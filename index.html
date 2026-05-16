@@ -1,0 +1,150 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Crypto Terminal</title>
+
+  <style>
+    body {
+      margin: 0;
+      background: #0b1220;
+      color: white;
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+
+    .card {
+      background: #111827;
+      border: 1px solid #1f2937;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px;
+      border-bottom: 1px solid #1f2937;
+      background: #0f172a;
+    }
+
+    .left-controls {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    input {
+      background: #0b1220;
+      border: none;
+      color: white;
+      padding: 8px 10px;
+      border-radius: 6px;
+      width: 120px;
+    }
+
+    button {
+      background: #2563eb;
+      border: none;
+      color: white;
+      padding: 8px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      opacity: 0.9;
+    }
+
+    .live {
+      color: #22c55e;
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    .chart {
+      height: 500px;
+    }
+  </style>
+</head>
+<body>
+
+<h1>CRYPTO TERMINAL 🚀</h1>
+
+<div class="grid">
+
+  <div class="card">
+    <div class="toolbar">
+      <div class="left-controls">
+        <input id="symbol1" value="BTCUSDT" />
+        <button onclick="loadChart(1)">LOAD</button>
+      </div>
+      <div class="live">LIVE</div>
+    </div>
+
+    <div id="chart1" class="chart"></div>
+  </div>
+
+  <div class="card">
+    <div class="toolbar">
+      <div class="left-controls">
+        <input id="symbol2" value="ETHUSDT" />
+        <button onclick="loadChart(2)">LOAD</button>
+      </div>
+      <div class="live">LIVE</div>
+    </div>
+
+    <div id="chart2" class="chart"></div>
+  </div>
+
+</div>
+
+<script src="https://s3.tradingview.com/tv.js"></script>
+
+<script>
+function createWidget(containerId, symbol) {
+  document.getElementById(containerId).innerHTML = "";
+
+  new TradingView.widget({
+    autosize: true,
+    symbol: "BYBIT:" + symbol + ".P",
+    interval: "15",
+    timezone: "Etc/UTC",
+    theme: "dark",
+    style: "1",
+    locale: "en",
+    toolbar_bg: "#0f172a",
+    enable_publishing: false,
+    allow_symbol_change: true,
+    container_id: containerId,
+    studies: [
+      "RSI@tv-basicstudies"
+    ]
+  });
+}
+
+function loadChart(id) {
+  const symbol = document.getElementById("symbol" + id).value.toUpperCase();
+  createWidget("chart" + id, symbol);
+}
+
+createWidget("chart1", "BTCUSDT");
+createWidget("chart2", "ETHUSDT");
+</script>
+
+</body>
+</html>
