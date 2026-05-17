@@ -11,19 +11,20 @@ body{
   background:#0b1220;
   color:white;
   font-family:Arial,sans-serif;
-  padding:20px;
+  padding:16px;
 }
 
 h1{
   text-align:center;
-  margin-bottom:20px;
+  margin-bottom:16px;
+  font-size:24px;
 }
 
 .topbar{
   display:flex;
   justify-content:center;
   gap:10px;
-  margin-bottom:20px;
+  margin-bottom:16px;
 }
 
 .topbar button{
@@ -38,7 +39,7 @@ h1{
 
 .grid{
   display:grid;
-  gap:20px;
+  gap:16px;
 }
 
 .grid-4{
@@ -65,23 +66,24 @@ h1{
   justify-content:space-between;
   align-items:center;
   padding:10px;
-  border-bottom:1px solid #1f2937;
   background:#0f172a;
+  border-bottom:1px solid #1f2937;
 }
 
 .left-controls{
   display:flex;
-  gap:10px;
   align-items:center;
+  gap:10px;
 }
 
 input{
   background:#0b1220;
-  color:white;
   border:none;
+  color:white;
   padding:8px 10px;
   border-radius:6px;
-  width:110px;
+  width:120px;
+  font-size:14px;
 }
 
 button{
@@ -94,6 +96,7 @@ button{
   border:none;
   padding:8px 12px;
   border-radius:6px;
+  font-weight:bold;
 }
 
 .alert-btn{
@@ -102,6 +105,7 @@ button{
   border:none;
   padding:8px 12px;
   border-radius:6px;
+  font-weight:bold;
 }
 
 .live{
@@ -111,17 +115,25 @@ button{
 }
 
 .chart{
-  height:400px;
+  height:460px;
 }
 
-@media(max-width:1200px){
-  .grid-6,.grid-8{
+@media(max-width:1400px){
+  .grid-8{
+    grid-template-columns:repeat(2,1fr);
+  }
+}
+
+@media(max-width:1100px){
+  .grid-6{
     grid-template-columns:repeat(2,1fr);
   }
 }
 
 @media(max-width:700px){
-  .grid-4,.grid-6,.grid-8{
+  .grid-4,
+  .grid-6,
+  .grid-8{
     grid-template-columns:1fr;
   }
 }
@@ -219,15 +231,23 @@ function loadChart(index){
     theme: "dark",
     style: "1",
     locale: "en",
+
     toolbar_bg: "#0f172a",
-    enable_publishing: false,
-    allow_symbol_change: true,
+
+    allow_symbol_change: false,
+
     hide_side_toolbar: false,
+    hide_top_toolbar: false,
+
     withdateranges: true,
-    details: true,
+    details: false,
+
+    enable_publishing: false,
+
     studies: [
       "RSI@tv-basicstudies"
     ],
+
     container_id: "chart" + index
   });
 }
