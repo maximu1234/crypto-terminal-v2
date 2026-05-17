@@ -1,123 +1,215 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Crypto Terminal</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Crypto Terminal V2</title>
 
-  <style>
-    body {
-      margin: 0;
-      background: #0b1220;
-      color: white;
-      font-family: Arial, sans-serif;
-      padding: 20px;
-    }
+<style>
+body{
+  margin:0;
+  background:#0b1220;
+  color:white;
+  font-family:Arial,sans-serif;
+  padding:20px;
+}
 
-    h1 {
-      text-align: center;
-      margin-bottom: 20px;
-    }
+h1{
+  text-align:center;
+  margin-bottom:20px;
+}
 
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 20px;
-    }
+.topbar{
+  display:flex;
+  justify-content:center;
+  gap:10px;
+  margin-bottom:20px;
+}
 
-    .card {
-      background: #111827;
-      border: 1px solid #1f2937;
-      border-radius: 12px;
-      overflow: hidden;
-    }
+.topbar button{
+  background:#2563eb;
+  border:none;
+  color:white;
+  padding:10px 16px;
+  border-radius:8px;
+  cursor:pointer;
+  font-weight:bold;
+}
 
-    .toolbar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 10px;
-      border-bottom: 1px solid #1f2937;
-      background: #0f172a;
-    }
+.grid{
+  display:grid;
+  gap:20px;
+}
 
-    .left-controls {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-    }
+.grid-4{
+  grid-template-columns:repeat(2,1fr);
+}
 
-    input {
-      background: #0b1220;
-      border: none;
-      color: white;
-      padding: 8px 10px;
-      border-radius: 6px;
-      width: 120px;
-    }
+.grid-6{
+  grid-template-columns:repeat(3,1fr);
+}
 
-    button {
-      background: #2563eb;
-      border: none;
-      color: white;
-      padding: 8px 12px;
-      border-radius: 6px;
-      cursor: pointer;
-    }
+.grid-8{
+  grid-template-columns:repeat(4,1fr);
+}
 
-    button:hover {
-      opacity: 0.9;
-    }
+.card{
+  background:#111827;
+  border:1px solid #1f2937;
+  border-radius:12px;
+  overflow:hidden;
+}
 
-    .live {
-      color: #22c55e;
-      font-size: 12px;
-      font-weight: bold;
-    }
+.toolbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:10px;
+  border-bottom:1px solid #1f2937;
+  background:#0f172a;
+}
 
-    .chart {
-      height: 500px;
-    }
-  </style>
+.left-controls{
+  display:flex;
+  gap:10px;
+  align-items:center;
+}
+
+input{
+  background:#0b1220;
+  color:white;
+  border:none;
+  padding:8px 10px;
+  border-radius:6px;
+  width:110px;
+}
+
+button{
+  cursor:pointer;
+}
+
+.load-btn{
+  background:#2563eb;
+  color:white;
+  border:none;
+  padding:8px 12px;
+  border-radius:6px;
+}
+
+.alert-btn{
+  background:#dc2626;
+  color:white;
+  border:none;
+  padding:8px 12px;
+  border-radius:6px;
+}
+
+.live{
+  color:#22c55e;
+  font-size:12px;
+  font-weight:bold;
+}
+
+.chart{
+  height:400px;
+}
+
+@media(max-width:1200px){
+  .grid-6,.grid-8{
+    grid-template-columns:repeat(2,1fr);
+  }
+}
+
+@media(max-width:700px){
+  .grid-4,.grid-6,.grid-8{
+    grid-template-columns:1fr;
+  }
+}
+</style>
 </head>
+
 <body>
 
-<h1>CRYPTO TERMINAL 🚀</h1>
+<h1>CRYPTO TERMINAL V2 🚀</h1>
 
-<div class="grid">
-
-  <div class="card">
-    <div class="toolbar">
-      <div class="left-controls">
-        <input id="symbol1" value="BTCUSDT" />
-        <button onclick="loadChart(1)">LOAD</button>
-      </div>
-      <div class="live">LIVE</div>
-    </div>
-
-    <div id="chart1" class="chart"></div>
-  </div>
-
-  <div class="card">
-    <div class="toolbar">
-      <div class="left-controls">
-        <input id="symbol2" value="ETHUSDT" />
-        <button onclick="loadChart(2)">LOAD</button>
-      </div>
-      <div class="live">LIVE</div>
-    </div>
-
-    <div id="chart2" class="chart"></div>
-  </div>
-
+<div class="topbar">
+  <button onclick="setLayout(4)">4 Charts</button>
+  <button onclick="setLayout(6)">6 Charts</button>
+  <button onclick="setLayout(8)">8 Charts</button>
 </div>
+
+<div id="grid" class="grid"></div>
 
 <script src="https://s3.tradingview.com/tv.js"></script>
 
 <script>
-function createWidget(containerId, symbol) {
-  document.getElementById(containerId).innerHTML = "";
+const defaults = [
+  "BTCUSDT",
+  "ETHUSDT",
+  "SOLUSDT",
+  "XRPUSDT",
+  "DOGEUSDT",
+  "ADAUSDT",
+  "AVAXUSDT",
+  "LINKUSDT"
+];
+
+let currentLayout = parseInt(localStorage.getItem("layout")) || 4;
+
+function saveLayout(){
+  localStorage.setItem("layout", currentLayout);
+}
+
+function getSymbol(index){
+  return localStorage.getItem("symbol_" + index) || defaults[index];
+}
+
+function saveSymbol(index,symbol){
+  localStorage.setItem("symbol_" + index, symbol);
+}
+
+function createCard(index){
+  const symbol = getSymbol(index);
+
+  return `
+    <div class="card">
+      <div class="toolbar">
+        <div class="left-controls">
+          <input id="symbol${index}" value="${symbol}" />
+          <button class="load-btn" onclick="reloadChart(${index})">LOAD</button>
+          <button class="alert-btn" onclick="createAlert(${index})">ALERT</button>
+        </div>
+
+        <div class="live">LIVE</div>
+      </div>
+
+      <div id="chart${index}" class="chart"></div>
+    </div>
+  `;
+}
+
+function render(){
+  const grid = document.getElementById("grid");
+
+  grid.className = "grid grid-" + currentLayout;
+
+  let html = "";
+
+  for(let i=0;i<currentLayout;i++){
+    html += createCard(i);
+  }
+
+  grid.innerHTML = html;
+
+  for(let i=0;i<currentLayout;i++){
+    loadChart(i);
+  }
+
+  saveLayout();
+}
+
+function loadChart(index){
+  const symbol = getSymbol(index);
 
   new TradingView.widget({
     autosize: true,
@@ -130,20 +222,51 @@ function createWidget(containerId, symbol) {
     toolbar_bg: "#0f172a",
     enable_publishing: false,
     allow_symbol_change: true,
-    container_id: containerId,
+    hide_side_toolbar: false,
+    withdateranges: true,
+    details: true,
     studies: [
       "RSI@tv-basicstudies"
-    ]
+    ],
+    container_id: "chart" + index
   });
 }
 
-function loadChart(id) {
-  const symbol = document.getElementById("symbol" + id).value.toUpperCase();
-  createWidget("chart" + id, symbol);
+function reloadChart(index){
+  const symbol = document.getElementById("symbol" + index).value.toUpperCase();
+
+  saveSymbol(index, symbol);
+
+  document.getElementById("chart" + index).innerHTML = "";
+
+  loadChart(index);
 }
 
-createWidget("chart1", "BTCUSDT");
-createWidget("chart2", "ETHUSDT");
+function setLayout(count){
+  currentLayout = count;
+  render();
+}
+
+function createAlert(index){
+  const symbol = getSymbol(index);
+
+  const price = prompt("Set alert price for " + symbol);
+
+  if(!price) return;
+
+  let alerts = JSON.parse(localStorage.getItem("alerts") || "[]");
+
+  alerts.push({
+    symbol,
+    price
+  });
+
+  localStorage.setItem("alerts", JSON.stringify(alerts));
+
+  alert("Alert saved for " + symbol + " at " + price);
+}
+
+render();
 </script>
 
 </body>
