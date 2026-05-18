@@ -3,17 +3,18 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Terminal V2.2 FIX</title>
+<title>Terminal V2.3 HARD FIX</title>
 
 <style>
-body{
+html, body{
   margin:0;
+  height:100%;
   background:#0b1220;
-  color:white;
   font-family:Arial;
   overflow:hidden;
 }
 
+/* 🔥 CRITICAL FIX: no flex collapse */
 #app{
   display:grid;
   grid-template-columns: 1fr 240px;
@@ -24,11 +25,12 @@ body{
   display:flex;
   flex-direction:column;
   height:100%;
+  min-height:0;
 }
 
 #chart{
   flex:1;
-  min-height:0;
+  min-height:400px; /* 🔥 IMPORTANT FIX */
 }
 
 #list{
@@ -73,50 +75,62 @@ let chart;
 let series;
 
 let candles = [];
-let loading = false;
 
-/* ---------------- INIT ---------------- */
+/* ---------------- SAFE INIT ---------------- */
 
 function initChart(){
 
   const el = document.getElementById("chart");
 
-  chart = LightweightCharts.createChart(el, {
-    layout:{
-      background:{ color:"#0b1220" },
-      textColor:"#d1d5db"
-    },
-    grid:{
-      vertLines:{ color:"#161b26" },
-      horzLines:{ color:"#161b26" }
-    },
-    timeScale:{
-      borderColor:"#1f2937",
-      timeVisible:true
-    }
-  });
+  /* 🔥 WAIT FOR LAYOUT STABILIZATION */
+  requestAnimationFrame(() => {
 
-  series = chart.addCandlestickSeries();
+    const height = el.clientHeight;
 
-  chart.timeScale().subscribeVisibleLogicalRangeChange(range => {
-    if(!range || loading) return;
-
-    if(range.from < 50){
-      loadMore();
-    }
-  });
-
-  window.addEventListener("resize", () => {
-    chart.applyOptions({
+    chart = LightweightCharts.createChart(el, {
       width: el.clientWidth,
-      height: el.clientHeight
+      height: height, // 🔥 FIXED HEIGHT SNAPSHOT
+
+      layout:{
+        background:{ color:"#0b1220" },
+        textColor:"#d1d5db"
+      },
+
+      grid:{
+        vertLines:{ color:"#161b26" },
+        horzLines:{ color:"#161b26" }
+      },
+
+      timeScale:{
+        borderColor:"#1f2937",
+        timeVisible:true
+      }
     });
+
+    series = chart.addCandlestickSeries();
+
+    /* 🔥 DOUBLE RESIZE FIX */
+    requestAnimationFrame(() => {
+      chart.applyOptions({
+        width: el.clientWidth,
+        height: el.clientHeight
+      });
+    });
+
+    window.addEventListener("resize", () => {
+      chart.applyOptions({
+        width: el.clientWidth,
+        height: el.clientHeight
+      });
+    });
+
+    load(symbols[0]);
   });
 }
 
-/* ---------------- HISTORY ---------------- */
+/* ---------------- LOAD ---------------- */
 
-async function loadHistory(symbol){
+async function load(symbol){
 
   const res = await fetch(
     `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=15m&limit=1500`
@@ -139,43 +153,6 @@ async function loadHistory(symbol){
   });
 }
 
-/* ---------------- LOAD MORE ---------------- */
-
-async function loadMore(){
-
-  loading = true;
-
-  const symbol = symbols[index];
-  const oldest = candles[0];
-
-  const res = await fetch(
-    `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=15m&limit=1500&endTime=${oldest.time*1000}`
-  );
-
-  const data = await res.json();
-
-  const older = data.map(d => ({
-    time: d[0] / 1000,
-    open: +d[1],
-    high: +d[2],
-    low: +d[3],
-    close: +d[4]
-  }));
-
-  if(older.length > 0){
-
-    candles = [...older, ...candles];
-
-    series.setData(candles);
-
-    requestAnimationFrame(() => {
-      chart.timeScale().fitContent();
-    });
-  }
-
-  loading = false;
-}
-
 /* ---------------- LIST ---------------- */
 
 function renderList(){
@@ -189,9 +166,9 @@ function renderList(){
     div.className = "coin" + (i===index ? " active" : "");
     div.innerText = s;
 
-    div.onclick = async () => {
+    div.onclick = () => {
       index = i;
-      await loadHistory(s);
+      load(s);
       renderList();
     };
 
@@ -203,9 +180,8 @@ function renderList(){
 
 /* ---------------- START ---------------- */
 
-initChart();
 renderList();
-loadHistory(symbols[0]);
+initChart();
 
 </script>
 
