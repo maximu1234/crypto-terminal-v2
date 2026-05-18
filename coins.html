@@ -1,258 +1,59 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Multichart - Монеты</title>
+widget = new TradingView.widget({
 
-<style>
-* { box-sizing:border-box; }
+  autosize: true,
 
-body{
-  margin:0;
-  background:#0b1220;
-  color:white;
-  font-family:Arial,sans-serif;
-  height:100vh;
-  display:flex;
-  flex-direction:column;
-  overflow:hidden;
-}
+  symbol: "BYBIT:" + symbols[index],
 
-/* HEADER */
-.header{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:10px 14px;
-  border-bottom:1px solid #1f2937;
-}
+  interval: tf,
 
-.header-left{ font-weight:700; font-size:18px; }
+  timezone: "Etc/UTC",
 
-.header-menu{ display:flex; gap:14px; }
+  theme: "dark",
 
-.header-menu a{
-  color:#9ca3af;
-  text-decoration:none;
-  padding:6px 10px;
-  border-radius:6px;
-}
+  style: "1",
 
-.header-menu a.active{
-  background:#1f2937;
-  color:white;
-}
+  locale: "en",
 
-/* TIMEFRAME */
-.topbar{
-  display:flex;
-  justify-content:flex-start;
-  padding:10px 14px;
-  border-bottom:1px solid #1f2937;
-}
+  allow_symbol_change: false,
 
-.timeframes button{
-  background:#2563eb;
-  border:none;
-  color:white;
-  padding:6px 10px;
-  border-radius:6px;
-  cursor:pointer;
-  margin-right:6px;
-  font-weight:600;
-}
+  hide_side_toolbar: true,
 
-.timeframes button.active{
-  background:#1d4ed8;
-}
+  studies: [
+    {
+      id: "RSI@tv-basicstudies",
+      inputs: {
+        length: 14
+      },
+      overrides: {
+        "plot.color": "#a855f7",
+        "plot.linewidth": 1,
+        "plot.transparency": 0
+      },
+      forced_overlay: true
+    }
+  ],
 
-/* MAIN */
-.container{
-  display:grid;
-  grid-template-columns: 3fr 1fr;
-  height:100%;
-}
+  disabled_features: [
+    "volume_force_overlay",
+    "volume_indicator",
+    "create_volume_indicator_by_default",
+    "left_toolbar",
+    "header_compare",
+    "header_symbol_search"
+  ],
 
-/* CHART */
-.chart-box{
-  background:#111827;
-  position:relative;
-}
+  overrides: {
 
-/* 🔥 FIX RSI VISUAL COMPRESSION */
-.chart-box iframe{
-  transform: scaleY(0.72);
-  transform-origin: top;
-}
+    "paneProperties.background": "#0b1220",
+    "paneProperties.vertGridProperties.color": "#161b26",
+    "paneProperties.horzGridProperties.color": "#161b26",
 
-#chart{
-  width:100%;
-  height:100%;
-}
+    "mainSeriesProperties.priceAxisProperties.log": true,
 
-/* LIST */
-.list{
-  border-left:1px solid #1f2937;
-  overflow:auto;
-}
+    // RSI stays on main pane (important)
+    "paneProperties.legendProperties.showStudyArguments": false
+  },
 
-.row{
-  display:grid;
-  grid-template-columns:40px 1fr;
-  padding:10px;
-  border-bottom:1px solid #1f2937;
-  cursor:pointer;
-}
-
-.row:hover{ background:#111827; }
-
-.row.active{ background:#1e293b; }
-</style>
-</head>
-
-<body>
-
-<div class="header">
-  <div class="header-left">Multichart</div>
-
-  <div class="header-menu">
-    <a href="index.html">Главная</a>
-    <a href="coins.html" class="active">Монеты</a>
-  </div>
-</div>
-
-<div class="topbar">
-  <div class="timeframes">
-    <button onclick="setTF('5')">5m</button>
-    <button onclick="setTF('15')" class="active">15m</button>
-    <button onclick="setTF('60')">1h</button>
-    <button onclick="setTF('240')">4h</button>
-    <button onclick="setTF('D')">1D</button>
-  </div>
-</div>
-
-<div class="container">
-
-  <div class="chart-box">
-    <div id="chart"></div>
-  </div>
-
-  <div class="list" id="list"></div>
-
-</div>
-
-<script src="https://s3.tradingview.com/tv.js"></script>
-
-<script>
-
-const symbols = [
-  "BTCUSDT","ETHUSDT","SOLUSDT","XRPUSDT",
-  "DOGEUSDT","ADAUSDT","AVAXUSDT","LINKUSDT","BNBUSDT"
-];
-
-let index = 0;
-let tf = localStorage.getItem("tf") || "15";
-let widget = null;
-
-function loadList(){
-  const list = document.getElementById("list");
-  list.innerHTML = "";
-
-  symbols.forEach((s,i)=>{
-
-    const row = document.createElement("div");
-    row.className = "row" + (i===index?" active":"");
-    row.innerHTML = `🇺🇸 ${s}`;
-
-    row.onclick = () => {
-      index = i;
-      render();
-    };
-
-    list.appendChild(row);
-  });
-}
-
-function createChart(){
-
-  if(widget && widget.remove) widget.remove();
-
-  widget = new TradingView.widget({
-
-    autosize:true,
-    symbol:"BYBIT:" + symbols[index],
-    interval: tf,
-    timezone:"Etc/UTC",
-    theme:"dark",
-    style:"1",
-    locale:"en",
-
-    allow_symbol_change:false,
-    hide_side_toolbar:true,
-
-    studies:[
-      "RSI@tv-basicstudies"
-    ],
-
-    disabled_features:[
-      "volume_force_overlay",
-      "volume_indicator",
-      "create_volume_indicator_by_default",
-      "left_toolbar",
-      "header_compare"
-    ],
-
-    overrides:{
-
-      "paneProperties.background":"#0b1220",
-      "paneProperties.vertGridProperties.color":"#161b26",
-      "paneProperties.horzGridProperties.color":"#161b26",
-
-      "mainSeriesProperties.priceAxisProperties.log":true,
-
-      "paneProperties.legendProperties.showVolume":false
-    },
-
-    studies_overrides:{
-
-      "rsi.plot.color":"#a855f7",
-      "rsi.plot.linewidth":1
-
-    },
-
-    container_id:"chart"
-  });
-}
-
-function setTF(newTf){
-  tf = newTf;
-  localStorage.setItem("tf", tf);
-  createChart();
-}
-
-function render(){
-  loadList();
-  createChart();
-}
-
-document.addEventListener("keydown",(e)=>{
-
-  if(e.key==="ArrowDown"){
-    index = Math.min(symbols.length-1,index+1);
-    render();
-  }
-
-  if(e.key==="ArrowUp"){
-    index = Math.max(0,index-1);
-    render();
-  }
+  container_id: "chart"
 
 });
-
-render();
-
-</script>
-
-</body>
-</html>
