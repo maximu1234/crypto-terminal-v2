@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Single Chart Test</title>
+
+<style>
+body{
+  margin:0;
+  background:#0b1220;
+  color:white;
+  font-family:Arial, sans-serif;
+  height:100vh;
+  display:flex;
+  flex-direction:column;
+}
+
+.header{
+  display:flex;
+  gap:10px;
+  padding:10px;
+  border-bottom:1px solid #1f2937;
+  align-items:center;
+}
+
+button{
+  background:#2563eb;
+  border:none;
+  color:white;
+  padding:6px 12px;
+  border-radius:6px;
+  cursor:pointer;
+}
+
+#chart{
+  flex:1;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+  <button onclick="setSymbol('BTCUSDT')">BTC</button>
+  <button onclick="setSymbol('ETHUSDT')">ETH</button>
+  <button onclick="setSymbol('SOLUSDT')">SOL</button>
+  <button onclick="setSymbol('XRPUSDT')">XRP</button>
+</div>
+
+<div id="chart"></div>
+
+<script src="https://s3.tradingview.com/tv.js"></script>
+
+<script>
+
+let widget;
+
+const savedSymbol = localStorage.getItem("symbol") || "BTCUSDT";
+
+function create(symbol){
+
+  if(widget){
+    widget.remove();
+  }
+
+  widget = new TradingView.widget({
+
+    autosize: true,
+    symbol: "BYBIT:" + symbol,
+    interval: "15",
+    timezone: "Etc/UTC",
+    theme: "dark",
+    style: "1",
+    locale: "en",
+
+    allow_symbol_change: true,
+
+    hide_side_toolbar: true,
+    hide_top_toolbar: false,
+
+    // 🔥 важно: лог режим (как ты хочешь)
+    overrides: {
+      "mainSeriesProperties.priceAxisProperties.log": true
+    },
+
+    // 🔥 убираем volume полностью
+    studies: [],
+    disabled_features: [
+      "volume_force_overlay",
+      "create_volume_indicator_by_default",
+      "volume_indicator",
+      "header_compare",
+      "header_symbol_search",
+      "left_toolbar"
+    ],
+
+    container_id: "chart"
+  });
+
+  localStorage.setItem("symbol", symbol);
+
+  widget.onChartReady(() => {
+
+    const chart = widget.activeChart();
+
+    // 🔥 сохранение монеты при смене внутри графика
+    chart.onSymbolChanged().subscribe(null, (sym) => {
+      if(!sym) return;
+
+      const clean = sym.split(":")[1] || sym;
+      localStorage.setItem("symbol", clean);
+    });
+
+  });
+}
+
+function setSymbol(sym){
+  create(sym);
+}
+
+window.onload = () => {
+  create(savedSymbol);
+};
+
+</script>
+
+</body>
+</html>
