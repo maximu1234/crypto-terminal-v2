@@ -1,6 +1,6 @@
 <!-- =========================================================
      FULL coins.html
-     FIXED RIGHT OFFSET VERSION
+     FAST TERMINAL ENGINE VERSION
 ========================================================= -->
 
 <!DOCTYPE html>
@@ -101,7 +101,7 @@ html,body{
 #chart-wrap{
   height:82%;
   min-height:0;
-  padding-right:52px;
+  padding-right:70px;
   box-sizing:border-box;
 }
 
@@ -115,14 +115,14 @@ html,body{
   height:18%;
   min-height:90px;
   border-top:1px solid #1f2937;
-  padding-right:52px;
+  padding-right:70px;
   box-sizing:border-box;
 }
 
 #rsi-band{
   position:absolute;
   left:0;
-  right:52px;
+  right:70px;
   top:30%;
   height:40%;
   background:#1e1e31;
@@ -132,7 +132,7 @@ html,body{
 #rsi-chart{
   position:absolute;
   inset:0;
-  right:52px;
+  right:70px;
   z-index:1;
 }
 
@@ -340,17 +340,21 @@ let currentDataset = "crypto";
 let currentTF = "60";
 let currentSymbol = "BTCUSDT";
 
+let candles = [];
+let marketData = [];
+
 let sortMode = "symbol";
 let sortAsc = true;
 
 let favorites =
 JSON.parse(localStorage.getItem("favorites") || "[]");
 
-let candles = [];
-let marketData = [];
-
 let allBybitSymbols = [];
 let newListings = [];
+
+/* =========================================================
+   SYMBOLS
+========================================================= */
 
 const stockSymbols = [
 "AAPL","TSLA","NVDA","MSFT","AMZN",
@@ -397,7 +401,7 @@ mode:1
 timeScale:{
 borderColor:"#1f2937",
 timeVisible:true,
-rightOffset:18
+rightOffset:28
 },
 
 crosshair:{
@@ -473,6 +477,10 @@ axisLabelVisible:true
 
 });
 
+/* =========================================================
+   RSI
+========================================================= */
+
 function calculateRSI(data, period=14){
 
 if(data.length < period+1){
@@ -537,7 +545,7 @@ return result;
 }
 
 /* =========================================================
-   LOAD SYMBOLS
+   SYMBOLS
 ========================================================= */
 
 async function loadBybitSymbols(){
@@ -591,6 +599,10 @@ return forexSymbols;
 
 }
 
+/* =========================================================
+   MARKET DATA
+========================================================= */
+
 function generateMarketData(){
 
 marketData = getCurrentSymbols().map(symbol => {
@@ -612,7 +624,7 @@ change1h:
 }
 
 /* =========================================================
-   LOAD CRYPTO HISTORY
+   FAST CRYPTO HISTORY
 ========================================================= */
 
 async function loadCryptoHistory(symbol){
@@ -621,7 +633,9 @@ let all = [];
 
 let end = Date.now();
 
-for(let i=0;i<8;i++){
+/* ONLY 3 REQUESTS NOW */
+
+for(let i=0;i<3;i++){
 
 const url =
 `https://api.bybit.com/v5/market/kline?category=linear&symbol=${symbol}&interval=${currentTF}&limit=1000&end=${end}`;
@@ -668,7 +682,7 @@ return Array
 }
 
 /* =========================================================
-   LOAD TWELVEDATA
+   TWELVEDATA
 ========================================================= */
 
 async function loadTwelveData(symbol){
@@ -700,7 +714,7 @@ interval = "1day";
 }
 
 const url =
-`https://api.twelvedata.com/time_series?symbol=${encodeURIComponent(symbol)}&interval=${interval}&outputsize=5000&apikey=${TWELVE_KEY}`;
+`https://api.twelvedata.com/time_series?symbol=${encodeURIComponent(symbol)}&interval=${interval}&outputsize=2500&apikey=${TWELVE_KEY}`;
 
 const res = await fetch(url);
 
@@ -761,20 +775,17 @@ rsiSeries.setData(
 calculateRSI(candles)
 );
 
-chart.timeScale().fitContent();
+/* NO FITCONTENT */
 
-chart.timeScale().applyOptions({
-rightOffset:18
+chart.timeScale().setVisibleLogicalRange({
+
+from:
+candles.length - 140,
+
+to:
+candles.length + 28
+
 });
-
-setTimeout(()=>{
-
-chart.timeScale().scrollToPosition(
--18,
-false
-);
-
-},50);
 
 renderList();
 
@@ -1042,6 +1053,10 @@ list.appendChild(div);
 
 }
 
+/* =========================================================
+   SORT
+========================================================= */
+
 document
 .querySelectorAll(".sortable")
 .forEach(el=>{
@@ -1066,6 +1081,57 @@ renderList();
 };
 
 });
+
+/* =========================================================
+   KEYBOARD NAVIGATION
+========================================================= */
+
+document.addEventListener(
+"keydown",
+async e=>{
+
+const symbols =
+marketData.map(x=>x.symbol);
+
+let index =
+symbols.indexOf(currentSymbol);
+
+if(
+e.code === "ArrowDown" ||
+e.code === "Space"
+){
+
+e.preventDefault();
+
+index++;
+
+if(index >= symbols.length){
+index = 0;
+}
+
+await loadSymbol(symbols[index]);
+
+}
+
+if(e.code === "ArrowUp"){
+
+e.preventDefault();
+
+index--;
+
+if(index < 0){
+index = symbols.length - 1;
+}
+
+await loadSymbol(symbols[index]);
+
+}
+
+});
+
+/* =========================================================
+   START
+========================================================= */
 
 async function init(){
 
