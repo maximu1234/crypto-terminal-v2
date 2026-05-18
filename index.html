@@ -1,6 +1,6 @@
 <!-- =========================================================
      FULL index.html
-     DASHBOARD ENGINE V5
+     DASHBOARD ENGINE V6
 ========================================================= -->
 
 <!DOCTYPE html>
@@ -232,7 +232,7 @@ Multichart
 
 <div id="top-controls">
 
-<button class="layout-btn active" data-layout="4">
+<button class="layout-btn" data-layout="4">
 4
 </button>
 
@@ -240,7 +240,7 @@ Multichart
 6
 </button>
 
-<button class="layout-btn" data-layout="9">
+<button class="layout-btn active" data-layout="9">
 9
 </button>
 
@@ -259,7 +259,7 @@ Open Terminal
      DASHBOARD
 ========================================================= -->
 
-<div id="dashboard" class="grid-4"></div>
+<div id="dashboard" class="grid-9"></div>
 
 <script>
 
@@ -270,16 +270,20 @@ Open Terminal
 const dashboard =
 document.getElementById("dashboard");
 
-let currentLayout = 4;
+/* DEFAULT = 9 */
+
+let currentLayout = 9;
 
 const defaultSymbols = [
 
 "BTCUSDT",
 "ETHUSDT",
 "SOLUSDT",
+
 "XRPUSDT",
 "BNBUSDT",
 "ADAUSDT",
+
 "DOGEUSDT",
 "LINKUSDT",
 "AVAXUSDT"
