@@ -27,13 +27,11 @@ body{
   align-items:center;
   padding:10px 14px;
   border-bottom:1px solid #1f2937;
-  background:#0b1220;
 }
 
 .header-left{
   font-size:18px;
   font-weight:700;
-  letter-spacing:0.5px;
 }
 
 .header-menu{
@@ -75,7 +73,6 @@ body{
   border-radius:6px;
   cursor:pointer;
   font-weight:600;
-  font-size:13px;
 }
 
 #grid{
@@ -83,8 +80,6 @@ body{
   display:grid;
   gap:10px;
   padding:10px;
-  width:100%;
-  height:100%;
 }
 
 .card{
@@ -184,11 +179,12 @@ function render(){
     grid.appendChild(card);
   }
 
-  requestAnimationFrame(() => {
+  // ВАЖНО: даём DOM 1 тик на стабилизацию
+  setTimeout(() => {
     for(let i=0;i<currentLayout;i++){
       loadChart(i);
     }
-  });
+  }, 50);
 }
 
 function loadChart(i){
@@ -229,14 +225,7 @@ function loadChart(i){
       "paneProperties.background": "#0b1220",
       "paneProperties.vertGridProperties.color": "#161b26",
       "paneProperties.horzGridProperties.color": "#161b26",
-      "paneProperties.legendProperties.showVolume": false,
       "scalesProperties.textColor": "#AAA",
-      "mainSeriesProperties.candleStyle.upColor": "#22c55e",
-      "mainSeriesProperties.candleStyle.downColor": "#ef4444",
-      "mainSeriesProperties.candleStyle.borderUpColor": "#22c55e",
-      "mainSeriesProperties.candleStyle.borderDownColor": "#ef4444",
-      "mainSeriesProperties.candleStyle.wickUpColor": "#22c55e",
-      "mainSeriesProperties.candleStyle.wickDownColor": "#ef4444",
       "mainSeriesProperties.priceAxisProperties.log": true
     },
 
