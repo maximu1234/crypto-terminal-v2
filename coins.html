@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Terminal V3.1 VISUAL FIX</title>
+<title>Terminal V4 Engine FIX</title>
 
 <style>
 html,body{
@@ -27,29 +27,8 @@ html,body{
   min-height:0;
 }
 
-#topbar{
-  display:flex;
-  gap:6px;
-  padding:8px;
-  border-bottom:1px solid #1f2937;
-}
-
-.tf-btn{
-  background:#1f2937;
-  color:white;
-  border:none;
-  padding:6px 10px;
-  border-radius:6px;
-  cursor:pointer;
-}
-
-.tf-btn.active{
-  background:#2563eb;
-}
-
 #chart{
   flex:1;
-  min-height:0;
 }
 
 #list{
@@ -77,15 +56,7 @@ html,body{
 <div id="app">
 
   <div id="left">
-
-    <div id="topbar">
-      <button class="tf-btn active" data="15m">15m</button>
-      <button class="tf-btn" data="1h">1h</button>
-      <button class="tf-btn" data="4h">4h</button>
-    </div>
-
     <div id="chart"></div>
-
   </div>
 
   <div id="list"></div>
@@ -103,70 +74,56 @@ let chart;
 let series;
 
 let candles = [];
-
-/* ---------------- WAIT FOR LAYOUT (CRITICAL FIX) ---------------- */
-
-function waitForLayout(el, cb){
-
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      cb(el.clientWidth, el.clientHeight);
-    });
-  });
-
-}
+let oldestLoadedTime = null;
+let loading = false;
 
 /* ---------------- INIT ---------------- */
 
-function initChart(){
+function init(){
 
   const el = document.getElementById("chart");
 
-  waitForLayout(el, (w,h) => {
-
-    chart = LightweightCharts.createChart(el, {
-      width: w,
-      height: h,
-
-      layout:{
-        background:{ color:"#0b1220" },
-        textColor:"#d1d5db"
-      },
-
-      grid:{
-        vertLines:{ color:"#161b26" },
-        horzLines:{ color:"#161b26" }
-      },
-
-      timeScale:{
-        borderColor:"#1f2937",
-        timeVisible:true
-      }
-    });
-
-    series = chart.addCandlestickSeries();
-
-    /* 🔥 FORCE REPAINT FIX */
-    requestAnimationFrame(() => {
-      chart.applyOptions({ width: el.clientWidth, height: el.clientHeight });
-    });
-
-    const ro = new ResizeObserver(() => {
-      chart.applyOptions({
-        width: el.clientWidth,
-        height: el.clientHeight
-      });
-    });
-
-    ro.observe(el);
-
-    load(symbols[0]);
+  chart = LightweightCharts.createChart(el, {
+    layout:{
+      background:{ color:"#0b1220" },
+      textColor:"#d1d5db"
+    },
+    grid:{
+      vertLines:{ color:"#161b26" },
+      horzLines:{ color:"#161b26" }
+    },
+    timeScale:{
+      borderColor:"#1f2937",
+      timeVisible:true
+    }
   });
+
+  series = chart.addCandlestickSeries();
+
+  chart.timeScale().subscribeVisibleLogicalRangeChange(range => {
+
+    if(!range || loading) return;
+
+    if(range.from < 50){
+      loadMore();
+    }
+  });
+
+  window.addEventListener("resize", () => {
+    chart.applyOptions({
+      width: el.clientWidth,
+      height: el.clientHeight
+    });
+  });
+
+  load(symbols[0]);
 }
 
-/* ---------------- LOAD ---------------- */
+/* ---------------- INITIAL LOAD ---------------- */
 
 async function load(symbol){
+
+  index = symbols.indexOf(symbol);
 
   const res = await fetch(
     `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${tf}&limit=1500`
@@ -182,11 +139,50 @@ async function load(symbol){
     close: +d[4]
   }));
 
+  oldestLoadedTime = candles[0].time;
+
   series.setData(candles);
 
-  requestAnimationFrame(() => {
-    chart.timeScale().fitContent();
-  });
+  chart.timeScale().fitContent();
+}
+
+/* ---------------- LOAD MORE (CRITICAL FIX) ---------------- */
+
+async function loadMore(){
+
+  loading = true;
+
+  const symbol = symbols[index];
+
+  const res = await fetch(
+    `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${tf}&limit=1500&endTime=${oldestLoadedTime*1000 - 1}`
+  );
+
+  const data = await res.json();
+
+  if(!data.length){
+    loading = false;
+    return;
+  }
+
+  const older = data.map(d => ({
+    time: d[0] / 1000,
+    open: +d[1],
+    high: +d[2],
+    low: +d[3],
+    close: +d[4]
+  }));
+
+  // ⚡ IMPORTANT: update boundary FIRST
+  oldestLoadedTime = older[0].time;
+
+  // merge
+  candles = [...older, ...candles];
+
+  // ⚠️ still safe for now, later we remove setData entirely
+  series.setData(candles);
+
+  loading = false;
 }
 
 /* ---------------- LIST ---------------- */
@@ -203,7 +199,6 @@ function renderList(){
     div.innerText = s;
 
     div.onclick = () => {
-      index = i;
       load(s);
       renderList();
     };
@@ -214,10 +209,8 @@ function renderList(){
 
 }
 
-/* ---------------- START ---------------- */
-
 renderList();
-initChart();
+init();
 
 </script>
 
