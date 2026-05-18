@@ -1,8 +1,3 @@
-<!-- =========================
-     FULL NEW coins.html
-     REAL STOCKS VIA FINNHUB
-========================= -->
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -260,8 +255,8 @@ BTCUSDT.P
 <button class="tf-btn" data-tf="1">1m</button>
 <button class="tf-btn" data-tf="5">5m</button>
 <button class="tf-btn" data-tf="15">15m</button>
-<button class="tf-btn" data-tf="60">1h</button>
-<button class="tf-btn active" data-tf="240">4h</button>
+<button class="tf-btn active" data-tf="60">1h</button>
+<button class="tf-btn" data-tf="240">4h</button>
 <button class="tf-btn" data-tf="D">1D</button>
 
 </div>
@@ -332,7 +327,7 @@ Coin
 <script>
 
 /* =========================
-   API KEYS
+   API
 ========================= */
 
 const FINNHUB_KEY =
@@ -343,7 +338,7 @@ const FINNHUB_KEY =
 ========================= */
 
 let currentDataset = "crypto";
-let currentTF = "240";
+let currentTF = "60";
 let currentSymbol = "BTCUSDT";
 
 let sortMode = "symbol";
@@ -355,16 +350,12 @@ JSON.parse(localStorage.getItem("favorites") || "[]");
 let marketData = [];
 
 let candles = [];
-let oldestTime = null;
-let loadingHistory = false;
-
-const HISTORY_LIMIT = 1000;
 
 let allBybitSymbols = [];
 let newListings = [];
 
 /* =========================
-   STOCKS
+   LISTS
 ========================= */
 
 const stockSymbols = [
@@ -401,15 +392,21 @@ if(currentTF === "1") return "1";
 if(currentTF === "5") return "5";
 if(currentTF === "15") return "15";
 if(currentTF === "60") return "60";
-if(currentTF === "240") return "240";
-if(currentTF === "D") return "D";
+
+if(currentTF === "240"){
+return "60";
+}
+
+if(currentTF === "D"){
+return "D";
+}
 
 return "60";
 
 }
 
 /* =========================
-   LOAD BYBIT SYMBOLS
+   LOAD SYMBOLS
 ========================= */
 
 async function loadBybitSymbols(){
@@ -442,7 +439,7 @@ return Number(x.launchTime) > weekAgo;
 }
 
 /* =========================
-   GET SYMBOLS
+   GET CURRENT SYMBOLS
 ========================= */
 
 function getCurrentSymbols(){
@@ -535,7 +532,7 @@ wickDownColor:"#ef4444"
 });
 
 /* =========================
-   RSI CHART
+   RSI
 ========================= */
 
 const rsiChart =
@@ -591,7 +588,7 @@ axisLabelVisible:true
 });
 
 /* =========================
-   RSI
+   RSI CALC
 ========================= */
 
 function calculateRSI(data, period=14){
@@ -674,7 +671,7 @@ currentDataset === "new")
 : symbol;
 
 /* =========================
-   CRYPTO / NEW
+   CRYPTO
 ========================= */
 
 if(
@@ -705,7 +702,7 @@ close:Number(k[4])
 }
 
 /* =========================
-   STOCKS REAL
+   STOCKS
 ========================= */
 
 else if(currentDataset === "stocks"){
@@ -725,6 +722,12 @@ const url =
 const res = await fetch(url);
 
 const json = await res.json();
+
+if(!json.t){
+
+alert("Finnhub limit or invalid response");
+return;
+}
 
 candles = json.t.map((t,i)=>({
 
