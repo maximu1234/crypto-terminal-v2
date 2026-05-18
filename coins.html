@@ -43,7 +43,6 @@ body{
   text-decoration:none;
   padding:6px 10px;
   border-radius:6px;
-  font-weight:600;
 }
 
 .header-menu a.active{
@@ -51,7 +50,7 @@ body{
   color:white;
 }
 
-/* TIMEFRAME BAR */
+/* TOPBAR */
 .topbar{
   display:flex;
   justify-content:flex-start;
@@ -82,13 +81,10 @@ body{
 }
 
 /* CHART */
-.chart-box{
-  background:#111827;
-}
-
 #chart{
   width:100%;
   height:100%;
+  background:#111827;
 }
 
 /* LIST */
@@ -117,7 +113,6 @@ body{
 
 <body>
 
-<!-- HEADER -->
 <div class="header">
   <div class="header-left">Multichart</div>
 
@@ -127,7 +122,6 @@ body{
   </div>
 </div>
 
-<!-- TIMEFRAME -->
 <div class="topbar">
   <div class="timeframes">
     <button onclick="setTF('5')">5m</button>
@@ -138,12 +132,9 @@ body{
   </div>
 </div>
 
-<!-- MAIN -->
 <div class="container">
 
-  <div class="chart-box">
-    <div id="chart"></div>
-  </div>
+  <div id="chart"></div>
 
   <div class="list" id="list"></div>
 
@@ -189,63 +180,67 @@ function createChart(){
 
   widget = new TradingView.widget({
 
-    autosize: true,
+    autosize:true,
 
-    symbol: "BYBIT:" + symbols[index],
+    symbol:"BYBIT:" + symbols[index],
 
     interval: tf,
 
-    timezone: "Etc/UTC",
+    timezone:"Etc/UTC",
 
-    theme: "dark",
+    theme:"dark",
 
-    style: "1",
+    style:"1",
 
-    locale: "en",
+    locale:"en",
 
-    allow_symbol_change: false,
+    allow_symbol_change:false,
 
-    hide_side_toolbar: true,
+    hide_side_toolbar:true,
 
-    hide_top_toolbar: false,
+    hide_top_toolbar:false,
 
-    withdateranges: false,
-    details: false,
+    studies:[
+      "RSI@tv-basicstudies"
+    ],
 
-    enable_publishing: false,
-    save_image: false,
-
-    load_last_chart: false,
-
-    studies: [],
-
-    disabled_features: [
+    disabled_features:[
       "volume_force_overlay",
       "volume_indicator",
       "create_volume_indicator_by_default",
       "left_toolbar",
       "header_compare",
-      "header_symbol_search",
-      "header_legend",
-      "study_dialog_search_control"
+      "header_symbol_search"
     ],
 
-    overrides: {
+    overrides:{
 
-      "paneProperties.background": "#0b1220",
-      "paneProperties.vertGridProperties.color": "#161b26",
-      "paneProperties.horzGridProperties.color": "#161b26",
+      "paneProperties.background":"#0b1220",
+      "paneProperties.vertGridProperties.color":"#161b26",
+      "paneProperties.horzGridProperties.color":"#161b26",
 
-      /* LOG PRICE ONLY */
-      "mainSeriesProperties.priceAxisProperties.log": true
+      "mainSeriesProperties.priceAxisProperties.log":true,
+
+      /* Volume OFF */
+      "paneProperties.legendProperties.showVolume":false
     },
 
-    container_id: "chart"
+    studies_overrides:{
+
+      /* RSI MINIMAL STYLE */
+      "rsi.plot.color":"#a855f7",
+      "rsi.plot.linewidth":1,
+      "rsi.hlines.background.visible":false,
+      "rsi.hlines.visible":false
+
+    },
+
+    container_id:"chart"
   });
 }
 
-function setTF(newTf){
-  tf = newTf;
+function setTF(v){
+  tf = v;
   localStorage.setItem("tf", tf);
   createChart();
 }
