@@ -3,278 +3,177 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Multichart - Монеты</title>
+<title>Terminal V1 FIX</title>
 
 <style>
-* { box-sizing:border-box; }
-
 body{
   margin:0;
   background:#0b1220;
   color:white;
-  font-family:Arial,sans-serif;
-  height:100vh;
-  display:flex;
-  flex-direction:column;
+  font-family:Arial;
   overflow:hidden;
 }
 
-/* HEADER */
-.header{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:10px 14px;
-  border-bottom:1px solid #1f2937;
-}
-
-.header-left{
-  font-size:18px;
-  font-weight:700;
-}
-
-.header-menu{
-  display:flex;
-  gap:14px;
-}
-
-.header-menu a{
-  color:#9ca3af;
-  text-decoration:none;
-  padding:6px 10px;
-  border-radius:6px;
-  font-weight:600;
-}
-
-.header-menu a.active{
-  background:#1f2937;
-  color:white;
-}
-
-/* TIMEFRAME BAR */
-.topbar{
-  display:flex;
-  justify-content:flex-start;
-  padding:10px 14px;
-  border-bottom:1px solid #1f2937;
-}
-
-.timeframes button{
-  background:#2563eb;
-  border:none;
-  color:white;
-  padding:6px 10px;
-  border-radius:6px;
-  cursor:pointer;
-  margin-right:6px;
-  font-weight:600;
-}
-
-.timeframes button.active{
-  background:#1d4ed8;
-}
-
-/* MAIN LAYOUT */
-.container{
+#app{
   display:grid;
-  grid-template-columns: 3fr 1fr;
-  height:100%;
+  grid-template-columns: 1fr 220px;
+  height:100vh;
 }
 
-/* CHART */
+#left{
+  display:flex;
+  flex-direction:column;
+}
+
 #chart{
-  width:100%;
-  height:100%;
-  background:#111827;
+  flex:3;
 }
 
-/* LIST */
-.list{
+#rsi{
+  flex:1;
+  border-top:1px solid #1f2937;
+}
+
+#list{
   border-left:1px solid #1f2937;
   overflow:auto;
 }
 
-.row{
-  display:grid;
-  grid-template-columns:40px 1fr;
+.coin{
   padding:10px;
   border-bottom:1px solid #1f2937;
   cursor:pointer;
 }
 
-.row:hover{
-  background:#111827;
-}
-
-.row.active{
+.active{
   background:#1e293b;
 }
+
+#error{
+  position:fixed;
+  bottom:10px;
+  left:10px;
+  background:red;
+  padding:10px;
+  display:none;
+}
 </style>
+
+<script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+
 </head>
 
 <body>
 
-<!-- HEADER -->
-<div class="header">
-  <div class="header-left">Multichart</div>
+<div id="app">
 
-  <div class="header-menu">
-    <a href="index.html">Главная</a>
-    <a href="coins.html" class="active">Монеты</a>
+  <div id="left">
+    <div id="chart"></div>
+    <div id="rsi"></div>
   </div>
-</div>
 
-<!-- TIMEFRAME -->
-<div class="topbar">
-  <div class="timeframes">
-    <button onclick="setTF('5')">5m</button>
-    <button onclick="setTF('15')" class="active">15m</button>
-    <button onclick="setTF('60')">1h</button>
-    <button onclick="setTF('240')">4h</button>
-    <button onclick="setTF('D')">1D</button>
-  </div>
-</div>
-
-<!-- MAIN -->
-<div class="container">
-
-  <div id="chart"></div>
-
-  <div class="list" id="list"></div>
+  <div id="list"></div>
 
 </div>
 
-<script src="https://s3.tradingview.com/tv.js"></script>
+<div id="error"></div>
 
 <script>
 
-const symbols = [
+function showError(msg){
+  const e=document.getElementById("error");
+  e.style.display="block";
+  e.innerText=msg;
+}
+
+const symbols=[
   "BTCUSDT","ETHUSDT","SOLUSDT","XRPUSDT",
-  "DOGEUSDT","ADAUSDT","AVAXUSDT","LINKUSDT","BNBUSDT"
+  "DOGEUSDT","ADAUSDT"
 ];
 
-let index = 0;
-let tf = localStorage.getItem("tf") || "15";
-let widget = null;
+let index=0;
 
-function loadList(){
-  const list = document.getElementById("list");
-  list.innerHTML = "";
+let chart;
+let candleSeries;
+
+async function fetchCandles(symbol){
+
+  const res=await fetch(
+    `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=15m&limit=100`
+  );
+
+  const data=await res.json();
+
+  return data.map(d=>({
+    time:d[0]/1000,
+    open:+d[1],
+    high:+d[2],
+    low:+d[3],
+    close:+d[4]
+  }));
+
+}
+
+function initChart(){
+
+  if(!window.LightweightCharts){
+    showError("LightweightCharts not loaded");
+    return;
+  }
+
+  chart = LightweightCharts.createChart(document.getElementById("chart"),{
+    layout:{
+      background:{ color:"#0b1220" },
+      textColor:"#d1d5db"
+    },
+    grid:{
+      vertLines:{ color:"#161b26" },
+      horzLines:{ color:"#161b26" }
+    }
+  });
+
+  candleSeries = chart.addCandlestickSeries();
+
+}
+
+async function loadSymbol(sym){
+
+  const candles = await fetchCandles(sym);
+
+  candleSeries.setData(candles);
+
+}
+
+function renderList(){
+
+  const list=document.getElementById("list");
+  list.innerHTML="";
 
   symbols.forEach((s,i)=>{
 
-    const row = document.createElement("div");
-    row.className = "row" + (i===index?" active":"");
-    row.innerHTML = `🇺🇸 ${s}`;
+    const div=document.createElement("div");
+    div.className="coin"+(i===index?" active":"");
+    div.innerText=s;
 
-    row.onclick = () => {
-      index = i;
-      render();
+    div.onclick=()=>{
+      index=i;
+      update();
     };
 
-    list.appendChild(row);
+    list.appendChild(div);
+
   });
+
 }
 
-function createChart(){
-
-  if(widget && widget.remove){
-    widget.remove();
-  }
-
-  widget = new TradingView.widget({
-
-    autosize:true,
-
-    symbol:"BYBIT:" + symbols[index],
-
-    interval: tf,
-
-    timezone:"Etc/UTC",
-
-    theme:"dark",
-
-    style:"1",
-
-    locale:"en",
-
-    allow_symbol_change:false,
-
-    hide_side_toolbar:true,
-    hide_top_toolbar:false,
-
-    withdateranges:false,
-    details:false,
-
-    enable_publishing:false,
-    save_image:false,
-
-    studies:[
-      "RSI@tv-basicstudies"
-    ],
-
-    disabled_features:[
-      "volume_force_overlay",
-      "volume_indicator",
-      "create_volume_indicator_by_default",
-      "left_toolbar",
-      "header_compare",
-      "header_symbol_search"
-    ],
-
-    overrides:{
-
-      /* PRICE = LOG (ТОЛЬКО ТУТ) */
-      "mainSeriesProperties.priceAxisProperties.log": true,
-
-      "paneProperties.background":"#0b1220",
-      "paneProperties.vertGridProperties.color":"#161b26",
-      "paneProperties.horzGridProperties.color":"#161b26",
-
-      "paneProperties.legendProperties.showVolume":false
-    },
-
-    studies_overrides:{
-
-      /* RSI CLEAN NORMAL MODE */
-      "rsi.plot.color":"#a855f7",
-      "rsi.plot.linewidth":1,
-
-      /* убираем визуальный мусор */
-      "rsi.level.0.color":"#333",
-      "rsi.level.1.color":"#333"
-    },
-
-    container_id:"chart"
-  });
+async function update(){
+  renderList();
+  await loadSymbol(symbols[index]);
 }
 
-function setTF(v){
-  tf = v;
-  localStorage.setItem("tf", tf);
-  createChart();
-}
-
-function render(){
-  loadList();
-  createChart();
-}
-
-document.addEventListener("keydown",(e)=>{
-
-  if(e.key==="ArrowDown"){
-    index = Math.min(symbols.length-1,index+1);
-    render();
-  }
-
-  if(e.key==="ArrowUp"){
-    index = Math.max(0,index-1);
-    render();
-  }
-
-});
-
-render();
+initChart();
+renderList();
+update();
 
 </script>
 
