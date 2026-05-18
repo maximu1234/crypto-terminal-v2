@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Multichart Terminal V1</title>
+
+<style>
+body{
+  margin:0;
+  background:#0b1220;
+  color:white;
+  font-family:Arial,sans-serif;
+  overflow:hidden;
+}
+
+#app{
+  display:grid;
+  grid-template-columns: 1fr 220px;
+  height:100vh;
+}
+
+/* LEFT AREA */
+#left{
+  display:flex;
+  flex-direction:column;
+}
+
+#chart{
+  flex:3;
+}
+
+#rsi{
+  flex:1;
+  border-top:1px solid #1f2937;
+}
+
+/* RIGHT LIST */
+#list{
+  border-left:1px solid #1f2937;
+  overflow:auto;
+}
+
+.coin{
+  padding:10px;
+  border-bottom:1px solid #1f2937;
+  cursor:pointer;
+}
+
+.coin:hover{
+  background:#111827;
+}
+
+.active{
+  background:#1e293b;
+}
+</style>
+
+<script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+
+</head>
+
+<body>
+
+<div id="app">
+
+  <div id="left">
+    <div id="chart"></div>
+    <div id="rsi"></div>
+  </div>
+
+  <div id="list"></div>
+
+</div>
+
+<script>
+
+const symbols = [
+  "BTCUSDT","ETHUSDT","SOLUSDT","XRPUSDT",
+  "DOGEUSDT","ADAUSDT","AVAXUSDT","LINKUSDT","BNBUSDT"
+];
+
+let index = 0;
+
+let chart = null;
+let candleSeries = null;
+let rsiChart = null;
+let rsiSeries = null;
+
+let candles = [];
+
+/* ---------------- BINANCE DATA ---------------- */
+
+async function loadCandles(symbol){
+
+  const res = await fetch(
+    `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=15m&limit=200`
+  );
+
+  const data = await res.json();
+
+  return data.map(d => ({
+    time: d[0]/1000,
+    open: parseFloat(d[1]),
+    high: parseFloat(d[2]),
+    low: parseFloat(d[3]),
+    close: parseFloat(d[4])
+  }));
+}
+
+/* ---------------- RSI CALC ---------------- */
+
+function calcRSI(data, period = 14){
+
+  let gains = [];
+  let losses = [];
+
+  for(let i=1;i<data.length;i++){
+    const diff = data[i].close - data[i-1].close;
+    gains.push(diff > 0 ? diff : 0);
+    losses.push(diff < 0 ? -diff : 0);
+  }
+
+  let rsi = [];
+
+  for(let i=period;i<gains.length;i++){
+
+    let gainSum = 0;
+    let lossSum = 0;
+
+    for(let j=i-period;j<i;j++){
+      gainSum += gains[j];
+      lossSum += losses[j];
+    }
+
+    const rs = gainSum / (lossSum || 1);
+    const value = 100 - (100 / (1 + rs));
+
+    rsi.push({
+      time: data[i].time,
+      value
+    });
+  }
+
+  return rsi;
+}
+
+/* ---------------- INIT CHARTS ---------------- */
+
+function initCharts(){
+
+  chart = LightweightCharts.createChart(document.getElementById("chart"),{
+    layout:{
+      background:{ color:"#0b1220" },
+      textColor:"#d1d5db"
+    },
+    grid:{
+      vertLines:{ color:"#161b26" },
+      horzLines:{ color:"#161b26" }
+    },
+    rightPriceScale:{
+      scaleMargins:{
+        top:0.1,
+        bottom:0.2
+      }
+    }
+  });
+
+  candleSeries = chart.addCandlestickSeries();
+
+  rsiChart = LightweightCharts.createChart(document.getElementById("rsi"),{
+    layout:{
+      background:{ color:"#0b1220" },
+      textColor:"#a1a1aa"
+    },
+    grid:{
+      vertLines:{ color:"#161b26" },
+      horzLines:{ color:"#161b26" }
+    },
+    rightPriceScale:{
+      scaleMargins:{
+        top:0.2,
+        bottom:0.2
+      }
+    }
+  });
+
+  rsiSeries = rsiChart.addLineSeries({
+    color:"#a855f7",
+    lineWidth:2
+  });
+}
+
+/* ---------------- LOAD SYMBOL ---------------- */
+
+async function loadSymbol(i){
+
+  const symbol = symbols[i];
+
+  candles = await loadCandles(symbol);
+
+  candleSeries.setData(candles);
+
+  const rsi = calcRSI(candles);
+
+  rsiSeries.setData(rsi);
+
+}
+
+/* ---------------- LIST ---------------- */
+
+function renderList(){
+
+  const list = document.getElementById("list");
+  list.innerHTML = "";
+
+  symbols.forEach((s,i)=>{
+
+    const div = document.createElement("div");
+    div.className = "coin" + (i===index?" active":"");
+    div.innerText = s;
+
+    div.onclick = ()=>{
+      index = i;
+      update();
+    };
+
+    list.appendChild(div);
+
+  });
+
+}
+
+/* ---------------- UPDATE ---------------- */
+
+async function update(){
+  renderList();
+  await loadSymbol(index);
+}
+
+/* ---------------- INIT ---------------- */
+
+initCharts();
+renderList();
+update();
+
+/* ---------------- KEYBOARD ---------------- */
+
+document.addEventListener("keydown",(e)=>{
+
+  if(e.key==="ArrowDown"){
+    index = Math.min(symbols.length-1,index+1);
+    update();
+  }
+
+  if(e.key==="ArrowUp"){
+    index = Math.max(0,index-1);
+    update();
+  }
+
+});
+
+</script>
+
+</body>
+</html>
