@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
+<meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Multichart</title>
 
@@ -10,19 +10,15 @@
 html,body{
   margin:0;
   height:100%;
-  background:#0b1220;
   overflow:hidden;
+  background:#0b1220;
   font-family:Arial,sans-serif;
   color:white;
 }
 
-/* =========================
-   APP
-========================= */
-
 #app{
   display:grid;
-  grid-template-columns:1fr 340px;
+  grid-template-columns:1fr 360px;
   height:100vh;
 }
 
@@ -48,13 +44,11 @@ html,body{
   padding:0 18px;
   gap:28px;
   flex-shrink:0;
-  background:#0b1220;
 }
 
 #logo{
   font-size:20px;
   font-weight:700;
-  color:white;
 }
 
 .menu{
@@ -66,11 +60,6 @@ html,body{
   color:#9ca3af;
   text-decoration:none;
   font-size:14px;
-  transition:0.2s;
-}
-
-.menu a:hover{
-  color:white;
 }
 
 .menu a.active{
@@ -82,10 +71,11 @@ html,body{
 ========================= */
 
 #topbar{
+  height:46px;
   display:flex;
   align-items:center;
   gap:6px;
-  padding:8px 12px;
+  padding:0 12px;
   border-bottom:1px solid #1f2937;
   flex-shrink:0;
 }
@@ -93,19 +83,18 @@ html,body{
 #current-symbol{
   font-size:14px;
   font-weight:700;
-  color:white;
   margin-right:12px;
   padding-right:14px;
   border-right:1px solid #1f2937;
-  min-width:120px;
+  min-width:140px;
 }
 
 .tf-btn{
+  border:none;
   background:#1f2937;
   color:white;
-  border:none;
-  border-radius:6px;
   padding:6px 10px;
+  border-radius:6px;
   cursor:pointer;
   font-size:12px;
 }
@@ -157,15 +146,14 @@ html,body{
 }
 
 /* =========================
-   RIGHT PANEL
+   RIGHT
 ========================= */
 
 #list{
   border-left:1px solid #1f2937;
-  overflow:auto;
-  background:#0b1220;
   display:flex;
   flex-direction:column;
+  overflow:hidden;
 }
 
 /* =========================
@@ -173,12 +161,9 @@ html,body{
 ========================= */
 
 #filter-wrap{
-  padding:10px 12px;
+  padding:10px;
   border-bottom:1px solid #1f2937;
   background:#0f172a;
-  position:sticky;
-  top:0;
-  z-index:20;
 }
 
 #market-filter{
@@ -189,11 +174,10 @@ html,body{
   border-radius:8px;
   padding:8px 10px;
   font-size:13px;
-  outline:none;
 }
 
 /* =========================
-   TABLE HEADER
+   TABLE
 ========================= */
 
 #table-header{
@@ -201,26 +185,19 @@ html,body{
   grid-template-columns:28px 1fr 70px 70px;
   padding:10px 12px;
   border-bottom:1px solid #1f2937;
-  background:#0f172a;
-  position:sticky;
-  top:58px;
-  z-index:10;
   font-size:12px;
   color:#9ca3af;
+  background:#0f172a;
 }
 
 .sortable{
   cursor:pointer;
-  user-select:none;
 }
 
-.sortable:hover{
-  color:white;
+#coins-body{
+  overflow:auto;
+  flex:1;
 }
-
-/* =========================
-   ROW
-========================= */
 
 .coin{
   display:grid;
@@ -228,9 +205,8 @@ html,body{
   align-items:center;
   padding:10px 12px;
   border-bottom:1px solid #1f2937;
-  cursor:pointer;
-  user-select:none;
   font-size:13px;
+  cursor:pointer;
 }
 
 .coin:hover{
@@ -241,13 +217,8 @@ html,body{
   background:#1e293b;
 }
 
-/* =========================
-   CELLS
-========================= */
-
 .col-flag{
   display:flex;
-  align-items:center;
   justify-content:center;
 }
 
@@ -255,9 +226,7 @@ html,body{
   width:10px;
   height:10px;
   border-radius:50%;
-  cursor:pointer;
-  transition:0.2s;
-  border:1px solid #374151;
+  border:1px solid #4b5563;
   background:transparent;
 }
 
@@ -267,21 +236,16 @@ html,body{
   box-shadow:0 0 8px #ef4444;
 }
 
-.col-symbol{
-  font-weight:600;
-}
-
-.col-change{
-  text-align:right;
-  font-size:12px;
-}
-
 .green{
   color:#22c55e;
 }
 
 .red{
   color:#ef4444;
+}
+
+.col-change{
+  text-align:right;
 }
 
 </style>
@@ -297,7 +261,6 @@ html,body{
   <!-- LEFT -->
   <div id="left">
 
-    <!-- HEADER -->
     <div id="header">
 
       <div id="logo">
@@ -311,7 +274,6 @@ html,body{
 
     </div>
 
-    <!-- TOPBAR -->
     <div id="topbar">
 
       <div id="current-symbol">
@@ -327,12 +289,10 @@ html,body{
 
     </div>
 
-    <!-- CHART -->
     <div id="chart-wrap">
       <div id="chart"></div>
     </div>
 
-    <!-- RSI -->
     <div id="rsi-wrap">
       <div id="rsi-band"></div>
       <div id="rsi-chart"></div>
@@ -343,7 +303,6 @@ html,body{
   <!-- RIGHT -->
   <div id="list">
 
-    <!-- FILTER -->
     <div id="filter-wrap">
 
       <select id="market-filter">
@@ -360,26 +319,29 @@ html,body{
           Commodities
         </option>
 
+        <option value="new">
+          New
+        </option>
+
       </select>
 
     </div>
 
-    <!-- HEADER -->
     <div id="table-header">
 
-      <div class="col-flag sortable" data-sort="favorites">
+      <div class="sortable" data-sort="favorites">
         ★
       </div>
 
-      <div class="col-symbol sortable" data-sort="symbol">
+      <div class="sortable" data-sort="symbol">
         Coin
       </div>
 
-      <div class="col-change sortable" data-sort="24h">
+      <div class="sortable" data-sort="24h">
         24h
       </div>
 
-      <div class="col-change sortable" data-sort="1h">
+      <div class="sortable" data-sort="1h">
         1h
       </div>
 
@@ -394,47 +356,83 @@ html,body{
 <script>
 
 /* =========================
-   DATASETS
+   HUGE CRYPTO LIST
 ========================= */
 
 const cryptoSymbols = [
 
-"BTCUSDT","ETHUSDT","SOLUSDT","XRPUSDT","DOGEUSDT",
-"ADAUSDT","AVAXUSDT","LINKUSDT","BNBUSDT","DOTUSDT",
-"TRXUSDT","LTCUSDT","ATOMUSDT","APTUSDT","ARBUSDT",
-"OPUSDT","INJUSDT","NEARUSDT","TIAUSDT","SUIUSDT",
-"PEPEUSDT","WIFUSDT","ORDIUSDT","SEIUSDT","FILUSDT",
-"ETCUSDT","AAVEUSDT","MKRUSDT","UNIUSDT","1000PEPEUSDT"
+"BTCUSDT","ETHUSDT","BNBUSDT","SOLUSDT","XRPUSDT",
+"DOGEUSDT","ADAUSDT","AVAXUSDT","LINKUSDT","TRXUSDT",
+"LTCUSDT","DOTUSDT","MATICUSDT","UNIUSDT","ATOMUSDT",
+"ETCUSDT","XLMUSDT","ICPUSDT","FILUSDT","APTUSDT",
+"ARBUSDT","OPUSDT","NEARUSDT","INJUSDT","SUIUSDT",
+"SEIUSDT","TIAUSDT","PEPEUSDT","WIFUSDT","ORDIUSDT",
+"1000PEPEUSDT","AAVEUSDT","MKRUSDT","RNDRUSDT",
+"GALAUSDT","DYDXUSDT","FETUSDT","RUNEUSDT","LDOUSDT",
+"JUPUSDT","PYTHUSDT","TONUSDT","BCHUSDT","EOSUSDT",
+"SANDUSDT","AXSUSDT","CRVUSDT","COMPUSDT","GMXUSDT",
+"FLOWUSDT","CHZUSDT","SNXUSDT","ZECUSDT","KAVAUSDT",
+"BLURUSDT","WLDUSDT","NOTUSDT","ENAUSDT","TAOUSDT",
+"NEOUSDT","QTUMUSDT","MASKUSDT","YFIUSDT","KSMUSDT",
+"STXUSDT","ALGOUSDT","ARUSDT","EGLDUSDT","CFXUSDT",
+"FTMUSDT","ROSEUSDT","1INCHUSDT","SUSHIUSDT","CELOUSDT"
 
 ];
+
+/* =========================
+   NEW LISTINGS
+========================= */
+
+const newSymbols = [
+
+"NOTUSDT",
+"ENAUSDT",
+"WUSDT",
+"BBUSDT",
+"ZKUSDT",
+"LISTAUSDT",
+"REZUSDT",
+"AEVOUSDT",
+"OMNIUSDT",
+"PORTALUSDT",
+"PIXELUSDT"
+
+];
+
+/* =========================
+   STOCKS
+========================= */
 
 const stockSymbols = [
 
 "AAPL","TSLA","NVDA","MSFT","AMZN",
 "META","GOOGL","NFLX","AMD","COIN",
 "PLTR","INTC","BA","UBER","PYPL",
-"SNAP","SHOP","BABA","DIS","NIO"
+"DIS","BABA","NIO","SHOP","SNAP"
 
 ];
+
+/* =========================
+   COMMODITIES
+========================= */
 
 const commoditySymbols = [
 
-"GOLD","SILVER","OIL","NATGAS","COPPER",
-"WHEAT","CORN","SOYBEAN","COCOA","COFFEE"
+"GOLD","SILVER","OIL","NATGAS",
+"COPPER","WHEAT","CORN","COCOA",
+"COFFEE","SOYBEAN"
 
 ];
-
-let currentDataset = "crypto";
 
 /* =========================
    GLOBALS
 ========================= */
 
+let currentDataset = "crypto";
+
 let currentTF = "15m";
 
 let currentSymbol = "BTCUSDT";
-
-const HISTORY_LIMIT = 1500;
 
 let sortMode = "symbol";
 let sortAsc = true;
@@ -448,8 +446,10 @@ let candles = [];
 let oldestTime = null;
 let loadingHistory = false;
 
+const HISTORY_LIMIT = 1500;
+
 /* =========================
-   GET ACTIVE LIST
+   GET SYMBOLS
 ========================= */
 
 function getCurrentSymbols(){
@@ -462,28 +462,30 @@ function getCurrentSymbols(){
     return stockSymbols;
   }
 
-  return commoditySymbols;
+  if(currentDataset === "commodities"){
+    return commoditySymbols;
+  }
+
+  return newSymbols;
 }
 
 /* =========================
-   GENERATE MARKET DATA
+   MARKET DATA
 ========================= */
 
 function generateMarketData(){
 
-  const symbols = getCurrentSymbols();
-
-  marketData = symbols.map(symbol => {
+  marketData = getCurrentSymbols().map(symbol => {
 
     return {
 
       symbol,
 
       change24:
-        ((Math.random() * 12) - 6),
+        ((Math.random()*20)-10),
 
       change1h:
-        ((Math.random() * 4) - 2)
+        ((Math.random()*6)-3)
 
     };
 
@@ -495,84 +497,39 @@ function generateMarketData(){
    MAIN CHART
 ========================= */
 
-const chart = LightweightCharts.createChart(
-  document.getElementById("chart"),
-  {
-    layout:{
-      background:{ color:"#0b1220" },
-      textColor:"#d1d5db"
-    },
+const chart =
+  LightweightCharts.createChart(
+    document.getElementById("chart"),
+{
+  layout:{
+    background:{ color:"#0b1220" },
+    textColor:"#d1d5db"
+  },
 
-    grid:{
-      vertLines:{ color:"#161b26" },
-      horzLines:{ color:"#161b26" }
-    },
+  grid:{
+    vertLines:{ color:"#161b26" },
+    horzLines:{ color:"#161b26" }
+  },
 
-    crosshair:{
-      mode: LightweightCharts.CrosshairMode.Normal
-    },
+  rightPriceScale:{
+    borderColor:"#1f2937",
+    mode:1
+  },
 
-    rightPriceScale:{
-      borderColor:"#1f2937",
-      mode:1
-    },
-
-    timeScale:{
-      borderColor:"#1f2937",
-      timeVisible:true
-    }
+  timeScale:{
+    borderColor:"#1f2937",
+    timeVisible:true
   }
-);
-
-const candleSeries = chart.addCandlestickSeries({
-  upColor:"#22c55e",
-  downColor:"#ef4444",
-  borderVisible:false,
-  wickUpColor:"#22c55e",
-  wickDownColor:"#ef4444"
 });
 
-/* =========================
-   RSI CHART
-========================= */
+const candleSeries =
+  chart.addCandlestickSeries({
 
-const rsiChart = LightweightCharts.createChart(
-  document.getElementById("rsi-chart"),
-  {
-    layout:{
-      background:{ color:"transparent" },
-      textColor:"#797b85"
-    },
-
-    grid:{
-      vertLines:{ color:"#161b26" },
-      horzLines:{ color:"#161b26" }
-    },
-
-    rightPriceScale:{
-      borderColor:"#1f2937"
-    },
-
-    timeScale:{
-      visible:false
-    }
-  }
-);
-
-const rsiSeries = rsiChart.addLineSeries({
-  color:"#a39cb9",
-  lineWidth:2
-});
-
-[30,50,70].forEach(level => {
-
-  rsiSeries.createPriceLine({
-    price:level,
-    color:"#797b85",
-    lineStyle:LightweightCharts.LineStyle.Dashed,
-    lineWidth:1,
-    axisLabelVisible:true
-  });
+    upColor:"#22c55e",
+    downColor:"#ef4444",
+    borderVisible:false,
+    wickUpColor:"#22c55e",
+    wickDownColor:"#ef4444"
 
 });
 
@@ -580,9 +537,59 @@ const rsiSeries = rsiChart.addLineSeries({
    RSI
 ========================= */
 
-function calculateRSI(data, period = 14){
+const rsiChart =
+  LightweightCharts.createChart(
+    document.getElementById("rsi-chart"),
+{
+  layout:{
+    background:{ color:"transparent" },
+    textColor:"#797b85"
+  },
 
-  if(data.length < period + 1){
+  grid:{
+    vertLines:{ color:"#161b26" },
+    horzLines:{ color:"#161b26" }
+  },
+
+  rightPriceScale:{
+    borderColor:"#1f2937"
+  },
+
+  timeScale:{
+    visible:false
+  }
+});
+
+const rsiSeries =
+  rsiChart.addLineSeries({
+
+    color:"#a39cb9",
+    lineWidth:2
+
+});
+
+[30,50,70].forEach(level=>{
+
+  rsiSeries.createPriceLine({
+
+    price:level,
+    color:"#797b85",
+    lineStyle:
+      LightweightCharts.LineStyle.Dashed,
+    lineWidth:1,
+    axisLabelVisible:true
+
+  });
+
+});
+
+/* =========================
+   RSI CALC
+========================= */
+
+function calculateRSI(data, period=14){
+
+  if(data.length < period+1){
     return [];
   }
 
@@ -593,7 +600,8 @@ function calculateRSI(data, period = 14){
 
   for(let i=1;i<=period;i++){
 
-    const diff = data[i].close - data[i-1].close;
+    const diff =
+      data[i].close - data[i-1].close;
 
     if(diff >= 0){
       gains += diff;
@@ -605,38 +613,34 @@ function calculateRSI(data, period = 14){
   let avgGain = gains / period;
   let avgLoss = losses / period;
 
-  let rs = avgGain / (avgLoss || 1);
+  for(let i=period;i<data.length;i++){
 
-  let rsi = 100 - (100 / (1 + rs));
+    const diff =
+      data[i].close - data[i-1].close;
 
-  result.push({
-    time:data[period].time,
-    value:rsi
-  });
+    const gain =
+      diff > 0 ? diff : 0;
 
-  for(let i=period+1;i<data.length;i++){
+    const loss =
+      diff < 0 ? Math.abs(diff) : 0;
 
-    const diff = data[i].close - data[i-1].close;
+    avgGain =
+      ((avgGain*(period-1))+gain)/period;
 
-    let gain = 0;
-    let loss = 0;
+    avgLoss =
+      ((avgLoss*(period-1))+loss)/period;
 
-    if(diff >= 0){
-      gain = diff;
-    }else{
-      loss = Math.abs(diff);
-    }
+    const rs =
+      avgGain / (avgLoss || 1);
 
-    avgGain = ((avgGain * (period - 1)) + gain) / period;
-    avgLoss = ((avgLoss * (period - 1)) + loss) / period;
-
-    rs = avgGain / (avgLoss || 1);
-
-    rsi = 100 - (100 / (1 + rs));
+    const rsi =
+      100 - (100/(1+rs));
 
     result.push({
+
       time:data[i].time,
       value:rsi
+
     });
   }
 
@@ -653,32 +657,59 @@ async function loadSymbol(symbol){
 
   loadingHistory = false;
 
-  if(currentDataset === "crypto"){
-    document.getElementById(
-      "current-symbol"
-    ).innerText = symbol + ".P";
+  document.getElementById(
+    "current-symbol"
+  ).innerText =
+    currentDataset === "crypto" ||
+    currentDataset === "new"
+      ? symbol + ".P"
+      : symbol;
+
+  /* =========================
+     CRYPTO / NEW
+  ========================= */
+
+  if(
+    currentDataset === "crypto" ||
+    currentDataset === "new"
+  ){
+
+    const url =
+      `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${currentTF}&limit=${HISTORY_LIMIT}`;
+
+    const res = await fetch(url);
+
+    const raw = await res.json();
+
+    candles = raw.map(k=>({
+
+      time:k[0]/1000,
+      open:+k[1],
+      high:+k[2],
+      low:+k[3],
+      close:+k[4]
+
+    }));
+
+    oldestTime = candles[0].time;
   }
+
+  /* =========================
+     STOCKS / COMMODITIES
+  ========================= */
 
   else{
-    document.getElementById(
-      "current-symbol"
-    ).innerText = symbol;
-  }
 
-  /* DEMO FOR STOCKS/COMMODITIES */
-
-  if(currentDataset !== "crypto"){
-
-    const fakeData = [];
+    candles = [];
 
     let price = 100;
 
-    for(let i=0;i<1500;i++){
+    for(let i=0;i<12000;i++){
 
       const open = price;
 
       const close =
-        open + ((Math.random()-0.5) * 5);
+        open + ((Math.random()-0.5)*5);
 
       const high =
         Math.max(open,close) + Math.random()*2;
@@ -686,48 +717,24 @@ async function loadSymbol(symbol){
       const low =
         Math.min(open,close) - Math.random()*2;
 
-      fakeData.push({
-        time:(Date.now()/1000)-((1500-i)*3600),
+      candles.push({
+
+        time:
+          Math.floor(Date.now()/1000)
+          - ((12000-i)*3600),
+
         open,
         high,
         low,
         close
+
       });
 
       price = close;
     }
 
-    candles = fakeData;
-
-    candleSeries.setData(candles);
-
-    rsiSeries.setData(
-      calculateRSI(candles)
-    );
-
-    chart.timeScale().fitContent();
-
-    renderList();
-
-    return;
+    oldestTime = candles[0].time;
   }
-
-  const url =
-    `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${currentTF}&limit=${HISTORY_LIMIT}`;
-
-  const res = await fetch(url);
-
-  const raw = await res.json();
-
-  candles = raw.map(k => ({
-    time:k[0]/1000,
-    open:+k[1],
-    high:+k[2],
-    low:+k[3],
-    close:+k[4]
-  }));
-
-  oldestTime = candles[0].time;
 
   candleSeries.setData(candles);
 
@@ -746,7 +753,10 @@ async function loadSymbol(symbol){
 
 async function loadMoreHistory(){
 
-  if(currentDataset !== "crypto"){
+  if(
+    currentDataset !== "crypto" &&
+    currentDataset !== "new"
+  ){
     return;
   }
 
@@ -754,7 +764,8 @@ async function loadMoreHistory(){
 
   loadingHistory = true;
 
-  const endTime = (oldestTime * 1000) - 1;
+  const endTime =
+    (oldestTime * 1000) - 1;
 
   const url =
     `https://api.binance.com/api/v3/klines?symbol=${currentSymbol}&interval=${currentTF}&limit=${HISTORY_LIMIT}&endTime=${endTime}`;
@@ -764,21 +775,24 @@ async function loadMoreHistory(){
   const raw = await res.json();
 
   if(!raw.length){
+
     loadingHistory = false;
     return;
   }
 
-  const older = raw.map(k => ({
+  const older = raw.map(k=>({
+
     time:k[0]/1000,
     open:+k[1],
     high:+k[2],
     low:+k[3],
     close:+k[4]
+
   }));
 
   oldestTime = older[0].time;
 
-  candles = [...older, ...candles];
+  candles = [...older,...candles];
 
   candleSeries.setData(candles);
 
@@ -790,23 +804,28 @@ async function loadMoreHistory(){
 }
 
 /* =========================
-   HISTORY SUB
+   HISTORY ENGINE
 ========================= */
 
-chart.timeScale().subscribeVisibleLogicalRangeChange(range => {
+chart.timeScale()
+.subscribeVisibleLogicalRangeChange(range=>{
 
   if(!range) return;
 
   if(range.from < 100){
+
     loadMoreHistory();
   }
 
 });
 
-chart.timeScale().subscribeVisibleLogicalRangeChange(range => {
+chart.timeScale()
+.subscribeVisibleLogicalRangeChange(range=>{
 
   if(range){
-    rsiChart.timeScale().setVisibleLogicalRange(range);
+
+    rsiChart.timeScale()
+      .setVisibleLogicalRange(range);
   }
 
 });
@@ -817,35 +836,55 @@ chart.timeScale().subscribeVisibleLogicalRangeChange(range => {
 
 function resizeCharts(){
 
-  const chartWrap =
-    document.getElementById("chart-wrap");
-
-  const rsiWrap =
-    document.getElementById("rsi-chart");
-
   chart.applyOptions({
-    width:chartWrap.clientWidth,
-    height:chartWrap.clientHeight
+
+    width:
+      document.getElementById(
+        "chart-wrap"
+      ).clientWidth,
+
+    height:
+      document.getElementById(
+        "chart-wrap"
+      ).clientHeight
+
   });
 
   rsiChart.applyOptions({
-    width:rsiWrap.clientWidth,
-    height:rsiWrap.clientHeight
+
+    width:
+      document.getElementById(
+        "rsi-chart"
+      ).clientWidth,
+
+    height:
+      document.getElementById(
+        "rsi-chart"
+      ).clientHeight
+
   });
 }
 
-window.addEventListener("resize", resizeCharts);
+window.addEventListener(
+  "resize",
+  resizeCharts
+);
 
 /* =========================
-   TF BUTTONS
+   TIMEFRAMES
 ========================= */
 
-document.querySelectorAll(".tf-btn").forEach(btn => {
+document
+.querySelectorAll(".tf-btn")
+.forEach(btn=>{
 
-  btn.onclick = async () => {
+  btn.onclick = async ()=>{
 
-    document.querySelectorAll(".tf-btn")
-      .forEach(b => b.classList.remove("active"));
+    document
+    .querySelectorAll(".tf-btn")
+    .forEach(b=>
+      b.classList.remove("active")
+    );
 
     btn.classList.add("active");
 
@@ -860,19 +899,20 @@ document.querySelectorAll(".tf-btn").forEach(btn => {
    FILTER
 ========================= */
 
-document.getElementById("market-filter")
-  .addEventListener("change", async e => {
+document
+.getElementById("market-filter")
+.addEventListener("change", async e=>{
 
-    currentDataset = e.target.value;
+  currentDataset = e.target.value;
 
-    generateMarketData();
+  generateMarketData();
 
-    currentSymbol =
-      getCurrentSymbols()[0];
+  currentSymbol =
+    getCurrentSymbols()[0];
 
-    renderList();
+  renderList();
 
-    await loadSymbol(currentSymbol);
+  await loadSymbol(currentSymbol);
 
 });
 
@@ -883,7 +923,9 @@ document.getElementById("market-filter")
 function renderList(){
 
   const list =
-    document.getElementById("coins-body");
+    document.getElementById(
+      "coins-body"
+    );
 
   list.innerHTML = "";
 
@@ -896,10 +938,12 @@ function renderList(){
     if(sortMode === "favorites"){
 
       const af =
-        favorites.includes(a.symbol) ? 1 : 0;
+        favorites.includes(a.symbol)
+          ? 1 : 0;
 
       const bf =
-        favorites.includes(b.symbol) ? 1 : 0;
+        favorites.includes(b.symbol)
+          ? 1 : 0;
 
       result = af - bf;
     }
@@ -907,7 +951,9 @@ function renderList(){
     else if(sortMode === "symbol"){
 
       result =
-        a.symbol.localeCompare(b.symbol);
+        a.symbol.localeCompare(
+          b.symbol
+        );
     }
 
     else if(sortMode === "24h"){
@@ -922,13 +968,16 @@ function renderList(){
         a.change1h - b.change1h;
     }
 
-    return sortAsc ? result : -result;
+    return sortAsc
+      ? result
+      : -result;
 
   });
 
-  data.forEach(item => {
+  data.forEach(item=>{
 
-    const div = document.createElement("div");
+    const div =
+      document.createElement("div");
 
     div.className = "coin";
 
@@ -951,38 +1000,48 @@ function renderList(){
 
       </div>
 
-      <div class="col-symbol">
+      <div>
         ${item.symbol}
       </div>
 
-      <div class="col-change ${item.change24 >= 0 ? 'green' : 'red'}">
+      <div class="col-change
+        ${item.change24>=0
+          ? 'green'
+          : 'red'}">
+
         ${item.change24.toFixed(2)}%
+
       </div>
 
-      <div class="col-change ${item.change1h >= 0 ? 'green' : 'red'}">
+      <div class="col-change
+        ${item.change1h>=0
+          ? 'green'
+          : 'red'}">
+
         ${item.change1h.toFixed(2)}%
-      </div>
 
+      </div>
     `;
 
-    div.onclick = async (e) => {
+    div.onclick = async e=>{
 
       if(e.target.dataset.fav){
         return;
       }
 
       await loadSymbol(item.symbol);
-
     };
 
     const favBtn =
       div.querySelector("[data-fav]");
 
-    favBtn.onclick = (e) => {
+    favBtn.onclick = e=>{
 
       e.stopPropagation();
 
-      if(favorites.includes(item.symbol)){
+      if(
+        favorites.includes(item.symbol)
+      ){
 
         favorites =
           favorites.filter(
@@ -992,7 +1051,6 @@ function renderList(){
       }else{
 
         favorites.push(item.symbol);
-
       }
 
       localStorage.setItem(
@@ -1013,27 +1071,27 @@ function renderList(){
    SORT
 ========================= */
 
-document.querySelectorAll(".sortable")
-  .forEach(el => {
+document
+.querySelectorAll(".sortable")
+.forEach(el=>{
 
-    el.onclick = () => {
+  el.onclick = ()=>{
 
-      const mode = el.dataset.sort;
+    const mode =
+      el.dataset.sort;
 
-      if(sortMode === mode){
+    if(sortMode === mode){
 
-        sortAsc = !sortAsc;
+      sortAsc = !sortAsc;
 
-      }else{
+    }else{
 
-        sortMode = mode;
-        sortAsc = false;
+      sortMode = mode;
+      sortAsc = false;
+    }
 
-      }
-
-      renderList();
-
-    };
+    renderList();
+  };
 
 });
 
@@ -1041,81 +1099,93 @@ document.querySelectorAll(".sortable")
    KEYBOARD NAV
 ========================= */
 
-window.addEventListener("keydown", async e => {
+window.addEventListener(
+  "keydown",
+  async e=>{
 
-  let sorted = [...marketData];
+    let sorted = [...marketData];
 
-  sorted.sort((a,b)=>{
+    sorted.sort((a,b)=>{
 
-    let result = 0;
+      let result = 0;
 
-    if(sortMode === "favorites"){
+      if(sortMode === "favorites"){
 
-      const af =
-        favorites.includes(a.symbol) ? 1 : 0;
+        const af =
+          favorites.includes(a.symbol)
+            ? 1 : 0;
 
-      const bf =
-        favorites.includes(b.symbol) ? 1 : 0;
+        const bf =
+          favorites.includes(b.symbol)
+            ? 1 : 0;
 
-      result = af - bf;
+        result = af - bf;
+      }
+
+      else if(sortMode === "symbol"){
+
+        result =
+          a.symbol.localeCompare(
+            b.symbol
+          );
+      }
+
+      else if(sortMode === "24h"){
+
+        result =
+          a.change24 - b.change24;
+      }
+
+      else if(sortMode === "1h"){
+
+        result =
+          a.change1h - b.change1h;
+      }
+
+      return sortAsc
+        ? result
+        : -result;
+
+    });
+
+    let currentPos =
+      sorted.findIndex(
+        s => s.symbol === currentSymbol
+      );
+
+    if(
+      e.code === "ArrowDown" ||
+      e.code === "Space"
+    ){
+
+      e.preventDefault();
+
+      currentPos++;
+
+      if(currentPos >= sorted.length){
+        currentPos = 0;
+      }
+
+      await loadSymbol(
+        sorted[currentPos].symbol
+      );
     }
 
-    else if(sortMode === "symbol"){
+    if(e.code === "ArrowUp"){
 
-      result =
-        a.symbol.localeCompare(b.symbol);
+      e.preventDefault();
+
+      currentPos--;
+
+      if(currentPos < 0){
+        currentPos =
+          sorted.length - 1;
+      }
+
+      await loadSymbol(
+        sorted[currentPos].symbol
+      );
     }
-
-    else if(sortMode === "24h"){
-
-      result =
-        a.change24 - b.change24;
-    }
-
-    else if(sortMode === "1h"){
-
-      result =
-        a.change1h - b.change1h;
-    }
-
-    return sortAsc ? result : -result;
-
-  });
-
-  let currentPos =
-    sorted.findIndex(
-      s => s.symbol === currentSymbol
-    );
-
-  if(e.code === "ArrowDown" || e.code === "Space"){
-
-    e.preventDefault();
-
-    currentPos++;
-
-    if(currentPos >= sorted.length){
-      currentPos = 0;
-    }
-
-    await loadSymbol(
-      sorted[currentPos].symbol
-    );
-  }
-
-  if(e.code === "ArrowUp"){
-
-    e.preventDefault();
-
-    currentPos--;
-
-    if(currentPos < 0){
-      currentPos = sorted.length - 1;
-    }
-
-    await loadSymbol(
-      sorted[currentPos].symbol
-    );
-  }
 
 });
 
