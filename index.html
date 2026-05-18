@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Crypto Terminal V5</title>
+<title>Crypto Terminal V6</title>
 
 <style>
 * { box-sizing: border-box; }
@@ -79,7 +79,7 @@ h1{
 
 <body>
 
-<h1>CRYPTO TERMINAL V5 🚀</h1>
+<h1>CRYPTO TERMINAL V6 🚀</h1>
 
 <div class="topbar">
   <button onclick="setLayout(4)">4 Charts</button>
@@ -107,10 +107,6 @@ const defaults = [
 
 let currentLayout = parseInt(localStorage.getItem("layout")) || 4;
 let widgets = {};
-
-function saveLayout(){
-  localStorage.setItem("layout", currentLayout);
-}
 
 function getSymbol(index){
   return localStorage.getItem("symbol_" + index) || defaults[index];
@@ -151,8 +147,6 @@ function render(){
       loadChart(i);
     }
   }, 150);
-
-  saveLayout();
 }
 
 function loadChart(index){
@@ -168,7 +162,7 @@ function loadChart(index){
 
     autosize: true,
 
-    symbol: "BYBIT:" + symbol + ".P",
+    symbol: "BYBIT:" + symbol,
 
     interval: "15",
 
@@ -194,10 +188,13 @@ function loadChart(index){
     load_last_chart: false,
 
     studies: [],
+    study_count_limit: 0,
+    saved_data: null,
 
     disabled_features: [
       "volume_force_overlay",
       "volume_indicator",
+      "create_volume_indicator_by_default",
       "header_compare",
       "header_symbol_search",
       "header_legend",
@@ -213,6 +210,7 @@ function loadChart(index){
       "paneProperties.horzGridProperties.color": "#161b26",
 
       "paneProperties.legendProperties.showVolume": false,
+      "volumePaneSize": "0",
 
       "scalesProperties.textColor": "#AAA",
 
@@ -232,6 +230,7 @@ function loadChart(index){
 
 function setLayout(count){
   currentLayout = count;
+  localStorage.setItem("layout", count);
   render();
 }
 
