@@ -3,14 +3,14 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Multichart Terminal V1</title>
+<title>Terminal Debug V1</title>
 
 <style>
 body{
   margin:0;
   background:#0b1220;
   color:white;
-  font-family:Arial,sans-serif;
+  font-family:Arial;
   overflow:hidden;
 }
 
@@ -20,7 +20,6 @@ body{
   height:100vh;
 }
 
-/* LEFT AREA */
 #left{
   display:flex;
   flex-direction:column;
@@ -28,14 +27,15 @@ body{
 
 #chart{
   flex:3;
+  background:#111827;
 }
 
 #rsi{
   flex:1;
+  background:#0f172a;
   border-top:1px solid #1f2937;
 }
 
-/* RIGHT LIST */
 #list{
   border-left:1px solid #1f2937;
   overflow:auto;
@@ -47,12 +47,19 @@ body{
   cursor:pointer;
 }
 
-.coin:hover{
-  background:#111827;
-}
-
 .active{
   background:#1e293b;
+}
+
+#error{
+  position:fixed;
+  bottom:10px;
+  left:10px;
+  background:red;
+  color:white;
+  padding:10px;
+  font-size:12px;
+  display:none;
 }
 </style>
 
@@ -73,81 +80,58 @@ body{
 
 </div>
 
+<div id="error"></div>
+
 <script>
+
+function showError(msg){
+  const el = document.getElementById("error");
+  el.style.display="block";
+  el.innerText = msg;
+}
+
+if(!window.LightweightCharts){
+  showError("❌ LightweightCharts не загрузился (CDN issue)");
+}
 
 const symbols = [
   "BTCUSDT","ETHUSDT","SOLUSDT","XRPUSDT",
-  "DOGEUSDT","ADAUSDT","AVAXUSDT","LINKUSDT","BNBUSDT"
+  "DOGEUSDT","ADAUSDT"
 ];
 
 let index = 0;
 
-let chart = null;
-let candleSeries = null;
-let rsiChart = null;
-let rsiSeries = null;
+let chart, candleSeries;
 
-let candles = [];
+async function fetchCandles(symbol){
 
-/* ---------------- BINANCE DATA ---------------- */
+  try{
 
-async function loadCandles(symbol){
+    const res = await fetch(
+      `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=15m&limit=100`
+    );
 
-  const res = await fetch(
-    `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=15m&limit=200`
-  );
-
-  const data = await res.json();
-
-  return data.map(d => ({
-    time: d[0]/1000,
-    open: parseFloat(d[1]),
-    high: parseFloat(d[2]),
-    low: parseFloat(d[3]),
-    close: parseFloat(d[4])
-  }));
-}
-
-/* ---------------- RSI CALC ---------------- */
-
-function calcRSI(data, period = 14){
-
-  let gains = [];
-  let losses = [];
-
-  for(let i=1;i<data.length;i++){
-    const diff = data[i].close - data[i-1].close;
-    gains.push(diff > 0 ? diff : 0);
-    losses.push(diff < 0 ? -diff : 0);
-  }
-
-  let rsi = [];
-
-  for(let i=period;i<gains.length;i++){
-
-    let gainSum = 0;
-    let lossSum = 0;
-
-    for(let j=i-period;j<i;j++){
-      gainSum += gains[j];
-      lossSum += losses[j];
+    if(!res.ok){
+      throw new Error("Binance API error: " + res.status);
     }
 
-    const rs = gainSum / (lossSum || 1);
-    const value = 100 - (100 / (1 + rs));
+    const data = await res.json();
 
-    rsi.push({
-      time: data[i].time,
-      value
-    });
+    return data.map(d => ({
+      time: d[0]/1000,
+      open: +d[1],
+      high: +d[2],
+      low: +d[3],
+      close: +d[4]
+    }));
+
+  } catch(err){
+    showError(err.message);
+    return [];
   }
-
-  return rsi;
 }
 
-/* ---------------- INIT CHARTS ---------------- */
-
-function initCharts(){
+function initChart(){
 
   chart = LightweightCharts.createChart(document.getElementById("chart"),{
     layout:{
@@ -157,71 +141,39 @@ function initCharts(){
     grid:{
       vertLines:{ color:"#161b26" },
       horzLines:{ color:"#161b26" }
-    },
-    rightPriceScale:{
-      scaleMargins:{
-        top:0.1,
-        bottom:0.2
-      }
     }
   });
 
   candleSeries = chart.addCandlestickSeries();
 
-  rsiChart = LightweightCharts.createChart(document.getElementById("rsi"),{
-    layout:{
-      background:{ color:"#0b1220" },
-      textColor:"#a1a1aa"
-    },
-    grid:{
-      vertLines:{ color:"#161b26" },
-      horzLines:{ color:"#161b26" }
-    },
-    rightPriceScale:{
-      scaleMargins:{
-        top:0.2,
-        bottom:0.2
-      }
-    }
-  });
-
-  rsiSeries = rsiChart.addLineSeries({
-    color:"#a855f7",
-    lineWidth:2
-  });
 }
 
-/* ---------------- LOAD SYMBOL ---------------- */
+async function loadSymbol(symbol){
 
-async function loadSymbol(i){
+  const candles = await fetchCandles(symbol);
 
-  const symbol = symbols[i];
-
-  candles = await loadCandles(symbol);
+  if(!candles.length){
+    showError("❌ Нет данных по " + symbol);
+    return;
+  }
 
   candleSeries.setData(candles);
 
-  const rsi = calcRSI(candles);
-
-  rsiSeries.setData(rsi);
-
 }
-
-/* ---------------- LIST ---------------- */
 
 function renderList(){
 
   const list = document.getElementById("list");
-  list.innerHTML = "";
+  list.innerHTML="";
 
   symbols.forEach((s,i)=>{
 
     const div = document.createElement("div");
-    div.className = "coin" + (i===index?" active":"");
-    div.innerText = s;
+    div.className="coin" + (i===index?" active":"");
+    div.innerText=s;
 
-    div.onclick = ()=>{
-      index = i;
+    div.onclick=()=>{
+      index=i;
       update();
     };
 
@@ -231,34 +183,17 @@ function renderList(){
 
 }
 
-/* ---------------- UPDATE ---------------- */
-
 async function update(){
+
   renderList();
-  await loadSymbol(index);
+
+  await loadSymbol(symbols[index]);
+
 }
 
-/* ---------------- INIT ---------------- */
-
-initCharts();
+initChart();
 renderList();
 update();
-
-/* ---------------- KEYBOARD ---------------- */
-
-document.addEventListener("keydown",(e)=>{
-
-  if(e.key==="ArrowDown"){
-    index = Math.min(symbols.length-1,index+1);
-    update();
-  }
-
-  if(e.key==="ArrowUp"){
-    index = Math.max(0,index-1);
-    update();
-  }
-
-});
 
 </script>
 
