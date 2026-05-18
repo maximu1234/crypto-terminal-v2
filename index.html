@@ -27,15 +27,9 @@ body{
   border-bottom:1px solid #1f2937;
 }
 
-.header-left{
-  font-size:18px;
-  font-weight:700;
-}
+.header-left{ font-size:18px; font-weight:700; }
 
-.header-menu{
-  display:flex;
-  gap:14px;
-}
+.header-menu{ display:flex; gap:14px; }
 
 .header-menu a{
   color:#9ca3af;
@@ -46,15 +40,9 @@ body{
   border-radius:6px;
 }
 
-.header-menu a:hover{
-  color:white;
-  background:#111827;
-}
+.header-menu a:hover{ color:white; background:#111827; }
 
-.header-menu a.active{
-  color:white;
-  background:#1f2937;
-}
+.header-menu a.active{ color:white; background:#1f2937; }
 
 .layout-bar{
   display:flex;
@@ -92,12 +80,6 @@ body{
   width:100%;
   height:100%;
 }
-
-@media(max-width:700px){
-  #grid{
-    grid-template-columns:1fr !important;
-  }
-}
 </style>
 </head>
 
@@ -125,21 +107,13 @@ body{
 <script>
 
 const defaults = [
-  "BTCUSDT",
-  "ETHUSDT",
-  "SOLUSDT",
-  "XRPUSDT",
-  "DOGEUSDT",
-  "ADAUSDT",
-  "AVAXUSDT",
-  "LINKUSDT",
-  "BNBUSDT"
+  "BTCUSDT","ETHUSDT","SOLUSDT","XRPUSDT","DOGEUSDT",
+  "ADAUSDT","AVAXUSDT","LINKUSDT","BNBUSDT"
 ];
 
-let savedLayout = parseInt(localStorage.getItem("layout"));
-let currentLayout = Number.isFinite(savedLayout) ? savedLayout : 4;
-
+let currentLayout = parseInt(localStorage.getItem("layout")) || 4;
 let widgets = {};
+let lastSymbols = {};
 
 function getSymbol(i){
   return localStorage.getItem("symbol_" + i) || defaults[i];
@@ -190,17 +164,13 @@ function render(){
     for(let i=0;i<currentLayout;i++){
       loadChart(i);
     }
-  }, 150);
+  }, 200);
 }
 
 function loadChart(i){
 
-  if(!window.TradingView){
-    console.error("TradingView not loaded");
-    return;
-  }
-
   const symbol = getSymbol(i);
+  lastSymbols[i] = symbol;
 
   const widget = new TradingView.widget({
     autosize: true,
@@ -232,12 +202,35 @@ function loadChart(i){
   widget.onChartReady(() => {
     const chart = widget.activeChart();
 
-    chart.onSymbolChanged().subscribe(null, (newSymbol) => {
-      if(!newSymbol) return;
+    // 🔥 основной трекер
+    chart.onDataLoaded().subscribe(null, () => {
+      try {
+        const newSymbol = chart.symbol?.() || chart.symbol();
+        if(!newSymbol) return;
 
-      const clean = newSymbol.split(":")[1] || newSymbol;
-      saveSymbol(i, clean);
+        const clean = newSymbol.split(":")[1] || newSymbol;
+
+        if(lastSymbols[i] !== clean){
+          lastSymbols[i] = clean;
+          saveSymbol(i, clean);
+        }
+      } catch(e){}
     });
+
+    // 🔥 страховка (TradingView иногда не стреляет events)
+    setInterval(() => {
+      try {
+        const newSymbol = chart.symbol?.() || chart.symbol();
+        if(!newSymbol) return;
+
+        const clean = newSymbol.split(":")[1] || newSymbol;
+
+        if(lastSymbols[i] !== clean){
+          lastSymbols[i] = clean;
+          saveSymbol(i, clean);
+        }
+      } catch(e){}
+    }, 2000);
   });
 }
 
