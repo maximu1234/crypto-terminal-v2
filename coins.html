@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Terminal V2.1 TradingView Behavior</title>
+<title>Terminal V2.2 FIX</title>
 
 <style>
 body{
@@ -28,6 +28,7 @@ body{
 
 #chart{
   flex:1;
+  min-height:0;
 }
 
 #list{
@@ -72,15 +73,15 @@ let chart;
 let series;
 
 let candles = [];
-let loadingHistory = false;
+let loading = false;
 
 /* ---------------- INIT ---------------- */
 
 function initChart(){
 
-  const container = document.getElementById("chart");
+  const el = document.getElementById("chart");
 
-  chart = LightweightCharts.createChart(container, {
+  chart = LightweightCharts.createChart(el, {
     layout:{
       background:{ color:"#0b1220" },
       textColor:"#d1d5db"
@@ -97,26 +98,20 @@ function initChart(){
 
   series = chart.addCandlestickSeries();
 
-  /* 🔥 KEY FIX: WATCH ZOOM */
   chart.timeScale().subscribeVisibleLogicalRangeChange(range => {
+    if(!range || loading) return;
 
-    if(!range || loadingHistory) return;
-
-    // если пользователь дошёл до левого края
     if(range.from < 50){
-      loadMoreHistory();
+      loadMore();
     }
   });
 
-  const resize = () => {
+  window.addEventListener("resize", () => {
     chart.applyOptions({
-      width: container.clientWidth,
-      height: container.clientHeight
+      width: el.clientWidth,
+      height: el.clientHeight
     });
-  };
-
-  window.addEventListener("resize", resize);
-  resize();
+  });
 }
 
 /* ---------------- HISTORY ---------------- */
@@ -139,17 +134,18 @@ async function loadHistory(symbol){
 
   series.setData(candles);
 
-  chart.timeScale().fitContent();
+  requestAnimationFrame(() => {
+    chart.timeScale().fitContent();
+  });
 }
 
-/* ---------------- LOAD MORE HISTORY ---------------- */
+/* ---------------- LOAD MORE ---------------- */
 
-async function loadMoreHistory(){
+async function loadMore(){
 
-  loadingHistory = true;
+  loading = true;
 
   const symbol = symbols[index];
-
   const oldest = candles[0];
 
   const res = await fetch(
@@ -166,25 +162,18 @@ async function loadMoreHistory(){
     close: +d[4]
   }));
 
-  if(older.length === 0){
-    loadingHistory = false;
-    return;
+  if(older.length > 0){
+
+    candles = [...older, ...candles];
+
+    series.setData(candles);
+
+    requestAnimationFrame(() => {
+      chart.timeScale().fitContent();
+    });
   }
 
-  candles = [...older, ...candles];
-
-  series.setData(candles);
-
-  loadingHistory = false;
-}
-
-/* ---------------- SYMBOL SWITCH ---------------- */
-
-async function update(){
-
-  await loadHistory(symbols[index]);
-  renderList();
-
+  loading = false;
 }
 
 /* ---------------- LIST ---------------- */
@@ -200,9 +189,10 @@ function renderList(){
     div.className = "coin" + (i===index ? " active" : "");
     div.innerText = s;
 
-    div.onclick = () => {
+    div.onclick = async () => {
       index = i;
-      update();
+      await loadHistory(s);
+      renderList();
     };
 
     list.appendChild(div);
@@ -215,7 +205,7 @@ function renderList(){
 
 initChart();
 renderList();
-update();
+loadHistory(symbols[0]);
 
 </script>
 
