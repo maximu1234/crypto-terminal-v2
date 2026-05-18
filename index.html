@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Multichart - Главная</title>
+<title>Multichart</title>
 
 <style>
 *{box-sizing:border-box}
@@ -26,20 +26,6 @@ body{
   border-bottom:1px solid #1f2937;
 }
 
-.header-left{font-size:18px;font-weight:700}
-
-.header-menu{display:flex;gap:14px}
-
-.header-menu a{
-  color:#9ca3af;
-  text-decoration:none;
-  padding:6px 10px;
-  border-radius:6px;
-  font-weight:600;
-}
-
-.header-menu a.active{background:#1f2937;color:#fff}
-
 .layout-bar{
   display:flex;
   gap:10px;
@@ -53,8 +39,6 @@ body{
   color:#fff;
   padding:6px 12px;
   border-radius:6px;
-  cursor:pointer;
-  font-weight:600;
 }
 
 #grid{
@@ -72,20 +56,16 @@ body{
   display:flex;
 }
 
-.chart{width:100%;height:100%}
+.chart{
+  width:100%;
+  height:100%;
+}
 </style>
 </head>
 
 <body>
 
-<div class="header">
-  <div class="header-left">Multichart</div>
-
-  <div class="header-menu">
-    <a href="index.html" class="active">Главная</a>
-    <a href="coins.html">Монеты</a>
-  </div>
-</div>
+<div class="header">Multichart</div>
 
 <div class="layout-bar">
   <button onclick="setLayout(4)">4</button>
@@ -99,9 +79,12 @@ body{
 
 <script>
 
-const defaults=["BTCUSDT","ETHUSDT","SOLUSDT","XRPUSDT","DOGEUSDT","ADAUSDT","AVAXUSDT","LINKUSDT","BNBUSDT"];
+const defaults=[
+  "BTCUSDT","ETHUSDT","SOLUSDT","XRPUSDT","DOGEUSDT",
+  "ADAUSDT","AVAXUSDT","LINKUSDT","BNBUSDT"
+];
 
-let currentLayout=parseInt(localStorage.getItem("layout"))||4;
+let layout=parseInt(localStorage.getItem("layout"))||4;
 let widgets={};
 
 function getSymbol(i){
@@ -119,7 +102,7 @@ function destroy(){
 
 function grid(n){
   const c=Math.ceil(Math.sqrt(n));
-  return{cols:c,rows:Math.ceil(n/c)};
+  return {cols:c,rows:Math.ceil(n/c)};
 }
 
 function render(){
@@ -129,33 +112,32 @@ function render(){
   destroy();
   gridEl.innerHTML="";
 
-  const {cols,rows}=grid(currentLayout);
+  const {cols,rows}=grid(layout);
 
   gridEl.style.gridTemplateColumns=`repeat(${cols},1fr)`;
   gridEl.style.gridTemplateRows=`repeat(${rows},1fr)`;
 
-  for(let i=0;i<currentLayout;i++){
+  for(let i=0;i<layout;i++){
+
     const card=document.createElement("div");
     card.className="card";
 
-    const div=document.createElement("div");
-    div.className="chart";
-    div.id="chart"+i;
+    const container=document.createElement("div");
+    container.className="chart";
 
-    card.appendChild(div);
+    card.appendChild(container);
     gridEl.appendChild(card);
-  }
 
-  setTimeout(()=>{
-    for(let i=0;i<currentLayout;i++) load(i);
-  },200);
+    load(i, container);
+  }
 }
 
-function load(i){
+function load(i, container){
 
   const symbol=getSymbol(i);
 
   const widget=new TradingView.widget({
+
     autosize:true,
     symbol:"BYBIT:"+symbol,
     interval:"15",
@@ -163,7 +145,11 @@ function load(i){
     theme:"dark",
     style:"1",
     locale:"en",
+
     allow_symbol_change:true,
+
+    hide_side_toolbar:true,
+    hide_top_toolbar:false,
 
     disabled_features:[
       "volume_force_overlay",
@@ -183,7 +169,7 @@ function load(i){
       "paneProperties.priceAxisProperties.log":true
     },
 
-    container_id:"chart"+i
+    container: container   // 🔥 ВОТ ГЛАВНЫЙ ФИКС
   });
 
   widgets[i]=widget;
@@ -200,7 +186,7 @@ function load(i){
 }
 
 function setLayout(n){
-  currentLayout=n;
+  layout=n;
   localStorage.setItem("layout",n);
   render();
 }
