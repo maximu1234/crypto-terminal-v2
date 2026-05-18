@@ -28,15 +28,9 @@ body{
   border-bottom:1px solid #1f2937;
 }
 
-.header-left{
-  font-weight:700;
-  font-size:18px;
-}
+.header-left{ font-weight:700; font-size:18px; }
 
-.header-menu{
-  display:flex;
-  gap:14px;
-}
+.header-menu{ display:flex; gap:14px; }
 
 .header-menu a{
   color:#9ca3af;
@@ -50,10 +44,10 @@ body{
   color:white;
 }
 
-/* TOP CONTROLS */
+/* TIMEFRAME */
 .topbar{
   display:flex;
-  justify-content:space-between;
+  justify-content:flex-start;
   padding:10px 14px;
   border-bottom:1px solid #1f2937;
 }
@@ -86,12 +80,18 @@ body{
   position:relative;
 }
 
+/* 🔥 FIX RSI VISUAL COMPRESSION */
+.chart-box iframe{
+  transform: scaleY(0.72);
+  transform-origin: top;
+}
+
 #chart{
   width:100%;
   height:100%;
 }
 
-/* TABLE */
+/* LIST */
 .list{
   border-left:1px solid #1f2937;
   overflow:auto;
@@ -105,19 +105,14 @@ body{
   cursor:pointer;
 }
 
-.row:hover{
-  background:#111827;
-}
+.row:hover{ background:#111827; }
 
-.row.active{
-  background:#1e293b;
-}
+.row.active{ background:#1e293b; }
 </style>
 </head>
 
 <body>
 
-<!-- HEADER -->
 <div class="header">
   <div class="header-left">Multichart</div>
 
@@ -127,9 +122,7 @@ body{
   </div>
 </div>
 
-<!-- TIMEFRAME BAR -->
 <div class="topbar">
-
   <div class="timeframes">
     <button onclick="setTF('5')">5m</button>
     <button onclick="setTF('15')" class="active">15m</button>
@@ -137,10 +130,8 @@ body{
     <button onclick="setTF('240')">4h</button>
     <button onclick="setTF('D')">1D</button>
   </div>
-
 </div>
 
-<!-- MAIN -->
 <div class="container">
 
   <div class="chart-box">
@@ -156,15 +147,8 @@ body{
 <script>
 
 const symbols = [
-  "BTCUSDT",
-  "ETHUSDT",
-  "SOLUSDT",
-  "XRPUSDT",
-  "DOGEUSDT",
-  "ADAUSDT",
-  "AVAXUSDT",
-  "LINKUSDT",
-  "BNBUSDT"
+  "BTCUSDT","ETHUSDT","SOLUSDT","XRPUSDT",
+  "DOGEUSDT","ADAUSDT","AVAXUSDT","LINKUSDT","BNBUSDT"
 ];
 
 let index = 0;
@@ -172,18 +156,14 @@ let tf = localStorage.getItem("tf") || "15";
 let widget = null;
 
 function loadList(){
-
   const list = document.getElementById("list");
   list.innerHTML = "";
 
-  symbols.forEach((s, i) => {
+  symbols.forEach((s,i)=>{
 
     const row = document.createElement("div");
-    row.className = "row" + (i === index ? " active" : "");
-    row.innerHTML = `
-      <div>🇺🇸</div>
-      <div>${s}</div>
-    `;
+    row.className = "row" + (i===index?" active":"");
+    row.innerHTML = `🇺🇸 ${s}`;
 
     row.onclick = () => {
       index = i;
@@ -196,41 +176,20 @@ function loadList(){
 
 function createChart(){
 
-  if(widget && widget.remove){
-    widget.remove();
-  }
+  if(widget && widget.remove) widget.remove();
 
   widget = new TradingView.widget({
 
     autosize:true,
-
     symbol:"BYBIT:" + symbols[index],
-
     interval: tf,
-
     timezone:"Etc/UTC",
-
     theme:"dark",
-
     style:"1",
-
     locale:"en",
 
     allow_symbol_change:false,
-
     hide_side_toolbar:true,
-
-    hide_top_toolbar:false,
-
-    withdateranges:false,
-
-    details:false,
-
-    enable_publishing:false,
-
-    save_image:false,
-
-    load_last_chart:false,
 
     studies:[
       "RSI@tv-basicstudies"
@@ -240,9 +199,8 @@ function createChart(){
       "volume_force_overlay",
       "volume_indicator",
       "create_volume_indicator_by_default",
-      "header_compare",
-      "header_symbol_search",
-      "left_toolbar"
+      "left_toolbar",
+      "header_compare"
     ],
 
     overrides:{
@@ -251,13 +209,16 @@ function createChart(){
       "paneProperties.vertGridProperties.color":"#161b26",
       "paneProperties.horzGridProperties.color":"#161b26",
 
-      "paneProperties.legendProperties.showVolume":false,
-      "volumePaneSize":"0",
-
       "mainSeriesProperties.priceAxisProperties.log":true,
 
-      // RSI “squeeze” effect (визуально уменьшаем)
-      "study_RSI@tv-basicstudies.plot.height": 40
+      "paneProperties.legendProperties.showVolume":false
+    },
+
+    studies_overrides:{
+
+      "rsi.plot.color":"#a855f7",
+      "rsi.plot.linewidth":1
+
     },
 
     container_id:"chart"
@@ -267,10 +228,6 @@ function createChart(){
 function setTF(newTf){
   tf = newTf;
   localStorage.setItem("tf", tf);
-
-  document.querySelectorAll(".timeframes button")
-    .forEach(b => b.classList.remove("active"));
-
   createChart();
 }
 
@@ -279,20 +236,16 @@ function render(){
   createChart();
 }
 
-document.addEventListener("keydown", (e) => {
+document.addEventListener("keydown",(e)=>{
 
-  if(e.key === "ArrowDown"){
-    index = Math.min(symbols.length-1, index+1);
+  if(e.key==="ArrowDown"){
+    index = Math.min(symbols.length-1,index+1);
     render();
   }
 
-  if(e.key === "ArrowUp"){
-    index = Math.max(0, index-1);
+  if(e.key==="ArrowUp"){
+    index = Math.max(0,index-1);
     render();
-  }
-
-  if(e.key === " "){
-    createChart();
   }
 
 });
