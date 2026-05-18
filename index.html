@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Terminal V4.3 RSI</title>
+<title>Terminal V4.4 RSI PRO</title>
 
 <style>
 html,body{
@@ -11,8 +11,8 @@ html,body{
   height:100%;
   background:#0b1220;
   font-family:Arial;
-  color:white;
   overflow:hidden;
+  color:white;
 }
 
 #app{
@@ -24,7 +24,8 @@ html,body{
 #left{
   display:flex;
   flex-direction:column;
-  min-height:0;
+  height:100vh;
+  overflow:hidden;
 }
 
 #topbar{
@@ -32,6 +33,7 @@ html,body{
   gap:6px;
   padding:8px;
   border-bottom:1px solid #1f2937;
+  flex-shrink:0;
 }
 
 .tf-btn{
@@ -49,13 +51,11 @@ html,body{
 }
 
 #chart{
-  flex:3;
-  min-height:0;
+  height:70%;
 }
 
 #rsi{
-  flex:1;
-  min-height:120px;
+  height:30%;
   border-top:1px solid #1f2937;
 }
 
@@ -68,6 +68,10 @@ html,body{
   padding:10px;
   border-bottom:1px solid #1f2937;
   cursor:pointer;
+}
+
+.coin:hover{
+  background:#111827;
 }
 
 .active{
@@ -122,13 +126,12 @@ let rsiValues = [];
 let oldestLoadedTime = null;
 let loading = false;
 
-/* ---------------- RSI CALC ---------------- */
+/* ---------------- RSI ---------------- */
 
 function calculateRSI(data, period = 14){
 
   let gains = 0;
   let losses = 0;
-
   let rsi = [];
 
   for(let i = 1; i < data.length; i++){
@@ -148,10 +151,9 @@ function calculateRSI(data, period = 14){
 
       rsi.push({
         time: data[i].time,
-        value: value
+        value
       });
 
-      // shift window
       const oldDiff = data[i - period + 1].close - data[i - period].close;
 
       if(oldDiff >= 0) gains -= oldDiff;
@@ -191,12 +193,12 @@ function init(){
 
   rsiChart = LightweightCharts.createChart(rsiEl, {
     layout:{
-      background:{ color:"#0b1220" },
-      textColor:"#a855f7"
+      background:{ color:"#1e1e31" }, // 🔥 RSI ZONE BACKGROUND
+      textColor:"#a39cb9"
     },
     grid:{
-      vertLines:{ color:"#161b26" },
-      horzLines:{ color:"#161b26" }
+      vertLines:{ color:"#1e1e31" },
+      horzLines:{ color:"#1e1e31" }
     },
     timeScale:{
       borderColor:"#1f2937"
@@ -204,11 +206,13 @@ function init(){
   });
 
   rsiSeries = rsiChart.addLineSeries({
-    color:"#a855f7",
+    color:"#a39cb9",
     lineWidth:2
   });
 
-  syncCharts();
+  drawRSILevels();
+
+  sync();
 
   window.addEventListener("resize", () => {
     chart.applyOptions({
@@ -227,12 +231,32 @@ function init(){
   load(symbols[0]);
 }
 
+/* ---------------- RSI LEVELS ---------------- */
+
+function drawRSILevels(){
+
+  const levels = [30, 50, 70];
+
+  levels.forEach(level => {
+
+    rsiSeries.createPriceLine({
+      price: level,
+      color: "#797b85",
+      lineWidth: 1,
+      lineStyle: LightweightCharts.LineStyle.Dashed,
+      axisLabelVisible: true,
+      title: level.toString()
+    });
+
+  });
+}
+
 /* ---------------- SYNC ---------------- */
 
-function syncCharts(){
+function sync(){
 
   chart.timeScale().subscribeVisibleLogicalRangeChange(range => {
-    rsiChart.timeScale().setVisibleLogicalRange(range);
+    if(range) rsiChart.timeScale().setVisibleLogicalRange(range);
   });
 
 }
@@ -262,7 +286,6 @@ async function load(symbol){
   series.setData(candles);
 
   rsiValues = calculateRSI(candles);
-
   rsiSeries.setData(rsiValues);
 
   chart.timeScale().fitContent();
@@ -302,7 +325,6 @@ async function loadMore(){
   series.setData(candles);
 
   rsiValues = calculateRSI(candles);
-
   rsiSeries.setData(rsiValues);
 
   loading = false;
