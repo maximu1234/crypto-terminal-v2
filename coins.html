@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Multichart Terminal V1.2</title>
+<title>Multichart Terminal V1.3</title>
 
 <style>
 body{
@@ -20,28 +20,24 @@ body{
   height:100vh;
 }
 
-/* LEFT SIDE */
 #left{
   display:flex;
   flex-direction:column;
   height:100%;
 }
 
-/* MAIN CHART */
 #chart{
   flex: 1;
   width:100%;
   min-height:0;
 }
 
-/* RSI PLACEHOLDER (later we upgrade) */
 #rsi{
   height:180px;
   border-top:1px solid #1f2937;
   background:#0f172a;
 }
 
-/* RIGHT LIST */
 #list{
   border-left:1px solid #1f2937;
   overflow:auto;
@@ -62,7 +58,6 @@ body{
   background:#1e293b;
 }
 
-/* HEADER */
 .header{
   position:absolute;
   top:10px;
@@ -80,7 +75,7 @@ body{
 <body>
 
 <div class="header">
-  Multichart Terminal V1.2 (Binance + Lightweight Charts FIXED VIEWPORT)
+  Multichart Terminal V1.3 (STABLE ZOOM FIX)
 </div>
 
 <div id="app">
@@ -106,12 +101,12 @@ let index = 0;
 let chart;
 let candleSeries;
 
-/* ---------------- BINANCE DATA ---------------- */
+/* ---------------- DATA ---------------- */
 
 async function fetchCandles(symbol){
 
   const res = await fetch(
-    `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=15m&limit=300`
+    `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=15m&limit=500`
   );
 
   const data = await res.json();
@@ -125,7 +120,7 @@ async function fetchCandles(symbol){
   }));
 }
 
-/* ---------------- INIT CHART ---------------- */
+/* ---------------- INIT ---------------- */
 
 function initChart(){
 
@@ -146,29 +141,26 @@ function initChart(){
     timeScale: {
       borderColor: "#1f2937",
       timeVisible: true,
-      secondsVisible: false
+      secondsVisible: false,
+      fixLeftEdge: true,
+      fixRightEdge: true
     }
   });
 
   candleSeries = chart.addCandlestickSeries();
 
-  /* 🔥 FIXED RESIZE (CRITICAL FOR VIEWPORT) */
   const resize = () => {
-    const w = container.clientWidth;
-    const h = container.clientHeight;
-
     chart.applyOptions({
-      width: w,
-      height: h
+      width: container.clientWidth,
+      height: container.clientHeight
     });
   };
 
   window.addEventListener("resize", resize);
   resize();
-
 }
 
-/* ---------------- LOAD SYMBOL ---------------- */
+/* ---------------- LOAD ---------------- */
 
 async function loadSymbol(symbol){
 
@@ -176,15 +168,10 @@ async function loadSymbol(symbol){
 
   candleSeries.setData(candles);
 
-  /* 🔥 KEY FIX: show more candles naturally */
-  chart.timeScale().setVisibleLogicalRange({
-    from: candles.length - 180,
-    to: candles.length
-  });
-
-  setTimeout(() => {
+  /* 🔥 ONLY ONE CONTROL = fitContent */
+  requestAnimationFrame(() => {
     chart.timeScale().fitContent();
-  }, 50);
+  });
 
 }
 
@@ -219,7 +206,7 @@ async function update(){
   await loadSymbol(symbols[index]);
 }
 
-/* ---------------- KEYBOARD NAV ---------------- */
+/* ---------------- KEYBOARD ---------------- */
 
 document.addEventListener("keydown",(e)=>{
 
