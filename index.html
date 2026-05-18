@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Crypto Terminal V6</title>
+<title>Crypto Terminal V7</title>
 
 <style>
 * { box-sizing: border-box; }
@@ -14,26 +14,32 @@ body{
   color:white;
   font-family:Arial,sans-serif;
   padding:12px;
+  height:100vh;
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
 }
 
 h1{
   text-align:center;
-  margin:0 0 14px 0;
-  font-size:22px;
+  margin:0 0 10px 0;
+  font-size:20px;
+  flex:0 0 auto;
 }
 
 .topbar{
   display:flex;
   justify-content:center;
   gap:10px;
-  margin-bottom:14px;
+  margin-bottom:10px;
+  flex:0 0 auto;
 }
 
 .topbar button{
   background:#2563eb;
   border:none;
   color:white;
-  padding:10px 16px;
+  padding:8px 14px;
   border-radius:8px;
   cursor:pointer;
   font-weight:bold;
@@ -43,51 +49,40 @@ h1{
   opacity:0.9;
 }
 
-.grid{
+#grid{
+  flex:1;
   display:grid;
-  gap:12px;
+  gap:10px;
+  width:100%;
+  height:100%;
 }
-
-.grid-4{ grid-template-columns:repeat(2,1fr); }
-.grid-6{ grid-template-columns:repeat(3,1fr); }
-.grid-9{ grid-template-columns:repeat(3,1fr); }
 
 .card{
   background:#111827;
   border:1px solid #1f2937;
   border-radius:12px;
   overflow:hidden;
+  display:flex;
 }
 
 .chart{
-  height:520px;
-}
-
-@media(max-width:1200px){
-  .grid-6, .grid-9{
-    grid-template-columns:repeat(2,1fr);
-  }
-}
-
-@media(max-width:700px){
-  .grid-4, .grid-6, .grid-9{
-    grid-template-columns:1fr;
-  }
+  width:100%;
+  height:100%;
 }
 </style>
 </head>
 
 <body>
 
-<h1>CRYPTO TERMINAL V6 🚀</h1>
+<h1>CRYPTO TERMINAL V7 🚀</h1>
 
 <div class="topbar">
-  <button onclick="setLayout(4)">4 Charts</button>
-  <button onclick="setLayout(6)">6 Charts</button>
-  <button onclick="setLayout(9)">9 Charts</button>
+  <button onclick="setLayout(4)">4</button>
+  <button onclick="setLayout(6)">6</button>
+  <button onclick="setLayout(9)">9</button>
 </div>
 
-<div id="grid" class="grid"></div>
+<div id="grid"></div>
 
 <script src="https://s3.tradingview.com/tv.js"></script>
 
@@ -108,8 +103,8 @@ const defaults = [
 let currentLayout = parseInt(localStorage.getItem("layout")) || 4;
 let widgets = {};
 
-function getSymbol(index){
-  return localStorage.getItem("symbol_" + index) || defaults[index];
+function getSymbol(i){
+  return localStorage.getItem("symbol_" + i) || defaults[i];
 }
 
 function destroyWidgets(){
@@ -119,12 +114,11 @@ function destroyWidgets(){
   widgets = {};
 }
 
-function createCard(index){
-  return `
-    <div class="card">
-      <div id="chart${index}" class="chart"></div>
-    </div>
-  `;
+function calculateGrid(n){
+  const cols = Math.ceil(Math.sqrt(n));
+  const rows = Math.ceil(n / cols);
+
+  return { cols, rows };
 }
 
 function render(){
@@ -132,15 +126,20 @@ function render(){
   destroyWidgets();
 
   const grid = document.getElementById("grid");
-  grid.className = "grid grid-" + currentLayout;
 
-  let html = "";
+  const { cols, rows } = calculateGrid(currentLayout);
+
+  grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+  grid.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
+
+  grid.innerHTML = "";
 
   for(let i=0;i<currentLayout;i++){
-    html += createCard(i);
+    const div = document.createElement("div");
+    div.className = "card";
+    div.innerHTML = `<div id="chart${i}" class="chart"></div>`;
+    grid.appendChild(div);
   }
-
-  grid.innerHTML = html;
 
   setTimeout(() => {
     for(let i=0;i<currentLayout;i++){
@@ -149,16 +148,16 @@ function render(){
   }, 150);
 }
 
-function loadChart(index){
+function loadChart(i){
 
   if(!window.TradingView){
     console.error("TradingView not loaded");
     return;
   }
 
-  const symbol = getSymbol(index);
+  const symbol = getSymbol(i);
 
-  widgets[index] = new TradingView.widget({
+  widgets[i] = new TradingView.widget({
 
     autosize: true,
 
@@ -224,13 +223,13 @@ function loadChart(index){
       "mainSeriesProperties.priceAxisProperties.log": true
     },
 
-    container_id: "chart" + index
+    container_id: "chart" + i
   });
 }
 
-function setLayout(count){
-  currentLayout = count;
-  localStorage.setItem("layout", count);
+function setLayout(n){
+  currentLayout = n;
+  localStorage.setItem("layout", n);
   render();
 }
 
