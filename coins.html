@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Terminal V4.4 RSI PRO</title>
+<title>Terminal V4.4 RSI BAND FIX</title>
 
 <style>
 html,body{
@@ -56,7 +56,26 @@ html,body{
 
 #rsi{
   height:30%;
+  position:relative;
   border-top:1px solid #1f2937;
+}
+
+/* 🔥 RSI BAND (ONLY 30-70 AREA) */
+#rsi-band{
+  position:absolute;
+  left:0;
+  right:0;
+  top:30%;
+  height:40%;
+  background:#1e1e31;
+  z-index:0;
+  pointer-events:none;
+}
+
+#rsi-chart{
+  position:absolute;
+  inset:0;
+  z-index:1;
 }
 
 #list{
@@ -99,7 +118,11 @@ html,body{
     </div>
 
     <div id="chart"></div>
-    <div id="rsi"></div>
+
+    <div id="rsi">
+      <div id="rsi-band"></div>
+      <div id="rsi-chart"></div>
+    </div>
 
   </div>
 
@@ -169,7 +192,7 @@ function calculateRSI(data, period = 14){
 function init(){
 
   const chartEl = document.getElementById("chart");
-  const rsiEl = document.getElementById("rsi");
+  const rsiEl = document.getElementById("rsi-chart");
 
   chart = LightweightCharts.createChart(chartEl, {
     layout:{
@@ -193,12 +216,19 @@ function init(){
 
   rsiChart = LightweightCharts.createChart(rsiEl, {
     layout:{
-      background:{ color:"#1e1e31" }, // 🔥 RSI ZONE BACKGROUND
-      textColor:"#a39cb9"
+      background:{ color:"transparent" }
     },
     grid:{
-      vertLines:{ color:"#1e1e31" },
-      horzLines:{ color:"#1e1e31" }
+      vertLines:{ color:"#161b26" },
+      horzLines:{ color:"#161b26" }
+    },
+    rightPriceScale:{
+      scaleMargins:{
+        top:0.1,
+        bottom:0.1
+      },
+      minValue:0,
+      maxValue:100
     },
     timeScale:{
       borderColor:"#1f2937"
@@ -210,7 +240,7 @@ function init(){
     lineWidth:2
   });
 
-  drawRSILevels();
+  drawLevels();
 
   sync();
 
@@ -231,24 +261,20 @@ function init(){
   load(symbols[0]);
 }
 
-/* ---------------- RSI LEVELS ---------------- */
+/* ---------------- RSI LEVEL LINES ---------------- */
 
-function drawRSILevels(){
+function drawLevels(){
 
-  const levels = [30, 50, 70];
-
-  levels.forEach(level => {
-
+  [30,50,70].forEach(level=>{
     rsiSeries.createPriceLine({
       price: level,
-      color: "#797b85",
-      lineWidth: 1,
+      color:"#797b85",
+      lineWidth:1,
       lineStyle: LightweightCharts.LineStyle.Dashed,
-      axisLabelVisible: true,
-      title: level.toString()
+      axisLabelVisible:true
     });
-
   });
+
 }
 
 /* ---------------- SYNC ---------------- */
