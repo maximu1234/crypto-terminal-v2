@@ -1,6 +1,6 @@
 <!-- =========================================================
      FULL index.html
-     CUSTOM MULTICHART DASHBOARD V1
+     DASHBOARD ENGINE V2
 ========================================================= -->
 
 <!DOCTYPE html>
@@ -128,7 +128,7 @@ body{
 }
 
 /* =========================================================
-   WIDGET HEADER
+   HEADER
 ========================================================= */
 
 .widget-header{
@@ -196,21 +196,6 @@ body{
     position:relative;
 }
 
-/* =========================================================
-   FOOTER
-========================================================= */
-
-#footer{
-    height:28px;
-    border-top:1px solid #1f2937;
-    display:flex;
-    align-items:center;
-    padding:0 14px;
-    font-size:11px;
-    color:#6b7280;
-    flex-shrink:0;
-}
-
 </style>
 
 </head>
@@ -255,14 +240,6 @@ Open Terminal
 
 <div id="dashboard" class="grid-4"></div>
 
-<!-- =========================================================
-     FOOTER
-========================================================= -->
-
-<div id="footer">
-Custom Dashboard Engine V1
-</div>
-
 <script>
 
 /* =========================================================
@@ -286,10 +263,6 @@ const symbols = [
 "LINKUSDT",
 "AVAXUSDT"
 
-];
-
-const timeframes = [
-"1","5","15","60","240","D"
 ];
 
 const widgets = [];
@@ -359,6 +332,10 @@ dashboard.appendChild(widget);
 const chartContainer =
 widget.querySelector(".chart");
 
+/* =========================================================
+   CHART
+========================================================= */
+
 const chart =
 LightweightCharts.createChart(
 chartContainer,
@@ -379,11 +356,26 @@ visible:false
 },
 
 timeScale:{
-visible:false
+visible:true,
+secondsVisible:false,
+rightOffset:18
 },
 
 crosshair:{
 mode:0
+},
+
+handleScroll:{
+mouseWheel:true,
+pressedMouseMove:true,
+horzTouchDrag:true,
+vertTouchDrag:false
+},
+
+handleScale:{
+axisPressedMouseMove:true,
+mouseWheel:true,
+pinch:true
 }
 
 });
@@ -412,6 +404,66 @@ const changeEl =
 widget.querySelector(".change");
 
 /* =========================================================
+   LOAD HISTORY
+========================================================= */
+
+async function loadHistory(symbol, tf){
+
+let all = [];
+
+let end = Date.now();
+
+/* LOAD 5000+ CANDLES */
+
+for(let i=0;i<5;i++){
+
+const url =
+`https://api.bybit.com/v5/market/kline?category=linear&symbol=${symbol}&interval=${tf}&limit=1000&end=${end}`;
+
+const res =
+await fetch(url);
+
+const json =
+await res.json();
+
+const batch =
+json.result.list;
+
+if(!batch || !batch.length){
+break;
+}
+
+all = [...all, ...batch];
+
+end =
+Number(batch[batch.length-1][0]) - 1;
+
+}
+
+const unique =
+new Map();
+
+all.forEach(k=>{
+
+unique.set(k[0],{
+
+time:Number(k[0])/1000,
+open:Number(k[1]),
+high:Number(k[2]),
+low:Number(k[3]),
+close:Number(k[4])
+
+});
+
+});
+
+return Array
+.from(unique.values())
+.sort((a,b)=>a.time-b.time);
+
+}
+
+/* =========================================================
    LOAD DATA
 ========================================================= */
 
@@ -423,42 +475,36 @@ symbolSelect.value;
 const tf =
 tfSelect.value;
 
-const url =
-`https://api.bybit.com/v5/market/kline?category=linear&symbol=${symbol}&interval=${tf}&limit=200`;
-
 try{
 
-const res =
-await fetch(url);
-
-const json =
-await res.json();
-
 const candles =
-json.result.list.reverse().map(k=>({
-
-time:Number(k[0])/1000,
-open:Number(k[1]),
-high:Number(k[2]),
-low:Number(k[3]),
-close:Number(k[4])
-
-}));
+await loadHistory(symbol, tf);
 
 series.setData(candles);
 
+/* =========================================================
+   INITIAL VIEW
+========================================================= */
+
 chart.timeScale().setVisibleLogicalRange({
 
-from:candles.length - 90,
-to:candles.length + 10
+from:
+candles.length - 140,
+
+to:
+candles.length + 18
 
 });
+
+/* =========================================================
+   PRICE
+========================================================= */
 
 const last =
 candles[candles.length - 1];
 
 const first =
-candles[0];
+candles[candles.length - 140];
 
 priceEl.innerText =
 last.close.toFixed(2);
@@ -492,6 +538,10 @@ console.log(err);
 
 symbolSelect.onchange = loadData;
 tfSelect.onchange = loadData;
+
+/* =========================================================
+   OPEN TERMINAL
+========================================================= */
 
 widget.onclick = e=>{
 
@@ -566,7 +616,7 @@ createWidget(i);
 }
 
 /* =========================================================
-   LAYOUT BUTTONS
+   LAYOUT
 ========================================================= */
 
 document
