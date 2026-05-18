@@ -22,7 +22,7 @@ html,body{
 
 #app{
   display:grid;
-  grid-template-columns:1fr 320px;
+  grid-template-columns:1fr 340px;
   height:100vh;
 }
 
@@ -157,7 +157,7 @@ html,body{
 }
 
 /* =========================
-   RIGHT TABLE
+   RIGHT PANEL
 ========================= */
 
 #list{
@@ -168,16 +168,42 @@ html,body{
   flex-direction:column;
 }
 
-/* HEADER */
+/* =========================
+   FILTER
+========================= */
+
+#filter-wrap{
+  padding:10px 12px;
+  border-bottom:1px solid #1f2937;
+  background:#0f172a;
+  position:sticky;
+  top:0;
+  z-index:20;
+}
+
+#market-filter{
+  width:100%;
+  background:#111827;
+  color:white;
+  border:1px solid #374151;
+  border-radius:8px;
+  padding:8px 10px;
+  font-size:13px;
+  outline:none;
+}
+
+/* =========================
+   TABLE HEADER
+========================= */
 
 #table-header{
   display:grid;
   grid-template-columns:28px 1fr 70px 70px;
   padding:10px 12px;
   border-bottom:1px solid #1f2937;
-  position:sticky;
-  top:0;
   background:#0f172a;
+  position:sticky;
+  top:58px;
   z-index:10;
   font-size:12px;
   color:#9ca3af;
@@ -192,7 +218,9 @@ html,body{
   color:white;
 }
 
-/* ROW */
+/* =========================
+   ROW
+========================= */
 
 .coin{
   display:grid;
@@ -213,7 +241,9 @@ html,body{
   background:#1e293b;
 }
 
-/* CELLS */
+/* =========================
+   CELLS
+========================= */
 
 .col-flag{
   display:flex;
@@ -313,6 +343,28 @@ html,body{
   <!-- RIGHT -->
   <div id="list">
 
+    <!-- FILTER -->
+    <div id="filter-wrap">
+
+      <select id="market-filter">
+
+        <option value="crypto">
+          Crypto
+        </option>
+
+        <option value="stocks">
+          Stocks
+        </option>
+
+        <option value="commodities">
+          Commodities
+        </option>
+
+      </select>
+
+    </div>
+
+    <!-- HEADER -->
     <div id="table-header">
 
       <div class="col-flag sortable" data-sort="favorites">
@@ -342,19 +394,41 @@ html,body{
 <script>
 
 /* =========================
-   CONFIG
+   DATASETS
 ========================= */
 
-const symbols = [
-  "BTCUSDT",
-  "ETHUSDT",
-  "SOLUSDT",
-  "XRPUSDT",
-  "DOGEUSDT",
-  "ADAUSDT",
-  "AVAXUSDT",
-  "LINKUSDT"
+const cryptoSymbols = [
+
+"BTCUSDT","ETHUSDT","SOLUSDT","XRPUSDT","DOGEUSDT",
+"ADAUSDT","AVAXUSDT","LINKUSDT","BNBUSDT","DOTUSDT",
+"TRXUSDT","LTCUSDT","ATOMUSDT","APTUSDT","ARBUSDT",
+"OPUSDT","INJUSDT","NEARUSDT","TIAUSDT","SUIUSDT",
+"PEPEUSDT","WIFUSDT","ORDIUSDT","SEIUSDT","FILUSDT",
+"ETCUSDT","AAVEUSDT","MKRUSDT","UNIUSDT","1000PEPEUSDT"
+
 ];
+
+const stockSymbols = [
+
+"AAPL","TSLA","NVDA","MSFT","AMZN",
+"META","GOOGL","NFLX","AMD","COIN",
+"PLTR","INTC","BA","UBER","PYPL",
+"SNAP","SHOP","BABA","DIS","NIO"
+
+];
+
+const commoditySymbols = [
+
+"GOLD","SILVER","OIL","NATGAS","COPPER",
+"WHEAT","CORN","SOYBEAN","COCOA","COFFEE"
+
+];
+
+let currentDataset = "crypto";
+
+/* =========================
+   GLOBALS
+========================= */
 
 let currentTF = "15m";
 
@@ -368,21 +442,36 @@ let sortAsc = true;
 let favorites =
   JSON.parse(localStorage.getItem("favorites") || "[]");
 
-/* =========================
-   STATE
-========================= */
+let marketData = [];
 
 let candles = [];
 let oldestTime = null;
 let loadingHistory = false;
 
 /* =========================
-   MARKET DATA
+   GET ACTIVE LIST
 ========================= */
 
-let marketData = [];
+function getCurrentSymbols(){
+
+  if(currentDataset === "crypto"){
+    return cryptoSymbols;
+  }
+
+  if(currentDataset === "stocks"){
+    return stockSymbols;
+  }
+
+  return commoditySymbols;
+}
+
+/* =========================
+   GENERATE MARKET DATA
+========================= */
 
 function generateMarketData(){
+
+  const symbols = getCurrentSymbols();
 
   marketData = symbols.map(symbol => {
 
@@ -444,7 +533,7 @@ const candleSeries = chart.addCandlestickSeries({
 });
 
 /* =========================
-   RSI
+   RSI CHART
 ========================= */
 
 const rsiChart = LightweightCharts.createChart(
@@ -458,10 +547,6 @@ const rsiChart = LightweightCharts.createChart(
     grid:{
       vertLines:{ color:"#161b26" },
       horzLines:{ color:"#161b26" }
-    },
-
-    crosshair:{
-      mode: LightweightCharts.CrosshairMode.Normal
     },
 
     rightPriceScale:{
@@ -492,7 +577,7 @@ const rsiSeries = rsiChart.addLineSeries({
 });
 
 /* =========================
-   RSI CALC
+   RSI
 ========================= */
 
 function calculateRSI(data, period = 14){
@@ -568,9 +653,64 @@ async function loadSymbol(symbol){
 
   loadingHistory = false;
 
-  document.getElementById(
-    "current-symbol"
-  ).innerText = symbol + ".P";
+  if(currentDataset === "crypto"){
+    document.getElementById(
+      "current-symbol"
+    ).innerText = symbol + ".P";
+  }
+
+  else{
+    document.getElementById(
+      "current-symbol"
+    ).innerText = symbol;
+  }
+
+  /* DEMO FOR STOCKS/COMMODITIES */
+
+  if(currentDataset !== "crypto"){
+
+    const fakeData = [];
+
+    let price = 100;
+
+    for(let i=0;i<1500;i++){
+
+      const open = price;
+
+      const close =
+        open + ((Math.random()-0.5) * 5);
+
+      const high =
+        Math.max(open,close) + Math.random()*2;
+
+      const low =
+        Math.min(open,close) - Math.random()*2;
+
+      fakeData.push({
+        time:(Date.now()/1000)-((1500-i)*3600),
+        open,
+        high,
+        low,
+        close
+      });
+
+      price = close;
+    }
+
+    candles = fakeData;
+
+    candleSeries.setData(candles);
+
+    rsiSeries.setData(
+      calculateRSI(candles)
+    );
+
+    chart.timeScale().fitContent();
+
+    renderList();
+
+    return;
+  }
 
   const url =
     `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${currentTF}&limit=${HISTORY_LIMIT}`;
@@ -580,7 +720,7 @@ async function loadSymbol(symbol){
   const raw = await res.json();
 
   candles = raw.map(k => ({
-    time:k[0] / 1000,
+    time:k[0]/1000,
     open:+k[1],
     high:+k[2],
     low:+k[3],
@@ -591,9 +731,9 @@ async function loadSymbol(symbol){
 
   candleSeries.setData(candles);
 
-  const rsiData = calculateRSI(candles);
-
-  rsiSeries.setData(rsiData);
+  rsiSeries.setData(
+    calculateRSI(candles)
+  );
 
   chart.timeScale().fitContent();
 
@@ -601,10 +741,14 @@ async function loadSymbol(symbol){
 }
 
 /* =========================
-   LOAD MORE HISTORY
+   LOAD HISTORY
 ========================= */
 
 async function loadMoreHistory(){
+
+  if(currentDataset !== "crypto"){
+    return;
+  }
 
   if(loadingHistory) return;
 
@@ -625,7 +769,7 @@ async function loadMoreHistory(){
   }
 
   const older = raw.map(k => ({
-    time:k[0] / 1000,
+    time:k[0]/1000,
     open:+k[1],
     high:+k[2],
     low:+k[3],
@@ -638,15 +782,15 @@ async function loadMoreHistory(){
 
   candleSeries.setData(candles);
 
-  const rsiData = calculateRSI(candles);
-
-  rsiSeries.setData(rsiData);
+  rsiSeries.setData(
+    calculateRSI(candles)
+  );
 
   loadingHistory = false;
 }
 
 /* =========================
-   HISTORY
+   HISTORY SUB
 ========================= */
 
 chart.timeScale().subscribeVisibleLogicalRangeChange(range => {
@@ -673,8 +817,11 @@ chart.timeScale().subscribeVisibleLogicalRangeChange(range => {
 
 function resizeCharts(){
 
-  const chartWrap = document.getElementById("chart-wrap");
-  const rsiWrap = document.getElementById("rsi-chart");
+  const chartWrap =
+    document.getElementById("chart-wrap");
+
+  const rsiWrap =
+    document.getElementById("rsi-chart");
 
   chart.applyOptions({
     width:chartWrap.clientWidth,
@@ -710,18 +857,37 @@ document.querySelectorAll(".tf-btn").forEach(btn => {
 });
 
 /* =========================
+   FILTER
+========================= */
+
+document.getElementById("market-filter")
+  .addEventListener("change", async e => {
+
+    currentDataset = e.target.value;
+
+    generateMarketData();
+
+    currentSymbol =
+      getCurrentSymbols()[0];
+
+    renderList();
+
+    await loadSymbol(currentSymbol);
+
+});
+
+/* =========================
    TABLE
 ========================= */
 
 function renderList(){
 
-  const list = document.getElementById("coins-body");
+  const list =
+    document.getElementById("coins-body");
 
   list.innerHTML = "";
 
   let data = [...marketData];
-
-  /* SORT */
 
   data.sort((a,b)=>{
 
@@ -736,35 +902,29 @@ function renderList(){
         favorites.includes(b.symbol) ? 1 : 0;
 
       result = af - bf;
-
     }
 
     else if(sortMode === "symbol"){
 
       result =
         a.symbol.localeCompare(b.symbol);
-
     }
 
     else if(sortMode === "24h"){
 
       result =
         a.change24 - b.change24;
-
     }
 
     else if(sortMode === "1h"){
 
       result =
         a.change1h - b.change1h;
-
     }
 
     return sortAsc ? result : -result;
 
   });
-
-  /* RENDER */
 
   data.forEach(item => {
 
@@ -805,8 +965,6 @@ function renderList(){
 
     `;
 
-    /* OPEN COIN */
-
     div.onclick = async (e) => {
 
       if(e.target.dataset.fav){
@@ -816,8 +974,6 @@ function renderList(){
       await loadSymbol(item.symbol);
 
     };
-
-    /* FAVORITE */
 
     const favBtn =
       div.querySelector("[data-fav]");
@@ -854,7 +1010,7 @@ function renderList(){
 }
 
 /* =========================
-   SORTING
+   SORT
 ========================= */
 
 document.querySelectorAll(".sortable")
@@ -879,7 +1035,7 @@ document.querySelectorAll(".sortable")
 
     };
 
-  });
+});
 
 /* =========================
    KEYBOARD NAV
@@ -902,28 +1058,24 @@ window.addEventListener("keydown", async e => {
         favorites.includes(b.symbol) ? 1 : 0;
 
       result = af - bf;
-
     }
 
     else if(sortMode === "symbol"){
 
       result =
         a.symbol.localeCompare(b.symbol);
-
     }
 
     else if(sortMode === "24h"){
 
       result =
         a.change24 - b.change24;
-
     }
 
     else if(sortMode === "1h"){
 
       result =
         a.change1h - b.change1h;
-
     }
 
     return sortAsc ? result : -result;
