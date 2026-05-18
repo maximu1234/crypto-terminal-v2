@@ -3,144 +3,70 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Multichart</title>
+<title>Multichart Stable</title>
 
 <style>
-*{box-sizing:border-box}
-
 body{
   margin:0;
   background:#0b1220;
-  color:#fff;
+  color:white;
   font-family:Arial;
   height:100vh;
   display:flex;
   flex-direction:column;
-  overflow:hidden;
 }
 
 .header{
-  display:flex;
-  justify-content:space-between;
-  padding:10px 14px;
+  padding:10px;
   border-bottom:1px solid #1f2937;
 }
 
-.layout-bar{
+.layout{
   display:flex;
-  gap:10px;
-  padding:10px 14px;
-  border-bottom:1px solid #1f2937;
-}
-
-.layout-bar button{
-  background:#2563eb;
-  border:none;
-  color:#fff;
-  padding:6px 12px;
-  border-radius:6px;
-}
-
-#grid{
-  flex:1;
-  display:grid;
   gap:10px;
   padding:10px;
 }
 
-.card{
-  background:#111827;
-  border:1px solid #1f2937;
-  border-radius:12px;
-  overflow:hidden;
-  display:flex;
+button{
+  background:#2563eb;
+  color:white;
+  border:none;
+  padding:6px 12px;
+  border-radius:6px;
 }
 
-.chart{
-  width:100%;
-  height:100%;
+#chart{
+  flex:1;
 }
 </style>
 </head>
 
 <body>
 
-<div class="header">Multichart</div>
+<div class="header">Multichart (stable version)</div>
 
-<div class="layout-bar">
-  <button onclick="setLayout(4)">4</button>
-  <button onclick="setLayout(6)">6</button>
-  <button onclick="setLayout(9)">9</button>
+<div class="layout">
+  <button onclick="set('BTCUSDT')">BTC</button>
+  <button onclick="set('ETHUSDT')">ETH</button>
+  <button onclick="set('SOLUSDT')">SOL</button>
+  <button onclick="set('XRPUSDT')">XRP</button>
 </div>
 
-<div id="grid"></div>
+<div id="chart"></div>
 
 <script src="https://s3.tradingview.com/tv.js"></script>
 
 <script>
 
-const defaults=[
-  "BTCUSDT","ETHUSDT","SOLUSDT","XRPUSDT","DOGEUSDT",
-  "ADAUSDT","AVAXUSDT","LINKUSDT","BNBUSDT"
-];
+let widget;
 
-let layout=parseInt(localStorage.getItem("layout"))||4;
-let widgets={};
+function init(symbol){
 
-function getSymbol(i){
-  return localStorage.getItem("symbol_"+i)||defaults[i];
-}
-
-function saveSymbol(i,s){
-  localStorage.setItem("symbol_"+i,s);
-}
-
-function destroy(){
-  Object.values(widgets).forEach(w=>w?.remove?.());
-  widgets={};
-}
-
-function calc(n){
-  const c=Math.ceil(Math.sqrt(n));
-  return {cols:c,rows:Math.ceil(n/c)};
-}
-
-function render(){
-
-  const grid=document.getElementById("grid");
-
-  destroy();
-  grid.innerHTML="";
-
-  const {cols,rows}=calc(layout);
-
-  grid.style.gridTemplateColumns=`repeat(${cols},1fr)`;
-  grid.style.gridTemplateRows=`repeat(${rows},1fr)`;
-
-  for(let i=0;i<layout;i++){
-    const card=document.createElement("div");
-    card.className="card";
-
-    const div=document.createElement("div");
-    div.className="chart";
-    div.id="chart"+i;
-
-    card.appendChild(div);
-    grid.appendChild(card);
+  if(widget){
+    widget.remove();
   }
 
-  // 🔥 ВАЖНО: больше не цикл сразу — последовательная загрузка
-  setTimeout(()=>loadSequential(0),250);
-}
-
-function loadSequential(i){
-
-  if(i>=layout) return;
-
-  const symbol=getSymbol(i);
-
-  const widget=new TradingView.widget({
-
+  widget = new TradingView.widget({
     autosize:true,
     symbol:"BYBIT:"+symbol,
     interval:"15",
@@ -148,49 +74,26 @@ function loadSequential(i){
     theme:"dark",
     style:"1",
     locale:"en",
+
     allow_symbol_change:true,
 
     hide_side_toolbar:true,
     hide_top_toolbar:false,
 
-    overrides:{
-      "paneProperties.priceAxisProperties.log":true
-    },
-
-    disabled_features:[
-      "volume_force_overlay",
-      "create_volume_indicator_by_default",
-      "header_compare",
-      "header_symbol_search",
-      "left_toolbar"
-    ],
-
-    container_id:"chart"+i
+    container_id:"chart"
   });
 
-  widgets[i]=widget;
-
-  widget.onChartReady(()=>{
-    const chart=widget.activeChart();
-
-    chart.onSymbolChanged().subscribe(null,(sym)=>{
-      if(!sym) return;
-      const clean=sym.split(":")[1]||sym;
-      saveSymbol(i,clean);
-    });
-  });
-
-  // 🔥 ключ: следующий график ТОЛЬКО после паузы
-  setTimeout(()=>loadSequential(i+1),250);
+  localStorage.setItem("symbol",symbol);
 }
 
-function setLayout(n){
-  layout=n;
-  localStorage.setItem("layout",n);
-  render();
+function set(symbol){
+  init(symbol);
 }
 
-render();
+window.onload = ()=>{
+  const saved = localStorage.getItem("symbol") || "BTCUSDT";
+  init(saved);
+};
 
 </script>
 
