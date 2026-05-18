@@ -1,3 +1,8 @@
+<!-- =========================================================
+     FULL coins.html
+     FIXED RIGHT OFFSET VERSION
+========================================================= -->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -96,7 +101,7 @@ html,body{
 #chart-wrap{
   height:82%;
   min-height:0;
-  padding-right:42px;
+  padding-right:52px;
   box-sizing:border-box;
 }
 
@@ -110,14 +115,14 @@ html,body{
   height:18%;
   min-height:90px;
   border-top:1px solid #1f2937;
-  padding-right:42px;
+  padding-right:52px;
   box-sizing:border-box;
 }
 
 #rsi-band{
   position:absolute;
   left:0;
-  right:42px;
+  right:52px;
   top:30%;
   height:40%;
   background:#1e1e31;
@@ -127,7 +132,7 @@ html,body{
 #rsi-chart{
   position:absolute;
   inset:0;
-  right:42px;
+  right:52px;
   z-index:1;
 }
 
@@ -328,16 +333,8 @@ Coin
 
 <script>
 
-/* =========================================================
-   API
-========================================================= */
-
 const TWELVE_KEY =
 "d6b45dcb1abf4b3ebe020038e41864fb";
-
-/* =========================================================
-   GLOBALS
-========================================================= */
 
 let currentDataset = "crypto";
 let currentTF = "60";
@@ -354,10 +351,6 @@ let marketData = [];
 
 let allBybitSymbols = [];
 let newListings = [];
-
-/* =========================================================
-   SYMBOLS
-========================================================= */
 
 const stockSymbols = [
 "AAPL","TSLA","NVDA","MSFT","AMZN",
@@ -404,7 +397,7 @@ mode:1
 timeScale:{
 borderColor:"#1f2937",
 timeVisible:true,
-rightOffset:40
+rightOffset:18
 },
 
 crosshair:{
@@ -480,10 +473,6 @@ axisLabelVisible:true
 
 });
 
-/* =========================================================
-   RSI CALC
-========================================================= */
-
 function calculateRSI(data, period=14){
 
 if(data.length < period+1){
@@ -548,7 +537,7 @@ return result;
 }
 
 /* =========================================================
-   BYBIT SYMBOLS
+   LOAD SYMBOLS
 ========================================================= */
 
 async function loadBybitSymbols(){
@@ -580,10 +569,6 @@ return Number(x.launchTime) > weekAgo;
 
 }
 
-/* =========================================================
-   GET SYMBOLS
-========================================================= */
-
 function getCurrentSymbols(){
 
 if(currentDataset === "crypto"){
@@ -605,10 +590,6 @@ return commoditySymbols;
 return forexSymbols;
 
 }
-
-/* =========================================================
-   MARKET DATA
-========================================================= */
 
 function generateMarketData(){
 
@@ -759,10 +740,6 @@ currentDataset === "new")
 ? symbol + ".P"
 : symbol;
 
-/* =========================================================
-   CRYPTO
-========================================================= */
-
 if(
 currentDataset === "crypto" ||
 currentDataset === "new"
@@ -771,13 +748,7 @@ currentDataset === "new"
 candles =
 await loadCryptoHistory(symbol);
 
-}
-
-/* =========================================================
-   STOCKS
-========================================================= */
-
-else{
+}else{
 
 candles =
 await loadTwelveData(symbol);
@@ -790,14 +761,16 @@ rsiSeries.setData(
 calculateRSI(candles)
 );
 
-/* IMPORTANT */
-
 chart.timeScale().fitContent();
+
+chart.timeScale().applyOptions({
+rightOffset:18
+});
 
 setTimeout(()=>{
 
 chart.timeScale().scrollToPosition(
--120,
+-18,
 false
 );
 
@@ -1069,10 +1042,6 @@ list.appendChild(div);
 
 }
 
-/* =========================================================
-   SORT
-========================================================= */
-
 document
 .querySelectorAll(".sortable")
 .forEach(el=>{
@@ -1097,10 +1066,6 @@ renderList();
 };
 
 });
-
-/* =========================================================
-   START
-========================================================= */
 
 async function init(){
 
