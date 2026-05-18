@@ -3,302 +3,357 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Multichart - Главная</title>
+<title>Terminal V4.3 RSI</title>
 
 <style>
-* {
-  box-sizing: border-box;
+html,body{
+  margin:0;
+  height:100%;
+  background:#0b1220;
+  font-family:Arial;
+  color:white;
+  overflow:hidden;
 }
 
-body{
-  margin:0;
-  background:#0b1220;
-  color:white;
-  font-family:Arial,sans-serif;
+#app{
+  display:grid;
+  grid-template-columns: 1fr 240px;
   height:100vh;
+}
+
+#left{
   display:flex;
   flex-direction:column;
-  overflow:hidden;
+  min-height:0;
 }
 
-/* ================= HEADER ================= */
-
-.header{
+#topbar{
   display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:10px 14px;
+  gap:6px;
+  padding:8px;
   border-bottom:1px solid #1f2937;
-  background:#0b1220;
 }
 
-.header-left{
-  font-size:18px;
-  font-weight:700;
-  letter-spacing:0.5px;
-}
-
-.header-menu{
-  display:flex;
-  gap:14px;
-}
-
-.header-menu a{
-  color:#9ca3af;
-  text-decoration:none;
-  font-weight:600;
-  font-size:14px;
+.tf-btn{
+  background:#1f2937;
+  color:white;
+  border:none;
   padding:6px 10px;
   border-radius:6px;
-  transition:0.2s;
-}
-
-.header-menu a:hover{
-  color:white;
-  background:#111827;
-}
-
-.header-menu a.active{
-  color:white;
-  background:#1f2937;
-}
-
-/* ================= LAYOUT BAR ================= */
-
-.layout-bar{
-  display:flex;
-  gap:10px;
-  justify-content:flex-start;
-  padding:10px 14px;
-  border-bottom:1px solid #1f2937;
-}
-
-.layout-bar button{
-  background:#2563eb;
-  border:none;
-  color:white;
-  padding:6px 12px;
-  border-radius:6px;
   cursor:pointer;
-  font-weight:600;
-  font-size:13px;
+  font-size:12px;
 }
 
-.layout-bar button:hover{
-  opacity:0.9;
+.tf-btn.active{
+  background:#2563eb;
 }
 
-/* ================= GRID ================= */
+#chart{
+  flex:3;
+  min-height:0;
+}
 
-#grid{
+#rsi{
   flex:1;
-  display:grid;
-  gap:10px;
+  min-height:120px;
+  border-top:1px solid #1f2937;
+}
+
+#list{
+  border-left:1px solid #1f2937;
+  overflow:auto;
+}
+
+.coin{
   padding:10px;
-  width:100%;
-  height:100%;
+  border-bottom:1px solid #1f2937;
+  cursor:pointer;
 }
 
-.card{
-  background:#111827;
-  border:1px solid #1f2937;
-  border-radius:12px;
-  overflow:hidden;
-  display:flex;
-}
-
-.chart{
-  width:100%;
-  height:100%;
-}
-
-/* responsive fallback */
-@media(max-width:1200px){
-  #grid[data-cols="3"]{
-    grid-template-columns:repeat(2,1fr);
-  }
-}
-
-@media(max-width:700px){
-  #grid{
-    grid-template-columns:1fr !important;
-  }
+.active{
+  background:#1e293b;
 }
 </style>
+
+<script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
+
 </head>
 
 <body>
 
-<!-- HEADER -->
-<div class="header">
-  <div class="header-left">Multichart</div>
+<div id="app">
 
-  <div class="header-menu">
-    <a href="index.html" class="active">Главная</a>
-    <a href="coins.html">Монеты</a>
+  <div id="left">
+
+    <div id="topbar">
+      <button class="tf-btn active" data="1m">1m</button>
+      <button class="tf-btn" data="5m">5m</button>
+      <button class="tf-btn" data="15m">15m</button>
+      <button class="tf-btn" data="1h">1h</button>
+      <button class="tf-btn" data="4h">4h</button>
+      <button class="tf-btn" data="1d">1D</button>
+    </div>
+
+    <div id="chart"></div>
+    <div id="rsi"></div>
+
   </div>
+
+  <div id="list"></div>
+
 </div>
-
-<!-- LAYOUT BAR -->
-<div class="layout-bar">
-  <button onclick="setLayout(4)">4</button>
-  <button onclick="setLayout(6)">6</button>
-  <button onclick="setLayout(9)">9</button>
-</div>
-
-<!-- GRID -->
-<div id="grid"></div>
-
-<script src="https://s3.tradingview.com/tv.js"></script>
 
 <script>
 
-const defaults = [
-  "BTCUSDT",
-  "ETHUSDT",
-  "SOLUSDT",
-  "XRPUSDT",
-  "DOGEUSDT",
-  "ADAUSDT",
-  "AVAXUSDT",
-  "LINKUSDT",
-  "BNBUSDT"
-];
+const symbols = ["BTCUSDT","ETHUSDT","SOLUSDT","XRPUSDT","DOGEUSDT"];
 
-let currentLayout = parseInt(localStorage.getItem("layout")) || 4;
-let widgets = {};
+let index = 0;
+let tf = "15m";
 
-function getSymbol(i){
-  return localStorage.getItem("symbol_" + i) || defaults[i];
-}
+let chart;
+let series;
 
-function destroyWidgets(){
-  Object.values(widgets).forEach(w => {
-    try { if (w?.remove) w.remove(); } catch(e){}
-  });
-  widgets = {};
-}
+let rsiChart;
+let rsiSeries;
 
-function calculateGrid(n){
-  const cols = Math.ceil(Math.sqrt(n));
-  const rows = Math.ceil(n / cols);
+let candles = [];
+let rsiValues = [];
 
-  return { cols, rows };
-}
+let oldestLoadedTime = null;
+let loading = false;
 
-function render(){
+/* ---------------- RSI CALC ---------------- */
 
-  destroyWidgets();
+function calculateRSI(data, period = 14){
 
-  const grid = document.getElementById("grid");
+  let gains = 0;
+  let losses = 0;
 
-  const { cols, rows } = calculateGrid(currentLayout);
+  let rsi = [];
 
-  grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
-  grid.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
+  for(let i = 1; i < data.length; i++){
 
-  grid.innerHTML = "";
+    const diff = data[i].close - data[i-1].close;
 
-  for(let i=0;i<currentLayout;i++){
-    const card = document.createElement("div");
-    card.className = "card";
-    card.innerHTML = `<div id="chart${i}" class="chart"></div>`;
-    grid.appendChild(card);
+    if(diff >= 0) gains += diff;
+    else losses += Math.abs(diff);
+
+    if(i >= period){
+
+      const avgGain = gains / period;
+      const avgLoss = losses / period;
+
+      const rs = avgGain / (avgLoss || 1);
+      const value = 100 - (100 / (1 + rs));
+
+      rsi.push({
+        time: data[i].time,
+        value: value
+      });
+
+      // shift window
+      const oldDiff = data[i - period + 1].close - data[i - period].close;
+
+      if(oldDiff >= 0) gains -= oldDiff;
+      else losses -= Math.abs(oldDiff);
+    }
   }
 
-  setTimeout(() => {
-    for(let i=0;i<currentLayout;i++){
-      loadChart(i);
-    }
-  }, 150);
+  return rsi;
 }
 
-function loadChart(i){
+/* ---------------- INIT ---------------- */
 
-  if(!window.TradingView){
-    console.error("TradingView not loaded");
+function init(){
+
+  const chartEl = document.getElementById("chart");
+  const rsiEl = document.getElementById("rsi");
+
+  chart = LightweightCharts.createChart(chartEl, {
+    layout:{
+      background:{ color:"#0b1220" },
+      textColor:"#d1d5db"
+    },
+    grid:{
+      vertLines:{ color:"#161b26" },
+      horzLines:{ color:"#161b26" }
+    },
+    timeScale:{
+      borderColor:"#1f2937",
+      timeVisible:true
+    },
+    crosshair:{
+      mode: LightweightCharts.CrosshairMode.Normal
+    }
+  });
+
+  series = chart.addCandlestickSeries();
+
+  rsiChart = LightweightCharts.createChart(rsiEl, {
+    layout:{
+      background:{ color:"#0b1220" },
+      textColor:"#a855f7"
+    },
+    grid:{
+      vertLines:{ color:"#161b26" },
+      horzLines:{ color:"#161b26" }
+    },
+    timeScale:{
+      borderColor:"#1f2937"
+    }
+  });
+
+  rsiSeries = rsiChart.addLineSeries({
+    color:"#a855f7",
+    lineWidth:2
+  });
+
+  syncCharts();
+
+  window.addEventListener("resize", () => {
+    chart.applyOptions({
+      width: chartEl.clientWidth,
+      height: chartEl.clientHeight
+    });
+
+    rsiChart.applyOptions({
+      width: rsiEl.clientWidth,
+      height: rsiEl.clientHeight
+    });
+  });
+
+  initTF();
+  renderList();
+  load(symbols[0]);
+}
+
+/* ---------------- SYNC ---------------- */
+
+function syncCharts(){
+
+  chart.timeScale().subscribeVisibleLogicalRangeChange(range => {
+    rsiChart.timeScale().setVisibleLogicalRange(range);
+  });
+
+}
+
+/* ---------------- LOAD ---------------- */
+
+async function load(symbol){
+
+  index = symbols.indexOf(symbol);
+
+  const res = await fetch(
+    `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${tf}&limit=1500`
+  );
+
+  const data = await res.json();
+
+  candles = data.map(d => ({
+    time: d[0] / 1000,
+    open: +d[1],
+    high: +d[2],
+    low: +d[3],
+    close: +d[4]
+  }));
+
+  oldestLoadedTime = candles[0].time;
+
+  series.setData(candles);
+
+  rsiValues = calculateRSI(candles);
+
+  rsiSeries.setData(rsiValues);
+
+  chart.timeScale().fitContent();
+}
+
+/* ---------------- LOAD MORE ---------------- */
+
+async function loadMore(){
+
+  loading = true;
+
+  const symbol = symbols[index];
+
+  const res = await fetch(
+    `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${tf}&limit=1500&endTime=${oldestLoadedTime*1000 - 1}`
+  );
+
+  const data = await res.json();
+
+  if(!data.length){
+    loading = false;
     return;
   }
 
-  const symbol = getSymbol(i);
+  const older = data.map(d => ({
+    time: d[0] / 1000,
+    open: +d[1],
+    high: +d[2],
+    low: +d[3],
+    close: +d[4]
+  }));
 
-  widgets[i] = new TradingView.widget({
+  oldestLoadedTime = older[0].time;
 
-    autosize: true,
+  candles = [...older, ...candles];
 
-    symbol: "BYBIT:" + symbol,
+  series.setData(candles);
 
-    interval: "15",
+  rsiValues = calculateRSI(candles);
 
-    timezone: "Etc/UTC",
+  rsiSeries.setData(rsiValues);
 
-    theme: "dark",
+  loading = false;
+}
 
-    style: "1",
+/* ---------------- TF ---------------- */
 
-    locale: "en",
+function initTF(){
 
-    allow_symbol_change: true,
+  document.querySelectorAll(".tf-btn").forEach(btn=>{
+    btn.onclick = () => {
 
-    hide_side_toolbar: true,
-    hide_top_toolbar: false,
+      document.querySelectorAll(".tf-btn")
+        .forEach(b=>b.classList.remove("active"));
 
-    withdateranges: false,
-    details: false,
+      btn.classList.add("active");
 
-    enable_publishing: false,
-    save_image: false,
+      tf = btn.dataset.data || btn.getAttribute("data");
 
-    load_last_chart: false,
-
-    studies: [],
-    study_count_limit: 0,
-    saved_data: null,
-
-    disabled_features: [
-      "volume_force_overlay",
-      "volume_indicator",
-      "create_volume_indicator_by_default",
-      "header_compare",
-      "header_symbol_search",
-      "header_legend",
-      "study_dialog_search_control",
-      "show_interval_dialog_on_key_press",
-      "left_toolbar"
-    ],
-
-    overrides: {
-
-      "paneProperties.background": "#0b1220",
-      "paneProperties.vertGridProperties.color": "#161b26",
-      "paneProperties.horzGridProperties.color": "#161b26",
-
-      "paneProperties.legendProperties.showVolume": false,
-      "volumePaneSize": "0",
-
-      "scalesProperties.textColor": "#AAA",
-
-      "mainSeriesProperties.candleStyle.upColor": "#22c55e",
-      "mainSeriesProperties.candleStyle.downColor": "#ef4444",
-      "mainSeriesProperties.candleStyle.borderUpColor": "#22c55e",
-      "mainSeriesProperties.candleStyle.borderDownColor": "#ef4444",
-      "mainSeriesProperties.candleStyle.wickUpColor": "#22c55e",
-      "mainSeriesProperties.candleStyle.wickDownColor": "#ef4444",
-
-      "mainSeriesProperties.priceAxisProperties.log": true
-    },
-
-    container_id: "chart" + i
+      load(symbols[index]);
+    };
   });
 }
 
-function setLayout(n){
-  currentLayout = n;
-  localStorage.setItem("layout", n);
-  render();
+/* ---------------- LIST ---------------- */
+
+function renderList(){
+
+  const list = document.getElementById("list");
+  list.innerHTML = "";
+
+  symbols.forEach((s,i)=>{
+
+    const div = document.createElement("div");
+    div.className = "coin" + (i===index ? " active" : "");
+    div.innerText = s;
+
+    div.onclick = () => {
+      load(s);
+      renderList();
+    };
+
+    list.appendChild(div);
+
+  });
+
 }
 
-render();
+/* ---------------- START ---------------- */
+
+init();
 
 </script>
 
