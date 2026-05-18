@@ -110,6 +110,8 @@ html,body{
 #chart-wrap{
   height:82%;
   min-height:0;
+  padding-right:14px;
+  box-sizing:border-box;
 }
 
 #chart{
@@ -126,12 +128,14 @@ html,body{
   height:18%;
   min-height:90px;
   border-top:1px solid #1f2937;
+  padding-right:14px;
+  box-sizing:border-box;
 }
 
 #rsi-band{
   position:absolute;
   left:0;
-  right:0;
+  right:14px;
   top:30%;
   height:40%;
   background:#1e1e31;
@@ -142,6 +146,7 @@ html,body{
 #rsi-chart{
   position:absolute;
   inset:0;
+  right:14px;
   z-index:1;
 }
 
@@ -280,12 +285,13 @@ html,body{
         BTCUSDT.P
       </div>
 
-      <button class="tf-btn active" data-tf="1m">1m</button>
-      <button class="tf-btn" data-tf="5m">5m</button>
-      <button class="tf-btn" data-tf="15m">15m</button>
-      <button class="tf-btn" data-tf="1h">1h</button>
-      <button class="tf-btn" data-tf="4h">4h</button>
-      <button class="tf-btn" data-tf="1d">1D</button>
+      <!-- DEFAULT 4H -->
+      <button class="tf-btn" data-tf="1">1m</button>
+      <button class="tf-btn" data-tf="5">5m</button>
+      <button class="tf-btn" data-tf="15">15m</button>
+      <button class="tf-btn" data-tf="60">1h</button>
+      <button class="tf-btn active" data-tf="240">4h</button>
+      <button class="tf-btn" data-tf="D">1D</button>
 
     </div>
 
@@ -311,16 +317,16 @@ html,body{
           Crypto
         </option>
 
+        <option value="new">
+          New
+        </option>
+
         <option value="stocks">
           Stocks
         </option>
 
         <option value="commodities">
           Commodities
-        </option>
-
-        <option value="new">
-          New
         </option>
 
       </select>
@@ -356,81 +362,14 @@ html,body{
 <script>
 
 /* =========================
-   HUGE CRYPTO LIST
-========================= */
-
-const cryptoSymbols = [
-
-"BTCUSDT","ETHUSDT","BNBUSDT","SOLUSDT","XRPUSDT",
-"DOGEUSDT","ADAUSDT","AVAXUSDT","LINKUSDT","TRXUSDT",
-"LTCUSDT","DOTUSDT","MATICUSDT","UNIUSDT","ATOMUSDT",
-"ETCUSDT","XLMUSDT","ICPUSDT","FILUSDT","APTUSDT",
-"ARBUSDT","OPUSDT","NEARUSDT","INJUSDT","SUIUSDT",
-"SEIUSDT","TIAUSDT","PEPEUSDT","WIFUSDT","ORDIUSDT",
-"1000PEPEUSDT","AAVEUSDT","MKRUSDT","RNDRUSDT",
-"GALAUSDT","DYDXUSDT","FETUSDT","RUNEUSDT","LDOUSDT",
-"JUPUSDT","PYTHUSDT","TONUSDT","BCHUSDT","EOSUSDT",
-"SANDUSDT","AXSUSDT","CRVUSDT","COMPUSDT","GMXUSDT",
-"FLOWUSDT","CHZUSDT","SNXUSDT","ZECUSDT","KAVAUSDT",
-"BLURUSDT","WLDUSDT","NOTUSDT","ENAUSDT","TAOUSDT",
-"NEOUSDT","QTUMUSDT","MASKUSDT","YFIUSDT","KSMUSDT",
-"STXUSDT","ALGOUSDT","ARUSDT","EGLDUSDT","CFXUSDT",
-"FTMUSDT","ROSEUSDT","1INCHUSDT","SUSHIUSDT","CELOUSDT"
-
-];
-
-/* =========================
-   NEW LISTINGS
-========================= */
-
-const newSymbols = [
-
-"NOTUSDT",
-"ENAUSDT",
-"WUSDT",
-"BBUSDT",
-"ZKUSDT",
-"LISTAUSDT",
-"REZUSDT",
-"AEVOUSDT",
-"OMNIUSDT",
-"PORTALUSDT",
-"PIXELUSDT"
-
-];
-
-/* =========================
-   STOCKS
-========================= */
-
-const stockSymbols = [
-
-"AAPL","TSLA","NVDA","MSFT","AMZN",
-"META","GOOGL","NFLX","AMD","COIN",
-"PLTR","INTC","BA","UBER","PYPL",
-"DIS","BABA","NIO","SHOP","SNAP"
-
-];
-
-/* =========================
-   COMMODITIES
-========================= */
-
-const commoditySymbols = [
-
-"GOLD","SILVER","OIL","NATGAS",
-"COPPER","WHEAT","CORN","COCOA",
-"COFFEE","SOYBEAN"
-
-];
-
-/* =========================
    GLOBALS
 ========================= */
 
 let currentDataset = "crypto";
 
-let currentTF = "15m";
+/* DEFAULT 4H */
+
+let currentTF = "240";
 
 let currentSymbol = "BTCUSDT";
 
@@ -446,7 +385,64 @@ let candles = [];
 let oldestTime = null;
 let loadingHistory = false;
 
-const HISTORY_LIMIT = 1500;
+const HISTORY_LIMIT = 1000;
+
+let allBybitSymbols = [];
+let newListings = [];
+
+/* =========================
+   STATIC LISTS
+========================= */
+
+const stockSymbols = [
+
+"AAPL","TSLA","NVDA","MSFT","AMZN",
+"META","GOOGL","NFLX","AMD","COIN",
+"PLTR","INTC","BA","UBER","PYPL",
+"DIS","BABA","NIO","SHOP","SNAP"
+
+];
+
+const commoditySymbols = [
+
+"GOLD","SILVER","OIL","NATGAS",
+"COPPER","WHEAT","CORN","COCOA",
+"COFFEE","SOYBEAN"
+
+];
+
+/* =========================
+   LOAD BYBIT SYMBOLS
+========================= */
+
+async function loadBybitSymbols(){
+
+  const res = await fetch(
+    "https://api.bybit.com/v5/market/instruments-info?category=linear&limit=1000"
+  );
+
+  const json = await res.json();
+
+  const list = json.result.list;
+
+  allBybitSymbols = list
+    .filter(x => x.status === "Trading")
+    .map(x => x.symbol);
+
+  const weekAgo =
+    Date.now() - (7 * 24 * 60 * 60 * 1000);
+
+  newListings = list
+    .filter(x => {
+
+      if(!x.launchTime) return false;
+
+      return Number(x.launchTime) > weekAgo;
+
+    })
+    .map(x => x.symbol);
+
+}
 
 /* =========================
    GET SYMBOLS
@@ -455,18 +451,18 @@ const HISTORY_LIMIT = 1500;
 function getCurrentSymbols(){
 
   if(currentDataset === "crypto"){
-    return cryptoSymbols;
+    return allBybitSymbols;
+  }
+
+  if(currentDataset === "new"){
+    return newListings;
   }
 
   if(currentDataset === "stocks"){
     return stockSymbols;
   }
 
-  if(currentDataset === "commodities"){
-    return commoditySymbols;
-  }
-
-  return newSymbols;
+  return commoditySymbols;
 }
 
 /* =========================
@@ -518,7 +514,8 @@ const chart =
 
   timeScale:{
     borderColor:"#1f2937",
-    timeVisible:true
+    timeVisible:true,
+    rightOffset:12
   }
 });
 
@@ -534,7 +531,7 @@ const candleSeries =
 });
 
 /* =========================
-   RSI
+   RSI CHART
 ========================= */
 
 const rsiChart =
@@ -584,7 +581,7 @@ const rsiSeries =
 });
 
 /* =========================
-   RSI CALC
+   RSI
 ========================= */
 
 function calculateRSI(data, period=14){
@@ -666,7 +663,7 @@ async function loadSymbol(symbol){
       : symbol;
 
   /* =========================
-     CRYPTO / NEW
+     BYBIT CRYPTO
   ========================= */
 
   if(
@@ -675,19 +672,22 @@ async function loadSymbol(symbol){
   ){
 
     const url =
-      `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${currentTF}&limit=${HISTORY_LIMIT}`;
+      `https://api.bybit.com/v5/market/kline?category=linear&symbol=${symbol}&interval=${currentTF}&limit=${HISTORY_LIMIT}`;
 
     const res = await fetch(url);
 
-    const raw = await res.json();
+    const json = await res.json();
+
+    const raw =
+      json.result.list.reverse();
 
     candles = raw.map(k=>({
 
-      time:k[0]/1000,
-      open:+k[1],
-      high:+k[2],
-      low:+k[3],
-      close:+k[4]
+      time:Number(k[0])/1000,
+      open:Number(k[1]),
+      high:Number(k[2]),
+      low:Number(k[3]),
+      close:Number(k[4])
 
     }));
 
@@ -695,7 +695,7 @@ async function loadSymbol(symbol){
   }
 
   /* =========================
-     STOCKS / COMMODITIES
+     DEMO STOCKS
   ========================= */
 
   else{
@@ -704,7 +704,7 @@ async function loadSymbol(symbol){
 
     let price = 100;
 
-    for(let i=0;i<12000;i++){
+    for(let i=0;i<15000;i++){
 
       const open = price;
 
@@ -721,7 +721,7 @@ async function loadSymbol(symbol){
 
         time:
           Math.floor(Date.now()/1000)
-          - ((12000-i)*3600),
+          - ((15000-i)*3600),
 
         open,
         high,
@@ -768,11 +768,14 @@ async function loadMoreHistory(){
     (oldestTime * 1000) - 1;
 
   const url =
-    `https://api.binance.com/api/v3/klines?symbol=${currentSymbol}&interval=${currentTF}&limit=${HISTORY_LIMIT}&endTime=${endTime}`;
+    `https://api.bybit.com/v5/market/kline?category=linear&symbol=${currentSymbol}&interval=${currentTF}&limit=${HISTORY_LIMIT}&end=${endTime}`;
 
   const res = await fetch(url);
 
-  const raw = await res.json();
+  const json = await res.json();
+
+  const raw =
+    json.result.list.reverse();
 
   if(!raw.length){
 
@@ -782,11 +785,11 @@ async function loadMoreHistory(){
 
   const older = raw.map(k=>({
 
-    time:k[0]/1000,
-    open:+k[1],
-    high:+k[2],
-    low:+k[3],
-    close:+k[4]
+    time:Number(k[0])/1000,
+    open:Number(k[1]),
+    high:Number(k[2]),
+    low:Number(k[3]),
+    close:Number(k[4])
 
   }));
 
@@ -812,7 +815,7 @@ chart.timeScale()
 
   if(!range) return;
 
-  if(range.from < 100){
+  if(range.from < 150){
 
     loadMoreHistory();
   }
@@ -871,7 +874,7 @@ window.addEventListener(
 );
 
 /* =========================
-   TIMEFRAMES
+   TF
 ========================= */
 
 document
@@ -1021,6 +1024,7 @@ function renderList(){
         ${item.change1h.toFixed(2)}%
 
       </div>
+
     `;
 
     div.onclick = async e=>{
@@ -1096,7 +1100,7 @@ document
 });
 
 /* =========================
-   KEYBOARD NAV
+   KEYBOARD
 ========================= */
 
 window.addEventListener(
@@ -1193,13 +1197,20 @@ window.addEventListener(
    START
 ========================= */
 
-generateMarketData();
+async function init(){
 
-resizeCharts();
+  await loadBybitSymbols();
 
-renderList();
+  generateMarketData();
 
-loadSymbol("BTCUSDT");
+  resizeCharts();
+
+  renderList();
+
+  await loadSymbol("BTCUSDT");
+}
+
+init();
 
 </script>
 
