@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Terminal V4.1 FIX TF</title>
+<title>Terminal V4.2 (No Magnet)</title>
 
 <style>
 html,body{
@@ -50,6 +50,7 @@ html,body{
 
 #chart{
   flex:1;
+  min-height:0;
 }
 
 #list{
@@ -61,6 +62,10 @@ html,body{
   padding:10px;
   border-bottom:1px solid #1f2937;
   cursor:pointer;
+}
+
+.coin:hover{
+  background:#111827;
 }
 
 .active{
@@ -78,7 +83,7 @@ html,body{
 
   <div id="left">
 
-    <!-- 🔥 RESTORED TIMEFRAMES -->
+    <!-- TIMEFRAMES -->
     <div id="topbar">
       <button class="tf-btn active" data="1m">1m</button>
       <button class="tf-btn" data="5m">5m</button>
@@ -121,13 +126,20 @@ function init(){
       background:{ color:"#0b1220" },
       textColor:"#d1d5db"
     },
+
     grid:{
       vertLines:{ color:"#161b26" },
       horzLines:{ color:"#161b26" }
     },
+
     timeScale:{
       borderColor:"#1f2937",
       timeVisible:true
+    },
+
+    // 🔥 NO MAGNET (IMPORTANT FIX)
+    crosshair: {
+      mode: LightweightCharts.CrosshairMode.Normal
     }
   });
 
@@ -153,7 +165,7 @@ function init(){
   load(symbols[0]);
 }
 
-/* ---------------- LOAD HISTORY ---------------- */
+/* ---------------- LOAD ---------------- */
 
 async function load(symbol){
 
@@ -216,7 +228,7 @@ async function loadMore(){
   loading = false;
 }
 
-/* ---------------- TF SWITCH ---------------- */
+/* ---------------- TF ---------------- */
 
 function initTF(){
 
