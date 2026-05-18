@@ -21,8 +21,6 @@ body{
   overflow:hidden;
 }
 
-/* ================= HEADER ================= */
-
 .header{
   display:flex;
   justify-content:space-between;
@@ -50,7 +48,6 @@ body{
   font-size:14px;
   padding:6px 10px;
   border-radius:6px;
-  transition:0.2s;
 }
 
 .header-menu a:hover{
@@ -63,12 +60,9 @@ body{
   background:#1f2937;
 }
 
-/* ================= LAYOUT BAR ================= */
-
 .layout-bar{
   display:flex;
   gap:10px;
-  justify-content:flex-start;
   padding:10px 14px;
   border-bottom:1px solid #1f2937;
 }
@@ -83,12 +77,6 @@ body{
   font-weight:600;
   font-size:13px;
 }
-
-.layout-bar button:hover{
-  opacity:0.9;
-}
-
-/* ================= GRID ================= */
 
 #grid{
   flex:1;
@@ -112,13 +100,6 @@ body{
   height:100%;
 }
 
-/* responsive fallback */
-@media(max-width:1200px){
-  #grid[data-cols="3"]{
-    grid-template-columns:repeat(2,1fr);
-  }
-}
-
 @media(max-width:700px){
   #grid{
     grid-template-columns:1fr !important;
@@ -129,7 +110,6 @@ body{
 
 <body>
 
-<!-- HEADER -->
 <div class="header">
   <div class="header-left">Multichart</div>
 
@@ -139,14 +119,12 @@ body{
   </div>
 </div>
 
-<!-- LAYOUT BAR -->
 <div class="layout-bar">
   <button onclick="setLayout(4)">4</button>
   <button onclick="setLayout(6)">6</button>
   <button onclick="setLayout(9)">9</button>
 </div>
 
-<!-- GRID -->
 <div id="grid"></div>
 
 <script src="https://s3.tradingview.com/tv.js"></script>
@@ -165,7 +143,9 @@ const defaults = [
   "BNBUSDT"
 ];
 
-let currentLayout = parseInt(localStorage.getItem("layout")) || 4;
+let savedLayout = parseInt(localStorage.getItem("layout"));
+let currentLayout = Number.isFinite(savedLayout) ? savedLayout : 4;
+
 let widgets = {};
 
 function getSymbol(i){
@@ -174,7 +154,7 @@ function getSymbol(i){
 
 function destroyWidgets(){
   Object.values(widgets).forEach(w => {
-    try { if (w?.remove) w.remove(); } catch(e){}
+    try { w?.remove?.(); } catch(e){}
   });
   widgets = {};
 }
@@ -182,7 +162,6 @@ function destroyWidgets(){
 function calculateGrid(n){
   const cols = Math.ceil(Math.sqrt(n));
   const rows = Math.ceil(n / cols);
-
   return { cols, rows };
 }
 
@@ -191,13 +170,12 @@ function render(){
   destroyWidgets();
 
   const grid = document.getElementById("grid");
+  grid.innerHTML = "";
 
   const { cols, rows } = calculateGrid(currentLayout);
 
   grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
   grid.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
-
-  grid.innerHTML = "";
 
   for(let i=0;i<currentLayout;i++){
     const card = document.createElement("div");
@@ -206,11 +184,11 @@ function render(){
     grid.appendChild(card);
   }
 
-  setTimeout(() => {
+  requestAnimationFrame(() => {
     for(let i=0;i<currentLayout;i++){
       loadChart(i);
     }
-  }, 150);
+  });
 }
 
 function loadChart(i){
@@ -222,38 +200,18 @@ function loadChart(i){
 
   const symbol = getSymbol(i);
 
-  widgets[i] = new TradingView.widget({
-
+  const widget = new TradingView.widget({
     autosize: true,
-
     symbol: "BYBIT:" + symbol,
-
     interval: "15",
-
     timezone: "Etc/UTC",
-
     theme: "dark",
-
     style: "1",
-
     locale: "en",
-
     allow_symbol_change: true,
 
     hide_side_toolbar: true,
     hide_top_toolbar: false,
-
-    withdateranges: false,
-    details: false,
-
-    enable_publishing: false,
-    save_image: false,
-
-    load_last_chart: false,
-
-    studies: [],
-    study_count_limit: 0,
-    saved_data: null,
 
     disabled_features: [
       "volume_force_overlay",
@@ -268,27 +226,34 @@ function loadChart(i){
     ],
 
     overrides: {
-
       "paneProperties.background": "#0b1220",
       "paneProperties.vertGridProperties.color": "#161b26",
       "paneProperties.horzGridProperties.color": "#161b26",
-
       "paneProperties.legendProperties.showVolume": false,
-      "volumePaneSize": "0",
-
       "scalesProperties.textColor": "#AAA",
-
       "mainSeriesProperties.candleStyle.upColor": "#22c55e",
       "mainSeriesProperties.candleStyle.downColor": "#ef4444",
       "mainSeriesProperties.candleStyle.borderUpColor": "#22c55e",
       "mainSeriesProperties.candleStyle.borderDownColor": "#ef4444",
       "mainSeriesProperties.candleStyle.wickUpColor": "#22c55e",
       "mainSeriesProperties.candleStyle.wickDownColor": "#ef4444",
-
       "mainSeriesProperties.priceAxisProperties.log": true
     },
 
     container_id: "chart" + i
+  });
+
+  widgets[i] = widget;
+
+  widget.onChartReady(() => {
+    const chart = widget.activeChart();
+
+    chart.onSymbolChanged().subscribe(null, (newSymbol) => {
+      if(!newSymbol) return;
+
+      const clean = newSymbol.split(":")[1] || newSymbol;
+      localStorage.setItem("symbol_" + i, clean);
+    });
   });
 }
 
