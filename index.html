@@ -3,9 +3,13 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Multichart Fix</title>
+<title>Multichart - Главная</title>
 
 <style>
+* {
+  box-sizing: border-box;
+}
+
 body{
   margin:0;
   background:#0b1220;
@@ -17,109 +21,284 @@ body{
   overflow:hidden;
 }
 
+/* ================= HEADER ================= */
+
 .header{
   display:flex;
-  gap:10px;
-  padding:10px;
-  border-bottom:1px solid #1f2937;
+  justify-content:space-between;
   align-items:center;
+  padding:10px 14px;
+  border-bottom:1px solid #1f2937;
+  background:#0b1220;
 }
 
-button{
-  padding:6px 12px;
+.header-left{
+  font-size:18px;
+  font-weight:700;
+  letter-spacing:0.5px;
+}
+
+.header-menu{
+  display:flex;
+  gap:14px;
+}
+
+.header-menu a{
+  color:#9ca3af;
+  text-decoration:none;
+  font-weight:600;
+  font-size:14px;
+  padding:6px 10px;
+  border-radius:6px;
+  transition:0.2s;
+}
+
+.header-menu a:hover{
+  color:white;
+  background:#111827;
+}
+
+.header-menu a.active{
+  color:white;
+  background:#1f2937;
+}
+
+/* ================= LAYOUT BAR ================= */
+
+.layout-bar{
+  display:flex;
+  gap:10px;
+  justify-content:flex-start;
+  padding:10px 14px;
+  border-bottom:1px solid #1f2937;
+}
+
+.layout-bar button{
   background:#2563eb;
   border:none;
   color:white;
+  padding:6px 12px;
   border-radius:6px;
   cursor:pointer;
+  font-weight:600;
+  font-size:13px;
 }
 
-#chart{
+.layout-bar button:hover{
+  opacity:0.9;
+}
+
+/* ================= GRID ================= */
+
+#grid{
   flex:1;
+  display:grid;
+  gap:10px;
+  padding:10px;
+  width:100%;
+  height:100%;
+}
+
+.card{
+  background:#111827;
+  border:1px solid #1f2937;
+  border-radius:12px;
+  overflow:hidden;
+  display:flex;
+}
+
+.chart{
+  width:100%;
+  height:100%;
+}
+
+/* responsive fallback */
+@media(max-width:1200px){
+  #grid[data-cols="3"]{
+    grid-template-columns:repeat(2,1fr);
+  }
+}
+
+@media(max-width:700px){
+  #grid{
+    grid-template-columns:1fr !important;
+  }
 }
 </style>
 </head>
 
 <body>
 
+<!-- HEADER -->
 <div class="header">
-  <button onclick="setSymbol('BTCUSDT')">BTC</button>
-  <button onclick="setSymbol('ETHUSDT')">ETH</button>
-  <button onclick="setSymbol('SOLUSDT')">SOL</button>
-  <button onclick="setSymbol('XRPUSDT')">XRP</button>
+  <div class="header-left">Multichart</div>
+
+  <div class="header-menu">
+    <a href="index.html" class="active">Главная</a>
+    <a href="coins.html">Монеты</a>
+  </div>
 </div>
 
-<div id="chart"></div>
+<!-- LAYOUT BAR -->
+<div class="layout-bar">
+  <button onclick="setLayout(4)">4</button>
+  <button onclick="setLayout(6)">6</button>
+  <button onclick="setLayout(9)">9</button>
+</div>
+
+<!-- GRID -->
+<div id="grid"></div>
 
 <script src="https://s3.tradingview.com/tv.js"></script>
 
 <script>
 
-let widget;
-let currentSymbol = localStorage.getItem("symbol") || "BTCUSDT";
+const defaults = [
+  "BTCUSDT",
+  "ETHUSDT",
+  "SOLUSDT",
+  "XRPUSDT",
+  "DOGEUSDT",
+  "ADAUSDT",
+  "AVAXUSDT",
+  "LINKUSDT",
+  "BNBUSDT"
+];
 
-function create(symbol){
+let currentLayout = parseInt(localStorage.getItem("layout")) || 4;
+let widgets = {};
 
-  if(widget){
-    widget.remove();
+function getSymbol(i){
+  return localStorage.getItem("symbol_" + i) || defaults[i];
+}
+
+function destroyWidgets(){
+  Object.values(widgets).forEach(w => {
+    try { if (w?.remove) w.remove(); } catch(e){}
+  });
+  widgets = {};
+}
+
+function calculateGrid(n){
+  const cols = Math.ceil(Math.sqrt(n));
+  const rows = Math.ceil(n / cols);
+
+  return { cols, rows };
+}
+
+function render(){
+
+  destroyWidgets();
+
+  const grid = document.getElementById("grid");
+
+  const { cols, rows } = calculateGrid(currentLayout);
+
+  grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+  grid.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
+
+  grid.innerHTML = "";
+
+  for(let i=0;i<currentLayout;i++){
+    const card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML = `<div id="chart${i}" class="chart"></div>`;
+    grid.appendChild(card);
   }
 
-  widget = new TradingView.widget({
+  setTimeout(() => {
+    for(let i=0;i<currentLayout;i++){
+      loadChart(i);
+    }
+  }, 150);
+}
+
+function loadChart(i){
+
+  if(!window.TradingView){
+    console.error("TradingView not loaded");
+    return;
+  }
+
+  const symbol = getSymbol(i);
+
+  widgets[i] = new TradingView.widget({
+
     autosize: true,
+
     symbol: "BYBIT:" + symbol,
+
     interval: "15",
+
     timezone: "Etc/UTC",
+
     theme: "dark",
+
     style: "1",
+
     locale: "en",
 
     allow_symbol_change: true,
+
     hide_side_toolbar: true,
     hide_top_toolbar: false,
 
+    withdateranges: false,
+    details: false,
+
+    enable_publishing: false,
+    save_image: false,
+
+    load_last_chart: false,
+
+    studies: [],
+    study_count_limit: 0,
+    saved_data: null,
+
     disabled_features: [
       "volume_force_overlay",
+      "volume_indicator",
       "create_volume_indicator_by_default",
       "header_compare",
       "header_symbol_search",
+      "header_legend",
+      "study_dialog_search_control",
+      "show_interval_dialog_on_key_press",
       "left_toolbar"
     ],
 
-    container_id: "chart"
-  });
+    overrides: {
 
-  localStorage.setItem("symbol", symbol);
+      "paneProperties.background": "#0b1220",
+      "paneProperties.vertGridProperties.color": "#161b26",
+      "paneProperties.horzGridProperties.color": "#161b26",
 
-  widget.onChartReady(() => {
+      "paneProperties.legendProperties.showVolume": false,
+      "volumePaneSize": "0",
 
-    const chart = widget.activeChart();
+      "scalesProperties.textColor": "#AAA",
 
-    function forceLog(){
-      try{
-        chart.setPriceScale("logarithmic");
-      } catch(e){}
-    }
+      "mainSeriesProperties.candleStyle.upColor": "#22c55e",
+      "mainSeriesProperties.candleStyle.downColor": "#ef4444",
+      "mainSeriesProperties.candleStyle.borderUpColor": "#22c55e",
+      "mainSeriesProperties.candleStyle.borderDownColor": "#ef4444",
+      "mainSeriesProperties.candleStyle.wickUpColor": "#22c55e",
+      "mainSeriesProperties.candleStyle.wickDownColor": "#ef4444",
 
-    // первый запуск
-    forceLog();
+      "mainSeriesProperties.priceAxisProperties.log": true
+    },
 
-    // TradingView часто сбрасывает scale после загрузки данных
-    chart.onDataLoaded().subscribe(null, forceLog);
-    chart.onVisibleRangeChanged().subscribe(null, forceLog);
-
-    // страховка от BYBIT reset
-    setInterval(forceLog, 1200);
+    container_id: "chart" + i
   });
 }
 
-function setSymbol(sym){
-  currentSymbol = sym;
-  create(sym);
+function setLayout(n){
+  currentLayout = n;
+  localStorage.setItem("layout", n);
+  render();
 }
 
-window.onload = () => {
-  create(currentSymbol);
-};
+render();
 
 </script>
 
