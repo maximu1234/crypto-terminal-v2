@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Multichart Stable</title>
+<title>Multichart Fix</title>
 
 <style>
 body{
@@ -21,31 +21,23 @@ body{
   border-bottom:1px solid #1f2937;
 }
 
-.layout{
-  display:flex;
-  gap:10px;
-  padding:10px;
+#chart{
+  flex:1;
 }
-
 button{
+  margin:5px;
+  padding:6px 12px;
   background:#2563eb;
   color:white;
   border:none;
-  padding:6px 12px;
   border-radius:6px;
-}
-
-#chart{
-  flex:1;
 }
 </style>
 </head>
 
 <body>
 
-<div class="header">Multichart (stable version)</div>
-
-<div class="layout">
+<div class="header">
   <button onclick="set('BTCUSDT')">BTC</button>
   <button onclick="set('ETHUSDT')">ETH</button>
   <button onclick="set('SOLUSDT')">SOL</button>
@@ -60,13 +52,14 @@ button{
 
 let widget;
 
-function init(symbol){
+function create(symbol){
 
   if(widget){
     widget.remove();
   }
 
   widget = new TradingView.widget({
+
     autosize:true,
     symbol:"BYBIT:"+symbol,
     interval:"15",
@@ -80,19 +73,32 @@ function init(symbol){
     hide_side_toolbar:true,
     hide_top_toolbar:false,
 
+    // 🔥 ВАЖНО: правильный log
+    logScale:true,
+
+    // 🔥 ВАЖНО: volume реально убираем через studies
+    studies: [],
+
+    disabled_features:[
+      "volume_force_overlay",
+      "create_volume_indicator_by_default",
+      "header_compare",
+      "header_symbol_search",
+      "left_toolbar"
+    ],
+
     container_id:"chart"
   });
 
   localStorage.setItem("symbol",symbol);
 }
 
-function set(symbol){
-  init(symbol);
+function set(s){
+  create(s);
 }
 
 window.onload = ()=>{
-  const saved = localStorage.getItem("symbol") || "BTCUSDT";
-  init(saved);
+  create(localStorage.getItem("symbol") || "BTCUSDT");
 };
 
 </script>
