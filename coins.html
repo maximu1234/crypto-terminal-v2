@@ -78,15 +78,26 @@ html,body{
 }
 
 /* =========================
-   TF BAR
+   TOPBAR
 ========================= */
 
 #topbar{
   display:flex;
+  align-items:center;
   gap:6px;
   padding:8px 12px;
   border-bottom:1px solid #1f2937;
   flex-shrink:0;
+}
+
+#current-symbol{
+  font-size:14px;
+  font-weight:700;
+  color:white;
+  margin-right:12px;
+  padding-right:14px;
+  border-right:1px solid #1f2937;
+  min-width:120px;
 }
 
 .tf-btn{
@@ -187,15 +198,10 @@ html,body{
   display:grid;
   grid-template-columns:28px 1fr 70px 70px;
   align-items:center;
-
   padding:10px 12px;
-
   border-bottom:1px solid #1f2937;
-
   cursor:pointer;
-
   user-select:none;
-
   font-size:13px;
 }
 
@@ -288,14 +294,20 @@ html,body{
 
     </div>
 
-    <!-- TF -->
+    <!-- TOPBAR -->
     <div id="topbar">
+
+      <div id="current-symbol">
+        BTCUSDT.P
+      </div>
+
       <button class="tf-btn active" data-tf="1m">1m</button>
       <button class="tf-btn" data-tf="5m">5m</button>
       <button class="tf-btn" data-tf="15m">15m</button>
       <button class="tf-btn" data-tf="1h">1h</button>
       <button class="tf-btn" data-tf="4h">4h</button>
       <button class="tf-btn" data-tf="1d">1D</button>
+
     </div>
 
     <!-- CHART -->
@@ -540,6 +552,10 @@ async function loadSymbol(symbol){
 
   loadingHistory = false;
 
+  document.getElementById(
+    "current-symbol"
+  ).innerText = symbol + ".P";
+
   const url =
     `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${currentTF}&limit=${HISTORY_LIMIT}`;
 
@@ -705,8 +721,6 @@ function renderList(){
 
   });
 
-  /* SORT */
-
   data.sort((a,b)=>{
 
     let result = 0;
@@ -731,8 +745,6 @@ function renderList(){
     return sortAsc ? result : -result;
 
   });
-
-  /* RENDER */
 
   data.forEach(item => {
 
@@ -773,8 +785,6 @@ function renderList(){
 
     `;
 
-    /* OPEN COIN */
-
     div.onclick = async (e) => {
 
       if(e.target.dataset.fav){
@@ -789,8 +799,6 @@ function renderList(){
       await loadSymbol(item.symbol);
 
     };
-
-    /* FAVORITE */
 
     const favBtn =
       div.querySelector("[data-fav]");
