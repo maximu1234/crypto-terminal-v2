@@ -40,8 +40,6 @@ body{
   border-radius:6px;
 }
 
-.header-menu a:hover{ color:white; background:#111827; }
-
 .header-menu a.active{ color:white; background:#1f2937; }
 
 .layout-bar{
@@ -113,14 +111,14 @@ const defaults = [
 
 let currentLayout = parseInt(localStorage.getItem("layout")) || 4;
 let widgets = {};
-let lastSymbols = {};
+let symbolsState = {};
 
 function getSymbol(i){
   return localStorage.getItem("symbol_" + i) || defaults[i];
 }
 
-function saveSymbol(i, symbol){
-  localStorage.setItem("symbol_" + i, symbol);
+function saveSymbol(i, sym){
+  localStorage.setItem("symbol_" + i, sym);
 }
 
 function destroyWidgets(){
@@ -170,7 +168,7 @@ function render(){
 function loadChart(i){
 
   const symbol = getSymbol(i);
-  lastSymbols[i] = symbol;
+  symbolsState[i] = symbol;
 
   const widget = new TradingView.widget({
     autosize: true,
@@ -185,8 +183,10 @@ function loadChart(i){
     hide_side_toolbar: true,
     hide_top_toolbar: false,
 
+    // 🔥 ВАЖНО: правильные фичи (volume реально убирается тут)
     disabled_features: [
       "volume_force_overlay",
+      "show_volume_force_overlay",
       "volume_indicator",
       "header_compare",
       "header_symbol_search",
@@ -194,44 +194,33 @@ function loadChart(i){
       "left_toolbar"
     ],
 
+    overrides: {
+      "mainSeriesProperties.priceAxisProperties.log": true
+    },
+
     container_id: "chart" + i
   });
 
   widgets[i] = widget;
 
-  widget.onChartReady(() => {
-    const chart = widget.activeChart();
+  // 🔥 стабильный polling (единственный надежный способ)
+  setInterval(() => {
+    try {
+      const chart = widget.activeChart();
+      if(!chart) return;
 
-    // 🔥 основной трекер
-    chart.onDataLoaded().subscribe(null, () => {
-      try {
-        const newSymbol = chart.symbol?.() || chart.symbol();
-        if(!newSymbol) return;
+      const sym = chart.symbol?.() || chart.symbol();
+      if(!sym) return;
 
-        const clean = newSymbol.split(":")[1] || newSymbol;
+      const clean = sym.split(":")[1] || sym;
 
-        if(lastSymbols[i] !== clean){
-          lastSymbols[i] = clean;
-          saveSymbol(i, clean);
-        }
-      } catch(e){}
-    });
+      if(symbolsState[i] !== clean){
+        symbolsState[i] = clean;
+        saveSymbol(i, clean);
+      }
 
-    // 🔥 страховка (TradingView иногда не стреляет events)
-    setInterval(() => {
-      try {
-        const newSymbol = chart.symbol?.() || chart.symbol();
-        if(!newSymbol) return;
-
-        const clean = newSymbol.split(":")[1] || newSymbol;
-
-        if(lastSymbols[i] !== clean){
-          lastSymbols[i] = clean;
-          saveSymbol(i, clean);
-        }
-      } catch(e){}
-    }, 2000);
-  });
+    } catch(e){}
+  }, 2000);
 }
 
 function setLayout(n){
