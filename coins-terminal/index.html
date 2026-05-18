@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Terminal Debug V1</title>
+<title>Terminal V1 FIX</title>
 
 <style>
 body{
@@ -27,12 +27,10 @@ body{
 
 #chart{
   flex:3;
-  background:#111827;
 }
 
 #rsi{
   flex:1;
-  background:#0f172a;
   border-top:1px solid #1f2937;
 }
 
@@ -56,9 +54,7 @@ body{
   bottom:10px;
   left:10px;
   background:red;
-  color:white;
   padding:10px;
-  font-size:12px;
   display:none;
 }
 </style>
@@ -85,53 +81,45 @@ body{
 <script>
 
 function showError(msg){
-  const el = document.getElementById("error");
-  el.style.display="block";
-  el.innerText = msg;
+  const e=document.getElementById("error");
+  e.style.display="block";
+  e.innerText=msg;
 }
 
-if(!window.LightweightCharts){
-  showError("❌ LightweightCharts не загрузился (CDN issue)");
-}
-
-const symbols = [
+const symbols=[
   "BTCUSDT","ETHUSDT","SOLUSDT","XRPUSDT",
   "DOGEUSDT","ADAUSDT"
 ];
 
-let index = 0;
+let index=0;
 
-let chart, candleSeries;
+let chart;
+let candleSeries;
 
 async function fetchCandles(symbol){
 
-  try{
+  const res=await fetch(
+    `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=15m&limit=100`
+  );
 
-    const res = await fetch(
-      `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=15m&limit=100`
-    );
+  const data=await res.json();
 
-    if(!res.ok){
-      throw new Error("Binance API error: " + res.status);
-    }
+  return data.map(d=>({
+    time:d[0]/1000,
+    open:+d[1],
+    high:+d[2],
+    low:+d[3],
+    close:+d[4]
+  }));
 
-    const data = await res.json();
-
-    return data.map(d => ({
-      time: d[0]/1000,
-      open: +d[1],
-      high: +d[2],
-      low: +d[3],
-      close: +d[4]
-    }));
-
-  } catch(err){
-    showError(err.message);
-    return [];
-  }
 }
 
 function initChart(){
+
+  if(!window.LightweightCharts){
+    showError("LightweightCharts not loaded");
+    return;
+  }
 
   chart = LightweightCharts.createChart(document.getElementById("chart"),{
     layout:{
@@ -148,14 +136,9 @@ function initChart(){
 
 }
 
-async function loadSymbol(symbol){
+async function loadSymbol(sym){
 
-  const candles = await fetchCandles(symbol);
-
-  if(!candles.length){
-    showError("❌ Нет данных по " + symbol);
-    return;
-  }
+  const candles = await fetchCandles(sym);
 
   candleSeries.setData(candles);
 
@@ -163,13 +146,13 @@ async function loadSymbol(symbol){
 
 function renderList(){
 
-  const list = document.getElementById("list");
+  const list=document.getElementById("list");
   list.innerHTML="";
 
   symbols.forEach((s,i)=>{
 
-    const div = document.createElement("div");
-    div.className="coin" + (i===index?" active":"");
+    const div=document.createElement("div");
+    div.className="coin"+(i===index?" active":"");
     div.innerText=s;
 
     div.onclick=()=>{
@@ -184,11 +167,8 @@ function renderList(){
 }
 
 async function update(){
-
   renderList();
-
   await loadSymbol(symbols[index]);
-
 }
 
 initChart();
