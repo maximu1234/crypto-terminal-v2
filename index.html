@@ -10,28 +10,32 @@ body{
   margin:0;
   background:#0b1220;
   color:white;
-  font-family:Arial;
+  font-family:Arial,sans-serif;
   height:100vh;
   display:flex;
   flex-direction:column;
+  overflow:hidden;
 }
 
 .header{
+  display:flex;
+  gap:10px;
   padding:10px;
   border-bottom:1px solid #1f2937;
+  align-items:center;
+}
+
+button{
+  padding:6px 12px;
+  background:#2563eb;
+  border:none;
+  color:white;
+  border-radius:6px;
+  cursor:pointer;
 }
 
 #chart{
   flex:1;
-}
-
-button{
-  margin:5px;
-  padding:6px 12px;
-  background:#2563eb;
-  color:white;
-  border:none;
-  border-radius:6px;
 }
 </style>
 </head>
@@ -39,10 +43,10 @@ button{
 <body>
 
 <div class="header">
-  <button onclick="set('BTCUSDT')">BTC</button>
-  <button onclick="set('ETHUSDT')">ETH</button>
-  <button onclick="set('SOLUSDT')">SOL</button>
-  <button onclick="set('XRPUSDT')">XRP</button>
+  <button onclick="setSymbol('BTCUSDT')">BTC</button>
+  <button onclick="setSymbol('ETHUSDT')">ETH</button>
+  <button onclick="setSymbol('SOLUSDT')">SOL</button>
+  <button onclick="setSymbol('XRPUSDT')">XRP</button>
 </div>
 
 <div id="chart"></div>
@@ -52,6 +56,7 @@ button{
 <script>
 
 let widget;
+let currentSymbol = localStorage.getItem("symbol") || "BTCUSDT";
 
 function create(symbol){
 
@@ -60,21 +65,19 @@ function create(symbol){
   }
 
   widget = new TradingView.widget({
+    autosize: true,
+    symbol: "BYBIT:" + symbol,
+    interval: "15",
+    timezone: "Etc/UTC",
+    theme: "dark",
+    style: "1",
+    locale: "en",
 
-    autosize:true,
-    symbol:"BYBIT:"+symbol,
-    interval:"15",
-    timezone:"Etc/UTC",
-    theme:"dark",
-    style:"1",
-    locale:"en",
+    allow_symbol_change: true,
+    hide_side_toolbar: true,
+    hide_top_toolbar: false,
 
-    allow_symbol_change:true,
-
-    hide_side_toolbar:true,
-    hide_top_toolbar:false,
-
-    disabled_features:[
+    disabled_features: [
       "volume_force_overlay",
       "create_volume_indicator_by_default",
       "header_compare",
@@ -82,32 +85,40 @@ function create(symbol){
       "left_toolbar"
     ],
 
-    studies: [],
-    container_id:"chart"
+    container_id: "chart"
   });
 
-  localStorage.setItem("symbol",symbol);
+  localStorage.setItem("symbol", symbol);
 
   widget.onChartReady(() => {
+
     const chart = widget.activeChart();
 
-    // 🔥 ВОТ ГЛАВНЫЙ ФИКС LOG
-    setTimeout(() => {
-      try {
+    function forceLog(){
+      try{
         chart.setPriceScale("logarithmic");
-      } catch(e) {
-        console.log("log set failed", e);
-      }
-    }, 300);
+      } catch(e){}
+    }
+
+    // первый запуск
+    forceLog();
+
+    // TradingView часто сбрасывает scale после загрузки данных
+    chart.onDataLoaded().subscribe(null, forceLog);
+    chart.onVisibleRangeChanged().subscribe(null, forceLog);
+
+    // страховка от BYBIT reset
+    setInterval(forceLog, 1200);
   });
 }
 
-function set(s){
-  create(s);
+function setSymbol(sym){
+  currentSymbol = sym;
+  create(sym);
 }
 
-window.onload = ()=>{
-  create(localStorage.getItem("symbol") || "BTCUSDT");
+window.onload = () => {
+  create(currentSymbol);
 };
 
 </script>
