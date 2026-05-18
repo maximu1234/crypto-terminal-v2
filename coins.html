@@ -6,6 +6,7 @@
 <title>Multichart</title>
 
 <style>
+
 html,body{
   margin:0;
   height:100%;
@@ -21,7 +22,7 @@ html,body{
 
 #app{
   display:grid;
-  grid-template-columns:1fr 240px;
+  grid-template-columns:1fr 320px;
   height:100vh;
 }
 
@@ -145,21 +146,48 @@ html,body{
 }
 
 /* =========================
-   RIGHT LIST
+   RIGHT TABLE
 ========================= */
 
 #list{
   border-left:1px solid #1f2937;
   overflow:auto;
   background:#0b1220;
+  display:flex;
+  flex-direction:column;
 }
 
-.coin{
+/* HEADER */
+
+#table-header{
+  display:grid;
+  grid-template-columns:28px 1fr 70px 70px;
   padding:10px 12px;
   border-bottom:1px solid #1f2937;
+  position:sticky;
+  top:0;
+  background:#0f172a;
+  z-index:10;
+  font-size:12px;
+  color:#9ca3af;
+}
+
+/* ROW */
+
+.coin{
+  display:grid;
+  grid-template-columns:28px 1fr 70px 70px;
+  align-items:center;
+
+  padding:10px 12px;
+
+  border-bottom:1px solid #1f2937;
+
   cursor:pointer;
+
   user-select:none;
-  font-size:14px;
+
+  font-size:13px;
 }
 
 .coin:hover{
@@ -169,6 +197,54 @@ html,body{
 .coin.active{
   background:#1e293b;
 }
+
+/* CELLS */
+
+.col-flag{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.flag{
+  width:10px;
+  height:10px;
+  border-radius:50%;
+}
+
+.flag.crypto{
+  background:#3b82f6;
+}
+
+.flag.stock{
+  background:#a855f7;
+}
+
+.flag.commodity{
+  background:#f59e0b;
+}
+
+.flag.new{
+  background:#22c55e;
+}
+
+.col-symbol{
+  font-weight:600;
+}
+
+.col-change{
+  text-align:right;
+  font-size:12px;
+}
+
+.green{
+  color:#22c55e;
+}
+
+.red{
+  color:#ef4444;
+}
+
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
@@ -220,7 +296,29 @@ html,body{
   </div>
 
   <!-- RIGHT -->
-  <div id="list"></div>
+  <div id="list">
+
+    <div id="table-header">
+
+      <div class="col-flag">F</div>
+
+      <div class="col-symbol">
+        Coin
+      </div>
+
+      <div class="col-change">
+        24h
+      </div>
+
+      <div class="col-change">
+        1h
+      </div>
+
+    </div>
+
+    <div id="coins-body"></div>
+
+  </div>
 
 </div>
 
@@ -560,16 +658,36 @@ document.querySelectorAll(".tf-btn").forEach(btn => {
 });
 
 /* =========================
-   LIST
+   TABLE
 ========================= */
 
 function renderList(){
 
-  const list = document.getElementById("list");
+  const list = document.getElementById("coins-body");
 
   list.innerHTML = "";
 
   symbols.forEach((symbol,index) => {
+
+    const change24 =
+      ((Math.random() * 12) - 6).toFixed(2);
+
+    const change1h =
+      ((Math.random() * 4) - 2).toFixed(2);
+
+    let category = "crypto";
+
+    if(symbol.includes("LINK")){
+      category = "stock";
+    }
+
+    if(symbol.includes("DOGE")){
+      category = "new";
+    }
+
+    if(symbol.includes("AVAX")){
+      category = "commodity";
+    }
 
     const div = document.createElement("div");
 
@@ -579,13 +697,32 @@ function renderList(){
       div.classList.add("active");
     }
 
-    div.innerText = symbol;
+    div.innerHTML = `
+
+      <div class="col-flag">
+        <div class="flag ${category}"></div>
+      </div>
+
+      <div class="col-symbol">
+        ${symbol}
+      </div>
+
+      <div class="col-change ${change24 >= 0 ? 'green' : 'red'}">
+        ${change24}%
+      </div>
+
+      <div class="col-change ${change1h >= 0 ? 'green' : 'red'}">
+        ${change1h}%
+      </div>
+
+    `;
 
     div.onclick = async () => {
 
       currentIndex = index;
 
       await loadSymbol(symbol);
+
     };
 
     list.appendChild(div);
