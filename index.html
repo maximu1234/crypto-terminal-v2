@@ -1,6 +1,6 @@
 <!-- =========================================================
      FULL index.html
-     DASHBOARD ENGINE V3
+     DASHBOARD ENGINE V4
 ========================================================= -->
 
 <!DOCTYPE html>
@@ -281,8 +281,8 @@ value="${defaultSymbols[index] || 'BTCUSDT'}"
 
 <option value="1">1m</option>
 <option value="5">5m</option>
-<option value="15">15m</option>
-<option value="60" selected>1h</option>
+<option value="15" selected>15m</option>
+<option value="60">1h</option>
 <option value="240">4h</option>
 <option value="D">1D</option>
 
@@ -479,16 +479,37 @@ return;
 series.setData(candles);
 
 /* =========================================================
-   PERFECT DEFAULT ZOOM
+   SMART DEFAULT ZOOM
 ========================================================= */
 
-/*
-Instead of showing few candles,
-show big history immediately
-*/
+let visibleBars = 900;
 
-const visibleBars = Math.min(
-900,
+if(tf === "1"){
+    visibleBars = 300;
+}
+
+if(tf === "5"){
+    visibleBars = 500;
+}
+
+if(tf === "15"){
+    visibleBars = 900;
+}
+
+if(tf === "60"){
+    visibleBars = 700;
+}
+
+if(tf === "240"){
+    visibleBars = 500;
+}
+
+if(tf === "D"){
+    visibleBars = 300;
+}
+
+visibleBars = Math.min(
+visibleBars,
 candles.length
 );
 
