@@ -1,9 +1,17 @@
+<!-- =========================================================
+     FULL coins.html
+     BYBIT + TWELVEDATA VERSION
+========================================================= -->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
 <title>Multichart</title>
+
+<script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
 
 <style>
 
@@ -74,7 +82,7 @@ html,body{
   margin-right:12px;
   padding-right:14px;
   border-right:1px solid #1f2937;
-  min-width:140px;
+  min-width:160px;
 }
 
 .tf-btn{
@@ -94,7 +102,7 @@ html,body{
 #chart-wrap{
   height:82%;
   min-height:0;
-  padding-right:28px;
+  padding-right:42px;
   box-sizing:border-box;
 }
 
@@ -108,25 +116,25 @@ html,body{
   height:18%;
   min-height:90px;
   border-top:1px solid #1f2937;
-  padding-right:28px;
+  padding-right:42px;
   box-sizing:border-box;
 }
 
 #rsi-band{
   position:absolute;
   left:0;
-  right:28px;
+  right:42px;
   top:30%;
   height:40%;
   background:#1e1e31;
-  pointer-events:none;
   z-index:0;
+  pointer-events:none;
 }
 
 #rsi-chart{
   position:absolute;
   inset:0;
-  right:28px;
+  right:42px;
   z-index:1;
 }
 
@@ -222,9 +230,6 @@ html,body{
 }
 
 </style>
-
-<script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
-
 </head>
 
 <body>
@@ -252,12 +257,12 @@ Multichart
 BTCUSDT.P
 </div>
 
-<button class="tf-btn" data-tf="1">1m</button>
-<button class="tf-btn" data-tf="5">5m</button>
-<button class="tf-btn" data-tf="15">15m</button>
-<button class="tf-btn active" data-tf="60">1h</button>
-<button class="tf-btn" data-tf="240">4h</button>
-<button class="tf-btn" data-tf="D">1D</button>
+<button class="tf-btn" data-tf="1min">1m</button>
+<button class="tf-btn" data-tf="5min">5m</button>
+<button class="tf-btn" data-tf="15min">15m</button>
+<button class="tf-btn active" data-tf="1h">1h</button>
+<button class="tf-btn" data-tf="4h">4h</button>
+<button class="tf-btn" data-tf="1day">1D</button>
 
 </div>
 
@@ -294,6 +299,10 @@ Stocks
 Commodities
 </option>
 
+<option value="forex">
+Forex
+</option>
+
 </select>
 
 </div>
@@ -326,37 +335,37 @@ Coin
 
 <script>
 
-/* =========================
+/* =========================================================
    API
-========================= */
+========================================================= */
 
-const FINNHUB_KEY =
-"d85k1vpr01qitd92cllgd85k1vpr01qitd92clm0";
+const TWELVE_KEY =
+"d6b45dcb1abf4b3ebe020038e41864fb";
 
-/* =========================
+/* =========================================================
    GLOBALS
-========================= */
+========================================================= */
 
 let currentDataset = "crypto";
-let currentTF = "60";
+let currentTF = "1h";
 let currentSymbol = "BTCUSDT";
 
 let sortMode = "symbol";
 let sortAsc = true;
 
-let favorites =
-JSON.parse(localStorage.getItem("favorites") || "[]");
+let candles = [];
 
 let marketData = [];
 
-let candles = [];
+let favorites =
+JSON.parse(localStorage.getItem("favorites") || "[]");
 
 let allBybitSymbols = [];
 let newListings = [];
 
-/* =========================
-   LISTS
-========================= */
+/* =========================================================
+   MARKETS
+========================================================= */
 
 const stockSymbols = [
 
@@ -376,38 +385,24 @@ const stockSymbols = [
 
 const commoditySymbols = [
 
-"GOLD",
-"SILVER",
-"OIL"
+"XAU/USD",
+"XAG/USD",
+"BRENT"
 
 ];
 
-/* =========================
-   TF MAP
-========================= */
+const forexSymbols = [
 
-function getFinnhubResolution(){
+"EUR/USD",
+"GBP/USD",
+"USD/JPY",
+"AUD/USD"
 
-if(currentTF === "1") return "1";
-if(currentTF === "5") return "5";
-if(currentTF === "15") return "15";
-if(currentTF === "60") return "60";
+];
 
-if(currentTF === "240"){
-return "60";
-}
-
-if(currentTF === "D"){
-return "D";
-}
-
-return "60";
-
-}
-
-/* =========================
-   LOAD SYMBOLS
-========================= */
+/* =========================================================
+   LOAD BYBIT SYMBOLS
+========================================================= */
 
 async function loadBybitSymbols(){
 
@@ -438,9 +433,9 @@ return Number(x.launchTime) > weekAgo;
 
 }
 
-/* =========================
+/* =========================================================
    GET CURRENT SYMBOLS
-========================= */
+========================================================= */
 
 function getCurrentSymbols(){
 
@@ -456,13 +451,17 @@ if(currentDataset === "stocks"){
 return stockSymbols;
 }
 
+if(currentDataset === "commodities"){
 return commoditySymbols;
+}
+
+return forexSymbols;
 
 }
 
-/* =========================
+/* =========================================================
    MARKET DATA
-========================= */
+========================================================= */
 
 function generateMarketData(){
 
@@ -484,9 +483,9 @@ change1h:
 
 }
 
-/* =========================
+/* =========================================================
    CHART
-========================= */
+========================================================= */
 
 const chart =
 LightweightCharts.createChart(
@@ -511,7 +510,7 @@ mode:1
 timeScale:{
 borderColor:"#1f2937",
 timeVisible:true,
-rightOffset:24
+rightOffset:40
 },
 
 crosshair:{
@@ -531,9 +530,9 @@ wickDownColor:"#ef4444"
 
 });
 
-/* =========================
+/* =========================================================
    RSI
-========================= */
+========================================================= */
 
 const rsiChart =
 LightweightCharts.createChart(
@@ -587,9 +586,9 @@ axisLabelVisible:true
 
 });
 
-/* =========================
+/* =========================================================
    RSI CALC
-========================= */
+========================================================= */
 
 function calculateRSI(data, period=14){
 
@@ -654,9 +653,43 @@ return result;
 
 }
 
-/* =========================
+/* =========================================================
+   LOAD TWELVEDATA
+========================================================= */
+
+async function loadTwelveData(symbol){
+
+const url =
+`https://api.twelvedata.com/time_series?symbol=${encodeURIComponent(symbol)}&interval=${currentTF}&outputsize=5000&apikey=${TWELVE_KEY}`;
+
+const res = await fetch(url);
+
+const json = await res.json();
+
+if(!json.values){
+
+alert("TwelveData error");
+return [];
+
+}
+
+return json.values.reverse().map(v=>({
+
+time:
+Math.floor(new Date(v.datetime).getTime()/1000),
+
+open:Number(v.open),
+high:Number(v.high),
+low:Number(v.low),
+close:Number(v.close)
+
+}));
+
+}
+
+/* =========================================================
    LOAD SYMBOL
-========================= */
+========================================================= */
 
 async function loadSymbol(symbol){
 
@@ -670,26 +703,33 @@ currentDataset === "new")
 ? symbol + ".P"
 : symbol;
 
-/* =========================
-   CRYPTO
-========================= */
+/* =========================================================
+   BYBIT
+========================================================= */
 
 if(
 currentDataset === "crypto" ||
 currentDataset === "new"
 ){
 
+let interval = "60";
+
+if(currentTF === "1min") interval = "1";
+if(currentTF === "5min") interval = "5";
+if(currentTF === "15min") interval = "15";
+if(currentTF === "1h") interval = "60";
+if(currentTF === "4h") interval = "240";
+if(currentTF === "1day") interval = "D";
+
 const url =
-`https://api.bybit.com/v5/market/kline?category=linear&symbol=${symbol}&interval=${currentTF}&limit=1000`;
+`https://api.bybit.com/v5/market/kline?category=linear&symbol=${symbol}&interval=${interval}&limit=1000`;
 
 const res = await fetch(url);
 
 const json = await res.json();
 
-const raw =
-json.result.list.reverse();
-
-candles = raw.map(k=>({
+candles =
+json.result.list.reverse().map(k=>({
 
 time:Number(k[0])/1000,
 open:Number(k[1]),
@@ -701,91 +741,20 @@ close:Number(k[4])
 
 }
 
-/* =========================
-   STOCKS
-========================= */
-
-else if(currentDataset === "stocks"){
-
-const now =
-Math.floor(Date.now()/1000);
-
-const from =
-now - (3600*24*365);
-
-const resolution =
-getFinnhubResolution();
-
-const url =
-`https://finnhub.io/api/v1/stock/candle?symbol=${symbol}&resolution=${resolution}&from=${from}&to=${now}&token=${FINNHUB_KEY}`;
-
-const res = await fetch(url);
-
-const json = await res.json();
-
-if(!json.t){
-
-alert("Finnhub limit or invalid response");
-return;
-}
-
-candles = json.t.map((t,i)=>({
-
-time:t,
-open:json.o[i],
-high:json.h[i],
-low:json.l[i],
-close:json.c[i]
-
-}));
-
-}
-
-/* =========================
-   COMMODITIES TEMP
-========================= */
+/* =========================================================
+   STOCKS / COMMODITIES / FOREX
+========================================================= */
 
 else{
 
-candles = [];
-
-let price = 100;
-
-for(let i=0;i<3000;i++){
-
-const open = price;
-
-const close =
-open + ((Math.random()-0.5)*5);
-
-const high =
-Math.max(open,close) + Math.random()*2;
-
-const low =
-Math.min(open,close) - Math.random()*2;
-
-candles.push({
-
-time:
-Math.floor(Date.now()/1000)
-- ((3000-i)*3600),
-
-open,
-high,
-low,
-close
-
-});
-
-price = close;
+candles =
+await loadTwelveData(symbol);
 
 }
 
-}
-
-/* =========================
+/* =========================================================
    DRAW
-========================= */
+========================================================= */
 
 candleSeries.setData(candles);
 
@@ -799,9 +768,9 @@ renderList();
 
 }
 
-/* =========================
+/* =========================================================
    SYNC
-========================= */
+========================================================= */
 
 chart.timeScale()
 .subscribeVisibleLogicalRangeChange(range=>{
@@ -815,9 +784,9 @@ rsiChart.timeScale()
 
 });
 
-/* =========================
+/* =========================================================
    RESIZE
-========================= */
+========================================================= */
 
 function resizeCharts(){
 
@@ -856,9 +825,9 @@ window.addEventListener(
 resizeCharts
 );
 
-/* =========================
-   TF
-========================= */
+/* =========================================================
+   TIMEFRAMES
+========================================================= */
 
 document
 .querySelectorAll(".tf-btn")
@@ -882,9 +851,9 @@ await loadSymbol(currentSymbol);
 
 });
 
-/* =========================
+/* =========================================================
    FILTER
-========================= */
+========================================================= */
 
 document
 .getElementById("market-filter")
@@ -903,9 +872,9 @@ await loadSymbol(currentSymbol);
 
 });
 
-/* =========================
+/* =========================================================
    TABLE
-========================= */
+========================================================= */
 
 function renderList(){
 
@@ -1061,9 +1030,9 @@ list.appendChild(div);
 
 }
 
-/* =========================
+/* =========================================================
    SORT
-========================= */
+========================================================= */
 
 document
 .querySelectorAll(".sortable")
@@ -1090,9 +1059,9 @@ renderList();
 
 });
 
-/* =========================
+/* =========================================================
    START
-========================= */
+========================================================= */
 
 async function init(){
 
