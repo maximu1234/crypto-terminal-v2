@@ -1,146 +1,3 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Multichart - Главная</title>
-
-<style>
-* {
-  box-sizing: border-box;
-}
-
-body{
-  margin:0;
-  background:#0b1220;
-  color:white;
-  font-family:Arial,sans-serif;
-  height:100vh;
-  display:flex;
-  flex-direction:column;
-  overflow:hidden;
-}
-
-.header{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:10px 14px;
-  border-bottom:1px solid #1f2937;
-}
-
-.header-left{
-  font-size:18px;
-  font-weight:700;
-}
-
-.header-menu{
-  display:flex;
-  gap:14px;
-}
-
-.header-menu a{
-  color:#9ca3af;
-  text-decoration:none;
-  font-weight:600;
-  font-size:14px;
-  padding:6px 10px;
-  border-radius:6px;
-}
-
-.header-menu a:hover{
-  color:white;
-  background:#111827;
-}
-
-.header-menu a.active{
-  color:white;
-  background:#1f2937;
-}
-
-.layout-bar{
-  display:flex;
-  gap:10px;
-  padding:10px 14px;
-  border-bottom:1px solid #1f2937;
-}
-
-.layout-bar button{
-  background:#2563eb;
-  border:none;
-  color:white;
-  padding:6px 12px;
-  border-radius:6px;
-  cursor:pointer;
-  font-weight:600;
-}
-
-#grid{
-  flex:1;
-  display:grid;
-  gap:10px;
-  padding:10px;
-}
-
-.card{
-  background:#111827;
-  border:1px solid #1f2937;
-  border-radius:12px;
-  overflow:hidden;
-  display:flex;
-}
-
-.chart{
-  width:100%;
-  height:100%;
-}
-
-@media(max-width:700px){
-  #grid{
-    grid-template-columns:1fr !important;
-  }
-}
-</style>
-</head>
-
-<body>
-
-<div class="header">
-  <div class="header-left">Multichart</div>
-
-  <div class="header-menu">
-    <a href="index.html" class="active">Главная</a>
-    <a href="coins.html">Монеты</a>
-  </div>
-</div>
-
-<div class="layout-bar">
-  <button onclick="setLayout(4)">4</button>
-  <button onclick="setLayout(6)">6</button>
-  <button onclick="setLayout(9)">9</button>
-</div>
-
-<div id="grid"></div>
-
-<script src="https://s3.tradingview.com/tv.js"></script>
-
-<script>
-
-const defaults = [
-  "BTCUSDT",
-  "ETHUSDT",
-  "SOLUSDT",
-  "XRPUSDT",
-  "DOGEUSDT",
-  "ADAUSDT",
-  "AVAXUSDT",
-  "LINKUSDT",
-  "BNBUSDT"
-];
-
-let savedLayout = parseInt(localStorage.getItem("layout"));
-let currentLayout = Number.isFinite(savedLayout) ? savedLayout : 4;
-
 let widgets = {};
 
 function getSymbol(i){
@@ -162,9 +19,9 @@ function calculateGrid(n){
 
 function render(){
 
-  destroyWidgets();
-
   const grid = document.getElementById("grid");
+
+  destroyWidgets();
   grid.innerHTML = "";
 
   const { cols, rows } = calculateGrid(currentLayout);
@@ -175,16 +32,21 @@ function render(){
   for(let i=0;i<currentLayout;i++){
     const card = document.createElement("div");
     card.className = "card";
-    card.innerHTML = `<div id="chart${i}" class="chart"></div>`;
+
+    const div = document.createElement("div");
+    div.id = "chart" + i;
+    div.className = "chart";
+
+    card.appendChild(div);
     grid.appendChild(card);
   }
 
-  // ВАЖНО: даём DOM 1 тик на стабилизацию
+  // маленькая пауза, как у тебя было раньше (это важно)
   setTimeout(() => {
     for(let i=0;i<currentLayout;i++){
       loadChart(i);
     }
-  }, 50);
+  }, 150);
 }
 
 function loadChart(i){
@@ -212,22 +74,11 @@ function loadChart(i){
     disabled_features: [
       "volume_force_overlay",
       "volume_indicator",
-      "create_volume_indicator_by_default",
       "header_compare",
       "header_symbol_search",
       "header_legend",
-      "study_dialog_search_control",
-      "show_interval_dialog_on_key_press",
       "left_toolbar"
     ],
-
-    overrides: {
-      "paneProperties.background": "#0b1220",
-      "paneProperties.vertGridProperties.color": "#161b26",
-      "paneProperties.horzGridProperties.color": "#161b26",
-      "scalesProperties.textColor": "#AAA",
-      "mainSeriesProperties.priceAxisProperties.log": true
-    },
 
     container_id: "chart" + i
   });
@@ -253,8 +104,3 @@ function setLayout(n){
 }
 
 render();
-
-</script>
-
-</body>
-</html>
