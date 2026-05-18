@@ -227,26 +227,13 @@ html,body{
   border-radius:50%;
   cursor:pointer;
   transition:0.2s;
-}
-
-.flag.crypto{
-  background:#3b82f6;
-}
-
-.flag.stock{
-  background:#a855f7;
-}
-
-.flag.commodity{
-  background:#f59e0b;
-}
-
-.flag.new{
-  background:#22c55e;
+  border:1px solid #374151;
+  background:transparent;
 }
 
 .favorite{
   background:#ef4444 !important;
+  border-color:#ef4444;
   box-shadow:0 0 8px #ef4444;
 }
 
@@ -328,7 +315,7 @@ html,body{
 
     <div id="table-header">
 
-      <div class="col-flag">
+      <div class="col-flag sortable" data-sort="favorites">
         ★
       </div>
 
@@ -359,18 +346,19 @@ html,body{
 ========================= */
 
 const symbols = [
-  { symbol:"BTCUSDT", category:"crypto" },
-  { symbol:"ETHUSDT", category:"crypto" },
-  { symbol:"SOLUSDT", category:"crypto" },
-  { symbol:"XRPUSDT", category:"crypto" },
-  { symbol:"DOGEUSDT", category:"new" },
-  { symbol:"ADAUSDT", category:"crypto" },
-  { symbol:"AVAXUSDT", category:"commodity" },
-  { symbol:"LINKUSDT", category:"stock" }
+  "BTCUSDT",
+  "ETHUSDT",
+  "SOLUSDT",
+  "XRPUSDT",
+  "DOGEUSDT",
+  "ADAUSDT",
+  "AVAXUSDT",
+  "LINKUSDT"
 ];
 
 let currentTF = "15m";
-let currentIndex = 0;
+
+let currentSymbol = "BTCUSDT";
 
 const HISTORY_LIMIT = 1500;
 
@@ -387,6 +375,32 @@ let favorites =
 let candles = [];
 let oldestTime = null;
 let loadingHistory = false;
+
+/* =========================
+   MARKET DATA
+========================= */
+
+let marketData = [];
+
+function generateMarketData(){
+
+  marketData = symbols.map(symbol => {
+
+    return {
+
+      symbol,
+
+      change24:
+        ((Math.random() * 12) - 6),
+
+      change1h:
+        ((Math.random() * 4) - 2)
+
+    };
+
+  });
+
+}
 
 /* =========================
    MAIN CHART
@@ -478,7 +492,7 @@ const rsiSeries = rsiChart.addLineSeries({
 });
 
 /* =========================
-   RSI
+   RSI CALC
 ========================= */
 
 function calculateRSI(data, period = 14){
@@ -550,6 +564,8 @@ function calculateRSI(data, period = 14){
 
 async function loadSymbol(symbol){
 
+  currentSymbol = symbol;
+
   loadingHistory = false;
 
   document.getElementById(
@@ -581,7 +597,7 @@ async function loadSymbol(symbol){
 
   chart.timeScale().fitContent();
 
-  updateActiveCoin();
+  renderList();
 }
 
 /* =========================
@@ -594,12 +610,10 @@ async function loadMoreHistory(){
 
   loadingHistory = true;
 
-  const symbol = symbols[currentIndex].symbol;
-
   const endTime = (oldestTime * 1000) - 1;
 
   const url =
-    `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${currentTF}&limit=${HISTORY_LIMIT}&endTime=${endTime}`;
+    `https://api.binance.com/api/v3/klines?symbol=${currentSymbol}&interval=${currentTF}&limit=${HISTORY_LIMIT}&endTime=${endTime}`;
 
   const res = await fetch(url);
 
@@ -690,7 +704,7 @@ document.querySelectorAll(".tf-btn").forEach(btn => {
 
     currentTF = btn.dataset.tf;
 
-    await loadSymbol(symbols[currentIndex].symbol);
+    await loadSymbol(currentSymbol);
   };
 
 });
@@ -705,37 +719,41 @@ function renderList(){
 
   list.innerHTML = "";
 
-  const data = symbols.map(item => {
+  let data = [...marketData];
 
-    const change24 =
-      ((Math.random() * 12) - 6);
-
-    const change1h =
-      ((Math.random() * 4) - 2);
-
-    return {
-      ...item,
-      change24,
-      change1h
-    };
-
-  });
+  /* SORT */
 
   data.sort((a,b)=>{
 
     let result = 0;
 
-    if(sortMode === "symbol"){
+    if(sortMode === "favorites"){
+
+      const af =
+        favorites.includes(a.symbol) ? 1 : 0;
+
+      const bf =
+        favorites.includes(b.symbol) ? 1 : 0;
+
+      result = af - bf;
+
+    }
+
+    else if(sortMode === "symbol"){
 
       result =
         a.symbol.localeCompare(b.symbol);
 
-    }else if(sortMode === "24h"){
+    }
+
+    else if(sortMode === "24h"){
 
       result =
         a.change24 - b.change24;
 
-    }else if(sortMode === "1h"){
+    }
+
+    else if(sortMode === "1h"){
 
       result =
         a.change1h - b.change1h;
@@ -746,13 +764,15 @@ function renderList(){
 
   });
 
+  /* RENDER */
+
   data.forEach(item => {
 
     const div = document.createElement("div");
 
     div.className = "coin";
 
-    if(symbols[currentIndex].symbol === item.symbol){
+    if(currentSymbol === item.symbol){
       div.classList.add("active");
     }
 
@@ -764,7 +784,7 @@ function renderList(){
       <div class="col-flag">
 
         <div
-          class="flag ${item.category}
+          class="flag
           ${isFavorite ? 'favorite' : ''}"
           data-fav="${item.symbol}"
         ></div>
@@ -785,20 +805,19 @@ function renderList(){
 
     `;
 
+    /* OPEN COIN */
+
     div.onclick = async (e) => {
 
       if(e.target.dataset.fav){
         return;
       }
 
-      currentIndex =
-        symbols.findIndex(
-          s => s.symbol === item.symbol
-        );
-
       await loadSymbol(item.symbol);
 
     };
+
+    /* FAVORITE */
 
     const favBtn =
       div.querySelector("[data-fav]");
@@ -831,20 +850,6 @@ function renderList(){
     list.appendChild(div);
 
   });
-
-}
-
-function updateActiveCoin(){
-
-  document.querySelectorAll(".coin")
-    .forEach((el,index)=>{
-
-      el.classList.toggle(
-        "active",
-        index === currentIndex
-      );
-
-    });
 
 }
 
@@ -882,30 +887,82 @@ document.querySelectorAll(".sortable")
 
 window.addEventListener("keydown", async e => {
 
+  let sorted = [...marketData];
+
+  sorted.sort((a,b)=>{
+
+    let result = 0;
+
+    if(sortMode === "favorites"){
+
+      const af =
+        favorites.includes(a.symbol) ? 1 : 0;
+
+      const bf =
+        favorites.includes(b.symbol) ? 1 : 0;
+
+      result = af - bf;
+
+    }
+
+    else if(sortMode === "symbol"){
+
+      result =
+        a.symbol.localeCompare(b.symbol);
+
+    }
+
+    else if(sortMode === "24h"){
+
+      result =
+        a.change24 - b.change24;
+
+    }
+
+    else if(sortMode === "1h"){
+
+      result =
+        a.change1h - b.change1h;
+
+    }
+
+    return sortAsc ? result : -result;
+
+  });
+
+  let currentPos =
+    sorted.findIndex(
+      s => s.symbol === currentSymbol
+    );
+
   if(e.code === "ArrowDown" || e.code === "Space"){
 
     e.preventDefault();
 
-    currentIndex++;
+    currentPos++;
 
-    if(currentIndex >= symbols.length){
-      currentIndex = 0;
+    if(currentPos >= sorted.length){
+      currentPos = 0;
     }
 
-    await loadSymbol(symbols[currentIndex].symbol);
+    await loadSymbol(
+      sorted[currentPos].symbol
+    );
   }
 
   if(e.code === "ArrowUp"){
 
     e.preventDefault();
 
-    currentIndex--;
+    currentPos--;
 
-    if(currentIndex < 0){
-      currentIndex = symbols.length - 1;
+    if(currentPos < 0){
+      currentPos = sorted.length - 1;
     }
 
-    await loadSymbol(symbols[currentIndex].symbol);
+    await loadSymbol(
+      sorted[currentPos].symbol
+    );
   }
 
 });
@@ -914,11 +971,13 @@ window.addEventListener("keydown", async e => {
    START
 ========================= */
 
+generateMarketData();
+
 resizeCharts();
 
 renderList();
 
-loadSymbol(symbols[0].symbol);
+loadSymbol("BTCUSDT");
 
 </script>
 
