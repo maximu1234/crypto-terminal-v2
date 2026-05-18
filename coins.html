@@ -1,3 +1,8 @@
+<!-- =========================
+     FULL NEW coins.html
+     REAL STOCKS VIA FINNHUB
+========================= -->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -22,19 +27,11 @@ html,body{
   height:100vh;
 }
 
-/* =========================
-   LEFT
-========================= */
-
 #left{
   display:flex;
   flex-direction:column;
   min-height:0;
 }
-
-/* =========================
-   HEADER
-========================= */
 
 #header{
   height:56px;
@@ -65,10 +62,6 @@ html,body{
 .menu a.active{
   color:white;
 }
-
-/* =========================
-   TOPBAR
-========================= */
 
 #topbar{
   height:46px;
@@ -103,10 +96,6 @@ html,body{
   background:#2563eb;
 }
 
-/* =========================
-   CHART
-========================= */
-
 #chart-wrap{
   height:82%;
   min-height:0;
@@ -118,10 +107,6 @@ html,body{
   width:100%;
   height:100%;
 }
-
-/* =========================
-   RSI
-========================= */
 
 #rsi-wrap{
   position:relative;
@@ -150,20 +135,12 @@ html,body{
   z-index:1;
 }
 
-/* =========================
-   RIGHT
-========================= */
-
 #list{
   border-left:1px solid #1f2937;
   display:flex;
   flex-direction:column;
   overflow:hidden;
 }
-
-/* =========================
-   FILTER
-========================= */
 
 #filter-wrap{
   padding:10px;
@@ -180,10 +157,6 @@ html,body{
   padding:8px 10px;
   font-size:13px;
 }
-
-/* =========================
-   TABLE
-========================= */
 
 #table-header{
   display:grid;
@@ -263,102 +236,107 @@ html,body{
 
 <div id="app">
 
-  <!-- LEFT -->
-  <div id="left">
+<div id="left">
 
-    <div id="header">
+<div id="header">
 
-      <div id="logo">
-        Multichart
-      </div>
+<div id="logo">
+Multichart
+</div>
 
-      <div class="menu">
-        <a href="index.html">Главная</a>
-        <a href="coins.html" class="active">Монеты</a>
-      </div>
+<div class="menu">
+<a href="index.html">Главная</a>
+<a href="coins.html" class="active">Монеты</a>
+</div>
 
-    </div>
+</div>
 
-    <div id="topbar">
+<div id="topbar">
 
-      <div id="current-symbol">
-        BTCUSDT.P
-      </div>
+<div id="current-symbol">
+BTCUSDT.P
+</div>
 
-      <button class="tf-btn" data-tf="1">1m</button>
-      <button class="tf-btn" data-tf="5">5m</button>
-      <button class="tf-btn" data-tf="15">15m</button>
-      <button class="tf-btn" data-tf="60">1h</button>
-      <button class="tf-btn active" data-tf="240">4h</button>
-      <button class="tf-btn" data-tf="D">1D</button>
+<button class="tf-btn" data-tf="1">1m</button>
+<button class="tf-btn" data-tf="5">5m</button>
+<button class="tf-btn" data-tf="15">15m</button>
+<button class="tf-btn" data-tf="60">1h</button>
+<button class="tf-btn active" data-tf="240">4h</button>
+<button class="tf-btn" data-tf="D">1D</button>
 
-    </div>
+</div>
 
-    <div id="chart-wrap">
-      <div id="chart"></div>
-    </div>
+<div id="chart-wrap">
+<div id="chart"></div>
+</div>
 
-    <div id="rsi-wrap">
-      <div id="rsi-band"></div>
-      <div id="rsi-chart"></div>
-    </div>
+<div id="rsi-wrap">
+<div id="rsi-band"></div>
+<div id="rsi-chart"></div>
+</div>
 
-  </div>
+</div>
 
-  <!-- RIGHT -->
-  <div id="list">
+<div id="list">
 
-    <div id="filter-wrap">
+<div id="filter-wrap">
 
-      <select id="market-filter">
+<select id="market-filter">
 
-        <option value="crypto">
-          Crypto
-        </option>
+<option value="crypto">
+Crypto
+</option>
 
-        <option value="new">
-          New
-        </option>
+<option value="new">
+New
+</option>
 
-        <option value="stocks">
-          Stocks
-        </option>
+<option value="stocks">
+Stocks
+</option>
 
-        <option value="commodities">
-          Commodities
-        </option>
+<option value="commodities">
+Commodities
+</option>
 
-      </select>
+</select>
 
-    </div>
+</div>
 
-    <div id="table-header">
+<div id="table-header">
 
-      <div class="sortable" data-sort="favorites">
-        ★
-      </div>
+<div class="sortable" data-sort="favorites">
+★
+</div>
 
-      <div class="sortable" data-sort="symbol">
-        Coin
-      </div>
+<div class="sortable" data-sort="symbol">
+Coin
+</div>
 
-      <div class="sortable" data-sort="24h">
-        24h
-      </div>
+<div class="sortable" data-sort="24h">
+24h
+</div>
 
-      <div class="sortable" data-sort="1h">
-        1h
-      </div>
+<div class="sortable" data-sort="1h">
+1h
+</div>
 
-    </div>
+</div>
 
-    <div id="coins-body"></div>
+<div id="coins-body"></div>
 
-  </div>
+</div>
 
 </div>
 
 <script>
+
+/* =========================
+   API KEYS
+========================= */
+
+const FINNHUB_KEY =
+"d85k1vpr01qitd92cllgd85k1vpr01qitd92clm0";
 
 /* =========================
    GLOBALS
@@ -372,7 +350,7 @@ let sortMode = "symbol";
 let sortAsc = true;
 
 let favorites =
-  JSON.parse(localStorage.getItem("favorites") || "[]");
+JSON.parse(localStorage.getItem("favorites") || "[]");
 
 let marketData = [];
 
@@ -386,25 +364,49 @@ let allBybitSymbols = [];
 let newListings = [];
 
 /* =========================
-   STATIC LISTS
+   STOCKS
 ========================= */
 
 const stockSymbols = [
 
-"AAPL","TSLA","NVDA","MSFT","AMZN",
-"META","GOOGL","NFLX","AMD","COIN",
-"PLTR","INTC","BA","UBER","PYPL",
-"DIS","BABA","NIO","SHOP","SNAP"
+"AAPL",
+"TSLA",
+"NVDA",
+"MSFT",
+"AMZN",
+"META",
+"GOOGL",
+"NFLX",
+"AMD",
+"COIN",
+"PLTR"
 
 ];
 
 const commoditySymbols = [
 
-"GOLD","SILVER","OIL","NATGAS",
-"COPPER","WHEAT","CORN","COCOA",
-"COFFEE","SOYBEAN"
+"GOLD",
+"SILVER",
+"OIL"
 
 ];
+
+/* =========================
+   TF MAP
+========================= */
+
+function getFinnhubResolution(){
+
+if(currentTF === "1") return "1";
+if(currentTF === "5") return "5";
+if(currentTF === "15") return "15";
+if(currentTF === "60") return "60";
+if(currentTF === "240") return "240";
+if(currentTF === "D") return "D";
+
+return "60";
+
+}
 
 /* =========================
    LOAD BYBIT SYMBOLS
@@ -412,30 +414,30 @@ const commoditySymbols = [
 
 async function loadBybitSymbols(){
 
-  const res = await fetch(
-    "https://api.bybit.com/v5/market/instruments-info?category=linear&limit=1000"
-  );
+const res = await fetch(
+"https://api.bybit.com/v5/market/instruments-info?category=linear&limit=1000"
+);
 
-  const json = await res.json();
+const json = await res.json();
 
-  const list = json.result.list;
+const list = json.result.list;
 
-  allBybitSymbols = list
-    .filter(x => x.status === "Trading")
-    .map(x => x.symbol);
+allBybitSymbols = list
+.filter(x => x.status === "Trading")
+.map(x => x.symbol);
 
-  const weekAgo =
-    Date.now() - (7 * 24 * 60 * 60 * 1000);
+const weekAgo =
+Date.now() - (7*24*60*60*1000);
 
-  newListings = list
-    .filter(x => {
+newListings = list
+.filter(x => {
 
-      if(!x.launchTime) return false;
+if(!x.launchTime) return false;
 
-      return Number(x.launchTime) > weekAgo;
+return Number(x.launchTime) > weekAgo;
 
-    })
-    .map(x => x.symbol);
+})
+.map(x => x.symbol);
 
 }
 
@@ -445,19 +447,20 @@ async function loadBybitSymbols(){
 
 function getCurrentSymbols(){
 
-  if(currentDataset === "crypto"){
-    return allBybitSymbols;
-  }
+if(currentDataset === "crypto"){
+return allBybitSymbols;
+}
 
-  if(currentDataset === "new"){
-    return newListings;
-  }
+if(currentDataset === "new"){
+return newListings;
+}
 
-  if(currentDataset === "stocks"){
-    return stockSymbols;
-  }
+if(currentDataset === "stocks"){
+return stockSymbols;
+}
 
-  return commoditySymbols;
+return commoditySymbols;
+
 }
 
 /* =========================
@@ -466,67 +469,68 @@ function getCurrentSymbols(){
 
 function generateMarketData(){
 
-  marketData = getCurrentSymbols().map(symbol => {
+marketData = getCurrentSymbols().map(symbol => {
 
-    return {
+return {
 
-      symbol,
+symbol,
 
-      change24:
-        ((Math.random()*20)-10),
+change24:
+((Math.random()*20)-10),
 
-      change1h:
-        ((Math.random()*6)-3)
+change1h:
+((Math.random()*6)-3)
 
-    };
+};
 
-  });
+});
 
 }
 
 /* =========================
-   MAIN CHART
+   CHART
 ========================= */
 
 const chart =
-  LightweightCharts.createChart(
-    document.getElementById("chart"),
+LightweightCharts.createChart(
+document.getElementById("chart"),
 {
-  layout:{
-    background:{ color:"#0b1220" },
-    textColor:"#d1d5db"
-  },
 
-  grid:{
-    vertLines:{ color:"#161b26" },
-    horzLines:{ color:"#161b26" }
-  },
+layout:{
+background:{ color:"#0b1220" },
+textColor:"#d1d5db"
+},
 
-  rightPriceScale:{
-    borderColor:"#1f2937",
-    mode:1
-  },
+grid:{
+vertLines:{ color:"#161b26" },
+horzLines:{ color:"#161b26" }
+},
 
-  timeScale:{
-    borderColor:"#1f2937",
-    timeVisible:true,
-    rightOffset:24
-  },
+rightPriceScale:{
+borderColor:"#1f2937",
+mode:1
+},
 
-  crosshair:{
-    mode:0
-  }
+timeScale:{
+borderColor:"#1f2937",
+timeVisible:true,
+rightOffset:24
+},
+
+crosshair:{
+mode:0
+}
 
 });
 
 const candleSeries =
-  chart.addCandlestickSeries({
+chart.addCandlestickSeries({
 
-    upColor:"#22c55e",
-    downColor:"#ef4444",
-    borderVisible:false,
-    wickUpColor:"#22c55e",
-    wickDownColor:"#ef4444"
+upColor:"#22c55e",
+downColor:"#ef4444",
+borderVisible:false,
+wickUpColor:"#22c55e",
+wickDownColor:"#ef4444"
 
 });
 
@@ -535,53 +539,54 @@ const candleSeries =
 ========================= */
 
 const rsiChart =
-  LightweightCharts.createChart(
-    document.getElementById("rsi-chart"),
+LightweightCharts.createChart(
+document.getElementById("rsi-chart"),
 {
-  layout:{
-    background:{ color:"transparent" },
-    textColor:"#797b85"
-  },
 
-  grid:{
-    vertLines:{ color:"#161b26" },
-    horzLines:{ color:"#161b26" }
-  },
+layout:{
+background:{ color:"transparent" },
+textColor:"#797b85"
+},
 
-  rightPriceScale:{
-    borderColor:"#1f2937"
-  },
+grid:{
+vertLines:{ color:"#161b26" },
+horzLines:{ color:"#161b26" }
+},
 
-  timeScale:{
-    visible:false
-  },
+rightPriceScale:{
+borderColor:"#1f2937"
+},
 
-  crosshair:{
-    mode:0
-  }
+timeScale:{
+visible:false
+},
+
+crosshair:{
+mode:0
+}
 
 });
 
 const rsiSeries =
-  rsiChart.addLineSeries({
+rsiChart.addLineSeries({
 
-    color:"#a39cb9",
-    lineWidth:2
+color:"#a39cb9",
+lineWidth:2
 
 });
 
 [30,50,70].forEach(level=>{
 
-  rsiSeries.createPriceLine({
+rsiSeries.createPriceLine({
 
-    price:level,
-    color:"#797b85",
-    lineStyle:
-      LightweightCharts.LineStyle.Dashed,
-    lineWidth:1,
-    axisLabelVisible:true
+price:level,
+color:"#797b85",
+lineStyle:
+LightweightCharts.LineStyle.Dashed,
+lineWidth:1,
+axisLabelVisible:true
 
-  });
+});
 
 });
 
@@ -591,62 +596,65 @@ const rsiSeries =
 
 function calculateRSI(data, period=14){
 
-  if(data.length < period+1){
-    return [];
-  }
+if(data.length < period+1){
+return [];
+}
 
-  let gains = 0;
-  let losses = 0;
+let gains = 0;
+let losses = 0;
 
-  const result = [];
+const result = [];
 
-  for(let i=1;i<=period;i++){
+for(let i=1;i<=period;i++){
 
-    const diff =
-      data[i].close - data[i-1].close;
+const diff =
+data[i].close - data[i-1].close;
 
-    if(diff >= 0){
-      gains += diff;
-    }else{
-      losses += Math.abs(diff);
-    }
-  }
+if(diff >= 0){
+gains += diff;
+}else{
+losses += Math.abs(diff);
+}
 
-  let avgGain = gains / period;
-  let avgLoss = losses / period;
+}
 
-  for(let i=period;i<data.length;i++){
+let avgGain = gains / period;
+let avgLoss = losses / period;
 
-    const diff =
-      data[i].close - data[i-1].close;
+for(let i=period;i<data.length;i++){
 
-    const gain =
-      diff > 0 ? diff : 0;
+const diff =
+data[i].close - data[i-1].close;
 
-    const loss =
-      diff < 0 ? Math.abs(diff) : 0;
+const gain =
+diff > 0 ? diff : 0;
 
-    avgGain =
-      ((avgGain*(period-1))+gain)/period;
+const loss =
+diff < 0 ? Math.abs(diff) : 0;
 
-    avgLoss =
-      ((avgLoss*(period-1))+loss)/period;
+avgGain =
+((avgGain*(period-1))+gain)/period;
 
-    const rs =
-      avgGain / (avgLoss || 1);
+avgLoss =
+((avgLoss*(period-1))+loss)/period;
 
-    const rsi =
-      100 - (100/(1+rs));
+const rs =
+avgGain / (avgLoss || 1);
 
-    result.push({
+const rsi =
+100 - (100/(1+rs));
 
-      time:data[i].time,
-      value:rsi
+result.push({
 
-    });
-  }
+time:data[i].time,
+value:rsi
 
-  return result;
+});
+
+}
+
+return result;
+
 }
 
 /* =========================
@@ -655,186 +663,152 @@ function calculateRSI(data, period=14){
 
 async function loadSymbol(symbol){
 
-  currentSymbol = symbol;
+currentSymbol = symbol;
 
-  loadingHistory = false;
+document.getElementById(
+"current-symbol"
+).innerText =
+(currentDataset === "crypto" ||
+currentDataset === "new")
+? symbol + ".P"
+: symbol;
 
-  document.getElementById(
-    "current-symbol"
-  ).innerText =
-    currentDataset === "crypto" ||
-    currentDataset === "new"
-      ? symbol + ".P"
-      : symbol;
+/* =========================
+   CRYPTO / NEW
+========================= */
 
-  /* =========================
-     BYBIT CRYPTO / NEW
-  ========================= */
+if(
+currentDataset === "crypto" ||
+currentDataset === "new"
+){
 
-  if(
-    currentDataset === "crypto" ||
-    currentDataset === "new"
-  ){
+const url =
+`https://api.bybit.com/v5/market/kline?category=linear&symbol=${symbol}&interval=${currentTF}&limit=1000`;
 
-    const url =
-      `https://api.bybit.com/v5/market/kline?category=linear&symbol=${symbol}&interval=${currentTF}&limit=${HISTORY_LIMIT}`;
+const res = await fetch(url);
 
-    const res = await fetch(url);
+const json = await res.json();
 
-    const json = await res.json();
+const raw =
+json.result.list.reverse();
 
-    const raw =
-      json.result.list.reverse();
+candles = raw.map(k=>({
 
-    candles = raw.map(k=>({
+time:Number(k[0])/1000,
+open:Number(k[1]),
+high:Number(k[2]),
+low:Number(k[3]),
+close:Number(k[4])
 
-      time:Number(k[0])/1000,
-      open:Number(k[1]),
-      high:Number(k[2]),
-      low:Number(k[3]),
-      close:Number(k[4])
+}));
 
-    }));
-
-    oldestTime = candles[0].time;
-  }
-
-  /* =========================
-     DEMO STOCKS
-  ========================= */
-
-  else{
-
-    candles = [];
-
-    let price = 100;
-
-    for(let i=0;i<15000;i++){
-
-      const open = price;
-
-      const close =
-        open + ((Math.random()-0.5)*5);
-
-      const high =
-        Math.max(open,close) + Math.random()*2;
-
-      const low =
-        Math.min(open,close) - Math.random()*2;
-
-      candles.push({
-
-        time:
-          Math.floor(Date.now()/1000)
-          - ((15000-i)*3600),
-
-        open,
-        high,
-        low,
-        close
-
-      });
-
-      price = close;
-    }
-
-    oldestTime = candles[0].time;
-  }
-
-  candleSeries.setData(candles);
-
-  rsiSeries.setData(
-    calculateRSI(candles)
-  );
-
-  chart.timeScale().fitContent();
-
-  renderList();
 }
 
 /* =========================
-   LOAD HISTORY
+   STOCKS REAL
 ========================= */
 
-async function loadMoreHistory(){
+else if(currentDataset === "stocks"){
 
-  if(
-    currentDataset !== "crypto" &&
-    currentDataset !== "new"
-  ){
-    return;
-  }
+const now =
+Math.floor(Date.now()/1000);
 
-  if(loadingHistory) return;
+const from =
+now - (3600*24*365);
 
-  loadingHistory = true;
+const resolution =
+getFinnhubResolution();
 
-  const endTime =
-    (oldestTime * 1000) - 1;
+const url =
+`https://finnhub.io/api/v1/stock/candle?symbol=${symbol}&resolution=${resolution}&from=${from}&to=${now}&token=${FINNHUB_KEY}`;
 
-  const url =
-    `https://api.bybit.com/v5/market/kline?category=linear&symbol=${currentSymbol}&interval=${currentTF}&limit=${HISTORY_LIMIT}&end=${endTime}`;
+const res = await fetch(url);
 
-  const res = await fetch(url);
+const json = await res.json();
 
-  const json = await res.json();
+candles = json.t.map((t,i)=>({
 
-  const raw =
-    json.result.list.reverse();
+time:t,
+open:json.o[i],
+high:json.h[i],
+low:json.l[i],
+close:json.c[i]
 
-  if(!raw.length){
+}));
 
-    loadingHistory = false;
-    return;
-  }
-
-  const older = raw.map(k=>({
-
-    time:Number(k[0])/1000,
-    open:Number(k[1]),
-    high:Number(k[2]),
-    low:Number(k[3]),
-    close:Number(k[4])
-
-  }));
-
-  oldestTime = older[0].time;
-
-  candles = [...older,...candles];
-
-  candleSeries.setData(candles);
-
-  rsiSeries.setData(
-    calculateRSI(candles)
-  );
-
-  loadingHistory = false;
 }
 
 /* =========================
-   HISTORY ENGINE
+   COMMODITIES TEMP
 ========================= */
 
-chart.timeScale()
-.subscribeVisibleLogicalRangeChange(range=>{
+else{
 
-  if(!range) return;
+candles = [];
 
-  if(range.from < 300){
+let price = 100;
 
-    loadMoreHistory();
-  }
+for(let i=0;i<3000;i++){
+
+const open = price;
+
+const close =
+open + ((Math.random()-0.5)*5);
+
+const high =
+Math.max(open,close) + Math.random()*2;
+
+const low =
+Math.min(open,close) - Math.random()*2;
+
+candles.push({
+
+time:
+Math.floor(Date.now()/1000)
+- ((3000-i)*3600),
+
+open,
+high,
+low,
+close
 
 });
 
+price = close;
+
+}
+
+}
+
+/* =========================
+   DRAW
+========================= */
+
+candleSeries.setData(candles);
+
+rsiSeries.setData(
+calculateRSI(candles)
+);
+
+chart.timeScale().fitContent();
+
+renderList();
+
+}
+
+/* =========================
+   SYNC
+========================= */
+
 chart.timeScale()
 .subscribeVisibleLogicalRangeChange(range=>{
 
-  if(range){
+if(range){
 
-    rsiChart.timeScale()
-      .setVisibleLogicalRange(range);
-  }
+rsiChart.timeScale()
+.setVisibleLogicalRange(range);
+
+}
 
 });
 
@@ -844,38 +818,39 @@ chart.timeScale()
 
 function resizeCharts(){
 
-  chart.applyOptions({
+chart.applyOptions({
 
-    width:
-      document.getElementById(
-        "chart-wrap"
-      ).clientWidth,
+width:
+document.getElementById(
+"chart-wrap"
+).clientWidth,
 
-    height:
-      document.getElementById(
-        "chart-wrap"
-      ).clientHeight
+height:
+document.getElementById(
+"chart-wrap"
+).clientHeight
 
-  });
+});
 
-  rsiChart.applyOptions({
+rsiChart.applyOptions({
 
-    width:
-      document.getElementById(
-        "rsi-chart"
-      ).clientWidth,
+width:
+document.getElementById(
+"rsi-chart"
+).clientWidth,
 
-    height:
-      document.getElementById(
-        "rsi-chart"
-      ).clientHeight
+height:
+document.getElementById(
+"rsi-chart"
+).clientHeight
 
-  });
+});
+
 }
 
 window.addEventListener(
-  "resize",
-  resizeCharts
+"resize",
+resizeCharts
 );
 
 /* =========================
@@ -886,20 +861,21 @@ document
 .querySelectorAll(".tf-btn")
 .forEach(btn=>{
 
-  btn.onclick = async ()=>{
+btn.onclick = async ()=>{
 
-    document
-    .querySelectorAll(".tf-btn")
-    .forEach(b=>
-      b.classList.remove("active")
-    );
+document
+.querySelectorAll(".tf-btn")
+.forEach(b=>
+b.classList.remove("active")
+);
 
-    btn.classList.add("active");
+btn.classList.add("active");
 
-    currentTF = btn.dataset.tf;
+currentTF = btn.dataset.tf;
 
-    await loadSymbol(currentSymbol);
-  };
+await loadSymbol(currentSymbol);
+
+};
 
 });
 
@@ -911,16 +887,16 @@ document
 .getElementById("market-filter")
 .addEventListener("change", async e=>{
 
-  currentDataset = e.target.value;
+currentDataset = e.target.value;
 
-  generateMarketData();
+generateMarketData();
 
-  currentSymbol =
-    getCurrentSymbols()[0];
+currentSymbol =
+getCurrentSymbols()[0];
 
-  renderList();
+renderList();
 
-  await loadSymbol(currentSymbol);
+await loadSymbol(currentSymbol);
 
 });
 
@@ -930,149 +906,155 @@ document
 
 function renderList(){
 
-  const list =
-    document.getElementById(
-      "coins-body"
-    );
+const list =
+document.getElementById(
+"coins-body"
+);
 
-  list.innerHTML = "";
+list.innerHTML = "";
 
-  let data = [...marketData];
+let data = [...marketData];
 
-  data.sort((a,b)=>{
+data.sort((a,b)=>{
 
-    let result = 0;
+let result = 0;
 
-    if(sortMode === "favorites"){
+if(sortMode === "favorites"){
 
-      const af =
-        favorites.includes(a.symbol)
-          ? 1 : 0;
+const af =
+favorites.includes(a.symbol)
+? 1 : 0;
 
-      const bf =
-        favorites.includes(b.symbol)
-          ? 1 : 0;
+const bf =
+favorites.includes(b.symbol)
+? 1 : 0;
 
-      result = af - bf;
-    }
+result = af - bf;
 
-    else if(sortMode === "symbol"){
+}
 
-      result =
-        a.symbol.localeCompare(
-          b.symbol
-        );
-    }
+else if(sortMode === "symbol"){
 
-    else if(sortMode === "24h"){
+result =
+a.symbol.localeCompare(
+b.symbol
+);
 
-      result =
-        a.change24 - b.change24;
-    }
+}
 
-    else if(sortMode === "1h"){
+else if(sortMode === "24h"){
 
-      result =
-        a.change1h - b.change1h;
-    }
+result =
+a.change24 - b.change24;
 
-    return sortAsc
-      ? result
-      : -result;
+}
 
-  });
+else if(sortMode === "1h"){
 
-  data.forEach(item=>{
+result =
+a.change1h - b.change1h;
 
-    const div =
-      document.createElement("div");
+}
 
-    div.className = "coin";
+return sortAsc
+? result
+: -result;
 
-    if(currentSymbol === item.symbol){
-      div.classList.add("active");
-    }
+});
 
-    const isFavorite =
-      favorites.includes(item.symbol);
+data.forEach(item=>{
 
-    div.innerHTML = `
+const div =
+document.createElement("div");
 
-      <div class="col-flag">
+div.className = "coin";
 
-        <div
-          class="flag
-          ${isFavorite ? 'favorite' : ''}"
-          data-fav="${item.symbol}"
-        ></div>
+if(currentSymbol === item.symbol){
+div.classList.add("active");
+}
 
-      </div>
+const isFavorite =
+favorites.includes(item.symbol);
 
-      <div>
-        ${item.symbol}
-      </div>
+div.innerHTML = `
 
-      <div class="col-change
-        ${item.change24>=0
-          ? 'green'
-          : 'red'}">
+<div class="col-flag">
 
-        ${item.change24.toFixed(2)}%
+<div
+class="flag
+${isFavorite ? 'favorite' : ''}"
+data-fav="${item.symbol}"
+></div>
 
-      </div>
+</div>
 
-      <div class="col-change
-        ${item.change1h>=0
-          ? 'green'
-          : 'red'}">
+<div>
+${item.symbol}
+</div>
 
-        ${item.change1h.toFixed(2)}%
+<div class="col-change
+${item.change24>=0
+? 'green'
+: 'red'}">
 
-      </div>
+${item.change24.toFixed(2)}%
 
-    `;
+</div>
 
-    div.onclick = async e=>{
+<div class="col-change
+${item.change1h>=0
+? 'green'
+: 'red'}">
 
-      if(e.target.dataset.fav){
-        return;
-      }
+${item.change1h.toFixed(2)}%
 
-      await loadSymbol(item.symbol);
-    };
+</div>
 
-    const favBtn =
-      div.querySelector("[data-fav]");
+`;
 
-    favBtn.onclick = e=>{
+div.onclick = async e=>{
 
-      e.stopPropagation();
+if(e.target.dataset.fav){
+return;
+}
 
-      if(
-        favorites.includes(item.symbol)
-      ){
+await loadSymbol(item.symbol);
 
-        favorites =
-          favorites.filter(
-            s => s !== item.symbol
-          );
+};
 
-      }else{
+const favBtn =
+div.querySelector("[data-fav]");
 
-        favorites.push(item.symbol);
-      }
+favBtn.onclick = e=>{
 
-      localStorage.setItem(
-        "favorites",
-        JSON.stringify(favorites)
-      );
+e.stopPropagation();
 
-      renderList();
-    };
+if(
+favorites.includes(item.symbol)
+){
 
-    list.appendChild(div);
+favorites =
+favorites.filter(
+s => s !== item.symbol
+);
 
-  });
+}else{
+
+favorites.push(item.symbol);
+}
+
+localStorage.setItem(
+"favorites",
+JSON.stringify(favorites)
+);
+
+renderList();
+
+};
+
+list.appendChild(div);
+
+});
 
 }
 
@@ -1084,117 +1066,24 @@ document
 .querySelectorAll(".sortable")
 .forEach(el=>{
 
-  el.onclick = ()=>{
+el.onclick = ()=>{
 
-    const mode =
-      el.dataset.sort;
+const mode =
+el.dataset.sort;
 
-    if(sortMode === mode){
+if(sortMode === mode){
 
-      sortAsc = !sortAsc;
+sortAsc = !sortAsc;
 
-    }else{
+}else{
 
-      sortMode = mode;
-      sortAsc = false;
-    }
+sortMode = mode;
+sortAsc = false;
+}
 
-    renderList();
-  };
+renderList();
 
-});
-
-/* =========================
-   KEYBOARD
-========================= */
-
-window.addEventListener(
-  "keydown",
-  async e=>{
-
-    let sorted = [...marketData];
-
-    sorted.sort((a,b)=>{
-
-      let result = 0;
-
-      if(sortMode === "favorites"){
-
-        const af =
-          favorites.includes(a.symbol)
-            ? 1 : 0;
-
-        const bf =
-          favorites.includes(b.symbol)
-            ? 1 : 0;
-
-        result = af - bf;
-      }
-
-      else if(sortMode === "symbol"){
-
-        result =
-          a.symbol.localeCompare(
-            b.symbol
-          );
-      }
-
-      else if(sortMode === "24h"){
-
-        result =
-          a.change24 - b.change24;
-      }
-
-      else if(sortMode === "1h"){
-
-        result =
-          a.change1h - b.change1h;
-      }
-
-      return sortAsc
-        ? result
-        : -result;
-
-    });
-
-    let currentPos =
-      sorted.findIndex(
-        s => s.symbol === currentSymbol
-      );
-
-    if(
-      e.code === "ArrowDown" ||
-      e.code === "Space"
-    ){
-
-      e.preventDefault();
-
-      currentPos++;
-
-      if(currentPos >= sorted.length){
-        currentPos = 0;
-      }
-
-      await loadSymbol(
-        sorted[currentPos].symbol
-      );
-    }
-
-    if(e.code === "ArrowUp"){
-
-      e.preventDefault();
-
-      currentPos--;
-
-      if(currentPos < 0){
-        currentPos =
-          sorted.length - 1;
-      }
-
-      await loadSymbol(
-        sorted[currentPos].symbol
-      );
-    }
+};
 
 });
 
@@ -1204,15 +1093,16 @@ window.addEventListener(
 
 async function init(){
 
-  await loadBybitSymbols();
+await loadBybitSymbols();
 
-  generateMarketData();
+generateMarketData();
 
-  resizeCharts();
+resizeCharts();
 
-  renderList();
+renderList();
 
-  await loadSymbol("BTCUSDT");
+await loadSymbol("BTCUSDT");
+
 }
 
 init();
