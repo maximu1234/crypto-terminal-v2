@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Multichart Terminal V1.5</title>
+<title>Terminal V1.6 Infinite History</title>
 
 <style>
 body{
@@ -83,11 +83,9 @@ body{
   <div id="left">
 
     <div id="topbar">
-      <button class="tf-btn active" data="5m">5m</button>
-      <button class="tf-btn" data="15m">15m</button>
+      <button class="tf-btn active" data="15m">15m</button>
       <button class="tf-btn" data="1h">1h</button>
       <button class="tf-btn" data="4h">4h</button>
-      <button class="tf-btn" data="1d">1D</button>
     </div>
 
     <div id="chart"></div>
@@ -101,35 +99,17 @@ body{
 
 <script>
 
-const symbols = [
-  "BTCUSDT","ETHUSDT","SOLUSDT","XRPUSDT",
-  "DOGEUSDT","ADAUSDT","AVAXUSDT","LINKUSDT","BNBUSDT"
-];
+const symbols = ["BTCUSDT","ETHUSDT","SOLUSDT"];
 
-let index = 0;
+let symbolIndex = 0;
 let tf = "15m";
 
 let chart;
-let candleSeries;
+let series;
 
-/* ---------------- DATA (HUGE FIX) ---------------- */
-
-async function fetchCandles(symbol){
-
-  const res = await fetch(
-    `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${tf}&limit=1500`
-  );
-
-  const data = await res.json();
-
-  return data.map(d => ({
-    time: d[0] / 1000,
-    open: +d[1],
-    high: +d[2],
-    low: +d[3],
-    close: +d[4]
-  }));
-}
+let candles = [];
+let oldestTime = null;
+let loading = false;
 
 /* ---------------- INIT ---------------- */
 
@@ -147,15 +127,19 @@ function initChart(){
       horzLines:{ color:"#161b26" }
     },
     timeScale:{
-      borderColor:"#1f2937",
-      timeVisible:true
-    },
-    rightPriceScale:{
       borderColor:"#1f2937"
     }
   });
 
-  candleSeries = chart.addCandlestickSeries();
+  series = chart.addCandlestickSeries();
+
+  chart.timeScale().subscribeVisibleLogicalRangeChange(range => {
+    if (!range || loading) return;
+
+    if (range.from < 50) {
+      loadMoreHistory();
+    }
+  });
 
   const resize = () => {
     chart.applyOptions({
@@ -168,24 +152,67 @@ function initChart(){
   resize();
 }
 
-/* ---------------- LOAD ---------------- */
+/* ---------------- FETCH CHUNK ---------------- */
+
+async function fetchChunk(symbol, endTime){
+
+  let url = `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${tf}&limit=1500`;
+
+  if(endTime){
+    url += `&endTime=${endTime}`;
+  }
+
+  const res = await fetch(url);
+  const data = await res.json();
+
+  return data.map(d => ({
+    time: d[0] / 1000,
+    open: +d[1],
+    high: +d[2],
+    low: +d[3],
+    close: +d[4]
+  }));
+}
+
+/* ---------------- INIT LOAD ---------------- */
 
 async function loadSymbol(symbol){
 
-  const candles = await fetchCandles(symbol);
+  candles = await fetchChunk(symbol);
 
-  candleSeries.setData(candles);
+  series.setData(candles);
 
-  // ❌ NO fitContent (this was hiding the real problem)
+  oldestTime = candles[0].time * 1000;
 
-  const from = Math.max(0, candles.length - 400);
-  const to = candles.length;
-
-  chart.timeScale().setVisibleLogicalRange({ from, to });
-
+  chart.timeScale().fitContent();
 }
 
-/* ---------------- LIST ---------------- */
+/* ---------------- LOAD MORE HISTORY ---------------- */
+
+async function loadMoreHistory(){
+
+  if (loading) return;
+  loading = true;
+
+  const symbol = symbols[symbolIndex];
+
+  const more = await fetchChunk(symbol, oldestTime);
+
+  if (more.length === 0) {
+    loading = false;
+    return;
+  }
+
+  oldestTime = more[0].time * 1000;
+
+  candles = [...more, ...candles];
+
+  series.setData(candles);
+
+  loading = false;
+}
+
+/* ---------------- SYMBOLS ---------------- */
 
 function renderList(){
 
@@ -195,11 +222,11 @@ function renderList(){
   symbols.forEach((s,i)=>{
 
     const div = document.createElement("div");
-    div.className = "coin" + (i===index ? " active" : "");
+    div.className = "coin" + (i===symbolIndex ? " active" : "");
     div.innerText = s;
 
     div.onclick = () => {
-      index = i;
+      symbolIndex = i;
       update();
     };
 
@@ -213,33 +240,28 @@ function renderList(){
 
 async function update(){
   renderList();
-  await loadSymbol(symbols[index]);
+  await loadSymbol(symbols[symbolIndex]);
 }
 
 /* ---------------- TF ---------------- */
 
-function initTF(){
+document.querySelectorAll(".tf-btn").forEach(btn=>{
+  btn.onclick = () => {
 
-  document.querySelectorAll(".tf-btn").forEach(btn=>{
-    btn.onclick = () => {
+    document.querySelectorAll(".tf-btn")
+      .forEach(b=>b.classList.remove("active"));
 
-      document.querySelectorAll(".tf-btn")
-        .forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active");
 
-      btn.classList.add("active");
+    tf = btn.dataset.data || btn.getAttribute("data");
 
-      tf = btn.getAttribute("data");
-
-      update();
-    };
-  });
-
-}
+    update();
+  };
+});
 
 /* ---------------- START ---------------- */
 
 initChart();
-initTF();
 renderList();
 update();
 
