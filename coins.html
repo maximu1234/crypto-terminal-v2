@@ -43,6 +43,7 @@ body{
   text-decoration:none;
   padding:6px 10px;
   border-radius:6px;
+  font-weight:600;
 }
 
 .header-menu a.active{
@@ -50,7 +51,7 @@ body{
   color:white;
 }
 
-/* TOPBAR */
+/* TIMEFRAME BAR */
 .topbar{
   display:flex;
   justify-content:flex-start;
@@ -73,7 +74,7 @@ body{
   background:#1d4ed8;
 }
 
-/* MAIN */
+/* MAIN LAYOUT */
 .container{
   display:grid;
   grid-template-columns: 3fr 1fr;
@@ -113,6 +114,7 @@ body{
 
 <body>
 
+<!-- HEADER -->
 <div class="header">
   <div class="header-left">Multichart</div>
 
@@ -122,6 +124,7 @@ body{
   </div>
 </div>
 
+<!-- TIMEFRAME -->
 <div class="topbar">
   <div class="timeframes">
     <button onclick="setTF('5')">5m</button>
@@ -132,6 +135,7 @@ body{
   </div>
 </div>
 
+<!-- MAIN -->
 <div class="container">
 
   <div id="chart"></div>
@@ -197,8 +201,13 @@ function createChart(){
     allow_symbol_change:false,
 
     hide_side_toolbar:true,
-
     hide_top_toolbar:false,
+
+    withdateranges:false,
+    details:false,
+
+    enable_publishing:false,
+    save_image:false,
 
     studies:[
       "RSI@tv-basicstudies"
@@ -215,24 +224,25 @@ function createChart(){
 
     overrides:{
 
+      /* PRICE = LOG (ТОЛЬКО ТУТ) */
+      "mainSeriesProperties.priceAxisProperties.log": true,
+
       "paneProperties.background":"#0b1220",
       "paneProperties.vertGridProperties.color":"#161b26",
       "paneProperties.horzGridProperties.color":"#161b26",
 
-      "mainSeriesProperties.priceAxisProperties.log":true,
-
-      /* Volume OFF */
       "paneProperties.legendProperties.showVolume":false
     },
 
     studies_overrides:{
 
-      /* RSI MINIMAL STYLE */
+      /* RSI CLEAN NORMAL MODE */
       "rsi.plot.color":"#a855f7",
       "rsi.plot.linewidth":1,
-      "rsi.hlines.background.visible":false,
-      "rsi.hlines.visible":false
 
+      /* убираем визуальный мусор */
+      "rsi.level.0.color":"#333",
+      "rsi.level.1.color":"#333"
     },
 
     container_id:"chart"
