@@ -3,18 +3,19 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Terminal V2.3 HARD FIX</title>
+<title>Multichart Terminal V2.4</title>
 
 <style>
-html, body{
+html,body{
   margin:0;
   height:100%;
   background:#0b1220;
   font-family:Arial;
+  color:white;
   overflow:hidden;
 }
 
-/* 🔥 CRITICAL FIX: no flex collapse */
+/* LAYOUT */
 #app{
   display:grid;
   grid-template-columns: 1fr 240px;
@@ -24,15 +25,39 @@ html, body{
 #left{
   display:flex;
   flex-direction:column;
-  height:100%;
   min-height:0;
 }
 
-#chart{
-  flex:1;
-  min-height:400px; /* 🔥 IMPORTANT FIX */
+/* TOPBAR */
+#topbar{
+  display:flex;
+  gap:6px;
+  padding:8px;
+  border-bottom:1px solid #1f2937;
+  background:#0b1220;
 }
 
+.tf-btn{
+  background:#1f2937;
+  color:white;
+  border:none;
+  padding:6px 10px;
+  border-radius:6px;
+  cursor:pointer;
+  font-size:12px;
+}
+
+.tf-btn.active{
+  background:#2563eb;
+}
+
+/* CHART */
+#chart{
+  flex:1;
+  min-height:0;
+}
+
+/* RIGHT LIST */
 #list{
   border-left:1px solid #1f2937;
   overflow:auto;
@@ -42,6 +67,11 @@ html, body{
   padding:10px;
   border-bottom:1px solid #1f2937;
   cursor:pointer;
+  color:white;
+}
+
+.coin:hover{
+  background:#111827;
 }
 
 .active{
@@ -58,7 +88,18 @@ html, body{
 <div id="app">
 
   <div id="left">
+
+    <!-- TIMEFRAMES RESTORED -->
+    <div id="topbar">
+      <button class="tf-btn active" data="5m">5m</button>
+      <button class="tf-btn" data="15m">15m</button>
+      <button class="tf-btn" data="1h">1h</button>
+      <button class="tf-btn" data="4h">4h</button>
+      <button class="tf-btn" data="1d">1D</button>
+    </div>
+
     <div id="chart"></div>
+
   </div>
 
   <div id="list"></div>
@@ -67,64 +108,61 @@ html, body{
 
 <script>
 
-const symbols = ["BTCUSDT","ETHUSDT","SOLUSDT"];
+const symbols = [
+  "BTCUSDT","ETHUSDT","SOLUSDT",
+  "XRPUSDT","DOGEUSDT","ADAUSDT",
+  "AVAXUSDT","LINKUSDT","BNBUSDT"
+];
 
 let index = 0;
+let tf = "15m";
 
 let chart;
 let series;
 
 let candles = [];
 
-/* ---------------- SAFE INIT ---------------- */
+/* ---------------- INIT ---------------- */
 
 function initChart(){
 
   const el = document.getElementById("chart");
 
-  /* 🔥 WAIT FOR LAYOUT STABILIZATION */
-  requestAnimationFrame(() => {
+  chart = LightweightCharts.createChart(el, {
+    layout:{
+      background:{ color:"#0b1220" },
+      textColor:"#d1d5db"
+    },
+    grid:{
+      vertLines:{ color:"#161b26" },
+      horzLines:{ color:"#161b26" }
+    },
+    timeScale:{
+      borderColor:"#1f2937",
+      timeVisible:true
+    }
+  });
 
-    const height = el.clientHeight;
+  series = chart.addCandlestickSeries();
 
-    chart = LightweightCharts.createChart(el, {
+  window.addEventListener("resize", () => {
+    chart.applyOptions({
       width: el.clientWidth,
-      height: height, // 🔥 FIXED HEIGHT SNAPSHOT
-
-      layout:{
-        background:{ color:"#0b1220" },
-        textColor:"#d1d5db"
-      },
-
-      grid:{
-        vertLines:{ color:"#161b26" },
-        horzLines:{ color:"#161b26" }
-      },
-
-      timeScale:{
-        borderColor:"#1f2937",
-        timeVisible:true
-      }
+      height: el.clientHeight
     });
+  });
 
-    series = chart.addCandlestickSeries();
+  resizeFix(el);
 
-    /* 🔥 DOUBLE RESIZE FIX */
-    requestAnimationFrame(() => {
-      chart.applyOptions({
-        width: el.clientWidth,
-        height: el.clientHeight
-      });
+}
+
+/* 🔥 SAFE RESIZE */
+function resizeFix(el){
+  requestAnimationFrame(() => {
+    chart.applyOptions({
+      width: el.clientWidth,
+      height: el.clientHeight
     });
-
-    window.addEventListener("resize", () => {
-      chart.applyOptions({
-        width: el.clientWidth,
-        height: el.clientHeight
-      });
-    });
-
-    load(symbols[0]);
   });
 }
 
@@ -133,7 +171,7 @@ function initChart(){
 async function load(symbol){
 
   const res = await fetch(
-    `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=15m&limit=1500`
+    `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${tf}&limit=1500`
   );
 
   const data = await res.json();
@@ -178,10 +216,31 @@ function renderList(){
 
 }
 
+/* ---------------- TF ---------------- */
+
+function initTF(){
+
+  document.querySelectorAll(".tf-btn").forEach(btn=>{
+    btn.onclick = () => {
+
+      document.querySelectorAll(".tf-btn")
+        .forEach(b=>b.classList.remove("active"));
+
+      btn.classList.add("active");
+
+      tf = btn.dataset.data || btn.getAttribute("data");
+
+      load(symbols[index]);
+    };
+  });
+}
+
 /* ---------------- START ---------------- */
 
-renderList();
 initChart();
+initTF();
+renderList();
+load(symbols[0]);
 
 </script>
 
