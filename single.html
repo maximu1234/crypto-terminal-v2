@@ -1,60 +1,7 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Single Chart Stable Save</title>
-
-<style>
-body{
-  margin:0;
-  background:#0b1220;
-  color:white;
-  font-family:Arial, sans-serif;
-  height:100vh;
-  display:flex;
-  flex-direction:column;
-}
-
-.header{
-  display:flex;
-  gap:10px;
-  padding:10px;
-  border-bottom:1px solid #1f2937;
-}
-
-button{
-  background:#2563eb;
-  border:none;
-  color:white;
-  padding:6px 12px;
-  border-radius:6px;
-  cursor:pointer;
-}
-
-#chart{
-  flex:1;
-}
-</style>
-</head>
-
-<body>
-
-<div class="header">
-  <button onclick="setSymbol('BTCUSDT')">BTC</button>
-  <button onclick="setSymbol('ETHUSDT')">ETH</button>
-  <button onclick="setSymbol('SOLUSDT')">SOL</button>
-  <button onclick="setSymbol('XRPUSDT')">XRP</button>
-</div>
-
-<div id="chart"></div>
-
-<script src="https://s3.tradingview.com/tv.js"></script>
-
 <script>
 
 let widget;
-let lastSavedSymbol = localStorage.getItem("symbol") || "BTCUSDT";
+let lastSymbol = localStorage.getItem("symbol") || "BTCUSDT";
 
 function create(symbol){
 
@@ -73,6 +20,7 @@ function create(symbol){
     locale:"en",
 
     allow_symbol_change:true,
+
     hide_side_toolbar:true,
     hide_top_toolbar:false,
 
@@ -97,37 +45,41 @@ function create(symbol){
 
   widget.onChartReady(() => {
 
-    const chart = widget.activeChart();
+    const container = document.getElementById("chart");
 
-    // 🔥 polling — единственный стабильный способ в embed
-    setInterval(() => {
+    const observer = new MutationObserver(() => {
 
-      try {
-        const s = chart.symbol() || "";
-        const clean = s.split(":")[1] || s;
+      // TradingView всегда пишет символ в header как текст
+      const el = container.querySelector(".js-symbol-header");
 
-        if(clean && clean !== lastSavedSymbol){
-          lastSavedSymbol = clean;
-          localStorage.setItem("symbol", clean);
-        }
+      if(!el) return;
 
-      } catch(e){}
-      
-    }, 800);
+      const text = el.innerText || "";
+      const clean = text.split(":")[1] || text;
+
+      if(clean && clean !== lastSymbol){
+        lastSymbol = clean;
+        localStorage.setItem("symbol", clean);
+      }
+
+    });
+
+    observer.observe(container, {
+      subtree: true,
+      childList: true,
+      characterData: true
+    });
 
   });
 }
 
 function setSymbol(sym){
-  lastSavedSymbol = sym;
+  lastSymbol = sym;
   create(sym);
 }
 
 window.onload = () => {
-  create(lastSavedSymbol);
+  create(lastSymbol);
 };
 
 </script>
-
-</body>
-</html>
