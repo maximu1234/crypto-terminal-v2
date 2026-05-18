@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Terminal V4.2 (No Magnet)</title>
+<title>Terminal V4.3 RSI FIX</title>
 
 <style>
 html,body{
@@ -11,8 +11,8 @@ html,body{
   height:100%;
   background:#0b1220;
   font-family:Arial;
-  color:white;
   overflow:hidden;
+  color:white;
 }
 
 #app{
@@ -24,14 +24,17 @@ html,body{
 #left{
   display:flex;
   flex-direction:column;
-  min-height:0;
+  height:100vh;
+  overflow:hidden;
 }
 
+/* TOPBAR */
 #topbar{
   display:flex;
   gap:6px;
   padding:8px;
   border-bottom:1px solid #1f2937;
+  flex-shrink:0;
 }
 
 .tf-btn{
@@ -48,11 +51,20 @@ html,body{
   background:#2563eb;
 }
 
+/* MAIN CHART */
 #chart{
-  flex:1;
-  min-height:0;
+  height:70%;
+  width:100%;
 }
 
+/* RSI FIXED HEIGHT (IMPORTANT) */
+#rsi{
+  height:30%;
+  width:100%;
+  border-top:1px solid #1f2937;
+}
+
+/* RIGHT LIST */
 #list{
   border-left:1px solid #1f2937;
   overflow:auto;
@@ -83,7 +95,6 @@ html,body{
 
   <div id="left">
 
-    <!-- TIMEFRAMES -->
     <div id="topbar">
       <button class="tf-btn active" data="1m">1m</button>
       <button class="tf-btn" data="5m">5m</button>
@@ -94,6 +105,7 @@ html,body{
     </div>
 
     <div id="chart"></div>
+    <div id="rsi"></div>
 
   </div>
 
@@ -111,58 +123,126 @@ let tf = "15m";
 let chart;
 let series;
 
+let rsiChart;
+let rsiSeries;
+
 let candles = [];
+let rsiValues = [];
 let oldestLoadedTime = null;
 let loading = false;
+
+/* ---------------- RSI ---------------- */
+
+function calculateRSI(data, period = 14){
+
+  let gains = 0;
+  let losses = 0;
+  let rsi = [];
+
+  for(let i = 1; i < data.length; i++){
+
+    const diff = data[i].close - data[i-1].close;
+
+    if(diff >= 0) gains += diff;
+    else losses += Math.abs(diff);
+
+    if(i >= period){
+
+      const avgGain = gains / period;
+      const avgLoss = losses / period;
+
+      const rs = avgGain / (avgLoss || 1);
+      const value = 100 - (100 / (1 + rs));
+
+      rsi.push({
+        time: data[i].time,
+        value
+      });
+
+      const oldDiff = data[i - period + 1].close - data[i - period].close;
+
+      if(oldDiff >= 0) gains -= oldDiff;
+      else losses -= Math.abs(oldDiff);
+    }
+  }
+
+  return rsi;
+}
 
 /* ---------------- INIT ---------------- */
 
 function init(){
 
-  const el = document.getElementById("chart");
+  const chartEl = document.getElementById("chart");
+  const rsiEl = document.getElementById("rsi");
 
-  chart = LightweightCharts.createChart(el, {
+  chart = LightweightCharts.createChart(chartEl, {
     layout:{
       background:{ color:"#0b1220" },
       textColor:"#d1d5db"
     },
-
     grid:{
       vertLines:{ color:"#161b26" },
       horzLines:{ color:"#161b26" }
     },
-
     timeScale:{
       borderColor:"#1f2937",
       timeVisible:true
     },
-
-    // 🔥 NO MAGNET (IMPORTANT FIX)
-    crosshair: {
+    crosshair:{
       mode: LightweightCharts.CrosshairMode.Normal
     }
   });
 
   series = chart.addCandlestickSeries();
 
-  chart.timeScale().subscribeVisibleLogicalRangeChange(range => {
-    if(!range || loading) return;
-
-    if(range.from < 50){
-      loadMore();
+  rsiChart = LightweightCharts.createChart(rsiEl, {
+    height: rsiEl.clientHeight,
+    layout:{
+      background:{ color:"#0b1220" },
+      textColor:"#a855f7"
+    },
+    grid:{
+      vertLines:{ color:"#161b26" },
+      horzLines:{ color:"#161b26" }
+    },
+    timeScale:{
+      borderColor:"#1f2937"
     }
   });
 
+  rsiSeries = rsiChart.addLineSeries({
+    color:"#a855f7",
+    lineWidth:2
+  });
+
+  sync();
+
   window.addEventListener("resize", () => {
     chart.applyOptions({
-      width: el.clientWidth,
-      height: el.clientHeight
+      width: chartEl.clientWidth,
+      height: chartEl.clientHeight
+    });
+
+    rsiChart.applyOptions({
+      width: rsiEl.clientWidth,
+      height: rsiEl.clientHeight
     });
   });
 
   initTF();
   renderList();
   load(symbols[0]);
+}
+
+/* ---------------- SYNC ---------------- */
+
+function sync(){
+
+  chart.timeScale().subscribeVisibleLogicalRangeChange(range => {
+    if(range) rsiChart.timeScale().setVisibleLogicalRange(range);
+  });
+
 }
 
 /* ---------------- LOAD ---------------- */
@@ -188,6 +268,9 @@ async function load(symbol){
   oldestLoadedTime = candles[0].time;
 
   series.setData(candles);
+
+  rsiValues = calculateRSI(candles);
+  rsiSeries.setData(rsiValues);
 
   chart.timeScale().fitContent();
 }
@@ -224,6 +307,9 @@ async function loadMore(){
   candles = [...older, ...candles];
 
   series.setData(candles);
+
+  rsiValues = calculateRSI(candles);
+  rsiSeries.setData(rsiValues);
 
   loading = false;
 }
