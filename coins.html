@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Multichart Terminal V2.4</title>
+<title>Multichart Terminal V3 Engine</title>
 
 <style>
 html,body{
@@ -15,7 +15,6 @@ html,body{
   overflow:hidden;
 }
 
-/* LAYOUT */
 #app{
   display:grid;
   grid-template-columns: 1fr 240px;
@@ -28,13 +27,11 @@ html,body{
   min-height:0;
 }
 
-/* TOPBAR */
 #topbar{
   display:flex;
   gap:6px;
   padding:8px;
   border-bottom:1px solid #1f2937;
-  background:#0b1220;
 }
 
 .tf-btn{
@@ -44,20 +41,16 @@ html,body{
   padding:6px 10px;
   border-radius:6px;
   cursor:pointer;
-  font-size:12px;
 }
 
 .tf-btn.active{
   background:#2563eb;
 }
 
-/* CHART */
 #chart{
   flex:1;
-  min-height:0;
 }
 
-/* RIGHT LIST */
 #list{
   border-left:1px solid #1f2937;
   overflow:auto;
@@ -67,11 +60,6 @@ html,body{
   padding:10px;
   border-bottom:1px solid #1f2937;
   cursor:pointer;
-  color:white;
-}
-
-.coin:hover{
-  background:#111827;
 }
 
 .active{
@@ -89,13 +77,10 @@ html,body{
 
   <div id="left">
 
-    <!-- TIMEFRAMES RESTORED -->
     <div id="topbar">
-      <button class="tf-btn active" data="5m">5m</button>
-      <button class="tf-btn" data="15m">15m</button>
+      <button class="tf-btn active" data="15m">15m</button>
       <button class="tf-btn" data="1h">1h</button>
       <button class="tf-btn" data="4h">4h</button>
-      <button class="tf-btn" data="1d">1D</button>
     </div>
 
     <div id="chart"></div>
@@ -109,9 +94,7 @@ html,body{
 <script>
 
 const symbols = [
-  "BTCUSDT","ETHUSDT","SOLUSDT",
-  "XRPUSDT","DOGEUSDT","ADAUSDT",
-  "AVAXUSDT","LINKUSDT","BNBUSDT"
+  "BTCUSDT","ETHUSDT","SOLUSDT"
 ];
 
 let index = 0;
@@ -121,6 +104,7 @@ let chart;
 let series;
 
 let candles = [];
+let loading = false;
 
 /* ---------------- INIT ---------------- */
 
@@ -145,30 +129,27 @@ function initChart(){
 
   series = chart.addCandlestickSeries();
 
+  /* 🔥 REAL INFINITE TRIGGER */
+  chart.timeScale().subscribeVisibleLogicalRangeChange(range => {
+
+    if(!range || loading) return;
+
+    if(range.from < 50){
+      loadMoreHistory();
+    }
+  });
+
   window.addEventListener("resize", () => {
     chart.applyOptions({
       width: el.clientWidth,
       height: el.clientHeight
     });
   });
-
-  resizeFix(el);
-
 }
 
-/* 🔥 SAFE RESIZE */
-function resizeFix(el){
-  requestAnimationFrame(() => {
-    chart.applyOptions({
-      width: el.clientWidth,
-      height: el.clientHeight
-    });
-  });
-}
+/* ---------------- INITIAL LOAD ---------------- */
 
-/* ---------------- LOAD ---------------- */
-
-async function load(symbol){
+async function loadHistory(symbol){
 
   const res = await fetch(
     `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${tf}&limit=1500`
@@ -186,9 +167,43 @@ async function load(symbol){
 
   series.setData(candles);
 
-  requestAnimationFrame(() => {
-    chart.timeScale().fitContent();
-  });
+  chart.timeScale().fitContent();
+}
+
+/* ---------------- LOAD MORE HISTORY (CORE) ---------------- */
+
+async function loadMoreHistory(){
+
+  loading = true;
+
+  const symbol = symbols[index];
+  const oldest = candles[0];
+
+  const res = await fetch(
+    `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${tf}&limit=1500&endTime=${oldest.time*1000}`
+  );
+
+  const data = await res.json();
+
+  if(!data.length){
+    loading = false;
+    return;
+  }
+
+  const older = data.map(d => ({
+    time: d[0] / 1000,
+    open: +d[1],
+    high: +d[2],
+    low: +d[3],
+    close: +d[4]
+  }));
+
+  candles = [...older, ...candles];
+
+  /* ⚠️ still using setData (next step will remove this) */
+  series.setData(candles);
+
+  loading = false;
 }
 
 /* ---------------- LIST ---------------- */
@@ -206,7 +221,7 @@ function renderList(){
 
     div.onclick = () => {
       index = i;
-      load(s);
+      loadHistory(s);
       renderList();
     };
 
@@ -216,31 +231,11 @@ function renderList(){
 
 }
 
-/* ---------------- TF ---------------- */
-
-function initTF(){
-
-  document.querySelectorAll(".tf-btn").forEach(btn=>{
-    btn.onclick = () => {
-
-      document.querySelectorAll(".tf-btn")
-        .forEach(b=>b.classList.remove("active"));
-
-      btn.classList.add("active");
-
-      tf = btn.dataset.data || btn.getAttribute("data");
-
-      load(symbols[index]);
-    };
-  });
-}
-
 /* ---------------- START ---------------- */
 
 initChart();
-initTF();
 renderList();
-load(symbols[0]);
+loadHistory(symbols[0]);
 
 </script>
 
