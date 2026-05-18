@@ -1,68 +1,421 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  />
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Crypto Terminal V3</title>
 
-  <title>Crypto Terminal V4</title>
+<style>
+*{
+  box-sizing:border-box;
+}
 
-  <link rel="stylesheet" href="styles/style.css" />
+body{
+  margin:0;
+  background:#0b1220;
+  color:white;
+  font-family:Arial,sans-serif;
+  padding:12px;
+}
 
-  <script src="https://s3.tradingview.com/tv.js"></script>
+h1{
+  text-align:center;
+  margin:0 0 14px 0;
+  font-size:22px;
+  font-weight:700;
+}
+
+.topbar{
+  display:flex;
+  justify-content:center;
+  gap:10px;
+  margin-bottom:14px;
+  flex-wrap:wrap;
+}
+
+.topbar button{
+  background:#2563eb;
+  border:none;
+  color:white;
+  padding:10px 16px;
+  border-radius:8px;
+  cursor:pointer;
+  font-weight:bold;
+  transition:0.2s;
+}
+
+.topbar button:hover{
+  opacity:0.9;
+}
+
+.grid{
+  display:grid;
+  gap:12px;
+}
+
+.grid-4{
+  grid-template-columns:repeat(2,1fr);
+}
+
+.grid-6{
+  grid-template-columns:repeat(3,1fr);
+}
+
+.grid-8{
+  grid-template-columns:repeat(4,1fr);
+}
+
+.card{
+  background:#111827;
+  border:1px solid #1f2937;
+  border-radius:12px;
+  overflow:hidden;
+}
+
+.toolbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:8px 10px;
+  background:#0f172a;
+  border-bottom:1px solid #1f2937;
+}
+
+.left-controls{
+  display:flex;
+  gap:8px;
+  align-items:center;
+}
+
+input{
+  background:#09101d;
+  color:white;
+  border:none;
+  border-radius:6px;
+  padding:8px 10px;
+  width:120px;
+  font-size:13px;
+}
+
+button{
+  cursor:pointer;
+}
+
+.load-btn{
+  background:#2563eb;
+  color:white;
+  border:none;
+  border-radius:6px;
+  padding:8px 12px;
+  font-weight:bold;
+}
+
+.alert-btn{
+  background:#dc2626;
+  color:white;
+  border:none;
+  border-radius:6px;
+  padding:8px 12px;
+  font-weight:bold;
+}
+
+.live{
+  color:#22c55e;
+  font-size:12px;
+  font-weight:bold;
+}
+
+.chart{
+  height:470px;
+}
+
+@media(max-width:1500px){
+  .grid-8{
+    grid-template-columns:repeat(2,1fr);
+  }
+}
+
+@media(max-width:1200px){
+  .grid-6{
+    grid-template-columns:repeat(2,1fr);
+  }
+}
+
+@media(max-width:700px){
+  .grid-4,
+  .grid-6,
+  .grid-8{
+    grid-template-columns:1fr;
+  }
+
+  .chart{
+    height:420px;
+  }
+}
+</style>
 </head>
 
 <body>
 
+<h1>CRYPTO TERMINAL V3 🚀</h1>
+
 <div class="topbar">
-
-  <div class="left-tools">
-
-    <button onclick="setTool('select')">
-      SELECT
-    </button>
-
-    <button onclick="setTool('hline')">
-      H-LINE
-    </button>
-
-    <button onclick="setTool('trend')">
-      TREND
-    </button>
-
-    <button onclick="setTool('ray')">
-      RAY
-    </button>
-
-  </div>
-
-  <div class="center-tools">
-
-    <button onclick="setLayout(4)">
-      4
-    </button>
-
-    <button onclick="setLayout(6)">
-      6
-    </button>
-
-    <button onclick="setLayout(8)">
-      8
-    </button>
-
-  </div>
-
+  <button onclick="setLayout(4)">4 Charts</button>
+  <button onclick="setLayout(6)">6 Charts</button>
+  <button onclick="setLayout(8)">8 Charts</button>
 </div>
 
 <div id="grid" class="grid"></div>
 
-<script src="js/persistence.js"></script>
-<script src="js/tools.js"></script>
-<script src="js/alerts.js"></script>
-<script src="js/overlay.js"></script>
-<script src="js/app.js"></script>
+<script src="https://s3.tradingview.com/tv.js"></script>
+
+<script>
+
+const defaults = [
+  "BTCUSDT",
+  "ETHUSDT",
+  "SOLUSDT",
+  "XRPUSDT",
+  "DOGEUSDT",
+  "ADAUSDT",
+  "AVAXUSDT",
+  "LINKUSDT"
+];
+
+let currentLayout = parseInt(localStorage.getItem("layout")) || 4;
+
+function saveLayout(){
+  localStorage.setItem("layout", currentLayout);
+}
+
+function getSymbol(index){
+  return localStorage.getItem("symbol_" + index) || defaults[index];
+}
+
+function saveSymbol(index, symbol){
+  localStorage.setItem("symbol_" + index, symbol);
+}
+
+function getInterval(index){
+  return localStorage.getItem("interval_" + index) || "15";
+}
+
+function saveInterval(index, interval){
+  localStorage.setItem("interval_" + index, interval);
+}
+
+function createCard(index){
+
+  const symbol = getSymbol(index);
+
+  return `
+    <div class="card">
+
+      <div class="toolbar">
+
+        <div class="left-controls">
+
+          <input
+            id="symbol${index}"
+            value="${symbol}"
+          />
+
+          <button
+            class="load-btn"
+            onclick="reloadChart(${index})"
+          >
+            LOAD
+          </button>
+
+          <button
+            class="alert-btn"
+            onclick="createAlert(${index})"
+          >
+            ALERT
+          </button>
+
+        </div>
+
+        <div class="live">
+          LIVE
+        </div>
+
+      </div>
+
+      <div
+        id="chart${index}"
+        class="chart"
+      ></div>
+
+    </div>
+  `;
+}
+
+function render(){
+
+  const grid = document.getElementById("grid");
+
+  grid.className = "grid grid-" + currentLayout;
+
+  let html = "";
+
+  for(let i=0;i<currentLayout;i++){
+    html += createCard(i);
+  }
+
+  grid.innerHTML = html;
+
+  for(let i=0;i<currentLayout;i++){
+    loadChart(i);
+  }
+
+  saveLayout();
+}
+
+function loadChart(index){
+
+  const symbol = getSymbol(index);
+
+  const interval = getInterval(index);
+
+  new TradingView.widget({
+
+    autosize: true,
+
+    symbol: "BYBIT:" + symbol + ".P",
+
+    interval: interval,
+
+    timezone: "Etc/UTC",
+
+    theme: "dark",
+
+    style: "1",
+
+    locale: "en",
+
+    toolbar_bg: "#0f172a",
+
+    allow_symbol_change: false,
+
+    hide_side_toolbar: false,
+
+    hide_top_toolbar: false,
+
+    withdateranges: false,
+
+    details: false,
+
+    enable_publishing: false,
+
+    save_image: false,
+
+    studies: [
+      "RSI@tv-basicstudies"
+    ],
+
+    disabled_features: [
+      "volume_force_overlay",
+      "header_compare",
+      "display_market_status",
+      "show_interval_dialog_on_key_press"
+    ],
+
+    overrides: {
+
+      "paneProperties.background": "#0b1220",
+
+      "paneProperties.vertGridProperties.color": "#161b26",
+
+      "paneProperties.horzGridProperties.color": "#161b26",
+
+      "symbolWatermarkProperties.transparency": 90,
+
+      "scalesProperties.textColor": "#AAA",
+
+      "mainSeriesProperties.candleStyle.upColor": "#22c55e",
+
+      "mainSeriesProperties.candleStyle.downColor": "#ef4444",
+
+      "mainSeriesProperties.candleStyle.borderUpColor": "#22c55e",
+
+      "mainSeriesProperties.candleStyle.borderDownColor": "#ef4444",
+
+      "mainSeriesProperties.candleStyle.wickUpColor": "#22c55e",
+
+      "mainSeriesProperties.candleStyle.wickDownColor": "#ef4444",
+
+      "mainSeriesProperties.priceAxisProperties.log": true
+
+    },
+
+    studies_overrides: {
+
+      "rsi.plot.color": "#a855f7",
+
+      "rsi.level.0.color": "#555",
+
+      "rsi.level.1.color": "#555"
+
+    },
+
+    container_id: "chart" + index
+
+  });
+
+}
+
+function reloadChart(index){
+
+  const symbolInput = document.getElementById("symbol" + index);
+
+  const symbol = symbolInput.value.toUpperCase();
+
+  saveSymbol(index, symbol);
+
+  document.getElementById("chart" + index).innerHTML = "";
+
+  loadChart(index);
+}
+
+function setLayout(count){
+
+  currentLayout = count;
+
+  render();
+}
+
+function createAlert(index){
+
+  const symbol = getSymbol(index);
+
+  const price = prompt("Set alert price for " + symbol);
+
+  if(!price) return;
+
+  let alerts = JSON.parse(
+    localStorage.getItem("alerts") || "[]"
+  );
+
+  alerts.push({
+    symbol,
+    price,
+    created: Date.now()
+  });
+
+  localStorage.setItem(
+    "alerts",
+    JSON.stringify(alerts)
+  );
+
+  alert(
+    "Alert saved for " + symbol + " at " + price
+  );
+}
+
+render();
+
+</script>
 
 </body>
 </html>
