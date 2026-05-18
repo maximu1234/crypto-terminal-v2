@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Multichart Terminal V1.4</title>
+<title>Multichart Terminal V1.5</title>
 
 <style>
 body{
@@ -20,52 +20,42 @@ body{
   height:100vh;
 }
 
-/* LEFT */
 #left{
   display:flex;
   flex-direction:column;
   height:100%;
 }
 
-/* TOP BAR (TIMEFRAMES) */
 #topbar{
   display:flex;
   gap:6px;
   padding:8px;
   border-bottom:1px solid #1f2937;
-  background:#0b1220;
 }
 
 .tf-btn{
   background:#1f2937;
-  color:#fff;
   border:none;
+  color:white;
   padding:6px 10px;
   border-radius:6px;
   cursor:pointer;
-  font-weight:600;
-  font-size:12px;
 }
 
 .tf-btn.active{
   background:#2563eb;
 }
 
-/* CHART */
 #chart{
   flex:1;
-  width:100%;
-  min-height:0;
 }
 
-/* RSI placeholder */
 #rsi{
   height:160px;
   border-top:1px solid #1f2937;
   background:#0f172a;
 }
 
-/* LIST */
 #list{
   border-left:1px solid #1f2937;
   overflow:auto;
@@ -77,21 +67,8 @@ body{
   cursor:pointer;
 }
 
-.coin:hover{
-  background:#111827;
-}
-
 .active{
   background:#1e293b;
-}
-
-.header{
-  position:absolute;
-  top:10px;
-  left:10px;
-  font-size:12px;
-  color:#9ca3af;
-  z-index:10;
 }
 </style>
 
@@ -101,21 +78,16 @@ body{
 
 <body>
 
-<div class="header">
-  Multichart Terminal V1.4 (TIMEFRAMES TEST)
-</div>
-
 <div id="app">
 
   <div id="left">
 
-    <!-- TIMEFRAMES -->
     <div id="topbar">
-      <button class="tf-btn active" data-tf="5m">5m</button>
-      <button class="tf-btn" data-tf="15m">15m</button>
-      <button class="tf-btn" data-tf="1h">1h</button>
-      <button class="tf-btn" data-tf="4h">4h</button>
-      <button class="tf-btn" data-tf="1d">1D</button>
+      <button class="tf-btn active" data="5m">5m</button>
+      <button class="tf-btn" data="15m">15m</button>
+      <button class="tf-btn" data="1h">1h</button>
+      <button class="tf-btn" data="4h">4h</button>
+      <button class="tf-btn" data="1d">1D</button>
     </div>
 
     <div id="chart"></div>
@@ -140,25 +112,12 @@ let tf = "15m";
 let chart;
 let candleSeries;
 
-/* ---------------- MAP TF TO BINANCE ---------------- */
-
-function mapTF(t){
-  if(t==="1d") return "1d";
-  if(t==="4h") return "4h";
-  if(t==="1h") return "1h";
-  if(t==="15m") return "15m";
-  if(t==="5m") return "5m";
-  return "15m";
-}
-
-/* ---------------- FETCH ---------------- */
+/* ---------------- DATA (HUGE FIX) ---------------- */
 
 async function fetchCandles(symbol){
 
-  const interval = mapTF(tf);
-
   const res = await fetch(
-    `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${interval}&limit=500`
+    `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${tf}&limit=1500`
   );
 
   const data = await res.json();
@@ -179,21 +138,20 @@ function initChart(){
   const container = document.getElementById("chart");
 
   chart = LightweightCharts.createChart(container, {
-    layout: {
-      background: { color: "#0b1220" },
-      textColor: "#d1d5db"
+    layout:{
+      background:{ color:"#0b1220" },
+      textColor:"#d1d5db"
     },
-    grid: {
-      vertLines: { color: "#161b26" },
-      horzLines: { color: "#161b26" }
+    grid:{
+      vertLines:{ color:"#161b26" },
+      horzLines:{ color:"#161b26" }
     },
-    rightPriceScale: {
-      borderColor: "#1f2937"
+    timeScale:{
+      borderColor:"#1f2937",
+      timeVisible:true
     },
-    timeScale: {
-      borderColor: "#1f2937",
-      timeVisible: true,
-      secondsVisible: false
+    rightPriceScale:{
+      borderColor:"#1f2937"
     }
   });
 
@@ -218,9 +176,12 @@ async function loadSymbol(symbol){
 
   candleSeries.setData(candles);
 
-  requestAnimationFrame(() => {
-    chart.timeScale().fitContent();
-  });
+  // ❌ NO fitContent (this was hiding the real problem)
+
+  const from = Math.max(0, candles.length - 400);
+  const to = candles.length;
+
+  chart.timeScale().setVisibleLogicalRange({ from, to });
 
 }
 
@@ -255,41 +216,25 @@ async function update(){
   await loadSymbol(symbols[index]);
 }
 
-/* ---------------- TIMEFRAME UI ---------------- */
+/* ---------------- TF ---------------- */
 
 function initTF(){
 
   document.querySelectorAll(".tf-btn").forEach(btn=>{
-    btn.onclick = async () => {
+    btn.onclick = () => {
 
       document.querySelectorAll(".tf-btn")
         .forEach(b=>b.classList.remove("active"));
 
       btn.classList.add("active");
 
-      tf = btn.dataset.tf;
+      tf = btn.getAttribute("data");
 
-      await update();
+      update();
     };
   });
 
 }
-
-/* ---------------- KEYBOARD ---------------- */
-
-document.addEventListener("keydown",(e)=>{
-
-  if(e.key==="ArrowDown"){
-    index = Math.min(symbols.length-1,index+1);
-    update();
-  }
-
-  if(e.key==="ArrowUp"){
-    index = Math.max(0,index-1);
-    update();
-  }
-
-});
 
 /* ---------------- START ---------------- */
 
