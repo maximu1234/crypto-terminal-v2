@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Terminal V4.3 RSI FIX</title>
+<title>Terminal V4.4 RSI PRO</title>
 
 <style>
 html,body{
@@ -28,7 +28,6 @@ html,body{
   overflow:hidden;
 }
 
-/* TOPBAR */
 #topbar{
   display:flex;
   gap:6px;
@@ -51,20 +50,15 @@ html,body{
   background:#2563eb;
 }
 
-/* MAIN CHART */
 #chart{
   height:70%;
-  width:100%;
 }
 
-/* RSI FIXED HEIGHT (IMPORTANT) */
 #rsi{
   height:30%;
-  width:100%;
   border-top:1px solid #1f2937;
 }
 
-/* RIGHT LIST */
 #list{
   border-left:1px solid #1f2937;
   overflow:auto;
@@ -128,6 +122,7 @@ let rsiSeries;
 
 let candles = [];
 let rsiValues = [];
+
 let oldestLoadedTime = null;
 let loading = false;
 
@@ -197,14 +192,13 @@ function init(){
   series = chart.addCandlestickSeries();
 
   rsiChart = LightweightCharts.createChart(rsiEl, {
-    height: rsiEl.clientHeight,
     layout:{
-      background:{ color:"#0b1220" },
-      textColor:"#a855f7"
+      background:{ color:"#1e1e31" }, // 🔥 RSI ZONE BACKGROUND
+      textColor:"#a39cb9"
     },
     grid:{
-      vertLines:{ color:"#161b26" },
-      horzLines:{ color:"#161b26" }
+      vertLines:{ color:"#1e1e31" },
+      horzLines:{ color:"#1e1e31" }
     },
     timeScale:{
       borderColor:"#1f2937"
@@ -212,9 +206,11 @@ function init(){
   });
 
   rsiSeries = rsiChart.addLineSeries({
-    color:"#a855f7",
+    color:"#a39cb9",
     lineWidth:2
   });
+
+  drawRSILevels();
 
   sync();
 
@@ -233,6 +229,26 @@ function init(){
   initTF();
   renderList();
   load(symbols[0]);
+}
+
+/* ---------------- RSI LEVELS ---------------- */
+
+function drawRSILevels(){
+
+  const levels = [30, 50, 70];
+
+  levels.forEach(level => {
+
+    rsiSeries.createPriceLine({
+      price: level,
+      color: "#797b85",
+      lineWidth: 1,
+      lineStyle: LightweightCharts.LineStyle.Dashed,
+      axisLabelVisible: true,
+      title: level.toString()
+    });
+
+  });
 }
 
 /* ---------------- SYNC ---------------- */
