@@ -172,6 +172,10 @@ function getSymbol(i){
   return localStorage.getItem("symbol_" + i) || defaults[i];
 }
 
+function saveSymbol(i, sym){
+  localStorage.setItem("symbol_" + i, sym);
+}
+
 function destroyWidgets(){
   Object.values(widgets).forEach(w => {
     try { if (w?.remove) w.remove(); } catch(e){}
@@ -182,7 +186,6 @@ function destroyWidgets(){
 function calculateGrid(n){
   const cols = Math.ceil(Math.sqrt(n));
   const rows = Math.ceil(n / cols);
-
   return { cols, rows };
 }
 
@@ -222,24 +225,17 @@ function loadChart(i){
 
   const symbol = getSymbol(i);
 
-  widgets[i] = new TradingView.widget({
+  const widget = new TradingView.widget({
 
     autosize: true,
-
     symbol: "BYBIT:" + symbol,
-
     interval: "15",
-
     timezone: "Etc/UTC",
-
     theme: "dark",
-
     style: "1",
-
     locale: "en",
 
     allow_symbol_change: true,
-
     hide_side_toolbar: true,
     hide_top_toolbar: false,
 
@@ -268,7 +264,6 @@ function loadChart(i){
     ],
 
     overrides: {
-
       "paneProperties.background": "#0b1220",
       "paneProperties.vertGridProperties.color": "#161b26",
       "paneProperties.horzGridProperties.color": "#161b26",
@@ -289,6 +284,29 @@ function loadChart(i){
     },
 
     container_id: "chart" + i
+  });
+
+  widgets[i] = widget;
+
+  widget.onChartReady(() => {
+
+    function saveCurrentSymbol(){
+      try {
+        const sym = widget.options.symbol; // <-- ключевой фикс
+        if(!sym) return;
+
+        const clean = sym.split(":")[1] || sym;
+        saveSymbol(i, clean);
+      } catch(e){}
+    }
+
+    // первый сохран
+    saveCurrentSymbol();
+
+    // ловим любые авто-изменения TradingView
+    widget.onAutoSaveNeeded(() => {
+      saveCurrentSymbol();
+    });
   });
 }
 
