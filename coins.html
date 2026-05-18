@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Terminal V1 FIX</title>
+<title>Terminal FIX V2</title>
 
 <style>
 body{
@@ -20,18 +20,8 @@ body{
   height:100vh;
 }
 
-#left{
-  display:flex;
-  flex-direction:column;
-}
-
 #chart{
-  flex:3;
-}
-
-#rsi{
-  flex:1;
-  border-top:1px solid #1f2937;
+  height:100%;
 }
 
 #list{
@@ -48,18 +38,10 @@ body{
 .active{
   background:#1e293b;
 }
-
-#error{
-  position:fixed;
-  bottom:10px;
-  left:10px;
-  background:red;
-  padding:10px;
-  display:none;
-}
 </style>
 
-<script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+<!-- ⚠️ IMPORTANT FIX -->
+<script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
 
 </head>
 
@@ -67,24 +49,13 @@ body{
 
 <div id="app">
 
-  <div id="left">
-    <div id="chart"></div>
-    <div id="rsi"></div>
-  </div>
+  <div id="chart"></div>
 
   <div id="list"></div>
 
 </div>
 
-<div id="error"></div>
-
 <script>
-
-function showError(msg){
-  const e=document.getElementById("error");
-  e.style.display="block";
-  e.innerText=msg;
-}
 
 const symbols=[
   "BTCUSDT","ETHUSDT","SOLUSDT","XRPUSDT",
@@ -94,15 +65,15 @@ const symbols=[
 let index=0;
 
 let chart;
-let candleSeries;
+let series;
 
 async function fetchCandles(symbol){
 
-  const res=await fetch(
+  const res = await fetch(
     `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=15m&limit=100`
   );
 
-  const data=await res.json();
+  const data = await res.json();
 
   return data.map(d=>({
     time:d[0]/1000,
@@ -114,33 +85,36 @@ async function fetchCandles(symbol){
 
 }
 
-function initChart(){
+function init(){
 
   if(!window.LightweightCharts){
-    showError("LightweightCharts not loaded");
+    alert("LightweightCharts failed to load");
     return;
   }
 
-  chart = LightweightCharts.createChart(document.getElementById("chart"),{
-    layout:{
-      background:{ color:"#0b1220" },
-      textColor:"#d1d5db"
-    },
-    grid:{
-      vertLines:{ color:"#161b26" },
-      horzLines:{ color:"#161b26" }
+  chart = LightweightCharts.createChart(
+    document.getElementById("chart"),
+    {
+      layout:{
+        background:{ color:"#0b1220" },
+        textColor:"#d1d5db"
+      },
+      grid:{
+        vertLines:{ color:"#161b26" },
+        horzLines:{ color:"#161b26" }
+      }
     }
-  });
+  );
 
-  candleSeries = chart.addCandlestickSeries();
+  series = chart.addCandlestickSeries();
 
 }
 
-async function loadSymbol(sym){
+async function load(sym){
 
   const candles = await fetchCandles(sym);
 
-  candleSeries.setData(candles);
+  series.setData(candles);
 
 }
 
@@ -168,10 +142,10 @@ function renderList(){
 
 async function update(){
   renderList();
-  await loadSymbol(symbols[index]);
+  await load(symbols[index]);
 }
 
-initChart();
+init();
 renderList();
 update();
 
