@@ -172,6 +172,15 @@ html,body{
   color:#9ca3af;
 }
 
+.sortable{
+  cursor:pointer;
+  user-select:none;
+}
+
+.sortable:hover{
+  color:white;
+}
+
 /* ROW */
 
 .coin{
@@ -210,6 +219,8 @@ html,body{
   width:10px;
   height:10px;
   border-radius:50%;
+  cursor:pointer;
+  transition:0.2s;
 }
 
 .flag.crypto{
@@ -226,6 +237,11 @@ html,body{
 
 .flag.new{
   background:#22c55e;
+}
+
+.favorite{
+  background:#ef4444 !important;
+  box-shadow:0 0 8px #ef4444;
 }
 
 .col-symbol{
@@ -300,17 +316,19 @@ html,body{
 
     <div id="table-header">
 
-      <div class="col-flag">F</div>
+      <div class="col-flag">
+        ★
+      </div>
 
-      <div class="col-symbol">
+      <div class="col-symbol sortable" data-sort="symbol">
         Coin
       </div>
 
-      <div class="col-change">
+      <div class="col-change sortable" data-sort="24h">
         24h
       </div>
 
-      <div class="col-change">
+      <div class="col-change sortable" data-sort="1h">
         1h
       </div>
 
@@ -329,20 +347,26 @@ html,body{
 ========================= */
 
 const symbols = [
-  "BTCUSDT",
-  "ETHUSDT",
-  "SOLUSDT",
-  "XRPUSDT",
-  "DOGEUSDT",
-  "ADAUSDT",
-  "AVAXUSDT",
-  "LINKUSDT"
+  { symbol:"BTCUSDT", category:"crypto" },
+  { symbol:"ETHUSDT", category:"crypto" },
+  { symbol:"SOLUSDT", category:"crypto" },
+  { symbol:"XRPUSDT", category:"crypto" },
+  { symbol:"DOGEUSDT", category:"new" },
+  { symbol:"ADAUSDT", category:"crypto" },
+  { symbol:"AVAXUSDT", category:"commodity" },
+  { symbol:"LINKUSDT", category:"stock" }
 ];
 
 let currentTF = "15m";
 let currentIndex = 0;
 
 const HISTORY_LIMIT = 1500;
+
+let sortMode = "symbol";
+let sortAsc = true;
+
+let favorites =
+  JSON.parse(localStorage.getItem("favorites") || "[]");
 
 /* =========================
    STATE
@@ -429,8 +453,6 @@ const rsiSeries = rsiChart.addLineSeries({
   lineWidth:2
 });
 
-/* LEVELS */
-
 [30,50,70].forEach(level => {
 
   rsiSeries.createPriceLine({
@@ -444,7 +466,7 @@ const rsiSeries = rsiChart.addLineSeries({
 });
 
 /* =========================
-   SIMPLE RSI
+   RSI
 ========================= */
 
 function calculateRSI(data, period = 14){
@@ -556,7 +578,7 @@ async function loadMoreHistory(){
 
   loadingHistory = true;
 
-  const symbol = symbols[currentIndex];
+  const symbol = symbols[currentIndex].symbol;
 
   const endTime = (oldestTime * 1000) - 1;
 
@@ -652,7 +674,7 @@ document.querySelectorAll(".tf-btn").forEach(btn => {
 
     currentTF = btn.dataset.tf;
 
-    await loadSymbol(symbols[currentIndex]);
+    await loadSymbol(symbols[currentIndex].symbol);
   };
 
 });
@@ -667,62 +689,135 @@ function renderList(){
 
   list.innerHTML = "";
 
-  symbols.forEach((symbol,index) => {
+  const data = symbols.map(item => {
 
     const change24 =
-      ((Math.random() * 12) - 6).toFixed(2);
+      ((Math.random() * 12) - 6);
 
     const change1h =
-      ((Math.random() * 4) - 2).toFixed(2);
+      ((Math.random() * 4) - 2);
 
-    let category = "crypto";
+    return {
+      ...item,
+      change24,
+      change1h
+    };
 
-    if(symbol.includes("LINK")){
-      category = "stock";
+  });
+
+  /* SORT */
+
+  data.sort((a,b)=>{
+
+    let result = 0;
+
+    if(sortMode === "symbol"){
+
+      result =
+        a.symbol.localeCompare(b.symbol);
+
+    }else if(sortMode === "24h"){
+
+      result =
+        a.change24 - b.change24;
+
+    }else if(sortMode === "1h"){
+
+      result =
+        a.change1h - b.change1h;
+
     }
 
-    if(symbol.includes("DOGE")){
-      category = "new";
-    }
+    return sortAsc ? result : -result;
 
-    if(symbol.includes("AVAX")){
-      category = "commodity";
-    }
+  });
+
+  /* RENDER */
+
+  data.forEach(item => {
 
     const div = document.createElement("div");
 
     div.className = "coin";
 
-    if(index === currentIndex){
+    if(symbols[currentIndex].symbol === item.symbol){
       div.classList.add("active");
     }
+
+    const isFavorite =
+      favorites.includes(item.symbol);
 
     div.innerHTML = `
 
       <div class="col-flag">
-        <div class="flag ${category}"></div>
+
+        <div
+          class="flag ${item.category}
+          ${isFavorite ? 'favorite' : ''}"
+          data-fav="${item.symbol}"
+        ></div>
+
       </div>
 
       <div class="col-symbol">
-        ${symbol}
+        ${item.symbol}
       </div>
 
-      <div class="col-change ${change24 >= 0 ? 'green' : 'red'}">
-        ${change24}%
+      <div class="col-change ${item.change24 >= 0 ? 'green' : 'red'}">
+        ${item.change24.toFixed(2)}%
       </div>
 
-      <div class="col-change ${change1h >= 0 ? 'green' : 'red'}">
-        ${change1h}%
+      <div class="col-change ${item.change1h >= 0 ? 'green' : 'red'}">
+        ${item.change1h.toFixed(2)}%
       </div>
 
     `;
 
-    div.onclick = async () => {
+    /* OPEN COIN */
 
-      currentIndex = index;
+    div.onclick = async (e) => {
 
-      await loadSymbol(symbol);
+      if(e.target.dataset.fav){
+        return;
+      }
 
+      currentIndex =
+        symbols.findIndex(
+          s => s.symbol === item.symbol
+        );
+
+      await loadSymbol(item.symbol);
+
+    };
+
+    /* FAVORITE */
+
+    const favBtn =
+      div.querySelector("[data-fav]");
+
+    favBtn.onclick = (e) => {
+
+      e.stopPropagation();
+
+      if(favorites.includes(item.symbol)){
+
+        favorites =
+          favorites.filter(
+            s => s !== item.symbol
+          );
+
+      }else{
+
+        favorites.push(item.symbol);
+
+      }
+
+      localStorage.setItem(
+        "favorites",
+        JSON.stringify(favorites)
+      );
+
+      renderList();
     };
 
     list.appendChild(div);
@@ -746,6 +841,34 @@ function updateActiveCoin(){
 }
 
 /* =========================
+   SORTING
+========================= */
+
+document.querySelectorAll(".sortable")
+  .forEach(el => {
+
+    el.onclick = () => {
+
+      const mode = el.dataset.sort;
+
+      if(sortMode === mode){
+
+        sortAsc = !sortAsc;
+
+      }else{
+
+        sortMode = mode;
+        sortAsc = false;
+
+      }
+
+      renderList();
+
+    };
+
+  });
+
+/* =========================
    KEYBOARD NAV
 ========================= */
 
@@ -761,7 +884,7 @@ window.addEventListener("keydown", async e => {
       currentIndex = 0;
     }
 
-    await loadSymbol(symbols[currentIndex]);
+    await loadSymbol(symbols[currentIndex].symbol);
   }
 
   if(e.code === "ArrowUp"){
@@ -774,7 +897,7 @@ window.addEventListener("keydown", async e => {
       currentIndex = symbols.length - 1;
     }
 
-    await loadSymbol(symbols[currentIndex]);
+    await loadSymbol(symbols[currentIndex].symbol);
   }
 
 });
@@ -787,7 +910,7 @@ resizeCharts();
 
 renderList();
 
-loadSymbol(symbols[0]);
+loadSymbol(symbols[0].symbol);
 
 </script>
 
