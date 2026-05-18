@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Single Chart Test</title>
+<title>Single Chart Stable Save</title>
 
 <style>
 body{
@@ -21,7 +21,6 @@ body{
   gap:10px;
   padding:10px;
   border-bottom:1px solid #1f2937;
-  align-items:center;
 }
 
 button{
@@ -55,8 +54,7 @@ button{
 <script>
 
 let widget;
-
-const savedSymbol = localStorage.getItem("symbol") || "BTCUSDT";
+let lastSavedSymbol = localStorage.getItem("symbol") || "BTCUSDT";
 
 function create(symbol){
 
@@ -66,27 +64,24 @@ function create(symbol){
 
   widget = new TradingView.widget({
 
-    autosize: true,
-    symbol: "BYBIT:" + symbol,
-    interval: "15",
-    timezone: "Etc/UTC",
-    theme: "dark",
-    style: "1",
-    locale: "en",
+    autosize:true,
+    symbol:"BYBIT:" + symbol,
+    interval:"15",
+    timezone:"Etc/UTC",
+    theme:"dark",
+    style:"1",
+    locale:"en",
 
-    allow_symbol_change: true,
+    allow_symbol_change:true,
+    hide_side_toolbar:true,
+    hide_top_toolbar:false,
 
-    hide_side_toolbar: true,
-    hide_top_toolbar: false,
-
-    // 🔥 важно: лог режим (как ты хочешь)
-    overrides: {
+    overrides:{
       "mainSeriesProperties.priceAxisProperties.log": true
     },
 
-    // 🔥 убираем volume полностью
-    studies: [],
-    disabled_features: [
+    studies:[],
+    disabled_features:[
       "volume_force_overlay",
       "create_volume_indicator_by_default",
       "volume_indicator",
@@ -95,7 +90,7 @@ function create(symbol){
       "left_toolbar"
     ],
 
-    container_id: "chart"
+    container_id:"chart"
   });
 
   localStorage.setItem("symbol", symbol);
@@ -104,23 +99,32 @@ function create(symbol){
 
     const chart = widget.activeChart();
 
-    // 🔥 сохранение монеты при смене внутри графика
-    chart.onSymbolChanged().subscribe(null, (sym) => {
-      if(!sym) return;
+    // 🔥 polling — единственный стабильный способ в embed
+    setInterval(() => {
 
-      const clean = sym.split(":")[1] || sym;
-      localStorage.setItem("symbol", clean);
-    });
+      try {
+        const s = chart.symbol() || "";
+        const clean = s.split(":")[1] || s;
+
+        if(clean && clean !== lastSavedSymbol){
+          lastSavedSymbol = clean;
+          localStorage.setItem("symbol", clean);
+        }
+
+      } catch(e){}
+      
+    }, 800);
 
   });
 }
 
 function setSymbol(sym){
+  lastSavedSymbol = sym;
   create(sym);
 }
 
 window.onload = () => {
-  create(savedSymbol);
+  create(lastSavedSymbol);
 };
 
 </script>
