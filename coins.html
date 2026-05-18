@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Multichart Terminal V1.1</title>
+<title>Multichart Terminal V1.2</title>
 
 <style>
 body{
@@ -16,7 +16,7 @@ body{
 
 #app{
   display:grid;
-  grid-template-columns: 1fr 220px;
+  grid-template-columns: 1fr 240px;
   height:100vh;
 }
 
@@ -34,7 +34,7 @@ body{
   min-height:0;
 }
 
-/* RSI (пока placeholder, но готов для следующего шага) */
+/* RSI PLACEHOLDER (later we upgrade) */
 #rsi{
   height:180px;
   border-top:1px solid #1f2937;
@@ -51,6 +51,7 @@ body{
   padding:10px;
   border-bottom:1px solid #1f2937;
   cursor:pointer;
+  font-weight:600;
 }
 
 .coin:hover{
@@ -61,7 +62,7 @@ body{
   background:#1e293b;
 }
 
-/* HEADER INFO */
+/* HEADER */
 .header{
   position:absolute;
   top:10px;
@@ -79,7 +80,7 @@ body{
 <body>
 
 <div class="header">
-  Multichart Terminal V1.1 (Binance + Lightweight Charts)
+  Multichart Terminal V1.2 (Binance + Lightweight Charts FIXED VIEWPORT)
 </div>
 
 <div id="app">
@@ -110,21 +111,21 @@ let candleSeries;
 async function fetchCandles(symbol){
 
   const res = await fetch(
-    `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=15m&limit=200`
+    `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=15m&limit=300`
   );
 
   const data = await res.json();
 
   return data.map(d => ({
     time: d[0] / 1000,
-    open: parseFloat(d[1]),
-    high: parseFloat(d[2]),
-    low: parseFloat(d[3]),
-    close: parseFloat(d[4])
+    open: +d[1],
+    high: +d[2],
+    low: +d[3],
+    close: +d[4]
   }));
 }
 
-/* ---------------- CHART INIT ---------------- */
+/* ---------------- INIT CHART ---------------- */
 
 function initChart(){
 
@@ -143,22 +144,28 @@ function initChart(){
       borderColor: "#1f2937"
     },
     timeScale: {
-      borderColor: "#1f2937"
+      borderColor: "#1f2937",
+      timeVisible: true,
+      secondsVisible: false
     }
   });
 
   candleSeries = chart.addCandlestickSeries();
 
-  // 🔥 CRITICAL FIX: resize correctly
+  /* 🔥 FIXED RESIZE (CRITICAL FOR VIEWPORT) */
   const resize = () => {
+    const w = container.clientWidth;
+    const h = container.clientHeight;
+
     chart.applyOptions({
-      width: container.clientWidth,
-      height: container.clientHeight
+      width: w,
+      height: h
     });
   };
 
   window.addEventListener("resize", resize);
   resize();
+
 }
 
 /* ---------------- LOAD SYMBOL ---------------- */
@@ -169,7 +176,15 @@ async function loadSymbol(symbol){
 
   candleSeries.setData(candles);
 
-  chart.timeScale().fitContent();
+  /* 🔥 KEY FIX: show more candles naturally */
+  chart.timeScale().setVisibleLogicalRange({
+    from: candles.length - 180,
+    to: candles.length
+  });
+
+  setTimeout(() => {
+    chart.timeScale().fitContent();
+  }, 50);
 
 }
 
