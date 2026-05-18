@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Multichart V5 Stable</title>
+<title>Multichart</title>
 
 <style>
 html,body{
@@ -15,13 +15,19 @@ html,body{
   color:white;
 }
 
+/* =========================
+   APP
+========================= */
+
 #app{
   display:grid;
   grid-template-columns:1fr 240px;
   height:100vh;
 }
 
-/* LEFT */
+/* =========================
+   LEFT
+========================= */
 
 #left{
   display:flex;
@@ -29,12 +35,55 @@ html,body{
   min-height:0;
 }
 
-/* TOPBAR */
+/* =========================
+   HEADER
+========================= */
+
+#header{
+  height:56px;
+  border-bottom:1px solid #1f2937;
+  display:flex;
+  align-items:center;
+  padding:0 18px;
+  gap:28px;
+  flex-shrink:0;
+  background:#0b1220;
+}
+
+#logo{
+  font-size:20px;
+  font-weight:700;
+  color:white;
+}
+
+.menu{
+  display:flex;
+  gap:18px;
+}
+
+.menu a{
+  color:#9ca3af;
+  text-decoration:none;
+  font-size:14px;
+  transition:0.2s;
+}
+
+.menu a:hover{
+  color:white;
+}
+
+.menu a.active{
+  color:white;
+}
+
+/* =========================
+   TF BAR
+========================= */
 
 #topbar{
   display:flex;
   gap:6px;
-  padding:8px;
+  padding:8px 12px;
   border-bottom:1px solid #1f2937;
   flex-shrink:0;
 }
@@ -53,10 +102,12 @@ html,body{
   background:#2563eb;
 }
 
-/* MAIN CHART */
+/* =========================
+   CHART
+========================= */
 
 #chart-wrap{
-  height:72%;
+  height:82%;
   min-height:0;
 }
 
@@ -65,24 +116,23 @@ html,body{
   height:100%;
 }
 
-/* RSI */
+/* =========================
+   RSI
+========================= */
 
 #rsi-wrap{
   position:relative;
-  height:28%;
+  height:18%;
+  min-height:90px;
   border-top:1px solid #1f2937;
-  min-height:140px;
 }
 
 #rsi-band{
   position:absolute;
   left:0;
   right:0;
-
-  /* 30-70 zone */
   top:30%;
   height:40%;
-
   background:#1e1e31;
   pointer-events:none;
   z-index:0;
@@ -94,18 +144,22 @@ html,body{
   z-index:1;
 }
 
-/* RIGHT LIST */
+/* =========================
+   RIGHT LIST
+========================= */
 
 #list{
   border-left:1px solid #1f2937;
   overflow:auto;
+  background:#0b1220;
 }
 
 .coin{
-  padding:10px;
+  padding:10px 12px;
   border-bottom:1px solid #1f2937;
   cursor:pointer;
   user-select:none;
+  font-size:14px;
 }
 
 .coin:hover{
@@ -128,6 +182,21 @@ html,body{
   <!-- LEFT -->
   <div id="left">
 
+    <!-- HEADER -->
+    <div id="header">
+
+      <div id="logo">
+        Multichart
+      </div>
+
+      <div class="menu">
+        <a href="index.html">Главная</a>
+        <a href="coins.html" class="active">Монеты</a>
+      </div>
+
+    </div>
+
+    <!-- TF -->
     <div id="topbar">
       <button class="tf-btn active" data-tf="1m">1m</button>
       <button class="tf-btn" data-tf="5m">5m</button>
@@ -137,10 +206,12 @@ html,body{
       <button class="tf-btn" data-tf="1d">1D</button>
     </div>
 
+    <!-- CHART -->
     <div id="chart-wrap">
       <div id="chart"></div>
     </div>
 
+    <!-- RSI -->
     <div id="rsi-wrap">
       <div id="rsi-band"></div>
       <div id="rsi-chart"></div>
@@ -184,7 +255,7 @@ let oldestTime = null;
 let loadingHistory = false;
 
 /* =========================
-   CHARTS
+   MAIN CHART
 ========================= */
 
 const chart = LightweightCharts.createChart(
@@ -206,7 +277,7 @@ const chart = LightweightCharts.createChart(
 
     rightPriceScale:{
       borderColor:"#1f2937",
-      mode:1 /* LOG */
+      mode:1
     },
 
     timeScale:{
@@ -224,7 +295,9 @@ const candleSeries = chart.addCandlestickSeries({
   wickDownColor:"#ef4444"
 });
 
-/* RSI */
+/* =========================
+   RSI
+========================= */
 
 const rsiChart = LightweightCharts.createChart(
   document.getElementById("rsi-chart"),
@@ -244,11 +317,7 @@ const rsiChart = LightweightCharts.createChart(
     },
 
     rightPriceScale:{
-      borderColor:"#1f2937",
-      scaleMargins:{
-        top:0.1,
-        bottom:0.1
-      }
+      borderColor:"#1f2937"
     },
 
     timeScale:{
@@ -262,7 +331,7 @@ const rsiSeries = rsiChart.addLineSeries({
   lineWidth:2
 });
 
-/* RSI LEVELS */
+/* LEVELS */
 
 [30,50,70].forEach(level => {
 
@@ -271,14 +340,13 @@ const rsiSeries = rsiChart.addLineSeries({
     color:"#797b85",
     lineStyle:LightweightCharts.LineStyle.Dashed,
     lineWidth:1,
-    axisLabelVisible:true,
-    title:String(level)
+    axisLabelVisible:true
   });
 
 });
 
 /* =========================
-   RSI (WILDER / TV STYLE)
+   SIMPLE RSI
 ========================= */
 
 function calculateRSI(data, period = 14){
@@ -291,8 +359,6 @@ function calculateRSI(data, period = 14){
   let losses = 0;
 
   const result = [];
-
-  /* FIRST AVG */
 
   for(let i=1;i<=period;i++){
 
@@ -309,14 +375,13 @@ function calculateRSI(data, period = 14){
   let avgLoss = losses / period;
 
   let rs = avgGain / (avgLoss || 1);
+
   let rsi = 100 - (100 / (1 + rs));
 
   result.push({
     time:data[period].time,
     value:rsi
   });
-
-  /* WILDER SMOOTHING */
 
   for(let i=period+1;i<data.length;i++){
 
@@ -431,7 +496,7 @@ async function loadMoreHistory(){
 }
 
 /* =========================
-   INFINITE HISTORY
+   HISTORY
 ========================= */
 
 chart.timeScale().subscribeVisibleLogicalRangeChange(range => {
@@ -443,10 +508,6 @@ chart.timeScale().subscribeVisibleLogicalRangeChange(range => {
   }
 
 });
-
-/* =========================
-   SYNC RSI
-========================= */
 
 chart.timeScale().subscribeVisibleLogicalRangeChange(range => {
 
