@@ -1,6 +1,6 @@
 <!-- =========================================================
      FULL index.html
-     DASHBOARD ENGINE V2
+     DASHBOARD ENGINE V3
 ========================================================= -->
 
 <!DOCTYPE html>
@@ -71,16 +71,6 @@ body{
     background:#2563eb;
 }
 
-#open-terminal{
-    border:none;
-    background:#16a34a;
-    color:white;
-    padding:10px 16px;
-    border-radius:8px;
-    cursor:pointer;
-    font-weight:600;
-}
-
 /* =========================================================
    GRID
 ========================================================= */
@@ -128,7 +118,7 @@ body{
 }
 
 /* =========================================================
-   HEADER
+   WIDGET HEADER
 ========================================================= */
 
 .widget-header{
@@ -148,21 +138,23 @@ body{
     gap:8px;
 }
 
-.symbol-select{
+.symbol-input{
+    width:110px;
     background:#1f2937;
-    border:none;
+    border:1px solid #374151;
     color:white;
-    padding:5px 8px;
+    padding:6px 8px;
     border-radius:6px;
     font-size:12px;
-    cursor:pointer;
+    outline:none;
+    text-transform:uppercase;
 }
 
 .tf-select{
     background:#1f2937;
     border:none;
     color:white;
-    padding:5px 8px;
+    padding:6px 8px;
     border-radius:6px;
     font-size:12px;
     cursor:pointer;
@@ -226,10 +218,6 @@ Multichart
 9
 </button>
 
-<button id="open-terminal">
-Open Terminal
-</button>
-
 </div>
 
 </div>
@@ -251,7 +239,7 @@ document.getElementById("dashboard");
 
 let currentLayout = 4;
 
-const symbols = [
+const defaultSymbols = [
 
 "BTCUSDT",
 "ETHUSDT",
@@ -284,17 +272,10 @@ widget.innerHTML = `
 
 <div class="left-controls">
 
-<select class="symbol-select">
-
-${symbols.map(s=>`
-
-<option value="${s}">
-${s}
-</option>
-
-`).join("")}
-
-</select>
+<input
+class="symbol-input"
+value="${defaultSymbols[index] || 'BTCUSDT'}"
+/>
 
 <select class="tf-select">
 
@@ -358,7 +339,7 @@ visible:false
 timeScale:{
 visible:true,
 secondsVisible:false,
-rightOffset:18
+rightOffset:25
 },
 
 crosshair:{
@@ -391,8 +372,8 @@ wickDownColor:"#ef4444"
 
 });
 
-const symbolSelect =
-widget.querySelector(".symbol-select");
+const symbolInput =
+widget.querySelector(".symbol-input");
 
 const tfSelect =
 widget.querySelector(".tf-select");
@@ -413,9 +394,9 @@ let all = [];
 
 let end = Date.now();
 
-/* LOAD 5000+ CANDLES */
+/* LOAD HUGE HISTORY */
 
-for(let i=0;i<5;i++){
+for(let i=0;i<6;i++){
 
 const url =
 `https://api.bybit.com/v5/market/kline?category=linear&symbol=${symbol}&interval=${tf}&limit=1000&end=${end}`;
@@ -426,10 +407,17 @@ await fetch(url);
 const json =
 await res.json();
 
+if(
+!json.result ||
+!json.result.list
+){
+break;
+}
+
 const batch =
 json.result.list;
 
-if(!batch || !batch.length){
+if(!batch.length){
 break;
 }
 
@@ -439,6 +427,8 @@ end =
 Number(batch[batch.length-1][0]) - 1;
 
 }
+
+/* REMOVE DUPLICATES */
 
 const unique =
 new Map();
@@ -470,7 +460,9 @@ return Array
 async function loadData(){
 
 const symbol =
-symbolSelect.value;
+symbolInput.value
+.trim()
+.toUpperCase();
 
 const tf =
 tfSelect.value;
@@ -480,19 +472,33 @@ try{
 const candles =
 await loadHistory(symbol, tf);
 
+if(!candles.length){
+return;
+}
+
 series.setData(candles);
 
 /* =========================================================
-   INITIAL VIEW
+   PERFECT DEFAULT ZOOM
 ========================================================= */
+
+/*
+Instead of showing few candles,
+show big history immediately
+*/
+
+const visibleBars = Math.min(
+900,
+candles.length
+);
 
 chart.timeScale().setVisibleLogicalRange({
 
 from:
-candles.length - 140,
+candles.length - visibleBars,
 
 to:
-candles.length + 18
+candles.length + 25
 
 });
 
@@ -504,7 +510,12 @@ const last =
 candles[candles.length - 1];
 
 const first =
-candles[candles.length - 140];
+candles[
+Math.max(
+0,
+candles.length - visibleBars
+)
+];
 
 priceEl.innerText =
 last.close.toFixed(2);
@@ -536,25 +547,17 @@ console.log(err);
    EVENTS
 ========================================================= */
 
-symbolSelect.onchange = loadData;
 tfSelect.onchange = loadData;
 
-/* =========================================================
-   OPEN TERMINAL
-========================================================= */
+symbolInput.addEventListener(
+"keydown",
+e=>{
 
-widget.onclick = e=>{
-
-if(
-e.target.tagName === "SELECT"
-){
-return;
+if(e.key === "Enter"){
+loadData();
 }
 
-window.location.href =
-`coins.html?symbol=${symbolSelect.value}`;
-
-};
+});
 
 /* =========================================================
    RESIZE
@@ -641,19 +644,6 @@ renderDashboard();
 };
 
 });
-
-/* =========================================================
-   OPEN TERMINAL
-========================================================= */
-
-document
-.getElementById("open-terminal")
-.onclick = ()=>{
-
-window.location.href =
-"coins.html";
-
-};
 
 /* =========================================================
    START
