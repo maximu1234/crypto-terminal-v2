@@ -3,12 +3,10 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Crypto Terminal V3</title>
+<title>Crypto Terminal V4</title>
 
 <style>
-*{
-  box-sizing:border-box;
-}
+*{ box-sizing:border-box; }
 
 body{
   margin:0;
@@ -22,7 +20,6 @@ h1{
   text-align:center;
   margin:0 0 14px 0;
   font-size:22px;
-  font-weight:700;
 }
 
 .topbar{
@@ -30,7 +27,6 @@ h1{
   justify-content:center;
   gap:10px;
   margin-bottom:14px;
-  flex-wrap:wrap;
 }
 
 .topbar button{
@@ -41,7 +37,6 @@ h1{
   border-radius:8px;
   cursor:pointer;
   font-weight:bold;
-  transition:0.2s;
 }
 
 .topbar button:hover{
@@ -53,17 +48,9 @@ h1{
   gap:12px;
 }
 
-.grid-4{
-  grid-template-columns:repeat(2,1fr);
-}
-
-.grid-6{
-  grid-template-columns:repeat(3,1fr);
-}
-
-.grid-8{
-  grid-template-columns:repeat(4,1fr);
-}
+.grid-4{ grid-template-columns:repeat(2,1fr); }
+.grid-6{ grid-template-columns:repeat(3,1fr); }
+.grid-9{ grid-template-columns:repeat(3,1fr); }
 
 .card{
   background:#111827;
@@ -72,84 +59,19 @@ h1{
   overflow:hidden;
 }
 
-.toolbar{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:8px 10px;
-  background:#0f172a;
-  border-bottom:1px solid #1f2937;
-}
-
-.left-controls{
-  display:flex;
-  gap:8px;
-  align-items:center;
-}
-
-input{
-  background:#09101d;
-  color:white;
-  border:none;
-  border-radius:6px;
-  padding:8px 10px;
-  width:120px;
-  font-size:13px;
-}
-
-button{
-  cursor:pointer;
-}
-
-.load-btn{
-  background:#2563eb;
-  color:white;
-  border:none;
-  border-radius:6px;
-  padding:8px 12px;
-  font-weight:bold;
-}
-
-.alert-btn{
-  background:#dc2626;
-  color:white;
-  border:none;
-  border-radius:6px;
-  padding:8px 12px;
-  font-weight:bold;
-}
-
-.live{
-  color:#22c55e;
-  font-size:12px;
-  font-weight:bold;
-}
-
 .chart{
-  height:470px;
-}
-
-@media(max-width:1500px){
-  .grid-8{
-    grid-template-columns:repeat(2,1fr);
-  }
+  height:520px;
 }
 
 @media(max-width:1200px){
-  .grid-6{
+  .grid-6, .grid-9{
     grid-template-columns:repeat(2,1fr);
   }
 }
 
 @media(max-width:700px){
-  .grid-4,
-  .grid-6,
-  .grid-8{
+  .grid-4, .grid-6, .grid-9{
     grid-template-columns:1fr;
-  }
-
-  .chart{
-    height:420px;
   }
 }
 </style>
@@ -157,12 +79,12 @@ button{
 
 <body>
 
-<h1>CRYPTO TERMINAL V3 🚀</h1>
+<h1>CRYPTO TERMINAL V4 🚀</h1>
 
 <div class="topbar">
   <button onclick="setLayout(4)">4 Charts</button>
   <button onclick="setLayout(6)">6 Charts</button>
-  <button onclick="setLayout(8)">8 Charts</button>
+  <button onclick="setLayout(9)">9 Charts</button>
 </div>
 
 <div id="grid" class="grid"></div>
@@ -179,10 +101,13 @@ const defaults = [
   "DOGEUSDT",
   "ADAUSDT",
   "AVAXUSDT",
-  "LINKUSDT"
+  "LINKUSDT",
+  "BNBUSDT"
 ];
 
 let currentLayout = parseInt(localStorage.getItem("layout")) || 4;
+
+let widgets = {};
 
 function saveLayout(){
   localStorage.setItem("layout", currentLayout);
@@ -192,66 +117,26 @@ function getSymbol(index){
   return localStorage.getItem("symbol_" + index) || defaults[index];
 }
 
-function saveSymbol(index, symbol){
-  localStorage.setItem("symbol_" + index, symbol);
-}
-
-function getInterval(index){
-  return localStorage.getItem("interval_" + index) || "15";
-}
-
-function saveInterval(index, interval){
-  localStorage.setItem("interval_" + index, interval);
+function destroyWidgets(){
+  Object.values(widgets).forEach(w => {
+    try {
+      if (w?.remove) w.remove();
+    } catch(e){}
+  });
+  widgets = {};
 }
 
 function createCard(index){
-
-  const symbol = getSymbol(index);
-
   return `
     <div class="card">
-
-      <div class="toolbar">
-
-        <div class="left-controls">
-
-          <input
-            id="symbol${index}"
-            value="${symbol}"
-          />
-
-          <button
-            class="load-btn"
-            onclick="reloadChart(${index})"
-          >
-            LOAD
-          </button>
-
-          <button
-            class="alert-btn"
-            onclick="createAlert(${index})"
-          >
-            ALERT
-          </button>
-
-        </div>
-
-        <div class="live">
-          LIVE
-        </div>
-
-      </div>
-
-      <div
-        id="chart${index}"
-        class="chart"
-      ></div>
-
+      <div id="chart${index}" class="chart"></div>
     </div>
   `;
 }
 
 function render(){
+
+  destroyWidgets();
 
   const grid = document.getElementById("grid");
 
@@ -265,26 +150,31 @@ function render(){
 
   grid.innerHTML = html;
 
-  for(let i=0;i<currentLayout;i++){
-    loadChart(i);
-  }
+  setTimeout(() => {
+    for(let i=0;i<currentLayout;i++){
+      loadChart(i);
+    }
+  }, 150);
 
   saveLayout();
 }
 
 function loadChart(index){
 
+  if(!window.TradingView){
+    console.error("TradingView not loaded");
+    return;
+  }
+
   const symbol = getSymbol(index);
 
-  const interval = getInterval(index);
-
-  new TradingView.widget({
+  widgets[index] = new TradingView.widget({
 
     autosize: true,
 
     symbol: "BYBIT:" + symbol + ".P",
 
-    interval: interval,
+    interval: "15",
 
     timezone: "Etc/UTC",
 
@@ -294,11 +184,9 @@ function loadChart(index){
 
     locale: "en",
 
-    toolbar_bg: "#0f172a",
+    allow_symbol_change: true,
 
-    allow_symbol_change: false,
-
-    hide_side_toolbar: false,
+    hide_side_toolbar: true,
 
     hide_top_toolbar: false,
 
@@ -310,107 +198,33 @@ function loadChart(index){
 
     save_image: false,
 
-    studies: [
-      "RSI@tv-basicstudies"
-    ],
+    studies: [],
 
-    disabled_features: [
-      "volume_force_overlay",
-      "header_compare",
-      "display_market_status",
-      "show_interval_dialog_on_key_press"
-    ],
+    container_id: "chart" + index,
 
     overrides: {
 
       "paneProperties.background": "#0b1220",
-
       "paneProperties.vertGridProperties.color": "#161b26",
-
       "paneProperties.horzGridProperties.color": "#161b26",
-
-      "symbolWatermarkProperties.transparency": 90,
 
       "scalesProperties.textColor": "#AAA",
 
       "mainSeriesProperties.candleStyle.upColor": "#22c55e",
-
       "mainSeriesProperties.candleStyle.downColor": "#ef4444",
-
       "mainSeriesProperties.candleStyle.borderUpColor": "#22c55e",
-
       "mainSeriesProperties.candleStyle.borderDownColor": "#ef4444",
-
       "mainSeriesProperties.candleStyle.wickUpColor": "#22c55e",
-
       "mainSeriesProperties.candleStyle.wickDownColor": "#ef4444",
 
       "mainSeriesProperties.priceAxisProperties.log": true
-
-    },
-
-    studies_overrides: {
-
-      "rsi.plot.color": "#a855f7",
-
-      "rsi.level.0.color": "#555",
-
-      "rsi.level.1.color": "#555"
-
-    },
-
-    container_id: "chart" + index
-
+    }
   });
-
-}
-
-function reloadChart(index){
-
-  const symbolInput = document.getElementById("symbol" + index);
-
-  const symbol = symbolInput.value.toUpperCase();
-
-  saveSymbol(index, symbol);
-
-  document.getElementById("chart" + index).innerHTML = "";
-
-  loadChart(index);
 }
 
 function setLayout(count){
-
   currentLayout = count;
-
   render();
-}
-
-function createAlert(index){
-
-  const symbol = getSymbol(index);
-
-  const price = prompt("Set alert price for " + symbol);
-
-  if(!price) return;
-
-  let alerts = JSON.parse(
-    localStorage.getItem("alerts") || "[]"
-  );
-
-  alerts.push({
-    symbol,
-    price,
-    created: Date.now()
-  });
-
-  localStorage.setItem(
-    "alerts",
-    JSON.stringify(alerts)
-  );
-
-  alert(
-    "Alert saved for " + symbol + " at " + price
-  );
 }
 
 render();
