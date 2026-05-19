@@ -36,6 +36,10 @@ tickerSocket.onmessage = event=>{
 const msg =
 JSON.parse(event.data);
 
+/* =========================================================
+   VALIDATION
+========================================================= */
+
 if(
 !msg.topic ||
 !msg.topic.startsWith("tickers.")
@@ -43,11 +47,22 @@ if(
 return;
 }
 
-if(!msg.data){
+if(
+!msg.data ||
+!Array.isArray(msg.data)
+){
 return;
 }
 
-const ticker = msg.data;
+/* =========================================================
+   MULTI TICKERS
+========================================================= */
+
+msg.data.forEach(ticker=>{
+
+if(!ticker.symbol){
+return;
+}
 
 const lastPrice =
 Number(
@@ -65,18 +80,18 @@ ticker.price24hPcnt || 0
 
 let change1h = 0;
 
-const prev1hPrice =
+const prevPrice1h =
 Number(
 ticker.prevPrice1h || 0
 );
 
-if(prev1hPrice > 0){
+if(prevPrice1h > 0){
 
 change1h =
 (
-(lastPrice - prev1hPrice)
+(lastPrice - prevPrice1h)
 /
-prev1hPrice
+prevPrice1h
 ) * 100;
 
 }
@@ -95,6 +110,8 @@ change1h
 
 subscribers.forEach(fn=>fn(payload));
 
+});
+
 };
 
 tickerSocket.onclose = ()=>{
@@ -112,7 +129,7 @@ connectTickerStream(()=>{});
 
 tickerSocket.onerror = ()=>{
 
-tickerSocket.close();
+socket?.close();
 
 };
 
