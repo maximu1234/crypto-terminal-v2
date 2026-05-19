@@ -16,14 +16,26 @@ horzLines:{ color:"#161b26" }
 },
 
 rightPriceScale:{
+
 borderColor:"#1f2937",
-mode:1
+
+mode:1,
+
+autoScale:true,
+
+entireTextOnly:true,
+
+scaleMargins:{
+top:0.12,
+bottom:0.12
+}
+
 },
 
 timeScale:{
 borderColor:"#1f2937",
 timeVisible:true,
-rightOffset:28
+rightOffset:20
 },
 
 crosshair:{
@@ -39,7 +51,11 @@ upColor:"#22c55e",
 downColor:"#ef4444",
 borderVisible:false,
 wickUpColor:"#22c55e",
-wickDownColor:"#ef4444"
+wickDownColor:"#ef4444",
+
+priceLineVisible:true,
+
+lastValueVisible:true
 
 });
 
@@ -70,7 +86,14 @@ horzLines:{ color:"#161b26" }
 },
 
 rightPriceScale:{
-borderColor:"#1f2937"
+
+borderColor:"#1f2937",
+
+scaleMargins:{
+top:0.2,
+bottom:0.2
+}
+
 },
 
 timeScale:{
