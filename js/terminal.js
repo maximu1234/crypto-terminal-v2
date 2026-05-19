@@ -264,6 +264,56 @@ calculateRSI(candles)
 }
 
 /* =========================================================
+   DEFAULT ZOOM
+========================================================= */
+
+function applyDefaultZoom(){
+
+if(!candles.length){
+return;
+}
+
+let visibleBars = candles.length;
+
+/* =========================================================
+   TF LIMITS
+========================================================= */
+
+if(currentTF === "1"){
+visibleBars = Math.min(candles.length, 1500);
+}
+
+if(currentTF === "5"){
+visibleBars = Math.min(candles.length, 2000);
+}
+
+if(currentTF === "15"){
+visibleBars = Math.min(candles.length, 2500);
+}
+
+if(currentTF === "60"){
+visibleBars = Math.min(candles.length, 3000);
+}
+
+if(currentTF === "240"){
+visibleBars = Math.min(candles.length, 2000);
+}
+
+if(currentTF === "D"){
+visibleBars = Math.min(candles.length, 1000);
+}
+
+chart.timeScale().setVisibleLogicalRange({
+
+from: candles.length - visibleBars,
+
+to: candles.length + 20
+
+});
+
+}
+
+/* =========================================================
    LOAD SYMBOL
 ========================================================= */
 
@@ -309,15 +359,11 @@ rsiSeries.setData(
 calculateRSI(candles)
 );
 
-chart.timeScale().setVisibleLogicalRange({
+/* =========================================================
+   APPLY ZOOM
+========================================================= */
 
-from:
-candles.length - 140,
-
-to:
-candles.length + 28
-
-});
+applyDefaultZoom();
 
 highlightActiveSymbol();
 
@@ -571,10 +617,6 @@ if(!change24El || !change1hEl){
 return;
 }
 
-/* =========================================================
-   COLORS
-========================================================= */
-
 if(item.change24 >= 0){
 
 change24El.classList.add("green");
@@ -598,10 +640,6 @@ change1hEl.classList.add("red");
 change1hEl.classList.remove("green");
 
 }
-
-/* =========================================================
-   VALUES
-========================================================= */
 
 change24El.innerText =
 `${item.change24.toFixed(2)}%`;
