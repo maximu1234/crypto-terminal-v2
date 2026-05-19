@@ -154,6 +154,7 @@ return forexSymbols;
 function generateMarketData(){
 
 marketData = [];
+
 marketMap.clear();
 
 getCurrentSymbols().forEach(symbol=>{
@@ -493,9 +494,13 @@ data-fav="${item.symbol}"
 ${item.symbol}
 </div>
 
-<div class="coin-change24"></div>
+<div class="coin-change24 col-change">
+0.00%
+</div>
 
-<div class="coin-change1h"></div>
+<div class="coin-change1h col-change">
+0.00%
+</div>
 
 `;
 
@@ -562,19 +567,41 @@ div.querySelector(".coin-change24");
 const change1hEl =
 div.querySelector(".coin-change1h");
 
-change24El.className =
-`col-change ${
-item.change24 >= 0
-? "green"
-: "red"
-}`;
+if(!change24El || !change1hEl){
+return;
+}
 
-change1hEl.className =
-`col-change ${
-item.change1h >= 0
-? "green"
-: "red"
-}`;
+/* =========================================================
+   COLORS
+========================================================= */
+
+if(item.change24 >= 0){
+
+change24El.classList.add("green");
+change24El.classList.remove("red");
+
+}else{
+
+change24El.classList.add("red");
+change24El.classList.remove("green");
+
+}
+
+if(item.change1h >= 0){
+
+change1hEl.classList.add("green");
+change1hEl.classList.remove("red");
+
+}else{
+
+change1hEl.classList.add("red");
+change1hEl.classList.remove("green");
+
+}
+
+/* =========================================================
+   VALUES
+========================================================= */
 
 change24El.innerText =
 `${item.change24.toFixed(2)}%`;
