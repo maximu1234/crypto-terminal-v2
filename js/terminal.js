@@ -13,6 +13,11 @@ saveFavorites,
 loadFavorites
 } from "./storage.js";
 
+import {
+createCandlestickChart,
+createRSIChart
+} from "./chart.js";
+
 let currentDataset = "crypto";
 let currentTF = "60";
 let currentSymbol = "BTCUSDT";
@@ -52,107 +57,30 @@ const forexSymbols = [
 ];
 
 /* =========================================================
-   CHART
+   CHARTS
 ========================================================= */
+
+const mainChart =
+createCandlestickChart(
+document.getElementById("chart")
+);
 
 const chart =
-LightweightCharts.createChart(
-document.getElementById("chart"),
-{
-
-layout:{
-background:{ color:"#0b1220" },
-textColor:"#d1d5db"
-},
-
-grid:{
-vertLines:{ color:"#161b26" },
-horzLines:{ color:"#161b26" }
-},
-
-rightPriceScale:{
-borderColor:"#1f2937",
-mode:1
-},
-
-timeScale:{
-borderColor:"#1f2937",
-timeVisible:true,
-rightOffset:28
-},
-
-crosshair:{
-mode:0
-}
-
-});
+mainChart.chart;
 
 const candleSeries =
-chart.addCandlestickSeries({
+mainChart.series;
 
-upColor:"#22c55e",
-downColor:"#ef4444",
-borderVisible:false,
-wickUpColor:"#22c55e",
-wickDownColor:"#ef4444"
-
-});
-
-/* =========================================================
-   RSI
-========================================================= */
+const rsi =
+createRSIChart(
+document.getElementById("rsi-chart")
+);
 
 const rsiChart =
-LightweightCharts.createChart(
-document.getElementById("rsi-chart"),
-{
-
-layout:{
-background:{ color:"transparent" },
-textColor:"#797b85"
-},
-
-grid:{
-vertLines:{ color:"#161b26" },
-horzLines:{ color:"#161b26" }
-},
-
-rightPriceScale:{
-borderColor:"#1f2937"
-},
-
-timeScale:{
-visible:false
-},
-
-crosshair:{
-mode:0
-}
-
-});
+rsi.chart;
 
 const rsiSeries =
-rsiChart.addLineSeries({
-
-color:"#a39cb9",
-lineWidth:2
-
-});
-
-[30,50,70].forEach(level=>{
-
-rsiSeries.createPriceLine({
-
-price:level,
-color:"#797b85",
-lineStyle:
-LightweightCharts.LineStyle.Dashed,
-lineWidth:1,
-axisLabelVisible:true
-
-});
-
-});
+rsi.series;
 
 /* =========================================================
    SYMBOLS
