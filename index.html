@@ -1,6 +1,7 @@
 <!-- =========================================================
      FULL index.html
-     DASHBOARD ENGINE V6
+     DASHBOARD ENGINE V7
+     + SAVED WIDGET STATE
 ========================================================= -->
 
 <!DOCTYPE html>
@@ -270,9 +271,8 @@ Open Terminal
 const dashboard =
 document.getElementById("dashboard");
 
-/* DEFAULT = 9 */
-
-let currentLayout = 9;
+let currentLayout =
+Number(localStorage.getItem("dashboard_layout")) || 9;
 
 const defaultSymbols = [
 
@@ -293,10 +293,65 @@ const defaultSymbols = [
 const widgets = [];
 
 /* =========================================================
+   STORAGE
+========================================================= */
+
+function saveWidgetState(index, symbol, tf){
+
+const state = {
+
+symbol,
+tf
+
+};
+
+localStorage.setItem(
+`widget_${index}`,
+JSON.stringify(state)
+);
+
+}
+
+function loadWidgetState(index){
+
+const raw =
+localStorage.getItem(
+`widget_${index}`
+);
+
+if(!raw){
+return null;
+}
+
+try{
+
+return JSON.parse(raw);
+
+}catch{
+
+return null;
+
+}
+
+}
+
+/* =========================================================
    CREATE WIDGET
 ========================================================= */
 
 function createWidget(index){
+
+const saved =
+loadWidgetState(index);
+
+const startSymbol =
+saved?.symbol ||
+defaultSymbols[index] ||
+"BTCUSDT";
+
+const startTf =
+saved?.tf ||
+"15";
 
 const widget =
 document.createElement("div");
@@ -311,17 +366,17 @@ widget.innerHTML = `
 
 <input
 class="symbol-input"
-value="${defaultSymbols[index] || 'BTCUSDT'}"
+value="${startSymbol}"
 />
 
 <select class="tf-select">
 
-<option value="1">1m</option>
-<option value="5">5m</option>
-<option value="15" selected>15m</option>
-<option value="60">1h</option>
-<option value="240">4h</option>
-<option value="D">1D</option>
+<option value="1" ${startTf==="1"?"selected":""}>1m</option>
+<option value="5" ${startTf==="5"?"selected":""}>5m</option>
+<option value="15" ${startTf==="15"?"selected":""}>15m</option>
+<option value="60" ${startTf==="60"?"selected":""}>1h</option>
+<option value="240" ${startTf==="240"?"selected":""}>4h</option>
+<option value="D" ${startTf==="D"?"selected":""}>1D</option>
 
 </select>
 
@@ -457,8 +512,6 @@ let all = [];
 
 let end = Date.now();
 
-/* LOAD HUGE HISTORY */
-
 for(let i=0;i<6;i++){
 
 const url =
@@ -490,8 +543,6 @@ end =
 Number(batch[batch.length-1][0]) - 1;
 
 }
-
-/* REMOVE DUPLICATES */
 
 const unique =
 new Map();
@@ -529,6 +580,14 @@ symbolInput.value
 
 const tf =
 tfSelect.value;
+
+/* SAVE STATE */
+
+saveWidgetState(
+index,
+symbol,
+tf
+);
 
 try{
 
@@ -692,6 +751,13 @@ dashboard.innerHTML = "";
 dashboard.className =
 `grid-${currentLayout}`;
 
+/* SAVE LAYOUT */
+
+localStorage.setItem(
+"dashboard_layout",
+currentLayout
+);
+
 widgets.length = 0;
 
 for(let i=0;i<currentLayout;i++){
@@ -699,6 +765,23 @@ for(let i=0;i<currentLayout;i++){
 createWidget(i);
 
 }
+
+/* ACTIVE BUTTON */
+
+document
+.querySelectorAll(".layout-btn")
+.forEach(btn=>{
+
+btn.classList.remove("active");
+
+if(
+Number(btn.dataset.layout)
+=== currentLayout
+){
+btn.classList.add("active");
+}
+
+});
 
 }
 
@@ -711,14 +794,6 @@ document
 .forEach(btn=>{
 
 btn.onclick = ()=>{
-
-document
-.querySelectorAll(".layout-btn")
-.forEach(b=>
-b.classList.remove("active")
-);
-
-btn.classList.add("active");
 
 currentLayout =
 Number(btn.dataset.layout);
