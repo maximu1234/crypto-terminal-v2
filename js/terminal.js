@@ -191,6 +191,9 @@ tick.price;
 item.change24 =
 tick.change24;
 
+item.change1h =
+tick.change1h;
+
 updateCoinRow(item);
 
 });
@@ -482,9 +485,9 @@ data-fav="${item.symbol}"
 ${item.symbol}
 </div>
 
-<div class="coin-change"></div>
+<div class="coin-change24"></div>
 
-<div class="coin-price"></div>
+<div class="coin-change1h"></div>
 
 `;
 
@@ -545,26 +548,31 @@ if(!div){
 return;
 }
 
-const changeEl =
-div.querySelector(".coin-change");
+const change24El =
+div.querySelector(".coin-change24");
 
-const priceEl =
-div.querySelector(".coin-price");
+const change1hEl =
+div.querySelector(".coin-change1h");
 
-changeEl.className =
+change24El.className =
 `col-change ${
 item.change24 >= 0
 ? "green"
 : "red"
 }`;
 
-changeEl.innerText =
+change1hEl.className =
+`col-change ${
+item.change1h >= 0
+? "green"
+: "red"
+}`;
+
+change24El.innerText =
 `${item.change24.toFixed(2)}%`;
 
-priceEl.innerText =
-item.price
-? item.price.toFixed(4)
-: "...";
+change1hEl.innerText =
+`${item.change1h.toFixed(2)}%`;
 
 }
 
