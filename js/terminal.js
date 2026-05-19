@@ -43,6 +43,9 @@ loadFavorites();
 let allBybitSymbols = [];
 let newListings = [];
 
+const coinElements =
+new Map();
+
 /* =========================================================
    SYMBOLS
 ========================================================= */
@@ -188,7 +191,7 @@ tick.price;
 item.change24 =
 tick.change24;
 
-renderList();
+updateCoinRow(item);
 
 });
 
@@ -304,7 +307,7 @@ candles.length + 28
 
 });
 
-renderList();
+highlightActiveSymbol();
 
 startRealtime();
 
@@ -407,10 +410,10 @@ currentDataset = e.target.value;
 
 generateMarketData();
 
+renderList();
+
 currentSymbol =
 getCurrentSymbols()[0];
-
-renderList();
 
 await loadSymbol(currentSymbol);
 
@@ -429,9 +432,161 @@ document.getElementById(
 
 list.innerHTML = "";
 
+coinElements.clear();
+
 let data = [...marketData];
 
-data.sort((a,b)=>{
+data.sort(sortData);
+
+data.forEach(item=>{
+
+const div =
+createCoinRow(item);
+
+coinElements.set(
+item.symbol,
+div
+);
+
+list.appendChild(div);
+
+});
+
+highlightActiveSymbol();
+
+}
+
+function createCoinRow(item){
+
+const div =
+document.createElement("div");
+
+div.className = "coin";
+
+const isFavorite =
+favorites.includes(item.symbol);
+
+div.innerHTML = `
+
+<div class="col-flag">
+
+<div
+class="flag
+${isFavorite ? 'favorite' : ''}"
+data-fav="${item.symbol}"
+></div>
+
+</div>
+
+<div class="coin-symbol">
+${item.symbol}
+</div>
+
+<div class="coin-change"></div>
+
+<div class="coin-price"></div>
+
+`;
+
+div.onclick = async e=>{
+
+if(e.target.dataset.fav){
+return;
+}
+
+await loadSymbol(item.symbol);
+
+};
+
+const favBtn =
+div.querySelector("[data-fav]");
+
+favBtn.onclick = e=>{
+
+e.stopPropagation();
+
+if(
+favorites.includes(item.symbol)
+){
+
+favorites =
+favorites.filter(
+s => s !== item.symbol
+);
+
+}else{
+
+favorites.push(item.symbol);
+}
+
+saveFavorites(
+favorites
+);
+
+favBtn.classList.toggle(
+"favorite"
+);
+
+};
+
+updateCoinRow(item, div);
+
+return div;
+
+}
+
+function updateCoinRow(item, element=null){
+
+const div =
+element ||
+coinElements.get(item.symbol);
+
+if(!div){
+return;
+}
+
+const changeEl =
+div.querySelector(".coin-change");
+
+const priceEl =
+div.querySelector(".coin-price");
+
+changeEl.className =
+`col-change ${
+item.change24 >= 0
+? "green"
+: "red"
+}`;
+
+changeEl.innerText =
+`${item.change24.toFixed(2)}%`;
+
+priceEl.innerText =
+item.price
+? item.price.toFixed(4)
+: "...";
+
+}
+
+function highlightActiveSymbol(){
+
+coinElements.forEach((el,symbol)=>{
+
+if(symbol === currentSymbol){
+
+el.classList.add("active");
+
+}else{
+
+el.classList.remove("active");
+
+}
+
+});
+
+}
+
+function sortData(a,b){
 
 let result = 0;
 
@@ -475,103 +630,6 @@ a.change1h - b.change1h;
 return sortAsc
 ? result
 : -result;
-
-});
-
-data.forEach(item=>{
-
-const div =
-document.createElement("div");
-
-div.className = "coin";
-
-if(currentSymbol === item.symbol){
-div.classList.add("active");
-}
-
-const isFavorite =
-favorites.includes(item.symbol);
-
-div.innerHTML = `
-
-<div class="col-flag">
-
-<div
-class="flag
-${isFavorite ? 'favorite' : ''}"
-data-fav="${item.symbol}"
-></div>
-
-</div>
-
-<div>
-${item.symbol}
-</div>
-
-<div class="col-change
-${item.change24>=0
-? 'green'
-: 'red'}">
-
-${item.change24.toFixed(2)}%
-
-</div>
-
-<div class="col-change
-${item.change24>=0
-? 'green'
-: 'red'}">
-
-${item.price
-? item.price.toFixed(4)
-: "..."}
-
-</div>
-
-`;
-
-div.onclick = async e=>{
-
-if(e.target.dataset.fav){
-return;
-}
-
-await loadSymbol(item.symbol);
-
-};
-
-const favBtn =
-div.querySelector("[data-fav]");
-
-favBtn.onclick = e=>{
-
-e.stopPropagation();
-
-if(
-favorites.includes(item.symbol)
-){
-
-favorites =
-favorites.filter(
-s => s !== item.symbol
-);
-
-}else{
-
-favorites.push(item.symbol);
-}
-
-saveFavorites(
-favorites
-);
-
-renderList();
-
-};
-
-list.appendChild(div);
-
-});
 
 }
 
