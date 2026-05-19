@@ -23,7 +23,9 @@ mode:1,
 
 autoScale:true,
 
-entireTextOnly:true,
+entireTextOnly:false,
+
+minimumWidth:90,
 
 scaleMargins:{
 top:0.12,
@@ -88,6 +90,8 @@ horzLines:{ color:"#161b26" }
 rightPriceScale:{
 
 borderColor:"#1f2937",
+
+minimumWidth:60,
 
 scaleMargins:{
 top:0.2,
