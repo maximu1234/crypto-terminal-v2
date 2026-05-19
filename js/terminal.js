@@ -18,6 +18,11 @@ createCandlestickChart,
 createRSIChart
 } from "./chart.js";
 
+import {
+connectKlineStream,
+disconnectKlineStream
+} from "./ws.js";
+
 let currentDataset = "crypto";
 let currentTF = "60";
 let currentSymbol = "BTCUSDT";
@@ -157,10 +162,66 @@ change1h:
 }
 
 /* =========================================================
+   REALTIME
+========================================================= */
+
+function startRealtime(){
+
+if(
+currentDataset !== "crypto" &&
+currentDataset !== "new"
+){
+return;
+}
+
+connectKlineStream({
+
+symbol:currentSymbol,
+tf:currentTF,
+
+onCandle:candle=>{
+
+if(!candles.length){
+return;
+}
+
+const last =
+candles[candles.length - 1];
+
+if(candle.time === last.time){
+
+candles[candles.length - 1] =
+candle;
+
+}else if(candle.time > last.time){
+
+candles.push(candle);
+
+if(candles.length > 4000){
+candles.shift();
+}
+
+}
+
+candleSeries.update(candle);
+
+rsiSeries.setData(
+calculateRSI(candles)
+);
+
+}
+
+});
+
+}
+
+/* =========================================================
    LOAD SYMBOL
 ========================================================= */
 
 async function loadSymbol(symbol){
+
+disconnectKlineStream();
 
 currentSymbol = symbol;
 
@@ -211,6 +272,8 @@ candles.length + 28
 });
 
 renderList();
+
+startRealtime();
 
 }
 
@@ -304,6 +367,8 @@ await loadSymbol(currentSymbol);
 document
 .getElementById("market-filter")
 .addEventListener("change", async e=>{
+
+disconnectKlineStream();
 
 currentDataset = e.target.value;
 
