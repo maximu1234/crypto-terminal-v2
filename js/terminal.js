@@ -23,6 +23,10 @@ connectKlineStream,
 disconnectKlineStream
 } from "./ws.js";
 
+import {
+connectTickerStream
+} from "./tickers.js";
+
 let currentDataset = "crypto";
 let currentTF = "60";
 let currentSymbol = "BTCUSDT";
@@ -149,13 +153,42 @@ return {
 
 symbol,
 
-change24:
-((Math.random()*20)-10),
+price:0,
 
-change1h:
-((Math.random()*6)-3)
+change24:0,
+
+change1h:0
 
 };
+
+});
+
+}
+
+/* =========================================================
+   REALTIME TICKERS
+========================================================= */
+
+function startTickerStream(){
+
+connectTickerStream(tick=>{
+
+const item =
+marketData.find(
+x => x.symbol === tick.symbol
+);
+
+if(!item){
+return;
+}
+
+item.price =
+tick.price;
+
+item.change24 =
+tick.change24;
+
+renderList();
 
 });
 
@@ -485,11 +518,13 @@ ${item.change24.toFixed(2)}%
 </div>
 
 <div class="col-change
-${item.change1h>=0
+${item.change24>=0
 ? 'green'
 : 'red'}">
 
-${item.change1h.toFixed(2)}%
+${item.price
+? item.price.toFixed(4)
+: "..."}
 
 </div>
 
@@ -629,6 +664,8 @@ generateMarketData();
 resizeCharts();
 
 renderList();
+
+startTickerStream();
 
 await loadSymbol("BTCUSDT");
 
