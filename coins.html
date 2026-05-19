@@ -20,18 +20,19 @@
 
 <div id="left">
 
-<div id="header">
+<header id="header">
 
 <div id="logo">
 Multichart
 </div>
 
-<div class="menu">
+<nav class="menu">
 <a href="index.html">Главная</a>
 <a href="coins.html" class="active">Монеты</a>
-</div>
+<a href="screener.html">Скринер</a>
+</nav>
 
-</div>
+</header>
 
 <div id="topbar">
 
@@ -41,15 +42,132 @@ BTCUSDT.P
 
 <button class="tf-btn" data-tf="1">1m</button>
 <button class="tf-btn" data-tf="5">5m</button>
-<button class="tf-btn active" data-tf="60">1h</button>
 <button class="tf-btn" data-tf="15">15m</button>
+<button class="tf-btn active" data-tf="60">1h</button>
 <button class="tf-btn" data-tf="240">4h</button>
 <button class="tf-btn" data-tf="D">1D</button>
+
+<div id="draw-toolbar" class="draw-toolbar-inline">
+
+<button type="button" class="draw-btn" data-draw-tool="cursor" title="Курсор">
+<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M6 3l12 8-5.5.5L11 21l-2.5-1.5L8.5 12 3 11z"/></svg>
+</button>
+
+<button type="button" class="draw-btn" data-draw-tool="trendline" title="Trendline — 2 клика">
+<svg viewBox="0 0 24 24" aria-hidden="true">
+<line x1="5" y1="18" x2="19" y2="6" stroke="currentColor" stroke-width="1.5"/>
+<circle cx="5" cy="18" r="2" fill="none" stroke="currentColor" stroke-width="1.5"/>
+<circle cx="19" cy="6" r="2" fill="none" stroke="currentColor" stroke-width="1.5"/>
+</svg>
+</button>
+
+<button type="button" class="draw-btn" data-draw-tool="hray" title="Horizontal Ray — 1 клик">
+<svg viewBox="0 0 24 24" aria-hidden="true">
+<line x1="6" y1="12" x2="20" y2="12" stroke="currentColor" stroke-width="1.5"/>
+<circle cx="6" cy="12" r="2" fill="none" stroke="currentColor" stroke-width="1.5"/>
+</svg>
+</button>
+
+<button type="button" class="draw-btn" data-draw-tool="fib" title="Fib Retracement — 2 клика">
+<svg viewBox="0 0 24 24" aria-hidden="true">
+<line x1="4" y1="18" x2="20" y2="18" stroke="currentColor" stroke-width="1.5"/>
+<line x1="4" y1="14" x2="20" y2="14" stroke="currentColor" stroke-width="1.5"/>
+<line x1="4" y1="10" x2="20" y2="10" stroke="currentColor" stroke-width="1.5"/>
+<line x1="4" y1="6" x2="20" y2="6" stroke="currentColor" stroke-width="1.5"/>
+<circle cx="4" cy="18" r="2" fill="none" stroke="currentColor" stroke-width="1.5"/>
+<circle cx="20" cy="10" r="2" fill="none" stroke="currentColor" stroke-width="1.5"/>
+</svg>
+</button>
+
+<button type="button" class="draw-btn" data-draw-tool="channel" title="Parallel Channel — 3 клика">
+<svg viewBox="0 0 24 24" aria-hidden="true">
+<line x1="5" y1="16" x2="19" y2="8" stroke="currentColor" stroke-width="1.5"/>
+<line x1="5" y1="20" x2="19" y2="12" stroke="currentColor" stroke-width="1.5"/>
+<circle cx="5" cy="16" r="2" fill="none" stroke="currentColor" stroke-width="1.5"/>
+<circle cx="19" cy="8" r="2" fill="none" stroke="currentColor" stroke-width="1.5"/>
+<circle cx="12" cy="16" r="2" fill="none" stroke="currentColor" stroke-width="1.5"/>
+</svg>
+</button>
+
+<button type="button" class="draw-btn draw-tool-clear-all" id="draw-tool-delete" title="Удалить все объекты на графике">
+<svg viewBox="0 0 24 24" aria-hidden="true">
+<path d="M9 3h6l1 2h4v2H4V5h4l1-2z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+<path d="M7 9v11h10V9" fill="none" stroke="currentColor" stroke-width="1.5"/>
+<line x1="10" y1="12" x2="10" y2="17" stroke="currentColor" stroke-width="1.5"/>
+<line x1="14" y1="12" x2="14" y2="17" stroke="currentColor" stroke-width="1.5"/>
+</svg>
+</button>
+
+</div>
 
 </div>
 
 <div id="chart-wrap">
 <div id="chart"></div>
+
+<div id="draw-style-bar" class="draw-style-float hidden">
+
+<button type="button" class="float-drag draw-style-drag" id="style-bar-drag" title="Перетащить панель" aria-label="Перетащить">
+<span class="drag-dots"></span>
+</button>
+
+<button type="button" class="float-color-btn draw-color-btn" id="draw-color-btn" title="Цвет">
+<svg class="pencil-icon" viewBox="0 0 24 24" aria-hidden="true">
+<path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" d="M4 20l4-1 9-9-3-3-9 9-1 4zM14 6l3 3"/>
+</svg>
+<span class="color-stripe draw-color-stripe" id="draw-color-stripe"></span>
+</button>
+
+<button type="button" class="float-width-btn draw-width-btn" id="draw-width-btn" title="Толщина линии">
+<span class="width-line-preview draw-width-preview" id="draw-width-preview"></span>
+<span class="draw-width-label" id="draw-width-label">1px</span>
+</button>
+
+<button type="button" class="float-settings draw-settings-btn" id="draw-settings-btn" title="Все настройки" aria-label="Настройки">
+<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+<path fill="currentColor" d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zm9.4 4.6 1.5-.3.2-1.4-1.4-.5-.8-1.2-1.2.8-.5 1.4.2 1.4-1.5.3-.2 1.4 1.4.5.8 1.2 1.2-.8.5-1.4-.2-1.4 1.5-.3.2-1.4-1.4-.5-.8-1.2-1.2.8-.5-1.4.2-1.4 1.5-.3-.2-1.4-1.4-.5-.8-1.2z"/>
+</svg>
+</button>
+
+<button type="button" class="float-delete draw-delete-one-btn" id="draw-delete-one" title="Удалить объект" aria-label="Удалить">
+<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+<path fill="none" stroke="currentColor" stroke-width="1.5" d="M9 3h6l1 2h4v2H4V5h4l1-2zM7 9v11h10V9M10 12v5M14 12v5"/>
+</svg>
+</button>
+
+</div>
+
+<div id="draw-color-popover" class="draw-popover draw-color-popover hidden"></div>
+
+<div id="draw-width-popover" class="draw-popover draw-width-popover hidden">
+<button type="button" class="width-option active" data-width="1">
+<span class="width-sample" style="height:1px"></span>
+<span>1px</span>
+</button>
+<button type="button" class="width-option" data-width="2">
+<span class="width-sample" style="height:2px"></span>
+<span>2px</span>
+</button>
+<button type="button" class="width-option" data-width="3">
+<span class="width-sample" style="height:3px"></span>
+<span>3px</span>
+</button>
+<button type="button" class="width-option" data-width="4">
+<span class="width-sample" style="height:4px"></span>
+<span>4px</span>
+</button>
+</div>
+
+<div id="draw-settings-popover" class="draw-popover draw-settings-popover hidden">
+<label class="popover-label">Уровни Fib</label>
+<input
+type="text"
+class="draw-fib-input"
+id="fib-levels-input"
+placeholder="0, 23.6, 38.2, 50, 61.8, 100"
+/>
+</div>
+
 </div>
 
 <div id="rsi-wrap">
@@ -62,6 +180,13 @@ BTCUSDT.P
 <div id="list">
 
 <div id="filter-wrap">
+
+<input
+id="coin-search"
+type="search"
+placeholder="Поиск монеты..."
+autocomplete="off"
+/>
 
 <select id="market-filter">
 
@@ -115,7 +240,47 @@ Coin
 
 </div>
 
-<script src="js/terminal.js" type="module"></script>
+<script type="module">
+
+if(location.protocol === "file:"){
+
+document.body.innerHTML = `
+<div style="padding:40px;font-family:Arial,sans-serif;background:#0b1220;color:#fff;max-width:520px">
+<h2>Нужен локальный сервер</h2>
+<p>Страницу нельзя открывать двойным кликом по файлу.</p>
+<p>В терминале:</p>
+<pre style="background:#1f2937;padding:12px;border-radius:8px">cd crypto-terminal-v2
+./start.sh</pre>
+<p>Затем откройте:<br>
+<a href="http://127.0.0.1:8080/coins.html" style="color:#60a5fa">http://127.0.0.1:8080/coins.html</a>
+</p>
+</div>`;
+
+}else{
+
+import("./js/terminal.js?v=22").catch(err=>{
+
+console.error(err);
+
+const box = document.createElement("div");
+
+box.style.cssText = "position:fixed;inset:0;z-index:9999;background:#0b1220;color:#fff;padding:32px;font-family:Arial,sans-serif";
+
+box.innerHTML = `
+<h2>Не удалось загрузить скрипты</h2>
+<p style="color:#fca5a5">${err.message}</p>
+<p>1. Остановите старый сервер (Ctrl+C в терминале)</p>
+<p>2. В папке проекта выполните: <code>./start.sh</code></p>
+<p>3. Откройте: <a href="http://127.0.0.1:8080/coins.html" style="color:#60a5fa">http://127.0.0.1:8080/coins.html</a></p>
+<p>4. Попробуйте режим инкогнито или другой браузер</p>`;
+
+document.body.prepend(box);
+
+});
+
+}
+
+</script>
 
 </body>
 </html>

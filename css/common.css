@@ -1,1 +1,106 @@
+*,
+*::before,
+*::after{
+box-sizing:border-box;
+}
 
+html,
+body{
+margin:0;
+padding:0;
+}
+
+.menu{
+display:flex;
+gap:18px;
+}
+
+.menu a{
+color:#9ca3af;
+text-decoration:none;
+font-size:14px;
+}
+
+.menu a:hover{
+color:#e5e7eb;
+}
+
+.menu a.active{
+color:#fff;
+}
+
+#header{
+flex-shrink:0;
+display:flex;
+align-items:center;
+gap:20px;
+padding:0 16px;
+height:56px;
+border-bottom:1px solid #1f2937;
+background:#0b1220;
+}
+
+#logo{
+font-size:20px;
+font-weight:700;
+white-space:nowrap;
+color:#fff;
+}
+
+#header-controls,
+#controls{
+display:flex;
+align-items:center;
+gap:16px;
+margin-left:auto;
+flex-wrap:wrap;
+justify-content:flex-end;
+}
+
+.control-group{
+display:flex;
+align-items:center;
+gap:6px;
+flex-wrap:wrap;
+}
+
+.control-label{
+font-size:11px;
+color:#6b7280;
+text-transform:uppercase;
+letter-spacing:0.04em;
+margin-right:4px;
+}
+
+.layout-btn,
+.sort-btn,
+#header .tf-btn{
+border:none;
+background:#1f2937;
+color:#e5e7eb;
+padding:6px 10px;
+border-radius:6px;
+cursor:pointer;
+font-size:12px;
+}
+
+.layout-btn:hover,
+.sort-btn:hover,
+#header .tf-btn:hover{
+background:#374151;
+}
+
+.layout-btn.active,
+.sort-btn.active,
+#header .tf-btn.active{
+background:#2563eb;
+color:#fff;
+}
+
+.green{
+color:#22c55e;
+}
+
+.red{
+color:#ef4444;
+}

@@ -1,24 +1,82 @@
 let socket = null;
 
-let currentTopic = null;
-
 let reconnectTimer = null;
 
-export function connectKlineStream({
+let intentionalClose = false;
 
-symbol,
-tf,
-onCandle
+const topicCallbacks = new Map();
 
-}){
+const activeTopics = new Set();
 
-disconnectKlineStream();
+let terminalUnsub = null;
 
-const interval =
-convertTf(tf);
+function convertTf(tf){
 
-currentTopic =
-`kline.${interval}.${symbol}`;
+if(tf === "D"){
+return "D";
+}
+
+return tf;
+
+}
+
+function topicFor(symbol, tf){
+
+return `kline.${convertTf(tf)}.${symbol}`;
+
+}
+
+function parseCandle(raw){
+
+return {
+
+time:Number(raw.start) / 1000,
+
+open:Number(raw.open),
+
+high:Number(raw.high),
+
+low:Number(raw.low),
+
+close:Number(raw.close)
+
+};
+
+}
+
+function resubscribeAll(){
+
+if(
+!socket ||
+socket.readyState !== WebSocket.OPEN ||
+!activeTopics.size
+){
+return;
+}
+
+socket.send(JSON.stringify({
+
+op:"subscribe",
+
+args:[...activeTopics]
+
+}));
+
+}
+
+function ensureSocket(){
+
+if(
+socket &&
+(
+socket.readyState === WebSocket.OPEN ||
+socket.readyState === WebSocket.CONNECTING
+)
+){
+return;
+}
+
+intentionalClose = false;
 
 socket =
 new WebSocket(
@@ -26,14 +84,7 @@ new WebSocket(
 );
 
 socket.onopen = ()=>{
-
-socket.send(JSON.stringify({
-
-op:"subscribe",
-args:[currentTopic]
-
-}));
-
+resubscribeAll();
 };
 
 socket.onmessage = event=>{
@@ -42,60 +93,109 @@ const msg =
 JSON.parse(event.data);
 
 if(
-msg.topic !== currentTopic
+!msg.topic ||
+!msg.data?.[0]
 ){
 return;
 }
 
-if(!msg.data){
+const callbacks =
+topicCallbacks.get(msg.topic);
+
+if(!callbacks?.size){
 return;
 }
 
 const candle =
-msg.data[0];
+parseCandle(msg.data[0]);
 
-if(!candle){
-return;
-}
-
-onCandle({
-
-time:Number(candle.start)/1000,
-open:Number(candle.open),
-high:Number(candle.high),
-low:Number(candle.low),
-close:Number(candle.close)
-
+callbacks.forEach(fn=>{
+fn(candle);
 });
 
 };
 
 socket.onclose = ()=>{
 
+socket = null;
+
+if(intentionalClose){
+return;
+}
+
 reconnectTimer =
 setTimeout(()=>{
 
-connectKlineStream({
+reconnectTimer = null;
 
-symbol,
-tf,
-onCandle
+if(activeTopics.size){
+ensureSocket();
+}
 
-});
-
-},2000);
+}, 2000);
 
 };
 
 socket.onerror = ()=>{
-
-socket.close();
-
+socket?.close();
 };
 
 }
 
-export function disconnectKlineStream(){
+function addTopic(topic){
+
+if(activeTopics.has(topic)){
+return;
+}
+
+activeTopics.add(topic);
+
+ensureSocket();
+
+if(
+socket &&
+socket.readyState === WebSocket.OPEN
+){
+socket.send(JSON.stringify({
+
+op:"subscribe",
+
+args:[topic]
+
+}));
+}
+
+}
+
+function removeTopic(topic){
+
+if(!activeTopics.has(topic)){
+return;
+}
+
+activeTopics.delete(topic);
+topicCallbacks.delete(topic);
+
+if(
+socket &&
+socket.readyState === WebSocket.OPEN
+){
+socket.send(JSON.stringify({
+
+op:"unsubscribe",
+
+args:[topic]
+
+}));
+}
+
+if(!activeTopics.size){
+disconnectSocket();
+}
+
+}
+
+function disconnectSocket(){
 
 if(reconnectTimer){
 
@@ -107,6 +207,8 @@ reconnectTimer = null;
 
 if(socket){
 
+intentionalClose = true;
+
 socket.close();
 
 socket = null;
@@ -115,12 +217,62 @@ socket = null;
 
 }
 
-function convertTf(tf){
+export function subscribeKline(symbol, tf, onCandle){
 
-if(tf === "D"){
-return "D";
+const topic =
+topicFor(symbol, tf);
+
+if(!topicCallbacks.has(topic)){
+
+topicCallbacks.set(topic, new Set());
+addTopic(topic);
+
 }
 
-return tf;
+topicCallbacks.get(topic).add(onCandle);
+
+return ()=>{
+
+const set =
+topicCallbacks.get(topic);
+
+if(!set){
+return;
+}
+
+set.delete(onCandle);
+
+if(!set.size){
+removeTopic(topic);
+}
+
+};
+
+}
+
+export function connectKlineStream({
+
+symbol,
+tf,
+onCandle
+
+}){
+
+disconnectKlineStream();
+
+terminalUnsub =
+subscribeKline(symbol, tf, onCandle);
+
+}
+
+export function disconnectKlineStream(){
+
+if(terminalUnsub){
+
+terminalUnsub();
+
+terminalUnsub = null;
+
+}
 
 }

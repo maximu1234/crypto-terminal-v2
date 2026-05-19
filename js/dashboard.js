@@ -1,15 +1,37 @@
 import {
-
 saveWidgetState,
 loadWidgetState,
 saveLayout,
 loadLayout
-
 } from "./storage.js";
 
 import {
 loadBybitHistory
 } from "./api.js";
+
+import {
+createCandlestickChart,
+applyChartPriceFormat,
+applyDashboardZoom
+} from "./chart.js";
+
+import {
+initDrawings
+} from "./drawings.js";
+
+import {
+subscribeKline
+} from "./ws.js";
+
+import {
+getWidgetToolbarHtml,
+getWidgetChartUiHtml
+} from "./dashboard-draw-ui.js";
+
+import {
+preloadTradingSymbols,
+attachSymbolAutocomplete
+} from "./symbol-autocomplete.js";
 
 const dashboard =
 document.getElementById("dashboard");
@@ -17,23 +39,37 @@ document.getElementById("dashboard");
 let currentLayout =
 loadLayout();
 
-const defaultSymbols = [
+let activeWidgetIndex = 0;
 
+const defaultSymbols = [
 "BTCUSDT",
 "ETHUSDT",
 "SOLUSDT",
-
 "XRPUSDT",
 "BNBUSDT",
 "ADAUSDT",
-
 "DOGEUSDT",
 "LINKUSDT",
 "AVAXUSDT"
-
 ];
 
 const widgets = [];
+
+function destroyAllWidgets(){
+
+widgets.forEach(w=>{
+
+w.unsubKline?.();
+w.drawingTools?.destroy();
+w.chart?.remove();
+w.resizeObserver?.disconnect();
+
+});
+
+widgets.length = 0;
+dashboard.innerHTML = "";
+
+}
 
 function createWidget(index){
 
@@ -53,112 +89,67 @@ const widget =
 document.createElement("div");
 
 widget.className = "widget";
+widget.dataset.index = String(index);
 
 widget.innerHTML = `
 
 <div class="widget-header">
 
+<div class="widget-header-row">
+
 <div class="left-controls">
 
-<input
-class="symbol-input"
-value="${startSymbol}"
-/>
+<input class="symbol-input" value="${startSymbol}" spellcheck="false" autocomplete="off"/>
 
 <select class="tf-select">
-
 <option value="1" ${startTf==="1"?"selected":""}>1m</option>
 <option value="5" ${startTf==="5"?"selected":""}>5m</option>
 <option value="15" ${startTf==="15"?"selected":""}>15m</option>
 <option value="60" ${startTf==="60"?"selected":""}>1h</option>
 <option value="240" ${startTf==="240"?"selected":""}>4h</option>
 <option value="D" ${startTf==="D"?"selected":""}>1D</option>
-
 </select>
 
-<button class="open-chart-btn">
-↗
-</button>
+<button type="button" class="open-chart-btn" title="Открыть в терминале">↗</button>
 
 </div>
+
+${getWidgetToolbarHtml()}
 
 <div class="price-info">
-
-<div class="price">
-...
-</div>
-
-<div class="change">
-...
+<div class="price">—</div>
+<div class="change">—</div>
 </div>
 
 </div>
 
 </div>
 
+<div class="widget-chart-wrap chart-wrap">
 <div class="chart"></div>
+${getWidgetChartUiHtml()}
+</div>
 
 `;
 
 dashboard.appendChild(widget);
 
+const chartWrap =
+widget.querySelector(".widget-chart-wrap");
+
 const chartContainer =
 widget.querySelector(".chart");
 
-const chart =
-LightweightCharts.createChart(
-chartContainer,
-{
+const toolsRoot =
+widget.querySelector(".widget-draw-toolbar");
 
-layout:{
-background:{ color:"#111827" },
-textColor:"#9ca3af"
-},
+const {
+chart,
+series
+} =
+createCandlestickChart(chartContainer);
 
-grid:{
-vertLines:{ color:"#1f2937" },
-horzLines:{ color:"#1f2937" }
-},
-
-rightPriceScale:{
-visible:false
-},
-
-timeScale:{
-visible:true,
-secondsVisible:false,
-rightOffset:25
-},
-
-crosshair:{
-mode:0
-},
-
-handleScroll:{
-mouseWheel:true,
-pressedMouseMove:true,
-horzTouchDrag:true,
-vertTouchDrag:false
-},
-
-handleScale:{
-axisPressedMouseMove:true,
-mouseWheel:true,
-pinch:true
-}
-
-});
-
-const series =
-chart.addCandlestickSeries({
-
-upColor:"#22c55e",
-downColor:"#ef4444",
-borderVisible:false,
-wickUpColor:"#22c55e",
-wickDownColor:"#ef4444"
-
-});
+let candles = [];
 
 const symbolInput =
 widget.querySelector(".symbol-input");
@@ -175,45 +166,104 @@ widget.querySelector(".price");
 const changeEl =
 widget.querySelector(".change");
 
-openChartBtn.onclick = ()=>{
+const loadSeq = { id: 0 };
 
-const symbol =
-symbolInput.value
-.trim()
-.toUpperCase();
+function getSymbol(){
+return symbolInput.value.trim().toUpperCase();
+}
 
-const tf =
-tfSelect.value;
+function getTf(){
+return tfSelect.value;
+}
+
+let drawingTools = null;
+
+try{
+
+drawingTools = initDrawings({
+
+chart,
+series,
+wrapEl: chartWrap,
+uiRoot: chartWrap,
+toolsRoot,
+getSymbol,
+getTf,
+getCandles: ()=> candles,
+isActive: ()=> activeWidgetIndex === index,
+barPosKey: `draw_bar_dashboard_${index}`
+
+});
+
+}catch(err){
+
+console.error("Widget drawings init:", err);
+
+}
+
+const entry = {
+index,
+widget,
+chart,
+series,
+chartWrap,
+drawingTools,
+loadData,
+candlesRef: ()=> candles,
+setCandles: data=>{ candles = data; },
+unsubKline: null
+};
+
+function setActive(){
+
+activeWidgetIndex = index;
+
+dashboard.querySelectorAll(".widget").forEach(el=>{
+el.classList.toggle(
+"widget-active",
+Number(el.dataset.index) === index
+);
+});
+
+}
+
+widget.addEventListener("pointerdown", setActive);
+
+openChartBtn.onclick = e=>{
+
+e.stopPropagation();
 
 window.location.href =
-`coins.html?symbol=${symbol}&tf=${tf}`;
+`coins.html?symbol=${encodeURIComponent(getSymbol())}&tf=${encodeURIComponent(getTf())}`;
 
 };
 
 async function loadData(){
 
-const symbol =
-symbolInput.value
-.trim()
-.toUpperCase();
+const symbol = getSymbol();
+const tf = getTf();
+const seq = ++loadSeq.id;
 
-const tf =
-tfSelect.value;
-
-saveWidgetState(
-index,
-symbol,
-tf
-);
+saveWidgetState(index, symbol, tf);
 
 try{
 
-const candles =
+const data =
 await loadBybitHistory(
 symbol,
 tf,
-6
+6,
+{ parallel: true }
 );
+
+if(seq !== loadSeq.id){
+return;
+}
+
+candles = data;
+entry.setCandles(data);
+
+entry.unsubKline?.();
 
 if(!candles.length){
 return;
@@ -221,46 +271,63 @@ return;
 
 series.setData(candles);
 
-let visibleBars = 900;
+entry.unsubKline =
+subscribeKline(
+symbol,
+tf,
+candle=>{
 
-if(tf === "1"){
-visibleBars = 300;
+if(seq !== loadSeq.id){
+return;
 }
 
-if(tf === "5"){
-visibleBars = 500;
+if(!candles.length){
+return;
 }
 
-if(tf === "15"){
-visibleBars = 900;
+const last =
+candles[candles.length - 1];
+
+if(candle.time === last.time){
+
+candles[candles.length - 1] = candle;
+
+}else if(candle.time > last.time){
+
+candles.push(candle);
+
+if(candles.length > 6000){
+candles.shift();
 }
 
-if(tf === "60"){
-visibleBars = 700;
+}else{
+return;
 }
 
-if(tf === "240"){
-visibleBars = 500;
-}
+series.update(candle);
 
-if(tf === "D"){
-visibleBars = 300;
-}
-
-visibleBars = Math.min(
-visibleBars,
-candles.length
+applyChartPriceFormat(
+series,
+candle.close
 );
 
-chart.timeScale().setVisibleLogicalRange({
+priceEl.innerText =
+candle.close.toFixed(2);
 
-from:
-candles.length - visibleBars,
+}
+);
 
-to:
-candles.length + 25
+applyChartPriceFormat(
+series,
+candles[candles.length - 1].close
+);
 
-});
+applyDashboardZoom(chart, candles, tf);
+
+resizeChart();
+
+drawingTools?.onSymbolChange();
+drawingTools?.resize();
 
 const last =
 candles[candles.length - 1];
@@ -269,7 +336,15 @@ const first =
 candles[
 Math.max(
 0,
-candles.length - visibleBars
+candles.length -
+Math.min(
+candles.length,
+tf === "1" ? 300 :
+tf === "5" ? 500 :
+tf === "15" ? 900 :
+tf === "60" ? 700 :
+tf === "240" ? 500 : 300
+)
 )
 ];
 
@@ -277,23 +352,17 @@ priceEl.innerText =
 last.close.toFixed(2);
 
 const change =
-(
-(last.close - first.close)
-/
-first.close
-)*100;
+((last.close - first.close) / first.close) * 100;
 
 changeEl.innerText =
-change.toFixed(2) + "%";
+`${change >= 0 ? "+" : ""}${change.toFixed(2)}%`;
 
 changeEl.className =
-change >= 0
-? "change green"
-: "change red";
+`change ${change >= 0 ? "green" : "red"}`;
 
 }catch(err){
 
-console.log(err);
+console.error("Dashboard widget load:", err);
 
 }
 
@@ -301,89 +370,75 @@ console.log(err);
 
 tfSelect.onchange = loadData;
 
-symbolInput.addEventListener(
-"keydown",
-e=>{
-
-if(e.key === "Enter"){
+attachSymbolAutocomplete(
+symbolInput,
+{
+onCommit:()=>{
 loadData();
 }
-
-});
-
-function resize(){
-
-chart.applyOptions({
-
-width:
-chartContainer.clientWidth,
-
-height:
-chartContainer.clientHeight
-
-});
-
 }
-
-window.addEventListener(
-"resize",
-resize
 );
 
-resize();
+function resizeChart(){
+
+const w =
+chartContainer.clientWidth;
+
+const h =
+chartContainer.clientHeight;
+
+if(w < 2 || h < 2){
+return;
+}
+
+chart.applyOptions({ width: w, height: h });
+drawingTools?.resize();
+
+}
+
+const resizeObserver =
+new ResizeObserver(resizeChart);
+
+resizeObserver.observe(chartWrap);
+entry.resizeObserver = resizeObserver;
+
+requestAnimationFrame(resizeChart);
 
 loadData();
 
-widgets.push({
+widgets.push(entry);
 
-widget,
-chart,
-series,
-loadData
-
-});
+if(index === activeWidgetIndex){
+setActive();
+}
 
 }
 
 function renderDashboard(){
 
-dashboard.innerHTML = "";
+destroyAllWidgets();
 
 dashboard.className =
 `grid-${currentLayout}`;
 
-saveLayout(
-currentLayout
-);
+saveLayout(currentLayout);
 
-widgets.length = 0;
-
-for(let i=0;i<currentLayout;i++){
-
+for(let i = 0; i < currentLayout; i++){
 createWidget(i);
-
 }
 
-document
-.querySelectorAll(".layout-btn")
-.forEach(btn=>{
+document.querySelectorAll(".layout-btn").forEach(btn=>{
 
-btn.classList.remove("active");
-
-if(
-Number(btn.dataset.layout)
-=== currentLayout
-){
-btn.classList.add("active");
-}
+btn.classList.toggle(
+"active",
+Number(btn.dataset.layout) === currentLayout
+);
 
 });
 
 }
 
-document
-.querySelectorAll(".layout-btn")
-.forEach(btn=>{
+document.querySelectorAll(".layout-btn").forEach(btn=>{
 
 btn.onclick = ()=>{
 
@@ -395,5 +450,7 @@ renderDashboard();
 };
 
 });
+
+preloadTradingSymbols();
 
 renderDashboard();

@@ -15,7 +15,8 @@ loadFavorites
 
 import {
 createCandlestickChart,
-createRSIChart
+createRSIChart,
+applyChartPriceFormat
 } from "./chart.js";
 
 import {
@@ -27,11 +28,16 @@ import {
 connectTickerStream
 } from "./tickers.js";
 
+import {
+initDrawings
+} from "./drawings.js";
+
 let currentDataset = "crypto";
 let currentTF = "60";
 let currentSymbol = "BTCUSDT";
 
 let candles = [];
+let symbolLoadSeq = 0;
 let marketData = [];
 
 const marketMap =
@@ -39,6 +45,8 @@ new Map();
 
 let sortMode = "symbol";
 let sortAsc = true;
+
+let searchQuery = "";
 
 let favorites =
 loadFavorites();
@@ -96,6 +104,30 @@ rsi.chart;
 
 const rsiSeries =
 rsi.series;
+
+let drawingTools = null;
+
+try{
+
+drawingTools = initDrawings({
+
+chart,
+series: candleSeries,
+wrapEl: document.getElementById("chart-wrap"),
+uiRoot: document.getElementById("chart-wrap"),
+toolsRoot: document.getElementById("draw-toolbar"),
+getSymbol: ()=> currentSymbol,
+getTf: ()=> currentTF,
+getCandles: ()=> candles,
+isActive: ()=>true
+
+});
+
+}catch(err){
+
+console.error("Drawings init failed:", err);
+
+}
 
 /* =========================================================
    SYMBOLS
@@ -273,6 +305,8 @@ if(!candles.length){
 return;
 }
 
+chart.timeScale().resetTimeScale();
+
 let visibleBars = candles.length;
 
 /* =========================================================
@@ -303,11 +337,25 @@ if(currentTF === "D"){
 visibleBars = Math.min(candles.length, 1000);
 }
 
+const lastIndex =
+candles.length - 1;
+
+const rightMargin =
+Math.max(
+48,
+Math.round(visibleBars * 0.1)
+);
+
+chart.timeScale().applyOptions({
+rightOffset:12,
+fixRightEdge:false
+});
+
 chart.timeScale().setVisibleLogicalRange({
 
-from: candles.length - visibleBars,
+from: Math.max(0, lastIndex - visibleBars + 1),
 
-to: candles.length + 20
+to: lastIndex + rightMargin
 
 });
 
@@ -318,6 +366,8 @@ to: candles.length + 20
 ========================================================= */
 
 async function loadSymbol(symbol){
+
+const loadSeq = ++symbolLoadSeq;
 
 disconnectKlineStream();
 
@@ -331,21 +381,22 @@ currentDataset === "new")
 ? symbol + ".P"
 : symbol;
 
+let nextCandles = [];
+
 if(
 currentDataset === "crypto" ||
 currentDataset === "new"
 ){
 
-candles =
+nextCandles =
 await loadBybitHistory(
 symbol,
-currentTF,
-3
+currentTF
 );
 
 }else{
 
-candles =
+nextCandles =
 await loadTwelveData(
 symbol,
 currentTF
@@ -353,7 +404,21 @@ currentTF
 
 }
 
+if(loadSeq !== symbolLoadSeq){
+return;
+}
+
+candles = nextCandles;
+
 candleSeries.setData(candles);
+
+const refPrice =
+candles[candles.length - 1]?.close ?? 1;
+
+applyChartPriceFormat(
+candleSeries,
+refPrice
+);
 
 rsiSeries.setData(
 calculateRSI(candles)
@@ -365,7 +430,11 @@ calculateRSI(candles)
 
 applyDefaultZoom();
 
+drawingTools?.onSymbolChange();
+
 highlightActiveSymbol();
+
+scrollActiveCoinIntoView();
 
 startRealtime();
 
@@ -390,6 +459,8 @@ document.getElementById(
 ).clientHeight
 
 });
+
+drawingTools?.resize();
 
 rsiChart.applyOptions({
 
@@ -466,6 +537,15 @@ disconnectKlineStream();
 
 currentDataset = e.target.value;
 
+searchQuery = "";
+
+const searchInput =
+document.getElementById("coin-search");
+
+if(searchInput){
+searchInput.value = "";
+}
+
 generateMarketData();
 
 renderList();
@@ -481,6 +561,36 @@ await loadSymbol(currentSymbol);
    TABLE
 ========================================================= */
 
+function getFilteredMarketData(){
+
+let data = [...marketData];
+
+const query =
+searchQuery.trim().toUpperCase();
+
+if(query){
+
+data = data.filter(item=>
+item.symbol.includes(query)
+);
+
+}
+
+return data;
+
+}
+
+function getVisibleSymbolList(){
+
+const data =
+getFilteredMarketData();
+
+data.sort(sortData);
+
+return data.map(item=>item.symbol);
+
+}
+
 function renderList(){
 
 const list =
@@ -492,7 +602,8 @@ list.innerHTML = "";
 
 coinElements.clear();
 
-let data = [...marketData];
+const data =
+getFilteredMarketData();
 
 data.sort(sortData);
 
@@ -511,6 +622,22 @@ list.appendChild(div);
 });
 
 highlightActiveSymbol();
+
+}
+
+function scrollActiveCoinIntoView(){
+
+const el =
+coinElements.get(currentSymbol);
+
+if(!el){
+return;
+}
+
+el.scrollIntoView({
+block:"nearest",
+behavior:"smooth"
+});
 
 }
 
@@ -747,48 +874,140 @@ renderList();
    KEYBOARD NAVIGATION
 ========================================================= */
 
+document
+.getElementById("coin-search")
+?.addEventListener("input", e=>{
+
+searchQuery = e.target.value;
+
+renderList();
+
+});
+
+function shouldIgnoreListKeyNav(e){
+
+const target =
+e.target;
+
+if(!target){
+return false;
+}
+
+const tag =
+target.tagName?.toLowerCase();
+
+if(
+tag === "input" ||
+tag === "textarea" ||
+tag === "select"
+){
+return true;
+}
+
+if(target.isContentEditable){
+return true;
+}
+
+return false;
+
+}
+
 document.addEventListener(
 "keydown",
 async e=>{
 
+if(shouldIgnoreListKeyNav(e)){
+return;
+}
+
 const symbols =
-marketData.map(x=>x.symbol);
+getVisibleSymbolList();
+
+if(!symbols.length){
+return;
+}
+
+const goDown =
+e.code === "ArrowDown" ||
+e.code === "Space" ||
+e.key === " ";
+
+const goUp =
+e.code === "ArrowUp";
+
+if(!goDown && !goUp){
+return;
+}
+
+e.preventDefault();
 
 let index =
 symbols.indexOf(currentSymbol);
 
-if(
-e.code === "ArrowDown" ||
-e.code === "Space"
-){
-
-e.preventDefault();
-
-index++;
-
-if(index >= symbols.length){
-index = 0;
-}
-
-await loadSymbol(symbols[index]);
-
-}
-
-if(e.code === "ArrowUp"){
-
-e.preventDefault();
-
-index--;
-
 if(index < 0){
-index = symbols.length - 1;
+index = goDown ? -1 : 0;
 }
 
-await loadSymbol(symbols[index]);
-
+if(goDown){
+index = (index + 1) % symbols.length;
+}else{
+index = (index - 1 + symbols.length) % symbols.length;
 }
+
+const next =
+symbols[index];
+
+if(
+!next ||
+next === currentSymbol
+){
+return;
+}
+
+await loadSymbol(next);
 
 });
+
+/* =========================================================
+   URL PARAMS
+========================================================= */
+
+function readUrlParams(){
+
+const params =
+new URLSearchParams(window.location.search);
+
+const symbol =
+params.get("symbol");
+
+const tf =
+params.get("tf");
+
+if(symbol){
+currentSymbol = symbol.trim().toUpperCase();
+currentDataset = "crypto";
+}
+
+if(tf){
+currentTF = tf;
+}
+
+}
+
+function applyUrlTimeframe(){
+
+document
+.querySelectorAll(".tf-btn")
+.forEach(btn=>{
+
+btn.classList.toggle(
+"active",
+btn.dataset.tf === currentTF
+);
+
+});
+
+}
 
 /* =========================================================
    START
@@ -796,7 +1015,25 @@ await loadSymbol(symbols[index]);
 
 async function init(){
 
+readUrlParams();
+
 await initSymbols();
+
+if(
+currentSymbol &&
+!getCurrentSymbols().includes(currentSymbol)
+){
+currentSymbol = getCurrentSymbols()[0] || "BTCUSDT";
+}
+
+const marketFilter =
+document.getElementById("market-filter");
+
+if(marketFilter){
+marketFilter.value = currentDataset;
+}
+
+applyUrlTimeframe();
 
 generateMarketData();
 
@@ -806,7 +1043,9 @@ renderList();
 
 startTickerStream();
 
-await loadSymbol("BTCUSDT");
+await loadSymbol(
+currentSymbol || "BTCUSDT"
+);
 
 }
 

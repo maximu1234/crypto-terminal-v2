@@ -5,41 +5,67 @@ const TWELVE_KEY =
    BYBIT HISTORY
 ========================================================= */
 
-export async function loadBybitHistory(symbol, tf, requests=6){
+let historyLoadQueue = Promise.resolve();
+
+function sleep(ms){
+return new Promise(resolve=>setTimeout(resolve, ms));
+}
+
+async function fetchBybitKlineBatch(url, retries = 3){
+
+for(let attempt = 0; attempt < retries; attempt++){
+
+const res = await fetch(url);
+const json = await res.json();
+
+if(json.retCode === 0 && json.result?.list?.length){
+return json.result.list;
+}
+
+const retryable =
+json.retCode === 10006 ||
+json.retCode === 10016 ||
+res.status === 429;
+
+if(retryable && attempt < retries - 1){
+await sleep(250 * (attempt + 1));
+continue;
+}
+
+return null;
+
+}
+
+return null;
+
+}
+
+async function loadBybitHistoryImpl(symbol, tf, requests = 6){
 
 let all = [];
-
 let end = Date.now();
 
-for(let i=0;i<requests;i++){
+for(let i = 0; i < requests; i++){
 
 const url =
 `https://api.bybit.com/v5/market/kline?category=linear&symbol=${symbol}&interval=${tf}&limit=1000&end=${end}`;
 
-const res =
-await fetch(url);
+const batch = await fetchBybitKlineBatch(url);
 
-const json =
-await res.json();
-
-if(
-!json.result ||
-!json.result.list
-){
+if(!batch?.length){
 break;
 }
 
-const batch =
-json.result.list;
+all.push(...batch);
 
-if(!batch.length){
-break;
+const oldest =
+Math.min(...batch.map(k=>Number(k[0])));
+
+end = oldest - 1;
+
+if(i < requests - 1){
+await sleep(80);
 }
-
-all = [...all, ...batch];
-
-end =
-Number(batch[batch.length-1][0]) - 1;
 
 }
 
@@ -66,19 +92,58 @@ return Array
 
 }
 
+export async function loadBybitHistory(symbol, tf, requests = 6, options = {}){
+
+if(options.parallel){
+return loadBybitHistoryImpl(symbol, tf, requests);
+}
+
+const task = ()=>loadBybitHistoryImpl(symbol, tf, requests);
+const result = historyLoadQueue.then(task, task);
+
+historyLoadQueue = result.then(
+()=>{},
+()=>{}
+);
+
+return result;
+
+}
+
 /* =========================================================
    BYBIT SYMBOLS
 ========================================================= */
 
 export async function loadBybitSymbols(){
 
+const all = [];
+let cursor = null;
+
+do{
+
+const cursorParam =
+cursor ? `&cursor=${encodeURIComponent(cursor)}` : "";
+
 const res = await fetch(
-"https://api.bybit.com/v5/market/instruments-info?category=linear&limit=1000"
+`https://api.bybit.com/v5/market/instruments-info?category=linear&limit=1000${cursorParam}`
 );
 
 const json = await res.json();
 
-return json.result.list;
+if(
+!json.result ||
+!json.result.list
+){
+break;
+}
+
+all.push(...json.result.list);
+
+cursor = json.result.nextPageCursor || null;
+
+}while(cursor);
+
+return all;
 
 }
 

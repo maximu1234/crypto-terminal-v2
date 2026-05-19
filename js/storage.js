@@ -78,3 +78,28 @@ localStorage.getItem("dashboard_layout")
 ) || 9;
 
 }
+
+export function saveScreenerState(state){
+
+localStorage.setItem(
+"screener_state",
+JSON.stringify(state)
+);
+
+}
+
+export function loadScreenerState(){
+
+try{
+
+return JSON.parse(
+localStorage.getItem("screener_state") || "{}"
+);
+
+}catch{
+
+return {};
+
+}
+
+}

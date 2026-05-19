@@ -15,55 +15,6 @@ body{
 }
 
 /* =========================================================
-   HEADER
-========================================================= */
-
-#header{
-    height:60px;
-    border-bottom:1px solid #1f2937;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    padding:0 20px;
-    flex-shrink:0;
-}
-
-#logo{
-    font-size:22px;
-    font-weight:700;
-}
-
-#top-controls{
-    display:flex;
-    gap:10px;
-    align-items:center;
-}
-
-.layout-btn{
-    border:none;
-    background:#1f2937;
-    color:white;
-    padding:8px 14px;
-    border-radius:8px;
-    cursor:pointer;
-    font-size:13px;
-}
-
-.layout-btn.active{
-    background:#2563eb;
-}
-
-#terminal-link{
-    background:#16a34a;
-    color:white;
-    text-decoration:none;
-    padding:10px 16px;
-    border-radius:8px;
-    font-size:13px;
-    font-weight:600;
-}
-
-/* =========================================================
    GRID
 ========================================================= */
 
@@ -96,13 +47,14 @@ body{
 ========================================================= */
 
 .widget{
-    background:#111827;
+    background:#0b1220;
     border:1px solid #1f2937;
     border-radius:12px;
     display:flex;
     flex-direction:column;
     overflow:hidden;
     position:relative;
+    min-height:0;
 }
 
 .widget:hover{
@@ -114,20 +66,81 @@ body{
 ========================================================= */
 
 .widget-header{
-    height:42px;
     border-bottom:1px solid #1f2937;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    padding:0 12px;
+    padding:6px 8px;
     flex-shrink:0;
     background:#0f172a;
+}
+
+.widget-header-row{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    width:100%;
+    min-height:32px;
+}
+
+.widget-header .price-info{
+    display:flex;
+    align-items:center;
+    justify-content:flex-end;
+    gap:10px;
+    flex-shrink:0;
+    margin-left:auto;
+}
+
+.widget-active{
+    border-color:#3b82f6;
+    box-shadow:0 0 0 1px #3b82f6;
+}
+
+.widget-draw-toolbar{
+    flex:1;
+    flex-wrap:nowrap;
+    gap:2px;
+    margin-left:4px;
+    padding-left:8px;
+    border-left:1px solid #1f2937;
+    justify-content:center;
+    min-width:0;
+    overflow-x:auto;
+}
+
+.draw-btn-sm{
+    width:26px;
+    height:26px;
+    padding:0;
+}
+
+.draw-btn-sm svg{
+    width:14px;
+    height:14px;
+}
+
+.widget-chart-wrap{
+    flex:1;
+    min-height:0;
+    position:relative;
+    overflow:hidden;
+}
+
+.widget .chart{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
 }
 
 .left-controls{
     display:flex;
     align-items:center;
     gap:8px;
+    flex-shrink:0;
+}
+
+.symbol-search-wrap{
+    position:relative;
+    flex-shrink:0;
 }
 
 .symbol-input{
@@ -140,6 +153,51 @@ body{
     font-size:12px;
     outline:none;
     text-transform:uppercase;
+    box-sizing:border-box;
+}
+
+.symbol-input:focus{
+    border-color:#2563eb;
+}
+
+.symbol-input::placeholder{
+    color:#6b7280;
+}
+
+.symbol-suggestions{
+    position:fixed;
+    z-index:2000;
+    min-width:140px;
+    max-width:220px;
+    max-height:200px;
+    overflow-y:auto;
+    background:#111827;
+    border:1px solid #374151;
+    border-radius:8px;
+    box-shadow:0 8px 24px rgba(0,0,0,0.45);
+}
+
+.symbol-suggestions.hidden{
+    display:none;
+}
+
+.symbol-suggestion-item{
+    display:block;
+    width:100%;
+    border:none;
+    background:transparent;
+    color:#e5e7eb;
+    text-align:left;
+    padding:7px 10px;
+    font-size:12px;
+    cursor:pointer;
+    text-transform:uppercase;
+}
+
+.symbol-suggestion-item:hover,
+.symbol-suggestion-item.highlighted{
+    background:#1e293b;
+    color:#fff;
 }
 
 .tf-select{
@@ -187,11 +245,12 @@ body{
     color:#ef4444;
 }
 
-/* =========================================================
-   CHART
-========================================================= */
+.widget-chart-wrap .draw-style-float{
+    transform:scale(0.88);
+    transform-origin:top left;
+}
 
-.chart{
-    flex:1;
-    position:relative;
+.widget-chart-wrap .draw-popover{
+    transform:scale(0.9);
+    transform-origin:top left;
 }
