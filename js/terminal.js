@@ -34,6 +34,9 @@ let currentSymbol = "BTCUSDT";
 let candles = [];
 let marketData = [];
 
+const marketMap =
+new Map();
+
 let sortMode = "symbol";
 let sortAsc = true;
 
@@ -150,9 +153,12 @@ return forexSymbols;
 
 function generateMarketData(){
 
-marketData = getCurrentSymbols().map(symbol => {
+marketData = [];
+marketMap.clear();
 
-return {
+getCurrentSymbols().forEach(symbol=>{
+
+const item = {
 
 symbol,
 
@@ -163,6 +169,10 @@ change24:0,
 change1h:0
 
 };
+
+marketData.push(item);
+
+marketMap.set(symbol,item);
 
 });
 
@@ -177,9 +187,7 @@ function startTickerStream(){
 connectTickerStream(tick=>{
 
 const item =
-marketData.find(
-x => x.symbol === tick.symbol
-);
+marketMap.get(tick.symbol);
 
 if(!item){
 return;
