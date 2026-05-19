@@ -1,8 +1,17 @@
+import {
+
+saveWidgetState,
+loadWidgetState,
+saveLayout,
+loadLayout
+
+} from "./storage.js";
+
 const dashboard =
 document.getElementById("dashboard");
 
 let currentLayout =
-Number(localStorage.getItem("dashboard_layout")) || 9;
+loadLayout();
 
 const defaultSymbols = [
 
@@ -21,49 +30,6 @@ const defaultSymbols = [
 ];
 
 const widgets = [];
-
-/* =========================================================
-   STORAGE
-========================================================= */
-
-function saveWidgetState(index, symbol, tf){
-
-const state = {
-
-symbol,
-tf
-
-};
-
-localStorage.setItem(
-`widget_${index}`,
-JSON.stringify(state)
-);
-
-}
-
-function loadWidgetState(index){
-
-const raw =
-localStorage.getItem(
-`widget_${index}`
-);
-
-if(!raw){
-return null;
-}
-
-try{
-
-return JSON.parse(raw);
-
-}catch{
-
-return null;
-
-}
-
-}
 
 /* =========================================================
    CREATE WIDGET
@@ -139,10 +105,6 @@ dashboard.appendChild(widget);
 const chartContainer =
 widget.querySelector(".chart");
 
-/* =========================================================
-   CHART
-========================================================= */
-
 const chart =
 LightweightCharts.createChart(
 chartContainer,
@@ -213,10 +175,6 @@ widget.querySelector(".price");
 const changeEl =
 widget.querySelector(".change");
 
-/* =========================================================
-   OPEN BIG CHART
-========================================================= */
-
 openChartBtn.onclick = ()=>{
 
 const symbol =
@@ -231,10 +189,6 @@ window.location.href =
 `coins.html?symbol=${symbol}&tf=${tf}`;
 
 };
-
-/* =========================================================
-   LOAD HISTORY
-========================================================= */
 
 async function loadHistory(symbol, tf){
 
@@ -297,10 +251,6 @@ return Array
 
 }
 
-/* =========================================================
-   LOAD DATA
-========================================================= */
-
 async function loadData(){
 
 const symbol =
@@ -310,8 +260,6 @@ symbolInput.value
 
 const tf =
 tfSelect.value;
-
-/* SAVE STATE */
 
 saveWidgetState(
 index,
@@ -330,34 +278,30 @@ return;
 
 series.setData(candles);
 
-/* =========================================================
-   SMART DEFAULT ZOOM
-========================================================= */
-
 let visibleBars = 900;
 
 if(tf === "1"){
-    visibleBars = 300;
+visibleBars = 300;
 }
 
 if(tf === "5"){
-    visibleBars = 500;
+visibleBars = 500;
 }
 
 if(tf === "15"){
-    visibleBars = 900;
+visibleBars = 900;
 }
 
 if(tf === "60"){
-    visibleBars = 700;
+visibleBars = 700;
 }
 
 if(tf === "240"){
-    visibleBars = 500;
+visibleBars = 500;
 }
 
 if(tf === "D"){
-    visibleBars = 300;
+visibleBars = 300;
 }
 
 visibleBars = Math.min(
@@ -374,10 +318,6 @@ to:
 candles.length + 25
 
 });
-
-/* =========================================================
-   PRICE
-========================================================= */
 
 const last =
 candles[candles.length - 1];
@@ -416,10 +356,6 @@ console.log(err);
 
 }
 
-/* =========================================================
-   EVENTS
-========================================================= */
-
 tfSelect.onchange = loadData;
 
 symbolInput.addEventListener(
@@ -431,10 +367,6 @@ loadData();
 }
 
 });
-
-/* =========================================================
-   RESIZE
-========================================================= */
 
 function resize(){
 
@@ -470,10 +402,6 @@ loadData
 
 }
 
-/* =========================================================
-   RENDER DASHBOARD
-========================================================= */
-
 function renderDashboard(){
 
 dashboard.innerHTML = "";
@@ -481,10 +409,7 @@ dashboard.innerHTML = "";
 dashboard.className =
 `grid-${currentLayout}`;
 
-/* SAVE LAYOUT */
-
-localStorage.setItem(
-"dashboard_layout",
+saveLayout(
 currentLayout
 );
 
@@ -495,8 +420,6 @@ for(let i=0;i<currentLayout;i++){
 createWidget(i);
 
 }
-
-/* ACTIVE BUTTON */
 
 document
 .querySelectorAll(".layout-btn")
@@ -515,10 +438,6 @@ btn.classList.add("active");
 
 }
 
-/* =========================================================
-   LAYOUT
-========================================================= */
-
 document
 .querySelectorAll(".layout-btn")
 .forEach(btn=>{
@@ -533,9 +452,5 @@ renderDashboard();
 };
 
 });
-
-/* =========================================================
-   START
-========================================================= */
 
 renderDashboard();
