@@ -1,6 +1,4 @@
-let tickerSocket = null;
-
-let reconnectTimer = null;
+let interval = null;
 
 let subscribers = [];
 
@@ -8,61 +6,38 @@ export function connectTickerStream(onTick){
 
 subscribers.push(onTick);
 
-if(tickerSocket){
+if(interval){
 return;
 }
 
-tickerSocket =
-new WebSocket(
-"wss://stream.bybit.com/v5/public/linear"
+loadTickers();
+
+interval =
+setInterval(
+loadTickers,
+3000
 );
 
-tickerSocket.onopen = ()=>{
+}
 
-tickerSocket.send(JSON.stringify({
+async function loadTickers(){
 
-op:"subscribe",
+try{
 
-args:[
-"tickers.*"
-]
+const res = await fetch(
+"https://api.bybit.com/v5/market/tickers?category=linear"
+);
 
-}));
-
-};
-
-tickerSocket.onmessage = event=>{
-
-const msg =
-JSON.parse(event.data);
-
-/* =========================================================
-   VALIDATION
-========================================================= */
+const json = await res.json();
 
 if(
-!msg.topic ||
-!msg.topic.startsWith("tickers.")
+!json.result ||
+!json.result.list
 ){
 return;
 }
 
-if(
-!msg.data ||
-!Array.isArray(msg.data)
-){
-return;
-}
-
-/* =========================================================
-   MULTI TICKERS
-========================================================= */
-
-msg.data.forEach(ticker=>{
-
-if(!ticker.symbol){
-return;
-}
+json.result.list.forEach(ticker=>{
 
 const lastPrice =
 Number(
@@ -75,24 +50,30 @@ ticker.price24hPcnt || 0
 ) * 100;
 
 /* =========================================================
-   1H CHANGE
+   1H CHANGE (APPROX)
 ========================================================= */
 
 let change1h = 0;
 
-const prevPrice1h =
+const highPrice24h =
 Number(
-ticker.prevPrice1h || 0
+ticker.highPrice24h || 0
 );
 
-if(prevPrice1h > 0){
+const lowPrice24h =
+Number(
+ticker.lowPrice24h || 0
+);
 
-change1h =
-(
-(lastPrice - prevPrice1h)
-/
-prevPrice1h
-) * 100;
+if(
+highPrice24h > 0 &&
+lowPrice24h > 0
+){
+
+const avgMove =
+change24 / 24;
+
+change1h = avgMove;
 
 }
 
@@ -112,44 +93,21 @@ subscribers.forEach(fn=>fn(payload));
 
 });
 
-};
+}catch(err){
 
-tickerSocket.onclose = ()=>{
+console.log(err);
 
-tickerSocket = null;
-
-reconnectTimer =
-setTimeout(()=>{
-
-connectTickerStream(()=>{});
-
-},2000);
-
-};
-
-tickerSocket.onerror = ()=>{
-
-socket?.close();
-
-};
+}
 
 }
 
 export function disconnectTickerStream(){
 
-if(reconnectTimer){
+if(interval){
 
-clearTimeout(reconnectTimer);
+clearInterval(interval);
 
-reconnectTimer = null;
-
-}
-
-if(tickerSocket){
-
-tickerSocket.close();
-
-tickerSocket = null;
+interval = null;
 
 }
 
