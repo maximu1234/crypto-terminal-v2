@@ -23,10 +23,6 @@ mode:1,
 
 autoScale:true,
 
-entireTextOnly:false,
-
-minimumWidth:90,
-
 scaleMargins:{
 top:0.12,
 bottom:0.12
@@ -56,8 +52,17 @@ wickUpColor:"#22c55e",
 wickDownColor:"#ef4444",
 
 priceLineVisible:true,
+lastValueVisible:true,
 
-lastValueVisible:true
+priceFormat:{
+
+type:"price",
+
+precision:8,
+
+minMove:0.00000001
+
+}
 
 });
 
@@ -90,8 +95,6 @@ horzLines:{ color:"#161b26" }
 rightPriceScale:{
 
 borderColor:"#1f2937",
-
-minimumWidth:60,
 
 scaleMargins:{
 top:0.2,
