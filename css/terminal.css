@@ -9,7 +9,7 @@ html,body{
 
 #app{
   display:grid;
-  grid-template-columns:1fr 360px;
+  grid-template-columns:minmax(0,1fr) 340px;
   height:100vh;
 }
 
@@ -57,6 +57,7 @@ html,body{
   padding:0 12px;
   border-bottom:1px solid #1f2937;
   flex-shrink:0;
+  overflow-x:auto;
 }
 
 #current-symbol{
@@ -66,6 +67,7 @@ html,body{
   padding-right:14px;
   border-right:1px solid #1f2937;
   min-width:160px;
+  flex-shrink:0;
 }
 
 .tf-btn{
@@ -76,6 +78,7 @@ html,body{
   border-radius:6px;
   cursor:pointer;
   font-size:12px;
+  flex-shrink:0;
 }
 
 .tf-btn.active{
@@ -85,7 +88,7 @@ html,body{
 #chart-wrap{
   height:82%;
   min-height:0;
-  padding-right:70px;
+  padding-right:12px;
   box-sizing:border-box;
 }
 
@@ -99,14 +102,14 @@ html,body{
   height:18%;
   min-height:90px;
   border-top:1px solid #1f2937;
-  padding-right:70px;
+  padding-right:12px;
   box-sizing:border-box;
 }
 
 #rsi-band{
   position:absolute;
   left:0;
-  right:70px;
+  right:12px;
   top:30%;
   height:40%;
   background:#1e1e31;
@@ -116,7 +119,7 @@ html,body{
 #rsi-chart{
   position:absolute;
   inset:0;
-  right:70px;
+  right:12px;
   z-index:1;
 }
 
@@ -125,6 +128,7 @@ html,body{
   display:flex;
   flex-direction:column;
   overflow:hidden;
+  min-width:0;
 }
 
 #filter-wrap{
@@ -141,16 +145,19 @@ html,body{
   border-radius:8px;
   padding:8px 10px;
   font-size:13px;
+  box-sizing:border-box;
 }
 
 #table-header{
   display:grid;
-  grid-template-columns:28px 1fr 70px 70px;
-  padding:10px 12px;
+  grid-template-columns:24px minmax(0,1fr) 62px 62px;
+  padding:10px 10px;
   border-bottom:1px solid #1f2937;
   font-size:12px;
   color:#9ca3af;
   background:#0f172a;
+  column-gap:6px;
+  box-sizing:border-box;
 }
 
 .sortable{
@@ -164,12 +171,14 @@ html,body{
 
 .coin{
   display:grid;
-  grid-template-columns:28px 1fr 70px 70px;
+  grid-template-columns:24px minmax(0,1fr) 62px 62px;
   align-items:center;
-  padding:10px 12px;
+  padding:10px 10px;
   border-bottom:1px solid #1f2937;
-  font-size:13px;
+  font-size:12px;
   cursor:pointer;
+  column-gap:6px;
+  box-sizing:border-box;
 }
 
 .coin:hover{
@@ -209,4 +218,12 @@ html,body{
 
 .col-change{
   text-align:right;
+  font-variant-numeric:tabular-nums;
+  white-space:nowrap;
+}
+
+.coin-symbol{
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
 }
