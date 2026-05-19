@@ -49,17 +49,47 @@ return;
 
 const ticker = msg.data;
 
+const lastPrice =
+Number(
+ticker.lastPrice || 0
+);
+
+const change24 =
+Number(
+ticker.price24hPcnt || 0
+) * 100;
+
+/* =========================================================
+   1H CHANGE
+========================================================= */
+
+let change1h = 0;
+
+const prev1hPrice =
+Number(
+ticker.prevPrice1h || 0
+);
+
+if(prev1hPrice > 0){
+
+change1h =
+(
+(lastPrice - prev1hPrice)
+/
+prev1hPrice
+) * 100;
+
+}
+
 const payload = {
 
 symbol:ticker.symbol,
 
-price:Number(
-ticker.lastPrice || 0
-),
+price:lastPrice,
 
-change24:Number(
-ticker.price24hPcnt || 0
-)*100
+change24,
+
+change1h
 
 };
 
