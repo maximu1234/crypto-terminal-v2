@@ -7,6 +7,10 @@ loadLayout
 
 } from "./storage.js";
 
+import {
+loadBybitHistory
+} from "./api.js";
+
 const dashboard =
 document.getElementById("dashboard");
 
@@ -30,10 +34,6 @@ const defaultSymbols = [
 ];
 
 const widgets = [];
-
-/* =========================================================
-   CREATE WIDGET
-========================================================= */
 
 function createWidget(index){
 
@@ -190,67 +190,6 @@ window.location.href =
 
 };
 
-async function loadHistory(symbol, tf){
-
-let all = [];
-
-let end = Date.now();
-
-for(let i=0;i<6;i++){
-
-const url =
-`https://api.bybit.com/v5/market/kline?category=linear&symbol=${symbol}&interval=${tf}&limit=1000&end=${end}`;
-
-const res =
-await fetch(url);
-
-const json =
-await res.json();
-
-if(
-!json.result ||
-!json.result.list
-){
-break;
-}
-
-const batch =
-json.result.list;
-
-if(!batch.length){
-break;
-}
-
-all = [...all, ...batch];
-
-end =
-Number(batch[batch.length-1][0]) - 1;
-
-}
-
-const unique =
-new Map();
-
-all.forEach(k=>{
-
-unique.set(k[0],{
-
-time:Number(k[0])/1000,
-open:Number(k[1]),
-high:Number(k[2]),
-low:Number(k[3]),
-close:Number(k[4])
-
-});
-
-});
-
-return Array
-.from(unique.values())
-.sort((a,b)=>a.time-b.time);
-
-}
-
 async function loadData(){
 
 const symbol =
@@ -270,7 +209,11 @@ tf
 try{
 
 const candles =
-await loadHistory(symbol, tf);
+await loadBybitHistory(
+symbol,
+tf,
+6
+);
 
 if(!candles.length){
 return;
