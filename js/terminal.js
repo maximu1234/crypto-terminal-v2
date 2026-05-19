@@ -1,5 +1,17 @@
-const TWELVE_KEY =
-"d6b45dcb1abf4b3ebe020038e41864fb";
+import {
+loadBybitHistory,
+loadBybitSymbols,
+loadTwelveData
+} from "./api.js";
+
+import {
+calculateRSI
+} from "./indicators.js";
+
+import {
+saveFavorites,
+loadFavorites
+} from "./storage.js";
 
 let currentDataset = "crypto";
 let currentTF = "60";
@@ -12,7 +24,7 @@ let sortMode = "symbol";
 let sortAsc = true;
 
 let favorites =
-JSON.parse(localStorage.getItem("favorites") || "[]");
+loadFavorites();
 
 let allBybitSymbols = [];
 let newListings = [];
@@ -143,85 +155,13 @@ axisLabelVisible:true
 });
 
 /* =========================================================
-   RSI
-========================================================= */
-
-function calculateRSI(data, period=14){
-
-if(data.length < period+1){
-return [];
-}
-
-let gains = 0;
-let losses = 0;
-
-const result = [];
-
-for(let i=1;i<=period;i++){
-
-const diff =
-data[i].close - data[i-1].close;
-
-if(diff >= 0){
-gains += diff;
-}else{
-losses += Math.abs(diff);
-}
-
-}
-
-let avgGain = gains / period;
-let avgLoss = losses / period;
-
-for(let i=period;i<data.length;i++){
-
-const diff =
-data[i].close - data[i-1].close;
-
-const gain =
-diff > 0 ? diff : 0;
-
-const loss =
-diff < 0 ? Math.abs(diff) : 0;
-
-avgGain =
-((avgGain*(period-1))+gain)/period;
-
-avgLoss =
-((avgLoss*(period-1))+loss)/period;
-
-const rs =
-avgGain / (avgLoss || 1);
-
-const rsi =
-100 - (100/(1+rs));
-
-result.push({
-
-time:data[i].time,
-value:rsi
-
-});
-
-}
-
-return result;
-
-}
-
-/* =========================================================
    SYMBOLS
 ========================================================= */
 
-async function loadBybitSymbols(){
+async function initSymbols(){
 
-const res = await fetch(
-"https://api.bybit.com/v5/market/instruments-info?category=linear&limit=1000"
-);
-
-const json = await res.json();
-
-const list = json.result.list;
+const list =
+await loadBybitSymbols();
 
 allBybitSymbols = list
 .filter(x => x.status === "Trading")
@@ -289,119 +229,6 @@ change1h:
 }
 
 /* =========================================================
-   FAST CRYPTO HISTORY
-========================================================= */
-
-async function loadCryptoHistory(symbol){
-
-let all = [];
-
-let end = Date.now();
-
-for(let i=0;i<3;i++){
-
-const url =
-`https://api.bybit.com/v5/market/kline?category=linear&symbol=${symbol}&interval=${currentTF}&limit=1000&end=${end}`;
-
-const res = await fetch(url);
-
-const json = await res.json();
-
-const batch =
-json.result.list;
-
-if(!batch || !batch.length){
-break;
-}
-
-all = [...all, ...batch];
-
-end =
-Number(batch[batch.length-1][0]) - 1;
-
-}
-
-const unique =
-new Map();
-
-all.forEach(k=>{
-
-unique.set(k[0],{
-
-time:Number(k[0])/1000,
-open:Number(k[1]),
-high:Number(k[2]),
-low:Number(k[3]),
-close:Number(k[4])
-
-});
-
-});
-
-return Array
-.from(unique.values())
-.sort((a,b)=>a.time-b.time);
-
-}
-
-/* =========================================================
-   TWELVEDATA
-========================================================= */
-
-async function loadTwelveData(symbol){
-
-let interval = "1h";
-
-if(currentTF === "1"){
-interval = "1min";
-}
-
-if(currentTF === "5"){
-interval = "5min";
-}
-
-if(currentTF === "15"){
-interval = "15min";
-}
-
-if(currentTF === "60"){
-interval = "1h";
-}
-
-if(currentTF === "240"){
-interval = "4h";
-}
-
-if(currentTF === "D"){
-interval = "1day";
-}
-
-const url =
-`https://api.twelvedata.com/time_series?symbol=${encodeURIComponent(symbol)}&interval=${interval}&outputsize=2500&apikey=${TWELVE_KEY}`;
-
-const res = await fetch(url);
-
-const json = await res.json();
-
-if(!json.values){
-return [];
-}
-
-return json.values.reverse().map(v=>({
-
-time:
-Math.floor(new Date(v.datetime).getTime()/1000),
-
-open:Number(v.open),
-high:Number(v.high),
-low:Number(v.low),
-close:Number(v.close)
-
-}));
-
-}
-
-/* =========================================================
    LOAD SYMBOL
 ========================================================= */
 
@@ -423,12 +250,19 @@ currentDataset === "new"
 ){
 
 candles =
-await loadCryptoHistory(symbol);
+await loadBybitHistory(
+symbol,
+currentTF,
+3
+);
 
 }else{
 
 candles =
-await loadTwelveData(symbol);
+await loadTwelveData(
+symbol,
+currentTF
+);
 
 }
 
@@ -699,9 +533,8 @@ s => s !== item.symbol
 favorites.push(item.symbol);
 }
 
-localStorage.setItem(
-"favorites",
-JSON.stringify(favorites)
+saveFavorites(
+favorites
 );
 
 renderList();
@@ -796,7 +629,7 @@ await loadSymbol(symbols[index]);
 
 async function init(){
 
-await loadBybitSymbols();
+await initSymbols();
 
 generateMarketData();
 
