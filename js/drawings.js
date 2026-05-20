@@ -629,42 +629,38 @@ USER_PREFS_KEY,
 JSON.stringify(next)
 );
 
-if(partial.color){
-activeColor = partial.color;
-}
-
 }
 
 function baseDefaultStyle(type){
 
-const global =
-loadUserPrefs();
 const saved =
-toolDefaults[type];
+toolDefaults[type] || {};
 
 const out =
 {
-color: global.color ||
-saved?.color ||
-STROKE,
-lineWidth: global.lineWidth ??
-saved?.lineWidth ??
-1
+color: saved.color || STROKE,
+lineWidth: saved.lineWidth ?? 1
 };
 
 if(type === "fib"){
+
+const legacy =
+loadUserPrefs();
+
 out.fibLevels =
 normalizeFibLevelsShape(
-global.fibLevels ||
-global.levels ||
-saved?.fibLevels ||
-saved?.levels ||
+saved.fibLevels ||
+saved.levels ||
+legacy.fibLevels ||
+legacy.levels ||
 null
 );
+
 out.fibShowTrendLine =
-global.fibShowTrendLine ??
-saved?.fibShowTrendLine ??
+saved.fibShowTrendLine ??
+legacy.fibShowTrendLine ??
 true;
+
 }
 
 return out;
@@ -1537,24 +1533,6 @@ if(!type){
 return;
 }
 
-const prefsPayload =
-{
-color:style.color,
-lineWidth:style.lineWidth
-};
-
-if(style.fibLevels){
-
-prefsPayload.fibLevels =
-style.fibLevels;
-
-prefsPayload.fibShowTrendLine =
-style.fibShowTrendLine !== false;
-
-}
-
-saveUserPrefs(prefsPayload);
-
 const sel =
 getSelected();
 
@@ -1583,7 +1561,28 @@ redraw();
 }
 
 if(tool !== "cursor"){
-saveToolDefaults(type, style);
+
+const defaultsPayload =
+{
+color: style.color,
+lineWidth: style.lineWidth
+};
+
+if(style.fibLevels){
+
+defaultsPayload.fibLevels =
+style.fibLevels;
+
+defaultsPayload.fibShowTrendLine =
+style.fibShowTrendLine !== false;
+
+}
+
+saveToolDefaults(
+type,
+defaultsPayload
+);
+
 }
 
 }
@@ -3323,16 +3322,6 @@ persistDrawingsForSymbol(sym);
 );
 
 loadToolDefaults();
-
-const prefs = loadUserPrefs();
-
-if(prefs.color){
-updateColorStripe(prefs.color);
-}
-
-if(prefs.lineWidth){
-setActiveWidth(prefs.lineWidth);
-}
 
 loadDrawings();
 lastLoadedSymbol = getSymbol();

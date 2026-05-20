@@ -37,7 +37,7 @@ processAlertTick
 
 import {
 initDrawings
-} from "./drawings.js?v=37";
+} from "./drawings.js?v=38";
 
 let currentDataset = "crypto";
 let currentTF = "60";
