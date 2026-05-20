@@ -23,7 +23,9 @@ fetchTickersInto
 
 import {
 saveScreenerState,
-loadScreenerState
+loadScreenerState,
+loadFavorites,
+saveFavorites
 } from "./storage.js?v=10";
 
 const gridEl =
@@ -34,6 +36,100 @@ document.getElementById("pagination");
 
 const statusEl =
 document.getElementById("screener-status");
+
+let favorites =
+loadFavorites();
+
+function isFavoriteSymbol(symbol){
+
+return favorites.includes(symbol);
+
+}
+
+function updateWidgetFavoriteUi(
+root,
+symbol
+){
+
+const flagEl =
+root?.querySelector(
+".screener-flag"
+);
+
+if(!flagEl){
+return;
+}
+
+const on =
+isFavoriteSymbol(symbol);
+
+flagEl.classList.toggle(
+"favorite",
+on
+);
+
+flagEl.setAttribute(
+"aria-pressed",
+on
+? "true"
+: "false"
+);
+
+flagEl.title =
+on
+? "Убрать из избранного"
+: "В избранное";
+
+}
+
+function syncFavoriteFlagsForSymbol(symbol){
+
+activeWidgets.forEach(widget=>{
+
+if(widget.symbol === symbol){
+updateWidgetFavoriteUi(
+widget.root,
+symbol
+);
+}
+
+});
+
+}
+
+function toggleFavoriteSymbol(
+symbol,
+e
+){
+
+if(e){
+e.stopPropagation();
+e.preventDefault();
+}
+
+if(!symbol){
+return;
+}
+
+if(
+favorites.includes(symbol)
+){
+
+favorites =
+favorites.filter(
+s=>s !== symbol
+);
+
+}else{
+
+favorites.push(symbol);
+
+}
+
+saveFavorites(favorites);
+syncFavoriteFlagsForSymbol(symbol);
+
+}
 
 const saved =
 loadScreenerState();
@@ -475,7 +571,18 @@ root.innerHTML = `
 
 <div class="screener-widget-header">
 
+<div class="screener-header-left">
+
+<button
+type="button"
+class="flag screener-flag"
+title="В избранное"
+aria-pressed="false"
+></button>
+
 <div class="screener-symbol">${symbol}</div>
+
+</div>
 
 <div class="screener-meta">
 
@@ -495,9 +602,18 @@ root.innerHTML = `
 
 `;
 
+root.querySelector(".screener-flag").onclick = e=>{
+toggleFavoriteSymbol(symbol, e);
+};
+
 root.querySelector(".screener-open").onclick = e=>{
 openTerminal(symbol, e);
 };
+
+updateWidgetFavoriteUi(
+root,
+symbol
+);
 
 const chartEl =
 root.querySelector(".screener-chart");
@@ -917,10 +1033,45 @@ btn.dataset.tf === currentTF
 
 }
 
+window.addEventListener(
+"storage",
+e=>{
+
+if(e.key !== "favorites"){
+return;
+}
+
+try{
+
+favorites =
+JSON.parse(
+e.newValue || "[]"
+);
+
+}catch{
+
+favorites =
+loadFavorites();
+
+}
+
+activeWidgets.forEach(widget=>{
+updateWidgetFavoriteUi(
+widget.root,
+widget.symbol
+);
+});
+
+}
+);
+
 async function init(){
 
 bindControls();
 applySavedUi();
+
+favorites =
+loadFavorites();
 
 setStatus("Загрузка списка монет…", true);
 

@@ -32,6 +32,10 @@
 
 <h1>Алерты</h1>
 
+<section class="alerts-section" aria-labelledby="alerts-active-heading">
+
+<h2 id="alerts-active-heading" class="alerts-section-title">Активные алерты</h2>
+
 <div id="alerts-empty" class="alerts-empty hidden">
 Нет установленных алертов. На графике выберите Horizontal Ray → «Сделать алертом» или ПКМ → «Поставить Алерт».
 </div>
@@ -43,6 +47,7 @@
 <tr>
 <th>Дата установки</th>
 <th>Монета</th>
+<th>ТФ</th>
 <th>Цена алерта</th>
 <th class="alerts-col-delete">
 <label class="alerts-delete-all-label">
@@ -57,6 +62,43 @@
 
 </div>
 
+</section>
+
+<section class="alerts-section alerts-section--history" aria-labelledby="alerts-history-heading">
+
+<div class="alerts-section-head">
+
+<h2 id="alerts-history-heading" class="alerts-section-title">Исполненные алерты</h2>
+
+<button type="button" id="alerts-clear-history" class="alerts-clear-history-btn hidden" title="Очистить историю">
+Очистить историю алертов
+</button>
+
+</div>
+
+<div id="alerts-history-empty" class="alerts-empty hidden">
+Пока нет исполненных алертов. Здесь появятся последние 30 срабатываний.
+</div>
+
+<div id="alerts-history-wrap" class="alerts-table-wrap hidden">
+
+<table class="alerts-table" id="alerts-history-table">
+<thead>
+<tr>
+<th>Дата срабатывания</th>
+<th>Дата установки</th>
+<th>Монета</th>
+<th>ТФ</th>
+<th>Цена алерта</th>
+</tr>
+</thead>
+<tbody id="alerts-history-tbody"></tbody>
+</table>
+
+</div>
+
+</section>
+
 <p id="alerts-clear-drawings" class="alerts-clear-drawings">
 Удалить ВСЕ объекты рисования и Алерты на всех монетах (
 <span id="alerts-clear-drawings-action"></span>)
@@ -65,7 +107,8 @@
 
 </main>
 
-<script type="module" src="/js/alerts-page.js?v=3"></script>
+<script type="module" src="/js/site-boot.js?v=13"></script>
+<script type="module" src="/js/alerts-page.js?v=9"></script>
 
 </body>
 </html>

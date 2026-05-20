@@ -31,8 +31,13 @@ fetchTickersInto
 } from "./tickers.js";
 
 import {
+processAlertCandle,
+processAlertTick
+} from "./alert-monitor.js?v=15";
+
+import {
 initDrawings
-} from "./drawings.js?v=29";
+} from "./drawings.js?v=36";
 
 let currentDataset = "crypto";
 let currentTF = "60";
@@ -70,9 +75,49 @@ new Set([
 "1h"
 ]);
 
+const COINS_TF_VALUES =
+new Set([
+"1",
+"5",
+"15",
+"60",
+"240",
+"D"
+]);
+
 function defaultSortEntry(){
 
 return { mode:"symbol", asc:true };
+
+}
+
+function defaultLastViewEntry(){
+
+return {
+symbol:null,
+tf:"60"
+};
+
+}
+
+function normalizeLastViewEntry(entry){
+
+const tf =
+typeof entry?.tf === "string" &&
+COINS_TF_VALUES.has(entry.tf)
+? entry.tf
+: "60";
+
+const symbol =
+typeof entry?.symbol === "string" &&
+entry.symbol.trim()
+? entry.symbol.trim().toUpperCase()
+: null;
+
+return {
+symbol,
+tf
+};
 
 }
 
@@ -81,13 +126,18 @@ function defaultCoinsPrefs(){
 const sortByMarket =
 {};
 
+const lastViewByMarket =
+{};
+
 for(const m of COINS_MARKETS){
 sortByMarket[m] = defaultSortEntry();
+lastViewByMarket[m] = defaultLastViewEntry();
 }
 
 return {
 market:"crypto",
-sortByMarket
+sortByMarket,
+lastViewByMarket
 };
 
 }
@@ -271,6 +321,12 @@ prefs.sortByMarket[m] =
 normalizeSortEntry(
 parsed?.sortByMarket?.[m]
 );
+
+prefs.lastViewByMarket[m] =
+normalizeLastViewEntry(
+parsed?.lastViewByMarket?.[m]
+);
+
 }
 
 try{
@@ -329,6 +385,11 @@ out.sortByMarket[m] =
 normalizeSortEntry(
 prefs?.sortByMarket?.[m]
 );
+
+out.lastViewByMarket[m] =
+normalizeLastViewEntry(
+prefs?.lastViewByMarket?.[m]
+);
 }
 
 localStorage.setItem(
@@ -355,7 +416,51 @@ mode:sortMode,
 asc:sortAsc
 };
 
+if(!prefs.lastViewByMarket){
+prefs.lastViewByMarket = {};
+}
+
+prefs.lastViewByMarket[currentDataset] = {
+symbol:currentSymbol,
+tf:currentTF
+};
+
 writeCoinsPrefs(prefs);
+
+}
+
+function resolveInitialSymbolAndTf(){
+
+const prefs =
+readCoinsPrefs();
+
+const last =
+normalizeLastViewEntry(
+prefs.lastViewByMarket?.[currentDataset]
+);
+
+if(
+last.tf &&
+COINS_TF_VALUES.has(last.tf)
+){
+currentTF = last.tf;
+}
+
+const symbols =
+getCurrentSymbols();
+
+if(
+last.symbol &&
+symbols.includes(last.symbol)
+){
+currentSymbol = last.symbol;
+return;
+}
+
+currentSymbol =
+getFirstVisibleSymbol() ||
+symbols[0] ||
+"BTCUSDT";
 
 }
 
@@ -848,6 +953,11 @@ function startTickerStream(){
 
 connectTickerStream(tick=>{
 
+processAlertTick(
+tick.symbol,
+tick.price
+);
+
 const item =
 marketMap.get(tick.symbol);
 
@@ -926,6 +1036,11 @@ candles.shift();
 candleSeries.update(candle);
 
 rebuildRsiFromCandles();
+
+processAlertCandle(
+streamSymbol,
+candle
+);
 
 }
 
@@ -1009,6 +1124,8 @@ const loadSeq = ++symbolLoadSeq;
 
 currentSymbol = symbol;
 
+persistCoinsPrefs();
+
 document.getElementById(
 "current-symbol"
 ).innerText =
@@ -1079,6 +1196,8 @@ highlightActiveSymbol();
 scrollActiveCoinIntoView();
 
 startRealtime();
+
+persistCoinsPrefs();
 
 }
 
@@ -1163,6 +1282,8 @@ currentTF = btn.dataset.tf;
 
 await loadSymbol(currentSymbol);
 
+persistCoinsPrefs();
+
 };
 
 });
@@ -1198,9 +1319,9 @@ await primeTickerSnapshots();
 
 renderList();
 
-currentSymbol =
-getFirstVisibleSymbol() ||
-getCurrentSymbols()[0];
+resolveInitialSymbolAndTf();
+
+applyUrlTimeframe();
 
 if(currentSymbol){
 await loadSymbol(currentSymbol);
@@ -1706,8 +1827,6 @@ if(marketFilter){
 marketFilter.value = currentDataset;
 }
 
-applyUrlTimeframe();
-
 generateMarketData();
 
 await primeTickerSnapshots();
@@ -1719,11 +1838,14 @@ renderList();
 startTickerStream();
 
 if(!hasUrlSymbol){
-currentSymbol =
-getFirstVisibleSymbol() ||
-getCurrentSymbols()[0] ||
-"BTCUSDT";
+resolveInitialSymbolAndTf();
+}else if(
+!COINS_TF_VALUES.has(currentTF)
+){
+currentTF = "60";
 }
+
+applyUrlTimeframe();
 
 await loadSymbol(
 currentSymbol || "BTCUSDT"

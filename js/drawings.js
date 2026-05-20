@@ -1,8 +1,8 @@
 import {
 ALERT_LINE_COLOR,
 ALERT_LINE_DASH,
-removeAlertByShapeId,
-syncAlertsForSymbol,
+patchAlertPrice,
+removeAlert,
 upsertAlert
 } from "./alerts.js";
 
@@ -544,6 +544,7 @@ let activeColor = STROKE;
 
 let tool = "cursor";
 let drawings = [];
+let lastLoadedSymbol = null;
 let selectedId = null;
 let placement = null;
 let previewPoint = null;
@@ -875,8 +876,22 @@ delete shape.levels;
 delete shape.showFibTrend;
 
 }
-if(shape.type === "hray" && shape.isAlert){
+if(shape.type === "hray"){
+
+if(
+shape.isAlert &&
+!shape.alertCreatedAt
+){
+shape.isAlert = false;
+delete shape.alertTf;
+delete shape.savedColor;
+delete shape.savedLineWidth;
+}
+
+if(shape.isAlert){
 shape.lineWidth = 1;
+}
+
 }
 
 return shape;
@@ -927,8 +942,13 @@ merged.push(shape);
 
 drawings = merged.map(normalizeShape);
 
+sanitizeDrawingsForCurrentSymbol();
+
 if(drawings.length){
-saveDrawings();
+localStorage.setItem(
+storageKey(),
+JSON.stringify(drawings)
+);
 }
 
 return;
@@ -943,13 +963,184 @@ drawings = [];
 
 }
 
-syncAlertsForSymbol(getSymbol(), drawings);
+sanitizeDrawingsForCurrentSymbol();
+
+}
+
+function stripAlertFromShape(shape){
+
+const cleaned = {
+...shape,
+isAlert: false
+};
+
+delete cleaned.alertCreatedAt;
+delete cleaned.alertTf;
+delete cleaned.alertSymbol;
+
+if(cleaned.savedColor){
+cleaned.color = cleaned.savedColor;
+delete cleaned.savedColor;
+}
+
+if(cleaned.savedLineWidth != null){
+cleaned.lineWidth = cleaned.savedLineWidth;
+delete cleaned.savedLineWidth;
+}
+
+return cleaned;
+
+}
+
+function isAlertOwnedByOtherSymbol(
+shapeId,
+currentSym
+){
+
+for(let i = 0; i < localStorage.length; i++){
+
+const key =
+localStorage.key(i);
+
+if(
+!key?.startsWith("drawings_")
+){
+continue;
+}
+
+const owner =
+key.slice("drawings_".length);
+
+const legacy =
+owner.match(
+/^(.+)_(1|5|15|60|240|D)$/
+);
+
+const fileSym =
+legacy
+? legacy[1]
+: owner;
+
+if(
+fileSym === currentSym
+){
+continue;
+}
+
+try{
+
+const list =
+JSON.parse(
+localStorage.getItem(key) || "[]"
+);
+
+if(
+!Array.isArray(list)
+){
+continue;
+}
+
+const other =
+list.find(
+s=>
+s.id === shapeId &&
+s.type === "hray" &&
+s.isAlert === true
+);
+
+if(other){
+return true;
+}
+
+}catch{}
+
+}
+
+return false;
+
+}
+
+function sanitizeDrawingsForCurrentSymbol(){
+
+const sym =
+getSymbol();
+
+let dirty =
+false;
+
+drawings =
+drawings.map(shape=>{
+
+if(
+shape.type !== "hray" ||
+!shape.isAlert
+){
+return shape;
+}
+
+if(
+isAlertOwnedByOtherSymbol(
+shape.id,
+sym
+)
+){
+dirty = true;
+return stripAlertFromShape(shape);
+}
+
+if(
+shape.alertSymbol &&
+shape.alertSymbol !== sym
+){
+dirty = true;
+return stripAlertFromShape(shape);
+}
+
+if(!shape.alertSymbol){
+
+dirty = true;
+return stripAlertFromShape(shape);
+
+}
+
+return shape;
+
+});
+
+if(dirty){
+
+try{
+
+localStorage.setItem(
+storageKey(),
+JSON.stringify(drawings)
+);
+
+}catch{}
+
+}
 
 }
 
 function saveDrawings(){
 localStorage.setItem(storageKey(), JSON.stringify(drawings));
-syncAlertsForSymbol(getSymbol(), drawings);
+}
+
+function persistDrawingsForSymbol(sym){
+
+if(!sym){
+return;
+}
+
+try{
+
+localStorage.setItem(
+`drawings_${sym}`,
+JSON.stringify(drawings)
+);
+
+}catch{}
+
 }
 
 function getSelected(){
@@ -1508,6 +1699,8 @@ return;
 if(shape.isAlert){
 shape.isAlert = false;
 delete shape.alertCreatedAt;
+delete shape.alertTf;
+delete shape.alertSymbol;
 
 if(shape.savedColor){
 shape.color = shape.savedColor;
@@ -1519,7 +1712,10 @@ shape.lineWidth = shape.savedLineWidth;
 delete shape.savedLineWidth;
 }
 
-removeAlertByShapeId(shape.id);
+removeAlert(
+getSymbol(),
+shape.id
+);
 
 }else{
 
@@ -1532,18 +1728,40 @@ shape.savedLineWidth = shape.lineWidth || 1;
 shape.isAlert = true;
 shape.lineWidth = 1;
 shape.alertCreatedAt = Date.now();
+shape.alertTf = getTf();
+shape.alertSymbol = getSymbol();
+
+saveDrawings();
+
+const sym =
+getSymbol();
+
+const level =
+Number(shape.price);
+
+if(
+!sym ||
+!Number.isFinite(level)
+){
+console.warn(
+"Alert: не удалось сохранить — нет символа или цены линии",
+sym,
+shape.price
+);
+}else{
 
 upsertAlert({
 id: shape.id,
 shapeId: shape.id,
-symbol: getSymbol(),
-price: Number(shape.price),
+symbol: sym,
+price: level,
+tf: shape.alertTf,
 createdAt: shape.alertCreatedAt
 });
 
 }
 
-saveDrawings();
+}
 updateStyleBar();
 redraw();
 
@@ -1809,6 +2027,18 @@ return;
 }
 
 moveHandle(shape, dragState.handleId, point);
+
+if(
+shape.type === "hray" &&
+shape.isAlert
+){
+patchAlertPrice(
+getSymbol(),
+shape.id,
+Number(shape.price)
+);
+}
+
 saveDrawings();
 redraw();
 
@@ -2645,7 +2875,10 @@ const removed =
 drawings.find(d=>d.id === selectedId);
 
 if(removed?.isAlert){
-removeAlertByShapeId(removed.id);
+removeAlert(
+getSymbol(),
+removed.id
+);
 }
 
 drawings = drawings.filter(d=>d.id !== selectedId);
@@ -2660,7 +2893,12 @@ function clearAll(){
 
 drawings
 .filter(d=>d.isAlert)
-.forEach(d=>removeAlertByShapeId(d.id));
+.forEach(d=>{
+removeAlert(
+getSymbol(),
+d.id
+);
+});
 
 drawings = [];
 selectedId = null;
@@ -3069,6 +3307,23 @@ window.addEventListener(
 onDrawingsUpdated
 );
 
+window.addEventListener(
+"pagehide",
+()=>{
+
+if(!alive){
+return;
+}
+
+const sym =
+lastLoadedSymbol ||
+getSymbol();
+
+persistDrawingsForSymbol(sym);
+
+}
+);
+
 loadToolDefaults();
 
 const prefs = loadUserPrefs();
@@ -3082,6 +3337,7 @@ setActiveWidth(prefs.lineWidth);
 }
 
 loadDrawings();
+lastLoadedSymbol = getSymbol();
 resizeCanvas();
 updateStyleBar();
 
@@ -3091,7 +3347,23 @@ setTool,
 
 onSymbolChange(){
 
-saveDrawings();
+const next =
+getSymbol();
+
+/*
+  При возврате на страницу initDrawings сначала грузит дефолтный символ (BTC),
+  затем loadSymbol переключает на выбранную монету. Без сохранения в lastLoadedSymbol
+  рисунки дефолтного символа перезаписывали ключ новой монеты.
+*/
+if(
+lastLoadedSymbol &&
+lastLoadedSymbol !== next
+){
+persistDrawingsForSymbol(lastLoadedSymbol);
+}
+
+lastLoadedSymbol = next;
+
 loadDrawings();
 selectedId = null;
 cancelPlacement();

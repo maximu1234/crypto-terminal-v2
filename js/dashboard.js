@@ -17,7 +17,7 @@ applyDashboardZoom
 
 import {
 initDrawings
-} from "./drawings.js?v=29";
+} from "./drawings.js?v=36";
 
 import {
 subscribeKline
@@ -110,7 +110,7 @@ widget.innerHTML = `
 <option value="D" ${startTf==="D"?"selected":""}>1D</option>
 </select>
 
-<button type="button" class="open-chart-btn" title="Открыть в терминале">↗</button>
+<button type="button" class="open-chart-btn" title="Открыть график">↗</button>
 
 </div>
 

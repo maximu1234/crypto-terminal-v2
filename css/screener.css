@@ -68,6 +68,39 @@ min-height:0;
 height:26px;
 }
 
+.screener-header-left{
+display:flex;
+align-items:center;
+gap:6px;
+min-width:0;
+flex-shrink:0;
+}
+
+.screener-flag{
+flex-shrink:0;
+padding:0;
+cursor:pointer;
+}
+
+.screener-flag:focus-visible{
+outline:2px solid #60a5fa;
+outline-offset:2px;
+}
+
+.screener-flag.flag{
+width:10px;
+height:10px;
+border-radius:50%;
+border:1px solid #4b5563;
+background:transparent;
+}
+
+.screener-flag.flag.favorite{
+background:#ef4444 !important;
+border-color:#ef4444;
+box-shadow:0 0 8px #ef4444;
+}
+
 .screener-symbol{
 font-size:11px;
 font-weight:700;
