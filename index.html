@@ -5,11 +5,13 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin/>
+<link rel="dns-prefetch" href="https://api.bybit.com"/>
+
 <title>Главная — Multichart</title>
 
 <link rel="stylesheet" href="css/common.css">
-<link rel="stylesheet" href="css/dashboard.css">
-<link rel="stylesheet" href="css/terminal.css">
+<link rel="stylesheet" href="css/screener.css">
 
 <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
 
@@ -24,25 +26,47 @@
 <nav class="menu">
 <a href="index.html" class="active">Главная</a>
 <a href="coins.html">Монеты</a>
-<a href="screener.html">Скринер</a>
+<a href="terminal.html">Терминал</a>
+<a href="alerts/">Алерты</a>
+<a href="trade-calculator.html">Калькулятор</a>
 </nav>
 
 <div id="header-controls">
 
 <div class="control-group">
 <span class="control-label">Виджеты</span>
-<button type="button" class="layout-btn" data-layout="4">4</button>
-<button type="button" class="layout-btn" data-layout="6">6</button>
-<button type="button" class="layout-btn active" data-layout="9">9</button>
+<button class="layout-btn" data-layout="4" type="button">4</button>
+<button class="layout-btn" data-layout="6" type="button">6</button>
+<button class="layout-btn active" data-layout="9" type="button">9</button>
+</div>
+
+<div class="control-group">
+<span class="control-label">Сортировка</span>
+<button class="sort-btn active" data-sort="change24" type="button">24ч %</button>
+<button class="sort-btn" data-sort="symbol" type="button">А–Я</button>
+</div>
+
+<div class="control-group">
+<span class="control-label">Таймфрейм</span>
+<button class="tf-btn" data-tf="1" type="button">1m</button>
+<button class="tf-btn" data-tf="5" type="button">5m</button>
+<button class="tf-btn active" data-tf="15" type="button">15m</button>
+<button class="tf-btn" data-tf="60" type="button">1h</button>
+<button class="tf-btn" data-tf="240" type="button">4h</button>
+<button class="tf-btn" data-tf="D" type="button">1D</button>
 </div>
 
 </div>
 
 </header>
 
-<main id="dashboard" class="grid-9"></main>
+<main id="screener-grid" class="grid-9" aria-live="polite"></main>
 
-<script src="js/dashboard.js?v=24" type="module"></script>
+<footer id="pagination" aria-label="Страницы"></footer>
+
+<div id="screener-status" class="hidden">Загрузка…</div>
+
+<script src="js/screener.js?v=23" type="module"></script>
 
 </body>
 </html>

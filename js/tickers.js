@@ -118,9 +118,9 @@ subscribers.forEach(fn=>fn(payload));
 
 });
 
-}catch(err){
+}catch{
 
-console.log(err);
+/* Тихий сбой опроса: сеть / лимит API; следующий цикл повторит. */
 
 }
 

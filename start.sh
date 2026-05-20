@@ -11,7 +11,11 @@ fi
 
 echo ""
 echo "Crypto Terminal:"
+echo "  http://127.0.0.1:$PORT/          (Главная)"
+echo "  http://127.0.0.1:$PORT/terminal.html"
 echo "  http://127.0.0.1:$PORT/coins.html"
+echo "  http://127.0.0.1:$PORT/trade-calculator.html"
+echo "  http://127.0.0.1:$PORT/alerts/"
 echo ""
 echo "Нажмите Ctrl+C для остановки."
 echo ""

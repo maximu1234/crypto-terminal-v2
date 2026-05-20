@@ -2,11 +2,12 @@ import {
 loadBybitHistory,
 loadBybitSymbols,
 loadTwelveData
-} from "./api.js";
+} from "./api.js?v=3";
 
 import {
-calculateRSI
-} from "./indicators.js";
+calculateRSI,
+RSI_PERIOD
+} from "./indicators.js?v=2";
 
 import {
 saveFavorites,
@@ -17,20 +18,21 @@ import {
 createCandlestickChart,
 createRSIChart,
 applyChartPriceFormat
-} from "./chart.js";
+} from "./chart.js?v=7";
 
 import {
 connectKlineStream,
 disconnectKlineStream
-} from "./ws.js";
+} from "./ws.js?v=1";
 
 import {
-connectTickerStream
+connectTickerStream,
+fetchTickersInto
 } from "./tickers.js";
 
 import {
 initDrawings
-} from "./drawings.js";
+} from "./drawings.js?v=29";
 
 let currentDataset = "crypto";
 let currentTF = "60";
@@ -47,6 +49,344 @@ let sortMode = "symbol";
 let sortAsc = true;
 
 let searchQuery = "";
+let hasUrlSymbol = false;
+
+const COINS_PREFS_KEY =
+"coins_page_prefs_v1";
+
+const COINS_MARKETS = [
+"crypto",
+"new",
+"stocks",
+"commodities",
+"forex"
+];
+
+const COINS_SORT_MODES =
+new Set([
+"favorites",
+"symbol",
+"24h",
+"1h"
+]);
+
+function defaultSortEntry(){
+
+return { mode:"symbol", asc:true };
+
+}
+
+function defaultCoinsPrefs(){
+
+const sortByMarket =
+{};
+
+for(const m of COINS_MARKETS){
+sortByMarket[m] = defaultSortEntry();
+}
+
+return {
+market:"crypto",
+sortByMarket
+};
+
+}
+
+function normalizeSortEntry(entry){
+
+if(!entry || typeof entry !== "object"){
+return defaultSortEntry();
+}
+
+const mode =
+typeof entry.mode === "string" &&
+COINS_SORT_MODES.has(entry.mode)
+? entry.mode
+: "symbol";
+
+const asc =
+typeof entry.asc === "boolean"
+? entry.asc
+: true;
+
+return { mode, asc };
+
+}
+
+function mergeLegacySortIntoPrefs(
+prefs,
+legacySort
+){
+
+if(!legacySort || typeof legacySort !== "object"){
+return false;
+}
+
+let changed =
+false;
+
+if(
+legacySort.sortByMarket &&
+typeof legacySort.sortByMarket === "object"
+){
+
+for(const m of COINS_MARKETS){
+
+if(legacySort.sortByMarket[m]){
+
+prefs.sortByMarket[m] =
+normalizeSortEntry(
+legacySort.sortByMarket[m]
+);
+
+changed = true;
+
+}
+
+}
+
+}else if(
+typeof legacySort.mode === "string"
+){
+
+const entry =
+normalizeSortEntry(legacySort);
+
+for(const m of COINS_MARKETS){
+prefs.sortByMarket[m] = { ...entry };
+}
+
+changed = true;
+
+}else{
+
+for(const m of COINS_MARKETS){
+
+if(
+legacySort[m] &&
+typeof legacySort[m] === "object"
+){
+
+prefs.sortByMarket[m] =
+normalizeSortEntry(
+legacySort[m]
+);
+
+changed = true;
+
+}
+
+}
+
+}
+
+return changed;
+
+}
+
+function mergeLegacyCoinsStorage(prefs){
+
+let changed =
+false;
+
+const legacyMarket =
+localStorage.getItem("coins_market_dataset");
+
+if(
+legacyMarket &&
+COINS_MARKETS.includes(legacyMarket)
+){
+
+prefs.market = legacyMarket;
+changed = true;
+
+}
+
+const legacySortRaw =
+localStorage.getItem("coins_sort_state");
+
+if(legacySortRaw){
+
+try{
+
+const legacySort =
+JSON.parse(legacySortRaw);
+
+if(
+mergeLegacySortIntoPrefs(
+prefs,
+legacySort
+)
+){
+changed = true;
+}
+
+}catch(err){
+
+console.warn("legacy coins sort:", err);
+
+}
+
+}
+
+if(changed){
+
+writeCoinsPrefs(prefs);
+
+try{
+
+localStorage.removeItem("coins_market_dataset");
+localStorage.removeItem("coins_sort_state");
+
+}catch{}
+
+}
+
+return prefs;
+
+}
+
+function readCoinsPrefs(){
+
+try{
+
+let prefs =
+defaultCoinsPrefs();
+
+const raw =
+localStorage.getItem(COINS_PREFS_KEY);
+
+if(raw){
+
+const parsed =
+JSON.parse(raw);
+
+prefs.market =
+COINS_MARKETS.includes(parsed?.market)
+? parsed.market
+: "crypto";
+
+for(const m of COINS_MARKETS){
+prefs.sortByMarket[m] =
+normalizeSortEntry(
+parsed?.sortByMarket?.[m]
+);
+}
+
+try{
+
+localStorage.removeItem(
+"coins_market_dataset"
+);
+localStorage.removeItem(
+"coins_sort_state"
+);
+
+}catch(_){
+}
+
+return prefs;
+
+}
+
+writeCoinsPrefs(prefs);
+
+if(
+localStorage.getItem("coins_market_dataset") ||
+localStorage.getItem("coins_sort_state")
+){
+
+prefs =
+mergeLegacyCoinsStorage(prefs);
+
+}
+
+return prefs;
+
+}catch(err){
+
+console.warn("coins prefs read:", err);
+return defaultCoinsPrefs();
+
+}
+
+}
+
+function writeCoinsPrefs(prefs){
+
+try{
+
+const out =
+defaultCoinsPrefs();
+
+out.market =
+COINS_MARKETS.includes(prefs?.market)
+? prefs.market
+: "crypto";
+
+for(const m of COINS_MARKETS){
+out.sortByMarket[m] =
+normalizeSortEntry(
+prefs?.sortByMarket?.[m]
+);
+}
+
+localStorage.setItem(
+COINS_PREFS_KEY,
+JSON.stringify(out)
+);
+
+}catch(err){
+
+console.warn("coins prefs write:", err);
+
+}
+
+}
+
+function persistCoinsPrefs(){
+
+const prefs =
+readCoinsPrefs();
+
+prefs.market = currentDataset;
+prefs.sortByMarket[currentDataset] = {
+mode:sortMode,
+asc:sortAsc
+};
+
+writeCoinsPrefs(prefs);
+
+}
+
+function applySortForCurrentMarket(){
+
+const prefs =
+readCoinsPrefs();
+
+const sort =
+prefs.sortByMarket[currentDataset] ||
+defaultSortEntry();
+
+sortMode = sort.mode;
+sortAsc = sort.asc;
+
+}
+
+function applyCoinsPrefs(){
+
+const prefs =
+readCoinsPrefs();
+
+if(!hasUrlSymbol){
+
+currentDataset = prefs.market;
+
+}
+
+applySortForCurrentMarket();
+
+}
 
 let favorites =
 loadFavorites();
@@ -104,6 +444,216 @@ rsi.chart;
 
 const rsiSeries =
 rsi.series;
+
+/*
+  Кеш точек RSI: пересборка только при данных свечей;
+  худ обновляется от курсора (как в TradingView).
+*/
+let rsiPointsCache =
+[];
+
+const rsiHudValue =
+document.getElementById(
+"rsi-hud-value"
+);
+
+const rsiHudPeriodEl =
+document.getElementById(
+"rsi-hud-period"
+);
+
+if(
+rsiHudPeriodEl
+){
+
+rsiHudPeriodEl.textContent =
+String(RSI_PERIOD);
+
+}
+
+function rsiCrosshairUnix(t){
+
+if(
+t === null ||
+t === undefined
+){
+return null;
+}
+
+if(
+typeof t === "number"
+){
+return t;
+
+}
+
+if(
+typeof t === "object" &&
+t !== null
+){
+
+if(
+typeof t.timestamp ===
+"number"
+){
+return t.timestamp;
+
+}
+
+}
+
+return null;
+
+}
+
+function formatRsiHud(v){
+
+if(
+v === null ||
+v === undefined ||
+Number.isNaN(v)
+){
+
+return "—";
+
+}
+
+return v.toFixed(2);
+
+}
+
+function rsiLookupAtOrBefore(ts){
+
+for(
+let i =
+rsiPointsCache.length -
+1;
+i >=
+0;
+i--
+){
+
+if(
+rsiPointsCache[i].time <=
+ts
+){
+
+return rsiPointsCache[i].value;
+
+}
+
+}
+
+return null;
+
+}
+
+function setRsiHudValue(v){
+
+if(
+rsiHudValue
+){
+
+rsiHudValue.textContent =
+formatRsiHud(v);
+
+}
+
+}
+
+function rebuildRsiFromCandles(){
+
+rsiPointsCache =
+calculateRSI(
+candles
+);
+
+rsiSeries.setData(
+rsiPointsCache
+);
+
+const last =
+rsiPointsCache[
+rsiPointsCache.length -
+1
+];
+
+setRsiHudValue(
+last
+? last.value
+: null
+
+);
+
+}
+
+chart.subscribeCrosshairMove(param=>{
+
+const ts =
+rsiCrosshairUnix(
+param.time
+);
+
+if(
+ts === null
+){
+
+const tail =
+rsiPointsCache[
+rsiPointsCache.length -
+1
+];
+
+setRsiHudValue(
+tail
+? tail.value
+: null
+);
+
+return;
+
+}
+
+const v =
+rsiLookupAtOrBefore(ts);
+
+setRsiHudValue(v);
+
+});
+
+rsiChart.subscribeCrosshairMove(param=>{
+
+const ts =
+rsiCrosshairUnix(
+param.time
+);
+
+if(
+ts === null
+){
+
+const tail =
+rsiPointsCache[
+rsiPointsCache.length -
+1
+];
+
+setRsiHudValue(
+tail
+? tail.value
+: null
+);
+
+return;
+
+}
+
+const v =
+rsiLookupAtOrBefore(ts);
+
+setRsiHudValue(v);
+
+});
 
 let drawingTools = null;
 
@@ -211,6 +761,85 @@ marketMap.set(symbol,item);
 
 }
 
+/*
+  После обновления % рынка список должен перестраиваться, иначе
+  при сохранённой сортировке по 24h/1h все строки с нулём % после
+  перезагрузки выглядят «несохранённой» сортировкой.
+*/
+let resortPriceColsTimer =
+null;
+
+function scheduleResortPriceColumns(){
+
+if(
+sortMode !== "24h" &&
+sortMode !== "1h"
+){
+return;
+}
+
+if(resortPriceColsTimer){
+return;
+}
+
+resortPriceColsTimer =
+setTimeout(()=>{
+
+resortPriceColsTimer = null;
+
+renderList();
+
+},200);
+
+}
+
+async function primeTickerSnapshots(){
+
+if(
+currentDataset !== "crypto" &&
+currentDataset !== "new"
+){
+return;
+}
+
+try{
+
+const snap =
+new Map();
+
+await fetchTickersInto(snap);
+
+snap.forEach((payload,symbol)=>{
+
+const item =
+marketMap.get(symbol);
+
+if(!item){
+return;
+}
+
+item.price =
+payload.price;
+
+item.change24 =
+payload.change24;
+
+item.change1h =
+payload.change1h;
+
+});
+
+}catch(err){
+
+console.warn(
+"prime tickers:",
+err
+);
+
+}
+
+}
+
 /* =========================================================
    REALTIME TICKERS
 ========================================================= */
@@ -237,6 +866,8 @@ tick.change1h;
 
 updateCoinRow(item);
 
+scheduleResortPriceColumns();
+
 });
 
 }
@@ -254,12 +885,21 @@ currentDataset !== "new"
 return;
 }
 
+const streamSymbol =
+currentSymbol;
+
 connectKlineStream({
 
 symbol:currentSymbol,
 tf:currentTF,
 
 onCandle:candle=>{
+
+if(
+streamSymbol !== currentSymbol
+){
+return;
+}
 
 if(!candles.length){
 return;
@@ -285,9 +925,7 @@ candles.shift();
 
 candleSeries.update(candle);
 
-rsiSeries.setData(
-calculateRSI(candles)
-);
+rebuildRsiFromCandles();
 
 }
 
@@ -369,8 +1007,6 @@ async function loadSymbol(symbol){
 
 const loadSeq = ++symbolLoadSeq;
 
-disconnectKlineStream();
-
 currentSymbol = symbol;
 
 document.getElementById(
@@ -391,7 +1027,15 @@ currentDataset === "new"
 nextCandles =
 await loadBybitHistory(
 symbol,
-currentTF
+currentTF,
+
+5,
+
+{
+parallel:true,
+batchGapMs:0
+}
+
 );
 
 }else{
@@ -420,9 +1064,7 @@ candleSeries,
 refPrice
 );
 
-rsiSeries.setData(
-calculateRSI(candles)
-);
+rebuildRsiFromCandles();
 
 /* =========================================================
    APPLY ZOOM
@@ -537,6 +1179,10 @@ disconnectKlineStream();
 
 currentDataset = e.target.value;
 
+applySortForCurrentMarket();
+
+persistCoinsPrefs();
+
 searchQuery = "";
 
 const searchInput =
@@ -548,12 +1194,17 @@ searchInput.value = "";
 
 generateMarketData();
 
+await primeTickerSnapshots();
+
 renderList();
 
 currentSymbol =
+getFirstVisibleSymbol() ||
 getCurrentSymbols()[0];
 
+if(currentSymbol){
 await loadSymbol(currentSymbol);
+}
 
 });
 
@@ -588,6 +1239,15 @@ getFilteredMarketData();
 data.sort(sortData);
 
 return data.map(item=>item.symbol);
+
+}
+
+function getFirstVisibleSymbol(){
+
+const symbols =
+getVisibleSymbolList();
+
+return symbols[0] || null;
 
 }
 
@@ -846,13 +1506,22 @@ return sortAsc
 ========================================================= */
 
 document
-.querySelectorAll(".sortable")
-.forEach(el=>{
+.getElementById("table-header")
+?.addEventListener("click", e=>{
 
-el.onclick = ()=>{
+const el =
+e.target.closest(".sortable");
+
+if(!el){
+return;
+}
 
 const mode =
 el.dataset.sort;
+
+if(!mode){
+return;
+}
 
 if(sortMode === mode){
 
@@ -864,9 +1533,9 @@ sortMode = mode;
 sortAsc = false;
 }
 
-renderList();
+persistCoinsPrefs();
 
-};
+renderList();
 
 });
 
@@ -986,6 +1655,7 @@ params.get("tf");
 if(symbol){
 currentSymbol = symbol.trim().toUpperCase();
 currentDataset = "crypto";
+hasUrlSymbol = true;
 }
 
 if(tf){
@@ -1017,13 +1687,16 @@ async function init(){
 
 readUrlParams();
 
+applyCoinsPrefs();
+
 await initSymbols();
 
 if(
+hasUrlSymbol &&
 currentSymbol &&
 !getCurrentSymbols().includes(currentSymbol)
 ){
-currentSymbol = getCurrentSymbols()[0] || "BTCUSDT";
+hasUrlSymbol = false;
 }
 
 const marketFilter =
@@ -1037,16 +1710,52 @@ applyUrlTimeframe();
 
 generateMarketData();
 
+await primeTickerSnapshots();
+
 resizeCharts();
 
 renderList();
 
 startTickerStream();
 
+if(!hasUrlSymbol){
+currentSymbol =
+getFirstVisibleSymbol() ||
+getCurrentSymbols()[0] ||
+"BTCUSDT";
+}
+
 await loadSymbol(
 currentSymbol || "BTCUSDT"
 );
 
 }
+
+function flushCoinsPrefs(){
+
+persistCoinsPrefs();
+
+}
+
+window.addEventListener(
+"beforeunload",
+flushCoinsPrefs
+);
+
+window.addEventListener(
+"pagehide",
+flushCoinsPrefs
+);
+
+document.addEventListener(
+"visibilitychange",
+()=>{
+
+if(document.visibilityState === "hidden"){
+flushCoinsPrefs();
+}
+
+}
+);
 
 init();

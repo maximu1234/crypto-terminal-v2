@@ -258,10 +258,24 @@ onCandle
 
 }){
 
-disconnectKlineStream();
+/*
+  Сначала подписываемся на новый топик, потом снимаем старый —
+  иначе временно 0 подписок → removeTopic закрывает сокет →
+  каждое переключение монеты снова платит за TCP + WSS handshake (заметные спайки 0.5–2s).
+*/
+const prevUnsub =
+terminalUnsub;
 
 terminalUnsub =
 subscribeKline(symbol, tf, onCandle);
+
+if(
+prevUnsub
+){
+
+prevUnsub();
+
+}
 
 }
 

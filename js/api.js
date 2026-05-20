@@ -40,7 +40,12 @@ return null;
 
 }
 
-async function loadBybitHistoryImpl(symbol, tf, requests = 6){
+async function loadBybitHistoryImpl(
+symbol,
+tf,
+requests = 6,
+batchGapMs = 80
+){
 
 let all = [];
 let end = Date.now();
@@ -63,8 +68,16 @@ Math.min(...batch.map(k=>Number(k[0])));
 
 end = oldest - 1;
 
-if(i < requests - 1){
-await sleep(80);
+if(
+i <
+requests -
+1 &&
+batchGapMs >
+0
+){
+await sleep(
+batchGapMs
+);
 }
 
 }
@@ -92,16 +105,45 @@ return Array
 
 }
 
-export async function loadBybitHistory(symbol, tf, requests = 6, options = {}){
+export async function loadBybitHistory(
+symbol,
+tf,
+requests = 6,
+options = {}
+){
+
+const gap =
+typeof options.batchGapMs ===
+"number"
+? options.batchGapMs
+: options.parallel === true
+/* При parallel вызовы обходят очередь; пауза между батчами лишняя (сотни мс впустую) */
+? 0
+: 80;
+
+const runner =
+()=>
+loadBybitHistoryImpl(
+symbol,
+tf,
+requests,
+gap
+);
 
 if(options.parallel){
-return loadBybitHistoryImpl(symbol, tf, requests);
+
+return runner();
+
 }
 
-const task = ()=>loadBybitHistoryImpl(symbol, tf, requests);
-const result = historyLoadQueue.then(task, task);
+const result =
+historyLoadQueue.then(
+runner,
+runner
+);
 
-historyLoadQueue = result.then(
+historyLoadQueue =
+result.then(
 ()=>{},
 ()=>{}
 );

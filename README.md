@@ -1,19 +1,30 @@
 # Crypto Terminal v2
 
-Мультичарт-терминал для криптовалют (Bybit) с дашбордом виджетов и отдельной страницей терминала.
+Мультичарт-терминал для криптовалют (Bybit) с сеткой скринера, дашбордом виджетов и страницей списка монет.
 
 ## Страницы
 
-- **index.html** — дашборд с сеткой 4 / 6 / 9 графиков, сохранение символа и таймфрейма в `localStorage`
-- **coins.html** — терминал: свечной график, RSI, список монет, избранное, фильтры рынков
+- **index.html** — главная: сетка скринера 4 / 6 / 9, сортировка и таймфрейм
+- **coins.html** — монеты: свечной график, RSI, список, избранное, фильтры рынков
+- **terminal.html** — терминал: дашборд с сеткой 4 / 6 / 9 виджетов, сохранение символа и ТФ в `localStorage`
+- **alerts/** — список алертов по горизонтальным лучам
+- **trade-calculator.html** — калькулятор суммы входа по риску и проценту стоп-лосса
+
+Старый адрес **screener.html** перенаправляет на главную.
 
 ## Запуск локально
+
+```bash
+./start.sh
+```
+
+или:
 
 ```bash
 python3 -m http.server 8080
 ```
 
-Откройте http://localhost:8080
+Откройте http://localhost:8080 (в `start.sh` по умолчанию порт **8080**).
 
 ## Деплой
 
@@ -29,12 +40,16 @@ python3 -m http.server 8080
 ```
 css/          — стили
 js/
-  api.js      — загрузка истории и списка инструментов
-  chart.js    — создание графиков Lightweight Charts
-  dashboard.js
-  terminal.js
-  ws.js       — realtime свечи
-  tickers.js  — обновление цен в списке
-  storage.js  — localStorage
+  api.js       — загрузка истории и списка инструментов
+  chart.js     — графики Lightweight Charts
+  dashboard.js — виджеты (terminal.html)
+  screener.js  — главная сетка (index.html)
+  terminal.js  — монеты (coins.html)
+  drawings.js  — лучи, фибо, каналы (графики)
+  alerts.js    — алерты (синхронизация с графиком)
+  ws.js        — realtime свечи Bybit
+  tickers.js   — опрос тикеров для списка / скринера
+  trade-calculator.js — страница калькулятора
+  storage.js
   indicators.js
 ```

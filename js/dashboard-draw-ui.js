@@ -1,3 +1,5 @@
+import { getAlertToggleButtonHtml } from "./draw-ui-shared.js";
+
 export function getWidgetToolbarHtml(){
 
 return `
@@ -74,6 +76,8 @@ return `
 <span class="draw-width-label">1px</span>
 </button>
 
+${getAlertToggleButtonHtml()}
+
 <button type="button" class="float-settings draw-settings-btn" title="Настройки">
 <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z"/></svg>
 </button>
@@ -93,9 +97,7 @@ return `
 <button type="button" class="width-option" data-width="4"><span class="width-sample" style="height:4px"></span><span>4</span></button>
 </div>
 
-<div class="draw-popover draw-settings-popover hidden">
-<label class="popover-label">Fib</label>
-<input type="text" class="draw-fib-input" placeholder="0, 23.6, 50, 100"/>
+<div class="draw-popover draw-settings-popover draw-settings-popover--fib hidden">
 </div>
 
 `;

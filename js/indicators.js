@@ -1,62 +1,163 @@
-export function calculateRSI(data, period=14){
+export const RSI_PERIOD = 14;
 
-if(data.length < period+1){
+/**
+ * RSI (Wilder / RMA), как «RSI(close, 14)» в TradingView.
+ * Первая точка — после period закрытых изменений без двойного учёта последнего движения.
+ */
+export function calculateRSI(
+data,
+period = RSI_PERIOD
+){
+
+if(
+data.length <
+period +
+1
+){
 return [];
+
 }
 
-let gains = 0;
-let losses = 0;
+let gains =
+0;
+let losses =
+0;
 
-const result = [];
-
-for(let i=1;i<=period;i++){
+for(
+let i =
+1;
+i <=
+period;
+i++
+){
 
 const diff =
-data[i].close - data[i-1].close;
+data[i].close -
+data[i - 1].close;
 
-if(diff >= 0){
-gains += diff;
+if(
+diff >=
+0
+){
+
+gains +=
+diff;
+
 }else{
-losses += Math.abs(diff);
-}
+
+losses +=
+Math.abs(diff);
 
 }
 
-let avgGain = gains / period;
-let avgLoss = losses / period;
+}
 
-for(let i=period;i<data.length;i++){
+let avgGain =
+gains /
+period;
+
+let avgLoss =
+losses /
+period;
+
+const epsilon =
+1e-10;
+
+const out =
+[];
+
+const rs0 =
+avgGain /
+(
+avgLoss ||
+epsilon
+);
+
+const rsi0 =
+100 -
+100 /
+(
+1 +
+rs0
+);
+
+out.push({
+
+time:data[period].time,
+value:
+rsi0
+
+});
+
+for(
+let i =
+period +
+1;
+i <
+data.length;
+i++
+){
 
 const diff =
-data[i].close - data[i-1].close;
+data[i].close -
+data[i - 1].close;
 
 const gain =
-diff > 0 ? diff : 0;
+diff >
+0
+? diff
+: 0;
 
 const loss =
-diff < 0 ? Math.abs(diff) : 0;
+diff <
+0
+? Math.abs(diff)
+: 0;
 
 avgGain =
-((avgGain*(period-1))+gain)/period;
+(
+avgGain *
+(
+period -
+1
+) +
+gain
+) /
+period;
 
 avgLoss =
-((avgLoss*(period-1))+loss)/period;
+(
+avgLoss *
+(
+period -
+1
+) +
+loss
+) /
+period;
 
 const rs =
-avgGain / (avgLoss || 1);
+avgGain /
+(
+avgLoss ||
+epsilon
+);
 
 const rsi =
-100 - (100/(1+rs));
+100 -
+100 /
+(
+1 +
+rs
+);
 
-result.push({
-
+out.push({
 time:data[i].time,
 value:rsi
-
 });
 
 }
 
-return result;
+return out;
 
 }

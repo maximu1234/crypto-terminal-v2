@@ -119,10 +119,11 @@ rightPriceScale:{
 
 borderColor:"#1f2937",
 
+/* LW: Normal=0 Log=1… Дефолт log — см. расчёт фибоначчи в drawings.js */
+
 mode:1,
 
 autoScale:true,
-
 scaleMargins:{
 top:0.12,
 bottom:0.12
@@ -438,30 +439,59 @@ Math.round(range.to - range.from)
 
 export function createRSIChart(container){
 
+const normalMode =
+LightweightCharts.PriceScaleMode !== undefined
+? LightweightCharts.PriceScaleMode.Normal
+: 0;
+
+const lineStyleDot =
+LightweightCharts.LineStyle !== undefined
+? LightweightCharts.LineStyle.Dotted
+: 1;
+
+const lineStyleDash =
+LightweightCharts.LineStyle !== undefined
+? LightweightCharts.LineStyle.Dashed
+: 2;
+
+const crosshairNormal =
+LightweightCharts.CrosshairMode !== undefined
+? LightweightCharts.CrosshairMode.Normal
+: 0;
+
 const chart =
 LightweightCharts.createChart(
 container,
 {
 
 layout:{
+/* Прозрачный: зона 30–70 рисуется DOM (#rsi-band) под канвой */
 background:{ color:"transparent" },
-textColor:"#797b85"
+textColor:"#b2b5be",
+fontFamily:
+"-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif"
 },
 
 grid:{
-vertLines:{ color:"#161b26" },
-horzLines:{ color:"#161b26" }
+vertLines:{
+color:"transparent",
+visible:false
+},
+horzLines:{
+visible:false
+}
 },
 
 rightPriceScale:{
-
-borderColor:"#1f2937",
-
+borderColor:"#2a2e39",
+mode:
+normalMode,
+autoScale:true,
+ticksVisible:false,
 scaleMargins:{
-top:0.2,
-bottom:0.2
+top:0,
+bottom:0
 }
-
 },
 
 timeScale:{
@@ -469,7 +499,40 @@ visible:false
 },
 
 crosshair:{
-mode:0
+mode:crosshairNormal,
+
+vertLine:{
+color:"rgba(120,126,146,0.45)",
+width:1,
+style:lineStyleDash,
+labelVisible:false
+},
+
+horzLine:{
+color:"rgba(120,126,146,0.35)",
+width:1,
+style:
+lineStyleDot,
+labelVisible:false
+}
+
+},
+
+handleScroll:{
+mouseWheel:false,
+pressedMouseMove:false,
+horzTouchDrag:false,
+vertTouchDrag:false
+},
+
+handleScale:{
+mouseWheel:false,
+pinch:false,
+axisPressedMouseMove:{
+time:false,
+price:false
+},
+axisDoubleClickReset:false
 }
 
 });
@@ -477,21 +540,65 @@ mode:0
 const series =
 chart.addLineSeries({
 
-color:"#a39cb9",
-lineWidth:2
+color:"#e6e8eb",
+
+lineWidth:1,
+
+lastValueVisible:false,
+
+priceLineVisible:false,
+
+crosshairMarkerVisible:false,
+
+autoscaleInfoProvider:()=>(
+{
+
+priceRange:{
+
+minValue:0,
+
+maxValue:100
+
+}
+
+}
+),
+
+priceFormat:{
+
+type:"price",
+
+precision:2,
+
+minMove:0.01
+
+}
 
 });
 
-[30,50,70].forEach(level=>{
+[
+{ price:70, axisLabelVisible:true },
+
+{ price:50, axisLabelVisible:false },
+
+{ price:30, axisLabelVisible:true }
+
+].forEach(({ price, axisLabelVisible })=>{
 
 series.createPriceLine({
 
-price:level,
-color:"#797b85",
+price,
+
+color:"rgba(174,174,182,0.35)",
+
 lineStyle:
-LightweightCharts.LineStyle.Dashed,
+lineStyleDot,
+
 lineWidth:1,
-axisLabelVisible:true
+
+axisLabelVisible,
+
+title:""
 
 });
 

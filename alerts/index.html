@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+<title>Алерты — Multichart</title>
+
+<link rel="stylesheet" href="../css/common.css">
+<link rel="stylesheet" href="../css/alerts.css">
+
+</head>
+
+<body>
+
+<header id="header">
+
+<div id="logo">Multichart</div>
+
+<nav class="menu">
+<a href="../index.html">Главная</a>
+<a href="../coins.html">Монеты</a>
+<a href="../terminal.html">Терминал</a>
+<a href="../alerts/" class="active">Алерты</a>
+<a href="../trade-calculator.html">Калькулятор</a>
+</nav>
+
+</header>
+
+<main id="alerts-page">
+
+<h1>Алерты</h1>
+
+<div id="alerts-empty" class="alerts-empty hidden">
+Нет установленных алертов. На графике выберите Horizontal Ray → «Сделать алертом» или ПКМ → «Поставить Алерт».
+</div>
+
+<div id="alerts-table-wrap" class="alerts-table-wrap hidden">
+
+<table class="alerts-table" id="alerts-table">
+<thead>
+<tr>
+<th>Дата установки</th>
+<th>Монета</th>
+<th>Цена алерта</th>
+<th class="alerts-col-delete">
+<label class="alerts-delete-all-label">
+<input type="checkbox" id="alerts-delete-all" title="Удалить все алерты"/>
+<span>Удалить все Алерты</span>
+</label>
+</th>
+</tr>
+</thead>
+<tbody id="alerts-tbody"></tbody>
+</table>
+
+</div>
+
+<p id="alerts-clear-drawings" class="alerts-clear-drawings">
+Удалить ВСЕ объекты рисования и Алерты на всех монетах (
+<span id="alerts-clear-drawings-action"></span>)
+<span id="alerts-clear-drawings-status" class="alerts-clear-drawings-status hidden"></span>
+</p>
+
+</main>
+
+<script type="module" src="../js/alerts-page.js?v=2"></script>
+
+</body>
+</html>

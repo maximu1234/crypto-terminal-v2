@@ -487,7 +487,7 @@ root.innerHTML = `
 
 </div>
 
-<button class="screener-open" type="button" title="Открыть в терминале">↗</button>
+<button class="screener-open" type="button" title="Открыть в Монетах">↗</button>
 
 </div>
 

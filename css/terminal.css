@@ -164,8 +164,78 @@ html,body{
 
 .float-color-btn:hover,
 .float-width-btn:hover,
-.float-settings:hover{
+.float-settings:hover,
+.float-alert:hover{
   background:#2a2e39;
+}
+
+.float-alert{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:36px;
+  height:32px;
+  padding:0;
+  border:none;
+  background:transparent;
+  color:#e5e7eb;
+  cursor:pointer;
+  border-radius:4px;
+  flex-shrink:0;
+}
+
+.float-alert.hidden,
+.float-color-btn.hidden,
+.float-width-btn.hidden{
+  display:none;
+}
+
+.float-alert.active{
+  background:#422006;
+  color:#facc15;
+}
+
+.float-alert .alert-icon{
+  flex-shrink:0;
+  color:currentColor;
+}
+
+.draw-context-menu{
+  position:absolute;
+  z-index:20;
+  padding:4px;
+  background:#1e222d;
+  border:1px solid #2a2e39;
+  border-radius:8px;
+  box-shadow:0 8px 24px rgba(0,0,0,0.5);
+  pointer-events:auto;
+}
+
+.draw-context-menu.hidden{
+  display:none;
+}
+
+.draw-context-alert-btn{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:36px;
+  height:32px;
+  padding:0;
+  border:none;
+  background:transparent;
+  color:#e5e7eb;
+  cursor:pointer;
+  border-radius:6px;
+}
+
+.draw-context-alert-btn:hover{
+  background:#2a2e39;
+  color:#facc15;
+}
+
+.draw-context-alert-btn .alert-icon{
+  color:#facc15;
 }
 
 .pencil-icon{
@@ -314,6 +384,77 @@ html,body{
   padding:10px 12px;
 }
 
+.draw-settings-popover--fib{
+  min-width:340px;
+  max-height:min(440px,calc(100vh - 120px));
+  overflow-y:auto;
+  box-sizing:border-box;
+}
+
+.fib-trend-label{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:12px;
+  color:#e5e7eb;
+  margin-bottom:10px;
+  cursor:pointer;
+  user-select:none;
+}
+
+.fib-trend-label input{
+  width:14px;
+  height:14px;
+  accent-color:#3b82f6;
+  cursor:pointer;
+}
+
+.fib-levels-head{
+  font-size:11px;
+  color:#9ca3af;
+  margin-bottom:4px;
+}
+
+.fib-levels-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px 14px;
+  margin-top:4px;
+}
+
+.fib-level-row{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  min-width:0;
+}
+
+.fib-level-row .fib-level-on{
+  flex:0 0 auto;
+  width:14px;
+  height:14px;
+  accent-color:#3b82f6;
+  cursor:pointer;
+}
+
+.fib-level-row .fib-level-val{
+  flex:1;
+  min-width:0;
+  width:auto;
+  box-sizing:border-box;
+  background:#111827;
+  border:1px solid #374151;
+  color:#e5e7eb;
+  border-radius:6px;
+  padding:5px 7px;
+  font-size:12px;
+}
+
+.fib-level-row .fib-level-val:focus{
+  outline:1px solid #3b82f6;
+  outline-offset:0;
+}
+
 .popover-label{
   display:block;
   font-size:11px;
@@ -330,6 +471,13 @@ html,body{
   border-radius:6px;
   padding:8px 10px;
   font-size:12px;
+}
+
+.draw-settings-popover input[type="checkbox"]{
+  width:auto;
+  padding:0;
+  background:transparent;
+  border:none;
 }
 
 .drawings-layer{
@@ -356,11 +504,13 @@ html,body{
   position:relative;
   height:18%;
   min-height:90px;
-  border-top:1px solid #1f2937;
+  border-top:1px solid #2a2e39;
   padding-right:12px;
   box-sizing:border-box;
+  background:#0b1220;
 }
 
+/* Зона между 30 и 70; шкала 0/100 — края панели RSI */
 #rsi-band{
   position:absolute;
   left:0;
@@ -368,7 +518,50 @@ html,body{
   top:30%;
   height:40%;
   background:#1e1e31;
+  pointer-events:none;
   z-index:0;
+}
+
+#rsi-hud{
+  position:absolute;
+  left:10px;
+  top:6px;
+  z-index:2;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  font-size:11px;
+  letter-spacing:0.01em;
+  pointer-events:none;
+  user-select:none;
+}
+
+.rsi-hud-title{
+  color:#d1d4dc;
+  font-variant-numeric:tabular-nums;
+}
+
+.rsi-hud-muted{
+  margin-left:6px;
+  color:#787b86;
+  font-weight:400;
+}
+
+#rsi-hud-value{
+  margin-left:2px;
+}
+
+.rsi-hud-badge{
+  display:inline-block;
+  min-width:40px;
+  padding:2px 8px;
+  border-radius:2px;
+  text-align:center;
+  font-variant-numeric:tabular-nums;
+  color:#f0f0f3;
+  background:linear-gradient(180deg,#7864a8 0%,#5d4b8a 100%);
+  border:1px solid rgba(142,123,198,0.5);
+  box-shadow:0 0 0 1px rgba(0,0,0,0.2) inset;
 }
 
 #rsi-chart{

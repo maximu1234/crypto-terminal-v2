@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+<title>Калькулятор сделки — Multichart</title>
+
+<link rel="stylesheet" href="css/common.css">
+<link rel="stylesheet" href="css/trade-calculator.css?v=2">
+
+</head>
+
+<body>
+
+<header id="header">
+
+<div id="logo">Multichart</div>
+
+<nav class="menu">
+<a href="index.html">Главная</a>
+<a href="coins.html">Монеты</a>
+<a href="terminal.html">Терминал</a>
+<a href="alerts/">Алерты</a>
+<a href="trade-calculator.html" class="active">Калькулятор</a>
+</nav>
+
+</header>
+
+<main id="calc-main">
+
+<h1>Калькулятор сделки</h1>
+
+<p class="calc-lead">
+Подберите сумму входа так, чтобы при срабатывании стоп-лосса на указанном расстоянии в процентах от точки входа убыток совпадал с выбранной суммой риска в долларах.
+</p>
+
+<div class="calc-card">
+
+<div class="calc-form">
+
+<div class="calc-field">
+
+<label for="stop-loss-pct">Процент стоп-лосса (%)</label>
+
+<div class="calc-input-wrap">
+<input id="stop-loss-pct" type="number" min="0" step="any" placeholder="Например, 2" inputmode="decimal"/>
+<span class="calc-suffix">%</span>
+</div>
+
+</div>
+
+<div class="calc-field">
+
+<label for="risk-usd">Сумма риска ($)</label>
+
+<div class="calc-input-wrap">
+<input id="risk-usd" type="number" min="0" step="any" placeholder="Например, 100" inputmode="decimal"/>
+<span class="calc-suffix">$</span>
+</div>
+
+</div>
+
+</div>
+
+<div id="calc-result" class="calc-result calc-result--error" aria-live="polite">
+
+<strong>Результат</strong>
+<span class="calc-result-value">Введите стоп и риск.</span>
+
+</div>
+
+<div class="calc-formula">
+Чтобы убыток при срабатывании стопа равнялся сумме риска <strong>R</strong> ($), размер позиции в долларах:
+<code>Сумма входа ($) = (R × 100) ÷ С</code>
+где <strong>С</strong> — расстояние до стопа в процентах от цены входа (как в вашем расширении: округление до целого доллара).
+</div>
+
+</div>
+
+</main>
+
+<script src="js/trade-calculator.js?v=2"></script>
+
+</body>
+</html>

@@ -1,15 +1,38 @@
-const DEFAULT_FIB_LEVELS = [
-0,
-0.236,
-0.382,
-0.5,
-0.618,
-0.786,
-1
-];
+import {
+ALERT_LINE_COLOR,
+ALERT_LINE_DASH,
+removeAlertByShapeId,
+syncAlertsForSymbol,
+upsertAlert
+} from "./alerts.js";
+
+import {
+ALARM_ICON_SVG,
+TRASH_ICON_SVG
+} from "./draw-ui-shared.js";
+
+const DEFAULT_FIB_SPEC = Object.freeze([
+{ v:0, enabled:true },
+{ v:0.382, enabled:true },
+{ v:0.618, enabled:true },
+{ v:1, enabled:true },
+{ v:-1, enabled:true },
+{ v:-2, enabled:true },
+{ v:-2.618, enabled:true },
+{ v:2.414, enabled:false },
+{ v:-3, enabled:false },
+{ v:0.25, enabled:true },
+{ v:0.5, enabled:true },
+{ v:0.75, enabled:true },
+{ v:-0.25, enabled:true },
+{ v:-0.5, enabled:true },
+{ v:-1.5, enabled:true },
+{ v:-1.44, enabled:true },
+{ v:-1.44, enabled:false },
+{ v:-2.618, enabled:false }
+]);
 
 const STROKE = "#3b82f6";
-const RULER_STROKE = "#22c55e";
 const HANDLE_FILL = "#2563eb";
 const HANDLE_STROKE = "#ffffff";
 const WIDTH_OPTIONS = [1, 2, 3, 4];
@@ -100,40 +123,315 @@ py - (y1 + t * dy)
 
 }
 
-function parseFibLevels(text){
+function cloneDefaultFibRows(){
 
-const parts =
-text
-.split(/[,;\s]+/)
-.map(s=>s.trim())
-.filter(Boolean);
+return DEFAULT_FIB_SPEC.map(x=>({
+v:x.v,
+enabled:!!x.enabled
+}));
 
-if(!parts.length){
-return [...DEFAULT_FIB_LEVELS];
 }
 
-return parts.map(v=>{
+function migrateFibFromNumberArray(arr){
 
-const n = Number(v.replace("%", ""));
+const next =
+cloneDefaultFibRows().map(r=>({
+...r,
+enabled:false
+}));
 
-if(!Number.isFinite(n)){
+const wanted =
+arr.filter(x=>
+typeof x === "number" &&
+Number.isFinite(x)
+);
+
+if(!wanted.length){
+return cloneDefaultFibRows();
+
+}
+
+wanted.forEach(n=>{
+
+next.forEach(r=>{
+
+if(
+Math.abs(n - r.v) <
+1e-6
+){
+
+r.enabled = true;
+
+}
+
+});
+
+});
+
+if(
+!next.some(r=>r.enabled)
+){
+
+DEFAULT_FIB_SPEC.forEach((d,i)=>{
+
+next[i].enabled = d.enabled;
+
+});
+
+}
+
+return next;
+
+}
+
+function migrateFibFromObjectRows(rows){
+
+const next =
+cloneDefaultFibRows();
+
+rows.forEach((cell,i)=>{
+
+if(
+i >= next.length ||
+!cell ||
+typeof cell !== "object"
+){
+return;
+
+}
+
+if(
+typeof cell.v === "number" &&
+Number.isFinite(cell.v)
+){
+
+next[i].v = cell.v;
+
+}
+
+if(
+typeof cell.enabled ===
+"boolean"
+){
+
+next[i].enabled = cell.enabled;
+
+}
+
+});
+
+return next;
+
+}
+
+function normalizeFibLevelsShape(raw){
+
+if(
+!raw ||
+!Array.isArray(raw) ||
+!raw.length
+){
+
+return cloneDefaultFibRows();
+
+}
+
+if(
+typeof raw[0] === "number"
+){
+
+return migrateFibFromNumberArray(raw);
+
+}
+
+if(
+typeof raw[0] === "object"
+){
+
+return migrateFibFromObjectRows(raw);
+
+}
+
+return cloneDefaultFibRows();
+
+}
+
+function formatFibInputValue(v){
+
+if(!Number.isFinite(v)){
+return "0";
+}
+
+if(
+Number.isInteger(v)
+){
+
+return String(v);
+
+}
+
+const t =
+Number(
+v.toFixed(6)
+);
+
+if(
+Number.isInteger(t)
+){
+
+return String(t);
+
+}
+
+return String(t);
+
+}
+
+function formatFibLabel(v){
+
+if(!Number.isFinite(v)){
+return "";
+}
+
+if(
+Number.isInteger(v)
+){
+
+return String(v);
+
+}
+
+const rounded =
+Math.round(v * 1e6) / 1e6;
+
+if(
+Number.isInteger(rounded)
+){
+
+return String(rounded);
+
+}
+
+let s =
+rounded.toFixed(6).replace(/0+$/, "");
+
+if(s.endsWith(".")){
+s = s.slice(0,-1);
+
+}
+
+return s;
+
+}
+
+function parseFibRatioField(text){
+
+const s =
+String(text ?? "")
+.trim()
+.replace(
+/,/g,
+"."
+);
+
+if(!s){
 return null;
 }
 
-return n > 1 ? n / 100 : n;
+const n =
+Number(s);
 
-}).filter(n=>n != null && n >= 0 && n <= 1);
+return Number.isFinite(n)
+? n
+: null;
 
 }
 
-function levelsToText(levels){
+function fibPriceAtRatio(
+anchorA,
+anchorB,
+ratio,
+logarithmic
+){
 
-return levels
-.map(l=>{
-const pct = l * 100;
-return Number.isInteger(pct) ? String(pct) : pct.toFixed(1);
-})
-.join(", ");
+const p1 =
+Number(anchorA);
+const p2 =
+Number(anchorB);
+
+if(
+!Number.isFinite(p1) ||
+!Number.isFinite(p2) ||
+!Number.isFinite(ratio)
+){
+
+return NaN;
+
+}
+
+if(
+logarithmic &&
+p1 > 0 &&
+p2 > 0
+){
+
+return (
+p1 * Math.pow(
+p2 / p1,
+ratio
+)
+);
+
+}
+
+return (
+p1 + (p2 - p1) * ratio
+);
+
+}
+
+function getFibRows(shape){
+
+const raw =
+shape.fibLevels ?? shape.levels;
+
+return normalizeFibLevelsShape(raw);
+
+}
+
+function isSeriesLogarithmic(s){
+
+try{
+
+const ps =
+typeof s?.priceScale ===
+"function"
+? s.priceScale()
+: null;
+
+const opts =
+typeof ps?.options ===
+"function"
+? ps.options()
+: ps?.options;
+
+const mode =
+opts?.mode;
+
+if(mode === 1){
+return true;
+}
+
+if(mode === 0){
+return false;
+
+}
+
+}catch(_){
+}
+
+/* в chart.js дефолт — log */
+return true;
 
 }
 
@@ -225,9 +523,6 @@ pickUi(uiRoot, "draw-width-preview", ".draw-width-preview");
 const widthPopover =
 pickUi(uiRoot, "draw-width-popover", ".draw-width-popover");
 
-const fibInput =
-pickUi(uiRoot, "fib-levels-input", ".draw-fib-input");
-
 const settingsPopover =
 pickUi(uiRoot, "draw-settings-popover", ".draw-settings-popover");
 
@@ -237,8 +532,13 @@ pickUi(uiRoot, "draw-settings-btn", ".draw-settings-btn");
 const deleteOneBtn =
 pickUi(uiRoot, "draw-delete-one", ".draw-delete-one-btn");
 
+const alertToggleBtn =
+pickUi(uiRoot, "draw-alert-toggle", ".draw-alert-toggle");
+
 const dragHandle =
 pickUi(uiRoot, "style-bar-drag", ".draw-style-drag");
+
+let contextMenuEl = null;
 
 let activeColor = STROKE;
 
@@ -248,8 +548,6 @@ let selectedId = null;
 let placement = null;
 let previewPoint = null;
 let previewXY = null;
-let ruler = null;
-let shiftDown = false;
 let dragState = null;
 let blockChartClick = false;
 
@@ -258,8 +556,15 @@ let clickHandler = null;
 let crosshairHandler = null;
 let rangeHandler = null;
 
+let fibPanelBuilt = false;
+let fibApplyTimer = null;
+
+let chartApplyPatchRestore = null;
+
 function defaultsStorageKey(name){
+
 return `draw_defaults_${name}`;
+
 }
 
 function loadToolDefaults(){
@@ -331,21 +636,39 @@ activeColor = partial.color;
 
 function baseDefaultStyle(type){
 
-const global = loadUserPrefs();
-const saved = toolDefaults[type];
+const global =
+loadUserPrefs();
+const saved =
+toolDefaults[type];
 
-return {
-color: global.color || saved?.color || STROKE,
-lineWidth: global.lineWidth ?? saved?.lineWidth ?? 1,
-levels: global.levels?.length
-? [...global.levels]
-: saved?.levels?.length
-? [...saved.levels]
-: [...DEFAULT_FIB_LEVELS]
+const out =
+{
+color: global.color ||
+saved?.color ||
+STROKE,
+lineWidth: global.lineWidth ??
+saved?.lineWidth ??
+1
 };
 
+if(type === "fib"){
+out.fibLevels =
+normalizeFibLevelsShape(
+global.fibLevels ||
+global.levels ||
+saved?.fibLevels ||
+saved?.levels ||
+null
+);
+out.fibShowTrendLine =
+global.fibShowTrendLine ??
+saved?.fibShowTrendLine ??
+true;
 }
 
+return out;
+
+}
 function normalizeTime(time){
 
 if(typeof time === "number"){
@@ -531,20 +854,32 @@ shape.color = shape.color || STROKE;
 shape.lineWidth = shape.lineWidth || 1;
 
 if(shape.type === "fib"){
-shape.levels = shape.levels?.length
-? [...shape.levels]
-: [...DEFAULT_FIB_LEVELS];
+
+shape.fibLevels =
+normalizeFibLevelsShape(
+shape.fibLevels ??
+shape.levels
+);
+
+shape.fibShowTrendLine =
+typeof shape.fibShowTrendLine ===
+"boolean"
+? shape.fibShowTrendLine
+:
+typeof shape.showFibTrend ===
+"boolean"
+? !!shape.showFibTrend
+:true;
+
+delete shape.levels;
+delete shape.showFibTrend;
+
+}
+if(shape.type === "hray" && shape.isAlert){
+shape.lineWidth = 1;
 }
 
 return shape;
-
-}
-
-function getShapeLevels(shape){
-
-return shape.levels?.length
-? shape.levels
-: DEFAULT_FIB_LEVELS;
 
 }
 
@@ -608,10 +943,13 @@ drawings = [];
 
 }
 
+syncAlertsForSymbol(getSymbol(), drawings);
+
 }
 
 function saveDrawings(){
 localStorage.setItem(storageKey(), JSON.stringify(drawings));
+syncAlertsForSymbol(getSymbol(), drawings);
 }
 
 function getSelected(){
@@ -641,16 +979,257 @@ return tool;
 return null;
 }
 
+function ensureFibSettingsPanel(){
+
+if(
+!settingsPopover ||
+fibPanelBuilt
+){
+return;
+}
+
+fibPanelBuilt = true;
+
+settingsPopover.innerHTML =
+`
+<div class="fib-settings">
+<label class="fib-trend-label">
+<input type="checkbox" id="fib-show-trend-line" checked />
+<span>Линия тренда</span>
+</label>
+<div class="fib-levels-head">Уровни (один цвет — с панели карандаша)</div>
+<div class="fib-levels-grid" id="fib-level-rows-root"></div>
+</div>
+`;
+
+const root =
+settingsPopover.querySelector("#fib-level-rows-root");
+
+DEFAULT_FIB_SPEC.forEach((spec,i)=>{
+
+const row =
+document.createElement("div");
+
+row.className = "fib-level-row";
+row.dataset.fibIndex =
+String(i);
+
+row.innerHTML =
+`
+<input type="checkbox" class="fib-level-on"/>
+<input type="text" class="fib-level-val" autocomplete="off" spellcheck="false"/>
+`;
+
+const on =
+row.querySelector(".fib-level-on");
+const val =
+row.querySelector(".fib-level-val");
+
+if(on){
+on.checked = !!spec.enabled;
+}
+
+if(val){
+val.value =
+formatFibInputValue(spec.v);
+}
+
+root.appendChild(row);
+
+});
+
+settingsPopover.addEventListener("change", e=>{
+
+if(
+!alive ||
+!isFibContext()
+){
+return;
+}
+
+if(
+e.target?.id === "fib-show-trend-line" ||
+e.target?.classList.contains("fib-level-on")
+){
+scheduleFibApplyImmediate();
+}
+
+});
+
+settingsPopover.addEventListener("input", e=>{
+
+if(
+!alive ||
+!isFibContext()
+){
+return;
+}
+
+if(
+e.target?.classList.contains("fib-level-val")
+){
+scheduleFibApplyDebounced();
+}
+
+});
+
+}
+
+function scheduleFibApplyImmediate(){
+
+if(fibApplyTimer){
+clearTimeout(fibApplyTimer);
+fibApplyTimer = null;
+}
+
+applyStyleFromUI();
+
+}
+
+function scheduleFibApplyDebounced(){
+
+if(fibApplyTimer){
+clearTimeout(fibApplyTimer);
+}
+
+fibApplyTimer =
+setTimeout(()=>{
+
+fibApplyTimer = null;
+applyStyleFromUI();
+
+},320);
+
+}
+
+function readFibPanelFromDOM(){
+
+ensureFibSettingsPanel();
+
+const template =
+cloneDefaultFibRows();
+
+const trendEl =
+settingsPopover.querySelector("#fib-show-trend-line");
+
+const fibShowTrendLine =
+!!(trendEl?.checked ?? true);
+
+settingsPopover.querySelectorAll(".fib-level-row").forEach((row,i)=>{
+
+if(
+i >= template.length
+){
+return;
+}
+
+const valInp =
+row.querySelector(".fib-level-val");
+const chk =
+row.querySelector(".fib-level-on");
+
+const parsed =
+parseFibRatioField(
+valInp?.value
+);
+
+template[i].v =
+parsed != null
+? parsed
+: DEFAULT_FIB_SPEC[i].v;
+
+template[i].enabled =
+!!chk?.checked;
+
+});
+
+return {
+fibLevels:template,
+fibShowTrendLine
+};
+
+}
+
+function fillFibSettingsPanel(
+fibLevels,
+fibShowTrendLine
+){
+
+ensureFibSettingsPanel();
+
+const rows =
+normalizeFibLevelsShape(
+fibLevels
+);
+
+const trendEl =
+settingsPopover.querySelector("#fib-show-trend-line");
+
+if(trendEl){
+
+trendEl.checked =
+fibShowTrendLine !== false;
+
+}
+
+rows.forEach((row,i)=>{
+
+const wrap =
+settingsPopover.querySelector(
+`.fib-level-row[data-fib-index="${i}"]`
+);
+
+if(!wrap){
+return;
+}
+
+const on =
+wrap.querySelector(".fib-level-on");
+const val =
+wrap.querySelector(".fib-level-val");
+
+if(on){
+on.checked = !!row.enabled;
+}
+
+if(val){
+val.value =
+formatFibInputValue(row.v);
+}
+
+});
+
+}
+
 function readStyleFromUI(){
 
 const widthActive =
 widthPopover?.querySelector(".width-option.active");
 
-return {
-color: activeColor || STROKE,
-lineWidth: Number(widthActive?.dataset.width || 1),
-levels: parseFibLevels(fibInput?.value || "")
+const base =
+{
+color: activeColor ||
+STROKE,
+lineWidth: Number(
+widthActive?.dataset.width || 1
+)
 };
+
+const tgt =
+getStyleTargetType();
+
+if(
+tgt === "fib" ||
+tool === "fib"
+){
+
+Object.assign(
+base,
+readFibPanelFromDOM()
+);
+}
+
+return base;
 
 }
 
@@ -696,7 +1275,12 @@ if(!styleBar){
 return;
 }
 
-updateColorStripe(style.color);
+const stripeColor =
+style.isAlert && style.savedColor
+? style.savedColor
+: style.color;
+
+updateColorStripe(stripeColor);
 setActiveWidth(style.lineWidth);
 
 settingsBtn?.classList.toggle(
@@ -705,7 +1289,10 @@ type !== "fib"
 );
 
 if(type === "fib"){
-fibInput.value = levelsToText(style.levels);
+fillFibSettingsPanel(
+style.fibLevels,
+style.fibShowTrendLine
+);
 }else{
 settingsPopover?.classList.add("hidden");
 }
@@ -738,12 +1325,15 @@ const type = getStyleTargetType();
 
 if(sel){
 fillStyleUI(sel, sel.type);
+updateAlertStyleUI(sel);
 return;
 }
 
 if(tool !== "cursor"){
 fillStyleUI(baseDefaultStyle(tool), tool);
 }
+
+updateAlertStyleUI(null);
 
 }
 
@@ -756,22 +1346,49 @@ if(!type){
 return;
 }
 
-saveUserPrefs({
-color: style.color,
-lineWidth: style.lineWidth,
-levels: style.levels
-});
+const prefsPayload =
+{
+color:style.color,
+lineWidth:style.lineWidth
+};
 
-const sel = getSelected();
+if(style.fibLevels){
+
+prefsPayload.fibLevels =
+style.fibLevels;
+
+prefsPayload.fibShowTrendLine =
+style.fibShowTrendLine !== false;
+
+}
+
+saveUserPrefs(prefsPayload);
+
+const sel =
+getSelected();
 
 if(sel){
+
+if(
+sel.type === "hray" &&
+sel.isAlert
+){
+sel.lineWidth = style.lineWidth;
+}else{
 sel.color = style.color;
 sel.lineWidth = style.lineWidth;
-if(sel.type === "fib"){
-sel.levels = style.levels;
 }
+
+if(sel.type === "fib"){
+sel.fibLevels = style.fibLevels;
+sel.fibShowTrendLine =
+style.fibShowTrendLine !== false;
+
+}
+
 saveDrawings();
 redraw();
+
 }
 
 if(tool !== "cursor"){
@@ -866,10 +1483,114 @@ redraw();
 
 function shapeStyle(shape){
 
+if(shape.isAlert){
+return {
+color: ALERT_LINE_COLOR,
+width: 1,
+dash: ALERT_LINE_DASH
+};
+}
+
 return {
 color: shape.color || STROKE,
-width: shape.lineWidth || 1
+width: shape.lineWidth || 1,
+dash: null
 };
+
+}
+
+function toggleAlertOnShape(shape){
+
+if(!shape || shape.type !== "hray"){
+return;
+}
+
+if(shape.isAlert){
+shape.isAlert = false;
+delete shape.alertCreatedAt;
+
+if(shape.savedColor){
+shape.color = shape.savedColor;
+delete shape.savedColor;
+}
+
+if(shape.savedLineWidth != null){
+shape.lineWidth = shape.savedLineWidth;
+delete shape.savedLineWidth;
+}
+
+removeAlertByShapeId(shape.id);
+
+}else{
+
+shape.savedColor = shape.color;
+
+if(shape.savedLineWidth == null){
+shape.savedLineWidth = shape.lineWidth || 1;
+}
+
+shape.isAlert = true;
+shape.lineWidth = 1;
+shape.alertCreatedAt = Date.now();
+
+upsertAlert({
+id: shape.id,
+shapeId: shape.id,
+symbol: getSymbol(),
+price: Number(shape.price),
+createdAt: shape.alertCreatedAt
+});
+
+}
+
+saveDrawings();
+updateStyleBar();
+redraw();
+
+}
+
+function updateAlertStyleUI(sel){
+
+const isHray =
+sel?.type === "hray";
+
+const isAlert =
+!!sel?.isAlert;
+
+alertToggleBtn?.classList.toggle(
+"hidden",
+!isHray
+);
+
+alertToggleBtn?.classList.toggle(
+"active",
+isAlert
+);
+
+if(alertToggleBtn){
+alertToggleBtn.title = isAlert
+? "Снять алерт"
+: "Сделать алертом";
+
+alertToggleBtn.setAttribute(
+"aria-label",
+alertToggleBtn.title
+);
+
+alertToggleBtn.innerHTML = isAlert
+? TRASH_ICON_SVG
+: ALARM_ICON_SVG;
+}
+
+colorBtn?.classList.toggle(
+"hidden",
+isAlert
+);
+
+widthBtn?.classList.toggle(
+"hidden",
+isAlert
+);
 
 }
 
@@ -1110,6 +1831,135 @@ window.addEventListener("mouseup", onEditUp);
 
 }
 
+function setupContextMenu(){
+
+contextMenuEl =
+document.createElement("div");
+
+contextMenuEl.className =
+"draw-context-menu hidden";
+
+contextMenuEl.innerHTML = `
+<button type="button" class="draw-context-alert-btn" title="Поставить алерт" aria-label="Поставить алерт">
+${ALARM_ICON_SVG}
+</button>
+`;
+
+wrapEl.appendChild(contextMenuEl);
+
+let contextShapeId = null;
+
+function hideContextMenu(){
+
+contextMenuEl.classList.add("hidden");
+contextShapeId = null;
+
+}
+
+const contextBtn =
+contextMenuEl.querySelector(
+".draw-context-alert-btn"
+);
+
+contextBtn?.addEventListener("click", e=>{
+
+e.stopPropagation();
+
+const shape =
+drawings.find(d=>d.id === contextShapeId);
+
+if(shape){
+toggleAlertOnShape(shape);
+}
+
+hideContextMenu();
+
+});
+
+wrapEl.addEventListener("contextmenu", e=>{
+
+if(!isActive()){
+return;
+}
+
+const { x, y } =
+pointerFromEvent(e);
+
+const id =
+hitTest(x, y);
+
+if(!id){
+return;
+}
+
+const shape =
+drawings.find(d=>d.id === id);
+
+if(!shape || shape.type !== "hray"){
+return;
+}
+
+e.preventDefault();
+e.stopPropagation();
+
+selectedId = id;
+updateStyleBar();
+redraw();
+
+contextShapeId = id;
+
+if(contextBtn){
+const isAlert = shape.isAlert;
+
+contextBtn.title = isAlert
+? "Снять алерт"
+: "Поставить алерт";
+
+contextBtn.setAttribute(
+"aria-label",
+contextBtn.title
+);
+
+contextBtn.innerHTML = isAlert
+? TRASH_ICON_SVG
+: ALARM_ICON_SVG;
+}
+
+const rect =
+wrapEl.getBoundingClientRect();
+
+contextMenuEl.style.left =
+`${e.clientX - rect.left}px`;
+
+contextMenuEl.style.top =
+`${e.clientY - rect.top}px`;
+
+contextMenuEl.classList.remove("hidden");
+
+});
+
+document.addEventListener("click", e=>{
+
+if(
+!contextMenuEl.contains(e.target)
+){
+hideContextMenu();
+}
+
+});
+
+document.addEventListener("keydown", e=>{
+
+if(e.key === "Escape"){
+hideContextMenu();
+}
+
+});
+
+return hideContextMenu;
+
+}
+
 function drawSelectionHandles(ctx, shape){
 
 if(shape.type === "trendline" || shape.type === "fib"){
@@ -1214,10 +2064,6 @@ if(placement){
 drawPlacementPreview(ctx, w, h);
 }
 
-if(ruler){
-drawRulerShape(ctx, ruler, w, h);
-}
-
 }catch(err){
 console.warn("redraw", err);
 }
@@ -1241,7 +2087,7 @@ ctx.setLineDash([]);
 
 function drawShape(ctx, shape, w, h){
 
-const { color, width } =
+const { color, width, dash } =
 shapeStyle(shape);
 
 if(shape.type === "trendline"){
@@ -1250,7 +2096,7 @@ const a = toXY(shape.p1);
 const b = toXY(shape.p2);
 
 if(a && b){
-drawLine(ctx, a.x, a.y, b.x, b.y, color, width);
+drawLine(ctx, a.x, a.y, b.x, b.y, color, width, dash);
 }
 
 }
@@ -1270,7 +2116,8 @@ anchor.y,
 w,
 anchor.y,
 color,
-width
+width,
+dash
 );
 }
 
@@ -1288,45 +2135,87 @@ drawChannel(ctx, shape, color, width);
 
 function drawFib(ctx, shape, color, width){
 
-const a = toXY(shape.p1);
-const b = toXY(shape.p2);
+const a =
+toXY(shape.p1);
+const b =
+toXY(shape.p2);
 
 if(!a || !b){
 return;
 }
 
-const x1 = Math.min(a.x, b.x);
-const x2 = Math.max(a.x, b.x);
-const levels = getShapeLevels(shape);
+const x1 =
+Math.min(a.x, b.x);
+const x2 =
+Math.max(a.x, b.x);
 
-levels.forEach(level=>{
+const useLog =
+isSeriesLogarithmic(series);
+
+getFibRows(shape).forEach(row=>{
+
+if(!row.enabled){
+return;
+}
 
 const price =
-shape.p1.price +
-(shape.p2.price - shape.p1.price) * level;
+fibPriceAtRatio(
+shape.p1.price,
+shape.p2.price,
+row.v,
+useLog
+);
 
-const y = series.priceToCoordinate(price);
+if(
+!Number.isFinite(price)
+){
+return;
+}
+
+const y =
+series.priceToCoordinate(price);
 
 if(y == null){
 return;
 }
 
-drawLine(ctx, x1, y, x2, y, color, width);
+drawLine(
+ctx,
+x1,
+y,
+x2,
+y,
+color,
+width
+);
 
 ctx.fillStyle = color;
 ctx.font = "11px Arial";
 ctx.fillText(
-`${(level * 100).toFixed(1)}%`,
+formatFibLabel(row.v),
 x2 + 4,
 y + 4
 );
 
 });
 
-drawLine(ctx, a.x, a.y, b.x, b.y, color, width);
+if(
+shape.fibShowTrendLine !== false
+){
+
+drawLine(
+ctx,
+a.x,
+a.y,
+b.x,
+b.y,
+color,
+width
+);
 
 }
 
+}
 function drawChannelAtXY(ctx, p1, p2, p3, color, width){
 
 if(!p1 || !p2 || !p3){
@@ -1366,38 +2255,6 @@ const p2 = toXY(shape.p2);
 const p3 = toXY(shape.p3);
 
 drawChannelAtXY(ctx, p1, p2, p3, color, width);
-
-}
-
-function drawRulerShape(ctx, data, w, h, color = RULER_STROKE){
-
-const p1 = data.p1 ? toXY(data.p1) : null;
-const p2Raw = data.p2 || data.preview;
-const p2 = p2Raw ? toXY(p2Raw) : null;
-
-if(!p1 || !p2){
-return;
-}
-
-drawLine(ctx, p1.x, p1.y, p2.x, p2.y, color, 2);
-
-const pct =
-((data.p2?.price ?? p2Raw.price) - data.p1.price) /
-data.p1.price *
-100;
-
-const label =
-`${pct >= 0 ? "+" : ""}${pct.toFixed(2)}%`;
-
-const midX = (p1.x + p2.x) / 2;
-const midY = (p1.y + p2.y) / 2;
-
-ctx.fillStyle = color;
-ctx.font = "bold 13px Arial";
-ctx.strokeStyle = "#0b1220";
-ctx.lineWidth = 3;
-ctx.strokeText(label, midX + 8, midY - 8);
-ctx.fillText(label, midX + 8, midY - 8);
 
 }
 
@@ -1472,11 +2329,15 @@ return;
 
 const previewPts = [...pts, previewPoint];
 
-const previewShape = {
+const previewShape =
+{
 type: placement.type,
 color: style.color,
 lineWidth: style.lineWidth,
-levels: style.levels,
+fibLevels:
+style.fibLevels,
+fibShowTrendLine:
+style.fibShowTrendLine,
 p1: previewPts[0],
 p2: previewPts[1],
 p3: previewPts[2],
@@ -1541,34 +2402,66 @@ anchor.y
 
 if(d.type === "fib"){
 
-const a = toXY(d.p1);
-const b = toXY(d.p2);
+const a =
+toXY(d.p1);
+const b =
+toXY(d.p2);
 
 if(a && b){
 
-getShapeLevels(d).forEach(level=>{
+const useLog =
+isSeriesLogarithmic(series);
+
+getFibRows(d).forEach(row=>{
+
+if(!row.enabled){
+return;
+}
 
 const price =
-d.p1.price +
-(d.p2.price - d.p1.price) * level;
+fibPriceAtRatio(
+d.p1.price,
+d.p2.price,
+row.v,
+useLog
+);
 
-const y = series.priceToCoordinate(price);
+if(!Number.isFinite(price)){
+return;
+}
+
+const y =
+series.priceToCoordinate(price);
 
 if(y != null){
-dist = Math.min(dist, Math.abs(py - y));
+dist = Math.min(
+dist,
+Math.abs(py - y)
+);
+
 }
 
 });
 
+if(d.fibShowTrendLine !== false){
+
 dist = Math.min(
 dist,
-distToSegment(px, py, a.x, a.y, b.x, b.y)
+distToSegment(
+px,
+py,
+a.x,
+a.y,
+b.x,
+b.y
+)
 );
 
 }
 
 }
 
+}
 if(d.type === "channel"){
 
 const a = toXY(d.p1);
@@ -1619,7 +2512,12 @@ id: uid(),
 type,
 color: style.color,
 lineWidth: style.lineWidth,
-levels: style.levels,
+fibLevels:type === "fib"
+? normalizeFibLevelsShape(style.fibLevels)
+:undefined,
+fibShowTrendLine:type === "fib"
+? style.fibShowTrendLine !== false
+:undefined,
 ...data
 });
 
@@ -1689,47 +2587,6 @@ redraw();
 
 }
 
-function clearRuler(){
-
-ruler = null;
-redraw();
-
-}
-
-function handleRulerClick(param){
-
-const point = pointFromParam(param);
-
-if(!point){
-return;
-}
-
-if(!ruler || !ruler.p1){
-
-ruler = { p1: point, p2: null, preview: null };
-
-}else if(!ruler.p2){
-
-ruler.p2 = point;
-ruler.preview = null;
-
-setTimeout(()=>{
-if(ruler?.p2){
-ruler = null;
-redraw();
-}
-}, 8000);
-
-}else{
-
-ruler = { p1: point, p2: null, preview: null };
-
-}
-
-redraw();
-
-}
-
 function handleToolClick(param){
 
 const point = pointFromParam(param);
@@ -1766,7 +2623,6 @@ function setTool(next){
 
 tool = next;
 cancelPlacement();
-clearRuler();
 
 tools.querySelectorAll("[data-draw-tool]").forEach(btn=>{
 btn.classList.toggle(
@@ -1785,6 +2641,13 @@ if(!selectedId){
 return;
 }
 
+const removed =
+drawings.find(d=>d.id === selectedId);
+
+if(removed?.isAlert){
+removeAlertByShapeId(removed.id);
+}
+
 drawings = drawings.filter(d=>d.id !== selectedId);
 selectedId = null;
 saveDrawings();
@@ -1794,6 +2657,10 @@ redraw();
 }
 
 function clearAll(){
+
+drawings
+.filter(d=>d.isAlert)
+.forEach(d=>removeAlertByShapeId(d.id));
 
 drawings = [];
 selectedId = null;
@@ -1810,16 +2677,17 @@ blockChartClick = false;
 return;
 }
 
-if(shiftDown){
-handleRulerClick(param);
-return;
-}
-
 handleToolClick(param);
 
 };
 
 crosshairHandler = param=>{
+
+previewPoint = pointFromParam(param);
+
+previewXY = param.point
+? { x: param.point.x, y: param.point.y }
+: null;
 
 const channelPreview =
 placement?.type === "channel" &&
@@ -1828,28 +2696,44 @@ placement.points.length < 3;
 
 const needsPreview =
 placement ||
-channelPreview ||
-(ruler && ruler.p1 && !ruler.p2);
+channelPreview;
 
 if(!needsPreview){
 return;
-}
-
-previewPoint = pointFromParam(param);
-
-previewXY = param.point
-? { x: param.point.x, y: param.point.y }
-: null;
-
-if(ruler && ruler.p1 && !ruler.p2){
-ruler.preview = previewPoint;
 }
 
 redraw();
 
 };
 
-rangeHandler = ()=> redraw();
+rangeHandler =
+() =>
+redraw();
+
+const origChartApplyOptions =
+chart.applyOptions.bind(chart);
+
+chartApplyPatchRestore =
+()=>{
+chart.applyOptions = origChartApplyOptions;
+chartApplyPatchRestore = null;
+};
+
+chart.applyOptions =
+function(opts){
+
+origChartApplyOptions(opts);
+
+if(
+alive &&
+opts &&
+opts.rightPriceScale !==
+undefined
+){
+redraw();
+}
+
+};
 
 chart.subscribeClick(clickHandler);
 chart.subscribeCrosshairMove(crosshairHandler);
@@ -1861,19 +2745,24 @@ if(!alive || !isActive()){
 return;
 }
 
-if(e.key === "Shift"){
-shiftDown = true;
-}
-
 if(e.key === "Escape"){
 cancelPlacement();
-clearRuler();
 setTool("cursor");
 }
 
 if(e.key === "Delete" || e.key === "Backspace"){
 
-if(document.activeElement?.tagName !== "INPUT"){
+const ae =
+document.activeElement;
+const tag =
+ae?.tagName;
+
+if(
+tag !== "INPUT" &&
+tag !== "TEXTAREA" &&
+!ae?.isContentEditable
+){
+
 e.preventDefault();
 deleteSelected();
 }
@@ -1882,33 +2771,24 @@ deleteSelected();
 
 };
 
-const onKeyUp = e=>{
-
-if(!alive || !isActive()){
-return;
-}
-
-if(e.key === "Shift"){
-shiftDown = false;
-}
-
-};
-
 window.addEventListener("keydown", onKeyDown);
-window.addEventListener("keyup", onKeyUp);
 
 tools.querySelectorAll("[data-draw-tool]").forEach(btn=>{
 btn.addEventListener("click", ()=>{
 
-if(
-tool === btn.dataset.drawTool &&
-tool !== "cursor"
-){
+const next = btn.dataset.drawTool;
+
+if(next === "cursor"){
 setTool("cursor");
 return;
 }
 
-setTool(btn.dataset.drawTool);
+if(tool === next){
+setTool("cursor");
+return;
+}
+
+setTool(next);
 
 });
 });
@@ -2034,21 +2914,22 @@ settingsPopover?.classList.remove("hidden");
 
 });
 
-fibInput?.addEventListener("change", ()=>{
-applyStyleFromUI();
-});
-
-fibInput?.addEventListener("keydown", e=>{
-
-if(e.key === "Enter"){
-applyStyleFromUI();
-settingsPopover?.classList.add("hidden");
-}
-
-});
-
 deleteOneBtn?.addEventListener("click", ()=>{
 deleteSelected();
+});
+
+alertToggleBtn?.addEventListener("click", e=>{
+
+e.stopPropagation();
+closePopovers();
+
+const sel =
+getSelected();
+
+if(sel?.type === "hray"){
+toggleAlertOnShape(sel);
+}
+
 });
 
 }
@@ -2166,6 +3047,27 @@ positionPopover(settingsPopover, 40);
 initFloatingBar();
 initStylePopovers();
 setupEditInteraction();
+const hideContextMenu =
+setupContextMenu();
+
+const onDrawingsUpdated = e=>{
+
+if(!alive || !isActive()){
+return;
+}
+
+if(e.detail?.symbol === getSymbol()){
+loadDrawings();
+redraw();
+updateStyleBar();
+}
+
+};
+
+window.addEventListener(
+"drawings-updated",
+onDrawingsUpdated
+);
 
 loadToolDefaults();
 
@@ -2193,7 +3095,6 @@ saveDrawings();
 loadDrawings();
 selectedId = null;
 cancelPlacement();
-clearRuler();
 updateStyleBar();
 redraw();
 
@@ -2205,12 +3106,25 @@ destroy(){
 
 alive = false;
 
+hideContextMenu?.();
+contextMenuEl?.remove();
+
 window.removeEventListener("keydown", onKeyDown);
-window.removeEventListener("keyup", onKeyUp);
+window.removeEventListener(
+"drawings-updated",
+onDrawingsUpdated
+);
 
 chart.unsubscribeClick(clickHandler);
 chart.unsubscribeCrosshairMove(crosshairHandler);
 chart.timeScale().unsubscribeVisibleLogicalRangeChange(rangeHandler);
+
+if(chartApplyPatchRestore){
+
+chartApplyPatchRestore();
+
+}
+
 canvas.remove();
 
 }
