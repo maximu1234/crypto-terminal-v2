@@ -72,7 +72,7 @@ alerts.map(alert=>`
 <td>${formatAlertDate(alert.createdAt)}</td>
 
 <td>
-<a class="alerts-symbol-link" href="coins.html?symbol=${encodeURIComponent(alert.symbol)}">
+<a class="alerts-symbol-link" href="/coins.html?symbol=${encodeURIComponent(alert.symbol)}">
 ${displaySymbol(alert.symbol)}
 </a>
 </td>
