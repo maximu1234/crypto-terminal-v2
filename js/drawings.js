@@ -3043,9 +3043,7 @@ if(!drawings.length){
 return;
 }
 
-if(confirm("Удалить все рисунки на этом графике?")){
 clearAll();
-}
 
 });
 
