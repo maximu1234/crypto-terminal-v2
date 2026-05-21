@@ -88,8 +88,8 @@ html,body{
 
 .draw-btn[data-draw-tool="long"] svg,
 .draw-btn[data-draw-tool="short"] svg{
-  width:24px;
-  height:24px;
+  width:14px;
+  height:22px;
 }
 
 .draw-btn:hover{

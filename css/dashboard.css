@@ -119,7 +119,7 @@ body{
 
 .draw-btn-sm[data-draw-tool="long"] svg,
 .draw-btn-sm[data-draw-tool="short"] svg{
-    width:16px;
+    width:10px;
     height:16px;
 }
 
