@@ -8,7 +8,7 @@
 <title>Калькулятор сделки — Multichart</title>
 
 <link rel="stylesheet" href="css/common.css">
-<link rel="stylesheet" href="css/trade-calculator.css?v=2">
+<link rel="stylesheet" href="css/trade-calculator.css?v=3">
 
 </head>
 
@@ -40,12 +40,14 @@
 
 <div class="calc-form">
 
+<div class="calc-form-row">
+
 <div class="calc-field">
 
-<label for="stop-loss-pct">Процент стоп-лосса (%)</label>
+<label for="stop-loss-pct">Стоп-лосс (%)</label>
 
 <div class="calc-input-wrap">
-<input id="stop-loss-pct" type="number" min="0" step="any" placeholder="Например, 2" inputmode="decimal"/>
+<input id="stop-loss-pct" type="number" min="0" step="any" placeholder="2" inputmode="decimal"/>
 <span class="calc-suffix">%</span>
 </div>
 
@@ -56,8 +58,10 @@
 <label for="risk-usd">Сумма риска ($)</label>
 
 <div class="calc-input-wrap">
-<input id="risk-usd" type="number" min="0" step="any" placeholder="Например, 100" inputmode="decimal"/>
+<input id="risk-usd" type="number" min="0" step="any" placeholder="100" inputmode="decimal"/>
 <span class="calc-suffix">$</span>
+</div>
+
 </div>
 
 </div>

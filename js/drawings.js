@@ -562,6 +562,13 @@ let fibApplyTimer = null;
 
 let chartApplyPatchRestore = null;
 
+let redrawRaf1 = 0;
+let redrawRaf2 = 0;
+let coordRetryCount = 0;
+let chartPanRedrawRaf = 0;
+let chartPanActive = false;
+let chartPanWheelTimer = null;
+
 function defaultsStorageKey(name){
 
 return `draw_defaults_${name}`;
@@ -1667,7 +1674,7 @@ canvas.height = Math.max(1, Math.floor(h * dpr));
 canvas.style.width = `${w}px`;
 canvas.style.height = `${h}px`;
 
-redraw();
+scheduleRedraw();
 
 }
 
@@ -2111,6 +2118,15 @@ if(!isActive()){
 return;
 }
 
+if(placement){
+
+e.preventDefault();
+e.stopPropagation();
+cancelPlacement();
+return;
+
+}
+
 const { x, y } =
 pointerFromEvent(e);
 
@@ -2262,6 +2278,224 @@ ctx,
 
 }
 
+function shapeCoordsReady(shape){
+
+if(shape.type === "trendline" || shape.type === "fib"){
+
+return !!(
+toXY(shape.p1) &&
+toXY(shape.p2)
+);
+
+}
+
+if(shape.type === "hray"){
+
+return !!toXY({
+time: shape.time,
+price: shape.price
+});
+
+}
+
+if(shape.type === "channel"){
+
+return !!(
+toXY(shape.p1) &&
+toXY(shape.p2) &&
+toXY(shape.p3)
+);
+
+}
+
+return true;
+
+}
+
+function stopChartPanRedraw(){
+
+chartPanActive = false;
+
+if(chartPanRedrawRaf){
+cancelAnimationFrame(chartPanRedrawRaf);
+chartPanRedrawRaf = 0;
+}
+
+if(chartPanWheelTimer){
+clearTimeout(chartPanWheelTimer);
+chartPanWheelTimer = null;
+}
+
+redraw();
+
+}
+
+function chartPanRedrawLoop(){
+
+if(
+!alive ||
+!chartPanActive
+){
+chartPanRedrawRaf = 0;
+return;
+}
+
+redraw();
+chartPanRedrawRaf =
+requestAnimationFrame(chartPanRedrawLoop);
+
+}
+
+function startChartPanRedraw(){
+
+chartPanActive = true;
+
+if(!chartPanRedrawRaf){
+chartPanRedrawRaf =
+requestAnimationFrame(chartPanRedrawLoop);
+}
+
+}
+
+function setupChartPanRedraw(){
+
+const onPanDown = e=>{
+
+if(
+!alive ||
+!isActive()
+){
+return;
+}
+
+if(
+e.button !== 0 &&
+e.button !== 1
+){
+return;
+}
+
+if(dragState){
+return;
+}
+
+if(
+dragHandle &&
+dragHandle.contains(e.target)
+){
+return;
+}
+
+if(
+styleBar &&
+styleBar.contains(e.target)
+){
+return;
+}
+
+startChartPanRedraw();
+
+};
+
+const onPanWheel = ()=>{
+
+if(!alive || !isActive()){
+return;
+}
+
+startChartPanRedraw();
+
+if(chartPanWheelTimer){
+clearTimeout(chartPanWheelTimer);
+}
+
+chartPanWheelTimer =
+setTimeout(
+stopChartPanRedraw,
+150
+);
+
+};
+
+wrapEl.addEventListener(
+"mousedown",
+onPanDown
+);
+
+wrapEl.addEventListener(
+"wheel",
+onPanWheel,
+{ passive: true }
+);
+
+window.addEventListener(
+"mouseup",
+stopChartPanRedraw
+);
+
+window.addEventListener(
+"blur",
+stopChartPanRedraw
+);
+
+return ()=>{
+
+wrapEl.removeEventListener(
+"mousedown",
+onPanDown
+);
+
+wrapEl.removeEventListener(
+"wheel",
+onPanWheel
+);
+
+window.removeEventListener(
+"mouseup",
+stopChartPanRedraw
+);
+
+window.removeEventListener(
+"blur",
+stopChartPanRedraw
+);
+
+stopChartPanRedraw();
+
+};
+
+}
+
+function scheduleRedraw(){
+
+if(chartPanActive){
+return;
+}
+
+if(redrawRaf1){
+cancelAnimationFrame(redrawRaf1);
+}
+
+if(redrawRaf2){
+cancelAnimationFrame(redrawRaf2);
+}
+
+redrawRaf1 =
+requestAnimationFrame(()=>{
+
+redrawRaf2 =
+requestAnimationFrame(()=>{
+
+redrawRaf1 = 0;
+redrawRaf2 = 0;
+redraw();
+
+});
+
+});
+
+}
+
 function redraw(){
 
 try{
@@ -2295,6 +2529,23 @@ drawPlacementPreview(ctx, w, h);
 
 }catch(err){
 console.warn("redraw", err);
+}
+
+if(
+!chartPanActive &&
+coordRetryCount < 8 &&
+drawings.some(
+d=>!shapeCoordsReady(d)
+)
+){
+
+coordRetryCount++;
+scheduleRedraw();
+
+}else{
+
+coordRetryCount = 0;
+
 }
 
 }
@@ -2944,8 +3195,9 @@ redraw();
 };
 
 rangeHandler =
-() =>
+()=>{
 redraw();
+};
 
 const origChartApplyOptions =
 chart.applyOptions.bind(chart);
@@ -2983,8 +3235,15 @@ return;
 }
 
 if(e.key === "Escape"){
+
+if(placement){
+cancelPlacement();
+return;
+}
+
 cancelPlacement();
 setTool("cursor");
+
 }
 
 if(e.key === "Delete" || e.key === "Backspace"){
@@ -3282,6 +3541,10 @@ positionPopover(settingsPopover, 40);
 initFloatingBar();
 initStylePopovers();
 setupEditInteraction();
+
+const teardownChartPanRedraw =
+setupChartPanRedraw();
+
 const hideContextMenu =
 setupContextMenu();
 
@@ -3293,15 +3556,32 @@ return;
 
 if(e.detail?.symbol === getSymbol()){
 loadDrawings();
-redraw();
+scheduleRedraw();
 updateStyleBar();
 }
+
+};
+
+const onAlertsChanged = ()=>{
+
+if(!alive){
+return;
+}
+
+loadDrawings();
+scheduleRedraw();
+updateStyleBar();
 
 };
 
 window.addEventListener(
 "drawings-updated",
 onDrawingsUpdated
+);
+
+window.addEventListener(
+"alerts-changed",
+onAlertsChanged
 );
 
 window.addEventListener(
@@ -3327,10 +3607,13 @@ loadDrawings();
 lastLoadedSymbol = getSymbol();
 resizeCanvas();
 updateStyleBar();
+scheduleRedraw();
 
 return {
 
 setTool,
+
+scheduleRedraw,
 
 onSymbolChange(){
 
@@ -3355,7 +3638,7 @@ loadDrawings();
 selectedId = null;
 cancelPlacement();
 updateStyleBar();
-redraw();
+scheduleRedraw();
 
 },
 
@@ -3373,6 +3656,24 @@ window.removeEventListener(
 "drawings-updated",
 onDrawingsUpdated
 );
+
+window.removeEventListener(
+"alerts-changed",
+onAlertsChanged
+);
+
+if(redrawRaf1){
+cancelAnimationFrame(redrawRaf1);
+redrawRaf1 = 0;
+}
+
+if(redrawRaf2){
+cancelAnimationFrame(redrawRaf2);
+redrawRaf2 = 0;
+}
+
+teardownChartPanRedraw?.();
+stopChartPanRedraw();
 
 chart.unsubscribeClick(clickHandler);
 chart.unsubscribeCrosshairMove(crosshairHandler);

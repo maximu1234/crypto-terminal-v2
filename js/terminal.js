@@ -2,7 +2,7 @@ import {
 loadBybitHistory,
 loadBybitSymbols,
 loadTwelveData
-} from "./api.js?v=3";
+} from "./api.js?v=4";
 
 import {
 calculateRSI,
@@ -37,7 +37,7 @@ processAlertTick
 
 import {
 initDrawings
-} from "./drawings.js?v=38";
+} from "./drawings.js?v=40";
 
 let currentDataset = "crypto";
 let currentTF = "60";
@@ -793,9 +793,7 @@ async function initSymbols(){
 const list =
 await loadBybitSymbols();
 
-allBybitSymbols = list
-.filter(x => x.status === "Trading")
-.map(x => x.symbol);
+allBybitSymbols = list.map(x => x.symbol);
 
 const weekAgo =
 Date.now() - (7*24*60*60*1000);
@@ -803,7 +801,9 @@ Date.now() - (7*24*60*60*1000);
 newListings = list
 .filter(x => {
 
-if(!x.launchTime) return false;
+if(!x.launchTime){
+return false;
+}
 
 return Number(x.launchTime) > weekAgo;
 
@@ -1190,6 +1190,8 @@ rebuildRsiFromCandles();
 applyDefaultZoom();
 
 drawingTools?.onSymbolChange();
+drawingTools?.resize();
+drawingTools?.scheduleRedraw?.();
 
 highlightActiveSymbol();
 
@@ -1222,6 +1224,7 @@ document.getElementById(
 });
 
 drawingTools?.resize();
+drawingTools?.scheduleRedraw?.();
 
 rsiChart.applyOptions({
 

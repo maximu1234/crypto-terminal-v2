@@ -17,7 +17,7 @@ applyDashboardZoom
 
 import {
 initDrawings
-} from "./drawings.js?v=38";
+} from "./drawings.js?v=40";
 
 import {
 subscribeKline
@@ -328,6 +328,7 @@ resizeChart();
 
 drawingTools?.onSymbolChange();
 drawingTools?.resize();
+drawingTools?.scheduleRedraw?.();
 
 const last =
 candles[candles.length - 1];

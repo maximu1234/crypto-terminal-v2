@@ -1,7 +1,7 @@
 import {
 loadBybitHistory,
 loadBybitSymbols
-} from "./api.js?v=13";
+} from "./api.js?v=14";
 
 import {
 createScreenerChart,
@@ -1079,9 +1079,7 @@ const list =
 await loadBybitSymbols();
 
 allSymbols =
-list
-.filter(x => x.status === "Trading")
-.map(x => x.symbol);
+list.map(x => x.symbol);
 
 await fetchTickersInto(tickerMap);
 

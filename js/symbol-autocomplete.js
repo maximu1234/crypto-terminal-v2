@@ -16,7 +16,6 @@ loadBybitSymbols()
 
 symbolsCache =
 list
-.filter(x => x.status === "Trading")
 .map(x => x.symbol)
 .sort((a, b)=>a.localeCompare(b));
 

@@ -156,6 +156,38 @@ return result;
    BYBIT SYMBOLS
 ========================================================= */
 
+export function isUsdtLinearSymbol(item){
+
+if(
+!item ||
+item.status !== "Trading"
+){
+return false;
+}
+
+const sym =
+String(item.symbol || "").toUpperCase();
+
+if(!sym.endsWith("USDT")){
+return false;
+}
+
+/* Дубликаты вроде PNUTPERP — оставляем только *USDT */
+if(sym.endsWith("PERP")){
+return false;
+}
+
+if(
+item.quoteCoin &&
+item.quoteCoin !== "USDT"
+){
+return false;
+}
+
+return true;
+
+}
+
 export async function loadBybitSymbols(){
 
 const all = [];
@@ -185,7 +217,7 @@ cursor = json.result.nextPageCursor || null;
 
 }while(cursor);
 
-return all;
+return all.filter(isUsdtLinearSymbol);
 
 }
 
