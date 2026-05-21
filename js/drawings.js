@@ -992,6 +992,7 @@ const canvas =
 document.createElement("canvas");
 
 canvas.className = "drawings-layer";
+canvas.style.pointerEvents = "none";
 wrapEl.insertBefore(
 canvas,
 wrapEl.firstChild
@@ -2888,11 +2889,7 @@ function syncChartTouchPan(){
 const lock =
 alive &&
 (
-(
-tool === "cursor" &&
-!!selectedId &&
-!placement
-) ||
+!!dragState ||
 (
 placement &&
 isTouchDrawTablet()
@@ -5248,6 +5245,8 @@ fibSettingsShapeId = picked.id;
 }
 
 updateStyleBar();
+redraw();
+return;
 
 }
 

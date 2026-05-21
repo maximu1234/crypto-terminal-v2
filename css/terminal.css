@@ -755,7 +755,6 @@ body{
   box-sizing:border-box;
   position:relative;
   pointer-events:none;
-  touch-action:none;
 }
 
 #chart{
