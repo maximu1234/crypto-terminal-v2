@@ -212,8 +212,8 @@ cursor:default;
 /* ‹ › — шире под палец; цифры страниц без изменений */
 #pagination > .page-btn:first-child,
 #pagination > .page-btn:last-child{
-min-width:52px;
-padding:0 14px;
+min-width:104px;
+padding:0 28px;
 font-size:20px;
 line-height:1;
 }
