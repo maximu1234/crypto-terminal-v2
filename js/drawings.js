@@ -5010,7 +5010,7 @@ rectHitsClient(fibLineWidthMenuPortal, e.clientX, e.clientY)
 
 function setupEditInteraction(){
 
-wrapEl.addEventListener("mousedown", e=>{
+const onEditDown = e=>{
 
 if(tool !== "cursor" || placement){
 return;
@@ -5018,10 +5018,21 @@ return;
 
 /*
   Панель стиля внутри chart-wrap: горизонтальные уровни фибы
-  ловят mousedown по всей ширине (|py-y|), из-за чего клики по кнопкам
+  ловят pointerdown по всей ширине (|py-y|), из-за чего клики по кнопкам
   перехватывались как перетаскивание объекта.
 */
 if(isDrawChromePointerEvent(e)){
+return;
+}
+
+if(
+e.pointerType === "mouse" &&
+e.button !== 0
+){
+return;
+}
+
+if(!e.isPrimary){
 return;
 }
 
@@ -5097,13 +5108,27 @@ blockChartClick = true;
 e.preventDefault();
 e.stopPropagation();
 
-}, true);
+try{
+wrapEl.setPointerCapture(e.pointerId);
+}catch{
+/* ignore */
+}
+
+};
+
+wrapEl.addEventListener("pointerdown", onEditDown, true);
 
 const onEditMove = e=>{
 
 if(!alive || !dragState){
 return;
 }
+
+if(!e.isPrimary){
+return;
+}
+
+e.preventDefault();
 
 const { x, y } = pointerFromEvent(e);
 
@@ -5198,8 +5223,9 @@ blockChartClick = true;
 
 };
 
-window.addEventListener("mousemove", onEditMove);
-window.addEventListener("mouseup", onEditUp);
+window.addEventListener("pointermove", onEditMove);
+window.addEventListener("pointerup", onEditUp);
+window.addEventListener("pointercancel", onEditUp);
 
 }
 
@@ -6688,7 +6714,18 @@ let dragging = false;
 let dragStart = { x: 0, y: 0 };
 let barStart = { x: 0, y: 0 };
 
-dragHandle?.addEventListener("mousedown", e=>{
+dragHandle?.addEventListener("pointerdown", e=>{
+
+if(
+e.pointerType === "mouse" &&
+e.button !== 0
+){
+return;
+}
+
+if(!e.isPrimary){
+return;
+}
 
 e.preventDefault();
 e.stopPropagation();
@@ -6703,6 +6740,12 @@ barStart = {
 x: barR.left,
 y: barR.top
 };
+
+try{
+dragHandle.setPointerCapture(e.pointerId);
+}catch{
+/* ignore */
+}
 
 });
 
@@ -6807,8 +6850,9 @@ closePopovers();
 
 };
 
-window.addEventListener("mousemove", onBarMove);
-window.addEventListener("mouseup", onBarUp);
+window.addEventListener("pointermove", onBarMove);
+window.addEventListener("pointerup", onBarUp);
+window.addEventListener("pointercancel", onBarUp);
 document.addEventListener("click", onDocClick);
 
 }
