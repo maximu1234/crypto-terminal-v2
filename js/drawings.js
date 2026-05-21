@@ -1976,10 +1976,30 @@ shape.p3 = { ...point };
 
 if(handleId === "p4"){
 
-shape.p3 = {
-time: point.time - (shape.p2.time - shape.p1.time),
-price: point.price - (shape.p2.price - shape.p1.price)
-};
+const a =
+toXY(shape.p1);
+const b =
+toXY(shape.p2);
+const p4xy =
+toXY(point);
+
+if(
+!a ||
+!b ||
+!p4xy
+){
+return;
+}
+
+const np3 =
+pointFromXY(
+p4xy.x - (b.x - a.x),
+p4xy.y - (b.y - a.y)
+);
+
+if(np3){
+shape.p3 = np3;
+}
 
 }
 
@@ -2051,6 +2071,330 @@ return hrayLineDist(px, py, shape) <= threshold;
 
 }
 
+function trendlineBodyDist(px, py, shape){
+
+if(
+shape?.type !== "trendline"
+){
+return Infinity;
+}
+
+const a =
+toXY(shape.p1);
+const b =
+toXY(shape.p2);
+
+if(!a || !b){
+return Infinity;
+}
+
+return distToSegment(
+px,
+py,
+a.x,
+a.y,
+b.x,
+b.y
+);
+
+}
+
+function hitTestTrendlineBody(px, py, shape, threshold = 8){
+
+return (
+shape?.type === "trendline" &&
+trendlineBodyDist(px, py, shape) <= threshold
+);
+
+}
+
+function fibBodyDist(px, py, shape){
+
+if(
+shape?.type !== "fib"
+){
+return Infinity;
+}
+
+const a =
+toXY(shape.p1);
+const b =
+toXY(shape.p2);
+
+if(!a || !b){
+return Infinity;
+}
+
+let dist = Infinity;
+
+const useLog =
+isSeriesLogarithmic(series);
+
+getFibRows(shape).forEach(row=>{
+
+if(!row.enabled){
+return;
+}
+
+const price =
+fibPriceAtRatio(
+shape.p1.price,
+shape.p2.price,
+row.v,
+useLog
+);
+
+if(!Number.isFinite(price)){
+return;
+}
+
+const y =
+series.priceToCoordinate(price);
+
+if(y != null){
+dist = Math.min(
+dist,
+Math.abs(py - y)
+);
+}
+
+});
+
+if(
+shape.fibShowTrendLine !== false
+){
+
+dist = Math.min(
+dist,
+distToSegment(
+px,
+py,
+a.x,
+a.y,
+b.x,
+b.y
+)
+);
+
+}
+
+return dist;
+
+}
+
+function hitTestFibBody(px, py, shape, threshold = 8){
+
+return (
+shape?.type === "fib" &&
+fibBodyDist(px, py, shape) <= threshold
+);
+
+}
+
+function channelBodyDist(px, py, shape){
+
+if(
+shape?.type !== "channel"
+){
+return Infinity;
+}
+
+const a =
+toXY(shape.p1);
+const b =
+toXY(shape.p2);
+const c =
+toXY(shape.p3);
+const p4 =
+toXY(channelP4(shape.p1, shape.p2, shape.p3));
+const { midStart, midEnd } =
+channelMidPoints(shape.p1, shape.p2, shape.p3);
+const m1 =
+toXY(midStart);
+const m2 =
+toXY(midEnd);
+
+if(!a || !b || !c || !p4){
+return Infinity;
+}
+
+let dist = Math.min(
+distToSegment(px, py, a.x, a.y, b.x, b.y),
+distToSegment(px, py, c.x, c.y, p4.x, p4.y)
+);
+
+if(m1 && m2){
+dist = Math.min(
+dist,
+distToSegment(px, py, m1.x, m1.y, m2.x, m2.y)
+);
+}
+
+return dist;
+
+}
+
+function hitTestChannelBody(px, py, shape, threshold = 8){
+
+return (
+shape?.type === "channel" &&
+channelBodyDist(px, py, shape) <= threshold
+);
+
+}
+
+function screenDragOffsetsForPoints(
+points,
+grabX,
+grabY
+){
+
+const offsets = [];
+
+for(const pt of points){
+
+const xy =
+toXY(pt);
+
+if(!xy){
+return null;
+}
+
+offsets.push({
+x: xy.x - grabX,
+y: xy.y - grabY
+});
+
+}
+
+return offsets;
+
+}
+
+function pointsFromScreenDrag(
+offsets,
+grabX,
+grabY
+){
+
+const out = [];
+
+for(const off of offsets){
+
+const p =
+pointFromXY(
+grabX + off.x,
+grabY + off.y
+);
+
+if(!p){
+return null;
+}
+
+out.push(p);
+
+}
+
+return out;
+
+}
+
+function chartPointsForScreenMove(shape){
+
+if(
+shape.type === "trendline" ||
+shape.type === "fib"
+){
+return [shape.p1, shape.p2];
+}
+
+if(shape.type === "channel"){
+return [shape.p1, shape.p2, shape.p3];
+}
+
+if(shape.type === "hray"){
+return [{
+time: shape.time,
+price: shape.price
+}];
+}
+
+return null;
+
+}
+
+function hitTestShapeBody(px, py, shape, threshold = 8){
+
+if(shape.type === "trendline"){
+return hitTestTrendlineBody(px, py, shape, threshold);
+}
+
+if(shape.type === "fib"){
+return hitTestFibBody(px, py, shape, threshold);
+}
+
+if(shape.type === "channel"){
+return hitTestChannelBody(px, py, shape, threshold);
+}
+
+if(shape.type === "hray"){
+return hitTestHrayLine(px, py, shape, threshold);
+}
+
+return false;
+
+}
+
+function applyScreenMoveToShape(
+shape,
+offsets,
+grabX,
+grabY
+){
+
+const pts =
+pointsFromScreenDrag(
+offsets,
+grabX,
+grabY
+);
+
+if(!pts){
+return false;
+}
+
+if(
+shape.type === "trendline" ||
+shape.type === "fib"
+){
+
+shape.p1 = pts[0];
+shape.p2 = pts[1];
+return true;
+
+}
+
+if(shape.type === "channel"){
+
+shape.p1 = pts[0];
+shape.p2 = pts[1];
+shape.p3 = pts[2];
+return true;
+
+}
+
+if(shape.type === "hray"){
+
+shape.time = pts[0].time;
+shape.price = pts[0].price;
+return true;
+
+}
+
+return false;
+
+}
+
 function setupEditInteraction(){
 
 wrapEl.addEventListener("mousedown", e=>{
@@ -2078,17 +2422,29 @@ handleId
 };
 
 }else if(
-sel.type === "hray" &&
-hitTestHrayLine(x, y, sel)
+hitTestShapeBody(x, y, sel)
 ){
+
+const movePoints =
+chartPointsForScreenMove(sel);
+
+const offsets =
+movePoints
+? screenDragOffsetsForPoints(
+movePoints,
+x,
+y
+)
+: null;
+
+if(!offsets){
+return;
+}
 
 dragState = {
 shapeId: sel.id,
-mode: "hray-line",
-startX: x,
-startY: y,
-startTime: sel.time,
-startPrice: Number(sel.price)
+mode: "screen-move",
+pointOffsets: offsets
 };
 
 }else{
@@ -2118,38 +2474,17 @@ if(!shape){
 return;
 }
 
-if(dragState.mode === "hray-line"){
-
-const curPrice =
-series.coordinateToPrice(y);
-
-const startPrice =
-series.coordinateToPrice(dragState.startY);
+if(dragState.mode === "screen-move"){
 
 if(
-curPrice == null ||
-startPrice == null ||
-!Number.isFinite(curPrice) ||
-!Number.isFinite(startPrice)
+!applyScreenMoveToShape(
+shape,
+dragState.pointOffsets,
+x,
+y
+)
 ){
 return;
-}
-
-shape.price =
-dragState.startPrice + (curPrice - startPrice);
-
-const curTime =
-timeFromX(x);
-
-const anchorTime =
-timeFromX(dragState.startX);
-
-if(
-curTime != null &&
-anchorTime != null
-){
-shape.time =
-dragState.startTime + (curTime - anchorTime);
 }
 
 }else{
@@ -2982,12 +3317,7 @@ let dist = Infinity;
 
 if(d.type === "trendline"){
 
-const a = toXY(d.p1);
-const b = toXY(d.p2);
-
-if(a && b){
-dist = distToSegment(px, py, a.x, a.y, b.x, b.y);
-}
+dist = trendlineBodyDist(px, py, d);
 
 }
 
@@ -3013,93 +3343,12 @@ anchor.y
 
 if(d.type === "fib"){
 
-const a =
-toXY(d.p1);
-const b =
-toXY(d.p2);
-
-if(a && b){
-
-const useLog =
-isSeriesLogarithmic(series);
-
-getFibRows(d).forEach(row=>{
-
-if(!row.enabled){
-return;
-}
-
-const price =
-fibPriceAtRatio(
-d.p1.price,
-d.p2.price,
-row.v,
-useLog
-);
-
-if(!Number.isFinite(price)){
-return;
-}
-
-const y =
-series.priceToCoordinate(price);
-
-if(y != null){
-dist = Math.min(
-dist,
-Math.abs(py - y)
-);
-
-}
-
-});
-
-if(d.fibShowTrendLine !== false){
-
-dist = Math.min(
-dist,
-distToSegment(
-px,
-py,
-a.x,
-a.y,
-b.x,
-b.y
-)
-);
-
-}
-
-}
+dist = fibBodyDist(px, py, d);
 
 }
 if(d.type === "channel"){
 
-const a = toXY(d.p1);
-const b = toXY(d.p2);
-const c = toXY(d.p3);
-const p4 = toXY(channelP4(d.p1, d.p2, d.p3));
-const { midStart, midEnd } =
-channelMidPoints(d.p1, d.p2, d.p3);
-const m1 = toXY(midStart);
-const m2 = toXY(midEnd);
-
-if(a && b && c && p4){
-
-dist = Math.min(
-dist,
-distToSegment(px, py, a.x, a.y, b.x, b.y),
-distToSegment(px, py, c.x, c.y, p4.x, p4.y)
-);
-
-if(m1 && m2){
-dist = Math.min(
-dist,
-distToSegment(px, py, m1.x, m1.y, m2.x, m2.y)
-);
-}
-
-}
+dist = channelBodyDist(px, py, d);
 
 }
 
