@@ -7,29 +7,34 @@ upsertAlert
 } from "./alerts.js";
 
 import {
+mountTvColorGrid
+} from "./draw-color-palette.js";
+
+import {
 ALARM_ICON_SVG,
 TRASH_ICON_SVG
 } from "./draw-ui-shared.js";
 
+/* Сетка 2×9: чётный индекс — левый столбец, нечётный — правый */
 const DEFAULT_FIB_SPEC = Object.freeze([
-{ v:0, enabled:true },
-{ v:0.382, enabled:true },
-{ v:0.618, enabled:true },
-{ v:1, enabled:true },
-{ v:-1, enabled:true },
-{ v:-2, enabled:true },
-{ v:-2.618, enabled:true },
-{ v:2.414, enabled:false },
-{ v:-3, enabled:false },
-{ v:0.25, enabled:true },
-{ v:0.5, enabled:true },
-{ v:0.75, enabled:true },
-{ v:-0.25, enabled:true },
-{ v:-0.5, enabled:true },
-{ v:-1.5, enabled:true },
-{ v:-1.44, enabled:true },
-{ v:-1.44, enabled:false },
-{ v:-2.618, enabled:false }
+{ v:0, enabled:true, color:"#facc15" },
+{ v:0.25, enabled:true, color:"#ef4444" },
+{ v:0.382, enabled:true, color:"#ffa726" },
+{ v:0.5, enabled:true, color:"#ffffff" },
+{ v:0.618, enabled:true, color:"#ffa726" },
+{ v:0.75, enabled:true, color:"#ef4444" },
+{ v:1, enabled:true, color:"#facc15" },
+{ v:1.25, enabled:true, color:"#ef4444" },
+{ v:2, enabled:true, color:"#facc15" },
+{ v:1.5, enabled:true, color:"#9ca3af" },
+{ v:2.44, enabled:true, color:"#66bb6a" },
+{ v:0.75, enabled:false, color:"#ffffff" },
+{ v:2.5, enabled:true, color:"#66bb6a" },
+{ v:-0.5, enabled:false, color:"#ffffff" },
+{ v:3, enabled:true, color:"#facc15" },
+{ v:-1.44, enabled:false, color:"#ffffff" },
+{ v:-1.44, enabled:false, color:"#ffffff" },
+{ v:-2.618, enabled:false, color:"#ffffff" }
 ]);
 
 const STROKE = "#3b82f6";
@@ -38,63 +43,6 @@ const HANDLE_STROKE = "#ffffff";
 const WIDTH_OPTIONS = [1, 2, 3, 4];
 const USER_PREFS_KEY = "draw_user_prefs";
 const GLOBAL_STYLE_KEY = "draw_style_global_v1";
-
-function buildColorPalette(){
-
-const palette = [];
-
-for(let i = 0; i < 12; i++){
-
-const v =
-Math.round(255 - (i / 11) * 255);
-
-const h =
-v.toString(16).padStart(2, "0");
-
-palette.push(`#${h}${h}${h}`);
-
-}
-
-const bases = [
-"#ef5350","#f57c00","#fdd835","#66bb6a",
-"#26a69a","#29b6f6","#42a5f5","#5c6bc0",
-"#ab47bc","#ec407a","#8d6e63","#78909c"
-];
-
-palette.push(...bases);
-
-for(let row = 0; row < 6; row++){
-
-bases.forEach(hex=>{
-
-const mix = 0.72 - row * 0.11;
-
-palette.push(mixHex(hex, mix));
-
-});
-
-}
-
-return palette;
-
-}
-
-function mixHex(hex, amount){
-
-const n = parseInt(hex.slice(1), 16);
-let r = (n >> 16) & 255;
-let g = (n >> 8) & 255;
-let b = n & 255;
-
-r = Math.round(r * amount + 255 * (1 - amount));
-g = Math.round(g * amount + 255 * (1 - amount));
-b = Math.round(b * amount + 255 * (1 - amount));
-
-return `#${[r, g, b].map(v=>v.toString(16).padStart(2, "0")).join("")}`;
-
-}
-
-const COLOR_PALETTE = buildColorPalette();
 
 function uid(){
 
@@ -124,12 +72,396 @@ py - (y1 + t * dy)
 
 }
 
+const FIB_LINE_DASH = Object.freeze({
+solid: [],
+dashed: [8, 6],
+dotted: [2, 3]
+});
+
+function normalizeFibLineStyle(raw){
+
+if(raw === "dashed" || raw === "dotted"){
+return raw;
+}
+
+return "solid";
+
+}
+
+function fibLevelDash(lineStyle){
+
+return FIB_LINE_DASH[
+normalizeFibLineStyle(lineStyle)
+] || [];
+
+}
+
+const FIB_LINE_STYLE_OPTIONS = [
+{ value: "solid", label: "Line" },
+{ value: "dashed", label: "Dashed line" },
+{ value: "dotted", label: "Dotted line" }
+];
+
+function fibLineStyleIconMarkup(style){
+
+const kind =
+normalizeFibLineStyle(style);
+
+let dashAttr = "";
+
+if(kind === "dashed"){
+dashAttr = ` stroke-dasharray="7 4"`;
+}
+
+if(kind === "dotted"){
+dashAttr = ` stroke-dasharray="2 3"`;
+}
+
+return `<svg class="fib-line-style-svg" width="28" height="12" viewBox="0 0 28 12" aria-hidden="true"><line x1="2" y1="6" x2="26" y2="6" stroke="currentColor" stroke-width="2" stroke-linecap="round"${dashAttr}/></svg>`;
+
+}
+
+function fibLineStyleMenuMarkup(){
+
+return FIB_LINE_STYLE_OPTIONS.map(opt=>`
+<button type="button" class="fib-line-style-option" data-line-style="${opt.value}">
+${fibLineStyleIconMarkup(opt.value)}
+<span>${opt.label}</span>
+</button>
+`).join("");
+
+}
+
+function setFibLineStyleButton(btn, style){
+
+if(!btn){
+return;
+}
+
+const next =
+normalizeFibLineStyle(style);
+
+btn.dataset.lineStyle = next;
+btn.innerHTML = fibLineStyleIconMarkup(next);
+
+}
+
+let fibLineStyleMenuPortal = null;
+let fibLineStyleMenuAnchor = null;
+let fibLineWidthMenuPortal = null;
+let fibLineWidthMenuAnchor = null;
+
+let fibPanelCommitHook = null;
+
+function runFibPanelCommitHook(){
+
+if(
+typeof fibPanelCommitHook ===
+"function"
+){
+fibPanelCommitHook();
+}
+
+}
+
+function ensureFibLineStyleMenuPortal(){
+
+if(fibLineStyleMenuPortal){
+return fibLineStyleMenuPortal;
+}
+
+const el =
+document.createElement("div");
+
+el.className =
+"fib-line-style-menu fib-line-style-menu--portal hidden";
+
+el.innerHTML = fibLineStyleMenuMarkup();
+
+document.body.appendChild(el);
+
+el.addEventListener("mousedown", e=>{
+e.stopPropagation();
+});
+
+el.addEventListener(
+"click",
+e=>{
+
+const option =
+e.target.closest(".fib-line-style-option");
+
+if(
+!option ||
+!fibLineStyleMenuAnchor
+){
+return;
+}
+
+e.preventDefault();
+e.stopPropagation();
+
+setFibLineStyleButton(
+fibLineStyleMenuAnchor,
+option.dataset.lineStyle
+);
+
+closeAllFibLineStyleMenus();
+runFibPanelCommitHook();
+
+}
+);
+
+fibLineStyleMenuPortal = el;
+return el;
+
+}
+
+function closeAllFibLineStyleMenus(){
+
+if(fibLineStyleMenuPortal){
+
+fibLineStyleMenuPortal.classList.add("hidden");
+fibLineStyleMenuPortal.style.left = "";
+fibLineStyleMenuPortal.style.top = "";
+fibLineStyleMenuPortal.style.position = "";
+fibLineStyleMenuPortal.style.zIndex = "";
+
+}
+
+fibLineStyleMenuAnchor = null;
+
+}
+
+function openFibLineStyleMenu(btn){
+
+const menu =
+ensureFibLineStyleMenuPortal();
+
+fibLineStyleMenuAnchor = btn;
+
+const current =
+normalizeFibLineStyle(
+btn.dataset.lineStyle
+);
+
+menu.querySelectorAll(".fib-line-style-option").forEach(opt=>{
+opt.classList.toggle(
+"active",
+opt.dataset.lineStyle === current
+);
+});
+
+menu.classList.remove("hidden");
+
+const rect =
+btn.getBoundingClientRect();
+
+menu.style.position = "fixed";
+menu.style.left = `${Math.round(rect.left)}px`;
+menu.style.top = `${Math.round(rect.bottom + 4)}px`;
+menu.style.zIndex = "20000";
+
+}
+
+function normalizeFibLevelWidth(raw){
+
+const n =
+Number(raw);
+
+if(
+!Number.isFinite(n) ||
+n < 1 ||
+n > 4
+){
+return null;
+}
+
+return Math.round(n);
+
+}
+
+function fibLineWidthMenuMarkup(){
+
+return WIDTH_OPTIONS.map(w=>`
+<button type="button" class="fib-line-width-option" data-width="${w}">
+<span class="width-sample" style="height:${w}px"></span>
+<span>${w}px</span>
+</button>
+`).join("");
+
+}
+
+function setFibLevelWidthButton(btn, width, fallback){
+
+if(!btn){
+return;
+}
+
+const picked =
+normalizeFibLevelWidth(width);
+
+if(picked){
+
+btn.dataset.customWidth = String(picked);
+btn.textContent = `${picked}px`;
+btn.classList.add("has-custom");
+return;
+
+}
+
+delete btn.dataset.customWidth;
+btn.textContent = `${normalizeFibLevelWidth(fallback) || 1}px`;
+btn.classList.remove("has-custom");
+
+}
+
+function closeAllFibLineWidthMenus(){
+
+if(fibLineWidthMenuPortal){
+
+fibLineWidthMenuPortal.classList.add("hidden");
+fibLineWidthMenuPortal.style.left = "";
+fibLineWidthMenuPortal.style.top = "";
+fibLineWidthMenuPortal.style.position = "";
+fibLineWidthMenuPortal.style.zIndex = "";
+
+}
+
+fibLineWidthMenuAnchor = null;
+
+}
+
+function openFibLineWidthMenu(btn, fallbackWidth){
+
+const menu =
+ensureFibLineWidthMenuPortal();
+
+fibLineWidthMenuAnchor = btn;
+
+const current =
+normalizeFibLevelWidth(
+btn.dataset.customWidth
+) ||
+normalizeFibLevelWidth(fallbackWidth) ||
+1;
+
+menu.querySelectorAll(".fib-line-width-option").forEach(opt=>{
+opt.classList.toggle(
+"active",
+Number(opt.dataset.width) === current
+);
+});
+
+menu.classList.remove("hidden");
+
+const rect =
+btn.getBoundingClientRect();
+
+menu.style.position = "fixed";
+menu.style.left = `${Math.round(rect.left)}px`;
+menu.style.top = `${Math.round(rect.bottom + 4)}px`;
+menu.style.zIndex = "10053";
+
+}
+
+function ensureFibLineWidthMenuPortal(){
+
+if(fibLineWidthMenuPortal){
+return fibLineWidthMenuPortal;
+}
+
+const el =
+document.createElement("div");
+
+el.className =
+"fib-line-width-menu fib-line-width-menu--portal hidden";
+
+el.innerHTML = fibLineWidthMenuMarkup();
+
+document.body.appendChild(el);
+
+el.addEventListener("mousedown", e=>{
+e.stopPropagation();
+});
+
+el.addEventListener(
+"click",
+e=>{
+
+const option =
+e.target.closest(".fib-line-width-option");
+
+if(
+!option ||
+!fibLineWidthMenuAnchor
+){
+return;
+}
+
+e.preventDefault();
+e.stopPropagation();
+
+setFibLevelWidthButton(
+fibLineWidthMenuAnchor,
+Number(option.dataset.width),
+1
+);
+
+closeAllFibLineWidthMenus();
+runFibPanelCommitHook();
+
+}
+);
+
+fibLineWidthMenuPortal = el;
+return el;
+
+}
+
+function normalizeFibLevelColor(raw){
+
+if(
+typeof raw !==
+"string"
+){
+return null;
+}
+
+const s =
+raw.trim();
+
+if(
+/^#[0-9A-Fa-f]{6}$/i.test(s)
+){
+return s.toLowerCase();
+}
+
+return null;
+
+}
+
 function cloneDefaultFibRows(){
 
-return DEFAULT_FIB_SPEC.map(x=>({
+return DEFAULT_FIB_SPEC.map(x=>{
+
+const row =
+{
 v:x.v,
-enabled:!!x.enabled
-}));
+enabled:!!x.enabled,
+lineStyle: "solid"
+};
+
+const levelColor =
+normalizeFibLevelColor(x.color);
+
+if(levelColor){
+row.color = levelColor;
+}
+
+return row;
+
+});
 
 }
 
@@ -217,6 +549,25 @@ typeof cell.enabled ===
 
 next[i].enabled = cell.enabled;
 
+}
+
+const levelColor =
+normalizeFibLevelColor(cell.color);
+
+if(levelColor){
+next[i].color = levelColor;
+}
+
+if(cell.lineStyle){
+next[i].lineStyle =
+normalizeFibLineStyle(cell.lineStyle);
+}
+
+const levelWidth =
+normalizeFibLevelWidth(cell.lineWidth);
+
+if(levelWidth){
+next[i].lineWidth = levelWidth;
 }
 
 });
@@ -396,7 +747,62 @@ function getFibRows(shape){
 const raw =
 shape.fibLevels ?? shape.levels;
 
-return normalizeFibLevelsShape(raw);
+const rows =
+normalizeFibLevelsShape(raw);
+
+if(
+!Array.isArray(raw) ||
+typeof raw[0] !== "object"
+){
+return rows;
+}
+
+raw.forEach((cell,i)=>{
+
+if(
+i >= rows.length ||
+!cell ||
+typeof cell !== "object"
+){
+return;
+}
+
+const levelColor =
+normalizeFibLevelColor(cell.color);
+
+if(levelColor){
+rows[i].color = levelColor;
+}
+
+if(cell.lineStyle){
+rows[i].lineStyle =
+normalizeFibLineStyle(cell.lineStyle);
+}
+
+const levelWidth =
+normalizeFibLevelWidth(cell.lineWidth);
+
+if(levelWidth){
+rows[i].lineWidth = levelWidth;
+}
+
+if(
+typeof cell.v === "number" &&
+Number.isFinite(cell.v)
+){
+rows[i].v = cell.v;
+}
+
+if(
+typeof cell.enabled ===
+"boolean"
+){
+rows[i].enabled = cell.enabled;
+}
+
+});
+
+return rows;
 
 }
 
@@ -498,7 +904,10 @@ const canvas =
 document.createElement("canvas");
 
 canvas.className = "drawings-layer";
-wrapEl.appendChild(canvas);
+wrapEl.insertBefore(
+canvas,
+wrapEl.firstChild
+);
 
 const styleBar =
 pickUi(uiRoot, "draw-style-bar", ".draw-style-float");
@@ -539,6 +948,82 @@ pickUi(uiRoot, "draw-alert-toggle", ".draw-alert-toggle");
 const dragHandle =
 pickUi(uiRoot, "style-bar-drag", ".draw-style-drag");
 
+let chromePortal = null;
+let barOffset = { x: 8, y: 8 };
+let chromeLayoutObserver = null;
+
+function ensureChromePortal(){
+
+if(chromePortal){
+return chromePortal;
+}
+
+const el =
+document.createElement("div");
+
+el.className = "draw-chrome-portal";
+document.body.appendChild(el);
+chromePortal = el;
+return el;
+
+}
+
+function portalDrawChrome(){
+
+const portal =
+ensureChromePortal();
+
+[
+styleBar,
+colorPopover,
+widthPopover,
+settingsPopover
+].forEach(node=>{
+
+if(!node){
+return;
+}
+
+node.style.pointerEvents = "auto";
+portal.appendChild(node);
+
+});
+
+}
+
+function syncDrawChromeLayout(){
+
+if(
+!styleBar ||
+!wrapEl
+){
+return;
+}
+
+const wrap =
+wrapEl.getBoundingClientRect();
+
+styleBar.style.position = "fixed";
+styleBar.style.left =
+`${wrap.left + barOffset.x}px`;
+styleBar.style.top =
+`${wrap.top + barOffset.y}px`;
+styleBar.style.zIndex = "10050";
+
+if(
+settingsPopover &&
+!settingsPopover.classList.contains("hidden")
+){
+positionPopover(
+settingsPopover,
+44
+);
+}
+
+}
+
+portalDrawChrome();
+
 let contextMenuEl = null;
 
 let activeColor = STROKE;
@@ -560,6 +1045,9 @@ let rangeHandler = null;
 
 let fibPanelBuilt = false;
 let fibApplyTimer = null;
+let fibSettingsShapeId = null;
+let fibColorMenuPortal = null;
+let fibColorMenuAnchor = null;
 
 let chartApplyPatchRestore = null;
 
@@ -1191,6 +1679,66 @@ return drawings.find(d=>d.id === selectedId) || null;
 
 }
 
+function getFibEditShape(){
+
+if(fibSettingsShapeId){
+
+const pinned =
+drawings.find(
+d=>
+d.id === fibSettingsShapeId &&
+d.type === "fib"
+);
+
+if(pinned){
+return pinned;
+}
+
+}
+
+const sel =
+getSelected();
+
+if(sel?.type === "fib"){
+return sel;
+}
+
+return null;
+
+}
+
+function resolveFibStyleTarget(){
+
+if(
+isFibSettingsOpen() &&
+!getFibEditShape()
+){
+rememberFibSettingsTarget();
+}
+
+return getFibEditShape();
+
+}
+
+function rememberFibSettingsTarget(){
+
+const sel =
+getSelected();
+
+if(sel?.type === "fib"){
+fibSettingsShapeId = sel.id;
+return;
+}
+
+const fibs =
+drawings.filter(d=>d.type === "fib");
+
+if(fibs.length === 1){
+fibSettingsShapeId = fibs[0].id;
+}
+
+}
+
 function isFibContext(){
 
 const sel = getSelected();
@@ -1198,6 +1746,24 @@ if(sel?.type === "fib"){
 return true;
 }
 return tool === "fib";
+}
+
+function isFibSettingsOpen(){
+
+return !!(
+settingsPopover &&
+!settingsPopover.classList.contains("hidden")
+);
+
+}
+
+function canApplyFibPanel(){
+
+return (
+alive &&
+(isFibContext() || isFibSettingsOpen())
+);
+
 }
 
 function getStyleTargetType(){
@@ -1230,7 +1796,7 @@ settingsPopover.innerHTML =
 <input type="checkbox" id="fib-show-trend-line" checked />
 <span>Линия тренда</span>
 </label>
-<div class="fib-levels-head">Уровни (один цвет — с панели карандаша)</div>
+<div class="fib-levels-head">Уровни: значение, цвет, толщина и тип линии</div>
 <div class="fib-levels-grid" id="fib-level-rows-root"></div>
 </div>
 `;
@@ -1251,12 +1817,21 @@ row.innerHTML =
 `
 <input type="checkbox" class="fib-level-on"/>
 <input type="text" class="fib-level-val" autocomplete="off" spellcheck="false"/>
+<button type="button" class="fib-level-color-btn" title="Цвет уровня" aria-label="Цвет уровня"></button>
+<button type="button" class="fib-line-width-btn" title="Толщина уровня" aria-label="Толщина уровня">1px</button>
+<button type="button" class="fib-line-style-btn" data-line-style="solid" title="Тип линии" aria-label="Тип линии"></button>
 `;
 
 const on =
 row.querySelector(".fib-level-on");
 const val =
 row.querySelector(".fib-level-val");
+const colorBtn =
+row.querySelector(".fib-level-color-btn");
+const widthBtn =
+row.querySelector(".fib-line-width-btn");
+const styleBtn =
+row.querySelector(".fib-line-style-btn");
 
 if(on){
 on.checked = !!spec.enabled;
@@ -1267,16 +1842,118 @@ val.value =
 formatFibInputValue(spec.v);
 }
 
+setFibLevelColorButton(
+colorBtn,
+null,
+STROKE
+);
+
+setFibLevelWidthButton(
+widthBtn,
+null,
+1
+);
+
+setFibLineStyleButton(
+styleBtn,
+"solid"
+);
+
 root.appendChild(row);
 
 });
 
+settingsPopover.addEventListener("mousedown", e=>{
+
+if(!alive){
+return;
+}
+
+const colorBtn =
+e.target.closest(".fib-level-color-btn");
+
+if(colorBtn){
+
+e.preventDefault();
+e.stopPropagation();
+
+const shape =
+getFibEditShape();
+
+const fallback =
+shape?.color || STROKE;
+
+closeFibColorMenu();
+openFibColorMenu(
+colorBtn,
+fallback
+);
+
+return;
+
+}
+
+const styleBtn =
+e.target.closest(".fib-line-style-btn");
+
+if(styleBtn){
+
+e.preventDefault();
+e.stopPropagation();
+
+const wasOpen =
+fibLineStyleMenuAnchor === styleBtn &&
+fibLineStyleMenuPortal &&
+!fibLineStyleMenuPortal.classList.contains("hidden");
+
+closeAllFibLineStyleMenus();
+
+if(!wasOpen){
+openFibLineStyleMenu(styleBtn);
+}
+
+return;
+
+}
+
+const widthBtn =
+e.target.closest(".fib-line-width-btn");
+
+if(widthBtn){
+
+e.preventDefault();
+e.stopPropagation();
+
+const shape =
+getFibEditShape();
+
+const fallback =
+shape?.lineWidth || 1;
+
+const wasWidthOpen =
+fibLineWidthMenuAnchor === widthBtn &&
+fibLineWidthMenuPortal &&
+!fibLineWidthMenuPortal.classList.contains("hidden");
+
+closeAllFibLineWidthMenus();
+closeAllFibLineStyleMenus();
+
+if(!wasWidthOpen){
+openFibLineWidthMenu(
+widthBtn,
+fallback
+);
+}
+
+return;
+
+}
+
+}, true);
+
 settingsPopover.addEventListener("change", e=>{
 
-if(
-!alive ||
-!isFibContext()
-){
+if(!canApplyFibPanel()){
 return;
 }
 
@@ -1291,10 +1968,7 @@ scheduleFibApplyImmediate();
 
 settingsPopover.addEventListener("input", e=>{
 
-if(
-!alive ||
-!isFibContext()
-){
+if(!canApplyFibPanel()){
 return;
 }
 
@@ -1306,6 +1980,207 @@ scheduleFibApplyDebounced();
 
 });
 
+if(!settingsPopover.dataset.fibLineMenuBound){
+
+settingsPopover.dataset.fibLineMenuBound = "1";
+
+document.addEventListener("mousedown", e=>{
+
+if(
+e.target.closest(
+".fib-line-style-btn, .fib-line-style-menu--portal, .fib-line-width-btn, .fib-line-width-menu--portal"
+)
+){
+return;
+}
+
+closeAllFibLineStyleMenus();
+closeAllFibLineWidthMenus();
+
+});
+
+window.addEventListener("scroll", closeAllFibLineStyleMenus, true);
+window.addEventListener("scroll", closeAllFibLineWidthMenus, true);
+
+window.addEventListener("resize", closeAllFibLineStyleMenus);
+window.addEventListener("resize", closeAllFibLineWidthMenus);
+
+}
+
+}
+
+function commitFibPanelToShape(){
+
+if(!canApplyFibPanel()){
+return false;
+}
+
+const shape =
+resolveFibStyleTarget();
+
+if(!shape){
+return false;
+}
+
+const panel =
+readFibPanelFromDOM();
+
+shape.fibLevels =
+JSON.parse(
+JSON.stringify(panel.fibLevels)
+);
+
+shape.fibShowTrendLine =
+panel.fibShowTrendLine !== false;
+
+saveDrawings();
+redraw();
+
+const style =
+readStyleFromUI();
+
+saveToolDefaults(
+"fib",
+{
+color: style.color,
+lineWidth: style.lineWidth,
+fibLevels: shape.fibLevels,
+fibShowTrendLine:
+shape.fibShowTrendLine !== false
+}
+);
+
+return true;
+
+}
+
+fibPanelCommitHook = ()=>{
+
+rememberFibSettingsTarget();
+commitFibPanelToShape();
+
+};
+
+function applyFibSettingsFromPanel(){
+
+commitFibPanelToShape();
+
+}
+
+function setFibLevelColorButton(btn, color, fallback){
+
+if(!btn){
+return;
+}
+
+const picked =
+normalizeFibLevelColor(color);
+
+if(picked){
+btn.dataset.customColor = picked;
+btn.style.background = picked;
+btn.classList.add("has-custom");
+return;
+}
+
+delete btn.dataset.customColor;
+btn.style.background = fallback || STROKE;
+btn.classList.remove("has-custom");
+
+}
+
+function closeFibColorMenu(){
+
+if(fibColorMenuPortal){
+fibColorMenuPortal.classList.add("hidden");
+}
+
+fibColorMenuAnchor = null;
+
+}
+
+function openFibColorMenu(anchorBtn, fallbackColor){
+
+const portal =
+ensureFibColorMenuPortal();
+
+fibColorMenuAnchor = anchorBtn;
+
+const active =
+anchorBtn.dataset.customColor ||
+fallbackColor ||
+STROKE;
+
+mountTvColorGrid(
+portal,
+{
+activeColor: active,
+onSelect: hex=>{
+
+setFibLevelColorButton(
+anchorBtn,
+hex,
+fallbackColor
+);
+
+rememberFibSettingsTarget();
+closeFibColorMenu();
+commitFibPanelToShape();
+
+}
+}
+);
+
+portal.classList.remove("hidden");
+
+const rect =
+anchorBtn.getBoundingClientRect();
+
+portal.style.position = "fixed";
+portal.style.left = `${Math.round(rect.left)}px`;
+portal.style.top = `${Math.round(rect.bottom + 4)}px`;
+portal.style.zIndex = "20000";
+
+}
+
+function ensureFibColorMenuPortal(){
+
+if(fibColorMenuPortal){
+return fibColorMenuPortal;
+}
+
+const el =
+document.createElement("div");
+
+el.className =
+"draw-popover tv-color-popover fib-level-color-menu hidden";
+
+document.body.appendChild(el);
+
+el.addEventListener("mousedown", e=>{
+e.stopPropagation();
+});
+
+document.addEventListener("mousedown", e=>{
+
+if(
+e.target.closest(
+".fib-level-color-btn, .fib-level-color-menu"
+)
+){
+return;
+}
+
+closeFibColorMenu();
+
+});
+
+window.addEventListener("scroll", closeFibColorMenu, true);
+window.addEventListener("resize", closeFibColorMenu);
+
+fibColorMenuPortal = el;
+return el;
+
 }
 
 function scheduleFibApplyImmediate(){
@@ -1313,6 +2188,11 @@ function scheduleFibApplyImmediate(){
 if(fibApplyTimer){
 clearTimeout(fibApplyTimer);
 fibApplyTimer = null;
+}
+
+if(isFibSettingsOpen()){
+applyFibSettingsFromPanel();
+return;
 }
 
 applyStyleFromUI();
@@ -1329,6 +2209,12 @@ fibApplyTimer =
 setTimeout(()=>{
 
 fibApplyTimer = null;
+
+if(isFibSettingsOpen()){
+applyFibSettingsFromPanel();
+return;
+}
+
 applyStyleFromUI();
 
 },320);
@@ -1360,6 +2246,12 @@ const valInp =
 row.querySelector(".fib-level-val");
 const chk =
 row.querySelector(".fib-level-on");
+const colorBtn =
+row.querySelector(".fib-level-color-btn");
+const widthBtn =
+row.querySelector(".fib-line-width-btn");
+const styleBtn =
+row.querySelector(".fib-line-style-btn");
 
 const parsed =
 parseFibRatioField(
@@ -1374,6 +2266,33 @@ parsed != null
 template[i].enabled =
 !!chk?.checked;
 
+template[i].lineStyle =
+normalizeFibLineStyle(
+styleBtn?.dataset.lineStyle
+);
+
+const levelColor =
+normalizeFibLevelColor(
+colorBtn?.dataset.customColor
+);
+
+if(levelColor){
+template[i].color = levelColor;
+}else{
+delete template[i].color;
+}
+
+const levelWidth =
+normalizeFibLevelWidth(
+widthBtn?.dataset.customWidth
+);
+
+if(levelWidth){
+template[i].lineWidth = levelWidth;
+}else{
+delete template[i].lineWidth;
+}
+
 });
 
 return {
@@ -1383,9 +2302,146 @@ fibShowTrendLine
 
 }
 
+function mergeFibLevelsAfterGlobalChange(
+shape,
+panel,
+{
+clearColors = false,
+clearWidths = false
+}
+){
+
+let levels =
+panel
+? JSON.parse(
+JSON.stringify(panel.fibLevels)
+)
+: JSON.parse(
+JSON.stringify(
+normalizeFibLevelsShape(shape.fibLevels)
+)
+);
+
+levels =
+normalizeFibLevelsShape(levels);
+
+levels.forEach(row=>{
+
+if(clearColors){
+delete row.color;
+}
+
+if(clearWidths){
+delete row.lineWidth;
+}
+
+});
+
+if(panel){
+
+panel.fibLevels.forEach((pr,i)=>{
+
+if(
+i >= levels.length
+){
+return;
+}
+
+levels[i].enabled = !!pr.enabled;
+levels[i].v = pr.v;
+levels[i].lineStyle =
+normalizeFibLineStyle(pr.lineStyle);
+
+const levelColor =
+normalizeFibLevelColor(pr.color);
+
+if(
+levelColor &&
+!clearColors
+){
+levels[i].color = levelColor;
+}
+
+const levelWidth =
+normalizeFibLevelWidth(pr.lineWidth);
+
+if(
+levelWidth &&
+!clearWidths
+){
+levels[i].lineWidth = levelWidth;
+}
+
+});
+
+shape.fibShowTrendLine =
+panel.fibShowTrendLine !== false;
+
+}
+
+shape.fibLevels = levels;
+
+}
+
+function applyFibGlobalColorFromToolbar(shape, color){
+
+shape.color = color;
+
+const panel =
+isFibSettingsOpen() ||
+fibPanelBuilt
+? readFibPanelFromDOM()
+: null;
+
+mergeFibLevelsAfterGlobalChange(
+shape,
+panel,
+{ clearColors: true, clearWidths: false }
+);
+
+if(fibPanelBuilt){
+fillFibSettingsPanel(
+shape.fibLevels,
+shape.fibShowTrendLine,
+shape.color,
+shape.lineWidth
+);
+}
+
+}
+
+function applyFibGlobalWidthFromToolbar(shape, lineWidth){
+
+shape.lineWidth = lineWidth;
+
+const panel =
+isFibSettingsOpen() ||
+fibPanelBuilt
+? readFibPanelFromDOM()
+: null;
+
+mergeFibLevelsAfterGlobalChange(
+shape,
+panel,
+{ clearColors: false, clearWidths: true }
+);
+
+if(fibPanelBuilt){
+fillFibSettingsPanel(
+shape.fibLevels,
+shape.fibShowTrendLine,
+shape.color,
+shape.lineWidth
+);
+}
+
+}
+
 function fillFibSettingsPanel(
 fibLevels,
-fibShowTrendLine
+fibShowTrendLine,
+fallbackColor,
+fallbackWidth
 ){
 
 ensureFibSettingsPanel();
@@ -1394,6 +2450,12 @@ const rows =
 normalizeFibLevelsShape(
 fibLevels
 );
+
+const baseColor =
+fallbackColor || STROKE;
+
+const baseWidth =
+normalizeFibLevelWidth(fallbackWidth) || 1;
 
 const trendEl =
 settingsPopover.querySelector("#fib-show-trend-line");
@@ -1420,6 +2482,12 @@ const on =
 wrap.querySelector(".fib-level-on");
 const val =
 wrap.querySelector(".fib-level-val");
+const colorBtn =
+wrap.querySelector(".fib-level-color-btn");
+const widthBtn =
+wrap.querySelector(".fib-line-width-btn");
+const styleBtn =
+wrap.querySelector(".fib-line-style-btn");
 
 if(on){
 on.checked = !!row.enabled;
@@ -1429,6 +2497,23 @@ if(val){
 val.value =
 formatFibInputValue(row.v);
 }
+
+setFibLevelColorButton(
+colorBtn,
+row.color,
+baseColor
+);
+
+setFibLevelWidthButton(
+widthBtn,
+row.lineWidth,
+baseWidth
+);
+
+setFibLineStyleButton(
+styleBtn,
+row.lineStyle
+);
 
 });
 
@@ -1474,7 +2559,7 @@ if(colorStripe){
 colorStripe.style.setProperty("--active-color", color);
 }
 
-colorPopover?.querySelectorAll(".color-swatch").forEach(btn=>{
+colorPopover?.querySelectorAll(".tv-color-swatch").forEach(btn=>{
 btn.classList.toggle(
 "active",
 btn.dataset.color?.toLowerCase() === color?.toLowerCase()
@@ -1524,7 +2609,9 @@ type !== "fib"
 if(type === "fib"){
 fillFibSettingsPanel(
 style.fibLevels,
-style.fibShowTrendLine
+style.fibShowTrendLine,
+style.color,
+style.lineWidth
 );
 }else{
 settingsPopover?.classList.add("hidden");
@@ -1542,6 +2629,10 @@ const show =
 tool !== "cursor" || !!selectedId;
 
 styleBar.classList.toggle("hidden", !show);
+
+if(show){
+syncDrawChromeLayout();
+}
 
 if(deleteOneBtn){
 deleteOneBtn.style.display =
@@ -1570,7 +2661,7 @@ updateAlertStyleUI(null);
 
 }
 
-function applyStyleFromUI(){
+function applyStyleFromUI(scope){
 
 const style = readStyleFromUI();
 const type = getStyleTargetType();
@@ -1582,22 +2673,57 @@ return;
 const sel =
 getSelected();
 
-if(sel){
+const fibTarget =
+type === "fib"
+? resolveFibStyleTarget()
+: null;
 
-if(
-sel.type === "hray" &&
-sel.isAlert
-){
-sel.lineWidth = style.lineWidth;
+const target =
+fibTarget || sel;
+
+if(target){
+
+if(target.type === "fib"){
+
+if(scope === "width"){
+
+applyFibGlobalWidthFromToolbar(
+target,
+style.lineWidth
+);
+
+}else if(scope === "color"){
+
+applyFibGlobalColorFromToolbar(
+target,
+style.color
+);
+
 }else{
-sel.color = style.color;
-sel.lineWidth = style.lineWidth;
+
+applyFibGlobalColorFromToolbar(
+target,
+style.color
+);
+
+applyFibGlobalWidthFromToolbar(
+target,
+style.lineWidth
+);
+
 }
 
-if(sel.type === "fib"){
-sel.fibLevels = style.fibLevels;
-sel.fibShowTrendLine =
-style.fibShowTrendLine !== false;
+}else if(
+target.type === "hray" &&
+target.isAlert
+){
+
+target.lineWidth = style.lineWidth;
+
+}else{
+
+target.color = style.color;
+target.lineWidth = style.lineWidth;
 
 }
 
@@ -1636,9 +2762,19 @@ lineWidth: style.lineWidth
 
 function closePopovers(){
 
+const fibSettingsWasOpen =
+isFibSettingsOpen();
+
 colorPopover?.classList.add("hidden");
 widthPopover?.classList.add("hidden");
 settingsPopover?.classList.add("hidden");
+closeAllFibLineStyleMenus();
+closeAllFibLineWidthMenus();
+closeFibColorMenu();
+
+if(fibSettingsWasOpen){
+fibSettingsShapeId = null;
+}
 
 }
 
@@ -1648,8 +2784,13 @@ if(!popover || !styleBar){
 return;
 }
 
-popover.style.left = `${styleBar.offsetLeft}px`;
-popover.style.top = `${styleBar.offsetTop + offsetY}px`;
+const barR =
+styleBar.getBoundingClientRect();
+
+popover.style.position = "fixed";
+popover.style.left = `${barR.left}px`;
+popover.style.top = `${barR.top + offsetY}px`;
+popover.style.zIndex = "10051";
 
 }
 
@@ -2152,10 +3293,22 @@ const y =
 series.priceToCoordinate(price);
 
 if(y != null){
+
+const x1 =
+Math.min(a.x, b.x);
+const x2 =
+Math.max(a.x, b.x);
+
+if(
+px >= x1 - 8 &&
+px <= x2 + 8
+){
 dist = Math.min(
 dist,
 Math.abs(py - y)
 );
+}
+
 }
 
 });
@@ -2395,11 +3548,87 @@ return false;
 
 }
 
+function isDrawChromeTarget(target){
+
+if(!target?.closest){
+return false;
+}
+
+return !!(
+chromePortal?.contains(target) ||
+styleBar?.contains(target) ||
+colorPopover?.contains(target) ||
+widthPopover?.contains(target) ||
+settingsPopover?.contains(target) ||
+target.closest(".draw-popover") ||
+target.closest(".draw-chrome-portal") ||
+target.closest(".fib-line-style-menu--portal") ||
+target.closest(".fib-line-width-menu--portal") ||
+target.closest(".fib-level-color-menu") ||
+target.closest(".draw-context-menu")
+);
+
+}
+
+function rectHitsClient(el, clientX, clientY){
+
+if(
+!el ||
+el.classList.contains("hidden")
+){
+return false;
+}
+
+const r =
+el.getBoundingClientRect();
+
+if(
+r.width < 1 ||
+r.height < 1
+){
+return false;
+}
+
+return (
+clientX >= r.left &&
+clientX <= r.right &&
+clientY >= r.top &&
+clientY <= r.bottom
+);
+
+}
+
+function isDrawChromePointerEvent(e){
+
+if(isDrawChromeTarget(e.target)){
+return true;
+}
+
+return (
+rectHitsClient(styleBar, e.clientX, e.clientY) ||
+rectHitsClient(colorPopover, e.clientX, e.clientY) ||
+rectHitsClient(widthPopover, e.clientX, e.clientY) ||
+rectHitsClient(settingsPopover, e.clientX, e.clientY) ||
+rectHitsClient(fibLineStyleMenuPortal, e.clientX, e.clientY) ||
+rectHitsClient(fibLineWidthMenuPortal, e.clientX, e.clientY)
+);
+
+}
+
 function setupEditInteraction(){
 
 wrapEl.addEventListener("mousedown", e=>{
 
 if(tool !== "cursor" || placement){
+return;
+}
+
+/*
+  Панель стиля внутри chart-wrap: горизонтальные уровни фибы
+  ловят mousedown по всей ширине (|py-y|), из-за чего клики по кнопкам
+  перехватывались как перетаскивание объекта.
+*/
+if(isDrawChromePointerEvent(e)){
 return;
 }
 
@@ -2454,8 +3683,6 @@ return;
 blockChartClick = true;
 e.preventDefault();
 e.stopPropagation();
-
-canvas.style.pointerEvents = "auto";
 
 }, true);
 
@@ -2523,7 +3750,6 @@ return;
 }
 
 dragState = null;
-canvas.style.pointerEvents = "none";
 blockChartClick = true;
 
 };
@@ -2852,10 +4078,7 @@ dragHandle.contains(e.target)
 return;
 }
 
-if(
-styleBar &&
-styleBar.contains(e.target)
-){
+if(isDrawChromePointerEvent(e)){
 return;
 }
 
@@ -3125,17 +4348,28 @@ if(y == null){
 return;
 }
 
+const lineColor =
+row.color || color;
+
+const dash =
+fibLevelDash(row.lineStyle);
+
+const lineWidth =
+normalizeFibLevelWidth(row.lineWidth) ||
+width;
+
 drawLine(
 ctx,
 x1,
 y,
 x2,
 y,
-color,
-width
+lineColor,
+lineWidth,
+dash
 );
 
-ctx.fillStyle = color;
+ctx.fillStyle = lineColor;
 ctx.font = "11px Arial";
 ctx.fillText(
 formatFibLabel(row.v),
@@ -3156,7 +4390,8 @@ a.y,
 b.x,
 b.y,
 color,
-width
+width,
+[]
 );
 
 }
@@ -3458,6 +4693,14 @@ return;
 if(tool === "cursor"){
 
 selectedId = hitTest(param.point.x, param.point.y);
+
+const picked =
+getSelected();
+
+if(picked?.type === "fib"){
+fibSettingsShapeId = picked.id;
+}
+
 updateStyleBar();
 redraw();
 return;
@@ -3616,6 +4859,16 @@ return;
 
 if(e.key === "Escape"){
 
+if(isFibSettingsOpen()){
+
+closeAllFibLineStyleMenus();
+closeAllFibLineWidthMenus();
+closeFibColorMenu();
+closePopovers();
+return;
+
+}
+
 if(placement){
 cancelPlacement();
 return;
@@ -3688,39 +4941,7 @@ clearAll();
 function initStylePopovers(){
 
 if(colorPopover){
-
-const grid =
-document.createElement("div");
-
-grid.className = "color-grid";
-
-COLOR_PALETTE.forEach(hex=>{
-
-const btn =
-document.createElement("button");
-
-btn.type = "button";
-btn.className = "color-swatch";
-btn.dataset.color = hex;
-btn.style.background = hex;
-btn.title = hex;
-
-btn.addEventListener("click", e=>{
-
-e.stopPropagation();
-updateColorStripe(hex);
-applyStyleFromUI();
-colorPopover.classList.add("hidden");
-
-});
-
-grid.appendChild(btn);
-
-});
-
-colorPopover.innerHTML = "";
-colorPopover.appendChild(grid);
-
+colorPopover.classList.add("tv-color-popover");
 }
 
 colorBtn?.addEventListener("click", e=>{
@@ -3732,9 +4953,24 @@ colorPopover?.classList.contains("hidden");
 
 closePopovers();
 
-if(open){
+if(open && colorPopover){
+
+mountTvColorGrid(
+colorPopover,
+{
+activeColor: activeColor || STROKE,
+onSelect: hex=>{
+
+updateColorStripe(hex);
+applyStyleFromUI("color");
+colorPopover.classList.add("hidden");
+
+}
+}
+);
+
 positionPopover(colorPopover, 40);
-colorPopover?.classList.remove("hidden");
+colorPopover.classList.remove("hidden");
 }
 
 });
@@ -3761,7 +4997,7 @@ btn.addEventListener("click", e=>{
 
 e.stopPropagation();
 setActiveWidth(Number(btn.dataset.width));
-applyStyleFromUI();
+applyStyleFromUI("width");
 widthPopover?.classList.add("hidden");
 
 });
@@ -3782,14 +5018,23 @@ settingsPopover?.classList.contains("hidden");
 closePopovers();
 
 if(open){
+rememberFibSettingsTarget();
 positionPopover(settingsPopover, 40);
 settingsPopover?.classList.remove("hidden");
 }
 
 });
 
-deleteOneBtn?.addEventListener("click", ()=>{
+deleteOneBtn?.addEventListener("mousedown", e=>{
+e.stopPropagation();
+});
+
+deleteOneBtn?.addEventListener("click", e=>{
+
+e.stopPropagation();
+e.preventDefault();
 deleteSelected();
+
 });
 
 alertToggleBtn?.addEventListener("click", e=>{
@@ -3821,13 +5066,35 @@ try{
 pos = JSON.parse(localStorage.getItem(key) || "") || pos;
 }catch{}
 
-styleBar.style.left = `${pos.x}px`;
-styleBar.style.top = `${pos.y}px`;
+barOffset = {
+x: Number(pos.x) || 8,
+y: Number(pos.y) || 8
+};
 
-if(settingsPopover){
-settingsPopover.style.left = `${pos.x}px`;
-settingsPopover.style.top = `${pos.y + 44}px`;
+syncDrawChromeLayout();
+
+if(
+typeof ResizeObserver !==
+"undefined"
+){
+chromeLayoutObserver =
+new ResizeObserver(()=>{
+syncDrawChromeLayout();
+});
+
+chromeLayoutObserver.observe(wrapEl);
 }
+
+window.addEventListener(
+"resize",
+syncDrawChromeLayout
+);
+
+window.addEventListener(
+"scroll",
+syncDrawChromeLayout,
+true
+);
 
 let dragging = false;
 let dragStart = { x: 0, y: 0 };
@@ -3840,9 +5107,13 @@ e.stopPropagation();
 
 dragging = true;
 dragStart = { x: e.clientX, y: e.clientY };
+
+const barR =
+styleBar.getBoundingClientRect();
+
 barStart = {
-x: styleBar.offsetLeft,
-y: styleBar.offsetTop
+x: barR.left,
+y: barR.top
 };
 
 });
@@ -3856,13 +5127,41 @@ return;
 const dx = e.clientX - dragStart.x;
 const dy = e.clientY - dragStart.y;
 
-const { w, h } = chartSize();
+const wrap =
+wrapEl.getBoundingClientRect();
+const barW =
+styleBar.offsetWidth;
+const barH =
+styleBar.offsetHeight;
 
-let nx = Math.max(0, Math.min(w - styleBar.offsetWidth, barStart.x + dx));
-let ny = Math.max(0, Math.min(h - styleBar.offsetHeight, barStart.y + dy));
+let fx =
+barStart.x + dx;
+let fy =
+barStart.y + dy;
 
-styleBar.style.left = `${nx}px`;
-styleBar.style.top = `${ny}px`;
+fx = Math.max(
+wrap.left,
+Math.min(
+wrap.right - barW,
+fx
+)
+);
+
+fy = Math.max(
+wrap.top,
+Math.min(
+wrap.bottom - barH,
+fy
+)
+);
+
+styleBar.style.left = `${fx}px`;
+styleBar.style.top = `${fy}px`;
+
+barOffset = {
+x: fx - wrap.left,
+y: fy - wrap.top
+};
 
 syncPopoversPosition();
 
@@ -3876,14 +5175,22 @@ return;
 
 dragging = false;
 
-const saved = {
-x: styleBar.offsetLeft,
-y: styleBar.offsetTop
-};
-
-localStorage.setItem(key, JSON.stringify(saved));
+localStorage.setItem(
+key,
+JSON.stringify(barOffset)
+);
 
 };
+
+function isFibSettingsChromePointerEvent(e){
+
+if(!isFibSettingsOpen()){
+return false;
+}
+
+return isDrawChromePointerEvent(e);
+
+}
 
 const onDocClick = e=>{
 
@@ -3891,11 +5198,18 @@ if(!alive || !isActive()){
 return;
 }
 
+if(isFibSettingsChromePointerEvent(e)){
+return;
+}
+
 if(
 styleBar?.contains(e.target) ||
 colorPopover?.contains(e.target) ||
 widthPopover?.contains(e.target) ||
-settingsPopover?.contains(e.target)
+settingsPopover?.contains(e.target) ||
+e.target.closest(".fib-line-style-menu--portal") ||
+e.target.closest(".fib-line-width-menu--portal") ||
+e.target.closest(".fib-level-color-menu")
 ){
 return;
 }
@@ -4040,6 +5354,7 @@ resize: resizeCanvas,
 destroy(){
 
 alive = false;
+fibPanelCommitHook = null;
 
 hideContextMenu?.();
 contextMenuEl?.remove();
@@ -4077,6 +5392,30 @@ if(chartApplyPatchRestore){
 chartApplyPatchRestore();
 
 }
+
+fibColorMenuPortal?.remove();
+fibColorMenuPortal = null;
+fibLineStyleMenuPortal?.remove();
+fibLineStyleMenuPortal = null;
+fibLineWidthMenuPortal?.remove();
+fibLineWidthMenuPortal = null;
+
+chromeLayoutObserver?.disconnect();
+chromeLayoutObserver = null;
+
+window.removeEventListener(
+"resize",
+syncDrawChromeLayout
+);
+
+window.removeEventListener(
+"scroll",
+syncDrawChromeLayout,
+true
+);
+
+chromePortal?.remove();
+chromePortal = null;
 
 canvas.remove();
 

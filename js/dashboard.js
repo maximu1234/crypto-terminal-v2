@@ -17,7 +17,7 @@ applyDashboardZoom
 
 import {
 initDrawings
-} from "./drawings.js?v=47";
+} from "./drawings.js?v=63";
 
 import {
 subscribeKline
@@ -32,6 +32,10 @@ import {
 preloadTradingSymbols,
 attachSymbolAutocomplete
 } from "./symbol-autocomplete.js";
+
+import {
+loadLightweightCharts
+} from "./charts-lib-boot.js";
 
 const dashboard =
 document.getElementById("dashboard");
@@ -452,6 +456,13 @@ renderDashboard();
 
 });
 
-preloadTradingSymbols();
+loadLightweightCharts().then(()=>{
 
+preloadTradingSymbols();
 renderDashboard();
+
+}).catch(err=>{
+
+console.error("Dashboard chart lib:", err);
+
+});
