@@ -982,6 +982,121 @@ renderPage();
 
 }
 
+function isSwipeBlockedTarget(el){
+
+if(!el){
+return true;
+}
+
+return !!el.closest(
+"button, a, input, textarea, select, label"
+);
+
+}
+
+/** Свайп влево/вправо на iPad — только главная (сетка + пагинация). */
+function initScreenerPageSwipe(){
+
+const zones =
+[gridEl, paginationEl].filter(Boolean);
+
+if(!zones.length){
+return;
+}
+
+const SWIPE_MIN_PX = 48;
+const MAX_VERTICAL_RATIO = 0.85;
+
+let startX = 0;
+let startY = 0;
+let tracking = false;
+
+function onTouchStart(e){
+
+if(e.touches.length !== 1){
+return;
+}
+
+if(isSwipeBlockedTarget(e.target)){
+return;
+}
+
+const t =
+e.touches[0];
+
+startX = t.clientX;
+startY = t.clientY;
+tracking = true;
+
+}
+
+function onTouchEnd(e){
+
+if(!tracking){
+return;
+}
+
+tracking = false;
+
+if(e.changedTouches.length !== 1){
+return;
+}
+
+const t =
+e.changedTouches[0];
+
+const dx =
+t.clientX - startX;
+
+const dy =
+t.clientY - startY;
+
+if(
+Math.abs(dx) < SWIPE_MIN_PX ||
+Math.abs(dy) > Math.abs(dx) * MAX_VERTICAL_RATIO
+){
+return;
+}
+
+/* влево — следующая страница, вправо — предыдущая */
+if(dx < 0){
+goToPage(currentPage + 1);
+}else{
+goToPage(currentPage - 1);
+}
+
+}
+
+function onTouchCancel(){
+tracking = false;
+}
+
+for(const zone of zones){
+
+zone.addEventListener(
+"touchstart",
+onTouchStart,
+{ passive: true }
+);
+
+zone.addEventListener(
+"touchend",
+onTouchEnd,
+{ passive: true }
+);
+
+zone.addEventListener(
+"touchcancel",
+onTouchCancel,
+{ passive: true }
+);
+
+}
+
+}
+
+initScreenerPageSwipe();
+
 document.addEventListener(
 "keydown",
 e=>{
