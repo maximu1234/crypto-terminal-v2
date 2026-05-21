@@ -3092,6 +3092,42 @@ return '600 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, s
 
 }
 
+function positionBadgeFontEntry(){
+
+return '600 10px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif';
+
+}
+
+function positionBadgeFontVolume(){
+
+return '800 14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif';
+
+}
+
+const POSITION_VOLUME_COLOR = "#FEF08C";
+
+function resolvePositionBadgeFont(kind, variant){
+
+if(kind === "volume"){
+return positionBadgeFontVolume();
+}
+
+if(kind === "badge"){
+return positionBadgeFont();
+}
+
+if(kind === "entry"){
+return positionBadgeFontEntry();
+}
+
+if(variant === "entry"){
+return positionBadgeFontEntry();
+}
+
+return positionBadgeFont();
+
+}
+
 function positionMinWidthPx(){
 
 const ctx =
@@ -3532,7 +3568,6 @@ variant
 ){
 
 ctx.save();
-ctx.textAlign = "center";
 ctx.textBaseline = "middle";
 
 const padX = 8;
@@ -3540,8 +3575,6 @@ let fill =
 "rgba(15, 23, 42, 0.92)";
 let stroke =
 "rgba(148, 163, 184, 0.35)";
-let font =
-positionBadgeFont();
 
 if(variant === "tp"){
 fill = "rgba(22, 101, 52, 0.95)";
@@ -3555,17 +3588,42 @@ stroke = "rgba(250, 204, 21, 0.4)";
 }else if(variant === "entry"){
 fill = "rgba(113, 63, 18, 0.95)";
 stroke = "rgba(250, 204, 21, 0.45)";
-font =
-'600 10px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif';
 }
+
+const segments =
+Array.isArray(text)
+? text
+: [{ text, font: variant }];
+
+const hasVolumeHighlight =
+segments.some(seg=>seg.font === "volume");
+
+const measured =
+segments.map(seg=>{
+
+const font =
+resolvePositionBadgeFont(seg.font, variant);
 
 ctx.font = font;
 
-const metrics =
-ctx.measureText(text);
+return {
+text: seg.text,
+font,
+color: seg.color,
+highlight: seg.highlight === true,
+width: ctx.measureText(seg.text).width
+};
+
+});
+
+const textWidth =
+measured.reduce((sum, seg)=>sum + seg.width, 0);
 const bw =
-metrics.width + padX * 2;
-const bh = 18;
+textWidth + padX * 2;
+const bh =
+hasVolumeHighlight
+? 22
+: 18;
 const left =
 cx - bw / 2;
 const top =
@@ -3580,8 +3638,43 @@ ctx.strokeStyle = stroke;
 ctx.lineWidth = 1;
 ctx.stroke();
 
-ctx.fillStyle = "#f8fafc";
-ctx.fillText(text, cx, cy);
+ctx.textAlign = "left";
+
+let x =
+cx - textWidth / 2;
+
+measured.forEach(seg=>{
+
+ctx.font = seg.font;
+
+if(seg.highlight){
+
+const pad = 4;
+const pillH =
+bh - 6;
+const pillTop =
+cy - pillH / 2;
+
+ctx.fillStyle = "rgba(0, 0, 0, 0.55)";
+ctx.beginPath();
+ctx.roundRect(
+x - pad,
+pillTop,
+seg.width + pad * 2,
+pillH,
+4
+);
+ctx.fill();
+
+}
+
+ctx.fillStyle =
+seg.color || "#f8fafc";
+ctx.fillText(seg.text, x, cy);
+x += seg.width;
+
+});
+
 ctx.restore();
 
 }
@@ -3771,9 +3864,6 @@ tpText =
 slText =
 `SL: ${sizing.slPct.toFixed(2)}% (${formatMoneyUsd(sizing.riskUsd)})`;
 
-entryText =
-`Объем ${formatVolumeUsd(sizing.volume)}$ RR: ${sizing.rrNum.toFixed(2)}`;
-
 }else{
 
 if(isLong){
@@ -3831,13 +3921,35 @@ botY - 14,
 
 }
 
+if(showSizing){
+
+drawPositionBadge(
+ctx,
+[
+{ text:"Объем ", font:"entry" },
+{
+text: formatVolumeUsd(sizing.volume),
+font: "volume",
+color: POSITION_VOLUME_COLOR
+},
+{ text:` $ RR: ${sizing.rrNum.toFixed(2)}`, font:"entry" }
+],
+cx,
+yEntry,
+"entry"
+);
+
+}else{
+
 drawPositionBadge(
 ctx,
 entryText,
 cx,
 yEntry,
-showSizing ? "entry" : "rr"
+"rr"
 );
+
+}
 
 if(showSelected){
 
