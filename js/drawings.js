@@ -37,6 +37,7 @@ const HANDLE_FILL = "#2563eb";
 const HANDLE_STROKE = "#ffffff";
 const WIDTH_OPTIONS = [1, 2, 3, 4];
 const USER_PREFS_KEY = "draw_user_prefs";
+const GLOBAL_STYLE_KEY = "draw_style_global_v1";
 
 function buildColorPalette(){
 
@@ -598,12 +599,47 @@ toolDefaults[name] = null;
 
 }
 
+function loadGlobalStyle(){
+
+try{
+
+return JSON.parse(
+localStorage.getItem(GLOBAL_STYLE_KEY) || "{}"
+);
+
+}catch{
+
+return {};
+
+}
+
+}
+
+function saveGlobalStyle(partial){
+
+const next = {
+...loadGlobalStyle(),
+...partial
+};
+
+localStorage.setItem(
+GLOBAL_STYLE_KEY,
+JSON.stringify(next)
+);
+
+}
+
 function saveToolDefaults(name, data){
 
-toolDefaults[name] = data;
+const next = {
+...(toolDefaults[name] || {}),
+...data
+};
+
+toolDefaults[name] = next;
 localStorage.setItem(
 defaultsStorageKey(name),
-JSON.stringify(data)
+JSON.stringify(next)
 );
 
 }
@@ -640,13 +676,16 @@ JSON.stringify(next)
 
 function baseDefaultStyle(type){
 
+const global =
+loadGlobalStyle();
+
 const saved =
 toolDefaults[type] || {};
 
 const out =
 {
-color: saved.color || STROKE,
-lineWidth: saved.lineWidth ?? 1
+color: saved.color || global.color || STROKE,
+lineWidth: saved.lineWidth ?? global.lineWidth ?? 1
 };
 
 if(type === "fib"){
@@ -1567,8 +1606,6 @@ redraw();
 
 }
 
-if(tool !== "cursor"){
-
 const defaultsPayload =
 {
 color: style.color,
@@ -1590,7 +1627,10 @@ type,
 defaultsPayload
 );
 
-}
+saveGlobalStyle({
+color: style.color,
+lineWidth: style.lineWidth
+});
 
 }
 
@@ -3637,6 +3677,15 @@ lastLoadedSymbol = next;
 loadDrawings();
 selectedId = null;
 cancelPlacement();
+
+if(tool !== "cursor"){
+const style =
+baseDefaultStyle(tool);
+
+updateColorStripe(style.color);
+setActiveWidth(style.lineWidth);
+}
+
 updateStyleBar();
 scheduleRedraw();
 
