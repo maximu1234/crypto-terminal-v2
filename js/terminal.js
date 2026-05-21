@@ -5,6 +5,10 @@ loadTwelveData
 } from "./api.js?v=4";
 
 import {
+filterRecentListings
+} from "./bybit-listings.js?v=1";
+
+import {
 calculateRSI,
 RSI_PERIOD
 } from "./indicators.js?v=2";
@@ -795,20 +799,8 @@ await loadBybitSymbols();
 
 allBybitSymbols = list.map(x => x.symbol);
 
-const weekAgo =
-Date.now() - (7*24*60*60*1000);
-
-newListings = list
-.filter(x => {
-
-if(!x.launchTime){
-return false;
-}
-
-return Number(x.launchTime) > weekAgo;
-
-})
-.map(x => x.symbol);
+newListings =
+filterRecentListings(list).map(x => x.symbol);
 
 }
 

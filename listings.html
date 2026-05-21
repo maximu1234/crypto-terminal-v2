@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin/>
+<link rel="dns-prefetch" href="https://api.bybit.com"/>
+
+<title>Листинги — Multichart</title>
+
+<link rel="stylesheet" href="css/common.css">
+<link rel="stylesheet" href="css/listings.css?v=2">
+
+</head>
+
+<body>
+
+<header id="header">
+
+<div id="logo">Multichart</div>
+
+<nav class="menu">
+<a href="/index.html">Главная</a>
+<a href="/coins.html">Монеты</a>
+<a href="/terminal.html">Терминал</a>
+<a href="/alerts/">Алерты</a>
+<a href="/listings.html" class="active">Листинги</a>
+<a href="/trade-calculator.html">Калькулятор</a>
+</nav>
+
+</header>
+
+<main id="listings-main">
+
+<h1>Листинги</h1>
+
+<p class="listings-lead">
+Все листинги биржи Bybit за последние 365 дней. Новые в верху списка.
+</p>
+
+<div id="listings-status">Загрузка…</div>
+
+<ul id="listings-list"></ul>
+
+</main>
+
+<script type="module" src="js/listings.js?v=2"></script>
+
+</body>
+</html>

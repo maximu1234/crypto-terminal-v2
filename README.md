@@ -8,6 +8,7 @@
 |----------|-----|----------|
 | Главная | `/` (`index.html`) | Скринер 4 / 6 / 9 виджетов, избранное (флаг) |
 | Монеты | `/coins` | Свечи, RSI, рисование, алерты на лучах |
+| Листинги | `/listings` | USDT-перпетуалы Bybit (`launchTime`, до 365 дн.; «Новые» на Монетах — 7 дн.) |
 | Терминал | `/terminal` | Дашборд виджетов 4 / 6 / 9 |
 | Алерты | `/alerts` | Активные и история (30 последних) |
 | Калькулятор | `/trade-calculator` | Размер позиции по риску и стопу |
@@ -42,22 +43,24 @@
 
 ## Данные
 
-- **Crypto / New** — Bybit Linear (REST + WebSocket).
+- **Crypto / Новые** — Bybit Linear (REST + WebSocket); «Новые» = 7 дней, страница Листинги = до 365 дней (`js/bybit-listings.js`).
 - **Stocks / Commodities / Forex** — Twelve Data (ключ в `js/api.js`).
 
 ## Структура
 
 ```
-index.html, coins.html, terminal.html, trade-calculator.html
+index.html, coins.html, listings.html, terminal.html, trade-calculator.html
 alerts/index.html
 screener.html          — редирект
 vercel.json, start.sh
 
-css/                   — common, screener, terminal, dashboard, alerts, trade-calculator
+css/                   — common, screener, terminal, dashboard, alerts, trade-calculator, listings
 js/
   api.js, chart.js, ws.js, tickers.js, indicators.js, storage.js
+  bybit-listings.js    — новые листинги Bybit (launchTime)
   screener.js          — главная
   terminal.js          — монеты
+  listings.js          — страница листингов
   dashboard.js         — терминал
   drawings.js          — инструменты на графике
   alerts.js, alert-monitor.js, alerts-page.js, site-boot.js
