@@ -86,6 +86,12 @@ html,body{
   display:block;
 }
 
+.draw-btn[data-draw-tool="long"] svg,
+.draw-btn[data-draw-tool="short"] svg{
+  width:24px;
+  height:24px;
+}
+
 .draw-btn:hover{
   background:#1f2937;
   color:#fff;
@@ -119,6 +125,60 @@ html,body{
 
 .draw-style-float.hidden{
   display:none;
+}
+
+/* Long / Short: только стоп ($) и удаление */
+.draw-style-float.draw-style-float--position .float-drag,
+.draw-style-float.draw-style-float--position .draw-color-btn,
+.draw-style-float.draw-style-float--position .draw-width-btn,
+.draw-style-float.draw-style-float--position .draw-settings-btn,
+.draw-style-float.draw-style-float--position .draw-alert-toggle{
+  display:none !important;
+}
+
+.draw-position-risk{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  margin:0 2px;
+  padding:0 4px;
+  font-size:11px;
+  color:#9ca3af;
+  white-space:nowrap;
+  cursor:default;
+}
+
+.draw-position-risk.hidden{
+  display:none;
+}
+
+.draw-position-risk-label{
+  flex-shrink:0;
+}
+
+.draw-position-risk-input{
+  width:72px;
+  height:28px;
+  padding:0 8px;
+  border:1px solid #374151;
+  border-radius:6px;
+  background:#0f172a;
+  color:#f8fafc;
+  font-size:12px;
+  box-sizing:border-box;
+  -moz-appearance:textfield;
+  appearance:textfield;
+}
+
+.draw-position-risk-input::-webkit-outer-spin-button,
+.draw-position-risk-input::-webkit-inner-spin-button{
+  -webkit-appearance:none;
+  margin:0;
+}
+
+.draw-position-risk-input:focus{
+  outline:none;
+  border-color:#60a5fa;
 }
 
 .float-drag{

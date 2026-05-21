@@ -1,4 +1,7 @@
-import { getAlertToggleButtonHtml } from "./draw-ui-shared.js";
+import {
+getAlertToggleButtonHtml,
+getPositionDrawToolbarButtonsHtml
+} from "./draw-ui-shared.js";
 
 export function getWidgetToolbarHtml(){
 
@@ -41,6 +44,8 @@ return `
 </svg>
 </button>
 
+${getPositionDrawToolbarButtonsHtml({ compact: true })}
+
 <button type="button" class="draw-btn draw-btn-sm draw-tool-clear-all" title="Удалить все">
 <svg viewBox="0 0 24 24" aria-hidden="true">
 <path d="M9 3h6l1 2h4v2H4V5h4l1-2z" fill="none" stroke="currentColor" stroke-width="1.5"/>
@@ -77,6 +82,11 @@ return `
 </button>
 
 ${getAlertToggleButtonHtml()}
+
+<label class="draw-position-risk hidden" title="Сумма риска при срабатывании стопа">
+<span class="draw-position-risk-label">Стоп-лосс ($)</span>
+<input type="number" class="draw-position-risk-input" min="0" step="any" placeholder="" inputmode="decimal"/>
+</label>
 
 <button type="button" class="float-settings draw-settings-btn" title="Настройки">
 <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z"/></svg>

@@ -1,3 +1,9 @@
+import {
+calcPositionVolumeUsd,
+formatVolumeUsd,
+parseMoneyInput
+} from "./position-sizing.js?v=1";
+
 const STORAGE_SL = "trade_calc_stop_loss_pct";
 const STORAGE_RISK = "trade_calc_risk_usd";
 
@@ -36,36 +42,17 @@ String(risk)
 
 }
 
-function formatInt(n){
-
-return Math.round(n)
-.toLocaleString("ru-RU");
-
-}
-
 function calculateVolume(){
 
 const stopLossPercent =
-parseFloat(
-String(
-elStop.value
-).replace(",",".")
-);
+parseMoneyInput(elStop.value);
 
 const riskAmount =
-parseFloat(
-String(
-elRisk.value
-).replace(",",".")
-);
+parseMoneyInput(elRisk.value);
 
 if(
-Number.isNaN(stopLossPercent) ||
-stopLossPercent <=
-0 ||
-Number.isNaN(riskAmount) ||
-riskAmount <=
-0
+stopLossPercent == null ||
+riskAmount == null
 ){
 
 elResult.classList.add(
@@ -92,14 +79,14 @@ riskAmount
 );
 
 const volume =
-Math.round(
-(riskAmount * 100) /
+calcPositionVolumeUsd(
+riskAmount,
 stopLossPercent
 );
 
 elResult.innerHTML = `
 <strong>Сумма входа (объём позиции)</strong>
-<span class="calc-result-value">${formatInt(volume)} $</span>
+<span class="calc-result-value">${formatVolumeUsd(volume)} $</span>
 `;
 
 }

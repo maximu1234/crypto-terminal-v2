@@ -117,6 +117,12 @@ body{
     height:14px;
 }
 
+.draw-btn-sm[data-draw-tool="long"] svg,
+.draw-btn-sm[data-draw-tool="short"] svg{
+    width:16px;
+    height:16px;
+}
+
 .widget-chart-wrap{
     flex:1;
     min-height:0;
@@ -250,6 +256,48 @@ body{
 .widget-chart-wrap .draw-style-float{
     transform:scale(0.88);
     transform-origin:top left;
+}
+
+.draw-style-float.draw-style-float--position .float-drag,
+.draw-style-float.draw-style-float--position .draw-color-btn,
+.draw-style-float.draw-style-float--position .draw-width-btn,
+.draw-style-float.draw-style-float--position .draw-settings-btn,
+.draw-style-float.draw-style-float--position .draw-alert-toggle{
+    display:none !important;
+}
+
+.draw-position-risk{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    margin:0 2px;
+    padding:0 4px;
+    font-size:11px;
+    color:#9ca3af;
+    white-space:nowrap;
+}
+
+.draw-position-risk.hidden{
+    display:none;
+}
+
+.draw-position-risk-input{
+    width:64px;
+    height:26px;
+    padding:0 6px;
+    border:1px solid #374151;
+    border-radius:6px;
+    background:#0f172a;
+    color:#f8fafc;
+    font-size:11px;
+    -moz-appearance:textfield;
+    appearance:textfield;
+}
+
+.draw-position-risk-input::-webkit-outer-spin-button,
+.draw-position-risk-input::-webkit-inner-spin-button{
+    -webkit-appearance:none;
+    margin:0;
 }
 
 .widget-chart-wrap .draw-popover{

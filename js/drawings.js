@@ -15,6 +15,13 @@ ALARM_ICON_SVG,
 TRASH_ICON_SVG
 } from "./draw-ui-shared.js";
 
+import {
+calcPositionSizing,
+formatMoneyUsd,
+formatVolumeUsd,
+parseMoneyInput
+} from "./position-sizing.js?v=1";
+
 /* Сетка 2×9: чётный индекс — левый столбец, нечётный — правый */
 const DEFAULT_FIB_SPEC = Object.freeze([
 { v:0, enabled:true, color:"#facc15" },
@@ -868,6 +875,87 @@ price: (p2.price + p4.price) / 2
 
 }
 
+const POSITION_ENTRY_COLOR = "#FACC15";
+const POSITION_TP_FILL = "rgba(20, 83, 45, 0.58)";
+const POSITION_SL_FILL = "rgba(127, 29, 29, 0.58)";
+/** Запасной %, если не удалось перевести пиксели в цену */
+const POSITION_DEFAULT_TP_PCT = 0.03;
+const POSITION_DEFAULT_SL_PCT = 0.015;
+/** Высота зон от входа в пикселях — одинаково на log/linear */
+const POSITION_DEFAULT_TP_ZONE_PX = 56;
+const POSITION_DEFAULT_SL_ZONE_PX = 28;
+const POSITION_DEFAULT_WIDTH_BARS = 14;
+const POSITION_RR_LABEL_SAMPLE =
+"Risk/reward ratio: 9.99";
+
+function isPositionType(type){
+
+return type === "long" || type === "short";
+
+}
+
+function positionEntryPrice(shape){
+
+return Number(shape.p1?.price);
+
+}
+
+function positionMidTime(shape){
+
+const t1 =
+normalizeTime(shape.p1?.time);
+const t2 =
+normalizeTime(shape.p2?.time);
+
+if(
+t1 == null ||
+t2 == null
+){
+return null;
+}
+
+return (t1 + t2) / 2;
+
+}
+
+function distToRect(px, py, x1, y1, x2, y2){
+
+const left =
+Math.min(x1, x2);
+const right =
+Math.max(x1, x2);
+const top =
+Math.min(y1, y2);
+const bottom =
+Math.max(y1, y2);
+
+if(
+px >= left &&
+px <= right &&
+py >= top &&
+py <= bottom
+){
+return 0;
+}
+
+const dx =
+px < left
+? left - px
+: px > right
+? px - right
+: 0;
+
+const dy =
+py < top
+? top - py
+: py > bottom
+? py - bottom
+: 0;
+
+return Math.hypot(dx, dy);
+
+}
+
 function pickUi(uiRoot, id, className){
 
 if(uiRoot){
@@ -941,6 +1029,12 @@ pickUi(uiRoot, "draw-settings-btn", ".draw-settings-btn");
 
 const deleteOneBtn =
 pickUi(uiRoot, "draw-delete-one", ".draw-delete-one-btn");
+
+const positionRiskWrap =
+pickUi(uiRoot, "draw-position-risk-wrap", ".draw-position-risk");
+
+const positionRiskInput =
+pickUi(uiRoot, "draw-position-risk-usd", ".draw-position-risk-input");
 
 const alertToggleBtn =
 pickUi(uiRoot, "draw-alert-toggle", ".draw-alert-toggle");
@@ -1175,6 +1269,24 @@ const out =
 color: saved.color || global.color || STROKE,
 lineWidth: saved.lineWidth ?? global.lineWidth ?? 1
 };
+
+if(isPositionType(type)){
+
+const prefs =
+loadUserPrefs();
+
+const risk =
+saved.riskUsd ??
+prefs.positionRiskUsd;
+
+if(
+risk != null &&
+Number(risk) > 0
+){
+out.riskUsd = Number(risk);
+}
+
+}
 
 if(type === "fib"){
 
@@ -1420,6 +1532,41 @@ delete shape.savedLineWidth;
 
 if(shape.isAlert){
 shape.lineWidth = 1;
+}
+
+}
+
+if(isPositionType(shape.type)){
+
+if(
+!shape.p1 ||
+!shape.p2
+){
+return shape;
+}
+
+const entry =
+positionEntryPrice(shape);
+const init =
+initialPositionTpSl(shape.type, entry);
+
+shape.tpPrice =
+Number(shape.tpPrice) || init.tpPrice;
+shape.slPrice =
+Number(shape.slPrice) || init.slPrice;
+shape.p1.price = entry;
+shape.p2.price = entry;
+
+const risk =
+Number(shape.riskUsd);
+
+if(
+Number.isFinite(risk) &&
+risk > 0
+){
+shape.riskUsd = risk;
+}else{
+delete shape.riskUsd;
 }
 
 }
@@ -2587,6 +2734,61 @@ widthPreview.style.height = `${lineWidth}px`;
 
 }
 
+function applyPositionRiskUsd(){
+
+const parsed =
+parseMoneyInput(
+positionRiskInput?.value ?? ""
+);
+
+const sel =
+getSelected();
+const styleType =
+getStyleTargetType();
+
+if(
+sel &&
+isPositionType(sel.type)
+){
+
+if(parsed){
+sel.riskUsd = parsed;
+}else{
+delete sel.riskUsd;
+}
+
+saveDrawings();
+
+}
+
+if(
+isPositionType(styleType)
+){
+
+saveToolDefaults(
+styleType,
+{
+riskUsd: parsed
+}
+);
+
+const prefs =
+loadUserPrefs();
+
+if(parsed){
+prefs.positionRiskUsd = parsed;
+}else{
+delete prefs.positionRiskUsd;
+}
+
+saveUserPrefs(prefs);
+
+}
+
+redraw();
+
+}
+
 function fillStyleUI(style, type){
 
 if(!styleBar){
@@ -2605,6 +2807,52 @@ settingsBtn?.classList.toggle(
 "hidden",
 type !== "fib"
 );
+
+const isPosToolbar =
+isPositionType(type);
+
+styleBar?.classList.toggle(
+"draw-style-float--position",
+isPosToolbar
+);
+
+colorBtn?.classList.toggle(
+"hidden",
+isPosToolbar || !!style.isAlert
+);
+
+widthBtn?.classList.toggle(
+"hidden",
+isPosToolbar || !!style.isAlert
+);
+
+positionRiskWrap?.classList.toggle(
+"hidden",
+!isPosToolbar
+);
+
+if(
+isPositionType(type) &&
+positionRiskInput
+){
+
+const sel =
+getSelected();
+const riskVal =
+(
+sel &&
+isPositionType(sel.type) &&
+sel.riskUsd
+) ||
+style.riskUsd ||
+toolDefaults[type]?.riskUsd;
+
+positionRiskInput.value =
+riskVal > 0
+? String(riskVal)
+: "";
+
+}
 
 if(type === "fib"){
 fillFibSettingsPanel(
@@ -2838,6 +3086,771 @@ return { x, y };
 
 }
 
+function positionBadgeFont(){
+
+return '600 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif';
+
+}
+
+function positionMinWidthPx(){
+
+const ctx =
+canvas.getContext("2d");
+
+if(!ctx){
+return 220;
+}
+
+ctx.save();
+ctx.font = positionBadgeFont();
+
+const w =
+ctx.measureText(POSITION_RR_LABEL_SAMPLE).width + 28;
+
+ctx.restore();
+return Math.ceil(w);
+
+}
+
+function ensurePositionP2MinWidth(p1, p2){
+
+const entry =
+p1.price;
+const minW =
+positionMinWidthPx();
+const a =
+toXY(p1);
+
+if(!a){
+return p2;
+}
+
+let t1 =
+normalizeTime(p1.time);
+let t2 =
+normalizeTime(p2?.time ?? p1.time);
+
+if(
+t1 == null ||
+t2 == null
+){
+return p2;
+}
+
+if(t2 < t1){
+t2 = t1;
+}
+
+const candles =
+candleSeries();
+let b =
+toXY({ time: t2, price: entry });
+
+for(let step = 0; step < 320; step++){
+
+if(
+b &&
+Math.abs(b.x - a.x) >= minW
+){
+break;
+}
+
+if(candles.length >= 2){
+
+const idx =
+candles.findIndex(c=>c.time >= t2);
+let nextIdx =
+idx < 0
+? candles.length - 1
+: Math.min(candles.length - 1, idx + 1);
+
+if(
+nextIdx <= idx ||
+candles[nextIdx].time <= t2
+){
+
+const last =
+candles[candles.length - 1];
+const prev =
+candles[candles.length - 2] || last;
+const dt =
+Math.max(60, last.time - prev.time);
+
+t2 = last.time + dt * (step + 1);
+
+}else{
+
+t2 = candles[nextIdx].time;
+
+}
+
+}else{
+
+t2 = t1 + 3600 * (step + POSITION_DEFAULT_WIDTH_BARS);
+
+}
+
+b = toXY({ time: t2, price: entry });
+
+}
+
+return {
+time: t2,
+price: entry
+};
+
+}
+
+function defaultPositionP2(p1){
+
+const candles =
+candleSeries();
+
+if(!candles.length){
+return ensurePositionP2MinWidth(
+p1,
+{
+time: p1.time,
+price: p1.price
+}
+);
+}
+
+const t0 =
+normalizeTime(p1.time);
+
+let idx =
+candles.findIndex(c=>c.time >= t0);
+
+if(idx < 0){
+idx = candles.length - 1;
+}
+
+const targetIdx =
+Math.min(
+candles.length - 1,
+idx + POSITION_DEFAULT_WIDTH_BARS
+);
+
+return ensurePositionP2MinWidth(
+p1,
+{
+time: candles[targetIdx].time,
+price: p1.price
+}
+);
+
+}
+
+function initialPositionTpSlPercent(type, entryN){
+
+if(type === "long"){
+return {
+tpPrice: entryN * (1 + POSITION_DEFAULT_TP_PCT),
+slPrice: entryN * (1 - POSITION_DEFAULT_SL_PCT)
+};
+}
+
+return {
+tpPrice: entryN * (1 - POSITION_DEFAULT_TP_PCT),
+slPrice: entryN * (1 + POSITION_DEFAULT_SL_PCT)
+};
+
+}
+
+function initialPositionTpSl(type, entry){
+
+const entryN =
+Number(entry);
+
+if(!Number.isFinite(entryN) || entryN <= 0){
+return {
+tpPrice: entryN,
+slPrice: entryN
+};
+}
+
+const yEntry =
+series.priceToCoordinate(entryN);
+
+if(yEntry == null){
+return initialPositionTpSlPercent(
+type,
+entryN
+);
+}
+
+const tpPx =
+POSITION_DEFAULT_TP_ZONE_PX;
+const slPx =
+POSITION_DEFAULT_SL_ZONE_PX;
+
+if(type === "long"){
+
+const tpPrice =
+series.coordinateToPrice(yEntry - tpPx);
+const slPrice =
+series.coordinateToPrice(yEntry + slPx);
+
+return {
+tpPrice:
+Number.isFinite(tpPrice) && tpPrice > entryN
+? tpPrice
+: entryN * (1 + POSITION_DEFAULT_TP_PCT),
+slPrice:
+Number.isFinite(slPrice) && slPrice < entryN
+? slPrice
+: entryN * (1 - POSITION_DEFAULT_SL_PCT)
+};
+
+}
+
+const slPrice =
+series.coordinateToPrice(yEntry - slPx);
+const tpPrice =
+series.coordinateToPrice(yEntry + tpPx);
+
+return {
+tpPrice:
+Number.isFinite(tpPrice) && tpPrice < entryN
+? tpPrice
+: entryN * (1 - POSITION_DEFAULT_TP_PCT),
+slPrice:
+Number.isFinite(slPrice) && slPrice > entryN
+? slPrice
+: entryN * (1 + POSITION_DEFAULT_SL_PCT)
+};
+
+}
+
+function clampPositionPrices(
+shape,
+opts = {}
+){
+
+const skipMinWidth =
+!!opts.skipMinWidth;
+
+const entry =
+positionEntryPrice(shape);
+
+if(!Number.isFinite(entry)){
+return;
+}
+
+shape.p1.price = entry;
+
+if(!skipMinWidth){
+shape.p2 =
+ensurePositionP2MinWidth(
+shape.p1,
+shape.p2 || shape.p1
+);
+}
+
+shape.p2.price = entry;
+
+const tp =
+Number(shape.tpPrice);
+const sl =
+Number(shape.slPrice);
+
+if(shape.type === "long"){
+
+shape.tpPrice =
+Number.isFinite(tp) && tp > entry
+? tp
+: entry * (1 + POSITION_DEFAULT_TP_PCT);
+
+shape.slPrice =
+Number.isFinite(sl) && sl < entry
+? sl
+: entry * (1 - POSITION_DEFAULT_SL_PCT);
+
+return;
+
+}
+
+shape.tpPrice =
+Number.isFinite(tp) && tp < entry
+? tp
+: entry * (1 - POSITION_DEFAULT_TP_PCT);
+
+shape.slPrice =
+Number.isFinite(sl) && sl > entry
+? sl
+: entry * (1 + POSITION_DEFAULT_SL_PCT);
+
+}
+
+function positionXBounds(shape){
+
+const a =
+toXY(shape.p1);
+const b =
+toXY(shape.p2);
+
+if(!a || !b){
+return null;
+}
+
+return {
+x1: Math.min(a.x, b.x),
+x2: Math.max(a.x, b.x),
+yEntry: a.y
+};
+
+}
+
+function positionBodyDist(px, py, shape){
+
+if(!isPositionType(shape.type)){
+return Infinity;
+}
+
+const box =
+positionXBounds(shape);
+
+if(!box){
+return Infinity;
+}
+
+const yTp =
+series.priceToCoordinate(shape.tpPrice);
+const ySl =
+series.priceToCoordinate(shape.slPrice);
+
+if(
+yTp == null ||
+ySl == null
+){
+return Infinity;
+}
+
+const { x1, x2, yEntry } = box;
+const isLong =
+shape.type === "long";
+
+let dist = Infinity;
+
+if(isLong){
+
+dist = Math.min(
+dist,
+distToRect(px, py, x1, yTp, x2, yEntry),
+distToRect(px, py, x1, yEntry, x2, ySl)
+);
+
+}else{
+
+dist = Math.min(
+dist,
+distToRect(px, py, x1, yEntry, x2, ySl),
+distToRect(px, py, x1, yTp, x2, yEntry)
+);
+
+}
+
+dist = Math.min(
+dist,
+distToSegment(px, py, x1, yEntry, x2, yEntry)
+);
+
+return dist;
+
+}
+
+function positionMetrics(shape){
+
+const entry =
+positionEntryPrice(shape);
+
+if(!Number.isFinite(entry) || entry === 0){
+return {
+tpPct: 0,
+slPct: 0,
+rr: "—"
+};
+}
+
+const tpPct =
+Math.abs(shape.tpPrice - entry) / entry * 100;
+const slPct =
+Math.abs(shape.slPrice - entry) / entry * 100;
+const rr =
+slPct > 0
+? (tpPct / slPct).toFixed(2)
+: "—";
+
+return { tpPct, slPct, rr };
+
+}
+
+function positionSizingFromShape(shape){
+
+const metrics =
+positionMetrics(shape);
+
+return calcPositionSizing(
+shape.riskUsd,
+metrics.tpPct,
+metrics.slPct
+);
+
+}
+
+function formatPositionPrice(price){
+
+const n =
+Number(price);
+
+if(!Number.isFinite(n)){
+return "—";
+}
+
+const abs =
+Math.abs(n);
+
+if(abs >= 1000){
+return n.toFixed(1);
+}
+
+if(abs >= 1){
+return n.toFixed(4);
+}
+
+return n.toFixed(6);
+
+}
+
+function drawPositionBadge(
+ctx,
+text,
+cx,
+cy,
+variant
+){
+
+ctx.save();
+ctx.textAlign = "center";
+ctx.textBaseline = "middle";
+
+const padX = 8;
+let fill =
+"rgba(15, 23, 42, 0.92)";
+let stroke =
+"rgba(148, 163, 184, 0.35)";
+let font =
+positionBadgeFont();
+
+if(variant === "tp"){
+fill = "rgba(22, 101, 52, 0.95)";
+stroke = "rgba(74, 222, 128, 0.45)";
+}else if(variant === "sl"){
+fill = "rgba(127, 29, 29, 0.95)";
+stroke = "rgba(248, 113, 113, 0.45)";
+}else if(variant === "rr"){
+fill = "rgba(30, 41, 59, 0.95)";
+stroke = "rgba(250, 204, 21, 0.4)";
+}else if(variant === "entry"){
+fill = "rgba(113, 63, 18, 0.95)";
+stroke = "rgba(250, 204, 21, 0.45)";
+font =
+'600 10px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif';
+}
+
+ctx.font = font;
+
+const metrics =
+ctx.measureText(text);
+const bw =
+metrics.width + padX * 2;
+const bh = 18;
+const left =
+cx - bw / 2;
+const top =
+cy - bh / 2;
+const r = 4;
+
+ctx.beginPath();
+ctx.roundRect(left, top, bw, bh, r);
+ctx.fillStyle = fill;
+ctx.fill();
+ctx.strokeStyle = stroke;
+ctx.lineWidth = 1;
+ctx.stroke();
+
+ctx.fillStyle = "#f8fafc";
+ctx.fillText(text, cx, cy);
+ctx.restore();
+
+}
+
+function drawPositionPriceTags(
+ctx,
+shape,
+chartW
+){
+
+const entry =
+positionEntryPrice(shape);
+const yEntry =
+series.priceToCoordinate(entry);
+const yTp =
+series.priceToCoordinate(shape.tpPrice);
+const ySl =
+series.priceToCoordinate(shape.slPrice);
+
+if(
+yEntry == null ||
+yTp == null ||
+ySl == null
+){
+return;
+}
+
+const tagX =
+chartW - 6;
+const items = [
+{ y: yTp, text: formatPositionPrice(shape.tpPrice), variant: "tp" },
+{ y: yEntry, text: formatPositionPrice(entry), variant: "rr" },
+{ y: ySl, text: formatPositionPrice(shape.slPrice), variant: "sl" }
+];
+
+items.forEach(item=>{
+
+ctx.save();
+ctx.font =
+'600 10px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif';
+ctx.textAlign = "right";
+ctx.textBaseline = "middle";
+
+const padX = 6;
+const padY = 3;
+const tw =
+ctx.measureText(item.text).width + padX * 2;
+const th = 16;
+const left =
+tagX - tw;
+const top =
+item.y - th / 2;
+
+let fill =
+"rgba(30, 41, 59, 0.95)";
+
+if(item.variant === "tp"){
+fill = "rgba(22, 101, 52, 0.95)";
+}else if(item.variant === "sl"){
+fill = "rgba(127, 29, 29, 0.95)";
+}else{
+fill = "rgba(113, 63, 18, 0.95)";
+}
+
+ctx.fillStyle = fill;
+ctx.beginPath();
+ctx.roundRect(left, top, tw, th, 3);
+ctx.fill();
+ctx.fillStyle = "#f8fafc";
+ctx.fillText(item.text, tagX - padX, item.y);
+ctx.restore();
+
+});
+
+}
+
+function drawPosition(ctx, shape, showLabels){
+
+const box =
+positionXBounds(shape);
+
+if(!box){
+return;
+}
+
+const yTp =
+series.priceToCoordinate(shape.tpPrice);
+const ySl =
+series.priceToCoordinate(shape.slPrice);
+
+if(
+yTp == null ||
+ySl == null
+){
+return;
+}
+
+const { x1, x2, yEntry } = box;
+const w =
+x2 - x1;
+const isLong =
+shape.type === "long";
+
+ctx.save();
+
+if(isLong){
+
+ctx.fillStyle = POSITION_TP_FILL;
+ctx.fillRect(
+x1,
+Math.min(yEntry, yTp),
+w,
+Math.abs(yEntry - yTp)
+);
+
+ctx.fillStyle = POSITION_SL_FILL;
+ctx.fillRect(
+x1,
+Math.min(yEntry, ySl),
+w,
+Math.abs(yEntry - ySl)
+);
+
+}else{
+
+ctx.fillStyle = POSITION_SL_FILL;
+ctx.fillRect(
+x1,
+Math.min(yEntry, ySl),
+w,
+Math.abs(yEntry - ySl)
+);
+
+ctx.fillStyle = POSITION_TP_FILL;
+ctx.fillRect(
+x1,
+Math.min(yEntry, yTp),
+w,
+Math.abs(yEntry - yTp)
+);
+
+}
+
+ctx.strokeStyle = POSITION_ENTRY_COLOR;
+ctx.lineWidth = 2;
+ctx.setLineDash([]);
+ctx.beginPath();
+ctx.moveTo(x1, yEntry);
+ctx.lineTo(x2, yEntry);
+ctx.stroke();
+
+ctx.restore();
+
+const sizing =
+positionSizingFromShape(shape);
+const showSelected =
+showLabels;
+const showSizing =
+!!sizing;
+
+if(
+!showSelected &&
+!showSizing
+){
+return;
+
+}
+
+const metrics =
+positionMetrics(shape);
+const cx =
+(x1 + x2) / 2;
+const topY =
+Math.min(yEntry, yTp, ySl);
+const botY =
+Math.max(yEntry, yTp, ySl);
+
+let tpText;
+let slText;
+let entryText;
+
+if(showSizing){
+
+tpText =
+`TP: ${sizing.tpPct.toFixed(2)}% (${formatMoneyUsd(sizing.profitUsd)})`;
+
+slText =
+`SL: ${sizing.slPct.toFixed(2)}% (${formatMoneyUsd(sizing.riskUsd)})`;
+
+entryText =
+`Объем ${formatVolumeUsd(sizing.volume)}$ RR: ${sizing.rrNum.toFixed(2)}`;
+
+}else{
+
+if(isLong){
+
+tpText = `${metrics.tpPct.toFixed(3)}%`;
+slText = `${metrics.slPct.toFixed(3)}%`;
+
+}else{
+
+slText = `${metrics.slPct.toFixed(3)}%`;
+tpText = `${metrics.tpPct.toFixed(3)}%`;
+
+}
+
+entryText =
+`RR: ${metrics.rr}`;
+
+}
+
+if(isLong){
+
+drawPositionBadge(
+ctx,
+tpText,
+cx,
+topY + 14,
+"tp"
+);
+
+drawPositionBadge(
+ctx,
+slText,
+cx,
+botY - 14,
+"sl"
+);
+
+}else{
+
+drawPositionBadge(
+ctx,
+slText,
+cx,
+topY + 14,
+"sl"
+);
+
+drawPositionBadge(
+ctx,
+tpText,
+cx,
+botY - 14,
+"tp"
+);
+
+}
+
+drawPositionBadge(
+ctx,
+entryText,
+cx,
+yEntry,
+showSizing ? "entry" : "rr"
+);
+
+if(showSelected){
+
+drawPositionPriceTags(
+ctx,
+shape,
+chartSize().w
+);
+
+}
+
+}
+
 function chartSize(){
 return {
 w: wrapEl.clientWidth,
@@ -3011,6 +4024,51 @@ ctx.stroke();
 
 }
 
+function drawPositionAnchor(ctx, x, y){
+
+ctx.save();
+ctx.beginPath();
+ctx.arc(x, y, 7, 0, Math.PI * 2);
+ctx.strokeStyle = "#808080";
+ctx.lineWidth = 2;
+ctx.stroke();
+ctx.restore();
+
+}
+
+function getPositionHandleScreens(shape){
+
+const box =
+positionXBounds(shape);
+
+if(!box){
+return [];
+}
+
+const yTp =
+series.priceToCoordinate(shape.tpPrice);
+const ySl =
+series.priceToCoordinate(shape.slPrice);
+
+if(
+yTp == null ||
+ySl == null
+){
+return [];
+}
+
+const leftX =
+box.x1;
+
+return [
+{ id: "entryL", x: leftX, y: box.yEntry },
+{ id: "entryR", x: box.x2, y: box.yEntry },
+{ id: "tp", x: leftX, y: yTp },
+{ id: "sl", x: leftX, y: ySl }
+];
+
+}
+
 function drawAnchorSquare(ctx, x, y){
 
 ctx.fillStyle = HANDLE_FILL;
@@ -3054,6 +4112,20 @@ return [
 
 }
 
+if(isPositionType(shape.type)){
+
+const entry =
+positionEntryPrice(shape);
+
+return [
+{ id: "entryL", point: { time: shape.p1.time, price: entry } },
+{ id: "entryR", point: { time: shape.p2.time, price: entry } },
+{ id: "tp", point: { time: shape.p1.time, price: shape.tpPrice } },
+{ id: "sl", point: { time: shape.p1.time, price: shape.slPrice } }
+];
+
+}
+
 return [];
 
 }
@@ -3062,15 +4134,38 @@ function hitTestHandle(px, py, shape){
 
 const threshold = 10;
 
+const handleThreshold =
+isPositionType(shape.type)
+? 16
+: threshold;
+
+if(isPositionType(shape.type)){
+
+for(const handle of getPositionHandleScreens(shape)){
+
+if(
+Math.hypot(px - handle.x, py - handle.y) <=
+handleThreshold
+){
+return handle.id;
+}
+
+}
+
+return null;
+
+}
+
 for(const handle of listHandles(shape)){
 
-const xy = toXY(handle.point);
+const xy =
+toXY(handle.point);
 
 if(!xy){
 continue;
 }
 
-if(Math.hypot(px - xy.x, py - xy.y) <= threshold){
+if(Math.hypot(px - xy.x, py - xy.y) <= handleThreshold){
 return handle.id;
 }
 
@@ -3143,6 +4238,72 @@ shape.p3 = np3;
 }
 
 }
+
+}
+
+if(isPositionType(shape.type)){
+
+const entry =
+positionEntryPrice(shape);
+
+if(handleId === "entryL"){
+
+shape.p1 = {
+time: point.time,
+price: point.price
+};
+
+shape.p2 = {
+time: shape.p2.time,
+price: point.price
+};
+
+clampPositionPrices(
+shape,
+{ skipMinWidth: true }
+);
+
+return;
+
+}
+
+if(handleId === "entryR"){
+
+shape.p2 = {
+time: point.time,
+price: entry
+};
+
+}
+
+if(handleId === "tp"){
+
+const entryNow =
+positionEntryPrice(shape);
+
+shape.tpPrice =
+shape.type === "long"
+? Math.max(point.price, entryNow * 1.0000001)
+: Math.min(point.price, entryNow * 0.9999999);
+
+}
+
+if(handleId === "sl"){
+
+const entryNow =
+positionEntryPrice(shape);
+
+shape.slPrice =
+shape.type === "long"
+? Math.min(point.price, entryNow * 0.9999999)
+: Math.max(point.price, entryNow * 1.0000001);
+
+}
+
+clampPositionPrices(
+shape,
+{ skipMinWidth: true }
+);
 
 }
 
@@ -3472,7 +4633,110 @@ price: shape.price
 }];
 }
 
+if(isPositionType(shape.type)){
+
+return [
+shape.p1,
+shape.p2,
+{ time: shape.p1.time, price: shape.tpPrice },
+{ time: shape.p1.time, price: shape.slPrice }
+];
+
+}
+
 return null;
+
+}
+
+function shiftPriceByPixels(
+price,
+dyPx
+){
+
+const y =
+series.priceToCoordinate(price);
+
+if(
+y == null ||
+!Number.isFinite(price)
+){
+return price;
+}
+
+const next =
+series.coordinateToPrice(y + dyPx);
+
+if(
+next == null ||
+!Number.isFinite(next)
+){
+return price;
+}
+
+return next;
+
+}
+
+function applyPositionBodyMove(
+shape,
+startX,
+startY,
+x,
+y,
+snapshot
+){
+
+const dy =
+y - startY;
+
+const tStart =
+timeFromX(startX);
+const tNow =
+timeFromX(x);
+
+if(
+tStart == null ||
+tNow == null
+){
+return false;
+}
+
+const dTime =
+tNow - tStart;
+const entry =
+shiftPriceByPixels(
+snapshot.entry,
+dy
+);
+
+shape.p1 = {
+time: snapshot.p1.time + dTime,
+price: entry
+};
+
+shape.p2 = {
+time: snapshot.p2.time + dTime,
+price: entry
+};
+
+shape.tpPrice =
+shiftPriceByPixels(
+snapshot.tpPrice,
+dy
+);
+
+shape.slPrice =
+shiftPriceByPixels(
+snapshot.slPrice,
+dy
+);
+
+clampPositionPrices(
+shape,
+{ skipMinWidth: true }
+);
+
+return true;
 
 }
 
@@ -3492,6 +4756,10 @@ return hitTestChannelBody(px, py, shape, threshold);
 
 if(shape.type === "hray"){
 return hitTestHrayLine(px, py, shape, threshold);
+}
+
+if(isPositionType(shape.type)){
+return positionBodyDist(px, py, shape) <= threshold;
 }
 
 return false;
@@ -3544,6 +4812,17 @@ return true;
 
 }
 
+if(isPositionType(shape.type)){
+
+shape.p1 = pts[0];
+shape.p2 = pts[1];
+shape.tpPrice = pts[2].price;
+shape.slPrice = pts[3].price;
+clampPositionPrices(shape);
+return true;
+
+}
+
 return false;
 
 }
@@ -3565,7 +4844,8 @@ target.closest(".draw-chrome-portal") ||
 target.closest(".fib-line-style-menu--portal") ||
 target.closest(".fib-line-width-menu--portal") ||
 target.closest(".fib-level-color-menu") ||
-target.closest(".draw-context-menu")
+target.closest(".draw-context-menu") ||
+target.closest(".draw-position-risk")
 );
 
 }
@@ -3606,6 +4886,7 @@ return true;
 
 return (
 rectHitsClient(styleBar, e.clientX, e.clientY) ||
+rectHitsClient(positionRiskWrap, e.clientX, e.clientY) ||
 rectHitsClient(colorPopover, e.clientX, e.clientY) ||
 rectHitsClient(widthPopover, e.clientX, e.clientY) ||
 rectHitsClient(settingsPopover, e.clientX, e.clientY) ||
@@ -3654,6 +4935,24 @@ handleId
 hitTestShapeBody(x, y, sel)
 ){
 
+if(isPositionType(sel.type)){
+
+dragState = {
+shapeId: sel.id,
+mode: "position-move",
+startX: x,
+startY: y,
+snapshot: {
+p1: { ...sel.p1 },
+p2: { ...sel.p2 },
+tpPrice: sel.tpPrice,
+slPrice: sel.slPrice,
+entry: positionEntryPrice(sel)
+}
+};
+
+}else{
+
 const movePoints =
 chartPointsForScreenMove(sel);
 
@@ -3675,6 +4974,8 @@ shapeId: sel.id,
 mode: "screen-move",
 pointOffsets: offsets
 };
+
+}
 
 }else{
 return;
@@ -3701,7 +5002,22 @@ if(!shape){
 return;
 }
 
-if(dragState.mode === "screen-move"){
+if(dragState.mode === "position-move"){
+
+if(
+!applyPositionBodyMove(
+shape,
+dragState.startX,
+dragState.startY,
+x,
+y,
+dragState.snapshot
+)
+){
+return;
+}
+
+}else if(dragState.mode === "screen-move"){
 
 if(
 !applyScreenMoveToShape(
@@ -3747,6 +5063,22 @@ const onEditUp = ()=>{
 
 if(!alive || !dragState){
 return;
+}
+
+if(dragState.mode === "position-move"){
+
+const shape =
+drawings.find(d=>d.id === dragState.shapeId);
+
+if(
+shape &&
+isPositionType(shape.type)
+){
+clampPositionPrices(shape);
+saveDrawings();
+redraw();
+}
+
 }
 
 dragState = null;
@@ -3968,6 +5300,14 @@ ctx,
 
 }
 
+if(isPositionType(shape.type)){
+
+getPositionHandleScreens(shape).forEach(handle=>{
+drawPositionAnchor(ctx, handle.x, handle.y);
+});
+
+}
+
 }
 
 function shapeCoordsReady(shape){
@@ -3996,6 +5336,17 @@ return !!(
 toXY(shape.p1) &&
 toXY(shape.p2) &&
 toXY(shape.p3)
+);
+
+}
+
+if(isPositionType(shape.type)){
+
+return !!(
+toXY(shape.p1) &&
+toXY(shape.p2) &&
+series.priceToCoordinate(shape.tpPrice) != null &&
+series.priceToCoordinate(shape.slPrice) != null
 );
 
 }
@@ -4300,6 +5651,14 @@ if(shape.type === "channel"){
 drawChannel(ctx, shape, color, width);
 }
 
+if(isPositionType(shape.type)){
+drawPosition(
+ctx,
+shape,
+shape.id === selectedId
+);
+}
+
 }
 
 function drawFib(ctx, shape, color, width){
@@ -4504,6 +5863,46 @@ return;
 
 }
 
+if(isPositionType(placement.type)){
+
+if(pts.length >= 1){
+
+const p1 =
+pts[0];
+let p2 =
+defaultPositionP2(p1);
+
+if(previewPoint){
+p2 = {
+time: previewPoint.time,
+price: p1.price
+};
+}
+
+const levels =
+initialPositionTpSl(
+placement.type,
+p1.price
+);
+
+drawPosition(
+ctx,
+{
+type: placement.type,
+p1,
+p2,
+tpPrice: levels.tpPrice,
+slPrice: levels.slPrice
+},
+false
+);
+
+}
+
+return;
+
+}
+
 if(!previewPoint){
 return;
 }
@@ -4587,6 +5986,12 @@ dist = channelBodyDist(px, py, d);
 
 }
 
+if(isPositionType(d.type)){
+
+dist = positionBodyDist(px, py, d);
+
+}
+
 if(dist < bestDist){
 bestDist = dist;
 best = d.id;
@@ -4648,6 +6053,34 @@ p1: pts[0],
 p2: pts[1],
 p3: pts[2]
 });
+}
+
+if(
+isPositionType(placement.type) &&
+pts.length >= 1
+){
+
+const p1 =
+pts[0];
+const p2 =
+defaultPositionP2(p1);
+const levels =
+initialPositionTpSl(
+placement.type,
+p1.price
+);
+
+const posStyle =
+baseDefaultStyle(placement.type);
+
+created = makeShape(placement.type, {
+p1,
+p2,
+tpPrice: levels.tpPrice,
+slPrice: levels.slPrice,
+riskUsd: posStyle.riskUsd
+});
+
 }
 
 if(created){
@@ -4714,7 +6147,13 @@ startPlacement(tool);
 placement.points.push(point);
 
 const needed =
-tool === "channel" ? 3 : tool === "hray" ? 1 : 2;
+tool === "channel"
+? 3
+: tool === "hray"
+? 1
+: isPositionType(tool)
+? 1
+: 2;
 
 if(placement.points.length >= needed){
 finishPlacement();
@@ -4795,6 +6234,15 @@ handleToolClick(param);
 crosshairHandler = param=>{
 
 previewPoint = pointFromParam(param);
+
+if(
+placement &&
+isPositionType(placement.type) &&
+placement.points.length >= 1 &&
+previewPoint
+){
+previewPoint.price = placement.points[0].price;
+}
 
 previewXY = param.point
 ? { x: param.point.x, y: param.point.y }
@@ -5037,6 +6485,34 @@ deleteSelected();
 
 });
 
+positionRiskInput?.addEventListener(
+"mousedown",
+e=>{
+e.stopPropagation();
+}
+);
+
+positionRiskInput?.addEventListener(
+"click",
+e=>{
+e.stopPropagation();
+}
+);
+
+positionRiskInput?.addEventListener(
+"input",
+()=>{
+applyPositionRiskUsd();
+}
+);
+
+positionRiskWrap?.addEventListener(
+"mousedown",
+e=>{
+e.stopPropagation();
+}
+);
+
 alertToggleBtn?.addEventListener("click", e=>{
 
 e.stopPropagation();
@@ -5204,6 +6680,7 @@ return;
 
 if(
 styleBar?.contains(e.target) ||
+positionRiskWrap?.contains(e.target) ||
 colorPopover?.contains(e.target) ||
 widthPopover?.contains(e.target) ||
 settingsPopover?.contains(e.target) ||

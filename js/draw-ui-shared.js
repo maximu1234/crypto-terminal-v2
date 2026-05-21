@@ -24,3 +24,43 @@ ${ALARM_ICON_SVG}
 `;
 
 }
+
+/** Long / Short: цветные зоны как на графике + стрелка + буква */
+export const LONG_POSITION_ICON_SVG = `
+<svg class="draw-pos-icon draw-pos-icon--long" viewBox="0 0 24 24" aria-hidden="true">
+<rect x="2" y="2" width="12" height="7" rx="1.5" fill="rgba(34,197,94,0.4)" stroke="#4ade80" stroke-width="1.2"/>
+<rect x="2" y="14" width="12" height="8" rx="1.5" fill="rgba(127,29,29,0.45)" stroke="#f87171" stroke-width="1.2"/>
+<line x1="2" y1="12" x2="14" y2="12" stroke="#facc15" stroke-width="2.2" stroke-linecap="round"/>
+<circle cx="3.5" cy="12" r="2" fill="#0f172a" stroke="#facc15" stroke-width="1.2"/>
+<text x="8" y="10.5" fill="#bbf7d0" font-size="8.5" font-weight="800" font-family="Arial,sans-serif">L</text>
+<path d="M19 15V8.5M19 8.5L16.5 11M19 8.5L21.5 11" stroke="#4ade80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>`;
+
+export const SHORT_POSITION_ICON_SVG = `
+<svg class="draw-pos-icon draw-pos-icon--short" viewBox="0 0 24 24" aria-hidden="true">
+<rect x="2" y="2" width="12" height="7" rx="1.5" fill="rgba(127,29,29,0.5)" stroke="#f87171" stroke-width="1.2"/>
+<rect x="2" y="14" width="12" height="8" rx="1.5" fill="rgba(34,197,94,0.4)" stroke="#4ade80" stroke-width="1.2"/>
+<line x1="2" y1="12" x2="14" y2="12" stroke="#facc15" stroke-width="2.2" stroke-linecap="round"/>
+<circle cx="3.5" cy="12" r="2" fill="#0f172a" stroke="#facc15" stroke-width="1.2"/>
+<text x="8" y="17" fill="#fecaca" font-size="8.5" font-weight="800" font-family="Arial,sans-serif">S</text>
+<path d="M19 9v6.5M19 15.5L16.5 13M19 15.5L21.5 13" stroke="#f87171" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>`;
+
+export function getPositionDrawToolbarButtonsHtml(
+opts = {}
+){
+
+const btnClass =
+opts.compact
+? "draw-btn draw-btn-sm"
+: "draw-btn";
+
+return `
+<button type="button" class="${btnClass}" data-draw-tool="long" title="Позиция Long — клик на вход, затем тяните тейк/стоп">
+${LONG_POSITION_ICON_SVG}
+</button>
+<button type="button" class="${btnClass}" data-draw-tool="short" title="Позиция Short — клик на вход, затем тяните тейк/стоп">
+${SHORT_POSITION_ICON_SVG}
+</button>`;
+
+}
