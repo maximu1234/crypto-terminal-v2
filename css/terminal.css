@@ -1,23 +1,43 @@
+html{
+  height:100%;
+  height:-webkit-fill-available;
+}
+
 html,body{
   margin:0;
-  height:100%;
   overflow:hidden;
   background:#0b1220;
   font-family:Arial,sans-serif;
   color:white;
 }
 
+body{
+  min-height:100vh;
+  min-height:100dvh;
+  min-height:-webkit-fill-available;
+}
+
 #app{
   display:grid;
   grid-template-columns:minmax(0,1fr) 340px;
   height:100vh;
+  height:100dvh;
+  max-height:100dvh;
+  box-sizing:border-box;
+  padding-bottom:env(safe-area-inset-bottom,0px);
 }
 
 #left{
   display:grid;
-  grid-template-rows:auto auto minmax(0,1fr) minmax(88px,140px);
+  grid-template-rows:auto auto minmax(0,1fr) clamp(64px,11dvh,100px);
   min-height:0;
   overflow:hidden;
+}
+
+@media (pointer:coarse) and (min-width:768px){
+  #left{
+    grid-template-rows:auto auto minmax(0,1fr) clamp(56px,10dvh,88px);
+  }
 }
 
 #topbar{
@@ -743,6 +763,10 @@ html,body{
   height:100%;
   pointer-events:auto;
   touch-action:pan-x pan-y;
+}
+
+#chart-wrap.chart-touch-locked #chart{
+  touch-action:none;
 }
 
 #rsi-wrap{

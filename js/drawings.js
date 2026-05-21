@@ -2867,7 +2867,48 @@ settingsPopover?.classList.add("hidden");
 
 }
 
+const CHART_SCROLL_DEFAULT = {
+mouseWheel:true,
+pressedMouseMove:true,
+horzTouchDrag:true,
+vertTouchDrag:false
+};
+
+const CHART_SCROLL_LOCKED = {
+mouseWheel:true,
+pressedMouseMove:false,
+horzTouchDrag:false,
+vertTouchDrag:false
+};
+
+function syncChartTouchPan(){
+
+const lock =
+alive &&
+tool === "cursor" &&
+!!selectedId &&
+!placement;
+
+try{
+chart.applyOptions({
+handleScroll: lock
+? CHART_SCROLL_LOCKED
+: CHART_SCROLL_DEFAULT
+});
+}catch{
+/* ignore */
+}
+
+wrapEl?.classList.toggle(
+"chart-touch-locked",
+!!lock
+);
+
+}
+
 function updateStyleBar(){
+
+syncChartTouchPan();
 
 if(!styleBar){
 return;
@@ -5037,7 +5078,37 @@ return;
 }
 
 const { x, y } = pointerFromEvent(e);
-const sel = getSelected();
+const hitId =
+hitTest(x, y);
+
+if(!hitId){
+
+if(selectedId){
+selectedId = null;
+updateStyleBar();
+}
+
+return;
+
+}
+
+if(hitId !== selectedId){
+
+selectedId = hitId;
+
+const picked =
+getSelected();
+
+if(picked?.type === "fib"){
+fibSettingsShapeId = picked.id;
+}
+
+updateStyleBar();
+
+}
+
+const sel =
+getSelected();
 
 if(!sel){
 return;
@@ -6987,6 +7058,8 @@ resize: resizeCanvas,
 destroy(){
 
 alive = false;
+selectedId = null;
+syncChartTouchPan();
 fibPanelCommitHook = null;
 
 hideContextMenu?.();
