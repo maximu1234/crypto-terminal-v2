@@ -1129,6 +1129,8 @@ let selectedId = null;
 let placement = null;
 let previewPoint = null;
 let previewXY = null;
+let touchDrawCrosshair = null;
+let touchPlaceTrack = null;
 let dragState = null;
 let blockChartClick = false;
 
@@ -2885,9 +2887,17 @@ function syncChartTouchPan(){
 
 const lock =
 alive &&
+(
+(
 tool === "cursor" &&
 !!selectedId &&
-!placement;
+!placement
+) ||
+(
+placement &&
+isTouchDrawTablet()
+)
+);
 
 try{
 chart.applyOptions({
@@ -3080,6 +3090,152 @@ popover.style.position = "fixed";
 popover.style.left = `${barR.left}px`;
 popover.style.top = `${barR.top + offsetY}px`;
 popover.style.zIndex = "10051";
+
+}
+
+function isTouchDrawTablet(){
+
+return window.matchMedia(
+"(pointer: coarse) and (min-width: 768px)"
+).matches;
+
+}
+
+function clampTouchCrosshairXY(x, y){
+
+const { w, h } =
+chartSize();
+
+return {
+x: Math.max(0, Math.min(w, x)),
+y: Math.max(0, Math.min(h, y))
+};
+
+}
+
+function initTouchDrawCrosshair(){
+
+const { w, h } =
+chartSize();
+
+touchDrawCrosshair = {
+x: w / 2,
+y: h / 2
+};
+
+syncTouchDrawCrosshairPreview();
+
+}
+
+function syncTouchDrawCrosshairPreview(){
+
+if(
+!touchDrawCrosshair
+){
+previewPoint = null;
+previewXY = null;
+return;
+}
+
+previewXY = {
+x: touchDrawCrosshair.x,
+y: touchDrawCrosshair.y
+};
+
+previewPoint =
+pointFromXY(
+touchDrawCrosshair.x,
+touchDrawCrosshair.y
+);
+
+}
+
+function drawTouchPlacementCrosshair(
+ctx,
+w,
+h
+){
+
+if(
+!touchDrawCrosshair
+){
+return;
+}
+
+const { x, y } =
+touchDrawCrosshair;
+
+ctx.save();
+ctx.strokeStyle = "#3b82f6";
+ctx.lineWidth = 1;
+ctx.setLineDash([5, 4]);
+
+ctx.beginPath();
+ctx.moveTo(x + 0.5, 0);
+ctx.lineTo(x + 0.5, h);
+ctx.moveTo(0, y + 0.5);
+ctx.lineTo(w, y + 0.5);
+ctx.stroke();
+
+ctx.setLineDash([]);
+ctx.fillStyle = "#3b82f6";
+ctx.beginPath();
+ctx.arc(x, y, 4, 0, Math.PI * 2);
+ctx.fill();
+
+ctx.restore();
+
+}
+
+function placementPointsNeeded(type){
+
+if(type === "channel"){
+return 3;
+}
+
+if(
+type === "hray" ||
+isPositionType(type)
+){
+return 1;
+}
+
+return 2;
+
+}
+
+function placeTouchCrosshairPoint(){
+
+if(
+!placement ||
+!touchDrawCrosshair
+){
+return;
+}
+
+const point =
+pointFromXY(
+touchDrawCrosshair.x,
+touchDrawCrosshair.y
+);
+
+if(!point){
+return;
+}
+
+placement.points.push(point);
+blockChartClick = true;
+
+if(
+placement.points.length >=
+placementPointsNeeded(placement.type)
+){
+finishPlacement();
+return;
+}
+
+syncTouchDrawCrosshairPreview();
+redraw();
 
 }
 
@@ -3869,20 +4025,12 @@ ctx.stroke();
 
 ctx.restore();
 
+if(!showLabels){
+return;
+}
+
 const sizing =
 positionSizingFromShape(shape);
-const showSelected =
-showLabels;
-const showSizing =
-!!sizing;
-
-if(
-!showSelected &&
-!showSizing
-){
-return;
-
-}
 
 const metrics =
 positionMetrics(shape);
@@ -3897,7 +4045,7 @@ let tpText;
 let slText;
 let entryText;
 
-if(showSizing){
+if(sizing){
 
 tpText =
 `TP: ${sizing.tpPct.toFixed(2)}% (${formatMoneyUsd(sizing.profitUsd)})`;
@@ -3962,7 +4110,7 @@ botY - 14,
 
 }
 
-if(showSizing){
+if(sizing){
 
 drawPositionBadge(
 ctx,
@@ -3992,15 +4140,11 @@ yEntry,
 
 }
 
-if(showSelected){
-
 drawPositionPriceTags(
 ctx,
 shape,
 chartSize().w
 );
-
-}
 
 }
 
@@ -5300,6 +5444,125 @@ window.addEventListener("pointercancel", onEditUp);
 
 }
 
+function setupTouchDrawCrosshair(){
+
+const TAP_MOVE_PX = 10;
+
+const onTouchPlaceDown = e=>{
+
+if(
+!placement ||
+tool === "cursor"
+){
+return;
+}
+
+if(!isTouchDrawTablet()){
+return;
+}
+
+if(isDrawChromePointerEvent(e)){
+return;
+}
+
+if(!e.isPrimary){
+return;
+}
+
+const { x, y } =
+pointerFromEvent(e);
+
+touchPlaceTrack = {
+id: e.pointerId,
+startX: x,
+startY: y,
+moved: false
+};
+
+};
+
+const onTouchPlaceMove = e=>{
+
+if(
+!placement ||
+!touchPlaceTrack ||
+e.pointerId !== touchPlaceTrack.id
+){
+return;
+}
+
+const { x, y } =
+pointerFromEvent(e);
+const dx =
+x - touchPlaceTrack.startX;
+const dy =
+y - touchPlaceTrack.startY;
+
+if(
+!touchPlaceTrack.moved &&
+dx * dx + dy * dy >
+TAP_MOVE_PX * TAP_MOVE_PX
+){
+touchPlaceTrack.moved = true;
+}
+
+if(touchPlaceTrack.moved){
+
+touchDrawCrosshair =
+clampTouchCrosshairXY(x, y);
+syncTouchDrawCrosshairPreview();
+e.preventDefault();
+redraw();
+
+}
+
+};
+
+const onTouchPlaceUp = e=>{
+
+if(
+!placement ||
+!touchPlaceTrack ||
+e.pointerId !== touchPlaceTrack.id
+){
+return;
+}
+
+if(!touchPlaceTrack.moved){
+placeTouchCrosshairPoint();
+e.preventDefault();
+}
+
+touchPlaceTrack = null;
+
+};
+
+wrapEl.addEventListener(
+"pointerdown",
+onTouchPlaceDown,
+true
+);
+
+wrapEl.addEventListener(
+"pointermove",
+onTouchPlaceMove,
+true
+);
+
+wrapEl.addEventListener(
+"pointerup",
+onTouchPlaceUp,
+true
+);
+
+wrapEl.addEventListener(
+"pointercancel",
+onTouchPlaceUp,
+true
+);
+
+}
+
 function setupContextMenu(){
 
 contextMenuEl =
@@ -5774,6 +6037,18 @@ console.warn("draw shape", err);
 
 if(placement){
 drawPlacementPreview(ctx, w, h);
+
+if(
+isTouchDrawTablet() &&
+touchDrawCrosshair
+){
+drawTouchPlacementCrosshair(
+ctx,
+w,
+h
+);
+}
+
 }
 
 }catch(err){
@@ -6313,6 +6588,10 @@ placement = { type, points: [] };
 previewPoint = null;
 previewXY = null;
 
+if(isTouchDrawTablet()){
+initTouchDrawCrosshair();
+}
+
 }
 
 function cancelPlacement(){
@@ -6320,13 +6599,30 @@ function cancelPlacement(){
 placement = null;
 previewPoint = null;
 previewXY = null;
+touchDrawCrosshair = null;
+touchPlaceTrack = null;
 redraw();
 
 }
 
 function handleToolClick(param){
 
-const point = pointFromParam(param);
+if(
+tool !== "cursor" &&
+isTouchDrawTablet() &&
+placement
+){
+return;
+}
+
+const point =
+isTouchDrawTablet() &&
+touchDrawCrosshair
+? pointFromXY(
+touchDrawCrosshair.x,
+touchDrawCrosshair.y
+)
+: pointFromParam(param);
 
 if(!point){
 return;
@@ -6355,16 +6651,10 @@ startPlacement(tool);
 
 placement.points.push(point);
 
-const needed =
-tool === "channel"
-? 3
-: tool === "hray"
-? 1
-: isPositionType(tool)
-? 1
-: 2;
-
-if(placement.points.length >= needed){
+if(
+placement.points.length >=
+placementPointsNeeded(placement.type)
+){
 finishPlacement();
 }
 
@@ -6375,6 +6665,13 @@ function setTool(next){
 tool = next;
 cancelPlacement();
 
+if(
+next !== "cursor" &&
+isTouchDrawTablet()
+){
+startPlacement(next);
+}
+
 tools.querySelectorAll("[data-draw-tool]").forEach(btn=>{
 btn.classList.toggle(
 "active",
@@ -6383,6 +6680,7 @@ btn.dataset.drawTool === tool
 });
 
 updateStyleBar();
+redraw();
 
 }
 
@@ -6442,6 +6740,23 @@ handleToolClick(param);
 
 crosshairHandler = param=>{
 
+if(
+placement &&
+isTouchDrawTablet() &&
+touchDrawCrosshair
+){
+syncTouchDrawCrosshairPreview();
+
+if(
+isPositionType(placement.type) &&
+placement.points.length >= 1 &&
+previewPoint
+){
+previewPoint.price = placement.points[0].price;
+}
+
+}else{
+
 previewPoint = pointFromParam(param);
 
 if(
@@ -6456,6 +6771,8 @@ previewPoint.price = placement.points[0].price;
 previewXY = param.point
 ? { x: param.point.x, y: param.point.y }
 : null;
+
+}
 
 const channelPreview =
 placement?.type === "channel" &&
@@ -6939,6 +7256,7 @@ positionPopover(settingsPopover, 40);
 initFloatingBar();
 initStylePopovers();
 setupEditInteraction();
+setupTouchDrawCrosshair();
 
 const teardownChartPanRedraw =
 setupChartPanRedraw();
