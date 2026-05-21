@@ -209,6 +209,15 @@ opacity:0.35;
 cursor:default;
 }
 
+/* ‹ › — шире под палец; цифры страниц без изменений */
+#pagination > .page-btn:first-child,
+#pagination > .page-btn:last-child{
+min-width:52px;
+padding:0 14px;
+font-size:20px;
+line-height:1;
+}
+
 .page-ellipsis{
 color:#6b7280;
 font-size:12px;
