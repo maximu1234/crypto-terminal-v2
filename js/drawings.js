@@ -2017,6 +2017,40 @@ return { time, price };
 
 }
 
+function hrayLineDist(px, py, shape){
+
+const anchor = toXY({
+time: shape.time,
+price: shape.price
+});
+
+if(!anchor){
+return Infinity;
+}
+
+return distToSegment(
+px,
+py,
+anchor.x,
+anchor.y,
+chartSize().w,
+anchor.y
+);
+
+}
+
+function hitTestHrayLine(px, py, shape, threshold = 8){
+
+if(
+shape?.type !== "hray"
+){
+return false;
+}
+
+return hrayLineDist(px, py, shape) <= threshold;
+
+}
+
 function setupEditInteraction(){
 
 wrapEl.addEventListener("mousedown", e=>{
@@ -2035,14 +2069,31 @@ return;
 const handleId =
 hitTestHandle(x, y, sel);
 
-if(!handleId){
-return;
-}
+if(handleId){
 
 dragState = {
 shapeId: sel.id,
+mode: "handle",
 handleId
 };
+
+}else if(
+sel.type === "hray" &&
+hitTestHrayLine(x, y, sel)
+){
+
+dragState = {
+shapeId: sel.id,
+mode: "hray-line",
+startX: x,
+startY: y,
+startTime: sel.time,
+startPrice: Number(sel.price)
+};
+
+}else{
+return;
+}
 
 blockChartClick = true;
 e.preventDefault();
@@ -2059,11 +2110,6 @@ return;
 }
 
 const { x, y } = pointerFromEvent(e);
-const point = pointFromXY(x, y);
-
-if(!point){
-return;
-}
 
 const shape =
 drawings.find(d=>d.id === dragState.shapeId);
@@ -2072,7 +2118,53 @@ if(!shape){
 return;
 }
 
+if(dragState.mode === "hray-line"){
+
+const curPrice =
+series.coordinateToPrice(y);
+
+const startPrice =
+series.coordinateToPrice(dragState.startY);
+
+if(
+curPrice == null ||
+startPrice == null ||
+!Number.isFinite(curPrice) ||
+!Number.isFinite(startPrice)
+){
+return;
+}
+
+shape.price =
+dragState.startPrice + (curPrice - startPrice);
+
+const curTime =
+timeFromX(x);
+
+const anchorTime =
+timeFromX(dragState.startX);
+
+if(
+curTime != null &&
+anchorTime != null
+){
+shape.time =
+dragState.startTime + (curTime - anchorTime);
+}
+
+}else{
+
+const point = pointFromXY(x, y);
+
+if(!point){
+return;
+}
+
 moveHandle(shape, dragState.handleId, point);
+
+}
+
+saveDrawings();
 
 if(
 shape.type === "hray" &&
@@ -2085,7 +2177,6 @@ Number(shape.price)
 );
 }
 
-saveDrawings();
 redraw();
 
 };
@@ -3605,6 +3696,10 @@ updateStyleBar();
 const onAlertsChanged = ()=>{
 
 if(!alive){
+return;
+}
+
+if(dragState){
 return;
 }
 
