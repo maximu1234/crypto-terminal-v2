@@ -41,9 +41,10 @@ linkPairedChartTimeScales,
 linkChartsCrosshair,
 updateRsiBandLayout,
 applyTabletRsiChartOptions,
+applyTabletMainChartScroll,
 mountTabletPriceScaleTouch,
 isUserCrosshairEvent
-} from "./chart.js?v=26";
+} from "./chart.js?v=27";
 
 import {
 connectKlineStream,
@@ -62,7 +63,7 @@ processAlertTick
 
 import {
 initDrawings
-} from "./drawings.js?v=91";
+} from "./drawings.js?v=92";
 
 let currentDataset = "crypto";
 let currentTF = "60";
@@ -614,6 +615,10 @@ document.getElementById(
 ()=>{
 priceHudCtrl.refresh?.();
 }
+);
+
+applyTabletMainChartScroll(
+chart
 );
 
 const rsi =

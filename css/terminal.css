@@ -771,7 +771,7 @@ body{
 /* iPad: свечи — pan/pinch через LW; шкала цены — отдельная полоса */
 @media (pointer:coarse) and (min-width:768px){
   #chart{
-    touch-action:manipulation;
+    touch-action:none;
   }
 
   #rsi-chart{

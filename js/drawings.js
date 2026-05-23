@@ -5402,9 +5402,128 @@ if(!e.isPrimary){
 return;
 }
 
-const { x, y } = pointerFromEvent(e);
+const { x, y } =
+pointerFromEvent(e);
+
+/*
+  iPad: pointerdown в capture ломает pan LW — выбор тапом (click),
+  перетаскивание только если палец на уже выбранном объекте.
+*/
+if(
+isTouchDrawTablet()
+){
+
+const sel =
+selectedId
+? getSelected()
+: null;
+
+if(
+!sel
+){
+return;
+}
+
+const handleId =
+hitTestHandle(
+x,
+y,
+sel
+);
+
+const onBody =
+hitTestShapeBody(
+x,
+y,
+sel
+);
+
+if(
+!handleId &&
+!onBody
+){
+return;
+}
+
+if(
+handleId
+){
+
+dragState = {
+shapeId: sel.id,
+mode: "handle",
+handleId
+};
+
+}else if(
+onBody
+){
+
+if(isPositionType(sel.type)){
+
+dragState = {
+shapeId: sel.id,
+mode: "position-move",
+startX: x,
+startY: y,
+snapshot: {
+p1: { ...sel.p1 },
+p2: { ...sel.p2 },
+tpPrice: sel.tpPrice,
+slPrice: sel.slPrice,
+entry: positionEntryPrice(sel)
+}
+};
+
+}else{
+
+const movePoints =
+chartPointsForScreenMove(sel);
+
+const offsets =
+movePoints
+? screenDragOffsetsForPoints(
+movePoints,
+x,
+y
+)
+: null;
+
+if(!offsets){
+return;
+}
+
+dragState = {
+shapeId: sel.id,
+mode: "screen-move",
+pointOffsets: offsets
+};
+
+}
+
+}else{
+return;
+}
+
+blockChartClick = true;
+e.preventDefault();
+e.stopPropagation();
+
+try{
+wrapEl.setPointerCapture(e.pointerId);
+}catch{
+/* ignore */
+}
+
+return;
+
+}
+
 const hitId =
-hitTest(x, y);
+hitTest(
+x,
+y
+);
 
 if(!hitId){
 
@@ -5514,7 +5633,11 @@ wrapEl.setPointerCapture(e.pointerId);
 
 };
 
-wrapEl.addEventListener("pointerdown", onEditDown, true);
+wrapEl.addEventListener(
+"pointerdown",
+onEditDown,
+!isTouchDrawTablet()
+);
 
 const onEditMove = e=>{
 

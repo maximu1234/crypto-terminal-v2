@@ -1099,7 +1099,7 @@ return;
 rsiChart.applyOptions({
 handleScroll:{
 mouseWheel:false,
-pressedMouseMove:false,
+pressedMouseMove:true,
 horzTouchDrag:true,
 vertTouchDrag:false
 },
@@ -1110,6 +1110,36 @@ price:false
 },
 mouseWheel:false,
 pinch:false
+}
+});
+
+}
+
+export function applyTabletMainChartScroll(
+mainChart
+){
+
+if(
+!mainChart ||
+!isTabletChartViewport()
+){
+return;
+}
+
+mainChart.applyOptions({
+handleScroll:{
+mouseWheel:true,
+pressedMouseMove:true,
+horzTouchDrag:true,
+vertTouchDrag:false
+},
+handleScale:{
+axisPressedMouseMove:{
+time:false,
+price:false
+},
+mouseWheel:true,
+pinch:true
 }
 });
 
