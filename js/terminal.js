@@ -49,7 +49,7 @@ mountTabletCrosshairLongPress,
 TABLET_USE_CUSTOM_TOUCH_PAN,
 isTabletChartViewport,
 isUserCrosshairEvent
-} from "./chart.js?v=34";
+} from "./chart.js?v=35";
 
 import {
 connectKlineStream,
@@ -682,6 +682,9 @@ tabletCrosshairProbe = false;
 abortTabletPan =
 tabletPanCtrl.abortPan;
 
+const cancelTabletPanGesture =
+tabletPanCtrl.cancelCurrentGesture;
+
 unmountTabletPan =
 tabletPanCtrl.dispose;
 
@@ -1114,11 +1117,21 @@ chartEl,
 {
 shouldBeginHold:tabletHoldShouldBegin,
 onHoldStart:()=>{
-abortTabletPan();
+cancelTabletPanGesture?.();
 tabletCrosshairProbe = true;
+document.getElementById(
+"chart-wrap"
+)?.classList.add(
+"chart-touch-locked"
+);
 },
 onHoldEnd:()=>{
 tabletCrosshairProbe = false;
+document.getElementById(
+"chart-wrap"
+)?.classList.remove(
+"chart-touch-locked"
+);
 }
 }
 );

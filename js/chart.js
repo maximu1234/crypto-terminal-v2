@@ -1878,6 +1878,7 @@ e.pointerId ===
 crosshairTrack.id
 ){
 
+e.preventDefault();
 setCrosshairFromClient(
 e.clientX,
 e.clientY
@@ -1966,7 +1967,7 @@ passive:true
 
 const moveOpts = {
 capture:true,
-passive:true
+passive:false
 };
 
 chartEl.addEventListener(
@@ -2069,7 +2070,8 @@ const noop =
 
 return {
 dispose:noop,
-abortPan:noop
+abortPan:noop,
+cancelCurrentGesture:noop
 };
 
 }
@@ -2083,6 +2085,9 @@ null;
 let pendingPan =
 null;
 
+let pressTrack =
+null;
+
 let activePointers =
 new Set();
 
@@ -2094,9 +2099,17 @@ null;
 
 function abortPan(){
 
+pressTrack = null;
 pendingPan = null;
 pan = null;
 detachDocListeners();
+
+}
+
+function cancelCurrentGesture(){
+
+pressTrack = null;
+abortPan();
 
 }
 
@@ -2247,6 +2260,52 @@ if(
 ){
 abortPan();
 return;
+}
+
+if(
+pressTrack &&
+!pendingPan &&
+!pan
+){
+
+if(
+moveEvent.pointerId !==
+undefined &&
+moveEvent.pointerId !==
+pressTrack.id
+){
+return;
+}
+
+const dx0 =
+moveEvent.clientX - pressTrack.x;
+
+const dy0 =
+moveEvent.clientY - pressTrack.y;
+
+if(
+Math.abs(dx0) <
+PAN_START_PX
+){
+return;
+}
+
+if(
+Math.abs(dx0) <
+Math.abs(dy0) *
+1.25
+){
+return;
+}
+
+pendingPan = {
+id:pressTrack.id,
+x:moveEvent.clientX,
+y:moveEvent.clientY
+};
+
+pressTrack = null;
+
 }
 
 if(
@@ -2436,7 +2495,7 @@ abortPan();
 return;
 }
 
-pendingPan = {
+pressTrack = {
 id:
 e.pointerId ??
 0,
@@ -2456,6 +2515,14 @@ activePointers.delete(
 e.pointerId ??
 0
 );
+
+if(
+pressTrack &&
+e.pointerId ===
+pressTrack.id
+){
+pressTrack = null;
+}
 
 endPan(
 e
@@ -2540,7 +2607,8 @@ abortPan();
 
 return {
 dispose,
-abortPan
+abortPan,
+cancelCurrentGesture
 };
 
 }
