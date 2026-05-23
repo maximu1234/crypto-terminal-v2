@@ -1,3 +1,10 @@
+import {
+loadFavoritesGroups,
+saveFavoritesGroups,
+favoritesToCloudList,
+favoritesFromCloudList
+} from "./favorites.js?v=1";
+
 export function saveWidgetState(index, symbol, tf){
 
 const state = {
@@ -37,28 +44,31 @@ return null;
 
 }
 
+export function saveFavoritesGroupsState(groups){
+
+saveFavoritesGroups(groups);
+
+}
+
+export function loadFavoritesGroupsState(){
+
+return loadFavoritesGroups();
+
+}
+
 export function saveFavorites(favorites){
 
-localStorage.setItem(
-"favorites",
-JSON.stringify(favorites)
+saveFavoritesGroups(
+favoritesFromCloudList(favorites)
 );
 
 }
 
 export function loadFavorites(){
 
-try{
-
-return JSON.parse(
-localStorage.getItem("favorites") || "[]"
+return favoritesToCloudList(
+loadFavoritesGroups()
 );
-
-}catch{
-
-return [];
-
-}
 
 }
 

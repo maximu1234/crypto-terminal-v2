@@ -14,9 +14,11 @@ RSI_PERIOD
 } from "./indicators.js?v=2";
 
 import {
-saveFavorites,
-loadFavorites
-} from "./storage.js?v=11";
+loadFavoritesGroups,
+saveFavoritesGroups,
+getFavoriteGroup,
+setFavoriteGroup
+} from "./favorites.js?v=1";
 
 import {
 ensureCloudReady
@@ -30,8 +32,10 @@ onFavoritesRemoteUpdate
 import {
 createCandlestickChart,
 createRSIChart,
-applyChartPriceFormat
-} from "./chart.js?v=7";
+applyChartPriceFormat,
+mountChartPriceHud,
+syncLinkedChartTimescales
+} from "./chart.js?v=8";
 
 import {
 connectKlineStream,
@@ -50,7 +54,7 @@ processAlertTick
 
 import {
 initDrawings
-} from "./drawings.js?v=86";
+} from "./drawings.js?v=87";
 
 let currentDataset = "crypto";
 let currentTF = "60";
@@ -507,7 +511,7 @@ applySortForCurrentMarket();
 }
 
 let favorites =
-loadFavorites();
+loadFavoritesGroups();
 
 let allBybitSymbols = [];
 let newListings = [];
@@ -1113,6 +1117,11 @@ to: lastIndex + rightMargin
 
 });
 
+syncLinkedChartTimescales(
+chart,
+rsiChart
+);
+
 }
 
 /* =========================================================
@@ -1199,6 +1208,7 @@ highlightActiveSymbol();
 scrollActiveCoinIntoView();
 
 startRealtime();
+startPriceHud();
 
 persistCoinsPrefs();
 
@@ -1210,35 +1220,34 @@ persistCoinsPrefs();
 
 function resizeCharts(){
 
+const chartWrap =
+document.getElementById("chart-wrap");
+const rsiEl =
+document.getElementById("rsi-chart");
+
 chart.applyOptions({
-
-width:
-document.getElementById(
-"chart-wrap"
-).clientWidth,
-
-height:
-document.getElementById(
-"chart-wrap"
-).clientHeight
-
+width: chartWrap.clientWidth,
+height: chartWrap.clientHeight
 });
+
+rsiChart.applyOptions({
+width: rsiEl.clientWidth,
+height: rsiEl.clientHeight
+});
+
+syncLinkedChartTimescales(
+chart,
+rsiChart
+);
 
 drawingTools?.resize();
 drawingTools?.scheduleRedraw?.();
 
-rsiChart.applyOptions({
-
-width:
-document.getElementById(
-"rsi-chart"
-).clientWidth,
-
-height:
-document.getElementById(
-"rsi-chart"
-).clientHeight
-
+requestAnimationFrame(()=>{
+syncLinkedChartTimescales(
+chart,
+rsiChart
+);
 });
 
 }
@@ -1256,13 +1265,28 @@ chart.timeScale()
 .subscribeVisibleLogicalRangeChange(range=>{
 
 if(range){
-
-rsiChart.timeScale()
-.setVisibleLogicalRange(range);
-
+syncLinkedChartTimescales(
+chart,
+rsiChart
+);
 }
 
 });
+
+let priceHudStop = null;
+
+function startPriceHud(){
+
+priceHudStop?.();
+priceHudStop =
+mountChartPriceHud({
+chart,
+series: candleSeries,
+wrapEl: document.getElementById("chart-wrap"),
+getTf: ()=> currentTF
+});
+
+}
 
 /* =========================================================
    TF
@@ -1433,18 +1457,16 @@ document.createElement("div");
 
 div.className = "coin";
 
-const isFavorite =
-favorites.includes(item.symbol);
+const favGroup =
+getFavoriteGroup(item.symbol, favorites);
 
 div.innerHTML = `
 
-<div class="col-flag">
+<div class="col-flag coin-flags">
 
-<div
-class="flag
-${isFavorite ? 'favorite' : ''}"
-data-fav="${item.symbol}"
-></div>
+<button type="button" class="flag flag--red ${favGroup === 'red' ? 'favorite' : ''}" data-fav-group="red" data-symbol="${item.symbol}" title="Красная группа" aria-pressed="${favGroup === 'red'}"></button>
+<button type="button" class="flag flag--green ${favGroup === 'green' ? 'favorite' : ''}" data-fav-group="green" data-symbol="${item.symbol}" title="Зелёная группа" aria-pressed="${favGroup === 'green'}"></button>
+<button type="button" class="flag flag--gray ${favGroup === 'gray' ? 'favorite' : ''}" data-fav-group="gray" data-symbol="${item.symbol}" title="Серая группа" aria-pressed="${favGroup === 'gray'}"></button>
 
 </div>
 
@@ -1464,7 +1486,9 @@ ${item.symbol}
 
 div.onclick = async e=>{
 
-if(e.target.dataset.fav){
+if(
+e.target.closest("[data-fav-group]")
+){
 return;
 }
 
@@ -1472,38 +1496,45 @@ await loadSymbol(item.symbol);
 
 };
 
-const favBtn =
-div.querySelector("[data-fav]");
+div.querySelectorAll("[data-fav-group]").forEach(btn=>{
 
-favBtn.onclick = e=>{
+btn.onclick = e=>{
 
 e.stopPropagation();
 
-if(
-favorites.includes(item.symbol)
-){
+const group =
+btn.dataset.favGroup;
+const sym =
+btn.dataset.symbol;
+const current =
+getFavoriteGroup(sym, favorites);
 
+if(current === group){
 favorites =
-favorites.filter(
-s => s !== item.symbol
-);
-
+setFavoriteGroup(sym, null, favorites);
 }else{
-
-favorites.push(item.symbol);
+favorites =
+setFavoriteGroup(sym, group, favorites);
 }
 
-saveFavorites(
-favorites
-);
-
+saveFavoritesGroups(favorites);
 persistFavoritesToCloud(favorites);
 
-favBtn.classList.toggle(
-"favorite"
+div.querySelectorAll("[data-fav-group]").forEach(b=>{
+const g =
+b.dataset.favGroup;
+const on =
+getFavoriteGroup(sym, favorites) === g;
+b.classList.toggle("favorite", on);
+b.setAttribute(
+"aria-pressed",
+on ? "true" : "false"
 );
+});
 
 };
+
+});
 
 updateCoinRow(item, div);
 
@@ -1566,24 +1597,27 @@ change1hEl.innerText =
 function syncFavoriteButtonsFromStorage(){
 
 favorites =
-loadFavorites();
+loadFavoritesGroups();
 
 coinElements.forEach((el, symbol)=>{
 
-const favBtn =
-el.querySelector("[data-fav]");
+const group =
+getFavoriteGroup(symbol, favorites);
 
-if(!favBtn){
-return;
-}
+el.querySelectorAll("[data-fav-group]").forEach(btn=>{
 
+const g =
+btn.dataset.favGroup;
 const on =
-favorites.includes(symbol);
+group === g;
 
-favBtn.classList.toggle(
-"favorite",
-on
+btn.classList.toggle("favorite", on);
+btn.setAttribute(
+"aria-pressed",
+on ? "true" : "false"
 );
+
+});
 
 });
 
@@ -1624,11 +1658,11 @@ let result = 0;
 if(sortMode === "favorites"){
 
 const af =
-favorites.includes(a.symbol)
+getFavoriteGroup(a.symbol, favorites)
 ? 1 : 0;
 
 const bf =
-favorites.includes(b.symbol)
+getFavoriteGroup(b.symbol, favorites)
 ? 1 : 0;
 
 result = af - bf;
@@ -1855,7 +1889,7 @@ readUrlParams();
 applyCoinsPrefs();
 
 favorites =
-loadFavorites();
+loadFavoritesGroups();
 
 await initSymbols();
 

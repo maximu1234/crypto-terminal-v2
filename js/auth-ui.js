@@ -97,18 +97,17 @@ close();
 
 function mountAuthUi(){
 
+if(!isMainPage()){
+return ()=>{};
+}
+
 const settingsMount =
 document.getElementById("cloud-settings-mount");
 const settingsWrap =
 document.getElementById("header-settings-wrap");
 
 const host =
-isMainPage() && settingsMount
-? settingsMount
-: (
-document.getElementById("header-controls") ||
-document.getElementById("controls")
-);
+settingsMount;
 
 if(
 !host ||
@@ -123,9 +122,7 @@ document.createElement("div");
 wrap.id = "cloud-auth-wrap";
 
 wrap.className =
-isMainPage()
-? "cloud-auth-wrap cloud-auth-wrap--panel hidden"
-: "cloud-auth-wrap hidden";
+"cloud-auth-wrap cloud-auth-wrap--panel hidden";
 
 wrap.innerHTML = `
 <div class="cloud-auth-logged-out">
@@ -141,9 +138,7 @@ wrap.innerHTML = `
 
 host.appendChild(wrap);
 
-if(isMainPage()){
 setupSettingsDropdown();
-}
 
 const emailInput =
 wrap.querySelector(".cloud-auth-email");

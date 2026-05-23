@@ -4,9 +4,13 @@ isSupabaseConfigured
 } from "./supabase-client.js?v=2";
 
 import {
-loadFavorites,
-saveFavorites
-} from "./storage.js?v=11";
+loadFavoritesGroups,
+saveFavoritesGroups,
+favoritesToCloudList,
+favoritesFromCloudList,
+favoritesGroupsEqual,
+favoritesSignature as favoritesGroupsSignature
+} from "./favorites.js?v=1";
 
 import {
 collectAllLocalDrawings,
@@ -206,32 +210,19 @@ return tsMs(a) > tsMs(b);
 
 }
 
-function favoritesSignature(list){
-
-return [...list].sort().join("|");
-
-}
-
-function favoritesListsEqual(a, b){
-
-return favoritesSignature(a) ===
-favoritesSignature(b);
-
-}
-
-function saveFavoritesSyncedSignature(list){
+function saveFavoritesSyncedSignature(groups){
 
 localStorage.setItem(
 FAVORITES_SYNCED_SIG_KEY,
-favoritesSignature(list)
+favoritesGroupsSignature(groups)
 );
 
 }
 
 function hasUnsyncedFavorites(){
 
-return favoritesSignature(
-loadFavorites()
+return favoritesGroupsSignature(
+loadFavoritesGroups()
 ) !== (
 localStorage.getItem(
 FAVORITES_SYNCED_SIG_KEY
@@ -426,18 +417,20 @@ return { sb, user: session.user };
 }
 
 function applyFavoritesLocally(
-favorites,
+favoritesList,
 updatedAt
 ){
 
-saveFavorites(favorites);
+saveFavoritesGroups(
+favoritesFromCloudList(favoritesList)
+);
 
 if(updatedAt){
 saveLocalFavoritesUpdatedAt(updatedAt);
 }
 
 saveFavoritesSyncedSignature(
-loadFavorites()
+loadFavoritesGroups()
 );
 
 notifyFavorites();
@@ -587,15 +580,17 @@ return;
 
 const cloudFavorites =
 normalizeFavoritesList(row.favorites);
-const localFavorites =
-loadFavorites();
+const localGroups =
+loadFavoritesGroups();
+const cloudGroups =
+favoritesFromCloudList(cloudFavorites);
 const cloudTs =
 row.updated_at || "";
 
 if(
-favoritesListsEqual(
-cloudFavorites,
-localFavorites
+favoritesGroupsEqual(
+localGroups,
+cloudGroups
 )
 ){
 
@@ -604,7 +599,7 @@ saveLocalFavoritesUpdatedAt(cloudTs);
 }
 
 saveFavoritesSyncedSignature(
-localFavorites
+localGroups
 );
 
 return;
@@ -740,14 +735,18 @@ const authed =
 await getAuthedClient();
 
 if(!authed){
-return loadFavorites();
+return favoritesToCloudList(
+loadFavoritesGroups()
+);
 }
 
 const { sb, user } =
 authed;
 
-const local =
-loadFavorites();
+const localGroups =
+loadFavoritesGroups();
+const localList =
+favoritesToCloudList(localGroups);
 const localTs =
 loadLocalFavoritesUpdatedAt();
 const cloud =
@@ -758,30 +757,30 @@ user.id
 
 if(!cloud){
 
-if(local.length > 0){
+if(localList.length > 0){
 
 const ts =
 await pushCloudFavorites(
 sb,
 user.id,
-local
+localList
 );
 
 if(ts){
 saveLocalFavoritesUpdatedAt(ts);
-saveFavoritesSyncedSignature(local);
+saveFavoritesSyncedSignature(localGroups);
 }
 
 }
 
-return local;
+return localList;
 
 }
 
 if(
-favoritesListsEqual(
-local,
-cloud.favorites
+favoritesGroupsEqual(
+localGroups,
+favoritesFromCloudList(cloud.favorites)
 )
 ){
 
@@ -791,8 +790,8 @@ cloud.updatedAt
 );
 }
 
-saveFavoritesSyncedSignature(local);
-return local;
+saveFavoritesSyncedSignature(localGroups);
+return localList;
 
 }
 
@@ -809,15 +808,15 @@ const ts =
 await pushCloudFavorites(
 sb,
 user.id,
-local
+localList
 );
 
 if(ts){
 saveLocalFavoritesUpdatedAt(ts);
-saveFavoritesSyncedSignature(local);
+saveFavoritesSyncedSignature(localGroups);
 }
 
-return local;
+return localList;
 
 }
 
@@ -837,14 +836,18 @@ const authed =
 await getAuthedClient();
 
 if(!authed){
-return loadFavorites();
+return favoritesToCloudList(
+loadFavoritesGroups()
+);
 }
 
 const { sb, user } =
 authed;
 
-const local =
-loadFavorites();
+const localGroups =
+loadFavoritesGroups();
+const localList =
+favoritesToCloudList(localGroups);
 const localTs =
 loadLocalFavoritesUpdatedAt();
 const cloud =
@@ -856,13 +859,13 @@ user.id
 if(
 !cloud
 ){
-return local;
+return localList;
 }
 
 if(
-favoritesListsEqual(
-local,
-cloud.favorites
+favoritesGroupsEqual(
+localGroups,
+favoritesFromCloudList(cloud.favorites)
 )
 ){
 
@@ -872,13 +875,13 @@ cloud.updatedAt
 );
 }
 
-saveFavoritesSyncedSignature(local);
-return local;
+saveFavoritesSyncedSignature(localGroups);
+return localList;
 
 }
 
 if(hasUnsyncedFavorites()){
-return local;
+return localList;
 }
 
 if(
@@ -891,7 +894,7 @@ localTs
 )
 )
 ){
-return local;
+return localList;
 }
 
 applyFavoritesLocally(
@@ -1074,7 +1077,7 @@ async function syncFavoritesWithCloud(){
 if(hasUnsyncedFavorites()){
 
 await persistFavoritesToCloud(
-loadFavorites()
+loadFavoritesGroups()
 );
 return;
 }
@@ -1133,7 +1136,15 @@ saveDrawingsSyncedSignature(drawings);
 
 export async function persistFavoritesToCloud(favorites){
 
-saveFavorites(favorites);
+const list =
+Array.isArray(favorites)
+? favorites
+: favoritesToCloudList(favorites);
+
+const groups =
+favoritesFromCloudList(list);
+
+saveFavoritesGroups(groups);
 
 const authed =
 await getAuthedClient();
@@ -1149,12 +1160,12 @@ const ts =
 await pushCloudFavorites(
 sb,
 user.id,
-favorites
+list
 );
 
 if(ts){
 saveLocalFavoritesUpdatedAt(ts);
-saveFavoritesSyncedSignature(favorites);
+saveFavoritesSyncedSignature(groups);
 }
 
 }

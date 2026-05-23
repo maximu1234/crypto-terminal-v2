@@ -993,6 +993,8 @@ let alive = true;
 
 wrapEl.style.position = "relative";
 
+let priceGutterEl = null;
+
 const canvas =
 document.createElement("canvas");
 
@@ -4187,6 +4189,153 @@ h: wrapEl.clientHeight
 };
 }
 
+function getPriceGutterWidth(){
+
+try{
+return chart.priceScale("right").width() || 56;
+}catch{
+return 56;
+}
+
+}
+
+function getPlotWidth(){
+
+return Math.max(
+0,
+chartSize().w - getPriceGutterWidth()
+);
+
+}
+
+function ensurePriceGutter(){
+
+const gw =
+getPriceGutterWidth();
+
+if(!priceGutterEl){
+priceGutterEl =
+document.createElement("div");
+priceGutterEl.className =
+"chart-price-gutter";
+wrapEl.appendChild(priceGutterEl);
+}
+
+priceGutterEl.style.width =
+`${gw}px`;
+
+}
+
+function drawScalePriceBadge(
+ctx,
+y,
+text,
+color
+){
+
+if(
+y == null ||
+!Number.isFinite(y) ||
+!text
+){
+return;
+}
+
+const chartW =
+chartSize().w;
+const padX = 6;
+const tagX =
+chartW - 4;
+
+ctx.save();
+ctx.font =
+'600 10px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif';
+ctx.textAlign = "right";
+ctx.textBaseline = "middle";
+
+const tw =
+ctx.measureText(text).width + padX * 2;
+const th = 16;
+const left =
+tagX - tw;
+const top =
+y - th / 2;
+
+ctx.fillStyle =
+color || "rgba(30, 41, 59, 0.95)";
+ctx.beginPath();
+ctx.roundRect(left, top, tw, th, 3);
+ctx.fill();
+ctx.fillStyle = "#f8fafc";
+ctx.fillText(text, tagX - padX, y);
+ctx.restore();
+
+}
+
+function drawPriceScaleLabels(ctx){
+
+drawings.forEach(shape=>{
+
+if(shape.type !== "hray"){
+return;
+}
+
+const y =
+series.priceToCoordinate(shape.price);
+
+if(y == null){
+return;
+}
+
+const { color } =
+shapeStyle(shape);
+
+drawScalePriceBadge(
+ctx,
+y,
+formatPositionPrice(shape.price),
+color
+);
+
+});
+
+if(!selectedId){
+return;
+}
+
+const sel =
+drawings.find(d=>d.id === selectedId);
+
+if(
+!sel ||
+sel.type === "hray"
+){
+return;
+}
+
+listHandles(sel).forEach(handle=>{
+
+const xy =
+toXY(handle.point);
+
+if(!xy){
+return;
+}
+
+const { color } =
+shapeStyle(sel);
+
+drawScalePriceBadge(
+ctx,
+xy.y,
+formatPositionPrice(handle.point.price),
+color
+);
+
+});
+
+}
+
 function resizeCanvas(){
 
 const dpr = window.devicePixelRatio || 1;
@@ -4197,6 +4346,7 @@ canvas.height = Math.max(1, Math.floor(h * dpr));
 canvas.style.width = `${w}px`;
 canvas.style.height = `${h}px`;
 
+ensurePriceGutter();
 scheduleRedraw();
 
 }
@@ -6049,15 +6199,24 @@ try{
 const ctx = canvas.getContext("2d");
 const dpr = window.devicePixelRatio || 1;
 const { w, h } = chartSize();
+const plotW =
+getPlotWidth();
 
 ctx.setTransform(1, 0, 0, 1, 0, 0);
 ctx.clearRect(0, 0, canvas.width, canvas.height);
 ctx.scale(dpr, dpr);
 
+ensurePriceGutter();
+
+ctx.save();
+ctx.beginPath();
+ctx.rect(0, 0, plotW, h);
+ctx.clip();
+
 drawings.forEach(d=>{
 
 try{
-drawShape(ctx, d, w, h);
+drawShape(ctx, d, plotW, h);
 
 if(d.id === selectedId){
 drawSelectionHandles(ctx, d);
@@ -6070,7 +6229,7 @@ console.warn("draw shape", err);
 });
 
 if(placement){
-drawPlacementPreview(ctx, w, h);
+drawPlacementPreview(ctx, plotW, h);
 
 if(
 isTouchDrawTablet() &&
@@ -6078,12 +6237,16 @@ touchDrawCrosshair
 ){
 drawTouchPlacementCrosshair(
 ctx,
-w,
+plotW,
 h
 );
 }
 
 }
+
+ctx.restore();
+
+drawPriceScaleLabels(ctx);
 
 }catch(err){
 console.warn("redraw", err);

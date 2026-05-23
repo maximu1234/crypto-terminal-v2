@@ -23,10 +23,16 @@ fetchTickersInto
 
 import {
 saveScreenerState,
-loadScreenerState,
-loadFavorites,
-saveFavorites
-} from "./storage.js?v=11";
+loadScreenerState
+} from "./storage.js?v=12";
+
+import {
+loadFavoritesGroups,
+saveFavoritesGroups,
+getFavoriteGroup,
+setFavoriteGroup,
+migrateFavorites
+} from "./favorites.js?v=1";
 
 import {
 ensureCloudReady
@@ -47,11 +53,11 @@ const statusEl =
 document.getElementById("screener-status");
 
 let favorites =
-loadFavorites();
+loadFavoritesGroups();
 
 function isFavoriteSymbol(symbol){
 
-return favorites.includes(symbol);
+return !!getFavoriteGroup(symbol, favorites);
 
 }
 
@@ -60,34 +66,34 @@ root,
 symbol
 ){
 
-const flagEl =
-root?.querySelector(
-".screener-flag"
-);
+const group =
+getFavoriteGroup(symbol, favorites);
 
-if(!flagEl){
-return;
-}
+root?.querySelectorAll(".screener-flag").forEach(btn=>{
 
+const g =
+btn.dataset.flagGroup;
 const on =
-isFavoriteSymbol(symbol);
+group === g;
 
-flagEl.classList.toggle(
-"favorite",
-on
-);
-
-flagEl.setAttribute(
+btn.classList.toggle("favorite", on);
+btn.setAttribute(
 "aria-pressed",
-on
-? "true"
-: "false"
+on ? "true" : "false"
 );
 
-flagEl.title =
+const titles = {
+red: "Красная группа",
+green: "Зелёная группа",
+gray: "Серая группа"
+};
+
+btn.title =
 on
-? "Убрать из избранного"
-: "В избранное";
+? `Убрать из группы (${titles[g]})`
+: titles[g] || "Группа";
+
+});
 
 }
 
@@ -106,8 +112,9 @@ symbol
 
 }
 
-function toggleFavoriteSymbol(
+function toggleFavoriteGroup(
 symbol,
+group,
 e
 ){
 
@@ -116,26 +123,25 @@ e.stopPropagation();
 e.preventDefault();
 }
 
-if(!symbol){
+if(
+!symbol ||
+!group
+){
 return;
 }
 
-if(
-favorites.includes(symbol)
-){
+const current =
+getFavoriteGroup(symbol, favorites);
 
+if(current === group){
 favorites =
-favorites.filter(
-s=>s !== symbol
-);
-
+setFavoriteGroup(symbol, null, favorites);
 }else{
-
-favorites.push(symbol);
-
+favorites =
+setFavoriteGroup(symbol, group, favorites);
 }
 
-saveFavorites(favorites);
+saveFavoritesGroups(favorites);
 persistFavoritesToCloud(favorites);
 syncFavoriteFlagsForSymbol(symbol);
 
@@ -583,12 +589,11 @@ root.innerHTML = `
 
 <div class="screener-header-left">
 
-<button
-type="button"
-class="flag screener-flag"
-title="В избранное"
-aria-pressed="false"
-></button>
+<div class="screener-flags">
+<button type="button" class="flag screener-flag screener-flag--red" data-flag-group="red" title="Красная группа" aria-pressed="false"></button>
+<button type="button" class="flag screener-flag screener-flag--green" data-flag-group="green" title="Зелёная группа" aria-pressed="false"></button>
+<button type="button" class="flag screener-flag screener-flag--gray" data-flag-group="gray" title="Серая группа" aria-pressed="false"></button>
+</div>
 
 <div class="screener-symbol">${symbol}</div>
 
@@ -612,9 +617,15 @@ aria-pressed="false"
 
 `;
 
-root.querySelector(".screener-flag").onclick = e=>{
-toggleFavoriteSymbol(symbol, e);
+root.querySelectorAll(".screener-flag").forEach(btn=>{
+btn.onclick = e=>{
+toggleFavoriteGroup(
+symbol,
+btn.dataset.flagGroup,
+e
+);
 };
+});
 
 root.querySelector(".screener-open").onclick = e=>{
 openTerminal(symbol, e);
@@ -1055,13 +1066,16 @@ try{
 
 favorites =
 JSON.parse(
-e.newValue || "[]"
+e.newValue || "null"
 );
+
+favorites =
+migrateFavorites(favorites);
 
 }catch{
 
 favorites =
-loadFavorites();
+loadFavoritesGroups();
 
 }
 
@@ -1078,7 +1092,7 @@ widget.symbol
 onFavoritesRemoteUpdate(()=>{
 
 favorites =
-loadFavorites();
+loadFavoritesGroups();
 
 activeWidgets.forEach(widget=>{
 
@@ -1099,7 +1113,7 @@ bindControls();
 applySavedUi();
 
 favorites =
-loadFavorites();
+loadFavoritesGroups();
 
 setStatus("Загрузка списка монет…", true);
 

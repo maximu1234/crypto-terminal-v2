@@ -98,6 +98,8 @@ priceFormatForValue(referencePrice)
 
 }
 
+export const CHART_PRICE_SCALE_WIDTH = 56;
+
 export function createCandlestickChart(container){
 
 const chart =
@@ -124,6 +126,7 @@ borderColor:"#1f2937",
 mode:1,
 
 autoScale:true,
+minimumWidth:CHART_PRICE_SCALE_WIDTH,
 scaleMargins:{
 top:0.12,
 bottom:0.12
@@ -140,6 +143,22 @@ fixRightEdge:false
 
 crosshair:{
 mode:0
+},
+
+handleScroll:{
+mouseWheel:true,
+pressedMouseMove:true,
+horzTouchDrag:true,
+vertTouchDrag:false
+},
+
+handleScale:{
+axisPressedMouseMove:{
+time:true,
+price:true
+},
+mouseWheel:true,
+pinch:true
 }
 
 });
@@ -154,7 +173,7 @@ wickUpColor:"#22c55e",
 wickDownColor:"#ef4444",
 
 priceLineVisible:true,
-lastValueVisible:true
+lastValueVisible:false
 
 });
 
@@ -487,6 +506,7 @@ borderColor:"#2a2e39",
 mode:
 normalMode,
 autoScale:true,
+minimumWidth:CHART_PRICE_SCALE_WIDTH,
 ticksVisible:false,
 scaleMargins:{
 top:0,
@@ -608,6 +628,199 @@ return {
 
 chart,
 series
+
+};
+
+}
+
+export function syncLinkedChartTimescales(
+mainChart,
+linkedChart
+){
+
+if(
+!mainChart ||
+!linkedChart
+){
+return;
+}
+
+const range =
+mainChart.timeScale().getVisibleLogicalRange();
+
+if(!range){
+return;
+}
+
+let barSpacing;
+
+try{
+barSpacing =
+mainChart.timeScale().options().barSpacing;
+}catch{
+barSpacing = undefined;
+}
+
+if(
+barSpacing != null &&
+Number.isFinite(barSpacing)
+){
+linkedChart.timeScale().applyOptions({
+barSpacing
+});
+}
+
+linkedChart.timeScale().setVisibleLogicalRange(range);
+
+}
+
+function tfPeriodSec(tf){
+
+const map = {
+"1":60,
+"5":300,
+"15":900,
+"60":3600,
+"240":14400,
+"D":86400
+};
+
+return map[tf] || 900;
+
+}
+
+function formatCandleCountdown(sec){
+
+const s =
+Math.max(0, Math.floor(sec));
+const m =
+Math.floor(s / 60);
+const r =
+s % 60;
+
+return `${m}:${String(r).padStart(2, "0")}`;
+
+}
+
+export function mountChartPriceHud({
+chart,
+series,
+wrapEl,
+getTf
+}){
+
+if(
+!chart ||
+!series ||
+!wrapEl
+){
+return ()=>{};
+}
+
+let hud =
+wrapEl.querySelector(".chart-price-hud");
+
+if(!hud){
+
+hud =
+document.createElement("div");
+hud.className = "chart-price-hud";
+hud.innerHTML = `
+<span class="chart-price-hud-price"></span>
+<span class="chart-price-hud-cd"></span>
+`;
+wrapEl.appendChild(hud);
+
+}
+
+const priceEl =
+hud.querySelector(".chart-price-hud-price");
+const cdEl =
+hud.querySelector(".chart-price-hud-cd");
+let timer = 0;
+
+function update(){
+
+try{
+
+const data =
+series.data();
+
+const last =
+data?.[data.length - 1];
+
+if(
+!last ||
+last.close == null
+){
+hud.classList.add("hidden");
+return;
+}
+
+const y =
+series.priceToCoordinate(last.close);
+
+if(
+y == null ||
+!Number.isFinite(y)
+){
+hud.classList.add("hidden");
+return;
+}
+
+const gutter =
+chart.priceScale("right").width() ||
+CHART_PRICE_SCALE_WIDTH;
+const up =
+last.close >= last.open;
+
+hud.classList.remove("hidden");
+hud.classList.toggle(
+"chart-price-hud--up",
+up
+);
+hud.classList.toggle(
+"chart-price-hud--down",
+!up
+);
+
+priceEl.textContent =
+formatPrice(last.close);
+
+const period =
+tfPeriodSec(getTf?.() || "60");
+const left =
+period -
+(
+Math.floor(Date.now() / 1000) % period
+);
+
+cdEl.textContent =
+formatCandleCountdown(left);
+
+hud.style.right = `${Math.max(gutter - 2, 0)}px`;
+hud.style.top = `${y}px`;
+
+}catch{
+hud.classList.add("hidden");
+}
+
+}
+
+update();
+
+timer = window.setInterval(update, 1000);
+
+const ro =
+new ResizeObserver(()=>update());
+
+ro.observe(wrapEl);
+
+return ()=>{
+
+clearInterval(timer);
+ro.disconnect();
+hud?.remove();
 
 };
 
