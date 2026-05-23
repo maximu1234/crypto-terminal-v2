@@ -12,7 +12,7 @@
 <title>Multichart</title>
 
 <link rel="stylesheet" href="css/common.css">
-<link rel="stylesheet" href="css/terminal.css?v=22">
+<link rel="stylesheet" href="css/terminal.css?v=23">
 
 </head>
 
@@ -207,6 +207,7 @@ RSI <span id="rsi-hud-period">14</span>
 <span id="rsi-hud-value" class="rsi-hud-badge">—</span>
 </div>
 <div id="rsi-chart"></div>
+<div id="rsi-crosshair-vert" class="rsi-crosshair-vert hidden" aria-hidden="true"></div>
 </div>
 
 </div>
@@ -295,7 +296,7 @@ document.body.innerHTML = `
 import("./js/charts-lib-boot.js").then(({ loadLightweightCharts })=>
 loadLightweightCharts()
 ).then(()=>
-import("./js/terminal.js?v=96")
+import("./js/terminal.js?v=97")
 ).catch(err=>{
 
 console.error(err);

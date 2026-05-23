@@ -168,10 +168,11 @@ horzLine:crosshairLineOptions(true)
 
 function rsiCrosshairOptions(){
 
+const Hidden =
+LightweightCharts.CrosshairMode?.Hidden ?? 2;
+
 return {
-...normalCrosshairOptions(),
-vertLine:crosshairLineOptions(false),
-horzLine:crosshairLineOptions(false)
+mode:Hidden
 };
 
 }
@@ -741,20 +742,48 @@ if(
 return CHART_PRICE_SCALE_WIDTH;
 }
 
-const w =
-Math.max(
-mainChart.priceScale("right").width() || 0,
-linkedChart.priceScale("right").width() || 0,
+const scale =
+"right";
+
+function measuredWidth(){
+
+return Math.max(
+mainChart.priceScale(scale).width() || 0,
+linkedChart.priceScale(scale).width() || 0,
 CHART_PRICE_SCALE_WIDTH
 );
 
-mainChart.priceScale("right").applyOptions({
+}
+
+let w =
+measuredWidth();
+
+mainChart.priceScale(scale).applyOptions({
 minimumWidth:w
 });
 
-linkedChart.priceScale("right").applyOptions({
+linkedChart.priceScale(scale).applyOptions({
 minimumWidth:w
 });
+
+const w2 =
+measuredWidth();
+
+if(
+w2 > w
+){
+
+w = w2;
+
+mainChart.priceScale(scale).applyOptions({
+minimumWidth:w
+});
+
+linkedChart.priceScale(scale).applyOptions({
+minimumWidth:w
+});
+
+}
 
 applyChartScaleWidthCss(mainChart);
 
@@ -803,6 +832,8 @@ mainChart,
 linkedChart,
 mainSeries,
 linkedSeries,
+linkedVertOverlayEl,
+onLinkedCrosshairTime,
 getLinkedValueAtTime,
 getMainValueAtTime
 }){
@@ -810,13 +841,85 @@ getMainValueAtTime
 let lock =
 false;
 
+function clearLinkedVert(){
+
+if(
+linkedVertOverlayEl
+){
+
+linkedVertOverlayEl.classList.add(
+"hidden"
+);
+
+linkedVertOverlayEl.style.removeProperty(
+"left"
+);
+
+}
+
+}
+
 function clearLinked(){
+
+clearLinkedVert();
 
 try{
 linkedChart.clearCrosshairPosition();
 }catch{
 /* ignore */
 }
+
+}
+
+function showLinkedVert(
+param
+){
+
+if(
+!linkedVertOverlayEl
+){
+return false;
+}
+
+const x =
+param.point?.x;
+
+if(
+!Number.isFinite(x)
+){
+clearLinkedVert();
+return true;
+}
+
+syncLinkedChartPriceScales(
+mainChart,
+linkedChart
+);
+
+linkedVertOverlayEl.style.left =
+`${Math.round(x)}px`;
+
+linkedVertOverlayEl.classList.remove(
+"hidden"
+);
+
+try{
+linkedChart.clearCrosshairPosition();
+}catch{
+/* ignore */
+}
+
+if(
+onLinkedCrosshairTime
+){
+
+onLinkedCrosshairTime(
+param.time
+);
+
+}
+
+return true;
 
 }
 
@@ -840,6 +943,12 @@ param.point === undefined
 ){
 
 clearLinked();
+return;
+}
+
+if(
+showLinkedVert(param)
+){
 return;
 }
 
@@ -875,6 +984,12 @@ lock = false;
 });
 
 linkedChart.subscribeCrosshairMove(param=>{
+
+if(
+linkedVertOverlayEl
+){
+return;
+}
 
 if(lock){
 return;

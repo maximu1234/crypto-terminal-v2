@@ -37,7 +37,7 @@ applyChartPriceFormat,
 mountChartPriceHud,
 syncLinkedChartTimescales,
 linkChartsCrosshair
-} from "./chart.js?v=17";
+} from "./chart.js?v=18";
 
 import {
 connectKlineStream,
@@ -814,6 +814,10 @@ mainChart:chart,
 linkedChart:rsiChart,
 mainSeries:candleSeries,
 linkedSeries:rsiSeries,
+linkedVertOverlayEl:document.getElementById(
+"rsi-crosshair-vert"
+),
+onLinkedCrosshairTime:updateRsiHudFromCrosshairTime,
 getLinkedValueAtTime(time){
 const ts =
 rsiCrosshairUnix(time);
@@ -841,10 +845,6 @@ return candleCloseAtOrBefore(ts);
 });
 
 chart.subscribeCrosshairMove(param=>{
-updateRsiHudFromCrosshairTime(param.time);
-});
-
-rsiChart.subscribeCrosshairMove(param=>{
 updateRsiHudFromCrosshairTime(param.time);
 });
 
@@ -1293,8 +1293,6 @@ function resizeCharts(){
 
 const chartWrap =
 document.getElementById("chart-wrap");
-const rsiWrap =
-document.getElementById("rsi-wrap");
 const rsiEl =
 document.getElementById("rsi-chart");
 
@@ -1307,7 +1305,7 @@ height:chartWrap.clientHeight
 });
 
 rsiChart.applyOptions({
-width:rsiWrap?.clientWidth || w,
+width:w,
 height:rsiEl.clientHeight
 });
 
