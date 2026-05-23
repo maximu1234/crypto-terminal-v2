@@ -547,7 +547,9 @@ bottom:0
 },
 
 timeScale:{
-visible:false
+visible:false,
+rightOffset:12,
+fixRightEdge:false
 },
 
 crosshair:{
@@ -749,23 +751,11 @@ if(!range){
 return;
 }
 
-let barSpacing;
-
-try{
-barSpacing =
-mainChart.timeScale().options().barSpacing;
-}catch{
-barSpacing = undefined;
-}
-
-if(
-barSpacing != null &&
-Number.isFinite(barSpacing)
-){
-linkedChart.timeScale().applyOptions({
-barSpacing
-});
-}
+linkedChart.timeScale().applyOptions(
+getTimeScaleSyncOptions(
+mainChart.timeScale()
+)
+);
 
 linkedChart.timeScale().setVisibleLogicalRange(range);
 
@@ -773,7 +763,7 @@ applyChartScaleWidthCss(mainChart);
 
 }
 
-function tfPeriodSec(tf){
+export function tfPeriodSec(tf){
 
 const map = {
 "1":60,
@@ -785,6 +775,48 @@ const map = {
 };
 
 return map[tf] || 900;
+
+}
+
+export function rsiPlotTimeOffsetSec(tf){
+
+return Math.floor(
+tfPeriodSec(tf) / 2
+);
+
+}
+
+function getTimeScaleSyncOptions(
+timeScale
+){
+
+const o =
+timeScale.options();
+
+const sync =
+{};
+
+for(
+const key of [
+"barSpacing",
+"rightOffset",
+"fixLeftEdge",
+"fixRightEdge",
+"leftOffset",
+"minBarSpacing",
+"maxBarSpacing"
+]
+){
+
+if(
+o[key] !== undefined
+){
+sync[key] = o[key];
+}
+
+}
+
+return sync;
 
 }
 

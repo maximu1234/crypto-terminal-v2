@@ -35,8 +35,9 @@ createCandlestickChart,
 createRSIChart,
 applyChartPriceFormat,
 mountChartPriceHud,
-syncLinkedChartTimescales
-} from "./chart.js?v=13";
+syncLinkedChartTimescales,
+rsiPlotTimeOffsetSec
+} from "./chart.js?v=14";
 
 import {
 connectKlineStream,
@@ -679,6 +680,10 @@ return v.toFixed(2);
 
 function rsiLookupAtOrBefore(ts){
 
+const plotTs =
+ts +
+rsiPlotTimeOffsetSec(currentTF);
+
 for(
 let i =
 rsiPointsCache.length -
@@ -690,7 +695,7 @@ i--
 
 if(
 rsiPointsCache[i].time <=
-ts
+plotTs
 ){
 
 return rsiPointsCache[i].value;
@@ -718,13 +723,24 @@ formatRsiHud(v);
 
 function rebuildRsiFromCandles(){
 
+const timeShift =
+rsiPlotTimeOffsetSec(currentTF);
+
 rsiPointsCache =
 calculateRSI(
 candles
-);
+).map(p=>({
+time:p.time + timeShift,
+value:p.value
+}));
 
 rsiSeries.setData(
 rsiPointsCache
+);
+
+syncLinkedChartTimescales(
+chart,
+rsiChart
 );
 
 const last =
@@ -1255,17 +1271,29 @@ function resizeCharts(){
 
 const chartWrap =
 document.getElementById("chart-wrap");
+const rsiWrap =
+document.getElementById("rsi-wrap");
 const rsiEl =
 document.getElementById("rsi-chart");
 
+const w =
+chartWrap.clientWidth;
+
+const mainH =
+Math.max(
+0,
+chartWrap.clientHeight -
+(rsiWrap?.offsetHeight || 0)
+);
+
 chart.applyOptions({
-width: chartWrap.clientWidth,
-height: chartWrap.clientHeight
+width:w,
+height:mainH || chartWrap.clientHeight
 });
 
 rsiChart.applyOptions({
-width: rsiEl.clientWidth,
-height: rsiEl.clientHeight
+width:w,
+height:rsiEl.clientHeight
 });
 
 syncLinkedChartTimescales(
