@@ -2204,6 +2204,10 @@ false;
 let crosshairTrack =
 null;
 
+/** iPad: long-press уже начат с touchstart (до pointerdown) */
+let holdGestureFromTouch =
+false;
+
 let onDocPointerMove =
 null;
 
@@ -2237,6 +2241,75 @@ syncChartTouchBlock();
 }
 
 holdPointer = null;
+holdGestureFromTouch = false;
+
+}
+
+function startHoldGesture(
+pointerId,
+clientX,
+clientY,
+{
+fromTouch = false
+} = {}
+){
+
+if(
+holdTimer
+){
+clearTimeout(
+holdTimer
+);
+
+holdTimer = null;
+
+}
+
+if(
+holdPending &&
+!crosshairTrack
+){
+holdPending = false;
+onHoldPendingEnd();
+detachDocGestureShield();
+syncChartTouchBlock();
+}
+
+holdGestureFromTouch =
+fromTouch;
+
+holdPending = true;
+syncChartTouchBlock();
+onHoldPendingStart();
+attachDocGestureShield();
+
+holdPointer =
+pointerId;
+
+holdStartX =
+clientX;
+
+holdStartY =
+clientY;
+
+holdTimer =
+setTimeout(
+()=>{
+
+holdTimer = null;
+
+if(
+holdPointer ===
+null
+){
+return;
+}
+
+beginCrosshairTrack();
+
+},
+TABLET_CROSSHAIR_HOLD_MS
+);
 
 }
 
@@ -2658,6 +2731,14 @@ return;
 }
 
 if(
+e.pointerType ===
+"touch" &&
+holdGestureFromTouch
+){
+return;
+}
+
+if(
 !shouldBeginHold(
 e
 )
@@ -2665,46 +2746,17 @@ e
 return;
 }
 
-clearHoldTimer();
-
 try{
 e.preventDefault();
 }catch{
 /* ignore */
 }
 
-holdPending = true;
-syncChartTouchBlock();
-onHoldPendingStart();
-attachDocGestureShield();
-
-holdPointer =
+startHoldGesture(
 e.pointerId ??
-0;
-
-holdStartX =
-e.clientX;
-
-holdStartY =
-e.clientY;
-
-holdTimer =
-setTimeout(
-()=>{
-
-holdTimer = null;
-
-if(
-holdPointer ===
-null
-){
-return;
-}
-
-beginCrosshairTrack();
-
-},
-TABLET_CROSSHAIR_HOLD_MS
+0,
+e.clientX,
+e.clientY
 );
 
 }
@@ -2725,7 +2777,40 @@ crosshairTrack
 endProbeSession();
 }
 
+return;
 }
+
+if(
+!shouldBeginHold(
+e
+)
+){
+return;
+}
+
+try{
+e.preventDefault();
+}catch{
+/* ignore */
+}
+
+const t =
+e.touches[
+0
+];
+
+if(
+!t
+){
+return;
+}
+
+startHoldGesture(
+t.identifier,
+t.clientX,
+t.clientY,
+{ fromTouch:true }
+);
 
 }
 
@@ -2760,7 +2845,7 @@ capUp
 touchLayerEl.addEventListener(
 "touchstart",
 onTouchStart,
-capUp
+capDown
 );
 
 return ()=>{
@@ -2795,7 +2880,7 @@ capUp
 touchLayerEl.removeEventListener(
 "touchstart",
 onTouchStart,
-capUp
+capDown
 );
 
 };

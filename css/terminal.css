@@ -788,6 +788,14 @@ body.tablet-chart #rsi-chart{
 }
 
 /* iPad: все касания свечного графика — через overlay, LW canvas не получает touch */
+body.tablet-chart #chart-wrap,
+body.tablet-chart .tablet-probe-touch-layer{
+  -webkit-user-select:none;
+  user-select:none;
+  -webkit-touch-callout:none;
+  -webkit-tap-highlight-color:transparent;
+}
+
 body.tablet-chart .tablet-probe-touch-layer{
   pointer-events:auto;
 }
