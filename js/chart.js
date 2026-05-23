@@ -130,6 +130,46 @@ return CHART_SCALE_LABEL_PAD_LEFT;
 
 }
 
+function normalCrosshairOptions(){
+
+const Normal =
+LightweightCharts.CrosshairMode?.Normal ?? 0;
+
+const Dashed =
+LightweightCharts.LineStyle?.Dashed ?? 2;
+
+const Dotted =
+LightweightCharts.LineStyle?.Dotted ?? 1;
+
+return {
+mode:Normal,
+vertLine:{
+color:"rgba(120,126,146,0.45)",
+width:1,
+style:Dashed,
+labelVisible:true
+},
+horzLine:{
+color:"rgba(120,126,146,0.35)",
+width:1,
+style:Dotted,
+labelVisible:true
+}
+};
+
+}
+
+function isUserCrosshairEvent(
+param
+){
+
+return !!(
+param &&
+param.sourceEvent
+);
+
+}
+
 export function createCandlestickChart(container){
 
 const chart =
@@ -173,9 +213,7 @@ rightOffset:12,
 fixRightEdge:false
 },
 
-crosshair:{
-mode:0
-},
+crosshair:normalCrosshairOptions(),
 
 handleScroll:{
 mouseWheel:true,
@@ -193,6 +231,10 @@ mouseWheel:true,
 pinch:true
 }
 
+});
+
+chart.applyOptions({
+crosshair:normalCrosshairOptions()
 });
 
 const series =
@@ -500,16 +542,6 @@ LightweightCharts.LineStyle !== undefined
 ? LightweightCharts.LineStyle.Dotted
 : 1;
 
-const lineStyleDash =
-LightweightCharts.LineStyle !== undefined
-? LightweightCharts.LineStyle.Dashed
-: 2;
-
-const crosshairNormal =
-LightweightCharts.CrosshairMode !== undefined
-? LightweightCharts.CrosshairMode.Normal
-: 0;
-
 const chart =
 LightweightCharts.createChart(
 container,
@@ -553,20 +585,15 @@ fixRightEdge:false
 },
 
 crosshair:{
-mode:crosshairNormal,
-
+...normalCrosshairOptions(),
 vertLine:{
-color:"rgba(120,126,146,0.45)",
-width:1,
-style:lineStyleDash,
+...normalCrosshairOptions().vertLine,
 labelVisible:false
 },
-
 horzLine:{
-visible:false,
+...normalCrosshairOptions().horzLine,
 labelVisible:false
 }
-
 },
 
 handleScroll:{
@@ -586,6 +613,20 @@ price:false
 axisDoubleClickReset:false
 }
 
+});
+
+chart.applyOptions({
+crosshair:{
+...normalCrosshairOptions(),
+vertLine:{
+...normalCrosshairOptions().vertLine,
+labelVisible:false
+},
+horzLine:{
+...normalCrosshairOptions().horzLine,
+labelVisible:false
+}
+}
 });
 
 const series =
@@ -789,6 +830,14 @@ return;
 }
 
 if(
+!isUserCrosshairEvent(param)
+){
+
+clearLinked();
+return;
+}
+
+if(
 !param?.time ||
 param.point === undefined
 ){
@@ -835,9 +884,15 @@ return;
 }
 
 if(
-!param?.time ||
-param.point === undefined ||
+!isUserCrosshairEvent(param) ||
 !getMainValueAtTime
+){
+return;
+}
+
+if(
+!param?.time ||
+param.point === undefined
 ){
 return;
 }

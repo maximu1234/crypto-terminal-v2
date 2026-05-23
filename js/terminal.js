@@ -36,9 +36,8 @@ createRSIChart,
 applyChartPriceFormat,
 mountChartPriceHud,
 syncLinkedChartTimescales,
-rsiPlotTimeOffsetSec,
 linkChartsCrosshair
-} from "./chart.js?v=15";
+} from "./chart.js?v=16";
 
 import {
 connectKlineStream,
@@ -681,10 +680,6 @@ return v.toFixed(2);
 
 function rsiLookupAtOrBefore(ts){
 
-const plotTs =
-ts +
-rsiPlotTimeOffsetSec(currentTF);
-
 for(
 let i =
 rsiPointsCache.length -
@@ -696,7 +691,7 @@ i--
 
 if(
 rsiPointsCache[i].time <=
-plotTs
+ts
 ){
 
 return rsiPointsCache[i].value;
@@ -724,16 +719,10 @@ formatRsiHud(v);
 
 function rebuildRsiFromCandles(){
 
-const timeShift =
-rsiPlotTimeOffsetSec(currentTF);
-
 rsiPointsCache =
 calculateRSI(
 candles
-).map(p=>({
-time:p.time + timeShift,
-value:p.value
-}));
+);
 
 rsiSeries.setData(
 rsiPointsCache
