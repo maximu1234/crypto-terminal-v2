@@ -75,9 +75,25 @@ body{
 .widget-header-row{
     display:flex;
     align-items:center;
+    justify-content:space-between;
     gap:6px;
     width:100%;
     min-height:32px;
+}
+
+.widget-header-left{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    min-width:0;
+    flex:1;
+}
+
+.widget-header-right{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    flex-shrink:0;
 }
 
 .widget-header .price-info{
@@ -86,7 +102,6 @@ body{
     justify-content:flex-end;
     gap:10px;
     flex-shrink:0;
-    margin-left:auto;
 }
 
 .widget-active{
@@ -219,19 +234,21 @@ body{
 }
 
 .open-chart-btn{
-    width:28px;
-    height:28px;
     border:none;
-    border-radius:6px;
-    background:#1f2937;
-    color:white;
+    background:transparent;
+    color:#6b7280;
     cursor:pointer;
-    font-size:14px;
-    transition:0.2s;
+    font-size:12px;
+    padding:0 4px;
+    border-radius:4px;
+    flex-shrink:0;
+    line-height:1;
+    transition:0.15s;
 }
 
 .open-chart-btn:hover{
-    background:#374151;
+    color:#fff;
+    background:#1f2937;
 }
 
 .price-info{

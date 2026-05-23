@@ -101,6 +101,8 @@ widget.innerHTML = `
 
 <div class="widget-header-row">
 
+<div class="widget-header-left">
+
 <div class="left-controls">
 
 <input class="symbol-input" value="${startSymbol}" spellcheck="false" autocomplete="off"/>
@@ -114,15 +116,21 @@ widget.innerHTML = `
 <option value="D" ${startTf==="D"?"selected":""}>1D</option>
 </select>
 
-<button type="button" class="open-chart-btn" title="Открыть график">↗</button>
-
 </div>
 
 ${getWidgetToolbarHtml()}
 
+</div>
+
+<div class="widget-header-right">
+
 <div class="price-info">
 <div class="price">—</div>
 <div class="change">—</div>
+</div>
+
+<button type="button" class="open-chart-btn" title="Открыть в Монетах">↗</button>
+
 </div>
 
 </div>
