@@ -764,14 +764,16 @@ body{
   z-index:4;
   transform:translateY(-50%);
   box-sizing:border-box;
-  padding:2px 4px;
+  padding:0 4px 0 4px;
   border-radius:0;
-  font-size:11px;
-  line-height:1.25;
-  text-align:right;
+  font-family:-apple-system, BlinkMacSystemFont, "Trebuchet MS", Roboto, Ubuntu, sans-serif;
+  font-size:12px;
+  font-weight:400;
+  line-height:16px;
+  text-align:left;
   font-variant-numeric:tabular-nums;
   pointer-events:none;
-  color:#fff;
+  color:#d1d5db;
 }
 
 .chart-price-hud.hidden{
@@ -788,8 +790,10 @@ body{
 
 .chart-price-hud-cd{
   display:block;
-  font-size:10px;
-  opacity:.95;
+  font-size:12px;
+  font-weight:400;
+  line-height:16px;
+  opacity:1;
 }
 
 #chart{

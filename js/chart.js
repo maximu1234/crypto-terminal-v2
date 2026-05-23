@@ -100,6 +100,24 @@ priceFormatForValue(referencePrice)
 
 export const CHART_PRICE_SCALE_WIDTH = 56;
 
+export const CHART_SCALE_TEXT_COLOR = "#d1d5db";
+
+export const CHART_SCALE_FONT_SIZE = 12;
+
+export const CHART_SCALE_FONT_FAMILY =
+"-apple-system, BlinkMacSystemFont, 'Trebuchet MS', Roboto, Ubuntu, sans-serif";
+
+export const CHART_SCALE_LABEL_PAD_LEFT = 4;
+
+export const CHART_SCALE_LABEL_LINE_HEIGHT =
+CHART_SCALE_FONT_SIZE + 4;
+
+export function chartScaleFont(){
+
+return `${CHART_SCALE_FONT_SIZE}px ${CHART_SCALE_FONT_FAMILY}`;
+
+}
+
 export function createCandlestickChart(container){
 
 const chart =
@@ -109,7 +127,9 @@ container,
 
 layout:{
 background:{ color:"#0b1220" },
-textColor:"#d1d5db"
+textColor:CHART_SCALE_TEXT_COLOR,
+fontSize:CHART_SCALE_FONT_SIZE,
+fontFamily:CHART_SCALE_FONT_FAMILY
 },
 
 grid:{

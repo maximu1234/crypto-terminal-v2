@@ -27,6 +27,14 @@ persistAllDrawingsToCloud,
 onDrawingsRemoteUpdate
 } from "./cloud-sync.js?v=7";
 
+import {
+formatPrice,
+chartScaleFont,
+CHART_SCALE_TEXT_COLOR,
+CHART_SCALE_LABEL_PAD_LEFT,
+CHART_SCALE_LABEL_LINE_HEIGHT
+} from "./chart.js?v=11";
+
 /* Сетка 2×9: чётный индекс — левый столбец, нечётный — правый */
 const DEFAULT_FIB_SPEC = Object.freeze([
 { v:0, enabled:true, color:"#facc15" },
@@ -4220,40 +4228,45 @@ priceGutterEl = null;
 function drawScalePriceBadge(
 ctx,
 y,
-text,
+price,
 color
 ){
 
 if(
 y == null ||
 !Number.isFinite(y) ||
-!text
+!Number.isFinite(Number(price))
 ){
 return;
 }
+
+const text =
+formatPrice(Number(price));
 
 const chartW =
 chartSize().w;
 const scaleW =
 getPriceGutterWidth();
-const padX = 4;
 const left =
 chartW - scaleW;
-const th = 16;
+const th =
+CHART_SCALE_LABEL_LINE_HEIGHT;
 const top =
 y - th / 2;
+const textX =
+left + CHART_SCALE_LABEL_PAD_LEFT;
 
 ctx.save();
 ctx.font =
-'600 10px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif';
-ctx.textAlign = "right";
+`normal ${chartScaleFont()}`;
+ctx.textAlign = "left";
 ctx.textBaseline = "middle";
 
 ctx.fillStyle =
 color || "rgba(30, 41, 59, 0.95)";
 ctx.fillRect(left, top, scaleW, th);
-ctx.fillStyle = "#f8fafc";
-ctx.fillText(text, chartW - padX, y);
+ctx.fillStyle = CHART_SCALE_TEXT_COLOR;
+ctx.fillText(text, textX, y);
 ctx.restore();
 
 }
@@ -4279,7 +4292,7 @@ shapeStyle(shape);
 drawScalePriceBadge(
 ctx,
 y,
-formatPositionPrice(shape.price),
+shape.price,
 color
 );
 
@@ -4314,7 +4327,7 @@ shapeStyle(sel);
 drawScalePriceBadge(
 ctx,
 xy.y,
-formatPositionPrice(handle.point.price),
+handle.point.price,
 color
 );
 
