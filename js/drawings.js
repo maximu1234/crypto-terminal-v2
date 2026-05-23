@@ -7101,6 +7101,36 @@ redraw();
 
 }
 
+function pickDrawTool(
+next
+){
+
+if(
+next ===
+"cursor"
+){
+setTool(
+"cursor"
+);
+return;
+}
+
+if(
+tool ===
+next
+){
+setTool(
+"cursor"
+);
+return;
+}
+
+setTool(
+next
+);
+
+}
+
 function deleteSelected(){
 
 if(!selectedId){
@@ -7293,25 +7323,30 @@ deleteSelected();
 
 window.addEventListener("keydown", onKeyDown);
 
-tools.querySelectorAll("[data-draw-tool]").forEach(btn=>{
-btn.addEventListener("click", ()=>{
+tools.addEventListener(
+"click",
+e=>{
 
-const next = btn.dataset.drawTool;
+const btn =
+e.target.closest?.(
+"[data-draw-tool]"
+);
 
-if(next === "cursor"){
-setTool("cursor");
+if(
+!btn ||
+!tools.contains(
+btn
+)
+){
 return;
 }
 
-if(tool === next){
-setTool("cursor");
-return;
+pickDrawTool(
+btn.dataset.drawTool
+);
+
 }
-
-setTool(next);
-
-});
-});
+);
 
 const clearAllBtn =
 tools.querySelector(".draw-tool-clear-all") ||
@@ -7774,6 +7809,7 @@ scheduleRedraw();
 return {
 
 setTool,
+pickDrawTool,
 
 scheduleRedraw,
 

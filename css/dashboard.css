@@ -66,6 +66,8 @@ body{
 ========================================================= */
 
 .widget-header{
+    position:relative;
+    z-index:20;
     border-bottom:1px solid #1f2937;
     padding:6px 8px;
     flex-shrink:0;
@@ -109,16 +111,44 @@ body{
     box-shadow:0 0 0 1px #3b82f6;
 }
 
-.widget-draw-toolbar{
-    flex:1;
-    flex-wrap:nowrap;
-    gap:2px;
+.widget-draw-tools{
+    position:relative;
+    flex-shrink:0;
     margin-left:4px;
     padding-left:8px;
     border-left:1px solid #1f2937;
-    justify-content:center;
-    min-width:0;
-    overflow-x:auto;
+}
+
+.widget-draw-tools-toggle.active,
+.widget-draw-tools--open .widget-draw-tools-toggle{
+    background:#374151;
+    color:#fff;
+}
+
+.widget-draw-tools-menu{
+    position:absolute;
+    top:calc(100% + 4px);
+    left:0;
+    z-index:300;
+    pointer-events:auto;
+    display:grid;
+    grid-template-columns:repeat(4, 26px);
+    gap:4px;
+    padding:6px;
+    background:#1e222d;
+    border:1px solid #2a2e39;
+    border-radius:8px;
+    box-shadow:0 8px 24px rgba(0,0,0,0.5);
+}
+
+.widget-draw-tools-menu.hidden{
+    display:none;
+}
+
+/* Выпадающее меню не обрезается соседними виджетами */
+.widget.widget-draw-tools-open{
+    overflow:visible;
+    z-index:30;
 }
 
 .draw-btn-sm{

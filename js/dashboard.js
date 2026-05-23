@@ -17,7 +17,7 @@ applyDashboardZoom
 
 import {
 initDrawings
-} from "./drawings.js?v=91";
+} from "./drawings.js?v=100";
 
 import {
 subscribeKline
@@ -25,8 +25,12 @@ subscribeKline
 
 import {
 getWidgetToolbarHtml,
-getWidgetChartUiHtml
-} from "./dashboard-draw-ui.js";
+getWidgetChartUiHtml,
+initWidgetDrawToolsDropdown,
+wireWidgetDrawToolMenu,
+closeAllWidgetDrawToolsMenus,
+resetWidgetDrawToolsMenus
+} from "./dashboard-draw-ui.js?v=4";
 
 import {
 preloadTradingSymbols,
@@ -71,6 +75,7 @@ w.resizeObserver?.disconnect();
 });
 
 widgets.length = 0;
+resetWidgetDrawToolsMenus();
 dashboard.innerHTML = "";
 
 }
@@ -153,7 +158,9 @@ const chartContainer =
 widget.querySelector(".chart");
 
 const toolsRoot =
-widget.querySelector(".widget-draw-toolbar");
+widget.querySelector(
+".widget-draw-tools"
+);
 
 const {
 chart,
@@ -213,6 +220,24 @@ console.error("Widget drawings init:", err);
 
 }
 
+initWidgetDrawToolsDropdown(
+toolsRoot
+);
+
+wireWidgetDrawToolMenu(
+toolsRoot,
+{
+pickTool:(
+name
+)=>{
+drawingTools?.pickDrawTool?.(
+name
+);
+},
+onActivate:setActive
+}
+);
+
 const entry = {
 index,
 widget,
@@ -229,6 +254,8 @@ unsubKline: null
 function setActive(){
 
 activeWidgetIndex = index;
+
+closeAllWidgetDrawToolsMenus();
 
 dashboard.querySelectorAll(".widget").forEach(el=>{
 el.classList.toggle(

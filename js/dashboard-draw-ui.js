@@ -1,58 +1,262 @@
 import {
-CURSOR_TOOL_ICON_SVG,
+DRAW_TOOLS_PALETTE_ICON_SVG,
 getAlertToggleButtonHtml,
-getPositionDrawToolbarButtonsHtml
-} from "./draw-ui-shared.js";
+getDrawToolbarButtonsHtml
+} from "./draw-ui-shared.js?v=2";
+
+const widgetDrawMenuClosers =
+new Set();
+
+let drawToolsMenuDocBound =
+false;
+
+function bindDrawToolsMenuDocument(){
+
+if(
+drawToolsMenuDocBound
+){
+return;
+}
+
+drawToolsMenuDocBound = true;
+
+document.addEventListener(
+"click",
+e=>{
+
+if(
+e.target.closest(
+".widget-draw-tools-toggle"
+)
+){
+return;
+}
+
+if(
+e.target.closest(
+".widget-draw-tools [data-draw-tool]"
+)
+){
+return;
+}
+
+if(
+e.target.closest(
+".widget-draw-tools"
+)
+){
+return;
+}
+
+closeAllWidgetDrawToolsMenus();
+
+}
+);
+
+document.addEventListener(
+"keydown",
+e=>{
+
+if(
+e.key ===
+"Escape"
+){
+closeAllWidgetDrawToolsMenus();
+}
+
+}
+);
+
+}
+
+export function closeAllWidgetDrawToolsMenus(){
+
+widgetDrawMenuClosers.forEach(
+close=>{
+close();
+}
+);
+
+}
+
+export function resetWidgetDrawToolsMenus(){
+
+closeAllWidgetDrawToolsMenus();
+widgetDrawMenuClosers.clear();
+
+}
+
+export function initWidgetDrawToolsDropdown(
+container
+){
+
+if(
+!container
+){
+return;
+}
+
+bindDrawToolsMenuDocument();
+
+const toggle =
+container.querySelector(
+".widget-draw-tools-toggle"
+);
+
+const menu =
+container.querySelector(
+".widget-draw-tools-menu"
+);
+
+const widgetEl =
+container.closest(
+".widget"
+);
+
+if(
+!toggle ||
+!menu
+){
+return;
+}
+
+function close(){
+
+menu.classList.add(
+"hidden"
+);
+
+toggle.setAttribute(
+"aria-expanded",
+"false"
+);
+
+container.classList.remove(
+"widget-draw-tools--open"
+);
+
+widgetEl?.classList.remove(
+"widget-draw-tools-open"
+);
+
+}
+
+function open(){
+
+closeAllWidgetDrawToolsMenus();
+
+menu.classList.remove(
+"hidden"
+);
+
+toggle.setAttribute(
+"aria-expanded",
+"true"
+);
+
+container.classList.add(
+"widget-draw-tools--open"
+);
+
+widgetEl?.classList.add(
+"widget-draw-tools-open"
+);
+
+}
+
+toggle.addEventListener(
+"click",
+e=>{
+
+e.stopPropagation();
+
+if(
+menu.classList.contains(
+"hidden"
+)
+){
+open();
+}else{
+close();
+}
+
+}
+);
+
+widgetDrawMenuClosers.add(
+close
+);
+
+}
+
+export function wireWidgetDrawToolMenu(
+container,
+{
+pickTool,
+onActivate
+} = {}
+){
+
+const menu =
+container?.querySelector(
+".widget-draw-tools-menu"
+);
+
+if(
+!menu ||
+!pickTool
+){
+return;
+}
+
+menu.addEventListener(
+"pointerdown",
+e=>{
+
+const btn =
+e.target.closest(
+"[data-draw-tool]"
+);
+
+if(
+!btn
+){
+return;
+}
+
+e.preventDefault();
+e.stopPropagation();
+
+onActivate?.();
+pickTool(
+btn.dataset.drawTool
+);
+
+queueMicrotask(
+()=>{
+closeAllWidgetDrawToolsMenus();
+}
+);
+
+},
+true
+);
+
+}
 
 export function getWidgetToolbarHtml(){
 
 return `
 
-<div class="widget-draw-toolbar draw-toolbar-inline">
+<div class="widget-draw-tools">
 
-<button type="button" class="draw-btn draw-btn-sm" data-draw-tool="cursor" title="Курсор">
-${CURSOR_TOOL_ICON_SVG}
+<button type="button" class="draw-btn draw-btn-sm widget-draw-tools-toggle" title="Объекты рисования" aria-label="Объекты рисования" aria-haspopup="true" aria-expanded="false">
+${DRAW_TOOLS_PALETTE_ICON_SVG}
 </button>
 
-<button type="button" class="draw-btn draw-btn-sm" data-draw-tool="trendline" title="Trendline">
-<svg viewBox="0 0 24 24" aria-hidden="true">
-<line x1="5" y1="18" x2="19" y2="6" stroke="currentColor" stroke-width="1.5"/>
-<circle cx="5" cy="18" r="2" fill="none" stroke="currentColor" stroke-width="1.5"/>
-<circle cx="19" cy="6" r="2" fill="none" stroke="currentColor" stroke-width="1.5"/>
-</svg>
-</button>
-
-<button type="button" class="draw-btn draw-btn-sm" data-draw-tool="hray" title="Horizontal Ray">
-<svg viewBox="0 0 24 24" aria-hidden="true">
-<line x1="6" y1="12" x2="20" y2="12" stroke="currentColor" stroke-width="1.5"/>
-<circle cx="6" cy="12" r="2" fill="none" stroke="currentColor" stroke-width="1.5"/>
-</svg>
-</button>
-
-<button type="button" class="draw-btn draw-btn-sm" data-draw-tool="fib" title="Fib">
-<svg viewBox="0 0 24 24" aria-hidden="true">
-<line x1="4" y1="18" x2="20" y2="18" stroke="currentColor" stroke-width="1.5"/>
-<line x1="4" y1="14" x2="20" y2="14" stroke="currentColor" stroke-width="1.5"/>
-<line x1="4" y1="10" x2="20" y2="10" stroke="currentColor" stroke-width="1.5"/>
-<line x1="4" y1="6" x2="20" y2="6" stroke="currentColor" stroke-width="1.5"/>
-</svg>
-</button>
-
-<button type="button" class="draw-btn draw-btn-sm" data-draw-tool="channel" title="Channel">
-<svg viewBox="0 0 24 24" aria-hidden="true">
-<line x1="5" y1="16" x2="19" y2="8" stroke="currentColor" stroke-width="1.5"/>
-<line x1="5" y1="20" x2="19" y2="12" stroke="currentColor" stroke-width="1.5"/>
-</svg>
-</button>
-
-${getPositionDrawToolbarButtonsHtml({ compact: true })}
-
-<button type="button" class="draw-btn draw-btn-sm draw-tool-clear-all" title="Удалить все">
-<svg viewBox="0 0 24 24" aria-hidden="true">
-<path d="M9 3h6l1 2h4v2H4V5h4l1-2z" fill="none" stroke="currentColor" stroke-width="1.5"/>
-<path d="M7 9v11h10V9" fill="none" stroke="currentColor" stroke-width="1.5"/>
-</svg>
-</button>
+<div class="widget-draw-tools-menu hidden" role="menu">
+${getDrawToolbarButtonsHtml({ compact: true })}
+</div>
 
 </div>
 
