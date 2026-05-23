@@ -1100,14 +1100,11 @@ if(
 return;
 }
 
-const lwTouchScroll =
-!TABLET_USE_CUSTOM_TOUCH_PAN;
-
 rsiChart.applyOptions({
 handleScroll:{
 mouseWheel:false,
-pressedMouseMove:lwTouchScroll,
-horzTouchDrag:lwTouchScroll,
+pressedMouseMove:true,
+horzTouchDrag:true,
 vertTouchDrag:false
 },
 handleScale:{
@@ -1116,7 +1113,7 @@ time:true,
 price:false
 },
 mouseWheel:false,
-pinch:false
+pinch:true
 }
 });
 
@@ -1720,14 +1717,31 @@ if(
 return ()=>{};
 }
 
+const PAN_START_PX =
+5;
+
 let pan =
 null;
+
+let pendingPan =
+null;
+
+let activePointers =
+new Set();
 
 let onDocMove =
 null;
 
 let onDocEnd =
 null;
+
+function abortPan(){
+
+pendingPan = null;
+pan = null;
+detachDocListeners();
+
+}
 
 function detachDocListeners(){
 
@@ -1769,8 +1783,36 @@ e
 ){
 
 if(
+e?.pointerId !==
+undefined &&
+pan &&
+e.pointerId !==
+pan.id &&
+pendingPan &&
+e.pointerId !==
+pendingPan.id
+){
+return;
+}
+
+if(
+e?.pointerId !==
+undefined &&
+pendingPan &&
+e.pointerId ===
+pendingPan.id
+){
+pendingPan = null;
+}
+
+if(
 !pan
 ){
+if(
+!pendingPan
+){
+detachDocListeners();
+}
 return;
 }
 
@@ -1784,7 +1826,12 @@ return;
 }
 
 pan = null;
+
+if(
+!pendingPan
+){
 detachDocListeners();
+}
 
 }
 
@@ -1818,46 +1865,69 @@ to:range.to - shift
 
 }
 
-function onPointerDown(
-e
-){
+function ensureDocListeners(){
 
 if(
-e.pointerType ===
-"mouse"
+onDocMove
 ){
 return;
 }
-
-if(
-e.button !==
-undefined &&
-e.button !==
-0
-){
-return;
-}
-
-if(
-e.target?.closest?.(
-".price-scale-touch-strip"
-)
-){
-return;
-}
-
-detachDocListeners();
-
-pan = {
-id:
-e.pointerId ??
-0,
-x:e.clientX
-};
 
 onDocMove =(
 moveEvent
 )=>{
+
+if(
+activePointers.size >
+1
+){
+abortPan();
+return;
+}
+
+if(
+pendingPan &&
+!pan
+){
+
+if(
+moveEvent.pointerId !==
+undefined &&
+moveEvent.pointerId !==
+pendingPan.id
+){
+return;
+}
+
+const dx0 =
+moveEvent.clientX - pendingPan.x;
+
+const dy0 =
+moveEvent.clientY - pendingPan.y;
+
+if(
+Math.abs(dx0) <
+PAN_START_PX
+){
+return;
+}
+
+if(
+Math.abs(dx0) <
+Math.abs(dy0) *
+1.25
+){
+return;
+}
+
+pan = {
+id:pendingPan.id,
+x:moveEvent.clientX
+};
+
+pendingPan = null;
+
+}
 
 if(
 !pan
@@ -1894,7 +1964,27 @@ dx
 
 };
 
-onDocEnd = endPan;
+onDocEnd =(
+endEvent
+)=>{
+
+activePointers.delete(
+endEvent.pointerId ??
+0
+);
+
+endPan(
+endEvent
+);
+
+if(
+activePointers.size ===
+0
+){
+detachDocListeners();
+}
+
+};
 
 document.addEventListener(
 "pointermove",
@@ -1914,9 +2004,115 @@ onDocEnd
 
 }
 
+function onPointerDown(
+e
+){
+
+if(
+e.pointerType ===
+"mouse"
+){
+return;
+}
+
+if(
+e.button !==
+undefined &&
+e.button !==
+0
+){
+return;
+}
+
+if(
+e.target?.closest?.(
+".price-scale-touch-strip"
+)
+){
+return;
+}
+
+activePointers.add(
+e.pointerId ??
+0
+);
+
+if(
+activePointers.size >
+1
+){
+abortPan();
+return;
+}
+
+pendingPan = {
+id:
+e.pointerId ??
+0,
+x:e.clientX,
+y:e.clientY
+};
+
+ensureDocListeners();
+
+}
+
+function onPointerUp(
+e
+){
+
+activePointers.delete(
+e.pointerId ??
+0
+);
+
+endPan(
+e
+);
+
+if(
+activePointers.size ===
+0
+){
+detachDocListeners();
+}
+
+}
+
+function onTouchStart(
+e
+){
+
+if(
+e.touches.length >
+1
+){
+abortPan();
+}
+
+}
+
 chartEl.addEventListener(
 "pointerdown",
 onPointerDown,
+{ capture:true, passive:true }
+);
+
+chartEl.addEventListener(
+"pointerup",
+onPointerUp,
+{ capture:true, passive:true }
+);
+
+chartEl.addEventListener(
+"pointercancel",
+onPointerUp,
+{ capture:true, passive:true }
+);
+
+chartEl.addEventListener(
+"touchstart",
+onTouchStart,
 { capture:true, passive:true }
 );
 
@@ -1928,8 +2124,26 @@ onPointerDown,
 { capture:true, passive:true }
 );
 
-pan = null;
-detachDocListeners();
+chartEl.removeEventListener(
+"pointerup",
+onPointerUp,
+{ capture:true, passive:true }
+);
+
+chartEl.removeEventListener(
+"pointercancel",
+onPointerUp,
+{ capture:true, passive:true }
+);
+
+chartEl.removeEventListener(
+"touchstart",
+onTouchStart,
+{ capture:true, passive:true }
+);
+
+activePointers.clear();
+abortPan();
 
 };
 

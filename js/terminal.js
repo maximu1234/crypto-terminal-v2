@@ -48,7 +48,7 @@ mountTabletCustomTouchPan,
 TABLET_USE_CUSTOM_TOUCH_PAN,
 isTabletChartViewport,
 isUserCrosshairEvent
-} from "./chart.js?v=30";
+} from "./chart.js?v=31";
 
 /** Временный тест iPad: true = initDrawings не вызывается на планшете */
 const DRAWINGS_DISABLED_ON_TABLET_TEST =
@@ -636,10 +636,10 @@ chartEl
 );
 
 console.info(
-"[tablet] Custom touch pan (LW horzTouchDrag off)"
+"[tablet] Custom touch pan + price strip + LW pinch"
 );
 
-}else{
+}
 
 mountTabletPriceScaleTouch(
 chart,
@@ -651,8 +651,6 @@ chartEl,
 priceHudCtrl.refresh?.();
 }
 );
-
-}
 
 applyTabletMainChartScroll(
 chart

@@ -784,12 +784,6 @@ body.tablet-chart .price-scale-touch-strip{
   display:block;
 }
 
-/* custom pan: без полосы цены — только pinch по вертикали */
-body.tablet-custom-pan .price-scale-touch-strip{
-  display:none !important;
-  pointer-events:none;
-}
-
 .price-scale-touch-strip{
   display:none;
   position:absolute;
