@@ -2178,7 +2178,8 @@ const noop =
 
 return {
 dispose:noop,
-cancelHoldWait:noop
+cancelHoldWait:noop,
+isHoldWaiting:()=>false
 };
 
 }
@@ -2947,9 +2948,16 @@ capDown
 
 };
 
+function isHoldWaiting(){
+
+return !!holdTimer;
+
+}
+
 return {
 dispose,
-cancelHoldWait
+cancelHoldWait,
+isHoldWaiting
 };
 
 }
@@ -2971,6 +2979,10 @@ options.onPanStart ??
 const onCancelHoldWait =
 options.onCancelHoldWait ??
 (()=>{});
+
+const isHoldWaiting =
+options.isHoldWaiting ??
+(()=>false);
 
 if(
 !TABLET_USE_CUSTOM_TOUCH_PAN ||
@@ -3175,6 +3187,12 @@ return;
 onDocMove =(
 moveEvent
 )=>{
+
+if(
+isHoldWaiting()
+){
+return;
+}
 
 if(
 tabletChartTouchBlock >
@@ -3434,6 +3452,7 @@ return;
 }
 
 if(
+isHoldWaiting() ||
 panSuspended ||
 !shouldAllowPan()
 ){

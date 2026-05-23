@@ -5426,17 +5426,59 @@ const { x, y } =
 pointerFromEvent(e);
 
 /*
-  iPad: pointerdown в capture ломает pan LW — выбор тапом (click),
-  перетаскивание только если палец на уже выбранном объекте.
+  iPad: тап в пустоту снимает выделение; drag только с выбранного объекта.
 */
 if(
 isTouchDrawTablet()
 ){
 
-const sel =
+const hitId =
+hitTest(
+x,
+y
+);
+
+if(
+!hitId
+){
+
+if(
 selectedId
-? getSelected()
-: null;
+){
+selectedId = null;
+updateStyleBar();
+redraw();
+}
+
+return;
+
+}
+
+if(
+hitId !==
+selectedId
+){
+
+selectedId = hitId;
+
+const picked =
+getSelected();
+
+if(
+picked?.type ===
+"fib"
+){
+fibSettingsShapeId = picked.id;
+}
+
+updateStyleBar();
+redraw();
+return;
+
+}
+
+const sel =
+getSelected();
 
 if(
 !sel
@@ -5462,7 +5504,12 @@ if(
 !handleId &&
 !onBody
 ){
+
+selectedId = null;
+updateStyleBar();
+redraw();
 return;
+
 }
 
 if(

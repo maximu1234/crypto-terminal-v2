@@ -55,7 +55,7 @@ mountAxisDoubleTapReset,
 TABLET_USE_CUSTOM_TOUCH_PAN,
 isTabletChartViewport,
 isUserCrosshairEvent
-} from "./chart.js?v=48";
+} from "./chart.js?v=49";
 
 import {
 connectKlineStream,
@@ -74,7 +74,7 @@ processAlertTick
 
 import {
 initDrawings
-} from "./drawings.js?v=95";
+} from "./drawings.js?v=96";
 
 let currentDataset = "crypto";
 let currentTF = "60";
@@ -639,6 +639,9 @@ let unmountTabletCrosshair =
 let cancelTabletHoldWait =
 ()=>{};
 
+let tabletCrosshairIsHoldWaiting =
+()=>false;
+
 /** iPad: true пока удержание активировало перекрестие (блокирует pan) */
 let tabletCrosshairProbe =
 false;
@@ -689,7 +692,8 @@ chartEl,
 {
 shouldAllowPan:tabletPanAllowed,
 blockChartScroll:()=>tabletCrosshairProbe,
-onCancelHoldWait:()=>cancelTabletHoldWait()
+onCancelHoldWait:()=>cancelTabletHoldWait(),
+isHoldWaiting:()=>tabletCrosshairIsHoldWaiting()
 }
 );
 
@@ -1365,6 +1369,9 @@ tabletCrosshairCtrl.dispose;
 
 cancelTabletHoldWait =
 tabletCrosshairCtrl.cancelHoldWait;
+
+tabletCrosshairIsHoldWaiting =
+tabletCrosshairCtrl.isHoldWaiting;
 
 }
 
