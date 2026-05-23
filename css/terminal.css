@@ -778,9 +778,18 @@ body.drawings-tablet-test-off .draw-toolbar-inline{
 }
 
 /* iPad: класс tablet-chart ставится из JS (isTabletChartViewport) */
-body.tablet-chart #chart,
+body.tablet-chart #chart{
+  pointer-events:none;
+  touch-action:none;
+}
+
 body.tablet-chart #rsi-chart{
   touch-action:none;
+}
+
+/* iPad: все касания свечного графика — через overlay, LW canvas не получает touch */
+body.tablet-chart .tablet-probe-touch-layer{
+  pointer-events:auto;
 }
 
 body.tablet-chart .price-scale-touch-strip{
@@ -914,18 +923,13 @@ body.tablet-chart .price-scale-touch-strip{
   z-index:1;
 }
 
-/* iPad: блокирует LW при probe-перекрестии (свечи не получают touch) */
+/* iPad: overlay над свечами (pointer-events — body.tablet-chart выше) */
 .tablet-probe-touch-layer{
   position:absolute;
   inset:0;
   right:var(--chart-scale-width, 56px);
   z-index:10;
-  pointer-events:none;
   touch-action:none;
-}
-
-.tablet-probe-touch-layer.active{
-  pointer-events:auto;
 }
 
 /* iPad: горизонталь probe-перекрестия (вертикаль — #linked-crosshair-vert) */

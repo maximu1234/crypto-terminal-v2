@@ -55,7 +55,7 @@ mountAxisDoubleTapReset,
 TABLET_USE_CUSTOM_TOUCH_PAN,
 isTabletChartViewport,
 isUserCrosshairEvent
-} from "./chart.js?v=43";
+} from "./chart.js?v=44";
 
 import {
 connectKlineStream,
@@ -618,6 +618,11 @@ document.getElementById(
 "chart"
 );
 
+const chartTouchLayerEl =
+document.getElementById(
+"tablet-probe-touch-layer"
+);
+
 markTabletChartBody();
 
 let priceHudCtrl = {
@@ -676,6 +681,7 @@ TABLET_USE_CUSTOM_TOUCH_PAN
 const tabletPanCtrl =
 mountTabletCustomTouchPan(
 chart,
+chartTouchLayerEl ??
 chartEl,
 {
 shouldAllowPan:tabletPanAllowed,
@@ -1146,17 +1152,12 @@ mountChartRangeFreeze(
 rsiChart
 );
 
-const probeTouchLayerEl =
-document.getElementById(
-"tablet-probe-touch-layer"
-);
-
 unmountTabletCrosshair =
 mountTabletCrosshairLongPress(
 chart,
 candleSeries,
 chartEl,
-probeTouchLayerEl,
+chartTouchLayerEl,
 {
 shouldBeginHold:tabletHoldShouldBegin,
 onHoldPendingStart:()=>{

@@ -199,6 +199,45 @@ null;
 let active =
 false;
 
+let rafId =
+null;
+
+function enforceFrozenRange(){
+
+if(
+!active ||
+!frozen ||
+!chart
+){
+return;
+}
+
+const range =
+chart.timeScale().getVisibleLogicalRange();
+
+if(
+range &&
+(
+range.from !==
+frozen.from ||
+range.to !==
+frozen.to
+)
+){
+
+chart.timeScale().setVisibleLogicalRange(
+frozen
+);
+
+}
+
+rafId =
+requestAnimationFrame(
+enforceFrozenRange
+);
+
+}
+
 function freeze(){
 
 if(
@@ -217,6 +256,19 @@ return;
 }
 
 active = true;
+
+if(
+rafId
+){
+cancelAnimationFrame(
+rafId
+);
+}
+
+rafId =
+requestAnimationFrame(
+enforceFrozenRange
+);
 
 sub =
 chart.timeScale().subscribeVisibleLogicalRangeChange(
@@ -252,6 +304,17 @@ function unfreeze(){
 
 active = false;
 frozen = null;
+
+if(
+rafId
+){
+cancelAnimationFrame(
+rafId
+);
+
+rafId = null;
+
+}
 
 if(
 sub
@@ -1417,6 +1480,109 @@ pinch:true
 
 }
 
+let tabletGestureGuardInstalled =
+false;
+
+let tabletChartTouchBlock =
+0;
+
+/**
+ * iPad: блокируем touch/pointer до LW (#chart) пока ждём long-press или probe.
+ * touchstart на canvas идёт раньше pointerdown — без этого LW успевает начать pan.
+ */
+export function installTabletChartGestureGuard(){
+
+if(
+tabletGestureGuardInstalled ||
+!isTabletChartViewport()
+){
+return;
+}
+
+tabletGestureGuardInstalled = true;
+
+const opts = {
+capture:true,
+passive:false
+};
+
+const isChartTarget =(
+target
+)=>{
+
+return !!target?.closest?.(
+"#chart"
+);
+
+};
+
+const blockIfNeeded =(
+e
+)=>{
+
+if(
+tabletChartTouchBlock <=
+0
+){
+return;
+}
+
+if(
+!isChartTarget(
+e.target
+)
+){
+return;
+}
+
+try{
+e.preventDefault();
+}catch{
+/* ignore */
+}
+
+e.stopImmediatePropagation();
+
+};
+
+window.addEventListener(
+"touchstart",
+blockIfNeeded,
+opts
+);
+
+window.addEventListener(
+"touchmove",
+blockIfNeeded,
+opts
+);
+
+window.addEventListener(
+"pointerdown",
+blockIfNeeded,
+opts
+);
+
+window.addEventListener(
+"pointermove",
+blockIfNeeded,
+opts
+);
+
+}
+
+export function setTabletChartTouchBlock(
+count
+){
+
+tabletChartTouchBlock =
+Math.max(
+0,
+count
+);
+
+}
+
 export function markTabletChartBody(){
 
 const tablet =
@@ -1432,6 +1598,12 @@ document.body.classList.toggle(
 tablet &&
 TABLET_USE_CUSTOM_TOUCH_PAN
 );
+
+if(
+tablet
+){
+installTabletChartGestureGuard();
+}
 
 }
 
@@ -2003,16 +2175,15 @@ if(
 return ()=>{};
 }
 
-const chartWrapEl =
-chartEl.closest?.(
-"#chart-wrap"
-) ??
-chartEl.parentElement;
+function syncChartTouchBlock(){
 
-if(
-!chartWrapEl
-){
-return ()=>{};
+setTabletChartTouchBlock(
+holdPending ||
+crosshairTrack
+? 1
+: 0
+);
+
 }
 
 let holdTimer =
@@ -2062,6 +2233,7 @@ holdPending &&
 holdPending = false;
 onHoldPendingEnd();
 detachDocGestureShield();
+syncChartTouchBlock();
 }
 
 holdPointer = null;
@@ -2432,6 +2604,7 @@ touchLayerEl.classList.remove(
 "active"
 );
 crosshairTrack = null;
+syncChartTouchBlock();
 
 if(
 wasProbe
@@ -2501,6 +2674,7 @@ e.preventDefault();
 }
 
 holdPending = true;
+syncChartTouchBlock();
 onHoldPendingStart();
 attachDocGestureShield();
 
@@ -2565,25 +2739,25 @@ capture:true,
 passive:true
 };
 
-chartWrapEl.addEventListener(
+touchLayerEl.addEventListener(
 "pointerdown",
 onPointerDown,
 capDown
 );
 
-chartWrapEl.addEventListener(
+touchLayerEl.addEventListener(
 "pointerup",
 onDocGestureEnd,
 capUp
 );
 
-chartWrapEl.addEventListener(
+touchLayerEl.addEventListener(
 "pointercancel",
 onDocGestureEnd,
 capUp
 );
 
-chartWrapEl.addEventListener(
+touchLayerEl.addEventListener(
 "touchstart",
 onTouchStart,
 capUp
@@ -2596,26 +2770,29 @@ clearHoldTimer();
 touchLayerEl.classList.remove(
 "active"
 );
+setTabletChartTouchBlock(
+0
+);
 
-chartWrapEl.removeEventListener(
+touchLayerEl.removeEventListener(
 "pointerdown",
 onPointerDown,
 capDown
 );
 
-chartWrapEl.removeEventListener(
+touchLayerEl.removeEventListener(
 "pointerup",
 onDocGestureEnd,
 capUp
 );
 
-chartWrapEl.removeEventListener(
+touchLayerEl.removeEventListener(
 "pointercancel",
 onDocGestureEnd,
 capUp
 );
 
-chartWrapEl.removeEventListener(
+touchLayerEl.removeEventListener(
 "touchstart",
 onTouchStart,
 capUp
@@ -2798,6 +2975,8 @@ dx
 ){
 
 if(
+tabletChartTouchBlock >
+0 ||
 blockChartScroll()
 ){
 return;
@@ -2840,6 +3019,13 @@ return;
 onDocMove =(
 moveEvent
 )=>{
+
+if(
+tabletChartTouchBlock >
+0
+){
+return;
+}
 
 if(
 panSuspended
