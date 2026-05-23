@@ -2141,11 +2141,11 @@ return false;
  * LW horzTouchDrag на Safari часто «залипает» в одной зоне экрана.
  */
 const TABLET_CROSSHAIR_HOLD_MS =
-450;
+500;
 
-/** Отмена ожидания long-press только при явном горизонтальном свайпе (не дрожание) */
+/** Отмена ожидания long-press только при явном горизонтальном свайпе */
 const TABLET_HOLD_CANCEL_HORIZ_PX =
-14;
+28;
 
 /**
  * iPad: перекрестие только после удержания пальца (~450ms).
@@ -2172,6 +2172,26 @@ if(
 !chartEl ||
 !touchLayerEl ||
 !isTabletChartViewport()
+){
+const noop =
+()=>{};
+
+return {
+dispose:noop,
+cancelHoldWait:noop,
+isHoldWaiting:()=>false
+};
+
+}
+
+const chartWrapEl =
+chartEl.closest?.(
+"#chart-wrap"
+) ??
+touchLayerEl.parentElement;
+
+if(
+!chartWrapEl
 ){
 const noop =
 ()=>{};
@@ -2213,16 +2233,6 @@ let holdStartY =
 let crosshairTrack =
 null;
 
-let onWaitMove =
-null;
-
-let onWaitTouchEnd =
-null;
-
-/** iPad: long-press уже начат с touchstart (до pointerdown) */
-let holdGestureFromTouch =
-false;
-
 let onDocPointerMove =
 null;
 
@@ -2231,59 +2241,6 @@ null;
 
 let onDocGestureEnd =
 null;
-
-function detachHoldWaitListeners(){
-
-const cap =
-{ capture:true };
-
-const moveCap =
-{
-capture:true,
-passive:false
-};
-
-if(
-onWaitMove
-){
-
-document.removeEventListener(
-"pointermove",
-onWaitMove,
-moveCap
-);
-
-document.removeEventListener(
-"touchmove",
-onWaitMove,
-moveCap
-);
-
-onWaitMove = null;
-
-}
-
-if(
-onWaitTouchEnd
-){
-
-document.removeEventListener(
-"touchend",
-onWaitTouchEnd,
-cap
-);
-
-document.removeEventListener(
-"touchcancel",
-onWaitTouchEnd,
-cap
-);
-
-onWaitTouchEnd = null;
-
-}
-
-}
 
 function cancelHoldWait(){
 
@@ -2298,11 +2255,8 @@ holdTimer = null;
 
 }
 
-detachHoldWaitListeners();
-
 holdPointer = null;
 holdTouchId = null;
-holdGestureFromTouch = false;
 
 }
 
@@ -2312,200 +2266,31 @@ cancelHoldWait();
 
 }
 
-function gestureEndMatches(
-e
-){
-
-if(
-holdPointer ===
-null &&
-holdTouchId ===
-null
-){
-return false;
-}
-
-if(
-e.type ===
-"touchend" ||
-e.type ===
-"touchcancel"
-){
-
-return Array.from(
-e.changedTouches ||
-[]
-).some(
-t=>
-t.identifier ===
-holdTouchId
-);
-
-}
-
-if(
-e.pointerId !==
-undefined
-){
-
-const trackId =
-crosshairTrack?.id ??
-holdPointer;
-
-return (
-trackId !==
-null &&
-trackId !==
-undefined &&
-e.pointerId ===
-trackId
-);
-
-}
-
-return false;
-
-}
-
-function attachHoldWaitListeners(){
-
-detachHoldWaitListeners();
-
-onWaitMove =(
-e
-)=>{
-
-if(
-!holdTimer
-){
-return;
-}
-
-const x =
-e.clientX ??
-e.touches?.[
-0
-]?.clientX;
-
-const y =
-e.clientY ??
-e.touches?.[
-0
-]?.clientY;
-
-if(
-x ===
-undefined ||
-y ===
-undefined
-){
-return;
-}
-
-const dx =
-x - holdStartX;
-
-const dy =
-y - holdStartY;
-
-if(
-Math.abs(
-dx
-) >=
-TABLET_HOLD_CANCEL_HORIZ_PX &&
-Math.abs(
-dx
-) >
-Math.abs(
-dy
-) *
-1.25
-){
-cancelHoldWait();
-}
-
-};
-
-onWaitTouchEnd =(
-e
-)=>{
-
-if(
-!holdTimer
-){
-return;
-}
-
-if(
-!gestureEndMatches(
-e
-)
-){
-return;
-}
-
-cancelHoldWait();
-
-};
-
-const cap =
-{ capture:true };
-
-const moveCap =
-{
-capture:true,
-passive:false
-};
-
-document.addEventListener(
-"pointermove",
-onWaitMove,
-moveCap
-);
-
-document.addEventListener(
-"touchmove",
-onWaitMove,
-moveCap
-);
-
-document.addEventListener(
-"touchend",
-onWaitTouchEnd,
-cap
-);
-
-document.addEventListener(
-"touchcancel",
-onWaitTouchEnd,
-cap
-);
-
-}
-
 function scheduleHoldWait(
-touchId,
+pointerId,
 clientX,
 clientY
 ){
 
 cancelHoldWait();
 
-holdGestureFromTouch = true;
-holdTouchId = touchId;
-holdPointer = touchId;
-holdStartX = clientX;
-holdStartY = clientY;
+holdPointer =
+pointerId;
 
-attachHoldWaitListeners();
+holdTouchId =
+pointerId;
+
+holdStartX =
+clientX;
+
+holdStartY =
+clientY;
 
 holdTimer =
 setTimeout(
 ()=>{
 
 holdTimer = null;
-
-detachHoldWaitListeners();
 
 if(
 holdPointer ===
@@ -2670,13 +2455,21 @@ e
 )=>{
 
 if(
-crosshairTrack
+!crosshairTrack
+){
+return;
+}
+
+if(
+e.type ===
+"touchend" ||
+e.type ===
+"touchcancel"
 ){
 
 if(
-!gestureEndMatches(
-e
-)
+e.touches.length >
+0
 ){
 return;
 }
@@ -2688,14 +2481,15 @@ return;
 }
 
 if(
-!gestureEndMatches(
-e
-)
+e.pointerId !==
+undefined &&
+e.pointerId !==
+crosshairTrack.id
 ){
 return;
 }
 
-cancelHoldWait();
+endProbeSession();
 
 };
 
@@ -2789,7 +2583,7 @@ holdStartY
 
 }
 
-function onPointerDown(
+function onLayerPointerDown(
 e
 ){
 
@@ -2801,25 +2595,127 @@ return;
 }
 
 if(
-e.pointerType ===
-"touch" &&
-holdGestureFromTouch &&
-(
-holdTimer ||
 crosshairTrack
+){
+return;
+}
+
+if(
+!shouldBeginHold(
+e
 )
 ){
-holdPointer =
+return;
+}
+
+scheduleHoldWait(
 e.pointerId ??
-holdPointer;
+0,
+e.clientX,
+e.clientY
+);
+
+}
+
+function onLayerPointerMove(
+e
+){
 
 if(
 crosshairTrack
 ){
-crosshairTrack.id =
-holdPointer;
+
+if(
+e.pointerId !==
+undefined &&
+e.pointerId !==
+crosshairTrack.id
+){
+return;
 }
 
+e.preventDefault();
+onProbeAt(
+e.clientX,
+e.clientY
+);
+
+return;
+
+}
+
+if(
+!holdTimer
+){
+return;
+}
+
+if(
+e.pointerId !==
+undefined &&
+e.pointerId !==
+holdPointer
+){
+return;
+}
+
+const dx =
+e.clientX - holdStartX;
+
+const dy =
+e.clientY - holdStartY;
+
+if(
+Math.abs(
+dx
+) >=
+TABLET_HOLD_CANCEL_HORIZ_PX &&
+Math.abs(
+dx
+) >
+Math.abs(
+dy
+) *
+1.25
+){
+cancelHoldWait();
+}
+
+}
+
+function onLayerPointerUp(
+e
+){
+
+if(
+crosshairTrack
+){
+
+if(
+e.pointerId !==
+undefined &&
+e.pointerId !==
+crosshairTrack.id
+){
+return;
+}
+
+endProbeSession();
+
+return;
+
+}
+
+if(
+holdTimer &&
+(
+e.pointerId ===
+undefined ||
+e.pointerId ===
+holdPointer
+)
+){
+cancelHoldWait();
 }
 
 }
@@ -2832,7 +2728,7 @@ if(
 e.touches.length >
 1
 ){
-clearHoldTimer();
+cancelHoldWait();
 
 if(
 crosshairTrack
@@ -2840,39 +2736,7 @@ crosshairTrack
 endProbeSession();
 }
 
-return;
 }
-
-if(
-!shouldBeginHold(
-e
-)
-){
-return;
-}
-
-const t =
-e.touches[
-0
-];
-
-if(
-!t
-){
-return;
-}
-
-try{
-e.preventDefault();
-}catch{
-/* ignore */
-}
-
-scheduleHoldWait(
-t.identifier,
-t.clientX,
-t.clientY
-);
 
 }
 
@@ -2894,24 +2758,42 @@ capture:true,
 passive:false
 };
 
-const capUp = {
+const moveCap = {
 capture:true,
-passive:true
+passive:false
 };
 
-touchLayerEl.addEventListener(
+chartWrapEl.addEventListener(
 "pointerdown",
-onPointerDown,
+onLayerPointerDown,
 capDown
 );
 
-touchLayerEl.addEventListener(
+chartWrapEl.addEventListener(
+"pointermove",
+onLayerPointerMove,
+moveCap
+);
+
+chartWrapEl.addEventListener(
+"pointerup",
+onLayerPointerUp,
+capDown
+);
+
+chartWrapEl.addEventListener(
+"pointercancel",
+onLayerPointerUp,
+capDown
+);
+
+chartWrapEl.addEventListener(
 "touchstart",
 onTouchStart,
-capDown
+{ capture:true, passive:true }
 );
 
-touchLayerEl.addEventListener(
+chartWrapEl.addEventListener(
 "contextmenu",
 onLayerContextMenu,
 capDown
@@ -2928,19 +2810,37 @@ setTabletChartTouchBlock(
 0
 );
 
-touchLayerEl.removeEventListener(
+chartWrapEl.removeEventListener(
 "pointerdown",
-onPointerDown,
+onLayerPointerDown,
 capDown
 );
 
-touchLayerEl.removeEventListener(
+chartWrapEl.removeEventListener(
+"pointermove",
+onLayerPointerMove,
+moveCap
+);
+
+chartWrapEl.removeEventListener(
+"pointerup",
+onLayerPointerUp,
+capDown
+);
+
+chartWrapEl.removeEventListener(
+"pointercancel",
+onLayerPointerUp,
+capDown
+);
+
+chartWrapEl.removeEventListener(
 "touchstart",
 onTouchStart,
-capDown
+{ capture:true, passive:true }
 );
 
-touchLayerEl.removeEventListener(
+chartWrapEl.removeEventListener(
 "contextmenu",
 onLayerContextMenu,
 capDown

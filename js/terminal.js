@@ -55,7 +55,7 @@ mountAxisDoubleTapReset,
 TABLET_USE_CUSTOM_TOUCH_PAN,
 isTabletChartViewport,
 isUserCrosshairEvent
-} from "./chart.js?v=49";
+} from "./chart.js?v=50";
 
 import {
 connectKlineStream,
@@ -1134,18 +1134,6 @@ return false;
 
 const x =
 clientX - rect.left;
-
-const y =
-clientY - rect.top;
-
-if(
-drawingTools?.isOverDrawingAt?.(
-x,
-y
-)
-){
-return false;
-}
 
 return true;
 
