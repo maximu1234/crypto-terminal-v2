@@ -1,12 +1,13 @@
 # Supabase sync (ветка `feature/supabase-sync`)
 
-Пока только **избранное** (флаги на монетах). `main` без этой ветки работает как раньше.
+**Избранное** (флаги) и **рисунки** (линии, фибо, позиции и т.д. по монетам). `main` без этой ветки работает как раньше.
 
 ## 1. SQL в Supabase
 
 1. [supabase.com/dashboard](https://supabase.com/dashboard) → проект **ehygysphfsnluegeycjx**
 2. **SQL Editor** → New query
-3. Вставь содержимое файла `supabase/schema.sql` → **Run**
+3. Новый проект: вставь `supabase/schema.sql` → **Run**
+4. Если таблица уже была (только флаги): выполни ещё `supabase/migration-drawings.sql`
 
 ## 2. Вход по email
 
@@ -72,7 +73,7 @@ alter publication supabase_realtime add table public.user_settings;
 ## 6. Проверка
 
 1. Войди на iPad (preview URL) и на Mac тем же email
-2. Поставь или сними флаг на одном устройстве
-3. На втором флаг должен обновиться за 1–2 секунды без refresh
+2. Флаги: поставь/сними на одном устройстве — на втором за 1–2 с (на iPad в фоне — до ~10 с)
+3. Рисунки: нарисуй линию на BTC на Mac — на iPad открой BTC, рисунок должен появиться
 
 Без входа сайт работает как раньше (только localStorage).

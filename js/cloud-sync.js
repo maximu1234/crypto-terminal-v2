@@ -8,16 +8,25 @@ loadFavorites,
 saveFavorites
 } from "./storage.js?v=11";
 
+import {
+collectAllLocalDrawings,
+applyDrawingsMapToLocal
+} from "./drawings-storage.js?v=1";
+
 const FAVORITES_LOCAL_TS_KEY =
 "favorites_local_updated_at";
+
+const DRAWINGS_LOCAL_TS_KEY =
+"drawings_local_updated_at";
 
 let configured = false;
 let loggedIn = false;
 let userEmail = "";
 const authListeners = new Set();
 const favoritesListeners = new Set();
+const drawingsListeners = new Set();
 
-let favoritesChannel = null;
+let settingsChannel = null;
 let realtimeUserId = null;
 let syncPollTimer = null;
 let realtimeReconnectTimer = null;
@@ -72,6 +81,30 @@ favoritesListeners.delete(fn);
 
 }
 
+export function onDrawingsRemoteUpdate(fn){
+
+drawingsListeners.add(fn);
+
+return ()=>{
+drawingsListeners.delete(fn);
+};
+
+}
+
+function notifyDrawings(symbols){
+
+drawingsListeners.forEach(fn=>{
+
+try{
+fn(symbols);
+}catch{
+/* ignore */
+}
+
+});
+
+}
+
 export function isCloudSyncEnabled(){
 
 return configured;
@@ -109,6 +142,30 @@ return;
 
 localStorage.setItem(
 FAVORITES_LOCAL_TS_KEY,
+iso
+);
+
+}
+
+function loadLocalDrawingsUpdatedAt(){
+
+return localStorage.getItem(
+DRAWINGS_LOCAL_TS_KEY
+) || "";
+
+}
+
+function saveLocalDrawingsUpdatedAt(iso){
+
+if(!iso){
+localStorage.removeItem(
+DRAWINGS_LOCAL_TS_KEY
+);
+return;
+}
+
+localStorage.setItem(
+DRAWINGS_LOCAL_TS_KEY,
 iso
 );
 
@@ -156,18 +213,66 @@ favoritesSignature(b);
 
 }
 
-async function fetchCloudSettings(sb, userId){
+function normalizeDrawingsMap(raw){
+
+if(
+!raw ||
+typeof raw !== "object" ||
+Array.isArray(raw)
+){
+return {};
+}
+
+const out = {};
+
+for(const [sym, list] of Object.entries(raw)){
+
+if(
+typeof sym !== "string" ||
+!sym ||
+!Array.isArray(list)
+){
+continue;
+}
+
+out[sym] = list;
+
+}
+
+return out;
+
+}
+
+function drawingsSignature(map){
+
+return Object.keys(map)
+.sort()
+.map(sym=>`${sym}:${JSON.stringify(map[sym])}`)
+.join("\n");
+
+}
+
+function drawingsMapsEqual(a, b){
+
+return drawingsSignature(a) ===
+drawingsSignature(b);
+
+}
+
+async function fetchUserSettings(sb, userId){
 
 const { data, error } =
 await sb
 .from("user_settings")
-.select("favorites, updated_at")
+.select(
+"favorites, updated_at, drawings, drawings_updated_at"
+)
 .eq("user_id", userId)
 .maybeSingle();
 
 if(error){
 console.warn(
-"cloud favorites load:",
+"cloud settings load:",
 error.message
 );
 return null;
@@ -181,7 +286,12 @@ return {
 favorites: normalizeFavoritesList(
 data.favorites
 ),
-updatedAt: data.updated_at || ""
+updatedAt: data.updated_at || "",
+drawings: normalizeDrawingsMap(
+data.drawings
+),
+drawingsUpdatedAt:
+data.drawings_updated_at || ""
 };
 
 }
@@ -212,6 +322,35 @@ return null;
 }
 
 return data?.updated_at || null;
+
+}
+
+async function pushCloudDrawings(
+sb,
+userId,
+drawings
+){
+
+const { data, error } =
+await sb
+.from("user_settings")
+.upsert({
+user_id: userId,
+drawings,
+drawings_updated_at: new Date().toISOString()
+})
+.select("drawings_updated_at")
+.single();
+
+if(error){
+console.warn(
+"cloud drawings save:",
+error.message
+);
+return null;
+}
+
+return data?.drawings_updated_at || null;
 
 }
 
@@ -253,6 +392,32 @@ notifyFavorites();
 
 }
 
+function applyDrawingsLocally(
+drawings,
+updatedAt
+){
+
+const before =
+collectAllLocalDrawings();
+
+applyDrawingsMapToLocal(drawings);
+
+const changed =
+new Set([
+...Object.keys(before),
+...Object.keys(drawings)
+]);
+
+if(updatedAt){
+saveLocalDrawingsUpdatedAt(updatedAt);
+}
+
+notifyDrawings(
+Array.from(changed)
+);
+
+}
+
 function stopSyncPoll(){
 
 if(!syncPollTimer){
@@ -278,23 +443,23 @@ document.visibilityState !==
 return;
 }
 
-pullFavoritesIfCloudNewer();
+pullRemoteSettingsIfNewer();
 
 },
 SYNC_POLL_MS);
 
 }
 
-function teardownFavoritesRealtime(){
+function teardownSettingsRealtime(){
 
-if(!favoritesChannel){
+if(!settingsChannel){
 return;
 }
 
 const ch =
-favoritesChannel;
+settingsChannel;
 
-favoritesChannel = null;
+settingsChannel = null;
 
 ch.unsubscribe();
 
@@ -309,7 +474,7 @@ clearTimeout(realtimeReconnectTimer);
 realtimeReconnectTimer = null;
 }
 
-teardownFavoritesRealtime();
+teardownSettingsRealtime();
 realtimeUserId = null;
 
 }
@@ -333,7 +498,7 @@ document.visibilityState !==
 return;
 }
 
-await setupFavoritesRealtime(
+await setupSettingsRealtime(
 realtimeUserId
 );
 
@@ -348,10 +513,10 @@ if(!loggedIn){
 return;
 }
 
-await pullFavoritesIfCloudNewer();
+await pullRemoteSettingsIfNewer();
 
 if(realtimeUserId){
-await setupFavoritesRealtime(
+await setupSettingsRealtime(
 realtimeUserId
 );
 }
@@ -392,7 +557,48 @@ cloudTs
 
 }
 
-async function setupFavoritesRealtime(userId){
+function handleRealtimeDrawingsRow(row){
+
+if(!row){
+return;
+}
+
+const cloudDrawings =
+normalizeDrawingsMap(row.drawings);
+const localDrawings =
+collectAllLocalDrawings();
+const cloudTs =
+row.drawings_updated_at || "";
+
+if(
+drawingsMapsEqual(
+cloudDrawings,
+localDrawings
+)
+){
+
+if(cloudTs){
+saveLocalDrawingsUpdatedAt(cloudTs);
+}
+
+return;
+}
+
+applyDrawingsLocally(
+cloudDrawings,
+cloudTs
+);
+
+}
+
+function handleRealtimeSettingsRow(row){
+
+handleRealtimeFavoritesRow(row);
+handleRealtimeDrawingsRow(row);
+
+}
+
+async function setupSettingsRealtime(userId){
 
 const sb =
 await getSupabase();
@@ -406,7 +612,7 @@ return;
 
 realtimeUserId = userId;
 
-teardownFavoritesRealtime();
+teardownSettingsRealtime();
 
 const channel =
 sb
@@ -420,7 +626,7 @@ table: "user_settings",
 filter: `user_id=eq.${userId}`
 },
 payload=>{
-handleRealtimeFavoritesRow(
+handleRealtimeSettingsRow(
 payload.new
 );
 }
@@ -434,7 +640,7 @@ table: "user_settings",
 filter: `user_id=eq.${userId}`
 },
 payload=>{
-handleRealtimeFavoritesRow(
+handleRealtimeSettingsRow(
 payload.new
 );
 }
@@ -451,7 +657,7 @@ status === "TIMED_OUT" ||
 status === "CLOSED"
 ){
 console.warn(
-"favorites realtime:",
+"settings realtime:",
 status
 );
 scheduleRealtimeReconnect();
@@ -459,7 +665,7 @@ scheduleRealtimeReconnect();
 
 });
 
-favoritesChannel = channel;
+settingsChannel = channel;
 
 }
 
@@ -481,7 +687,7 @@ loadFavorites();
 const localTs =
 loadLocalFavoritesUpdatedAt();
 const cloud =
-await fetchCloudSettings(
+await fetchUserSettings(
 sb,
 user.id
 );
@@ -569,7 +775,7 @@ authed;
 const localTs =
 loadLocalFavoritesUpdatedAt();
 const cloud =
-await fetchCloudSettings(
+await fetchUserSettings(
 sb,
 user.id
 );
@@ -593,6 +799,172 @@ cloud.updatedAt
 );
 
 return cloud.favorites;
+
+}
+
+export async function mergeDrawingsWithCloud(){
+
+const authed =
+await getAuthedClient();
+
+if(!authed){
+return collectAllLocalDrawings();
+}
+
+const { sb, user } =
+authed;
+
+const local =
+collectAllLocalDrawings();
+const localTs =
+loadLocalDrawingsUpdatedAt();
+const cloud =
+await fetchUserSettings(
+sb,
+user.id
+);
+
+if(!cloud){
+
+if(Object.keys(local).length > 0){
+
+const ts =
+await pushCloudDrawings(
+sb,
+user.id,
+local
+);
+
+if(ts){
+saveLocalDrawingsUpdatedAt(ts);
+}
+
+}
+
+return local;
+
+}
+
+if(
+!localTs ||
+isTsNewer(
+cloud.drawingsUpdatedAt,
+localTs
+)
+){
+
+applyDrawingsLocally(
+cloud.drawings,
+cloud.drawingsUpdatedAt
+);
+return cloud.drawings;
+
+}
+
+if(
+localTs &&
+(
+!cloud.drawingsUpdatedAt ||
+isTsNewer(
+localTs,
+cloud.drawingsUpdatedAt
+)
+)
+){
+
+const ts =
+await pushCloudDrawings(
+sb,
+user.id,
+local
+);
+
+if(ts){
+saveLocalDrawingsUpdatedAt(ts);
+}
+
+return local;
+
+}
+
+return local;
+
+}
+
+export async function pullDrawingsIfCloudNewer(){
+
+const authed =
+await getAuthedClient();
+
+if(!authed){
+return collectAllLocalDrawings();
+}
+
+const { sb, user } =
+authed;
+
+const localTs =
+loadLocalDrawingsUpdatedAt();
+const cloud =
+await fetchUserSettings(
+sb,
+user.id
+);
+
+if(
+!cloud?.drawingsUpdatedAt ||
+(
+localTs &&
+!isTsNewer(
+cloud.drawingsUpdatedAt,
+localTs
+)
+)
+){
+return collectAllLocalDrawings();
+}
+
+applyDrawingsLocally(
+cloud.drawings,
+cloud.drawingsUpdatedAt
+);
+
+return cloud.drawings;
+
+}
+
+export async function pullRemoteSettingsIfNewer(){
+
+await pullFavoritesIfCloudNewer();
+await pullDrawingsIfCloudNewer();
+
+}
+
+export async function persistAllDrawingsToCloud(){
+
+const drawings =
+collectAllLocalDrawings();
+
+const authed =
+await getAuthedClient();
+
+if(!authed){
+return;
+}
+
+const { sb, user } =
+authed;
+
+const ts =
+await pushCloudDrawings(
+sb,
+user.id,
+drawings
+);
+
+if(ts){
+saveLocalDrawingsUpdatedAt(ts);
+}
 
 }
 
@@ -675,7 +1047,8 @@ userEmail = session?.user?.email || "";
 
 if(loggedIn){
 await mergeFavoritesWithCloud();
-await setupFavoritesRealtime(
+await mergeDrawingsWithCloud();
+await setupSettingsRealtime(
 session.user.id
 );
 startSyncPoll();
