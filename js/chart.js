@@ -1413,3 +1413,259 @@ hud?.remove();
 };
 
 }
+
+export function isTabletChartViewport(){
+
+return window.matchMedia(
+"(pointer: coarse) and (min-width: 768px)"
+).matches;
+
+}
+
+/**
+ * iPad: вертикальное сжатие/растяжение по правой шкале цены (как TradingView).
+ * Мышь на десктопе — нативный LW; touch — свой drag по зоне шкалы.
+ */
+export function mountTabletPriceScaleTouch(
+chart,
+chartEl
+){
+
+if(
+!chart ||
+!chartEl ||
+!isTabletChartViewport()
+){
+return ()=>{};
+}
+
+let drag =
+null;
+
+function priceScaleWidth(){
+
+try{
+return chart.priceScale("right").width() ||
+CHART_PRICE_SCALE_WIDTH;
+}catch{
+return CHART_PRICE_SCALE_WIDTH;
+}
+
+}
+
+function pointerOnPriceScale(
+clientX
+){
+
+const rect =
+chartEl.getBoundingClientRect();
+
+return clientX >=
+rect.right - priceScaleWidth() - 1;
+
+}
+
+function applyVerticalScaleDrag(
+dy
+){
+
+const scale =
+chart.priceScale("right");
+
+let range;
+
+try{
+range = scale.getVisibleRange();
+}catch{
+return;
+}
+
+if(
+!range ||
+!Number.isFinite(range.from) ||
+!Number.isFinite(range.to)
+){
+return;
+}
+
+const mid =
+(range.from + range.to) / 2;
+
+let half =
+Math.max(
+(range.to - range.from) / 2,
+1e-12
+);
+
+half *=
+Math.exp(
+dy * 0.012
+);
+
+scale.setVisibleRange({
+from: mid - half,
+to: mid + half
+});
+
+}
+
+function onPointerDown(
+e
+){
+
+if(
+!e.isPrimary
+){
+return;
+}
+
+if(
+e.pointerType === "mouse"
+){
+return;
+}
+
+if(
+!pointerOnPriceScale(
+e.clientX
+)
+){
+return;
+}
+
+drag = {
+id: e.pointerId,
+y: e.clientY
+};
+
+try{
+chart.priceScale("right").setAutoScale(
+false
+);
+}catch{
+/* ignore */
+}
+
+e.preventDefault();
+
+e.stopPropagation();
+
+try{
+chartEl.setPointerCapture(
+e.pointerId
+);
+}catch{
+/* ignore */
+}
+
+}
+
+function onPointerMove(
+e
+){
+
+if(
+!drag ||
+e.pointerId !== drag.id
+){
+return;
+}
+
+const dy =
+e.clientY - drag.y;
+
+drag.y =
+e.clientY;
+
+if(
+Math.abs(dy) <
+0.5
+){
+return;
+}
+
+applyVerticalScaleDrag(
+dy
+);
+
+e.preventDefault();
+
+}
+
+function endDrag(
+e
+){
+
+if(
+!drag ||
+e.pointerId !== drag.id
+){
+return;
+}
+
+drag = null;
+
+try{
+chartEl.releasePointerCapture(
+e.pointerId
+);
+}catch{
+/* ignore */
+}
+
+}
+
+const opts = {
+capture: true,
+passive: false
+};
+
+chartEl.addEventListener(
+"pointerdown",
+onPointerDown,
+opts
+);
+
+chartEl.addEventListener(
+"pointermove",
+onPointerMove,
+opts
+);
+
+chartEl.addEventListener(
+"pointerup",
+endDrag
+);
+
+chartEl.addEventListener(
+"pointercancel",
+endDrag
+);
+
+return ()=>{
+
+chartEl.removeEventListener(
+"pointerdown",
+onPointerDown,
+opts
+);
+
+chartEl.removeEventListener(
+"pointermove",
+onPointerMove,
+opts
+);
+
+chartEl.removeEventListener(
+"pointerup",
+endDrag
+);
+
+chartEl.removeEventListener(
+"pointercancel",
+endDrag
+);
+
+};
+
+}

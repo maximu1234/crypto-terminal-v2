@@ -39,8 +39,9 @@ mountChartPriceHud,
 syncLinkedChartTimescales,
 linkChartsCrosshair,
 updateRsiBandLayout,
+mountTabletPriceScaleTouch,
 isUserCrosshairEvent
-} from "./chart.js?v=22";
+} from "./chart.js?v=23";
 
 import {
 connectKlineStream,
@@ -592,6 +593,16 @@ mainChart.chart;
 
 const candleSeries =
 mainChart.series;
+
+const chartEl =
+document.getElementById(
+"chart"
+);
+
+mountTabletPriceScaleTouch(
+chart,
+chartEl
+);
 
 const rsi =
 createRSIChart(

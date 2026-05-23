@@ -768,6 +768,13 @@ body{
   touch-action:pan-x pan-y;
 }
 
+/* iPad: отдать жесты шкале цены / pinch библиотеке (pan-x/pan-y их блокирует) */
+@media (pointer:coarse) and (min-width:768px){
+  #chart{
+    touch-action:none;
+  }
+}
+
 .chart-price-hud{
   position:absolute;
   right:0;
