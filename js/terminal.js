@@ -36,8 +36,9 @@ createRSIChart,
 applyChartPriceFormat,
 mountChartPriceHud,
 syncLinkedChartTimescales,
-rsiPlotTimeOffsetSec
-} from "./chart.js?v=14";
+rsiPlotTimeOffsetSec,
+linkChartsCrosshair
+} from "./chart.js?v=15";
 
 import {
 connectKlineStream,
@@ -758,11 +759,39 @@ last
 
 }
 
-chart.subscribeCrosshairMove(param=>{
+function candleCloseAtOrBefore(ts){
+
+for(
+let i =
+candles.length -
+1;
+i >=
+0;
+i--
+){
+
+if(
+candles[i].time <=
+ts
+){
+
+return candles[i].close;
+
+}
+
+}
+
+return null;
+
+}
+
+function updateRsiHudFromCrosshairTime(
+time
+){
 
 const ts =
 rsiCrosshairUnix(
-param.time
+time
 );
 
 if(
@@ -785,45 +814,49 @@ return;
 
 }
 
-const v =
-rsiLookupAtOrBefore(ts);
+setRsiHudValue(
+rsiLookupAtOrBefore(ts)
+);
 
-setRsiHudValue(v);
+}
 
+linkChartsCrosshair({
+mainChart:chart,
+linkedChart:rsiChart,
+mainSeries:candleSeries,
+linkedSeries:rsiSeries,
+getLinkedValueAtTime(time){
+const ts =
+rsiCrosshairUnix(time);
+
+if(
+ts === null
+){
+return null;
+}
+
+return rsiLookupAtOrBefore(ts);
+},
+getMainValueAtTime(time){
+const ts =
+rsiCrosshairUnix(time);
+
+if(
+ts === null
+){
+return null;
+}
+
+return candleCloseAtOrBefore(ts);
+}
+});
+
+chart.subscribeCrosshairMove(param=>{
+updateRsiHudFromCrosshairTime(param.time);
 });
 
 rsiChart.subscribeCrosshairMove(param=>{
-
-const ts =
-rsiCrosshairUnix(
-param.time
-);
-
-if(
-ts === null
-){
-
-const tail =
-rsiPointsCache[
-rsiPointsCache.length -
-1
-];
-
-setRsiHudValue(
-tail
-? tail.value
-: null
-);
-
-return;
-
-}
-
-const v =
-rsiLookupAtOrBefore(ts);
-
-setRsiHudValue(v);
-
+updateRsiHudFromCrosshairTime(param.time);
 });
 
 let drawingTools = null;
@@ -1279,20 +1312,13 @@ document.getElementById("rsi-chart");
 const w =
 chartWrap.clientWidth;
 
-const mainH =
-Math.max(
-0,
-chartWrap.clientHeight -
-(rsiWrap?.offsetHeight || 0)
-);
-
 chart.applyOptions({
 width:w,
-height:mainH || chartWrap.clientHeight
+height:chartWrap.clientHeight
 });
 
 rsiChart.applyOptions({
-width:w,
+width:rsiWrap?.clientWidth || w,
 height:rsiEl.clientHeight
 });
 

@@ -563,10 +563,7 @@ labelVisible:false
 },
 
 horzLine:{
-color:"rgba(120,126,146,0.35)",
-width:1,
-style:
-lineStyleDot,
+visible:false,
 labelVisible:false
 }
 
@@ -760,6 +757,120 @@ mainChart.timeScale()
 linkedChart.timeScale().setVisibleLogicalRange(range);
 
 applyChartScaleWidthCss(mainChart);
+
+}
+
+export function linkChartsCrosshair({
+mainChart,
+linkedChart,
+mainSeries,
+linkedSeries,
+getLinkedValueAtTime,
+getMainValueAtTime
+}){
+
+let lock =
+false;
+
+function clearLinked(){
+
+try{
+linkedChart.clearCrosshairPosition();
+}catch{
+/* ignore */
+}
+
+}
+
+mainChart.subscribeCrosshairMove(param=>{
+
+if(lock){
+return;
+}
+
+if(
+!param?.time ||
+param.point === undefined
+){
+
+clearLinked();
+return;
+}
+
+const value =
+getLinkedValueAtTime?.(
+param.time
+);
+
+if(
+value === null ||
+value === undefined ||
+!Number.isFinite(value)
+){
+
+clearLinked();
+return;
+}
+
+lock = true;
+
+try{
+linkedChart.setCrosshairPosition(
+value,
+param.time,
+linkedSeries
+);
+}catch{
+/* ignore */
+}finally{
+lock = false;
+}
+
+});
+
+linkedChart.subscribeCrosshairMove(param=>{
+
+if(lock){
+return;
+}
+
+if(
+!param?.time ||
+param.point === undefined ||
+!getMainValueAtTime
+){
+return;
+}
+
+const value =
+getMainValueAtTime(
+param.time
+);
+
+if(
+value === null ||
+value === undefined ||
+!Number.isFinite(value)
+){
+
+return;
+}
+
+lock = true;
+
+try{
+mainChart.setCrosshairPosition(
+value,
+param.time,
+mainSeries
+);
+}catch{
+/* ignore */
+}finally{
+lock = false;
+}
+
+});
 
 }
 

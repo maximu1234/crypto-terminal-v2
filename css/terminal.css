@@ -758,6 +758,13 @@ body{
   overflow:hidden;
 }
 
+#chart{
+  width:100%;
+  height:100%;
+  pointer-events:auto;
+  touch-action:pan-x pan-y;
+}
+
 .chart-price-hud{
   position:absolute;
   right:0;
@@ -796,12 +803,6 @@ body{
   opacity:1;
 }
 
-#chart{
-  width:100%;
-  height:100%;
-  pointer-events:auto;
-  touch-action:pan-x pan-y;
-}
 
 #chart-wrap.chart-touch-locked #chart{
   touch-action:none;
