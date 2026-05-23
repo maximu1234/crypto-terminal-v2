@@ -774,19 +774,14 @@ body.drawings-tablet-test-off .draw-toolbar-inline{
   touch-action:pan-x pan-y;
 }
 
-/* iPad: свечи — pan/pinch через LW; шкала цены — отдельная полоса */
-@media (pointer:coarse) and (min-width:768px){
-  #chart{
-    touch-action:none;
-  }
+/* iPad: класс tablet-chart ставится из JS (isTabletChartViewport) */
+body.tablet-chart #chart,
+body.tablet-chart #rsi-chart{
+  touch-action:none;
+}
 
-  #rsi-chart{
-    touch-action:none;
-  }
-
-  .price-scale-touch-strip{
-    display:block;
-  }
+body.tablet-chart .price-scale-touch-strip{
+  display:block;
 }
 
 .price-scale-touch-strip{

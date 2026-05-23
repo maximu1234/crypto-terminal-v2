@@ -1129,7 +1129,7 @@ return;
 mainChart.applyOptions({
 handleScroll:{
 mouseWheel:true,
-pressedMouseMove:true,
+pressedMouseMove:false,
 horzTouchDrag:true,
 vertTouchDrag:false
 },
@@ -1142,6 +1142,15 @@ mouseWheel:true,
 pinch:true
 }
 });
+
+}
+
+export function markTabletChartBody(){
+
+document.body.classList.toggle(
+"tablet-chart",
+isTabletChartViewport()
+);
 
 }
 
@@ -1681,12 +1690,14 @@ return false;
 export function mountTabletPriceScaleTouch(
 chart,
 stripEl,
+chartEl,
 onInteraction
 ){
 
 if(
 !chart ||
 !stripEl ||
+!chartEl ||
 !isTabletChartViewport()
 ){
 return ()=>{};
@@ -1724,7 +1735,61 @@ o.scaleMargins?.bottom ??
 
 }
 
-function releaseDrag(
+let onDocMove =
+null;
+
+let onDocEnd =
+null;
+
+function detachDocListeners(){
+
+if(
+onDocMove
+){
+
+document.removeEventListener(
+"pointermove",
+onDocMove
+);
+
+onDocMove = null;
+
+}
+
+if(
+onDocEnd
+){
+
+document.removeEventListener(
+"pointerup",
+onDocEnd
+);
+
+document.removeEventListener(
+"pointercancel",
+onDocEnd
+);
+
+onDocEnd = null;
+
+}
+
+}
+
+function abortDrag(){
+
+if(
+!drag
+){
+return;
+}
+
+drag = null;
+detachDocListeners();
+
+}
+
+function endDrag(
 e
 ){
 
@@ -1734,19 +1799,14 @@ if(
 return;
 }
 
-const id =
-e?.pointerId ??
-drag.id;
-
-drag = null;
-
-try{
-stripEl.releasePointerCapture(
-id
-);
-}catch{
-/* ignore */
+if(
+e?.pointerId !== undefined &&
+e.pointerId !== drag.id
+){
+return;
 }
+
+abortDrag();
 
 }
 
@@ -1801,6 +1861,8 @@ return;
 
 readMargins();
 
+detachDocListeners();
+
 drag = {
 id:
 e.pointerId ??
@@ -1818,40 +1880,27 @@ false
 /* ignore */
 }
 
-e.preventDefault();
+onDocMove =(
+moveEvent
+)=>{
 
-try{
-stripEl.setPointerCapture(
+if(
+!drag ||
+(
+moveEvent.pointerId !==
+undefined &&
+moveEvent.pointerId !==
 drag.id
-);
-}catch{
-/* ignore */
-}
-
-}
-
-function onPointerMove(
-e
-){
-
-if(
-!drag
-){
-return;
-}
-
-if(
-e.pointerId !== undefined &&
-e.pointerId !== drag.id
+)
 ){
 return;
 }
 
 const dy =
-e.clientY - drag.y;
+moveEvent.clientY - drag.y;
 
 drag.y =
-e.clientY;
+moveEvent.clientY;
 
 if(
 Math.abs(dy) <
@@ -1864,49 +1913,61 @@ applyVerticalScaleDrag(
 dy
 );
 
+moveEvent.preventDefault();
+
+};
+
+onDocEnd = endDrag;
+
+document.addEventListener(
+"pointermove",
+onDocMove,
+{ passive:false }
+);
+
+document.addEventListener(
+"pointerup",
+onDocEnd
+);
+
+document.addEventListener(
+"pointercancel",
+onDocEnd
+);
+
 e.preventDefault();
 
 }
 
-const moveOpts = {
+const stripOpts = {
 passive:false
 };
 
 stripEl.addEventListener(
 "pointerdown",
 onPointerDown,
-moveOpts
+stripOpts
 );
 
-stripEl.addEventListener(
-"pointermove",
-onPointerMove,
-moveOpts
-);
+const onChartPointerDown =(
+e
+)=>{
 
-stripEl.addEventListener(
-"pointerup",
-releaseDrag
-);
+if(
+e.pointerType ===
+"mouse"
+){
+return;
+}
 
-stripEl.addEventListener(
-"pointercancel",
-releaseDrag
-);
+abortDrag();
 
-window.addEventListener(
-"pointerup",
-releaseDrag
-);
+};
 
-window.addEventListener(
-"pointercancel",
-releaseDrag
-);
-
-window.addEventListener(
-"blur",
-releaseDrag
+chartEl.addEventListener(
+"pointerdown",
+onChartPointerDown,
+{ passive:true }
 );
 
 return ()=>{
@@ -1914,41 +1975,16 @@ return ()=>{
 stripEl.removeEventListener(
 "pointerdown",
 onPointerDown,
-moveOpts
+stripOpts
 );
 
-stripEl.removeEventListener(
-"pointermove",
-onPointerMove,
-moveOpts
+chartEl.removeEventListener(
+"pointerdown",
+onChartPointerDown,
+{ passive:true }
 );
 
-stripEl.removeEventListener(
-"pointerup",
-releaseDrag
-);
-
-stripEl.removeEventListener(
-"pointercancel",
-releaseDrag
-);
-
-window.removeEventListener(
-"pointerup",
-releaseDrag
-);
-
-window.removeEventListener(
-"pointercancel",
-releaseDrag
-);
-
-window.removeEventListener(
-"blur",
-releaseDrag
-);
-
-releaseDrag();
+abortDrag();
 
 };
 

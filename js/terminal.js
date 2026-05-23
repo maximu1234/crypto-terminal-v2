@@ -42,10 +42,11 @@ linkChartsCrosshair,
 updateRsiBandLayout,
 applyTabletRsiChartOptions,
 applyTabletMainChartScroll,
+markTabletChartBody,
 mountTabletPriceScaleTouch,
 isTabletChartViewport,
 isUserCrosshairEvent
-} from "./chart.js?v=28";
+} from "./chart.js?v=29";
 
 /** Временный тест iPad: true = initDrawings не вызывается на планшете */
 const DRAWINGS_DISABLED_ON_TABLET_TEST =
@@ -607,6 +608,13 @@ document.getElementById(
 "chart-wrap"
 );
 
+const chartEl =
+document.getElementById(
+"chart"
+);
+
+markTabletChartBody();
+
 let priceHudCtrl = {
 stop(){},
 refresh(){}
@@ -617,6 +625,7 @@ chart,
 document.getElementById(
 "price-scale-touch-strip"
 ),
+chartEl,
 ()=>{
 priceHudCtrl.refresh?.();
 }
