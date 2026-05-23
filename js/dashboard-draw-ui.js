@@ -1,4 +1,5 @@
 import {
+CURSOR_TOOL_ICON_SVG,
 getAlertToggleButtonHtml,
 getPositionDrawToolbarButtonsHtml
 } from "./draw-ui-shared.js";
@@ -10,7 +11,7 @@ return `
 <div class="widget-draw-toolbar draw-toolbar-inline">
 
 <button type="button" class="draw-btn draw-btn-sm" data-draw-tool="cursor" title="Курсор">
-<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M6 3l12 8-5.5.5L11 21l-2.5-1.5L8.5 12 3 11z"/></svg>
+${CURSOR_TOOL_ICON_SVG}
 </button>
 
 <button type="button" class="draw-btn draw-btn-sm" data-draw-tool="trendline" title="Trendline">

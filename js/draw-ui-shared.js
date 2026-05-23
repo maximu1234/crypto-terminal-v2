@@ -1,3 +1,12 @@
+/** Иконка инструмента «Курсор» — перекрестие с зазором в центре */
+export const CURSOR_TOOL_ICON_SVG = `
+<svg viewBox="0 0 24 24" aria-hidden="true">
+<line x1="12" y1="3" x2="12" y2="9" stroke="currentColor" stroke-width="2" stroke-linecap="square"/>
+<line x1="12" y1="15" x2="12" y2="21" stroke="currentColor" stroke-width="2" stroke-linecap="square"/>
+<line x1="3" y1="12" x2="9" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="square"/>
+<line x1="15" y1="12" x2="21" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="square"/>
+</svg>`;
+
 export const ALARM_ICON_SVG = `
 <svg class="alert-icon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
 <circle cx="12" cy="13" r="6.5" fill="none" stroke="currentColor" stroke-width="1.4"/>
