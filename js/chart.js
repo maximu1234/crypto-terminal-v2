@@ -1245,7 +1245,8 @@ applyChartScaleWidthCss(mainChart);
 export function linkPairedChartTimeScales(
 mainChart,
 linkedChart,
-afterSync
+afterSync,
+options = {}
 ){
 
 if(
@@ -1255,12 +1256,19 @@ if(
 return ()=>{};
 }
 
+const isLocked =
+options.isLocked ??
+(()=>false);
+
 let lock =
 false;
 
 function fromMain(){
 
-if(lock){
+if(
+lock ||
+isLocked()
+){
 return;
 }
 
@@ -1279,7 +1287,10 @@ lock = false;
 
 function fromLinked(){
 
-if(lock){
+if(
+lock ||
+isLocked()
+){
 return;
 }
 
@@ -1971,6 +1982,7 @@ export function mountTabletCrosshairLongPress(
 chart,
 series,
 chartEl,
+touchLayerEl,
 {
 shouldBeginHold = ()=>true,
 onHoldStart = ()=>{},
@@ -1983,6 +1995,7 @@ if(
 !chart ||
 !series ||
 !chartEl ||
+!touchLayerEl ||
 !isTabletChartViewport()
 ){
 return ()=>{};
@@ -2080,8 +2093,12 @@ crosshairTrack = {
 id:holdPointer
 };
 
+touchLayerEl.classList.add(
+"active"
+);
+
 try{
-chartEl.setPointerCapture(
+touchLayerEl.setPointerCapture(
 holdPointer
 );
 }catch{
@@ -2099,6 +2116,10 @@ function releaseCrosshairCapture(
 pointerId
 ){
 
+touchLayerEl.classList.remove(
+"active"
+);
+
 if(
 pointerId ===
 undefined ||
@@ -2111,11 +2132,11 @@ return;
 try{
 
 if(
-chartEl.hasPointerCapture?.(
+touchLayerEl.hasPointerCapture?.(
 pointerId
 )
 ){
-chartEl.releasePointerCapture(
+touchLayerEl.releasePointerCapture(
 pointerId
 );
 
@@ -2127,15 +2148,17 @@ pointerId
 
 }
 
-function onPointerMove(
+function onLayerPointerMove(
 e
 ){
 
 if(
-crosshairTrack &&
-e.pointerId ===
+!crosshairTrack ||
+e.pointerId !==
 crosshairTrack.id
 ){
+return;
+}
 
 e.preventDefault();
 e.stopImmediatePropagation();
@@ -2144,8 +2167,32 @@ e.clientX,
 e.clientY
 );
 
+}
+
+function onLayerPointerUp(
+e
+){
+
+if(
+!crosshairTrack ||
+e.pointerId !==
+crosshairTrack.id
+){
 return;
 }
+
+releaseCrosshairCapture(
+e.pointerId
+);
+
+crosshairTrack = null;
+onHoldEnd();
+
+}
+
+function onPointerMove(
+e
+){
 
 if(
 holdTimer &&
@@ -2198,21 +2245,6 @@ e.pointerId ===
 holdPointer
 ){
 clearHoldTimer();
-}
-
-if(
-crosshairTrack &&
-e.pointerId ===
-crosshairTrack.id
-){
-
-releaseCrosshairCapture(
-e.pointerId
-);
-
-crosshairTrack = null;
-onHoldEnd();
-
 }
 
 }
@@ -2282,7 +2314,29 @@ onTouchStart,
 opts
 );
 
+touchLayerEl.addEventListener(
+"pointermove",
+onLayerPointerMove,
+moveOpts
+);
+
+touchLayerEl.addEventListener(
+"pointerup",
+onLayerPointerUp,
+opts
+);
+
+touchLayerEl.addEventListener(
+"pointercancel",
+onLayerPointerUp,
+opts
+);
+
 return ()=>{
+
+touchLayerEl.classList.remove(
+"active"
+);
 
 chartEl.removeEventListener(
 "pointerdown",
@@ -2311,6 +2365,24 @@ opts
 chartEl.removeEventListener(
 "touchstart",
 onTouchStart,
+opts
+);
+
+touchLayerEl.removeEventListener(
+"pointermove",
+onLayerPointerMove,
+moveOpts
+);
+
+touchLayerEl.removeEventListener(
+"pointerup",
+onLayerPointerUp,
+opts
+);
+
+touchLayerEl.removeEventListener(
+"pointercancel",
+onLayerPointerUp,
 opts
 );
 
@@ -2491,9 +2563,19 @@ detachDocListeners();
 
 }
 
+const blockChartScroll =
+options.blockChartScroll ??
+(()=>false);
+
 function scrollByDx(
 dx
 ){
+
+if(
+blockChartScroll()
+){
+return;
+}
 
 const ts =
 chart.timeScale();

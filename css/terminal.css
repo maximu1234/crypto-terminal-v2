@@ -908,6 +908,20 @@ body.tablet-chart .price-scale-touch-strip{
   z-index:1;
 }
 
+/* iPad: блокирует LW при probe-перекрестии (свечи не получают touch) */
+.tablet-probe-touch-layer{
+  position:absolute;
+  inset:0;
+  right:var(--chart-scale-width, 56px);
+  z-index:10;
+  pointer-events:none;
+  touch-action:none;
+}
+
+.tablet-probe-touch-layer.active{
+  pointer-events:auto;
+}
+
 /* iPad: горизонталь probe-перекрестия (вертикаль — #linked-crosshair-vert) */
 .tablet-probe-crosshair-h{
   position:absolute;

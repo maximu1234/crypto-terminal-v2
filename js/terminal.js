@@ -55,7 +55,7 @@ mountAxisDoubleTapReset,
 TABLET_USE_CUSTOM_TOUCH_PAN,
 isTabletChartViewport,
 isUserCrosshairEvent
-} from "./chart.js?v=40";
+} from "./chart.js?v=41";
 
 import {
 connectKlineStream,
@@ -678,7 +678,8 @@ mountTabletCustomTouchPan(
 chart,
 chartEl,
 {
-shouldAllowPan:tabletPanAllowed
+shouldAllowPan:tabletPanAllowed,
+blockChartScroll:()=>tabletCrosshairProbe
 }
 );
 
@@ -1145,11 +1146,17 @@ mountChartRangeFreeze(
 rsiChart
 );
 
+const probeTouchLayerEl =
+document.getElementById(
+"tablet-probe-touch-layer"
+);
+
 unmountTabletCrosshair =
 mountTabletCrosshairLongPress(
 chart,
 candleSeries,
 chartEl,
+probeTouchLayerEl,
 {
 shouldBeginHold:tabletHoldShouldBegin,
 onHoldStart:()=>{
@@ -1736,7 +1743,10 @@ resizeCharts
 linkPairedChartTimeScales(
 chart,
 rsiChart,
-layoutRsiBand
+layoutRsiBand,
+{
+isLocked:()=>tabletCrosshairProbe
+}
 );
 
 const rsiChartEl =
