@@ -45,11 +45,11 @@ applyTabletMainChartScroll,
 markTabletChartBody,
 mountTabletPriceScaleTouch,
 mountTabletCustomTouchPan,
-mountTabletCrosshairTouch,
+mountTabletCrosshairLongPress,
 TABLET_USE_CUSTOM_TOUCH_PAN,
 isTabletChartViewport,
 isUserCrosshairEvent
-} from "./chart.js?v=33";
+} from "./chart.js?v=34";
 
 import {
 connectKlineStream,
@@ -625,9 +625,12 @@ let unmountTabletPan =
 let unmountTabletCrosshair =
 ()=>{};
 
-/** iPad: после тапа по графику — водим перекрестие; горизонтальный свайп снова включает pan */
+/** iPad: true пока удержание активировало перекрестие (блокирует pan) */
 let tabletCrosshairProbe =
 false;
+
+let abortTabletPan =
+()=>{};
 
 function tabletPanAllowed(){
 
@@ -664,7 +667,7 @@ if(
 TABLET_USE_CUSTOM_TOUCH_PAN
 ){
 
-unmountTabletPan =
+const tabletPanCtrl =
 mountTabletCustomTouchPan(
 chart,
 chartEl,
@@ -675,6 +678,12 @@ tabletCrosshairProbe = false;
 }
 }
 );
+
+abortTabletPan =
+tabletPanCtrl.abortPan;
+
+unmountTabletPan =
+tabletPanCtrl.dispose;
 
 }
 
@@ -1050,43 +1059,69 @@ if(
 TABLET_USE_CUSTOM_TOUCH_PAN
 ){
 
+function tabletHoldShouldBegin(
+e
+){
+
+const wrap =
+document.getElementById(
+"chart-wrap"
+);
+
+if(
+wrap?.classList.contains(
+"chart-touch-locked"
+)
+){
+return false;
+}
+
+if(
+e.target?.closest?.(
+".price-scale-touch-strip"
+)
+){
+return false;
+}
+
+const rect =
+chartEl.getBoundingClientRect();
+
+const x =
+e.clientX - rect.left;
+
+const y =
+e.clientY - rect.top;
+
+if(
+drawingTools?.isOverDrawingAt?.(
+x,
+y
+)
+){
+return false;
+}
+
+return true;
+
+}
+
 unmountTabletCrosshair =
-mountTabletCrosshairTouch(
+mountTabletCrosshairLongPress(
 chart,
 candleSeries,
 chartEl,
-()=>tabletCrosshairProbe
-);
-
-if(
-drawingTools
-){
-
-chart.subscribeClick(
-param=>{
-
-if(
-!isTabletChartViewport() ||
-!param?.point
-){
-return;
-}
-
-if(
-drawingTools.isOverDrawingAt?.(
-param.point.x,
-param.point.y
-)
-){
-return;
-}
-
+{
+shouldBeginHold:tabletHoldShouldBegin,
+onHoldStart:()=>{
+abortTabletPan();
 tabletCrosshairProbe = true;
-
+},
+onHoldEnd:()=>{
+tabletCrosshairProbe = false;
+}
 }
 );
-
-}
 
 }
 

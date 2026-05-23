@@ -1703,11 +1703,25 @@ return false;
  * iPad: горизонтальный pan вне LW — pointer на document, как у полосы цены.
  * LW horzTouchDrag на Safari часто «залипает» в одной зоне экрана.
  */
-export function mountTabletCrosshairTouch(
+const TABLET_CROSSHAIR_HOLD_MS =
+450;
+
+const TABLET_CROSSHAIR_HOLD_MOVE_CANCEL_PX =
+10;
+
+/**
+ * iPad: перекрестие только после удержания пальца (~450ms).
+ * Короткий тап и свайп — pan графика (см. mountTabletCustomTouchPan).
+ */
+export function mountTabletCrosshairLongPress(
 chart,
 series,
 chartEl,
-isCrosshairMode
+{
+shouldBeginHold = ()=>true,
+onHoldStart = ()=>{},
+onHoldEnd = ()=>{}
+} = {}
 ){
 
 if(
@@ -1719,7 +1733,19 @@ if(
 return ()=>{};
 }
 
-let track =
+let holdTimer =
+null;
+
+let holdPointer =
+null;
+
+let holdStartX =
+0;
+
+let holdStartY =
+0;
+
+let crosshairTrack =
 null;
 
 function setCrosshairFromClient(
@@ -1765,23 +1791,80 @@ series
 
 }
 
+function clearHoldTimer(){
+
+if(
+holdTimer
+){
+clearTimeout(
+holdTimer
+);
+
+holdTimer = null;
+
+}
+
+holdPointer = null;
+
+}
+
 function onPointerDown(
 e
 ){
 
 if(
-!isCrosshairMode() ||
 e.pointerType ===
 "mouse"
 ){
 return;
 }
 
-track = {
-id:
+if(
+!shouldBeginHold(
+e
+)
+){
+return;
+}
+
+clearHoldTimer();
+
+holdPointer =
 e.pointerId ??
-0
+0;
+
+holdStartX =
+e.clientX;
+
+holdStartY =
+e.clientY;
+
+holdTimer =
+setTimeout(
+()=>{
+
+holdTimer = null;
+
+if(
+holdPointer ===
+null
+){
+return;
+}
+
+onHoldStart();
+crosshairTrack = {
+id:holdPointer
 };
+
+setCrosshairFromClient(
+holdStartX,
+holdStartY
+);
+
+},
+TABLET_CROSSHAIR_HOLD_MS
+);
 
 }
 
@@ -1790,25 +1873,42 @@ e
 ){
 
 if(
-!track ||
-!isCrosshairMode()
+crosshairTrack &&
+e.pointerId ===
+crosshairTrack.id
 ){
-return;
-}
-
-if(
-e.pointerId !==
-undefined &&
-e.pointerId !==
-track.id
-){
-return;
-}
 
 setCrosshairFromClient(
 e.clientX,
 e.clientY
 );
+
+return;
+}
+
+if(
+holdTimer &&
+holdPointer !==
+null &&
+e.pointerId ===
+holdPointer
+){
+
+const dx =
+e.clientX - holdStartX;
+
+const dy =
+e.clientY - holdStartY;
+
+if(
+dx * dx + dy * dy >
+TABLET_CROSSHAIR_HOLD_MOVE_CANCEL_PX *
+TABLET_CROSSHAIR_HOLD_MOVE_CANCEL_PX
+){
+clearHoldTimer();
+}
+
+}
 
 }
 
@@ -1817,41 +1917,86 @@ e
 ){
 
 if(
-track &&
-e.pointerId !==
-undefined &&
-e.pointerId !==
-track.id
+holdPointer !==
+null &&
+e.pointerId ===
+holdPointer
 ){
-return;
+clearHoldTimer();
 }
 
-track = null;
+if(
+crosshairTrack &&
+e.pointerId ===
+crosshairTrack.id
+){
+
+crosshairTrack = null;
+onHoldEnd();
 
 }
+
+}
+
+function onTouchStart(
+e
+){
+
+if(
+e.touches.length >
+1
+){
+clearHoldTimer();
+
+if(
+crosshairTrack
+){
+crosshairTrack = null;
+onHoldEnd();
+}
+
+}
+
+}
+
+const opts = {
+capture:true,
+passive:true
+};
+
+const moveOpts = {
+capture:true,
+passive:true
+};
 
 chartEl.addEventListener(
 "pointerdown",
 onPointerDown,
-{ passive:true }
+opts
 );
 
 chartEl.addEventListener(
 "pointermove",
 onPointerMove,
-{ passive:true }
+moveOpts
 );
 
 chartEl.addEventListener(
 "pointerup",
 onPointerUp,
-{ passive:true }
+opts
 );
 
 chartEl.addEventListener(
 "pointercancel",
 onPointerUp,
-{ passive:true }
+opts
+);
+
+chartEl.addEventListener(
+"touchstart",
+onTouchStart,
+opts
 );
 
 return ()=>{
@@ -1859,28 +2004,41 @@ return ()=>{
 chartEl.removeEventListener(
 "pointerdown",
 onPointerDown,
-{ passive:true }
+opts
 );
 
 chartEl.removeEventListener(
 "pointermove",
 onPointerMove,
-{ passive:true }
+moveOpts
 );
 
 chartEl.removeEventListener(
 "pointerup",
 onPointerUp,
-{ passive:true }
+opts
 );
 
 chartEl.removeEventListener(
 "pointercancel",
 onPointerUp,
-{ passive:true }
+opts
 );
 
-track = null;
+chartEl.removeEventListener(
+"touchstart",
+onTouchStart,
+opts
+);
+
+clearHoldTimer();
+
+if(
+crosshairTrack
+){
+crosshairTrack = null;
+onHoldEnd();
+}
 
 };
 
@@ -1906,7 +2064,14 @@ if(
 !chartEl ||
 !isTabletChartViewport()
 ){
-return ()=>{};
+const noop =
+()=>{};
+
+return {
+dispose:noop,
+abortPan:noop
+};
+
 }
 
 const PAN_START_PX =
@@ -2371,6 +2536,11 @@ onTouchStart,
 activePointers.clear();
 abortPan();
 
+};
+
+return {
+dispose,
+abortPan
 };
 
 }
