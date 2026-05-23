@@ -1,3 +1,5 @@
 {
-  "cleanUrls": true
+  "cleanUrls": true,
+  "buildCommand": "node scripts/write-supabase-env.js",
+  "outputDirectory": "."
 }

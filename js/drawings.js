@@ -22,6 +22,11 @@ formatVolumeUsd,
 parseMoneyInput
 } from "./position-sizing.js?v=1";
 
+import {
+persistAllDrawingsToCloud,
+onDrawingsRemoteUpdate
+} from "./cloud-sync.js?v=7";
+
 /* Сетка 2×9: чётный индекс — левый столбец, нечётный — правый */
 const DEFAULT_FIB_SPEC = Object.freeze([
 { v:0, enabled:true, color:"#facc15" },
@@ -1802,8 +1807,38 @@ JSON.stringify(drawings)
 
 }
 
+let drawingsCloudPushTimer = null;
+
+function scheduleDrawingsCloudPush(){
+
+clearTimeout(drawingsCloudPushTimer);
+
+drawingsCloudPushTimer = setTimeout(()=>{
+
+drawingsCloudPushTimer = null;
+persistAllDrawingsToCloud();
+
+},
+800);
+
+}
+
+window.addEventListener(
+"drawings-updated",
+()=>{
+scheduleDrawingsCloudPush();
+}
+);
+
 function saveDrawings(){
-localStorage.setItem(storageKey(), JSON.stringify(drawings));
+
+localStorage.setItem(
+storageKey(),
+JSON.stringify(drawings)
+);
+
+scheduleDrawingsCloudPush();
+
 }
 
 function persistDrawingsForSymbol(sym){
@@ -7293,6 +7328,30 @@ updateStyleBar();
 
 };
 
+const onDrawingsRemoteSync = symbols=>{
+
+if(!alive || !isActive()){
+return;
+}
+
+const sym =
+getSymbol();
+
+if(
+!symbols?.length ||
+symbols.includes(sym)
+){
+loadDrawings();
+scheduleRedraw();
+updateStyleBar();
+}
+
+};
+
+onDrawingsRemoteUpdate(
+onDrawingsRemoteSync
+);
+
 window.addEventListener(
 "drawings-updated",
 onDrawingsUpdated
@@ -7316,6 +7375,7 @@ lastLoadedSymbol ||
 getSymbol();
 
 persistDrawingsForSymbol(sym);
+scheduleDrawingsCloudPush();
 
 }
 );
@@ -7349,6 +7409,7 @@ lastLoadedSymbol &&
 lastLoadedSymbol !== next
 ){
 persistDrawingsForSymbol(lastLoadedSymbol);
+scheduleDrawingsCloudPush();
 }
 
 lastLoadedSymbol = next;

@@ -27,20 +27,21 @@
 
 1. Репозиторий на GitHub (ветка `main`).
 2. [vercel.com](https://vercel.com) → **Add Project** → импорт репозитория.
-3. Framework: **Other**, build command пустой, output — корень репозитория.
+3. Framework: **Other**; build и output — см. `vercel.json` (генерация `supabase-env.js` + корень репозитория).
 4. **Deploy**. После пуша в `main` Vercel обновляет сайт автоматически.
 
 Конфиг: `vercel.json` (`cleanUrls` — адреса без `.html`).
+
+**Облачная синхронизация** (избранное + рисунки): [docs/SUPABASE_SETUP.md](docs/SUPABASE_SETUP.md). Перенос с тестовой ветки на production: [docs/PRODUCTION_DEPLOY.md](docs/PRODUCTION_DEPLOY.md).
 
 **После деплоя:** жёсткое обновление в браузере (Cmd+Shift+R), чтобы сбросить кэш скриптов.
 
 ## Основные возможности
 
-- **Избранное** — один список `favorites` в localStorage (скринер + монеты).
+- **Избранное** — localStorage; с входом по email — синхронизация через Supabase (скринер + монеты).
+- **Рисунки** — `drawings_{SYMBOL}` в localStorage; с входом — синхронизация между устройствами.
 - **Алерты** — горизонтальный луч → пересечение цены → звук, тост, удаление луча; история на `/alerts`.
 - **Coins** — запоминает последнюю монету и ТФ (`coins_page_prefs_v1`).
-- **Рисунки** — `drawings_{SYMBOL}` в localStorage.
-
 ## Данные
 
 - **Crypto / Новые** — Bybit Linear (REST + WebSocket); «Новые» = 7 дней, страница Листинги = до 365 дней (`js/bybit-listings.js`).

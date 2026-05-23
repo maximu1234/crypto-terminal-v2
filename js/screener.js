@@ -26,7 +26,16 @@ saveScreenerState,
 loadScreenerState,
 loadFavorites,
 saveFavorites
-} from "./storage.js?v=10";
+} from "./storage.js?v=11";
+
+import {
+ensureCloudReady
+} from "./auth-ui.js?v=3";
+
+import {
+persistFavoritesToCloud,
+onFavoritesRemoteUpdate
+} from "./cloud-sync.js?v=7";
 
 const gridEl =
 document.getElementById("screener-grid");
@@ -127,6 +136,7 @@ favorites.push(symbol);
 }
 
 saveFavorites(favorites);
+persistFavoritesToCloud(favorites);
 syncFavoriteFlagsForSymbol(symbol);
 
 }
@@ -1065,7 +1075,25 @@ widget.symbol
 }
 );
 
+onFavoritesRemoteUpdate(()=>{
+
+favorites =
+loadFavorites();
+
+activeWidgets.forEach(widget=>{
+
+updateWidgetFavoriteUi(
+widget.root,
+widget.symbol
+);
+
+});
+
+});
+
 async function init(){
+
+await ensureCloudReady();
 
 bindControls();
 applySavedUi();

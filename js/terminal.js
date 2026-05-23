@@ -16,7 +16,16 @@ RSI_PERIOD
 import {
 saveFavorites,
 loadFavorites
-} from "./storage.js";
+} from "./storage.js?v=11";
+
+import {
+ensureCloudReady
+} from "./auth-ui.js?v=3";
+
+import {
+persistFavoritesToCloud,
+onFavoritesRemoteUpdate
+} from "./cloud-sync.js?v=7";
 
 import {
 createCandlestickChart,
@@ -41,7 +50,7 @@ processAlertTick
 
 import {
 initDrawings
-} from "./drawings.js?v=85";
+} from "./drawings.js?v=86";
 
 let currentDataset = "crypto";
 let currentTF = "60";
@@ -1488,6 +1497,8 @@ saveFavorites(
 favorites
 );
 
+persistFavoritesToCloud(favorites);
+
 favBtn.classList.toggle(
 "favorite"
 );
@@ -1551,6 +1562,42 @@ change1hEl.innerText =
 `${item.change1h.toFixed(2)}%`;
 
 }
+
+function syncFavoriteButtonsFromStorage(){
+
+favorites =
+loadFavorites();
+
+coinElements.forEach((el, symbol)=>{
+
+const favBtn =
+el.querySelector("[data-fav]");
+
+if(!favBtn){
+return;
+}
+
+const on =
+favorites.includes(symbol);
+
+favBtn.classList.toggle(
+"favorite",
+on
+);
+
+});
+
+}
+
+onFavoritesRemoteUpdate(()=>{
+
+syncFavoriteButtonsFromStorage();
+
+if(sortMode === "favorites"){
+renderList();
+}
+
+});
 
 function highlightActiveSymbol(){
 
@@ -1801,9 +1848,14 @@ btn.dataset.tf === currentTF
 
 async function init(){
 
+await ensureCloudReady();
+
 readUrlParams();
 
 applyCoinsPrefs();
+
+favorites =
+loadFavorites();
 
 await initSymbols();
 
