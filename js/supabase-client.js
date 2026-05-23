@@ -1,7 +1,20 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
-
 let envPromise = null;
 let client = null;
+let createClientPromise = null;
+
+async function loadCreateClient(){
+
+if(!createClientPromise){
+
+createClientPromise = import(
+"https://esm.sh/@supabase/supabase-js@2.49.1"
+).then(m=>m.createClient);
+
+}
+
+return createClientPromise;
+
+}
 
 async function loadEnv(){
 
@@ -45,6 +58,9 @@ return null;
 }
 
 if(!client){
+
+const createClient =
+await loadCreateClient();
 
 client = createClient(
 env.SUPABASE_URL,

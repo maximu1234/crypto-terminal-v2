@@ -1,7 +1,7 @@
 import {
 getSupabase,
 isSupabaseConfigured
-} from "./supabase-client.js?v=1";
+} from "./supabase-client.js?v=2";
 
 import {
 loadFavorites,
