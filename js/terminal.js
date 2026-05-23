@@ -50,10 +50,6 @@ isTabletChartViewport,
 isUserCrosshairEvent
 } from "./chart.js?v=31";
 
-/** false = рисование на iPad включено */
-const DRAWINGS_DISABLED_ON_TABLET_TEST =
-false;
-
 import {
 connectKlineStream,
 disconnectKlineStream
@@ -971,28 +967,9 @@ updateRsiHudFromCrosshairTime(param.time);
 
 let drawingTools = null;
 
-const skipDrawingsOnTablet =
-DRAWINGS_DISABLED_ON_TABLET_TEST &&
-isTabletChartViewport();
-
-if(
-skipDrawingsOnTablet
-){
-
-console.info(
-"[test] Drawings handler off on tablet (DRAWINGS_DISABLED_ON_TABLET_TEST)"
-);
-
-document.body.classList.add(
-"drawings-tablet-test-off"
-);
-
-}else{
-
 document.body.classList.remove(
 "drawings-tablet-test-off"
 );
-
 
 try{
 
@@ -1013,8 +990,6 @@ isActive: ()=>true
 }catch(err){
 
 console.error("Drawings init failed:", err);
-
-}
 
 }
 

@@ -754,7 +754,7 @@ body.drawings-tablet-test-off .draw-toolbar-inline{
   position:absolute;
   inset:0;
   pointer-events:none;
-  z-index:2;
+  z-index:3;
 }
 
 #chart-wrap{
@@ -768,8 +768,11 @@ body.drawings-tablet-test-off .draw-toolbar-inline{
 }
 
 #chart{
+  position:absolute;
+  inset:0;
   width:100%;
   height:100%;
+  z-index:1;
   pointer-events:auto;
   touch-action:pan-x pan-y;
 }
