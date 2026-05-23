@@ -5819,7 +5819,9 @@ window.addEventListener("pointercancel", onEditUp);
 
 function setupTouchDrawCrosshair(){
 
-const TAP_MOVE_PX = 10;
+/** iPad: порог «тап», не «перетаскивание перекрестия» */
+const TAP_MOVE_PX =
+18;
 
 const onTouchPlaceDown = e=>{
 
@@ -5842,6 +5844,12 @@ if(!e.isPrimary){
 return;
 }
 
+if(
+!touchDrawCrosshair
+){
+initTouchDrawCrosshair();
+}
+
 const { x, y } =
 pointerFromEvent(e);
 
@@ -5849,8 +5857,12 @@ touchPlaceTrack = {
 id: e.pointerId,
 startX: x,
 startY: y,
-moved: false
+moved: false,
+crosshairX: touchDrawCrosshair.x,
+crosshairY: touchDrawCrosshair.y
 };
+
+e.preventDefault();
 
 };
 
@@ -5882,7 +5894,11 @@ touchPlaceTrack.moved = true;
 if(touchPlaceTrack.moved){
 
 touchDrawCrosshair =
-clampTouchCrosshairXY(x, y);
+clampTouchCrosshairXY(
+touchPlaceTrack.crosshairX + dx,
+touchPlaceTrack.crosshairY + dy
+);
+
 syncTouchDrawCrosshairPreview();
 e.preventDefault();
 redraw();
