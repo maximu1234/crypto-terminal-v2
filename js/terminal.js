@@ -50,7 +50,7 @@ mountAxisDoubleTapReset,
 TABLET_USE_CUSTOM_TOUCH_PAN,
 isTabletChartViewport,
 isUserCrosshairEvent
-} from "./chart.js?v=36";
+} from "./chart.js?v=37";
 
 import {
 connectKlineStream,
@@ -673,10 +673,7 @@ mountTabletCustomTouchPan(
 chart,
 chartEl,
 {
-shouldAllowPan:tabletPanAllowed,
-onPanStart:()=>{
-tabletCrosshairProbe = false;
-}
+shouldAllowPan:tabletPanAllowed
 }
 );
 
@@ -1125,6 +1122,22 @@ document.getElementById(
 )?.classList.add(
 "chart-touch-locked"
 );
+chart.applyOptions({
+handleScroll:{
+mouseWheel:false,
+pressedMouseMove:false,
+horzTouchDrag:false,
+vertTouchDrag:false
+},
+handleScale:{
+mouseWheel:false,
+pinch:false,
+axisPressedMouseMove:{
+time:false,
+price:false
+}
+}
+});
 },
 onHoldEnd:()=>{
 tabletCrosshairProbe = false;
@@ -1132,6 +1145,9 @@ document.getElementById(
 "chart-wrap"
 )?.classList.remove(
 "chart-touch-locked"
+);
+applyTabletMainChartScroll(
+chart
 );
 }
 }

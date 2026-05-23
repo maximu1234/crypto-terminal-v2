@@ -1890,6 +1890,7 @@ crosshairTrack.id
 ){
 
 e.preventDefault();
+e.stopPropagation();
 setCrosshairFromClient(
 e.clientX,
 e.clientY
@@ -2309,6 +2310,13 @@ Math.abs(dy0) *
 return;
 }
 
+if(
+!shouldAllowPan()
+){
+pressTrack = null;
+return;
+}
+
 pendingPan = {
 id:pressTrack.id,
 x:moveEvent.clientX,
@@ -2351,6 +2359,13 @@ Math.abs(dx0) <
 Math.abs(dy0) *
 1.25
 ){
+return;
+}
+
+if(
+!shouldAllowPan()
+){
+pendingPan = null;
 return;
 }
 
