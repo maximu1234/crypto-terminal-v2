@@ -45,7 +45,7 @@ applyTabletMainChartScroll,
 mountTabletPriceScaleTouch,
 isTabletChartViewport,
 isUserCrosshairEvent
-} from "./chart.js?v=27";
+} from "./chart.js?v=28";
 
 /** Временный тест iPad: true = initDrawings не вызывается на планшете */
 const DRAWINGS_DISABLED_ON_TABLET_TEST =
@@ -953,16 +953,16 @@ console.info(
 "[test] Drawings handler off on tablet (DRAWINGS_DISABLED_ON_TABLET_TEST)"
 );
 
-document
-.getElementById(
-"draw-toolbar"
-)
-?.setAttribute(
-"hidden",
-""
+document.body.classList.add(
+"drawings-tablet-test-off"
 );
 
 }else{
+
+document.body.classList.remove(
+"drawings-tablet-test-off"
+);
+
 
 try{
 

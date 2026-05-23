@@ -78,6 +78,12 @@ body{
   background:#2563eb;
 }
 
+/* временный тест: рисование отключено на iPad (terminal.js) */
+body.drawings-tablet-test-off #draw-toolbar,
+body.drawings-tablet-test-off .draw-toolbar-inline{
+  display:none !important;
+}
+
 .draw-toolbar-inline{
   display:flex;
   align-items:center;

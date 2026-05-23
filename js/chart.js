@@ -1626,9 +1626,51 @@ hud?.remove();
 
 export function isTabletChartViewport(){
 
-return window.matchMedia(
+if(
+window.matchMedia(
 "(pointer: coarse) and (min-width: 768px)"
-).matches;
+).matches
+){
+return true;
+}
+
+if(
+navigator.maxTouchPoints <
+1
+){
+return false;
+}
+
+if(
+!window.matchMedia(
+"(min-width: 768px)"
+).matches
+){
+return false;
+}
+
+const ua =
+navigator.userAgent ||
+"";
+
+if(
+/iPad/i.test(
+ua
+)
+){
+return true;
+}
+
+if(
+navigator.platform ===
+"MacIntel" &&
+"ontouchend" in
+document
+){
+return true;
+}
+
+return false;
 
 }
 
