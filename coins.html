@@ -12,7 +12,7 @@
 <title>Multichart</title>
 
 <link rel="stylesheet" href="css/common.css">
-<link rel="stylesheet" href="css/terminal.css?v=42">
+<link rel="stylesheet" href="css/terminal.css?v=43">
 
 </head>
 
@@ -125,7 +125,6 @@ BTCUSDT.P
 <div id="chart-wrap">
 <div id="chart"></div>
 <div id="tablet-probe-touch-layer" class="tablet-probe-touch-layer" aria-hidden="true"></div>
-<div id="tablet-probe-crosshair-h" class="tablet-probe-crosshair-h hidden" aria-hidden="true"></div>
 <div id="price-scale-touch-strip" class="price-scale-touch-strip" aria-hidden="true"></div>
 
 <div id="draw-style-bar" class="draw-style-float hidden">
@@ -212,6 +211,7 @@ BTCUSDT.P
 </div>
 
 <div id="linked-crosshair-vert" class="linked-crosshair-vert hidden" aria-hidden="true"></div>
+<div id="tablet-probe-crosshair-h" class="tablet-probe-crosshair-h hidden" aria-hidden="true"></div>
 
 </div>
 
@@ -301,7 +301,7 @@ document.body.innerHTML = `
 import("./js/charts-lib-boot.js").then(({ loadLightweightCharts })=>
 loadLightweightCharts()
 ).then(()=>
-import("./js/terminal.js?v=135")
+import("./js/terminal.js?v=136")
 ).catch(err=>{
 
 console.error(err);

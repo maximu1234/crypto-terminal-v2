@@ -407,32 +407,40 @@ linkedVertEl.classList.remove(
 }
 
 if(
-horizLineEl
+horizLineEl &&
+chartsStackEl
 ){
 
-const horizWrapEl =
-chartEl.closest?.(
-"#chart-wrap"
-) ??
-chartEl.parentElement;
+const stackR =
+chartsStackEl.getBoundingClientRect();
 
-const horizR =
-horizWrapEl?.getBoundingClientRect?.() ??
-chartR;
+const chartTopInStack =
+chartR.top - stackR.top;
 
-const horizTop =
-clientY - horizR.top;
+const chartBottomInStack =
+chartTopInStack + chartR.height;
+
+const topInStack =
+clientY - stackR.top;
+
+const clampedTop =
+Math.max(
+chartTopInStack,
+Math.min(
+chartBottomInStack,
+topInStack
+)
+);
 
 horizLineEl.style.top =
-`${Math.round(
-Math.max(
-0,
-Math.min(
-horizR.height,
-horizTop
-)
-)
-)}px`;
+`${Math.round(clampedTop)}px`;
+
+horizLineEl.style.left =
+"0";
+
+horizLineEl.style.removeProperty(
+"right"
+);
 
 horizLineEl.classList.remove(
 "hidden"

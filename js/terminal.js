@@ -54,7 +54,7 @@ mountAxisDoubleTapReset,
 TABLET_USE_CUSTOM_TOUCH_PAN,
 isTabletChartViewport,
 isUserCrosshairEvent
-} from "./chart.js?v=53";
+} from "./chart.js?v=54";
 
 import {
 connectKlineStream,
