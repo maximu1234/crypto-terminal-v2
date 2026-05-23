@@ -50,9 +50,9 @@ isTabletChartViewport,
 isUserCrosshairEvent
 } from "./chart.js?v=31";
 
-/** Временный тест iPad: true = initDrawings не вызывается на планшете */
+/** false = рисование на iPad включено */
 const DRAWINGS_DISABLED_ON_TABLET_TEST =
-true;
+false;
 
 import {
 connectKlineStream,
@@ -71,7 +71,7 @@ processAlertTick
 
 import {
 initDrawings
-} from "./drawings.js?v=92";
+} from "./drawings.js?v=93";
 
 let currentDataset = "crypto";
 let currentTF = "60";

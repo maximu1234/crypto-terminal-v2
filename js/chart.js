@@ -2032,6 +2032,19 @@ e.target?.closest?.(
 return;
 }
 
+const chartWrap =
+chartEl.closest(
+"#chart-wrap"
+);
+
+if(
+chartWrap?.classList.contains(
+"chart-touch-locked"
+)
+){
+return;
+}
+
 activePointers.add(
 e.pointerId ??
 0

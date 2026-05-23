@@ -32,8 +32,10 @@ formatPrice,
 chartScaleFont,
 CHART_SCALE_TEXT_COLOR,
 CHART_SCALE_LABEL_PAD_LEFT,
-CHART_SCALE_LABEL_LINE_HEIGHT
-} from "./chart.js?v=12";
+CHART_SCALE_LABEL_LINE_HEIGHT,
+isTabletChartViewport,
+TABLET_USE_CUSTOM_TOUCH_PAN
+} from "./chart.js?v=31";
 
 /* Сетка 2×9: чётный индекс — левый столбец, нечётный — правый */
 const DEFAULT_FIB_SPEC = Object.freeze([
@@ -2929,6 +2931,26 @@ horzTouchDrag:false,
 vertTouchDrag:false
 };
 
+const CHART_SCROLL_TABLET_CUSTOM_PAN = {
+mouseWheel:true,
+pressedMouseMove:false,
+horzTouchDrag:false,
+vertTouchDrag:false
+};
+
+function chartScrollWhenUnlocked(){
+
+if(
+isTabletChartViewport() &&
+TABLET_USE_CUSTOM_TOUCH_PAN
+){
+return CHART_SCROLL_TABLET_CUSTOM_PAN;
+}
+
+return CHART_SCROLL_DEFAULT;
+
+}
+
 function syncChartTouchPan(){
 
 const lock =
@@ -2945,7 +2967,7 @@ try{
 chart.applyOptions({
 handleScroll: lock
 ? CHART_SCROLL_LOCKED
-: CHART_SCROLL_DEFAULT
+: chartScrollWhenUnlocked()
 });
 }catch{
 /* ignore */
@@ -3137,9 +3159,7 @@ popover.style.zIndex = "10051";
 
 function isTouchDrawTablet(){
 
-return window.matchMedia(
-"(pointer: coarse) and (min-width: 768px)"
-).matches;
+return isTabletChartViewport();
 
 }
 
