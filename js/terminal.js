@@ -10,8 +10,9 @@ filterRecentListings
 
 import {
 calculateRSI,
+alignRsiWithCandleTimes,
 RSI_PERIOD
-} from "./indicators.js?v=2";
+} from "./indicators.js?v=3";
 
 import {
 loadFavoritesGroups,
@@ -36,8 +37,10 @@ createRSIChart,
 applyChartPriceFormat,
 mountChartPriceHud,
 syncLinkedChartTimescales,
-linkChartsCrosshair
-} from "./chart.js?v=18";
+linkChartsCrosshair,
+updateRsiBandLayout,
+isUserCrosshairEvent
+} from "./chart.js?v=21";
 
 import {
 connectKlineStream,
@@ -719,9 +722,15 @@ formatRsiHud(v);
 
 function rebuildRsiFromCandles(){
 
-rsiPointsCache =
+const raw =
 calculateRSI(
 candles
+);
+
+rsiPointsCache =
+alignRsiWithCandleTimes(
+candles,
+raw
 );
 
 rsiSeries.setData(
@@ -733,6 +742,8 @@ chart,
 rsiChart
 );
 
+layoutRsiBand();
+
 const last =
 rsiPointsCache[
 rsiPointsCache.length -
@@ -740,10 +751,20 @@ rsiPointsCache.length -
 ];
 
 setRsiHudValue(
-last
-? last.value
-: null
+last?.value ??
+null
 
+);
+
+}
+
+function layoutRsiBand(){
+
+updateRsiBandLayout(
+rsiSeries,
+document.getElementById(
+"rsi-band"
+)
 );
 
 }
@@ -809,15 +830,32 @@ rsiLookupAtOrBefore(ts)
 
 }
 
+const rsiWrapEl =
+document.getElementById(
+"rsi-wrap"
+);
+
 linkChartsCrosshair({
 mainChart:chart,
 linkedChart:rsiChart,
 mainSeries:candleSeries,
 linkedSeries:rsiSeries,
 linkedVertOverlayEl:document.getElementById(
-"rsi-crosshair-vert"
+"linked-crosshair-vert"
+),
+crosshairTimeLabelEl:document.getElementById(
+"crosshair-time-label"
+),
+crosshairScaleLabelEl:document.getElementById(
+"rsi-crosshair-scale-label"
 ),
 onLinkedCrosshairTime:updateRsiHudFromCrosshairTime,
+onLinkedCrosshairActive(active){
+rsiWrapEl?.classList.toggle(
+"rsi-wrap--crosshair",
+!!active
+);
+},
 getLinkedValueAtTime(time){
 const ts =
 rsiCrosshairUnix(time);
@@ -845,7 +883,15 @@ return candleCloseAtOrBefore(ts);
 });
 
 chart.subscribeCrosshairMove(param=>{
+
+if(
+isUserCrosshairEvent(param)
+){
+return;
+}
+
 updateRsiHudFromCrosshairTime(param.time);
+
 });
 
 let drawingTools = null;
@@ -1322,6 +1368,7 @@ syncLinkedChartTimescales(
 chart,
 rsiChart
 );
+layoutRsiBand();
 });
 
 }
@@ -1343,6 +1390,7 @@ syncLinkedChartTimescales(
 chart,
 rsiChart
 );
+layoutRsiBand();
 }
 
 });

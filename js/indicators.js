@@ -161,3 +161,46 @@ value:rsi
 return out;
 
 }
+
+/** Пустые бары в начале — те же time, что у свечей; logical range совпадает с графиком цены. */
+export function alignRsiWithCandleTimes(
+candles,
+rsiPoints,
+period = RSI_PERIOD
+){
+
+if(
+!candles.length ||
+!rsiPoints.length
+){
+return rsiPoints;
+}
+
+const pad =
+[];
+
+const lead =
+Math.min(
+period,
+candles.length
+);
+
+for(
+let i =
+0;
+i <
+lead;
+i++
+){
+
+pad.push({
+time:candles[i].time
+});
+
+}
+
+return pad.concat(
+rsiPoints
+);
+
+}

@@ -177,7 +177,236 @@ mode:Hidden
 
 }
 
-function isUserCrosshairEvent(
+function crosshairUnix(
+time
+){
+
+if(
+time === null ||
+time === undefined
+){
+return null;
+}
+
+if(
+typeof time === "number"
+){
+return time;
+}
+
+if(
+typeof time === "object" &&
+typeof time.timestamp === "number"
+){
+return time.timestamp;
+}
+
+return null;
+
+}
+
+export function formatCrosshairTimeLabel(
+time
+){
+
+const ts =
+crosshairUnix(time);
+
+if(
+ts === null
+){
+return "";
+}
+
+const d =
+new Date(ts * 1000);
+
+const weekdays =
+[
+"вс",
+"пн",
+"вт",
+"ср",
+"чт",
+"пт",
+"сб"
+];
+
+const months =
+[
+"янв.",
+"февр.",
+"мар.",
+"апр.",
+"май",
+"июн.",
+"июл.",
+"авг.",
+"сен.",
+"окт.",
+"нояб.",
+"дек."
+];
+
+const wd =
+weekdays[d.getDay()];
+
+const day =
+d.getDate();
+
+const mon =
+months[d.getMonth()];
+
+const yr =
+String(d.getFullYear()).slice(-2);
+
+const hh =
+String(d.getHours()).padStart(2, "0");
+
+const mm =
+String(d.getMinutes()).padStart(2, "0");
+
+return `${wd} ${day} ${mon} '${yr} ${hh}:${mm}`;
+
+}
+
+function updateCrosshairAxisLabels({
+param,
+linkedChart,
+linkedSeries,
+getLinkedValueAtTime,
+timeLabelEl,
+scaleLabelEl
+}){
+
+const x =
+param.point?.x;
+
+if(
+timeLabelEl &&
+Number.isFinite(x)
+){
+
+timeLabelEl.textContent =
+formatCrosshairTimeLabel(param.time);
+
+timeLabelEl.style.left =
+`${Math.round(x)}px`;
+
+timeLabelEl.classList.remove(
+"hidden"
+);
+
+}else if(
+timeLabelEl
+){
+
+timeLabelEl.classList.add(
+"hidden"
+);
+
+timeLabelEl.style.removeProperty(
+"left"
+);
+
+}
+
+const linkedValue =
+getLinkedValueAtTime?.(
+param.time
+);
+
+if(
+!scaleLabelEl ||
+linkedValue === null ||
+linkedValue === undefined ||
+!Number.isFinite(linkedValue) ||
+!linkedSeries
+){
+
+scaleLabelEl?.classList.add(
+"hidden"
+);
+
+scaleLabelEl?.style.removeProperty(
+"top"
+);
+
+return;
+
+}
+
+const y =
+linkedSeries.priceToCoordinate?.(
+linkedValue
+);
+
+if(
+y === null ||
+y === undefined ||
+!Number.isFinite(y)
+){
+
+scaleLabelEl.classList.add(
+"hidden"
+);
+
+scaleLabelEl.style.removeProperty(
+"top"
+);
+
+return;
+
+}
+
+scaleLabelEl.textContent =
+linkedValue.toFixed(2);
+
+scaleLabelEl.style.top =
+`${Math.round(y)}px`;
+
+scaleLabelEl.classList.remove(
+"hidden"
+);
+
+}
+
+function clearCrosshairAxisLabels(
+timeLabelEl,
+scaleLabelEl
+){
+
+if(
+timeLabelEl
+){
+
+timeLabelEl.classList.add(
+"hidden"
+);
+
+timeLabelEl.style.removeProperty(
+"left"
+);
+
+}
+
+if(
+scaleLabelEl
+){
+
+scaleLabelEl.classList.add(
+"hidden"
+);
+
+scaleLabelEl.style.removeProperty(
+"top"
+);
+
+}
+
+}
+
+export function isUserCrosshairEvent(
 param
 ){
 
@@ -226,7 +455,7 @@ bottom:0.12
 
 timeScale:{
 borderColor:"#1f2937",
-timeVisible:true,
+visible:false,
 rightOffset:12,
 fixRightEdge:false
 },
@@ -597,7 +826,10 @@ bottom:0
 },
 
 timeScale:{
-visible:false,
+visible:true,
+timeVisible:true,
+borderColor:"#1f2937",
+secondsVisible:false,
 rightOffset:12,
 fixRightEdge:false
 },
@@ -823,7 +1055,67 @@ mainChart.timeScale()
 
 linkedChart.timeScale().setVisibleLogicalRange(range);
 
+const barSpacing =
+mainChart.timeScale().options().barSpacing;
+
+if(
+barSpacing !== undefined
+){
+
+linkedChart.timeScale().applyOptions({
+barSpacing
+});
+
+}
+
 applyChartScaleWidthCss(mainChart);
+
+}
+
+export function updateRsiBandLayout(
+rsiSeries,
+bandEl
+){
+
+if(
+!rsiSeries ||
+!bandEl
+){
+return;
+}
+
+const y70 =
+rsiSeries.priceToCoordinate?.(
+70
+);
+
+const y30 =
+rsiSeries.priceToCoordinate?.(
+30
+);
+
+if(
+y70 === null ||
+y70 === undefined ||
+y30 === null ||
+y30 === undefined ||
+!Number.isFinite(y70) ||
+!Number.isFinite(y30)
+){
+return;
+}
+
+const top =
+Math.min(
+y70,
+y30
+);
+
+bandEl.style.top =
+`${Math.round(top)}px`;
+
+bandEl.style.height =
+`${Math.round(Math.abs(y30 - y70))}px`;
 
 }
 
@@ -833,7 +1125,10 @@ linkedChart,
 mainSeries,
 linkedSeries,
 linkedVertOverlayEl,
+crosshairTimeLabelEl,
+crosshairScaleLabelEl,
 onLinkedCrosshairTime,
+onLinkedCrosshairActive,
 getLinkedValueAtTime,
 getMainValueAtTime
 }){
@@ -862,6 +1157,15 @@ linkedVertOverlayEl.style.removeProperty(
 function clearLinked(){
 
 clearLinkedVert();
+
+clearCrosshairAxisLabels(
+crosshairTimeLabelEl,
+crosshairScaleLabelEl
+);
+
+onLinkedCrosshairActive?.(
+false
+);
 
 try{
 linkedChart.clearCrosshairPosition();
@@ -909,6 +1213,19 @@ linkedChart.clearCrosshairPosition();
 /* ignore */
 }
 
+updateCrosshairAxisLabels({
+param,
+linkedChart,
+linkedSeries,
+getLinkedValueAtTime,
+timeLabelEl:crosshairTimeLabelEl,
+scaleLabelEl:crosshairScaleLabelEl
+});
+
+onLinkedCrosshairActive?.(
+true
+);
+
 if(
 onLinkedCrosshairTime
 ){
@@ -930,14 +1247,6 @@ return;
 }
 
 if(
-!isUserCrosshairEvent(param)
-){
-
-clearLinked();
-return;
-}
-
-if(
 !param?.time ||
 param.point === undefined
 ){
@@ -945,96 +1254,15 @@ param.point === undefined
 clearLinked();
 return;
 }
-
-if(
-showLinkedVert(param)
-){
-return;
-}
-
-const value =
-getLinkedValueAtTime?.(
-param.time
-);
-
-if(
-value === null ||
-value === undefined ||
-!Number.isFinite(value)
-){
-
-clearLinked();
-return;
-}
-
-lock = true;
-
-try{
-linkedChart.setCrosshairPosition(
-value,
-param.time,
-linkedSeries
-);
-}catch{
-/* ignore */
-}finally{
-lock = false;
-}
-
-});
-
-linkedChart.subscribeCrosshairMove(param=>{
 
 if(
 linkedVertOverlayEl
 ){
-return;
-}
 
-if(lock){
-return;
-}
-
-if(
-!isUserCrosshairEvent(param) ||
-!getMainValueAtTime
-){
-return;
-}
-
-if(
-!param?.time ||
-param.point === undefined
-){
-return;
-}
-
-const value =
-getMainValueAtTime(
-param.time
+showLinkedVert(
+param
 );
 
-if(
-value === null ||
-value === undefined ||
-!Number.isFinite(value)
-){
-
-return;
-}
-
-lock = true;
-
-try{
-mainChart.setCrosshairPosition(
-value,
-param.time,
-mainSeries
-);
-}catch{
-/* ignore */
-}finally{
-lock = false;
 }
 
 });
