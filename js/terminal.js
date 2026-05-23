@@ -44,9 +44,11 @@ applyTabletRsiChartOptions,
 applyTabletMainChartScroll,
 markTabletChartBody,
 mountTabletPriceScaleTouch,
+mountTabletCustomTouchPan,
+TABLET_USE_CUSTOM_TOUCH_PAN,
 isTabletChartViewport,
 isUserCrosshairEvent
-} from "./chart.js?v=29";
+} from "./chart.js?v=30";
 
 /** Временный тест iPad: true = initDrawings не вызывается на планшете */
 const DRAWINGS_DISABLED_ON_TABLET_TEST =
@@ -620,6 +622,25 @@ stop(){},
 refresh(){}
 };
 
+let unmountTabletPan =
+()=>{};
+
+if(
+TABLET_USE_CUSTOM_TOUCH_PAN
+){
+
+unmountTabletPan =
+mountTabletCustomTouchPan(
+chart,
+chartEl
+);
+
+console.info(
+"[tablet] Custom touch pan (LW horzTouchDrag off)"
+);
+
+}else{
+
 mountTabletPriceScaleTouch(
 chart,
 document.getElementById(
@@ -630,6 +651,8 @@ chartEl,
 priceHudCtrl.refresh?.();
 }
 );
+
+}
 
 applyTabletMainChartScroll(
 chart

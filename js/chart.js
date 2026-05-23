@@ -1085,6 +1085,10 @@ return ()=>{};
 
 }
 
+/** iPad: свой pan по pointer (document), без horzTouchDrag LW — обход залипания Safari */
+export const TABLET_USE_CUSTOM_TOUCH_PAN =
+true;
+
 export function applyTabletRsiChartOptions(
 rsiChart
 ){
@@ -1096,11 +1100,14 @@ if(
 return;
 }
 
+const lwTouchScroll =
+!TABLET_USE_CUSTOM_TOUCH_PAN;
+
 rsiChart.applyOptions({
 handleScroll:{
 mouseWheel:false,
-pressedMouseMove:true,
-horzTouchDrag:true,
+pressedMouseMove:lwTouchScroll,
+horzTouchDrag:lwTouchScroll,
 vertTouchDrag:false
 },
 handleScale:{
@@ -1126,11 +1133,14 @@ if(
 return;
 }
 
+const lwTouchScroll =
+!TABLET_USE_CUSTOM_TOUCH_PAN;
+
 mainChart.applyOptions({
 handleScroll:{
 mouseWheel:true,
 pressedMouseMove:false,
-horzTouchDrag:true,
+horzTouchDrag:lwTouchScroll,
 vertTouchDrag:false
 },
 handleScale:{
@@ -1147,9 +1157,18 @@ pinch:true
 
 export function markTabletChartBody(){
 
+const tablet =
+isTabletChartViewport();
+
 document.body.classList.toggle(
 "tablet-chart",
-isTabletChartViewport()
+tablet
+);
+
+document.body.classList.toggle(
+"tablet-custom-pan",
+tablet &&
+TABLET_USE_CUSTOM_TOUCH_PAN
 );
 
 }
@@ -1680,6 +1699,239 @@ return true;
 }
 
 return false;
+
+}
+
+/**
+ * iPad: горизонтальный pan вне LW — pointer на document, как у полосы цены.
+ * LW horzTouchDrag на Safari часто «залипает» в одной зоне экрана.
+ */
+export function mountTabletCustomTouchPan(
+chart,
+chartEl
+){
+
+if(
+!TABLET_USE_CUSTOM_TOUCH_PAN ||
+!chart ||
+!chartEl ||
+!isTabletChartViewport()
+){
+return ()=>{};
+}
+
+let pan =
+null;
+
+let onDocMove =
+null;
+
+let onDocEnd =
+null;
+
+function detachDocListeners(){
+
+if(
+onDocMove
+){
+
+document.removeEventListener(
+"pointermove",
+onDocMove
+);
+
+onDocMove = null;
+
+}
+
+if(
+onDocEnd
+){
+
+document.removeEventListener(
+"pointerup",
+onDocEnd
+);
+
+document.removeEventListener(
+"pointercancel",
+onDocEnd
+);
+
+onDocEnd = null;
+
+}
+
+}
+
+function endPan(
+e
+){
+
+if(
+!pan
+){
+return;
+}
+
+if(
+e?.pointerId !==
+undefined &&
+e.pointerId !==
+pan.id
+){
+return;
+}
+
+pan = null;
+detachDocListeners();
+
+}
+
+function scrollByDx(
+dx
+){
+
+const ts =
+chart.timeScale();
+
+const range =
+ts.getVisibleLogicalRange();
+
+if(
+!range
+){
+return;
+}
+
+const spacing =
+ts.options().barSpacing ??
+6;
+
+const shift =
+dx / spacing;
+
+ts.setVisibleLogicalRange({
+from:range.from - shift,
+to:range.to - shift
+});
+
+}
+
+function onPointerDown(
+e
+){
+
+if(
+e.pointerType ===
+"mouse"
+){
+return;
+}
+
+if(
+e.button !==
+undefined &&
+e.button !==
+0
+){
+return;
+}
+
+if(
+e.target?.closest?.(
+".price-scale-touch-strip"
+)
+){
+return;
+}
+
+detachDocListeners();
+
+pan = {
+id:
+e.pointerId ??
+0,
+x:e.clientX
+};
+
+onDocMove =(
+moveEvent
+)=>{
+
+if(
+!pan
+){
+return;
+}
+
+if(
+moveEvent.pointerId !==
+undefined &&
+moveEvent.pointerId !==
+pan.id
+){
+return;
+}
+
+const dx =
+moveEvent.clientX - pan.x;
+
+pan.x =
+moveEvent.clientX;
+
+if(
+Math.abs(dx) <
+1
+){
+return;
+}
+
+moveEvent.preventDefault();
+scrollByDx(
+dx
+);
+
+};
+
+onDocEnd = endPan;
+
+document.addEventListener(
+"pointermove",
+onDocMove,
+{ passive:false }
+);
+
+document.addEventListener(
+"pointerup",
+onDocEnd
+);
+
+document.addEventListener(
+"pointercancel",
+onDocEnd
+);
+
+}
+
+chartEl.addEventListener(
+"pointerdown",
+onPointerDown,
+{ capture:true, passive:true }
+);
+
+return ()=>{
+
+chartEl.removeEventListener(
+"pointerdown",
+onPointerDown,
+{ capture:true, passive:true }
+);
+
+pan = null;
+detachDocListeners();
+
+};
 
 }
 
