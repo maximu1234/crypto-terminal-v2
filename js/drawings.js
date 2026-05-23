@@ -5656,7 +5656,7 @@ wrapEl.setPointerCapture(e.pointerId);
 wrapEl.addEventListener(
 "pointerdown",
 onEditDown,
-!isTouchDrawTablet()
+true
 );
 
 const onEditMove = e=>{
@@ -7708,20 +7708,25 @@ if(
 return false;
 }
 
-if(
-dragState
+return !!dragState;
+
+},
+
+isOverDrawingAt(
+x,
+y
 ){
-return true;
-}
 
 if(
-tool ===
-"cursor"
+!alive
 ){
-return true;
-}
-
 return false;
+}
+
+return !!hitTest(
+x,
+y
+);
 
 },
 

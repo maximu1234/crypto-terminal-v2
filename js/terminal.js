@@ -49,7 +49,7 @@ mountTabletCrosshairTouch,
 TABLET_USE_CUSTOM_TOUCH_PAN,
 isTabletChartViewport,
 isUserCrosshairEvent
-} from "./chart.js?v=32";
+} from "./chart.js?v=33";
 
 import {
 connectKlineStream,
@@ -68,7 +68,7 @@ processAlertTick
 
 import {
 initDrawings
-} from "./drawings.js?v=94";
+} from "./drawings.js?v=95";
 
 let currentDataset = "crypto";
 let currentTF = "60";
@@ -625,6 +625,10 @@ let unmountTabletPan =
 let unmountTabletCrosshair =
 ()=>{};
 
+/** iPad: после тапа по графику — водим перекрестие; горизонтальный свайп снова включает pan */
+let tabletCrosshairProbe =
+false;
+
 function tabletPanAllowed(){
 
 const wrap =
@@ -636,6 +640,12 @@ if(
 wrap?.classList.contains(
 "chart-touch-locked"
 )
+){
+return false;
+}
+
+if(
+tabletCrosshairProbe
 ){
 return false;
 }
@@ -659,7 +669,10 @@ mountTabletCustomTouchPan(
 chart,
 chartEl,
 {
-shouldAllowPan:tabletPanAllowed
+shouldAllowPan:tabletPanAllowed,
+onPanStart:()=>{
+tabletCrosshairProbe = false;
+}
 }
 );
 
@@ -1022,8 +1035,19 @@ console.error("Drawings init failed:", err);
 }
 
 if(
-TABLET_USE_CUSTOM_TOUCH_PAN &&
-drawingTools
+isTabletChartViewport()
+){
+
+try{
+chart.clearCrosshairPosition();
+}catch{
+/* ignore */
+}
+
+}
+
+if(
+TABLET_USE_CUSTOM_TOUCH_PAN
 ){
 
 unmountTabletCrosshair =
@@ -1031,10 +1055,38 @@ mountTabletCrosshairTouch(
 chart,
 candleSeries,
 chartEl,
-()=>
-drawingTools?.blocksTabletChartPan?.() ??
-false
+()=>tabletCrosshairProbe
 );
+
+if(
+drawingTools
+){
+
+chart.subscribeClick(
+param=>{
+
+if(
+!isTabletChartViewport() ||
+!param?.point
+){
+return;
+}
+
+if(
+drawingTools.isOverDrawingAt?.(
+param.point.x,
+param.point.y
+)
+){
+return;
+}
+
+tabletCrosshairProbe = true;
+
+}
+);
+
+}
 
 }
 

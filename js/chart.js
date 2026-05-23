@@ -1896,6 +1896,10 @@ const shouldAllowPan =
 options.shouldAllowPan ??
 (()=>true);
 
+const onPanStart =
+options.onPanStart ??
+(()=>{});
+
 if(
 !TABLET_USE_CUSTOM_TOUCH_PAN ||
 !chart ||
@@ -2121,6 +2125,7 @@ x:moveEvent.clientX
 };
 
 pendingPan = null;
+onPanStart();
 
 }
 
