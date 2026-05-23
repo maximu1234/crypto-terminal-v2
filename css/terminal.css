@@ -1001,8 +1001,7 @@ body{
 .coin-flag-menu{
   position:absolute;
   top:calc(100% + 4px);
-  left:50%;
-  transform:translateX(-50%);
+  left:0;
   z-index:30;
   display:flex;
   align-items:center;
