@@ -54,7 +54,7 @@ mountAxisDoubleTapReset,
 TABLET_USE_CUSTOM_TOUCH_PAN,
 isTabletChartViewport,
 isUserCrosshairEvent
-} from "./chart.js?v=52";
+} from "./chart.js?v=53";
 
 import {
 connectKlineStream,
@@ -1144,7 +1144,6 @@ onHoldStart:()=>{
 setTabletPanSuspended?.(
 true
 );
-cancelTabletPanGesture?.();
 tabletCrosshairProbe = true;
 document.getElementById(
 "chart-wrap"

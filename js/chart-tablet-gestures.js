@@ -58,6 +58,11 @@ setPanSuspended:noop
 };
 }
 
+const moveCap = {
+capture:true,
+passive:false
+};
+
 /** @type {"idle"|"pending"|"pan"|"crosshair"} */
 let mode =
 "idle";
@@ -90,6 +95,12 @@ let onDocUp =
 null;
 
 let onDocTouchEnd =
+null;
+
+let onWrapPointerMove =
+null;
+
+let onWrapTouchMove =
 null;
 
 function scrollByDx(
@@ -193,6 +204,34 @@ onDocTouchEnd,
 );
 
 onDocTouchEnd = null;
+
+}
+
+if(
+onWrapPointerMove
+){
+
+chartWrapEl.removeEventListener(
+"pointermove",
+onWrapPointerMove,
+moveCap
+);
+
+onWrapPointerMove = null;
+
+}
+
+if(
+onWrapTouchMove
+){
+
+chartWrapEl.removeEventListener(
+"touchmove",
+onWrapTouchMove,
+moveCap
+);
+
+onWrapTouchMove = null;
 
 }
 
@@ -387,6 +426,7 @@ mode ===
 ){
 
 e.preventDefault();
+e.stopImmediatePropagation?.();
 onProbeAt(
 e.clientX,
 e.clientY
@@ -396,9 +436,9 @@ e.clientY
 
 };
 
-onDocTouchMove =(
+function handleCrosshairTouchMove(
 e
-)=>{
+){
 
 if(
 mode !==
@@ -427,12 +467,36 @@ return;
 }
 
 e.preventDefault();
+e.stopImmediatePropagation?.();
 onProbeAt(
 t.clientX,
 t.clientY
 );
 
+}
+
+onDocTouchMove =(
+e
+)=>{
+
+handleCrosshairTouchMove(
+e
+);
+
 };
+
+onWrapTouchMove =(
+e
+)=>{
+
+handleCrosshairTouchMove(
+e
+);
+
+};
+
+onWrapPointerMove =
+onDocMove;
 
 onDocUp =(
 e
@@ -470,11 +534,6 @@ resetGesture();
 
 };
 
-const moveCap = {
-capture:true,
-passive:false
-};
-
 document.addEventListener(
 "pointermove",
 onDocMove,
@@ -507,6 +566,18 @@ document.addEventListener(
 "touchcancel",
 onDocTouchEnd,
 { capture:true }
+);
+
+chartWrapEl.addEventListener(
+"pointermove",
+onWrapPointerMove,
+moveCap
+);
+
+chartWrapEl.addEventListener(
+"touchmove",
+onWrapTouchMove,
+moveCap
 );
 
 }
@@ -671,7 +742,15 @@ resetGesture();
 
 function cancelCurrentGesture(){
 
+if(
+mode ===
+"pan" ||
+mode ===
+"pending"
+){
 resetGesture();
+}
+
 }
 
 function setPanSuspended(

@@ -410,8 +410,29 @@ if(
 horizLineEl
 ){
 
+const horizWrapEl =
+chartEl.closest?.(
+"#chart-wrap"
+) ??
+chartEl.parentElement;
+
+const horizR =
+horizWrapEl?.getBoundingClientRect?.() ??
+chartR;
+
+const horizTop =
+clientY - horizR.top;
+
 horizLineEl.style.top =
-`${Math.round(y)}px`;
+`${Math.round(
+Math.max(
+0,
+Math.min(
+horizR.height,
+horizTop
+)
+)
+)}px`;
 
 horizLineEl.classList.remove(
 "hidden"
@@ -2092,7 +2113,7 @@ hud?.remove();
 
 export {
 mountTabletChartGestures
-} from "./chart-tablet-gestures.js?v=3";
+} from "./chart-tablet-gestures.js?v=4";
 
 export function isTabletChartViewport(){
 
