@@ -6,7 +6,7 @@ getCloudUserEmail,
 onCloudSyncChange,
 signInWithEmailOtp,
 signOutCloud
-} from "./cloud-sync.js?v=6";
+} from "./cloud-sync.js?v=7";
 
 function mountAuthUi(){
 

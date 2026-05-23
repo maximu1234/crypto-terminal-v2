@@ -19,6 +19,12 @@ const FAVORITES_LOCAL_TS_KEY =
 const DRAWINGS_LOCAL_TS_KEY =
 "drawings_local_updated_at";
 
+const FAVORITES_SYNCED_SIG_KEY =
+"favorites_synced_signature";
+
+const DRAWINGS_SYNCED_SIG_KEY =
+"drawings_synced_signature";
+
 let configured = false;
 let loggedIn = false;
 let userEmail = "";
@@ -213,6 +219,48 @@ favoritesSignature(b);
 
 }
 
+function saveFavoritesSyncedSignature(list){
+
+localStorage.setItem(
+FAVORITES_SYNCED_SIG_KEY,
+favoritesSignature(list)
+);
+
+}
+
+function hasUnsyncedFavorites(){
+
+return favoritesSignature(
+loadFavorites()
+) !== (
+localStorage.getItem(
+FAVORITES_SYNCED_SIG_KEY
+) || ""
+);
+
+}
+
+function saveDrawingsSyncedSignature(map){
+
+localStorage.setItem(
+DRAWINGS_SYNCED_SIG_KEY,
+drawingsSignature(map)
+);
+
+}
+
+function hasUnsyncedDrawings(){
+
+return drawingsSignature(
+collectAllLocalDrawings()
+) !== (
+localStorage.getItem(
+DRAWINGS_SYNCED_SIG_KEY
+) || ""
+);
+
+}
+
 function normalizeDrawingsMap(raw){
 
 if(
@@ -366,14 +414,14 @@ if(
 return null;
 }
 
-const { data: { user } } =
-await sb.auth.getUser();
+const { data: { session } } =
+await sb.auth.getSession();
 
-if(!user){
+if(!session?.user){
 return null;
 }
 
-return { sb, user };
+return { sb, user: session.user };
 
 }
 
@@ -387,6 +435,10 @@ saveFavorites(favorites);
 if(updatedAt){
 saveLocalFavoritesUpdatedAt(updatedAt);
 }
+
+saveFavoritesSyncedSignature(
+loadFavorites()
+);
 
 notifyFavorites();
 
@@ -411,6 +463,10 @@ new Set([
 if(updatedAt){
 saveLocalDrawingsUpdatedAt(updatedAt);
 }
+
+saveDrawingsSyncedSignature(
+collectAllLocalDrawings()
+);
 
 notifyDrawings(
 Array.from(changed)
@@ -547,6 +603,10 @@ if(cloudTs){
 saveLocalFavoritesUpdatedAt(cloudTs);
 }
 
+saveFavoritesSyncedSignature(
+localFavorites
+);
+
 return;
 }
 
@@ -580,6 +640,10 @@ localDrawings
 if(cloudTs){
 saveLocalDrawingsUpdatedAt(cloudTs);
 }
+
+saveDrawingsSyncedSignature(
+localDrawings
+);
 
 return;
 }
@@ -705,6 +769,7 @@ local
 
 if(ts){
 saveLocalFavoritesUpdatedAt(ts);
+saveFavoritesSyncedSignature(local);
 }
 
 }
@@ -714,29 +779,29 @@ return local;
 }
 
 if(
-!localTs ||
-isTsNewer(
-cloud.updatedAt,
-localTs
+favoritesListsEqual(
+local,
+cloud.favorites
 )
 ){
 
-applyFavoritesLocally(
-cloud.favorites,
+if(cloud.updatedAt){
+saveLocalFavoritesUpdatedAt(
 cloud.updatedAt
 );
-return cloud.favorites;
+}
+
+saveFavoritesSyncedSignature(local);
+return local;
 
 }
 
 if(
-localTs &&
-(
-!cloud.updatedAt ||
-isTsNewer(
-localTs,
-cloud.updatedAt
-)
+hasUnsyncedFavorites() ||
+!localTs ||
+!isTsNewer(
+cloud.updatedAt,
+localTs
 )
 ){
 
@@ -749,13 +814,19 @@ local
 
 if(ts){
 saveLocalFavoritesUpdatedAt(ts);
+saveFavoritesSyncedSignature(local);
 }
 
 return local;
 
 }
 
-return local;
+applyFavoritesLocally(
+cloud.favorites,
+cloud.updatedAt
+);
+
+return cloud.favorites;
 
 }
 
@@ -772,6 +843,8 @@ return loadFavorites();
 const { sb, user } =
 authed;
 
+const local =
+loadFavorites();
 const localTs =
 loadLocalFavoritesUpdatedAt();
 const cloud =
@@ -781,7 +854,35 @@ user.id
 );
 
 if(
-!cloud?.updatedAt ||
+!cloud
+){
+return local;
+}
+
+if(
+favoritesListsEqual(
+local,
+cloud.favorites
+)
+){
+
+if(cloud.updatedAt){
+saveLocalFavoritesUpdatedAt(
+cloud.updatedAt
+);
+}
+
+saveFavoritesSyncedSignature(local);
+return local;
+
+}
+
+if(hasUnsyncedFavorites()){
+return local;
+}
+
+if(
+!cloud.updatedAt ||
 (
 localTs &&
 !isTsNewer(
@@ -790,7 +891,7 @@ localTs
 )
 )
 ){
-return loadFavorites();
+return local;
 }
 
 applyFavoritesLocally(
@@ -837,6 +938,7 @@ local
 
 if(ts){
 saveLocalDrawingsUpdatedAt(ts);
+saveDrawingsSyncedSignature(local);
 }
 
 }
@@ -846,29 +948,29 @@ return local;
 }
 
 if(
-!localTs ||
-isTsNewer(
-cloud.drawingsUpdatedAt,
-localTs
+drawingsMapsEqual(
+local,
+cloud.drawings
 )
 ){
 
-applyDrawingsLocally(
-cloud.drawings,
+if(cloud.drawingsUpdatedAt){
+saveLocalDrawingsUpdatedAt(
 cloud.drawingsUpdatedAt
 );
-return cloud.drawings;
+}
+
+saveDrawingsSyncedSignature(local);
+return local;
 
 }
 
 if(
-localTs &&
-(
-!cloud.drawingsUpdatedAt ||
-isTsNewer(
-localTs,
-cloud.drawingsUpdatedAt
-)
+hasUnsyncedDrawings() ||
+!localTs ||
+!isTsNewer(
+cloud.drawingsUpdatedAt,
+localTs
 )
 ){
 
@@ -881,13 +983,19 @@ local
 
 if(ts){
 saveLocalDrawingsUpdatedAt(ts);
+saveDrawingsSyncedSignature(local);
 }
 
 return local;
 
 }
 
-return local;
+applyDrawingsLocally(
+cloud.drawings,
+cloud.drawingsUpdatedAt
+);
+
+return cloud.drawings;
 
 }
 
@@ -903,6 +1011,8 @@ return collectAllLocalDrawings();
 const { sb, user } =
 authed;
 
+const local =
+collectAllLocalDrawings();
 const localTs =
 loadLocalDrawingsUpdatedAt();
 const cloud =
@@ -911,8 +1021,34 @@ sb,
 user.id
 );
 
+if(!cloud){
+return local;
+}
+
 if(
-!cloud?.drawingsUpdatedAt ||
+drawingsMapsEqual(
+local,
+cloud.drawings
+)
+){
+
+if(cloud.drawingsUpdatedAt){
+saveLocalDrawingsUpdatedAt(
+cloud.drawingsUpdatedAt
+);
+}
+
+saveDrawingsSyncedSignature(local);
+return local;
+
+}
+
+if(hasUnsyncedDrawings()){
+return local;
+}
+
+if(
+!cloud.drawingsUpdatedAt ||
 (
 localTs &&
 !isTsNewer(
@@ -921,7 +1057,7 @@ localTs
 )
 )
 ){
-return collectAllLocalDrawings();
+return local;
 }
 
 applyDrawingsLocally(
@@ -933,10 +1069,36 @@ return cloud.drawings;
 
 }
 
-export async function pullRemoteSettingsIfNewer(){
+async function syncFavoritesWithCloud(){
+
+if(hasUnsyncedFavorites()){
+
+await persistFavoritesToCloud(
+loadFavorites()
+);
+return;
+}
 
 await pullFavoritesIfCloudNewer();
+
+}
+
+async function syncDrawingsWithCloud(){
+
+if(hasUnsyncedDrawings()){
+
+await persistAllDrawingsToCloud();
+return;
+}
+
 await pullDrawingsIfCloudNewer();
+
+}
+
+export async function pullRemoteSettingsIfNewer(){
+
+await syncFavoritesWithCloud();
+await syncDrawingsWithCloud();
 
 }
 
@@ -964,6 +1126,7 @@ drawings
 
 if(ts){
 saveLocalDrawingsUpdatedAt(ts);
+saveDrawingsSyncedSignature(drawings);
 }
 
 }
@@ -991,6 +1154,7 @@ favorites
 
 if(ts){
 saveLocalFavoritesUpdatedAt(ts);
+saveFavoritesSyncedSignature(favorites);
 }
 
 }

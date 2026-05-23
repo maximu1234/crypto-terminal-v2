@@ -25,7 +25,7 @@ parseMoneyInput
 import {
 persistAllDrawingsToCloud,
 onDrawingsRemoteUpdate
-} from "./cloud-sync.js?v=6";
+} from "./cloud-sync.js?v=7";
 
 /* Сетка 2×9: чётный индекс — левый столбец, нечётный — правый */
 const DEFAULT_FIB_SPEC = Object.freeze([
