@@ -20,7 +20,7 @@ loadFavorites
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=2";
+} from "./auth-ui.js?v=3";
 
 import {
 persistFavoritesToCloud,

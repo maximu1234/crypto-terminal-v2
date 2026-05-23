@@ -65,6 +65,33 @@ gap:8px;
 max-width:320px;
 }
 
+.cloud-auth-wrap--panel{
+flex-direction:column;
+align-items:stretch;
+max-width:none;
+gap:10px;
+}
+
+.cloud-auth-wrap--panel .cloud-auth-logged-out,
+.cloud-auth-wrap--panel .cloud-auth-logged-in{
+flex-direction:column;
+align-items:stretch;
+gap:8px;
+}
+
+.cloud-auth-wrap--panel .cloud-auth-email{
+width:100%;
+}
+
+.cloud-auth-wrap--panel .cloud-auth-send,
+.cloud-auth-wrap--panel .cloud-auth-out{
+width:100%;
+}
+
+.cloud-auth-wrap--panel .cloud-auth-email-label{
+max-width:none;
+}
+
 .cloud-auth-wrap.hidden{
 display:none;
 }

@@ -11,7 +11,7 @@
 <title>Главная — Multichart</title>
 
 <link rel="stylesheet" href="css/common.css">
-<link rel="stylesheet" href="css/screener.css?v=3">
+<link rel="stylesheet" href="css/screener.css?v=4">
 
 </head>
 
@@ -28,6 +28,15 @@
 <a href="/alerts/">Алерты</a>
 <a href="/listings.html">Листинги</a>
 <a href="/trade-calculator.html">Калькулятор</a>
+<div class="header-settings-wrap hidden" id="header-settings-wrap">
+<button type="button" class="header-settings-btn" id="header-settings-btn" title="Настройки" aria-label="Настройки" aria-expanded="false" aria-haspopup="true">
+<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M11.078 2.25c-.917 0-1.699.663-1.85 1.567L9.05 4.889c-.878.178-1.719.436-2.515.771L4.162 4.57a1.875 1.875 0 0 0-2.615 2.615l1.09 1.374c-.335.796-.593 1.637-.771 2.515l-1.072 1.178c-.178.917.663 1.699 1.567 1.85l1.178 1.072c.178.878.436 1.719.771 2.515l-1.09 1.374a1.875 1.875 0 0 0 2.615 2.615l1.374-1.09c.796.335 1.637.593 2.515.771l1.178 1.072c.917.178 1.699-.663 1.85-1.567l1.072-1.178c.878-.178 1.719-.436 2.515-.771l1.374 1.09a1.875 1.875 0 0 0 2.615-2.615l-1.09-1.374c.335-.796.593-1.637.771-2.515l1.072-1.178c.178-.917-.663-1.699-1.567-1.85l-1.178-1.072a13.803 13.803 0 0 0-.771-2.515l1.09-1.374a1.875 1.875 0 0 0-2.615-2.615l-1.374 1.09a13.803 13.803 0 0 0-2.515-.771L11.078 2.25ZM12 15.75a3.75 3.75 0 1 0 0-7.5 3.75 3.75 0 0 0 0 7.5Z" clip-rule="evenodd"/></svg>
+</button>
+<div class="header-settings-dropdown hidden" id="header-settings-dropdown" role="menu">
+<p class="header-settings-section-title">Синхронизация</p>
+<div id="cloud-settings-mount"></div>
+</div>
+</div>
 </nav>
 
 <div id="header-controls">
