@@ -83,7 +83,13 @@ false;
 let onDocMove =
 null;
 
+let onDocTouchMove =
+null;
+
 let onDocUp =
+null;
+
+let onDocTouchEnd =
 null;
 
 function scrollByDx(
@@ -139,6 +145,20 @@ onDocMove = null;
 }
 
 if(
+onDocTouchMove
+){
+
+document.removeEventListener(
+"touchmove",
+onDocTouchMove,
+{ capture:true }
+);
+
+onDocTouchMove = null;
+
+}
+
+if(
 onDocUp
 ){
 
@@ -153,6 +173,26 @@ onDocUp
 );
 
 onDocUp = null;
+
+}
+
+if(
+onDocTouchEnd
+){
+
+document.removeEventListener(
+"touchend",
+onDocTouchEnd,
+{ capture:true }
+);
+
+document.removeEventListener(
+"touchcancel",
+onDocTouchEnd,
+{ capture:true }
+);
+
+onDocTouchEnd = null;
 
 }
 
@@ -356,6 +396,44 @@ e.clientY
 
 };
 
+onDocTouchMove =(
+e
+)=>{
+
+if(
+mode !==
+"crosshair"
+){
+return;
+}
+
+if(
+e.touches.length >
+1
+){
+resetGesture();
+return;
+}
+
+const t =
+e.touches[
+0
+];
+
+if(
+!t
+){
+return;
+}
+
+e.preventDefault();
+onProbeAt(
+t.clientX,
+t.clientY
+);
+
+};
+
 onDocUp =(
 e
 )=>{
@@ -377,10 +455,36 @@ resetGesture();
 
 };
 
+onDocTouchEnd =(
+e
+)=>{
+
+if(
+e.touches.length >
+0
+){
+return;
+}
+
+resetGesture();
+
+};
+
+const moveCap = {
+capture:true,
+passive:false
+};
+
 document.addEventListener(
 "pointermove",
 onDocMove,
-{ passive:false }
+moveCap
+);
+
+document.addEventListener(
+"touchmove",
+onDocTouchMove,
+moveCap
 );
 
 document.addEventListener(
@@ -391,6 +495,18 @@ onDocUp
 document.addEventListener(
 "pointercancel",
 onDocUp
+);
+
+document.addEventListener(
+"touchend",
+onDocTouchEnd,
+{ capture:true }
+);
+
+document.addEventListener(
+"touchcancel",
+onDocTouchEnd,
+{ capture:true }
 );
 
 }

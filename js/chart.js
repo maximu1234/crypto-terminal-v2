@@ -386,17 +386,6 @@ y
 )
 );
 
-const time =
-chart.timeScale().coordinateToTime?.(
-x
-);
-
-if(
-time == null
-){
-return null;
-}
-
 if(
 chartsStackEl &&
 linkedVertEl
@@ -427,6 +416,27 @@ horizLineEl.style.top =
 horizLineEl.classList.remove(
 "hidden"
 );
+
+}
+
+const time =
+chart.timeScale().coordinateToTime?.(
+x
+);
+
+if(
+time == null
+){
+
+if(
+timeLabelEl
+){
+timeLabelEl.classList.add(
+"hidden"
+);
+}
+
+return null;
 
 }
 
@@ -2082,7 +2092,7 @@ hud?.remove();
 
 export {
 mountTabletChartGestures
-} from "./chart-tablet-gestures.js?v=2";
+} from "./chart-tablet-gestures.js?v=3";
 
 export function isTabletChartViewport(){
 
