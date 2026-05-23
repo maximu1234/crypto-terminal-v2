@@ -37,7 +37,7 @@ applyChartPriceFormat,
 mountChartPriceHud,
 syncLinkedChartTimescales,
 linkChartsCrosshair
-} from "./chart.js?v=16";
+} from "./chart.js?v=17";
 
 import {
 connectKlineStream,

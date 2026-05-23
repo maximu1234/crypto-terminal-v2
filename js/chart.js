@@ -130,31 +130,48 @@ return CHART_SCALE_LABEL_PAD_LEFT;
 
 }
 
+const TV_CROSSHAIR_COLOR =
+"#758696";
+
+const TV_CROSSHAIR_LABEL_BG =
+"#363A45";
+
+function crosshairLineOptions(
+labelVisible = true
+){
+
+const Dashed =
+LightweightCharts.LineStyle?.Dashed ?? 2;
+
+return {
+color:TV_CROSSHAIR_COLOR,
+width:1,
+style:Dashed,
+labelVisible,
+labelBackgroundColor:TV_CROSSHAIR_LABEL_BG
+};
+
+}
+
 function normalCrosshairOptions(){
 
 const Normal =
 LightweightCharts.CrosshairMode?.Normal ?? 0;
 
-const Dashed =
-LightweightCharts.LineStyle?.Dashed ?? 2;
-
-const Dotted =
-LightweightCharts.LineStyle?.Dotted ?? 1;
-
 return {
 mode:Normal,
-vertLine:{
-color:"rgba(120,126,146,0.45)",
-width:1,
-style:Dashed,
-labelVisible:true
-},
-horzLine:{
-color:"rgba(120,126,146,0.35)",
-width:1,
-style:Dotted,
-labelVisible:true
+vertLine:crosshairLineOptions(true),
+horzLine:crosshairLineOptions(true)
+};
+
 }
+
+function rsiCrosshairOptions(){
+
+return {
+...normalCrosshairOptions(),
+vertLine:crosshairLineOptions(false),
+horzLine:crosshairLineOptions(false)
 };
 
 }
@@ -584,17 +601,7 @@ rightOffset:12,
 fixRightEdge:false
 },
 
-crosshair:{
-...normalCrosshairOptions(),
-vertLine:{
-...normalCrosshairOptions().vertLine,
-labelVisible:false
-},
-horzLine:{
-...normalCrosshairOptions().horzLine,
-labelVisible:false
-}
-},
+crosshair:rsiCrosshairOptions(),
 
 handleScroll:{
 mouseWheel:false,
@@ -616,17 +623,7 @@ axisDoubleClickReset:false
 });
 
 chart.applyOptions({
-crosshair:{
-...normalCrosshairOptions(),
-vertLine:{
-...normalCrosshairOptions().vertLine,
-labelVisible:false
-},
-horzLine:{
-...normalCrosshairOptions().horzLine,
-labelVisible:false
-}
-}
+crosshair:rsiCrosshairOptions()
 });
 
 const series =
