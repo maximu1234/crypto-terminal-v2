@@ -758,16 +758,6 @@ body{
   overflow:hidden;
 }
 
-.chart-price-gutter{
-  position:absolute;
-  top:0;
-  right:0;
-  bottom:0;
-  z-index:3;
-  background:#0b1220;
-  pointer-events:none;
-}
-
 .chart-price-hud{
   position:absolute;
   z-index:4;

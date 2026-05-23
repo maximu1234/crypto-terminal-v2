@@ -689,16 +689,57 @@ return map[tf] || 900;
 
 }
 
+function candleCloseCountdownSec(
+candleOpenSec,
+periodSec
+){
+
+const period =
+Math.max(1, periodSec);
+const now =
+Math.floor(Date.now() / 1000);
+
+if(
+candleOpenSec != null &&
+Number.isFinite(candleOpenSec)
+){
+return Math.max(
+0,
+candleOpenSec + period - now
+);
+}
+
+return Math.max(
+0,
+period - (now % period)
+);
+
+}
+
 function formatCandleCountdown(sec){
 
 const s =
 Math.max(0, Math.floor(sec));
+
+if(s >= 3600){
+
+const h =
+Math.floor(s / 3600);
+const m =
+Math.floor((s % 3600) / 60);
+const r =
+s % 60;
+
+return `${h}:${String(m).padStart(2, "0")}:${String(r).padStart(2, "0")}`;
+
+}
+
 const m =
 Math.floor(s / 60);
 const r =
 s % 60;
 
-return `${m}:${String(r).padStart(2, "0")}`;
+return `${String(m).padStart(2, "0")}:${String(r).padStart(2, "0")}`;
 
 }
 
@@ -790,9 +831,9 @@ formatPrice(last.close);
 const period =
 tfPeriodSec(getTf?.() || "60");
 const left =
-period -
-(
-Math.floor(Date.now() / 1000) % period
+candleCloseCountdownSec(
+last.time,
+period
 );
 
 cdEl.textContent =

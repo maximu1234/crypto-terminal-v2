@@ -4208,21 +4208,12 @@ chartSize().w - getPriceGutterWidth()
 
 }
 
-function ensurePriceGutter(){
+function removePriceGutterOverlay(){
 
-const gw =
-getPriceGutterWidth();
-
-if(!priceGutterEl){
-priceGutterEl =
-document.createElement("div");
-priceGutterEl.className =
-"chart-price-gutter";
-wrapEl.appendChild(priceGutterEl);
+if(priceGutterEl){
+priceGutterEl.remove();
+priceGutterEl = null;
 }
-
-priceGutterEl.style.width =
-`${gw}px`;
 
 }
 
@@ -4346,7 +4337,7 @@ canvas.height = Math.max(1, Math.floor(h * dpr));
 canvas.style.width = `${w}px`;
 canvas.style.height = `${h}px`;
 
-ensurePriceGutter();
+removePriceGutterOverlay();
 scheduleRedraw();
 
 }
@@ -6206,7 +6197,7 @@ ctx.setTransform(1, 0, 0, 1, 0, 0);
 ctx.clearRect(0, 0, canvas.width, canvas.height);
 ctx.scale(dpr, dpr);
 
-ensurePriceGutter();
+removePriceGutterOverlay();
 
 ctx.save();
 ctx.beginPath();

@@ -37,7 +37,7 @@ createRSIChart,
 applyChartPriceFormat,
 mountChartPriceHud,
 syncLinkedChartTimescales
-} from "./chart.js?v=8";
+} from "./chart.js?v=9";
 
 import {
 connectKlineStream,
@@ -56,7 +56,7 @@ processAlertTick
 
 import {
 initDrawings
-} from "./drawings.js?v=87";
+} from "./drawings.js?v=88";
 
 let currentDataset = "crypto";
 let currentTF = "60";
