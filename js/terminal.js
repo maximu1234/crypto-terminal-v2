@@ -43,8 +43,13 @@ updateRsiBandLayout,
 applyTabletRsiChartOptions,
 applyTabletMainChartScroll,
 mountTabletPriceScaleTouch,
+isTabletChartViewport,
 isUserCrosshairEvent
 } from "./chart.js?v=27";
+
+/** Временный тест iPad: true = initDrawings не вызывается на планшете */
+const DRAWINGS_DISABLED_ON_TABLET_TEST =
+true;
 
 import {
 connectKlineStream,
@@ -936,6 +941,29 @@ updateRsiHudFromCrosshairTime(param.time);
 
 let drawingTools = null;
 
+const skipDrawingsOnTablet =
+DRAWINGS_DISABLED_ON_TABLET_TEST &&
+isTabletChartViewport();
+
+if(
+skipDrawingsOnTablet
+){
+
+console.info(
+"[test] Drawings handler off on tablet (DRAWINGS_DISABLED_ON_TABLET_TEST)"
+);
+
+document
+.getElementById(
+"draw-toolbar"
+)
+?.setAttribute(
+"hidden",
+""
+);
+
+}else{
+
 try{
 
 drawingTools = initDrawings({
@@ -955,6 +983,8 @@ isActive: ()=>true
 }catch(err){
 
 console.error("Drawings init failed:", err);
+
+}
 
 }
 
