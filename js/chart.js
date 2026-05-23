@@ -1974,7 +1974,8 @@ chartEl,
 {
 shouldBeginHold = ()=>true,
 onHoldStart = ()=>{},
-onHoldEnd = ()=>{}
+onHoldEnd = ()=>{},
+onProbeAt = ()=>{}
 } = {}
 ){
 
@@ -2001,10 +2002,6 @@ let holdStartY =
 
 let crosshairTrack =
 null;
-
-const onProbeAt =
-options.onProbeAt ??
-(()=>{});
 
 function clearHoldTimer(){
 
