@@ -2064,19 +2064,66 @@ null
 return;
 }
 
+beginCrosshairTrack();
+
+},
+TABLET_CROSSHAIR_HOLD_MS
+);
+
+}
+
+function beginCrosshairTrack(){
+
 onHoldStart();
+
 crosshairTrack = {
 id:holdPointer
 };
+
+try{
+chartEl.setPointerCapture(
+holdPointer
+);
+}catch{
+/* ignore */
+}
 
 onProbeAt(
 holdStartX,
 holdStartY
 );
 
-},
-TABLET_CROSSHAIR_HOLD_MS
+}
+
+function releaseCrosshairCapture(
+pointerId
+){
+
+if(
+pointerId ===
+undefined ||
+pointerId ===
+null
+){
+return;
+}
+
+try{
+
+if(
+chartEl.hasPointerCapture?.(
+pointerId
+)
+){
+chartEl.releasePointerCapture(
+pointerId
 );
+
+}
+
+}catch{
+/* ignore */
+}
 
 }
 
@@ -2091,7 +2138,7 @@ crosshairTrack.id
 ){
 
 e.preventDefault();
-e.stopPropagation();
+e.stopImmediatePropagation();
 onProbeAt(
 e.clientX,
 e.clientY
@@ -2119,7 +2166,21 @@ dx * dx + dy * dy >
 TABLET_CROSSHAIR_HOLD_MOVE_CANCEL_PX *
 TABLET_CROSSHAIR_HOLD_MOVE_CANCEL_PX
 ){
+
+const movedHoriz =
+Math.abs(dx) >
+Math.abs(dy);
+
 clearHoldTimer();
+
+if(
+movedHoriz
+){
+releaseCrosshairCapture(
+holdPointer
+);
+}
+
 }
 
 }
@@ -2145,6 +2206,10 @@ e.pointerId ===
 crosshairTrack.id
 ){
 
+releaseCrosshairCapture(
+e.pointerId
+);
+
 crosshairTrack = null;
 onHoldEnd();
 
@@ -2165,6 +2230,10 @@ clearHoldTimer();
 if(
 crosshairTrack
 ){
+releaseCrosshairCapture(
+crosshairTrack.id
+);
+
 crosshairTrack = null;
 onHoldEnd();
 }
@@ -2284,7 +2353,8 @@ const noop =
 return {
 dispose:noop,
 abortPan:noop,
-cancelCurrentGesture:noop
+cancelCurrentGesture:noop,
+setPanSuspended:noop
 };
 
 }
@@ -2309,6 +2379,9 @@ null;
 
 let onDocEnd =
 null;
+
+let panSuspended =
+false;
 
 function abortPan(){
 
@@ -2459,6 +2532,12 @@ return;
 onDocMove =(
 moveEvent
 )=>{
+
+if(
+panSuspended
+){
+return;
+}
 
 if(
 activePointers.size >
@@ -2704,6 +2783,7 @@ return;
 }
 
 if(
+panSuspended ||
 !shouldAllowPan()
 ){
 return;
@@ -2832,10 +2912,26 @@ abortPan();
 
 };
 
+function setPanSuspended(
+value
+){
+
+panSuspended =
+!!value;
+
+if(
+panSuspended
+){
+cancelCurrentGesture();
+}
+
+}
+
 return {
 dispose,
 abortPan,
-cancelCurrentGesture
+cancelCurrentGesture,
+setPanSuspended
 };
 
 }

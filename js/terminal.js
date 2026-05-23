@@ -55,7 +55,7 @@ mountAxisDoubleTapReset,
 TABLET_USE_CUSTOM_TOUCH_PAN,
 isTabletChartViewport,
 isUserCrosshairEvent
-} from "./chart.js?v=39";
+} from "./chart.js?v=40";
 
 import {
 connectKlineStream,
@@ -688,6 +688,9 @@ tabletPanCtrl.abortPan;
 const cancelTabletPanGesture =
 tabletPanCtrl.cancelCurrentGesture;
 
+const setTabletPanSuspended =
+tabletPanCtrl.setPanSuspended;
+
 unmountTabletPan =
 tabletPanCtrl.dispose;
 
@@ -1150,6 +1153,9 @@ chartEl,
 {
 shouldBeginHold:tabletHoldShouldBegin,
 onHoldStart:()=>{
+setTabletPanSuspended?.(
+true
+);
 cancelTabletPanGesture?.();
 tabletCrosshairProbe = true;
 document.getElementById(
@@ -1182,8 +1188,27 @@ price:false
 }
 }
 });
+rsiChart.applyOptions({
+handleScroll:{
+mouseWheel:false,
+pressedMouseMove:false,
+horzTouchDrag:false,
+vertTouchDrag:false
+},
+handleScale:{
+mouseWheel:false,
+pinch:false,
+axisPressedMouseMove:{
+time:false,
+price:false
+}
+}
+});
 },
 onHoldEnd:()=>{
+setTabletPanSuspended?.(
+false
+);
 tabletCrosshairProbe = false;
 document.getElementById(
 "chart-wrap"
@@ -1218,6 +1243,9 @@ crosshair:normalCrosshairOptions()
 }
 applyTabletMainChartScroll(
 chart
+);
+applyTabletRsiChartOptions(
+rsiChart
 );
 },
 onProbeAt(
