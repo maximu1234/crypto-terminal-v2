@@ -977,13 +977,8 @@ body{
   justify-content:center;
 }
 
-.coin-flags{
-  display:flex;
-  align-items:center;
-  gap:4px;
-}
-
-.col-flag .flag{
+.col-flag .flag,
+.col-flag .coin-flag{
   width:10px;
   height:10px;
   padding:0;

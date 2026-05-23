@@ -69,31 +69,82 @@ symbol
 const group =
 getFavoriteGroup(symbol, favorites);
 
-root?.querySelectorAll(".screener-flag").forEach(btn=>{
-
-const g =
-btn.dataset.flagGroup;
-const on =
-group === g;
-
-btn.classList.toggle("favorite", on);
-btn.setAttribute(
-"aria-pressed",
-on ? "true" : "false"
+const btn =
+root?.querySelector(
+"[data-screener-flag-trigger]"
 );
 
+if(!btn){
+return;
+}
+
+btn.className = "flag screener-flag-btn";
+
+if(group){
+btn.classList.add(
+"favorite",
+`flag--${group}`,
+`screener-flag--${group}`
+);
+}
+
 const titles = {
-red: "Красная группа",
-green: "Зелёная группа",
-gray: "Серая группа"
+red:"Красный флаг",
+green:"Зелёный флаг",
+gray:"Серый флаг"
 };
 
 btn.title =
-on
-? `Убрать из группы (${titles[g]})`
-: titles[g] || "Группа";
+group
+? titles[group]
+: "Выбрать флаг";
+
+btn.setAttribute(
+"aria-pressed",
+group ? "true" : "false"
+);
+
+}
+
+function closeAllScreenerFlagMenus(
+exceptWrap = null
+){
+
+document.querySelectorAll(".screener-flag-wrap").forEach(wrap=>{
+
+if(wrap === exceptWrap){
+return;
+}
+
+wrap.querySelector(".screener-flag-menu")?.classList.add("hidden");
 
 });
+
+}
+
+function applyFavoriteGroup(
+symbol,
+group
+){
+
+if(!symbol){
+return;
+}
+
+if(
+group === "clear" ||
+group === null
+){
+favorites =
+setFavoriteGroup(symbol, null, favorites);
+}else{
+favorites =
+setFavoriteGroup(symbol, group, favorites);
+}
+
+saveFavoritesGroups(favorites);
+persistFavoritesToCloud(favorites);
+syncFavoriteFlagsForSymbol(symbol);
 
 }
 
@@ -112,40 +163,6 @@ symbol
 
 }
 
-function toggleFavoriteGroup(
-symbol,
-group,
-e
-){
-
-if(e){
-e.stopPropagation();
-e.preventDefault();
-}
-
-if(
-!symbol ||
-!group
-){
-return;
-}
-
-const current =
-getFavoriteGroup(symbol, favorites);
-
-if(current === group){
-favorites =
-setFavoriteGroup(symbol, null, favorites);
-}else{
-favorites =
-setFavoriteGroup(symbol, group, favorites);
-}
-
-saveFavoritesGroups(favorites);
-persistFavoritesToCloud(favorites);
-syncFavoriteFlagsForSymbol(symbol);
-
-}
 
 const saved =
 loadScreenerState();
@@ -589,10 +606,14 @@ root.innerHTML = `
 
 <div class="screener-header-left">
 
-<div class="screener-flags">
-<button type="button" class="flag screener-flag screener-flag--red" data-flag-group="red" title="Красная группа" aria-pressed="false"></button>
-<button type="button" class="flag screener-flag screener-flag--green" data-flag-group="green" title="Зелёная группа" aria-pressed="false"></button>
-<button type="button" class="flag screener-flag screener-flag--gray" data-flag-group="gray" title="Серая группа" aria-pressed="false"></button>
+<div class="screener-flag-wrap">
+<button type="button" class="flag screener-flag-btn" data-screener-flag-trigger title="Выбрать флаг" aria-haspopup="true" aria-expanded="false" aria-pressed="false"></button>
+<div class="screener-flag-menu hidden" role="menu">
+<button type="button" class="flag screener-flag-pick flag--red" data-flag-group="red" title="Красный" role="menuitem"></button>
+<button type="button" class="flag screener-flag-pick flag--green" data-flag-group="green" title="Зелёный" role="menuitem"></button>
+<button type="button" class="flag screener-flag-pick flag--gray" data-flag-group="gray" title="Серый" role="menuitem"></button>
+<button type="button" class="flag screener-flag-pick screener-flag-clear" data-flag-group="clear" title="Снять флаг" role="menuitem"></button>
+</div>
 </div>
 
 <div class="screener-symbol">${symbol}</div>
@@ -617,14 +638,52 @@ root.innerHTML = `
 
 `;
 
-root.querySelectorAll(".screener-flag").forEach(btn=>{
-btn.onclick = e=>{
-toggleFavoriteGroup(
-symbol,
-btn.dataset.flagGroup,
-e
+const flagWrap =
+root.querySelector(".screener-flag-wrap");
+
+const flagTrigger =
+flagWrap?.querySelector(
+"[data-screener-flag-trigger]"
 );
-};
+
+const flagMenu =
+flagWrap?.querySelector(".screener-flag-menu");
+
+flagTrigger?.addEventListener("click", e=>{
+
+e.stopPropagation();
+
+const open =
+!flagMenu?.classList.contains("hidden");
+
+closeAllScreenerFlagMenus(flagWrap);
+
+if(open){
+flagMenu?.classList.add("hidden");
+flagTrigger.setAttribute("aria-expanded", "false");
+}else{
+flagMenu?.classList.remove("hidden");
+flagTrigger.setAttribute("aria-expanded", "true");
+}
+
+});
+
+flagMenu?.querySelectorAll("[data-flag-group]").forEach(btn=>{
+
+btn.addEventListener("click", e=>{
+
+e.stopPropagation();
+
+applyFavoriteGroup(
+symbol,
+btn.dataset.flagGroup
+);
+
+flagMenu?.classList.add("hidden");
+flagTrigger?.setAttribute("aria-expanded", "false");
+
+});
+
 });
 
 root.querySelector(".screener-open").onclick = e=>{
@@ -1110,6 +1169,19 @@ async function init(){
 await ensureCloudReady();
 
 bindControls();
+
+document.addEventListener("click", e=>{
+
+if(
+e.target.closest(".screener-flag-wrap")
+){
+return;
+}
+
+closeAllScreenerFlagMenus();
+
+});
+
 applySavedUi();
 
 favorites =

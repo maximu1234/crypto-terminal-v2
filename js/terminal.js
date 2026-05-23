@@ -17,7 +17,9 @@ import {
 loadFavoritesGroups,
 saveFavoritesGroups,
 getFavoriteGroup,
-setFavoriteGroup
+setFavoriteGroup,
+cycleFavoriteGroup,
+flagSortRank
 } from "./favorites.js?v=1";
 
 import {
@@ -67,8 +69,10 @@ let marketData = [];
 const marketMap =
 new Map();
 
-let sortMode = "symbol";
+let innerSortMode = "symbol";
 let sortAsc = true;
+let flagSortActive = false;
+let flagSortAsc = true;
 
 let searchQuery = "";
 let hasUrlSymbol = false;
@@ -104,7 +108,12 @@ new Set([
 
 function defaultSortEntry(){
 
-return { mode:"symbol", asc:true };
+return {
+mode:"symbol",
+asc:true,
+byFlag:false,
+flagAsc:true
+};
 
 }
 
@@ -165,7 +174,7 @@ if(!entry || typeof entry !== "object"){
 return defaultSortEntry();
 }
 
-const mode =
+let mode =
 typeof entry.mode === "string" &&
 COINS_SORT_MODES.has(entry.mode)
 ? entry.mode
@@ -176,7 +185,28 @@ typeof entry.asc === "boolean"
 ? entry.asc
 : true;
 
-return { mode, asc };
+let byFlag =
+typeof entry.byFlag === "boolean"
+? entry.byFlag
+: false;
+
+let flagAsc =
+typeof entry.flagAsc === "boolean"
+? entry.flagAsc
+: true;
+
+if(mode === "favorites"){
+byFlag = true;
+flagAsc = asc;
+mode = "symbol";
+}
+
+return {
+mode,
+asc,
+byFlag,
+flagAsc
+};
 
 }
 
@@ -429,8 +459,10 @@ readCoinsPrefs();
 
 prefs.market = currentDataset;
 prefs.sortByMarket[currentDataset] = {
-mode:sortMode,
-asc:sortAsc
+mode:innerSortMode,
+asc:sortAsc,
+byFlag:flagSortActive,
+flagAsc:flagSortAsc
 };
 
 if(!prefs.lastViewByMarket){
@@ -490,8 +522,10 @@ const sort =
 prefs.sortByMarket[currentDataset] ||
 defaultSortEntry();
 
-sortMode = sort.mode;
+innerSortMode = sort.mode;
 sortAsc = sort.asc;
+flagSortActive = sort.byFlag;
+flagSortAsc = sort.flagAsc;
 
 }
 
@@ -882,8 +916,8 @@ null;
 function scheduleResortPriceColumns(){
 
 if(
-sortMode !== "24h" &&
-sortMode !== "1h"
+innerSortMode !== "24h" &&
+innerSortMode !== "1h"
 ){
 return;
 }
@@ -1450,6 +1484,34 @@ behavior:"smooth"
 
 }
 
+function updateCoinFlagButton(btn, symbol){
+
+const group =
+getFavoriteGroup(symbol, favorites);
+
+const titles = {
+red:"Красный флаг",
+green:"Зелёный флаг",
+gray:"Серый флаг"
+};
+
+btn.className =
+group
+? `flag coin-flag flag--${group} favorite`
+: "flag coin-flag";
+
+btn.title =
+group
+? titles[group]
+: "Установить флаг";
+
+btn.setAttribute(
+"aria-pressed",
+group ? "true" : "false"
+);
+
+}
+
 function createCoinRow(item){
 
 const div =
@@ -1460,13 +1522,22 @@ div.className = "coin";
 const favGroup =
 getFavoriteGroup(item.symbol, favorites);
 
+const flagBtnClass =
+favGroup
+? `flag coin-flag flag--${favGroup} favorite`
+: "flag coin-flag";
+
+const flagTitles = {
+red:"Красный флаг",
+green:"Зелёный флаг",
+gray:"Серый флаг"
+};
+
 div.innerHTML = `
 
-<div class="col-flag coin-flags">
+<div class="col-flag">
 
-<button type="button" class="flag flag--red ${favGroup === 'red' ? 'favorite' : ''}" data-fav-group="red" data-symbol="${item.symbol}" title="Красная группа" aria-pressed="${favGroup === 'red'}"></button>
-<button type="button" class="flag flag--green ${favGroup === 'green' ? 'favorite' : ''}" data-fav-group="green" data-symbol="${item.symbol}" title="Зелёная группа" aria-pressed="${favGroup === 'green'}"></button>
-<button type="button" class="flag flag--gray ${favGroup === 'gray' ? 'favorite' : ''}" data-fav-group="gray" data-symbol="${item.symbol}" title="Серая группа" aria-pressed="${favGroup === 'gray'}"></button>
+<button type="button" class="${flagBtnClass}" data-coin-flag data-symbol="${item.symbol}" title="${favGroup ? flagTitles[favGroup] : 'Установить флаг'}" aria-pressed="${favGroup ? 'true' : 'false'}"></button>
 
 </div>
 
@@ -1487,7 +1558,7 @@ ${item.symbol}
 div.onclick = async e=>{
 
 if(
-e.target.closest("[data-fav-group]")
+e.target.closest("[data-coin-flag]")
 ){
 return;
 }
@@ -1496,45 +1567,33 @@ await loadSymbol(item.symbol);
 
 };
 
-div.querySelectorAll("[data-fav-group]").forEach(btn=>{
+const flagBtn =
+div.querySelector("[data-coin-flag]");
 
-btn.onclick = e=>{
+flagBtn.onclick = e=>{
 
 e.stopPropagation();
 
-const group =
-btn.dataset.favGroup;
 const sym =
-btn.dataset.symbol;
+flagBtn.dataset.symbol;
 const current =
 getFavoriteGroup(sym, favorites);
+const next =
+cycleFavoriteGroup(current);
 
-if(current === group){
 favorites =
-setFavoriteGroup(sym, null, favorites);
-}else{
-favorites =
-setFavoriteGroup(sym, group, favorites);
-}
+setFavoriteGroup(sym, next, favorites);
 
 saveFavoritesGroups(favorites);
 persistFavoritesToCloud(favorites);
 
-div.querySelectorAll("[data-fav-group]").forEach(b=>{
-const g =
-b.dataset.favGroup;
-const on =
-getFavoriteGroup(sym, favorites) === g;
-b.classList.toggle("favorite", on);
-b.setAttribute(
-"aria-pressed",
-on ? "true" : "false"
-);
-});
+updateCoinFlagButton(flagBtn, sym);
+
+if(flagSortActive){
+renderList();
+}
 
 };
-
-});
 
 updateCoinRow(item, div);
 
@@ -1604,20 +1663,12 @@ coinElements.forEach((el, symbol)=>{
 const group =
 getFavoriteGroup(symbol, favorites);
 
-el.querySelectorAll("[data-fav-group]").forEach(btn=>{
+const btn =
+el.querySelector("[data-coin-flag]");
 
-const g =
-btn.dataset.favGroup;
-const on =
-group === g;
-
-btn.classList.toggle("favorite", on);
-btn.setAttribute(
-"aria-pressed",
-on ? "true" : "false"
-);
-
-});
+if(btn){
+updateCoinFlagButton(btn, symbol);
+}
 
 });
 
@@ -1627,7 +1678,7 @@ onFavoritesRemoteUpdate(()=>{
 
 syncFavoriteButtonsFromStorage();
 
-if(sortMode === "favorites"){
+if(flagSortActive){
 renderList();
 }
 
@@ -1651,41 +1702,23 @@ el.classList.remove("active");
 
 }
 
-function sortData(a,b){
+function compareInnerSort(a, b){
 
 let result = 0;
 
-if(sortMode === "favorites"){
-
-const af =
-getFavoriteGroup(a.symbol, favorites)
-? 1 : 0;
-
-const bf =
-getFavoriteGroup(b.symbol, favorites)
-? 1 : 0;
-
-result = af - bf;
-
-}
-
-else if(sortMode === "symbol"){
+if(innerSortMode === "symbol"){
 
 result =
 a.symbol.localeCompare(
 b.symbol
 );
 
-}
-
-else if(sortMode === "24h"){
+}else if(innerSortMode === "24h"){
 
 result =
 a.change24 - b.change24;
 
-}
-
-else if(sortMode === "1h"){
+}else if(innerSortMode === "1h"){
 
 result =
 a.change1h - b.change1h;
@@ -1695,6 +1728,32 @@ a.change1h - b.change1h;
 return sortAsc
 ? result
 : -result;
+
+}
+
+function sortData(a,b){
+
+if(flagSortActive){
+
+const ar =
+flagSortRank(
+getFavoriteGroup(a.symbol, favorites),
+flagSortAsc
+);
+
+const br =
+flagSortRank(
+getFavoriteGroup(b.symbol, favorites),
+flagSortAsc
+);
+
+if(ar !== br){
+return ar - br;
+}
+
+}
+
+return compareInnerSort(a, b);
 
 }
 
@@ -1720,14 +1779,28 @@ if(!mode){
 return;
 }
 
-if(sortMode === mode){
+if(mode === "favorites"){
+
+if(!flagSortActive){
+
+flagSortActive = true;
+flagSortAsc = true;
+
+}else{
+
+flagSortAsc = !flagSortAsc;
+
+}
+
+}else if(innerSortMode === mode){
 
 sortAsc = !sortAsc;
 
 }else{
 
-sortMode = mode;
+innerSortMode = mode;
 sortAsc = false;
+
 }
 
 persistCoinsPrefs();
