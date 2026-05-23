@@ -56,7 +56,7 @@ mountAxisDoubleTapReset,
 TABLET_USE_CUSTOM_TOUCH_PAN,
 isTabletChartViewport,
 isUserCrosshairEvent
-} from "./chart.js?v=55";
+} from "./chart.js?v=56";
 
 import {
 connectKlineStream,
@@ -75,7 +75,7 @@ processAlertTick
 
 import {
 initDrawings
-} from "./drawings.js?v=97";
+} from "./drawings.js?v=98";
 
 let currentDataset = "crypto";
 let currentTF = "60";
@@ -644,6 +644,9 @@ false;
 let abortTabletPan =
 ()=>{};
 
+let cancelTabletPanGesture =
+()=>{};
+
 function tabletPanAllowed(){
 
 const wrap =
@@ -1021,7 +1024,10 @@ toolsRoot: document.getElementById("draw-toolbar"),
 getSymbol: ()=> currentSymbol,
 getTf: ()=> currentTF,
 getCandles: ()=> candles,
-isActive: ()=>true
+isActive: ()=>true,
+abortTabletChartGesture:()=>{
+cancelTabletPanGesture?.();
+}
 
 });
 
@@ -1096,8 +1102,14 @@ undefined
 return false;
 }
 
-const x =
-clientX - rect.left;
+if(
+drawingTools?.blocksTabletChartGestures?.(
+clientX,
+clientY
+)
+){
+return false;
+}
 
 return true;
 
@@ -1141,6 +1153,35 @@ chartTouchLayerEl,
 {
 shouldBeginGesture:tabletHoldShouldBegin,
 shouldAllowPan:tabletPanAllowed,
+shouldAllowPinch:()=>{
+if(
+tabletCrosshairProbe
+){
+return false;
+}
+if(
+drawingTools?.blocksTabletChartPan?.()
+){
+return false;
+}
+if(
+drawingTools?.isPlacementActive?.()
+){
+return false;
+}
+const wrap =
+document.getElementById(
+"chart-wrap"
+);
+if(
+wrap?.classList.contains(
+"chart-touch-locked"
+)
+){
+return false;
+}
+return true;
+},
 blockChartScroll:()=>tabletCrosshairProbe,
 onHoldStart:()=>{
 setTabletPanSuspended?.(
@@ -1267,7 +1308,7 @@ onTime:updateRsiHudFromCrosshairTime
 abortTabletPan =
 tabletGestureCtrl.abortPan;
 
-const cancelTabletPanGesture =
+cancelTabletPanGesture =
 tabletGestureCtrl.cancelCurrentGesture;
 
 const setTabletPanSuspended =

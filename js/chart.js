@@ -2260,7 +2260,7 @@ hud?.remove();
 
 export {
 mountTabletChartGestures
-} from "./chart-tablet-gestures.js?v=4";
+} from "./chart-tablet-gestures.js?v=5";
 
 export function isTabletChartViewport(){
 

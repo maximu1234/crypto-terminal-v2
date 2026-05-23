@@ -17,6 +17,7 @@ touchLayerEl,
 {
 shouldBeginGesture = ()=>true,
 shouldAllowPan = ()=>true,
+shouldAllowPinch = ()=>true,
 blockChartScroll = ()=>false,
 onHoldStart = ()=>{},
 onHoldEnd = ()=>{},
@@ -63,9 +64,12 @@ capture:true,
 passive:false
 };
 
-/** @type {"idle"|"pending"|"pan"|"crosshair"} */
+/** @type {"idle"|"pending"|"pan"|"crosshair"|"pinch"} */
 let mode =
 "idle";
+
+let pinchState =
+null;
 
 let pointerId =
 null;
@@ -257,6 +261,128 @@ onHoldEnd();
 
 }
 
+function touchSpan(
+touches
+){
+
+const a =
+touches[
+0
+];
+
+const b =
+touches[
+1
+];
+
+if(
+!a ||
+!b
+){
+return 0;
+}
+
+return Math.hypot(
+b.clientX - a.clientX,
+b.clientY - a.clientY
+);
+
+}
+
+function beginPinch(
+e
+){
+
+const ts =
+chart.timeScale();
+
+const range =
+ts.getVisibleLogicalRange();
+
+if(
+!range
+){
+return;
+}
+
+pinchState = {
+startDist:touchSpan(
+e.touches
+),
+range:{
+from:range.from,
+to:range.to
+}
+};
+
+mode =
+"pinch";
+
+pointerId = null;
+
+clearTimeout(
+holdTimer
+);
+
+holdTimer = null;
+
+detachDocListeners();
+
+}
+
+function applyPinch(
+touches
+){
+
+if(
+!pinchState ||
+touches.length <
+2
+){
+return;
+}
+
+const dist =
+touchSpan(
+touches
+);
+
+if(
+dist <
+1 ||
+pinchState.startDist <
+1
+){
+return;
+}
+
+const ratio =
+dist / pinchState.startDist;
+
+const center =
+(
+pinchState.range.from +
+pinchState.range.to
+) /
+2;
+
+const half =
+(
+pinchState.range.to -
+pinchState.range.from
+) /
+2;
+
+const newHalf =
+half / ratio;
+
+chart.timeScale().setVisibleLogicalRange({
+from:center - newHalf,
+to:center + newHalf
+});
+
+}
+
 function resetGesture(){
 
 clearTimeout(
@@ -264,6 +390,8 @@ holdTimer
 );
 
 holdTimer = null;
+
+pinchState = null;
 
 if(
 mode ===
@@ -595,7 +723,9 @@ return;
 
 if(
 mode ===
-"crosshair"
+"crosshair" ||
+mode ===
+"pinch"
 ){
 return;
 }
@@ -649,16 +779,87 @@ attachDocListeners();
 
 }
 
-function onTouchStart(
+function onWrapTouchStart(
 e
 ){
 
 if(
-e.touches.length >
-1
+e.touches.length <
+2
+){
+return;
+}
+
+if(
+mode ===
+"crosshair"
 ){
 resetGesture();
 }
+
+if(
+!shouldAllowPinch()
+){
+resetGesture();
+return;
+}
+
+beginPinch(
+e
+);
+
+e.preventDefault();
+
+}
+
+function onWrapPinchMove(
+e
+){
+
+if(
+mode !==
+"pinch" ||
+e.touches.length <
+2
+){
+return;
+}
+
+if(
+!shouldAllowPinch()
+){
+resetGesture();
+return;
+}
+
+e.preventDefault();
+applyPinch(
+e.touches
+);
+
+}
+
+function onWrapPinchEnd(
+e
+){
+
+if(
+mode !==
+"pinch"
+){
+return;
+}
+
+if(
+e.touches.length >=
+2
+){
+return;
+}
+
+pinchState = null;
+mode =
+"idle";
 
 }
 
@@ -690,7 +891,25 @@ capDown
 
 chartWrapEl.addEventListener(
 "touchstart",
-onTouchStart,
+onWrapTouchStart,
+{ capture:true, passive:false }
+);
+
+chartWrapEl.addEventListener(
+"touchmove",
+onWrapPinchMove,
+{ capture:true, passive:false }
+);
+
+chartWrapEl.addEventListener(
+"touchend",
+onWrapPinchEnd,
+{ capture:true, passive:true }
+);
+
+chartWrapEl.addEventListener(
+"touchcancel",
+onWrapPinchEnd,
 { capture:true, passive:true }
 );
 
@@ -715,7 +934,25 @@ capDown
 
 chartWrapEl.removeEventListener(
 "touchstart",
-onTouchStart,
+onWrapTouchStart,
+{ capture:true, passive:false }
+);
+
+chartWrapEl.removeEventListener(
+"touchmove",
+onWrapPinchMove,
+{ capture:true, passive:false }
+);
+
+chartWrapEl.removeEventListener(
+"touchend",
+onWrapPinchEnd,
+{ capture:true, passive:true }
+);
+
+chartWrapEl.removeEventListener(
+"touchcancel",
+onWrapPinchEnd,
 { capture:true, passive:true }
 );
 
@@ -733,7 +970,9 @@ if(
 mode ===
 "pan" ||
 mode ===
-"pending"
+"pending" ||
+mode ===
+"pinch"
 ){
 resetGesture();
 }

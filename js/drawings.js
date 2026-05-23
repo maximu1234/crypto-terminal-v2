@@ -992,12 +992,23 @@ getCandles,
 uiRoot = null,
 toolsRoot = null,
 isActive = ()=>true,
-barPosKey = "draw_bar_pos"
+barPosKey = "draw_bar_pos",
+abortTabletChartGesture = null
 
 }){
 
 const tools =
 toolsRoot || document;
+
+function notifyTabletChartGestureAbort(){
+
+try{
+abortTabletChartGesture?.();
+}catch{
+/* ignore */
+}
+
+}
 
 let alive = true;
 
@@ -5572,6 +5583,8 @@ pointOffsets: offsets
 return;
 }
 
+notifyTabletChartGestureAbort();
+
 blockChartClick = true;
 e.preventDefault();
 e.stopPropagation();
@@ -5683,6 +5696,8 @@ pointOffsets: offsets
 };
 
 }
+
+notifyTabletChartGestureAbort();
 
 }else{
 return;
@@ -7772,6 +7787,70 @@ return false;
 }
 
 return !!dragState;
+
+},
+
+blocksTabletChartGestures(
+clientX,
+clientY
+){
+
+if(
+!alive ||
+!isActive() ||
+!isTouchDrawTablet()
+){
+return false;
+}
+
+if(
+dragState ||
+touchPlaceTrack
+){
+return true;
+}
+
+if(
+placement
+){
+return true;
+}
+
+if(
+tool !==
+"cursor"
+){
+return true;
+}
+
+if(
+clientX ===
+undefined ||
+clientY ===
+undefined
+){
+return false;
+}
+
+const rect =
+wrapEl.getBoundingClientRect();
+
+const x =
+clientX - rect.left;
+
+const y =
+clientY - rect.top;
+
+return !!hitTest(
+x,
+y
+);
+
+},
+
+isPlacementActive(){
+
+return !!placement;
 
 },
 
