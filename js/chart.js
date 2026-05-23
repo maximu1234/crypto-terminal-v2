@@ -107,7 +107,13 @@ export const CHART_SCALE_FONT_SIZE = 12;
 export const CHART_SCALE_FONT_FAMILY =
 "-apple-system, BlinkMacSystemFont, 'Trebuchet MS', Roboto, Ubuntu, sans-serif";
 
-export const CHART_SCALE_LABEL_PAD_LEFT = 4;
+const CHART_SCALE_TICK_LENGTH = 5;
+
+const CHART_SCALE_PADDING_INNER =
+CHART_SCALE_FONT_SIZE / 12 * CHART_SCALE_TICK_LENGTH;
+
+export const CHART_SCALE_LABEL_PAD_LEFT =
+CHART_SCALE_TICK_LENGTH + CHART_SCALE_PADDING_INNER;
 
 export const CHART_SCALE_LABEL_LINE_HEIGHT =
 CHART_SCALE_FONT_SIZE + 4;
@@ -115,6 +121,12 @@ CHART_SCALE_FONT_SIZE + 4;
 export function chartScaleFont(){
 
 return `${CHART_SCALE_FONT_SIZE}px ${CHART_SCALE_FONT_FAMILY}`;
+
+}
+
+export function chartScaleTextLeftPx(){
+
+return CHART_SCALE_LABEL_PAD_LEFT;
 
 }
 

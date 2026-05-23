@@ -764,7 +764,7 @@ body{
   z-index:4;
   transform:translateY(-50%);
   box-sizing:border-box;
-  padding:0 4px 0 4px;
+  padding:0 4px 0 10px;
   border-radius:0;
   font-family:-apple-system, BlinkMacSystemFont, "Trebuchet MS", Roboto, Ubuntu, sans-serif;
   font-size:12px;

@@ -33,7 +33,7 @@ chartScaleFont,
 CHART_SCALE_TEXT_COLOR,
 CHART_SCALE_LABEL_PAD_LEFT,
 CHART_SCALE_LABEL_LINE_HEIGHT
-} from "./chart.js?v=11";
+} from "./chart.js?v=12";
 
 /* Сетка 2×9: чётный индекс — левый столбец, нечётный — правый */
 const DEFAULT_FIB_SPEC = Object.freeze([
