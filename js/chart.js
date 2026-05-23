@@ -183,6 +183,80 @@ horzLine:crosshairLineOptions(true)
 
 }
 
+/** iPad probe: горизонталь LW, вертикаль — DOM (#linked-crosshair-vert). */
+export function tabletProbeCrosshairOptions(){
+
+const Normal =
+LightweightCharts.CrosshairMode?.Normal ?? 0;
+
+return {
+mode:Normal,
+vertLine:{
+visible:false,
+labelVisible:false
+},
+horzLine:crosshairLineOptions(
+true
+)
+};
+
+}
+
+/**
+ * Горизонталь probe в #charts-stack (если в HTML ещё внутри #chart-wrap — переносим).
+ */
+export function ensureTabletProbeHorizLine(
+chartsStackEl
+){
+
+if(
+!chartsStackEl
+){
+return null;
+}
+
+let el =
+document.getElementById(
+"tablet-probe-crosshair-h"
+);
+
+if(
+!el
+){
+
+el =
+document.createElement(
+"div"
+);
+
+el.id =
+"tablet-probe-crosshair-h";
+
+el.className =
+"tablet-probe-crosshair-h hidden";
+
+el.setAttribute(
+"aria-hidden",
+"true"
+);
+
+}
+
+if(
+el.parentElement !==
+chartsStackEl
+){
+
+chartsStackEl.appendChild(
+el
+);
+
+}
+
+return el;
+
+}
+
 /**
  * Пока активен probe-режим — откатываем любой сдвиг шкалы времени.
  */
@@ -338,10 +412,11 @@ unfreeze
 }
 
 /**
- * Перекрестие probe: DOM-линии + HUD, без setCrosshairPosition (не двигает график).
+ * iPad probe: вертикаль DOM, горизонталь LW + резервный DOM в #charts-stack.
  */
 export function positionTabletProbeCrosshair({
 chart,
+series,
 chartEl,
 chartsStackEl,
 linkedVertEl,
@@ -406,6 +481,39 @@ linkedVertEl.classList.remove(
 
 }
 
+const time =
+chart.timeScale().coordinateToTime?.(
+x
+);
+
+if(
+series
+){
+
+const price =
+series.coordinateToPrice?.(
+y
+);
+
+if(
+price != null &&
+time != null
+){
+
+try{
+chart.setCrosshairPosition(
+price,
+time,
+series
+);
+}catch{
+/* ignore */
+}
+
+}
+
+}
+
 if(
 horizLineEl &&
 chartsStackEl
@@ -432,26 +540,45 @@ topInStack
 )
 );
 
+const plotLeft =
+chartR.left - stackR.left;
+
+const scaleStrip =
+document.getElementById(
+"price-scale-touch-strip"
+);
+
+const scaleW =
+scaleStrip?.offsetWidth ??
+56;
+
+const plotWidth =
+Math.max(
+0,
+chartR.width - scaleW
+);
+
 horizLineEl.style.top =
 `${Math.round(clampedTop)}px`;
 
 horizLineEl.style.left =
-"0";
+`${Math.round(plotLeft)}px`;
+
+horizLineEl.style.width =
+`${Math.round(plotWidth)}px`;
 
 horizLineEl.style.removeProperty(
 "right"
 );
+
+horizLineEl.style.display =
+"block";
 
 horizLineEl.classList.remove(
 "hidden"
 );
 
 }
-
-const time =
-chart.timeScale().coordinateToTime?.(
-x
-);
 
 if(
 time == null
@@ -512,6 +639,18 @@ horizLineEl?.classList.add(
 
 horizLineEl?.style.removeProperty(
 "top"
+);
+
+horizLineEl?.style.removeProperty(
+"left"
+);
+
+horizLineEl?.style.removeProperty(
+"width"
+);
+
+horizLineEl?.style.removeProperty(
+"display"
 );
 
 clearCrosshairAxisLabels(

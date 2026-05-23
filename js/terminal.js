@@ -48,13 +48,15 @@ mountTabletChartGestures,
 mountChartRangeFreeze,
 positionTabletProbeCrosshair,
 hideTabletProbeCrosshair,
+ensureTabletProbeHorizLine,
+tabletProbeCrosshairOptions,
 hiddenCrosshairOptions,
 normalCrosshairOptions,
 mountAxisDoubleTapReset,
 TABLET_USE_CUSTOM_TOUCH_PAN,
 isTabletChartViewport,
 isUserCrosshairEvent
-} from "./chart.js?v=54";
+} from "./chart.js?v=55";
 
 import {
 connectKlineStream,
@@ -1107,8 +1109,8 @@ document.getElementById(
 );
 
 const probeHorizEl =
-document.getElementById(
-"tablet-probe-crosshair-h"
+ensureTabletProbeHorizLine(
+chartsStackEl
 );
 
 const linkedVertEl =
@@ -1159,7 +1161,7 @@ rsiChart.clearCrosshairPosition();
 /* ignore */
 }
 chart.applyOptions({
-crosshair:hiddenCrosshairOptions(),
+crosshair:tabletProbeCrosshairOptions(),
 handleScroll:{
 mouseWheel:false,
 pressedMouseMove:false,
@@ -1176,6 +1178,7 @@ price:false
 }
 });
 rsiChart.applyOptions({
+crosshair:hiddenCrosshairOptions(),
 handleScroll:{
 mouseWheel:false,
 pressedMouseMove:false,
@@ -1204,6 +1207,12 @@ document.getElementById(
 );
 mainRangeFreeze.unfreeze();
 rsiRangeFreeze.unfreeze();
+try{
+chart.clearCrosshairPosition();
+}catch{
+/* ignore */
+}
+
 hideTabletProbeCrosshair({
 linkedVertEl,
 horizLineEl:probeHorizEl,
@@ -1241,6 +1250,7 @@ clientY
 ){
 positionTabletProbeCrosshair({
 chart,
+series:candleSeries,
 chartEl,
 chartsStackEl,
 linkedVertEl,

@@ -940,20 +940,14 @@ body.tablet-chart .price-scale-touch-strip{
   touch-action:none;
 }
 
-/* iPad: горизонталь probe-перекрестия в #charts-stack (вертикаль — #linked-crosshair-vert) */
+/* iPad: горизонталь probe в #charts-stack (ширина/left — из JS; дубль LW crosshair) */
 .tablet-probe-crosshair-h{
   position:absolute;
-  left:0;
-  width:calc(100% - var(--chart-scale-width, 56px));
-  height:1px;
+  top:0;
+  height:0;
   border:none;
-  background:repeating-linear-gradient(
-    to right,
-    #758696 0,
-    #758696 4px,
-    transparent 4px,
-    transparent 8px
-  );
+  border-top:1px dashed #758696;
+  box-sizing:border-box;
   pointer-events:none;
   z-index:25;
 }
