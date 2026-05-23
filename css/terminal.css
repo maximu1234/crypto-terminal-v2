@@ -908,6 +908,21 @@ body.tablet-chart .price-scale-touch-strip{
   z-index:1;
 }
 
+/* iPad: горизонталь probe-перекрестия (вертикаль — #linked-crosshair-vert) */
+.tablet-probe-crosshair-h{
+  position:absolute;
+  left:0;
+  right:var(--chart-scale-width, 56px);
+  height:0;
+  border-top:1px dashed #758696;
+  pointer-events:none;
+  z-index:20;
+}
+
+.tablet-probe-crosshair-h.hidden{
+  display:none;
+}
+
 .linked-crosshair-vert{
   position:absolute;
   top:0;

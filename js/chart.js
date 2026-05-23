@@ -153,7 +153,24 @@ labelBackgroundColor:TV_CROSSHAIR_LABEL_BG
 
 }
 
-function normalCrosshairOptions(){
+function rsiCrosshairOptions(){
+
+const Hidden =
+LightweightCharts.CrosshairMode?.Hidden ?? 2;
+
+return {
+mode:Hidden
+};
+
+}
+
+export function hiddenCrosshairOptions(){
+
+return rsiCrosshairOptions();
+
+}
+
+export function normalCrosshairOptions(){
 
 const Normal =
 LightweightCharts.CrosshairMode?.Normal ?? 0;
@@ -166,14 +183,240 @@ horzLine:crosshairLineOptions(true)
 
 }
 
-function rsiCrosshairOptions(){
+/**
+ * Пока активен probe-режим — откатываем любой сдвиг шкалы времени.
+ */
+export function mountChartRangeFreeze(
+chart
+){
 
-const Hidden =
-LightweightCharts.CrosshairMode?.Hidden ?? 2;
+let frozen =
+null;
+
+let sub =
+null;
+
+let active =
+false;
+
+function freeze(){
+
+if(
+!chart
+){
+return;
+}
+
+frozen =
+chart.timeScale().getVisibleLogicalRange();
+
+if(
+!frozen
+){
+return;
+}
+
+active = true;
+
+sub =
+chart.timeScale().subscribeVisibleLogicalRangeChange(
+range=>{
+
+if(
+!active ||
+!frozen ||
+!range
+){
+return;
+}
+
+if(
+range.from !==
+frozen.from ||
+range.to !==
+frozen.to
+){
+
+chart.timeScale().setVisibleLogicalRange(
+frozen
+);
+
+}
+
+}
+);
+
+}
+
+function unfreeze(){
+
+active = false;
+frozen = null;
+
+if(
+sub
+){
+
+chart.timeScale().unsubscribeVisibleLogicalRangeChange(
+sub
+);
+
+sub = null;
+
+}
+
+}
 
 return {
-mode:Hidden
+freeze,
+unfreeze
 };
+
+}
+
+/**
+ * Перекрестие probe: DOM-линии + HUD, без setCrosshairPosition (не двигает график).
+ */
+export function positionTabletProbeCrosshair({
+chart,
+chartEl,
+chartsStackEl,
+linkedVertEl,
+horizLineEl,
+timeLabelEl,
+clientX,
+clientY,
+onTime
+}){
+
+if(
+!chart ||
+!chartEl
+){
+return null;
+}
+
+const chartR =
+chartEl.getBoundingClientRect();
+
+let x =
+clientX - chartR.left;
+
+let y =
+clientY - chartR.top;
+
+x =
+Math.max(
+0,
+Math.min(
+chartR.width,
+x
+)
+);
+
+y =
+Math.max(
+0,
+Math.min(
+chartR.height,
+y
+)
+);
+
+const time =
+chart.timeScale().coordinateToTime?.(
+x
+);
+
+if(
+time == null
+){
+return null;
+}
+
+if(
+chartsStackEl &&
+linkedVertEl
+){
+
+const stackR =
+chartsStackEl.getBoundingClientRect();
+
+const lineLeft =
+chartR.left - stackR.left + x;
+
+linkedVertEl.style.left =
+`${Math.round(lineLeft)}px`;
+
+linkedVertEl.classList.remove(
+"hidden"
+);
+
+}
+
+if(
+horizLineEl
+){
+
+horizLineEl.style.top =
+`${Math.round(y)}px`;
+
+horizLineEl.classList.remove(
+"hidden"
+);
+
+}
+
+updateCrosshairAxisLabels({
+param:{
+time,
+point:{
+x
+}
+},
+timeLabelEl
+});
+
+onTime?.(
+time
+);
+
+return {
+time,
+x,
+y
+};
+
+}
+
+export function hideTabletProbeCrosshair({
+linkedVertEl,
+horizLineEl,
+timeLabelEl,
+onClear
+}){
+
+linkedVertEl?.classList.add(
+"hidden"
+);
+
+linkedVertEl?.style.removeProperty(
+"left"
+);
+
+horizLineEl?.classList.add(
+"hidden"
+);
+
+horizLineEl?.style.removeProperty(
+"top"
+);
+
+clearCrosshairAxisLabels(
+timeLabelEl
+);
+
+onClear?.();
 
 }
 
@@ -1759,48 +2002,9 @@ let holdStartY =
 let crosshairTrack =
 null;
 
-function setCrosshairFromClient(
-clientX,
-clientY
-){
-
-const rect =
-chartEl.getBoundingClientRect();
-
-const x =
-clientX - rect.left;
-
-const y =
-clientY - rect.top;
-
-const price =
-series.coordinateToPrice(
-y
-);
-
-const time =
-chart.timeScale().coordinateToTime?.(
-x
-);
-
-if(
-price == null ||
-time == null
-){
-return;
-}
-
-try{
-chart.setCrosshairPosition(
-price,
-time,
-series
-);
-}catch{
-/* ignore */
-}
-
-}
+const onProbeAt =
+options.onProbeAt ??
+(()=>{});
 
 function clearHoldTimer(){
 
@@ -1868,7 +2072,7 @@ crosshairTrack = {
 id:holdPointer
 };
 
-setCrosshairFromClient(
+onProbeAt(
 holdStartX,
 holdStartY
 );
@@ -1891,7 +2095,7 @@ crosshairTrack.id
 
 e.preventDefault();
 e.stopPropagation();
-setCrosshairFromClient(
+onProbeAt(
 e.clientX,
 e.clientY
 );

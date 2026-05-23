@@ -46,11 +46,16 @@ markTabletChartBody,
 mountTabletPriceScaleTouch,
 mountTabletCustomTouchPan,
 mountTabletCrosshairLongPress,
+mountChartRangeFreeze,
+positionTabletProbeCrosshair,
+hideTabletProbeCrosshair,
+hiddenCrosshairOptions,
+normalCrosshairOptions,
 mountAxisDoubleTapReset,
 TABLET_USE_CUSTOM_TOUCH_PAN,
 isTabletChartViewport,
 isUserCrosshairEvent
-} from "./chart.js?v=37";
+} from "./chart.js?v=38";
 
 import {
 connectKlineStream,
@@ -1107,6 +1112,36 @@ return true;
 
 }
 
+const chartsStackEl =
+document.getElementById(
+"charts-stack"
+);
+
+const probeHorizEl =
+document.getElementById(
+"tablet-probe-crosshair-h"
+);
+
+const linkedVertEl =
+document.getElementById(
+"linked-crosshair-vert"
+);
+
+const crosshairTimeLabelEl =
+document.getElementById(
+"crosshair-time-label"
+);
+
+const mainRangeFreeze =
+mountChartRangeFreeze(
+chart
+);
+
+const rsiRangeFreeze =
+mountChartRangeFreeze(
+rsiChart
+);
+
 unmountTabletCrosshair =
 mountTabletCrosshairLongPress(
 chart,
@@ -1122,7 +1157,16 @@ document.getElementById(
 )?.classList.add(
 "chart-touch-locked"
 );
+mainRangeFreeze.freeze();
+rsiRangeFreeze.freeze();
+try{
+chart.clearCrosshairPosition();
+rsiChart.clearCrosshairPosition();
+}catch{
+/* ignore */
+}
 chart.applyOptions({
+crosshair:hiddenCrosshairOptions(),
 handleScroll:{
 mouseWheel:false,
 pressedMouseMove:false,
@@ -1146,9 +1190,51 @@ document.getElementById(
 )?.classList.remove(
 "chart-touch-locked"
 );
+mainRangeFreeze.unfreeze();
+rsiRangeFreeze.unfreeze();
+hideTabletProbeCrosshair({
+linkedVertEl,
+horizLineEl:probeHorizEl,
+timeLabelEl:crosshairTimeLabelEl,
+onClear(){
+const last =
+rsiPointsCache[
+rsiPointsCache.length -
+1
+];
+
+setRsiHudValue(
+last?.value ??
+null
+);
+}
+});
+try{
+chart.applyOptions({
+crosshair:normalCrosshairOptions()
+});
+}catch{
+/* ignore */
+}
 applyTabletMainChartScroll(
 chart
 );
+},
+onProbeAt(
+clientX,
+clientY
+){
+positionTabletProbeCrosshair({
+chart,
+chartEl,
+chartsStackEl,
+linkedVertEl,
+horizLineEl:probeHorizEl,
+timeLabelEl:crosshairTimeLabelEl,
+clientX,
+clientY,
+onTime:updateRsiHudFromCrosshairTime
+});
 }
 }
 );
