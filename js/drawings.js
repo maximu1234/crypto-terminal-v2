@@ -4234,9 +4234,14 @@ return;
 
 const chartW =
 chartSize().w;
-const padX = 6;
-const tagX =
-chartW - 4;
+const scaleW =
+getPriceGutterWidth();
+const padX = 4;
+const left =
+chartW - scaleW;
+const th = 16;
+const top =
+y - th / 2;
 
 ctx.save();
 ctx.font =
@@ -4244,21 +4249,11 @@ ctx.font =
 ctx.textAlign = "right";
 ctx.textBaseline = "middle";
 
-const tw =
-ctx.measureText(text).width + padX * 2;
-const th = 16;
-const left =
-tagX - tw;
-const top =
-y - th / 2;
-
 ctx.fillStyle =
 color || "rgba(30, 41, 59, 0.95)";
-ctx.beginPath();
-ctx.roundRect(left, top, tw, th, 3);
-ctx.fill();
+ctx.fillRect(left, top, scaleW, th);
 ctx.fillStyle = "#f8fafc";
-ctx.fillText(text, tagX - padX, y);
+ctx.fillText(text, chartW - padX, y);
 ctx.restore();
 
 }

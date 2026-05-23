@@ -839,7 +839,9 @@ period
 cdEl.textContent =
 formatCandleCountdown(left);
 
-hud.style.right = `${Math.max(gutter - 2, 0)}px`;
+hud.style.right = "0";
+hud.style.left = "auto";
+hud.style.width = `${gutter}px`;
 hud.style.top = `${y}px`;
 
 }catch{
