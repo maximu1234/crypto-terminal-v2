@@ -11,12 +11,20 @@
 ## 2. Вход по email
 
 1. **Authentication** → **Providers** → **Email** — включён
-2. **Authentication** → **URL Configuration**:
-   - **Site URL:** твой preview на Vercel, например `https://crypto-terminal-v2-xxx.vercel.app`
-   - **Redirect URLs** (добавь все):
+2. **Authentication** → **Sign In / Providers** → выключи **Confirm email** (иначе первое письмо ведёт на Site URL).
+
+3. **Authentication** → **URL Configuration** (важно для iPad):
+   - **Site URL** — **НЕ** `127.0.0.1`. Поставь preview с Vercel, например:
+     `https://crypto-terminal-v2-git-feature-supabase-sync-maxscreener.vercel.app`
+     (без слэша в конце)
+   - **Redirect URLs** — добавь **все** строки:
      - `http://127.0.0.1:8080/**`
      - `http://localhost:8080/**`
-     - `https://*.vercel.app/**` (или точный preview URL)
+     - `https://crypto-terminal-v2-git-feature-supabase-sync-maxscreener.vercel.app/**`
+     - `https://*.vercel.app/**`
+   - **Save**
+
+Если Site URL = localhost, письма с iPad всё равно откроют 127.0.0.1.
 
 ## 3. Локально на Mac
 

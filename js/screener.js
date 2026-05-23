@@ -33,8 +33,9 @@ ensureCloudReady
 } from "./auth-ui.js?v=1";
 
 import {
-persistFavoritesToCloud
-} from "./cloud-sync.js?v=1";
+persistFavoritesToCloud,
+onFavoritesRemoteUpdate
+} from "./cloud-sync.js?v=2";
 
 const gridEl =
 document.getElementById("screener-grid");
@@ -1073,6 +1074,22 @@ widget.symbol
 
 }
 );
+
+onFavoritesRemoteUpdate(()=>{
+
+favorites =
+loadFavorites();
+
+activeWidgets.forEach(widget=>{
+
+updateWidgetFavoriteUi(
+widget.root,
+widget.symbol
+);
+
+});
+
+});
 
 async function init(){
 

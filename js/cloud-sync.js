@@ -8,14 +8,32 @@ loadFavorites,
 saveFavorites
 } from "./storage.js?v=11";
 
+const FAVORITES_LOCAL_TS_KEY =
+"favorites_local_updated_at";
+
 let configured = false;
 let loggedIn = false;
 let userEmail = "";
-const listeners = new Set();
+const authListeners = new Set();
+const favoritesListeners = new Set();
 
-function notify(){
+function notifyAuth(){
 
-listeners.forEach(fn=>{
+authListeners.forEach(fn=>{
+
+try{
+fn();
+}catch{
+/* ignore */
+}
+
+});
+
+}
+
+function notifyFavorites(){
+
+favoritesListeners.forEach(fn=>{
 
 try{
 fn();
@@ -29,10 +47,20 @@ fn();
 
 export function onCloudSyncChange(fn){
 
-listeners.add(fn);
+authListeners.add(fn);
 
 return ()=>{
-listeners.delete(fn);
+authListeners.delete(fn);
+};
+
+}
+
+export function onFavoritesRemoteUpdate(fn){
+
+favoritesListeners.add(fn);
+
+return ()=>{
+favoritesListeners.delete(fn);
 };
 
 }
@@ -55,31 +83,80 @@ return userEmail;
 
 }
 
-async function fetchCloudFavorites(sb, userId){
+function loadLocalFavoritesUpdatedAt(){
+
+return localStorage.getItem(
+FAVORITES_LOCAL_TS_KEY
+) || "";
+
+}
+
+function saveLocalFavoritesUpdatedAt(iso){
+
+if(!iso){
+localStorage.removeItem(
+FAVORITES_LOCAL_TS_KEY
+);
+return;
+}
+
+localStorage.setItem(
+FAVORITES_LOCAL_TS_KEY,
+iso
+);
+
+}
+
+function normalizeFavoritesList(list){
+
+if(!Array.isArray(list)){
+return [];
+}
+
+return list.filter(s=>typeof s === "string");
+
+}
+
+async function fetchCloudSettings(sb, userId){
 
 const { data, error } =
 await sb
 .from("user_settings")
-.select("favorites")
+.select("favorites, updated_at")
 .eq("user_id", userId)
 .maybeSingle();
 
 if(error){
-console.warn("cloud favorites load:", error.message);
+console.warn(
+"cloud favorites load:",
+error.message
+);
 return null;
 }
 
-if(!data?.favorites){
-return [];
+if(!data){
+return null;
 }
 
-return Array.isArray(data.favorites)
-? data.favorites.filter(s=>typeof s === "string")
-: [];
+return {
+favorites: normalizeFavoritesList(
+data.favorites
+),
+updatedAt: data.updated_at || ""
+};
 
 }
 
-async function pushCloudFavorites(sb, userId, favorites){
+async function pushCloudFavorites(
+sb,
+userId,
+favorites,
+updatedAt
+){
+
+const ts =
+updatedAt ||
+new Date().toISOString();
 
 const { error } =
 await sb
@@ -87,19 +164,22 @@ await sb
 .upsert({
 user_id: userId,
 favorites,
-updated_at: new Date().toISOString()
+updated_at: ts
 });
 
 if(error){
-console.warn("cloud favorites save:", error.message);
-return false;
+console.warn(
+"cloud favorites save:",
+error.message
+);
+return null;
 }
 
-return true;
+return ts;
 
 }
 
-export async function mergeFavoritesWithCloud(){
+async function getAuthedClient(){
 
 const sb =
 await getSupabase();
@@ -108,75 +188,186 @@ if(
 !sb ||
 !loggedIn
 ){
-return loadFavorites();
+return null;
 }
 
 const { data: { user } } =
 await sb.auth.getUser();
 
 if(!user){
+return null;
+}
+
+return { sb, user };
+
+}
+
+function applyFavoritesLocally(
+favorites,
+updatedAt
+){
+
+saveFavorites(favorites);
+
+if(updatedAt){
+saveLocalFavoritesUpdatedAt(updatedAt);
+}
+
+notifyFavorites();
+
+}
+
+/** Слияние по updated_at — побеждает последнее изменение (в т.ч. пустой список). */
+export async function mergeFavoritesWithCloud(){
+
+const authed =
+await getAuthedClient();
+
+if(!authed){
 return loadFavorites();
 }
 
+const { sb, user } =
+authed;
+
 const local =
 loadFavorites();
+const localTs =
+loadLocalFavoritesUpdatedAt();
 const cloud =
-await fetchCloudFavorites(
+await fetchCloudSettings(
 sb,
 user.id
 );
 
-if(
-cloud &&
-cloud.length > 0
-){
-
-saveFavorites(cloud);
-notify();
-return cloud;
-
-}
+if(!cloud){
 
 if(local.length > 0){
 
+const ts =
 await pushCloudFavorites(
 sb,
 user.id,
 local
 );
 
+if(ts){
+saveLocalFavoritesUpdatedAt(ts);
 }
 
-notify();
+}
+
 return local;
+
+}
+
+if(
+!localTs ||
+(
+cloud.updatedAt &&
+cloud.updatedAt > localTs
+)
+){
+
+applyFavoritesLocally(
+cloud.favorites,
+cloud.updatedAt
+);
+return cloud.favorites;
+
+}
+
+if(
+localTs &&
+(
+!cloud.updatedAt ||
+localTs > cloud.updatedAt
+)
+){
+
+const ts =
+await pushCloudFavorites(
+sb,
+user.id,
+local,
+localTs
+);
+
+if(ts){
+saveLocalFavoritesUpdatedAt(ts);
+}
+
+return local;
+
+}
+
+return local;
+
+}
+
+/** Подтянуть с другого устройства (вкладка / refresh). */
+export async function pullFavoritesIfCloudNewer(){
+
+const authed =
+await getAuthedClient();
+
+if(!authed){
+return loadFavorites();
+}
+
+const { sb, user } =
+authed;
+
+const localTs =
+loadLocalFavoritesUpdatedAt();
+const cloud =
+await fetchCloudSettings(
+sb,
+user.id
+);
+
+if(
+!cloud?.updatedAt ||
+(
+localTs &&
+localTs >= cloud.updatedAt
+)
+){
+return loadFavorites();
+}
+
+applyFavoritesLocally(
+cloud.favorites,
+cloud.updatedAt
+);
+
+return cloud.favorites;
 
 }
 
 export async function persistFavoritesToCloud(favorites){
 
+const ts =
+new Date().toISOString();
+
 saveFavorites(favorites);
+saveLocalFavoritesUpdatedAt(ts);
 
-const sb =
-await getSupabase();
+const authed =
+await getAuthedClient();
 
-if(
-!sb ||
-!loggedIn
-){
+if(!authed){
 return;
 }
 
-const { data: { user } } =
-await sb.auth.getUser();
-
-if(!user){
-return;
-}
+const { sb, user } =
+authed;
 
 await pushCloudFavorites(
 sb,
 user.id,
-favorites
+favorites,
+ts
 );
 
 }
@@ -191,20 +382,22 @@ throw new Error("Supabase не настроен");
 }
 
 const redirectTo =
-window.location.origin +
-window.location.pathname;
+`${window.location.origin}${window.location.pathname}`;
 
 const { error } =
 await sb.auth.signInWithOtp({
 email,
 options:{
-emailRedirectTo: redirectTo
+emailRedirectTo: redirectTo,
+shouldCreateUser: true
 }
 });
 
 if(error){
 throw error;
 }
+
+return redirectTo;
 
 }
 
@@ -219,7 +412,7 @@ await sb.auth.signOut();
 
 loggedIn = false;
 userEmail = "";
-notify();
+notifyAuth();
 
 }
 
@@ -231,8 +424,41 @@ userEmail = session?.user?.email || "";
 if(loggedIn){
 await mergeFavoritesWithCloud();
 }else{
-notify();
+notifyAuth();
 }
+
+}
+
+function bindRemotePullTriggers(){
+
+const pull = ()=>{
+
+if(!loggedIn){
+return;
+}
+
+pullFavoritesIfCloudNewer();
+
+};
+
+document.addEventListener(
+"visibilitychange",
+()=>{
+
+if(
+document.visibilityState ===
+"visible"
+){
+pull();
+}
+
+}
+);
+
+window.addEventListener(
+"focus",
+pull
+);
 
 }
 
@@ -242,7 +468,7 @@ configured =
 await isSupabaseConfigured();
 
 if(!configured){
-notify();
+notifyAuth();
 return;
 }
 
@@ -250,7 +476,7 @@ const sb =
 await getSupabase();
 
 if(!sb){
-notify();
+notifyAuth();
 return;
 }
 
@@ -258,6 +484,8 @@ const { data: { session } } =
 await sb.auth.getSession();
 
 await applySession(session);
+
+bindRemotePullTriggers();
 
 sb.auth.onAuthStateChange(
 async(event, session)=>{
@@ -276,7 +504,7 @@ event === "SIGNED_OUT"
 ){
 loggedIn = false;
 userEmail = "";
-notify();
+notifyAuth();
 }
 
 }

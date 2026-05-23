@@ -6,7 +6,7 @@ getCloudUserEmail,
 onCloudSyncChange,
 signInWithEmailOtp,
 signOutCloud
-} from "./cloud-sync.js?v=1";
+} from "./cloud-sync.js?v=2";
 
 function mountAuthUi(){
 
@@ -121,10 +121,11 @@ false
 
 try{
 
+const redirectTo =
 await signInWithEmailOtp(email);
 
 setHint(
-"Ссылка отправлена на почту. Откройте её на этом устройстве.",
+`Ссылка отправлена. Откройте письмо на этом iPad/устройстве. После входа откроется: ${redirectTo}`,
 false
 );
 

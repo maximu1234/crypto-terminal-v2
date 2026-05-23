@@ -23,8 +23,9 @@ ensureCloudReady
 } from "./auth-ui.js?v=1";
 
 import {
-persistFavoritesToCloud
-} from "./cloud-sync.js?v=1";
+persistFavoritesToCloud,
+onFavoritesRemoteUpdate
+} from "./cloud-sync.js?v=2";
 
 import {
 createCandlestickChart,
@@ -1561,6 +1562,36 @@ change1hEl.innerText =
 `${item.change1h.toFixed(2)}%`;
 
 }
+
+function syncFavoriteButtonsFromStorage(){
+
+favorites =
+loadFavorites();
+
+coinElements.forEach((el, symbol)=>{
+
+const favBtn =
+el.querySelector("[data-fav]");
+
+if(!favBtn){
+return;
+}
+
+const on =
+favorites.includes(symbol);
+
+favBtn.classList.toggle(
+"favorite",
+on
+);
+
+});
+
+}
+
+onFavoritesRemoteUpdate(
+syncFavoriteButtonsFromStorage
+);
 
 function highlightActiveSymbol(){
 
