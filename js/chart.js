@@ -2085,49 +2085,84 @@ TABLET_CROSSHAIR_HOLD_MS
 
 }
 
-function beginCrosshairTrack(){
+let onDocProbeMove =
+null;
 
-onHoldStart();
+let onDocProbeEnd =
+null;
 
-crosshairTrack = {
-id:holdPointer
-};
+function detachDocProbeListeners(){
 
-touchLayerEl.classList.add(
+if(
+onDocProbeMove
+){
+
+document.removeEventListener(
+"pointermove",
+onDocProbeMove,
+{ capture:true }
+);
+
+onDocProbeMove = null;
+
+}
+
+if(
+onDocProbeEnd
+){
+
+document.removeEventListener(
+"pointerup",
+onDocProbeEnd,
+{ capture:true }
+);
+
+document.removeEventListener(
+"pointercancel",
+onDocProbeEnd,
+{ capture:true }
+);
+
+document.removeEventListener(
+"lostpointercapture",
+onDocProbeEnd,
+{ capture:true }
+);
+
+onDocProbeEnd = null;
+
+}
+
+}
+
+function endProbeSession(
+pointerId
+){
+
+if(
+!crosshairTrack
+){
+touchLayerEl.classList.remove(
 "active"
 );
 
-try{
-touchLayerEl.setPointerCapture(
-holdPointer
-);
-}catch{
-/* ignore */
+detachDocProbeListeners();
+
+return;
 }
 
-onProbeAt(
-holdStartX,
-holdStartY
-);
-
-}
-
-function releaseCrosshairCapture(
-pointerId
-){
+detachDocProbeListeners();
 
 touchLayerEl.classList.remove(
 "active"
 );
 
 if(
-pointerId ===
-undefined ||
-pointerId ===
+pointerId !==
+undefined &&
+pointerId !==
 null
 ){
-return;
-}
 
 try{
 
@@ -2148,14 +2183,34 @@ pointerId
 
 }
 
-function onLayerPointerMove(
-e
+const ended =
+crosshairTrack;
+crosshairTrack = null;
+
+if(
+ended
 ){
+onHoldEnd();
+}
+
+}
+
+function attachDocProbeListeners(){
+
+detachDocProbeListeners();
+
+onDocProbeMove =(
+e
+)=>{
 
 if(
 !crosshairTrack ||
+(
+e.pointerId !==
+undefined &&
 e.pointerId !==
 crosshairTrack.id
+)
 ){
 return;
 }
@@ -2167,26 +2222,94 @@ e.clientX,
 e.clientY
 );
 
-}
+};
 
-function onLayerPointerUp(
+onDocProbeEnd =(
 e
-){
+)=>{
 
 if(
-!crosshairTrack ||
+!crosshairTrack
+){
+return;
+}
+
+if(
+e.pointerId !==
+undefined &&
 e.pointerId !==
 crosshairTrack.id
 ){
 return;
 }
 
-releaseCrosshairCapture(
+endProbeSession(
 e.pointerId
 );
 
-crosshairTrack = null;
-onHoldEnd();
+};
+
+const cap =
+{ capture:true };
+
+const moveCap =
+{
+capture:true,
+passive:false
+};
+
+document.addEventListener(
+"pointermove",
+onDocProbeMove,
+moveCap
+);
+
+document.addEventListener(
+"pointerup",
+onDocProbeEnd,
+cap
+);
+
+document.addEventListener(
+"pointercancel",
+onDocProbeEnd,
+cap
+);
+
+document.addEventListener(
+"lostpointercapture",
+onDocProbeEnd,
+cap
+);
+
+}
+
+function beginCrosshairTrack(){
+
+onHoldStart();
+
+crosshairTrack = {
+id:holdPointer
+};
+
+touchLayerEl.classList.add(
+"active"
+);
+
+attachDocProbeListeners();
+
+try{
+touchLayerEl.setPointerCapture(
+holdPointer
+);
+}catch{
+/* ignore */
+}
+
+onProbeAt(
+holdStartX,
+holdStartY
+);
 
 }
 
@@ -2214,19 +2337,7 @@ TABLET_CROSSHAIR_HOLD_MOVE_CANCEL_PX *
 TABLET_CROSSHAIR_HOLD_MOVE_CANCEL_PX
 ){
 
-const movedHoriz =
-Math.abs(dx) >
-Math.abs(dy);
-
 clearHoldTimer();
-
-if(
-movedHoriz
-){
-releaseCrosshairCapture(
-holdPointer
-);
-}
 
 }
 
@@ -2247,6 +2358,21 @@ holdPointer
 clearHoldTimer();
 }
 
+if(
+crosshairTrack &&
+(
+e.pointerId ===
+undefined ||
+e.pointerId ===
+crosshairTrack.id
+)
+){
+endProbeSession(
+e.pointerId
+);
+
+}
+
 }
 
 function onTouchStart(
@@ -2262,12 +2388,10 @@ clearHoldTimer();
 if(
 crosshairTrack
 ){
-releaseCrosshairCapture(
+endProbeSession(
 crosshairTrack.id
 );
 
-crosshairTrack = null;
-onHoldEnd();
 }
 
 }
@@ -2314,26 +2438,9 @@ onTouchStart,
 opts
 );
 
-touchLayerEl.addEventListener(
-"pointermove",
-onLayerPointerMove,
-moveOpts
-);
-
-touchLayerEl.addEventListener(
-"pointerup",
-onLayerPointerUp,
-opts
-);
-
-touchLayerEl.addEventListener(
-"pointercancel",
-onLayerPointerUp,
-opts
-);
-
 return ()=>{
 
+endProbeSession();
 touchLayerEl.classList.remove(
 "active"
 );
@@ -2368,32 +2475,7 @@ onTouchStart,
 opts
 );
 
-touchLayerEl.removeEventListener(
-"pointermove",
-onLayerPointerMove,
-moveOpts
-);
-
-touchLayerEl.removeEventListener(
-"pointerup",
-onLayerPointerUp,
-opts
-);
-
-touchLayerEl.removeEventListener(
-"pointercancel",
-onLayerPointerUp,
-opts
-);
-
 clearHoldTimer();
-
-if(
-crosshairTrack
-){
-crosshairTrack = null;
-onHoldEnd();
-}
 
 };
 
