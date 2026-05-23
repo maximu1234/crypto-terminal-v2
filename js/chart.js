@@ -2178,7 +2178,6 @@ return ()=>{};
 function syncChartTouchBlock(){
 
 setTabletChartTouchBlock(
-holdPending ||
 crosshairTrack
 ? 1
 : 0
@@ -2202,10 +2201,13 @@ let holdStartX =
 let holdStartY =
 0;
 
-let holdPending =
-false;
-
 let crosshairTrack =
+null;
+
+let onWaitMove =
+null;
+
+let onWaitEnd =
 null;
 
 /** iPad: long-press уже начат с touchstart (до pointerdown) */
@@ -2221,7 +2223,72 @@ null;
 let onDocGestureEnd =
 null;
 
-function clearHoldTimer(){
+function detachHoldWaitListeners(){
+
+const cap =
+{ capture:true };
+
+const moveCap =
+{
+capture:true,
+passive:false
+};
+
+if(
+onWaitMove
+){
+
+document.removeEventListener(
+"pointermove",
+onWaitMove,
+moveCap
+);
+
+document.removeEventListener(
+"touchmove",
+onWaitMove,
+moveCap
+);
+
+onWaitMove = null;
+
+}
+
+if(
+onWaitEnd
+){
+
+document.removeEventListener(
+"pointerup",
+onWaitEnd,
+cap
+);
+
+document.removeEventListener(
+"pointercancel",
+onWaitEnd,
+cap
+);
+
+document.removeEventListener(
+"touchend",
+onWaitEnd,
+cap
+);
+
+document.removeEventListener(
+"touchcancel",
+onWaitEnd,
+cap
+);
+
+onWaitEnd = null;
+
+}
+
+}
+
+function cancelHoldWait(){
 
 if(
 holdTimer
@@ -2234,19 +2301,17 @@ holdTimer = null;
 
 }
 
-if(
-holdPending &&
-!crosshairTrack
-){
-holdPending = false;
-onHoldPendingEnd();
-detachDocGestureShield();
-syncChartTouchBlock();
-}
+detachHoldWaitListeners();
 
 holdPointer = null;
 holdTouchId = null;
 holdGestureFromTouch = false;
+
+}
+
+function clearHoldTimer(){
+
+cancelHoldWait();
 
 }
 
@@ -2305,62 +2370,149 @@ return false;
 
 }
 
-function startHoldGesture(
-pointerId,
-clientX,
-clientY,
-{
-fromTouch = false,
-touchId = null
-} = {}
-){
+function attachHoldWaitListeners(){
+
+detachHoldWaitListeners();
+
+onWaitMove =(
+e
+)=>{
 
 if(
-holdTimer
+!holdTimer
 ){
-clearTimeout(
-holdTimer
+return;
+}
+
+const x =
+e.clientX ??
+e.touches?.[
+0
+]?.clientX;
+
+const y =
+e.clientY ??
+e.touches?.[
+0
+]?.clientY;
+
+if(
+x ===
+undefined ||
+y ===
+undefined
+){
+return;
+}
+
+const dx =
+x - holdStartX;
+
+const dy =
+y - holdStartY;
+
+if(
+dx * dx + dy * dy >
+TABLET_CROSSHAIR_HOLD_MOVE_CANCEL_PX *
+TABLET_CROSSHAIR_HOLD_MOVE_CANCEL_PX
+){
+cancelHoldWait();
+}
+
+};
+
+onWaitEnd =(
+e
+)=>{
+
+if(
+!holdTimer
+){
+return;
+}
+
+if(
+!gestureEndMatches(
+e
+)
+){
+return;
+}
+
+cancelHoldWait();
+
+};
+
+const cap =
+{ capture:true };
+
+const moveCap =
+{
+capture:true,
+passive:false
+};
+
+document.addEventListener(
+"pointermove",
+onWaitMove,
+moveCap
 );
 
-holdTimer = null;
+document.addEventListener(
+"touchmove",
+onWaitMove,
+moveCap
+);
+
+document.addEventListener(
+"pointerup",
+onWaitEnd,
+cap
+);
+
+document.addEventListener(
+"pointercancel",
+onWaitEnd,
+cap
+);
+
+document.addEventListener(
+"touchend",
+onWaitEnd,
+cap
+);
+
+document.addEventListener(
+"touchcancel",
+onWaitEnd,
+cap
+);
 
 }
 
-if(
-holdPending &&
-!crosshairTrack
+function scheduleHoldWait(
+touchId,
+clientX,
+clientY
 ){
-holdPending = false;
-onHoldPendingEnd();
-detachDocGestureShield();
-syncChartTouchBlock();
-}
 
-holdGestureFromTouch =
-fromTouch;
+cancelHoldWait();
 
-holdTouchId =
-touchId;
+holdGestureFromTouch = true;
+holdTouchId = touchId;
+holdPointer = touchId;
+holdStartX = clientX;
+holdStartY = clientY;
 
-holdPending = true;
-syncChartTouchBlock();
-onHoldPendingStart();
-attachDocGestureShield();
-
-holdPointer =
-pointerId;
-
-holdStartX =
-clientX;
-
-holdStartY =
-clientY;
+attachHoldWaitListeners();
 
 holdTimer =
 setTimeout(
 ()=>{
 
 holdTimer = null;
+
+detachHoldWaitListeners();
 
 if(
 holdPointer ===
@@ -2458,22 +2610,13 @@ onDocPointerMove =(
 e
 )=>{
 
-const probeActive =
-!!crosshairTrack;
-
-const pendingActive =
-holdPending &&
-!!holdTimer;
-
 if(
-!probeActive &&
-!pendingActive
+!crosshairTrack
 ){
 return;
 }
 
 if(
-probeActive &&
 e.pointerId !==
 undefined &&
 e.pointerId !==
@@ -2482,22 +2625,6 @@ crosshairTrack.id
 return;
 }
 
-if(
-pendingActive &&
-holdPointer !==
-null &&
-e.pointerId !==
-undefined &&
-e.pointerId !==
-holdPointer
-){
-return;
-}
-
-if(
-probeActive
-){
-
 e.preventDefault();
 e.stopImmediatePropagation();
 onProbeAt(
@@ -2505,31 +2632,14 @@ e.clientX,
 e.clientY
 );
 
-}else if(
-pendingActive
-){
-
-e.preventDefault();
-e.stopImmediatePropagation();
-
-}
-
 };
 
 onDocTouchMove =(
 e
 )=>{
 
-const probeActive =
-!!crosshairTrack;
-
-const pendingActive =
-holdPending &&
-!!holdTimer;
-
 if(
-!probeActive &&
-!pendingActive
+!crosshairTrack
 ){
 return;
 }
@@ -2538,14 +2648,7 @@ if(
 e.touches.length >
 1
 ){
-clearHoldTimer();
-
-if(
-probeActive
-){
 endProbeSession();
-}
-
 return;
 }
 
@@ -2560,29 +2663,12 @@ if(
 return;
 }
 
-if(
-pendingActive &&
-!probeActive
-){
-
-e.preventDefault();
-e.stopImmediatePropagation();
-return;
-
-}
-
-if(
-probeActive
-){
-
 e.preventDefault();
 e.stopImmediatePropagation();
 onProbeAt(
 t.clientX,
 t.clientY
 );
-
-}
 
 };
 
@@ -2609,12 +2695,6 @@ return;
 }
 
 if(
-!holdPending
-){
-return;
-}
-
-if(
 !gestureEndMatches(
 e
 )
@@ -2622,7 +2702,7 @@ e
 return;
 }
 
-clearHoldTimer();
+cancelHoldWait();
 
 };
 
@@ -2695,28 +2775,19 @@ onHoldEnd();
 
 function beginCrosshairTrack(){
 
-if(
-holdPending
-){
-holdPending = false;
-onHoldPendingEnd();
-}
-
 onHoldStart();
 
 crosshairTrack = {
 id:holdPointer
 };
 
+syncChartTouchBlock();
+
 touchLayerEl.classList.add(
 "active"
 );
 
-if(
-!onDocPointerMove
-){
 attachDocGestureShield();
-}
 
 onProbeAt(
 holdStartX,
@@ -2740,7 +2811,10 @@ if(
 e.pointerType ===
 "touch" &&
 holdGestureFromTouch &&
-holdPending
+(
+holdTimer ||
+crosshairTrack
+)
 ){
 holdPointer =
 e.pointerId ??
@@ -2753,29 +2827,7 @@ crosshairTrack.id =
 holdPointer;
 }
 
-return;
 }
-
-if(
-!shouldBeginHold(
-e
-)
-){
-return;
-}
-
-try{
-e.preventDefault();
-}catch{
-/* ignore */
-}
-
-startHoldGesture(
-e.pointerId ??
-0,
-e.clientX,
-e.clientY
-);
 
 }
 
@@ -2806,12 +2858,6 @@ e
 return;
 }
 
-try{
-e.preventDefault();
-}catch{
-/* ignore */
-}
-
 const t =
 e.touches[
 0
@@ -2823,14 +2869,10 @@ if(
 return;
 }
 
-startHoldGesture(
+scheduleHoldWait(
 t.identifier,
 t.clientX,
-t.clientY,
-{
-fromTouch:true,
-touchId:t.identifier
-}
+t.clientY
 );
 
 }
@@ -2840,7 +2882,7 @@ e
 ){
 
 if(
-holdPending ||
+holdTimer ||
 crosshairTrack
 ){
 e.preventDefault();
