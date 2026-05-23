@@ -7699,6 +7699,32 @@ setTool,
 
 scheduleRedraw,
 
+blocksTabletChartPan(){
+
+if(
+!alive ||
+!isActive()
+){
+return false;
+}
+
+if(
+dragState
+){
+return true;
+}
+
+if(
+tool ===
+"cursor"
+){
+return true;
+}
+
+return false;
+
+},
+
 onSymbolChange(){
 
 const next =

@@ -45,10 +45,11 @@ applyTabletMainChartScroll,
 markTabletChartBody,
 mountTabletPriceScaleTouch,
 mountTabletCustomTouchPan,
+mountTabletCrosshairTouch,
 TABLET_USE_CUSTOM_TOUCH_PAN,
 isTabletChartViewport,
 isUserCrosshairEvent
-} from "./chart.js?v=31";
+} from "./chart.js?v=32";
 
 import {
 connectKlineStream,
@@ -67,7 +68,7 @@ processAlertTick
 
 import {
 initDrawings
-} from "./drawings.js?v=93";
+} from "./drawings.js?v=94";
 
 let currentDataset = "crypto";
 let currentTF = "60";
@@ -621,6 +622,34 @@ refresh(){}
 let unmountTabletPan =
 ()=>{};
 
+let unmountTabletCrosshair =
+()=>{};
+
+function tabletPanAllowed(){
+
+const wrap =
+document.getElementById(
+"chart-wrap"
+);
+
+if(
+wrap?.classList.contains(
+"chart-touch-locked"
+)
+){
+return false;
+}
+
+if(
+drawingTools?.blocksTabletChartPan?.()
+){
+return false;
+}
+
+return true;
+
+}
+
 if(
 TABLET_USE_CUSTOM_TOUCH_PAN
 ){
@@ -628,11 +657,10 @@ TABLET_USE_CUSTOM_TOUCH_PAN
 unmountTabletPan =
 mountTabletCustomTouchPan(
 chart,
-chartEl
-);
-
-console.info(
-"[tablet] Custom touch pan + price strip + LW pinch"
+chartEl,
+{
+shouldAllowPan:tabletPanAllowed
+}
 );
 
 }
@@ -990,6 +1018,23 @@ isActive: ()=>true
 }catch(err){
 
 console.error("Drawings init failed:", err);
+
+}
+
+if(
+TABLET_USE_CUSTOM_TOUCH_PAN &&
+drawingTools
+){
+
+unmountTabletCrosshair =
+mountTabletCrosshairTouch(
+chart,
+candleSeries,
+chartEl,
+()=>
+drawingTools?.blocksTabletChartPan?.() ??
+false
+);
 
 }
 

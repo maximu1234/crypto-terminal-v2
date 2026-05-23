@@ -1703,10 +1703,198 @@ return false;
  * iPad: горизонтальный pan вне LW — pointer на document, как у полосы цены.
  * LW horzTouchDrag на Safari часто «залипает» в одной зоне экрана.
  */
+export function mountTabletCrosshairTouch(
+chart,
+series,
+chartEl,
+isCrosshairMode
+){
+
+if(
+!chart ||
+!series ||
+!chartEl ||
+!isTabletChartViewport()
+){
+return ()=>{};
+}
+
+let track =
+null;
+
+function setCrosshairFromClient(
+clientX,
+clientY
+){
+
+const rect =
+chartEl.getBoundingClientRect();
+
+const x =
+clientX - rect.left;
+
+const y =
+clientY - rect.top;
+
+const price =
+series.coordinateToPrice(
+y
+);
+
+const time =
+chart.timeScale().coordinateToTime?.(
+x
+);
+
+if(
+price == null ||
+time == null
+){
+return;
+}
+
+try{
+chart.setCrosshairPosition(
+price,
+time,
+series
+);
+}catch{
+/* ignore */
+}
+
+}
+
+function onPointerDown(
+e
+){
+
+if(
+!isCrosshairMode() ||
+e.pointerType ===
+"mouse"
+){
+return;
+}
+
+track = {
+id:
+e.pointerId ??
+0
+};
+
+}
+
+function onPointerMove(
+e
+){
+
+if(
+!track ||
+!isCrosshairMode()
+){
+return;
+}
+
+if(
+e.pointerId !==
+undefined &&
+e.pointerId !==
+track.id
+){
+return;
+}
+
+setCrosshairFromClient(
+e.clientX,
+e.clientY
+);
+
+}
+
+function onPointerUp(
+e
+){
+
+if(
+track &&
+e.pointerId !==
+undefined &&
+e.pointerId !==
+track.id
+){
+return;
+}
+
+track = null;
+
+}
+
+chartEl.addEventListener(
+"pointerdown",
+onPointerDown,
+{ passive:true }
+);
+
+chartEl.addEventListener(
+"pointermove",
+onPointerMove,
+{ passive:true }
+);
+
+chartEl.addEventListener(
+"pointerup",
+onPointerUp,
+{ passive:true }
+);
+
+chartEl.addEventListener(
+"pointercancel",
+onPointerUp,
+{ passive:true }
+);
+
+return ()=>{
+
+chartEl.removeEventListener(
+"pointerdown",
+onPointerDown,
+{ passive:true }
+);
+
+chartEl.removeEventListener(
+"pointermove",
+onPointerMove,
+{ passive:true }
+);
+
+chartEl.removeEventListener(
+"pointerup",
+onPointerUp,
+{ passive:true }
+);
+
+chartEl.removeEventListener(
+"pointercancel",
+onPointerUp,
+{ passive:true }
+);
+
+track = null;
+
+};
+
+}
+
 export function mountTabletCustomTouchPan(
 chart,
-chartEl
+chartEl,
+options = {}
 ){
+
+const shouldAllowPan =
+options.shouldAllowPan ??
+(()=>true);
 
 if(
 !TABLET_USE_CUSTOM_TOUCH_PAN ||
@@ -1886,6 +2074,13 @@ return;
 }
 
 if(
+!shouldAllowPan()
+){
+abortPan();
+return;
+}
+
+if(
 pendingPan &&
 !pan
 ){
@@ -1932,6 +2127,13 @@ pendingPan = null;
 if(
 !pan
 ){
+return;
+}
+
+if(
+!shouldAllowPan()
+){
+abortPan();
 return;
 }
 
@@ -2041,6 +2243,12 @@ if(
 chartWrap?.classList.contains(
 "chart-touch-locked"
 )
+){
+return;
+}
+
+if(
+!shouldAllowPan()
 ){
 return;
 }
