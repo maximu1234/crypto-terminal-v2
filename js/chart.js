@@ -2143,8 +2143,9 @@ return false;
 const TABLET_CROSSHAIR_HOLD_MS =
 450;
 
-const TABLET_CROSSHAIR_HOLD_MOVE_CANCEL_PX =
-10;
+/** Отмена ожидания long-press только при явном горизонтальном свайпе (не дрожание) */
+const TABLET_HOLD_CANCEL_HORIZ_PX =
+14;
 
 /**
  * iPad: перекрестие только после удержания пальца (~450ms).
@@ -2172,7 +2173,14 @@ if(
 !touchLayerEl ||
 !isTabletChartViewport()
 ){
-return ()=>{};
+const noop =
+()=>{};
+
+return {
+dispose:noop,
+cancelHoldWait:noop
+};
+
 }
 
 function syncChartTouchBlock(){
@@ -2207,7 +2215,7 @@ null;
 let onWaitMove =
 null;
 
-let onWaitEnd =
+let onWaitTouchEnd =
 null;
 
 /** iPad: long-press уже начат с touchstart (до pointerdown) */
@@ -2255,34 +2263,22 @@ onWaitMove = null;
 }
 
 if(
-onWaitEnd
+onWaitTouchEnd
 ){
 
 document.removeEventListener(
-"pointerup",
-onWaitEnd,
-cap
-);
-
-document.removeEventListener(
-"pointercancel",
-onWaitEnd,
-cap
-);
-
-document.removeEventListener(
 "touchend",
-onWaitEnd,
+onWaitTouchEnd,
 cap
 );
 
 document.removeEventListener(
 "touchcancel",
-onWaitEnd,
+onWaitTouchEnd,
 cap
 );
 
-onWaitEnd = null;
+onWaitTouchEnd = null;
 
 }
 
@@ -2412,16 +2408,24 @@ const dy =
 y - holdStartY;
 
 if(
-dx * dx + dy * dy >
-TABLET_CROSSHAIR_HOLD_MOVE_CANCEL_PX *
-TABLET_CROSSHAIR_HOLD_MOVE_CANCEL_PX
+Math.abs(
+dx
+) >=
+TABLET_HOLD_CANCEL_HORIZ_PX &&
+Math.abs(
+dx
+) >
+Math.abs(
+dy
+) *
+1.25
 ){
 cancelHoldWait();
 }
 
 };
 
-onWaitEnd =(
+onWaitTouchEnd =(
 e
 )=>{
 
@@ -2465,26 +2469,14 @@ moveCap
 );
 
 document.addEventListener(
-"pointerup",
-onWaitEnd,
-cap
-);
-
-document.addEventListener(
-"pointercancel",
-onWaitEnd,
-cap
-);
-
-document.addEventListener(
 "touchend",
-onWaitEnd,
+onWaitTouchEnd,
 cap
 );
 
 document.addEventListener(
 "touchcancel",
-onWaitEnd,
+onWaitTouchEnd,
 cap
 );
 
@@ -2869,6 +2861,12 @@ if(
 return;
 }
 
+try{
+e.preventDefault();
+}catch{
+/* ignore */
+}
+
 scheduleHoldWait(
 t.identifier,
 t.clientX,
@@ -2918,7 +2916,7 @@ onLayerContextMenu,
 capDown
 );
 
-return ()=>{
+const dispose =()=>{
 
 endProbeSession();
 clearHoldTimer();
@@ -2949,6 +2947,11 @@ capDown
 
 };
 
+return {
+dispose,
+cancelHoldWait
+};
+
 }
 
 export function mountTabletCustomTouchPan(
@@ -2963,6 +2966,10 @@ options.shouldAllowPan ??
 
 const onPanStart =
 options.onPanStart ??
+(()=>{});
+
+const onCancelHoldWait =
+options.onCancelHoldWait ??
 (()=>{});
 
 if(
@@ -3247,6 +3254,7 @@ y:moveEvent.clientY
 };
 
 pressTrack = null;
+onCancelHoldWait();
 
 }
 

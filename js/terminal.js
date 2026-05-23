@@ -55,7 +55,7 @@ mountAxisDoubleTapReset,
 TABLET_USE_CUSTOM_TOUCH_PAN,
 isTabletChartViewport,
 isUserCrosshairEvent
-} from "./chart.js?v=47";
+} from "./chart.js?v=48";
 
 import {
 connectKlineStream,
@@ -636,6 +636,9 @@ let unmountTabletPan =
 let unmountTabletCrosshair =
 ()=>{};
 
+let cancelTabletHoldWait =
+()=>{};
+
 /** iPad: true пока удержание активировало перекрестие (блокирует pan) */
 let tabletCrosshairProbe =
 false;
@@ -685,7 +688,8 @@ chartTouchLayerEl ??
 chartEl,
 {
 shouldAllowPan:tabletPanAllowed,
-blockChartScroll:()=>tabletCrosshairProbe
+blockChartScroll:()=>tabletCrosshairProbe,
+onCancelHoldWait:()=>cancelTabletHoldWait()
 }
 );
 
@@ -1173,7 +1177,7 @@ mountChartRangeFreeze(
 rsiChart
 );
 
-unmountTabletCrosshair =
+const tabletCrosshairCtrl =
 mountTabletCrosshairLongPress(
 chart,
 candleSeries,
@@ -1355,6 +1359,12 @@ onTime:updateRsiHudFromCrosshairTime
 }
 }
 );
+
+unmountTabletCrosshair =
+tabletCrosshairCtrl.dispose;
+
+cancelTabletHoldWait =
+tabletCrosshairCtrl.cancelHoldWait;
 
 }
 
