@@ -992,6 +992,129 @@ applyChartScaleWidthCss(mainChart);
 
 }
 
+export function linkPairedChartTimeScales(
+mainChart,
+linkedChart,
+afterSync
+){
+
+if(
+!mainChart ||
+!linkedChart
+){
+return ()=>{};
+}
+
+let lock =
+false;
+
+function fromMain(){
+
+if(lock){
+return;
+}
+
+lock = true;
+
+syncLinkedChartTimescales(
+mainChart,
+linkedChart
+);
+
+afterSync?.();
+
+lock = false;
+
+}
+
+function fromLinked(){
+
+if(lock){
+return;
+}
+
+const range =
+linkedChart.timeScale().getVisibleLogicalRange();
+
+if(
+!range
+){
+return;
+}
+
+lock = true;
+
+mainChart.timeScale().applyOptions(
+getTimeScaleSyncOptions(
+linkedChart.timeScale()
+)
+);
+
+mainChart.timeScale().setVisibleLogicalRange(
+range
+);
+
+syncLinkedChartPriceScales(
+mainChart,
+linkedChart
+);
+
+afterSync?.();
+
+lock = false;
+
+}
+
+mainChart.timeScale().subscribeVisibleLogicalRangeChange(
+range=>{
+if(range){
+fromMain();
+}
+}
+);
+
+linkedChart.timeScale().subscribeVisibleLogicalRangeChange(
+range=>{
+if(range){
+fromLinked();
+}
+}
+);
+
+return ()=>{};
+
+}
+
+export function applyTabletRsiChartOptions(
+rsiChart
+){
+
+if(
+!rsiChart ||
+!isTabletChartViewport()
+){
+return;
+}
+
+rsiChart.applyOptions({
+handleScroll:{
+mouseWheel:false,
+pressedMouseMove:false,
+horzTouchDrag:true,
+vertTouchDrag:false
+},
+handleScale:{
+axisPressedMouseMove:{
+time:true,
+price:false
+},
+mouseWheel:false,
+pinch:false
+}
+});
+
+}
+
 export function updateRsiBandLayout(
 rsiSeries,
 bandEl
@@ -1323,7 +1446,6 @@ const priceEl =
 hud.querySelector(".chart-price-hud-price");
 const cdEl =
 hud.querySelector(".chart-price-hud-cd");
-let timer = 0;
 
 function update(){
 
@@ -1395,20 +1517,78 @@ hud.classList.add("hidden");
 
 }
 
+let hudRaf =
+0;
+
+function scheduleUpdate(){
+
+if(
+hudRaf
+){
+return;
+}
+
+hudRaf =
+requestAnimationFrame(()=>{
+hudRaf = 0;
+update();
+});
+
+}
+
 update();
 
-timer = window.setInterval(update, 1000);
+const timer =
+window.setInterval(
+update,
+1000
+);
 
 const ro =
-new ResizeObserver(()=>update());
+new ResizeObserver(
+scheduleUpdate
+);
 
-ro.observe(wrapEl);
+ro.observe(
+wrapEl
+);
 
-return ()=>{
+chart.timeScale().subscribeVisibleLogicalRangeChange(
+scheduleUpdate
+);
 
-clearInterval(timer);
+try{
+chart.priceScale(
+"right"
+).subscribeVisibleLogicalRangeChange?.(
+scheduleUpdate
+);
+}catch{
+/* ignore */
+}
+
+return {
+
+refresh:update,
+
+stop(){
+
+clearInterval(
+timer
+);
+
+if(
+hudRaf
+){
+cancelAnimationFrame(
+hudRaf
+);
+}
+
 ro.disconnect();
 hud?.remove();
+
+}
 
 };
 
@@ -1423,16 +1603,18 @@ return window.matchMedia(
 }
 
 /**
- * iPad: вертикальное сжатие/растяжение по правой шкале цены (как TradingView).
- * Мышь на десктопе — нативный LW; touch — свой drag по зоне шкалы.
+ * iPad: вертикальный масштаб за правую шкалу цены (scaleMargins, как в TV).
  */
 export function mountTabletPriceScaleTouch(
 chart,
-chartEl
+wrapEl,
+chartEl,
+onInteraction
 ){
 
 if(
 !chart ||
+!wrapEl ||
 !chartEl ||
 !isTabletChartViewport()
 ){
@@ -1442,14 +1624,48 @@ return ()=>{};
 let drag =
 null;
 
-function priceScaleWidth(){
+let margins =
+{
+top:0.12,
+bottom:0.12
+};
+
+function readMargins(){
 
 try{
-return chart.priceScale("right").width() ||
-CHART_PRICE_SCALE_WIDTH;
+
+const o =
+chart.priceScale(
+"right"
+).options();
+
+margins.top =
+o.scaleMargins?.top ??
+0.12;
+
+margins.bottom =
+o.scaleMargins?.bottom ??
+0.12;
+
 }catch{
-return CHART_PRICE_SCALE_WIDTH;
+/* ignore */
 }
+
+}
+
+function priceScaleHitWidth(){
+
+const w =
+chart.priceScale(
+"right"
+).width() ||
+CHART_PRICE_SCALE_WIDTH;
+
+return Math.max(
+w,
+CHART_PRICE_SCALE_WIDTH,
+72
+);
 
 }
 
@@ -1460,8 +1676,14 @@ clientX
 const rect =
 chartEl.getBoundingClientRect();
 
-return clientX >=
-rect.right - priceScaleWidth() - 1;
+return (
+clientX >=
+rect.left &&
+clientX <=
+rect.right &&
+clientX >=
+rect.right - priceScaleHitWidth()
+);
 
 }
 
@@ -1469,55 +1691,44 @@ function applyVerticalScaleDrag(
 dy
 ){
 
-const scale =
-chart.priceScale("right");
+const delta =
+dy * 0.003;
 
-let range;
-
-try{
-range = scale.getVisibleRange();
-}catch{
-return;
-}
-
-if(
-!range ||
-!Number.isFinite(range.from) ||
-!Number.isFinite(range.to)
-){
-return;
-}
-
-const mid =
-(range.from + range.to) / 2;
-
-let half =
+margins.top =
 Math.max(
-(range.to - range.from) / 2,
-1e-12
+0.02,
+Math.min(
+0.48,
+margins.top + delta
+)
 );
 
-half *=
-Math.exp(
-dy * 0.012
+margins.bottom =
+Math.max(
+0.02,
+Math.min(
+0.48,
+margins.bottom + delta
+)
 );
 
-scale.setVisibleRange({
-from: mid - half,
-to: mid + half
+chart.priceScale(
+"right"
+).applyOptions({
+autoScale:false,
+scaleMargins:{
+top:margins.top,
+bottom:margins.bottom
+}
 });
+
+onInteraction?.();
 
 }
 
 function onPointerDown(
 e
 ){
-
-if(
-!e.isPrimary
-){
-return;
-}
 
 if(
 e.pointerType === "mouse"
@@ -1533,13 +1744,19 @@ e.clientX
 return;
 }
 
+readMargins();
+
 drag = {
-id: e.pointerId,
-y: e.clientY
+id:
+e.pointerId ??
+0,
+y:e.clientY
 };
 
 try{
-chart.priceScale("right").setAutoScale(
+chart.priceScale(
+"right"
+).setAutoScale(
 false
 );
 }catch{
@@ -1550,9 +1767,11 @@ e.preventDefault();
 
 e.stopPropagation();
 
+e.stopImmediatePropagation?.();
+
 try{
-chartEl.setPointerCapture(
-e.pointerId
+wrapEl.setPointerCapture(
+drag.id
 );
 }catch{
 /* ignore */
@@ -1565,7 +1784,13 @@ e
 ){
 
 if(
-!drag ||
+!drag
+){
+return;
+}
+
+if(
+e.pointerId !== undefined &&
 e.pointerId !== drag.id
 ){
 return;
@@ -1597,7 +1822,13 @@ e
 ){
 
 if(
-!drag ||
+!drag
+){
+return;
+}
+
+if(
+e.pointerId !== undefined &&
 e.pointerId !== drag.id
 ){
 return;
@@ -1606,7 +1837,7 @@ return;
 drag = null;
 
 try{
-chartEl.releasePointerCapture(
+wrapEl.releasePointerCapture(
 e.pointerId
 );
 }catch{
@@ -1616,52 +1847,52 @@ e.pointerId
 }
 
 const opts = {
-capture: true,
-passive: false
+capture:true,
+passive:false
 };
 
-chartEl.addEventListener(
+wrapEl.addEventListener(
 "pointerdown",
 onPointerDown,
 opts
 );
 
-chartEl.addEventListener(
+wrapEl.addEventListener(
 "pointermove",
 onPointerMove,
 opts
 );
 
-chartEl.addEventListener(
+wrapEl.addEventListener(
 "pointerup",
 endDrag
 );
 
-chartEl.addEventListener(
+wrapEl.addEventListener(
 "pointercancel",
 endDrag
 );
 
 return ()=>{
 
-chartEl.removeEventListener(
+wrapEl.removeEventListener(
 "pointerdown",
 onPointerDown,
 opts
 );
 
-chartEl.removeEventListener(
+wrapEl.removeEventListener(
 "pointermove",
 onPointerMove,
 opts
 );
 
-chartEl.removeEventListener(
+wrapEl.removeEventListener(
 "pointerup",
 endDrag
 );
 
-chartEl.removeEventListener(
+wrapEl.removeEventListener(
 "pointercancel",
 endDrag
 );

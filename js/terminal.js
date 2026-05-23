@@ -37,11 +37,13 @@ createRSIChart,
 applyChartPriceFormat,
 mountChartPriceHud,
 syncLinkedChartTimescales,
+linkPairedChartTimeScales,
 linkChartsCrosshair,
 updateRsiBandLayout,
+applyTabletRsiChartOptions,
 mountTabletPriceScaleTouch,
 isUserCrosshairEvent
-} from "./chart.js?v=23";
+} from "./chart.js?v=25";
 
 import {
 connectKlineStream,
@@ -594,14 +596,28 @@ mainChart.chart;
 const candleSeries =
 mainChart.series;
 
+const chartWrapEl =
+document.getElementById(
+"chart-wrap"
+);
+
 const chartEl =
 document.getElementById(
 "chart"
 );
 
+let priceHudCtrl = {
+stop(){},
+refresh(){}
+};
+
 mountTabletPriceScaleTouch(
 chart,
-chartEl
+chartWrapEl,
+chartEl,
+()=>{
+priceHudCtrl.refresh?.();
+}
 );
 
 const rsi =
@@ -614,6 +630,10 @@ rsi.chart;
 
 const rsiSeries =
 rsi.series;
+
+applyTabletRsiChartOptions(
+rsiChart
+);
 
 /*
   Кеш точек RSI: пересборка только при данных свечей;
@@ -1401,29 +1421,21 @@ resizeCharts
    SYNC
 ========================================================= */
 
-chart.timeScale()
-.subscribeVisibleLogicalRangeChange(range=>{
-
-if(range){
-syncLinkedChartTimescales(
+linkPairedChartTimeScales(
 chart,
-rsiChart
+rsiChart,
+layoutRsiBand
 );
-layoutRsiBand();
-}
-
-});
-
-let priceHudStop = null;
 
 function startPriceHud(){
 
-priceHudStop?.();
-priceHudStop =
+priceHudCtrl.stop?.();
+
+priceHudCtrl =
 mountChartPriceHud({
 chart,
 series: candleSeries,
-wrapEl: document.getElementById("chart-wrap"),
+wrapEl: chartWrapEl,
 getTf: ()=> currentTF
 });
 

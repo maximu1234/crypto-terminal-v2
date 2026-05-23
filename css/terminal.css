@@ -768,9 +768,10 @@ body{
   touch-action:pan-x pan-y;
 }
 
-/* iPad: отдать жесты шкале цены / pinch библиотеке (pan-x/pan-y их блокирует) */
+/* iPad: жесты LW (pinch, шкала времени, шкала цены) */
 @media (pointer:coarse) and (min-width:768px){
-  #chart{
+  #chart,
+  #rsi-chart{
     touch-action:none;
   }
 }
