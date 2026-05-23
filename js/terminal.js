@@ -46,10 +46,11 @@ markTabletChartBody,
 mountTabletPriceScaleTouch,
 mountTabletCustomTouchPan,
 mountTabletCrosshairLongPress,
+mountAxisDoubleTapReset,
 TABLET_USE_CUSTOM_TOUCH_PAN,
 isTabletChartViewport,
 isUserCrosshairEvent
-} from "./chart.js?v=35";
+} from "./chart.js?v=36";
 
 import {
 connectKlineStream,
@@ -1607,6 +1608,30 @@ chart,
 rsiChart,
 layoutRsiBand
 );
+
+const rsiChartEl =
+document.getElementById(
+"rsi-chart"
+);
+
+let unmountRsiTimeAxisDoubleTap =
+()=>{};
+
+if(
+rsiChartEl
+){
+
+unmountRsiTimeAxisDoubleTap =
+mountAxisDoubleTapReset(
+rsiChartEl,
+()=>{
+applyDefaultZoom();
+layoutRsiBand();
+drawingTools?.scheduleRedraw?.();
+}
+);
+
+}
 
 function startPriceHud(){
 

@@ -397,6 +397,10 @@ axisPressedMouseMove:{
 time:true,
 price:true
 },
+axisDoubleClickReset:{
+time:true,
+price:true
+},
 mouseWheel:true,
 pinch:true
 }
@@ -773,7 +777,10 @@ axisPressedMouseMove:{
 time:false,
 price:false
 },
-axisDoubleClickReset:false
+axisDoubleClickReset:{
+time:true,
+price:false
+}
 }
 
 });
@@ -1109,6 +1116,10 @@ vertTouchDrag:false
 },
 handleScale:{
 axisPressedMouseMove:{
+time:true,
+price:false
+},
+axisDoubleClickReset:{
 time:true,
 price:false
 },
@@ -2613,6 +2624,209 @@ cancelCurrentGesture
 
 }
 
+export const DEFAULT_PRICE_SCALE_MARGINS =
+Object.freeze({
+top:0.12,
+bottom:0.12
+});
+
+export function resetChartPriceAutoScale(
+chart
+){
+
+if(
+!chart
+){
+return;
+}
+
+try{
+chart.priceScale(
+"right"
+).applyOptions({
+autoScale:true,
+scaleMargins:{
+top:DEFAULT_PRICE_SCALE_MARGINS.top,
+bottom:DEFAULT_PRICE_SCALE_MARGINS.bottom
+}
+});
+}catch{
+/* ignore */
+}
+
+}
+
+/**
+ * Двойной тап / двойной клик по шкале → onReset (автомасштаб и т.п.)
+ */
+export function mountAxisDoubleTapReset(
+targetEl,
+onReset
+){
+
+if(
+!targetEl ||
+typeof onReset !==
+"function"
+){
+return ()=>{};
+}
+
+const DBL_MS =
+320;
+
+const DBL_PX =
+28;
+
+let lastTap =
+null;
+
+let lastTapTimer =
+0;
+
+function clearLastTap(){
+
+lastTap = null;
+
+if(
+lastTapTimer
+){
+clearTimeout(
+lastTapTimer
+);
+
+lastTapTimer = 0;
+
+}
+
+}
+
+function tryDoubleTap(
+e
+){
+
+const now =
+Date.now();
+
+const x =
+e.clientX;
+const y =
+e.clientY;
+
+if(
+lastTap &&
+now - lastTap.t <=
+DBL_MS
+){
+
+const dx =
+x - lastTap.x;
+const dy =
+y - lastTap.y;
+
+if(
+dx * dx + dy * dy <=
+DBL_PX * DBL_PX
+){
+clearLastTap();
+e.preventDefault();
+e.stopPropagation();
+onReset(
+e
+);
+return true;
+
+}
+
+}
+
+if(
+lastTapTimer
+){
+clearTimeout(
+lastTapTimer
+);
+
+}
+
+lastTap = {
+t:now,
+x,
+y
+};
+
+lastTapTimer =
+setTimeout(
+clearLastTap,
+DBL_MS + 80
+);
+
+return false;
+
+}
+
+function onPointerDown(
+e
+){
+
+if(
+e.pointerType ===
+"mouse" &&
+e.button !==
+0
+){
+return;
+}
+
+tryDoubleTap(
+e
+);
+
+}
+
+function onDblClick(
+e
+){
+
+clearLastTap();
+e.preventDefault();
+e.stopPropagation();
+onReset(
+e
+);
+
+}
+
+targetEl.addEventListener(
+"pointerdown",
+onPointerDown,
+{ passive:false }
+);
+
+targetEl.addEventListener(
+"dblclick",
+onDblClick
+);
+
+return ()=>{
+
+targetEl.removeEventListener(
+"pointerdown",
+onPointerDown,
+{ passive:false }
+);
+
+targetEl.removeEventListener(
+"dblclick",
+onDblClick
+);
+
+clearLastTap();
+
+};
+
+}
+
 /**
  * iPad: вертикальный масштаб только на полосе #price-scale-touch-strip.
  * Область свечей не перехватывается — pan/pinch LW остаются отзывчивыми.
@@ -2638,9 +2852,118 @@ null;
 
 let margins =
 {
-top:0.12,
-bottom:0.12
+top:DEFAULT_PRICE_SCALE_MARGINS.top,
+bottom:DEFAULT_PRICE_SCALE_MARGINS.bottom
 };
+
+const STRIP_DBL_TAP_MS =
+320;
+
+const STRIP_DBL_TAP_PX =
+28;
+
+let stripLastTap =
+null;
+
+let stripTapTimer =
+0;
+
+function clearStripLastTap(){
+
+stripLastTap = null;
+
+if(
+stripTapTimer
+){
+clearTimeout(
+stripTapTimer
+);
+
+stripTapTimer = 0;
+
+}
+
+}
+
+function resetStripPriceAutoScale(){
+
+margins = {
+top:DEFAULT_PRICE_SCALE_MARGINS.top,
+bottom:DEFAULT_PRICE_SCALE_MARGINS.bottom
+};
+
+resetChartPriceAutoScale(
+chart
+);
+
+onInteraction?.();
+
+}
+
+function stripTryDoubleTap(
+e
+){
+
+const now =
+Date.now();
+
+const x =
+e.clientX;
+
+const y =
+e.clientY;
+
+if(
+stripLastTap &&
+now - stripLastTap.t <=
+STRIP_DBL_TAP_MS
+){
+
+const dx =
+x - stripLastTap.x;
+
+const dy =
+y - stripLastTap.y;
+
+if(
+dx * dx + dy * dy <=
+STRIP_DBL_TAP_PX * STRIP_DBL_TAP_PX
+){
+clearStripLastTap();
+abortDrag();
+resetStripPriceAutoScale();
+e.preventDefault();
+e.stopPropagation();
+return true;
+
+}
+
+}
+
+if(
+stripTapTimer
+){
+clearTimeout(
+stripTapTimer
+);
+
+}
+
+stripLastTap = {
+t:now,
+x,
+y
+};
+
+stripTapTimer =
+setTimeout(
+clearStripLastTap,
+STRIP_DBL_TAP_MS + 80
+);
+
+return false;
+
+}
 
 function readMargins(){
 
@@ -2789,6 +3112,14 @@ e.pointerType === "mouse"
 return;
 }
 
+if(
+stripTryDoubleTap(
+e
+)
+){
+return;
+}
+
 readMargins();
 
 detachDocListeners();
@@ -2873,10 +3204,26 @@ const stripOpts = {
 passive:false
 };
 
+function onStripDblClick(
+e
+){
+
+e.preventDefault();
+e.stopPropagation();
+abortDrag();
+resetStripPriceAutoScale();
+
+}
+
 stripEl.addEventListener(
 "pointerdown",
 onPointerDown,
 stripOpts
+);
+
+stripEl.addEventListener(
+"dblclick",
+onStripDblClick
 );
 
 const onChartPointerDown =(
@@ -2902,10 +3249,17 @@ onChartPointerDown,
 
 return ()=>{
 
+clearStripLastTap();
+
 stripEl.removeEventListener(
 "pointerdown",
 onPointerDown,
 stripOpts
+);
+
+stripEl.removeEventListener(
+"dblclick",
+onStripDblClick
 );
 
 chartEl.removeEventListener(
