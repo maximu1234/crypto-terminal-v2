@@ -2192,6 +2192,10 @@ null;
 let holdPointer =
 null;
 
+/** touch.identifier (touchstart); ≠ pointerId на iOS */
+let holdTouchId =
+null;
+
 let holdStartX =
 0;
 
@@ -2241,7 +2245,63 @@ syncChartTouchBlock();
 }
 
 holdPointer = null;
+holdTouchId = null;
 holdGestureFromTouch = false;
+
+}
+
+function gestureEndMatches(
+e
+){
+
+if(
+holdPointer ===
+null &&
+holdTouchId ===
+null
+){
+return false;
+}
+
+if(
+e.type ===
+"touchend" ||
+e.type ===
+"touchcancel"
+){
+
+return Array.from(
+e.changedTouches ||
+[]
+).some(
+t=>
+t.identifier ===
+holdTouchId
+);
+
+}
+
+if(
+e.pointerId !==
+undefined
+){
+
+const trackId =
+crosshairTrack?.id ??
+holdPointer;
+
+return (
+trackId !==
+null &&
+trackId !==
+undefined &&
+e.pointerId ===
+trackId
+);
+
+}
+
+return false;
 
 }
 
@@ -2250,7 +2310,8 @@ pointerId,
 clientX,
 clientY,
 {
-fromTouch = false
+fromTouch = false,
+touchId = null
 } = {}
 ){
 
@@ -2277,6 +2338,9 @@ syncChartTouchBlock();
 
 holdGestureFromTouch =
 fromTouch;
+
+holdTouchId =
+touchId;
 
 holdPending = true;
 syncChartTouchBlock();
@@ -2431,31 +2495,6 @@ return;
 }
 
 if(
-pendingActive &&
-holdPointer !==
-null &&
-e.pointerId ===
-holdPointer
-){
-
-const dx =
-e.clientX - holdStartX;
-
-const dy =
-e.clientY - holdStartY;
-
-if(
-dx * dx + dy * dy >
-TABLET_CROSSHAIR_HOLD_MOVE_CANCEL_PX *
-TABLET_CROSSHAIR_HOLD_MOVE_CANCEL_PX
-){
-clearHoldTimer();
-return;
-}
-
-}
-
-if(
 probeActive
 ){
 
@@ -2526,21 +2565,6 @@ pendingActive &&
 !probeActive
 ){
 
-const dx =
-t.clientX - holdStartX;
-
-const dy =
-t.clientY - holdStartY;
-
-if(
-dx * dx + dy * dy >
-TABLET_CROSSHAIR_HOLD_MOVE_CANCEL_PX *
-TABLET_CROSSHAIR_HOLD_MOVE_CANCEL_PX
-){
-clearHoldTimer();
-return;
-}
-
 e.preventDefault();
 e.stopImmediatePropagation();
 return;
@@ -2571,15 +2595,9 @@ crosshairTrack
 ){
 
 if(
-e.type ===
-"touchend" ||
-e.type ===
-"touchcancel"
-){
-
-if(
-e.touches.length >
-0
+!gestureEndMatches(
+e
+)
 ){
 return;
 }
@@ -2591,27 +2609,15 @@ return;
 }
 
 if(
-e.pointerId !==
-undefined &&
-e.pointerId !==
-crosshairTrack.id
+!holdPending
 ){
 return;
 }
 
-endProbeSession();
-
-return;
-
-}
-
 if(
-holdPointer !==
-null &&
-e.pointerId !==
-undefined &&
-e.pointerId !==
-holdPointer
+!gestureEndMatches(
+e
+)
 ){
 return;
 }
@@ -2733,8 +2739,20 @@ return;
 if(
 e.pointerType ===
 "touch" &&
-holdGestureFromTouch
+holdGestureFromTouch &&
+holdPending
 ){
+holdPointer =
+e.pointerId ??
+holdPointer;
+
+if(
+crosshairTrack
+){
+crosshairTrack.id =
+holdPointer;
+}
+
 return;
 }
 
@@ -2809,8 +2827,24 @@ startHoldGesture(
 t.identifier,
 t.clientX,
 t.clientY,
-{ fromTouch:true }
+{
+fromTouch:true,
+touchId:t.identifier
+}
 );
+
+}
+
+function onLayerContextMenu(
+e
+){
+
+if(
+holdPending ||
+crosshairTrack
+){
+e.preventDefault();
+}
 
 }
 
@@ -2831,20 +2865,14 @@ capDown
 );
 
 touchLayerEl.addEventListener(
-"pointerup",
-onDocGestureEnd,
-capUp
-);
-
-touchLayerEl.addEventListener(
-"pointercancel",
-onDocGestureEnd,
-capUp
-);
-
-touchLayerEl.addEventListener(
 "touchstart",
 onTouchStart,
+capDown
+);
+
+touchLayerEl.addEventListener(
+"contextmenu",
+onLayerContextMenu,
 capDown
 );
 
@@ -2866,20 +2894,14 @@ capDown
 );
 
 touchLayerEl.removeEventListener(
-"pointerup",
-onDocGestureEnd,
-capUp
-);
-
-touchLayerEl.removeEventListener(
-"pointercancel",
-onDocGestureEnd,
-capUp
-);
-
-touchLayerEl.removeEventListener(
 "touchstart",
 onTouchStart,
+capDown
+);
+
+touchLayerEl.removeEventListener(
+"contextmenu",
+onLayerContextMenu,
 capDown
 );
 
