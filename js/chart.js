@@ -272,11 +272,7 @@ return `${wd} ${day} ${mon} '${yr} ${hh}:${mm}`;
 
 function updateCrosshairAxisLabels({
 param,
-linkedChart,
-linkedSeries,
-getLinkedValueAtTime,
-timeLabelEl,
-scaleLabelEl
+timeLabelEl
 }){
 
 const x =
@@ -311,69 +307,10 @@ timeLabelEl.style.removeProperty(
 
 }
 
-const linkedValue =
-getLinkedValueAtTime?.(
-param.time
-);
-
-if(
-!scaleLabelEl ||
-linkedValue === null ||
-linkedValue === undefined ||
-!Number.isFinite(linkedValue) ||
-!linkedSeries
-){
-
-scaleLabelEl?.classList.add(
-"hidden"
-);
-
-scaleLabelEl?.style.removeProperty(
-"top"
-);
-
-return;
-
-}
-
-const y =
-linkedSeries.priceToCoordinate?.(
-linkedValue
-);
-
-if(
-y === null ||
-y === undefined ||
-!Number.isFinite(y)
-){
-
-scaleLabelEl.classList.add(
-"hidden"
-);
-
-scaleLabelEl.style.removeProperty(
-"top"
-);
-
-return;
-
-}
-
-scaleLabelEl.textContent =
-linkedValue.toFixed(2);
-
-scaleLabelEl.style.top =
-`${Math.round(y)}px`;
-
-scaleLabelEl.classList.remove(
-"hidden"
-);
-
 }
 
 function clearCrosshairAxisLabels(
-timeLabelEl,
-scaleLabelEl
+timeLabelEl
 ){
 
 if(
@@ -386,20 +323,6 @@ timeLabelEl.classList.add(
 
 timeLabelEl.style.removeProperty(
 "left"
-);
-
-}
-
-if(
-scaleLabelEl
-){
-
-scaleLabelEl.classList.add(
-"hidden"
-);
-
-scaleLabelEl.style.removeProperty(
-"top"
 );
 
 }
@@ -818,7 +741,7 @@ mode:
 normalMode,
 autoScale:true,
 minimumWidth:CHART_PRICE_SCALE_WIDTH,
-ticksVisible:false,
+ticksVisible:true,
 scaleMargins:{
 top:0,
 bottom:0
@@ -862,11 +785,11 @@ crosshair:rsiCrosshairOptions()
 const series =
 chart.addLineSeries({
 
-color:"#e6e8eb",
+color:"#b2b5be",
 
 lineWidth:1,
 
-lastValueVisible:false,
+lastValueVisible:true,
 
 priceLineVisible:false,
 
@@ -899,13 +822,10 @@ minMove:0.01
 });
 
 [
-{ price:70, axisLabelVisible:true },
-
-{ price:50, axisLabelVisible:false },
-
-{ price:30, axisLabelVisible:true }
-
-].forEach(({ price, axisLabelVisible })=>{
+70,
+50,
+30
+].forEach(price=>{
 
 series.createPriceLine({
 
@@ -918,7 +838,7 @@ lineStyleDot,
 
 lineWidth:1,
 
-axisLabelVisible,
+axisLabelVisible:false,
 
 title:""
 
@@ -1126,9 +1046,8 @@ mainSeries,
 linkedSeries,
 linkedVertOverlayEl,
 crosshairTimeLabelEl,
-crosshairScaleLabelEl,
 onLinkedCrosshairTime,
-onLinkedCrosshairActive,
+onLinkedCrosshairClear,
 getLinkedValueAtTime,
 getMainValueAtTime
 }){
@@ -1159,13 +1078,10 @@ function clearLinked(){
 clearLinkedVert();
 
 clearCrosshairAxisLabels(
-crosshairTimeLabelEl,
-crosshairScaleLabelEl
+crosshairTimeLabelEl
 );
 
-onLinkedCrosshairActive?.(
-false
-);
+onLinkedCrosshairClear?.();
 
 try{
 linkedChart.clearCrosshairPosition();
@@ -1215,16 +1131,8 @@ linkedChart.clearCrosshairPosition();
 
 updateCrosshairAxisLabels({
 param,
-linkedChart,
-linkedSeries,
-getLinkedValueAtTime,
-timeLabelEl:crosshairTimeLabelEl,
-scaleLabelEl:crosshairScaleLabelEl
+timeLabelEl:crosshairTimeLabelEl
 });
-
-onLinkedCrosshairActive?.(
-true
-);
 
 if(
 onLinkedCrosshairTime

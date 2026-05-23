@@ -40,7 +40,7 @@ syncLinkedChartTimescales,
 linkChartsCrosshair,
 updateRsiBandLayout,
 isUserCrosshairEvent
-} from "./chart.js?v=21";
+} from "./chart.js?v=22";
 
 import {
 connectKlineStream,
@@ -697,7 +697,17 @@ rsiPointsCache[i].time <=
 ts
 ){
 
-return rsiPointsCache[i].value;
+const v =
+rsiPointsCache[i].value;
+
+if(
+v !== undefined &&
+Number.isFinite(v)
+){
+
+return v;
+
+}
 
 }
 
@@ -830,11 +840,6 @@ rsiLookupAtOrBefore(ts)
 
 }
 
-const rsiWrapEl =
-document.getElementById(
-"rsi-wrap"
-);
-
 linkChartsCrosshair({
 mainChart:chart,
 linkedChart:rsiChart,
@@ -846,14 +851,17 @@ linkedVertOverlayEl:document.getElementById(
 crosshairTimeLabelEl:document.getElementById(
 "crosshair-time-label"
 ),
-crosshairScaleLabelEl:document.getElementById(
-"rsi-crosshair-scale-label"
-),
 onLinkedCrosshairTime:updateRsiHudFromCrosshairTime,
-onLinkedCrosshairActive(active){
-rsiWrapEl?.classList.toggle(
-"rsi-wrap--crosshair",
-!!active
+onLinkedCrosshairClear(){
+const last =
+rsiPointsCache[
+rsiPointsCache.length -
+1
+];
+
+setRsiHudValue(
+last?.value ??
+null
 );
 },
 getLinkedValueAtTime(time){

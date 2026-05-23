@@ -813,9 +813,9 @@ body{
 
 #rsi-wrap{
   position:relative;
-  flex:0 0 clamp(64px,11dvh,100px);
-  height:clamp(64px,11dvh,100px);
-  min-height:64px;
+  flex:0 0 clamp(102px,17.6dvh,160px);
+  height:clamp(102px,17.6dvh,160px);
+  min-height:102px;
   border-top:1px solid #2a2e39;
   padding-right:0;
   box-sizing:border-box;
@@ -824,9 +824,9 @@ body{
 
 @media (pointer:coarse) and (min-width:768px){
   #rsi-wrap{
-    flex-basis:clamp(56px,10dvh,88px);
-    height:clamp(56px,10dvh,88px);
-    min-height:56px;
+    flex-basis:clamp(90px,16dvh,141px);
+    height:clamp(90px,16dvh,141px);
+    min-height:90px;
   }
 }
 
@@ -847,41 +847,28 @@ body{
   left:10px;
   top:6px;
   z-index:2;
-  display:flex;
-  align-items:center;
-  gap:12px;
-  font-size:11px;
+  font-size:12px;
+  line-height:16px;
   letter-spacing:0.01em;
   pointer-events:none;
   user-select:none;
+  font-variant-numeric:tabular-nums;
 }
 
 .rsi-hud-title{
   color:#d1d4dc;
-  font-variant-numeric:tabular-nums;
 }
 
 .rsi-hud-muted{
-  margin-left:6px;
+  margin-left:4px;
   color:#787b86;
   font-weight:400;
 }
 
 #rsi-hud-value{
-  margin-left:2px;
-}
-
-.rsi-hud-badge{
-  display:inline-block;
-  min-width:40px;
-  padding:2px 8px;
-  border-radius:2px;
-  text-align:center;
-  font-variant-numeric:tabular-nums;
-  color:#f0f0f3;
-  background:linear-gradient(180deg,#7864a8 0%,#5d4b8a 100%);
-  border:1px solid rgba(142,123,198,0.5);
-  box-shadow:0 0 0 1px rgba(0,0,0,0.2) inset;
+  margin-left:4px;
+  color:#d1d4dc;
+  font-weight:400;
 }
 
 #rsi-chart{
@@ -926,19 +913,6 @@ body{
   white-space:nowrap;
 }
 
-.crosshair-scale-label{
-  right:0;
-  width:var(--chart-scale-width, 56px);
-  box-sizing:border-box;
-  padding-right:6px;
-  padding-left:4px;
-  text-align:right;
-  transform:translateY(-50%);
-}
-
-#rsi-wrap.rsi-wrap--crosshair .rsi-hud-badge{
-  visibility:hidden;
-}
 
 #list{
   border-left:1px solid #1f2937;

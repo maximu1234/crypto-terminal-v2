@@ -12,7 +12,7 @@
 <title>Multichart</title>
 
 <link rel="stylesheet" href="css/common.css">
-<link rel="stylesheet" href="css/terminal.css?v=26">
+<link rel="stylesheet" href="css/terminal.css?v=28">
 
 </head>
 
@@ -202,15 +202,10 @@ BTCUSDT.P
 <div id="rsi-wrap">
 <div id="rsi-band"></div>
 <div id="rsi-hud" aria-hidden="false">
-<span class="rsi-hud-title">
-RSI <span id="rsi-hud-period">14</span>
-<span class="rsi-hud-muted">close</span>
-</span>
-<span id="rsi-hud-value" class="rsi-hud-badge">—</span>
+<span class="rsi-hud-title">RSI <span id="rsi-hud-period">14</span></span><span class="rsi-hud-muted">close</span><span id="rsi-hud-value">—</span>
 </div>
 <div id="rsi-chart"></div>
 <div id="crosshair-time-label" class="crosshair-axis-label crosshair-time-label hidden" aria-hidden="true"></div>
-<div id="rsi-crosshair-scale-label" class="crosshair-axis-label crosshair-scale-label hidden" aria-hidden="true"></div>
 </div>
 
 <div id="linked-crosshair-vert" class="linked-crosshair-vert hidden" aria-hidden="true"></div>
@@ -303,7 +298,7 @@ document.body.innerHTML = `
 import("./js/charts-lib-boot.js").then(({ loadLightweightCharts })=>
 loadLightweightCharts()
 ).then(()=>
-import("./js/terminal.js?v=100")
+import("./js/terminal.js?v=101")
 ).catch(err=>{
 
 console.error(err);
