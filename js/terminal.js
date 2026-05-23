@@ -36,7 +36,7 @@ createRSIChart,
 applyChartPriceFormat,
 mountChartPriceHud,
 syncLinkedChartTimescales
-} from "./chart.js?v=12";
+} from "./chart.js?v=13";
 
 import {
 connectKlineStream,

@@ -821,7 +821,7 @@ body{
 #rsi-band{
   position:absolute;
   left:0;
-  right:56px;
+  right:var(--chart-scale-width, 56px);
   top:30%;
   height:40%;
   background:#1e1e31;
@@ -874,7 +874,6 @@ body{
 #rsi-chart{
   position:absolute;
   inset:0;
-  right:56px;
   z-index:1;
 }
 

@@ -518,9 +518,9 @@ container,
 layout:{
 /* Прозрачный: зона 30–70 рисуется DOM (#rsi-band) под канвой */
 background:{ color:"transparent" },
-textColor:"#b2b5be",
-fontFamily:
-"-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif"
+textColor:CHART_SCALE_TEXT_COLOR,
+fontSize:CHART_SCALE_FONT_SIZE,
+fontFamily:CHART_SCALE_FONT_FAMILY
 },
 
 grid:{
@@ -665,6 +665,66 @@ series
 
 }
 
+export function applyChartScaleWidthCss(
+mainChart
+){
+
+if(!mainChart){
+return;
+}
+
+const w =
+mainChart.priceScale("right").width() ||
+CHART_PRICE_SCALE_WIDTH;
+
+const px =
+`${w}px`;
+
+document
+.getElementById("chart-wrap")
+?.style
+.setProperty("--chart-scale-width", px);
+
+document
+.getElementById("rsi-wrap")
+?.style
+.setProperty("--chart-scale-width", px);
+
+}
+
+export function syncLinkedChartPriceScales(
+mainChart,
+linkedChart
+){
+
+if(
+!mainChart ||
+!linkedChart
+){
+return CHART_PRICE_SCALE_WIDTH;
+}
+
+const w =
+Math.max(
+mainChart.priceScale("right").width() || 0,
+linkedChart.priceScale("right").width() || 0,
+CHART_PRICE_SCALE_WIDTH
+);
+
+mainChart.priceScale("right").applyOptions({
+minimumWidth:w
+});
+
+linkedChart.priceScale("right").applyOptions({
+minimumWidth:w
+});
+
+applyChartScaleWidthCss(mainChart);
+
+return w;
+
+}
+
 export function syncLinkedChartTimescales(
 mainChart,
 linkedChart
@@ -676,6 +736,11 @@ if(
 ){
 return;
 }
+
+syncLinkedChartPriceScales(
+mainChart,
+linkedChart
+);
 
 const range =
 mainChart.timeScale().getVisibleLogicalRange();
@@ -703,6 +768,8 @@ barSpacing
 }
 
 linkedChart.timeScale().setVisibleLogicalRange(range);
+
+applyChartScaleWidthCss(mainChart);
 
 }
 
