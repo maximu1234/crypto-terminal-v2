@@ -768,12 +768,31 @@ body{
   touch-action:pan-x pan-y;
 }
 
-/* iPad: жесты LW (pinch, шкала времени, шкала цены) */
+/* iPad: свечи — pan/pinch через LW; шкала цены — отдельная полоса */
 @media (pointer:coarse) and (min-width:768px){
-  #chart,
+  #chart{
+    touch-action:manipulation;
+  }
+
   #rsi-chart{
     touch-action:none;
   }
+
+  .price-scale-touch-strip{
+    display:block;
+  }
+}
+
+.price-scale-touch-strip{
+  display:none;
+  position:absolute;
+  top:0;
+  right:0;
+  bottom:0;
+  width:var(--chart-scale-width, 56px);
+  z-index:5;
+  touch-action:none;
+  pointer-events:auto;
 }
 
 .chart-price-hud{

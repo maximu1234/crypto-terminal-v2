@@ -1603,19 +1603,18 @@ return window.matchMedia(
 }
 
 /**
- * iPad: вертикальный масштаб за правую шкалу цены (scaleMargins, как в TV).
+ * iPad: вертикальный масштаб только на полосе #price-scale-touch-strip.
+ * Область свечей не перехватывается — pan/pinch LW остаются отзывчивыми.
  */
 export function mountTabletPriceScaleTouch(
 chart,
-wrapEl,
-chartEl,
+stripEl,
 onInteraction
 ){
 
 if(
 !chart ||
-!wrapEl ||
-!chartEl ||
+!stripEl ||
 !isTabletChartViewport()
 ){
 return ()=>{};
@@ -1653,37 +1652,29 @@ o.scaleMargins?.bottom ??
 
 }
 
-function priceScaleHitWidth(){
-
-const w =
-chart.priceScale(
-"right"
-).width() ||
-CHART_PRICE_SCALE_WIDTH;
-
-return Math.max(
-w,
-CHART_PRICE_SCALE_WIDTH,
-72
-);
-
-}
-
-function pointerOnPriceScale(
-clientX
+function releaseDrag(
+e
 ){
 
-const rect =
-chartEl.getBoundingClientRect();
+if(
+!drag
+){
+return;
+}
 
-return (
-clientX >=
-rect.left &&
-clientX <=
-rect.right &&
-clientX >=
-rect.right - priceScaleHitWidth()
+const id =
+e?.pointerId ??
+drag.id;
+
+drag = null;
+
+try{
+stripEl.releasePointerCapture(
+id
 );
+}catch{
+/* ignore */
+}
 
 }
 
@@ -1736,14 +1727,6 @@ e.pointerType === "mouse"
 return;
 }
 
-if(
-!pointerOnPriceScale(
-e.clientX
-)
-){
-return;
-}
-
 readMargins();
 
 drag = {
@@ -1765,12 +1748,8 @@ false
 
 e.preventDefault();
 
-e.stopPropagation();
-
-e.stopImmediatePropagation?.();
-
 try{
-wrapEl.setPointerCapture(
+stripEl.setPointerCapture(
 drag.id
 );
 }catch{
@@ -1817,85 +1796,87 @@ e.preventDefault();
 
 }
 
-function endDrag(
-e
-){
-
-if(
-!drag
-){
-return;
-}
-
-if(
-e.pointerId !== undefined &&
-e.pointerId !== drag.id
-){
-return;
-}
-
-drag = null;
-
-try{
-wrapEl.releasePointerCapture(
-e.pointerId
-);
-}catch{
-/* ignore */
-}
-
-}
-
-const opts = {
-capture:true,
+const moveOpts = {
 passive:false
 };
 
-wrapEl.addEventListener(
+stripEl.addEventListener(
 "pointerdown",
 onPointerDown,
-opts
+moveOpts
 );
 
-wrapEl.addEventListener(
+stripEl.addEventListener(
 "pointermove",
 onPointerMove,
-opts
+moveOpts
 );
 
-wrapEl.addEventListener(
+stripEl.addEventListener(
 "pointerup",
-endDrag
+releaseDrag
 );
 
-wrapEl.addEventListener(
+stripEl.addEventListener(
 "pointercancel",
-endDrag
+releaseDrag
+);
+
+window.addEventListener(
+"pointerup",
+releaseDrag
+);
+
+window.addEventListener(
+"pointercancel",
+releaseDrag
+);
+
+window.addEventListener(
+"blur",
+releaseDrag
 );
 
 return ()=>{
 
-wrapEl.removeEventListener(
+stripEl.removeEventListener(
 "pointerdown",
 onPointerDown,
-opts
+moveOpts
 );
 
-wrapEl.removeEventListener(
+stripEl.removeEventListener(
 "pointermove",
 onPointerMove,
-opts
+moveOpts
 );
 
-wrapEl.removeEventListener(
+stripEl.removeEventListener(
 "pointerup",
-endDrag
+releaseDrag
 );
 
-wrapEl.removeEventListener(
+stripEl.removeEventListener(
 "pointercancel",
-endDrag
+releaseDrag
 );
+
+window.removeEventListener(
+"pointerup",
+releaseDrag
+);
+
+window.removeEventListener(
+"pointercancel",
+releaseDrag
+);
+
+window.removeEventListener(
+"blur",
+releaseDrag
+);
+
+releaseDrag();
 
 };
 

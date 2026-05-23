@@ -43,7 +43,7 @@ updateRsiBandLayout,
 applyTabletRsiChartOptions,
 mountTabletPriceScaleTouch,
 isUserCrosshairEvent
-} from "./chart.js?v=25";
+} from "./chart.js?v=26";
 
 import {
 connectKlineStream,
@@ -601,11 +601,6 @@ document.getElementById(
 "chart-wrap"
 );
 
-const chartEl =
-document.getElementById(
-"chart"
-);
-
 let priceHudCtrl = {
 stop(){},
 refresh(){}
@@ -613,8 +608,9 @@ refresh(){}
 
 mountTabletPriceScaleTouch(
 chart,
-chartWrapEl,
-chartEl,
+document.getElementById(
+"price-scale-touch-strip"
+),
 ()=>{
 priceHudCtrl.refresh?.();
 }
