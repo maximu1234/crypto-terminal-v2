@@ -44,8 +44,7 @@ applyTabletRsiChartOptions,
 applyTabletMainChartScroll,
 markTabletChartBody,
 mountTabletPriceScaleTouch,
-mountTabletCustomTouchPan,
-mountTabletCrosshairLongPress,
+mountTabletChartGestures,
 mountChartRangeFreeze,
 positionTabletProbeCrosshair,
 hideTabletProbeCrosshair,
@@ -55,7 +54,7 @@ mountAxisDoubleTapReset,
 TABLET_USE_CUSTOM_TOUCH_PAN,
 isTabletChartViewport,
 isUserCrosshairEvent
-} from "./chart.js?v=50";
+} from "./chart.js?v=51";
 
 import {
 connectKlineStream,
@@ -630,17 +629,11 @@ stop(){},
 refresh(){}
 };
 
-let unmountTabletPan =
+let unmountTabletGestures =
 ()=>{};
 
 let unmountTabletCrosshair =
 ()=>{};
-
-let cancelTabletHoldWait =
-()=>{};
-
-let tabletCrosshairIsHoldWaiting =
-()=>false;
 
 /** iPad: true пока удержание активировало перекрестие (блокирует pan) */
 let tabletCrosshairProbe =
@@ -677,37 +670,6 @@ return false;
 }
 
 return true;
-
-}
-
-if(
-TABLET_USE_CUSTOM_TOUCH_PAN
-){
-
-const tabletPanCtrl =
-mountTabletCustomTouchPan(
-chart,
-chartTouchLayerEl ??
-chartEl,
-{
-shouldAllowPan:tabletPanAllowed,
-blockChartScroll:()=>tabletCrosshairProbe,
-onCancelHoldWait:()=>cancelTabletHoldWait(),
-isHoldWaiting:()=>tabletCrosshairIsHoldWaiting()
-}
-);
-
-abortTabletPan =
-tabletPanCtrl.abortPan;
-
-const cancelTabletPanGesture =
-tabletPanCtrl.cancelCurrentGesture;
-
-const setTabletPanSuspended =
-tabletPanCtrl.setPanSuspended;
-
-unmountTabletPan =
-tabletPanCtrl.dispose;
 
 }
 
@@ -1169,74 +1131,15 @@ mountChartRangeFreeze(
 rsiChart
 );
 
-const tabletCrosshairCtrl =
-mountTabletCrosshairLongPress(
+const tabletGestureCtrl =
+mountTabletChartGestures(
 chart,
-candleSeries,
 chartEl,
 chartTouchLayerEl,
 {
-shouldBeginHold:tabletHoldShouldBegin,
-onHoldPendingStart:()=>{
-chartWrapEl?.classList.add(
-"chart-probe-pending"
-);
-try{
-chart.applyOptions({
-handleScroll:{
-mouseWheel:false,
-pressedMouseMove:false,
-horzTouchDrag:false,
-vertTouchDrag:false
-},
-handleScale:{
-mouseWheel:false,
-pinch:false,
-axisPressedMouseMove:{
-time:false,
-price:false
-}
-}
-});
-rsiChart.applyOptions({
-handleScroll:{
-mouseWheel:false,
-pressedMouseMove:false,
-horzTouchDrag:false,
-vertTouchDrag:false
-},
-handleScale:{
-mouseWheel:false,
-pinch:false,
-axisPressedMouseMove:{
-time:false,
-price:false
-}
-}
-});
-}catch{
-/* ignore */
-}
-},
-onHoldPendingEnd:()=>{
-chartWrapEl?.classList.remove(
-"chart-probe-pending"
-);
-if(
-!tabletCrosshairProbe
-){
-try{
-applyTabletMainChartScroll(
-chart
-);
-applyTabletRsiChartOptions(
-rsiChart
-);
-}catch{
-/* ignore */
-}
-}
-},
+shouldBeginGesture:tabletHoldShouldBegin,
+shouldAllowPan:tabletPanAllowed,
+blockChartScroll:()=>tabletCrosshairProbe,
 onHoldStart:()=>{
 setTabletPanSuspended?.(
 true
@@ -1352,14 +1255,20 @@ onTime:updateRsiHudFromCrosshairTime
 }
 );
 
+abortTabletPan =
+tabletGestureCtrl.abortPan;
+
+const cancelTabletPanGesture =
+tabletGestureCtrl.cancelCurrentGesture;
+
+const setTabletPanSuspended =
+tabletGestureCtrl.setPanSuspended;
+
+unmountTabletGestures =
+tabletGestureCtrl.dispose;
+
 unmountTabletCrosshair =
-tabletCrosshairCtrl.dispose;
-
-cancelTabletHoldWait =
-tabletCrosshairCtrl.cancelHoldWait;
-
-tabletCrosshairIsHoldWaiting =
-tabletCrosshairCtrl.isHoldWaiting;
+unmountTabletGestures;
 
 }
 

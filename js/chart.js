@@ -1599,12 +1599,6 @@ tablet &&
 TABLET_USE_CUSTOM_TOUCH_PAN
 );
 
-if(
-tablet
-){
-installTabletChartGestureGuard();
-}
-
 }
 
 export function updateRsiBandLayout(
@@ -2085,6 +2079,10 @@ hud?.remove();
 };
 
 }
+
+export {
+mountTabletChartGestures
+} from "./chart-tablet-gestures.js?v=2";
 
 export function isTabletChartViewport(){
 
