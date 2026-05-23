@@ -842,6 +842,12 @@ body.tablet-chart .price-scale-touch-strip{
   touch-action:none;
 }
 
+/* iPad: LW не получает touch до срабатывания long-press (тот же жест) */
+#chart-wrap.chart-probe-pending #chart,
+#chart-wrap.chart-probe-pending #tablet-probe-touch-layer{
+  touch-action:none;
+}
+
 #rsi-wrap{
   position:relative;
   flex:0 0 clamp(102px,17.6dvh,160px);

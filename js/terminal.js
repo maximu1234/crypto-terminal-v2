@@ -55,7 +55,7 @@ mountAxisDoubleTapReset,
 TABLET_USE_CUSTOM_TOUCH_PAN,
 isTabletChartViewport,
 isUserCrosshairEvent
-} from "./chart.js?v=42";
+} from "./chart.js?v=43";
 
 import {
 connectKlineStream,
@@ -1159,6 +1159,66 @@ chartEl,
 probeTouchLayerEl,
 {
 shouldBeginHold:tabletHoldShouldBegin,
+onHoldPendingStart:()=>{
+chartWrapEl?.classList.add(
+"chart-probe-pending"
+);
+try{
+chart.applyOptions({
+handleScroll:{
+mouseWheel:false,
+pressedMouseMove:false,
+horzTouchDrag:false,
+vertTouchDrag:false
+},
+handleScale:{
+mouseWheel:false,
+pinch:false,
+axisPressedMouseMove:{
+time:false,
+price:false
+}
+}
+});
+rsiChart.applyOptions({
+handleScroll:{
+mouseWheel:false,
+pressedMouseMove:false,
+horzTouchDrag:false,
+vertTouchDrag:false
+},
+handleScale:{
+mouseWheel:false,
+pinch:false,
+axisPressedMouseMove:{
+time:false,
+price:false
+}
+}
+});
+}catch{
+/* ignore */
+}
+},
+onHoldPendingEnd:()=>{
+chartWrapEl?.classList.remove(
+"chart-probe-pending"
+);
+if(
+!tabletCrosshairProbe
+){
+try{
+applyTabletMainChartScroll(
+chart
+);
+applyTabletRsiChartOptions(
+rsiChart
+);
+}catch{
+/* ignore */
+}
+}
+},
 onHoldStart:()=>{
 setTabletPanSuspended?.(
 true

@@ -1985,6 +1985,8 @@ chartEl,
 touchLayerEl,
 {
 shouldBeginHold = ()=>true,
+onHoldPendingStart = ()=>{},
+onHoldPendingEnd = ()=>{},
 onHoldStart = ()=>{},
 onHoldEnd = ()=>{},
 onProbeAt = ()=>{}
@@ -2001,6 +2003,18 @@ if(
 return ()=>{};
 }
 
+const chartWrapEl =
+chartEl.closest?.(
+"#chart-wrap"
+) ??
+chartEl.parentElement;
+
+if(
+!chartWrapEl
+){
+return ()=>{};
+}
+
 let holdTimer =
 null;
 
@@ -2013,7 +2027,19 @@ let holdStartX =
 let holdStartY =
 0;
 
+let holdPending =
+false;
+
 let crosshairTrack =
+null;
+
+let onDocPointerMove =
+null;
+
+let onDocTouchMove =
+null;
+
+let onDocGestureEnd =
 null;
 
 function clearHoldTimer(){
@@ -2029,7 +2055,421 @@ holdTimer = null;
 
 }
 
+if(
+holdPending &&
+!crosshairTrack
+){
+holdPending = false;
+onHoldPendingEnd();
+detachDocGestureShield();
+}
+
 holdPointer = null;
+
+}
+
+function detachDocGestureShield(){
+
+const cap =
+{ capture:true };
+
+const moveCap =
+{
+capture:true,
+passive:false
+};
+
+if(
+onDocPointerMove
+){
+
+document.removeEventListener(
+"pointermove",
+onDocPointerMove,
+moveCap
+);
+
+onDocPointerMove = null;
+
+}
+
+if(
+onDocTouchMove
+){
+
+document.removeEventListener(
+"touchmove",
+onDocTouchMove,
+moveCap
+);
+
+onDocTouchMove = null;
+
+}
+
+if(
+onDocGestureEnd
+){
+
+document.removeEventListener(
+"pointerup",
+onDocGestureEnd,
+cap
+);
+
+document.removeEventListener(
+"pointercancel",
+onDocGestureEnd,
+cap
+);
+
+document.removeEventListener(
+"touchend",
+onDocGestureEnd,
+cap
+);
+
+document.removeEventListener(
+"touchcancel",
+onDocGestureEnd,
+cap
+);
+
+onDocGestureEnd = null;
+
+}
+
+}
+
+function attachDocGestureShield(){
+
+detachDocGestureShield();
+
+onDocPointerMove =(
+e
+)=>{
+
+const probeActive =
+!!crosshairTrack;
+
+const pendingActive =
+holdPending &&
+!!holdTimer;
+
+if(
+!probeActive &&
+!pendingActive
+){
+return;
+}
+
+if(
+probeActive &&
+e.pointerId !==
+undefined &&
+e.pointerId !==
+crosshairTrack.id
+){
+return;
+}
+
+if(
+pendingActive &&
+holdPointer !==
+null &&
+e.pointerId !==
+undefined &&
+e.pointerId !==
+holdPointer
+){
+return;
+}
+
+if(
+pendingActive &&
+holdPointer !==
+null &&
+e.pointerId ===
+holdPointer
+){
+
+const dx =
+e.clientX - holdStartX;
+
+const dy =
+e.clientY - holdStartY;
+
+if(
+dx * dx + dy * dy >
+TABLET_CROSSHAIR_HOLD_MOVE_CANCEL_PX *
+TABLET_CROSSHAIR_HOLD_MOVE_CANCEL_PX
+){
+clearHoldTimer();
+return;
+}
+
+}
+
+if(
+probeActive
+){
+
+e.preventDefault();
+e.stopImmediatePropagation();
+onProbeAt(
+e.clientX,
+e.clientY
+);
+
+}else if(
+pendingActive
+){
+
+e.preventDefault();
+e.stopImmediatePropagation();
+
+}
+
+};
+
+onDocTouchMove =(
+e
+)=>{
+
+const probeActive =
+!!crosshairTrack;
+
+const pendingActive =
+holdPending &&
+!!holdTimer;
+
+if(
+!probeActive &&
+!pendingActive
+){
+return;
+}
+
+if(
+e.touches.length >
+1
+){
+clearHoldTimer();
+
+if(
+probeActive
+){
+endProbeSession();
+}
+
+return;
+}
+
+const t =
+e.touches[
+0
+];
+
+if(
+!t
+){
+return;
+}
+
+if(
+pendingActive &&
+!probeActive
+){
+
+const dx =
+t.clientX - holdStartX;
+
+const dy =
+t.clientY - holdStartY;
+
+if(
+dx * dx + dy * dy >
+TABLET_CROSSHAIR_HOLD_MOVE_CANCEL_PX *
+TABLET_CROSSHAIR_HOLD_MOVE_CANCEL_PX
+){
+clearHoldTimer();
+return;
+}
+
+e.preventDefault();
+e.stopImmediatePropagation();
+return;
+
+}
+
+if(
+probeActive
+){
+
+e.preventDefault();
+e.stopImmediatePropagation();
+onProbeAt(
+t.clientX,
+t.clientY
+);
+
+}
+
+};
+
+onDocGestureEnd =(
+e
+)=>{
+
+if(
+crosshairTrack
+){
+
+if(
+e.type ===
+"touchend" ||
+e.type ===
+"touchcancel"
+){
+
+if(
+e.touches.length >
+0
+){
+return;
+}
+
+endProbeSession();
+
+return;
+
+}
+
+if(
+e.pointerId !==
+undefined &&
+e.pointerId !==
+crosshairTrack.id
+){
+return;
+}
+
+endProbeSession();
+
+return;
+
+}
+
+if(
+holdPointer !==
+null &&
+e.pointerId !==
+undefined &&
+e.pointerId !==
+holdPointer
+){
+return;
+}
+
+clearHoldTimer();
+
+};
+
+const cap =
+{ capture:true };
+
+const moveCap =
+{
+capture:true,
+passive:false
+};
+
+document.addEventListener(
+"pointermove",
+onDocPointerMove,
+moveCap
+);
+
+document.addEventListener(
+"touchmove",
+onDocTouchMove,
+moveCap
+);
+
+document.addEventListener(
+"pointerup",
+onDocGestureEnd,
+cap
+);
+
+document.addEventListener(
+"pointercancel",
+onDocGestureEnd,
+cap
+);
+
+document.addEventListener(
+"touchend",
+onDocGestureEnd,
+cap
+);
+
+document.addEventListener(
+"touchcancel",
+onDocGestureEnd,
+cap
+);
+
+}
+
+function endProbeSession(){
+
+const wasProbe =
+!!crosshairTrack;
+
+detachDocGestureShield();
+touchLayerEl.classList.remove(
+"active"
+);
+crosshairTrack = null;
+
+if(
+wasProbe
+){
+onHoldEnd();
+}
+
+}
+
+function beginCrosshairTrack(){
+
+if(
+holdPending
+){
+holdPending = false;
+onHoldPendingEnd();
+}
+
+onHoldStart();
+
+crosshairTrack = {
+id:holdPointer
+};
+
+touchLayerEl.classList.add(
+"active"
+);
+
+if(
+!onDocPointerMove
+){
+attachDocGestureShield();
+}
+
+onProbeAt(
+holdStartX,
+holdStartY
+);
 
 }
 
@@ -2053,6 +2493,16 @@ return;
 }
 
 clearHoldTimer();
+
+try{
+e.preventDefault();
+}catch{
+/* ignore */
+}
+
+holdPending = true;
+onHoldPendingStart();
+attachDocGestureShield();
 
 holdPointer =
 e.pointerId ??
@@ -2085,296 +2535,6 @@ TABLET_CROSSHAIR_HOLD_MS
 
 }
 
-let onDocProbeMove =
-null;
-
-let onDocProbeEnd =
-null;
-
-function detachDocProbeListeners(){
-
-if(
-onDocProbeMove
-){
-
-document.removeEventListener(
-"pointermove",
-onDocProbeMove,
-{ capture:true }
-);
-
-onDocProbeMove = null;
-
-}
-
-if(
-onDocProbeEnd
-){
-
-document.removeEventListener(
-"pointerup",
-onDocProbeEnd,
-{ capture:true }
-);
-
-document.removeEventListener(
-"pointercancel",
-onDocProbeEnd,
-{ capture:true }
-);
-
-document.removeEventListener(
-"lostpointercapture",
-onDocProbeEnd,
-{ capture:true }
-);
-
-onDocProbeEnd = null;
-
-}
-
-}
-
-function endProbeSession(
-pointerId
-){
-
-if(
-!crosshairTrack
-){
-touchLayerEl.classList.remove(
-"active"
-);
-
-detachDocProbeListeners();
-
-return;
-}
-
-detachDocProbeListeners();
-
-touchLayerEl.classList.remove(
-"active"
-);
-
-if(
-pointerId !==
-undefined &&
-pointerId !==
-null
-){
-
-try{
-
-if(
-touchLayerEl.hasPointerCapture?.(
-pointerId
-)
-){
-touchLayerEl.releasePointerCapture(
-pointerId
-);
-
-}
-
-}catch{
-/* ignore */
-}
-
-}
-
-const ended =
-crosshairTrack;
-crosshairTrack = null;
-
-if(
-ended
-){
-onHoldEnd();
-}
-
-}
-
-function attachDocProbeListeners(){
-
-detachDocProbeListeners();
-
-onDocProbeMove =(
-e
-)=>{
-
-if(
-!crosshairTrack ||
-(
-e.pointerId !==
-undefined &&
-e.pointerId !==
-crosshairTrack.id
-)
-){
-return;
-}
-
-e.preventDefault();
-e.stopImmediatePropagation();
-onProbeAt(
-e.clientX,
-e.clientY
-);
-
-};
-
-onDocProbeEnd =(
-e
-)=>{
-
-if(
-!crosshairTrack
-){
-return;
-}
-
-if(
-e.pointerId !==
-undefined &&
-e.pointerId !==
-crosshairTrack.id
-){
-return;
-}
-
-endProbeSession(
-e.pointerId
-);
-
-};
-
-const cap =
-{ capture:true };
-
-const moveCap =
-{
-capture:true,
-passive:false
-};
-
-document.addEventListener(
-"pointermove",
-onDocProbeMove,
-moveCap
-);
-
-document.addEventListener(
-"pointerup",
-onDocProbeEnd,
-cap
-);
-
-document.addEventListener(
-"pointercancel",
-onDocProbeEnd,
-cap
-);
-
-document.addEventListener(
-"lostpointercapture",
-onDocProbeEnd,
-cap
-);
-
-}
-
-function beginCrosshairTrack(){
-
-onHoldStart();
-
-crosshairTrack = {
-id:holdPointer
-};
-
-touchLayerEl.classList.add(
-"active"
-);
-
-attachDocProbeListeners();
-
-try{
-touchLayerEl.setPointerCapture(
-holdPointer
-);
-}catch{
-/* ignore */
-}
-
-onProbeAt(
-holdStartX,
-holdStartY
-);
-
-}
-
-function onPointerMove(
-e
-){
-
-if(
-holdTimer &&
-holdPointer !==
-null &&
-e.pointerId ===
-holdPointer
-){
-
-const dx =
-e.clientX - holdStartX;
-
-const dy =
-e.clientY - holdStartY;
-
-if(
-dx * dx + dy * dy >
-TABLET_CROSSHAIR_HOLD_MOVE_CANCEL_PX *
-TABLET_CROSSHAIR_HOLD_MOVE_CANCEL_PX
-){
-
-clearHoldTimer();
-
-}
-
-}
-
-}
-
-function onPointerUp(
-e
-){
-
-if(
-holdPointer !==
-null &&
-e.pointerId ===
-holdPointer
-){
-clearHoldTimer();
-}
-
-if(
-crosshairTrack &&
-(
-e.pointerId ===
-undefined ||
-e.pointerId ===
-crosshairTrack.id
-)
-){
-endProbeSession(
-e.pointerId
-);
-
-}
-
-}
-
 function onTouchStart(
 e
 ){
@@ -2388,94 +2548,78 @@ clearHoldTimer();
 if(
 crosshairTrack
 ){
-endProbeSession(
-crosshairTrack.id
-);
-
+endProbeSession();
 }
 
 }
 
 }
 
-const opts = {
-capture:true,
-passive:true
-};
-
-const moveOpts = {
+const capDown = {
 capture:true,
 passive:false
 };
 
-chartEl.addEventListener(
+const capUp = {
+capture:true,
+passive:true
+};
+
+chartWrapEl.addEventListener(
 "pointerdown",
 onPointerDown,
-opts
+capDown
 );
 
-chartEl.addEventListener(
-"pointermove",
-onPointerMove,
-moveOpts
-);
-
-chartEl.addEventListener(
+chartWrapEl.addEventListener(
 "pointerup",
-onPointerUp,
-opts
+onDocGestureEnd,
+capUp
 );
 
-chartEl.addEventListener(
+chartWrapEl.addEventListener(
 "pointercancel",
-onPointerUp,
-opts
+onDocGestureEnd,
+capUp
 );
 
-chartEl.addEventListener(
+chartWrapEl.addEventListener(
 "touchstart",
 onTouchStart,
-opts
+capUp
 );
 
 return ()=>{
 
 endProbeSession();
+clearHoldTimer();
 touchLayerEl.classList.remove(
 "active"
 );
 
-chartEl.removeEventListener(
+chartWrapEl.removeEventListener(
 "pointerdown",
 onPointerDown,
-opts
+capDown
 );
 
-chartEl.removeEventListener(
-"pointermove",
-onPointerMove,
-moveOpts
-);
-
-chartEl.removeEventListener(
+chartWrapEl.removeEventListener(
 "pointerup",
-onPointerUp,
-opts
+onDocGestureEnd,
+capUp
 );
 
-chartEl.removeEventListener(
+chartWrapEl.removeEventListener(
 "pointercancel",
-onPointerUp,
-opts
+onDocGestureEnd,
+capUp
 );
 
-chartEl.removeEventListener(
+chartWrapEl.removeEventListener(
 "touchstart",
 onTouchStart,
-opts
+capUp
 );
-
-clearHoldTimer();
 
 };
 
