@@ -16,7 +16,15 @@ RSI_PERIOD
 import {
 saveFavorites,
 loadFavorites
-} from "./storage.js";
+} from "./storage.js?v=11";
+
+import {
+ensureCloudReady
+} from "./auth-ui.js?v=1";
+
+import {
+persistFavoritesToCloud
+} from "./cloud-sync.js?v=1";
 
 import {
 createCandlestickChart,
@@ -1488,6 +1496,8 @@ saveFavorites(
 favorites
 );
 
+persistFavoritesToCloud(favorites);
+
 favBtn.classList.toggle(
 "favorite"
 );
@@ -1801,9 +1811,14 @@ btn.dataset.tf === currentTF
 
 async function init(){
 
+await ensureCloudReady();
+
 readUrlParams();
 
 applyCoinsPrefs();
+
+favorites =
+loadFavorites();
 
 await initSymbols();
 

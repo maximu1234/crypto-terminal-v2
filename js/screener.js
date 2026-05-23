@@ -26,7 +26,15 @@ saveScreenerState,
 loadScreenerState,
 loadFavorites,
 saveFavorites
-} from "./storage.js?v=10";
+} from "./storage.js?v=11";
+
+import {
+ensureCloudReady
+} from "./auth-ui.js?v=1";
+
+import {
+persistFavoritesToCloud
+} from "./cloud-sync.js?v=1";
 
 const gridEl =
 document.getElementById("screener-grid");
@@ -127,6 +135,7 @@ favorites.push(symbol);
 }
 
 saveFavorites(favorites);
+persistFavoritesToCloud(favorites);
 syncFavoriteFlagsForSymbol(symbol);
 
 }
@@ -1066,6 +1075,8 @@ widget.symbol
 );
 
 async function init(){
+
+await ensureCloudReady();
 
 bindControls();
 applySavedUi();
