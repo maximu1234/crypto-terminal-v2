@@ -25,7 +25,7 @@ ensureCloudReady
 import {
 persistFavoritesToCloud,
 onFavoritesRemoteUpdate
-} from "./cloud-sync.js?v=2";
+} from "./cloud-sync.js?v=5";
 
 import {
 createCandlestickChart,
@@ -1589,9 +1589,15 @@ on
 
 }
 
-onFavoritesRemoteUpdate(
-syncFavoriteButtonsFromStorage
-);
+onFavoritesRemoteUpdate(()=>{
+
+syncFavoriteButtonsFromStorage();
+
+if(sortMode === "favorites"){
+renderList();
+}
+
+});
 
 function highlightActiveSymbol(){
 

@@ -55,11 +55,24 @@ cp js/supabase-env.example.js js/supabase-env.js
 
 При деплое ветки `feature/supabase-sync` build создаст `js/supabase-env.js` автоматически.
 
-## 5. Проверка
+## 5. Realtime (флаги без перезагрузки)
 
-1. Войди на iPad (preview URL)
-2. Поставь флаг на монете
-3. На Mac открой тот же preview, войди тем же email
-4. Избранное должно совпасть
+В **SQL Editor** один раз:
+
+```sql
+alter publication supabase_realtime add table public.user_settings;
+```
+
+Либо: **Database** → **Publications** → `supabase_realtime` → включить таблицу `user_settings`.
+
+Без этого шага синхронизация работает при смене вкладки / фокусе, но не мгновенно.
+
+**iPad / Safari:** в фоне iOS отключает WebSocket — мгновенный realtime не идёт. Пока вкладка **на экране**, флаги подтягиваются каждые ~10 с; при возврате в Safari — сразу после переключения вкладки.
+
+## 6. Проверка
+
+1. Войди на iPad (preview URL) и на Mac тем же email
+2. Поставь или сними флаг на одном устройстве
+3. На втором флаг должен обновиться за 1–2 секунды без refresh
 
 Без входа сайт работает как раньше (только localStorage).

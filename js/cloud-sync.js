@@ -17,6 +17,13 @@ let userEmail = "";
 const authListeners = new Set();
 const favoritesListeners = new Set();
 
+let favoritesChannel = null;
+let realtimeUserId = null;
+let syncPollTimer = null;
+let realtimeReconnectTimer = null;
+
+const SYNC_POLL_MS = 10000;
+
 function notifyAuth(){
 
 authListeners.forEach(fn=>{
@@ -117,6 +124,38 @@ return list.filter(s=>typeof s === "string");
 
 }
 
+function tsMs(iso){
+
+if(!iso){
+return 0;
+}
+
+const n =
+Date.parse(iso);
+
+return Number.isFinite(n) ? n : 0;
+
+}
+
+function isTsNewer(a, b){
+
+return tsMs(a) > tsMs(b);
+
+}
+
+function favoritesSignature(list){
+
+return [...list].sort().join("|");
+
+}
+
+function favoritesListsEqual(a, b){
+
+return favoritesSignature(a) ===
+favoritesSignature(b);
+
+}
+
 async function fetchCloudSettings(sb, userId){
 
 const { data, error } =
@@ -150,22 +189,19 @@ updatedAt: data.updated_at || ""
 async function pushCloudFavorites(
 sb,
 userId,
-favorites,
-updatedAt
+favorites
 ){
 
-const ts =
-updatedAt ||
-new Date().toISOString();
-
-const { error } =
+const { data, error } =
 await sb
 .from("user_settings")
 .upsert({
 user_id: userId,
 favorites,
-updated_at: ts
-});
+updated_at: new Date().toISOString()
+})
+.select("updated_at")
+.single();
 
 if(error){
 console.warn(
@@ -175,7 +211,7 @@ error.message
 return null;
 }
 
-return ts;
+return data?.updated_at || null;
 
 }
 
@@ -214,6 +250,216 @@ saveLocalFavoritesUpdatedAt(updatedAt);
 }
 
 notifyFavorites();
+
+}
+
+function stopSyncPoll(){
+
+if(!syncPollTimer){
+return;
+}
+
+clearInterval(syncPollTimer);
+syncPollTimer = null;
+
+}
+
+function startSyncPoll(){
+
+stopSyncPoll();
+
+syncPollTimer = setInterval(()=>{
+
+if(
+!loggedIn ||
+document.visibilityState !==
+"visible"
+){
+return;
+}
+
+pullFavoritesIfCloudNewer();
+
+},
+SYNC_POLL_MS);
+
+}
+
+function teardownFavoritesRealtime(){
+
+if(!favoritesChannel){
+return;
+}
+
+const ch =
+favoritesChannel;
+
+favoritesChannel = null;
+
+ch.unsubscribe();
+
+}
+
+function stopCloudSyncHelpers(){
+
+stopSyncPoll();
+
+if(realtimeReconnectTimer){
+clearTimeout(realtimeReconnectTimer);
+realtimeReconnectTimer = null;
+}
+
+teardownFavoritesRealtime();
+realtimeUserId = null;
+
+}
+
+function scheduleRealtimeReconnect(){
+
+if(realtimeReconnectTimer){
+return;
+}
+
+realtimeReconnectTimer = setTimeout(async()=>{
+
+realtimeReconnectTimer = null;
+
+if(
+!loggedIn ||
+document.visibilityState !==
+"visible" ||
+!realtimeUserId
+){
+return;
+}
+
+await setupFavoritesRealtime(
+realtimeUserId
+);
+
+},
+2000);
+
+}
+
+async function refreshCloudConnection(){
+
+if(!loggedIn){
+return;
+}
+
+await pullFavoritesIfCloudNewer();
+
+if(realtimeUserId){
+await setupFavoritesRealtime(
+realtimeUserId
+);
+}
+
+}
+
+function handleRealtimeFavoritesRow(row){
+
+if(!row){
+return;
+}
+
+const cloudFavorites =
+normalizeFavoritesList(row.favorites);
+const localFavorites =
+loadFavorites();
+const cloudTs =
+row.updated_at || "";
+
+if(
+favoritesListsEqual(
+cloudFavorites,
+localFavorites
+)
+){
+
+if(cloudTs){
+saveLocalFavoritesUpdatedAt(cloudTs);
+}
+
+return;
+}
+
+applyFavoritesLocally(
+cloudFavorites,
+cloudTs
+);
+
+}
+
+async function setupFavoritesRealtime(userId){
+
+const sb =
+await getSupabase();
+
+if(
+!sb ||
+!userId
+){
+return;
+}
+
+realtimeUserId = userId;
+
+teardownFavoritesRealtime();
+
+const channel =
+sb
+.channel(`user_settings:${userId}`)
+.on(
+"postgres_changes",
+{
+event: "UPDATE",
+schema: "public",
+table: "user_settings",
+filter: `user_id=eq.${userId}`
+},
+payload=>{
+handleRealtimeFavoritesRow(
+payload.new
+);
+}
+)
+.on(
+"postgres_changes",
+{
+event: "INSERT",
+schema: "public",
+table: "user_settings",
+filter: `user_id=eq.${userId}`
+},
+payload=>{
+handleRealtimeFavoritesRow(
+payload.new
+);
+}
+)
+.subscribe(status=>{
+
+if(status === "SUBSCRIBED"){
+return;
+}
+
+if(
+status === "CHANNEL_ERROR" ||
+status === "TIMED_OUT" ||
+status === "CLOSED"
+){
+console.warn(
+"favorites realtime:",
+status
+);
+scheduleRealtimeReconnect();
+}
+
+});
+
+favoritesChannel = channel;
 
 }
 
@@ -263,9 +509,9 @@ return local;
 
 if(
 !localTs ||
-(
-cloud.updatedAt &&
-cloud.updatedAt > localTs
+isTsNewer(
+cloud.updatedAt,
+localTs
 )
 ){
 
@@ -281,7 +527,10 @@ if(
 localTs &&
 (
 !cloud.updatedAt ||
-localTs > cloud.updatedAt
+isTsNewer(
+localTs,
+cloud.updatedAt
+)
 )
 ){
 
@@ -289,8 +538,7 @@ const ts =
 await pushCloudFavorites(
 sb,
 user.id,
-local,
-localTs
+local
 );
 
 if(ts){
@@ -330,7 +578,10 @@ if(
 !cloud?.updatedAt ||
 (
 localTs &&
-localTs >= cloud.updatedAt
+!isTsNewer(
+cloud.updatedAt,
+localTs
+)
 )
 ){
 return loadFavorites();
@@ -347,11 +598,7 @@ return cloud.favorites;
 
 export async function persistFavoritesToCloud(favorites){
 
-const ts =
-new Date().toISOString();
-
 saveFavorites(favorites);
-saveLocalFavoritesUpdatedAt(ts);
 
 const authed =
 await getAuthedClient();
@@ -363,12 +610,16 @@ return;
 const { sb, user } =
 authed;
 
+const ts =
 await pushCloudFavorites(
 sb,
 user.id,
-favorites,
-ts
+favorites
 );
+
+if(ts){
+saveLocalFavoritesUpdatedAt(ts);
+}
 
 }
 
@@ -412,6 +663,7 @@ await sb.auth.signOut();
 
 loggedIn = false;
 userEmail = "";
+stopCloudSyncHelpers();
 notifyAuth();
 
 }
@@ -423,41 +675,54 @@ userEmail = session?.user?.email || "";
 
 if(loggedIn){
 await mergeFavoritesWithCloud();
-}else{
+await setupFavoritesRealtime(
+session.user.id
+);
+startSyncPoll();
 notifyAuth();
+return;
 }
+
+stopCloudSyncHelpers();
+notifyAuth();
 
 }
 
 function bindRemotePullTriggers(){
 
-const pull = ()=>{
+const wake = ()=>{
 
-if(!loggedIn){
+if(
+document.visibilityState !==
+"visible"
+){
 return;
 }
 
-pullFavoritesIfCloudNewer();
+refreshCloudConnection().catch(()=>{
+/* ignore */
+});
 
 };
 
 document.addEventListener(
 "visibilitychange",
-()=>{
+wake
+);
 
-if(
-document.visibilityState ===
-"visible"
-){
-pull();
-}
-
-}
+window.addEventListener(
+"pageshow",
+wake
 );
 
 window.addEventListener(
 "focus",
-pull
+wake
+);
+
+window.addEventListener(
+"online",
+wake
 );
 
 }
@@ -504,6 +769,7 @@ event === "SIGNED_OUT"
 ){
 loggedIn = false;
 userEmail = "";
+stopCloudSyncHelpers();
 notifyAuth();
 }
 

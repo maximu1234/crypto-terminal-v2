@@ -21,5 +21,9 @@ create policy "user_settings_update_own"
   on public.user_settings for update
   using (auth.uid() = user_id);
 
+-- Синхронизация флагов между устройствами без перезагрузки (Realtime).
+-- Если таблица уже была создана раньше — выполни отдельно в SQL Editor:
+--   alter publication supabase_realtime add table public.user_settings;
+
 -- Authentication → Providers → Email: включён
 -- Authentication → URL Configuration: redirect http://127.0.0.1:8080/**
