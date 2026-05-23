@@ -56,7 +56,7 @@ mountAxisDoubleTapReset,
 TABLET_USE_CUSTOM_TOUCH_PAN,
 isTabletChartViewport,
 isUserCrosshairEvent
-} from "./chart.js?v=56";
+} from "./chart.js?v=57";
 
 import {
 connectKlineStream,
@@ -75,7 +75,7 @@ processAlertTick
 
 import {
 initDrawings
-} from "./drawings.js?v=98";
+} from "./drawings.js?v=110";
 
 let currentDataset = "crypto";
 let currentTF = "60";
@@ -944,6 +944,7 @@ rsiLookupAtOrBefore(ts)
 
 }
 
+const chartCrosshairLink =
 linkChartsCrosshair({
 mainChart:chart,
 linkedChart:rsiChart,
@@ -1027,6 +1028,90 @@ getCandles: ()=> candles,
 isActive: ()=>true,
 abortTabletChartGesture:()=>{
 cancelTabletPanGesture?.();
+},
+onChartCrosshairSuppress:()=>{
+chartCrosshairLink?.setSuppressed?.(
+true
+);
+},
+onChartCrosshairRelease:()=>{
+chartCrosshairLink?.setSuppressed?.(
+false
+);
+},
+onChartCrosshairAt(
+clientX,
+clientY
+){
+
+if(
+!isTabletChartViewport()
+){
+return;
+}
+
+positionTabletProbeCrosshair({
+chart,
+series: candleSeries,
+chartEl,
+chartsStackEl: document.getElementById(
+"charts-stack"
+),
+linkedVertEl: document.getElementById(
+"linked-crosshair-vert"
+),
+horizLineEl: document.getElementById(
+"tablet-probe-crosshair-h"
+),
+timeLabelEl: document.getElementById(
+"crosshair-time-label"
+),
+clientX,
+clientY,
+onTime: updateRsiHudFromCrosshairTime
+});
+
+},
+onChartCrosshairClear(){
+
+if(
+!isTabletChartViewport()
+){
+return;
+}
+
+hideTabletProbeCrosshair({
+linkedVertEl: document.getElementById(
+"linked-crosshair-vert"
+),
+horizLineEl: document.getElementById(
+"tablet-probe-crosshair-h"
+),
+timeLabelEl: document.getElementById(
+"crosshair-time-label"
+),
+onClear(){
+
+const last =
+rsiPointsCache[
+rsiPointsCache.length -
+1
+];
+
+setRsiHudValue(
+last?.value ??
+null
+);
+
+}
+});
+
+try{
+chart.clearCrosshairPosition();
+}catch{
+/* ignore */
+}
+
 }
 
 });

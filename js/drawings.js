@@ -65,6 +65,8 @@ const HANDLE_STROKE = "#ffffff";
 const WIDTH_OPTIONS = [1, 2, 3, 4];
 const USER_PREFS_KEY = "draw_user_prefs";
 const GLOBAL_STYLE_KEY = "draw_style_global_v1";
+/** Смена — полный сброс draw_defaults_fib на DEFAULT_FIB_SPEC */
+const FIB_TOOL_DEFAULTS_VERSION = 4;
 
 function uid(){
 
@@ -471,7 +473,8 @@ const row =
 {
 v:x.v,
 enabled:!!x.enabled,
-lineStyle: "solid"
+lineStyle: "solid",
+lineWidth: 1
 };
 
 const levelColor =
@@ -484,6 +487,46 @@ row.color = levelColor;
 return row;
 
 });
+
+}
+
+function buildDefaultFibToolStorage(){
+
+return {
+fibDefaultsVersion: FIB_TOOL_DEFAULTS_VERSION,
+color: STROKE,
+lineWidth: 1,
+fibLevels: cloneDefaultFibRows(),
+fibShowTrendLine: false
+};
+
+}
+
+function migrateFibToolDefaults(
+saved
+){
+
+if(
+saved?.fibDefaultsVersion ===
+FIB_TOOL_DEFAULTS_VERSION &&
+Array.isArray(saved.fibLevels) &&
+saved.fibLevels.length ===
+DEFAULT_FIB_SPEC.length
+){
+return {
+...buildDefaultFibToolStorage(),
+color: saved.color || STROKE,
+lineWidth: saved.lineWidth ?? 1,
+fibLevels: JSON.parse(
+JSON.stringify(saved.fibLevels)
+),
+fibShowTrendLine:
+saved.fibShowTrendLine === true
+};
+
+}
+
+return buildDefaultFibToolStorage();
 
 }
 
@@ -595,6 +638,116 @@ next[i].lineWidth = levelWidth;
 });
 
 return next;
+
+}
+
+function isClassicFibLevelNumbers(
+arr
+){
+
+if(
+!Array.isArray(arr) ||
+!arr.length ||
+typeof arr[0] !== "number"
+){
+return false;
+}
+
+if(
+arr.length > 12
+){
+return false;
+}
+
+return arr.some(n=>
+Math.abs(n - 0.236) <
+1e-4 ||
+Math.abs(n - 0.786) <
+1e-4
+);
+
+}
+
+function repairFibLevels(
+rows
+){
+
+const base =
+cloneDefaultFibRows();
+
+const normalized =
+Array.isArray(rows) &&
+rows.length === base.length
+? rows
+: normalizeFibLevelsShape(rows);
+
+return normalized.map((row,i)=>{
+
+const def =
+base[i];
+
+if(
+!def
+){
+return row;
+}
+
+const levelColor =
+normalizeFibLevelColor(row.color) ||
+normalizeFibLevelColor(def.color);
+
+const out = {
+v: Number.isFinite(row.v)
+? row.v
+: def.v,
+enabled: typeof row.enabled === "boolean"
+? row.enabled
+: def.enabled,
+lineStyle: normalizeFibLineStyle(
+row.lineStyle
+) ||
+def.lineStyle ||
+"solid"
+};
+
+if(levelColor){
+out.color = levelColor;
+}
+
+const levelWidth =
+normalizeFibLevelWidth(row.lineWidth) ||
+normalizeFibLevelWidth(def.lineWidth);
+
+if(levelWidth){
+out.lineWidth = levelWidth;
+}
+
+return out;
+
+});
+
+}
+
+/** Уровни/цвета по DEFAULT_FIB_SPEC; чинит legacy localStorage. */
+function finalizeFibLevels(
+raw
+){
+
+if(
+!raw
+){
+return cloneDefaultFibRows();
+}
+
+if(
+isClassicFibLevelNumbers(raw)
+){
+return cloneDefaultFibRows();
+}
+
+return repairFibLevels(
+normalizeFibLevelsShape(raw)
+);
 
 }
 
@@ -896,9 +1049,17 @@ const POSITION_SL_FILL = "rgba(127, 29, 29, 0.58)";
 /** Запасной %, если не удалось перевести пиксели в цену */
 const POSITION_DEFAULT_TP_PCT = 0.03;
 const POSITION_DEFAULT_SL_PCT = 0.015;
-/** Высота зон от входа в пикселях — одинаково на log/linear */
-const POSITION_DEFAULT_TP_ZONE_PX = 56;
-const POSITION_DEFAULT_SL_ZONE_PX = 28;
+/** Высота зон TP/SL при создании Long/Short (×3 от базы; ширина не меняется) */
+const POSITION_DEFAULT_ZONE_HEIGHT_MULT =
+3;
+
+const POSITION_DEFAULT_TP_ZONE_PX =
+56 *
+POSITION_DEFAULT_ZONE_HEIGHT_MULT;
+
+const POSITION_DEFAULT_SL_ZONE_PX =
+28 *
+POSITION_DEFAULT_ZONE_HEIGHT_MULT;
 const POSITION_DEFAULT_WIDTH_BARS = 14;
 const POSITION_RR_LABEL_SAMPLE =
 "Risk/reward ratio: 9.99";
@@ -993,7 +1154,11 @@ uiRoot = null,
 toolsRoot = null,
 isActive = ()=>true,
 barPosKey = "draw_bar_pos",
-abortTabletChartGesture = null
+abortTabletChartGesture = null,
+onChartCrosshairAt = null,
+onChartCrosshairClear = null,
+onChartCrosshairSuppress = null,
+onChartCrosshairRelease = null
 
 }){
 
@@ -1208,6 +1373,24 @@ toolDefaults[name] = null;
 
 }
 
+if(
+name === "fib"
+){
+
+const migrated =
+migrateFibToolDefaults(
+toolDefaults.fib
+);
+
+toolDefaults.fib = migrated;
+
+localStorage.setItem(
+defaultsStorageKey("fib"),
+JSON.stringify(migrated)
+);
+
+}
+
 });
 
 }
@@ -1321,22 +1504,31 @@ out.riskUsd = Number(risk);
 
 if(type === "fib"){
 
-const legacy =
-loadUserPrefs();
+const fibStore =
+migrateFibToolDefaults(
+toolDefaults.fib ||
+saved
+);
 
 out.fibLevels =
-normalizeFibLevelsShape(
-saved.fibLevels ||
-saved.levels ||
-legacy.fibLevels ||
-legacy.levels ||
-null
+JSON.parse(
+JSON.stringify(fibStore.fibLevels)
 );
 
 out.fibShowTrendLine =
-saved.fibShowTrendLine ??
-legacy.fibShowTrendLine ??
-true;
+fibStore.fibShowTrendLine === true;
+
+if(
+saved?.color
+){
+out.color = saved.color;
+}
+
+if(
+saved?.lineWidth != null
+){
+out.lineWidth = saved.lineWidth;
+}
 
 }
 
@@ -1530,7 +1722,7 @@ shape.lineWidth = shape.lineWidth || 1;
 if(shape.type === "fib"){
 
 shape.fibLevels =
-normalizeFibLevelsShape(
+finalizeFibLevels(
 shape.fibLevels ??
 shape.levels
 );
@@ -2001,7 +2193,7 @@ settingsPopover.innerHTML =
 `
 <div class="fib-settings">
 <label class="fib-trend-label">
-<input type="checkbox" id="fib-show-trend-line" checked />
+<input type="checkbox" id="fib-show-trend-line" />
 <span>Линия тренда</span>
 </label>
 <div class="fib-levels-head">Уровни: значение, цвет, толщина и тип линии</div>
@@ -2052,7 +2244,7 @@ formatFibInputValue(spec.v);
 
 setFibLevelColorButton(
 colorBtn,
-null,
+normalizeFibLevelColor(spec.color),
 STROKE
 );
 
@@ -2250,11 +2442,12 @@ readStyleFromUI();
 saveToolDefaults(
 "fib",
 {
+fibDefaultsVersion: FIB_TOOL_DEFAULTS_VERSION,
 color: style.color,
 lineWidth: style.lineWidth,
 fibLevels: shape.fibLevels,
 fibShowTrendLine:
-shape.fibShowTrendLine !== false
+shape.fibShowTrendLine === true
 }
 );
 
@@ -2487,7 +2680,18 @@ colorBtn?.dataset.customColor
 if(levelColor){
 template[i].color = levelColor;
 }else{
+
+const defColor =
+normalizeFibLevelColor(
+DEFAULT_FIB_SPEC[i]?.color
+);
+
+if(defColor){
+template[i].color = defColor;
+}else{
 delete template[i].color;
+}
+
 }
 
 const levelWidth =
@@ -2655,9 +2859,23 @@ fallbackWidth
 ensureFibSettingsPanel();
 
 const rows =
-normalizeFibLevelsShape(
-fibLevels
-);
+Array.isArray(fibLevels) &&
+fibLevels.length === DEFAULT_FIB_SPEC.length
+? fibLevels.map((row,i)=>{
+const def =
+DEFAULT_FIB_SPEC[i];
+const levelColor =
+normalizeFibLevelColor(row.color) ||
+normalizeFibLevelColor(def?.color);
+return {
+v: Number.isFinite(row.v) ? row.v : def?.v ?? 0,
+enabled: !!row.enabled,
+lineStyle: normalizeFibLineStyle(row.lineStyle) || "solid",
+lineWidth: normalizeFibLevelWidth(row.lineWidth) || 1,
+...(levelColor ? { color: levelColor } : {})
+};
+})
+: cloneDefaultFibRows();
 
 const baseColor =
 fallbackColor || STROKE;
@@ -3114,11 +3332,14 @@ lineWidth: style.lineWidth
 
 if(style.fibLevels){
 
+defaultsPayload.fibDefaultsVersion =
+FIB_TOOL_DEFAULTS_VERSION;
+
 defaultsPayload.fibLevels =
 style.fibLevels;
 
 defaultsPayload.fibShowTrendLine =
-style.fibShowTrendLine !== false;
+style.fibShowTrendLine === true;
 
 }
 
@@ -3200,6 +3421,118 @@ syncTouchDrawCrosshairPreview();
 
 }
 
+function crosshairClientFromLocal(
+localX,
+localY
+){
+
+const rect =
+wrapEl.getBoundingClientRect();
+
+return {
+clientX: rect.left + localX,
+clientY: rect.top + localY
+};
+
+}
+
+/** Тот же курсор, что на графике: LW на десктопе, probe на iPad. */
+function showStandardChartCrosshair(
+e,
+localX,
+localY
+){
+
+const xy =
+clampTouchCrosshairXY(
+localX,
+localY
+);
+
+if(
+!isTouchDrawTablet()
+){
+
+const point =
+pointFromXY(
+xy.x,
+xy.y
+);
+
+if(
+point &&
+chart &&
+series
+){
+
+try{
+chart.setCrosshairPosition(
+point.price,
+point.time,
+series
+);
+}catch{
+/* ignore */
+}
+
+}
+
+return;
+
+}
+
+const clientX =
+e?.clientX;
+
+const clientY =
+e?.clientY;
+
+const client =
+clientX != null &&
+clientY != null
+? { clientX, clientY }
+: crosshairClientFromLocal(
+xy.x,
+xy.y
+);
+
+try{
+onChartCrosshairAt?.(
+client.clientX,
+client.clientY
+);
+}catch{
+/* ignore */
+}
+
+}
+
+function hideStandardChartCrosshair(){
+
+if(
+isTouchDrawTablet()
+){
+
+try{
+onChartCrosshairClear?.();
+}catch{
+/* ignore */
+}
+
+}else if(
+chart
+){
+
+try{
+chart.clearCrosshairPosition();
+}catch{
+/* ignore */
+}
+
+}
+
+}
+
 function syncTouchDrawCrosshairPreview(){
 
 if(
@@ -3221,42 +3554,81 @@ touchDrawCrosshair.x,
 touchDrawCrosshair.y
 );
 
+if(
+placement &&
+isTouchDrawTablet()
+){
+showStandardChartCrosshair(
+null,
+touchDrawCrosshair.x,
+touchDrawCrosshair.y
+);
 }
 
-function drawTouchPlacementCrosshair(
-ctx,
-w,
-h
+}
+
+function syncEditDragCrosshair(
+e,
+localX,
+localY
 ){
 
 if(
-!touchDrawCrosshair
+!dragState
 ){
 return;
 }
 
-const { x, y } =
-touchDrawCrosshair;
+showStandardChartCrosshair(
+e,
+localX,
+localY
+);
 
-ctx.save();
-ctx.strokeStyle = "#3b82f6";
-ctx.lineWidth = 1;
-ctx.setLineDash([5, 4]);
+}
 
-ctx.beginPath();
-ctx.moveTo(x + 0.5, 0);
-ctx.lineTo(x + 0.5, h);
-ctx.moveTo(0, y + 0.5);
-ctx.lineTo(w, y + 0.5);
-ctx.stroke();
+function beginEditDragCrosshair(
+e,
+localX,
+localY
+){
 
-ctx.setLineDash([]);
-ctx.fillStyle = "#3b82f6";
-ctx.beginPath();
-ctx.arc(x, y, 4, 0, Math.PI * 2);
-ctx.fill();
+try{
+onChartCrosshairSuppress?.();
+}catch{
+/* ignore */
+}
 
-ctx.restore();
+if(
+!isTouchDrawTablet() &&
+chart
+){
+
+try{
+chart.clearCrosshairPosition();
+}catch{
+/* ignore */
+}
+
+}
+
+syncEditDragCrosshair(
+e,
+localX,
+localY
+);
+
+}
+
+function clearEditDragCrosshair(){
+
+hideStandardChartCrosshair();
+
+try{
+onChartCrosshairRelease?.();
+}catch{
+/* ignore */
+}
 
 }
 
@@ -3805,6 +4177,37 @@ metrics.slPct
 
 }
 
+/** Таблетки TP/SL снаружи объекта (не на цветной зоне) */
+const POSITION_EDGE_BADGE_GAP =
+4;
+
+const POSITION_EDGE_BADGE_H =
+18;
+
+function positionBadgeCyOutside(
+edgeY,
+side
+){
+
+const half =
+POSITION_EDGE_BADGE_H /
+2;
+
+if(
+side ===
+"above"
+){
+return edgeY -
+POSITION_EDGE_BADGE_GAP -
+half;
+}
+
+return edgeY +
+POSITION_EDGE_BADGE_GAP +
+half;
+
+}
+
 function formatPositionPrice(price){
 
 const n =
@@ -3852,6 +4255,12 @@ stroke = "rgba(74, 222, 128, 0.45)";
 }else if(variant === "sl"){
 fill = "rgba(127, 29, 29, 0.95)";
 stroke = "rgba(248, 113, 113, 0.45)";
+}else if(variant === "long-center"){
+fill = "rgba(22, 101, 52, 0.95)";
+stroke = "rgba(74, 222, 128, 0.55)";
+}else if(variant === "short-center"){
+fill = "rgba(127, 29, 29, 0.95)";
+stroke = "rgba(248, 113, 113, 0.55)";
 }else if(variant === "rr"){
 fill = "rgba(30, 41, 59, 0.95)";
 stroke = "rgba(250, 204, 21, 0.4)";
@@ -3898,7 +4307,8 @@ const left =
 cx - bw / 2;
 const top =
 cy - bh / 2;
-const r = 4;
+const r =
+bh / 2;
 
 ctx.beginPath();
 ctx.roundRect(left, top, bw, bh, r);
@@ -3939,7 +4349,13 @@ ctx.fill();
 }
 
 ctx.fillStyle =
-seg.color || "#f8fafc";
+seg.color ||
+(
+variant === "long-center" ||
+variant === "short-center"
+? "#ffffff"
+: "#f8fafc"
+);
 ctx.fillText(seg.text, x, cy);
 x += seg.width;
 
@@ -4110,15 +4526,25 @@ positionMetrics(shape);
 const cx =
 (x1 + x2) / 2;
 const topY =
-Math.min(yEntry, yTp, ySl);
+Math.min(
+yEntry,
+yTp,
+ySl
+);
 const botY =
-Math.max(yEntry, yTp, ySl);
+Math.max(
+yEntry,
+yTp,
+ySl
+);
 
 let tpText;
 let slText;
 let entryText;
 
-if(sizing){
+if(
+sizing
+){
 
 tpText =
 `TP: ${sizing.tpPct.toFixed(2)}% (${formatMoneyUsd(sizing.profitUsd)})`;
@@ -4128,7 +4554,9 @@ slText =
 
 }else{
 
-if(isLong){
+if(
+isLong
+){
 
 tpText = `${metrics.tpPct.toFixed(3)}%`;
 slText = `${metrics.slPct.toFixed(3)}%`;
@@ -4145,13 +4573,23 @@ entryText =
 
 }
 
-if(isLong){
+const centerVariant =
+isLong
+? "long-center"
+: "short-center";
+
+if(
+isLong
+){
 
 drawPositionBadge(
 ctx,
 tpText,
 cx,
-topY + 14,
+positionBadgeCyOutside(
+topY,
+"above"
+),
 "tp"
 );
 
@@ -4159,7 +4597,10 @@ drawPositionBadge(
 ctx,
 slText,
 cx,
-botY - 14,
+positionBadgeCyOutside(
+botY,
+"below"
+),
 "sl"
 );
 
@@ -4169,7 +4610,10 @@ drawPositionBadge(
 ctx,
 slText,
 cx,
-topY + 14,
+positionBadgeCyOutside(
+topY,
+"above"
+),
 "sl"
 );
 
@@ -4177,20 +4621,27 @@ drawPositionBadge(
 ctx,
 tpText,
 cx,
-botY - 14,
+positionBadgeCyOutside(
+botY,
+"below"
+),
 "tp"
 );
 
 }
 
-if(sizing){
+if(
+sizing
+){
 
 drawPositionBadge(
 ctx,
 [
 { text:"Объем ", font:"entry" },
 {
-text: formatVolumeUsd(sizing.volume),
+text: formatVolumeUsd(
+sizing.volume
+),
 font: "volume",
 color: POSITION_VOLUME_COLOR
 },
@@ -4198,7 +4649,7 @@ color: POSITION_VOLUME_COLOR
 ],
 cx,
 yEntry,
-"entry"
+centerVariant
 );
 
 }else{
@@ -4208,7 +4659,7 @@ ctx,
 entryText,
 cx,
 yEntry,
-"rr"
+centerVariant
 );
 
 }
@@ -5589,6 +6040,13 @@ blockChartClick = true;
 e.preventDefault();
 e.stopPropagation();
 
+beginEditDragCrosshair(
+e,
+x,
+y
+);
+syncChartTouchPan();
+
 try{
 wrapEl.setPointerCapture(e.pointerId);
 }catch{
@@ -5707,6 +6165,13 @@ blockChartClick = true;
 e.preventDefault();
 e.stopPropagation();
 
+beginEditDragCrosshair(
+e,
+x,
+y
+);
+syncChartTouchPan();
+
 try{
 wrapEl.setPointerCapture(e.pointerId);
 }catch{
@@ -5734,6 +6199,12 @@ return;
 e.preventDefault();
 
 const { x, y } = pointerFromEvent(e);
+
+syncEditDragCrosshair(
+e,
+x,
+y
+);
 
 const shape =
 drawings.find(d=>d.id === dragState.shapeId);
@@ -5816,12 +6287,14 @@ isPositionType(shape.type)
 ){
 clampPositionPrices(shape);
 saveDrawings();
-redraw();
 }
 
 }
 
 dragState = null;
+clearEditDragCrosshair();
+syncChartTouchPan();
+redraw();
 blockChartClick = true;
 
 };
@@ -6450,18 +6923,6 @@ console.warn("draw shape", err);
 
 if(placement){
 drawPlacementPreview(ctx, plotW, h);
-
-if(
-isTouchDrawTablet() &&
-touchDrawCrosshair
-){
-drawTouchPlacementCrosshair(
-ctx,
-plotW,
-h
-);
-}
-
 }
 
 ctx.restore();
@@ -6914,10 +7375,15 @@ type,
 color: style.color,
 lineWidth: style.lineWidth,
 fibLevels:type === "fib"
-? normalizeFibLevelsShape(style.fibLevels)
+? JSON.parse(
+JSON.stringify(
+style.fibLevels ||
+cloneDefaultFibRows()
+)
+)
 :undefined,
 fibShowTrendLine:type === "fib"
-? style.fibShowTrendLine !== false
+? style.fibShowTrendLine === true
 :undefined,
 ...data
 });
@@ -7018,6 +7484,7 @@ previewPoint = null;
 previewXY = null;
 touchDrawCrosshair = null;
 touchPlaceTrack = null;
+hideStandardChartCrosshair();
 redraw();
 
 }
@@ -7799,6 +8266,28 @@ scheduleDrawingsCloudPush();
 );
 
 loadToolDefaults();
+
+try{
+const legacyPrefs =
+loadUserPrefs();
+
+if(
+legacyPrefs.fibLevels ||
+legacyPrefs.levels ||
+legacyPrefs.fibShowTrendLine != null
+){
+
+delete legacyPrefs.fibLevels;
+delete legacyPrefs.levels;
+delete legacyPrefs.fibShowTrendLine;
+
+saveUserPrefs(legacyPrefs);
+
+}
+
+}catch{
+/* ignore */
+}
 
 loadDrawings();
 lastLoadedSymbol = getSymbol();

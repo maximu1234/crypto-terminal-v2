@@ -1962,6 +1962,23 @@ param
 
 });
 
+return {
+clearLinked,
+setSuppressed(
+suppressed
+){
+
+lock = !!suppressed;
+
+if(
+lock
+){
+clearLinked();
+}
+
+}
+};
+
 }
 
 export function tfPeriodSec(tf){
