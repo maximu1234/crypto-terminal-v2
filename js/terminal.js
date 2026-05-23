@@ -18,7 +18,6 @@ loadFavoritesGroups,
 saveFavoritesGroups,
 getFavoriteGroup,
 setFavoriteGroup,
-cycleFavoriteGroup,
 flagSortRank
 } from "./favorites.js?v=1";
 
@@ -1484,6 +1483,65 @@ behavior:"smooth"
 
 }
 
+function closeAllCoinFlagMenus(
+exceptWrap = null
+){
+
+document.querySelectorAll(".coin-flag-wrap").forEach(wrap=>{
+
+if(wrap === exceptWrap){
+return;
+}
+
+wrap.querySelector(".coin-flag-menu")?.classList.add("hidden");
+
+wrap.querySelector("[data-coin-flag-trigger]")?.setAttribute(
+"aria-expanded",
+"false"
+);
+
+});
+
+}
+
+function applyCoinFavoriteGroup(
+symbol,
+group
+){
+
+if(!symbol){
+return;
+}
+
+if(
+group === "clear" ||
+group === null
+){
+favorites =
+setFavoriteGroup(symbol, null, favorites);
+}else{
+favorites =
+setFavoriteGroup(symbol, group, favorites);
+}
+
+saveFavoritesGroups(favorites);
+persistFavoritesToCloud(favorites);
+
+const row =
+coinElements.get(symbol);
+const btn =
+row?.querySelector("[data-coin-flag-trigger]");
+
+if(btn){
+updateCoinFlagButton(btn, symbol);
+}
+
+if(flagSortActive){
+renderList();
+}
+
+}
+
 function updateCoinFlagButton(btn, symbol){
 
 const group =
@@ -1495,15 +1553,20 @@ green:"Зелёный флаг",
 gray:"Серый флаг"
 };
 
-btn.className =
-group
-? `flag coin-flag flag--${group} favorite`
-: "flag coin-flag";
+btn.className = "flag coin-flag-btn";
+
+if(group){
+btn.classList.add(
+"favorite",
+`flag--${group}`,
+`coin-flag--${group}`
+);
+}
 
 btn.title =
 group
 ? titles[group]
-: "Установить флаг";
+: "Выбрать флаг";
 
 btn.setAttribute(
 "aria-pressed",
@@ -1519,25 +1582,19 @@ document.createElement("div");
 
 div.className = "coin";
 
-const favGroup =
-getFavoriteGroup(item.symbol, favorites);
-
-const flagBtnClass =
-favGroup
-? `flag coin-flag flag--${favGroup} favorite`
-: "flag coin-flag";
-
-const flagTitles = {
-red:"Красный флаг",
-green:"Зелёный флаг",
-gray:"Серый флаг"
-};
-
 div.innerHTML = `
 
 <div class="col-flag">
 
-<button type="button" class="${flagBtnClass}" data-coin-flag data-symbol="${item.symbol}" title="${favGroup ? flagTitles[favGroup] : 'Установить флаг'}" aria-pressed="${favGroup ? 'true' : 'false'}"></button>
+<div class="coin-flag-wrap">
+<button type="button" class="flag coin-flag-btn" data-coin-flag-trigger data-symbol="${item.symbol}" title="Выбрать флаг" aria-haspopup="true" aria-expanded="false" aria-pressed="false"></button>
+<div class="coin-flag-menu hidden" role="menu">
+<button type="button" class="flag coin-flag-pick flag--red" data-flag-group="red" title="Красный" role="menuitem"></button>
+<button type="button" class="flag coin-flag-pick flag--green" data-flag-group="green" title="Зелёный" role="menuitem"></button>
+<button type="button" class="flag coin-flag-pick flag--gray" data-flag-group="gray" title="Серый" role="menuitem"></button>
+<button type="button" class="flag coin-flag-pick coin-flag-clear" data-flag-group="clear" title="Снять флаг" role="menuitem"></button>
+</div>
+</div>
 
 </div>
 
@@ -1558,7 +1615,7 @@ ${item.symbol}
 div.onclick = async e=>{
 
 if(
-e.target.closest("[data-coin-flag]")
+e.target.closest(".coin-flag-wrap")
 ){
 return;
 }
@@ -1567,33 +1624,55 @@ await loadSymbol(item.symbol);
 
 };
 
-const flagBtn =
-div.querySelector("[data-coin-flag]");
+const flagWrap =
+div.querySelector(".coin-flag-wrap");
 
-flagBtn.onclick = e=>{
+const flagTrigger =
+flagWrap?.querySelector("[data-coin-flag-trigger]");
+
+const flagMenu =
+flagWrap?.querySelector(".coin-flag-menu");
+
+if(flagTrigger){
+updateCoinFlagButton(flagTrigger, item.symbol);
+}
+
+flagTrigger?.addEventListener("click", e=>{
 
 e.stopPropagation();
 
-const sym =
-flagBtn.dataset.symbol;
-const current =
-getFavoriteGroup(sym, favorites);
-const next =
-cycleFavoriteGroup(current);
+const open =
+!flagMenu?.classList.contains("hidden");
 
-favorites =
-setFavoriteGroup(sym, next, favorites);
+closeAllCoinFlagMenus(flagWrap);
 
-saveFavoritesGroups(favorites);
-persistFavoritesToCloud(favorites);
-
-updateCoinFlagButton(flagBtn, sym);
-
-if(flagSortActive){
-renderList();
+if(open){
+flagMenu?.classList.add("hidden");
+flagTrigger.setAttribute("aria-expanded", "false");
+}else{
+flagMenu?.classList.remove("hidden");
+flagTrigger.setAttribute("aria-expanded", "true");
 }
 
-};
+});
+
+flagMenu?.querySelectorAll("[data-flag-group]").forEach(btn=>{
+
+btn.addEventListener("click", e=>{
+
+e.stopPropagation();
+
+applyCoinFavoriteGroup(
+item.symbol,
+btn.dataset.flagGroup
+);
+
+flagMenu?.classList.add("hidden");
+flagTrigger?.setAttribute("aria-expanded", "false");
+
+});
+
+});
 
 updateCoinRow(item, div);
 
@@ -1664,7 +1743,7 @@ const group =
 getFavoriteGroup(symbol, favorites);
 
 const btn =
-el.querySelector("[data-coin-flag]");
+el.querySelector("[data-coin-flag-trigger]");
 
 if(btn){
 updateCoinFlagButton(btn, symbol);
@@ -1952,6 +2031,18 @@ btn.dataset.tf === currentTF
 /* =========================================================
    START
 ========================================================= */
+
+document.addEventListener("click", e=>{
+
+if(
+e.target.closest(".coin-flag-wrap")
+){
+return;
+}
+
+closeAllCoinFlagMenus();
+
+});
 
 async function init(){
 
