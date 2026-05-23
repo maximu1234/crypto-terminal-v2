@@ -1,31 +1,25 @@
-# Supabase sync (ветка `feature/supabase-sync`)
+# Supabase — синхронизация избранного и рисунков
 
-**Избранное** (флаги) и **рисунки** (линии, фибо, позиции и т.д. по монетам). `main` без этой ветки работает как раньше.
+**Избранное** (флаги) и **рисунки** (линии, фибо, позиции по монетам) между устройствами после входа по email.
+
+Подробный перенос с тестовой ветки на production: [PRODUCTION_DEPLOY.md](./PRODUCTION_DEPLOY.md).
 
 ## 1. SQL в Supabase
 
 1. [supabase.com/dashboard](https://supabase.com/dashboard) → проект **ehygysphfsnluegeycjx**
 2. **SQL Editor** → New query
-3. Новый проект: вставь `supabase/schema.sql` → **Run**
-4. Если таблица уже была (только флаги): выполни ещё `supabase/migration-drawings.sql`
+3. Запускай по **блокам** из `supabase/schema.sql` (см. комментарии в файле)
+4. Закрой **Table Editor** для `user_settings` перед Run, если был deadlock
+
+Проверка: в `user_settings` есть колонки `drawings`, `drawings_updated_at`.
 
 ## 2. Вход по email
 
 1. **Authentication** → **Providers** → **Email** — включён
-2. **Authentication** → **Sign In / Providers** → выключи **Confirm email** (иначе первое письмо ведёт на Site URL).
-
-3. **Authentication** → **URL Configuration** (важно для iPad):
-   - **Site URL** — **НЕ** `127.0.0.1`. Поставь preview с Vercel, например:
-     `https://crypto-terminal-v2-git-feature-supabase-sync-maxscreener.vercel.app`
-     (без слэша в конце)
-   - **Redirect URLs** — добавь **все** строки:
-     - `http://127.0.0.1:8080/**`
-     - `http://localhost:8080/**`
-     - `https://crypto-terminal-v2-git-feature-supabase-sync-maxscreener.vercel.app/**`
-     - `https://*.vercel.app/**`
-   - **Save**
-
-Если Site URL = localhost, письма с iPad всё равно откроют 127.0.0.1.
+2. **Confirm email** — выключить (удобнее magic link)
+3. **URL Configuration**:
+   - **Site URL** — **production**-URL сайта (не `127.0.0.1`), например `https://crypto-terminal-v2.vercel.app`
+   - **Redirect URLs** — production, preview, localhost (см. `PRODUCTION_DEPLOY.md`)
 
 ## 3. Локально на Mac
 
@@ -33,47 +27,34 @@
 cp js/supabase-env.example.js js/supabase-env.js
 ```
 
-Открой `js/supabase-env.js` и вставь **Project URL** и **anon key** из Supabase → Settings → API.
-
-Запуск:
+Вставь **Project URL** и **anon key** (Supabase → Settings → API).
 
 ```bash
 ./start.sh
 ```
 
-В шапке появится поле email → **Войти** → ссылка на почту.
+На главной: шестерёнка → **Синхронизация** → email → **Войти**.
 
-## 4. Vercel (только Preview, не Production)
+## 4. Vercel
 
 **Settings** → **Environment Variables**:
 
 | Name | Value | Environments |
 |------|--------|----------------|
-| `SUPABASE_URL` | `https://ehygysphfsnluegeycjx.supabase.co` | Preview |
-| `SUPABASE_ANON_KEY` | anon key | Preview |
+| `SUPABASE_URL` | `https://ehygysphfsnluegeycjx.supabase.co` | **Production** и Preview |
+| `SUPABASE_ANON_KEY` | anon key | **Production** и Preview |
 
-**Production** не отмечай, пока не готов merge в `main`.
+Build (`vercel.json`) создаёт `js/supabase-env.js` при деплое.
 
-При деплое ветки `feature/supabase-sync` build создаст `js/supabase-env.js` автоматически.
+## 5. Realtime
 
-## 5. Realtime (флаги без перезагрузки)
+Таблица `user_settings` в publication `supabase_realtime` (блок 3 в `schema.sql`).
 
-В **SQL Editor** один раз:
-
-```sql
-alter publication supabase_realtime add table public.user_settings;
-```
-
-Либо: **Database** → **Publications** → `supabase_realtime` → включить таблицу `user_settings`.
-
-Без этого шага синхронизация работает при смене вкладки / фокусе, но не мгновенно.
-
-**iPad / Safari:** в фоне iOS отключает WebSocket — мгновенный realtime не идёт. Пока вкладка **на экране**, флаги подтягиваются каждые ~10 с; при возврате в Safari — сразу после переключения вкладки.
+**iPad / Safari:** в фоне WebSocket спит; на открытой вкладке — опрос ~10 с + при возврате в Safari.
 
 ## 6. Проверка
 
-1. Войди на iPad (preview URL) и на Mac тем же email
-2. Флаги: поставь/сними на одном устройстве — на втором за 1–2 с (на iPad в фоне — до ~10 с)
-3. Рисунки: нарисуй линию на BTC на Mac — на iPad открой BTC, рисунок должен появиться
+1. Войди на Mac и iPad **одним email**
+2. Флаги и рисунки меняются на одном устройстве → появляются на другом (1–10 с)
 
-Без входа сайт работает как раньше (только localStorage).
+Без входа — только localStorage, как раньше.
