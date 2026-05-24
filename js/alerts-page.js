@@ -7,16 +7,16 @@ formatAlertDate,
 formatTfLabel,
 getAlertsHistorySorted,
 getAlertsSorted,
-rebuildAlertRegistryFromStorage,
 removeAlert,
+stripAlertFlagsNotInRegistry,
 removeAllAlerts
-} from "./alerts.js?v=16";
+} from "./alerts.js?v=17";
 
 import {
 getTelegramChatId,
 initAlertsCloudSync,
 saveTelegramChatId
-} from "./alerts-cloud-sync.js?v=14";
+} from "./alerts-cloud-sync.js?v=17";
 
 import {
 isCloudLoggedIn,
@@ -354,7 +354,7 @@ clearDrawingsAction.querySelector("button");
 btn.onclick = e=>{
 e.preventDefault();
 clearAllDrawings();
-rebuildAlertRegistryFromStorage();
+stripAlertFlagsNotInRegistry();
 render();
 showClearDrawingsSuccess();
 };
@@ -435,16 +435,11 @@ await focusAlertsLogin();
 
 onCloudSyncChange(()=>{
 refreshTelegramUi();
-
-if(isCloudLoggedIn()){
-rebuildAlertRegistryFromStorage();
 render();
-}
-
 });
 
 initAlertsCloudSync();
-rebuildAlertRegistryFromStorage();
+stripAlertFlagsNotInRegistry();
 render();
 
 void ensureCloudReady()

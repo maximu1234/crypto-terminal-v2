@@ -2,14 +2,12 @@ import {
 ALERT_LINE_COLOR,
 ALERT_LINE_DASH,
 alertPriceFromShape,
-alertPricesMatch,
 getActiveAlerts,
 patchAlertPrice,
-remapAlertShapeId,
 removeAlert,
 registerAlertFromDrawing,
 upsertAlert
-} from "./alerts.js?v=16";
+} from "./alerts.js?v=17";
 
 import {
 mountTvColorGrid
@@ -8262,20 +8260,16 @@ Date.now() / 1000
 
 function reconcileDrawingAlertsFromRegistry(){
 
-const sym =
-getSymbol();
-
 const symNorm =
-String(sym || "").toUpperCase();
+String(getSymbol() || "").trim().toUpperCase();
 
 const alertsForSym =
 getActiveAlerts().filter(
 a=>
-String(a.symbol).toUpperCase() ===
-symNorm
+String(a.symbol).toUpperCase() === symNorm
 );
 
-const activeIds =
+const registryIds =
 new Set(
 alertsForSym.map(a=>a.shapeId)
 );
@@ -8290,37 +8284,19 @@ if(shape.type !== "hray"){
 return shape;
 }
 
-let shouldAlert =
-activeIds.has(shape.id);
+if(
+shape.isAlert &&
+!registryIds.has(shape.id)
+){
+dirty = true;
+return stripAlertFromShape(shape);
+}
 
 if(
-!shouldAlert &&
-Number.isFinite(
-alertPriceFromShape(shape)
-)
+!registryIds.has(shape.id)
 ){
-
-const match =
-alertsForSym.find(a=>
-alertPricesMatch(
-a.price,
-shape.price
-)
-);
-
-if(match){
-remapAlertShapeId(
-symNorm,
-match.shapeId,
-shape.id
-);
-activeIds.add(shape.id);
-shouldAlert = true;
+return shape;
 }
-
-}
-
-if(shouldAlert){
 
 if(shape.isAlert){
 return shape;
@@ -8344,18 +8320,9 @@ shape.savedColor ||
 shape.color
 };
 
-}
-
-if(!shape.isAlert){
-return shape;
-}
-
-dirty = true;
-return stripAlertFromShape(shape);
-
 });
 
-const existingHrayIds =
+const existingIds =
 new Set(
 drawings
 .filter(d=>d.type === "hray")
@@ -8365,7 +8332,7 @@ drawings
 for(const alert of alertsForSym){
 
 if(
-existingHrayIds.has(alert.shapeId)
+existingIds.has(alert.shapeId)
 ){
 continue;
 }
@@ -8375,48 +8342,6 @@ Number(alert.price);
 
 if(!Number.isFinite(price)){
 continue;
-}
-
-const orphanRay =
-drawings.find(
-d=>
-d.type === "hray" &&
-!d.isAlert &&
-!existingHrayIds.has(d.id) &&
-alertPricesMatch(
-d.price,
-price
-)
-);
-
-if(orphanRay){
-
-remapAlertShapeId(
-symNorm,
-alert.shapeId,
-orphanRay.id
-);
-
-orphanRay.isAlert = true;
-orphanRay.lineWidth = 1;
-orphanRay.alertCreatedAt =
-alert.createdAt ||
-Date.now();
-orphanRay.alertTf =
-alert.tf ||
-getTf();
-orphanRay.alertSymbol = symNorm;
-
-if(!orphanRay.savedColor){
-orphanRay.savedColor =
-orphanRay.color;
-}
-
-existingHrayIds.add(orphanRay.id);
-activeIds.add(orphanRay.id);
-dirty = true;
-continue;
-
 }
 
 const restored =
@@ -8439,7 +8364,7 @@ restored.savedColor =
 restored.color;
 
 drawings.push(restored);
-existingHrayIds.add(alert.shapeId);
+existingIds.add(alert.shapeId);
 dirty = true;
 
 }

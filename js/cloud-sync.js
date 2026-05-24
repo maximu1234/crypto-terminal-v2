@@ -449,15 +449,8 @@ return map;
 const out =
 JSON.parse(JSON.stringify(map));
 
-const {
-getActiveAlerts,
-alertPricesMatch,
-remapAlertShapeId
-} =
-await import("./alerts.js?v=16");
-
-const matchedShapeIds =
-new Set();
+const { getActiveAlerts } =
+await import("./alerts.js?v=17");
 
 for(const alert of getActiveAlerts()){
 
@@ -467,13 +460,9 @@ String(alert.symbol || "").toUpperCase();
 const sid =
 String(alert.shapeId || "");
 
-const price =
-Number(alert.price);
-
 if(
 !sym ||
-!sid ||
-!Number.isFinite(price)
+!sid
 ){
 continue;
 }
@@ -485,43 +474,16 @@ if(!Array.isArray(list)){
 continue;
 }
 
-let shape =
+const shape =
 list.find(
 s=>
 s?.id === sid &&
 s?.type === "hray"
 );
 
-if(
-!shape
-){
-
-shape =
-list.find(
-s=>
-s?.type === "hray" &&
-!matchedShapeIds.has(s.id) &&
-alertPricesMatch(
-s.price,
-price
-)
-);
-
-if(shape){
-remapAlertShapeId(
-sym,
-sid,
-shape.id
-);
-}
-
-}
-
 if(!shape){
 continue;
 }
-
-matchedShapeIds.add(shape.id);
 
 shape.isAlert = true;
 shape.lineWidth = 1;
@@ -1344,13 +1306,13 @@ session.user.id
 );
 startSyncPoll();
 
-import("./alerts-cloud-sync.js?v=14")
+import("./alerts-cloud-sync.js?v=17")
 .then(async m=>{
 
-const { rebuildAlertRegistryFromStorage } =
-await import("./alerts.js?v=16");
+const { stripAlertFlagsNotInRegistry } =
+await import("./alerts.js?v=17");
 
-rebuildAlertRegistryFromStorage();
+stripAlertFlagsNotInRegistry();
 await m.mergeCloudAlertsIntoLocal();
 await m.syncAllLocalAlertsToCloud();
 

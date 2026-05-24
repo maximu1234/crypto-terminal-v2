@@ -6,7 +6,7 @@ const MAX_ALERT_HISTORY = 30;
 
 function queueAlertsCloud(fn){
 
-import("./alerts-cloud-sync.js?v=16")
+import("./alerts-cloud-sync.js?v=17")
 .then(m=>fn(m))
 .catch(err=>{
 console.warn("alerts cloud:", err);
@@ -538,7 +538,7 @@ await import("./auth-ui.js?v=9");
 await ensureCloudReady();
 
 const m =
-await import("./alerts-cloud-sync.js?v=16");
+await import("./alerts-cloud-sync.js?v=17");
 
 const ok =
 await m.persistAlertsRegistryToCloud();
@@ -610,7 +610,7 @@ a.shapeId === shapeId
 );
 
 if(row){
-void import("./alerts-cloud-sync.js?v=16").then(m=>{
+void import("./alerts-cloud-sync.js?v=17").then(m=>{
 m.persistAlertsRegistryToCloud();
 });
 }
@@ -653,8 +653,7 @@ saveAlerts(list);
 
 clearAlertOnDrawing(
 sym,
-sid,
-row?.price
+sid
 );
 
 stripAlertFlagsNotInRegistry();
@@ -913,7 +912,7 @@ null;
 try{
 
 m =
-await import("./alerts-cloud-sync.js?v=16");
+await import("./alerts-cloud-sync.js?v=17");
 
 cloudOk =
 await m.markAlertTriggeredOnCloud(
@@ -996,55 +995,6 @@ return cleaned;
 
 }
 
-function drawingMatchesRemovedAlert(
-shape,
-shapeId,
-priceHint,
-alertsForSym
-){
-
-if(
-shape?.type !== "hray" ||
-!shape.isAlert
-){
-return false;
-}
-
-const sid =
-String(shapeId || "").trim();
-
-if(
-sid &&
-shape.id === sid
-){
-return true;
-}
-
-if(
-priceHint != null &&
-Number.isFinite(Number(priceHint)) &&
-alertPricesMatch(
-shape.price,
-priceHint
-)
-){
-return true;
-}
-
-return alertsForSym.some(
-a=>
-alertPricesMatch(
-a.price,
-shape.price
-) &&
-(
-a.shapeId === shape.id ||
-a.shapeId === sid
-)
-);
-
-}
-
 export function stripAlertFlagsNotInRegistry(){
 
 const registry =
@@ -1096,18 +1046,7 @@ shape.type !== "hray" ||
 return shape;
 }
 
-const inRegistry =
-registryIds.has(shape.id) ||
-alertsForSym.some(
-a=>
-a.shapeId === shape.id ||
-alertPricesMatch(
-a.price,
-shape.price
-)
-);
-
-if(inRegistry){
+if(registryIds.has(shape.id)){
 return shape;
 }
 
@@ -1139,8 +1078,7 @@ new CustomEvent(
 
 export function clearAlertOnDrawing(
 symbol,
-shapeId,
-priceHint
+shapeId
 ){
 
 const sym =
@@ -1163,12 +1101,6 @@ try{
 const drawings =
 JSON.parse(raw);
 
-const alertsForSym =
-loadAlerts().filter(
-a=>
-String(a.symbol).toUpperCase() === sym
-);
-
 let changed =
 false;
 
@@ -1176,12 +1108,9 @@ const next =
 drawings.map(shape=>{
 
 if(
-!drawingMatchesRemovedAlert(
-shape,
-sid,
-priceHint,
-alertsForSym
-)
+shape?.type !== "hray" ||
+!shape.isAlert ||
+shape.id !== sid
 ){
 return shape;
 }
@@ -1267,92 +1196,11 @@ export function rebuildAlertRegistryFromStorage(){
 
 stripAlertFlagsNotInRegistry();
 
-const existing =
-loadAlerts();
-
-const existingByKey =
-new Map(
-existing.map(a=>[
-alertEntryKey(a.symbol, a.shapeId),
-a
-])
-);
-
-const merged = [];
-const seen =
-new Set();
-
-for(const { symbol } of listDrawingStorageEntries()){
-
-const drawings =
-loadDrawingsForSymbol(symbol);
-
-drawings
-.filter(d=>isValidAlertShape(symbol, d))
-.forEach(d=>{
-
-const key =
-alertEntryKey(symbol, d.id);
-
-if(seen.has(key)){
-return;
-}
-
-seen.add(key);
-
-const prev =
-existingByKey.get(key);
-
-const createdAt =
-Number(d.alertCreatedAt) ||
-Date.now();
-
-const price =
-Number(d.price);
-
-if(
-!Number.isFinite(price)
-){
-return;
-}
-
-merged.push({
-id:d.id,
-shapeId:d.id,
-symbol,
-price,
-tf:
-d.alertTf ||
-prev?.tf ||
-"60",
-createdAt
-});
-
-});
-
-}
-
-for(const [key, prev] of existingByKey){
-
-if(
-seen.has(key) ||
-!isStoredAlertRow(prev)
-){
-continue;
-}
-
-merged.push(prev);
-seen.add(key);
-
-}
-
-saveAlerts(merged);
-
 queueAlertsCloud(m=>{
-m.syncAlertsWithCloud();
+m.syncAllLocalAlertsToCloud();
 });
 
-return merged.length;
+return loadAlerts().length;
 
 }
 
