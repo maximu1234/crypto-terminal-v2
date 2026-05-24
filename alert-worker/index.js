@@ -138,7 +138,7 @@ async function main() {
     });
   });
 
-  const server = http.createServer((req, res) => {
+  const server = http.createServer(async (req, res) => {
 
     if (req.url === "/health" || req.url === "/") {
       const st = getConfigStatus();
