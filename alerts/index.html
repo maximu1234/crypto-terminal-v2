@@ -33,6 +33,53 @@
 
 <h1>Алерты</h1>
 
+<section class="alerts-telegram-section" aria-labelledby="alerts-telegram-heading">
+
+<h2 id="alerts-telegram-heading" class="alerts-section-title">Telegram</h2>
+
+<p class="alerts-telegram-note">
+Дополнение к алертам в браузере: при закрытом терминале сообщения приходят в Telegram (обычно за 1–2 с).
+Нужен <a href="/coins.html">вход по email</a> и бот.
+</p>
+
+<div id="alerts-telegram-guest" class="alerts-telegram-guest hidden">
+Войдите через шестерёнку на главной или на Монетах, затем укажите chat id.
+</div>
+
+<div id="alerts-telegram-form" class="alerts-telegram-form hidden">
+
+<label class="alerts-telegram-label" for="alerts-telegram-chat-id">
+Chat ID
+</label>
+
+<input
+id="alerts-telegram-chat-id"
+class="alerts-telegram-input"
+type="text"
+inputmode="numeric"
+autocomplete="off"
+placeholder="например 123456789"
+/>
+
+<button type="button" id="alerts-telegram-save" class="alerts-telegram-save">
+Сохранить
+</button>
+
+<p id="alerts-telegram-status" class="alerts-telegram-status" role="status"></p>
+
+<details class="alerts-telegram-help">
+<summary>Как узнать chat id</summary>
+<ol>
+<li>Создайте бота в <a href="https://t.me/BotFather" target="_blank" rel="noopener">@BotFather</a> и скопируйте токен (его в Railway, не на сайт).</li>
+<li>Напишите боту <code>/start</code>.</li>
+<li>Откройте <code>https://api.telegram.org/bot&lt;TOKEN&gt;/getUpdates</code> и найдите <code>"chat":{"id": …}</code>.</li>
+</ol>
+</details>
+
+</div>
+
+</section>
+
 <section class="alerts-section" aria-labelledby="alerts-active-heading">
 
 <h2 id="alerts-active-heading" class="alerts-section-title">Активные алерты</h2>
@@ -109,7 +156,7 @@
 </main>
 
 <script type="module" src="/js/site-boot.js?v=14"></script>
-<script type="module" src="/js/alerts-page.js?v=9"></script>
+<script type="module" src="/js/alerts-page.js?v=10"></script>
 
 </body>
 </html>

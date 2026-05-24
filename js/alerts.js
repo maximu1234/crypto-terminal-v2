@@ -4,6 +4,16 @@ const HISTORY_KEY = "price_alerts_history_v1";
 
 const MAX_ALERT_HISTORY = 30;
 
+function queueAlertsCloud(fn){
+
+import("./alerts-cloud-sync.js?v=1")
+.then(m=>fn(m))
+.catch(()=>{
+/* ignore */
+});
+
+}
+
 export const ALERT_LINE_COLOR = "#facc15";
 
 export const ALERT_LINE_DASH = [8, 6];
@@ -305,6 +315,10 @@ list.push(row);
 
 saveAlerts(list);
 
+queueAlertsCloud(m=>{
+m.pushAlertToCloud(row);
+});
+
 }
 
 export function patchAlertPrice(
@@ -350,6 +364,20 @@ return a;
 
 if(changed){
 saveAlerts(next);
+
+const row =
+next.find(
+a=>
+a.symbol === symbol &&
+a.shapeId === shapeId
+);
+
+if(row){
+queueAlertsCloud(m=>{
+m.pushAlertToCloud(row);
+});
+}
+
 }
 
 }
@@ -373,6 +401,13 @@ a.shapeId === shapeId
 );
 
 saveAlerts(list);
+
+queueAlertsCloud(m=>{
+m.removeAlertFromCloud(
+symbol,
+shapeId
+);
+});
 
 }
 
@@ -615,6 +650,13 @@ removeAlert(
 symbol,
 shapeId
 );
+
+queueAlertsCloud(m=>{
+m.markAlertTriggeredOnCloud(
+symbol,
+shapeId
+);
+});
 
 }
 

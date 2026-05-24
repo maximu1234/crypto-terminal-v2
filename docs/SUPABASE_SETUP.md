@@ -1,6 +1,6 @@
 # Supabase — синхронизация избранного и рисунков
 
-**Избранное** (флаги) и **рисунки** (линии, фибо, позиции по монетам) между устройствами после входа по email.
+**Избранное** (флаги), **рисунки** и **алерты в Telegram** (опционально) между устройствами после входа по email.
 
 Подробный перенос с тестовой ветки на production: [PRODUCTION_DEPLOY.md](./PRODUCTION_DEPLOY.md).
 
@@ -12,6 +12,8 @@
 4. Закрой **Table Editor** для `user_settings` перед Run, если был deadlock
 
 Проверка: в `user_settings` есть колонки `drawings`, `drawings_updated_at`.
+
+**Алерты + Telegram:** после блоков 1–3 выполни `supabase/migration-alerts-telegram.sql`. Worker: папка `alert-worker/`, деплой на Railway — см. `alert-worker/README.md`.
 
 ## 2. Вход по email
 

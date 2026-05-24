@@ -12,6 +12,17 @@ removeAlert,
 removeAllAlerts
 } from "./alerts.js";
 
+import {
+getTelegramChatId,
+initAlertsCloudSync,
+saveTelegramChatId
+} from "./alerts-cloud-sync.js?v=1";
+
+import {
+isCloudLoggedIn,
+onCloudSyncChange
+} from "./cloud-sync.js?v=7";
+
 import { formatPrice } from "./chart.js";
 
 const tbody =
@@ -44,7 +55,101 @@ document.getElementById("alerts-clear-drawings-action");
 const clearDrawingsStatus =
 document.getElementById("alerts-clear-drawings-status");
 
+const telegramGuest =
+document.getElementById("alerts-telegram-guest");
+
+const telegramForm =
+document.getElementById("alerts-telegram-form");
+
+const telegramInput =
+document.getElementById("alerts-telegram-chat-id");
+
+const telegramSave =
+document.getElementById("alerts-telegram-save");
+
+const telegramStatus =
+document.getElementById("alerts-telegram-status");
+
 let clearDrawingsSuccessTimer = null;
+
+function setTelegramStatus(text, isError){
+
+if(!telegramStatus){
+return;
+}
+
+telegramStatus.textContent = text || "";
+telegramStatus.classList.toggle(
+"is-error",
+!!isError
+);
+
+}
+
+async function refreshTelegramUi(){
+
+const loggedIn =
+isCloudLoggedIn();
+
+telegramGuest?.classList.toggle(
+"hidden",
+loggedIn
+);
+
+telegramForm?.classList.toggle(
+"hidden",
+!loggedIn
+);
+
+if(!loggedIn){
+setTelegramStatus("");
+return;
+}
+
+try{
+const id =
+await getTelegramChatId();
+
+if(
+telegramInput &&
+id != null
+){
+telegramInput.value = String(id);
+}
+
+setTelegramStatus(
+id != null
+? "Telegram подключён. Новые алерты синхронизируются в облако."
+: "Укажите chat id и сохраните."
+);
+
+}catch{
+setTelegramStatus(
+"Не удалось загрузить настройки",
+true
+);
+
+}
+
+}
+
+telegramSave?.addEventListener("click", async ()=>{
+
+try{
+await saveTelegramChatId(
+telegramInput?.value?.trim() ?? ""
+);
+await refreshTelegramUi();
+setTelegramStatus("Сохранено.");
+}catch(err){
+setTelegramStatus(
+err?.message || "Ошибка сохранения",
+true
+);
+
+}
+
+});
 
 function displaySymbol(symbol){
 
