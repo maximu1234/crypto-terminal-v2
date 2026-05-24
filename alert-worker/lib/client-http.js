@@ -1,4 +1,3 @@
-import { createClient } from "@supabase/supabase-js";
 import { getWorkerConfig } from "./config.js";
 
 export function setCors(res, req) {
@@ -56,41 +55,62 @@ export function readJsonBody(req) {
 
 }
 
+/**
+ * Проверка JWT без @supabase/supabase-js (на Node 20 без ws не падает).
+ */
 export async function verifyUserToken(token) {
 
   const cfg = getWorkerConfig();
 
   if (
     !cfg.supabaseUrl ||
-    !cfg.supabaseServiceRoleKey ||
     !token
   ) {
     return null;
   }
 
-  /* service role — не нужен SUPABASE_ANON_KEY на Railway */
-  const sb = createClient(
-    cfg.supabaseUrl,
-    cfg.supabaseServiceRoleKey,
-    {
-      auth: {
-        persistSession: false,
-        autoRefreshToken: false
-      }
-    }
-  );
+  const apikey =
+    cfg.supabaseAnonKey ||
+    cfg.supabaseServiceRoleKey;
 
-  const { data, error } =
-    await sb.auth.getUser(token);
-
-  if (
-    error ||
-    !data?.user
-  ) {
+  if (!apikey) {
     return null;
   }
 
-  return data.user;
+  const base =
+    cfg.supabaseUrl.replace(/\/$/, "");
+
+  try{
+    const res =
+      await fetch(
+        `${base}/auth/v1/user`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            apikey
+          }
+        }
+      );
+
+    if (!res.ok) {
+      return null;
+    }
+
+    const data =
+      await res.json();
+
+    if (!data?.id) {
+      return null;
+    }
+
+    return {
+      id: data.id,
+      email: data.email
+    };
+
+  }catch{
+    return null;
+  }
 
 }
 
