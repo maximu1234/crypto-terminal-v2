@@ -10,19 +10,19 @@ getAlertsSorted,
 rebuildAlertRegistryFromStorage,
 removeAlert,
 removeAllAlerts
-} from "./alerts.js?v=13";
+} from "./alerts.js?v=14";
 
 import {
 getTelegramChatId,
 initAlertsCloudSync,
 saveTelegramChatId
-} from "./alerts-cloud-sync.js?v=11";
+} from "./alerts-cloud-sync.js?v=14";
 
 import {
 isCloudLoggedIn,
 onCloudSyncChange,
 getCloudUserEmail
-} from "./cloud-sync.js?v=11";
+} from "./cloud-sync.js?v=12";
 
 import {
 ensureCloudReady,
@@ -440,6 +440,12 @@ await focusAlertsLogin();
 
 onCloudSyncChange(()=>{
 refreshTelegramUi();
+
+if(isCloudLoggedIn()){
+rebuildAlertRegistryFromStorage();
+render();
+}
+
 });
 
 initAlertsCloudSync();

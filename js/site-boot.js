@@ -8,11 +8,11 @@ ensureCloudReady
 
 import {
 initAlertsCloudSync
-} from "./alerts-cloud-sync.js?v=11";
+} from "./alerts-cloud-sync.js?v=14";
 
 import {
 rebuildAlertRegistryFromStorage
-} from "./alerts.js?v=13";
+} from "./alerts.js?v=14";
 
 initAlertMonitor();
 initAlertsCloudSync();

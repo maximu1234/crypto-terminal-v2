@@ -29,7 +29,7 @@ ensureCloudReady
 import {
 persistFavoritesToCloud,
 onFavoritesRemoteUpdate
-} from "./cloud-sync.js?v=11";
+} from "./cloud-sync.js?v=12";
 
 import {
 createCandlestickChart,
@@ -74,7 +74,7 @@ processAlertCandle
 
 import {
 initDrawings
-} from "./drawings.js?v=113";
+} from "./drawings.js?v=114";
 
 let currentDataset = "crypto";
 let currentTF = "60";

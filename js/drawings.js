@@ -5,9 +5,9 @@ alertPriceFromShape,
 getActiveAlerts,
 patchAlertPrice,
 removeAlert,
-rebuildAlertRegistryFromStorage,
+registerAlertFromDrawing,
 upsertAlert
-} from "./alerts.js?v=13";
+} from "./alerts.js?v=14";
 
 import {
 mountTvColorGrid
@@ -28,7 +28,7 @@ parseMoneyInput
 import {
 persistAllDrawingsToCloud,
 onDrawingsRemoteUpdate
-} from "./cloud-sync.js?v=11";
+} from "./cloud-sync.js?v=12";
 
 import {
 formatPrice,
@@ -4920,6 +4920,18 @@ if(!shape.alertSymbol){
 shape.alertSymbol = sym;
 }
 
+if(
+!registerAlertFromDrawing(
+shape,
+sym
+)
+){
+console.warn(
+"Alert: не записан в таблицу — нет символа или цены",
+sym,
+shape.price
+);
+}else{
 void upsertAlert({
 id: shape.id,
 shapeId: shape.id,
@@ -4927,13 +4939,15 @@ symbol: sym,
 price: level,
 tf: shape.alertTf,
 createdAt: shape.alertCreatedAt
-}).then(()=>{
-rebuildAlertRegistryFromStorage();
 }).catch(err=>{
-console.warn("Alert upsert:", err);
-}).finally(()=>{
-saveDrawings();
+console.warn(
+"Alert cloud:",
+err?.message || err
+);
 });
+}
+
+saveDrawings();
 
 }
 
@@ -8288,16 +8302,10 @@ sym &&
 Number.isFinite(level)
 ){
 
-void upsertAlert({
-id: shape.id,
-shapeId: shape.id,
-symbol: symNorm,
-price: level,
-tf: shape.alertTf || getTf(),
-createdAt:
-shape.alertCreatedAt ||
-Date.now()
-});
+registerAlertFromDrawing(
+shape,
+symNorm
+);
 
 return shape;
 

@@ -450,7 +450,7 @@ const out =
 JSON.parse(JSON.stringify(map));
 
 const { getActiveAlerts } =
-await import("./alerts.js");
+await import("./alerts.js?v=14");
 
 for(const alert of getActiveAlerts()){
 
@@ -785,10 +785,13 @@ if(status === "SUBSCRIBED"){
 return;
 }
 
+if(status === "CLOSED"){
+return;
+}
+
 if(
 status === "CHANNEL_ERROR" ||
-status === "TIMED_OUT" ||
-status === "CLOSED"
+status === "TIMED_OUT"
 ){
 console.warn(
 "settings realtime:",
@@ -1303,11 +1306,11 @@ session.user.id
 );
 startSyncPoll();
 
-import("./alerts-cloud-sync.js?v=11")
+import("./alerts-cloud-sync.js?v=14")
 .then(async m=>{
 
 const { rebuildAlertRegistryFromStorage } =
-await import("./alerts.js");
+await import("./alerts.js?v=14");
 
 rebuildAlertRegistryFromStorage();
 await m.mergeCloudAlertsIntoLocal();
