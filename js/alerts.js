@@ -6,7 +6,7 @@ const MAX_ALERT_HISTORY = 30;
 
 function queueAlertsCloud(fn){
 
-import("./alerts-cloud-sync.js?v=11")
+import("./alerts-cloud-sync.js?v=12")
 .then(m=>fn(m))
 .catch(err=>{
 console.warn("alerts cloud:", err);
@@ -378,7 +378,7 @@ await import("./auth-ui.js?v=9");
 await ensureCloudReady();
 
 const m =
-await import("./alerts-cloud-sync.js?v=11");
+await import("./alerts-cloud-sync.js?v=12");
 
 const ok =
 await m.persistAlertsRegistryToCloud();
@@ -394,6 +394,8 @@ console.warn(
 "alerts cloud persist:",
 err?.message || err
 );
+}
+
 }
 
 export function patchAlertPrice(
@@ -448,7 +450,7 @@ a.shapeId === shapeId
 );
 
 if(row){
-void import("./alerts-cloud-sync.js?v=11").then(m=>{
+void import("./alerts-cloud-sync.js?v=12").then(m=>{
 m.persistAlertsRegistryToCloud();
 });
 }
@@ -731,7 +733,7 @@ null;
 try{
 
 m =
-await import("./alerts-cloud-sync.js?v=11");
+await import("./alerts-cloud-sync.js?v=12");
 
 cloudOk =
 await m.markAlertTriggeredOnCloud(

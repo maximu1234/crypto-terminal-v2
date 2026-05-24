@@ -74,7 +74,7 @@ processAlertCandle
 
 import {
 initDrawings
-} from "./drawings.js?v=111";
+} from "./drawings.js?v=112";
 
 let currentDataset = "crypto";
 let currentTF = "60";

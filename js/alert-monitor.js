@@ -3,7 +3,7 @@ alertEntryKey,
 formatTfLabel,
 getActiveAlerts,
 markAlertTriggered
-} from "./alerts.js";
+} from "./alerts.js?v=12";
 
 import { formatPrice } from "./chart.js";
 

@@ -5,7 +5,7 @@ getActiveAlerts,
 patchAlertPrice,
 removeAlert,
 upsertAlert
-} from "./alerts.js";
+} from "./alerts.js?v=12";
 
 import {
 mountTvColorGrid
