@@ -1,6 +1,6 @@
 import {
 initAlertMonitor
-} from "./alert-monitor.js?v=26";
+} from "./alert-monitor.js?v=27";
 
 import {
 ensureCloudReady
@@ -8,11 +8,11 @@ ensureCloudReady
 
 import {
 initAlertsCloudSync
-} from "./alerts-cloud-sync.js?v=26";
+} from "./alerts-cloud-sync.js?v=27";
 
 import {
 stripAlertFlagsNotInRegistry
-} from "./alerts.js?v=26";
+} from "./alerts.js?v=27";
 
 initAlertMonitor();
 initAlertsCloudSync();

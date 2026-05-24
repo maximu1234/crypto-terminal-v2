@@ -6,7 +6,7 @@ const MAX_ALERT_HISTORY = 30;
 
 function queueAlertsCloud(fn){
 
-import("./alerts-cloud-sync.js?v=26")
+import("./alerts-cloud-sync.js?v=27")
 .then(m=>fn(m))
 .catch(err=>{
 console.warn("alerts cloud:", err);
@@ -545,7 +545,7 @@ list.push(row);
 saveAlerts(list);
 
 const m =
-await import("./alerts-cloud-sync.js?v=26");
+await import("./alerts-cloud-sync.js?v=27");
 
 const pushed =
 await m.pushSingleAlertToCloud(row);
@@ -655,7 +655,7 @@ a.shapeId === shapeId
 );
 
 if(row){
-void import("./alerts-cloud-sync.js?v=26").then(m=>{
+void import("./alerts-cloud-sync.js?v=27").then(m=>{
 m.pushSingleAlertToCloud(row);
 });
 }
@@ -979,7 +979,7 @@ false;
 try{
 
 const m =
-await import("./alerts-cloud-sync.js?v=26");
+await import("./alerts-cloud-sync.js?v=27");
 
 const remote =
 await m.triggerAlertViaWorker(

@@ -47,27 +47,30 @@ const { data, error } =
 await ctx.sb.auth.refreshSession();
 
 if(
-error ||
-!data?.session?.user
+!error &&
+data?.session?.user
 ){
-return null;
-}
-
 return {
 sb: ctx.sb,
 user: data.session.user
 };
-
-}catch{
-return null;
 }
+
+}catch(err){
+console.warn(
+"auth refresh:",
+err?.message || err
+);
+}
+
+return ctx;
 
 }
 
 async function getWorkerRequestAuth(){
 
 const ctx =
-await getAuthedFresh();
+await getAuthed();
 
 if(!ctx){
 return null;
@@ -93,13 +96,20 @@ ctx
 async function verifyAlertActiveInCloud(
 ctx,
 symbol,
-shapeId
+shapeId,
+attempts = 4
 ){
 
 const sym =
 String(symbol || "").trim().toUpperCase();
 const sid =
 String(shapeId || "").trim();
+
+for(
+let i = 0;
+i < attempts;
+i++
+){
 
 const { data, error } =
 await ctx.sb
@@ -116,10 +126,19 @@ console.warn(
 "alert cloud verify:",
 error.message
 );
-return false;
+}else if(data?.id){
+return true;
 }
 
-return !!data?.id;
+if(i < attempts - 1){
+await new Promise(r=>{
+setTimeout(r, 250);
+});
+}
+
+}
+
+return false;
 
 }
 
@@ -233,7 +252,7 @@ return String(tf);
 async function pushAlertToCloudImpl(entry){
 
 const ctx =
-await getAuthedFresh();
+await getAuthed();
 
 if(!ctx){
 console.warn(
@@ -318,21 +337,22 @@ symbol,
 shapeId
 );
 
-if(verified){
 console.log(
 "alert cloud push ok:",
 symbol,
 shapeId,
 row.tf
 );
-return true;
-}
 
+if(!verified){
 console.warn(
-"alert cloud push: upsert без строки в таблице",
+"alert cloud push: upsert ok, проверка строки не сразу",
 symbol,
 shapeId
 );
+}
+
+return true;
 }
 
 console.warn(
@@ -363,22 +383,22 @@ symbol,
 shapeId
 );
 
-if(verified){
 console.log(
 "alert cloud push ok (insert):",
 symbol,
 shapeId,
 row.tf
 );
-return true;
-}
 
+if(!verified){
 console.warn(
-"alert cloud push: insert без строки в таблице",
+"alert cloud push: insert ok, проверка строки не сразу",
 symbol,
 shapeId
 );
-return false;
+}
+
+return true;
 
 }
 
@@ -707,11 +727,13 @@ text.slice(0, 240)
 return false;
 }
 
-return verifyAlertActiveInCloud(
-auth.ctx,
+console.log(
+"alert cloud push ok (worker):",
 symbol,
 shapeId
 );
+
+return true;
 
 }
 
@@ -730,7 +752,7 @@ return 0;
 }
 
 const { getActiveAlerts } =
-await import("./alerts.js?v=26");
+await import("./alerts.js?v=27");
 
 const localKeys =
 new Set(
@@ -815,7 +837,14 @@ normalizeAlertTf(entry?.tf)
 
 }
 
-async function pushOneAlertRow(row){
+async function pushOneAlertRow(
+row,
+options = {}
+){
+
+const retries =
+Number(options.retries) ||
+1;
 
 if(
 !row.symbol ||
@@ -826,15 +855,13 @@ return false;
 }
 
 const { markAlertCloudSynced } =
-await import("./alerts.js?v=26");
+await import("./alerts.js?v=27");
 
-if(await pushAlertViaWorker(row)){
-markAlertCloudSynced(
-row.symbol,
-row.shapeId
-);
-return true;
-}
+for(
+let attempt = 0;
+attempt < retries;
+attempt++
+){
 
 if(await pushAlertToCloudImpl(row)){
 markAlertCloudSynced(
@@ -844,14 +871,43 @@ row.shapeId
 return true;
 }
 
+if(await pushAlertViaWorker(row)){
+markAlertCloudSynced(
+row.symbol,
+row.shapeId
+);
+return true;
+}
+
+if(attempt < retries - 1){
+await new Promise(r=>{
+setTimeout(
+r,
+400 * (attempt + 1)
+);
+});
+}
+
+}
+
 return false;
 
 }
 
 async function syncAllLocalAlertsToCloudImpl(){
 
-const ctx =
+const { ensureCloudReady } =
+await import("./auth-ui.js?v=9");
+
+await ensureCloudReady();
+
+let ctx =
 await getAuthedFresh();
+
+if(!ctx){
+ctx =
+await getAuthed();
+}
 
 if(!ctx){
 console.warn(
@@ -860,13 +916,8 @@ console.warn(
 return 0;
 }
 
-const { ensureCloudReady } =
-await import("./auth-ui.js?v=9");
-
-await ensureCloudReady();
-
 const { getActiveAlerts } =
-await import("./alerts.js?v=26");
+await import("./alerts.js?v=27");
 
 const list =
 getActiveAlerts();
@@ -881,7 +932,12 @@ for(const entry of list){
 const row =
 normalizeAlertEntry(entry);
 
-if(await pushOneAlertRow(row)){
+if(
+await pushOneAlertRow(
+row,
+{ retries: 2 }
+)
+){
 ok += 1;
 }
 }
@@ -930,7 +986,7 @@ Date.now() < deadline
 ){
 
 const { getActiveAlerts } =
-await import("./alerts.js?v=26");
+await import("./alerts.js?v=27");
 
 const list =
 getActiveAlerts();
@@ -1014,28 +1070,19 @@ await ensureCloudReady();
 const row =
 normalizeAlertEntry(entry);
 
-for(
-let attempt = 0;
-attempt < 4;
-attempt++
-){
+const ok =
+await pushOneAlertRow(
+row,
+{ retries: 4 }
+);
 
-if(await pushOneAlertRow(row)){
+if(ok){
 console.log(
 "Облако: алерт в Supabase",
 row.symbol,
 row.shapeId
 );
 return true;
-}
-
-await new Promise(r=>{
-setTimeout(
-r,
-400 * (attempt + 1)
-);
-});
-
 }
 
 console.warn(
@@ -1109,7 +1156,7 @@ saveAlertsFromCloudMerge,
 alertEntryKey,
 loadAlerts
 } =
-await import("./alerts.js?v=26");
+await import("./alerts.js?v=27");
 
 const cloudKeys =
 new Set(
@@ -1165,7 +1212,7 @@ const n =
 await reconcileLocalRegistryWithCloud();
 
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=26");
+await import("./alerts.js?v=27");
 
 stripAlertFlagsNotInRegistry();
 
@@ -1178,7 +1225,7 @@ return n;
 async function hydrateAlertsAfterAuth(){
 
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=26");
+await import("./alerts.js?v=27");
 
 await syncAllLocalAlertsToCloudImpl();
 await reconcileLocalRegistryWithCloud();
