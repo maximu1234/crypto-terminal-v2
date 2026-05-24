@@ -1,7 +1,12 @@
 import { createClient } from "@supabase/supabase-js";
 import WebSocket from "ws";
 import { getWorkerConfig } from "./config.js";
-import { restGet, restPatch, restDelete } from "./supabase-rest.js";
+import {
+  restGet,
+  restPatch,
+  restDelete,
+  restPatchReturning
+} from "./supabase-rest.js";
 
 let client = null;
 
@@ -189,41 +194,79 @@ export async function fetchAlertDiagnostics() {
 
 }
 
-export async function markAlertTriggered(alertId) {
+/**
+ * Забирает алерт (triggered_at), чтобы не сработало дважды (браузер + worker).
+ * @returns {object|null} строка price_alerts
+ */
+export async function claimAlertById(alertId) {
 
   const cfg = getWorkerConfig();
 
-  if (!cfg.ready) {
-    return false;
-  }
-
-  try{
-    await restDelete(
-      `price_alerts?id=eq.${encodeURIComponent(alertId)}`
-    );
-    return true;
-  }catch(err){
-    console.warn(
-      "mark triggered (delete):",
-      err.message
-    );
+  if (!cfg.ready || !alertId) {
+    return null;
   }
 
   const triggeredAt =
     new Date().toISOString();
 
   try{
-    await restPatch(
-      `price_alerts?id=eq.${encodeURIComponent(alertId)}`,
+    const rows = await restPatchReturning(
+      "price_alerts?id=eq." +
+      encodeURIComponent(alertId) +
+      "&triggered_at=is.null",
       { triggered_at: triggeredAt }
     );
-    return true;
+
+    return rows?.[0] || null;
   }catch(err){
     console.warn(
-      "mark triggered (patch):",
+      "claim alert:",
       err.message
     );
-    return false;
+    return null;
   }
+
+}
+
+export async function fetchTelegramChatId(userId) {
+
+  const cfg = getWorkerConfig();
+
+  if (
+    !cfg.ready ||
+    !userId
+  ) {
+    return null;
+  }
+
+  try{
+    const rows = await restGet(
+      "user_settings?select=telegram_chat_id&user_id=eq." +
+      encodeURIComponent(userId) +
+      "&telegram_chat_id=not.is.null"
+    );
+
+    const id = rows?.[0]?.telegram_chat_id;
+
+    return id != null ? Number(id) : null;
+  }catch(err){
+    console.warn(
+      "fetch telegram chat:",
+      err.message
+    );
+    return null;
+  }
+
+}
+
+export async function markAlertTriggered(alertId) {
+
+  const { executeAlertTrigger } =
+    await import("./execute-trigger.js");
+
+  const result =
+    await executeAlertTrigger(alertId);
+
+  return result.ok;
 
 }

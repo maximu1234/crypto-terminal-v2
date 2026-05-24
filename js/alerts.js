@@ -6,7 +6,7 @@ const MAX_ALERT_HISTORY = 30;
 
 function queueAlertsCloud(fn){
 
-import("./alerts-cloud-sync.js?v=21")
+import("./alerts-cloud-sync.js?v=22")
 .then(m=>fn(m))
 .catch(err=>{
 console.warn("alerts cloud:", err);
@@ -561,7 +561,7 @@ return;
 }
 
 const m =
-await import("./alerts-cloud-sync.js?v=21");
+await import("./alerts-cloud-sync.js?v=22");
 
 const row = {
 shapeId:
@@ -655,7 +655,7 @@ a.shapeId === shapeId
 );
 
 if(row){
-void import("./alerts-cloud-sync.js?v=21").then(m=>{
+void import("./alerts-cloud-sync.js?v=22").then(m=>{
 m.persistAlertsRegistryToCloud();
 });
 }
@@ -959,7 +959,28 @@ false;
 try{
 
 const m =
-await import("./alerts-cloud-sync.js?v=21");
+await import("./alerts-cloud-sync.js?v=22");
+
+const remote =
+await m.triggerAlertViaWorker(
+sym,
+sid
+);
+
+if(remote?.ok){
+cloudOk = true;
+
+if(
+remote.telegram === false &&
+remote.skipped !== "not_found" &&
+remote.reason !== "not_claimed"
+){
+console.warn(
+"Telegram: не отправлено — проверьте chat id на странице Алерты и TELEGRAM_BOT_TOKEN на Railway."
+);
+}
+
+}else{
 
 cloudOk =
 await m.markAlertTriggeredOnCloudImmediate(
@@ -976,6 +997,14 @@ await m.markAlertTriggeredOnCloudImmediate(
 sym,
 sid
 );
+}
+
+if(!cloudOk){
+console.warn(
+"Облако: не удалось удалить алерт из Supabase. Задайте ALERT_WORKER_URL для Telegram при открытой вкладке."
+);
+}
+
 }
 
 }catch(err){

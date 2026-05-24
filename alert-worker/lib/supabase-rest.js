@@ -66,6 +66,40 @@ export async function restPatch(pathAndQuery, body) {
 
 }
 
+export async function restPatchReturning(
+  pathAndQuery,
+  body
+) {
+
+  const { base, key } = restBase();
+
+  const res = await fetch(`${base}/rest/v1/${pathAndQuery}`, {
+    method: "PATCH",
+    headers: {
+      apikey: key,
+      Authorization: `Bearer ${key}`,
+      "Content-Type": "application/json",
+      Prefer: "return=representation"
+    },
+    body: JSON.stringify(body)
+  });
+
+  const text = await res.text();
+
+  if (!res.ok) {
+    throw new Error(
+      `REST PATCH ${res.status}: ${text.slice(0, 200)}`
+    );
+  }
+
+  if (!text) {
+    return [];
+  }
+
+  return JSON.parse(text);
+
+}
+
 export async function restDelete(pathAndQuery) {
 
   const { base, key } = restBase();

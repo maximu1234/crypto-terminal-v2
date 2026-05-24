@@ -37,6 +37,7 @@ export function getWorkerConfig() {
         ? legacyKey
         : secretKey || legacyKey;
   const telegramBotToken = readEnv("TELEGRAM_BOT_TOKEN");
+  const supabaseAnonKey = readEnv("SUPABASE_ANON_KEY");
 
   const missing = [];
 
@@ -55,6 +56,7 @@ export function getWorkerConfig() {
   return {
     supabaseUrl,
     supabaseServiceRoleKey,
+    supabaseAnonKey,
     telegramBotToken,
     missing,
     ready: missing.length === 0

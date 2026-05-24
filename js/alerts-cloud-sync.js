@@ -397,6 +397,123 @@ shapeId
 
 }
 
+async function getAlertWorkerBaseUrl(){
+
+try{
+const env =
+await import("./supabase-env.js?v=4");
+
+const url =
+String(
+env.ALERT_WORKER_URL || ""
+).trim();
+
+return url.replace(/\/$/, "");
+
+}catch{
+return "";
+
+}
+
+}
+
+/**
+ * Срабатывание из браузера: Telegram + удаление строки через Railway (service role).
+ */
+export async function triggerAlertViaWorker(
+symbol,
+shapeId
+){
+
+const base =
+await getAlertWorkerBaseUrl();
+
+if(!base){
+console.warn(
+"Telegram: задайте ALERT_WORKER_URL в js/supabase-env.js (URL Railway alert-worker) и обновите страницу."
+);
+return {
+ok: false,
+reason: "no_worker_url"
+};
+}
+
+const ctx =
+await getAuthed();
+
+if(!ctx){
+return {
+ok: false,
+reason: "no_auth"
+};
+}
+
+const { data: { session } } =
+await ctx.sb.auth.getSession();
+
+const token =
+session?.access_token;
+
+if(!token){
+return {
+ok: false,
+reason: "no_token"
+};
+}
+
+const sym =
+String(symbol || "").trim().toUpperCase();
+const sid =
+String(shapeId || "").trim();
+
+const res =
+await fetch(
+`${base}/trigger`,
+{
+method: "POST",
+headers: {
+"Content-Type": "application/json",
+Authorization: `Bearer ${token}`
+},
+body: JSON.stringify({
+symbol: sym,
+shape_id: sid
+})
+}
+);
+
+const text =
+await res.text();
+
+let body = {};
+
+try{
+body =
+text
+? JSON.parse(text)
+: {};
+}catch{
+body = { raw: text };
+}
+
+if(!res.ok){
+console.warn(
+"worker /trigger:",
+res.status,
+text.slice(0, 240)
+);
+return {
+ok: false,
+reason: "http_error",
+status: res.status,
+body
+};
+}
+
+return body;
+
+}
+
 export {
 markAlertTriggeredOnCloudImpl,
 syncAllLocalAlertsToCloudImpl
@@ -417,7 +534,7 @@ return 0;
 }
 
 const { getActiveAlerts } =
-await import("./alerts.js?v=21");
+await import("./alerts.js?v=22");
 
 const localKeys =
 new Set(
@@ -498,7 +615,7 @@ return 0;
 }
 
 const { getActiveAlerts } =
-await import("./alerts.js?v=21");
+await import("./alerts.js?v=22");
 
 const list =
 getActiveAlerts();
@@ -546,7 +663,7 @@ export async function persistAlertsRegistryToCloud(){
 return runCloudOp(async()=>{
 
 const { getActiveAlerts } =
-await import("./alerts.js?v=21");
+await import("./alerts.js?v=22");
 
 const list =
 getActiveAlerts();
@@ -590,7 +707,7 @@ return 0;
 }
 
 const { saveAlerts, alertEntryKey, loadAlerts } =
-await import("./alerts.js?v=21");
+await import("./alerts.js?v=22");
 
 const byKey = new Map();
 const now = Date.now();
@@ -672,7 +789,7 @@ const n =
 await mergeCloudAlertsIntoLocal();
 
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=21");
+await import("./alerts.js?v=22");
 
 stripAlertFlagsNotInRegistry();
 
@@ -691,7 +808,7 @@ return n;
 async function hydrateAlertsAfterAuth(){
 
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=21");
+await import("./alerts.js?v=22");
 
 await syncAllLocalAlertsToCloudImpl();
 await mergeCloudAlertsIntoLocal();

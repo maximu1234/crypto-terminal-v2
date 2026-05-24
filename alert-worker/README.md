@@ -2,7 +2,7 @@
 
 Постоянный процесс: Bybit WebSocket → проверка алертов из Supabase → Telegram.
 
-Браузерные алерты (звук/тост) **не заменяет** — только дополнение при привязанном Telegram.
+Браузерные алерты (звук/тост) при открытой вкладке вызывают `POST /trigger` на worker (нужен `ALERT_WORKER_URL` на Vercel в `js/supabase-env.js`). При закрытой вкладке срабатывает только worker по свечам Bybit.
 
 ## Railway (пустой дашборд)
 
@@ -14,6 +14,7 @@
 | Variable | Пример |
 |----------|--------|
 | `SUPABASE_URL` | `https://xxxx.supabase.co` |
+| `SUPABASE_ANON_KEY` | anon key (для `POST /trigger` из браузера) |
 | `SUPABASE_SERVICE_ROLE_KEY` | длинный `service_role` ключ |
 | `TELEGRAM_BOT_TOKEN` | от BotFather |
 

@@ -1,9 +1,5 @@
 import { didCrossWithCandle } from "./cross.js";
-import {
-  formatAlertMessage,
-  sendTelegramMessage
-} from "./telegram.js";
-import { markAlertTriggered } from "./alerts-db.js";
+import { executeAlertTrigger } from "./execute-trigger.js";
 
 /** alert key -> last price for cross detection */
 const lastPriceByAlert = new Map();
@@ -64,26 +60,17 @@ export async function evaluateAlertsForCandle(
       continue;
     }
 
-    const text = formatAlertMessage(alert);
-    const marked = await markAlertTriggered(alert.id);
+    const result =
+      await executeAlertTrigger(alert.id);
 
     activeAlerts.delete(key);
     lastPriceByAlert.delete(key);
 
-    if (!marked) {
-      console.warn(
-        "mark triggered failed",
-        alert.symbol,
-        alert.id
-      );
+    if (!result.ok) {
+      continue;
     }
 
-    const ok = await sendTelegramMessage(
-      alert.telegram_chat_id,
-      text
-    );
-
-    if (ok) {
+    if (result.telegram) {
       console.log(
         "triggered",
         alert.symbol,
@@ -92,11 +79,18 @@ export async function evaluateAlertsForCandle(
         "→",
         alert.telegram_chat_id
       );
-    } else {
+    } else if (alert.telegram_chat_id != null) {
       console.warn(
         "telegram failed",
         alert.symbol,
         alert.telegram_chat_id
+      );
+    } else {
+      console.log(
+        "triggered (no telegram chat)",
+        alert.symbol,
+        tfNorm,
+        level
       );
     }
 

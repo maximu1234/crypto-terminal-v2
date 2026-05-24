@@ -20,6 +20,11 @@ process.env.SUPABASE_ANON_KEY ||
 process.env.VITE_SUPABASE_ANON_KEY ||
 "";
 
+const workerUrl =
+process.env.ALERT_WORKER_URL ||
+process.env.VITE_ALERT_WORKER_URL ||
+"";
+
 if(!url || !key){
 
 if(fs.existsSync(out)){
@@ -38,6 +43,7 @@ console.warn(
 const body = `/* Auto-generated at deploy — do not edit */
 export const SUPABASE_URL = ${JSON.stringify(url)};
 export const SUPABASE_ANON_KEY = ${JSON.stringify(key)};
+export const ALERT_WORKER_URL = ${JSON.stringify(workerUrl)};
 `;
 
 fs.writeFileSync(out, body, "utf8");
