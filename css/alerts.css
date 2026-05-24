@@ -48,6 +48,22 @@ color:#9ca3af;
 color:#60a5fa;
 }
 
+.alerts-inline-auth-mount .cloud-auth-wrap--inline{
+margin-top:4px;
+}
+
+.alerts-inline-auth-mount .cloud-auth-logged-out{
+display:flex;
+flex-wrap:wrap;
+gap:8px;
+align-items:center;
+}
+
+.alerts-inline-auth-mount .cloud-auth-email{
+flex:1 1 200px;
+min-width:0;
+}
+
 .alerts-telegram-guest{
 margin:0;
 font-size:0.9rem;

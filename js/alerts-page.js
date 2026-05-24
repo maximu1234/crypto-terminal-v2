@@ -23,6 +23,11 @@ isCloudLoggedIn,
 onCloudSyncChange
 } from "./cloud-sync.js?v=7";
 
+import {
+ensureCloudReady,
+focusAlertsLogin
+} from "./auth-ui.js?v=5";
+
 import { formatPrice } from "./chart.js";
 
 const tbody =
@@ -377,22 +382,20 @@ render();
 window.addEventListener("alerts-changed", render);
 window.addEventListener("alerts-history-changed", render);
 
-document.getElementById("alerts-open-settings")?.addEventListener("click", ()=>{
+document.getElementById("alerts-open-login")?.addEventListener("click", async e=>{
 
-const btn =
-document.getElementById("header-settings-btn");
-const dropdown =
-document.getElementById("header-settings-dropdown");
-
-if(!btn || !dropdown){
-return;
-}
-
-dropdown.classList.remove("hidden");
-btn.setAttribute("aria-expanded", "true");
-btn.focus();
+e.preventDefault();
+await focusAlertsLogin();
 
 });
 
+onCloudSyncChange(()=>{
+refreshTelegramUi();
+});
+
+initAlertsCloudSync();
+
+await ensureCloudReady();
+await refreshTelegramUi();
 rebuildAlertRegistryFromStorage();
 render();

@@ -4,7 +4,7 @@ initAlertMonitor
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=4";
+} from "./auth-ui.js?v=5";
 
 initAlertMonitor();
 await ensureCloudReady();

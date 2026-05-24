@@ -48,11 +48,11 @@
 
 <p class="alerts-telegram-note">
 Дополнение к алертам в браузере: при закрытом терминале сообщения приходят в Telegram (обычно за 1–2 с).
-Нужен вход по email (<button type="button" class="alerts-inline-settings-link" id="alerts-open-settings">шестерёнка ⚙</button> в меню справа) и бот.
+Нужен <button type="button" class="alerts-inline-settings-link" id="alerts-open-login">вход по email</button> и бот.
 </p>
 
 <div id="alerts-telegram-guest" class="alerts-telegram-guest hidden">
-Нажмите шестерёнку ⚙ в меню справа → email → ссылка из письма → вернитесь сюда и укажите Chat ID.
+<div id="alerts-inline-auth-mount" class="alerts-inline-auth-mount"></div>
 </div>
 
 <div id="alerts-telegram-form" class="alerts-telegram-form hidden">
@@ -165,7 +165,7 @@ placeholder="например 123456789"
 </main>
 
 <script type="module" src="/js/site-boot.js?v=14"></script>
-<script type="module" src="/js/alerts-page.js?v=12"></script>
+<script type="module" src="/js/alerts-page.js?v=13"></script>
 
 </body>
 </html>

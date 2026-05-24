@@ -8,16 +8,9 @@ signInWithEmailOtp,
 signOutCloud
 } from "./cloud-sync.js?v=7";
 
-function isMainPage(){
+function isAlertsPage(){
 
-const path =
-window.location.pathname;
-
-return (
-path === "/" ||
-path.endsWith("/index.html") ||
-path.endsWith("/index")
-);
+return window.location.pathname.includes("/alerts");
 
 }
 
@@ -26,7 +19,11 @@ function pageHasCloudAuth(){
 const path =
 window.location.pathname;
 
-if(isMainPage()){
+if(
+path === "/" ||
+path.endsWith("/index.html") ||
+path.endsWith("/index")
+){
 return true;
 }
 
@@ -113,34 +110,20 @@ close();
 
 }
 
-function mountAuthUi(){
-
-if(!pageHasCloudAuth()){
-return ()=>{};
-}
-
-const settingsMount =
-document.getElementById("cloud-settings-mount");
-const settingsWrap =
-document.getElementById("header-settings-wrap");
-
-const host =
-settingsMount;
+function createAuthPanel(host, variant){
 
 if(
 !host ||
-document.getElementById("cloud-auth-wrap")
+host.querySelector(".cloud-auth-wrap")
 ){
-return;
+return null;
 }
 
 const wrap =
 document.createElement("div");
 
-wrap.id = "cloud-auth-wrap";
-
 wrap.className =
-"cloud-auth-wrap cloud-auth-wrap--panel hidden";
+`cloud-auth-wrap cloud-auth-wrap--${variant} hidden`;
 
 wrap.innerHTML = `
 <div class="cloud-auth-logged-out">
@@ -155,8 +138,6 @@ wrap.innerHTML = `
 `;
 
 host.appendChild(wrap);
-
-setupSettingsDropdown();
 
 const emailInput =
 wrap.querySelector(".cloud-auth-email");
@@ -187,16 +168,26 @@ hintEl.classList.toggle(
 
 }
 
-function refresh(){
+function refreshOne(){
+
+const settingsWrap =
+document.getElementById("header-settings-wrap");
 
 if(!isCloudSyncEnabled()){
 wrap.classList.add("hidden");
+
+if(variant === "panel"){
 settingsWrap?.classList.add("hidden");
+}
+
 return;
 }
 
 wrap.classList.remove("hidden");
+
+if(variant === "panel"){
 settingsWrap?.classList.remove("hidden");
+}
 
 if(isCloudLoggedIn()){
 
@@ -204,12 +195,12 @@ loggedOut.classList.add("hidden");
 loggedIn.classList.remove("hidden");
 emailLabel.textContent =
 getCloudUserEmail() || "Аккаунт";
-const onAlerts =
-window.location.pathname.includes("/alerts");
 
 setHint(
-onAlerts
-? "После входа сохраните Chat ID ниже. Рисунки и избранное тоже синхронизируются."
+variant === "inline" && isAlertsPage()
+? "Откройте ссылку из письма на этом устройстве, затем укажите Chat ID ниже."
+: isAlertsPage()
+? "После входа сохраните Chat ID ниже."
 : "Избранное и рисунки синхронизируются между устройствами.",
 false
 );
@@ -269,14 +260,67 @@ sendBtn.disabled = false;
 outBtn?.addEventListener("click", async()=>{
 
 await signOutCloud();
-refresh();
 
 });
 
-onCloudSyncChange(refresh);
-refresh();
+return {
+wrap,
+refreshOne,
+emailInput
+};
 
-return refresh;
+}
+
+function mountAuthUi(){
+
+if(!pageHasCloudAuth()){
+return ()=>{};
+}
+
+const panels = [];
+
+const headerPanel =
+createAuthPanel(
+document.getElementById("cloud-settings-mount"),
+"panel"
+);
+
+if(headerPanel){
+panels.push(headerPanel);
+}
+
+if(isAlertsPage()){
+
+const inlinePanel =
+createAuthPanel(
+document.getElementById("alerts-inline-auth-mount"),
+"inline"
+);
+
+if(inlinePanel){
+panels.push(inlinePanel);
+}
+
+}
+
+if(!panels.length){
+return ()=>{};
+}
+
+setupSettingsDropdown();
+
+function refreshAll(){
+
+panels.forEach(p=>{
+p.refreshOne();
+});
+
+}
+
+onCloudSyncChange(refreshAll);
+refreshAll();
+
+return refreshAll;
 
 }
 
@@ -285,6 +329,7 @@ let initPromise = null;
 
 async function initAuthUiInternal(){
 
+setupSettingsDropdown();
 await initCloudSync();
 refreshAuthUi = mountAuthUi() || (()=>{});
 refreshAuthUi();
@@ -304,5 +349,63 @@ return initPromise;
 export async function initAuthUi(){
 
 return ensureCloudReady();
+
+}
+
+export async function openCloudSettingsPanel(){
+
+await ensureCloudReady();
+
+const wrap =
+document.getElementById("header-settings-wrap");
+const dropdown =
+document.getElementById("header-settings-dropdown");
+const btn =
+document.getElementById("header-settings-btn");
+
+if(
+!wrap ||
+!dropdown ||
+!btn ||
+!isCloudSyncEnabled()
+){
+return false;
+}
+
+wrap.classList.remove("hidden");
+dropdown.classList.remove("hidden");
+btn.setAttribute(
+"aria-expanded",
+"true"
+);
+
+wrap.querySelector(".cloud-auth-email")?.focus();
+return true;
+
+}
+
+export async function focusAlertsLogin(){
+
+await ensureCloudReady();
+
+const guest =
+document.getElementById("alerts-telegram-guest");
+
+guest?.scrollIntoView({
+behavior: "smooth",
+block: "nearest"
+});
+
+const email =
+document.querySelector(
+"#alerts-inline-auth-mount .cloud-auth-email"
+);
+
+if(email){
+email.focus();
+return true;
+}
+
+return openCloudSettingsPanel();
 
 }
