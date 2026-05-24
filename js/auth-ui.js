@@ -23,6 +23,13 @@ return window.location.pathname.includes("/alerts");
 
 function pageHasCloudAuth(){
 
+if(
+document.getElementById("cloud-settings-mount") ||
+document.getElementById("header-settings-btn")
+){
+return true;
+}
+
 const path =
 window.location.pathname;
 
@@ -76,9 +83,27 @@ btn.setAttribute(
 
 };
 
+const placeDropdown = ()=>{
+
+const rect =
+btn.getBoundingClientRect();
+
+dropdown.style.top =
+`${Math.round(rect.bottom + 8)}px`;
+
+dropdown.style.right =
+`${Math.round(
+window.innerWidth - rect.right
+)}px`;
+
+dropdown.style.left = "auto";
+
+};
+
 const open = ()=>{
 
 dropdown.classList.remove("hidden");
+placeDropdown();
 btn.setAttribute(
 "aria-expanded",
 "true"
@@ -122,6 +147,45 @@ close();
 });
 
 settingsDropdownReady = true;
+
+window.addEventListener(
+"resize",
+()=>{
+if(
+!dropdown.classList.contains("hidden")
+){
+placeDropdown();
+}
+},
+{ passive: true }
+);
+
+}
+
+function bindHeaderSettingsEarly(){
+
+if(
+!document.getElementById("header-settings-btn")
+){
+return;
+}
+
+setupSettingsDropdown();
+
+}
+
+if(
+document.readyState === "loading"
+){
+
+document.addEventListener(
+"DOMContentLoaded",
+bindHeaderSettingsEarly
+);
+
+}else{
+
+bindHeaderSettingsEarly();
 
 }
 

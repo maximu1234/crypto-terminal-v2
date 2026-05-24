@@ -362,10 +362,11 @@ color:#e5e7eb;
 }
 
 .header-settings-dropdown{
-position:absolute;
-top:calc(100% + 8px);
+position:fixed;
+top:0;
 right:0;
-z-index:100;
+left:auto;
+z-index:10001;
 min-width:280px;
 max-width:min(320px, calc(100vw - 24px));
 padding:12px;
