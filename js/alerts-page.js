@@ -10,7 +10,7 @@ getAlertsSorted,
 rebuildAlertRegistryFromStorage,
 removeAlert,
 removeAllAlerts
-} from "./alerts.js?v=14";
+} from "./alerts.js?v=16";
 
 import {
 getTelegramChatId,
@@ -396,7 +396,6 @@ clearDrawingsSuccessTimer = null;
 
 function removeOne(symbol, shapeId){
 
-clearAlertOnDrawing(symbol, shapeId);
 removeAlert(symbol, shapeId);
 render();
 
@@ -410,10 +409,6 @@ return;
 
 const alerts =
 getAlertsSorted();
-
-alerts.forEach(alert=>{
-clearAlertOnDrawing(alert.symbol, alert.shapeId);
-});
 
 removeAllAlerts();
 deleteAllCb.checked = false;

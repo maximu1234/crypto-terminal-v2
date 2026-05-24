@@ -2,12 +2,14 @@ import {
 ALERT_LINE_COLOR,
 ALERT_LINE_DASH,
 alertPriceFromShape,
+alertPricesMatch,
 getActiveAlerts,
 patchAlertPrice,
+remapAlertShapeId,
 removeAlert,
 registerAlertFromDrawing,
 upsertAlert
-} from "./alerts.js?v=14";
+} from "./alerts.js?v=16";
 
 import {
 mountTvColorGrid
@@ -8226,6 +8228,7 @@ return;
 
 if(e.detail?.symbol === getSymbol()){
 loadDrawings();
+reconcileDrawingAlertsFromRegistry();
 scheduleRedraw();
 updateStyleBar();
 }
@@ -8287,8 +8290,35 @@ if(shape.type !== "hray"){
 return shape;
 }
 
-const shouldAlert =
+let shouldAlert =
 activeIds.has(shape.id);
+
+if(
+!shouldAlert &&
+Number.isFinite(
+alertPriceFromShape(shape)
+)
+){
+
+const match =
+alertsForSym.find(a=>
+alertPricesMatch(
+a.price,
+shape.price
+)
+);
+
+if(match){
+remapAlertShapeId(
+symNorm,
+match.shapeId,
+shape.id
+);
+activeIds.add(shape.id);
+shouldAlert = true;
+}
+
+}
 
 if(shouldAlert){
 
@@ -8320,23 +8350,6 @@ if(!shape.isAlert){
 return shape;
 }
 
-const level =
-alertPriceFromShape(shape);
-
-if(
-symNorm &&
-Number.isFinite(level)
-){
-
-registerAlertFromDrawing(
-shape,
-symNorm
-);
-
-return shape;
-
-}
-
 dirty = true;
 return stripAlertFromShape(shape);
 
@@ -8362,6 +8375,48 @@ Number(alert.price);
 
 if(!Number.isFinite(price)){
 continue;
+}
+
+const orphanRay =
+drawings.find(
+d=>
+d.type === "hray" &&
+!d.isAlert &&
+!existingHrayIds.has(d.id) &&
+alertPricesMatch(
+d.price,
+price
+)
+);
+
+if(orphanRay){
+
+remapAlertShapeId(
+symNorm,
+alert.shapeId,
+orphanRay.id
+);
+
+orphanRay.isAlert = true;
+orphanRay.lineWidth = 1;
+orphanRay.alertCreatedAt =
+alert.createdAt ||
+Date.now();
+orphanRay.alertTf =
+alert.tf ||
+getTf();
+orphanRay.alertSymbol = symNorm;
+
+if(!orphanRay.savedColor){
+orphanRay.savedColor =
+orphanRay.color;
+}
+
+existingHrayIds.add(orphanRay.id);
+activeIds.add(orphanRay.id);
+dirty = true;
+continue;
+
 }
 
 const restored =
@@ -8427,6 +8482,7 @@ if(
 symbols.includes(sym)
 ){
 loadDrawings();
+reconcileDrawingAlertsFromRegistry();
 scheduleRedraw();
 updateStyleBar();
 }

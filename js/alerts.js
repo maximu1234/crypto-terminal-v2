@@ -6,7 +6,7 @@ const MAX_ALERT_HISTORY = 30;
 
 function queueAlertsCloud(fn){
 
-import("./alerts-cloud-sync.js?v=14")
+import("./alerts-cloud-sync.js?v=16")
 .then(m=>fn(m))
 .catch(err=>{
 console.warn("alerts cloud:", err);
@@ -53,6 +53,91 @@ return TF_LABELS[tf] || tf;
 export function alertEntryKey(symbol, shapeId){
 
 return `${symbol}::${shapeId}`;
+
+}
+
+export function alertPricesMatch(
+a,
+b
+){
+
+const pa =
+Number(a);
+const pb =
+Number(b);
+
+if(
+!Number.isFinite(pa) ||
+!Number.isFinite(pb)
+){
+return false;
+}
+
+const scale =
+Math.max(
+1,
+Math.abs(pa),
+Math.abs(pb)
+);
+
+return Math.abs(pa - pb) <=
+scale * 1e-6;
+
+}
+
+export function remapAlertShapeId(
+symbol,
+oldShapeId,
+newShapeId
+){
+
+const sym =
+String(symbol || "").trim().toUpperCase();
+const oldId =
+String(oldShapeId || "").trim();
+const newId =
+String(newShapeId || "").trim();
+
+if(
+!sym ||
+!oldId ||
+!newId ||
+oldId === newId
+){
+return false;
+}
+
+const list =
+loadAlerts();
+
+let changed =
+false;
+
+const next =
+list.map(row=>{
+
+if(
+String(row.symbol).toUpperCase() !== sym ||
+String(row.shapeId) !== oldId
+){
+return row;
+}
+
+changed = true;
+
+return {
+...row,
+id: newId,
+shapeId: newId
+};
+
+});
+
+if(changed){
+saveAlerts(next);
+}
+
+return changed;
 
 }
 
@@ -453,7 +538,7 @@ await import("./auth-ui.js?v=9");
 await ensureCloudReady();
 
 const m =
-await import("./alerts-cloud-sync.js?v=14");
+await import("./alerts-cloud-sync.js?v=16");
 
 const ok =
 await m.persistAlertsRegistryToCloud();
@@ -525,7 +610,7 @@ a.shapeId === shapeId
 );
 
 if(row){
-void import("./alerts-cloud-sync.js?v=14").then(m=>{
+void import("./alerts-cloud-sync.js?v=16").then(m=>{
 m.persistAlertsRegistryToCloud();
 });
 }
@@ -536,28 +621,48 @@ m.persistAlertsRegistryToCloud();
 
 export function removeAlert(symbol, shapeId){
 
+const sym =
+String(symbol || "").trim().toUpperCase();
+const sid =
+String(shapeId || "").trim();
+
 if(
-!symbol ||
-!shapeId
+!sym ||
+!sid
 ){
 return;
 }
+
+const row =
+loadAlerts().find(
+a=>
+String(a.symbol).toUpperCase() === sym &&
+String(a.shapeId) === sid
+);
 
 const list =
 loadAlerts().filter(
 a=>!
 (
-a.symbol === symbol &&
-a.shapeId === shapeId
+String(a.symbol).toUpperCase() === sym &&
+String(a.shapeId) === sid
 )
 );
 
 saveAlerts(list);
 
+clearAlertOnDrawing(
+sym,
+sid,
+row?.price
+);
+
+stripAlertFlagsNotInRegistry();
+
 queueAlertsCloud(async m=>{
 await m.removeAlertFromCloud(
-symbol,
-shapeId
+sym,
+sid
 );
 await m.pruneOrphanCloudAlerts();
 });
@@ -808,7 +913,7 @@ null;
 try{
 
 m =
-await import("./alerts-cloud-sync.js?v=14");
+await import("./alerts-cloud-sync.js?v=16");
 
 cloudOk =
 await m.markAlertTriggeredOnCloud(
@@ -858,13 +963,185 @@ export function removeAllAlerts(){
 
 saveAlerts([]);
 
+stripAlertFlagsNotInRegistry();
+
 queueAlertsCloud(m=>{
 m.clearAllAlertsFromCloud();
 });
 
 }
 
-export function clearAlertOnDrawing(symbol, shapeId){
+function stripShapeAlertFlags(shape){
+
+const cleaned = {
+...shape,
+isAlert: false
+};
+
+delete cleaned.alertCreatedAt;
+delete cleaned.alertTf;
+delete cleaned.alertSymbol;
+
+if(cleaned.savedColor){
+cleaned.color = cleaned.savedColor;
+delete cleaned.savedColor;
+}
+
+if(cleaned.savedLineWidth != null){
+cleaned.lineWidth = cleaned.savedLineWidth;
+delete cleaned.savedLineWidth;
+}
+
+return cleaned;
+
+}
+
+function drawingMatchesRemovedAlert(
+shape,
+shapeId,
+priceHint,
+alertsForSym
+){
+
+if(
+shape?.type !== "hray" ||
+!shape.isAlert
+){
+return false;
+}
+
+const sid =
+String(shapeId || "").trim();
+
+if(
+sid &&
+shape.id === sid
+){
+return true;
+}
+
+if(
+priceHint != null &&
+Number.isFinite(Number(priceHint)) &&
+alertPricesMatch(
+shape.price,
+priceHint
+)
+){
+return true;
+}
+
+return alertsForSym.some(
+a=>
+alertPricesMatch(
+a.price,
+shape.price
+) &&
+(
+a.shapeId === shape.id ||
+a.shapeId === sid
+)
+);
+
+}
+
+export function stripAlertFlagsNotInRegistry(){
+
+const registry =
+loadAlerts();
+
+const bySymbol =
+new Map();
+
+for(const row of registry){
+
+const sym =
+String(row.symbol || "").trim().toUpperCase();
+
+if(!sym){
+continue;
+}
+
+if(!bySymbol.has(sym)){
+bySymbol.set(sym, []);
+}
+
+bySymbol.get(sym).push(row);
+
+}
+
+for(const { symbol } of listDrawingStorageEntries()){
+
+const sym =
+String(symbol || "").trim().toUpperCase();
+const alertsForSym =
+bySymbol.get(sym) || [];
+const registryIds =
+new Set(
+alertsForSym.map(a=>a.shapeId)
+);
+
+let list =
+loadDrawingsForSymbol(sym);
+let dirty =
+false;
+
+const next =
+list.map(shape=>{
+
+if(
+shape.type !== "hray" ||
+!shape.isAlert
+){
+return shape;
+}
+
+const inRegistry =
+registryIds.has(shape.id) ||
+alertsForSym.some(
+a=>
+a.shapeId === shape.id ||
+alertPricesMatch(
+a.price,
+shape.price
+)
+);
+
+if(inRegistry){
+return shape;
+}
+
+dirty = true;
+
+return stripShapeAlertFlags(shape);
+
+});
+
+if(!dirty){
+continue;
+}
+
+localStorage.setItem(
+drawingsStorageKey(sym),
+JSON.stringify(next)
+);
+
+window.dispatchEvent(
+new CustomEvent(
+"drawings-updated",
+{ detail:{ symbol: sym } }
+)
+);
+
+}
+
+}
+
+export function clearAlertOnDrawing(
+symbol,
+shapeId,
+priceHint
+){
 
 const sym =
 String(symbol || "").trim().toUpperCase();
@@ -886,34 +1163,42 @@ try{
 const drawings =
 JSON.parse(raw);
 
-const shape =
-drawings.find(
-d=>d.id === sid
+const alertsForSym =
+loadAlerts().filter(
+a=>
+String(a.symbol).toUpperCase() === sym
 );
 
-if(!shape){
+let changed =
+false;
+
+const next =
+drawings.map(shape=>{
+
+if(
+!drawingMatchesRemovedAlert(
+shape,
+sid,
+priceHint,
+alertsForSym
+)
+){
+return shape;
+}
+
+changed = true;
+
+return stripShapeAlertFlags(shape);
+
+});
+
+if(!changed){
 return false;
-}
-
-shape.isAlert = false;
-
-delete shape.alertCreatedAt;
-delete shape.alertTf;
-delete shape.alertSymbol;
-
-if(shape.savedColor){
-shape.color = shape.savedColor;
-delete shape.savedColor;
-}
-
-if(shape.savedLineWidth != null){
-shape.lineWidth = shape.savedLineWidth;
-delete shape.savedLineWidth;
 }
 
 localStorage.setItem(
 key,
-JSON.stringify(drawings)
+JSON.stringify(next)
 );
 
 window.dispatchEvent(
@@ -979,6 +1264,8 @@ e=>!e.legacy || !canonical.has(e.symbol)
 }
 
 export function rebuildAlertRegistryFromStorage(){
+
+stripAlertFlagsNotInRegistry();
 
 const existing =
 loadAlerts();
