@@ -6,10 +6,9 @@
 
 ## Railway (пустой дашборд)
 
-1. **New Project** → **Deploy from GitHub repo** → репозиторий `crypto-terminal-v2`.
+1. **New Project** → **Deploy from GitHub repo** → `crypto-terminal-v2`.
 2. Открой сервис → **Settings**:
    - **Root Directory**: `alert-worker`
-   - **Start Command** (если спросит): `npm start`
 3. **Variables** (обязательно):
 
 | Variable | Где взять |
@@ -19,8 +18,10 @@
 | `TELEGRAM_BOT_TOKEN` | BotFather |
 | `PORT` | `8080` (Railway часто подставляет сам — можно не задавать) |
 
-4. **Deploy** → **Logs**: должно быть `bybit ws connected` и `alerts loaded: N`.
-5. Открой **Settings → Networking → Generate Domain** → проверь `https://….up.railway.app/health` → `{"ok":true,...}`.
+4. **Deploy** → **Logs**: `bybit ws connected` и `alert-worker listening`.
+5. Если **Build failed** — открой **Build Logs**; после push с `Dockerfile` сборка идёт через Docker.
+
+6. **Settings → Networking → Generate Domain** → `https://….up.railway.app/health` → `{"ok":true,...}`.
 
 ## Supabase SQL
 
