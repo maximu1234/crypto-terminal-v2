@@ -330,7 +330,12 @@ let initPromise = null;
 async function initAuthUiInternal(){
 
 setupSettingsDropdown();
+try{
 await initCloudSync();
+}catch(err){
+console.warn("cloud sync init:", err);
+}
+
 refreshAuthUi = mountAuthUi() || (()=>{});
 refreshAuthUi();
 

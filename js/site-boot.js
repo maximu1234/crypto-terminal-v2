@@ -7,4 +7,6 @@ ensureCloudReady
 } from "./auth-ui.js?v=5";
 
 initAlertMonitor();
-await ensureCloudReady();
+void ensureCloudReady().catch(err=>{
+console.warn("cloud init failed:", err);
+});
