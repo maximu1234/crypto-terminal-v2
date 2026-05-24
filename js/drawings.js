@@ -8232,6 +8232,31 @@ updateStyleBar();
 
 };
 
+function defaultHrayAnchorTime(){
+
+const list =
+getCandles?.();
+
+if(
+Array.isArray(list) &&
+list.length
+){
+
+const last =
+list[list.length - 1];
+
+if(last?.time != null){
+return last.time;
+}
+
+}
+
+return Math.floor(
+Date.now() / 1000
+);
+
+}
+
 function reconcileDrawingAlertsFromRegistry(){
 
 const sym =
@@ -8240,15 +8265,16 @@ getSymbol();
 const symNorm =
 String(sym || "").toUpperCase();
 
-const activeIds =
-new Set(
-getActiveAlerts()
-.filter(
+const alertsForSym =
+getActiveAlerts().filter(
 a=>
 String(a.symbol).toUpperCase() ===
 symNorm
-)
-.map(a=>a.shapeId)
+);
+
+const activeIds =
+new Set(
+alertsForSym.map(a=>a.shapeId)
 );
 
 let dirty =
@@ -8282,7 +8308,7 @@ Date.now(),
 alertTf:
 shape.alertTf ||
 getTf(),
-alertSymbol: sym,
+alertSymbol: symNorm,
 savedColor:
 shape.savedColor ||
 shape.color
@@ -8298,7 +8324,7 @@ const level =
 alertPriceFromShape(shape);
 
 if(
-sym &&
+symNorm &&
 Number.isFinite(level)
 ){
 
@@ -8316,8 +8342,57 @@ return stripAlertFromShape(shape);
 
 });
 
+const existingHrayIds =
+new Set(
+drawings
+.filter(d=>d.type === "hray")
+.map(d=>d.id)
+);
+
+for(const alert of alertsForSym){
+
+if(
+existingHrayIds.has(alert.shapeId)
+){
+continue;
+}
+
+const price =
+Number(alert.price);
+
+if(!Number.isFinite(price)){
+continue;
+}
+
+const restored =
+makeShape("hray", {
+id: alert.shapeId,
+time: defaultHrayAnchorTime(),
+price
+});
+
+restored.isAlert = true;
+restored.lineWidth = 1;
+restored.alertCreatedAt =
+alert.createdAt ||
+Date.now();
+restored.alertTf =
+alert.tf ||
+getTf();
+restored.alertSymbol = symNorm;
+restored.savedColor =
+restored.color;
+
+drawings.push(restored);
+existingHrayIds.add(alert.shapeId);
+dirty = true;
+
+}
+
 if(dirty){
 saveDrawings();
+scheduleRedraw();
+updateStyleBar();
 }
 
 }
@@ -8415,6 +8490,7 @@ saveUserPrefs(legacyPrefs);
 }
 
 loadDrawings();
+reconcileDrawingAlertsFromRegistry();
 lastLoadedSymbol = getSymbol();
 resizeCanvas();
 updateStyleBar();
@@ -8543,6 +8619,7 @@ scheduleDrawingsCloudPush();
 lastLoadedSymbol = next;
 
 loadDrawings();
+reconcileDrawingAlertsFromRegistry();
 selectedId = null;
 cancelPlacement();
 
