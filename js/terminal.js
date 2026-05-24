@@ -70,7 +70,7 @@ fetchTickersInto
 
 import {
 processAlertCandle
-} from "./alert-monitor.js?v=17";
+} from "./alert-monitor.js?v=18";
 
 import {
 initDrawings

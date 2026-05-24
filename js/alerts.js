@@ -6,7 +6,7 @@ const MAX_ALERT_HISTORY = 30;
 
 function queueAlertsCloud(fn){
 
-import("./alerts-cloud-sync.js?v=9")
+import("./alerts-cloud-sync.js?v=10")
 .then(m=>fn(m))
 .catch(err=>{
 console.warn("alerts cloud:", err);
@@ -50,7 +50,7 @@ waits[i] - waits[i - 1]
 try{
 
 const m =
-await import("./alerts-cloud-sync.js?v=9");
+await import("./alerts-cloud-sync.js?v=10");
 
 const ok =
 await m.pushAlertToCloud(row);
@@ -76,7 +76,7 @@ await import("./cloud-sync.js?v=10");
 await waitForCloudAuth(8000);
 
 const m =
-await import("./alerts-cloud-sync.js?v=9");
+await import("./alerts-cloud-sync.js?v=10");
 
 const n =
 await m.syncAlertsWithCloud();
@@ -353,7 +353,41 @@ return loadAlerts().sort(
 
 }
 
-export function upsertAlert(entry){
+function drawingsStorageKey(symbol){
+
+return `drawings_${String(symbol || "").trim().toUpperCase()}`;
+
+}
+
+export function disarmAlertLocally(symbol, shapeId){
+
+const sym =
+String(symbol || "").trim().toUpperCase();
+const sid =
+String(shapeId || "").trim();
+
+if(
+!sym ||
+!sid
+){
+return;
+}
+
+const list =
+loadAlerts().filter(
+a=>!
+(
+String(a.symbol).toUpperCase() === sym &&
+String(a.shapeId) === sid
+)
+);
+
+saveAlerts(list);
+clearAlertOnDrawing(sym, sid);
+
+}
+
+export async function upsertAlert(entry){
 
 const shapeId =
 entry?.shapeId ||
@@ -370,7 +404,7 @@ if(
 !shapeId ||
 !Number.isFinite(price)
 ){
-return;
+return false;
 }
 
 const row = {
@@ -397,7 +431,7 @@ list.push(row);
 
 saveAlerts(list);
 
-void pushAlertRowToCloud(row);
+return pushAlertRowToCloud(row);
 
 }
 
@@ -493,7 +527,7 @@ await m.pruneOrphanCloudAlerts();
 export function removeDrawingShape(symbol, shapeId){
 
 const key =
-`drawings_${symbol}`;
+drawingsStorageKey(symbol);
 
 const raw =
 localStorage.getItem(key);
@@ -731,7 +765,7 @@ false;
 try{
 
 const m =
-await import("./alerts-cloud-sync.js?v=9");
+await import("./alerts-cloud-sync.js?v=10");
 
 cloudOk =
 await m.markAlertTriggeredOnCloud(
@@ -757,21 +791,10 @@ err?.message || err
 );
 }
 
-removeDrawingShape(
+disarmAlertLocally(
 sym,
 sid
 );
-
-const list =
-loadAlerts().filter(
-a=>!
-(
-a.symbol === sym &&
-a.shapeId === sid
-)
-);
-
-saveAlerts(list);
 
 return cloudOk;
 
@@ -789,8 +812,13 @@ m.clearAllAlertsFromCloud();
 
 export function clearAlertOnDrawing(symbol, shapeId){
 
+const sym =
+String(symbol || "").trim().toUpperCase();
+const sid =
+String(shapeId || "").trim();
+
 const key =
-`drawings_${symbol}`;
+drawingsStorageKey(sym);
 
 const raw =
 localStorage.getItem(key);
@@ -806,7 +834,7 @@ JSON.parse(raw);
 
 const shape =
 drawings.find(
-d=>d.id === shapeId
+d=>d.id === sid
 );
 
 if(!shape){
@@ -837,7 +865,7 @@ JSON.stringify(drawings)
 window.dispatchEvent(
 new CustomEvent(
 "drawings-updated",
-{ detail:{ symbol } }
+{ detail:{ symbol: sym } }
 )
 );
 

@@ -1,5 +1,6 @@
 import {
 alertEntryKey,
+disarmAlertLocally,
 formatTfLabel,
 getActiveAlerts,
 markAlertTriggered
@@ -10,6 +11,11 @@ import { formatPrice } from "./chart.js";
 /* Базовая цена отдельно для каждого алерта (symbol + shapeId) */
 const lastPriceByAlert =
 new Map();
+
+const recentlyTriggered =
+new Map();
+
+const TRIGGER_COOLDOWN_MS = 60000;
 
 let audioCtx = null;
 
@@ -112,6 +118,7 @@ for(const key of [
 
 if(!activeKeys.has(key)){
 lastPriceByAlert.delete(key);
+recentlyTriggered.delete(key);
 }
 
 }
@@ -373,6 +380,29 @@ continue;
 
 }
 
+const lastFire =
+recentlyTriggered.get(key);
+
+if(
+lastFire &&
+Date.now() - lastFire < TRIGGER_COOLDOWN_MS
+){
+continue;
+}
+
+recentlyTriggered.set(
+key,
+Date.now()
+);
+lastPriceByAlert.delete(key);
+
+disarmAlertLocally(
+alert.symbol,
+alert.shapeId
+);
+
+notifyAlertTriggered(alert);
+
 void markAlertTriggered(
 alert.symbol,
 alert.shapeId
@@ -387,9 +417,6 @@ alert.shapeId
 }
 
 });
-
-notifyAlertTriggered(alert);
-lastPriceByAlert.delete(key);
 
 }
 

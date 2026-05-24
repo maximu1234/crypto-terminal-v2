@@ -4913,16 +4913,27 @@ shape.price
 );
 }else{
 
-upsertAlert({
+void upsertAlert({
 id: shape.id,
 shapeId: shape.id,
 symbol: sym,
 price: level,
 tf: shape.alertTf,
 createdAt: shape.alertCreatedAt
-});
+}).then(ok=>{
+
+if(!ok){
+console.warn(
+"Alert: не записан в Supabase — войдите через шестерёнку"
+);
+}
 
 saveDrawings();
+
+}).catch(err=>{
+console.warn("Alert upsert:", err);
+saveDrawings();
+});
 
 }
 
