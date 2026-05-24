@@ -10,8 +10,16 @@ import {
 initAlertsCloudSync
 } from "./alerts-cloud-sync.js?v=11";
 
+import {
+rebuildAlertRegistryFromStorage
+} from "./alerts.js";
+
 initAlertMonitor();
 initAlertsCloudSync();
-void ensureCloudReady().catch(err=>{
+void ensureCloudReady()
+.then(()=>{
+rebuildAlertRegistryFromStorage();
+})
+.catch(err=>{
 console.warn("cloud init failed:", err);
 });

@@ -362,7 +362,20 @@ list.push(row);
 
 saveAlerts(list);
 
+void flushAlertsToCloud();
+
+return true;
+
+}
+
+async function flushAlertsToCloud(){
+
 try{
+
+const { ensureCloudReady } =
+await import("./auth-ui.js?v=9");
+
+await ensureCloudReady();
 
 const m =
 await import("./alerts-cloud-sync.js?v=11");
@@ -372,21 +385,15 @@ await m.persistAlertsRegistryToCloud();
 
 if(!ok){
 console.warn(
-"alert cloud: не все алерты в Supabase — проверьте вход (шестерёнка)"
+"alert cloud: не все алерты в Supabase — войдите через шестерёнку и подождите пару секунд"
 );
 }
-
-return ok;
 
 }catch(err){
 console.warn(
 "alerts cloud persist:",
 err?.message || err
 );
-return false;
-
-}
-
 }
 
 export function patchAlertPrice(

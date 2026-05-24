@@ -540,6 +540,105 @@ return n >= list.length;
 
 }
 
+export async function mergeCloudAlertsIntoLocal(){
+
+const ctx = await getAuthed();
+
+if(!ctx){
+return 0;
+}
+
+const { data, error } =
+await ctx.sb
+.from("price_alerts")
+.select(
+"symbol, shape_id, price, tf, created_at"
+)
+.eq("user_id", ctx.user.id)
+.is("triggered_at", null);
+
+if(error){
+console.warn(
+"alert cloud pull:",
+error.message
+);
+return 0;
+}
+
+const {
+loadAlerts,
+saveAlerts,
+alertEntryKey
+} =
+await import("./alerts.js");
+
+const byKey =
+new Map(
+loadAlerts().map(a=>[
+alertEntryKey(a.symbol, a.shapeId),
+a
+])
+);
+
+for(const row of data || []){
+
+const sym =
+String(row.symbol || "").trim().toUpperCase();
+const sid =
+String(row.shape_id || "").trim();
+const price =
+Number(row.price);
+
+if(
+!sym ||
+!sid ||
+!Number.isFinite(price)
+){
+continue;
+}
+
+const key =
+alertEntryKey(sym, sid);
+const prev =
+byKey.get(key);
+
+byKey.set(key, {
+id: sid,
+shapeId: sid,
+symbol: sym,
+price,
+tf: normalizeAlertTf(
+row.tf ||
+prev?.tf
+),
+createdAt:
+row.created_at
+? Date.parse(row.created_at)
+: (
+prev?.createdAt ||
+Date.now()
+)
+});
+
+}
+
+saveAlerts([...byKey.values()]);
+
+return byKey.size;
+
+}
+
+async function hydrateAlertsAfterAuth(){
+
+const { rebuildAlertRegistryFromStorage } =
+await import("./alerts.js");
+
+rebuildAlertRegistryFromStorage();
+await mergeCloudAlertsIntoLocal();
+await syncAllLocalAlertsToCloudImpl();
+
+}
+
 export async function syncAlertsWithCloud(){
 
 return syncAllLocalAlertsToCloud();
@@ -585,13 +684,27 @@ scheduleAlertCloudSync("alerts-changed");
 onCloudSyncChange(()=>{
 
 if(isCloudLoggedIn()){
-scheduleAlertCloudSync("auth");
+runCloudOp(()=>
+hydrateAlertsAfterAuth()
+).catch(err=>{
+console.warn(
+"alert cloud hydrate:",
+err?.message || err
+);
+});
 }
 
 });
 
 if(isCloudLoggedIn()){
-scheduleAlertCloudSync("init");
+runCloudOp(()=>
+hydrateAlertsAfterAuth()
+).catch(err=>{
+console.warn(
+"alert cloud hydrate init:",
+err?.message || err
+);
+});
 }
 
 }

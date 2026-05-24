@@ -306,7 +306,7 @@ document.body.innerHTML = `
 import("./js/charts-lib-boot.js").then(({ loadLightweightCharts })=>
 loadLightweightCharts()
 ).then(()=>
-import("./js/terminal.js?v=143")
+import("./js/terminal.js?v=144")
 ).catch(err=>{
 
 console.error(err);
@@ -315,14 +315,25 @@ const box = document.createElement("div");
 
 box.style.cssText = "position:fixed;inset:0;z-index:9999;background:#0b1220;color:#fff;padding:32px;font-family:Arial,sans-serif";
 
+let detail =
+err?.message ||
+String(err);
+
+if(err?.cause){
+detail +=
+` → ${err.cause?.message || err.cause}`;
+}
+
 const hint =
-String(err?.message || err).includes("LightweightCharts")
+detail.includes("LightweightCharts")
 ? "<p>Библиотека графиков не загрузилась. Проверьте VPN/интернет или файл <code>vendor/lightweight-charts.standalone.production.js</code>.</p>"
+: detail.includes("Failed to fetch")
+? "<p>Сервер не отдал файл (часто помогает: Ctrl+C в терминале, затем <code>./start.sh</code> и жёсткое обновление Cmd+Shift+R).</p>"
 : "";
 
 box.innerHTML = `
 <h2>Не удалось загрузить скрипты</h2>
-<p style="color:#fca5a5">${err.message}</p>
+<p style="color:#fca5a5">${detail}</p>
 ${hint}
 <p>1. Остановите старый сервер (Ctrl+C в терминале)</p>
 <p>2. В папке проекта выполните: <code>./start.sh</code></p>
@@ -337,7 +348,7 @@ document.body.prepend(box);
 
 </script>
 
-<script src="js/site-boot.js?v=20" type="module"></script>
+<script src="js/site-boot.js?v=21" type="module"></script>
 
 </body>
 </html>

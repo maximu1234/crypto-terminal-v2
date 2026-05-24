@@ -4920,18 +4920,9 @@ symbol: sym,
 price: level,
 tf: shape.alertTf,
 createdAt: shape.alertCreatedAt
-}).then(ok=>{
-
-if(!ok){
-console.warn(
-"Alert: не записан в Supabase — войдите через шестерёнку"
-);
-}
-
-saveDrawings();
-
 }).catch(err=>{
 console.warn("Alert upsert:", err);
+}).finally(()=>{
 saveDrawings();
 });
 

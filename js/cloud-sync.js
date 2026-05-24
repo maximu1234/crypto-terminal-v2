@@ -1304,8 +1304,15 @@ session.user.id
 startSyncPoll();
 
 import("./alerts-cloud-sync.js?v=11")
-.then(m=>{
-m.syncAllLocalAlertsToCloud();
+.then(async m=>{
+
+const { rebuildAlertRegistryFromStorage } =
+await import("./alerts.js");
+
+rebuildAlertRegistryFromStorage();
+await m.mergeCloudAlertsIntoLocal();
+await m.syncAllLocalAlertsToCloud();
+
 })
 .catch(err=>{
 console.warn("alerts cloud sync on login:", err);
