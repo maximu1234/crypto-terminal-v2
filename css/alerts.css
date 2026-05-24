@@ -69,6 +69,45 @@ flex:1 1 200px;
 min-width:0;
 }
 
+.alerts-telegram-connected{
+display:flex;
+flex-wrap:wrap;
+align-items:center;
+gap:10px 16px;
+padding:12px 14px;
+border:1px solid #14532d;
+border-radius:8px;
+background:rgba(
+22,
+101,
+52,
+0.12
+);
+}
+
+.alerts-telegram-connected-text{
+margin:0;
+flex:1 1 240px;
+font-size:0.9rem;
+line-height:1.45;
+color:#bbf7d0;
+}
+
+.alerts-telegram-edit{
+padding:0;
+border:none;
+background:none;
+color:#93c5fd;
+font-size:0.85rem;
+cursor:pointer;
+text-decoration:underline;
+text-underline-offset:2px;
+}
+
+.alerts-telegram-edit:hover{
+color:#bfdbfe;
+}
+
 .alerts-telegram-login{
 margin:0;
 font-size:0.9rem;

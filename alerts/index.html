@@ -8,7 +8,7 @@
 <title>Алерты — Multichart</title>
 
 <link rel="stylesheet" href="/css/common.css?v=9">
-<link rel="stylesheet" href="/css/alerts.css?v=9">
+<link rel="stylesheet" href="/css/alerts.css?v=10">
 
 </head>
 
@@ -55,6 +55,13 @@
 Вы вошли как <span id="alerts-telegram-user-email" class="alerts-telegram-user-email"></span>.
 Укажите Chat ID ниже — тогда алерты будут приходить в Telegram при закрытом терминале.
 </p>
+
+<div id="alerts-telegram-connected" class="alerts-telegram-connected hidden" role="status">
+<p id="alerts-telegram-connected-text" class="alerts-telegram-connected-text"></p>
+<button type="button" id="alerts-telegram-edit" class="alerts-telegram-edit">
+Изменить chat id
+</button>
+</div>
 
 <div id="alerts-telegram-login" class="alerts-telegram-login">
 <div id="alerts-inline-auth-mount" class="alerts-inline-auth-mount"></div>
@@ -170,7 +177,7 @@ placeholder="например 123456789"
 </main>
 
 <script type="module" src="/js/site-boot.js?v=25"></script>
-<script type="module" src="/js/alerts-page.js?v=23"></script>
+<script type="module" src="/js/alerts-page.js?v=24"></script>
 
 </body>
 </html>
