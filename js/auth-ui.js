@@ -21,6 +21,24 @@ path.endsWith("/index")
 
 }
 
+function pageHasCloudAuth(){
+
+const path =
+window.location.pathname;
+
+if(isMainPage()){
+return true;
+}
+
+return (
+path === "/alerts" ||
+path === "/alerts/" ||
+path.endsWith("/alerts") ||
+path.endsWith("/alerts/")
+);
+
+}
+
 function setupSettingsDropdown(){
 
 const btn =
@@ -97,7 +115,7 @@ close();
 
 function mountAuthUi(){
 
-if(!isMainPage()){
+if(!pageHasCloudAuth()){
 return ()=>{};
 }
 
@@ -186,8 +204,13 @@ loggedOut.classList.add("hidden");
 loggedIn.classList.remove("hidden");
 emailLabel.textContent =
 getCloudUserEmail() || "Аккаунт";
+const onAlerts =
+window.location.pathname.includes("/alerts");
+
 setHint(
-"Избранное и рисунки синхронизируются между устройствами.",
+onAlerts
+? "После входа сохраните Chat ID ниже. Рисунки и избранное тоже синхронизируются."
+: "Избранное и рисунки синхронизируются между устройствами.",
 false
 );
 

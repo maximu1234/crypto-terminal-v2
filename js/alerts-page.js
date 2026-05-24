@@ -377,5 +377,22 @@ render();
 window.addEventListener("alerts-changed", render);
 window.addEventListener("alerts-history-changed", render);
 
+document.getElementById("alerts-open-settings")?.addEventListener("click", ()=>{
+
+const btn =
+document.getElementById("header-settings-btn");
+const dropdown =
+document.getElementById("header-settings-dropdown");
+
+if(!btn || !dropdown){
+return;
+}
+
+dropdown.classList.remove("hidden");
+btn.setAttribute("aria-expanded", "true");
+btn.focus();
+
+});
+
 rebuildAlertRegistryFromStorage();
 render();
