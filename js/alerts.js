@@ -6,7 +6,7 @@ const MAX_ALERT_HISTORY = 30;
 
 function queueAlertsCloud(fn){
 
-import("./alerts-cloud-sync.js?v=13")
+import("./alerts-cloud-sync.js?v=14")
 .then(m=>fn(m))
 .catch(err=>{
 console.warn("alerts cloud:", err);
@@ -324,6 +324,71 @@ return `drawings_${String(symbol || "").trim().toUpperCase()}`;
 
 }
 
+export function registerAlertFromDrawing(
+shape,
+symbolOverride
+){
+
+const sym =
+String(
+symbolOverride ||
+shape?.alertSymbol ||
+shape?.symbol ||
+""
+).trim().toUpperCase();
+
+const shapeId =
+String(
+shape?.shapeId ||
+shape?.id ||
+""
+).trim();
+
+const price =
+Number.isFinite(Number(shape?.price))
+? Number(shape.price)
+: alertPriceFromShape(shape);
+
+if(
+!sym ||
+!shapeId ||
+!Number.isFinite(price)
+){
+return false;
+}
+
+const row = {
+id: shapeId,
+shapeId,
+symbol: sym,
+price,
+tf: normalizeAlertTf(
+shape?.alertTf ||
+shape?.tf
+),
+createdAt:
+Number(shape?.alertCreatedAt) ||
+Number(shape?.createdAt) ||
+Date.now()
+};
+
+const list =
+loadAlerts().filter(
+a=>!
+(
+String(a.symbol).toUpperCase() === sym &&
+String(a.shapeId) === shapeId
+)
+);
+
+list.push(row);
+
+saveAlerts(list);
+
+return true;
+
+}
+
 export function disarmAlertLocally(symbol, shapeId){
 
 const sym =
@@ -354,47 +419,23 @@ clearAlertOnDrawing(sym, sid);
 
 export async function upsertAlert(entry){
 
-const shapeId =
-entry?.shapeId ||
-entry?.id;
-
-const symbol =
-String(entry?.symbol || "").trim().toUpperCase();
-
-const price =
-Number(entry?.price);
-
-if(
-!symbol ||
-!shapeId ||
-!Number.isFinite(price)
-){
-return false;
-}
-
-const row = {
-id: shapeId,
-shapeId,
-symbol,
-price,
-tf: normalizeAlertTf(entry.tf),
-createdAt:
-Number(entry.createdAt) ||
-Date.now()
-};
-
-const list =
-loadAlerts().filter(
-a=>!
-(
-a.symbol === row.symbol &&
-a.shapeId === row.shapeId
-)
+const ok =
+registerAlertFromDrawing(
+{
+id: entry?.shapeId || entry?.id,
+shapeId: entry?.shapeId || entry?.id,
+price: entry?.price,
+alertTf: entry?.tf,
+alertCreatedAt: entry?.createdAt,
+alertSymbol: entry?.symbol,
+symbol: entry?.symbol
+},
+entry?.symbol
 );
 
-list.push(row);
-
-saveAlerts(list);
+if(!ok){
+return false;
+}
 
 void flushAlertsToCloud();
 
@@ -412,7 +453,7 @@ await import("./auth-ui.js?v=9");
 await ensureCloudReady();
 
 const m =
-await import("./alerts-cloud-sync.js?v=13");
+await import("./alerts-cloud-sync.js?v=14");
 
 const ok =
 await m.persistAlertsRegistryToCloud();
@@ -484,7 +525,7 @@ a.shapeId === shapeId
 );
 
 if(row){
-void import("./alerts-cloud-sync.js?v=13").then(m=>{
+void import("./alerts-cloud-sync.js?v=14").then(m=>{
 m.persistAlertsRegistryToCloud();
 });
 }
@@ -767,7 +808,7 @@ null;
 try{
 
 m =
-await import("./alerts-cloud-sync.js?v=13");
+await import("./alerts-cloud-sync.js?v=14");
 
 cloudOk =
 await m.markAlertTriggeredOnCloud(
