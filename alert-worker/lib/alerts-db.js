@@ -1,26 +1,32 @@
 import { createClient } from "@supabase/supabase-js";
-
-function requireEnv(name) {
-
-  const v = process.env[name];
-
-  if (!v) {
-    throw new Error(`Missing env: ${name}`);
-  }
-
-  return v;
-
-}
+import WebSocket from "ws";
+import { getWorkerConfig } from "./config.js";
 
 let client = null;
 
 export function getSupabaseAdmin() {
 
+  const cfg = getWorkerConfig();
+
+  if (!cfg.ready) {
+    throw new Error(
+      `Missing env: ${cfg.missing.join(", ")}`
+    );
+  }
+
   if (!client) {
     client = createClient(
-      requireEnv("SUPABASE_URL"),
-      requireEnv("SUPABASE_SERVICE_ROLE_KEY"),
-      { auth: { persistSession: false, autoRefreshToken: false } }
+      cfg.supabaseUrl,
+      cfg.supabaseServiceRoleKey,
+      {
+        auth: {
+          persistSession: false,
+          autoRefreshToken: false
+        },
+        realtime: {
+          WebSocket
+        }
+      }
     );
   }
 
@@ -40,6 +46,12 @@ export function getSupabaseAdmin() {
  * }>>}
  */
 export async function fetchTelegramAlerts() {
+
+  const cfg = getWorkerConfig();
+
+  if (!cfg.ready) {
+    return [];
+  }
 
   const sb = getSupabaseAdmin();
 
@@ -101,6 +113,12 @@ export async function fetchTelegramAlerts() {
 }
 
 export async function markAlertTriggered(alertId) {
+
+  const cfg = getWorkerConfig();
+
+  if (!cfg.ready) {
+    return false;
+  }
 
   const sb = getSupabaseAdmin();
 

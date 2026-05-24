@@ -9,19 +9,22 @@
 1. **New Project** → **Deploy from GitHub repo** → `crypto-terminal-v2`.
 2. Открой сервис → **Settings**:
    - **Root Directory**: `alert-worker`
-3. **Variables** (обязательно):
+3. **Variables** — на **этом же сервисе** (не только в Project Shared), с **значениями** (нажмите глаз, проверьте что не пусто):
 
-| Variable | Где взять |
-|----------|-----------|
-| `SUPABASE_URL` | Supabase → Settings → API → Project URL |
-| `SUPABASE_SERVICE_ROLE_KEY` | Supabase → API → `service_role` (секрет, не anon) |
-| `TELEGRAM_BOT_TOKEN` | BotFather |
-| `PORT` | `8080` (Railway часто подставляет сам — можно не задавать) |
+| Variable | Пример |
+|----------|--------|
+| `SUPABASE_URL` | `https://xxxx.supabase.co` |
+| `SUPABASE_SERVICE_ROLE_KEY` | длинный `service_role` ключ |
+| `TELEGRAM_BOT_TOKEN` | от BotFather |
 
-4. **Deploy** → **Logs**: `bybit ws connected` и `alert-worker listening`.
-5. Если **Build failed** — открой **Build Logs**; после push с `Dockerfile` сборка идёт через Docker.
+Без кавычек в значениях. **Chat ID сюда не нужен.**
 
-6. **Settings → Networking → Generate Domain** → `https://….up.railway.app/health` → `{"ok":true,...}`.
+После добавления/правки переменных: **Deployments** → **⋯** → **Redeploy** (обязательно, иначе контейнер старый).
+
+4. **Deploy** → **Deploy Logs**: `env ok: …` и `alert-worker listening`.
+5. **Networking** → domain → `/health` → `{"ok":true,"config":{"ready":true,...}}`.
+
+Если `ok:false` и `missing:[...]` — переменные не попали в контейнер → Redeploy или проверьте значения (глаз).
 
 ## Supabase SQL
 

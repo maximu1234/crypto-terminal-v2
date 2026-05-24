@@ -1,19 +1,21 @@
-const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+import { getWorkerConfig } from "./config.js";
 
 export function telegramConfigured() {
 
-  return !!BOT_TOKEN;
+  return !!getWorkerConfig().telegramBotToken;
 
 }
 
 export async function sendTelegramMessage(chatId, text) {
 
-  if (!BOT_TOKEN || chatId == null) {
+  const token = getWorkerConfig().telegramBotToken;
+
+  if (!token || chatId == null) {
     return false;
   }
 
   const res = await fetch(
-    `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`,
+    `https://api.telegram.org/bot${token}/sendMessage`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
