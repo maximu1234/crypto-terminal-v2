@@ -492,8 +492,6 @@ notifyAlertTriggered(alert);
 
 }
 
-}
-
 export function processAlertCandle(
 symbol,
 candle,
