@@ -1,0 +1,67 @@
+import { getWorkerConfig } from "./config.js";
+
+function restBase() {
+
+  const cfg = getWorkerConfig();
+  const base = cfg.supabaseUrl.replace(/\/$/, "");
+
+  return {
+    base,
+    key: cfg.supabaseServiceRoleKey
+  };
+
+}
+
+export async function restGet(pathAndQuery) {
+
+  const { base, key } = restBase();
+
+  const res = await fetch(`${base}/rest/v1/${pathAndQuery}`, {
+    headers: {
+      apikey: key,
+      Authorization: `Bearer ${key}`,
+      Accept: "application/json"
+    }
+  });
+
+  const text = await res.text();
+
+  if (!res.ok) {
+    throw new Error(
+      `REST ${res.status}: ${text.slice(0, 200)}`
+    );
+  }
+
+  if (!text) {
+    return [];
+  }
+
+  return JSON.parse(text);
+
+}
+
+export async function restPatch(pathAndQuery, body) {
+
+  const { base, key } = restBase();
+
+  const res = await fetch(`${base}/rest/v1/${pathAndQuery}`, {
+    method: "PATCH",
+    headers: {
+      apikey: key,
+      Authorization: `Bearer ${key}`,
+      "Content-Type": "application/json",
+      Prefer: "return=minimal"
+    },
+    body: JSON.stringify(body)
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(
+      `REST PATCH ${res.status}: ${text.slice(0, 200)}`
+    );
+  }
+
+  return true;
+
+}

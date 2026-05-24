@@ -2,15 +2,100 @@ let envPromise = null;
 let client = null;
 let createClientPromise = null;
 
-async function loadCreateClient(){
+const SUPABASE_UMD_SOURCES = [
+"/vendor/supabase.umd.js",
+"https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.1/dist/umd/supabase.js"
+];
 
-if(!createClientPromise){
+function loadSupabaseUmd(src){
 
-createClientPromise = import(
-"https://esm.sh/@supabase/supabase-js@2.49.1"
-).then(m=>m.createClient);
+return new Promise((resolve, reject)=>{
+
+if(
+window.supabase?.createClient
+){
+resolve(window.supabase.createClient);
+return;
+}
+
+const existing =
+document.querySelector(
+`script[data-supabase-umd="${src}"]`
+);
+
+if(existing){
+
+existing.addEventListener(
+"load",
+()=>{
+if(window.supabase?.createClient){
+resolve(window.supabase.createClient);
+}else{
+reject(new Error("Supabase UMD loaded without createClient"));
+}
+},
+{ once: true }
+);
+existing.addEventListener(
+"error",
+()=>reject(new Error(src)),
+{ once: true }
+);
+return;
 
 }
+
+const el =
+document.createElement("script");
+
+el.src = src;
+el.dataset.supabaseUmd = src;
+el.async = true;
+el.addEventListener(
+"load",
+()=>{
+if(window.supabase?.createClient){
+resolve(window.supabase.createClient);
+}else{
+reject(new Error("Supabase UMD loaded without createClient"));
+}
+},
+{ once: true }
+);
+el.addEventListener(
+"error",
+()=>reject(new Error(src)),
+{ once: true }
+);
+document.head.appendChild(el);
+
+});
+
+}
+
+async function loadCreateClient(){
+
+if(createClientPromise){
+return createClientPromise;
+}
+
+createClientPromise = (async()=>{
+
+let lastErr;
+
+for(const src of SUPABASE_UMD_SOURCES){
+
+try{
+return await loadSupabaseUmd(src);
+}catch(err){
+lastErr = err;
+}
+
+}
+
+throw lastErr || new Error("Supabase SDK unavailable");
+
+})();
 
 return createClientPromise;
 
@@ -22,7 +107,7 @@ if(envPromise){
 return envPromise;
 }
 
-envPromise = import("./supabase-env.js")
+envPromise = import("./supabase-env.js?v=2")
 .then(m=>m)
 .catch(()=>({
 SUPABASE_URL:"",

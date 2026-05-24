@@ -20,6 +20,21 @@ process.env.SUPABASE_ANON_KEY ||
 process.env.VITE_SUPABASE_ANON_KEY ||
 "";
 
+if(!url || !key){
+
+if(fs.existsSync(out)){
+console.log(
+"supabase-env.js: env vars missing — keeping existing file"
+);
+process.exit(0);
+}
+
+console.warn(
+"supabase-env.js: env vars missing — writing empty stub (cloud sync off)"
+);
+
+}
+
 const body = `/* Auto-generated at deploy — do not edit */
 export const SUPABASE_URL = ${JSON.stringify(url)};
 export const SUPABASE_ANON_KEY = ${JSON.stringify(key)};

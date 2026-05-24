@@ -1,7 +1,7 @@
 import {
 getSupabase,
 isSupabaseConfigured
-} from "./supabase-client.js?v=2";
+} from "./supabase-client.js?v=4";
 
 import {
 isCloudLoggedIn,

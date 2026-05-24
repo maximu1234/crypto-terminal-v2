@@ -1,7 +1,7 @@
 import {
 getSupabase,
 isSupabaseConfigured
-} from "./supabase-client.js?v=2";
+} from "./supabase-client.js?v=4";
 
 import {
 loadFavoritesGroups,
@@ -1277,16 +1277,28 @@ wake
 
 export async function initCloudSync(){
 
-configured =
+const hasEnv =
 await isSupabaseConfigured();
 
-if(!configured){
+if(!hasEnv){
+configured = false;
 notifyAuth();
 return;
 }
 
-const sb =
+configured = true;
+notifyAuth();
+
+let sb;
+
+try{
+sb =
 await getSupabase();
+}catch(err){
+console.warn("supabase client:", err);
+notifyAuth();
+return;
+}
 
 if(!sb){
 notifyAuth();

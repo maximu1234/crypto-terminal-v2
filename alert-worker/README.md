@@ -36,6 +36,25 @@
 2. Открой `https://api.telegram.org/bot<TOKEN>/getUpdates` → `chat.id`.
 3. На сайте **Алерты** → блок «Telegram» → вставь chat id (после входа в аккаунт).
 
+## Если /health показывает alerts: 0, а SQL — 2
+
+В Railway в `SUPABASE_SERVICE_ROLE_KEY` нужен **Legacy `service_role`** (начинается с **`eyJ`**), не `sb_publishable_` и не `sb_secret_`.
+
+Supabase → Settings → API Keys → вкладка **Legacy anon, service_role API keys** → **service_role** → Reveal.
+
+Проверка локально:
+
+```bash
+cd alert-worker
+cp .env.example .env   # URL + legacy service_role
+node scripts/check-supabase.mjs
+```
+
+После push в Git: Railway → Redeploy. В `/health` смотри:
+
+- `config.jwtRole` — должно быть **`service_role`**. Если **`anon`** — в Railway вставлен не тот ключ (anon даёт `[]` без ошибки).
+- `diag.activeInDb` — должно совпадать с SQL (2).
+
 ## Локально
 
 ```bash

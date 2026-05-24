@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import WebSocket from "ws";
 import { getWorkerConfig } from "./config.js";
+import { restGet, restPatch } from "./supabase-rest.js";
 
 let client = null;
 
@@ -53,15 +54,15 @@ export async function fetchTelegramAlerts() {
     return [];
   }
 
-  const sb = getSupabaseAdmin();
+  let alerts;
+  let settings;
 
-  const { data: alerts, error: alertsErr } = await sb
-    .from("price_alerts")
-    .select("id, user_id, symbol, shape_id, price, tf")
-    .is("triggered_at", null);
-
-  if (alertsErr) {
-    console.warn("fetch alerts:", alertsErr.message);
+  try{
+    alerts = await restGet(
+      "price_alerts?select=id,user_id,symbol,shape_id,price,tf&triggered_at=is.null"
+    );
+  }catch(err){
+    console.warn("fetch alerts (REST):", err.message);
     return [];
   }
 
@@ -70,15 +71,14 @@ export async function fetchTelegramAlerts() {
   }
 
   const userIds = [...new Set(alerts.map(a => a.user_id))];
+  const inList = userIds.join(",");
 
-  const { data: settings, error: setErr } = await sb
-    .from("user_settings")
-    .select("user_id, telegram_chat_id")
-    .in("user_id", userIds)
-    .not("telegram_chat_id", "is", null);
-
-  if (setErr) {
-    console.warn("fetch settings:", setErr.message);
+  try{
+    settings = await restGet(
+      `user_settings?select=user_id,telegram_chat_id&user_id=in.(${inList})&telegram_chat_id=not.is.null`
+    );
+  }catch(err){
+    console.warn("fetch settings (REST):", err.message);
     return [];
   }
 
@@ -112,6 +112,83 @@ export async function fetchTelegramAlerts() {
 
 }
 
+/** Для /health — почему alerts может быть 0 */
+export async function fetchAlertDiagnostics() {
+
+  const cfg = getWorkerConfig();
+
+  if (!cfg.ready) {
+    return {
+      activeInDb: 0,
+      withTelegramChat: 0,
+      loadedForWorker: 0
+    };
+  }
+
+  let alerts;
+  let settings;
+
+  try{
+    alerts = await restGet(
+      "price_alerts?select=user_id&triggered_at=is.null"
+    );
+  }catch(err){
+    return {
+      activeInDb: 0,
+      withTelegramChat: 0,
+      loadedForWorker: 0,
+      alertsError: err.message
+    };
+  }
+
+  const activeInDb = alerts?.length || 0;
+
+  if (!activeInDb) {
+    return {
+      activeInDb: 0,
+      withTelegramChat: 0,
+      loadedForWorker: 0
+    };
+  }
+
+  const userIds = [...new Set(alerts.map(a => a.user_id))];
+  const inList = userIds.join(",");
+
+  try{
+    settings = await restGet(
+      `user_settings?select=user_id,telegram_chat_id&user_id=in.(${inList})&telegram_chat_id=not.is.null`
+    );
+  }catch(err){
+    return {
+      activeInDb,
+      withTelegramChat: 0,
+      loadedForWorker: 0,
+      settingsError: err.message
+    };
+  }
+
+  const usersWithChat = new Set(
+    (settings || []).map(s => s.user_id)
+  );
+
+  let withTelegramChat = 0;
+
+  for (const row of alerts) {
+    if (usersWithChat.has(row.user_id)) {
+      withTelegramChat += 1;
+    }
+  }
+
+  const loaded = await fetchTelegramAlerts();
+
+  return {
+    activeInDb,
+    withTelegramChat,
+    loadedForWorker: loaded.length
+  };
+
+}
+
 export async function markAlertTriggered(alertId) {
 
   const cfg = getWorkerConfig();
@@ -120,18 +197,15 @@ export async function markAlertTriggered(alertId) {
     return false;
   }
 
-  const sb = getSupabaseAdmin();
-
-  const { error } = await sb
-    .from("price_alerts")
-    .update({ triggered_at: new Date().toISOString() })
-    .eq("id", alertId);
-
-  if (error) {
-    console.warn("mark triggered:", error.message);
+  try{
+    await restPatch(
+      `price_alerts?id=eq.${alertId}`,
+      { triggered_at: new Date().toISOString() }
+    );
+    return true;
+  }catch(err){
+    console.warn("mark triggered:", err.message);
     return false;
   }
-
-  return true;
 
 }

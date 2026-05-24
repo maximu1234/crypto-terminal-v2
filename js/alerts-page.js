@@ -20,13 +20,14 @@ saveTelegramChatId
 
 import {
 isCloudLoggedIn,
-onCloudSyncChange
+onCloudSyncChange,
+getCloudUserEmail
 } from "./cloud-sync.js?v=7";
 
 import {
 ensureCloudReady,
 focusAlertsLogin
-} from "./auth-ui.js?v=5";
+} from "./auth-ui.js?v=7";
 
 import { formatPrice } from "./chart.js";
 
@@ -60,8 +61,20 @@ document.getElementById("alerts-clear-drawings-action");
 const clearDrawingsStatus =
 document.getElementById("alerts-clear-drawings-status");
 
-const telegramGuest =
-document.getElementById("alerts-telegram-guest");
+const telegramLogin =
+document.getElementById("alerts-telegram-login");
+
+const telegramNoteGuest =
+document.getElementById("alerts-telegram-note-guest");
+
+const telegramNoteLogged =
+document.getElementById("alerts-telegram-note-logged");
+
+const telegramUserEmail =
+document.getElementById("alerts-telegram-user-email");
+
+const telegramOpenLogin =
+document.getElementById("alerts-open-login");
 
 const telegramForm =
 document.getElementById("alerts-telegram-form");
@@ -96,7 +109,25 @@ async function refreshTelegramUi(){
 const loggedIn =
 isCloudLoggedIn();
 
-telegramGuest?.classList.toggle(
+telegramNoteGuest?.classList.toggle(
+"hidden",
+loggedIn
+);
+
+telegramNoteLogged?.classList.toggle(
+"hidden",
+!loggedIn
+);
+
+if(
+loggedIn &&
+telegramUserEmail
+){
+telegramUserEmail.textContent =
+getCloudUserEmail() || "аккаунт";
+}
+
+telegramLogin?.classList.toggle(
 "hidden",
 loggedIn
 );
@@ -400,7 +431,7 @@ render();
 window.addEventListener("alerts-changed", render);
 window.addEventListener("alerts-history-changed", render);
 
-document.getElementById("alerts-open-login")?.addEventListener("click", async e=>{
+telegramOpenLogin?.addEventListener("click", async e=>{
 
 e.preventDefault();
 await focusAlertsLogin();

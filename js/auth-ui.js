@@ -8,6 +8,13 @@ signInWithEmailOtp,
 signOutCloud
 } from "./cloud-sync.js?v=7";
 
+import {
+isSupabaseConfigured
+} from "./supabase-client.js?v=4";
+
+let cloudEnvConfigured = false;
+let cloudSdkError = "";
+
 function isAlertsPage(){
 
 return window.location.pathname.includes("/alerts");
@@ -172,22 +179,26 @@ function refreshOne(){
 
 const settingsWrap =
 document.getElementById("header-settings-wrap");
-
-if(!isCloudSyncEnabled()){
-wrap.classList.add("hidden");
-
-if(variant === "panel"){
-settingsWrap?.classList.add("hidden");
-}
-
-return;
-}
-
-wrap.classList.remove("hidden");
+const showAuthUi =
+cloudEnvConfigured ||
+isCloudSyncEnabled();
 
 if(variant === "panel"){
 settingsWrap?.classList.remove("hidden");
 }
+
+if(!showAuthUi){
+wrap.classList.remove("hidden");
+loggedIn.classList.add("hidden");
+loggedOut.classList.remove("hidden");
+setHint(
+"Синхронизация недоступна: нет ключей Supabase. Локально — заполните js/supabase-env.js.",
+true
+);
+return;
+}
+
+wrap.classList.remove("hidden");
 
 if(isCloudLoggedIn()){
 
@@ -209,7 +220,12 @@ false
 
 loggedIn.classList.add("hidden");
 loggedOut.classList.remove("hidden");
+
+if(cloudSdkError){
+setHint(cloudSdkError, true);
+}else{
 setHint("", false);
+}
 
 }
 
@@ -326,17 +342,37 @@ return refreshAll;
 
 let refreshAuthUi = ()=>{};
 let initPromise = null;
+let authUiMounted = false;
 
 async function initAuthUiInternal(){
 
 setupSettingsDropdown();
+
 try{
-await initCloudSync();
-}catch(err){
-console.warn("cloud sync init:", err);
+cloudEnvConfigured =
+await isSupabaseConfigured();
+}catch{
+cloudEnvConfigured = false;
 }
 
+if(!authUiMounted){
 refreshAuthUi = mountAuthUi() || (()=>{});
+authUiMounted = true;
+}
+
+refreshAuthUi();
+
+try{
+await initCloudSync();
+cloudSdkError = "";
+}catch(err){
+console.warn("cloud sync init:", err);
+cloudSdkError =
+cloudEnvConfigured
+? "Не удалось подключить облако. Обновите страницу."
+: "";
+}
+
 refreshAuthUi();
 
 }
@@ -372,7 +408,10 @@ if(
 !wrap ||
 !dropdown ||
 !btn ||
-!isCloudSyncEnabled()
+!(
+cloudEnvConfigured ||
+isCloudSyncEnabled()
+)
 ){
 return false;
 }
@@ -391,12 +430,14 @@ return true;
 
 export async function focusAlertsLogin(){
 
+const loginBlock =
+document.getElementById("alerts-telegram-login");
+
+loginBlock?.classList.remove("hidden");
+
 await ensureCloudReady();
 
-const guest =
-document.getElementById("alerts-telegram-guest");
-
-guest?.scrollIntoView({
+loginBlock?.scrollIntoView({
 behavior: "smooth",
 block: "nearest"
 });

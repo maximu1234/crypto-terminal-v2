@@ -4,6 +4,7 @@ import { getConfigStatus, getWorkerConfig } from "./lib/config.js";
 import { didCrossLine } from "./lib/cross.js";
 import {
   fetchTelegramAlerts,
+  fetchAlertDiagnostics,
   markAlertTriggered
 } from "./lib/alerts-db.js";
 import {
@@ -141,12 +142,14 @@ async function main() {
 
     if (req.url === "/health" || req.url === "/") {
       const st = getConfigStatus();
+      const diag = await fetchAlertDiagnostics().catch(() => null);
       res.writeHead(200, { "Content-Type": "application/json" });
       res.end(JSON.stringify({
         ok: st.ready,
         alerts: activeAlerts.size,
         telegram: telegramConfigured(),
-        config: st
+        config: st,
+        diag
       }));
       return;
     }

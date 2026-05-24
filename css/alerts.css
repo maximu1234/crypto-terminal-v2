@@ -48,6 +48,11 @@ color:#9ca3af;
 color:#60a5fa;
 }
 
+.alerts-telegram-user-email{
+color:#e5e7eb;
+font-weight:600;
+}
+
 .alerts-inline-auth-mount .cloud-auth-wrap--inline{
 margin-top:4px;
 }
@@ -64,7 +69,7 @@ flex:1 1 200px;
 min-width:0;
 }
 
-.alerts-telegram-guest{
+.alerts-telegram-login{
 margin:0;
 font-size:0.9rem;
 color:#d1d5db;
