@@ -173,7 +173,17 @@ function renderActive(){
 const alerts =
 getAlertsSorted();
 
+if(deleteAllCb){
 deleteAllCb.checked = false;
+}
+
+if(
+!emptyEl ||
+!tableWrap ||
+!tbody
+){
+return;
+}
 
 if(!alerts.length){
 
@@ -237,6 +247,14 @@ function renderHistory(){
 
 const history =
 getAlertsHistorySorted();
+
+if(
+!historyEmptyEl ||
+!historyWrap ||
+!historyTbody
+){
+return;
+}
 
 if(!history.length){
 
@@ -394,8 +412,12 @@ refreshTelegramUi();
 });
 
 initAlertsCloudSync();
-
-await ensureCloudReady();
-await refreshTelegramUi();
 rebuildAlertRegistryFromStorage();
 render();
+
+void ensureCloudReady()
+.then(()=>refreshTelegramUi())
+.catch(err=>{
+console.warn("alerts cloud init:", err);
+refreshTelegramUi();
+});
