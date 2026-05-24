@@ -6,7 +6,7 @@ const MAX_ALERT_HISTORY = 30;
 
 function queueAlertsCloud(fn){
 
-import("./alerts-cloud-sync.js?v=42")
+import("./alerts-cloud-sync.js?v=46")
 .then(m=>fn(m))
 .catch(err=>{
 console.warn("alerts cloud:", err);
@@ -598,22 +598,35 @@ list.push(row);
 
 saveAlerts(list);
 
+const { ensureCloudReady } =
+await import("./auth-ui.js?v=10");
+
+await ensureCloudReady();
+
 const m =
-await import("./alerts-cloud-sync.js?v=42");
+await import("./alerts-cloud-sync.js?v=46");
 
 const pushed =
-await m.flushAlertCloudPush(row);
+await m.pushOneAlertRow(
+row,
+{ retries: 6 }
+);
 
 if(!pushed){
-const retry =
-await m.pushSingleAlertToCloud(row);
-
-if(!retry){
+console.error(
+"Alert: НЕ записан в Supabase — откройте консоль (F12), строки [alerts] REST/worker ОТКЛОНЁН",
+sym,
+shapeId
+);
 m.scheduleRegistryCloudSync();
+return false;
 }
 
-return !!retry;
-}
+console.log(
+"Alert: ✓ в Supabase",
+sym,
+shapeId
+);
 
 return true;
 
@@ -724,7 +737,7 @@ return;
 
 saveAlerts(list);
 
-void import("./alerts-cloud-sync.js?v=42").then(m=>{
+void import("./alerts-cloud-sync.js?v=46").then(m=>{
 m.flushAlertCloudPush(row);
 });
 
@@ -1081,7 +1094,7 @@ sym,
 sid
 );
 
-void import("./alert-monitor.js?v=42").then(m=>{
+void import("./alert-monitor.js?v=46").then(m=>{
 m.notifyAlertTriggered({
 symbol: sym,
 shapeId: sid,
@@ -1139,7 +1152,7 @@ sym,
 sid
 );
 
-void import("./alerts-cloud-sync.js?v=42").then(m=>{
+void import("./alerts-cloud-sync.js?v=46").then(m=>{
 m.fireAlertCloudTrigger(
 sym,
 sid,

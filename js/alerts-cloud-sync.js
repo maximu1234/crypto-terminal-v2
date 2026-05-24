@@ -116,7 +116,7 @@ const {
 applyRemoteAlertFired,
 stripAlertFlagsNotInRegistry
 } =
-await import("./alerts.js?v=42");
+await import("./alerts.js?v=46");
 
 if(
 sym &&
@@ -250,6 +250,10 @@ stopReconcileTimer();
 let cloudOpChain =
 Promise.resolve();
 
+/** Отдельная очередь только для push алертов (не блокируется hydrate/sync). */
+let alertPushChain =
+Promise.resolve();
+
 export function runCloudOp(fn){
 
 const job =
@@ -259,6 +263,78 @@ cloudOpChain =
 job.catch(()=>{});
 
 return job;
+
+}
+
+export function enqueueAlertPush(fn){
+
+const job =
+alertPushChain.then(()=>fn());
+
+alertPushChain =
+job.catch(()=>{});
+
+return job;
+
+}
+
+async function confirmRowActiveInCloud(
+ctx,
+symbol,
+shapeId
+){
+
+if(
+!ctx ||
+!symbol ||
+!shapeId
+){
+return false;
+}
+
+return verifyAlertActiveInCloud(
+ctx,
+symbol,
+shapeId
+);
+
+}
+
+async function markRowSyncedAfterVerify(
+ctx,
+symbol,
+shapeId,
+cloudId
+){
+
+const { markAlertCloudSynced, markAlertCloudId } =
+await import("./alerts.js?v=46");
+
+const ok =
+await confirmRowActiveInCloud(
+ctx,
+symbol,
+shapeId
+);
+
+if(!ok){
+return false;
+}
+
+markAlertCloudSynced(
+symbol,
+shapeId
+);
+
+if(cloudId){
+markAlertCloudId(
+symbol,
+shapeId,
+cloudId
+);
+}
+
+return true;
 
 }
 
@@ -281,7 +357,7 @@ try{
 const { data, error } =
 await withTimeout(
 ctx.sb.auth.refreshSession(),
-5000,
+15000,
 "auth refresh"
 );
 
@@ -296,10 +372,7 @@ user: data.session.user
 }
 
 }catch(err){
-console.warn(
-"auth refresh:",
-err?.message || err
-);
+/* push использует getAuthed() без refresh — таймаут refresh не блокирует запись */
 }
 
 return ctx;
@@ -638,10 +711,12 @@ const text =
 await res.text();
 
 if(!res.ok){
-console.warn(
-"alert REST push:",
+console.error(
+"[alerts] REST push ОТКЛОНЁН:",
 res.status,
-text.slice(0, 320)
+symbol,
+shapeId,
+text.slice(0, 400)
 );
 return false;
 }
@@ -667,7 +742,7 @@ null;
 
 if(cloudId){
 const { markAlertCloudId } =
-await import("./alerts.js?v=42");
+await import("./alerts.js?v=46");
 
 markAlertCloudId(
 symbol,
@@ -1427,21 +1502,46 @@ if(
 !res.ok ||
 !body.ok
 ){
-console.warn(
-"worker /push-alert:",
+console.error(
+"[alerts] worker /push-alert ОТКЛОНЁН:",
 res.status,
-text.slice(0, 240)
+symbol,
+shapeId,
+text.slice(0, 400)
 );
 return false;
+}
+
+const cloudId =
+body?.id ||
+null;
+
+if(cloudId){
+const { markAlertCloudId } =
+await import("./alerts.js?v=46");
+
+markAlertCloudId(
+symbol,
+shapeId,
+cloudId
+);
 }
 
 console.log(
 "alert cloud push ok (worker):",
 symbol,
-shapeId
+shapeId,
+cloudId || ""
 );
 
 return true;
+
+}
+
+/** Пока false — не ловить пересечение (иначе Telegram не уйдёт). */
+export function isCloudAlertGateEnabled(){
+
+return isCloudLoggedIn();
 
 }
 
@@ -1460,7 +1560,7 @@ return 0;
 }
 
 const { getActiveAlerts } =
-await import("./alerts.js?v=42");
+await import("./alerts.js?v=46");
 
 const localKeys =
 new Set(
@@ -1545,7 +1645,7 @@ normalizeAlertTf(entry?.tf)
 
 }
 
-async function pushOneAlertRow(
+async function pushOneAlertRowImpl(
 row,
 options = {}
 ){
@@ -1566,10 +1666,12 @@ row
 return false;
 }
 
-const { markAlertCloudSynced } =
-await import("./alerts.js?v=42");
+const { ensureCloudReady } =
+await import("./auth-ui.js?v=10");
 
-const ctx =
+await ensureCloudReady();
+
+let ctx =
 await getAuthed();
 
 for(
@@ -1578,6 +1680,26 @@ attempt < retries;
 attempt++
 ){
 
+if(await pushAlertViaWorker(row)){
+
+const { markAlertCloudSynced } =
+await import("./alerts.js?v=46");
+
+markAlertCloudSynced(
+row.symbol,
+row.shapeId
+);
+
+console.log(
+"[alerts] ✓ Supabase (worker):",
+row.symbol,
+row.shapeId
+);
+
+return true;
+
+}
+
 if(
 ctx &&
 await pushAlertViaRest(
@@ -1585,32 +1707,92 @@ row,
 ctx
 )
 ){
-markAlertCloudSynced(
-row.symbol,
-row.shapeId
-);
-return true;
-}
 
-if(await pushAlertViaWorker(row)){
-markAlertCloudSynced(
-row.symbol,
-row.shapeId
-);
-return true;
-}
+const { loadAlerts, markAlertCloudSynced } =
+await import("./alerts.js?v=46");
 
-if(await pushAlertToCloudImpl(row)){
+const hasId =
+loadAlerts().some(
+a=>
+a.symbol === row.symbol &&
+a.shapeId === row.shapeId &&
+a.cloudId
+);
+
+if(
+hasId ||
+await markRowSyncedAfterVerify(
+ctx,
+row.symbol,
+row.shapeId,
+null
+)
+){
 markAlertCloudSynced(
 row.symbol,
 row.shapeId
 );
+
+console.log(
+"[alerts] ✓ Supabase (REST):",
+row.symbol,
+row.shapeId
+);
+
 return true;
+
 }
 
 console.warn(
-"[alerts] push attempt failed",
+"[alerts] REST ответил ok, но строка не видна — повтор…",
+row.symbol,
+row.shapeId
+);
+
+}
+
+if(
+await pushAlertToCloudImpl(row)
+){
+
+ctx =
+await getAuthed();
+
+if(
+ctx &&
+await markRowSyncedAfterVerify(
+ctx,
+row.symbol,
+row.shapeId,
+null
+)
+){
+
+const { markAlertCloudSynced } =
+await import("./alerts.js?v=46");
+
+markAlertCloudSynced(
+row.symbol,
+row.shapeId
+);
+
+console.log(
+"[alerts] ✓ Supabase (sdk):",
+row.symbol,
+row.shapeId
+);
+
+return true;
+
+}
+
+}
+
+console.warn(
+"[alerts] ОШИБКА ЗАПИСИ в Supabase, попытка",
 attempt + 1,
+"/",
+retries,
 row.symbol,
 row.shapeId
 );
@@ -1622,11 +1804,108 @@ r,
 400 * (attempt + 1)
 );
 });
+ctx =
+await getAuthed();
 }
 
 }
+
+console.error(
+"[alerts] НЕ ЗАПИСАН в Supabase:",
+row.symbol,
+row.shapeId,
+"— проверьте вход (шестерёнка) и вкладку сети"
+);
 
 return false;
+
+}
+
+export function pushOneAlertRow(
+row,
+options = {}
+){
+
+return pushOneAlertRowImpl(
+row,
+options
+);
+
+}
+
+export function pushOneAlertRowQueued(
+row,
+options = {}
+){
+
+return enqueueAlertPush(()=>
+pushOneAlertRowImpl(
+row,
+options
+)
+);
+
+}
+
+/** Все локальные алерты без cloudSynced — повторить push (после возврата на вкладку и т.п.). */
+export async function pushUnsyncedAlerts(){
+
+if(!isCloudLoggedIn()){
+return 0;
+}
+
+const { getActiveAlerts } =
+await import("./alerts.js?v=46");
+
+const pending =
+getActiveAlerts().filter(a=>!a.cloudSynced);
+
+if(!pending.length){
+return 0;
+}
+
+console.log(
+"[alerts] дозапись в Supabase:",
+pending.length
+);
+
+let ok =
+0;
+
+for(const entry of pending){
+const row =
+normalizeAlertEntry(entry);
+
+console.log(
+"[alerts] дозапись попытка:",
+row.symbol,
+row.shapeId
+);
+
+if(
+await pushOneAlertRowImpl(
+row,
+{ retries: 4 }
+)
+){
+ok += 1;
+}else{
+console.error(
+"[alerts] дозапись не удалась:",
+row.symbol,
+row.shapeId
+);
+}
+}
+
+console.log(
+"[alerts] дозапись готова:",
+ok,
+"/",
+pending.length
+);
+
+return ok;
 
 }
 
@@ -1648,7 +1927,7 @@ return 0;
 }
 
 const { getActiveAlerts } =
-await import("./alerts.js?v=42");
+await import("./alerts.js?v=46");
 
 const list =
 getActiveAlerts();
@@ -1711,7 +1990,10 @@ if(
 return Promise.resolve(false);
 }
 
-return pushSingleAlertToCloud(row);
+return pushOneAlertRow(
+row,
+{ retries: 6 }
+);
 
 }
 
@@ -1793,7 +2075,7 @@ saveAlertsFromCloudMerge,
 alertEntryKey,
 loadAlerts
 } =
-await import("./alerts.js?v=42");
+await import("./alerts.js?v=46");
 
 const cloudKeys =
 new Set(
@@ -1808,7 +2090,7 @@ String(row.shape_id || "").trim()
 const {
 applyRemoteAlertFired
 } =
-await import("./alerts.js?v=42");
+await import("./alerts.js?v=46");
 
 const local =
 loadAlerts();
@@ -1899,7 +2181,7 @@ const n =
 await reconcileLocalRegistryWithCloud();
 
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=42");
+await import("./alerts.js?v=46");
 
 stripAlertFlagsNotInRegistry();
 
@@ -1912,7 +2194,7 @@ return n;
 async function hydrateAlertsAfterAuth(){
 
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=42");
+await import("./alerts.js?v=46");
 
 console.log(
 "[alerts] hydrate after login…"
@@ -1944,9 +2226,14 @@ if(!isCloudLoggedIn()){
 return;
 }
 
-runCloudOp(()=>
-syncAllLocalAlertsToCloudImpl()
-).catch(err=>{
+void pushUnsyncedAlerts().catch(err=>{
+console.warn(
+"alert push unsynced:",
+err?.message || err
+);
+});
+
+void syncAllLocalAlertsToCloudImpl().catch(err=>{
 console.warn(
 "alert registry sync:",
 err?.message || err
@@ -2034,6 +2321,34 @@ pullWhenVisible
 document.addEventListener(
 "visibilitychange",
 pullWhenVisible
+);
+
+const retryPushWhenVisible = ()=>{
+
+if(
+document.visibilityState !== "visible" ||
+!isCloudLoggedIn()
+){
+return;
+}
+
+void pushUnsyncedAlerts().catch(err=>{
+console.warn(
+"alert push on visible:",
+err?.message || err
+);
+});
+
+};
+
+document.addEventListener(
+"visibilitychange",
+retryPushWhenVisible
+);
+
+window.addEventListener(
+"focus",
+retryPushWhenVisible
 );
 
 }

@@ -6,12 +6,12 @@ getActiveAlerts,
 finalizeAlertPriceDrag,
 removeAlert,
 upsertAlert
-} from "./alerts.js?v=42";
+} from "./alerts.js?v=46";
 
 import {
 setAlertDragPaused,
 resetAlertWatchBaseline
-} from "./alert-monitor.js?v=42";
+} from "./alert-monitor.js?v=46";
 
 import {
 mountTvColorGrid
@@ -4935,17 +4935,11 @@ createdAt: shape.alertCreatedAt
 
 if(pushed === false){
 console.warn(
-"Alert: не записан в Supabase — войдите через шестерёнку (email) или проверьте [Multichart] в консоли при загрузке",
+"Alert: не записан в Supabase — пересечение заблокировано до синхронизации. Шестерёнка → вход, затем снова включите алерт",
 sym,
 shape.id
 );
-}else if(pushed){
-console.log(
-"Alert: записан в Supabase",
-sym,
-shape.id
-);
-}else{
+}else if(!pushed){
 console.warn(
 "Alert: не удалось — нет символа или цены линии",
 sym,

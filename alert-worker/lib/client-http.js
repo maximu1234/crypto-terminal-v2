@@ -62,14 +62,16 @@ export async function verifyUserToken(token) {
 
   if (
     !cfg.supabaseUrl ||
-    !cfg.supabaseAnonKey
+    !cfg.supabaseServiceRoleKey ||
+    !token
   ) {
     return null;
   }
 
+  /* service role — не нужен SUPABASE_ANON_KEY на Railway */
   const sb = createClient(
     cfg.supabaseUrl,
-    cfg.supabaseAnonKey,
+    cfg.supabaseServiceRoleKey,
     {
       auth: {
         persistSession: false,
