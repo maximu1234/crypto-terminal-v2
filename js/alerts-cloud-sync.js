@@ -33,6 +33,96 @@ return waitForCloudAuth(12000);
 
 }
 
+async function getAuthedFresh(){
+
+const ctx =
+await waitForCloudAuth(12000);
+
+if(!ctx){
+return null;
+}
+
+try{
+const { data, error } =
+await ctx.sb.auth.refreshSession();
+
+if(
+error ||
+!data?.session?.user
+){
+return null;
+}
+
+return {
+sb: ctx.sb,
+user: data.session.user
+};
+
+}catch{
+return null;
+}
+
+}
+
+async function getWorkerRequestAuth(){
+
+const ctx =
+await getAuthedFresh();
+
+if(!ctx){
+return null;
+}
+
+const { data: { session } } =
+await ctx.sb.auth.getSession();
+
+const token =
+session?.access_token;
+
+if(!token){
+return null;
+}
+
+return {
+token,
+ctx
+};
+
+}
+
+async function verifyAlertActiveInCloud(
+ctx,
+symbol,
+shapeId
+){
+
+const sym =
+String(symbol || "").trim().toUpperCase();
+const sid =
+String(shapeId || "").trim();
+
+const { data, error } =
+await ctx.sb
+.from("price_alerts")
+.select("id")
+.eq("user_id", ctx.user.id)
+.eq("symbol", sym)
+.eq("shape_id", sid)
+.is("triggered_at", null)
+.maybeSingle();
+
+if(error){
+console.warn(
+"alert cloud verify:",
+error.message
+);
+return false;
+}
+
+return !!data?.id;
+
+}
+
 export async function getTelegramChatId(){
 
 const ctx = await getAuthed();
@@ -142,7 +232,8 @@ return String(tf);
 
 async function pushAlertToCloudImpl(entry){
 
-const ctx = await getAuthed();
+const ctx =
+await getAuthedFresh();
 
 if(!ctx){
 console.warn(
@@ -220,6 +311,14 @@ row,
 );
 
 if(!upsertErr){
+const verified =
+await verifyAlertActiveInCloud(
+ctx,
+symbol,
+shapeId
+);
+
+if(verified){
 console.log(
 "alert cloud push ok:",
 symbol,
@@ -227,6 +326,13 @@ shapeId,
 row.tf
 );
 return true;
+}
+
+console.warn(
+"alert cloud push: upsert без строки в таблице",
+symbol,
+shapeId
+);
 }
 
 console.warn(
@@ -250,6 +356,14 @@ insertErr.details
 return false;
 }
 
+const verified =
+await verifyAlertActiveInCloud(
+ctx,
+symbol,
+shapeId
+);
+
+if(verified){
 console.log(
 "alert cloud push ok (insert):",
 symbol,
@@ -257,12 +371,14 @@ shapeId,
 row.tf
 );
 return true;
-
 }
 
-export function pushAlertToCloudImmediate(entry){
-
-return pushAlertToCloudImpl(entry);
+console.warn(
+"alert cloud push: insert без строки в таблице",
+symbol,
+shapeId
+);
+return false;
 
 }
 
@@ -442,26 +558,13 @@ reason: "no_worker_url"
 };
 }
 
-const ctx =
-await getAuthed();
+const auth =
+await getWorkerRequestAuth();
 
-if(!ctx){
+if(!auth){
 return {
 ok: false,
 reason: "no_auth"
-};
-}
-
-const { data: { session } } =
-await ctx.sb.auth.getSession();
-
-const token =
-session?.access_token;
-
-if(!token){
-return {
-ok: false,
-reason: "no_token"
 };
 }
 
@@ -477,7 +580,7 @@ await fetch(
 method: "POST",
 headers: {
 "Content-Type": "application/json",
-Authorization: `Bearer ${token}`
+Authorization: `Bearer ${auth.token}`
 },
 body: JSON.stringify({
 symbol: sym,
@@ -518,6 +621,100 @@ return body;
 
 }
 
+/**
+ * Запись алерта через Railway (service role) — надёжнее браузерного upsert.
+ */
+export async function pushAlertViaWorker(
+entry
+){
+
+const base =
+await getAlertWorkerBaseUrl();
+
+if(!base){
+return false;
+}
+
+const auth =
+await getWorkerRequestAuth();
+
+if(!auth){
+return false;
+}
+
+const shapeId =
+String(
+entry?.shapeId ||
+entry?.id ||
+""
+).trim();
+
+const symbol =
+String(entry?.symbol || "").trim().toUpperCase();
+
+const price =
+Number(entry?.price);
+
+if(
+!symbol ||
+!shapeId ||
+!Number.isFinite(price)
+){
+return false;
+}
+
+const res =
+await fetch(
+`${base}/push-alert`,
+{
+method: "POST",
+headers: {
+"Content-Type": "application/json",
+Authorization: `Bearer ${auth.token}`
+},
+body: JSON.stringify({
+symbol,
+shape_id: shapeId,
+price,
+tf: normalizeAlertTf(entry?.tf)
+})
+}
+);
+
+const text =
+await res.text();
+
+let body = {};
+
+try{
+body =
+text
+? JSON.parse(text)
+: {};
+}catch{
+body = { raw: text };
+}
+
+if(
+!res.ok ||
+!body.ok
+){
+console.warn(
+"worker /push-alert:",
+res.status,
+text.slice(0, 240)
+);
+return false;
+}
+
+return verifyAlertActiveInCloud(
+auth.ctx,
+symbol,
+shapeId
+);
+
+}
+
 function localAlertKey(row){
 
 return `${String(row.symbol).toUpperCase()}::${String(row.shapeId)}`;
@@ -533,7 +730,7 @@ return 0;
 }
 
 const { getActiveAlerts } =
-await import("./alerts.js?v=25");
+await import("./alerts.js?v=26");
 
 const localKeys =
 new Set(
@@ -602,9 +799,59 @@ return removed;
 
 }
 
+function normalizeAlertEntry(entry){
+
+return {
+shapeId:
+entry?.shapeId ||
+entry?.id,
+symbol:
+String(entry?.symbol || "").trim().toUpperCase(),
+price:
+Number(entry?.price),
+tf:
+normalizeAlertTf(entry?.tf)
+};
+
+}
+
+async function pushOneAlertRow(row){
+
+if(
+!row.symbol ||
+!row.shapeId ||
+!Number.isFinite(row.price)
+){
+return false;
+}
+
+const { markAlertCloudSynced } =
+await import("./alerts.js?v=26");
+
+if(await pushAlertViaWorker(row)){
+markAlertCloudSynced(
+row.symbol,
+row.shapeId
+);
+return true;
+}
+
+if(await pushAlertToCloudImpl(row)){
+markAlertCloudSynced(
+row.symbol,
+row.shapeId
+);
+return true;
+}
+
+return false;
+
+}
+
 async function syncAllLocalAlertsToCloudImpl(){
 
-const ctx = await getAuthed();
+const ctx =
+await getAuthedFresh();
 
 if(!ctx){
 console.warn(
@@ -613,8 +860,13 @@ console.warn(
 return 0;
 }
 
+const { ensureCloudReady } =
+await import("./auth-ui.js?v=9");
+
+await ensureCloudReady();
+
 const { getActiveAlerts } =
-await import("./alerts.js?v=25");
+await import("./alerts.js?v=26");
 
 const list =
 getActiveAlerts();
@@ -625,16 +877,12 @@ return 0;
 
 let ok = 0;
 
-const { markAlertCloudSynced } =
-await import("./alerts.js?v=25");
+for(const entry of list){
+const row =
+normalizeAlertEntry(entry);
 
-for(const row of list){
-if(await pushAlertToCloudImpl(row)){
+if(await pushOneAlertRow(row)){
 ok += 1;
-markAlertCloudSynced(
-row.symbol,
-row.shapeId
-);
 }
 }
 
@@ -682,7 +930,7 @@ Date.now() < deadline
 ){
 
 const { getActiveAlerts } =
-await import("./alerts.js?v=25");
+await import("./alerts.js?v=26");
 
 const list =
 getActiveAlerts();
@@ -763,40 +1011,40 @@ await import("./auth-ui.js?v=9");
 
 await ensureCloudReady();
 
-const ctx =
-await waitForCloudAuth(8000);
+const row =
+normalizeAlertEntry(entry);
 
-if(!ctx){
-return false;
-}
+for(
+let attempt = 0;
+attempt < 4;
+attempt++
+){
 
-const row = {
-shapeId:
-entry?.shapeId ||
-entry?.id,
-symbol:
-String(entry?.symbol || "").trim().toUpperCase(),
-price:
-Number(entry?.price),
-tf:
-normalizeAlertTf(
-entry?.tf
-)
-};
-
-const ok =
-await pushAlertToCloudImpl(row);
-
-if(ok){
-const { markAlertCloudSynced } =
-await import("./alerts.js?v=25");
-markAlertCloudSynced(
+if(await pushOneAlertRow(row)){
+console.log(
+"Облако: алерт в Supabase",
 row.symbol,
 row.shapeId
 );
+return true;
 }
 
-return ok;
+await new Promise(r=>{
+setTimeout(
+r,
+400 * (attempt + 1)
+);
+});
+
+}
+
+console.warn(
+"Облако: не удалось записать алерт в Supabase",
+row.symbol,
+row.shapeId
+);
+
+return false;
 
 }catch(err){
 console.warn(
@@ -831,32 +1079,11 @@ return ensureAlertsChain;
 
 }
 
-export async function persistAlertsRegistryToCloud(){
+/** Убирает из реестра только уже синхронизированные алерты, сработавшие в облаке. */
+export async function reconcileLocalRegistryWithCloud(){
 
-return runCloudOp(async()=>{
-
-const { getActiveAlerts } =
-await import("./alerts.js?v=25");
-
-const list =
-getActiveAlerts();
-
-if(!list.length){
-return true;
-}
-
-const n =
-await syncAllLocalAlertsToCloudImpl();
-
-return n >= list.length;
-
-});
-
-}
-
-export async function mergeCloudAlertsIntoLocal(){
-
-const ctx = await getAuthed();
+const ctx =
+await getAuthedFresh();
 
 if(!ctx){
 return 0;
@@ -865,15 +1092,13 @@ return 0;
 const { data, error } =
 await ctx.sb
 .from("price_alerts")
-.select(
-"symbol, shape_id, price, tf, created_at"
-)
+.select("symbol, shape_id")
 .eq("user_id", ctx.user.id)
 .is("triggered_at", null);
 
 if(error){
 console.warn(
-"alert cloud pull:",
+"alert cloud reconcile:",
 error.message
 );
 return 0;
@@ -884,71 +1109,51 @@ saveAlertsFromCloudMerge,
 alertEntryKey,
 loadAlerts
 } =
-await import("./alerts.js?v=25");
+await import("./alerts.js?v=26");
 
-const byKey = new Map();
+const cloudKeys =
+new Set(
+(data || []).map(row=>
+alertEntryKey(
+String(row.symbol || "").trim().toUpperCase(),
+String(row.shape_id || "").trim()
+)
+)
+);
 
-for(const local of loadAlerts()){
+const local =
+loadAlerts();
+
+const next =
+local.filter(a=>{
 
 const sym =
-String(local.symbol || "").trim().toUpperCase();
+String(a.symbol || "").trim().toUpperCase();
 const sid =
-String(local.shapeId || local.id || "").trim();
+String(a.shapeId || a.id || "").trim();
 
 if(
 !sym ||
 !sid
 ){
-continue;
+return false;
 }
 
-byKey.set(
-alertEntryKey(sym, sid),
-local
+if(!a.cloudSynced){
+return true;
+}
+
+return cloudKeys.has(
+alertEntryKey(sym, sid)
 );
 
+});
+
+if(next.length !== local.length){
+saveAlertsFromCloudMerge(next);
 }
 
-for(const row of data || []){
-
-const sym =
-String(row.symbol || "").trim().toUpperCase();
-const sid =
-String(row.shape_id || "").trim();
-const price =
-Number(row.price);
-
-if(
-!sym ||
-!sid ||
-!Number.isFinite(price)
-){
-continue;
-}
-
-const entry = {
-id: sid,
-shapeId: sid,
-symbol: sym,
-price,
-tf: normalizeAlertTf(row.tf),
-createdAt:
-row.created_at
-? Date.parse(row.created_at)
-: Date.now(),
-cloudSynced: true
-};
-
-byKey.set(
-alertEntryKey(sym, sid),
-entry
-);
-
-}
-
-saveAlertsFromCloudMerge([...byKey.values()]);
-
-return byKey.size;
+return next.length;
 
 }
 
@@ -957,10 +1162,10 @@ export async function pullRegistryFromCloud(){
 return runCloudOp(async()=>{
 
 const n =
-await mergeCloudAlertsIntoLocal();
+await reconcileLocalRegistryWithCloud();
 
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=25");
+await import("./alerts.js?v=26");
 
 stripAlertFlagsNotInRegistry();
 
@@ -973,10 +1178,10 @@ return n;
 async function hydrateAlertsAfterAuth(){
 
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=25");
+await import("./alerts.js?v=26");
 
 await syncAllLocalAlertsToCloudImpl();
-await mergeCloudAlertsIntoLocal();
+await reconcileLocalRegistryWithCloud();
 stripAlertFlagsNotInRegistry();
 
 }

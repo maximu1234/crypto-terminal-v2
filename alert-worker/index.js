@@ -13,7 +13,7 @@ import {
   pruneWatchState,
   evaluateAlertsForCandle
 } from "./lib/trigger-alert.js";
-import { handleClientTrigger } from "./lib/client-trigger.js";
+import { handleClientApi } from "./lib/client-api.js";
 
 const PORT = Number(process.env.PORT) || 8080;
 const RELOAD_MS = Number(process.env.ALERTS_RELOAD_MS) || 3000;
@@ -88,7 +88,7 @@ async function main() {
 
   const server = http.createServer(async (req, res) => {
 
-    if (await handleClientTrigger(req, res)) {
+    if (await handleClientApi(req, res)) {
       return;
     }
 

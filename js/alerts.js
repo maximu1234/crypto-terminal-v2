@@ -6,7 +6,7 @@ const MAX_ALERT_HISTORY = 30;
 
 function queueAlertsCloud(fn){
 
-import("./alerts-cloud-sync.js?v=25")
+import("./alerts-cloud-sync.js?v=26")
 .then(m=>fn(m))
 .catch(err=>{
 console.warn("alerts cloud:", err);
@@ -482,7 +482,7 @@ return `drawings_${String(symbol || "").trim().toUpperCase()}`;
 
 }
 
-export function registerAlertFromDrawing(
+export async function registerAlertFromDrawing(
 shape,
 symbolOverride
 ){
@@ -544,15 +544,15 @@ list.push(row);
 
 saveAlerts(list);
 
-void import("./alerts-cloud-sync.js?v=25").then(async m=>{
+const m =
+await import("./alerts-cloud-sync.js?v=26");
+
 const pushed =
 await m.pushSingleAlertToCloud(row);
 
 if(!pushed){
 m.scheduleEnsureAlertsInCloud();
 }
-
-});
 
 return true;
 
@@ -655,8 +655,8 @@ a.shapeId === shapeId
 );
 
 if(row){
-void import("./alerts-cloud-sync.js?v=25").then(m=>{
-m.persistAlertsRegistryToCloud();
+void import("./alerts-cloud-sync.js?v=26").then(m=>{
+m.pushSingleAlertToCloud(row);
 });
 }
 
@@ -979,7 +979,7 @@ false;
 try{
 
 const m =
-await import("./alerts-cloud-sync.js?v=25");
+await import("./alerts-cloud-sync.js?v=26");
 
 const remote =
 await m.triggerAlertViaWorker(
@@ -1033,14 +1033,6 @@ console.warn(
 "alert cloud trigger:",
 err?.message || err
 );
-}
-
-try{
-const m =
-await import("./alerts-cloud-sync.js?v=25");
-m.scheduleEnsureAlertsInCloud();
-}catch{
-/* ignore */
 }
 
 return cloudOk;

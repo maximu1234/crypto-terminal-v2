@@ -1,15 +1,29 @@
-import { restGet } from "./supabase-rest.js";
-import { executeAlertTrigger } from "./execute-trigger.js";
+import { getWorkerConfig } from "./config.js";
+import { restUpsertPriceAlert } from "./supabase-rest.js";
+import { handleClientTrigger } from "./client-trigger.js";
 import {
   readJsonBody,
   setCors,
   verifyUserFromRequest
 } from "./client-http.js";
 
+function normalizeTf(tf) {
+
+  if (
+    tf == null ||
+    tf === ""
+  ) {
+    return "60";
+  }
+
+  return String(tf);
+
+}
+
 /**
- * POST /trigger — браузер сообщает о срабатывании (Telegram + delete с service role).
+ * POST /push-alert — запись алерта в Supabase (service role, обходит сбой браузерного upsert).
  */
-export async function handleClientTrigger(
+async function handleClientPushAlert(
   req,
   res
 ) {
@@ -17,7 +31,7 @@ export async function handleClientTrigger(
   const path =
     (req.url || "").split("?")[0];
 
-  if (path !== "/trigger") {
+  if (path !== "/push-alert") {
     return false;
   }
 
@@ -61,48 +75,67 @@ export async function handleClientTrigger(
     String(body.symbol || "").trim().toUpperCase();
   const sid =
     String(body.shape_id || body.shapeId || "").trim();
+  const price =
+    Number(body.price);
 
-  if (!sym || !sid) {
+  if (
+    !sym ||
+    !sid ||
+    !Number.isFinite(price)
+  ) {
     res.writeHead(400, { "Content-Type": "application/json" });
     res.end(JSON.stringify({ ok: false, error: "bad_body" }));
     return true;
   }
 
-  let rows;
+  const cfg = getWorkerConfig();
+
+  if (!cfg.ready) {
+    res.writeHead(503, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ ok: false, error: "worker_not_ready" }));
+    return true;
+  }
 
   try{
-    rows = await restGet(
-      "price_alerts?select=id&user_id=eq." +
-      encodeURIComponent(user.id) +
-      "&symbol=eq." +
-      encodeURIComponent(sym) +
-      "&shape_id=eq." +
-      encodeURIComponent(sid) +
-      "&triggered_at=is.null"
-    );
+    const saved = await restUpsertPriceAlert({
+      user_id: user.id,
+      symbol: sym,
+      shape_id: sid,
+      price,
+      tf: normalizeTf(body.tf),
+      triggered_at: null
+    });
+
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({
+      ok: true,
+      id: saved?.id || null
+    }));
   }catch(err){
     res.writeHead(500, { "Content-Type": "application/json" });
     res.end(JSON.stringify({
       ok: false,
       error: err.message
     }));
-    return true;
   }
 
-  if (!rows?.length) {
-    res.writeHead(200, { "Content-Type": "application/json" });
-    res.end(JSON.stringify({
-      ok: false,
-      skipped: "not_found"
-    }));
-    return true;
-  }
-
-  const result =
-    await executeAlertTrigger(rows[0].id);
-
-  res.writeHead(200, { "Content-Type": "application/json" });
-  res.end(JSON.stringify(result));
   return true;
+
+}
+
+export async function handleClientApi(
+  req,
+  res
+) {
+
+  if (await handleClientPushAlert(req, res)) {
+    return true;
+  }
+
+  if (await handleClientTrigger(req, res)) {
+    return true;
+  }
+
+  return false;
 
 }
