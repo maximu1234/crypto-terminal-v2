@@ -3,11 +3,7 @@ alertEntryKey,
 commitAlertTriggeredLocally,
 formatTfLabel,
 getActiveAlerts
-} from "./alerts.js?v=38";
-
-import {
-isBrowserCrossCheckEnabled
-} from "./alerts-mode.js";
+} from "./alerts.js?v=42";
 
 import { formatPrice } from "./chart.js";
 
@@ -407,10 +403,6 @@ candle,
 active,
 chartTf
 ){
-
-if(!isBrowserCrossCheckEnabled()){
-return;
-}
 
 const close =
 Number(candle?.close);

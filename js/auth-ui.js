@@ -10,7 +10,7 @@ signOutCloud
 
 import {
 isSupabaseConfigured
-} from "./supabase-client.js?v=4";
+} from "./supabase-client.js?v=5";
 
 let cloudEnvConfigured = false;
 let cloudSdkError = "";

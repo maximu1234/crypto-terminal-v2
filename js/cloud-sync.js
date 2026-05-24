@@ -1,7 +1,7 @@
 import {
 getSupabase,
 isSupabaseConfigured
-} from "./supabase-client.js?v=4";
+} from "./supabase-client.js?v=5";
 
 import {
 loadFavoritesGroups,
@@ -450,7 +450,7 @@ const out =
 JSON.parse(JSON.stringify(map));
 
 const { getActiveAlerts } =
-await import("./alerts.js?v=38");
+await import("./alerts.js?v=42");
 
 for(const alert of getActiveAlerts()){
 
@@ -1306,11 +1306,11 @@ session.user.id
 );
 startSyncPoll();
 
-import("./alerts-cloud-sync.js?v=38")
+import("./alerts-cloud-sync.js?v=42")
 .then(async m=>{
 
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=38");
+await import("./alerts.js?v=42");
 
 await m.syncAllLocalAlertsToCloudImmediate();
 await m.pullRegistryFromCloud();
@@ -1409,7 +1409,20 @@ return null;
 
 }
 
+let cloudSyncInitPromise = null;
+
 export async function initCloudSync(){
+
+if(cloudSyncInitPromise){
+return cloudSyncInitPromise;
+}
+
+cloudSyncInitPromise = initCloudSyncImpl();
+return cloudSyncInitPromise;
+
+}
+
+async function initCloudSyncImpl(){
 
 const hasEnv =
 await isSupabaseConfigured();

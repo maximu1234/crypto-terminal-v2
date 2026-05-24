@@ -1,5 +1,6 @@
 let envPromise = null;
 let client = null;
+let clientPromise = null;
 let createClientPromise = null;
 
 const SUPABASE_UMD_SOURCES = [
@@ -142,12 +143,19 @@ if(
 return null;
 }
 
-if(!client){
+if(client){
+return client;
+}
+
+if(!clientPromise){
+
+clientPromise = (async()=>{
 
 const createClient =
 await loadCreateClient();
 
-client = createClient(
+const sb =
+createClient(
 env.SUPABASE_URL,
 env.SUPABASE_ANON_KEY,
 {
@@ -161,8 +169,18 @@ storageKey:"ct_supabase_auth"
 }
 );
 
+client = sb;
+return sb;
+
+})();
+
 }
 
-return client;
+try{
+return await clientPromise;
+}catch(err){
+clientPromise = null;
+throw err;
+}
 
 }

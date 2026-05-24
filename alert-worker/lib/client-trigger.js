@@ -57,6 +57,33 @@ export async function handleClientTrigger(
     return true;
   }
 
+  const alertId =
+    String(
+      body.alert_id ||
+      body.alertId ||
+      ""
+    ).trim();
+
+  if (alertId) {
+
+    try{
+      const result =
+        await executeAlertTrigger(alertId);
+
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify(result));
+      return true;
+    }catch(err){
+      res.writeHead(500, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({
+        ok: false,
+        error: err.message
+      }));
+      return true;
+    }
+
+  }
+
   const sym =
     String(body.symbol || "").trim().toUpperCase();
   const sid =

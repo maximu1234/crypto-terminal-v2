@@ -1,6 +1,6 @@
 import {
 initAlertMonitor
-} from "./alert-monitor.js?v=38";
+} from "./alert-monitor.js?v=42";
 
 import {
 ensureCloudReady
@@ -9,11 +9,11 @@ ensureCloudReady
 import {
 initAlertsCloudSync,
 scheduleRegistryCloudSync
-} from "./alerts-cloud-sync.js?v=38";
+} from "./alerts-cloud-sync.js?v=42";
 
 import {
 stripAlertFlagsNotInRegistry
-} from "./alerts.js?v=38";
+} from "./alerts.js?v=42";
 
 import {
 isCloudLoggedIn,
@@ -23,7 +23,7 @@ getCloudUserEmail
 
 import {
 isSupabaseConfigured
-} from "./supabase-client.js?v=4";
+} from "./supabase-client.js?v=5";
 
 initAlertMonitor();
 initAlertsCloudSync();

@@ -6,7 +6,7 @@ const MAX_ALERT_HISTORY = 30;
 
 function queueAlertsCloud(fn){
 
-import("./alerts-cloud-sync.js?v=38")
+import("./alerts-cloud-sync.js?v=42")
 .then(m=>fn(m))
 .catch(err=>{
 console.warn("alerts cloud:", err);
@@ -408,6 +408,60 @@ dispatchAlertsRegistryPulled();
 
 }
 
+export function markAlertCloudId(
+symbol,
+shapeId,
+cloudId
+){
+
+const sym =
+String(symbol || "").trim().toUpperCase();
+const sid =
+String(shapeId || "").trim();
+const id =
+String(cloudId || "").trim();
+
+if(
+!sym ||
+!sid ||
+!id
+){
+return;
+}
+
+const list =
+loadAlerts();
+
+let changed =
+false;
+
+const next =
+list.map(a=>{
+
+if(
+String(a.symbol).toUpperCase() === sym &&
+a.shapeId === sid
+){
+changed = true;
+
+return {
+...a,
+cloudId: id,
+cloudSynced: true
+};
+
+}
+
+return a;
+
+});
+
+if(changed){
+saveAlertsQuiet(next);
+}
+
+}
+
 export function markAlertCloudSynced(
 symbol,
 shapeId
@@ -545,7 +599,7 @@ list.push(row);
 saveAlerts(list);
 
 const m =
-await import("./alerts-cloud-sync.js?v=38");
+await import("./alerts-cloud-sync.js?v=42");
 
 const pushed =
 await m.flushAlertCloudPush(row);
@@ -670,7 +724,7 @@ return;
 
 saveAlerts(list);
 
-void import("./alerts-cloud-sync.js?v=38").then(m=>{
+void import("./alerts-cloud-sync.js?v=42").then(m=>{
 m.flushAlertCloudPush(row);
 });
 
@@ -989,7 +1043,18 @@ String(a.symbol).toUpperCase() === sym &&
 String(a.shapeId) === sid
 );
 
-if(!existing){
+const price =
+Number(row?.price) ||
+Number(existing?.price);
+const tf =
+normalizeAlertTf(
+row?.tf ||
+existing?.tf
+);
+
+if(
+!Number.isFinite(price)
+){
 return false;
 }
 
@@ -998,12 +1063,17 @@ key,
 Date.now()
 );
 
+if(existing){
 appendAlertToHistory(existing);
-
 disarmAlertLocally(
 sym,
 sid
 );
+}else{
+removeDrawingShape(sym, sid);
+clearAlertOnDrawing(sym, sid);
+stripAlertFlagsNotInRegistry();
+}
 
 console.log(
 "[alerts] сработал (облако):",
@@ -1011,18 +1081,12 @@ sym,
 sid
 );
 
-void import("./alert-monitor.js?v=38").then(m=>{
+void import("./alert-monitor.js?v=42").then(m=>{
 m.notifyAlertTriggered({
 symbol: sym,
 shapeId: sid,
-price:
-Number(row?.price) ||
-existing.price,
-tf:
-normalizeAlertTf(
-row?.tf ||
-existing.tf
-)
+price,
+tf
 });
 });
 
@@ -1030,7 +1094,7 @@ return true;
 
 }
 
-/** Сразу убрать с графика и из реестра (только без облачного worker). */
+/** Сразу убрать линию; в облаке — ещё POST /trigger для Telegram. */
 export function commitAlertTriggeredLocally(
 symbol,
 shapeId
@@ -1055,6 +1119,9 @@ String(a.symbol).toUpperCase() === sym &&
 a.shapeId === sid
 );
 
+const cloudId =
+existing?.cloudId;
+
 if(existing){
 appendAlertToHistory(existing);
 }
@@ -1064,191 +1131,21 @@ sym,
 sid
 );
 
+stripAlertFlagsNotInRegistry();
+
 console.log(
 "[alerts] сработал:",
 sym,
 sid
 );
 
-enqueueAlertCloudTrigger(
+void import("./alerts-cloud-sync.js?v=42").then(m=>{
+m.fireAlertCloudTrigger(
 sym,
-sid
+sid,
+cloudId
 );
-
-}
-
-let alertTriggerChain =
-Promise.resolve();
-
-function enqueueAlertCloudTrigger(
-symbol,
-shapeId
-){
-
-const sym =
-String(symbol || "").trim().toUpperCase();
-const sid =
-String(shapeId || "").trim();
-
-if(
-!sym ||
-!sid
-){
-return alertTriggerChain;
-}
-
-alertTriggerChain =
-alertTriggerChain
-.catch(()=>{})
-.then(()=>
-markAlertTriggered(
-sym,
-sid
-)
-);
-
-return alertTriggerChain;
-
-}
-
-export async function markAlertTriggered(
-symbol,
-shapeId
-){
-
-const sym =
-String(symbol || "").trim().toUpperCase();
-const sid =
-String(shapeId || "").trim();
-
-if(
-!sym ||
-!sid
-){
-return false;
-}
-
-try{
-
-const m =
-await import("./alerts-cloud-sync.js?v=38");
-
-console.log(
-"[alerts] cloud →",
-sym,
-sid
-);
-
-let remote =
-await m.triggerAlertViaWorker(
-sym,
-sid
-);
-
-console.log(
-"[alerts] worker:",
-remote?.ok,
-remote?.telegram,
-remote?.reason ||
-remote?.skipped ||
-""
-);
-
-if(
-remote?.ok &&
-remote.telegram === false
-){
-await new Promise(r=>{
-setTimeout(r, 700);
 });
-const retry =
-await m.triggerAlertViaWorker(
-sym,
-sid
-);
-
-console.log(
-"[alerts] worker retry:",
-retry?.ok,
-retry?.telegram
-);
-
-if(
-retry?.ok &&
-retry.telegram
-){
-remote = retry;
-}
-}
-
-let purged =
-await m.purgeAlertRowFromCloud(
-sym,
-sid
-);
-
-if(!purged){
-await new Promise(r=>{
-setTimeout(r, 500);
-});
-purged =
-await m.purgeAlertRowFromCloud(
-sym,
-sid
-);
-}
-
-const stillThere =
-await m.isAlertRowInCloud(
-sym,
-sid
-);
-
-if(stillThere){
-console.warn(
-"[alerts] строка всё ещё в Supabase после purge",
-sym,
-sid
-);
-}else{
-console.log(
-"[alerts] Supabase ok (строки нет)",
-sym,
-sid
-);
-}
-
-if(
-remote?.ok === true &&
-remote.telegram === false
-){
-console.warn(
-"[alerts] Worker ответил, но Telegram не отправлен — chat id на /alerts/ и TELEGRAM_BOT_TOKEN на Railway"
-);
-}else if(
-remote?.ok !== true
-){
-console.log(
-"[alerts] браузер не достучался до /trigger (" +
-(
-remote?.reason ||
-remote?.status ||
-"ошибка"
-) +
-") — если Telegram пришёл, это нормально: сработал worker на Railway по свече"
-);
-}
-
-return !stillThere;
-
-}catch(err){
-console.warn(
-"alert cloud trigger:",
-err?.message || err
-);
-return false;
-
-}
 
 }
 

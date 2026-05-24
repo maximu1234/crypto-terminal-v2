@@ -1,7 +1,7 @@
 import {
 getSupabase,
 isSupabaseConfigured
-} from "./supabase-client.js?v=4";
+} from "./supabase-client.js?v=5";
 
 import {
 waitForCloudAuth
@@ -26,13 +26,13 @@ let registrySyncTimer = null;
 
 const REGISTRY_SYNC_DEBOUNCE_MS = 400;
 
-const RECONCILE_INTERVAL_MS = 12000;
+const RECONCILE_INTERVAL_MS = 4000;
+
+const RECONCILE_MIN_AGE_MS = 5000;
+
+let lastRemoteAlertMode = null;
 
 async function updateBrowserCrossMode(){
-
-setBrowserCrossCheckEnabled(
-!isCloudLoggedIn()
-);
 
 const loggedIn =
 isCloudLoggedIn();
@@ -56,16 +56,21 @@ loggedIn &&
 configured &&
 !!worker;
 
-setBrowserCrossCheckEnabled(!remote);
+/* Браузер всегда ловит пересечение (UI + /trigger). Worker — запас, если вкладка закрыта. */
+setBrowserCrossCheckEnabled(true);
+
+if(lastRemoteAlertMode !== remote){
+lastRemoteAlertMode = remote;
 
 if(remote){
 console.log(
-"[alerts] режим облака: срабатывание на Railway, браузер только синхронизирует"
+"[alerts] облако: UI в браузере + Telegram (браузер /trigger и worker)"
 );
 }else{
 console.log(
-"[alerts] режим браузера: пересечение на этой вкладке"
+"[alerts] локально: только браузер (без Telegram)"
 );
+}
 }
 
 return remote;
@@ -96,14 +101,33 @@ async function handleAlertsRealtimeDelete(
 oldRow
 ){
 
-if(!oldRow){
+const sym =
+String(
+oldRow?.symbol || ""
+).trim().toUpperCase();
+const sid =
+String(
+oldRow?.shape_id ||
+oldRow?.shapeId ||
+""
+).trim();
+
+const {
+applyRemoteAlertFired,
+stripAlertFlagsNotInRegistry
+} =
+await import("./alerts.js?v=42");
+
+if(
+sym &&
+sid &&
+applyRemoteAlertFired(oldRow)
+){
 return;
 }
 
-const { applyRemoteAlertFired } =
-await import("./alerts.js?v=38");
-
-applyRemoteAlertFired(oldRow);
+await reconcileLocalRegistryWithCloud();
+stripAlertFlagsNotInRegistry();
 
 }
 
@@ -114,13 +138,6 @@ userId
 await teardownAlertsRealtime();
 
 if(!userId){
-return;
-}
-
-const { isBrowserCrossCheckEnabled } =
-await import("./alerts-mode.js");
-
-if(isBrowserCrossCheckEnabled()){
 return;
 }
 
@@ -629,10 +646,41 @@ text.slice(0, 320)
 return false;
 }
 
+let cloudId =
+null;
+
+try{
+const parsed =
+JSON.parse(text);
+
+const row =
+Array.isArray(parsed)
+? parsed[0]
+: parsed;
+
+cloudId =
+row?.id ||
+null;
+}catch{
+/* ignore */
+}
+
+if(cloudId){
+const { markAlertCloudId } =
+await import("./alerts.js?v=42");
+
+markAlertCloudId(
+symbol,
+shapeId,
+cloudId
+);
+}
+
 console.log(
 "alert cloud push ok (REST):",
 symbol,
-shapeId
+shapeId,
+cloudId || ""
 );
 
 return true;
@@ -881,6 +929,196 @@ return url.replace(/\/$/, "");
 return "";
 
 }
+
+}
+
+/**
+ * POST /trigger по uuid строки (надёжнее, чем symbol+shape_id).
+ */
+export async function triggerAlertViaWorkerById(
+alertId
+){
+
+const base =
+await getAlertWorkerBaseUrl();
+
+if(
+!base ||
+!alertId
+){
+return {
+ok: false,
+reason: "no_worker_or_id"
+};
+}
+
+const auth =
+await getWorkerRequestAuth();
+
+if(!auth){
+return {
+ok: false,
+reason: "no_auth"
+};
+}
+
+let res;
+
+try{
+res =
+await fetchWithTimeout(
+`${base}/trigger`,
+{
+method: "POST",
+headers: {
+"Content-Type": "application/json",
+Authorization: `Bearer ${auth.token}`
+},
+body: JSON.stringify({
+alert_id: String(alertId)
+})
+},
+15000
+);
+}catch(err){
+console.warn(
+"worker /trigger id:",
+err?.message || err
+);
+return {
+ok: false,
+reason: "network_error"
+};
+}
+
+const text =
+await res.text();
+
+let body = {};
+
+try{
+body =
+text
+? JSON.parse(text)
+: {};
+}catch{
+body = { raw: text };
+}
+
+if(!res.ok){
+console.warn(
+"worker /trigger id:",
+res.status,
+text.slice(0, 240)
+);
+return {
+ok: false,
+reason: "http_error",
+status: res.status,
+body
+};
+}
+
+return body;
+
+}
+
+/**
+ * Параллельный вызов облака: без очереди, с повторами (второй алерт не ждёт первый).
+ */
+export async function fireAlertCloudTrigger(
+symbol,
+shapeId,
+cloudId
+){
+
+const sym =
+String(symbol || "").trim().toUpperCase();
+const sid =
+String(shapeId || "").trim();
+const id =
+String(cloudId || "").trim();
+
+if(
+!sym ||
+!sid
+){
+return false;
+}
+
+console.log(
+"[alerts] cloud →",
+sym,
+sid,
+id || "(по shape_id)"
+);
+
+for(
+let attempt = 0;
+attempt < 4;
+attempt++
+){
+
+let remote;
+
+if(id){
+remote =
+await triggerAlertViaWorkerById(id);
+}else{
+remote =
+await triggerAlertViaWorker(
+sym,
+sid
+);
+}
+
+console.log(
+"[alerts] worker:",
+sym,
+sid,
+remote?.ok,
+remote?.telegram,
+remote?.reason ||
+remote?.skipped ||
+""
+);
+
+if(remote?.ok){
+return true;
+}
+
+if(
+remote?.skipped === "not_found" &&
+attempt < 3
+){
+await new Promise(r=>{
+setTimeout(
+r,
+350 * (attempt + 1)
+);
+});
+continue;
+}
+
+break;
+
+}
+
+const purged =
+await purgeAlertRowFromCloud(
+sym,
+sid
+);
+
+if(purged){
+console.log(
+"[alerts] Supabase: строка удалена (fallback)",
+sym,
+sid
+);
+}
+
+return purged;
 
 }
 
@@ -1222,7 +1460,7 @@ return 0;
 }
 
 const { getActiveAlerts } =
-await import("./alerts.js?v=38");
+await import("./alerts.js?v=42");
 
 const localKeys =
 new Set(
@@ -1329,7 +1567,7 @@ return false;
 }
 
 const { markAlertCloudSynced } =
-await import("./alerts.js?v=38");
+await import("./alerts.js?v=42");
 
 const ctx =
 await getAuthed();
@@ -1410,7 +1648,7 @@ return 0;
 }
 
 const { getActiveAlerts } =
-await import("./alerts.js?v=38");
+await import("./alerts.js?v=42");
 
 const list =
 getActiveAlerts();
@@ -1555,7 +1793,7 @@ saveAlertsFromCloudMerge,
 alertEntryKey,
 loadAlerts
 } =
-await import("./alerts.js?v=38");
+await import("./alerts.js?v=42");
 
 const cloudKeys =
 new Set(
@@ -1570,7 +1808,7 @@ String(row.shape_id || "").trim()
 const {
 applyRemoteAlertFired
 } =
-await import("./alerts.js?v=38");
+await import("./alerts.js?v=42");
 
 const local =
 loadAlerts();
@@ -1584,8 +1822,7 @@ String(a.shapeId || a.id || "").trim();
 
 if(
 !sym ||
-!sid ||
-!a.cloudSynced
+!sid
 ){
 continue;
 }
@@ -1593,14 +1830,28 @@ continue;
 const key =
 alertEntryKey(sym, sid);
 
-if(!cloudKeys.has(key)){
+if(cloudKeys.has(key)){
+continue;
+}
+
+const age =
+Date.now() - (
+Number(a.createdAt) || 0
+);
+
+if(
+!a.cloudSynced &&
+age < RECONCILE_MIN_AGE_MS
+){
+continue;
+}
+
 applyRemoteAlertFired({
 symbol: sym,
 shape_id: sid,
 price: a.price,
 tf: a.tf
 });
-}
 
 }
 
@@ -1648,7 +1899,7 @@ const n =
 await reconcileLocalRegistryWithCloud();
 
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=38");
+await import("./alerts.js?v=42");
 
 stripAlertFlagsNotInRegistry();
 
@@ -1661,7 +1912,7 @@ return n;
 async function hydrateAlertsAfterAuth(){
 
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=38");
+await import("./alerts.js?v=42");
 
 console.log(
 "[alerts] hydrate after login…"
@@ -1679,16 +1930,6 @@ export async function syncAlertsWithCloud(){
 return syncAllLocalAlertsToCloud();
 
 }
-
-let alertsCloudSyncReady = false;
-
-export function initAlertsCloudSync(){
-
-if(alertsCloudSyncReady){
-return;
-}
-
-alertsCloudSyncReady = true;
 
 export function scheduleRegistryCloudSync(){
 
@@ -1716,6 +1957,16 @@ err?.message || err
 REGISTRY_SYNC_DEBOUNCE_MS);
 
 }
+
+let alertsCloudSyncReady = false;
+
+export function initAlertsCloudSync(){
+
+if(alertsCloudSyncReady){
+return;
+}
+
+alertsCloudSyncReady = true;
 
 window.addEventListener(
 "alerts-changed",
