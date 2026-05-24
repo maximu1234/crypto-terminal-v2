@@ -71,7 +71,7 @@ err?.message || err
 try{
 
 const { waitForCloudAuth } =
-await import("./cloud-sync.js?v=9");
+await import("./cloud-sync.js?v=10");
 
 await waitForCloudAuth(8000);
 

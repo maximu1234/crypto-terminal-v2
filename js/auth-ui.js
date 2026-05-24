@@ -6,7 +6,7 @@ getCloudUserEmail,
 onCloudSyncChange,
 signInWithEmailOtp,
 signOutCloud
-} from "./cloud-sync.js?v=9";
+} from "./cloud-sync.js?v=10";
 
 import {
 isSupabaseConfigured

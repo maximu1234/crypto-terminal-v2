@@ -5,12 +5,12 @@ isSupabaseConfigured
 
 import {
 waitForCloudAuth
-} from "./cloud-sync.js?v=9";
+} from "./cloud-sync.js?v=10";
 
 import {
 isCloudLoggedIn,
 onCloudSyncChange
-} from "./cloud-sync.js?v=9";
+} from "./cloud-sync.js?v=10";
 
 async function getAuthed() {
 

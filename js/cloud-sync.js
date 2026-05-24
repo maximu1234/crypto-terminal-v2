@@ -718,7 +718,7 @@ localDrawings
 return;
 }
 
-await applyDrawingsLocally(
+void applyDrawingsLocally(
 cloudDrawings,
 cloudTs
 );
@@ -1303,7 +1303,7 @@ session.user.id
 );
 startSyncPoll();
 
-import("./alerts-cloud-sync.js?v=9")
+import("./alerts-cloud-sync.js?v=10")
 .then(m=>{
 m.syncAllLocalAlertsToCloud();
 })

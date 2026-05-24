@@ -16,13 +16,13 @@ import {
 getTelegramChatId,
 initAlertsCloudSync,
 saveTelegramChatId
-} from "./alerts-cloud-sync.js?v=9";
+} from "./alerts-cloud-sync.js?v=10";
 
 import {
 isCloudLoggedIn,
 onCloudSyncChange,
 getCloudUserEmail
-} from "./cloud-sync.js?v=9";
+} from "./cloud-sync.js?v=10";
 
 import {
 ensureCloudReady,
