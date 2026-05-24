@@ -652,6 +652,9 @@ const base =
 await getAlertWorkerBaseUrl();
 
 if(!base){
+console.warn(
+"worker /push-alert: нет ALERT_WORKER_URL в js/supabase-env.js"
+);
 return false;
 }
 
@@ -659,6 +662,9 @@ const auth =
 await getWorkerRequestAuth();
 
 if(!auth){
+console.warn(
+"worker /push-alert: нет сессии — войдите через шестерёнку в шапке"
+);
 return false;
 }
 
@@ -752,7 +758,7 @@ return 0;
 }
 
 const { getActiveAlerts } =
-await import("./alerts.js?v=27");
+await import("./alerts.js?v=28");
 
 const localKeys =
 new Set(
@@ -855,7 +861,7 @@ return false;
 }
 
 const { markAlertCloudSynced } =
-await import("./alerts.js?v=27");
+await import("./alerts.js?v=28");
 
 for(
 let attempt = 0;
@@ -917,7 +923,7 @@ return 0;
 }
 
 const { getActiveAlerts } =
-await import("./alerts.js?v=27");
+await import("./alerts.js?v=28");
 
 const list =
 getActiveAlerts();
@@ -986,7 +992,7 @@ Date.now() < deadline
 ){
 
 const { getActiveAlerts } =
-await import("./alerts.js?v=27");
+await import("./alerts.js?v=28");
 
 const list =
 getActiveAlerts();
@@ -1156,7 +1162,7 @@ saveAlertsFromCloudMerge,
 alertEntryKey,
 loadAlerts
 } =
-await import("./alerts.js?v=27");
+await import("./alerts.js?v=28");
 
 const cloudKeys =
 new Set(
@@ -1212,7 +1218,7 @@ const n =
 await reconcileLocalRegistryWithCloud();
 
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=27");
+await import("./alerts.js?v=28");
 
 stripAlertFlagsNotInRegistry();
 
@@ -1225,7 +1231,7 @@ return n;
 async function hydrateAlertsAfterAuth(){
 
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=27");
+await import("./alerts.js?v=28");
 
 await syncAllLocalAlertsToCloudImpl();
 await reconcileLocalRegistryWithCloud();

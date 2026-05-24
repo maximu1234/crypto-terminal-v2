@@ -6,7 +6,7 @@ getActiveAlerts,
 patchAlertPrice,
 removeAlert,
 upsertAlert
-} from "./alerts.js?v=27";
+} from "./alerts.js?v=28";
 
 import {
 mountTvColorGrid
@@ -4933,6 +4933,12 @@ console.warn(
 "Alert: не записан в таблицу — нет символа или цены",
 sym,
 shape.price
+);
+}else{
+console.log(
+"Alert: локально сохранён, отправка в Supabase…",
+sym,
+shape.id
 );
 }
 
