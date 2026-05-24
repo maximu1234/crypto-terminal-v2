@@ -249,6 +249,160 @@ return String(tf);
 
 }
 
+function withTimeout(
+promise,
+ms,
+label
+){
+
+return Promise.race([
+promise,
+new Promise((_, reject)=>{
+setTimeout(()=>{
+reject(
+new Error(
+`${label} timeout (${ms}ms)`
+)
+);
+}, ms);
+})
+]);
+
+}
+
+/**
+ * Прямой REST upsert с JWT пользователя (обходит зависания supabase-js).
+ */
+async function pushAlertViaRest(
+entry,
+ctx
+){
+
+const { data: { session } } =
+await ctx.sb.auth.getSession();
+
+const token =
+session?.access_token;
+
+if(!token){
+console.warn(
+"alert REST push: нет access_token"
+);
+return false;
+}
+
+const env =
+await import("./supabase-env.js?v=4");
+
+const base =
+String(env.SUPABASE_URL || "")
+.replace(/\/$/, "");
+
+const anon =
+env.SUPABASE_ANON_KEY;
+
+if(
+!base ||
+!anon
+){
+console.warn(
+"alert REST push: нет SUPABASE_URL/ANON_KEY"
+);
+return false;
+}
+
+const shapeId =
+String(
+entry?.shapeId ||
+entry?.id ||
+""
+).trim();
+
+const symbol =
+String(entry?.symbol || "").trim().toUpperCase();
+
+const price =
+Number(entry?.price);
+
+if(
+!symbol ||
+!shapeId ||
+!Number.isFinite(price)
+){
+return false;
+}
+
+const row = {
+user_id: ctx.user.id,
+symbol,
+shape_id: shapeId,
+price,
+tf: normalizeAlertTf(entry.tf),
+triggered_at: null
+};
+
+const controller =
+new AbortController();
+
+const timer =
+setTimeout(()=>{
+controller.abort();
+}, 15000);
+
+try{
+
+const res =
+await fetch(
+`${base}/rest/v1/price_alerts?on_conflict=user_id,symbol,shape_id`,
+{
+method: "POST",
+signal: controller.signal,
+headers: {
+apikey: anon,
+Authorization: `Bearer ${token}`,
+"Content-Type": "application/json",
+Prefer: "resolution=merge-duplicates,return=representation"
+},
+body: JSON.stringify(row)
+}
+);
+
+const text =
+await res.text();
+
+if(!res.ok){
+console.warn(
+"alert REST push:",
+res.status,
+text.slice(0, 320)
+);
+return false;
+}
+
+console.log(
+"alert cloud push ok (REST):",
+symbol,
+shapeId
+);
+
+return true;
+
+}catch(err){
+
+console.warn(
+"alert REST push:",
+err?.message || err
+);
+return false;
+
+}finally{
+
+clearTimeout(timer);
+
+}
+
+}
+
 async function pushAlertToCloudImpl(entry){
 
 const ctx =
@@ -322,11 +476,15 @@ triggered_at: null
 };
 
 const { error: upsertErr } =
-await ctx.sb
+await withTimeout(
+ctx.sb
 .from("price_alerts")
 .upsert(
 row,
 { onConflict: "user_id,symbol,shape_id" }
+),
+15000,
+"alert upsert"
 );
 
 if(!upsertErr){
@@ -758,7 +916,7 @@ return 0;
 }
 
 const { getActiveAlerts } =
-await import("./alerts.js?v=29");
+await import("./alerts.js?v=30");
 
 const localKeys =
 new Set(
@@ -861,7 +1019,10 @@ return false;
 }
 
 const { markAlertCloudSynced } =
-await import("./alerts.js?v=29");
+await import("./alerts.js?v=30");
+
+const ctx =
+await getAuthed();
 
 for(
 let attempt = 0;
@@ -869,7 +1030,7 @@ attempt < retries;
 attempt++
 ){
 
-if(await pushAlertToCloudImpl(row)){
+if(await pushAlertViaWorker(row)){
 markAlertCloudSynced(
 row.symbol,
 row.shapeId
@@ -877,7 +1038,21 @@ row.shapeId
 return true;
 }
 
-if(await pushAlertViaWorker(row)){
+if(
+ctx &&
+await pushAlertViaRest(
+row,
+ctx
+)
+){
+markAlertCloudSynced(
+row.symbol,
+row.shapeId
+);
+return true;
+}
+
+if(await pushAlertToCloudImpl(row)){
 markAlertCloudSynced(
 row.symbol,
 row.shapeId
@@ -923,7 +1098,7 @@ return 0;
 }
 
 const { getActiveAlerts } =
-await import("./alerts.js?v=29");
+await import("./alerts.js?v=30");
 
 const list =
 getActiveAlerts();
@@ -992,10 +1167,16 @@ Date.now() < deadline
 ){
 
 const { getActiveAlerts } =
-await import("./alerts.js?v=29");
+await import("./alerts.js?v=30");
 
 const list =
 getActiveAlerts();
+
+console.log(
+"[alerts] ensure cloud:",
+list.length,
+"в localStorage"
+);
 
 if(!list.length){
 return true;
@@ -1162,7 +1343,7 @@ saveAlertsFromCloudMerge,
 alertEntryKey,
 loadAlerts
 } =
-await import("./alerts.js?v=29");
+await import("./alerts.js?v=30");
 
 const cloudKeys =
 new Set(
@@ -1218,7 +1399,7 @@ const n =
 await reconcileLocalRegistryWithCloud();
 
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=29");
+await import("./alerts.js?v=30");
 
 stripAlertFlagsNotInRegistry();
 
@@ -1231,7 +1412,11 @@ return n;
 async function hydrateAlertsAfterAuth(){
 
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=29");
+await import("./alerts.js?v=30");
+
+console.log(
+"[alerts] hydrate after login…"
+);
 
 await syncAllLocalAlertsToCloudImpl();
 await reconcileLocalRegistryWithCloud();
@@ -1258,7 +1443,28 @@ alertsCloudSyncReady = true;
 window.addEventListener(
 "alerts-changed",
 ()=>{
+
+void (async()=>{
+
+const { getActiveAlerts } =
+await import("./alerts.js?v=30");
+
+const list =
+getActiveAlerts();
+
+console.log(
+"[alerts] changed:",
+list.length
+);
+
+for(const row of list){
+await pushSingleAlertToCloud(row);
+}
+
+})();
+
 scheduleEnsureAlertsInCloud();
+
 }
 );
 
