@@ -1,11 +1,13 @@
 import {
 ALERT_LINE_COLOR,
 ALERT_LINE_DASH,
+alertPriceFromShape,
 getActiveAlerts,
 patchAlertPrice,
 removeAlert,
+rebuildAlertRegistryFromStorage,
 upsertAlert
-} from "./alerts.js?v=12";
+} from "./alerts.js?v=13";
 
 import {
 mountTvColorGrid
@@ -4892,15 +4894,16 @@ shape.isAlert = true;
 shape.lineWidth = 1;
 shape.alertCreatedAt = Date.now();
 shape.alertTf = getTf();
-shape.alertSymbol = getSymbol();
+shape.alertSymbol =
+String(getSymbol() || "").trim().toUpperCase();
 
 saveDrawings();
 
 const sym =
-getSymbol();
+String(getSymbol() || "").trim().toUpperCase();
 
 const level =
-Number(shape.price);
+alertPriceFromShape(shape);
 
 if(
 !sym ||
@@ -4913,6 +4916,10 @@ shape.price
 );
 }else{
 
+if(!shape.alertSymbol){
+shape.alertSymbol = sym;
+}
+
 void upsertAlert({
 id: shape.id,
 shapeId: shape.id,
@@ -4920,6 +4927,8 @@ symbol: sym,
 price: level,
 tf: shape.alertTf,
 createdAt: shape.alertCreatedAt
+}).then(()=>{
+rebuildAlertRegistryFromStorage();
 }).catch(err=>{
 console.warn("Alert upsert:", err);
 }).finally(()=>{
@@ -8269,6 +8278,29 @@ shape.color
 
 if(!shape.isAlert){
 return shape;
+}
+
+const level =
+alertPriceFromShape(shape);
+
+if(
+sym &&
+Number.isFinite(level)
+){
+
+void upsertAlert({
+id: shape.id,
+shapeId: shape.id,
+symbol: symNorm,
+price: level,
+tf: shape.alertTf || getTf(),
+createdAt:
+shape.alertCreatedAt ||
+Date.now()
+});
+
+return shape;
+
 }
 
 dirty = true;

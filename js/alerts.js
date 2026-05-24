@@ -6,7 +6,7 @@ const MAX_ALERT_HISTORY = 30;
 
 function queueAlertsCloud(fn){
 
-import("./alerts-cloud-sync.js?v=12")
+import("./alerts-cloud-sync.js?v=13")
 .then(m=>fn(m))
 .catch(err=>{
 console.warn("alerts cloud:", err);
@@ -56,24 +56,58 @@ return `${symbol}::${shapeId}`;
 
 }
 
+export function alertPriceFromShape(shape){
+
+const direct =
+Number(shape?.price);
+
+if(Number.isFinite(direct)){
+return direct;
+}
+
+const fromP1 =
+Number(shape?.p1?.price);
+
+if(Number.isFinite(fromP1)){
+return fromP1;
+}
+
+return NaN;
+
+}
+
 function isValidAlertShape(symbol, shape){
 
-return (
-shape?.type === "hray" &&
-shape.isAlert === true &&
-shape.alertCreatedAt &&
-shape.alertSymbol === symbol
-);
+if(
+shape?.type !== "hray" ||
+shape.isAlert !== true ||
+!shape.alertCreatedAt
+){
+return false;
+}
+
+const sym =
+String(symbol || "").trim().toUpperCase();
+const alertSym =
+String(
+shape.alertSymbol ||
+sym
+).trim().toUpperCase();
+
+return alertSym === sym;
 
 }
 
 export function loadDrawingsForSymbol(symbol){
 
+const sym =
+String(symbol || "").trim().toUpperCase();
+
 try{
 
 const raw =
 localStorage.getItem(
-`drawings_${symbol}`
+`drawings_${sym}`
 );
 
 if(!raw){
@@ -378,7 +412,7 @@ await import("./auth-ui.js?v=9");
 await ensureCloudReady();
 
 const m =
-await import("./alerts-cloud-sync.js?v=12");
+await import("./alerts-cloud-sync.js?v=13");
 
 const ok =
 await m.persistAlertsRegistryToCloud();
@@ -450,7 +484,7 @@ a.shapeId === shapeId
 );
 
 if(row){
-void import("./alerts-cloud-sync.js?v=12").then(m=>{
+void import("./alerts-cloud-sync.js?v=13").then(m=>{
 m.persistAlertsRegistryToCloud();
 });
 }
@@ -733,7 +767,7 @@ null;
 try{
 
 m =
-await import("./alerts-cloud-sync.js?v=12");
+await import("./alerts-cloud-sync.js?v=13");
 
 cloudOk =
 await m.markAlertTriggeredOnCloud(
@@ -970,6 +1004,20 @@ createdAt
 
 }
 
+for(const [key, prev] of existingByKey){
+
+if(
+seen.has(key) ||
+!isStoredAlertRow(prev)
+){
+continue;
+}
+
+merged.push(prev);
+seen.add(key);
+
+}
+
 saveAlerts(merged);
 
 queueAlertsCloud(m=>{
@@ -989,24 +1037,7 @@ return false;
 const rest =
 key.slice("drawings_".length);
 
-if(!rest){
-return false;
-}
-
-const legacy =
-rest.match(
-/^(.+)_(1|5|15|60|240|D)$/
-);
-
-if(legacy){
-return true;
-}
-
-if(!rest.includes("_")){
-return true;
-}
-
-return false;
+return !!rest;
 
 }
 

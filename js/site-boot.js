@@ -12,7 +12,7 @@ initAlertsCloudSync
 
 import {
 rebuildAlertRegistryFromStorage
-} from "./alerts.js?v=12";
+} from "./alerts.js?v=13";
 
 initAlertMonitor();
 initAlertsCloudSync();
