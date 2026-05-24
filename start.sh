@@ -4,9 +4,9 @@ cd "$(dirname "$0")"
 PORT=8080
 
 if lsof -ti:"$PORT" >/dev/null 2>&1; then
-echo "Порт $PORT занят — останавливаю старый процесс..."
-lsof -ti:"$PORT" | xargs kill 2>/dev/null
-sleep 0.5
+  echo "Порт $PORT занят — останавливаю старый процесс..."
+  lsof -ti:"$PORT" | xargs kill 2>/dev/null
+  sleep 0.5
 fi
 
 echo ""
@@ -21,4 +21,4 @@ echo ""
 echo "Нажмите Ctrl+C для остановки."
 echo ""
 
-exec python3 -m http.server "$PORT"
+exec python3 scripts/dev-server.py --port "$PORT"

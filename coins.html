@@ -338,8 +338,9 @@ detail +=
 const hint =
 detail.includes("LightweightCharts")
 ? "<p>Библиотека графиков не загрузилась. Проверьте VPN/интернет или файл <code>vendor/lightweight-charts.standalone.production.js</code>.</p>"
-: detail.includes("Failed to fetch")
-? "<p>Сервер не отдал файл (часто помогает: Ctrl+C в терминале, затем <code>./start.sh</code> и жёсткое обновление Cmd+Shift+R).</p>"
+: detail.includes("Failed to fetch") ||
+detail.includes("CONNECTION_RESET")
+? "<p>Сервер не отдал файл (часто помогает: Ctrl+C в терминале, затем <code>./start.sh</code> и жёсткое обновление Cmd+Shift+R). Новый <code>start.sh</code> использует многопоточный сервер — меньше обрывов при загрузке модулей.</p>"
 : "";
 
 box.innerHTML = `
