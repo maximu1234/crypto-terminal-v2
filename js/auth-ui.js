@@ -45,7 +45,9 @@ return (
 path === "/alerts" ||
 path === "/alerts/" ||
 path.endsWith("/alerts") ||
-path.endsWith("/alerts/")
+path.endsWith("/alerts/") ||
+path.includes("coins.html") ||
+path.endsWith("/coins")
 );
 
 }

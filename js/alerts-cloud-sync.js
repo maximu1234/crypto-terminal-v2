@@ -534,7 +534,7 @@ return 0;
 }
 
 const { getActiveAlerts } =
-await import("./alerts.js?v=22");
+await import("./alerts.js?v=23");
 
 const localKeys =
 new Set(
@@ -615,7 +615,7 @@ return 0;
 }
 
 const { getActiveAlerts } =
-await import("./alerts.js?v=22");
+await import("./alerts.js?v=23");
 
 const list =
 getActiveAlerts();
@@ -658,12 +658,127 @@ return syncAllLocalAlertsToCloudImpl();
 
 }
 
+let ensureAlertsPushPromise =
+null;
+
+/**
+ * Повторяет push, пока сессия не готова (график coins часто раньше, чем initCloudSync).
+ */
+export async function ensureAlertsPushedToCloud(
+options = {}
+){
+
+const maxMs =
+Number(options.maxMs) ||
+50000;
+
+const deadline =
+Date.now() + maxMs;
+
+while(
+Date.now() < deadline
+){
+
+const { getActiveAlerts } =
+await import("./alerts.js?v=23");
+
+const list =
+getActiveAlerts();
+
+if(!list.length){
+return true;
+}
+
+try{
+
+const { ensureCloudReady } =
+await import("./auth-ui.js?v=9");
+
+await ensureCloudReady();
+
+const ctx =
+await waitForCloudAuth(5000);
+
+if(!ctx){
+await new Promise(r=>{
+setTimeout(r, 1000);
+});
+continue;
+}
+
+const pushed =
+await syncAllLocalAlertsToCloudImmediate();
+
+if(pushed >= list.length){
+console.log(
+"Облако: активные алерты в Supabase (",
+pushed,
+"/",
+list.length,
+")"
+);
+return true;
+}
+
+if(pushed > 0){
+console.log(
+"Облако: частичный push, повтор…",
+pushed,
+"/",
+list.length
+);
+}
+
+}catch(err){
+console.warn(
+"alert cloud push retry:",
+err?.message || err
+);
+}
+
+await new Promise(r=>{
+setTimeout(r, 1200);
+});
+
+}
+
+console.warn(
+"Облако: не удалось отправить все алерты в Supabase — войдите (шестерёнка) или откройте /alerts/"
+);
+
+return false;
+
+}
+
+export function scheduleEnsureAlertsInCloud(){
+
+if(ensureAlertsPushPromise){
+return ensureAlertsPushPromise;
+}
+
+ensureAlertsPushPromise =
+ensureAlertsPushedToCloud()
+.catch(err=>{
+console.warn(
+"alert cloud ensure:",
+err?.message || err
+);
+return false;
+})
+.finally(()=>{
+ensureAlertsPushPromise = null;
+});
+
+return ensureAlertsPushPromise;
+
+}
+
 export async function persistAlertsRegistryToCloud(){
 
 return runCloudOp(async()=>{
 
 const { getActiveAlerts } =
-await import("./alerts.js?v=22");
+await import("./alerts.js?v=23");
 
 const list =
 getActiveAlerts();
@@ -707,7 +822,7 @@ return 0;
 }
 
 const { saveAlerts, alertEntryKey, loadAlerts } =
-await import("./alerts.js?v=22");
+await import("./alerts.js?v=23");
 
 const byKey = new Map();
 const now = Date.now();
@@ -789,7 +904,7 @@ const n =
 await mergeCloudAlertsIntoLocal();
 
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=22");
+await import("./alerts.js?v=23");
 
 stripAlertFlagsNotInRegistry();
 
@@ -808,7 +923,7 @@ return n;
 async function hydrateAlertsAfterAuth(){
 
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=22");
+await import("./alerts.js?v=23");
 
 await syncAllLocalAlertsToCloudImpl();
 await mergeCloudAlertsIntoLocal();
@@ -854,6 +969,7 @@ alertsCloudSyncReady = true;
 window.addEventListener(
 "alerts-changed",
 ()=>{
+scheduleEnsureAlertsInCloud();
 scheduleAlertCloudSync("alerts-changed");
 }
 );

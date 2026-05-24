@@ -6,7 +6,7 @@ const MAX_ALERT_HISTORY = 30;
 
 function queueAlertsCloud(fn){
 
-import("./alerts-cloud-sync.js?v=22")
+import("./alerts-cloud-sync.js?v=23")
 .then(m=>fn(m))
 .catch(err=>{
 console.warn("alerts cloud:", err);
@@ -480,6 +480,10 @@ list.push(row);
 
 saveAlerts(list);
 
+void import("./alerts-cloud-sync.js?v=23").then(m=>{
+m.scheduleEnsureAlertsInCloud();
+});
+
 return true;
 
 }
@@ -532,74 +536,12 @@ if(!ok){
 return false;
 }
 
-await syncSingleAlertToCloud(entry);
+const m =
+await import("./alerts-cloud-sync.js?v=23");
+
+await m.scheduleEnsureAlertsInCloud();
 
 return true;
-
-}
-
-async function syncSingleAlertToCloud(entry){
-
-try{
-
-const { ensureCloudReady } =
-await import("./auth-ui.js?v=9");
-
-await ensureCloudReady();
-
-const { waitForCloudAuth } =
-await import("./cloud-sync.js?v=12");
-
-const ctx =
-await waitForCloudAuth(12000);
-
-if(!ctx){
-console.warn(
-"Облако: войдите по email (шестерёнка) — иначе алерт не попадёт в Supabase."
-);
-return;
-}
-
-const m =
-await import("./alerts-cloud-sync.js?v=22");
-
-const row = {
-shapeId:
-entry?.shapeId ||
-entry?.id,
-symbol:
-String(entry?.symbol || "").trim().toUpperCase(),
-price:
-Number(entry?.price),
-tf:
-normalizeAlertTf(entry?.tf)
-};
-
-let ok =
-await m.pushAlertToCloudImmediate(row);
-
-if(!ok){
-const n =
-await m.syncAllLocalAlertsToCloudImmediate();
-ok = n >= 1;
-}
-
-if(ok){
-console.log(
-"Облако: алерт записан в Supabase (таблица price_alerts)."
-);
-}else{
-console.warn(
-"Облако: не удалось записать в Supabase — см. консоль (RLS / migration-alerts-telegram.sql)."
-);
-}
-
-}catch(err){
-console.warn(
-"alert cloud sync:",
-err?.message || err
-);
-}
 
 }
 
@@ -655,7 +597,7 @@ a.shapeId === shapeId
 );
 
 if(row){
-void import("./alerts-cloud-sync.js?v=22").then(m=>{
+void import("./alerts-cloud-sync.js?v=23").then(m=>{
 m.persistAlertsRegistryToCloud();
 });
 }
@@ -959,7 +901,7 @@ false;
 try{
 
 const m =
-await import("./alerts-cloud-sync.js?v=22");
+await import("./alerts-cloud-sync.js?v=23");
 
 const remote =
 await m.triggerAlertViaWorker(
