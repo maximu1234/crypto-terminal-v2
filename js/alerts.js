@@ -6,7 +6,7 @@ const MAX_ALERT_HISTORY = 30;
 
 function queueAlertsCloud(fn){
 
-import("./alerts-cloud-sync.js?v=36")
+import("./alerts-cloud-sync.js?v=38")
 .then(m=>fn(m))
 .catch(err=>{
 console.warn("alerts cloud:", err);
@@ -545,7 +545,7 @@ list.push(row);
 saveAlerts(list);
 
 const m =
-await import("./alerts-cloud-sync.js?v=36");
+await import("./alerts-cloud-sync.js?v=38");
 
 const pushed =
 await m.flushAlertCloudPush(row);
@@ -555,7 +555,7 @@ const retry =
 await m.pushSingleAlertToCloud(row);
 
 if(!retry){
-m.scheduleEnsureAlertsInCloud();
+m.scheduleRegistryCloudSync();
 }
 
 return !!retry;
@@ -607,67 +607,6 @@ symbol: entry?.symbol
 },
 entry?.symbol
 );
-
-}
-
-export function patchAlertPrice(
-symbol,
-shapeId,
-price
-){
-
-if(
-!symbol ||
-!shapeId ||
-!Number.isFinite(price)
-){
-return;
-}
-
-const list =
-loadAlerts();
-
-let changed =
-false;
-
-const next =
-list.map(a=>{
-
-if(
-a.symbol === symbol &&
-a.shapeId === shapeId
-){
-
-changed = true;
-
-return {
-...a,
-price: Number(price)
-};
-
-}
-
-return a;
-
-});
-
-if(changed){
-saveAlertsQuiet(next);
-
-const row =
-next.find(
-a=>
-a.symbol === symbol &&
-a.shapeId === shapeId
-);
-
-if(row){
-void import("./alerts-cloud-sync.js?v=36").then(m=>{
-m.scheduleDebouncedAlertPush(row);
-});
-}
-
-}
 
 }
 
@@ -731,7 +670,7 @@ return;
 
 saveAlerts(list);
 
-void import("./alerts-cloud-sync.js?v=36").then(m=>{
+void import("./alerts-cloud-sync.js?v=38").then(m=>{
 m.flushAlertCloudPush(row);
 });
 
@@ -996,7 +935,102 @@ dispatchAlertsHistoryChanged();
 
 }
 
-/** Сразу убрать с графика и из реестра (до async в облако). */
+const remoteFiredCooldown =
+new Map();
+
+const REMOTE_FIRE_COOLDOWN_MS = 60000;
+
+/**
+ * Worker удалил строку в Supabase — убрать линию и показать уведомление.
+ * (Единственный путь срабатывания при входе в облако.)
+ */
+export function applyRemoteAlertFired(
+row
+){
+
+const sym =
+String(
+row?.symbol || ""
+).trim().toUpperCase();
+const sid =
+String(
+row?.shape_id ||
+row?.shapeId ||
+""
+).trim();
+
+if(
+!sym ||
+!sid
+){
+return false;
+}
+
+const key =
+alertEntryKey(
+sym,
+sid
+);
+
+const last =
+remoteFiredCooldown.get(key);
+
+if(
+last &&
+Date.now() - last < REMOTE_FIRE_COOLDOWN_MS
+){
+return false;
+}
+
+const existing =
+loadAlerts().find(
+a=>
+String(a.symbol).toUpperCase() === sym &&
+String(a.shapeId) === sid
+);
+
+if(!existing){
+return false;
+}
+
+remoteFiredCooldown.set(
+key,
+Date.now()
+);
+
+appendAlertToHistory(existing);
+
+disarmAlertLocally(
+sym,
+sid
+);
+
+console.log(
+"[alerts] сработал (облако):",
+sym,
+sid
+);
+
+void import("./alert-monitor.js?v=38").then(m=>{
+m.notifyAlertTriggered({
+symbol: sym,
+shapeId: sid,
+price:
+Number(row?.price) ||
+existing.price,
+tf:
+normalizeAlertTf(
+row?.tf ||
+existing.tf
+)
+});
+});
+
+return true;
+
+}
+
+/** Сразу убрать с графика и из реестра (только без облачного worker). */
 export function commitAlertTriggeredLocally(
 symbol,
 shapeId
@@ -1097,7 +1131,7 @@ return false;
 try{
 
 const m =
-await import("./alerts-cloud-sync.js?v=36");
+await import("./alerts-cloud-sync.js?v=38");
 
 console.log(
 "[alerts] cloud →",
@@ -1185,11 +1219,23 @@ sid
 }
 
 if(
-!remote?.ok ||
+remote?.ok === true &&
 remote.telegram === false
 ){
 console.warn(
-"[alerts] Telegram не ушёл — задеплойте alert-worker на Railway (git push) и проверьте chat id"
+"[alerts] Worker ответил, но Telegram не отправлен — chat id на /alerts/ и TELEGRAM_BOT_TOKEN на Railway"
+);
+}else if(
+remote?.ok !== true
+){
+console.log(
+"[alerts] браузер не достучался до /trigger (" +
+(
+remote?.reason ||
+remote?.status ||
+"ошибка"
+) +
+") — если Telegram пришёл, это нормально: сработал worker на Railway по свече"
 );
 }
 

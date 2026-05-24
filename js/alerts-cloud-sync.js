@@ -12,6 +12,224 @@ isCloudLoggedIn,
 onCloudSyncChange
 } from "./cloud-sync.js?v=12";
 
+import {
+setBrowserCrossCheckEnabled
+} from "./alerts-mode.js";
+
+let alertsRealtimeChannel = null;
+
+let alertsRealtimeUserId = null;
+
+let reconcileTimer = null;
+
+let registrySyncTimer = null;
+
+const REGISTRY_SYNC_DEBOUNCE_MS = 400;
+
+const RECONCILE_INTERVAL_MS = 12000;
+
+async function updateBrowserCrossMode(){
+
+setBrowserCrossCheckEnabled(
+!isCloudLoggedIn()
+);
+
+const loggedIn =
+isCloudLoggedIn();
+
+let worker = "";
+
+try{
+const env =
+await import("./supabase-env.js?v=4");
+worker =
+String(env.ALERT_WORKER_URL || "").trim();
+}catch{
+/* ignore */
+}
+
+const configured =
+await isSupabaseConfigured();
+
+const remote =
+loggedIn &&
+configured &&
+!!worker;
+
+setBrowserCrossCheckEnabled(!remote);
+
+if(remote){
+console.log(
+"[alerts] режим облака: срабатывание на Railway, браузер только синхронизирует"
+);
+}else{
+console.log(
+"[alerts] режим браузера: пересечение на этой вкладке"
+);
+}
+
+return remote;
+
+}
+
+async function teardownAlertsRealtime(){
+
+if(alertsRealtimeChannel){
+try{
+const sb =
+await getSupabase();
+
+if(sb){
+await sb.removeChannel(alertsRealtimeChannel);
+}
+}catch{
+/* ignore */
+}
+
+alertsRealtimeChannel = null;
+alertsRealtimeUserId = null;
+}
+
+}
+
+async function handleAlertsRealtimeDelete(
+oldRow
+){
+
+if(!oldRow){
+return;
+}
+
+const { applyRemoteAlertFired } =
+await import("./alerts.js?v=38");
+
+applyRemoteAlertFired(oldRow);
+
+}
+
+async function setupAlertsRealtime(
+userId
+){
+
+await teardownAlertsRealtime();
+
+if(!userId){
+return;
+}
+
+const { isBrowserCrossCheckEnabled } =
+await import("./alerts-mode.js");
+
+if(isBrowserCrossCheckEnabled()){
+return;
+}
+
+const sb =
+await getSupabase();
+
+if(!sb){
+return;
+}
+
+alertsRealtimeUserId = userId;
+
+alertsRealtimeChannel =
+sb
+.channel(`price_alerts:${userId}`)
+.on(
+"postgres_changes",
+{
+event: "DELETE",
+schema: "public",
+table: "price_alerts",
+filter: `user_id=eq.${userId}`
+},
+payload=>{
+void handleAlertsRealtimeDelete(
+payload.old
+);
+}
+)
+.subscribe(status=>{
+
+if(
+status === "SUBSCRIBED"
+){
+console.log(
+"[alerts] realtime: price_alerts"
+);
+return;
+}
+
+if(
+status === "CHANNEL_ERROR" ||
+status === "TIMED_OUT"
+){
+console.warn(
+"[alerts] realtime:",
+status
+);
+}
+
+});
+
+}
+
+function stopReconcileTimer(){
+
+if(reconcileTimer){
+clearInterval(reconcileTimer);
+reconcileTimer = null;
+}
+
+}
+
+function startReconcileTimer(){
+
+stopReconcileTimer();
+
+reconcileTimer = setInterval(()=>{
+
+if(
+!isCloudLoggedIn() ||
+document.visibilityState !== "visible"
+){
+return;
+}
+
+reconcileLocalRegistryWithCloud().catch(err=>{
+console.warn(
+"alert reconcile:",
+err?.message || err
+);
+});
+
+},
+RECONCILE_INTERVAL_MS);
+
+}
+
+async function refreshCloudAlertMode(){
+
+const remote =
+await updateBrowserCrossMode();
+
+const ctx =
+await getAuthed();
+
+if(
+remote &&
+ctx?.user?.id
+){
+await setupAlertsRealtime(ctx.user.id);
+startReconcileTimer();
+}else{
+await teardownAlertsRealtime();
+stopReconcileTimer();
+}
+
+}
+
 let cloudOpChain =
 Promise.resolve();
 
@@ -646,87 +864,6 @@ console.warn("alert cloud delete:", error.message);
 
 }
 
-async function markAlertTriggeredOnCloudImpl(
-symbol,
-shapeId
-){
-
-const ctx = await getAuthed();
-
-if(!ctx){
-console.warn(
-"alert cloud trigger: нет сессии"
-);
-return false;
-}
-
-const sym =
-String(symbol || "").trim().toUpperCase();
-const sid =
-String(shapeId || "").trim();
-
-if(!sym || !sid){
-return false;
-}
-
-const { error: deleteErr } =
-await ctx.sb
-.from("price_alerts")
-.delete()
-.eq("user_id", ctx.user.id)
-.eq("symbol", sym)
-.eq("shape_id", sid);
-
-if(!deleteErr){
-console.log(
-"alert cloud removed (triggered):",
-sym,
-sid
-);
-return true;
-}
-
-const triggeredAt =
-new Date().toISOString();
-
-const { error: updateErr } =
-await ctx.sb
-.from("price_alerts")
-.update({ triggered_at: triggeredAt })
-.eq("user_id", ctx.user.id)
-.eq("symbol", sym)
-.eq("shape_id", sid);
-
-if(!updateErr){
-console.log(
-"alert cloud triggered:",
-sym,
-sid
-);
-return true;
-}
-
-console.warn(
-"alert cloud trigger:",
-deleteErr.message,
-updateErr?.message
-);
-return false;
-
-}
-
-export function markAlertTriggeredOnCloudImmediate(
-symbol,
-shapeId
-){
-
-return markAlertTriggeredOnCloudImpl(
-symbol,
-shapeId
-);
-
-}
-
 async function getAlertWorkerBaseUrl(){
 
 try{
@@ -1085,7 +1222,7 @@ return 0;
 }
 
 const { getActiveAlerts } =
-await import("./alerts.js?v=36");
+await import("./alerts.js?v=38");
 
 const localKeys =
 new Set(
@@ -1192,7 +1329,7 @@ return false;
 }
 
 const { markAlertCloudSynced } =
-await import("./alerts.js?v=36");
+await import("./alerts.js?v=38");
 
 const ctx =
 await getAuthed();
@@ -1273,7 +1410,7 @@ return 0;
 }
 
 const { getActiveAlerts } =
-await import("./alerts.js?v=36");
+await import("./alerts.js?v=38");
 
 const list =
 getActiveAlerts();
@@ -1320,148 +1457,6 @@ return syncAllLocalAlertsToCloudImpl();
 
 }
 
-let ensureAlertsChain =
-Promise.resolve();
-
-/**
- * Повторяет push, пока сессия не готова (график coins часто раньше, чем initCloudSync).
- */
-export async function ensureAlertsPushedToCloud(
-options = {}
-){
-
-const maxMs =
-Number(options.maxMs) ||
-50000;
-
-const deadline =
-Date.now() + maxMs;
-
-while(
-Date.now() < deadline
-){
-
-const { getActiveAlerts } =
-await import("./alerts.js?v=36");
-
-const list =
-getActiveAlerts();
-
-console.log(
-"[alerts] ensure cloud:",
-list.length,
-"в localStorage"
-);
-
-if(!list.length){
-return true;
-}
-
-try{
-
-const { ensureCloudReady } =
-await import("./auth-ui.js?v=10");
-
-await ensureCloudReady();
-
-const ctx =
-await waitForCloudAuth(5000);
-
-if(!ctx){
-await new Promise(r=>{
-setTimeout(r, 1000);
-});
-continue;
-}
-
-const pushed =
-await syncAllLocalAlertsToCloudImmediate();
-
-if(pushed >= list.length){
-console.log(
-"Облако: активные алерты в Supabase (",
-pushed,
-"/",
-list.length,
-")"
-);
-return true;
-}
-
-if(pushed > 0){
-console.log(
-"Облако: частичный push, повтор…",
-pushed,
-"/",
-list.length
-);
-}
-
-}catch(err){
-console.warn(
-"alert cloud push retry:",
-err?.message || err
-);
-}
-
-await new Promise(r=>{
-setTimeout(r, 1200);
-});
-
-}
-
-console.warn(
-"Облако: не удалось отправить все алерты в Supabase — войдите (шестерёнка) или откройте /alerts/"
-);
-
-return false;
-
-}
-
-const debouncedPushTimers =
-new Map();
-
-const ALERT_PUSH_DEBOUNCE_MS =
-500;
-
-/**
- * При перетаскивении линии — не спамить Supabase на каждый пиксель.
- */
-export function scheduleDebouncedAlertPush(
-entry
-){
-
-const row =
-normalizeAlertEntry(entry);
-
-if(
-!row.symbol ||
-!row.shapeId ||
-!Number.isFinite(row.price)
-){
-return;
-}
-
-const key =
-`${row.symbol}::${row.shapeId}`;
-
-const prev =
-debouncedPushTimers.get(key);
-
-if(prev){
-clearTimeout(prev);
-}
-
-debouncedPushTimers.set(
-key,
-setTimeout(()=>{
-debouncedPushTimers.delete(key);
-void pushSingleAlertToCloud(row);
-}, ALERT_PUSH_DEBOUNCE_MS)
-);
-
-}
-
 /** Сразу записать в облако (отпустили линию алерта). */
 export function flushAlertCloudPush(
 entry
@@ -1476,17 +1471,6 @@ if(
 !Number.isFinite(row.price)
 ){
 return Promise.resolve(false);
-}
-
-const key =
-`${row.symbol}::${row.shapeId}`;
-
-const prev =
-debouncedPushTimers.get(key);
-
-if(prev){
-clearTimeout(prev);
-debouncedPushTimers.delete(key);
 }
 
 return pushSingleAlertToCloud(row);
@@ -1541,28 +1525,6 @@ return false;
 
 }
 
-export function scheduleEnsureAlertsInCloud(){
-
-ensureAlertsChain =
-ensureAlertsChain
-.catch(()=>{})
-.then(()=>
-ensureAlertsPushedToCloud({
-maxMs: 12000
-})
-)
-.catch(err=>{
-console.warn(
-"alert cloud ensure:",
-err?.message || err
-);
-return false;
-});
-
-return ensureAlertsChain;
-
-}
-
 /** Убирает из реестра только уже синхронизированные алерты, сработавшие в облаке. */
 export async function reconcileLocalRegistryWithCloud(){
 
@@ -1593,7 +1555,7 @@ saveAlertsFromCloudMerge,
 alertEntryKey,
 loadAlerts
 } =
-await import("./alerts.js?v=36");
+await import("./alerts.js?v=38");
 
 const cloudKeys =
 new Set(
@@ -1605,11 +1567,48 @@ String(row.shape_id || "").trim()
 )
 );
 
+const {
+applyRemoteAlertFired
+} =
+await import("./alerts.js?v=38");
+
 const local =
 loadAlerts();
 
+for(const a of local){
+
+const sym =
+String(a.symbol || "").trim().toUpperCase();
+const sid =
+String(a.shapeId || a.id || "").trim();
+
+if(
+!sym ||
+!sid ||
+!a.cloudSynced
+){
+continue;
+}
+
+const key =
+alertEntryKey(sym, sid);
+
+if(!cloudKeys.has(key)){
+applyRemoteAlertFired({
+symbol: sym,
+shape_id: sid,
+price: a.price,
+tf: a.tf
+});
+}
+
+}
+
+const after =
+loadAlerts();
+
 const next =
-local.filter(a=>{
+after.filter(a=>{
 
 const sym =
 String(a.symbol || "").trim().toUpperCase();
@@ -1633,7 +1632,7 @@ alertEntryKey(sym, sid)
 
 });
 
-if(next.length !== local.length){
+if(next.length !== after.length){
 saveAlertsFromCloudMerge(next);
 }
 
@@ -1649,7 +1648,7 @@ const n =
 await reconcileLocalRegistryWithCloud();
 
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=36");
+await import("./alerts.js?v=38");
 
 stripAlertFlagsNotInRegistry();
 
@@ -1662,7 +1661,7 @@ return n;
 async function hydrateAlertsAfterAuth(){
 
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=36");
+await import("./alerts.js?v=38");
 
 console.log(
 "[alerts] hydrate after login…"
@@ -1671,6 +1670,7 @@ console.log(
 await syncAllLocalAlertsToCloudImpl();
 await reconcileLocalRegistryWithCloud();
 stripAlertFlagsNotInRegistry();
+await refreshCloudAlertMode();
 
 }
 
@@ -1690,14 +1690,43 @@ return;
 
 alertsCloudSyncReady = true;
 
+export function scheduleRegistryCloudSync(){
+
+if(registrySyncTimer){
+clearTimeout(registrySyncTimer);
+}
+
+registrySyncTimer = setTimeout(()=>{
+registrySyncTimer = null;
+
+if(!isCloudLoggedIn()){
+return;
+}
+
+runCloudOp(()=>
+syncAllLocalAlertsToCloudImpl()
+).catch(err=>{
+console.warn(
+"alert registry sync:",
+err?.message || err
+);
+});
+
+},
+REGISTRY_SYNC_DEBOUNCE_MS);
+
+}
+
 window.addEventListener(
 "alerts-changed",
 ()=>{
-scheduleEnsureAlertsInCloud();
+scheduleRegistryCloudSync();
 }
 );
 
 onCloudSyncChange(()=>{
+
+void refreshCloudAlertMode();
 
 if(isCloudLoggedIn()){
 runCloudOp(()=>
@@ -1708,9 +1737,14 @@ console.warn(
 err?.message || err
 );
 });
+}else{
+void teardownAlertsRealtime();
+stopReconcileTimer();
 }
 
 });
+
+void refreshCloudAlertMode();
 
 if(isCloudLoggedIn()){
 runCloudOp(()=>

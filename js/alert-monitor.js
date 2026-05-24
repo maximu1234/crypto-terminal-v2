@@ -3,7 +3,11 @@ alertEntryKey,
 commitAlertTriggeredLocally,
 formatTfLabel,
 getActiveAlerts
-} from "./alerts.js?v=36";
+} from "./alerts.js?v=38";
+
+import {
+isBrowserCrossCheckEnabled
+} from "./alerts-mode.js";
 
 import { formatPrice } from "./chart.js";
 
@@ -357,7 +361,7 @@ setTimeout(()=>n.close(), 8000);
 
 }
 
-function notifyAlertTriggered(alert){
+export function notifyAlertTriggered(alert){
 
 const sym =
 displaySymbol(alert.symbol);
@@ -403,6 +407,10 @@ candle,
 active,
 chartTf
 ){
+
+if(!isBrowserCrossCheckEnabled()){
+return;
+}
 
 const close =
 Number(candle?.close);

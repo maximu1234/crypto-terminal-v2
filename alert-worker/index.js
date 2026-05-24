@@ -88,11 +88,16 @@ async function main() {
 
   const server = http.createServer(async (req, res) => {
 
+    try{
+
     if (await handleClientApi(req, res)) {
       return;
     }
 
-    if (req.url === "/health" || req.url === "/") {
+    const pathOnly =
+      (req.url || "").split("?")[0];
+
+    if (pathOnly === "/health" || pathOnly === "/") {
       const st = getConfigStatus();
       const diag = await fetchAlertDiagnostics().catch(() => null);
       res.writeHead(200, { "Content-Type": "application/json" });
@@ -108,6 +113,27 @@ async function main() {
 
     res.writeHead(404);
     res.end();
+
+    }catch(err){
+    console.error("http handler:", err);
+
+    try{
+    const { setCors } =
+    await import("./lib/client-http.js");
+    setCors(res, req);
+    }catch{
+    /* ignore */
+    }
+
+    if(!res.headersSent){
+    res.writeHead(500, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({
+      ok: false,
+      error: err?.message || "internal_error"
+    }));
+    }
+
+    }
 
   });
 

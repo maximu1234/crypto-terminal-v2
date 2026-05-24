@@ -1,6 +1,6 @@
 import {
 initAlertMonitor
-} from "./alert-monitor.js?v=36";
+} from "./alert-monitor.js?v=38";
 
 import {
 ensureCloudReady
@@ -8,12 +8,12 @@ ensureCloudReady
 
 import {
 initAlertsCloudSync,
-scheduleEnsureAlertsInCloud
-} from "./alerts-cloud-sync.js?v=36";
+scheduleRegistryCloudSync
+} from "./alerts-cloud-sync.js?v=38";
 
 import {
 stripAlertFlagsNotInRegistry
-} from "./alerts.js?v=36";
+} from "./alerts.js?v=38";
 
 import {
 isCloudLoggedIn,
@@ -77,7 +77,7 @@ if(
 configured &&
 loggedIn
 ){
-scheduleEnsureAlertsInCloud();
+scheduleRegistryCloudSync();
 }
 
 })
