@@ -66,6 +66,33 @@ export async function handleClientTrigger(
 
   if (alertId) {
 
+    let owned;
+
+    try{
+      owned = await restGet(
+        "price_alerts?select=id&id=eq." +
+        encodeURIComponent(alertId) +
+        "&user_id=eq." +
+        encodeURIComponent(user.id)
+      );
+    }catch(err){
+      res.writeHead(500, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({
+        ok: false,
+        error: err.message
+      }));
+      return true;
+    }
+
+    if (!owned?.length) {
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({
+        ok: false,
+        skipped: "not_found"
+      }));
+      return true;
+    }
+
     try{
       const result =
         await executeAlertTrigger(alertId);

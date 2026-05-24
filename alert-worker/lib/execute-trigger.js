@@ -19,8 +19,7 @@ export async function executeAlertTrigger(alertId) {
   try{
     rows = await restDeleteReturning(
       "price_alerts?id=eq." +
-      encodeURIComponent(alertId) +
-      "&triggered_at=is.null"
+      encodeURIComponent(alertId)
     );
   }catch(err){
     console.warn(

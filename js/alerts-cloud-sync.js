@@ -116,7 +116,7 @@ const {
 applyRemoteAlertFired,
 stripAlertFlagsNotInRegistry
 } =
-await import("./alerts.js?v=46");
+await import("./alerts.js?v=47");
 
 if(
 sym &&
@@ -308,7 +308,7 @@ cloudId
 ){
 
 const { markAlertCloudSynced, markAlertCloudId } =
-await import("./alerts.js?v=46");
+await import("./alerts.js?v=47");
 
 const ok =
 await confirmRowActiveInCloud(
@@ -742,7 +742,7 @@ null;
 
 if(cloudId){
 const { markAlertCloudId } =
-await import("./alerts.js?v=46");
+await import("./alerts.js?v=47");
 
 markAlertCloudId(
 symbol,
@@ -1098,6 +1098,88 @@ return body;
 
 }
 
+async function resolveCloudAlertId(
+sym,
+sid,
+cloudId
+){
+
+const fromLocal =
+String(cloudId || "").trim();
+
+if(fromLocal){
+return fromLocal;
+}
+
+const ctx =
+await getAuthed();
+
+if(!ctx){
+return "";
+}
+
+const { data, error } =
+await ctx.sb
+.from("price_alerts")
+.select("id")
+.eq("user_id", ctx.user.id)
+.eq("symbol", sym)
+.eq("shape_id", sid)
+.maybeSingle();
+
+if(error){
+console.warn(
+"[alerts] resolve cloud id:",
+error.message
+);
+return "";
+}
+
+return data?.id
+? String(data.id)
+: "";
+
+}
+
+export async function purgeAlertRowByCloudId(
+cloudId
+){
+
+const ctx =
+await getAuthed();
+const id =
+String(cloudId || "").trim();
+
+if(
+!ctx ||
+!id
+){
+return false;
+}
+
+const { error } =
+await ctx.sb
+.from("price_alerts")
+.delete()
+.eq("user_id", ctx.user.id)
+.eq("id", id);
+
+if(error){
+console.warn(
+"alert cloud purge by id:",
+error.message
+);
+return false;
+}
+
+console.log(
+"alert cloud purge ok (id):",
+id
+);
+return true;
+
+}
+
 /**
  * Параллельный вызов облака: без очереди, с повторами (второй алерт не ждёт первый).
  */
@@ -1111,8 +1193,6 @@ const sym =
 String(symbol || "").trim().toUpperCase();
 const sid =
 String(shapeId || "").trim();
-const id =
-String(cloudId || "").trim();
 
 if(
 !sym ||
@@ -1121,12 +1201,24 @@ if(
 return false;
 }
 
+const id =
+await resolveCloudAlertId(
+sym,
+sid,
+cloudId
+);
+
 console.log(
 "[alerts] cloud →",
 sym,
 sid,
 id || "(по shape_id)"
 );
+
+let workerOk =
+false;
+let telegramSent =
+false;
 
 for(
 let attempt = 0;
@@ -1159,11 +1251,17 @@ remote?.skipped ||
 );
 
 if(remote?.ok){
-return true;
+workerOk = true;
+telegramSent = !!remote?.telegram;
+break;
 }
 
+const retryable =
+remote?.skipped === "not_found" ||
+remote?.reason === "not_claimed";
+
 if(
-remote?.skipped === "not_found" &&
+retryable &&
 attempt < 3
 ){
 await new Promise(r=>{
@@ -1179,21 +1277,78 @@ break;
 
 }
 
-const purged =
-await purgeAlertRowFromCloud(
+const stillInCloud =
+await isAlertRowInCloud(
 sym,
 sid
 );
 
-if(purged){
+if(!stillInCloud){
+
+if(
+workerOk &&
+!telegramSent
+){
+console.warn(
+"[alerts] строка удалена, Telegram не ушёл — chat id на странице «Алерты» и TELEGRAM_BOT_TOKEN на Railway."
+);
+}
+
+if(workerOk){
 console.log(
-"[alerts] Supabase: строка удалена (fallback)",
+"[alerts] ✓ облако (worker):",
 sym,
 sid
 );
 }
 
-return purged;
+return true;
+
+}
+
+let purged =
+false;
+
+if(id){
+purged =
+await purgeAlertRowByCloudId(id);
+}
+
+if(!purged){
+purged =
+await purgeAlertRowFromCloud(
+sym,
+sid
+);
+}
+
+if(purged){
+console.log(
+"[alerts] Supabase: строка удалена (браузер)",
+sym,
+sid
+);
+
+if(
+!workerOk
+){
+console.warn(
+"[alerts] Telegram мог не уйти — проверьте Railway /trigger и обновите деплой worker."
+);
+}
+
+return true;
+
+}
+
+console.error(
+"[alerts] не удалось удалить строку в Supabase:",
+sym,
+sid,
+id || "(нет id)"
+);
+
+return false;
 
 }
 
@@ -1518,7 +1673,7 @@ null;
 
 if(cloudId){
 const { markAlertCloudId } =
-await import("./alerts.js?v=46");
+await import("./alerts.js?v=47");
 
 markAlertCloudId(
 symbol,
@@ -1560,7 +1715,7 @@ return 0;
 }
 
 const { getActiveAlerts } =
-await import("./alerts.js?v=46");
+await import("./alerts.js?v=47");
 
 const localKeys =
 new Set(
@@ -1683,7 +1838,7 @@ attempt++
 if(await pushAlertViaWorker(row)){
 
 const { markAlertCloudSynced } =
-await import("./alerts.js?v=46");
+await import("./alerts.js?v=47");
 
 markAlertCloudSynced(
 row.symbol,
@@ -1709,7 +1864,7 @@ ctx
 ){
 
 const { loadAlerts, markAlertCloudSynced } =
-await import("./alerts.js?v=46");
+await import("./alerts.js?v=47");
 
 const hasId =
 loadAlerts().some(
@@ -1769,7 +1924,7 @@ null
 ){
 
 const { markAlertCloudSynced } =
-await import("./alerts.js?v=46");
+await import("./alerts.js?v=47");
 
 markAlertCloudSynced(
 row.symbol,
@@ -1855,7 +2010,7 @@ return 0;
 }
 
 const { getActiveAlerts } =
-await import("./alerts.js?v=46");
+await import("./alerts.js?v=47");
 
 const pending =
 getActiveAlerts().filter(a=>!a.cloudSynced);
@@ -1927,7 +2082,7 @@ return 0;
 }
 
 const { getActiveAlerts } =
-await import("./alerts.js?v=46");
+await import("./alerts.js?v=47");
 
 const list =
 getActiveAlerts();
@@ -2075,7 +2230,7 @@ saveAlertsFromCloudMerge,
 alertEntryKey,
 loadAlerts
 } =
-await import("./alerts.js?v=46");
+await import("./alerts.js?v=47");
 
 const cloudKeys =
 new Set(
@@ -2090,7 +2245,7 @@ String(row.shape_id || "").trim()
 const {
 applyRemoteAlertFired
 } =
-await import("./alerts.js?v=46");
+await import("./alerts.js?v=47");
 
 const local =
 loadAlerts();
@@ -2181,7 +2336,7 @@ const n =
 await reconcileLocalRegistryWithCloud();
 
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=46");
+await import("./alerts.js?v=47");
 
 stripAlertFlagsNotInRegistry();
 
@@ -2194,7 +2349,7 @@ return n;
 async function hydrateAlertsAfterAuth(){
 
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=46");
+await import("./alerts.js?v=47");
 
 console.log(
 "[alerts] hydrate after login…"

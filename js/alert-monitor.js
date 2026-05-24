@@ -3,7 +3,7 @@ alertEntryKey,
 commitAlertTriggeredLocally,
 formatTfLabel,
 getActiveAlerts
-} from "./alerts.js?v=46";
+} from "./alerts.js?v=47";
 
 import { formatPrice } from "./chart.js";
 
