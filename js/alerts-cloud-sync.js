@@ -116,7 +116,7 @@ const {
 applyRemoteAlertFired,
 stripAlertFlagsNotInRegistry
 } =
-await import("./alerts.js?v=48");
+await import("./alerts.js?v=50");
 
 if(
 sym &&
@@ -308,7 +308,7 @@ cloudId
 ){
 
 const { markAlertCloudSynced, markAlertCloudId } =
-await import("./alerts.js?v=48");
+await import("./alerts.js?v=50");
 
 const ok =
 await confirmRowActiveInCloud(
@@ -757,7 +757,7 @@ null;
 
 if(cloudId){
 const { markAlertCloudId } =
-await import("./alerts.js?v=48");
+await import("./alerts.js?v=50");
 
 markAlertCloudId(
 symbol,
@@ -1027,7 +1027,8 @@ return "";
  */
 export async function triggerAlertViaWorkerById(
 alertId,
-payload = {}
+payload = {},
+authToken = null
 ){
 
 const base =
@@ -1043,6 +1044,10 @@ reason: "no_worker_or_id"
 };
 }
 
+let token =
+authToken;
+
+if(!token){
 const auth =
 await getWorkerRequestAuth();
 
@@ -1051,6 +1056,10 @@ return {
 ok: false,
 reason: "no_auth"
 };
+}
+
+token = auth.token;
+
 }
 
 const sym =
@@ -1064,24 +1073,24 @@ payload.tf != null
 ? String(payload.tf)
 : undefined;
 
-const body = {
+const reqBody = {
 alert_id: String(alertId)
 };
 
 if(sym){
-body.symbol = sym;
+reqBody.symbol = sym;
 }
 
 if(sid){
-body.shape_id = sid;
+reqBody.shape_id = sid;
 }
 
 if(Number.isFinite(price)){
-body.price = price;
+reqBody.price = price;
 }
 
 if(tf != null){
-body.tf = tf;
+reqBody.tf = tf;
 }
 
 let res;
@@ -1094,9 +1103,9 @@ await fetchWithTimeout(
 method: "POST",
 headers: {
 "Content-Type": "application/json",
-Authorization: `Bearer ${auth.token}`
+Authorization: `Bearer ${token}`
 },
-body: JSON.stringify(body)
+body: JSON.stringify(reqBody)
 },
 12000
 );
@@ -1114,15 +1123,15 @@ reason: "network_error"
 const text =
 await res.text();
 
-let body = {};
+let parsed = {};
 
 try{
-body =
+parsed =
 text
 ? JSON.parse(text)
 : {};
 }catch{
-body = { raw: text };
+parsed = { raw: text };
 }
 
 if(!res.ok){
@@ -1135,18 +1144,19 @@ return {
 ok: false,
 reason: "http_error",
 status: res.status,
-body
+body: parsed
 };
 }
 
-return body;
+return parsed;
 
 }
 
 async function resolveCloudAlertId(
 sym,
 sid,
-cloudId
+cloudId,
+ctxIn
 ){
 
 const fromLocal =
@@ -1157,7 +1167,12 @@ return fromLocal;
 }
 
 const ctx =
-await getAuthed();
+ctxIn ||
+await withTimeout(
+getAuthed(),
+8000,
+"getAuthed resolve"
+).catch(()=>null);
 
 if(!ctx){
 return "";
@@ -1186,42 +1201,182 @@ return data?.id
 
 }
 
-export async function purgeAlertRowByCloudId(
-cloudId
+async function getAccessTokenForUser(
+ctx
 ){
 
-const ctx =
-await getAuthed();
+if(!ctx){
+return null;
+}
+
+try{
+const { data } =
+await withTimeout(
+ctx.sb.auth.getSession(),
+5000,
+"getSession"
+);
+
+return data?.session?.access_token || null;
+
+}catch(err){
+console.warn(
+"[alerts] getSession:",
+err?.message || err
+);
+return null;
+
+}
+
+}
+
+/**
+ * DELETE через PostgREST (не зависает, в отличие от sb.from().delete()).
+ */
+async function purgeAlertViaRest(
+opts
+){
+
 const id =
-String(cloudId || "").trim();
+String(opts?.id || "").trim();
+const sym =
+String(opts?.symbol || "").trim().toUpperCase();
+const sid =
+String(opts?.shapeId || "").trim();
+let ctx =
+opts?.ctx || null;
+let token =
+opts?.token || null;
+
+if(!ctx){
+try{
+ctx =
+await withTimeout(
+getAuthed(),
+8000,
+"getAuthed purge"
+);
+}catch{
+ctx = null;
+}
+}
+
+if(!ctx){
+console.warn(
+"[alerts] purge: нет сессии"
+);
+return false;
+}
+
+if(!token){
+token =
+await getAccessTokenForUser(ctx);
+}
+
+if(!token){
+console.warn(
+"[alerts] purge: нет токена"
+);
+return false;
+}
+
+let env;
+
+try{
+env =
+await import("./supabase-env.js?v=4");
+}catch{
+return false;
+}
+
+const base =
+String(env.SUPABASE_URL || "").replace(/\/$/, "");
+const anon =
+env.SUPABASE_ANON_KEY;
 
 if(
-!ctx ||
-!id
+!base ||
+!anon
 ){
 return false;
 }
 
-const { error } =
-await ctx.sb
-.from("price_alerts")
-.delete()
-.eq("user_id", ctx.user.id)
-.eq("id", id);
+let path =
+"";
 
-if(error){
+if(id){
+path =
+`price_alerts?id=eq.${encodeURIComponent(id)}` +
+`&user_id=eq.${encodeURIComponent(ctx.user.id)}`;
+}else if(
+sym &&
+sid
+){
+path =
+`price_alerts?user_id=eq.${encodeURIComponent(ctx.user.id)}` +
+`&symbol=eq.${encodeURIComponent(sym)}` +
+`&shape_id=eq.${encodeURIComponent(sid)}`;
+}else{
+return false;
+}
+
+try{
+const res =
+await fetchWithTimeout(
+`${base}/rest/v1/${path}`,
+{
+method: "DELETE",
+headers: {
+apikey: anon,
+Authorization: `Bearer ${token}`,
+Prefer: "return=minimal"
+}
+},
+10000
+);
+
+if(!res.ok){
+const text =
+await res.text();
 console.warn(
-"alert cloud purge by id:",
-error.message
+"[alerts] purge REST:",
+res.status,
+text.slice(0, 200)
 );
 return false;
 }
 
 console.log(
-"alert cloud purge ok (id):",
-id
+"[alerts] purge REST ok:",
+id || `${sym} ${sid}`
 );
 return true;
+
+}catch(err){
+console.warn(
+"[alerts] purge REST:",
+err?.message || err
+);
+return false;
+
+}
+
+}
+
+export async function purgeAlertRowByCloudId(
+cloudId
+){
+
+const id =
+String(cloudId || "").trim();
+
+if(!id){
+return false;
+}
+
+return purgeAlertViaRest({
+id
+});
 
 }
 
@@ -1247,11 +1402,35 @@ if(
 return false;
 }
 
+let ctx =
+null;
+let token =
+null;
+
+try{
+ctx =
+await withTimeout(
+getAuthed(),
+8000,
+"getAuthed trigger"
+);
+if(ctx){
+token =
+await getAccessTokenForUser(ctx);
+}
+}catch(err){
+console.warn(
+"[alerts] auth:",
+err?.message || err
+);
+}
+
 const id =
 await resolveCloudAlertId(
 sym,
 sid,
-cloudId
+cloudId,
+ctx
 );
 
 const price =
@@ -1268,36 +1447,6 @@ sid,
 id || "(по shape_id)"
 );
 
-let purged =
-false;
-
-if(id){
-purged =
-await purgeAlertRowByCloudId(id);
-}
-
-if(!purged){
-purged =
-await purgeAlertRowFromCloud(
-sym,
-sid
-);
-}
-
-if(purged){
-console.log(
-"[alerts] ✓ Supabase удалено (браузер):",
-sym,
-sid
-);
-}else{
-console.warn(
-"[alerts] purge не удался — worker попробует удалить:",
-sym,
-sid
-);
-}
-
 const triggerPayload = {
 symbol: sym,
 shape_id: sid,
@@ -1308,46 +1457,86 @@ tf
 };
 
 console.log(
-"[alerts] → worker /trigger (Telegram)…"
+"[alerts] удаляем строку + Telegram…"
 );
 
-let remote = {
+const purgePromise =
+purgeAlertViaRest({
+ctx,
+token,
+id,
+symbol: sym,
+shapeId: sid
+});
+
+const workerPromise =
+(async()=>{
+
+if(!token){
+return {
 ok: false,
-reason: "no_attempt"
+reason: "no_auth"
 };
+}
 
 try{
 if(id){
-remote =
-await withTimeout(
+return await withTimeout(
 triggerAlertViaWorkerById(
 id,
-triggerPayload
-),
-12000,
-"worker /trigger"
-);
-}else{
-remote =
-await withTimeout(
-triggerAlertViaWorker(
-sym,
-sid,
-triggerPayload
+triggerPayload,
+token
 ),
 12000,
 "worker /trigger"
 );
 }
+
+return await withTimeout(
+triggerAlertViaWorker(
+sym,
+sid,
+triggerPayload,
+token
+),
+12000,
+"worker /trigger"
+);
+
 }catch(err){
 console.warn(
 "[alerts] worker /trigger:",
 err?.message || err
 );
-remote = {
+return {
 ok: false,
 reason: "timeout"
 };
+
+}
+})();
+
+const [
+purged,
+remote
+] =
+await Promise.all([
+purgePromise,
+workerPromise
+]);
+
+if(purged){
+console.log(
+"[alerts] ✓ Supabase удалено (браузер):",
+sym,
+sid
+);
+}else{
+console.warn(
+"[alerts] purge не удался:",
+sym,
+sid
+);
 }
 
 console.log(
@@ -1371,11 +1560,24 @@ console.warn(
 );
 }
 
-const stillInCloud =
-await isAlertRowInCloud(
+let stillInCloud =
+false;
+
+if(!purged){
+try{
+stillInCloud =
+await withTimeout(
+isAlertRowInCloud(
 sym,
 sid
+),
+5000,
+"row check"
 );
+}catch{
+stillInCloud = true;
+}
+}
 
 if(stillInCloud){
 
@@ -1417,7 +1619,8 @@ purged
 export async function triggerAlertViaWorker(
 symbol,
 shapeId,
-payload = {}
+payload = {},
+authToken = null
 ){
 
 const base =
@@ -1433,6 +1636,10 @@ reason: "no_worker_url"
 };
 }
 
+let token =
+authToken;
+
+if(!token){
 const auth =
 await getWorkerRequestAuth();
 
@@ -1443,6 +1650,10 @@ reason: "no_auth"
 };
 }
 
+token = auth.token;
+
+}
+
 const sym =
 String(symbol || "").trim().toUpperCase();
 const sid =
@@ -1450,17 +1661,17 @@ String(shapeId || "").trim();
 const price =
 Number(payload.price);
 
-const body = {
+const reqBody = {
 symbol: sym,
 shape_id: sid
 };
 
 if(Number.isFinite(price)){
-body.price = price;
+reqBody.price = price;
 }
 
 if(payload.tf != null){
-body.tf = String(payload.tf);
+reqBody.tf = String(payload.tf);
 }
 
 let res;
@@ -1473,9 +1684,9 @@ await fetchWithTimeout(
 method: "POST",
 headers: {
 "Content-Type": "application/json",
-Authorization: `Bearer ${auth.token}`
+Authorization: `Bearer ${token}`
 },
-body: JSON.stringify(body)
+body: JSON.stringify(reqBody)
 },
 12000
 );
@@ -1493,15 +1704,15 @@ reason: "network_error"
 const text =
 await res.text();
 
-let body = {};
+let parsed = {};
 
 try{
-body =
+parsed =
 text
 ? JSON.parse(text)
 : {};
 }catch{
-body = { raw: text };
+parsed = { raw: text };
 }
 
 if(!res.ok){
@@ -1514,11 +1725,11 @@ return {
 ok: false,
 reason: "http_error",
 status: res.status,
-body
+body: parsed
 };
 }
 
-return body;
+return parsed;
 
 }
 
@@ -1597,40 +1808,22 @@ symbol,
 shapeId
 ){
 
-const ctx =
-await getAuthed();
-
-if(!ctx){
-return false;
-}
-
 const sym =
 String(symbol || "").trim().toUpperCase();
 const sid =
 String(shapeId || "").trim();
 
-const { error } =
-await ctx.sb
-.from("price_alerts")
-.delete()
-.eq("user_id", ctx.user.id)
-.eq("symbol", sym)
-.eq("shape_id", sid);
-
-if(error){
-console.warn(
-"alert cloud purge:",
-error.message
-);
+if(
+!sym ||
+!sid
+){
 return false;
 }
 
-console.log(
-"alert cloud purge ok:",
-sym,
-sid
-);
-return true;
+return purgeAlertViaRest({
+symbol: sym,
+shapeId: sid
+});
 
 }
 
@@ -1745,7 +1938,7 @@ null;
 
 if(cloudId){
 const { markAlertCloudId } =
-await import("./alerts.js?v=48");
+await import("./alerts.js?v=50");
 
 markAlertCloudId(
 symbol,
@@ -1787,7 +1980,7 @@ return 0;
 }
 
 const { getActiveAlerts } =
-await import("./alerts.js?v=48");
+await import("./alerts.js?v=50");
 
 const localKeys =
 new Set(
@@ -1910,7 +2103,7 @@ attempt++
 if(await pushAlertViaWorker(row)){
 
 const { markAlertCloudSynced } =
-await import("./alerts.js?v=48");
+await import("./alerts.js?v=50");
 
 markAlertCloudSynced(
 row.symbol,
@@ -1936,7 +2129,7 @@ ctx
 ){
 
 const { loadAlerts, markAlertCloudSynced } =
-await import("./alerts.js?v=48");
+await import("./alerts.js?v=50");
 
 const hasId =
 loadAlerts().some(
@@ -1996,7 +2189,7 @@ null
 ){
 
 const { markAlertCloudSynced } =
-await import("./alerts.js?v=48");
+await import("./alerts.js?v=50");
 
 markAlertCloudSynced(
 row.symbol,
@@ -2082,7 +2275,7 @@ return 0;
 }
 
 const { getActiveAlerts } =
-await import("./alerts.js?v=48");
+await import("./alerts.js?v=50");
 
 const pending =
 getActiveAlerts().filter(a=>!a.cloudSynced);
@@ -2154,7 +2347,7 @@ return 0;
 }
 
 const { getActiveAlerts } =
-await import("./alerts.js?v=48");
+await import("./alerts.js?v=50");
 
 const list =
 getActiveAlerts();
@@ -2302,7 +2495,7 @@ saveAlertsFromCloudMerge,
 alertEntryKey,
 loadAlerts
 } =
-await import("./alerts.js?v=48");
+await import("./alerts.js?v=50");
 
 const cloudKeys =
 new Set(
@@ -2317,7 +2510,7 @@ String(row.shape_id || "").trim()
 const {
 applyRemoteAlertFired
 } =
-await import("./alerts.js?v=48");
+await import("./alerts.js?v=50");
 
 const local =
 loadAlerts();
@@ -2408,7 +2601,7 @@ const n =
 await reconcileLocalRegistryWithCloud();
 
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=48");
+await import("./alerts.js?v=50");
 
 stripAlertFlagsNotInRegistry();
 
@@ -2421,7 +2614,7 @@ return n;
 async function hydrateAlertsAfterAuth(){
 
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=48");
+await import("./alerts.js?v=50");
 
 console.log(
 "[alerts] hydrate after login…"
