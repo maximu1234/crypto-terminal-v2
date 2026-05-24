@@ -6,7 +6,7 @@ const MAX_ALERT_HISTORY = 30;
 
 function queueAlertsCloud(fn){
 
-import("./alerts-cloud-sync.js?v=5")
+import("./alerts-cloud-sync.js?v=6")
 .then(m=>fn(m))
 .catch(err=>{
 console.warn("alerts cloud:", err);
@@ -671,11 +671,22 @@ a.shapeId === shapeId
 
 saveAlerts(list);
 
-queueAlertsCloud(m=>{
+void queueAlertsCloud(async m=>{
+const ok =
+await m.markAlertTriggeredOnCloud(
+symbol,
+shapeId
+);
+
+if(!ok){
+setTimeout(()=>{
 m.markAlertTriggeredOnCloud(
 symbol,
 shapeId
 );
+}, 2500);
+}
+
 });
 
 }

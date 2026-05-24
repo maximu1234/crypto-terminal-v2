@@ -37,13 +37,23 @@ export async function sendTelegramMessage(chatId, text) {
 
 }
 
+const TF_LABELS = {
+  "1": "1m",
+  "5": "5m",
+  "15": "15m",
+  "60": "1h",
+  "240": "4h",
+  "D": "1D"
+};
+
 export function formatAlertMessage(alert) {
 
   const sym = alert.symbol?.endsWith("USDT")
     ? `${alert.symbol.replace(/USDT$/, "")}/USDT`
     : alert.symbol;
 
-  const tf = alert.tf || "—";
+  const tfRaw = String(alert.tf || "60");
+  const tf = TF_LABELS[tfRaw] || tfRaw;
   const price = Number(alert.price);
 
   return `${sym} · ${tf}\nЦена пересекла уровень ${price}`;

@@ -7,12 +7,6 @@ markAlertTriggered
 
 import { formatPrice } from "./chart.js";
 
-import {
-connectTickerStream
-} from "./tickers.js";
-
-let tickerHooked = false;
-
 /* Базовая цена отдельно для каждого алерта (symbol + shapeId) */
 const lastPriceByAlert =
 new Map();
@@ -52,6 +46,48 @@ prev - level
 ) * (
 curr - level
 ) <= 0;
+
+}
+
+function didCrossWithCandle(prev, candle, level){
+
+if(
+!Number.isFinite(prev) ||
+!Number.isFinite(level) ||
+!candle
+){
+return false;
+}
+
+const close =
+Number(candle.close);
+
+if(didCrossLine(prev, close, level)){
+return true;
+}
+
+const high =
+Number(candle.high);
+const low =
+Number(candle.low);
+
+if(
+Number.isFinite(high) &&
+prev < level &&
+high >= level
+){
+return true;
+}
+
+if(
+Number.isFinite(low) &&
+prev > level &&
+low <= level
+){
+return true;
+}
+
+return false;
 
 }
 
@@ -275,18 +311,29 @@ Notification.requestPermission().catch(()=>{});
 
 function evaluateAlerts(
 symbol,
-nextPrice,
-active
+candle,
+active,
+chartTf
 ){
 
+const close =
+Number(candle?.close);
+
 if(
-!Number.isFinite(nextPrice) ||
+!Number.isFinite(close) ||
 !active.length
 ){
 return;
 }
 
+const tfNorm =
+String(chartTf || "60");
+
 for(const alert of active){
+
+if(String(alert.tf || "60") !== tfNorm){
+continue;
+}
 
 const level =
 Number(alert.price);
@@ -305,22 +352,22 @@ if(prev === undefined){
 /* Новый алерт: запомнить текущую цену, не проверять пересечение сразу */
 lastPriceByAlert.set(
 key,
-nextPrice
+close
 );
 continue;
 
 }
 
 if(
-!didCrossLine(
+!didCrossWithCandle(
 prev,
-nextPrice,
+candle,
 level
 )
 ){
 lastPriceByAlert.set(
 key,
-nextPrice
+close
 );
 continue;
 
@@ -337,38 +384,10 @@ lastPriceByAlert.delete(key);
 
 }
 
-export function processAlertTick(
-symbol,
-price
-){
-
-if(
-!symbol ||
-!Number.isFinite(price)
-){
-return;
-}
-
-const active =
-getActiveAlerts().filter(
-a=>a.symbol === symbol
-);
-
-if(!active.length){
-return;
-}
-
-evaluateAlerts(
-symbol,
-price,
-active
-);
-
-}
-
 export function processAlertCandle(
 symbol,
-candle
+candle,
+chartTf
 ){
 
 if(
@@ -378,13 +397,6 @@ if(
 return;
 }
 
-const close =
-Number(candle.close);
-
-if(!Number.isFinite(close)){
-return;
-}
-
 const active =
 getActiveAlerts().filter(
 a=>a.symbol === symbol
@@ -396,27 +408,14 @@ return;
 
 evaluateAlerts(
 symbol,
-close,
-active
-);
-
-}
-
-function onTicker(tick){
-
-processAlertTick(
-tick.symbol,
-tick.price
+candle,
+active,
+chartTf
 );
 
 }
 
 export function initAlertMonitor(){
-
-if(!tickerHooked){
-connectTickerStream(onTicker);
-tickerHooked = true;
-}
 
 maybeRequestNotificationPermission();
 

@@ -1228,7 +1228,7 @@ session.user.id
 );
 startSyncPoll();
 
-import("./alerts-cloud-sync.js?v=5")
+import("./alerts-cloud-sync.js?v=6")
 .then(m=>{
 m.syncAllLocalAlertsToCloud();
 })

@@ -278,22 +278,64 @@ shapeId
 const ctx = await getAuthed();
 
 if(!ctx){
-return;
+console.warn(
+"alert cloud trigger: нет сессии"
+);
+return false;
 }
 
-const { error } =
+const sym =
+String(symbol || "").trim().toUpperCase();
+const sid =
+String(shapeId || "").trim();
+
+if(!sym || !sid){
+return false;
+}
+
+const triggeredAt =
+new Date().toISOString();
+
+const { error: updateErr } =
 await ctx.sb
 .from("price_alerts")
-.update({
-triggered_at: new Date().toISOString()
-})
+.update({ triggered_at: triggeredAt })
 .eq("user_id", ctx.user.id)
-.eq("symbol", symbol)
-.eq("shape_id", shapeId);
+.eq("symbol", sym)
+.eq("shape_id", sid);
 
-if(error){
-console.warn("alert cloud trigger:", error.message);
+if(!updateErr){
+console.log(
+"alert cloud triggered:",
+sym,
+sid
+);
+return true;
 }
+
+const { error: deleteErr } =
+await ctx.sb
+.from("price_alerts")
+.delete()
+.eq("user_id", ctx.user.id)
+.eq("symbol", sym)
+.eq("shape_id", sid);
+
+if(deleteErr){
+console.warn(
+"alert cloud trigger:",
+updateErr.message,
+deleteErr.message
+);
+return false;
+}
+
+console.log(
+"alert cloud removed:",
+sym,
+sid
+);
+return true;
 
 }
 

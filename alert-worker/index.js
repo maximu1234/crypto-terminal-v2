@@ -11,7 +11,7 @@ import {
 import {
   alertKey,
   pruneWatchState,
-  evaluateAlertsForPrice
+  evaluateAlertsForCandle
 } from "./lib/trigger-alert.js";
 
 const PORT = Number(process.env.PORT) || 8080;
@@ -74,22 +74,15 @@ async function main() {
 
   const klineHub = createBybitKlineHub();
 
-  const runEval = (symbol, tf, price) => {
-    evaluateAlertsForPrice(
+  klineHub.onKline((symbol, tf, candle) => {
+    evaluateAlertsForCandle(
       activeAlerts,
       symbol,
       tf,
-      price
+      candle
     ).catch(err => {
       console.warn("evaluate:", err.message);
     });
-  };
-
-  klineHub.onKline((symbol, tf, candle) => {
-    if (!Number.isFinite(candle.close)) {
-      return;
-    }
-    runEval(symbol, tf, candle.close);
   });
 
   const server = http.createServer(async (req, res) => {

@@ -1,4 +1,4 @@
-import { didCrossLine } from "./cross.js";
+import { didCrossWithCandle } from "./cross.js";
 import {
   formatAlertMessage,
   sendTelegramMessage
@@ -22,14 +22,19 @@ export function pruneWatchState(activeAlerts) {
 
 }
 
-export async function evaluateAlertsForPrice(
+export async function evaluateAlertsForCandle(
   activeAlerts,
   symbol,
   tf,
-  price
+  candle
 ) {
 
   const tfNorm = String(tf || "60");
+  const close = Number(candle?.close);
+
+  if (!Number.isFinite(close)) {
+    return;
+  }
 
   for (const [key, alert] of activeAlerts) {
 
@@ -43,19 +48,19 @@ export async function evaluateAlertsForPrice(
 
     const level = Number(alert.price);
 
-    if (!Number.isFinite(level) || !Number.isFinite(price)) {
+    if (!Number.isFinite(level)) {
       continue;
     }
 
     let prev = lastPriceByAlert.get(key);
 
     if (prev === undefined) {
-      lastPriceByAlert.set(key, price);
+      lastPriceByAlert.set(key, close);
       continue;
     }
 
-    if (!didCrossLine(prev, price, level)) {
-      lastPriceByAlert.set(key, price);
+    if (!didCrossWithCandle(prev, candle, level)) {
+      lastPriceByAlert.set(key, close);
       continue;
     }
 

@@ -69,9 +69,8 @@ fetchTickersInto
 } from "./tickers.js";
 
 import {
-processAlertCandle,
-processAlertTick
-} from "./alert-monitor.js?v=15";
+processAlertCandle
+} from "./alert-monitor.js?v=16";
 
 import {
 initDrawings
@@ -1564,11 +1563,6 @@ function startTickerStream(){
 
 connectTickerStream(tick=>{
 
-processAlertTick(
-tick.symbol,
-tick.price
-);
-
 const item =
 marketMap.get(tick.symbol);
 
@@ -1650,7 +1644,8 @@ rebuildRsiFromCandles();
 
 processAlertCandle(
 streamSymbol,
-candle
+candle,
+currentTF
 );
 
 }
