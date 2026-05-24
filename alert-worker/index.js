@@ -1,23 +1,21 @@
 import http from "http";
-import { createBybitTickerHub } from "./lib/bybit.js";
+import { createBybitKlineHub } from "./lib/bybit-kline.js";
 import { getConfigStatus, getWorkerConfig } from "./lib/config.js";
-import { didCrossLine } from "./lib/cross.js";
 import {
   fetchTelegramAlerts,
-  fetchAlertDiagnostics,
-  markAlertTriggered
+  fetchAlertDiagnostics
 } from "./lib/alerts-db.js";
 import {
-  formatAlertMessage,
-  sendTelegramMessage,
   telegramConfigured
 } from "./lib/telegram.js";
+import {
+  alertKey,
+  pruneWatchState,
+  evaluateAlertsForPrice
+} from "./lib/trigger-alert.js";
 
 const PORT = Number(process.env.PORT) || 8080;
 const RELOAD_MS = Number(process.env.ALERTS_RELOAD_MS) || 8000;
-
-/** alert key -> last seen price */
-const lastPriceByAlert = new Map();
 
 /** alert key -> row */
 let activeAlerts = new Map();
@@ -43,17 +41,10 @@ function logConfigOnce() {
     "env missing:",
     st.missing.join(", ")
   );
-  console.error(
-    "Railway: Variables на этом сервисе → заполните значения → Deployments → Redeploy"
-  );
 
 }
 
-function alertKey(row) {
-  return `${row.user_id}::${row.symbol}::${row.shape_id}`;
-}
-
-async function reloadAlerts(hub) {
+async function reloadAlerts(klineHub) {
 
   logConfigOnce();
 
@@ -69,73 +60,36 @@ async function reloadAlerts(hub) {
   for (const row of rows) {
     const key = alertKey(row);
     next.set(key, row);
-    hub.ensureSymbol(row.symbol);
+    klineHub.ensureKline(row.symbol, row.tf || "60");
   }
 
   activeAlerts = next;
-
-  for (const key of lastPriceByAlert.keys()) {
-    if (!next.has(key)) {
-      lastPriceByAlert.delete(key);
-    }
-  }
+  pruneWatchState(activeAlerts);
 
   console.log(`alerts loaded: ${next.size} active (telegram)`);
 
 }
 
-async function onPriceTick(hub, symbol, price) {
-
-  if (!getWorkerConfig().ready) {
-    return;
-  }
-
-  for (const [key, alert] of activeAlerts) {
-
-    if (alert.symbol !== symbol) {
-      continue;
-    }
-
-    const level = Number(alert.price);
-    let prev = lastPriceByAlert.get(key);
-
-    if (prev === undefined) {
-      lastPriceByAlert.set(key, price);
-      continue;
-    }
-
-    if (!didCrossLine(prev, price, level)) {
-      lastPriceByAlert.set(key, price);
-      continue;
-    }
-
-    const text = formatAlertMessage(alert);
-    const ok = await sendTelegramMessage(
-      alert.telegram_chat_id,
-      text
-    );
-
-    if (ok) {
-      await markAlertTriggered(alert.id);
-      activeAlerts.delete(key);
-      lastPriceByAlert.delete(key);
-      console.log("triggered", alert.symbol, level, "→", alert.telegram_chat_id);
-    }
-
-    lastPriceByAlert.set(key, price);
-
-  }
-
-}
-
 async function main() {
 
-  const hub = createBybitTickerHub();
+  const klineHub = createBybitKlineHub();
 
-  hub.onTick((symbol, price) => {
-    onPriceTick(hub, symbol, price).catch(err => {
-      console.warn("onPriceTick:", err);
+  const runEval = (symbol, tf, price) => {
+    evaluateAlertsForPrice(
+      activeAlerts,
+      symbol,
+      tf,
+      price
+    ).catch(err => {
+      console.warn("evaluate:", err.message);
     });
+  };
+
+  klineHub.onKline((symbol, tf, candle) => {
+    if (!Number.isFinite(candle.close)) {
+      return;
+    }
+    runEval(symbol, tf, candle.close);
   });
 
   const server = http.createServer(async (req, res) => {
@@ -161,13 +115,13 @@ async function main() {
 
   server.listen(PORT, () => {
     console.log(`alert-worker listening :${PORT}`);
-    reloadAlerts(hub).catch(err => {
+    reloadAlerts(klineHub).catch(err => {
       console.warn("reloadAlerts:", err.message);
     });
   });
 
   setInterval(() => {
-    reloadAlerts(hub).catch(err => {
+    reloadAlerts(klineHub).catch(err => {
       console.warn("reloadAlerts:", err.message);
     });
   }, RELOAD_MS);

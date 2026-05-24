@@ -7,7 +7,7 @@ COPY package.json ./
 RUN npm install --omit=dev
 
 COPY index.js ./
-COPY lib ./lib
+COPY lib/ ./lib/
 
 ENV NODE_ENV=production
 
