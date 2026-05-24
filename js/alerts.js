@@ -6,7 +6,7 @@ const MAX_ALERT_HISTORY = 30;
 
 function queueAlertsCloud(fn){
 
-import("./alerts-cloud-sync.js?v=34")
+import("./alerts-cloud-sync.js?v=36")
 .then(m=>fn(m))
 .catch(err=>{
 console.warn("alerts cloud:", err);
@@ -545,7 +545,7 @@ list.push(row);
 saveAlerts(list);
 
 const m =
-await import("./alerts-cloud-sync.js?v=34");
+await import("./alerts-cloud-sync.js?v=36");
 
 const pushed =
 await m.flushAlertCloudPush(row);
@@ -662,7 +662,7 @@ a.shapeId === shapeId
 );
 
 if(row){
-void import("./alerts-cloud-sync.js?v=34").then(m=>{
+void import("./alerts-cloud-sync.js?v=36").then(m=>{
 m.scheduleDebouncedAlertPush(row);
 });
 }
@@ -731,7 +731,7 @@ return;
 
 saveAlerts(list);
 
-void import("./alerts-cloud-sync.js?v=34").then(m=>{
+void import("./alerts-cloud-sync.js?v=36").then(m=>{
 m.flushAlertCloudPush(row);
 });
 
@@ -1036,14 +1036,51 @@ sym,
 sid
 );
 
-void markAlertTriggered(
+enqueueAlertCloudTrigger(
 sym,
 sid
 );
 
 }
 
-export async function markAlertTriggered(symbol, shapeId){
+let alertTriggerChain =
+Promise.resolve();
+
+function enqueueAlertCloudTrigger(
+symbol,
+shapeId
+){
+
+const sym =
+String(symbol || "").trim().toUpperCase();
+const sid =
+String(shapeId || "").trim();
+
+if(
+!sym ||
+!sid
+){
+return alertTriggerChain;
+}
+
+alertTriggerChain =
+alertTriggerChain
+.catch(()=>{})
+.then(()=>
+markAlertTriggered(
+sym,
+sid
+)
+);
+
+return alertTriggerChain;
+
+}
+
+export async function markAlertTriggered(
+symbol,
+shapeId
+){
 
 const sym =
 String(symbol || "").trim().toUpperCase();
@@ -1057,132 +1094,115 @@ if(
 return false;
 }
 
-let cloudOk =
-false;
-
 try{
 
 const m =
-await import("./alerts-cloud-sync.js?v=34");
+await import("./alerts-cloud-sync.js?v=36");
 
-const remote =
+console.log(
+"[alerts] cloud →",
+sym,
+sid
+);
+
+let remote =
 await m.triggerAlertViaWorker(
 sym,
 sid
 );
 
-const workerHandled =
-remote?.ok === true;
+console.log(
+"[alerts] worker:",
+remote?.ok,
+remote?.telegram,
+remote?.reason ||
+remote?.skipped ||
+""
+);
 
-if(workerHandled){
+if(
+remote?.ok &&
+remote.telegram === false
+){
+await new Promise(r=>{
+setTimeout(r, 700);
+});
+const retry =
+await m.triggerAlertViaWorker(
+sym,
+sid
+);
 
-cloudOk = true;
+console.log(
+"[alerts] worker retry:",
+retry?.ok,
+retry?.telegram
+);
+
+if(
+retry?.ok &&
+retry.telegram
+){
+remote = retry;
+}
+}
+
+let purged =
+await m.purgeAlertRowFromCloud(
+sym,
+sid
+);
+
+if(!purged){
+await new Promise(r=>{
+setTimeout(r, 500);
+});
+purged =
+await m.purgeAlertRowFromCloud(
+sym,
+sid
+);
+}
 
 const stillThere =
-await m.isAlertRowActiveInCloud(
+await m.isAlertRowInCloud(
 sym,
 sid
 );
 
 if(stillThere){
 console.warn(
-"alert: worker ok, но строка в Supabase осталась — дочищаем",
-sym,
-sid
-);
-cloudOk =
-await m.markAlertTriggeredOnCloudImmediate(
-sym,
-sid
-);
-if(!cloudOk){
-await m.removeAlertFromCloud(
-sym,
-sid
-);
-}
-}
-
-if(
-remote.telegram === false &&
-!stillThere
-){
-console.warn(
-"Telegram: не отправлено — проверьте chat id на странице Алерты и TELEGRAM_BOT_TOKEN на Railway."
-);
-}
-
-if(
-remote.telegram === false &&
-stillThere
-){
-console.warn(
-"Telegram: не отправлено (worker). Проверьте chat id и Railway."
-);
-}
-
-}else if(
-remote?.reason === "not_claimed"
-){
-console.warn(
-"alert: worker not_claimed",
+"[alerts] строка всё ещё в Supabase после purge",
 sym,
 sid
 );
 }else{
+console.log(
+"[alerts] Supabase ok (строки нет)",
+sym,
+sid
+);
+}
 
 if(
-remote?.skipped === "not_found" ||
-remote?.reason === "not_found"
+!remote?.ok ||
+remote.telegram === false
 ){
 console.warn(
-"alert: в Supabase не было строки для",
-sym,
-sid,
-"— удаляем локально"
+"[alerts] Telegram не ушёл — задеплойте alert-worker на Railway (git push) и проверьте chat id"
 );
 }
 
-cloudOk =
-await m.markAlertTriggeredOnCloudImmediate(
-sym,
-sid
-);
-
-if(!cloudOk){
-await new Promise(r=>{
-setTimeout(r, 800);
-});
-cloudOk =
-await m.markAlertTriggeredOnCloudImmediate(
-sym,
-sid
-);
-}
-
-if(!cloudOk){
-await m.removeAlertFromCloud(
-sym,
-sid
-);
-}
-
-if(!cloudOk){
-console.warn(
-"Облако: не удалось удалить алерт из Supabase — проверьте ALERT_WORKER_URL и вход."
-);
-}
-
-}
+return !stillThere;
 
 }catch(err){
 console.warn(
 "alert cloud trigger:",
 err?.message || err
 );
-}
+return false;
 
-return cloudOk;
+}
 
 }
 

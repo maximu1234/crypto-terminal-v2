@@ -70,11 +70,11 @@ fetchTickersInto
 
 import {
 processAlertCandle
-} from "./alert-monitor.js?v=35";
+} from "./alert-monitor.js?v=36";
 
 import {
 initDrawings
-} from "./drawings.js?v=125";
+} from "./drawings.js?v=126";
 
 let currentDataset = "crypto";
 let currentTF = "60";

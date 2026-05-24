@@ -880,6 +880,83 @@ return !!data?.id;
 
 }
 
+/** Любая строка (в т.ч. «зависшая» с triggered_at). */
+export async function isAlertRowInCloud(
+symbol,
+shapeId
+){
+
+const ctx =
+await getAuthed();
+
+if(!ctx){
+return false;
+}
+
+const sym =
+String(symbol || "").trim().toUpperCase();
+const sid =
+String(shapeId || "").trim();
+
+const { data, error } =
+await ctx.sb
+.from("price_alerts")
+.select("id, triggered_at")
+.eq("user_id", ctx.user.id)
+.eq("symbol", sym)
+.eq("shape_id", sid)
+.maybeSingle();
+
+if(error){
+return false;
+}
+
+return !!data?.id;
+
+}
+
+export async function purgeAlertRowFromCloud(
+symbol,
+shapeId
+){
+
+const ctx =
+await getAuthed();
+
+if(!ctx){
+return false;
+}
+
+const sym =
+String(symbol || "").trim().toUpperCase();
+const sid =
+String(shapeId || "").trim();
+
+const { error } =
+await ctx.sb
+.from("price_alerts")
+.delete()
+.eq("user_id", ctx.user.id)
+.eq("symbol", sym)
+.eq("shape_id", sid);
+
+if(error){
+console.warn(
+"alert cloud purge:",
+error.message
+);
+return false;
+}
+
+console.log(
+"alert cloud purge ok:",
+sym,
+sid
+);
+return true;
+
+}
+
 /**
  * Запись алерта через Railway (service role) — надёжнее браузерного upsert.
  */
@@ -1008,7 +1085,7 @@ return 0;
 }
 
 const { getActiveAlerts } =
-await import("./alerts.js?v=34");
+await import("./alerts.js?v=36");
 
 const localKeys =
 new Set(
@@ -1115,7 +1192,7 @@ return false;
 }
 
 const { markAlertCloudSynced } =
-await import("./alerts.js?v=34");
+await import("./alerts.js?v=36");
 
 const ctx =
 await getAuthed();
@@ -1196,7 +1273,7 @@ return 0;
 }
 
 const { getActiveAlerts } =
-await import("./alerts.js?v=34");
+await import("./alerts.js?v=36");
 
 const list =
 getActiveAlerts();
@@ -1265,7 +1342,7 @@ Date.now() < deadline
 ){
 
 const { getActiveAlerts } =
-await import("./alerts.js?v=34");
+await import("./alerts.js?v=36");
 
 const list =
 getActiveAlerts();
@@ -1516,7 +1593,7 @@ saveAlertsFromCloudMerge,
 alertEntryKey,
 loadAlerts
 } =
-await import("./alerts.js?v=34");
+await import("./alerts.js?v=36");
 
 const cloudKeys =
 new Set(
@@ -1572,7 +1649,7 @@ const n =
 await reconcileLocalRegistryWithCloud();
 
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=34");
+await import("./alerts.js?v=36");
 
 stripAlertFlagsNotInRegistry();
 
@@ -1585,7 +1662,7 @@ return n;
 async function hydrateAlertsAfterAuth(){
 
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=34");
+await import("./alerts.js?v=36");
 
 console.log(
 "[alerts] hydrate after login…"
