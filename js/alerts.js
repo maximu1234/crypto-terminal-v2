@@ -6,7 +6,7 @@ const MAX_ALERT_HISTORY = 30;
 
 function queueAlertsCloud(fn){
 
-import("./alerts-cloud-sync.js?v=8")
+import("./alerts-cloud-sync.js?v=9")
 .then(m=>fn(m))
 .catch(err=>{
 console.warn("alerts cloud:", err);
@@ -29,24 +29,28 @@ return String(tf);
 
 async function pushAlertRowToCloud(row){
 
-const delays = [
+const waits = [
 0,
-1500,
-4000
+800,
+2000,
+5000
 ];
 
-for(let i = 0; i < delays.length; i++){
+for(let i = 0; i < waits.length; i++){
 
-if(delays[i] > 0){
+if(i > 0){
 await new Promise(r=>{
-setTimeout(r, delays[i]);
+setTimeout(
+r,
+waits[i] - waits[i - 1]
+);
 });
 }
 
 try{
 
 const m =
-await import("./alerts-cloud-sync.js?v=8");
+await import("./alerts-cloud-sync.js?v=9");
 
 const ok =
 await m.pushAlertToCloud(row);
@@ -66,10 +70,22 @@ err?.message || err
 
 try{
 
-const m =
-await import("./alerts-cloud-sync.js?v=8");
+const { waitForCloudAuth } =
+await import("./cloud-sync.js?v=9");
 
+await waitForCloudAuth(8000);
+
+const m =
+await import("./alerts-cloud-sync.js?v=9");
+
+const n =
 await m.syncAlertsWithCloud();
+
+if(!n){
+console.warn(
+"alert cloud: строка не попала в Supabase — проверьте вход (шестерёнка)"
+);
+}
 
 }catch(err){
 console.warn(
@@ -715,7 +731,7 @@ false;
 try{
 
 const m =
-await import("./alerts-cloud-sync.js?v=8");
+await import("./alerts-cloud-sync.js?v=9");
 
 cloudOk =
 await m.markAlertTriggeredOnCloud(

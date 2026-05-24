@@ -4,41 +4,17 @@ isSupabaseConfigured
 } from "./supabase-client.js?v=4";
 
 import {
-isCloudLoggedIn,
-onCloudSyncChange
-} from "./cloud-sync.js?v=8";
+waitForCloudAuth
+} from "./cloud-sync.js?v=9";
 
 import {
-getActiveAlerts,
-loadAlerts
-} from "./alerts.js";
+isCloudLoggedIn,
+onCloudSyncChange
+} from "./cloud-sync.js?v=9";
 
 async function getAuthed() {
 
-if(!(await isSupabaseConfigured())){
-return null;
-}
-
-const sb = await getSupabase();
-
-if(!sb){
-return null;
-}
-
-const { data: { session }, error } =
-await sb.auth.getSession();
-
-if(
-error ||
-!session?.user
-){
-return null;
-}
-
-return {
-sb,
-user: session.user
-};
+return waitForCloudAuth(12000);
 
 }
 
@@ -155,7 +131,7 @@ const ctx = await getAuthed();
 
 if(!ctx){
 console.warn(
-"alert cloud push: нет сессии — войдите через шестерёнку"
+"alert cloud push: нет сессии — войдите через шестерёнку и обновите страницу"
 );
 return false;
 }
@@ -194,29 +170,47 @@ tf: normalizeAlertTf(entry.tf),
 triggered_at: null
 };
 
-const { error } =
+const { error: upsertErr } =
 await ctx.sb
 .from("price_alerts")
 .upsert(
 row,
-{
-onConflict: "user_id,symbol,shape_id",
-ignoreDuplicates: false
-}
+{ onConflict: "user_id,symbol,shape_id" }
 );
 
-if(error){
+if(!upsertErr){
+console.log(
+"alert cloud push ok:",
+symbol,
+shapeId,
+row.tf
+);
+return true;
+}
+
 console.warn(
-"alert cloud push:",
-error.message,
-error.code,
-error.details
+"alert cloud upsert:",
+upsertErr.message,
+upsertErr.code
+);
+
+const { error: insertErr } =
+await ctx.sb
+.from("price_alerts")
+.insert(row);
+
+if(insertErr){
+console.warn(
+"alert cloud insert:",
+insertErr.message,
+insertErr.code,
+insertErr.details
 );
 return false;
 }
 
 console.log(
-"alert cloud push ok:",
+"alert cloud push ok (insert):",
 symbol,
 shapeId,
 row.tf
@@ -362,6 +356,9 @@ if(!ctx){
 return 0;
 }
 
+const { getActiveAlerts } =
+await import("./alerts.js");
+
 const localKeys =
 new Set(
 getActiveAlerts().map(localAlertKey)
@@ -434,11 +431,21 @@ export async function syncAllLocalAlertsToCloud(){
 const ctx = await getAuthed();
 
 if(!ctx){
+console.warn(
+"alert cloud sync: нет сессии"
+);
 return 0;
 }
 
+const { getActiveAlerts } =
+await import("./alerts.js");
+
 const list =
 getActiveAlerts();
+
+if(!list.length){
+return 0;
+}
 
 let ok = 0;
 
@@ -448,14 +455,13 @@ ok += 1;
 }
 }
 
-const pruned =
+if(ok === list.length){
 await pruneOrphanCloudAlerts();
-
-if(list.length || pruned){
-console.log(
-`alert cloud sync: pushed ${ok}/${list.length}, pruned ${pruned} orphan(s)`
-);
 }
+
+console.log(
+`alert cloud sync: pushed ${ok}/${list.length}`
+);
 
 return ok;
 
@@ -482,7 +488,7 @@ reason,
 err?.message || err
 );
 });
-}, 400);
+}, 600);
 
 }
 

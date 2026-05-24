@@ -26,7 +26,7 @@ parseMoneyInput
 import {
 persistAllDrawingsToCloud,
 onDrawingsRemoteUpdate
-} from "./cloud-sync.js?v=8";
+} from "./cloud-sync.js?v=9";
 
 import {
 formatPrice,
@@ -8212,10 +8212,17 @@ function reconcileDrawingAlertsFromRegistry(){
 const sym =
 getSymbol();
 
+const symNorm =
+String(sym || "").toUpperCase();
+
 const activeIds =
 new Set(
 getActiveAlerts()
-.filter(a=>a.symbol === sym)
+.filter(
+a=>
+String(a.symbol).toUpperCase() ===
+symNorm
+)
 .map(a=>a.shapeId)
 );
 

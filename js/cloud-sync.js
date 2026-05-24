@@ -17,10 +17,6 @@ collectAllLocalDrawings,
 applyDrawingsMapToLocal
 } from "./drawings-storage.js?v=1";
 
-import {
-getActiveAlerts
-} from "./alerts.js";
-
 const FAVORITES_LOCAL_TS_KEY =
 "favorites_local_updated_at";
 
@@ -441,7 +437,7 @@ notifyFavorites();
 
 }
 
-function applyAlertFlagsToDrawingsMap(map){
+async function applyAlertFlagsToDrawingsMap(map){
 
 if(
 !map ||
@@ -452,6 +448,9 @@ return map;
 
 const out =
 JSON.parse(JSON.stringify(map));
+
+const { getActiveAlerts } =
+await import("./alerts.js");
 
 for(const alert of getActiveAlerts()){
 
@@ -508,7 +507,7 @@ return out;
 
 }
 
-function applyDrawingsLocally(
+async function applyDrawingsLocally(
 drawings,
 updatedAt
 ){
@@ -517,7 +516,7 @@ const before =
 collectAllLocalDrawings();
 
 const merged =
-applyAlertFlagsToDrawingsMap(drawings);
+await applyAlertFlagsToDrawingsMap(drawings);
 
 applyDrawingsMapToLocal(merged);
 
@@ -719,7 +718,7 @@ localDrawings
 return;
 }
 
-applyDrawingsLocally(
+await applyDrawingsLocally(
 cloudDrawings,
 cloudTs
 );
@@ -1069,7 +1068,7 @@ return local;
 
 }
 
-applyDrawingsLocally(
+await applyDrawingsLocally(
 cloud.drawings,
 cloud.drawingsUpdatedAt
 );
@@ -1139,7 +1138,7 @@ localTs
 return local;
 }
 
-applyDrawingsLocally(
+await applyDrawingsLocally(
 cloud.drawings,
 cloud.drawingsUpdatedAt
 );
@@ -1304,7 +1303,7 @@ session.user.id
 );
 startSyncPoll();
 
-import("./alerts-cloud-sync.js?v=8")
+import("./alerts-cloud-sync.js?v=9")
 .then(m=>{
 m.syncAllLocalAlertsToCloud();
 })
@@ -1357,6 +1356,47 @@ window.addEventListener(
 "online",
 wake
 );
+
+}
+
+export async function waitForCloudAuth(maxWaitMs = 12000){
+
+if(!(await isSupabaseConfigured())){
+return null;
+}
+
+const sb =
+await getSupabase();
+
+if(!sb){
+return null;
+}
+
+const deadline =
+Date.now() + maxWaitMs;
+
+while(Date.now() < deadline){
+
+const { data: { session }, error } =
+await sb.auth.getSession();
+
+if(
+!error &&
+session?.user
+){
+return {
+sb,
+user: session.user
+};
+}
+
+await new Promise(r=>{
+setTimeout(r, 250);
+});
+
+}
+
+return null;
 
 }
 
