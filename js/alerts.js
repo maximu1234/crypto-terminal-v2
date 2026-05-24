@@ -6,7 +6,7 @@ const MAX_ALERT_HISTORY = 30;
 
 function queueAlertsCloud(fn){
 
-import("./alerts-cloud-sync.js?v=17")
+import("./alerts-cloud-sync.js?v=18")
 .then(m=>fn(m))
 .catch(err=>{
 console.warn("alerts cloud:", err);
@@ -522,13 +522,13 @@ if(!ok){
 return false;
 }
 
-void flushAlertsToCloud();
+void syncSingleAlertToCloud(entry);
 
 return true;
 
 }
 
-async function flushAlertsToCloud(){
+async function syncSingleAlertToCloud(entry){
 
 try{
 
@@ -537,21 +537,52 @@ await import("./auth-ui.js?v=9");
 
 await ensureCloudReady();
 
-const m =
-await import("./alerts-cloud-sync.js?v=17");
+const { isCloudLoggedIn } =
+await import("./cloud-sync.js?v=12");
 
-const ok =
-await m.persistAlertsRegistryToCloud();
+if(!isCloudLoggedIn()){
+console.warn(
+"Telegram: войдите по email (шестерёнка), иначе алерт не попадёт в облако."
+);
+return;
+}
+
+const m =
+await import("./alerts-cloud-sync.js?v=18");
+
+const row = {
+shapeId:
+entry?.shapeId ||
+entry?.id,
+symbol:
+String(entry?.symbol || "").trim().toUpperCase(),
+price:
+Number(entry?.price),
+tf:
+normalizeAlertTf(entry?.tf)
+};
+
+let ok =
+await m.pushAlertToCloud(row);
 
 if(!ok){
+ok =
+await m.persistAlertsRegistryToCloud();
+}
+
+if(ok){
+console.log(
+"Telegram: алерт в Supabase — сработает при закрытой вкладке, если на странице «Алерты» указан Chat ID."
+);
+}else{
 console.warn(
-"alert cloud: не все алерты в Supabase — войдите через шестерёнку и подождите пару секунд"
+"Telegram: не удалось записать алерт в Supabase (проверьте вход и таблицу price_alerts)."
 );
 }
 
 }catch(err){
 console.warn(
-"alerts cloud persist:",
+"Telegram cloud sync:",
 err?.message || err
 );
 }
@@ -610,7 +641,7 @@ a.shapeId === shapeId
 );
 
 if(row){
-void import("./alerts-cloud-sync.js?v=17").then(m=>{
+void import("./alerts-cloud-sync.js?v=18").then(m=>{
 m.persistAlertsRegistryToCloud();
 });
 }
@@ -912,7 +943,7 @@ null;
 try{
 
 m =
-await import("./alerts-cloud-sync.js?v=17");
+await import("./alerts-cloud-sync.js?v=18");
 
 cloudOk =
 await m.markAlertTriggeredOnCloud(

@@ -7,7 +7,7 @@ patchAlertPrice,
 removeAlert,
 registerAlertFromDrawing,
 upsertAlert
-} from "./alerts.js?v=17";
+} from "./alerts.js?v=18";
 
 import {
 mountTvColorGrid

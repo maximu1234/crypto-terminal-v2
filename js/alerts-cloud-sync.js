@@ -399,7 +399,7 @@ return 0;
 }
 
 const { getActiveAlerts } =
-await import("./alerts.js?v=17");
+await import("./alerts.js?v=18");
 
 const localKeys =
 new Set(
@@ -480,7 +480,7 @@ return 0;
 }
 
 const { getActiveAlerts } =
-await import("./alerts.js?v=17");
+await import("./alerts.js?v=18");
 
 const list =
 getActiveAlerts();
@@ -522,7 +522,7 @@ export async function persistAlertsRegistryToCloud(){
 return runCloudOp(async()=>{
 
 const { getActiveAlerts } =
-await import("./alerts.js?v=17");
+await import("./alerts.js?v=18");
 
 const list =
 getActiveAlerts();
@@ -570,7 +570,7 @@ loadAlerts,
 saveAlerts,
 alertEntryKey
 } =
-await import("./alerts.js?v=17");
+await import("./alerts.js?v=18");
 
 const byKey =
 new Map(
@@ -631,7 +631,7 @@ return byKey.size;
 async function hydrateAlertsAfterAuth(){
 
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=17");
+await import("./alerts.js?v=18");
 
 stripAlertFlagsNotInRegistry();
 await mergeCloudAlertsIntoLocal();

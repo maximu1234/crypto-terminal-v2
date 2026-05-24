@@ -10,13 +10,14 @@ getAlertsSorted,
 removeAlert,
 stripAlertFlagsNotInRegistry,
 removeAllAlerts
-} from "./alerts.js?v=17";
+} from "./alerts.js?v=18";
 
 import {
 getTelegramChatId,
 initAlertsCloudSync,
-saveTelegramChatId
-} from "./alerts-cloud-sync.js?v=17";
+saveTelegramChatId,
+syncAlertsWithCloud
+} from "./alerts-cloud-sync.js?v=18";
 
 import {
 isCloudLoggedIn,
@@ -175,8 +176,11 @@ try{
 await saveTelegramChatId(
 telegramInput?.value?.trim() ?? ""
 );
+await syncAlertsWithCloud();
 await refreshTelegramUi();
-setTelegramStatus("Сохранено.");
+setTelegramStatus(
+"Сохранено. Активные алерты отправлены в облако для Telegram."
+);
 }catch(err){
 setTelegramStatus(
 err?.message || "Ошибка сохранения",
