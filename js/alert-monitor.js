@@ -4,7 +4,7 @@ commitAlertTriggeredLocally,
 formatTfLabel,
 getActiveAlerts,
 markAlertTriggered
-} from "./alerts.js?v=24";
+} from "./alerts.js?v=25";
 
 import { formatPrice } from "./chart.js";
 

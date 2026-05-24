@@ -186,7 +186,20 @@ await ctx.sb
 .maybeSingle();
 
 if(existing?.triggered_at){
-return true;
+const { error: staleErr } =
+await ctx.sb
+.from("price_alerts")
+.delete()
+.eq("user_id", ctx.user.id)
+.eq("symbol", symbol)
+.eq("shape_id", shapeId);
+
+if(staleErr){
+console.warn(
+"alert cloud stale delete:",
+staleErr.message
+);
+}
 }
 
 const row = {
@@ -244,14 +257,6 @@ shapeId,
 row.tf
 );
 return true;
-
-}
-
-export function pushAlertToCloud(entry){
-
-return runCloudOp(()=>
-pushAlertToCloudImpl(entry)
-);
 
 }
 
@@ -384,20 +389,6 @@ return false;
 
 }
 
-export function markAlertTriggeredOnCloud(
-symbol,
-shapeId
-){
-
-return runCloudOp(()=>
-markAlertTriggeredOnCloudImpl(
-symbol,
-shapeId
-)
-);
-
-}
-
 export function markAlertTriggeredOnCloudImmediate(
 symbol,
 shapeId
@@ -527,11 +518,6 @@ return body;
 
 }
 
-export {
-markAlertTriggeredOnCloudImpl,
-syncAllLocalAlertsToCloudImpl
-};
-
 function localAlertKey(row){
 
 return `${String(row.symbol).toUpperCase()}::${String(row.shapeId)}`;
@@ -547,7 +533,7 @@ return 0;
 }
 
 const { getActiveAlerts } =
-await import("./alerts.js?v=24");
+await import("./alerts.js?v=25");
 
 const localKeys =
 new Set(
@@ -628,7 +614,7 @@ return 0;
 }
 
 const { getActiveAlerts } =
-await import("./alerts.js?v=24");
+await import("./alerts.js?v=25");
 
 const list =
 getActiveAlerts();
@@ -640,7 +626,7 @@ return 0;
 let ok = 0;
 
 const { markAlertCloudSynced } =
-await import("./alerts.js?v=24");
+await import("./alerts.js?v=25");
 
 for(const row of list){
 if(await pushAlertToCloudImpl(row)){
@@ -650,10 +636,6 @@ row.symbol,
 row.shapeId
 );
 }
-}
-
-if(ok === list.length){
-await pruneOrphanCloudAlerts();
 }
 
 console.log(
@@ -700,7 +682,7 @@ Date.now() < deadline
 ){
 
 const { getActiveAlerts } =
-await import("./alerts.js?v=24");
+await import("./alerts.js?v=25");
 
 const list =
 getActiveAlerts();
@@ -770,6 +752,63 @@ return false;
 
 }
 
+export async function pushSingleAlertToCloud(
+entry
+){
+
+try{
+
+const { ensureCloudReady } =
+await import("./auth-ui.js?v=9");
+
+await ensureCloudReady();
+
+const ctx =
+await waitForCloudAuth(8000);
+
+if(!ctx){
+return false;
+}
+
+const row = {
+shapeId:
+entry?.shapeId ||
+entry?.id,
+symbol:
+String(entry?.symbol || "").trim().toUpperCase(),
+price:
+Number(entry?.price),
+tf:
+normalizeAlertTf(
+entry?.tf
+)
+};
+
+const ok =
+await pushAlertToCloudImpl(row);
+
+if(ok){
+const { markAlertCloudSynced } =
+await import("./alerts.js?v=25");
+markAlertCloudSynced(
+row.symbol,
+row.shapeId
+);
+}
+
+return ok;
+
+}catch(err){
+console.warn(
+"pushSingleAlert:",
+err?.message || err
+);
+return false;
+
+}
+
+}
+
 export function scheduleEnsureAlertsInCloud(){
 
 ensureAlertsChain =
@@ -777,7 +816,7 @@ ensureAlertsChain
 .catch(()=>{})
 .then(()=>
 ensureAlertsPushedToCloud({
-maxMs: 20000
+maxMs: 12000
 })
 )
 .catch(err=>{
@@ -797,7 +836,7 @@ export async function persistAlertsRegistryToCloud(){
 return runCloudOp(async()=>{
 
 const { getActiveAlerts } =
-await import("./alerts.js?v=24");
+await import("./alerts.js?v=25");
 
 const list =
 getActiveAlerts();
@@ -845,9 +884,30 @@ saveAlertsFromCloudMerge,
 alertEntryKey,
 loadAlerts
 } =
-await import("./alerts.js?v=24");
+await import("./alerts.js?v=25");
 
 const byKey = new Map();
+
+for(const local of loadAlerts()){
+
+const sym =
+String(local.symbol || "").trim().toUpperCase();
+const sid =
+String(local.shapeId || local.id || "").trim();
+
+if(
+!sym ||
+!sid
+){
+continue;
+}
+
+byKey.set(
+alertEntryKey(sym, sid),
+local
+);
+
+}
 
 for(const row of data || []){
 
@@ -886,30 +946,6 @@ entry
 
 }
 
-for(const local of loadAlerts()){
-
-const sym =
-String(local.symbol || "").trim().toUpperCase();
-const sid =
-String(local.shapeId || local.id || "").trim();
-const key =
-alertEntryKey(sym, sid);
-
-if(
-!sym ||
-!sid ||
-byKey.has(key)
-){
-continue;
-}
-
-if(!local.cloudSynced){
-byKey.set(key, local);
-continue;
-}
-
-}
-
 saveAlertsFromCloudMerge([...byKey.values()]);
 
 return byKey.size;
@@ -924,15 +960,9 @@ const n =
 await mergeCloudAlertsIntoLocal();
 
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=24");
+await import("./alerts.js?v=25");
 
 stripAlertFlagsNotInRegistry();
-
-window.dispatchEvent(
-new CustomEvent(
-"alerts-registry-pulled"
-)
-);
 
 return n;
 
@@ -943,7 +973,7 @@ return n;
 async function hydrateAlertsAfterAuth(){
 
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=24");
+await import("./alerts.js?v=25");
 
 await syncAllLocalAlertsToCloudImpl();
 await mergeCloudAlertsIntoLocal();
@@ -958,25 +988,6 @@ return syncAllLocalAlertsToCloud();
 }
 
 let alertsCloudSyncReady = false;
-let cloudSyncTimer = null;
-
-function scheduleAlertCloudSync(reason){
-
-clearTimeout(cloudSyncTimer);
-
-cloudSyncTimer = setTimeout(()=>{
-runCloudOp(()=>
-syncAllLocalAlertsToCloudImpl()
-).catch(err=>{
-console.warn(
-"alert cloud sync:",
-reason,
-err?.message || err
-);
-});
-}, 600);
-
-}
 
 export function initAlertsCloudSync(){
 
@@ -990,7 +1001,6 @@ window.addEventListener(
 "alerts-changed",
 ()=>{
 scheduleEnsureAlertsInCloud();
-scheduleAlertCloudSync("alerts-changed");
 }
 );
 
@@ -1046,11 +1056,6 @@ pullWhenVisible
 document.addEventListener(
 "visibilitychange",
 pullWhenVisible
-);
-
-setInterval(
-pullWhenVisible,
-12000
 );
 
 }

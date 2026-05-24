@@ -5,9 +5,8 @@ alertPriceFromShape,
 getActiveAlerts,
 patchAlertPrice,
 removeAlert,
-registerAlertFromDrawing,
 upsertAlert
-} from "./alerts.js?v=24";
+} from "./alerts.js?v=25";
 
 import {
 mountTvColorGrid
@@ -4920,18 +4919,6 @@ if(!shape.alertSymbol){
 shape.alertSymbol = sym;
 }
 
-if(
-!registerAlertFromDrawing(
-shape,
-sym
-)
-){
-console.warn(
-"Alert: не записан в таблицу — нет символа или цены",
-sym,
-shape.price
-);
-}else{
 void upsertAlert({
 id: shape.id,
 shapeId: shape.id,
@@ -4939,13 +4926,22 @@ symbol: sym,
 price: level,
 tf: shape.alertTf,
 createdAt: shape.alertCreatedAt
+}).then(ok=>{
+
+if(!ok){
+console.warn(
+"Alert: не записан в таблицу — нет символа или цены",
+sym,
+shape.price
+);
+}
+
 }).catch(err=>{
 console.warn(
 "Alert cloud:",
 err?.message || err
 );
 });
-}
 
 saveDrawings();
 

@@ -6,7 +6,7 @@ const MAX_ALERT_HISTORY = 30;
 
 function queueAlertsCloud(fn){
 
-import("./alerts-cloud-sync.js?v=24")
+import("./alerts-cloud-sync.js?v=25")
 .then(m=>fn(m))
 .catch(err=>{
 console.warn("alerts cloud:", err);
@@ -544,8 +544,14 @@ list.push(row);
 
 saveAlerts(list);
 
-void import("./alerts-cloud-sync.js?v=24").then(m=>{
+void import("./alerts-cloud-sync.js?v=25").then(async m=>{
+const pushed =
+await m.pushSingleAlertToCloud(row);
+
+if(!pushed){
 m.scheduleEnsureAlertsInCloud();
+}
+
 });
 
 return true;
@@ -582,8 +588,7 @@ removeDrawingShape(sym, sid);
 
 export async function upsertAlert(entry){
 
-const ok =
-registerAlertFromDrawing(
+return registerAlertFromDrawing(
 {
 id: entry?.shapeId || entry?.id,
 shapeId: entry?.shapeId || entry?.id,
@@ -595,17 +600,6 @@ symbol: entry?.symbol
 },
 entry?.symbol
 );
-
-if(!ok){
-return false;
-}
-
-const m =
-await import("./alerts-cloud-sync.js?v=24");
-
-await m.scheduleEnsureAlertsInCloud();
-
-return true;
 
 }
 
@@ -661,7 +655,7 @@ a.shapeId === shapeId
 );
 
 if(row){
-void import("./alerts-cloud-sync.js?v=24").then(m=>{
+void import("./alerts-cloud-sync.js?v=25").then(m=>{
 m.persistAlertsRegistryToCloud();
 });
 }
@@ -985,7 +979,7 @@ false;
 try{
 
 const m =
-await import("./alerts-cloud-sync.js?v=24");
+await import("./alerts-cloud-sync.js?v=25");
 
 const remote =
 await m.triggerAlertViaWorker(
@@ -993,14 +987,15 @@ sym,
 sid
 );
 
-if(remote?.ok){
+const workerHandled =
+remote?.ok &&
+!remote.skipped &&
+remote.reason !== "not_claimed";
+
+if(workerHandled){
 cloudOk = true;
 
-if(
-remote.telegram === false &&
-remote.skipped !== "not_found" &&
-remote.reason !== "not_claimed"
-){
+if(remote.telegram === false){
 console.warn(
 "Telegram: не отправлено — проверьте chat id на странице Алерты и TELEGRAM_BOT_TOKEN на Railway."
 );
@@ -1042,7 +1037,7 @@ err?.message || err
 
 try{
 const m =
-await import("./alerts-cloud-sync.js?v=24");
+await import("./alerts-cloud-sync.js?v=25");
 m.scheduleEnsureAlertsInCloud();
 }catch{
 /* ignore */
@@ -1283,18 +1278,6 @@ entries
 return entries.filter(
 e=>!e.legacy || !canonical.has(e.symbol)
 );
-
-}
-
-export function rebuildAlertRegistryFromStorage(){
-
-stripAlertFlagsNotInRegistry();
-
-queueAlertsCloud(m=>{
-m.syncAllLocalAlertsToCloud();
-});
-
-return loadAlerts().length;
 
 }
 

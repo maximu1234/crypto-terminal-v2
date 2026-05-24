@@ -193,7 +193,7 @@ export async function handleClientTrigger(
   if (!rows?.length) {
     res.writeHead(200, { "Content-Type": "application/json" });
     res.end(JSON.stringify({
-      ok: true,
+      ok: false,
       skipped: "not_found"
     }));
     return true;

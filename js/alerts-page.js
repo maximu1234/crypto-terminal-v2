@@ -1,5 +1,4 @@
 import {
-clearAlertOnDrawing,
 clearAllDrawings,
 clearAlertsHistory,
 countAllDrawings,
@@ -10,14 +9,14 @@ getAlertsSorted,
 removeAlert,
 stripAlertFlagsNotInRegistry,
 removeAllAlerts
-} from "./alerts.js?v=24";
+} from "./alerts.js?v=25";
 
 import {
 getTelegramChatId,
 initAlertsCloudSync,
 saveTelegramChatId,
 syncAlertsWithCloud
-} from "./alerts-cloud-sync.js?v=24";
+} from "./alerts-cloud-sync.js?v=25";
 
 import {
 isCloudLoggedIn,
