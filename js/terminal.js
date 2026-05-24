@@ -29,7 +29,7 @@ ensureCloudReady
 import {
 persistFavoritesToCloud,
 onFavoritesRemoteUpdate
-} from "./cloud-sync.js?v=10";
+} from "./cloud-sync.js?v=11";
 
 import {
 createCandlestickChart,
@@ -70,7 +70,7 @@ fetchTickersInto
 
 import {
 processAlertCandle
-} from "./alert-monitor.js?v=18";
+} from "./alert-monitor.js?v=19";
 
 import {
 initDrawings

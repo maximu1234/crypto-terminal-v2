@@ -15,7 +15,7 @@ import {
 } from "./lib/trigger-alert.js";
 
 const PORT = Number(process.env.PORT) || 8080;
-const RELOAD_MS = Number(process.env.ALERTS_RELOAD_MS) || 8000;
+const RELOAD_MS = Number(process.env.ALERTS_RELOAD_MS) || 3000;
 
 /** alert key -> row */
 let activeAlerts = new Map();

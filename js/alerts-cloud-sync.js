@@ -5,12 +5,27 @@ isSupabaseConfigured
 
 import {
 waitForCloudAuth
-} from "./cloud-sync.js?v=10";
+} from "./cloud-sync.js?v=11";
 
 import {
 isCloudLoggedIn,
 onCloudSyncChange
-} from "./cloud-sync.js?v=10";
+} from "./cloud-sync.js?v=11";
+
+let cloudOpChain =
+Promise.resolve();
+
+export function runCloudOp(fn){
+
+const job =
+cloudOpChain.then(()=>fn());
+
+cloudOpChain =
+job.catch(()=>{});
+
+return job;
+
+}
 
 async function getAuthed() {
 
@@ -125,7 +140,7 @@ return String(tf);
 
 }
 
-export async function pushAlertToCloud(entry){
+async function pushAlertToCloudImpl(entry){
 
 const ctx = await getAuthed();
 
@@ -219,6 +234,14 @@ return true;
 
 }
 
+export function pushAlertToCloud(entry){
+
+return runCloudOp(()=>
+pushAlertToCloudImpl(entry)
+);
+
+}
+
 export async function clearAllAlertsFromCloud(){
 
 const ctx = await getAuthed();
@@ -273,7 +296,7 @@ console.warn("alert cloud delete:", error.message);
 
 }
 
-export async function markAlertTriggeredOnCloud(
+async function markAlertTriggeredOnCloudImpl(
 symbol,
 shapeId
 ){
@@ -341,6 +364,25 @@ updateErr?.message
 return false;
 
 }
+
+export function markAlertTriggeredOnCloud(
+symbol,
+shapeId
+){
+
+return runCloudOp(()=>
+markAlertTriggeredOnCloudImpl(
+symbol,
+shapeId
+)
+);
+
+}
+
+export {
+markAlertTriggeredOnCloudImpl,
+syncAllLocalAlertsToCloudImpl
+};
 
 function localAlertKey(row){
 
@@ -426,7 +468,7 @@ return removed;
 
 }
 
-export async function syncAllLocalAlertsToCloud(){
+async function syncAllLocalAlertsToCloudImpl(){
 
 const ctx = await getAuthed();
 
@@ -467,6 +509,37 @@ return ok;
 
 }
 
+export function syncAllLocalAlertsToCloud(){
+
+return runCloudOp(()=>
+syncAllLocalAlertsToCloudImpl()
+);
+
+}
+
+export async function persistAlertsRegistryToCloud(){
+
+return runCloudOp(async()=>{
+
+const { getActiveAlerts } =
+await import("./alerts.js");
+
+const list =
+getActiveAlerts();
+
+if(!list.length){
+return true;
+}
+
+const n =
+await syncAllLocalAlertsToCloudImpl();
+
+return n >= list.length;
+
+});
+
+}
+
 export async function syncAlertsWithCloud(){
 
 return syncAllLocalAlertsToCloud();
@@ -481,7 +554,9 @@ function scheduleAlertCloudSync(reason){
 clearTimeout(cloudSyncTimer);
 
 cloudSyncTimer = setTimeout(()=>{
-syncAllLocalAlertsToCloud().catch(err=>{
+runCloudOp(()=>
+syncAllLocalAlertsToCloudImpl()
+).catch(err=>{
 console.warn(
 "alert cloud sync:",
 reason,

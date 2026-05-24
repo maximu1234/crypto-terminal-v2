@@ -1,6 +1,5 @@
 import {
 alertEntryKey,
-disarmAlertLocally,
 formatTfLabel,
 getActiveAlerts,
 markAlertTriggered
@@ -395,11 +394,6 @@ key,
 Date.now()
 );
 lastPriceByAlert.delete(key);
-
-disarmAlertLocally(
-alert.symbol,
-alert.shapeId
-);
 
 notifyAlertTriggered(alert);
 

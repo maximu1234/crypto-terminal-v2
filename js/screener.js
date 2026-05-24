@@ -41,7 +41,7 @@ ensureCloudReady
 import {
 persistFavoritesToCloud,
 onFavoritesRemoteUpdate
-} from "./cloud-sync.js?v=10";
+} from "./cloud-sync.js?v=11";
 
 const gridEl =
 document.getElementById("screener-grid");

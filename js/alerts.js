@@ -6,7 +6,7 @@ const MAX_ALERT_HISTORY = 30;
 
 function queueAlertsCloud(fn){
 
-import("./alerts-cloud-sync.js?v=10")
+import("./alerts-cloud-sync.js?v=11")
 .then(m=>fn(m))
 .catch(err=>{
 console.warn("alerts cloud:", err);
@@ -24,75 +24,6 @@ return "60";
 }
 
 return String(tf);
-
-}
-
-async function pushAlertRowToCloud(row){
-
-const waits = [
-0,
-800,
-2000,
-5000
-];
-
-for(let i = 0; i < waits.length; i++){
-
-if(i > 0){
-await new Promise(r=>{
-setTimeout(
-r,
-waits[i] - waits[i - 1]
-);
-});
-}
-
-try{
-
-const m =
-await import("./alerts-cloud-sync.js?v=10");
-
-const ok =
-await m.pushAlertToCloud(row);
-
-if(ok){
-return;
-}
-
-}catch(err){
-console.warn(
-"alerts cloud push:",
-err?.message || err
-);
-}
-
-}
-
-try{
-
-const { waitForCloudAuth } =
-await import("./cloud-sync.js?v=10");
-
-await waitForCloudAuth(8000);
-
-const m =
-await import("./alerts-cloud-sync.js?v=10");
-
-const n =
-await m.syncAlertsWithCloud();
-
-if(!n){
-console.warn(
-"alert cloud: строка не попала в Supabase — проверьте вход (шестерёнка)"
-);
-}
-
-}catch(err){
-console.warn(
-"alerts cloud full sync:",
-err?.message || err
-);
-}
 
 }
 
@@ -431,7 +362,30 @@ list.push(row);
 
 saveAlerts(list);
 
-return pushAlertRowToCloud(row);
+try{
+
+const m =
+await import("./alerts-cloud-sync.js?v=11");
+
+const ok =
+await m.persistAlertsRegistryToCloud();
+
+if(!ok){
+console.warn(
+"alert cloud: не все алерты в Supabase — проверьте вход (шестерёнка)"
+);
+}
+
+return ok;
+
+}catch(err){
+console.warn(
+"alerts cloud persist:",
+err?.message || err
+);
+return false;
+
+}
 
 }
 
@@ -487,7 +441,9 @@ a.shapeId === shapeId
 );
 
 if(row){
-void pushAlertRowToCloud(row);
+void import("./alerts-cloud-sync.js?v=11").then(m=>{
+m.persistAlertsRegistryToCloud();
+});
 }
 
 }
@@ -762,10 +718,13 @@ appendAlertToHistory(existing);
 let cloudOk =
 false;
 
+let m =
+null;
+
 try{
 
-const m =
-await import("./alerts-cloud-sync.js?v=10");
+m =
+await import("./alerts-cloud-sync.js?v=11");
 
 cloudOk =
 await m.markAlertTriggeredOnCloud(
@@ -775,7 +734,7 @@ sid
 
 if(!cloudOk){
 await new Promise(r=>{
-setTimeout(r, 1500);
+setTimeout(r, 800);
 });
 cloudOk =
 await m.markAlertTriggeredOnCloud(
@@ -795,6 +754,17 @@ disarmAlertLocally(
 sym,
 sid
 );
+
+if(m){
+try{
+await m.syncAllLocalAlertsToCloud();
+}catch(syncErr){
+console.warn(
+"alert cloud sync after trigger:",
+syncErr?.message || syncErr
+);
+}
+}
 
 return cloudOk;
 
