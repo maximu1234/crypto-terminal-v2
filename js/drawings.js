@@ -25,7 +25,7 @@ parseMoneyInput
 import {
 persistAllDrawingsToCloud,
 onDrawingsRemoteUpdate
-} from "./cloud-sync.js?v=7";
+} from "./cloud-sync.js?v=8";
 
 import {
 formatPrice,

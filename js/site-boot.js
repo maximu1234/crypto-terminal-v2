@@ -8,7 +8,7 @@ ensureCloudReady
 
 import {
 initAlertsCloudSync
-} from "./alerts-cloud-sync.js?v=4";
+} from "./alerts-cloud-sync.js?v=5";
 
 initAlertMonitor();
 initAlertsCloudSync();

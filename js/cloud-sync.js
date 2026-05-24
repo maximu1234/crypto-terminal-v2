@@ -1227,6 +1227,15 @@ await setupSettingsRealtime(
 session.user.id
 );
 startSyncPoll();
+
+import("./alerts-cloud-sync.js?v=5")
+.then(m=>{
+m.syncAllLocalAlertsToCloud();
+})
+.catch(err=>{
+console.warn("alerts cloud sync on login:", err);
+});
+
 notifyAuth();
 return;
 }

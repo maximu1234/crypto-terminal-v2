@@ -6,7 +6,7 @@ isSupabaseConfigured
 import {
 isCloudLoggedIn,
 onCloudSyncChange
-} from "./cloud-sync.js?v=7";
+} from "./cloud-sync.js?v=8";
 
 import {
 getActiveAlerts,
@@ -15,10 +15,7 @@ loadAlerts
 
 async function getAuthed() {
 
-if(
-!isSupabaseConfigured() ||
-!isCloudLoggedIn()
-){
+if(!(await isSupabaseConfigured())){
 return null;
 }
 
@@ -28,14 +25,20 @@ if(!sb){
 return null;
 }
 
-const { data: { user } } =
-await sb.auth.getUser();
+const { data: { session }, error } =
+await sb.auth.getSession();
 
-if(!user){
+if(
+error ||
+!session?.user
+){
 return null;
 }
 
-return { sb, user };
+return {
+sb,
+user: session.user
+};
 
 }
 
@@ -133,20 +136,39 @@ throw new Error(error.message);
 
 }
 
+function normalizeAlertTf(tf){
+
+if(
+tf == null ||
+tf === ""
+){
+return "60";
+}
+
+return String(tf);
+
+}
+
 export async function pushAlertToCloud(entry){
 
 const ctx = await getAuthed();
 
 if(!ctx){
-return;
+console.warn(
+"alert cloud push: нет сессии — войдите через шестерёнку"
+);
+return false;
 }
 
 const shapeId =
+String(
 entry?.shapeId ||
-entry?.id;
+entry?.id ||
+""
+).trim();
 
 const symbol =
-entry?.symbol;
+String(entry?.symbol || "").trim().toUpperCase();
 
 const price =
 Number(entry?.price);
@@ -156,27 +178,50 @@ if(
 !shapeId ||
 !Number.isFinite(price)
 ){
-return;
+console.warn(
+"alert cloud push: неполные данные",
+{ symbol, shapeId, price }
+);
+return false;
 }
+
+const row = {
+user_id: ctx.user.id,
+symbol,
+shape_id: shapeId,
+price,
+tf: normalizeAlertTf(entry.tf),
+triggered_at: null
+};
 
 const { error } =
 await ctx.sb
 .from("price_alerts")
 .upsert(
+row,
 {
-user_id: ctx.user.id,
-symbol,
-shape_id: shapeId,
-price,
-tf: entry.tf || "60",
-triggered_at: null
-},
-{ onConflict: "user_id,symbol,shape_id" }
+onConflict: "user_id,symbol,shape_id",
+ignoreDuplicates: false
+}
 );
 
 if(error){
-console.warn("alert cloud push:", error.message);
+console.warn(
+"alert cloud push:",
+error.message,
+error.code,
+error.details
+);
+return false;
 }
+
+console.log(
+"alert cloud push ok:",
+symbol,
+shapeId,
+row.tf
+);
+return true;
 
 }
 
@@ -257,15 +302,27 @@ export async function syncAllLocalAlertsToCloud(){
 const ctx = await getAuthed();
 
 if(!ctx){
-return;
+return 0;
 }
 
 const list =
 getActiveAlerts();
 
+let ok = 0;
+
 for(const row of list){
-await pushAlertToCloud(row);
+if(await pushAlertToCloud(row)){
+ok += 1;
 }
+}
+
+if(list.length){
+console.log(
+`alert cloud sync: ${ok}/${list.length}`
+);
+}
+
+return ok;
 
 }
 

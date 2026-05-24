@@ -6,10 +6,28 @@ const MAX_ALERT_HISTORY = 30;
 
 function queueAlertsCloud(fn){
 
-import("./alerts-cloud-sync.js?v=4")
+import("./alerts-cloud-sync.js?v=5")
 .then(m=>fn(m))
 .catch(err=>{
 console.warn("alerts cloud:", err);
+});
+
+}
+
+function pushAlertRowToCloud(row){
+
+queueAlertsCloud(async m=>{
+const ok =
+await m.pushAlertToCloud(row);
+
+if(!ok){
+setTimeout(()=>{
+m.pushAlertToCloud(row).catch(()=>{
+/* retry once */
+});
+}, 2000);
+}
+
 });
 
 }
@@ -315,9 +333,7 @@ list.push(row);
 
 saveAlerts(list);
 
-queueAlertsCloud(m=>{
-m.pushAlertToCloud(row);
-});
+pushAlertRowToCloud(row);
 
 }
 
@@ -373,9 +389,7 @@ a.shapeId === shapeId
 );
 
 if(row){
-queueAlertsCloud(m=>{
-m.pushAlertToCloud(row);
-});
+pushAlertRowToCloud(row);
 }
 
 }
@@ -853,6 +867,10 @@ createdAt
 }
 
 saveAlerts(merged);
+
+queueAlertsCloud(m=>{
+m.syncAllLocalAlertsToCloud();
+});
 
 return merged.length;
 
