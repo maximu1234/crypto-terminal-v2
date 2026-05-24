@@ -1,9 +1,10 @@
 import {
 alertEntryKey,
+commitAlertTriggeredLocally,
 formatTfLabel,
 getActiveAlerts,
 markAlertTriggered
-} from "./alerts.js?v=23";
+} from "./alerts.js?v=24";
 
 import { formatPrice } from "./chart.js";
 
@@ -394,6 +395,11 @@ key,
 Date.now()
 );
 lastPriceByAlert.delete(key);
+
+commitAlertTriggeredLocally(
+alert.symbol,
+alert.shapeId
+);
 
 notifyAlertTriggered(alert);
 

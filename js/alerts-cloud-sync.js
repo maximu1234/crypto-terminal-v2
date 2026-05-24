@@ -176,6 +176,19 @@ console.warn(
 return false;
 }
 
+const { data: existing } =
+await ctx.sb
+.from("price_alerts")
+.select("triggered_at")
+.eq("user_id", ctx.user.id)
+.eq("symbol", symbol)
+.eq("shape_id", shapeId)
+.maybeSingle();
+
+if(existing?.triggered_at){
+return true;
+}
+
 const row = {
 user_id: ctx.user.id,
 symbol,
@@ -534,7 +547,7 @@ return 0;
 }
 
 const { getActiveAlerts } =
-await import("./alerts.js?v=23");
+await import("./alerts.js?v=24");
 
 const localKeys =
 new Set(
@@ -615,7 +628,7 @@ return 0;
 }
 
 const { getActiveAlerts } =
-await import("./alerts.js?v=23");
+await import("./alerts.js?v=24");
 
 const list =
 getActiveAlerts();
@@ -626,9 +639,16 @@ return 0;
 
 let ok = 0;
 
+const { markAlertCloudSynced } =
+await import("./alerts.js?v=24");
+
 for(const row of list){
 if(await pushAlertToCloudImpl(row)){
 ok += 1;
+markAlertCloudSynced(
+row.symbol,
+row.shapeId
+);
 }
 }
 
@@ -658,8 +678,8 @@ return syncAllLocalAlertsToCloudImpl();
 
 }
 
-let ensureAlertsPushPromise =
-null;
+let ensureAlertsChain =
+Promise.resolve();
 
 /**
  * Повторяет push, пока сессия не готова (график coins часто раньше, чем initCloudSync).
@@ -680,7 +700,7 @@ Date.now() < deadline
 ){
 
 const { getActiveAlerts } =
-await import("./alerts.js?v=23");
+await import("./alerts.js?v=24");
 
 const list =
 getActiveAlerts();
@@ -752,24 +772,23 @@ return false;
 
 export function scheduleEnsureAlertsInCloud(){
 
-if(ensureAlertsPushPromise){
-return ensureAlertsPushPromise;
-}
-
-ensureAlertsPushPromise =
-ensureAlertsPushedToCloud()
+ensureAlertsChain =
+ensureAlertsChain
+.catch(()=>{})
+.then(()=>
+ensureAlertsPushedToCloud({
+maxMs: 20000
+})
+)
 .catch(err=>{
 console.warn(
 "alert cloud ensure:",
 err?.message || err
 );
 return false;
-})
-.finally(()=>{
-ensureAlertsPushPromise = null;
 });
 
-return ensureAlertsPushPromise;
+return ensureAlertsChain;
 
 }
 
@@ -778,7 +797,7 @@ export async function persistAlertsRegistryToCloud(){
 return runCloudOp(async()=>{
 
 const { getActiveAlerts } =
-await import("./alerts.js?v=23");
+await import("./alerts.js?v=24");
 
 const list =
 getActiveAlerts();
@@ -821,12 +840,14 @@ error.message
 return 0;
 }
 
-const { saveAlerts, alertEntryKey, loadAlerts } =
-await import("./alerts.js?v=23");
+const {
+saveAlertsFromCloudMerge,
+alertEntryKey,
+loadAlerts
+} =
+await import("./alerts.js?v=24");
 
 const byKey = new Map();
-const now = Date.now();
-const PENDING_PUSH_MS = 120000;
 
 for(const row of data || []){
 
@@ -854,7 +875,8 @@ tf: normalizeAlertTf(row.tf),
 createdAt:
 row.created_at
 ? Date.parse(row.created_at)
-: Date.now()
+: Date.now(),
+cloudSynced: true
 };
 
 byKey.set(
@@ -881,16 +903,14 @@ byKey.has(key)
 continue;
 }
 
-const age =
-now - (Number(local.createdAt) || 0);
-
-if(age <= PENDING_PUSH_MS){
+if(!local.cloudSynced){
 byKey.set(key, local);
+continue;
 }
 
 }
 
-saveAlerts([...byKey.values()]);
+saveAlertsFromCloudMerge([...byKey.values()]);
 
 return byKey.size;
 
@@ -904,7 +924,7 @@ const n =
 await mergeCloudAlertsIntoLocal();
 
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=23");
+await import("./alerts.js?v=24");
 
 stripAlertFlagsNotInRegistry();
 
@@ -923,7 +943,7 @@ return n;
 async function hydrateAlertsAfterAuth(){
 
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=23");
+await import("./alerts.js?v=24");
 
 await syncAllLocalAlertsToCloudImpl();
 await mergeCloudAlertsIntoLocal();

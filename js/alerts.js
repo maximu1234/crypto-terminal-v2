@@ -6,7 +6,7 @@ const MAX_ALERT_HISTORY = 30;
 
 function queueAlertsCloud(fn){
 
-import("./alerts-cloud-sync.js?v=23")
+import("./alerts-cloud-sync.js?v=24")
 .then(m=>fn(m))
 .catch(err=>{
 console.warn("alerts cloud:", err);
@@ -373,7 +373,7 @@ return [];
 
 }
 
-export function saveAlerts(list){
+function saveAlertsQuiet(list){
 
 const cleaned =
 (Array.isArray(list)
@@ -386,11 +386,74 @@ STORAGE_KEY,
 JSON.stringify(cleaned)
 );
 
+}
+
+export function saveAlerts(list){
+
+saveAlertsQuiet(list);
+
 window.dispatchEvent(
 new CustomEvent(
 "alerts-changed"
 )
 );
+
+}
+
+export function saveAlertsFromCloudMerge(list){
+
+saveAlertsQuiet(list);
+
+dispatchAlertsRegistryPulled();
+
+}
+
+export function markAlertCloudSynced(
+symbol,
+shapeId
+){
+
+const sym =
+String(symbol || "").trim().toUpperCase();
+const sid =
+String(shapeId || "").trim();
+
+if(
+!sym ||
+!sid
+){
+return;
+}
+
+const list =
+loadAlerts();
+
+let changed =
+false;
+
+const next =
+list.map(a=>{
+
+if(
+String(a.symbol).toUpperCase() === sym &&
+a.shapeId === sid
+){
+changed = true;
+
+return {
+...a,
+cloudSynced: true
+};
+
+}
+
+return a;
+
+});
+
+if(changed){
+saveAlertsQuiet(next);
+}
 
 }
 
@@ -464,7 +527,8 @@ shape?.tf
 createdAt:
 Number(shape?.alertCreatedAt) ||
 Number(shape?.createdAt) ||
-Date.now()
+Date.now(),
+cloudSynced: false
 };
 
 const list =
@@ -480,7 +544,7 @@ list.push(row);
 
 saveAlerts(list);
 
-void import("./alerts-cloud-sync.js?v=23").then(m=>{
+void import("./alerts-cloud-sync.js?v=24").then(m=>{
 m.scheduleEnsureAlertsInCloud();
 });
 
@@ -537,7 +601,7 @@ return false;
 }
 
 const m =
-await import("./alerts-cloud-sync.js?v=23");
+await import("./alerts-cloud-sync.js?v=24");
 
 await m.scheduleEnsureAlertsInCloud();
 
@@ -597,7 +661,7 @@ a.shapeId === shapeId
 );
 
 if(row){
-void import("./alerts-cloud-sync.js?v=23").then(m=>{
+void import("./alerts-cloud-sync.js?v=24").then(m=>{
 m.persistAlertsRegistryToCloud();
 });
 }
@@ -865,7 +929,11 @@ dispatchAlertsHistoryChanged();
 
 }
 
-export async function markAlertTriggered(symbol, shapeId){
+/** Сразу убрать с графика и из реестра (до async в облако). */
+export function commitAlertTriggeredLocally(
+symbol,
+shapeId
+){
 
 const sym =
 String(symbol || "").trim().toUpperCase();
@@ -876,7 +944,7 @@ if(
 !sym ||
 !sid
 ){
-return false;
+return;
 }
 
 const existing =
@@ -895,13 +963,29 @@ sym,
 sid
 );
 
+}
+
+export async function markAlertTriggered(symbol, shapeId){
+
+const sym =
+String(symbol || "").trim().toUpperCase();
+const sid =
+String(shapeId || "").trim();
+
+if(
+!sym ||
+!sid
+){
+return false;
+}
+
 let cloudOk =
 false;
 
 try{
 
 const m =
-await import("./alerts-cloud-sync.js?v=23");
+await import("./alerts-cloud-sync.js?v=24");
 
 const remote =
 await m.triggerAlertViaWorker(
@@ -954,6 +1038,14 @@ console.warn(
 "alert cloud trigger:",
 err?.message || err
 );
+}
+
+try{
+const m =
+await import("./alerts-cloud-sync.js?v=24");
+m.scheduleEnsureAlertsInCloud();
+}catch{
+/* ignore */
 }
 
 return cloudOk;

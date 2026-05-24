@@ -36,15 +36,23 @@ export async function executeAlertTrigger(alertId) {
     );
   }
 
-  try{
-    await restDelete(
-      `price_alerts?id=eq.${encodeURIComponent(alertId)}`
-    );
-  }catch(err){
-    console.warn(
-      "execute trigger delete:",
-      err.message
-    );
+  for (let attempt = 0; attempt < 3; attempt++) {
+
+    try{
+      await restDelete(
+        `price_alerts?id=eq.${encodeURIComponent(alertId)}`
+      );
+      break;
+    }catch(err){
+      console.warn(
+        "execute trigger delete:",
+        err.message
+      );
+      if (attempt < 2) {
+        await new Promise(r => setTimeout(r, 400));
+      }
+    }
+
   }
 
   return {
