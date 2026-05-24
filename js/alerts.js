@@ -6,7 +6,7 @@ const MAX_ALERT_HISTORY = 30;
 
 function queueAlertsCloud(fn){
 
-import("./alerts-cloud-sync.js?v=7")
+import("./alerts-cloud-sync.js?v=8")
 .then(m=>fn(m))
 .catch(err=>{
 console.warn("alerts cloud:", err);
@@ -46,7 +46,7 @@ setTimeout(r, delays[i]);
 try{
 
 const m =
-await import("./alerts-cloud-sync.js?v=7");
+await import("./alerts-cloud-sync.js?v=8");
 
 const ok =
 await m.pushAlertToCloud(row);
@@ -67,7 +67,7 @@ err?.message || err
 try{
 
 const m =
-await import("./alerts-cloud-sync.js?v=7");
+await import("./alerts-cloud-sync.js?v=8");
 
 await m.syncAlertsWithCloud();
 
@@ -684,59 +684,80 @@ dispatchAlertsHistoryChanged();
 
 }
 
-export function markAlertTriggered(symbol, shapeId){
+export async function markAlertTriggered(symbol, shapeId){
+
+const sym =
+String(symbol || "").trim().toUpperCase();
+const sid =
+String(shapeId || "").trim();
 
 if(
-!symbol ||
-!shapeId
+!sym ||
+!sid
 ){
-return;
+return false;
 }
 
 const existing =
 loadAlerts().find(
 a=>
-a.symbol === symbol &&
-a.shapeId === shapeId
+a.symbol === sym &&
+a.shapeId === sid
 );
 
 if(existing){
 appendAlertToHistory(existing);
 }
 
+let cloudOk =
+false;
+
+try{
+
+const m =
+await import("./alerts-cloud-sync.js?v=8");
+
+cloudOk =
+await m.markAlertTriggeredOnCloud(
+sym,
+sid
+);
+
+if(!cloudOk){
+await new Promise(r=>{
+setTimeout(r, 1500);
+});
+cloudOk =
+await m.markAlertTriggeredOnCloud(
+sym,
+sid
+);
+}
+
+}catch(err){
+console.warn(
+"alert cloud trigger:",
+err?.message || err
+);
+}
+
 removeDrawingShape(
-symbol,
-shapeId
+sym,
+sid
 );
 
 const list =
 loadAlerts().filter(
 a=>!
 (
-a.symbol === symbol &&
-a.shapeId === shapeId
+a.symbol === sym &&
+a.shapeId === sid
 )
 );
 
 saveAlerts(list);
 
-void queueAlertsCloud(async m=>{
-const ok =
-await m.markAlertTriggeredOnCloud(
-symbol,
-shapeId
-);
-
-if(!ok){
-setTimeout(()=>{
-m.markAlertTriggeredOnCloud(
-symbol,
-shapeId
-);
-}, 2500);
-}
-
-});
+return cloudOk;
 
 }
 

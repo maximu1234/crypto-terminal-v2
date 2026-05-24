@@ -302,6 +302,23 @@ if(!sym || !sid){
 return false;
 }
 
+const { error: deleteErr } =
+await ctx.sb
+.from("price_alerts")
+.delete()
+.eq("user_id", ctx.user.id)
+.eq("symbol", sym)
+.eq("shape_id", sid);
+
+if(!deleteErr){
+console.log(
+"alert cloud removed (triggered):",
+sym,
+sid
+);
+return true;
+}
+
 const triggeredAt =
 new Date().toISOString();
 
@@ -322,29 +339,12 @@ sid
 return true;
 }
 
-const { error: deleteErr } =
-await ctx.sb
-.from("price_alerts")
-.delete()
-.eq("user_id", ctx.user.id)
-.eq("symbol", sym)
-.eq("shape_id", sid);
-
-if(deleteErr){
 console.warn(
 "alert cloud trigger:",
-updateErr.message,
-deleteErr.message
+deleteErr.message,
+updateErr?.message
 );
 return false;
-}
-
-console.log(
-"alert cloud removed:",
-sym,
-sid
-);
-return true;
 
 }
 

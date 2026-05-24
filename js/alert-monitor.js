@@ -373,10 +373,21 @@ continue;
 
 }
 
-markAlertTriggered(
+void markAlertTriggered(
+alert.symbol,
+alert.shapeId
+).then(cloudOk=>{
+
+if(!cloudOk){
+console.warn(
+"alert: не удалось отметить в Supabase",
 alert.symbol,
 alert.shapeId
 );
+}
+
+});
+
 notifyAlertTriggered(alert);
 lastPriceByAlert.delete(key);
 

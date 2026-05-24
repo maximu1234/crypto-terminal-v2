@@ -65,3 +65,27 @@ export async function restPatch(pathAndQuery, body) {
   return true;
 
 }
+
+export async function restDelete(pathAndQuery) {
+
+  const { base, key } = restBase();
+
+  const res = await fetch(`${base}/rest/v1/${pathAndQuery}`, {
+    method: "DELETE",
+    headers: {
+      apikey: key,
+      Authorization: `Bearer ${key}`,
+      Prefer: "return=minimal"
+    }
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(
+      `REST DELETE ${res.status}: ${text.slice(0, 200)}`
+    );
+  }
+
+  return true;
+
+}

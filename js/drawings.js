@@ -1,6 +1,7 @@
 import {
 ALERT_LINE_COLOR,
 ALERT_LINE_DASH,
+getActiveAlerts,
 patchAlertPrice,
 removeAlert,
 upsertAlert
@@ -4877,6 +4878,8 @@ getSymbol(),
 shape.id
 );
 
+saveDrawings();
+
 }else{
 
 shape.savedColor = shape.color;
@@ -4919,9 +4922,16 @@ tf: shape.alertTf,
 createdAt: shape.alertCreatedAt
 });
 
+saveDrawings();
+
 }
 
 }
+
+if(shape.isAlert){
+saveDrawings();
+}
+
 updateStyleBar();
 redraw();
 
@@ -8197,6 +8207,72 @@ updateStyleBar();
 
 };
 
+function reconcileDrawingAlertsFromRegistry(){
+
+const sym =
+getSymbol();
+
+const activeIds =
+new Set(
+getActiveAlerts()
+.filter(a=>a.symbol === sym)
+.map(a=>a.shapeId)
+);
+
+let dirty =
+false;
+
+drawings =
+drawings.map(shape=>{
+
+if(shape.type !== "hray"){
+return shape;
+}
+
+const shouldAlert =
+activeIds.has(shape.id);
+
+if(shouldAlert){
+
+if(shape.isAlert){
+return shape;
+}
+
+dirty = true;
+
+return {
+...shape,
+isAlert: true,
+lineWidth: 1,
+alertCreatedAt:
+shape.alertCreatedAt ||
+Date.now(),
+alertTf:
+shape.alertTf ||
+getTf(),
+alertSymbol: sym,
+savedColor:
+shape.savedColor ||
+shape.color
+};
+
+}
+
+if(!shape.isAlert){
+return shape;
+}
+
+dirty = true;
+return stripAlertFromShape(shape);
+
+});
+
+if(dirty){
+saveDrawings();
+}
+
+}
+
 const onAlertsChanged = ()=>{
 
 if(!alive){
@@ -8207,7 +8283,7 @@ if(dragState){
 return;
 }
 
-loadDrawings();
+reconcileDrawingAlertsFromRegistry();
 scheduleRedraw();
 updateStyleBar();
 

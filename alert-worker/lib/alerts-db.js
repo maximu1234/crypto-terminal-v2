@@ -1,7 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import WebSocket from "ws";
 import { getWorkerConfig } from "./config.js";
-import { restGet, restPatch } from "./supabase-rest.js";
+import { restGet, restPatch, restDelete } from "./supabase-rest.js";
 
 let client = null;
 
@@ -197,14 +197,32 @@ export async function markAlertTriggered(alertId) {
     return false;
   }
 
+  const triggeredAt =
+    new Date().toISOString();
+
   try{
     await restPatch(
       `price_alerts?id=eq.${encodeURIComponent(alertId)}`,
-      { triggered_at: new Date().toISOString() }
+      { triggered_at: triggeredAt }
     );
     return true;
   }catch(err){
-    console.warn("mark triggered:", err.message);
+    console.warn(
+      "mark triggered (patch):",
+      err.message
+    );
+  }
+
+  try{
+    await restDelete(
+      `price_alerts?id=eq.${encodeURIComponent(alertId)}`
+    );
+    return true;
+  }catch(err){
+    console.warn(
+      "mark triggered (delete):",
+      err.message
+    );
     return false;
   }
 

@@ -17,6 +17,10 @@ collectAllLocalDrawings,
 applyDrawingsMapToLocal
 } from "./drawings-storage.js?v=1";
 
+import {
+getActiveAlerts
+} from "./alerts.js";
+
 const FAVORITES_LOCAL_TS_KEY =
 "favorites_local_updated_at";
 
@@ -437,6 +441,73 @@ notifyFavorites();
 
 }
 
+function applyAlertFlagsToDrawingsMap(map){
+
+if(
+!map ||
+typeof map !== "object"
+){
+return map;
+}
+
+const out =
+JSON.parse(JSON.stringify(map));
+
+for(const alert of getActiveAlerts()){
+
+const sym =
+String(alert.symbol || "").toUpperCase();
+
+const sid =
+String(alert.shapeId || "");
+
+if(
+!sym ||
+!sid
+){
+continue;
+}
+
+const list =
+out[sym];
+
+if(!Array.isArray(list)){
+continue;
+}
+
+const shape =
+list.find(
+s=>
+s?.id === sid &&
+s?.type === "hray"
+);
+
+if(!shape){
+continue;
+}
+
+shape.isAlert = true;
+shape.lineWidth = 1;
+shape.alertTf =
+alert.tf ||
+shape.alertTf ||
+"60";
+shape.alertSymbol = sym;
+shape.alertCreatedAt =
+shape.alertCreatedAt ||
+alert.createdAt ||
+Date.now();
+
+if(!shape.savedColor){
+shape.savedColor = shape.color;
+}
+
+}
+
+return out;
+
+}
+
 function applyDrawingsLocally(
 drawings,
 updatedAt
@@ -445,7 +516,10 @@ updatedAt
 const before =
 collectAllLocalDrawings();
 
-applyDrawingsMapToLocal(drawings);
+const merged =
+applyAlertFlagsToDrawingsMap(drawings);
+
+applyDrawingsMapToLocal(merged);
 
 const changed =
 new Set([
@@ -464,6 +538,8 @@ collectAllLocalDrawings()
 notifyDrawings(
 Array.from(changed)
 );
+
+return merged;
 
 }
 
@@ -1228,7 +1304,7 @@ session.user.id
 );
 startSyncPoll();
 
-import("./alerts-cloud-sync.js?v=7")
+import("./alerts-cloud-sync.js?v=8")
 .then(m=>{
 m.syncAllLocalAlertsToCloud();
 })
