@@ -242,6 +242,12 @@ pushAlertToCloudImpl(entry)
 
 }
 
+export function pushAlertToCloudImmediate(entry){
+
+return pushAlertToCloudImpl(entry);
+
+}
+
 export async function clearAllAlertsFromCloud(){
 
 const ctx = await getAuthed();
@@ -379,6 +385,18 @@ shapeId
 
 }
 
+export function markAlertTriggeredOnCloudImmediate(
+symbol,
+shapeId
+){
+
+return markAlertTriggeredOnCloudImpl(
+symbol,
+shapeId
+);
+
+}
+
 export {
 markAlertTriggeredOnCloudImpl,
 syncAllLocalAlertsToCloudImpl
@@ -399,7 +417,7 @@ return 0;
 }
 
 const { getActiveAlerts } =
-await import("./alerts.js?v=18");
+await import("./alerts.js?v=21");
 
 const localKeys =
 new Set(
@@ -480,7 +498,7 @@ return 0;
 }
 
 const { getActiveAlerts } =
-await import("./alerts.js?v=18");
+await import("./alerts.js?v=21");
 
 const list =
 getActiveAlerts();
@@ -492,7 +510,7 @@ return 0;
 let ok = 0;
 
 for(const row of list){
-if(await pushAlertToCloud(row)){
+if(await pushAlertToCloudImpl(row)){
 ok += 1;
 }
 }
@@ -517,12 +535,18 @@ syncAllLocalAlertsToCloudImpl()
 
 }
 
+export function syncAllLocalAlertsToCloudImmediate(){
+
+return syncAllLocalAlertsToCloudImpl();
+
+}
+
 export async function persistAlertsRegistryToCloud(){
 
 return runCloudOp(async()=>{
 
 const { getActiveAlerts } =
-await import("./alerts.js?v=18");
+await import("./alerts.js?v=21");
 
 const list =
 getActiveAlerts();
@@ -565,20 +589,12 @@ error.message
 return 0;
 }
 
-const {
-loadAlerts,
-saveAlerts,
-alertEntryKey
-} =
-await import("./alerts.js?v=18");
+const { saveAlerts, alertEntryKey, loadAlerts } =
+await import("./alerts.js?v=21");
 
-const byKey =
-new Map(
-loadAlerts().map(a=>[
-alertEntryKey(a.symbol, a.shapeId),
-a
-])
-);
+const byKey = new Map();
+const now = Date.now();
+const PENDING_PUSH_MS = 120000;
 
 for(const row of data || []){
 
@@ -597,28 +613,48 @@ if(
 continue;
 }
 
-const key =
-alertEntryKey(sym, sid);
-const prev =
-byKey.get(key);
-
-byKey.set(key, {
+const entry = {
 id: sid,
 shapeId: sid,
 symbol: sym,
 price,
-tf: normalizeAlertTf(
-row.tf ||
-prev?.tf
-),
+tf: normalizeAlertTf(row.tf),
 createdAt:
 row.created_at
 ? Date.parse(row.created_at)
-: (
-prev?.createdAt ||
-Date.now()
-)
-});
+: Date.now()
+};
+
+byKey.set(
+alertEntryKey(sym, sid),
+entry
+);
+
+}
+
+for(const local of loadAlerts()){
+
+const sym =
+String(local.symbol || "").trim().toUpperCase();
+const sid =
+String(local.shapeId || local.id || "").trim();
+const key =
+alertEntryKey(sym, sid);
+
+if(
+!sym ||
+!sid ||
+byKey.has(key)
+){
+continue;
+}
+
+const age =
+now - (Number(local.createdAt) || 0);
+
+if(age <= PENDING_PUSH_MS){
+byKey.set(key, local);
+}
 
 }
 
@@ -628,14 +664,38 @@ return byKey.size;
 
 }
 
+export async function pullRegistryFromCloud(){
+
+return runCloudOp(async()=>{
+
+const n =
+await mergeCloudAlertsIntoLocal();
+
+const { stripAlertFlagsNotInRegistry } =
+await import("./alerts.js?v=21");
+
+stripAlertFlagsNotInRegistry();
+
+window.dispatchEvent(
+new CustomEvent(
+"alerts-registry-pulled"
+)
+);
+
+return n;
+
+});
+
+}
+
 async function hydrateAlertsAfterAuth(){
 
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=18");
+await import("./alerts.js?v=21");
 
-stripAlertFlagsNotInRegistry();
-await mergeCloudAlertsIntoLocal();
 await syncAllLocalAlertsToCloudImpl();
+await mergeCloudAlertsIntoLocal();
+stripAlertFlagsNotInRegistry();
 
 }
 
@@ -706,5 +766,38 @@ err?.message || err
 );
 });
 }
+
+const pullWhenVisible = ()=>{
+
+if(
+document.visibilityState !== "visible" ||
+!isCloudLoggedIn()
+){
+return;
+}
+
+pullRegistryFromCloud().catch(err=>{
+console.warn(
+"alert cloud pull:",
+err?.message || err
+);
+});
+
+};
+
+window.addEventListener(
+"focus",
+pullWhenVisible
+);
+
+document.addEventListener(
+"visibilitychange",
+pullWhenVisible
+);
+
+setInterval(
+pullWhenVisible,
+12000
+);
 
 }

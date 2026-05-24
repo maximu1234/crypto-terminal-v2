@@ -197,6 +197,18 @@ export async function markAlertTriggered(alertId) {
     return false;
   }
 
+  try{
+    await restDelete(
+      `price_alerts?id=eq.${encodeURIComponent(alertId)}`
+    );
+    return true;
+  }catch(err){
+    console.warn(
+      "mark triggered (delete):",
+      err.message
+    );
+  }
+
   const triggeredAt =
     new Date().toISOString();
 
@@ -209,18 +221,6 @@ export async function markAlertTriggered(alertId) {
   }catch(err){
     console.warn(
       "mark triggered (patch):",
-      err.message
-    );
-  }
-
-  try{
-    await restDelete(
-      `price_alerts?id=eq.${encodeURIComponent(alertId)}`
-    );
-    return true;
-  }catch(err){
-    console.warn(
-      "mark triggered (delete):",
       err.message
     );
     return false;

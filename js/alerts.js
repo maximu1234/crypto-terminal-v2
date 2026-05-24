@@ -6,7 +6,7 @@ const MAX_ALERT_HISTORY = 30;
 
 function queueAlertsCloud(fn){
 
-import("./alerts-cloud-sync.js?v=18")
+import("./alerts-cloud-sync.js?v=21")
 .then(m=>fn(m))
 .catch(err=>{
 console.warn("alerts cloud:", err);
@@ -394,6 +394,16 @@ new CustomEvent(
 
 }
 
+function dispatchAlertsRegistryPulled(){
+
+window.dispatchEvent(
+new CustomEvent(
+"alerts-registry-pulled"
+)
+);
+
+}
+
 export function getAlertsSorted(){
 
 return loadAlerts().sort(
@@ -498,7 +508,7 @@ String(a.shapeId) === sid
 );
 
 saveAlerts(list);
-clearAlertOnDrawing(sym, sid);
+removeDrawingShape(sym, sid);
 
 }
 
@@ -522,7 +532,7 @@ if(!ok){
 return false;
 }
 
-void syncSingleAlertToCloud(entry);
+await syncSingleAlertToCloud(entry);
 
 return true;
 
@@ -537,18 +547,21 @@ await import("./auth-ui.js?v=9");
 
 await ensureCloudReady();
 
-const { isCloudLoggedIn } =
+const { waitForCloudAuth } =
 await import("./cloud-sync.js?v=12");
 
-if(!isCloudLoggedIn()){
+const ctx =
+await waitForCloudAuth(12000);
+
+if(!ctx){
 console.warn(
-"Telegram: войдите по email (шестерёнка), иначе алерт не попадёт в облако."
+"Облако: войдите по email (шестерёнка) — иначе алерт не попадёт в Supabase."
 );
 return;
 }
 
 const m =
-await import("./alerts-cloud-sync.js?v=18");
+await import("./alerts-cloud-sync.js?v=21");
 
 const row = {
 shapeId:
@@ -563,26 +576,27 @@ normalizeAlertTf(entry?.tf)
 };
 
 let ok =
-await m.pushAlertToCloud(row);
+await m.pushAlertToCloudImmediate(row);
 
 if(!ok){
-ok =
-await m.persistAlertsRegistryToCloud();
+const n =
+await m.syncAllLocalAlertsToCloudImmediate();
+ok = n >= 1;
 }
 
 if(ok){
 console.log(
-"Telegram: алерт в Supabase — сработает при закрытой вкладке, если на странице «Алерты» указан Chat ID."
+"Облако: алерт записан в Supabase (таблица price_alerts)."
 );
 }else{
 console.warn(
-"Telegram: не удалось записать алерт в Supabase (проверьте вход и таблицу price_alerts)."
+"Облако: не удалось записать в Supabase — см. консоль (RLS / migration-alerts-telegram.sql)."
 );
 }
 
 }catch(err){
 console.warn(
-"Telegram cloud sync:",
+"alert cloud sync:",
 err?.message || err
 );
 }
@@ -641,7 +655,7 @@ a.shapeId === shapeId
 );
 
 if(row){
-void import("./alerts-cloud-sync.js?v=18").then(m=>{
+void import("./alerts-cloud-sync.js?v=21").then(m=>{
 m.persistAlertsRegistryToCloud();
 });
 }
@@ -926,7 +940,7 @@ return false;
 const existing =
 loadAlerts().find(
 a=>
-a.symbol === sym &&
+String(a.symbol).toUpperCase() === sym &&
 a.shapeId === sid
 );
 
@@ -934,19 +948,21 @@ if(existing){
 appendAlertToHistory(existing);
 }
 
+disarmAlertLocally(
+sym,
+sid
+);
+
 let cloudOk =
 false;
 
-let m =
-null;
-
 try{
 
-m =
-await import("./alerts-cloud-sync.js?v=18");
+const m =
+await import("./alerts-cloud-sync.js?v=21");
 
 cloudOk =
-await m.markAlertTriggeredOnCloud(
+await m.markAlertTriggeredOnCloudImmediate(
 sym,
 sid
 );
@@ -956,7 +972,7 @@ await new Promise(r=>{
 setTimeout(r, 800);
 });
 cloudOk =
-await m.markAlertTriggeredOnCloud(
+await m.markAlertTriggeredOnCloudImmediate(
 sym,
 sid
 );
@@ -967,22 +983,6 @@ console.warn(
 "alert cloud trigger:",
 err?.message || err
 );
-}
-
-disarmAlertLocally(
-sym,
-sid
-);
-
-if(m){
-try{
-await m.syncAllLocalAlertsToCloud();
-}catch(syncErr){
-console.warn(
-"alert cloud sync after trigger:",
-syncErr?.message || syncErr
-);
-}
 }
 
 return cloudOk;

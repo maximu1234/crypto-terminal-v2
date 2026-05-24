@@ -7,7 +7,7 @@ patchAlertPrice,
 removeAlert,
 registerAlertFromDrawing,
 upsertAlert
-} from "./alerts.js?v=18";
+} from "./alerts.js?v=21";
 
 import {
 mountTvColorGrid
@@ -8258,7 +8258,12 @@ Date.now() / 1000
 
 }
 
-function reconcileDrawingAlertsFromRegistry(){
+function reconcileDrawingAlertsFromRegistry(
+options = {}
+){
+
+const allowCreate =
+options.allowCreate !== false;
 
 const symNorm =
 String(getSymbol() || "").trim().toUpperCase();
@@ -8329,6 +8334,8 @@ drawings
 .map(d=>d.id)
 );
 
+if(allowCreate){
+
 for(const alert of alertsForSym){
 
 if(
@@ -8369,6 +8376,8 @@ dirty = true;
 
 }
 
+}
+
 if(dirty){
 saveDrawings();
 scheduleRedraw();
@@ -8393,6 +8402,25 @@ updateStyleBar();
 
 };
 
+const onAlertsRegistryPulled = ()=>{
+
+if(!alive || !isActive()){
+return;
+}
+
+reconcileDrawingAlertsFromRegistry({
+allowCreate: false
+});
+scheduleRedraw();
+updateStyleBar();
+
+};
+
+window.addEventListener(
+"alerts-registry-pulled",
+onAlertsRegistryPulled
+);
+
 const onDrawingsRemoteSync = symbols=>{
 
 if(!alive || !isActive()){
@@ -8407,7 +8435,9 @@ if(
 symbols.includes(sym)
 ){
 loadDrawings();
-reconcileDrawingAlertsFromRegistry();
+reconcileDrawingAlertsFromRegistry({
+allowCreate: false
+});
 scheduleRedraw();
 updateStyleBar();
 }
