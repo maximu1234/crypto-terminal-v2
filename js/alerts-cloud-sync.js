@@ -758,7 +758,7 @@ return 0;
 }
 
 const { getActiveAlerts } =
-await import("./alerts.js?v=28");
+await import("./alerts.js?v=29");
 
 const localKeys =
 new Set(
@@ -861,7 +861,7 @@ return false;
 }
 
 const { markAlertCloudSynced } =
-await import("./alerts.js?v=28");
+await import("./alerts.js?v=29");
 
 for(
 let attempt = 0;
@@ -903,7 +903,7 @@ return false;
 async function syncAllLocalAlertsToCloudImpl(){
 
 const { ensureCloudReady } =
-await import("./auth-ui.js?v=9");
+await import("./auth-ui.js?v=10");
 
 await ensureCloudReady();
 
@@ -923,7 +923,7 @@ return 0;
 }
 
 const { getActiveAlerts } =
-await import("./alerts.js?v=28");
+await import("./alerts.js?v=29");
 
 const list =
 getActiveAlerts();
@@ -992,7 +992,7 @@ Date.now() < deadline
 ){
 
 const { getActiveAlerts } =
-await import("./alerts.js?v=28");
+await import("./alerts.js?v=29");
 
 const list =
 getActiveAlerts();
@@ -1004,7 +1004,7 @@ return true;
 try{
 
 const { ensureCloudReady } =
-await import("./auth-ui.js?v=9");
+await import("./auth-ui.js?v=10");
 
 await ensureCloudReady();
 
@@ -1069,7 +1069,7 @@ entry
 try{
 
 const { ensureCloudReady } =
-await import("./auth-ui.js?v=9");
+await import("./auth-ui.js?v=10");
 
 await ensureCloudReady();
 
@@ -1162,7 +1162,7 @@ saveAlertsFromCloudMerge,
 alertEntryKey,
 loadAlerts
 } =
-await import("./alerts.js?v=28");
+await import("./alerts.js?v=29");
 
 const cloudKeys =
 new Set(
@@ -1218,7 +1218,7 @@ const n =
 await reconcileLocalRegistryWithCloud();
 
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=28");
+await import("./alerts.js?v=29");
 
 stripAlertFlagsNotInRegistry();
 
@@ -1231,7 +1231,7 @@ return n;
 async function hydrateAlertsAfterAuth(){
 
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=28");
+await import("./alerts.js?v=29");
 
 await syncAllLocalAlertsToCloudImpl();
 await reconcileLocalRegistryWithCloud();

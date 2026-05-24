@@ -6,7 +6,7 @@ getActiveAlerts,
 patchAlertPrice,
 removeAlert,
 upsertAlert
-} from "./alerts.js?v=28";
+} from "./alerts.js?v=29";
 
 import {
 mountTvColorGrid
@@ -4926,19 +4926,25 @@ symbol: sym,
 price: level,
 tf: shape.alertTf,
 createdAt: shape.alertCreatedAt
-}).then(ok=>{
+}).then(pushed=>{
 
-if(!ok){
+if(pushed === false){
 console.warn(
-"Alert: не записан в таблицу — нет символа или цены",
-sym,
-shape.price
-);
-}else{
-console.log(
-"Alert: локально сохранён, отправка в Supabase…",
+"Alert: не записан в Supabase — войдите через шестерёнку (email) или проверьте [Multichart] в консоли при загрузке",
 sym,
 shape.id
+);
+}else if(pushed){
+console.log(
+"Alert: записан в Supabase",
+sym,
+shape.id
+);
+}else{
+console.warn(
+"Alert: не удалось — нет символа или цены линии",
+sym,
+shape.price
 );
 }
 

@@ -9,7 +9,7 @@ getAlertsSorted,
 removeAlert,
 stripAlertFlagsNotInRegistry,
 removeAllAlerts
-} from "./alerts.js?v=28";
+} from "./alerts.js?v=29";
 
 import {
 getTelegramChatId,
@@ -27,7 +27,7 @@ getCloudUserEmail
 import {
 ensureCloudReady,
 focusAlertsLogin
-} from "./auth-ui.js?v=9";
+} from "./auth-ui.js?v=10";
 
 import { formatPrice } from "./chart.js";
 

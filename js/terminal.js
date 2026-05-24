@@ -24,7 +24,7 @@ flagSortRank
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=9";
+} from "./auth-ui.js?v=10";
 
 import {
 persistFavoritesToCloud,
@@ -70,11 +70,11 @@ fetchTickersInto
 
 import {
 processAlertCandle
-} from "./alert-monitor.js?v=19";
+} from "./alert-monitor.js?v=28";
 
 import {
 initDrawings
-} from "./drawings.js?v=119";
+} from "./drawings.js?v=120";
 
 let currentDataset = "crypto";
 let currentTF = "60";

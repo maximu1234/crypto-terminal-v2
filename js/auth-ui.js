@@ -208,7 +208,7 @@ wrap.className =
 
 wrap.innerHTML = `
 <div class="cloud-auth-logged-out">
-<input type="email" class="cloud-auth-email" placeholder="email" autocomplete="email" inputmode="email"/>
+<input type="email" id="cloud-auth-email" name="email" class="cloud-auth-email" placeholder="email" autocomplete="email" inputmode="email"/>
 <button type="button" class="cloud-auth-send">Войти</button>
 </div>
 <div class="cloud-auth-logged-in hidden">
