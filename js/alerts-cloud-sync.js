@@ -256,13 +256,22 @@ if(!ctx){
 return;
 }
 
+const sym =
+String(symbol || "").trim().toUpperCase();
+const sid =
+String(shapeId || "").trim();
+
+if(!sym || !sid){
+return;
+}
+
 const { error } =
 await ctx.sb
 .from("price_alerts")
 .delete()
 .eq("user_id", ctx.user.id)
-.eq("symbol", symbol)
-.eq("shape_id", shapeId);
+.eq("symbol", sym)
+.eq("shape_id", sid);
 
 if(error){
 console.warn("alert cloud delete:", error.message);
@@ -339,6 +348,87 @@ return true;
 
 }
 
+function localAlertKey(row){
+
+return `${String(row.symbol).toUpperCase()}::${String(row.shapeId)}`;
+
+}
+
+export async function pruneOrphanCloudAlerts(){
+
+const ctx = await getAuthed();
+
+if(!ctx){
+return 0;
+}
+
+const localKeys =
+new Set(
+getActiveAlerts().map(localAlertKey)
+);
+
+const { data: cloudRows, error } =
+await ctx.sb
+.from("price_alerts")
+.select("id, symbol, shape_id")
+.eq("user_id", ctx.user.id)
+.is("triggered_at", null);
+
+if(error){
+console.warn(
+"alert cloud prune list:",
+error.message
+);
+return 0;
+}
+
+if(!cloudRows?.length){
+return 0;
+}
+
+let removed = 0;
+
+for(const row of cloudRows){
+
+const key =
+`${String(row.symbol).toUpperCase()}::${String(row.shape_id)}`;
+
+if(localKeys.has(key)){
+continue;
+}
+
+const { error: delErr } =
+await ctx.sb
+.from("price_alerts")
+.delete()
+.eq("id", row.id);
+
+if(!delErr){
+removed += 1;
+console.log(
+"alert cloud prune:",
+row.symbol,
+row.shape_id
+);
+}else{
+console.warn(
+"alert cloud prune:",
+delErr.message
+);
+}
+
+}
+
+if(removed){
+console.log(
+`alert cloud prune: removed ${removed} orphan(s)`
+);
+}
+
+return removed;
+
+}
+
 export async function syncAllLocalAlertsToCloud(){
 
 const ctx = await getAuthed();
@@ -358,9 +448,12 @@ ok += 1;
 }
 }
 
-if(list.length){
+const pruned =
+await pruneOrphanCloudAlerts();
+
+if(list.length || pruned){
 console.log(
-`alert cloud sync: ${ok}/${list.length}`
+`alert cloud sync: pushed ${ok}/${list.length}, pruned ${pruned} orphan(s)`
 );
 }
 
@@ -368,7 +461,30 @@ return ok;
 
 }
 
+export async function syncAlertsWithCloud(){
+
+return syncAllLocalAlertsToCloud();
+
+}
+
 let alertsCloudSyncReady = false;
+let cloudSyncTimer = null;
+
+function scheduleAlertCloudSync(reason){
+
+clearTimeout(cloudSyncTimer);
+
+cloudSyncTimer = setTimeout(()=>{
+syncAllLocalAlertsToCloud().catch(err=>{
+console.warn(
+"alert cloud sync:",
+reason,
+err?.message || err
+);
+});
+}, 400);
+
+}
 
 export function initAlertsCloudSync(){
 
@@ -378,20 +494,23 @@ return;
 
 alertsCloudSyncReady = true;
 
+window.addEventListener(
+"alerts-changed",
+()=>{
+scheduleAlertCloudSync("alerts-changed");
+}
+);
+
 onCloudSyncChange(()=>{
 
 if(isCloudLoggedIn()){
-syncAllLocalAlertsToCloud().catch(()=>{
-/* ignore */
-});
+scheduleAlertCloudSync("auth");
 }
 
 });
 
 if(isCloudLoggedIn()){
-syncAllLocalAlertsToCloud().catch(()=>{
-/* ignore */
-});
+scheduleAlertCloudSync("init");
 }
 
 }

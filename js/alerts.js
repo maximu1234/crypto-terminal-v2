@@ -6,7 +6,7 @@ const MAX_ALERT_HISTORY = 30;
 
 function queueAlertsCloud(fn){
 
-import("./alerts-cloud-sync.js?v=6")
+import("./alerts-cloud-sync.js?v=7")
 .then(m=>fn(m))
 .catch(err=>{
 console.warn("alerts cloud:", err);
@@ -14,21 +14,69 @@ console.warn("alerts cloud:", err);
 
 }
 
-function pushAlertRowToCloud(row){
+function normalizeAlertTf(tf){
 
-queueAlertsCloud(async m=>{
+if(
+tf == null ||
+tf === ""
+){
+return "60";
+}
+
+return String(tf);
+
+}
+
+async function pushAlertRowToCloud(row){
+
+const delays = [
+0,
+1500,
+4000
+];
+
+for(let i = 0; i < delays.length; i++){
+
+if(delays[i] > 0){
+await new Promise(r=>{
+setTimeout(r, delays[i]);
+});
+}
+
+try{
+
+const m =
+await import("./alerts-cloud-sync.js?v=7");
+
 const ok =
 await m.pushAlertToCloud(row);
 
-if(!ok){
-setTimeout(()=>{
-m.pushAlertToCloud(row).catch(()=>{
-/* retry once */
-});
-}, 2000);
+if(ok){
+return;
 }
 
-});
+}catch(err){
+console.warn(
+"alerts cloud push:",
+err?.message || err
+);
+}
+
+}
+
+try{
+
+const m =
+await import("./alerts-cloud-sync.js?v=7");
+
+await m.syncAlertsWithCloud();
+
+}catch(err){
+console.warn(
+"alerts cloud full sync:",
+err?.message || err
+);
+}
 
 }
 
@@ -296,7 +344,7 @@ entry?.shapeId ||
 entry?.id;
 
 const symbol =
-entry?.symbol;
+String(entry?.symbol || "").trim().toUpperCase();
 
 const price =
 Number(entry?.price);
@@ -314,7 +362,7 @@ id: shapeId,
 shapeId,
 symbol,
 price,
-tf: entry.tf || "60",
+tf: normalizeAlertTf(entry.tf),
 createdAt:
 Number(entry.createdAt) ||
 Date.now()
@@ -333,7 +381,7 @@ list.push(row);
 
 saveAlerts(list);
 
-pushAlertRowToCloud(row);
+void pushAlertRowToCloud(row);
 
 }
 
@@ -389,7 +437,7 @@ a.shapeId === shapeId
 );
 
 if(row){
-pushAlertRowToCloud(row);
+void pushAlertRowToCloud(row);
 }
 
 }
@@ -416,11 +464,12 @@ a.shapeId === shapeId
 
 saveAlerts(list);
 
-queueAlertsCloud(m=>{
-m.removeAlertFromCloud(
+queueAlertsCloud(async m=>{
+await m.removeAlertFromCloud(
 symbol,
 shapeId
 );
+await m.pruneOrphanCloudAlerts();
 });
 
 }
@@ -880,7 +929,7 @@ createdAt
 saveAlerts(merged);
 
 queueAlertsCloud(m=>{
-m.syncAllLocalAlertsToCloud();
+m.syncAlertsWithCloud();
 });
 
 return merged.length;

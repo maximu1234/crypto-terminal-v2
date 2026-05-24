@@ -16,7 +16,7 @@ import {
 getTelegramChatId,
 initAlertsCloudSync,
 saveTelegramChatId
-} from "./alerts-cloud-sync.js?v=6";
+} from "./alerts-cloud-sync.js?v=7";
 
 import {
 isCloudLoggedIn,
