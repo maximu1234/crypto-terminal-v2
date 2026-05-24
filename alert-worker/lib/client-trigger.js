@@ -1,13 +1,39 @@
 import { restGet } from "./supabase-rest.js";
-import { executeAlertTrigger } from "./execute-trigger.js";
+import {
+  executeAlertTrigger,
+  notifyTelegramOnly
+} from "./execute-trigger.js";
 import {
   readJsonBody,
   setCors,
   verifyUserFromRequest
 } from "./client-http.js";
 
+function notifyPayloadFromBody(body) {
+
+  const sym =
+    String(body.symbol || "").trim().toUpperCase();
+  const price =
+    Number(body.price);
+
+  if (
+    !sym ||
+    !Number.isFinite(price)
+  ) {
+    return null;
+  }
+
+  return {
+    symbol: sym,
+    price,
+    tf: body.tf
+  };
+
+}
+
 /**
- * POST /trigger — браузер сообщает о срабатывании (Telegram + delete с service role).
+ * POST /trigger — браузер: Telegram + удаление (service role).
+ * Если строки уже нет — Telegram по symbol/price/tf из тела.
  */
 export async function handleClientTrigger(
   req,
@@ -85,17 +111,51 @@ export async function handleClientTrigger(
     }
 
     if (!owned?.length) {
+
+      const payload =
+        notifyPayloadFromBody(body);
+
+      if (payload) {
+        const result =
+          await notifyTelegramOnly(
+            user.id,
+            payload
+          );
+
+        res.writeHead(200, { "Content-Type": "application/json" });
+        res.end(JSON.stringify(result));
+        return true;
+      }
+
       res.writeHead(200, { "Content-Type": "application/json" });
       res.end(JSON.stringify({
         ok: false,
         skipped: "not_found"
       }));
       return true;
+
     }
 
     try{
-      const result =
+      let result =
         await executeAlertTrigger(alertId);
+
+      if (
+        !result.ok &&
+        result.reason === "not_claimed"
+      ) {
+        const payload =
+          notifyPayloadFromBody(body);
+
+        if (payload) {
+          result =
+            await notifyTelegramOnly(
+              user.id,
+              payload
+            );
+        }
+
+      }
 
       res.writeHead(200, { "Content-Type": "application/json" });
       res.end(JSON.stringify(result));
@@ -131,8 +191,7 @@ export async function handleClientTrigger(
       "&symbol=eq." +
       encodeURIComponent(sym) +
       "&shape_id=eq." +
-      encodeURIComponent(sid) +
-      "&triggered_at=is.null"
+      encodeURIComponent(sid)
     );
   }catch(err){
     res.writeHead(500, { "Content-Type": "application/json" });
@@ -144,12 +203,29 @@ export async function handleClientTrigger(
   }
 
   if (!rows?.length) {
+
+    const payload =
+      notifyPayloadFromBody(body);
+
+    if (payload) {
+      const result =
+        await notifyTelegramOnly(
+          user.id,
+          payload
+        );
+
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify(result));
+      return true;
+    }
+
     res.writeHead(200, { "Content-Type": "application/json" });
     res.end(JSON.stringify({
       ok: false,
       skipped: "not_found"
     }));
     return true;
+
   }
 
   const result =

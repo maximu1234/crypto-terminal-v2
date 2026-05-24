@@ -63,3 +63,54 @@ export async function executeAlertTrigger(alertId) {
   };
 
 }
+
+/**
+ * Telegram без строки в price_alerts (браузер уже удалил).
+ */
+export async function notifyTelegramOnly(
+  userId,
+  alert
+) {
+
+  const sym =
+    String(alert?.symbol || "").trim().toUpperCase();
+  const price =
+    Number(alert?.price);
+
+  if (
+    !sym ||
+    !Number.isFinite(price)
+  ) {
+    return {
+      ok: false,
+      reason: "bad_body"
+    };
+  }
+
+  const chatId =
+    await fetchTelegramChatId(userId);
+
+  if (chatId == null) {
+    return {
+      ok: true,
+      telegram: false,
+      reason: "no_chat"
+    };
+  }
+
+  const telegram =
+    await sendTelegramMessage(
+      chatId,
+      formatAlertMessage({
+        symbol: sym,
+        price,
+        tf: alert?.tf
+      })
+    );
+
+  return {
+    ok: true,
+    telegram
+  };
+
+}
