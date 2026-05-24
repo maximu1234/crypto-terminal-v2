@@ -6,10 +6,10 @@ const MAX_ALERT_HISTORY = 30;
 
 function queueAlertsCloud(fn){
 
-import("./alerts-cloud-sync.js?v=1")
+import("./alerts-cloud-sync.js?v=4")
 .then(m=>fn(m))
-.catch(()=>{
-/* ignore */
+.catch(err=>{
+console.warn("alerts cloud:", err);
 });
 
 }
@@ -646,10 +646,16 @@ symbol,
 shapeId
 );
 
-removeAlert(
-symbol,
-shapeId
+const list =
+loadAlerts().filter(
+a=>!
+(
+a.symbol === symbol &&
+a.shapeId === shapeId
+)
 );
+
+saveAlerts(list);
 
 queueAlertsCloud(m=>{
 m.markAlertTriggeredOnCloud(
