@@ -180,6 +180,26 @@ console.warn("alert cloud push:", error.message);
 
 }
 
+export async function clearAllAlertsFromCloud(){
+
+const ctx = await getAuthed();
+
+if(!ctx){
+return;
+}
+
+const { error } =
+await ctx.sb
+.from("price_alerts")
+.delete()
+.eq("user_id", ctx.user.id);
+
+if(error){
+console.warn("alert cloud clear all:", error.message);
+}
+
+}
+
 export async function removeAlertFromCloud(
 symbol,
 shapeId
@@ -249,7 +269,15 @@ await pushAlertToCloud(row);
 
 }
 
+let alertsCloudSyncReady = false;
+
 export function initAlertsCloudSync(){
+
+if(alertsCloudSyncReady){
+return;
+}
+
+alertsCloudSyncReady = true;
 
 onCloudSyncChange(()=>{
 

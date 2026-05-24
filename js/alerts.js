@@ -670,6 +670,10 @@ export function removeAllAlerts(){
 
 saveAlerts([]);
 
+queueAlertsCloud(m=>{
+m.clearAllAlertsFromCloud();
+});
+
 }
 
 export function clearAlertOnDrawing(symbol, shapeId){

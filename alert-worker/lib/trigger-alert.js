@@ -60,15 +60,25 @@ export async function evaluateAlertsForPrice(
     }
 
     const text = formatAlertMessage(alert);
+    const marked = await markAlertTriggered(alert.id);
+
+    activeAlerts.delete(key);
+    lastPriceByAlert.delete(key);
+
+    if (!marked) {
+      console.warn(
+        "mark triggered failed",
+        alert.symbol,
+        alert.id
+      );
+    }
+
     const ok = await sendTelegramMessage(
       alert.telegram_chat_id,
       text
     );
 
     if (ok) {
-      await markAlertTriggered(alert.id);
-      activeAlerts.delete(key);
-      lastPriceByAlert.delete(key);
       console.log(
         "triggered",
         alert.symbol,
@@ -84,8 +94,6 @@ export async function evaluateAlertsForPrice(
         alert.telegram_chat_id
       );
     }
-
-    lastPriceByAlert.set(key, price);
 
   }
 

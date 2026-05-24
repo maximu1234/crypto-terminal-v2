@@ -16,7 +16,7 @@ import {
 getTelegramChatId,
 initAlertsCloudSync,
 saveTelegramChatId
-} from "./alerts-cloud-sync.js?v=1";
+} from "./alerts-cloud-sync.js?v=4";
 
 import {
 isCloudLoggedIn,
@@ -27,7 +27,7 @@ getCloudUserEmail
 import {
 ensureCloudReady,
 focusAlertsLogin
-} from "./auth-ui.js?v=7";
+} from "./auth-ui.js?v=8";
 
 import { formatPrice } from "./chart.js";
 

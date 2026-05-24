@@ -108,6 +108,9 @@ export function createBybitKlineHub() {
     socket.on("close", () => {
       console.warn("bybit kline ws closed, reconnect in 3s");
       socket = null;
+      if (reconnectTimer) {
+        clearTimeout(reconnectTimer);
+      }
       reconnectTimer = setTimeout(connect, 3000);
     });
 

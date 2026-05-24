@@ -43,7 +43,13 @@ path.endsWith("/alerts/")
 
 }
 
+let settingsDropdownReady = false;
+
 function setupSettingsDropdown(){
+
+if(settingsDropdownReady){
+return;
+}
 
 const btn =
 document.getElementById("header-settings-btn");
@@ -114,6 +120,8 @@ close();
 }
 
 });
+
+settingsDropdownReady = true;
 
 }
 
@@ -345,8 +353,6 @@ let initPromise = null;
 let authUiMounted = false;
 
 async function initAuthUiInternal(){
-
-setupSettingsDropdown();
 
 try{
 cloudEnvConfigured =

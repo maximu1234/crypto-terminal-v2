@@ -199,7 +199,7 @@ export async function markAlertTriggered(alertId) {
 
   try{
     await restPatch(
-      `price_alerts?id=eq.${alertId}`,
+      `price_alerts?id=eq.${encodeURIComponent(alertId)}`,
       { triggered_at: new Date().toISOString() }
     );
     return true;
