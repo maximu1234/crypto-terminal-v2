@@ -6,7 +6,7 @@ const MAX_ALERT_HISTORY = 30;
 
 function queueAlertsCloud(fn){
 
-import("./alerts-cloud-sync.js?v=30")
+import("./alerts-cloud-sync.js?v=34")
 .then(m=>fn(m))
 .catch(err=>{
 console.warn("alerts cloud:", err);
@@ -545,16 +545,23 @@ list.push(row);
 saveAlerts(list);
 
 const m =
-await import("./alerts-cloud-sync.js?v=30");
+await import("./alerts-cloud-sync.js?v=34");
 
 const pushed =
-await m.pushSingleAlertToCloud(row);
+await m.flushAlertCloudPush(row);
 
 if(!pushed){
+const retry =
+await m.pushSingleAlertToCloud(row);
+
+if(!retry){
 m.scheduleEnsureAlertsInCloud();
 }
 
-return pushed;
+return !!retry;
+}
+
+return true;
 
 }
 
@@ -645,7 +652,7 @@ return a;
 });
 
 if(changed){
-saveAlerts(next);
+saveAlertsQuiet(next);
 
 const row =
 next.find(
@@ -655,12 +662,78 @@ a.shapeId === shapeId
 );
 
 if(row){
-void import("./alerts-cloud-sync.js?v=30").then(m=>{
-m.pushSingleAlertToCloud(row);
+void import("./alerts-cloud-sync.js?v=34").then(m=>{
+m.scheduleDebouncedAlertPush(row);
 });
 }
 
 }
+
+}
+
+/** После отпускания линии алерта — обновить цену в реестре и в Supabase. */
+export function finalizeAlertPriceDrag(
+symbol,
+shapeId,
+price,
+tf
+){
+
+const sym =
+String(symbol || "").trim().toUpperCase();
+const sid =
+String(shapeId || "").trim();
+
+const level =
+Number(price);
+
+if(
+!sym ||
+!sid ||
+!Number.isFinite(level)
+){
+return;
+}
+
+let row =
+null;
+
+const list =
+loadAlerts().map(a=>{
+
+if(
+String(a.symbol).toUpperCase() === sym &&
+String(a.shapeId) === sid
+){
+
+row = {
+...a,
+price: level,
+tf:
+normalizeAlertTf(
+tf ||
+a.tf
+),
+cloudSynced: false
+};
+
+return row;
+
+}
+
+return a;
+
+});
+
+if(!row){
+return;
+}
+
+saveAlerts(list);
+
+void import("./alerts-cloud-sync.js?v=34").then(m=>{
+m.flushAlertCloudPush(row);
+});
 
 }
 
@@ -957,6 +1030,17 @@ sym,
 sid
 );
 
+console.log(
+"[alerts] сработал:",
+sym,
+sid
+);
+
+void markAlertTriggered(
+sym,
+sid
+);
+
 }
 
 export async function markAlertTriggered(symbol, shapeId){
@@ -979,7 +1063,7 @@ false;
 try{
 
 const m =
-await import("./alerts-cloud-sync.js?v=30");
+await import("./alerts-cloud-sync.js?v=34");
 
 const remote =
 await m.triggerAlertViaWorker(
@@ -988,20 +1072,76 @@ sid
 );
 
 const workerHandled =
-remote?.ok &&
-!remote.skipped &&
-remote.reason !== "not_claimed";
+remote?.ok === true;
 
 if(workerHandled){
+
 cloudOk = true;
 
-if(remote.telegram === false){
+const stillThere =
+await m.isAlertRowActiveInCloud(
+sym,
+sid
+);
+
+if(stillThere){
+console.warn(
+"alert: worker ok, но строка в Supabase осталась — дочищаем",
+sym,
+sid
+);
+cloudOk =
+await m.markAlertTriggeredOnCloudImmediate(
+sym,
+sid
+);
+if(!cloudOk){
+await m.removeAlertFromCloud(
+sym,
+sid
+);
+}
+}
+
+if(
+remote.telegram === false &&
+!stillThere
+){
 console.warn(
 "Telegram: не отправлено — проверьте chat id на странице Алерты и TELEGRAM_BOT_TOKEN на Railway."
 );
 }
 
+if(
+remote.telegram === false &&
+stillThere
+){
+console.warn(
+"Telegram: не отправлено (worker). Проверьте chat id и Railway."
+);
+}
+
+}else if(
+remote?.reason === "not_claimed"
+){
+console.warn(
+"alert: worker not_claimed",
+sym,
+sid
+);
 }else{
+
+if(
+remote?.skipped === "not_found" ||
+remote?.reason === "not_found"
+){
+console.warn(
+"alert: в Supabase не было строки для",
+sym,
+sid,
+"— удаляем локально"
+);
+}
 
 cloudOk =
 await m.markAlertTriggeredOnCloudImmediate(
@@ -1021,8 +1161,15 @@ sid
 }
 
 if(!cloudOk){
+await m.removeAlertFromCloud(
+sym,
+sid
+);
+}
+
+if(!cloudOk){
 console.warn(
-"Облако: не удалось удалить алерт из Supabase. Задайте ALERT_WORKER_URL для Telegram при открытой вкладке."
+"Облако: не удалось удалить алерт из Supabase — проверьте ALERT_WORKER_URL и вход."
 );
 }
 

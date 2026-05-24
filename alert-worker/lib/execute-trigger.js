@@ -1,6 +1,7 @@
-import { restDelete } from "./supabase-rest.js";
 import {
-  claimAlertById,
+  restDeleteReturning
+} from "./supabase-rest.js";
+import {
   fetchTelegramChatId
 } from "./alerts-db.js";
 import {
@@ -9,16 +10,35 @@ import {
 } from "./telegram.js";
 
 /**
- * Атомарно «забирает» алерт, шлёт Telegram, удаляет строку.
- * Возвращает false, если алерт уже обработан другим процессом.
+ * Удаляет активную строку, шлёт Telegram. Без «зависших» triggered_at.
  */
 export async function executeAlertTrigger(alertId) {
 
-  const claimed = await claimAlertById(alertId);
+  let rows;
 
-  if (!claimed) {
+  try{
+    rows = await restDeleteReturning(
+      "price_alerts?id=eq." +
+      encodeURIComponent(alertId) +
+      "&triggered_at=is.null"
+    );
+  }catch(err){
+    console.warn(
+      "execute trigger delete:",
+      err.message
+    );
+    return {
+      ok: false,
+      reason: "delete_failed",
+      error: err.message
+    };
+  }
+
+  if (!rows?.length) {
     return { ok: false, reason: "not_claimed" };
   }
+
+  const claimed = rows[0];
 
   const chatId =
     await fetchTelegramChatId(claimed.user_id);
@@ -34,25 +54,6 @@ export async function executeAlertTrigger(alertId) {
         tf: claimed.tf
       })
     );
-  }
-
-  for (let attempt = 0; attempt < 3; attempt++) {
-
-    try{
-      await restDelete(
-        `price_alerts?id=eq.${encodeURIComponent(alertId)}`
-      );
-      break;
-    }catch(err){
-      console.warn(
-        "execute trigger delete:",
-        err.message
-      );
-      if (attempt < 2) {
-        await new Promise(r => setTimeout(r, 400));
-      }
-    }
-
   }
 
   return {

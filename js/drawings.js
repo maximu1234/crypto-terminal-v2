@@ -3,10 +3,15 @@ ALERT_LINE_COLOR,
 ALERT_LINE_DASH,
 alertPriceFromShape,
 getActiveAlerts,
-patchAlertPrice,
+finalizeAlertPriceDrag,
 removeAlert,
 upsertAlert
-} from "./alerts.js?v=30";
+} from "./alerts.js?v=34";
+
+import {
+setAlertDragPaused,
+resetAlertWatchBaseline
+} from "./alert-monitor.js?v=34";
 
 import {
 mountTvColorGrid
@@ -6027,6 +6032,17 @@ mode: "handle",
 handleId
 };
 
+if(
+sel.type === "hray" &&
+sel.isAlert
+){
+setAlertDragPaused(
+getSymbol(),
+sel.id,
+true
+);
+}
+
 }else if(
 onBody
 ){
@@ -6070,6 +6086,17 @@ shapeId: sel.id,
 mode: "screen-move",
 pointOffsets: offsets
 };
+
+if(
+sel.type === "hray" &&
+sel.isAlert
+){
+setAlertDragPaused(
+getSymbol(),
+sel.id,
+true
+);
+}
 
 }
 
@@ -6298,17 +6325,6 @@ moveHandle(shape, dragState.handleId, point);
 
 saveDrawings();
 
-if(
-shape.type === "hray" &&
-shape.isAlert
-){
-patchAlertPrice(
-getSymbol(),
-shape.id,
-Number(shape.price)
-);
-}
-
 redraw();
 
 };
@@ -6319,19 +6335,55 @@ if(!alive || !dragState){
 return;
 }
 
-if(dragState.mode === "position-move"){
-
-const shape =
+const draggedShape =
 drawings.find(d=>d.id === dragState.shapeId);
 
+if(dragState.mode === "position-move"){
+
 if(
-shape &&
-isPositionType(shape.type)
+draggedShape &&
+isPositionType(draggedShape.type)
 ){
-clampPositionPrices(shape);
+clampPositionPrices(draggedShape);
 saveDrawings();
 }
 
+}
+
+if(
+draggedShape?.type === "hray" &&
+draggedShape.isAlert
+){
+const sym =
+String(getSymbol() || "").trim().toUpperCase();
+
+const candles =
+getCandles?.();
+
+const close =
+Array.isArray(candles) &&
+candles.length
+? Number(candles[candles.length - 1].close)
+: Number(draggedShape.price);
+
+finalizeAlertPriceDrag(
+sym,
+draggedShape.id,
+Number(draggedShape.price),
+draggedShape.alertTf
+);
+
+resetAlertWatchBaseline(
+sym,
+draggedShape.id,
+close
+);
+
+setAlertDragPaused(
+sym,
+draggedShape.id,
+false
+);
 }
 
 dragState = null;

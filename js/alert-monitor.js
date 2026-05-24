@@ -2,9 +2,8 @@ import {
 alertEntryKey,
 commitAlertTriggeredLocally,
 formatTfLabel,
-getActiveAlerts,
-markAlertTriggered
-} from "./alerts.js?v=30";
+getActiveAlerts
+} from "./alerts.js?v=34";
 
 import { formatPrice } from "./chart.js";
 
@@ -17,7 +16,89 @@ new Map();
 
 const TRIGGER_COOLDOWN_MS = 60000;
 
+/** shapeId → symbol пока тянут линию алерта (не проверять пересечение). */
+const dragPausedAlerts =
+new Map();
+
 let audioCtx = null;
+
+export function setAlertDragPaused(
+symbol,
+shapeId,
+paused
+){
+
+const sym =
+String(symbol || "").trim().toUpperCase();
+const sid =
+String(shapeId || "").trim();
+
+if(
+!sym ||
+!sid
+){
+return;
+}
+
+const key =
+alertEntryKey(
+sym,
+sid
+);
+
+if(paused){
+dragPausedAlerts.set(
+key,
+sym
+);
+}else{
+dragPausedAlerts.delete(key);
+}
+
+}
+
+/** После отпускания линии — не считать пересечение сразу. */
+export function resetAlertWatchBaseline(
+symbol,
+shapeId,
+price
+){
+
+const sym =
+String(symbol || "").trim().toUpperCase();
+const sid =
+String(shapeId || "").trim();
+
+if(
+!sym ||
+!sid
+){
+return;
+}
+
+const key =
+alertEntryKey(
+sym,
+sid
+);
+
+const baseline =
+Number.isFinite(Number(price))
+? Number(price)
+: undefined;
+
+if(baseline !== undefined){
+lastPriceByAlert.set(
+key,
+baseline
+);
+}else{
+lastPriceByAlert.delete(key);
+}
+
+recentlyTriggered.delete(key);
+
+}
 
 function displaySymbol(symbol){
 
@@ -342,14 +423,18 @@ if(String(alert.tf || "60") !== tfNorm){
 continue;
 }
 
-const level =
-Number(alert.price);
-
 const key =
 alertEntryKey(
 alert.symbol,
 alert.shapeId
 );
+
+if(dragPausedAlerts.has(key)){
+continue;
+}
+
+const level =
+Number(alert.price);
 
 let prev =
 lastPriceByAlert.get(key);
@@ -403,20 +488,7 @@ alert.shapeId
 
 notifyAlertTriggered(alert);
 
-void markAlertTriggered(
-alert.symbol,
-alert.shapeId
-).then(cloudOk=>{
-
-if(!cloudOk){
-console.warn(
-"alert: не удалось отметить в Supabase",
-alert.symbol,
-alert.shapeId
-);
 }
-
-});
 
 }
 

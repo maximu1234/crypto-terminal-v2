@@ -161,3 +161,39 @@ export async function restDelete(pathAndQuery) {
   return true;
 
 }
+
+/** DELETE с возвратом удалённых строк (для атомарного claim). */
+export async function restDeleteReturning(
+  pathAndQuery
+) {
+
+  const { base, key } = restBase();
+
+  const res = await fetch(`${base}/rest/v1/${pathAndQuery}`, {
+    method: "DELETE",
+    headers: {
+      apikey: key,
+      Authorization: `Bearer ${key}`,
+      Prefer: "return=representation"
+    }
+  });
+
+  const text = await res.text();
+
+  if (!res.ok) {
+    throw new Error(
+      `REST DELETE ${res.status}: ${text.slice(0, 200)}`
+    );
+  }
+
+  if (!text) {
+    return [];
+  }
+
+  const parsed = JSON.parse(text);
+
+  return Array.isArray(parsed)
+    ? parsed
+    : [parsed];
+
+}
