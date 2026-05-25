@@ -450,7 +450,7 @@ const out =
 JSON.parse(JSON.stringify(map));
 
 const { getActiveAlerts } =
-await import("./alerts.js?v=50");
+await import("./alerts.js?v=51");
 
 for(const alert of getActiveAlerts()){
 
@@ -1288,6 +1288,12 @@ await sb.auth.signOut();
 
 loggedIn = false;
 userEmail = "";
+
+const { clearAlertAuthCache } =
+await import("./alert-auth-cache.js");
+
+clearAlertAuthCache();
+
 stopCloudSyncHelpers();
 notifyAuth();
 
@@ -1299,6 +1305,20 @@ loggedIn = !!session?.user;
 userEmail = session?.user?.email || "";
 
 if(loggedIn){
+
+const sb =
+await getSupabase();
+
+if(sb){
+const { warmAlertAuthCache } =
+await import("./alert-auth-cache.js");
+
+warmAlertAuthCache(
+sb,
+session
+);
+}
+
 await mergeFavoritesWithCloud();
 await mergeDrawingsWithCloud();
 await setupSettingsRealtime(
@@ -1306,11 +1326,11 @@ session.user.id
 );
 startSyncPoll();
 
-import("./alerts-cloud-sync.js?v=50")
+import("./alerts-cloud-sync.js?v=51")
 .then(async m=>{
 
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=50");
+await import("./alerts.js?v=51");
 
 await m.syncAllLocalAlertsToCloudImmediate();
 await m.pullRegistryFromCloud();
@@ -1477,6 +1497,12 @@ event === "SIGNED_OUT"
 loggedIn = false;
 userEmail = "";
 stopCloudSyncHelpers();
+
+const { clearAlertAuthCache } =
+await import("./alert-auth-cache.js");
+
+clearAlertAuthCache();
+
 notifyAuth();
 }
 

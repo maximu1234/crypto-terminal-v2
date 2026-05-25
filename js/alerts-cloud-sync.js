@@ -16,6 +16,12 @@ import {
 setBrowserCrossCheckEnabled
 } from "./alerts-mode.js";
 
+import {
+getCachedAlertAuth,
+setAlertAuthCache,
+clearAlertAuthCache
+} from "./alert-auth-cache.js";
+
 let alertsRealtimeChannel = null;
 
 let alertsRealtimeUserId = null;
@@ -116,7 +122,7 @@ const {
 applyRemoteAlertFired,
 stripAlertFlagsNotInRegistry
 } =
-await import("./alerts.js?v=50");
+await import("./alerts.js?v=51");
 
 if(
 sym &&
@@ -308,7 +314,7 @@ cloudId
 ){
 
 const { markAlertCloudSynced, markAlertCloudId } =
-await import("./alerts.js?v=50");
+await import("./alerts.js?v=51");
 
 const ok =
 await confirmRowActiveInCloud(
@@ -340,7 +346,29 @@ return true;
 
 async function getAuthed() {
 
-return waitForCloudAuth(12000);
+const hit =
+getCachedAlertAuth();
+
+if(hit?.ctx){
+return hit.ctx;
+}
+
+const ctx =
+await waitForCloudAuth(12000);
+
+if(ctx){
+const token =
+await getAccessTokenForUser(ctx);
+
+if(token){
+setAlertAuthCache(
+ctx,
+token
+);
+}
+}
+
+return ctx;
 
 }
 
@@ -409,6 +437,19 @@ clearTimeout(timer);
 
 async function getWorkerRequestAuth(){
 
+const hit =
+getCachedAlertAuth();
+
+if(
+hit?.ctx &&
+hit?.token
+){
+return {
+token: hit.token,
+ctx: hit.ctx
+};
+}
+
 const ctx =
 await getAuthed();
 
@@ -416,30 +457,17 @@ if(!ctx){
 return null;
 }
 
-let session;
-
-try{
-const { data } =
-await withTimeout(
-ctx.sb.auth.getSession(),
-5000,
-"getSession"
-);
-session = data?.session;
-}catch(err){
-console.warn(
-"[alerts] getSession:",
-err?.message || err
-);
-return null;
-}
-
 const token =
-session?.access_token;
+await getAccessTokenForUser(ctx);
 
 if(!token){
 return null;
 }
+
+setAlertAuthCache(
+ctx,
+token
+);
 
 return {
 token,
@@ -633,11 +661,36 @@ entry,
 ctx
 ){
 
-const { data: { session } } =
-await ctx.sb.auth.getSession();
+let token =
+getCachedAlertAuth()?.token ||
+null;
 
-const token =
-session?.access_token;
+if(
+!token &&
+ctx
+){
+try{
+const { data } =
+await withTimeout(
+ctx.sb.auth.getSession(),
+5000,
+"getSession push"
+);
+token =
+data?.session?.access_token || null;
+if(token){
+setAlertAuthCache(
+ctx,
+token
+);
+}
+}catch(err){
+console.warn(
+"alert REST push getSession:",
+err?.message || err
+);
+}
+}
 
 if(!token){
 console.warn(
@@ -757,7 +810,7 @@ null;
 
 if(cloudId){
 const { markAlertCloudId } =
-await import("./alerts.js?v=50");
+await import("./alerts.js?v=51");
 
 markAlertCloudId(
 symbol,
@@ -1407,22 +1460,39 @@ null;
 let token =
 null;
 
+const cached =
+getCachedAlertAuth();
+
+if(
+cached?.ctx &&
+cached?.token
+){
+ctx = cached.ctx;
+token = cached.token;
+}else{
 try{
 ctx =
 await withTimeout(
 getAuthed(),
-8000,
+4000,
 "getAuthed trigger"
 );
 if(ctx){
 token =
 await getAccessTokenForUser(ctx);
+if(token){
+setAlertAuthCache(
+ctx,
+token
+);
+}
 }
 }catch(err){
 console.warn(
 "[alerts] auth:",
 err?.message || err
 );
+}
 }
 
 const id =
@@ -1938,7 +2008,7 @@ null;
 
 if(cloudId){
 const { markAlertCloudId } =
-await import("./alerts.js?v=50");
+await import("./alerts.js?v=51");
 
 markAlertCloudId(
 symbol,
@@ -1980,7 +2050,7 @@ return 0;
 }
 
 const { getActiveAlerts } =
-await import("./alerts.js?v=50");
+await import("./alerts.js?v=51");
 
 const localKeys =
 new Set(
@@ -2094,6 +2164,13 @@ await ensureCloudReady();
 let ctx =
 await getAuthed();
 
+if(!ctx){
+console.warn(
+"[alerts] push: нет сессии — войдите через шестерёнку"
+);
+return false;
+}
+
 for(
 let attempt = 0;
 attempt < retries;
@@ -2103,7 +2180,7 @@ attempt++
 if(await pushAlertViaWorker(row)){
 
 const { markAlertCloudSynced } =
-await import("./alerts.js?v=50");
+await import("./alerts.js?v=51");
 
 markAlertCloudSynced(
 row.symbol,
@@ -2129,7 +2206,7 @@ ctx
 ){
 
 const { loadAlerts, markAlertCloudSynced } =
-await import("./alerts.js?v=50");
+await import("./alerts.js?v=51");
 
 const hasId =
 loadAlerts().some(
@@ -2175,9 +2252,6 @@ if(
 await pushAlertToCloudImpl(row)
 ){
 
-ctx =
-await getAuthed();
-
 if(
 ctx &&
 await markRowSyncedAfterVerify(
@@ -2189,7 +2263,7 @@ null
 ){
 
 const { markAlertCloudSynced } =
-await import("./alerts.js?v=50");
+await import("./alerts.js?v=51");
 
 markAlertCloudSynced(
 row.symbol,
@@ -2275,7 +2349,7 @@ return 0;
 }
 
 const { getActiveAlerts } =
-await import("./alerts.js?v=50");
+await import("./alerts.js?v=51");
 
 const pending =
 getActiveAlerts().filter(a=>!a.cloudSynced);
@@ -2347,7 +2421,7 @@ return 0;
 }
 
 const { getActiveAlerts } =
-await import("./alerts.js?v=50");
+await import("./alerts.js?v=51");
 
 const list =
 getActiveAlerts();
@@ -2495,7 +2569,7 @@ saveAlertsFromCloudMerge,
 alertEntryKey,
 loadAlerts
 } =
-await import("./alerts.js?v=50");
+await import("./alerts.js?v=51");
 
 const cloudKeys =
 new Set(
@@ -2510,7 +2584,7 @@ String(row.shape_id || "").trim()
 const {
 applyRemoteAlertFired
 } =
-await import("./alerts.js?v=50");
+await import("./alerts.js?v=51");
 
 const local =
 loadAlerts();
@@ -2601,7 +2675,7 @@ const n =
 await reconcileLocalRegistryWithCloud();
 
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=50");
+await import("./alerts.js?v=51");
 
 stripAlertFlagsNotInRegistry();
 
@@ -2614,7 +2688,7 @@ return n;
 async function hydrateAlertsAfterAuth(){
 
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=50");
+await import("./alerts.js?v=51");
 
 console.log(
 "[alerts] hydrate after login…"
@@ -2696,6 +2770,7 @@ err?.message || err
 );
 });
 }else{
+clearAlertAuthCache();
 void teardownAlertsRealtime();
 stopReconcileTimer();
 }
