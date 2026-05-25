@@ -181,6 +181,15 @@ iso
 
 }
 
+/** Локальное изменение рисунков — чтобы sync не перезаписал облаком. */
+export function bumpDrawingsLocalRevision(){
+
+saveLocalDrawingsUpdatedAt(
+new Date().toISOString()
+);
+
+}
+
 function normalizeFavoritesList(list){
 
 if(!Array.isArray(list)){

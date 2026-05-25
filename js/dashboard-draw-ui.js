@@ -193,6 +193,7 @@ export function wireWidgetDrawToolMenu(
 container,
 {
 pickTool,
+onClearAll,
 onActivate
 } = {}
 ){
@@ -203,15 +204,40 @@ container?.querySelector(
 );
 
 if(
-!menu ||
-!pickTool
+!menu
 ){
 return;
 }
 
 menu.addEventListener(
-"pointerdown",
+"click",
 e=>{
+
+const clearBtn =
+e.target.closest(
+".draw-tool-clear-all"
+);
+
+if(clearBtn){
+
+e.preventDefault();
+e.stopPropagation();
+onActivate?.();
+onClearAll?.();
+
+queueMicrotask(
+()=>{
+closeAllWidgetDrawToolsMenus();
+}
+);
+
+return;
+
+}
+
+if(!pickTool){
+return;
+}
 
 const btn =
 e.target.closest(
@@ -237,6 +263,27 @@ queueMicrotask(
 closeAllWidgetDrawToolsMenus();
 }
 );
+
+}
+);
+
+menu.addEventListener(
+"pointerdown",
+e=>{
+
+const btn =
+e.target.closest(
+"[data-draw-tool]"
+);
+
+if(
+!btn
+){
+return;
+}
+
+e.preventDefault();
+e.stopPropagation();
 
 },
 true

@@ -30,6 +30,7 @@ parseMoneyInput
 } from "./position-sizing.js?v=1";
 
 import {
+bumpDrawingsLocalRevision,
 persistAllDrawingsToCloud,
 onDrawingsRemoteUpdate
 } from "./cloud-sync.js?v=12";
@@ -2059,6 +2060,7 @@ storageKey(),
 JSON.stringify(drawings)
 );
 
+bumpDrawingsLocalRevision();
 scheduleDrawingsCloudPush();
 
 }
@@ -7714,22 +7716,38 @@ redraw();
 
 }
 
-function clearAll(){
+function clearAllDrawingsOnChart(){
+
+if(!alive){
+return;
+}
+
+const sym =
+getSymbol();
 
 drawings
 .filter(d=>d.isAlert)
 .forEach(d=>{
 removeAlert(
-getSymbol(),
+sym,
 d.id
 );
 });
 
 drawings = [];
 selectedId = null;
+cancelPlacement();
 saveDrawings();
+
+window.dispatchEvent(
+new CustomEvent(
+"drawings-updated",
+{ detail:{ symbol: sym } }
+)
+);
+
 updateStyleBar();
-redraw();
+scheduleRedraw();
 
 }
 
@@ -7886,6 +7904,23 @@ tools.addEventListener(
 "click",
 e=>{
 
+const clearBtn =
+e.target.closest?.(
+".draw-tool-clear-all"
+);
+
+if(
+clearBtn &&
+tools.contains(
+clearBtn
+)
+){
+e.preventDefault();
+e.stopPropagation();
+clearAllDrawingsOnChart();
+return;
+}
+
 const btn =
 e.target.closest?.(
 "[data-draw-tool]"
@@ -7906,22 +7941,6 @@ btn.dataset.drawTool
 
 }
 );
-
-const clearAllBtn =
-tools.querySelector(".draw-tool-clear-all") ||
-document.getElementById("draw-tool-delete");
-
-clearAllBtn?.addEventListener("click", e=>{
-
-e.stopPropagation();
-
-if(!drawings.length){
-return;
-}
-
-clearAll();
-
-});
 
 function initStylePopovers(){
 
@@ -8568,6 +8587,8 @@ return {
 
 setTool,
 pickDrawTool,
+clearAllDrawings:
+clearAllDrawingsOnChart,
 
 scheduleRedraw,
 
