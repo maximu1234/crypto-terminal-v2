@@ -123,7 +123,7 @@ const {
 applyRemoteAlertFired,
 stripAlertFlagsNotInRegistry
 } =
-await import("./alerts.js?v=53");
+await import("./alerts.js?v=54");
 
 if(
 sym &&
@@ -335,7 +335,7 @@ cloudId
 ){
 
 const { markAlertCloudSynced, markAlertCloudId } =
-await import("./alerts.js?v=53");
+await import("./alerts.js?v=54");
 
 const ok =
 await confirmRowActiveInCloud(
@@ -831,7 +831,7 @@ null;
 
 if(cloudId){
 const { markAlertCloudId } =
-await import("./alerts.js?v=53");
+await import("./alerts.js?v=54");
 
 markAlertCloudId(
 symbol,
@@ -2024,7 +2024,7 @@ null;
 
 if(cloudId){
 const { markAlertCloudId } =
-await import("./alerts.js?v=53");
+await import("./alerts.js?v=54");
 
 markAlertCloudId(
 symbol,
@@ -2066,7 +2066,7 @@ return 0;
 }
 
 const { getActiveAlerts } =
-await import("./alerts.js?v=53");
+await import("./alerts.js?v=54");
 
 const localKeys =
 new Set(
@@ -2177,8 +2177,16 @@ await import("./auth-ui.js?v=10");
 
 await ensureCloudReady();
 
+let auth =
+await resolveAlertAuthFast();
+
 let ctx =
+auth?.ctx || null;
+
+if(!ctx){
+ctx =
 await getAuthed();
+}
 
 if(!ctx){
 console.warn(
@@ -2195,30 +2203,10 @@ attempt++
 
 if(await pushAlertViaWorker(row)){
 
-const { loadAlerts, markAlertCloudSynced } =
-await import("./alerts.js?v=53");
+const { markAlertCloudSynced } =
+await import("./alerts.js?v=54");
 
-const cloudId =
-loadAlerts().find(
-a=>
-String(a.symbol).toUpperCase() === row.symbol &&
-String(a.shapeId) === row.shapeId
-)?.cloudId ||
-null;
-
-const verified =
-cloudId ||
-(
-ctx &&
-await markRowSyncedAfterVerify(
-ctx,
-row.symbol,
-row.shapeId,
-cloudId
-)
-);
-
-if(verified){
+/* Worker пишет service role — не ждём SELECT по JWT пользователя */
 markAlertCloudSynced(
 row.symbol,
 row.shapeId
@@ -2234,14 +2222,6 @@ return true;
 
 }
 
-console.warn(
-"[alerts] worker ok, строка не видна в БД — REST…",
-row.symbol,
-row.shapeId
-);
-
-}
-
 if(
 ctx &&
 await pushAlertViaRest(
@@ -2251,7 +2231,7 @@ ctx
 ){
 
 const { loadAlerts, markAlertCloudSynced } =
-await import("./alerts.js?v=53");
+await import("./alerts.js?v=54");
 
 const hasId =
 loadAlerts().some(
@@ -2308,7 +2288,7 @@ null
 ){
 
 const { markAlertCloudSynced } =
-await import("./alerts.js?v=53");
+await import("./alerts.js?v=54");
 
 markAlertCloudSynced(
 row.symbol,
@@ -2395,8 +2375,19 @@ if(!isCloudLoggedIn()){
 return 0;
 }
 
-const { getActiveAlerts } =
-await import("./alerts.js?v=53");
+const { mergeRegistryFromChartDrawings, getActiveAlerts } =
+await import("./alerts.js?v=54");
+
+const merged =
+mergeRegistryFromChartDrawings();
+
+if(merged > 0){
+console.log(
+"[alerts] реестр с графика:",
+merged,
+"алерт(ов)"
+);
+}
 
 const pending =
 getActiveAlerts().filter(a=>!a.cloudSynced);
@@ -2468,7 +2459,7 @@ return 0;
 }
 
 const { getActiveAlerts } =
-await import("./alerts.js?v=53");
+await import("./alerts.js?v=54");
 
 const list =
 getActiveAlerts();
@@ -2616,7 +2607,7 @@ saveAlertsFromCloudMerge,
 alertEntryKey,
 loadAlerts
 } =
-await import("./alerts.js?v=53");
+await import("./alerts.js?v=54");
 
 const cloudKeys =
 new Set(
@@ -2631,7 +2622,7 @@ String(row.shape_id || "").trim()
 const {
 applyRemoteAlertFired
 } =
-await import("./alerts.js?v=53");
+await import("./alerts.js?v=54");
 
 const local =
 loadAlerts();
@@ -2722,7 +2713,7 @@ const n =
 await reconcileLocalRegistryWithCloud();
 
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=53");
+await import("./alerts.js?v=54");
 
 stripAlertFlagsNotInRegistry();
 
@@ -2735,16 +2726,24 @@ return n;
 async function hydrateAlertsAfterAuth(){
 
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=53");
+await import("./alerts.js?v=54");
 
 console.log(
 "[alerts] hydrate after login…"
 );
 
 const { mergeRegistryFromChartDrawings } =
-await import("./alerts.js?v=53");
+await import("./alerts.js?v=54");
 
+const merged =
 mergeRegistryFromChartDrawings();
+
+if(merged > 0){
+console.log(
+"[alerts] hydrate: с графика +",
+merged
+);
+}
 
 await syncAllLocalAlertsToCloudImpl();
 await reconcileLocalRegistryWithCloud();
@@ -2772,7 +2771,7 @@ if(!isCloudLoggedIn()){
 return;
 }
 
-void import("./alerts.js?v=53").then(m=>{
+void import("./alerts.js?v=54").then(m=>{
 m.mergeRegistryFromChartDrawings();
 }).catch(()=>{});
 
