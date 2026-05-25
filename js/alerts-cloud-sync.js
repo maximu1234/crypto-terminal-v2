@@ -613,6 +613,13 @@ throw new Error(error.message);
 
 }
 
+/** Сброс chat id — пользователь больше не получает алерты в Telegram. */
+export async function clearTelegramChatId(){
+
+return saveTelegramChatId(null);
+
+}
+
 function normalizeAlertTf(tf){
 
 if(

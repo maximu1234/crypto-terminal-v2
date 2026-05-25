@@ -13,6 +13,7 @@ removeAllAlerts
 } from "./alerts.js?v=60";
 
 import {
+clearTelegramChatId,
 getTelegramChatId,
 initAlertsCloudSync,
 saveTelegramChatId,
@@ -97,6 +98,9 @@ document.getElementById("alerts-telegram-connected-text");
 
 const telegramEdit =
 document.getElementById("alerts-telegram-edit");
+
+const telegramDisconnect =
+document.getElementById("alerts-telegram-disconnect");
 
 let telegramSetupEdit =
 false;
@@ -227,24 +231,59 @@ try{
 const raw =
 telegramInput?.value?.trim() ?? "";
 
+if(!raw){
+setTelegramStatus(
+"Введите chat id или нажмите «Отключить Telegram»",
+true
+);
+return;
+}
+
 await saveTelegramChatId(raw);
 await syncAlertsWithCloud();
-telegramSetupEdit =
-raw === "" || raw == null;
+telegramSetupEdit = false;
 
 await refreshTelegramUi();
-
-if(!telegramSetupEdit){
-setTelegramStatus("");
-}else{
 setTelegramStatus(
-"Сохранено. Активные алерты отправлены в облако."
+"Сохранено. Алерты в Telegram включены."
 );
-}
 
 }catch(err){
 setTelegramStatus(
 err?.message || "Ошибка сохранения",
+true
+);
+
+}
+
+});
+
+telegramDisconnect?.addEventListener("click", async ()=>{
+
+if(
+!window.confirm(
+"Отключить Telegram? Алерты в боте приходить не будут (в браузере останутся, если вкладка открыта)."
+)
+){
+return;
+}
+
+try{
+await clearTelegramChatId();
+
+if(telegramInput){
+telegramInput.value = "";
+}
+
+telegramSetupEdit = true;
+await refreshTelegramUi();
+setTelegramStatus(
+"Telegram отключён. Chat id удалён из аккаунта."
+);
+
+}catch(err){
+setTelegramStatus(
+err?.message || "Не удалось отключить",
 true
 );
 

@@ -37,12 +37,12 @@ onDrawingsRemoteUpdate
 import {
 formatPrice,
 chartScaleFont,
-CHART_SCALE_TEXT_COLOR,
 CHART_SCALE_LABEL_PAD_LEFT,
 CHART_SCALE_LABEL_LINE_HEIGHT,
+scaleLabelTextColorForBackground,
 isTabletChartViewport,
 TABLET_USE_CUSTOM_TOUCH_PAN
-} from "./chart.js?v=31";
+} from "./chart.js?v=59";
 
 /* Сетка 2×9: чётный индекс — левый столбец, нечётный — правый */
 const DEFAULT_FIB_SPEC = Object.freeze([
@@ -4751,10 +4751,13 @@ ctx.font =
 ctx.textAlign = "left";
 ctx.textBaseline = "middle";
 
-ctx.fillStyle =
+const bg =
 color || "rgba(30, 41, 59, 0.95)";
+
+ctx.fillStyle = bg;
 ctx.fillRect(left, top, scaleW, th);
-ctx.fillStyle = CHART_SCALE_TEXT_COLOR;
+ctx.fillStyle =
+scaleLabelTextColorForBackground(bg);
 ctx.fillText(text, textX, y);
 ctx.restore();
 

@@ -102,6 +102,10 @@ export const CHART_PRICE_SCALE_WIDTH = 56;
 
 export const CHART_SCALE_TEXT_COLOR = "#d1d5db";
 
+/** Текст на светлой плашке ценовой шкалы (линии, алерты, светлые цвета). */
+export const CHART_SCALE_TEXT_ON_LIGHT_BG =
+"#1e293b";
+
 export const CHART_SCALE_FONT_SIZE = 12;
 
 export const CHART_SCALE_FONT_FAMILY =
@@ -121,6 +125,132 @@ CHART_SCALE_FONT_SIZE + 4;
 export function chartScaleFont(){
 
 return `${CHART_SCALE_FONT_SIZE}px ${CHART_SCALE_FONT_FAMILY}`;
+
+}
+
+function parseColorToRgb(
+color
+){
+
+const raw =
+String(color || "").trim();
+
+if(!raw){
+return null;
+}
+
+if(
+raw.startsWith("#")
+){
+
+let hex =
+raw.slice(1);
+
+if(
+hex.length === 3
+){
+hex =
+hex
+.split("")
+.map(ch=>ch + ch)
+.join("");
+}
+
+if(
+hex.length < 6
+){
+return null;
+}
+
+const r =
+parseInt(
+hex.slice(0, 2),
+16
+);
+const g =
+parseInt(
+hex.slice(2, 4),
+16
+);
+const b =
+parseInt(
+hex.slice(4, 6),
+16
+);
+
+if(
+[r, g, b].some(n=>Number.isNaN(n))
+){
+return null;
+}
+
+return { r, g, b };
+
+}
+
+const rgbMatch =
+raw.match(
+/^rgba?\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)/
+);
+
+if(rgbMatch){
+
+return {
+r: Number(rgbMatch[1]),
+g: Number(rgbMatch[2]),
+b: Number(rgbMatch[3])
+};
+
+}
+
+return null;
+
+}
+
+function relativeLuminance(
+rgb
+){
+
+const channel =
+c=>{
+
+const v =
+c / 255;
+
+return v <= 0.03928
+? v / 12.92
+: Math.pow(
+(v + 0.055) / 1.055,
+2.4
+);
+
+};
+
+return (
+0.2126 * channel(rgb.r) +
+0.7152 * channel(rgb.g) +
+0.0722 * channel(rgb.b)
+);
+
+}
+
+/**
+ * Светлый фон плашки → тёмные цифры; тёмный фон → светлые (как шкала).
+ */
+export function scaleLabelTextColorForBackground(
+bgColor
+){
+
+const rgb =
+parseColorToRgb(bgColor);
+
+if(!rgb){
+return CHART_SCALE_TEXT_COLOR;
+}
+
+return relativeLuminance(rgb) > 0.45
+? CHART_SCALE_TEXT_ON_LIGHT_BG
+: CHART_SCALE_TEXT_COLOR;
 
 }
 
@@ -175,9 +305,13 @@ export function normalCrosshairOptions(){
 const Normal =
 LightweightCharts.CrosshairMode?.Normal ?? 0;
 
+/* Вертикаль — только DOM #linked-crosshair-vert (иначе двойная линия при смене свечи). */
 return {
 mode:Normal,
-vertLine:crosshairLineOptions(true),
+vertLine:{
+visible:false,
+labelVisible:false
+},
 horzLine:crosshairLineOptions(true)
 };
 
@@ -756,11 +890,14 @@ return `${wd} ${day} ${mon} '${yr} ${hh}:${mm}`;
 
 function updateCrosshairAxisLabels({
 param,
-timeLabelEl
+timeLabelEl,
+snappedX
 }){
 
 const x =
-param.point?.x;
+Number.isFinite(snappedX)
+? snappedX
+: param.point?.x;
 
 if(
 timeLabelEl &&
@@ -1878,6 +2015,32 @@ linkedChart.clearCrosshairPosition();
 
 }
 
+function crosshairVertX(
+param
+){
+
+if(
+param?.time != null &&
+mainChart?.timeScale
+){
+
+const snapped =
+mainChart.timeScale().timeToCoordinate(
+param.time
+);
+
+if(
+Number.isFinite(snapped)
+){
+return snapped;
+}
+
+}
+
+return param.point?.x;
+
+}
+
 function showLinkedVert(
 param
 ){
@@ -1889,7 +2052,7 @@ return false;
 }
 
 const x =
-param.point?.x;
+crosshairVertX(param);
 
 if(
 !Number.isFinite(x)
@@ -1918,7 +2081,8 @@ linkedChart.clearCrosshairPosition();
 
 updateCrosshairAxisLabels({
 param,
-timeLabelEl:crosshairTimeLabelEl
+timeLabelEl:crosshairTimeLabelEl,
+snappedX:x
 });
 
 if(

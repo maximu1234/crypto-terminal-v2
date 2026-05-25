@@ -8,7 +8,7 @@
 <title>Алерты — Multichart</title>
 
 <link rel="stylesheet" href="/css/common.css?v=9">
-<link rel="stylesheet" href="/css/alerts.css?v=10">
+<link rel="stylesheet" href="/css/alerts.css?v=11">
 
 </head>
 
@@ -58,9 +58,14 @@
 
 <div id="alerts-telegram-connected" class="alerts-telegram-connected hidden" role="status">
 <p id="alerts-telegram-connected-text" class="alerts-telegram-connected-text"></p>
+<div class="alerts-telegram-connected-actions">
 <button type="button" id="alerts-telegram-edit" class="alerts-telegram-edit">
 Изменить chat id
 </button>
+<button type="button" id="alerts-telegram-disconnect" class="alerts-telegram-disconnect">
+Отключить Telegram
+</button>
+</div>
 </div>
 
 <div id="alerts-telegram-login" class="alerts-telegram-login">
@@ -177,7 +182,7 @@ placeholder="например 123456789"
 </main>
 
 <script type="module" src="/js/site-boot.js?v=51"></script>
-<script type="module" src="/js/alerts-page.js?v=38"></script>
+<script type="module" src="/js/alerts-page.js?v=39"></script>
 
 </body>
 </html>
