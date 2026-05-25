@@ -9,7 +9,7 @@ ensureCloudReady
 import {
 initAlertsCloudSync,
 scheduleRegistryCloudSync
-} from "./alerts-cloud-sync.js?v=60";
+} from "./alerts-cloud-sync.js?v=61";
 
 import {
 stripAlertFlagsNotInRegistry

@@ -22,6 +22,10 @@ resolveAlertAuthFast,
 readAlertTokenSync
 } from "./alert-auth-cache.js?v=4";
 
+import {
+normalizeAlertWorkerBaseUrl
+} from "./alert-worker-url.js?v=1";
+
 let alertsRealtimeChannel = null;
 
 let alertsRealtimeUserId = null;
@@ -49,9 +53,11 @@ let worker = "";
 
 try{
 const env =
-await import("./supabase-env.js?v=4");
+await import("./supabase-env.js?v=5");
 worker =
-String(env.ALERT_WORKER_URL || "").trim();
+normalizeAlertWorkerBaseUrl(
+env.ALERT_WORKER_URL || ""
+);
 }catch{
 /* ignore */
 }
@@ -1069,20 +1075,50 @@ console.warn("alert cloud delete:", error.message);
 
 }
 
+let cachedWorkerBaseUrl = null;
+let workerUrlNormalizeWarned = false;
+
 async function getAlertWorkerBaseUrl(){
+
+if(
+cachedWorkerBaseUrl !== null
+){
+return cachedWorkerBaseUrl;
+}
 
 try{
 const env =
-await import("./supabase-env.js?v=4");
+await import("./supabase-env.js?v=5");
 
-const url =
+const raw =
 String(
 env.ALERT_WORKER_URL || ""
 ).trim();
 
-return url.replace(/\/$/, "");
+const base =
+normalizeAlertWorkerBaseUrl(raw);
+
+if(
+raw &&
+base &&
+raw !== base &&
+!workerUrlNormalizeWarned
+){
+workerUrlNormalizeWarned = true;
+console.warn(
+"[alerts] ALERT_WORKER_URL исправлен:",
+raw,
+"→",
+base,
+"(в Vercel задайте полный URL с https://, без /alerts)"
+);
+}
+
+cachedWorkerBaseUrl = base;
+return base;
 
 }catch{
+cachedWorkerBaseUrl = "";
 return "";
 
 }

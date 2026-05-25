@@ -20,10 +20,43 @@ process.env.SUPABASE_ANON_KEY ||
 process.env.VITE_SUPABASE_ANON_KEY ||
 "";
 
-const workerUrl =
+const workerUrlRaw =
 process.env.ALERT_WORKER_URL ||
 process.env.VITE_ALERT_WORKER_URL ||
 "";
+
+function normalizeAlertWorkerBaseUrl(raw) {
+
+let s = String(raw || "").trim();
+if (!s) return "";
+s = s.replace(/\/+$/, "");
+s = s.replace(/\/alerts\/?$/i, "");
+if (!/^https?:\/\//i.test(s)) {
+s = `https://${s.replace(/^\/+/, "")}`;
+}
+try {
+return new URL(s).origin;
+} catch {
+return "";
+}
+
+}
+
+const workerUrl =
+normalizeAlertWorkerBaseUrl(workerUrlRaw);
+
+if (
+workerUrlRaw &&
+workerUrl &&
+workerUrlRaw !== workerUrl
+) {
+console.warn(
+"ALERT_WORKER_URL normalized:",
+workerUrlRaw,
+"→",
+workerUrl
+);
+}
 
 if(!url || !key){
 
