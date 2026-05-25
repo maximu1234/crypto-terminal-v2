@@ -261,6 +261,8 @@ continue;
 
 }
 
+}
+
 rotateBybitApiBase();
 
 }

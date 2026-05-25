@@ -31,7 +31,7 @@ initBybitNetworkUi
 
 import {
 resetBybitEndpoints
-} from "./bybit-fetch.js?v=1";
+} from "./bybit-fetch.js?v=2";
 
 initBybitNetworkUi();
 

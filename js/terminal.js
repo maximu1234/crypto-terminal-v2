@@ -66,7 +66,7 @@ disconnectKlineStream
 import {
 connectTickerStream,
 fetchTickersInto
-} from "./tickers.js";
+} from "./tickers.js?v=21";
 
 import {
 processAlertCandle,
