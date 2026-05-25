@@ -1,7 +1,7 @@
 import {
 loadBybitHistory,
 loadBybitSymbols
-} from "./api.js?v=14";
+} from "./api.js?v=15";
 
 import {
 createScreenerChart,
@@ -14,12 +14,12 @@ SCREENER_MAX_BARS
 
 import {
 subscribeKline
-} from "./ws.js?v=13";
+} from "./ws.js?v=14";
 
 import {
 connectTickerStream,
 fetchTickersInto
-} from "./tickers.js?v=20";
+} from "./tickers.js?v=21";
 
 import {
 saveScreenerState,
@@ -473,7 +473,16 @@ return;
 }
 
 if(!candles.length){
+
+if(loadId === renderToken){
+setStatus(
+"График Bybit не загрузился — «Повторить» внизу экрана",
+true
+);
+}
+
 return;
+
 }
 
 const loaded =
@@ -1168,6 +1177,69 @@ widget.symbol
 
 });
 
+async function loadScreenerMarketData(){
+
+setStatus(
+"Загрузка списка монет…",
+true
+);
+
+const list =
+await loadBybitSymbols();
+
+allSymbols =
+list.map(x => x.symbol);
+
+await fetchTickersInto(tickerMap);
+
+}
+
+let screenerMarketReloading = false;
+
+async function reloadScreenerMarketData(){
+
+if(screenerMarketReloading){
+return;
+}
+
+screenerMarketReloading = true;
+
+try{
+
+await loadScreenerMarketData();
+
+await renderPage();
+
+setStatus(
+"",
+false
+);
+
+}catch(err){
+
+console.error(
+"Screener Bybit reload:",
+err
+);
+
+setStatus(
+"Список монет Bybit не загрузился — «Повторить» внизу",
+true
+);
+
+}
+
+screenerMarketReloading = false;
+
+}
+
+window.addEventListener(
+"bybit-network-retry",
+()=>{
+void reloadScreenerMarketData();
+}
+);
+
 async function init(){
 
 await ensureCloudReady();
@@ -1191,15 +1263,25 @@ applySavedUi();
 favorites =
 loadFavoritesGroups();
 
-setStatus("Загрузка списка монет…", true);
+try{
 
-const list =
-await loadBybitSymbols();
+await loadScreenerMarketData();
 
-allSymbols =
-list.map(x => x.symbol);
+}catch(err){
 
-await fetchTickersInto(tickerMap);
+console.error(
+"Screener init:",
+err
+);
+
+allSymbols = [];
+
+setStatus(
+"Список монет Bybit не загрузился — «Повторить» внизу",
+true
+);
+
+}
 
 connectTickerStream(tick=>{
 

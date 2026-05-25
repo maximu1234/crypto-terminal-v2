@@ -1,6 +1,6 @@
 import {
 loadBybitSymbols
-} from "./api.js?v=4";
+} from "./api.js?v=15";
 
 import {
 BYBIT_LISTINGS_PAGE_WINDOW_MS,
@@ -117,5 +117,12 @@ listEl.innerHTML = "";
 }
 
 }
+
+window.addEventListener(
+"bybit-network-retry",
+()=>{
+void init();
+}
+);
 
 init();

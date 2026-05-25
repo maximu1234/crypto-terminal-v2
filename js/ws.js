@@ -1,3 +1,8 @@
+import {
+getBybitWsUrl,
+rotateBybitWsEndpoint
+} from "./bybit-fetch.js?v=1";
+
 let socket = null;
 
 let reconnectTimer = null;
@@ -9,6 +14,8 @@ const topicCallbacks = new Map();
 const activeTopics = new Set();
 
 let terminalUnsub = null;
+
+let wsConnectFailures = 0;
 
 function convertTf(tf){
 
@@ -64,6 +71,27 @@ args:[...activeTopics]
 
 }
 
+function scheduleReconnect(delayMs){
+
+if(reconnectTimer){
+return;
+}
+
+reconnectTimer =
+setTimeout(()=>{
+
+reconnectTimer = null;
+
+if(activeTopics.size){
+ensureSocket();
+}
+
+},
+delayMs
+);
+
+}
+
 function ensureSocket(){
 
 if(
@@ -78,13 +106,19 @@ return;
 
 intentionalClose = false;
 
+const wsUrl =
+getBybitWsUrl();
+const openedAt =
+Date.now();
+
 socket =
-new WebSocket(
-"wss://stream.bybit.com/v5/public/linear"
-);
+new WebSocket(wsUrl);
 
 socket.onopen = ()=>{
+
+wsConnectFailures = 0;
 resubscribeAll();
+
 };
 
 socket.onmessage = event=>{
@@ -117,22 +151,33 @@ fn(candle);
 
 socket.onclose = ()=>{
 
+const livedMs =
+Date.now() - openedAt;
+
 socket = null;
 
 if(intentionalClose){
 return;
 }
 
-reconnectTimer =
-setTimeout(()=>{
+if(
+livedMs < 8000
+){
+wsConnectFailures++;
 
-reconnectTimer = null;
-
-if(activeTopics.size){
-ensureSocket();
+if(
+wsConnectFailures >= 2
+){
+rotateBybitWsEndpoint();
+wsConnectFailures = 0;
+}
 }
 
-}, 2000);
+scheduleReconnect(
+livedMs < 3000
+? 3500
+: 2000
+);
 
 };
 
@@ -217,6 +262,31 @@ socket = null;
 
 }
 
+window.addEventListener(
+"bybit-ws-reset",
+()=>{
+
+wsConnectFailures = 0;
+
+if(reconnectTimer){
+clearTimeout(reconnectTimer);
+reconnectTimer = null;
+}
+
+if(socket){
+intentionalClose = true;
+socket.close();
+socket = null;
+intentionalClose = false;
+}
+
+if(activeTopics.size){
+ensureSocket();
+}
+
+}
+);
+
 export function subscribeKline(symbol, tf, onCandle){
 
 const topic =
@@ -258,11 +328,6 @@ onCandle
 
 }){
 
-/*
-  Сначала подписываемся на новый топик, потом снимаем старый —
-  иначе временно 0 подписок → removeTopic закрывает сокет →
-  каждое переключение монеты снова платит за TCP + WSS handshake (заметные спайки 0.5–2s).
-*/
 const prevUnsub =
 terminalUnsub;
 

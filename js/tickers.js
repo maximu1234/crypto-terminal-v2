@@ -1,3 +1,7 @@
+import {
+fetchBybit
+} from "./bybit-fetch.js?v=1";
+
 let interval = null;
 
 let subscribers = [];
@@ -48,11 +52,16 @@ volume24:Number(ticker.turnover24h || 0)
 
 export async function fetchTickersInto(targetMap){
 
-const res = await fetch(
-"https://api.bybit.com/v5/market/tickers?category=linear"
-);
+try{
 
-const json = await res.json();
+const { json } =
+await fetchBybit(
+"/v5/market/tickers?category=linear",
+{
+retries: 4,
+timeoutMs: 20000
+}
+);
 
 if(
 !json.result ||
@@ -71,6 +80,10 @@ targetMap.set(payload.symbol, payload);
 });
 
 return targetMap.size;
+
+}catch{
+return 0;
+}
 
 }
 
@@ -96,11 +109,14 @@ async function loadTickers(){
 
 try{
 
-const res = await fetch(
-"https://api.bybit.com/v5/market/tickers?category=linear"
+const { json } =
+await fetchBybit(
+"/v5/market/tickers?category=linear",
+{
+retries: 3,
+timeoutMs: 18000
+}
 );
-
-const json = await res.json();
 
 if(
 !json.result ||
@@ -119,21 +135,16 @@ subscribers.forEach(fn=>fn(payload));
 });
 
 }catch{
-
-/* Тихий сбой опроса: сеть / лимит API; следующий цикл повторит. */
-
+/* тихо — следующий интервал или баннер уже от fetchBybit */
 }
 
 }
 
-export function disconnectTickerStream(){
+export function stopTickerStream(){
 
 if(interval){
-
 clearInterval(interval);
-
 interval = null;
-
 }
 
 subscribers = [];

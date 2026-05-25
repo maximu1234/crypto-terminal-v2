@@ -25,6 +25,23 @@ import {
 isSupabaseConfigured
 } from "./supabase-client.js?v=5";
 
+import {
+initBybitNetworkUi
+} from "./bybit-network-ui.js?v=1";
+
+import {
+resetBybitEndpoints
+} from "./bybit-fetch.js?v=1";
+
+initBybitNetworkUi();
+
+window.addEventListener(
+"bybit-network-retry",
+()=>{
+resetBybitEndpoints();
+}
+);
+
 initAlertMonitor();
 initAlertsCloudSync();
 void ensureCloudReady()

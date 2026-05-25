@@ -2,7 +2,7 @@ import {
 loadBybitHistory,
 loadBybitSymbols,
 loadTwelveData
-} from "./api.js?v=4";
+} from "./api.js?v=15";
 
 import {
 filterRecentListings
@@ -61,7 +61,7 @@ isUserCrosshairEvent
 import {
 connectKlineStream,
 disconnectKlineStream
-} from "./ws.js?v=1";
+} from "./ws.js?v=14";
 
 import {
 connectTickerStream,
@@ -1416,12 +1416,68 @@ async function initSymbols(){
 const list =
 await loadBybitSymbols();
 
-allBybitSymbols = list.map(x => x.symbol);
+allBybitSymbols =
+list.map(x => x.symbol);
 
 newListings =
 filterRecentListings(list).map(x => x.symbol);
 
 }
+
+let terminalBybitReloading = false;
+
+async function reloadTerminalBybitData(){
+
+if(
+terminalBybitReloading
+){
+return;
+}
+
+terminalBybitReloading = true;
+
+try{
+
+await initSymbols();
+
+await primeTickerSnapshots();
+
+generateMarketData();
+
+renderList();
+
+resizeCharts();
+
+await loadSymbol(
+currentSymbol || "BTCUSDT"
+);
+
+}catch(err){
+
+console.error(
+"Terminal Bybit reload:",
+err
+);
+
+}
+
+terminalBybitReloading = false;
+
+}
+
+window.addEventListener(
+"bybit-network-retry",
+()=>{
+
+if(
+currentDataset === "crypto" ||
+currentDataset === "new"
+){
+void reloadTerminalBybitData();
+}
+
+}
+);
 
 function getCurrentSymbols(){
 
@@ -1782,6 +1838,26 @@ return;
 }
 
 candles = nextCandles;
+
+if(
+!candles.length &&
+(
+currentDataset === "crypto" ||
+currentDataset === "new"
+)
+){
+
+void import("./bybit-network-ui.js?v=1").then(m=>{
+m.showBybitNetworkIssue(
+new Error(
+"История свечей Bybit пуста"
+)
+);
+});
+
+return;
+
+}
 
 candleSeries.setData(candles);
 
@@ -2718,7 +2794,21 @@ applyCoinsPrefs();
 favorites =
 loadFavoritesGroups();
 
+try{
+
 await initSymbols();
+
+}catch(err){
+
+console.error(
+"Terminal symbols:",
+err
+);
+
+allBybitSymbols = [];
+newListings = [];
+
+}
 
 if(
 hasUrlSymbol &&

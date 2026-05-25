@@ -10,7 +10,7 @@
 
 <title>Главная — Multichart</title>
 
-<link rel="stylesheet" href="css/common.css?v=11">
+<link rel="stylesheet" href="css/common.css?v=12">
 <link rel="stylesheet" href="css/screener.css?v=10">
 
 </head>
@@ -78,11 +78,11 @@
 
 import { loadLightweightCharts } from "./js/charts-lib-boot.js";
 
-import("./js/site-boot.js?v=51");
+import("./js/site-boot.js?v=59");
 
 loadLightweightCharts().then(async ()=>{
 
-await import("./js/screener.js?v=40");
+await import("./js/screener.js?v=41");
 
 }).catch(err=>{
 

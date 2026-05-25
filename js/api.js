@@ -1,3 +1,7 @@
+import {
+fetchBybit
+} from "./bybit-fetch.js?v=1";
+
 const TWELVE_KEY =
 "d6b45dcb1abf4b3ebe020038e41864fb";
 
@@ -11,29 +15,36 @@ function sleep(ms){
 return new Promise(resolve=>setTimeout(resolve, ms));
 }
 
-async function fetchBybitKlineBatch(url, retries = 3){
+async function fetchBybitKlineBatch(
+symbol,
+tf,
+end,
+retries = 5
+){
 
-for(let attempt = 0; attempt < retries; attempt++){
+const path =
+`/v5/market/kline?category=linear&symbol=${encodeURIComponent(symbol)}&interval=${encodeURIComponent(tf)}&limit=1000&end=${end}`;
 
-const res = await fetch(url);
-const json = await res.json();
+try{
 
-if(json.retCode === 0 && json.result?.list?.length){
+const { json } =
+await fetchBybit(
+path,
+{
+retries,
+timeoutMs: 22000
+}
+);
+
+if(
+json.retCode === 0 &&
+json.result?.list?.length
+){
 return json.result.list;
 }
 
-const retryable =
-json.retCode === 10006 ||
-json.retCode === 10016 ||
-res.status === 429;
-
-if(retryable && attempt < retries - 1){
-await sleep(250 * (attempt + 1));
-continue;
-}
-
-return null;
-
+}catch{
+/* fetchBybit уже показал баннер при полном отказе */
 }
 
 return null;
@@ -49,17 +60,39 @@ batchGapMs = 80
 
 let all = [];
 let end = Date.now();
+let failedBatches = 0;
 
 for(let i = 0; i < requests; i++){
 
-const url =
-`https://api.bybit.com/v5/market/kline?category=linear&symbol=${symbol}&interval=${tf}&limit=1000&end=${end}`;
-
-const batch = await fetchBybitKlineBatch(url);
+const batch =
+await fetchBybitKlineBatch(
+symbol,
+tf,
+end
+);
 
 if(!batch?.length){
+
+failedBatches++;
+
+if(
+failedBatches >= 2 &&
+!all.length
+){
 break;
 }
+
+if(
+!all.length
+){
+break;
+}
+
+break;
+
+}
+
+failedBatches = 0;
 
 all.push(...batch);
 
@@ -117,9 +150,8 @@ typeof options.batchGapMs ===
 "number"
 ? options.batchGapMs
 : options.parallel === true
-/* При parallel вызовы обходят очередь; пауза между батчами лишняя (сотни мс впустую) */
 ? 0
-: 80;
+: 120;
 
 const runner =
 ()=>
@@ -172,7 +204,6 @@ if(!sym.endsWith("USDT")){
 return false;
 }
 
-/* Дубликаты вроде PNUTPERP — оставляем только *USDT */
 if(sym.endsWith("PERP")){
 return false;
 }
@@ -192,32 +223,88 @@ export async function loadBybitSymbols(){
 
 const all = [];
 let cursor = null;
+let pageFailures = 0;
 
 do{
 
 const cursorParam =
-cursor ? `&cursor=${encodeURIComponent(cursor)}` : "";
+cursor
+? `&cursor=${encodeURIComponent(cursor)}`
+: "";
 
-const res = await fetch(
-`https://api.bybit.com/v5/market/instruments-info?category=linear&limit=1000${cursorParam}`
+const path =
+`/v5/market/instruments-info?category=linear&limit=1000${cursorParam}`;
+
+try{
+
+const { json } =
+await fetchBybit(
+path,
+{
+retries: 5,
+timeoutMs: 25000
+}
 );
-
-const json = await res.json();
 
 if(
 !json.result ||
-!json.result.list
+!json.result.list?.length
+){
+pageFailures++;
+
+if(
+pageFailures >= 2
 ){
 break;
 }
 
+await sleep(600);
+continue;
+}
+
+pageFailures = 0;
+
 all.push(...json.result.list);
 
-cursor = json.result.nextPageCursor || null;
+cursor =
+json.result.nextPageCursor ||
+null;
+
+}catch(err){
+
+pageFailures++;
+
+if(
+pageFailures >= 2 &&
+!all.length
+){
+throw err;
+}
+
+if(
+pageFailures >= 3
+){
+break;
+}
+
+await sleep(800);
+
+}
 
 }while(cursor);
 
-return all.filter(isUsdtLinearSymbol);
+const filtered =
+all.filter(isUsdtLinearSymbol);
+
+if(
+!filtered.length
+){
+throw new Error(
+"Пустой список инструментов Bybit"
+);
+}
+
+return filtered;
 
 }
 
