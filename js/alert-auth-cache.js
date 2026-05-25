@@ -1,9 +1,12 @@
 /**
- * Кэш JWT для алертов. Fallback: чтение сессии из localStorage Supabase
- * (без getSession(), который зависает при двух срабатываниях подряд).
+ * Кэш JWT для алертов. Fallback: localStorage `ct_supabase_auth`
+ * (без getSession(), который зависает при повторных срабатываниях).
  */
 
 let cache = null;
+
+/** Живёт между readAlertTokenSync, пока не signOut. */
+let durableAuth = null;
 
 export function getCachedAlertAuth() {
 
@@ -41,6 +44,7 @@ token
 export function clearAlertAuthCache() {
 
   cache = null;
+  durableAuth = null;
 
 }
 
@@ -58,6 +62,11 @@ session
     return;
   }
 
+  durableAuth = {
+    token: String(session.access_token),
+    user: session.user
+  };
+
   setAlertAuthCache(
     ctx,
     session.access_token
@@ -65,28 +74,65 @@ session
 
 }
 
-function readSessionFromLocalStorage(
-projectRef
-) {
+function rememberDurableAuth(
+session
+){
 
   if(
-    !projectRef ||
+    !session?.access_token ||
+    !session?.user
+  ){
+    return null;
+  }
+
+  durableAuth = {
+    token: String(session.access_token),
+    user: session.user
+  };
+
+  return durableAuth;
+
+}
+
+function readSessionFromAppStorage(){
+
+  if(
     typeof localStorage === "undefined"
   ){
     return null;
   }
 
-  const key =
-    `sb-${projectRef}-auth-token`;
+  const keys = [
+    "ct_supabase_auth"
+  ];
 
-  let raw;
+  for(const key of keys){
 
-  try{
-    raw =
-    localStorage.getItem(key);
-  }catch{
-    return null;
+    let raw;
+
+    try{
+      raw =
+      localStorage.getItem(key);
+    }catch{
+      continue;
+    }
+
+    const session =
+    parseSupabaseAuthRaw(raw);
+
+    if(session){
+      return session;
+    }
+
   }
+
+  return null;
+
+}
+
+function parseSupabaseAuthRaw(
+raw
+){
 
   if(!raw){
     return null;
@@ -129,9 +175,197 @@ projectRef
 
 }
 
+function readSessionFromLocalStorage(
+projectRef
+) {
+
+  if(
+    !projectRef ||
+    typeof localStorage === "undefined"
+  ){
+    return null;
+  }
+
+  let raw;
+
+  try{
+    raw =
+    localStorage.getItem(
+      `sb-${projectRef}-auth-token`
+    );
+  }catch{
+    return null;
+  }
+
+  return parseSupabaseAuthRaw(raw);
+
+}
+
+/**
+ * Синхронно: кэш или любой sb-*-auth-token (без getSession/getSupabase).
+ */
+export function readAlertTokenSync(){
+
+  const hit =
+  getCachedAlertAuth();
+
+  if(hit?.token){
+    return {
+      token: hit.token,
+      user: hit.ctx.user,
+      ctx: hit.ctx
+    };
+  }
+
+  if(
+    durableAuth?.token &&
+    durableAuth?.user
+  ){
+    return {
+      token: durableAuth.token,
+      user: durableAuth.user,
+      ctx: cache?.ctx || null
+    };
+  }
+
+  const appSession =
+  readSessionFromAppStorage();
+
+  if(appSession?.access_token){
+    rememberDurableAuth(appSession);
+    return {
+      token: appSession.access_token,
+      user: appSession.user,
+      ctx: cache?.ctx || null
+    };
+  }
+
+  if(
+    typeof localStorage === "undefined"
+  ){
+    return null;
+  }
+
+  for(
+    let i = 0;
+    i < localStorage.length;
+    i++
+  ){
+
+    const key =
+    localStorage.key(i);
+
+    if(
+      !key?.startsWith("sb-") ||
+      !key.endsWith("-auth-token")
+    ){
+      continue;
+    }
+
+    const session =
+    parseSupabaseAuthRaw(
+      localStorage.getItem(key)
+    );
+
+    if(session?.access_token){
+      rememberDurableAuth(session);
+      return {
+        token: session.access_token,
+        user: session.user,
+        ctx: cache?.ctx || null
+      };
+    }
+
+  }
+
+  return null;
+
+}
+
 /**
  * Кэш → localStorage Supabase → null (без waitForCloudAuth).
  */
+async function attachSupabaseToAuth(
+syncHit
+){
+
+  if(
+    !syncHit?.token ||
+    !syncHit?.user
+  ){
+    return null;
+  }
+
+  if(
+    syncHit.ctx?.sb &&
+    syncHit.ctx?.user
+  ){
+    return {
+      ctx: syncHit.ctx,
+      token: syncHit.token
+    };
+  }
+
+  try{
+    const { getSupabase } =
+    await import("./supabase-client.js?v=5");
+
+    const sb =
+    await Promise.race([
+      getSupabase(),
+      new Promise((_, reject)=>{
+        setTimeout(
+          ()=>reject(
+            new Error("getSupabase timeout")
+          ),
+          3000
+        );
+      })
+    ]);
+
+    if(!sb){
+      return {
+        ctx: {
+          sb: null,
+          user: syncHit.user
+        },
+        token: syncHit.token
+      };
+    }
+
+    const ctx = {
+      sb,
+      user: syncHit.user
+    };
+
+    setAlertAuthCache(
+      ctx,
+      syncHit.token
+    );
+
+    return {
+      ctx,
+      token: syncHit.token
+    };
+
+  }catch(err){
+    console.warn(
+      "[alerts] resolveAlertAuthFast (sb):",
+      err?.message || err
+    );
+
+    return {
+      ctx: {
+        sb: null,
+        user: syncHit.user
+      },
+      token: syncHit.token
+    };
+
+  }
+
+}
+
 export async function resolveAlertAuthFast() {
 
   const hit =
@@ -141,9 +375,14 @@ export async function resolveAlertAuthFast() {
     return hit;
   }
 
+  const sync =
+    readAlertTokenSync();
+
+  if(sync?.token){
+    return attachSupabaseToAuth(sync);
+  }
+
   try{
-    const { getSupabase } =
-    await import("./supabase-client.js?v=5");
     const env =
     await import("./supabase-env.js?v=4");
 
@@ -151,7 +390,7 @@ export async function resolveAlertAuthFast() {
     String(env.SUPABASE_URL || "").trim();
 
     if(!url){
-    return null;
+      return null;
     }
 
     const projectRef =
@@ -159,38 +398,23 @@ export async function resolveAlertAuthFast() {
     "";
 
     const session =
+    readSessionFromAppStorage() ||
     readSessionFromLocalStorage(projectRef);
 
     if(!session){
-    return null;
+      return null;
     }
 
-    const sb =
-    await getSupabase();
-
-    if(!sb){
-    return null;
-    }
-
-    const ctx = {
-    sb,
-    user: session.user
-    };
-
-    setAlertAuthCache(
-    ctx,
-    session.access_token
-    );
-
-    return {
-    ctx,
-    token: session.access_token
-    };
+    return attachSupabaseToAuth({
+      token: session.access_token,
+      user: session.user,
+      ctx: null
+    });
 
   }catch(err){
     console.warn(
-    "[alerts] resolveAlertAuthFast:",
-    err?.message || err
+      "[alerts] resolveAlertAuthFast:",
+      err?.message || err
     );
     return null;
   }

@@ -1,3 +1,7 @@
+import {
+readAlertTokenSync
+} from "./alert-auth-cache.js?v=3";
+
 const STORAGE_KEY = "price_alerts_v1";
 
 const HISTORY_KEY = "price_alerts_history_v1";
@@ -29,7 +33,7 @@ return job;
 
 function queueAlertsCloud(fn){
 
-import("./alerts-cloud-sync.js?v=55")
+import("./alerts-cloud-sync.js?v=58")
 .then(m=>fn(m))
 .catch(err=>{
 console.warn("alerts cloud:", err);
@@ -559,12 +563,74 @@ return `drawings_${String(symbol || "").trim().toUpperCase()}`;
 
 }
 
+function alertRegistryKey(
+sym,
+sid
+){
+
+return `${sym}::${sid}`;
+
+}
+
+/** Сколько жёлтых лучей (isAlert) на всех графиках. */
+export function countAlertsOnChart(){
+
+let n =
+0;
+
+for(
+let i = 0;
+i < localStorage.length;
+i++
+){
+
+const key =
+localStorage.key(i);
+
+if(
+!key?.startsWith("drawings_")
+){
+continue;
+}
+
+let drawings;
+
+try{
+drawings =
+JSON.parse(
+localStorage.getItem(key) || "[]"
+);
+}catch{
+continue;
+}
+
+if(!Array.isArray(drawings)){
+continue;
+}
+
+for(const shape of drawings){
+
+if(
+shape?.isAlert &&
+shape.type === "hray"
+){
+n += 1;
+}
+
+}
+
+}
+
+return n;
+
+}
+
 /**
- * Все жёлтые лучи на графиках → реестр (если гонка затёрла localStorage).
+ * Реестр = только алерты с графика (источник правды для записи в Supabase).
  */
 export function mergeRegistryFromChartDrawings(){
 
-const merged =
+const prevByKey =
 new Map();
 
 for(const a of loadAlerts()){
@@ -580,12 +646,20 @@ if(
 continue;
 }
 
-merged.set(
-`${sym}::${sid}`,
-{ ...a }
+prevByKey.set(
+alertRegistryKey(
+sym,
+sid
+),
+a
 );
 
 }
+
+const next =
+[];
+let onChart =
+0;
 
 for(
 let i = 0;
@@ -645,43 +719,84 @@ if(
 continue;
 }
 
+onChart += 1;
+
 const mapKey =
-`${sym}::${sid}`;
+alertRegistryKey(
+sym,
+sid
+);
+const prev =
+prevByKey.get(mapKey);
 
-if(merged.has(mapKey)){
-continue;
-}
-
-merged.set(
-mapKey,
-{
+next.push({
 id: sid,
 shapeId: sid,
 symbol: sym,
 price,
 tf: normalizeAlertTf(
-shape.alertTf
+shape.alertTf ||
+prev?.tf
 ),
 createdAt:
 Number(shape.alertCreatedAt) ||
+Number(prev?.createdAt) ||
 Date.now(),
-cloudSynced: false
+cloudId: prev?.cloudId,
+cloudSynced: !!(
+prev?.cloudId &&
+prev?.cloudSynced
+)
+});
+
 }
+
+}
+
+const before =
+loadAlerts().length;
+
+const changed =
+before !== next.length ||
+next.some(row=>{
+
+const sym =
+String(row.symbol || "").trim().toUpperCase();
+const sid =
+String(row.shapeId || "").trim();
+const prev =
+prevByKey.get(
+alertRegistryKey(
+sym,
+sid
+)
 );
 
+if(!prev){
+return true;
 }
 
-}
+return (
+Number(prev.price) !== Number(row.price) ||
+!!prev.cloudSynced !== !!row.cloudSynced
+);
 
-const next =
-[...merged.values()];
+});
 
-if(next.length !== loadAlerts().length){
+if(changed){
 saveAlerts(next);
-return next.length;
 }
 
-return 0;
+console.log(
+"[alerts] на графике:",
+onChart,
+"| реестр:",
+next.length,
+"| без облака:",
+next.filter(a=>!a.cloudSynced).length
+);
+
+return onChart;
 
 }
 
@@ -757,7 +872,7 @@ await ensureCloudReady();
 mergeRegistryFromChartDrawings();
 
 const m =
-await import("./alerts-cloud-sync.js?v=55");
+await import("./alerts-cloud-sync.js?v=58");
 
 const pushed =
 await m.pushOneAlertRow(
@@ -892,8 +1007,15 @@ return;
 
 saveAlerts(list);
 
-void import("./alerts-cloud-sync.js?v=55").then(m=>{
+void import("./alerts-cloud-sync.js?v=58").then(m=>{
 m.flushAlertCloudPush(row);
+});
+
+void import("./alert-monitor.js?v=58").then(m=>{
+m.armAlertQuietAfterDrag(
+sym,
+sid
+);
 });
 
 }
@@ -1249,7 +1371,7 @@ sym,
 sid
 );
 
-void import("./alert-monitor.js?v=55").then(m=>{
+void import("./alert-monitor.js?v=58").then(m=>{
 m.notifyAlertTriggered({
 symbol: sym,
 shapeId: sid,
@@ -1290,6 +1412,10 @@ a.shapeId === sid
 const cloudId =
 existing?.cloudId;
 
+const tokenSnap =
+readAlertTokenSync()?.token ||
+null;
+
 if(existing){
 appendAlertToHistory(existing);
 }
@@ -1307,14 +1433,15 @@ sym,
 sid
 );
 
-void import("./alerts-cloud-sync.js?v=55").then(m=>{
+void import("./alerts-cloud-sync.js?v=58").then(m=>{
 m.fireAlertCloudTrigger(
 sym,
 sid,
 cloudId,
 {
 price: existing?.price,
-tf: existing?.tf
+tf: existing?.tf,
+authToken: tokenSnap
 }
 ).catch(err=>{
 console.error(

@@ -20,8 +20,9 @@ import {
 getCachedAlertAuth,
 setAlertAuthCache,
 clearAlertAuthCache,
-resolveAlertAuthFast
-} from "./alert-auth-cache.js";
+resolveAlertAuthFast,
+readAlertTokenSync
+} from "./alert-auth-cache.js?v=3";
 
 let alertsRealtimeChannel = null;
 
@@ -123,7 +124,7 @@ const {
 applyRemoteAlertFired,
 stripAlertFlagsNotInRegistry
 } =
-await import("./alerts.js?v=55");
+await import("./alerts.js?v=58");
 
 if(
 sym &&
@@ -335,7 +336,7 @@ cloudId
 ){
 
 const { markAlertCloudSynced, markAlertCloudId } =
-await import("./alerts.js?v=55");
+await import("./alerts.js?v=58");
 
 const ok =
 await confirmRowActiveInCloud(
@@ -831,7 +832,7 @@ null;
 
 if(cloudId){
 const { markAlertCloudId } =
-await import("./alerts.js?v=55");
+await import("./alerts.js?v=58");
 
 markAlertCloudId(
 symbol,
@@ -1322,6 +1323,25 @@ opts?.ctx || null;
 let token =
 opts?.token || null;
 
+if(!token){
+const snap =
+readAlertTokenSync();
+
+token =
+snap?.token || null;
+
+if(
+!ctx &&
+snap?.user
+){
+ctx = {
+sb: null,
+user: snap.user
+};
+}
+
+}
+
 if(!ctx){
 try{
 ctx =
@@ -1344,7 +1364,19 @@ return false;
 
 if(!token){
 token =
+readAlertTokenSync()?.token ||
+null;
+}
+
+if(
+!token
+){
+try{
+token =
 await getAccessTokenForUser(ctx);
+}catch{
+token = null;
+}
 }
 
 if(!token){
@@ -1494,25 +1526,66 @@ if(
 return false;
 }
 
-let auth =
-await resolveAlertAuthFast();
+let token =
+String(meta?.authToken || "").trim() ||
+null;
+let ctx =
+null;
 
-if(!auth?.token){
-auth =
-await resolveAlertAuthFast();
+const syncAuth =
+readAlertTokenSync();
+
+if(!token && syncAuth?.token){
+token = syncAuth.token;
+ctx = syncAuth.ctx || null;
 }
 
-let ctx =
-auth?.ctx || null;
-let token =
+if(!token){
+const auth =
+await resolveAlertAuthFast();
+
+token =
 auth?.token || null;
+ctx =
+auth?.ctx || ctx;
+}
+
+if(
+!token
+){
+const workerAuth =
+await getWorkerRequestAuth();
+
+token =
+workerAuth?.token || null;
+ctx =
+workerAuth?.ctx || ctx;
+}
 
 if(!token){
+const hasAuthStorage =
+typeof localStorage !== "undefined" &&
+!!localStorage.getItem("ct_supabase_auth");
+
 console.warn(
 "[alerts] trigger: нет JWT — шестерёнка → войти заново",
 sym,
-sid
+sid,
+hasAuthStorage
+? "(ct_supabase_auth есть, но токен не прочитан)"
+: "(нет ct_supabase_auth — войдите)"
 );
+}else if(!getCachedAlertAuth()?.token){
+const user =
+ctx?.user ||
+syncAuth?.user;
+
+if(user){
+setAlertAuthCache(
+ctx || { sb: null, user },
+token
+);
+}
 }
 
 const id =
@@ -1619,16 +1692,19 @@ console.warn(
 let stillInCloud =
 false;
 
-if(
-ctx &&
-token
-){
+if(token){
 try{
 stillInCloud =
 await withTimeout(
-isAlertRowInCloud(
+isAlertRowInCloudFast(
 sym,
-sid
+sid,
+{
+token,
+userId:
+ctx?.user?.id ||
+syncAuth?.user?.id
+}
 ),
 4000,
 "row check"
@@ -1671,7 +1747,13 @@ sym,
 sid
 );
 }
-}else if(!stillInCloud){
+}else if(
+!stillInCloud &&
+(
+remote?.ok ||
+remote?.telegram
+)
+){
 console.log(
 "[alerts] ✓ строка в Supabase снята",
 sym,
@@ -1685,6 +1767,17 @@ stillInCloud &&
 ){
 console.error(
 "[alerts] строка осталась в Supabase:",
+sym,
+sid,
+id || "",
+remote?.reason || "no_auth"
+);
+}else if(
+stillInCloud &&
+!token
+){
+console.error(
+"[alerts] строка осталась (нет JWT для purge):",
 sym,
 sid,
 id || ""
@@ -1855,6 +1948,85 @@ return !!data?.id;
 }
 
 /** Любая строка (в т.ч. «зависшая» с triggered_at). */
+async function isAlertRowInCloudFast(
+symbol,
+shapeId,
+opts = {}
+){
+
+const sym =
+String(symbol || "").trim().toUpperCase();
+const sid =
+String(shapeId || "").trim();
+const token =
+String(opts?.token || "").trim();
+const userId =
+String(opts?.userId || "").trim();
+
+if(
+token &&
+userId
+){
+
+let env;
+
+try{
+env =
+await import("./supabase-env.js?v=4");
+}catch{
+return false;
+}
+
+const base =
+String(env.SUPABASE_URL || "").trim();
+
+if(!base){
+return false;
+}
+
+const url =
+`${base}/rest/v1/price_alerts?` +
+`user_id=eq.${encodeURIComponent(userId)}` +
+`&symbol=eq.${encodeURIComponent(sym)}` +
+`&shape_id=eq.${encodeURIComponent(sid)}` +
+`&select=id&limit=1`;
+
+try{
+const res =
+await fetchWithTimeout(
+url,
+{
+method: "GET",
+headers: {
+apikey: env.SUPABASE_ANON_KEY,
+Authorization: `Bearer ${token}`,
+Accept: "application/json"
+}
+},
+5000
+);
+
+if(!res.ok){
+return false;
+}
+
+const rows =
+await res.json();
+return Array.isArray(rows) && rows.length > 0;
+
+}catch{
+return false;
+}
+
+}
+
+return isAlertRowInCloud(
+symbol,
+shapeId
+);
+
+}
+
 export async function isAlertRowInCloud(
 symbol,
 shapeId
@@ -2024,7 +2196,7 @@ null;
 
 if(cloudId){
 const { markAlertCloudId } =
-await import("./alerts.js?v=55");
+await import("./alerts.js?v=58");
 
 markAlertCloudId(
 symbol,
@@ -2066,7 +2238,7 @@ return 0;
 }
 
 const { getActiveAlerts } =
-await import("./alerts.js?v=55");
+await import("./alerts.js?v=58");
 
 const localKeys =
 new Set(
@@ -2204,7 +2376,7 @@ attempt++
 if(await pushAlertViaWorker(row)){
 
 const { markAlertCloudSynced } =
-await import("./alerts.js?v=55");
+await import("./alerts.js?v=58");
 
 /* Worker пишет service role — не ждём SELECT по JWT пользователя */
 markAlertCloudSynced(
@@ -2231,7 +2403,7 @@ ctx
 ){
 
 const { loadAlerts, markAlertCloudSynced } =
-await import("./alerts.js?v=55");
+await import("./alerts.js?v=58");
 
 const hasId =
 loadAlerts().some(
@@ -2288,7 +2460,7 @@ null
 ){
 
 const { markAlertCloudSynced } =
-await import("./alerts.js?v=55");
+await import("./alerts.js?v=58");
 
 markAlertCloudSynced(
 row.symbol,
@@ -2376,29 +2548,39 @@ return 0;
 }
 
 const { mergeRegistryFromChartDrawings, getActiveAlerts } =
-await import("./alerts.js?v=55");
+await import("./alerts.js?v=58");
 
-const merged =
+const { countAlertsOnChart } =
+await import("./alerts.js?v=58");
+
 mergeRegistryFromChartDrawings();
 
-if(merged > 0){
-console.log(
-"[alerts] реестр с графика:",
-merged,
-"алерт(ов)"
-);
-}
+const onChart =
+countAlertsOnChart();
 
 const pending =
 getActiveAlerts().filter(a=>!a.cloudSynced);
 
 if(!pending.length){
+
+if(onChart > 0){
+console.warn(
+"[alerts] на графике",
+onChart,
+", но все помечены cloudSynced — снимите и снова поставьте алерт или обновите страницу"
+);
+}
+
 return 0;
+
 }
 
 console.log(
 "[alerts] дозапись в Supabase:",
-pending.length
+pending.length,
+"(на графике:",
+onChart,
+")"
 );
 
 let ok =
@@ -2415,9 +2597,9 @@ row.shapeId
 );
 
 if(
-await pushOneAlertRowImpl(
+await pushOneAlertRow(
 row,
-{ retries: 4 }
+{ retries: 6 }
 )
 ){
 ok += 1;
@@ -2459,7 +2641,7 @@ return 0;
 }
 
 const { getActiveAlerts } =
-await import("./alerts.js?v=55");
+await import("./alerts.js?v=58");
 
 const list =
 getActiveAlerts();
@@ -2577,7 +2759,10 @@ return false;
 
 }
 
-/** Убирает из реестра только уже синхронизированные алерты, сработавшие в облаке. */
+/**
+ * Сверка с активными строками price_alerts (triggered_at IS NULL).
+ * Нет строки в облаке ≠ срабатывание — только сброс cloudSynced для повторной дозаписи.
+ */
 export async function reconcileLocalRegistryWithCloud(){
 
 const ctx =
@@ -2587,10 +2772,20 @@ if(!ctx){
 return 0;
 }
 
+const {
+mergeRegistryFromChartDrawings,
+saveAlertsFromCloudMerge,
+alertEntryKey,
+loadAlerts
+} =
+await import("./alerts.js?v=58");
+
+mergeRegistryFromChartDrawings();
+
 const { data, error } =
 await ctx.sb
 .from("price_alerts")
-.select("symbol, shape_id")
+.select("id, symbol, shape_id")
 .eq("user_id", ctx.user.id)
 .is("triggered_at", null);
 
@@ -2602,32 +2797,40 @@ error.message
 return 0;
 }
 
-const {
-saveAlertsFromCloudMerge,
-alertEntryKey,
-loadAlerts
-} =
-await import("./alerts.js?v=55");
+const cloudByKey =
+new Map();
 
-const cloudKeys =
-new Set(
-(data || []).map(row=>
+for(const row of data || []){
+
+const sym =
+String(row.symbol || "").trim().toUpperCase();
+const sid =
+String(row.shape_id || "").trim();
+
+if(
+!sym ||
+!sid
+){
+continue;
+}
+
+cloudByKey.set(
 alertEntryKey(
-String(row.symbol || "").trim().toUpperCase(),
-String(row.shape_id || "").trim()
-)
-)
+sym,
+sid
+),
+row
 );
 
-const {
-applyRemoteAlertFired
-} =
-await import("./alerts.js?v=55");
+}
 
 const local =
 loadAlerts();
+let changed =
+false;
 
-for(const a of local){
+const next =
+local.map(a=>{
 
 const sym =
 String(a.symbol || "").trim().toUpperCase();
@@ -2638,67 +2841,64 @@ if(
 !sym ||
 !sid
 ){
-continue;
+return a;
 }
 
 const key =
-alertEntryKey(sym, sid);
+alertEntryKey(
+sym,
+sid
+);
+const cloud =
+cloudByKey.get(key);
 
-if(cloudKeys.has(key)){
-continue;
+if(cloud){
+
+const want =
+{
+...a,
+cloudId: String(cloud.id || a.cloudId || ""),
+cloudSynced: true
+};
+
+if(
+a.cloudSynced !== want.cloudSynced ||
+String(a.cloudId || "") !== String(want.cloudId || "")
+){
+changed = true;
 }
 
-const age =
-Date.now() - (
-Number(a.createdAt) || 0
-);
+return want;
+
+}
 
 if(
 !a.cloudSynced &&
-age < RECONCILE_MIN_AGE_MS
+!a.cloudId
 ){
-continue;
+return a;
 }
 
-applyRemoteAlertFired({
-symbol: sym,
-shape_id: sid,
-price: a.price,
-tf: a.tf
-});
+const reset =
+{
+...a,
+cloudSynced: false,
+cloudId: undefined
+};
 
-}
-
-const after =
-loadAlerts();
-
-const next =
-after.filter(a=>{
-
-const sym =
-String(a.symbol || "").trim().toUpperCase();
-const sid =
-String(a.shapeId || a.id || "").trim();
-
-if(
-!sym ||
-!sid
-){
-return false;
-}
-
-if(!a.cloudSynced){
-return true;
-}
-
-return cloudKeys.has(
-alertEntryKey(sym, sid)
-);
+changed = true;
+return reset;
 
 });
 
-if(next.length !== after.length){
+if(changed){
 saveAlertsFromCloudMerge(next);
+console.log(
+"[alerts] reconcile: в облаке",
+cloudByKey.size,
+"| реестр",
+next.length
+);
 }
 
 return next.length;
@@ -2713,7 +2913,7 @@ const n =
 await reconcileLocalRegistryWithCloud();
 
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=55");
+await import("./alerts.js?v=58");
 
 stripAlertFlagsNotInRegistry();
 
@@ -2726,14 +2926,14 @@ return n;
 async function hydrateAlertsAfterAuth(){
 
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=55");
+await import("./alerts.js?v=58");
 
 console.log(
 "[alerts] hydrate after login…"
 );
 
 const { mergeRegistryFromChartDrawings } =
-await import("./alerts.js?v=55");
+await import("./alerts.js?v=58");
 
 const merged =
 mergeRegistryFromChartDrawings();
@@ -2771,20 +2971,13 @@ if(!isCloudLoggedIn()){
 return;
 }
 
-void import("./alerts.js?v=55").then(m=>{
+void import("./alerts.js?v=58").then(m=>{
 m.mergeRegistryFromChartDrawings();
 }).catch(()=>{});
 
 void pushUnsyncedAlerts().catch(err=>{
 console.warn(
 "alert push unsynced:",
-err?.message || err
-);
-});
-
-void syncAllLocalAlertsToCloudImpl().catch(err=>{
-console.warn(
-"alert registry sync:",
 err?.message || err
 );
 });

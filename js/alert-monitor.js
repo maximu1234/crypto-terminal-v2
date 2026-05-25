@@ -3,7 +3,7 @@ alertEntryKey,
 commitAlertTriggeredLocally,
 formatTfLabel,
 getActiveAlerts
-} from "./alerts.js?v=55";
+} from "./alerts.js?v=58";
 
 import { formatPrice } from "./chart.js";
 
@@ -15,6 +15,11 @@ const recentlyTriggered =
 new Map();
 
 const TRIGGER_COOLDOWN_MS = 60000;
+
+/** После отпускания линии — не считать ложное пересечение (перетаскивали к цене). */
+const POST_DRAG_QUIET_MS = 3000;
+const postDragQuietUntil =
+new Map();
 
 /** shapeId → symbol пока тянут линию алерта (не проверять пересечение). */
 const dragPausedAlerts =
@@ -58,6 +63,33 @@ dragPausedAlerts.delete(key);
 }
 
 /** После отпускания линии — не считать пересечение сразу. */
+export function armAlertQuietAfterDrag(
+symbol,
+shapeId
+){
+
+const sym =
+String(symbol || "").trim().toUpperCase();
+const sid =
+String(shapeId || "").trim();
+
+if(
+!sym ||
+!sid
+){
+return;
+}
+
+postDragQuietUntil.set(
+alertEntryKey(
+sym,
+sid
+),
+Date.now() + POST_DRAG_QUIET_MS
+);
+
+}
+
 export function resetAlertWatchBaseline(
 symbol,
 shapeId,
@@ -430,6 +462,13 @@ alert.shapeId
 );
 
 if(dragPausedAlerts.has(key)){
+continue;
+}
+
+if(
+(postDragQuietUntil.get(key) || 0) >
+Date.now()
+){
 continue;
 }
 

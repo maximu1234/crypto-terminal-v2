@@ -1,3 +1,7 @@
+/** Ключ в localStorage — должен совпадать с createClient({ auth: { storageKey } }). */
+export const SUPABASE_AUTH_STORAGE_KEY =
+"ct_supabase_auth";
+
 let envPromise = null;
 let client = null;
 let clientPromise = null;
@@ -164,7 +168,7 @@ persistSession:true,
 autoRefreshToken:true,
 detectSessionInUrl:true,
 storage: window.localStorage,
-storageKey:"ct_supabase_auth"
+storageKey: SUPABASE_AUTH_STORAGE_KEY
 }
 }
 );
