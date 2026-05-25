@@ -83,8 +83,7 @@ btn.className = "flag screener-flag-btn";
 if(group){
 btn.classList.add(
 "favorite",
-`flag--${group}`,
-`screener-flag--${group}`
+`flag--${group}`
 );
 }
 

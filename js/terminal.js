@@ -2156,8 +2156,7 @@ btn.className = "flag coin-flag-btn";
 if(group){
 btn.classList.add(
 "favorite",
-`flag--${group}`,
-`coin-flag--${group}`
+`flag--${group}`
 );
 }
 
