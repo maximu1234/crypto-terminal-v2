@@ -1043,7 +1043,7 @@ body.tablet-chart .price-scale-touch-strip{
 
 #table-header{
   display:grid;
-  grid-template-columns:24px minmax(0,1fr) 62px 62px;
+  grid-template-columns:28px minmax(0,1fr) 62px 62px;
   padding:10px 10px;
   border-bottom:1px solid #1f2937;
   font-size:12px;
@@ -1064,7 +1064,7 @@ body.tablet-chart .price-scale-touch-strip{
 
 .coin{
   display:grid;
-  grid-template-columns:24px minmax(0,1fr) 62px 62px;
+  grid-template-columns:28px minmax(0,1fr) 62px 62px;
   align-items:center;
   padding:10px 10px;
   border-bottom:1px solid #1f2937;
@@ -1094,8 +1094,13 @@ body.tablet-chart .price-scale-touch-strip{
 }
 
 .coin-flag-btn{
-  padding:0;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:7px;
+  box-sizing:content-box;
   cursor:pointer;
+  touch-action:manipulation;
 }
 
 .coin-flag-btn:focus-visible{
@@ -1105,26 +1110,28 @@ body.tablet-chart .price-scale-touch-strip{
 
 .col-flag .flag,
 .col-flag .coin-flag-btn{
-  width:10px;
-  height:10px;
-  border-radius:50%;
+  width:14px;
+  height:14px;
+  border-radius:2px;
   border:1px solid #4b5563;
   background:transparent;
   cursor:pointer;
+  flex-shrink:0;
 }
 
 .coin-flag-menu{
   position:absolute;
-  top:calc(100% + 4px);
-  left:0;
+  top:calc(100% + 6px);
+  left:50%;
+  transform:translateX(-50%);
   z-index:30;
   display:flex;
   align-items:center;
-  gap:6px;
-  padding:6px 8px;
+  gap:8px;
+  padding:8px 10px;
   background:#1e293b;
   border:1px solid #334155;
-  border-radius:6px;
+  border-radius:8px;
   box-shadow:0 8px 24px rgba(0,0,0,.45);
 }
 
@@ -1133,13 +1140,18 @@ body.tablet-chart .price-scale-touch-strip{
 }
 
 .coin-flag-pick{
-  width:12px;
-  height:12px;
+  width:20px;
+  height:20px;
+  min-width:32px;
+  min-height:32px;
   padding:0;
-  border-radius:50%;
+  border-radius:3px;
   cursor:pointer;
   border:1px solid #4b5563;
   background:transparent;
+  box-sizing:border-box;
+  flex-shrink:0;
+  touch-action:manipulation;
 }
 
 .coin-flag-pick.flag--red{
@@ -1160,6 +1172,8 @@ body.tablet-chart .price-scale-touch-strip{
 .coin-flag-clear{
   background:transparent !important;
   border:1px dashed #6b7280;
+  min-width:32px;
+  min-height:32px;
 }
 
 .flag--red.favorite{

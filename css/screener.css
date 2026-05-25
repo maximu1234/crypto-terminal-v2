@@ -100,9 +100,9 @@ outline-offset:2px;
 }
 
 .screener-flag-btn.flag{
-width:10px;
-height:10px;
-border-radius:50%;
+width:12px;
+height:12px;
+border-radius:2px;
 border:1px solid #4b5563;
 background:transparent;
 }
@@ -130,16 +130,16 @@ box-shadow:0 0 6px rgba(156,163,175,.45);
 
 .screener-flag-menu{
 position:absolute;
-top:calc(100% + 4px);
+top:calc(100% + 6px);
 left:0;
 z-index:30;
 display:flex;
 align-items:center;
-gap:6px;
-padding:6px 8px;
+gap:8px;
+padding:8px 10px;
 background:#1e293b;
 border:1px solid #334155;
-border-radius:6px;
+border-radius:8px;
 box-shadow:0 8px 24px rgba(0,0,0,.45);
 }
 
@@ -148,13 +148,17 @@ display:none;
 }
 
 .screener-flag-pick{
-width:12px;
-height:12px;
+width:20px;
+height:20px;
+min-width:32px;
+min-height:32px;
 padding:0;
-border-radius:50%;
+border-radius:3px;
 cursor:pointer;
 border:1px solid #4b5563;
 background:transparent;
+box-sizing:border-box;
+touch-action:manipulation;
 }
 
 .screener-flag-pick.flag--red{
@@ -175,6 +179,8 @@ border-color:#9ca3af;
 .screener-flag-clear{
 background:transparent !important;
 border:1px dashed #6b7280;
+min-width:32px;
+min-height:32px;
 }
 
 .screener-symbol{
