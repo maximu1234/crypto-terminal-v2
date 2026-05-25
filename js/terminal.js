@@ -69,8 +69,9 @@ fetchTickersInto
 } from "./tickers.js";
 
 import {
-processAlertCandle
-} from "./alert-monitor.js?v=59";
+processAlertCandle,
+syncBackgroundAlertStreams
+} from "./alert-monitor.js?v=61";
 
 import {
 initDrawings
@@ -1811,6 +1812,11 @@ scrollActiveCoinIntoView();
 startRealtime();
 startPriceHud();
 
+syncBackgroundAlertStreams(
+currentSymbol,
+currentTF
+);
+
 persistCoinsPrefs();
 
 }
@@ -2695,6 +2701,16 @@ function flushCoinsPrefs(){
 persistCoinsPrefs();
 
 }
+
+window.addEventListener(
+"alert-streams-sync",
+()=>{
+syncBackgroundAlertStreams(
+currentSymbol,
+currentTF
+);
+}
+);
 
 window.addEventListener(
 "beforeunload",

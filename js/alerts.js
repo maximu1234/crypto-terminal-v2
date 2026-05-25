@@ -1083,7 +1083,7 @@ void import("./alerts-cloud-sync.js?v=59").then(m=>{
 m.flushAlertCloudPush(row);
 });
 
-void import("./alert-monitor.js?v=59").then(m=>{
+void import("./alert-monitor.js?v=61").then(m=>{
 m.armAlertQuietAfterDrag(
 sym,
 sid
@@ -1443,7 +1443,7 @@ sym,
 sid
 );
 
-void import("./alert-monitor.js?v=59").then(m=>{
+void import("./alert-monitor.js?v=61").then(m=>{
 m.notifyAlertTriggered({
 symbol: sym,
 shapeId: sid,

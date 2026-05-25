@@ -5,8 +5,16 @@ formatAlertTelegramText,
 getActiveAlerts
 } from "./alerts.js?v=60";
 
+import {
+subscribeKline
+} from "./ws.js?v=1";
+
 /* Базовая цена отдельно для каждого алерта (symbol + shapeId) */
 const lastPriceByAlert =
+new Map();
+
+/** Фоновые WS на TF алертов, когда график на другом TF. */
+const backgroundAlertUnsubs =
 new Map();
 
 const recentlyTriggered =
@@ -479,6 +487,119 @@ notifyAlertTriggered(alert);
 
 }
 
+function backgroundStreamKey(
+symbol,
+tf
+){
+
+return `${symbol}::${String(tf || "60")}`;
+
+}
+
+/**
+ * Подписки на свечи TF алертов, отличных от TF графика (алерт 1m при просмотре 1h).
+ */
+export function syncBackgroundAlertStreams(
+symbol,
+chartTf
+){
+
+const sym =
+String(symbol || "").trim().toUpperCase();
+const chartTfNorm =
+String(chartTf || "60");
+
+if(!sym){
+return;
+}
+
+const needed =
+new Set();
+
+for(const alert of getActiveAlerts()){
+
+if(
+String(alert.symbol || "").toUpperCase() !== sym
+){
+continue;
+}
+
+const alertTf =
+String(alert.tf || "60");
+
+if(alertTf === chartTfNorm){
+continue;
+}
+
+needed.add(
+backgroundStreamKey(
+sym,
+alertTf
+)
+);
+
+}
+
+for(
+const [key, unsub] of backgroundAlertUnsubs
+){
+
+if(
+!key.startsWith(`${sym}::`) ||
+needed.has(key)
+){
+continue;
+}
+
+unsub();
+backgroundAlertUnsubs.delete(key);
+
+}
+
+for(const key of needed){
+
+if(backgroundAlertUnsubs.has(key)){
+continue;
+}
+
+const alertTf =
+key.slice(sym.length + 2);
+
+const unsub =
+subscribeKline(
+sym,
+alertTf,
+candle=>{
+
+const active =
+getActiveAlerts().filter(
+a=>
+String(a.symbol || "").toUpperCase() === sym
+);
+
+if(!active.length){
+return;
+}
+
+evaluateAlerts(
+sym,
+candle,
+active,
+alertTf
+);
+
+}
+);
+
+backgroundAlertUnsubs.set(
+key,
+unsub
+);
+
+}
+
+}
+
 export function processAlertCandle(
 symbol,
 candle,
@@ -492,19 +613,26 @@ if(
 return;
 }
 
+const sym =
+String(symbol || "").trim().toUpperCase();
+
 const active =
 getActiveAlerts().filter(
-a=>a.symbol === symbol
+a=>
+String(a.symbol || "").toUpperCase() === sym
 );
 
-if(!active.length){
-return;
-}
-
+if(active.length){
 evaluateAlerts(
-symbol,
+sym,
 candle,
 active,
+chartTf
+);
+}
+
+syncBackgroundAlertStreams(
+sym,
 chartTf
 );
 
@@ -521,6 +649,11 @@ window.addEventListener(
 ()=>{
 pruneAlertWatchState();
 maybeRequestNotificationPermission();
+window.dispatchEvent(
+new CustomEvent(
+"alert-streams-sync"
+)
+);
 }
 );
 
