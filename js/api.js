@@ -1,6 +1,6 @@
 import {
 fetchBybit
-} from "./bybit-fetch.js?v=2";
+} from "./bybit-fetch.js?v=3";
 
 const TWELVE_KEY =
 "d6b45dcb1abf4b3ebe020038e41864fb";
@@ -19,7 +19,7 @@ async function fetchBybitKlineBatch(
 symbol,
 tf,
 end,
-retries = 5
+retries = 3
 ){
 
 const path =
@@ -31,8 +31,9 @@ const { json } =
 await fetchBybit(
 path,
 {
+sequential: true,
 retries,
-timeoutMs: 22000
+timeoutMs: 14000
 }
 );
 
@@ -188,38 +189,69 @@ return result;
    BYBIT SYMBOLS
 ========================================================= */
 
-export function isUsdtLinearSymbol(item){
+const SYMBOLS_CACHE_KEY =
+"bybit_linear_symbols_v1";
+
+const SYMBOLS_CACHE_TTL_MS =
+60 * 60 * 1000;
+
+function readSymbolsCache(){
+
+try{
+
+const raw =
+localStorage.getItem(SYMBOLS_CACHE_KEY);
+
+if(!raw){
+return null;
+}
+
+const parsed =
+JSON.parse(raw);
 
 if(
-!item ||
-item.status !== "Trading"
+!Array.isArray(parsed?.symbols) ||
+!parsed.symbols.length
 ){
-return false;
-}
-
-const sym =
-String(item.symbol || "").toUpperCase();
-
-if(!sym.endsWith("USDT")){
-return false;
-}
-
-if(sym.endsWith("PERP")){
-return false;
+return null;
 }
 
 if(
-item.quoteCoin &&
-item.quoteCoin !== "USDT"
+Date.now() - Number(parsed.at || 0) >
+SYMBOLS_CACHE_TTL_MS
 ){
-return false;
+return null;
 }
 
-return true;
+return parsed.symbols;
+
+}catch{
+
+return null;
 
 }
 
-export async function loadBybitSymbols(){
+}
+
+function writeSymbolsCache(symbols){
+
+try{
+
+localStorage.setItem(
+SYMBOLS_CACHE_KEY,
+JSON.stringify({
+at: Date.now(),
+symbols
+})
+);
+
+}catch{
+/* ignore */
+}
+
+}
+
+async function loadBybitSymbolsFromNetwork(){
 
 const all = [];
 let cursor = null;
@@ -241,8 +273,8 @@ const { json } =
 await fetchBybit(
 path,
 {
-retries: 5,
-timeoutMs: 25000
+timeoutMs: 12000,
+retries: 1
 }
 );
 
@@ -287,7 +319,7 @@ pageFailures >= 3
 break;
 }
 
-await sleep(800);
+await sleep(500);
 
 }
 
@@ -304,7 +336,80 @@ throw new Error(
 );
 }
 
+writeSymbolsCache(filtered);
+
 return filtered;
+
+}
+
+export function isUsdtLinearSymbol(item){
+
+if(
+!item ||
+item.status !== "Trading"
+){
+return false;
+}
+
+const sym =
+String(item.symbol || "").toUpperCase();
+
+if(!sym.endsWith("USDT")){
+return false;
+}
+
+if(sym.endsWith("PERP")){
+return false;
+}
+
+if(
+item.quoteCoin &&
+item.quoteCoin !== "USDT"
+){
+return false;
+}
+
+return true;
+
+}
+
+export async function loadBybitSymbols(
+options = {}
+){
+
+const cached =
+readSymbolsCache();
+
+if(
+cached?.length &&
+!options.forceNetwork
+){
+
+void loadBybitSymbolsFromNetwork()
+.then(symbols=>{
+
+window.dispatchEvent(
+new CustomEvent(
+"bybit-symbols-updated",
+{
+detail: { symbols }
+}
+)
+);
+
+})
+.catch(err=>{
+console.warn(
+"Bybit symbols refresh:",
+err?.message || err
+);
+});
+
+return cached;
+
+}
+
+return loadBybitSymbolsFromNetwork();
 
 }
 

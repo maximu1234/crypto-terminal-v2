@@ -1,7 +1,7 @@
 import {
 loadBybitHistory,
 loadBybitSymbols
-} from "./api.js?v=15";
+} from "./api.js?v=16";
 
 import {
 createScreenerChart,
@@ -1180,7 +1180,7 @@ widget.symbol
 async function loadScreenerMarketData(){
 
 setStatus(
-"Загрузка списка монет…",
+"Загрузка…",
 true
 );
 
@@ -1206,7 +1206,15 @@ screenerMarketReloading = true;
 
 try{
 
-await loadScreenerMarketData();
+const list =
+await loadBybitSymbols({
+forceNetwork: true
+});
+
+allSymbols =
+list.map(x => x.symbol);
+
+await fetchTickersInto(tickerMap);
 
 await renderPage();
 
@@ -1237,6 +1245,32 @@ window.addEventListener(
 "bybit-network-retry",
 ()=>{
 void reloadScreenerMarketData();
+}
+);
+
+window.addEventListener(
+"bybit-symbols-updated",
+e=>{
+
+const symbols =
+e.detail?.symbols;
+
+if(
+!Array.isArray(symbols) ||
+!symbols.length
+){
+return;
+}
+
+allSymbols =
+symbols.map(x=>
+typeof x === "string"
+? x
+: x.symbol
+).filter(Boolean);
+
+void renderPage();
+
 }
 );
 

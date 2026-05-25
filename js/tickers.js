@@ -1,6 +1,6 @@
 import {
 fetchBybit
-} from "./bybit-fetch.js?v=2";
+} from "./bybit-fetch.js?v=3";
 
 let interval = null;
 
@@ -58,8 +58,8 @@ const { json } =
 await fetchBybit(
 "/v5/market/tickers?category=linear",
 {
-retries: 4,
-timeoutMs: 20000
+timeoutMs: 12000,
+retries: 1
 }
 );
 
@@ -113,8 +113,8 @@ const { json } =
 await fetchBybit(
 "/v5/market/tickers?category=linear",
 {
-retries: 3,
-timeoutMs: 18000
+timeoutMs: 12000,
+retries: 1
 }
 );
 

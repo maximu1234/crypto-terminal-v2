@@ -19,12 +19,20 @@ return new Promise(resolve=>setTimeout(resolve, ms));
 function backoffMs(attempt){
 
 return Math.min(
-8000,
-350 * Math.pow(
+6000,
+300 * Math.pow(
 2,
 attempt
 )
 );
+
+}
+
+function normalizePath(pathQuery){
+
+return pathQuery.startsWith("/")
+? pathQuery
+: `/${pathQuery}`;
 
 }
 
@@ -110,57 +118,34 @@ if(!err){
 return false;
 }
 
-if(
-err.name === "AbortError"
-){
-return true;
-}
-
 return true;
 
 }
 
-/**
- * GET к Bybit v5 с таймаутом, backoff и сменой api host.
- * @returns {{ res: Response, json: object, base: string }}
- */
-export async function fetchBybit(
-pathQuery,
-options = {}
+function markBybitSuccess(baseIndex){
+
+activeApiBaseIndex =
+baseIndex;
+
+void import("./bybit-network-ui.js?v=1").then(m=>{
+m.clearBybitNetworkIssue();
+});
+
+}
+
+function markBybitFailure(err){
+
+void import("./bybit-network-ui.js?v=1").then(m=>{
+m.showBybitNetworkIssue(err);
+});
+
+}
+
+async function fetchOneBybitUrl(
+url,
+baseIndex,
+timeoutMs
 ){
-
-const retries =
-options.retries ??
-4;
-const timeoutMs =
-options.timeoutMs ??
-20000;
-const path =
-pathQuery.startsWith("/")
-? pathQuery
-: `/${pathQuery}`;
-
-let lastErr = null;
-
-for(
-let basePass = 0;
-basePass <
-BYBIT_API_BASES.length;
-basePass++
-){
-
-const base =
-getBybitApiBase();
-const url =
-`${base}${path}`;
-
-for(
-let attempt = 0;
-attempt < retries;
-attempt++
-){
-
-try{
 
 const controller =
 new AbortController();
@@ -169,6 +154,8 @@ setTimeout(
 ()=>controller.abort(),
 timeoutMs
 );
+
+try{
 
 const res =
 await fetch(
@@ -181,52 +168,142 @@ cache: "no-store"
 
 clearTimeout(timer);
 
-let json = {};
-
-try{
-json =
+const json =
 await res.json();
-}catch(parseErr){
-lastErr = parseErr;
-
-if(
-attempt <
-retries - 1
-){
-await sleep(
-backoffMs(attempt)
-);
-continue;
-}
-
-break;
-}
 
 if(
 json.retCode === 0
 ){
-void import("./bybit-network-ui.js?v=1").then(m=>{
-m.clearBybitNetworkIssue();
-});
+markBybitSuccess(baseIndex);
 return {
 res,
 json,
-base
+base: BYBIT_API_BASES[baseIndex]
 };
 }
 
-if(
-isRetryableBybitResponse(
-res,
-json
-)
-){
-lastErr =
+const err =
 new Error(
 `Bybit ${json.retCode}: ${json.retMsg || res.status}`
 );
 
+err.retryable =
+isRetryableBybitResponse(
+res,
+json
+);
+
+throw err;
+
+}catch(err){
+
+clearTimeout(timer);
+throw err;
+
+}
+
+}
+
+/**
+ * Параллельно на всех хостах — кто быстрее ответил (как у биржи после «паузы»).
+ */
+async function fetchBybitRace(
+pathQuery,
+options = {}
+){
+
+const path =
+normalizePath(pathQuery);
+const timeoutMs =
+options.timeoutMs ??
+12000;
+
+const tasks =
+BYBIT_API_BASES.map(
+(base, index)=>
+fetchOneBybitUrl(
+`${base}${path}`,
+index,
+timeoutMs
+)
+);
+
+try{
+
+return await Promise.any(tasks);
+
+}catch(err){
+
+const lastErr =
+err?.errors?.[
+err.errors.length - 1
+] ||
+err;
+
+markBybitFailure(lastErr);
+
+throw (
+lastErr ||
+new Error(
+"Bybit API недоступен"
+)
+);
+
+}
+
+}
+
+/**
+ * По очереди — для kline, чтобы не дублировать rate limit на всех хостах сразу.
+ */
+async function fetchBybitSequential(
+pathQuery,
+options = {}
+){
+
+const retries =
+options.retries ??
+2;
+const timeoutMs =
+options.timeoutMs ??
+12000;
+const path =
+normalizePath(pathQuery);
+
+let lastErr = null;
+
+for(
+let basePass = 0;
+basePass <
+BYBIT_API_BASES.length;
+basePass++
+){
+
+const baseIndex =
+activeApiBaseIndex;
+const url =
+`${getBybitApiBase()}${path}`;
+
+for(
+let attempt = 0;
+attempt < retries;
+attempt++
+){
+
+try{
+
+return await fetchOneBybitUrl(
+url,
+baseIndex,
+timeoutMs
+);
+
+}catch(err){
+
+lastErr = err;
+
 if(
+err?.retryable &&
 attempt <
 retries - 1
 ){
@@ -235,18 +312,6 @@ backoffMs(attempt)
 );
 continue;
 }
-
-}else{
-return {
-res,
-json,
-base
-};
-}
-
-}catch(err){
-
-lastErr = err;
 
 if(
 isRetryableFetchError(err) &&
@@ -259,6 +324,8 @@ backoffMs(attempt)
 continue;
 }
 
+break;
+
 }
 
 }
@@ -267,15 +334,37 @@ rotateBybitApiBase();
 
 }
 
-void import("./bybit-network-ui.js?v=1").then(m=>{
-m.showBybitNetworkIssue(lastErr);
-});
+markBybitFailure(lastErr);
 
 throw (
 lastErr ||
 new Error(
 "Bybit API недоступен"
 )
+);
+
+}
+
+/**
+ * GET к Bybit v5. По умолчанию — race по хостам; sequential: true — для свечей.
+ */
+export async function fetchBybit(
+pathQuery,
+options = {}
+){
+
+if(
+options.sequential === true
+){
+return fetchBybitSequential(
+pathQuery,
+options
+);
+}
+
+return fetchBybitRace(
+pathQuery,
+options
 );
 
 }
