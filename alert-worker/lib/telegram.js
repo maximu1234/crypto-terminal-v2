@@ -46,20 +46,28 @@ const TF_LABELS = {
   "D": "1D"
 };
 
-export function formatAlertMessage(alert) {
+function formatAlertTicker(symbol) {
 
-  const sym = alert.symbol?.endsWith("USDT")
-    ? `${alert.symbol.replace(/USDT$/, "")}/USDT`
-    : alert.symbol;
+  const raw =
+    String(symbol || "").trim().toUpperCase();
 
-  const tfRaw = String(alert.tf || "60");
-  const tf = TF_LABELS[tfRaw] || tfRaw;
-  const price =
-    formatPriceForTelegram(
-      Number(alert.price)
-    );
+  if (!raw) {
+    return "—";
+  }
 
-  return `${sym} · ${tf}\nЦена пересекла уровень ${price}`;
+  if (raw.includes("/")) {
+    return raw;
+  }
+
+  if (raw.endsWith(".P")) {
+    return raw;
+  }
+
+  if (raw.endsWith("USDT")) {
+    return `${raw}.P`;
+  }
+
+  return raw;
 
 }
 
@@ -69,14 +77,27 @@ function formatPriceForTelegram(n) {
     return "—";
   }
 
-  if (n >= 1000) {
-    return n.toFixed(2);
-  }
+  return n.toFixed(4);
 
-  if (n >= 1) {
-    return n.toFixed(4);
-  }
+}
 
-  return n.toFixed(6);
+export function formatAlertMessage(alert) {
+
+  const sym =
+    formatAlertTicker(alert.symbol);
+  const tfRaw =
+    String(alert.tf || "60");
+  const tf =
+    TF_LABELS[tfRaw] || tfRaw;
+  const price =
+    formatPriceForTelegram(
+      Number(alert.price)
+    );
+
+  return (
+    `${sym} - ${tf}\n` +
+    "Цена пересекла уровень\n" +
+    price
+  );
 
 }

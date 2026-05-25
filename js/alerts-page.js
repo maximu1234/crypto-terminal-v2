@@ -3,13 +3,14 @@ clearAllDrawings,
 clearAlertsHistory,
 countAllDrawings,
 formatAlertDate,
+formatAlertTicker,
 formatTfLabel,
 getAlertsHistorySorted,
 getAlertsSorted,
 removeAlert,
 stripAlertFlagsNotInRegistry,
 removeAllAlerts
-} from "./alerts.js?v=59";
+} from "./alerts.js?v=60";
 
 import {
 getTelegramChatId,
@@ -251,18 +252,6 @@ true
 
 });
 
-function displaySymbol(symbol){
-
-if(!symbol){
-return "—";
-}
-
-return symbol.endsWith("USDT")
-? `${symbol.replace(/USDT$/, "")}/USDT`
-: symbol;
-
-}
-
 function renderActive(){
 
 const alerts =
@@ -301,7 +290,7 @@ alerts.map(alert=>`
 
 <td>
 <a class="alerts-symbol-link" href="/coins.html?symbol=${encodeURIComponent(alert.symbol)}&tf=${encodeURIComponent(alert.tf || "60")}">
-${displaySymbol(alert.symbol)}
+${formatAlertTicker(alert.symbol)}
 </a>
 </td>
 
@@ -376,7 +365,7 @@ history.map(alert=>`
 
 <td>
 <a class="alerts-symbol-link" href="/coins.html?symbol=${encodeURIComponent(alert.symbol)}&tf=${encodeURIComponent(alert.tf || "60")}">
-${displaySymbol(alert.symbol)}
+${formatAlertTicker(alert.symbol)}
 </a>
 </td>
 

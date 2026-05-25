@@ -1,11 +1,9 @@
 import {
 alertEntryKey,
 commitAlertTriggeredLocally,
-formatTfLabel,
+formatAlertTelegramText,
 getActiveAlerts
-} from "./alerts.js?v=59";
-
-import { formatPrice } from "./chart.js";
+} from "./alerts.js?v=60";
 
 /* Базовая цена отдельно для каждого алерта (symbol + shapeId) */
 const lastPriceByAlert =
@@ -133,20 +131,6 @@ lastPriceByAlert.delete(key);
 }
 
 recentlyTriggered.delete(key);
-
-}
-
-function displaySymbol(symbol){
-
-if(!symbol){
-return "—";
-}
-
-if(symbol.endsWith("USDT")){
-return `${symbol.replace(/USDT$/, "")}/USDT`;
-}
-
-return symbol;
 
 }
 
@@ -358,20 +342,17 @@ setTimeout(()=>n.close(), 8000);
 
 export function notifyAlertTriggered(alert){
 
-const sym =
-displaySymbol(alert.symbol);
-
-const tf =
-formatTfLabel(alert.tf);
-
-const price =
-formatPrice(alert.price);
+const text =
+formatAlertTelegramText(alert);
+const lines =
+text.split("\n");
 
 const title =
-`${sym} · ${tf}`;
+lines[0] || "Алерт";
 
 const body =
-`Цена пересекла уровень ${price}`;
+lines.slice(1).join("\n") ||
+"";
 
 playAlertSound();
 showToast(title, body);

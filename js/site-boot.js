@@ -13,7 +13,7 @@ scheduleRegistryCloudSync
 
 import {
 stripAlertFlagsNotInRegistry
-} from "./alerts.js?v=59";
+} from "./alerts.js?v=60";
 
 import {
 isCloudLoggedIn,

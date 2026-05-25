@@ -6,7 +6,7 @@ getActiveAlerts,
 finalizeAlertPriceDrag,
 removeAlert,
 upsertAlert
-} from "./alerts.js?v=59";
+} from "./alerts.js?v=60";
 
 import {
 setAlertDragPaused,

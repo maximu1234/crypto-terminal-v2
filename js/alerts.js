@@ -77,6 +77,78 @@ return TF_LABELS[tf] || tf;
 
 }
 
+/**
+ * Тикер для алертов: спот UB/USDT, линейные фьючи UBUSDT.P (как на графике).
+ */
+export function formatAlertTicker(
+symbol
+){
+
+const raw =
+String(symbol || "").trim().toUpperCase();
+
+if(!raw){
+return "—";
+}
+
+if(raw.includes("/")){
+return raw;
+}
+
+if(raw.endsWith(".P")){
+return raw;
+}
+
+if(raw.endsWith("USDT")){
+return `${raw}.P`;
+}
+
+return raw;
+
+}
+
+/** Цена в Telegram / тосте — ровно 4 знака после точки. */
+export function formatAlertTelegramPrice(
+price
+){
+
+const n =
+Number(price);
+
+if(!Number.isFinite(n)){
+return "—";
+}
+
+return n.toFixed(4);
+
+}
+
+/** Три строки: тикер - TF; текст; цена. */
+export function formatAlertTelegramText(
+alert
+){
+
+const sym =
+formatAlertTicker(
+alert?.symbol
+);
+const tf =
+formatTfLabel(
+alert?.tf
+);
+const price =
+formatAlertTelegramPrice(
+alert?.price
+);
+
+return (
+`${sym} - ${tf}\n` +
+"Цена пересекла уровень\n" +
+price
+);
+
+}
+
 export function alertEntryKey(symbol, shapeId){
 
 return `${symbol}::${shapeId}`;
