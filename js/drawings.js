@@ -33,7 +33,7 @@ import {
 bumpDrawingsLocalRevision,
 persistAllDrawingsToCloud,
 onDrawingsRemoteUpdate
-} from "./cloud-sync.js?v=12";
+} from "./cloud-sync.js?v=13";
 
 import {
 formatPrice,
@@ -7719,11 +7719,14 @@ redraw();
 function clearAllDrawingsOnChart(){
 
 if(!alive){
-return;
+return false;
 }
 
 const sym =
-getSymbol();
+String(getSymbol() || "").trim().toUpperCase();
+
+const hadAlerts =
+drawings.some(d=>d.isAlert);
 
 drawings
 .filter(d=>d.isAlert)
@@ -7739,15 +7742,69 @@ selectedId = null;
 cancelPlacement();
 saveDrawings();
 
+void persistAllDrawingsToCloud().catch(err=>{
+console.warn(
+"clear drawings cloud:",
+err?.message || err
+);
+});
+
 window.dispatchEvent(
 new CustomEvent(
 "drawings-updated",
-{ detail:{ symbol: sym } }
+{
+detail:{
+symbol: sym,
+cleared: true
+}
+}
 )
 );
 
 updateStyleBar();
 scheduleRedraw();
+
+return hadAlerts || true;
+
+}
+
+function bindClearAllToolbarButtons(){
+
+const buttons =
+tools.querySelectorAll(
+".draw-tool-clear-all"
+);
+
+buttons.forEach(btn=>{
+
+if(
+btn.dataset.clearAllBound ===
+"1"
+){
+return;
+}
+
+btn.dataset.clearAllBound = "1";
+
+const runClear = e=>{
+
+e.preventDefault();
+e.stopPropagation();
+clearAllDrawingsOnChart();
+
+};
+
+btn.addEventListener(
+"click",
+runClear
+);
+
+btn.addEventListener(
+"pointerup",
+runClear
+);
+
+});
 
 }
 
@@ -7941,6 +7998,8 @@ btn.dataset.drawTool
 
 }
 );
+
+bindClearAllToolbarButtons();
 
 function initStylePopovers(){
 
@@ -8296,16 +8355,42 @@ setupContextMenu();
 
 const onDrawingsUpdated = e=>{
 
-if(!alive || !isActive()){
+if(!alive){
 return;
 }
 
-if(e.detail?.symbol === getSymbol()){
+const symNorm =
+String(getSymbol() || "").trim().toUpperCase();
+
+const eventSym =
+String(e.detail?.symbol || "").trim().toUpperCase();
+
+if(
+eventSym !== symNorm
+){
+return;
+}
+
+if(e.detail?.cleared){
+
+drawings = [];
+selectedId = null;
+cancelPlacement();
+loadDrawings();
+updateStyleBar();
+scheduleRedraw();
+return;
+
+}
+
+if(!isActive()){
+return;
+}
+
 loadDrawings();
 reconcileDrawingAlertsFromRegistry();
 scheduleRedraw();
 updateStyleBar();
-}
 
 };
 

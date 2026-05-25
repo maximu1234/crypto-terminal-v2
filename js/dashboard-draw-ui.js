@@ -223,7 +223,15 @@ if(clearBtn){
 e.preventDefault();
 e.stopPropagation();
 onActivate?.();
+
+const cleared =
 onClearAll?.();
+
+if(cleared === false){
+console.warn(
+"[draw] clear all: drawing layer not ready"
+);
+}
 
 queueMicrotask(
 ()=>{

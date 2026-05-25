@@ -17,7 +17,7 @@ applyDashboardZoom
 
 import {
 initDrawings
-} from "./drawings.js?v=111";
+} from "./drawings.js?v=112";
 
 import {
 subscribeKline
@@ -30,7 +30,7 @@ initWidgetDrawToolsDropdown,
 wireWidgetDrawToolMenu,
 closeAllWidgetDrawToolsMenus,
 resetWidgetDrawToolsMenus
-} from "./dashboard-draw-ui.js?v=5";
+} from "./dashboard-draw-ui.js?v=6";
 
 import {
 preloadTradingSymbols,
@@ -234,9 +234,9 @@ drawingTools?.pickDrawTool?.(
 name
 );
 },
-onClearAll:()=>{
-drawingTools?.clearAllDrawings?.();
-},
+onClearAll:()=>
+drawingTools?.clearAllDrawings?.() ??
+false,
 onActivate:setActive
 }
 );
