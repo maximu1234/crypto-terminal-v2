@@ -182,29 +182,6 @@ color:#86efac;
 color:#fca5a5;
 }
 
-.alerts-telegram-open-bot{
-flex:1 1 100%;
-display:inline-block;
-padding:8px 14px;
-border-radius:6px;
-background:#0088cc;
-color:#fff !important;
-font-size:0.9rem;
-font-weight:500;
-text-decoration:none;
-text-align:center;
-}
-
-.alerts-telegram-open-bot:hover{
-background:#006699;
-}
-
-.alerts-telegram-open-bot.is-disabled{
-pointer-events:none;
-opacity:0.45;
-cursor:not-allowed;
-}
-
 .alerts-telegram-help{
 flex:1 1 100%;
 margin:4px 0 0;
@@ -225,12 +202,6 @@ padding-left:1.2rem;
 .alerts-telegram-help code{
 font-size:0.8rem;
 color:#e5e7eb;
-}
-
-.alerts-telegram-help-note{
-margin:10px 0 0;
-font-size:0.78rem;
-color:#6b7280;
 }
 
 .menu{

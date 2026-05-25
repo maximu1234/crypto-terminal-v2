@@ -33,6 +33,11 @@ focusAlertsLogin
 
 import { formatPrice } from "./chart.js";
 
+import {
+getTelegramBotUrl,
+TELEGRAM_BOT_USERNAME
+} from "./telegram-bot-public.js?v=1";
+
 const tbody =
 document.getElementById("alerts-tbody");
 
@@ -102,114 +107,33 @@ document.getElementById("alerts-telegram-edit");
 const telegramDisconnect =
 document.getElementById("alerts-telegram-disconnect");
 
-const telegramOpenBotBtn =
-document.getElementById("alerts-telegram-open-bot-btn");
-
-const telegramOpenBotHelp =
+const telegramOpenBotLink =
 document.getElementById("alerts-telegram-open-bot");
 
 let telegramSetupEdit =
 false;
 
-let telegramBotLinkCached =
-null;
+function initTelegramBotLink(){
 
-async function resolveTelegramBotLink(){
+const url =
+getTelegramBotUrl();
 
-if(telegramBotLinkCached){
-return telegramBotLinkCached;
+if(
+!telegramOpenBotLink ||
+!url
+){
+return;
 }
 
-let workerBase =
-"";
+telegramOpenBotLink.href = url;
 
-let fallbackUsername =
-"";
+const label =
+TELEGRAM_BOT_USERNAME
+? `@${TELEGRAM_BOT_USERNAME.replace(/^@/, "")}`
+: "бота";
 
-try{
-const env =
-await import("./supabase-env.js?v=4");
-
-workerBase =
-String(env.ALERT_WORKER_URL || "")
-.trim()
-.replace(/\/$/, "");
-
-fallbackUsername =
-String(env.TELEGRAM_BOT_USERNAME || "")
-.trim()
-.replace(/^@/, "");
-
-}catch{
-/* supabase-env.js отсутствует */
-}
-
-if(workerBase){
-
-try{
-const res =
-await fetch(
-`${workerBase}/telegram/info`,
-{ cache: "no-store" }
-);
-
-if(res.ok){
-const data =
-await res.json();
-
-if(data?.link){
-telegramBotLinkCached = data.link;
-return telegramBotLinkCached;
-}
-
-if(data?.username){
-telegramBotLinkCached =
-`https://t.me/${data.username}`;
-return telegramBotLinkCached;
-}
-
-}
-
-}catch{
-/* worker недоступен */
-}
-
-}
-
-if(fallbackUsername){
-telegramBotLinkCached =
-`https://t.me/${fallbackUsername}`;
-return telegramBotLinkCached;
-}
-
-return null;
-
-}
-
-function applyTelegramBotLinks(link){
-
-const nodes =
-[
-telegramOpenBotBtn,
-telegramOpenBotHelp
-].filter(Boolean);
-
-for(const el of nodes){
-
-if(link){
-el.href = link;
-el.classList.remove("is-disabled");
-el.removeAttribute("aria-disabled");
-el.title = "";
-}else{
-el.href = "#";
-el.classList.add("is-disabled");
-el.setAttribute("aria-disabled", "true");
-el.title =
-"Ссылка на бота появится после настройки alert-worker на Railway";
-}
-
-}
+telegramOpenBotLink.textContent =
+`Откройте бота ${label}`;
 
 }
 
@@ -642,11 +566,7 @@ initAlertsCloudSync();
 stripAlertFlagsNotInRegistry();
 render();
 
-void resolveTelegramBotLink()
-.then(applyTelegramBotLinks)
-.catch(()=>{
-applyTelegramBotLinks(null);
-});
+initTelegramBotLink();
 
 void ensureCloudReady()
 .then(()=>refreshTelegramUi())
