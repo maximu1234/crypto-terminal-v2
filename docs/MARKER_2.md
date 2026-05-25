@@ -1,7 +1,7 @@
 # Метка 2 — алерты (текущий эталон)
 
 **Зафиксировано:** 2026-05-25  
-**Тег:** `metka-2` · **Коммит:** `7fb5280` (`7fb52804f1a1c48a6a8ef36cf22c1c30a79b3c0c`).
+**Тег:** `metka-2` · **Коммит:** `111fdfe` (`111fdfe7e915ff19ed69feb5a36048521a893926`).
 
 ## Что работает
 
@@ -26,7 +26,7 @@
 
 ```bash
 git checkout metka-2 -- js/ alert-worker/lib/ sounds/ docs/
-# или: git checkout 7fb5280 -- js/ …
+# или: git checkout 111fdfe -- js/ …
 ```
 
 Вся ветка: `git checkout metka-2` (сохраните незакоммиченное отдельно).
