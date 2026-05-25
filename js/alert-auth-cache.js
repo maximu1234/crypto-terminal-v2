@@ -3,6 +3,10 @@
  * (без getSession(), который зависает при повторных срабатываниях).
  */
 
+import {
+SUPABASE_AUTH_STORAGE_KEY
+} from "./supabase-client.js?v=5";
+
 let cache = null;
 
 /** Живёт между readAlertTokenSync, пока не signOut. */
@@ -102,31 +106,18 @@ function readSessionFromAppStorage(){
     return null;
   }
 
-  const keys = [
-    "ct_supabase_auth"
-  ];
+  let raw;
 
-  for(const key of keys){
-
-    let raw;
-
-    try{
-      raw =
-      localStorage.getItem(key);
-    }catch{
-      continue;
-    }
-
-    const session =
-    parseSupabaseAuthRaw(raw);
-
-    if(session){
-      return session;
-    }
-
+  try{
+    raw =
+    localStorage.getItem(
+      SUPABASE_AUTH_STORAGE_KEY
+    );
+  }catch{
+    return null;
   }
 
-  return null;
+  return parseSupabaseAuthRaw(raw);
 
 }
 

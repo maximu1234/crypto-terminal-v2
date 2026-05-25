@@ -64,7 +64,9 @@ js/
   listings.js          — страница листингов
   dashboard.js         — терминал
   drawings.js          — инструменты на графике
-  alerts.js, alert-monitor.js, alerts-page.js, site-boot.js
+  alerts.js, alert-monitor.js, alert-auth-cache.js, alerts-cloud-sync.js
+  alerts-page.js, site-boot.js
+sounds/                — cute_msg_alert.mp3 (звук срабатывания)
   trade-calculator.js, symbol-autocomplete.js, draw-ui-shared.js
 ```
 

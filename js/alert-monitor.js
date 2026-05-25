@@ -3,7 +3,7 @@ alertEntryKey,
 commitAlertTriggeredLocally,
 formatTfLabel,
 getActiveAlerts
-} from "./alerts.js?v=58";
+} from "./alerts.js?v=59";
 
 import { formatPrice } from "./chart.js";
 
@@ -25,7 +25,11 @@ new Map();
 const dragPausedAlerts =
 new Map();
 
-let audioCtx = null;
+const ALERT_SOUND_URL =
+"/sounds/cute_msg_alert.mp3";
+
+let alertSound =
+null;
 
 export function setAlertDragPaused(
 symbol,
@@ -238,57 +242,19 @@ recentlyTriggered.delete(key);
 
 }
 
-function ensureAudioContext(){
+function ensureAlertSound(){
 
-if(audioCtx){
-return audioCtx;
+if(alertSound){
+return alertSound;
 }
 
-const Ctx =
-window.AudioContext ||
-window.webkitAudioContext;
+const audio =
+new Audio(ALERT_SOUND_URL);
 
-if(!Ctx){
-return null;
-}
+audio.preload = "auto";
 
-audioCtx = new Ctx();
-return audioCtx;
-
-}
-
-function playTone(
-ctx,
-t0,
-freq,
-duration,
-peakGain
-){
-
-const osc =
-ctx.createOscillator();
-
-const gain =
-ctx.createGain();
-
-osc.type = "square";
-osc.frequency.setValueAtTime(freq, t0);
-
-gain.gain.setValueAtTime(0.0001, t0);
-gain.gain.exponentialRampToValueAtTime(
-peakGain,
-t0 + 0.03
-);
-gain.gain.exponentialRampToValueAtTime(
-0.0001,
-t0 + duration
-);
-
-osc.connect(gain);
-gain.connect(ctx.destination);
-
-osc.start(t0);
-osc.stop(t0 + duration + 0.05);
+alertSound = audio;
+return audio;
 
 }
 
@@ -296,23 +262,24 @@ function playAlertSound(){
 
 try{
 
-const ctx =
-ensureAudioContext();
+const audio =
+ensureAlertSound();
 
-if(!ctx){
+if(!audio){
 return;
 }
 
-if(ctx.state === "suspended"){
-ctx.resume();
+audio.currentTime = 0;
+
+const play =
+audio.play();
+
+if(
+play &&
+typeof play.catch === "function"
+){
+play.catch(()=>{});
 }
-
-const t0 =
-ctx.currentTime;
-
-playTone(ctx, t0, 880, 0.38, 0.55);
-playTone(ctx, t0 + 0.42, 1175, 0.42, 0.5);
-playTone(ctx, t0 + 0.88, 880, 0.38, 0.45);
 
 }catch{}
 
@@ -563,6 +530,8 @@ chartTf
 }
 
 export function initAlertMonitor(){
+
+ensureAlertSound();
 
 maybeRequestNotificationPermission();
 
