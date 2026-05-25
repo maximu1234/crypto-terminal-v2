@@ -42,6 +42,14 @@ return;
 
 if(
 e.target.closest(
+".draw-tool-clear-all"
+)
+){
+return;
+}
+
+if(
+e.target.closest(
 ".widget-draw-tools"
 )
 ){
@@ -209,27 +217,34 @@ if(
 return;
 }
 
-menu.addEventListener(
-"click",
-e=>{
+function runClearAllFromMenu(
+e
+){
 
 const clearBtn =
 e.target.closest(
 ".draw-tool-clear-all"
 );
 
-if(clearBtn){
+if(
+!clearBtn
+){
+return false;
+}
 
 e.preventDefault();
 e.stopPropagation();
-onActivate?.();
+
+onActivate?.(e);
 
 const cleared =
 onClearAll?.();
 
-if(cleared === false){
+if(
+cleared === false
+){
 console.warn(
-"[draw] clear all: drawing layer not ready"
+"[Multichart] Очистка графика недоступна — обновите страницу (Cmd+Shift+R)"
 );
 }
 
@@ -239,9 +254,29 @@ closeAllWidgetDrawToolsMenus();
 }
 );
 
-return;
+return true;
 
 }
+
+menu.addEventListener(
+"pointerdown",
+e=>{
+
+if(
+runClearAllFromMenu(
+e
+)
+){
+return;
+}
+
+},
+true
+);
+
+menu.addEventListener(
+"click",
+e=>{
 
 if(!pickTool){
 return;
@@ -261,7 +296,7 @@ return;
 e.preventDefault();
 e.stopPropagation();
 
-onActivate?.();
+onActivate?.(e);
 pickTool(
 btn.dataset.drawTool
 );

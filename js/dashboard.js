@@ -17,7 +17,7 @@ applyDashboardZoom
 
 import {
 initDrawings
-} from "./drawings.js?v=112";
+} from "./drawings.js?v=113";
 
 import {
 subscribeKline
@@ -30,7 +30,7 @@ initWidgetDrawToolsDropdown,
 wireWidgetDrawToolMenu,
 closeAllWidgetDrawToolsMenus,
 resetWidgetDrawToolsMenus
-} from "./dashboard-draw-ui.js?v=6";
+} from "./dashboard-draw-ui.js?v=7";
 
 import {
 preloadTradingSymbols,
@@ -254,11 +254,22 @@ setCandles: data=>{ candles = data; },
 unsubKline: null
 };
 
-function setActive(){
+function setActive(
+e
+){
 
 activeWidgetIndex = index;
 
+const keepDrawMenuOpen =
+e?.target?.closest?.(
+".widget-draw-tools"
+);
+
+if(
+!keepDrawMenuOpen
+){
 closeAllWidgetDrawToolsMenus();
+}
 
 dashboard.querySelectorAll(".widget").forEach(el=>{
 el.classList.toggle(
@@ -269,7 +280,10 @@ Number(el.dataset.index) === index
 
 }
 
-widget.addEventListener("pointerdown", setActive);
+widget.addEventListener(
+"pointerdown",
+setActive
+);
 
 openChartBtn.onclick = e=>{
 

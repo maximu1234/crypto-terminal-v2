@@ -7795,12 +7795,13 @@ clearAllDrawingsOnChart();
 };
 
 btn.addEventListener(
-"click",
-runClear
+"pointerdown",
+runClear,
+true
 );
 
 btn.addEventListener(
-"pointerup",
+"click",
 runClear
 );
 
@@ -8316,6 +8317,8 @@ positionRiskWrap?.contains(e.target) ||
 colorPopover?.contains(e.target) ||
 widthPopover?.contains(e.target) ||
 settingsPopover?.contains(e.target) ||
+e.target.closest(".widget-draw-tools") ||
+e.target.closest(".draw-tool-clear-all") ||
 e.target.closest(".fib-line-style-menu--portal") ||
 e.target.closest(".fib-line-width-menu--portal") ||
 e.target.closest(".fib-level-color-menu")
