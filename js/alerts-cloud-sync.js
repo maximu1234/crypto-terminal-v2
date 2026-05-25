@@ -123,7 +123,7 @@ const {
 applyRemoteAlertFired,
 stripAlertFlagsNotInRegistry
 } =
-await import("./alerts.js?v=54");
+await import("./alerts.js?v=55");
 
 if(
 sym &&
@@ -335,7 +335,7 @@ cloudId
 ){
 
 const { markAlertCloudSynced, markAlertCloudId } =
-await import("./alerts.js?v=54");
+await import("./alerts.js?v=55");
 
 const ok =
 await confirmRowActiveInCloud(
@@ -831,7 +831,7 @@ null;
 
 if(cloudId){
 const { markAlertCloudId } =
-await import("./alerts.js?v=54");
+await import("./alerts.js?v=55");
 
 markAlertCloudId(
 symbol,
@@ -2024,7 +2024,7 @@ null;
 
 if(cloudId){
 const { markAlertCloudId } =
-await import("./alerts.js?v=54");
+await import("./alerts.js?v=55");
 
 markAlertCloudId(
 symbol,
@@ -2066,7 +2066,7 @@ return 0;
 }
 
 const { getActiveAlerts } =
-await import("./alerts.js?v=54");
+await import("./alerts.js?v=55");
 
 const localKeys =
 new Set(
@@ -2204,7 +2204,7 @@ attempt++
 if(await pushAlertViaWorker(row)){
 
 const { markAlertCloudSynced } =
-await import("./alerts.js?v=54");
+await import("./alerts.js?v=55");
 
 /* Worker пишет service role — не ждём SELECT по JWT пользователя */
 markAlertCloudSynced(
@@ -2231,7 +2231,7 @@ ctx
 ){
 
 const { loadAlerts, markAlertCloudSynced } =
-await import("./alerts.js?v=54");
+await import("./alerts.js?v=55");
 
 const hasId =
 loadAlerts().some(
@@ -2288,7 +2288,7 @@ null
 ){
 
 const { markAlertCloudSynced } =
-await import("./alerts.js?v=54");
+await import("./alerts.js?v=55");
 
 markAlertCloudSynced(
 row.symbol,
@@ -2376,7 +2376,7 @@ return 0;
 }
 
 const { mergeRegistryFromChartDrawings, getActiveAlerts } =
-await import("./alerts.js?v=54");
+await import("./alerts.js?v=55");
 
 const merged =
 mergeRegistryFromChartDrawings();
@@ -2459,7 +2459,7 @@ return 0;
 }
 
 const { getActiveAlerts } =
-await import("./alerts.js?v=54");
+await import("./alerts.js?v=55");
 
 const list =
 getActiveAlerts();
@@ -2607,7 +2607,7 @@ saveAlertsFromCloudMerge,
 alertEntryKey,
 loadAlerts
 } =
-await import("./alerts.js?v=54");
+await import("./alerts.js?v=55");
 
 const cloudKeys =
 new Set(
@@ -2622,7 +2622,7 @@ String(row.shape_id || "").trim()
 const {
 applyRemoteAlertFired
 } =
-await import("./alerts.js?v=54");
+await import("./alerts.js?v=55");
 
 const local =
 loadAlerts();
@@ -2713,7 +2713,7 @@ const n =
 await reconcileLocalRegistryWithCloud();
 
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=54");
+await import("./alerts.js?v=55");
 
 stripAlertFlagsNotInRegistry();
 
@@ -2726,14 +2726,14 @@ return n;
 async function hydrateAlertsAfterAuth(){
 
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=54");
+await import("./alerts.js?v=55");
 
 console.log(
 "[alerts] hydrate after login…"
 );
 
 const { mergeRegistryFromChartDrawings } =
-await import("./alerts.js?v=54");
+await import("./alerts.js?v=55");
 
 const merged =
 mergeRegistryFromChartDrawings();
@@ -2771,7 +2771,7 @@ if(!isCloudLoggedIn()){
 return;
 }
 
-void import("./alerts.js?v=54").then(m=>{
+void import("./alerts.js?v=55").then(m=>{
 m.mergeRegistryFromChartDrawings();
 }).catch(()=>{});
 

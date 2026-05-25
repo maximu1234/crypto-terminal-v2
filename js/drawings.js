@@ -6,12 +6,12 @@ getActiveAlerts,
 finalizeAlertPriceDrag,
 removeAlert,
 upsertAlert
-} from "./alerts.js?v=54";
+} from "./alerts.js?v=55";
 
 import {
 setAlertDragPaused,
 resetAlertWatchBaseline
-} from "./alert-monitor.js?v=54";
+} from "./alert-monitor.js?v=55";
 
 import {
 mountTvColorGrid

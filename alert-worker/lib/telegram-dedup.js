@@ -1,0 +1,67 @@
+/** Не слать два Telegram за один алерт (браузер + worker). */
+
+const recent =
+new Map();
+
+const DEDUP_MS =
+90_000;
+
+function dedupKey(
+userId,
+symbol,
+shapeId
+) {
+
+return (
+String(userId) +
+"::" +
+String(symbol || "").toUpperCase() +
+"::" +
+String(shapeId || "")
+);
+
+}
+
+export function shouldSendTelegramAlert(
+userId,
+symbol,
+shapeId
+) {
+
+const key =
+dedupKey(
+userId,
+symbol,
+shapeId
+);
+
+const at =
+recent.get(key);
+
+if(
+at != null &&
+Date.now() - at < DEDUP_MS
+){
+return false;
+}
+
+recent.set(
+key,
+Date.now()
+);
+
+if(recent.size > 500){
+const cutoff =
+Date.now() - DEDUP_MS;
+
+for(const [k, t] of recent){
+if(t < cutoff){
+recent.delete(k);
+}
+}
+
+}
+
+return true;
+
+}

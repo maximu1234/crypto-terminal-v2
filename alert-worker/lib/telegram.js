@@ -54,8 +54,29 @@ export function formatAlertMessage(alert) {
 
   const tfRaw = String(alert.tf || "60");
   const tf = TF_LABELS[tfRaw] || tfRaw;
-  const price = Number(alert.price);
+  const price =
+    formatPriceForTelegram(
+      Number(alert.price)
+    );
 
   return `${sym} · ${tf}\nЦена пересекла уровень ${price}`;
+
+}
+
+function formatPriceForTelegram(n) {
+
+  if (!Number.isFinite(n)) {
+    return "—";
+  }
+
+  if (n >= 1000) {
+    return n.toFixed(2);
+  }
+
+  if (n >= 1) {
+    return n.toFixed(4);
+  }
+
+  return n.toFixed(6);
 
 }
