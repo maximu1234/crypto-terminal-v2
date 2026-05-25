@@ -86,6 +86,9 @@ document.getElementById("alerts-open-login");
 const telegramForm =
 document.getElementById("alerts-telegram-form");
 
+const telegramSetupFields =
+document.getElementById("alerts-telegram-setup-fields");
+
 const telegramInput =
 document.getElementById("alerts-telegram-chat-id");
 
@@ -139,7 +142,10 @@ telegramOpenBotLink.textContent =
 
 let clearDrawingsSuccessTimer = null;
 
-function setTelegramStatus(text, isError){
+function setTelegramStatus(
+text,
+kind = ""
+){
 
 if(!telegramStatus){
 return;
@@ -148,8 +154,67 @@ return;
 telegramStatus.textContent = text || "";
 telegramStatus.classList.toggle(
 "is-error",
-!!isError
+kind === "error"
 );
+telegramStatus.classList.toggle(
+"is-success",
+kind === "success"
+);
+
+}
+
+function clearTelegramInputError(){
+
+telegramInput?.classList.remove("is-invalid");
+
+}
+
+function setTelegramInputError(message){
+
+telegramInput?.classList.add("is-invalid");
+setTelegramStatus(
+message,
+"error"
+);
+
+}
+
+function telegramConnectedMessage(email){
+
+const account =
+email || getCloudUserEmail() || "аккаунт";
+
+return (
+"Chat ID сохранён. Алерты будут приходить в Telegram, " +
+"когда вкладка с терминалом закрыта " +
+`(${account}).`
+);
+
+}
+
+function showTelegramConnectedUi(email){
+
+telegramSetupEdit = false;
+clearTelegramInputError();
+setTelegramStatus("");
+
+telegramNoteLogged?.classList.add("hidden");
+telegramSetupFields?.classList.add("hidden");
+telegramForm?.classList.add("hidden");
+telegramConnected?.classList.remove("hidden");
+
+if(telegramConnectedText){
+telegramConnectedText.textContent =
+telegramConnectedMessage(email);
+}
+
+}
+
+function showTelegramSetupUi(){
+
+telegramSetupFields?.classList.remove("hidden");
+telegramForm?.classList.remove("hidden");
+telegramConnected?.classList.add("hidden");
 
 }
 
@@ -200,6 +265,16 @@ telegramSetupEdit = true;
 const showSetup =
 telegramSetupEdit || !hasChatId;
 
+if(
+hasChatId &&
+!showSetup
+){
+showTelegramConnectedUi(email);
+return;
+}
+
+showTelegramSetupUi();
+
 telegramNoteLogged?.classList.toggle(
 "hidden",
 !showSetup
@@ -210,11 +285,6 @@ telegramForm?.classList.toggle(
 !showSetup
 );
 
-telegramConnected?.classList.toggle(
-"hidden",
-!hasChatId || showSetup
-);
-
 if(
 telegramInput &&
 id != null
@@ -222,20 +292,18 @@ id != null
 telegramInput.value = String(id);
 }
 
-if(
-hasChatId &&
-!showSetup &&
-telegramConnectedText
-){
-telegramConnectedText.textContent =
-`Telegram подключён (${email}). Алерты приходят в бот, когда вкладка с терминалом закрыта.`;
-setTelegramStatus("");
-}else if(showSetup){
+if(showSetup){
+clearTelegramInputError();
+
+if(!hasChatId){
 setTelegramStatus(
-hasChatId
-? ""
-: "Укажите chat id и нажмите «Сохранить»."
+"Укажите chat id и нажмите «Сохранить».",
+""
 );
+}else{
+setTelegramStatus("");
+}
+
 }
 
 }catch{
@@ -245,7 +313,7 @@ telegramForm?.classList.remove("hidden");
 telegramNoteLogged?.classList.remove("hidden");
 setTelegramStatus(
 "Не удалось загрузить настройки",
-true
+"error"
 );
 
 }
@@ -254,37 +322,70 @@ true
 
 telegramEdit?.addEventListener("click", ()=>{
 telegramSetupEdit = true;
+clearTelegramInputError();
+setTelegramStatus("");
 void refreshTelegramUi();
 });
 
 telegramSave?.addEventListener("click", async ()=>{
+
+const saveLabel =
+telegramSave?.textContent || "Сохранить";
+
+clearTelegramInputError();
+setTelegramStatus("");
 
 try{
 const raw =
 telegramInput?.value?.trim() ?? "";
 
 if(!raw){
-setTelegramStatus(
-"Введите chat id или нажмите «Отключить Telegram»",
-true
+setTelegramInputError(
+"Введите chat id из сообщения бота."
 );
 return;
 }
 
-await saveTelegramChatId(raw);
-await syncAlertsWithCloud();
-telegramSetupEdit = false;
+if(telegramSave){
+telegramSave.disabled = true;
+telegramSave.textContent = "Сохранение…";
+}
 
-await refreshTelegramUi();
-setTelegramStatus(
-"Сохранено. Алерты в Telegram включены."
+await saveTelegramChatId(raw);
+
+const savedId =
+await getTelegramChatId();
+
+if(savedId == null){
+throw new Error(
+"Не удалось проверить сохранение. Обновите страницу и попробуйте снова."
 );
+
+}
+
+try{
+await syncAlertsWithCloud();
+}catch(syncErr){
+console.warn(
+"alerts sync after telegram:",
+syncErr?.message || syncErr
+);
+
+}
+
+showTelegramConnectedUi();
 
 }catch(err){
-setTelegramStatus(
-err?.message || "Ошибка сохранения",
-true
+setTelegramInputError(
+err?.message || "Ошибка сохранения"
 );
+
+}finally{
+
+if(telegramSave){
+telegramSave.disabled = false;
+telegramSave.textContent = saveLabel;
+}
 
 }
 
@@ -310,13 +411,13 @@ telegramInput.value = "";
 telegramSetupEdit = true;
 await refreshTelegramUi();
 setTelegramStatus(
-"Telegram отключён. Chat id удалён из аккаунта."
+"Telegram отключён. Chat id удалён из аккаунта.",
+"success"
 );
 
 }catch(err){
-setTelegramStatus(
-err?.message || "Не удалось отключить",
-true
+setTelegramInputError(
+err?.message || "Не удалось отключить"
 );
 
 }

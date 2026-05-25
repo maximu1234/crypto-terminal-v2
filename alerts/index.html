@@ -8,7 +8,7 @@
 <title>Алерты — Multichart</title>
 
 <link rel="stylesheet" href="/css/common.css?v=9">
-<link rel="stylesheet" href="/css/alerts.css?v=12">
+<link rel="stylesheet" href="/css/alerts.css?v=13">
 
 </head>
 
@@ -74,6 +74,8 @@
 
 <div id="alerts-telegram-form" class="alerts-telegram-form hidden">
 
+<div id="alerts-telegram-setup-fields" class="alerts-telegram-setup-fields">
+
 <label class="alerts-telegram-label" for="alerts-telegram-chat-id">
 Chat ID
 </label>
@@ -85,18 +87,21 @@ type="text"
 inputmode="numeric"
 autocomplete="off"
 placeholder="например 123456789"
+aria-describedby="alerts-telegram-status"
 />
 
 <button type="button" id="alerts-telegram-save" class="alerts-telegram-save">
 Сохранить
 </button>
 
+</div>
+
 <p id="alerts-telegram-status" class="alerts-telegram-status" role="status"></p>
 
 <details class="alerts-telegram-help">
 <summary>Как подключить Telegram</summary>
 <ol>
-<li><a id="alerts-telegram-open-bot" href="https://t.me/multichart_alerts_bot" target="_blank" rel="noopener noreferrer">Откройте бота @multichart_alerts_bot</a> и нажмите <strong>Start</strong> (или отправьте <code>/start</code>).</li>
+<li><a id="alerts-telegram-open-bot" href="https://t.me/multichart_alerts_bot" target="_blank" rel="noopener noreferrer">Откройте бота @multichart_alerts_bot</a>&nbsp;и нажмите <strong>Start</strong> (или отправьте <code>/start</code>).</li>
 <li>Бот пришлёт сообщение с вашим Chat ID — скопируйте число в поле выше и нажмите «Сохранить».</li>
 </ol>
 </details>
@@ -181,7 +186,7 @@ placeholder="например 123456789"
 </main>
 
 <script type="module" src="/js/site-boot.js?v=51"></script>
-<script type="module" src="/js/alerts-page.js?v=41"></script>
+<script type="module" src="/js/alerts-page.js?v=42"></script>
 
 </body>
 </html>

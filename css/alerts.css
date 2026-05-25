@@ -140,6 +140,18 @@ align-items:center;
 gap:10px 12px;
 }
 
+.alerts-telegram-setup-fields{
+display:flex;
+flex-wrap:wrap;
+align-items:center;
+gap:10px 12px;
+flex:1 1 100%;
+}
+
+.alerts-telegram-setup-fields.hidden{
+display:none;
+}
+
 .alerts-telegram-label{
 font-size:0.85rem;
 color:#d1d5db;
@@ -154,6 +166,11 @@ border-radius:6px;
 background:#0b1220;
 color:#f9fafb;
 font-size:0.95rem;
+}
+
+.alerts-telegram-input.is-invalid{
+border-color:#f87171;
+box-shadow:0 0 0 1px #f87171;
 }
 
 .alerts-telegram-save{
@@ -182,6 +199,10 @@ color:#86efac;
 color:#fca5a5;
 }
 
+.alerts-telegram-status.is-success{
+color:#86efac;
+}
+
 .alerts-telegram-help{
 flex:1 1 100%;
 margin:4px 0 0;
@@ -201,6 +222,17 @@ padding-left:1.2rem;
 
 .alerts-telegram-help code{
 font-size:0.8rem;
+color:#e5e7eb;
+}
+
+.alerts-telegram-help a,
+.alerts-telegram-help a:visited{
+color:#9ca3af;
+text-decoration:underline;
+text-underline-offset:2px;
+}
+
+.alerts-telegram-help a:hover{
 color:#e5e7eb;
 }
 
