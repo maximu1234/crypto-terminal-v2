@@ -484,6 +484,10 @@ candles.length > SCREENER_MAX_BARS
 widget.candles = loaded;
 widget.userAdjustedZoom = false;
 
+/* iPad/Safari: сетка иногда отдаёт 0×0 до первого layout — zoom ждёт размер,
+   но свечи должны попасть в series сразу */
+series.setData(loaded);
+
 applyChartPriceFormat(
 series,
 loaded[loaded.length - 1].close
@@ -503,6 +507,7 @@ requestAnimationFrame(runZoom);
 setTimeout(runZoom, 50);
 setTimeout(runZoom, 200);
 setTimeout(runZoom, 500);
+setTimeout(runZoom, 1200);
 
 widget.unsubKline?.();
 

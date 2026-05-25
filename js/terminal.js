@@ -1801,6 +1801,11 @@ rebuildRsiFromCandles();
 
 applyDefaultZoom();
 
+resizeCharts();
+requestAnimationFrame(resizeCharts);
+setTimeout(resizeCharts, 50);
+setTimeout(resizeCharts, 300);
+
 drawingTools?.onSymbolChange();
 drawingTools?.resize();
 drawingTools?.scheduleRedraw?.();
@@ -1832,17 +1837,47 @@ document.getElementById("chart-wrap");
 const rsiEl =
 document.getElementById("rsi-chart");
 
+if(
+!chartWrap ||
+!rsiEl
+){
+return;
+}
+
 const w =
-chartWrap.clientWidth;
+Math.max(
+chartWrap.clientWidth,
+1
+);
+
+const chartH =
+Math.max(
+chartWrap.clientHeight,
+1
+);
+
+const rsiH =
+Math.max(
+rsiEl.clientHeight,
+1
+);
+
+if(
+w < 2 ||
+chartH < 2 ||
+rsiH < 2
+){
+return;
+}
 
 chart.applyOptions({
 width:w,
-height:chartWrap.clientHeight
+height:chartH
 });
 
 rsiChart.applyOptions({
 width:w,
-height:rsiEl.clientHeight
+height:rsiH
 });
 
 syncLinkedChartTimescales(
@@ -1867,6 +1902,31 @@ window.addEventListener(
 "resize",
 resizeCharts
 );
+
+const chartWrapForResize =
+document.getElementById("chart-wrap");
+
+if(
+chartWrapForResize &&
+typeof ResizeObserver !==
+"undefined"
+){
+
+const chartResizeObserver =
+new ResizeObserver(()=>{
+resizeCharts();
+});
+
+chartResizeObserver.observe(chartWrapForResize);
+
+const rsiWrapEl =
+document.getElementById("rsi-wrap");
+
+if(rsiWrapEl){
+chartResizeObserver.observe(rsiWrapEl);
+}
+
+}
 
 /* =========================================================
    SYNC

@@ -26,7 +26,46 @@ document.querySelector(
 
 if(existing){
 
-existing.addEventListener("load", ()=>resolve(), { once: true });
+if(
+typeof LightweightCharts !==
+"undefined"
+){
+resolve();
+return;
+}
+
+if(
+existing.readyState ===
+"complete" ||
+existing.readyState ===
+"loaded"
+){
+reject(
+new Error(
+`Chart lib script loaded but LightweightCharts missing (${src})`
+)
+);
+return;
+}
+
+existing.addEventListener("load", ()=>{
+
+if(
+typeof LightweightCharts !==
+"undefined"
+){
+resolve();
+return;
+}
+
+reject(
+new Error(
+`Chart lib script loaded but LightweightCharts missing (${src})`
+)
+);
+
+}, { once: true });
+
 existing.addEventListener("error", ()=>reject(new Error(src)), { once: true });
 return;
 
