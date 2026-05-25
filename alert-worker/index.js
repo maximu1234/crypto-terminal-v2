@@ -14,6 +14,11 @@ import {
   evaluateAlertsForCandle
 } from "./lib/trigger-alert.js";
 import { handleClientApi } from "./lib/client-api.js";
+import {
+  ensureTelegramWebhook,
+  handleTelegramInfo,
+  handleTelegramWebhook
+} from "./lib/telegram-webhook.js";
 
 const PORT = Number(process.env.PORT) || 8080;
 const RELOAD_MS = Number(process.env.ALERTS_RELOAD_MS) || 3000;
@@ -94,6 +99,14 @@ async function main() {
       return;
     }
 
+    if (await handleTelegramWebhook(req, res)) {
+      return;
+    }
+
+    if (await handleTelegramInfo(req, res)) {
+      return;
+    }
+
     const pathOnly =
       (req.url || "").split("?")[0];
 
@@ -139,6 +152,9 @@ async function main() {
 
   server.listen(PORT, () => {
     console.log(`alert-worker listening :${PORT}`);
+    ensureTelegramWebhook().catch(err => {
+      console.warn("telegram webhook:", err.message);
+    });
     reloadAlerts(klineHub).catch(err => {
       console.warn("reloadAlerts:", err.message);
     });

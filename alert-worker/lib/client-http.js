@@ -24,6 +24,24 @@ export function setCors(res, req) {
 
 }
 
+/** Публичные GET (ссылка на бота) — без Authorization. */
+export function setPublicCors(res, req) {
+
+  const origin =
+    req.headers.origin || "*";
+
+  res.setHeader(
+    "Access-Control-Allow-Origin",
+    origin
+  );
+  res.setHeader("Vary", "Origin");
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "GET, OPTIONS"
+  );
+
+}
+
 export function readJsonBody(req) {
 
   return new Promise((resolve, reject) => {

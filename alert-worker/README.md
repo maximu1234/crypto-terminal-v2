@@ -35,11 +35,22 @@
 
 Выполни `supabase/migration-alerts-telegram.sql` в SQL Editor.
 
-## Telegram chat_id
+## Telegram chat_id (для пользователя)
 
-1. Напиши боту `/start`.
-2. Открой `https://api.telegram.org/bot<TOKEN>/getUpdates` → `chat.id`.
-3. На сайте **Алерты** → блок «Telegram» → вставь chat id (после входа в аккаунт).
+1. На сайте **Алерты** → «Открыть бота в Telegram» → **Start**.
+2. Бот пришлёт Chat ID — вставить в поле на сайте → **Сохранить**.
+
+Worker при старте регистрирует webhook `POST /telegram/webhook` (нужен публичный URL Railway). В логах: `telegram webhook ok → …`.
+
+Опционально в Variables:
+
+| Variable | Зачем |
+|----------|--------|
+| `TELEGRAM_WEBHOOK_SECRET` | секрет для заголовка Telegram (случайная строка) |
+| `TELEGRAM_WEBHOOK_BASE_URL` | если авто-домен Railway не подхватился: `https://….up.railway.app` |
+| `TELEGRAM_DISABLE_AUTO_WEBHOOK` | `1` — не вызывать setWebhook при старте |
+
+На Vercel в `supabase-env.js`: `ALERT_WORKER_URL` (для кнопки «Открыть бота» через `GET /telegram/info`). Опционально `TELEGRAM_BOT_USERNAME` без `@`.
 
 ## Если /health показывает alerts: 0, а SQL — 2
 

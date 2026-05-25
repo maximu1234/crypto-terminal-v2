@@ -10,3 +10,5 @@ export const SUPABASE_URL = "";
 export const SUPABASE_ANON_KEY = "";
 /** URL Railway alert-worker (без слэша в конце), для Telegram при срабатывании в открытой вкладке */
 export const ALERT_WORKER_URL = "";
+/** Опционально: @username бота, если /telegram/info с worker недоступен (ссылка на странице Алерты) */
+export const TELEGRAM_BOT_USERNAME = "";

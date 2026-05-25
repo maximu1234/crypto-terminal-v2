@@ -1,4 +1,4 @@
-function readEnv(name) {
+export function readEnv(name) {
 
   const raw = process.env[name];
 
