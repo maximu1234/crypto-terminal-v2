@@ -36,6 +36,10 @@ const RECONCILE_INTERVAL_MS = 4000;
 
 let lastRemoteAlertMode = null;
 
+/** Снимок активных строк облака — ловим срабатывание, если realtime DELETE без payload (iPad). */
+const lastSeenCloudAlerts =
+new Map();
+
 async function updateBrowserCrossMode(){
 
 const loggedIn =
@@ -128,6 +132,15 @@ sid &&
 applyRemoteAlertFired(oldRow)
 ){
 return;
+}
+
+if(
+!sym ||
+!sid
+){
+console.warn(
+"[alerts] realtime DELETE без symbol/shape_id — включите replica identity full на price_alerts"
+);
 }
 
 await reconcileLocalRegistryWithCloud();
@@ -1661,6 +1674,41 @@ remote?.skipped ||
 );
 
 if(
+token &&
+Number.isFinite(price) &&
+(
+remote?.skipped === "already_handled" ||
+(
+remote?.ok &&
+!remote?.telegram &&
+remote?.reason !== "no_chat" &&
+remote?.reason !== "no_auth"
+)
+)
+){
+const notify =
+await triggerNotifyTelegramViaWorker(
+sym,
+sid,
+{
+price,
+tf
+},
+token
+);
+
+if(
+notify?.telegram
+){
+remote = {
+...remote,
+telegram: true
+};
+}
+
+}
+
+if(
 remote?.ok &&
 !remote?.telegram &&
 remote?.reason !== "no_chat"
@@ -1885,6 +1933,130 @@ return {
 ok: false,
 reason: "http_error",
 status: res.status,
+body: parsed
+};
+}
+
+return parsed;
+
+}
+
+/**
+ * POST /notify-telegram — строка уже снята worker'ом, дослать сообщение.
+ */
+export async function triggerNotifyTelegramViaWorker(
+symbol,
+shapeId,
+payload = {},
+authToken = null
+){
+
+const base =
+await getAlertWorkerBaseUrl();
+
+if(!base){
+return {
+ok: false,
+reason: "no_worker_url"
+};
+}
+
+let token =
+authToken;
+
+if(!token){
+const auth =
+await getWorkerRequestAuth();
+
+if(!auth){
+return {
+ok: false,
+reason: "no_auth"
+};
+}
+
+token = auth.token;
+
+}
+
+const sym =
+String(symbol || "").trim().toUpperCase();
+const sid =
+String(shapeId || "").trim();
+const price =
+Number(payload.price);
+
+if(
+!sym ||
+!sid ||
+!Number.isFinite(price)
+){
+return {
+ok: false,
+reason: "bad_body"
+};
+}
+
+const reqBody = {
+symbol: sym,
+shape_id: sid,
+price
+};
+
+if(payload.tf != null){
+reqBody.tf = String(payload.tf);
+}
+
+let res;
+
+try{
+res =
+await fetchWithTimeout(
+`${base}/notify-telegram`,
+{
+method: "POST",
+headers: {
+"Content-Type": "application/json",
+Authorization: `Bearer ${token}`
+},
+body: JSON.stringify(reqBody)
+},
+12000
+);
+}catch(err){
+console.warn(
+"worker /notify-telegram:",
+err?.message || err
+);
+return {
+ok: false,
+reason: "network_error"
+};
+}
+
+const text =
+await res.text();
+
+let parsed = {};
+
+try{
+parsed =
+text
+? JSON.parse(text)
+: {};
+}catch{
+parsed = { raw: text };
+}
+
+if(!res.ok){
+console.warn(
+"worker /notify-telegram:",
+res.status,
+text.slice(0, 240)
+);
+return {
+ok: false,
+reason: "http_error",
 body: parsed
 };
 }
@@ -2638,7 +2810,7 @@ mergeRegistryFromChartDrawings();
 const { data, error } =
 await ctx.sb
 .from("price_alerts")
-.select("id, symbol, shape_id")
+.select("id, symbol, shape_id, price, tf")
 .eq("user_id", ctx.user.id)
 .is("triggered_at", null);
 
@@ -2652,6 +2824,8 @@ return 0;
 
 const cloudByKey =
 new Map();
+const removedRows =
+[];
 
 for(const row of data || []){
 
@@ -2667,13 +2841,64 @@ if(
 continue;
 }
 
-cloudByKey.set(
+const key =
 alertEntryKey(
 sym,
 sid
-),
+);
+
+cloudByKey.set(
+key,
 row
 );
+
+}
+
+for(
+const [key, meta] of lastSeenCloudAlerts
+){
+
+if(
+!cloudByKey.has(key)
+){
+removedRows.push(meta);
+}
+
+}
+
+lastSeenCloudAlerts.clear();
+
+for(
+const [key, row] of cloudByKey
+){
+
+const sym =
+String(row.symbol || "").trim().toUpperCase();
+const sid =
+String(row.shape_id || "").trim();
+
+lastSeenCloudAlerts.set(
+key,
+{
+symbol: sym,
+shape_id: sid,
+price: Number(row.price),
+tf: row.tf || "60"
+}
+);
+
+}
+
+if(removedRows.length){
+
+const { applyRemoteAlertFired } =
+await import("./alerts.js?v=60");
+
+for(const row of removedRows){
+
+applyRemoteAlertFired(row);
+
+}
 
 }
 
@@ -2917,6 +3142,22 @@ pullWhenVisible
 document.addEventListener(
 "visibilitychange",
 pullWhenVisible
+);
+
+document.addEventListener(
+"visibilitychange",
+()=>{
+
+if(
+document.visibilityState !== "visible" ||
+!isCloudLoggedIn()
+){
+return;
+}
+
+void refreshCloudAlertMode();
+
+}
 );
 
 const retryPushWhenVisible = ()=>{

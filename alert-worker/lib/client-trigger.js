@@ -1,14 +1,79 @@
 import { restGet } from "./supabase-rest.js";
-import { executeAlertTrigger } from "./execute-trigger.js";
+import {
+executeAlertTrigger,
+notifyTelegramOnly
+} from "./execute-trigger.js";
 import {
   readJsonBody,
   setCors,
   verifyUserFromRequest
 } from "./client-http.js";
 
+function triggerBodyForNotify(body) {
+
+  const sym =
+    String(body.symbol || "").trim().toUpperCase();
+  const sid =
+    String(body.shape_id || body.shapeId || "").trim();
+  const price =
+    Number(body.price);
+
+  if (
+    !sym ||
+    !sid ||
+    !Number.isFinite(price)
+  ) {
+    return null;
+  }
+
+  return {
+    symbol: sym,
+    shape_id: sid,
+    price,
+    tf: body.tf
+  };
+
+}
+
+async function finishAlreadyHandled(
+  user,
+  body,
+  res
+) {
+
+  const payload =
+    triggerBodyForNotify(body);
+
+  if (!payload) {
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({
+      ok: true,
+      telegram: false,
+      skipped: "already_handled"
+    }));
+    return true;
+  }
+
+  const notify =
+    await notifyTelegramOnly(
+      user.id,
+      payload
+    );
+
+  res.writeHead(200, { "Content-Type": "application/json" });
+  res.end(JSON.stringify({
+    ok: true,
+    telegram: !!notify.telegram,
+    skipped: "already_handled",
+    notify: notify.skipped || notify.reason || null
+  }));
+  return true;
+
+}
+
 /**
  * POST /trigger — браузер: DELETE + Telegram (service role).
- * Если строка уже обработана worker/другим вызовом — без повторного Telegram.
+ * Если строка уже удалена worker'ом — дослать Telegram через notifyTelegramOnly.
  */
 export async function handleClientTrigger(
   req,
@@ -75,13 +140,11 @@ export async function handleClientTrigger(
         !result.ok &&
         result.reason === "not_claimed"
       ) {
-        res.writeHead(200, { "Content-Type": "application/json" });
-        res.end(JSON.stringify({
-          ok: true,
-          telegram: false,
-          skipped: "already_handled"
-        }));
-        return true;
+        return finishAlreadyHandled(
+          user,
+          body,
+          res
+        );
       }
 
       res.writeHead(200, { "Content-Type": "application/json" });
@@ -130,13 +193,11 @@ export async function handleClientTrigger(
   }
 
   if (!rows?.length) {
-    res.writeHead(200, { "Content-Type": "application/json" });
-    res.end(JSON.stringify({
-      ok: true,
-      telegram: false,
-      skipped: "already_handled"
-    }));
-    return true;
+    return finishAlreadyHandled(
+      user,
+      body,
+      res
+    );
   }
 
   const result =
@@ -146,13 +207,11 @@ export async function handleClientTrigger(
     !result.ok &&
     result.reason === "not_claimed"
   ) {
-    res.writeHead(200, { "Content-Type": "application/json" });
-    res.end(JSON.stringify({
-      ok: true,
-      telegram: false,
-      skipped: "already_handled"
-    }));
-    return true;
+    return finishAlreadyHandled(
+      user,
+      body,
+      res
+    );
   }
 
   res.writeHead(200, { "Content-Type": "application/json" });

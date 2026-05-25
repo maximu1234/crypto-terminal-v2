@@ -299,6 +299,10 @@ function showToast(title, body){
 const host =
 ensureToastHost();
 
+while(host.children.length > 4){
+host.firstElementChild?.remove();
+}
+
 const el =
 document.createElement("div");
 
@@ -481,8 +485,6 @@ alert.symbol,
 alert.shapeId
 );
 
-notifyAlertTriggered(alert);
-
 }
 
 }
@@ -638,9 +640,83 @@ chartTf
 
 }
 
+let alertAudioUnlocked = false;
+
+function unlockAlertAudioOnGesture(){
+
+if(alertAudioUnlocked){
+return;
+}
+
+try{
+
+const audio =
+ensureAlertSound();
+
+if(!audio){
+return;
+}
+
+const play =
+audio.play();
+
+const done =
+()=>{
+audio.pause();
+audio.currentTime = 0;
+alertAudioUnlocked = true;
+};
+
+if(
+play &&
+typeof play.then === "function"
+){
+play.then(done).catch(()=>{});
+}else{
+done();
+}
+
+}catch{
+/* ignore */
+}
+
+}
+
 export function initAlertMonitor(){
 
 ensureAlertSound();
+
+for(const ev of [
+"pointerdown",
+"touchstart",
+"keydown"
+]){
+
+document.addEventListener(
+ev,
+unlockAlertAudioOnGesture,
+{
+once: true,
+passive: true
+}
+);
+
+}
+
+document.addEventListener(
+"visibilitychange",
+()=>{
+
+if(
+document.visibilityState !== "visible"
+){
+return;
+}
+
+unlockAlertAudioOnGesture();
+
+}
+);
 
 maybeRequestNotificationPermission();
 

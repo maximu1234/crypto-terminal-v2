@@ -11,7 +11,7 @@ upsertAlert
 import {
 setAlertDragPaused,
 resetAlertWatchBaseline
-} from "./alert-monitor.js?v=61";
+} from "./alert-monitor.js?v=62";
 
 import {
 mountTvColorGrid

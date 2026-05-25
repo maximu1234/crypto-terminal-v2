@@ -1,6 +1,7 @@
 import { getWorkerConfig } from "./config.js";
 import { restUpsertPriceAlert } from "./supabase-rest.js";
 import { handleClientTrigger } from "./client-trigger.js";
+import { handleClientNotifyTelegram } from "./client-notify-telegram.js";
 import {
   readJsonBody,
   setCors,
@@ -133,6 +134,10 @@ export async function handleClientApi(
   }
 
   if (await handleClientTrigger(req, res)) {
+    return true;
+  }
+
+  if (await handleClientNotifyTelegram(req, res)) {
     return true;
   }
 

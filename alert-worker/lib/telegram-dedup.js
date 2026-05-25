@@ -22,7 +22,7 @@ String(shapeId || "")
 
 }
 
-export function shouldSendTelegramAlert(
+export function isTelegramAlertDeduped(
 userId,
 symbol,
 shapeId
@@ -38,12 +38,25 @@ shapeId
 const at =
 recent.get(key);
 
-if(
+return (
 at != null &&
 Date.now() - at < DEDUP_MS
-){
-return false;
+);
+
 }
+
+export function markTelegramAlertSent(
+userId,
+symbol,
+shapeId
+) {
+
+const key =
+dedupKey(
+userId,
+symbol,
+shapeId
+);
 
 recent.set(
 key,
@@ -62,6 +75,19 @@ recent.delete(k);
 
 }
 
-return true;
+}
+
+/** @deprecated use isTelegramAlertDeduped — не помечает отправленным до успеха */
+export function shouldSendTelegramAlert(
+userId,
+symbol,
+shapeId
+) {
+
+return !isTelegramAlertDeduped(
+userId,
+symbol,
+shapeId
+);
 
 }

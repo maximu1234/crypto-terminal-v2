@@ -8,7 +8,10 @@ import {
   formatAlertMessage,
   sendTelegramMessage
 } from "./telegram.js";
-import { shouldSendTelegramAlert } from "./telegram-dedup.js";
+import {
+isTelegramAlertDeduped,
+markTelegramAlertSent
+} from "./telegram-dedup.js";
 
 /**
  * Удаляет активную строку, шлёт Telegram. Без «зависших» triggered_at.
@@ -45,14 +48,24 @@ export async function executeAlertTrigger(alertId) {
 
   let telegram = false;
 
-  if (
-    chatId != null &&
-    shouldSendTelegramAlert(
-      claimed.user_id,
-      claimed.symbol,
-      claimed.shape_id
-    )
-  ) {
+  if (chatId != null) {
+
+    if (
+      isTelegramAlertDeduped(
+        claimed.user_id,
+        claimed.symbol,
+        claimed.shape_id
+      )
+    ) {
+      return {
+        ok: true,
+        telegram: false,
+        skipped: "telegram_dedup",
+        symbol: claimed.symbol,
+        shape_id: claimed.shape_id
+      };
+    }
+
     telegram = await sendTelegramMessage(
       chatId,
       formatAlertMessage({
@@ -61,14 +74,15 @@ export async function executeAlertTrigger(alertId) {
         tf: claimed.tf
       })
     );
-  } else if (chatId != null) {
-    return {
-      ok: true,
-      telegram: false,
-      skipped: "telegram_dedup",
-      symbol: claimed.symbol,
-      shape_id: claimed.shape_id
-    };
+
+    if (telegram) {
+      markTelegramAlertSent(
+        claimed.user_id,
+        claimed.symbol,
+        claimed.shape_id
+      );
+    }
+
   }
 
   return {
@@ -123,7 +137,7 @@ export async function notifyTelegramOnly(
 
   if (
     shapeId &&
-    !shouldSendTelegramAlert(
+    isTelegramAlertDeduped(
       userId,
       sym,
       shapeId
@@ -145,6 +159,17 @@ export async function notifyTelegramOnly(
         tf: alert?.tf
       })
     );
+
+  if (
+    telegram &&
+    shapeId
+  ) {
+    markTelegramAlertSent(
+      userId,
+      sym,
+      shapeId
+    );
+  }
 
   return {
     ok: true,
