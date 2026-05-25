@@ -2469,7 +2469,11 @@ flagSortAsc = !flagSortAsc;
 
 }
 
-}else if(innerSortMode === mode){
+}else{
+
+flagSortActive = false;
+
+if(innerSortMode === mode){
 
 sortAsc = !sortAsc;
 
@@ -2477,6 +2481,8 @@ sortAsc = !sortAsc;
 
 innerSortMode = mode;
 sortAsc = false;
+
+}
 
 }
 
