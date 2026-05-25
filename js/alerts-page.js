@@ -9,14 +9,14 @@ getAlertsSorted,
 removeAlert,
 stripAlertFlagsNotInRegistry,
 removeAllAlerts
-} from "./alerts.js?v=51";
+} from "./alerts.js?v=53";
 
 import {
 getTelegramChatId,
 initAlertsCloudSync,
 saveTelegramChatId,
 syncAlertsWithCloud
-} from "./alerts-cloud-sync.js?v=51";
+} from "./alerts-cloud-sync.js?v=53";
 
 import {
 isCloudLoggedIn,

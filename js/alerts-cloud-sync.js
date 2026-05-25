@@ -19,7 +19,8 @@ setBrowserCrossCheckEnabled
 import {
 getCachedAlertAuth,
 setAlertAuthCache,
-clearAlertAuthCache
+clearAlertAuthCache,
+resolveAlertAuthFast
 } from "./alert-auth-cache.js";
 
 let alertsRealtimeChannel = null;
@@ -122,7 +123,7 @@ const {
 applyRemoteAlertFired,
 stripAlertFlagsNotInRegistry
 } =
-await import("./alerts.js?v=51");
+await import("./alerts.js?v=53");
 
 if(
 sym &&
@@ -284,6 +285,26 @@ return job;
 
 }
 
+let alertTriggerChain =
+Promise.resolve();
+
+export function enqueueAlertTrigger(fn){
+
+const job =
+alertTriggerChain.then(()=>fn());
+
+alertTriggerChain =
+job.catch(err=>{
+console.warn(
+"[alerts] trigger chain:",
+err?.message || err
+);
+});
+
+return job;
+
+}
+
 async function confirmRowActiveInCloud(
 ctx,
 symbol,
@@ -314,7 +335,7 @@ cloudId
 ){
 
 const { markAlertCloudSynced, markAlertCloudId } =
-await import("./alerts.js?v=51");
+await import("./alerts.js?v=53");
 
 const ok =
 await confirmRowActiveInCloud(
@@ -810,7 +831,7 @@ null;
 
 if(cloudId){
 const { markAlertCloudId } =
-await import("./alerts.js?v=51");
+await import("./alerts.js?v=53");
 
 markAlertCloudId(
 symbol,
@@ -1434,9 +1455,27 @@ id
 }
 
 /**
- * Параллельный вызов облака: без очереди, с повторами (второй алерт не ждёт первый).
+ * Срабатывание: очередь (2-й алерт не ломает auth 1-го) → worker (Telegram+delete) → purge fallback.
  */
-export async function fireAlertCloudTrigger(
+export function fireAlertCloudTrigger(
+symbol,
+shapeId,
+cloudId,
+meta = {}
+){
+
+return enqueueAlertTrigger(()=>
+fireAlertCloudTriggerImpl(
+symbol,
+shapeId,
+cloudId,
+meta
+)
+);
+
+}
+
+async function fireAlertCloudTriggerImpl(
 symbol,
 shapeId,
 cloudId,
@@ -1455,44 +1494,25 @@ if(
 return false;
 }
 
+let auth =
+await resolveAlertAuthFast();
+
+if(!auth?.token){
+auth =
+await resolveAlertAuthFast();
+}
+
 let ctx =
-null;
+auth?.ctx || null;
 let token =
-null;
+auth?.token || null;
 
-const cached =
-getCachedAlertAuth();
-
-if(
-cached?.ctx &&
-cached?.token
-){
-ctx = cached.ctx;
-token = cached.token;
-}else{
-try{
-ctx =
-await withTimeout(
-getAuthed(),
-4000,
-"getAuthed trigger"
-);
-if(ctx){
-token =
-await getAccessTokenForUser(ctx);
-if(token){
-setAlertAuthCache(
-ctx,
-token
-);
-}
-}
-}catch(err){
+if(!token){
 console.warn(
-"[alerts] auth:",
-err?.message || err
+"[alerts] trigger: нет JWT — шестерёнка → войти заново",
+sym,
+sid
 );
-}
 }
 
 const id =
@@ -1526,87 +1546,53 @@ price: Number.isFinite(price)
 tf
 };
 
-console.log(
-"[alerts] удаляем строку + Telegram…"
-);
-
-const purgePromise =
-purgeAlertViaRest({
-ctx,
-token,
-id,
-symbol: sym,
-shapeId: sid
-});
-
-const workerPromise =
-(async()=>{
-
-if(!token){
-return {
+let remote = {
 ok: false,
 reason: "no_auth"
 };
-}
+
+if(token){
+console.log(
+"[alerts] → worker /trigger…",
+sym,
+sid
+);
 
 try{
 if(id){
-return await withTimeout(
+remote =
+await withTimeout(
 triggerAlertViaWorkerById(
 id,
 triggerPayload,
 token
 ),
-12000,
+15000,
 "worker /trigger"
 );
-}
-
-return await withTimeout(
+}else{
+remote =
+await withTimeout(
 triggerAlertViaWorker(
 sym,
 sid,
 triggerPayload,
 token
 ),
-12000,
+15000,
 "worker /trigger"
 );
-
+}
 }catch(err){
 console.warn(
 "[alerts] worker /trigger:",
 err?.message || err
 );
-return {
+remote = {
 ok: false,
 reason: "timeout"
 };
-
 }
-})();
-
-const [
-purged,
-remote
-] =
-await Promise.all([
-purgePromise,
-workerPromise
-]);
-
-if(purged){
-console.log(
-"[alerts] ✓ Supabase удалено (браузер):",
-sym,
-sid
-);
-}else{
-console.warn(
-"[alerts] purge не удался:",
-sym,
-sid
-);
 }
 
 console.log(
@@ -1633,7 +1619,10 @@ console.warn(
 let stillInCloud =
 false;
 
-if(!purged){
+if(
+ctx &&
+token
+){
 try{
 stillInCloud =
 await withTimeout(
@@ -1641,7 +1630,7 @@ isAlertRowInCloud(
 sym,
 sid
 ),
-5000,
+4000,
 "row check"
 );
 }catch{
@@ -1649,36 +1638,63 @@ stillInCloud = true;
 }
 }
 
-if(stillInCloud){
-
-const again =
-await purgeAlertRowFromCloud(
-sym,
-sid
-);
-
-if(again){
+if(
+stillInCloud &&
+token
+){
 console.log(
-"[alerts] ✓ Supabase удалено (повтор):",
+"[alerts] дочистка строки (браузер)…",
 sym,
 sid
 );
+
+const purged =
+await purgeAlertViaRest({
+ctx,
+token,
+id,
+symbol: sym,
+shapeId: sid
+});
+
+if(purged){
+console.log(
+"[alerts] ✓ Supabase удалено (браузер):",
+sym,
+sid
+);
+stillInCloud = false;
 }else{
+console.warn(
+"[alerts] purge не удался:",
+sym,
+sid
+);
+}
+}else if(!stillInCloud){
+console.log(
+"[alerts] ✓ строка в Supabase снята",
+sym,
+sid
+);
+}
+
+if(
+stillInCloud &&
+!remote?.ok
+){
 console.error(
-"[alerts] строка всё ещё в Supabase:",
+"[alerts] строка осталась в Supabase:",
 sym,
 sid,
 id || ""
 );
 }
 
-}
-
 return (
 remote?.ok ||
 !!remote?.telegram ||
-!stillInCloud ||
-purged
+!stillInCloud
 );
 
 }
@@ -2008,7 +2024,7 @@ null;
 
 if(cloudId){
 const { markAlertCloudId } =
-await import("./alerts.js?v=51");
+await import("./alerts.js?v=53");
 
 markAlertCloudId(
 symbol,
@@ -2050,7 +2066,7 @@ return 0;
 }
 
 const { getActiveAlerts } =
-await import("./alerts.js?v=51");
+await import("./alerts.js?v=53");
 
 const localKeys =
 new Set(
@@ -2179,9 +2195,30 @@ attempt++
 
 if(await pushAlertViaWorker(row)){
 
-const { markAlertCloudSynced } =
-await import("./alerts.js?v=51");
+const { loadAlerts, markAlertCloudSynced } =
+await import("./alerts.js?v=53");
 
+const cloudId =
+loadAlerts().find(
+a=>
+String(a.symbol).toUpperCase() === row.symbol &&
+String(a.shapeId) === row.shapeId
+)?.cloudId ||
+null;
+
+const verified =
+cloudId ||
+(
+ctx &&
+await markRowSyncedAfterVerify(
+ctx,
+row.symbol,
+row.shapeId,
+cloudId
+)
+);
+
+if(verified){
 markAlertCloudSynced(
 row.symbol,
 row.shapeId
@@ -2197,6 +2234,14 @@ return true;
 
 }
 
+console.warn(
+"[alerts] worker ok, строка не видна в БД — REST…",
+row.symbol,
+row.shapeId
+);
+
+}
+
 if(
 ctx &&
 await pushAlertViaRest(
@@ -2206,7 +2251,7 @@ ctx
 ){
 
 const { loadAlerts, markAlertCloudSynced } =
-await import("./alerts.js?v=51");
+await import("./alerts.js?v=53");
 
 const hasId =
 loadAlerts().some(
@@ -2263,7 +2308,7 @@ null
 ){
 
 const { markAlertCloudSynced } =
-await import("./alerts.js?v=51");
+await import("./alerts.js?v=53");
 
 markAlertCloudSynced(
 row.symbol,
@@ -2320,9 +2365,11 @@ row,
 options = {}
 ){
 
-return pushOneAlertRowImpl(
+return enqueueAlertPush(()=>
+pushOneAlertRowImpl(
 row,
 options
+)
 );
 
 }
@@ -2349,7 +2396,7 @@ return 0;
 }
 
 const { getActiveAlerts } =
-await import("./alerts.js?v=51");
+await import("./alerts.js?v=53");
 
 const pending =
 getActiveAlerts().filter(a=>!a.cloudSynced);
@@ -2421,7 +2468,7 @@ return 0;
 }
 
 const { getActiveAlerts } =
-await import("./alerts.js?v=51");
+await import("./alerts.js?v=53");
 
 const list =
 getActiveAlerts();
@@ -2569,7 +2616,7 @@ saveAlertsFromCloudMerge,
 alertEntryKey,
 loadAlerts
 } =
-await import("./alerts.js?v=51");
+await import("./alerts.js?v=53");
 
 const cloudKeys =
 new Set(
@@ -2584,7 +2631,7 @@ String(row.shape_id || "").trim()
 const {
 applyRemoteAlertFired
 } =
-await import("./alerts.js?v=51");
+await import("./alerts.js?v=53");
 
 const local =
 loadAlerts();
@@ -2675,7 +2722,7 @@ const n =
 await reconcileLocalRegistryWithCloud();
 
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=51");
+await import("./alerts.js?v=53");
 
 stripAlertFlagsNotInRegistry();
 
@@ -2688,11 +2735,16 @@ return n;
 async function hydrateAlertsAfterAuth(){
 
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=51");
+await import("./alerts.js?v=53");
 
 console.log(
 "[alerts] hydrate after login…"
 );
+
+const { mergeRegistryFromChartDrawings } =
+await import("./alerts.js?v=53");
+
+mergeRegistryFromChartDrawings();
 
 await syncAllLocalAlertsToCloudImpl();
 await reconcileLocalRegistryWithCloud();
@@ -2719,6 +2771,10 @@ registrySyncTimer = null;
 if(!isCloudLoggedIn()){
 return;
 }
+
+void import("./alerts.js?v=53").then(m=>{
+m.mergeRegistryFromChartDrawings();
+}).catch(()=>{});
 
 void pushUnsyncedAlerts().catch(err=>{
 console.warn(

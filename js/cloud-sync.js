@@ -450,7 +450,7 @@ const out =
 JSON.parse(JSON.stringify(map));
 
 const { getActiveAlerts } =
-await import("./alerts.js?v=51");
+await import("./alerts.js?v=53");
 
 for(const alert of getActiveAlerts()){
 
@@ -1326,11 +1326,11 @@ session.user.id
 );
 startSyncPoll();
 
-import("./alerts-cloud-sync.js?v=51")
+import("./alerts-cloud-sync.js?v=53")
 .then(async m=>{
 
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=51");
+await import("./alerts.js?v=53");
 
 await m.syncAllLocalAlertsToCloudImmediate();
 await m.pullRegistryFromCloud();

@@ -4,9 +4,32 @@ const HISTORY_KEY = "price_alerts_history_v1";
 
 const MAX_ALERT_HISTORY = 30;
 
+/** Сериализация read-modify-write в localStorage (иначе 4 алерта → 2 строки). */
+let registryWriteChain =
+Promise.resolve();
+
+function enqueueRegistryWrite(
+fn
+){
+
+const job =
+registryWriteChain.then(()=>fn());
+
+registryWriteChain =
+job.catch(err=>{
+console.warn(
+"alerts registry write:",
+err?.message || err
+);
+});
+
+return job;
+
+}
+
 function queueAlertsCloud(fn){
 
-import("./alerts-cloud-sync.js?v=51")
+import("./alerts-cloud-sync.js?v=53")
 .then(m=>fn(m))
 .catch(err=>{
 console.warn("alerts cloud:", err);
@@ -536,10 +559,138 @@ return `drawings_${String(symbol || "").trim().toUpperCase()}`;
 
 }
 
+/**
+ * Все жёлтые лучи на графиках → реестр (если гонка затёрла localStorage).
+ */
+export function mergeRegistryFromChartDrawings(){
+
+const merged =
+new Map();
+
+for(const a of loadAlerts()){
+const sym =
+String(a.symbol || "").trim().toUpperCase();
+const sid =
+String(a.shapeId || a.id || "").trim();
+
+if(
+!sym ||
+!sid
+){
+continue;
+}
+
+merged.set(
+`${sym}::${sid}`,
+{ ...a }
+);
+
+}
+
+for(
+let i = 0;
+i < localStorage.length;
+i++
+){
+
+const key =
+localStorage.key(i);
+
+if(
+!key?.startsWith("drawings_")
+){
+continue;
+}
+
+const sym =
+key.slice("drawings_".length).trim().toUpperCase();
+
+if(!sym){
+continue;
+}
+
+let drawings;
+
+try{
+drawings =
+JSON.parse(
+localStorage.getItem(key) || "[]"
+);
+}catch{
+continue;
+}
+
+if(!Array.isArray(drawings)){
+continue;
+}
+
+for(const shape of drawings){
+
+if(
+!shape?.isAlert ||
+shape.type !== "hray"
+){
+continue;
+}
+
+const sid =
+String(shape.id || "").trim();
+const price =
+alertPriceFromShape(shape);
+
+if(
+!sid ||
+!Number.isFinite(price)
+){
+continue;
+}
+
+const mapKey =
+`${sym}::${sid}`;
+
+if(merged.has(mapKey)){
+continue;
+}
+
+merged.set(
+mapKey,
+{
+id: sid,
+shapeId: sid,
+symbol: sym,
+price,
+tf: normalizeAlertTf(
+shape.alertTf
+),
+createdAt:
+Number(shape.alertCreatedAt) ||
+Date.now(),
+cloudSynced: false
+}
+);
+
+}
+
+}
+
+const next =
+[...merged.values()];
+
+if(next.length !== loadAlerts().length){
+saveAlerts(next);
+return next.length;
+}
+
+return 0;
+
+}
+
 export async function registerAlertFromDrawing(
 shape,
 symbolOverride
 ){
+
+return enqueueRegistryWrite(async()=>{
 
 const sym =
 String(
@@ -604,7 +755,7 @@ await import("./auth-ui.js?v=10");
 await ensureCloudReady();
 
 const m =
-await import("./alerts-cloud-sync.js?v=51");
+await import("./alerts-cloud-sync.js?v=53");
 
 const pushed =
 await m.pushOneAlertRow(
@@ -629,6 +780,8 @@ shapeId
 );
 
 return true;
+
+});
 
 }
 
@@ -737,7 +890,7 @@ return;
 
 saveAlerts(list);
 
-void import("./alerts-cloud-sync.js?v=51").then(m=>{
+void import("./alerts-cloud-sync.js?v=53").then(m=>{
 m.flushAlertCloudPush(row);
 });
 
@@ -1094,7 +1247,7 @@ sym,
 sid
 );
 
-void import("./alert-monitor.js?v=51").then(m=>{
+void import("./alert-monitor.js?v=53").then(m=>{
 m.notifyAlertTriggered({
 symbol: sym,
 shapeId: sid,
@@ -1152,7 +1305,7 @@ sym,
 sid
 );
 
-void import("./alerts-cloud-sync.js?v=51").then(m=>{
+void import("./alerts-cloud-sync.js?v=53").then(m=>{
 m.fireAlertCloudTrigger(
 sym,
 sid,
