@@ -217,11 +217,22 @@ body{
     pointer-events:none;
 }
 
+/* Слой рисования поверх LW (на Монетах стили в terminal.css). */
+.widget-chart-wrap .drawings-layer{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    pointer-events:none;
+    z-index:3;
+}
+
 .widget .chart{
     position:absolute;
     inset:0;
     width:100%;
     height:100%;
+    z-index:1;
     pointer-events:auto;
 }
 

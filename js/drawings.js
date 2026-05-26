@@ -23,6 +23,10 @@ TRASH_ICON_SVG
 } from "./draw-ui-shared.js";
 
 import {
+closeAllWidgetDrawToolsMenus
+} from "./dashboard-draw-ui.js?v=8";
+
+import {
 calcPositionSizing,
 formatMoneyUsd,
 formatVolumeUsd,
@@ -7870,6 +7874,7 @@ next ===
 setTool(
 "cursor"
 );
+closeAllWidgetDrawToolsMenus();
 return;
 }
 
@@ -7880,12 +7885,15 @@ next
 setTool(
 "cursor"
 );
+closeAllWidgetDrawToolsMenus();
 return;
 }
 
 setTool(
 next
 );
+
+closeAllWidgetDrawToolsMenus();
 
 }
 
