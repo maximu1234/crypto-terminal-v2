@@ -49,10 +49,18 @@ overflow:visible;
 }
 
 #logo{
+display:inline-flex;
+align-items:center;
 font-size:20px;
 font-weight:700;
 white-space:nowrap;
 color:#fff;
+text-decoration:none;
+-webkit-tap-highlight-color:transparent;
+}
+
+#logo:hover{
+color:#e5e7eb;
 }
 
 #header-controls,
