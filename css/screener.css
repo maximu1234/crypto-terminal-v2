@@ -283,8 +283,8 @@ color:#e5e7eb;
 }
 
 .header-settings-dropdown{
-position:fixed;
-top:0;
+position:absolute;
+top:calc(100% + 8px);
 right:0;
 left:auto;
 z-index:10050;

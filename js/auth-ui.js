@@ -61,7 +61,6 @@ path.endsWith("/terminal")
 }
 
 let settingsDropdownReady = false;
-let ignoreSettingsDocClick = false;
 let refreshSettingsAuthUi = ()=>{};
 
 function isSettingsInlineMode(
@@ -165,19 +164,144 @@ target.closest(
 
 }
 
-function placeSettingsDropdown(
-btn,
-dropdown,
+function needsSettingsPortal(
 wrap
 ){
 
 if(
+!wrap ||
+isSettingsInlineMode(wrap)
+){
+return false;
+}
+
+let node =
+wrap.parentElement;
+
+while(
+node &&
+node !== document.body
+){
+
+const style =
+getComputedStyle(node);
+
+if(
+style.overflow === "hidden" ||
+style.overflowX === "hidden" ||
+style.overflowY === "hidden" ||
+style.overflow === "clip" ||
+style.overflowX === "clip" ||
+style.overflowY === "clip"
+){
+return true;
+}
+
+node =
+node.parentElement;
+
+}
+
+return false;
+
+}
+
+function clearPortaledPosition(
+dropdown
+){
+
+if(!dropdown){
+return;
+}
+
+dropdown.style.top = "";
+dropdown.style.left = "";
+dropdown.style.right = "";
+dropdown.style.bottom = "";
+
+}
+
+function positionPortaledDropdown(
+btn,
+dropdown
+){
+
+if(
+!btn ||
+!dropdown
+){
+return false;
+}
+
+const rect =
+btn.getBoundingClientRect();
+
+if(
+rect.width < 1 ||
+rect.height < 1
+){
+return false;
+}
+
+const margin =
+12;
+
+const dropW =
+Math.min(
+dropdown.offsetWidth || 280,
+window.innerWidth - margin * 2
+);
+
+let left =
+rect.left;
+
+if(
+left + dropW >
+window.innerWidth - margin
+){
+left =
+Math.max(
+margin,
+rect.right - dropW
+);
+}
+
+dropdown.style.top =
+`${Math.round(rect.bottom + 8)}px`;
+
+dropdown.style.left =
+`${Math.round(left)}px`;
+
+dropdown.style.right = "auto";
+dropdown.style.bottom = "auto";
+
+return true;
+
+}
+
+function syncSettingsDropdownPlacement(){
+
+const btn =
+document.getElementById("header-settings-btn");
+const dropdown =
+document.getElementById("header-settings-dropdown");
+const wrap =
+document.getElementById("header-settings-wrap");
+
+if(
 !btn ||
 !dropdown ||
-!wrap
+!wrap ||
+dropdown.classList.contains("hidden")
 ){
 return;
 }
+
+dropdown.classList.remove(
+"header-settings-dropdown--inline",
+"header-settings-dropdown--portaled"
+);
+clearPortaledPosition(dropdown);
 
 if(
 isSettingsInlineMode(wrap)
@@ -188,9 +312,6 @@ dropdown,
 wrap
 );
 
-dropdown.style.top = "";
-dropdown.style.right = "";
-dropdown.style.left = "";
 dropdown.classList.add(
 "header-settings-dropdown--inline"
 );
@@ -198,48 +319,51 @@ return;
 
 }
 
-dropdown.classList.remove(
-"header-settings-dropdown--inline"
-);
+if(
+needsSettingsPortal(wrap)
+){
 
 portalDropdownToBody(
 dropdown,
 wrap
 );
 
-const rect =
-btn.getBoundingClientRect();
-
-dropdown.style.top =
-`${Math.round(rect.bottom + 8)}px`;
-
-dropdown.style.right =
-`${Math.round(
-window.innerWidth - rect.right
-)}px`;
-
-dropdown.style.left = "auto";
-
-const dropW =
-dropdown.offsetWidth ||
-280;
-const margin = 12;
-let right =
-window.innerWidth - rect.right;
+dropdown.classList.add(
+"header-settings-dropdown--portaled"
+);
 
 if(
-right + dropW >
-window.innerWidth - margin
+!positionPortaledDropdown(
+btn,
+dropdown
+)
 ){
-right =
-Math.max(
-margin,
-window.innerWidth - dropW - margin
+requestAnimationFrame(()=>{
+positionPortaledDropdown(
+btn,
+dropdown
 );
+});
 }
 
-dropdown.style.right =
-`${Math.round(right)}px`;
+return;
+
+}
+
+restoreDropdownHome(
+dropdown,
+wrap
+);
+
+}
+
+function scheduleSettingsDropdownPlacement(){
+
+syncSettingsDropdownPlacement();
+
+requestAnimationFrame(()=>{
+syncSettingsDropdownPlacement();
+});
 
 }
 
@@ -293,16 +417,13 @@ return;
 }
 
 dropdown.classList.remove("hidden");
-refreshSettingsAuthUi();
-placeSettingsDropdown(
-btn,
-dropdown,
-wrap
-);
 btn.setAttribute(
 "aria-expanded",
 "true"
 );
+
+refreshSettingsAuthUi();
+scheduleSettingsDropdownPlacement();
 
 }
 
@@ -351,12 +472,14 @@ function onSettingsToggle(
 e
 ){
 
+e.preventDefault();
 e.stopPropagation();
 
-ignoreSettingsDocClick = true;
-window.setTimeout(()=>{
-ignoreSettingsDocClick = false;
-}, 120);
+if(
+typeof e.stopImmediatePropagation === "function"
+){
+e.stopImmediatePropagation();
+}
 
 if(
 dropdown.classList.contains("hidden")
@@ -373,11 +496,27 @@ btn.addEventListener(
 onSettingsToggle
 );
 
+btn.addEventListener(
+"pointerdown",
+e=>{
+e.stopPropagation();
+},
+true
+);
+
 document.addEventListener(
-"click",
+"pointerdown",
 e=>{
 
-if(ignoreSettingsDocClick){
+const panel =
+document.getElementById(
+"header-settings-dropdown"
+);
+
+if(
+!panel ||
+panel.classList.contains("hidden")
+){
 return;
 }
 
@@ -391,7 +530,8 @@ return;
 
 closeSettingsDropdown();
 
-}
+},
+true
 );
 
 document.addEventListener("keydown", e=>{
@@ -420,11 +560,7 @@ gear &&
 shell &&
 !drop.classList.contains("hidden")
 ){
-placeSettingsDropdown(
-gear,
-drop,
-shell
-);
+syncSettingsDropdownPlacement();
 }
 },
 { passive: true }

@@ -61,6 +61,12 @@ body.coins-page #topbar{
 grid-column:1 / -1;
 }
 
+body.coins-page #header{
+position:relative;
+z-index:200;
+overflow:visible;
+}
+
 body.coins-page #charts-stack{
 grid-column:1;
 grid-row:3;
