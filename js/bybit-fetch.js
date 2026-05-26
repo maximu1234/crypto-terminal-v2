@@ -69,6 +69,12 @@ return /Chrome|Chromium|CriOS|YaBrowser|Edg\/|OPR\/|Brave/i.test(ua);
 
 function shouldSkipDirectBybit(){
 
+if(
+!isChromiumBrowser()
+){
+return false;
+}
+
 try{
 
 if(
@@ -87,11 +93,17 @@ return true;
 /* ignore */
 }
 
-return isChromiumBrowser();
+return true;
 
 }
 
 function noteDirectBybitOk(){
+
+if(
+!isChromiumBrowser()
+){
+return;
+}
 
 try{
 
@@ -108,6 +120,12 @@ sessionStorage.removeItem(DIRECT_BAD_KEY);
 }
 
 function noteDirectBybitBad(){
+
+if(
+!isChromiumBrowser()
+){
+return;
+}
 
 try{
 
@@ -207,6 +225,12 @@ return workerProxyConfigPromise;
 
 /** Прогрев TLS/DNS к Railway (после preload). */
 export function warmBybitWorkerProxy(){
+
+if(
+!shouldSkipDirectBybit()
+){
+return;
+}
 
 void preloadBybitProxyConfig().then(base=>{
 
@@ -577,10 +601,14 @@ timeoutMs,
 
 }
 
+const useWorker =
+workerBase &&
+shouldSkipDirectBybit();
+
 const tasks = [];
 
 if(
-workerBase
+useWorker
 ){
 
 tasks.push(
@@ -595,7 +623,7 @@ timeoutMs,
 }
 
 const directTimeoutMs =
-workerBase
+useWorker
 ? Math.min(
 1800,
 timeoutMs
@@ -691,6 +719,10 @@ normalizePath(pathQuery);
 
 let lastErr = null;
 
+if(
+shouldSkipDirectBybit()
+){
+
 const workerBase =
 await getWorkerProxyBase();
 
@@ -715,9 +747,17 @@ lastErr = err;
 
 }
 
-if(
-!shouldSkipDirectBybit()
-){
+try{
+return await fetchBybitViaProxies(
+path,
+timeoutMs
+);
+}catch(proxyErr){
+markBybitFailure(proxyErr);
+throw proxyErr;
+}
+
+}
 
 for(
 let basePass = 0;
@@ -742,10 +782,7 @@ try{
 return await fetchOneBybitUrl(
 url,
 baseIndex,
-Math.min(
-4000,
 timeoutMs
-)
 );
 
 }catch(err){
@@ -784,16 +821,9 @@ rotateBybitApiBase();
 
 }
 
-}
-
 if(
-lastErr &&
-!isNetworkFetchError(lastErr)
+isNetworkFetchError(lastErr)
 ){
-markBybitFailure(lastErr);
-throw lastErr;
-}
-
 try{
 return await fetchBybitViaProxies(
 path,
@@ -803,6 +833,16 @@ timeoutMs
 markBybitFailure(proxyErr);
 throw proxyErr;
 }
+}
+
+markBybitFailure(lastErr);
+
+throw (
+lastErr ||
+new Error(
+"Bybit API недоступен"
+)
+);
 
 }
 

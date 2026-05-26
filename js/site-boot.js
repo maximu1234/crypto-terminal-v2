@@ -33,7 +33,7 @@ import {
 resetBybitEndpoints,
 preloadBybitProxyConfig,
 warmBybitWorkerProxy
-} from "./bybit-fetch.js?v=8";
+} from "./bybit-fetch.js?v=9";
 
 import {
 initMobileRecovery

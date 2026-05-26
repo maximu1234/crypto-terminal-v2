@@ -1,6 +1,6 @@
 import {
 fetchBybit
-} from "./bybit-fetch.js?v=8";
+} from "./bybit-fetch.js?v=9";
 
 const TWELVE_KEY =
 "d6b45dcb1abf4b3ebe020038e41864fb";
