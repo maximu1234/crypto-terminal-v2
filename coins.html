@@ -75,9 +75,16 @@ Multichart
 
 <div id="topbar" class="coins-topbar">
 
-<div id="current-symbol">
-BTCUSDT.P
-</div>
+<div id="current-symbol"></div>
+<script>
+(function(){
+var s=new URLSearchParams(location.search).get("symbol");
+var el=document.getElementById("current-symbol");
+if(s&&el){
+el.textContent=s.trim().toUpperCase()+".P";
+}
+})();
+</script>
 
 <div class="coins-tf-desktop">
 <button class="tf-btn" data-tf="1">1m</button>
@@ -358,7 +365,7 @@ document.body.innerHTML = `
 import("./js/charts-lib-boot.js").then(({ loadLightweightCharts })=>
 loadLightweightCharts()
 ).then(()=>
-import("./js/terminal.js?v=158")
+import("./js/terminal.js?v=159")
 ).catch(err=>{
 
 console.error(err);

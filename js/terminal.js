@@ -1800,13 +1800,7 @@ currentSymbol = symbol;
 
 persistCoinsPrefs();
 
-document.getElementById(
-"current-symbol"
-).innerText =
-(currentDataset === "crypto" ||
-currentDataset === "new")
-? symbol + ".P"
-: symbol;
+syncCoinsSymbolLabel();
 
 let nextCandles = [];
 
@@ -2796,6 +2790,41 @@ currentTF = tf;
 
 }
 
+function formatCoinsSymbolLabel(
+symbol = currentSymbol
+){
+
+if(!symbol){
+return "—";
+}
+
+if(
+currentDataset === "crypto" ||
+currentDataset === "new"
+){
+return symbol + ".P";
+}
+
+return symbol;
+
+}
+
+function syncCoinsSymbolLabel(){
+
+const el =
+document.getElementById(
+"current-symbol"
+);
+
+if(!el){
+return;
+}
+
+el.textContent =
+formatCoinsSymbolLabel();
+
+}
+
 function applyUrlTimeframe(){
 
 document
@@ -2832,8 +2861,6 @@ closeAllCoinFlagMenus();
 async function init(){
 
 await ensureCloudReady();
-
-readUrlParams();
 
 applyCoinsPrefs();
 
@@ -2891,6 +2918,8 @@ currentTF = "60";
 
 applyUrlTimeframe();
 
+syncCoinsSymbolLabel();
+
 await loadSymbol(
 currentSymbol || "BTCUSDT"
 );
@@ -2938,5 +2967,9 @@ flushCoinsPrefs();
 
 }
 );
+
+readUrlParams();
+syncCoinsSymbolLabel();
+applyUrlTimeframe();
 
 init();
