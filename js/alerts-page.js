@@ -16,10 +16,15 @@ import {
 clearTelegramChatId,
 getTelegramChatId,
 initAlertsCloudSync,
+readCachedTelegramChatId,
 saveTelegramChatId,
 syncAlertsWithCloud,
 pullRegistryFromCloud
-} from "./alerts-cloud-sync.js?v=64";
+} from "./alerts-cloud-sync.js?v=65";
+
+import {
+readAlertTokenSync
+} from "./alert-auth-cache.js?v=4";
 
 import {
 isCloudLoggedIn,
@@ -114,8 +119,17 @@ document.getElementById("alerts-telegram-disconnect");
 const telegramOpenBotLink =
 document.getElementById("alerts-telegram-open-bot");
 
+const telegramPending =
+document.getElementById("alerts-telegram-pending");
+
+const telegramPendingText =
+document.getElementById("alerts-telegram-pending-text");
+
 let telegramSetupEdit =
 false;
+
+let telegramUiFetchSeq =
+0;
 
 function initTelegramBotLink(){
 
@@ -219,42 +233,83 @@ telegramConnected?.classList.add("hidden");
 
 }
 
-async function refreshTelegramUi(){
+function hideTelegramGuestUi(){
 
-const loggedIn =
-isCloudLoggedIn();
-const email =
-getCloudUserEmail() || "аккаунт";
+telegramNoteGuest?.classList.add("hidden");
+telegramLogin?.classList.add("hidden");
 
-telegramNoteGuest?.classList.toggle(
-"hidden",
-loggedIn
-);
-
-if(
-loggedIn &&
-telegramUserEmail
-){
-telegramUserEmail.textContent = email;
 }
 
-telegramLogin?.classList.toggle(
-"hidden",
-loggedIn
-);
+function showTelegramPendingUi(
+message
+){
 
-if(!loggedIn){
-telegramSetupEdit = false;
-telegramNoteLogged?.classList.add("hidden");
+hideTelegramGuestUi();
+telegramPending?.classList.remove("hidden");
 telegramConnected?.classList.add("hidden");
 telegramForm?.classList.add("hidden");
+telegramNoteLogged?.classList.add("hidden");
 setTelegramStatus("");
-return;
+
+if(
+telegramPendingText &&
+message
+){
+telegramPendingText.textContent = message;
 }
 
-try{
-const id =
-await getTelegramChatId();
+}
+
+function hideTelegramPendingUi(){
+
+telegramPending?.classList.add("hidden");
+
+}
+
+function getAlertsAuthView(){
+
+const peek =
+readAlertTokenSync();
+
+if(isCloudLoggedIn()){
+
+return {
+state:"ready",
+email:
+getCloudUserEmail() ||
+peek?.user?.email ||
+"аккаунт",
+userId:
+peek?.user?.id || ""
+};
+
+}
+
+if(peek?.user){
+
+return {
+state:"pending",
+email:
+peek.user.email ||
+"аккаунт",
+userId:
+peek.user.id || ""
+};
+
+}
+
+return {
+state:"guest",
+email:"",
+userId:""
+};
+
+}
+
+function applyTelegramUiFromServer(
+email,
+id
+){
 
 const hasChatId =
 id != null;
@@ -307,7 +362,96 @@ setTelegramStatus("");
 
 }
 
+}
+
+async function refreshTelegramUi(){
+
+const fetchSeq = ++telegramUiFetchSeq;
+
+const auth =
+getAlertsAuthView();
+
+hideTelegramPendingUi();
+
+telegramNoteGuest?.classList.toggle(
+"hidden",
+auth.state !== "guest"
+);
+
+telegramLogin?.classList.toggle(
+"hidden",
+auth.state !== "guest"
+);
+
+if(
+auth.state !== "guest" &&
+telegramUserEmail
+){
+telegramUserEmail.textContent = auth.email;
+}
+
+if(auth.state === "guest"){
+telegramSetupEdit = false;
+telegramNoteLogged?.classList.add("hidden");
+telegramConnected?.classList.add("hidden");
+telegramForm?.classList.add("hidden");
+setTelegramStatus("");
+return;
+}
+
+const userId =
+auth.userId ||
+readAlertTokenSync()?.user?.id ||
+"";
+
+const cached =
+userId
+? readCachedTelegramChatId(userId)
+: undefined;
+
+if(
+cached != null &&
+!telegramSetupEdit
+){
+hideTelegramGuestUi();
+showTelegramConnectedUi(auth.email);
+}else if(!telegramSetupEdit){
+showTelegramPendingUi(
+auth.state === "pending"
+? "Проверяем вход и Telegram…"
+: "Проверяем настройки Telegram…"
+);
+}
+
+try{
+const id =
+await getTelegramChatId();
+
+if(fetchSeq !== telegramUiFetchSeq){
+return;
+}
+
+hideTelegramPendingUi();
+applyTelegramUiFromServer(
+auth.email,
+id
+);
+
 }catch{
+
+if(fetchSeq !== telegramUiFetchSeq){
+return;
+}
+
+hideTelegramPendingUi();
+
+if(
+cached != null &&
+!telegramSetupEdit
+){
+return;
+}
+
 telegramSetupEdit = true;
 telegramConnected?.classList.add("hidden");
 telegramForm?.classList.remove("hidden");
@@ -670,6 +814,8 @@ stripAlertFlagsNotInRegistry();
 render();
 
 initTelegramBotLink();
+
+void refreshTelegramUi();
 
 void ensureCloudReady()
 .then(async()=>{

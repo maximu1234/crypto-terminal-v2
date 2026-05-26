@@ -643,6 +643,81 @@ return false;
 
 }
 
+const TELEGRAM_CHAT_CACHE_PREFIX =
+"ct_telegram_chat_v1:";
+
+export function readCachedTelegramChatId(
+userId
+){
+
+if(!userId){
+return undefined;
+}
+
+try{
+
+const raw =
+localStorage.getItem(
+TELEGRAM_CHAT_CACHE_PREFIX +
+String(userId)
+);
+
+if(raw === null){
+return undefined;
+}
+
+if(raw === "none"){
+return null;
+}
+
+const n =
+Number(raw);
+
+return Number.isFinite(n)
+? n
+: null;
+
+}catch{
+return undefined;
+}
+
+}
+
+function writeCachedTelegramChatId(
+userId,
+chatId
+){
+
+if(!userId){
+return;
+}
+
+try{
+
+if(
+chatId == null ||
+chatId === ""
+){
+localStorage.setItem(
+TELEGRAM_CHAT_CACHE_PREFIX +
+String(userId),
+"none"
+);
+return;
+}
+
+localStorage.setItem(
+TELEGRAM_CHAT_CACHE_PREFIX +
+String(userId),
+String(chatId)
+);
+
+}catch{
+/* ignore */
+}
+
+}
+
 export async function getTelegramChatId(){
 
 const ctx = await getAuthed();
@@ -665,7 +740,17 @@ return null;
 
 const id = data?.telegram_chat_id;
 
-return id != null ? Number(id) : null;
+const parsed =
+id != null
+? Number(id)
+: null;
+
+writeCachedTelegramChatId(
+ctx.user.id,
+parsed
+);
+
+return parsed;
 
 }
 
@@ -734,6 +819,11 @@ throw new Error(error.message);
 }
 
 }
+
+writeCachedTelegramChatId(
+ctx.user.id,
+parsed
+);
 
 }
 

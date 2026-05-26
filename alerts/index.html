@@ -8,7 +8,7 @@
 <title>Алерты — Multichart</title>
 
 <link rel="stylesheet" href="/css/common.css?v=13">
-<link rel="stylesheet" href="/css/alerts.css?v=13">
+<link rel="stylesheet" href="/css/alerts.css?v=14">
 
 </head>
 
@@ -56,6 +56,12 @@
 Укажите Chat ID ниже — тогда алерты будут приходить в Telegram при закрытом терминале.
 </p>
 
+<div id="alerts-telegram-pending" class="alerts-telegram-pending hidden" role="status" aria-live="polite">
+<p id="alerts-telegram-pending-text" class="alerts-telegram-pending-text">
+Проверяем вход и Telegram…
+</p>
+</div>
+
 <div id="alerts-telegram-connected" class="alerts-telegram-connected hidden" role="status">
 <p id="alerts-telegram-connected-text" class="alerts-telegram-connected-text"></p>
 <div class="alerts-telegram-connected-actions">
@@ -71,6 +77,61 @@
 <div id="alerts-telegram-login" class="alerts-telegram-login">
 <div id="alerts-inline-auth-mount" class="alerts-inline-auth-mount"></div>
 </div>
+
+<script>
+(function(){
+try{
+var raw=
+localStorage.getItem("ct_supabase_auth");
+if(!raw){
+return;
+}
+var data=JSON.parse(raw);
+var session=
+data?.access_token
+? data
+: data?.currentSession||data?.session;
+var user=session?.user;
+if(!user?.id){
+return;
+}
+var guest=
+document.getElementById("alerts-telegram-note-guest");
+var login=
+document.getElementById("alerts-telegram-login");
+if(guest){
+guest.classList.add("hidden");
+}
+if(login){
+login.classList.add("hidden");
+}
+var cacheKey="ct_telegram_chat_v1:"+user.id;
+var cached=localStorage.getItem(cacheKey);
+var connected=
+document.getElementById("alerts-telegram-connected");
+var pending=
+document.getElementById("alerts-telegram-pending");
+var email=user.email||"аккаунт";
+if(
+cached!=null&&
+cached!=="none"
+){
+if(connected){
+connected.classList.remove("hidden");
+}
+var text=
+document.getElementById("alerts-telegram-connected-text");
+if(text){
+text.textContent=
+"Chat ID сохранён. Алерты будут приходить в Telegram, "+
+"когда вкладка с терминалом закрыта ("+email+").";
+}
+}else if(pending){
+pending.classList.remove("hidden");
+}
+}catch(e){}
+})();
+</script>
 
 <div id="alerts-telegram-form" class="alerts-telegram-form hidden">
 
@@ -186,7 +247,7 @@ aria-describedby="alerts-telegram-status"
 </main>
 
 <script type="module" src="/js/site-boot.js?v=60"></script>
-<script type="module" src="/js/alerts-page.js?v=46"></script>
+<script type="module" src="/js/alerts-page.js?v=47"></script>
 
 </body>
 </html>

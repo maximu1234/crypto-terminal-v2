@@ -69,6 +69,25 @@ flex:1 1 200px;
 min-width:0;
 }
 
+.alerts-telegram-pending{
+padding:12px 14px;
+border:1px solid #374151;
+border-radius:8px;
+background:rgba(
+55,
+65,
+81,
+0.35
+);
+}
+
+.alerts-telegram-pending-text{
+margin:0;
+font-size:0.9rem;
+line-height:1.45;
+color:#d1d5db;
+}
+
 .alerts-telegram-connected{
 display:flex;
 flex-wrap:wrap;
