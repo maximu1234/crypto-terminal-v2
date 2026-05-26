@@ -79,6 +79,7 @@ initDrawings
 
 import {
 initCoinsMobileUi,
+isCoinsMobile,
 syncCoinsTfLabel
 } from "./coins-mobile.js?v=1";
 
@@ -1895,6 +1896,8 @@ highlightActiveSymbol();
 
 scrollActiveCoinIntoView();
 
+ensureCoinsMobileShowsChart();
+
 startRealtime();
 startPriceHud();
 
@@ -2224,6 +2227,10 @@ highlightActiveSymbol();
 
 function scrollActiveCoinIntoView(){
 
+if(isCoinsMobile()){
+return;
+}
+
 const el =
 coinElements.get(currentSymbol);
 
@@ -2235,6 +2242,22 @@ el.scrollIntoView({
 block:"nearest",
 behavior:"smooth"
 });
+
+}
+
+function ensureCoinsMobileShowsChart(){
+
+if(!isCoinsMobile()){
+return;
+}
+
+if(window.scrollY > 0){
+window.scrollTo({
+top:0,
+left:0,
+behavior:"instant"
+});
+}
 
 }
 
