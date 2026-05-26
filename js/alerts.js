@@ -1697,6 +1697,8 @@ err?.message || err
 );
 });
 
+});
+
 }
 
 function stripShapeAlertFlags(shape){
