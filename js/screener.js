@@ -989,8 +989,6 @@ async function renderPage(){
 
 const loadId = ++renderToken;
 
-destroyWidgets();
-
 gridEl.className =
 screenerGridClass();
 
@@ -1001,6 +999,7 @@ renderPagination();
 
 if(!symbols.length){
 
+destroyWidgets();
 gridEl.innerHTML = "";
 setStatus("Нет монет для отображения", true);
 return;
@@ -1012,15 +1011,33 @@ setStatus(
 true
 );
 
-symbols.forEach(symbol=>{
+const nextWidgets =
+symbols.map(symbol=>
+createWidget(
+symbol,
+loadId
+)
+);
 
-const widget =
-createWidget(symbol, loadId);
+destroyWidgets();
 
-gridEl.appendChild(widget.root);
-activeWidgets.push(widget);
+const fragment =
+document.createDocumentFragment();
 
+nextWidgets.forEach(widget=>{
+fragment.appendChild(widget.root);
+updateWidgetMeta(
+widget.symbol,
+widget.root
+);
+updateWidgetFavoriteUi(
+widget.root,
+widget.symbol
+);
 });
+
+gridEl.appendChild(fragment);
+activeWidgets = nextWidgets;
 
 const chartLoads =
 activeWidgets.map(w=>
