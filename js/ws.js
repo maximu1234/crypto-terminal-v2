@@ -1,7 +1,7 @@
 import {
 getBybitWsUrl,
 rotateBybitWsEndpoint
-} from "./bybit-fetch.js?v=4";
+} from "./bybit-fetch.js?v=5";
 
 let socket = null;
 

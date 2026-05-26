@@ -1,6 +1,6 @@
 import {
 fetchBybit
-} from "./bybit-fetch.js?v=4";
+} from "./bybit-fetch.js?v=5";
 
 let interval = null;
 

@@ -14,6 +14,7 @@ import {
   evaluateAlertsForCandle
 } from "./lib/trigger-alert.js";
 import { handleClientApi } from "./lib/client-api.js";
+import { handleBybitProxy } from "./lib/bybit-proxy.js";
 import {
   ensureTelegramWebhook,
   handleTelegramInfo,
@@ -94,6 +95,10 @@ async function main() {
   const server = http.createServer(async (req, res) => {
 
     try{
+
+    if (await handleBybitProxy(req, res)) {
+      return;
+    }
 
     if (await handleClientApi(req, res)) {
       return;

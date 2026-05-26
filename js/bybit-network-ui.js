@@ -73,8 +73,11 @@ String(detail).toLowerCase();
 
 const desktopHint =
 lower.includes("failed to fetch") ||
-lower.includes("network")
-? " На компьютере часто мешают блокировщик рекламы, «Защита» в Яндексе или антивирус — попробуйте режим инкогнито или другой браузер."
+lower.includes("network") ||
+lower.includes("timed_out") ||
+lower.includes("timeout") ||
+lower.includes("не json")
+? " На компьютере часто мешают блокировщик, «Защита» в Яндексе или антивирус; на телефоне при той же Wi‑Fi их обычно нет — попробуйте инкогнито или Safari/Chrome."
 : "";
 
 messageEl.textContent =

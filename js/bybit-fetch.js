@@ -1,3 +1,7 @@
+import {
+normalizeAlertWorkerBaseUrl
+} from "./alert-worker-url.js?v=1";
+
 /** Публичные REST API Bybit (зеркало — запас при блокировках DNS/региона). */
 export const BYBIT_API_BASES = [
 "https://api.bybit.com",
@@ -144,18 +148,68 @@ msg.includes("network request failed")
 
 }
 
-/**
- * Тот же origin — не блокируется AdGuard / Protect на десктопе.
- */
-async function fetchOneBybitProxy(
-pathQuery,
-timeoutMs
+let cachedWorkerProxyBase;
+
+async function getWorkerProxyBase(){
+
+if(
+cachedWorkerProxyBase !== undefined
+){
+return cachedWorkerProxyBase;
+}
+
+try{
+
+const env =
+await import("./supabase-env.js?v=4");
+cachedWorkerProxyBase =
+normalizeAlertWorkerBaseUrl(
+env.ALERT_WORKER_URL
+);
+
+}catch{
+
+cachedWorkerProxyBase = "";
+
+}
+
+return cachedWorkerProxyBase;
+
+}
+
+async function parseBybitResponse(
+res
 ){
 
-const path =
-normalizePath(pathQuery);
-const url =
-`/api/bybit?path=${encodeURIComponent(path)}`;
+const text =
+await res.text();
+
+try{
+
+return JSON.parse(text);
+
+}catch{
+
+const err =
+new Error(
+res.ok
+? "ответ не JSON"
+: `HTTP ${res.status}`
+);
+
+err.httpStatus = res.status;
+throw err;
+
+}
+
+}
+
+async function fetchOneBybitProxyUrl(
+url,
+pathQuery,
+timeoutMs,
+label
+){
 
 const controller =
 new AbortController();
@@ -179,7 +233,7 @@ cache: "no-store"
 clearTimeout(timer);
 
 const json =
-await res.json();
+await parseBybitResponse(res);
 
 if(
 json.retCode === 0
@@ -188,7 +242,7 @@ markBybitSuccess(0);
 return {
 res,
 json,
-base: "proxy",
+base: label,
 proxied: true
 };
 }
@@ -210,6 +264,65 @@ throw err;
 
 clearTimeout(timer);
 throw err;
+
+}
+
+}
+
+/**
+ * Запасной путь: Railway worker (тот же, что для алертов), затем Vercel /api/bybit.
+ * Vercel часто в регионе, где Bybit отдаёт 403 CloudFront.
+ */
+async function fetchBybitViaProxies(
+pathQuery,
+timeoutMs
+){
+
+const path =
+normalizePath(pathQuery);
+const encoded =
+encodeURIComponent(path);
+let lastErr = null;
+
+const workerBase =
+await getWorkerProxyBase();
+
+if(
+workerBase
+){
+
+try{
+
+return await fetchOneBybitProxyUrl(
+`${workerBase}/bybit?path=${encoded}`,
+path,
+timeoutMs,
+"worker-proxy"
+);
+
+}catch(err){
+
+lastErr = err;
+
+}
+
+}
+
+try{
+
+return await fetchOneBybitProxyUrl(
+`/api/bybit?path=${encoded}`,
+path,
+timeoutMs,
+"vercel-proxy"
+);
+
+}catch(err){
+
+throw (
+lastErr ||
+err
+);
 
 }
 
@@ -337,7 +450,7 @@ if(
 isNetworkFetchError(lastErr)
 ){
 try{
-return await fetchOneBybitProxy(
+return await fetchBybitViaProxies(
 path,
 timeoutMs
 );
@@ -445,7 +558,7 @@ if(
 isNetworkFetchError(lastErr)
 ){
 try{
-return await fetchOneBybitProxy(
+return await fetchBybitViaProxies(
 path,
 timeoutMs
 );
