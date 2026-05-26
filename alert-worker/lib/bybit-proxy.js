@@ -52,7 +52,7 @@ export async function handleBybitProxy(req, res) {
 
       res.writeHead(upstream.status, {
         "Content-Type": "application/json",
-        "Cache-Control": "public, max-age=8"
+        "Cache-Control": "public, max-age=30, stale-while-revalidate=120"
       });
       res.end(body);
       return true;

@@ -1,6 +1,6 @@
 import {
 fetchBybit
-} from "./bybit-fetch.js?v=7";
+} from "./bybit-fetch.js?v=8";
 
 const TWELVE_KEY =
 "d6b45dcb1abf4b3ebe020038e41864fb";
@@ -33,7 +33,7 @@ path,
 {
 sequential: true,
 retries,
-timeoutMs: 14000
+timeoutMs: 10000
 }
 );
 
@@ -195,7 +195,82 @@ const SYMBOLS_CACHE_KEY =
 const SYMBOLS_CACHE_TTL_MS =
 60 * 60 * 1000;
 
+const SYMBOLS_STALE_MAX_MS =
+7 *
+24 *
+60 *
+60 *
+1000;
+
+function readSymbolsCacheRaw(){
+
+try{
+
+const raw =
+localStorage.getItem(SYMBOLS_CACHE_KEY);
+
+if(!raw){
+return null;
+}
+
+const parsed =
+JSON.parse(raw);
+
+if(
+!Array.isArray(parsed?.symbols) ||
+!parsed.symbols.length
+){
+return null;
+}
+
+if(
+Date.now() - Number(parsed.at || 0) >
+SYMBOLS_STALE_MAX_MS
+){
+return null;
+}
+
+return parsed;
+
+}catch{
+
+return null;
+
+}
+
+}
+
+/** Список из localStorage даже если TTL истёк (до 7 суток) — мгновенный UI. */
+export function peekBybitSymbolsCache(){
+
+const parsed =
+readSymbolsCacheRaw();
+
+return parsed?.symbols || null;
+
+}
+
 function readSymbolsCache(){
+
+const parsed =
+readSymbolsCacheRaw();
+
+if(
+!parsed
+){
+return null;
+}
+
+if(
+Date.now() - Number(parsed.at || 0) >
+SYMBOLS_CACHE_TTL_MS
+){
+return null;
+}
+
+return parsed.symbols;
+
+}
 
 try{
 
@@ -273,7 +348,7 @@ const { json } =
 await fetchBybit(
 path,
 {
-timeoutMs: 12000,
+timeoutMs: 10000,
 retries: 1
 }
 );
@@ -406,6 +481,39 @@ err?.message || err
 });
 
 return cached;
+
+}
+
+const stale =
+options.forceNetwork
+? null
+: peekBybitSymbolsCache();
+
+if(
+stale?.length
+){
+
+void loadBybitSymbolsFromNetwork()
+.then(symbols=>{
+
+window.dispatchEvent(
+new CustomEvent(
+"bybit-symbols-updated",
+{
+detail: { symbols }
+}
+)
+);
+
+})
+.catch(err=>{
+console.warn(
+"Bybit symbols refresh:",
+err?.message || err
+);
+});
+
+return stale;
 
 }
 

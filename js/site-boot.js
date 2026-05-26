@@ -30,8 +30,10 @@ initBybitNetworkUi
 } from "./bybit-network-ui.js?v=2";
 
 import {
-resetBybitEndpoints
-} from "./bybit-fetch.js?v=7";
+resetBybitEndpoints,
+preloadBybitProxyConfig,
+warmBybitWorkerProxy
+} from "./bybit-fetch.js?v=8";
 
 import {
 initMobileRecovery
@@ -42,6 +44,8 @@ bindSiteMobileNav
 } from "./site-mobile-nav.js?v=3";
 
 initBybitNetworkUi();
+preloadBybitProxyConfig();
+warmBybitWorkerProxy();
 initMobileRecovery();
 
 if(

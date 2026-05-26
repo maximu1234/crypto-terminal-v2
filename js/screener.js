@@ -1,7 +1,8 @@
 import {
 loadBybitHistory,
-loadBybitSymbols
-} from "./api.js?v=18";
+loadBybitSymbols,
+peekBybitSymbolsCache
+} from "./api.js?v=19";
 
 import {
 createScreenerChart,
@@ -1638,6 +1639,27 @@ widget.symbol
 
 });
 
+function mapSymbolList(list){
+
+return list.map(x=>
+typeof x === "string"
+? x
+: x.symbol
+).filter(Boolean);
+
+}
+
+function refreshWidgetTickerMeta(){
+
+activeWidgets.forEach(widget=>{
+updateWidgetMeta(
+widget.symbol,
+widget.root
+);
+});
+
+}
+
 async function loadScreenerMarketData(){
 
 setStatus(
@@ -1645,19 +1667,30 @@ setStatus(
 true
 );
 
+const instant =
+peekBybitSymbolsCache();
+
+if(
+instant?.length
+){
+screenerMarketLoadFailed = false;
+allSymbols =
+mapSymbolList(instant);
+}
+
+const tickersPromise =
+fetchTickersInto(tickerMap).then(()=>{
+refreshWidgetTickerMeta();
+});
+
 const list =
 await loadBybitSymbols();
 
 screenerMarketLoadFailed = false;
-
 allSymbols =
-list.map(x=>
-typeof x === "string"
-? x
-: x.symbol
-).filter(Boolean);
+mapSymbolList(list);
 
-await fetchTickersInto(tickerMap);
+await tickersPromise;
 
 }
 
@@ -1681,13 +1714,10 @@ forceNetwork: true
 screenerMarketLoadFailed = false;
 
 allSymbols =
-list.map(x=>
-typeof x === "string"
-? x
-: x.symbol
-).filter(Boolean);
+mapSymbolList(list);
 
 await fetchTickersInto(tickerMap);
+refreshWidgetTickerMeta();
 
 await renderPage();
 
@@ -1776,6 +1806,31 @@ applySavedUi();
 favorites =
 loadFavoritesGroups();
 
+const instantSymbols =
+peekBybitSymbolsCache();
+
+if(
+instantSymbols?.length
+){
+screenerMarketLoadFailed = false;
+allSymbols =
+mapSymbolList(instantSymbols);
+
+void withTimeout(
+loadScreenerMarketData(),
+45000,
+"screener market"
+).catch(err=>{
+
+console.error(
+"Screener market refresh:",
+err
+);
+
+});
+
+}else{
+
 try{
 
 await withTimeout(
@@ -1797,6 +1852,8 @@ allSymbols = [];
 void import("./bybit-network-ui.js?v=2").then(m=>{
 m.showBybitNetworkIssue(err);
 });
+
+}
 
 }
 

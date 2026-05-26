@@ -13,8 +13,14 @@ export const BYBIT_WS_URLS = [
 "wss://stream.bytick.com/v5/public/linear"
 ];
 
+const DIRECT_OK_KEY = "bybit_direct_ok";
+const DIRECT_BAD_KEY = "bybit_direct_bad";
+
 let activeApiBaseIndex = 0;
 let activeWsIndex = 0;
+
+let cachedWorkerProxyBase;
+let workerProxyConfigPromise = null;
 
 function sleep(ms){
 return new Promise(resolve=>setTimeout(resolve, ms));
@@ -37,6 +43,82 @@ function normalizePath(pathQuery){
 return pathQuery.startsWith("/")
 ? pathQuery
 : `/${pathQuery}`;
+
+}
+
+function isChromiumBrowser(){
+
+const ua =
+navigator.userAgent || "";
+
+if(
+/Firefox/i.test(ua)
+){
+return false;
+}
+
+if(
+/iPhone|iPad|iPod/i.test(ua)
+){
+return false;
+}
+
+return /Chrome|Chromium|CriOS|YaBrowser|Edg\/|OPR\/|Brave/i.test(ua);
+
+}
+
+function shouldSkipDirectBybit(){
+
+try{
+
+if(
+sessionStorage.getItem(DIRECT_OK_KEY) === "1"
+){
+return false;
+}
+
+if(
+sessionStorage.getItem(DIRECT_BAD_KEY) === "1"
+){
+return true;
+}
+
+}catch{
+/* ignore */
+}
+
+return isChromiumBrowser();
+
+}
+
+function noteDirectBybitOk(){
+
+try{
+
+sessionStorage.setItem(
+DIRECT_OK_KEY,
+"1"
+);
+sessionStorage.removeItem(DIRECT_BAD_KEY);
+
+}catch{
+/* ignore */
+}
+
+}
+
+function noteDirectBybitBad(){
+
+try{
+
+sessionStorage.setItem(
+DIRECT_BAD_KEY,
+"1"
+);
+
+}catch{
+/* ignore */
+}
 
 }
 
@@ -83,11 +165,69 @@ export function resetBybitEndpoints(){
 activeApiBaseIndex = 0;
 activeWsIndex = 0;
 
+try{
+sessionStorage.removeItem(DIRECT_BAD_KEY);
+}catch{
+/* ignore */
+}
+
 window.dispatchEvent(
 new CustomEvent(
 "bybit-ws-reset"
 )
 );
+
+}
+
+function loadWorkerProxyBaseFromEnv(){
+
+return import("./supabase-env.js?v=4")
+.then(env=>{
+return normalizeAlertWorkerBaseUrl(
+env.ALERT_WORKER_URL
+);
+})
+.catch(()=>"");
+
+}
+
+/** Старт загрузки ALERT_WORKER_URL до первого fetchBybit. */
+export function preloadBybitProxyConfig(){
+
+if(
+!workerProxyConfigPromise
+){
+workerProxyConfigPromise =
+loadWorkerProxyBaseFromEnv();
+}
+
+return workerProxyConfigPromise;
+
+}
+
+/** Прогрев TLS/DNS к Railway (после preload). */
+export function warmBybitWorkerProxy(){
+
+void preloadBybitProxyConfig().then(base=>{
+
+if(
+!base
+){
+return;
+}
+
+const path =
+encodeURIComponent("/v5/market/time");
+
+fetch(
+`${base}/bybit?path=${path}`,
+{
+cache: "no-store",
+priority: "low"
+}
+).catch(()=>{});
+
+});
 
 }
 
@@ -143,12 +283,12 @@ err?.name === "AbortError" ||
 msg.includes("failed to fetch") ||
 msg.includes("networkerror") ||
 msg.includes("load failed") ||
-msg.includes("network request failed")
+msg.includes("network request failed") ||
+msg.includes("timed_out") ||
+msg.includes("timeout")
 );
 
 }
-
-let cachedWorkerProxyBase;
 
 async function getWorkerProxyBase(){
 
@@ -158,20 +298,8 @@ cachedWorkerProxyBase !== undefined
 return cachedWorkerProxyBase;
 }
 
-try{
-
-const env =
-await import("./supabase-env.js?v=4");
 cachedWorkerProxyBase =
-normalizeAlertWorkerBaseUrl(
-env.ALERT_WORKER_URL
-);
-
-}catch{
-
-cachedWorkerProxyBase = "";
-
-}
+await preloadBybitProxyConfig();
 
 return cachedWorkerProxyBase;
 
@@ -269,10 +397,6 @@ throw err;
 
 }
 
-/**
- * Запасной путь: Railway worker (тот же, что для алертов), затем Vercel /api/bybit.
- * Vercel часто в регионе, где Bybit отдаёт 403 CloudFront.
- */
 async function fetchBybitViaProxies(
 pathQuery,
 timeoutMs
@@ -375,11 +499,12 @@ cache: "no-store"
 clearTimeout(timer);
 
 const json =
-await res.json();
+await parseBybitResponse(res);
 
 if(
 json.retCode === 0
 ){
+noteDirectBybitOk();
 markBybitSuccess(baseIndex);
 return {
 res,
@@ -404,6 +529,13 @@ throw err;
 }catch(err){
 
 clearTimeout(timer);
+
+if(
+isNetworkFetchError(err)
+){
+noteDirectBybitBad();
+}
+
 throw err;
 
 }
@@ -412,7 +544,8 @@ throw err;
 
 async function buildBybitRaceTasks(
 path,
-timeoutMs
+timeoutMs,
+options = {}
 ){
 
 const encoded =
@@ -421,23 +554,30 @@ encodeURIComponent(path);
 const workerBase =
 await getWorkerProxyBase();
 
-const directTimeoutMs =
-workerBase
-? Math.min(
-5000,
-timeoutMs
-)
-: timeoutMs;
-
-const tasks =
-BYBIT_API_BASES.map(
-(base, index)=>
-fetchOneBybitUrl(
-`${base}${path}`,
-index,
-directTimeoutMs
-)
+const proxyOnly =
+options.proxyOnly === true ||
+(
+workerBase &&
+shouldSkipDirectBybit()
 );
+
+if(
+proxyOnly &&
+workerBase
+){
+
+return [
+fetchOneBybitProxyUrl(
+`${workerBase}/bybit?path=${encoded}`,
+path,
+timeoutMs,
+"worker-proxy"
+)
+];
+
+}
+
+const tasks = [];
 
 if(
 workerBase
@@ -454,13 +594,30 @@ timeoutMs,
 
 }
 
+const directTimeoutMs =
+workerBase
+? Math.min(
+1800,
+timeoutMs
+)
+: timeoutMs;
+
+BYBIT_API_BASES.forEach(
+(base, index)=>{
+tasks.push(
+fetchOneBybitUrl(
+`${base}${path}`,
+index,
+directTimeoutMs
+)
+);
+}
+);
+
 return tasks;
 
 }
 
-/**
- * Параллельно: Bybit + worker /bybit (EU) — не ждём 12 с таймаута прямого API в Chrome/Яндексе.
- */
 async function fetchBybitRace(
 pathQuery,
 options = {}
@@ -470,12 +627,13 @@ const path =
 normalizePath(pathQuery);
 const timeoutMs =
 options.timeoutMs ??
-12000;
+10000;
 
 const tasks =
 await buildBybitRaceTasks(
 path,
-timeoutMs
+timeoutMs,
+options
 );
 
 try{
@@ -517,9 +675,6 @@ new Error(
 
 }
 
-/**
- * По очереди — для kline, чтобы не дублировать rate limit на всех хостах сразу.
- */
 async function fetchBybitSequential(
 pathQuery,
 options = {}
@@ -530,7 +685,7 @@ options.retries ??
 2;
 const timeoutMs =
 options.timeoutMs ??
-12000;
+10000;
 const path =
 normalizePath(pathQuery);
 
@@ -560,6 +715,10 @@ lastErr = err;
 
 }
 
+if(
+!shouldSkipDirectBybit()
+){
+
 for(
 let basePass = 0;
 basePass <
@@ -583,7 +742,10 @@ try{
 return await fetchOneBybitUrl(
 url,
 baseIndex,
+Math.min(
+4000,
 timeoutMs
+)
 );
 
 }catch(err){
@@ -622,9 +784,16 @@ rotateBybitApiBase();
 
 }
 
+}
+
 if(
-isNetworkFetchError(lastErr)
+lastErr &&
+!isNetworkFetchError(lastErr)
 ){
+markBybitFailure(lastErr);
+throw lastErr;
+}
+
 try{
 return await fetchBybitViaProxies(
 path,
@@ -634,22 +803,9 @@ timeoutMs
 markBybitFailure(proxyErr);
 throw proxyErr;
 }
-}
-
-markBybitFailure(lastErr);
-
-throw (
-lastErr ||
-new Error(
-"Bybit API недоступен"
-)
-);
 
 }
 
-/**
- * GET к Bybit v5. По умолчанию — race по хостам; sequential: true — для свечей.
- */
 export async function fetchBybit(
 pathQuery,
 options = {}
