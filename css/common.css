@@ -559,3 +559,17 @@ border-color:#22c55e;
 background:#9ca3af;
 border-color:#9ca3af;
 }
+
+@media (max-width:640px){
+
+.header-settings-dropdown.header-settings-dropdown--portaled{
+display:none !important;
+visibility:hidden !important;
+pointer-events:none !important;
+}
+
+#header .header-settings-wrap{
+z-index:auto;
+}
+
+}

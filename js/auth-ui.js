@@ -306,6 +306,30 @@ if(
 return;
 }
 
+if(isMobileNavViewport()){
+
+restoreDropdownHome(
+dropdown,
+wrap
+);
+clearPortaledPosition(dropdown);
+dropdown.classList.remove(
+"header-settings-dropdown--portaled"
+);
+
+if(
+dropdown.classList.contains("hidden")
+){
+return;
+}
+
+dropdown.classList.add(
+"header-settings-dropdown--inline"
+);
+return;
+
+}
+
 if(
 dropdown.classList.contains("hidden")
 ){
@@ -575,6 +599,29 @@ closeSettingsDropdown();
 });
 
 settingsDropdownReady = true;
+
+if(isMobileNavViewport()){
+
+const drop =
+document.getElementById("header-settings-dropdown");
+const shell =
+document.getElementById("header-settings-wrap");
+
+if(
+drop &&
+shell
+){
+restoreDropdownHome(
+drop,
+shell
+);
+clearPortaledPosition(drop);
+drop.classList.remove(
+"header-settings-dropdown--portaled"
+);
+}
+
+}
 
 function onSettingsViewportChange(){
 

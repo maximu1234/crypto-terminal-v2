@@ -2,6 +2,11 @@
  * Выпадающее меню в шапке для простых страниц (алерты, листинги, калькулятор).
  */
 
+import {
+syncMobileNavDrawerMount,
+bindMobileNavDrawerLinks
+} from "./mobile-nav-drawer.js?v=1";
+
 export function bindSiteMobileNav(
 config = {}
 ){
@@ -44,6 +49,14 @@ if(
 return;
 }
 
+const header =
+panel?.closest(
+".screener-page-header"
+) ||
+document.querySelector(
+".screener-page-header"
+);
+
 function closeNav(){
 
 document.body.classList.remove(
@@ -63,7 +76,7 @@ toggle.setAttribute(
 
 function openNav(){
 
-void import("./auth-ui.js?v=17").then(m=>{
+void import("./auth-ui.js?v=18").then(m=>{
 m.closeCloudSettingsDropdown?.();
 }).catch(()=>{});
 
@@ -81,6 +94,33 @@ toggle.setAttribute(
 );
 
 }
+
+function syncNavDrawer(){
+
+syncMobileNavDrawerMount({
+header,
+panel,
+backdrop,
+insertAfter: header?.querySelector(
+".site-mobile-bar, .screener-mobile-bar"
+)
+});
+
+bindMobileNavDrawerLinks(
+panel,
+closeNav
+);
+
+}
+
+syncNavDrawer();
+
+window.matchMedia(
+"(max-width: 640px)"
+).addEventListener(
+"change",
+syncNavDrawer
+);
 
 toggle.addEventListener(
 "click",
@@ -103,17 +143,6 @@ backdrop.addEventListener(
 "click",
 closeNav
 );
-
-panel?.querySelectorAll(
-"a[href]"
-).forEach(link=>{
-
-link.addEventListener(
-"click",
-closeNav
-);
-
-});
 
 document.addEventListener(
 "keydown",

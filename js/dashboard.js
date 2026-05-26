@@ -45,7 +45,7 @@ import {
 initTerminalPageUi,
 isTerminalMobile,
 TERMINAL_MOBILE_MQ
-} from "./terminal-page.js?v=2";
+} from "./terminal-page.js?v=3";
 
 const dashboard =
 document.getElementById("dashboard");

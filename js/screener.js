@@ -36,12 +36,17 @@ migrateFavorites
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=17";
+} from "./auth-ui.js?v=18";
 
 import {
 ensureSettled,
 withTimeout
 } from "./async-timeout.js?v=1";
+
+import {
+syncMobileNavDrawerMount,
+bindMobileNavDrawerLinks
+} from "./mobile-nav-drawer.js?v=1";
 
 import {
 persistFavoritesToCloud,
@@ -1163,7 +1168,7 @@ toggle?.setAttribute(
 
 function openScreenerNav(){
 
-void import("./auth-ui.js?v=17").then(m=>{
+void import("./auth-ui.js?v=18").then(m=>{
 m.closeCloudSettingsDropdown?.();
 }).catch(()=>{});
 
@@ -1232,7 +1237,25 @@ btn.dataset.tf === currentTF
 
 }
 
+function syncScreenerNavDrawer(){
+
+syncMobileNavDrawerMount({
+header: document.getElementById("header"),
+panel: document.getElementById("screener-nav-panel"),
+backdrop: document.getElementById("screener-nav-backdrop"),
+insertAfter: document.getElementById("screener-mobile-bar")
+});
+
+bindMobileNavDrawerLinks(
+document.getElementById("screener-nav-panel"),
+closeScreenerNav
+);
+
+}
+
 function bindMobileControls(){
+
+syncScreenerNavDrawer();
 
 const sortTrigger =
 document.getElementById(
@@ -1394,6 +1417,7 @@ closeScreenerMobilePickers();
 const onMobileMqChange =
 ()=>{
 
+syncScreenerNavDrawer();
 clampPage();
 applySavedUi();
 syncMobileControlLabels();

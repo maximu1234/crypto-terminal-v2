@@ -353,6 +353,13 @@ flex-shrink:0;
 .screener-page-header > .menu:not(.screener-nav-panel),
 .screener-page-header > .screener-header-desktop{
 display:none !important;
+visibility:hidden !important;
+pointer-events:none !important;
+position:absolute !important;
+width:0 !important;
+height:0 !important;
+overflow:hidden !important;
+clip:rect(0,0,0,0) !important;
 }
 
 .screener-mobile-bar{
@@ -450,10 +457,11 @@ linear-gradient(#fff,#fff) 0 100% / 100% 3px no-repeat;
 border-radius:2px;
 }
 
-.screener-nav-backdrop{
+.screener-nav-backdrop,
+#screener-nav-backdrop{
 position:fixed;
 inset:0;
-z-index:10010;
+z-index:10020;
 background:rgba(0,0,0,.55);
 }
 
@@ -465,13 +473,30 @@ body.screener-nav-open{
 overflow:hidden;
 }
 
-.screener-page-header .screener-nav-panel{
-display:flex !important;
+.screener-page-header{
+position:relative;
+z-index:10030;
+overflow:hidden;
+isolation:isolate;
+}
+
+.screener-mobile-bar{
+position:relative;
+z-index:2;
+}
+
+#screener-nav-toggle{
+position:relative;
+z-index:3;
+}
+
+#screener-nav-panel{
+display:none !important;
 position:fixed;
 top:0;
 right:0;
 bottom:0;
-z-index:10015;
+z-index:10025;
 width:min(280px, 86vw);
 flex-direction:column;
 align-items:stretch;
@@ -481,18 +506,17 @@ padding:max(16px, env(safe-area-inset-top)) 16px 24px;
 background:#0f172a;
 border-left:1px solid #1f2937;
 box-shadow:-8px 0 32px rgba(0,0,0,.45);
-transform:translateX(100%);
-transition:transform 0.22s ease-out;
 pointer-events:none;
-visibility:hidden;
+-webkit-overflow-scrolling:touch;
+overflow-y:auto;
 }
 
-body.screener-nav-open .screener-page-header .screener-nav-panel{
-transform:translateX(0);
+body.screener-nav-open #screener-nav-panel{
+display:flex !important;
 pointer-events:auto;
-visibility:visible;
 }
 
+#screener-nav-panel a,
 .screener-page-header .screener-nav-panel a{
 display:block;
 padding:14px 12px;
@@ -500,6 +524,7 @@ font-size:16px;
 border-radius:8px;
 }
 
+#screener-nav-panel .header-settings-wrap,
 .screener-page-header .screener-nav-panel .header-settings-wrap{
 display:block;
 width:100%;
@@ -510,6 +535,7 @@ align-self:stretch;
 z-index:auto;
 }
 
+#screener-nav-panel .header-settings-btn,
 .screener-page-header .screener-nav-panel .header-settings-btn{
 display:inline-flex;
 width:auto;
@@ -522,11 +548,14 @@ padding:10px 12px;
 margin:0;
 }
 
+#screener-nav-panel .header-settings-icon,
 .screener-page-header .screener-nav-panel .header-settings-icon{
 flex-shrink:0;
 }
 
 /* fixed ломается из-за transform у drawer — форма входа внутри меню */
+#screener-nav-panel .header-settings-dropdown,
+#screener-nav-panel .header-settings-dropdown--inline,
 .screener-page-header .screener-nav-panel .header-settings-dropdown,
 .screener-page-header .screener-nav-panel .header-settings-dropdown--inline{
 position:relative !important;
@@ -540,23 +569,28 @@ margin-top:10px;
 box-shadow:none;
 }
 
+#screener-nav-panel .header-settings-section-title,
 .screener-page-header .screener-nav-panel .header-settings-section-title{
 margin-bottom:8px;
 }
 
+#screener-nav-panel .cloud-auth-wrap--panel,
 .screener-page-header .screener-nav-panel .cloud-auth-wrap--panel{
 max-width:none;
 }
 
+#screener-nav-panel .cloud-auth-wrap--panel .cloud-auth-logged-out,
 .screener-page-header .screener-nav-panel .cloud-auth-wrap--panel .cloud-auth-logged-out{
 width:100%;
 }
 
+#screener-nav-panel .cloud-auth-email,
 .screener-page-header .screener-nav-panel .cloud-auth-email{
 width:100%;
 box-sizing:border-box;
 }
 
+#screener-nav-panel .cloud-auth-send,
 .screener-page-header .screener-nav-panel .cloud-auth-send{
 width:100%;
 margin-top:8px;

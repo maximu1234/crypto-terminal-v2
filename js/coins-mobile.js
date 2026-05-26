@@ -158,7 +158,7 @@ document.getElementById(
 
 function openCoinsNav(){
 
-void import("./auth-ui.js?v=17").then(m=>{
+void import("./auth-ui.js?v=18").then(m=>{
 m.closeCloudSettingsDropdown?.();
 }).catch(()=>{});
 
@@ -193,6 +193,14 @@ const backdrop =
 document.getElementById(
 "coins-nav-backdrop"
 );
+const panel =
+document.getElementById(
+"coins-nav-panel"
+);
+const header =
+document.querySelector(
+".coins-page-header"
+);
 
 if(
 !toggle ||
@@ -200,6 +208,40 @@ if(
 ){
 return;
 }
+
+void import("./mobile-nav-drawer.js?v=1").then(m=>{
+
+m.syncMobileNavDrawerMount({
+header,
+panel,
+backdrop,
+insertAfter: document.querySelector(
+".coins-mobile-bar"
+)
+});
+
+m.bindMobileNavDrawerLinks(
+panel,
+closeCoinsNav
+);
+
+window.matchMedia(
+"(max-width: 640px)"
+).addEventListener(
+"change",
+()=>{
+m.syncMobileNavDrawerMount({
+header,
+panel,
+backdrop,
+insertAfter: document.querySelector(
+".coins-mobile-bar"
+)
+});
+}
+);
+
+}).catch(()=>{});
 
 toggle.addEventListener(
 "click",

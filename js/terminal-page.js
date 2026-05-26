@@ -32,7 +32,7 @@ document.getElementById(
 
 function openTerminalNav(){
 
-void import("./auth-ui.js?v=17").then(m=>{
+void import("./auth-ui.js?v=18").then(m=>{
 m.closeCloudSettingsDropdown?.();
 }).catch(()=>{});
 
@@ -65,6 +65,14 @@ const backdrop =
 document.getElementById(
 "screener-nav-backdrop"
 );
+const panel =
+document.getElementById(
+"screener-nav-panel"
+);
+const header =
+document.getElementById(
+"header"
+);
 
 if(
 !toggle ||
@@ -72,6 +80,40 @@ if(
 ){
 return;
 }
+
+void import("./mobile-nav-drawer.js?v=1").then(m=>{
+
+m.syncMobileNavDrawerMount({
+header,
+panel,
+backdrop,
+insertAfter: document.getElementById(
+"screener-mobile-bar"
+)
+});
+
+m.bindMobileNavDrawerLinks(
+panel,
+closeTerminalNav
+);
+
+window.matchMedia(
+"(max-width: 640px)"
+).addEventListener(
+"change",
+()=>{
+m.syncMobileNavDrawerMount({
+header,
+panel,
+backdrop,
+insertAfter: document.getElementById(
+"screener-mobile-bar"
+)
+});
+}
+);
+
+}).catch(()=>{});
 
 toggle.addEventListener(
 "click",

@@ -81,7 +81,7 @@ import {
 initCoinsMobileUi,
 isCoinsMobile,
 syncCoinsTfLabel
-} from "./coins-mobile.js?v=2";
+} from "./coins-mobile.js?v=3";
 
 let currentDataset = "crypto";
 let currentTF = "60";

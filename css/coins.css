@@ -218,12 +218,12 @@ display:block;
 }
 
 body.coins-page #coins-nav-panel{
-display:flex !important;
+display:none !important;
 position:fixed;
 top:0;
 right:0;
 bottom:0;
-z-index:10015;
+z-index:10025;
 width:min(280px, 86vw);
 flex-direction:column;
 align-items:stretch;
@@ -232,16 +232,14 @@ padding:max(16px, env(safe-area-inset-top)) 16px 24px;
 background:#0f172a;
 border-left:1px solid #1f2937;
 box-shadow:-8px 0 32px rgba(0,0,0,.45);
-transform:translateX(100%);
-transition:transform 0.22s ease-out;
 pointer-events:none;
-visibility:hidden;
+-webkit-overflow-scrolling:touch;
+overflow-y:auto;
 }
 
 body.coins-page.coins-nav-open #coins-nav-panel{
-transform:translateX(0);
+display:flex !important;
 pointer-events:auto;
-visibility:visible;
 }
 
 body.coins-page #coins-nav-panel a{
