@@ -510,6 +510,42 @@ margin:0;
 flex-shrink:0;
 }
 
+/* fixed ломается из-за transform у drawer — форма входа внутри меню */
+.screener-page-header .screener-nav-panel .header-settings-dropdown,
+.screener-page-header .screener-nav-panel .header-settings-dropdown--inline{
+position:relative !important;
+top:auto !important;
+right:auto !important;
+left:auto !important;
+width:100%;
+max-width:none;
+min-width:0;
+margin-top:10px;
+box-shadow:none;
+}
+
+.screener-page-header .screener-nav-panel .header-settings-section-title{
+margin-bottom:8px;
+}
+
+.screener-page-header .screener-nav-panel .cloud-auth-wrap--panel{
+max-width:none;
+}
+
+.screener-page-header .screener-nav-panel .cloud-auth-wrap--panel .cloud-auth-logged-out{
+width:100%;
+}
+
+.screener-page-header .screener-nav-panel .cloud-auth-email{
+width:100%;
+box-sizing:border-box;
+}
+
+.screener-page-header .screener-nav-panel .cloud-auth-send{
+width:100%;
+margin-top:8px;
+}
+
 #screener-grid.grid-mobile-2{
 grid-template-columns:1fr;
 grid-template-rows:1fr 1fr;

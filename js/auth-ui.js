@@ -89,6 +89,30 @@ btn.setAttribute(
 
 const placeDropdown = ()=>{
 
+const inMobileNav =
+wrap.closest(
+".screener-nav-panel"
+) &&
+window.matchMedia(
+"(max-width: 640px)"
+).matches;
+
+if(inMobileNav){
+
+dropdown.style.top = "";
+dropdown.style.right = "";
+dropdown.style.left = "";
+dropdown.classList.add(
+"header-settings-dropdown--inline"
+);
+return;
+
+}
+
+dropdown.classList.remove(
+"header-settings-dropdown--inline"
+);
+
 const rect =
 btn.getBoundingClientRect();
 
@@ -101,6 +125,27 @@ window.innerWidth - rect.right
 )}px`;
 
 dropdown.style.left = "auto";
+
+const dropW =
+dropdown.offsetWidth ||
+280;
+const margin = 12;
+let right =
+window.innerWidth - rect.right;
+
+if(
+right + dropW >
+window.innerWidth - margin
+){
+right =
+Math.max(
+margin,
+window.innerWidth - dropW - margin
+);
+}
+
+dropdown.style.right =
+`${Math.round(right)}px`;
 
 };
 
