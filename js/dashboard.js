@@ -30,7 +30,7 @@ initWidgetDrawToolsDropdown,
 wireWidgetDrawToolMenu,
 closeAllWidgetDrawToolsMenus,
 resetWidgetDrawToolsMenus
-} from "./dashboard-draw-ui.js?v=9";
+} from "./dashboard-draw-ui.js?v=10";
 
 import {
 preloadTradingSymbols,

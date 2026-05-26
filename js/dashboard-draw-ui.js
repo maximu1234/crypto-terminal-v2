@@ -196,38 +196,6 @@ widgetDrawMenuClosers.add(
 close
 );
 
-const onMenuToolPicked = e=>{
-
-const btn =
-e.target.closest(
-"[data-draw-tool]"
-);
-
-if(
-!btn ||
-btn.closest(
-".draw-tool-clear-all"
-)
-){
-return;
-}
-
-close();
-
-};
-
-menu.addEventListener(
-"pointerup",
-onMenuToolPicked,
-{ capture:true }
-);
-
-menu.addEventListener(
-"click",
-onMenuToolPicked,
-{ capture:true }
-);
-
 }
 
 export function wireWidgetDrawToolMenu(
@@ -349,32 +317,11 @@ runPickTool(
 e
 )
 ){
+e.preventDefault();
 e.stopPropagation();
 }
 
 }
-);
-
-menu.addEventListener(
-"pointerup",
-e=>{
-
-if(
-!pickTool
-){
-return;
-}
-
-if(
-runPickTool(
-e
-)
-){
-e.stopPropagation();
-}
-
-},
-{ capture:true }
 );
 
 }

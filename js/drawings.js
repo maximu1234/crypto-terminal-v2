@@ -24,7 +24,7 @@ TRASH_ICON_SVG
 
 import {
 closeAllWidgetDrawToolsMenus
-} from "./dashboard-draw-ui.js?v=9";
+} from "./dashboard-draw-ui.js?v=10";
 
 import {
 calcPositionSizing,
