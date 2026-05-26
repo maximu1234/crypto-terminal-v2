@@ -63,17 +63,26 @@ path.endsWith("/terminal")
 let settingsDropdownReady = false;
 let refreshSettingsAuthUi = ()=>{};
 
+const MOBILE_NAV_MQ =
+window.matchMedia(
+"(max-width: 640px)"
+);
+
+function isMobileNavViewport(){
+
+return MOBILE_NAV_MQ.matches;
+
+}
+
 function isSettingsInlineMode(
 wrap
 ){
 
 return !!(
+isMobileNavViewport() &&
 wrap?.closest(
-".screener-nav-panel"
-) &&
-window.matchMedia(
-"(max-width: 640px)"
-).matches
+".screener-nav-panel, #coins-nav-panel"
+)
 );
 
 }
@@ -170,6 +179,7 @@ wrap
 
 if(
 !wrap ||
+isMobileNavViewport() ||
 isSettingsInlineMode(wrap)
 ){
 return false;
@@ -291,9 +301,24 @@ document.getElementById("header-settings-wrap");
 if(
 !btn ||
 !dropdown ||
-!wrap ||
+!wrap
+){
+return;
+}
+
+if(
 dropdown.classList.contains("hidden")
 ){
+if(
+dropdown.parentElement === document.body
+){
+restoreDropdownHome(
+dropdown,
+wrap
+);
+clearPortaledPosition(dropdown);
+}
+
 return;
 }
 
@@ -367,7 +392,7 @@ syncSettingsDropdownPlacement();
 
 }
 
-function closeSettingsDropdown(){
+export function closeCloudSettingsDropdown(){
 
 const btn =
 document.getElementById("header-settings-btn");
@@ -384,6 +409,7 @@ return;
 }
 
 dropdown.classList.add("hidden");
+clearPortaledPosition(dropdown);
 
 if(wrap){
 restoreDropdownHome(
@@ -396,6 +422,12 @@ btn.setAttribute(
 "aria-expanded",
 "false"
 );
+
+}
+
+function closeSettingsDropdown(){
+
+closeCloudSettingsDropdown();
 
 }
 
@@ -544,27 +576,77 @@ closeSettingsDropdown();
 
 settingsDropdownReady = true;
 
-window.addEventListener(
-"resize",
-()=>{
+function onSettingsViewportChange(){
+
 const drop =
 document.getElementById("header-settings-dropdown");
-const gear =
-document.getElementById("header-settings-btn");
 const shell =
 document.getElementById("header-settings-wrap");
 
 if(
-drop &&
-gear &&
-shell &&
+!drop ||
+!shell
+){
+return;
+}
+
+if(
+isMobileNavViewport()
+){
+if(
+drop.parentElement === document.body
+){
+restoreDropdownHome(
+drop,
+shell
+);
+clearPortaledPosition(drop);
+}
+
+if(
+drop.classList.contains("hidden")
+){
+return;
+}
+
+drop.classList.remove(
+"header-settings-dropdown--portaled"
+);
+drop.classList.add(
+"header-settings-dropdown--inline"
+);
+clearPortaledPosition(drop);
+return;
+}
+
+if(
 !drop.classList.contains("hidden")
 ){
 syncSettingsDropdownPlacement();
 }
-},
+
+}
+
+window.addEventListener(
+"resize",
+onSettingsViewportChange,
 { passive: true }
 );
+
+if(
+typeof MOBILE_NAV_MQ.addEventListener === "function"
+){
+MOBILE_NAV_MQ.addEventListener(
+"change",
+onSettingsViewportChange
+);
+}else if(
+typeof MOBILE_NAV_MQ.addListener === "function"
+){
+MOBILE_NAV_MQ.addListener(
+onSettingsViewportChange
+);
+}
 
 }
 

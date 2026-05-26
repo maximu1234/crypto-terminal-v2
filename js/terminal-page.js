@@ -32,6 +32,10 @@ document.getElementById(
 
 function openTerminalNav(){
 
+void import("./auth-ui.js?v=17").then(m=>{
+m.closeCloudSettingsDropdown?.();
+}).catch(()=>{});
+
 document.body.classList.add(
 "screener-nav-open"
 );

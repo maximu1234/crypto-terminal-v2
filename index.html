@@ -11,7 +11,7 @@
 <title>Главная — Multichart</title>
 
 <link rel="stylesheet" href="css/common.css?v=15">
-<link rel="stylesheet" href="css/screener.css?v=19">
+<link rel="stylesheet" href="css/screener.css?v=20">
 
 </head>
 
@@ -112,11 +112,11 @@
 
 import { loadLightweightCharts } from "./js/charts-lib-boot.js";
 
-import("./js/site-boot.js?v=62");
+import("./js/site-boot.js?v=63");
 
 loadLightweightCharts().then(async ()=>{
 
-await import("./js/screener.js?v=51");
+await import("./js/screener.js?v=52");
 
 }).catch(err=>{
 

@@ -4,7 +4,7 @@ initAlertMonitor
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=16";
+} from "./auth-ui.js?v=17";
 
 import {
 initAlertsCloudSync,
@@ -39,7 +39,7 @@ initMobileRecovery
 
 import {
 bindSiteMobileNav
-} from "./site-mobile-nav.js?v=1";
+} from "./site-mobile-nav.js?v=2";
 
 initBybitNetworkUi();
 initMobileRecovery();

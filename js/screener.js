@@ -36,7 +36,7 @@ migrateFavorites
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=16";
+} from "./auth-ui.js?v=17";
 
 import {
 ensureSettled,
@@ -1162,6 +1162,10 @@ toggle?.setAttribute(
 }
 
 function openScreenerNav(){
+
+void import("./auth-ui.js?v=17").then(m=>{
+m.closeCloudSettingsDropdown?.();
+}).catch(()=>{});
 
 document.body.classList.add(
 "screener-nav-open"

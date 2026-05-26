@@ -25,7 +25,7 @@ font-size:17px;
 flex-shrink:0;
 }
 
-body.site-nav-page .screener-page-header > .menu,
+body.site-nav-page .screener-page-header > .menu:not(.screener-nav-panel),
 body.site-nav-page .screener-page-header > .screener-header-desktop{
 display:none !important;
 }
@@ -121,6 +121,7 @@ margin-top:12px;
 padding-top:12px;
 border-top:1px solid #1f2937;
 align-self:stretch;
+z-index:auto;
 }
 
 body.site-nav-page .screener-page-header .screener-nav-panel .header-settings-btn{

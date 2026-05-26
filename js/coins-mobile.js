@@ -158,6 +158,10 @@ document.getElementById(
 
 function openCoinsNav(){
 
+void import("./auth-ui.js?v=17").then(m=>{
+m.closeCloudSettingsDropdown?.();
+}).catch(()=>{});
+
 document.body.classList.add(
 "coins-nav-open"
 );
