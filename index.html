@@ -110,26 +110,55 @@
 
 <script type="module">
 
-import { loadLightweightCharts } from "./js/charts-lib-boot.js";
+if(location.protocol === "file:"){
 
-import("./js/site-boot.js?v=63");
+document.body.innerHTML = `
+<div style="padding:40px;font-family:Arial,sans-serif;background:#0b1220;color:#fff;max-width:520px">
+<h2>Нужен локальный сервер</h2>
+<p>Страницу нельзя открывать двойным кликом по файлу.</p>
+<p>В терминале:</p>
+<pre style="background:#1f2937;padding:12px;border-radius:8px">cd crypto-terminal-v2
+./start.sh</pre>
+<p>Затем откройте:<br>
+<a href="http://127.0.0.1:8080/index.html" style="color:#60a5fa">http://127.0.0.1:8080/index.html</a>
+</p>
+</div>`;
+
+}else{
+
+import { loadLightweightCharts } from "./js/charts-lib-boot.js?v=2";
 
 loadLightweightCharts().then(async ()=>{
 
 await import("./js/screener.js?v=52");
+await import("./js/site-boot.js?v=63");
 
 }).catch(err=>{
 
 console.error(err);
 
+const msg =
+String(
+err?.message ||
+err
+);
+
+const exportHint =
+/export/i.test(msg)
+? "<p>Обычно это кэш или открытие без сервера. Запустите <code>./start.sh</code>, откройте ссылку ниже и сделайте жёсткое обновление (Cmd+Shift+R).</p>"
+: "";
+
 document.body.innerHTML = `
 <div style="padding:32px;font-family:Arial,sans-serif;background:#0b1220;color:#fff;max-width:520px">
 <h2>Не удалось загрузить графики</h2>
-<p style="color:#fca5a5">${err.message}</p>
-<p>Запустите <code>./start.sh</code> и откройте <a href="/index.html" style="color:#60a5fa">/index.html</a></p>
+<p style="color:#fca5a5">${msg}</p>
+${exportHint}
+<p>Запустите <code>./start.sh</code> и откройте <a href="http://127.0.0.1:8080/index.html" style="color:#60a5fa">http://127.0.0.1:8080/index.html</a></p>
 </div>`;
 
 });
+
+}
 
 </script>
 

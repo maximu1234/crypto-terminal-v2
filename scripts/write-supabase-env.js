@@ -11,19 +11,25 @@ const root = path.join(__dirname, "..");
 const out = path.join(root, "js", "supabase-env.js");
 
 const url =
+String(
 process.env.SUPABASE_URL ||
 process.env.VITE_SUPABASE_URL ||
-"";
+""
+).trim();
 
 const key =
+String(
 process.env.SUPABASE_ANON_KEY ||
 process.env.VITE_SUPABASE_ANON_KEY ||
-"";
+""
+).trim();
 
 const workerUrlRaw =
+String(
 process.env.ALERT_WORKER_URL ||
 process.env.VITE_ALERT_WORKER_URL ||
-"";
+""
+).trim();
 
 function normalizeAlertWorkerBaseUrl(raw) {
 

@@ -39,13 +39,13 @@ attachSymbolAutocomplete
 
 import {
 loadLightweightCharts
-} from "./charts-lib-boot.js";
+} from "./charts-lib-boot.js?v=2";
 
 import {
 initTerminalPageUi,
 isTerminalMobile,
 TERMINAL_MOBILE_MQ
-} from "./terminal-page.js?v=1";
+} from "./terminal-page.js?v=2";
 
 const dashboard =
 document.getElementById("dashboard");
@@ -568,7 +568,13 @@ onTerminalMobileMqChange
 );
 }
 
-loadLightweightCharts().then(()=>{
+const chartsReady =
+typeof LightweightCharts !==
+"undefined"
+? Promise.resolve()
+: loadLightweightCharts();
+
+chartsReady.then(()=>{
 
 initTerminalPageUi();
 preloadTradingSymbols();

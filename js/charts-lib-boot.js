@@ -76,9 +76,27 @@ document.createElement("script");
 
 el.src = src;
 el.dataset.lwcSrc = src;
+el.type = "text/javascript";
 el.async = false;
 
-el.onload = ()=>resolve();
+el.onload = ()=>{
+
+if(
+typeof LightweightCharts !==
+"undefined"
+){
+resolve();
+return;
+}
+
+reject(
+new Error(
+`Chart lib loaded but LightweightCharts missing (${src})`
+)
+);
+
+};
+
 el.onerror = ()=>reject(new Error(`Failed to load ${src}`));
 
 document.head.appendChild(el);
