@@ -227,6 +227,32 @@ body{
     z-index:3;
 }
 
+.chart-dom-crosshair-vert{
+    position:absolute;
+    top:0;
+    bottom:0;
+    width:0;
+    border-left:1px dashed #758696;
+    pointer-events:none;
+    z-index:4;
+}
+
+.chart-dom-crosshair-vert.hidden,
+.chart-dom-crosshair-horz.hidden{
+    display:none;
+}
+
+.chart-dom-crosshair-horz{
+    position:absolute;
+    left:0;
+    height:0;
+    border:none;
+    border-top:1px dashed #758696;
+    box-sizing:border-box;
+    pointer-events:none;
+    z-index:4;
+}
+
 .widget .chart{
     position:absolute;
     inset:0;

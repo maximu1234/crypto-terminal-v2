@@ -317,6 +317,261 @@ horzLine:crosshairLineOptions(true)
 
 }
 
+/** Виджеты / touch: обе линии LW (нет отдельного DOM-оверлея в #charts-stack). */
+export function fullCrosshairOptions(){
+
+const Normal =
+LightweightCharts.CrosshairMode?.Normal ?? 0;
+
+return {
+mode:Normal,
+vertLine:crosshairLineOptions(
+true
+),
+horzLine:crosshairLineOptions(
+true
+)
+};
+
+}
+
+const DOM_CROSSHAIR_VERT =
+"chart-dom-crosshair-vert";
+
+const DOM_CROSSHAIR_HORZ =
+"chart-dom-crosshair-horz";
+
+function resolveChartCanvasEl(
+wrapEl
+){
+
+if(
+!wrapEl
+){
+return null;
+}
+
+return (
+wrapEl.querySelector(
+".chart"
+) ||
+wrapEl.querySelector(
+"#chart"
+)
+);
+
+}
+
+/**
+ * Вертикаль + горизонталь внутри wrap (виджеты, iPhone, рисование).
+ */
+export function ensureDomChartCrosshair(
+wrapEl
+){
+
+if(
+!wrapEl ||
+wrapEl.querySelector(
+`.${DOM_CROSSHAIR_VERT}`
+)
+){
+return;
+}
+
+const vert =
+document.createElement(
+"div"
+);
+
+vert.className =
+`${DOM_CROSSHAIR_VERT} hidden`;
+
+vert.setAttribute(
+"aria-hidden",
+"true"
+);
+
+const horz =
+document.createElement(
+"div"
+);
+
+horz.className =
+`${DOM_CROSSHAIR_HORZ} hidden`;
+
+horz.setAttribute(
+"aria-hidden",
+"true"
+);
+
+wrapEl.appendChild(
+vert
+);
+
+wrapEl.appendChild(
+horz
+);
+
+}
+
+export function positionDomChartCrosshair({
+wrapEl,
+chartEl,
+chart,
+series,
+clientX,
+clientY
+}){
+
+const el =
+chartEl ||
+resolveChartCanvasEl(
+wrapEl
+);
+
+if(
+!wrapEl ||
+!el ||
+!chart
+){
+return null;
+}
+
+const chartR =
+el.getBoundingClientRect();
+
+let x =
+clientX - chartR.left;
+
+let y =
+clientY - chartR.top;
+
+x =
+Math.max(
+0,
+Math.min(
+chartR.width,
+x
+)
+);
+
+y =
+Math.max(
+0,
+Math.min(
+chartR.height,
+y
+)
+);
+
+const vert =
+wrapEl.querySelector(
+`.${DOM_CROSSHAIR_VERT}`
+);
+
+const horz =
+wrapEl.querySelector(
+`.${DOM_CROSSHAIR_HORZ}`
+);
+
+if(
+vert
+){
+
+vert.style.left =
+`${Math.round(x)}px`;
+
+vert.classList.remove(
+"hidden"
+);
+
+}
+
+let scaleW =
+56;
+
+try{
+scaleW =
+chart.priceScale(
+"right"
+).width() ||
+56;
+}catch{
+/* ignore */
+}
+
+const plotW =
+Math.max(
+0,
+chartR.width - scaleW
+);
+
+if(
+horz
+){
+
+horz.style.top =
+`${Math.round(y)}px`;
+
+horz.style.left =
+"0px";
+
+horz.style.width =
+`${Math.round(plotW)}px`;
+
+horz.classList.remove(
+"hidden"
+);
+
+}
+
+try{
+chart.clearCrosshairPosition();
+}catch{
+/* ignore */
+}
+
+const time =
+chart.timeScale().coordinateToTime?.(
+x
+);
+
+const price =
+series?.coordinateToPrice?.(
+y
+);
+
+return {
+x,
+y,
+time,
+price
+};
+
+}
+
+export function hideDomChartCrosshair(
+wrapEl
+){
+
+if(
+!wrapEl
+){
+return;
+}
+
+wrapEl.querySelectorAll(
+`.${DOM_CROSSHAIR_VERT}, .${DOM_CROSSHAIR_HORZ}`
+).forEach(
+node=>{
+node.classList.add(
+"hidden"
+);
+}
+);
+
+}
+
 /** iPad probe: горизонталь LW, вертикаль — DOM (#linked-crosshair-vert). */
 export function tabletProbeCrosshairOptions(){
 
@@ -1004,7 +1259,7 @@ rightOffset:12,
 fixRightEdge:false
 },
 
-crosshair:normalCrosshairOptions(),
+crosshair:fullCrosshairOptions(),
 
 handleScroll:{
 mouseWheel:true,
@@ -1029,7 +1284,7 @@ pinch:true
 });
 
 chart.applyOptions({
-crosshair:normalCrosshairOptions()
+crosshair:fullCrosshairOptions()
 });
 
 const series =

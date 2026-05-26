@@ -970,6 +970,32 @@ body.tablet-chart .price-scale-touch-strip{
   display:none;
 }
 
+#chart-wrap .chart-dom-crosshair-vert{
+  position:absolute;
+  top:0;
+  bottom:0;
+  width:0;
+  border-left:1px dashed #758696;
+  pointer-events:none;
+  z-index:4;
+}
+
+#chart-wrap .chart-dom-crosshair-horz{
+  position:absolute;
+  left:0;
+  height:0;
+  border:none;
+  border-top:1px dashed #758696;
+  box-sizing:border-box;
+  pointer-events:none;
+  z-index:4;
+}
+
+#chart-wrap .chart-dom-crosshair-vert.hidden,
+#chart-wrap .chart-dom-crosshair-horz.hidden{
+  display:none;
+}
+
 .crosshair-axis-label{
   position:absolute;
   z-index:5;

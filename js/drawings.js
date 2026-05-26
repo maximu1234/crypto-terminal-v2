@@ -47,8 +47,12 @@ CHART_SCALE_LABEL_LINE_HEIGHT,
 scaleLabelTextColorForBackground,
 isCoarseTouchViewport,
 isTabletChartViewport,
-TABLET_USE_CUSTOM_TOUCH_PAN
-} from "./chart.js?v=60";
+TABLET_USE_CUSTOM_TOUCH_PAN,
+ensureDomChartCrosshair,
+positionDomChartCrosshair,
+hideDomChartCrosshair,
+fullCrosshairOptions
+} from "./chart.js?v=61";
 
 /* Сетка 2×9: чётный индекс — левый столбец, нечётный — правый */
 const DEFAULT_FIB_SPEC = Object.freeze([
@@ -3442,7 +3446,21 @@ function useChartProbeCrosshair(){
 return (
 typeof onChartCrosshairAt ===
 "function" &&
-tabletCustomPanHooked
+tabletCustomPanHooked &&
+isTabletChartViewport()
+);
+
+}
+
+function chartCanvasEl(){
+
+return (
+wrapEl?.querySelector(
+".chart"
+) ||
+wrapEl?.querySelector(
+"#chart"
+)
 );
 
 }
@@ -3565,23 +3583,14 @@ return;
 
 }
 
-if(
-point &&
-chart &&
-series
-){
-
-try{
-chart.setCrosshairPosition(
-point.price,
-point.time,
-series
-);
-}catch{
-/* ignore */
-}
-
-}
+positionDomChartCrosshair({
+wrapEl,
+chartEl:chartCanvasEl(),
+chart,
+series,
+clientX:client.clientX,
+clientY:client.clientY
+});
 
 }
 
@@ -3601,7 +3610,13 @@ onChartCrosshairClear?.();
 /* ignore */
 }
 
-}else if(
+}else{
+
+hideDomChartCrosshair(
+wrapEl
+);
+
+if(
 chart
 ){
 
@@ -3613,9 +3628,15 @@ chart.clearCrosshairPosition();
 
 }
 
+}
+
 return;
 
 }
+
+hideDomChartCrosshair(
+wrapEl
+);
 
 if(
 chart
@@ -8193,6 +8214,10 @@ crosshairHandler = param=>{
 
 if(
 placement &&
+param?.point
+){
+
+if(
 isTouchDrawPlacement() &&
 touchDrawCrosshair
 ){
@@ -8207,6 +8232,12 @@ previewPoint.price = placement.points[0].price;
 }
 
 }else{
+
+showStandardChartCrosshair(
+null,
+param.point.x,
+param.point.y
+);
 
 previewPoint = pointFromParam(param);
 
@@ -8724,6 +8755,14 @@ positionPopover(settingsPopover, 40);
 
 initFloatingBar();
 initStylePopovers();
+if(
+!useChartProbeCrosshair()
+){
+ensureDomChartCrosshair(
+wrapEl
+);
+}
+
 setupEditInteraction();
 setupCoarseTouchChartGuard();
 setupTouchDrawCrosshair();
@@ -9197,6 +9236,9 @@ destroy(){
 
 alive = false;
 selectedId = null;
+hideDomChartCrosshair(
+wrapEl
+);
 syncChartTouchPan();
 fibPanelCommitHook = null;
 
