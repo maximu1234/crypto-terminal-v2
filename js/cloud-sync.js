@@ -18,6 +18,10 @@ collectAllLocalDrawings,
 applyDrawingsMapToLocal
 } from "./drawings-storage.js?v=1";
 
+import {
+withTimeout
+} from "./async-timeout.js?v=1";
+
 const FAVORITES_LOCAL_TS_KEY =
 "favorites_local_updated_at";
 
@@ -1759,10 +1763,25 @@ if(
 !session
 ){
 
-const { data } =
-await sb.auth.getSession();
+try{
 
-session = data.session;
+const { data } =
+await withTimeout(
+sb.auth.getSession(),
+5000,
+"getSession"
+);
+
+session = data?.session ?? null;
+
+}catch(err){
+console.warn(
+"cloud getSession:",
+err?.message || err
+);
+session = null;
+
+}
 
 }
 

@@ -35,7 +35,7 @@ getCloudUserEmail
 import {
 ensureCloudReady,
 focusAlertsLogin
-} from "./auth-ui.js?v=16";
+} from "./auth-ui.js?v=18";
 
 import { formatPrice } from "./chart.js";
 

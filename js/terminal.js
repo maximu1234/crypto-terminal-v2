@@ -24,7 +24,7 @@ flagSortRank
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=16";
+} from "./auth-ui.js?v=18";
 
 import {
 persistFavoritesToCloud,
@@ -2966,14 +2966,7 @@ closeAllCoinFlagMenus();
 
 });
 
-async function init(){
-
-await ensureCloudReady();
-
-applyCoinsPrefs();
-
-favorites =
-loadFavoritesGroups();
+async function refreshCoinsMarketUi(){
 
 try{
 
@@ -2999,13 +2992,6 @@ currentSymbol &&
 hasUrlSymbol = false;
 }
 
-const marketFilter =
-document.getElementById("market-filter");
-
-if(marketFilter){
-marketFilter.value = currentDataset;
-}
-
 generateMarketData();
 
 await primeTickerSnapshots();
@@ -3015,6 +3001,24 @@ resizeCharts();
 renderList();
 
 startTickerStream();
+
+}
+
+async function init(){
+
+void ensureCloudReady();
+
+applyCoinsPrefs();
+
+favorites =
+loadFavoritesGroups();
+
+const marketFilter =
+document.getElementById("market-filter");
+
+if(marketFilter){
+marketFilter.value = currentDataset;
+}
 
 if(!hasUrlSymbol){
 resolveInitialSymbolAndTf();
@@ -3038,6 +3042,8 @@ initCoinsMobileUi({
 getTf: ()=> currentTF,
 onTfChange: setCoinsTimeframe
 });
+
+void refreshCoinsMarketUi();
 
 }
 

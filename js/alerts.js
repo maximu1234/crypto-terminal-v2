@@ -961,7 +961,7 @@ list.push(row);
 saveAlerts(list);
 
 const { ensureCloudReady } =
-await import("./auth-ui.js?v=10");
+await import("./auth-ui.js?v=18");
 
 await ensureCloudReady();
 
