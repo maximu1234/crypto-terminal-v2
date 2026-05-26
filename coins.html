@@ -16,7 +16,7 @@
 <link rel="stylesheet" href="css/common.css?v=13">
 <link rel="stylesheet" href="css/terminal.css?v=64">
 <link rel="stylesheet" href="css/dashboard.css?v=8">
-<link rel="stylesheet" href="css/coins.css?v=6">
+<link rel="stylesheet" href="css/coins.css?v=7">
 
 </head>
 
@@ -342,6 +342,8 @@ Coin
 
 </div>
 
+<div id="coins-chart-status" class="coins-chart-status hidden" aria-live="polite"></div>
+
 <script type="module">
 
 if(location.protocol === "file:"){
@@ -363,7 +365,7 @@ document.body.innerHTML = `
 import("./js/charts-lib-boot.js").then(({ loadLightweightCharts })=>
 loadLightweightCharts()
 ).then(()=>
-import("./js/terminal.js?v=159")
+import("./js/terminal.js?v=160")
 ).catch(err=>{
 
 console.error(err);

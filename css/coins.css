@@ -434,3 +434,41 @@ flex:0 0 auto;
 }
 
 }
+
+/* Плашка загрузки графика (как #screener-status на главной) */
+.coins-chart-status{
+position:fixed;
+top:auto;
+right:auto;
+left:50%;
+bottom:16px;
+width:max-content;
+max-width:90vw;
+transform:translateX(-50%);
+background:#1f2937;
+border:1px solid #374151;
+padding:8px 16px;
+border-radius:8px;
+font-size:13px;
+white-space:nowrap;
+z-index:10005;
+pointer-events:none;
+box-sizing:border-box;
+color:#e5e7eb;
+}
+
+.coins-chart-status.hidden{
+display:none;
+}
+
+@media (max-width:640px){
+
+.coins-chart-status{
+bottom:calc(
+12px + env(safe-area-inset-bottom, 0px)
+);
+font-size:12px;
+padding:6px 12px;
+}
+
+}

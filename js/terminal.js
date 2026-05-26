@@ -1792,6 +1792,29 @@ rsiChart
    LOAD SYMBOL
 ========================================================= */
 
+function setCoinsChartStatus(
+text,
+visible
+){
+
+const el =
+document.getElementById(
+"coins-chart-status"
+);
+
+if(!el){
+return;
+}
+
+el.textContent = text;
+
+el.classList.toggle(
+"hidden",
+!visible
+);
+
+}
+
 async function loadSymbol(symbol){
 
 const loadSeq = ++symbolLoadSeq;
@@ -1801,6 +1824,13 @@ currentSymbol = symbol;
 persistCoinsPrefs();
 
 syncCoinsSymbolLabel();
+
+setCoinsChartStatus(
+`Загрузка ${formatCoinsSymbolLabel(symbol)}…`,
+true
+);
+
+try{
 
 let nextCandles = [];
 
@@ -1901,6 +1931,17 @@ currentTF
 );
 
 persistCoinsPrefs();
+
+}finally{
+
+if(loadSeq === symbolLoadSeq){
+setCoinsChartStatus(
+"",
+false
+);
+}
+
+}
 
 }
 
