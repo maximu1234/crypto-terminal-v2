@@ -41,9 +41,10 @@ chartScaleFont,
 CHART_SCALE_LABEL_PAD_LEFT,
 CHART_SCALE_LABEL_LINE_HEIGHT,
 scaleLabelTextColorForBackground,
+isCoarseTouchViewport,
 isTabletChartViewport,
 TABLET_USE_CUSTOM_TOUCH_PAN
-} from "./chart.js?v=59";
+} from "./chart.js?v=60";
 
 /* Сетка 2×9: чётный индекс — левый столбец, нечётный — правый */
 const DEFAULT_FIB_SPEC = Object.freeze([
@@ -1163,6 +1164,9 @@ toolsRoot = null,
 isActive = ()=>true,
 barPosKey = "draw_bar_pos",
 abortTabletChartGesture = null,
+tabletCustomPanHooked =
+typeof abortTabletChartGesture ===
+"function",
 onChartCrosshairAt = null,
 onChartCrosshairClear = null,
 onChartCrosshairSuppress = null,
@@ -3179,6 +3183,7 @@ vertTouchDrag:false
 function chartScrollWhenUnlocked(){
 
 if(
+tabletCustomPanHooked &&
 isTabletChartViewport() &&
 TABLET_USE_CUSTOM_TOUCH_PAN
 ){
@@ -3400,7 +3405,7 @@ popover.style.zIndex = "10051";
 
 function isTouchDrawTablet(){
 
-return isTabletChartViewport();
+return isCoarseTouchViewport();
 
 }
 

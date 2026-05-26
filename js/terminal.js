@@ -56,7 +56,7 @@ mountAxisDoubleTapReset,
 TABLET_USE_CUSTOM_TOUCH_PAN,
 isTabletChartViewport,
 isUserCrosshairEvent
-} from "./chart.js?v=59";
+} from "./chart.js?v=60";
 
 import {
 connectKlineStream,
@@ -75,7 +75,7 @@ syncBackgroundAlertStreams
 
 import {
 initDrawings
-} from "./drawings.js?v=126";
+} from "./drawings.js?v=127";
 
 import {
 initCoinsMobileUi,

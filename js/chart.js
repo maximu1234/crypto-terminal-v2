@@ -2079,8 +2079,32 @@ linkedChart.clearCrosshairPosition();
 /* ignore */
 }
 
+const labelParam = {
+...param,
+point: param.point ?? { x }
+};
+
+if(
+labelParam.time ==
+null &&
+mainChart?.timeScale
+){
+
+const t =
+mainChart.timeScale().coordinateToTime?.(
+x
+);
+
+if(
+t != null
+){
+labelParam.time = t;
+}
+
+}
+
 updateCrosshairAxisLabels({
-param,
+param: labelParam,
 timeLabelEl:crosshairTimeLabelEl,
 snappedX:x
 });
@@ -2106,7 +2130,6 @@ return;
 }
 
 if(
-!param?.time ||
 param.point === undefined
 ){
 
@@ -2442,6 +2465,19 @@ hud?.remove();
 export {
 mountTabletChartGestures
 } from "./chart-tablet-gestures.js?v=5";
+
+/** Смартфон / планшет с touch — отдельно от isTabletChartViewport (≥768px). */
+export function isCoarseTouchViewport(){
+
+return (
+window.matchMedia(
+"(pointer: coarse)"
+).matches &&
+navigator.maxTouchPoints >=
+1
+);
+
+}
 
 export function isTabletChartViewport(){
 
