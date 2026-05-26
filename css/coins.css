@@ -17,8 +17,7 @@ display:none !important;
 body.coins-page .coins-header-desktop{
 display:flex !important;
 align-items:center;
-gap:16px;
-margin-left:auto;
+gap:18px;
 }
 
 body.coins-page .coins-tf-mobile-wrap,
