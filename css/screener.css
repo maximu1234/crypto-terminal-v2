@@ -317,6 +317,11 @@ display:none;
 
 @media (max-width:640px){
 
+body{
+min-height:100dvh;
+min-height:-webkit-fill-available;
+}
+
 .screener-page-header{
 flex-wrap:nowrap;
 gap:8px;
@@ -521,15 +526,11 @@ overflow-y:hidden;
 -webkit-overflow-scrolling:touch;
 scroll-snap-type:x proximity;
 gap:6px;
-padding:8px 10px;
-/* запас под адресную строку Safari / панель браузера */
-padding-bottom:calc(
-12px + env(safe-area-inset-bottom, 0px) + 52px
+padding:8px 10px calc(
+10px + env(safe-area-inset-bottom, 0px)
 );
 background:#0b1220;
-position:sticky;
-bottom:0;
-z-index:40;
+flex-shrink:0;
 }
 
 #pagination .page-btn{
@@ -554,7 +555,7 @@ padding:0 6px;
 
 #screener-status{
 bottom:calc(
-64px + env(safe-area-inset-bottom, 0px) + 52px
+52px + env(safe-area-inset-bottom, 0px)
 );
 }
 
