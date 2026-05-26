@@ -91,7 +91,31 @@ let lastErr;
 for(const src of SUPABASE_UMD_SOURCES){
 
 try{
-return await loadSupabaseUmd(src);
+
+const loaded =
+await Promise.race([
+loadSupabaseUmd(src),
+new Promise(
+(
+_,
+reject
+)=>{
+setTimeout(
+()=>{
+reject(
+new Error(
+`Supabase SDK timeout (${src})`
+)
+);
+},
+12000
+);
+}
+)
+]);
+
+return loaded;
+
 }catch(err){
 lastErr = err;
 }

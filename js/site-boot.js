@@ -33,7 +33,12 @@ import {
 resetBybitEndpoints
 } from "./bybit-fetch.js?v=3";
 
+import {
+initMobileRecovery
+} from "./mobile-recovery.js?v=1";
+
 initBybitNetworkUi();
+initMobileRecovery();
 
 window.addEventListener(
 "bybit-network-retry",

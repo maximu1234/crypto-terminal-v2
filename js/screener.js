@@ -39,6 +39,11 @@ ensureCloudReady
 } from "./auth-ui.js?v=13";
 
 import {
+ensureSettled,
+withTimeout
+} from "./async-timeout.js?v=1";
+
+import {
 persistFavoritesToCloud,
 onFavoritesRemoteUpdate
 } from "./cloud-sync.js?v=13";
@@ -1017,9 +1022,16 @@ activeWidgets.push(widget);
 
 });
 
-await Promise.all(
-activeWidgets.map(w=>loadWidgetChart(w))
+const chartLoads =
+activeWidgets.map(w=>
+ensureSettled(
+loadWidgetChart(w),
+28000,
+`chart ${w.symbol}`
+)
 );
+
+await Promise.all(chartLoads);
 
 if(loadId === renderToken){
 setStatus("", false);
@@ -1665,7 +1677,7 @@ void renderPage();
 
 async function init(){
 
-await ensureCloudReady();
+void ensureCloudReady();
 
 bindControls();
 
@@ -1688,7 +1700,11 @@ loadFavoritesGroups();
 
 try{
 
-await loadScreenerMarketData();
+await withTimeout(
+loadScreenerMarketData(),
+20000,
+"screener market"
+);
 
 }catch(err){
 
@@ -1716,7 +1732,27 @@ updateWidgetMeta(w.symbol, w.root);
 
 });
 
-await renderPage();
+try{
+
+await withTimeout(
+renderPage(),
+60000,
+"screener render"
+);
+
+}catch(err){
+
+console.error(
+"Screener render:",
+err
+);
+
+setStatus(
+"Графики не загрузились — обновите страницу",
+true
+);
+
+}
 
 }
 

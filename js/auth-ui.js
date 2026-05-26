@@ -620,7 +620,20 @@ refreshAuthUi();
 export function ensureCloudReady(){
 
 if(!initPromise){
-initPromise = initAuthUiInternal();
+initPromise = Promise.race([
+initAuthUiInternal(),
+new Promise(resolve=>{
+setTimeout(
+()=>{
+console.warn(
+"[Multichart] cloud init timeout — страница продолжит без ожидания"
+);
+resolve();
+},
+10000
+);
+})
+]);
 }
 
 return initPromise;
