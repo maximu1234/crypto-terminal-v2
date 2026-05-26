@@ -1,0 +1,31 @@
+/* Терминал — смартфон */
+
+.screener-mobile-bar.terminal-mobile-bar{
+display:none;
+}
+
+@media (max-width:640px){
+
+body.terminal-page{
+min-height:100dvh;
+min-height:-webkit-fill-available;
+}
+
+body.terminal-page #dashboard.grid-mobile-2{
+grid-template-columns:1fr;
+grid-template-rows:1fr 1fr;
+gap:6px;
+padding:6px;
+padding-bottom:calc(
+6px + env(safe-area-inset-bottom, 0px)
+);
+}
+
+.terminal-mobile-bar{
+display:flex !important;
+align-items:center;
+margin-left:auto;
+flex:0 0 auto;
+}
+
+}

@@ -41,6 +41,12 @@ import {
 loadLightweightCharts
 } from "./charts-lib-boot.js";
 
+import {
+initTerminalPageUi,
+isTerminalMobile,
+TERMINAL_MOBILE_MQ
+} from "./terminal-page.js?v=1";
+
 const dashboard =
 document.getElementById("dashboard");
 
@@ -471,17 +477,26 @@ setActive();
 
 }
 
-function renderDashboard(){
+function dashboardWidgetCount(){
 
-destroyAllWidgets();
+return isTerminalMobile()
+? 2
+: currentLayout;
 
-dashboard.className =
-`grid-${currentLayout}`;
+}
 
-saveLayout(currentLayout);
+function dashboardGridClass(){
 
-for(let i = 0; i < currentLayout; i++){
-createWidget(i);
+return isTerminalMobile()
+? "grid-mobile-2"
+: `grid-${currentLayout}`;
+
+}
+
+function syncLayoutButtons(){
+
+if(isTerminalMobile()){
+return;
 }
 
 document.querySelectorAll(".layout-btn").forEach(btn=>{
@@ -495,9 +510,35 @@ Number(btn.dataset.layout) === currentLayout
 
 }
 
+function renderDashboard(){
+
+destroyAllWidgets();
+
+dashboard.className =
+dashboardGridClass();
+
+const count =
+dashboardWidgetCount();
+
+if(!isTerminalMobile()){
+saveLayout(currentLayout);
+}
+
+for(let i = 0; i < count; i++){
+createWidget(i);
+}
+
+syncLayoutButtons();
+
+}
+
 document.querySelectorAll(".layout-btn").forEach(btn=>{
 
 btn.onclick = ()=>{
+
+if(isTerminalMobile()){
+return;
+}
 
 currentLayout =
 Number(btn.dataset.layout);
@@ -508,8 +549,28 @@ renderDashboard();
 
 });
 
+const onTerminalMobileMqChange =
+()=>{
+renderDashboard();
+};
+
+if(
+typeof TERMINAL_MOBILE_MQ.addEventListener ===
+"function"
+){
+TERMINAL_MOBILE_MQ.addEventListener(
+"change",
+onTerminalMobileMqChange
+);
+}else{
+TERMINAL_MOBILE_MQ.addListener(
+onTerminalMobileMqChange
+);
+}
+
 loadLightweightCharts().then(()=>{
 
+initTerminalPageUi();
 preloadTradingSymbols();
 renderDashboard();
 

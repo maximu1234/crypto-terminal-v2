@@ -3,7 +3,7 @@
 <head>
 
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
 
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin/>
 <link rel="dns-prefetch" href="https://api.bybit.com"/>
@@ -13,17 +13,26 @@
 
 <link rel="stylesheet" href="css/common.css?v=13">
 <link rel="stylesheet" href="css/dashboard.css?v=4">
-<link rel="stylesheet" href="css/terminal.css">
+<link rel="stylesheet" href="css/screener.css?v=15">
+<link rel="stylesheet" href="css/terminal-page.css?v=1">
 
 </head>
 
-<body>
+<body class="terminal-page">
 
-<header id="header">
+<header id="header" class="screener-page-header">
 
 <a href="/index.html" id="logo">Multichart</a>
 
-<nav class="menu">
+<div class="screener-mobile-bar terminal-mobile-bar">
+<button type="button" class="screener-nav-toggle" id="screener-nav-toggle" aria-label="Меню" aria-expanded="false" aria-controls="screener-nav-panel">
+<span class="screener-nav-toggle-bars" aria-hidden="true"></span>
+</button>
+</div>
+
+<div class="screener-nav-backdrop hidden" id="screener-nav-backdrop"></div>
+
+<nav class="menu screener-nav-panel" id="screener-nav-panel">
 <a href="/index.html">Главная</a>
 <a href="/coins.html">Монеты</a>
 <a href="/terminal.html" class="active">Терминал</a>
@@ -41,9 +50,9 @@
 </div>
 </nav>
 
-<div id="header-controls">
+<div id="header-controls" class="screener-header-desktop">
 
-<div class="control-group">
+<div class="control-group screener-layout-group">
 <span class="control-label">Виджеты</span>
 <button type="button" class="layout-btn" data-layout="4">4</button>
 <button type="button" class="layout-btn" data-layout="6">6</button>
@@ -63,7 +72,8 @@ import { loadLightweightCharts } from "./js/charts-lib-boot.js";
 loadLightweightCharts().then(async ()=>{
 
 await import("./js/site-boot.js?v=59");
-await import("./js/dashboard.js?v=55");
+await import("./js/dashboard.js?v=56");
+await import("./js/terminal-page.js?v=1");
 
 }).catch(err=>{
 
