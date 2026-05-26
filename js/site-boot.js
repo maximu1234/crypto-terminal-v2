@@ -27,11 +27,11 @@ isSupabaseConfigured
 
 import {
 initBybitNetworkUi
-} from "./bybit-network-ui.js?v=1";
+} from "./bybit-network-ui.js?v=2";
 
 import {
 resetBybitEndpoints
-} from "./bybit-fetch.js?v=3";
+} from "./bybit-fetch.js?v=4";
 
 import {
 initMobileRecovery

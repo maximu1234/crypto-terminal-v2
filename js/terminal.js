@@ -1915,7 +1915,7 @@ currentDataset === "new"
 )
 ){
 
-void import("./bybit-network-ui.js?v=1").then(m=>{
+void import("./bybit-network-ui.js?v=2").then(m=>{
 m.showBybitNetworkIssue(
 new Error(
 "История свечей Bybit пуста"

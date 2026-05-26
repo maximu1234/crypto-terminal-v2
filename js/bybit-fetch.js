@@ -122,12 +122,105 @@ return true;
 
 }
 
+function isNetworkFetchError(
+err
+){
+
+const msg =
+String(
+err?.message ||
+err ||
+""
+).toLowerCase();
+
+return (
+err?.name === "TypeError" ||
+err?.name === "AbortError" ||
+msg.includes("failed to fetch") ||
+msg.includes("networkerror") ||
+msg.includes("load failed") ||
+msg.includes("network request failed")
+);
+
+}
+
+/**
+ * Тот же origin — не блокируется AdGuard / Protect на десктопе.
+ */
+async function fetchOneBybitProxy(
+pathQuery,
+timeoutMs
+){
+
+const path =
+normalizePath(pathQuery);
+const url =
+`/api/bybit?path=${encodeURIComponent(path)}`;
+
+const controller =
+new AbortController();
+const timer =
+setTimeout(
+()=>controller.abort(),
+timeoutMs
+);
+
+try{
+
+const res =
+await fetch(
+url,
+{
+signal: controller.signal,
+cache: "no-store"
+}
+);
+
+clearTimeout(timer);
+
+const json =
+await res.json();
+
+if(
+json.retCode === 0
+){
+markBybitSuccess(0);
+return {
+res,
+json,
+base: "proxy",
+proxied: true
+};
+}
+
+const err =
+new Error(
+`Bybit ${json.retCode}: ${json.retMsg || res.status}`
+);
+
+err.retryable =
+isRetryableBybitResponse(
+res,
+json
+);
+
+throw err;
+
+}catch(err){
+
+clearTimeout(timer);
+throw err;
+
+}
+
+}
+
 function markBybitSuccess(baseIndex){
 
 activeApiBaseIndex =
 baseIndex;
 
-void import("./bybit-network-ui.js?v=1").then(m=>{
+void import("./bybit-network-ui.js?v=2").then(m=>{
 m.clearBybitNetworkIssue();
 });
 
@@ -135,7 +228,7 @@ m.clearBybitNetworkIssue();
 
 function markBybitFailure(err){
 
-void import("./bybit-network-ui.js?v=1").then(m=>{
+void import("./bybit-network-ui.js?v=2").then(m=>{
 m.showBybitNetworkIssue(err);
 });
 
@@ -240,6 +333,20 @@ err.errors.length - 1
 ] ||
 err;
 
+if(
+isNetworkFetchError(lastErr)
+){
+try{
+return await fetchOneBybitProxy(
+path,
+timeoutMs
+);
+}catch(proxyErr){
+markBybitFailure(proxyErr);
+throw proxyErr;
+}
+}
+
 markBybitFailure(lastErr);
 
 throw (
@@ -332,6 +439,20 @@ break;
 
 rotateBybitApiBase();
 
+}
+
+if(
+isNetworkFetchError(lastErr)
+){
+try{
+return await fetchOneBybitProxy(
+path,
+timeoutMs
+);
+}catch(proxyErr){
+markBybitFailure(proxyErr);
+throw proxyErr;
+}
 }
 
 markBybitFailure(lastErr);

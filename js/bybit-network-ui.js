@@ -68,11 +68,20 @@ typeof err === "string"
 : ""
 );
 
+const lower =
+String(detail).toLowerCase();
+
+const desktopHint =
+lower.includes("failed to fetch") ||
+lower.includes("network")
+? " На компьютере часто мешают блокировщик рекламы, «Защита» в Яндексе или антивирус — попробуйте режим инкогнито или другой браузер."
+: "";
+
 messageEl.textContent =
 detail &&
 !detail.includes("Bybit API")
-? `Данные Bybit не загрузились (${detail}). Проверьте сеть или нажмите «Повторить».`
-: "Данные Bybit не загрузились (сеть, Wi‑Fi или блокировка). Нажмите «Повторить» или обновите страницу.";
+? `Данные Bybit не загрузились (${detail}). Проверьте сеть или нажмите «Повторить».${desktopHint}`
+: `Данные Bybit не загрузились (сеть, Wi‑Fi или блокировка). Нажмите «Повторить» или обновите страницу.${desktopHint}`;
 
 host.classList.remove("hidden");
 
