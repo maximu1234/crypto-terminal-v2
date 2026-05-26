@@ -17,8 +17,9 @@ clearTelegramChatId,
 getTelegramChatId,
 initAlertsCloudSync,
 saveTelegramChatId,
-syncAlertsWithCloud
-} from "./alerts-cloud-sync.js?v=61";
+syncAlertsWithCloud,
+pullRegistryFromCloud
+} from "./alerts-cloud-sync.js?v=62";
 
 import {
 isCloudLoggedIn,
@@ -29,7 +30,7 @@ getCloudUserEmail
 import {
 ensureCloudReady,
 focusAlertsLogin
-} from "./auth-ui.js?v=10";
+} from "./auth-ui.js?v=12";
 
 import { formatPrice } from "./chart.js";
 
@@ -649,6 +650,7 @@ render();
 });
 
 window.addEventListener("alerts-changed", render);
+window.addEventListener("alerts-registry-pulled", render);
 window.addEventListener("alerts-history-changed", render);
 
 telegramOpenLogin?.addEventListener("click", async e=>{
@@ -670,7 +672,16 @@ render();
 initTelegramBotLink();
 
 void ensureCloudReady()
-.then(()=>refreshTelegramUi())
+.then(async()=>{
+
+if(isCloudLoggedIn()){
+await pullRegistryFromCloud();
+}
+
+render();
+refreshTelegramUi();
+
+})
 .catch(err=>{
 console.warn("alerts cloud init:", err);
 refreshTelegramUi();

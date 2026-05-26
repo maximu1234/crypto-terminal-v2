@@ -4,12 +4,12 @@ initAlertMonitor
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=11";
+} from "./auth-ui.js?v=12";
 
 import {
 initAlertsCloudSync,
 scheduleRegistryCloudSync
-} from "./alerts-cloud-sync.js?v=61";
+} from "./alerts-cloud-sync.js?v=62";
 
 import {
 stripAlertFlagsNotInRegistry

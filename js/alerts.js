@@ -41,7 +41,7 @@ console.warn("alerts cloud:", err);
 
 }
 
-function normalizeAlertTf(tf){
+export function normalizeAlertTf(tf){
 
 if(
 tf == null ||
@@ -698,7 +698,7 @@ return n;
 }
 
 /**
- * Реестр = только алерты с графика (источник правды для записи в Supabase).
+ * Реестр с графика + облачные строки, которых нет на этом устройстве.
  */
 export function mergeRegistryFromChartDrawings(){
 
@@ -821,6 +821,30 @@ prev?.cloudSynced
 )
 });
 
+}
+
+}
+
+for(
+const [mapKey, prev] of prevByKey
+){
+
+if(
+next.some(row=>
+alertRegistryKey(
+String(row.symbol || "").trim().toUpperCase(),
+String(row.shapeId || "").trim()
+) === mapKey
+)
+){
+continue;
+}
+
+if(
+prev?.cloudSynced &&
+prev?.cloudId
+){
+next.push(prev);
 }
 
 }

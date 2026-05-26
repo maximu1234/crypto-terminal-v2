@@ -2822,7 +2822,7 @@ row,
 
 /**
  * Сверка с активными строками price_alerts (triggered_at IS NULL).
- * Нет строки в облаке ≠ срабатывание — только сброс cloudSynced для повторной дозаписи.
+ * Импортирует все активные облачные алерты в localStorage (кросс-устройство).
  */
 export async function reconcileLocalRegistryWithCloud(){
 
@@ -2834,19 +2834,17 @@ return 0;
 }
 
 const {
-mergeRegistryFromChartDrawings,
 saveAlertsFromCloudMerge,
 alertEntryKey,
-loadAlerts
+loadAlerts,
+normalizeAlertTf
 } =
-await import("./alerts.js?v=60");
-
-mergeRegistryFromChartDrawings();
+await import("./alerts.js?v=61");
 
 const { data, error } =
 await ctx.sb
 .from("price_alerts")
-.select("id, symbol, shape_id, price, tf")
+.select("id, symbol, shape_id, price, tf, created_at")
 .eq("user_id", ctx.user.id)
 .is("triggered_at", null);
 
@@ -2940,11 +2938,10 @@ applyRemoteAlertFired(row);
 
 const local =
 loadAlerts();
-let changed =
-false;
+const localByKey =
+new Map();
 
-const next =
-local.map(a=>{
+for(const a of local){
 
 const sym =
 String(a.symbol || "").trim().toUpperCase();
@@ -2955,7 +2952,75 @@ if(
 !sym ||
 !sid
 ){
-return a;
+continue;
+}
+
+localByKey.set(
+alertEntryKey(
+sym,
+sid
+),
+a
+);
+
+}
+
+const next =
+[];
+const seen =
+new Set();
+
+for(
+const [key, cloud] of cloudByKey
+){
+
+const sym =
+String(cloud.symbol || "").trim().toUpperCase();
+const sid =
+String(cloud.shape_id || "").trim();
+const prev =
+localByKey.get(key);
+
+const cloudPrice =
+Number(cloud.price);
+const prevPrice =
+Number(prev?.price);
+
+next.push({
+id: sid,
+shapeId: sid,
+symbol: sym,
+price:
+Number.isFinite(cloudPrice)
+? cloudPrice
+: prevPrice,
+tf: normalizeAlertTf(
+cloud.tf ||
+prev?.tf
+),
+createdAt:
+prev?.createdAt ||
+(Date.parse(cloud.created_at) || Date.now()),
+cloudId: String(cloud.id || ""),
+cloudSynced: true
+});
+
+seen.add(key);
+
+}
+
+for(const a of local){
+
+const sym =
+String(a.symbol || "").trim().toUpperCase();
+const sid =
+String(a.shapeId || a.id || "").trim();
+
+if(
+!sym ||
+!sid
+){
+continue;
 }
 
 const key =
@@ -2963,45 +3028,47 @@ alertEntryKey(
 sym,
 sid
 );
-const cloud =
-cloudByKey.get(key);
 
-if(cloud){
-
-const want =
-{
-...a,
-cloudId: String(cloud.id || a.cloudId || ""),
-cloudSynced: true
-};
-
-if(
-a.cloudSynced !== want.cloudSynced ||
-String(a.cloudId || "") !== String(want.cloudId || "")
-){
-changed = true;
-}
-
-return want;
-
+if(seen.has(key)){
+continue;
 }
 
 if(
 !a.cloudSynced &&
 !a.cloudId
 ){
-return a;
+next.push(a);
+seen.add(key);
 }
 
-const reset =
-{
-...a,
-cloudSynced: false,
-cloudId: undefined
-};
+}
 
-changed = true;
-return reset;
+const changed =
+next.length !== local.length ||
+next.some(row=>{
+
+const sym =
+String(row.symbol || "").trim().toUpperCase();
+const sid =
+String(row.shapeId || "").trim();
+const key =
+alertEntryKey(
+sym,
+sid
+);
+const prev =
+localByKey.get(key);
+
+if(!prev){
+return true;
+}
+
+return (
+Number(prev.price) !== Number(row.price) ||
+normalizeAlertTf(prev.tf) !== normalizeAlertTf(row.tf) ||
+!!prev.cloudSynced !== !!row.cloudSynced ||
+String(prev.cloudId || "") !== String(row.cloudId || "")
+);
 
 });
 
@@ -3047,7 +3114,10 @@ console.log(
 );
 
 const { mergeRegistryFromChartDrawings } =
-await import("./alerts.js?v=60");
+await import("./alerts.js?v=61");
+
+mergeRegistryFromChartDrawings();
+await reconcileLocalRegistryWithCloud();
 
 const merged =
 mergeRegistryFromChartDrawings();
@@ -3085,13 +3155,16 @@ if(!isCloudLoggedIn()){
 return;
 }
 
-void import("./alerts.js?v=60").then(m=>{
-m.mergeRegistryFromChartDrawings();
-}).catch(()=>{});
+void import("./alerts.js?v=61").then(async m=>{
 
-void pushUnsyncedAlerts().catch(err=>{
+m.mergeRegistryFromChartDrawings();
+
+await pushUnsyncedAlerts();
+await reconcileLocalRegistryWithCloud();
+
+}).catch(err=>{
 console.warn(
-"alert push unsynced:",
+"alert registry sync:",
 err?.message || err
 );
 });

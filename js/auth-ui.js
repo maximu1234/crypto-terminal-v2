@@ -55,39 +55,14 @@ path.endsWith("/terminal")
 }
 
 let settingsDropdownReady = false;
+let ignoreSettingsDocClick = false;
+let refreshSettingsAuthUi = ()=>{};
 
-function setupSettingsDropdown(){
-
-if(settingsDropdownReady){
-return;
-}
-
-const btn =
-document.getElementById("header-settings-btn");
-const dropdown =
-document.getElementById("header-settings-dropdown");
-const wrap =
-document.getElementById("header-settings-wrap");
-
-if(
-!btn ||
-!dropdown ||
-!wrap
+function placeSettingsDropdown(
+btn,
+dropdown,
+wrap
 ){
-return;
-}
-
-const close = ()=>{
-
-dropdown.classList.add("hidden");
-btn.setAttribute(
-"aria-expanded",
-"false"
-);
-
-};
-
-const placeDropdown = ()=>{
 
 const inMobileNav =
 wrap.closest(
@@ -147,52 +122,128 @@ window.innerWidth - dropW - margin
 dropdown.style.right =
 `${Math.round(right)}px`;
 
-};
+}
 
-const open = ()=>{
+function closeSettingsDropdown(){
 
+const btn =
+document.getElementById("header-settings-btn");
+const dropdown =
+document.getElementById("header-settings-dropdown");
+
+if(
+!btn ||
+!dropdown
+){
+return;
+}
+
+dropdown.classList.add("hidden");
+btn.setAttribute(
+"aria-expanded",
+"false"
+);
+
+}
+
+function openSettingsDropdown(){
+
+const btn =
+document.getElementById("header-settings-btn");
+const dropdown =
+document.getElementById("header-settings-dropdown");
+const wrap =
+document.getElementById("header-settings-wrap");
+
+if(
+!btn ||
+!dropdown ||
+!wrap
+){
+return;
+}
+
+refreshSettingsAuthUi();
 dropdown.classList.remove("hidden");
-placeDropdown();
+placeSettingsDropdown(
+btn,
+dropdown,
+wrap
+);
 btn.setAttribute(
 "aria-expanded",
 "true"
 );
 
-};
+}
+
+function setupSettingsDropdown(){
+
+if(settingsDropdownReady){
+return;
+}
+
+const btn =
+document.getElementById("header-settings-btn");
+const dropdown =
+document.getElementById("header-settings-dropdown");
+const wrap =
+document.getElementById("header-settings-wrap");
+
+if(
+!btn ||
+!dropdown ||
+!wrap
+){
+return;
+}
 
 btn.addEventListener("click", e=>{
 
 e.stopPropagation();
 e.preventDefault();
 
+ignoreSettingsDocClick = true;
+setTimeout(()=>{
+ignoreSettingsDocClick = false;
+}, 0);
+
 if(
 dropdown.classList.contains("hidden")
 ){
-open();
+openSettingsDropdown();
 }else{
-close();
+closeSettingsDropdown();
 }
 
 });
 
 document.addEventListener("click", e=>{
 
+if(ignoreSettingsDocClick){
+return;
+}
+
 if(
-wrap.contains(e.target)
+e.target.closest("#header-settings-wrap")
 ){
 return;
 }
 
-close();
+closeSettingsDropdown();
 
 });
 
 document.addEventListener("keydown", e=>{
 
 if(e.key === "Escape"){
-close();
+closeSettingsDropdown();
 }
 
+});
+
+onCloudSyncChange(()=>{
+closeSettingsDropdown();
 });
 
 settingsDropdownReady = true;
@@ -200,10 +251,24 @@ settingsDropdownReady = true;
 window.addEventListener(
 "resize",
 ()=>{
+const drop =
+document.getElementById("header-settings-dropdown");
+const gear =
+document.getElementById("header-settings-btn");
+const shell =
+document.getElementById("header-settings-wrap");
+
 if(
-!dropdown.classList.contains("hidden")
+drop &&
+gear &&
+shell &&
+!drop.classList.contains("hidden")
 ){
-placeDropdown();
+placeSettingsDropdown(
+gear,
+drop,
+shell
+);
 }
 },
 { passive: true }
@@ -476,6 +541,7 @@ cloudEnvConfigured = false;
 
 if(!authUiMounted){
 refreshAuthUi = mountAuthUi() || (()=>{});
+refreshSettingsAuthUi = refreshAuthUi;
 authUiMounted = true;
 }
 
@@ -535,12 +601,7 @@ isCloudSyncEnabled()
 return false;
 }
 
-wrap.classList.remove("hidden");
-dropdown.classList.remove("hidden");
-btn.setAttribute(
-"aria-expanded",
-"true"
-);
+openSettingsDropdown();
 
 wrap.querySelector(".cloud-auth-email")?.focus();
 return true;
