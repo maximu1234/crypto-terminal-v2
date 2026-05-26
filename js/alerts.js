@@ -1107,7 +1107,7 @@ void import("./alerts-cloud-sync.js?v=63").then(m=>{
 m.flushAlertCloudPush(row);
 });
 
-void import("./alert-monitor.js?v=62").then(m=>{
+void import("./alert-monitor.js?v=63").then(m=>{
 m.armAlertQuietAfterDrag(
 sym,
 sid
@@ -1467,7 +1467,8 @@ sym,
 sid
 );
 
-void import("./alert-monitor.js?v=62").then(m=>{
+if(existing){
+void import("./alert-monitor.js?v=63").then(m=>{
 m.notifyAlertTriggered({
 symbol: sym,
 shapeId: sid,
@@ -1475,6 +1476,7 @@ price,
 tf
 });
 });
+}
 
 return true;
 
@@ -1580,7 +1582,7 @@ sym,
 sid
 );
 
-void import("./alert-monitor.js?v=62").then(m=>{
+void import("./alert-monitor.js?v=63").then(m=>{
 m.notifyAlertTriggered({
 symbol: sym,
 shapeId: sid,

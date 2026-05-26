@@ -34,6 +34,11 @@ new Map();
 const ALERT_SOUND_URL =
 "/sounds/cute_msg_alert.mp3";
 
+const MOBILE_ALERT_MQ =
+window.matchMedia(
+"(max-width: 640px)"
+);
+
 let alertSound =
 null;
 
@@ -234,6 +239,36 @@ recentlyTriggered.delete(key);
 
 }
 
+function isMobileAlertViewport(){
+
+return MOBILE_ALERT_MQ.matches;
+
+}
+
+function releaseAlertMediaSession(){
+
+try{
+
+const audio =
+alertSound;
+
+if(audio){
+audio.pause();
+audio.currentTime = 0;
+}
+
+if(
+typeof navigator !== "undefined" &&
+navigator.mediaSession
+){
+navigator.mediaSession.playbackState = "none";
+navigator.mediaSession.metadata = null;
+}
+
+}catch{}
+
+}
+
 function ensureAlertSound(){
 
 if(alertSound){
@@ -243,7 +278,18 @@ return alertSound;
 const audio =
 new Audio(ALERT_SOUND_URL);
 
-audio.preload = "auto";
+audio.preload =
+isMobileAlertViewport()
+? "none"
+: "auto";
+
+audio.addEventListener(
+"ended",
+()=>{
+releaseAlertMediaSession();
+},
+{ passive: true }
+);
 
 alertSound = audio;
 return audio;
@@ -262,6 +308,10 @@ return;
 }
 
 audio.currentTime = 0;
+
+if(!alertAudioUnlocked){
+unlockAlertAudioOnGesture();
+}
 
 const play =
 audio.play();
@@ -641,6 +691,7 @@ chartTf
 }
 
 let alertAudioUnlocked = false;
+let alertUnlockListenersBound = false;
 
 function unlockAlertAudioOnGesture(){
 
@@ -650,41 +701,52 @@ return;
 
 try{
 
-const audio =
-ensureAlertSound();
+const Ctx =
+window.AudioContext ||
+window.webkitAudioContext;
 
-if(!audio){
-return;
-}
-
-const play =
-audio.play();
+if(Ctx){
+const ctx =
+new Ctx();
 
 const done =
 ()=>{
-audio.pause();
-audio.currentTime = 0;
 alertAudioUnlocked = true;
+ctx.close().catch(()=>{});
 };
 
+const resumed =
+ctx.resume();
+
 if(
-play &&
-typeof play.then === "function"
+resumed &&
+typeof resumed.then === "function"
 ){
-play.then(done).catch(()=>{});
+resumed.then(done).catch(()=>{
+alertAudioUnlocked = true;
+});
 }else{
 done();
+}
+
+return;
 }
 
 }catch{
 /* ignore */
 }
 
+alertAudioUnlocked = true;
+
 }
 
-export function initAlertMonitor(){
+function bindAlertUnlockListeners(){
 
-ensureAlertSound();
+if(alertUnlockListenersBound){
+return;
+}
+
+alertUnlockListenersBound = true;
 
 for(const ev of [
 "pointerdown",
@@ -703,17 +765,46 @@ passive: true
 
 }
 
+}
+
+function syncAlertAudioLifecycle(){
+
+if(
+isMobileAlertViewport() &&
+!getActiveAlerts().length
+){
+releaseAlertMediaSession();
+return;
+}
+
+if(getActiveAlerts().length){
+bindAlertUnlockListeners();
+}
+
+}
+
+export function initAlertMonitor(){
+
+if(
+!isMobileAlertViewport() ||
+getActiveAlerts().length
+){
+bindAlertUnlockListeners();
+}
+
+if(!isMobileAlertViewport()){
+ensureAlertSound();
+}
+
 document.addEventListener(
 "visibilitychange",
 ()=>{
 
 if(
-document.visibilityState !== "visible"
+document.visibilityState === "hidden"
 ){
-return;
+releaseAlertMediaSession();
 }
-
-unlockAlertAudioOnGesture();
 
 }
 );
@@ -724,6 +815,7 @@ window.addEventListener(
 "alerts-changed",
 ()=>{
 pruneAlertWatchState();
+syncAlertAudioLifecycle();
 maybeRequestNotificationPermission();
 window.dispatchEvent(
 new CustomEvent(
@@ -732,5 +824,7 @@ new CustomEvent(
 );
 }
 );
+
+syncAlertAudioLifecycle();
 
 }
