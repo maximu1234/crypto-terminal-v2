@@ -36,7 +36,9 @@ display:flex !important;
 
 body.coins-page #app{
 display:grid;
+/* #list — сосед #left в DOM, не внутри #left */
 grid-template-columns:minmax(0,1fr) 340px;
+grid-template-rows:minmax(0,1fr);
 height:100dvh;
 max-height:100dvh;
 box-sizing:border-box;
@@ -45,10 +47,14 @@ padding-bottom:env(safe-area-inset-bottom, 0px);
 
 body.coins-page #left{
 display:grid;
-grid-template-columns:minmax(0,1fr) 340px;
+grid-template-columns:minmax(0,1fr);
 grid-template-rows:auto auto minmax(0,1fr);
+grid-column:1;
+grid-row:1;
 min-height:0;
+min-width:0;
 overflow:hidden;
+align-self:stretch;
 }
 
 body.coins-page #header,
@@ -59,11 +65,30 @@ grid-column:1 / -1;
 body.coins-page #charts-stack{
 grid-column:1;
 grid-row:3;
+display:flex;
+flex-direction:column;
+min-height:0;
+min-width:0;
+overflow:hidden;
+}
+
+body.coins-page #chart-wrap{
+flex:1 1 auto;
+min-height:0;
+}
+
+body.coins-page #rsi-wrap{
+flex:0 0 clamp(102px,17.6dvh,160px);
+height:clamp(102px,17.6dvh,160px);
+min-height:102px;
+max-height:none;
 }
 
 body.coins-page #list{
 grid-column:2;
-grid-row:3;
+grid-row:1;
+min-height:0;
+align-self:stretch;
 border-left:1px solid #1f2937;
 border-top:none;
 max-height:none;
