@@ -20,7 +20,7 @@ readAlertTokenSync
 
 import {
 isSystemAdminUser
-} from "./system-admin-access.js?v=1";
+} from "./system-admin-access.js?v=2";
 
 let cloudEnvConfigured = false;
 let cloudSdkError = "";
@@ -59,7 +59,10 @@ path.endsWith("/alerts/") ||
 path.includes("coins.html") ||
 path.endsWith("/coins") ||
 path.includes("terminal.html") ||
-path.endsWith("/terminal")
+path.endsWith("/terminal") ||
+path === "/system" ||
+path.endsWith("/system") ||
+path.includes("/system/")
 );
 
 }
@@ -1057,7 +1060,12 @@ const dropdown =
 document.getElementById("header-settings-dropdown");
 
 if(
-!dropdown ||
+!dropdown
+){
+return;
+}
+
+if(
 dropdown.querySelector(
 "[data-system-admin-link]"
 )

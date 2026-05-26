@@ -10,7 +10,7 @@ getCloudUserEmail
 import {
 isSystemAdminUser,
 getSystemAdminEmails
-} from "./system-admin-access.js?v=1";
+} from "./system-admin-access.js?v=2";
 
 import {
 getBybitRouteMode,
@@ -169,6 +169,32 @@ await isSystemAdminUser();
 if(
 !admin
 ){
+
+const deniedEmailEl =
+document.getElementById("system-admin-denied-email");
+
+if(
+deniedEmailEl
+){
+deniedEmailEl.textContent =
+getCloudUserEmail() || "—";
+}
+
+const hintEl =
+document.getElementById("system-admin-denied-hint");
+
+if(
+hintEl
+){
+const admins =
+await getSystemAdminEmails();
+
+hintEl.textContent =
+admins.length
+? `Разрешены только: ${admins.join(", ")}`
+: "В js/supabase-env.js или на Vercel не задан SYSTEM_ADMIN_EMAIL.";
+}
+
 showOnly(deniedEl);
 return;
 }

@@ -241,7 +241,7 @@ new CustomEvent(
 
 function loadWorkerProxyBaseFromEnv(){
 
-return import("./supabase-env.js?v=4")
+return import("./supabase-env.js?v=5")
 .then(env=>{
 return normalizeAlertWorkerBaseUrl(
 env.ALERT_WORKER_URL

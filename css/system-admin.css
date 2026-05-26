@@ -1,19 +1,32 @@
+html,
+body.system-admin-body{
+min-height:100%;
+background:#0b1220;
+color:#e5e7eb;
+}
+
+.system-admin-shell{
+min-height:calc(100vh - 56px);
+}
+
 .system-admin-page{
 max-width:720px;
 margin:0 auto;
 padding:24px 16px 48px;
-color:#e5e7eb;
 }
 
 .system-admin-page h1{
 font-size:22px;
 margin:0 0 8px;
+font-weight:700;
+color:#fff;
 }
 
 .system-admin-lead{
 color:#9ca3af;
 font-size:14px;
 margin:0 0 24px;
+line-height:1.5;
 }
 
 .system-admin-card{
@@ -27,6 +40,7 @@ margin-bottom:16px;
 .system-admin-card h2{
 font-size:16px;
 margin:0 0 12px;
+color:#f3f4f6;
 }
 
 .system-admin-route-list{
@@ -43,21 +57,32 @@ padding:12px;
 border:1px solid #374151;
 border-radius:10px;
 cursor:pointer;
+transition:border-color .15s, background .15s;
+}
+
+.system-admin-route-option:hover{
+border-color:#4b5563;
 }
 
 .system-admin-route-option:has(input:checked){
 border-color:#3b82f6;
-background:rgba(59,130,246,0.08);
+background:rgba(59,130,246,0.1);
 }
 
 .system-admin-route-option input{
 margin-top:3px;
 flex-shrink:0;
+accent-color:#3b82f6;
 }
 
 .system-admin-route-text{
 font-size:14px;
 line-height:1.45;
+color:#d1d5db;
+}
+
+.system-admin-route-text strong{
+color:#f9fafb;
 }
 
 .system-admin-route-text code{
@@ -106,22 +131,42 @@ min-height:1.2em;
 .system-admin-guest{
 text-align:center;
 padding:48px 16px;
+max-width:520px;
+margin:0 auto;
 }
 
 .system-admin-denied h1,
 .system-admin-guest h1{
 font-size:20px;
+color:#fff;
+margin:0 0 12px;
 }
 
 .system-admin-denied p,
 .system-admin-guest p{
 color:#9ca3af;
-max-width:420px;
-margin:12px auto 0;
+margin:8px 0;
+line-height:1.5;
+font-size:14px;
+}
+
+.system-admin-denied code,
+.system-admin-guest code{
+color:#93c5fd;
+font-size:13px;
 }
 
 .system-admin-meta{
 font-size:12px;
 color:#6b7280;
 margin-top:8px;
+}
+
+.system-admin-user-email{
+color:#e5e7eb;
+font-weight:600;
+}
+
+.menu a.system-nav-active{
+color:#fff;
 }

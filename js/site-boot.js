@@ -77,7 +77,7 @@ let workerUrl = "";
 
 try{
 const env =
-await import("./supabase-env.js?v=4");
+await import("./supabase-env.js?v=5");
 workerUrl =
 String(env.ALERT_WORKER_URL || "").trim();
 }catch{
