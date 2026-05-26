@@ -1,7 +1,7 @@
 import {
 loadBybitHistory,
 loadBybitSymbols
-} from "./api.js?v=16";
+} from "./api.js?v=18";
 
 import {
 createScreenerChart,
@@ -222,6 +222,7 @@ let currentPage =
 Number(saved.page) || 1;
 
 let allSymbols = [];
+let screenerMarketLoadFailed = false;
 const tickerMap = new Map();
 let activeWidgets = [];
 let renderToken = 0;
@@ -1006,7 +1007,21 @@ if(!symbols.length){
 
 destroyWidgets();
 gridEl.innerHTML = "";
-setStatus("Нет монет для отображения", true);
+
+if(
+screenerMarketLoadFailed
+){
+setStatus(
+"Список монет Bybit не загрузился — «Повторить» внизу экрана",
+true
+);
+}else{
+setStatus(
+"Нет монет для отображения",
+true
+);
+}
+
 return;
 
 }
@@ -1633,8 +1648,14 @@ true
 const list =
 await loadBybitSymbols();
 
+screenerMarketLoadFailed = false;
+
 allSymbols =
-list.map(x => x.symbol);
+list.map(x=>
+typeof x === "string"
+? x
+: x.symbol
+).filter(Boolean);
 
 await fetchTickersInto(tickerMap);
 
@@ -1657,8 +1678,14 @@ await loadBybitSymbols({
 forceNetwork: true
 });
 
+screenerMarketLoadFailed = false;
+
 allSymbols =
-list.map(x => x.symbol);
+list.map(x=>
+typeof x === "string"
+? x
+: x.symbol
+).filter(Boolean);
 
 await fetchTickersInto(tickerMap);
 
@@ -1676,10 +1703,16 @@ console.error(
 err
 );
 
+screenerMarketLoadFailed = true;
+
 setStatus(
-"Список монет Bybit не загрузился — «Повторить» внизу",
+"Список монет Bybit не загрузился — «Повторить» внизу экрана",
 true
 );
+
+void import("./bybit-network-ui.js?v=2").then(m=>{
+m.showBybitNetworkIssue(err);
+});
 
 }
 
@@ -1747,7 +1780,7 @@ try{
 
 await withTimeout(
 loadScreenerMarketData(),
-20000,
+45000,
 "screener market"
 );
 
@@ -1758,12 +1791,12 @@ console.error(
 err
 );
 
+screenerMarketLoadFailed = true;
 allSymbols = [];
 
-setStatus(
-"Список монет Bybit не загрузился — «Повторить» внизу",
-true
-);
+void import("./bybit-network-ui.js?v=2").then(m=>{
+m.showBybitNetworkIssue(err);
+});
 
 }
 

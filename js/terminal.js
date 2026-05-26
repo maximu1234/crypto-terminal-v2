@@ -2,7 +2,7 @@ import {
 loadBybitHistory,
 loadBybitSymbols,
 loadTwelveData
-} from "./api.js?v=16";
+} from "./api.js?v=17";
 
 import {
 filterRecentListings

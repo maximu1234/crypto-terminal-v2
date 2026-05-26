@@ -31,7 +31,7 @@ initBybitNetworkUi
 
 import {
 resetBybitEndpoints
-} from "./bybit-fetch.js?v=5";
+} from "./bybit-fetch.js?v=7";
 
 import {
 initMobileRecovery

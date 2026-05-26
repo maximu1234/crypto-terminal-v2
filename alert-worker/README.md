@@ -13,6 +13,7 @@
 1. **New Project** → **Deploy from GitHub repo** → `crypto-terminal-v2`.
 2. Открой сервис → **Settings**:
    - **Root Directory**: `alert-worker`
+   - **Regions** (Scale): **EU West · Amsterdam** (`europe-west4-drams3a`) — иначе прокси `/bybit` для браузера часто **403** от Bybit. В репо то же задано в `railway.toml`; после push сделай **Redeploy**.
 3. **Variables** — на **этом же сервисе** (не только в Project Shared), с **значениями** (нажмите глаз, проверьте что не пусто):
 
 | Variable | Пример |
@@ -28,6 +29,14 @@
 
 4. **Deploy** → **Deploy Logs**: `env ok: …` и `alert-worker listening`.
 5. **Networking** → domain → `/health` → `{"ok":true,"config":{"ready":true,...}}`.
+
+Проверка прокси Bybit (после EU):
+
+```bash
+curl -sS "https://YOUR.up.railway.app/bybit?path=%2Fv5%2Fmarket%2Ftime"
+```
+
+Должен быть JSON с `"retCode":0`, не `block access from your country`.
 
 Если `ok:false` и `missing:[...]` — переменные не попали в контейнер → Redeploy или проверьте значения (глаз).
 

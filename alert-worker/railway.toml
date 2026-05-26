@@ -3,5 +3,7 @@ builder = "DOCKERFILE"
 dockerfilePath = "Dockerfile"
 
 [deploy]
+# Amsterdam — Bybit REST не режет CloudFront (в US часто 403).
+region = "europe-west4-drams3a"
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 10

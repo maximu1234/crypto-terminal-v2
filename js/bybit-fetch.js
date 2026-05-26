@@ -410,8 +410,56 @@ throw err;
 
 }
 
+async function buildBybitRaceTasks(
+path,
+timeoutMs
+){
+
+const encoded =
+encodeURIComponent(path);
+
+const workerBase =
+await getWorkerProxyBase();
+
+const directTimeoutMs =
+workerBase
+? Math.min(
+5000,
+timeoutMs
+)
+: timeoutMs;
+
+const tasks =
+BYBIT_API_BASES.map(
+(base, index)=>
+fetchOneBybitUrl(
+`${base}${path}`,
+index,
+directTimeoutMs
+)
+);
+
+if(
+workerBase
+){
+
+tasks.push(
+fetchOneBybitProxyUrl(
+`${workerBase}/bybit?path=${encoded}`,
+path,
+timeoutMs,
+"worker-proxy"
+)
+);
+
+}
+
+return tasks;
+
+}
+
 /**
- * Параллельно на всех хостах — кто быстрее ответил (как у биржи после «паузы»).
+ * Параллельно: Bybit + worker /bybit (EU) — не ждём 12 с таймаута прямого API в Chrome/Яндексе.
  */
 async function fetchBybitRace(
 pathQuery,
@@ -425,13 +473,9 @@ options.timeoutMs ??
 12000;
 
 const tasks =
-BYBIT_API_BASES.map(
-(base, index)=>
-fetchOneBybitUrl(
-`${base}${path}`,
-index,
+await buildBybitRaceTasks(
+path,
 timeoutMs
-)
 );
 
 try{
@@ -491,6 +535,30 @@ const path =
 normalizePath(pathQuery);
 
 let lastErr = null;
+
+const workerBase =
+await getWorkerProxyBase();
+
+if(
+workerBase
+){
+
+try{
+
+return await fetchOneBybitProxyUrl(
+`${workerBase}/bybit?path=${encodeURIComponent(path)}`,
+path,
+timeoutMs,
+"worker-proxy"
+);
+
+}catch(err){
+
+lastErr = err;
+
+}
+
+}
 
 for(
 let basePass = 0;

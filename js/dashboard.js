@@ -7,7 +7,7 @@ loadLayout
 
 import {
 loadBybitHistory
-} from "./api.js?v=16";
+} from "./api.js?v=17";
 
 import {
 createCandlestickChart,
