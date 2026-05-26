@@ -17,7 +17,7 @@ applyDashboardZoom
 
 import {
 initDrawings
-} from "./drawings.js?v=134";
+} from "./drawings.js?v=136";
 
 import {
 subscribeKline
@@ -30,7 +30,7 @@ initWidgetDrawToolsDropdown,
 wireWidgetDrawToolMenu,
 closeAllWidgetDrawToolsMenus,
 resetWidgetDrawToolsMenus
-} from "./dashboard-draw-ui.js?v=11";
+} from "./dashboard-draw-ui.js?v=12";
 
 import {
 preloadTradingSymbols,

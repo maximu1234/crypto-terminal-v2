@@ -302,9 +302,9 @@ return true;
 
 }
 
-menu.addEventListener(
-"pointerdown",
-e=>{
+function onMenuPick(
+e
+){
 
 if(
 !pickTool
@@ -321,7 +321,17 @@ e.preventDefault();
 e.stopPropagation();
 }
 
-},
+}
+
+menu.addEventListener(
+"pointerdown",
+onMenuPick,
+true
+);
+
+menu.addEventListener(
+"click",
+onMenuPick,
 true
 );
 

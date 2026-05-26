@@ -24,7 +24,7 @@ TRASH_ICON_SVG
 
 import {
 closeAllWidgetDrawToolsMenus
-} from "./dashboard-draw-ui.js?v=11";
+} from "./dashboard-draw-ui.js?v=12";
 
 import {
 calcPositionSizing,
@@ -8035,9 +8035,37 @@ redraw();
 
 }
 
+let lastToolPickStamp = {
+name: "",
+at: 0
+};
+
 function pickDrawTool(
 next
 ){
+
+if(
+!next
+){
+return;
+}
+
+const now =
+performance.now();
+
+if(
+lastToolPickStamp.name ===
+next &&
+now - lastToolPickStamp.at <
+400
+){
+return;
+}
+
+lastToolPickStamp = {
+name: next,
+at: now
+};
 
 if(
 next ===
@@ -8258,6 +8286,8 @@ return;
 
 redraw();
 
+}
+
 };
 
 rangeHandler =
@@ -8383,8 +8413,7 @@ return true;
 
 }
 
-tools.addEventListener(
-"pointerdown",
+const onToolsPointerDown =
 e=>{
 
 if(
@@ -8399,12 +8428,9 @@ handleToolbarToolPick(
 e
 );
 
-},
-true
-);
+};
 
-tools.addEventListener(
-"click",
+const onToolsClick =
 e=>{
 
 const clearBtn =
@@ -8421,9 +8447,25 @@ clearBtn
 e.preventDefault();
 e.stopPropagation();
 clearAllDrawingsOnChart();
+return;
 }
 
-}
+handleToolbarToolPick(
+e
+);
+
+};
+
+tools.addEventListener(
+"pointerdown",
+onToolsPointerDown,
+true
+);
+
+tools.addEventListener(
+"click",
+onToolsClick,
+true
 );
 
 bindClearAllToolbarButtons();
@@ -9264,6 +9306,16 @@ hideContextMenu?.();
 contextMenuEl?.remove();
 
 window.removeEventListener("keydown", onKeyDown);
+tools.removeEventListener(
+"pointerdown",
+onToolsPointerDown,
+true
+);
+tools.removeEventListener(
+"click",
+onToolsClick,
+true
+);
 window.removeEventListener(
 "drawings-updated",
 onDrawingsUpdated
@@ -9326,7 +9378,5 @@ canvas.remove();
 }
 
 };
-
-}
 
 }
