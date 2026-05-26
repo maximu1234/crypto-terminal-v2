@@ -19,7 +19,7 @@ import {
 isCloudLoggedIn,
 isCloudSyncEnabled,
 getCloudUserEmail
-} from "./cloud-sync.js?v=13";
+} from "./cloud-sync.js?v=14";
 
 import {
 isSupabaseConfigured

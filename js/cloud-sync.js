@@ -22,6 +22,10 @@ import {
 withTimeout
 } from "./async-timeout.js?v=1";
 
+import {
+readAlertTokenSync
+} from "./alert-auth-cache.js?v=4";
+
 const FAVORITES_LOCAL_TS_KEY =
 "favorites_local_updated_at";
 
@@ -1534,23 +1538,137 @@ return redirectTo;
 
 export async function signOutCloud(){
 
-const sb =
-await getSupabase();
-
-if(sb){
-await sb.auth.signOut();
-}
-
 loggedIn = false;
 userEmail = "";
 
+try{
+
+const keys = [];
+
+for(
+let i = 0;
+i < localStorage.length;
+i++
+){
+
+const key =
+localStorage.key(i);
+
+if(
+key?.startsWith("sb-") &&
+key.endsWith("-auth-token")
+){
+keys.push(key);
+}
+
+}
+
+keys.forEach(k=>{
+localStorage.removeItem(k);
+});
+
+localStorage.removeItem(
+SUPABASE_AUTH_STORAGE_KEY
+);
+
+}catch{
+/* ignore */
+}
+
 const { clearAlertAuthCache } =
-await import("./alert-auth-cache.js");
+await import("./alert-auth-cache.js?v=4");
 
 clearAlertAuthCache();
 
 stopCloudSyncHelpers();
 notifyAuth();
+
+try{
+
+const sb =
+await withTimeout(
+getSupabase(),
+4000,
+"getSupabase signOut"
+);
+
+if(
+sb
+){
+await withTimeout(
+sb.auth.signOut(),
+4000,
+"signOut"
+);
+}
+
+}catch(err){
+console.warn(
+"signOut:",
+err?.message || err
+);
+}
+
+}
+
+export function isCloudLoggedInEffective(){
+
+if(
+isCloudLoggedIn()
+){
+return true;
+}
+
+return !!readAlertTokenSync()?.user;
+
+}
+
+export function getEffectiveCloudUserEmail(){
+
+return (
+userEmail ||
+readAlertTokenSync()?.user?.email ||
+""
+);
+
+}
+
+export async function ensureCloudLoginResolved(
+maxWaitMs = 12000
+){
+
+if(
+isCloudLoggedIn()
+){
+return true;
+}
+
+await waitForCloudAuth(
+maxWaitMs
+);
+
+if(
+isCloudLoggedIn()
+){
+return true;
+}
+
+const cached =
+readAlertTokenSync();
+
+if(
+!cached?.token ||
+!cached?.user
+){
+return false;
+}
+
+await applySession({
+access_token: cached.token,
+user: cached.user
+});
+
+return loggedIn;
 
 }
 
@@ -1781,6 +1899,25 @@ err?.message || err
 );
 session = null;
 
+}
+
+}
+
+if(
+!session
+){
+
+const cached =
+readAlertTokenSync();
+
+if(
+cached?.token &&
+cached?.user
+){
+session = {
+access_token: cached.token,
+user: cached.user
+};
 }
 
 }

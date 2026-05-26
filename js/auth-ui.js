@@ -8,7 +8,7 @@ signInWithEmailOtp,
 signOutCloud,
 recoverAuthSessionFromUrl,
 hasAuthCallbackInUrl
-} from "./cloud-sync.js?v=13";
+} from "./cloud-sync.js?v=14";
 
 import {
 isSupabaseConfigured
@@ -20,7 +20,7 @@ readAlertTokenSync
 
 import {
 isSystemAdminUser
-} from "./system-admin-access.js?v=2";
+} from "./system-admin-access.js?v=3";
 
 let cloudEnvConfigured = false;
 let cloudSdkError = "";
@@ -899,12 +899,38 @@ sendBtn.disabled = false;
 
 });
 
-outBtn?.addEventListener("click", async()=>{
+outBtn?.addEventListener(
+"click",
+async e=>{
+
+e.preventDefault();
+e.stopPropagation();
+
+outBtn.disabled = true;
+
+try{
 
 await signOutCloud();
+
+}catch(err){
+console.warn(
+"signOut:",
+err
+);
+}
+
+outBtn.disabled = false;
 closeSettingsDropdown();
 
-});
+}
+);
+
+outBtn?.addEventListener(
+"mousedown",
+e=>{
+e.stopPropagation();
+}
+);
 
 return {
 wrap,

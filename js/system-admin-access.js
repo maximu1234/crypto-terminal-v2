@@ -1,7 +1,7 @@
 import {
-isCloudLoggedIn,
-getCloudUserEmail
-} from "./cloud-sync.js?v=13";
+isCloudLoggedInEffective,
+getEffectiveCloudUserEmail
+} from "./cloud-sync.js?v=14";
 
 function normalizeEmail(raw){
 
@@ -47,17 +47,23 @@ return [];
 
 }
 
+export function isLoggedInEffective(){
+
+return isCloudLoggedInEffective();
+
+}
+
 export async function isSystemAdminUser(){
 
 if(
-!isCloudLoggedIn()
+!isLoggedInEffective()
 ){
 return false;
 }
 
 const email =
 normalizeEmail(
-getCloudUserEmail()
+getEffectiveCloudUserEmail()
 );
 
 if(

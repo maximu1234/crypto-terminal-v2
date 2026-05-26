@@ -3,14 +3,15 @@ ensureCloudReady
 } from "./auth-ui.js?v=19";
 
 import {
-isCloudLoggedIn,
-getCloudUserEmail
-} from "./cloud-sync.js?v=13";
+ensureCloudLoginResolved,
+getEffectiveCloudUserEmail
+} from "./cloud-sync.js?v=14";
 
 import {
 isSystemAdminUser,
-getSystemAdminEmails
-} from "./system-admin-access.js?v=2";
+getSystemAdminEmails,
+isLoggedInEffective
+} from "./system-admin-access.js?v=3";
 
 import {
 getBybitRouteMode,
@@ -156,8 +157,12 @@ async function init(){
 
 await ensureCloudReady();
 
+await ensureCloudLoginResolved(
+12000
+);
+
 if(
-!isCloudLoggedIn()
+!isLoggedInEffective()
 ){
 showOnly(guestEl);
 return;
@@ -177,7 +182,7 @@ if(
 deniedEmailEl
 ){
 deniedEmailEl.textContent =
-getCloudUserEmail() || "—";
+getEffectiveCloudUserEmail() || "—";
 }
 
 const hintEl =
@@ -205,7 +210,7 @@ if(
 emailEl
 ){
 emailEl.textContent =
-getCloudUserEmail() || "";
+getEffectiveCloudUserEmail() || "";
 }
 
 const admins =
