@@ -3430,11 +3430,18 @@ return isCoarseTouchViewport();
 
 }
 
-/** Crosshair-размещение — только главный график Монет (кастомный pan). */
+/** Touch: перекрестье + тап/перетаскивание точек (как iPad на Монетах). */
 function isTouchDrawPlacement(){
 
+return isCoarseTouchViewport();
+
+}
+
+function useChartProbeCrosshair(){
+
 return (
-isTouchDrawTablet() &&
+typeof onChartCrosshairAt ===
+"function" &&
 tabletCustomPanHooked
 );
 
@@ -3494,15 +3501,15 @@ localX,
 localY
 );
 
-if(
-!isTouchDrawTablet()
-){
-
 const point =
 pointFromXY(
 xy.x,
 xy.y
 );
+
+if(
+!isTouchDrawTablet()
+){
 
 if(
 point &&
@@ -3541,13 +3548,39 @@ xy.x,
 xy.y
 );
 
+if(
+useChartProbeCrosshair()
+){
+
 try{
-onChartCrosshairAt?.(
+onChartCrosshairAt(
 client.clientX,
 client.clientY
 );
 }catch{
 /* ignore */
+}
+
+return;
+
+}
+
+if(
+point &&
+chart &&
+series
+){
+
+try{
+chart.setCrosshairPosition(
+point.price,
+point.time,
+series
+);
+}catch{
+/* ignore */
+}
+
 }
 
 }
@@ -3558,6 +3591,10 @@ if(
 isTouchDrawTablet()
 ){
 
+if(
+useChartProbeCrosshair()
+){
+
 try{
 onChartCrosshairClear?.();
 }catch{
@@ -3565,6 +3602,22 @@ onChartCrosshairClear?.();
 }
 
 }else if(
+chart
+){
+
+try{
+chart.clearCrosshairPosition();
+}catch{
+/* ignore */
+}
+
+}
+
+return;
+
+}
+
+if(
 chart
 ){
 
@@ -6502,6 +6555,14 @@ return true;
 
 if(
 tool !==
+"cursor" &&
+isTouchDrawPlacement()
+){
+return true;
+}
+
+if(
+tool !==
 "cursor"
 ){
 return false;
@@ -7562,6 +7623,109 @@ return;
 
 if(!previewPoint){
 return;
+}
+
+const previewXYPoint =
+previewPointToXY(
+previewPoint
+);
+
+if(
+pts.length ===
+0 &&
+previewXYPoint &&
+(
+placement.type ===
+"trendline" ||
+placement.type ===
+"fib"
+)
+){
+
+drawAnchorCircle(
+ctx,
+previewXYPoint.x,
+previewXYPoint.y
+);
+
+return;
+
+}
+
+if(
+pts.length ===
+1 &&
+previewXYPoint &&
+placement.type ===
+"trendline"
+){
+
+const a =
+toXY(
+pts[
+0
+]
+);
+
+if(
+a
+){
+drawLine(
+ctx,
+a.x,
+a.y,
+previewXYPoint.x,
+previewXYPoint.y,
+style.color,
+style.lineWidth
+);
+}
+
+return;
+
+}
+
+if(
+pts.length ===
+1 &&
+previewXYPoint &&
+placement.type ===
+"fib"
+){
+
+const previewPts = [
+pts[
+0
+],
+previewPoint
+];
+
+const previewShape =
+{
+type: placement.type,
+color: style.color,
+lineWidth: style.lineWidth,
+fibLevels:
+style.fibLevels,
+fibShowTrendLine:
+style.fibShowTrendLine,
+p1: previewPts[
+0
+],
+p2: previewPts[
+1
+]
+};
+
+drawShape(
+ctx,
+previewShape,
+w,
+h
+);
+
+return;
+
 }
 
 const previewPts = [...pts, previewPoint];
