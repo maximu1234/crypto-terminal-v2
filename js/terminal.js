@@ -77,6 +77,11 @@ import {
 initDrawings
 } from "./drawings.js?v=126";
 
+import {
+initCoinsMobileUi,
+syncCoinsTfLabel
+} from "./coins-mobile.js?v=1";
+
 let currentDataset = "crypto";
 let currentTF = "60";
 let currentSymbol = "BTCUSDT";
@@ -1021,7 +1026,7 @@ chart,
 series: candleSeries,
 wrapEl: document.getElementById("chart-wrap"),
 uiRoot: document.getElementById("chart-wrap"),
-toolsRoot: document.getElementById("draw-toolbar"),
+toolsRoot: document.getElementById("topbar"),
 getSymbol: ()=> currentSymbol,
 getTf: ()=> currentTF,
 getCandles: ()=> candles,
@@ -2059,26 +2064,42 @@ getTf: ()=> currentTF
    TF
 ========================================================= */
 
+async function setCoinsTimeframe(
+tf
+){
+
+if(
+!tf ||
+tf === currentTF
+){
+return;
+}
+
+currentTF = tf;
+
 document
 .querySelectorAll(".tf-btn")
-.forEach(btn=>{
-
-btn.onclick = async ()=>{
-
-document
-.querySelectorAll(".tf-btn")
-.forEach(b=>
-b.classList.remove("active")
+.forEach(b=>{
+b.classList.toggle(
+"active",
+b.dataset.tf === currentTF
 );
+});
 
-btn.classList.add("active");
-
-currentTF = btn.dataset.tf;
+syncCoinsTfLabel(currentTF);
 
 await loadSymbol(currentSymbol);
 
 persistCoinsPrefs();
 
+}
+
+document
+.querySelectorAll(".tf-btn")
+.forEach(btn=>{
+
+btn.onclick = async ()=>{
+await setCoinsTimeframe(btn.dataset.tf);
 };
 
 });
@@ -2765,6 +2786,8 @@ btn.dataset.tf === currentTF
 
 });
 
+syncCoinsTfLabel(currentTF);
+
 }
 
 /* =========================================================
@@ -2848,6 +2871,11 @@ applyUrlTimeframe();
 await loadSymbol(
 currentSymbol || "BTCUSDT"
 );
+
+initCoinsMobileUi({
+getTf: ()=> currentTF,
+onTfChange: setCoinsTimeframe
+});
 
 }
 

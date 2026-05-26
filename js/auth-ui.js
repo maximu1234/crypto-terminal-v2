@@ -505,6 +505,30 @@ if(headerPanel){
 panels.push(headerPanel);
 }
 
+const mobileAuthHost =
+document.getElementById(
+"cloud-settings-mount-mobile"
+);
+
+if(
+mobileAuthHost &&
+!mobileAuthHost.querySelector(
+".cloud-auth-wrap"
+)
+){
+
+const mobilePanel =
+createAuthPanel(
+mobileAuthHost,
+"panel"
+);
+
+if(mobilePanel){
+panels.push(mobilePanel);
+}
+
+}
+
 if(isAlertsPage()){
 
 const inlinePanel =

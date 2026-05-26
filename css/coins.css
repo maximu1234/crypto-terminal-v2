@@ -1,0 +1,268 @@
+/* Монеты — десктоп: график слева, список справа */
+@media (min-width:641px){
+
+#app{
+display:block;
+}
+
+#left{
+display:grid;
+grid-template-columns:minmax(0,1fr) 340px;
+grid-template-rows:auto auto minmax(0,1fr);
+min-height:0;
+}
+
+#header,
+#topbar{
+grid-column:1 / -1;
+}
+
+#charts-stack{
+grid-column:1;
+grid-row:3;
+}
+
+#list{
+grid-column:2;
+grid-row:3;
+border-left:1px solid #1f2937;
+border-top:none;
+}
+
+}
+
+/* ——— Смартфон ——— */
+.coins-tf-mobile-wrap,
+.coins-draw-tools-mount{
+display:none;
+}
+
+@media (max-width:640px){
+
+html.coins-page,
+body.coins-page{
+overflow:hidden;
+height:100%;
+height:100dvh;
+}
+
+body.coins-page #app{
+display:flex;
+flex-direction:column;
+height:100dvh;
+max-height:100dvh;
+grid-template-columns:1fr;
+padding-bottom:0;
+}
+
+body.coins-page #left{
+display:flex;
+flex-direction:column;
+flex:1 1 auto;
+min-height:0;
+overflow:hidden;
+}
+
+body.coins-page .coins-header-desktop{
+display:none !important;
+}
+
+body.coins-page.coins-nav-open{
+overflow:hidden;
+}
+
+body.coins-page.coins-nav-open #coins-nav-panel{
+transform:translateX(0);
+pointer-events:auto;
+visibility:visible;
+}
+
+.coins-page-header .screener-nav-panel#coins-nav-panel{
+display:flex !important;
+position:fixed;
+top:0;
+right:0;
+bottom:0;
+z-index:10015;
+width:min(280px, 86vw);
+flex-direction:column;
+align-items:stretch;
+margin:0;
+padding:max(16px, env(safe-area-inset-top)) 16px 24px;
+background:#0f172a;
+border-left:1px solid #1f2937;
+box-shadow:-8px 0 32px rgba(0,0,0,.45);
+transform:translateX(100%);
+transition:transform 0.22s ease-out;
+pointer-events:none;
+visibility:hidden;
+}
+
+.coins-page-header .screener-nav-panel#coins-nav-panel a{
+display:block;
+padding:14px 12px;
+font-size:16px;
+border-radius:8px;
+}
+
+body.coins-page #coins-nav-backdrop{
+display:none;
+position:fixed;
+inset:0;
+z-index:10014;
+background:rgba(0,0,0,.55);
+}
+
+body.coins-page.coins-nav-open #coins-nav-backdrop{
+display:block;
+}
+
+.coins-page-header > .coins-header-desktop{
+display:none !important;
+}
+
+.coins-mobile-bar{
+display:flex !important;
+}
+
+#topbar.coins-topbar{
+flex-shrink:0;
+height:48px;
+padding:0 10px;
+gap:8px;
+overflow:visible;
+border-bottom:1px solid #1f2937;
+}
+
+#current-symbol{
+font-size:15px;
+font-weight:700;
+min-width:0;
+flex:1 1 auto;
+margin-right:0;
+padding-right:0;
+border-right:none;
+white-space:nowrap;
+overflow:hidden;
+text-overflow:ellipsis;
+}
+
+.coins-tf-desktop,
+.coins-draw-desktop{
+display:none !important;
+}
+
+.coins-tf-mobile-wrap{
+display:block;
+flex:0 0 auto;
+min-width:72px;
+max-width:88px;
+}
+
+.coins-tf-mobile-wrap .screener-mobile-select{
+padding:8px 10px;
+font-size:14px;
+}
+
+.coins-draw-tools-mount{
+display:flex;
+align-items:center;
+flex-shrink:0;
+}
+
+.coins-draw-tools-mount .widget-draw-tools{
+margin-left:0;
+padding-left:0;
+border-left:none;
+}
+
+.coins-draw-tools-mount .widget-draw-tools-toggle{
+width:40px;
+height:40px;
+border:1px solid #374151;
+background:#1f2937;
+border-radius:8px;
+}
+
+.coins-draw-tools-mount .widget-draw-tools-menu{
+right:0;
+left:auto;
+}
+
+#charts-stack{
+flex:1 1 auto;
+min-height:0;
+display:flex;
+flex-direction:column;
+overflow:hidden;
+}
+
+#chart-wrap{
+flex:1 1 62%;
+min-height:200px;
+}
+
+#rsi-wrap{
+flex:0 0 auto;
+min-height:72px;
+max-height:28%;
+}
+
+#list{
+flex:0 1 auto;
+display:flex;
+flex-direction:column;
+min-height:0;
+max-height:min(38vh, 320px);
+border-left:none;
+border-top:1px solid #1f2937;
+background:#0b1220;
+}
+
+#filter-wrap{
+flex-shrink:0;
+padding:10px 12px calc(
+12px + env(safe-area-inset-bottom, 0px)
+);
+gap:10px;
+}
+
+#market-filter,
+#coin-search{
+font-size:16px;
+padding:10px 12px;
+}
+
+#table-header{
+flex-shrink:0;
+}
+
+#coins-body{
+flex:1 1 auto;
+min-height:0;
+-webkit-overflow-scrolling:touch;
+}
+
+.coins-page-header .screener-nav-panel#coins-nav-panel .coins-nav-settings{
+display:block;
+width:100%;
+margin-top:12px;
+padding-top:12px;
+border-top:1px solid #1f2937;
+}
+
+.coins-page-header .screener-nav-panel#coins-nav-panel .coins-nav-settings .header-settings-section-title{
+margin-bottom:8px;
+}
+
+.coins-page-header .screener-nav-panel#coins-nav-panel .cloud-auth-wrap--panel{
+max-width:none;
+}
+
+.coins-page-header .screener-nav-panel#coins-nav-panel .cloud-auth-email,
+.coins-page-header .screener-nav-panel#coins-nav-panel .cloud-auth-send{
+width:100%;
+box-sizing:border-box;
+}
+
+}

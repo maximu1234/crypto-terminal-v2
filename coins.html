@@ -15,22 +15,46 @@
 
 <link rel="stylesheet" href="css/common.css?v=12">
 <link rel="stylesheet" href="css/terminal.css?v=64">
+<link rel="stylesheet" href="css/dashboard.css?v=8">
+<link rel="stylesheet" href="css/screener.css?v=15">
+<link rel="stylesheet" href="css/coins.css?v=1">
 
 </head>
 
-<body>
+<body class="coins-page">
 
 <div id="app">
 
 <div id="left">
 
-<header id="header">
+<header id="header" class="screener-page-header coins-page-header">
 
 <div id="logo">
 Multichart
 </div>
 
-<nav class="menu">
+<div class="screener-mobile-bar coins-mobile-bar">
+<button type="button" class="screener-nav-toggle" id="coins-nav-toggle" aria-label="Меню" aria-expanded="false" aria-controls="coins-nav-panel">
+<span class="screener-nav-toggle-bars" aria-hidden="true"></span>
+</button>
+</div>
+
+<div class="screener-nav-backdrop hidden" id="coins-nav-backdrop"></div>
+
+<nav class="screener-nav-panel" id="coins-nav-panel">
+<a href="/index.html">Главная</a>
+<a href="/coins.html" class="active">Монеты</a>
+<a href="/terminal.html">Терминал</a>
+<a href="/alerts/">Алерты</a>
+<a href="/listings.html">Листинги</a>
+<a href="/trade-calculator.html">Калькулятор</a>
+<div class="header-settings-wrap coins-nav-settings">
+<p class="header-settings-section-title">Синхронизация</p>
+<div id="cloud-settings-mount-mobile"></div>
+</div>
+</nav>
+
+<nav class="menu coins-header-desktop">
 <a href="/index.html">Главная</a>
 <a href="/coins.html" class="active">Монеты</a>
 <a href="/terminal.html">Терминал</a>
@@ -50,20 +74,38 @@ Multichart
 
 </header>
 
-<div id="topbar">
+<div id="topbar" class="coins-topbar">
 
 <div id="current-symbol">
 BTCUSDT.P
 </div>
 
+<div class="coins-tf-desktop">
 <button class="tf-btn" data-tf="1">1m</button>
 <button class="tf-btn" data-tf="5">5m</button>
 <button class="tf-btn" data-tf="15">15m</button>
 <button class="tf-btn active" data-tf="60">1h</button>
 <button class="tf-btn" data-tf="240">4h</button>
 <button class="tf-btn" data-tf="D">1D</button>
+</div>
 
-<div id="draw-toolbar" class="draw-toolbar-inline">
+<div class="screener-mobile-select-wrap coins-tf-mobile-wrap">
+<button type="button" class="screener-mobile-select" id="coins-tf-trigger" aria-haspopup="listbox" aria-expanded="false">
+<span id="coins-tf-label">1h</span>
+</button>
+<div class="screener-mobile-menu hidden" id="coins-tf-menu" role="listbox">
+<button type="button" class="screener-mobile-menu-item" data-tf="1">1m</button>
+<button type="button" class="screener-mobile-menu-item" data-tf="5">5m</button>
+<button type="button" class="screener-mobile-menu-item" data-tf="15">15m</button>
+<button type="button" class="screener-mobile-menu-item active" data-tf="60">1h</button>
+<button type="button" class="screener-mobile-menu-item" data-tf="240">4h</button>
+<button type="button" class="screener-mobile-menu-item" data-tf="D">1D</button>
+</div>
+</div>
+
+<div id="coins-draw-tools-mount" class="coins-draw-tools-mount"></div>
+
+<div id="draw-toolbar" class="draw-toolbar-inline coins-draw-desktop">
 
 <button type="button" class="draw-btn" data-draw-tool="cursor" title="Курсор">
 <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -317,7 +359,7 @@ document.body.innerHTML = `
 import("./js/charts-lib-boot.js").then(({ loadLightweightCharts })=>
 loadLightweightCharts()
 ).then(()=>
-import("./js/terminal.js?v=156")
+import("./js/terminal.js?v=157")
 ).catch(err=>{
 
 console.error(err);
