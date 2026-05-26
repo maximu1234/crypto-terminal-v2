@@ -303,7 +303,7 @@ return true;
 }
 
 menu.addEventListener(
-"click",
+"pointerdown",
 e=>{
 
 if(
@@ -321,7 +321,8 @@ e.preventDefault();
 e.stopPropagation();
 }
 
-}
+},
+true
 );
 
 }

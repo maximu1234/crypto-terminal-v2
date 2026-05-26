@@ -24,7 +24,7 @@ TRASH_ICON_SVG
 
 import {
 closeAllWidgetDrawToolsMenus
-} from "./dashboard-draw-ui.js?v=10";
+} from "./dashboard-draw-ui.js?v=11";
 
 import {
 calcPositionSizing,
@@ -6567,20 +6567,7 @@ dragState
 return true;
 }
 
-if(
-placement &&
-isTouchDrawPlacement()
-){
-return true;
-}
-
-if(
-tool !==
-"cursor" &&
-isTouchDrawPlacement()
-){
-return true;
-}
+/* placement: точки ставятся pointerdown/up на wrapEl — touchstart не блокируем */
 
 if(
 tool !==
@@ -8358,6 +8345,64 @@ deleteSelected();
 
 window.addEventListener("keydown", onKeyDown);
 
+function handleToolbarToolPick(
+e
+){
+
+const btn =
+e.target.closest?.(
+"[data-draw-tool]"
+);
+
+if(
+!btn ||
+!tools.contains(
+btn
+)
+){
+return false;
+}
+
+if(
+btn.closest(
+".widget-draw-tools-menu"
+) ||
+btn.closest(
+".widget-draw-tools-toggle"
+)
+){
+return false;
+}
+
+e.preventDefault();
+e.stopPropagation();
+pickDrawTool(
+btn.dataset.drawTool
+);
+return true;
+
+}
+
+tools.addEventListener(
+"pointerdown",
+e=>{
+
+if(
+e.target.closest?.(
+".draw-tool-clear-all"
+)
+){
+return;
+}
+
+handleToolbarToolPick(
+e
+);
+
+},
+true
+);
+
 tools.addEventListener(
 "click",
 e=>{
@@ -8376,34 +8421,7 @@ clearBtn
 e.preventDefault();
 e.stopPropagation();
 clearAllDrawingsOnChart();
-return;
 }
-
-const btn =
-e.target.closest?.(
-"[data-draw-tool]"
-);
-
-if(
-!btn ||
-!tools.contains(
-btn
-)
-){
-return;
-}
-
-if(
-btn.closest(
-".widget-draw-tools-menu"
-)
-){
-return;
-}
-
-pickDrawTool(
-btn.dataset.drawTool
-);
 
 }
 );
