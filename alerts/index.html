@@ -3,22 +3,31 @@
 <head>
 
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
 
 <title>Алерты — Multichart</title>
 
 <link rel="stylesheet" href="/css/common.css?v=13">
+<link rel="stylesheet" href="/css/site-mobile-nav.css?v=1">
 <link rel="stylesheet" href="/css/alerts.css?v=14">
 
 </head>
 
-<body>
+<body class="site-nav-page">
 
-<header id="header">
+<header id="header" class="screener-page-header">
 
 <a href="/index.html" id="logo">Multichart</a>
 
-<nav class="menu">
+<div class="screener-mobile-bar site-mobile-bar">
+<button type="button" class="screener-nav-toggle" id="site-nav-toggle" aria-label="Меню" aria-expanded="false" aria-controls="site-nav-panel">
+<span class="screener-nav-toggle-bars" aria-hidden="true"></span>
+</button>
+</div>
+
+<div class="screener-nav-backdrop hidden" id="site-nav-backdrop"></div>
+
+<nav class="menu screener-nav-panel" id="site-nav-panel">
 <a href="/index.html">Главная</a>
 <a href="/coins.html">Монеты</a>
 <a href="/terminal.html">Терминал</a>
@@ -246,7 +255,7 @@ aria-describedby="alerts-telegram-status"
 
 </main>
 
-<script type="module" src="/js/site-boot.js?v=60"></script>
+<script type="module" src="/js/site-boot.js?v=61"></script>
 <script type="module" src="/js/alerts-page.js?v=47"></script>
 
 </body>

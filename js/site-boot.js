@@ -37,8 +37,20 @@ import {
 initMobileRecovery
 } from "./mobile-recovery.js?v=1";
 
+import {
+bindSiteMobileNav
+} from "./site-mobile-nav.js?v=1";
+
 initBybitNetworkUi();
 initMobileRecovery();
+
+if(
+document.body.classList.contains(
+"site-nav-page"
+)
+){
+bindSiteMobileNav();
+}
 
 window.addEventListener(
 "bybit-network-retry",
