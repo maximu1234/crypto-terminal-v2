@@ -24,7 +24,7 @@ flagSortRank
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=18";
+} from "./auth-ui.js?v=19";
 
 import {
 persistFavoritesToCloud,

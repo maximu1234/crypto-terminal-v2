@@ -51,6 +51,12 @@ return "";
 const workerUrl =
 normalizeAlertWorkerBaseUrl(workerUrlRaw);
 
+const systemAdminEmail =
+String(
+process.env.SYSTEM_ADMIN_EMAIL ||
+""
+).trim();
+
 if (
 workerUrlRaw &&
 workerUrl &&
@@ -83,6 +89,7 @@ const body = `/* Auto-generated at deploy — do not edit */
 export const SUPABASE_URL = ${JSON.stringify(url)};
 export const SUPABASE_ANON_KEY = ${JSON.stringify(key)};
 export const ALERT_WORKER_URL = ${JSON.stringify(workerUrl)};
+export const SYSTEM_ADMIN_EMAIL = ${JSON.stringify(systemAdminEmail)};
 `;
 
 fs.writeFileSync(out, body, "utf8");

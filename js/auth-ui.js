@@ -18,6 +18,10 @@ import {
 readAlertTokenSync
 } from "./alert-auth-cache.js?v=4";
 
+import {
+isSystemAdminUser
+} from "./system-admin-access.js?v=1";
+
 let cloudEnvConfigured = false;
 let cloudSdkError = "";
 
@@ -1034,6 +1038,49 @@ cloudEnvConfigured
 }
 
 refreshAuthUi();
+
+void injectSystemAdminNavLink();
+
+}
+
+async function injectSystemAdminNavLink(){
+
+try{
+
+if(
+!await isSystemAdminUser()
+){
+return;
+}
+
+const dropdown =
+document.getElementById("header-settings-dropdown");
+
+if(
+!dropdown ||
+dropdown.querySelector(
+"[data-system-admin-link]"
+)
+){
+return;
+}
+
+const link =
+document.createElement("a");
+
+link.href = "/system";
+link.className = "header-settings-system-link";
+link.setAttribute(
+"data-system-admin-link",
+"1"
+);
+link.textContent = "Системные настройки";
+
+dropdown.appendChild(link);
+
+}catch{
+/* ignore */
+}
 
 }
 

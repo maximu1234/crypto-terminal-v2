@@ -4,7 +4,7 @@ initAlertMonitor
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=18";
+} from "./auth-ui.js?v=19";
 
 import {
 initAlertsCloudSync,
@@ -33,7 +33,7 @@ import {
 resetBybitEndpoints,
 preloadBybitProxyConfig,
 warmBybitWorkerProxy
-} from "./bybit-fetch.js?v=9";
+} from "./bybit-fetch.js?v=10";
 
 import {
 initMobileRecovery

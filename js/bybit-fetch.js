@@ -2,6 +2,12 @@ import {
 normalizeAlertWorkerBaseUrl
 } from "./alert-worker-url.js?v=1";
 
+import {
+getBybitRouteMode,
+BYBIT_ROUTE_DIRECT,
+BYBIT_ROUTE_PROXY
+} from "./bybit-route-pref.js?v=1";
+
 /** Публичные REST API Bybit (зеркало — запас при блокировках DNS/региона). */
 export const BYBIT_API_BASES = [
 "https://api.bybit.com",
@@ -69,6 +75,21 @@ return /Chrome|Chromium|CriOS|YaBrowser|Edg\/|OPR\/|Brave/i.test(ua);
 
 function shouldSkipDirectBybit(){
 
+const mode =
+getBybitRouteMode();
+
+if(
+mode === BYBIT_ROUTE_DIRECT
+){
+return false;
+}
+
+if(
+mode === BYBIT_ROUTE_PROXY
+){
+return true;
+}
+
 if(
 !isChromiumBrowser()
 ){
@@ -94,6 +115,27 @@ return true;
 }
 
 return true;
+
+}
+
+function prefersBybitWorkerProxy(){
+
+const mode =
+getBybitRouteMode();
+
+if(
+mode === BYBIT_ROUTE_PROXY
+){
+return true;
+}
+
+if(
+mode === BYBIT_ROUTE_DIRECT
+){
+return false;
+}
+
+return shouldSkipDirectBybit();
 
 }
 
@@ -227,7 +269,7 @@ return workerProxyConfigPromise;
 export function warmBybitWorkerProxy(){
 
 if(
-!shouldSkipDirectBybit()
+!prefersBybitWorkerProxy()
 ){
 return;
 }
@@ -582,7 +624,7 @@ const proxyOnly =
 options.proxyOnly === true ||
 (
 workerBase &&
-shouldSkipDirectBybit()
+prefersBybitWorkerProxy()
 );
 
 if(
@@ -603,7 +645,7 @@ timeoutMs,
 
 const useWorker =
 workerBase &&
-shouldSkipDirectBybit();
+prefersBybitWorkerProxy();
 
 const tasks = [];
 
@@ -720,7 +762,7 @@ normalizePath(pathQuery);
 let lastErr = null;
 
 if(
-shouldSkipDirectBybit()
+prefersBybitWorkerProxy()
 ){
 
 const workerBase =
@@ -863,6 +905,19 @@ options
 return fetchBybitRace(
 pathQuery,
 options
+);
+
+}
+
+if(
+typeof window !== "undefined"
+){
+
+window.addEventListener(
+"bybit-route-changed",
+()=>{
+resetBybitEndpoints();
+}
 );
 
 }

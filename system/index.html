@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<meta name="robots" content="noindex, nofollow"/>
+
+<title>Системные настройки</title>
+
+<link rel="stylesheet" href="/css/common.css?v=17">
+<link rel="stylesheet" href="/css/system-admin.css?v=1">
+
+</head>
+
+<body class="site-nav-page">
+
+<header id="header" class="screener-page-header">
+
+<a href="/index.html" id="logo">Multichart</a>
+
+<nav class="menu">
+<a href="/index.html">← На главную</a>
+</nav>
+
+</header>
+
+<div id="system-admin-root">
+
+<div id="system-admin-guest" class="system-admin-guest hidden">
+<h1>Вход нужен</h1>
+<p>Откройте шестерёнку на любом разделе → войдите по email. Затем снова зайдите на <code>/system</code>.</p>
+</div>
+
+<div id="system-admin-denied" class="system-admin-denied hidden">
+<h1>Нет доступа</h1>
+<p>Страница только для администратора. Ваш аккаунт не в списке <code>SYSTEM_ADMIN_EMAIL</code>.</p>
+</div>
+
+<main id="system-admin-panel" class="system-admin-page hidden">
+
+<h1>Системные настройки</h1>
+<p class="system-admin-lead">
+Только для вас (<span id="system-admin-email"></span>). Не в меню сайта — сохраните закладку <code>/system</code>.
+</p>
+<p id="system-admin-admins-meta" class="system-admin-meta"></p>
+
+<section class="system-admin-card" aria-labelledby="bybit-route-heading">
+
+<h2 id="bybit-route-heading">Маршрут данных Bybit (REST)</h2>
+
+<form id="system-bybit-route-form" class="system-admin-route-list">
+
+<label class="system-admin-route-option">
+<input type="radio" name="bybit-route" value="auto"/>
+<span class="system-admin-route-text">
+<strong>Авто</strong> (как у пользователей по умолчанию)<br/>
+Safari → <code>api.bybit.com</code>; Chrome / Яндекс → <code>railway.app/bybit</code>
+</span>
+</label>
+
+<label class="system-admin-route-option">
+<input type="radio" name="bybit-route" value="direct"/>
+<span class="system-admin-route-text">
+<strong>1. Прямой</strong><br/>
+Браузер → <code>api.bybit.com</code> (и зеркало bytick)
+</span>
+</label>
+
+<label class="system-admin-route-option">
+<input type="radio" name="bybit-route" value="proxy"/>
+<span class="system-admin-route-text">
+<strong>2. Прокси Railway</strong><br/>
+Браузер → <code>railway.app/bybit</code> → Amsterdam → <code>api.bybit.com</code>
+</span>
+</label>
+
+</form>
+
+<p id="system-admin-status" class="system-admin-status" aria-live="polite"></p>
+
+<div class="system-admin-actions">
+<button type="button" class="system-admin-btn system-admin-btn-primary" id="system-admin-reload-site">
+Открыть главную с новым маршрутом
+</button>
+</div>
+
+</section>
+
+</main>
+
+</div>
+
+<script type="module" src="/js/site-boot.js?v=67"></script>
+<script type="module" src="/js/system-admin-page.js?v=1"></script>
+
+</body>
+</html>
