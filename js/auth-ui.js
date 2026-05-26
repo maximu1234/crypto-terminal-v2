@@ -1010,7 +1010,10 @@ p.refreshOne();
 
 }
 
-onCloudSyncChange(refreshAll);
+onCloudSyncChange(()=>{
+refreshAll();
+void syncSystemAdminNavLinks();
+});
 refreshAll();
 
 return refreshAll;
@@ -1068,36 +1071,21 @@ cloudEnvConfigured
 
 refreshAuthUi();
 
-void injectSystemAdminNavLink();
+void syncSystemAdminNavLinks();
 
 }
 
-async function injectSystemAdminNavLink(){
+function removeSystemAdminNavLinks(){
 
-try{
-
-if(
-!await isSystemAdminUser()
-){
-return;
-}
-
-const dropdown =
-document.getElementById("header-settings-dropdown");
-
-if(
-!dropdown
-){
-return;
-}
-
-if(
-dropdown.querySelector(
+document.querySelectorAll(
 "[data-system-admin-link]"
-)
-){
-return;
+).forEach(node=>{
+node.remove();
+});
+
 }
+
+function createSystemAdminNavLink(){
 
 const link =
 document.createElement("a");
@@ -1110,7 +1098,62 @@ link.setAttribute(
 );
 link.textContent = "Системные настройки";
 
-dropdown.appendChild(link);
+return link;
+
+}
+
+function getSystemAdminNavLinkHosts(){
+
+const hosts = [];
+
+const dropdown =
+document.getElementById(
+"header-settings-dropdown"
+);
+
+if(dropdown){
+hosts.push(dropdown);
+}
+
+const coinsNavSettings =
+document.querySelector(
+"#coins-nav-panel .coins-nav-settings"
+);
+
+if(coinsNavSettings){
+hosts.push(coinsNavSettings);
+}
+
+return hosts;
+
+}
+
+export async function syncSystemAdminNavLinks(){
+
+try{
+
+removeSystemAdminNavLinks();
+
+if(
+!await isSystemAdminUser()
+){
+return;
+}
+
+const hosts =
+getSystemAdminNavLinkHosts();
+
+if(
+!hosts.length
+){
+return;
+}
+
+hosts.forEach(host=>{
+host.appendChild(
+createSystemAdminNavLink()
+);
+});
 
 }catch{
 /* ignore */

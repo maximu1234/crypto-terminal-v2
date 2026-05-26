@@ -24,7 +24,7 @@ flagSortRank
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=19";
+} from "./auth-ui.js?v=20";
 
 import {
 persistFavoritesToCloud,
@@ -2789,39 +2789,32 @@ return false;
 
 }
 
-document.addEventListener(
-"keydown",
-async e=>{
-
-if(shouldIgnoreListKeyNav(e)){
-return;
-}
+async function navigateCoinsList(
+direction
+){
 
 const symbols =
 getVisibleSymbolList();
 
-if(!symbols.length){
+if(
+!symbols.length
+){
 return;
 }
 
 const goDown =
-e.code === "ArrowDown" ||
-e.code === "Space" ||
-e.key === " ";
-
-const goUp =
-e.code === "ArrowUp";
-
-if(!goDown && !goUp){
-return;
-}
-
-e.preventDefault();
+direction >
+0;
 
 let index =
-symbols.indexOf(currentSymbol);
+symbols.indexOf(
+currentSymbol
+);
 
-if(index < 0){
+if(
+index <
+0
+){
 index = goDown ? -1 : 0;
 }
 
@@ -2841,10 +2834,150 @@ next === currentSymbol
 return;
 }
 
-setCoinsChartSymbol(next);
-await loadSymbol(next);
+setCoinsChartSymbol(
+next
+);
+await loadSymbol(
+next
+);
+
+}
+
+document.addEventListener(
+"keydown",
+async e=>{
+
+if(shouldIgnoreListKeyNav(e)){
+return;
+}
+
+const goDown =
+e.code === "ArrowDown" ||
+e.code === "Space" ||
+e.key === " ";
+
+const goUp =
+e.code === "ArrowUp";
+
+if(!goDown && !goUp){
+return;
+}
+
+e.preventDefault();
+await navigateCoinsList(
+goDown ? 1 : -1
+);
 
 });
+
+const COINS_TABLET_LIST_NAV_MQ =
+window.matchMedia(
+"(pointer: coarse) and (min-width: 768px)"
+);
+
+function syncCoinsTabletListNav(){
+
+const show =
+COINS_TABLET_LIST_NAV_MQ.matches &&
+!isCoinsMobile();
+
+document.body.classList.toggle(
+"coins-tablet-list-nav-on",
+show
+);
+
+if(
+!show
+){
+return;
+}
+
+const list =
+document.getElementById(
+"list"
+);
+
+if(
+!list
+){
+return;
+}
+
+let nav =
+document.getElementById(
+"coins-list-tablet-nav"
+);
+
+if(
+nav
+){
+return;
+}
+
+nav =
+document.createElement(
+"div"
+);
+
+nav.id = "coins-list-tablet-nav";
+nav.className = "coins-list-tablet-nav";
+nav.setAttribute(
+"aria-label",
+"Листание списка монет"
+);
+
+const up =
+document.createElement(
+"button"
+);
+
+up.type = "button";
+up.className = "coins-list-scroll-btn coins-list-scroll-btn--up";
+up.id = "coins-list-scroll-up";
+up.textContent = "▲ Вверх по списку";
+
+const down =
+document.createElement(
+"button"
+);
+
+down.type = "button";
+down.className = "coins-list-scroll-btn coins-list-scroll-btn--down";
+down.id = "coins-list-scroll-down";
+down.textContent = "▼ Вниз по списку";
+
+up.addEventListener(
+"click",
+()=>{
+void navigateCoinsList(
+-1
+);
+}
+);
+
+down.addEventListener(
+"click",
+()=>{
+void navigateCoinsList(
+1
+);
+}
+);
+
+nav.append(
+up,
+down
+);
+list.appendChild(
+nav
+);
+
+}
+
+COINS_TABLET_LIST_NAV_MQ.addEventListener(
+"change",
+syncCoinsTabletListNav
+);
 
 /* =========================================================
    URL PARAMS
@@ -3071,6 +3204,8 @@ false
 });
 
 void refreshCoinsMarketUi();
+
+syncCoinsTabletListNav();
 
 }
 

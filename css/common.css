@@ -445,6 +445,12 @@ text-decoration:none;
 color:#bfdbfe;
 }
 
+.coins-nav-settings .header-settings-system-link,
+#coins-nav-panel .header-settings-system-link{
+margin-top:14px;
+padding-top:14px;
+}
+
 /* Флаги монет: Монеты, Главная (скринер), везде с меню выбора цвета */
 .coin-flag-wrap,
 .screener-flag-wrap{
