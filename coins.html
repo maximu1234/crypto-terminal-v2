@@ -76,11 +76,30 @@
 <div id="current-symbol"></div>
 <script>
 (function(){
-var s=new URLSearchParams(location.search).get("symbol");
 var el=document.getElementById("current-symbol");
-if(s&&el){
-el.textContent=s.trim().toUpperCase()+".P";
+if(!el){
+return;
 }
+var params=new URLSearchParams(location.search);
+var fromUrl=params.get("symbol");
+if(fromUrl){
+el.textContent=fromUrl.trim().toUpperCase()+".P";
+return;
+}
+try{
+var raw=localStorage.getItem("coins_page_prefs_v1");
+if(!raw){
+return;
+}
+var prefs=JSON.parse(raw);
+var market=prefs.market||"crypto";
+var last=
+prefs.lastViewByMarket&&
+prefs.lastViewByMarket[market];
+if(last&&last.symbol){
+el.textContent=String(last.symbol).toUpperCase()+".P";
+}
+}catch(e){}
 })();
 </script>
 
@@ -365,7 +384,7 @@ document.body.innerHTML = `
 import("./js/charts-lib-boot.js").then(({ loadLightweightCharts })=>
 loadLightweightCharts()
 ).then(()=>
-import("./js/terminal.js?v=160")
+import("./js/terminal.js?v=161")
 ).catch(err=>{
 
 console.error(err);

@@ -87,6 +87,10 @@ let currentDataset = "crypto";
 let currentTF = "60";
 let currentSymbol = "BTCUSDT";
 
+/** То, что показано в #current-symbol (не сбрасывается на BTC при переключении). */
+let displaySymbol =
+"";
+
 let candles = [];
 let symbolLoadSeq = 0;
 let marketData = [];
@@ -1820,10 +1824,9 @@ async function loadSymbol(symbol){
 const loadSeq = ++symbolLoadSeq;
 
 currentSymbol = symbol;
+setCoinsChartSymbol(symbol);
 
 persistCoinsPrefs();
-
-syncCoinsSymbolLabel();
 
 setCoinsChartStatus(
 `Загрузка ${formatCoinsSymbolLabel(symbol)}…`,
@@ -2176,6 +2179,7 @@ renderList();
 resolveInitialSymbolAndTf();
 
 applyUrlTimeframe();
+setCoinsChartSymbol(currentSymbol);
 
 if(currentSymbol){
 await loadSymbol(currentSymbol);
@@ -2432,6 +2436,7 @@ e.target.closest(".coin-flag-wrap")
 return;
 }
 
+setCoinsChartSymbol(item.symbol);
 await loadSymbol(item.symbol);
 
 };
@@ -2800,6 +2805,7 @@ next === currentSymbol
 return;
 }
 
+setCoinsChartSymbol(next);
 await loadSymbol(next);
 
 });
@@ -2832,10 +2838,15 @@ currentTF = tf;
 }
 
 function formatCoinsSymbolLabel(
-symbol = currentSymbol
+symbol
 ){
 
-if(!symbol){
+const sym =
+symbol ||
+displaySymbol ||
+currentSymbol;
+
+if(!sym){
 return "—";
 }
 
@@ -2843,14 +2854,27 @@ if(
 currentDataset === "crypto" ||
 currentDataset === "new"
 ){
-return symbol + ".P";
+return sym + ".P";
 }
 
-return symbol;
+return sym;
 
 }
 
-function syncCoinsSymbolLabel(){
+function setCoinsChartSymbol(
+symbol
+){
+
+const sym =
+symbol
+? String(symbol).trim().toUpperCase()
+: "";
+
+if(!sym){
+return;
+}
+
+displaySymbol = sym;
 
 const el =
 document.getElementById(
@@ -2862,7 +2886,15 @@ return;
 }
 
 el.textContent =
-formatCoinsSymbolLabel();
+formatCoinsSymbolLabel(sym);
+
+}
+
+function syncCoinsSymbolLabel(){
+
+setCoinsChartSymbol(
+currentSymbol
+);
 
 }
 
@@ -2958,11 +2990,12 @@ currentTF = "60";
 }
 
 applyUrlTimeframe();
-
-syncCoinsSymbolLabel();
+setCoinsChartSymbol(
+currentSymbol || displaySymbol
+);
 
 await loadSymbol(
-currentSymbol || "BTCUSDT"
+currentSymbol || displaySymbol || "BTCUSDT"
 );
 
 initCoinsMobileUi({
@@ -3010,7 +3043,16 @@ flushCoinsPrefs();
 );
 
 readUrlParams();
-syncCoinsSymbolLabel();
+applyCoinsPrefs();
+
+if(!hasUrlSymbol){
+resolveInitialSymbolAndTf();
+}
+
+setCoinsChartSymbol(
+currentSymbol
+);
+
 applyUrlTimeframe();
 
 init();
