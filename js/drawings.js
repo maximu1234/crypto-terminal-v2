@@ -24,7 +24,7 @@ TRASH_ICON_SVG
 
 import {
 closeAllWidgetDrawToolsMenus
-} from "./dashboard-draw-ui.js?v=8";
+} from "./dashboard-draw-ui.js?v=9";
 
 import {
 calcPositionSizing,
@@ -8193,6 +8193,14 @@ if(
 !btn ||
 !tools.contains(
 btn
+)
+){
+return;
+}
+
+if(
+btn.closest(
+".widget-draw-tools-menu"
 )
 ){
 return;

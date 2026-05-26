@@ -75,13 +75,14 @@ syncBackgroundAlertStreams
 
 import {
 initDrawings
-} from "./drawings.js?v=129";
+} from "./drawings.js?v=130";
 
 import {
 initCoinsMobileUi,
+wireCoinsMobileDrawToolsMenu,
 isCoinsMobile,
 syncCoinsTfLabel
-} from "./coins-mobile.js?v=3";
+} from "./coins-mobile.js?v=4";
 
 let currentDataset = "crypto";
 let currentTF = "60";
@@ -3040,7 +3041,33 @@ currentSymbol || displaySymbol || "BTCUSDT"
 
 initCoinsMobileUi({
 getTf: ()=> currentTF,
-onTfChange: setCoinsTimeframe
+onTfChange: setCoinsTimeframe,
+wireDrawToolsMenu:(
+container
+)=>{
+if(
+!container ||
+!drawingTools
+){
+return;
+}
+
+wireCoinsMobileDrawToolsMenu(
+container,
+{
+pickTool:(
+name
+)=>{
+drawingTools.pickDrawTool(
+name
+);
+},
+onClearAll:()=>
+drawingTools.clearAllDrawings?.() ??
+false
+}
+);
+}
 });
 
 void refreshCoinsMarketUi();

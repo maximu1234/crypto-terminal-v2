@@ -1,7 +1,11 @@
 import {
 getWidgetToolbarHtml,
-initWidgetDrawToolsDropdown
-} from "./dashboard-draw-ui.js?v=2";
+initWidgetDrawToolsDropdown,
+wireWidgetDrawToolMenu
+} from "./dashboard-draw-ui.js?v=9";
+
+let wireCoinsDrawToolsMenuFn =
+null;
 
 const COINS_MOBILE_MQ =
 window.matchMedia(
@@ -37,6 +41,10 @@ getTfFn;
 tfChangeHandler =
 opts.onTfChange ||
 tfChangeHandler;
+
+wireCoinsDrawToolsMenuFn =
+opts.wireDrawToolsMenu ||
+wireCoinsDrawToolsMenuFn;
 
 mountMobileDrawTools();
 bindCoinsNav();
@@ -110,10 +118,36 @@ return;
 mount.innerHTML =
 getWidgetToolbarHtml();
 
-initWidgetDrawToolsDropdown(
+const container =
 mount.querySelector(
 ".widget-draw-tools"
-)
+);
+
+initWidgetDrawToolsDropdown(
+container
+);
+
+wireCoinsDrawToolsMenuFn?.(
+container
+);
+
+}
+
+export function wireCoinsMobileDrawToolsMenu(
+container,
+handlers = {}
+){
+
+if(
+!container ||
+!isCoinsMobile()
+){
+return;
+}
+
+wireWidgetDrawToolMenu(
+container,
+handlers
 );
 
 }

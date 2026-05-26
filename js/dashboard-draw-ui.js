@@ -37,6 +37,7 @@ e.target.closest(
 ".widget-draw-tools [data-draw-tool]"
 )
 ){
+closeAllWidgetDrawToolsMenus();
 return;
 }
 
@@ -195,6 +196,38 @@ widgetDrawMenuClosers.add(
 close
 );
 
+const onMenuToolPicked = e=>{
+
+const btn =
+e.target.closest(
+"[data-draw-tool]"
+);
+
+if(
+!btn ||
+btn.closest(
+".draw-tool-clear-all"
+)
+){
+return;
+}
+
+close();
+
+};
+
+menu.addEventListener(
+"pointerup",
+onMenuToolPicked,
+{ capture:true }
+);
+
+menu.addEventListener(
+"click",
+onMenuToolPicked,
+{ capture:true }
+);
+
 }
 
 export function wireWidgetDrawToolMenu(
@@ -274,13 +307,9 @@ return;
 true
 );
 
-menu.addEventListener(
-"click",
-e=>{
-
-if(!pickTool){
-return;
-}
+function runPickTool(
+e
+){
 
 const btn =
 e.target.closest(
@@ -288,48 +317,64 @@ e.target.closest(
 );
 
 if(
-!btn
+!btn ||
+btn.closest(
+".draw-tool-clear-all"
+)
 ){
-return;
+return false;
 }
-
-e.preventDefault();
-e.stopPropagation();
 
 onActivate?.(e);
 pickTool(
 btn.dataset.drawTool
 );
-
-queueMicrotask(
-()=>{
 closeAllWidgetDrawToolsMenus();
+return true;
+
 }
-);
+
+menu.addEventListener(
+"click",
+e=>{
+
+if(
+!pickTool
+){
+return;
+}
+
+if(
+runPickTool(
+e
+)
+){
+e.stopPropagation();
+}
 
 }
 );
 
 menu.addEventListener(
-"pointerdown",
+"pointerup",
 e=>{
 
-const btn =
-e.target.closest(
-"[data-draw-tool]"
-);
-
 if(
-!btn
+!pickTool
 ){
 return;
 }
 
-e.preventDefault();
+if(
+runPickTool(
+e
+)
+){
 e.stopPropagation();
+}
 
 },
-true
+{ capture:true }
 );
 
 }
