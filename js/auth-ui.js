@@ -64,21 +64,129 @@ let settingsDropdownReady = false;
 let ignoreSettingsDocClick = false;
 let refreshSettingsAuthUi = ()=>{};
 
+function isSettingsInlineMode(
+wrap
+){
+
+return !!(
+wrap?.closest(
+".screener-nav-panel"
+) &&
+window.matchMedia(
+"(max-width: 640px)"
+).matches
+);
+
+}
+
+function restoreDropdownHome(
+dropdown,
+wrap
+){
+
+if(
+!dropdown ||
+!wrap ||
+dropdown.parentElement !== document.body
+){
+return;
+}
+
+const anchor =
+wrap.querySelector(
+"[data-settings-dropdown-anchor]"
+);
+
+if(anchor){
+wrap.insertBefore(
+dropdown,
+anchor
+);
+anchor.remove();
+}else{
+wrap.appendChild(dropdown);
+}
+
+dropdown.classList.remove(
+"header-settings-dropdown--portaled"
+);
+
+}
+
+function portalDropdownToBody(
+dropdown,
+wrap
+){
+
+if(
+!dropdown ||
+!wrap ||
+dropdown.parentElement === document.body
+){
+return;
+}
+
+const anchor =
+document.createComment(
+"settings-dropdown-anchor"
+);
+
+anchor.setAttribute(
+"data-settings-dropdown-anchor",
+""
+);
+wrap.insertBefore(
+anchor,
+dropdown
+);
+document.body.appendChild(dropdown);
+dropdown.classList.add(
+"header-settings-dropdown--portaled"
+);
+
+}
+
+function isSettingsUiTarget(
+target
+){
+
+if(!target?.closest){
+return false;
+}
+
+return !!(
+target.closest(
+"#header-settings-wrap"
+) ||
+target.closest(
+"#header-settings-dropdown"
+)
+);
+
+}
+
 function placeSettingsDropdown(
 btn,
 dropdown,
 wrap
 ){
 
-const inMobileNav =
-wrap.closest(
-".screener-nav-panel"
-) &&
-window.matchMedia(
-"(max-width: 640px)"
-).matches;
+if(
+!btn ||
+!dropdown ||
+!wrap
+){
+return;
+}
 
-if(inMobileNav){
+if(
+isSettingsInlineMode(wrap)
+){
+
+restoreDropdownHome(
+dropdown,
+wrap
+);
 
 dropdown.style.top = "";
 dropdown.style.right = "";
@@ -92,6 +200,11 @@ return;
 
 dropdown.classList.remove(
 "header-settings-dropdown--inline"
+);
+
+portalDropdownToBody(
+dropdown,
+wrap
 );
 
 const rect =
@@ -136,6 +249,8 @@ const btn =
 document.getElementById("header-settings-btn");
 const dropdown =
 document.getElementById("header-settings-dropdown");
+const wrap =
+document.getElementById("header-settings-wrap");
 
 if(
 !btn ||
@@ -145,6 +260,14 @@ return;
 }
 
 dropdown.classList.add("hidden");
+
+if(wrap){
+restoreDropdownHome(
+dropdown,
+wrap
+);
+}
+
 btn.setAttribute(
 "aria-expanded",
 "false"
@@ -224,15 +347,16 @@ if(
 return;
 }
 
-btn.addEventListener("click", e=>{
+function onSettingsToggle(
+e
+){
 
 e.stopPropagation();
-e.preventDefault();
 
 ignoreSettingsDocClick = true;
-setTimeout(()=>{
+window.setTimeout(()=>{
 ignoreSettingsDocClick = false;
-}, 0);
+}, 120);
 
 if(
 dropdown.classList.contains("hidden")
@@ -242,23 +366,33 @@ openSettingsDropdown();
 closeSettingsDropdown();
 }
 
-});
+}
 
-document.addEventListener("click", e=>{
+btn.addEventListener(
+"click",
+onSettingsToggle
+);
+
+document.addEventListener(
+"click",
+e=>{
 
 if(ignoreSettingsDocClick){
 return;
 }
 
 if(
-e.target.closest("#header-settings-wrap")
+isSettingsUiTarget(
+e.target
+)
 ){
 return;
 }
 
 closeSettingsDropdown();
 
-});
+}
+);
 
 document.addEventListener("keydown", e=>{
 

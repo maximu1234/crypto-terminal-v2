@@ -318,9 +318,25 @@ color:#0b1220;
 background:#fbbf24;
 }
 
+#header .menu,
+#header .screener-nav-panel{
+position:relative;
+z-index:2;
+flex:1 1 auto;
+min-width:0;
+overflow:visible;
+}
+
+#header-controls,
+#header .screener-header-desktop{
+position:relative;
+z-index:1;
+flex-shrink:0;
+}
+
 .header-settings-wrap{
 position:relative;
-z-index:120;
+z-index:130;
 display:inline-flex;
 align-items:center;
 align-self:center;
@@ -366,7 +382,7 @@ position:fixed;
 top:0;
 right:0;
 left:auto;
-z-index:10001;
+z-index:10050;
 min-width:280px;
 max-width:min(320px, calc(100vw - 24px));
 padding:12px;
@@ -374,6 +390,10 @@ background:#111827;
 border:1px solid #374151;
 border-radius:8px;
 box-shadow:0 8px 24px rgba(0,0,0,.45);
+}
+
+.header-settings-dropdown.header-settings-dropdown--portaled{
+z-index:10050;
 }
 
 .header-settings-dropdown.hidden{
