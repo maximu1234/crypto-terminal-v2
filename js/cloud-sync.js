@@ -1,6 +1,7 @@
 import {
 getSupabase,
-isSupabaseConfigured
+isSupabaseConfigured,
+SUPABASE_AUTH_STORAGE_KEY
 } from "./supabase-client.js?v=5";
 
 import {
@@ -1257,6 +1258,247 @@ saveFavoritesSyncedSignature(groups);
 
 }
 
+export function buildAuthRedirectUrl(){
+
+const origin =
+window.location.origin;
+let path =
+window.location.pathname || "/";
+
+if(
+path.endsWith("/index.html")
+){
+path =
+path.slice(
+0,
+-"/index.html".length
+) || "/";
+}
+
+return `${origin}${path}`;
+
+}
+
+export function hasAuthCallbackInUrl(){
+
+const hash =
+window.location.hash || "";
+const search =
+window.location.search || "";
+
+return (
+hash.includes("access_token=") ||
+hash.includes("error=") ||
+search.includes("code=")
+);
+
+}
+
+function clearAuthCallbackFromUrl(){
+
+if(
+!hasAuthCallbackInUrl()
+){
+return;
+}
+
+const clean =
+`${window.location.pathname || "/"}${window.location.search || ""}`;
+
+history.replaceState(
+null,
+"",
+clean
+);
+
+}
+
+function readAuthHashParams(){
+
+const raw =
+(window.location.hash || "").replace(
+/^#/,
+""
+);
+
+if(!raw){
+return null;
+}
+
+const params =
+new URLSearchParams(raw);
+
+const access_token =
+params.get("access_token");
+
+if(!access_token){
+return {
+error:
+params.get("error_description") ||
+params.get("error") ||
+""
+};
+}
+
+return {
+access_token,
+refresh_token:
+params.get("refresh_token") || "",
+error: ""
+};
+
+}
+
+async function recoverSessionFromAuthUrl(
+sb
+){
+
+if(
+!sb ||
+!hasAuthCallbackInUrl()
+){
+return null;
+}
+
+const searchParams =
+new URLSearchParams(
+window.location.search || ""
+);
+const code =
+searchParams.get("code");
+
+if(code){
+
+const { data, error } =
+await sb.auth.exchangeCodeForSession(code);
+
+if(error){
+console.warn(
+"[auth] exchangeCodeForSession:",
+error.message
+);
+return null;
+}
+
+clearAuthCallbackFromUrl();
+return data.session || null;
+
+}
+
+const hashParams =
+readAuthHashParams();
+
+if(
+hashParams?.error
+){
+console.warn(
+"[auth] magic link:",
+hashParams.error
+);
+clearAuthCallbackFromUrl();
+return null;
+}
+
+if(
+!hashParams?.access_token
+){
+return null;
+}
+
+async function trySetSession(){
+
+const { data, error } =
+await sb.auth.setSession({
+access_token: hashParams.access_token,
+refresh_token: hashParams.refresh_token
+});
+
+if(error){
+throw error;
+}
+
+return data.session || null;
+
+}
+
+try{
+
+const session =
+await trySetSession();
+
+if(session){
+clearAuthCallbackFromUrl();
+}
+
+return session;
+
+}catch(err){
+
+console.warn(
+"[auth] setSession from hash:",
+err?.message || err
+);
+
+try{
+localStorage.removeItem(
+SUPABASE_AUTH_STORAGE_KEY
+);
+}catch{
+/* ignore */
+}
+
+try{
+
+const session =
+await trySetSession();
+
+if(session){
+clearAuthCallbackFromUrl();
+}
+
+return session;
+
+}catch(retryErr){
+console.warn(
+"[auth] setSession retry:",
+retryErr?.message || retryErr
+);
+return null;
+}
+
+}
+
+}
+
+export async function recoverAuthSessionFromUrl(){
+
+if(
+!(await isSupabaseConfigured())
+){
+return false;
+}
+
+const sb =
+await getSupabase();
+
+if(!sb){
+return false;
+}
+
+const recovered =
+await recoverSessionFromAuthUrl(sb);
+
+if(
+!recovered
+){
+return false;
+}
+
+await applySession(recovered);
+return true;
+
+}
+
 export async function signInWithEmailOtp(email){
 
 const sb =
@@ -1267,7 +1509,7 @@ throw new Error("Supabase не настроен");
 }
 
 const redirectTo =
-`${window.location.origin}${window.location.pathname}`;
+buildAuthRedirectUrl();
 
 const { error } =
 await sb.auth.signInWithOtp({
@@ -1382,7 +1624,18 @@ wake
 
 window.addEventListener(
 "pageshow",
-wake
+e=>{
+
+wake();
+
+if(
+e.persisted &&
+hasAuthCallbackInUrl()
+){
+void recoverAuthSessionFromUrl();
+}
+
+}
 );
 
 window.addEventListener(
@@ -1414,6 +1667,23 @@ const deadline =
 Date.now() + maxWaitMs;
 
 while(Date.now() < deadline){
+
+if(
+hasAuthCallbackInUrl()
+){
+const recovered =
+await recoverSessionFromAuthUrl(sb);
+
+if(
+recovered?.user
+){
+return {
+sb,
+user: recovered.user
+};
+}
+
+}
 
 const { data: { session }, error } =
 await sb.auth.getSession();
@@ -1481,12 +1751,54 @@ notifyAuth();
 return;
 }
 
-const { data: { session } } =
+let session =
+(await recoverSessionFromAuthUrl(sb)) ||
+null;
+
+if(
+!session
+){
+
+const { data } =
 await sb.auth.getSession();
+
+session = data.session;
+
+}
+
+if(
+!session &&
+hasAuthCallbackInUrl()
+){
+
+await new Promise(r=>{
+setTimeout(r, 150);
+});
+
+session =
+(await recoverSessionFromAuthUrl(sb)) ||
+(await sb.auth.getSession()).data.session;
+
+}
 
 await applySession(session);
 
 bindRemotePullTriggers();
+
+if(
+hasAuthCallbackInUrl() &&
+!loggedIn
+){
+window.setTimeout(()=>{
+void recoverAuthSessionFromUrl().then(ok=>{
+if(ok){
+console.log(
+"[auth] вход восстановлен из ссылки"
+);
+}
+});
+}, 400);
+}
 
 sb.auth.onAuthStateChange(
 async(event, session)=>{

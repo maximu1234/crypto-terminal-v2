@@ -8,7 +8,7 @@ import {
 waitForCloudAuth,
 isCloudLoggedIn,
 onCloudSyncChange
-} from "./cloud-sync.js?v=12";
+} from "./cloud-sync.js?v=13";
 
 import {
 setBrowserCrossCheckEnabled

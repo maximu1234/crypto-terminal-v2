@@ -25,12 +25,12 @@ import {
 isCloudLoggedIn,
 onCloudSyncChange,
 getCloudUserEmail
-} from "./cloud-sync.js?v=12";
+} from "./cloud-sync.js?v=13";
 
 import {
 ensureCloudReady,
 focusAlertsLogin
-} from "./auth-ui.js?v=12";
+} from "./auth-ui.js?v=13";
 
 import { formatPrice } from "./chart.js";
 

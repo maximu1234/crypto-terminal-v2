@@ -5,8 +5,10 @@ isCloudLoggedIn,
 getCloudUserEmail,
 onCloudSyncChange,
 signInWithEmailOtp,
-signOutCloud
-} from "./cloud-sync.js?v=12";
+signOutCloud,
+recoverAuthSessionFromUrl,
+hasAuthCallbackInUrl
+} from "./cloud-sync.js?v=13";
 
 import {
 isSupabaseConfigured
@@ -318,9 +320,14 @@ document.createElement("div");
 wrap.className =
 `cloud-auth-wrap cloud-auth-wrap--${variant} hidden`;
 
+const emailInputId =
+variant === "inline"
+? "cloud-auth-email-inline"
+: "cloud-auth-email-header";
+
 wrap.innerHTML = `
 <div class="cloud-auth-logged-out">
-<input type="email" id="cloud-auth-email" name="email" class="cloud-auth-email" placeholder="email" autocomplete="email" inputmode="email"/>
+<input type="email" id="${emailInputId}" name="email" class="cloud-auth-email" placeholder="email" autocomplete="email" inputmode="email"/>
 <button type="button" class="cloud-auth-send">Войти</button>
 </div>
 <div class="cloud-auth-logged-in hidden">
@@ -409,6 +416,13 @@ loggedOut.classList.remove("hidden");
 
 if(cloudSdkError){
 setHint(cloudSdkError, true);
+}else if(
+hasAuthCallbackInUrl()
+){
+setHint(
+"Завершаем вход по ссылке…",
+false
+);
 }else{
 setHint("", false);
 }
@@ -550,6 +564,23 @@ refreshAuthUi();
 try{
 await initCloudSync();
 cloudSdkError = "";
+
+if(
+!isCloudLoggedIn() &&
+hasAuthCallbackInUrl()
+){
+const recovered =
+await recoverAuthSessionFromUrl();
+
+if(
+!recovered &&
+hasAuthCallbackInUrl()
+){
+cloudSdkError =
+"Ссылка из письма не сработала. Запросите новую или откройте в том же браузере, где вводили email.";
+}
+}
+
 }catch(err){
 console.warn("cloud sync init:", err);
 cloudSdkError =
@@ -623,6 +654,9 @@ block: "nearest"
 });
 
 const email =
+document.getElementById(
+"cloud-auth-email-inline"
+) ||
 document.querySelector(
 "#alerts-inline-auth-mount .cloud-auth-email"
 );

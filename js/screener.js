@@ -36,12 +36,12 @@ migrateFavorites
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=12";
+} from "./auth-ui.js?v=13";
 
 import {
 persistFavoritesToCloud,
 onFavoritesRemoteUpdate
-} from "./cloud-sync.js?v=12";
+} from "./cloud-sync.js?v=13";
 
 const gridEl =
 document.getElementById("screener-grid");
