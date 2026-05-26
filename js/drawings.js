@@ -3180,6 +3180,14 @@ horzTouchDrag:false,
 vertTouchDrag:false
 };
 
+/** Смартфон / виджеты: инструмент рисования — тап ставит точку, не pan. */
+const CHART_SCROLL_DRAW_TOOL = {
+mouseWheel:true,
+pressedMouseMove:false,
+horzTouchDrag:false,
+vertTouchDrag:false
+};
+
 function chartScrollWhenUnlocked(){
 
 if(
@@ -3188,6 +3196,15 @@ isTabletChartViewport() &&
 TABLET_USE_CUSTOM_TOUCH_PAN
 ){
 return CHART_SCROLL_TABLET_CUSTOM_PAN;
+}
+
+if(
+isCoarseTouchViewport() &&
+!tabletCustomPanHooked &&
+tool !==
+"cursor"
+){
+return CHART_SCROLL_DRAW_TOOL;
 }
 
 return CHART_SCROLL_DEFAULT;
@@ -3202,7 +3219,7 @@ alive &&
 !!dragState ||
 (
 placement &&
-isTouchDrawTablet()
+isTouchDrawPlacement()
 )
 );
 
@@ -3409,6 +3426,16 @@ return isCoarseTouchViewport();
 
 }
 
+/** Crosshair-размещение — только главный график Монет (кастомный pan). */
+function isTouchDrawPlacement(){
+
+return (
+isTouchDrawTablet() &&
+tabletCustomPanHooked
+);
+
+}
+
 function clampTouchCrosshairXY(x, y){
 
 const { w, h } =
@@ -3570,7 +3597,7 @@ touchDrawCrosshair.y
 
 if(
 placement &&
-isTouchDrawTablet()
+isTouchDrawPlacement()
 ){
 showStandardChartCrosshair(
 null,
@@ -6404,6 +6431,171 @@ window.addEventListener("pointercancel", onEditUp);
 
 }
 
+/**
+ * Смартфон: touchstart до LW — иначе pan начинается до pointerdown.
+ */
+function setupCoarseTouchChartGuard(){
+
+if(
+!isCoarseTouchViewport()
+){
+return;
+}
+
+const cap = {
+capture:true,
+passive:false
+};
+
+function touchLocal(
+e
+){
+
+const t =
+e.touches?.[
+0
+];
+
+if(
+!t
+){
+return null;
+}
+
+const rect =
+wrapEl.getBoundingClientRect();
+
+return {
+x: t.clientX - rect.left,
+y: t.clientY - rect.top
+};
+
+}
+
+function shouldBlockChartTouch(
+e
+){
+
+if(
+!alive ||
+!isActive()
+){
+return false;
+}
+
+if(
+dragState
+){
+return true;
+}
+
+if(
+placement &&
+isTouchDrawPlacement()
+){
+return true;
+}
+
+if(
+tool !==
+"cursor"
+){
+return false;
+}
+
+const p =
+touchLocal(
+e
+);
+
+if(
+!p
+){
+return false;
+}
+
+if(
+hitTest(
+p.x,
+p.y
+)
+){
+return true;
+}
+
+const sel =
+getSelected();
+
+if(
+!sel
+){
+return false;
+}
+
+return (
+!!hitTestHandle(
+p.x,
+p.y,
+sel
+) ||
+hitTestShapeBody(
+p.x,
+p.y,
+sel
+)
+);
+
+}
+
+const onTouchStart = e=>{
+
+if(
+e.touches.length >
+1
+){
+return;
+}
+
+if(
+!shouldBlockChartTouch(
+e
+)
+){
+return;
+}
+
+e.preventDefault();
+
+syncChartTouchPan();
+
+};
+
+const onTouchMove = e=>{
+
+if(
+!dragState
+){
+return;
+}
+
+e.preventDefault();
+
+};
+
+wrapEl.addEventListener(
+"touchstart",
+onTouchStart,
+cap
+);
+
+wrapEl.addEventListener(
+"touchmove",
+onTouchMove,
+cap
+);
+
+}
+
 function setupTouchDrawCrosshair(){
 
 /** iPad: порог «тап», не «перетаскивание перекрестия» */
@@ -6419,7 +6611,7 @@ tool === "cursor"
 return;
 }
 
-if(!isTouchDrawTablet()){
+if(!isTouchDrawPlacement()){
 return;
 }
 
@@ -7570,7 +7762,7 @@ placement = { type, points: [] };
 previewPoint = null;
 previewXY = null;
 
-if(isTouchDrawTablet()){
+if(isTouchDrawPlacement()){
 initTouchDrawCrosshair();
 }
 
@@ -7592,14 +7784,14 @@ function handleToolClick(param){
 
 if(
 tool !== "cursor" &&
-isTouchDrawTablet() &&
+isTouchDrawPlacement() &&
 placement
 ){
 return;
 }
 
 const point =
-isTouchDrawTablet() &&
+isTouchDrawPlacement() &&
 touchDrawCrosshair
 ? pointFromXY(
 touchDrawCrosshair.x,
@@ -7650,7 +7842,7 @@ cancelPlacement();
 
 if(
 next !== "cursor" &&
-isTouchDrawTablet()
+isTouchDrawPlacement()
 ){
 startPlacement(next);
 }
@@ -7829,7 +8021,7 @@ crosshairHandler = param=>{
 
 if(
 placement &&
-isTouchDrawTablet() &&
+isTouchDrawPlacement() &&
 touchDrawCrosshair
 ){
 syncTouchDrawCrosshairPreview();
@@ -8353,6 +8545,7 @@ positionPopover(settingsPopover, 40);
 initFloatingBar();
 initStylePopovers();
 setupEditInteraction();
+setupCoarseTouchChartGuard();
 setupTouchDrawCrosshair();
 
 const teardownChartPanRedraw =
