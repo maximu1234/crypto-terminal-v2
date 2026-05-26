@@ -159,10 +159,17 @@ justify-content:center;
 gap:4px;
 padding:8px 12px 10px;
 border-top:1px solid #1f2937;
+flex-wrap:nowrap;
+}
+
+.pagination-pages{
+display:flex;
+align-items:center;
+justify-content:center;
+gap:4px;
+flex:1 1 auto;
+min-width:0;
 flex-wrap:wrap;
-max-height:52px;
-overflow-x:auto;
-overflow-y:hidden;
 }
 
 .page-btn{
@@ -192,8 +199,9 @@ cursor:default;
 }
 
 /* ‹ › — шире под палец; цифры страниц без изменений */
-#pagination > .page-btn:first-child,
-#pagination > .page-btn:last-child{
+#pagination > .page-nav-prev,
+#pagination > .page-nav-next{
+flex-shrink:0;
 min-width:104px;
 padding:0 28px;
 font-size:20px;
@@ -554,19 +562,24 @@ padding:6px;
 }
 
 #pagination{
-flex-wrap:nowrap;
+gap:6px;
+padding:8px 8px calc(
+10px + env(safe-area-inset-bottom, 0px)
+);
+background:#0b1220;
+}
+
+.pagination-pages{
+flex:1 1 auto;
+min-width:0;
 justify-content:flex-start;
-max-height:none;
+flex-wrap:nowrap;
 overflow-x:auto;
 overflow-y:hidden;
 -webkit-overflow-scrolling:touch;
 scroll-snap-type:x proximity;
 gap:6px;
-padding:8px 10px calc(
-10px + env(safe-area-inset-bottom, 0px)
-);
-background:#0b1220;
-flex-shrink:0;
+padding:0 2px;
 }
 
 #pagination .page-btn{
@@ -574,16 +587,28 @@ flex-shrink:0;
 scroll-snap-align:center;
 }
 
-#pagination > .page-btn:first-child,
-#pagination > .page-btn:last-child{
-min-width:48px;
-width:48px;
+#pagination > .page-nav-prev,
+#pagination > .page-nav-next{
+min-width:44px;
+width:44px;
 padding:0;
 font-size:22px;
 line-height:1;
+position:relative;
+z-index:1;
+background:#0b1220;
+box-shadow:0 0 10px 4px #0b1220;
 }
 
-#pagination .page-btn:not(:first-child):not(:last-child){
+#pagination > .page-nav-next{
+box-shadow:-8px 0 10px 4px #0b1220;
+}
+
+#pagination > .page-nav-prev{
+box-shadow:8px 0 10px 4px #0b1220;
+}
+
+.pagination-pages .page-btn{
 min-width:36px;
 height:36px;
 padding:0 6px;

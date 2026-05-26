@@ -846,7 +846,11 @@ paginationEl.innerHTML = "";
 const prev =
 document.createElement("button");
 
-prev.className = "page-btn";
+prev.className = "page-btn page-nav-prev";
+prev.setAttribute(
+"aria-label",
+"Предыдущая страница"
+);
 prev.textContent = "‹";
 prev.disabled = currentPage <= 1;
 prev.onclick = ()=>{
@@ -857,9 +861,20 @@ renderPage();
 
 paginationEl.appendChild(prev);
 
+const pagesWrap =
+document.createElement("div");
+
+pagesWrap.className = "pagination-pages";
+pagesWrap.setAttribute(
+"aria-label",
+"Номера страниц"
+);
+
+paginationEl.appendChild(pagesWrap);
+
 const maxButtons =
 isScreenerMobile()
-? 5
+? 3
 : 11;
 const half =
 Math.floor(maxButtons / 2);
@@ -895,7 +910,11 @@ addPageButton(total);
 const next =
 document.createElement("button");
 
-next.className = "page-btn";
+next.className = "page-btn page-nav-next";
+next.setAttribute(
+"aria-label",
+"Следующая страница"
+);
 next.textContent = "›";
 next.disabled = currentPage >= total;
 next.onclick = ()=>{
@@ -905,6 +924,22 @@ renderPage();
 };
 
 paginationEl.appendChild(next);
+
+if(isScreenerMobile()){
+
+const active =
+pagesWrap.querySelector(".page-btn.active");
+
+if(active){
+requestAnimationFrame(()=>{
+active.scrollIntoView({
+inline: "center",
+block: "nearest"
+});
+});
+}
+
+}
 
 function addPageButton(page){
 
@@ -928,7 +963,7 @@ renderPage();
 
 };
 
-paginationEl.appendChild(btn);
+pagesWrap.appendChild(btn);
 
 }
 
@@ -939,7 +974,7 @@ document.createElement("span");
 
 span.className = "page-ellipsis";
 span.textContent = "…";
-paginationEl.appendChild(span);
+pagesWrap.appendChild(span);
 
 }
 
