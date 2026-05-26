@@ -11,17 +11,51 @@
 <title>Главная — Multichart</title>
 
 <link rel="stylesheet" href="css/common.css?v=12">
-<link rel="stylesheet" href="css/screener.css?v=10">
+<link rel="stylesheet" href="css/screener.css?v=11">
 
 </head>
 
 <body>
 
-<header id="header">
+<header id="header" class="screener-page-header">
 
 <div id="logo">Multichart</div>
 
-<nav class="menu">
+<div class="screener-mobile-bar" id="screener-mobile-bar">
+
+<div class="screener-mobile-select-wrap">
+<button type="button" class="screener-mobile-select" id="screener-sort-trigger" aria-haspopup="listbox" aria-expanded="false">
+<span id="screener-sort-label">24ч %</span>
+</button>
+<div class="screener-mobile-menu hidden" id="screener-sort-menu" role="listbox">
+<button type="button" class="screener-mobile-menu-item active" data-sort="change24">24ч %</button>
+<button type="button" class="screener-mobile-menu-item" data-sort="symbol">А–Я</button>
+</div>
+</div>
+
+<div class="screener-mobile-select-wrap">
+<button type="button" class="screener-mobile-select" id="screener-tf-trigger" aria-haspopup="listbox" aria-expanded="false">
+<span id="screener-tf-label">15m</span>
+</button>
+<div class="screener-mobile-menu hidden" id="screener-tf-menu" role="listbox">
+<button type="button" class="screener-mobile-menu-item" data-tf="1">1m</button>
+<button type="button" class="screener-mobile-menu-item" data-tf="5">5m</button>
+<button type="button" class="screener-mobile-menu-item active" data-tf="15">15m</button>
+<button type="button" class="screener-mobile-menu-item" data-tf="60">1h</button>
+<button type="button" class="screener-mobile-menu-item" data-tf="240">4h</button>
+<button type="button" class="screener-mobile-menu-item" data-tf="D">1D</button>
+</div>
+</div>
+
+<button type="button" class="screener-nav-toggle" id="screener-nav-toggle" aria-label="Меню" aria-expanded="false" aria-controls="screener-nav-panel">
+<span class="screener-nav-toggle-bars" aria-hidden="true"></span>
+</button>
+
+</div>
+
+<div class="screener-nav-backdrop hidden" id="screener-nav-backdrop"></div>
+
+<nav class="menu screener-nav-panel" id="screener-nav-panel">
 <a href="/index.html" class="active">Главная</a>
 <a href="/coins.html">Монеты</a>
 <a href="/terminal.html">Терминал</a>
@@ -39,9 +73,9 @@
 </div>
 </nav>
 
-<div id="header-controls">
+<div id="header-controls" class="screener-header-desktop">
 
-<div class="control-group">
+<div class="control-group screener-layout-group">
 <span class="control-label">Виджеты</span>
 <button class="layout-btn" data-layout="4" type="button">4</button>
 <button class="layout-btn" data-layout="6" type="button">6</button>
@@ -82,7 +116,7 @@ import("./js/site-boot.js?v=59");
 
 loadLightweightCharts().then(async ()=>{
 
-await import("./js/screener.js?v=42");
+await import("./js/screener.js?v=43");
 
 }).catch(err=>{
 
