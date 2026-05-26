@@ -1335,7 +1335,7 @@ session.user.id
 );
 startSyncPoll();
 
-import("./alerts-cloud-sync.js?v=62")
+import("./alerts-cloud-sync.js?v=63")
 .then(async m=>{
 
 const { stripAlertFlagsNotInRegistry } =

@@ -44,6 +44,10 @@ let lastRemoteAlertMode = null;
 const lastSeenCloudAlerts =
 new Map();
 
+let remoteRegistrySyncTimer = null;
+
+const REMOTE_REGISTRY_SYNC_MS = 120;
+
 async function updateBrowserCrossMode(){
 
 const loggedIn =
@@ -111,9 +115,57 @@ alertsRealtimeUserId = null;
 
 }
 
+function scheduleRemoteRegistrySync(){
+
+if(remoteRegistrySyncTimer){
+clearTimeout(remoteRegistrySyncTimer);
+}
+
+remoteRegistrySyncTimer = setTimeout(()=>{
+
+remoteRegistrySyncTimer = null;
+
+if(!isCloudLoggedIn()){
+return;
+}
+
+void reconcileLocalRegistryWithCloud()
+.then(async()=>{
+
+const { stripAlertFlagsNotInRegistry } =
+await import("./alerts.js?v=62");
+
+stripAlertFlagsNotInRegistry();
+
+})
+.catch(err=>{
+console.warn(
+"[alerts] remote registry sync:",
+err?.message || err
+);
+});
+
+},
+REMOTE_REGISTRY_SYNC_MS);
+
+}
+
 async function handleAlertsRealtimeDelete(
 oldRow
 ){
+
+const triggered =
+oldRow?.triggered_at;
+
+if(triggered){
+
+const { applyRemoteAlertFired } =
+await import("./alerts.js?v=62");
+
+applyRemoteAlertFired(oldRow);
+return;
+
+}
 
 const sym =
 String(
@@ -126,31 +178,29 @@ oldRow?.shapeId ||
 ""
 ).trim();
 
-const {
-applyRemoteAlertFired,
-stripAlertFlagsNotInRegistry
-} =
-await import("./alerts.js?v=60");
-
 if(
 sym &&
-sid &&
-applyRemoteAlertFired(oldRow)
+sid
 ){
-return;
-}
 
-if(
-!sym ||
-!sid
-){
+const { applyRemoteAlertRemoved } =
+await import("./alerts.js?v=62");
+
+applyRemoteAlertRemoved(oldRow);
+
+}else{
 console.warn(
 "[alerts] realtime DELETE без symbol/shape_id — включите replica identity full на price_alerts"
 );
 }
 
-await reconcileLocalRegistryWithCloud();
-stripAlertFlagsNotInRegistry();
+scheduleRemoteRegistrySync();
+
+}
+
+function handleAlertsRealtimeUpsert(){
+
+scheduleRemoteRegistrySync();
 
 }
 
@@ -176,6 +226,30 @@ alertsRealtimeUserId = userId;
 alertsRealtimeChannel =
 sb
 .channel(`price_alerts:${userId}`)
+.on(
+"postgres_changes",
+{
+event: "INSERT",
+schema: "public",
+table: "price_alerts",
+filter: `user_id=eq.${userId}`
+},
+()=>{
+handleAlertsRealtimeUpsert();
+}
+)
+.on(
+"postgres_changes",
+{
+event: "UPDATE",
+schema: "public",
+table: "price_alerts",
+filter: `user_id=eq.${userId}`
+},
+()=>{
+handleAlertsRealtimeUpsert();
+}
+)
 .on(
 "postgres_changes",
 {
@@ -1023,21 +1097,19 @@ return true;
 
 export async function clearAllAlertsFromCloud(){
 
-const ctx = await getAuthed();
+const ok =
+await purgeAlertViaRest({
+all: true
+});
 
-if(!ctx){
-return;
+if(ok){
+lastSeenCloudAlerts.clear();
+console.log(
+"[alerts] облако: удалены все активные алерты"
+);
 }
 
-const { error } =
-await ctx.sb
-.from("price_alerts")
-.delete()
-.eq("user_id", ctx.user.id);
-
-if(error){
-console.warn("alert cloud clear all:", error.message);
-}
+return ok;
 
 }
 
@@ -1046,32 +1118,33 @@ symbol,
 shapeId
 ){
 
-const ctx = await getAuthed();
-
-if(!ctx){
-return;
-}
-
 const sym =
 String(symbol || "").trim().toUpperCase();
 const sid =
 String(shapeId || "").trim();
 
-if(!sym || !sid){
-return;
+if(
+!sym ||
+!sid
+){
+return false;
 }
 
-const { error } =
-await ctx.sb
-.from("price_alerts")
-.delete()
-.eq("user_id", ctx.user.id)
-.eq("symbol", sym)
-.eq("shape_id", sid);
+const ok =
+await purgeAlertViaRest({
+symbol: sym,
+shapeId: sid
+});
 
-if(error){
-console.warn("alert cloud delete:", error.message);
+if(!ok){
+console.warn(
+"alert cloud delete:",
+sym,
+sid
+);
 }
+
+return ok;
 
 }
 
@@ -1340,6 +1413,8 @@ async function purgeAlertViaRest(
 opts
 ){
 
+const all =
+!!opts?.all;
 const id =
 String(opts?.id || "").trim();
 const sym =
@@ -1438,7 +1513,11 @@ return false;
 let path =
 "";
 
-if(id){
+if(all){
+path =
+`price_alerts?user_id=eq.${encodeURIComponent(ctx.user.id)}` +
+`&triggered_at=is.null`;
+}else if(id){
 path =
 `price_alerts?id=eq.${encodeURIComponent(id)}` +
 `&user_id=eq.${encodeURIComponent(ctx.user.id)}`;
@@ -1482,7 +1561,9 @@ return false;
 
 console.log(
 "[alerts] purge REST ok:",
-id || `${sym} ${sid}`
+all
+? "all active"
+: (id || `${sym} ${sid}`)
 );
 return true;
 
@@ -2398,23 +2479,15 @@ if(localKeys.has(key)){
 continue;
 }
 
-const { error: delErr } =
-await ctx.sb
-.from("price_alerts")
-.delete()
-.eq("id", row.id);
+const pruned =
+await purgeAlertRowByCloudId(row.id);
 
-if(!delErr){
+if(pruned){
 removed += 1;
 console.log(
 "alert cloud prune:",
 row.symbol,
 row.shape_id
-);
-}else{
-console.warn(
-"alert cloud prune:",
-delErr.message
 );
 }
 

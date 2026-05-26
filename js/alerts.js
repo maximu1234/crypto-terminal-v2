@@ -33,7 +33,7 @@ return job;
 
 function queueAlertsCloud(fn){
 
-import("./alerts-cloud-sync.js?v=61")
+import("./alerts-cloud-sync.js?v=63")
 .then(m=>fn(m))
 .catch(err=>{
 console.warn("alerts cloud:", err);
@@ -968,7 +968,7 @@ await ensureCloudReady();
 mergeRegistryFromChartDrawings();
 
 const m =
-await import("./alerts-cloud-sync.js?v=61");
+await import("./alerts-cloud-sync.js?v=63");
 
 const pushed =
 await m.pushOneAlertRow(
@@ -1103,7 +1103,7 @@ return;
 
 saveAlerts(list);
 
-void import("./alerts-cloud-sync.js?v=61").then(m=>{
+void import("./alerts-cloud-sync.js?v=63").then(m=>{
 m.flushAlertCloudPush(row);
 });
 
@@ -1480,6 +1480,57 @@ return true;
 
 }
 
+/**
+ * Строку удалили в облаке вручную (не срабатывание) — убрать из реестра на этом устройстве.
+ */
+export function applyRemoteAlertRemoved(
+row
+){
+
+const sym =
+String(
+row?.symbol || ""
+).trim().toUpperCase();
+const sid =
+String(
+row?.shape_id ||
+row?.shapeId ||
+""
+).trim();
+
+if(
+!sym ||
+!sid
+){
+return false;
+}
+
+const before =
+loadAlerts();
+const list =
+before.filter(
+a=>!
+(
+String(a.symbol).toUpperCase() === sym &&
+String(a.shapeId) === sid
+)
+);
+
+if(list.length === before.length){
+return false;
+}
+
+saveAlertsFromCloudMerge(list);
+clearAlertOnDrawing(
+sym,
+sid
+);
+stripAlertFlagsNotInRegistry();
+
+return true;
+
+}
+
 /** Сразу убрать линию; в облаке — ещё POST /trigger для Telegram. */
 export function commitAlertTriggeredLocally(
 symbol,
@@ -1538,7 +1589,7 @@ tf: existing?.tf
 });
 });
 
-void import("./alerts-cloud-sync.js?v=61").then(m=>{
+void import("./alerts-cloud-sync.js?v=63").then(m=>{
 m.fireAlertCloudTrigger(
 sym,
 sid,
@@ -1564,8 +1615,17 @@ saveAlerts([]);
 
 stripAlertFlagsNotInRegistry();
 
-queueAlertsCloud(m=>{
-m.clearAllAlertsFromCloud();
+queueAlertsCloud(async m=>{
+
+const ok =
+await m.clearAllAlertsFromCloud();
+
+if(!ok){
+console.warn(
+"[alerts] не удалось очистить алерты в облаке — проверьте вход и Supabase"
+);
+}
+
 });
 
 }
