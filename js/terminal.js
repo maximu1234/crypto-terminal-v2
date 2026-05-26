@@ -507,15 +507,46 @@ writeCoinsPrefs(prefs);
 
 }
 
-function resolveInitialSymbolAndTf(){
+function readLastViewFromPrefs(){
 
 const prefs =
 readCoinsPrefs();
 
-const last =
-normalizeLastViewEntry(
+return normalizeLastViewEntry(
 prefs.lastViewByMarket?.[currentDataset]
 );
+
+}
+
+function bootstrapCoinsPageState(){
+
+readUrlParams();
+applyCoinsPrefs();
+
+if(hasUrlSymbol){
+return;
+}
+
+const last =
+readLastViewFromPrefs();
+
+if(
+last.tf &&
+COINS_TF_VALUES.has(last.tf)
+){
+currentTF = last.tf;
+}
+
+if(last.symbol){
+currentSymbol = last.symbol;
+}
+
+}
+
+function resolveInitialSymbolAndTf(){
+
+const last =
+readLastViewFromPrefs();
 
 if(
 last.tf &&
@@ -527,12 +558,16 @@ currentTF = last.tf;
 const symbols =
 getCurrentSymbols();
 
+if(last.symbol){
+
 if(
-last.symbol &&
+symbols.length === 0 ||
 symbols.includes(last.symbol)
 ){
 currentSymbol = last.symbol;
 return;
+}
+
 }
 
 currentSymbol =
@@ -2989,10 +3024,11 @@ resolveInitialSymbolAndTf();
 currentTF = "60";
 }
 
-applyUrlTimeframe();
 setCoinsChartSymbol(
 currentSymbol || displaySymbol
 );
+
+applyUrlTimeframe();
 
 await loadSymbol(
 currentSymbol || displaySymbol || "BTCUSDT"
@@ -3042,12 +3078,7 @@ flushCoinsPrefs();
 }
 );
 
-readUrlParams();
-applyCoinsPrefs();
-
-if(!hasUrlSymbol){
-resolveInitialSymbolAndTf();
-}
+bootstrapCoinsPageState();
 
 setCoinsChartSymbol(
 currentSymbol
