@@ -1,6 +1,6 @@
 import {
 loadBybitSymbols
-} from "./api.js?v=19";
+} from "./api.js?v=20";
 
 let symbolsCache = null;
 

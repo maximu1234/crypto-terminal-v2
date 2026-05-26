@@ -272,42 +272,6 @@ return parsed.symbols;
 
 }
 
-try{
-
-const raw =
-localStorage.getItem(SYMBOLS_CACHE_KEY);
-
-if(!raw){
-return null;
-}
-
-const parsed =
-JSON.parse(raw);
-
-if(
-!Array.isArray(parsed?.symbols) ||
-!parsed.symbols.length
-){
-return null;
-}
-
-if(
-Date.now() - Number(parsed.at || 0) >
-SYMBOLS_CACHE_TTL_MS
-){
-return null;
-}
-
-return parsed.symbols;
-
-}catch{
-
-return null;
-
-}
-
-}
-
 function writeSymbolsCache(symbols){
 
 try{

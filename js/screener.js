@@ -2,7 +2,7 @@ import {
 loadBybitHistory,
 loadBybitSymbols,
 peekBybitSymbolsCache
-} from "./api.js?v=19";
+} from "./api.js?v=20";
 
 import {
 createScreenerChart,
