@@ -36,7 +36,7 @@ migrateFavorites
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=13";
+} from "./auth-ui.js?v=14";
 
 import {
 ensureSettled,

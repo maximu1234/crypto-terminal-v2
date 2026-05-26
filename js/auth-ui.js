@@ -14,6 +14,10 @@ import {
 isSupabaseConfigured
 } from "./supabase-client.js?v=5";
 
+import {
+readAlertTokenSync
+} from "./alert-auth-cache.js?v=4";
+
 let cloudEnvConfigured = false;
 let cloudSdkError = "";
 
@@ -165,8 +169,8 @@ if(
 return;
 }
 
-refreshSettingsAuthUi();
 dropdown.classList.remove("hidden");
+refreshSettingsAuthUi();
 placeSettingsDropdown(
 btn,
 dropdown,
@@ -175,6 +179,26 @@ wrap
 btn.setAttribute(
 "aria-expanded",
 "true"
+);
+
+}
+
+function isAuthUiLoggedIn(){
+
+if(isCloudLoggedIn()){
+return true;
+}
+
+return !!readAlertTokenSync()?.user;
+
+}
+
+function getAuthUiEmail(){
+
+return (
+getCloudUserEmail() ||
+readAlertTokenSync()?.user?.email ||
+""
 );
 
 }
@@ -242,10 +266,6 @@ if(e.key === "Escape"){
 closeSettingsDropdown();
 }
 
-});
-
-onCloudSyncChange(()=>{
-closeSettingsDropdown();
 });
 
 settingsDropdownReady = true;
@@ -393,12 +413,12 @@ return;
 
 wrap.classList.remove("hidden");
 
-if(isCloudLoggedIn()){
+if(isAuthUiLoggedIn()){
 
 loggedOut.classList.add("hidden");
 loggedIn.classList.remove("hidden");
 emailLabel.textContent =
-getCloudUserEmail() || "Аккаунт";
+getAuthUiEmail() || "Аккаунт";
 
 setHint(
 variant === "inline" && isAlertsPage()
@@ -476,6 +496,7 @@ sendBtn.disabled = false;
 outBtn?.addEventListener("click", async()=>{
 
 await signOutCloud();
+closeSettingsDropdown();
 
 });
 
