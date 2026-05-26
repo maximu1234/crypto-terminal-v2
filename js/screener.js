@@ -1,8 +1,9 @@
 import {
 loadBybitHistory,
 loadBybitSymbols,
-peekBybitSymbolsCache
-} from "./api.js?v=20";
+peekBybitSymbolsCache,
+symbolListSignature
+} from "./api.js?v=21";
 
 import {
 createScreenerChart,
@@ -1771,12 +1772,19 @@ if(
 return;
 }
 
-allSymbols =
-symbols.map(x=>
-typeof x === "string"
-? x
-: x.symbol
-).filter(Boolean);
+const nextSymbols =
+mapSymbolList(symbols);
+
+if(
+symbolListSignature(nextSymbols) ===
+symbolListSignature(allSymbols) &&
+activeWidgets.length > 0
+){
+allSymbols = nextSymbols;
+return;
+}
+
+allSymbols = nextSymbols;
 
 void renderPage();
 

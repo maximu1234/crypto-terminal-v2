@@ -290,6 +290,58 @@ symbols
 
 }
 
+function symbolNamesFromList(list){
+
+return list.map(x=>
+typeof x === "string"
+? x
+: x?.symbol
+).filter(Boolean).map(s=>
+String(s).toUpperCase()
+);
+
+}
+
+/** Сравнение списков инструментов — без лишнего renderPage на главной. */
+export function symbolListSignature(list){
+
+const names =
+symbolNamesFromList(list);
+
+if(
+!names.length
+){
+return "";
+}
+
+names.sort();
+return `${names.length}|${names.join(",")}`;
+
+}
+
+function dispatchSymbolsUpdatedIfChanged(
+prevList,
+nextList
+){
+
+if(
+symbolListSignature(prevList) ===
+symbolListSignature(nextList)
+){
+return;
+}
+
+window.dispatchEvent(
+new CustomEvent(
+"bybit-symbols-updated",
+{
+detail: { symbols: nextList }
+}
+)
+);
+
+}
+
 async function loadBybitSymbolsFromNetwork(){
 
 const all = [];
@@ -426,16 +478,10 @@ cached?.length &&
 
 void loadBybitSymbolsFromNetwork()
 .then(symbols=>{
-
-window.dispatchEvent(
-new CustomEvent(
-"bybit-symbols-updated",
-{
-detail: { symbols }
-}
-)
+dispatchSymbolsUpdatedIfChanged(
+cached,
+symbols
 );
-
 })
 .catch(err=>{
 console.warn(
@@ -459,16 +505,10 @@ stale?.length
 
 void loadBybitSymbolsFromNetwork()
 .then(symbols=>{
-
-window.dispatchEvent(
-new CustomEvent(
-"bybit-symbols-updated",
-{
-detail: { symbols }
-}
-)
+dispatchSymbolsUpdatedIfChanged(
+stale,
+symbols
 );
-
 })
 .catch(err=>{
 console.warn(
