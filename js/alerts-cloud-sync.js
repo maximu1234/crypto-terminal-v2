@@ -1027,6 +1027,8 @@ return null;
 
 }
 
+}
+
 export async function saveTelegramChatId(chatId){
 
 const auth =
