@@ -20,7 +20,7 @@ readCachedTelegramChatId,
 saveTelegramChatId,
 syncAlertsWithCloud,
 pullRegistryFromCloud
-} from "./alerts-cloud-sync.js?v=65";
+} from "./alerts-cloud-sync.js?v=66";
 
 import {
 readAlertTokenSync
@@ -496,27 +496,28 @@ telegramSave.disabled = true;
 telegramSave.textContent = "Сохранение…";
 }
 
+const savedId =
 await saveTelegramChatId(raw);
 
-const savedId =
-await getTelegramChatId();
-
-if(savedId == null){
+if(
+raw &&
+(
+savedId == null ||
+!Number.isInteger(savedId)
+)
+){
 throw new Error(
-"Не удалось проверить сохранение. Обновите страницу и попробуйте снова."
+"Не удалось сохранить chat id. Попробуйте ещё раз."
 );
 
 }
 
-try{
-await syncAlertsWithCloud();
-}catch(syncErr){
+void syncAlertsWithCloud().catch(syncErr=>{
 console.warn(
 "alerts sync after telegram:",
 syncErr?.message || syncErr
 );
-
-}
+});
 
 showTelegramConnectedUi();
 

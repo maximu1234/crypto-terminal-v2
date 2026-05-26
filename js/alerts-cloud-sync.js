@@ -718,49 +718,324 @@ String(chatId)
 
 }
 
-export async function getTelegramChatId(){
+async function resolveUserRestAuth(){
 
-const ctx = await getAuthed();
+const sync =
+readAlertTokenSync();
 
-if(!ctx){
+if(
+sync?.token &&
+sync?.user?.id
+){
+return {
+token: sync.token,
+userId: sync.user.id
+};
+}
+
+const auth =
+await resolveAlertAuthFast();
+
+if(
+auth?.token &&
+auth?.ctx?.user?.id
+){
+return {
+token: auth.token,
+userId: auth.ctx.user.id
+};
+}
+
+try{
+
+const ctx =
+await withTimeout(
+waitForCloudAuth(8000),
+9000,
+"waitForCloudAuth telegram"
+);
+
+if(!ctx?.user?.id){
 return null;
 }
 
-const { data, error } =
-await ctx.sb
-.from("user_settings")
-.select("telegram_chat_id")
-.eq("user_id", ctx.user.id)
-.maybeSingle();
+const token =
+readAlertTokenSync()?.token ||
+await withTimeout(
+getAccessTokenForUser(ctx),
+6000,
+"getSession telegram"
+);
 
-if(error){
-console.warn("telegram chat load:", error.message);
+if(!token){
 return null;
 }
 
-const id = data?.telegram_chat_id;
+setAlertAuthCache(
+ctx,
+token
+);
 
-const parsed =
-id != null
-? Number(id)
+return {
+token,
+userId: ctx.user.id
+};
+
+}catch(err){
+console.warn(
+"[telegram] auth:",
+err?.message || err
+);
+return null;
+
+}
+
+}
+
+async function getSupabaseHttpConfig(){
+
+const env =
+await import("./supabase-env.js?v=4");
+
+const base =
+String(env.SUPABASE_URL || "").replace(/\/$/, "");
+
+const anon =
+env.SUPABASE_ANON_KEY;
+
+if(
+!base ||
+!anon
+){
+return null;
+}
+
+return {
+base,
+anon
+};
+
+}
+
+async function loadTelegramChatIdViaRest(
+auth
+){
+
+const http =
+await getSupabaseHttpConfig();
+
+if(
+!http ||
+!auth
+){
+return undefined;
+}
+
+const url =
+`${http.base}/rest/v1/user_settings` +
+`?user_id=eq.${encodeURIComponent(auth.userId)}` +
+`&select=telegram_chat_id`;
+
+const res =
+await fetchWithTimeout(
+url,
+{
+method: "GET",
+headers: {
+apikey: http.anon,
+Authorization: `Bearer ${auth.token}`,
+Accept: "application/json"
+}
+},
+10000
+);
+
+if(!res.ok){
+const text =
+await res.text().catch(()=>"");
+throw new Error(
+text.slice(0, 120) ||
+`Ошибка загрузки (${res.status})`
+);
+}
+
+const rows =
+await res.json();
+
+const id =
+Array.isArray(rows)
+? rows[0]?.telegram_chat_id
 : null;
 
+if(id == null){
+return null;
+}
+
+const parsed =
+Number(id);
+
+return Number.isFinite(parsed)
+? parsed
+: null;
+
+}
+
+async function saveTelegramChatIdViaRest(
+auth,
+parsed
+){
+
+const http =
+await getSupabaseHttpConfig();
+
+if(
+!http ||
+!auth
+){
+throw new Error(
+"Нет доступа к облаку"
+);
+}
+
+const uidQ =
+encodeURIComponent(auth.userId);
+
+const checkUrl =
+`${http.base}/rest/v1/user_settings` +
+`?user_id=eq.${uidQ}&select=user_id`;
+
+const checkRes =
+await fetchWithTimeout(
+checkUrl,
+{
+method: "GET",
+headers: {
+apikey: http.anon,
+Authorization: `Bearer ${auth.token}`,
+Accept: "application/json"
+}
+},
+10000
+);
+
+if(!checkRes.ok){
+const text =
+await checkRes.text().catch(()=>"");
+throw new Error(
+text.slice(0, 120) ||
+`Ошибка проверки (${checkRes.status})`
+);
+}
+
+const existing =
+await checkRes.json();
+
+const hasRow =
+Array.isArray(existing) &&
+existing.length > 0;
+
+const headers = {
+apikey: http.anon,
+Authorization: `Bearer ${auth.token}`,
+"Content-Type": "application/json",
+Prefer: "return=minimal"
+};
+
+let res;
+
+if(hasRow){
+
+res =
+await fetchWithTimeout(
+`${http.base}/rest/v1/user_settings?user_id=eq.${uidQ}`,
+{
+method: "PATCH",
+headers,
+body: JSON.stringify({
+telegram_chat_id: parsed
+})
+},
+10000
+);
+
+}else{
+
+res =
+await fetchWithTimeout(
+`${http.base}/rest/v1/user_settings`,
+{
+method: "POST",
+headers,
+body: JSON.stringify({
+user_id: auth.userId,
+telegram_chat_id: parsed,
+favorites: [],
+drawings: {}
+})
+},
+10000
+);
+
+}
+
+if(!res.ok){
+const text =
+await res.text().catch(()=>"");
+throw new Error(
+text.slice(0, 160) ||
+`Ошибка сохранения (${res.status})`
+);
+}
+
+}
+
+export async function getTelegramChatId(){
+
+const auth =
+await resolveUserRestAuth();
+
+if(!auth){
+return null;
+}
+
+try{
+
+const parsed =
+await withTimeout(
+loadTelegramChatIdViaRest(auth),
+12000,
+"telegram load"
+);
+
+if(parsed === undefined){
+return null;
+}
+
 writeCachedTelegramChatId(
-ctx.user.id,
+auth.userId,
 parsed
 );
 
 return parsed;
 
+}catch(err){
+console.warn(
+"telegram chat load:",
+err?.message || err
+);
+return null;
+
 }
 
 export async function saveTelegramChatId(chatId){
 
-const ctx = await getAuthed();
+const auth =
+await resolveUserRestAuth();
 
-if(!ctx){
-throw new Error("Войдите в аккаунт для привязки Telegram");
-
+if(!auth){
+throw new Error(
+"Войдите в аккаунт для привязки Telegram"
+);
 }
 
 const parsed =
@@ -779,51 +1054,21 @@ throw new Error("Некорректный chat id");
 
 }
 
-const { data: row, error: readErr } =
-await ctx.sb
-.from("user_settings")
-.select("user_id")
-.eq("user_id", ctx.user.id)
-.maybeSingle();
-
-if(readErr){
-throw new Error(readErr.message);
-}
-
-if(row){
-
-const { error } =
-await ctx.sb
-.from("user_settings")
-.update({ telegram_chat_id: parsed })
-.eq("user_id", ctx.user.id);
-
-if(error){
-throw new Error(error.message);
-}
-
-}else{
-
-const { error } =
-await ctx.sb
-.from("user_settings")
-.insert({
-user_id: ctx.user.id,
-telegram_chat_id: parsed,
-favorites: [],
-drawings: {}
-});
-
-if(error){
-throw new Error(error.message);
-}
-
-}
+await withTimeout(
+saveTelegramChatIdViaRest(
+auth,
+parsed
+),
+15000,
+"telegram save"
+);
 
 writeCachedTelegramChatId(
-ctx.user.id,
+auth.userId,
 parsed
 );
+
+return parsed;
 
 }
 
