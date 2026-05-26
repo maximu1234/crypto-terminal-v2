@@ -48,6 +48,32 @@ let remoteRegistrySyncTimer = null;
 
 const REMOTE_REGISTRY_SYNC_MS = 120;
 
+/** Блокирует merge/push/reconcile после «удалить все», пока облако не очищено. */
+let registrySyncPausedUntil = 0;
+
+export function pauseRegistryCloudSync(
+ms = 0
+){
+
+if(
+!ms ||
+ms < 1
+){
+registrySyncPausedUntil = 0;
+return;
+}
+
+registrySyncPausedUntil =
+Date.now() + ms;
+
+}
+
+function isRegistryCloudSyncPaused(){
+
+return Date.now() < registrySyncPausedUntil;
+
+}
+
 async function updateBrowserCrossMode(){
 
 const loggedIn =
@@ -116,6 +142,10 @@ alertsRealtimeUserId = null;
 }
 
 function scheduleRemoteRegistrySync(){
+
+if(isRegistryCloudSyncPaused()){
+return;
+}
 
 if(remoteRegistrySyncTimer){
 clearTimeout(remoteRegistrySyncTimer);
@@ -306,7 +336,8 @@ reconcileTimer = setInterval(()=>{
 
 if(
 !isCloudLoggedIn() ||
-document.visibilityState !== "visible"
+document.visibilityState !== "visible" ||
+isRegistryCloudSyncPaused()
 ){
 return;
 }
@@ -1095,12 +1126,108 @@ return true;
 
 }
 
+async function deleteAllActiveAlertsFallback(
+ctx,
+token
+){
+
+if(
+!ctx?.user?.id ||
+!token
+){
+return false;
+}
+
+const { data, error } =
+await ctx.sb
+.from("price_alerts")
+.select("id")
+.eq("user_id", ctx.user.id)
+.is("triggered_at", null);
+
+if(error){
+console.warn(
+"[alerts] clear all list:",
+error.message
+);
+return false;
+}
+
+const rows =
+data || [];
+
+if(!rows.length){
+return true;
+}
+
+let ok =
+true;
+
+for(const row of rows){
+
+const id =
+String(row.id || "").trim();
+
+if(!id){
+continue;
+}
+
+const one =
+await purgeAlertViaRest({
+id,
+ctx,
+token
+});
+
+if(!one){
+ok = false;
+}
+
+}
+
+return ok;
+
+}
+
 export async function clearAllAlertsFromCloud(){
 
-const ok =
+const ctx =
+await getAuthed();
+
+if(!ctx?.user?.id){
+console.warn(
+"[alerts] clear all: нет входа"
+);
+return false;
+}
+
+const token =
+await getAccessTokenForUser(ctx);
+
+if(!token){
+console.warn(
+"[alerts] clear all: нет токена"
+);
+return false;
+}
+
+let ok =
 await purgeAlertViaRest({
-all: true
+all: true,
+ctx,
+token
 });
+
+if(!ok){
+console.warn(
+"[alerts] clear all REST batch failed — по одной строке…"
+);
+ok =
+await deleteAllActiveAlertsFallback(
+ctx,
+token
+);
+}
 
 if(ok){
 lastSeenCloudAlerts.clear();
@@ -1108,6 +1235,30 @@ console.log(
 "[alerts] облако: удалены все активные алерты"
 );
 }
+
+return ok;
+
+}
+
+export async function removeAllAlertsEverywhere(){
+
+pauseRegistryCloudSync(20000);
+
+if(registrySyncTimer){
+clearTimeout(registrySyncTimer);
+registrySyncTimer = null;
+}
+
+const { stripAlertFlagsNotInRegistry } =
+await import("./alerts.js?v=62");
+
+const ok =
+await clearAllAlertsFromCloud();
+
+await reconcileLocalRegistryWithCloud();
+stripAlertFlagsNotInRegistry();
+
+pauseRegistryCloudSync(0);
 
 return ok;
 
@@ -1445,7 +1596,9 @@ user: snap.user
 
 }
 
-if(!ctx){
+if(
+!ctx?.user?.id
+){
 try{
 ctx =
 await withTimeout(
@@ -1456,9 +1609,28 @@ getAuthed(),
 }catch{
 ctx = null;
 }
+}else if(
+!ctx.sb
+){
+try{
+const full =
+await withTimeout(
+getAuthed(),
+8000,
+"getAuthed purge sb"
+);
+
+if(full){
+ctx = full;
+}
+}catch{
+/* keep partial ctx */
+}
 }
 
-if(!ctx){
+if(
+!ctx?.user?.id
+){
 console.warn(
 "[alerts] purge: нет сессии"
 );
@@ -1515,8 +1687,7 @@ let path =
 
 if(all){
 path =
-`price_alerts?user_id=eq.${encodeURIComponent(ctx.user.id)}` +
-`&triggered_at=is.null`;
+`price_alerts?user_id=eq.${encodeURIComponent(ctx.user.id)}`;
 }else if(id){
 path =
 `price_alerts?id=eq.${encodeURIComponent(id)}` +
@@ -2725,17 +2896,15 @@ options
 /** Все локальные алерты без cloudSynced — повторить push (после возврата на вкладку и т.п.). */
 export async function pushUnsyncedAlerts(){
 
-if(!isCloudLoggedIn()){
+if(
+!isCloudLoggedIn() ||
+isRegistryCloudSyncPaused()
+){
 return 0;
 }
 
-const { mergeRegistryFromChartDrawings, getActiveAlerts } =
-await import("./alerts.js?v=60");
-
-const { countAlertsOnChart } =
-await import("./alerts.js?v=60");
-
-mergeRegistryFromChartDrawings();
+const { getActiveAlerts, countAlertsOnChart } =
+await import("./alerts.js?v=62");
 
 const onChart =
 countAlertsOnChart();
@@ -3224,18 +3393,16 @@ clearTimeout(registrySyncTimer);
 registrySyncTimer = setTimeout(()=>{
 registrySyncTimer = null;
 
-if(!isCloudLoggedIn()){
+if(
+!isCloudLoggedIn() ||
+isRegistryCloudSyncPaused()
+){
 return;
 }
 
-void import("./alerts.js?v=61").then(async m=>{
-
-m.mergeRegistryFromChartDrawings();
-
-await pushUnsyncedAlerts();
-await reconcileLocalRegistryWithCloud();
-
-}).catch(err=>{
+void pushUnsyncedAlerts()
+.then(()=>reconcileLocalRegistryWithCloud())
+.catch(err=>{
 console.warn(
 "alert registry sync:",
 err?.message || err

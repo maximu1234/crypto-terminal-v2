@@ -19,7 +19,7 @@ initAlertsCloudSync,
 saveTelegramChatId,
 syncAlertsWithCloud,
 pullRegistryFromCloud
-} from "./alerts-cloud-sync.js?v=63";
+} from "./alerts-cloud-sync.js?v=64";
 
 import {
 isCloudLoggedIn,

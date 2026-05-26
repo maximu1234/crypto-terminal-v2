@@ -1609,16 +1609,80 @@ err?.message || err
 
 }
 
+export function clearAllChartAlertFlags(){
+
+let any =
+false;
+
+for(
+const { symbol } of listDrawingStorageEntries()
+){
+
+const sym =
+String(symbol || "").trim().toUpperCase();
+
+if(!sym){
+continue;
+}
+
+let list =
+loadDrawingsForSymbol(sym);
+let dirty =
+false;
+
+const next =
+list.map(shape=>{
+
+if(
+shape.type !== "hray" ||
+!shape.isAlert
+){
+return shape;
+}
+
+dirty = true;
+return stripShapeAlertFlags(shape);
+
+});
+
+if(!dirty){
+continue;
+}
+
+localStorage.setItem(
+drawingsStorageKey(sym),
+JSON.stringify(next)
+);
+
+any = true;
+
+window.dispatchEvent(
+new CustomEvent(
+"drawings-updated",
+{ detail:{ symbol: sym } }
+)
+);
+
+}
+
+if(any){
+console.log(
+"[alerts] сняты флаги алертов на всех графиках"
+);
+}
+
+}
+
 export function removeAllAlerts(){
 
-saveAlerts([]);
-
+clearAllChartAlertFlags();
+saveAlertsFromCloudMerge([]);
 stripAlertFlagsNotInRegistry();
 
-queueAlertsCloud(async m=>{
-
-const ok =
-await m.clearAllAlertsFromCloud();
+void import("./alerts-cloud-sync.js?v=64").then(m=>{
+m.runCloudOp(()=>
+m.removeAllAlertsEverywhere()
+).then(ok=>{
 
 if(!ok){
 console.warn(
@@ -1626,6 +1690,11 @@ console.warn(
 );
 }
 
+}).catch(err=>{
+console.warn(
+"[alerts] remove all:",
+err?.message || err
+);
 });
 
 }
