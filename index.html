@@ -3,7 +3,7 @@
 <head>
 
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
 
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin/>
 <link rel="dns-prefetch" href="https://api.bybit.com"/>
@@ -11,7 +11,7 @@
 <title>Главная — Multichart</title>
 
 <link rel="stylesheet" href="css/common.css?v=12">
-<link rel="stylesheet" href="css/screener.css?v=11">
+<link rel="stylesheet" href="css/screener.css?v=12">
 
 </head>
 
@@ -116,7 +116,7 @@ import("./js/site-boot.js?v=59");
 
 loadLightweightCharts().then(async ()=>{
 
-await import("./js/screener.js?v=43");
+await import("./js/screener.js?v=44");
 
 }).catch(err=>{
 

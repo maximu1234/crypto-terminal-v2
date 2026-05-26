@@ -857,8 +857,13 @@ renderPage();
 
 paginationEl.appendChild(prev);
 
-const maxButtons = 11;
-let start = Math.max(1, currentPage - 5);
+const maxButtons =
+isScreenerMobile()
+? 5
+: 11;
+const half =
+Math.floor(maxButtons / 2);
+let start = Math.max(1, currentPage - half);
 let end = Math.min(total, start + maxButtons - 1);
 
 start = Math.max(1, end - maxButtons + 1);

@@ -481,18 +481,28 @@ border-radius:8px;
 }
 
 .screener-page-header .screener-nav-panel .header-settings-wrap{
-display:flex;
+display:block;
+width:100%;
 margin-top:12px;
 padding-top:12px;
 border-top:1px solid #1f2937;
+align-self:stretch;
 }
 
 .screener-page-header .screener-nav-panel .header-settings-btn{
-width:100%;
+display:inline-flex;
+width:auto;
+max-width:100%;
 justify-content:flex-start;
+align-items:center;
 gap:10px;
 min-height:44px;
 padding:10px 12px;
+margin:0;
+}
+
+.screener-page-header .screener-nav-panel .header-settings-icon{
+flex-shrink:0;
 }
 
 #screener-grid.grid-mobile-2{
@@ -503,11 +513,49 @@ padding:6px;
 }
 
 #pagination{
-padding-bottom:max(10px, env(safe-area-inset-bottom, 0px));
+flex-wrap:nowrap;
+justify-content:flex-start;
+max-height:none;
+overflow-x:auto;
+overflow-y:hidden;
+-webkit-overflow-scrolling:touch;
+scroll-snap-type:x proximity;
+gap:6px;
+padding:8px 10px;
+/* запас под адресную строку Safari / панель браузера */
+padding-bottom:calc(
+12px + env(safe-area-inset-bottom, 0px) + 52px
+);
+background:#0b1220;
+position:sticky;
+bottom:0;
+z-index:40;
+}
+
+#pagination .page-btn{
+flex-shrink:0;
+scroll-snap-align:center;
+}
+
+#pagination > .page-btn:first-child,
+#pagination > .page-btn:last-child{
+min-width:48px;
+width:48px;
+padding:0;
+font-size:22px;
+line-height:1;
+}
+
+#pagination .page-btn:not(:first-child):not(:last-child){
+min-width:36px;
+height:36px;
+padding:0 6px;
 }
 
 #screener-status{
-bottom:max(56px, calc(48px + env(safe-area-inset-bottom, 0px)));
+bottom:calc(
+64px + env(safe-area-inset-bottom, 0px) + 52px
+);
 }
 
 }
