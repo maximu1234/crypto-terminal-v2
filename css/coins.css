@@ -1,37 +1,78 @@
-/* Монеты — десктоп: график слева, список справа */
-@media (min-width:641px){
+/* Монеты: не тянуть screener.css — у него body { display:flex } ломает десктоп */
 
-#app{
+body.coins-page{
 display:block;
+overflow:hidden;
 }
 
-#left{
+/* ——— Десктоп (как было: график | список) ——— */
+@media (min-width:641px){
+
+body.coins-page .coins-mobile-bar,
+body.coins-page #coins-nav-panel,
+body.coins-page #coins-nav-backdrop{
+display:none !important;
+}
+
+body.coins-page .coins-header-desktop{
+display:flex !important;
+align-items:center;
+gap:16px;
+margin-left:auto;
+}
+
+body.coins-page .coins-tf-mobile-wrap,
+body.coins-page .coins-draw-tools-mount{
+display:none !important;
+}
+
+body.coins-page .coins-tf-desktop{
+display:contents;
+}
+
+body.coins-page .coins-draw-desktop{
+display:flex !important;
+}
+
+body.coins-page #app{
+display:grid;
+grid-template-columns:minmax(0,1fr) 340px;
+height:100dvh;
+max-height:100dvh;
+box-sizing:border-box;
+padding-bottom:env(safe-area-inset-bottom, 0px);
+}
+
+body.coins-page #left{
 display:grid;
 grid-template-columns:minmax(0,1fr) 340px;
 grid-template-rows:auto auto minmax(0,1fr);
 min-height:0;
+overflow:hidden;
 }
 
-#header,
-#topbar{
+body.coins-page #header,
+body.coins-page #topbar{
 grid-column:1 / -1;
 }
 
-#charts-stack{
+body.coins-page #charts-stack{
 grid-column:1;
 grid-row:3;
 }
 
-#list{
+body.coins-page #list{
 grid-column:2;
 grid-row:3;
 border-left:1px solid #1f2937;
 border-top:none;
+max-height:none;
 }
 
 }
 
 /* ——— Смартфон ——— */
+.coins-mobile-bar,
 .coins-tf-mobile-wrap,
 .coins-draw-tools-mount{
 display:none;
@@ -71,13 +112,67 @@ body.coins-page.coins-nav-open{
 overflow:hidden;
 }
 
-body.coins-page.coins-nav-open #coins-nav-panel{
-transform:translateX(0);
-pointer-events:auto;
-visibility:visible;
+/* Шапка */
+body.coins-page .coins-page-header{
+flex-wrap:nowrap;
+gap:8px;
+padding:0 10px;
+height:52px;
+padding-top:env(safe-area-inset-top, 0px);
 }
 
-.coins-page-header .screener-nav-panel#coins-nav-panel{
+body.coins-page .coins-page-header #logo{
+font-size:17px;
+flex-shrink:0;
+}
+
+body.coins-page .coins-mobile-bar{
+display:flex !important;
+align-items:center;
+gap:6px;
+margin-left:auto;
+flex-shrink:0;
+}
+
+body.coins-page .screener-nav-toggle{
+flex-shrink:0;
+display:inline-flex;
+align-items:center;
+justify-content:center;
+width:44px;
+height:40px;
+padding:0;
+border:none;
+background:transparent;
+cursor:pointer;
+border-radius:8px;
+-webkit-tap-highlight-color:transparent;
+}
+
+body.coins-page .screener-nav-toggle-bars{
+display:block;
+width:22px;
+height:16px;
+background:
+linear-gradient(#fff,#fff) 0 0 / 100% 3px no-repeat,
+linear-gradient(#fff,#fff) 0 50% / 100% 3px no-repeat,
+linear-gradient(#fff,#fff) 0 100% / 100% 3px no-repeat;
+border-radius:2px;
+}
+
+body.coins-page #coins-nav-backdrop{
+display:none;
+position:fixed;
+inset:0;
+z-index:10014;
+background:rgba(0,0,0,.55);
+}
+
+body.coins-page.coins-nav-open #coins-nav-backdrop{
+display:block;
+}
+
+body.coins-page #coins-nav-panel{
 display:flex !important;
 position:fixed;
 top:0;
@@ -98,33 +193,49 @@ pointer-events:none;
 visibility:hidden;
 }
 
-.coins-page-header .screener-nav-panel#coins-nav-panel a{
+body.coins-page.coins-nav-open #coins-nav-panel{
+transform:translateX(0);
+pointer-events:auto;
+visibility:visible;
+}
+
+body.coins-page #coins-nav-panel a{
 display:block;
 padding:14px 12px;
 font-size:16px;
 border-radius:8px;
+color:#e5e7eb;
+text-decoration:none;
 }
 
-body.coins-page #coins-nav-backdrop{
-display:none;
-position:fixed;
-inset:0;
-z-index:10014;
-background:rgba(0,0,0,.55);
+body.coins-page #coins-nav-panel a.active{
+color:#fff;
+background:#1e293b;
 }
 
-body.coins-page.coins-nav-open #coins-nav-backdrop{
+body.coins-page #coins-nav-panel .coins-nav-settings{
 display:block;
+width:100%;
+margin-top:12px;
+padding-top:12px;
+border-top:1px solid #1f2937;
 }
 
-.coins-page-header > .coins-header-desktop{
-display:none !important;
+body.coins-page #coins-nav-panel .coins-nav-settings .header-settings-section-title{
+margin-bottom:8px;
 }
 
-.coins-mobile-bar{
-display:flex !important;
+body.coins-page #coins-nav-panel .cloud-auth-wrap--panel{
+max-width:none;
 }
 
+body.coins-page #coins-nav-panel .cloud-auth-email,
+body.coins-page #coins-nav-panel .cloud-auth-send{
+width:100%;
+box-sizing:border-box;
+}
+
+/* Панель графика */
 #topbar.coins-topbar{
 flex-shrink:0;
 height:48px;
@@ -159,9 +270,55 @@ min-width:72px;
 max-width:88px;
 }
 
-.coins-tf-mobile-wrap .screener-mobile-select{
+.screener-mobile-select-wrap{
+position:relative;
+}
+
+.screener-mobile-select{
+width:100%;
+box-sizing:border-box;
+border:1px solid #374151;
+background:#1f2937;
+color:#e5e7eb;
+border-radius:8px;
 padding:8px 10px;
 font-size:14px;
+font-weight:600;
+cursor:pointer;
+text-align:left;
+-webkit-tap-highlight-color:transparent;
+}
+
+.screener-mobile-menu{
+position:absolute;
+top:calc(100% + 4px);
+left:0;
+right:0;
+z-index:10020;
+min-width:100%;
+background:#111827;
+border:1px solid #374151;
+border-radius:8px;
+box-shadow:0 8px 24px rgba(0,0,0,.5);
+overflow:hidden;
+}
+
+.screener-mobile-menu-item{
+display:block;
+width:100%;
+box-sizing:border-box;
+border:none;
+background:transparent;
+color:#e5e7eb;
+padding:10px 12px;
+font-size:13px;
+text-align:left;
+cursor:pointer;
+}
+
+.screener-mobile-menu-item.active{
+background:#2563eb;
+color:#fff;
 }
 
 .coins-draw-tools-mount{
@@ -241,28 +398,6 @@ flex-shrink:0;
 flex:1 1 auto;
 min-height:0;
 -webkit-overflow-scrolling:touch;
-}
-
-.coins-page-header .screener-nav-panel#coins-nav-panel .coins-nav-settings{
-display:block;
-width:100%;
-margin-top:12px;
-padding-top:12px;
-border-top:1px solid #1f2937;
-}
-
-.coins-page-header .screener-nav-panel#coins-nav-panel .coins-nav-settings .header-settings-section-title{
-margin-bottom:8px;
-}
-
-.coins-page-header .screener-nav-panel#coins-nav-panel .cloud-auth-wrap--panel{
-max-width:none;
-}
-
-.coins-page-header .screener-nav-panel#coins-nav-panel .cloud-auth-email,
-.coins-page-header .screener-nav-panel#coins-nav-panel .cloud-auth-send{
-width:100%;
-box-sizing:border-box;
 }
 
 }
