@@ -56,7 +56,7 @@ getWidgetFlagHtml,
 wireWidgetFlagUi,
 updateWidgetFlagUi,
 bindWidgetFlagGlobalListeners
-} from "./widget-favorite-flag.js?v=1";
+} from "./widget-favorite-flag.js?v=2";
 
 const dashboard =
 document.getElementById("dashboard");

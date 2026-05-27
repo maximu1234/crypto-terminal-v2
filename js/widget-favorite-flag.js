@@ -251,6 +251,7 @@ flagTrigger?.setAttribute(
 );
 
 }
+);
 
 updateWidgetFlagUi(
 root,
