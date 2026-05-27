@@ -9,7 +9,7 @@ ensureCloudReady
 import {
 initAlertsCloudSync,
 scheduleRegistryCloudSync
-} from "./alerts-cloud-sync.js?v=67";
+} from "./alerts-cloud-sync.js?v=69";
 
 import {
 stripAlertFlagsNotInRegistry
@@ -19,7 +19,7 @@ import {
 isCloudLoggedIn,
 isCloudSyncEnabled,
 getCloudUserEmail
-} from "./cloud-sync.js?v=15";
+} from "./cloud-sync.js?v=16";
 
 import {
 isSupabaseConfigured

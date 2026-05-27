@@ -7,7 +7,7 @@ finalizeAlertPriceDrag
 
 import {
 isCloudLoggedInEffective
-} from "./cloud-sync.js?v=15";
+} from "./cloud-sync.js?v=16";
 
 import {
 formatPrice

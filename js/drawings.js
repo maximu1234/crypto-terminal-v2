@@ -39,7 +39,7 @@ persistAllDrawingsToCloud,
 scheduleDrawingsCloudPush,
 flushDrawingsCloudPush,
 onDrawingsRemoteUpdate
-} from "./cloud-sync.js?v=15";
+} from "./cloud-sync.js?v=16";
 
 import {
 touchShapeRevision,

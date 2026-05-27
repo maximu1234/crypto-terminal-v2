@@ -34,9 +34,11 @@ let reconcileTimer = null;
 
 let registrySyncTimer = null;
 
-const REGISTRY_SYNC_DEBOUNCE_MS = 400;
+const REGISTRY_SYNC_DEBOUNCE_MS = 200;
 
 const RECONCILE_INTERVAL_MS = 4000;
+
+const ALERTS_FAST_POLL_MS = 2500;
 
 let lastRemoteAlertMode = null;
 
@@ -46,7 +48,9 @@ new Map();
 
 let remoteRegistrySyncTimer = null;
 
-const REMOTE_REGISTRY_SYNC_MS = 120;
+const REMOTE_REGISTRY_SYNC_MS = 50;
+
+let alertsFastPollTimer = null;
 
 /** Блокирует merge/push/reconcile после «удалить все», пока облако не очищено. */
 let registrySyncPausedUntil = 0;
@@ -228,6 +232,30 @@ scheduleRemoteRegistrySync();
 
 }
 
+function broadcastAlertsRegistrySync(){
+
+if(
+!alertsRealtimeChannel
+){
+return;
+}
+
+try{
+
+alertsRealtimeChannel.send({
+type: "broadcast",
+event: "alerts-registry-sync",
+payload: {
+at: Date.now()
+}
+});
+
+}catch{
+/* ignore */
+}
+
+}
+
 function handleAlertsRealtimeUpsert(){
 
 scheduleRemoteRegistrySync();
@@ -255,7 +283,16 @@ alertsRealtimeUserId = userId;
 
 alertsRealtimeChannel =
 sb
-.channel(`price_alerts:${userId}`)
+.channel(
+`price_alerts:${userId}`,
+{
+config:{
+broadcast:{
+self: false
+}
+}
+}
+)
 .on(
 "postgres_changes",
 {
@@ -294,6 +331,15 @@ payload.old
 );
 }
 )
+.on(
+"broadcast",
+{
+event: "alerts-registry-sync"
+},
+()=>{
+void pullRegistryFromCloud();
+}
+)
 .subscribe(status=>{
 
 if(
@@ -326,6 +372,50 @@ clearInterval(reconcileTimer);
 reconcileTimer = null;
 }
 
+stopAlertsFastPoll();
+
+}
+
+function startAlertsFastPoll(){
+
+stopAlertsFastPoll();
+
+alertsFastPollTimer =
+setInterval(()=>{
+
+if(
+!isCloudLoggedIn() ||
+isRegistryCloudSyncPaused()
+){
+return;
+}
+
+void pullRegistryFromCloud().catch(err=>{
+console.warn(
+"[alerts] fast poll:",
+err?.message || err
+);
+});
+
+},
+ALERTS_FAST_POLL_MS);
+
+}
+
+function stopAlertsFastPoll(){
+
+if(
+!alertsFastPollTimer
+){
+return;
+}
+
+clearInterval(
+alertsFastPollTimer
+);
+alertsFastPollTimer =
+null;
+
 }
 
 function startReconcileTimer(){
@@ -336,7 +426,6 @@ reconcileTimer = setInterval(()=>{
 
 if(
 !isCloudLoggedIn() ||
-document.visibilityState !== "visible" ||
 isRegistryCloudSyncPaused()
 ){
 return;
@@ -368,6 +457,7 @@ ctx?.user?.id
 ){
 await setupAlertsRealtime(ctx.user.id);
 startReconcileTimer();
+startAlertsFastPoll();
 }else{
 await teardownAlertsRealtime();
 stopReconcileTimer();
@@ -3094,6 +3184,8 @@ row.symbol,
 row.shapeId
 );
 
+broadcastAlertsRegistrySync();
+
 return true;
 
 }
@@ -3137,6 +3229,8 @@ row.symbol,
 row.shapeId
 );
 
+broadcastAlertsRegistrySync();
+
 return true;
 
 }
@@ -3176,6 +3270,8 @@ console.log(
 row.symbol,
 row.shapeId
 );
+
+broadcastAlertsRegistrySync();
 
 return true;
 
@@ -3765,6 +3861,15 @@ window.addEventListener(
 "alerts-changed",
 ()=>{
 scheduleRegistryCloudSync();
+scheduleRemoteRegistrySync();
+}
+);
+
+window.addEventListener(
+"price-alerts-changed",
+()=>{
+scheduleRegistryCloudSync();
+scheduleRemoteRegistrySync();
 }
 );
 
@@ -3805,9 +3910,16 @@ err?.message || err
 const pullWhenVisible = ()=>{
 
 if(
-document.visibilityState !== "visible" ||
 !isCloudLoggedIn()
 ){
+return;
+}
+
+if(
+document.visibilityState ===
+"hidden"
+){
+void pushUnsyncedAlerts();
 return;
 }
 

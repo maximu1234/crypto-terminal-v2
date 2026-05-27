@@ -54,11 +54,14 @@ const drawingsListeners = new Set();
 let settingsChannel = null;
 let realtimeUserId = null;
 let syncPollTimer = null;
+let drawingsFastPollTimer = null;
 let realtimeReconnectTimer = null;
 let drawingsPushTimer = null;
+let pendingDrawingsCloudPush = false;
 
-const SYNC_POLL_MS = 10000;
-const DRAWINGS_PUSH_DEBOUNCE_MS = 400;
+const SYNC_POLL_MS = 5000;
+const DRAWINGS_FAST_POLL_MS = 2500;
+const DRAWINGS_PUSH_DEBOUNCE_MS = 250;
 
 function notifyAuth(){
 
@@ -310,6 +313,14 @@ DRAWINGS_SYNCED_SIG_KEY
 }
 
 export function scheduleDrawingsCloudPush(){
+
+if(
+!loggedIn
+){
+pendingDrawingsCloudPush =
+true;
+return;
+}
 
 if(
 drawingsPushTimer
@@ -631,17 +642,76 @@ if(
 return;
 }
 
-if(
-document.visibilityState ===
-"visible"
-){
 pullRemoteSettingsIfNewer();
+
+},
+SYNC_POLL_MS);
+
+}
+
+function startDrawingsFastPoll(){
+
+stopDrawingsFastPoll();
+
+drawingsFastPollTimer =
+setInterval(()=>{
+
+if(
+!loggedIn
+){
+return;
+}
+
+if(
+hasUnsyncedDrawings()
+){
+void flushDrawingsCloudPush();
 }else{
 void pullDrawingsIfCloudNewer();
 }
 
 },
-SYNC_POLL_MS);
+DRAWINGS_FAST_POLL_MS);
+
+}
+
+function stopDrawingsFastPoll(){
+
+if(
+!drawingsFastPollTimer
+){
+return;
+}
+
+clearInterval(
+drawingsFastPollTimer
+);
+drawingsFastPollTimer =
+null;
+
+}
+
+function broadcastDrawingsSync(){
+
+if(
+!settingsChannel
+){
+return;
+}
+
+try{
+
+settingsChannel.send({
+type: "broadcast",
+event: "drawings-sync",
+payload: {
+at: Date.now()
+}
+});
+
+}catch{
+/* ignore */
+}
 
 }
 
@@ -663,6 +733,7 @@ ch.unsubscribe();
 function stopCloudSyncHelpers(){
 
 stopSyncPoll();
+stopDrawingsFastPoll();
 
 if(realtimeReconnectTimer){
 clearTimeout(realtimeReconnectTimer);
@@ -686,8 +757,6 @@ realtimeReconnectTimer = null;
 
 if(
 !loggedIn ||
-document.visibilityState !==
-"visible" ||
 !realtimeUserId
 ){
 return;
@@ -848,7 +917,16 @@ teardownSettingsRealtime();
 
 const channel =
 sb
-.channel(`user_settings:${userId}`)
+.channel(
+`user_settings:${userId}`,
+{
+config:{
+broadcast:{
+self: false
+}
+}
+}
+)
 .on(
 "postgres_changes",
 {
@@ -877,9 +955,21 @@ payload.new
 );
 }
 )
+.on(
+"broadcast",
+{
+event: "drawings-sync"
+},
+()=>{
+void pullDrawingsIfCloudNewer();
+}
+)
 .subscribe(status=>{
 
 if(status === "SUBSCRIBED"){
+console.log(
+"[cloud] realtime: user_settings + broadcast"
+);
 return;
 }
 
@@ -1445,6 +1535,21 @@ await syncDrawingsWithCloud();
 
 export async function persistAllDrawingsToCloud(){
 
+await waitForCloudAuth(
+8000
+);
+
+if(
+!loggedIn
+){
+pendingDrawingsCloudPush =
+true;
+return;
+}
+
+pendingDrawingsCloudPush =
+false;
+
 const localSnap =
 drawingsSyncSnapshot();
 
@@ -1458,39 +1563,39 @@ return;
 const { sb, user } =
 authed;
 
-let merged =
-mergeDrawingsPayload(
-localSnap.shapes,
-{},
-localSnap.tombstones,
-{}
-);
+for(
+let attempt = 0;
+attempt <
+4;
+attempt++
+){
+
+let cloud =
+null;
 
 try{
-
-const cloud =
+cloud =
 await fetchUserSettings(
 sb,
 user.id
 );
-
-if(
-cloud
-){
-merged =
-mergeDrawingsPayload(
-localSnap.shapes,
-cloud.drawings ||
-{},
-localSnap.tombstones,
-cloud.drawingsTombstones ||
-{}
-);
-}
-
 }catch{
 /* push local snapshot */
 }
+
+const baseTs =
+cloud?.drawingsUpdatedAt ||
+"";
+
+const merged =
+mergeDrawingsPayload(
+localSnap.shapes,
+cloud?.drawings ||
+{},
+localSnap.tombstones,
+cloud?.drawingsTombstones ||
+{}
+);
 
 const mergedSnap =
 {
@@ -1508,12 +1613,16 @@ merged.tombstones
 )
 );
 
-if(ts){
+if(
+!ts
+){
+break;
+}
+
 saveLocalDrawingsUpdatedAt(ts);
 saveDrawingsSyncedSignature(
 mergedSnap
 );
-}
 
 if(
 drawingsFullSignature(
@@ -1528,6 +1637,49 @@ merged.shapes,
 merged.tombstones,
 ts
 );
+}
+
+broadcastDrawingsSync();
+
+let verify =
+null;
+
+try{
+verify =
+await fetchUserSettings(
+sb,
+user.id
+);
+}catch{
+break;
+}
+
+const verifyTs =
+verify?.drawingsUpdatedAt ||
+"";
+
+if(
+verifyTs ===
+ts ||
+verifyTs ===
+baseTs
+){
+break;
+}
+
+await new Promise(
+r=>{
+setTimeout(
+r,
+100 *
+(
+attempt +
+1
+)
+);
+}
+);
+
 }
 
 }
@@ -2000,8 +2152,17 @@ await setupSettingsRealtime(
 session.user.id
 );
 startSyncPoll();
+startDrawingsFastPoll();
 
-import("./alerts-cloud-sync.js?v=67")
+if(
+pendingDrawingsCloudPush
+){
+pendingDrawingsCloudPush =
+false;
+void flushDrawingsCloudPush();
+}
+
+import("./alerts-cloud-sync.js?v=69")
 .then(async m=>{
 
 const { stripAlertFlagsNotInRegistry } =

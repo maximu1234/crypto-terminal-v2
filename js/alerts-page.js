@@ -20,7 +20,7 @@ readCachedTelegramChatId,
 saveTelegramChatId,
 syncAlertsWithCloud,
 pullRegistryFromCloud
-} from "./alerts-cloud-sync.js?v=67";
+} from "./alerts-cloud-sync.js?v=69";
 
 import {
 readAlertTokenSync

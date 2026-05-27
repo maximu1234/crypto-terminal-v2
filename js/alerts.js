@@ -33,7 +33,7 @@ return job;
 
 function queueAlertsCloud(fn){
 
-import("./alerts-cloud-sync.js?v=67")
+import("./alerts-cloud-sync.js?v=69")
 .then(m=>fn(m))
 .catch(err=>{
 console.warn("alerts cloud:", err);
@@ -984,12 +984,12 @@ await import("./auth-ui.js?v=20");
 await ensureCloudReady();
 
 const m =
-await import("./alerts-cloud-sync.js?v=68");
+await import("./alerts-cloud-sync.js?v=69");
 
 const pushed =
 await m.pushOneAlertRow(
 row,
-{ retries: 6 }
+{ retries: 3 }
 );
 
 if(
@@ -1076,12 +1076,12 @@ await ensureCloudReady();
 mergeRegistryFromChartDrawings();
 
 const m =
-await import("./alerts-cloud-sync.js?v=67");
+await import("./alerts-cloud-sync.js?v=69");
 
 const pushed =
 await m.pushOneAlertRow(
 row,
-{ retries: 6 }
+{ retries: 3 }
 );
 
 if(!pushed){
@@ -1211,7 +1211,7 @@ return;
 
 saveAlerts(list);
 
-void import("./alerts-cloud-sync.js?v=67").then(m=>{
+void import("./alerts-cloud-sync.js?v=69").then(m=>{
 m.flushAlertCloudPush(row);
 });
 
@@ -1711,7 +1711,7 @@ tf: existing?.tf
 });
 });
 
-void import("./alerts-cloud-sync.js?v=67").then(m=>{
+void import("./alerts-cloud-sync.js?v=69").then(m=>{
 m.fireAlertCloudTrigger(
 sym,
 sid,
@@ -1801,7 +1801,7 @@ clearAllChartAlertFlags();
 saveAlertsFromCloudMerge([]);
 stripAlertFlagsNotInRegistry();
 
-void import("./alerts-cloud-sync.js?v=67").then(m=>{
+void import("./alerts-cloud-sync.js?v=69").then(m=>{
 m.runCloudOp(()=>
 m.removeAllAlertsEverywhere()
 ).then(ok=>{
