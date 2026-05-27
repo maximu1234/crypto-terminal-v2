@@ -1,13 +1,11 @@
 /**
- * Синхронизация флагов избранного через user_settings.favorites (REST + realtime в cloud-sync).
- * Отдельная таблица не нужна — колонка уже есть в Supabase.
+ * Синхронизация флагов: user_settings.favorites (REST + realtime).
  */
 import {
-isCloudLoggedIn,
 isCloudLoggedInEffective,
 onCloudSyncChange,
 notifyFavoritesListeners
-} from "./cloud-sync.js?v=23";
+} from "./cloud-sync.js?v=24";
 
 import {
 loadFavoritesGroups,
@@ -19,12 +17,12 @@ favoritesSignature
 } from "./favorites.js?v=1";
 
 import {
-readAlertTokenSync
+readAlertTokenSync,
+resolveAlertAuthFast
 } from "./alert-auth-cache.js?v=4";
 
 import {
-createPullCoalescer,
-isAlertsPage
+createPullCoalescer
 } from "./cloud-sync-throttle.js?v=2";
 
 const FAVORITES_LOCAL_TS_KEY =
@@ -33,20 +31,20 @@ const FAVORITES_LOCAL_TS_KEY =
 const FAVORITES_SYNCED_SIG_KEY =
 "favorites_synced_signature";
 
-const PUSH_DEBOUNCE_MS =
-350;
-
 const coalesceFavoritesPull =
 createPullCoalescer({
-minIntervalMs: 2000,
-errorBackoffMs: 8000
+minIntervalMs: 1500,
+errorBackoffMs: 6000
 });
-
-let pushTimer =
-null;
 
 let ready =
 false;
+
+let pushInFlight =
+null;
+
+let authPullTimer =
+null;
 
 function loadLocalFavoritesUpdatedAt(){
 
@@ -156,6 +154,23 @@ s=>typeof s ===
 
 }
 
+/** Вызвать сразу при клике по флагу — до push в облако. */
+export function markFavoritesDirty(){
+
+saveLocalFavoritesUpdatedAt(
+new Date().toISOString()
+);
+
+try{
+localStorage.removeItem(
+FAVORITES_SYNCED_SIG_KEY
+);
+}catch{
+/* ignore */
+}
+
+}
+
 function applyCloudFavorites(
 list,
 updatedAt
@@ -213,7 +228,7 @@ anon
 
 }
 
-function resolveFavoritesRestAuth(){
+async function resolveFavoritesRestAuth(){
 
 const snap =
 readAlertTokenSync();
@@ -225,6 +240,20 @@ snap?.user?.id
 return {
 token: snap.token,
 userId: snap.user.id
+};
+
+}
+
+const auth =
+await resolveAlertAuthFast();
+
+if(
+auth?.token &&
+auth?.ctx?.user?.id
+){
+return {
+token: auth.token,
+userId: auth.ctx.user.id
 };
 
 }
@@ -295,7 +324,8 @@ method: "GET",
 headers: {
 apikey: http.anon,
 Authorization: `Bearer ${auth.token}`,
-Accept: "application/json"
+Accept: "application/json",
+"Cache-Control": "no-cache"
 },
 cache: "no-store"
 },
@@ -474,7 +504,7 @@ return null;
 }
 
 /**
- * Сверка local ↔ user_settings.favorites (последний updated_at побеждает).
+ * Побеждает более новый updated_at. hasUnsynced не перетирает более свежее облако.
  */
 export async function reconcileLocalFavoritesWithCloud(){
 
@@ -487,8 +517,30 @@ loadFavoritesGroups()
 
 }
 
+if(
+pushInFlight
+){
+try{
+await pushInFlight;
+}catch{
+/* ignore */
+}
+}
+
 const auth =
-resolveFavoritesRestAuth();
+await resolveFavoritesRestAuth();
+
+if(
+!auth
+){
+console.warn(
+"[favorites] нет JWT для REST — войдите через шестерёнку"
+);
+return favoritesToCloudList(
+loadFavoritesGroups()
+);
+
+}
 
 const localGroups =
 loadFavoritesGroups();
@@ -499,17 +551,10 @@ localGroups
 const localTs =
 loadLocalFavoritesUpdatedAt();
 
-let cloud =
-null;
-
-if(
-auth
-){
-cloud =
+const cloud =
 await fetchFavoritesViaRest(
 auth
 );
-}
 
 if(
 !cloud
@@ -517,12 +562,15 @@ if(
 return localList;
 }
 
+const cloudGroups =
+favoritesFromCloudList(
+cloud.favorites
+);
+
 if(
 favoritesGroupsEqual(
 localGroups,
-favoritesFromCloudList(
-cloud.favorites
-)
+cloudGroups
 )
 ){
 
@@ -541,18 +589,50 @@ return localList;
 
 }
 
-if(
-hasUnsyncedFavorites() ||
+const cloudNewer =
+cloud.updatedAt &&
+(
 !localTs ||
+isTsNewer(
+cloud.updatedAt,
+localTs
+)
+);
+const localNewer =
+localTs &&
+cloud.updatedAt &&
 isTsNewer(
 localTs,
 cloud.updatedAt
-)
-){
+);
 
 if(
-auth
+cloudNewer &&
+!localNewer
 ){
+
+applyCloudFavorites(
+cloud.favorites,
+cloud.updatedAt
+);
+
+console.log(
+"[favorites] с облака:",
+cloud.favorites.length,
+"флагов"
+);
+
+return cloud.favorites;
+
+}
+
+if(
+localList.length >
+0 ||
+hasUnsyncedFavorites() ||
+!cloud.updatedAt
+){
+
 const ts =
 await pushFavoritesViaRest(
 auth,
@@ -568,30 +648,27 @@ ts
 saveFavoritesSyncedSignature(
 localGroups
 );
-}
+
+console.log(
+"[favorites] в облако:",
+localList.length,
+"флагов"
+);
+
+}else{
+console.warn(
+"[favorites] push не удался"
+);
 }
 
 return localList;
 
 }
 
-if(
-cloud.updatedAt &&
-(
-!localTs ||
-isTsNewer(
-cloud.updatedAt,
-localTs
-)
-)
-){
-
 applyCloudFavorites(
 cloud.favorites,
 cloud.updatedAt
 );
-
-}
 
 return cloud.favorites;
 
@@ -610,11 +687,14 @@ list
 ){
 
 const auth =
-resolveFavoritesRestAuth();
+await resolveFavoritesRestAuth();
 
 if(
 !auth
 ){
+console.warn(
+"[favorites] push: нет входа"
+);
 return false;
 }
 
@@ -653,57 +733,6 @@ return false;
 
 }
 
-export function scheduleFavoritesCloudPush(
-favorites
-){
-
-if(
-!isCloudLoggedInEffective()
-){
-return;
-}
-
-const list =
-Array.isArray(
-favorites
-)
-? favorites
-: favoritesToCloudList(
-favorites ||
-loadFavoritesGroups()
-);
-
-if(
-pushTimer
-){
-clearTimeout(
-pushTimer
-);
-}
-
-pushTimer =
-setTimeout(
-()=>{
-
-pushTimer =
-null;
-void pushFavoritesImpl(
-list
-).catch(
-err=>{
-console.warn(
-"[favorites] push:",
-err?.message || err
-);
-}
-);
-
-},
-PUSH_DEBOUNCE_MS
-);
-
-}
-
 export async function persistFavoritesToCloudNow(
 favorites
 ){
@@ -717,13 +746,62 @@ favorites
 favorites
 );
 
-return pushFavoritesImpl(
+markFavoritesDirty();
+
+const job =
+pushFavoritesImpl(
 list
+);
+
+pushInFlight =
+job.finally(
+()=>{
+
+if(
+pushInFlight ===
+job
+){
+pushInFlight =
+null;
+}
+
+}
+);
+
+return job;
+
+}
+
+/** После клика по флагу: сразу push (не только debounce). */
+export function pushFavoritesAfterLocalEdit(
+favorites
+){
+
+markFavoritesDirty();
+
+void persistFavoritesToCloudNow(
+favorites
+).catch(
+err=>{
+console.warn(
+"[favorites] push after edit:",
+err?.message || err
+);
+}
 );
 
 }
 
-/** Вызывается из cloud-sync при realtime UPDATE user_settings. */
+export function scheduleFavoritesCloudPush(
+favorites
+){
+
+pushFavoritesAfterLocalEdit(
+favorites
+);
+
+}
+
 export function applyFavoritesFromRealtimeRow(
 row
 ){
@@ -747,6 +825,8 @@ cloudFavorites
 const cloudTs =
 row.updated_at ||
 "";
+const localTs =
+loadLocalFavoritesUpdatedAt();
 
 if(
 favoritesGroupsEqual(
@@ -770,9 +850,48 @@ return;
 
 }
 
+if(
+localTs &&
+cloudTs &&
+isTsNewer(
+localTs,
+cloudTs
+) &&
+hasUnsyncedFavorites()
+){
+return;
+}
+
 applyCloudFavorites(
 cloudFavorites,
 cloudTs
+);
+
+}
+
+function scheduleAuthPull(){
+
+if(
+authPullTimer
+){
+clearTimeout(
+authPullTimer
+);
+}
+
+authPullTimer =
+setTimeout(
+()=>{
+
+authPullTimer =
+null;
+
+void pullFavoritesFromCloudNow().catch(
+()=>{}
+);
+
+},
+900
 );
 
 }
@@ -797,9 +916,7 @@ if(
 return;
 }
 
-void pullFavoritesFromCloudNow().catch(
-()=>{}
-);
+scheduleAuthPull();
 
 }
 );
@@ -839,13 +956,11 @@ pullWhenVisible
 if(
 isCloudLoggedInEffective()
 ){
-void pullFavoritesFromCloudNow().catch(
-()=>{}
-);
+scheduleAuthPull();
 }
 
 console.log(
-"[favorites] облачная синхронизация: user_settings.favorites"
+"[favorites] sync: user_settings.favorites (ts wins)"
 );
 
 }

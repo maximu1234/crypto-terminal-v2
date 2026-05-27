@@ -53,7 +53,7 @@ bindMobileNavDrawerLinks
 import {
 persistFavoritesToCloud,
 onFavoritesRemoteUpdate
-} from "./cloud-sync.js?v=13";
+} from "./cloud-sync.js?v=24";
 
 const gridEl =
 document.getElementById("screener-grid");
@@ -186,8 +186,12 @@ favorites =
 setFavoriteGroup(symbol, group, favorites);
 }
 
-saveFavoritesGroups(favorites);
-persistFavoritesToCloud(favorites);
+saveFavoritesGroups(
+favorites
+);
+persistFavoritesToCloud(
+favorites
+);
 syncFavoriteFlagsForSymbol(symbol);
 
 }

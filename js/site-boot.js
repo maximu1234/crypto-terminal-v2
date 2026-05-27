@@ -26,7 +26,7 @@ isCloudSyncEnabled,
 getCloudUserEmail,
 pullDeviceStateFromCloud,
 onCloudSyncChange
-} from "./cloud-sync.js?v=23";
+} from "./cloud-sync.js?v=24";
 
 import {
 isSupabaseConfigured
@@ -142,7 +142,7 @@ initDrawingsCloudSync();
 }
 );
 
-import("./favorites-cloud-sync.js?v=1").then(
+import("./favorites-cloud-sync.js?v=2").then(
 ({ initFavoritesCloudSync })=>{
 initFavoritesCloudSync();
 }

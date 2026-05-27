@@ -747,7 +747,7 @@ realtimeUserId
 
 function handleRealtimeFavoritesRow(row){
 
-void import("./favorites-cloud-sync.js?v=1").then(
+void import("./favorites-cloud-sync.js?v=2").then(
 m=>{
 m.applyFavoritesFromRealtimeRow(
 row
@@ -1074,15 +1074,10 @@ return collectAllLocalDrawings();
 
 async function syncFavoritesWithCloud(){
 
-if(hasUnsyncedFavorites()){
+const m =
+await import("./favorites-cloud-sync.js?v=2");
 
-await persistFavoritesToCloud(
-loadFavoritesGroups()
-);
-return;
-}
-
-await pullFavoritesIfCloudNewer();
+await m.reconcileLocalFavoritesWithCloud();
 
 }
 
@@ -1118,9 +1113,9 @@ favorites
 ){
 
 const m =
-await import("./favorites-cloud-sync.js?v=1");
+await import("./favorites-cloud-sync.js?v=2");
 
-m.scheduleFavoritesCloudPush(
+m.pushFavoritesAfterLocalEdit(
 favorites
 );
 
@@ -1606,7 +1601,7 @@ return;
 try{
 
 const favoritesCloud =
-await import("./favorites-cloud-sync.js?v=1");
+await import("./favorites-cloud-sync.js?v=2");
 
 await favoritesCloud.reconcileLocalFavoritesWithCloud();
 
@@ -1819,7 +1814,7 @@ await ensureCloudLoginResolved(
 const alertsCloud =
 await import("./alerts-cloud-sync.js?v=76");
 const favoritesCloud =
-await import("./favorites-cloud-sync.js?v=1");
+await import("./favorites-cloud-sync.js?v=2");
 const { stripAlertFlagsNotInRegistry } =
 await import("./alerts.js?v=76");
 
