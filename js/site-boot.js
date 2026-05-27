@@ -50,10 +50,49 @@ import {
 ensureDrawToolsVisible
 } from "./draw-tools-visible.js?v=1";
 
+async function startSiteBoot(){
+
+const onCoins =
+/\/coins(\.html)?\/?$/i.test(
+location.pathname ||
+""
+);
+
+if(
+onCoins &&
+!window.__coinsAppReady
+){
+await new Promise(
+resolve=>{
+if(
+window.__coinsAppReady
+){
+resolve();
+return;
+}
+window.addEventListener(
+"coins-app-ready",
+()=>{
+resolve();
+},
+{ once: true }
+);
+setTimeout(
+resolve,
+30000
+);
+}
+);
+}
+
 initBybitNetworkUi();
 preloadBybitProxyConfig();
 warmBybitWorkerProxy();
 initMobileRecovery();
+
+}
+
+void startSiteBoot();
 
 if(
 document.body.classList.contains(

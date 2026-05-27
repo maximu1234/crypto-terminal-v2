@@ -22,7 +22,9 @@
 
 <script src="/vendor/lightweight-charts.standalone.production.js"></script>
 <link rel="modulepreload" href="/js/charts-lib-boot.js?v=3" crossorigin>
-<link rel="modulepreload" href="/js/terminal.js?v=188" crossorigin>
+<link rel="modulepreload" href="/js/coins-page-boot.js?v=2" crossorigin>
+<link rel="modulepreload" href="/js/chart-page.js?v=1" crossorigin>
+<link rel="modulepreload" href="/js/terminal.js?v=189" crossorigin>
 
 </head>
 
@@ -370,167 +372,8 @@ Coin
 
 <div id="coins-chart-status" class="coins-chart-status hidden" aria-live="polite"></div>
 
-<script type="module">
-
-if(location.protocol === "file:"){
-
-document.body.innerHTML = `
-<div style="padding:40px;font-family:Arial,sans-serif;background:#0b1220;color:#fff;max-width:520px">
-<h2>Нужен локальный сервер</h2>
-<p>Страницу нельзя открывать двойным кликом по файлу.</p>
-<p>В терминале:</p>
-<pre style="background:#1f2937;padding:12px;border-radius:8px">cd crypto-terminal-v2
-./start.sh</pre>
-<p>Затем откройте:<br>
-<a href="http://127.0.0.1:8080/coins.html" style="color:#60a5fa">http://127.0.0.1:8080/coins.html</a>
-</p>
-</div>`;
-
-}else{
-
-async function importWithRetry(
-url,
-tries = 3
-){
-
-let lastErr;
-
-for(
-let i = 0;
-i <
-tries;
-i++
-){
-
-try{
-return await import(
-url
-);
-}catch(
-err
-){
-lastErr =
-err;
-if(
-i <
-tries -
-1
-){
-await new Promise(
-r=>
-setTimeout(
-r,
-500 *
-(
-i +
-1
-)
-)
-);
-}
-}
-
-}
-
-throw lastErr;
-
-}
-
-(
-window.waitForSiteCssReady
-? window.waitForSiteCssReady()
-: Promise.resolve()
-).then(
-()=>
-importWithRetry(
-"/js/charts-lib-boot.js?v=3"
-)
-).then(
-({ loadLightweightCharts })=>
-loadLightweightCharts()
-).then(
-()=>
-importWithRetry(
-"/js/terminal.js?v=188"
-)
-).catch(
-err=>{
-
-console.error(
-err
-);
-
-const box =
-document.createElement(
-"div"
-);
-
-box.style.cssText =
-"position:fixed;inset:0;z-index:9999;background:#0b1220;color:#fff;padding:32px;font-family:Arial,sans-serif;overflow:auto";
-
-let detail =
-err?.message ||
-String(
-err
-);
-
-if(
-err?.cause
-){
-detail +=
-` → ${err.cause?.message || err.cause}`;
-}
-
-const onVercel =
-/vercel\.app/i.test(
-location.hostname
-);
-
-const hint =
-detail.includes(
-"LightweightCharts"
-)
-? "<p>Библиотека графиков не загрузилась. Проверьте интернет/VPN или обновите страницу (Cmd+Shift+R).</p>"
-: detail.includes(
-"Failed to fetch"
-) ||
-detail.includes(
-"CONNECTION_RESET"
-) ||
-detail.includes(
-"dynamically imported"
-)
-? onVercel
-? "<p>Не удалось скачать JS с сервера (сеть или кэш). Сделайте <strong>жёсткое обновление</strong> (Cmd+Shift+R / Ctrl+Shift+R) или откройте в режиме инкогнито.</p>"
-: "<p>Сервер не отдал файл. Остановите старый <code>./start.sh</code> (Ctrl+C), запустите снова и обновите страницу Cmd+Shift+R.</p>"
-: "";
-
-const localSteps =
-onVercel
-? `<p><a href="${location.pathname}" style="color:#60a5fa">Обновить страницу</a></p>`
-: `<p>1. <code>./start.sh</code> в папке проекта</p>
-<p>2. <a href="http://127.0.0.1:8080/coins.html" style="color:#60a5fa">http://127.0.0.1:8080/coins.html</a></p>`;
-
-box.innerHTML =
-`
-<h2>Не удалось загрузить скрипты</h2>
-<p style="color:#fca5a5">${detail}</p>
-${hint}
-${localSteps}
-<p>Попробуйте другой браузер или отключите блокировщик рекламы для этого сайта.</p>`;
-
-document.body.prepend(
-box
-);
-
-}
-);
-
-}
-
-</script>
-
-<script src="/js/site-boot.js?v=72" type="module"></script>
+<script src="/js/coins-page-boot.js?v=2" type="module"></script>
+<script src="/js/site-boot.js?v=73" type="module"></script>
 
 </body>
 </html>
