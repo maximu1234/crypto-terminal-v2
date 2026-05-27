@@ -16,8 +16,9 @@ getTelegramChatId
 } from "./alerts-cloud-sync.js?v=69";
 
 import {
-formatPrice
-} from "./chart.js?v=1";
+formatPrice,
+hideDomChartCrosshair
+} from "./chart.js?v=61";
 
 const PLUS_ICON_W =
 22;
@@ -31,7 +32,9 @@ series,
 wrapEl,
 getSymbol,
 getTf,
-scheduleRedraw
+scheduleRedraw,
+onCrosshairSuppress,
+onCrosshairRelease
 }){
 
 if(
@@ -546,6 +549,31 @@ setAlertDragLivePrice(
 dragAlertId,
 hit.price
 );
+
+try{
+onCrosshairSuppress?.();
+}catch{
+/* ignore */
+}
+
+hideDomChartCrosshair(
+wrapEl
+);
+
+try{
+chart.clearCrosshairPosition();
+}catch{
+/* ignore */
+}
+
+try{
+wrapEl.setPointerCapture(
+e.pointerId
+);
+}catch{
+/* ignore */
+}
+
 e.preventDefault();
 e.stopPropagation();
 
@@ -592,6 +620,12 @@ positionDeleteBarFromPrice(
 price
 );
 
+try{
+chart.clearCrosshairPosition();
+}catch{
+/* ignore */
+}
+
 scheduleRedraw?.();
 
 }
@@ -633,6 +667,20 @@ dispatchAlertsChanged();
 clearAlertDragLivePrice(
 dragAlertId
 );
+
+try{
+wrapEl.releasePointerCapture(
+e.pointerId
+);
+}catch{
+/* ignore */
+}
+
+try{
+onCrosshairRelease?.();
+}catch{
+/* ignore */
+}
 
 dragAlertId =
 null;

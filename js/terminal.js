@@ -75,7 +75,7 @@ syncBackgroundAlertStreams
 
 import {
 initDrawings
-} from "./drawings.js?v=155";
+} from "./drawings.js?v=156";
 
 import {
 initCoinsMobileUi,
@@ -1172,7 +1172,7 @@ if(
 drawingTools
 ){
 
-void import("./price-alert-ui.js?v=7").then(({ mountPriceAlertUi })=>{
+void import("./price-alert-ui.js?v=8").then(({ mountPriceAlertUi })=>{
 mountPriceAlertUi({
 chart,
 series: candleSeries,
@@ -1181,7 +1181,17 @@ getSymbol: ()=> currentSymbol,
 getTf: ()=> currentTF,
 scheduleRedraw: ()=>
 drawingTools?.scheduleDragRedraw?.() ||
-drawingTools?.scheduleRedraw?.()
+drawingTools?.scheduleRedraw?.(),
+onCrosshairSuppress:()=>{
+chartCrosshairLink?.setSuppressed?.(
+true
+);
+},
+onCrosshairRelease:()=>{
+chartCrosshairLink?.setSuppressed?.(
+false
+);
+}
 });
 }).catch(err=>{
 console.warn(

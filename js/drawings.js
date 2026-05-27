@@ -4115,6 +4115,31 @@ touchDrawCrosshair.y
 
 }
 
+function suppressChartCrosshairForDrag(){
+
+try{
+onChartCrosshairSuppress?.();
+}catch{
+/* ignore */
+}
+
+hideStandardChartCrosshair();
+
+if(
+!isTouchDrawTablet() &&
+chart
+){
+
+try{
+chart.clearCrosshairPosition();
+}catch{
+/* ignore */
+}
+
+}
+
+}
+
 function syncEditDragCrosshair(
 e,
 localX,
@@ -4141,24 +4166,7 @@ localX,
 localY
 ){
 
-try{
-onChartCrosshairSuppress?.();
-}catch{
-/* ignore */
-}
-
-if(
-!isTouchDrawTablet() &&
-chart
-){
-
-try{
-chart.clearCrosshairPosition();
-}catch{
-/* ignore */
-}
-
-}
+suppressChartCrosshairForDrag();
 
 syncEditDragCrosshair(
 e,
@@ -6766,11 +6774,20 @@ blockChartClick = true;
 e.preventDefault();
 e.stopPropagation();
 
+if(
+sel.type ===
+"hray" &&
+sel.isAlert
+){
+suppressChartCrosshairForDrag();
+}else{
 beginEditDragCrosshair(
 e,
 x,
 y
 );
+}
+
 syncChartTouchPan();
 
 try{
@@ -6891,11 +6908,20 @@ blockChartClick = true;
 e.preventDefault();
 e.stopPropagation();
 
+if(
+sel.type ===
+"hray" &&
+sel.isAlert
+){
+suppressChartCrosshairForDrag();
+}else{
 beginEditDragCrosshair(
 e,
 x,
 y
 );
+}
+
 syncChartTouchPan();
 
 try{
@@ -6939,8 +6965,12 @@ shape.type ===
 shape.isAlert;
 
 if(
-!isAlertHrayDrag
+isAlertHrayDrag
 ){
+
+suppressChartCrosshairForDrag();
+
+}else{
 syncEditDragCrosshair(
 e,
 x,
