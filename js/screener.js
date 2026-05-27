@@ -1793,6 +1793,13 @@ void renderPage();
 
 async function init(){
 
+const { waitForSiteCssReady } =
+await import(
+"./site-css-gate.js?v=1"
+);
+
+await waitForSiteCssReady();
+
 void ensureCloudReady();
 
 bindControls();
@@ -1860,6 +1867,17 @@ allSymbols = [];
 void import("./bybit-network-ui.js?v=2").then(m=>{
 m.showBybitNetworkIssue(err);
 });
+
+setTimeout(
+()=>{
+if(
+screenerMarketLoadFailed
+){
+void reloadScreenerMarketData();
+}
+},
+2500
+);
 
 }
 

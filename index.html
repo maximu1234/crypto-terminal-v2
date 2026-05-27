@@ -10,8 +10,8 @@
 
 <title>Главная — Multichart</title>
 
-<link rel="stylesheet" href="/css/critical-shell.css?v=1">
-<script src="/js/site-css-ready.js?v=1"></script>
+<link rel="stylesheet" href="/css/critical-shell.css?v=2">
+<script src="/js/site-css-ready.js?v=2"></script>
 <link rel="stylesheet" href="/css/common.css?v=19">
 <link rel="stylesheet" href="/css/screener.css?v=21">
 <link rel="stylesheet" href="/css/site-mobile-nav.css?v=3">
@@ -133,12 +133,18 @@ document.body.innerHTML = `
 
 try{
 
+if(
+window.waitForSiteCssReady
+){
+await window.waitForSiteCssReady();
+}
+
 const { loadLightweightCharts } =
 await import("/js/charts-lib-boot.js?v=3");
 
 await loadLightweightCharts();
-await import("./js/screener.js?v=58");
-await import("./js/site-boot.js?v=70");
+await import("/js/screener.js?v=59");
+await import("/js/site-boot.js?v=72");
 
 }catch(err){
 

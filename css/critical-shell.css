@@ -1,6 +1,5 @@
 /**
- * Минимум для первого кадра (Яндекс.Браузер / медленный CSS).
- * Подключается первым, blocking, до остальных таблиц стилей.
+ * Первый кадр до полных CSS (Яндекс.Браузер часто рисует HTML раньше таблиц стилей).
  */
 html:not(.css-ready){
 visibility:hidden;
@@ -13,6 +12,8 @@ visibility:visible;
 html,
 body{
 margin:0;
+width:100%;
+height:100%;
 background:#0b1220;
 color:#e5e7eb;
 font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
@@ -20,11 +21,13 @@ font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-se
 
 .hidden,
 .header-settings-dropdown.hidden,
+.screener-mobile-menu.hidden,
 [hidden]{
 display:none !important;
 }
 
-.menu{
+.menu,
+nav.menu{
 display:flex;
 flex-wrap:wrap;
 align-items:center;
@@ -37,14 +40,21 @@ text-decoration:none;
 font-size:14px;
 }
 
-#header{
+.menu a.active{
+color:#fff;
+}
+
+#header,
+.screener-page-header{
 display:flex;
+flex-wrap:nowrap;
 align-items:center;
-gap:16px;
+gap:12px;
 padding:0 16px;
 min-height:56px;
 background:#0b1220;
 border-bottom:1px solid #1f2937;
+overflow:visible;
 }
 
 #logo{
@@ -52,6 +62,74 @@ color:#fff;
 text-decoration:none;
 font-weight:700;
 font-size:20px;
+flex-shrink:0;
+}
+
+#header-controls.screener-header-desktop{
+display:flex;
+flex-wrap:wrap;
+align-items:center;
+gap:12px;
+margin-left:auto;
+}
+
+/* Screener: без screener.css мобильная панель «24ч %» наезжает на меню */
+.screener-mobile-bar,
+.screener-nav-backdrop,
+#screener-nav-backdrop{
+display:none !important;
+}
+
+#screener-nav-panel{
+display:flex;
+align-items:center;
+gap:18px;
+}
+
+body:has(#screener-grid){
+display:flex;
+flex-direction:column;
+overflow:hidden;
+}
+
+#screener-grid{
+flex:1;
+display:grid;
+gap:8px;
+padding:8px;
+box-sizing:border-box;
+min-height:0;
+overflow:hidden;
+}
+
+#screener-grid.grid-4{
+grid-template-columns:1fr 1fr;
+grid-template-rows:1fr 1fr;
+}
+
+#screener-grid.grid-6{
+grid-template-columns:repeat(3,1fr);
+grid-template-rows:1fr 1fr;
+}
+
+#screener-grid.grid-9{
+grid-template-columns:repeat(3,1fr);
+grid-template-rows:repeat(3,1fr);
+}
+
+.screener-widget{
+display:flex;
+flex-direction:column;
+background:#0b1220;
+border:1px solid #1f2937;
+border-radius:10px;
+min-height:0;
+overflow:hidden;
+}
+
+body.coins-page{
+display:block;
+overflow:hidden;
 }
 
 body.coins-page #coins-nav-panel,
@@ -67,19 +145,33 @@ body.coins-page.coins-nav-open #coins-nav-backdrop{
 display:block !important;
 }
 
-body.site-nav-page #site-nav-panel,
-body.site-nav-page #screener-nav-panel,
-body.site-nav-page .screener-nav-backdrop,
-body.site-nav-page #screener-nav-backdrop{
+@media (max-width:640px){
+
+.screener-mobile-bar{
+display:flex !important;
+align-items:center;
+gap:6px;
+margin-left:auto;
+min-width:0;
+}
+
+#header-controls.screener-header-desktop{
 display:none !important;
 }
 
-body.site-nav-page.screener-nav-open #site-nav-panel,
-body.site-nav-page.screener-nav-open #screener-nav-panel{
-display:flex !important;
+#screener-nav-panel{
+display:none !important;
 }
 
-body.site-nav-page.screener-nav-open .screener-nav-backdrop,
-body.site-nav-page.screener-nav-open #screener-nav-backdrop{
+body.screener-nav-open #screener-nav-panel{
+display:flex !important;
+flex-direction:column;
+align-items:stretch;
+}
+
+body.screener-nav-open #screener-nav-backdrop,
+body.screener-nav-open .screener-nav-backdrop{
 display:block !important;
+}
+
 }
