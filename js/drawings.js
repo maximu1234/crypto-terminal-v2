@@ -9,7 +9,7 @@ setAlertDragLivePrice,
 clearAlertDragLivePrice,
 removeAlert,
 upsertAlert
-} from "./alerts.js?v=78";
+} from "./alerts.js?v=79";
 
 import {
 setAlertDragPaused,

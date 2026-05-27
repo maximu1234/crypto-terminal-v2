@@ -1902,7 +1902,7 @@ void drawingsCloud.flushDrawingsCloudPush();
 if(
 !isAlertsPage()
 ){
-import("./alerts-cloud-sync.js?v=78")
+import("./alerts-cloud-sync.js?v=79")
 .then(
 async m=>{
 
@@ -2088,11 +2088,11 @@ await ensureCloudLoginResolved(
 );
 
 const alertsCloud =
-await import("./alerts-cloud-sync.js?v=78");
+await import("./alerts-cloud-sync.js?v=79");
 const favoritesCloud =
 await import("./favorites-cloud-sync.js?v=2");
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=78");
+await import("./alerts.js?v=79");
 
 const stripOpts =
 isAlertsPage()
@@ -2120,7 +2120,9 @@ favCount
 ] =
 await withTimeout(
 Promise.all([
-alertsCloud.pullRegistryFromCloudNow(),
+alertsCloud.pullRegistryFromCloudNow({
+immediate: true
+}),
 favoritesCloud.pullFavoritesFromCloudNow()
 ]),
 25000,
@@ -2140,7 +2142,9 @@ favCount
 await withTimeout(
 Promise.all([
 drawingsCloud.pullDrawingsFromCloudNow(),
-alertsCloud.pullRegistryFromCloudNow(),
+alertsCloud.pullRegistryFromCloudNow({
+immediate: true
+}),
 favoritesCloud.pullFavoritesFromCloudNow()
 ]),
 25000,

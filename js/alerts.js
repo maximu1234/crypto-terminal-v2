@@ -9,7 +9,7 @@ withTimeout
 import {
 pauseRegistryCloudSync,
 scheduleRemoteRegistrySync
-} from "./alerts-cloud-sync.js?v=78";
+} from "./alerts-cloud-sync.js?v=79";
 
 const STORAGE_KEY = "price_alerts_v1";
 
@@ -125,7 +125,7 @@ return job;
 
 function queueAlertsCloud(fn){
 
-import("./alerts-cloud-sync.js?v=78")
+import("./alerts-cloud-sync.js?v=79")
 .then(m=>fn(m))
 .catch(err=>{
 console.warn("alerts cloud:", err);
@@ -1294,7 +1294,7 @@ return null;
 }
 
 const { getTelegramChatId } =
-await import("./alerts-cloud-sync.js?v=78");
+await import("./alerts-cloud-sync.js?v=79");
 
 if(
 await getTelegramChatId() == null
@@ -1372,7 +1372,7 @@ await import("./auth-ui.js?v=23");
 await ensureCloudReady();
 
 const m =
-await import("./alerts-cloud-sync.js?v=78");
+await import("./alerts-cloud-sync.js?v=79");
 
 const pushed =
 await m.pushOneAlertRow(
@@ -1469,7 +1469,7 @@ await ensureCloudReady();
 mergeRegistryFromChartDrawings();
 
 const m =
-await import("./alerts-cloud-sync.js?v=78");
+await import("./alerts-cloud-sync.js?v=79");
 
 const pushed =
 await m.pushOneAlertRow(
@@ -1587,7 +1587,8 @@ normalizeAlertTf(
 tf ||
 a.tf
 ),
-cloudSynced: false
+cloudSynced: false,
+priceUpdatedAt: Date.now()
 };
 
 return row;
@@ -1612,7 +1613,7 @@ dispatchPriceAlertsChanged(
 sym
 );
 
-void import("./alerts-cloud-sync.js?v=78").then(async m=>{
+void import("./alerts-cloud-sync.js?v=79").then(async m=>{
 
 const ok =
 await m.flushAlertCloudPush(
@@ -2118,6 +2119,134 @@ return true;
 
 }
 
+/**
+ * Realtime INSERT/UPDATE — сразу обновить реестр (без отложенного pull).
+ */
+export function applyRemoteAlertUpsert(
+cloudRow
+){
+
+const sym =
+String(
+cloudRow?.symbol ||
+""
+).trim().toUpperCase();
+const sid =
+String(
+cloudRow?.shape_id ||
+cloudRow?.shapeId ||
+""
+).trim();
+const price =
+Number(
+cloudRow?.price
+);
+
+if(
+!sym ||
+!sid ||
+!Number.isFinite(
+price
+)
+){
+return false;
+}
+
+if(
+isAlertDeleted(
+sym,
+sid
+)
+){
+return false;
+}
+
+const list =
+loadAlerts();
+const idx =
+list.findIndex(
+a=>
+String(
+a.symbol
+).toUpperCase() ===
+sym &&
+String(
+a.shapeId
+) ===
+sid
+);
+
+const prev =
+idx >=
+0
+? list[
+idx
+]
+: null;
+
+const entry = {
+id: sid,
+shapeId: sid,
+symbol: sym,
+price,
+tf: normalizeAlertTf(
+cloudRow?.tf ||
+prev?.tf
+),
+createdAt:
+prev?.createdAt ||
+Date.parse(
+cloudRow?.created_at
+) ||
+Date.now(),
+cloudId: String(
+cloudRow?.id ||
+prev?.cloudId ||
+""
+),
+cloudSynced: true,
+priceUpdatedAt:
+Date.parse(
+cloudRow?.updated_at
+) ||
+Date.now()
+};
+
+let next;
+
+if(
+idx >=
+0
+){
+
+next = [
+...list
+];
+next[
+idx
+] = entry;
+
+}else{
+
+next = [
+...list,
+entry
+];
+
+}
+
+saveAlertsFromCloudMerge(
+next
+);
+
+dispatchPriceAlertsChanged(
+sym
+);
+
+return true;
+
+}
+
 /** Сразу убрать линию; в облаке — ещё POST /trigger для Telegram. */
 export function commitAlertTriggeredLocally(
 symbol,
@@ -2180,7 +2309,7 @@ tf: existing?.tf
 });
 });
 
-void import("./alerts-cloud-sync.js?v=78").then(m=>{
+void import("./alerts-cloud-sync.js?v=79").then(m=>{
 m.fireAlertCloudTrigger(
 sym,
 sid,
@@ -2270,7 +2399,7 @@ clearAllChartAlertFlags();
 saveAlertsFromCloudMerge([]);
 stripAlertFlagsNotInRegistry();
 
-void import("./alerts-cloud-sync.js?v=78").then(m=>{
+void import("./alerts-cloud-sync.js?v=79").then(m=>{
 m.runCloudOp(()=>
 m.removeAllAlertsEverywhere()
 ).then(ok=>{
@@ -2685,7 +2814,7 @@ const drawingsCloud =
 await import("./drawings-cloud-sync.js?v=17");
 
 const alertsCloud =
-await import("./alerts-cloud-sync.js?v=78");
+await import("./alerts-cloud-sync.js?v=79");
 
 const hadLocalDrawings =
 countAllDrawings() >

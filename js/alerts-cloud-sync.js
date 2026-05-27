@@ -91,7 +91,7 @@ new Set();
 
 let remoteRegistrySyncTimer = null;
 
-const REMOTE_REGISTRY_SYNC_MS = 400;
+const REMOTE_REGISTRY_SYNC_MS = 80;
 
 let alertsBgSyncTimer = null;
 
@@ -211,12 +211,14 @@ if(!isCloudLoggedIn()){
 return;
 }
 
-void pullRegistryFromCloudNow()
+void pullRegistryFromCloudNow({
+immediate: true
+})
 .then(
 async n=>{
 
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=78");
+await import("./alerts.js?v=79");
 
 stripAlertFlagsNotInRegistry();
 
@@ -257,7 +259,7 @@ oldRow?.triggered_at;
 if(triggered){
 
 const { applyRemoteAlertFired } =
-await import("./alerts.js?v=78");
+await import("./alerts.js?v=79");
 
 applyRemoteAlertFired(oldRow);
 return;
@@ -281,7 +283,7 @@ sid
 ){
 
 const { applyRemoteAlertRemoved } =
-await import("./alerts.js?v=78");
+await import("./alerts.js?v=79");
 
 applyRemoteAlertRemoved(oldRow);
 
@@ -319,7 +321,47 @@ at: Date.now()
 
 }
 
-function handleAlertsRealtimeUpsert(){
+function handleAlertsRealtimeUpsert(
+payload
+){
+
+const row =
+payload?.new;
+
+if(
+row &&
+!row.triggered_at &&
+row.symbol &&
+row.shape_id
+){
+
+void import("./alerts.js?v=79").then(
+({ applyRemoteAlertUpsert })=>{
+
+if(
+applyRemoteAlertUpsert(
+row
+)
+){
+return;
+}
+
+scheduleRemoteRegistrySync();
+
+}
+).catch(
+err=>{
+console.warn(
+"[alerts] realtime upsert apply:",
+err?.message || err
+);
+scheduleRemoteRegistrySync();
+}
+);
+
+return;
+
+}
 
 scheduleRemoteRegistrySync();
 
@@ -364,8 +406,10 @@ schema: "public",
 table: "price_alerts",
 filter: `user_id=eq.${userId}`
 },
-()=>{
-handleAlertsRealtimeUpsert();
+payload=>{
+handleAlertsRealtimeUpsert(
+payload
+);
 }
 )
 .on(
@@ -376,8 +420,10 @@ schema: "public",
 table: "price_alerts",
 filter: `user_id=eq.${userId}`
 },
-()=>{
-handleAlertsRealtimeUpsert();
+payload=>{
+handleAlertsRealtimeUpsert(
+payload
+);
 }
 )
 .on(
@@ -400,7 +446,9 @@ payload.old
 event: "alerts-registry-sync"
 },
 ()=>{
-void pullRegistryFromCloudNow().then(
+void pullRegistryFromCloudNow({
+immediate: true
+}).then(
 n=>{
 if(
 n >
@@ -624,7 +672,7 @@ cloudId
 ){
 
 const { markAlertCloudSynced, markAlertCloudId } =
-await import("./alerts.js?v=78");
+await import("./alerts.js?v=79");
 
 const ok =
 await verifyAlertActiveInCloud(
@@ -1477,7 +1525,7 @@ null;
 
 if(cloudId){
 const { markAlertCloudId } =
-await import("./alerts.js?v=78");
+await import("./alerts.js?v=79");
 
 markAlertCloudId(
 symbol,
@@ -1797,7 +1845,7 @@ registrySyncTimer = null;
 }
 
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=78");
+await import("./alerts.js?v=79");
 
 const ok =
 await clearAllAlertsFromCloud();
@@ -3192,7 +3240,7 @@ null;
 
 if(cloudId){
 const { markAlertCloudId } =
-await import("./alerts.js?v=78");
+await import("./alerts.js?v=79");
 
 markAlertCloudId(
 symbol,
@@ -3227,7 +3275,7 @@ return 0;
 }
 
 const { getActiveAlerts } =
-await import("./alerts.js?v=78");
+await import("./alerts.js?v=79");
 
 const localKeys =
 new Set(
@@ -3357,7 +3405,7 @@ attempt++
 if(await pushAlertViaWorker(row)){
 
 const { markAlertCloudSynced } =
-await import("./alerts.js?v=78");
+await import("./alerts.js?v=79");
 
 /* Worker пишет service role — не ждём SELECT по JWT пользователя */
 markAlertCloudSynced(
@@ -3386,7 +3434,7 @@ ctx
 ){
 
 const { loadAlerts, markAlertCloudSynced } =
-await import("./alerts.js?v=78");
+await import("./alerts.js?v=79");
 
 const hasId =
 loadAlerts().some(
@@ -3445,7 +3493,7 @@ null
 ){
 
 const { markAlertCloudSynced } =
-await import("./alerts.js?v=78");
+await import("./alerts.js?v=79");
 
 markAlertCloudSynced(
 row.symbol,
@@ -3524,7 +3572,7 @@ return 0;
 }
 
 const { getActiveAlerts, countAlertsOnChart } =
-await import("./alerts.js?v=78");
+await import("./alerts.js?v=79");
 
 const onChart =
 countAlertsOnChart();
@@ -3612,7 +3660,7 @@ return 0;
 }
 
 const { getActiveAlerts } =
-await import("./alerts.js?v=78");
+await import("./alerts.js?v=79");
 
 const list =
 getActiveAlerts();
@@ -3921,7 +3969,7 @@ normalizeAlertTf,
 isAlertDeleted,
 forgetAlertDeleted
 } =
-await import("./alerts.js?v=78");
+await import("./alerts.js?v=79");
 
 const cloudByKey =
 new Map();
@@ -4039,7 +4087,7 @@ tf: row.tf || "60"
 if(removedRows.length){
 
 const { applyRemoteAlertFired } =
-await import("./alerts.js?v=78");
+await import("./alerts.js?v=79");
 
 for(const row of removedRows){
 
@@ -4125,7 +4173,13 @@ createdAt:
 prev?.createdAt ||
 (Date.parse(cloud.created_at) || Date.now()),
 cloudId: String(cloud.id || ""),
-cloudSynced: true
+cloudSynced: true,
+priceUpdatedAt:
+Date.parse(
+cloud.created_at
+) ||
+prev?.priceUpdatedAt ||
+Date.now()
 });
 
 seen.add(key);
@@ -4217,7 +4271,7 @@ const n =
 await reconcileLocalRegistryWithCloud();
 
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=78");
+await import("./alerts.js?v=79");
 
 stripAlertFlagsNotInRegistry(
 isAlertsPage()
@@ -4235,7 +4289,9 @@ return n;
 }
 
 /** Без очереди cloudOp — сразу подтянуть алерты с Mac/другого устройства. */
-export async function pullRegistryFromCloudNow(){
+export async function pullRegistryFromCloudNow(
+opts = {}
+){
 
 if(
 isRegistryCloudSyncPaused()
@@ -4254,8 +4310,14 @@ await ensureCloudLoginResolved(
 /* ignore */
 }
 
+const immediate =
+opts.immediate ===
+true;
+
 const n =
-await coalesceRegistryPull(
+immediate
+? await reconcileLocalRegistryWithCloud()
+: await coalesceRegistryPull(
 ()=>reconcileLocalRegistryWithCloud()
 );
 
@@ -4317,7 +4379,7 @@ if(
 !isAlertsPage()
 ){
 const { mergeRegistryFromChartDrawings } =
-await import("./alerts.js?v=78");
+await import("./alerts.js?v=79");
 
 mergeRegistryFromChartDrawings({
 stripFlags: stripOpts
@@ -4328,7 +4390,7 @@ await pushUnsyncedAlerts();
 await pullRegistryFromCloudNow();
 
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=78");
+await import("./alerts.js?v=79");
 
 stripAlertFlagsNotInRegistry(
 stripOpts
@@ -4483,7 +4545,9 @@ void pushUnsyncedAlerts();
 return;
 }
 
-pullRegistryFromCloudNow().catch(err=>{
+pullRegistryFromCloudNow({
+immediate: true
+}).catch(err=>{
 console.warn(
 "alert cloud pull:",
 err?.message || err
@@ -4496,6 +4560,41 @@ window.addEventListener(
 "focus",
 pullWhenVisible
 );
+
+const isMobileAlertsSync =
+typeof navigator !==
+"undefined" &&
+/iPhone|iPad|iPod|Android/i.test(
+navigator.userAgent ||
+""
+);
+
+if(
+isMobileAlertsSync
+){
+
+setInterval(
+()=>{
+
+if(
+!isCloudLoggedInEffective() ||
+document.visibilityState !==
+"visible"
+){
+return;
+}
+
+void pullRegistryFromCloudNow({
+immediate: true
+}).catch(()=>{
+/* ignore */
+});
+
+},
+12000
+);
+
+}
 
 document.addEventListener(
 "visibilitychange",
