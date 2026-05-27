@@ -1469,6 +1469,8 @@ let redrawRaf1 = 0;
 let redrawRaf2 = 0;
 /** Один rAF на кадр при рисовании (не scheduleRedraw с двойным rAF). */
 let placementPreviewRaf = 0;
+/** Перетаскивание объектов / алертов — один redraw на кадр. */
+let dragRedrawRaf = 0;
 let placementPreviewPending = null;
 let placementCrosshairVert = null;
 let placementCrosshairHorz = null;
@@ -6924,17 +6926,26 @@ e.preventDefault();
 
 const { x, y } = pointerFromEvent(e);
 
-syncEditDragCrosshair(
-e,
-x,
-y
-);
-
 const shape =
 drawings.find(d=>d.id === dragState.shapeId);
 
 if(!shape){
 return;
+}
+
+const isAlertHrayDrag =
+shape.type ===
+"hray" &&
+shape.isAlert;
+
+if(
+!isAlertHrayDrag
+){
+syncEditDragCrosshair(
+e,
+x,
+y
+);
 }
 
 if(dragState.mode === "position-move"){
@@ -7025,7 +7036,7 @@ live
 
 }
 
-redraw();
+scheduleDragRedraw();
 
 };
 
@@ -7033,6 +7044,15 @@ const onEditUp = ()=>{
 
 if(!alive || !dragState){
 return;
+}
+
+if(
+dragRedrawRaf
+){
+cancelAnimationFrame(
+dragRedrawRaf
+);
+dragRedrawRaf = 0;
 }
 
 const draggedShape =
@@ -7828,6 +7848,30 @@ stopChartPanRedraw
 stopChartPanRedraw();
 
 };
+
+}
+
+function scheduleDragRedraw(){
+
+if(
+chartPanActive
+){
+return;
+}
+
+if(
+dragRedrawRaf
+){
+return;
+}
+
+dragRedrawRaf =
+requestAnimationFrame(()=>{
+
+dragRedrawRaf = 0;
+redraw();
+
+});
 
 }
 
@@ -10226,6 +10270,7 @@ clearAllDrawings:
 clearAllDrawingsOnChart,
 
 scheduleRedraw,
+scheduleDragRedraw,
 
 blocksTabletChartPan(){
 

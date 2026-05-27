@@ -172,13 +172,13 @@ deleteBar.classList.add(
 
 }
 
-function positionDeleteBar(
-alertRow
+function positionDeleteBarFromPrice(
+price
 ){
 
 const y =
 series.priceToCoordinate(
-alertRow.price
+price
 );
 
 if(
@@ -195,6 +195,16 @@ deleteBar.style.top =
 `${y - 11}px`;
 deleteBar.classList.remove(
 "hidden"
+);
+
+}
+
+function positionDeleteBar(
+alertRow
+){
+
+positionDeleteBarFromPrice(
+alertRow.price
 );
 
 }
@@ -578,13 +588,8 @@ dragAlertId,
 price
 );
 
-positionDeleteBar(
-alertAt(
-dragAlertId
-) || {
-shapeId: dragAlertId,
+positionDeleteBarFromPrice(
 price
-}
 );
 
 scheduleRedraw?.();
