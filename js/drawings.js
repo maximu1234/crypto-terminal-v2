@@ -50,9 +50,9 @@ ensureDrawToolsVisible
 import {
 deleteDrawingFromCloud,
 flushDrawingsCloudPush,
-onDrawingsRemoteUpdate,
+registerDrawingsChartRefresh,
 scheduleDrawingsCloudPush
-} from "./drawings-cloud-sync.js?v=15";
+} from "./drawings-cloud-sync.js?v=16";
 
 import {
 touchShapeRevision,
@@ -9082,7 +9082,9 @@ lastStorageSnap =
 
 }
 
-function syncDrawingsFromStorageNow(){
+function applyRemoteDrawingsToChart(
+symbols
+){
 
 if(
 !alive
@@ -9090,12 +9092,51 @@ if(
 return;
 }
 
+const sym =
+String(
+getSymbol() ||
+""
+).trim().toUpperCase();
+
+const list =
+Array.isArray(
+symbols
+)
+? symbols.map(
+s=>
+String(
+s ||
+""
+).trim().toUpperCase()
+)
+: [];
+
+if(
+list.length &&
+!list.includes(
+sym
+)
+){
+return;
+}
+
+resizeCanvas();
 loadDrawings();
 reconcileDrawingAlertsFromRegistry();
 redraw();
 scheduleRedraw();
 updateStyleBar();
 touchStorageSnap();
+
+}
+
+function syncDrawingsFromStorageNow(){
+
+applyRemoteDrawingsToChart(
+[
+getSymbol()
+]
+);
 
 }
 
@@ -9130,11 +9171,11 @@ return;
 
 lastStorageSnap =
 raw;
-loadDrawings();
-reconcileDrawingAlertsFromRegistry();
-redraw();
-scheduleRedraw();
-updateStyleBar();
+applyRemoteDrawingsToChart(
+[
+getSymbol()
+]
+);
 
 }
 
@@ -9147,7 +9188,7 @@ return;
 }
 
 void import(
-"./drawings-cloud-sync.js?v=15"
+"./drawings-cloud-sync.js?v=16"
 ).then(
 m=>
 m.pullDrawingsFromCloudNow()
@@ -9161,7 +9202,9 @@ syncDrawingsFromStorageNow();
 
 };
 
-const onDrawingsCloudChanged = e=>{
+window.addEventListener(
+"drawings-cloud-changed",
+e=>{
 
 if(
 !alive
@@ -9169,41 +9212,11 @@ if(
 return;
 }
 
-const sym =
-String(
-getSymbol() ||
-""
-).trim().toUpperCase();
-
-const list =
-Array.isArray(
+applyRemoteDrawingsToChart(
 e.detail?.symbols
-)
-? e.detail.symbols.map(
-s=>
-String(
-s ||
-""
-).trim().toUpperCase()
-)
-: [];
+);
 
-if(
-list.length &&
-!list.includes(
-sym
-)
-){
-return;
 }
-
-syncDrawingsFromStorageNow();
-
-};
-
-window.addEventListener(
-"drawings-cloud-changed",
-onDrawingsCloudChanged
 );
 
 document.addEventListener(
@@ -9427,46 +9440,9 @@ window.addEventListener(
 onAlertsRegistryPulled
 );
 
-const onDrawingsRemoteSync = symbols=>{
-
-if(!alive){
-return;
-}
-
-const sym =
-String(
-getSymbol() ||
-""
-).trim().toUpperCase();
-
-const list =
-Array.isArray(
-symbols
-)
-? symbols.map(
-s=>
-String(
-s ||
-""
-).trim().toUpperCase()
-)
-: [];
-
-if(
-list.length &&
-!list.includes(
-sym
-)
-){
-return;
-}
-
-syncDrawingsFromStorageNow();
-
-};
-
-onDrawingsRemoteUpdate(
-onDrawingsRemoteSync
+const unregisterDrawingsChartRefresh =
+registerDrawingsChartRefresh(
+applyRemoteDrawingsToChart
 );
 
 touchStorageSnap();
@@ -9769,6 +9745,8 @@ onAlertsChanged
 );
 
 unsubscribeCloudAuthChange?.();
+
+unregisterDrawingsChartRefresh?.();
 
 if(redrawRaf1){
 cancelAnimationFrame(redrawRaf1);

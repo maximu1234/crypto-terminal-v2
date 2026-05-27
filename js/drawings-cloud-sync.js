@@ -51,7 +51,7 @@ const REGISTRY_SYNC_DEBOUNCE_MS =
 200;
 
 const FAST_POLL_MS =
-800;
+500;
 
 const FAST_POLL_HIDDEN_MS =
 4000;
@@ -601,6 +601,57 @@ return false;
 
 const drawingsListeners =
 new Set();
+
+/** Прямой вызов графика (надёжнее window events в Safari). */
+const chartRefreshHandlers =
+new Set();
+
+export function registerDrawingsChartRefresh(
+handler
+){
+
+chartRefreshHandlers.add(
+handler
+);
+
+return ()=>{
+chartRefreshHandlers.delete(
+handler
+);
+};
+
+}
+
+function invokeDrawingsChartRefresh(
+symbols
+){
+
+const list =
+Array.isArray(
+symbols
+)
+? symbols
+: [];
+
+if(
+!list.length
+){
+return;
+}
+
+chartRefreshHandlers.forEach(
+handler=>{
+try{
+handler(
+list
+);
+}catch{
+/* ignore */
+}
+}
+);
+
+}
 
 export function onDrawingsRemoteUpdate(
 fn
@@ -2566,6 +2617,54 @@ console.log(
 "[drawings] reconcile: обновлено символов",
 changed.length
 );
+
+}else{
+
+const fp =
+buildCloudDrawingsFingerprint(
+data
+);
+
+if(
+fp !==
+lastCloudDrawingsFingerprint &&
+cloudFetchHasRows
+){
+
+lastCloudDrawingsFingerprint =
+fp;
+
+const refreshSyms =
+Object.keys(
+cloudBySymbol
+);
+
+if(
+refreshSyms.length
+){
+invokeDrawingsChartRefresh(
+refreshSyms
+);
+
+for(
+const sym of refreshSyms
+){
+window.dispatchEvent(
+new CustomEvent(
+"drawings-updated",
+{
+detail:{
+symbol: sym,
+remote: true
+}
+}
+)
+);
+}
+
+}
+
+}
 
 }
 
