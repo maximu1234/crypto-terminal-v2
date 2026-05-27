@@ -192,7 +192,7 @@ document.getElementById(
 
 function openCoinsNav(){
 
-void import("./auth-ui.js?v=22").then(m=>{
+void import("./auth-ui.js?v=23").then(m=>{
 m.closeCloudSettingsDropdown?.();
 }).catch(()=>{});
 

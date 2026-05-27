@@ -24,7 +24,7 @@ flagSortRank
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=22";
+} from "./auth-ui.js?v=23";
 
 import {
 persistFavoritesToCloud,
@@ -75,7 +75,7 @@ syncBackgroundAlertStreams
 
 import {
 initDrawings
-} from "./drawings.js?v=138";
+} from "./drawings.js?v=139";
 
 import {
 initCoinsMobileUi,

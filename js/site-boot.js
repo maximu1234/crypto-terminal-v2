@@ -4,7 +4,7 @@ initAlertMonitor
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=22";
+} from "./auth-ui.js?v=23";
 
 import {
 initAlertsCloudSync,
@@ -66,7 +66,7 @@ resetBybitEndpoints();
 initAlertMonitor();
 initAlertsCloudSync();
 
-import("./drawings-cloud-sync.js?v=1").then(
+import("./drawings-cloud-sync.js?v=2").then(
 ({ initDrawingsCloudSync })=>{
 initDrawingsCloudSync();
 }

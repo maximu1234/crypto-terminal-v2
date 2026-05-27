@@ -1,6 +1,6 @@
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=22";
+} from "./auth-ui.js?v=23";
 
 import {
 ensureCloudLoginResolved,

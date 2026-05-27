@@ -320,7 +320,7 @@ true;
 return;
 }
 
-void import("./drawings-cloud-sync.js?v=1").then(
+void import("./drawings-cloud-sync.js?v=2").then(
 m=>{
 m.scheduleDrawingsCloudPush();
 }
@@ -341,7 +341,7 @@ return Promise.resolve();
 pendingDrawingsCloudPush =
 false;
 
-return import("./drawings-cloud-sync.js?v=1").then(
+return import("./drawings-cloud-sync.js?v=2").then(
 m=>
 m.flushDrawingsCloudPush()
 );
@@ -644,7 +644,7 @@ function stopCloudSyncHelpers(){
 
 stopSyncPoll();
 
-void import("./drawings-cloud-sync.js?v=1").then(
+void import("./drawings-cloud-sync.js?v=2").then(
 m=>{
 m.stopDrawingsCloudSync();
 }
@@ -746,7 +746,7 @@ function handleRealtimeSettingsRow(row){
 
 handleRealtimeFavoritesRow(row);
 
-void import("./drawings-cloud-sync.js?v=1").then(
+void import("./drawings-cloud-sync.js?v=2").then(
 m=>
 m.pullDrawingsFromCloud()
 );
@@ -1020,7 +1020,7 @@ return cloud.favorites;
 export async function mergeDrawingsWithCloud(){
 
 const drawingsCloud =
-await import("./drawings-cloud-sync.js?v=1");
+await import("./drawings-cloud-sync.js?v=2");
 
 await drawingsCloud.hydrateDrawingsAfterAuth();
 
@@ -1030,7 +1030,7 @@ return collectAllLocalDrawings();
 
 export async function pullDrawingsIfCloudNewer(){
 
-await import("./drawings-cloud-sync.js?v=1").then(
+await import("./drawings-cloud-sync.js?v=2").then(
 m=>
 m.pullDrawingsFromCloud()
 );
@@ -1056,7 +1056,7 @@ await pullFavoritesIfCloudNewer();
 async function syncDrawingsWithCloud(){
 
 const m =
-await import("./drawings-cloud-sync.js?v=1");
+await import("./drawings-cloud-sync.js?v=2");
 
 await m.flushDrawingsCloudPush();
 
@@ -1565,7 +1565,7 @@ session
 await mergeFavoritesWithCloud();
 
 const drawingsCloud =
-await import("./drawings-cloud-sync.js?v=1");
+await import("./drawings-cloud-sync.js?v=2");
 
 await drawingsCloud.hydrateDrawingsAfterAuth();
 await drawingsCloud.setupDrawingsRealtimeForUser(

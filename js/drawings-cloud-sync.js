@@ -344,6 +344,66 @@ return true;
 
 }
 
+/**
+ * Удалить все рисунки пользователя из user_drawings (страница «Алерты» и т.п.).
+ */
+export async function clearAllDrawingsFromCloud(){
+
+return runCloudOp(
+async()=>{
+
+const ctx =
+await getAuthed();
+
+if(
+!ctx
+){
+return false;
+}
+
+const { error } =
+await withTimeout(
+ctx.sb
+.from(
+"user_drawings"
+)
+.delete()
+.eq(
+"user_id",
+ctx.user.id
+),
+20000,
+"user_drawings delete all"
+);
+
+if(
+error
+){
+console.warn(
+"[drawings] delete all:",
+error.message
+);
+return false;
+}
+
+saveSyncMeta(
+{}
+);
+saveLocalTombstones(
+{}
+);
+
+broadcastDrawingsSync();
+
+await reconcileLocalDrawingsWithCloud();
+
+return true;
+
+}
+);
+
+}
+
 export async function deleteDrawingFromCloud(
 symbol,
 shapeId

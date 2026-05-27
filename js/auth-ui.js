@@ -768,13 +768,14 @@ wrap.innerHTML = `
 </div>
 <div class="cloud-telegram-wrap hidden">
 <p class="cloud-telegram-title">Telegram для алертов</p>
+<div class="cloud-telegram-connected hidden" role="status">
+<p class="cloud-telegram-connected-text"></p>
+</div>
+<div class="cloud-telegram-setup">
 <p class="cloud-telegram-help">Введите Chat ID. Без Chat ID алерты недоступны.</p>
 <div class="cloud-telegram-row">
 <input type="text" class="cloud-telegram-chat-id" placeholder="Chat ID" inputmode="numeric" autocomplete="off"/>
 <button type="button" class="cloud-telegram-save">Сохранить</button>
-</div>
-<div class="cloud-telegram-row">
-<button type="button" class="cloud-telegram-clear">Отключить Telegram</button>
 </div>
 <details class="cloud-telegram-howto">
 <summary>Как подключить</summary>
@@ -783,6 +784,11 @@ wrap.innerHTML = `
 <li>Скопируйте Chat ID из сообщения бота и сохраните его здесь.</li>
 </ol>
 </details>
+</div>
+<div class="cloud-telegram-actions">
+<button type="button" class="cloud-telegram-edit hidden">Изменить Chat ID</button>
+<button type="button" class="cloud-telegram-clear">Отключить Telegram</button>
+</div>
 </div>
 <p class="cloud-auth-hint hidden"></p>
 `;
@@ -805,19 +811,73 @@ const emailLabel =
 wrap.querySelector(".cloud-auth-email-label");
 const tgWrap =
 wrap.querySelector(".cloud-telegram-wrap");
+const tgSetup =
+wrap.querySelector(".cloud-telegram-setup");
+const tgConnected =
+wrap.querySelector(".cloud-telegram-connected");
+const tgConnectedText =
+wrap.querySelector(".cloud-telegram-connected-text");
 const tgInput =
 wrap.querySelector(".cloud-telegram-chat-id");
 const tgSave =
 wrap.querySelector(".cloud-telegram-save");
+const tgEdit =
+wrap.querySelector(".cloud-telegram-edit");
 const tgClear =
 wrap.querySelector(".cloud-telegram-clear");
 
 let tgLoadedForEmail = "";
+let tgEditMode =
+false;
+
+function telegramConnectedMessage(){
+
+const account =
+getAuthUiEmail() || "аккаунт";
+
+return (
+"Chat ID сохранён. Алерты будут приходить в Telegram " +
+`(${account}).`
+);
+
+}
+
+function applyTelegramUiMode(
+hasChatId
+){
+
+const showConnected =
+hasChatId &&
+!tgEditMode;
+
+tgSetup?.classList.toggle(
+"hidden",
+showConnected
+);
+tgConnected?.classList.toggle(
+"hidden",
+!showConnected
+);
+tgEdit?.classList.toggle(
+"hidden",
+!showConnected
+);
+
+if(
+showConnected &&
+tgConnectedText
+){
+tgConnectedText.textContent =
+telegramConnectedMessage();
+}
+
+}
 
 function setTelegramUiLocked(locked){
 
 tgInput && (tgInput.disabled = !!locked);
 tgSave && (tgSave.disabled = !!locked);
+tgEdit && (tgEdit.disabled = !!locked);
 tgClear && (tgClear.disabled = !!locked);
 
 }
@@ -830,6 +890,7 @@ variant !== "panel" ||
 ){
 tgWrap?.classList.add("hidden");
 tgLoadedForEmail = "";
+tgEditMode = false;
 return;
 }
 
@@ -850,16 +911,26 @@ setTelegramUiLocked(true);
 try{
 const chatId =
 await getTelegramChatId();
+const hasChatId =
+chatId != null;
+
 if(tgInput){
 tgInput.value =
-chatId == null ? "" : String(chatId);
+hasChatId ? String(chatId) : "";
 tgInput.dataset.loaded = "1";
 }
+
+applyTelegramUiMode(
+hasChatId
+);
 tgLoadedForEmail = email;
 }catch{
 if(tgInput){
 tgInput.dataset.loaded = "0";
 }
+applyTelegramUiMode(
+false
+);
 }finally{
 setTelegramUiLocked(false);
 }
@@ -938,6 +1009,7 @@ setHint("", false);
 
 tgWrap?.classList.add("hidden");
 tgLoadedForEmail = "";
+tgEditMode = false;
 
 }
 
@@ -997,9 +1069,25 @@ tgInput?.value?.trim() || "";
 
 setTelegramUiLocked(true);
 
+if(
+!value
+){
+setHint(
+"Введите Chat ID из сообщения бота.",
+true
+);
+setTelegramUiLocked(false);
+return;
+}
+
 try{
 await saveTelegramChatId(value);
-setHint("Chat ID сохранён. Теперь алерты доступны.", false);
+tgEditMode = false;
+tgLoadedForEmail = "";
+setHint(
+"Избранное и рисунки синхронизируются. Ниже — Chat ID для алертов в Telegram.",
+false
+);
 await refreshTelegramOne();
 }catch(err){
 setHint(
@@ -1012,9 +1100,27 @@ setTelegramUiLocked(false);
 
 });
 
+tgEdit?.addEventListener("click", ()=>{
+
+tgEditMode = true;
+applyTelegramUiMode(
+false
+);
+setHint("", false);
+
+});
+
 tgClear?.addEventListener("click", async()=>{
 
 if(!isAuthUiLoggedIn()){
+return;
+}
+
+if(
+!window.confirm(
+"Отключить Telegram? Алерты в боте приходить не будут."
+)
+){
 return;
 }
 
@@ -1022,10 +1128,18 @@ setTelegramUiLocked(true);
 
 try{
 await clearTelegramChatId();
+tgEditMode = false;
+tgLoadedForEmail = "";
 if(tgInput){
 tgInput.value = "";
 }
-setHint("Telegram отключен. Без Chat ID алерты недоступны.", false);
+applyTelegramUiMode(
+false
+);
+setHint(
+"Telegram отключён. Без Chat ID алерты недоступны.",
+false
+);
 }catch(err){
 setHint(
 err?.message || "Не удалось отключить Telegram.",

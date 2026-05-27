@@ -997,7 +997,7 @@ sym
 );
 
 const { ensureCloudReady } =
-await import("./auth-ui.js?v=22");
+await import("./auth-ui.js?v=23");
 
 await ensureCloudReady();
 
@@ -1087,7 +1087,7 @@ list.push(row);
 saveAlerts(list);
 
 const { ensureCloudReady } =
-await import("./auth-ui.js?v=22");
+await import("./auth-ui.js?v=23");
 
 await ensureCloudReady();
 
@@ -2124,7 +2124,7 @@ return total;
 
 }
 
-export function clearAllDrawings(){
+export async function clearAllDrawings(){
 
 const symbols =
 new Set();
@@ -2145,9 +2145,32 @@ symbols.add(symbolFromDrawingsKey(key));
 
 }
 
+try{
+const { clearAllDrawingsFromCloud } =
+await import("./drawings-cloud-sync.js?v=2");
+
+await clearAllDrawingsFromCloud();
+}catch(err){
+console.warn(
+"clear all drawings cloud:",
+err?.message || err
+);
+}
+
 keys.forEach(key=>{
 localStorage.removeItem(key);
 });
+
+try{
+localStorage.removeItem(
+"drawings_row_sync_v1"
+);
+localStorage.removeItem(
+"drawings_tombstones_v1"
+);
+}catch{
+/* ignore */
+}
 
 removeAllAlerts();
 

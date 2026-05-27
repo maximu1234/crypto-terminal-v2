@@ -10,7 +10,7 @@ getAlertsSorted,
 removeAlert,
 stripAlertFlagsNotInRegistry,
 removeAllAlerts
-} from "./alerts.js?v=61";
+} from "./alerts.js?v=65";
 
 import {
 getTelegramChatId,
@@ -30,7 +30,7 @@ getCloudUserEmail
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=22";
+} from "./auth-ui.js?v=23";
 
 import { formatPrice } from "./chart.js";
 
@@ -420,12 +420,18 @@ clearDrawingsAction.innerHTML =
 const btn =
 clearDrawingsAction.querySelector("button");
 
-btn.onclick = e=>{
+btn.onclick = async e=>{
 e.preventDefault();
-clearAllDrawings();
+btn.disabled = true;
+
+try{
+await clearAllDrawings();
 stripAlertFlagsNotInRegistry();
 render();
 showClearDrawingsSuccess();
+}finally{
+btn.disabled = false;
+}
 };
 
 }else{
