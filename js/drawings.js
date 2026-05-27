@@ -34,12 +34,15 @@ parseMoneyInput
 } from "./position-sizing.js?v=1";
 
 import {
-bumpDrawingsLocalRevision,
-persistAllDrawingsToCloud,
-scheduleDrawingsCloudPush,
-flushDrawingsCloudPush,
-onDrawingsRemoteUpdate
+bumpDrawingsLocalRevision
 } from "./cloud-sync.js?v=16";
+
+import {
+deleteDrawingFromCloud,
+flushDrawingsCloudPush,
+onDrawingsRemoteUpdate,
+scheduleDrawingsCloudPush
+} from "./drawings-cloud-sync.js?v=1";
 
 import {
 touchShapeRevision,
@@ -8143,6 +8146,11 @@ recordDrawingTombstone(
 symDel,
 removed.id
 );
+
+void deleteDrawingFromCloud(
+symDel,
+removed.id
+);
 }
 
 drawings = drawings.filter(d=>d.id !== selectedId);
@@ -8181,6 +8189,10 @@ recordDrawingTombstone(
 sym,
 d.id
 );
+void deleteDrawingFromCloud(
+sym,
+d.id
+);
 }
 
 drawings = [];
@@ -8188,7 +8200,7 @@ selectedId = null;
 cancelPlacement();
 saveDrawings();
 
-void persistAllDrawingsToCloud().catch(err=>{
+void flushDrawingsCloudPush().catch(err=>{
 console.warn(
 "clear drawings cloud:",
 err?.message || err

@@ -15,6 +15,8 @@
 
 **Алерты + Telegram:** после блоков 1–3 выполни `supabase/migration-alerts-telegram.sql`. Worker: папка `alert-worker/`, деплой на Railway — см. `alert-worker/README.md`.
 
+**Рисунки (как алерты, по строкам):** выполни `supabase/migration-user-drawings.sql`, затем `supabase/migration-user-drawings-realtime.sql`. При первом входе старый JSON из `user_settings.drawings` импортируется в таблицу `user_drawings` автоматически.
+
 ## 2. Вход по email
 
 1. **Authentication** → **Providers** → **Email** — включён

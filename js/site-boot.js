@@ -65,6 +65,12 @@ resetBybitEndpoints();
 
 initAlertMonitor();
 initAlertsCloudSync();
+
+import("./drawings-cloud-sync.js?v=1").then(
+({ initDrawingsCloudSync })=>{
+initDrawingsCloudSync();
+}
+);
 void ensureCloudReady()
 .then(async()=>{
 

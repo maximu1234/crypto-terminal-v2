@@ -54,13 +54,11 @@ const drawingsListeners = new Set();
 let settingsChannel = null;
 let realtimeUserId = null;
 let syncPollTimer = null;
-let drawingsFastPollTimer = null;
 let realtimeReconnectTimer = null;
 let drawingsPushTimer = null;
 let pendingDrawingsCloudPush = false;
 
 const SYNC_POLL_MS = 5000;
-const DRAWINGS_FAST_POLL_MS = 2500;
 const DRAWINGS_PUSH_DEBOUNCE_MS = 250;
 
 function notifyAuth(){
@@ -121,7 +119,7 @@ drawingsListeners.delete(fn);
 
 }
 
-function notifyDrawings(symbols){
+export function notifyDrawings(symbols){
 
 drawingsListeners.forEach(fn=>{
 
@@ -322,52 +320,30 @@ true;
 return;
 }
 
-if(
-drawingsPushTimer
-){
-clearTimeout(
-drawingsPushTimer
-);
+void import("./drawings-cloud-sync.js?v=1").then(
+m=>{
+m.scheduleDrawingsCloudPush();
 }
-
-drawingsPushTimer =
-setTimeout(()=>{
-
-drawingsPushTimer =
-null;
-void persistAllDrawingsToCloud();
-
-},
-DRAWINGS_PUSH_DEBOUNCE_MS);
+);
 
 }
 
 export function flushDrawingsCloudPush(){
 
 if(
-drawingsPushTimer
+!loggedIn
 ){
-clearTimeout(
-drawingsPushTimer
-);
-drawingsPushTimer =
-null;
+pendingDrawingsCloudPush =
+true;
+return Promise.resolve();
 }
 
-return persistAllDrawingsToCloud();
+pendingDrawingsCloudPush =
+false;
 
-}
-
-if(
-typeof window !==
-"undefined"
-){
-
-window.addEventListener(
-"drawings-updated",
-()=>{
-scheduleDrawingsCloudPush();
-}
+return import("./drawings-cloud-sync.js?v=1").then(
+m=>
+m.flushDrawingsCloudPush()
 );
 
 }
@@ -649,72 +625,6 @@ SYNC_POLL_MS);
 
 }
 
-function startDrawingsFastPoll(){
-
-stopDrawingsFastPoll();
-
-drawingsFastPollTimer =
-setInterval(()=>{
-
-if(
-!loggedIn
-){
-return;
-}
-
-if(
-hasUnsyncedDrawings()
-){
-void flushDrawingsCloudPush();
-}else{
-void pullDrawingsIfCloudNewer();
-}
-
-},
-DRAWINGS_FAST_POLL_MS);
-
-}
-
-function stopDrawingsFastPoll(){
-
-if(
-!drawingsFastPollTimer
-){
-return;
-}
-
-clearInterval(
-drawingsFastPollTimer
-);
-drawingsFastPollTimer =
-null;
-
-}
-
-function broadcastDrawingsSync(){
-
-if(
-!settingsChannel
-){
-return;
-}
-
-try{
-
-settingsChannel.send({
-type: "broadcast",
-event: "drawings-sync",
-payload: {
-at: Date.now()
-}
-});
-
-}catch{
-/* ignore */
-}
-
-}
-
 function teardownSettingsRealtime(){
 
 if(!settingsChannel){
@@ -733,7 +643,12 @@ ch.unsubscribe();
 function stopCloudSyncHelpers(){
 
 stopSyncPoll();
-stopDrawingsFastPoll();
+
+void import("./drawings-cloud-sync.js?v=1").then(
+m=>{
+m.stopDrawingsCloudSync();
+}
+);
 
 if(realtimeReconnectTimer){
 clearTimeout(realtimeReconnectTimer);
@@ -827,75 +742,14 @@ cloudTs
 
 }
 
-function handleRealtimeDrawingsRow(row){
-
-if(!row){
-return;
-}
-
-const unpacked =
-unpackCloudDrawings(
-row.drawings
-);
-const localShapes =
-collectAllLocalDrawings();
-const localTombs =
-loadLocalTombstones();
-const cloudTs =
-row.drawings_updated_at || "";
-
-const merged =
-mergeDrawingsPayload(
-localShapes,
-unpacked.shapes,
-localTombs,
-unpacked.tombstones
-);
-
-const localSnap =
-{
-shapes: localShapes,
-tombstones: localTombs
-};
-
-const mergedSnap =
-{
-shapes: merged.shapes,
-tombstones: merged.tombstones
-};
-
-if(
-drawingsFullSignature(
-mergedSnap
-) ===
-drawingsFullSignature(
-localSnap
-)
-){
-
-if(cloudTs){
-saveLocalDrawingsUpdatedAt(cloudTs);
-}
-
-saveDrawingsSyncedSignature(
-localSnap
-);
-
-return;
-}
-
-void applyDrawingsLocally(
-merged.shapes,
-merged.tombstones,
-cloudTs
-);
-
-}
-
 function handleRealtimeSettingsRow(row){
 
 handleRealtimeFavoritesRow(row);
-handleRealtimeDrawingsRow(row);
+
+void import("./drawings-cloud-sync.js?v=1").then(
+m=>
+m.pullDrawingsFromCloud()
+);
 
 }
 
@@ -955,20 +809,11 @@ payload.new
 );
 }
 )
-.on(
-"broadcast",
-{
-event: "drawings-sync"
-},
-()=>{
-void pullDrawingsIfCloudNewer();
-}
-)
 .subscribe(status=>{
 
 if(status === "SUBSCRIBED"){
 console.log(
-"[cloud] realtime: user_settings + broadcast"
+"[cloud] realtime: user_settings"
 );
 return;
 }
@@ -1174,329 +1019,23 @@ return cloud.favorites;
 
 export async function mergeDrawingsWithCloud(){
 
-const authed =
-await getAuthedClient();
+const drawingsCloud =
+await import("./drawings-cloud-sync.js?v=1");
 
-if(!authed){
+await drawingsCloud.hydrateDrawingsAfterAuth();
+
 return collectAllLocalDrawings();
-}
-
-const { sb, user } =
-authed;
-
-const localSnap =
-drawingsSyncSnapshot();
-const cloud =
-await fetchUserSettings(
-sb,
-user.id
-);
-
-if(!cloud){
-
-if(
-Object.keys(
-localSnap.shapes
-).length >
-0
-){
-
-const ts =
-await pushCloudDrawings(
-sb,
-user.id,
-packCloudDrawings(
-localSnap.shapes,
-localSnap.tombstones
-)
-);
-
-if(ts){
-saveLocalDrawingsUpdatedAt(ts);
-saveDrawingsSyncedSignature(
-localSnap
-);
-}
-
-}
-
-return localSnap.shapes;
-
-}
-
-const cloudSnap =
-{
-shapes: cloud.drawings ||
-{},
-tombstones: cloud.drawingsTombstones ||
-{}
-};
-
-if(
-drawingsFullSignature(
-localSnap
-) ===
-drawingsFullSignature(
-cloudSnap
-)
-){
-
-if(cloud.drawingsUpdatedAt){
-saveLocalDrawingsUpdatedAt(
-cloud.drawingsUpdatedAt
-);
-}
-
-saveDrawingsSyncedSignature(
-localSnap
-);
-return localSnap.shapes;
-
-}
-
-const localEmpty =
-Object.keys(
-localSnap.shapes
-).length ===
-0 &&
-!Object.keys(
-localSnap.tombstones
-).length;
-const cloudEmpty =
-Object.keys(
-cloudSnap.shapes
-).length ===
-0 &&
-!Object.keys(
-cloudSnap.tombstones
-).length;
-
-if(
-localEmpty &&
-!cloudEmpty
-){
-
-await applyDrawingsLocally(
-cloudSnap.shapes,
-cloudSnap.tombstones,
-cloud.drawingsUpdatedAt
-);
-
-return cloudSnap.shapes;
-
-}
-
-if(
-!localEmpty &&
-cloudEmpty
-){
-
-const ts =
-await pushCloudDrawings(
-sb,
-user.id,
-packCloudDrawings(
-localSnap.shapes,
-localSnap.tombstones
-)
-);
-
-if(ts){
-saveLocalDrawingsUpdatedAt(ts);
-saveDrawingsSyncedSignature(
-localSnap
-);
-}
-
-return localSnap.shapes;
-
-}
-
-const merged =
-mergeDrawingsPayload(
-localSnap.shapes,
-cloudSnap.shapes,
-localSnap.tombstones,
-cloudSnap.tombstones
-);
-
-const mergedSnap =
-{
-shapes: merged.shapes,
-tombstones: merged.tombstones
-};
-
-if(
-drawingsFullSignature(
-mergedSnap
-) ===
-drawingsFullSignature(
-localSnap
-) &&
-drawingsFullSignature(
-mergedSnap
-) ===
-drawingsFullSignature(
-cloudSnap
-)
-){
-
-if(cloud.drawingsUpdatedAt){
-saveLocalDrawingsUpdatedAt(
-cloud.drawingsUpdatedAt
-);
-}
-
-saveDrawingsSyncedSignature(
-mergedSnap
-);
-
-return merged.shapes;
-
-}
-
-const ts =
-await pushCloudDrawings(
-sb,
-user.id,
-packCloudDrawings(
-merged.shapes,
-merged.tombstones
-)
-);
-
-if(ts){
-saveLocalDrawingsUpdatedAt(ts);
-saveDrawingsSyncedSignature(
-mergedSnap
-);
-}
-
-await applyDrawingsLocally(
-merged.shapes,
-merged.tombstones,
-ts ||
-cloud.drawingsUpdatedAt
-);
-
-return merged.shapes;
 
 }
 
 export async function pullDrawingsIfCloudNewer(){
 
-const authed =
-await getAuthedClient();
+await import("./drawings-cloud-sync.js?v=1").then(
+m=>
+m.pullDrawingsFromCloud()
+);
 
-if(!authed){
 return collectAllLocalDrawings();
-}
-
-const { sb, user } =
-authed;
-
-const localSnap =
-drawingsSyncSnapshot();
-const cloud =
-await fetchUserSettings(
-sb,
-user.id
-);
-
-if(!cloud){
-return localSnap.shapes;
-}
-
-const cloudSnap =
-{
-shapes: cloud.drawings ||
-{},
-tombstones: cloud.drawingsTombstones ||
-{}
-};
-
-if(
-drawingsFullSignature(
-localSnap
-) ===
-drawingsFullSignature(
-cloudSnap
-)
-){
-
-if(cloud.drawingsUpdatedAt){
-saveLocalDrawingsUpdatedAt(
-cloud.drawingsUpdatedAt
-);
-}
-
-saveDrawingsSyncedSignature(
-localSnap
-);
-return localSnap.shapes;
-
-}
-
-if(
-hasUnsyncedDrawings()
-){
-
-const merged =
-mergeDrawingsPayload(
-localSnap.shapes,
-cloudSnap.shapes,
-localSnap.tombstones,
-cloudSnap.tombstones
-);
-
-const mergedSnap =
-{
-shapes: merged.shapes,
-tombstones: merged.tombstones
-};
-
-const ts =
-await pushCloudDrawings(
-sb,
-user.id,
-packCloudDrawings(
-merged.shapes,
-merged.tombstones
-)
-);
-
-if(ts){
-saveLocalDrawingsUpdatedAt(ts);
-saveDrawingsSyncedSignature(
-mergedSnap
-);
-}
-
-await applyDrawingsLocally(
-merged.shapes,
-merged.tombstones,
-ts
-);
-
-return merged.shapes;
-
-}
-
-const merged =
-mergeDrawingsPayload(
-localSnap.shapes,
-cloudSnap.shapes,
-localSnap.tombstones,
-cloudSnap.tombstones
-);
-
-await applyDrawingsLocally(
-merged.shapes,
-merged.tombstones,
-cloud.drawingsUpdatedAt
-);
-
-return merged.shapes;
 
 }
 
@@ -1516,13 +1055,10 @@ await pullFavoritesIfCloudNewer();
 
 async function syncDrawingsWithCloud(){
 
-if(hasUnsyncedDrawings()){
+const m =
+await import("./drawings-cloud-sync.js?v=1");
 
-await persistAllDrawingsToCloud();
-return;
-}
-
-await pullDrawingsIfCloudNewer();
+await m.flushDrawingsCloudPush();
 
 }
 
@@ -1535,152 +1071,7 @@ await syncDrawingsWithCloud();
 
 export async function persistAllDrawingsToCloud(){
 
-await waitForCloudAuth(
-8000
-);
-
-if(
-!loggedIn
-){
-pendingDrawingsCloudPush =
-true;
-return;
-}
-
-pendingDrawingsCloudPush =
-false;
-
-const localSnap =
-drawingsSyncSnapshot();
-
-const authed =
-await getAuthedClient();
-
-if(!authed){
-return;
-}
-
-const { sb, user } =
-authed;
-
-for(
-let attempt = 0;
-attempt <
-4;
-attempt++
-){
-
-let cloud =
-null;
-
-try{
-cloud =
-await fetchUserSettings(
-sb,
-user.id
-);
-}catch{
-/* push local snapshot */
-}
-
-const baseTs =
-cloud?.drawingsUpdatedAt ||
-"";
-
-const merged =
-mergeDrawingsPayload(
-localSnap.shapes,
-cloud?.drawings ||
-{},
-localSnap.tombstones,
-cloud?.drawingsTombstones ||
-{}
-);
-
-const mergedSnap =
-{
-shapes: merged.shapes,
-tombstones: merged.tombstones
-};
-
-const ts =
-await pushCloudDrawings(
-sb,
-user.id,
-packCloudDrawings(
-merged.shapes,
-merged.tombstones
-)
-);
-
-if(
-!ts
-){
-break;
-}
-
-saveLocalDrawingsUpdatedAt(ts);
-saveDrawingsSyncedSignature(
-mergedSnap
-);
-
-if(
-drawingsFullSignature(
-mergedSnap
-) !==
-drawingsFullSignature(
-localSnap
-)
-){
-await applyDrawingsLocally(
-merged.shapes,
-merged.tombstones,
-ts
-);
-}
-
-broadcastDrawingsSync();
-
-let verify =
-null;
-
-try{
-verify =
-await fetchUserSettings(
-sb,
-user.id
-);
-}catch{
-break;
-}
-
-const verifyTs =
-verify?.drawingsUpdatedAt ||
-"";
-
-if(
-verifyTs ===
-ts ||
-verifyTs ===
-baseTs
-){
-break;
-}
-
-await new Promise(
-r=>{
-setTimeout(
-r,
-100 *
-(
-attempt +
-1
-)
-);
-}
-);
-
-}
+return flushDrawingsCloudPush();
 
 }
 
@@ -2147,19 +1538,26 @@ session
 }
 
 await mergeFavoritesWithCloud();
-await mergeDrawingsWithCloud();
+
+const drawingsCloud =
+await import("./drawings-cloud-sync.js?v=1");
+
+await drawingsCloud.hydrateDrawingsAfterAuth();
+await drawingsCloud.setupDrawingsRealtimeForUser(
+session.user.id
+);
+
 await setupSettingsRealtime(
 session.user.id
 );
 startSyncPoll();
-startDrawingsFastPoll();
 
 if(
 pendingDrawingsCloudPush
 ){
 pendingDrawingsCloudPush =
 false;
-void flushDrawingsCloudPush();
+void drawingsCloud.flushDrawingsCloudPush();
 }
 
 import("./alerts-cloud-sync.js?v=69")
