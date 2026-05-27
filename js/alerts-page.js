@@ -14,8 +14,7 @@ removeAllAlerts
 
 import {
 getTelegramChatId,
-initAlertsCloudSync,
-pullRegistryFromCloud
+initAlertsCloudSync
 } from "./alerts-cloud-sync.js?v=69";
 
 import {
@@ -24,13 +23,16 @@ readAlertTokenSync
 
 import {
 isCloudLoggedIn,
+isCloudLoggedInEffective,
 onCloudSyncChange,
-getCloudUserEmail
-} from "./cloud-sync.js?v=19";
+getCloudUserEmail,
+pullDeviceStateFromCloud,
+ensureCloudLoginResolved
+} from "./cloud-sync.js?v=20";
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=23";
+} from "./auth-ui.js?v=24";
 
 import { formatPrice } from "./chart.js";
 
@@ -612,8 +614,23 @@ window.addEventListener("alerts-registry-pulled", render);
 window.addEventListener("alerts-history-changed", render);
 
 onCloudSyncChange(()=>{
+
+void (async()=>{
+
+if(
+isCloudLoggedInEffective()
+){
+await ensureCloudLoginResolved(
+8000
+);
+await pullDeviceStateFromCloud();
+}
+
 refreshTelegramUi();
 render();
+
+})();
+
 });
 
 initAlertsCloudSync();
@@ -625,8 +642,14 @@ void refreshTelegramUi();
 void ensureCloudReady()
 .then(async()=>{
 
-if(isCloudLoggedIn()){
-await pullRegistryFromCloud();
+await ensureCloudLoginResolved(
+10000
+);
+
+if(
+isCloudLoggedInEffective()
+){
+await pullDeviceStateFromCloud();
 }
 
 render();

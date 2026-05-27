@@ -3790,13 +3790,26 @@ const n =
 await reconcileLocalRegistryWithCloud();
 
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=60");
+await import("./alerts.js?v=69");
 
 stripAlertFlagsNotInRegistry();
 
 return n;
 
 });
+
+}
+
+/** Без очереди cloudOp — сразу подтянуть алерты с Mac/другого устройства. */
+export async function pullRegistryFromCloudNow(){
+
+if(
+isRegistryCloudSyncPaused()
+){
+return 0;
+}
+
+return reconcileLocalRegistryWithCloud();
 
 }
 

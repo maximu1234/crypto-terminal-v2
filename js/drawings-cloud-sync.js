@@ -2027,6 +2027,19 @@ return runCloudOp(
 
 }
 
+/** Без очереди cloudOp — для второго устройства (iPad) сразу после входа. */
+export async function pullDrawingsFromCloudNow(){
+
+if(
+isDrawingsCloudSyncPaused()
+){
+return 0;
+}
+
+return reconcileLocalDrawingsWithCloud();
+
+}
+
 let drawingsPushTimer =
 null;
 

@@ -17,9 +17,12 @@ stripAlertFlagsNotInRegistry
 
 import {
 isCloudLoggedIn,
+isCloudLoggedInEffective,
 isCloudSyncEnabled,
-getCloudUserEmail
-} from "./cloud-sync.js?v=19";
+getCloudUserEmail,
+pullDeviceStateFromCloud,
+onCloudSyncChange
+} from "./cloud-sync.js?v=20";
 
 import {
 isSupabaseConfigured
@@ -70,6 +73,24 @@ resetBybitEndpoints();
 initAlertMonitor();
 initAlertsCloudSync();
 ensureDrawToolsVisible();
+
+onCloudSyncChange(
+()=>{
+
+if(
+isCloudLoggedInEffective()
+){
+void pullDeviceStateFromCloud();
+}
+
+window.dispatchEvent(
+new CustomEvent(
+"draw-tools-access-changed"
+)
+);
+
+}
+);
 
 import("./drawings-cloud-sync.js?v=9").then(
 ({ initDrawingsCloudSync })=>{
@@ -139,9 +160,10 @@ console.info(
 
 if(
 configured &&
-loggedIn
+isCloudLoggedInEffective()
 ){
 scheduleRegistryCloudSync();
+void pullDeviceStateFromCloud();
 }
 
 })

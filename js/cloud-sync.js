@@ -1679,11 +1679,10 @@ return;
 }
 
 if(
-loggedIn
+loggedIn ||
+isCloudLoggedInEffective()
 ){
-void flushDrawingsCloudPush().then(()=>{
-void pullDrawingsIfCloudNewer();
-});
+void pullDeviceStateFromCloud();
 }
 
 refreshCloudConnection().catch(()=>{
@@ -1722,6 +1721,92 @@ window.addEventListener(
 "online",
 wake
 );
+
+}
+
+/**
+ * Загрузить рисунки и алерты из Supabase на это устройство (iPad после входа с Mac).
+ */
+export async function pullDeviceStateFromCloud(){
+
+if(
+!isCloudLoggedInEffective()
+){
+console.warn(
+"[Multichart] нет входа на этом устройстве — шестерёнка → email → ссылка из письма"
+);
+return {
+ok: false,
+reason: "no_auth"
+};
+}
+
+try{
+await ensureCloudLoginResolved(
+10000
+);
+
+const drawingsCloud =
+await import("./drawings-cloud-sync.js?v=9");
+const alertsCloud =
+await import("./alerts-cloud-sync.js?v=69");
+const { stripAlertFlagsNotInRegistry } =
+await import("./alerts.js?v=69");
+
+const [drawSyms, alertRows] =
+await withTimeout(
+Promise.all([
+drawingsCloud.pullDrawingsFromCloudNow(),
+alertsCloud.pullRegistryFromCloudNow()
+]),
+25000,
+"pull device from cloud"
+);
+
+stripAlertFlagsNotInRegistry();
+
+window.dispatchEvent(
+new CustomEvent(
+"alerts-registry-pulled"
+)
+);
+window.dispatchEvent(
+new CustomEvent(
+"alerts-changed"
+)
+);
+window.dispatchEvent(
+new CustomEvent(
+"draw-tools-access-changed"
+)
+);
+
+console.log(
+"[Multichart] загружено из облака: символов с рисунками —",
+drawSyms,
+"| алертов —",
+alertRows
+);
+
+return {
+ok: true,
+drawSyms,
+alertRows
+};
+
+}catch(
+err
+){
+console.warn(
+"[Multichart] загрузка из облака:",
+err?.message || err
+);
+return {
+ok: false,
+reason: "error"
+};
+
+}
 
 }
 
