@@ -52,7 +52,7 @@ deleteDrawingFromCloud,
 flushDrawingsCloudPush,
 registerDrawingsChartRefresh,
 scheduleDrawingsCloudPush
-} from "./drawings-cloud-sync.js?v=16";
+} from "./drawings-cloud-sync.js?v=17";
 
 import {
 touchShapeRevision,
@@ -9082,6 +9082,45 @@ lastStorageSnap =
 
 }
 
+function startCoordRetryBurst(){
+
+let tries =
+0;
+
+const tick =
+()=>{
+
+if(
+!alive ||
+tries >
+48
+){
+return;
+}
+
+tries += 1;
+redraw();
+
+if(
+drawings.some(
+d=>!shapeCoordsReady(
+d
+)
+)
+){
+requestAnimationFrame(
+tick
+);
+}
+
+};
+
+requestAnimationFrame(
+tick
+);
+
+}
+
 function applyRemoteDrawingsToChart(
 symbols
 ){
@@ -9098,18 +9137,24 @@ getSymbol() ||
 ""
 ).trim().toUpperCase();
 
-const list =
+if(
+symbols !=
+null &&
 Array.isArray(
 symbols
 )
-? symbols.map(
+){
+
+const list =
+symbols.map(
 s=>
 String(
 s ||
 ""
 ).trim().toUpperCase()
-)
-: [];
+).filter(
+Boolean
+);
 
 if(
 list.length &&
@@ -9120,6 +9165,8 @@ sym
 return;
 }
 
+}
+
 resizeCanvas();
 loadDrawings();
 reconcileDrawingAlertsFromRegistry();
@@ -9127,6 +9174,7 @@ redraw();
 scheduleRedraw();
 updateStyleBar();
 touchStorageSnap();
+startCoordRetryBurst();
 
 }
 
@@ -9188,15 +9236,19 @@ return;
 }
 
 void import(
-"./drawings-cloud-sync.js?v=16"
+"./drawings-cloud-sync.js?v=17"
 ).then(
-m=>
-m.pullDrawingsFromCloudNow()
+m=>{
+m.bumpDrawingsPullNow?.();
+return m.pullDrawingsFromCloudNow();
+}
 ).catch(
 ()=>{}
 ).finally(
 ()=>{
-syncDrawingsFromStorageNow();
+applyRemoteDrawingsToChart(
+null
+);
 }
 );
 
@@ -9217,6 +9269,45 @@ e.detail?.symbols
 );
 
 }
+);
+
+const onChartCandlesLoaded = e=>{
+
+if(
+!alive
+){
+return;
+}
+
+const sym =
+String(
+getSymbol() ||
+""
+).trim().toUpperCase();
+
+const eventSym =
+String(
+e.detail?.symbol ||
+""
+).trim().toUpperCase();
+
+if(
+eventSym &&
+eventSym !==
+sym
+){
+return;
+}
+
+applyRemoteDrawingsToChart(
+null
+);
+
+};
+
+window.addEventListener(
+"chart-candles-loaded",
+onChartCandlesLoaded
 );
 
 document.addEventListener(
@@ -9747,6 +9838,11 @@ onAlertsChanged
 unsubscribeCloudAuthChange?.();
 
 unregisterDrawingsChartRefresh?.();
+
+window.removeEventListener(
+"chart-candles-loaded",
+onChartCandlesLoaded
+);
 
 if(redrawRaf1){
 cancelAnimationFrame(redrawRaf1);

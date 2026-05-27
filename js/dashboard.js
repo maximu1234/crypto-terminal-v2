@@ -17,7 +17,7 @@ applyDashboardZoom
 
 import {
 initDrawings
-} from "./drawings.js?v=148";
+} from "./drawings.js?v=149";
 
 import {
 subscribeKline

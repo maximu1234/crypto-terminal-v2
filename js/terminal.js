@@ -75,7 +75,7 @@ syncBackgroundAlertStreams
 
 import {
 initDrawings
-} from "./drawings.js?v=148";
+} from "./drawings.js?v=149";
 
 import {
 initCoinsMobileUi,
@@ -1977,6 +1977,20 @@ setTimeout(resizeCharts, 300);
 drawingTools?.onSymbolChange();
 drawingTools?.resize();
 drawingTools?.scheduleRedraw?.();
+
+window.dispatchEvent(
+new CustomEvent(
+"chart-candles-loaded",
+{
+detail:{
+symbol: String(
+currentSymbol ||
+""
+).trim().toUpperCase()
+}
+}
+)
+);
 
 highlightActiveSymbol();
 

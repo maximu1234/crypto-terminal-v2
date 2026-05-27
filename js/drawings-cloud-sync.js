@@ -74,6 +74,12 @@ null;
 let fastPollStopped =
 true;
 
+let fastPollRafId =
+0;
+
+let lastDrawingsPullMs =
+0;
+
 let lastCloudDrawingsFingerprint =
 "";
 
@@ -626,24 +632,11 @@ function invokeDrawingsChartRefresh(
 symbols
 ){
 
-const list =
-Array.isArray(
-symbols
-)
-? symbols
-: [];
-
-if(
-!list.length
-){
-return;
-}
-
 chartRefreshHandlers.forEach(
 handler=>{
 try{
 handler(
-list
+symbols
 );
 }catch{
 /* ignore */
@@ -2574,6 +2567,10 @@ applyMap,
 { merge: false }
 );
 
+invokeDrawingsChartRefresh(
+null
+);
+
 for(
 const sym of changed
 ){
@@ -2764,7 +2761,14 @@ isDrawingsCloudSyncPaused()
 return 0;
 }
 
-return reconcileLocalDrawingsWithCloud();
+const n =
+await reconcileLocalDrawingsWithCloud();
+
+invokeDrawingsChartRefresh(
+null
+);
+
+return n;
 
 }
 
@@ -2893,7 +2897,9 @@ table: "user_drawings",
 filter: `user_id=eq.${userId}`
 },
 ()=>{
-scheduleRemoteDrawingsSync();
+lastDrawingsPullMs =
+0;
+void pullDrawingsFromCloudNow();
 }
 )
 .on(
@@ -2955,40 +2961,51 @@ null;
 
 }
 
-function scheduleDrawingsFastPollTick(){
+function drawingsFastPollTick(){
 
 if(
 fastPollStopped
 ){
+fastPollRafId =
+0;
 return;
 }
 
-const delay =
-document.visibilityState ===
-"hidden"
-? FAST_POLL_HIDDEN_MS
-: FAST_POLL_MS;
-
-fastPollTimer =
-setTimeout(
-()=>{
-
-fastPollTimer =
-null;
+fastPollRafId =
+requestAnimationFrame(
+drawingsFastPollTick
+);
 
 if(
-isCloudLoggedInEffective() &&
-!isDrawingsCloudSyncPaused()
+document.visibilityState !==
+"visible"
 ){
-void pullDrawingsFromCloudNow().catch(
-()=>{}
-);
+return;
 }
 
-scheduleDrawingsFastPollTick();
+if(
+!isCloudLoggedInEffective() ||
+isDrawingsCloudSyncPaused()
+){
+return;
+}
 
-},
-delay
+const now =
+Date.now();
+
+if(
+now -
+lastDrawingsPullMs <
+FAST_POLL_MS
+){
+return;
+}
+
+lastDrawingsPullMs =
+now;
+
+void pullDrawingsFromCloudNow().catch(
+()=>{}
 );
 
 }
@@ -2997,6 +3014,12 @@ function startDrawingsFastPoll(){
 
 fastPollStopped =
 false;
+
+if(
+!fastPollRafId
+){
+drawingsFastPollTick();
+}
 
 if(
 fastPollTimer
@@ -3008,7 +3031,48 @@ fastPollTimer =
 null;
 }
 
-scheduleDrawingsFastPollTick();
+fastPollTimer =
+setTimeout(
+function hiddenPoll(){
+
+if(
+fastPollStopped
+){
+return;
+}
+
+if(
+document.visibilityState ===
+"hidden" &&
+isCloudLoggedInEffective() &&
+!isDrawingsCloudSyncPaused()
+){
+const now =
+Date.now();
+
+if(
+now -
+lastDrawingsPullMs >=
+FAST_POLL_HIDDEN_MS
+){
+lastDrawingsPullMs =
+now;
+void pullDrawingsFromCloudNow().catch(
+()=>{}
+);
+}
+
+}
+
+fastPollTimer =
+setTimeout(
+hiddenPoll,
+FAST_POLL_HIDDEN_MS
+);
+
+},
+FAST_POLL_HIDDEN_MS
+);
 
 }
 
@@ -3016,6 +3080,16 @@ export function stopDrawingsFastPoll(){
 
 fastPollStopped =
 true;
+
+if(
+fastPollRafId
+){
+cancelAnimationFrame(
+fastPollRafId
+);
+fastPollRafId =
+0;
+}
 
 if(
 fastPollTimer
@@ -3112,7 +3186,7 @@ onCloudSyncChange(
 ()=>{
 
 if(
-isCloudLoggedIn()
+isCloudLoggedInEffective()
 ){
 void getAuthed().then(
 ctx=>{
@@ -3169,7 +3243,7 @@ pullWhenVisible
 );
 
 if(
-isCloudLoggedIn()
+isCloudLoggedInEffective()
 ){
 void hydrateDrawingsAfterAuth();
 void getAuthed().then(
@@ -3185,6 +3259,17 @@ ctx.user.id
 );
 startDrawingsFastPoll();
 }
+
+}
+
+export function bumpDrawingsPullNow(){
+
+lastDrawingsPullMs =
+0;
+
+void pullDrawingsFromCloudNow().catch(
+()=>{}
+);
 
 }
 
