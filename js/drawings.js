@@ -1469,6 +1469,7 @@ let placementPreviewRaf = 0;
 let placementPreviewPending = null;
 let placementCrosshairVert = null;
 let placementCrosshairHorz = null;
+let cachedLastCandleRightX = NaN;
 let coordRetryCount = 0;
 let chartPanRedrawRaf = 0;
 let chartPanActive = false;
@@ -3661,53 +3662,6 @@ if(
 !isTouchDrawTablet()
 ){
 
-const evtClientX =
-e?.clientX;
-
-const evtClientY =
-e?.clientY;
-
-const client =
-evtClientX != null &&
-evtClientY != null
-? {
-clientX: evtClientX,
-clientY: evtClientY
-}
-: crosshairClientFromLocal(
-xy.x,
-xy.y
-);
-
-if(
-placement
-){
-
-if(
-chart
-){
-
-try{
-chart.clearCrosshairPosition();
-}catch{
-/* ignore */
-}
-
-}
-
-positionDomChartCrosshair({
-wrapEl,
-chartEl:chartCanvasEl(),
-chart,
-series,
-clientX:client.clientX,
-clientY:client.clientY
-});
-
-return;
-
-}
-
 if(
 point &&
 chart &&
@@ -3828,6 +3782,70 @@ chart.clearCrosshairPosition();
 }
 
 }
+
+}
+
+function invalidateLastCandleRightXCache(){
+
+cachedLastCandleRightX = NaN;
+
+}
+
+function getLastCandleRightX(){
+
+if(
+Number.isFinite(
+cachedLastCandleRightX
+)
+){
+return cachedLastCandleRightX;
+}
+
+const candles =
+candleSeries();
+
+if(
+!candles.length
+){
+return null;
+}
+
+const x =
+xFromTime(
+candles[
+candles.length -
+1
+].time
+);
+
+if(
+x == null ||
+!Number.isFinite(
+x
+)
+){
+return null;
+}
+
+cachedLastCandleRightX = x;
+return x;
+
+}
+
+function isPlotXBeyondLastCandle(
+plotX
+){
+
+const right =
+getLastCandleRightX();
+
+if(
+right == null
+){
+return false;
+}
+
+return plotX > right + 0.5;
 
 }
 
@@ -3991,30 +4009,6 @@ flushPlacementPreviewRedraw();
 
 }
 
-function updatePlacementPreviewFromLocal(
-localX,
-localY
-){
-
-placementPointerXY = {
-x: localX,
-y: localY
-};
-
-placementPreviewPending = {
-x: localX,
-y: localY
-};
-
-updatePlacementCrosshairFast(
-localX,
-localY
-);
-
-schedulePlacementPreviewRedraw();
-
-}
-
 function setupPlacementPointerPreview(){
 
 const onPlacementPointerMove = e=>{
@@ -4035,10 +4029,42 @@ return;
 const { x, y } =
 pointerFromEvent(e);
 
-updatePlacementPreviewFromLocal(
+placementPointerXY = {
+x,
+y
+};
+
+if(
+!isPlotXBeyondLastCandle(
+x
+)
+){
+return;
+}
+
+updatePlacementCrosshairFast(
 x,
 y
 );
+
+if(
+chart
+){
+
+try{
+chart.clearCrosshairPosition();
+}catch{
+/* ignore */
+}
+
+}
+
+placementPreviewPending = {
+x,
+y
+};
+
+schedulePlacementPreviewRedraw();
 
 };
 
@@ -8352,63 +8378,11 @@ previewXY = null;
 placementPointerXY = null;
 cancelPlacementPreviewRaf();
 resetPlacementCrosshairCache();
-endPlacementCrosshairMode();
 hideStandardChartCrosshair();
 saveDrawings();
 setTool("cursor");
 updateStyleBar();
 redraw();
-
-}
-
-function beginPlacementCrosshairMode(){
-
-if(
-!chart ||
-isTouchDrawPlacement()
-){
-return;
-}
-
-const Hidden =
-LightweightCharts.CrosshairMode?.Hidden ?? 1;
-
-try{
-chart.applyOptions({
-crosshair:{
-mode:Hidden,
-vertLine:{
-visible:false,
-labelVisible:false
-},
-horzLine:{
-visible:false,
-labelVisible:false
-}
-}
-});
-}catch{
-/* ignore */
-}
-
-}
-
-function endPlacementCrosshairMode(){
-
-if(
-!chart ||
-isTouchDrawPlacement()
-){
-return;
-}
-
-try{
-chart.applyOptions({
-crosshair:fullCrosshairOptions()
-});
-}catch{
-/* ignore */
-}
 
 }
 
@@ -8420,8 +8394,7 @@ previewXY = null;
 placementPointerXY = null;
 cancelPlacementPreviewRaf();
 resetPlacementCrosshairCache();
-
-beginPlacementCrosshairMode();
+invalidateLastCandleRightXCache();
 
 if(isTouchDrawPlacement()){
 initTouchDrawCrosshair();
@@ -8439,7 +8412,6 @@ touchDrawCrosshair = null;
 touchPlaceTrack = null;
 cancelPlacementPreviewRaf();
 resetPlacementCrosshairCache();
-endPlacementCrosshairMode();
 hideStandardChartCrosshair();
 redraw();
 
@@ -8772,7 +8744,85 @@ param?.point
 if(
 !isTouchDrawPlacement()
 ){
+
+const lx =
+placementPointerXY?.x ??
+param.point.x;
+
+const ly =
+placementPointerXY?.y ??
+param.point.y;
+
+if(
+isPlotXBeyondLastCandle(
+lx
+)
+){
+
+updatePlacementCrosshairFast(
+lx,
+ly
+);
+
+if(
+chart
+){
+
+try{
+chart.clearCrosshairPosition();
+}catch{
+/* ignore */
+}
+
+}
+
+}else{
+
+hideDomChartCrosshair(
+wrapEl
+);
+
+showStandardChartCrosshair(
+null,
+lx,
+ly
+);
+
+}
+
+previewXY = {
+x: lx,
+y: ly
+};
+
+previewPoint =
+pointFromXY(
+lx,
+ly
+);
+
+if(
+isPositionType(placement.type) &&
+placement.points.length >= 1 &&
+previewPoint
+){
+previewPoint.price = placement.points[0].price;
+}
+
+const channelPreviewDesktop =
+placement.type === "channel" &&
+placement.points.length > 0 &&
+placement.points.length < 3;
+
+if(
+placement ||
+channelPreviewDesktop
+){
+redraw();
+}
+
 return;
+
 }
 
 if(
@@ -8833,6 +8883,7 @@ redraw();
 
 rangeHandler =
 ()=>{
+invalidateLastCandleRightXCache();
 redraw();
 };
 
