@@ -11,7 +11,7 @@ getFavoriteGroup
 import {
 persistFavoritesToCloud,
 onFavoritesRemoteUpdate
-} from "./cloud-sync.js?v=24";
+} from "./cloud-sync.js?v=25";
 
 let favorites =
 loadFavoritesGroups();

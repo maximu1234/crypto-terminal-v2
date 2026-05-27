@@ -5,7 +5,7 @@ import {
 isCloudLoggedInEffective,
 onCloudSyncChange,
 notifyFavoritesListeners
-} from "./cloud-sync.js?v=24";
+} from "./cloud-sync.js?v=25";
 
 import {
 loadFavoritesGroups,
@@ -19,7 +19,7 @@ favoritesSignature
 import {
 readAlertTokenSync,
 resolveAlertAuthFast
-} from "./alert-auth-cache.js?v=4";
+} from "./alert-auth-cache.js?v=6";
 
 import {
 createPullCoalescer

@@ -21,7 +21,7 @@ setAlertAuthCache,
 clearAlertAuthCache,
 resolveAlertAuthFast,
 readAlertTokenSync
-} from "./alert-auth-cache.js?v=4";
+} from "./alert-auth-cache.js?v=6";
 
 import {
 normalizeAlertWorkerBaseUrl

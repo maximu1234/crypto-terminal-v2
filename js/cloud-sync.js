@@ -29,8 +29,9 @@ withTimeout
 } from "./async-timeout.js?v=1";
 
 import {
-readAlertTokenSync
-} from "./alert-auth-cache.js?v=4";
+readAlertTokenSync,
+readPersistedAuthSession
+} from "./alert-auth-cache.js?v=6";
 
 import {
 createNotifyDebouncer,
@@ -58,20 +59,230 @@ const authListeners = new Set();
 function bootstrapAuthFromLocalStorage(){
 
 const snap =
+readPersistedAuthSession() ||
 readAlertTokenSync();
 
+const user =
+snap?.user;
+
 if(
-snap?.user?.id
+user?.id
 ){
 loggedIn = true;
 userEmail =
-snap.user.email ||
+user.email ||
 "";
 }
 
 }
 
 bootstrapAuthFromLocalStorage();
+
+function isMobileLikeBrowser(){
+
+if(
+typeof navigator ===
+"undefined"
+){
+return false;
+}
+
+const ua =
+navigator.userAgent ||
+"";
+
+return /iPhone|iPad|iPod|Android|Mobile/i.test(
+ua
+);
+
+}
+
+function isAccessTokenExpired(
+session
+){
+
+const exp =
+Number(
+session?.expires_at
+) ||
+0;
+
+return (
+exp >
+0 &&
+exp *
+1000 <
+Date.now() -
+5000
+);
+
+}
+
+/**
+ * Восстановить сессию из localStorage (refresh после истечения access — типично на iPad).
+ */
+async function restoreSessionFromPersisted(
+sb
+){
+
+const persisted =
+readPersistedAuthSession();
+
+if(
+!persisted?.access_token ||
+!persisted?.user
+){
+return null;
+}
+
+const refresh =
+String(
+persisted.refresh_token ||
+""
+).trim();
+
+if(
+isAccessTokenExpired(
+persisted
+) &&
+!refresh
+){
+return null;
+}
+
+if(
+!sb
+){
+return persisted;
+}
+
+try{
+const { data, error } =
+await withTimeout(
+sb.auth.setSession({
+access_token: persisted.access_token,
+refresh_token: refresh
+}),
+isMobileLikeBrowser()
+? 12000
+: 8000,
+"setSession restore"
+);
+
+if(
+error
+){
+console.warn(
+"[auth] restore setSession:",
+error.message
+);
+}else if(
+data?.session
+){
+return data.session;
+}
+}catch(
+err
+){
+console.warn(
+"[auth] restore setSession:",
+err?.message || err
+);
+}
+
+if(
+refresh
+){
+try{
+const { data, error } =
+await withTimeout(
+sb.auth.refreshSession(),
+isMobileLikeBrowser()
+? 12000
+: 8000,
+"refreshSession restore"
+);
+
+if(
+error
+){
+console.warn(
+"[auth] refreshSession:",
+error.message
+);
+return null;
+}
+
+return data?.session ?? null;
+}catch(
+err
+){
+console.warn(
+"[auth] refreshSession:",
+err?.message || err
+);
+return null;
+}
+}
+
+return isAccessTokenExpired(
+persisted
+)
+? null
+: persisted;
+
+}
+
+async function refreshAuthSessionSilent(){
+
+if(
+!isCloudLoggedInEffective()
+){
+return false;
+}
+
+const sb =
+await getSupabase();
+
+if(
+!sb
+){
+return false;
+}
+
+try{
+const { data, error } =
+await withTimeout(
+sb.auth.refreshSession(),
+isMobileLikeBrowser()
+? 12000
+: 6000,
+"refreshSession silent"
+);
+
+if(
+error ||
+!data?.session
+){
+return false;
+}
+
+await applySession(
+data.session
+);
+return true;
+}catch(
+err
+){
+console.warn(
+"[auth] silent refresh:",
+err?.message || err
+);
+return false;
+}
+
+}
+
 const favoritesListeners = new Set();
 const drawingsListeners = new Set();
 
@@ -1456,7 +1667,7 @@ localStorage.removeItem(k);
 }
 
 const { clearAlertAuthCache } =
-await import("./alert-auth-cache.js?v=4");
+await import("./alert-auth-cache.js?v=6");
 
 clearAlertAuthCache();
 
@@ -1534,25 +1745,62 @@ return true;
 }
 
 const cached =
+readPersistedAuthSession() ||
 readAlertTokenSync();
 
 if(
-!cached?.token ||
+!cached?.access_token ||
 !cached?.user
 ){
 return false;
 }
 
-await applySession({
-access_token: cached.token,
-user: cached.user
-});
+const sb =
+await getSupabase();
+
+let session =
+cached;
+
+if(
+sb
+){
+session =
+await restoreSessionFromPersisted(
+sb
+) ||
+session;
+}
+
+await applySession(
+session
+);
 
 return loggedIn;
 
 }
 
 async function applySession(session){
+
+if(
+session?.access_token &&
+session?.user &&
+!session.refresh_token
+){
+const persisted =
+readPersistedAuthSession();
+
+if(
+persisted?.refresh_token &&
+persisted?.user?.id ===
+session.user?.id
+){
+session = {
+...session,
+refresh_token: persisted.refresh_token,
+expires_at: persisted.expires_at
+};
+}
+}
 
 loggedIn = !!session?.user;
 userEmail = session?.user?.email || "";
@@ -1573,8 +1821,22 @@ if(
 sb &&
 session?.access_token
 ){
+
+try{
+await withTimeout(
+sb.auth.setSession({
+access_token: session.access_token,
+refresh_token: session.refresh_token || ""
+}),
+5000,
+"setSession apply"
+);
+}catch{
+/* ignore */
+}
+
 const { warmAlertAuthCache } =
-await import("./alert-auth-cache.js");
+await import("./alert-auth-cache.js?v=6");
 
 warmAlertAuthCache(
 sb,
@@ -1707,7 +1969,21 @@ refreshCloudConnection().catch(()=>{
 });
 }
 
+if(
+document.visibilityState ===
+"visible"
+){
+void refreshAuthSessionSilent();
+}
+
 };
+
+window.addEventListener(
+"focus",
+()=>{
+void refreshAuthSessionSilent();
+}
+);
 
 document.addEventListener(
 "visibilitychange",
@@ -2034,22 +2310,19 @@ notifyAuth();
 return;
 }
 
-const cachedEarly =
-readAlertTokenSync();
-
 let session =
-(await recoverSessionFromAuthUrl(sb)) ||
+(await recoverSessionFromAuthUrl(
+sb
+)) ||
 null;
 
 if(
-!session &&
-cachedEarly?.token &&
-cachedEarly?.user
+!session
 ){
-session = {
-access_token: cachedEarly.token,
-user: cachedEarly.user
-};
+session =
+await restoreSessionFromPersisted(
+sb
+);
 }
 
 if(
@@ -2061,13 +2334,17 @@ try{
 const { data } =
 await withTimeout(
 sb.auth.getSession(),
-3000,
+isMobileLikeBrowser()
+? 10000
+: 5000,
 "getSession"
 );
 
 session = data?.session ?? null;
 
-}catch(err){
+}catch(
+err
+){
 console.warn(
 "cloud getSession:",
 err?.message || err
@@ -2079,14 +2356,21 @@ session = null;
 }
 
 if(
-!session &&
-cachedEarly?.token &&
-cachedEarly?.user
+!session
 ){
-session = {
-access_token: cachedEarly.token,
-user: cachedEarly.user
-};
+const cached =
+readPersistedAuthSession();
+
+if(
+cached?.access_token &&
+cached?.user
+){
+session =
+await restoreSessionFromPersisted(
+sb
+) ||
+cached;
+}
 }
 
 if(
@@ -2136,14 +2420,30 @@ return;
 }
 
 if(
-event === "SIGNED_OUT"
+event ===
+"SIGNED_OUT"
 ){
+
+const restored =
+await restoreSessionFromPersisted(
+sb
+);
+
+if(
+restored
+){
+await applySession(
+restored
+);
+return;
+}
+
 loggedIn = false;
 userEmail = "";
 stopCloudSyncHelpers();
 
 const { clearAlertAuthCache } =
-await import("./alert-auth-cache.js");
+await import("./alert-auth-cache.js?v=6");
 
 clearAlertAuthCache();
 

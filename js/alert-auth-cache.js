@@ -68,6 +68,9 @@ session
 
   durableAuth = {
     token: String(session.access_token),
+    refresh_token: session.refresh_token
+    ? String(session.refresh_token)
+    : "",
     user: session.user
   };
 
@@ -91,6 +94,9 @@ session
 
   durableAuth = {
     token: String(session.access_token),
+    refresh_token: session.refresh_token
+    ? String(session.refresh_token)
+    : "",
     user: session.user
   };
 
@@ -147,13 +153,33 @@ raw
       return null;
     }
 
+    const refresh =
+    String(
+      session.refresh_token ||
+      data?.refresh_token ||
+      ""
+    ).trim();
+
+    if(
+      refresh &&
+      !session.refresh_token
+    ){
+      session.refresh_token =
+      refresh;
+    }
+
     const exp =
-    Number(session.expires_at) ||
+    Number(
+      session.expires_at
+    ) ||
     0;
 
     if(
       exp > 0 &&
-      exp * 1000 < Date.now() - 5000
+      exp * 1000 <
+      Date.now() -
+      5000 &&
+      !refresh
     ){
       return null;
     }
@@ -193,6 +219,69 @@ projectRef
 }
 
 /**
+ * Полная сессия из localStorage (в т.ч. с истёкшим access, если есть refresh).
+ */
+export function readPersistedAuthSession(){
+
+  const app =
+  readSessionFromAppStorage();
+
+  if(
+    app
+  ){
+    return app;
+  }
+
+  if(
+    typeof localStorage ===
+    "undefined"
+  ){
+    return null;
+  }
+
+  for(
+    let i = 0;
+    i <
+    localStorage.length;
+    i++
+  ){
+
+    const key =
+    localStorage.key(
+      i
+    );
+
+    if(
+      !key?.startsWith(
+        "sb-"
+      ) ||
+      !key.endsWith(
+        "-auth-token"
+      )
+    ){
+      continue;
+    }
+
+    const session =
+    parseSupabaseAuthRaw(
+      localStorage.getItem(
+        key
+      )
+    );
+
+    if(
+      session?.access_token
+    ){
+      return session;
+    }
+
+  }
+
+  return null;
+
+}
+
+/**
  * Синхронно: кэш или любой sb-*-auth-token (без getSession/getSupabase).
  */
 export function readAlertTokenSync(){
@@ -220,53 +309,20 @@ export function readAlertTokenSync(){
   }
 
   const appSession =
-  readSessionFromAppStorage();
+  readPersistedAuthSession();
 
-  if(appSession?.access_token){
-    rememberDurableAuth(appSession);
+  if(
+    appSession?.access_token
+  ){
+    rememberDurableAuth(
+      appSession
+    );
     return {
       token: appSession.access_token,
+      refresh_token: appSession.refresh_token || "",
       user: appSession.user,
       ctx: cache?.ctx || null
     };
-  }
-
-  if(
-    typeof localStorage === "undefined"
-  ){
-    return null;
-  }
-
-  for(
-    let i = 0;
-    i < localStorage.length;
-    i++
-  ){
-
-    const key =
-    localStorage.key(i);
-
-    if(
-      !key?.startsWith("sb-") ||
-      !key.endsWith("-auth-token")
-    ){
-      continue;
-    }
-
-    const session =
-    parseSupabaseAuthRaw(
-      localStorage.getItem(key)
-    );
-
-    if(session?.access_token){
-      rememberDurableAuth(session);
-      return {
-        token: session.access_token,
-        user: session.user,
-        ctx: cache?.ctx || null
-      };
-    }
-
   }
 
   return null;

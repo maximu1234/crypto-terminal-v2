@@ -26,7 +26,7 @@ isCloudSyncEnabled,
 getCloudUserEmail,
 pullDeviceStateFromCloud,
 onCloudSyncChange
-} from "./cloud-sync.js?v=24";
+} from "./cloud-sync.js?v=25";
 
 import {
 isSupabaseConfigured
