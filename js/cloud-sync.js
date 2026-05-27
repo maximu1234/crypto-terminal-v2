@@ -1902,7 +1902,7 @@ void drawingsCloud.flushDrawingsCloudPush();
 if(
 !isAlertsPage()
 ){
-import("./alerts-cloud-sync.js?v=77")
+import("./alerts-cloud-sync.js?v=78")
 .then(
 async m=>{
 
@@ -2088,11 +2088,11 @@ await ensureCloudLoginResolved(
 );
 
 const alertsCloud =
-await import("./alerts-cloud-sync.js?v=77");
+await import("./alerts-cloud-sync.js?v=78");
 const favoritesCloud =
 await import("./favorites-cloud-sync.js?v=2");
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=77");
+await import("./alerts.js?v=78");
 
 const stripOpts =
 isAlertsPage()

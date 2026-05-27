@@ -6,9 +6,17 @@ import {
 withTimeout
 } from "./async-timeout.js?v=1";
 
+import {
+pauseRegistryCloudSync,
+scheduleRemoteRegistrySync
+} from "./alerts-cloud-sync.js?v=78";
+
 const STORAGE_KEY = "price_alerts_v1";
 
 const HISTORY_KEY = "price_alerts_history_v1";
+
+const DELETED_ALERTS_LS =
+"price_alerts_deleted_keys_v1";
 
 /** Пока тянут линию — цена для отрисовки (реестр читается из localStorage заново). */
 const alertDragLivePrice =
@@ -117,7 +125,7 @@ return job;
 
 function queueAlertsCloud(fn){
 
-import("./alerts-cloud-sync.js?v=77")
+import("./alerts-cloud-sync.js?v=78")
 .then(m=>fn(m))
 .catch(err=>{
 console.warn("alerts cloud:", err);
@@ -243,6 +251,56 @@ return `${symbol}::${shapeId}`;
 const pendingAlertDeletes =
 new Map();
 
+function loadPersistedDeletedAlertKeys(){
+
+try{
+const raw =
+localStorage.getItem(
+DELETED_ALERTS_LS
+);
+const arr =
+JSON.parse(
+raw ||
+"[]"
+);
+
+return new Set(
+Array.isArray(
+arr
+)
+? arr
+: []
+);
+
+}catch{
+return new Set();
+}
+
+}
+
+function savePersistedDeletedAlertKeys(
+keys
+){
+
+const arr = [
+...keys
+].slice(
+-500
+);
+
+try{
+localStorage.setItem(
+DELETED_ALERTS_LS,
+JSON.stringify(
+arr
+)
+);
+}catch{
+/* ignore */
+}
+
+}
+
 export function markAlertPendingDelete(
 symbol,
 shapeId,
@@ -280,7 +338,7 @@ ms,
 
 }
 
-export function clearAlertPendingDelete(
+export function rememberAlertDeleted(
 symbol,
 shapeId
 ){
@@ -303,16 +361,101 @@ if(
 return;
 }
 
-pendingAlertDeletes.delete(
+markAlertPendingDelete(
+sym,
+sid,
+7 *
+24 *
+3600 *
+1000
+);
+
+const keys =
+loadPersistedDeletedAlertKeys();
+
+keys.add(
 alertEntryKey(
 sym,
 sid
 )
 );
 
+savePersistedDeletedAlertKeys(
+keys
+);
+
+}
+
+export function clearAlertPendingDelete(
+symbol,
+shapeId
+){
+
+forgetAlertDeleted(
+symbol,
+shapeId
+);
+
+}
+
+export function forgetAlertDeleted(
+symbol,
+shapeId
+){
+
+const sym =
+String(
+symbol ||
+""
+).trim().toUpperCase();
+const sid =
+String(
+shapeId ||
+""
+).trim();
+
+if(
+!sym ||
+!sid
+){
+return;
+}
+
+const key =
+alertEntryKey(
+sym,
+sid
+);
+
+pendingAlertDeletes.delete(
+key
+);
+
+const keys =
+loadPersistedDeletedAlertKeys();
+
+keys.delete(
+key
+);
+
+savePersistedDeletedAlertKeys(
+keys
+);
+
 }
 
 export function isAlertPendingDelete(
+symbol,
+shapeId
+){
+
+return isAlertDeleted(
+symbol,
+shapeId
+);
+}
+
+export function isAlertDeleted(
 symbol,
 shapeId
 ){
@@ -340,16 +483,15 @@ alertEntryKey(
 sym,
 sid
 );
+
 const exp =
 pendingAlertDeletes.get(
 key
 );
 
 if(
-!exp
+exp
 ){
-return false;
-}
 
 if(
 Date.now() >
@@ -358,10 +500,15 @@ exp
 pendingAlertDeletes.delete(
 key
 );
-return false;
+}else{
+return true;
 }
 
-return true;
+}
+
+return loadPersistedDeletedAlertKeys().has(
+key
+);
 
 }
 
@@ -1147,7 +1294,7 @@ return null;
 }
 
 const { getTelegramChatId } =
-await import("./alerts-cloud-sync.js?v=77");
+await import("./alerts-cloud-sync.js?v=78");
 
 if(
 await getTelegramChatId() == null
@@ -1225,7 +1372,7 @@ await import("./auth-ui.js?v=23");
 await ensureCloudReady();
 
 const m =
-await import("./alerts-cloud-sync.js?v=77");
+await import("./alerts-cloud-sync.js?v=78");
 
 const pushed =
 await m.pushOneAlertRow(
@@ -1280,6 +1427,11 @@ if(
 return false;
 }
 
+forgetAlertDeleted(
+sym,
+shapeId
+);
+
 const row = {
 id: shapeId,
 shapeId,
@@ -1317,7 +1469,7 @@ await ensureCloudReady();
 mergeRegistryFromChartDrawings();
 
 const m =
-await import("./alerts-cloud-sync.js?v=77");
+await import("./alerts-cloud-sync.js?v=78");
 
 const pushed =
 await m.pushOneAlertRow(
@@ -1450,10 +1602,45 @@ if(!row){
 return;
 }
 
+pauseRegistryCloudSync(
+20000
+);
+
 saveAlerts(list);
 
-void import("./alerts-cloud-sync.js?v=77").then(m=>{
-m.flushAlertCloudPush(row);
+dispatchPriceAlertsChanged(
+sym
+);
+
+void import("./alerts-cloud-sync.js?v=78").then(async m=>{
+
+const ok =
+await m.flushAlertCloudPush(
+row
+);
+
+if(
+ok
+){
+scheduleRemoteRegistrySync();
+pauseRegistryCloudSync(
+4000
+);
+}else{
+m.scheduleRegistryCloudSync();
+pauseRegistryCloudSync(
+8000
+);
+}
+
+}).catch(err=>{
+console.warn(
+"[alerts] price drag cloud:",
+err?.message || err
+);
+pauseRegistryCloudSync(
+8000
+);
 });
 
 void import("./alert-monitor.js?v=64").then(m=>{
@@ -1479,18 +1666,14 @@ if(
 return;
 }
 
-markAlertPendingDelete(
+rememberAlertDeleted(
 sym,
 sid
 );
 
-void import("./alerts-cloud-sync.js?v=77").then(m=>{
-m.pauseRegistryCloudSync(
+pauseRegistryCloudSync(
 120000
 );
-}).catch(()=>{
-/* ignore */
-});
 
 const row =
 loadAlerts().find(
@@ -1523,22 +1706,29 @@ sym
 
 queueAlertsCloud(async m=>{
 
-const ok =
+let ok =
 await m.removeAlertFromCloud(
 sym,
-sid
+sid,
+row?.cloudId ||
+null
 );
 
+if(
+!ok
+){
 await m.pruneOrphanCloudAlerts();
+}
 
 if(
 ok
 ){
-clearAlertPendingDelete(
+forgetAlertDeleted(
 sym,
 sid
 );
-m.pauseRegistryCloudSync(
+scheduleRemoteRegistrySync();
+pauseRegistryCloudSync(
 8000
 );
 }else{
@@ -1547,8 +1737,8 @@ console.warn(
 sym,
 sid
 );
-m.pauseRegistryCloudSync(
-60000
+pauseRegistryCloudSync(
+120000
 );
 }
 
@@ -1990,7 +2180,7 @@ tf: existing?.tf
 });
 });
 
-void import("./alerts-cloud-sync.js?v=77").then(m=>{
+void import("./alerts-cloud-sync.js?v=78").then(m=>{
 m.fireAlertCloudTrigger(
 sym,
 sid,
@@ -2080,7 +2270,7 @@ clearAllChartAlertFlags();
 saveAlertsFromCloudMerge([]);
 stripAlertFlagsNotInRegistry();
 
-void import("./alerts-cloud-sync.js?v=77").then(m=>{
+void import("./alerts-cloud-sync.js?v=78").then(m=>{
 m.runCloudOp(()=>
 m.removeAllAlertsEverywhere()
 ).then(ok=>{
@@ -2495,7 +2685,7 @@ const drawingsCloud =
 await import("./drawings-cloud-sync.js?v=17");
 
 const alertsCloud =
-await import("./alerts-cloud-sync.js?v=77");
+await import("./alerts-cloud-sync.js?v=78");
 
 const hadLocalDrawings =
 countAllDrawings() >
