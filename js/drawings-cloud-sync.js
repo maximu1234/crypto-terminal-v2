@@ -1,6 +1,7 @@
 import {
 waitForCloudAuth,
 isCloudLoggedIn,
+isCloudSyncEnabled,
 onCloudSyncChange,
 notifyDrawings as notifyDrawingsListeners
 } from "./cloud-sync.js?v=17";
@@ -318,6 +319,25 @@ at: Date.now()
 
 }
 
+function isDeletedAtColumnError(
+err
+){
+
+const msg =
+String(
+err?.message ||
+err?.details ||
+""
+);
+
+return (
+/PGRST204|42703|deleted_at|column/i.test(
+msg
+)
+);
+
+}
+
 async function upsertDrawingRow(
 ctx,
 symbol,
@@ -347,13 +367,7 @@ getShapeRevisionTime(
 shape
 );
 
-const { error } =
-await withTimeout(
-ctx.sb
-.from(
-"user_drawings"
-)
-.upsert(
+const baseRow =
 {
 user_id: ctx.user.id,
 symbol: sym,
@@ -361,7 +375,18 @@ shape_id: shapeId,
 shape,
 updated_at: new Date(
 rev
-).toISOString(),
+).toISOString()
+};
+
+let result =
+await withTimeout(
+ctx.sb
+.from(
+"user_drawings"
+)
+.upsert(
+{
+...baseRow,
 deleted_at: null
 },
 {
@@ -373,11 +398,34 @@ onConflict: "user_id,symbol,shape_id"
 );
 
 if(
-error
+result.error &&
+isDeletedAtColumnError(
+result.error
+)
+){
+result =
+await withTimeout(
+ctx.sb
+.from(
+"user_drawings"
+)
+.upsert(
+baseRow,
+{
+onConflict: "user_id,symbol,shape_id"
+}
+),
+12000,
+"user_drawings upsert (no deleted_at)"
+);
+}
+
+if(
+result.error
 ){
 console.warn(
 "[drawings] upsert:",
-error.message
+result.error.message
 );
 return false;
 }
@@ -545,6 +593,21 @@ await getAuthed();
 if(
 !ctx
 ){
+
+if(
+isCloudLoggedIn()
+){
+console.warn(
+"[drawings] в Supabase не отправлено: сессия не готова. Обновите страницу или войдите снова."
+);
+}else if(
+isCloudSyncEnabled()
+){
+console.warn(
+"[drawings] только в браузере — войдите: шестерёнка → email → ссылка из письма."
+);
+}
+
 return 0;
 }
 
@@ -653,6 +716,10 @@ pushed >
 0
 ){
 broadcastDrawingsSync();
+console.log(
+"[drawings] Supabase: сохранено фигур —",
+pushed
+);
 }
 
 return pushed;
@@ -790,8 +857,8 @@ if(
 return 0;
 }
 
-const { data, error } =
-await ctx.sb
+let query =
+ctx.sb
 .from(
 "user_drawings"
 )
@@ -806,6 +873,34 @@ ctx.user.id
 "deleted_at",
 null
 );
+
+let { data, error } =
+await query;
+
+if(
+error &&
+isDeletedAtColumnError(
+error
+)
+){
+const retry =
+await ctx.sb
+.from(
+"user_drawings"
+)
+.select(
+"symbol, shape_id, shape, updated_at"
+)
+.eq(
+"user_id",
+ctx.user.id
+);
+
+data =
+retry.data;
+error =
+retry.error;
+}
 
 if(
 error

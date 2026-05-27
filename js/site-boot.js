@@ -71,7 +71,7 @@ initAlertMonitor();
 initAlertsCloudSync();
 ensureDrawToolsVisible();
 
-import("./drawings-cloud-sync.js?v=3").then(
+import("./drawings-cloud-sync.js?v=4").then(
 ({ initDrawingsCloudSync })=>{
 initDrawingsCloudSync();
 }

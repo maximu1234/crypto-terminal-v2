@@ -38,6 +38,7 @@ import {
 bumpDrawingsLocalRevision,
 isCloudLoggedIn,
 isCloudLoggedInEffective,
+isCloudSyncEnabled,
 ensureCloudLoginResolved,
 onCloudSyncChange
 } from "./cloud-sync.js?v=17";
@@ -51,7 +52,7 @@ deleteDrawingFromCloud,
 flushDrawingsCloudPush,
 onDrawingsRemoteUpdate,
 scheduleDrawingsCloudPush
-} from "./drawings-cloud-sync.js?v=3";
+} from "./drawings-cloud-sync.js?v=4";
 
 import {
 touchShapeRevision,
@@ -2167,8 +2168,18 @@ storageKey(),
 JSON.stringify(drawings)
 );
 
+if(
+canUseDrawings()
+){
 bumpDrawingsLocalRevision();
 scheduleDrawingsCloudPush();
+}else if(
+isCloudSyncEnabled()
+){
+console.warn(
+"[drawings] сохранено только локально — войдите в аккаунт (шестерёнка), чтобы строки попали в Supabase."
+);
+}
 
 window.dispatchEvent(
 new CustomEvent(
