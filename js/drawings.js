@@ -6,12 +6,12 @@ getActiveAlerts,
 finalizeAlertPriceDrag,
 removeAlert,
 upsertAlert
-} from "./alerts.js?v=60";
+} from "./alerts.js?v=62";
 
 import {
 setAlertDragPaused,
 resetAlertWatchBaseline
-} from "./alert-monitor.js?v=63";
+} from "./alert-monitor.js?v=64";
 
 import {
 mountTvColorGrid
@@ -37,7 +37,11 @@ import {
 bumpDrawingsLocalRevision,
 persistAllDrawingsToCloud,
 onDrawingsRemoteUpdate
-} from "./cloud-sync.js?v=13";
+} from "./cloud-sync.js?v=14";
+
+import {
+touchShapeRevision
+} from "./drawings-storage.js?v=2";
 
 import {
 formatPrice,
@@ -1860,7 +1864,7 @@ merged.push(shape);
 
 });
 
-drawings = merged.map(normalizeShape);
+drawings = merged.map(shape=>stripAlertFromShape(normalizeShape(shape)));
 
 sanitizeDrawingsForCurrentSymbol();
 
@@ -1875,7 +1879,7 @@ return;
 
 }
 
-drawings = JSON.parse(raw).map(normalizeShape);
+drawings = JSON.parse(raw).map(shape=>stripAlertFromShape(normalizeShape(shape)));
 
 }catch{
 
@@ -2066,6 +2070,18 @@ scheduleDrawingsCloudPush();
 );
 
 function saveDrawings(){
+
+drawings =
+drawings.map(shape=>{
+if(
+shape?.isAlert
+){
+return stripAlertFromShape(
+shape
+);
+}
+return shape;
+});
 
 localStorage.setItem(
 storageKey(),
@@ -3280,7 +3296,7 @@ const type = getStyleTargetType();
 
 if(sel){
 fillStyleUI(sel, sel.type);
-updateAlertStyleUI(sel);
+updateAlertStyleUI();
 return;
 }
 
@@ -3288,7 +3304,7 @@ if(tool !== "cursor"){
 fillStyleUI(baseDefaultStyle(tool), tool);
 }
 
-updateAlertStyleUI(null);
+updateAlertStyleUI();
 
 }
 
@@ -4956,14 +4972,6 @@ scheduleRedraw();
 
 function shapeStyle(shape){
 
-if(shape.isAlert){
-return {
-color: ALERT_LINE_COLOR,
-width: 1,
-dash: ALERT_LINE_DASH
-};
-}
-
 return {
 color: shape.color || STROKE,
 width: shape.lineWidth || 1,
@@ -5084,48 +5092,77 @@ redraw();
 
 }
 
-function updateAlertStyleUI(sel){
+function updateAlertStyleUI(){
 
-const isHray =
-sel?.type === "hray";
-
-const isAlert =
-!!sel?.isAlert;
-
-alertToggleBtn?.classList.toggle(
-"hidden",
-!isHray
+alertToggleBtn?.classList.add(
+"hidden"
 );
 
-alertToggleBtn?.classList.toggle(
-"active",
-isAlert
+colorBtn?.classList.remove(
+"hidden"
 );
 
-if(alertToggleBtn){
-alertToggleBtn.title = isAlert
-? "Снять алерт"
-: "Сделать алертом";
-
-alertToggleBtn.setAttribute(
-"aria-label",
-alertToggleBtn.title
+widthBtn?.classList.remove(
+"hidden"
 );
 
-alertToggleBtn.innerHTML = isAlert
-? TRASH_ICON_SVG
-: ALARM_ICON_SVG;
 }
 
-colorBtn?.classList.toggle(
-"hidden",
-isAlert
+function drawRegistryPriceAlerts(
+ctx,
+plotW,
+h
+){
+
+const sym =
+String(
+getSymbol() ||
+""
+).trim().toUpperCase();
+
+if(
+!sym
+){
+return;
+}
+
+for(
+const alert of getActiveAlerts()
+){
+
+if(
+String(
+alert.symbol
+).toUpperCase() !==
+sym
+){
+continue;
+}
+
+const y =
+series.priceToCoordinate(
+alert.price
 );
 
-widthBtn?.classList.toggle(
-"hidden",
-isAlert
+if(
+y ==
+null
+){
+continue;
+}
+
+drawLine(
+ctx,
+0,
+y,
+plotW,
+y,
+ALERT_LINE_COLOR,
+1,
+ALERT_LINE_DASH
 );
+
+}
 
 }
 
@@ -6447,52 +6484,27 @@ return;
 const draggedShape =
 drawings.find(d=>d.id === dragState.shapeId);
 
-if(dragState.mode === "position-move"){
+if(
+draggedShape
+){
 
 if(
-draggedShape &&
-isPositionType(draggedShape.type)
+dragState.mode ===
+"position-move" &&
+isPositionType(
+draggedShape.type
+)
 ){
-clampPositionPrices(draggedShape);
+clampPositionPrices(
+draggedShape
+);
+}
+
+touchShapeRevision(
+draggedShape
+);
 saveDrawings();
-}
 
-}
-
-if(
-draggedShape?.type === "hray" &&
-draggedShape.isAlert
-){
-const sym =
-String(getSymbol() || "").trim().toUpperCase();
-
-const candles =
-getCandles?.();
-
-const close =
-Array.isArray(candles) &&
-candles.length
-? Number(candles[candles.length - 1].close)
-: Number(draggedShape.price);
-
-finalizeAlertPriceDrag(
-sym,
-draggedShape.id,
-Number(draggedShape.price),
-draggedShape.alertTf
-);
-
-resetAlertWatchBaseline(
-sym,
-draggedShape.id,
-close
-);
-
-setAlertDragPaused(
-sym,
-draggedShape.id,
-false
-);
 }
 
 dragState = null;
@@ -7291,6 +7303,12 @@ drawPlacementPreview(ctx, plotW, h);
 
 ctx.restore();
 
+drawRegistryPriceAlerts(
+ctx,
+plotW,
+h
+);
+
 drawPriceScaleLabels(ctx);
 
 }catch(err){
@@ -7838,6 +7856,7 @@ const style = baseDefaultStyle(type);
 
 return normalizeShape({
 id: uid(),
+createdAt: Date.now(),
 type,
 color: style.color,
 lineWidth: style.lineWidth,
@@ -7918,6 +7937,9 @@ riskUsd: posStyle.riskUsd
 }
 
 if(created){
+touchShapeRevision(
+created
+);
 drawings.push(created);
 selectedId = created.id;
 }
@@ -8874,6 +8896,44 @@ updateStyleBar();
 
 };
 
+const onPriceAlertsChanged =
+e=>{
+
+if(
+!alive
+){
+return;
+}
+
+const symNorm =
+String(
+getSymbol() ||
+""
+).trim().toUpperCase();
+
+const eventSym =
+String(
+e.detail?.symbol ||
+""
+).trim().toUpperCase();
+
+if(
+eventSym &&
+eventSym !==
+symNorm
+){
+return;
+}
+
+scheduleRedraw();
+
+};
+
+window.addEventListener(
+"price-alerts-changed",
+onPriceAlertsChanged
+);
+
 function defaultHrayAnchorTime(){
 
 const list =
@@ -9368,6 +9428,11 @@ window.removeEventListener(
 "scroll",
 syncDrawChromeLayout,
 true
+);
+
+window.removeEventListener(
+"price-alerts-changed",
+onPriceAlertsChanged
 );
 
 chromePortal?.remove();

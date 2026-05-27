@@ -17,6 +17,10 @@ new Map();
 const backgroundAlertUnsubs =
 new Map();
 
+/** WS по всем символам/TF активных алертов (вкладка в фоне, другая монета на графике). */
+const globalAlertUnsubs =
+new Map();
+
 const recentlyTriggered =
 new Map();
 
@@ -551,6 +555,144 @@ return `${symbol}::${String(tf || "60")}`;
 /**
  * Подписки на свечи TF алертов, отличных от TF графика (алерт 1m при просмотре 1h).
  */
+function subscribeAlertTopic(
+symbol,
+tf,
+onCandle
+){
+
+return subscribeKline(
+symbol,
+tf,
+onCandle
+);
+
+}
+
+/**
+ * Подписки на все пары symbol+tf из реестра алертов (не зависит от открытой монеты).
+ */
+export function syncGlobalAlertStreams(){
+
+const needed =
+new Set();
+
+for(
+const alert of getActiveAlerts()
+){
+
+const sym =
+String(
+alert.symbol ||
+""
+).trim().toUpperCase();
+const alertTf =
+String(
+alert.tf ||
+"60"
+);
+
+if(
+!sym
+){
+continue;
+}
+
+needed.add(
+backgroundStreamKey(
+sym,
+alertTf
+)
+);
+
+}
+
+for(
+const [key, unsub] of globalAlertUnsubs
+){
+
+if(
+!needed.has(
+key
+)
+){
+unsub();
+globalAlertUnsubs.delete(
+key
+);
+}
+
+}
+
+for(
+const key of needed
+){
+
+if(
+globalAlertUnsubs.has(
+key
+)
+){
+continue;
+}
+
+const sep =
+key.indexOf(
+"::"
+);
+
+const sym =
+key.slice(
+0,
+sep
+);
+const alertTf =
+key.slice(
+sep +
+2
+);
+
+const unsub =
+subscribeAlertTopic(
+sym,
+alertTf,
+candle=>{
+
+const active =
+getActiveAlerts().filter(
+a=>
+String(
+a.symbol ||
+""
+).toUpperCase() ===
+sym
+);
+
+if(
+!active.length
+){
+return;
+}
+
+evaluateAlerts(
+sym,
+candle,
+active,
+alertTf
+);
+
+}
+);
+
+globalAlertUnsubs.set(
+key,
+unsub
+);
+
+}
+
+}
+
 export function syncBackgroundAlertStreams(
 symbol,
 chartTf
@@ -618,7 +760,7 @@ const alertTf =
 key.slice(sym.length + 2);
 
 const unsub =
-subscribeKline(
+subscribeAlertTopic(
 sym,
 alertTf,
 candle=>{
@@ -687,6 +829,8 @@ syncBackgroundAlertStreams(
 sym,
 chartTf
 );
+
+syncGlobalAlertStreams();
 
 }
 
@@ -811,10 +955,10 @@ releaseAlertMediaSession();
 
 maybeRequestNotificationPermission();
 
-window.addEventListener(
-"alerts-changed",
+const resyncAlertStreams =
 ()=>{
 pruneAlertWatchState();
+syncGlobalAlertStreams();
 syncAlertAudioLifecycle();
 maybeRequestNotificationPermission();
 window.dispatchEvent(
@@ -822,9 +966,33 @@ new CustomEvent(
 "alert-streams-sync"
 )
 );
+};
+
+window.addEventListener(
+"alerts-changed",
+resyncAlertStreams
+);
+
+window.addEventListener(
+"price-alerts-changed",
+resyncAlertStreams
+);
+
+document.addEventListener(
+"visibilitychange",
+()=>{
+
+if(
+document.visibilityState ===
+"visible"
+){
+syncGlobalAlertStreams();
+}
+
 }
 );
 
 syncAlertAudioLifecycle();
+syncGlobalAlertStreams();
 
 }

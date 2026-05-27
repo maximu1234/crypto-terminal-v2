@@ -29,7 +29,7 @@ ensureCloudReady
 import {
 persistFavoritesToCloud,
 onFavoritesRemoteUpdate
-} from "./cloud-sync.js?v=13";
+} from "./cloud-sync.js?v=14";
 
 import {
 createCandlestickChart,
@@ -71,7 +71,7 @@ fetchTickersInto
 import {
 processAlertCandle,
 syncBackgroundAlertStreams
-} from "./alert-monitor.js?v=63";
+} from "./alert-monitor.js?v=64";
 
 import {
 initDrawings
@@ -1165,6 +1165,29 @@ chart.clearCrosshairPosition();
 }catch(err){
 
 console.error("Drawings init failed:", err);
+
+}
+
+if(
+drawingTools
+){
+
+void import("./price-alert-ui.js?v=2").then(({ mountPriceAlertUi })=>{
+mountPriceAlertUi({
+chart,
+series: candleSeries,
+wrapEl: chartWrapEl,
+getSymbol: ()=> currentSymbol,
+getTf: ()=> currentTF,
+scheduleRedraw: ()=>
+drawingTools?.scheduleRedraw?.()
+});
+}).catch(err=>{
+console.warn(
+"price alert ui:",
+err
+);
+});
 
 }
 

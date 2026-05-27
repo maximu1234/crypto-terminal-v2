@@ -816,6 +816,59 @@ body.tablet-chart .price-scale-touch-strip{
   pointer-events:auto;
 }
 
+.price-alert-scale-plus{
+  position:absolute;
+  z-index:12;
+  width:28px;
+  height:28px;
+  padding:0;
+  border:1px solid rgba(250,204,21,.55);
+  border-radius:50%;
+  background:rgba(17,24,39,.92);
+  color:#facc15;
+  font-size:20px;
+  line-height:1;
+  cursor:pointer;
+  pointer-events:auto;
+  touch-action:manipulation;
+  box-shadow:0 2px 8px rgba(0,0,0,.35);
+}
+
+.price-alert-scale-plus.hidden{
+  display:none;
+}
+
+.price-alert-delete-bar{
+  position:absolute;
+  z-index:12;
+  display:flex;
+  align-items:center;
+  pointer-events:auto;
+}
+
+.price-alert-delete-bar.hidden{
+  display:none;
+}
+
+.price-alert-delete-btn{
+  width:32px;
+  height:32px;
+  padding:0;
+  border:1px solid rgba(239,68,68,.45);
+  border-radius:6px;
+  background:rgba(17,24,39,.94);
+  color:#f87171;
+  cursor:pointer;
+  touch-action:manipulation;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.price-alert-delete-btn:hover{
+  background:rgba(127,29,29,.35);
+}
+
 .chart-price-hud{
   position:absolute;
   right:0;

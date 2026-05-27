@@ -697,61 +697,87 @@ return n;
 
 }
 
-/**
- * Реестр с графика + облачные строки, которых нет на этом устройстве.
- */
-export function mergeRegistryFromChartDrawings(){
-
-const prevByKey =
-new Map();
-
-for(const a of loadAlerts()){
-const sym =
-String(a.symbol || "").trim().toUpperCase();
-const sid =
-String(a.shapeId || a.id || "").trim();
-
-if(
-!sym ||
-!sid
+export function dispatchPriceAlertsChanged(
+symbol
 ){
-continue;
-}
 
-prevByKey.set(
-alertRegistryKey(
-sym,
-sid
-),
-a
+window.dispatchEvent(
+new CustomEvent(
+"price-alerts-changed",
+{
+detail:{
+symbol:
+String(
+symbol ||
+""
+).trim().toUpperCase()
+}
+}
+)
 );
 
 }
 
-const next =
-[];
-let onChart =
-0;
+const LEGACY_ALERTS_MIGRATED_KEY =
+"price_alerts_legacy_migrated_v2";
+
+export function migrateLegacyDrawingAlertsFromShapes(){
+
+if(
+localStorage.getItem(
+LEGACY_ALERTS_MIGRATED_KEY
+)
+){
+return;
+}
+
+const byKey =
+new Map();
+
+for(
+const row of loadAlerts()
+){
+byKey.set(
+alertRegistryKey(
+String(
+row.symbol
+).toUpperCase(),
+String(
+row.shapeId
+)
+),
+row
+);
+}
 
 for(
 let i = 0;
-i < localStorage.length;
+i <
+localStorage.length;
 i++
 ){
 
 const key =
-localStorage.key(i);
+localStorage.key(
+i
+);
 
 if(
-!key?.startsWith("drawings_")
+!key?.startsWith(
+"drawings_"
+)
 ){
 continue;
 }
 
 const sym =
-key.slice("drawings_".length).trim().toUpperCase();
+key.slice(
+"drawings_".length
+).trim().toUpperCase();
 
-if(!sym){
+if(
+!sym
+){
 continue;
 }
 
@@ -760,139 +786,221 @@ let drawings;
 try{
 drawings =
 JSON.parse(
-localStorage.getItem(key) || "[]"
+localStorage.getItem(
+key
+) ||
+"[]"
 );
 }catch{
 continue;
 }
 
-if(!Array.isArray(drawings)){
+if(
+!Array.isArray(
+drawings
+)
+){
 continue;
 }
 
-for(const shape of drawings){
+for(
+const shape of drawings
+){
 
 if(
 !shape?.isAlert ||
-shape.type !== "hray"
+shape.type !==
+"hray"
 ){
 continue;
 }
 
 const sid =
-String(shape.id || "").trim();
+String(
+shape.id ||
+""
+).trim();
 const price =
-alertPriceFromShape(shape);
+alertPriceFromShape(
+shape
+);
 
 if(
 !sid ||
-!Number.isFinite(price)
+!Number.isFinite(
+price
+)
 ){
 continue;
 }
-
-onChart += 1;
 
 const mapKey =
 alertRegistryKey(
 sym,
 sid
 );
-const prev =
-prevByKey.get(mapKey);
 
-next.push({
+if(
+!byKey.has(
+mapKey
+)
+){
+byKey.set(
+mapKey,
+{
 id: sid,
 shapeId: sid,
 symbol: sym,
 price,
 tf: normalizeAlertTf(
-shape.alertTf ||
-prev?.tf
+shape.alertTf
 ),
 createdAt:
-Number(shape.alertCreatedAt) ||
-Number(prev?.createdAt) ||
+Number(
+shape.alertCreatedAt
+) ||
 Date.now(),
-cloudId: prev?.cloudId,
-cloudSynced: !!(
-prev?.cloudId &&
-prev?.cloudSynced
-)
-});
-
+cloudSynced: false
 }
-
-}
-
-for(
-const [mapKey, prev] of prevByKey
-){
-
-if(
-next.some(row=>
-alertRegistryKey(
-String(row.symbol || "").trim().toUpperCase(),
-String(row.shapeId || "").trim()
-) === mapKey
-)
-){
-continue;
-}
-
-if(
-prev?.cloudSynced &&
-prev?.cloudId
-){
-next.push(prev);
-}
-
-}
-
-const before =
-loadAlerts().length;
-
-const changed =
-before !== next.length ||
-next.some(row=>{
-
-const sym =
-String(row.symbol || "").trim().toUpperCase();
-const sid =
-String(row.shapeId || "").trim();
-const prev =
-prevByKey.get(
-alertRegistryKey(
-sym,
-sid
-)
 );
 
-if(!prev){
-return true;
 }
 
-return (
-Number(prev.price) !== Number(row.price) ||
-!!prev.cloudSynced !== !!row.cloudSynced
+}
+
+}
+
+saveAlerts(
+[
+...byKey.values()
+]
 );
 
-});
+localStorage.setItem(
+LEGACY_ALERTS_MIGRATED_KEY,
+"1"
+);
 
-if(changed){
-saveAlerts(next);
 }
+
+/**
+ * Реестр алертов — источник истины; рисунки hray больше не используются как алерты.
+ */
+export function mergeRegistryFromChartDrawings(){
+
+migrateLegacyDrawingAlertsFromShapes();
+
+stripAlertFlagsNotInRegistry();
+
+const list =
+loadAlerts();
 
 console.log(
-"[alerts] на графике:",
-onChart,
-"| реестр:",
-next.length,
+"[alerts] реестр:",
+list.length,
 "| без облака:",
-next.filter(a=>!a.cloudSynced).length
+list.filter(
+a=>!a.cloudSynced
+).length
 );
 
-return onChart;
+return list.length;
+
+}
+
+export async function createPriceAlert(
+symbol,
+price,
+tf
+){
+
+return enqueueRegistryWrite(async()=>{
+
+const sym =
+String(
+symbol ||
+""
+).trim().toUpperCase();
+
+const level =
+Number(
+price
+);
+
+if(
+!sym ||
+!Number.isFinite(
+level
+)
+){
+return null;
+}
+
+const shapeId =
+`pa_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+
+const row = {
+id: shapeId,
+shapeId,
+symbol: sym,
+price: level,
+tf: normalizeAlertTf(
+tf
+),
+createdAt: Date.now(),
+cloudSynced: false
+};
+
+const list =
+loadAlerts().filter(
+a=>!
+(
+String(
+a.symbol
+).toUpperCase() ===
+sym &&
+String(
+a.shapeId
+) ===
+shapeId
+)
+);
+
+list.push(
+row
+);
+
+saveAlerts(
+list
+);
+
+dispatchPriceAlertsChanged(
+sym
+);
+
+const { ensureCloudReady } =
+await import("./auth-ui.js?v=20");
+
+await ensureCloudReady();
+
+const m =
+await import("./alerts-cloud-sync.js?v=68");
+
+const pushed =
+await m.pushOneAlertRow(
+row,
+{ retries: 6 }
+);
+
+if(
+!pushed
+){
+m.scheduleRegistryCloudSync();
+}
+
+return row;
+
+});
 
 }
 
@@ -1107,7 +1215,7 @@ void import("./alerts-cloud-sync.js?v=67").then(m=>{
 m.flushAlertCloudPush(row);
 });
 
-void import("./alert-monitor.js?v=63").then(m=>{
+void import("./alert-monitor.js?v=64").then(m=>{
 m.armAlertQuietAfterDrag(
 sym,
 sid
@@ -1154,6 +1262,10 @@ sid
 );
 
 stripAlertFlagsNotInRegistry();
+
+dispatchPriceAlertsChanged(
+sym
+);
 
 queueAlertsCloud(async m=>{
 await m.removeAlertFromCloud(
@@ -1461,6 +1573,10 @@ clearAlertOnDrawing(sym, sid);
 stripAlertFlagsNotInRegistry();
 }
 
+dispatchPriceAlertsChanged(
+sym
+);
+
 console.log(
 "[alerts] сработал (облако):",
 sym,
@@ -1468,7 +1584,7 @@ sid
 );
 
 if(existing){
-void import("./alert-monitor.js?v=63").then(m=>{
+void import("./alert-monitor.js?v=64").then(m=>{
 m.notifyAlertTriggered({
 symbol: sym,
 shapeId: sid,
@@ -1576,13 +1692,17 @@ sid
 
 stripAlertFlagsNotInRegistry();
 
+dispatchPriceAlertsChanged(
+sym
+);
+
 console.log(
 "[alerts] сработал:",
 sym,
 sid
 );
 
-void import("./alert-monitor.js?v=63").then(m=>{
+void import("./alert-monitor.js?v=64").then(m=>{
 m.notifyAlertTriggered({
 symbol: sym,
 shapeId: sid,

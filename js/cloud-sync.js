@@ -15,8 +15,9 @@ favoritesSignature as favoritesGroupsSignature
 
 import {
 collectAllLocalDrawings,
-applyDrawingsMapToLocal
-} from "./drawings-storage.js?v=1";
+applyDrawingsMapToLocal,
+mergeDrawingsMaps
+} from "./drawings-storage.js?v=2";
 
 import {
 withTimeout
@@ -457,71 +458,7 @@ notifyFavorites();
 
 async function applyAlertFlagsToDrawingsMap(map){
 
-if(
-!map ||
-typeof map !== "object"
-){
 return map;
-}
-
-const out =
-JSON.parse(JSON.stringify(map));
-
-const { getActiveAlerts } =
-await import("./alerts.js?v=60");
-
-for(const alert of getActiveAlerts()){
-
-const sym =
-String(alert.symbol || "").toUpperCase();
-
-const sid =
-String(alert.shapeId || "");
-
-if(
-!sym ||
-!sid
-){
-continue;
-}
-
-const list =
-out[sym];
-
-if(!Array.isArray(list)){
-continue;
-}
-
-const shape =
-list.find(
-s=>
-s?.id === sid &&
-s?.type === "hray"
-);
-
-if(!shape){
-continue;
-}
-
-shape.isAlert = true;
-shape.lineWidth = 1;
-shape.alertTf =
-alert.tf ||
-shape.alertTf ||
-"60";
-shape.alertSymbol = sym;
-shape.alertCreatedAt =
-shape.alertCreatedAt ||
-alert.createdAt ||
-Date.now();
-
-if(!shape.savedColor){
-shape.savedColor = shape.color;
-}
-
-}
-
-return out;
 
 }
 
@@ -736,8 +673,32 @@ localDrawings
 return;
 }
 
+const merged =
+mergeDrawingsMaps(
+localDrawings,
+cloudDrawings
+);
+
+if(
+drawingsMapsEqual(
+merged,
+localDrawings
+)
+){
+
+if(cloudTs){
+saveLocalDrawingsUpdatedAt(cloudTs);
+}
+
+saveDrawingsSyncedSignature(
+localDrawings
+);
+
+return;
+}
+
 void applyDrawingsLocally(
-cloudDrawings,
+merged,
 cloudTs
 );
 
@@ -1064,13 +1025,38 @@ return local;
 
 }
 
+const cloudDrawings =
+cloud.drawings ||
+{};
+
+const localEmpty =
+Object.keys(
+local
+).length ===
+0;
+const cloudEmpty =
+Object.keys(
+cloudDrawings
+).length ===
+0;
+
 if(
-hasUnsyncedDrawings() ||
-!localTs ||
-!isTsNewer(
-cloud.drawingsUpdatedAt,
-localTs
-)
+localEmpty &&
+!cloudEmpty
+){
+
+await applyDrawingsLocally(
+cloudDrawings,
+cloud.drawingsUpdatedAt
+);
+
+return cloudDrawings;
+
+}
+
+if(
+!localEmpty &&
+cloudEmpty
 ){
 
 const ts =
@@ -1089,12 +1075,56 @@ return local;
 
 }
 
+const merged =
+mergeDrawingsMaps(
+local,
+cloudDrawings
+);
+
+if(
+drawingsMapsEqual(
+merged,
+local
+) &&
+drawingsMapsEqual(
+merged,
+cloudDrawings
+)
+){
+
+if(cloud.drawingsUpdatedAt){
+saveLocalDrawingsUpdatedAt(
+cloud.drawingsUpdatedAt
+);
+}
+
+saveDrawingsSyncedSignature(
+merged
+);
+
+return merged;
+
+}
+
+const ts =
+await pushCloudDrawings(
+sb,
+user.id,
+merged
+);
+
+if(ts){
+saveLocalDrawingsUpdatedAt(ts);
+saveDrawingsSyncedSignature(merged);
+}
+
 await applyDrawingsLocally(
-cloud.drawings,
+merged,
+ts ||
 cloud.drawingsUpdatedAt
 );
 
-return cloud.drawings;
+return merged;
 
 }
 
@@ -1142,29 +1172,71 @@ return local;
 
 }
 
-if(hasUnsyncedDrawings()){
-return local;
-}
+const cloudDrawings =
+cloud.drawings ||
+{};
 
 if(
-!cloud.drawingsUpdatedAt ||
-(
-localTs &&
-!isTsNewer(
-cloud.drawingsUpdatedAt,
-localTs
-)
-)
+hasUnsyncedDrawings()
 ){
-return local;
+
+const merged =
+mergeDrawingsMaps(
+local,
+cloudDrawings
+);
+
+const ts =
+await pushCloudDrawings(
+sb,
+user.id,
+merged
+);
+
+if(ts){
+saveLocalDrawingsUpdatedAt(ts);
+saveDrawingsSyncedSignature(merged);
 }
 
 await applyDrawingsLocally(
-cloud.drawings,
+merged,
+ts
+);
+
+return merged;
+
+}
+
+if(
+drawingsMapsEqual(
+local,
+cloudDrawings
+)
+){
+
+if(cloud.drawingsUpdatedAt){
+saveLocalDrawingsUpdatedAt(
+cloud.drawingsUpdatedAt
+);
+}
+
+saveDrawingsSyncedSignature(local);
+return local;
+
+}
+
+const merged =
+mergeDrawingsMaps(
+local,
+cloudDrawings
+);
+
+await applyDrawingsLocally(
+merged,
 cloud.drawingsUpdatedAt
 );
 
-return cloud.drawings;
+return merged;
 
 }
 
@@ -1203,7 +1275,7 @@ await syncDrawingsWithCloud();
 
 export async function persistAllDrawingsToCloud(){
 
-const drawings =
+const local =
 collectAllLocalDrawings();
 
 const authed =
@@ -1216,16 +1288,53 @@ return;
 const { sb, user } =
 authed;
 
+let merged =
+local;
+
+try{
+
+const cloud =
+await fetchUserSettings(
+sb,
+user.id
+);
+
+if(
+cloud?.drawings
+){
+merged =
+mergeDrawingsMaps(
+local,
+cloud.drawings
+);
+}
+
+}catch{
+/* push local snapshot */
+}
+
 const ts =
 await pushCloudDrawings(
 sb,
 user.id,
-drawings
+merged
 );
 
 if(ts){
 saveLocalDrawingsUpdatedAt(ts);
-saveDrawingsSyncedSignature(drawings);
+saveDrawingsSyncedSignature(merged);
+}
+
+if(
+!drawingsMapsEqual(
+merged,
+local
+)
+){
+await applyDrawingsLocally(
+merged,
+ts
+);
 }
 
 }
