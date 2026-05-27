@@ -9,7 +9,7 @@ ensureCloudReady
 import {
 initAlertsCloudSync,
 scheduleRegistryCloudSync
-} from "./alerts-cloud-sync.js?v=73";
+} from "./alerts-cloud-sync.js?v=74";
 
 import {
 stripAlertFlagsNotInRegistry
@@ -22,7 +22,7 @@ isCloudSyncEnabled,
 getCloudUserEmail,
 pullDeviceStateFromCloud,
 onCloudSyncChange
-} from "./cloud-sync.js?v=20";
+} from "./cloud-sync.js?v=21";
 
 import {
 isSupabaseConfigured
@@ -131,7 +131,7 @@ new CustomEvent(
 }
 );
 
-import("./drawings-cloud-sync.js?v=17").then(
+import("./drawings-cloud-sync.js?v=18").then(
 ({ initDrawingsCloudSync })=>{
 initDrawingsCloudSync();
 }

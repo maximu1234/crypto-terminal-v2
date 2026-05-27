@@ -32,6 +32,10 @@ import {
 readAlertTokenSync
 } from "./alert-auth-cache.js?v=4";
 
+import {
+createNotifyDebouncer
+} from "./cloud-sync-throttle.js?v=1";
+
 const FAVORITES_LOCAL_TS_KEY =
 "favorites_local_updated_at";
 
@@ -80,9 +84,18 @@ let pendingDrawingsCloudPush = false;
 const SYNC_POLL_MS = 5000;
 const DRAWINGS_PUSH_DEBOUNCE_MS = 250;
 
+const flushAuthListeners =
+createNotifyDebouncer(
+400
+);
+
 function notifyAuth(){
 
-authListeners.forEach(fn=>{
+flushAuthListeners(
+()=>{
+
+authListeners.forEach(
+fn=>{
 
 try{
 fn();
@@ -90,7 +103,11 @@ fn();
 /* ignore */
 }
 
-});
+}
+);
+
+}
+);
 
 }
 
@@ -339,7 +356,7 @@ true;
 return;
 }
 
-void import("./drawings-cloud-sync.js?v=17").then(
+void import("./drawings-cloud-sync.js?v=18").then(
 m=>{
 m.scheduleDrawingsCloudPush();
 }
@@ -360,7 +377,7 @@ return Promise.resolve();
 pendingDrawingsCloudPush =
 false;
 
-return import("./drawings-cloud-sync.js?v=17").then(
+return import("./drawings-cloud-sync.js?v=18").then(
 m=>
 m.flushDrawingsCloudPush()
 );
@@ -663,7 +680,7 @@ function stopCloudSyncHelpers(){
 
 stopSyncPoll();
 
-void import("./drawings-cloud-sync.js?v=17").then(
+void import("./drawings-cloud-sync.js?v=18").then(
 m=>{
 m.stopDrawingsCloudSync();
 }
@@ -765,7 +782,7 @@ function handleRealtimeSettingsRow(row){
 
 handleRealtimeFavoritesRow(row);
 
-void import("./drawings-cloud-sync.js?v=17").then(
+void import("./drawings-cloud-sync.js?v=18").then(
 m=>
 m.pullDrawingsFromCloud()
 );
@@ -1039,7 +1056,7 @@ return cloud.favorites;
 export async function mergeDrawingsWithCloud(){
 
 const drawingsCloud =
-await import("./drawings-cloud-sync.js?v=17");
+await import("./drawings-cloud-sync.js?v=18");
 
 await drawingsCloud.hydrateDrawingsAfterAuth();
 
@@ -1049,7 +1066,7 @@ return collectAllLocalDrawings();
 
 export async function pullDrawingsIfCloudNewer(){
 
-await import("./drawings-cloud-sync.js?v=17").then(
+await import("./drawings-cloud-sync.js?v=18").then(
 m=>
 m.pullDrawingsFromCloud()
 );
@@ -1075,7 +1092,7 @@ await pullFavoritesIfCloudNewer();
 async function syncDrawingsWithCloud(){
 
 const m =
-await import("./drawings-cloud-sync.js?v=17");
+await import("./drawings-cloud-sync.js?v=18");
 
 await m.flushDrawingsCloudPush();
 
@@ -1612,7 +1629,7 @@ try{
 await mergeFavoritesWithCloud();
 
 const drawingsCloud =
-await import("./drawings-cloud-sync.js?v=17");
+await import("./drawings-cloud-sync.js?v=18");
 
 await drawingsCloud.hydrateDrawingsAfterAuth();
 await drawingsCloud.setupDrawingsRealtimeForUser(
@@ -1632,7 +1649,7 @@ false;
 void drawingsCloud.flushDrawingsCloudPush();
 }
 
-import("./alerts-cloud-sync.js?v=72")
+import("./alerts-cloud-sync.js?v=74")
 .then(async m=>{
 
 const { stripAlertFlagsNotInRegistry } =
@@ -1724,6 +1741,15 @@ wake
 
 }
 
+let pullDeviceInflight =
+null;
+
+let lastPullDeviceMs =
+0;
+
+const PULL_DEVICE_MIN_MS =
+2500;
+
 /**
  * Загрузить рисунки и алерты из Supabase на это устройство (iPad после входа с Mac).
  */
@@ -1741,15 +1767,53 @@ reason: "no_auth"
 };
 }
 
+const now =
+Date.now();
+
+if(
+pullDeviceInflight
+){
+return pullDeviceInflight;
+}
+
+if(
+now -
+lastPullDeviceMs <
+PULL_DEVICE_MIN_MS
+){
+return {
+ok: true,
+skipped: true
+};
+}
+
+pullDeviceInflight =
+pullDeviceStateFromCloudImpl().finally(
+()=>{
+
+pullDeviceInflight =
+null;
+lastPullDeviceMs =
+Date.now();
+
+}
+);
+
+return pullDeviceInflight;
+
+}
+
+async function pullDeviceStateFromCloudImpl(){
+
 try{
 await ensureCloudLoginResolved(
 10000
 );
 
 const drawingsCloud =
-await import("./drawings-cloud-sync.js?v=17");
+await import("./drawings-cloud-sync.js?v=18");
 const alertsCloud =
-await import("./alerts-cloud-sync.js?v=73");
+await import("./alerts-cloud-sync.js?v=74");
 const { stripAlertFlagsNotInRegistry } =
 await import("./alerts.js?v=69");
 

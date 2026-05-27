@@ -5,7 +5,7 @@ isCloudLoggedInEffective,
 isCloudSyncEnabled,
 onCloudSyncChange,
 notifyDrawings as notifyDrawingsListeners
-} from "./cloud-sync.js?v=20";
+} from "./cloud-sync.js?v=21";
 
 import {
 normalizeAlertWorkerBaseUrl
@@ -34,6 +34,27 @@ withTimeout
 } from "./async-timeout.js?v=1";
 
 import {
+createPullCoalescer,
+isDrawingsUiPage
+} from "./cloud-sync-throttle.js?v=1";
+
+const IS_YANDEX =
+/YaBrowser|Yandex/i.test(
+navigator.userAgent ||
+""
+);
+
+const coalesceDrawingsPull =
+createPullCoalescer({
+minIntervalMs: IS_YANDEX
+? 4000
+: 2000,
+errorBackoffMs: IS_YANDEX
+? 15000
+: 8000
+});
+
+import {
 readAlertTokenSync
 } from "./alert-auth-cache.js?v=4";
 
@@ -51,10 +72,14 @@ const REGISTRY_SYNC_DEBOUNCE_MS =
 200;
 
 const FAST_POLL_MS =
-500;
+IS_YANDEX
+? 5000
+: 2500;
 
 const FAST_POLL_HIDDEN_MS =
-4000;
+IS_YANDEX
+? 15000
+: 8000;
 
 let drawingsRealtimeChannel =
 null;
@@ -74,7 +99,7 @@ null;
 let fastPollStopped =
 true;
 
-let fastPollRafId =
+let fastPollIntervalId =
 0;
 
 let lastDrawingsPullMs =
@@ -86,11 +111,14 @@ let lastCloudDrawingsFingerprint =
 let cloudOpChain =
 Promise.resolve();
 
+let drawingsRestStressUntil =
+0;
+
 let drawingsSyncPausedUntil =
 0;
 
 const REMOTE_SYNC_MS =
-50;
+400;
 
 export function pauseDrawingsCloudSync(
 ms
@@ -1006,10 +1034,30 @@ rows
 }catch(
 err
 ){
+const msg =
+err?.message || err;
+
+if(
+/INSUFFICIENT_RESOURCES/i.test(
+String(
+msg
+)
+)
+){
+drawingsRestStressUntil =
+Date.now() +
+(
+IS_YANDEX
+? 20000
+: 10000
+);
+}else{
 console.warn(
 "[drawings] fetch REST:",
-err?.message || err
+msg
 );
+}
+
 return null;
 
 }
@@ -2265,6 +2313,13 @@ data ===
 null
 ){
 
+if(
+Date.now() <
+drawingsRestStressUntil
+){
+return 0;
+}
+
 const ctx =
 await getAuthed();
 
@@ -2762,11 +2817,19 @@ return 0;
 }
 
 const n =
-await reconcileLocalDrawingsWithCloud();
+await coalesceDrawingsPull(
+()=>reconcileLocalDrawingsWithCloud()
+);
 
+if(
+n >
+0 ||
+isDrawingsUiPage()
+){
 invokeDrawingsChartRefresh(
 null
 );
+}
 
 return n;
 
@@ -2966,15 +3029,8 @@ function drawingsFastPollTick(){
 if(
 fastPollStopped
 ){
-fastPollRafId =
-0;
 return;
 }
-
-fastPollRafId =
-requestAnimationFrame(
-drawingsFastPollTick
-);
 
 if(
 document.visibilityState !==
@@ -3012,13 +3068,24 @@ void pullDrawingsFromCloudNow().catch(
 
 function startDrawingsFastPoll(){
 
+if(
+!isDrawingsUiPage()
+){
+stopDrawingsFastPoll();
+return;
+}
+
 fastPollStopped =
 false;
 
 if(
-!fastPollRafId
+!fastPollIntervalId
 ){
-drawingsFastPollTick();
+fastPollIntervalId =
+setInterval(
+drawingsFastPollTick,
+FAST_POLL_MS
+);
 }
 
 if(
@@ -3082,12 +3149,12 @@ fastPollStopped =
 true;
 
 if(
-fastPollRafId
+fastPollIntervalId
 ){
-cancelAnimationFrame(
-fastPollRafId
+clearInterval(
+fastPollIntervalId
 );
-fastPollRafId =
+fastPollIntervalId =
 0;
 }
 
@@ -3203,7 +3270,20 @@ ctx.user.id
 );
 
 void hydrateDrawingsAfterAuth();
+
+if(
+isDrawingsUiPage()
+){
 startDrawingsFastPoll();
+}else{
+stopDrawingsFastPoll();
+void coalesceDrawingsPull(
+()=>reconcileLocalDrawingsWithCloud()
+).catch(
+()=>{}
+);
+}
+
 }else{
 stopDrawingsCloudSync();
 }

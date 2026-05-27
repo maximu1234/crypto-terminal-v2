@@ -15,7 +15,7 @@ removeAllAlerts
 import {
 getTelegramChatId,
 initAlertsCloudSync
-} from "./alerts-cloud-sync.js?v=69";
+} from "./alerts-cloud-sync.js?v=74";
 
 import {
 readAlertTokenSync
@@ -28,7 +28,7 @@ onCloudSyncChange,
 getCloudUserEmail,
 pullDeviceStateFromCloud,
 ensureCloudLoginResolved
-} from "./cloud-sync.js?v=20";
+} from "./cloud-sync.js?v=21";
 
 import {
 ensureCloudReady
@@ -92,6 +92,18 @@ document.getElementById("alerts-telegram-pending-text");
 
 let telegramUiFetchSeq =
 0;
+
+let telegramChatCache =
+null;
+
+let telegramChatCacheAt =
+0;
+
+const TELEGRAM_CACHE_MS =
+30000;
+
+let cloudPullDebounceTimer =
+null;
 
 let clearDrawingsSuccessTimer = null;
 
@@ -348,6 +360,24 @@ null
 return;
 }
 
+const cacheFresh =
+Date.now() -
+telegramChatCacheAt <
+TELEGRAM_CACHE_MS;
+
+if(
+cacheFresh &&
+telegramChatCache !==
+null
+){
+hideTelegramPendingUi();
+applyTelegramStatus(
+auth,
+telegramChatCache.chatId
+);
+return;
+}
+
 showTelegramPendingUi(
 auth.state === "pending"
 ? "Проверяем вход…"
@@ -357,6 +387,13 @@ auth.state === "pending"
 try{
 const chatId =
 await getTelegramChatId();
+
+telegramChatCache =
+{
+chatId
+};
+telegramChatCacheAt =
+Date.now();
 
 if(
 fetchSeq !== telegramUiFetchSeq
@@ -615,7 +652,23 @@ window.addEventListener("alerts-history-changed", render);
 
 onCloudSyncChange(()=>{
 
-void (async()=>{
+if(
+cloudPullDebounceTimer
+){
+clearTimeout(
+cloudPullDebounceTimer
+);
+}
+
+cloudPullDebounceTimer =
+setTimeout(
+()=>{
+
+cloudPullDebounceTimer =
+null;
+
+void (
+async()=>{
 
 if(
 isCloudLoggedInEffective()
@@ -629,7 +682,12 @@ await pullDeviceStateFromCloud();
 refreshTelegramUi();
 render();
 
-})();
+}
+)();
+
+},
+800
+);
 
 });
 

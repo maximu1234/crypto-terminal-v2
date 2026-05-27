@@ -9,7 +9,7 @@ waitForCloudAuth,
 isCloudLoggedIn,
 isCloudLoggedInEffective,
 onCloudSyncChange
-} from "./cloud-sync.js?v=20";
+} from "./cloud-sync.js?v=21";
 
 import {
 setBrowserCrossCheckEnabled
@@ -27,6 +27,32 @@ import {
 normalizeAlertWorkerBaseUrl
 } from "./alert-worker-url.js?v=1";
 
+import {
+createPullCoalescer
+} from "./cloud-sync-throttle.js?v=1";
+
+const IS_YANDEX =
+/YaBrowser|Yandex/i.test(
+navigator.userAgent ||
+""
+);
+
+const coalesceRegistryPull =
+createPullCoalescer({
+minIntervalMs: IS_YANDEX
+? 4000
+: 2000,
+errorBackoffMs: IS_YANDEX
+? 15000
+: 8000
+});
+
+let alertsRestStressUntil =
+0;
+
+let refreshAlertModeTimer =
+null;
+
 let alertsRealtimeChannel = null;
 
 let alertsRealtimeUserId = null;
@@ -39,7 +65,10 @@ const REGISTRY_SYNC_DEBOUNCE_MS = 200;
 
 const RECONCILE_INTERVAL_MS = 4000;
 
-const ALERTS_FAST_POLL_MS = 2500;
+const ALERTS_FAST_POLL_MS =
+IS_YANDEX
+? 6000
+: 3500;
 
 let lastRemoteAlertMode = null;
 
@@ -49,7 +78,7 @@ new Map();
 
 let remoteRegistrySyncTimer = null;
 
-const REMOTE_REGISTRY_SYNC_MS = 50;
+const REMOTE_REGISTRY_SYNC_MS = 400;
 
 let alertsFastPollTimer = null;
 
@@ -464,7 +493,7 @@ RECONCILE_INTERVAL_MS);
 
 }
 
-async function refreshCloudAlertMode(){
+async function refreshCloudAlertModeImpl(){
 
 const remote =
 await updateBrowserCrossMode();
@@ -483,6 +512,39 @@ startAlertsFastPoll();
 await teardownAlertsRealtime();
 stopReconcileTimer();
 }
+
+}
+
+function refreshCloudAlertMode(){
+
+if(
+refreshAlertModeTimer
+){
+clearTimeout(
+refreshAlertModeTimer
+);
+}
+
+refreshAlertModeTimer =
+setTimeout(
+()=>{
+
+refreshAlertModeTimer =
+null;
+void refreshCloudAlertModeImpl().catch(
+err=>{
+console.warn(
+"[alerts] refresh mode:",
+err?.message || err
+);
+}
+);
+
+},
+IS_YANDEX
+? 600
+: 350
+);
 
 }
 
@@ -3628,10 +3690,30 @@ rows
 }catch(
 err
 ){
+const msg =
+err?.message || err;
+
+if(
+/INSUFFICIENT_RESOURCES/i.test(
+String(
+msg
+)
+)
+){
+alertsRestStressUntil =
+Date.now() +
+(
+IS_YANDEX
+? 20000
+: 10000
+);
+}else{
 console.warn(
 "[alerts] fetch REST:",
-err?.message || err
+msg
 );
+}
+
 return null;
 
 }
@@ -3661,6 +3743,13 @@ if(
 data ===
 null
 ){
+
+if(
+Date.now() <
+alertsRestStressUntil
+){
+return 0;
+}
 
 const ctx =
 await getAuthed();
@@ -3985,7 +4074,9 @@ return 0;
 }
 
 const n =
-await reconcileLocalRegistryWithCloud();
+await coalesceRegistryPull(
+()=>reconcileLocalRegistryWithCloud()
+);
 
 if(
 n >
