@@ -7,7 +7,7 @@
 
 <title>Алерты — Multichart</title>
 
-<link rel="stylesheet" href="/css/common.css?v=16">
+<link rel="stylesheet" href="/css/common.css?v=17">
 <link rel="stylesheet" href="/css/site-mobile-nav.css?v=3">
 <link rel="stylesheet" href="/css/alerts.css?v=14">
 
@@ -56,13 +56,12 @@
 <h2 id="alerts-telegram-heading" class="alerts-section-title">Telegram</h2>
 
 <p id="alerts-telegram-note-guest" class="alerts-telegram-note">
-Дополнение к алертам в браузере: при закрытом терминале сообщения приходят в Telegram (обычно за 1–2 с).
-Нужен <button type="button" class="alerts-inline-settings-link" id="alerts-open-login">вход по email</button> и бот.
+Чтобы использовать алерты, войдите в аккаунт и укажите Telegram Chat ID в настройках под шестерёнкой.
 </p>
 
 <p id="alerts-telegram-note-logged" class="alerts-telegram-note hidden">
 Вы вошли как <span id="alerts-telegram-user-email" class="alerts-telegram-user-email"></span>.
-Укажите Chat ID ниже — тогда алерты будут приходить в Telegram при закрытом терминале.
+Если Telegram Chat ID подключён в настройках, алерты будут приходить в Telegram.
 </p>
 
 <div id="alerts-telegram-pending" class="alerts-telegram-pending hidden" role="status" aria-live="polite">
@@ -73,109 +72,6 @@
 
 <div id="alerts-telegram-connected" class="alerts-telegram-connected hidden" role="status">
 <p id="alerts-telegram-connected-text" class="alerts-telegram-connected-text"></p>
-<div class="alerts-telegram-connected-actions">
-<button type="button" id="alerts-telegram-edit" class="alerts-telegram-edit">
-Изменить chat id
-</button>
-<button type="button" id="alerts-telegram-disconnect" class="alerts-telegram-disconnect">
-Отключить Telegram
-</button>
-</div>
-</div>
-
-<div id="alerts-telegram-login" class="alerts-telegram-login">
-<div id="alerts-inline-auth-mount" class="alerts-inline-auth-mount"></div>
-</div>
-
-<script>
-(function(){
-try{
-var raw=
-localStorage.getItem("ct_supabase_auth");
-if(!raw){
-return;
-}
-var data=JSON.parse(raw);
-var session=
-data?.access_token
-? data
-: data?.currentSession||data?.session;
-var user=session?.user;
-if(!user?.id){
-return;
-}
-var guest=
-document.getElementById("alerts-telegram-note-guest");
-var login=
-document.getElementById("alerts-telegram-login");
-if(guest){
-guest.classList.add("hidden");
-}
-if(login){
-login.classList.add("hidden");
-}
-var cacheKey="ct_telegram_chat_v1:"+user.id;
-var cached=localStorage.getItem(cacheKey);
-var connected=
-document.getElementById("alerts-telegram-connected");
-var pending=
-document.getElementById("alerts-telegram-pending");
-var email=user.email||"аккаунт";
-if(
-cached!=null&&
-cached!=="none"
-){
-if(connected){
-connected.classList.remove("hidden");
-}
-var text=
-document.getElementById("alerts-telegram-connected-text");
-if(text){
-text.textContent=
-"Chat ID сохранён. Алерты будут приходить в Telegram, "+
-"когда вкладка с терминалом закрыта ("+email+").";
-}
-}else if(pending){
-pending.classList.remove("hidden");
-}
-}catch(e){}
-})();
-</script>
-
-<div id="alerts-telegram-form" class="alerts-telegram-form hidden">
-
-<div id="alerts-telegram-setup-fields" class="alerts-telegram-setup-fields">
-
-<label class="alerts-telegram-label" for="alerts-telegram-chat-id">
-Chat ID
-</label>
-
-<input
-id="alerts-telegram-chat-id"
-class="alerts-telegram-input"
-type="text"
-inputmode="numeric"
-autocomplete="off"
-placeholder="например 123456789"
-aria-describedby="alerts-telegram-status"
-/>
-
-<button type="button" id="alerts-telegram-save" class="alerts-telegram-save">
-Сохранить
-</button>
-
-</div>
-
-<p id="alerts-telegram-status" class="alerts-telegram-status" role="status"></p>
-
-<details class="alerts-telegram-help">
-<summary>Как подключить Telegram</summary>
-<ol>
-<li><a id="alerts-telegram-open-bot" href="https://t.me/multichart_alerts_bot" target="_blank" rel="noopener noreferrer">Откройте бота @multichart_alerts_bot</a>&nbsp;и нажмите <strong>Start</strong> (или отправьте <code>/start</code>).</li>
-<li>Бот пришлёт сообщение с вашим Chat ID — скопируйте число в поле выше и нажмите «Сохранить».</li>
-</ol>
-</details>
-
 </div>
 
 </section>
@@ -185,7 +81,7 @@ aria-describedby="alerts-telegram-status"
 <h2 id="alerts-active-heading" class="alerts-section-title">Активные алерты</h2>
 
 <div id="alerts-empty" class="alerts-empty hidden">
-Нет установленных алертов. На графике выберите Horizontal Ray → «Сделать алертом» или ПКМ → «Поставить Алерт».
+Нет установленных алертов. Добавляйте их с кнопки “+” у ценовой шкалы на графике (доступно только после входа и подключения Telegram Chat ID).
 </div>
 
 <div id="alerts-table-wrap" class="alerts-table-wrap hidden">
@@ -255,8 +151,8 @@ aria-describedby="alerts-telegram-status"
 
 </main>
 
-<script type="module" src="/js/site-boot.js?v=67"></script>
-<script type="module" src="/js/alerts-page.js?v=49"></script>
+<script type="module" src="/js/site-boot.js?v=70"></script>
+<script type="module" src="/js/alerts-page.js?v=51"></script>
 
 </body>
 </html>

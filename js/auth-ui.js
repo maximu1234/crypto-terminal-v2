@@ -8,7 +8,7 @@ signInWithEmailOtp,
 signOutCloud,
 recoverAuthSessionFromUrl,
 hasAuthCallbackInUrl
-} from "./cloud-sync.js?v=16";
+} from "./cloud-sync.js?v=17";
 
 import {
 isSupabaseConfigured
@@ -17,6 +17,12 @@ isSupabaseConfigured
 import {
 readAlertTokenSync
 } from "./alert-auth-cache.js?v=4";
+
+import {
+getTelegramChatId,
+saveTelegramChatId,
+clearTelegramChatId
+} from "./alerts-cloud-sync.js?v=69";
 
 import {
 isSystemAdminUser
@@ -760,6 +766,24 @@ wrap.innerHTML = `
 <span class="cloud-auth-email-label"></span>
 <button type="button" class="cloud-auth-out">Выйти</button>
 </div>
+<div class="cloud-telegram-wrap hidden">
+<p class="cloud-telegram-title">Telegram для алертов</p>
+<p class="cloud-telegram-help">Введите Chat ID. Без Chat ID алерты недоступны.</p>
+<div class="cloud-telegram-row">
+<input type="text" class="cloud-telegram-chat-id" placeholder="Chat ID" inputmode="numeric" autocomplete="off"/>
+<button type="button" class="cloud-telegram-save">Сохранить</button>
+</div>
+<div class="cloud-telegram-row">
+<button type="button" class="cloud-telegram-clear">Отключить Telegram</button>
+</div>
+<details class="cloud-telegram-howto">
+<summary>Как подключить</summary>
+<ol>
+<li>Откройте бота <a href="https://t.me/multichart_alerts_bot" target="_blank" rel="noopener noreferrer">@multichart_alerts_bot</a> и нажмите Start.</li>
+<li>Скопируйте Chat ID из сообщения бота и сохраните его здесь.</li>
+</ol>
+</details>
+</div>
 <p class="cloud-auth-hint hidden"></p>
 `;
 
@@ -779,6 +803,68 @@ const loggedIn =
 wrap.querySelector(".cloud-auth-logged-in");
 const emailLabel =
 wrap.querySelector(".cloud-auth-email-label");
+const tgWrap =
+wrap.querySelector(".cloud-telegram-wrap");
+const tgInput =
+wrap.querySelector(".cloud-telegram-chat-id");
+const tgSave =
+wrap.querySelector(".cloud-telegram-save");
+const tgClear =
+wrap.querySelector(".cloud-telegram-clear");
+
+let tgLoadedForEmail = "";
+
+function setTelegramUiLocked(locked){
+
+tgInput && (tgInput.disabled = !!locked);
+tgSave && (tgSave.disabled = !!locked);
+tgClear && (tgClear.disabled = !!locked);
+
+}
+
+async function refreshTelegramOne(){
+
+if(
+variant !== "panel" ||
+!isAuthUiLoggedIn()
+){
+tgWrap?.classList.add("hidden");
+tgLoadedForEmail = "";
+return;
+}
+
+tgWrap?.classList.remove("hidden");
+
+const email =
+getAuthUiEmail() || "";
+
+if(
+tgLoadedForEmail === email &&
+tgInput?.dataset.loaded === "1"
+){
+return;
+}
+
+setTelegramUiLocked(true);
+
+try{
+const chatId =
+await getTelegramChatId();
+if(tgInput){
+tgInput.value =
+chatId == null ? "" : String(chatId);
+tgInput.dataset.loaded = "1";
+}
+tgLoadedForEmail = email;
+}catch{
+if(tgInput){
+tgInput.dataset.loaded = "0";
+}
+}finally{
+setTelegramUiLocked(false);
+}
+
+}
 
 function setHint(text, isError){
 
@@ -827,13 +913,10 @@ emailLabel.textContent =
 getAuthUiEmail() || "Аккаунт";
 
 setHint(
-variant === "inline" && isAlertsPage()
-? "Откройте ссылку из письма на этом устройстве, затем укажите Chat ID ниже."
-: isAlertsPage()
-? "После входа сохраните Chat ID ниже."
-: "Избранное и рисунки синхронизируются между устройствами.",
+"Избранное и рисунки синхронизируются. Ниже — Chat ID для алертов в Telegram.",
 false
 );
+void refreshTelegramOne();
 
 }else{
 
@@ -852,6 +935,9 @@ false
 }else{
 setHint("", false);
 }
+
+tgWrap?.classList.add("hidden");
+tgLoadedForEmail = "";
 
 }
 
@@ -896,6 +982,58 @@ true
 }
 
 sendBtn.disabled = false;
+
+});
+
+tgSave?.addEventListener("click", async()=>{
+
+if(!isAuthUiLoggedIn()){
+setHint("Войдите в аккаунт, затем сохраните Chat ID.", true);
+return;
+}
+
+const value =
+tgInput?.value?.trim() || "";
+
+setTelegramUiLocked(true);
+
+try{
+await saveTelegramChatId(value);
+setHint("Chat ID сохранён. Теперь алерты доступны.", false);
+await refreshTelegramOne();
+}catch(err){
+setHint(
+err?.message || "Не удалось сохранить Chat ID.",
+true
+);
+}finally{
+setTelegramUiLocked(false);
+}
+
+});
+
+tgClear?.addEventListener("click", async()=>{
+
+if(!isAuthUiLoggedIn()){
+return;
+}
+
+setTelegramUiLocked(true);
+
+try{
+await clearTelegramChatId();
+if(tgInput){
+tgInput.value = "";
+}
+setHint("Telegram отключен. Без Chat ID алерты недоступны.", false);
+}catch(err){
+setHint(
+err?.message || "Не удалось отключить Telegram.",
+true
+);
+}finally{
+setTelegramUiLocked(false);
+}
 
 });
 
@@ -978,20 +1116,6 @@ mobileAuthHost,
 
 if(mobilePanel){
 panels.push(mobilePanel);
-}
-
-}
-
-if(isAlertsPage()){
-
-const inlinePanel =
-createAuthPanel(
-document.getElementById("alerts-inline-auth-mount"),
-"inline"
-);
-
-if(inlinePanel){
-panels.push(inlinePanel);
 }
 
 }
@@ -1221,31 +1345,6 @@ return true;
 }
 
 export async function focusAlertsLogin(){
-
-const loginBlock =
-document.getElementById("alerts-telegram-login");
-
-loginBlock?.classList.remove("hidden");
-
-await ensureCloudReady();
-
-loginBlock?.scrollIntoView({
-behavior: "smooth",
-block: "nearest"
-});
-
-const email =
-document.getElementById(
-"cloud-auth-email-inline"
-) ||
-document.querySelector(
-"#alerts-inline-auth-mount .cloud-auth-email"
-);
-
-if(email){
-email.focus();
-return true;
-}
 
 return openCloudSettingsPanel();
 

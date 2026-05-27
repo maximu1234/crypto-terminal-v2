@@ -24,12 +24,12 @@ flagSortRank
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=20";
+} from "./auth-ui.js?v=22";
 
 import {
 persistFavoritesToCloud,
 onFavoritesRemoteUpdate
-} from "./cloud-sync.js?v=16";
+} from "./cloud-sync.js?v=17";
 
 import {
 createCandlestickChart,
@@ -75,7 +75,7 @@ syncBackgroundAlertStreams
 
 import {
 initDrawings
-} from "./drawings.js?v=136";
+} from "./drawings.js?v=138";
 
 import {
 initCoinsMobileUi,
@@ -1172,7 +1172,7 @@ if(
 drawingTools
 ){
 
-void import("./price-alert-ui.js?v=4").then(({ mountPriceAlertUi })=>{
+void import("./price-alert-ui.js?v=5").then(({ mountPriceAlertUi })=>{
 mountPriceAlertUi({
 chart,
 series: candleSeries,

@@ -10,15 +10,11 @@ getAlertsSorted,
 removeAlert,
 stripAlertFlagsNotInRegistry,
 removeAllAlerts
-} from "./alerts.js?v=60";
+} from "./alerts.js?v=61";
 
 import {
-clearTelegramChatId,
 getTelegramChatId,
 initAlertsCloudSync,
-readCachedTelegramChatId,
-saveTelegramChatId,
-syncAlertsWithCloud,
 pullRegistryFromCloud
 } from "./alerts-cloud-sync.js?v=69";
 
@@ -30,19 +26,13 @@ import {
 isCloudLoggedIn,
 onCloudSyncChange,
 getCloudUserEmail
-} from "./cloud-sync.js?v=13";
+} from "./cloud-sync.js?v=17";
 
 import {
-ensureCloudReady,
-focusAlertsLogin
-} from "./auth-ui.js?v=20";
+ensureCloudReady
+} from "./auth-ui.js?v=22";
 
 import { formatPrice } from "./chart.js";
-
-import {
-getTelegramBotUrl,
-TELEGRAM_BOT_USERNAME
-} from "./telegram-bot-public.js?v=1";
 
 const tbody =
 document.getElementById("alerts-tbody");
@@ -74,9 +64,6 @@ document.getElementById("alerts-clear-drawings-action");
 const clearDrawingsStatus =
 document.getElementById("alerts-clear-drawings-status");
 
-const telegramLogin =
-document.getElementById("alerts-telegram-login");
-
 const telegramNoteGuest =
 document.getElementById("alerts-telegram-note-guest");
 
@@ -86,38 +73,11 @@ document.getElementById("alerts-telegram-note-logged");
 const telegramUserEmail =
 document.getElementById("alerts-telegram-user-email");
 
-const telegramOpenLogin =
-document.getElementById("alerts-open-login");
-
-const telegramForm =
-document.getElementById("alerts-telegram-form");
-
-const telegramSetupFields =
-document.getElementById("alerts-telegram-setup-fields");
-
-const telegramInput =
-document.getElementById("alerts-telegram-chat-id");
-
-const telegramSave =
-document.getElementById("alerts-telegram-save");
-
-const telegramStatus =
-document.getElementById("alerts-telegram-status");
-
 const telegramConnected =
 document.getElementById("alerts-telegram-connected");
 
 const telegramConnectedText =
 document.getElementById("alerts-telegram-connected-text");
-
-const telegramEdit =
-document.getElementById("alerts-telegram-edit");
-
-const telegramDisconnect =
-document.getElementById("alerts-telegram-disconnect");
-
-const telegramOpenBotLink =
-document.getElementById("alerts-telegram-open-bot");
 
 const telegramPending =
 document.getElementById("alerts-telegram-pending");
@@ -125,74 +85,10 @@ document.getElementById("alerts-telegram-pending");
 const telegramPendingText =
 document.getElementById("alerts-telegram-pending-text");
 
-let telegramSetupEdit =
-false;
-
 let telegramUiFetchSeq =
 0;
 
-function initTelegramBotLink(){
-
-const url =
-getTelegramBotUrl();
-
-if(
-!telegramOpenBotLink ||
-!url
-){
-return;
-}
-
-telegramOpenBotLink.href = url;
-
-const label =
-TELEGRAM_BOT_USERNAME
-? `@${TELEGRAM_BOT_USERNAME.replace(/^@/, "")}`
-: "бота";
-
-telegramOpenBotLink.textContent =
-`Откройте бота ${label}`;
-
-}
-
 let clearDrawingsSuccessTimer = null;
-
-function setTelegramStatus(
-text,
-kind = ""
-){
-
-if(!telegramStatus){
-return;
-}
-
-telegramStatus.textContent = text || "";
-telegramStatus.classList.toggle(
-"is-error",
-kind === "error"
-);
-telegramStatus.classList.toggle(
-"is-success",
-kind === "success"
-);
-
-}
-
-function clearTelegramInputError(){
-
-telegramInput?.classList.remove("is-invalid");
-
-}
-
-function setTelegramInputError(message){
-
-telegramInput?.classList.add("is-invalid");
-setTelegramStatus(
-message,
-"error"
-);
-
-}
 
 function telegramConnectedMessage(email){
 
@@ -207,49 +103,13 @@ return (
 
 }
 
-function showTelegramConnectedUi(email){
-
-telegramSetupEdit = false;
-clearTelegramInputError();
-setTelegramStatus("");
-
-telegramNoteLogged?.classList.add("hidden");
-telegramSetupFields?.classList.add("hidden");
-telegramForm?.classList.add("hidden");
-telegramConnected?.classList.remove("hidden");
-
-if(telegramConnectedText){
-telegramConnectedText.textContent =
-telegramConnectedMessage(email);
-}
-
-}
-
-function showTelegramSetupUi(){
-
-telegramSetupFields?.classList.remove("hidden");
-telegramForm?.classList.remove("hidden");
-telegramConnected?.classList.add("hidden");
-
-}
-
-function hideTelegramGuestUi(){
-
-telegramNoteGuest?.classList.add("hidden");
-telegramLogin?.classList.add("hidden");
-
-}
-
 function showTelegramPendingUi(
 message
 ){
 
-hideTelegramGuestUi();
 telegramPending?.classList.remove("hidden");
 telegramConnected?.classList.add("hidden");
-telegramForm?.classList.add("hidden");
 telegramNoteLogged?.classList.add("hidden");
-setTelegramStatus("");
 
 if(
 telegramPendingText &&
@@ -263,6 +123,49 @@ telegramPendingText.textContent = message;
 function hideTelegramPendingUi(){
 
 telegramPending?.classList.add("hidden");
+
+}
+
+function applyTelegramStatus(
+auth,
+chatId
+){
+
+telegramNoteGuest?.classList.toggle(
+"hidden",
+auth.state !== "guest"
+);
+
+if(
+auth.state === "guest"
+){
+telegramNoteLogged?.classList.add("hidden");
+telegramConnected?.classList.add("hidden");
+return;
+}
+
+if(
+telegramUserEmail
+){
+telegramUserEmail.textContent = auth.email;
+}
+
+if(
+chatId != null
+){
+telegramNoteLogged?.classList.add("hidden");
+telegramConnected?.classList.remove("hidden");
+
+if(telegramConnectedText){
+telegramConnectedText.textContent =
+telegramConnectedMessage(auth.email);
+}
+
+return;
+}
+
+telegramNoteLogged?.classList.remove("hidden");
+telegramConnected?.classList.add("hidden");
 
 }
 
@@ -306,64 +209,6 @@ userId:""
 
 }
 
-function applyTelegramUiFromServer(
-email,
-id
-){
-
-const hasChatId =
-id != null;
-
-if(!hasChatId){
-telegramSetupEdit = true;
-}
-
-const showSetup =
-telegramSetupEdit || !hasChatId;
-
-if(
-hasChatId &&
-!showSetup
-){
-showTelegramConnectedUi(email);
-return;
-}
-
-showTelegramSetupUi();
-
-telegramNoteLogged?.classList.toggle(
-"hidden",
-!showSetup
-);
-
-telegramForm?.classList.toggle(
-"hidden",
-!showSetup
-);
-
-if(
-telegramInput &&
-id != null
-){
-telegramInput.value = String(id);
-}
-
-if(showSetup){
-clearTelegramInputError();
-
-if(!hasChatId){
-setTelegramStatus(
-"Укажите chat id и нажмите «Сохранить».",
-""
-);
-}else{
-setTelegramStatus("");
-}
-
-}
-
-}
-
 async function refreshTelegramUi(){
 
 const fetchSeq = ++telegramUiFetchSeq;
@@ -373,202 +218,55 @@ getAlertsAuthView();
 
 hideTelegramPendingUi();
 
-telegramNoteGuest?.classList.toggle(
-"hidden",
-auth.state !== "guest"
-);
-
-telegramLogin?.classList.toggle(
-"hidden",
-auth.state !== "guest"
-);
-
 if(
-auth.state !== "guest" &&
-telegramUserEmail
+auth.state === "guest"
 ){
-telegramUserEmail.textContent = auth.email;
-}
-
-if(auth.state === "guest"){
-telegramSetupEdit = false;
-telegramNoteLogged?.classList.add("hidden");
-telegramConnected?.classList.add("hidden");
-telegramForm?.classList.add("hidden");
-setTelegramStatus("");
+applyTelegramStatus(
+auth,
+null
+);
 return;
 }
 
-const userId =
-auth.userId ||
-readAlertTokenSync()?.user?.id ||
-"";
-
-const cached =
-userId
-? readCachedTelegramChatId(userId)
-: undefined;
-
-if(
-cached != null &&
-!telegramSetupEdit
-){
-hideTelegramGuestUi();
-showTelegramConnectedUi(auth.email);
-}else if(!telegramSetupEdit){
 showTelegramPendingUi(
 auth.state === "pending"
-? "Проверяем вход и Telegram…"
-: "Проверяем настройки Telegram…"
+? "Проверяем вход…"
+: "Проверяем Telegram…"
 );
-}
 
 try{
-const id =
+const chatId =
 await getTelegramChatId();
 
-if(fetchSeq !== telegramUiFetchSeq){
+if(
+fetchSeq !== telegramUiFetchSeq
+){
 return;
 }
 
 hideTelegramPendingUi();
-applyTelegramUiFromServer(
-auth.email,
-id
+applyTelegramStatus(
+auth,
+chatId
 );
 
 }catch{
 
-if(fetchSeq !== telegramUiFetchSeq){
+if(
+fetchSeq !== telegramUiFetchSeq
+){
 return;
 }
 
 hideTelegramPendingUi();
-
-if(
-cached != null &&
-!telegramSetupEdit
-){
-return;
-}
-
-telegramSetupEdit = true;
-telegramConnected?.classList.add("hidden");
-telegramForm?.classList.remove("hidden");
-telegramNoteLogged?.classList.remove("hidden");
-setTelegramStatus(
-"Не удалось загрузить настройки",
-"error"
+applyTelegramStatus(
+auth,
+null
 );
 
 }
 
 }
-
-telegramEdit?.addEventListener("click", ()=>{
-telegramSetupEdit = true;
-clearTelegramInputError();
-setTelegramStatus("");
-void refreshTelegramUi();
-});
-
-telegramSave?.addEventListener("click", async ()=>{
-
-const saveLabel =
-telegramSave?.textContent || "Сохранить";
-
-clearTelegramInputError();
-setTelegramStatus("");
-
-try{
-const raw =
-telegramInput?.value?.trim() ?? "";
-
-if(!raw){
-setTelegramInputError(
-"Введите chat id из сообщения бота."
-);
-return;
-}
-
-if(telegramSave){
-telegramSave.disabled = true;
-telegramSave.textContent = "Сохранение…";
-}
-
-const savedId =
-await saveTelegramChatId(raw);
-
-if(
-raw &&
-(
-savedId == null ||
-!Number.isInteger(savedId)
-)
-){
-throw new Error(
-"Не удалось сохранить chat id. Попробуйте ещё раз."
-);
-
-}
-
-void syncAlertsWithCloud().catch(syncErr=>{
-console.warn(
-"alerts sync after telegram:",
-syncErr?.message || syncErr
-);
-});
-
-showTelegramConnectedUi();
-
-}catch(err){
-setTelegramInputError(
-err?.message || "Ошибка сохранения"
-);
-
-}finally{
-
-if(telegramSave){
-telegramSave.disabled = false;
-telegramSave.textContent = saveLabel;
-}
-
-}
-
-});
-
-telegramDisconnect?.addEventListener("click", async ()=>{
-
-if(
-!window.confirm(
-"Отключить Telegram? Алерты в боте приходить не будут (в браузере останутся, если вкладка открыта)."
-)
-){
-return;
-}
-
-try{
-await clearTelegramChatId();
-
-if(telegramInput){
-telegramInput.value = "";
-}
-
-telegramSetupEdit = true;
-await refreshTelegramUi();
-setTelegramStatus(
-"Telegram отключён. Chat id удалён из аккаунта.",
-"success"
-);
-
-}catch(err){
-setTelegramInputError(
-err?.message || "Не удалось отключить"
-);
-
-}
-
-});
 
 function renderActive(){
 
@@ -798,13 +496,6 @@ window.addEventListener("alerts-changed", render);
 window.addEventListener("alerts-registry-pulled", render);
 window.addEventListener("alerts-history-changed", render);
 
-telegramOpenLogin?.addEventListener("click", async e=>{
-
-e.preventDefault();
-await focusAlertsLogin();
-
-});
-
 onCloudSyncChange(()=>{
 refreshTelegramUi();
 render();
@@ -813,8 +504,6 @@ render();
 initAlertsCloudSync();
 stripAlertFlagsNotInRegistry();
 render();
-
-initTelegramBotLink();
 
 void refreshTelegramUi();
 

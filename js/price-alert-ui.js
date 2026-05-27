@@ -3,11 +3,15 @@ createPriceAlert,
 getActiveAlerts,
 removeAlert,
 finalizeAlertPriceDrag
-} from "./alerts.js?v=63";
+} from "./alerts.js?v=64";
 
 import {
 isCloudLoggedInEffective
-} from "./cloud-sync.js?v=16";
+} from "./cloud-sync.js?v=17";
+
+import {
+getTelegramChatId
+} from "./alerts-cloud-sync.js?v=69";
 
 import {
 formatPrice
@@ -314,6 +318,18 @@ if(
 ){
 window.alert(
 "Войдите в аккаунт, чтобы ставить алерты."
+);
+return;
+}
+
+const chatId =
+await getTelegramChatId();
+
+if(
+chatId == null
+){
+window.alert(
+"Для алертов сначала подключите Telegram Chat ID в настройках (шестерёнка)."
 );
 return;
 }

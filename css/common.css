@@ -166,6 +166,71 @@ line-height:1.3;
 color:#f87171;
 }
 
+.cloud-telegram-wrap{
+display:flex;
+flex-direction:column;
+gap:8px;
+padding-top:6px;
+border-top:1px solid #1f2937;
+}
+
+.cloud-telegram-title{
+margin:0;
+font-size:12px;
+font-weight:600;
+color:#e5e7eb;
+}
+
+.cloud-telegram-help{
+margin:0;
+font-size:11px;
+color:#9ca3af;
+line-height:1.35;
+}
+
+.cloud-telegram-row{
+display:flex;
+gap:6px;
+align-items:center;
+}
+
+.cloud-telegram-chat-id{
+flex:1 1 auto;
+background:#111827;
+border:1px solid #374151;
+color:#e5e7eb;
+border-radius:6px;
+padding:6px 8px;
+font-size:12px;
+min-width:0;
+}
+
+.cloud-telegram-save,
+.cloud-telegram-clear{
+border:none;
+background:#1f2937;
+color:#e5e7eb;
+border-radius:6px;
+padding:6px 10px;
+font-size:12px;
+cursor:pointer;
+}
+
+.cloud-telegram-save:hover,
+.cloud-telegram-clear:hover{
+background:#374151;
+}
+
+.cloud-telegram-howto{
+font-size:11px;
+color:#9ca3af;
+}
+
+.cloud-telegram-howto summary{
+cursor:pointer;
+color:#9ca3af;
+}
+
 .control-group{
 display:flex;
 align-items:center;

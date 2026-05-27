@@ -914,6 +914,24 @@ price,
 tf
 ){
 
+const { isCloudLoggedIn } =
+await import("./cloud-sync.js?v=17");
+
+if(
+!isCloudLoggedIn()
+){
+return null;
+}
+
+const { getTelegramChatId } =
+await import("./alerts-cloud-sync.js?v=69");
+
+if(
+await getTelegramChatId() == null
+){
+return null;
+}
+
 return enqueueRegistryWrite(async()=>{
 
 const sym =
@@ -979,7 +997,7 @@ sym
 );
 
 const { ensureCloudReady } =
-await import("./auth-ui.js?v=20");
+await import("./auth-ui.js?v=22");
 
 await ensureCloudReady();
 
@@ -1069,7 +1087,7 @@ list.push(row);
 saveAlerts(list);
 
 const { ensureCloudReady } =
-await import("./auth-ui.js?v=20");
+await import("./auth-ui.js?v=22");
 
 await ensureCloudReady();
 

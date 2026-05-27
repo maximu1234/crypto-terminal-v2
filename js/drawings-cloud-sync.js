@@ -3,7 +3,7 @@ waitForCloudAuth,
 isCloudLoggedIn,
 onCloudSyncChange,
 notifyDrawings as notifyDrawingsListeners
-} from "./cloud-sync.js?v=16";
+} from "./cloud-sync.js?v=17";
 
 import {
 collectAllLocalDrawings,

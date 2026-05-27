@@ -1416,6 +1416,31 @@ localStorage.removeItem(
 SUPABASE_AUTH_STORAGE_KEY
 );
 
+const localKeys = [];
+
+for(
+let i = 0;
+i < localStorage.length;
+i++
+){
+
+const key =
+localStorage.key(i);
+
+if(
+key?.startsWith("drawings_") ||
+key === "price_alerts_v1" ||
+key === "price_alerts_history_v1"
+){
+localKeys.push(key);
+}
+
+}
+
+localKeys.forEach(k=>{
+localStorage.removeItem(k);
+});
+
 }catch{
 /* ignore */
 }

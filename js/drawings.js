@@ -6,7 +6,7 @@ getActiveAlerts,
 finalizeAlertPriceDrag,
 removeAlert,
 upsertAlert
-} from "./alerts.js?v=63";
+} from "./alerts.js?v=64";
 
 import {
 setAlertDragPaused,
@@ -34,8 +34,10 @@ parseMoneyInput
 } from "./position-sizing.js?v=1";
 
 import {
-bumpDrawingsLocalRevision
-} from "./cloud-sync.js?v=16";
+bumpDrawingsLocalRevision,
+isCloudLoggedIn,
+onCloudSyncChange
+} from "./cloud-sync.js?v=17";
 
 import {
 deleteDrawingFromCloud,
@@ -1363,6 +1365,40 @@ let clickHandler = null;
 let crosshairHandler = null;
 let rangeHandler = null;
 
+function canUseDrawings(){
+return isCloudLoggedIn();
+}
+
+function refreshDrawToolsAccessUi(){
+
+const canUse =
+canUseDrawings();
+
+tools.querySelectorAll("[data-draw-tool]").forEach(btn=>{
+btn.classList.toggle("hidden", !canUse);
+btn.disabled = !canUse;
+});
+
+tools.querySelectorAll(".draw-tool-clear-all").forEach(btn=>{
+btn.classList.toggle("hidden", !canUse);
+btn.disabled = !canUse;
+});
+
+tools.querySelectorAll(
+".widget-draw-tools, #coins-draw-tools-mount, #draw-toolbar"
+).forEach(el=>{
+el.classList.toggle("hidden", !canUse);
+});
+
+if(!canUse){
+tool = "cursor";
+selectedId = null;
+cancelPlacement();
+styleBar?.classList.add("hidden");
+}
+
+}
+
 let fibPanelBuilt = false;
 let fibApplyTimer = null;
 let fibSettingsShapeId = null;
@@ -1836,6 +1872,14 @@ return `drawings_${getSymbol()}`;
 
 function loadDrawings(){
 
+if(
+!canUseDrawings()
+){
+drawings = [];
+selectedId = null;
+return;
+}
+
 const key = storageKey();
 
 try{
@@ -2089,7 +2133,10 @@ symbol: getSymbol()
 
 function persistDrawingsForSymbol(sym){
 
-if(!sym){
+if(
+!sym ||
+!canUseDrawings()
+){
 return;
 }
 
@@ -8069,6 +8116,15 @@ if(
 return;
 }
 
+if(
+!canUseDrawings()
+){
+window.alert(
+"Рисование доступно только для залогиненных пользователей."
+);
+return;
+}
+
 const now =
 performance.now();
 
@@ -9135,6 +9191,24 @@ onDrawingsRemoteUpdate(
 onDrawingsRemoteSync
 );
 
+const onCloudAuthChange = ()=>{
+refreshDrawToolsAccessUi();
+if(
+canUseDrawings()
+){
+loadDrawings();
+}else{
+drawings = [];
+selectedId = null;
+cancelPlacement();
+}
+updateStyleBar();
+scheduleRedraw();
+};
+
+const unsubscribeCloudAuthChange =
+onCloudSyncChange(onCloudAuthChange);
+
 window.addEventListener(
 "drawings-updated",
 onDrawingsUpdated
@@ -9190,6 +9264,7 @@ saveUserPrefs(legacyPrefs);
 loadDrawings();
 reconcileDrawingAlertsFromRegistry();
 lastLoadedSymbol = getSymbol();
+refreshDrawToolsAccessUi();
 resizeCanvas();
 updateStyleBar();
 scheduleRedraw();
@@ -9371,6 +9446,8 @@ window.removeEventListener(
 "alerts-changed",
 onAlertsChanged
 );
+
+unsubscribeCloudAuthChange?.();
 
 if(redrawRaf1){
 cancelAnimationFrame(redrawRaf1);
