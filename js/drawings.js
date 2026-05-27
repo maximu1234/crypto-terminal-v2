@@ -1361,6 +1361,8 @@ let drawings = [];
 let lastLoadedSymbol = null;
 let selectedId = null;
 let placement = null;
+/** Десктоп: сырой pointer внутри wrap (LW режет crosshair до последней свечи). */
+let placementPointerXY = null;
 let previewPoint = null;
 let previewXY = null;
 let touchDrawCrosshair = null;
@@ -3654,6 +3656,53 @@ if(
 !isTouchDrawTablet()
 ){
 
+const evtClientX =
+e?.clientX;
+
+const evtClientY =
+e?.clientY;
+
+const client =
+evtClientX != null &&
+evtClientY != null
+? {
+clientX: evtClientX,
+clientY: evtClientY
+}
+: crosshairClientFromLocal(
+xy.x,
+xy.y
+);
+
+if(
+placement
+){
+
+if(
+chart
+){
+
+try{
+chart.clearCrosshairPosition();
+}catch{
+/* ignore */
+}
+
+}
+
+positionDomChartCrosshair({
+wrapEl,
+chartEl:chartCanvasEl(),
+chart,
+series,
+clientX:client.clientX,
+clientY:client.clientY
+});
+
+return;
+
+}
+
 if(
 point &&
 chart &&
@@ -3774,6 +3823,81 @@ chart.clearCrosshairPosition();
 }
 
 }
+
+}
+
+function updatePlacementPreviewFromLocal(
+localX,
+localY
+){
+
+placementPointerXY = {
+x: localX,
+y: localY
+};
+
+previewXY = {
+x: localX,
+y: localY
+};
+
+previewPoint =
+pointFromXY(
+localX,
+localY
+);
+
+if(
+placement &&
+isPositionType(placement.type) &&
+placement.points.length >= 1 &&
+previewPoint
+){
+previewPoint.price = placement.points[0].price;
+}
+
+showStandardChartCrosshair(
+null,
+localX,
+localY
+);
+
+scheduleRedraw();
+
+}
+
+function setupPlacementPointerPreview(){
+
+const onPlacementPointerMove = e=>{
+
+if(
+!alive ||
+!isActive() ||
+!placement ||
+isTouchDrawPlacement()
+){
+return;
+}
+
+if(!e.isPrimary){
+return;
+}
+
+const { x, y } =
+pointerFromEvent(e);
+
+updatePlacementPreviewFromLocal(
+x,
+y
+);
+
+};
+
+wrapEl.addEventListener(
+"pointermove",
+onPlacementPointerMove,
+true
+);
 
 }
 
@@ -3943,7 +4067,16 @@ return null;
 
 let time = null;
 
-if(param.time != null){
+if(
+placement
+){
+time = timeFromX(param.point.x);
+}
+
+if(
+time == null &&
+param.time != null
+){
 time = normalizeTime(param.time);
 }
 
@@ -8067,10 +8200,64 @@ selectedId = created.id;
 placement = null;
 previewPoint = null;
 previewXY = null;
+placementPointerXY = null;
+endPlacementCrosshairMode();
+hideStandardChartCrosshair();
 saveDrawings();
 setTool("cursor");
 updateStyleBar();
 redraw();
+
+}
+
+function beginPlacementCrosshairMode(){
+
+if(
+!chart ||
+isTouchDrawPlacement()
+){
+return;
+}
+
+const Hidden =
+LightweightCharts.CrosshairMode?.Hidden ?? 1;
+
+try{
+chart.applyOptions({
+crosshair:{
+mode:Hidden,
+vertLine:{
+visible:false,
+labelVisible:false
+},
+horzLine:{
+visible:false,
+labelVisible:false
+}
+}
+});
+}catch{
+/* ignore */
+}
+
+}
+
+function endPlacementCrosshairMode(){
+
+if(
+!chart ||
+isTouchDrawPlacement()
+){
+return;
+}
+
+try{
+chart.applyOptions({
+crosshair:fullCrosshairOptions()
+});
+}catch{
+/* ignore */
+}
 
 }
 
@@ -8079,6 +8266,9 @@ function startPlacement(type){
 placement = { type, points: [] };
 previewPoint = null;
 previewXY = null;
+placementPointerXY = null;
+
+beginPlacementCrosshairMode();
 
 if(isTouchDrawPlacement()){
 initTouchDrawCrosshair();
@@ -8091,8 +8281,10 @@ function cancelPlacement(){
 placement = null;
 previewPoint = null;
 previewXY = null;
+placementPointerXY = null;
 touchDrawCrosshair = null;
 touchPlaceTrack = null;
+endPlacementCrosshairMode();
 hideStandardChartCrosshair();
 redraw();
 
@@ -8114,6 +8306,11 @@ touchDrawCrosshair
 ? pointFromXY(
 touchDrawCrosshair.x,
 touchDrawCrosshair.y
+)
+: placementPointerXY
+? pointFromXY(
+placementPointerXY.x,
+placementPointerXY.y
 )
 : pointFromParam(param);
 
@@ -8418,7 +8615,12 @@ param?.point
 ){
 
 if(
-isTouchDrawPlacement() &&
+!isTouchDrawPlacement()
+){
+return;
+}
+
+if(
 touchDrawCrosshair
 ){
 syncTouchDrawCrosshairPreview();
@@ -8442,7 +8644,6 @@ param.point.y
 previewPoint = pointFromParam(param);
 
 if(
-placement &&
 isPositionType(placement.type) &&
 placement.points.length >= 1 &&
 previewPoint
@@ -9011,6 +9212,7 @@ wrapEl
 setupEditInteraction();
 setupCoarseTouchChartGuard();
 setupTouchDrawCrosshair();
+setupPlacementPointerPreview();
 
 const teardownChartPanRedraw =
 setupChartPanRedraw();
