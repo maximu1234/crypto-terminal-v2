@@ -1246,6 +1246,12 @@ panels.forEach(p=>{
 p.refreshOne();
 });
 
+window.dispatchEvent(
+new CustomEvent(
+"draw-tools-access-changed"
+)
+);
+
 }
 
 onCloudSyncChange(()=>{

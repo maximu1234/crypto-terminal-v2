@@ -17,7 +17,7 @@ applyDashboardZoom
 
 import {
 initDrawings
-} from "./drawings.js?v=139";
+} from "./drawings.js?v=141";
 
 import {
 subscribeKline
@@ -30,7 +30,11 @@ initWidgetDrawToolsDropdown,
 wireWidgetDrawToolMenu,
 closeAllWidgetDrawToolsMenus,
 resetWidgetDrawToolsMenus
-} from "./dashboard-draw-ui.js?v=12";
+} from "./dashboard-draw-ui.js?v=13";
+
+import {
+ensureDrawToolsVisible
+} from "./draw-tools-visible.js?v=1";
 
 import {
 preloadTradingSymbols,
@@ -579,6 +583,12 @@ chartsReady.then(()=>{
 initTerminalPageUi();
 preloadTradingSymbols();
 renderDashboard();
+ensureDrawToolsVisible();
+window.dispatchEvent(
+new CustomEvent(
+"draw-tools-access-changed"
+)
+);
 
 }).catch(err=>{
 

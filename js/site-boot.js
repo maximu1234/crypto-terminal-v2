@@ -43,6 +43,10 @@ import {
 bindSiteMobileNav
 } from "./site-mobile-nav.js?v=3";
 
+import {
+ensureDrawToolsVisible
+} from "./draw-tools-visible.js?v=1";
+
 initBybitNetworkUi();
 preloadBybitProxyConfig();
 warmBybitWorkerProxy();
@@ -65,6 +69,7 @@ resetBybitEndpoints();
 
 initAlertMonitor();
 initAlertsCloudSync();
+ensureDrawToolsVisible();
 
 import("./drawings-cloud-sync.js?v=2").then(
 ({ initDrawingsCloudSync })=>{
@@ -73,6 +78,12 @@ initDrawingsCloudSync();
 );
 void ensureCloudReady()
 .then(async()=>{
+
+window.dispatchEvent(
+new CustomEvent(
+"draw-tools-access-changed"
+)
+);
 
 stripAlertFlagsNotInRegistry();
 

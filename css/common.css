@@ -349,6 +349,17 @@ color:#ef4444;
 display:none !important;
 }
 
+.draw-tools--locked .draw-btn,
+.draw-tools--locked .widget-draw-tools-toggle,
+.draw-tools--locked .draw-tool-clear-all{
+opacity:0.55;
+cursor:pointer;
+}
+
+.draw-tools--locked .draw-btn.active{
+opacity:0.75;
+}
+
 #alert-toast-host{
 position:fixed;
 top:max(64px, calc(12px + env(safe-area-inset-top, 0px)));

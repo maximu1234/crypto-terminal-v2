@@ -1,3 +1,6 @@
+export const DRAW_TOOLS_GUEST_MSG =
+"Рисование доступно только для залогиненных пользователей.";
+
 /** Иконка инструмента «Курсор» — перекрестие с зазором в центре */
 export const CURSOR_TOOL_ICON_SVG = `
 <svg viewBox="0 0 24 24" aria-hidden="true">

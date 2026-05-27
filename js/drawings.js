@@ -19,8 +19,9 @@ mountTvColorGrid
 
 import {
 ALARM_ICON_SVG,
-TRASH_ICON_SVG
-} from "./draw-ui-shared.js";
+TRASH_ICON_SVG,
+DRAW_TOOLS_GUEST_MSG
+} from "./draw-ui-shared.js?v=3";
 
 import {
 closeAllWidgetDrawToolsMenus
@@ -36,8 +37,14 @@ parseMoneyInput
 import {
 bumpDrawingsLocalRevision,
 isCloudLoggedIn,
+isCloudLoggedInEffective,
+ensureCloudLoginResolved,
 onCloudSyncChange
 } from "./cloud-sync.js?v=17";
+
+import {
+ensureDrawToolsVisible
+} from "./draw-tools-visible.js?v=1";
 
 import {
 deleteDrawingFromCloud,
@@ -1366,28 +1373,73 @@ let crosshairHandler = null;
 let rangeHandler = null;
 
 function canUseDrawings(){
-return isCloudLoggedIn();
+return isCloudLoggedInEffective();
+}
+
+function getDrawToolsContainers(){
+
+const found =
+new Set();
+
+[
+tools,
+document
+].forEach(root=>{
+
+if(
+!root?.querySelectorAll
+){
+return;
+}
+
+root.querySelectorAll(
+".widget-draw-tools, #coins-draw-tools-mount, #draw-toolbar"
+).forEach(el=>{
+found.add(
+el
+);
+});
+
+});
+
+return [
+...found
+];
+
 }
 
 function refreshDrawToolsAccessUi(){
 
+ensureDrawToolsVisible();
+
 const canUse =
 canUseDrawings();
 
-tools.querySelectorAll("[data-draw-tool]").forEach(btn=>{
-btn.classList.toggle("hidden", !canUse);
-btn.disabled = !canUse;
-});
-
-tools.querySelectorAll(".draw-tool-clear-all").forEach(btn=>{
-btn.classList.toggle("hidden", !canUse);
-btn.disabled = !canUse;
+getDrawToolsContainers().forEach(el=>{
+el.classList.remove(
+"hidden"
+);
+el.classList.toggle(
+"draw-tools--locked",
+!canUse
+);
+el.setAttribute(
+"aria-disabled",
+canUse ? "false" : "true"
+);
 });
 
 tools.querySelectorAll(
-".widget-draw-tools, #coins-draw-tools-mount, #draw-toolbar"
-).forEach(el=>{
-el.classList.toggle("hidden", !canUse);
+"[data-draw-tool], .draw-tool-clear-all"
+).forEach(btn=>{
+btn.classList.remove(
+"hidden"
+);
+btn.disabled = false;
+btn.classList.toggle(
+"draw-tools-btn--locked",
+!canUse
+);
 });
 
 if(!canUse){
@@ -8120,7 +8172,7 @@ if(
 !canUseDrawings()
 ){
 window.alert(
-"Рисование доступно только для залогиненных пользователей."
+DRAW_TOOLS_GUEST_MSG
 );
 return;
 }
@@ -9192,7 +9244,21 @@ onDrawingsRemoteSync
 );
 
 const onCloudAuthChange = ()=>{
+void refreshDrawToolsAccessUiAsync();
+};
+
+async function refreshDrawToolsAccessUiAsync(){
+
+try{
+await ensureCloudLoginResolved(
+8000
+);
+}catch{
+/* ignore */
+}
+
 refreshDrawToolsAccessUi();
+
 if(
 canUseDrawings()
 ){
@@ -9202,12 +9268,19 @@ drawings = [];
 selectedId = null;
 cancelPlacement();
 }
+
 updateStyleBar();
 scheduleRedraw();
-};
+
+}
 
 const unsubscribeCloudAuthChange =
 onCloudSyncChange(onCloudAuthChange);
+
+window.addEventListener(
+"draw-tools-access-changed",
+onCloudAuthChange
+);
 
 window.addEventListener(
 "drawings-updated",
@@ -9264,7 +9337,7 @@ saveUserPrefs(legacyPrefs);
 loadDrawings();
 reconcileDrawingAlertsFromRegistry();
 lastLoadedSymbol = getSymbol();
-refreshDrawToolsAccessUi();
+void refreshDrawToolsAccessUiAsync();
 resizeCanvas();
 updateStyleBar();
 scheduleRedraw();
@@ -9273,6 +9346,9 @@ return {
 
 setTool,
 pickDrawTool,
+refreshDrawToolsAccessUi,
+refreshDrawToolsAccessUiAsync,
+canUseDrawings,
 clearAllDrawings:
 clearAllDrawingsOnChart,
 

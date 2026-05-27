@@ -2,7 +2,7 @@ import {
 getWidgetToolbarHtml,
 initWidgetDrawToolsDropdown,
 wireWidgetDrawToolMenu
-} from "./dashboard-draw-ui.js?v=12";
+} from "./dashboard-draw-ui.js?v=13";
 
 let wireCoinsDrawToolsMenuFn =
 null;

@@ -89,6 +89,7 @@ body{
     gap:6px;
     min-width:0;
     flex:1;
+    overflow:visible;
 }
 
 .widget-header-right{
@@ -155,9 +156,20 @@ body{
 .widget-draw-tools{
     position:relative;
     flex-shrink:0;
+    display:flex !important;
+    align-items:center;
     margin-left:4px;
     padding-left:8px;
     border-left:1px solid #1f2937;
+    visibility:visible !important;
+}
+
+.widget-draw-tools.hidden{
+    display:flex !important;
+}
+
+body.terminal-page .widget-draw-tools{
+    display:flex !important;
 }
 
 .widget-draw-tools-toggle.active,

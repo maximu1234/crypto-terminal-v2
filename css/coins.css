@@ -29,8 +29,26 @@ body.coins-page .coins-tf-desktop{
 display:contents;
 }
 
-body.coins-page .coins-draw-desktop{
+body.coins-page .coins-draw-desktop,
+body.coins-page #draw-toolbar.coins-draw-desktop{
 display:flex !important;
+visibility:visible !important;
+flex:0 0 auto;
+min-width:0;
+}
+
+body.coins-page #draw-toolbar.coins-draw-desktop.hidden,
+body.coins-page .coins-draw-desktop.hidden{
+display:flex !important;
+}
+
+body.coins-page #draw-toolbar .draw-btn.hidden{
+display:inline-flex !important;
+}
+
+body.coins-page #topbar.coins-topbar #current-symbol{
+flex:0 1 auto;
+max-width:min(38vw, 220px);
 }
 
 body.coins-page #app{

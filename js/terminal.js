@@ -75,7 +75,7 @@ syncBackgroundAlertStreams
 
 import {
 initDrawings
-} from "./drawings.js?v=139";
+} from "./drawings.js?v=141";
 
 import {
 initCoinsMobileUi,
@@ -3163,7 +3163,9 @@ startTickerStream();
 
 async function init(){
 
-void ensureCloudReady();
+void ensureCloudReady().then(()=>{
+void drawingTools?.refreshDrawToolsAccessUiAsync?.();
+});
 
 applyCoinsPrefs();
 
@@ -3225,6 +3227,8 @@ false
 );
 }
 });
+
+void drawingTools?.refreshDrawToolsAccessUiAsync?.();
 
 void refreshCoinsMarketUi();
 
