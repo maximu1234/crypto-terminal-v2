@@ -822,13 +822,13 @@ body.tablet-chart .price-scale-touch-strip{
   display:flex;
   flex-direction:row;
   align-items:stretch;
-  height:28px;
+  height:22px;
   margin:0;
   padding:0;
   border:none;
-  border-radius:4px;
-  background:rgba(42,46,57,.94);
-  box-shadow:0 1px 4px rgba(0,0,0,.45);
+  border-radius:2px;
+  background:rgba(42,46,57,.96);
+  box-shadow:0 1px 3px rgba(0,0,0,.5);
   cursor:pointer;
   pointer-events:auto;
   touch-action:manipulation;
@@ -841,27 +841,37 @@ body.tablet-chart .price-scale-touch-strip{
 }
 
 .price-alert-scale-plus-icon{
-  flex:0 0 28px;
-  width:28px;
+  flex:0 0 22px;
+  width:22px;
   display:flex;
   align-items:center;
   justify-content:center;
-  color:#d1d5db;
-  font-size:18px;
-  font-weight:300;
+  border-right:1px solid rgba(255,255,255,.1);
+}
+
+.price-alert-scale-plus-circle{
+  width:16px;
+  height:16px;
+  border:1px solid rgba(209,212,220,.55);
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#d1d4dc;
+  font-size:12px;
+  font-weight:400;
   line-height:1;
-  border-right:1px solid rgba(255,255,255,.12);
 }
 
 .price-alert-scale-plus-price{
   flex:0 0 auto;
   display:flex;
   align-items:center;
-  padding:0 10px 0 8px;
-  color:#fff;
-  font-size:12px;
+  padding:0 8px 0 6px;
+  color:#d1d4dc;
+  font-size:11px;
   font-weight:400;
-  line-height:1;
+  line-height:22px;
   font-variant-numeric:tabular-nums;
   white-space:nowrap;
 }
@@ -870,7 +880,8 @@ body.tablet-chart .price-scale-touch-strip{
   background:rgba(50,54,66,.98);
 }
 
-.price-alert-scale-plus:hover .price-alert-scale-plus-icon{
+.price-alert-scale-plus:hover .price-alert-scale-plus-icon,
+.price-alert-scale-plus:hover .price-alert-scale-plus-price{
   color:#fff;
 }
 
@@ -887,11 +898,11 @@ body.tablet-chart .price-scale-touch-strip{
 }
 
 .price-alert-delete-btn{
-  width:32px;
-  height:32px;
+  width:22px;
+  height:22px;
   padding:0;
   border:1px solid rgba(239,68,68,.45);
-  border-radius:6px;
+  border-radius:4px;
   background:rgba(17,24,39,.94);
   color:#f87171;
   cursor:pointer;
@@ -899,6 +910,11 @@ body.tablet-chart .price-scale-touch-strip{
   display:flex;
   align-items:center;
   justify-content:center;
+}
+
+.price-alert-delete-btn svg{
+  width:13px;
+  height:13px;
 }
 
 .price-alert-delete-btn:hover{

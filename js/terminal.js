@@ -29,7 +29,7 @@ ensureCloudReady
 import {
 persistFavoritesToCloud,
 onFavoritesRemoteUpdate
-} from "./cloud-sync.js?v=14";
+} from "./cloud-sync.js?v=15";
 
 import {
 createCandlestickChart,
@@ -1172,7 +1172,7 @@ if(
 drawingTools
 ){
 
-void import("./price-alert-ui.js?v=3").then(({ mountPriceAlertUi })=>{
+void import("./price-alert-ui.js?v=4").then(({ mountPriceAlertUi })=>{
 mountPriceAlertUi({
 chart,
 series: candleSeries,

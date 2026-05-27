@@ -36,12 +36,15 @@ parseMoneyInput
 import {
 bumpDrawingsLocalRevision,
 persistAllDrawingsToCloud,
+scheduleDrawingsCloudPush,
+flushDrawingsCloudPush,
 onDrawingsRemoteUpdate
-} from "./cloud-sync.js?v=14";
+} from "./cloud-sync.js?v=15";
 
 import {
-touchShapeRevision
-} from "./drawings-storage.js?v=2";
+touchShapeRevision,
+recordDrawingTombstone
+} from "./drawings-storage.js?v=3";
 
 import {
 formatPrice,
@@ -2046,29 +2049,6 @@ JSON.stringify(drawings)
 
 }
 
-let drawingsCloudPushTimer = null;
-
-function scheduleDrawingsCloudPush(){
-
-clearTimeout(drawingsCloudPushTimer);
-
-drawingsCloudPushTimer = setTimeout(()=>{
-
-drawingsCloudPushTimer = null;
-persistAllDrawingsToCloud();
-
-},
-800);
-
-}
-
-window.addEventListener(
-"drawings-updated",
-()=>{
-scheduleDrawingsCloudPush();
-}
-);
-
 function saveDrawings(){
 
 drawings =
@@ -2091,6 +2071,17 @@ JSON.stringify(drawings)
 bumpDrawingsLocalRevision();
 scheduleDrawingsCloudPush();
 
+window.dispatchEvent(
+new CustomEvent(
+"drawings-updated",
+{
+detail:{
+symbol: getSymbol()
+}
+}
+)
+);
+
 }
 
 function persistDrawingsForSymbol(sym){
@@ -2105,6 +2096,9 @@ localStorage.setItem(
 `drawings_${sym}`,
 JSON.stringify(drawings)
 );
+
+bumpDrawingsLocalRevision();
+scheduleDrawingsCloudPush();
 
 }catch{}
 
@@ -8135,6 +8129,22 @@ removed.id
 );
 }
 
+const symDel =
+String(
+getSymbol() ||
+""
+).trim().toUpperCase();
+
+if(
+removed?.id &&
+symDel
+){
+recordDrawingTombstone(
+symDel,
+removed.id
+);
+}
+
 drawings = drawings.filter(d=>d.id !== selectedId);
 selectedId = null;
 saveDrawings();
@@ -8163,6 +8173,15 @@ sym,
 d.id
 );
 });
+
+for(
+const d of drawings
+){
+recordDrawingTombstone(
+sym,
+d.id
+);
+}
 
 drawings = [];
 selectedId = null;
@@ -9081,7 +9100,7 @@ onAlertsRegistryPulled
 
 const onDrawingsRemoteSync = symbols=>{
 
-if(!alive || !isActive()){
+if(!alive){
 return;
 }
 
@@ -9127,7 +9146,7 @@ lastLoadedSymbol ||
 getSymbol();
 
 persistDrawingsForSymbol(sym);
-scheduleDrawingsCloudPush();
+void flushDrawingsCloudPush();
 
 }
 );

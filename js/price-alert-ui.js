@@ -7,17 +7,17 @@ finalizeAlertPriceDrag
 
 import {
 isCloudLoggedInEffective
-} from "./cloud-sync.js?v=14";
+} from "./cloud-sync.js?v=15";
 
 import {
 formatPrice
 } from "./chart.js?v=1";
 
 const PLUS_ICON_W =
-28;
+22;
 
 const PLUS_HIT_PAD =
-12;
+14;
 
 export function mountPriceAlertUi({
 chart,
@@ -56,7 +56,7 @@ plusBtn.setAttribute(
 plusBtn.title =
 "Алерт на этой цене";
 plusBtn.innerHTML =
-`<span class="price-alert-scale-plus-icon" aria-hidden="true">+</span><span class="price-alert-scale-plus-price"></span>`;
+`<span class="price-alert-scale-plus-icon" aria-hidden="true"><span class="price-alert-scale-plus-circle">+</span></span><span class="price-alert-scale-plus-price"></span>`;
 
 const plusPriceEl =
 plusBtn.querySelector(
@@ -186,7 +186,7 @@ return;
 deleteBar.style.left =
 "8px";
 deleteBar.style.top =
-`${y - 18}px`;
+`${y - 11}px`;
 deleteBar.classList.remove(
 "hidden"
 );
@@ -347,12 +347,7 @@ e.stopPropagation();
 }
 );
 
-deleteBtn?.addEventListener(
-"click",
-e=>{
-
-e.preventDefault();
-e.stopPropagation();
+function deleteSelectedAlert(){
 
 if(
 !selectedAlertId
@@ -371,6 +366,59 @@ dispatchAlertsChanged();
 scheduleRedraw?.();
 
 }
+
+deleteBtn?.addEventListener(
+"click",
+e=>{
+
+e.preventDefault();
+e.stopPropagation();
+deleteSelectedAlert();
+
+}
+);
+
+const onKeyDown =
+e=>{
+
+if(
+e.key !==
+"Delete" &&
+e.key !==
+"Backspace"
+){
+return;
+}
+
+const ae =
+document.activeElement;
+const tag =
+ae?.tagName;
+
+if(
+tag ===
+"INPUT" ||
+tag ===
+"TEXTAREA" ||
+ae?.isContentEditable
+){
+return;
+}
+
+if(
+!selectedAlertId
+){
+return;
+}
+
+e.preventDefault();
+deleteSelectedAlert();
+
+};
+
+window.addEventListener(
+"keydown",
+onKeyDown
 );
 
 function hitTestAlert(
@@ -631,6 +679,11 @@ onWrapPointerUp
 window.removeEventListener(
 "pointercancel",
 onWrapPointerUp
+);
+
+window.removeEventListener(
+"keydown",
+onKeyDown
 );
 
 plusBtn.remove();

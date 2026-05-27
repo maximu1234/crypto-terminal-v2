@@ -1,6 +1,12 @@
 const LEGACY_TF_RE =
 /^(.+)_(1|5|15|60|240|D)$/;
 
+export const DRAWINGS_TOMBSTONES_KEY =
+"__tombstones__";
+
+const LOCAL_TOMBSTONES_KEY =
+"drawings_tombstones_v1";
+
 export function getShapeRevisionTime(
 shape
 ){
@@ -259,6 +265,526 @@ key
 }
 
 return out;
+
+}
+
+export function loadLocalTombstones(){
+
+try{
+
+return normalizeTombstonesMap(
+JSON.parse(
+localStorage.getItem(
+LOCAL_TOMBSTONES_KEY
+) ||
+"{}"
+)
+);
+
+}catch{
+
+return {};
+
+}
+
+}
+
+export function saveLocalTombstones(
+map
+){
+
+const norm =
+normalizeTombstonesMap(
+map
+);
+
+if(
+!Object.keys(
+norm
+).length
+){
+
+localStorage.removeItem(
+LOCAL_TOMBSTONES_KEY
+);
+return;
+
+}
+
+localStorage.setItem(
+LOCAL_TOMBSTONES_KEY,
+JSON.stringify(
+norm
+)
+);
+
+}
+
+export function normalizeTombstonesMap(
+raw
+){
+
+if(
+!raw ||
+typeof raw !==
+"object" ||
+Array.isArray(
+raw
+)
+){
+return {};
+}
+
+const out =
+{};
+
+for(
+const [
+sym,
+ids
+] of Object.entries(
+raw
+)
+){
+
+const key =
+String(
+sym
+).trim().toUpperCase();
+
+if(
+!key ||
+!ids ||
+typeof ids !==
+"object" ||
+Array.isArray(
+ids
+)
+){
+continue;
+}
+
+const bucket =
+{};
+
+for(
+const [
+id,
+ts
+] of Object.entries(
+ids
+)
+){
+
+const n =
+Number(
+ts
+);
+
+if(
+id &&
+Number.isFinite(
+n
+) &&
+n >
+0
+){
+bucket[
+String(
+id
+)
+] =
+n;
+}
+
+}
+
+if(
+Object.keys(
+bucket
+).length
+){
+out[
+key
+] =
+bucket;
+}
+
+}
+
+return out;
+
+}
+
+export function mergeTombstoneMaps(
+a,
+b
+){
+
+const out =
+normalizeTombstonesMap(
+a
+);
+
+for(
+const [
+sym,
+ids
+] of Object.entries(
+normalizeTombstonesMap(
+b
+)
+)
+){
+
+if(
+!out[
+sym
+]
+){
+out[
+sym
+] =
+{};
+}
+
+for(
+const [
+id,
+ts
+] of Object.entries(
+ids
+)
+){
+
+const prev =
+out[
+sym
+][
+id
+] ||
+0;
+
+out[
+sym
+][
+id
+] =
+Math.max(
+prev,
+ts
+);
+}
+
+}
+
+return out;
+
+}
+
+export function recordDrawingTombstone(
+symbol,
+shapeId
+){
+
+const sym =
+String(
+symbol ||
+""
+).trim().toUpperCase();
+const id =
+String(
+shapeId ||
+""
+).trim();
+
+if(
+!sym ||
+!id
+){
+return;
+}
+
+const all =
+loadLocalTombstones();
+
+if(
+!all[
+sym
+]
+){
+all[
+sym
+] =
+{};
+}
+
+all[
+sym
+][
+id
+] =
+Date.now();
+
+saveLocalTombstones(
+all
+);
+
+}
+
+export function applyTombstonesToShapeList(
+list,
+tombstonesForSym
+){
+
+const shapes =
+Array.isArray(
+list
+)
+? list
+: [];
+
+const tombs =
+tombstonesForSym &&
+typeof tombstonesForSym ===
+"object"
+? tombstonesForSym
+: {};
+
+if(
+!Object.keys(
+tombs
+).length
+){
+return shapes;
+}
+
+return shapes.filter(
+shape=>{
+
+const id =
+String(
+shape?.id ||
+""
+);
+
+const delAt =
+Number(
+tombs[
+id
+]
+);
+
+if(
+!Number.isFinite(
+delAt
+) ||
+delAt <
+1
+){
+return true;
+}
+
+return getShapeRevisionTime(
+shape
+) >
+delAt;
+
+}
+);
+
+}
+
+export function unpackCloudDrawings(
+raw
+){
+
+if(
+!raw ||
+typeof raw !==
+"object" ||
+Array.isArray(
+raw
+)
+){
+return {
+shapes: {},
+tombstones: {}
+};
+}
+
+const tombstones =
+normalizeTombstonesMap(
+raw[
+DRAWINGS_TOMBSTONES_KEY
+]
+);
+
+const shapes =
+{};
+
+for(
+const [
+sym,
+list
+] of Object.entries(
+raw
+)
+){
+
+if(
+sym ===
+DRAWINGS_TOMBSTONES_KEY
+){
+continue;
+}
+
+if(
+typeof sym !==
+"string" ||
+!sym ||
+!Array.isArray(
+list
+)
+){
+continue;
+}
+
+shapes[
+String(
+sym
+).trim().toUpperCase()
+] =
+list;
+
+}
+
+return {
+shapes,
+tombstones
+};
+
+}
+
+export function packCloudDrawings(
+shapeMap,
+tombstoneMap
+){
+
+const shapes =
+shapeMap &&
+typeof shapeMap ===
+"object"
+? {
+...shapeMap
+}
+: {};
+
+const tombstones =
+normalizeTombstonesMap(
+tombstoneMap
+);
+
+delete shapes[
+DRAWINGS_TOMBSTONES_KEY
+];
+
+if(
+Object.keys(
+tombstones
+).length
+){
+shapes[
+DRAWINGS_TOMBSTONES_KEY
+] =
+tombstones;
+}
+
+return shapes;
+
+}
+
+export function mergeDrawingsPayload(
+localShapes,
+cloudShapes,
+localTombs,
+cloudTombs
+){
+
+const mergedTombs =
+mergeTombstoneMaps(
+localTombs,
+cloudTombs
+);
+
+const local =
+localShapes &&
+typeof localShapes ===
+"object"
+? localShapes
+: {};
+
+const cloud =
+cloudShapes &&
+typeof cloudShapes ===
+"object"
+? cloudShapes
+: {};
+
+const symbols =
+new Set([
+...Object.keys(
+local
+),
+...Object.keys(
+cloud
+)
+]);
+
+const shapes =
+{};
+
+for(
+const sym of symbols
+){
+
+const key =
+String(
+sym
+).trim().toUpperCase();
+
+if(
+!key
+){
+continue;
+}
+
+const list =
+mergeShapeLists(
+local[
+key
+],
+cloud[
+key
+]
+);
+
+shapes[
+key
+] =
+applyTombstonesToShapeList(
+list,
+mergedTombs[
+key
+]
+);
+
+}
+
+return {
+shapes,
+tombstones: mergedTombs
+};
 
 }
 
