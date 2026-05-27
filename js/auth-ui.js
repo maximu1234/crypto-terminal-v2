@@ -1413,12 +1413,23 @@ initAuthUiInternal(),
 new Promise(resolve=>{
 setTimeout(
 ()=>{
+
+if(
+!isCloudLoggedIn() &&
+!readAlertTokenSync()?.user
+){
 console.warn(
 "[Multichart] cloud init timeout — страница продолжит без ожидания"
 );
+}else{
+console.info(
+"[Multichart] синхронизация с облаком продолжается в фоне"
+);
+}
+
 resolve();
 },
-4000
+8000
 );
 })
 ]);
