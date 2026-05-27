@@ -2134,7 +2134,7 @@ const { purgeAllLocalDrawingsStorage } =
 await import("./drawings-storage.js?v=4");
 
 const drawingsCloud =
-await import("./drawings-cloud-sync.js?v=7");
+await import("./drawings-cloud-sync.js?v=8");
 
 const alertsCloud =
 await import("./alerts-cloud-sync.js?v=70");
@@ -2165,7 +2165,7 @@ if(
 cloudDrawingsOk === false
 ){
 throw new Error(
-"Не удалось удалить рисунки в облаке. Войдите в аккаунт и повторите."
+"Не удалось удалить рисунки в Supabase. Обновите страницу и войдите через шестерёнку."
 );
 }
 

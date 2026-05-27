@@ -48,6 +48,25 @@ let configured = false;
 let loggedIn = false;
 let userEmail = "";
 const authListeners = new Set();
+
+/** Сразу из localStorage — без getSession() (в Safari он часто зависает 12+ с). */
+function bootstrapAuthFromLocalStorage(){
+
+const snap =
+readAlertTokenSync();
+
+if(
+snap?.user?.id
+){
+loggedIn = true;
+userEmail =
+snap.user.email ||
+"";
+}
+
+}
+
+bootstrapAuthFromLocalStorage();
 const favoritesListeners = new Set();
 const drawingsListeners = new Set();
 
@@ -320,7 +339,7 @@ true;
 return;
 }
 
-void import("./drawings-cloud-sync.js?v=7").then(
+void import("./drawings-cloud-sync.js?v=8").then(
 m=>{
 m.scheduleDrawingsCloudPush();
 }
@@ -341,7 +360,7 @@ return Promise.resolve();
 pendingDrawingsCloudPush =
 false;
 
-return import("./drawings-cloud-sync.js?v=7").then(
+return import("./drawings-cloud-sync.js?v=8").then(
 m=>
 m.flushDrawingsCloudPush()
 );
@@ -644,7 +663,7 @@ function stopCloudSyncHelpers(){
 
 stopSyncPoll();
 
-void import("./drawings-cloud-sync.js?v=7").then(
+void import("./drawings-cloud-sync.js?v=8").then(
 m=>{
 m.stopDrawingsCloudSync();
 }
@@ -746,7 +765,7 @@ function handleRealtimeSettingsRow(row){
 
 handleRealtimeFavoritesRow(row);
 
-void import("./drawings-cloud-sync.js?v=7").then(
+void import("./drawings-cloud-sync.js?v=8").then(
 m=>
 m.pullDrawingsFromCloud()
 );
@@ -1020,7 +1039,7 @@ return cloud.favorites;
 export async function mergeDrawingsWithCloud(){
 
 const drawingsCloud =
-await import("./drawings-cloud-sync.js?v=7");
+await import("./drawings-cloud-sync.js?v=8");
 
 await drawingsCloud.hydrateDrawingsAfterAuth();
 
@@ -1030,7 +1049,7 @@ return collectAllLocalDrawings();
 
 export async function pullDrawingsIfCloudNewer(){
 
-await import("./drawings-cloud-sync.js?v=7").then(
+await import("./drawings-cloud-sync.js?v=8").then(
 m=>
 m.pullDrawingsFromCloud()
 );
@@ -1056,7 +1075,7 @@ await pullFavoritesIfCloudNewer();
 async function syncDrawingsWithCloud(){
 
 const m =
-await import("./drawings-cloud-sync.js?v=7");
+await import("./drawings-cloud-sync.js?v=8");
 
 await m.flushDrawingsCloudPush();
 
@@ -1547,12 +1566,22 @@ async function applySession(session){
 loggedIn = !!session?.user;
 userEmail = session?.user?.email || "";
 
-if(loggedIn){
+notifyAuth();
+
+if(
+!loggedIn
+){
+stopCloudSyncHelpers();
+return;
+}
 
 const sb =
 await getSupabase();
 
-if(sb){
+if(
+sb &&
+session?.access_token
+){
 const { warmAlertAuthCache } =
 await import("./alert-auth-cache.js");
 
@@ -1562,10 +1591,28 @@ session
 );
 }
 
+void applySessionCloudWork(
+session
+);
+
+}
+
+async function applySessionCloudWork(
+session
+){
+
+if(
+!session?.user?.id
+){
+return;
+}
+
+try{
+
 await mergeFavoritesWithCloud();
 
 const drawingsCloud =
-await import("./drawings-cloud-sync.js?v=7");
+await import("./drawings-cloud-sync.js?v=8");
 
 await drawingsCloud.hydrateDrawingsAfterAuth();
 await drawingsCloud.setupDrawingsRealtimeForUser(
@@ -1600,11 +1647,16 @@ console.warn("alerts cloud sync on login:", err);
 });
 
 notifyAuth();
-return;
-}
 
-stopCloudSyncHelpers();
-notifyAuth();
+}catch(
+err
+){
+console.warn(
+"cloud session sync:",
+err?.message || err
+);
+
+}
 
 }
 
@@ -1756,6 +1808,7 @@ return;
 }
 
 configured = true;
+bootstrapAuthFromLocalStorage();
 notifyAuth();
 
 let sb;
@@ -1774,18 +1827,15 @@ notifyAuth();
 return;
 }
 
+const cachedEarly =
+readAlertTokenSync();
+
 let session =
 (await recoverSessionFromAuthUrl(sb)) ||
 null;
 
 if(
-!session
-){
-
-const cachedEarly =
-readAlertTokenSync();
-
-if(
+!session &&
 cachedEarly?.token &&
 cachedEarly?.user
 ){
@@ -1793,8 +1843,6 @@ session = {
 access_token: cachedEarly.token,
 user: cachedEarly.user
 };
-}
-
 }
 
 if(
@@ -1806,7 +1854,7 @@ try{
 const { data } =
 await withTimeout(
 sb.auth.getSession(),
-12000,
+3000,
 "getSession"
 );
 
@@ -1824,19 +1872,13 @@ session = null;
 }
 
 if(
-!session
-){
-
-const cached =
-readAlertTokenSync();
-
-if(
-cached?.token &&
-cached?.user
+!session &&
+cachedEarly?.token &&
+cachedEarly?.user
 ){
 session = {
-access_token: cached.token,
-user: cached.user
+access_token: cachedEarly.token,
+user: cachedEarly.user
 };
 }
 

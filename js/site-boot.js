@@ -19,7 +19,7 @@ import {
 isCloudLoggedIn,
 isCloudSyncEnabled,
 getCloudUserEmail
-} from "./cloud-sync.js?v=17";
+} from "./cloud-sync.js?v=18";
 
 import {
 isSupabaseConfigured
@@ -71,7 +71,7 @@ initAlertMonitor();
 initAlertsCloudSync();
 ensureDrawToolsVisible();
 
-import("./drawings-cloud-sync.js?v=7").then(
+import("./drawings-cloud-sync.js?v=8").then(
 ({ initDrawingsCloudSync })=>{
 initDrawingsCloudSync();
 }

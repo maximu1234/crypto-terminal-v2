@@ -174,12 +174,40 @@ timer
 
 }
 
+function resolveDrawingsRestAuth(){
+
+const snap =
+readAlertTokenSync();
+
+if(
+!snap?.token ||
+!snap?.user?.id
+){
+return null;
+}
+
+return {
+user: snap.user,
+token: snap.token
+};
+
+}
+
 async function getAccessTokenForUser(
 ctx
 ){
 
+const cached =
+readAlertTokenSync()?.token;
+
 if(
-!ctx
+cached
+){
+return cached;
+}
+
+if(
+!ctx?.sb
 ){
 return null;
 }
@@ -188,7 +216,7 @@ try{
 const { data } =
 await withTimeout(
 ctx.sb.auth.getSession(),
-5000,
+4000,
 "getSession"
 );
 
@@ -949,49 +977,39 @@ return true;
 }
 
 /**
- * Удалить все рисунки пользователя из user_drawings (страница «Алерты» и т.п.).
+ * Удалить все рисунки пользователя из user_drawings (страница «Алерты»).
+ * @returns {Promise<boolean|null>} true/false или null если входа нет (только локально)
  */
 export async function clearAllDrawingsFromCloud(){
 
-return runCloudOp(
-async()=>{
-
-const ctx =
-await getAuthed();
+const auth =
+resolveDrawingsRestAuth();
 
 if(
-!ctx
-){
-return false;
-}
-
-const token =
-await getAccessTokenForUser(
-ctx
-);
-
-if(
-!token
+!auth
 ){
 console.warn(
-"[drawings] delete all: нет токена"
+"[drawings] delete all: нет входа — очищено только в браузере"
 );
-return false;
+return null;
 }
+
+try{
+return await withTimeout(
+(async()=>{
 
 const ok =
 await purgeDrawingsViaRest({
 all: true,
-ctx,
-token
+ctx: {
+user: auth.user
+},
+token: auth.token
 });
 
 if(
 !ok
 ){
-console.warn(
-"[drawings] delete all REST failed"
-);
 return false;
 }
 
@@ -1002,8 +1020,15 @@ saveLocalTombstones(
 {}
 );
 
-await clearLegacyDrawingsBlob(
-ctx
+void clearLegacyDrawingsBlobViaRest(
+auth
+).catch(
+err=>{
+console.warn(
+"[drawings] очистка JSON в user_settings:",
+err?.message || err
+);
+}
 );
 
 localStorage.setItem(
@@ -1015,16 +1040,185 @@ broadcastDrawingsSync();
 
 return true;
 
-},
-45000,
+})(),
+18000,
 "user_drawings delete all"
 );
+
+}catch(
+err
+){
+console.warn(
+"[drawings] delete all:",
+err?.message || err
+);
+return false;
+
+}
+
+}
+
+async function clearLegacyDrawingsBlobViaRest(
+auth
+){
+
+let env;
+
+try{
+env =
+await import("./supabase-env.js?v=4");
+}catch{
+return;
+}
+
+const base =
+String(
+env.SUPABASE_URL || ""
+).replace(
+/\/$/,
+""
+);
+const anon =
+env.SUPABASE_ANON_KEY;
+
+if(
+!base ||
+!anon
+){
+return;
+}
+
+const emptyBlob =
+packCloudDrawings(
+{},
+{}
+);
+const uidQ =
+encodeURIComponent(
+auth.user.id
+);
+const headers = {
+apikey: anon,
+Authorization: `Bearer ${auth.token}`,
+"Content-Type": "application/json",
+Prefer: "return=minimal"
+};
+
+const checkRes =
+await fetchWithTimeout(
+`${base}/rest/v1/user_settings?user_id=eq.${uidQ}&select=user_id`,
+{
+method: "GET",
+headers: {
+apikey: anon,
+Authorization: `Bearer ${auth.token}`,
+Accept: "application/json"
+}
+},
+8000
+);
+
+let hasRow =
+false;
+
+if(
+checkRes.ok
+){
+const rows =
+await checkRes.json();
+hasRow =
+Array.isArray(
+rows
+) &&
+rows.length >
+0;
+}
+
+const patchBody =
+{
+drawings: emptyBlob,
+drawings_updated_at: new Date().toISOString()
+};
+
+let res;
+
+if(
+hasRow
+){
+
+res =
+await fetchWithTimeout(
+`${base}/rest/v1/user_settings?user_id=eq.${uidQ}`,
+{
+method: "PATCH",
+headers,
+body: JSON.stringify(
+patchBody
+)
+},
+8000
+);
+
+}else{
+
+res =
+await fetchWithTimeout(
+`${base}/rest/v1/user_settings`,
+{
+method: "POST",
+headers,
+body: JSON.stringify({
+user_id: auth.user.id,
+favorites: [],
+drawings: emptyBlob,
+drawings_updated_at: patchBody.drawings_updated_at
+})
+},
+8000
+);
+
+}
+
+if(
+!res.ok
+){
+const text =
+await res.text().catch(
+()=>""
+);
+throw new Error(
+text.slice(
+0,
+120
+) ||
+`HTTP ${res.status}`
+);
+}
 
 }
 
 async function clearLegacyDrawingsBlob(
 ctx
 ){
+
+const auth =
+resolveDrawingsRestAuth();
+
+if(
+auth?.token
+){
+await clearLegacyDrawingsBlobViaRest(
+auth
+);
+return;
+}
+
+if(
+!ctx?.sb ||
+!ctx?.user?.id
+){
+return;
+}
 
 const emptyBlob =
 packCloudDrawings(
@@ -1048,7 +1242,7 @@ drawings_updated_at: new Date().toISOString()
 onConflict: "user_id"
 }
 ),
-12000,
+8000,
 "user_settings drawings clear"
 );
 
