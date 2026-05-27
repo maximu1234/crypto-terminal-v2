@@ -15,7 +15,7 @@ removeAllAlerts
 import {
 getTelegramChatId,
 initAlertsCloudSync
-} from "./alerts-cloud-sync.js?v=74";
+} from "./alerts-cloud-sync.js?v=75";
 
 import {
 readAlertTokenSync
@@ -28,7 +28,7 @@ onCloudSyncChange,
 getCloudUserEmail,
 pullDeviceStateFromCloud,
 ensureCloudLoginResolved
-} from "./cloud-sync.js?v=21";
+} from "./cloud-sync.js?v=22";
 
 import {
 ensureCloudReady
@@ -105,7 +105,54 @@ const TELEGRAM_CACHE_MS =
 let cloudPullDebounceTimer =
 null;
 
+let alertsPageSyncInflight =
+null;
+
 let clearDrawingsSuccessTimer = null;
+
+async function syncAlertsPageOnce(){
+
+if(
+!isCloudLoggedInEffective()
+){
+refreshTelegramUi();
+render();
+return;
+}
+
+if(
+alertsPageSyncInflight
+){
+await alertsPageSyncInflight;
+refreshTelegramUi();
+render();
+return;
+}
+
+alertsPageSyncInflight =
+(
+async()=>{
+
+await ensureCloudLoginResolved(
+8000
+);
+await pullDeviceStateFromCloud();
+
+}
+)().finally(
+()=>{
+
+alertsPageSyncInflight =
+null;
+
+}
+);
+
+await alertsPageSyncInflight;
+refreshTelegramUi();
+render();
+
+}
 
 let clearDrawingsBusy =
 false;
@@ -666,27 +713,10 @@ setTimeout(
 
 cloudPullDebounceTimer =
 null;
-
-void (
-async()=>{
-
-if(
-isCloudLoggedInEffective()
-){
-await ensureCloudLoginResolved(
-8000
-);
-await pullDeviceStateFromCloud();
-}
-
-refreshTelegramUi();
-render();
-
-}
-)();
+void syncAlertsPageOnce();
 
 },
-800
+1200
 );
 
 });
@@ -698,23 +728,15 @@ render();
 void refreshTelegramUi();
 
 void ensureCloudReady()
-.then(async()=>{
-
-await ensureCloudLoginResolved(
-10000
+.then(
+()=>syncAlertsPageOnce()
+)
+.catch(
+err=>{
+console.warn(
+"alerts cloud init:",
+err
 );
-
-if(
-isCloudLoggedInEffective()
-){
-await pullDeviceStateFromCloud();
+refreshTelegramUi();
 }
-
-render();
-refreshTelegramUi();
-
-})
-.catch(err=>{
-console.warn("alerts cloud init:", err);
-refreshTelegramUi();
-});
+);

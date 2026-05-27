@@ -33,8 +33,9 @@ readAlertTokenSync
 } from "./alert-auth-cache.js?v=4";
 
 import {
-createNotifyDebouncer
-} from "./cloud-sync-throttle.js?v=1";
+createNotifyDebouncer,
+isAlertsPage
+} from "./cloud-sync-throttle.js?v=2";
 
 const FAVORITES_LOCAL_TS_KEY =
 "favorites_local_updated_at";
@@ -356,7 +357,7 @@ true;
 return;
 }
 
-void import("./drawings-cloud-sync.js?v=18").then(
+void import("./drawings-cloud-sync.js?v=19").then(
 m=>{
 m.scheduleDrawingsCloudPush();
 }
@@ -377,7 +378,7 @@ return Promise.resolve();
 pendingDrawingsCloudPush =
 false;
 
-return import("./drawings-cloud-sync.js?v=18").then(
+return import("./drawings-cloud-sync.js?v=19").then(
 m=>
 m.flushDrawingsCloudPush()
 );
@@ -680,7 +681,7 @@ function stopCloudSyncHelpers(){
 
 stopSyncPoll();
 
-void import("./drawings-cloud-sync.js?v=18").then(
+void import("./drawings-cloud-sync.js?v=19").then(
 m=>{
 m.stopDrawingsCloudSync();
 }
@@ -782,7 +783,7 @@ function handleRealtimeSettingsRow(row){
 
 handleRealtimeFavoritesRow(row);
 
-void import("./drawings-cloud-sync.js?v=18").then(
+void import("./drawings-cloud-sync.js?v=19").then(
 m=>
 m.pullDrawingsFromCloud()
 );
@@ -1056,7 +1057,7 @@ return cloud.favorites;
 export async function mergeDrawingsWithCloud(){
 
 const drawingsCloud =
-await import("./drawings-cloud-sync.js?v=18");
+await import("./drawings-cloud-sync.js?v=19");
 
 await drawingsCloud.hydrateDrawingsAfterAuth();
 
@@ -1092,7 +1093,7 @@ await pullFavoritesIfCloudNewer();
 async function syncDrawingsWithCloud(){
 
 const m =
-await import("./drawings-cloud-sync.js?v=18");
+await import("./drawings-cloud-sync.js?v=19");
 
 await m.flushDrawingsCloudPush();
 
@@ -1101,7 +1102,12 @@ await m.flushDrawingsCloudPush();
 export async function pullRemoteSettingsIfNewer(){
 
 await syncFavoritesWithCloud();
+
+if(
+!isAlertsPage()
+){
 await syncDrawingsWithCloud();
+}
 
 }
 
@@ -1629,17 +1635,28 @@ try{
 await mergeFavoritesWithCloud();
 
 const drawingsCloud =
-await import("./drawings-cloud-sync.js?v=18");
+await import("./drawings-cloud-sync.js?v=19");
 
+if(
+!isAlertsPage()
+){
 await drawingsCloud.hydrateDrawingsAfterAuth();
 await drawingsCloud.setupDrawingsRealtimeForUser(
 session.user.id
 );
+}else{
+drawingsCloud.stopDrawingsFastPoll();
+}
 
 await setupSettingsRealtime(
 session.user.id
 );
+
+if(
+!isAlertsPage()
+){
 startSyncPoll();
+}
 
 if(
 pendingDrawingsCloudPush
@@ -1649,7 +1666,7 @@ false;
 void drawingsCloud.flushDrawingsCloudPush();
 }
 
-import("./alerts-cloud-sync.js?v=74")
+import("./alerts-cloud-sync.js?v=75")
 .then(async m=>{
 
 const { stripAlertFlagsNotInRegistry } =
@@ -1696,15 +1713,22 @@ return;
 }
 
 if(
+!isAlertsPage() &&
+(
 loggedIn ||
 isCloudLoggedInEffective()
+)
 ){
 void pullDeviceStateFromCloud();
 }
 
+if(
+!isAlertsPage()
+){
 refreshCloudConnection().catch(()=>{
 /* ignore */
 });
+}
 
 };
 
@@ -1811,9 +1835,9 @@ await ensureCloudLoginResolved(
 );
 
 const drawingsCloud =
-await import("./drawings-cloud-sync.js?v=18");
+await import("./drawings-cloud-sync.js?v=19");
 const alertsCloud =
-await import("./alerts-cloud-sync.js?v=74");
+await import("./alerts-cloud-sync.js?v=75");
 const { stripAlertFlagsNotInRegistry } =
 await import("./alerts.js?v=69");
 

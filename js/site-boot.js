@@ -7,9 +7,13 @@ ensureCloudReady
 } from "./auth-ui.js?v=24";
 
 import {
+isAlertsPage
+} from "./cloud-sync-throttle.js?v=2";
+
+import {
 initAlertsCloudSync,
 scheduleRegistryCloudSync
-} from "./alerts-cloud-sync.js?v=74";
+} from "./alerts-cloud-sync.js?v=75";
 
 import {
 stripAlertFlagsNotInRegistry
@@ -22,7 +26,7 @@ isCloudSyncEnabled,
 getCloudUserEmail,
 pullDeviceStateFromCloud,
 onCloudSyncChange
-} from "./cloud-sync.js?v=21";
+} from "./cloud-sync.js?v=22";
 
 import {
 isSupabaseConfigured
@@ -117,7 +121,8 @@ onCloudSyncChange(
 ()=>{
 
 if(
-isCloudLoggedInEffective()
+isCloudLoggedInEffective() &&
+!isAlertsPage()
 ){
 void pullDeviceStateFromCloud();
 }
@@ -131,7 +136,7 @@ new CustomEvent(
 }
 );
 
-import("./drawings-cloud-sync.js?v=18").then(
+import("./drawings-cloud-sync.js?v=19").then(
 ({ initDrawingsCloudSync })=>{
 initDrawingsCloudSync();
 }
@@ -199,7 +204,8 @@ console.info(
 
 if(
 configured &&
-isCloudLoggedInEffective()
+isCloudLoggedInEffective() &&
+!isAlertsPage()
 ){
 scheduleRegistryCloudSync();
 void pullDeviceStateFromCloud();

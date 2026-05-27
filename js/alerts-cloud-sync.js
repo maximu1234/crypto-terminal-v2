@@ -9,7 +9,7 @@ waitForCloudAuth,
 isCloudLoggedIn,
 isCloudLoggedInEffective,
 onCloudSyncChange
-} from "./cloud-sync.js?v=21";
+} from "./cloud-sync.js?v=22";
 
 import {
 setBrowserCrossCheckEnabled
@@ -28,8 +28,9 @@ normalizeAlertWorkerBaseUrl
 } from "./alert-worker-url.js?v=1";
 
 import {
-createPullCoalescer
-} from "./cloud-sync-throttle.js?v=1";
+createPullCoalescer,
+isAlertsPage
+} from "./cloud-sync-throttle.js?v=2";
 
 const IS_YANDEX =
 /YaBrowser|Yandex/i.test(
@@ -65,10 +66,18 @@ const REGISTRY_SYNC_DEBOUNCE_MS = 200;
 
 const RECONCILE_INTERVAL_MS = 4000;
 
-const ALERTS_FAST_POLL_MS =
+const ALERTS_BG_SYNC_MS =
+isAlertsPage()
+? (
+IS_YANDEX
+? 10000
+: 8000
+)
+: (
 IS_YANDEX
 ? 6000
-: 3500;
+: 5000
+);
 
 let lastRemoteAlertMode = null;
 
@@ -80,7 +89,12 @@ let remoteRegistrySyncTimer = null;
 
 const REMOTE_REGISTRY_SYNC_MS = 400;
 
-let alertsFastPollTimer = null;
+let alertsBgSyncTimer = null;
+
+let hydrateAlertsInflight = null;
+
+let lastHydrateAlertsMs =
+0;
 
 /** Блокирует merge/push/reconcile после «удалить все», пока облако не очищено. */
 let registrySyncPausedUntil = 0;
@@ -193,8 +207,9 @@ if(!isCloudLoggedIn()){
 return;
 }
 
-void reconcileLocalRegistryWithCloud()
-.then(async n=>{
+void pullRegistryFromCloudNow()
+.then(
+async n=>{
 
 const { stripAlertFlagsNotInRegistry } =
 await import("./alerts.js?v=69");
@@ -212,13 +227,16 @@ new CustomEvent(
 );
 }
 
-})
-.catch(err=>{
+}
+)
+.catch(
+err=>{
 console.warn(
 "[alerts] remote registry sync:",
 err?.message || err
 );
-});
+}
+);
 
 },
 REMOTE_REGISTRY_SYNC_MS);
@@ -417,21 +435,27 @@ status
 
 function stopReconcileTimer(){
 
-if(reconcileTimer){
-clearInterval(reconcileTimer);
-reconcileTimer = null;
+if(
+reconcileTimer
+){
+clearInterval(
+reconcileTimer
+);
+reconcileTimer =
+null;
 }
 
-stopAlertsFastPoll();
+stopAlertsBackgroundSync();
 
 }
 
-function startAlertsFastPoll(){
+function startAlertsBackgroundSync(){
 
-stopAlertsFastPoll();
+stopAlertsBackgroundSync();
 
-alertsFastPollTimer =
-setInterval(()=>{
+alertsBgSyncTimer =
+setInterval(
+()=>{
 
 if(
 !isCloudLoggedInEffective() ||
@@ -440,56 +464,44 @@ isRegistryCloudSyncPaused()
 return;
 }
 
-void pullRegistryFromCloudNow().catch(err=>{
+void pullRegistryFromCloudNow().catch(
+err=>{
 console.warn(
-"[alerts] fast poll:",
+"[alerts] background sync:",
 err?.message || err
 );
-});
+}
+);
 
 },
-ALERTS_FAST_POLL_MS);
+ALERTS_BG_SYNC_MS
+);
 
 }
 
-function stopAlertsFastPoll(){
+function stopAlertsBackgroundSync(){
 
 if(
-!alertsFastPollTimer
+alertsBgSyncTimer
 ){
-return;
-}
-
 clearInterval(
-alertsFastPollTimer
+alertsBgSyncTimer
 );
-alertsFastPollTimer =
+alertsBgSyncTimer =
 null;
+}
 
 }
 
 function startReconcileTimer(){
 
-stopReconcileTimer();
+startAlertsBackgroundSync();
 
-reconcileTimer = setInterval(()=>{
-
-if(
-!isCloudLoggedIn() ||
-isRegistryCloudSyncPaused()
-){
-return;
 }
 
-reconcileLocalRegistryWithCloud().catch(err=>{
-console.warn(
-"alert reconcile:",
-err?.message || err
-);
-});
+function stopAlertsFastPoll(){
 
-},
-RECONCILE_INTERVAL_MS);
+stopAlertsBackgroundSync();
 
 }
 
@@ -505,9 +517,10 @@ if(
 remote &&
 ctx?.user?.id
 ){
-await setupAlertsRealtime(ctx.user.id);
+await setupAlertsRealtime(
+ctx.user.id
+);
 startReconcileTimer();
-startAlertsFastPoll();
 }else{
 await teardownAlertsRealtime();
 stopReconcileTimer();
@@ -4095,6 +4108,31 @@ return n;
 
 async function hydrateAlertsAfterAuth(){
 
+if(
+hydrateAlertsInflight
+){
+return hydrateAlertsInflight;
+}
+
+const now =
+Date.now();
+
+if(
+now -
+lastHydrateAlertsMs <
+(
+isAlertsPage()
+? 8000
+: 4000
+)
+){
+return 0;
+}
+
+hydrateAlertsInflight =
+runCloudOp(
+async()=>{
+
 const { stripAlertFlagsNotInRegistry } =
 await import("./alerts.js?v=60");
 
@@ -4106,12 +4144,14 @@ const { mergeRegistryFromChartDrawings } =
 await import("./alerts.js?v=61");
 
 mergeRegistryFromChartDrawings();
-await reconcileLocalRegistryWithCloud();
 
 const merged =
 mergeRegistryFromChartDrawings();
 
-if(merged > 0){
+if(
+merged >
+0
+){
 console.log(
 "[alerts] hydrate: с графика +",
 merged
@@ -4119,9 +4159,24 @@ merged
 }
 
 await pushUnsyncedAlerts();
-await reconcileLocalRegistryWithCloud();
+await pullRegistryFromCloudNow();
 stripAlertFlagsNotInRegistry();
-await refreshCloudAlertMode();
+await refreshCloudAlertModeImpl();
+
+lastHydrateAlertsMs =
+Date.now();
+
+}
+).finally(
+()=>{
+
+hydrateAlertsInflight =
+null;
+
+}
+);
+
+return hydrateAlertsInflight;
 
 }
 
@@ -4148,13 +4203,17 @@ return;
 }
 
 void pushUnsyncedAlerts()
-.then(()=>reconcileLocalRegistryWithCloud())
-.catch(err=>{
+.then(
+()=>pullRegistryFromCloudNow()
+)
+.catch(
+err=>{
 console.warn(
 "alert registry sync:",
 err?.message || err
 );
-});
+}
+);
 
 },
 REGISTRY_SYNC_DEBOUNCE_MS);
@@ -4187,38 +4246,44 @@ scheduleRemoteRegistrySync();
 }
 );
 
-onCloudSyncChange(()=>{
+onCloudSyncChange(
+()=>{
 
 void refreshCloudAlertMode();
 
-if(isCloudLoggedIn()){
-runCloudOp(()=>
-hydrateAlertsAfterAuth()
-).catch(err=>{
+if(
+isCloudLoggedIn()
+){
+void hydrateAlertsAfterAuth().catch(
+err=>{
 console.warn(
 "alert cloud hydrate:",
 err?.message || err
 );
-});
+}
+);
 }else{
 clearAlertAuthCache();
 void teardownAlertsRealtime();
 stopReconcileTimer();
 }
 
-});
+}
+);
 
 void refreshCloudAlertMode();
 
-if(isCloudLoggedIn()){
-runCloudOp(()=>
-hydrateAlertsAfterAuth()
-).catch(err=>{
+if(
+isCloudLoggedIn()
+){
+void hydrateAlertsAfterAuth().catch(
+err=>{
 console.warn(
 "alert cloud hydrate init:",
 err?.message || err
 );
-});
+}
+);
 }
 
 const pullWhenVisible = ()=>{

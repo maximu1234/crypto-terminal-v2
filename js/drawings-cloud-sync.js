@@ -5,7 +5,7 @@ isCloudLoggedInEffective,
 isCloudSyncEnabled,
 onCloudSyncChange,
 notifyDrawings as notifyDrawingsListeners
-} from "./cloud-sync.js?v=21";
+} from "./cloud-sync.js?v=22";
 
 import {
 normalizeAlertWorkerBaseUrl
@@ -35,8 +35,9 @@ withTimeout
 
 import {
 createPullCoalescer,
+isAlertsPage,
 isDrawingsUiPage
-} from "./cloud-sync-throttle.js?v=1";
+} from "./cloud-sync-throttle.js?v=2";
 
 const IS_YANDEX =
 /YaBrowser|Yandex/i.test(
@@ -3253,8 +3254,19 @@ onCloudSyncChange(
 ()=>{
 
 if(
-isCloudLoggedInEffective()
+!isCloudLoggedInEffective()
 ){
+stopDrawingsCloudSync();
+return;
+}
+
+if(
+isAlertsPage()
+){
+stopDrawingsFastPoll();
+return;
+}
+
 void getAuthed().then(
 ctx=>{
 
@@ -3282,10 +3294,6 @@ void coalesceDrawingsPull(
 ).catch(
 ()=>{}
 );
-}
-
-}else{
-stopDrawingsCloudSync();
 }
 
 }
@@ -3323,7 +3331,8 @@ pullWhenVisible
 );
 
 if(
-isCloudLoggedInEffective()
+isCloudLoggedInEffective() &&
+!isAlertsPage()
 ){
 void hydrateDrawingsAfterAuth();
 void getAuthed().then(
@@ -3337,7 +3346,12 @@ ctx.user.id
 }
 }
 );
+
+if(
+isDrawingsUiPage()
+){
 startDrawingsFastPoll();
+}
 }
 
 }

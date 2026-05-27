@@ -10,16 +10,30 @@ navigator.userAgent ||
 ""
 );
 
-export function isDrawingsUiPage(){
+function pagePath(){
 
-const path =
-typeof location !==
+return typeof location !==
 "undefined"
 ? (
 location.pathname ||
 ""
 )
 : "";
+
+}
+
+export function isAlertsPage(){
+
+return /\/alerts(\.html)?\/?$/i.test(
+pagePath()
+);
+
+}
+
+export function isDrawingsUiPage(){
+
+const path =
+pagePath();
 
 return (
 /\/coins(\.html)?\/?$/i.test(
