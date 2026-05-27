@@ -13,11 +13,11 @@ isAlertsPage
 import {
 initAlertsCloudSync,
 scheduleRegistryCloudSync
-} from "./alerts-cloud-sync.js?v=76";
+} from "./alerts-cloud-sync.js?v=77";
 
 import {
 stripAlertFlagsNotInRegistry
-} from "./alerts.js?v=60";
+} from "./alerts.js?v=77";
 
 import {
 isCloudLoggedIn,

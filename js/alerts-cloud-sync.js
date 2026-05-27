@@ -20,7 +20,8 @@ getCachedAlertAuth,
 setAlertAuthCache,
 clearAlertAuthCache,
 resolveAlertAuthFast,
-readAlertTokenSync
+readAlertTokenSync,
+readPersistedAuthSession
 } from "./alert-auth-cache.js?v=6";
 
 import {
@@ -84,6 +85,9 @@ let lastRemoteAlertMode = null;
 /** Снимок активных строк облака — ловим срабатывание, если realtime DELETE без payload (iPad). */
 const lastSeenCloudAlerts =
 new Map();
+
+const purgeRetryInFlight =
+new Set();
 
 let remoteRegistrySyncTimer = null;
 
@@ -620,7 +624,7 @@ cloudId
 ){
 
 const { markAlertCloudSynced, markAlertCloudId } =
-await import("./alerts.js?v=60");
+await import("./alerts.js?v=77");
 
 const ok =
 await verifyAlertActiveInCloud(
@@ -1458,7 +1462,7 @@ null;
 
 if(cloudId){
 const { markAlertCloudId } =
-await import("./alerts.js?v=60");
+await import("./alerts.js?v=77");
 
 markAlertCloudId(
 symbol,
@@ -1828,6 +1832,14 @@ sid
 );
 return false;
 }
+
+const { clearAlertPendingDelete } =
+await import("./alerts.js?v=77");
+
+clearAlertPendingDelete(
+sym,
+sid
+);
 
 broadcastAlertsRegistrySync();
 
@@ -3125,7 +3137,7 @@ null;
 
 if(cloudId){
 const { markAlertCloudId } =
-await import("./alerts.js?v=60");
+await import("./alerts.js?v=77");
 
 markAlertCloudId(
 symbol,
@@ -3160,7 +3172,7 @@ return 0;
 }
 
 const { getActiveAlerts } =
-await import("./alerts.js?v=60");
+await import("./alerts.js?v=77");
 
 const localKeys =
 new Set(
@@ -3290,7 +3302,7 @@ attempt++
 if(await pushAlertViaWorker(row)){
 
 const { markAlertCloudSynced } =
-await import("./alerts.js?v=60");
+await import("./alerts.js?v=77");
 
 /* Worker пишет service role — не ждём SELECT по JWT пользователя */
 markAlertCloudSynced(
@@ -3319,7 +3331,7 @@ ctx
 ){
 
 const { loadAlerts, markAlertCloudSynced } =
-await import("./alerts.js?v=60");
+await import("./alerts.js?v=77");
 
 const hasId =
 loadAlerts().some(
@@ -3378,7 +3390,7 @@ null
 ){
 
 const { markAlertCloudSynced } =
-await import("./alerts.js?v=60");
+await import("./alerts.js?v=77");
 
 markAlertCloudSynced(
 row.symbol,
@@ -3545,7 +3557,7 @@ return 0;
 }
 
 const { getActiveAlerts } =
-await import("./alerts.js?v=60");
+await import("./alerts.js?v=77");
 
 const list =
 getActiveAlerts();
@@ -3738,17 +3750,42 @@ export async function reconcileLocalRegistryWithCloud(){
 const snap =
 readAlertTokenSync();
 
+let token =
+snap?.token ||
+null;
+let userId =
+snap?.user?.id ||
+null;
+
+if(
+!token ||
+!userId
+){
+const persisted =
+readPersistedAuthSession();
+
+if(
+persisted?.access_token &&
+persisted?.user?.id
+){
+token =
+persisted.access_token;
+userId =
+persisted.user.id;
+}
+}
+
 let data =
 null;
 
 if(
-snap?.token &&
-snap?.user?.id
+token &&
+userId
 ){
 data =
 await fetchActivePriceAlertsViaRest({
-token: snap.token,
-userId: snap.user.id
+token,
+userId
 });
 }
 
@@ -3825,9 +3862,11 @@ const {
 saveAlertsFromCloudMerge,
 alertEntryKey,
 loadAlerts,
-normalizeAlertTf
+normalizeAlertTf,
+isAlertPendingDelete,
+clearAlertPendingDelete
 } =
-await import("./alerts.js?v=69");
+await import("./alerts.js?v=77");
 
 const cloudByKey =
 new Map();
@@ -3845,6 +3884,52 @@ if(
 !sym ||
 !sid
 ){
+continue;
+}
+
+if(
+isAlertPendingDelete(
+sym,
+sid
+)
+){
+
+const purgeKey =
+alertEntryKey(
+sym,
+sid
+);
+
+if(
+!purgeRetryInFlight.has(
+purgeKey
+)
+){
+purgeRetryInFlight.add(
+purgeKey
+);
+
+void purgeAlertViaRest({
+symbol: sym,
+shapeId: sid
+}).then(
+ok=>{
+if(
+ok
+){
+clearAlertPendingDelete(
+sym,
+sid
+);
+}
+}
+).finally(()=>{
+purgeRetryInFlight.delete(
+purgeKey
+);
+});
+}
+
 continue;
 }
 
@@ -3899,7 +3984,7 @@ tf: row.tf || "60"
 if(removedRows.length){
 
 const { applyRemoteAlertFired } =
-await import("./alerts.js?v=60");
+await import("./alerts.js?v=77");
 
 for(const row of removedRows){
 
@@ -3951,6 +4036,16 @@ const sym =
 String(cloud.symbol || "").trim().toUpperCase();
 const sid =
 String(cloud.shape_id || "").trim();
+
+if(
+isAlertPendingDelete(
+sym,
+sid
+)
+){
+continue;
+}
+
 const prev =
 localByKey.get(key);
 
@@ -4067,7 +4162,7 @@ const n =
 await reconcileLocalRegistryWithCloud();
 
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=76");
+await import("./alerts.js?v=77");
 
 stripAlertFlagsNotInRegistry(
 isAlertsPage()
@@ -4091,6 +4186,17 @@ if(
 isRegistryCloudSyncPaused()
 ){
 return 0;
+}
+
+try{
+const { ensureCloudLoginResolved } =
+await import("./cloud-sync.js?v=25");
+
+await ensureCloudLoginResolved(
+8000
+);
+}catch{
+/* ignore */
 }
 
 const n =
@@ -4156,7 +4262,7 @@ if(
 !isAlertsPage()
 ){
 const { mergeRegistryFromChartDrawings } =
-await import("./alerts.js?v=76");
+await import("./alerts.js?v=77");
 
 mergeRegistryFromChartDrawings({
 stripFlags: stripOpts
@@ -4167,7 +4273,7 @@ await pushUnsyncedAlerts();
 await pullRegistryFromCloudNow();
 
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=76");
+await import("./alerts.js?v=77");
 
 stripAlertFlagsNotInRegistry(
 stripOpts

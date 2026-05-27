@@ -117,7 +117,7 @@ return job;
 
 function queueAlertsCloud(fn){
 
-import("./alerts-cloud-sync.js?v=69")
+import("./alerts-cloud-sync.js?v=77")
 .then(m=>fn(m))
 .catch(err=>{
 console.warn("alerts cloud:", err);
@@ -236,6 +236,132 @@ price
 export function alertEntryKey(symbol, shapeId){
 
 return `${symbol}::${shapeId}`;
+
+}
+
+/** Пока DELETE в Supabase не завершён — reconcile не возвращает строку обратно. */
+const pendingAlertDeletes =
+new Map();
+
+export function markAlertPendingDelete(
+symbol,
+shapeId,
+ms = 120000
+){
+
+const sym =
+String(
+symbol ||
+""
+).trim().toUpperCase();
+const sid =
+String(
+shapeId ||
+""
+).trim();
+
+if(
+!sym ||
+!sid
+){
+return;
+}
+
+pendingAlertDeletes.set(
+alertEntryKey(
+sym,
+sid
+),
+Date.now() + Math.max(
+ms,
+5000
+)
+);
+
+}
+
+export function clearAlertPendingDelete(
+symbol,
+shapeId
+){
+
+const sym =
+String(
+symbol ||
+""
+).trim().toUpperCase();
+const sid =
+String(
+shapeId ||
+""
+).trim();
+
+if(
+!sym ||
+!sid
+){
+return;
+}
+
+pendingAlertDeletes.delete(
+alertEntryKey(
+sym,
+sid
+)
+);
+
+}
+
+export function isAlertPendingDelete(
+symbol,
+shapeId
+){
+
+const sym =
+String(
+symbol ||
+""
+).trim().toUpperCase();
+const sid =
+String(
+shapeId ||
+""
+).trim();
+
+if(
+!sym ||
+!sid
+){
+return false;
+}
+
+const key =
+alertEntryKey(
+sym,
+sid
+);
+const exp =
+pendingAlertDeletes.get(
+key
+);
+
+if(
+!exp
+){
+return false;
+}
+
+if(
+Date.now() >
+exp
+){
+pendingAlertDeletes.delete(
+key
+);
+return false;
+}
+
+return true;
 
 }
 
@@ -1021,7 +1147,7 @@ return null;
 }
 
 const { getTelegramChatId } =
-await import("./alerts-cloud-sync.js?v=69");
+await import("./alerts-cloud-sync.js?v=77");
 
 if(
 await getTelegramChatId() == null
@@ -1099,7 +1225,7 @@ await import("./auth-ui.js?v=23");
 await ensureCloudReady();
 
 const m =
-await import("./alerts-cloud-sync.js?v=69");
+await import("./alerts-cloud-sync.js?v=77");
 
 const pushed =
 await m.pushOneAlertRow(
@@ -1191,7 +1317,7 @@ await ensureCloudReady();
 mergeRegistryFromChartDrawings();
 
 const m =
-await import("./alerts-cloud-sync.js?v=69");
+await import("./alerts-cloud-sync.js?v=77");
 
 const pushed =
 await m.pushOneAlertRow(
@@ -1326,7 +1452,7 @@ return;
 
 saveAlerts(list);
 
-void import("./alerts-cloud-sync.js?v=69").then(m=>{
+void import("./alerts-cloud-sync.js?v=77").then(m=>{
 m.flushAlertCloudPush(row);
 });
 
@@ -1352,6 +1478,19 @@ if(
 ){
 return;
 }
+
+markAlertPendingDelete(
+sym,
+sid
+);
+
+void import("./alerts-cloud-sync.js?v=77").then(m=>{
+m.pauseRegistryCloudSync(
+120000
+);
+}).catch(()=>{
+/* ignore */
+});
 
 const row =
 loadAlerts().find(
@@ -1383,11 +1522,36 @@ sym
 );
 
 queueAlertsCloud(async m=>{
+
+const ok =
 await m.removeAlertFromCloud(
 sym,
 sid
 );
+
 await m.pruneOrphanCloudAlerts();
+
+if(
+ok
+){
+clearAlertPendingDelete(
+sym,
+sid
+);
+m.pauseRegistryCloudSync(
+8000
+);
+}else{
+console.warn(
+"[alerts] удаление в облаке не подтверждено —",
+sym,
+sid
+);
+m.pauseRegistryCloudSync(
+60000
+);
+}
+
 });
 
 }
@@ -1826,7 +1990,7 @@ tf: existing?.tf
 });
 });
 
-void import("./alerts-cloud-sync.js?v=69").then(m=>{
+void import("./alerts-cloud-sync.js?v=77").then(m=>{
 m.fireAlertCloudTrigger(
 sym,
 sid,
@@ -1916,7 +2080,7 @@ clearAllChartAlertFlags();
 saveAlertsFromCloudMerge([]);
 stripAlertFlagsNotInRegistry();
 
-void import("./alerts-cloud-sync.js?v=69").then(m=>{
+void import("./alerts-cloud-sync.js?v=77").then(m=>{
 m.runCloudOp(()=>
 m.removeAllAlertsEverywhere()
 ).then(ok=>{
@@ -2331,7 +2495,7 @@ const drawingsCloud =
 await import("./drawings-cloud-sync.js?v=17");
 
 const alertsCloud =
-await import("./alerts-cloud-sync.js?v=69");
+await import("./alerts-cloud-sync.js?v=77");
 
 const hadLocalDrawings =
 countAllDrawings() >
