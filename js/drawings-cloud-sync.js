@@ -5,7 +5,7 @@ isCloudLoggedInEffective,
 isCloudSyncEnabled,
 onCloudSyncChange,
 notifyDrawings as notifyDrawingsListeners
-} from "./cloud-sync.js?v=22";
+} from "./cloud-sync.js?v=23";
 
 import {
 normalizeAlertWorkerBaseUrl
@@ -3223,7 +3223,30 @@ true;
 window.addEventListener(
 "drawings-updated",
 ()=>{
+
+if(
+isAlertsPage()
+){
+return;
+}
+
 scheduleDrawingsCloudSync();
+
+}
+);
+
+window.addEventListener(
+"drawings-batch-updated",
+()=>{
+
+if(
+isAlertsPage()
+){
+return;
+}
+
+scheduleDrawingsCloudSync();
+
 }
 );
 

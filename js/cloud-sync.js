@@ -1666,21 +1666,27 @@ false;
 void drawingsCloud.flushDrawingsCloudPush();
 }
 
-import("./alerts-cloud-sync.js?v=75")
-.then(async m=>{
-
-const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=60");
+if(
+!isAlertsPage()
+){
+import("./alerts-cloud-sync.js?v=76")
+.then(
+async m=>{
 
 await m.syncAllLocalAlertsToCloudImmediate();
 await m.pullRegistryFromCloud();
 
-})
-.catch(err=>{
-console.warn("alerts cloud sync on login:", err);
-});
-
-notifyAuth();
+}
+)
+.catch(
+err=>{
+console.warn(
+"alerts cloud sync on login:",
+err
+);
+}
+);
+}
 
 }catch(
 err
@@ -1834,14 +1840,42 @@ await ensureCloudLoginResolved(
 10000
 );
 
+const alertsCloud =
+await import("./alerts-cloud-sync.js?v=76");
+const { stripAlertFlagsNotInRegistry } =
+await import("./alerts.js?v=76");
+
+const stripOpts =
+isAlertsPage()
+? {
+registryOnlySymbols: true,
+emitDrawingsEvents: false
+}
+: {};
+
+let drawSyms =
+0;
+let alertRows =
+0;
+
+if(
+isAlertsPage()
+){
+alertRows =
+await withTimeout(
+alertsCloud.pullRegistryFromCloudNow(),
+25000,
+"pull alerts from cloud"
+);
+}else{
+
 const drawingsCloud =
 await import("./drawings-cloud-sync.js?v=19");
-const alertsCloud =
-await import("./alerts-cloud-sync.js?v=75");
-const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=69");
 
-const [drawSyms, alertRows] =
+[
+drawSyms,
+alertRows
+] =
 await withTimeout(
 Promise.all([
 drawingsCloud.pullDrawingsFromCloudNow(),
@@ -1851,7 +1885,11 @@ alertsCloud.pullRegistryFromCloudNow()
 "pull device from cloud"
 );
 
-stripAlertFlagsNotInRegistry();
+}
+
+stripAlertFlagsNotInRegistry(
+stripOpts
+);
 
 window.dispatchEvent(
 new CustomEvent(

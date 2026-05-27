@@ -890,11 +890,24 @@ LEGACY_ALERTS_MIGRATED_KEY,
 /**
  * Реестр алертов — источник истины; рисунки hray больше не используются как алерты.
  */
-export function mergeRegistryFromChartDrawings(){
+export function mergeRegistryFromChartDrawings(
+opts = {}
+){
 
+const skipHeavy =
+opts.skipHeavy ===
+true;
+
+if(
+!skipHeavy
+){
 migrateLegacyDrawingAlertsFromShapes();
 
-stripAlertFlagsNotInRegistry();
+stripAlertFlagsNotInRegistry(
+opts.stripFlags ||
+{}
+);
+}
 
 const list =
 loadAlerts();
@@ -1870,7 +1883,21 @@ return cleaned;
 
 }
 
-export function stripAlertFlagsNotInRegistry(){
+/**
+ * @param {{ registryOnlySymbols?: boolean, emitDrawingsEvents?: boolean }} [opts]
+ * registryOnlySymbols — не сканировать весь localStorage (страница Алерты).
+ * emitDrawingsEvents — false: не слать сотни drawings-updated (зависание браузера).
+ */
+export function stripAlertFlagsNotInRegistry(
+opts = {}
+){
+
+const registryOnlySymbols =
+opts.registryOnlySymbols ===
+true;
+const emitDrawingsEvents =
+opts.emitDrawingsEvents !==
+false;
 
 const registry =
 loadAlerts();
@@ -1878,75 +1905,152 @@ loadAlerts();
 const bySymbol =
 new Map();
 
-for(const row of registry){
+for(
+const row of registry
+){
 
 const sym =
-String(row.symbol || "").trim().toUpperCase();
+String(
+row.symbol ||
+""
+).trim().toUpperCase();
 
-if(!sym){
+if(
+!sym
+){
 continue;
 }
 
-if(!bySymbol.has(sym)){
-bySymbol.set(sym, []);
+if(
+!bySymbol.has(
+sym
+)
+){
+bySymbol.set(
+sym,
+[]
+);
 }
 
-bySymbol.get(sym).push(row);
+bySymbol.get(
+sym
+).push(
+row
+);
 
 }
 
-for(const { symbol } of listDrawingStorageEntries()){
+const symbolsToScan =
+registryOnlySymbols
+? [
+...bySymbol.keys()
+].map(
+symbol=>({
+symbol
+})
+)
+: listDrawingStorageEntries();
+
+const changedSymbols =
+[];
+
+for(
+const { symbol } of symbolsToScan
+){
 
 const sym =
-String(symbol || "").trim().toUpperCase();
+String(
+symbol ||
+""
+).trim().toUpperCase();
 const alertsForSym =
-bySymbol.get(sym) || [];
+bySymbol.get(
+sym
+) ||
+[];
 const registryIds =
 new Set(
-alertsForSym.map(a=>a.shapeId)
+alertsForSym.map(
+a=>a.shapeId
+)
 );
 
 let list =
-loadDrawingsForSymbol(sym);
+loadDrawingsForSymbol(
+sym
+);
 let dirty =
 false;
 
 const next =
-list.map(shape=>{
+list.map(
+shape=>{
 
 if(
-shape.type !== "hray" ||
+shape.type !==
+"hray" ||
 !shape.isAlert
 ){
 return shape;
 }
 
-if(registryIds.has(shape.id)){
+if(
+registryIds.has(
+shape.id
+)
+){
 return shape;
 }
 
-dirty = true;
+dirty =
+true;
 
-return stripShapeAlertFlags(shape);
+return stripShapeAlertFlags(
+shape
+);
 
-});
+}
+);
 
-if(!dirty){
+if(
+!dirty
+){
 continue;
 }
 
 localStorage.setItem(
-drawingsStorageKey(sym),
-JSON.stringify(next)
-);
-
-window.dispatchEvent(
-new CustomEvent(
-"drawings-updated",
-{ detail:{ symbol: sym } }
+drawingsStorageKey(
+sym
+),
+JSON.stringify(
+next
 )
 );
 
+if(
+emitDrawingsEvents
+){
+changedSymbols.push(
+sym
+);
+}
+
+}
+
+if(
+emitDrawingsEvents &&
+changedSymbols.length
+){
+window.dispatchEvent(
+new CustomEvent(
+"drawings-batch-updated",
+{
+detail:{
+symbols: changedSymbols
+}
+}
+)
+);
 }
 
 }

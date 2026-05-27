@@ -13,7 +13,7 @@ isAlertsPage
 import {
 initAlertsCloudSync,
 scheduleRegistryCloudSync
-} from "./alerts-cloud-sync.js?v=75";
+} from "./alerts-cloud-sync.js?v=76";
 
 import {
 stripAlertFlagsNotInRegistry
@@ -26,7 +26,7 @@ isCloudSyncEnabled,
 getCloudUserEmail,
 pullDeviceStateFromCloud,
 onCloudSyncChange
-} from "./cloud-sync.js?v=22";
+} from "./cloud-sync.js?v=23";
 
 import {
 isSupabaseConfigured

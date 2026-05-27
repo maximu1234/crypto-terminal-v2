@@ -9,7 +9,7 @@ waitForCloudAuth,
 isCloudLoggedIn,
 isCloudLoggedInEffective,
 onCloudSyncChange
-} from "./cloud-sync.js?v=22";
+} from "./cloud-sync.js?v=23";
 
 import {
 setBrowserCrossCheckEnabled
@@ -4067,9 +4067,16 @@ const n =
 await reconcileLocalRegistryWithCloud();
 
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=69");
+await import("./alerts.js?v=76");
 
-stripAlertFlagsNotInRegistry();
+stripAlertFlagsNotInRegistry(
+isAlertsPage()
+? {
+registryOnlySymbols: true,
+emitDrawingsEvents: false
+}
+: {}
+);
 
 return n;
 
@@ -4133,35 +4140,44 @@ hydrateAlertsInflight =
 runCloudOp(
 async()=>{
 
-const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=60");
-
 console.log(
 "[alerts] hydrate after login…"
 );
 
-const { mergeRegistryFromChartDrawings } =
-await import("./alerts.js?v=61");
-
-mergeRegistryFromChartDrawings();
-
-const merged =
-mergeRegistryFromChartDrawings();
+const stripOpts =
+isAlertsPage()
+? {
+registryOnlySymbols: true,
+emitDrawingsEvents: false
+}
+: {};
 
 if(
-merged >
-0
+!isAlertsPage()
 ){
-console.log(
-"[alerts] hydrate: с графика +",
-merged
-);
+const { mergeRegistryFromChartDrawings } =
+await import("./alerts.js?v=76");
+
+mergeRegistryFromChartDrawings({
+stripFlags: stripOpts
+});
 }
 
 await pushUnsyncedAlerts();
 await pullRegistryFromCloudNow();
-stripAlertFlagsNotInRegistry();
+
+const { stripAlertFlagsNotInRegistry } =
+await import("./alerts.js?v=76");
+
+stripAlertFlagsNotInRegistry(
+stripOpts
+);
+
+if(
+!isAlertsPage()
+){
 await refreshCloudAlertModeImpl();
+}
 
 lastHydrateAlertsMs =
 Date.now();
@@ -4252,7 +4268,8 @@ onCloudSyncChange(
 void refreshCloudAlertMode();
 
 if(
-isCloudLoggedIn()
+isCloudLoggedIn() &&
+!isAlertsPage()
 ){
 void hydrateAlertsAfterAuth().catch(
 err=>{
@@ -4262,7 +4279,9 @@ err?.message || err
 );
 }
 );
-}else{
+}else if(
+!isCloudLoggedIn()
+){
 clearAlertAuthCache();
 void teardownAlertsRealtime();
 stopReconcileTimer();
@@ -4274,7 +4293,8 @@ stopReconcileTimer();
 void refreshCloudAlertMode();
 
 if(
-isCloudLoggedIn()
+isCloudLoggedIn() &&
+!isAlertsPage()
 ){
 void hydrateAlertsAfterAuth().catch(
 err=>{
