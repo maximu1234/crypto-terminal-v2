@@ -895,8 +895,6 @@ const uid =
 encodeURIComponent(
 auth.user.id
 );
-const cacheBust =
-Date.now();
 const headers = {
 apikey: anon,
 Authorization: `Bearer ${auth.token}`,
@@ -906,8 +904,8 @@ Pragma: "no-cache"
 };
 
 const paths = [
-`user_drawings?user_id=eq.${uid}&select=symbol,shape_id,shape,updated_at&deleted_at=is.null&_=${cacheBust}`,
-`user_drawings?user_id=eq.${uid}&select=symbol,shape_id,shape,updated_at&_=${cacheBust}`
+`user_drawings?user_id=eq.${uid}&select=symbol,shape_id,shape,updated_at&deleted_at=is.null`,
+`user_drawings?user_id=eq.${uid}&select=symbol,shape_id,shape,updated_at`
 ];
 
 for(
@@ -920,7 +918,8 @@ await fetchWithTimeout(
 `${base}/rest/v1/${path}`,
 {
 method: "GET",
-headers
+headers,
+cache: "no-store"
 },
 15000,
 "user_drawings fetch"
@@ -2315,17 +2314,6 @@ result.data;
 
 }
 
-const cloudFp =
-buildCloudDrawingsFingerprint(
-data
-);
-const fpChanged =
-cloudFp !==
-lastCloudDrawingsFingerprint;
-
-lastCloudDrawingsFingerprint =
-cloudFp;
-
 const cloudBySymbol =
 {};
 
@@ -2390,14 +2378,6 @@ sym
 shape
 );
 
-markShapeSynced(
-sym,
-sid,
-getShapeRevisionTime(
-shape
-)
-);
-
 }
 
 void pruneDuplicateShapeIdsAcrossSymbols();
@@ -2422,6 +2402,13 @@ const applyMap =
 
 const changed =
 [];
+
+const cloudFetchHasRows =
+(
+data ||
+[]
+).length >
+0;
 
 for(
 const sym of symbols
@@ -2487,18 +2474,20 @@ return true;
 }
 
 if(
+cloudFetchHasRows &&
 shapeWasSynced(
 sym,
 id
 )
 ){
+recordDrawingTombstone(
+sym,
+id
+);
 return false;
 }
 
-return shapeNeedsPush(
-sym,
-shape
-);
+return true;
 
 }
 );
@@ -2534,6 +2523,41 @@ applyMap,
 { merge: false }
 );
 
+for(
+const sym of changed
+){
+
+const list =
+applyMap[
+sym
+] ||
+[];
+
+for(
+const shape of list
+){
+
+if(
+shape?.id
+){
+markShapeSynced(
+sym,
+shape.id,
+getShapeRevisionTime(
+shape
+)
+);
+}
+
+}
+
+}
+
+lastCloudDrawingsFingerprint =
+buildCloudDrawingsFingerprint(
+data
+);
+
 notifyDrawings(
 changed
 );
@@ -2542,36 +2566,6 @@ console.log(
 "[drawings] reconcile: обновлено символов",
 changed.length
 );
-
-}else if(
-fpChanged
-){
-
-const refreshSyms =
-[
-...symbols
-].map(
-sym=>
-String(
-sym
-).trim().toUpperCase()
-).filter(
-Boolean
-);
-
-if(
-refreshSyms.length
-){
-notifyDrawings(
-refreshSyms
-);
-
-console.log(
-"[drawings] reconcile: облако изменилось — обновление UI",
-refreshSyms.length,
-"симв."
-);
-}
 
 }
 
