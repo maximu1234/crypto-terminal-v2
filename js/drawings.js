@@ -52,7 +52,7 @@ deleteDrawingFromCloud,
 flushDrawingsCloudPush,
 onDrawingsRemoteUpdate,
 scheduleDrawingsCloudPush
-} from "./drawings-cloud-sync.js?v=13";
+} from "./drawings-cloud-sync.js?v=14";
 
 import {
 touchShapeRevision,
@@ -2167,6 +2167,8 @@ localStorage.setItem(
 storageKey(),
 JSON.stringify(drawings)
 );
+
+touchStorageSnap();
 
 if(
 canUseDrawings()
@@ -9055,12 +9057,32 @@ return;
 
 loadDrawings();
 reconcileDrawingAlertsFromRegistry();
+redraw();
 scheduleRedraw();
 updateStyleBar();
+touchStorageSnap();
 
 };
 
-const refreshDrawingsOnTabWake = ()=>{
+let lastStorageSnap =
+"";
+
+function touchStorageSnap(){
+
+try{
+lastStorageSnap =
+localStorage.getItem(
+storageKey()
+) ||
+"[]";
+}catch{
+lastStorageSnap =
+"[]";
+}
+
+}
+
+function syncDrawingsFromStorageNow(){
 
 if(
 !alive
@@ -9070,10 +9092,119 @@ return;
 
 loadDrawings();
 reconcileDrawingAlertsFromRegistry();
+redraw();
+scheduleRedraw();
+updateStyleBar();
+touchStorageSnap();
+
+}
+
+function syncDrawingsFromStorageIfChanged(){
+
+if(
+!alive ||
+!canUseDrawings()
+){
+return;
+}
+
+let raw =
+"[]";
+
+try{
+raw =
+localStorage.getItem(
+storageKey()
+) ||
+"[]";
+}catch{
+return;
+}
+
+if(
+raw ===
+lastStorageSnap
+){
+return;
+}
+
+lastStorageSnap =
+raw;
+loadDrawings();
+reconcileDrawingAlertsFromRegistry();
+redraw();
 scheduleRedraw();
 updateStyleBar();
 
+}
+
+const refreshDrawingsOnTabWake = ()=>{
+
+if(
+!alive
+){
+return;
+}
+
+void import(
+"./drawings-cloud-sync.js?v=14"
+).then(
+m=>
+m.pullDrawingsFromCloudNow()
+).catch(
+()=>{}
+).finally(
+()=>{
+syncDrawingsFromStorageNow();
+}
+);
+
 };
+
+const onDrawingsCloudChanged = e=>{
+
+if(
+!alive
+){
+return;
+}
+
+const sym =
+String(
+getSymbol() ||
+""
+).trim().toUpperCase();
+
+const list =
+Array.isArray(
+e.detail?.symbols
+)
+? e.detail.symbols.map(
+s=>
+String(
+s ||
+""
+).trim().toUpperCase()
+)
+: [];
+
+if(
+list.length &&
+!list.includes(
+sym
+)
+){
+return;
+}
+
+syncDrawingsFromStorageNow();
+
+};
+
+window.addEventListener(
+"drawings-cloud-changed",
+onDrawingsCloudChanged
+);
 
 document.addEventListener(
 "visibilitychange",
@@ -9084,6 +9215,8 @@ document.visibilityState ===
 "visible"
 ){
 refreshDrawingsOnTabWake();
+}else{
+touchStorageSnap();
 }
 
 }
@@ -9092,6 +9225,23 @@ refreshDrawingsOnTabWake();
 window.addEventListener(
 "focus",
 refreshDrawingsOnTabWake
+);
+
+let storageSyncTimer =
+setInterval(
+()=>{
+
+if(
+document.visibilityState !==
+"visible"
+){
+return;
+}
+
+syncDrawingsFromStorageIfChanged();
+
+},
+400
 );
 
 const onPriceAlertsChanged =
@@ -9311,17 +9461,15 @@ sym
 return;
 }
 
-loadDrawings();
-reconcileDrawingAlertsFromRegistry();
-redraw();
-scheduleRedraw();
-updateStyleBar();
+syncDrawingsFromStorageNow();
 
 };
 
 onDrawingsRemoteUpdate(
 onDrawingsRemoteSync
 );
+
+touchStorageSnap();
 
 const onCloudAuthChange = ()=>{
 void refreshDrawToolsAccessUiAsync();
@@ -9590,6 +9738,11 @@ window.removeEventListener(
 onDrawingsUpdated
 );
 
+window.removeEventListener(
+"drawings-cloud-changed",
+onDrawingsCloudChanged
+);
+
 document.removeEventListener(
 "visibilitychange",
 refreshDrawingsOnTabWake
@@ -9599,6 +9752,16 @@ window.removeEventListener(
 "focus",
 refreshDrawingsOnTabWake
 );
+
+if(
+storageSyncTimer
+){
+clearInterval(
+storageSyncTimer
+);
+storageSyncTimer =
+null;
+}
 
 window.removeEventListener(
 "alerts-changed",

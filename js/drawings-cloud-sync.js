@@ -51,7 +51,10 @@ const REGISTRY_SYNC_DEBOUNCE_MS =
 200;
 
 const FAST_POLL_MS =
-1200;
+800;
+
+const FAST_POLL_HIDDEN_MS =
+4000;
 
 let drawingsRealtimeChannel =
 null;
@@ -67,6 +70,12 @@ null;
 
 let fastPollTimer =
 null;
+
+let fastPollStopped =
+true;
+
+let lastCloudDrawingsFingerprint =
+"";
 
 let cloudOpChain =
 Promise.resolve();
@@ -638,6 +647,21 @@ list
 );
 
 if(
+list.length
+){
+window.dispatchEvent(
+new CustomEvent(
+"drawings-cloud-changed",
+{
+detail:{
+symbols: list
+}
+}
+)
+);
+}
+
+if(
 opts.skipWindowEvent
 ){
 return;
@@ -767,6 +791,28 @@ synced +
 
 }
 
+function shapeWasSynced(
+symbol,
+shapeId
+){
+
+const key =
+syncMetaKey(
+symbol,
+shapeId
+);
+return (
+Number(
+loadSyncMeta()[
+key
+]
+) ||
+0
+) >
+0;
+
+}
+
 async function getAuthed(){
 
 const snap =
@@ -849,15 +895,19 @@ const uid =
 encodeURIComponent(
 auth.user.id
 );
+const cacheBust =
+Date.now();
 const headers = {
 apikey: anon,
 Authorization: `Bearer ${auth.token}`,
-Accept: "application/json"
+Accept: "application/json",
+"Cache-Control": "no-cache, no-store",
+Pragma: "no-cache"
 };
 
 const paths = [
-`user_drawings?user_id=eq.${uid}&select=symbol,shape_id,shape,updated_at&deleted_at=is.null`,
-`user_drawings?user_id=eq.${uid}&select=symbol,shape_id,shape,updated_at`
+`user_drawings?user_id=eq.${uid}&select=symbol,shape_id,shape,updated_at&deleted_at=is.null&_=${cacheBust}`,
+`user_drawings?user_id=eq.${uid}&select=symbol,shape_id,shape,updated_at&_=${cacheBust}`
 ];
 
 for(
@@ -2106,6 +2156,41 @@ count,
 
 }
 
+function buildCloudDrawingsFingerprint(
+rows
+){
+
+return (
+rows ||
+[]
+)
+.map(
+row=>{
+const sym =
+String(
+row?.symbol ||
+""
+).trim().toUpperCase();
+const sid =
+String(
+row?.shape_id ||
+""
+).trim();
+const ts =
+String(
+row?.updated_at ||
+""
+);
+return `${sym}:${sid}:${ts}`;
+}
+)
+.sort()
+.join(
+"|"
+);
+
+}
+
 /**
  * Сверка с user_drawings — как price_alerts для алертов.
  */
@@ -2229,6 +2314,17 @@ data =
 result.data;
 
 }
+
+const cloudFp =
+buildCloudDrawingsFingerprint(
+data
+);
+const fpChanged =
+cloudFp !==
+lastCloudDrawingsFingerprint;
+
+lastCloudDrawingsFingerprint =
+cloudFp;
 
 const cloudBySymbol =
 {};
@@ -2390,6 +2486,15 @@ id
 return true;
 }
 
+if(
+shapeWasSynced(
+sym,
+id
+)
+){
+return false;
+}
+
 return shapeNeedsPush(
 sym,
 shape
@@ -2437,6 +2542,37 @@ console.log(
 "[drawings] reconcile: обновлено символов",
 changed.length
 );
+
+}else if(
+fpChanged
+){
+
+const refreshSyms =
+[
+...symbols
+].map(
+sym=>
+String(
+sym
+).trim().toUpperCase()
+).filter(
+Boolean
+);
+
+if(
+refreshSyms.length
+){
+notifyDrawings(
+refreshSyms
+);
+
+console.log(
+"[drawings] reconcile: облако изменилось — обновление UI",
+refreshSyms.length,
+"симв."
+);
+}
+
 }
 
 const cloudTotal =
@@ -2726,35 +2862,72 @@ null;
 
 }
 
-function startDrawingsFastPoll(){
-
-stopDrawingsFastPoll();
-
-fastPollTimer =
-setInterval(
-()=>{
+function scheduleDrawingsFastPollTick(){
 
 if(
-!isCloudLoggedInEffective() ||
-isDrawingsCloudSyncPaused()
+fastPollStopped
 ){
 return;
 }
 
-void pullDrawingsFromCloudNow();
+const delay =
+document.visibilityState ===
+"hidden"
+? FAST_POLL_HIDDEN_MS
+: FAST_POLL_MS;
+
+fastPollTimer =
+setTimeout(
+()=>{
+
+fastPollTimer =
+null;
+
+if(
+isCloudLoggedInEffective() &&
+!isDrawingsCloudSyncPaused()
+){
+void pullDrawingsFromCloudNow().catch(
+()=>{}
+);
+}
+
+scheduleDrawingsFastPollTick();
 
 },
-FAST_POLL_MS
+delay
 );
+
+}
+
+function startDrawingsFastPoll(){
+
+fastPollStopped =
+false;
+
+if(
+fastPollTimer
+){
+clearTimeout(
+fastPollTimer
+);
+fastPollTimer =
+null;
+}
+
+scheduleDrawingsFastPollTick();
 
 }
 
 export function stopDrawingsFastPoll(){
 
+fastPollStopped =
+true;
+
 if(
 fastPollTimer
 ){
-clearInterval(
+clearTimeout(
 fastPollTimer
 );
 fastPollTimer =
