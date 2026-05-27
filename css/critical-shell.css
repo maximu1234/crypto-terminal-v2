@@ -1,0 +1,85 @@
+/**
+ * Минимум для первого кадра (Яндекс.Браузер / медленный CSS).
+ * Подключается первым, blocking, до остальных таблиц стилей.
+ */
+html:not(.css-ready){
+visibility:hidden;
+}
+
+html.css-ready{
+visibility:visible;
+}
+
+html,
+body{
+margin:0;
+background:#0b1220;
+color:#e5e7eb;
+font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+}
+
+.hidden,
+.header-settings-dropdown.hidden,
+[hidden]{
+display:none !important;
+}
+
+.menu{
+display:flex;
+flex-wrap:wrap;
+align-items:center;
+gap:18px;
+}
+
+.menu a{
+color:#9ca3af;
+text-decoration:none;
+font-size:14px;
+}
+
+#header{
+display:flex;
+align-items:center;
+gap:16px;
+padding:0 16px;
+min-height:56px;
+background:#0b1220;
+border-bottom:1px solid #1f2937;
+}
+
+#logo{
+color:#fff;
+text-decoration:none;
+font-weight:700;
+font-size:20px;
+}
+
+body.coins-page #coins-nav-panel,
+body.coins-page #coins-nav-backdrop{
+display:none !important;
+}
+
+body.coins-page.coins-nav-open #coins-nav-panel{
+display:flex !important;
+}
+
+body.coins-page.coins-nav-open #coins-nav-backdrop{
+display:block !important;
+}
+
+body.site-nav-page #site-nav-panel,
+body.site-nav-page #screener-nav-panel,
+body.site-nav-page .screener-nav-backdrop,
+body.site-nav-page #screener-nav-backdrop{
+display:none !important;
+}
+
+body.site-nav-page.screener-nav-open #site-nav-panel,
+body.site-nav-page.screener-nav-open #screener-nav-panel{
+display:flex !important;
+}
+
+body.site-nav-page.screener-nav-open .screener-nav-backdrop,
+body.site-nav-page.screener-nav-open #screener-nav-backdrop{
+display:block !important;
+}
