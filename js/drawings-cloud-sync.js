@@ -540,32 +540,153 @@ snap?.token &&
 snap?.user
 ){
 
+let sb =
+snap.ctx?.sb ||
+null;
+
 if(
-snap.ctx?.sb
+!sb
 ){
-return {
-sb: snap.ctx.sb,
-user: snap.user
-};
+try{
+sb =
+await withTimeout(
+getSupabase(),
+3000,
+"getSupabase"
+);
+}catch{
+sb = null;
+}
 }
 
-const sb =
-await getSupabase();
-
-if(
-sb
-){
 return {
 sb,
-user: snap.user
+user: snap.user,
+token: snap.token
 };
-}
 
 }
 
 return waitForCloudAuth(
-12000
+8000
 );
+
+}
+
+/**
+ * Чтение user_drawings через REST (на iPad getSupabase/select часто зависают).
+ */
+async function fetchCloudDrawingsViaRest(
+auth
+){
+
+let env;
+
+try{
+env =
+await import("./supabase-env.js?v=4");
+}catch{
+return null;
+}
+
+const base =
+String(
+env.SUPABASE_URL || ""
+).replace(
+/\/$/,
+""
+);
+const anon =
+env.SUPABASE_ANON_KEY;
+
+if(
+!base ||
+!anon ||
+!auth?.token ||
+!auth?.user?.id
+){
+return null;
+}
+
+const uid =
+encodeURIComponent(
+auth.user.id
+);
+const headers = {
+apikey: anon,
+Authorization: `Bearer ${auth.token}`,
+Accept: "application/json"
+};
+
+const paths = [
+`user_drawings?user_id=eq.${uid}&select=symbol,shape_id,shape,updated_at&deleted_at=is.null`,
+`user_drawings?user_id=eq.${uid}&select=symbol,shape_id,shape,updated_at`
+];
+
+for(
+const path of paths
+){
+
+try{
+const res =
+await fetchWithTimeout(
+`${base}/rest/v1/${path}`,
+{
+method: "GET",
+headers
+},
+15000,
+"user_drawings fetch"
+);
+
+if(
+!res.ok
+){
+const text =
+await res.text();
+
+if(
+/deleted_at|PGRST204|42703/i.test(
+text
+)
+){
+continue;
+}
+
+console.warn(
+"[drawings] fetch REST:",
+res.status,
+text.slice(
+0,
+160
+)
+);
+return null;
+}
+
+const rows =
+await res.json();
+
+return Array.isArray(
+rows
+)
+? rows
+: [];
+
+}catch(
+err
+){
+console.warn(
+"[drawings] fetch REST:",
+err?.message || err
+);
+return null;
+
+}
+
+}
+
+return null;
 
 }
 
@@ -891,11 +1012,31 @@ getShapeRevisionTime(
 shape
 );
 
+const auth =
+resolveDrawingsRestAuth();
+const token =
+auth?.token ||
+null;
+const user =
+auth?.user ||
+ctx?.user ||
+null;
+
+if(
+token &&
+user
+){
+
 if(
 await upsertDrawingRowViaRest(
-ctx,
+{
+user
+},
 symbol,
-shape
+shape,
+{
+token
+}
 )
 ){
 markShapeSynced(
@@ -905,6 +1046,17 @@ rev
 );
 broadcastDrawingsSync();
 return true;
+}
+
+}
+
+if(
+!ctx?.sb
+){
+console.warn(
+"[drawings] upsert: нет REST и нет SDK — перелогиньтесь"
+);
+return false;
 }
 
 const baseRow =
@@ -1357,18 +1509,19 @@ isDrawingsCloudSyncPaused()
 return 0;
 }
 
-const ctx =
-await getAuthed();
+const auth =
+resolveDrawingsRestAuth();
 
 if(
-!ctx
+!auth?.token ||
+!auth?.user?.id
 ){
 
 if(
-isCloudLoggedIn()
+isCloudLoggedInEffective()
 ){
 console.warn(
-"[drawings] в Supabase не отправлено: сессия не готова. Обновите страницу или войдите снова."
+"[drawings] в Supabase не отправлено: нет JWT. Шестерёнка → войти снова (часто на iPad)."
 );
 }else if(
 isCloudSyncEnabled()
@@ -1380,6 +1533,11 @@ console.warn(
 
 return 0;
 }
+
+const ctx =
+{
+user: auth.user
+};
 
 const dupRemoved =
 pruneDuplicateShapeIdsAcrossSymbols();
@@ -1453,12 +1611,22 @@ continue;
 }
 
 if(
-await upsertDrawingRow(
+await upsertDrawingRowViaRest(
 ctx,
 sym,
-shape
+shape,
+{
+token: auth.token
+}
 )
 ){
+markShapeSynced(
+sym,
+shape.id,
+getShapeRevisionTime(
+shape
+)
+);
 pushed += 1;
 }
 
@@ -1713,12 +1881,35 @@ isDrawingsCloudSyncPaused()
 return 0;
 }
 
+const auth =
+resolveDrawingsRestAuth();
+
+if(
+!auth?.token ||
+!auth?.user?.id
+){
+return 0;
+}
+
+let data =
+await fetchCloudDrawingsViaRest(
+auth
+);
+
+if(
+data ===
+null
+){
+
 const ctx =
 await getAuthed();
 
 if(
-!ctx
+!ctx?.sb
 ){
+console.warn(
+"[drawings] reconcile: не удалось прочитать облако (REST/SDK)"
+);
 return 0;
 }
 
@@ -1739,17 +1930,22 @@ ctx.user.id
 null
 );
 
-let { data, error } =
-await query;
+let result =
+await withTimeout(
+query,
+12000,
+"user_drawings select"
+);
 
 if(
-error &&
+result.error &&
 isDeletedAtColumnError(
-error
+result.error
 )
 ){
-const retry =
-await ctx.sb
+result =
+await withTimeout(
+ctx.sb
 .from(
 "user_drawings"
 )
@@ -1759,24 +1955,22 @@ await ctx.sb
 .eq(
 "user_id",
 ctx.user.id
+),
+12000,
+"user_drawings select (no deleted_at)"
 );
-
-data =
-retry.data;
-error =
-retry.error;
 }
 
 if(
-error
+result.error
 ){
 
 if(
-error.code ===
+result.error.code ===
 "42P01" ||
 /PGRST205|does not exist/i.test(
 String(
-error.message ||
+result.error.message ||
 ""
 )
 )
@@ -1789,9 +1983,14 @@ return 0;
 
 console.warn(
 "[drawings] reconcile:",
-error.message
+result.error.message
 );
 return 0;
+
+}
+
+data =
+result.data;
 
 }
 
@@ -2122,14 +2321,12 @@ drawingsPushTimer =
 null;
 }
 
-return runCloudOp(
-async()=>{
+return (async()=>{
 
 await pushUnsyncedDrawingsImpl();
-await reconcileLocalDrawingsWithCloud();
+return reconcileLocalDrawingsWithCloud();
 
-}
-);
+})();
 
 }
 

@@ -75,7 +75,7 @@ syncBackgroundAlertStreams
 
 import {
 initDrawings
-} from "./drawings.js?v=143";
+} from "./drawings.js?v=144";
 
 import {
 initCoinsMobileUi,

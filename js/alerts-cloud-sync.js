@@ -3544,13 +3544,179 @@ row,
  * Сверка с активными строками price_alerts (triggered_at IS NULL).
  * Импортирует все активные облачные алерты в localStorage (кросс-устройство).
  */
+async function fetchActivePriceAlertsViaRest(
+auth
+){
+
+let env;
+
+try{
+env =
+await import("./supabase-env.js?v=4");
+}catch{
+return null;
+}
+
+const base =
+String(
+env.SUPABASE_URL || ""
+).replace(
+/\/$/,
+""
+);
+const anon =
+env.SUPABASE_ANON_KEY;
+const uid =
+auth?.userId ||
+auth?.user?.id;
+
+if(
+!base ||
+!anon ||
+!auth?.token ||
+!uid
+){
+return null;
+}
+
+const url =
+`${base}/rest/v1/price_alerts?user_id=eq.${encodeURIComponent(uid)}` +
+`&triggered_at=is.null` +
+`&select=id,symbol,shape_id,price,tf,created_at`;
+
+try{
+const res =
+await fetchWithTimeout(
+url,
+{
+method: "GET",
+headers: {
+apikey: anon,
+Authorization: `Bearer ${auth.token}`,
+Accept: "application/json"
+}
+},
+15000,
+"price_alerts fetch"
+);
+
+if(
+!res.ok
+){
+console.warn(
+"[alerts] fetch REST:",
+res.status,
+(
+await res.text()
+).slice(
+0,
+160
+)
+);
+return null;
+}
+
+const rows =
+await res.json();
+
+return Array.isArray(
+rows
+)
+? rows
+: [];
+
+}catch(
+err
+){
+console.warn(
+"[alerts] fetch REST:",
+err?.message || err
+);
+return null;
+
+}
+
+}
+
 export async function reconcileLocalRegistryWithCloud(){
+
+const snap =
+readAlertTokenSync();
+
+let data =
+null;
+
+if(
+snap?.token &&
+snap?.user?.id
+){
+data =
+await fetchActivePriceAlertsViaRest({
+token: snap.token,
+userId: snap.user.id
+});
+}
+
+if(
+data ===
+null
+){
 
 const ctx =
 await getAuthed();
 
-if(!ctx){
+if(
+!ctx?.sb
+){
 return 0;
+}
+
+let result;
+
+try{
+result =
+await withTimeout(
+ctx.sb
+.from(
+"price_alerts"
+)
+.select(
+"id, symbol, shape_id, price, tf, created_at"
+)
+.eq(
+"user_id",
+ctx.user.id
+)
+.is(
+"triggered_at",
+null
+),
+12000,
+"price_alerts select"
+);
+}catch(
+err
+){
+console.warn(
+"alert cloud reconcile:",
+err?.message || err
+);
+return 0;
+}
+
+if(
+result.error
+){
+console.warn(
+"alert cloud reconcile:",
+result.error.message
+);
+return 0;
+}
+
+data =
+result.data;
+
 }
 
 const {
@@ -3559,22 +3725,7 @@ alertEntryKey,
 loadAlerts,
 normalizeAlertTf
 } =
-await import("./alerts.js?v=61");
-
-const { data, error } =
-await ctx.sb
-.from("price_alerts")
-.select("id, symbol, shape_id, price, tf, created_at")
-.eq("user_id", ctx.user.id)
-.is("triggered_at", null);
-
-if(error){
-console.warn(
-"alert cloud reconcile:",
-error.message
-);
-return 0;
-}
+await import("./alerts.js?v=69");
 
 const cloudByKey =
 new Map();
