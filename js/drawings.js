@@ -52,7 +52,7 @@ deleteDrawingFromCloud,
 flushDrawingsCloudPush,
 onDrawingsRemoteUpdate,
 scheduleDrawingsCloudPush
-} from "./drawings-cloud-sync.js?v=12";
+} from "./drawings-cloud-sync.js?v=13";
 
 import {
 touchShapeRevision,
@@ -9046,7 +9046,10 @@ return;
 
 }
 
-if(!isActive()){
+if(
+!isActive() &&
+!e.detail?.remote
+){
 return;
 }
 
@@ -9056,6 +9059,40 @@ scheduleRedraw();
 updateStyleBar();
 
 };
+
+const refreshDrawingsOnTabWake = ()=>{
+
+if(
+!alive
+){
+return;
+}
+
+loadDrawings();
+reconcileDrawingAlertsFromRegistry();
+scheduleRedraw();
+updateStyleBar();
+
+};
+
+document.addEventListener(
+"visibilitychange",
+()=>{
+
+if(
+document.visibilityState ===
+"visible"
+){
+refreshDrawingsOnTabWake();
+}
+
+}
+);
+
+window.addEventListener(
+"focus",
+refreshDrawingsOnTabWake
+);
 
 const onPriceAlertsChanged =
 e=>{
@@ -9247,17 +9284,38 @@ return;
 }
 
 const sym =
-getSymbol();
+String(
+getSymbol() ||
+""
+).trim().toUpperCase();
+
+const list =
+Array.isArray(
+symbols
+)
+? symbols.map(
+s=>
+String(
+s ||
+""
+).trim().toUpperCase()
+)
+: [];
 
 if(
-!symbols?.length ||
-symbols.includes(sym)
+list.length &&
+!list.includes(
+sym
+)
 ){
+return;
+}
+
 loadDrawings();
 reconcileDrawingAlertsFromRegistry();
+redraw();
 scheduleRedraw();
 updateStyleBar();
-}
 
 };
 
@@ -9530,6 +9588,16 @@ true
 window.removeEventListener(
 "drawings-updated",
 onDrawingsUpdated
+);
+
+document.removeEventListener(
+"visibilitychange",
+refreshDrawingsOnTabWake
+);
+
+window.removeEventListener(
+"focus",
+refreshDrawingsOnTabWake
 );
 
 window.removeEventListener(

@@ -51,7 +51,7 @@ const REGISTRY_SYNC_DEBOUNCE_MS =
 200;
 
 const FAST_POLL_MS =
-2500;
+1200;
 
 let drawingsRealtimeChannel =
 null;
@@ -610,24 +610,68 @@ fn
 }
 
 function notifyDrawings(
-symbols
+symbols,
+opts = {}
 ){
 
-notifyDrawingsListeners(
+const list =
+Array.isArray(
 symbols
+)
+? symbols
+: [];
+
+notifyDrawingsListeners(
+list
 );
 
 drawingsListeners.forEach(
 fn=>{
 try{
 fn(
-symbols
+list
 );
 }catch{
 /* ignore */
 }
 }
 );
+
+if(
+opts.skipWindowEvent
+){
+return;
+}
+
+for(
+const symbol of list
+){
+
+const sym =
+String(
+symbol ||
+""
+).trim().toUpperCase();
+
+if(
+!sym
+){
+continue;
+}
+
+window.dispatchEvent(
+new CustomEvent(
+"drawings-updated",
+{
+detail:{
+symbol: sym,
+remote: true
+}
+}
+)
+);
+
+}
 
 }
 
@@ -959,7 +1003,7 @@ remoteSyncTimer =
 null;
 
 if(
-!isCloudLoggedIn()
+!isCloudLoggedInEffective()
 ){
 return;
 }
@@ -2287,19 +2331,71 @@ for(
 const sym of symbols
 ){
 
-const mergedList =
-applyTombstonesToShapeList(
-mergeShapeLists(
+const localList =
 local[
 sym
-],
+] ||
+[];
+const cloudList =
 cloudBySymbol[
 sym
-]
+] ||
+[];
+
+let mergedList =
+applyTombstonesToShapeList(
+mergeShapeLists(
+localList,
+cloudList
 ),
 tombstones[
 sym
 ]
+);
+
+const cloudIds =
+new Set(
+cloudList.map(
+shape=>
+String(
+shape?.id ||
+""
+).trim()
+).filter(
+Boolean
+)
+);
+
+mergedList =
+mergedList.filter(
+shape=>{
+
+const id =
+String(
+shape?.id ||
+""
+).trim();
+
+if(
+!id
+){
+return false;
+}
+
+if(
+cloudIds.has(
+id
+)
+){
+return true;
+}
+
+return shapeNeedsPush(
+sym,
+shape
+);
+
+}
 );
 
 applyMap[
@@ -2374,9 +2470,14 @@ if(
 syms.size >
 0
 ){
-notifyDrawings([
+notifyDrawings(
+[
 ...syms
-]);
+],
+{
+skipWindowEvent: true
+}
+);
 
 for(
 const symbol of syms
@@ -2387,7 +2488,8 @@ new CustomEvent(
 {
 detail:{
 symbol,
-cleared: true
+cleared: true,
+remote: true
 }
 }
 )
