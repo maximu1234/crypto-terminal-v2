@@ -27,6 +27,14 @@ import {
 withTimeout
 } from "./async-timeout.js?v=1";
 
+import {
+readAlertTokenSync
+} from "./alert-auth-cache.js?v=4";
+
+import {
+getSupabase
+} from "./supabase-client.js?v=5";
+
 const DRAWINGS_ROW_SYNC_META_KEY =
 "drawings_row_sync_v1";
 
@@ -494,9 +502,92 @@ synced +
 
 async function getAuthed(){
 
+const snap =
+readAlertTokenSync();
+
+if(
+snap?.token &&
+snap?.user
+){
+
+if(
+snap.ctx?.sb
+){
+return {
+sb: snap.ctx.sb,
+user: snap.user
+};
+}
+
+const sb =
+await getSupabase();
+
+if(
+sb
+){
+return {
+sb,
+user: snap.user
+};
+}
+
+}
+
 return waitForCloudAuth(
 12000
 );
+
+}
+
+function countLocalDrawingStats(){
+
+const local =
+collectAllLocalDrawings();
+let total =
+0;
+let pending =
+0;
+
+for(
+const [
+sym,
+list
+] of Object.entries(
+local
+)
+){
+
+if(
+!Array.isArray(
+list
+)
+){
+continue;
+}
+
+for(
+const shape of list
+){
+
+total += 1;
+
+if(
+shapeNeedsPush(
+sym,
+shape
+)
+){
+pending += 1;
+}
+
+}
+
+}
+
+return {
+total,
+pending
+};
 
 }
 
@@ -580,6 +671,166 @@ msg
 
 }
 
+async function upsertDrawingRowViaRest(
+ctx,
+symbol,
+shape,
+opts = {}
+){
+
+const sym =
+String(
+symbol ||
+""
+).trim().toUpperCase();
+const shapeId =
+String(
+shape?.id ||
+""
+).trim();
+
+if(
+!sym ||
+!shapeId
+){
+return false;
+}
+
+let token =
+opts.token || null;
+
+if(
+!token
+){
+token =
+await getAccessTokenForUser(
+ctx
+);
+}
+
+if(
+!token
+){
+return false;
+}
+
+let env;
+
+try{
+env =
+await import("./supabase-env.js?v=4");
+}catch{
+return false;
+}
+
+const base =
+String(
+env.SUPABASE_URL || ""
+).replace(
+/\/$/,
+""
+);
+const anon =
+env.SUPABASE_ANON_KEY;
+
+if(
+!base ||
+!anon
+){
+return false;
+}
+
+const rev =
+getShapeRevisionTime(
+shape
+);
+
+const row =
+{
+user_id: ctx.user.id,
+symbol: sym,
+shape_id: shapeId,
+shape,
+updated_at: new Date(
+rev
+).toISOString()
+};
+
+if(
+opts.includeDeletedAt !==
+false
+){
+row.deleted_at = null;
+}
+
+try{
+const res =
+await fetchWithTimeout(
+`${base}/rest/v1/user_drawings?on_conflict=user_id,symbol,shape_id`,
+{
+method: "POST",
+headers: {
+apikey: anon,
+Authorization: `Bearer ${token}`,
+"Content-Type": "application/json",
+Prefer: "resolution=merge-duplicates,return=minimal"
+},
+body: JSON.stringify(
+row
+)
+},
+15000
+);
+
+if(
+res.ok
+){
+return true;
+}
+
+const text =
+await res.text();
+
+if(
+opts.includeDeletedAt !==
+false &&
+/deleted_at|PGRST204|42703/i.test(
+text
+)
+){
+return upsertDrawingRowViaRest(
+ctx,
+symbol,
+shape,
+{
+...opts,
+includeDeletedAt: false,
+token
+}
+);
+}
+
+console.warn(
+"[drawings] upsert REST:",
+res.status,
+text.slice(
+0,
+200
+)
+);
+return false;
+
+}catch(err){
+console.warn(
+"[drawings] upsert REST:",
+err?.message || err
+);
+return false;
+
+}
+
+}
+
 async function upsertDrawingRow(
 ctx,
 symbol,
@@ -608,6 +859,21 @@ const rev =
 getShapeRevisionTime(
 shape
 );
+
+if(
+await upsertDrawingRowViaRest(
+ctx,
+symbol,
+shape
+)
+){
+markShapeSynced(
+sym,
+shapeId,
+rev
+);
+return true;
+}
 
 const baseRow =
 {
@@ -1462,6 +1728,75 @@ changed.length
 );
 }
 
+const cloudTotal =
+(
+data ||
+[]
+).length;
+
+if(
+cloudTotal ===
+0
+){
+
+const {
+total,
+pending
+} =
+countLocalDrawingStats();
+
+if(
+total >
+0 &&
+pending ===
+0
+){
+
+const syms =
+purgeAllLocalDrawingsStorage();
+
+if(
+syms.size >
+0
+){
+notifyDrawings([
+...syms
+]);
+
+for(
+const symbol of syms
+){
+window.dispatchEvent(
+new CustomEvent(
+"drawings-updated",
+{
+detail:{
+symbol,
+cleared: true
+}
+}
+)
+);
+}
+
+console.log(
+"[drawings] Supabase пусто — локальные рисунки сняты с графиков"
+);
+}
+
+}else if(
+total >
+0 &&
+pending >
+0
+){
+console.warn(
+"[drawings] на графике есть рисунки, в Supabase 0 строк — отправка в облако…"
+);
+}
+
+}
+
 return changed.length;
 
 }
@@ -1717,6 +2052,7 @@ await migrateLegacyBlobOnce(
 ctx
 );
 
+await pushUnsyncedDrawingsImpl();
 await reconcileLocalDrawingsWithCloud();
 await pushUnsyncedDrawingsImpl();
 await reconcileLocalDrawingsWithCloud();
