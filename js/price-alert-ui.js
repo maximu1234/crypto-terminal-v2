@@ -1,21 +1,23 @@
 import {
-ALERT_LINE_COLOR,
-ALERT_LINE_DASH,
 createPriceAlert,
 getActiveAlerts,
 removeAlert,
 finalizeAlertPriceDrag
-} from "./alerts.js?v=62";
+} from "./alerts.js?v=63";
 
 import {
 isCloudLoggedInEffective
 } from "./cloud-sync.js?v=14";
 
-const PLUS_HIT_W =
-52;
+import {
+formatPrice
+} from "./chart.js?v=1";
 
-const PLUS_HIT_H =
-40;
+const PLUS_ICON_W =
+28;
+
+const PLUS_HIT_PAD =
+12;
 
 export function mountPriceAlertUi({
 chart,
@@ -38,10 +40,6 @@ let selectedAlertId =
 null;
 let dragAlertId =
 null;
-let dragStartY =
-0;
-let dragStartPrice =
-0;
 
 const plusBtn =
 document.createElement(
@@ -57,8 +55,13 @@ plusBtn.setAttribute(
 );
 plusBtn.title =
 "Алерт на этой цене";
-plusBtn.textContent =
-"+";
+plusBtn.innerHTML =
+`<span class="price-alert-scale-plus-icon" aria-hidden="true">+</span><span class="price-alert-scale-plus-price"></span>`;
+
+const plusPriceEl =
+plusBtn.querySelector(
+".price-alert-scale-plus-price"
+);
 
 wrapEl.appendChild(
 plusBtn
@@ -180,9 +183,6 @@ hideDeleteBar();
 return;
 }
 
-const rect =
-wrapEl.getBoundingClientRect();
-
 deleteBar.style.left =
 "8px";
 deleteBar.style.top =
@@ -234,11 +234,12 @@ pw;
 
 if(
 x <
-pw ||
+pw -
+PLUS_HIT_PAD ||
 x >
 pw +
 scaleW +
-PLUS_HIT_W
+PLUS_HIT_PAD
 ){
 hidePlus();
 return;
@@ -261,9 +262,21 @@ return;
 }
 
 plusBtn.style.left =
-`${pw + 6}px`;
+`${pw - PLUS_ICON_W}px`;
 plusBtn.style.top =
-`${y - PLUS_HIT_H / 2}px`;
+`${y}px`;
+plusBtn.style.transform =
+"translateY(-50%)";
+
+if(
+plusPriceEl
+){
+plusPriceEl.textContent =
+formatPrice(
+price
+);
+}
+
 plusBtn.dataset.pendingPrice =
 String(
 price
@@ -453,10 +466,6 @@ hit
 );
 dragAlertId =
 hit.shapeId;
-dragStartY =
-y;
-dragStartPrice =
-hit.price;
 e.preventDefault();
 e.stopPropagation();
 

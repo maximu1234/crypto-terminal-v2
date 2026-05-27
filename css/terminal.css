@@ -819,23 +819,59 @@ body.tablet-chart .price-scale-touch-strip{
 .price-alert-scale-plus{
   position:absolute;
   z-index:12;
-  width:28px;
+  display:flex;
+  flex-direction:row;
+  align-items:stretch;
   height:28px;
+  margin:0;
   padding:0;
-  border:1px solid rgba(250,204,21,.55);
-  border-radius:50%;
-  background:rgba(17,24,39,.92);
-  color:#facc15;
-  font-size:20px;
-  line-height:1;
+  border:none;
+  border-radius:4px;
+  background:rgba(42,46,57,.94);
+  box-shadow:0 1px 4px rgba(0,0,0,.45);
   cursor:pointer;
   pointer-events:auto;
   touch-action:manipulation;
-  box-shadow:0 2px 8px rgba(0,0,0,.35);
+  font-family:-apple-system, BlinkMacSystemFont, "Trebuchet MS", Roboto, Ubuntu, sans-serif;
+  overflow:hidden;
 }
 
 .price-alert-scale-plus.hidden{
   display:none;
+}
+
+.price-alert-scale-plus-icon{
+  flex:0 0 28px;
+  width:28px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#d1d5db;
+  font-size:18px;
+  font-weight:300;
+  line-height:1;
+  border-right:1px solid rgba(255,255,255,.12);
+}
+
+.price-alert-scale-plus-price{
+  flex:0 0 auto;
+  display:flex;
+  align-items:center;
+  padding:0 10px 0 8px;
+  color:#fff;
+  font-size:12px;
+  font-weight:400;
+  line-height:1;
+  font-variant-numeric:tabular-nums;
+  white-space:nowrap;
+}
+
+.price-alert-scale-plus:hover{
+  background:rgba(50,54,66,.98);
+}
+
+.price-alert-scale-plus:hover .price-alert-scale-plus-icon{
+  color:#fff;
 }
 
 .price-alert-delete-bar{

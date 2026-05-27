@@ -1256,7 +1256,7 @@ String(a.shapeId) === sid
 
 saveAlerts(list);
 
-clearAlertOnDrawing(
+removeDrawingShape(
 sym,
 sid
 );

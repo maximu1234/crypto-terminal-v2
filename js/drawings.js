@@ -6,7 +6,7 @@ getActiveAlerts,
 finalizeAlertPriceDrag,
 removeAlert,
 upsertAlert
-} from "./alerts.js?v=62";
+} from "./alerts.js?v=63";
 
 import {
 setAlertDragPaused,
@@ -8959,127 +8959,86 @@ Date.now() / 1000
 
 }
 
-function reconcileDrawingAlertsFromRegistry(
-options = {}
+function isLegacyAlertHray(
+shape,
+registryIds
 ){
 
-const allowCreate =
-options.allowCreate !== false;
+if(
+shape?.type !==
+"hray"
+){
+return false;
+}
+
+const id =
+String(
+shape.id ||
+""
+);
+
+if(
+shape.isAlert ===
+true
+){
+return true;
+}
+
+if(
+id.startsWith(
+"pa_"
+)
+){
+return true;
+}
+
+return registryIds.has(
+id
+);
+
+}
+
+function reconcileDrawingAlertsFromRegistry(){
 
 const symNorm =
-String(getSymbol() || "").trim().toUpperCase();
+String(
+getSymbol() ||
+""
+).trim().toUpperCase();
 
 const alertsForSym =
 getActiveAlerts().filter(
 a=>
-String(a.symbol).toUpperCase() === symNorm
+String(
+a.symbol
+).toUpperCase() ===
+symNorm
 );
 
 const registryIds =
 new Set(
-alertsForSym.map(a=>a.shapeId)
+alertsForSym.map(
+a=>
+a.shapeId
+)
 );
 
-let dirty =
-false;
+const before =
+drawings.length;
 
 drawings =
-drawings.map(shape=>{
-
-if(shape.type !== "hray"){
-return shape;
-}
-
-if(
-shape.isAlert &&
-!registryIds.has(shape.id)
-){
-dirty = true;
-return stripAlertFromShape(shape);
-}
-
-if(
-!registryIds.has(shape.id)
-){
-return shape;
-}
-
-if(shape.isAlert){
-return shape;
-}
-
-dirty = true;
-
-return {
-...shape,
-isAlert: true,
-lineWidth: 1,
-alertCreatedAt:
-shape.alertCreatedAt ||
-Date.now(),
-alertTf:
-shape.alertTf ||
-getTf(),
-alertSymbol: symNorm,
-savedColor:
-shape.savedColor ||
-shape.color
-};
-
-});
-
-const existingIds =
-new Set(
-drawings
-.filter(d=>d.type === "hray")
-.map(d=>d.id)
+drawings.filter(
+shape=>!
+isLegacyAlertHray(
+shape,
+registryIds
+)
 );
 
-if(allowCreate){
-
-for(const alert of alertsForSym){
-
 if(
-existingIds.has(alert.shapeId)
+drawings.length !==
+before
 ){
-continue;
-}
-
-const price =
-Number(alert.price);
-
-if(!Number.isFinite(price)){
-continue;
-}
-
-const restored =
-makeShape("hray", {
-id: alert.shapeId,
-time: defaultHrayAnchorTime(),
-price
-});
-
-restored.isAlert = true;
-restored.lineWidth = 1;
-restored.alertCreatedAt =
-alert.createdAt ||
-Date.now();
-restored.alertTf =
-alert.tf ||
-getTf();
-restored.alertSymbol = symNorm;
-restored.savedColor =
-restored.color;
-
-drawings.push(restored);
-existingIds.add(alert.shapeId);
-dirty = true;
-
-}
-
-}
-
-if(dirty){
 saveDrawings();
 scheduleRedraw();
 updateStyleBar();
@@ -9109,9 +9068,7 @@ if(!alive || !isActive()){
 return;
 }
 
-reconcileDrawingAlertsFromRegistry({
-allowCreate: false
-});
+reconcileDrawingAlertsFromRegistry();
 scheduleRedraw();
 updateStyleBar();
 
@@ -9136,9 +9093,7 @@ if(
 symbols.includes(sym)
 ){
 loadDrawings();
-reconcileDrawingAlertsFromRegistry({
-allowCreate: false
-});
+reconcileDrawingAlertsFromRegistry();
 scheduleRedraw();
 updateStyleBar();
 }
