@@ -51,6 +51,13 @@ isTerminalMobile,
 TERMINAL_MOBILE_MQ
 } from "./terminal-page.js?v=3";
 
+import {
+getWidgetFlagHtml,
+wireWidgetFlagUi,
+updateWidgetFlagUi,
+bindWidgetFlagGlobalListeners
+} from "./widget-favorite-flag.js?v=1";
+
 const dashboard =
 document.getElementById("dashboard");
 
@@ -117,6 +124,8 @@ widget.innerHTML = `
 <div class="widget-header-row">
 
 <div class="widget-header-left">
+
+${getWidgetFlagHtml()}
 
 <div class="left-controls">
 
@@ -251,6 +260,11 @@ onActivate:setActive
 }
 );
 
+wireWidgetFlagUi(
+widget,
+getSymbol
+);
+
 const entry = {
 index,
 widget,
@@ -259,6 +273,7 @@ series,
 chartWrap,
 drawingTools,
 loadData,
+getSymbol,
 candlesRef: ()=> candles,
 setCandles: data=>{ candles = data; },
 unsubKline: null
@@ -427,6 +442,11 @@ changeEl.innerText =
 changeEl.className =
 `change ${change >= 0 ? "green" : "red"}`;
 
+updateWidgetFlagUi(
+widget,
+symbol
+);
+
 }catch(err){
 
 console.error("Dashboard widget load:", err);
@@ -577,6 +597,22 @@ typeof LightweightCharts !==
 "undefined"
 ? Promise.resolve()
 : loadLightweightCharts();
+
+bindWidgetFlagGlobalListeners(
+()=>{
+
+widgets.forEach(
+w=>{
+updateWidgetFlagUi(
+w.widget,
+w.getSymbol?.() ||
+""
+);
+}
+);
+
+}
+);
 
 chartsReady.then(()=>{
 

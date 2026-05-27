@@ -92,6 +92,10 @@ body{
     overflow:visible;
 }
 
+.widget-header-left .screener-flag-wrap{
+    flex-shrink:0;
+}
+
 .widget-header-right{
     display:flex;
     align-items:center;
