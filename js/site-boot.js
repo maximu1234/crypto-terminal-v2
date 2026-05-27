@@ -71,7 +71,7 @@ initAlertMonitor();
 initAlertsCloudSync();
 ensureDrawToolsVisible();
 
-import("./drawings-cloud-sync.js?v=4").then(
+import("./drawings-cloud-sync.js?v=5").then(
 ({ initDrawingsCloudSync })=>{
 initDrawingsCloudSync();
 }
@@ -125,6 +125,15 @@ configured &&
 ){
 console.warn(
 "[Multichart] Чтобы алерты попадали в Supabase и Telegram: шестерёнка в шапке → email → ссылка из письма."
+);
+}
+
+if(
+configured &&
+loggedIn
+){
+console.info(
+"[Multichart] Develop → Empty Caches не удаляет рисунки в браузере. Полный сброс: страница Алерты → «Удалить»."
 );
 }
 

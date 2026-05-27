@@ -17,8 +17,10 @@ mergeShapeLists,
 applyTombstonesToShapeList,
 getShapeRevisionTime,
 unpackCloudDrawings,
+packCloudDrawings,
 purgeAllLocalDrawingsStorage,
-DRAWINGS_TOMBSTONES_KEY
+DRAWINGS_TOMBSTONES_KEY,
+DRAWINGS_GLOBAL_CLEAR_KEY
 } from "./drawings-storage.js?v=4";
 
 import {
@@ -489,12 +491,62 @@ saveLocalTombstones(
 {}
 );
 
+await clearLegacyDrawingsBlob(
+ctx
+);
+
+localStorage.setItem(
+BLOB_MIGRATED_KEY,
+"1"
+);
+
 broadcastDrawingsSync();
 
 return true;
 
 }
 );
+
+}
+
+async function clearLegacyDrawingsBlob(
+ctx
+){
+
+const emptyBlob =
+packCloudDrawings(
+{},
+{}
+);
+
+const { error } =
+await withTimeout(
+ctx.sb
+.from(
+"user_settings"
+)
+.upsert(
+{
+user_id: ctx.user.id,
+drawings: emptyBlob,
+drawings_updated_at: new Date().toISOString()
+},
+{
+onConflict: "user_id"
+}
+),
+12000,
+"user_settings drawings clear"
+);
+
+if(
+error
+){
+console.warn(
+"[drawings] очистка JSON в user_settings:",
+error.message
+);
+}
 
 }
 
@@ -616,6 +668,24 @@ collectAllLocalDrawings();
 const tombstones =
 loadLocalTombstones();
 
+let localShapeCount =
+0;
+
+for(
+const list of Object.values(
+local
+)
+){
+if(
+Array.isArray(
+list
+)
+){
+localShapeCount +=
+list.length;
+}
+}
+
 let pushed =
 0;
 
@@ -716,10 +786,26 @@ pushed >
 0
 ){
 broadcastDrawingsSync();
+
+if(
+localShapeCount >
+0 &&
+pushed >=
+localShapeCount *
+0.5
+){
+console.warn(
+"[drawings] из браузера (localStorage) отправлено в Supabase:",
+pushed,
+"фигур. Empty Caches кэш не очищает — для полного сброса: Алерты → «Удалить»."
+);
+}else{
 console.log(
 "[drawings] Supabase: сохранено фигур —",
 pushed
 );
+}
+
 }
 
 return pushed;
@@ -772,10 +858,50 @@ BLOB_MIGRATED_KEY
 return;
 }
 
+if(
+localStorage.getItem(
+DRAWINGS_GLOBAL_CLEAR_KEY
+)
+){
+localStorage.setItem(
+BLOB_MIGRATED_KEY,
+"1"
+);
+return;
+}
+
 const legacy =
 await fetchLegacyBlobDrawings(
 ctx
 );
+
+const legacyCount =
+Object.values(
+legacy.shapes ||
+{}
+).reduce(
+(sum, list)=>
+sum +
+(
+Array.isArray(
+list
+)
+? list.length
+: 0
+),
+0
+);
+
+if(
+legacyCount ===
+0
+){
+localStorage.setItem(
+BLOB_MIGRATED_KEY,
+"1"
+);
+return;
+}
 
 const local =
 collectAllLocalDrawings();

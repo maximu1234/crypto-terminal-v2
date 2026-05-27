@@ -4,6 +4,10 @@ const LEGACY_TF_RE =
 export const DRAWINGS_TOMBSTONES_KEY =
 "__tombstones__";
 
+/** После «Удалить всё» на Алерты — не поднимать старый JSON из user_settings. */
+export const DRAWINGS_GLOBAL_CLEAR_KEY =
+"drawings_global_clear_v1";
+
 const LOCAL_TOMBSTONES_KEY =
 "drawings_tombstones_v1";
 
@@ -858,6 +862,12 @@ localStorage.removeItem(
 );
 localStorage.removeItem(
 "drawings_tombstones_v1"
+);
+localStorage.setItem(
+DRAWINGS_GLOBAL_CLEAR_KEY,
+String(
+Date.now()
+)
 );
 }catch{
 /* ignore */
