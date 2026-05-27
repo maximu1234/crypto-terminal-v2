@@ -9,7 +9,7 @@ ensureCloudReady
 import {
 initAlertsCloudSync,
 scheduleRegistryCloudSync
-} from "./alerts-cloud-sync.js?v=69";
+} from "./alerts-cloud-sync.js?v=72";
 
 import {
 stripAlertFlagsNotInRegistry
@@ -92,7 +92,7 @@ new CustomEvent(
 }
 );
 
-import("./drawings-cloud-sync.js?v=9").then(
+import("./drawings-cloud-sync.js?v=10").then(
 ({ initDrawingsCloudSync })=>{
 initDrawingsCloudSync();
 }

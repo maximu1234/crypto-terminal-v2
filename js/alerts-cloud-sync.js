@@ -7,8 +7,9 @@ SUPABASE_AUTH_STORAGE_KEY
 import {
 waitForCloudAuth,
 isCloudLoggedIn,
+isCloudLoggedInEffective,
 onCloudSyncChange
-} from "./cloud-sync.js?v=13";
+} from "./cloud-sync.js?v=20";
 
 import {
 setBrowserCrossCheckEnabled
@@ -164,12 +165,23 @@ return;
 }
 
 void reconcileLocalRegistryWithCloud()
-.then(async()=>{
+.then(async n=>{
 
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=62");
+await import("./alerts.js?v=69");
 
 stripAlertFlagsNotInRegistry();
+
+if(
+n >
+0
+){
+window.dispatchEvent(
+new CustomEvent(
+"alerts-registry-pulled"
+)
+);
+}
 
 })
 .catch(err=>{
@@ -337,7 +349,16 @@ payload.old
 event: "alerts-registry-sync"
 },
 ()=>{
-void pullRegistryFromCloud();
+void pullRegistryFromCloudNow().then(
+n=>{
+if(
+n >
+0
+){
+broadcastAlertsRegistrySync();
+}
+}
+);
 }
 )
 .subscribe(status=>{
@@ -384,13 +405,13 @@ alertsFastPollTimer =
 setInterval(()=>{
 
 if(
-!isCloudLoggedIn() ||
+!isCloudLoggedInEffective() ||
 isRegistryCloudSyncPaused()
 ){
 return;
 }
 
-void pullRegistryFromCloud().catch(err=>{
+void pullRegistryFromCloudNow().catch(err=>{
 console.warn(
 "[alerts] fast poll:",
 err?.message || err
@@ -1730,7 +1751,10 @@ console.warn(
 sym,
 sid
 );
+return false;
 }
+
+broadcastAlertsRegistrySync();
 
 return ok;
 
@@ -3809,7 +3833,21 @@ isRegistryCloudSyncPaused()
 return 0;
 }
 
-return reconcileLocalRegistryWithCloud();
+const n =
+await reconcileLocalRegistryWithCloud();
+
+if(
+n >
+0
+){
+window.dispatchEvent(
+new CustomEvent(
+"alerts-registry-pulled"
+)
+);
+}
+
+return n;
 
 }
 
@@ -3944,7 +3982,7 @@ err?.message || err
 const pullWhenVisible = ()=>{
 
 if(
-!isCloudLoggedIn()
+!isCloudLoggedInEffective()
 ){
 return;
 }
@@ -3957,7 +3995,7 @@ void pushUnsyncedAlerts();
 return;
 }
 
-pullRegistryFromCloud().catch(err=>{
+pullRegistryFromCloudNow().catch(err=>{
 console.warn(
 "alert cloud pull:",
 err?.message || err

@@ -339,7 +339,7 @@ true;
 return;
 }
 
-void import("./drawings-cloud-sync.js?v=9").then(
+void import("./drawings-cloud-sync.js?v=10").then(
 m=>{
 m.scheduleDrawingsCloudPush();
 }
@@ -360,7 +360,7 @@ return Promise.resolve();
 pendingDrawingsCloudPush =
 false;
 
-return import("./drawings-cloud-sync.js?v=9").then(
+return import("./drawings-cloud-sync.js?v=10").then(
 m=>
 m.flushDrawingsCloudPush()
 );
@@ -663,7 +663,7 @@ function stopCloudSyncHelpers(){
 
 stopSyncPoll();
 
-void import("./drawings-cloud-sync.js?v=9").then(
+void import("./drawings-cloud-sync.js?v=10").then(
 m=>{
 m.stopDrawingsCloudSync();
 }
@@ -765,7 +765,7 @@ function handleRealtimeSettingsRow(row){
 
 handleRealtimeFavoritesRow(row);
 
-void import("./drawings-cloud-sync.js?v=9").then(
+void import("./drawings-cloud-sync.js?v=10").then(
 m=>
 m.pullDrawingsFromCloud()
 );
@@ -1039,7 +1039,7 @@ return cloud.favorites;
 export async function mergeDrawingsWithCloud(){
 
 const drawingsCloud =
-await import("./drawings-cloud-sync.js?v=9");
+await import("./drawings-cloud-sync.js?v=10");
 
 await drawingsCloud.hydrateDrawingsAfterAuth();
 
@@ -1049,7 +1049,7 @@ return collectAllLocalDrawings();
 
 export async function pullDrawingsIfCloudNewer(){
 
-await import("./drawings-cloud-sync.js?v=9").then(
+await import("./drawings-cloud-sync.js?v=10").then(
 m=>
 m.pullDrawingsFromCloud()
 );
@@ -1075,7 +1075,7 @@ await pullFavoritesIfCloudNewer();
 async function syncDrawingsWithCloud(){
 
 const m =
-await import("./drawings-cloud-sync.js?v=9");
+await import("./drawings-cloud-sync.js?v=10");
 
 await m.flushDrawingsCloudPush();
 
@@ -1612,7 +1612,7 @@ try{
 await mergeFavoritesWithCloud();
 
 const drawingsCloud =
-await import("./drawings-cloud-sync.js?v=9");
+await import("./drawings-cloud-sync.js?v=10");
 
 await drawingsCloud.hydrateDrawingsAfterAuth();
 await drawingsCloud.setupDrawingsRealtimeForUser(
@@ -1632,7 +1632,7 @@ false;
 void drawingsCloud.flushDrawingsCloudPush();
 }
 
-import("./alerts-cloud-sync.js?v=69")
+import("./alerts-cloud-sync.js?v=72")
 .then(async m=>{
 
 const { stripAlertFlagsNotInRegistry } =
@@ -1747,9 +1747,9 @@ await ensureCloudLoginResolved(
 );
 
 const drawingsCloud =
-await import("./drawings-cloud-sync.js?v=9");
+await import("./drawings-cloud-sync.js?v=10");
 const alertsCloud =
-await import("./alerts-cloud-sync.js?v=69");
+await import("./alerts-cloud-sync.js?v=72");
 const { stripAlertFlagsNotInRegistry } =
 await import("./alerts.js?v=69");
 

@@ -1,10 +1,11 @@
 import {
 waitForCloudAuth,
 isCloudLoggedIn,
+isCloudLoggedInEffective,
 isCloudSyncEnabled,
 onCloudSyncChange,
 notifyDrawings as notifyDrawingsListeners
-} from "./cloud-sync.js?v=19";
+} from "./cloud-sync.js?v=20";
 
 import {
 collectAllLocalDrawings,
@@ -814,6 +815,7 @@ row
 if(
 res.ok
 ){
+broadcastDrawingsSync();
 return true;
 }
 
@@ -901,6 +903,7 @@ sym,
 shapeId,
 rev
 );
+broadcastDrawingsSync();
 return true;
 }
 
@@ -1258,7 +1261,7 @@ error.message
 
 }
 
-export async function deleteDrawingFromCloud(
+export async function deleteDrawingFromCloudNow(
 symbol,
 shapeId
 ){
@@ -1281,26 +1284,15 @@ if(
 return false;
 }
 
-return runCloudOp(
-async()=>{
-
-const ctx =
-await getAuthed();
+const auth =
+resolveDrawingsRestAuth();
 
 if(
-!ctx
+!auth?.token
 ){
-return false;
-}
-
-const token =
-await getAccessTokenForUser(
-ctx
+console.warn(
+"[drawings] delete: нет токена"
 );
-
-if(
-!token
-){
 return false;
 }
 
@@ -1308,13 +1300,20 @@ const ok =
 await purgeDrawingsViaRest({
 symbol: sym,
 shapeId: sid,
-ctx,
-token
+ctx: {
+user: auth.user
+},
+token: auth.token
 });
 
 if(
 !ok
 ){
+console.warn(
+"[drawings] delete REST failed",
+sym,
+sid
+);
 return false;
 }
 
@@ -1336,9 +1335,16 @@ broadcastDrawingsSync();
 
 return true;
 
-},
-20000,
-"user_drawings delete one"
+}
+
+export async function deleteDrawingFromCloud(
+symbol,
+shapeId
+){
+
+return deleteDrawingFromCloudNow(
+symbol,
+shapeId
 );
 
 }
@@ -2072,7 +2078,15 @@ null;
 
 void pushUnsyncedDrawingsImpl()
 .then(
-()=>reconcileLocalDrawingsWithCloud()
+n=>{
+if(
+n >
+0
+){
+broadcastDrawingsSync();
+}
+return reconcileLocalDrawingsWithCloud();
+}
 )
 .catch(
 err=>{
@@ -2168,7 +2182,7 @@ scheduleRemoteDrawingsSync();
 event: "drawings-rows-sync"
 },
 ()=>{
-void pullDrawingsFromCloud();
+void pullDrawingsFromCloudNow();
 }
 )
 .subscribe(
@@ -2230,13 +2244,13 @@ setInterval(
 ()=>{
 
 if(
-!isCloudLoggedIn() ||
+!isCloudLoggedInEffective() ||
 isDrawingsCloudSyncPaused()
 ){
 return;
 }
 
-void pullDrawingsFromCloud();
+void pullDrawingsFromCloudNow();
 
 },
 FAST_POLL_MS
@@ -2370,7 +2384,7 @@ const pullWhenVisible =
 ()=>{
 
 if(
-!isCloudLoggedIn()
+!isCloudLoggedInEffective()
 ){
 return;
 }
@@ -2383,7 +2397,7 @@ void pushUnsyncedDrawingsImpl();
 return;
 }
 
-void pullDrawingsFromCloud();
+void pullDrawingsFromCloudNow();
 
 };
 
