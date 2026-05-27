@@ -1882,8 +1882,6 @@ user: cachedEarly.user
 };
 }
 
-}
-
 if(
 !session &&
 hasAuthCallbackInUrl()

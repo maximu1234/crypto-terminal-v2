@@ -4,7 +4,7 @@ isCloudLoggedIn,
 isCloudSyncEnabled,
 onCloudSyncChange,
 notifyDrawings as notifyDrawingsListeners
-} from "./cloud-sync.js?v=17";
+} from "./cloud-sync.js?v=19";
 
 import {
 collectAllLocalDrawings,
