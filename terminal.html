@@ -16,6 +16,8 @@
 <link rel="stylesheet" href="css/screener.css?v=21">
 <link rel="stylesheet" href="css/terminal-page.css?v=1">
 
+<script src="/vendor/lightweight-charts.standalone.production.js"></script>
+
 </head>
 
 <body class="terminal-page">
@@ -86,10 +88,10 @@ document.body.innerHTML = `
 try{
 
 const { loadLightweightCharts } =
-await import("./js/charts-lib-boot.js?v=2");
+await import("/js/charts-lib-boot.js?v=3");
 
 await loadLightweightCharts();
-await import("./js/site-boot.js?v=71");
+await import("/js/site-boot.js?v=72");
 await import("./js/dashboard.js?v=67");
 await import("./js/terminal-page.js?v=3");
 

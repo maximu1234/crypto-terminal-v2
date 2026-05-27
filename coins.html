@@ -18,6 +18,10 @@
 <link rel="stylesheet" href="css/dashboard.css?v=9">
 <link rel="stylesheet" href="css/coins.css?v=11">
 
+<script src="/vendor/lightweight-charts.standalone.production.js"></script>
+<link rel="modulepreload" href="/js/charts-lib-boot.js?v=3" crossorigin>
+<link rel="modulepreload" href="/js/terminal.js?v=188" crossorigin>
+
 </head>
 
 <body class="coins-page">
@@ -382,53 +386,142 @@ document.body.innerHTML = `
 
 }else{
 
-import("./js/charts-lib-boot.js?v=2").then(({ loadLightweightCharts })=>
+async function importWithRetry(
+url,
+tries = 3
+){
+
+let lastErr;
+
+for(
+let i = 0;
+i <
+tries;
+i++
+){
+
+try{
+return await import(
+url
+);
+}catch(
+err
+){
+lastErr =
+err;
+if(
+i <
+tries -
+1
+){
+await new Promise(
+r=>
+setTimeout(
+r,
+500 *
+(
+i +
+1
+)
+)
+);
+}
+}
+
+}
+
+throw lastErr;
+
+}
+
+importWithRetry(
+"/js/charts-lib-boot.js?v=3"
+).then(
+({ loadLightweightCharts })=>
 loadLightweightCharts()
-).then(()=>
-import("./js/terminal.js?v=187")
-).catch(err=>{
+).then(
+()=>
+importWithRetry(
+"/js/terminal.js?v=188"
+)
+).catch(
+err=>{
 
-console.error(err);
+console.error(
+err
+);
 
-const box = document.createElement("div");
+const box =
+document.createElement(
+"div"
+);
 
-box.style.cssText = "position:fixed;inset:0;z-index:9999;background:#0b1220;color:#fff;padding:32px;font-family:Arial,sans-serif";
+box.style.cssText =
+"position:fixed;inset:0;z-index:9999;background:#0b1220;color:#fff;padding:32px;font-family:Arial,sans-serif;overflow:auto";
 
 let detail =
 err?.message ||
-String(err);
+String(
+err
+);
 
-if(err?.cause){
+if(
+err?.cause
+){
 detail +=
 ` → ${err.cause?.message || err.cause}`;
 }
 
+const onVercel =
+/vercel\.app/i.test(
+location.hostname
+);
+
 const hint =
-detail.includes("LightweightCharts")
-? "<p>Библиотека графиков не загрузилась. Проверьте VPN/интернет или файл <code>vendor/lightweight-charts.standalone.production.js</code>.</p>"
-: detail.includes("Failed to fetch") ||
-detail.includes("CONNECTION_RESET")
-? "<p>Сервер не отдал файл (часто помогает: Ctrl+C в терминале, затем <code>./start.sh</code> и жёсткое обновление Cmd+Shift+R). Новый <code>start.sh</code> использует многопоточный сервер — меньше обрывов при загрузке модулей.</p>"
+detail.includes(
+"LightweightCharts"
+)
+? "<p>Библиотека графиков не загрузилась. Проверьте интернет/VPN или обновите страницу (Cmd+Shift+R).</p>"
+: detail.includes(
+"Failed to fetch"
+) ||
+detail.includes(
+"CONNECTION_RESET"
+) ||
+detail.includes(
+"dynamically imported"
+)
+? onVercel
+? "<p>Не удалось скачать JS с сервера (сеть или кэш). Сделайте <strong>жёсткое обновление</strong> (Cmd+Shift+R / Ctrl+Shift+R) или откройте в режиме инкогнито.</p>"
+: "<p>Сервер не отдал файл. Остановите старый <code>./start.sh</code> (Ctrl+C), запустите снова и обновите страницу Cmd+Shift+R.</p>"
 : "";
 
-box.innerHTML = `
+const localSteps =
+onVercel
+? `<p><a href="${location.pathname}" style="color:#60a5fa">Обновить страницу</a></p>`
+: `<p>1. <code>./start.sh</code> в папке проекта</p>
+<p>2. <a href="http://127.0.0.1:8080/coins.html" style="color:#60a5fa">http://127.0.0.1:8080/coins.html</a></p>`;
+
+box.innerHTML =
+`
 <h2>Не удалось загрузить скрипты</h2>
 <p style="color:#fca5a5">${detail}</p>
 ${hint}
-<p>1. Остановите старый сервер (Ctrl+C в терминале)</p>
-<p>2. В папке проекта выполните: <code>./start.sh</code></p>
-<p>3. Откройте: <a href="http://127.0.0.1:8080/coins.html" style="color:#60a5fa">http://127.0.0.1:8080/coins.html</a></p>
-<p>4. Попробуйте режим инкогнито или другой браузер</p>`;
+${localSteps}
+<p>Попробуйте другой браузер или отключите блокировщик рекламы для этого сайта.</p>`;
 
-document.body.prepend(box);
+document.body.prepend(
+box
+);
 
-});
+}
+);
 
 }
 
 </script>
 
-<script src="js/site-boot.js?v=71" type="module"></script>
+<script src="/js/site-boot.js?v=72" type="module"></script>
 
 </body>
 </html>

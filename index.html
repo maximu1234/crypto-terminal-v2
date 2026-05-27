@@ -13,6 +13,8 @@
 <link rel="stylesheet" href="css/common.css?v=19">
 <link rel="stylesheet" href="css/screener.css?v=21">
 
+<script src="/vendor/lightweight-charts.standalone.production.js"></script>
+
 </head>
 
 <body>
@@ -129,7 +131,7 @@ document.body.innerHTML = `
 try{
 
 const { loadLightweightCharts } =
-await import("./js/charts-lib-boot.js?v=2");
+await import("/js/charts-lib-boot.js?v=3");
 
 await loadLightweightCharts();
 await import("./js/screener.js?v=58");

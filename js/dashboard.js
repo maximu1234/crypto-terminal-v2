@@ -43,7 +43,7 @@ attachSymbolAutocomplete
 
 import {
 loadLightweightCharts
-} from "./charts-lib-boot.js?v=2";
+} from "./charts-lib-boot.js?v=3";
 
 import {
 initTerminalPageUi,
