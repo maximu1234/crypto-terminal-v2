@@ -30,7 +30,8 @@ normalizeAlertWorkerBaseUrl
 
 import {
 createPullCoalescer,
-isAlertsPage
+isAlertsPage,
+isDrawingsUiPage
 } from "./cloud-sync-throttle.js?v=2";
 
 const IS_YANDEX =
@@ -59,26 +60,19 @@ let alertsRealtimeChannel = null;
 
 let alertsRealtimeUserId = null;
 
-let reconcileTimer = null;
-
 let registrySyncTimer = null;
 
 const REGISTRY_SYNC_DEBOUNCE_MS = 200;
 
-const RECONCILE_INTERVAL_MS = 4000;
+const FAST_POLL_MS =
+IS_YANDEX
+? 5000
+: 2500;
 
-const ALERTS_BG_SYNC_MS =
-isAlertsPage()
-? (
+const FAST_POLL_HIDDEN_MS =
 IS_YANDEX
-? 10000
-: 8000
-)
-: (
-IS_YANDEX
-? 6000
-: 5000
-);
+? 15000
+: 8000;
 
 let lastRemoteAlertMode = null;
 
@@ -93,7 +87,17 @@ let remoteRegistrySyncTimer = null;
 
 const REMOTE_REGISTRY_SYNC_MS = 80;
 
-let alertsBgSyncTimer = null;
+let alertsFastPollTimer =
+null;
+
+let alertsFastPollStopped =
+true;
+
+let alertsFastPollIntervalId =
+0;
+
+let lastAlertsPullMs =
+0;
 
 let hydrateAlertsInflight = null;
 
@@ -218,7 +222,7 @@ immediate: true
 async n=>{
 
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=79");
+await import("./alerts.js?v=80");
 
 stripAlertFlagsNotInRegistry();
 
@@ -259,7 +263,7 @@ oldRow?.triggered_at;
 if(triggered){
 
 const { applyRemoteAlertFired } =
-await import("./alerts.js?v=79");
+await import("./alerts.js?v=80");
 
 applyRemoteAlertFired(oldRow);
 return;
@@ -283,7 +287,7 @@ sid
 ){
 
 const { applyRemoteAlertRemoved } =
-await import("./alerts.js?v=79");
+await import("./alerts.js?v=80");
 
 applyRemoteAlertRemoved(oldRow);
 
@@ -335,7 +339,7 @@ row.symbol &&
 row.shape_id
 ){
 
-void import("./alerts.js?v=79").then(
+void import("./alerts.js?v=80").then(
 ({ applyRemoteAlertUpsert })=>{
 
 if(
@@ -485,29 +489,20 @@ status
 
 }
 
-function stopReconcileTimer(){
+function alertsFastPollTick(){
 
 if(
-reconcileTimer
+alertsFastPollStopped
 ){
-clearInterval(
-reconcileTimer
-);
-reconcileTimer =
-null;
+return;
 }
 
-stopAlertsBackgroundSync();
-
+if(
+document.visibilityState !==
+"visible"
+){
+return;
 }
-
-function startAlertsBackgroundSync(){
-
-stopAlertsBackgroundSync();
-
-alertsBgSyncTimer =
-setInterval(
-()=>{
 
 if(
 !isCloudLoggedInEffective() ||
@@ -516,44 +511,132 @@ isRegistryCloudSyncPaused()
 return;
 }
 
-void pullRegistryFromCloudNow().catch(
-err=>{
-console.warn(
-"[alerts] background sync:",
-err?.message || err
-);
-}
-);
-
-},
-ALERTS_BG_SYNC_MS
-);
-
-}
-
-function stopAlertsBackgroundSync(){
+const now =
+Date.now();
 
 if(
-alertsBgSyncTimer
+now -
+lastAlertsPullMs <
+FAST_POLL_MS
 ){
-clearInterval(
-alertsBgSyncTimer
+return;
+}
+
+lastAlertsPullMs =
+now;
+
+void pullRegistryFromCloudNow({
+immediate: true
+}).catch(
+()=>{}
 );
-alertsBgSyncTimer =
+
+}
+
+export function startAlertsFastPoll(){
+
+if(
+!isDrawingsUiPage() ||
+isAlertsPage()
+){
+stopAlertsFastPoll();
+return;
+}
+
+alertsFastPollStopped =
+false;
+
+if(
+!alertsFastPollIntervalId
+){
+alertsFastPollIntervalId =
+setInterval(
+alertsFastPollTick,
+FAST_POLL_MS
+);
+}
+
+if(
+alertsFastPollTimer
+){
+clearTimeout(
+alertsFastPollTimer
+);
+alertsFastPollTimer =
 null;
 }
 
+alertsFastPollTimer =
+setTimeout(
+function hiddenPoll(){
+
+if(
+alertsFastPollStopped
+){
+return;
 }
 
-function startReconcileTimer(){
+if(
+document.visibilityState ===
+"hidden" &&
+isCloudLoggedInEffective() &&
+!isRegistryCloudSyncPaused()
+){
+const now =
+Date.now();
 
-startAlertsBackgroundSync();
+if(
+now -
+lastAlertsPullMs >=
+FAST_POLL_HIDDEN_MS
+){
+lastAlertsPullMs =
+now;
+void pullRegistryFromCloudNow({
+immediate: true
+}).catch(
+()=>{}
+);
+}
 
 }
 
-function stopAlertsFastPoll(){
+alertsFastPollTimer =
+setTimeout(
+hiddenPoll,
+FAST_POLL_HIDDEN_MS
+);
 
-stopAlertsBackgroundSync();
+},
+FAST_POLL_HIDDEN_MS
+);
+
+}
+
+export function stopAlertsFastPoll(){
+
+alertsFastPollStopped =
+true;
+
+if(
+alertsFastPollIntervalId
+){
+clearInterval(
+alertsFastPollIntervalId
+);
+alertsFastPollIntervalId =
+0;
+}
+
+if(
+alertsFastPollTimer
+){
+clearTimeout(
+alertsFastPollTimer
+);
+alertsFastPollTimer =
+null;
+}
 
 }
 
@@ -572,10 +655,19 @@ ctx?.user?.id
 await setupAlertsRealtime(
 ctx.user.id
 );
-startReconcileTimer();
+
+if(
+isDrawingsUiPage() &&
+!isAlertsPage()
+){
+startAlertsFastPoll();
+}else{
+stopAlertsFastPoll();
+}
+
 }else{
 await teardownAlertsRealtime();
-stopReconcileTimer();
+stopAlertsFastPoll();
 }
 
 }
@@ -672,7 +764,7 @@ cloudId
 ){
 
 const { markAlertCloudSynced, markAlertCloudId } =
-await import("./alerts.js?v=79");
+await import("./alerts.js?v=80");
 
 const ok =
 await verifyAlertActiveInCloud(
@@ -1525,7 +1617,7 @@ null;
 
 if(cloudId){
 const { markAlertCloudId } =
-await import("./alerts.js?v=79");
+await import("./alerts.js?v=80");
 
 markAlertCloudId(
 symbol,
@@ -1845,7 +1937,7 @@ registrySyncTimer = null;
 }
 
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=79");
+await import("./alerts.js?v=80");
 
 const ok =
 await clearAllAlertsFromCloud();
@@ -3240,7 +3332,7 @@ null;
 
 if(cloudId){
 const { markAlertCloudId } =
-await import("./alerts.js?v=79");
+await import("./alerts.js?v=80");
 
 markAlertCloudId(
 symbol,
@@ -3275,7 +3367,7 @@ return 0;
 }
 
 const { getActiveAlerts } =
-await import("./alerts.js?v=79");
+await import("./alerts.js?v=80");
 
 const localKeys =
 new Set(
@@ -3405,7 +3497,7 @@ attempt++
 if(await pushAlertViaWorker(row)){
 
 const { markAlertCloudSynced } =
-await import("./alerts.js?v=79");
+await import("./alerts.js?v=80");
 
 /* Worker пишет service role — не ждём SELECT по JWT пользователя */
 markAlertCloudSynced(
@@ -3434,7 +3526,7 @@ ctx
 ){
 
 const { loadAlerts, markAlertCloudSynced } =
-await import("./alerts.js?v=79");
+await import("./alerts.js?v=80");
 
 const hasId =
 loadAlerts().some(
@@ -3493,7 +3585,7 @@ null
 ){
 
 const { markAlertCloudSynced } =
-await import("./alerts.js?v=79");
+await import("./alerts.js?v=80");
 
 markAlertCloudSynced(
 row.symbol,
@@ -3572,7 +3664,7 @@ return 0;
 }
 
 const { getActiveAlerts, countAlertsOnChart } =
-await import("./alerts.js?v=79");
+await import("./alerts.js?v=80");
 
 const onChart =
 countAlertsOnChart();
@@ -3660,7 +3752,7 @@ return 0;
 }
 
 const { getActiveAlerts } =
-await import("./alerts.js?v=79");
+await import("./alerts.js?v=80");
 
 const list =
 getActiveAlerts();
@@ -3969,7 +4061,7 @@ normalizeAlertTf,
 isAlertDeleted,
 forgetAlertDeleted
 } =
-await import("./alerts.js?v=79");
+await import("./alerts.js?v=80");
 
 const cloudByKey =
 new Map();
@@ -4087,7 +4179,7 @@ tf: row.tf || "60"
 if(removedRows.length){
 
 const { applyRemoteAlertFired } =
-await import("./alerts.js?v=79");
+await import("./alerts.js?v=80");
 
 for(const row of removedRows){
 
@@ -4271,7 +4363,7 @@ const n =
 await reconcileLocalRegistryWithCloud();
 
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=79");
+await import("./alerts.js?v=80");
 
 stripAlertFlagsNotInRegistry(
 isAlertsPage()
@@ -4323,7 +4415,8 @@ immediate
 
 if(
 n >
-0
+0 ||
+isDrawingsUiPage()
 ){
 window.dispatchEvent(
 new CustomEvent(
@@ -4336,7 +4429,23 @@ return n;
 
 }
 
-async function hydrateAlertsAfterAuth(){
+export async function setupAlertsRealtimeForUser(
+userId
+){
+
+if(
+userId
+){
+await setupAlertsRealtime(
+userId
+);
+}
+
+}
+
+export async function hydrateAlertsAfterAuth(
+opts = {}
+){
 
 if(
 hydrateAlertsInflight
@@ -4348,6 +4457,7 @@ const now =
 Date.now();
 
 if(
+!opts.force &&
 now -
 lastHydrateAlertsMs <
 (
@@ -4379,7 +4489,7 @@ if(
 !isAlertsPage()
 ){
 const { mergeRegistryFromChartDrawings } =
-await import("./alerts.js?v=79");
+await import("./alerts.js?v=80");
 
 mergeRegistryFromChartDrawings({
 stripFlags: stripOpts
@@ -4387,10 +4497,16 @@ stripFlags: stripOpts
 }
 
 await pushUnsyncedAlerts();
-await pullRegistryFromCloudNow();
+await pullRegistryFromCloudNow({
+immediate: true
+});
+await pushUnsyncedAlerts();
+await pullRegistryFromCloudNow({
+immediate: true
+});
 
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=79");
+await import("./alerts.js?v=80");
 
 stripAlertFlagsNotInRegistry(
 stripOpts
@@ -4443,7 +4559,9 @@ return;
 
 void pushUnsyncedAlerts()
 .then(
-()=>pullRegistryFromCloudNow()
+()=>pullRegistryFromCloudNow({
+immediate: true
+})
 )
 .catch(
 err=>{
@@ -4473,27 +4591,45 @@ window.addEventListener(
 "alerts-changed",
 ()=>{
 scheduleRegistryCloudSync();
-scheduleRemoteRegistrySync();
-}
-);
-
-window.addEventListener(
-"price-alerts-changed",
-()=>{
-scheduleRegistryCloudSync();
-scheduleRemoteRegistrySync();
 }
 );
 
 onCloudSyncChange(
 ()=>{
 
-void refreshCloudAlertMode();
+if(
+!isCloudLoggedInEffective()
+){
+stopAlertsFastPoll();
+clearAlertAuthCache();
+void teardownAlertsRealtime();
+return;
+}
 
 if(
-isCloudLoggedIn() &&
-!isAlertsPage()
+isAlertsPage()
 ){
+stopAlertsFastPoll();
+void refreshCloudAlertMode();
+return;
+}
+
+void refreshCloudAlertMode();
+
+void getAuthed().then(
+ctx=>{
+
+if(
+ctx?.user?.id
+){
+void setupAlertsRealtimeForUser(
+ctx.user.id
+);
+}
+
+}
+);
+
 void hydrateAlertsAfterAuth().catch(
 err=>{
 console.warn(
@@ -4502,12 +4638,13 @@ err?.message || err
 );
 }
 );
-}else if(
-!isCloudLoggedIn()
+
+if(
+isDrawingsUiPage()
 ){
-clearAlertAuthCache();
-void teardownAlertsRealtime();
-stopReconcileTimer();
+startAlertsFastPoll();
+}else{
+stopAlertsFastPoll();
 }
 
 }
@@ -4516,7 +4653,7 @@ stopReconcileTimer();
 void refreshCloudAlertMode();
 
 if(
-isCloudLoggedIn() &&
+isCloudLoggedInEffective() &&
 !isAlertsPage()
 ){
 void hydrateAlertsAfterAuth().catch(
@@ -4527,6 +4664,12 @@ err?.message || err
 );
 }
 );
+
+if(
+isDrawingsUiPage()
+){
+startAlertsFastPoll();
+}
 }
 
 const pullWhenVisible = ()=>{
@@ -4560,41 +4703,6 @@ window.addEventListener(
 "focus",
 pullWhenVisible
 );
-
-const isMobileAlertsSync =
-typeof navigator !==
-"undefined" &&
-/iPhone|iPad|iPod|Android/i.test(
-navigator.userAgent ||
-""
-);
-
-if(
-isMobileAlertsSync
-){
-
-setInterval(
-()=>{
-
-if(
-!isCloudLoggedInEffective() ||
-document.visibilityState !==
-"visible"
-){
-return;
-}
-
-void pullRegistryFromCloudNow({
-immediate: true
-}).catch(()=>{
-/* ignore */
-});
-
-},
-12000
-);
-
-}
 
 document.addEventListener(
 "visibilitychange",
