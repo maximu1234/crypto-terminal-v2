@@ -1464,6 +1464,11 @@ let chartApplyPatchRestore = null;
 
 let redrawRaf1 = 0;
 let redrawRaf2 = 0;
+/** Один rAF на кадр при рисовании (не scheduleRedraw с двойным rAF). */
+let placementPreviewRaf = 0;
+let placementPreviewPending = null;
+let placementCrosshairVert = null;
+let placementCrosshairHorz = null;
 let coordRetryCount = 0;
 let chartPanRedrawRaf = 0;
 let chartPanActive = false;
@@ -3826,6 +3831,166 @@ chart.clearCrosshairPosition();
 
 }
 
+function resetPlacementCrosshairCache(){
+
+placementCrosshairVert = null;
+placementCrosshairHorz = null;
+
+}
+
+function cancelPlacementPreviewRaf(){
+
+if(
+placementPreviewRaf
+){
+cancelAnimationFrame(
+placementPreviewRaf
+);
+placementPreviewRaf = 0;
+}
+
+placementPreviewPending = null;
+
+}
+
+function ensurePlacementCrosshairEls(){
+
+if(
+!placementCrosshairVert
+){
+placementCrosshairVert =
+wrapEl.querySelector(
+".chart-dom-crosshair-vert"
+);
+}
+
+if(
+!placementCrosshairHorz
+){
+placementCrosshairHorz =
+wrapEl.querySelector(
+".chart-dom-crosshair-horz"
+);
+
+}
+
+}
+
+/** Только DOM-линии по локальным координатам (без getBoundingClientRect). */
+function updatePlacementCrosshairFast(
+localX,
+localY
+){
+
+ensurePlacementCrosshairEls();
+
+const { w, h } =
+chartSize();
+const plotW =
+getPlotWidth();
+
+const x =
+Math.max(
+0,
+Math.min(
+plotW,
+localX
+)
+);
+
+const y =
+Math.max(
+0,
+Math.min(
+h,
+localY
+)
+);
+
+if(
+placementCrosshairVert
+){
+
+placementCrosshairVert.style.left =
+`${Math.round(x)}px`;
+
+placementCrosshairVert.classList.remove(
+"hidden"
+);
+
+}
+
+if(
+placementCrosshairHorz
+){
+
+placementCrosshairHorz.style.top =
+`${Math.round(y)}px`;
+
+placementCrosshairHorz.style.width =
+`${Math.round(plotW)}px`;
+
+placementCrosshairHorz.classList.remove(
+"hidden"
+);
+
+}
+
+}
+
+function flushPlacementPreviewRedraw(){
+
+const pending =
+placementPreviewPending;
+
+if(
+!placement ||
+!pending
+){
+return;
+}
+
+previewXY = {
+x: pending.x,
+y: pending.y
+};
+
+previewPoint =
+pointFromXY(
+pending.x,
+pending.y
+);
+
+if(
+isPositionType(placement.type) &&
+placement.points.length >= 1 &&
+previewPoint
+){
+previewPoint.price = placement.points[0].price;
+}
+
+redraw();
+
+}
+
+function schedulePlacementPreviewRedraw(){
+
+if(
+placementPreviewRaf
+){
+return;
+}
+
+placementPreviewRaf =
+requestAnimationFrame(()=>{
+
+placementPreviewRaf = 0;
+flushPlacementPreviewRedraw();
+
+});
+
+}
+
 function updatePlacementPreviewFromLocal(
 localX,
 localY
@@ -3836,33 +4001,17 @@ x: localX,
 y: localY
 };
 
-previewXY = {
+placementPreviewPending = {
 x: localX,
 y: localY
 };
 
-previewPoint =
-pointFromXY(
+updatePlacementCrosshairFast(
 localX,
 localY
 );
 
-if(
-placement &&
-isPositionType(placement.type) &&
-placement.points.length >= 1 &&
-previewPoint
-){
-previewPoint.price = placement.points[0].price;
-}
-
-showStandardChartCrosshair(
-null,
-localX,
-localY
-);
-
-scheduleRedraw();
+schedulePlacementPreviewRedraw();
 
 }
 
@@ -8201,6 +8350,8 @@ placement = null;
 previewPoint = null;
 previewXY = null;
 placementPointerXY = null;
+cancelPlacementPreviewRaf();
+resetPlacementCrosshairCache();
 endPlacementCrosshairMode();
 hideStandardChartCrosshair();
 saveDrawings();
@@ -8267,6 +8418,8 @@ placement = { type, points: [] };
 previewPoint = null;
 previewXY = null;
 placementPointerXY = null;
+cancelPlacementPreviewRaf();
+resetPlacementCrosshairCache();
 
 beginPlacementCrosshairMode();
 
@@ -8284,6 +8437,8 @@ previewXY = null;
 placementPointerXY = null;
 touchDrawCrosshair = null;
 touchPlaceTrack = null;
+cancelPlacementPreviewRaf();
+resetPlacementCrosshairCache();
 endPlacementCrosshairMode();
 hideStandardChartCrosshair();
 redraw();
