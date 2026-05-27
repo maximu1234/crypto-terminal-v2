@@ -52,12 +52,12 @@ deleteDrawingFromCloud,
 flushDrawingsCloudPush,
 onDrawingsRemoteUpdate,
 scheduleDrawingsCloudPush
-} from "./drawings-cloud-sync.js?v=8";
+} from "./drawings-cloud-sync.js?v=9";
 
 import {
 touchShapeRevision,
 recordDrawingTombstone
-} from "./drawings-storage.js?v=4";
+} from "./drawings-storage.js?v=5";
 
 import {
 formatPrice,
@@ -3958,6 +3958,17 @@ return { time, price };
 }
 
 function toXY(point){
+
+if(
+!point ||
+point.time ==
+null ||
+!Number.isFinite(
+point.price
+)
+){
+return null;
+}
 
 const x = xFromTime(point.time);
 const y = series.priceToCoordinate(point.price);
@@ -9311,11 +9322,9 @@ if(!alive){
 return;
 }
 
-const sym =
-lastLoadedSymbol ||
-getSymbol();
-
-persistDrawingsForSymbol(sym);
+persistDrawingsForSymbol(
+getSymbol()
+);
 void flushDrawingsCloudPush();
 
 }
@@ -9466,17 +9475,11 @@ const next =
 getSymbol();
 
 /*
-  При возврате на страницу initDrawings сначала грузит дефолтный символ (BTC),
-  затем loadSymbol переключает на выбранную монету. Без сохранения в lastLoadedSymbol
-  рисунки дефолтного символа перезаписывали ключ новой монеты.
+  Не пишем текущий массив drawings в ключ старой монеты: пока грузятся свечи,
+  getSymbol() уже новый, а в памяти могут быть фигуры новой монеты — так появлялся
+  лишний BTCUSDT в Supabase с тем же shape_id, что и PHAROSUSDT.
+  Каждая монета сохраняется через saveDrawings() в свой ключ при редактировании.
 */
-if(
-lastLoadedSymbol &&
-lastLoadedSymbol !== next
-){
-persistDrawingsForSymbol(lastLoadedSymbol);
-scheduleDrawingsCloudPush();
-}
 
 lastLoadedSymbol = next;
 

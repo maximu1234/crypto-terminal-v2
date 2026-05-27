@@ -2141,10 +2141,10 @@ return total;
 export async function clearAllDrawings(){
 
 const { purgeAllLocalDrawingsStorage } =
-await import("./drawings-storage.js?v=4");
+await import("./drawings-storage.js?v=5");
 
 const drawingsCloud =
-await import("./drawings-cloud-sync.js?v=8");
+await import("./drawings-cloud-sync.js?v=9");
 
 const alertsCloud =
 await import("./alerts-cloud-sync.js?v=69");

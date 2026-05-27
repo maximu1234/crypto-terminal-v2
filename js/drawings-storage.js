@@ -877,6 +877,174 @@ return symbols;
 
 }
 
+/**
+ * Один shape_id — одна монета (убирает «призрак» BTC с тем же id, что PHAROS).
+ */
+export function pruneDuplicateShapeIdsAcrossSymbols(){
+
+const local =
+collectAllLocalDrawings();
+const bestById =
+new Map();
+const removed =
+[];
+
+for(
+const [
+sym,
+list
+] of Object.entries(
+local
+)
+){
+
+if(
+!Array.isArray(
+list
+)
+){
+continue;
+}
+
+for(
+const shape of list
+){
+
+if(
+!shape?.id
+){
+continue;
+}
+
+const id =
+String(
+shape.id
+);
+const prev =
+bestById.get(
+id
+);
+
+if(
+!prev
+){
+bestById.set(
+id,
+{
+sym,
+shape
+}
+);
+continue;
+}
+
+const prevRev =
+getShapeRevisionTime(
+prev.shape
+);
+const nextRev =
+getShapeRevisionTime(
+shape
+);
+
+if(
+nextRev >=
+prevRev
+){
+removed.push({
+sym: prev.sym,
+id
+});
+bestById.set(
+id,
+{
+sym,
+shape
+}
+);
+}else{
+removed.push({
+sym,
+id
+});
+}
+
+}
+
+}
+
+if(
+!removed.length
+){
+return [];
+}
+
+for(
+const {
+sym,
+id
+} of removed
+){
+
+const key =
+`drawings_${sym}`;
+let list =
+[];
+
+try{
+list =
+JSON.parse(
+localStorage.getItem(
+key
+) ||
+"[]"
+);
+}catch{
+list =
+[];
+}
+
+if(
+!Array.isArray(
+list
+)
+){
+continue;
+}
+
+const next =
+list.filter(
+s=>
+String(
+s?.id ||
+""
+) !==
+id
+);
+
+if(
+next.length !==
+list.length
+){
+localStorage.setItem(
+key,
+JSON.stringify(
+next
+)
+);
+}
+
+}
+
+console.log(
+"[drawings] убраны дубликаты shape_id на других монетах:",
+removed.length
+);
+
+return removed;
+
+}
+
 export function collectAllLocalDrawings(){
 
 const out =

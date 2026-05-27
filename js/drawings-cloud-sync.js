@@ -8,6 +8,7 @@ notifyDrawings as notifyDrawingsListeners
 
 import {
 collectAllLocalDrawings,
+pruneDuplicateShapeIdsAcrossSymbols,
 applyDrawingsMapToLocal,
 loadLocalTombstones,
 saveLocalTombstones,
@@ -21,7 +22,7 @@ packCloudDrawings,
 purgeAllLocalDrawingsStorage,
 DRAWINGS_TOMBSTONES_KEY,
 DRAWINGS_GLOBAL_CLEAR_KEY
-} from "./drawings-storage.js?v=4";
+} from "./drawings-storage.js?v=5";
 
 import {
 withTimeout
@@ -1374,6 +1375,9 @@ console.warn(
 return 0;
 }
 
+const dupRemoved =
+pruneDuplicateShapeIdsAcrossSymbols();
+
 const local =
 collectAllLocalDrawings();
 const tombstones =
@@ -1452,6 +1456,24 @@ shape
 pushed += 1;
 }
 
+}
+
+}
+
+for(
+const {
+sym,
+id
+} of dupRemoved
+){
+
+if(
+await deleteDrawingFromCloud(
+sym,
+id
+)
+){
+pushed += 1;
 }
 
 }
@@ -1840,6 +1862,8 @@ shape
 );
 
 }
+
+void pruneDuplicateShapeIdsAcrossSymbols();
 
 const local =
 collectAllLocalDrawings();
