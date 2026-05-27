@@ -10,7 +10,7 @@ getAlertsSorted,
 removeAlert,
 stripAlertFlagsNotInRegistry,
 removeAllAlerts
-} from "./alerts.js?v=65";
+} from "./alerts.js?v=66";
 
 import {
 getTelegramChatId,
@@ -64,6 +64,9 @@ document.getElementById("alerts-clear-drawings-action");
 const clearDrawingsStatus =
 document.getElementById("alerts-clear-drawings-status");
 
+const clearDrawingsWrap =
+document.getElementById("alerts-clear-drawings");
+
 const telegramNoteGuest =
 document.getElementById("alerts-telegram-note-guest");
 
@@ -89,6 +92,127 @@ let telegramUiFetchSeq =
 0;
 
 let clearDrawingsSuccessTimer = null;
+
+let clearDrawingsBusy =
+false;
+
+function shouldOfferGlobalClear(){
+
+if(
+isCloudLoggedIn()
+){
+return true;
+}
+
+if(
+getAlertsSorted().length >
+0
+){
+return true;
+}
+
+return (
+countAllDrawings() >
+0
+);
+
+}
+
+if(
+clearDrawingsWrap
+){
+
+clearDrawingsWrap.addEventListener(
+"click",
+async e=>{
+
+const btn =
+e.target.closest(
+".alerts-clear-drawings-link"
+);
+
+if(
+!btn ||
+clearDrawingsBusy
+){
+return;
+}
+
+e.preventDefault();
+e.stopPropagation();
+
+if(
+!shouldOfferGlobalClear()
+){
+window.alert(
+"Нет локальных рисунков. Войдите в аккаунт, чтобы очистить облако."
+);
+return;
+}
+
+if(
+!window.confirm(
+"Удалить все объекты рисования и все алерты на всех монетах? Это нельзя отменить."
+)
+){
+return;
+}
+
+clearDrawingsBusy =
+true;
+btn.disabled = true;
+
+if(
+clearDrawingsStatus
+){
+clearDrawingsStatus.textContent =
+"Удаление…";
+clearDrawingsStatus.classList.remove(
+"hidden"
+);
+clearDrawingsStatus.style.color =
+"";
+}
+
+try{
+await clearAllDrawings();
+stripAlertFlagsNotInRegistry();
+render();
+showClearDrawingsSuccess();
+}catch(err){
+console.warn(
+"clear all drawings:",
+err
+);
+
+if(
+clearDrawingsStatus
+){
+clearDrawingsStatus.textContent =
+err?.message ||
+"Не удалось удалить. Проверьте вход в аккаунт.";
+clearDrawingsStatus.style.color =
+"#fca5a5";
+clearDrawingsStatus.classList.remove(
+"hidden"
+);
+}else{
+window.alert(
+err?.message ||
+"Не удалось удалить."
+);
+}
+
+}finally{
+clearDrawingsBusy =
+false;
+btn.disabled = false;
+}
+
+}
+);
+
+}
 
 function telegramConnectedMessage(email){
 
@@ -405,39 +529,23 @@ updateClearDrawingsUi();
 
 function updateClearDrawingsUi(){
 
-const count =
-countAllDrawings();
-
-if(!clearDrawingsAction){
+if(
+!clearDrawingsAction
+){
 return;
 }
 
-if(count > 0){
+if(
+shouldOfferGlobalClear()
+){
 
 clearDrawingsAction.innerHTML =
 `<button type="button" class="alerts-clear-drawings-link">Удалить</button>`;
 
-const btn =
-clearDrawingsAction.querySelector("button");
-
-btn.onclick = async e=>{
-e.preventDefault();
-btn.disabled = true;
-
-try{
-await clearAllDrawings();
-stripAlertFlagsNotInRegistry();
-render();
-showClearDrawingsSuccess();
-}finally{
-btn.disabled = false;
-}
-};
-
 }else{
 
 clearDrawingsAction.innerHTML =
-`<span class="alerts-clear-drawings-text">Удалить</span>`;
+`<span class="alerts-clear-drawings-text" title="Войдите в аккаунт">Удалить</span>`;
 
 }
 

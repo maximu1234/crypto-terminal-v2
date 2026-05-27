@@ -2126,70 +2126,101 @@ return total;
 
 export async function clearAllDrawings(){
 
-const symbols =
-new Set();
+const { purgeAllLocalDrawingsStorage } =
+await import("./drawings-storage.js?v=4");
 
-const keys = [];
+const drawingsCloud =
+await import("./drawings-cloud-sync.js?v=3");
 
-for(let i = 0; i < localStorage.length; i++){
+const alertsCloud =
+await import("./alerts-cloud-sync.js?v=70");
 
-const key =
-localStorage.key(i);
+let symbols =
+purgeAllLocalDrawingsStorage();
 
-if(!isDrawingsStorageKey(key)){
-continue;
-}
-
-keys.push(key);
-symbols.add(symbolFromDrawingsKey(key));
-
-}
+drawingsCloud.pauseDrawingsCloudSync(
+90000
+);
+alertsCloud.pauseRegistryCloudSync(
+90000
+);
 
 try{
-const { clearAllDrawingsFromCloud } =
-await import("./drawings-cloud-sync.js?v=2");
+clearAllChartAlertFlags();
+saveAlertsFromCloudMerge(
+[]
+);
 
-await clearAllDrawingsFromCloud();
-}catch(err){
+symbols =
+purgeAllLocalDrawingsStorage();
+
+const cloudDrawingsOk =
+await drawingsCloud.clearAllDrawingsFromCloud();
+
+if(
+cloudDrawingsOk === false
+){
+throw new Error(
+"Не удалось удалить рисунки в облаке. Войдите в аккаунт и повторите."
+);
+}
+
+symbols =
+purgeAllLocalDrawingsStorage();
+
+const alertsOk =
+await alertsCloud.runCloudOp(()=>
+alertsCloud.removeAllAlertsEverywhere()
+);
+
+if(
+alertsOk === false
+){
 console.warn(
-"clear all drawings cloud:",
-err?.message || err
+"[alerts] не удалось очистить алерты в облаке"
 );
 }
 
-keys.forEach(key=>{
-localStorage.removeItem(key);
-});
-
-try{
-localStorage.removeItem(
-"drawings_row_sync_v1"
-);
-localStorage.removeItem(
-"drawings_tombstones_v1"
-);
-}catch{
-/* ignore */
-}
-
-removeAllAlerts();
+stripAlertFlagsNotInRegistry();
 
 symbols.forEach(symbol=>{
 
 window.dispatchEvent(
 new CustomEvent(
 "drawings-updated",
-{ detail:{ symbol } }
+{
+detail:{
+symbol,
+cleared: true
+}
+}
 )
 );
 
 });
 
 window.dispatchEvent(
-new CustomEvent("drawings-cleared-all")
+new CustomEvent(
+"drawings-cleared-all"
+)
 );
 
-return keys.length;
+return {
+symbols: symbols.size,
+cloudDrawingsOk,
+alertsOk
+};
+
+}finally{
+
+drawingsCloud.pauseDrawingsCloudSync(
+0
+);
+alertsCloud.pauseRegistryCloudSync(
+0
+);
+
+}
 
 }
 

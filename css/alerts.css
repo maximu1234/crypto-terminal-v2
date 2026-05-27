@@ -422,7 +422,10 @@ line-height:1.5;
 }
 
 .alerts-clear-drawings-link{
-padding:0;
+position:relative;
+z-index:2;
+padding:2px 4px;
+margin:-2px -4px;
 border:none;
 background:none;
 font:inherit;
@@ -430,6 +433,13 @@ font-size:inherit;
 color:#60a5fa;
 cursor:pointer;
 text-decoration:underline;
+pointer-events:auto;
+-webkit-tap-highlight-color:transparent;
+}
+
+.alerts-clear-drawings-link:disabled{
+opacity:0.6;
+cursor:wait;
 }
 
 .alerts-clear-drawings-link:hover{

@@ -16,8 +16,9 @@ mergeShapeLists,
 applyTombstonesToShapeList,
 getShapeRevisionTime,
 unpackCloudDrawings,
+purgeAllLocalDrawingsStorage,
 DRAWINGS_TOMBSTONES_KEY
-} from "./drawings-storage.js?v=3";
+} from "./drawings-storage.js?v=4";
 
 import {
 withTimeout
@@ -53,8 +54,67 @@ null;
 let cloudOpChain =
 Promise.resolve();
 
+let drawingsSyncPausedUntil =
+0;
+
 const REMOTE_SYNC_MS =
 50;
+
+export function pauseDrawingsCloudSync(
+ms
+){
+
+if(
+ms <=
+0
+){
+drawingsSyncPausedUntil =
+0;
+return;
+}
+
+drawingsSyncPausedUntil =
+Date.now() +
+ms;
+
+if(
+registrySyncTimer
+){
+clearTimeout(
+registrySyncTimer
+);
+registrySyncTimer =
+null;
+}
+
+}
+
+function isDrawingsCloudSyncPaused(){
+
+return (
+Date.now() <
+drawingsSyncPausedUntil
+);
+
+}
+
+export function runCloudOp(
+fn
+){
+
+const job =
+cloudOpChain.then(
+()=>fn()
+);
+
+cloudOpChain =
+job.catch(
+()=>{}
+);
+
+return job;
+
+}
 
 const drawingsListeners =
 new Set();
@@ -197,25 +257,13 @@ return waitForCloudAuth(
 
 }
 
-function runCloudOp(
-fn
-){
-
-const job =
-cloudOpChain.then(
-()=>fn()
-);
-
-cloudOpChain =
-job.catch(
-()=>{}
-);
-
-return job;
-
-}
-
 function scheduleRemoteDrawingsSync(){
+
+if(
+isDrawingsCloudSyncPaused()
+){
+return;
+}
 
 if(
 remoteSyncTimer
@@ -395,8 +443,6 @@ saveLocalTombstones(
 
 broadcastDrawingsSync();
 
-await reconcileLocalDrawingsWithCloud();
-
 return true;
 
 }
@@ -486,6 +532,12 @@ return true;
 }
 
 async function pushUnsyncedDrawingsImpl(){
+
+if(
+isDrawingsCloudSyncPaused()
+){
+return 0;
+}
 
 const ctx =
 await getAuthed();
@@ -723,6 +775,12 @@ count,
  */
 export async function reconcileLocalDrawingsWithCloud(){
 
+if(
+isDrawingsCloudSyncPaused()
+){
+return 0;
+}
+
 const ctx =
 await getAuthed();
 
@@ -953,7 +1011,8 @@ const PUSH_DEBOUNCE_MS =
 export function scheduleDrawingsCloudSync(){
 
 if(
-!isCloudLoggedIn()
+!isCloudLoggedIn() ||
+isDrawingsCloudSyncPaused()
 ){
 return;
 }
@@ -1133,7 +1192,8 @@ setInterval(
 ()=>{
 
 if(
-!isCloudLoggedIn()
+!isCloudLoggedIn() ||
+isDrawingsCloudSyncPaused()
 ){
 return;
 }
@@ -1212,6 +1272,29 @@ window.addEventListener(
 "drawings-updated",
 ()=>{
 scheduleDrawingsCloudSync();
+}
+);
+
+window.addEventListener(
+"drawings-cleared-all",
+()=>{
+
+pauseDrawingsCloudSync(
+60000
+);
+
+if(
+registrySyncTimer
+){
+clearTimeout(
+registrySyncTimer
+);
+registrySyncTimer =
+null;
+}
+
+purgeAllLocalDrawingsStorage();
+
 }
 );
 

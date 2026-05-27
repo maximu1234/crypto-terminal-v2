@@ -788,6 +788,85 @@ tombstones: mergedTombs
 
 }
 
+/**
+ * Удалить все ключи drawings_* и метаданные синхронизации (страница «Алерты»).
+ */
+export function purgeAllLocalDrawingsStorage(){
+
+const symbols =
+new Set();
+
+const keys = [];
+
+for(
+let i = 0;
+i <
+localStorage.length;
+i++
+){
+
+const key =
+localStorage.key(
+i
+);
+
+if(
+!key?.startsWith(
+"drawings_"
+)
+){
+continue;
+}
+
+const suffix =
+key.slice(
+"drawings_".length
+);
+
+if(
+!suffix
+){
+continue;
+}
+
+keys.push(
+key
+);
+
+const legacy =
+suffix.match(
+LEGACY_TF_RE
+);
+
+symbols.add(
+legacy
+? legacy[1]
+: suffix
+);
+
+}
+
+keys.forEach(k=>{
+localStorage.removeItem(
+k
+);
+});
+
+try{
+localStorage.removeItem(
+"drawings_row_sync_v1"
+);
+localStorage.removeItem(
+"drawings_tombstones_v1"
+);
+}catch{
+/* ignore */
+}
+
+return symbols;
+
+}
+
 export function collectAllLocalDrawings(){
 
 const out =

@@ -51,12 +51,12 @@ deleteDrawingFromCloud,
 flushDrawingsCloudPush,
 onDrawingsRemoteUpdate,
 scheduleDrawingsCloudPush
-} from "./drawings-cloud-sync.js?v=2";
+} from "./drawings-cloud-sync.js?v=3";
 
 import {
 touchShapeRevision,
 recordDrawingTombstone
-} from "./drawings-storage.js?v=3";
+} from "./drawings-storage.js?v=4";
 
 import {
 formatPrice,
