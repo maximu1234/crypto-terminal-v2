@@ -141,6 +141,12 @@ import("./drawings-cloud-sync.js?v=19").then(
 initDrawingsCloudSync();
 }
 );
+
+import("./favorites-cloud-sync.js?v=1").then(
+({ initFavoritesCloudSync })=>{
+initFavoritesCloudSync();
+}
+);
 void ensureCloudReady()
 .then(async()=>{
 

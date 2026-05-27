@@ -126,6 +126,12 @@ fn();
 
 }
 
+export function notifyFavoritesListeners(){
+
+notifyFavorites();
+
+}
+
 export function onCloudSyncChange(fn){
 
 authListeners.add(fn);
@@ -741,40 +747,30 @@ realtimeUserId
 
 function handleRealtimeFavoritesRow(row){
 
-if(!row){
-return;
+void import("./favorites-cloud-sync.js?v=1").then(
+m=>{
+m.applyFavoritesFromRealtimeRow(
+row
+);
 }
-
-const cloudFavorites =
-normalizeFavoritesList(row.favorites);
-const localGroups =
-loadFavoritesGroups();
-const cloudGroups =
-favoritesFromCloudList(cloudFavorites);
-const cloudTs =
-row.updated_at || "";
+).catch(
+()=>{
 
 if(
-favoritesGroupsEqual(
-localGroups,
-cloudGroups
-)
+!row
 ){
-
-if(cloudTs){
-saveLocalFavoritesUpdatedAt(cloudTs);
-}
-
-saveFavoritesSyncedSignature(
-localGroups
-);
-
 return;
 }
 
 applyFavoritesLocally(
-cloudFavorites,
-cloudTs
+normalizeFavoritesList(
+row.favorites
+),
+row.updated_at ||
+""
+);
+
+}
 );
 
 }
@@ -1117,39 +1113,16 @@ return flushDrawingsCloudPush();
 
 }
 
-export async function persistFavoritesToCloud(favorites){
+export async function persistFavoritesToCloud(
+favorites
+){
 
-const list =
-Array.isArray(favorites)
-? favorites
-: favoritesToCloudList(favorites);
+const m =
+await import("./favorites-cloud-sync.js?v=1");
 
-const groups =
-favoritesFromCloudList(list);
-
-saveFavoritesGroups(groups);
-
-const authed =
-await getAuthedClient();
-
-if(!authed){
-return;
-}
-
-const { sb, user } =
-authed;
-
-const ts =
-await pushCloudFavorites(
-sb,
-user.id,
-list
+m.scheduleFavoritesCloudPush(
+favorites
 );
-
-if(ts){
-saveLocalFavoritesUpdatedAt(ts);
-saveFavoritesSyncedSignature(groups);
-}
 
 }
 
@@ -1632,7 +1605,10 @@ return;
 
 try{
 
-await mergeFavoritesWithCloud();
+const favoritesCloud =
+await import("./favorites-cloud-sync.js?v=1");
+
+await favoritesCloud.reconcileLocalFavoritesWithCloud();
 
 const drawingsCloud =
 await import("./drawings-cloud-sync.js?v=19");
@@ -1842,6 +1818,8 @@ await ensureCloudLoginResolved(
 
 const alertsCloud =
 await import("./alerts-cloud-sync.js?v=76");
+const favoritesCloud =
+await import("./favorites-cloud-sync.js?v=1");
 const { stripAlertFlagsNotInRegistry } =
 await import("./alerts.js?v=76");
 
@@ -1858,15 +1836,26 @@ let drawSyms =
 let alertRows =
 0;
 
+let favCount =
+0;
+
 if(
 isAlertsPage()
 ){
-alertRows =
+
+[
+alertRows,
+favCount
+] =
 await withTimeout(
+Promise.all([
 alertsCloud.pullRegistryFromCloudNow(),
+favoritesCloud.pullFavoritesFromCloudNow()
+]),
 25000,
-"pull alerts from cloud"
+"pull alerts+favorites from cloud"
 );
+
 }else{
 
 const drawingsCloud =
@@ -1874,12 +1863,14 @@ await import("./drawings-cloud-sync.js?v=19");
 
 [
 drawSyms,
-alertRows
+alertRows,
+favCount
 ] =
 await withTimeout(
 Promise.all([
 drawingsCloud.pullDrawingsFromCloudNow(),
-alertsCloud.pullRegistryFromCloudNow()
+alertsCloud.pullRegistryFromCloudNow(),
+favoritesCloud.pullFavoritesFromCloudNow()
 ]),
 25000,
 "pull device from cloud"
@@ -1907,17 +1898,27 @@ new CustomEvent(
 )
 );
 
+const favGroups =
+loadFavoritesGroups();
+const favTotal =
+favGroups.red.length +
+favGroups.green.length +
+favGroups.gray.length;
+
 console.log(
-"[Multichart] загружено из облака: символов с рисунками —",
+"[Multichart] загружено из облака: рисунки —",
 drawSyms,
-"| алертов —",
-alertRows
+"| алерты —",
+alertRows,
+"| флаги —",
+favTotal
 );
 
 return {
 ok: true,
 drawSyms,
-alertRows
+alertRows,
+favCount: favTotal
 };
 
 }catch(
