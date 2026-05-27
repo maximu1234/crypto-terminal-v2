@@ -102,13 +102,27 @@ drawingsSyncPausedUntil
 }
 
 export function runCloudOp(
-fn
+fn,
+ms = 45000,
+label = "drawings cloud op"
 ){
 
 const job =
-cloudOpChain.then(
-()=>fn()
-);
+cloudOpChain
+.catch(
+()=>{}
+)
+.then(
+()=>
+withTimeout(
+Promise.resolve().then(
+fn
+),
+ms,
+label
+)
+)
+;
 
 cloudOpChain =
 job.catch(
@@ -116,6 +130,232 @@ job.catch(
 );
 
 return job;
+
+}
+
+async function fetchWithTimeout(
+url,
+options,
+ms = 12000
+){
+
+const controller =
+new AbortController();
+
+const timer =
+setTimeout(
+()=>{
+controller.abort();
+},
+ms
+);
+
+try{
+return await fetch(
+url,
+{
+...options,
+signal: controller.signal
+}
+);
+}finally{
+clearTimeout(
+timer
+);
+}
+
+}
+
+async function getAccessTokenForUser(
+ctx
+){
+
+if(
+!ctx
+){
+return null;
+}
+
+try{
+const { data } =
+await withTimeout(
+ctx.sb.auth.getSession(),
+5000,
+"getSession"
+);
+
+return data?.session?.access_token || null;
+
+}catch(err){
+console.warn(
+"[drawings] getSession:",
+err?.message || err
+);
+return null;
+
+}
+
+}
+
+/**
+ * DELETE через PostgREST (sb.from().delete() в Safari часто зависает).
+ */
+async function purgeDrawingsViaRest(
+opts
+){
+
+const all =
+!!opts?.all;
+const sym =
+String(
+opts?.symbol ||
+""
+).trim().toUpperCase();
+const sid =
+String(
+opts?.shapeId ||
+""
+).trim();
+let ctx =
+opts?.ctx || null;
+let token =
+opts?.token || null;
+
+if(
+!ctx?.user?.id
+){
+try{
+ctx =
+await withTimeout(
+getAuthed(),
+8000,
+"getAuthed purge"
+);
+}catch{
+ctx = null;
+}
+}
+
+if(
+!ctx?.user?.id
+){
+console.warn(
+"[drawings] purge: нет сессии"
+);
+return false;
+}
+
+if(
+!token
+){
+token =
+await getAccessTokenForUser(
+ctx
+);
+}
+
+if(
+!token
+){
+console.warn(
+"[drawings] purge: нет токена"
+);
+return false;
+}
+
+let env;
+
+try{
+env =
+await import("./supabase-env.js?v=4");
+}catch{
+return false;
+}
+
+const base =
+String(
+env.SUPABASE_URL || ""
+).replace(
+/\/$/,
+""
+);
+const anon =
+env.SUPABASE_ANON_KEY;
+
+if(
+!base ||
+!anon
+){
+return false;
+}
+
+let path =
+"";
+
+if(
+all
+){
+path =
+`user_drawings?user_id=eq.${encodeURIComponent(ctx.user.id)}`;
+}else if(
+sym &&
+sid
+){
+path =
+`user_drawings?user_id=eq.${encodeURIComponent(ctx.user.id)}` +
+`&symbol=eq.${encodeURIComponent(sym)}` +
+`&shape_id=eq.${encodeURIComponent(sid)}`;
+}else{
+return false;
+}
+
+try{
+const res =
+await fetchWithTimeout(
+`${base}/rest/v1/${path}`,
+{
+method: "DELETE",
+headers: {
+apikey: anon,
+Authorization: `Bearer ${token}`,
+Prefer: "return=minimal"
+}
+},
+15000
+);
+
+if(
+!res.ok
+){
+const text =
+await res.text();
+console.warn(
+"[drawings] purge REST:",
+res.status,
+text.slice(
+0,
+200
+)
+);
+return false;
+}
+
+console.log(
+"[drawings] purge REST ok:",
+all
+? "all"
+: `${sym} ${sid}`
+);
+return true;
+
+}catch(err){
+console.warn(
+"[drawings] purge REST:",
+err?.message || err
+);
+return false;
+
+}
 
 }
 
@@ -459,27 +699,32 @@ if(
 return false;
 }
 
-const { error } =
-await withTimeout(
-ctx.sb
-.from(
-"user_drawings"
-)
-.delete()
-.eq(
-"user_id",
-ctx.user.id
-),
-20000,
-"user_drawings delete all"
+const token =
+await getAccessTokenForUser(
+ctx
 );
 
 if(
-error
+!token
 ){
 console.warn(
-"[drawings] delete all:",
-error.message
+"[drawings] delete all: нет токена"
+);
+return false;
+}
+
+const ok =
+await purgeDrawingsViaRest({
+all: true,
+ctx,
+token
+});
+
+if(
+!ok
+){
+console.warn(
+"[drawings] delete all REST failed"
 );
 return false;
 }
@@ -504,7 +749,9 @@ broadcastDrawingsSync();
 
 return true;
 
-}
+},
+45000,
+"user_drawings delete all"
 );
 
 }
@@ -555,15 +802,6 @@ symbol,
 shapeId
 ){
 
-const ctx =
-await getAuthed();
-
-if(
-!ctx
-){
-return false;
-}
-
 const sym =
 String(
 symbol ||
@@ -582,32 +820,40 @@ if(
 return false;
 }
 
-const { error } =
-await ctx.sb
-.from(
-"user_drawings"
-)
-.delete()
-.eq(
-"user_id",
-ctx.user.id
-)
-.eq(
-"symbol",
-sym
-)
-.eq(
-"shape_id",
-sid
+return runCloudOp(
+async()=>{
+
+const ctx =
+await getAuthed();
+
+if(
+!ctx
+){
+return false;
+}
+
+const token =
+await getAccessTokenForUser(
+ctx
 );
 
 if(
-error
+!token
 ){
-console.warn(
-"[drawings] delete:",
-error.message
-);
+return false;
+}
+
+const ok =
+await purgeDrawingsViaRest({
+symbol: sym,
+shapeId: sid,
+ctx,
+token
+});
+
+if(
+!ok
+){
 return false;
 }
 
@@ -628,6 +874,11 @@ meta
 broadcastDrawingsSync();
 
 return true;
+
+},
+20000,
+"user_drawings delete one"
+);
 
 }
 

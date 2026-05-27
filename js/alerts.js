@@ -2,6 +2,10 @@ import {
 readAlertTokenSync
 } from "./alert-auth-cache.js?v=4";
 
+import {
+withTimeout
+} from "./async-timeout.js?v=1";
+
 const STORAGE_KEY = "price_alerts_v1";
 
 const HISTORY_KEY = "price_alerts_history_v1";
@@ -2130,7 +2134,7 @@ const { purgeAllLocalDrawingsStorage } =
 await import("./drawings-storage.js?v=4");
 
 const drawingsCloud =
-await import("./drawings-cloud-sync.js?v=5");
+await import("./drawings-cloud-sync.js?v=6");
 
 const alertsCloud =
 await import("./alerts-cloud-sync.js?v=70");
@@ -2169,8 +2173,22 @@ symbols =
 purgeAllLocalDrawingsStorage();
 
 const alertsOk =
-await alertsCloud.runCloudOp(()=>
+await withTimeout(
+alertsCloud.runCloudOp(()=>
 alertsCloud.removeAllAlertsEverywhere()
+),
+35000,
+"clear all alerts"
+).then(
+()=>true
+).catch(
+err=>{
+console.warn(
+"[alerts] clear all timeout:",
+err?.message || err
+);
+return false;
+}
 );
 
 if(

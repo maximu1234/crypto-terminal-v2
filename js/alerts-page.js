@@ -10,7 +10,7 @@ getAlertsSorted,
 removeAlert,
 stripAlertFlagsNotInRegistry,
 removeAllAlerts
-} from "./alerts.js?v=66";
+} from "./alerts.js?v=67";
 
 import {
 getTelegramChatId,

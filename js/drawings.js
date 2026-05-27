@@ -52,7 +52,7 @@ deleteDrawingFromCloud,
 flushDrawingsCloudPush,
 onDrawingsRemoteUpdate,
 scheduleDrawingsCloudPush
-} from "./drawings-cloud-sync.js?v=5";
+} from "./drawings-cloud-sync.js?v=6";
 
 import {
 touchShapeRevision,
