@@ -2116,8 +2116,18 @@ try{
 const drawings =
 JSON.parse(localStorage.getItem(key) || "[]");
 
-if(Array.isArray(drawings)){
+if(
+Array.isArray(drawings) &&
+drawings.length >
+0
+){
 total += drawings.length;
+}else if(
+Array.isArray(drawings)
+){
+localStorage.removeItem(
+key
+);
 }
 
 }catch{}
@@ -2137,16 +2147,26 @@ const drawingsCloud =
 await import("./drawings-cloud-sync.js?v=8");
 
 const alertsCloud =
-await import("./alerts-cloud-sync.js?v=70");
+await import("./alerts-cloud-sync.js?v=69");
+
+const hadLocalDrawings =
+countAllDrawings() >
+0;
+const hadLocalAlerts =
+getAlertsSorted().length >
+0;
+const alreadyEmpty =
+!hadLocalDrawings &&
+!hadLocalAlerts;
 
 let symbols =
 purgeAllLocalDrawingsStorage();
 
 drawingsCloud.pauseDrawingsCloudSync(
-90000
+120000
 );
 alertsCloud.pauseRegistryCloudSync(
-90000
+120000
 );
 
 try{
@@ -2158,7 +2178,15 @@ saveAlertsFromCloudMerge(
 symbols =
 purgeAllLocalDrawingsStorage();
 
-const cloudDrawingsOk =
+let cloudDrawingsOk =
+null;
+
+if(
+alreadyEmpty
+){
+void drawingsCloud.clearAllDrawingsFromCloud();
+}else{
+cloudDrawingsOk =
 await drawingsCloud.clearAllDrawingsFromCloud();
 
 if(
@@ -2168,23 +2196,24 @@ throw new Error(
 "Не удалось удалить рисунки в Supabase. Обновите страницу и войдите через шестерёнку."
 );
 }
+}
 
 symbols =
 purgeAllLocalDrawingsStorage();
 
 const alertsOk =
 await withTimeout(
-alertsCloud.runCloudOp(()=>
-alertsCloud.removeAllAlertsEverywhere()
-),
-35000,
+alertsCloud.removeAllAlertsEverywhere({
+skipReconcile: true
+}),
+12000,
 "clear all alerts"
 ).then(
 ()=>true
 ).catch(
 err=>{
 console.warn(
-"[alerts] clear all timeout:",
+"[alerts] clear all:",
 err?.message || err
 );
 return false;
@@ -2192,7 +2221,11 @@ return false;
 );
 
 if(
-alertsOk === false
+alertsOk === false &&
+(
+hadLocalAlerts ||
+!alreadyEmpty
+)
 ){
 console.warn(
 "[alerts] не удалось очистить алерты в облаке"

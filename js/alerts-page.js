@@ -10,7 +10,7 @@ getAlertsSorted,
 removeAlert,
 stripAlertFlagsNotInRegistry,
 removeAllAlerts
-} from "./alerts.js?v=68";
+} from "./alerts.js?v=69";
 
 import {
 getTelegramChatId,
@@ -97,12 +97,6 @@ let clearDrawingsBusy =
 false;
 
 function shouldOfferGlobalClear(){
-
-if(
-isCloudLoggedIn()
-){
-return true;
-}
 
 if(
 getAlertsSorted().length >
@@ -541,6 +535,13 @@ shouldOfferGlobalClear()
 
 clearDrawingsAction.innerHTML =
 `<button type="button" class="alerts-clear-drawings-link">Удалить</button>`;
+
+}else if(
+isCloudLoggedIn()
+){
+
+clearDrawingsAction.innerHTML =
+`<span class="alerts-clear-drawings-text" title="В браузере и в списке алертов ничего нет">Нечего удалять</span>`;
 
 }else{
 

@@ -1618,31 +1618,32 @@ return ok;
 
 export async function clearAllAlertsFromCloud(){
 
+const snap =
+readAlertTokenSync();
+
+if(
+!snap?.token ||
+!snap?.user?.id
+){
+console.warn(
+"[alerts] clear all: нет токена — только локально"
+);
+return null;
+}
+
 const ctx =
-await getAuthed();
-
-if(!ctx?.user?.id){
-console.warn(
-"[alerts] clear all: нет входа"
-);
-return false;
-}
-
-const token =
-await getAccessTokenForUser(ctx);
-
-if(!token){
-console.warn(
-"[alerts] clear all: нет токена"
-);
-return false;
-}
+snap.ctx?.sb
+? snap.ctx
+: {
+sb: null,
+user: snap.user
+};
 
 let ok =
 await purgeAlertViaRest({
 all: true,
 ctx,
-token
+token: snap.token
 });
 
 if(!ok){
@@ -1667,9 +1668,13 @@ return ok;
 
 }
 
-export async function removeAllAlertsEverywhere(){
+export async function removeAllAlertsEverywhere(
+opts = {}
+){
 
-pauseRegistryCloudSync(20000);
+pauseRegistryCloudSync(
+60000
+);
 
 if(registrySyncTimer){
 clearTimeout(registrySyncTimer);
@@ -1677,12 +1682,17 @@ registrySyncTimer = null;
 }
 
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=62");
+await import("./alerts.js?v=69");
 
 const ok =
 await clearAllAlertsFromCloud();
 
+if(
+!opts.skipReconcile
+){
 await reconcileLocalRegistryWithCloud();
+}
+
 stripAlertFlagsNotInRegistry();
 
 pauseRegistryCloudSync(0);
@@ -1959,7 +1969,18 @@ async function getAccessTokenForUser(
 ctx
 ){
 
-if(!ctx){
+const cached =
+readAlertTokenSync()?.token;
+
+if(
+cached
+){
+return cached;
+}
+
+if(
+!ctx?.sb
+){
 return null;
 }
 
@@ -1967,7 +1988,7 @@ try{
 const { data } =
 await withTimeout(
 ctx.sb.auth.getSession(),
-5000,
+4000,
 "getSession"
 );
 
