@@ -2,11 +2,14 @@ import {
 ALERT_LINE_COLOR,
 ALERT_LINE_DASH,
 alertPriceFromShape,
+alertPriceForDisplay,
 getActiveAlerts,
 finalizeAlertPriceDrag,
+setAlertDragLivePrice,
+clearAlertDragLivePrice,
 removeAlert,
 upsertAlert
-} from "./alerts.js?v=64";
+} from "./alerts.js?v=65";
 
 import {
 setAlertDragPaused,
@@ -5536,6 +5539,58 @@ widthBtn?.classList.remove(
 
 }
 
+function registryAlertDrawPrice(
+alert
+){
+
+const sid =
+String(
+alert.shapeId ||
+alert.id ||
+""
+).trim();
+
+if(
+dragState &&
+sid
+){
+
+const dragged =
+drawings.find(
+d=>
+d.id ===
+dragState.shapeId
+);
+
+if(
+dragged &&
+dragged.id ===
+sid
+){
+
+const live =
+alertPriceFromShape(
+dragged
+);
+
+if(
+Number.isFinite(
+live
+)
+){
+return live;
+}
+
+}
+
+}
+
+return alertPriceForDisplay(
+alert
+);
+
+}
+
 function drawRegistryPriceAlerts(
 ctx,
 plotW,
@@ -5567,9 +5622,22 @@ sym
 continue;
 }
 
+const level =
+registryAlertDrawPrice(
+alert
+);
+
+if(
+!Number.isFinite(
+level
+)
+){
+continue;
+}
+
 const y =
 series.priceToCoordinate(
-alert.price
+level
 );
 
 if(
@@ -6615,6 +6683,12 @@ getSymbol(),
 sel.id,
 true
 );
+setAlertDragLivePrice(
+sel.id,
+alertPriceFromShape(
+sel
+)
+);
 }
 
 }else if(
@@ -6669,6 +6743,12 @@ setAlertDragPaused(
 getSymbol(),
 sel.id,
 true
+);
+setAlertDragLivePrice(
+sel.id,
+alertPriceFromShape(
+sel
+)
 );
 }
 
@@ -6885,6 +6965,30 @@ y
 return;
 }
 
+if(
+shape.type ===
+"hray" &&
+shape.isAlert
+){
+
+const live =
+alertPriceFromShape(
+shape
+);
+
+if(
+Number.isFinite(
+live
+)
+){
+setAlertDragLivePrice(
+shape.id,
+live
+);
+}
+
+}
+
 }else{
 
 const point = pointFromXY(x, y);
@@ -6895,9 +6999,31 @@ return;
 
 moveHandle(shape, dragState.handleId, point);
 
+if(
+shape.type ===
+"hray" &&
+shape.isAlert
+){
+
+const live =
+alertPriceFromShape(
+shape
+);
+
+if(
+Number.isFinite(
+live
+)
+){
+setAlertDragLivePrice(
+shape.id,
+live
+);
 }
 
-saveDrawings();
+}
+
+}
 
 redraw();
 
@@ -6926,6 +7052,52 @@ draggedShape.type
 clampPositionPrices(
 draggedShape
 );
+}
+
+if(
+draggedShape.type ===
+"hray" &&
+draggedShape.isAlert
+){
+
+const sym =
+String(
+getSymbol() ||
+""
+).trim().toUpperCase();
+
+const level =
+alertPriceFromShape(
+draggedShape
+);
+
+if(
+sym &&
+Number.isFinite(
+level
+)
+){
+
+finalizeAlertPriceDrag(
+sym,
+draggedShape.id,
+level,
+draggedShape.alertTf ||
+getTf()
+);
+
+}
+
+setAlertDragPaused(
+sym,
+draggedShape.id,
+false
+);
+
+clearAlertDragLivePrice(
+draggedShape.id
+);
+
 }
 
 touchShapeRevision(

@@ -10,6 +10,86 @@ const STORAGE_KEY = "price_alerts_v1";
 
 const HISTORY_KEY = "price_alerts_history_v1";
 
+/** Пока тянут линию — цена для отрисовки (реестр читается из localStorage заново). */
+const alertDragLivePrice =
+new Map();
+
+export function setAlertDragLivePrice(
+shapeId,
+price
+){
+
+const sid =
+String(
+shapeId ||
+""
+).trim();
+
+if(
+!sid
+){
+return;
+}
+
+if(
+price ==
+null ||
+!Number.isFinite(
+price
+)
+){
+alertDragLivePrice.delete(
+sid
+);
+return;
+}
+
+alertDragLivePrice.set(
+sid,
+price
+);
+
+}
+
+export function clearAlertDragLivePrice(
+shapeId
+){
+
+setAlertDragLivePrice(
+shapeId,
+null
+);
+
+}
+
+export function alertPriceForDisplay(
+alert
+){
+
+const sid =
+String(
+alert?.shapeId ||
+alert?.id ||
+""
+).trim();
+
+if(
+sid &&
+alertDragLivePrice.has(
+sid
+)
+){
+return alertDragLivePrice.get(
+sid
+);
+}
+
+return Number(
+alert?.price
+);
+
+}
+
 const MAX_ALERT_HISTORY = 30;
 
 /** Сериализация read-modify-write в localStorage (иначе 4 алерта → 2 строки). */

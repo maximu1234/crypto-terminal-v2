@@ -2,8 +2,10 @@ import {
 createPriceAlert,
 getActiveAlerts,
 removeAlert,
-finalizeAlertPriceDrag
-} from "./alerts.js?v=64";
+finalizeAlertPriceDrag,
+setAlertDragLivePrice,
+clearAlertDragLivePrice
+} from "./alerts.js?v=65";
 
 import {
 isCloudLoggedInEffective
@@ -530,6 +532,10 @@ hit
 );
 dragAlertId =
 hit.shapeId;
+setAlertDragLivePrice(
+dragAlertId,
+hit.price
+);
 e.preventDefault();
 e.stopPropagation();
 
@@ -567,21 +573,21 @@ price
 return;
 }
 
-const row =
-alertAt(
-dragAlertId
+setAlertDragLivePrice(
+dragAlertId,
+price
 );
 
-if(
-row
-){
-row.price =
-price;
 positionDeleteBar(
-row
-);
-scheduleRedraw?.();
+alertAt(
+dragAlertId
+) || {
+shapeId: dragAlertId,
+price
 }
+);
+
+scheduleRedraw?.();
 
 }
 
@@ -618,6 +624,10 @@ tf()
 );
 dispatchAlertsChanged();
 }
+
+clearAlertDragLivePrice(
+dragAlertId
+);
 
 dragAlertId =
 null;
