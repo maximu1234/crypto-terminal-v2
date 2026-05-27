@@ -92,7 +92,7 @@ new CustomEvent(
 }
 );
 
-import("./drawings-cloud-sync.js?v=11").then(
+import("./drawings-cloud-sync.js?v=12").then(
 ({ initDrawingsCloudSync })=>{
 initDrawingsCloudSync();
 }

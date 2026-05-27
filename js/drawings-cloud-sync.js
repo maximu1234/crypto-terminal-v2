@@ -8,6 +8,10 @@ notifyDrawings as notifyDrawingsListeners
 } from "./cloud-sync.js?v=20";
 
 import {
+normalizeAlertWorkerBaseUrl
+} from "./alert-worker-url.js?v=1";
+
+import {
 collectAllLocalDrawings,
 pruneDuplicateShapeIdsAcrossSymbols,
 applyDrawingsMapToLocal,
@@ -192,6 +196,195 @@ return {
 user: snap.user,
 token: snap.token
 };
+
+}
+
+let cachedDrawingsWorkerBaseUrl =
+null;
+
+async function getDrawingsWorkerBaseUrl(){
+
+if(
+cachedDrawingsWorkerBaseUrl !==
+null
+){
+return cachedDrawingsWorkerBaseUrl;
+}
+
+try{
+const env =
+await import("./supabase-env.js?v=5");
+cachedDrawingsWorkerBaseUrl =
+normalizeAlertWorkerBaseUrl(
+env.ALERT_WORKER_URL || ""
+);
+}catch{
+cachedDrawingsWorkerBaseUrl =
+"";
+}
+
+return cachedDrawingsWorkerBaseUrl;
+
+}
+
+/**
+ * Запись рисунка через Railway (service role) — надёжнее прямого REST с iPad.
+ */
+async function pushDrawingViaWorker(
+symbol,
+shape,
+opts = {}
+){
+
+const base =
+await getDrawingsWorkerBaseUrl();
+
+if(
+!base
+){
+return false;
+}
+
+const token =
+opts.token ||
+readAlertTokenSync()?.token ||
+null;
+
+if(
+!token
+){
+return false;
+}
+
+const sym =
+String(
+symbol ||
+""
+).trim().toUpperCase();
+const shapeId =
+String(
+shape?.id ||
+""
+).trim();
+
+if(
+!sym ||
+!shapeId ||
+!shape
+){
+return false;
+}
+
+const rev =
+getShapeRevisionTime(
+shape
+);
+
+let res;
+
+try{
+res =
+await fetchWithTimeout(
+`${base}/push-drawing`,
+{
+method: "POST",
+headers: {
+"Content-Type": "application/json",
+Authorization: `Bearer ${token}`
+},
+body: JSON.stringify({
+symbol: sym,
+shape_id: shapeId,
+shape,
+updated_at: new Date(
+rev
+).toISOString(),
+updated_at_ms: rev,
+deleted_at: null
+})
+},
+12000
+);
+}catch(
+err
+){
+console.warn(
+"[drawings] worker /push-drawing:",
+err?.message || err
+);
+return false;
+}
+
+const text =
+await res.text();
+
+let body =
+{};
+
+try{
+body =
+text
+? JSON.parse(
+text
+)
+: {};
+}catch{
+body = {
+raw: text
+};
+}
+
+if(
+!res.ok ||
+!body.ok
+){
+console.warn(
+"[drawings] worker /push-drawing отклонён:",
+res.status,
+sym,
+shapeId,
+text.slice(
+0,
+300
+)
+);
+return false;
+}
+
+console.log(
+"[drawings] ✓ Supabase (worker):",
+sym,
+shapeId
+);
+
+broadcastDrawingsSync();
+return true;
+
+}
+
+async function pushShapeToCloud(
+ctx,
+symbol,
+shape,
+opts = {}
+){
+
+if(
+await pushDrawingViaWorker(
+symbol,
+shape,
+opts
+)
+){
+return true;
+}
+
+return upsertDrawingRowViaRest(
+ctx,
+symbol,
+shape,
+opts
+);
 
 }
 
@@ -1028,7 +1221,7 @@ user
 ){
 
 if(
-await upsertDrawingRowViaRest(
+await pushShapeToCloud(
 {
 user
 },
@@ -1044,7 +1237,6 @@ sym,
 shapeId,
 rev
 );
-broadcastDrawingsSync();
 return true;
 }
 
@@ -1611,7 +1803,7 @@ continue;
 }
 
 if(
-await upsertDrawingRowViaRest(
+await pushShapeToCloud(
 ctx,
 sym,
 shape,
@@ -2254,7 +2446,7 @@ const PUSH_DEBOUNCE_MS =
 export function scheduleDrawingsCloudSync(){
 
 if(
-!isCloudLoggedIn() ||
+!isCloudLoggedInEffective() ||
 isDrawingsCloudSyncPaused()
 ){
 return;

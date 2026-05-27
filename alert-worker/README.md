@@ -4,6 +4,7 @@
 
 Браузерные алерты (звук/тост) при открытой вкладке:
 - `POST /push-alert` — запись алерта в Supabase (service role)
+- `POST /push-drawing` — запись рисунка в `user_drawings` (service role, для iPad)
 - `POST /trigger` — Telegram + удаление после срабатывания
 
 Нужен `ALERT_WORKER_URL` на Vercel в `js/supabase-env.js`. При закрытой вкладке срабатывает только worker по свечам Bybit.
