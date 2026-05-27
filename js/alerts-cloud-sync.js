@@ -211,7 +211,9 @@ remoteRegistrySyncTimer = setTimeout(()=>{
 
 remoteRegistrySyncTimer = null;
 
-if(!isCloudLoggedIn()){
+if(
+!isCloudLoggedInEffective()
+){
 return;
 }
 
@@ -222,7 +224,7 @@ immediate: true
 async n=>{
 
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=80");
+await import("./alerts.js?v=81");
 
 stripAlertFlagsNotInRegistry();
 
@@ -263,7 +265,7 @@ oldRow?.triggered_at;
 if(triggered){
 
 const { applyRemoteAlertFired } =
-await import("./alerts.js?v=80");
+await import("./alerts.js?v=81");
 
 applyRemoteAlertFired(oldRow);
 return;
@@ -287,7 +289,7 @@ sid
 ){
 
 const { applyRemoteAlertRemoved } =
-await import("./alerts.js?v=80");
+await import("./alerts.js?v=81");
 
 applyRemoteAlertRemoved(oldRow);
 
@@ -339,7 +341,7 @@ row.symbol &&
 row.shape_id
 ){
 
-void import("./alerts.js?v=80").then(
+void import("./alerts.js?v=81").then(
 ({ applyRemoteAlertUpsert })=>{
 
 if(
@@ -642,14 +644,16 @@ null;
 
 async function refreshCloudAlertModeImpl(){
 
-const remote =
 await updateBrowserCrossMode();
 
+const configured =
+await isSupabaseConfigured();
 const ctx =
 await getAuthed();
 
 if(
-remote &&
+isCloudLoggedInEffective() &&
+configured &&
 ctx?.user?.id
 ){
 await setupAlertsRealtime(
@@ -764,7 +768,7 @@ cloudId
 ){
 
 const { markAlertCloudSynced, markAlertCloudId } =
-await import("./alerts.js?v=80");
+await import("./alerts.js?v=81");
 
 const ok =
 await verifyAlertActiveInCloud(
@@ -1617,7 +1621,7 @@ null;
 
 if(cloudId){
 const { markAlertCloudId } =
-await import("./alerts.js?v=80");
+await import("./alerts.js?v=81");
 
 markAlertCloudId(
 symbol,
@@ -1937,7 +1941,7 @@ registrySyncTimer = null;
 }
 
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=80");
+await import("./alerts.js?v=81");
 
 const ok =
 await clearAllAlertsFromCloud();
@@ -3332,7 +3336,7 @@ null;
 
 if(cloudId){
 const { markAlertCloudId } =
-await import("./alerts.js?v=80");
+await import("./alerts.js?v=81");
 
 markAlertCloudId(
 symbol,
@@ -3367,7 +3371,7 @@ return 0;
 }
 
 const { getActiveAlerts } =
-await import("./alerts.js?v=80");
+await import("./alerts.js?v=81");
 
 const localKeys =
 new Set(
@@ -3497,7 +3501,7 @@ attempt++
 if(await pushAlertViaWorker(row)){
 
 const { markAlertCloudSynced } =
-await import("./alerts.js?v=80");
+await import("./alerts.js?v=81");
 
 /* Worker пишет service role — не ждём SELECT по JWT пользователя */
 markAlertCloudSynced(
@@ -3526,7 +3530,7 @@ ctx
 ){
 
 const { loadAlerts, markAlertCloudSynced } =
-await import("./alerts.js?v=80");
+await import("./alerts.js?v=81");
 
 const hasId =
 loadAlerts().some(
@@ -3585,7 +3589,7 @@ null
 ){
 
 const { markAlertCloudSynced } =
-await import("./alerts.js?v=80");
+await import("./alerts.js?v=81");
 
 markAlertCloudSynced(
 row.symbol,
@@ -3657,14 +3661,14 @@ options
 export async function pushUnsyncedAlerts(){
 
 if(
-!isCloudLoggedIn() ||
+!isCloudLoggedInEffective() ||
 isRegistryCloudSyncPaused()
 ){
 return 0;
 }
 
 const { getActiveAlerts, countAlertsOnChart } =
-await import("./alerts.js?v=80");
+await import("./alerts.js?v=81");
 
 const onChart =
 countAlertsOnChart();
@@ -3752,7 +3756,7 @@ return 0;
 }
 
 const { getActiveAlerts } =
-await import("./alerts.js?v=80");
+await import("./alerts.js?v=81");
 
 const list =
 getActiveAlerts();
@@ -4061,7 +4065,7 @@ normalizeAlertTf,
 isAlertDeleted,
 forgetAlertDeleted
 } =
-await import("./alerts.js?v=80");
+await import("./alerts.js?v=81");
 
 const cloudByKey =
 new Map();
@@ -4179,7 +4183,7 @@ tf: row.tf || "60"
 if(removedRows.length){
 
 const { applyRemoteAlertFired } =
-await import("./alerts.js?v=80");
+await import("./alerts.js?v=81");
 
 for(const row of removedRows){
 
@@ -4222,6 +4226,8 @@ const next =
 [];
 const seen =
 new Set();
+const localsNeedingPush =
+[];
 
 for(
 const [key, cloud] of cloudByKey
@@ -4248,15 +4254,47 @@ const cloudPrice =
 Number(cloud.price);
 const prevPrice =
 Number(prev?.price);
+const localTs =
+Number(prev?.priceUpdatedAt) ||
+Number(prev?.createdAt) ||
+0;
+const cloudTs =
+Date.parse(
+cloud.created_at
+) ||
+0;
+const pricesDiffer =
+Number.isFinite(prevPrice) &&
+Number.isFinite(cloudPrice) &&
+Math.abs(prevPrice - cloudPrice) >
+1e-12;
+const localPriceNewer =
+!!prev &&
+pricesDiffer &&
+localTs >
+cloudTs +
+500;
+
+let mergedPrice =
+Number.isFinite(cloudPrice)
+? cloudPrice
+: prevPrice;
+
+if(
+localPriceNewer
+){
+mergedPrice =
+prevPrice;
+localsNeedingPush.push(
+prev
+);
+}
 
 next.push({
 id: sid,
 shapeId: sid,
 symbol: sym,
-price:
-Number.isFinite(cloudPrice)
-? cloudPrice
-: prevPrice,
+price: mergedPrice,
 tf: normalizeAlertTf(
 cloud.tf ||
 prev?.tf
@@ -4264,14 +4302,16 @@ prev?.tf
 createdAt:
 prev?.createdAt ||
 (Date.parse(cloud.created_at) || Date.now()),
-cloudId: String(cloud.id || ""),
+cloudId: String(cloud.id || prev?.cloudId || ""),
 cloudSynced: true,
 priceUpdatedAt:
-Date.parse(
-cloud.created_at
-) ||
-prev?.priceUpdatedAt ||
+localPriceNewer
+? localTs
+: Math.max(
+localTs,
+cloudTs ||
 Date.now()
+)
 });
 
 seen.add(key);
@@ -4351,6 +4391,22 @@ next.length
 );
 }
 
+for(const entry of localsNeedingPush){
+const row =
+normalizeAlertEntry(entry);
+
+if(
+row.symbol &&
+row.shapeId &&
+Number.isFinite(row.price)
+){
+void pushOneAlertRow(
+row,
+{ retries: 4 }
+);
+}
+}
+
 return next.length;
 
 }
@@ -4363,7 +4419,7 @@ const n =
 await reconcileLocalRegistryWithCloud();
 
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=80");
+await import("./alerts.js?v=81");
 
 stripAlertFlagsNotInRegistry(
 isAlertsPage()
@@ -4489,7 +4545,7 @@ if(
 !isAlertsPage()
 ){
 const { mergeRegistryFromChartDrawings } =
-await import("./alerts.js?v=80");
+await import("./alerts.js?v=81");
 
 mergeRegistryFromChartDrawings({
 stripFlags: stripOpts
@@ -4506,17 +4562,11 @@ immediate: true
 });
 
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=80");
+await import("./alerts.js?v=81");
 
 stripAlertFlagsNotInRegistry(
 stripOpts
 );
-
-if(
-!isAlertsPage()
-){
-await refreshCloudAlertModeImpl();
-}
 
 lastHydrateAlertsMs =
 Date.now();
@@ -4551,7 +4601,7 @@ registrySyncTimer = setTimeout(()=>{
 registrySyncTimer = null;
 
 if(
-!isCloudLoggedIn() ||
+!isCloudLoggedInEffective() ||
 isRegistryCloudSyncPaused()
 ){
 return;
@@ -4606,30 +4656,11 @@ void teardownAlertsRealtime();
 return;
 }
 
-if(
-isAlertsPage()
-){
-stopAlertsFastPoll();
-void refreshCloudAlertMode();
-return;
-}
-
 void refreshCloudAlertMode();
 
-void getAuthed().then(
-ctx=>{
-
 if(
-ctx?.user?.id
+!isAlertsPage()
 ){
-void setupAlertsRealtimeForUser(
-ctx.user.id
-);
-}
-
-}
-);
-
 void hydrateAlertsAfterAuth().catch(
 err=>{
 console.warn(
@@ -4638,13 +4669,6 @@ err?.message || err
 );
 }
 );
-
-if(
-isDrawingsUiPage()
-){
-startAlertsFastPoll();
-}else{
-stopAlertsFastPoll();
 }
 
 }
@@ -4715,7 +4739,7 @@ document.addEventListener(
 
 if(
 document.visibilityState !== "visible" ||
-!isCloudLoggedIn()
+!isCloudLoggedInEffective()
 ){
 return;
 }
@@ -4729,7 +4753,7 @@ const retryPushWhenVisible = ()=>{
 
 if(
 document.visibilityState !== "visible" ||
-!isCloudLoggedIn()
+!isCloudLoggedInEffective()
 ){
 return;
 }
