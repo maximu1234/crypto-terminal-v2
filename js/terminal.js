@@ -44,6 +44,7 @@ applyTabletRsiChartOptions,
 applyTabletMainChartScroll,
 markTabletChartBody,
 mountTabletPriceScaleTouch,
+getVisibleCandlesPriceRange,
 mountTabletChartGestures,
 mountChartRangeFreeze,
 positionTabletProbeCrosshair,
@@ -56,7 +57,7 @@ mountAxisDoubleTapReset,
 TABLET_USE_CUSTOM_TOUCH_PAN,
 isTabletChartViewport,
 isUserCrosshairEvent
-} from "./chart.js?v=80";
+} from "./chart.js?v=82";
 
 import {
 connectKlineStream,
@@ -1221,6 +1222,12 @@ return true;
 }
 
 const priceScaleTouchHooks = {
+getFallbackPriceRange(){
+return getVisibleCandlesPriceRange(
+chart,
+candleSeries
+);
+},
 onInteraction(){
 priceHudCtrl.refresh?.();
 },
@@ -1695,12 +1702,6 @@ range
 priceScaleTouchHooks.onDragEnd =
 ()=>{
 drawingTools?.endPriceScaleDragRedraw?.();
-};
-
-priceScaleTouchHooks.onReset =
-()=>{
-drawingTools?.endPriceScaleDragRedraw?.();
-drawingTools?.scheduleRedraw?.();
 };
 
 priceScaleTouchHooks.onReset =
