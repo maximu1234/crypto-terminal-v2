@@ -4480,6 +4480,109 @@ top:0.12,
 bottom:0.12
 });
 
+export function isChartPriceScaleLogarithmic(
+chart
+){
+
+try{
+return chart.priceScale(
+"right"
+).options().mode ===
+1;
+}catch{
+return true;
+}
+
+}
+
+/**
+ * Log-шкала: min > 0. Иначе LW рисует отрицательные «цены».
+ */
+export function sanitizeAutoscalePriceRange(
+chart,
+min,
+max
+){
+
+if(
+!Number.isFinite(
+min
+) ||
+!Number.isFinite(
+max
+)
+){
+return null;
+}
+
+let lo =
+Math.min(
+min,
+max
+);
+
+let hi =
+Math.max(
+min,
+max
+);
+
+if(
+hi ===
+lo
+){
+const bump =
+Math.max(
+Math.abs(
+hi
+) *
+0.01,
+1e-8
+);
+
+lo -= bump;
+hi += bump;
+}
+
+if(
+isChartPriceScaleLogarithmic(
+chart
+)
+){
+
+const floor =
+Math.max(
+hi *
+1e-8,
+1e-12
+);
+
+if(
+lo <=
+0
+){
+lo =
+floor;
+}
+
+if(
+hi <=
+lo
+){
+hi =
+lo *
+1.02;
+}
+
+}
+
+return {
+min:lo,
+max:hi
+};
+
+}
+
 export function getVisibleCandlesPriceRange(
 chart,
 series
@@ -4526,11 +4629,89 @@ range.to
 
 }
 
+if(
+from >
+to
+){
+return null;
+}
+
 let min =
 Infinity;
 
 let max =
 -Infinity;
+
+for(
+let i =
+from;
+i <=
+to;
+i++
+){
+
+const bar =
+data[
+i
+];
+
+const close =
+bar?.close;
+
+if(
+close ==
+null ||
+!Number.isFinite(
+close
+)
+){
+continue;
+}
+
+if(
+close <
+min
+){
+min =
+close;
+}
+
+if(
+close >
+max
+){
+max =
+close;
+}
+
+}
+
+if(
+!Number.isFinite(
+min
+) ||
+!Number.isFinite(
+max
+)
+){
+return null;
+}
+
+const span =
+Math.max(
+max - min,
+max *
+0.02,
+1e-8
+);
+
+const wickLo =
+min - span *
+0.35;
+
+const wickHi =
+max + span *
+0.35;
 
 for(
 let i =
@@ -4552,6 +4733,11 @@ continue;
 }
 
 if(
+Number.isFinite(
+bar.low
+) &&
+bar.low >=
+wickLo &&
 bar.low <
 min
 ){
@@ -4560,6 +4746,11 @@ bar.low;
 }
 
 if(
+Number.isFinite(
+bar.high
+) &&
+bar.high <=
+wickHi &&
 bar.high >
 max
 ){
@@ -4569,37 +4760,15 @@ bar.high;
 
 }
 
-if(
-!Number.isFinite(
-min
-) ||
-!Number.isFinite(
-max
-)
-){
-return null;
-}
-
-const span =
-max - min;
-
 const pad =
-span >
-0
-? span *
-0.08
-: Math.max(
-Math.abs(
-max
-) *
-0.01,
-1e-8
-);
+span *
+0.08;
 
-return {
-min:min - pad,
-max:max + pad
-};
+return sanitizeAutoscalePriceRange(
+chart,
+min - pad,
+max + pad
+);
 
 }
 
@@ -4641,21 +4810,6 @@ bottom:DEFAULT_PRICE_SCALE_MARGINS.bottom
 });
 }catch{
 /* ignore */
-}
-
-}
-
-function isChartPriceScaleLogarithmic(
-chart
-){
-
-try{
-return chart.priceScale(
-"right"
-).options().mode ===
-1;
-}catch{
-return true;
 }
 
 }
@@ -5093,78 +5247,6 @@ chart,
 series
 );
 
-const snapRange =
-hooks.getFallbackPriceRange?.() ||
-getVisibleCandlesPriceRange(
-chart,
-series
-);
-
-if(
-snapRange &&
-Number.isFinite(
-snapRange.min
-) &&
-Number.isFinite(
-snapRange.max
-) &&
-snapRange.min !==
-snapRange.max
-){
-
-try{
-series.applyOptions({
-autoscaleInfoProvider:()=>({
-priceRange:{
-minValue:snapRange.min,
-maxValue:snapRange.max
-}
-})
-});
-chart.priceScale(
-"right"
-).applyOptions({
-autoScale:true,
-scaleMargins:{
-top:DEFAULT_PRICE_SCALE_MARGINS.top,
-bottom:DEFAULT_PRICE_SCALE_MARGINS.bottom
-}
-});
-}catch{
-/* ignore */
-}
-
-requestAnimationFrame(
-()=>{
-try{
-series.applyOptions({
-autoscaleInfoProvider:()=>null
-});
-chart.priceScale(
-"right"
-).applyOptions({
-autoScale:true
-});
-}catch{
-/* ignore */
-}
-}
-);
-
-}else{
-
-try{
-chart.priceScale(
-"right"
-).applyOptions({
-autoScale:true
-});
-}catch{
-/* ignore */
-}
-
-}
-
 clearTabletProbeCrosshairForChart(
 chart
 );
@@ -5279,10 +5361,23 @@ if(
 return null;
 }
 
+const safe =
+sanitizeAutoscalePriceRange(
+chart,
+priceZoomRange.min,
+priceZoomRange.max
+);
+
+if(
+!safe
+){
+return null;
+}
+
 return {
 priceRange:{
-minValue:priceZoomRange.min,
-maxValue:priceZoomRange.max
+minValue:safe.min,
+maxValue:safe.max
 }
 };
 
@@ -5476,6 +5571,22 @@ mid - newHalf;
 priceZoomRange.max =
 mid + newHalf;
 
+}
+
+const safeZoom =
+sanitizeAutoscalePriceRange(
+chart,
+priceZoomRange.min,
+priceZoomRange.max
+);
+
+if(
+safeZoom
+){
+priceZoomRange.min =
+safeZoom.min;
+priceZoomRange.max =
+safeZoom.max;
 }
 
 notifyChartPriceRangeChanged();
