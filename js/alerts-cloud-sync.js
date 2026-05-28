@@ -257,7 +257,7 @@ immediate: true
 async n=>{
 
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=81");
+await import("./alerts.js?v=91");
 
 stripAlertFlagsNotInRegistry();
 
@@ -303,7 +303,7 @@ String(rawTriggered).trim().toLowerCase() !== "null";
 if(triggered){
 
 const { applyRemoteAlertFired } =
-await import("./alerts.js?v=81");
+await import("./alerts.js?v=91");
 
 applyRemoteAlertFired(oldRow);
 return;
@@ -327,7 +327,7 @@ sid
 ){
 
 const { applyRemoteAlertRemoved } =
-await import("./alerts.js?v=81");
+await import("./alerts.js?v=91");
 
 applyRemoteAlertRemoved(oldRow);
 
@@ -373,13 +373,28 @@ const row =
 payload?.new;
 
 if(
+row?.deleted_at &&
+row.symbol &&
+row.shape_id
+){
+void import("./alerts.js?v=91").then(
+({ applyRemoteAlertRemoved })=>{
+applyRemoteAlertRemoved(row);
+}
+).catch(()=>{});
+scheduleRemoteRegistrySync();
+return;
+}
+
+if(
 row &&
 !row.triggered_at &&
+!row.deleted_at &&
 row.symbol &&
 row.shape_id
 ){
 
-void import("./alerts.js?v=81").then(
+void import("./alerts.js?v=91").then(
 ({ applyRemoteAlertUpsert })=>{
 
 if(
@@ -933,7 +948,7 @@ cloudId
 ){
 
 const { markAlertCloudSynced, markAlertCloudId } =
-await import("./alerts.js?v=81");
+await import("./alerts.js?v=91");
 
 const ok =
 await verifyAlertActiveInCloud(
@@ -1844,7 +1859,8 @@ symbol,
 shape_id: shapeId,
 price,
 tf: normalizeAlertTf(entry.tf),
-triggered_at: null
+triggered_at: null,
+deleted_at: null
 };
 
 const controller =
@@ -1908,7 +1924,7 @@ null;
 
 if(cloudId){
 const { markAlertCloudId } =
-await import("./alerts.js?v=81");
+await import("./alerts.js?v=91");
 
 markAlertCloudId(
 symbol,
@@ -2146,7 +2162,7 @@ continue;
 }
 
 const one =
-await purgeAlertViaRest({
+await softDeleteAlertViaRest({
 id,
 ctx,
 token
@@ -2186,7 +2202,7 @@ user: snap.user
 };
 
 let ok =
-await purgeAlertViaRest({
+await softDeleteAlertViaRest({
 all: true,
 ctx,
 token: snap.token
@@ -2228,7 +2244,7 @@ registrySyncTimer = null;
 }
 
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=81");
+await import("./alerts.js?v=91");
 
 const ok =
 await clearAllAlertsFromCloud();
@@ -2277,7 +2293,7 @@ if(
 cid
 ){
 ok =
-await purgeAlertViaRest({
+await softDeleteAlertViaRest({
 id: cid
 });
 }
@@ -2286,7 +2302,7 @@ if(
 !ok
 ){
 ok =
-await purgeAlertViaRest({
+await softDeleteAlertViaRest({
 symbol: sym,
 shapeId: sid
 });
@@ -2540,6 +2556,8 @@ await ctx.sb
 .eq("user_id", ctx.user.id)
 .eq("symbol", sym)
 .eq("shape_id", sid)
+.is("triggered_at", null)
+.is("deleted_at", null)
 .maybeSingle();
 
 if(error){
@@ -2631,6 +2649,192 @@ ctx = {
 sb: null,
 user: snap.user
 };
+}
+
+async function softDeleteAlertViaRest(
+opts
+){
+
+const all =
+!!opts?.all;
+const id =
+String(opts?.id || "").trim();
+const sym =
+String(opts?.symbol || "").trim().toUpperCase();
+const sid =
+String(opts?.shapeId || "").trim();
+let ctx =
+opts?.ctx || null;
+let token =
+opts?.token || null;
+
+if(!token){
+const snap =
+readAlertTokenSync();
+token =
+snap?.token || null;
+if(
+!ctx &&
+snap?.user
+){
+ctx = {
+sb: null,
+user: snap.user
+};
+}
+}
+
+if(!token){
+const persisted =
+readPersistedAuthSession();
+if(
+persisted?.access_token
+){
+token =
+persisted.access_token;
+if(
+!ctx?.user?.id &&
+persisted?.user
+){
+ctx = {
+sb: ctx?.sb || null,
+user: persisted.user
+};
+}
+}
+}
+
+if(
+!ctx?.user?.id
+){
+try{
+ctx =
+await withTimeout(
+getAuthed(),
+8000,
+"getAuthed soft delete"
+);
+}catch{
+ctx = null;
+}
+}
+
+if(
+!ctx?.user?.id
+){
+return false;
+}
+
+if(!token){
+token =
+await refreshRestAuthForUser(ctx);
+}
+
+if(!token){
+return false;
+}
+
+let env;
+try{
+env =
+await import("./supabase-env.js?v=4");
+}catch{
+return false;
+}
+
+const base =
+String(env.SUPABASE_URL || "").replace(/\/$/, "");
+const anon =
+env.SUPABASE_ANON_KEY;
+
+if(
+!base ||
+!anon
+){
+return false;
+}
+
+let path =
+"";
+
+if(all){
+path =
+`price_alerts?user_id=eq.${encodeURIComponent(ctx.user.id)}&triggered_at=is.null&deleted_at=is.null`;
+}else if(id){
+path =
+`price_alerts?id=eq.${encodeURIComponent(id)}` +
+`&user_id=eq.${encodeURIComponent(ctx.user.id)}`;
+}else if(
+sym &&
+sid
+){
+path =
+`price_alerts?user_id=eq.${encodeURIComponent(ctx.user.id)}` +
+`&symbol=eq.${encodeURIComponent(sym)}` +
+`&shape_id=eq.${encodeURIComponent(sid)}`;
+}else{
+return false;
+}
+
+try{
+const res =
+await fetchWithTimeout(
+`${base}/rest/v1/${path}`,
+{
+method: "PATCH",
+headers: {
+apikey: anon,
+Authorization: `Bearer ${token}`,
+"Content-Type": "application/json",
+Prefer: "return=minimal"
+},
+body: JSON.stringify({
+deleted_at: new Date().toISOString()
+})
+},
+10000
+);
+
+if(!res.ok){
+const text =
+await res.text();
+if(
+isJwtExpiredText(text)
+){
+const refreshed =
+await refreshRestAuthForUser(ctx);
+if(
+refreshed &&
+refreshed !== token
+){
+const retry =
+await fetchWithTimeout(
+`${base}/rest/v1/${path}`,
+{
+method: "PATCH",
+headers: {
+apikey: anon,
+Authorization: `Bearer ${refreshed}`,
+"Content-Type": "application/json",
+Prefer: "return=minimal"
+},
+body: JSON.stringify({
+deleted_at: new Date().toISOString()
+})
+},
+10000
+);
+return retry.ok;
+}
+}
+return false;
+}
+
+return true;
+}catch{
+return false;
+}
+
 }
 
 }
@@ -3507,6 +3711,8 @@ const url =
 `user_id=eq.${encodeURIComponent(userId)}` +
 `&symbol=eq.${encodeURIComponent(sym)}` +
 `&shape_id=eq.${encodeURIComponent(sid)}` +
+`&triggered_at=is.null` +
+`&deleted_at=is.null` +
 `&select=id&limit=1`;
 
 try{
@@ -3569,6 +3775,7 @@ await ctx.sb
 .eq("user_id", ctx.user.id)
 .eq("symbol", sym)
 .eq("shape_id", sid)
+.is("deleted_at", null)
 .maybeSingle();
 
 if(error){
@@ -3690,7 +3897,7 @@ null;
 
 if(cloudId){
 const { markAlertCloudId } =
-await import("./alerts.js?v=81");
+await import("./alerts.js?v=91");
 
 markAlertCloudId(
 symbol,
@@ -3725,7 +3932,7 @@ return 0;
 }
 
 const { getActiveAlerts } =
-await import("./alerts.js?v=81");
+await import("./alerts.js?v=91");
 
 const localKeys =
 new Set(
@@ -3737,7 +3944,8 @@ await ctx.sb
 .from("price_alerts")
 .select("id, symbol, shape_id")
 .eq("user_id", ctx.user.id)
-.is("triggered_at", null);
+.is("triggered_at", null)
+.is("deleted_at", null);
 
 if(error){
 console.warn(
@@ -3855,7 +4063,7 @@ attempt++
 if(await pushAlertViaWorker(row)){
 
 const { markAlertCloudSynced } =
-await import("./alerts.js?v=81");
+await import("./alerts.js?v=91");
 
 /* Worker пишет service role — не ждём SELECT по JWT пользователя */
 markAlertCloudSynced(
@@ -3884,7 +4092,7 @@ ctx
 ){
 
 const { loadAlerts, markAlertCloudSynced } =
-await import("./alerts.js?v=81");
+await import("./alerts.js?v=91");
 
 const hasId =
 loadAlerts().some(
@@ -3943,7 +4151,7 @@ null
 ){
 
 const { markAlertCloudSynced } =
-await import("./alerts.js?v=81");
+await import("./alerts.js?v=91");
 
 markAlertCloudSynced(
 row.symbol,
@@ -4022,7 +4230,7 @@ return 0;
 }
 
 const { getActiveAlerts, countAlertsOnChart } =
-await import("./alerts.js?v=81");
+await import("./alerts.js?v=91");
 
 const onChart =
 countAlertsOnChart();
@@ -4124,7 +4332,7 @@ return 0;
 }
 
 const { getActiveAlerts } =
-await import("./alerts.js?v=81");
+await import("./alerts.js?v=91");
 
 const list =
 getActiveAlerts();
@@ -4236,7 +4444,8 @@ return null;
 const url =
 `${base}/rest/v1/price_alerts?user_id=eq.${encodeURIComponent(uid)}` +
 `&triggered_at=is.null` +
-`&select=id,symbol,shape_id,price,tf,created_at`;
+`&deleted_at=is.null` +
+`&select=id,symbol,shape_id,price,tf,created_at,updated_at`;
 
 try{
 let token =
@@ -4418,7 +4627,7 @@ ctx.sb
 "price_alerts"
 )
 .select(
-"id, symbol, shape_id, price, tf, created_at"
+"id, symbol, shape_id, price, tf, created_at, updated_at, deleted_at"
 )
 .eq(
 "user_id",
@@ -4426,6 +4635,10 @@ ctx.user.id
 )
 .is(
 "triggered_at",
+null
+)
+.is(
+"deleted_at",
 null
 ),
 12000,
@@ -4464,7 +4677,7 @@ normalizeAlertTf,
 isAlertDeleted,
 forgetAlertDeleted
 } =
-await import("./alerts.js?v=81");
+await import("./alerts.js?v=91");
 
 const cloudByKey =
 new Map();
@@ -4582,7 +4795,7 @@ tf: row.tf || "60"
 if(removedRows.length){
 
 const { applyRemoteAlertRemoved } =
-await import("./alerts.js?v=81");
+await import("./alerts.js?v=91");
 
 for(const row of removedRows){
 
@@ -4659,6 +4872,7 @@ Number(prev?.createdAt) ||
 0;
 const cloudTs =
 Date.parse(
+cloud.updated_at ||
 cloud.created_at
 ) ||
 0;
@@ -4828,7 +5042,7 @@ const n =
 await reconcileLocalRegistryWithCloud();
 
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=81");
+await import("./alerts.js?v=91");
 
 stripAlertFlagsNotInRegistry(
 isAlertsPage()
@@ -4954,7 +5168,7 @@ if(
 !isAlertsPage()
 ){
 const { mergeRegistryFromChartDrawings } =
-await import("./alerts.js?v=81");
+await import("./alerts.js?v=91");
 
 mergeRegistryFromChartDrawings({
 stripFlags: stripOpts
@@ -4971,7 +5185,7 @@ immediate: true
 });
 
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=81");
+await import("./alerts.js?v=91");
 
 stripAlertFlagsNotInRegistry(
 stripOpts
