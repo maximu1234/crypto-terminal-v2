@@ -41,6 +41,17 @@ navigator.userAgent ||
 ""
 );
 
+const IS_IOS_SAFARI =
+/iP(hone|ad|od)/i.test(
+navigator.userAgent || ""
+) &&
+/Safari/i.test(
+navigator.userAgent || ""
+) &&
+!/CriOS|FxiOS|EdgiOS|YaBrowser|Yowser|OPiOS/i.test(
+navigator.userAgent || ""
+);
+
 const coalesceRegistryPull =
 createPullCoalescer({
 minIntervalMs: IS_YANDEX
@@ -75,6 +86,9 @@ IS_YANDEX
 ? 15000
 : 8000;
 
+const IOS_SAFARI_VISIBLE_PULL_MS =
+3500;
+
 let lastRemoteAlertMode = null;
 
 /** Снимок активных строк облака — ловим срабатывание, если realtime DELETE без payload (iPad). */
@@ -99,6 +113,12 @@ let alertsFastPollIntervalId =
 
 let lastAlertsPullMs =
 0;
+
+let iosSafariPullTimer =
+null;
+
+let iosSafariPullInFlight =
+false;
 
 let hydrateAlertsInflight = null;
 
@@ -631,6 +651,70 @@ alertsFastPollIntervalId =
 0;
 }
 
+function startIosSafariVisiblePull(){
+
+if(
+!IS_IOS_SAFARI ||
+iosSafariPullTimer
+){
+return;
+}
+
+iosSafariPullTimer =
+setInterval(
+()=>{
+
+if(
+iosSafariPullInFlight ||
+!isCloudLoggedInEffective() ||
+document.visibilityState !== "visible" ||
+isAlertsPage() ||
+!isDrawingsUiPage() ||
+isRegistryCloudSyncPaused()
+){
+return;
+}
+
+iosSafariPullInFlight =
+true;
+
+void ensureCloudLoginResolved(8000)
+.catch(()=>null)
+.then(()=>
+pullRegistryFromCloudNow({
+immediate: true
+})
+)
+.catch(()=>{})
+.finally(()=>{
+iosSafariPullInFlight =
+false;
+});
+
+},
+IOS_SAFARI_VISIBLE_PULL_MS
+);
+
+}
+
+function stopIosSafariVisiblePull(){
+
+if(
+!iosSafariPullTimer
+){
+return;
+}
+
+clearInterval(
+iosSafariPullTimer
+);
+iosSafariPullTimer =
+null;
+iosSafariPullInFlight =
+false;
+
+}
+
 if(
 alertsFastPollTimer
 ){
@@ -1085,12 +1169,59 @@ return (
 
 }
 
+function isJwtExpiredText(text){
+
+const msg =
+String(text || "");
+
+return (
+/JWT expired/i.test(msg) ||
+/PGRST303/i.test(msg) ||
+/invalid jwt/i.test(msg)
+);
+
+}
+
 async function refreshTelegramRestAuth(){
 
 try{
 await ensureCloudLoginResolved(10000);
 }catch{
 /* ignore */
+}
+
+async function refreshRestAuthForUser(ctx){
+
+try{
+await ensureCloudLoginResolved(10000);
+}catch{
+/* ignore */
+}
+
+const tokenFromSync =
+readAlertTokenSync()?.token;
+
+if(tokenFromSync){
+return tokenFromSync;
+}
+
+const persisted =
+readPersistedAuthSession();
+
+if(
+persisted?.access_token
+){
+return persisted.access_token;
+}
+
+if(
+ctx?.sb
+){
+return getAccessTokenForUser(ctx);
+}
+
+return null;
+
 }
 
 return resolveUserRestAuth();
@@ -2556,6 +2687,54 @@ Prefer: "return=minimal"
 if(!res.ok){
 const text =
 await res.text();
+
+if(
+isJwtExpiredText(text)
+){
+const refreshedToken =
+await refreshRestAuthForUser(ctx);
+
+if(
+refreshedToken &&
+refreshedToken !== token
+){
+token = refreshedToken;
+
+const retryRes =
+await fetchWithTimeout(
+`${base}/rest/v1/${path}`,
+{
+method: "DELETE",
+headers: {
+apikey: anon,
+Authorization: `Bearer ${token}`,
+Prefer: "return=minimal"
+}
+},
+10000
+);
+
+if(retryRes.ok){
+console.log(
+"[alerts] purge REST ok (retry):",
+all
+? "all active"
+: (id || `${sym} ${sid}`)
+);
+return true;
+}
+
+const retryText =
+await retryRes.text();
+console.warn(
+"[alerts] purge REST retry:",
+retryRes.status,
+retryText.slice(0, 200)
+);
+return false;
+}
+}
+
 console.warn(
 "[alerts] purge REST:",
 res.status,
@@ -4258,12 +4437,12 @@ tf: row.tf || "60"
 
 if(removedRows.length){
 
-const { applyRemoteAlertFired } =
+const { applyRemoteAlertRemoved } =
 await import("./alerts.js?v=81");
 
 for(const row of removedRows){
 
-applyRemoteAlertFired(row);
+applyRemoteAlertRemoved(row);
 
 }
 
@@ -4727,6 +4906,7 @@ if(
 !isCloudLoggedInEffective()
 ){
 stopAlertsFastPoll();
+stopIosSafariVisiblePull();
 clearAlertAuthCache();
 void teardownAlertsRealtime();
 return;
@@ -4746,6 +4926,8 @@ err?.message || err
 }
 );
 }
+
+startIosSafariVisiblePull();
 
 }
 );
@@ -4770,6 +4952,8 @@ isDrawingsUiPage()
 ){
 startAlertsFastPoll();
 }
+
+startIosSafariVisiblePull();
 }
 
 const pullWhenVisible = ()=>{
