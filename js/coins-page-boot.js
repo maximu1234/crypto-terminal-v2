@@ -15,10 +15,14 @@ navigator.userAgent ||
 ""
 );
 
+/** Менять при каждом релизе графика — иначе iPad держит старый boot в кэше (v=2). */
+export const COINS_CHART_BUILD =
+"20260529-lw-scale";
+
 const CHART_ENTRY =
 IS_YANDEX
-? "/js/chart-page.js?v=1"
-: "/js/terminal.js?v=226";
+? "/js/chart-page.js?v=2"
+: "/js/terminal.js?v=227";
 
 function loadModuleScript(
 url,
@@ -178,6 +182,12 @@ throw lastErr;
 }
 
 async function boot(){
+
+console.info(
+"[coins boot]",
+COINS_CHART_BUILD,
+CHART_ENTRY
+);
 
 if(
 location.protocol ===
