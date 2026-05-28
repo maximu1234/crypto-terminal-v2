@@ -4223,8 +4223,23 @@ bottom:0.12
 });
 
 export function resetChartPriceAutoScale(
-chart
+chart,
+series
 ){
+
+if(
+series
+){
+
+try{
+series.applyOptions({
+autoscaleInfoProvider:undefined
+});
+}catch{
+/* ignore */
+}
+
+}
 
 if(
 !chart
@@ -4244,6 +4259,21 @@ bottom:DEFAULT_PRICE_SCALE_MARGINS.bottom
 });
 }catch{
 /* ignore */
+}
+
+}
+
+function isChartPriceScaleLogarithmic(
+chart
+){
+
+try{
+return chart.priceScale(
+"right"
+).options().mode ===
+1;
+}catch{
+return true;
 }
 
 }
@@ -4427,13 +4457,27 @@ export function mountTabletPriceScaleTouch(
 chart,
 stripEl,
 chartEl,
+series,
 callbacks
 ){
+
+if(
+!series ||
+typeof series.coordinateToPrice !==
+"function"
+){
+callbacks =
+series ||
+{};
+series =
+null;
+}
 
 if(
 !chart ||
 !stripEl ||
 !chartEl ||
+!series ||
 !isTabletChartViewport()
 ){
 return ()=>{};
@@ -4499,6 +4543,9 @@ stripTapTimer = 0;
 
 }
 
+let priceZoomRange =
+null;
+
 function resetStripPriceAutoScale(){
 
 margins = {
@@ -4506,11 +4553,224 @@ top:DEFAULT_PRICE_SCALE_MARGINS.top,
 bottom:DEFAULT_PRICE_SCALE_MARGINS.bottom
 };
 
+priceZoomRange =
+null;
+
 resetChartPriceAutoScale(
-chart
+chart,
+series
 );
 
 onInteraction?.();
+
+}
+
+function captureVisiblePriceRange(){
+
+const chartH =
+Math.max(
+1,
+Math.floor(
+chartEl.clientHeight ||
+0
+)
+);
+
+readMargins();
+
+const plotTop =
+chartH * margins.top;
+
+const plotBottom =
+chartH * (
+1 - margins.bottom
+);
+
+let priceAtTop =
+series.coordinateToPrice(
+plotTop
+);
+
+let priceAtBottom =
+series.coordinateToPrice(
+plotBottom
+);
+
+if(
+priceAtTop ==
+null ||
+priceAtBottom ==
+null
+){
+return null;
+}
+
+const min =
+Math.min(
+priceAtTop,
+priceAtBottom
+);
+
+const max =
+Math.max(
+priceAtTop,
+priceAtBottom
+);
+
+if(
+!Number.isFinite(min) ||
+!Number.isFinite(max) ||
+min ===
+max
+){
+return null;
+}
+
+return {
+min,
+max
+};
+
+}
+
+function applyTabletPriceZoomProvider(){
+
+if(
+!priceZoomRange
+){
+return;
+}
+
+try{
+series.applyOptions({
+autoscaleInfoProvider:()=>(
+{
+priceRange:{
+minValue:priceZoomRange.min,
+maxValue:priceZoomRange.max
+}
+}
+)
+});
+}catch{
+/* ignore */
+}
+
+try{
+chart.priceScale(
+"right"
+).applyOptions({
+autoScale:true,
+scaleMargins:{
+top:DEFAULT_PRICE_SCALE_MARGINS.top,
+bottom:DEFAULT_PRICE_SCALE_MARGINS.bottom
+}
+});
+}catch{
+/* ignore */
+}
+
+}
+
+function zoomVisiblePriceRange(
+dy
+){
+
+if(
+!priceZoomRange
+){
+priceZoomRange =
+captureVisiblePriceRange();
+
+if(
+!priceZoomRange
+){
+return;
+}
+
+}
+
+const zoomFactor =
+Math.exp(
+dy * 0.003
+);
+
+const logScale =
+isChartPriceScaleLogarithmic(
+chart
+);
+
+if(
+logScale &&
+priceZoomRange.min >
+0 &&
+priceZoomRange.max >
+0
+){
+
+const logMin =
+Math.log(
+priceZoomRange.min
+);
+
+const logMax =
+Math.log(
+priceZoomRange.max
+);
+
+const logMid =
+(
+logMin + logMax
+) /
+2;
+
+const logHalf =
+(
+logMax - logMin
+) /
+2;
+
+const newHalf =
+logHalf / zoomFactor;
+
+priceZoomRange.min =
+Math.exp(
+logMid - newHalf
+);
+
+priceZoomRange.max =
+Math.exp(
+logMid + newHalf
+);
+
+}else{
+
+const mid =
+(
+priceZoomRange.min +
+priceZoomRange.max
+) /
+2;
+
+const half =
+(
+priceZoomRange.max -
+priceZoomRange.min
+) /
+2;
+
+const newHalf =
+half / zoomFactor;
+
+priceZoomRange.min =
+mid - newHalf;
+
+priceZoomRange.max =
+mid + newHalf;
+
+}
+
+applyTabletPriceZoomProvider();
 
 }
 
@@ -4682,42 +4942,12 @@ function applyVerticalScaleDrag(
 dy
 ){
 
-const delta =
-dy * 0.003;
-
-margins.top =
-Math.max(
-0.02,
-Math.min(
-0.48,
-margins.top + delta
-)
+zoomVisiblePriceRange(
+dy
 );
-
-margins.bottom =
-Math.max(
-0.02,
-Math.min(
-0.48,
-margins.bottom + delta
-)
-);
-
-chart.priceScale(
-"right"
-).applyOptions({
-autoScale:false,
-scaleMargins:{
-top:margins.top,
-bottom:margins.bottom
-}
-});
 
 onInteraction?.();
-onScaleFrame?.({
-top:margins.top,
-bottom:margins.bottom
-});
+onScaleFrame?.();
 
 }
 
@@ -4750,20 +4980,12 @@ e.pointerId ??
 y:e.clientY
 };
 
-onDragStart?.({
-top:margins.top,
-bottom:margins.bottom
-});
+priceZoomRange =
+captureVisiblePriceRange();
 
-try{
-chart.priceScale(
-"right"
-).setAutoScale(
-false
-);
-}catch{
-/* ignore */
-}
+applyTabletPriceZoomProvider();
+
+onDragStart?.();
 
 onDocMove =(
 moveEvent

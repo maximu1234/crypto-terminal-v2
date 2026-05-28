@@ -75,7 +75,7 @@ ensureDomChartCrosshair,
 positionDomChartCrosshair,
 hideDomChartCrosshair,
 fullCrosshairOptions
-} from "./chart.js?v=73";
+} from "./chart.js?v=74";
 
 /* Сетка 2×9: чётный индекс — левый столбец, нечётный — правый */
 const DEFAULT_FIB_SPEC = Object.freeze([
@@ -1480,6 +1480,7 @@ let chartPanRedrawRaf = 0;
 let chartPanActive = false;
 let chartPanWheelTimer = null;
 let priceScaleDragActive = false;
+let priceScaleDragRaf = 0;
 let priceScaleSyncPending = false;
 let priceScaleApplyPatchRestore = null;
 /** Во время iPad price-scale drag LW отстаёт в priceToCoordinate — считаем Y сами. */
@@ -4286,20 +4287,32 @@ return { time, price };
 
 }
 
-function chartPlotHeightPx(){
+function readChartScaleMargins(){
 
-const el =
-chartCanvasEl();
+try{
 
-const h =
-el?.clientHeight ??
-wrapEl?.clientHeight ??
-0;
+const o =
+chart.priceScale(
+"right"
+).options();
 
-return Math.max(
-1,
-h
-);
+return {
+top:
+o.scaleMargins?.top ??
+0.12,
+bottom:
+o.scaleMargins?.bottom ??
+0.12
+};
+
+}catch{
+
+return {
+top:0.12,
+bottom:0.12
+};
+
+}
 
 }
 
@@ -4356,6 +4369,58 @@ plotHeight <=
 return null;
 }
 
+const inverted =
+s.inverted;
+
+if(
+s.logarithmic &&
+minPrice >
+0 &&
+maxPrice >
+0 &&
+price >
+0
+){
+
+const logMin =
+Math.log(
+minPrice
+);
+
+const logMax =
+Math.log(
+maxPrice
+);
+
+const logSpan =
+logMax - logMin;
+
+if(
+!Number.isFinite(logSpan) ||
+logSpan ===
+0
+){
+return null;
+}
+
+const logP =
+Math.log(
+price
+);
+
+const ratio =
+inverted
+? (
+logP - logMin
+) / logSpan
+: (
+logMax - logP
+) / logSpan;
+
+return plotTop + ratio * plotHeight;
+
+}
+
 const span =
 maxPrice - minPrice;
 
@@ -4366,9 +4431,6 @@ span ===
 ){
 return null;
 }
-
-const inverted =
-s.inverted;
 
 const ratio =
 inverted
@@ -7997,16 +8059,18 @@ function captureManualPriceScaleDrag(
 margins
 ){
 
+const m =
+margins ||
+readChartScaleMargins();
+
 const top =
-margins?.top ??
-0.12;
+m.top;
 
 const bottom =
-margins?.bottom ??
-0.12;
+m.bottom;
 
 const h =
-chartPlotHeightPx();
+chartSize().h;
 
 const plotTop =
 h * top;
@@ -8054,35 +8118,54 @@ priceAtBottom
 top,
 bottom,
 h,
-inverted
+inverted,
+logarithmic:
+isSeriesLogarithmic(
+series
+)
 };
 
 return true;
 
 }
 
-function beginManualPriceScaleDrag(
-margins
-){
-
-priceScaleDragActive = true;
-ensureSeriesPriceToCoordinatePatch();
+function priceScaleDragRedrawLoop(){
 
 if(
-!captureManualPriceScaleDrag(
-margins
-)
+!alive ||
+!priceScaleDragActive
 ){
+priceScaleDragRaf = 0;
 return;
 }
 
+captureManualPriceScaleDrag();
 redraw();
+priceScaleDragRaf =
+requestAnimationFrame(
+priceScaleDragRedrawLoop
+);
 
 }
 
-function updateManualPriceScaleDrag(
-margins
+function beginPriceScaleDragRedraw(){
+
+priceScaleDragActive = true;
+ensureSeriesPriceToCoordinatePatch();
+captureManualPriceScaleDrag();
+
+if(
+!priceScaleDragRaf
 ){
+priceScaleDragRaf =
+requestAnimationFrame(
+priceScaleDragRedrawLoop
+);
+}
+
+}
+
+function redrawDuringPriceScaleDrag(){
 
 if(
 !priceScaleDragActive
@@ -8090,41 +8173,26 @@ if(
 return;
 }
 
-if(
-!manualPriceScaleDrag
-){
-if(
-!captureManualPriceScaleDrag(
-margins
-)
-){
-return;
-}
-
-}else{
-
-manualPriceScaleDrag.top =
-margins?.top ??
-manualPriceScaleDrag.top;
-
-manualPriceScaleDrag.bottom =
-margins?.bottom ??
-manualPriceScaleDrag.bottom;
-
-manualPriceScaleDrag.h =
-chartPlotHeightPx();
-
-}
-
+captureManualPriceScaleDrag();
 redraw();
 
 }
 
-function endManualPriceScaleDrag(){
+function endPriceScaleDragRedraw(){
 
 manualPriceScaleDrag =
 null;
 priceScaleDragActive = false;
+
+if(
+priceScaleDragRaf
+){
+cancelAnimationFrame(
+priceScaleDragRaf
+);
+priceScaleDragRaf = 0;
+}
+
 priceScaleSyncPending =
 false;
 schedulePriceScaleSyncedRedraw();
@@ -10719,9 +10787,9 @@ clearAllDrawingsOnChart,
 scheduleRedraw,
 scheduleDragRedraw,
 schedulePriceScaleSyncedRedraw,
-beginManualPriceScaleDrag,
-updateManualPriceScaleDrag,
-endManualPriceScaleDrag,
+beginPriceScaleDragRedraw,
+redrawDuringPriceScaleDrag,
+endPriceScaleDragRedraw,
 
 blocksTabletChartPan(){
 
@@ -10932,7 +11000,7 @@ redrawRaf2 = 0;
 
 teardownChartPanRedraw?.();
 stopChartPanRedraw();
-endManualPriceScaleDrag();
+endPriceScaleDragRedraw();
 restoreSeriesPriceToCoordinate();
 
 if(
