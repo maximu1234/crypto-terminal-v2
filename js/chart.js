@@ -4713,34 +4713,11 @@ bottom:margins.bottom
 }
 });
 
-const chartW =
-Math.max(
-1,
-Math.floor(
-chartEl.clientWidth ||
-0
-)
-);
-const chartH =
-Math.max(
-1,
-Math.floor(
-chartEl.clientHeight ||
-0
-)
-);
-
-try{
-chart.resize(
-chartW,
-chartH
-);
-}catch{
-/* ignore */
-}
-
 onInteraction?.();
-onScaleFrame?.();
+onScaleFrame?.({
+top:margins.top,
+bottom:margins.bottom
+});
 
 }
 
@@ -4773,7 +4750,10 @@ e.pointerId ??
 y:e.clientY
 };
 
-onDragStart();
+onDragStart?.({
+top:margins.top,
+bottom:margins.bottom
+});
 
 try{
 chart.priceScale(

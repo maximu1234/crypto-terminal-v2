@@ -75,7 +75,7 @@ ensureDomChartCrosshair,
 positionDomChartCrosshair,
 hideDomChartCrosshair,
 fullCrosshairOptions
-} from "./chart.js?v=70";
+} from "./chart.js?v=73";
 
 /* Сетка 2×9: чётный индекс — левый столбец, нечётный — правый */
 const DEFAULT_FIB_SPEC = Object.freeze([
@@ -1480,9 +1480,11 @@ let chartPanRedrawRaf = 0;
 let chartPanActive = false;
 let chartPanWheelTimer = null;
 let priceScaleDragActive = false;
-let priceScaleDragRaf = 0;
 let priceScaleSyncPending = false;
 let priceScaleApplyPatchRestore = null;
+/** Во время iPad price-scale drag LW отстаёт в priceToCoordinate — считаем Y сами. */
+let manualPriceScaleDrag = null;
+let seriesPriceToCoordinateOrig = null;
 
 function defaultsStorageKey(name){
 
@@ -4284,6 +4286,129 @@ return { time, price };
 
 }
 
+function chartPlotHeightPx(){
+
+const el =
+chartCanvasEl();
+
+const h =
+el?.clientHeight ??
+wrapEl?.clientHeight ??
+0;
+
+return Math.max(
+1,
+h
+);
+
+}
+
+function isPriceScaleInverted(){
+
+try{
+return chart.priceScale(
+"right"
+).options().invertScale ===
+true;
+}catch{
+return false;
+}
+
+}
+
+function manualPriceToCoordinate(
+price
+){
+
+const s =
+manualPriceScaleDrag;
+
+if(
+!s ||
+!Number.isFinite(
+price
+)
+){
+return null;
+}
+
+const {
+minPrice,
+maxPrice,
+top,
+bottom,
+h
+} =
+s;
+
+const plotTop =
+h * top;
+
+const plotHeight =
+h * (
+1 - top - bottom
+);
+
+if(
+plotHeight <=
+0
+){
+return null;
+}
+
+const span =
+maxPrice - minPrice;
+
+if(
+!Number.isFinite(span) ||
+span ===
+0
+){
+return null;
+}
+
+const inverted =
+s.inverted;
+
+const ratio =
+inverted
+? (
+price - minPrice
+) / span
+: (
+maxPrice - price
+) / span;
+
+return plotTop + ratio * plotHeight;
+
+}
+
+function plotPriceToCoordinate(
+price
+){
+
+if(
+manualPriceScaleDrag
+){
+const y =
+manualPriceToCoordinate(
+price
+);
+
+if(
+y !=
+null
+){
+return y;
+}
+}
+
+return series.priceToCoordinate(
+price
+);
+
+}
+
 function toXY(point){
 
 if(
@@ -4298,7 +4423,7 @@ return null;
 }
 
 const x = xFromTime(point.time);
-const y = series.priceToCoordinate(point.price);
+const y = plotPriceToCoordinate(point.price);
 
 if(x == null || y == null){
 return null;
@@ -7811,55 +7936,198 @@ redraw();
 
 }
 
-function stopPriceScaleDragRedraw(){
-
-priceScaleDragActive = false;
+function ensureSeriesPriceToCoordinatePatch(){
 
 if(
-priceScaleDragRaf
+seriesPriceToCoordinateOrig
 ){
-cancelAnimationFrame(
-priceScaleDragRaf
-);
-priceScaleDragRaf = 0;
-}
-
-priceScaleSyncPending =
-false;
-schedulePriceScaleSyncedRedraw();
-
-}
-
-function priceScaleDragRedrawLoop(){
-
-if(
-!alive ||
-!priceScaleDragActive
-){
-priceScaleDragRaf = 0;
 return;
 }
 
-schedulePriceScaleSyncedRedraw();
-priceScaleDragRaf =
-requestAnimationFrame(
-priceScaleDragRedrawLoop
+seriesPriceToCoordinateOrig =
+series.priceToCoordinate.bind(
+series
 );
 
-}
-
-function startPriceScaleDragRedraw(){
-
-priceScaleDragActive = true;
+series.priceToCoordinate =
+function(
+price
+){
 
 if(
-!priceScaleDragRaf
+manualPriceScaleDrag
 ){
-priceScaleDragRaf =
-requestAnimationFrame(
-priceScaleDragRedrawLoop
+const y =
+manualPriceToCoordinate(
+price
 );
+
+if(
+y !=
+null
+){
+return y;
 }
+}
+
+return seriesPriceToCoordinateOrig(
+price
+);
+
+};
+
+}
+
+function restoreSeriesPriceToCoordinate(){
+
+if(
+!seriesPriceToCoordinateOrig
+){
+return;
+}
+
+series.priceToCoordinate =
+seriesPriceToCoordinateOrig;
+seriesPriceToCoordinateOrig =
+null;
+
+}
+
+function captureManualPriceScaleDrag(
+margins
+){
+
+const top =
+margins?.top ??
+0.12;
+
+const bottom =
+margins?.bottom ??
+0.12;
+
+const h =
+chartPlotHeightPx();
+
+const plotTop =
+h * top;
+
+const plotBottom =
+h * (
+1 - bottom
+);
+
+let priceAtTop =
+series.coordinateToPrice(
+plotTop
+);
+
+let priceAtBottom =
+series.coordinateToPrice(
+plotBottom
+);
+
+if(
+priceAtTop ==
+null ||
+priceAtBottom ==
+null
+){
+manualPriceScaleDrag =
+null;
+
+return false;
+}
+
+const inverted =
+isPriceScaleInverted();
+
+manualPriceScaleDrag =
+{
+minPrice:Math.min(
+priceAtTop,
+priceAtBottom
+),
+maxPrice:Math.max(
+priceAtTop,
+priceAtBottom
+),
+top,
+bottom,
+h,
+inverted
+};
+
+return true;
+
+}
+
+function beginManualPriceScaleDrag(
+margins
+){
+
+priceScaleDragActive = true;
+ensureSeriesPriceToCoordinatePatch();
+
+if(
+!captureManualPriceScaleDrag(
+margins
+)
+){
+return;
+}
+
+redraw();
+
+}
+
+function updateManualPriceScaleDrag(
+margins
+){
+
+if(
+!priceScaleDragActive
+){
+return;
+}
+
+if(
+!manualPriceScaleDrag
+){
+if(
+!captureManualPriceScaleDrag(
+margins
+)
+){
+return;
+}
+
+}else{
+
+manualPriceScaleDrag.top =
+margins?.top ??
+manualPriceScaleDrag.top;
+
+manualPriceScaleDrag.bottom =
+margins?.bottom ??
+manualPriceScaleDrag.bottom;
+
+manualPriceScaleDrag.h =
+chartPlotHeightPx();
+
+}
+
+redraw();
+
+}
+
+function endManualPriceScaleDrag(){
+
+manualPriceScaleDrag =
+null;
+priceScaleDragActive = false;
+priceScaleSyncPending =
+false;
+schedulePriceScaleSyncedRedraw();
 
 }
 
@@ -10451,8 +10719,9 @@ clearAllDrawingsOnChart,
 scheduleRedraw,
 scheduleDragRedraw,
 schedulePriceScaleSyncedRedraw,
-startPriceScaleDragRedraw,
-stopPriceScaleDragRedraw,
+beginManualPriceScaleDrag,
+updateManualPriceScaleDrag,
+endManualPriceScaleDrag,
 
 blocksTabletChartPan(){
 
@@ -10663,7 +10932,8 @@ redrawRaf2 = 0;
 
 teardownChartPanRedraw?.();
 stopChartPanRedraw();
-stopPriceScaleDragRedraw();
+endManualPriceScaleDrag();
+restoreSeriesPriceToCoordinate();
 
 if(
 priceScaleApplyPatchRestore
