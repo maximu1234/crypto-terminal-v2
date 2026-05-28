@@ -2731,7 +2731,7 @@ hud?.remove();
 
 export {
 mountTabletChartGestures
-} from "./chart-tablet-gestures.js?v=6";
+} from "./chart-tablet-gestures.js?v=7";
 
 /** Смартфон / планшет с touch — отдельно от isTabletChartViewport (≥768px). */
 export function isCoarseTouchViewport(){

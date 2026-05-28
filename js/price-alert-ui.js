@@ -61,6 +61,8 @@ let suppressPlusClickUntil =
 0;
 let suppressPlusForScaleDrag =
 false;
+let plusSubmitInFlight =
+false;
 
 const plusBtn =
 document.createElement(
@@ -328,8 +330,11 @@ const scaleW =
 rect.width - pw;
 
 if(
+!opts.forceShowFromProbe &&
+(
 x < pw - PLUS_HIT_PAD ||
 x > pw + scaleW + PLUS_HIT_PAD
+)
 ){
 hidePlus({
 release: false
@@ -396,9 +401,9 @@ clientY
 
 }
 
-plusBtn.addEventListener(
-"click",
-async e=>{
+async function submitAlertFromPlusTap(
+e
+){
 
 e.preventDefault();
 e.stopPropagation();
@@ -410,6 +415,17 @@ suppressPlusClickUntil
 ){
 return;
 }
+
+if(
+plusSubmitInFlight
+){
+return;
+}
+
+plusSubmitInFlight =
+true;
+
+try{
 
 const price =
 Number(
@@ -464,8 +480,37 @@ row
 );
 dispatchAlertsChanged();
 scheduleRedraw?.();
+window.dispatchEvent(
+new CustomEvent(
+"chart-probe-crosshair-clear-request"
+)
+);
 }
 
+}finally{
+plusSubmitInFlight =
+false;
+}
+
+}
+
+plusBtn.addEventListener(
+"click",
+submitAlertFromPlusTap
+);
+
+plusBtn.addEventListener(
+"touchend",
+e=>{
+if(
+Date.now() <
+suppressPlusClickUntil
+){
+return;
+}
+suppressPlusClickUntil =
+Date.now() + 450;
+void submitAlertFromPlusTap(e);
 }
 );
 
@@ -509,6 +554,12 @@ onWrapPointerLeave
 
 const onWrapTouchScaleMove =
 e=>{
+
+if(
+IS_COARSE_TOUCH
+){
+return;
+}
 
 if(
 dragAlertId ||
@@ -563,6 +614,52 @@ wrapEl.addEventListener(
 "touchmove",
 onWrapTouchScaleMove,
 { capture:true, passive:true }
+);
+
+const onProbeCrosshair =
+e=>{
+
+if(
+!IS_COARSE_TOUCH
+){
+return;
+}
+
+if(
+!e?.detail?.active
+){
+hidePlus({
+release: false
+});
+return;
+}
+
+const x =
+Number(e.detail.clientX);
+const y =
+Number(e.detail.clientY);
+
+if(
+!Number.isFinite(x) ||
+!Number.isFinite(y)
+){
+return;
+}
+
+syncPlusFromClient(
+x,
+y,
+{
+fromTouch: true,
+forceShowFromProbe: true
+}
+);
+
+};
+
+window.addEventListener(
+"chart-probe-crosshair",
+onProbeCrosshair
 );
 
 const onWrapDoubleClick =
@@ -861,6 +958,13 @@ e
 ){
 
 if(
+suppressPlusForScaleDrag
+){
+suppressPlusForScaleDrag =
+false;
+}
+
+if(
 !dragAlertId
 ){
 return;
@@ -994,6 +1098,11 @@ wrapEl.removeEventListener(
 "touchmove",
 onWrapTouchScaleMove,
 true
+);
+
+window.removeEventListener(
+"chart-probe-crosshair",
+onProbeCrosshair
 );
 
 window.removeEventListener(

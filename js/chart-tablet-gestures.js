@@ -10,6 +10,9 @@ const PAN_START_PX =
 const PAN_HORIZ_BIAS =
 1.25;
 
+const CROSSHAIR_TAP_TOGGLE_PX =
+8;
+
 export function mountTabletChartGestures(
 chart,
 chartEl,
@@ -87,6 +90,12 @@ let holdTimer =
 null;
 
 let panSuspended =
+false;
+
+let crosshairMoved =
+false;
+
+let crosshairJustEntered =
 false;
 
 let onDocMove =
@@ -257,6 +266,13 @@ touchLayerEl.classList.remove(
 mode =
 "idle";
 
+crosshairMoved =
+false;
+crosshairJustEntered =
+false;
+pointerId = null;
+detachDocListeners();
+
 onHoldEnd();
 
 }
@@ -420,6 +436,11 @@ return;
 mode =
 "crosshair";
 
+crosshairMoved =
+false;
+crosshairJustEntered =
+true;
+
 touchLayerEl.classList.add(
 "active"
 );
@@ -553,6 +574,19 @@ mode ===
 "crosshair"
 ){
 
+const dx =
+e.clientX - startClientX;
+const dy =
+e.clientY - startClientY;
+
+if(
+dx * dx + dy * dy >
+CROSSHAIR_TAP_TOGGLE_PX *
+CROSSHAIR_TAP_TOGGLE_PX
+){
+crosshairMoved = true;
+}
+
 e.preventDefault();
 e.stopImmediatePropagation?.();
 onProbeAt(
@@ -631,6 +665,46 @@ e
 )=>{
 
 if(
+mode ===
+"crosshair"
+){
+
+if(
+pointerId ===
+null ||
+(
+e.pointerId !==
+undefined &&
+e.pointerId !==
+pointerId
+)
+){
+return;
+}
+
+const isTapToggle =
+!crosshairMoved;
+
+pointerId = null;
+detachDocListeners();
+
+if(crosshairJustEntered){
+crosshairJustEntered =
+false;
+return;
+}
+
+if(isTapToggle){
+endCrosshair();
+}
+
+crosshairMoved =
+false;
+return;
+
+}
+
+if(
 pointerId ===
 null ||
 (
@@ -655,6 +729,19 @@ if(
 e.touches.length >
 0
 ){
+return;
+}
+
+if(
+mode ===
+"crosshair"
+){
+pointerId = null;
+detachDocListeners();
+crosshairMoved =
+false;
+crosshairJustEntered =
+false;
 return;
 }
 
@@ -727,6 +814,37 @@ mode ===
 mode ===
 "pinch"
 ){
+if(
+mode ===
+"crosshair"
+){
+if(
+!shouldBeginGesture(
+e
+)
+){
+return;
+}
+
+pointerId =
+e.pointerId ??
+0;
+startClientX =
+e.clientX;
+startClientY =
+e.clientY;
+crosshairMoved =
+false;
+attachDocListeners();
+e.preventDefault();
+e.stopImmediatePropagation?.();
+onProbeAt(
+e.clientX,
+e.clientY
+);
+return;
+}
+
 return;
 }
 
@@ -1038,11 +1156,31 @@ resetGesture();
 
 }
 
+function deactivateProbe(){
+
+if(
+mode ===
+"crosshair"
+){
+endCrosshair();
+return;
+}
+
+if(
+mode ===
+"pending"
+){
+resetGesture();
+}
+
+}
+
 return {
 dispose,
 abortPan,
 cancelCurrentGesture,
-setPanSuspended
+setPanSuspended,
+deactivateProbe
 };
 
 }

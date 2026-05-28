@@ -956,6 +956,14 @@ touchHoldTimer =
 null;
 };
 
+const onAnyTouchEnd = ()=>{
+clearTimeout(
+touchHoldTimer
+);
+touchHoldTimer =
+null;
+};
+
 const onDocPointerDown =
 e=>{
 
@@ -1027,6 +1035,18 @@ hideMenu,
 true
 );
 
+window.addEventListener(
+"touchend",
+onAnyTouchEnd,
+true
+);
+
+window.addEventListener(
+"touchcancel",
+onAnyTouchEnd,
+true
+);
+
 return ()=>{
 hideMenu();
 clearTimeout(touchHoldTimer);
@@ -1075,6 +1095,18 @@ window.removeEventListener(
 hideMenu,
 true
 );
+
+window.removeEventListener(
+"touchend",
+onAnyTouchEnd,
+true
+);
+
+window.removeEventListener(
+"touchcancel",
+onAnyTouchEnd,
+true
+);
 menu.remove();
 };
 
@@ -1112,6 +1144,27 @@ let abortTabletPan =
 
 let cancelTabletPanGesture =
 ()=>{};
+
+function emitChartProbeCrosshair(
+active,
+clientX = null,
+clientY = null
+){
+
+window.dispatchEvent(
+new CustomEvent(
+"chart-probe-crosshair",
+{
+detail:{
+active: !!active,
+clientX,
+clientY
+}
+}
+)
+);
+
+}
 
 function tabletPanAllowed(){
 
@@ -1592,7 +1645,7 @@ if(
 drawingTools
 ){
 
-void import("./price-alert-ui.js?v=14").then(({ mountPriceAlertUi })=>{
+void import("./price-alert-ui.js?v=16").then(({ mountPriceAlertUi })=>{
 mountPriceAlertUi({
 chart,
 series: candleSeries,
@@ -1786,6 +1839,7 @@ rsiChart.clearCrosshairPosition();
 }catch{
 /* ignore */
 }
+emitChartProbeCrosshair(false);
 chart.applyOptions({
 crosshair:tabletProbeCrosshairOptions(),
 handleScroll:{
@@ -1856,6 +1910,7 @@ null
 );
 }
 });
+emitChartProbeCrosshair(false);
 try{
 chart.applyOptions({
 crosshair:normalCrosshairOptions()
@@ -1886,6 +1941,11 @@ clientX,
 clientY,
 onTime:updateRsiHudFromCrosshairTime
 });
+emitChartProbeCrosshair(
+true,
+clientX,
+clientY
+);
 }
 }
 );
@@ -1898,6 +1958,14 @@ tabletGestureCtrl.cancelCurrentGesture;
 
 const setTabletPanSuspended =
 tabletGestureCtrl.setPanSuspended;
+
+window.addEventListener(
+"chart-probe-crosshair-clear-request",
+()=>{
+tabletGestureCtrl.deactivateProbe?.();
+emitChartProbeCrosshair(false);
+}
+);
 
 unmountTabletGestures =
 tabletGestureCtrl.dispose;
