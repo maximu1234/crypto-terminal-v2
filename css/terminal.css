@@ -816,8 +816,9 @@ body.tablet-chart .price-scale-touch-strip{
 }
 
 body.tablet-chart.tablet-lw-price-scale .price-scale-touch-strip{
-  pointer-events:none;
-  z-index:5;
+  pointer-events:auto;
+  z-index:50;
+  bottom:var(--chart-time-scale-height, 28px);
 }
 
 .price-scale-touch-strip{
@@ -1059,6 +1060,7 @@ body.tablet-chart.tablet-lw-price-scale .price-scale-touch-strip{
   position:absolute;
   inset:0;
   right:var(--chart-scale-width, 56px);
+  bottom:var(--chart-time-scale-height, 28px);
   z-index:10;
   touch-action:none;
 }

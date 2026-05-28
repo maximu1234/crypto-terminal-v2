@@ -100,6 +100,9 @@ priceFormatForValue(referencePrice)
 
 export const CHART_PRICE_SCALE_WIDTH = 56;
 
+/** Высота полосы шкалы времени LW (px) — overlay/strip не перекрывают */
+export const CHART_TIME_SCALE_HEIGHT = 28;
+
 export const CHART_SCALE_TEXT_COLOR = "#d1d5db";
 
 /** Текст на светлой плашке ценовой шкалы (линии, алерты, светлые цвета). */
@@ -832,24 +835,6 @@ clientX - chartR.left;
 let y =
 clientY - chartR.top;
 
-x =
-Math.max(
-0,
-Math.min(
-chartR.width,
-x
-)
-);
-
-y =
-Math.max(
-0,
-Math.min(
-chartR.height,
-y
-)
-);
-
 let scaleW =
 56;
 
@@ -876,6 +861,30 @@ chartR.width * 0.35
 )
 );
 
+const plotWidth =
+Math.max(
+0,
+chartR.width - scaleW
+);
+
+x =
+Math.max(
+0,
+Math.min(
+plotWidth,
+x
+)
+);
+
+y =
+Math.max(
+0,
+Math.min(
+chartR.height,
+y
+)
+);
+
 if(
 chartsStackEl &&
 linkedVertEl
@@ -884,8 +893,17 @@ linkedVertEl
 const stackR =
 chartsStackEl.getBoundingClientRect();
 
+const plotRightInStack =
+chartR.left - stackR.left + Math.max(
+0,
+chartR.width - scaleW
+);
+
 const lineLeft =
-chartR.left - stackR.left + x;
+Math.min(
+chartR.left - stackR.left + x,
+plotRightInStack
+);
 
 linkedVertEl.style.left =
 `${Math.round(lineLeft)}px`;
@@ -1809,10 +1827,20 @@ CHART_PRICE_SCALE_WIDTH;
 const px =
 `${w}px`;
 
-document
-.getElementById("chart-wrap")
-?.style
-.setProperty("--chart-scale-width", px);
+const wrapEl =
+document.getElementById(
+"chart-wrap"
+);
+
+wrapEl?.style.setProperty(
+"--chart-scale-width",
+px
+);
+
+wrapEl?.style.setProperty(
+"--chart-time-scale-height",
+`${CHART_TIME_SCALE_HEIGHT}px`
+);
 
 document
 .getElementById("rsi-wrap")
@@ -2103,7 +2131,7 @@ vertTouchDrag:false
 },
 handleScale:{
 axisPressedMouseMove:{
-time:false,
+time:true,
 price:false
 },
 axisDoubleClickReset:{
@@ -2311,15 +2339,100 @@ e.touches?.[
 0
 ]?.clientX;
 
+const y =
+e.clientY ??
+e.touches?.[
+0
+]?.clientY;
+
 if(
 x ==
+null ||
+y ==
 null
+){
+return false;
+}
+
+const timeH =
+readChartTimeScaleHeightPx(
+chartEl
+);
+
+if(
+y >
+rect.bottom - timeH
 ){
 return false;
 }
 
 return x >=
 rect.right - w - 0.5;
+
+}
+
+function readChartTimeScaleHeightPx(
+chartEl
+){
+
+const wrap =
+chartEl?.closest?.(
+"#chart-wrap"
+);
+
+if(
+wrap
+){
+
+const raw =
+getComputedStyle(
+wrap
+).getPropertyValue(
+"--chart-time-scale-height"
+);
+
+const n =
+parseFloat(
+raw
+);
+
+if(
+Number.isFinite(
+n
+) &&
+n >
+0
+){
+return n;
+}
+
+}
+
+return CHART_TIME_SCALE_HEIGHT;
+
+}
+
+function clearTabletProbeCrosshairForChart(
+chart
+){
+
+hideTabletProbeCrosshair({
+linkedVertEl:document.getElementById(
+"linked-crosshair-vert"
+),
+horizLineEl:document.getElementById(
+"tablet-probe-crosshair-h"
+),
+timeLabelEl:document.getElementById(
+"crosshair-time-label"
+)
+});
+
+try{
+chart?.clearCrosshairPosition?.();
+}catch{
+/* ignore */
+}
 
 }
 
@@ -4753,9 +4866,7 @@ TABLET_LW_NATIVE_PRICE_SCALE &&
 isTabletChartViewport();
 
 const touchTargetEl =
-useLwNativeScale
-? chartEl
-: stripEl;
+stripEl;
 
 let priceZoomRange =
 null;
@@ -4936,6 +5047,10 @@ bottom:DEFAULT_PRICE_SCALE_MARGINS.bottom
 }
 
 notifyChartPriceRangeChanged();
+
+clearTabletProbeCrosshairForChart(
+chart
+);
 
 onReset?.();
 onDragEnd?.();
@@ -5458,6 +5573,10 @@ e
 return;
 }
 
+clearTabletProbeCrosshairForChart(
+chart
+);
+
 stripPointerDown = {
 id:
 e.pointerId ??
@@ -5671,16 +5790,15 @@ onPointerDown,
 touchOpts
 );
 
+touchTargetEl.addEventListener(
+"dblclick",
+onChartScaleDblClick
+);
+
 if(
 useLwNativeScale
 ){
-chartEl.addEventListener(
-"dblclick",
-onChartScaleDblClick,
-true
-);
-
-chartEl.addEventListener(
+touchTargetEl.addEventListener(
 "touchend",
 onScaleTouchEnd,
 touchOpts
@@ -5697,16 +5815,15 @@ onPointerDown,
 touchOpts
 );
 
+touchTargetEl.removeEventListener(
+"dblclick",
+onChartScaleDblClick
+);
+
 if(
 useLwNativeScale
 ){
-chartEl.removeEventListener(
-"dblclick",
-onChartScaleDblClick,
-true
-);
-
-chartEl.removeEventListener(
+touchTargetEl.removeEventListener(
 "touchend",
 onScaleTouchEnd,
 touchOpts
