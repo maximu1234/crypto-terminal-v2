@@ -4009,7 +4009,21 @@ const onChart =
 countAlertsOnChart();
 
 const pending =
-getActiveAlerts().filter(a=>!a.cloudSynced);
+getActiveAlerts().filter(a=>{
+if(a.cloudSynced){
+return false;
+}
+
+const localTs =
+Number(a.priceUpdatedAt) ||
+Number(a.createdAt) ||
+0;
+
+return (
+Date.now() - localTs <=
+UNSYNCED_LOCAL_KEEP_MS
+);
+});
 
 if(!pending.length){
 
@@ -4017,7 +4031,7 @@ if(onChart > 0){
 console.warn(
 "[alerts] на графике",
 onChart,
-", но все помечены cloudSynced — снимите и снова поставьте алерт или обновите страницу"
+", но несинхронизированные строки отсутствуют или устарели"
 );
 }
 
@@ -4365,13 +4379,6 @@ if(
 data ===
 null
 ){
-
-if(
-Date.now() <
-alertsRestStressUntil
-){
-return 0;
-}
 
 const ctx =
 await getAuthed();
