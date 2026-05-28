@@ -44,6 +44,7 @@ applyTabletRsiChartOptions,
 applyTabletMainChartScroll,
 markTabletChartBody,
 mountTabletPriceScaleTouch,
+mountPriceScaleDoubleTapReset,
 getVisibleCandlesPriceRange,
 mountTabletChartGestures,
 mountChartRangeFreeze,
@@ -58,7 +59,7 @@ TABLET_USE_CUSTOM_TOUCH_PAN,
 isTabletChartViewport,
 isUserCrosshairEvent,
 resetChartPriceAutoScale
-} from "./chart.js?v=84";
+} from "./chart.js?v=85";
 
 import {
 connectKlineStream,
@@ -1238,6 +1239,7 @@ onDragEnd(){},
 onReset(){}
 };
 
+let tabletPriceScaleCtrl =
 mountTabletPriceScaleTouch(
 chart,
 document.getElementById(
@@ -1247,6 +1249,26 @@ chartEl,
 candleSeries,
 priceScaleTouchHooks
 );
+
+function resetTabletPriceScale(){
+
+if(
+tabletPriceScaleCtrl?.resetPriceAutoScale
+){
+tabletPriceScaleCtrl.resetPriceAutoScale();
+return;
+}
+
+resetChartPriceAutoScale(
+chart,
+candleSeries
+);
+priceScaleTouchHooks.onReset?.();
+
+}
+
+let unmountPriceScaleDoubleTap =
+()=>{};
 
 applyTabletMainChartScroll(
 chart
@@ -1711,25 +1733,15 @@ drawingTools?.endPriceScaleDragRedraw?.();
 drawingTools?.scheduleRedraw?.();
 };
 
-const priceScaleStripEl =
-document.getElementById(
-"price-scale-touch-strip"
-);
-
-if(
-priceScaleStripEl
-){
-mountAxisDoubleTapReset(
-priceScaleStripEl,
-()=>{
-resetChartPriceAutoScale(
+unmountPriceScaleDoubleTap =
+mountPriceScaleDoubleTapReset({
 chart,
-candleSeries
-);
-priceScaleTouchHooks.onReset?.();
-}
-);
-}
+chartEl,
+stripEl:document.getElementById(
+"price-scale-touch-strip"
+),
+resetPriceScale:resetTabletPriceScale
+});
 
 void import("./price-alert-ui.js?v=26").then(({ mountPriceAlertUi })=>{
 mountPriceAlertUi({

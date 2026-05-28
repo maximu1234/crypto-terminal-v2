@@ -4343,6 +4343,313 @@ max:max + pad
 
 }
 
+/**
+ * iPad: двойной тап по правой шкале → сброс Y-масштаба.
+ * Слушает touch на document (capture) + hit-test по полосе и зоне LW-шкалы.
+ */
+export function mountPriceScaleDoubleTapReset({
+chart,
+chartEl,
+stripEl,
+resetPriceScale
+}){
+
+if(
+!chart ||
+!chartEl ||
+typeof resetPriceScale !==
+"function"
+){
+return ()=>{};
+}
+
+const DBL_MS =
+500;
+
+const DBL_PX =
+48;
+
+const TAP_MOVE_PX =
+14;
+
+let lastTap =
+null;
+
+let activeTouch =
+null;
+
+function scaleWidth(){
+
+try{
+return (
+chart.priceScale(
+"right"
+)?.width?.() ||
+56
+);
+}catch{
+return 56;
+}
+
+}
+
+function hitPriceScale(
+clientX,
+clientY
+){
+
+const stripR =
+stripEl?.getBoundingClientRect?.();
+
+if(
+stripR &&
+stripR.width >
+0 &&
+stripR.height >
+0
+){
+
+if(
+clientX >=
+stripR.left - 6 &&
+clientX <=
+stripR.right + 6 &&
+clientY >=
+stripR.top &&
+clientY <=
+stripR.bottom
+){
+return true;
+}
+
+}
+
+const r =
+chartEl.getBoundingClientRect();
+
+const sw =
+scaleWidth();
+
+return (
+clientY >=
+r.top &&
+clientY <=
+r.bottom &&
+clientX >=
+r.right - sw - 6 &&
+clientX <=
+r.right + 6
+);
+
+}
+
+function tryDoubleTap(
+clientX,
+clientY,
+ev
+){
+
+const now =
+Date.now();
+
+if(
+lastTap &&
+now - lastTap.t <=
+DBL_MS
+){
+
+const dx =
+clientX - lastTap.x;
+
+const dy =
+clientY - lastTap.y;
+
+if(
+dx * dx + dy * dy <=
+DBL_PX * DBL_PX
+){
+lastTap =
+null;
+resetPriceScale();
+ev?.preventDefault?.();
+ev?.stopPropagation?.();
+return true;
+
+}
+
+}
+
+lastTap = {
+t:now,
+x:clientX,
+y:clientY
+};
+
+return false;
+
+}
+
+function onTouchStart(
+e
+){
+
+if(
+e.touches.length !==
+1
+){
+return;
+}
+
+const t =
+e.touches[
+0
+];
+
+if(
+!hitPriceScale(
+t.clientX,
+t.clientY
+)
+){
+activeTouch =
+null;
+return;
+}
+
+activeTouch = {
+id:t.identifier,
+x:t.clientX,
+y:t.clientY
+};
+
+}
+
+function onTouchEnd(
+e
+){
+
+for(
+let i =
+0;
+i <
+e.changedTouches.length;
+i++
+){
+
+const t =
+e.changedTouches[
+i
+];
+
+if(
+!activeTouch ||
+t.identifier !==
+activeTouch.id
+){
+continue;
+}
+
+const dx =
+t.clientX - activeTouch.x;
+
+const dy =
+t.clientY - activeTouch.y;
+
+activeTouch =
+null;
+
+if(
+dx * dx + dy * dy >
+TAP_MOVE_PX * TAP_MOVE_PX
+){
+continue;
+}
+
+if(
+!hitPriceScale(
+t.clientX,
+t.clientY
+)
+){
+continue;
+}
+
+if(
+tryDoubleTap(
+t.clientX,
+t.clientY,
+e
+)
+){
+return;
+}
+
+}
+
+}
+
+function onTouchCancel(
+e
+){
+
+onTouchEnd(
+e
+);
+
+}
+
+const opts = {
+capture:true,
+passive:false
+};
+
+document.addEventListener(
+"touchstart",
+onTouchStart,
+opts
+);
+
+document.addEventListener(
+"touchend",
+onTouchEnd,
+opts
+);
+
+document.addEventListener(
+"touchcancel",
+onTouchCancel,
+opts
+);
+
+return ()=>{
+
+document.removeEventListener(
+"touchstart",
+onTouchStart,
+opts
+);
+
+document.removeEventListener(
+"touchend",
+onTouchEnd,
+opts
+);
+
+document.removeEventListener(
+"touchcancel",
+onTouchCancel,
+opts
+);
+
+lastTap =
+null;
+activeTouch =
+null;
+
+};
+
+}
+
 export function resetChartPriceAutoScale(
 chart,
 series
@@ -4598,10 +4905,16 @@ if(
 !chart ||
 !stripEl ||
 !chartEl ||
-!series ||
-!isTabletChartViewport()
+!series
 ){
-return ()=>{};
+return {
+dispose:()=>{},
+resetPriceAutoScale:()=>
+resetChartPriceAutoScale(
+chart,
+series
+)
+};
 }
 
 const hooks =
@@ -5447,7 +5760,7 @@ onChartPointerDown,
 { passive:true }
 );
 
-return ()=>{
+const dispose = ()=>{
 
 clearStripLastTap();
 
@@ -5476,6 +5789,11 @@ onChartPointerDown,
 
 abortDrag();
 
+};
+
+return {
+dispose,
+resetPriceAutoScale:resetStripPriceAutoScale
 };
 
 }
