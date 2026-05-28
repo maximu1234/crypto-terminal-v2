@@ -2292,6 +2292,25 @@ shapeId: sid
 });
 }
 
+if(ok){
+const stillThere =
+await resolveCloudAlertId(
+sym,
+sid,
+null
+);
+
+if(stillThere){
+console.warn(
+"alert cloud delete verify failed:",
+sym,
+sid,
+stillThere
+);
+ok = false;
+}
+}
+
 if(!ok){
 console.warn(
 "alert cloud delete:",
