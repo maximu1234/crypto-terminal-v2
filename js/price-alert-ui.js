@@ -294,6 +294,13 @@ function onPointerMove(
 e
 ){
 
+if(
+IS_COARSE_TOUCH &&
+e?.pointerType !== "mouse"
+){
+return;
+}
+
 if(dragAlertId){
 return;
 }
@@ -535,7 +542,14 @@ clientY: e.clientY
 );
 
 const onWrapPointerLeave =
-()=>{
+e=>{
+
+if(
+IS_COARSE_TOUCH ||
+e?.pointerType === "touch"
+){
+return;
+}
 
 if(
 dragAlertId
