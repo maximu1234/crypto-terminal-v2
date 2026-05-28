@@ -966,6 +966,34 @@ y
 }
 
 if(
+crosshairPrice ==
+null &&
+probeTime !=
+null
+){
+const bars =
+series?.data?.();
+
+const last =
+bars?.length
+? bars[
+bars.length - 1
+]
+: null;
+
+if(
+last &&
+Number.isFinite(
+last.close
+)
+){
+crosshairPrice =
+last.close;
+}
+
+}
+
+if(
 probeTime !=
 null &&
 crosshairPrice !=
@@ -3011,7 +3039,7 @@ hud?.remove();
 
 export {
 mountTabletChartGestures
-} from "./chart-tablet-gestures.js?v=9";
+} from "./chart-tablet-gestures.js?v=10";
 
 /** Смартфон / планшет с touch — отдельно от isTabletChartViewport (≥768px). */
 export function isCoarseTouchViewport(){
@@ -5065,6 +5093,78 @@ chart,
 series
 );
 
+const snapRange =
+hooks.getFallbackPriceRange?.() ||
+getVisibleCandlesPriceRange(
+chart,
+series
+);
+
+if(
+snapRange &&
+Number.isFinite(
+snapRange.min
+) &&
+Number.isFinite(
+snapRange.max
+) &&
+snapRange.min !==
+snapRange.max
+){
+
+try{
+series.applyOptions({
+autoscaleInfoProvider:()=>({
+priceRange:{
+minValue:snapRange.min,
+maxValue:snapRange.max
+}
+})
+});
+chart.priceScale(
+"right"
+).applyOptions({
+autoScale:true,
+scaleMargins:{
+top:DEFAULT_PRICE_SCALE_MARGINS.top,
+bottom:DEFAULT_PRICE_SCALE_MARGINS.bottom
+}
+});
+}catch{
+/* ignore */
+}
+
+requestAnimationFrame(
+()=>{
+try{
+series.applyOptions({
+autoscaleInfoProvider:()=>null
+});
+chart.priceScale(
+"right"
+).applyOptions({
+autoScale:true
+});
+}catch{
+/* ignore */
+}
+}
+);
+
+}else{
+
+try{
+chart.priceScale(
+"right"
+).applyOptions({
+autoScale:true
+});
+}catch{
+/* ignore */
+}
+
+}
+
 clearTabletProbeCrosshairForChart(
 chart
 );
@@ -5767,15 +5867,14 @@ touchTargetEl.addEventListener(
 onChartScaleDblClick
 );
 
-if(
-useLwNativeScale
-){
 touchTargetEl.addEventListener(
 "touchend",
 onScaleTouchEnd,
-touchOpts
-);
+{
+capture:true,
+passive:false
 }
+);
 
 const dispose = ()=>{
 
@@ -5792,15 +5891,14 @@ touchTargetEl.removeEventListener(
 onChartScaleDblClick
 );
 
-if(
-useLwNativeScale
-){
 touchTargetEl.removeEventListener(
 "touchend",
 onScaleTouchEnd,
-touchOpts
-);
+{
+capture:true,
+passive:false
 }
+);
 
 abortDrag();
 

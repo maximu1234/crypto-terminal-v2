@@ -58,7 +58,7 @@ TABLET_USE_CUSTOM_TOUCH_PAN,
 isTabletChartViewport,
 isUserCrosshairEvent,
 resetChartPriceAutoScale
-} from "./chart-import.js?v=9";
+} from "./chart-import.js?v=10";
 
 import {
 connectKlineStream,
@@ -2552,8 +2552,6 @@ refPrice
 
 rebuildRsiFromCandles();
 
-resetTabletPriceScale();
-
 /* =========================================================
    APPLY ZOOM
 ========================================================= */
@@ -2561,6 +2559,17 @@ resetTabletPriceScale();
 applyDefaultZoom();
 
 resizeCharts();
+
+requestAnimationFrame(
+()=>{
+resetTabletPriceScale();
+applyTabletMainChartScroll(
+chart
+);
+resizeCharts();
+}
+);
+
 requestAnimationFrame(resizeCharts);
 setTimeout(resizeCharts, 50);
 setTimeout(resizeCharts, 300);

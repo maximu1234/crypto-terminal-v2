@@ -13,7 +13,7 @@ import {
 createCandlestickChart,
 applyChartPriceFormat,
 applyDashboardZoom
-} from "./chart-import.js?v=9";
+} from "./chart-import.js?v=10";
 
 import {
 initDrawings

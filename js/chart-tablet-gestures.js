@@ -1,5 +1,6 @@
 /**
  * iPad: один конечный автомат на жест — свайп = pan, удержание = probe-перекрестие.
+ * v=10: finishCrosshairRelease (без неё probe залипал на iOS).
  */
 const HOLD_MS =
 500;
@@ -278,6 +279,31 @@ pointerId = null;
 detachDocListeners();
 
 onHoldEnd();
+
+}
+
+function finishCrosshairRelease(){
+
+if(
+mode !==
+"crosshair"
+){
+return;
+}
+
+if(
+crosshairReleaseHandled
+){
+return;
+}
+
+crosshairReleaseHandled =
+true;
+
+pointerId =
+null;
+
+endCrosshair();
 
 }
 
@@ -1111,18 +1137,19 @@ function cancelCurrentGesture(){
 
 if(
 mode ===
+"crosshair"
+){
+finishCrosshairRelease();
+return;
+}
+
+if(
+mode ===
 "pan" ||
 mode ===
 "pending"
 ){
 resetGesture();
-}
-
-if(
-mode ===
-"crosshair"
-){
-endCrosshair();
 }
 
 }

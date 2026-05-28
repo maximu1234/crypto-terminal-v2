@@ -3,22 +3,22 @@
  * chart-import.js: export * from `./chart.js?v=${CHART_JS_V}`
  */
 export const CHART_JS_V =
-98;
+99;
 
 export const CHART_IMPORT_V =
-9;
+10;
 
 export const TERMINAL_JS_V =
-233;
+234;
 
 export const COINS_BOOT_V =
-5;
+6;
 
 export const CHART_PAGE_V =
 2;
 
 export const CHART_BUILD_ID =
-"20260529-single-load";
+"20260529-probe-scale-fix";
 
 export const TERMINAL_ENTRY =
 `/js/terminal.js?v=${TERMINAL_JS_V}`;
