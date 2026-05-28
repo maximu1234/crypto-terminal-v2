@@ -122,6 +122,61 @@ let drawingsSyncPausedUntil =
 const REMOTE_SYNC_MS =
 400;
 
+const dirtyDrawingSymbols =
+new Set();
+
+function normalizeSymbolKey(
+symbol
+){
+
+return String(
+symbol ||
+""
+).trim().toUpperCase();
+
+}
+
+function markDrawingSymbolDirty(
+symbol
+){
+
+const sym =
+normalizeSymbolKey(symbol);
+
+if(sym){
+dirtyDrawingSymbols.add(sym);
+}
+
+}
+
+function markDrawingSymbolsDirty(
+symbols
+){
+
+for(
+const sym of symbols ||
+[]
+){
+markDrawingSymbolDirty(sym);
+}
+
+}
+
+function getActiveChartSymbol(){
+
+try{
+const sym =
+new URLSearchParams(
+location.search || ""
+).get("symbol");
+
+return normalizeSymbolKey(sym);
+}catch{
+return "";
+}
+
+}
+
 export function pauseDrawingsCloudSync(
 ms
 ){
@@ -1995,6 +2050,23 @@ const local =
 collectAllLocalDrawings();
 const tombstones =
 loadLocalTombstones();
+const activeSymbol =
+getActiveChartSymbol();
+const symbolsToProcess =
+new Set([
+...dirtyDrawingSymbols
+]);
+
+if(activeSymbol){
+symbolsToProcess.add(activeSymbol);
+}
+
+const processAllSymbols =
+symbolsToProcess.size === 0;
+const symbolFailed =
+new Set();
+const symbolProcessed =
+new Set();
 
 let localShapeCount =
 0;
@@ -2040,6 +2112,15 @@ list
 continue;
 }
 
+if(
+!processAllSymbols &&
+!symbolsToProcess.has(sym)
+){
+continue;
+}
+
+symbolProcessed.add(sym);
+
 for(
 const shape of list
 ){
@@ -2077,6 +2158,8 @@ shape
 )
 );
 pushed += 1;
+}else{
+symbolFailed.add(sym);
 }
 
 }
@@ -2091,12 +2174,23 @@ id
 ){
 
 if(
+!processAllSymbols &&
+!symbolsToProcess.has(sym)
+){
+continue;
+}
+
+symbolProcessed.add(sym);
+
+if(
 await deleteDrawingFromCloud(
 sym,
 id
 )
 ){
 pushed += 1;
+}else{
+symbolFailed.add(sym);
 }
 
 }
@@ -2118,6 +2212,15 @@ typeof tombs !==
 continue;
 }
 
+if(
+!processAllSymbols &&
+!symbolsToProcess.has(sym)
+){
+continue;
+}
+
+symbolProcessed.add(sym);
+
 for(
 const shapeId of Object.keys(
 tombs
@@ -2131,10 +2234,22 @@ shapeId
 )
 ){
 pushed += 1;
+}else{
+symbolFailed.add(sym);
 }
 
 }
 
+}
+
+for(
+const sym of symbolProcessed
+){
+if(
+!symbolFailed.has(sym)
+){
+dirtyDrawingSymbols.delete(sym);
+}
 }
 
 if(
@@ -3311,6 +3426,11 @@ isAlertsPage()
 return;
 }
 
+markDrawingSymbolDirty(
+e?.detail?.symbol ||
+getActiveChartSymbol()
+);
+
 scheduleDrawingsCloudSync();
 
 }
@@ -3330,6 +3450,22 @@ if(
 isAlertsPage()
 ){
 return;
+}
+
+markDrawingSymbolsDirty(
+e?.detail?.symbols
+);
+
+if(
+!Array.isArray(
+e?.detail?.symbols
+) ||
+e.detail.symbols.length ===
+0
+){
+markDrawingSymbolDirty(
+getActiveChartSymbol()
+);
 }
 
 scheduleDrawingsCloudSync();
