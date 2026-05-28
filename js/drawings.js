@@ -75,7 +75,7 @@ ensureDomChartCrosshair,
 positionDomChartCrosshair,
 hideDomChartCrosshair,
 fullCrosshairOptions
-} from "./chart-import.js?v=7";
+} from "./chart-import.js?v=8";
 
 /* Сетка 2×9: чётный индекс — левый столбец, нечётный — правый */
 const DEFAULT_FIB_SPEC = Object.freeze([

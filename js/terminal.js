@@ -58,7 +58,7 @@ TABLET_USE_CUSTOM_TOUCH_PAN,
 isTabletChartViewport,
 isUserCrosshairEvent,
 resetChartPriceAutoScale
-} from "./chart-import.js?v=7";
+} from "./chart-import.js?v=8";
 
 import {
 connectKlineStream,
@@ -2551,6 +2551,8 @@ refPrice
 );
 
 rebuildRsiFromCandles();
+
+resetTabletPriceScale();
 
 /* =========================================================
    APPLY ZOOM

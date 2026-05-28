@@ -5057,23 +5057,13 @@ bottom:DEFAULT_PRICE_SCALE_MARGINS.bottom
 priceZoomRange =
 null;
 
-ensureTabletPriceZoomProvider();
+priceZoomProviderInstalled =
+false;
 
-try{
-chart.priceScale(
-"right"
-).applyOptions({
-autoScale:true,
-scaleMargins:{
-top:DEFAULT_PRICE_SCALE_MARGINS.top,
-bottom:DEFAULT_PRICE_SCALE_MARGINS.bottom
-}
-});
-}catch{
-/* ignore */
-}
-
-notifyChartPriceRangeChanged();
+resetChartPriceAutoScale(
+chart,
+series
+);
 
 clearTabletProbeCrosshairForChart(
 chart
@@ -5171,45 +5161,6 @@ max
 let priceZoomProviderInstalled =
 false;
 
-function visibleAutoscalePriceRange(){
-
-if(
-priceZoomRange
-){
-return {
-minValue:priceZoomRange.min,
-maxValue:priceZoomRange.max
-};
-}
-
-const fallback =
-hooks.getFallbackPriceRange?.() ||
-getVisibleCandlesPriceRange(
-chart,
-series
-);
-
-if(
-!fallback ||
-!Number.isFinite(
-fallback.min
-) ||
-!Number.isFinite(
-fallback.max
-) ||
-fallback.min ===
-fallback.max
-){
-return null;
-}
-
-return {
-minValue:fallback.min,
-maxValue:fallback.max
-};
-
-}
-
 function ensureTabletPriceZoomProvider(){
 
 if(
@@ -5222,17 +5173,17 @@ try{
 series.applyOptions({
 autoscaleInfoProvider:()=>{
 
-const range =
-visibleAutoscalePriceRange();
-
 if(
-!range
+!priceZoomRange
 ){
 return null;
 }
 
 return {
-priceRange:range
+priceRange:{
+minValue:priceZoomRange.min,
+maxValue:priceZoomRange.max
+}
 };
 
 }
@@ -5767,12 +5718,6 @@ tryScaleZoneDoubleTap(
 e
 );
 
-}
-
-if(
-useLwNativeScale
-){
-ensureTabletPriceZoomProvider();
 }
 
 const touchOpts = {

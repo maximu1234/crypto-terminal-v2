@@ -17,12 +17,12 @@ navigator.userAgent ||
 
 /** Менять при каждом релизе графика — иначе iPad держит старый boot в кэше (v=2). */
 export const COINS_CHART_BUILD =
-"20260529-probe-release";
+"20260529-autoscale-default";
 
 const CHART_ENTRY =
 IS_YANDEX
 ? "/js/chart-page.js?v=2"
-: "/js/terminal.js?v=231";
+: "/js/terminal.js?v=232";
 
 function loadModuleScript(
 url,
