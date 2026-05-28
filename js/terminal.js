@@ -59,7 +59,7 @@ TABLET_USE_CUSTOM_TOUCH_PAN,
 isTabletChartViewport,
 isUserCrosshairEvent,
 resetChartPriceAutoScale
-} from "./chart.js?v=85";
+} from "./chart.js?v=86";
 
 import {
 connectKlineStream,
@@ -1740,7 +1740,9 @@ chartEl,
 stripEl:document.getElementById(
 "price-scale-touch-strip"
 ),
-resetPriceScale:resetTabletPriceScale
+resetPriceScale:resetTabletPriceScale,
+isTapAllowed:()=>
+!tabletPriceScaleCtrl?.isScaleDragging?.()
 });
 
 void import("./price-alert-ui.js?v=26").then(({ mountPriceAlertUi })=>{

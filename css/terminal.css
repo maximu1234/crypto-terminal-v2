@@ -806,6 +806,7 @@ body.tablet-chart .price-scale-touch-strip{
   display:block;
   pointer-events:auto;
   z-index:50;
+  /* manipulation: без 300ms задержки между тапами (важно для double-tap) */
   touch-action:manipulation;
 }
 
@@ -817,7 +818,7 @@ body.tablet-chart .price-scale-touch-strip{
   bottom:0;
   width:var(--chart-scale-width, 56px);
   z-index:25;
-  touch-action:none;
+  touch-action:manipulation;
   -webkit-tap-highlight-color:transparent;
   pointer-events:auto;
 }
