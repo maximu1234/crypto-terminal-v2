@@ -4457,6 +4457,9 @@ hooks.onDragStart ||
 const onDragEnd =
 hooks.onDragEnd ||
 (()=>{});
+const onScaleFrame =
+hooks.onScaleFrame ||
+(()=>{});
 
 let drag =
 null;
@@ -4710,7 +4713,34 @@ bottom:margins.bottom
 }
 });
 
+const chartW =
+Math.max(
+1,
+Math.floor(
+chartEl.clientWidth ||
+0
+)
+);
+const chartH =
+Math.max(
+1,
+Math.floor(
+chartEl.clientHeight ||
+0
+)
+);
+
+try{
+chart.resize(
+chartW,
+chartH
+);
+}catch{
+/* ignore */
+}
+
 onInteraction?.();
+onScaleFrame?.();
 
 }
 

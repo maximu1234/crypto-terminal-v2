@@ -56,7 +56,7 @@ mountAxisDoubleTapReset,
 TABLET_USE_CUSTOM_TOUCH_PAN,
 isTabletChartViewport,
 isUserCrosshairEvent
-} from "./chart.js?v=71";
+} from "./chart.js?v=72";
 
 import {
 connectKlineStream,
@@ -75,7 +75,7 @@ syncBackgroundAlertStreams
 
 import {
 initDrawings
-} from "./drawings.js?v=158";
+} from "./drawings.js?v=159";
 
 import {
 initCoinsMobileUi,
@@ -1224,6 +1224,7 @@ const priceScaleTouchHooks = {
 onInteraction(){
 priceHudCtrl.refresh?.();
 },
+onScaleFrame(){},
 onDragStart(){},
 onDragEnd(){}
 };
@@ -1673,6 +1674,12 @@ console.error("Drawings init failed:", err);
 if(
 drawingTools
 ){
+
+priceScaleTouchHooks.onScaleFrame =
+()=>{
+priceHudCtrl.refresh?.();
+drawingTools?.schedulePriceScaleSyncedRedraw?.();
+};
 
 priceScaleTouchHooks.onDragStart =
 ()=>{

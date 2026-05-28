@@ -1481,6 +1481,7 @@ let chartPanActive = false;
 let chartPanWheelTimer = null;
 let priceScaleDragActive = false;
 let priceScaleDragRaf = 0;
+let priceScaleSyncPending = false;
 let priceScaleApplyPatchRestore = null;
 
 function defaultsStorageKey(name){
@@ -7771,6 +7772,45 @@ redraw();
 
 }
 
+function schedulePriceScaleSyncedRedraw(){
+
+if(
+!alive
+){
+return;
+}
+
+if(
+priceScaleSyncPending
+){
+return;
+}
+
+priceScaleSyncPending =
+true;
+
+requestAnimationFrame(
+()=>{
+requestAnimationFrame(
+()=>{
+priceScaleSyncPending =
+false;
+
+if(
+!alive
+){
+return;
+}
+
+redraw();
+
+}
+);
+}
+);
+
+}
+
 function stopPriceScaleDragRedraw(){
 
 priceScaleDragActive = false;
@@ -7784,7 +7824,9 @@ priceScaleDragRaf
 priceScaleDragRaf = 0;
 }
 
-redraw();
+priceScaleSyncPending =
+false;
+schedulePriceScaleSyncedRedraw();
 
 }
 
@@ -7798,7 +7840,7 @@ priceScaleDragRaf = 0;
 return;
 }
 
-redraw();
+schedulePriceScaleSyncedRedraw();
 priceScaleDragRaf =
 requestAnimationFrame(
 priceScaleDragRedrawLoop
@@ -10408,6 +10450,7 @@ clearAllDrawingsOnChart,
 
 scheduleRedraw,
 scheduleDragRedraw,
+schedulePriceScaleSyncedRedraw,
 startPriceScaleDragRedraw,
 stopPriceScaleDragRedraw,
 
