@@ -790,38 +790,61 @@ menu.classList.remove("hidden");
 menu.style.left = "0px";
 menu.style.top = "0px";
 
-const rect =
+const menuRect =
 menu.getBoundingClientRect();
+const chartRect =
+chartEl.getBoundingClientRect();
+const scaleW =
+chart.priceScale(
+"right"
+)?.width?.() ||
+56;
+
+const scaleLeft =
+chartRect.right - scaleW;
 
 let left =
-Math.round(clientX);
+Math.round(
+scaleLeft - menuRect.width
+);
 let top =
-Math.round(clientY);
+Math.round(
+clientY - menuRect.height / 2
+);
+
+const chartLeft =
+chartRect.left + margin;
 
 if(
-left + rect.width >
-window.innerWidth - margin
+left <
+chartLeft
 ){
 left =
-window.innerWidth - margin - rect.width;
-}
-
-if(
-top + rect.height >
-window.innerHeight - margin
-){
-top =
-window.innerHeight - margin - rect.height;
+Math.round(
+chartLeft
+);
 }
 
 left = Math.max(
 margin,
 left
 );
-top = Math.max(
-margin,
-top
-);
+
+if(
+top + menuRect.height >
+window.innerHeight - margin
+){
+top =
+window.innerHeight - margin - menuRect.height;
+}
+
+if(
+top <
+margin
+){
+top =
+margin;
+}
 
 menu.style.left =
 `${left}px`;
