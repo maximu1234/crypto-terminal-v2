@@ -4233,7 +4233,7 @@ series
 
 try{
 series.applyOptions({
-autoscaleInfoProvider:undefined
+autoscaleInfoProvider:()=>null
 });
 }catch{
 /* ignore */
@@ -4508,6 +4508,9 @@ hooks.onScaleFrame ||
 let drag =
 null;
 
+let pointerSession =
+null;
+
 let margins =
 {
 top:DEFAULT_PRICE_SCALE_MARGINS.top,
@@ -4519,6 +4522,9 @@ const STRIP_DBL_TAP_MS =
 
 const STRIP_DBL_TAP_PX =
 28;
+
+const STRIP_DRAG_START_PX =
+4;
 
 let stripLastTap =
 null;
@@ -4559,10 +4565,21 @@ null;
 priceZoomProviderInstalled =
 false;
 
+const hadActiveDrag =
+!!drag;
+
+finishPointerSession();
+
 resetChartPriceAutoScale(
 chart,
 series
 );
+
+if(
+hadActiveDrag
+){
+onDragEnd();
+}
 
 onInteraction?.();
 
@@ -4720,25 +4737,7 @@ max:priceZoomRange.max
 
 }
 
-let scaleFrameNotifyRaf =
-0;
-
-function emitScaleFrame(){
-
-if(
-scaleFrameNotifyRaf
-){
-cancelAnimationFrame(
-scaleFrameNotifyRaf
-);
-}
-
-scaleFrameNotifyRaf =
-requestAnimationFrame(
-()=>{
-requestAnimationFrame(
-()=>{
-scaleFrameNotifyRaf = 0;
+function notifyScaleFrame(){
 
 const payload =
 scaleFramePayload();
@@ -4750,11 +4749,6 @@ onScaleFrame?.(
 payload
 );
 }
-
-}
-);
-}
-);
 
 }
 
@@ -4890,7 +4884,6 @@ dx * dx + dy * dy <=
 STRIP_DBL_TAP_PX * STRIP_DBL_TAP_PX
 ){
 clearStripLastTap();
-abortDrag();
 resetStripPriceAutoScale();
 e.preventDefault();
 e.stopPropagation();
@@ -4989,38 +4982,90 @@ onDocEnd = null;
 
 }
 
+function finishPointerSession(){
+
+pointerSession =
+null;
+drag =
+null;
+detachDocListeners();
+
+}
+
 function abortDrag(){
 
+const hadActiveDrag =
+!!drag;
+
+finishPointerSession();
+
 if(
-!drag
+hadActiveDrag
+){
+onDragEnd();
+}
+
+}
+
+function activatePriceScaleDrag(){
+
+if(
+!pointerSession ||
+pointerSession.activated
 ){
 return;
 }
 
-drag = null;
-detachDocListeners();
-onDragEnd();
+pointerSession.activated =
+true;
+
+drag = {
+id:pointerSession.id,
+y:pointerSession.y
+};
+
+priceZoomRange =
+captureVisiblePriceRange();
+
+ensureTabletPriceZoomProvider();
+
+notifyChartPriceRangeChanged();
+
+onDragStart?.(
+scaleFramePayload()
+);
 
 }
 
-function endDrag(
+function endPointerSession(
 e
 ){
 
 if(
-!drag
+!pointerSession
 ){
 return;
 }
 
 if(
-e?.pointerId !== undefined &&
-e.pointerId !== drag.id
+e?.pointerId !==
+undefined &&
+e.pointerId !==
+pointerSession.id
 ){
 return;
 }
 
-abortDrag();
+const hadActiveDrag =
+!!drag;
+
+finishPointerSession();
+
+if(
+hadActiveDrag
+){
+onDragEnd();
+}
 
 }
 
@@ -5035,7 +5080,7 @@ dy
 notifyChartPriceRangeChanged();
 
 onInteraction?.();
-emitScaleFrame();
+notifyScaleFrame();
 
 }
 
@@ -5061,36 +5106,62 @@ readMargins();
 
 detachDocListeners();
 
-drag = {
+pointerSession = {
 id:
 e.pointerId ??
 0,
-y:e.clientY
+startX:e.clientX,
+startY:e.clientY,
+y:e.clientY,
+activated:false
 };
-
-priceZoomRange =
-captureVisiblePriceRange();
-
-ensureTabletPriceZoomProvider();
-
-notifyChartPriceRangeChanged();
-
-onDragStart?.(
-scaleFramePayload()
-);
 
 onDocMove =(
 moveEvent
 )=>{
 
 if(
-!drag ||
+!pointerSession ||
 (
 moveEvent.pointerId !==
 undefined &&
 moveEvent.pointerId !==
-drag.id
+pointerSession.id
 )
+){
+return;
+}
+
+if(
+!pointerSession.activated
+){
+
+const dx =
+moveEvent.clientX -
+pointerSession.startX;
+
+const dy0 =
+moveEvent.clientY -
+pointerSession.startY;
+
+if(
+Math.hypot(
+dx,
+dy0
+) <
+STRIP_DRAG_START_PX
+){
+return;
+}
+
+pointerSession.y =
+moveEvent.clientY;
+activatePriceScaleDrag();
+
+}
+
+if(
+!drag
 ){
 return;
 }
@@ -5116,7 +5187,7 @@ moveEvent.preventDefault();
 
 };
 
-onDocEnd = endDrag;
+onDocEnd = endPointerSession;
 
 document.addEventListener(
 "pointermove",
@@ -5134,8 +5205,6 @@ document.addEventListener(
 onDocEnd
 );
 
-e.preventDefault();
-
 }
 
 const stripOpts = {
@@ -5148,7 +5217,7 @@ e
 
 e.preventDefault();
 e.stopPropagation();
-abortDrag();
+finishPointerSession();
 resetStripPriceAutoScale();
 
 }

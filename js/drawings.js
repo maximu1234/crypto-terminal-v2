@@ -75,7 +75,7 @@ ensureDomChartCrosshair,
 positionDomChartCrosshair,
 hideDomChartCrosshair,
 fullCrosshairOptions
-} from "./chart.js?v=75";
+} from "./chart.js?v=76";
 
 /* Сетка 2×9: чётный индекс — левый столбец, нечётный — правый */
 const DEFAULT_FIB_SPEC = Object.freeze([
@@ -1480,6 +1480,8 @@ let chartPanRedrawRaf = 0;
 let chartPanActive = false;
 let chartPanWheelTimer = null;
 let priceScaleDragActive = false;
+let priceScalePaintRaf = 0;
+let pendingPriceScaleRange = null;
 let priceScaleSyncPending = false;
 let priceScaleApplyPatchRestore = null;
 /** Во время iPad price-scale drag LW отстаёт в priceToCoordinate — считаем Y сами. */
@@ -8113,16 +8115,78 @@ return true;
 
 }
 
+function priceScaleDragPaintLoop(){
+
+if(
+!alive ||
+!priceScaleDragActive
+){
+priceScalePaintRaf = 0;
+return;
+}
+
+if(
+pendingPriceScaleRange
+){
+applyLockedPriceRangeFromChart(
+pendingPriceScaleRange
+);
+}
+
+redraw();
+priceScalePaintRaf =
+requestAnimationFrame(
+priceScaleDragPaintLoop
+);
+
+}
+
+function startPriceScalePaintLoop(){
+
+if(
+priceScalePaintRaf
+){
+return;
+}
+
+priceScalePaintRaf =
+requestAnimationFrame(
+priceScaleDragPaintLoop
+);
+
+}
+
+function stopPriceScalePaintLoop(){
+
+if(
+priceScalePaintRaf
+){
+cancelAnimationFrame(
+priceScalePaintRaf
+);
+priceScalePaintRaf = 0;
+}
+
+pendingPriceScaleRange =
+null;
+
+}
+
 function beginPriceScaleDragRedraw(
 range
 ){
 
 priceScaleDragActive = true;
 ensureSeriesPriceToCoordinatePatch();
+pendingPriceScaleRange =
+range ||
+null;
+
 applyLockedPriceRangeFromChart(
-range
+pendingPriceScaleRange
 );
 redraw();
+startPriceScalePaintLoop();
 
 }
 
@@ -8136,10 +8200,9 @@ if(
 return;
 }
 
-applyLockedPriceRangeFromChart(
-range
-);
-redraw();
+pendingPriceScaleRange =
+range ||
+null;
 
 }
 
@@ -8148,6 +8211,7 @@ function endPriceScaleDragRedraw(){
 manualPriceScaleDrag =
 null;
 priceScaleDragActive = false;
+stopPriceScalePaintLoop();
 restoreSeriesPriceToCoordinate();
 redraw();
 
