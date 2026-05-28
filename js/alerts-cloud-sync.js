@@ -10,7 +10,7 @@ isCloudLoggedIn,
 isCloudLoggedInEffective,
 onCloudSyncChange,
 ensureCloudLoginResolved
-} from "./cloud-sync.js?v=23";
+} from "./cloud-sync.js?v=26";
 
 import {
 setBrowserCrossCheckEnabled
@@ -5212,7 +5212,7 @@ return 0;
 
 try{
 const { ensureCloudLoginResolved } =
-await import("./cloud-sync.js?v=25");
+await import("./cloud-sync.js?v=26");
 
 await ensureCloudLoginResolved(
 8000

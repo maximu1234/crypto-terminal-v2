@@ -1285,7 +1285,7 @@ tf
 ){
 
 const { isCloudLoggedIn } =
-await import("./cloud-sync.js?v=19");
+await import("./cloud-sync.js?v=26");
 
 if(
 !isCloudLoggedIn()
@@ -2807,7 +2807,7 @@ const { purgeAllLocalDrawingsStorage } =
 await import("./drawings-storage.js?v=5");
 
 const drawingsCloud =
-await import("./drawings-cloud-sync.js?v=23");
+await import("./drawings-cloud-sync.js?v=26");
 
 const alertsCloud =
 await import("./alerts-cloud-sync.js?v=92");

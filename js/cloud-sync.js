@@ -53,6 +53,7 @@ const DRAWINGS_SYNCED_SIG_KEY =
 let configured = false;
 let loggedIn = false;
 let userEmail = "";
+let lastAppliedSessionKey = "__init__";
 const authListeners = new Set();
 
 /** Сразу из localStorage — без getSession() (в Safari он часто зависает 12+ с). */
@@ -574,7 +575,7 @@ true;
 return;
 }
 
-void import("./drawings-cloud-sync.js?v=23").then(
+void import("./drawings-cloud-sync.js?v=26").then(
 m=>{
 m.scheduleDrawingsCloudPush();
 }
@@ -595,7 +596,7 @@ return Promise.resolve();
 pendingDrawingsCloudPush =
 false;
 
-return import("./drawings-cloud-sync.js?v=23").then(
+return import("./drawings-cloud-sync.js?v=26").then(
 m=>
 m.flushDrawingsCloudPush()
 );
@@ -898,7 +899,7 @@ function stopCloudSyncHelpers(){
 
 stopSyncPoll();
 
-void import("./drawings-cloud-sync.js?v=23").then(
+void import("./drawings-cloud-sync.js?v=26").then(
 m=>{
 m.stopDrawingsCloudSync();
 }
@@ -990,7 +991,7 @@ function handleRealtimeSettingsRow(row){
 
 handleRealtimeFavoritesRow(row);
 
-void import("./drawings-cloud-sync.js?v=23").then(
+void import("./drawings-cloud-sync.js?v=26").then(
 m=>
 m.pullDrawingsFromCloud()
 );
@@ -1264,7 +1265,7 @@ return cloud.favorites;
 export async function mergeDrawingsWithCloud(){
 
 const drawingsCloud =
-await import("./drawings-cloud-sync.js?v=23");
+await import("./drawings-cloud-sync.js?v=26");
 
 await drawingsCloud.hydrateDrawingsAfterAuth();
 
@@ -1274,7 +1275,7 @@ return collectAllLocalDrawings();
 
 export async function pullDrawingsIfCloudNewer(){
 
-await import("./drawings-cloud-sync.js?v=23").then(
+await import("./drawings-cloud-sync.js?v=26").then(
 m=>
 m.pullDrawingsFromCloud()
 );
@@ -1295,7 +1296,7 @@ await m.reconcileLocalFavoritesWithCloud();
 async function syncDrawingsWithCloud(){
 
 const m =
-await import("./drawings-cloud-sync.js?v=23");
+await import("./drawings-cloud-sync.js?v=26");
 
 await m.flushDrawingsCloudPush();
 
@@ -1802,6 +1803,22 @@ expires_at: persisted.expires_at
 }
 }
 
+const sessionKey =
+session?.user?.id &&
+session?.access_token
+? `${session.user.id}:${session.access_token}`
+: "__signed_out__";
+
+if(
+sessionKey ===
+lastAppliedSessionKey
+){
+return;
+}
+
+lastAppliedSessionKey =
+sessionKey;
+
 loggedIn = !!session?.user;
 userEmail = session?.user?.email || "";
 
@@ -1868,7 +1885,7 @@ await import("./favorites-cloud-sync.js?v=2");
 await favoritesCloud.reconcileLocalFavoritesWithCloud();
 
 const drawingsCloud =
-await import("./drawings-cloud-sync.js?v=23");
+await import("./drawings-cloud-sync.js?v=26");
 
 if(
 !isAlertsPage()
@@ -2124,7 +2141,7 @@ favoritesCloud.pullFavoritesFromCloudNow()
 }else{
 
 const drawingsCloud =
-await import("./drawings-cloud-sync.js?v=23");
+await import("./drawings-cloud-sync.js?v=26");
 
 [
 drawSyms,
