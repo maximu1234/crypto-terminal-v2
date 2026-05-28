@@ -3,7 +3,7 @@
  * chart-import.js: export * from `./chart.js?v=${CHART_JS_V}`
  */
 export const CHART_JS_V =
-102;
+103;
 
 export const CHART_IMPORT_V =
 12;
@@ -18,7 +18,7 @@ export const CHART_PAGE_V =
 2;
 
 export const CHART_BUILD_ID =
-"20260529-tablet-scale-desktop";
+"20260529-probe-horiz-future";
 
 export const TERMINAL_ENTRY =
 `/js/terminal.js?v=${TERMINAL_JS_V}`;

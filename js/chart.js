@@ -914,13 +914,26 @@ linkedVertEl.classList.remove(
 
 }
 
-const time =
-chart.timeScale().coordinateToTime?.(
+const inFutureGap =
+isPlotXBeyondLastCandle(
+chart,
+series,
 x
 );
 
-const probeTime =
-time ??
+let probeTime =
+probeTimeFromPlotX(
+chart,
+series,
+x
+);
+
+if(
+probeTime ===
+null
+){
+probeTime =
+crosshairUnix(
 chart.timeScale().coordinateToTime?.(
 Math.max(
 0,
@@ -929,7 +942,9 @@ chartR.width - scaleW - 1,
 x
 )
 )
+)
 );
+}
 
 const price =
 series?.coordinateToPrice?.(
@@ -949,8 +964,6 @@ hasPrice
 
 if(
 crosshairPrice ==
-null &&
-probeTime !=
 null
 ){
 crosshairPrice =
@@ -963,13 +976,24 @@ y
 )
 )
 );
+
+if(
+crosshairPrice != null &&
+!Number.isFinite(
+crosshairPrice
+)
+){
+crosshairPrice = null;
+}
+
 }
 
 if(
 crosshairPrice ==
 null &&
 probeTime !=
-null
+null &&
+!inFutureGap
 ){
 const bars =
 series?.data?.();
@@ -993,14 +1017,18 @@ last.close;
 
 }
 
-if(
+const lwHorizOk =
+!inFutureGap &&
 probeTime !=
 null &&
 crosshairPrice !=
 null &&
 Number.isFinite(
 crosshairPrice
-)
+);
+
+if(
+lwHorizOk
 ){
 
 try{
@@ -1026,6 +1054,10 @@ chart.clearCrosshairPosition();
 if(
 horizLineEl &&
 chartsStackEl
+){
+
+if(
+!lwHorizOk
 ){
 
 const stackR =
@@ -1077,6 +1109,18 @@ horizLineEl.style.display =
 horizLineEl.classList.remove(
 "hidden"
 );
+
+}else{
+
+horizLineEl.classList.add(
+"hidden"
+);
+
+horizLineEl.style.removeProperty(
+"display"
+);
+
+}
 
 }else if(
 horizLineEl
@@ -1204,6 +1248,230 @@ return time.timestamp;
 }
 
 return null;
+
+}
+
+function segmentPlotTimeX(
+ts,
+t0,
+t1
+){
+
+const x0 =
+ts.timeToCoordinate(
+t0
+);
+
+const x1 =
+ts.timeToCoordinate(
+t1
+);
+
+const u0 =
+crosshairUnix(
+t0
+);
+
+const u1 =
+crosshairUnix(
+t1
+);
+
+if(
+!Number.isFinite(
+x0
+) ||
+!Number.isFinite(
+x1
+) ||
+u0 ===
+null ||
+u1 ===
+null
+){
+return null;
+}
+
+const dt =
+u1 - u0;
+
+if(
+dt <=
+0
+){
+return null;
+}
+
+return {
+x0,
+x1,
+t0:u0,
+dt
+};
+
+}
+
+/** Время по X в области без свечей (в т.ч. «будущее» справа от последней свечи). */
+function probeTimeFromPlotX(
+chart,
+series,
+x
+){
+
+const ts =
+chart.timeScale();
+
+const direct =
+crosshairUnix(
+ts.coordinateToTime?.(
+x
+)
+);
+
+if(
+direct !==
+null
+){
+return direct;
+}
+
+const bars =
+series?.data?.();
+
+if(
+!bars ||
+bars.length <
+2
+){
+return null;
+}
+
+for(
+let i =
+0;
+i <
+bars.length - 1;
+i++
+){
+
+const seg =
+segmentPlotTimeX(
+ts,
+bars[
+i
+].time,
+bars[
+i + 1
+].time
+);
+
+if(
+!seg
+){
+continue;
+}
+
+const minX =
+Math.min(
+seg.x0,
+seg.x1
+);
+
+const maxX =
+Math.max(
+seg.x0,
+seg.x1
+);
+
+if(
+x >=
+minX &&
+x <=
+maxX
+){
+const ratio =
+(seg.x1 - seg.x0) !==
+0
+? (x - seg.x0) / (seg.x1 - seg.x0)
+: 0;
+
+return seg.t0 + ratio * seg.dt;
+}
+
+}
+
+const prev =
+bars[
+bars.length - 2
+];
+
+const last =
+bars[
+bars.length - 1
+];
+
+const tail =
+segmentPlotTimeX(
+ts,
+prev.time,
+last.time
+);
+
+if(
+tail &&
+x >
+Math.max(
+tail.x0,
+tail.x1
+)
+){
+
+const ratio =
+(tail.x1 - tail.x0) !==
+0
+? (x - tail.x1) / (tail.x1 - tail.x0)
+: 0;
+
+return crosshairUnix(
+last.time
+) + ratio * tail.dt;
+}
+
+return null;
+
+}
+
+function isPlotXBeyondLastCandle(
+chart,
+series,
+x
+){
+
+const bars =
+series?.data?.();
+
+if(
+!bars?.length
+){
+return false;
+}
+
+const lastX =
+chart.timeScale().timeToCoordinate(
+bars[
+bars.length - 1
+].time
+);
+
+if(
+!Number.isFinite(
+lastX
+)
+){
+return false;
+}
+
+return x > lastX + 0.5;
 
 }
 

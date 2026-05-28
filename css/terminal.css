@@ -1062,7 +1062,7 @@ body.tablet-chart .price-scale-touch-strip{
   border-top:1px dashed #758696;
   box-sizing:border-box;
   pointer-events:none;
-  z-index:10;
+  z-index:25;
 }
 
 .tablet-probe-crosshair-h.hidden{
