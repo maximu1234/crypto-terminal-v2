@@ -266,50 +266,47 @@ function onPointerMove(
 e
 ){
 
-if(
-dragAlertId
-){
+if(dragAlertId){
 return;
 }
+
+syncPlusFromClient(
+e.clientX,
+e.clientY
+);
+
+}
+
+function syncPlusFromClient(
+clientX,
+clientY
+){
 
 const rect =
 wrapEl.getBoundingClientRect();
 const x =
-e.clientX -
-rect.left;
+clientX - rect.left;
 const y =
-e.clientY -
-rect.top;
+clientY - rect.top;
 const pw =
 plotWidth();
 const scaleW =
-rect.width -
-pw;
+rect.width - pw;
 
 if(
-x <
-pw -
-PLUS_HIT_PAD ||
-x >
-pw +
-scaleW +
-PLUS_HIT_PAD
+x < pw - PLUS_HIT_PAD ||
+x > pw + scaleW + PLUS_HIT_PAD
 ){
 hidePlus();
 return;
 }
 
 const price =
-series.coordinateToPrice(
-y
-);
+series.coordinateToPrice(y);
 
 if(
-price ==
-null ||
-!Number.isFinite(
-price
-)
+price == null ||
+!Number.isFinite(price)
 ){
 hidePlus();
 return;
@@ -322,29 +319,21 @@ plusBtn.style.top =
 plusBtn.style.transform =
 "translateY(-50%)";
 
-if(
-plusPriceEl
-){
+if(plusPriceEl){
 plusPriceEl.textContent =
-formatPrice(
-price
-);
+formatPrice(price);
 }
 
 plusBtn.dataset.pendingPrice =
-String(
-price
-);
-plusBtn.classList.remove(
-"hidden"
-);
+String(price);
+plusBtn.classList.remove("hidden");
 
 positionDomChartCrosshair({
 wrapEl,
 chart,
 series,
-clientX: e.clientX,
-clientY: e.clientY
+clientX,
+clientY
 });
 
 }
@@ -458,6 +447,43 @@ hidePlus();
 wrapEl.addEventListener(
 "pointerleave",
 onWrapPointerLeave
+);
+
+const onWrapTouchScaleMove =
+e=>{
+
+if(
+dragAlertId ||
+!e.touches ||
+e.touches.length !== 1
+){
+return;
+}
+
+const t =
+e.touches[0];
+
+if(!t){
+return;
+}
+
+syncPlusFromClient(
+t.clientX,
+t.clientY
+);
+
+};
+
+wrapEl.addEventListener(
+"touchstart",
+onWrapTouchScaleMove,
+{ capture:true, passive:true }
+);
+
+wrapEl.addEventListener(
+"touchmove",
+onWrapTouchScaleMove,
+{ capture:true, passive:true }
 );
 
 const onWrapDoubleClick =
@@ -860,6 +886,18 @@ true
 wrapEl.removeEventListener(
 "pointerleave",
 onWrapPointerLeave
+);
+
+wrapEl.removeEventListener(
+"touchstart",
+onWrapTouchScaleMove,
+true
+);
+
+wrapEl.removeEventListener(
+"touchmove",
+onWrapTouchScaleMove,
+true
 );
 
 window.removeEventListener(
