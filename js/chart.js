@@ -4427,7 +4427,7 @@ export function mountTabletPriceScaleTouch(
 chart,
 stripEl,
 chartEl,
-onInteraction
+callbacks
 ){
 
 if(
@@ -4438,6 +4438,25 @@ if(
 ){
 return ()=>{};
 }
+
+const hooks =
+typeof callbacks ===
+"function"
+? { onInteraction: callbacks }
+: (
+callbacks ||
+{}
+);
+
+const onInteraction =
+hooks.onInteraction ||
+(()=>{});
+const onDragStart =
+hooks.onDragStart ||
+(()=>{});
+const onDragEnd =
+hooks.onDragEnd ||
+(()=>{});
 
 let drag =
 null;
@@ -4631,6 +4650,7 @@ return;
 
 drag = null;
 detachDocListeners();
+onDragEnd();
 
 }
 
@@ -4722,6 +4742,8 @@ e.pointerId ??
 0,
 y:e.clientY
 };
+
+onDragStart();
 
 try{
 chart.priceScale(

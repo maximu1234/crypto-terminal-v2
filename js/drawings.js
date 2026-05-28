@@ -1479,6 +1479,9 @@ let coordRetryCount = 0;
 let chartPanRedrawRaf = 0;
 let chartPanActive = false;
 let chartPanWheelTimer = null;
+let priceScaleDragActive = false;
+let priceScaleDragRaf = 0;
+let priceScaleApplyPatchRestore = null;
 
 function defaultsStorageKey(name){
 
@@ -7768,6 +7771,56 @@ redraw();
 
 }
 
+function stopPriceScaleDragRedraw(){
+
+priceScaleDragActive = false;
+
+if(
+priceScaleDragRaf
+){
+cancelAnimationFrame(
+priceScaleDragRaf
+);
+priceScaleDragRaf = 0;
+}
+
+redraw();
+
+}
+
+function priceScaleDragRedrawLoop(){
+
+if(
+!alive ||
+!priceScaleDragActive
+){
+priceScaleDragRaf = 0;
+return;
+}
+
+redraw();
+priceScaleDragRaf =
+requestAnimationFrame(
+priceScaleDragRedrawLoop
+);
+
+}
+
+function startPriceScaleDragRedraw(){
+
+priceScaleDragActive = true;
+
+if(
+!priceScaleDragRaf
+){
+priceScaleDragRaf =
+requestAnimationFrame(
+priceScaleDragRedrawLoop
+);
+}
+
+}
+
 function chartPanRedrawLoop(){
 
 if(
@@ -9178,6 +9231,40 @@ redraw();
 
 };
 
+const priceScale =
+chart.priceScale(
+"right"
+);
+const origPriceScaleApplyOptions =
+priceScale.applyOptions.bind(
+priceScale
+);
+
+priceScaleApplyPatchRestore =
+()=>{
+priceScale.applyOptions =
+origPriceScaleApplyOptions;
+priceScaleApplyPatchRestore = null;
+};
+
+priceScale.applyOptions =
+function(opts){
+
+origPriceScaleApplyOptions(
+opts
+);
+
+if(
+!alive ||
+priceScaleDragActive
+){
+return;
+}
+
+scheduleRedraw();
+
+};
+
 chart.subscribeClick(clickHandler);
 chart.subscribeCrosshairMove(crosshairHandler);
 chart.timeScale().subscribeVisibleLogicalRangeChange(rangeHandler);
@@ -10321,6 +10408,8 @@ clearAllDrawingsOnChart,
 
 scheduleRedraw,
 scheduleDragRedraw,
+startPriceScaleDragRedraw,
+stopPriceScaleDragRedraw,
 
 blocksTabletChartPan(){
 
@@ -10531,6 +10620,13 @@ redrawRaf2 = 0;
 
 teardownChartPanRedraw?.();
 stopChartPanRedraw();
+stopPriceScaleDragRedraw();
+
+if(
+priceScaleApplyPatchRestore
+){
+priceScaleApplyPatchRestore();
+}
 
 chart.unsubscribeClick(clickHandler);
 chart.unsubscribeCrosshairMove(crosshairHandler);

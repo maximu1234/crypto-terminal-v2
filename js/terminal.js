@@ -56,7 +56,7 @@ mountAxisDoubleTapReset,
 TABLET_USE_CUSTOM_TOUCH_PAN,
 isTabletChartViewport,
 isUserCrosshairEvent
-} from "./chart.js?v=70";
+} from "./chart.js?v=71";
 
 import {
 connectKlineStream,
@@ -75,7 +75,7 @@ syncBackgroundAlertStreams
 
 import {
 initDrawings
-} from "./drawings.js?v=157";
+} from "./drawings.js?v=158";
 
 import {
 initCoinsMobileUi,
@@ -1220,15 +1220,21 @@ return true;
 
 }
 
+const priceScaleTouchHooks = {
+onInteraction(){
+priceHudCtrl.refresh?.();
+},
+onDragStart(){},
+onDragEnd(){}
+};
+
 mountTabletPriceScaleTouch(
 chart,
 document.getElementById(
 "price-scale-touch-strip"
 ),
 chartEl,
-()=>{
-priceHudCtrl.refresh?.();
-}
+priceScaleTouchHooks
 );
 
 applyTabletMainChartScroll(
@@ -1667,6 +1673,16 @@ console.error("Drawings init failed:", err);
 if(
 drawingTools
 ){
+
+priceScaleTouchHooks.onDragStart =
+()=>{
+drawingTools?.startPriceScaleDragRedraw?.();
+};
+
+priceScaleTouchHooks.onDragEnd =
+()=>{
+drawingTools?.stopPriceScaleDragRedraw?.();
+};
 
 void import("./price-alert-ui.js?v=26").then(({ mountPriceAlertUi })=>{
 mountPriceAlertUi({
