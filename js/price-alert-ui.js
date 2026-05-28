@@ -59,6 +59,8 @@ let dragAlertId =
 null;
 let suppressPlusClickUntil =
 0;
+let suppressPlusForScaleDrag =
+false;
 
 const plusBtn =
 document.createElement(
@@ -294,6 +296,13 @@ if(dragAlertId){
 return;
 }
 
+if(
+suppressPlusForScaleDrag &&
+e.pointerType === "mouse"
+){
+return;
+}
+
 syncPlusFromClient(
 e.clientX,
 e.clientY
@@ -517,6 +526,12 @@ return;
 }
 
 if(
+plusBtn.contains(e.target)
+){
+return;
+}
+
+if(
 !isInPriceScaleArea(
 t.clientX,
 t.clientY
@@ -719,6 +734,21 @@ e.target
 return;
 }
 
+if(
+e.pointerType === "mouse" &&
+isInPriceScaleArea(
+e.clientX,
+e.clientY
+)
+){
+suppressPlusForScaleDrag =
+true;
+hidePlus({
+release: false
+});
+return;
+}
+
 const hit =
 hitTestAlert(
 x,
@@ -880,6 +910,8 @@ onCrosshairRelease?.();
 
 dragAlertId =
 null;
+suppressPlusForScaleDrag =
+false;
 scheduleRedraw?.();
 
 }

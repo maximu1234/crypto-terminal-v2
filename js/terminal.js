@@ -751,6 +751,11 @@ if(
 return ()=>{};
 }
 
+const scaleStripEl =
+document.getElementById(
+"price-scale-touch-strip"
+);
+
 const menu =
 document.createElement("div");
 menu.className =
@@ -980,26 +985,28 @@ onDesktopContextMenu,
 true
 );
 
-chartWrapEl.addEventListener(
+if(scaleStripEl){
+scaleStripEl.addEventListener(
 "touchstart",
 onTouchStart,
 { capture:true, passive:true }
 );
-chartWrapEl.addEventListener(
+scaleStripEl.addEventListener(
 "touchmove",
 onTouchMove,
 { capture:true, passive:true }
 );
-chartWrapEl.addEventListener(
+scaleStripEl.addEventListener(
 "touchend",
 onTouchEnd,
 { capture:true, passive:true }
 );
-chartWrapEl.addEventListener(
+scaleStripEl.addEventListener(
 "touchcancel",
 onTouchEnd,
 { capture:true, passive:true }
 );
+}
 
 document.addEventListener(
 "pointerdown",
@@ -1028,26 +1035,28 @@ chartWrapEl.removeEventListener(
 onDesktopContextMenu,
 true
 );
-chartWrapEl.removeEventListener(
+if(scaleStripEl){
+scaleStripEl.removeEventListener(
 "touchstart",
 onTouchStart,
 true
 );
-chartWrapEl.removeEventListener(
+scaleStripEl.removeEventListener(
 "touchmove",
 onTouchMove,
 true
 );
-chartWrapEl.removeEventListener(
+scaleStripEl.removeEventListener(
 "touchend",
 onTouchEnd,
 true
 );
-chartWrapEl.removeEventListener(
+scaleStripEl.removeEventListener(
 "touchcancel",
 onTouchEnd,
 true
 );
+}
 document.removeEventListener(
 "pointerdown",
 onDocPointerDown,
@@ -1583,7 +1592,7 @@ if(
 drawingTools
 ){
 
-void import("./price-alert-ui.js?v=13").then(({ mountPriceAlertUi })=>{
+void import("./price-alert-ui.js?v=14").then(({ mountPriceAlertUi })=>{
 mountPriceAlertUi({
 chart,
 series: candleSeries,
