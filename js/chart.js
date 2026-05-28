@@ -955,8 +955,8 @@ chartR.left - stackR.left;
 
 const plotWidth =
 Math.max(
-0,
-chartR.width - scaleW
+1,
+chartR.width
 );
 
 horizLineEl.style.top =
