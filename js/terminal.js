@@ -75,7 +75,7 @@ syncBackgroundAlertStreams
 
 import {
 initDrawings
-} from "./drawings.js?v=156";
+} from "./drawings.js?v=157";
 
 import {
 initCoinsMobileUi,
@@ -1668,7 +1668,7 @@ if(
 drawingTools
 ){
 
-void import("./price-alert-ui.js?v=23").then(({ mountPriceAlertUi })=>{
+void import("./price-alert-ui.js?v=24").then(({ mountPriceAlertUi })=>{
 mountPriceAlertUi({
 chart,
 series: candleSeries,

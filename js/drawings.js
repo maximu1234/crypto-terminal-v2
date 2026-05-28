@@ -6015,8 +6015,19 @@ px,
 py,
 anchor.x,
 anchor.y,
-chartSize().w,
+getPlotWidth(),
 anchor.y
+);
+
+}
+
+function isPointerInPriceGutter(
+px
+){
+
+return (
+px >=
+getPlotWidth() - 4
 );
 
 }
@@ -6586,6 +6597,15 @@ return;
 
 const { x, y } =
 pointerFromEvent(e);
+
+if(
+e.pointerType === "mouse" &&
+isPointerInPriceGutter(
+x
+)
+){
+return;
+}
 
 /*
   iPad: тап в пустоту снимает выделение; drag только с выбранного объекта.
@@ -8489,7 +8509,7 @@ px,
 py,
 anchor.x,
 anchor.y,
-chartSize().w,
+getPlotWidth(),
 anchor.y
 );
 }

@@ -446,13 +446,18 @@ return;
 const showTouchStyle =
 opts.fromTouch === true ||
 IS_COARSE_TOUCH;
+const plusAnchorLeft =
+pw -
+(showTouchStyle
+? TOUCH_PLUS_OFFSET_PX
+: 0);
 
 plusBtn.style.left =
-`${pw - PLUS_ICON_W - (showTouchStyle ? TOUCH_PLUS_OFFSET_PX : 0)}px`;
+`${Math.round(plusAnchorLeft)}px`;
 plusBtn.style.top =
 `${y}px`;
 plusBtn.style.transform =
-"translateY(-50%)";
+"translate(-100%, -50%)";
 
 if(plusPriceEl){
 plusPriceEl.textContent =
