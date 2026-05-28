@@ -2061,8 +2061,12 @@ if(activeSymbol){
 symbolsToProcess.add(activeSymbol);
 }
 
-const processAllSymbols =
-symbolsToProcess.size === 0;
+if(
+symbolsToProcess.size ===
+0
+){
+return 0;
+}
 const symbolFailed =
 new Set();
 const symbolProcessed =
@@ -2113,7 +2117,6 @@ continue;
 }
 
 if(
-!processAllSymbols &&
 !symbolsToProcess.has(sym)
 ){
 continue;
@@ -2174,7 +2177,6 @@ id
 ){
 
 if(
-!processAllSymbols &&
 !symbolsToProcess.has(sym)
 ){
 continue;
@@ -2213,7 +2215,6 @@ continue;
 }
 
 if(
-!processAllSymbols &&
 !symbolsToProcess.has(sym)
 ){
 continue;

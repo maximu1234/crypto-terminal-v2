@@ -55,7 +55,7 @@ deleteDrawingFromCloud,
 flushDrawingsCloudPush,
 registerDrawingsChartRefresh,
 scheduleDrawingsCloudPush
-} from "./drawings-cloud-sync.js?v=30";
+} from "./drawings-cloud-sync.js?v=31";
 
 import {
 touchShapeRevision,
@@ -9890,7 +9890,7 @@ return;
 }
 
 void import(
-"./drawings-cloud-sync.js?v=30"
+"./drawings-cloud-sync.js?v=31"
 ).then(
 m=>{
 m.bumpDrawingsPullNow?.();

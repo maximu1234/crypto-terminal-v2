@@ -575,7 +575,7 @@ true;
 return;
 }
 
-void import("./drawings-cloud-sync.js?v=30").then(
+void import("./drawings-cloud-sync.js?v=31").then(
 m=>{
 m.scheduleDrawingsCloudPush();
 }
@@ -596,7 +596,7 @@ return Promise.resolve();
 pendingDrawingsCloudPush =
 false;
 
-return import("./drawings-cloud-sync.js?v=30").then(
+return import("./drawings-cloud-sync.js?v=31").then(
 m=>
 m.flushDrawingsCloudPush()
 );
@@ -899,7 +899,7 @@ function stopCloudSyncHelpers(){
 
 stopSyncPoll();
 
-void import("./drawings-cloud-sync.js?v=30").then(
+void import("./drawings-cloud-sync.js?v=31").then(
 m=>{
 m.stopDrawingsCloudSync();
 }
@@ -991,7 +991,7 @@ function handleRealtimeSettingsRow(row){
 
 handleRealtimeFavoritesRow(row);
 
-void import("./drawings-cloud-sync.js?v=30").then(
+void import("./drawings-cloud-sync.js?v=31").then(
 m=>
 m.pullDrawingsFromCloud()
 );
@@ -1265,7 +1265,7 @@ return cloud.favorites;
 export async function mergeDrawingsWithCloud(){
 
 const drawingsCloud =
-await import("./drawings-cloud-sync.js?v=30");
+await import("./drawings-cloud-sync.js?v=31");
 
 await drawingsCloud.hydrateDrawingsAfterAuth();
 
@@ -1275,7 +1275,7 @@ return collectAllLocalDrawings();
 
 export async function pullDrawingsIfCloudNewer(){
 
-await import("./drawings-cloud-sync.js?v=30").then(
+await import("./drawings-cloud-sync.js?v=31").then(
 m=>
 m.pullDrawingsFromCloud()
 );
@@ -1296,7 +1296,7 @@ await m.reconcileLocalFavoritesWithCloud();
 async function syncDrawingsWithCloud(){
 
 const m =
-await import("./drawings-cloud-sync.js?v=30");
+await import("./drawings-cloud-sync.js?v=31");
 
 await m.flushDrawingsCloudPush();
 
@@ -1885,7 +1885,7 @@ await import("./favorites-cloud-sync.js?v=2");
 await favoritesCloud.reconcileLocalFavoritesWithCloud();
 
 const drawingsCloud =
-await import("./drawings-cloud-sync.js?v=30");
+await import("./drawings-cloud-sync.js?v=31");
 
 if(
 !isAlertsPage()
@@ -2141,7 +2141,7 @@ favoritesCloud.pullFavoritesFromCloudNow()
 }else{
 
 const drawingsCloud =
-await import("./drawings-cloud-sync.js?v=30");
+await import("./drawings-cloud-sync.js?v=31");
 
 [
 drawSyms,
