@@ -850,6 +850,15 @@ y
 )
 );
 
+const scaleStrip =
+document.getElementById(
+"price-scale-touch-strip"
+);
+
+const scaleW =
+scaleStrip?.offsetWidth ??
+56;
+
 if(
 chartsStackEl &&
 linkedVertEl
@@ -875,6 +884,18 @@ chart.timeScale().coordinateToTime?.(
 x
 );
 
+const probeTime =
+time ??
+chart.timeScale().coordinateToTime?.(
+Math.max(
+0,
+Math.min(
+chartR.width - scaleW - 1,
+x
+)
+)
+);
+
 if(
 series
 ){
@@ -886,13 +907,13 @@ y
 
 if(
 price != null &&
-time != null
+probeTime != null
 ){
 
 try{
 chart.setCrosshairPosition(
 price,
-time,
+probeTime,
 series
 );
 }catch{
@@ -932,15 +953,6 @@ topInStack
 const plotLeft =
 chartR.left - stackR.left;
 
-const scaleStrip =
-document.getElementById(
-"price-scale-touch-strip"
-);
-
-const scaleW =
-scaleStrip?.offsetWidth ??
-56;
-
 const plotWidth =
 Math.max(
 0,
@@ -970,7 +982,7 @@ horizLineEl.classList.remove(
 }
 
 if(
-time == null
+probeTime == null
 ){
 
 if(
@@ -987,7 +999,7 @@ return null;
 
 updateCrosshairAxisLabels({
 param:{
-time,
+time: probeTime,
 point:{
 x
 }
@@ -996,11 +1008,11 @@ timeLabelEl
 });
 
 onTime?.(
-time
+probeTime
 );
 
 return {
-time,
+time: probeTime,
 x,
 y
 };
