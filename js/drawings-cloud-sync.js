@@ -122,8 +122,23 @@ let drawingsSyncPausedUntil =
 const REMOTE_SYNC_MS =
 400;
 
+const DRAWINGS_SYNC_DEBUG =
+false;
+
 const dirtyDrawingSymbols =
 new Set();
+
+function drawingsDebugLog(
+...args
+){
+
+if(
+DRAWINGS_SYNC_DEBUG
+){
+console.log(...args);
+}
+
+}
 
 function normalizeSymbolKey(
 symbol
@@ -451,7 +466,7 @@ text.slice(
 return false;
 }
 
-console.log(
+drawingsDebugLog(
 "[drawings] ✓ Supabase (worker):",
 sym,
 shapeId
@@ -724,7 +739,7 @@ Prefer: "return=minimal"
 );
 
 if(retry.ok){
-console.log(
+drawingsDebugLog(
 "[drawings] purge REST ok (retry):",
 all
 ? "all"
@@ -746,7 +761,7 @@ text.slice(
 return false;
 }
 
-console.log(
+drawingsDebugLog(
 "[drawings] purge REST ok:",
 all
 ? "all"
@@ -2071,6 +2086,8 @@ const symbolFailed =
 new Set();
 const symbolProcessed =
 new Set();
+const symbolFoundAnyLocalData =
+new Set();
 
 let localShapeCount =
 0;
@@ -2114,6 +2131,13 @@ list
 )
 ){
 continue;
+}
+
+if(
+list.length >
+0
+){
+symbolFoundAnyLocalData.add(sym);
 }
 
 if(
@@ -2182,6 +2206,7 @@ if(
 continue;
 }
 
+symbolFoundAnyLocalData.add(sym);
 symbolProcessed.add(sym);
 
 if(
@@ -2220,6 +2245,13 @@ if(
 continue;
 }
 
+if(
+Object.keys(tombs).length >
+0
+){
+symbolFoundAnyLocalData.add(sym);
+}
+
 symbolProcessed.add(sym);
 
 for(
@@ -2253,6 +2285,16 @@ dirtyDrawingSymbols.delete(sym);
 }
 }
 
+for(
+const sym of symbolsToProcess
+){
+if(
+!symbolFoundAnyLocalData.has(sym)
+){
+dirtyDrawingSymbols.delete(sym);
+}
+}
+
 if(
 pushed >
 0
@@ -2272,7 +2314,7 @@ pushed,
 "фигур. Empty Caches кэш не очищает — для полного сброса: Алерты → «Удалить»."
 );
 }else{
-console.log(
+drawingsDebugLog(
 "[drawings] Supabase: сохранено фигур —",
 pushed
 );
@@ -2426,7 +2468,7 @@ if(
 count >
 0
 ){
-console.log(
+drawingsDebugLog(
 "[drawings] миграция из JSON:",
 count,
 "фигур"
@@ -2853,7 +2895,7 @@ notifyDrawings(
 changed
 );
 
-console.log(
+drawingsDebugLog(
 "[drawings] reconcile: обновлено символов",
 changed.length
 );
@@ -2965,7 +3007,7 @@ remote: true
 );
 }
 
-console.log(
+drawingsDebugLog(
 "[drawings] Supabase пусто — локальные рисунки сняты с графиков"
 );
 }
@@ -3169,7 +3211,7 @@ if(
 status ===
 "SUBSCRIBED"
 ){
-console.log(
+drawingsDebugLog(
 "[drawings] realtime: user_drawings"
 );
 }
