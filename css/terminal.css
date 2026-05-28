@@ -1247,3 +1247,34 @@ body.tablet-chart .price-scale-touch-strip{
   text-overflow:ellipsis;
   white-space:nowrap;
 }
+
+.chart-scale-context-menu{
+  position:fixed;
+  z-index:12000;
+  min-width:190px;
+  background:#111827;
+  border:1px solid rgba(148,163,184,.35);
+  border-radius:8px;
+  box-shadow:0 12px 28px rgba(0,0,0,.45);
+  padding:6px;
+}
+
+.chart-scale-context-menu.hidden{
+  display:none;
+}
+
+.chart-scale-context-menu-item{
+  width:100%;
+  border:0;
+  background:transparent;
+  color:#e5e7eb;
+  text-align:left;
+  font:500 13px/1.2 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  padding:8px 10px;
+  border-radius:6px;
+  cursor:pointer;
+}
+
+.chart-scale-context-menu-item:hover{
+  background:rgba(255,255,255,.08);
+}

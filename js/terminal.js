@@ -87,6 +87,10 @@ syncCoinsTfLabel
 let currentDataset = "crypto";
 let currentTF = "60";
 let currentSymbol = "BTCUSDT";
+const isCoinsPage =
+window.location.pathname.includes("/coins");
+let isCoinsChartInverted =
+false;
 
 /** То, что показано в #current-symbol (не сбрасывается на BTC при переключении). */
 let displaySymbol =
@@ -193,7 +197,8 @@ lastViewByMarket[m] = defaultLastViewEntry();
 return {
 market:"crypto",
 sortByMarket,
-lastViewByMarket
+lastViewByMarket,
+invertChart:false
 };
 
 }
@@ -406,6 +411,9 @@ parsed?.lastViewByMarket?.[m]
 
 }
 
+prefs.invertChart =
+!!parsed?.invertChart;
+
 try{
 
 localStorage.removeItem(
@@ -469,6 +477,9 @@ prefs?.lastViewByMarket?.[m]
 );
 }
 
+out.invertChart =
+!!prefs?.invertChart;
+
 localStorage.setItem(
 COINS_PREFS_KEY,
 JSON.stringify(out)
@@ -503,6 +514,13 @@ prefs.lastViewByMarket[currentDataset] = {
 symbol:currentSymbol,
 tf:currentTF
 };
+
+if(
+isCoinsPage
+){
+prefs.invertChart =
+isCoinsChartInverted;
+}
 
 writeCoinsPrefs(prefs);
 
@@ -670,7 +688,400 @@ document.getElementById(
 "tablet-probe-touch-layer"
 );
 
+function applyCoinsChartInversion(
+inverted
+){
+
+isCoinsChartInverted =
+!!inverted;
+
+try{
+chart.priceScale(
+"right"
+).applyOptions({
+invertScale:
+isCoinsChartInverted
+});
+}catch{
+/* ignore */
+}
+
+}
+
+function persistCoinsChartInversion(){
+
+if(
+!isCoinsPage
+){
+return;
+}
+
+const prefs =
+readCoinsPrefs();
+
+prefs.invertChart =
+isCoinsChartInverted;
+
+writeCoinsPrefs(prefs);
+
+}
+
+function toggleCoinsChartInversion(){
+
+if(
+!isCoinsPage
+){
+return;
+}
+
+applyCoinsChartInversion(
+!isCoinsChartInverted
+);
+persistCoinsChartInversion();
+
+}
+
+function mountCoinsScaleInvertMenu(){
+
+if(
+!isCoinsPage ||
+!chartWrapEl ||
+!chartEl
+){
+return ()=>{};
+}
+
+const menu =
+document.createElement("div");
+menu.className =
+"chart-scale-context-menu hidden";
+
+const item =
+document.createElement("button");
+item.type = "button";
+item.className =
+"chart-scale-context-menu-item";
+item.textContent =
+"Инвертировать график";
+menu.appendChild(item);
+document.body.appendChild(menu);
+
+let touchHoldTimer =
+null;
+let touchStartX = 0;
+let touchStartY = 0;
+
+function hideMenu(){
+menu.classList.add("hidden");
+}
+
+function showMenuAt(
+clientX,
+clientY
+){
+
+const margin = 8;
+menu.classList.remove("hidden");
+menu.style.left = "0px";
+menu.style.top = "0px";
+
+const rect =
+menu.getBoundingClientRect();
+
+let left =
+Math.round(clientX);
+let top =
+Math.round(clientY);
+
+if(
+left + rect.width >
+window.innerWidth - margin
+){
+left =
+window.innerWidth - margin - rect.width;
+}
+
+if(
+top + rect.height >
+window.innerHeight - margin
+){
+top =
+window.innerHeight - margin - rect.height;
+}
+
+left = Math.max(
+margin,
+left
+);
+top = Math.max(
+margin,
+top
+);
+
+menu.style.left =
+`${left}px`;
+menu.style.top =
+`${top}px`;
+
+}
+
+function isInPriceScale(
+clientX,
+clientY
+){
+
+const rect =
+chartEl.getBoundingClientRect();
+const localX =
+clientX - rect.left;
+const localY =
+clientY - rect.top;
+const scaleW =
+chart.priceScale(
+"right"
+)?.width?.() || 56;
+
+return (
+localY >= 0 &&
+localY <= rect.height &&
+localX >= rect.width - scaleW &&
+localX <= rect.width
+);
+
+}
+
+const onDesktopContextMenu =
+e=>{
+
+if(
+!isInPriceScale(
+e.clientX,
+e.clientY
+)
+){
+hideMenu();
+return;
+}
+
+e.preventDefault();
+e.stopPropagation();
+showMenuAt(
+e.clientX,
+e.clientY
+);
+
+};
+
+const onTouchStart =
+e=>{
+
+if(
+!e.touches ||
+e.touches.length !== 1
+){
+return;
+}
+
+const t = e.touches[0];
+
+if(
+!isInPriceScale(
+t.clientX,
+t.clientY
+)
+){
+return;
+}
+
+touchStartX = t.clientX;
+touchStartY = t.clientY;
+
+clearTimeout(
+touchHoldTimer
+);
+
+touchHoldTimer =
+setTimeout(
+()=>{
+showMenuAt(
+touchStartX,
+touchStartY
+);
+},
+420
+);
+
+};
+
+const onTouchMove =
+e=>{
+
+if(
+!touchHoldTimer ||
+!e.touches ||
+e.touches.length !== 1
+){
+return;
+}
+
+const t = e.touches[0];
+const dx =
+t.clientX - touchStartX;
+const dy =
+t.clientY - touchStartY;
+
+if(
+dx * dx + dy * dy >
+64
+){
+clearTimeout(
+touchHoldTimer
+);
+touchHoldTimer =
+null;
+}
+
+};
+
+const onTouchEnd = ()=>{
+clearTimeout(
+touchHoldTimer
+);
+touchHoldTimer =
+null;
+};
+
+const onDocPointerDown =
+e=>{
+
+if(
+menu.contains(e.target)
+){
+return;
+}
+
+hideMenu();
+
+};
+
+item.addEventListener(
+"click",
+e=>{
+e.preventDefault();
+e.stopPropagation();
+toggleCoinsChartInversion();
+hideMenu();
+}
+);
+
+chartWrapEl.addEventListener(
+"contextmenu",
+onDesktopContextMenu,
+true
+);
+
+chartWrapEl.addEventListener(
+"touchstart",
+onTouchStart,
+{ capture:true, passive:true }
+);
+chartWrapEl.addEventListener(
+"touchmove",
+onTouchMove,
+{ capture:true, passive:true }
+);
+chartWrapEl.addEventListener(
+"touchend",
+onTouchEnd,
+{ capture:true, passive:true }
+);
+chartWrapEl.addEventListener(
+"touchcancel",
+onTouchEnd,
+{ capture:true, passive:true }
+);
+
+document.addEventListener(
+"pointerdown",
+onDocPointerDown,
+true
+);
+window.addEventListener(
+"blur",
+hideMenu
+);
+window.addEventListener(
+"resize",
+hideMenu
+);
+window.addEventListener(
+"scroll",
+hideMenu,
+true
+);
+
+return ()=>{
+hideMenu();
+clearTimeout(touchHoldTimer);
+chartWrapEl.removeEventListener(
+"contextmenu",
+onDesktopContextMenu,
+true
+);
+chartWrapEl.removeEventListener(
+"touchstart",
+onTouchStart,
+true
+);
+chartWrapEl.removeEventListener(
+"touchmove",
+onTouchMove,
+true
+);
+chartWrapEl.removeEventListener(
+"touchend",
+onTouchEnd,
+true
+);
+chartWrapEl.removeEventListener(
+"touchcancel",
+onTouchEnd,
+true
+);
+document.removeEventListener(
+"pointerdown",
+onDocPointerDown,
+true
+);
+window.removeEventListener(
+"blur",
+hideMenu
+);
+window.removeEventListener(
+"resize",
+hideMenu
+);
+window.removeEventListener(
+"scroll",
+hideMenu,
+true
+);
+menu.remove();
+};
+
+}
+
 markTabletChartBody();
+
+if(
+isCoinsPage
+){
+applyCoinsChartInversion(
+readCoinsPrefs().invertChart === true
+);
+}
+
+mountCoinsScaleInvertMenu();
 
 let priceHudCtrl = {
 stop(){},
