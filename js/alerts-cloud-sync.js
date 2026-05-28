@@ -90,7 +90,10 @@ const IOS_SAFARI_VISIBLE_PULL_MS =
 3500;
 
 const VISIBLE_PULL_FALLBACK_MS =
-5000;
+2000;
+
+const UNSYNCED_LOCAL_KEEP_MS =
+30000;
 
 let lastRemoteAlertMode = null;
 
@@ -1229,82 +1232,6 @@ userId: sync.user.id
 };
 }
 
-function isJwtExpiredError(err){
-
-const msg =
-String(
-err?.message ||
-err ||
-""
-);
-
-return (
-/JWT expired/i.test(msg) ||
-/PGRST303/i.test(msg) ||
-/invalid jwt/i.test(msg)
-);
-
-}
-
-function isJwtExpiredText(text){
-
-const msg =
-String(text || "");
-
-return (
-/JWT expired/i.test(msg) ||
-/PGRST303/i.test(msg) ||
-/invalid jwt/i.test(msg)
-);
-
-}
-
-async function refreshTelegramRestAuth(){
-
-try{
-await ensureCloudLoginResolved(10000);
-}catch{
-/* ignore */
-}
-
-async function refreshRestAuthForUser(ctx){
-
-try{
-await ensureCloudLoginResolved(10000);
-}catch{
-/* ignore */
-}
-
-const tokenFromSync =
-readAlertTokenSync()?.token;
-
-if(tokenFromSync){
-return tokenFromSync;
-}
-
-const persisted =
-readPersistedAuthSession();
-
-if(
-persisted?.access_token
-){
-return persisted.access_token;
-}
-
-if(
-ctx?.sb
-){
-return getAccessTokenForUser(ctx);
-}
-
-return null;
-
-}
-
-return resolveUserRestAuth();
-
-}
-
 const auth =
 await resolveAlertAuthFast();
 
@@ -1361,6 +1288,82 @@ err?.message || err
 return null;
 
 }
+
+}
+
+function isJwtExpiredError(err){
+
+const msg =
+String(
+err?.message ||
+err ||
+""
+);
+
+return (
+/JWT expired/i.test(msg) ||
+/PGRST303/i.test(msg) ||
+/invalid jwt/i.test(msg)
+);
+
+}
+
+function isJwtExpiredText(text){
+
+const msg =
+String(text || "");
+
+return (
+/JWT expired/i.test(msg) ||
+/PGRST303/i.test(msg) ||
+/invalid jwt/i.test(msg)
+);
+
+}
+
+async function refreshTelegramRestAuth(){
+
+try{
+await ensureCloudLoginResolved(10000);
+}catch{
+/* ignore */
+}
+
+return resolveUserRestAuth();
+
+}
+
+async function refreshRestAuthForUser(ctx){
+
+try{
+await ensureCloudLoginResolved(10000);
+}catch{
+/* ignore */
+}
+
+const tokenFromSync =
+readAlertTokenSync()?.token;
+
+if(tokenFromSync){
+return tokenFromSync;
+}
+
+const persisted =
+readPersistedAuthSession();
+
+if(
+persisted?.access_token
+){
+return persisted.access_token;
+}
+
+if(
+ctx?.sb
+){
+return getAccessTokenForUser(ctx);
+}
+
+return null;
 
 }
 
@@ -4716,8 +4719,18 @@ if(
 !a.cloudSynced &&
 !a.cloudId
 ){
+const localTs =
+Number(a.priceUpdatedAt) ||
+Number(a.createdAt) ||
+0;
+
+if(
+Date.now() - localTs <=
+UNSYNCED_LOCAL_KEEP_MS
+){
 next.push(a);
 seen.add(key);
+}
 }
 
 }
@@ -5090,9 +5103,14 @@ void pushUnsyncedAlerts();
 return;
 }
 
+void ensureCloudLoginResolved(8000)
+.catch(()=>null)
+.then(()=>
 pullRegistryFromCloudNow({
 immediate: true
-}).catch(err=>{
+})
+)
+.catch(err=>{
 console.warn(
 "alert cloud pull:",
 err?.message || err
