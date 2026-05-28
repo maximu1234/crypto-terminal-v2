@@ -1148,7 +1148,8 @@ let cancelTabletPanGesture =
 function emitChartProbeCrosshair(
 active,
 clientX = null,
-clientY = null
+clientY = null,
+price = null
 ){
 
 window.dispatchEvent(
@@ -1158,7 +1159,8 @@ new CustomEvent(
 detail:{
 active: !!active,
 clientX,
-clientY
+clientY,
+price
 }
 }
 )
@@ -1645,7 +1647,7 @@ if(
 drawingTools
 ){
 
-void import("./price-alert-ui.js?v=18").then(({ mountPriceAlertUi })=>{
+void import("./price-alert-ui.js?v=19").then(({ mountPriceAlertUi })=>{
 mountPriceAlertUi({
 chart,
 series: candleSeries,
@@ -1929,6 +1931,7 @@ onProbeAt(
 clientX,
 clientY
 ){
+const probe =
 positionTabletProbeCrosshair({
 chart,
 series:candleSeries,
@@ -1944,7 +1947,8 @@ onTime:updateRsiHudFromCrosshairTime
 emitChartProbeCrosshair(
 true,
 clientX,
-clientY
+clientY,
+probe?.price ?? null
 );
 }
 }

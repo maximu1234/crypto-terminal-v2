@@ -350,7 +350,9 @@ return;
 }
 
 const price =
-series.coordinateToPrice(y);
+Number.isFinite(opts.probePrice)
+? Number(opts.probePrice)
+: series.coordinateToPrice(y);
 
 if(
 price == null ||
@@ -655,6 +657,8 @@ const x =
 Number(e.detail.clientX);
 const y =
 Number(e.detail.clientY);
+const probePrice =
+Number(e.detail.price);
 
 if(
 !Number.isFinite(x) ||
@@ -668,7 +672,8 @@ x,
 y,
 {
 fromTouch: true,
-forceShowFromProbe: true
+forceShowFromProbe: true,
+probePrice
 }
 );
 
