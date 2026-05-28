@@ -75,7 +75,7 @@ ensureDomChartCrosshair,
 positionDomChartCrosshair,
 hideDomChartCrosshair,
 fullCrosshairOptions
-} from "./chart.js?v=78";
+} from "./chart.js?v=79";
 
 /* Сетка 2×9: чётный индекс — левый столбец, нечётный — правый */
 const DEFAULT_FIB_SPEC = Object.freeze([
@@ -1481,6 +1481,8 @@ let chartPanActive = false;
 let chartPanWheelTimer = null;
 let priceScaleDragActive = false;
 let priceScalePaintRaf = 0;
+let manualPriceScaleDrag = null;
+let seriesPriceToCoordinateOrig = null;
 let priceScaleSyncPending = false;
 let priceScaleApplyPatchRestore = null;
 
@@ -4284,6 +4286,199 @@ return { time, price };
 
 }
 
+
+function readChartScaleMargins(){
+
+try{
+
+const o =
+chart.priceScale(
+"right"
+).options();
+
+return {
+top:
+o.scaleMargins?.top ??
+0.12,
+bottom:
+o.scaleMargins?.bottom ??
+0.12
+};
+
+}catch{
+
+return {
+top:0.12,
+bottom:0.12
+};
+
+}
+
+}
+
+function isPriceScaleInverted(){
+
+try{
+return chart.priceScale(
+"right"
+).options().invertScale ===
+true;
+}catch{
+return false;
+}
+
+}
+
+function manualPriceToCoordinate(
+price
+){
+
+const s =
+manualPriceScaleDrag;
+
+if(
+!s ||
+!Number.isFinite(
+price
+)
+){
+return null;
+}
+
+const {
+minPrice,
+maxPrice,
+top,
+bottom,
+h
+} =
+s;
+
+const plotTop =
+h * top;
+
+const plotHeight =
+h * (
+1 - top - bottom
+);
+
+if(
+plotHeight <=
+0
+){
+return null;
+}
+
+const inverted =
+s.inverted;
+
+if(
+s.logarithmic &&
+minPrice >
+0 &&
+maxPrice >
+0 &&
+price >
+0
+){
+
+const logMin =
+Math.log(
+minPrice
+);
+
+const logMax =
+Math.log(
+maxPrice
+);
+
+const logSpan =
+logMax - logMin;
+
+if(
+!Number.isFinite(logSpan) ||
+logSpan ===
+0
+){
+return null;
+}
+
+const logP =
+Math.log(
+price
+);
+
+const ratio =
+inverted
+? (
+logP - logMin
+) / logSpan
+: (
+logMax - logP
+) / logSpan;
+
+return plotTop + ratio * plotHeight;
+
+}
+
+const span =
+maxPrice - minPrice;
+
+if(
+!Number.isFinite(span) ||
+span ===
+0
+){
+return null;
+}
+
+const ratio =
+inverted
+? (
+price - minPrice
+) / span
+: (
+maxPrice - price
+) / span;
+
+return plotTop + ratio * plotHeight;
+
+}
+
+function plotPriceToCoordinate(
+price
+){
+
+if(
+priceScaleDragActive
+){
+
+if(
+manualPriceScaleDrag
+){
+const y =
+manualPriceToCoordinate(
+price
+);
+
+if(
+y !=
+null
+){
+return y;
+}
+}
+
+return null;
+
+}
+
+return series.priceToCoordinate(
+price
+);
+
+}
+
 function toXY(point){
 
 if(
@@ -4298,7 +4493,37 @@ return null;
 }
 
 const x = xFromTime(point.time);
-const y = series.priceToCoordinate(point.price);
+const y = plotPriceToCoordinate(point.price);
+
+if(x == null || y == null){
+return null;
+}
+
+return { x, y };
+
+}
+
+function positionBadgeFont(){
+
+return '600 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif';
+
+}
+
+function toXY(point){
+
+if(
+!point ||
+point.time ==
+null ||
+!Number.isFinite(
+point.price
+)
+){
+return null;
+}
+
+const x = xFromTime(point.time);
+const y = plotPriceToCoordinate(point.price);
 
 if(x == null || y == null){
 return null;
@@ -7811,6 +8036,114 @@ redraw();
 
 }
 
+function ensureSeriesPriceToCoordinatePatch(){
+
+if(
+seriesPriceToCoordinateOrig
+){
+return;
+}
+
+seriesPriceToCoordinateOrig =
+series.priceToCoordinate.bind(
+series
+);
+
+series.priceToCoordinate =
+function(
+price
+){
+
+if(
+priceScaleDragActive
+){
+
+if(
+manualPriceScaleDrag
+){
+const y =
+manualPriceToCoordinate(
+price
+);
+
+if(
+y !=
+null
+){
+return y;
+}
+}
+
+return null;
+
+}
+
+return seriesPriceToCoordinateOrig(
+price
+);
+
+};
+
+}
+
+function restoreSeriesPriceToCoordinate(){
+
+if(
+!seriesPriceToCoordinateOrig
+){
+return;
+}
+
+series.priceToCoordinate =
+seriesPriceToCoordinateOrig;
+seriesPriceToCoordinateOrig =
+null;
+
+}
+
+function applyLockedPriceRangeFromChart(
+range
+){
+
+if(
+!range ||
+!Number.isFinite(
+range.min
+) ||
+!Number.isFinite(
+range.max
+) ||
+range.min ===
+range.max
+){
+manualPriceScaleDrag =
+null;
+
+return false;
+}
+
+const m =
+readChartScaleMargins();
+
+manualPriceScaleDrag =
+{
+minPrice:range.min,
+maxPrice:range.max,
+top:m.top,
+bottom:m.bottom,
+h:chartSize().h,
+inverted:
+isPriceScaleInverted(),
+logarithmic:
+isSeriesLogarithmic(
+series
+)
+};
+
+return true;
+
+}
+
 function priceScaleDragPaintLoop(){
 
 if(
@@ -7857,18 +8190,53 @@ priceScalePaintRaf = 0;
 
 }
 
-function beginPriceScaleDragRedraw(){
+function beginPriceScaleDragRedraw(
+range
+){
 
 priceScaleDragActive = true;
+ensureSeriesPriceToCoordinatePatch();
+applyLockedPriceRangeFromChart(
+range
+);
 redraw();
 startPriceScalePaintLoop();
 
 }
 
+function applyPriceScaleFrame(
+range
+){
+
+if(
+!priceScaleDragActive
+){
+return;
+}
+
+applyLockedPriceRangeFromChart(
+range
+);
+
+}
+
+function redrawDuringPriceScaleDrag(
+range
+){
+
+applyPriceScaleFrame(
+range
+);
+
+}
+
 function endPriceScaleDragRedraw(){
 
+manualPriceScaleDrag =
+null;
 priceScaleDragActive = false;
 stopPriceScalePaintLoop();
+restoreSeriesPriceToCoordinate();
 schedulePriceScaleSyncedRedraw();
 
 }
@@ -10462,6 +10830,7 @@ scheduleRedraw,
 scheduleDragRedraw,
 schedulePriceScaleSyncedRedraw,
 beginPriceScaleDragRedraw,
+applyPriceScaleFrame,
 endPriceScaleDragRedraw,
 
 blocksTabletChartPan(){
