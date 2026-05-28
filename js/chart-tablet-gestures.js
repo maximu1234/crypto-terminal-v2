@@ -878,6 +878,23 @@ e.preventDefault();
 
 }
 
+function onSelectStart(
+e
+){
+
+if(
+mode ===
+"pending" ||
+mode ===
+"crosshair" ||
+mode ===
+"pan"
+){
+e.preventDefault();
+}
+
+}
+
 const capDown = {
 capture:true,
 passive:false
@@ -916,6 +933,12 @@ onWrapPinchEnd,
 chartWrapEl.addEventListener(
 "contextmenu",
 onContextMenu,
+capDown
+);
+
+chartWrapEl.addEventListener(
+"selectstart",
+onSelectStart,
 capDown
 );
 
@@ -959,6 +982,12 @@ onWrapPinchEnd,
 chartWrapEl.removeEventListener(
 "contextmenu",
 onContextMenu,
+capDown
+);
+
+chartWrapEl.removeEventListener(
+"selectstart",
+onSelectStart,
 capDown
 );
 

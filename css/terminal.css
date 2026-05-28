@@ -790,6 +790,14 @@ body.tablet-chart .tablet-probe-touch-layer{
   -webkit-tap-highlight-color:transparent;
 }
 
+/* iPad/iPhone: полностью выключаем выделение/лупу внутри области графика */
+body.tablet-chart #charts-stack,
+body.tablet-chart #charts-stack *{
+  -webkit-user-select:none;
+  user-select:none;
+  -webkit-touch-callout:none;
+}
+
 body.tablet-chart .tablet-probe-touch-layer{
   pointer-events:auto;
 }
