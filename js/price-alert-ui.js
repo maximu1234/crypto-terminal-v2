@@ -17,7 +17,8 @@ getTelegramChatId
 
 import {
 formatPrice,
-hideDomChartCrosshair
+hideDomChartCrosshair,
+positionDomChartCrosshair
 } from "./chart.js?v=61";
 
 const PLUS_ICON_W =
@@ -304,6 +305,14 @@ plusBtn.classList.remove(
 "hidden"
 );
 
+positionDomChartCrosshair({
+wrapEl,
+chart,
+series,
+clientX: e.clientX,
+clientY: e.clientY
+});
+
 }
 
 plusBtn.addEventListener(
@@ -375,6 +384,19 @@ plusBtn.addEventListener(
 "pointerdown",
 e=>{
 e.stopPropagation();
+}
+);
+
+plusBtn.addEventListener(
+"pointermove",
+e=>{
+positionDomChartCrosshair({
+wrapEl,
+chart,
+series,
+clientX: e.clientX,
+clientY: e.clientY
+});
 }
 );
 

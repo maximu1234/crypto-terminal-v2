@@ -76,7 +76,7 @@ toggle.setAttribute(
 
 function openNav(){
 
-void import("./auth-ui.js?v=23").then(m=>{
+void import("./auth-ui.js?v=24").then(m=>{
 m.closeCloudSettingsDropdown?.();
 }).catch(()=>{});
 

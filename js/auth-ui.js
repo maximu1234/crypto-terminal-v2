@@ -76,6 +76,9 @@ path.includes("/system/")
 let settingsDropdownReady = false;
 let refreshSettingsAuthUi = ()=>{};
 
+const AUTH_UI_LAST_EMAIL_KEY =
+"cloud_auth_last_email_v1";
+
 const MOBILE_NAV_MQ =
 window.matchMedia(
 "(max-width: 640px)"
@@ -508,11 +511,52 @@ return !!readAlertTokenSync()?.user;
 
 function getAuthUiEmail(){
 
-return (
+const knownEmail =
 getCloudUserEmail() ||
 readAlertTokenSync()?.user?.email ||
-""
+readRememberedAuthEmail();
+
+if(knownEmail){
+rememberAuthEmail(knownEmail);
+}
+
+return knownEmail || "";
+
+}
+
+function rememberAuthEmail(
+email
+){
+
+const value =
+String(email || "").trim();
+
+if(!value){
+return;
+}
+
+try{
+localStorage.setItem(
+AUTH_UI_LAST_EMAIL_KEY,
+value
 );
+}catch{
+/* ignore */
+}
+
+}
+
+function readRememberedAuthEmail(){
+
+try{
+return String(
+localStorage.getItem(
+AUTH_UI_LAST_EMAIL_KEY
+) || ""
+).trim();
+}catch{
+return "";
+}
 
 }
 
@@ -993,6 +1037,10 @@ void refreshTelegramOne();
 
 loggedIn.classList.add("hidden");
 loggedOut.classList.remove("hidden");
+if(emailInput){
+emailInput.value =
+getAuthUiEmail() || "";
+}
 
 if(cloudSdkError){
 setHint(cloudSdkError, true);
@@ -1015,7 +1063,7 @@ tgEditMode = false;
 
 }
 
-sendBtn?.addEventListener("click", async()=>{
+const submitAuthEmail = async()=>{
 
 const email =
 emailInput?.value?.trim();
@@ -1028,6 +1076,7 @@ true
 return;
 }
 
+rememberAuthEmail(email);
 sendBtn.disabled = true;
 setHint(
 "Отправляем ссылку…",
@@ -1055,7 +1104,25 @@ true
 
 sendBtn.disabled = false;
 
-});
+};
+
+sendBtn?.addEventListener("click", submitAuthEmail);
+
+emailInput?.addEventListener(
+"keydown",
+e=>{
+
+if(
+e.key !== "Enter"
+){
+return;
+}
+
+e.preventDefault();
+void submitAuthEmail();
+
+}
+);
 
 tgSave?.addEventListener("click", async()=>{
 

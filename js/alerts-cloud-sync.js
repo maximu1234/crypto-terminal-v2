@@ -4114,7 +4114,7 @@ return false;
 }
 
 const { ensureCloudReady } =
-await import("./auth-ui.js?v=23");
+await import("./auth-ui.js?v=24");
 
 await ensureCloudReady();
 
@@ -4399,7 +4399,7 @@ return ok;
 async function syncAllLocalAlertsToCloudImpl(){
 
 const { ensureCloudReady } =
-await import("./auth-ui.js?v=23");
+await import("./auth-ui.js?v=24");
 
 await ensureCloudReady();
 
