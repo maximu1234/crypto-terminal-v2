@@ -1053,7 +1053,7 @@ body.tablet-chart .price-scale-touch-strip{
   top:0;
   height:0;
   border:none;
-  border-top:2px solid rgba(173, 190, 212, .96);
+  border-top:1px solid rgba(173, 190, 212, .9);
   box-sizing:border-box;
   pointer-events:none;
   z-index:40;
