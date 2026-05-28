@@ -4504,6 +4504,9 @@ hooks.onDragEnd ||
 const onScaleFrame =
 hooks.onScaleFrame ||
 (()=>{});
+const onReset =
+hooks.onReset ||
+(()=>{});
 
 let drag =
 null;
@@ -4518,7 +4521,7 @@ bottom:DEFAULT_PRICE_SCALE_MARGINS.bottom
 };
 
 const STRIP_DBL_TAP_MS =
-320;
+450;
 
 const STRIP_DBL_TAP_PX =
 28;
@@ -4531,6 +4534,12 @@ null;
 
 let stripTapTimer =
 0;
+
+let stripLastTouchEnd =
+null;
+
+let stripWasDrag =
+false;
 
 function clearStripLastTap(){
 
@@ -4546,6 +4555,31 @@ stripTapTimer
 stripTapTimer = 0;
 
 }
+
+}
+
+function clearStripTouchEnd(){
+
+stripLastTouchEnd =
+null;
+
+}
+
+function handleStripDoubleTapReset(
+e
+){
+
+if(
+e
+){
+e.preventDefault();
+e.stopPropagation();
+}
+
+clearStripLastTap();
+clearStripTouchEnd();
+resetStripPriceAutoScale();
+onReset();
 
 }
 
@@ -4574,6 +4608,8 @@ resetChartPriceAutoScale(
 chart,
 series
 );
+
+forceChartRepaint();
 
 if(
 hadActiveDrag
@@ -4706,6 +4742,36 @@ true;
 
 }
 
+function forceChartRepaint(){
+
+const chartW =
+Math.max(
+1,
+Math.floor(
+chartEl.clientWidth ||
+0
+)
+);
+const chartH =
+Math.max(
+1,
+Math.floor(
+chartEl.clientHeight ||
+0
+)
+);
+
+try{
+chart.resize(
+chartW,
+chartH
+);
+}catch{
+/* ignore */
+}
+
+}
+
 function notifyChartPriceRangeChanged(){
 
 ensureTabletPriceZoomProvider();
@@ -4719,6 +4785,8 @@ autoScale:true
 }catch{
 /* ignore */
 }
+
+forceChartRepaint();
 
 }
 
@@ -4854,67 +4922,77 @@ notifyChartPriceRangeChanged();
 
 }
 
-function stripTryDoubleTap(
+function onStripTouchEnd(
 e
 ){
+
+if(
+stripWasDrag
+){
+stripWasDrag =
+false;
+
+return;
+}
+
+if(
+e.touches.length >
+0
+){
+return;
+}
+
+const touch =
+e.changedTouches?.[
+0
+];
+
+if(
+!touch
+){
+return;
+}
 
 const now =
 Date.now();
 
 const x =
-e.clientX;
+touch.clientX;
 
 const y =
-e.clientY;
+touch.clientY;
 
 if(
-stripLastTap &&
-now - stripLastTap.t <=
+stripLastTouchEnd &&
+now - stripLastTouchEnd.t <=
 STRIP_DBL_TAP_MS
 ){
 
 const dx =
-x - stripLastTap.x;
+x - stripLastTouchEnd.x;
 
 const dy =
-y - stripLastTap.y;
+y - stripLastTouchEnd.y;
 
 if(
 dx * dx + dy * dy <=
 STRIP_DBL_TAP_PX * STRIP_DBL_TAP_PX
 ){
-clearStripLastTap();
-resetStripPriceAutoScale();
-e.preventDefault();
-e.stopPropagation();
-return true;
-
-}
-
-}
-
-if(
-stripTapTimer
-){
-clearTimeout(
-stripTapTimer
+handleStripDoubleTapReset(
+e
 );
 
+return;
+
 }
 
-stripLastTap = {
+}
+
+stripLastTouchEnd = {
 t:now,
 x,
 y
 };
-
-stripTapTimer =
-setTimeout(
-clearStripLastTap,
-STRIP_DBL_TAP_MS + 80
-);
-
-return false;
 
 }
 
@@ -5019,6 +5097,9 @@ return;
 pointerSession.activated =
 true;
 
+stripWasDrag =
+true;
+
 drag = {
 id:pointerSession.id,
 y:pointerSession.y
@@ -5094,13 +5175,8 @@ e.pointerType === "mouse"
 return;
 }
 
-if(
-stripTryDoubleTap(
-e
-)
-){
-return;
-}
+stripWasDrag =
+false;
 
 readMargins();
 
@@ -5215,10 +5291,9 @@ function onStripDblClick(
 e
 ){
 
-e.preventDefault();
-e.stopPropagation();
-finishPointerSession();
-resetStripPriceAutoScale();
+handleStripDoubleTapReset(
+e
+);
 
 }
 
@@ -5226,6 +5301,15 @@ stripEl.addEventListener(
 "pointerdown",
 onPointerDown,
 stripOpts
+);
+
+stripEl.addEventListener(
+"touchend",
+onStripTouchEnd,
+{
+capture:true,
+passive:false
+}
 );
 
 stripEl.addEventListener(
@@ -5262,6 +5346,15 @@ stripEl.removeEventListener(
 "pointerdown",
 onPointerDown,
 stripOpts
+);
+
+stripEl.removeEventListener(
+"touchend",
+onStripTouchEnd,
+{
+capture:true,
+passive:false
+}
 );
 
 stripEl.removeEventListener(

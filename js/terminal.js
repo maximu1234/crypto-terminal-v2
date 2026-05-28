@@ -56,7 +56,7 @@ mountAxisDoubleTapReset,
 TABLET_USE_CUSTOM_TOUCH_PAN,
 isTabletChartViewport,
 isUserCrosshairEvent
-} from "./chart.js?v=76";
+} from "./chart.js?v=77";
 
 import {
 connectKlineStream,
@@ -75,7 +75,7 @@ syncBackgroundAlertStreams
 
 import {
 initDrawings
-} from "./drawings.js?v=163";
+} from "./drawings.js?v=165";
 
 import {
 initCoinsMobileUi,
@@ -1226,7 +1226,8 @@ priceHudCtrl.refresh?.();
 },
 onScaleFrame(){},
 onDragStart(){},
-onDragEnd(){}
+onDragEnd(){},
+onReset(){}
 };
 
 mountTabletPriceScaleTouch(
@@ -1679,7 +1680,7 @@ drawingTools
 priceScaleTouchHooks.onScaleFrame =
 range=>{
 priceHudCtrl.refresh?.();
-drawingTools?.redrawDuringPriceScaleDrag?.(
+drawingTools?.applyPriceScaleFrame?.(
 range
 );
 };
@@ -1694,6 +1695,12 @@ range
 priceScaleTouchHooks.onDragEnd =
 ()=>{
 drawingTools?.endPriceScaleDragRedraw?.();
+};
+
+priceScaleTouchHooks.onReset =
+()=>{
+drawingTools?.endPriceScaleDragRedraw?.();
+drawingTools?.scheduleRedraw?.();
 };
 
 void import("./price-alert-ui.js?v=26").then(({ mountPriceAlertUi })=>{

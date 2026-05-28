@@ -75,7 +75,7 @@ ensureDomChartCrosshair,
 positionDomChartCrosshair,
 hideDomChartCrosshair,
 fullCrosshairOptions
-} from "./chart.js?v=76";
+} from "./chart.js?v=77";
 
 /* Сетка 2×9: чётный индекс — левый столбец, нечётный — правый */
 const DEFAULT_FIB_SPEC = Object.freeze([
@@ -1481,12 +1481,11 @@ let chartPanActive = false;
 let chartPanWheelTimer = null;
 let priceScaleDragActive = false;
 let priceScalePaintRaf = 0;
-let pendingPriceScaleRange = null;
+/** Диапазон цен с chart.js (тот же, что autoscaleInfoProvider). */
+let chartLockedPriceRange = null;
+let seriesPriceToCoordinateOrig = null;
 let priceScaleSyncPending = false;
 let priceScaleApplyPatchRestore = null;
-/** Во время iPad price-scale drag LW отстаёт в priceToCoordinate — считаем Y сами. */
-let manualPriceScaleDrag = null;
-let seriesPriceToCoordinateOrig = null;
 
 function defaultsStorageKey(name){
 
@@ -4288,57 +4287,15 @@ return { time, price };
 
 }
 
-function readChartScaleMargins(){
-
-try{
-
-const o =
-chart.priceScale(
-"right"
-).options();
-
-return {
-top:
-o.scaleMargins?.top ??
-0.12,
-bottom:
-o.scaleMargins?.bottom ??
-0.12
-};
-
-}catch{
-
-return {
-top:0.12,
-bottom:0.12
-};
-
-}
-
-}
-
-function isPriceScaleInverted(){
-
-try{
-return chart.priceScale(
-"right"
-).options().invertScale ===
-true;
-}catch{
-return false;
-}
-
-}
-
-function manualPriceToCoordinate(
+function priceYFromChartRange(
 price
 ){
 
-const s =
-manualPriceScaleDrag;
+const frame =
+chartLockedPriceRange;
 
 if(
-!s ||
+!frame ||
 !Number.isFinite(
 price
 )
@@ -4351,9 +4308,11 @@ minPrice,
 maxPrice,
 top,
 bottom,
-h
+h,
+inverted,
+logarithmic
 } =
-s;
+frame;
 
 const plotTop =
 h * top;
@@ -4370,11 +4329,8 @@ plotHeight <=
 return null;
 }
 
-const inverted =
-s.inverted;
-
 if(
-s.logarithmic &&
+logarithmic &&
 minPrice >
 0 &&
 maxPrice >
@@ -4446,19 +4402,91 @@ return plotTop + ratio * plotHeight;
 
 }
 
+function applyChartPriceRange(
+range
+){
+
+if(
+!range ||
+!Number.isFinite(
+range.min
+) ||
+!Number.isFinite(
+range.max
+) ||
+range.min ===
+range.max
+){
+chartLockedPriceRange =
+null;
+
+return;
+}
+
+let top =
+0.12;
+
+let bottom =
+0.12;
+
+try{
+
+const o =
+chart.priceScale(
+"right"
+).options();
+
+top =
+o.scaleMargins?.top ??
+0.12;
+
+bottom =
+o.scaleMargins?.bottom ??
+0.12;
+
+}catch{
+/* ignore */
+}
+
+let inverted =
+false;
+
+try{
+inverted =
+chart.priceScale(
+"right"
+).options().invertScale ===
+true;
+}catch{
+/* ignore */
+}
+
+chartLockedPriceRange =
+{
+minPrice:range.min,
+maxPrice:range.max,
+top,
+bottom,
+h:chartSize().h,
+inverted,
+logarithmic:
+isSeriesLogarithmic(
+series
+)
+};
+
+}
+
 function plotPriceToCoordinate(
 price
 ){
 
 if(
-priceScaleDragActive
-){
-
-if(
-manualPriceScaleDrag
+priceScaleDragActive &&
+chartLockedPriceRange
 ){
 const y =
-manualPriceToCoordinate(
+priceYFromChartRange(
 price
 );
 
@@ -4470,8 +4498,12 @@ return y;
 }
 }
 
-return null;
-
+if(
+seriesPriceToCoordinateOrig
+){
+return seriesPriceToCoordinateOrig(
+price
+);
 }
 
 return series.priceToCoordinate(
@@ -8026,14 +8058,11 @@ price
 ){
 
 if(
-priceScaleDragActive
-){
-
-if(
-manualPriceScaleDrag
+priceScaleDragActive &&
+chartLockedPriceRange
 ){
 const y =
-manualPriceToCoordinate(
+priceYFromChartRange(
 price
 );
 
@@ -8043,10 +8072,6 @@ null
 ){
 return y;
 }
-}
-
-return null;
-
 }
 
 return seriesPriceToCoordinateOrig(
@@ -8072,49 +8097,6 @@ null;
 
 }
 
-function applyLockedPriceRangeFromChart(
-range
-){
-
-if(
-!range ||
-!Number.isFinite(
-range.min
-) ||
-!Number.isFinite(
-range.max
-) ||
-range.min ===
-range.max
-){
-manualPriceScaleDrag =
-null;
-
-return false;
-}
-
-const m =
-readChartScaleMargins();
-
-manualPriceScaleDrag =
-{
-minPrice:range.min,
-maxPrice:range.max,
-top:m.top,
-bottom:m.bottom,
-h:chartSize().h,
-inverted:
-isPriceScaleInverted(),
-logarithmic:
-isSeriesLogarithmic(
-series
-)
-};
-
-return true;
-
-}
-
 function priceScaleDragPaintLoop(){
 
 if(
@@ -8123,14 +8105,6 @@ if(
 ){
 priceScalePaintRaf = 0;
 return;
-}
-
-if(
-pendingPriceScaleRange
-){
-applyLockedPriceRangeFromChart(
-pendingPriceScaleRange
-);
 }
 
 redraw();
@@ -8167,9 +8141,6 @@ priceScalePaintRaf
 priceScalePaintRaf = 0;
 }
 
-pendingPriceScaleRange =
-null;
-
 }
 
 function beginPriceScaleDragRedraw(
@@ -8178,19 +8149,15 @@ range
 
 priceScaleDragActive = true;
 ensureSeriesPriceToCoordinatePatch();
-pendingPriceScaleRange =
-range ||
-null;
-
-applyLockedPriceRangeFromChart(
-pendingPriceScaleRange
+applyChartPriceRange(
+range
 );
 redraw();
 startPriceScalePaintLoop();
 
 }
 
-function redrawDuringPriceScaleDrag(
+function applyPriceScaleFrame(
 range
 ){
 
@@ -8200,15 +8167,15 @@ if(
 return;
 }
 
-pendingPriceScaleRange =
-range ||
-null;
+applyChartPriceRange(
+range
+);
 
 }
 
 function endPriceScaleDragRedraw(){
 
-manualPriceScaleDrag =
+chartLockedPriceRange =
 null;
 priceScaleDragActive = false;
 stopPriceScalePaintLoop();
@@ -10806,7 +10773,7 @@ scheduleRedraw,
 scheduleDragRedraw,
 schedulePriceScaleSyncedRedraw,
 beginPriceScaleDragRedraw,
-redrawDuringPriceScaleDrag,
+applyPriceScaleFrame,
 endPriceScaleDragRedraw,
 
 blocksTabletChartPan(){

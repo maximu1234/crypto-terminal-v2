@@ -1,4 +1,4 @@
 /**
  * Точка входа графика для /coins (имя без «terminal» — реже блокируется в Яндексе).
  */
-import "./terminal.js?v=209";
+import "./terminal.js?v=211";

@@ -813,8 +813,9 @@ body.tablet-chart .price-scale-touch-strip{
   right:0;
   bottom:0;
   width:var(--chart-scale-width, 56px);
-  z-index:5;
+  z-index:20;
   touch-action:none;
+  -webkit-tap-highlight-color:transparent;
   pointer-events:auto;
 }
 
