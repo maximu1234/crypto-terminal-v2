@@ -949,16 +949,10 @@ chart.clearCrosshairPosition();
 
 }
 
-const useStackProbeHoriz =
-!document.body.classList.contains(
-"tablet-chart"
-);
-
 if(
 horizLineEl &&
 chartsStackEl &&
-hasPrice &&
-useStackProbeHoriz
+hasPrice
 ){
 
 const stackR =
@@ -4884,8 +4878,6 @@ scaleFrameNotifyRaf
 scaleFrameNotifyRaf =
 requestAnimationFrame(
 ()=>{
-requestAnimationFrame(
-()=>{
 scaleFrameNotifyRaf = 0;
 
 const payload =
@@ -4899,8 +4891,6 @@ payload
 );
 }
 
-}
-);
 }
 );
 
@@ -5040,8 +5030,8 @@ STRIP_DBL_TAP_PX * STRIP_DBL_TAP_PX
 clearStripLastTap();
 abortDrag();
 resetStripPriceAutoScale();
-e.preventDefault();
-e.stopPropagation();
+e.preventDefault?.();
+e.stopPropagation?.();
 return true;
 
 }
@@ -5187,23 +5177,18 @@ emitScaleFrame();
 
 }
 
-function onPointerDown(
-e
-){
+const STRIP_DRAG_START_PX =
+8;
 
-if(
-e.pointerType === "mouse"
-){
-return;
-}
+let stripPointerDown =
+null;
 
-if(
-stripTryDoubleTap(
-e
-)
+let stripDidDrag =
+false;
+
+function beginStripDrag(
+clientY
 ){
-return;
-}
 
 readMargins();
 
@@ -5211,9 +5196,9 @@ detachDocListeners();
 
 drag = {
 id:
-e.pointerId ??
+stripPointerDown?.id ??
 0,
-y:e.clientY
+y:clientY
 };
 
 priceZoomRange =
@@ -5227,44 +5212,130 @@ onDragStart?.(
 scaleFramePayload()
 );
 
-onDocMove =(
-moveEvent
-)=>{
+}
+
+function onPointerDown(
+e
+){
 
 if(
-!drag ||
-(
-moveEvent.pointerId !==
-undefined &&
-moveEvent.pointerId !==
-drag.id
+e.pointerType ===
+"mouse"
+){
+return;
+}
+
+if(
+stripTryDoubleTap(
+e
 )
 ){
 return;
 }
 
+stripPointerDown = {
+id:
+e.pointerId ??
+0,
+x:e.clientX,
+y:e.clientY
+};
+
+stripDidDrag =
+false;
+
+detachDocListeners();
+
+onDocMove =(
+moveEvent
+)=>{
+
+if(
+!stripPointerDown ||
+(
+moveEvent.pointerId !==
+undefined &&
+moveEvent.pointerId !==
+stripPointerDown.id
+)
+){
+return;
+}
+
+const dx =
+moveEvent.clientX - stripPointerDown.x;
+
 const dy =
+moveEvent.clientY - stripPointerDown.y;
+
+if(
+!drag
+){
+
+if(
+dx * dx + dy * dy <
+STRIP_DRAG_START_PX * STRIP_DRAG_START_PX
+){
+return;
+}
+
+stripDidDrag =
+true;
+
+beginStripDrag(
+moveEvent.clientY
+);
+
+}
+
+const moveDy =
 moveEvent.clientY - drag.y;
 
 drag.y =
 moveEvent.clientY;
 
 if(
-Math.abs(dy) <
+Math.abs(moveDy) <
 0.5
 ){
 return;
 }
 
 applyVerticalScaleDrag(
-dy
+moveDy
 );
 
 moveEvent.preventDefault();
 
 };
 
-onDocEnd = endDrag;
+onDocEnd =(
+endEvent
+)=>{
+
+if(
+stripPointerDown &&
+(
+endEvent.pointerId ===
+undefined ||
+endEvent.pointerId ===
+stripPointerDown.id
+)
+){
+
+if(
+drag
+){
+onDragEnd?.();
+}
+
+abortDrag();
+stripPointerDown =
+null;
+
+}
+
+};
 
 document.addEventListener(
 "pointermove",
@@ -5286,6 +5357,43 @@ e.preventDefault();
 
 }
 
+function onStripTouchEnd(
+e
+){
+
+if(
+stripDidDrag ||
+drag
+){
+return;
+}
+
+for(
+let i =
+0;
+i <
+e.changedTouches.length;
+i++
+){
+
+const t =
+e.changedTouches[
+i
+];
+
+if(
+stripTryDoubleTap(
+t
+)
+){
+e.preventDefault();
+break;
+}
+
+}
+
+}
+
 const stripOpts = {
 passive:false
 };
@@ -5304,6 +5412,12 @@ resetStripPriceAutoScale();
 stripEl.addEventListener(
 "pointerdown",
 onPointerDown,
+stripOpts
+);
+
+stripEl.addEventListener(
+"touchend",
+onStripTouchEnd,
 stripOpts
 );
 
@@ -5340,6 +5454,12 @@ clearStripLastTap();
 stripEl.removeEventListener(
 "pointerdown",
 onPointerDown,
+stripOpts
+);
+
+stripEl.removeEventListener(
+"touchend",
+onStripTouchEnd,
 stripOpts
 );
 
