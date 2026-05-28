@@ -19,7 +19,7 @@ import {
 formatPrice,
 hideDomChartCrosshair,
 positionDomChartCrosshair
-} from "./chart.js?v=65";
+} from "./chart.js?v=66";
 
 const PLUS_ICON_W =
 22;
@@ -367,9 +367,7 @@ return;
 }
 
 const price =
-Number.isFinite(opts.probePrice)
-? Number(opts.probePrice)
-: series.coordinateToPrice(y);
+series.coordinateToPrice(y);
 
 if(
 price == null ||
@@ -588,70 +586,6 @@ wrapEl.addEventListener(
 onWrapPointerLeave
 );
 
-const onWrapTouchScaleMove =
-e=>{
-
-if(
-IS_COARSE_TOUCH
-){
-return;
-}
-
-if(
-dragAlertId ||
-!e.touches ||
-e.touches.length !== 1
-){
-return;
-}
-
-const t =
-e.touches[0];
-
-if(!t){
-return;
-}
-
-if(
-plusBtn.contains(e.target)
-){
-return;
-}
-
-if(
-!isInPriceScaleArea(
-t.clientX,
-t.clientY
-)
-){
-hidePlus({
-release: false
-});
-return;
-}
-
-syncPlusFromClient(
-t.clientX,
-t.clientY,
-{
-fromTouch: true
-}
-);
-
-};
-
-wrapEl.addEventListener(
-"touchstart",
-onWrapTouchScaleMove,
-{ capture:true, passive:true }
-);
-
-wrapEl.addEventListener(
-"touchmove",
-onWrapTouchScaleMove,
-{ capture:true, passive:true }
-);
-
 const onProbeCrosshair =
 e=>{
 
@@ -674,8 +608,6 @@ const x =
 Number(e.detail.clientX);
 const y =
 Number(e.detail.clientY);
-const probePrice =
-Number(e.detail.price);
 
 if(
 !Number.isFinite(x) ||
@@ -689,8 +621,7 @@ x,
 y,
 {
 fromTouch: true,
-forceShowFromProbe: true,
-probePrice
+forceShowFromProbe: true
 }
 );
 
@@ -1125,18 +1056,6 @@ true
 wrapEl.removeEventListener(
 "pointerleave",
 onWrapPointerLeave
-);
-
-wrapEl.removeEventListener(
-"touchstart",
-onWrapTouchScaleMove,
-true
-);
-
-wrapEl.removeEventListener(
-"touchmove",
-onWrapTouchScaleMove,
-true
 );
 
 window.removeEventListener(

@@ -56,7 +56,7 @@ mountAxisDoubleTapReset,
 TABLET_USE_CUSTOM_TOUCH_PAN,
 isTabletChartViewport,
 isUserCrosshairEvent
-} from "./chart.js?v=65";
+} from "./chart.js?v=66";
 
 import {
 connectKlineStream,
@@ -1148,8 +1148,7 @@ let cancelTabletPanGesture =
 function emitChartProbeCrosshair(
 active,
 clientX = null,
-clientY = null,
-price = null
+clientY = null
 ){
 
 window.dispatchEvent(
@@ -1159,8 +1158,7 @@ new CustomEvent(
 detail:{
 active: !!active,
 clientX,
-clientY,
-price
+clientY
 }
 }
 )
@@ -1647,7 +1645,7 @@ if(
 drawingTools
 ){
 
-void import("./price-alert-ui.js?v=20").then(({ mountPriceAlertUi })=>{
+void import("./price-alert-ui.js?v=21").then(({ mountPriceAlertUi })=>{
 mountPriceAlertUi({
 chart,
 series: candleSeries,
@@ -1931,7 +1929,6 @@ onProbeAt(
 clientX,
 clientY
 ){
-const probe =
 positionTabletProbeCrosshair({
 chart,
 series:candleSeries,
@@ -1947,8 +1944,7 @@ onTime:updateRsiHudFromCrosshairTime
 emitChartProbeCrosshair(
 true,
 clientX,
-clientY,
-probe?.price ?? null
+clientY
 );
 }
 }

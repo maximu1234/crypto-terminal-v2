@@ -823,9 +823,6 @@ if(
 return null;
 }
 
-let probePrice =
-null;
-
 const chartR =
 chartEl.getBoundingClientRect();
 
@@ -858,20 +855,9 @@ document.getElementById(
 "price-scale-touch-strip"
 );
 
-const scaleWRaw =
+const scaleW =
 scaleStrip?.offsetWidth ??
 56;
-
-const scaleW =
-Math.max(
-40,
-Math.min(
-Math.round(
-chartR.width * 0.35
-),
-scaleWRaw
-)
-);
 
 if(
 chartsStackEl &&
@@ -919,19 +905,14 @@ series.coordinateToPrice?.(
 y
 );
 
-probePrice =
-Number.isFinite(price)
-? price
-: null;
-
 if(
-probePrice != null &&
+price != null &&
 probeTime != null
 ){
 
 try{
 chart.setCrosshairPosition(
-probePrice,
+price,
 probeTime,
 series
 );
@@ -972,19 +953,10 @@ topInStack
 const plotLeft =
 chartR.left - stackR.left;
 
-const clampedScaleW =
-Math.max(
-0,
-Math.min(
-scaleW,
-chartR.width - 1
-)
-);
-
 const plotWidth =
 Math.max(
-1,
-chartR.width - clampedScaleW
+0,
+chartR.width - scaleW
 );
 
 horizLineEl.style.top =
@@ -1004,67 +976,6 @@ horizLineEl.style.display =
 "block";
 
 horizLineEl.classList.remove(
-"hidden"
-);
-
-}
-
-if(
-chartsStackEl &&
-probePrice != null
-){
-
-let priceLabelEl =
-document.getElementById(
-"tablet-probe-price-label"
-);
-
-if(
-!priceLabelEl
-){
-priceLabelEl =
-document.createElement("div");
-priceLabelEl.id =
-"tablet-probe-price-label";
-priceLabelEl.className =
-"crosshair-axis-label";
-priceLabelEl.setAttribute(
-"aria-hidden",
-"true"
-);
-chartsStackEl.appendChild(
-priceLabelEl
-);
-}
-
-const stackR =
-chartsStackEl.getBoundingClientRect();
-const topInStack =
-Math.max(
-0,
-Math.min(
-chartR.height,
-clientY - chartR.top
-)
-);
-
-priceLabelEl.textContent =
-formatPrice(probePrice);
-priceLabelEl.style.top =
-`${Math.round(chartR.top - stackR.top + topInStack - 10)}px`;
-priceLabelEl.style.left =
-`${Math.round(chartR.right - stackR.left - clampedScaleW + 3)}px`;
-priceLabelEl.style.transform =
-"translateY(-50%)";
-priceLabelEl.classList.remove(
-"hidden"
-);
-
-}else{
-
-document.getElementById(
-"tablet-probe-price-label"
-)?.classList.add(
 "hidden"
 );
 
@@ -1103,8 +1014,7 @@ probeTime
 return {
 time: probeTime,
 x,
-y,
-price: probePrice
+y
 };
 
 }
@@ -1122,15 +1032,6 @@ linkedVertEl?.classList.add(
 
 linkedVertEl?.style.removeProperty(
 "left"
-);
-
-const priceLabelEl =
-document.getElementById(
-"tablet-probe-price-label"
-);
-
-priceLabelEl?.classList.add(
-"hidden"
 );
 
 horizLineEl?.classList.add(
