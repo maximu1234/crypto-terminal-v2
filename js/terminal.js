@@ -59,7 +59,7 @@ TABLET_USE_CUSTOM_TOUCH_PAN,
 isTabletChartViewport,
 isUserCrosshairEvent,
 resetChartPriceAutoScale
-} from "./chart.js?v=86";
+} from "./chart.js?v=87";
 
 import {
 connectKlineStream,
@@ -1268,7 +1268,16 @@ priceScaleTouchHooks.onReset?.();
 }
 
 let unmountPriceScaleDoubleTap =
-()=>{};
+mountPriceScaleDoubleTapReset({
+chart,
+chartEl,
+stripEl:document.getElementById(
+"price-scale-touch-strip"
+),
+resetPriceScale:resetTabletPriceScale,
+isTapAllowed:()=>
+!tabletPriceScaleCtrl?.isScaleDragging?.()
+});
 
 applyTabletMainChartScroll(
 chart
@@ -1732,18 +1741,6 @@ priceScaleTouchHooks.onReset =
 drawingTools?.endPriceScaleDragRedraw?.();
 drawingTools?.scheduleRedraw?.();
 };
-
-unmountPriceScaleDoubleTap =
-mountPriceScaleDoubleTapReset({
-chart,
-chartEl,
-stripEl:document.getElementById(
-"price-scale-touch-strip"
-),
-resetPriceScale:resetTabletPriceScale,
-isTapAllowed:()=>
-!tabletPriceScaleCtrl?.isScaleDragging?.()
-});
 
 void import("./price-alert-ui.js?v=26").then(({ mountPriceAlertUi })=>{
 mountPriceAlertUi({

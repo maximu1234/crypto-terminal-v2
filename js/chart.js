@@ -4345,7 +4345,7 @@ max:max + pad
 
 /**
  * iPad: двойной тап по правой шкале → сброс Y-масштаба.
- * Считает пары touchend/pointerup (не pointerdown): на iOS между тапами ~300ms задержка.
+ * touchend + click (iOS шлёт click ~300ms после tap); pointerdown на strip не блокируем.
  */
 export function mountPriceScaleDoubleTapReset({
 chart,
@@ -4365,13 +4365,13 @@ return ()=>{};
 }
 
 const DBL_MS =
-650;
+700;
 
 const DBL_PX =
-52;
+60;
 
 const TAP_MOVE_PX =
-18;
+22;
 
 let lastTap =
 null;
@@ -4386,6 +4386,9 @@ let lastEndX =
 0;
 
 let lastEndY =
+0;
+
+let ignoreClickUntil =
 0;
 
 function scaleWidth(){
@@ -4624,9 +4627,10 @@ dx =
 t.clientX - touchDown.x;
 dy =
 t.clientY - touchDown.y;
+}
+
 touchDown =
 null;
-}
 
 if(
 dx * dx + dy * dy >
@@ -4634,6 +4638,19 @@ TAP_MOVE_PX * TAP_MOVE_PX
 ){
 continue;
 }
+
+if(
+!hitPriceScale(
+t.clientX,
+t.clientY
+)
+){
+continue;
+}
+
+ignoreClickUntil =
+Date.now() +
+450;
 
 registerTapEnd(
 t.clientX,
@@ -4652,13 +4669,13 @@ null;
 
 }
 
-function onPointerUp(
+function onClick(
 e
 ){
 
 if(
-e.pointerType ===
-"mouse"
+Date.now() <
+ignoreClickUntil
 ){
 return;
 }
@@ -4695,10 +4712,22 @@ opts
 );
 
 document.addEventListener(
-"pointerup",
-onPointerUp,
+"click",
+onClick,
 opts
 );
+
+if(
+stripEl
+){
+
+stripEl.addEventListener(
+"click",
+onClick,
+opts
+);
+
+}
 
 return ()=>{
 
@@ -4721,10 +4750,22 @@ opts
 );
 
 document.removeEventListener(
-"pointerup",
-onPointerUp,
+"click",
+onClick,
 opts
 );
+
+if(
+stripEl
+){
+
+stripEl.removeEventListener(
+"click",
+onClick,
+opts
+);
+
+}
 
 lastTap =
 null;
@@ -5648,8 +5689,6 @@ document.addEventListener(
 "pointercancel",
 onDocEnd
 );
-
-e.preventDefault();
 
 }
 
