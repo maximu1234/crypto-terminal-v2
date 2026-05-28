@@ -1278,3 +1278,15 @@ body.tablet-chart .price-scale-touch-strip{
 .chart-scale-context-menu-item:hover{
   background:rgba(255,255,255,.08);
 }
+
+.price-alert-touch-guide{
+  position:absolute;
+  height:0;
+  border-top:1px dashed rgba(167, 179, 194, .85);
+  pointer-events:none;
+  z-index:11;
+}
+
+.price-alert-touch-guide.hidden{
+  display:none;
+}

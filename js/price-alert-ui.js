@@ -27,6 +27,13 @@ const PLUS_ICON_W =
 const PLUS_HIT_PAD =
 14;
 
+const IS_COARSE_TOUCH =
+window.matchMedia?.("(pointer: coarse)")?.matches ||
+("ontouchstart" in window);
+
+const TOUCH_PLUS_OFFSET_PX =
+28;
+
 export function mountPriceAlertUi({
 chart,
 series,
@@ -77,6 +84,14 @@ plusBtn.querySelector(
 
 wrapEl.appendChild(
 plusBtn
+);
+
+const touchGuideLine =
+document.createElement("div");
+touchGuideLine.className =
+"price-alert-touch-guide hidden";
+wrapEl.appendChild(
+touchGuideLine
 );
 
 const deleteBar =
@@ -162,9 +177,14 @@ shapeId
 
 }
 
-function hidePlus(){
+function hidePlus(
+opts = {}
+){
 
 plusBtn.classList.add(
+"hidden"
+);
+touchGuideLine.classList.add(
 "hidden"
 );
 hideDomChartCrosshair(
@@ -172,7 +192,11 @@ wrapEl
 );
 
 try{
+if(
+opts.release !== false
+){
 onCrosshairRelease?.();
+}
 }catch{
 /* ignore */
 }
@@ -279,7 +303,8 @@ e.clientY
 
 function syncPlusFromClient(
 clientX,
-clientY
+clientY,
+opts = {}
 ){
 
 const rect =
@@ -297,7 +322,9 @@ if(
 x < pw - PLUS_HIT_PAD ||
 x > pw + scaleW + PLUS_HIT_PAD
 ){
-hidePlus();
+hidePlus({
+release: false
+});
 return;
 }
 
@@ -308,12 +335,18 @@ if(
 price == null ||
 !Number.isFinite(price)
 ){
-hidePlus();
+hidePlus({
+release: false
+});
 return;
 }
 
+const showTouchStyle =
+opts.fromTouch === true ||
+IS_COARSE_TOUCH;
+
 plusBtn.style.left =
-`${pw - PLUS_ICON_W}px`;
+`${pw - PLUS_ICON_W - (showTouchStyle ? TOUCH_PLUS_OFFSET_PX : 0)}px`;
 plusBtn.style.top =
 `${y}px`;
 plusBtn.style.transform =
@@ -327,6 +360,22 @@ formatPrice(price);
 plusBtn.dataset.pendingPrice =
 String(price);
 plusBtn.classList.remove("hidden");
+
+if(showTouchStyle){
+touchGuideLine.style.top =
+`${Math.round(y)}px`;
+touchGuideLine.style.left =
+"0px";
+touchGuideLine.style.width =
+`${Math.round(pw)}px`;
+touchGuideLine.classList.remove(
+"hidden"
+);
+}else{
+touchGuideLine.classList.add(
+"hidden"
+);
+}
 
 positionDomChartCrosshair({
 wrapEl,
@@ -467,9 +516,24 @@ if(!t){
 return;
 }
 
-syncPlusFromClient(
+if(
+!isInPriceScaleArea(
 t.clientX,
 t.clientY
+)
+){
+hidePlus({
+release: false
+});
+return;
+}
+
+syncPlusFromClient(
+t.clientX,
+t.clientY,
+{
+fromTouch: true
+}
 );
 
 };
