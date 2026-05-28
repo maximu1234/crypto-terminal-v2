@@ -9,20 +9,25 @@ import {
 loadLightweightCharts
 } from "./charts-lib-boot.js?v=3";
 
+import {
+CHART_BUILD_ID,
+CHART_PAGE_ENTRY,
+TERMINAL_ENTRY
+} from "./coins-asset-versions.js?v=1";
+
 const IS_YANDEX =
 /YaBrowser|Yandex/i.test(
 navigator.userAgent ||
 ""
 );
 
-/** Менять при каждом релизе графика — иначе iPad держит старый boot в кэше (v=2). */
 export const COINS_CHART_BUILD =
-"20260529-autoscale-default";
+CHART_BUILD_ID;
 
 const CHART_ENTRY =
 IS_YANDEX
-? "/js/chart-page.js?v=2"
-: "/js/terminal.js?v=232";
+? CHART_PAGE_ENTRY
+: TERMINAL_ENTRY;
 
 function loadModuleScript(
 url,
@@ -140,7 +145,10 @@ i++
 ){
 
 const url =
-`${CHART_ENTRY}${CHART_ENTRY.includes("?") ? "&" : "?"}n=${i}&t=${Date.now()}`;
+i ===
+0
+? CHART_ENTRY
+: `${CHART_ENTRY}${CHART_ENTRY.includes("?") ? "&" : "?"}n=${i}&t=${Date.now()}`;
 
 try{
 if(
@@ -153,7 +161,7 @@ url
 );
 }else{
 await import(
-url
+CHART_ENTRY
 );
 }
 return;
