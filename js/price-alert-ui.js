@@ -165,6 +165,15 @@ function hidePlus(){
 plusBtn.classList.add(
 "hidden"
 );
+hideDomChartCrosshair(
+wrapEl
+);
+
+try{
+onCrosshairRelease?.();
+}catch{
+/* ignore */
+}
 
 }
 
@@ -398,6 +407,24 @@ clientX: e.clientX,
 clientY: e.clientY
 });
 }
+);
+
+const onWrapPointerLeave =
+()=>{
+
+if(
+dragAlertId
+){
+return;
+}
+
+hidePlus();
+
+};
+
+wrapEl.addEventListener(
+"pointerleave",
+onWrapPointerLeave
 );
 
 function deleteSelectedAlert(){
@@ -765,6 +792,11 @@ wrapEl.removeEventListener(
 "pointerdown",
 onWrapPointerDown,
 true
+);
+
+wrapEl.removeEventListener(
+"pointerleave",
+onWrapPointerLeave
 );
 
 window.removeEventListener(
