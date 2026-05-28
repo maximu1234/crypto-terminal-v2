@@ -4814,6 +4814,46 @@ bottom:DEFAULT_PRICE_SCALE_MARGINS.bottom
 
 }
 
+/** Сброс залипшего ручного диапазона — пересчёт autoscale LW (смена монеты). */
+export function pulsePriceScaleAutoscale(
+chart,
+series
+){
+
+resetChartPriceAutoScale(
+chart,
+series
+);
+
+if(
+!chart
+){
+return;
+}
+
+try{
+const ps =
+chart.priceScale(
+"right"
+);
+
+ps.applyOptions({
+autoScale:false
+});
+
+ps.applyOptions({
+autoScale:true,
+scaleMargins:{
+top:DEFAULT_PRICE_SCALE_MARGINS.top,
+bottom:DEFAULT_PRICE_SCALE_MARGINS.bottom
+}
+});
+}catch{
+/* ignore */
+}
+
+}
+
 /**
  * Двойной тап / двойной клик по шкале → onReset (автомасштаб и т.п.)
  */
@@ -5178,10 +5218,13 @@ SCALE_DBL_TAP_PX * SCALE_DBL_TAP_PX
 ){
 clearScaleLastTap();
 abortDrag();
-resetStripPriceAutoScale();
+resetStripPriceAutoScale({
+force:true
+});
 
 try{
 e.preventDefault?.();
+e.stopPropagation?.();
 }catch{
 /* ignore */
 }
@@ -5216,12 +5259,18 @@ return false;
 
 }
 
-function resetStripPriceAutoScale(){
+function resetStripPriceAutoScale(
+options = {}
+){
+
+const force =
+!!options.force;
 
 const now =
 Date.now();
 
 if(
+!force &&
 now - scaleResetAt <
 350
 ){
@@ -5242,7 +5291,7 @@ null;
 priceZoomProviderInstalled =
 false;
 
-resetChartPriceAutoScale(
+pulsePriceScaleAutoscale(
 chart,
 series
 );
@@ -5343,7 +5392,35 @@ max
 let priceZoomProviderInstalled =
 false;
 
+function uninstallTabletPriceZoomProvider(){
+
+if(
+!priceZoomProviderInstalled
+){
+return;
+}
+
+try{
+series.applyOptions({
+autoscaleInfoProvider:()=>null
+});
+}catch{
+/* ignore */
+}
+
+priceZoomProviderInstalled =
+false;
+
+}
+
 function ensureTabletPriceZoomProvider(){
+
+if(
+!priceZoomRange
+){
+uninstallTabletPriceZoomProvider();
+return;
+}
 
 if(
 priceZoomProviderInstalled
@@ -5407,6 +5484,13 @@ true;
 }
 
 function notifyChartPriceRangeChanged(){
+
+if(
+!priceZoomRange
+){
+uninstallTabletPriceZoomProvider();
+return;
+}
 
 ensureTabletPriceZoomProvider();
 
@@ -5950,7 +6034,37 @@ return;
 }
 
 abortDrag();
-resetStripPriceAutoScale();
+resetStripPriceAutoScale({
+force:true
+});
+
+}
+
+function onChartScaleTouchEnd(
+e
+){
+
+if(
+!useLwNativeScale
+){
+return;
+}
+
+if(
+!isTabletEventOnPriceScale(
+chartEl,
+e
+)
+){
+return;
+}
+
+scaleTouchEndAt =
+Date.now();
+
+tryScaleZoneDoubleTap(
+e
+);
 
 }
 
@@ -5987,6 +6101,15 @@ passive:false
 }
 );
 
+chartEl.addEventListener(
+"touchend",
+onChartScaleTouchEnd,
+{
+capture:true,
+passive:false
+}
+);
+
 const dispose = ()=>{
 
 clearScaleLastTap();
@@ -6005,6 +6128,15 @@ onChartScaleDblClick
 touchTargetEl.removeEventListener(
 "touchend",
 onScaleTouchEnd,
+{
+capture:true,
+passive:false
+}
+);
+
+chartEl.removeEventListener(
+"touchend",
+onChartScaleTouchEnd,
 {
 capture:true,
 passive:false

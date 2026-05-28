@@ -57,8 +57,9 @@ mountAxisDoubleTapReset,
 TABLET_USE_CUSTOM_TOUCH_PAN,
 isTabletChartViewport,
 isUserCrosshairEvent,
-resetChartPriceAutoScale
-} from "./chart-import.js?v=11";
+resetChartPriceAutoScale,
+pulsePriceScaleAutoscale
+} from "./chart-import.js?v=12";
 
 import {
 connectKlineStream,
@@ -1252,20 +1253,39 @@ candleSeries,
 priceScaleTouchHooks
 );
 
-function resetTabletPriceScale(){
+function resetTabletPriceScale(
+force = false
+){
 
 if(
 tabletPriceScaleCtrl?.resetPriceAutoScale
 ){
-tabletPriceScaleCtrl.resetPriceAutoScale();
-return;
-}
-
+tabletPriceScaleCtrl.resetPriceAutoScale(
+force
+? { force:true }
+: {}
+);
+}else{
 resetChartPriceAutoScale(
 chart,
 candleSeries
 );
+
+if(
+force
+){
+pulsePriceScaleAutoscale(
+chart,
+candleSeries
+);
+}
+}
+
+if(
+force
+){
 priceScaleTouchHooks.onReset?.();
+}
 
 }
 
@@ -2540,6 +2560,10 @@ return;
 
 }
 
+resetTabletPriceScale(
+true
+);
+
 candleSeries.setData(candles);
 
 const refPrice =
@@ -2562,7 +2586,9 @@ resizeCharts();
 
 requestAnimationFrame(
 ()=>{
-resetTabletPriceScale();
+resetTabletPriceScale(
+true
+);
 applyTabletMainChartScroll(
 chart
 );
