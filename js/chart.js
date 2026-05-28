@@ -4556,6 +4556,9 @@ bottom:DEFAULT_PRICE_SCALE_MARGINS.bottom
 priceZoomRange =
 null;
 
+priceZoomProviderInstalled =
+false;
+
 resetChartPriceAutoScale(
 chart,
 series
@@ -4633,24 +4636,35 @@ max
 
 }
 
-function applyTabletPriceZoomProvider(){
+let priceZoomProviderInstalled =
+false;
+
+function ensureTabletPriceZoomProvider(){
 
 if(
-!priceZoomRange
+priceZoomProviderInstalled
 ){
 return;
 }
 
 try{
 series.applyOptions({
-autoscaleInfoProvider:()=>(
-{
+autoscaleInfoProvider:()=>{
+
+if(
+!priceZoomRange
+){
+return null;
+}
+
+return {
 priceRange:{
 minValue:priceZoomRange.min,
 maxValue:priceZoomRange.max
 }
+};
+
 }
-)
 });
 }catch{
 /* ignore */
@@ -4669,6 +4683,78 @@ bottom:DEFAULT_PRICE_SCALE_MARGINS.bottom
 }catch{
 /* ignore */
 }
+
+priceZoomProviderInstalled =
+true;
+
+}
+
+function notifyChartPriceRangeChanged(){
+
+ensureTabletPriceZoomProvider();
+
+try{
+chart.priceScale(
+"right"
+).applyOptions({
+autoScale:true
+});
+}catch{
+/* ignore */
+}
+
+}
+
+function scaleFramePayload(){
+
+if(
+!priceZoomRange
+){
+return null;
+}
+
+return {
+min:priceZoomRange.min,
+max:priceZoomRange.max
+};
+
+}
+
+let scaleFrameNotifyRaf =
+0;
+
+function emitScaleFrame(){
+
+if(
+scaleFrameNotifyRaf
+){
+cancelAnimationFrame(
+scaleFrameNotifyRaf
+);
+}
+
+scaleFrameNotifyRaf =
+requestAnimationFrame(
+()=>{
+requestAnimationFrame(
+()=>{
+scaleFrameNotifyRaf = 0;
+
+const payload =
+scaleFramePayload();
+
+if(
+payload
+){
+onScaleFrame?.(
+payload
+);
+}
+
+}
+);
+}
+);
 
 }
 
@@ -4770,7 +4856,7 @@ mid + newHalf;
 
 }
 
-applyTabletPriceZoomProvider();
+notifyChartPriceRangeChanged();
 
 }
 
@@ -4946,8 +5032,10 @@ zoomVisiblePriceRange(
 dy
 );
 
+notifyChartPriceRangeChanged();
+
 onInteraction?.();
-onScaleFrame?.();
+emitScaleFrame();
 
 }
 
@@ -4983,9 +5071,13 @@ y:e.clientY
 priceZoomRange =
 captureVisiblePriceRange();
 
-applyTabletPriceZoomProvider();
+ensureTabletPriceZoomProvider();
 
-onDragStart?.();
+notifyChartPriceRangeChanged();
+
+onDragStart?.(
+scaleFramePayload()
+);
 
 onDocMove =(
 moveEvent
