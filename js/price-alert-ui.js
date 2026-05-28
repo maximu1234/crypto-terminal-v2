@@ -50,6 +50,8 @@ let selectedAlertId =
 null;
 let dragAlertId =
 null;
+let suppressPlusClickUntil =
+0;
 
 const plusBtn =
 document.createElement(
@@ -237,6 +239,29 @@ symbol: sym()
 
 }
 
+function isInPriceScaleArea(
+clientX,
+clientY
+){
+
+const rect =
+wrapEl.getBoundingClientRect();
+const x =
+clientX - rect.left;
+const y =
+clientY - rect.top;
+const pw =
+plotWidth();
+
+return (
+y >= 0 &&
+y <= rect.height &&
+x >= pw - PLUS_HIT_PAD &&
+x <= rect.width + PLUS_HIT_PAD
+);
+
+}
+
 function onPointerMove(
 e
 ){
@@ -330,6 +355,14 @@ async e=>{
 
 e.preventDefault();
 e.stopPropagation();
+
+if(
+e.detail > 1 ||
+Date.now() <
+suppressPlusClickUntil
+){
+return;
+}
 
 const price =
 Number(
@@ -425,6 +458,30 @@ hidePlus();
 wrapEl.addEventListener(
 "pointerleave",
 onWrapPointerLeave
+);
+
+const onWrapDoubleClick =
+e=>{
+
+if(
+!isInPriceScaleArea(
+e.clientX,
+e.clientY
+)
+){
+return;
+}
+
+suppressPlusClickUntil =
+Date.now() + 500;
+hidePlus();
+
+};
+
+wrapEl.addEventListener(
+"dblclick",
+onWrapDoubleClick,
+true
 );
 
 function deleteSelectedAlert(){
@@ -791,6 +848,12 @@ true
 wrapEl.removeEventListener(
 "pointerdown",
 onWrapPointerDown,
+true
+);
+
+wrapEl.removeEventListener(
+"dblclick",
+onWrapDoubleClick,
 true
 );
 
