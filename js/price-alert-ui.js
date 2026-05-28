@@ -34,6 +34,9 @@ window.matchMedia?.("(pointer: coarse)")?.matches ||
 const TOUCH_PLUS_OFFSET_PX =
 28;
 
+const PLUS_SCALE_GAP_PX =
+4;
+
 function probeHorizTopPx(
 y
 ){
@@ -43,21 +46,21 @@ return `${Math.round(y) + 0.5}px`;
 }
 
 function touchGuideEndPx(
-plusCenterX,
+plusRightEdge,
 plotW
 ){
 
 if(
 Number.isFinite(
-plusCenterX
+plusRightEdge
 ) &&
-plusCenterX >
+plusRightEdge >
 0
 ){
 return Math.max(
 1,
 Math.round(
-plusCenterX - PLUS_ICON_W / 2
+plusRightEdge
 )
 );
 }
@@ -65,7 +68,7 @@ plusCenterX - PLUS_ICON_W / 2
 return Math.max(
 1,
 Math.round(
-plotW - PLUS_ICON_W / 2 - 2
+plotW - PLUS_ICON_W - PLUS_SCALE_GAP_PX
 )
 );
 
@@ -75,12 +78,12 @@ function positionTouchGuideLine(
 lineEl,
 y,
 plotW,
-plusCenterX
+plusRightEdge
 ){
 
 const end =
 touchGuideEndPx(
-plusCenterX,
+plusRightEdge,
 plotW
 );
 
@@ -456,18 +459,25 @@ return;
 const showTouchStyle =
 opts.fromTouch === true ||
 IS_COARSE_TOUCH;
-const plusCenterX =
+const plusLeft =
+Math.round(
 pw -
-(showTouchStyle
+PLUS_ICON_W -
+(
+showTouchStyle
 ? TOUCH_PLUS_OFFSET_PX
-: 0);
+: PLUS_SCALE_GAP_PX
+)
+);
 
 plusBtn.style.left =
-`${Math.round(plusCenterX)}px`;
+`${plusLeft}px`;
 plusBtn.style.top =
 `${y}px`;
 plusBtn.style.transform =
-"translate(-50%, -50%)";
+"translateY(-50%)";
+const plusRightEdge =
+plusLeft + PLUS_ICON_W;
 
 plusPriceHint.textContent =
 formatPrice(price);
@@ -494,7 +504,7 @@ positionTouchGuideLine(
 touchGuideLine,
 y,
 pw,
-plusCenterX
+plusRightEdge
 );
 
 requestAnimationFrame(
@@ -511,7 +521,7 @@ positionTouchGuideLine(
 touchGuideLine,
 y,
 pw,
-plusCenterX
+plusRightEdge
 );
 
 }

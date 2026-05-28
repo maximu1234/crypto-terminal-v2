@@ -1668,7 +1668,7 @@ if(
 drawingTools
 ){
 
-void import("./price-alert-ui.js?v=25").then(({ mountPriceAlertUi })=>{
+void import("./price-alert-ui.js?v=26").then(({ mountPriceAlertUi })=>{
 mountPriceAlertUi({
 chart,
 series: candleSeries,
