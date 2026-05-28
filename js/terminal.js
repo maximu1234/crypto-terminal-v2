@@ -1147,7 +1147,10 @@ readCoinsPrefs().invertChart === true
 );
 }
 
+/*
+TEMP DEBUG: отключено для проверки двойного тапа по шкале (конфликт с «Инвертировать график»).
 mountCoinsScaleInvertMenu();
+*/
 
 let priceHudCtrl = {
 stop(){},
@@ -1729,6 +1732,8 @@ drawingTools?.endPriceScaleDragRedraw?.();
 drawingTools?.scheduleRedraw?.();
 };
 
+/*
+TEMP DEBUG: отключено для проверки двойного тапа по шкале (конфликт с кнопкой «+» на шкале).
 void import("./price-alert-ui.js?v=26").then(({ mountPriceAlertUi })=>{
 mountPriceAlertUi({
 chart,
@@ -1756,6 +1761,7 @@ console.warn(
 err
 );
 });
+*/
 
 }
 
