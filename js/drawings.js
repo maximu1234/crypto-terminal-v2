@@ -9,7 +9,7 @@ setAlertDragLivePrice,
 clearAlertDragLivePrice,
 removeAlert,
 upsertAlert
-} from "./alerts.js?v=94";
+} from "./alerts.js?v=95";
 
 import {
 setAlertDragPaused,
@@ -55,7 +55,7 @@ deleteDrawingFromCloud,
 flushDrawingsCloudPush,
 registerDrawingsChartRefresh,
 scheduleDrawingsCloudPush
-} from "./drawings-cloud-sync.js?v=28";
+} from "./drawings-cloud-sync.js?v=29";
 
 import {
 touchShapeRevision,
@@ -9890,7 +9890,7 @@ return;
 }
 
 void import(
-"./drawings-cloud-sync.js?v=28"
+"./drawings-cloud-sync.js?v=29"
 ).then(
 m=>{
 m.bumpDrawingsPullNow?.();

@@ -3369,15 +3369,10 @@ const signature =
 `${isAlertsPage() ? 1 : 0}:` +
 `${isDrawingsUiPage() ? 1 : 0}:` +
 `${document.visibilityState}`;
-const now =
-Date.now();
 
 if(
 signature ===
-lastDrawingsAuthSyncSignature &&
-now -
-lastDrawingsAuthSyncAt <
-5000
+lastDrawingsAuthSyncSignature
 ){
 return;
 }
@@ -3385,7 +3380,7 @@ return;
 lastDrawingsAuthSyncSignature =
 signature;
 lastDrawingsAuthSyncAt =
-now;
+Date.now();
 
 if(
 !isCloudLoggedInEffective()
