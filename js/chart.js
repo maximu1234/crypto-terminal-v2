@@ -4599,8 +4599,7 @@ if(
 !chart ||
 !stripEl ||
 !chartEl ||
-!series ||
-!isTabletChartViewport()
+!series
 ){
 return {
 dispose:()=>{},
@@ -4648,10 +4647,13 @@ bottom:DEFAULT_PRICE_SCALE_MARGINS.bottom
 };
 
 const STRIP_DBL_TAP_MS =
-320;
+900;
 
 const STRIP_DBL_TAP_PX =
-28;
+64;
+
+const STRIP_DRAG_START_PX =
+10;
 
 let stripLastTap =
 null;
@@ -5189,23 +5191,16 @@ emitScaleFrame();
 
 }
 
-function onPointerDown(
-e
-){
+let stripPointerDown =
+null;
 
-if(
-e.pointerType === "mouse"
-){
-return;
-}
+let stripDidDrag =
+false;
 
-if(
-stripTryDoubleTap(
-e
-)
+function beginStripDrag(
+clientY,
+pointerId
 ){
-return;
-}
 
 readMargins();
 
@@ -5213,9 +5208,9 @@ detachDocListeners();
 
 drag = {
 id:
-e.pointerId ??
+pointerId ??
 0,
-y:e.clientY
+y:clientY
 };
 
 priceZoomRange =
@@ -5229,44 +5224,132 @@ onDragStart?.(
 scaleFramePayload()
 );
 
+}
+
+function onPointerDown(
+e
+){
+
+if(
+e.pointerType ===
+"mouse"
+){
+return;
+}
+
+stripPointerDown = {
+id:
+e.pointerId ??
+0,
+x:e.clientX,
+y:e.clientY
+};
+
+stripDidDrag =
+false;
+
+detachDocListeners();
+
 onDocMove =(
 moveEvent
 )=>{
 
 if(
-!drag ||
+!stripPointerDown ||
 (
 moveEvent.pointerId !==
 undefined &&
 moveEvent.pointerId !==
-drag.id
+stripPointerDown.id
 )
 ){
 return;
 }
 
+const dx =
+moveEvent.clientX - stripPointerDown.x;
+
 const dy =
+moveEvent.clientY - stripPointerDown.y;
+
+if(
+!drag
+){
+
+if(
+dx * dx + dy * dy <
+STRIP_DRAG_START_PX * STRIP_DRAG_START_PX
+){
+return;
+}
+
+stripDidDrag =
+true;
+
+beginStripDrag(
+moveEvent.clientY,
+stripPointerDown.id
+);
+
+}
+
+const moveDy =
 moveEvent.clientY - drag.y;
 
 drag.y =
 moveEvent.clientY;
 
 if(
-Math.abs(dy) <
+Math.abs(moveDy) <
 0.5
 ){
 return;
 }
 
 applyVerticalScaleDrag(
-dy
+moveDy
 );
 
 moveEvent.preventDefault();
 
 };
 
-onDocEnd = endDrag;
+onDocEnd =(
+endEvent
+)=>{
+
+if(
+stripPointerDown &&
+(
+endEvent.pointerId ===
+undefined ||
+endEvent.pointerId ===
+stripPointerDown.id
+)
+){
+
+if(
+!stripDidDrag &&
+!drag
+){
+stripTryDoubleTap(
+endEvent
+);
+}
+
+if(
+drag
+){
+onDragEnd?.();
+}
+
+abortDrag();
+stripPointerDown =
+null;
+
+}
+
+};
 
 document.addEventListener(
 "pointermove",
@@ -5284,7 +5367,42 @@ document.addEventListener(
 onDocEnd
 );
 
+}
+
+function onStripTouchEndDbl(
+e
+){
+
+if(
+stripDidDrag ||
+drag
+){
+return;
+}
+
+for(
+let i =
+0;
+i <
+e.changedTouches.length;
+i++
+){
+
+const t =
+e.changedTouches[
+i
+];
+
+if(
+stripTryDoubleTap(
+t
+)
+){
 e.preventDefault();
+break;
+}
+
+}
 
 }
 
@@ -5310,8 +5428,18 @@ stripOpts
 );
 
 stripEl.addEventListener(
+"touchend",
+onStripTouchEndDbl,
+stripOpts
+);
+
+stripEl.addEventListener(
 "dblclick",
 onStripDblClick
+);
+
+stripEl.removeAttribute(
+"aria-hidden"
 );
 
 const onChartPointerDown =(
@@ -5342,6 +5470,12 @@ clearStripLastTap();
 stripEl.removeEventListener(
 "pointerdown",
 onPointerDown,
+stripOpts
+);
+
+stripEl.removeEventListener(
+"touchend",
+onStripTouchEndDbl,
 stripOpts
 );
 

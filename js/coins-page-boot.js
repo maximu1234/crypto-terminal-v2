@@ -18,7 +18,7 @@ navigator.userAgent ||
 const CHART_ENTRY =
 IS_YANDEX
 ? "/js/chart-page.js?v=1"
-: "/js/terminal.js?v=224";
+: "/js/terminal.js?v=225";
 
 function loadModuleScript(
 url,
