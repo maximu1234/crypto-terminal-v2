@@ -1027,6 +1027,17 @@ price: hasPrice
 
 }
 
+return {
+time: null,
+x,
+y,
+price: hasPrice
+? price
+: null
+};
+
+}
+
 export function hideTabletProbeCrosshair({
 linkedVertEl,
 horizLineEl,
