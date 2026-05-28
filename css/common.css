@@ -596,7 +596,7 @@ padding-top:14px;
 /* Флаги монет: Монеты, Главная (скринер), везде с меню выбора цвета */
 .coin-flag-wrap,
 .screener-flag-wrap{
---flag-color-size:10px;
+--flag-color-size:12px;
 --flag-color-menu-gap:10px;
 position:relative;
 flex-shrink:0;
