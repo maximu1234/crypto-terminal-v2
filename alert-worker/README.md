@@ -58,6 +58,7 @@ Worker при старте регистрирует webhook `POST /telegram/webh
 |----------|--------|
 | `TELEGRAM_WEBHOOK_SECRET` | секрет для заголовка Telegram (случайная строка) |
 | `TELEGRAM_WEBHOOK_BASE_URL` | если авто-домен Railway не подхватился: `https://….up.railway.app` |
+| `SITE_PUBLIC_URL` | URL фронта для ссылки на график в Telegram, напр. `https://crypto-terminal-v2.vercel.app` |
 | `TELEGRAM_DISABLE_AUTO_WEBHOOK` | `1` — не вызывать setWebhook при старте |
 
 На Vercel в `supabase-env.js`: `ALERT_WORKER_URL` (для кнопки «Открыть бота» через `GET /telegram/info`). Опционально `TELEGRAM_BOT_USERNAME` без `@`.

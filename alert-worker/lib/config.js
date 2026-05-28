@@ -38,6 +38,7 @@ export function getWorkerConfig() {
         : secretKey || legacyKey;
   const telegramBotToken = readEnv("TELEGRAM_BOT_TOKEN");
   const supabaseAnonKey = readEnv("SUPABASE_ANON_KEY");
+  const sitePublicUrl = readEnv("SITE_PUBLIC_URL");
 
   const missing = [];
 
@@ -58,6 +59,7 @@ export function getWorkerConfig() {
     supabaseServiceRoleKey,
     supabaseAnonKey,
     telegramBotToken,
+    sitePublicUrl,
     missing,
     ready: missing.length === 0
   };

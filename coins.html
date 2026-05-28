@@ -83,6 +83,29 @@
 
 <div id="current-symbol"></div>
 
+<div class="coins-tf-desktop">
+<button class="tf-btn" data-tf="1">1m</button>
+<button class="tf-btn" data-tf="5">5m</button>
+<button class="tf-btn" data-tf="15">15m</button>
+<button class="tf-btn active" data-tf="60">1h</button>
+<button class="tf-btn" data-tf="240">4h</button>
+<button class="tf-btn" data-tf="D">1D</button>
+</div>
+
+<div class="screener-mobile-select-wrap coins-tf-mobile-wrap">
+<button type="button" class="screener-mobile-select" id="coins-tf-trigger" aria-haspopup="listbox" aria-expanded="false">
+<span id="coins-tf-label">1h</span>
+</button>
+<div class="screener-mobile-menu hidden" id="coins-tf-menu" role="listbox">
+<button type="button" class="screener-mobile-menu-item" data-tf="1">1m</button>
+<button type="button" class="screener-mobile-menu-item" data-tf="5">5m</button>
+<button type="button" class="screener-mobile-menu-item" data-tf="15">15m</button>
+<button type="button" class="screener-mobile-menu-item active" data-tf="60">1h</button>
+<button type="button" class="screener-mobile-menu-item" data-tf="240">4h</button>
+<button type="button" class="screener-mobile-menu-item" data-tf="D">1D</button>
+</div>
+</div>
+
 <div id="draw-toolbar" class="draw-toolbar-inline coins-draw-desktop">
 
 <button type="button" class="draw-btn" data-draw-tool="cursor" title="Курсор">
@@ -182,29 +205,6 @@ el.textContent=String(last.symbol).toUpperCase()+".P";
 }catch(e){}
 })();
 </script>
-
-<div class="coins-tf-desktop">
-<button class="tf-btn" data-tf="1">1m</button>
-<button class="tf-btn" data-tf="5">5m</button>
-<button class="tf-btn" data-tf="15">15m</button>
-<button class="tf-btn active" data-tf="60">1h</button>
-<button class="tf-btn" data-tf="240">4h</button>
-<button class="tf-btn" data-tf="D">1D</button>
-</div>
-
-<div class="screener-mobile-select-wrap coins-tf-mobile-wrap">
-<button type="button" class="screener-mobile-select" id="coins-tf-trigger" aria-haspopup="listbox" aria-expanded="false">
-<span id="coins-tf-label">1h</span>
-</button>
-<div class="screener-mobile-menu hidden" id="coins-tf-menu" role="listbox">
-<button type="button" class="screener-mobile-menu-item" data-tf="1">1m</button>
-<button type="button" class="screener-mobile-menu-item" data-tf="5">5m</button>
-<button type="button" class="screener-mobile-menu-item" data-tf="15">15m</button>
-<button type="button" class="screener-mobile-menu-item active" data-tf="60">1h</button>
-<button type="button" class="screener-mobile-menu-item" data-tf="240">4h</button>
-<button type="button" class="screener-mobile-menu-item" data-tf="D">1D</button>
-</div>
-</div>
 
 <div id="coins-draw-tools-mount" class="coins-draw-tools-mount"></div>
 

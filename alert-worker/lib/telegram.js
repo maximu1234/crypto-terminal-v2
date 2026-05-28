@@ -1,12 +1,19 @@
 import { getWorkerConfig } from "./config.js";
 
+const DEFAULT_SITE_URL =
+"https://crypto-terminal-v2.vercel.app";
+
 export function telegramConfigured() {
 
   return !!getWorkerConfig().telegramBotToken;
 
 }
 
-export async function sendTelegramMessage(chatId, text) {
+export async function sendTelegramMessage(
+chatId,
+text,
+options = {}
+) {
 
   const token = getWorkerConfig().telegramBotToken;
 
@@ -14,22 +21,28 @@ export async function sendTelegramMessage(chatId, text) {
     return false;
   }
 
+  const body = {
+    chat_id: chatId,
+    text,
+    disable_web_page_preview: true
+  };
+
+  if (options.parse_mode) {
+    body.parse_mode = options.parse_mode;
+  }
+
   const res = await fetch(
     `https://api.telegram.org/bot${token}/sendMessage`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        chat_id: chatId,
-        text,
-        disable_web_page_preview: true
-      })
+      body: JSON.stringify(body)
     }
   );
 
   if (!res.ok) {
-    const body = await res.text();
-    console.warn("telegram send:", res.status, body);
+    const errBody = await res.text();
+    console.warn("telegram send:", res.status, errBody);
     return false;
   }
 
@@ -45,6 +58,71 @@ const TF_LABELS = {
   "240": "4h",
   "D": "1D"
 };
+
+function escapeHtml(value) {
+
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+
+}
+
+export function getSitePublicUrl() {
+
+  const raw =
+    getWorkerConfig().sitePublicUrl ||
+    "";
+
+  if (!raw) {
+    return DEFAULT_SITE_URL;
+  }
+
+  const trimmed =
+    raw.replace(/\/$/, "");
+
+  if (
+    trimmed.startsWith("http://") ||
+    trimmed.startsWith("https://")
+  ) {
+    return trimmed;
+  }
+
+  return `https://${trimmed}`;
+
+}
+
+function symbolForCoinsUrl(symbol) {
+
+  const raw =
+    String(symbol || "").trim().toUpperCase();
+
+  if (!raw) {
+    return "";
+  }
+
+  return raw.replace(/\.P$/i, "");
+
+}
+
+export function buildCoinsChartUrl(symbol, tf) {
+
+  const sym =
+    symbolForCoinsUrl(symbol);
+
+  if (!sym) {
+    return "";
+  }
+
+  const params =
+    new URLSearchParams({
+      symbol: sym,
+      tf: String(tf || "60")
+    });
+
+  return `${getSitePublicUrl()}/coins.html?${params}`;
+
+}
 
 function formatAlertTicker(symbol) {
 
@@ -93,11 +171,24 @@ export function formatAlertMessage(alert) {
     formatPriceForTelegram(
       Number(alert.price)
     );
+  const chartUrl =
+    buildCoinsChartUrl(
+      alert.symbol,
+      tfRaw
+    );
 
-  return (
-    `${sym} - ${tf}\n` +
-    "Цена пересекла уровень\n" +
-    price
-  );
+  const symHtml =
+    chartUrl
+      ? `<a href="${escapeHtml(chartUrl)}">${escapeHtml(sym)}</a>`
+      : escapeHtml(sym);
+
+  return {
+    text: (
+      `${symHtml} - ${escapeHtml(tf)}\n` +
+      "Цена пересекла уровень\n" +
+      escapeHtml(price)
+    ),
+    parse_mode: "HTML"
+  };
 
 }

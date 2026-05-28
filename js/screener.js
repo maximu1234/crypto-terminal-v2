@@ -265,10 +265,32 @@ list.sort((a, b)=>a.localeCompare(b));
 list.sort((a, b)=>{
 
 const ca =
-tickerMap.get(a)?.change24 ?? 0;
-
+tickerMap.get(a)?.change24;
 const cb =
-tickerMap.get(b)?.change24 ?? 0;
+tickerMap.get(b)?.change24;
+const ha =
+Number.isFinite(ca);
+const hb =
+Number.isFinite(cb);
+
+if(
+!ha &&
+!hb
+){
+return a.localeCompare(b);
+}
+
+if(
+!ha
+){
+return 1;
+}
+
+if(
+!hb
+){
+return -1;
+}
 
 return cb - ca;
 
@@ -1825,31 +1847,6 @@ applySavedUi();
 favorites =
 loadFavoritesGroups();
 
-const instantSymbols =
-peekBybitSymbolsCache();
-
-if(
-instantSymbols?.length
-){
-screenerMarketLoadFailed = false;
-allSymbols =
-mapSymbolList(instantSymbols);
-
-void withTimeout(
-loadScreenerMarketData(),
-45000,
-"screener market"
-).catch(err=>{
-
-console.error(
-"Screener market refresh:",
-err
-);
-
-});
-
-}else{
-
 try{
 
 await withTimeout(
@@ -1882,8 +1879,6 @@ void reloadScreenerMarketData();
 },
 2500
 );
-
-}
 
 }
 

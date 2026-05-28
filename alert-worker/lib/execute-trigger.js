@@ -66,13 +66,17 @@ export async function executeAlertTrigger(alertId) {
       };
     }
 
-    telegram = await sendTelegramMessage(
-      chatId,
+    const msg =
       formatAlertMessage({
         symbol: claimed.symbol,
         price: claimed.price,
         tf: claimed.tf
-      })
+      });
+
+    telegram = await sendTelegramMessage(
+      chatId,
+      msg.text,
+      { parse_mode: msg.parse_mode }
     );
 
     if (telegram) {
@@ -150,14 +154,18 @@ export async function notifyTelegramOnly(
     };
   }
 
+  const msg =
+    formatAlertMessage({
+      symbol: sym,
+      price,
+      tf: alert?.tf
+    });
+
   const telegram =
     await sendTelegramMessage(
       chatId,
-      formatAlertMessage({
-        symbol: sym,
-        price,
-        tf: alert?.tf
-      })
+      msg.text,
+      { parse_mode: msg.parse_mode }
     );
 
   if (
