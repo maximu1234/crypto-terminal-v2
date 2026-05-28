@@ -43,29 +43,29 @@ return `${Math.round(y) + 0.5}px`;
 }
 
 function touchGuideEndPx(
-plusEl,
+plusCenterX,
 plotW
 ){
 
-const fromLayout =
-plusEl?.offsetLeft;
-
 if(
 Number.isFinite(
-fromLayout
+plusCenterX
 ) &&
-fromLayout >
+plusCenterX >
 0
 ){
-return Math.round(
-fromLayout
+return Math.max(
+1,
+Math.round(
+plusCenterX - PLUS_ICON_W / 2
+)
 );
 }
 
 return Math.max(
 1,
 Math.round(
-plotW - PLUS_ICON_W - TOUCH_PLUS_OFFSET_PX
+plotW - PLUS_ICON_W / 2 - 2
 )
 );
 
@@ -75,12 +75,12 @@ function positionTouchGuideLine(
 lineEl,
 y,
 plotW,
-plusEl
+plusCenterX
 ){
 
 const end =
 touchGuideEndPx(
-plusEl,
+plusCenterX,
 plotW
 );
 
@@ -140,18 +140,25 @@ plusBtn.setAttribute(
 "aria-label",
 "Добавить алерт по цене"
 );
-plusBtn.title =
-"Алерт на этой цене";
 plusBtn.innerHTML =
-`<span class="price-alert-scale-plus-icon" aria-hidden="true"><span class="price-alert-scale-plus-circle">+</span></span><span class="price-alert-scale-plus-price"></span>`;
+`<span class="price-alert-scale-plus-circle" aria-hidden="true">+</span>`;
 
-const plusPriceEl =
-plusBtn.querySelector(
-".price-alert-scale-plus-price"
+const plusPriceHint =
+document.createElement(
+"div"
+);
+plusPriceHint.className =
+"price-alert-scale-price-hint hidden";
+plusPriceHint.setAttribute(
+"aria-hidden",
+"true"
 );
 
 wrapEl.appendChild(
 plusBtn
+);
+wrapEl.appendChild(
+plusPriceHint
 );
 
 const touchGuideLine =
@@ -267,6 +274,9 @@ opts = {}
 ){
 
 plusBtn.classList.add(
+"hidden"
+);
+plusPriceHint.classList.add(
 "hidden"
 );
 touchGuideLine.classList.add(
@@ -446,27 +456,34 @@ return;
 const showTouchStyle =
 opts.fromTouch === true ||
 IS_COARSE_TOUCH;
-const plusAnchorLeft =
+const plusCenterX =
 pw -
 (showTouchStyle
 ? TOUCH_PLUS_OFFSET_PX
 : 0);
 
 plusBtn.style.left =
-`${Math.round(plusAnchorLeft)}px`;
+`${Math.round(plusCenterX)}px`;
 plusBtn.style.top =
 `${y}px`;
 plusBtn.style.transform =
-"translate(-100%, -50%)";
+"translate(-50%, -50%)";
 
-if(plusPriceEl){
-plusPriceEl.textContent =
+plusPriceHint.textContent =
 formatPrice(price);
-}
+plusPriceHint.style.left =
+`${Math.round(pw)}px`;
+plusPriceHint.style.width =
+`${Math.round(scaleW)}px`;
+plusPriceHint.style.top =
+`${y}px`;
+plusPriceHint.style.transform =
+"translateY(-50%)";
 
 plusBtn.dataset.pendingPrice =
 String(price);
 plusBtn.classList.remove("hidden");
+plusPriceHint.classList.remove("hidden");
 
 if(
 showTouchStyle ||
@@ -477,7 +494,7 @@ positionTouchGuideLine(
 touchGuideLine,
 y,
 pw,
-plusBtn
+plusCenterX
 );
 
 requestAnimationFrame(
@@ -494,7 +511,7 @@ positionTouchGuideLine(
 touchGuideLine,
 y,
 pw,
-plusBtn
+plusCenterX
 );
 
 }
@@ -1179,6 +1196,7 @@ onKeyDown
 );
 
 plusBtn.remove();
+plusPriceHint.remove();
 deleteBar.remove();
 
 };
