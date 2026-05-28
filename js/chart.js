@@ -2039,6 +2039,13 @@ return ()=>{};
 export const TABLET_USE_CUSTOM_TOUCH_PAN =
 true;
 
+/**
+ * iPad: двойной тап по шкале — встроенный LW (axisDoubleClickReset);
+ * касания идут в canvas (#chart), полоса — только визуальная.
+ */
+export const TABLET_LW_NATIVE_PRICE_SCALE =
+true;
+
 export function applyTabletRsiChartOptions(
 rsiChart
 ){
@@ -2101,7 +2108,7 @@ price:false
 },
 axisDoubleClickReset:{
 time:false,
-price:false
+price:TABLET_LW_NATIVE_PRICE_SCALE
 },
 mouseWheel:true,
 pinch:true
@@ -2228,6 +2235,91 @@ document.body.classList.toggle(
 tablet &&
 TABLET_USE_CUSTOM_TOUCH_PAN
 );
+
+document.body.classList.toggle(
+"tablet-lw-price-scale",
+tablet &&
+TABLET_LW_NATIVE_PRICE_SCALE
+);
+
+}
+
+function readChartScaleStripWidthPx(
+chartEl
+){
+
+const wrap =
+chartEl?.closest?.(
+"#chart-wrap"
+);
+
+if(
+wrap
+){
+
+const raw =
+getComputedStyle(
+wrap
+).getPropertyValue(
+"--chart-scale-width"
+);
+
+const n =
+parseFloat(
+raw
+);
+
+if(
+Number.isFinite(
+n
+) &&
+n >
+0
+){
+return n;
+}
+
+}
+
+return CHART_PRICE_SCALE_WIDTH;
+
+}
+
+export function isTabletEventOnPriceScale(
+chartEl,
+e
+){
+
+if(
+!chartEl ||
+!e
+){
+return false;
+}
+
+const rect =
+chartEl.getBoundingClientRect();
+
+const w =
+readChartScaleStripWidthPx(
+chartEl
+);
+
+const x =
+e.clientX ??
+e.touches?.[
+0
+]?.clientX;
+
+if(
+x ==
+null
+){
+return false;
+}
+
+return x >=
+rect.right - w - 0.5;
 
 }
 
@@ -4646,37 +4738,17 @@ top:DEFAULT_PRICE_SCALE_MARGINS.top,
 bottom:DEFAULT_PRICE_SCALE_MARGINS.bottom
 };
 
-const STRIP_DBL_TAP_MS =
-900;
-
-const STRIP_DBL_TAP_PX =
-64;
-
 const STRIP_DRAG_START_PX =
 10;
 
-let stripLastTap =
-null;
+const useLwNativeScale =
+TABLET_LW_NATIVE_PRICE_SCALE &&
+isTabletChartViewport();
 
-let stripTapTimer =
-0;
-
-function clearStripLastTap(){
-
-stripLastTap = null;
-
-if(
-stripTapTimer
-){
-clearTimeout(
-stripTapTimer
-);
-
-stripTapTimer = 0;
-
-}
-
-}
+const touchTargetEl =
+useLwNativeScale
+? chartEl
+: stripEl;
 
 let priceZoomRange =
 null;
@@ -5012,71 +5084,6 @@ notifyChartPriceRangeChanged();
 
 }
 
-function stripTryDoubleTap(
-e
-){
-
-const now =
-Date.now();
-
-const x =
-e.clientX;
-
-const y =
-e.clientY;
-
-if(
-stripLastTap &&
-now - stripLastTap.t <=
-STRIP_DBL_TAP_MS
-){
-
-const dx =
-x - stripLastTap.x;
-
-const dy =
-y - stripLastTap.y;
-
-if(
-dx * dx + dy * dy <=
-STRIP_DBL_TAP_PX * STRIP_DBL_TAP_PX
-){
-clearStripLastTap();
-abortDrag();
-resetStripPriceAutoScale();
-e.preventDefault();
-e.stopPropagation();
-return true;
-
-}
-
-}
-
-if(
-stripTapTimer
-){
-clearTimeout(
-stripTapTimer
-);
-
-}
-
-stripLastTap = {
-t:now,
-x,
-y
-};
-
-stripTapTimer =
-setTimeout(
-clearStripLastTap,
-STRIP_DBL_TAP_MS + 80
-);
-
-return false;
-
-}
-
 function readMargins(){
 
 try{
@@ -5237,6 +5244,15 @@ e.pointerType ===
 return;
 }
 
+if(
+!isTabletEventOnPriceScale(
+chartEl,
+e
+)
+){
+return;
+}
+
 stripPointerDown = {
 id:
 e.pointerId ??
@@ -5329,15 +5345,6 @@ stripPointerDown.id
 ){
 
 if(
-!stripDidDrag &&
-!drag
-){
-stripTryDoubleTap(
-endEvent
-);
-}
-
-if(
 drag
 ){
 onDragEnd?.();
@@ -5369,126 +5376,84 @@ onDocEnd
 
 }
 
-function onStripTouchEndDbl(
-e
-){
-
-if(
-stripDidDrag ||
-drag
-){
-return;
-}
-
-for(
-let i =
-0;
-i <
-e.changedTouches.length;
-i++
-){
-
-const t =
-e.changedTouches[
-i
-];
-
-if(
-stripTryDoubleTap(
-t
-)
-){
-e.preventDefault();
-break;
-}
-
-}
-
-}
-
-const stripOpts = {
+const touchOpts = {
 passive:false
 };
 
-function onStripDblClick(
+function onChartScaleDblClick(
 e
 ){
 
-e.preventDefault();
-e.stopPropagation();
-abortDrag();
-resetStripPriceAutoScale();
-
-}
-
-stripEl.addEventListener(
-"pointerdown",
-onPointerDown,
-stripOpts
-);
-
-stripEl.addEventListener(
-"touchend",
-onStripTouchEndDbl,
-stripOpts
-);
-
-stripEl.addEventListener(
-"dblclick",
-onStripDblClick
-);
-
-stripEl.removeAttribute(
-"aria-hidden"
-);
-
-const onChartPointerDown =(
-e
-)=>{
-
 if(
-e.pointerType ===
-"mouse"
+!useLwNativeScale ||
+!isTabletEventOnPriceScale(
+chartEl,
+e
+)
 ){
 return;
 }
 
 abortDrag();
 
-};
+if(
+priceZoomRange ||
+priceZoomProviderInstalled
+){
+resetStripPriceAutoScale();
+}else{
+onReset?.();
+onInteraction?.();
+}
 
-chartEl.addEventListener(
-"pointerdown",
-onChartPointerDown,
-{ passive:true }
+}
+
+if(
+useLwNativeScale
+){
+stripEl.setAttribute(
+"aria-hidden",
+"true"
 );
+}else{
+stripEl.removeAttribute(
+"aria-hidden"
+);
+}
+
+touchTargetEl.addEventListener(
+"pointerdown",
+onPointerDown,
+touchOpts
+);
+
+if(
+useLwNativeScale
+){
+chartEl.addEventListener(
+"dblclick",
+onChartScaleDblClick,
+true
+);
+}
 
 const dispose = ()=>{
 
-clearStripLastTap();
-
-stripEl.removeEventListener(
+touchTargetEl.removeEventListener(
 "pointerdown",
 onPointerDown,
-stripOpts
+touchOpts
 );
 
-stripEl.removeEventListener(
-"touchend",
-onStripTouchEndDbl,
-stripOpts
-);
-
-stripEl.removeEventListener(
-"dblclick",
-onStripDblClick
-);
-
+if(
+useLwNativeScale
+){
 chartEl.removeEventListener(
-"pointerdown",
-onChartPointerDown,
-{ passive:true }
+"dblclick",
+onChartScaleDblClick,
+true
 );
+}
 
 abortDrag();
 
