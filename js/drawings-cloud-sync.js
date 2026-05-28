@@ -3293,7 +3293,13 @@ true;
 
 window.addEventListener(
 "drawings-updated",
-()=>{
+e=>{
+
+if(
+e?.detail?.remote
+){
+return;
+}
 
 if(
 isAlertsPage()
@@ -3308,7 +3314,13 @@ scheduleDrawingsCloudSync();
 
 window.addEventListener(
 "drawings-batch-updated",
-()=>{
+e=>{
+
+if(
+e?.detail?.remote
+){
+return;
+}
 
 if(
 isAlertsPage()
