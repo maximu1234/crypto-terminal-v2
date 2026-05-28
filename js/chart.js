@@ -2108,7 +2108,7 @@ price:false
 },
 axisDoubleClickReset:{
 time:false,
-price:TABLET_LW_NATIVE_PRICE_SCALE
+price:false
 },
 mouseWheel:true,
 pinch:true
@@ -4766,6 +4766,12 @@ null;
 let scaleTapTimer =
 0;
 
+let scaleResetAt =
+0;
+
+let scaleTouchEndAt =
+0;
+
 function clearScaleLastTap(){
 
 scaleLastTap = null;
@@ -4892,6 +4898,19 @@ return false;
 
 function resetStripPriceAutoScale(){
 
+const now =
+Date.now();
+
+if(
+now - scaleResetAt <
+350
+){
+return;
+}
+
+scaleResetAt =
+now;
+
 margins = {
 top:DEFAULT_PRICE_SCALE_MARGINS.top,
 bottom:DEFAULT_PRICE_SCALE_MARGINS.bottom
@@ -4900,13 +4919,23 @@ bottom:DEFAULT_PRICE_SCALE_MARGINS.bottom
 priceZoomRange =
 null;
 
-priceZoomProviderInstalled =
-false;
+ensureTabletPriceZoomProvider();
 
-resetChartPriceAutoScale(
-chart,
-series
-);
+try{
+chart.priceScale(
+"right"
+).applyOptions({
+autoScale:true,
+scaleMargins:{
+top:DEFAULT_PRICE_SCALE_MARGINS.top,
+bottom:DEFAULT_PRICE_SCALE_MARGINS.bottom
+}
+});
+}catch{
+/* ignore */
+}
+
+notifyChartPriceRangeChanged();
 
 onReset?.();
 onDragEnd?.();
@@ -5000,6 +5029,45 @@ max
 let priceZoomProviderInstalled =
 false;
 
+function visibleAutoscalePriceRange(){
+
+if(
+priceZoomRange
+){
+return {
+minValue:priceZoomRange.min,
+maxValue:priceZoomRange.max
+};
+}
+
+const fallback =
+hooks.getFallbackPriceRange?.() ||
+getVisibleCandlesPriceRange(
+chart,
+series
+);
+
+if(
+!fallback ||
+!Number.isFinite(
+fallback.min
+) ||
+!Number.isFinite(
+fallback.max
+) ||
+fallback.min ===
+fallback.max
+){
+return null;
+}
+
+return {
+minValue:fallback.min,
+maxValue:fallback.max
+};
+
+}
+
 function ensureTabletPriceZoomProvider(){
 
 if(
@@ -5012,17 +5080,17 @@ try{
 series.applyOptions({
 autoscaleInfoProvider:()=>{
 
+const range =
+visibleAutoscalePriceRange();
+
 if(
-!priceZoomRange
+!range
 ){
 return null;
 }
 
 return {
-priceRange:{
-minValue:priceZoomRange.min,
-maxValue:priceZoomRange.max
-}
+priceRange:range
 };
 
 }
@@ -5489,9 +5557,18 @@ if(
 !stripDidDrag &&
 !drag
 ){
+
+if(
+Date.now() - scaleTouchEndAt <
+120
+){
+/* touchend уже обработал double-tap */
+}else{
 tryScaleZoneDoubleTap(
 endEvent
 );
+}
+
 }
 
 if(
@@ -5537,10 +5614,19 @@ if(
 return;
 }
 
+scaleTouchEndAt =
+Date.now();
+
 tryScaleZoneDoubleTap(
 e
 );
 
+}
+
+if(
+useLwNativeScale
+){
+ensureTabletPriceZoomProvider();
 }
 
 const touchOpts = {

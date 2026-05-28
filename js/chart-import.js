@@ -1,4 +1,4 @@
 /**
  * Единая точка импорта chart.js — версию менять только здесь.
  */
-export * from "./chart.js?v=93";
+export * from "./chart.js?v=94";
