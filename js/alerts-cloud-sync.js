@@ -62,6 +62,21 @@ errorBackoffMs: IS_YANDEX
 : 8000
 });
 
+const ALERTS_SYNC_DEBUG =
+false;
+
+function alertsDebugLog(
+...args
+){
+
+if(
+ALERTS_SYNC_DEBUG
+){
+console.log(...args);
+}
+
+}
+
 let alertsRestStressUntil =
 0;
 
@@ -196,11 +211,11 @@ if(lastRemoteAlertMode !== remote){
 lastRemoteAlertMode = remote;
 
 if(remote){
-console.log(
+alertsDebugLog(
 "[alerts] облако: UI в браузере + Telegram (браузер /trigger и worker)"
 );
 }else{
-console.log(
+alertsDebugLog(
 "[alerts] локально: только браузер (без Telegram)"
 );
 }
@@ -526,7 +541,7 @@ broadcastAlertsRegistrySync();
 if(
 status === "SUBSCRIBED"
 ){
-console.log(
+alertsDebugLog(
 "[alerts] realtime: price_alerts"
 );
 return;
@@ -1952,7 +1967,7 @@ cloudId
 );
 }
 
-console.log(
+alertsDebugLog(
 "alert cloud push ok (REST):",
 symbol,
 shapeId,
@@ -2069,7 +2084,7 @@ symbol,
 shapeId
 );
 
-console.log(
+alertsDebugLog(
 "alert cloud push ok:",
 symbol,
 shapeId,
@@ -2115,7 +2130,7 @@ symbol,
 shapeId
 );
 
-console.log(
+alertsDebugLog(
 "alert cloud push ok (insert):",
 symbol,
 shapeId,
@@ -2240,7 +2255,7 @@ token
 
 if(ok){
 lastSeenCloudAlerts.clear();
-console.log(
+alertsDebugLog(
 "[alerts] облако: удалены все активные алерты"
 );
 }
@@ -3067,7 +3082,7 @@ Prefer: "return=minimal"
 );
 
 if(retryRes.ok){
-console.log(
+alertsDebugLog(
 "[alerts] purge REST ok (retry):",
 all
 ? "all active"
@@ -3095,7 +3110,7 @@ text.slice(0, 200)
 return false;
 }
 
-console.log(
+alertsDebugLog(
 "[alerts] purge REST ok:",
 all
 ? "all active"
@@ -3250,7 +3265,7 @@ meta?.tf != null
 ? normalizeAlertTf(meta.tf)
 : undefined;
 
-console.log(
+alertsDebugLog(
 "[alerts] cloud →",
 sym,
 sid,
@@ -3272,7 +3287,7 @@ reason: "no_auth"
 };
 
 if(token){
-console.log(
+alertsDebugLog(
 "[alerts] → worker /trigger…",
 sym,
 sid
@@ -3315,7 +3330,7 @@ reason: "timeout"
 }
 }
 
-console.log(
+alertsDebugLog(
 "[alerts] worker:",
 sym,
 sid,
@@ -3400,7 +3415,7 @@ if(
 stillInCloud &&
 token
 ){
-console.log(
+alertsDebugLog(
 "[alerts] дочистка строки (браузер)…",
 sym,
 sid
@@ -3416,7 +3431,7 @@ shapeId: sid
 });
 
 if(purged){
-console.log(
+alertsDebugLog(
 "[alerts] ✓ Supabase удалено (браузер):",
 sym,
 sid
@@ -3436,7 +3451,7 @@ remote?.ok ||
 remote?.telegram
 )
 ){
-console.log(
+alertsDebugLog(
 "[alerts] ✓ строка в Supabase снята",
 sym,
 sid
@@ -3973,7 +3988,7 @@ cloudId
 );
 }
 
-console.log(
+alertsDebugLog(
 "alert cloud push ok (worker):",
 symbol,
 shapeId,
@@ -4042,7 +4057,7 @@ await purgeAlertRowByCloudId(row.id);
 
 if(pruned){
 removed += 1;
-console.log(
+alertsDebugLog(
 "alert cloud prune:",
 row.symbol,
 row.shape_id
@@ -4052,7 +4067,7 @@ row.shape_id
 }
 
 if(removed){
-console.log(
+alertsDebugLog(
 `alert cloud prune: removed ${removed} orphan(s)`
 );
 }
@@ -4138,7 +4153,7 @@ row.symbol,
 row.shapeId
 );
 
-console.log(
+alertsDebugLog(
 "[alerts] ✓ Supabase (worker):",
 row.symbol,
 row.shapeId
@@ -4183,7 +4198,7 @@ row.symbol,
 row.shapeId
 );
 
-console.log(
+alertsDebugLog(
 "[alerts] ✓ Supabase (REST):",
 row.symbol,
 row.shapeId
@@ -4225,7 +4240,7 @@ row.symbol,
 row.shapeId
 );
 
-console.log(
+alertsDebugLog(
 "[alerts] ✓ Supabase (sdk):",
 row.symbol,
 row.shapeId
@@ -4333,7 +4348,7 @@ return 0;
 
 }
 
-console.log(
+alertsDebugLog(
 "[alerts] дозапись в Supabase:",
 pending.length,
 "(на графике:",
@@ -4348,7 +4363,7 @@ for(const entry of pending){
 const row =
 normalizeAlertEntry(entry);
 
-console.log(
+alertsDebugLog(
 "[alerts] дозапись попытка:",
 row.symbol,
 row.shapeId
@@ -4370,7 +4385,7 @@ row.shapeId
 }
 }
 
-console.log(
+alertsDebugLog(
 "[alerts] дозапись готова:",
 ok,
 "/",
@@ -4424,7 +4439,7 @@ ok += 1;
 }
 }
 
-console.log(
+alertsDebugLog(
 `alert cloud sync: pushed ${ok}/${list.length}`
 );
 
@@ -5150,7 +5165,7 @@ String(prev.cloudId || "") !== String(row.cloudId || "")
 
 if(changed){
 saveAlertsFromCloudMerge(next);
-console.log(
+alertsDebugLog(
 "[alerts] reconcile: в облаке",
 cloudByKey.size,
 "| реестр",
@@ -5296,7 +5311,7 @@ hydrateAlertsInflight =
 runCloudOp(
 async()=>{
 
-console.log(
+alertsDebugLog(
 "[alerts] hydrate after login…"
 );
 
