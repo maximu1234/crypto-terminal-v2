@@ -89,6 +89,9 @@ IS_YANDEX
 const IOS_SAFARI_VISIBLE_PULL_MS =
 3500;
 
+const VISIBLE_PULL_FALLBACK_MS =
+5000;
+
 let lastRemoteAlertMode = null;
 
 /** Снимок активных строк облака — ловим срабатывание, если realtime DELETE без payload (iPad). */
@@ -118,6 +121,12 @@ let iosSafariPullTimer =
 null;
 
 let iosSafariPullInFlight =
+false;
+
+let visiblePullFallbackTimer =
+null;
+
+let visiblePullFallbackInFlight =
 false;
 
 let hydrateAlertsInflight = null;
@@ -280,8 +289,13 @@ async function handleAlertsRealtimeDelete(
 oldRow
 ){
 
-const triggered =
+const rawTriggered =
 oldRow?.triggered_at;
+const triggered =
+rawTriggered !== null &&
+rawTriggered !== undefined &&
+String(rawTriggered).trim() !== "" &&
+String(rawTriggered).trim().toLowerCase() !== "null";
 
 if(triggered){
 
@@ -723,6 +737,69 @@ iosSafariPullTimer
 iosSafariPullTimer =
 null;
 iosSafariPullInFlight =
+false;
+
+}
+
+function startVisiblePullFallback(){
+
+if(
+visiblePullFallbackTimer
+){
+return;
+}
+
+visiblePullFallbackTimer =
+setInterval(
+()=>{
+
+if(
+visiblePullFallbackInFlight ||
+!isCloudLoggedInEffective() ||
+document.visibilityState !== "visible" ||
+isAlertsPage() ||
+!isDrawingsUiPage() ||
+isRegistryCloudSyncPaused()
+){
+return;
+}
+
+visiblePullFallbackInFlight =
+true;
+
+void ensureCloudLoginResolved(8000)
+.catch(()=>null)
+.then(()=>
+pullRegistryFromCloudNow({
+immediate: true
+})
+)
+.catch(()=>{})
+.finally(()=>{
+visiblePullFallbackInFlight =
+false;
+});
+
+},
+VISIBLE_PULL_FALLBACK_MS
+);
+
+}
+
+function stopVisiblePullFallback(){
+
+if(
+!visiblePullFallbackTimer
+){
+return;
+}
+
+clearInterval(
+visiblePullFallbackTimer
+);
+visiblePullFallbackTimer =
+null;
+visiblePullFallbackInFlight =
 false;
 
 }
@@ -4126,6 +4203,16 @@ const url =
 `&select=id,symbol,shape_id,price,tf,created_at`;
 
 try{
+let token =
+auth?.token;
+
+if(
+!token
+){
+return null;
+}
+
+for(let attempt = 0; attempt < 2; attempt++){
 const res =
 await fetchWithTimeout(
 url,
@@ -4133,7 +4220,7 @@ url,
 method: "GET",
 headers: {
 apikey: anon,
-Authorization: `Bearer ${auth.token}`,
+Authorization: `Bearer ${token}`,
 Accept: "application/json"
 }
 },
@@ -4144,12 +4231,37 @@ Accept: "application/json"
 if(
 !res.ok
 ){
+const errText =
+await res.text();
+
+if(
+attempt === 0 &&
+isJwtExpiredText(errText)
+){
+try{
+await ensureCloudLoginResolved(10000);
+}catch{
+/* ignore */
+}
+
+const refreshed =
+readAlertTokenSync()?.token ||
+readPersistedAuthSession()?.access_token ||
+null;
+
+if(
+refreshed &&
+refreshed !== token
+){
+token = refreshed;
+continue;
+}
+}
+
 console.warn(
 "[alerts] fetch REST:",
 res.status,
-(
-await res.text()
-).slice(
+errText.slice(
 0,
 160
 )
@@ -4165,6 +4277,9 @@ rows
 )
 ? rows
 : [];
+}
+
+return null;
 
 }catch(
 err
@@ -4907,6 +5022,7 @@ if(
 ){
 stopAlertsFastPoll();
 stopIosSafariVisiblePull();
+stopVisiblePullFallback();
 clearAlertAuthCache();
 void teardownAlertsRealtime();
 return;
@@ -4928,6 +5044,7 @@ err?.message || err
 }
 
 startIosSafariVisiblePull();
+startVisiblePullFallback();
 
 }
 );
@@ -4954,6 +5071,7 @@ startAlertsFastPoll();
 }
 
 startIosSafariVisiblePull();
+startVisiblePullFallback();
 }
 
 const pullWhenVisible = ()=>{
