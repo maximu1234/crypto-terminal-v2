@@ -617,8 +617,32 @@ await ensureCloudLoginResolved(10000);
 /* ignore */
 }
 
+let fullCtx =
+ctx;
+
+if(
+!fullCtx?.sb
+){
+try{
+fullCtx =
+await withTimeout(
+getAuthed(),
+8000,
+"getAuthed purge refresh"
+);
+}catch{
+fullCtx = ctx;
+}
+}
+
 const refreshed =
-await getAccessTokenForUser(ctx);
+(
+fullCtx?.sb
+? await getAccessTokenForUser(fullCtx)
+: null
+) ||
+resolveDrawingsRestAuth()?.token ||
+null;
 
 if(
 refreshed &&

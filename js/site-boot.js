@@ -136,7 +136,7 @@ new CustomEvent(
 }
 );
 
-import("./drawings-cloud-sync.js?v=20").then(
+import("./drawings-cloud-sync.js?v=21").then(
 ({ initDrawingsCloudSync })=>{
 initDrawingsCloudSync();
 }
