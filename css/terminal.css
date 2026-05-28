@@ -771,9 +771,9 @@ body{
   touch-action:pan-x pan-y;
 }
 
-/* iPad: класс tablet-chart ставится из JS (isTabletChartViewport) */
+/* iPad: LW получает touch на шкале цены; pan свечей — через overlay слева */
 body.tablet-chart #chart{
-  pointer-events:none;
+  pointer-events:auto;
   touch-action:none;
 }
 
@@ -803,7 +803,8 @@ body.tablet-chart .tablet-probe-touch-layer{
 }
 
 body.tablet-chart .price-scale-touch-strip{
-  display:block;
+  display:none;
+  pointer-events:none;
 }
 
 .price-scale-touch-strip{
