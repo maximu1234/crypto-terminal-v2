@@ -19,7 +19,7 @@ import {
 formatPrice,
 hideDomChartCrosshair,
 positionDomChartCrosshair
-} from "./chart.js?v=66";
+} from "./chart.js?v=67";
 
 const PLUS_ICON_W =
 22;

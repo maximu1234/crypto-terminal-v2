@@ -896,17 +896,19 @@ x
 )
 );
 
-if(
-series
-){
-
 const price =
-series.coordinateToPrice?.(
+series?.coordinateToPrice?.(
 y
 );
 
-if(
+const hasPrice =
 price != null &&
+Number.isFinite(
+price
+);
+
+if(
+hasPrice &&
 probeTime != null
 ){
 
@@ -920,13 +922,20 @@ series
 /* ignore */
 }
 
+}else{
+
+try{
+chart.clearCrosshairPosition();
+}catch{
+/* ignore */
 }
 
 }
 
 if(
 horizLineEl &&
-chartsStackEl
+chartsStackEl &&
+hasPrice
 ){
 
 const stackR =
@@ -982,10 +991,7 @@ horizLineEl.classList.remove(
 }
 
 if(
-probeTime == null
-){
-
-if(
+probeTime == null &&
 timeLabelEl
 ){
 timeLabelEl.classList.add(
@@ -993,10 +999,9 @@ timeLabelEl.classList.add(
 );
 }
 
-return null;
-
-}
-
+if(
+probeTime != null
+){
 updateCrosshairAxisLabels({
 param:{
 time: probeTime,
@@ -1014,7 +1019,10 @@ probeTime
 return {
 time: probeTime,
 x,
-y
+y,
+price: hasPrice
+? price
+: null
 };
 
 }
