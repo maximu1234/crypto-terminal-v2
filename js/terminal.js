@@ -58,7 +58,7 @@ TABLET_USE_CUSTOM_TOUCH_PAN,
 isTabletChartViewport,
 isUserCrosshairEvent,
 resetChartPriceAutoScale
-} from "./chart-import.js?v=6";
+} from "./chart-import.js?v=7";
 
 import {
 connectKlineStream,

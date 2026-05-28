@@ -98,6 +98,10 @@ false;
 let crosshairJustEntered =
 false;
 
+/** iOS: и pointerup, и touchend — снимаем probe один раз */
+let crosshairReleaseHandled =
+false;
+
 let onDocMove =
 null;
 
@@ -441,6 +445,9 @@ false;
 crosshairJustEntered =
 true;
 
+crosshairReleaseHandled =
+false;
+
 touchLayerEl.classList.add(
 "active"
 );
@@ -682,24 +689,7 @@ pointerId
 return;
 }
 
-const isTapToggle =
-!crosshairMoved;
-
-pointerId = null;
-detachDocListeners();
-
-if(crosshairJustEntered){
-crosshairJustEntered =
-false;
-return;
-}
-
-if(isTapToggle){
-endCrosshair();
-}
-
-crosshairMoved =
-false;
+finishCrosshairRelease();
 return;
 
 }
@@ -736,12 +726,7 @@ if(
 mode ===
 "crosshair"
 ){
-pointerId = null;
-detachDocListeners();
-crosshairMoved =
-false;
-crosshairJustEntered =
-false;
+finishCrosshairRelease();
 return;
 }
 
@@ -1131,6 +1116,13 @@ mode ===
 "pending"
 ){
 resetGesture();
+}
+
+if(
+mode ===
+"crosshair"
+){
+endCrosshair();
 }
 
 }

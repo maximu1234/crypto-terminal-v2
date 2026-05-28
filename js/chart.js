@@ -942,14 +942,42 @@ Number.isFinite(
 price
 );
 
+let crosshairPrice =
+hasPrice
+? price
+: null;
+
 if(
-hasPrice &&
-probeTime != null
+crosshairPrice ==
+null &&
+probeTime !=
+null
+){
+crosshairPrice =
+series?.coordinateToPrice?.(
+Math.max(
+1,
+Math.min(
+chartR.height - 1,
+y
+)
+)
+);
+}
+
+if(
+probeTime !=
+null &&
+crosshairPrice !=
+null &&
+Number.isFinite(
+crosshairPrice
+)
 ){
 
 try{
 chart.setCrosshairPosition(
-price,
+crosshairPrice,
 probeTime,
 series
 );
@@ -969,8 +997,7 @@ chart.clearCrosshairPosition();
 
 if(
 horizLineEl &&
-chartsStackEl &&
-hasPrice
+chartsStackEl
 ){
 
 const stackR =
@@ -2984,7 +3011,7 @@ hud?.remove();
 
 export {
 mountTabletChartGestures
-} from "./chart-tablet-gestures.js?v=8";
+} from "./chart-tablet-gestures.js?v=9";
 
 /** Смартфон / планшет с touch — отдельно от isTabletChartViewport (≥768px). */
 export function isCoarseTouchViewport(){

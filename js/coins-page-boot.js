@@ -17,12 +17,12 @@ navigator.userAgent ||
 
 /** Менять при каждом релизе графика — иначе iPad держит старый boot в кэше (v=2). */
 export const COINS_CHART_BUILD =
-"20260529-time-scale-crosshair";
+"20260529-probe-release";
 
 const CHART_ENTRY =
 IS_YANDEX
 ? "/js/chart-page.js?v=2"
-: "/js/terminal.js?v=230";
+: "/js/terminal.js?v=231";
 
 function loadModuleScript(
 url,
