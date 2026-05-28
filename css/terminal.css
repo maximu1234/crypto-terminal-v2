@@ -805,6 +805,7 @@ body.tablet-chart .tablet-probe-touch-layer{
 body.tablet-chart .price-scale-touch-strip{
   display:block;
   pointer-events:auto;
+  z-index:25;
 }
 
 .price-scale-touch-strip{
@@ -814,7 +815,7 @@ body.tablet-chart .price-scale-touch-strip{
   right:0;
   bottom:0;
   width:var(--chart-scale-width, 56px);
-  z-index:20;
+  z-index:25;
   touch-action:none;
   -webkit-tap-highlight-color:transparent;
   pointer-events:auto;

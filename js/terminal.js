@@ -56,8 +56,9 @@ normalCrosshairOptions,
 mountAxisDoubleTapReset,
 TABLET_USE_CUSTOM_TOUCH_PAN,
 isTabletChartViewport,
-isUserCrosshairEvent
-} from "./chart.js?v=82";
+isUserCrosshairEvent,
+resetChartPriceAutoScale
+} from "./chart.js?v=83";
 
 import {
 connectKlineStream,
@@ -1709,6 +1710,26 @@ priceScaleTouchHooks.onReset =
 drawingTools?.endPriceScaleDragRedraw?.();
 drawingTools?.scheduleRedraw?.();
 };
+
+const priceScaleStripEl =
+document.getElementById(
+"price-scale-touch-strip"
+);
+
+if(
+priceScaleStripEl
+){
+mountAxisDoubleTapReset(
+priceScaleStripEl,
+()=>{
+resetChartPriceAutoScale(
+chart,
+candleSeries
+);
+priceScaleTouchHooks.onReset?.();
+}
+);
+}
 
 void import("./price-alert-ui.js?v=26").then(({ mountPriceAlertUi })=>{
 mountPriceAlertUi({
