@@ -4741,6 +4741,13 @@ bottom:DEFAULT_PRICE_SCALE_MARGINS.bottom
 const STRIP_DRAG_START_PX =
 10;
 
+/** iOS Safari: dblclick по canvas не приходит; LW тоже слушает dblclick */
+const SCALE_DBL_TAP_MS =
+500;
+
+const SCALE_DBL_TAP_PX =
+30;
+
 const useLwNativeScale =
 TABLET_LW_NATIVE_PRICE_SCALE &&
 isTabletChartViewport();
@@ -4752,6 +4759,136 @@ useLwNativeScale
 
 let priceZoomRange =
 null;
+
+let scaleLastTap =
+null;
+
+let scaleTapTimer =
+0;
+
+function clearScaleLastTap(){
+
+scaleLastTap = null;
+
+if(
+scaleTapTimer
+){
+clearTimeout(
+scaleTapTimer
+);
+scaleTapTimer = 0;
+}
+
+}
+
+function tryScaleZoneDoubleTap(
+e
+){
+
+if(
+stripDidDrag ||
+drag
+){
+return false;
+}
+
+const pt =
+e.changedTouches?.[
+0
+] ||
+e;
+
+const x =
+pt.clientX;
+
+const y =
+pt.clientY;
+
+if(
+x ==
+null ||
+y ==
+null
+){
+return false;
+}
+
+if(
+!isTabletEventOnPriceScale(
+chartEl,
+{
+clientX:x,
+clientY:y,
+touches:[
+{
+clientX:x,
+clientY:y
+}
+]
+}
+)
+){
+return false;
+}
+
+const now =
+Date.now();
+
+if(
+scaleLastTap &&
+now - scaleLastTap.t <=
+SCALE_DBL_TAP_MS
+){
+
+const dx =
+x - scaleLastTap.x;
+
+const dy =
+y - scaleLastTap.y;
+
+if(
+dx * dx + dy * dy <=
+SCALE_DBL_TAP_PX * SCALE_DBL_TAP_PX
+){
+clearScaleLastTap();
+abortDrag();
+resetStripPriceAutoScale();
+
+try{
+e.preventDefault?.();
+}catch{
+/* ignore */
+}
+
+return true;
+
+}
+
+}
+
+if(
+scaleTapTimer
+){
+clearTimeout(
+scaleTapTimer
+);
+}
+
+scaleLastTap = {
+t:now,
+x,
+y
+};
+
+scaleTapTimer =
+setTimeout(
+clearScaleLastTap,
+SCALE_DBL_TAP_MS + 60
+);
+
+return false;
+
+}
 
 function resetStripPriceAutoScale(){
 
@@ -5264,7 +5401,11 @@ y:e.clientY
 stripDidDrag =
 false;
 
-detachDocListeners();
+if(
+onDocMove
+){
+return;
+}
 
 onDocMove =(
 moveEvent
@@ -5345,6 +5486,15 @@ stripPointerDown.id
 ){
 
 if(
+!stripDidDrag &&
+!drag
+){
+tryScaleZoneDoubleTap(
+endEvent
+);
+}
+
+if(
 drag
 ){
 onDragEnd?.();
@@ -5353,6 +5503,7 @@ onDragEnd?.();
 abortDrag();
 stripPointerDown =
 null;
+detachDocListeners();
 
 }
 
@@ -5376,6 +5527,22 @@ onDocEnd
 
 }
 
+function onScaleTouchEnd(
+e
+){
+
+if(
+!useLwNativeScale
+){
+return;
+}
+
+tryScaleZoneDoubleTap(
+e
+);
+
+}
+
 const touchOpts = {
 passive:false
 };
@@ -5395,16 +5562,7 @@ return;
 }
 
 abortDrag();
-
-if(
-priceZoomRange ||
-priceZoomProviderInstalled
-){
 resetStripPriceAutoScale();
-}else{
-onReset?.();
-onInteraction?.();
-}
 
 }
 
@@ -5435,9 +5593,17 @@ chartEl.addEventListener(
 onChartScaleDblClick,
 true
 );
+
+chartEl.addEventListener(
+"touchend",
+onScaleTouchEnd,
+touchOpts
+);
 }
 
 const dispose = ()=>{
+
+clearScaleLastTap();
 
 touchTargetEl.removeEventListener(
 "pointerdown",
@@ -5452,6 +5618,12 @@ chartEl.removeEventListener(
 "dblclick",
 onChartScaleDblClick,
 true
+);
+
+chartEl.removeEventListener(
+"touchend",
+onScaleTouchEnd,
+touchOpts
 );
 }
 
