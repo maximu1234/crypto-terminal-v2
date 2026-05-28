@@ -57,8 +57,7 @@ mountAxisDoubleTapReset,
 TABLET_USE_CUSTOM_TOUCH_PAN,
 isTabletChartViewport,
 isUserCrosshairEvent,
-resetChartPriceAutoScale,
-pulsePriceScaleAutoscale
+resetChartPriceAutoScale
 } from "./chart-import.js?v=12";
 
 import {
@@ -1253,39 +1252,20 @@ candleSeries,
 priceScaleTouchHooks
 );
 
-function resetTabletPriceScale(
-force = false
-){
+function resetTabletPriceScale(){
 
 if(
 tabletPriceScaleCtrl?.resetPriceAutoScale
 ){
-tabletPriceScaleCtrl.resetPriceAutoScale(
-force
-? { force:true }
-: {}
-);
-}else{
+tabletPriceScaleCtrl.resetPriceAutoScale();
+return;
+}
+
 resetChartPriceAutoScale(
 chart,
 candleSeries
 );
-
-if(
-force
-){
-pulsePriceScaleAutoscale(
-chart,
-candleSeries
-);
-}
-}
-
-if(
-force
-){
 priceScaleTouchHooks.onReset?.();
-}
 
 }
 
@@ -2560,10 +2540,6 @@ return;
 
 }
 
-resetTabletPriceScale(
-true
-);
-
 candleSeries.setData(candles);
 
 const refPrice =
@@ -2583,18 +2559,6 @@ rebuildRsiFromCandles();
 applyDefaultZoom();
 
 resizeCharts();
-
-requestAnimationFrame(
-()=>{
-resetTabletPriceScale(
-true
-);
-applyTabletMainChartScroll(
-chart
-);
-resizeCharts();
-}
-);
 
 requestAnimationFrame(resizeCharts);
 setTimeout(resizeCharts, 50);

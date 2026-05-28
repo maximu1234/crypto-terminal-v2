@@ -771,13 +771,8 @@ body{
   touch-action:pan-x pan-y;
 }
 
-/* iPad: pan свечей через overlay; шкала — canvas LW (tablet-lw-price-scale) */
+/* iPad: pan свечей через overlay; ценовая шкала — LW на canvas (#chart), как на десктопе */
 body.tablet-chart #chart{
-  pointer-events:none;
-  touch-action:none;
-}
-
-body.tablet-chart.tablet-lw-price-scale #chart{
   pointer-events:auto;
   touch-action:none;
 }
@@ -809,15 +804,8 @@ body.tablet-chart .tablet-probe-touch-layer{
 
 body.tablet-chart .price-scale-touch-strip{
   display:block;
-  pointer-events:auto;
-  z-index:50;
-  /* manipulation: без 300ms задержки между тапами (важно для double-tap) */
-  touch-action:manipulation;
-}
-
-body.tablet-chart.tablet-lw-price-scale .price-scale-touch-strip{
-  pointer-events:auto;
-  z-index:50;
+  pointer-events:none;
+  z-index:5;
   bottom:var(--chart-time-scale-height, 28px);
 }
 

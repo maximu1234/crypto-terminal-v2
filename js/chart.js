@@ -2123,11 +2123,11 @@ export const TABLET_USE_CUSTOM_TOUCH_PAN =
 true;
 
 /**
- * iPad: двойной тап по шкале — встроенный LW (axisDoubleClickReset);
- * касания идут в canvas (#chart), полоса — только визуальная.
+ * iPad: ценовая шкала как на десктопе (LW axisPressedMouseMove / axisDoubleClickReset).
+ * Полоса strip — только визуально (кнопка «+» позже).
  */
 export const TABLET_LW_NATIVE_PRICE_SCALE =
-true;
+false;
 
 export function applyTabletRsiChartOptions(
 rsiChart
@@ -2187,11 +2187,11 @@ vertTouchDrag:false
 handleScale:{
 axisPressedMouseMove:{
 time:true,
-price:false
+price:true
 },
 axisDoubleClickReset:{
-time:false,
-price:false
+time:true,
+price:true
 },
 mouseWheel:true,
 pinch:true
@@ -5090,6 +5090,27 @@ hooks.onScaleFrame ||
 const onReset =
 hooks.onReset ||
 (()=>{});
+
+/* iPad: без кастомного Y-zoom — только LW, как на десктопе */
+if(
+isTabletChartViewport()
+){
+
+return {
+dispose:()=>{},
+resetPriceAutoScale:()=>{
+resetChartPriceAutoScale(
+chart,
+series
+);
+clearTabletProbeCrosshairForChart(
+chart
+);
+onReset?.();
+}
+};
+
+}
 
 let drag =
 null;
