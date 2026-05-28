@@ -497,6 +497,12 @@ opts?.ctx || null;
 let token =
 opts?.token || null;
 
+try{
+await ensureCloudLoginResolved(8000);
+}catch{
+/* ignore */
+}
+
 if(
 !ctx?.user?.id
 ){
@@ -1887,23 +1893,18 @@ return false;
 const auth =
 resolveDrawingsRestAuth();
 
-if(
-!auth?.token
-){
-console.warn(
-"[drawings] delete: нет токена"
-);
-return false;
-}
-
 const ok =
 await purgeDrawingsViaRest({
 symbol: sym,
 shapeId: sid,
-ctx: {
+ctx:
+auth?.user
+? {
 user: auth.user
-},
-token: auth.token
+}
+: null,
+token:
+auth?.token || null
 });
 
 if(
