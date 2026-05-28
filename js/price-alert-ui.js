@@ -19,7 +19,7 @@ import {
 formatPrice,
 hideDomChartCrosshair,
 positionDomChartCrosshair
-} from "./chart.js?v=68";
+} from "./chart.js?v=69";
 
 const PLUS_ICON_W =
 22;
@@ -399,13 +399,24 @@ plusBtn.dataset.pendingPrice =
 String(price);
 plusBtn.classList.remove("hidden");
 
-if(showTouchStyle){
+if(
+showTouchStyle ||
+opts.forceShowFromProbe
+){
+const lineW =
+Math.max(
+1,
+Math.round(
+pw
+)
+);
+
 touchGuideLine.style.top =
 `${Math.round(y)}px`;
 touchGuideLine.style.left =
 "0px";
 touchGuideLine.style.width =
-`${Math.round(pw)}px`;
+`${lineW}px`;
 touchGuideLine.classList.remove(
 "hidden"
 );

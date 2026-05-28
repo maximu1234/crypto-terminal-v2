@@ -56,7 +56,7 @@ mountAxisDoubleTapReset,
 TABLET_USE_CUSTOM_TOUCH_PAN,
 isTabletChartViewport,
 isUserCrosshairEvent
-} from "./chart.js?v=68";
+} from "./chart.js?v=69";
 
 import {
 connectKlineStream,
@@ -1645,7 +1645,7 @@ if(
 drawingTools
 ){
 
-void import("./price-alert-ui.js?v=21").then(({ mountPriceAlertUi })=>{
+void import("./price-alert-ui.js?v=22").then(({ mountPriceAlertUi })=>{
 mountPriceAlertUi({
 chart,
 series: candleSeries,

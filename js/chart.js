@@ -850,14 +850,31 @@ y
 )
 );
 
-const scaleStrip =
-document.getElementById(
-"price-scale-touch-strip"
-);
-
-const scaleW =
-scaleStrip?.offsetWidth ??
+let scaleW =
 56;
+
+try{
+scaleW =
+chart.priceScale?.(
+"right"
+)?.width?.() ||
+scaleW;
+}catch{
+/* ignore */
+}
+
+scaleW =
+Math.max(
+40,
+Math.min(
+Math.round(
+scaleW
+),
+Math.round(
+chartR.width * 0.35
+)
+)
+);
 
 if(
 chartsStackEl &&

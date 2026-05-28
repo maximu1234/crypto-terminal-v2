@@ -12,7 +12,7 @@ applyScreenerZoom,
 restoreScreenerViewport,
 SCREENER_VISIBLE_BARS,
 SCREENER_MAX_BARS
-} from "./chart.js?v=68";
+} from "./chart.js?v=69";
 
 import {
 subscribeKline
