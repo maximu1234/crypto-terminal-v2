@@ -19,7 +19,7 @@ import {
 formatPrice,
 hideDomChartCrosshair,
 positionDomChartCrosshair
-} from "./chart.js?v=64";
+} from "./chart.js?v=65";
 
 const PLUS_ICON_W =
 22;
@@ -140,15 +140,32 @@ getTf?.() ||
 
 function plotWidth(){
 
-return Math.max(
+const wrapW =
+Math.max(
 0,
-wrapEl.clientWidth -
-(
+wrapEl.clientWidth
+);
+
+const rawScaleW =
 chart.priceScale?.(
 "right"
 )?.width?.() ||
-56
+56;
+
+const safeScaleW =
+Math.max(
+40,
+Math.min(
+Math.round(
+wrapW * 0.35
+),
+rawScaleW
 )
+);
+
+return Math.max(
+0,
+wrapW - safeScaleW
 );
 
 }

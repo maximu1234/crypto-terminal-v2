@@ -858,9 +858,20 @@ document.getElementById(
 "price-scale-touch-strip"
 );
 
-const scaleW =
+const scaleWRaw =
 scaleStrip?.offsetWidth ??
 56;
+
+const scaleW =
+Math.max(
+40,
+Math.min(
+Math.round(
+chartR.width * 0.35
+),
+scaleWRaw
+)
+);
 
 if(
 chartsStackEl &&
