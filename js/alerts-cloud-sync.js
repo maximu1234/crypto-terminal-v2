@@ -651,6 +651,18 @@ alertsFastPollIntervalId =
 0;
 }
 
+if(
+alertsFastPollTimer
+){
+clearTimeout(
+alertsFastPollTimer
+);
+alertsFastPollTimer =
+null;
+}
+
+}
+
 function startIosSafariVisiblePull(){
 
 if(
@@ -712,18 +724,6 @@ iosSafariPullTimer =
 null;
 iosSafariPullInFlight =
 false;
-
-}
-
-if(
-alertsFastPollTimer
-){
-clearTimeout(
-alertsFastPollTimer
-);
-alertsFastPollTimer =
-null;
-}
 
 }
 
