@@ -8,7 +8,8 @@ import {
 waitForCloudAuth,
 isCloudLoggedIn,
 isCloudLoggedInEffective,
-onCloudSyncChange
+onCloudSyncChange,
+ensureCloudLoginResolved
 } from "./cloud-sync.js?v=23";
 
 import {
@@ -1067,6 +1068,35 @@ userId: sync.user.id
 };
 }
 
+function isJwtExpiredError(err){
+
+const msg =
+String(
+err?.message ||
+err ||
+""
+);
+
+return (
+/JWT expired/i.test(msg) ||
+/PGRST303/i.test(msg) ||
+/invalid jwt/i.test(msg)
+);
+
+}
+
+async function refreshTelegramRestAuth(){
+
+try{
+await ensureCloudLoginResolved(10000);
+}catch{
+/* ignore */
+}
+
+return resolveUserRestAuth();
+
+}
+
 const auth =
 await resolveAlertAuthFast();
 
@@ -1325,13 +1355,14 @@ text.slice(0, 160) ||
 
 export async function getTelegramChatId(){
 
-const auth =
+let auth =
 await resolveUserRestAuth();
 
 if(!auth){
 return null;
 }
 
+for(let attempt = 0; attempt < 2; attempt++){
 try{
 
 const parsed =
@@ -1353,6 +1384,19 @@ parsed
 return parsed;
 
 }catch(err){
+if(
+attempt === 0 &&
+isJwtExpiredError(err)
+){
+const nextAuth =
+await refreshTelegramRestAuth();
+
+if(nextAuth){
+auth = nextAuth;
+continue;
+}
+}
+
 console.warn(
 "telegram chat load:",
 err?.message || err
@@ -1360,12 +1404,15 @@ err?.message || err
 return null;
 
 }
+}
+
+return null;
 
 }
 
 export async function saveTelegramChatId(chatId){
 
-const auth =
+let auth =
 await resolveUserRestAuth();
 
 if(!auth){
@@ -1390,6 +1437,11 @@ throw new Error("Некорректный chat id");
 
 }
 
+let saved =
+false;
+
+for(let attempt = 0; attempt < 2; attempt++){
+try{
 await withTimeout(
 saveTelegramChatIdViaRest(
 auth,
@@ -1398,6 +1450,30 @@ parsed
 15000,
 "telegram save"
 );
+saved = true;
+break;
+}catch(err){
+if(
+attempt === 0 &&
+isJwtExpiredError(err)
+){
+const nextAuth =
+await refreshTelegramRestAuth();
+
+if(nextAuth){
+auth = nextAuth;
+continue;
+}
+}
+throw err;
+}
+}
+
+if(!saved){
+throw new Error(
+"Не удалось сохранить Chat ID"
+);
+}
 
 writeCachedTelegramChatId(
 auth.userId,
