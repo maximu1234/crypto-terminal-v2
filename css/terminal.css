@@ -1053,10 +1053,10 @@ body.tablet-chart .price-scale-touch-strip{
   top:0;
   height:0;
   border:none;
-  border-top:1px dashed #758696;
+  border-top:2px solid rgba(173, 190, 212, .96);
   box-sizing:border-box;
   pointer-events:none;
-  z-index:25;
+  z-index:40;
 }
 
 .tablet-probe-crosshair-h.hidden{

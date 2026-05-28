@@ -409,16 +409,20 @@ clientY
 }
 
 async function submitAlertFromPlusTap(
-e
+e,
+opts = {}
 ){
 
 e.preventDefault();
 e.stopPropagation();
 
 if(
+!opts.ignoreSuppressWindow &&
+(
 e.detail > 1 ||
 Date.now() <
 suppressPlusClickUntil
+)
 ){
 return;
 }
@@ -509,15 +513,14 @@ submitAlertFromPlusTap
 plusBtn.addEventListener(
 "touchend",
 e=>{
-if(
-Date.now() <
-suppressPlusClickUntil
-){
-return;
-}
 suppressPlusClickUntil =
 Date.now() + 450;
-void submitAlertFromPlusTap(e);
+void submitAlertFromPlusTap(
+e,
+{
+ignoreSuppressWindow: true
+}
+);
 }
 );
 
