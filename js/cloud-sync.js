@@ -575,7 +575,7 @@ true;
 return;
 }
 
-void import("./drawings-cloud-sync.js?v=26").then(
+void import("./drawings-cloud-sync.js?v=27").then(
 m=>{
 m.scheduleDrawingsCloudPush();
 }
@@ -596,7 +596,7 @@ return Promise.resolve();
 pendingDrawingsCloudPush =
 false;
 
-return import("./drawings-cloud-sync.js?v=26").then(
+return import("./drawings-cloud-sync.js?v=27").then(
 m=>
 m.flushDrawingsCloudPush()
 );
@@ -899,7 +899,7 @@ function stopCloudSyncHelpers(){
 
 stopSyncPoll();
 
-void import("./drawings-cloud-sync.js?v=26").then(
+void import("./drawings-cloud-sync.js?v=27").then(
 m=>{
 m.stopDrawingsCloudSync();
 }
@@ -991,7 +991,7 @@ function handleRealtimeSettingsRow(row){
 
 handleRealtimeFavoritesRow(row);
 
-void import("./drawings-cloud-sync.js?v=26").then(
+void import("./drawings-cloud-sync.js?v=27").then(
 m=>
 m.pullDrawingsFromCloud()
 );
@@ -1265,7 +1265,7 @@ return cloud.favorites;
 export async function mergeDrawingsWithCloud(){
 
 const drawingsCloud =
-await import("./drawings-cloud-sync.js?v=26");
+await import("./drawings-cloud-sync.js?v=27");
 
 await drawingsCloud.hydrateDrawingsAfterAuth();
 
@@ -1275,7 +1275,7 @@ return collectAllLocalDrawings();
 
 export async function pullDrawingsIfCloudNewer(){
 
-await import("./drawings-cloud-sync.js?v=26").then(
+await import("./drawings-cloud-sync.js?v=27").then(
 m=>
 m.pullDrawingsFromCloud()
 );
@@ -1296,7 +1296,7 @@ await m.reconcileLocalFavoritesWithCloud();
 async function syncDrawingsWithCloud(){
 
 const m =
-await import("./drawings-cloud-sync.js?v=26");
+await import("./drawings-cloud-sync.js?v=27");
 
 await m.flushDrawingsCloudPush();
 
@@ -1885,7 +1885,7 @@ await import("./favorites-cloud-sync.js?v=2");
 await favoritesCloud.reconcileLocalFavoritesWithCloud();
 
 const drawingsCloud =
-await import("./drawings-cloud-sync.js?v=26");
+await import("./drawings-cloud-sync.js?v=27");
 
 if(
 !isAlertsPage()
@@ -1920,7 +1920,7 @@ if(
 !isAlertsPage()
 ){
 const alertsCloud =
-await import("./alerts-cloud-sync.js?v=92");
+await import("./alerts-cloud-sync.js?v=93");
 
 await alertsCloud.hydrateAlertsAfterAuth({
 force: true
@@ -2097,11 +2097,11 @@ await ensureCloudLoginResolved(
 );
 
 const alertsCloud =
-await import("./alerts-cloud-sync.js?v=92");
+await import("./alerts-cloud-sync.js?v=93");
 const favoritesCloud =
 await import("./favorites-cloud-sync.js?v=2");
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=81");
+await import("./alerts.js?v=93");
 
 const stripOpts =
 isAlertsPage()
@@ -2141,7 +2141,7 @@ favoritesCloud.pullFavoritesFromCloudNow()
 }else{
 
 const drawingsCloud =
-await import("./drawings-cloud-sync.js?v=26");
+await import("./drawings-cloud-sync.js?v=27");
 
 [
 drawSyms,
