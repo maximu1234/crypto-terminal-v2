@@ -511,7 +511,7 @@ horz
 ){
 
 horz.style.top =
-`${Math.round(y)}px`;
+`${Math.round(y) + 0.5}px`;
 
 horz.style.left =
 "0px";
@@ -949,10 +949,16 @@ chart.clearCrosshairPosition();
 
 }
 
+const useStackProbeHoriz =
+!document.body.classList.contains(
+"tablet-chart"
+);
+
 if(
 horizLineEl &&
 chartsStackEl &&
-hasPrice
+hasPrice &&
+useStackProbeHoriz
 ){
 
 const stackR =
@@ -1002,6 +1008,14 @@ horizLineEl.style.display =
 "block";
 
 horizLineEl.classList.remove(
+"hidden"
+);
+
+}else if(
+horizLineEl
+){
+
+horizLineEl.classList.add(
 "hidden"
 );
 
@@ -2767,7 +2781,7 @@ hud?.remove();
 
 export {
 mountTabletChartGestures
-} from "./chart-tablet-gestures.js?v=7";
+} from "./chart-tablet-gestures.js?v=8";
 
 /** Смартфон / планшет с touch — отдельно от isTabletChartViewport (≥768px). */
 export function isCoarseTouchViewport(){

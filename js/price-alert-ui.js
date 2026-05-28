@@ -19,7 +19,7 @@ import {
 formatPrice,
 hideDomChartCrosshair,
 positionDomChartCrosshair
-} from "./chart.js?v=69";
+} from "./chart.js?v=70";
 
 const PLUS_ICON_W =
 22;
@@ -33,6 +33,70 @@ window.matchMedia?.("(pointer: coarse)")?.matches ||
 
 const TOUCH_PLUS_OFFSET_PX =
 28;
+
+function probeHorizTopPx(
+y
+){
+
+return `${Math.round(y) + 0.5}px`;
+
+}
+
+function touchGuideEndPx(
+plusEl,
+plotW
+){
+
+const fromLayout =
+plusEl?.offsetLeft;
+
+if(
+Number.isFinite(
+fromLayout
+) &&
+fromLayout >
+0
+){
+return Math.round(
+fromLayout
+);
+}
+
+return Math.max(
+1,
+Math.round(
+plotW - PLUS_ICON_W - TOUCH_PLUS_OFFSET_PX
+)
+);
+
+}
+
+function positionTouchGuideLine(
+lineEl,
+y,
+plotW,
+plusEl
+){
+
+const end =
+touchGuideEndPx(
+plusEl,
+plotW
+);
+
+lineEl.style.top =
+probeHorizTopPx(
+y
+);
+lineEl.style.left =
+"0px";
+lineEl.style.width =
+`${end}px`;
+lineEl.classList.remove(
+"hidden"
+);
+
+}
 
 export function mountPriceAlertUi({
 chart,
@@ -403,29 +467,43 @@ if(
 showTouchStyle ||
 opts.forceShowFromProbe
 ){
-const lineW =
-Math.max(
-1,
-Math.round(
-pw
-)
+
+positionTouchGuideLine(
+touchGuideLine,
+y,
+pw,
+plusBtn
 );
 
-touchGuideLine.style.top =
-`${Math.round(y)}px`;
-touchGuideLine.style.left =
-"0px";
-touchGuideLine.style.width =
-`${lineW}px`;
-touchGuideLine.classList.remove(
+requestAnimationFrame(
+()=>{
+if(
+plusBtn.classList.contains(
 "hidden"
+)
+){
+return;
+}
+
+positionTouchGuideLine(
+touchGuideLine,
+y,
+pw,
+plusBtn
 );
+
+}
+);
+
 }else{
 touchGuideLine.classList.add(
 "hidden"
 );
 }
 
+if(
+!opts.forceShowFromProbe
+){
 positionDomChartCrosshair({
 wrapEl,
 chart,
@@ -433,6 +511,7 @@ series,
 clientX,
 clientY
 });
+}
 
 }
 

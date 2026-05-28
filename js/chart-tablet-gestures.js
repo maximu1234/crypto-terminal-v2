@@ -838,10 +838,6 @@ false;
 attachDocListeners();
 e.preventDefault();
 e.stopImmediatePropagation?.();
-onProbeAt(
-e.clientX,
-e.clientY
-);
 return;
 }
 

@@ -1053,11 +1053,10 @@ body.tablet-chart .price-scale-touch-strip{
   top:0;
   height:0;
   border:none;
-  border-top:2px dashed rgba(226, 232, 240, .95);
+  border-top:1px dashed #758696;
   box-sizing:border-box;
   pointer-events:none;
-  z-index:45;
-  filter:drop-shadow(0 0 2px rgba(0,0,0,.85));
+  z-index:10;
 }
 
 .tablet-probe-crosshair-h.hidden{
@@ -1093,11 +1092,10 @@ body.tablet-chart .price-scale-touch-strip{
   left:0;
   height:0;
   border:none;
-  border-top:2px dashed rgba(226, 232, 240, .95);
+  border-top:1px dashed #758696;
   box-sizing:border-box;
   pointer-events:none;
-  z-index:50;
-  filter:drop-shadow(0 0 2px rgba(0,0,0,.85));
+  z-index:10;
 }
 
 #chart-wrap .chart-dom-crosshair-vert.hidden,
@@ -1285,10 +1283,10 @@ body.tablet-chart .price-scale-touch-strip{
   position:absolute;
   height:0;
   border:none;
-  border-top:2px dashed rgba(226, 232, 240, .95);
+  border-top:1px dashed #758696;
+  box-sizing:border-box;
   pointer-events:none;
-  z-index:50;
-  filter:drop-shadow(0 0 2px rgba(0,0,0,.85));
+  z-index:10;
 }
 
 .price-alert-touch-guide.hidden{
