@@ -13,11 +13,11 @@ isAlertsPage
 import {
 initAlertsCloudSync,
 scheduleRegistryCloudSync
-} from "./alerts-cloud-sync.js?v=93";
+} from "./alerts-cloud-sync.js?v=94";
 
 import {
 stripAlertFlagsNotInRegistry
-} from "./alerts.js?v=93";
+} from "./alerts.js?v=94";
 
 import {
 isCloudLoggedIn,
@@ -136,7 +136,7 @@ new CustomEvent(
 }
 );
 
-import("./drawings-cloud-sync.js?v=27").then(
+import("./drawings-cloud-sync.js?v=28").then(
 ({ initDrawingsCloudSync })=>{
 initDrawingsCloudSync();
 }

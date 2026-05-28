@@ -10,12 +10,12 @@ getAlertsSorted,
 removeAlert,
 stripAlertFlagsNotInRegistry,
 removeAllAlerts
-} from "./alerts.js?v=93";
+} from "./alerts.js?v=94";
 
 import {
 getTelegramChatId,
 initAlertsCloudSync
-} from "./alerts-cloud-sync.js?v=93";
+} from "./alerts-cloud-sync.js?v=94";
 
 import {
 readAlertTokenSync

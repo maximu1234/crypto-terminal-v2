@@ -3279,6 +3279,10 @@ await reconcileLocalDrawingsWithCloud();
 
 let ready =
 false;
+let lastDrawingsAuthSyncSignature =
+"";
+let lastDrawingsAuthSyncAt =
+0;
 
 export function initDrawingsCloudSync(){
 
@@ -3358,6 +3362,30 @@ purgeAllLocalDrawingsStorage();
 
 onCloudSyncChange(
 ()=>{
+
+const signature =
+`${isCloudLoggedInEffective() ? 1 : 0}:` +
+`${readAlertTokenSync()?.user?.id || ""}:` +
+`${isAlertsPage() ? 1 : 0}:` +
+`${isDrawingsUiPage() ? 1 : 0}:` +
+`${document.visibilityState}`;
+const now =
+Date.now();
+
+if(
+signature ===
+lastDrawingsAuthSyncSignature &&
+now -
+lastDrawingsAuthSyncAt <
+5000
+){
+return;
+}
+
+lastDrawingsAuthSyncSignature =
+signature;
+lastDrawingsAuthSyncAt =
+now;
 
 if(
 !isCloudLoggedInEffective()

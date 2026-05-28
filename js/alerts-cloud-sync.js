@@ -257,7 +257,7 @@ immediate: true
 async n=>{
 
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=93");
+await import("./alerts.js?v=94");
 
 stripAlertFlagsNotInRegistry({
 emitDrawingsEvents: false
@@ -305,7 +305,7 @@ String(rawTriggered).trim().toLowerCase() !== "null";
 if(triggered){
 
 const { applyRemoteAlertFired } =
-await import("./alerts.js?v=93");
+await import("./alerts.js?v=94");
 
 applyRemoteAlertFired(oldRow);
 return;
@@ -329,7 +329,7 @@ sid
 ){
 
 const { applyRemoteAlertRemoved } =
-await import("./alerts.js?v=93");
+await import("./alerts.js?v=94");
 
 applyRemoteAlertRemoved(oldRow);
 
@@ -379,7 +379,7 @@ row?.deleted_at &&
 row.symbol &&
 row.shape_id
 ){
-void import("./alerts.js?v=93").then(
+void import("./alerts.js?v=94").then(
 ({ applyRemoteAlertRemoved })=>{
 applyRemoteAlertRemoved(row);
 }
@@ -396,7 +396,7 @@ row.symbol &&
 row.shape_id
 ){
 
-void import("./alerts.js?v=93").then(
+void import("./alerts.js?v=94").then(
 ({ applyRemoteAlertUpsert })=>{
 
 if(
@@ -950,7 +950,7 @@ cloudId
 ){
 
 const { markAlertCloudSynced, markAlertCloudId } =
-await import("./alerts.js?v=93");
+await import("./alerts.js?v=94");
 
 const ok =
 await verifyAlertActiveInCloud(
@@ -1943,7 +1943,7 @@ null;
 
 if(cloudId){
 const { markAlertCloudId } =
-await import("./alerts.js?v=93");
+await import("./alerts.js?v=94");
 
 markAlertCloudId(
 symbol,
@@ -2263,7 +2263,7 @@ registrySyncTimer = null;
 }
 
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=93");
+await import("./alerts.js?v=94");
 
 const ok =
 await clearAllAlertsFromCloud();
@@ -3964,7 +3964,7 @@ null;
 
 if(cloudId){
 const { markAlertCloudId } =
-await import("./alerts.js?v=93");
+await import("./alerts.js?v=94");
 
 markAlertCloudId(
 symbol,
@@ -3999,7 +3999,7 @@ return 0;
 }
 
 const { getActiveAlerts } =
-await import("./alerts.js?v=93");
+await import("./alerts.js?v=94");
 
 const localKeys =
 new Set(
@@ -4130,7 +4130,7 @@ attempt++
 if(await pushAlertViaWorker(row)){
 
 const { markAlertCloudSynced } =
-await import("./alerts.js?v=93");
+await import("./alerts.js?v=94");
 
 /* Worker пишет service role — не ждём SELECT по JWT пользователя */
 markAlertCloudSynced(
@@ -4159,7 +4159,7 @@ ctx
 ){
 
 const { loadAlerts, markAlertCloudSynced } =
-await import("./alerts.js?v=93");
+await import("./alerts.js?v=94");
 
 const hasId =
 loadAlerts().some(
@@ -4218,7 +4218,7 @@ null
 ){
 
 const { markAlertCloudSynced } =
-await import("./alerts.js?v=93");
+await import("./alerts.js?v=94");
 
 markAlertCloudSynced(
 row.symbol,
@@ -4297,7 +4297,7 @@ return 0;
 }
 
 const { getActiveAlerts, countAlertsOnChart } =
-await import("./alerts.js?v=93");
+await import("./alerts.js?v=94");
 
 const onChart =
 countAlertsOnChart();
@@ -4399,7 +4399,7 @@ return 0;
 }
 
 const { getActiveAlerts } =
-await import("./alerts.js?v=93");
+await import("./alerts.js?v=94");
 
 const list =
 getActiveAlerts();
@@ -4821,7 +4821,7 @@ normalizeAlertTf,
 isAlertDeleted,
 forgetAlertDeleted
 } =
-await import("./alerts.js?v=93");
+await import("./alerts.js?v=94");
 
 const cloudByKey =
 new Map();
@@ -4939,7 +4939,7 @@ tf: row.tf || "60"
 if(removedRows.length){
 
 const { applyRemoteAlertRemoved } =
-await import("./alerts.js?v=93");
+await import("./alerts.js?v=94");
 
 for(const row of removedRows){
 
@@ -5186,7 +5186,7 @@ const n =
 await reconcileLocalRegistryWithCloud();
 
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=93");
+await import("./alerts.js?v=94");
 
 stripAlertFlagsNotInRegistry(
 isAlertsPage()
@@ -5312,7 +5312,7 @@ if(
 !isAlertsPage()
 ){
 const { mergeRegistryFromChartDrawings } =
-await import("./alerts.js?v=93");
+await import("./alerts.js?v=94");
 
 mergeRegistryFromChartDrawings({
 stripFlags: stripOpts
@@ -5329,7 +5329,7 @@ immediate: true
 });
 
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=93");
+await import("./alerts.js?v=94");
 
 stripAlertFlagsNotInRegistry(
 stripOpts
@@ -5395,6 +5395,10 @@ REGISTRY_SYNC_DEBOUNCE_MS);
 }
 
 let alertsCloudSyncReady = false;
+let lastAlertsAuthSyncSignature =
+"";
+let lastAlertsAuthSyncAt =
+0;
 
 export function initAlertsCloudSync(){
 
@@ -5413,6 +5417,30 @@ scheduleRegistryCloudSync();
 
 onCloudSyncChange(
 ()=>{
+
+const signature =
+`${isCloudLoggedInEffective() ? 1 : 0}:` +
+`${readAlertTokenSync()?.user?.id || ""}:` +
+`${isAlertsPage() ? 1 : 0}:` +
+`${isDrawingsUiPage() ? 1 : 0}:` +
+`${document.visibilityState}`;
+const now =
+Date.now();
+
+if(
+signature ===
+lastAlertsAuthSyncSignature &&
+now -
+lastAlertsAuthSyncAt <
+5000
+){
+return;
+}
+
+lastAlertsAuthSyncSignature =
+signature;
+lastAlertsAuthSyncAt =
+now;
 
 if(
 !isCloudLoggedInEffective()
