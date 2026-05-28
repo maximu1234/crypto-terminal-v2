@@ -4343,438 +4343,6 @@ max:max + pad
 
 }
 
-/**
- * iPad: двойной тап по правой шкале → сброс Y-масштаба.
- * touchend + click (iOS шлёт click ~300ms после tap); pointerdown на strip не блокируем.
- */
-export function mountPriceScaleDoubleTapReset({
-chart,
-chartEl,
-stripEl,
-resetPriceScale,
-isTapAllowed
-}){
-
-if(
-!chart ||
-!chartEl ||
-typeof resetPriceScale !==
-"function"
-){
-return ()=>{};
-}
-
-const DBL_MS =
-700;
-
-const DBL_PX =
-60;
-
-const TAP_MOVE_PX =
-22;
-
-let lastTap =
-null;
-
-let touchDown =
-null;
-
-let lastEndDedupe =
-0;
-
-let lastEndX =
-0;
-
-let lastEndY =
-0;
-
-let ignoreClickUntil =
-0;
-
-function scaleWidth(){
-
-try{
-return (
-chart.priceScale(
-"right"
-)?.width?.() ||
-56
-);
-}catch{
-return 56;
-}
-
-}
-
-function hitPriceScale(
-clientX,
-clientY
-){
-
-const stripR =
-stripEl?.getBoundingClientRect?.();
-
-if(
-stripR &&
-stripR.width >
-0 &&
-stripR.height >
-0
-){
-
-if(
-clientX >=
-stripR.left - 8 &&
-clientX <=
-stripR.right + 8 &&
-clientY >=
-stripR.top &&
-clientY <=
-stripR.bottom
-){
-return true;
-}
-
-}
-
-const r =
-chartEl.getBoundingClientRect();
-
-const sw =
-scaleWidth();
-
-return (
-clientY >=
-r.top &&
-clientY <=
-r.bottom &&
-clientX >=
-r.right - sw - 8 &&
-clientX <=
-r.right + 8
-);
-
-}
-
-function tryDoubleTap(
-clientX,
-clientY,
-ev
-){
-
-if(
-typeof isTapAllowed ===
-"function" &&
-!isTapAllowed()
-){
-return false;
-}
-
-const now =
-Date.now();
-
-if(
-lastTap &&
-now - lastTap.t <=
-DBL_MS
-){
-
-const dx =
-clientX - lastTap.x;
-
-const dy =
-clientY - lastTap.y;
-
-if(
-dx * dx + dy * dy <=
-DBL_PX * DBL_PX
-){
-lastTap =
-null;
-resetPriceScale();
-ev?.preventDefault?.();
-ev?.stopPropagation?.();
-return true;
-
-}
-
-}
-
-lastTap = {
-t:now,
-x:clientX,
-y:clientY
-};
-
-return false;
-
-}
-
-function registerTapEnd(
-clientX,
-clientY,
-ev
-){
-
-const now =
-Date.now();
-
-if(
-now - lastEndDedupe <
-80 &&
-Math.abs(
-clientX - lastEndX
-) <
-4 &&
-Math.abs(
-clientY - lastEndY
-) <
-4
-){
-return;
-}
-
-lastEndDedupe =
-now;
-lastEndX =
-clientX;
-lastEndY =
-clientY;
-
-if(
-!hitPriceScale(
-clientX,
-clientY
-)
-){
-return;
-}
-
-tryDoubleTap(
-clientX,
-clientY,
-ev
-);
-
-}
-
-function onTouchStart(
-e
-){
-
-if(
-e.touches.length !==
-1
-){
-touchDown =
-null;
-return;
-}
-
-const t =
-e.touches[
-0
-];
-
-if(
-!hitPriceScale(
-t.clientX,
-t.clientY
-)
-){
-touchDown =
-null;
-return;
-}
-
-touchDown = {
-id:t.identifier,
-x:t.clientX,
-y:t.clientY
-};
-
-}
-
-function onTouchEnd(
-e
-){
-
-for(
-let i =
-0;
-i <
-e.changedTouches.length;
-i++
-){
-
-const t =
-e.changedTouches[
-i
-];
-
-let dx =
-0;
-
-let dy =
-0;
-
-if(
-touchDown &&
-t.identifier ===
-touchDown.id
-){
-dx =
-t.clientX - touchDown.x;
-dy =
-t.clientY - touchDown.y;
-}
-
-touchDown =
-null;
-
-if(
-dx * dx + dy * dy >
-TAP_MOVE_PX * TAP_MOVE_PX
-){
-continue;
-}
-
-if(
-!hitPriceScale(
-t.clientX,
-t.clientY
-)
-){
-continue;
-}
-
-ignoreClickUntil =
-Date.now() +
-450;
-
-registerTapEnd(
-t.clientX,
-t.clientY,
-e
-);
-
-}
-
-}
-
-function onTouchCancel(){
-
-touchDown =
-null;
-
-}
-
-function onClick(
-e
-){
-
-if(
-Date.now() <
-ignoreClickUntil
-){
-return;
-}
-
-registerTapEnd(
-e.clientX,
-e.clientY,
-e
-);
-
-}
-
-const opts = {
-capture:true,
-passive:false
-};
-
-document.addEventListener(
-"touchstart",
-onTouchStart,
-opts
-);
-
-document.addEventListener(
-"touchend",
-onTouchEnd,
-opts
-);
-
-document.addEventListener(
-"touchcancel",
-onTouchCancel,
-opts
-);
-
-document.addEventListener(
-"click",
-onClick,
-opts
-);
-
-if(
-stripEl
-){
-
-stripEl.addEventListener(
-"click",
-onClick,
-opts
-);
-
-}
-
-return ()=>{
-
-document.removeEventListener(
-"touchstart",
-onTouchStart,
-opts
-);
-
-document.removeEventListener(
-"touchend",
-onTouchEnd,
-opts
-);
-
-document.removeEventListener(
-"touchcancel",
-onTouchCancel,
-opts
-);
-
-document.removeEventListener(
-"click",
-onClick,
-opts
-);
-
-if(
-stripEl
-){
-
-stripEl.removeEventListener(
-"click",
-onClick,
-opts
-);
-
-}
-
-lastTap =
-null;
-touchDown =
-null;
-
-};
-
-}
 
 export function resetChartPriceAutoScale(
 chart,
@@ -5525,11 +5093,74 @@ emitScaleFrame();
 const STRIP_DRAG_START_PX =
 8;
 
+const STRIP_DBL_TAP_MS =
+750;
+
+const STRIP_DBL_TAP_PX =
+64;
+
 let stripPointerDown =
 null;
 
 let stripDidDrag =
 false;
+
+let stripDblLast =
+null;
+
+function tryStripDoubleTapEnd(
+clientX,
+clientY,
+ev
+){
+
+if(
+drag ||
+stripDidDrag
+){
+return false;
+}
+
+const now =
+Date.now();
+
+if(
+stripDblLast &&
+now - stripDblLast.t <=
+STRIP_DBL_TAP_MS
+){
+
+const dx =
+clientX - stripDblLast.x;
+
+const dy =
+clientY - stripDblLast.y;
+
+if(
+dx * dx + dy * dy <=
+STRIP_DBL_TAP_PX * STRIP_DBL_TAP_PX
+){
+stripDblLast =
+null;
+abortDrag();
+resetStripPriceAutoScale();
+ev?.preventDefault?.();
+ev?.stopImmediatePropagation?.();
+return true;
+
+}
+
+}
+
+stripDblLast = {
+t:now,
+x:clientX,
+y:clientY
+};
+
+return false;
+
+}
 
 function beginStripDrag(
 clientY
@@ -5664,11 +5295,55 @@ if(
 drag
 ){
 onDragEnd?.();
+}else{
+tryStripDoubleTapEnd(
+endEvent.clientX,
+endEvent.clientY,
+endEvent
+);
 }
 
 abortDrag();
 stripPointerDown =
 null;
+
+}
+
+};
+
+const onStripTouchEndForDbl =(
+e
+)=>{
+
+if(
+stripDidDrag ||
+drag
+){
+return;
+}
+
+for(
+let i =
+0;
+i <
+e.changedTouches.length;
+i++
+){
+
+const t =
+e.changedTouches[
+i
+];
+
+if(
+tryStripDoubleTapEnd(
+t.clientX,
+t.clientY,
+e
+)
+){
+return;
+}
 
 }
 
@@ -5714,6 +5389,15 @@ stripOpts
 );
 
 stripEl.addEventListener(
+"touchend",
+onStripTouchEndForDbl,
+{
+capture:true,
+passive:false
+}
+);
+
+stripEl.addEventListener(
 "dblclick",
 onStripDblClick
 );
@@ -5745,6 +5429,15 @@ stripEl.removeEventListener(
 "pointerdown",
 onPointerDown,
 stripOpts
+);
+
+stripEl.removeEventListener(
+"touchend",
+onStripTouchEndForDbl,
+{
+capture:true,
+passive:false
+}
 );
 
 stripEl.removeEventListener(

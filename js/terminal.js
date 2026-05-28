@@ -44,7 +44,6 @@ applyTabletRsiChartOptions,
 applyTabletMainChartScroll,
 markTabletChartBody,
 mountTabletPriceScaleTouch,
-mountPriceScaleDoubleTapReset,
 getVisibleCandlesPriceRange,
 mountTabletChartGestures,
 mountChartRangeFreeze,
@@ -59,7 +58,7 @@ TABLET_USE_CUSTOM_TOUCH_PAN,
 isTabletChartViewport,
 isUserCrosshairEvent,
 resetChartPriceAutoScale
-} from "./chart.js?v=87";
+} from "./chart-import.js?v=1";
 
 import {
 connectKlineStream,
@@ -1019,23 +1018,25 @@ onDesktopContextMenu,
 true
 );
 
-if(scaleStripEl){
-scaleStripEl.addEventListener(
+if(
+chartWrapEl
+){
+chartWrapEl.addEventListener(
 "touchstart",
 onTouchStart,
 { capture:true, passive:true }
 );
-scaleStripEl.addEventListener(
+chartWrapEl.addEventListener(
 "touchmove",
 onTouchMove,
 { capture:true, passive:true }
 );
-scaleStripEl.addEventListener(
+chartWrapEl.addEventListener(
 "touchend",
 onTouchEnd,
 { capture:true, passive:true }
 );
-scaleStripEl.addEventListener(
+chartWrapEl.addEventListener(
 "touchcancel",
 onTouchEnd,
 { capture:true, passive:true }
@@ -1081,28 +1082,26 @@ chartWrapEl.removeEventListener(
 onDesktopContextMenu,
 true
 );
-if(scaleStripEl){
-scaleStripEl.removeEventListener(
+chartWrapEl.removeEventListener(
 "touchstart",
 onTouchStart,
 true
 );
-scaleStripEl.removeEventListener(
+chartWrapEl.removeEventListener(
 "touchmove",
 onTouchMove,
 true
 );
-scaleStripEl.removeEventListener(
+chartWrapEl.removeEventListener(
 "touchend",
 onTouchEnd,
 true
 );
-scaleStripEl.removeEventListener(
+chartWrapEl.removeEventListener(
 "touchcancel",
 onTouchEnd,
 true
 );
-}
 document.removeEventListener(
 "pointerdown",
 onDocPointerDown,
@@ -1266,18 +1265,6 @@ candleSeries
 priceScaleTouchHooks.onReset?.();
 
 }
-
-let unmountPriceScaleDoubleTap =
-mountPriceScaleDoubleTapReset({
-chart,
-chartEl,
-stripEl:document.getElementById(
-"price-scale-touch-strip"
-),
-resetPriceScale:resetTabletPriceScale,
-isTapAllowed:()=>
-!tabletPriceScaleCtrl?.isScaleDragging?.()
-});
 
 applyTabletMainChartScroll(
 chart
