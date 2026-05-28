@@ -4550,6 +4550,8 @@ stripTapTimer = 0;
 
 }
 
+}
+
 let stripLastTouchEnd =
 null;
 
