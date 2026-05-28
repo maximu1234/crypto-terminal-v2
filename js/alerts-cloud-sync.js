@@ -80,6 +80,89 @@ console.log(...args);
 let alertsRestStressUntil =
 0;
 
+let alertsPullFailureStreak =
+0;
+
+let alertsPullBackoffUntil =
+0;
+
+let lastAlertsPullWarnAt =
+0;
+
+function warnAlertsPullThrottled(
+...args
+){
+
+const now =
+Date.now();
+
+if(
+now - lastAlertsPullWarnAt <
+6000
+){
+return;
+}
+
+lastAlertsPullWarnAt =
+now;
+console.warn(...args);
+
+}
+
+function markAlertsPullFailure(
+reason
+){
+
+alertsPullFailureStreak += 1;
+
+const baseMs =
+IS_YANDEX
+? 2500
+: 1800;
+
+const delayMs =
+Math.min(
+30000,
+baseMs *
+(
+2 **
+Math.max(
+0,
+alertsPullFailureStreak - 1
+)
+)
+);
+
+alertsPullBackoffUntil =
+Date.now() + delayMs;
+
+warnAlertsPullThrottled(
+"alert cloud pull backoff:",
+delayMs,
+"ms",
+reason || ""
+);
+
+}
+
+function markAlertsPullSuccess(){
+
+alertsPullFailureStreak =
+0;
+alertsPullBackoffUntil =
+0;
+
+}
+
+function isAlertsPullInBackoff(){
+
+return (
+Date.now() <
+alertsPullBackoffUntil
+);
+
+}
+
 let refreshAlertModeTimer =
 null;
 
@@ -578,7 +661,10 @@ return;
 
 if(
 !isCloudLoggedInEffective() ||
-isRegistryCloudSyncPaused()
+isRegistryCloudSyncPaused() ||
+Date.now() <
+alertsRestStressUntil ||
+isAlertsPullInBackoff()
 ){
 return;
 }
@@ -731,7 +817,10 @@ iosSafariPullInFlight ||
 document.visibilityState !== "visible" ||
 isAlertsPage() ||
 !isDrawingsUiPage() ||
-isRegistryCloudSyncPaused()
+isRegistryCloudSyncPaused() ||
+Date.now() <
+alertsRestStressUntil ||
+isAlertsPullInBackoff()
 ){
 return;
 }
@@ -794,7 +883,10 @@ visiblePullFallbackInFlight ||
 document.visibilityState !== "visible" ||
 isAlertsPage() ||
 !isDrawingsUiPage() ||
-isRegistryCloudSyncPaused()
+isRegistryCloudSyncPaused() ||
+Date.now() <
+alertsRestStressUntil ||
+isAlertsPullInBackoff()
 ){
 return;
 }
@@ -4765,7 +4857,10 @@ null
 }catch(
 err
 ){
-console.warn(
+markAlertsPullFailure(
+err?.message || err
+);
+warnAlertsPullThrottled(
 "alert cloud reconcile:",
 err?.message || err
 );
@@ -4816,7 +4911,10 @@ null
 if(
 result.error
 ){
-console.warn(
+markAlertsPullFailure(
+result.error.message
+);
+warnAlertsPullThrottled(
 "alert cloud reconcile:",
 result.error.message
 );
@@ -5189,6 +5287,8 @@ row,
 }
 }
 
+markAlertsPullSuccess();
+
 return next.length;
 
 }
@@ -5229,6 +5329,20 @@ isRegistryCloudSyncPaused()
 return 0;
 }
 
+if(
+Date.now() <
+alertsRestStressUntil
+){
+return 0;
+}
+
+if(
+isAlertsPullInBackoff() &&
+!opts.bypassBackoff
+){
+return 0;
+}
+
 try{
 const { ensureCloudLoginResolved } =
 await import("./cloud-sync.js?v=26");
@@ -5244,12 +5358,25 @@ const immediate =
 opts.immediate ===
 true;
 
-const n =
+let n = 0;
+
+try{
+n =
 immediate
 ? await reconcileLocalRegistryWithCloud()
 : await coalesceRegistryPull(
 ()=>reconcileLocalRegistryWithCloud()
 );
+}catch(err){
+markAlertsPullFailure(
+err?.message || err
+);
+warnAlertsPullThrottled(
+"alert cloud pull:",
+err?.message || err
+);
+return 0;
+}
 
 if(
 n >

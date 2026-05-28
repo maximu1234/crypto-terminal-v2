@@ -15,7 +15,7 @@ removeAllAlerts
 import {
 getTelegramChatId,
 initAlertsCloudSync
-} from "./alerts-cloud-sync.js?v=96";
+} from "./alerts-cloud-sync.js?v=97";
 
 import {
 readAlertTokenSync
