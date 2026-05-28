@@ -257,7 +257,7 @@ immediate: true
 async n=>{
 
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=91");
+await import("./alerts.js?v=92");
 
 stripAlertFlagsNotInRegistry();
 
@@ -303,7 +303,7 @@ String(rawTriggered).trim().toLowerCase() !== "null";
 if(triggered){
 
 const { applyRemoteAlertFired } =
-await import("./alerts.js?v=91");
+await import("./alerts.js?v=92");
 
 applyRemoteAlertFired(oldRow);
 return;
@@ -327,7 +327,7 @@ sid
 ){
 
 const { applyRemoteAlertRemoved } =
-await import("./alerts.js?v=91");
+await import("./alerts.js?v=92");
 
 applyRemoteAlertRemoved(oldRow);
 
@@ -377,7 +377,7 @@ row?.deleted_at &&
 row.symbol &&
 row.shape_id
 ){
-void import("./alerts.js?v=91").then(
+void import("./alerts.js?v=92").then(
 ({ applyRemoteAlertRemoved })=>{
 applyRemoteAlertRemoved(row);
 }
@@ -394,7 +394,7 @@ row.symbol &&
 row.shape_id
 ){
 
-void import("./alerts.js?v=91").then(
+void import("./alerts.js?v=92").then(
 ({ applyRemoteAlertUpsert })=>{
 
 if(
@@ -948,7 +948,7 @@ cloudId
 ){
 
 const { markAlertCloudSynced, markAlertCloudId } =
-await import("./alerts.js?v=91");
+await import("./alerts.js?v=92");
 
 const ok =
 await verifyAlertActiveInCloud(
@@ -1332,6 +1332,23 @@ return (
 /JWT expired/i.test(msg) ||
 /PGRST303/i.test(msg) ||
 /invalid jwt/i.test(msg)
+);
+
+}
+
+function isMissingColumnError(
+text,
+column
+){
+
+const msg =
+String(text || "");
+
+return (
+new RegExp(column, "i").test(msg) &&
+(
+/PGRST204|42703|column|does not exist|schema cache/i.test(msg)
+)
 );
 
 }
@@ -1924,7 +1941,7 @@ null;
 
 if(cloudId){
 const { markAlertCloudId } =
-await import("./alerts.js?v=91");
+await import("./alerts.js?v=92");
 
 markAlertCloudId(
 symbol,
@@ -2244,7 +2261,7 @@ registrySyncTimer = null;
 }
 
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=91");
+await import("./alerts.js?v=92");
 
 const ok =
 await clearAllAlertsFromCloud();
@@ -2561,6 +2578,27 @@ await ctx.sb
 .maybeSingle();
 
 if(error){
+if(
+isMissingColumnError(
+error.message,
+"deleted_at"
+)
+){
+const legacy =
+await ctx.sb
+.from("price_alerts")
+.select("id")
+.eq("user_id", ctx.user.id)
+.eq("symbol", sym)
+.eq("shape_id", sid)
+.is("triggered_at", null)
+.maybeSingle();
+
+return legacy.data?.id
+? String(legacy.data.id)
+: "";
+}
+
 console.warn(
 "[alerts] resolve cloud id:",
 error.message
@@ -2798,6 +2836,13 @@ deleted_at: new Date().toISOString()
 if(!res.ok){
 const text =
 await res.text();
+
+if(
+isMissingColumnError(text, "deleted_at")
+){
+return purgeAlertViaRest(opts);
+}
+
 if(
 isJwtExpiredText(text)
 ){
@@ -3779,6 +3824,24 @@ await ctx.sb
 .maybeSingle();
 
 if(error){
+if(
+isMissingColumnError(
+error.message,
+"deleted_at"
+)
+){
+const legacy =
+await ctx.sb
+.from("price_alerts")
+.select("id, triggered_at")
+.eq("user_id", ctx.user.id)
+.eq("symbol", sym)
+.eq("shape_id", sid)
+.maybeSingle();
+
+return !!legacy.data?.id;
+}
+
 return false;
 }
 
@@ -3897,7 +3960,7 @@ null;
 
 if(cloudId){
 const { markAlertCloudId } =
-await import("./alerts.js?v=91");
+await import("./alerts.js?v=92");
 
 markAlertCloudId(
 symbol,
@@ -3932,7 +3995,7 @@ return 0;
 }
 
 const { getActiveAlerts } =
-await import("./alerts.js?v=91");
+await import("./alerts.js?v=92");
 
 const localKeys =
 new Set(
@@ -4063,7 +4126,7 @@ attempt++
 if(await pushAlertViaWorker(row)){
 
 const { markAlertCloudSynced } =
-await import("./alerts.js?v=91");
+await import("./alerts.js?v=92");
 
 /* Worker пишет service role — не ждём SELECT по JWT пользователя */
 markAlertCloudSynced(
@@ -4092,7 +4155,7 @@ ctx
 ){
 
 const { loadAlerts, markAlertCloudSynced } =
-await import("./alerts.js?v=91");
+await import("./alerts.js?v=92");
 
 const hasId =
 loadAlerts().some(
@@ -4151,7 +4214,7 @@ null
 ){
 
 const { markAlertCloudSynced } =
-await import("./alerts.js?v=91");
+await import("./alerts.js?v=92");
 
 markAlertCloudSynced(
 row.symbol,
@@ -4230,7 +4293,7 @@ return 0;
 }
 
 const { getActiveAlerts, countAlertsOnChart } =
-await import("./alerts.js?v=91");
+await import("./alerts.js?v=92");
 
 const onChart =
 countAlertsOnChart();
@@ -4332,7 +4395,7 @@ return 0;
 }
 
 const { getActiveAlerts } =
-await import("./alerts.js?v=91");
+await import("./alerts.js?v=92");
 
 const list =
 getActiveAlerts();
@@ -4447,6 +4510,11 @@ const url =
 `&deleted_at=is.null` +
 `&select=id,symbol,shape_id,price,tf,created_at,updated_at`;
 
+const legacyUrl =
+`${base}/rest/v1/price_alerts?user_id=eq.${encodeURIComponent(uid)}` +
+`&triggered_at=is.null` +
+`&select=id,symbol,shape_id,price,tf,created_at`;
+
 try{
 let token =
 auth?.token;
@@ -4500,6 +4568,37 @@ refreshed !== token
 ){
 token = refreshed;
 continue;
+}
+}
+
+if(
+attempt === 0 &&
+(
+isMissingColumnError(errText, "deleted_at") ||
+isMissingColumnError(errText, "updated_at")
+)
+){
+const legacyRes =
+await fetchWithTimeout(
+legacyUrl,
+{
+method: "GET",
+headers: {
+apikey: anon,
+Authorization: `Bearer ${token}`,
+Accept: "application/json"
+}
+},
+15000,
+"price_alerts fetch legacy"
+);
+
+if(legacyRes.ok){
+const legacyRows =
+await legacyRes.json();
+return Array.isArray(legacyRows)
+? legacyRows
+: [];
 }
 }
 
@@ -4657,6 +4756,47 @@ return 0;
 if(
 result.error
 ){
+const maybeMissingDeleted =
+isMissingColumnError(
+result.error.message,
+"deleted_at"
+);
+const maybeMissingUpdated =
+isMissingColumnError(
+result.error.message,
+"updated_at"
+);
+
+if(
+maybeMissingDeleted ||
+maybeMissingUpdated
+){
+result =
+await withTimeout(
+ctx.sb
+.from(
+"price_alerts"
+)
+.select(
+"id, symbol, shape_id, price, tf, created_at"
+)
+.eq(
+"user_id",
+ctx.user.id
+)
+.is(
+"triggered_at",
+null
+),
+12000,
+"price_alerts select legacy"
+);
+}
+}
+
+if(
+result.error
+){
 console.warn(
 "alert cloud reconcile:",
 result.error.message
@@ -4677,7 +4817,7 @@ normalizeAlertTf,
 isAlertDeleted,
 forgetAlertDeleted
 } =
-await import("./alerts.js?v=91");
+await import("./alerts.js?v=92");
 
 const cloudByKey =
 new Map();
@@ -4795,7 +4935,7 @@ tf: row.tf || "60"
 if(removedRows.length){
 
 const { applyRemoteAlertRemoved } =
-await import("./alerts.js?v=91");
+await import("./alerts.js?v=92");
 
 for(const row of removedRows){
 
@@ -5042,7 +5182,7 @@ const n =
 await reconcileLocalRegistryWithCloud();
 
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=91");
+await import("./alerts.js?v=92");
 
 stripAlertFlagsNotInRegistry(
 isAlertsPage()
@@ -5168,7 +5308,7 @@ if(
 !isAlertsPage()
 ){
 const { mergeRegistryFromChartDrawings } =
-await import("./alerts.js?v=91");
+await import("./alerts.js?v=92");
 
 mergeRegistryFromChartDrawings({
 stripFlags: stripOpts
@@ -5185,7 +5325,7 @@ immediate: true
 });
 
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=91");
+await import("./alerts.js?v=92");
 
 stripAlertFlagsNotInRegistry(
 stripOpts

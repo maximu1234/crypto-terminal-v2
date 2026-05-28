@@ -4,7 +4,8 @@ isCloudLoggedIn,
 isCloudLoggedInEffective,
 isCloudSyncEnabled,
 onCloudSyncChange,
-notifyDrawings as notifyDrawingsListeners
+notifyDrawings as notifyDrawingsListeners,
+ensureCloudLoginResolved
 } from "./cloud-sync.js?v=23";
 
 import {
@@ -604,6 +605,51 @@ if(
 ){
 const text =
 await res.text();
+
+if(
+/JWT expired|PGRST303|invalid jwt/i.test(
+String(text)
+)
+){
+try{
+await ensureCloudLoginResolved(10000);
+}catch{
+/* ignore */
+}
+
+const refreshed =
+await getAccessTokenForUser(ctx);
+
+if(
+refreshed &&
+refreshed !== token
+){
+const retry =
+await fetchWithTimeout(
+`${base}/rest/v1/${path}`,
+{
+method: "DELETE",
+headers: {
+apikey: anon,
+Authorization: `Bearer ${refreshed}`,
+Prefer: "return=minimal"
+}
+},
+15000
+);
+
+if(retry.ok){
+console.log(
+"[drawings] purge REST ok (retry):",
+all
+? "all"
+: `${sym} ${sid}`
+);
+return true;
+}
+}
+}
+
 console.warn(
 "[drawings] purge REST:",
 res.status,

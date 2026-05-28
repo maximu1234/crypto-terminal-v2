@@ -9,7 +9,7 @@ withTimeout
 import {
 pauseRegistryCloudSync,
 scheduleRemoteRegistrySync
-} from "./alerts-cloud-sync.js?v=91";
+} from "./alerts-cloud-sync.js?v=92";
 
 const STORAGE_KEY = "price_alerts_v1";
 
@@ -125,7 +125,7 @@ return job;
 
 function queueAlertsCloud(fn){
 
-import("./alerts-cloud-sync.js?v=91")
+import("./alerts-cloud-sync.js?v=92")
 .then(m=>fn(m))
 .catch(err=>{
 console.warn("alerts cloud:", err);
@@ -1294,7 +1294,7 @@ return null;
 }
 
 const { getTelegramChatId } =
-await import("./alerts-cloud-sync.js?v=91");
+await import("./alerts-cloud-sync.js?v=92");
 
 if(
 await getTelegramChatId() == null
@@ -1372,7 +1372,7 @@ await import("./auth-ui.js?v=23");
 await ensureCloudReady();
 
 const m =
-await import("./alerts-cloud-sync.js?v=91");
+await import("./alerts-cloud-sync.js?v=92");
 
 const pushed =
 await m.pushOneAlertRow(
@@ -1469,7 +1469,7 @@ await ensureCloudReady();
 mergeRegistryFromChartDrawings();
 
 const m =
-await import("./alerts-cloud-sync.js?v=91");
+await import("./alerts-cloud-sync.js?v=92");
 
 const pushed =
 await m.pushOneAlertRow(
@@ -1613,7 +1613,7 @@ dispatchPriceAlertsChanged(
 sym
 );
 
-void import("./alerts-cloud-sync.js?v=91").then(async m=>{
+void import("./alerts-cloud-sync.js?v=92").then(async m=>{
 
 const ok =
 await m.flushAlertCloudPush(
@@ -2305,7 +2305,7 @@ tf: existing?.tf
 });
 });
 
-void import("./alerts-cloud-sync.js?v=91").then(m=>{
+void import("./alerts-cloud-sync.js?v=92").then(m=>{
 m.fireAlertCloudTrigger(
 sym,
 sid,
@@ -2395,7 +2395,7 @@ clearAllChartAlertFlags();
 saveAlertsFromCloudMerge([]);
 stripAlertFlagsNotInRegistry();
 
-void import("./alerts-cloud-sync.js?v=91").then(m=>{
+void import("./alerts-cloud-sync.js?v=92").then(m=>{
 m.runCloudOp(()=>
 m.removeAllAlertsEverywhere()
 ).then(ok=>{
@@ -2807,10 +2807,10 @@ const { purgeAllLocalDrawingsStorage } =
 await import("./drawings-storage.js?v=5");
 
 const drawingsCloud =
-await import("./drawings-cloud-sync.js?v=17");
+await import("./drawings-cloud-sync.js?v=20");
 
 const alertsCloud =
-await import("./alerts-cloud-sync.js?v=91");
+await import("./alerts-cloud-sync.js?v=92");
 
 const hadLocalDrawings =
 countAllDrawings() >
