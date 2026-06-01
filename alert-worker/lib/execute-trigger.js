@@ -1,5 +1,6 @@
 import {
-  restDeleteReturning
+  restDeleteReturning,
+  restInsertAlertEvent
 } from "./supabase-rest.js";
 import {
   fetchTelegramChatId
@@ -16,7 +17,10 @@ markTelegramAlertSent
 /**
  * Удаляет активную строку, шлёт Telegram. Без «зависших» triggered_at.
  */
-export async function executeAlertTrigger(alertId) {
+export async function executeAlertTrigger(
+  alertId,
+  meta = {}
+) {
 
   let rows;
 
@@ -42,6 +46,28 @@ export async function executeAlertTrigger(alertId) {
   }
 
   const claimed = rows[0];
+
+  const triggerPrice =
+    Number(meta?.trigger_price ?? meta?.triggerPrice);
+
+  try{
+    await restInsertAlertEvent({
+      user_id: claimed.user_id,
+      symbol: claimed.symbol,
+      shape_id: claimed.shape_id,
+      price: claimed.price,
+      trigger_price: Number.isFinite(triggerPrice)
+        ? triggerPrice
+        : null,
+      tf: claimed.tf || "60",
+      triggered_at: new Date().toISOString()
+    });
+  }catch(err){
+    console.warn(
+      "alert history insert:",
+      err.message
+    );
+  }
 
   const chatId =
     await fetchTelegramChatId(claimed.user_id);

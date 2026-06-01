@@ -133,8 +133,15 @@ export async function handleClientTrigger(
   if (alertId) {
 
     try{
+      const triggerMeta = {
+        trigger_price: Number(body.price)
+      };
+
       const result =
-        await executeAlertTrigger(alertId);
+        await executeAlertTrigger(
+          alertId,
+          triggerMeta
+        );
 
       if (
         !result.ok &&
@@ -200,8 +207,15 @@ export async function handleClientTrigger(
     );
   }
 
+  const triggerMeta = {
+    trigger_price: Number(body.price)
+  };
+
   const result =
-    await executeAlertTrigger(rows[0].id);
+    await executeAlertTrigger(
+      rows[0].id,
+      triggerMeta
+    );
 
   if (
     !result.ok &&

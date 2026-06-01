@@ -61,7 +61,12 @@ export async function evaluateAlertsForCandle(
     }
 
     const result =
-      await executeAlertTrigger(alert.id);
+      await executeAlertTrigger(
+        alert.id,
+        {
+          trigger_price: close
+        }
+      );
 
     activeAlerts.delete(key);
     lastPriceByAlert.delete(key);

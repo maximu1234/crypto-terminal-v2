@@ -176,6 +176,44 @@ export async function restUpsertPriceAlert(row) {
 
 }
 
+export async function restInsertAlertEvent(row) {
+
+  const { base, key } = restBase();
+
+  const res = await fetch(
+    `${base}/rest/v1/price_alert_events`,
+    {
+      method: "POST",
+      headers: {
+        apikey: key,
+        Authorization: `Bearer ${key}`,
+        "Content-Type": "application/json",
+        Prefer: "return=representation"
+      },
+      body: JSON.stringify(row)
+    }
+  );
+
+  const text = await res.text();
+
+  if (!res.ok) {
+    throw new Error(
+      `REST INSERT price_alert_events ${res.status}: ${text.slice(0, 200)}`
+    );
+  }
+
+  if (!text) {
+    return null;
+  }
+
+  const parsed = JSON.parse(text);
+
+  return Array.isArray(parsed)
+    ? parsed[0]
+    : parsed;
+
+}
+
 export async function restDelete(pathAndQuery) {
 
   const { base, key } = restBase();

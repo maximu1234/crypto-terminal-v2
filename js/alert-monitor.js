@@ -3,7 +3,7 @@ alertEntryKey,
 commitAlertTriggeredLocally,
 formatAlertTelegramText,
 getActiveAlerts
-} from "./alerts.js?v=95";
+} from "./alerts.js?v=96";
 
 import {
 subscribeKline

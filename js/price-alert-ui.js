@@ -5,7 +5,7 @@ removeAlert,
 finalizeAlertPriceDrag,
 setAlertDragLivePrice,
 clearAlertDragLivePrice
-} from "./alerts.js?v=95";
+} from "./alerts.js?v=96";
 
 import {
 isCloudLoggedInEffective
@@ -13,7 +13,7 @@ isCloudLoggedInEffective
 
 import {
 getTelegramChatId
-} from "./alerts-cloud-sync.js?v=99";
+} from "./alerts-cloud-sync.js?v=100";
 
 import {
 formatPrice,
