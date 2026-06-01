@@ -98,6 +98,8 @@ const isCoinsPage =
 window.location.pathname.includes("/coins");
 let isCoinsChartInverted =
 false;
+let drawingTools =
+null;
 
 /** То, что показано в #current-symbol (не сбрасывается на BTC при переключении). */
 let displaySymbol =
@@ -713,6 +715,8 @@ isCoinsChartInverted
 /* ignore */
 }
 
+drawingTools?.scheduleRedraw?.();
+
 }
 
 function persistCoinsChartInversion(){
@@ -763,6 +767,10 @@ document.getElementById(
 "price-scale-touch-strip"
 );
 
+/** Длиннее окна double-tap по шкале (~320–500 ms), короче случайного long-press при pan */
+const HOLD_MS =
+520;
+
 const menu =
 document.createElement("div");
 menu.className =
@@ -773,10 +781,26 @@ document.createElement("button");
 item.type = "button";
 item.className =
 "chart-scale-context-menu-item";
-item.textContent =
-"Инвертировать график";
 menu.appendChild(item);
 document.body.appendChild(menu);
+
+function syncMenuLabel(){
+
+item.textContent =
+isCoinsChartInverted
+? "Вернуть обычную шкалу"
+: "Инвертировать график";
+
+item.setAttribute(
+"aria-pressed",
+isCoinsChartInverted
+? "true"
+: "false"
+);
+
+}
+
+syncMenuLabel();
 
 let touchHoldTimer =
 null;
@@ -791,6 +815,8 @@ function showMenuAt(
 clientX,
 clientY
 ){
+
+syncMenuLabel();
 
 const margin = 8;
 menu.classList.remove("hidden");
@@ -885,6 +911,25 @@ localX <= rect.width
 
 }
 
+function resolveTouchTarget(){
+
+if(
+scaleStripEl &&
+getComputedStyle(
+scaleStripEl
+).display !==
+"none"
+){
+return scaleStripEl;
+}
+
+return chartWrapEl;
+
+}
+
+const touchTargetEl =
+resolveTouchTarget();
+
 const onDesktopContextMenu =
 e=>{
 
@@ -920,6 +965,7 @@ return;
 const t = e.touches[0];
 
 if(
+touchTargetEl === chartWrapEl &&
 !isInPriceScale(
 t.clientX,
 t.clientY
@@ -943,7 +989,7 @@ touchStartX,
 touchStartY
 );
 },
-420
+HOLD_MS
 );
 
 };
@@ -986,14 +1032,6 @@ touchHoldTimer =
 null;
 };
 
-const onAnyTouchEnd = ()=>{
-clearTimeout(
-touchHoldTimer
-);
-touchHoldTimer =
-null;
-};
-
 const onDocPointerDown =
 e=>{
 
@@ -1013,6 +1051,7 @@ e=>{
 e.preventDefault();
 e.stopPropagation();
 toggleCoinsChartInversion();
+syncMenuLabel();
 hideMenu();
 }
 );
@@ -1023,30 +1062,26 @@ onDesktopContextMenu,
 true
 );
 
-if(
-chartWrapEl
-){
-chartWrapEl.addEventListener(
+touchTargetEl.addEventListener(
 "touchstart",
 onTouchStart,
 { capture:true, passive:true }
 );
-chartWrapEl.addEventListener(
+touchTargetEl.addEventListener(
 "touchmove",
 onTouchMove,
 { capture:true, passive:true }
 );
-chartWrapEl.addEventListener(
+touchTargetEl.addEventListener(
 "touchend",
 onTouchEnd,
 { capture:true, passive:true }
 );
-chartWrapEl.addEventListener(
+touchTargetEl.addEventListener(
 "touchcancel",
 onTouchEnd,
 { capture:true, passive:true }
 );
-}
 
 document.addEventListener(
 "pointerdown",
@@ -1067,18 +1102,6 @@ hideMenu,
 true
 );
 
-window.addEventListener(
-"touchend",
-onAnyTouchEnd,
-true
-);
-
-window.addEventListener(
-"touchcancel",
-onAnyTouchEnd,
-true
-);
-
 return ()=>{
 hideMenu();
 clearTimeout(touchHoldTimer);
@@ -1087,22 +1110,22 @@ chartWrapEl.removeEventListener(
 onDesktopContextMenu,
 true
 );
-chartWrapEl.removeEventListener(
+touchTargetEl.removeEventListener(
 "touchstart",
 onTouchStart,
 true
 );
-chartWrapEl.removeEventListener(
+touchTargetEl.removeEventListener(
 "touchmove",
 onTouchMove,
 true
 );
-chartWrapEl.removeEventListener(
+touchTargetEl.removeEventListener(
 "touchend",
 onTouchEnd,
 true
 );
-chartWrapEl.removeEventListener(
+touchTargetEl.removeEventListener(
 "touchcancel",
 onTouchEnd,
 true
@@ -1125,18 +1148,6 @@ window.removeEventListener(
 hideMenu,
 true
 );
-
-window.removeEventListener(
-"touchend",
-onAnyTouchEnd,
-true
-);
-
-window.removeEventListener(
-"touchcancel",
-onAnyTouchEnd,
-true
-);
 menu.remove();
 };
 
@@ -1144,18 +1155,18 @@ menu.remove();
 
 markTabletChartBody();
 
+let unmountCoinsScaleInvertMenu =
+()=>{};
+
 if(
 isCoinsPage
 ){
 applyCoinsChartInversion(
 readCoinsPrefs().invertChart === true
 );
-}
-
-/*
-TEMP DEBUG: отключено для проверки двойного тапа по шкале (конфликт с «Инвертировать график»).
+unmountCoinsScaleInvertMenu =
 mountCoinsScaleInvertMenu();
-*/
+}
 
 let priceHudCtrl = {
 stop(){},
@@ -1591,8 +1602,6 @@ return;
 updateRsiHudFromCrosshairTime(param.time);
 
 });
-
-let drawingTools = null;
 
 document.body.classList.remove(
 "drawings-tablet-test-off"

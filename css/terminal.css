@@ -1265,7 +1265,8 @@ body.tablet-chart .price-alert-scale-plus-circle{
   cursor:pointer;
 }
 
-.chart-scale-context-menu-item:hover{
+.chart-scale-context-menu-item:hover,
+.chart-scale-context-menu-item[aria-pressed="true"]{
   background:rgba(255,255,255,.08);
 }
 

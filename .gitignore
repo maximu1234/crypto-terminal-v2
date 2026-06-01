@@ -1,3 +1,4 @@
 .DS_Store
 .vercel
 js/supabase-env.js
+.venv-icons/
