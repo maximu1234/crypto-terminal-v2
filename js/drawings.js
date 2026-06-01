@@ -4074,6 +4074,12 @@ true
 
 function setupFinePointerChartClicks(){
 
+if(
+!tabletCustomPanHooked
+){
+return;
+}
+
 wrapEl.addEventListener(
 "pointerdown",
 e=>{
@@ -4122,12 +4128,19 @@ pointerFromEvent(
 e
 );
 
+const placed =
 handleToolClick({
 point:{
 x,
 y
 }
 });
+
+if(
+!placed
+){
+return;
+}
 
 blockChartClick =
 true;
@@ -9405,7 +9418,7 @@ tool !== "cursor" &&
 isTouchDrawPlacement() &&
 placement
 ){
-return;
+return false;
 }
 
 const point =
@@ -9423,7 +9436,7 @@ placementPointerXY.y
 : pointFromParam(param);
 
 if(!point){
-return;
+return false;
 }
 
 if(tool === "cursor"){
@@ -9439,7 +9452,7 @@ fibSettingsShapeId = picked.id;
 
 updateStyleBar();
 redraw();
-return;
+return true;
 
 }
 
@@ -9455,6 +9468,8 @@ placementPointsNeeded(placement.type)
 ){
 finishPlacement();
 }
+
+return true;
 
 }
 

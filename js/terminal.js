@@ -77,7 +77,7 @@ syncBackgroundAlertStreams
 
 import {
 initDrawings
-} from "./drawings.js?v=173";
+} from "./drawings.js?v=175";
 
 import {
 mountDrawToolbar,
