@@ -46,7 +46,7 @@ body{
   height:46px;
   display:flex;
   align-items:center;
-  gap:6px;
+  gap:2px;
   padding:0 12px;
   border-bottom:1px solid #1f2937;
   flex-shrink:0;
@@ -65,17 +65,24 @@ body{
 
 .tf-btn{
   border:none;
-  background:#1f2937;
-  color:white;
-  padding:6px 10px;
-  border-radius:6px;
+  background:transparent;
+  color:#d1d4dc;
+  padding:5px 10px;
+  border-radius:8px;
   cursor:pointer;
-  font-size:12px;
+  font-size:13px;
+  font-weight:400;
+  line-height:1.2;
   flex-shrink:0;
 }
 
+.tf-btn:hover:not(.active){
+  color:#f3f4f6;
+}
+
 .tf-btn.active{
-  background:#2563eb;
+  background:#363a45;
+  color:#fff;
 }
 
 .draw-toolbar-inline{

@@ -313,8 +313,7 @@ margin-right:4px;
 }
 
 .layout-btn,
-.sort-btn,
-#header .tf-btn{
+.sort-btn{
 border:none;
 background:#1f2937;
 color:#e5e7eb;
@@ -324,16 +323,35 @@ cursor:pointer;
 font-size:12px;
 }
 
+#header .tf-btn{
+border:none;
+background:transparent;
+color:#d1d4dc;
+padding:5px 10px;
+border-radius:8px;
+cursor:pointer;
+font-size:13px;
+font-weight:400;
+line-height:1.2;
+}
+
 .layout-btn:hover,
-.sort-btn:hover,
-#header .tf-btn:hover{
+.sort-btn:hover{
 background:#374151;
 }
 
+#header .tf-btn:hover:not(.active){
+color:#f3f4f6;
+}
+
 .layout-btn.active,
-.sort-btn.active,
-#header .tf-btn.active{
+.sort-btn.active{
 background:#2563eb;
+color:#fff;
+}
+
+#header .tf-btn.active{
+background:#363a45;
 color:#fff;
 }
 

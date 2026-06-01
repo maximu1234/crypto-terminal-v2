@@ -26,7 +26,10 @@ display:none !important;
 }
 
 body.coins-page .coins-tf-desktop{
-display:contents;
+display:flex;
+align-items:center;
+gap:2px;
+flex:0 0 auto;
 }
 
 body.coins-page .coins-draw-desktop,
@@ -49,6 +52,9 @@ display:inline-flex !important;
 body.coins-page #topbar.coins-topbar #current-symbol{
 flex:0 1 auto;
 max-width:min(38vw, 220px);
+margin-right:8px;
+padding-right:10px;
+border-right:1px solid #374151;
 }
 
 body.coins-page #app{
