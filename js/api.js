@@ -2,8 +2,9 @@ import {
 fetchBybit
 } from "./bybit-fetch.js?v=10";
 
-const TWELVE_KEY =
-"d6b45dcb1abf4b3ebe020038e41864fb";
+import {
+fetchTwelveTimeSeries
+} from "./twelvedata-fetch.js?v=1";
 
 /* =========================================================
    BYBIT HISTORY
@@ -557,12 +558,12 @@ if(tf === "D"){
 interval = "1day";
 }
 
-const url =
-`https://api.twelvedata.com/time_series?symbol=${encodeURIComponent(symbol)}&interval=${interval}&outputsize=2500&apikey=${TWELVE_KEY}`;
-
-const res = await fetch(url);
-
-const json = await res.json();
+const json =
+await fetchTwelveTimeSeries(
+symbol,
+interval,
+2500
+);
 
 if(!json.values){
 return [];

@@ -2,7 +2,7 @@ import {
 loadBybitHistory,
 loadBybitSymbols,
 loadTwelveData
-} from "./api.js?v=20";
+} from "./api.js?v=22";
 
 import {
 filterRecentListings
@@ -63,7 +63,7 @@ resetChartPriceAutoScale
 import {
 connectKlineStream,
 disconnectKlineStream
-} from "./ws.js?v=14";
+} from "./ws.js?v=15";
 
 import {
 connectTickerStream,

@@ -18,6 +18,11 @@ echo "  http://127.0.0.1:$PORT/terminal.html    (Терминал)"
 echo "  http://127.0.0.1:$PORT/alerts/         (Алерты)"
 echo "  http://127.0.0.1:$PORT/trade-calculator.html"
 echo ""
+if [ -z "${TWELVEDATA_API_KEY:-}" ] && [ -z "${TWELVE_DATA_API_KEY:-}" ]; then
+  echo "  Stocks/Forex: задайте TWELVEDATA_API_KEY (см. .env.example)"
+  echo "  export TWELVEDATA_API_KEY='ваш_ключ'"
+  echo ""
+fi
 echo "Нажмите Ctrl+C для остановки."
 echo ""
 

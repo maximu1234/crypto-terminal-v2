@@ -45,7 +45,7 @@
 ## Данные
 
 - **Crypto / Новые** — Bybit Linear (REST + WebSocket); «Новые» = 7 дней, страница Листинги = до 365 дней (`js/bybit-listings.js`).
-- **Stocks / Commodities / Forex** — Twelve Data (ключ в `js/api.js`).
+- **Stocks / Commodities / Forex** — Twelve Data через `/api/twelvedata` (ключ только на сервере: `TWELVEDATA_API_KEY` в Vercel / локально в env).
 
 ## Структура
 
@@ -53,11 +53,14 @@
 index.html, coins.html, listings.html, terminal.html, trade-calculator.html
 alerts/index.html
 screener.html          — редирект
-vercel.json, start.sh
+vercel.json, start.sh, .env.example
+
+api/
+  bybit.js, twelvedata.js   — прокси на Vercel (ключи не в браузере)
 
 css/                   — common, screener, terminal, dashboard, alerts, trade-calculator, listings
 js/
-  api.js, chart.js, ws.js, tickers.js, indicators.js, storage.js
+  api.js, twelvedata-fetch.js, chart.js, ws.js, tickers.js, indicators.js, storage.js
   bybit-listings.js    — новые листинги Bybit (launchTime)
   screener.js          — главная
   terminal.js          — монеты

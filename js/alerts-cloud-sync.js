@@ -58,15 +58,32 @@ errorBackoffMs: IS_YANDEX
 : 8000
 });
 
-const ALERTS_SYNC_DEBUG =
-false;
+function isAlertsSyncDebugEnabled(){
+
+try{
+if(
+localStorage.getItem(
+"ct_debug_alerts"
+) === "1"
+){
+return true;
+}
+}catch{
+/* ignore */
+}
+
+return /(?:\?|&)debug=alerts(?:&|$)/i.test(
+location.search || ""
+);
+
+}
 
 function alertsDebugLog(
 ...args
 ){
 
 if(
-ALERTS_SYNC_DEBUG
+isAlertsSyncDebugEnabled()
 ){
 console.log(...args);
 }

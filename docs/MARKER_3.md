@@ -51,4 +51,4 @@ git checkout metka-3 -- js/chart.js js/chart-tablet-gestures.js js/terminal.js j
 
 ## Дальше
 
-Вернуть «+» и инверсию шкалы после стабилизации; не смешивать с кастомным Y-zoom на strip (`tablet-price-scale.js` — только справочно, на iPad не используется).
+Вернуть «+» и инверсию шкалы после стабилизации; не смешивать с кастомным Y-zoom на strip (черновик: `docs/archive/tablet-price-scale.js`, на iPad не используется).

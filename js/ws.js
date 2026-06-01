@@ -17,6 +17,62 @@ let terminalUnsub = null;
 
 let wsConnectFailures = 0;
 
+/** Слияние тиков в один callback на топик (~8/s вместо сотен). */
+const KLINE_FLUSH_MS =
+120;
+
+const pendingCandleByTopic =
+new Map();
+
+let klineFlushTimer =
+null;
+
+function scheduleKlineFlush(){
+
+if(klineFlushTimer){
+return;
+}
+
+klineFlushTimer =
+setTimeout(
+flushPendingKlines,
+KLINE_FLUSH_MS
+);
+
+}
+
+function flushPendingKlines(){
+
+klineFlushTimer = null;
+
+if(!pendingCandleByTopic.size){
+return;
+}
+
+pendingCandleByTopic.forEach(
+(
+candle,
+topic
+)=>{
+
+const callbacks =
+topicCallbacks.get(topic);
+
+if(!callbacks?.size){
+return;
+}
+
+callbacks.forEach(fn=>{
+fn(candle);
+});
+
+}
+);
+
+pendingCandleByTopic.clear();
+
+}
+
 function convertTf(tf){
 
 if(tf === "D"){
@@ -143,9 +199,12 @@ return;
 const candle =
 parseCandle(msg.data[0]);
 
-callbacks.forEach(fn=>{
-fn(candle);
-});
+pendingCandleByTopic.set(
+msg.topic,
+candle
+);
+
+scheduleKlineFlush();
 
 };
 
@@ -249,6 +308,16 @@ clearTimeout(reconnectTimer);
 reconnectTimer = null;
 
 }
+
+if(klineFlushTimer){
+
+clearTimeout(klineFlushTimer);
+
+klineFlushTimer = null;
+
+}
+
+pendingCandleByTopic.clear();
 
 if(socket){
 

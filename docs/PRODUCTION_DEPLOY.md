@@ -21,6 +21,9 @@ Vercel сам задеплоит Production после пуша в `main`.
 |------|--------|----------------|
 | `SUPABASE_URL` | `https://ehygysphfsnluegeycjx.supabase.co` | **Production** (+ Preview, если нужен) |
 | `SUPABASE_ANON_KEY` | anon key из Supabase → Settings → API | **Production** (+ Preview) |
+| `TWELVEDATA_API_KEY` | ключ из [twelvedata.com](https://twelvedata.com) → Dashboard | **Production** (+ Preview) |
+
+**Twelve Data:** если ключ когда-либо был в репозитории или в собранном фронте — **создайте новый ключ** в кабинете Twelve Data и отзовите старый.
 
 Раньше ключи были только на Preview — для основного сайта нужен **Production**.
 
@@ -63,7 +66,10 @@ Preview-URL можно оставить в Redirect URLs — на вход эт�
 git checkout main
 git pull
 cp js/supabase-env.example.js js/supabase-env.js   # если ещё нет
+export TWELVEDATA_API_KEY='ваш_ключ'               # Stocks / Forex / Commodities
 ./start.sh
 ```
 
 Заполни `js/supabase-env.js` (файл в `.gitignore`, в репозиторий не попадает).
+
+Отладка алертов в консоли: `localStorage.setItem('ct_debug_alerts','1')` или URL `?debug=alerts`.

@@ -3,7 +3,7 @@ loadBybitHistory,
 loadBybitSymbols,
 peekBybitSymbolsCache,
 symbolListSignature
-} from "./api.js?v=21";
+} from "./api.js?v=22";
 
 import {
 createScreenerChart,
@@ -16,7 +16,7 @@ SCREENER_MAX_BARS
 
 import {
 subscribeKline
-} from "./ws.js?v=14";
+} from "./ws.js?v=15";
 
 import {
 connectTickerStream,
