@@ -98,7 +98,10 @@ priceFormatForValue(referencePrice)
 
 }
 
-export const CHART_PRICE_SCALE_WIDTH = 56;
+export const CHART_PRICE_SCALE_WIDTH = 48;
+
+/** iPad / touch — чуть шире для пальца */
+export const CHART_PRICE_SCALE_WIDTH_TOUCH = 56;
 
 /** Высота полосы шкалы времени LW (px) — overlay/strip не перекрывают */
 export const CHART_TIME_SCALE_HEIGHT = 28;
@@ -109,7 +112,9 @@ export const CHART_SCALE_TEXT_COLOR = "#d1d5db";
 export const CHART_SCALE_TEXT_ON_LIGHT_BG =
 "#1e293b";
 
-export const CHART_SCALE_FONT_SIZE = 12;
+export const CHART_SCALE_FONT_SIZE = 11;
+
+export const CHART_SCALE_FONT_SIZE_TOUCH = 12;
 
 export const CHART_SCALE_FONT_FAMILY =
 "-apple-system, BlinkMacSystemFont, 'Trebuchet MS', Roboto, Ubuntu, sans-serif";
@@ -127,7 +132,7 @@ CHART_SCALE_FONT_SIZE + 4;
 
 export function chartScaleFont(){
 
-return `${CHART_SCALE_FONT_SIZE}px ${CHART_SCALE_FONT_FAMILY}`;
+return `${effectiveChartScaleFontSize()}px ${CHART_SCALE_FONT_FAMILY}`;
 
 }
 
@@ -1623,7 +1628,7 @@ container,
 layout:{
 background:{ color:"#0b1220" },
 textColor:CHART_SCALE_TEXT_COLOR,
-fontSize:CHART_SCALE_FONT_SIZE,
+fontSize:effectiveChartScaleFontSize(),
 fontFamily:CHART_SCALE_FONT_FAMILY
 },
 
@@ -1641,7 +1646,7 @@ borderColor:"#1f2937",
 mode:1,
 
 autoScale:true,
-minimumWidth:CHART_PRICE_SCALE_WIDTH,
+minimumWidth:effectiveChartPriceScaleWidth(),
 scaleMargins:{
 top:0.12,
 bottom:0.12
@@ -1998,7 +2003,7 @@ layout:{
 /* Прозрачный: зона 30–70 рисуется DOM (#rsi-band) под канвой */
 background:{ color:"transparent" },
 textColor:CHART_SCALE_TEXT_COLOR,
-fontSize:CHART_SCALE_FONT_SIZE,
+fontSize:effectiveChartScaleFontSize(),
 fontFamily:CHART_SCALE_FONT_FAMILY
 },
 
@@ -2017,7 +2022,7 @@ borderColor:"#2a2e39",
 mode:
 normalMode,
 autoScale:true,
-minimumWidth:CHART_PRICE_SCALE_WIDTH,
+minimumWidth:effectiveChartPriceScaleWidth(),
 ticksVisible:true,
 scaleMargins:{
 top:0,
@@ -2145,7 +2150,7 @@ return;
 
 const w =
 mainChart.priceScale("right").width() ||
-CHART_PRICE_SCALE_WIDTH;
+effectiveChartPriceScaleWidth();
 
 const px =
 `${w}px`;
@@ -2181,7 +2186,7 @@ if(
 !mainChart ||
 !linkedChart
 ){
-return CHART_PRICE_SCALE_WIDTH;
+return effectiveChartPriceScaleWidth();
 }
 
 const scale =
@@ -2192,7 +2197,7 @@ function measuredWidth(){
 return Math.max(
 mainChart.priceScale(scale).width() || 0,
 linkedChart.priceScale(scale).width() || 0,
-CHART_PRICE_SCALE_WIDTH
+effectiveChartPriceScaleWidth()
 );
 
 }
@@ -2632,7 +2637,7 @@ return n;
 
 }
 
-return CHART_PRICE_SCALE_WIDTH;
+return effectiveChartPriceScaleWidth();
 
 }
 
@@ -3189,7 +3194,7 @@ return;
 
 const gutter =
 chart.priceScale("right").width() ||
-CHART_PRICE_SCALE_WIDTH;
+effectiveChartPriceScaleWidth();
 const up =
 last.close >= last.open;
 
@@ -3319,6 +3324,22 @@ window.matchMedia(
 navigator.maxTouchPoints >=
 1
 );
+
+}
+
+export function effectiveChartPriceScaleWidth(){
+
+return isCoarseTouchViewport()
+? CHART_PRICE_SCALE_WIDTH_TOUCH
+: CHART_PRICE_SCALE_WIDTH;
+
+}
+
+export function effectiveChartScaleFontSize(){
+
+return isCoarseTouchViewport()
+? CHART_SCALE_FONT_SIZE_TOUCH
+: CHART_SCALE_FONT_SIZE;
 
 }
 

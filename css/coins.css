@@ -54,7 +54,7 @@ max-width:min(38vw, 220px);
 body.coins-page #app{
 display:grid;
 /* #list — сосед #left в DOM, не внутри #left */
-grid-template-columns:minmax(0,1fr) 340px;
+grid-template-columns:minmax(0,1fr) 252px;
 grid-template-rows:minmax(0,1fr);
 height:100dvh;
 max-height:100dvh;

@@ -5901,10 +5901,46 @@ ALERT_LINE_DASH
 
 }
 
+function anchorCircleRadius(){
+
+return isCoarseTouchViewport()
+? 10
+: 5;
+
+}
+
+function anchorSquareHalfSize(){
+
+return isCoarseTouchViewport()
+? 8
+: 4;
+
+}
+
+function handleHitThreshold(
+shape
+){
+
+const base =
+isCoarseTouchViewport()
+? 14
+: 10;
+
+return isPositionType(
+shape.type
+)
+? 16
+: base;
+
+}
+
 function drawAnchorCircle(ctx, x, y){
 
+const r =
+anchorCircleRadius();
+
 ctx.beginPath();
-ctx.arc(x, y, 10, 0, Math.PI * 2);
+ctx.arc(x, y, r, 0, Math.PI * 2);
 ctx.fillStyle = HANDLE_FILL;
 ctx.fill();
 ctx.strokeStyle = HANDLE_STROKE;
@@ -5960,11 +5996,14 @@ return [
 
 function drawAnchorSquare(ctx, x, y){
 
+const h =
+anchorSquareHalfSize();
+
 ctx.fillStyle = HANDLE_FILL;
-ctx.fillRect(x - 8, y - 8, 16, 16);
+ctx.fillRect(x - h, y - h, h * 2, h * 2);
 ctx.strokeStyle = HANDLE_STROKE;
 ctx.lineWidth = 1.5;
-ctx.strokeRect(x - 8.5, y - 8.5, 17, 17);
+ctx.strokeRect(x - h - 0.5, y - h - 0.5, h * 2 + 1, h * 2 + 1);
 
 }
 
@@ -6021,12 +6060,10 @@ return [];
 
 function hitTestHandle(px, py, shape){
 
-const threshold = 14;
-
 const handleThreshold =
-isPositionType(shape.type)
-? 16
-: threshold;
+handleHitThreshold(
+shape
+);
 
 if(isPositionType(shape.type)){
 
