@@ -1057,112 +1057,6 @@ return true;
 
 }
 
-function channelP4XY(
-p1,
-p2,
-p3
-){
-
-if(
-!p1 ||
-!p2 ||
-!p3
-){
-return null;
-}
-
-return {
-x: p3.x + (p2.x - p1.x),
-y: p3.y + (p2.y - p1.y)
-};
-
-}
-
-function channelScreenGeometry(
-shape
-){
-
-const p1 =
-toXY(
-shape.p1
-);
-const p2 =
-toXY(
-shape.p2
-);
-const p3 =
-toXY(
-shape.p3
-);
-
-if(
-!p1 ||
-!p2 ||
-!p3
-){
-return null;
-}
-
-const p4 =
-channelP4XY(
-p1,
-p2,
-p3
-);
-
-if(
-!p4
-){
-return null;
-}
-
-return {
-p1,
-p2,
-p3,
-p4,
-edgeMidA: {
-x: (p1.x + p2.x) / 2,
-y: (p1.y + p2.y) / 2
-},
-edgeMidB: {
-x: (p3.x + p4.x) / 2,
-y: (p3.y + p4.y) / 2
-},
-midStart: {
-x: (p1.x + p3.x) / 2,
-y: (p1.y + p3.y) / 2
-},
-midEnd: {
-x: (p2.x + p4.x) / 2,
-y: (p2.y + p4.y) / 2
-}
-};
-
-}
-
-function channelP4Point(
-shape
-){
-
-const geom =
-channelScreenGeometry(
-shape
-);
-
-if(
-!geom?.p4
-){
-return null;
-}
-
-return pointFromXY(
-geom.p4.x,
-geom.p4.y
-);
-
-}
-
 const POSITION_ENTRY_COLOR = "#FACC15";
 const POSITION_TP_FILL = "rgba(20, 83, 45, 0.58)";
 const POSITION_SL_FILL = "rgba(127, 29, 29, 0.58)";
@@ -6531,6 +6425,112 @@ function hitTestFibBody(px, py, shape, threshold = 8){
 return (
 shape?.type === "fib" &&
 fibBodyDist(px, py, shape) <= threshold
+);
+
+}
+
+function channelP4XY(
+p1,
+p2,
+p3
+){
+
+if(
+!p1 ||
+!p2 ||
+!p3
+){
+return null;
+}
+
+return {
+x: p3.x + (p2.x - p1.x),
+y: p3.y + (p2.y - p1.y)
+};
+
+}
+
+function channelScreenGeometry(
+shape
+){
+
+const p1 =
+toXY(
+shape.p1
+);
+const p2 =
+toXY(
+shape.p2
+);
+const p3 =
+toXY(
+shape.p3
+);
+
+if(
+!p1 ||
+!p2 ||
+!p3
+){
+return null;
+}
+
+const p4 =
+channelP4XY(
+p1,
+p2,
+p3
+);
+
+if(
+!p4
+){
+return null;
+}
+
+return {
+p1,
+p2,
+p3,
+p4,
+edgeMidA: {
+x: (p1.x + p2.x) / 2,
+y: (p1.y + p2.y) / 2
+},
+edgeMidB: {
+x: (p3.x + p4.x) / 2,
+y: (p3.y + p4.y) / 2
+},
+midStart: {
+x: (p1.x + p3.x) / 2,
+y: (p1.y + p3.y) / 2
+},
+midEnd: {
+x: (p2.x + p4.x) / 2,
+y: (p2.y + p4.y) / 2
+}
+};
+
+}
+
+function channelP4Point(
+shape
+){
+
+const geom =
+channelScreenGeometry(
+shape
+);
+
+if(
+!geom?.p4
+){
+return null;
+}
+
+return pointFromXY(
+geom.p4.x,
+geom.p4.y
 );
 
 }

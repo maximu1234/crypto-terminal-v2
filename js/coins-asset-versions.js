@@ -9,7 +9,7 @@ export const CHART_IMPORT_V =
 12;
 
 export const TERMINAL_JS_V =
-241;
+242;
 
 export const COINS_BOOT_V =
 10;
