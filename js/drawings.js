@@ -5895,16 +5895,32 @@ function handleHitThreshold(
 shape
 ){
 
-const base =
-isCoarseTouchViewport()
-? 14
-: 10;
-
+if(
+!isCoarseTouchViewport()
+){
 return isPositionType(
 shape.type
 )
 ? 16
-: base;
+: 10;
+}
+
+const touchHit =
+Math.max(
+anchorCircleRadius() *
+2,
+anchorSquareHalfSize() *
+Math.SQRT2
+);
+
+return isPositionType(
+shape.type
+)
+? Math.max(
+touchHit,
+16
+)
+: touchHit;
 
 }
 
