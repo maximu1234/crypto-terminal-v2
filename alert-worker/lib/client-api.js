@@ -264,6 +264,127 @@ async function handleClientPushDrawing(
 
 }
 
+/**
+ * POST /delete-alert — удаление активного алерта (service role, hard DELETE).
+ */
+async function handleClientDeleteAlert(
+  req,
+  res
+) {
+
+  const path =
+    (req.url || "").split("?")[0];
+
+  if (path !== "/delete-alert") {
+    return false;
+  }
+
+  setCors(res, req);
+
+  if (req.method === "OPTIONS") {
+    res.writeHead(204);
+    res.end();
+    return true;
+  }
+
+  if (req.method !== "POST") {
+    res.writeHead(405);
+    res.end("Method not allowed");
+    return true;
+  }
+
+  const user =
+    await verifyUserFromRequest(req);
+
+  if (!user) {
+    res.writeHead(401, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ ok: false, error: "invalid_token" }));
+    return true;
+  }
+
+  let body;
+
+  try{
+    body = await readJsonBody(req);
+  }catch(err){
+    res.writeHead(400, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({
+      ok: false,
+      error: err.message
+    }));
+    return true;
+  }
+
+  const alertId =
+    String(
+      body.alert_id ||
+      body.alertId ||
+      body.id ||
+      ""
+    ).trim();
+  const sym =
+    String(body.symbol || "").trim().toUpperCase();
+  const sid =
+    String(body.shape_id || body.shapeId || "").trim();
+
+  if (
+    !alertId &&
+    (
+      !sym ||
+      !sid
+    )
+  ) {
+    res.writeHead(400, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ ok: false, error: "bad_body" }));
+    return true;
+  }
+
+  const cfg = getWorkerConfig();
+
+  if (!cfg.ready) {
+    res.writeHead(503, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ ok: false, error: "worker_not_ready" }));
+    return true;
+  }
+
+  const { restDelete } =
+    await import("./supabase-rest.js");
+
+  let restPath =
+    "";
+
+  if (alertId) {
+    restPath =
+      "price_alerts?id=eq." +
+      encodeURIComponent(alertId) +
+      "&user_id=eq." +
+      encodeURIComponent(user.id);
+  } else {
+    restPath =
+      "price_alerts?user_id=eq." +
+      encodeURIComponent(user.id) +
+      "&symbol=eq." +
+      encodeURIComponent(sym) +
+      "&shape_id=eq." +
+      encodeURIComponent(sid);
+  }
+
+  try{
+    await restDelete(restPath);
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ ok: true }));
+  }catch(err){
+    res.writeHead(500, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({
+      ok: false,
+      error: err.message
+    }));
+  }
+
+  return true;
+
+}
+
 export async function handleClientApi(
   req,
   res
@@ -274,6 +395,10 @@ export async function handleClientApi(
   }
 
   if (await handleClientPushDrawing(req, res)) {
+    return true;
+  }
+
+  if (await handleClientDeleteAlert(req, res)) {
     return true;
   }
 

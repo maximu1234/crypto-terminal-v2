@@ -366,7 +366,7 @@ immediate: true
 async n=>{
 
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=96");
+await import("./alerts.js?v=97");
 
 stripAlertFlagsNotInRegistry({
 emitDrawingsEvents: false
@@ -414,7 +414,7 @@ String(rawTriggered).trim().toLowerCase() !== "null";
 if(triggered){
 
 const { applyRemoteAlertFired } =
-await import("./alerts.js?v=96");
+await import("./alerts.js?v=97");
 
 applyRemoteAlertFired(oldRow);
 return;
@@ -438,7 +438,7 @@ sid
 ){
 
 const { applyRemoteAlertRemoved } =
-await import("./alerts.js?v=96");
+await import("./alerts.js?v=97");
 
 applyRemoteAlertRemoved(oldRow);
 
@@ -488,7 +488,7 @@ row?.deleted_at &&
 row.symbol &&
 row.shape_id
 ){
-void import("./alerts.js?v=96").then(
+void import("./alerts.js?v=97").then(
 ({ applyRemoteAlertRemoved })=>{
 applyRemoteAlertRemoved(row);
 }
@@ -505,7 +505,7 @@ row.symbol &&
 row.shape_id
 ){
 
-void import("./alerts.js?v=96").then(
+void import("./alerts.js?v=97").then(
 ({ applyRemoteAlertUpsert })=>{
 
 if(
@@ -551,7 +551,7 @@ if(
 return;
 }
 
-void import("./alerts.js?v=96").then(
+void import("./alerts.js?v=97").then(
 ({ applyRemoteAlertHistoryFromCloud })=>{
 applyRemoteAlertHistoryFromCloud(
 row
@@ -1113,7 +1113,7 @@ cloudId
 ){
 
 const { markAlertCloudSynced, markAlertCloudId } =
-await import("./alerts.js?v=96");
+await import("./alerts.js?v=97");
 
 const ok =
 await verifyAlertActiveInCloud(
@@ -2106,7 +2106,7 @@ null;
 
 if(cloudId){
 const { markAlertCloudId } =
-await import("./alerts.js?v=96");
+await import("./alerts.js?v=97");
 
 markAlertCloudId(
 symbol,
@@ -2426,7 +2426,7 @@ registrySyncTimer = null;
 }
 
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=96");
+await import("./alerts.js?v=97");
 
 const ok =
 await clearAllAlertsFromCloud();
@@ -2468,6 +2468,17 @@ if(
 !sid
 ){
 return false;
+}
+
+if(
+await deleteAlertViaWorker(
+sym,
+sid,
+cid
+)
+){
+broadcastAlertsRegistrySync();
+return true;
 }
 
 let ok =
@@ -3971,6 +3982,111 @@ return !!data?.id;
 /**
  * Запись алерта через Railway (service role) — надёжнее браузерного upsert.
  */
+export async function deleteAlertViaWorker(
+symbol,
+shapeId,
+cloudId = null
+){
+
+const base =
+await getAlertWorkerBaseUrl();
+
+if(!base){
+return false;
+}
+
+const auth =
+await getWorkerRequestAuth();
+
+if(!auth){
+return false;
+}
+
+const sym =
+String(symbol || "").trim().toUpperCase();
+const sid =
+String(shapeId || "").trim();
+const cid =
+String(cloudId || "").trim();
+
+if(
+!sym ||
+!sid
+){
+return false;
+}
+
+const body =
+cid
+? { alert_id: cid, symbol: sym, shape_id: sid }
+: { symbol: sym, shape_id: sid };
+
+let res;
+
+try{
+res =
+await fetchWithTimeout(
+`${base}/delete-alert`,
+{
+method: "POST",
+headers: {
+"Content-Type": "application/json",
+Authorization: `Bearer ${auth.token}`
+},
+body: JSON.stringify(body)
+},
+12000
+);
+}catch(err){
+console.warn(
+"worker /delete-alert:",
+err?.message || err
+);
+return false;
+}
+
+const text =
+await res.text();
+
+let parsed =
+{};
+
+try{
+parsed =
+text
+? JSON.parse(text)
+: {};
+}catch{
+parsed = { raw: text };
+}
+
+if(
+!res.ok ||
+!parsed.ok
+){
+console.warn(
+"[alerts] worker /delete-alert ОТКЛОНЁН:",
+res.status,
+sym,
+sid,
+text.slice(0, 300)
+);
+return false;
+}
+
+alertsDebugLog(
+"[alerts] ✓ Supabase удалено (worker):",
+sym,
+sid
+);
+
+return true;
+
+}
+
+/**
+ * Запись алерта через Railway (service role) — надёжнее браузерного upsert.
+ */
 export async function pushAlertViaWorker(
 entry
 ){
@@ -4079,7 +4195,7 @@ null;
 
 if(cloudId){
 const { markAlertCloudId } =
-await import("./alerts.js?v=96");
+await import("./alerts.js?v=97");
 
 markAlertCloudId(
 symbol,
@@ -4114,7 +4230,7 @@ return 0;
 }
 
 const { getActiveAlerts } =
-await import("./alerts.js?v=96");
+await import("./alerts.js?v=97");
 
 const localKeys =
 new Set(
@@ -4245,7 +4361,7 @@ attempt++
 if(await pushAlertViaWorker(row)){
 
 const { markAlertCloudSynced } =
-await import("./alerts.js?v=96");
+await import("./alerts.js?v=97");
 
 /* Worker пишет service role — не ждём SELECT по JWT пользователя */
 markAlertCloudSynced(
@@ -4276,7 +4392,7 @@ ctx
 ){
 
 const { markAlertCloudSynced } =
-await import("./alerts.js?v=96");
+await import("./alerts.js?v=97");
 
 if(
 await markRowSyncedAfterVerify(
@@ -4363,7 +4479,7 @@ return 0;
 }
 
 const { getActiveAlerts, countAlertsOnChart } =
-await import("./alerts.js?v=96");
+await import("./alerts.js?v=97");
 
 const onChart =
 countAlertsOnChart();
@@ -4465,7 +4581,7 @@ return 0;
 }
 
 const { getActiveAlerts } =
-await import("./alerts.js?v=96");
+await import("./alerts.js?v=97");
 
 const list =
 getActiveAlerts();
@@ -4893,7 +5009,7 @@ normalizeAlertTf,
 isAlertDeleted,
 forgetAlertDeleted
 } =
-await import("./alerts.js?v=96");
+await import("./alerts.js?v=97");
 
 const cloudByKey =
 new Map();
@@ -5011,7 +5127,7 @@ tf: row.tf || "60"
 if(removedRows.length){
 
 const { applyRemoteAlertRemoved } =
-await import("./alerts.js?v=96");
+await import("./alerts.js?v=97");
 
 for(const row of removedRows){
 
@@ -5260,7 +5376,7 @@ const n =
 await reconcileLocalRegistryWithCloud();
 
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=96");
+await import("./alerts.js?v=97");
 
 stripAlertFlagsNotInRegistry(
 isAlertsPage()
@@ -5413,7 +5529,7 @@ if(
 !isAlertsPage()
 ){
 const { mergeRegistryFromChartDrawings } =
-await import("./alerts.js?v=96");
+await import("./alerts.js?v=97");
 
 mergeRegistryFromChartDrawings({
 stripFlags: stripOpts
@@ -5430,7 +5546,7 @@ immediate: true
 });
 
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=96");
+await import("./alerts.js?v=97");
 
 stripAlertFlagsNotInRegistry(
 stripOpts

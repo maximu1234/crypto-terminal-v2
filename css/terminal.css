@@ -804,8 +804,8 @@ body.tablet-chart .tablet-probe-touch-layer{
 
 body.tablet-chart .price-scale-touch-strip{
   display:block;
-  pointer-events:none;
-  z-index:5;
+  pointer-events:auto;
+  z-index:30;
   bottom:var(--chart-time-scale-height, 28px);
 }
 
@@ -824,7 +824,7 @@ body.tablet-chart .price-scale-touch-strip{
 
 .price-alert-scale-plus{
   position:absolute;
-  z-index:12;
+  z-index:32;
   width:22px;
   height:22px;
   margin:0;
@@ -871,7 +871,7 @@ body.tablet-chart .price-scale-touch-strip{
 
 .price-alert-scale-price-hint{
   position:absolute;
-  z-index:11;
+  z-index:31;
   height:22px;
   box-sizing:border-box;
   display:flex;
@@ -894,7 +894,7 @@ body.tablet-chart .price-scale-touch-strip{
 
 .price-alert-delete-bar{
   position:absolute;
-  z-index:12;
+  z-index:32;
   display:flex;
   align-items:center;
   pointer-events:auto;
@@ -902,6 +902,22 @@ body.tablet-chart .price-scale-touch-strip{
 
 .price-alert-delete-bar.hidden{
   display:none;
+}
+
+body.tablet-chart .price-alert-delete-btn{
+  width:36px;
+  height:36px;
+}
+
+body.tablet-chart .price-alert-scale-plus{
+  width:32px;
+  height:32px;
+}
+
+body.tablet-chart .price-alert-scale-plus-circle{
+  width:22px;
+  height:22px;
+  font-size:16px;
 }
 
 .price-alert-delete-btn{

@@ -9,13 +9,13 @@ export const CHART_IMPORT_V =
 12;
 
 export const TERMINAL_JS_V =
-238;
+239;
 
 export const COINS_BOOT_V =
-9;
+10;
 
 export const CHART_PAGE_V =
-3;
+4;
 
 export const CHART_BUILD_ID =
 "20260529-probe-horiz-future";

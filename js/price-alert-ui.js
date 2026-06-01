@@ -5,7 +5,7 @@ removeAlert,
 finalizeAlertPriceDrag,
 setAlertDragLivePrice,
 clearAlertDragLivePrice
-} from "./alerts.js?v=96";
+} from "./alerts.js?v=97";
 
 import {
 isCloudLoggedInEffective
@@ -13,7 +13,7 @@ isCloudLoggedInEffective
 
 import {
 getTelegramChatId
-} from "./alerts-cloud-sync.js?v=100";
+} from "./alerts-cloud-sync.js?v=101";
 
 import {
 formatPrice,
@@ -36,6 +36,12 @@ const TOUCH_PLUS_OFFSET_PX =
 
 const PLUS_SCALE_GAP_PX =
 4;
+
+const TOUCH_LINE_HIT_PX =
+22;
+
+const LINE_HIT_PX =
+10;
 
 function probeHorizTopPx(
 y
@@ -388,13 +394,6 @@ function onPointerMove(
 e
 ){
 
-if(
-IS_COARSE_TOUCH &&
-e?.pointerType !== "mouse"
-){
-return;
-}
-
 if(dragAlertId){
 return;
 }
@@ -406,9 +405,32 @@ e.pointerType === "mouse"
 return;
 }
 
-syncPlusFromClient(
+if(
+IS_COARSE_TOUCH &&
+e.pointerType !== "mouse" &&
+!isInPriceScaleArea(
 e.clientX,
 e.clientY
+)
+){
+return;
+}
+
+if(
+IS_COARSE_TOUCH &&
+e.pointerType === "mouse"
+){
+return;
+}
+
+syncPlusFromClient(
+e.clientX,
+e.clientY,
+{
+fromTouch:
+IS_COARSE_TOUCH &&
+e.pointerType !== "mouse"
+}
 );
 
 }
@@ -809,6 +831,57 @@ deleteSelectedAlert();
 }
 );
 
+deleteBtn?.addEventListener(
+"touchend",
+e=>{
+
+e.preventDefault();
+e.stopPropagation();
+deleteSelectedAlert();
+
+},
+{ passive: false }
+);
+
+const scaleStripEl =
+document.getElementById(
+"price-scale-touch-strip"
+);
+
+function onScaleStripPointer(
+e
+){
+
+if(dragAlertId){
+return;
+}
+
+syncPlusFromClient(
+e.clientX,
+e.clientY,
+{
+fromTouch: true,
+forceShowFromProbe: true
+}
+);
+
+}
+
+if(
+scaleStripEl
+){
+scaleStripEl.addEventListener(
+"pointerdown",
+onScaleStripPointer,
+true
+);
+scaleStripEl.addEventListener(
+"pointermove",
+onScaleStripPointer,
+true
+);
+}
+
 const onKeyDown =
 e=>{
 
@@ -857,6 +930,11 @@ x,
 y
 ){
 
+const hitPx =
+IS_COARSE_TOUCH
+? TOUCH_LINE_HIT_PX
+: LINE_HIT_PX;
+
 const row =
 alertsForChart().find(
 alert=>{
@@ -882,7 +960,7 @@ Math.abs(
 y -
 lineY
 ) <=
-10
+hitPx
 );
 
 });
@@ -1208,6 +1286,22 @@ onKeyDown
 plusBtn.remove();
 plusPriceHint.remove();
 deleteBar.remove();
+touchGuideLine.remove();
+
+if(
+scaleStripEl
+){
+scaleStripEl.removeEventListener(
+"pointerdown",
+onScaleStripPointer,
+true
+);
+scaleStripEl.removeEventListener(
+"pointermove",
+onScaleStripPointer,
+true
+);
+}
 
 };
 
