@@ -21,6 +21,10 @@ hideDomChartCrosshair,
 positionDomChartCrosshair
 } from "./chart-import.js?v=12";
 
+import {
+mountDrawToolIcons
+} from "./draw-ui-shared.js?v=7";
+
 const PLUS_ICON_W =
 22;
 
@@ -191,10 +195,14 @@ deleteBar.innerHTML =
 <span class="drag-dots"></span>
 </button>
 <button type="button" class="float-delete price-alert-delete-btn" title="Удалить алерт" aria-label="Удалить алерт">
-<img class="draw-tool-icon" src="/assets/draw-toolbar-icons/trash.png" width="18" height="18" alt="" aria-hidden="true">
+<img class="draw-tool-icon" data-icon="trash" width="18" height="18" alt="" aria-hidden="true">
 </button>`;
 
 document.body.appendChild(
+deleteBar
+);
+
+mountDrawToolIcons(
 deleteBar
 );
 

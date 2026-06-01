@@ -80,6 +80,11 @@ initDrawings
 } from "./drawings.js?v=171";
 
 import {
+mountDrawToolbar,
+mountDrawToolIcons
+} from "./draw-ui-shared.js?v=7";
+
+import {
 initCoinsMobileUi,
 wireCoinsMobileDrawToolsMenu,
 isCoinsMobile,
@@ -1595,6 +1600,13 @@ document.body.classList.remove(
 
 try{
 
+mountDrawToolbar(
+document.getElementById("draw-toolbar")
+);
+mountDrawToolIcons(
+document
+);
+
 drawingTools = initDrawings({
 
 chart,
@@ -1732,7 +1744,7 @@ drawingTools?.endPriceScaleDragRedraw?.();
 drawingTools?.scheduleRedraw?.();
 };
 
-void import("./price-alert-ui.js?v=32").then(({ mountPriceAlertUi })=>{
+void import("./price-alert-ui.js?v=33").then(({ mountPriceAlertUi })=>{
 mountPriceAlertUi({
 chart,
 series: candleSeries,

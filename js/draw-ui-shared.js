@@ -1,15 +1,57 @@
+import {
+getDrawToolIconSrc
+} from "./draw-toolbar-icon-data.js?v=1";
+
 export const DRAW_TOOLS_GUEST_MSG =
 "Рисование доступно только для залогиненных пользователей.";
 
-export const DRAW_TOOL_ICON_BASE =
-"/assets/draw-toolbar-icons";
-
 export function drawToolIconImg(
 name,
-className = "draw-tool-icon"
+className = "draw-tool-icon",
+size = 22
 ){
 
-return `<img class="${className}" src="${DRAW_TOOL_ICON_BASE}/${name}.png" width="22" height="22" alt="" aria-hidden="true">`;
+const src =
+getDrawToolIconSrc(name);
+
+return `<img class="${className}" src="${src}" width="${size}" height="${size}" alt="" aria-hidden="true" decoding="async">`;
+
+}
+
+export function mountDrawToolIcons(
+root = document
+){
+
+root.querySelectorAll(
+"img.draw-tool-icon[data-icon]"
+).forEach(img=>{
+
+const name =
+img.dataset.icon;
+
+if(!name){
+return;
+}
+
+img.src =
+getDrawToolIconSrc(name);
+
+});
+
+}
+
+export function mountDrawToolbar(
+container
+){
+
+if(
+!container
+){
+return;
+}
+
+container.innerHTML =
+getDrawToolbarButtonsHtml();
 
 }
 

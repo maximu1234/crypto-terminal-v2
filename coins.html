@@ -118,41 +118,7 @@
 </div>
 </div>
 
-<div id="draw-toolbar" class="draw-toolbar-inline coins-draw-desktop">
-
-<button type="button" class="draw-btn" data-draw-tool="cursor" title="Курсор">
-<img class="draw-tool-icon" src="/assets/draw-toolbar-icons/cursor.png" width="22" height="22" alt="" aria-hidden="true">
-</button>
-
-<button type="button" class="draw-btn" data-draw-tool="trendline" title="Trendline — 2 клика">
-<img class="draw-tool-icon" src="/assets/draw-toolbar-icons/trendline.png" width="22" height="22" alt="" aria-hidden="true">
-</button>
-
-<button type="button" class="draw-btn" data-draw-tool="hray" title="Horizontal Ray — 1 клик">
-<img class="draw-tool-icon" src="/assets/draw-toolbar-icons/hray.png" width="22" height="22" alt="" aria-hidden="true">
-</button>
-
-<button type="button" class="draw-btn" data-draw-tool="fib" title="Fib Retracement — 2 клика">
-<img class="draw-tool-icon" src="/assets/draw-toolbar-icons/fib.png" width="22" height="22" alt="" aria-hidden="true">
-</button>
-
-<button type="button" class="draw-btn" data-draw-tool="channel" title="Parallel Channel — 3 клика">
-<img class="draw-tool-icon" src="/assets/draw-toolbar-icons/channel.png" width="22" height="22" alt="" aria-hidden="true">
-</button>
-
-<button type="button" class="draw-btn" data-draw-tool="long" title="Позиция Long">
-<img class="draw-tool-icon draw-pos-icon draw-pos-icon--long" src="/assets/draw-toolbar-icons/long.png" width="22" height="22" alt="" aria-hidden="true">
-</button>
-
-<button type="button" class="draw-btn" data-draw-tool="short" title="Позиция Short">
-<img class="draw-tool-icon draw-pos-icon draw-pos-icon--short" src="/assets/draw-toolbar-icons/short.png" width="22" height="22" alt="" aria-hidden="true">
-</button>
-
-<button type="button" class="draw-btn draw-tool-clear-all" id="draw-tool-delete" title="Удалить все объекты на графике">
-<img class="draw-tool-icon" src="/assets/draw-toolbar-icons/trash.png" width="22" height="22" alt="" aria-hidden="true">
-</button>
-
-</div>
+<div id="draw-toolbar" class="draw-toolbar-inline coins-draw-desktop"></div>
 
 <script>
 (function(){
@@ -235,7 +201,7 @@ el.textContent=String(last.symbol).toUpperCase()+".P";
 </button>
 
 <button type="button" class="float-delete draw-delete-one-btn" id="draw-delete-one" title="Удалить объект" aria-label="Удалить">
-<img class="draw-tool-icon" src="/assets/draw-toolbar-icons/trash.png" width="18" height="18" alt="" aria-hidden="true">
+<img class="draw-tool-icon" data-icon="trash" width="18" height="18" alt="" aria-hidden="true">
 </button>
 
 </div>
