@@ -192,7 +192,9 @@ deleteBar.innerHTML =
 </button>
 <button type="button" class="float-delete price-alert-delete-btn" title="Удалить алерт" aria-label="Удалить алерт">
 <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-<path fill="none" stroke="currentColor" stroke-width="1.5" d="M9 3h6l1 2h4v2H4V5h4l1-2zM7 9v11h10V9M10 12v5M14 12v5"/>
+<path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" d="M10 3h4v2"/>
+<path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" d="M6 8h12"/>
+<path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" d="M7.5 8L6.5 20h11L16.5 8"/>
 </svg>
 </button>`;
 

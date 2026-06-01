@@ -24,11 +24,11 @@ import {
 ALARM_ICON_SVG,
 TRASH_ICON_SVG,
 DRAW_TOOLS_GUEST_MSG
-} from "./draw-ui-shared.js?v=3";
+} from "./draw-ui-shared.js?v=4";
 
 import {
 closeAllWidgetDrawToolsMenus
-} from "./dashboard-draw-ui.js?v=12";
+} from "./dashboard-draw-ui.js?v=14";
 
 import {
 calcPositionSizing,

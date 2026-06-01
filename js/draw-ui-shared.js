@@ -22,10 +22,13 @@ export const ALARM_ICON_SVG = `
 `;
 
 export const TRASH_ICON_SVG = `
-<svg class="alert-icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-<path fill="none" stroke="currentColor" stroke-width="1.5" d="M9 3h6l1 2h4v2H4V5h4l1-2zM7 9v11h10V9"/>
-</svg>
-`;
+<svg viewBox="0 0 24 24" aria-hidden="true">
+<path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" d="M10 3h4v2"/>
+<path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" d="M6 8h12"/>
+<path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" d="M7.5 8L6.5 20h11L16.5 8"/>
+</svg>`;
+
+export const TOOLBAR_CLEAR_TRASH_ICON_SVG = TRASH_ICON_SVG;
 
 export function getAlertToggleButtonHtml(){
 
@@ -39,17 +42,17 @@ ${ALARM_ICON_SVG}
 
 /** Long / Short: те же зоны, что на графике (POSITION_* в drawings.js) */
 export const LONG_POSITION_ICON_SVG = `
-<svg class="draw-pos-icon draw-pos-icon--long" viewBox="0 0 12 18" aria-hidden="true">
-<rect x="2" y="1" width="8" height="9.5" fill="rgba(20,83,45,0.92)"/>
-<line x1="2" y1="10.75" x2="10" y2="10.75" stroke="#FACC15" stroke-width="1.5" stroke-linecap="square"/>
-<rect x="2" y="11.25" width="8" height="5.75" fill="rgba(127,29,29,0.92)"/>
+<svg class="draw-pos-icon draw-pos-icon--long" viewBox="0 0 12 12" aria-hidden="true">
+<rect x="2" y="1" width="8" height="5" fill="rgba(20,83,45,0.92)"/>
+<line x1="2" y1="6.5" x2="10" y2="6.5" stroke="#FACC15" stroke-width="1.25" stroke-linecap="square"/>
+<rect x="2" y="7" width="8" height="4" fill="rgba(127,29,29,0.92)"/>
 </svg>`;
 
 export const SHORT_POSITION_ICON_SVG = `
-<svg class="draw-pos-icon draw-pos-icon--short" viewBox="0 0 12 18" aria-hidden="true">
-<rect x="2" y="1" width="8" height="5.75" fill="rgba(127,29,29,0.92)"/>
-<line x1="2" y1="7.25" x2="10" y2="7.25" stroke="#FACC15" stroke-width="1.5" stroke-linecap="square"/>
-<rect x="2" y="7.75" width="8" height="9.5" fill="rgba(20,83,45,0.92)"/>
+<svg class="draw-pos-icon draw-pos-icon--short" viewBox="0 0 12 12" aria-hidden="true">
+<rect x="2" y="1" width="8" height="4" fill="rgba(127,29,29,0.92)"/>
+<line x1="2" y1="5.5" x2="10" y2="5.5" stroke="#FACC15" stroke-width="1.25" stroke-linecap="square"/>
+<rect x="2" y="6" width="8" height="5" fill="rgba(20,83,45,0.92)"/>
 </svg>`;
 
 /** Иконка «Объекты рисования» — палитра и кисть */
@@ -113,10 +116,7 @@ ${CURSOR_TOOL_ICON_SVG}
 ${getPositionDrawToolbarButtonsHtml(opts)}
 
 <button type="button" class="${btnClass} draw-tool-clear-all" title="Удалить все объекты на графике">
-<svg viewBox="0 0 24 24" aria-hidden="true">
-<path d="M9 3h6l1 2h4v2H4V5h4l1-2z" fill="none" stroke="currentColor" stroke-width="1.5"/>
-<path d="M7 9v11h10V9" fill="none" stroke="currentColor" stroke-width="1.5"/>
-</svg>
+${TOOLBAR_CLEAR_TRASH_ICON_SVG}
 </button>`;
 
 }

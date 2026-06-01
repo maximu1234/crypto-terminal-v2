@@ -30,7 +30,7 @@ initWidgetDrawToolsDropdown,
 wireWidgetDrawToolMenu,
 closeAllWidgetDrawToolsMenus,
 resetWidgetDrawToolsMenus
-} from "./dashboard-draw-ui.js?v=13";
+} from "./dashboard-draw-ui.js?v=14";
 
 import {
 ensureDrawToolsVisible

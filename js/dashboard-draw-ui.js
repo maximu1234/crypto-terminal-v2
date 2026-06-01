@@ -1,9 +1,10 @@
 import {
 DRAW_TOOLS_PALETTE_ICON_SVG,
 DRAW_TOOLS_GUEST_MSG,
+TRASH_ICON_SVG,
 getAlertToggleButtonHtml,
 getDrawToolbarButtonsHtml
-} from "./draw-ui-shared.js?v=3";
+} from "./draw-ui-shared.js?v=4";
 
 import {
 isCloudLoggedInEffective
@@ -405,7 +406,7 @@ ${getAlertToggleButtonHtml()}
 </button>
 
 <button type="button" class="float-delete draw-delete-one-btn" title="Удалить">
-<svg viewBox="0 0 24 24" width="16" height="16"><path fill="none" stroke="currentColor" stroke-width="1.5" d="M9 3h6l1 2h4v2H4V5h4l1-2zM7 9v11h10V9"/></svg>
+${TRASH_ICON_SVG}
 </button>
 
 </div>

@@ -118,7 +118,7 @@ body{
 
 .draw-btn[data-draw-tool="long"] svg,
 .draw-btn[data-draw-tool="short"] svg{
-  width:14px;
+  width:22px;
   height:22px;
 }
 
@@ -136,7 +136,7 @@ body{
 
   .draw-btn[data-draw-tool="long"] svg,
   .draw-btn[data-draw-tool="short"] svg{
-    width:15px;
+    width:24px;
     height:24px;
   }
 }

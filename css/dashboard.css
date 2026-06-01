@@ -143,7 +143,7 @@ body{
 
 .draw-btn[data-draw-tool="long"] svg,
 .draw-btn[data-draw-tool="short"] svg{
-    width:14px;
+    width:22px;
     height:22px;
 }
 
@@ -221,8 +221,8 @@ body.terminal-page .widget-draw-tools{
 
 .draw-btn-sm[data-draw-tool="long"] svg,
 .draw-btn-sm[data-draw-tool="short"] svg{
-    width:10px;
-    height:16px;
+    width:14px;
+    height:14px;
 }
 
 .widget-chart-wrap{
