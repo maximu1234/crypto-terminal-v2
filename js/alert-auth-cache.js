@@ -4,8 +4,10 @@
  */
 
 import {
-SUPABASE_AUTH_STORAGE_KEY
-} from "./supabase-client.js?v=5";
+SUPABASE_AUTH_STORAGE_KEY,
+SUPABASE_AUTH_BACKUP_KEY,
+restoreAuthSessionFromBackup
+} from "./auth-storage.js?v=1";
 
 let cache = null;
 
@@ -119,6 +121,25 @@ function readSessionFromAppStorage(){
     localStorage.getItem(
       SUPABASE_AUTH_STORAGE_KEY
     );
+
+    if(
+      !raw
+    ){
+      restoreAuthSessionFromBackup();
+      raw =
+      localStorage.getItem(
+        SUPABASE_AUTH_STORAGE_KEY
+      );
+    }
+
+    if(
+      !raw
+    ){
+      raw =
+      localStorage.getItem(
+        SUPABASE_AUTH_BACKUP_KEY
+      );
+    }
   }catch{
     return null;
   }
@@ -355,7 +376,7 @@ syncHit
 
   try{
     const { getSupabase } =
-    await import("./supabase-client.js?v=5");
+    await import("./supabase-client.js?v=6");
 
     const sb =
     await Promise.race([

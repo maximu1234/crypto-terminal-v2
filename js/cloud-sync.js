@@ -1,8 +1,16 @@
 import {
 getSupabase,
-isSupabaseConfigured,
-SUPABASE_AUTH_STORAGE_KEY
-} from "./supabase-client.js?v=5";
+isSupabaseConfigured
+} from "./supabase-client.js?v=6";
+
+import {
+SUPABASE_AUTH_STORAGE_KEY,
+authNetworkTimeoutMs,
+isExplicitAuthSignOut,
+isSafariBrowser,
+markExplicitAuthSignOut,
+restoreAuthSessionFromBackup
+} from "./auth-storage.js?v=1";
 
 import {
 loadFavoritesGroups,
@@ -31,7 +39,7 @@ withTimeout
 import {
 readAlertTokenSync,
 readPersistedAuthSession
-} from "./alert-auth-cache.js?v=6";
+} from "./alert-auth-cache.js?v=7";
 
 import {
 createNotifyDebouncer,
@@ -79,21 +87,92 @@ user.email ||
 
 bootstrapAuthFromLocalStorage();
 
-function isMobileLikeBrowser(){
+async function tryRecoverSignedOutSession(
+sb
+){
 
 if(
-typeof navigator ===
-"undefined"
+isExplicitAuthSignOut()
 ){
-return false;
+return null;
 }
 
-const ua =
-navigator.userAgent ||
-"";
+restoreAuthSessionFromBackup();
 
-return /iPhone|iPad|iPod|Android|Mobile/i.test(
-ua
+let restored =
+await restoreSessionFromPersisted(
+sb
+);
+
+if(
+restored
+){
+return restored;
+}
+
+const persisted =
+readPersistedAuthSession();
+
+if(
+!persisted?.access_token ||
+!persisted?.user
+){
+return null;
+}
+
+if(
+sb
+){
+restored =
+await restoreSessionFromPersisted(
+sb
+);
+}
+
+return restored ||
+(
+isAccessTokenExpired(
+persisted
+)
+? null
+: persisted
+);
+
+}
+
+function bindSafariAuthKeepalive(){
+
+if(
+!isSafariBrowser()
+){
+return;
+}
+
+const KEEPALIVE_MS =
+45 *
+60 *
+1000;
+
+window.setInterval(
+()=>{
+
+if(
+document.visibilityState !==
+"visible"
+){
+return;
+}
+
+if(
+!isCloudLoggedInEffective()
+){
+return;
+}
+
+void refreshAuthSessionSilent();
+
+},
+KEEPALIVE_MS
 );
 
 }
@@ -164,9 +243,9 @@ sb.auth.setSession({
 access_token: persisted.access_token,
 refresh_token: refresh
 }),
-isMobileLikeBrowser()
-? 12000
-: 8000,
+authNetworkTimeoutMs(
+"setSession restore"
+),
 "setSession restore"
 );
 
@@ -198,9 +277,9 @@ try{
 const { data, error } =
 await withTimeout(
 sb.auth.refreshSession(),
-isMobileLikeBrowser()
-? 12000
-: 8000,
+authNetworkTimeoutMs(
+"refreshSession restore"
+),
 "refreshSession restore"
 );
 
@@ -255,9 +334,9 @@ try{
 const { data, error } =
 await withTimeout(
 sb.auth.refreshSession(),
-isMobileLikeBrowser()
-? 12000
-: 6000,
+authNetworkTimeoutMs(
+"refreshSession silent"
+),
 "refreshSession silent"
 );
 
@@ -265,6 +344,21 @@ if(
 error ||
 !data?.session
 ){
+restoreAuthSessionFromBackup();
+const recovered =
+await restoreSessionFromPersisted(
+sb
+);
+
+if(
+recovered
+){
+await applySession(
+recovered
+);
+return true;
+}
+
 return false;
 }
 
@@ -1605,6 +1699,8 @@ return redirectTo;
 
 export async function signOutCloud(){
 
+markExplicitAuthSignOut();
+
 loggedIn = false;
 userEmail = "";
 
@@ -1668,7 +1764,7 @@ localStorage.removeItem(k);
 }
 
 const { clearAlertAuthCache } =
-await import("./alert-auth-cache.js?v=6");
+await import("./alert-auth-cache.js?v=7");
 
 clearAlertAuthCache();
 
@@ -1853,7 +1949,7 @@ refresh_token: session.refresh_token || ""
 }
 
 const { warmAlertAuthCache } =
-await import("./alert-auth-cache.js?v=6");
+await import("./alert-auth-cache.js?v=7");
 
 warmAlertAuthCache(
 sb,
@@ -1982,6 +2078,7 @@ if(
 document.visibilityState ===
 "visible"
 ){
+restoreAuthSessionFromBackup();
 void refreshAuthSessionSilent();
 }
 
@@ -2332,6 +2429,7 @@ null;
 if(
 !session
 ){
+restoreAuthSessionFromBackup();
 session =
 await restoreSessionFromPersisted(
 sb
@@ -2347,9 +2445,9 @@ try{
 const { data } =
 await withTimeout(
 sb.auth.getSession(),
-isMobileLikeBrowser()
-? 10000
-: 5000,
+authNetworkTimeoutMs(
+"getSession"
+),
 "getSession"
 );
 
@@ -2438,7 +2536,7 @@ event ===
 ){
 
 const restored =
-await restoreSessionFromPersisted(
+await tryRecoverSignedOutSession(
 sb
 );
 
@@ -2456,7 +2554,7 @@ userEmail = "";
 stopCloudSyncHelpers();
 
 const { clearAlertAuthCache } =
-await import("./alert-auth-cache.js?v=6");
+await import("./alert-auth-cache.js?v=7");
 
 clearAlertAuthCache();
 
@@ -2465,5 +2563,7 @@ notifyAuth();
 
 }
 );
+
+bindSafariAuthKeepalive();
 
 }

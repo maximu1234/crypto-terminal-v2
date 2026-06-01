@@ -44,7 +44,7 @@ isCloudLoggedInEffective,
 isCloudSyncEnabled,
 ensureCloudLoginResolved,
 onCloudSyncChange
-} from "./cloud-sync.js?v=26";
+} from "./cloud-sync.js?v=27";
 
 import {
 ensureDrawToolsVisible

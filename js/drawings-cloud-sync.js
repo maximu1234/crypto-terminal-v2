@@ -6,7 +6,7 @@ isCloudSyncEnabled,
 onCloudSyncChange,
 notifyDrawings as notifyDrawingsListeners,
 ensureCloudLoginResolved
-} from "./cloud-sync.js?v=26";
+} from "./cloud-sync.js?v=27";
 
 import {
 normalizeAlertWorkerBaseUrl
@@ -62,7 +62,7 @@ readAlertTokenSync
 
 import {
 getSupabase
-} from "./supabase-client.js?v=5";
+} from "./supabase-client.js?v=6";
 
 const DRAWINGS_ROW_SYNC_META_KEY =
 "drawings_row_sync_v1";

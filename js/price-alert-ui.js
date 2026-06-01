@@ -9,7 +9,7 @@ clearAlertDragLivePrice
 
 import {
 isCloudLoggedInEffective
-} from "./cloud-sync.js?v=26";
+} from "./cloud-sync.js?v=27";
 
 import {
 getTelegramChatId

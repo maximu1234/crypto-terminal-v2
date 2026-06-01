@@ -26,11 +26,11 @@ isCloudSyncEnabled,
 getCloudUserEmail,
 pullDeviceStateFromCloud,
 onCloudSyncChange
-} from "./cloud-sync.js?v=26";
+} from "./cloud-sync.js?v=27";
 
 import {
 isSupabaseConfigured
-} from "./supabase-client.js?v=5";
+} from "./supabase-client.js?v=6";
 
 import {
 initBybitNetworkUi
