@@ -1057,29 +1057,109 @@ return true;
 
 }
 
-function channelP4(p1, p2, p3){
+function channelP4XY(
+p1,
+p2,
+p3
+){
+
+if(
+!p1 ||
+!p2 ||
+!p3
+){
+return null;
+}
 
 return {
-time: p3.time + (p2.time - p1.time),
-price: p3.price + (p2.price - p1.price)
+x: p3.x + (p2.x - p1.x),
+y: p3.y + (p2.y - p1.y)
 };
 
 }
 
-function channelMidPoints(p1, p2, p3){
+function channelScreenGeometry(
+shape
+){
 
-const p4 = channelP4(p1, p2, p3);
+const p1 =
+toXY(
+shape.p1
+);
+const p2 =
+toXY(
+shape.p2
+);
+const p3 =
+toXY(
+shape.p3
+);
+
+if(
+!p1 ||
+!p2 ||
+!p3
+){
+return null;
+}
+
+const p4 =
+channelP4XY(
+p1,
+p2,
+p3
+);
+
+if(
+!p4
+){
+return null;
+}
 
 return {
+p1,
+p2,
+p3,
+p4,
+edgeMidA: {
+x: (p1.x + p2.x) / 2,
+y: (p1.y + p2.y) / 2
+},
+edgeMidB: {
+x: (p3.x + p4.x) / 2,
+y: (p3.y + p4.y) / 2
+},
 midStart: {
-time: (p1.time + p3.time) / 2,
-price: (p1.price + p3.price) / 2
+x: (p1.x + p3.x) / 2,
+y: (p1.y + p3.y) / 2
 },
 midEnd: {
-time: (p2.time + p4.time) / 2,
-price: (p2.price + p4.price) / 2
+x: (p2.x + p4.x) / 2,
+y: (p2.y + p4.y) / 2
 }
 };
+
+}
+
+function channelP4Point(
+shape
+){
+
+const geom =
+channelScreenGeometry(
+shape
+);
+
+if(
+!geom?.p4
+){
+return null;
+}
+
+return pointFromXY(
+geom.p4.x,
+geom.p4.y
+);
 
 }
 
@@ -6029,7 +6109,20 @@ point: { time: shape.time, price: shape.price }
 
 if(shape.type === "channel"){
 
-const p4 = channelP4(shape.p1, shape.p2, shape.p3);
+const p4 =
+channelP4Point(
+shape
+);
+
+if(
+!p4
+){
+return [
+{ id: "p1", point: shape.p1 },
+{ id: "p2", point: shape.p2 },
+{ id: "p3", point: shape.p3 }
+];
+}
 
 return [
 { id: "p1", point: shape.p1 },
@@ -6445,43 +6538,49 @@ fibBodyDist(px, py, shape) <= threshold
 function channelBodyDist(px, py, shape){
 
 if(
-shape?.type !== "channel"
+shape?.type !==
+"channel"
 ){
 return Infinity;
 }
 
-const a =
-toXY(shape.p1);
-const b =
-toXY(shape.p2);
-const c =
-toXY(shape.p3);
-const p4 =
-toXY(channelP4(shape.p1, shape.p2, shape.p3));
-const { midStart, midEnd } =
-channelMidPoints(shape.p1, shape.p2, shape.p3);
-const m1 =
-toXY(midStart);
-const m2 =
-toXY(midEnd);
+const geom =
+channelScreenGeometry(
+shape
+);
 
-if(!a || !b || !c || !p4){
+if(
+!geom
+){
 return Infinity;
 }
 
-let dist = Math.min(
-distToSegment(px, py, a.x, a.y, b.x, b.y),
-distToSegment(px, py, c.x, c.y, p4.x, p4.y)
+return Math.min(
+distToSegment(
+px,
+py,
+geom.p1.x,
+geom.p1.y,
+geom.p2.x,
+geom.p2.y
+),
+distToSegment(
+px,
+py,
+geom.p3.x,
+geom.p3.y,
+geom.p4.x,
+geom.p4.y
+),
+distToSegment(
+px,
+py,
+geom.midStart.x,
+geom.midStart.y,
+geom.midEnd.x,
+geom.midEnd.y
+)
 );
-
-if(m1 && m2){
-dist = Math.min(
-dist,
-distToSegment(px, py, m1.x, m1.y, m2.x, m2.y)
-);
-}
-
-return dist;
 
 }
 
@@ -7922,42 +8021,52 @@ drawAnchorCircle(ctx, anchor.x, anchor.y);
 
 if(shape.type === "channel"){
 
-const p1 = toXY(shape.p1);
-const p2 = toXY(shape.p2);
-const p3 = toXY(shape.p3);
-const p4 = toXY(channelP4(shape.p1, shape.p2, shape.p3));
+const geom =
+channelScreenGeometry(
+shape
+);
 
-if(p1){
-drawAnchorCircle(ctx, p1.x, p1.y);
+if(
+!geom
+){
+return;
 }
 
-if(p2){
-drawAnchorCircle(ctx, p2.x, p2.y);
-}
+drawAnchorCircle(
+ctx,
+geom.p1.x,
+geom.p1.y
+);
 
-if(p3){
-drawAnchorCircle(ctx, p3.x, p3.y);
-}
+drawAnchorCircle(
+ctx,
+geom.p2.x,
+geom.p2.y
+);
 
-if(p4){
-drawAnchorCircle(ctx, p4.x, p4.y);
-}
+drawAnchorCircle(
+ctx,
+geom.p3.x,
+geom.p3.y
+);
 
-if(p1 && p2){
+drawAnchorCircle(
+ctx,
+geom.p4.x,
+geom.p4.y
+);
+
 drawAnchorSquare(
 ctx,
-(p1.x + p2.x) / 2,
-(p1.y + p2.y) / 2
+geom.edgeMidA.x,
+geom.edgeMidA.y
 );
-}
 
-if(p3 && p4){
 drawAnchorSquare(
 ctx,
-(p3.x + p4.x) / 2,
-(p3.y + p4.y) / 2
+geom.edgeMidB.x,
+geom.edgeMidB.y
 );
-}
 
 }
 
