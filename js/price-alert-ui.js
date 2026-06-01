@@ -184,14 +184,19 @@ document.createElement(
 );
 
 deleteBar.className =
-"price-alert-delete-bar hidden";
+"draw-style-float price-alert-style-float hidden";
 
 deleteBar.innerHTML =
-`<button type="button" class="price-alert-delete-btn" title="Удалить алерт" aria-label="Удалить алерт">
-<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.5" d="M9 3h6l1 2h4v2H4V5h4l1-2zM7 9v11h10V9"/></svg>
+`<button type="button" class="float-drag price-alert-style-drag" title="Перетащить панель" aria-label="Перетащить">
+<span class="drag-dots"></span>
+</button>
+<button type="button" class="float-delete price-alert-delete-btn" title="Удалить алерт" aria-label="Удалить алерт">
+<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+<path fill="none" stroke="currentColor" stroke-width="1.5" d="M9 3h6l1 2h4v2H4V5h4l1-2zM7 9v11h10V9M10 12v5M14 12v5"/>
+</svg>
 </button>`;
 
-wrapEl.appendChild(
+document.body.appendChild(
 deleteBar
 );
 
@@ -199,6 +204,29 @@ const deleteBtn =
 deleteBar.querySelector(
 ".price-alert-delete-btn"
 );
+
+const deleteBarDragHandle =
+deleteBar.querySelector(
+".price-alert-style-drag"
+);
+
+let alertBarOffset = {
+x: 12,
+y: -16
+};
+
+let alertBarDragging =
+false;
+
+let alertBarDragStart = {
+x: 0,
+y: 0
+};
+
+let alertBarStart = {
+x: 0,
+y: 0
+};
 
 function sym(){
 
@@ -315,8 +343,27 @@ deleteBar.classList.add(
 
 }
 
-function positionDeleteBarFromPrice(
+function syncAlertDeleteBarLayout(
 price
+){
+
+const wrap =
+wrapEl.getBoundingClientRect();
+
+const barW =
+deleteBar.offsetWidth ||
+72;
+
+const barH =
+deleteBar.offsetHeight ||
+40;
+
+let top =
+wrap.top + alertBarOffset.y;
+
+if(
+price !=
+null
 ){
 
 const y =
@@ -332,10 +379,54 @@ hideDeleteBar();
 return;
 }
 
+top =
+wrap.top + y + alertBarOffset.y - barH / 2;
+}
+
+top =
+Math.max(
+wrap.top,
+Math.min(
+wrap.bottom - barH,
+top
+)
+);
+
+const left =
+Math.max(
+wrap.left,
+Math.min(
+wrap.right - barW,
+wrap.left + alertBarOffset.x
+)
+);
+
+deleteBar.style.position =
+"fixed";
 deleteBar.style.left =
-"8px";
+`${Math.round(left)}px`;
 deleteBar.style.top =
-`${y - 11}px`;
+`${Math.round(top)}px`;
+deleteBar.style.zIndex =
+"10050";
+
+}
+
+function positionDeleteBarFromPrice(
+price
+){
+
+if(
+price ==
+null
+){
+hideDeleteBar();
+return;
+}
+
+syncAlertDeleteBarLayout(
+price
+);
 deleteBar.classList.remove(
 "hidden"
 );
@@ -843,6 +934,205 @@ deleteSelectedAlert();
 { passive: false }
 );
 
+deleteBarDragHandle?.addEventListener(
+"pointerdown",
+e=>{
+
+if(
+e.pointerType ===
+"mouse" &&
+e.button !==
+0
+){
+return;
+}
+
+if(
+!e.isPrimary
+){
+return;
+}
+
+e.preventDefault();
+e.stopPropagation();
+
+alertBarDragging =
+true;
+alertBarDragStart = {
+x: e.clientX,
+y: e.clientY
+};
+
+const barR =
+deleteBar.getBoundingClientRect();
+
+alertBarStart = {
+x: barR.left,
+y: barR.top
+};
+
+try{
+deleteBarDragHandle.setPointerCapture(
+e.pointerId
+);
+}catch{
+/* ignore */
+}
+
+}
+);
+
+function onAlertBarDragMove(
+e
+){
+
+if(
+!alertBarDragging
+){
+return;
+}
+
+const wrap =
+wrapEl.getBoundingClientRect();
+const barW =
+deleteBar.offsetWidth ||
+72;
+const barH =
+deleteBar.offsetHeight ||
+40;
+
+const dx =
+e.clientX - alertBarDragStart.x;
+const dy =
+e.clientY - alertBarDragStart.y;
+
+let fx =
+alertBarStart.x + dx;
+let fy =
+alertBarStart.y + dy;
+
+fx =
+Math.max(
+wrap.left,
+Math.min(
+wrap.right - barW,
+fx
+)
+);
+
+fy =
+Math.max(
+wrap.top,
+Math.min(
+wrap.bottom - barH,
+fy
+)
+);
+
+deleteBar.style.left =
+`${Math.round(fx)}px`;
+deleteBar.style.top =
+`${Math.round(fy)}px`;
+
+}
+
+function onAlertBarDragEnd(){
+
+if(
+!alertBarDragging
+){
+return;
+}
+
+alertBarDragging =
+false;
+
+const wrap =
+wrapEl.getBoundingClientRect();
+const barR =
+deleteBar.getBoundingClientRect();
+const row =
+selectedAlertId
+? alertAt(
+selectedAlertId
+)
+: null;
+
+alertBarOffset.x =
+barR.left - wrap.left;
+
+if(
+row
+){
+
+const lineY =
+series.priceToCoordinate(
+row.price
+);
+
+const barH =
+deleteBar.offsetHeight ||
+40;
+
+if(
+lineY !=
+null
+){
+alertBarOffset.y =
+barR.top - (
+wrap.top + lineY - barH / 2
+);
+}else{
+alertBarOffset.y =
+barR.top - wrap.top;
+}
+
+}else{
+alertBarOffset.y =
+barR.top - wrap.top;
+}
+
+}
+
+window.addEventListener(
+"pointermove",
+onAlertBarDragMove
+);
+
+window.addEventListener(
+"pointerup",
+onAlertBarDragEnd
+);
+
+window.addEventListener(
+"pointercancel",
+onAlertBarDragEnd
+);
+
+window.addEventListener(
+"resize",
+()=>{
+if(
+selectedAlertId &&
+!deleteBar.classList.contains(
+"hidden"
+)
+){
+const row =
+alertAt(
+selectedAlertId
+);
+if(
+row
+){
+syncAlertDeleteBarLayout(
+row.price
+);
+}
+}
+}
+);
+
 const scaleStripEl =
 document.getElementById(
 "price-scale-touch-strip"
@@ -1281,6 +1571,21 @@ onWrapPointerUp
 window.removeEventListener(
 "keydown",
 onKeyDown
+);
+
+window.removeEventListener(
+"pointermove",
+onAlertBarDragMove
+);
+
+window.removeEventListener(
+"pointerup",
+onAlertBarDragEnd
+);
+
+window.removeEventListener(
+"pointercancel",
+onAlertBarDragEnd
 );
 
 plusBtn.remove();

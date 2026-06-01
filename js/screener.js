@@ -1584,6 +1584,30 @@ if(e.code === "ArrowLeft"){
 e.preventDefault();
 goToPage(currentPage - 1);
 
+return;
+
+}
+
+if(
+e.code === "Space" &&
+!e.shiftKey
+){
+
+e.preventDefault();
+goToPage(currentPage + 1);
+
+return;
+
+}
+
+if(
+e.code === "Space" &&
+e.shiftKey
+){
+
+e.preventDefault();
+goToPage(currentPage - 1);
+
 }
 
 });

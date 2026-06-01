@@ -100,7 +100,7 @@ const DEFAULT_FIB_SPEC = Object.freeze([
 ]);
 
 const STROKE = "#3b82f6";
-const HANDLE_FILL = "#2563eb";
+const HANDLE_FILL = "#000000";
 const HANDLE_STROKE = "#ffffff";
 const WIDTH_OPTIONS = [1, 2, 3, 4];
 const USER_PREFS_KEY = "draw_user_prefs";
@@ -5904,7 +5904,7 @@ ALERT_LINE_DASH
 function drawAnchorCircle(ctx, x, y){
 
 ctx.beginPath();
-ctx.arc(x, y, 5, 0, Math.PI * 2);
+ctx.arc(x, y, 10, 0, Math.PI * 2);
 ctx.fillStyle = HANDLE_FILL;
 ctx.fill();
 ctx.strokeStyle = HANDLE_STROKE;
@@ -5961,10 +5961,10 @@ return [
 function drawAnchorSquare(ctx, x, y){
 
 ctx.fillStyle = HANDLE_FILL;
-ctx.fillRect(x - 4, y - 4, 8, 8);
+ctx.fillRect(x - 8, y - 8, 16, 16);
 ctx.strokeStyle = HANDLE_STROKE;
 ctx.lineWidth = 1.5;
-ctx.strokeRect(x - 4.5, y - 4.5, 9, 9);
+ctx.strokeRect(x - 8.5, y - 8.5, 17, 17);
 
 }
 
@@ -6021,7 +6021,7 @@ return [];
 
 function hitTestHandle(px, py, shape){
 
-const threshold = 10;
+const threshold = 14;
 
 const handleThreshold =
 isPositionType(shape.type)
