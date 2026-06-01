@@ -76,18 +76,3 @@ recent.delete(k);
 }
 
 }
-
-/** @deprecated use isTelegramAlertDeduped — не помечает отправленным до успеха */
-export function shouldSendTelegramAlert(
-userId,
-symbol,
-shapeId
-) {
-
-return !isTelegramAlertDeduped(
-userId,
-symbol,
-shapeId
-);
-
-}

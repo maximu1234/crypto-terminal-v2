@@ -13,10 +13,6 @@ ensureCloudLoginResolved
 } from "./cloud-sync.js?v=26";
 
 import {
-setBrowserCrossCheckEnabled
-} from "./alerts-mode.js";
-
-import {
 getCachedAlertAuth,
 setAlertAuthCache,
 clearAlertAuthCache,
@@ -288,8 +284,6 @@ configured &&
 !!worker;
 
 /* Браузер всегда ловит пересечение (UI + /trigger). Worker — запас, если вкладка закрыта. */
-setBrowserCrossCheckEnabled(true);
-
 if(lastRemoteAlertMode !== remote){
 lastRemoteAlertMode = remote;
 
