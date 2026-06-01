@@ -27,17 +27,17 @@ body{
     overflow:hidden;
 }
 
-.grid-4{
+#dashboard.grid-4{
     grid-template-columns:1fr 1fr;
     grid-template-rows:1fr 1fr;
 }
 
-.grid-6{
+#dashboard.grid-6{
     grid-template-columns:1fr 1fr 1fr;
     grid-template-rows:1fr 1fr;
 }
 
-.grid-9{
+#dashboard.grid-9{
     grid-template-columns:1fr 1fr 1fr;
     grid-template-rows:1fr 1fr 1fr;
 }

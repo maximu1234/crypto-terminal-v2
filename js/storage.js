@@ -83,9 +83,20 @@ layout
 
 export function loadLayout(){
 
-return Number(
-localStorage.getItem("dashboard_layout")
-) || 9;
+const raw =
+Number(
+localStorage.getItem(
+"dashboard_layout"
+)
+);
+
+return (
+raw === 4 ||
+raw === 6 ||
+raw === 9
+)
+? raw
+: 9;
 
 }
 

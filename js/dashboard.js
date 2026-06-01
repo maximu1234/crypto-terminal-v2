@@ -17,7 +17,7 @@ applyDashboardZoom
 
 import {
 initDrawings
-} from "./drawings.js?v=173";
+} from "./drawings.js?v=174";
 
 import {
 subscribeKline
@@ -548,8 +548,21 @@ if(!isTerminalMobile()){
 saveLayout(currentLayout);
 }
 
-for(let i = 0; i < count; i++){
+for(
+let i = 0;
+i < count;
+i++
+){
+try{
 createWidget(i);
+}catch(
+err
+){
+console.error(
+"Dashboard widget create:",
+err
+);
+}
 }
 
 syncLayoutButtons();

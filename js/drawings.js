@@ -10678,9 +10678,7 @@ null
 
 };
 
-window.addEventListener(
-"drawings-cloud-changed",
-e=>{
+const onDrawingsCloudChanged = e=>{
 
 if(
 !alive
@@ -10692,7 +10690,11 @@ applyRemoteDrawingsToChart(
 e.detail?.symbols
 );
 
-}
+};
+
+window.addEventListener(
+"drawings-cloud-changed",
+onDrawingsCloudChanged
 );
 
 const onChartCandlesLoaded = e=>{
