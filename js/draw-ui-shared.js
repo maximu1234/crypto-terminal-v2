@@ -1,14 +1,52 @@
 export const DRAW_TOOLS_GUEST_MSG =
 "Рисование доступно только для залогиненных пользователей.";
 
-/** Иконка инструмента «Курсор» — перекрестие с зазором в центре */
+/** Все иконки тулбара: viewBox 24×24, «чернила» в квадрате 5…19 (14×14). */
 export const CURSOR_TOOL_ICON_SVG = `
 <svg viewBox="0 0 24 24" aria-hidden="true">
-<line x1="12" y1="3" x2="12" y2="9" stroke="currentColor" stroke-width="2" stroke-linecap="square"/>
-<line x1="12" y1="15" x2="12" y2="21" stroke="currentColor" stroke-width="2" stroke-linecap="square"/>
-<line x1="3" y1="12" x2="9" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="square"/>
-<line x1="15" y1="12" x2="21" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="square"/>
+<line x1="12" y1="5" x2="12" y2="10" stroke="currentColor" stroke-width="1.5" stroke-linecap="square"/>
+<line x1="12" y1="14" x2="12" y2="19" stroke="currentColor" stroke-width="1.5" stroke-linecap="square"/>
+<line x1="5" y1="12" x2="10" y2="12" stroke="currentColor" stroke-width="1.5" stroke-linecap="square"/>
+<line x1="14" y1="12" x2="19" y2="12" stroke="currentColor" stroke-width="1.5" stroke-linecap="square"/>
 </svg>`;
+
+export const TRENDLINE_ICON_SVG = `
+<svg viewBox="0 0 24 24" aria-hidden="true">
+<line x1="5.5" y1="18.5" x2="18.5" y2="5.5" stroke="currentColor" stroke-width="1.5"/>
+<circle cx="5.5" cy="18.5" r="1.75" fill="none" stroke="currentColor" stroke-width="1.5"/>
+<circle cx="18.5" cy="5.5" r="1.75" fill="none" stroke="currentColor" stroke-width="1.5"/>
+</svg>`;
+
+export const HRAY_ICON_SVG = `
+<svg viewBox="0 0 24 24" aria-hidden="true">
+<line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" stroke-width="1.5"/>
+<circle cx="5" cy="12" r="1.75" fill="none" stroke="currentColor" stroke-width="1.5"/>
+</svg>`;
+
+export const FIB_ICON_SVG = `
+<svg viewBox="0 0 24 24" aria-hidden="true">
+<line x1="5" y1="19" x2="19" y2="19" stroke="currentColor" stroke-width="1.5"/>
+<line x1="5" y1="15.5" x2="19" y2="15.5" stroke="currentColor" stroke-width="1.5"/>
+<line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" stroke-width="1.5"/>
+<line x1="5" y1="8.5" x2="19" y2="8.5" stroke="currentColor" stroke-width="1.5"/>
+<line x1="5" y1="5" x2="19" y2="5" stroke="currentColor" stroke-width="1.5"/>
+</svg>`;
+
+export const CHANNEL_ICON_SVG = `
+<svg viewBox="0 0 24 24" aria-hidden="true">
+<line x1="5" y1="17" x2="19" y2="7" stroke="currentColor" stroke-width="1.5"/>
+<line x1="5" y1="19" x2="19" y2="9" stroke="currentColor" stroke-width="1.5"/>
+</svg>`;
+
+/** Корзина — outline как в TradingView: ручка, крышка, трапеция со скруглённым дном. */
+export const TRASH_ICON_SVG = `
+<svg viewBox="0 0 24 24" aria-hidden="true">
+<path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M10.5 8.5V6a1.5 1.5 0 0 1 3 0v2.5"/>
+<line x1="5" y1="8.5" x2="19" y2="8.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+<path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" d="M7.75 8.5 6.35 18.65a1.35 1.35 0 0 0 1.35 1.35h8.6a1.35 1.35 0 0 0 1.35-1.35L16.25 8.5"/>
+</svg>`;
+
+export const TOOLBAR_CLEAR_TRASH_ICON_SVG = TRASH_ICON_SVG;
 
 export const ALARM_ICON_SVG = `
 <svg class="alert-icon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
@@ -20,15 +58,6 @@ export const ALARM_ICON_SVG = `
 <path d="M18.5 18.5h2.2v2.2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
 </svg>
 `;
-
-export const TRASH_ICON_SVG = `
-<svg viewBox="0 0 24 24" aria-hidden="true">
-<path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" d="M10 3h4v2"/>
-<path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" d="M6 8h12"/>
-<path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" d="M7.5 8L6.5 20h11L16.5 8"/>
-</svg>`;
-
-export const TOOLBAR_CLEAR_TRASH_ICON_SVG = TRASH_ICON_SVG;
 
 export function getAlertToggleButtonHtml(){
 
@@ -42,17 +71,17 @@ ${ALARM_ICON_SVG}
 
 /** Long / Short: те же зоны, что на графике (POSITION_* в drawings.js) */
 export const LONG_POSITION_ICON_SVG = `
-<svg class="draw-pos-icon draw-pos-icon--long" viewBox="0 0 12 12" aria-hidden="true">
-<rect x="2" y="1" width="8" height="5" fill="rgba(20,83,45,0.92)"/>
-<line x1="2" y1="6.5" x2="10" y2="6.5" stroke="#FACC15" stroke-width="1.25" stroke-linecap="square"/>
-<rect x="2" y="7" width="8" height="4" fill="rgba(127,29,29,0.92)"/>
+<svg class="draw-pos-icon draw-pos-icon--long" viewBox="0 0 24 24" aria-hidden="true">
+<rect x="5" y="5" width="14" height="6.5" fill="rgba(20,83,45,0.92)"/>
+<line x1="5" y1="12" x2="19" y2="12" stroke="#FACC15" stroke-width="1.5" stroke-linecap="square"/>
+<rect x="5" y="12.5" width="14" height="6.5" fill="rgba(127,29,29,0.92)"/>
 </svg>`;
 
 export const SHORT_POSITION_ICON_SVG = `
-<svg class="draw-pos-icon draw-pos-icon--short" viewBox="0 0 12 12" aria-hidden="true">
-<rect x="2" y="1" width="8" height="4" fill="rgba(127,29,29,0.92)"/>
-<line x1="2" y1="5.5" x2="10" y2="5.5" stroke="#FACC15" stroke-width="1.25" stroke-linecap="square"/>
-<rect x="2" y="6" width="8" height="5" fill="rgba(20,83,45,0.92)"/>
+<svg class="draw-pos-icon draw-pos-icon--short" viewBox="0 0 24 24" aria-hidden="true">
+<rect x="5" y="5" width="14" height="5.5" fill="rgba(127,29,29,0.92)"/>
+<line x1="5" y1="11" x2="19" y2="11" stroke="#FACC15" stroke-width="1.5" stroke-linecap="square"/>
+<rect x="5" y="11.5" width="14" height="7.5" fill="rgba(20,83,45,0.92)"/>
 </svg>`;
 
 /** Иконка «Объекты рисования» — палитра и кисть */
@@ -83,34 +112,19 @@ ${CURSOR_TOOL_ICON_SVG}
 </button>
 
 <button type="button" class="${btnClass}" data-draw-tool="trendline" title="Trendline — 2 клика">
-<svg viewBox="0 0 24 24" aria-hidden="true">
-<line x1="5" y1="18" x2="19" y2="6" stroke="currentColor" stroke-width="1.5"/>
-<circle cx="5" cy="18" r="2" fill="none" stroke="currentColor" stroke-width="1.5"/>
-<circle cx="19" cy="6" r="2" fill="none" stroke="currentColor" stroke-width="1.5"/>
-</svg>
+${TRENDLINE_ICON_SVG}
 </button>
 
 <button type="button" class="${btnClass}" data-draw-tool="hray" title="Horizontal Ray — 1 клик">
-<svg viewBox="0 0 24 24" aria-hidden="true">
-<line x1="6" y1="12" x2="20" y2="12" stroke="currentColor" stroke-width="1.5"/>
-<circle cx="6" cy="12" r="2" fill="none" stroke="currentColor" stroke-width="1.5"/>
-</svg>
+${HRAY_ICON_SVG}
 </button>
 
 <button type="button" class="${btnClass}" data-draw-tool="fib" title="Fib Retracement — 2 клика">
-<svg viewBox="0 0 24 24" aria-hidden="true">
-<line x1="4" y1="18" x2="20" y2="18" stroke="currentColor" stroke-width="1.5"/>
-<line x1="4" y1="14" x2="20" y2="14" stroke="currentColor" stroke-width="1.5"/>
-<line x1="4" y1="10" x2="20" y2="10" stroke="currentColor" stroke-width="1.5"/>
-<line x1="4" y1="6" x2="20" y2="6" stroke="currentColor" stroke-width="1.5"/>
-</svg>
+${FIB_ICON_SVG}
 </button>
 
 <button type="button" class="${btnClass}" data-draw-tool="channel" title="Parallel Channel — 3 клика">
-<svg viewBox="0 0 24 24" aria-hidden="true">
-<line x1="5" y1="16" x2="19" y2="8" stroke="currentColor" stroke-width="1.5"/>
-<line x1="5" y1="20" x2="19" y2="12" stroke="currentColor" stroke-width="1.5"/>
-</svg>
+${CHANNEL_ICON_SVG}
 </button>
 
 ${getPositionDrawToolbarButtonsHtml(opts)}

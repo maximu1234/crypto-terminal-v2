@@ -1732,7 +1732,7 @@ drawingTools?.endPriceScaleDragRedraw?.();
 drawingTools?.scheduleRedraw?.();
 };
 
-void import("./price-alert-ui.js?v=30").then(({ mountPriceAlertUi })=>{
+void import("./price-alert-ui.js?v=31").then(({ mountPriceAlertUi })=>{
 mountPriceAlertUi({
 chart,
 series: candleSeries,

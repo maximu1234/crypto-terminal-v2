@@ -24,7 +24,7 @@ import {
 ALARM_ICON_SVG,
 TRASH_ICON_SVG,
 DRAW_TOOLS_GUEST_MSG
-} from "./draw-ui-shared.js?v=4";
+} from "./draw-ui-shared.js?v=5";
 
 import {
 closeAllWidgetDrawToolsMenus

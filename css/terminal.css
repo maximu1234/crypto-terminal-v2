@@ -116,12 +116,6 @@ body{
   display:block;
 }
 
-.draw-btn[data-draw-tool="long"] svg,
-.draw-btn[data-draw-tool="short"] svg{
-  width:22px;
-  height:22px;
-}
-
 /* Планшет с touch (iPad): чуть крупнее кнопки рисования */
 @media (pointer:coarse) and (min-width:768px){
   .draw-btn{
@@ -130,12 +124,6 @@ body{
   }
 
   .draw-btn svg{
-    width:24px;
-    height:24px;
-  }
-
-  .draw-btn[data-draw-tool="long"] svg,
-  .draw-btn[data-draw-tool="short"] svg{
     width:24px;
     height:24px;
   }
