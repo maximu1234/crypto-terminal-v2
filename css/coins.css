@@ -114,6 +114,21 @@ body.coins-page #topbar{
 grid-column:1 / -1;
 }
 
+body.coins-page #topbar.coins-topbar{
+overflow:visible;
+position:relative;
+z-index:50;
+}
+
+body.coins-page #topbar.coins-topbar .coins-symbol-head,
+body.coins-page #topbar.coins-topbar #coins-chart-flag-wrap{
+overflow:visible;
+}
+
+body.coins-page #topbar.coins-topbar .coin-flag-menu{
+z-index:10020;
+}
+
 body.coins-page #header{
 position:relative;
 z-index:200;
