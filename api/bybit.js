@@ -8,7 +8,7 @@ const BASES = [
 "https://api.bytick.com"
 ];
 
-export default async function handler(
+module.exports = async function handler(
 req,
 res
 ){

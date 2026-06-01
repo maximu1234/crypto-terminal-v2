@@ -23,7 +23,7 @@ return typeof raw === "string"
 
 }
 
-export default async function handler(
+module.exports = async function handler(
 req,
 res
 ){

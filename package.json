@@ -1,0 +1,4 @@
+{
+  "private": true,
+  "description": "Static site + Vercel serverless /api (CommonJS handlers)"
+}

@@ -1,0 +1,83 @@
+#!/usr/bin/env node
+/**
+ * Генерирует js/supabase-env.js из переменных окружения (Vercel build).
+ */
+const fs = require("fs");
+const path = require("path");
+
+const root = path.join(__dirname, "..");
+const out = path.join(root, "js", "supabase-env.js");
+
+const url = String(
+  process.env.SUPABASE_URL ||
+  process.env.VITE_SUPABASE_URL ||
+  ""
+).trim();
+
+const key = String(
+  process.env.SUPABASE_ANON_KEY ||
+  process.env.VITE_SUPABASE_ANON_KEY ||
+  ""
+).trim();
+
+const workerUrlRaw = String(
+  process.env.ALERT_WORKER_URL ||
+  process.env.VITE_ALERT_WORKER_URL ||
+  ""
+).trim();
+
+function normalizeAlertWorkerBaseUrl(raw) {
+  let s = String(raw || "").trim();
+  if (!s) return "";
+  s = s.replace(/\/+$/, "");
+  s = s.replace(/\/alerts\/?$/i, "");
+  if (!/^https?:\/\//i.test(s)) {
+    s = `https://${s.replace(/^\/+/, "")}`;
+  }
+  try {
+    return new URL(s).origin;
+  } catch {
+    return "";
+  }
+}
+
+const workerUrl = normalizeAlertWorkerBaseUrl(workerUrlRaw);
+
+const systemAdminEmail = String(
+  process.env.SYSTEM_ADMIN_EMAIL || ""
+).trim();
+
+if (workerUrlRaw && workerUrl && workerUrlRaw !== workerUrl) {
+  console.warn(
+    "ALERT_WORKER_URL normalized:",
+    workerUrlRaw,
+    "→",
+    workerUrl
+  );
+}
+
+if (!url || !key) {
+  if (fs.existsSync(out)) {
+    console.log(
+      "supabase-env.js: env vars missing — keeping existing file"
+    );
+    process.exit(0);
+  }
+
+  console.warn(
+    "supabase-env.js: env vars missing — writing empty stub (cloud sync off)"
+  );
+}
+
+const body = `/* Auto-generated at deploy — do not edit */
+export const SUPABASE_URL = ${JSON.stringify(url)};
+export const SUPABASE_ANON_KEY = ${JSON.stringify(key)};
+export const ALERT_WORKER_URL = ${JSON.stringify(workerUrl)};
+export const SYSTEM_ADMIN_EMAIL = ${JSON.stringify(systemAdminEmail)};
+`;
+
+fs.writeFileSync(out, body, "utf8");
+console.log(
+  "supabase-env.js:",
+  url ? "configured" : "empty (cloud sync off)"
+);
