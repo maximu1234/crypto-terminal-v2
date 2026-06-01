@@ -30,6 +30,23 @@ display:flex;
 align-items:center;
 gap:2px;
 flex:0 0 auto;
+padding:0 4px;
+}
+
+body.coins-page .coins-topbar-divider{
+display:none;
+flex-shrink:0;
+width:1px;
+align-self:stretch;
+background:#434651;
+margin:9px 10px;
+border-radius:1px;
+}
+
+body.coins-page #topbar.coins-topbar #draw-toolbar.draw-toolbar-inline{
+margin-left:0;
+padding-left:4px;
+border-left:none;
 }
 
 body.coins-page .coins-draw-desktop,
@@ -56,9 +73,9 @@ gap:8px;
 flex:0 1 auto;
 min-width:0;
 max-width:min(42vw, 260px);
-margin-right:8px;
-padding-right:10px;
-border-right:1px solid #374151;
+margin-right:0;
+padding-right:4px;
+border-right:none;
 }
 
 body.coins-page #topbar.coins-topbar #coins-chart-flag-wrap{
@@ -327,9 +344,25 @@ box-sizing:border-box;
 flex-shrink:0;
 height:48px;
 padding:0 10px;
-gap:8px;
+gap:0;
 overflow:visible;
 border-bottom:1px solid #1f2937;
+}
+
+@media (min-width:641px){
+
+body.coins-page .coins-topbar-divider{
+display:block;
+}
+
+body.coins-page .coins-tf-desktop{
+padding:0 6px;
+}
+
+body.coins-page #topbar.coins-topbar #draw-toolbar.draw-toolbar-inline{
+padding-left:6px;
+}
+
 }
 
 #current-symbol{
