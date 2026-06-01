@@ -536,6 +536,68 @@ all
 
 }
 
+export function clearDrawingTombstone(
+symbol,
+shapeId
+){
+
+const sym =
+String(
+symbol ||
+""
+).trim().toUpperCase();
+const id =
+String(
+shapeId ||
+""
+).trim();
+
+if(
+!sym ||
+!id
+){
+return false;
+}
+
+const all =
+loadLocalTombstones();
+const bucket =
+all[
+sym
+];
+
+if(
+!bucket ||
+!Object.prototype.hasOwnProperty.call(
+bucket,
+id
+)
+){
+return false;
+}
+
+delete bucket[
+id
+];
+
+if(
+!Object.keys(
+bucket
+).length
+){
+delete all[
+sym
+];
+}
+
+saveLocalTombstones(
+all
+);
+
+return true;
+
+}
+
 export function applyTombstonesToShapeList(
 list,
 tombstonesForSym

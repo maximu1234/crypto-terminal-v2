@@ -26,7 +26,7 @@ isCloudSyncEnabled,
 getCloudUserEmail,
 pullDeviceStateFromCloud,
 onCloudSyncChange
-} from "./cloud-sync.js?v=27";
+} from "./cloud-sync.js?v=28";
 
 import {
 isSupabaseConfigured
@@ -136,7 +136,7 @@ new CustomEvent(
 }
 );
 
-import("./drawings-cloud-sync.js?v=31").then(
+import("./drawings-cloud-sync.js?v=32").then(
 ({ initDrawingsCloudSync })=>{
 initDrawingsCloudSync();
 }

@@ -1285,7 +1285,7 @@ tf
 ){
 
 const { isCloudLoggedIn } =
-await import("./cloud-sync.js?v=27");
+await import("./cloud-sync.js?v=28");
 
 if(
 !isCloudLoggedIn()
@@ -2857,10 +2857,10 @@ return total;
 export async function clearAllDrawings(){
 
 const { purgeAllLocalDrawingsStorage } =
-await import("./drawings-storage.js?v=5");
+await import("./drawings-storage.js?v=6");
 
 const drawingsCloud =
-await import("./drawings-cloud-sync.js?v=31");
+await import("./drawings-cloud-sync.js?v=32");
 
 const alertsCloud =
 await import("./alerts-cloud-sync.js?v=101");

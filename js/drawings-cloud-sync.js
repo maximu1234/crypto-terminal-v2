@@ -6,7 +6,7 @@ isCloudSyncEnabled,
 onCloudSyncChange,
 notifyDrawings as notifyDrawingsListeners,
 ensureCloudLoginResolved
-} from "./cloud-sync.js?v=27";
+} from "./cloud-sync.js?v=28";
 
 import {
 normalizeAlertWorkerBaseUrl
@@ -19,6 +19,7 @@ applyDrawingsMapToLocal,
 loadLocalTombstones,
 saveLocalTombstones,
 recordDrawingTombstone,
+clearDrawingTombstone,
 mergeDrawingsPayload,
 mergeShapeLists,
 applyTombstonesToShapeList,
@@ -28,7 +29,7 @@ packCloudDrawings,
 purgeAllLocalDrawingsStorage,
 DRAWINGS_TOMBSTONES_KEY,
 DRAWINGS_GLOBAL_CLEAR_KEY
-} from "./drawings-storage.js?v=5";
+} from "./drawings-storage.js?v=6";
 
 import {
 withTimeout
@@ -72,6 +73,13 @@ const BLOB_MIGRATED_KEY =
 
 const REGISTRY_SYNC_DEBOUNCE_MS =
 200;
+
+/** Не удалять local-only shape сразу после push — REST/realtime часто отстают. */
+const RECENT_SYNC_GRACE_MS =
+20000;
+
+const RECONCILE_AFTER_PUSH_MS =
+3000;
 
 const FAST_POLL_MS =
 IS_YANDEX
@@ -1029,6 +1037,58 @@ key
 0
 ) >
 0;
+
+}
+
+function shapeRecentlySynced(
+symbol,
+shapeId
+){
+
+const key =
+syncMetaKey(
+symbol,
+shapeId
+);
+const syncedAt =
+Number(
+loadSyncMeta()[
+key
+]
+) ||
+0;
+
+if(
+syncedAt <=
+0
+){
+return false;
+}
+
+return (
+Date.now() -
+syncedAt
+) <
+RECENT_SYNC_GRACE_MS;
+
+}
+
+function scheduleReconcileAfterPush(){
+
+setTimeout(
+()=>{
+
+if(
+isDrawingsCloudSyncPaused()
+){
+return;
+}
+
+void reconcileLocalDrawingsWithCloud();
+
+},
+RECONCILE_AFTER_PUSH_MS
+);
 
 }
 
@@ -2754,6 +2814,27 @@ sym
 ] ||
 [];
 
+for(
+const shape of cloudList
+){
+
+const id =
+String(
+shape?.id ||
+""
+).trim();
+
+if(
+id
+){
+clearDrawingTombstone(
+sym,
+id
+);
+}
+
+}
+
 let mergedList =
 applyTombstonesToShapeList(
 mergeShapeLists(
@@ -2809,6 +2890,16 @@ sym,
 id
 )
 ){
+
+if(
+shapeRecentlySynced(
+sym,
+id
+)
+){
+return true;
+}
+
 recordDrawingTombstone(
 sym,
 id
@@ -3103,6 +3194,8 @@ n >
 0
 ){
 broadcastDrawingsSync();
+scheduleReconcileAfterPush();
+return;
 }
 return reconcileLocalDrawingsWithCloud();
 }
@@ -3143,7 +3236,23 @@ null;
 
 return (async()=>{
 
+const pushed =
 await pushUnsyncedDrawingsImpl();
+
+if(
+pushed >
+0
+){
+await new Promise(
+resolve=>{
+setTimeout(
+resolve,
+RECONCILE_AFTER_PUSH_MS
+);
+}
+);
+}
+
 return reconcileLocalDrawingsWithCloud();
 
 })();

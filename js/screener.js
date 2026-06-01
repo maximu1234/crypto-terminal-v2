@@ -53,7 +53,7 @@ bindMobileNavDrawerLinks
 import {
 persistFavoritesToCloud,
 onFavoritesRemoteUpdate
-} from "./cloud-sync.js?v=27";
+} from "./cloud-sync.js?v=28";
 
 const gridEl =
 document.getElementById("screener-grid");
