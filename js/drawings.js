@@ -11118,26 +11118,24 @@ if(
 return false;
 }
 
-const blockDrawChartGesture = ()=>{
-
 if(
 dragState ||
-touchPlaceTrack
-){
-return true;
-}
-
-if(
-placement
-){
-return true;
-}
-
-if(
+touchPlaceTrack ||
+placement ||
 tool !==
 "cursor"
 ){
 return true;
+}
+
+if(
+!isTouchDrawTablet() &&
+!(
+hasAnyFinePointer() &&
+isTabletChartViewport()
+)
+){
+return false;
 }
 
 if(
@@ -11183,23 +11181,6 @@ return !!hitTest(
 x,
 y
 );
-
-};
-
-if(
-isTouchDrawTablet()
-){
-return blockDrawChartGesture();
-}
-
-if(
-hasAnyFinePointer() &&
-isTabletChartViewport()
-){
-return blockDrawChartGesture();
-}
-
-return false;
 
 },
 

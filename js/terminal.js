@@ -56,6 +56,7 @@ normalCrosshairOptions,
 mountAxisDoubleTapReset,
 TABLET_USE_CUSTOM_TOUCH_PAN,
 isTabletChartViewport,
+hasAnyFinePointer,
 isUserCrosshairEvent,
 resetChartPriceAutoScale
 } from "./chart-import.js?v=13";
@@ -77,7 +78,7 @@ syncBackgroundAlertStreams
 
 import {
 initDrawings
-} from "./drawings.js?v=175";
+} from "./drawings.js?v=176";
 
 import {
 mountDrawToolbar,
@@ -1897,6 +1898,9 @@ chart,
 chartEl,
 chartTouchLayerEl,
 {
+allowMousePan:()=>
+isTabletChartViewport() &&
+hasAnyFinePointer(),
 shouldBeginGesture:tabletHoldShouldBegin,
 shouldAllowPan:tabletPanAllowed,
 shouldAllowPinch:()=>{

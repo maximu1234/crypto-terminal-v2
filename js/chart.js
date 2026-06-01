@@ -3315,7 +3315,7 @@ hud?.remove();
 
 export {
 mountTabletChartGestures
-} from "./chart-tablet-gestures.js?v=12";
+} from "./chart-tablet-gestures.js?v=13";
 
 /** Bluetooth-мышь / трекпад на iPad — (any-pointer: fine). */
 export function hasAnyFinePointer(){

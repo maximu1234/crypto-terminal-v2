@@ -3,13 +3,13 @@
  * chart-import.js: export * from `./chart.js?v=${CHART_JS_V}`
  */
 export const CHART_JS_V =
-105;
+106;
 
 export const CHART_IMPORT_V =
 13;
 
 export const TERMINAL_JS_V =
-247;
+248;
 
 export const COINS_BOOT_V =
 10;

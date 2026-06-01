@@ -23,6 +23,8 @@ shouldBeginGesture = ()=>true,
 shouldAllowPan = ()=>true,
 shouldAllowPinch = ()=>true,
 blockChartScroll = ()=>false,
+/** iPad + Bluetooth-мышь; на чистом десктопе LW сам ловит click/pan */
+allowMousePan = ()=>false,
 onHoldStart = ()=>{},
 onHoldEnd = ()=>{},
 onProbeAt = ()=>{},
@@ -856,6 +858,12 @@ if(
 e.pointerType ===
 "mouse"
 ){
+
+if(
+!allowMousePan()
+){
+return;
+}
 
 if(
 e.button !==
