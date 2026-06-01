@@ -1732,9 +1732,7 @@ drawingTools?.endPriceScaleDragRedraw?.();
 drawingTools?.scheduleRedraw?.();
 };
 
-/*
-TEMP DEBUG: отключено для проверки двойного тапа по шкале (конфликт с кнопкой «+» на шкале).
-void import("./price-alert-ui.js?v=26").then(({ mountPriceAlertUi })=>{
+void import("./price-alert-ui.js?v=27").then(({ mountPriceAlertUi })=>{
 mountPriceAlertUi({
 chart,
 series: candleSeries,
@@ -1761,7 +1759,6 @@ console.warn(
 err
 );
 });
-*/
 
 }
 
