@@ -19,7 +19,7 @@ import {
 formatPrice,
 hideDomChartCrosshair,
 positionDomChartCrosshair
-} from "./chart-import.js?v=12";
+} from "./chart-import.js?v=13";
 
 import {
 mountDrawToolIcons

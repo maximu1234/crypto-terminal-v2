@@ -34,7 +34,7 @@ import {
 ensureCloudReady
 } from "./auth-ui.js?v=24";
 
-import { formatPrice } from "./chart-import.js?v=12";
+import { formatPrice } from "./chart-import.js?v=13";
 
 const tbody =
 document.getElementById("alerts-tbody");

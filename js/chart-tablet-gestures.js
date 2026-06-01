@@ -856,7 +856,55 @@ if(
 e.pointerType ===
 "mouse"
 ){
+
+if(
+e.button !==
+0
+){
 return;
+}
+
+if(
+!shouldBeginGesture(
+e
+)
+){
+return;
+}
+
+if(
+panSuspended ||
+!shouldAllowPan()
+){
+return;
+}
+
+resetGesture();
+
+pointerId =
+e.pointerId ??
+0;
+
+startClientX =
+e.clientX;
+
+startClientY =
+e.clientY;
+
+lastPanClientX =
+e.clientX;
+
+mode =
+"pan";
+
+onPanStart();
+
+attachDocListeners();
+
+e.preventDefault();
+
+return;
+
 }
 
 if(

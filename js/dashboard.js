@@ -13,11 +13,11 @@ import {
 createCandlestickChart,
 applyChartPriceFormat,
 applyDashboardZoom
-} from "./chart-import.js?v=12";
+} from "./chart-import.js?v=13";
 
 import {
 initDrawings
-} from "./drawings.js?v=172";
+} from "./drawings.js?v=173";
 
 import {
 subscribeKline

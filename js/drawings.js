@@ -70,12 +70,13 @@ CHART_SCALE_LABEL_LINE_HEIGHT,
 scaleLabelTextColorForBackground,
 isCoarseTouchViewport,
 isTabletChartViewport,
+hasAnyFinePointer,
 TABLET_USE_CUSTOM_TOUCH_PAN,
 ensureDomChartCrosshair,
 positionDomChartCrosshair,
 hideDomChartCrosshair,
 fullCrosshairOptions
-} from "./chart-import.js?v=12";
+} from "./chart-import.js?v=13";
 
 /* Сетка 2×9: чётный индекс — левый столбец, нечётный — правый */
 const DEFAULT_FIB_SPEC = Object.freeze([
@@ -3319,7 +3320,8 @@ function chartScrollWhenUnlocked(){
 if(
 tabletCustomPanHooked &&
 isTabletChartViewport() &&
-TABLET_USE_CUSTOM_TOUCH_PAN
+TABLET_USE_CUSTOM_TOUCH_PAN &&
+!hasAnyFinePointer()
 ){
 return CHART_SCROLL_TABLET_CUSTOM_PAN;
 }
@@ -3546,16 +3548,25 @@ popover.style.zIndex = "10051";
 
 }
 
+function prefersTouchDrawInput(){
+
+return (
+isCoarseTouchViewport() &&
+!hasAnyFinePointer()
+);
+
+}
+
 function isTouchDrawTablet(){
 
-return isCoarseTouchViewport();
+return prefersTouchDrawInput();
 
 }
 
 /** Touch: перекрестье + тап/перетаскивание точек (как iPad на Монетах). */
 function isTouchDrawPlacement(){
 
-return isCoarseTouchViewport();
+return prefersTouchDrawInput();
 
 }
 
@@ -4056,6 +4067,74 @@ schedulePlacementPreviewRedraw();
 wrapEl.addEventListener(
 "pointermove",
 onPlacementPointerMove,
+true
+);
+
+}
+
+function setupFinePointerChartClicks(){
+
+wrapEl.addEventListener(
+"pointerdown",
+e=>{
+
+if(
+!alive ||
+!isActive()
+){
+return;
+}
+
+if(
+e.pointerType !==
+"mouse"
+){
+return;
+}
+
+if(
+!isTabletChartViewport() ||
+!hasAnyFinePointer()
+){
+return;
+}
+
+if(
+tool ===
+"cursor" ||
+isDrawChromePointerEvent(
+e
+)
+){
+return;
+}
+
+if(
+e.button !==
+0 ||
+!e.isPrimary
+){
+return;
+}
+
+const { x, y } =
+pointerFromEvent(
+e
+);
+
+handleToolClick({
+point:{
+x,
+y
+}
+});
+
+blockChartClick =
+true;
+
+e.preventDefault();
+
+},
 true
 );
 
@@ -10354,6 +10433,7 @@ wrapEl
 setupEditInteraction();
 setupCoarseTouchChartGuard();
 setupTouchDrawCrosshair();
+setupFinePointerChartClicks();
 setupPlacementPointerPreview();
 
 const teardownChartPanRedraw =
@@ -11016,11 +11096,12 @@ clientY
 
 if(
 !alive ||
-!isActive() ||
-!isTouchDrawTablet()
+!isActive()
 ){
 return false;
 }
+
+const blockDrawChartGesture = ()=>{
 
 if(
 dragState ||
@@ -11060,10 +11141,48 @@ clientX - rect.left;
 const y =
 clientY - rect.top;
 
+const sel =
+getSelected();
+
+if(
+sel &&
+(
+hitTestHandle(
+x,
+y,
+sel
+) ||
+hitTestShapeBody(
+x,
+y,
+sel
+)
+)
+){
+return true;
+}
+
 return !!hitTest(
 x,
 y
 );
+
+};
+
+if(
+isTouchDrawTablet()
+){
+return blockDrawChartGesture();
+}
+
+if(
+hasAnyFinePointer() &&
+isTabletChartViewport()
+){
+return blockDrawChartGesture();
+}
+
+return false;
 
 },
 

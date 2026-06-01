@@ -58,7 +58,7 @@ TABLET_USE_CUSTOM_TOUCH_PAN,
 isTabletChartViewport,
 isUserCrosshairEvent,
 resetChartPriceAutoScale
-} from "./chart-import.js?v=12";
+} from "./chart-import.js?v=13";
 
 import {
 connectKlineStream,
@@ -77,7 +77,7 @@ syncBackgroundAlertStreams
 
 import {
 initDrawings
-} from "./drawings.js?v=172";
+} from "./drawings.js?v=173";
 
 import {
 mountDrawToolbar,

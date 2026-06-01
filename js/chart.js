@@ -2598,6 +2598,9 @@ tablet &&
 TABLET_LW_NATIVE_PRICE_SCALE
 );
 
+bindFinePointerMedia();
+syncTabletFinePointerClass();
+
 }
 
 function readChartScaleStripWidthPx(
@@ -3312,7 +3315,89 @@ hud?.remove();
 
 export {
 mountTabletChartGestures
-} from "./chart-tablet-gestures.js?v=11";
+} from "./chart-tablet-gestures.js?v=12";
+
+/** Bluetooth-мышь / трекпад на iPad — (any-pointer: fine). */
+export function hasAnyFinePointer(){
+
+try{
+return window.matchMedia(
+"(any-pointer: fine)"
+).matches;
+}catch{
+return false;
+}
+
+}
+
+let finePointerMediaBound =
+false;
+
+export function syncTabletFinePointerClass(){
+
+if(
+typeof document ===
+"undefined"
+){
+return;
+}
+
+document.body.classList.toggle(
+"tablet-fine-pointer",
+isTabletChartViewport() &&
+hasAnyFinePointer()
+);
+
+}
+
+function bindFinePointerMedia(){
+
+if(
+finePointerMediaBound ||
+typeof window ===
+"undefined" ||
+!window.matchMedia
+){
+return;
+}
+
+finePointerMediaBound =
+true;
+
+const mq =
+window.matchMedia(
+"(any-pointer: fine)"
+);
+
+const sync =
+()=>{
+syncTabletFinePointerClass();
+};
+
+if(
+typeof mq.addEventListener ===
+"function"
+){
+mq.addEventListener(
+"change",
+sync
+);
+}else if(
+typeof mq.addListener ===
+"function"
+){
+mq.addListener(
+sync
+);
+}
+
+window.addEventListener(
+"pointerdown",
+sync,
+true
+);
+
+}
 
 /** Смартфон / планшет с touch — отдельно от isTabletChartViewport (≥768px). */
 export function isCoarseTouchViewport(){
