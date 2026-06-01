@@ -18,7 +18,7 @@
 <link rel="stylesheet" href="/css/common.css?v=21">
 <link rel="stylesheet" href="/css/terminal.css?v=90">
 <link rel="stylesheet" href="/css/dashboard.css?v=9">
-<link rel="stylesheet" href="/css/coins.css?v=13">
+<link rel="stylesheet" href="/css/coins.css?v=14">
 
 <script src="/vendor/lightweight-charts.standalone.production.js"></script>
 <link rel="modulepreload" href="/js/charts-lib-boot.js?v=3" crossorigin>
@@ -79,7 +79,21 @@
 
 <div id="topbar" class="coins-topbar">
 
+<div class="coins-symbol-head" id="coins-symbol-head">
+
+<div class="coin-flag-wrap screener-flag-wrap" id="coins-chart-flag-wrap">
+<button type="button" class="flag coin-flag-btn screener-flag-btn" data-coin-flag-trigger data-chart-header-flag title="Выбрать флаг" aria-haspopup="true" aria-expanded="false" aria-pressed="false"></button>
+<div class="coin-flag-menu screener-flag-menu hidden" role="menu">
+<button type="button" class="flag coin-flag-pick screener-flag-pick flag--red" data-flag-group="red" title="Красный" role="menuitem"></button>
+<button type="button" class="flag coin-flag-pick screener-flag-pick flag--green" data-flag-group="green" title="Зелёный" role="menuitem"></button>
+<button type="button" class="flag coin-flag-pick screener-flag-pick flag--gray" data-flag-group="gray" title="Серый" role="menuitem"></button>
+<button type="button" class="flag coin-flag-pick screener-flag-clear screener-flag-clear" data-flag-group="clear" title="Снять флаг" role="menuitem"></button>
+</div>
+</div>
+
 <div id="current-symbol"></div>
+
+</div>
 
 <div class="coins-tf-desktop">
 <button class="tf-btn" data-tf="1">1m</button>

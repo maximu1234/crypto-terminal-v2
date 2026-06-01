@@ -3013,6 +3013,17 @@ if(btn){
 updateCoinFlagButton(btn, symbol);
 }
 
+if(
+symbol === (
+currentSymbol ||
+displaySymbol
+)
+){
+updateCoinsChartHeaderFlag(
+symbol
+);
+}
+
 if(flagSortActive){
 renderList();
 }
@@ -3030,7 +3041,8 @@ green:"Зелёный флаг",
 gray:"Серый флаг"
 };
 
-btn.className = "flag coin-flag-btn";
+btn.className =
+"flag coin-flag-btn screener-flag-btn";
 
 if(group){
 btn.classList.add(
@@ -3047,6 +3059,153 @@ group
 btn.setAttribute(
 "aria-pressed",
 group ? "true" : "false"
+);
+
+}
+
+function getCoinsChartHeaderFlagBtn(){
+
+return document.querySelector(
+"[data-chart-header-flag]"
+);
+
+}
+
+function updateCoinsChartHeaderFlag(
+symbol
+){
+
+const sym =
+String(
+symbol ||
+currentSymbol ||
+displaySymbol ||
+""
+).trim().toUpperCase();
+
+const btn =
+getCoinsChartHeaderFlagBtn();
+
+if(
+!btn ||
+!sym
+){
+return;
+}
+
+updateCoinFlagButton(
+btn,
+sym
+);
+
+}
+
+function mountCoinsChartHeaderFlag(){
+
+const flagWrap =
+document.getElementById(
+"coins-chart-flag-wrap"
+);
+
+const flagTrigger =
+flagWrap?.querySelector(
+"[data-coin-flag-trigger]"
+);
+
+const flagMenu =
+flagWrap?.querySelector(
+".coin-flag-menu"
+);
+
+if(
+!flagWrap ||
+!flagTrigger ||
+!flagMenu
+){
+return;
+}
+
+flagTrigger.addEventListener(
+"click",
+e=>{
+
+e.stopPropagation();
+
+const open =
+!flagMenu.classList.contains(
+"hidden"
+);
+
+closeAllCoinFlagMenus(
+flagWrap
+);
+
+if(
+open
+){
+flagMenu.classList.add(
+"hidden"
+);
+flagTrigger.setAttribute(
+"aria-expanded",
+"false"
+);
+}else{
+flagMenu.classList.remove(
+"hidden"
+);
+flagTrigger.setAttribute(
+"aria-expanded",
+"true"
+);
+}
+
+}
+);
+
+flagMenu.querySelectorAll(
+"[data-flag-group]"
+).forEach(
+btn=>{
+
+btn.addEventListener(
+"click",
+e=>{
+
+e.stopPropagation();
+
+const sym =
+currentSymbol ||
+displaySymbol;
+
+if(
+!sym
+){
+return;
+}
+
+applyCoinFavoriteGroup(
+sym,
+btn.dataset.flagGroup
+);
+
+flagMenu.classList.add(
+"hidden"
+);
+flagTrigger.setAttribute(
+"aria-expanded",
+"false"
+);
+
+}
+);
+
+}
+);
+
+updateCoinsChartHeaderFlag(
+currentSymbol ||
+displaySymbol
 );
 
 }
@@ -3227,6 +3386,11 @@ updateCoinFlagButton(btn, symbol);
 }
 
 });
+
+updateCoinsChartHeaderFlag(
+currentSymbol ||
+displaySymbol
+);
 
 }
 
@@ -3681,6 +3845,10 @@ return;
 el.textContent =
 formatCoinsSymbolLabel(sym);
 
+updateCoinsChartHeaderFlag(
+sym
+);
+
 }
 
 function syncCoinsSymbolLabel(){
@@ -3769,6 +3937,8 @@ void drawingTools?.refreshDrawToolsAccessUiAsync?.();
 });
 
 applyCoinsPrefs();
+
+mountCoinsChartHeaderFlag();
 
 favorites =
 loadFavoritesGroups();

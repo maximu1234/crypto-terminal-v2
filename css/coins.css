@@ -49,12 +49,32 @@ body.coins-page #draw-toolbar .draw-btn.hidden{
 display:inline-flex !important;
 }
 
-body.coins-page #topbar.coins-topbar #current-symbol{
+body.coins-page #topbar.coins-topbar .coins-symbol-head{
+display:flex;
+align-items:center;
+gap:8px;
 flex:0 1 auto;
-max-width:min(38vw, 220px);
+min-width:0;
+max-width:min(42vw, 260px);
 margin-right:8px;
 padding-right:10px;
 border-right:1px solid #374151;
+}
+
+body.coins-page #topbar.coins-topbar #coins-chart-flag-wrap{
+flex-shrink:0;
+}
+
+body.coins-page #topbar.coins-topbar #current-symbol{
+flex:1 1 auto;
+min-width:0;
+max-width:none;
+margin-right:0;
+padding-right:0;
+border-right:none;
+white-space:nowrap;
+overflow:hidden;
+text-overflow:ellipsis;
 }
 
 body.coins-page #app{
@@ -323,6 +343,19 @@ border-right:none;
 white-space:nowrap;
 overflow:hidden;
 text-overflow:ellipsis;
+}
+
+body.coins-page #topbar.coins-topbar .coins-symbol-head{
+flex:1 1 auto;
+max-width:none;
+margin-right:0;
+padding-right:0;
+border-right:none;
+}
+
+body.coins-page #topbar.coins-topbar #current-symbol{
+font-size:15px;
+font-weight:700;
 }
 
 .coins-tf-desktop,
