@@ -110,10 +110,13 @@ body{
   justify-content:center;
 }
 
-.draw-btn svg{
+.draw-btn svg,
+.draw-btn img,
+.draw-btn .draw-tool-icon{
   width:22px;
   height:22px;
   display:block;
+  object-fit:contain;
 }
 
 /* Планшет с touch (iPad): чуть крупнее кнопки рисования */
@@ -123,7 +126,9 @@ body{
     height:36px;
   }
 
-  .draw-btn svg{
+  .draw-btn svg,
+  .draw-btn img,
+  .draw-btn .draw-tool-icon{
     width:24px;
     height:24px;
   }

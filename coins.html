@@ -16,8 +16,8 @@
 <link rel="stylesheet" href="/css/critical-shell.css?v=2">
 <script src="/js/site-css-ready.js?v=2"></script>
 <link rel="stylesheet" href="/css/common.css?v=21">
-<link rel="stylesheet" href="/css/terminal.css?v=92">
-<link rel="stylesheet" href="/css/dashboard.css?v=11">
+<link rel="stylesheet" href="/css/terminal.css?v=93">
+<link rel="stylesheet" href="/css/dashboard.css?v=12">
 <link rel="stylesheet" href="/css/coins.css?v=18">
 
 <script src="/vendor/lightweight-charts.standalone.production.js"></script>
@@ -121,68 +121,35 @@
 <div id="draw-toolbar" class="draw-toolbar-inline coins-draw-desktop">
 
 <button type="button" class="draw-btn" data-draw-tool="cursor" title="Курсор">
-<svg viewBox="0 0 24 24" aria-hidden="true">
-<line x1="12" y1="5" x2="12" y2="10" stroke="currentColor" stroke-width="1.5" stroke-linecap="square"/>
-<line x1="12" y1="14" x2="12" y2="19" stroke="currentColor" stroke-width="1.5" stroke-linecap="square"/>
-<line x1="5" y1="12" x2="10" y2="12" stroke="currentColor" stroke-width="1.5" stroke-linecap="square"/>
-<line x1="14" y1="12" x2="19" y2="12" stroke="currentColor" stroke-width="1.5" stroke-linecap="square"/>
-</svg>
+<img class="draw-tool-icon" src="/assets/draw-toolbar-icons/cursor.png" width="22" height="22" alt="" aria-hidden="true">
 </button>
 
 <button type="button" class="draw-btn" data-draw-tool="trendline" title="Trendline — 2 клика">
-<svg viewBox="0 0 24 24" aria-hidden="true">
-<line x1="5.5" y1="18.5" x2="18.5" y2="5.5" stroke="currentColor" stroke-width="1.5"/>
-<circle cx="5.5" cy="18.5" r="1.75" fill="none" stroke="currentColor" stroke-width="1.5"/>
-<circle cx="18.5" cy="5.5" r="1.75" fill="none" stroke="currentColor" stroke-width="1.5"/>
-</svg>
+<img class="draw-tool-icon" src="/assets/draw-toolbar-icons/trendline.png" width="22" height="22" alt="" aria-hidden="true">
 </button>
 
 <button type="button" class="draw-btn" data-draw-tool="hray" title="Horizontal Ray — 1 клик">
-<svg viewBox="0 0 24 24" aria-hidden="true">
-<line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" stroke-width="1.5"/>
-<circle cx="5" cy="12" r="1.75" fill="none" stroke="currentColor" stroke-width="1.5"/>
-</svg>
+<img class="draw-tool-icon" src="/assets/draw-toolbar-icons/hray.png" width="22" height="22" alt="" aria-hidden="true">
 </button>
 
 <button type="button" class="draw-btn" data-draw-tool="fib" title="Fib Retracement — 2 клика">
-<svg viewBox="0 0 24 24" aria-hidden="true">
-<line x1="5" y1="19" x2="19" y2="19" stroke="currentColor" stroke-width="1.5"/>
-<line x1="5" y1="15.5" x2="19" y2="15.5" stroke="currentColor" stroke-width="1.5"/>
-<line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" stroke-width="1.5"/>
-<line x1="5" y1="8.5" x2="19" y2="8.5" stroke="currentColor" stroke-width="1.5"/>
-<line x1="5" y1="5" x2="19" y2="5" stroke="currentColor" stroke-width="1.5"/>
-</svg>
+<img class="draw-tool-icon" src="/assets/draw-toolbar-icons/fib.png" width="22" height="22" alt="" aria-hidden="true">
 </button>
 
 <button type="button" class="draw-btn" data-draw-tool="channel" title="Parallel Channel — 3 клика">
-<svg viewBox="0 0 24 24" aria-hidden="true">
-<line x1="5" y1="17" x2="19" y2="7" stroke="currentColor" stroke-width="1.5"/>
-<line x1="5" y1="19" x2="19" y2="9" stroke="currentColor" stroke-width="1.5"/>
-</svg>
+<img class="draw-tool-icon" src="/assets/draw-toolbar-icons/channel.png" width="22" height="22" alt="" aria-hidden="true">
 </button>
 
 <button type="button" class="draw-btn" data-draw-tool="long" title="Позиция Long">
-<svg class="draw-pos-icon draw-pos-icon--long" viewBox="0 0 24 24" aria-hidden="true">
-<rect x="5" y="5" width="14" height="6.5" fill="rgba(20,83,45,0.92)"/>
-<line x1="5" y1="12" x2="19" y2="12" stroke="#FACC15" stroke-width="1.5" stroke-linecap="square"/>
-<rect x="5" y="12.5" width="14" height="6.5" fill="rgba(127,29,29,0.92)"/>
-</svg>
+<img class="draw-tool-icon draw-pos-icon draw-pos-icon--long" src="/assets/draw-toolbar-icons/long.png" width="22" height="22" alt="" aria-hidden="true">
 </button>
 
 <button type="button" class="draw-btn" data-draw-tool="short" title="Позиция Short">
-<svg class="draw-pos-icon draw-pos-icon--short" viewBox="0 0 24 24" aria-hidden="true">
-<rect x="5" y="5" width="14" height="5.5" fill="rgba(127,29,29,0.92)"/>
-<line x1="5" y1="11" x2="19" y2="11" stroke="#FACC15" stroke-width="1.5" stroke-linecap="square"/>
-<rect x="5" y="11.5" width="14" height="7.5" fill="rgba(20,83,45,0.92)"/>
-</svg>
+<img class="draw-tool-icon draw-pos-icon draw-pos-icon--short" src="/assets/draw-toolbar-icons/short.png" width="22" height="22" alt="" aria-hidden="true">
 </button>
 
 <button type="button" class="draw-btn draw-tool-clear-all" id="draw-tool-delete" title="Удалить все объекты на графике">
-<svg viewBox="0 0 24 24" aria-hidden="true">
-<path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M10.5 8.5V6a1.5 1.5 0 0 1 3 0v2.5"/>
-<line x1="5" y1="8.5" x2="19" y2="8.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-<path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" d="M7.75 8.5 6.35 18.65a1.35 1.35 0 0 0 1.35 1.35h8.6a1.35 1.35 0 0 0 1.35-1.35L16.25 8.5"/>
-</svg>
+<img class="draw-tool-icon" src="/assets/draw-toolbar-icons/trash.png" width="22" height="22" alt="" aria-hidden="true">
 </button>
 
 </div>
@@ -268,11 +235,7 @@ el.textContent=String(last.symbol).toUpperCase()+".P";
 </button>
 
 <button type="button" class="float-delete draw-delete-one-btn" id="draw-delete-one" title="Удалить объект" aria-label="Удалить">
-<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-<path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M10.5 8.5V6a1.5 1.5 0 0 1 3 0v2.5"/>
-<line x1="5" y1="8.5" x2="19" y2="8.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-<path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" d="M7.75 8.5 6.35 18.65a1.35 1.35 0 0 0 1.35 1.35h8.6a1.35 1.35 0 0 0 1.35-1.35L16.25 8.5"/>
-</svg>
+<img class="draw-tool-icon" src="/assets/draw-toolbar-icons/trash.png" width="18" height="18" alt="" aria-hidden="true">
 </button>
 
 </div>

@@ -135,10 +135,13 @@ body{
     -webkit-appearance:none;
 }
 
-.draw-btn svg{
+.draw-btn svg,
+.draw-btn img,
+.draw-btn .draw-tool-icon{
     width:22px;
     height:22px;
     display:block;
+    object-fit:contain;
 }
 
 .draw-btn:hover{
@@ -208,7 +211,9 @@ body.terminal-page .widget-draw-tools{
     padding:0;
 }
 
-.draw-btn-sm svg{
+.draw-btn-sm svg,
+.draw-btn-sm img,
+.draw-btn-sm .draw-tool-icon{
     width:14px;
     height:14px;
 }
