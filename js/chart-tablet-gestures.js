@@ -1,6 +1,6 @@
 /**
  * iPad: один конечный автомат на жест — свайп = pan, удержание = probe-перекрестие.
- * v=10: finishCrosshairRelease (без неё probe залипал на iOS).
+ * v=11: после отпускания пальца probe остаётся (crosshair-docked), можно таскать и нажать «+».
  */
 const HOLD_MS =
 500;
@@ -68,7 +68,7 @@ capture:true,
 passive:false
 };
 
-/** @type {"idle"|"pending"|"pan"|"crosshair"|"pinch"} */
+/** @type {"idle"|"pending"|"pan"|"crosshair"|"crosshair-docked"|"pinch"} */
 let mode =
 "idle";
 
@@ -101,6 +101,10 @@ false;
 
 /** iOS: и pointerup, и touchend — снимаем probe один раз */
 let crosshairReleaseHandled =
+false;
+
+/** Повторное касание по chart-wrap при уже закреплённом probe */
+let crosshairFromDock =
 false;
 
 let onDocMove =
@@ -259,7 +263,9 @@ function endCrosshair(){
 
 if(
 mode !==
-"crosshair"
+"crosshair" &&
+mode !==
+"crosshair-docked"
 ){
 return;
 }
@@ -275,10 +281,28 @@ crosshairMoved =
 false;
 crosshairJustEntered =
 false;
+crosshairFromDock =
+false;
 pointerId = null;
 detachDocListeners();
 
 onHoldEnd();
+
+}
+
+function dockCrosshair(){
+
+mode =
+"crosshair-docked";
+
+crosshairMoved =
+false;
+crosshairReleaseHandled =
+false;
+pointerId =
+null;
+
+detachDocListeners();
 
 }
 
@@ -303,7 +327,19 @@ true;
 pointerId =
 null;
 
+if(
+crosshairFromDock &&
+!crosshairMoved
+){
+crosshairFromDock =
+false;
 endCrosshair();
+return;
+}
+
+crosshairFromDock =
+false;
+dockCrosshair();
 
 }
 
@@ -441,7 +477,9 @@ pinchState = null;
 
 if(
 mode ===
-"crosshair"
+"crosshair" ||
+mode ===
+"crosshair-docked"
 ){
 endCrosshair();
 }else{
@@ -472,6 +510,8 @@ crosshairJustEntered =
 true;
 
 crosshairReleaseHandled =
+false;
+crosshairFromDock =
 false;
 
 touchLayerEl.classList.add(
@@ -821,6 +861,52 @@ return;
 
 if(
 mode ===
+"crosshair-docked"
+){
+
+if(
+!shouldBeginGesture(
+e
+)
+){
+return;
+}
+
+pointerId =
+e.pointerId ??
+0;
+
+startClientX =
+e.clientX;
+
+startClientY =
+e.clientY;
+
+crosshairMoved =
+false;
+crosshairReleaseHandled =
+false;
+crosshairFromDock =
+true;
+
+mode =
+"crosshair";
+
+attachDocListeners();
+
+onProbeAt(
+e.clientX,
+e.clientY
+);
+
+e.preventDefault();
+e.stopImmediatePropagation?.();
+return;
+
+}
+
+if(
+mode ===
 "crosshair" ||
 mode ===
 "pinch"
@@ -917,7 +1003,9 @@ return;
 
 if(
 mode ===
-"crosshair"
+"crosshair" ||
+mode ===
+"crosshair-docked"
 ){
 resetGesture();
 }
@@ -996,7 +1084,9 @@ if(
 mode ===
 "pending" ||
 mode ===
-"crosshair"
+"crosshair" ||
+mode ===
+"crosshair-docked"
 ){
 e.preventDefault();
 }
@@ -1012,6 +1102,8 @@ mode ===
 "pending" ||
 mode ===
 "crosshair" ||
+mode ===
+"crosshair-docked" ||
 mode ===
 "pan"
 ){
@@ -1145,6 +1237,14 @@ return;
 
 if(
 mode ===
+"crosshair-docked"
+){
+endCrosshair();
+return;
+}
+
+if(
+mode ===
 "pan" ||
 mode ===
 "pending"
@@ -1175,7 +1275,9 @@ function deactivateProbe(){
 
 if(
 mode ===
-"crosshair"
+"crosshair" ||
+mode ===
+"crosshair-docked"
 ){
 endCrosshair();
 return;
