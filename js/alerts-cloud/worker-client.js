@@ -973,6 +973,9 @@ if(
 return false;
 }
 
+let ok =
+false;
+
 if(
 await deleteAlertViaWorker(
 sym,
@@ -980,12 +983,12 @@ sid,
 cid
 )
 ){
-broadcastAlertsRegistrySync();
-return true;
+ok = true;
 }
 
-let ok =
-false;
+if(
+!ok
+){
 
 if(
 cid
@@ -1006,7 +1009,22 @@ shapeId: sid
 });
 }
 
-if(ok){
+}
+
+if(
+!ok
+){
+ok =
+await purgeAlertViaRest({
+symbol: sym,
+shapeId: sid,
+id: cid || undefined
+});
+}
+
+if(
+ok
+){
 const stillThere =
 await resolveCloudAlertId(
 sym,
@@ -1014,7 +1032,9 @@ sid,
 null
 );
 
-if(stillThere){
+if(
+stillThere
+){
 console.warn(
 "alert cloud delete verify failed:",
 sym,
@@ -1025,7 +1045,9 @@ ok = false;
 }
 }
 
-if(!ok){
+if(
+!ok
+){
 console.warn(
 "alert cloud delete:",
 sym,
@@ -1035,9 +1057,17 @@ cid || ""
 return false;
 }
 
+const { forgetAlertDeleted } =
+await import("../alerts.js?v=97");
+
+forgetAlertDeleted(
+sym,
+sid
+);
+
 broadcastAlertsRegistrySync();
 
-return ok;
+return true;
 
 }
 
@@ -2028,7 +2058,7 @@ return !!data?.id;
 /**
  * Запись алерта через Railway (service role) — надёжнее браузерного upsert.
  */
-export async function deleteAlertViaWorker(
+async function deleteAlertViaWorkerAttempt(
 symbol,
 shapeId,
 cloudId = null
@@ -2053,7 +2083,10 @@ String(symbol || "").trim().toUpperCase();
 const sid =
 String(shapeId || "").trim();
 const cid =
-String(cloudId || "").trim();
+String(
+cloudId ||
+""
+).trim();
 
 if(
 !sym ||
@@ -2108,7 +2141,11 @@ parsed = { raw: text };
 
 if(
 !res.ok ||
-!parsed.ok
+!parsed.ok ||
+Number(
+parsed.deleted
+) <=
+0
 ){
 console.warn(
 "[alerts] worker /delete-alert ОТКЛОНЁН:",
@@ -2123,10 +2160,54 @@ return false;
 alertsDebugLog(
 "[alerts] ✓ Supabase удалено (worker):",
 sym,
-sid
+sid,
+"deleted=",
+parsed.deleted
 );
 
 return true;
+
+}
+
+export async function deleteAlertViaWorker(
+symbol,
+shapeId,
+cloudId = null
+){
+
+const sym =
+String(symbol || "").trim().toUpperCase();
+const sid =
+String(shapeId || "").trim();
+const cid =
+String(
+cloudId ||
+""
+).trim();
+
+if(
+!sym ||
+!sid
+){
+return false;
+}
+
+if(
+cid &&
+await deleteAlertViaWorkerAttempt(
+sym,
+sid,
+cid
+)
+){
+return true;
+}
+
+return deleteAlertViaWorkerAttempt(
+sym,
+sid,
+null
+);
 
 }
 

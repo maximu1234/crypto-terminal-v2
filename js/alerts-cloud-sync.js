@@ -2497,6 +2497,9 @@ if(
 return false;
 }
 
+let ok =
+false;
+
 if(
 await deleteAlertViaWorker(
 sym,
@@ -2504,12 +2507,12 @@ sid,
 cid
 )
 ){
-broadcastAlertsRegistrySync();
-return true;
+ok = true;
 }
 
-let ok =
-false;
+if(
+!ok
+){
 
 if(
 cid
@@ -2530,7 +2533,22 @@ shapeId: sid
 });
 }
 
-if(ok){
+}
+
+if(
+!ok
+){
+ok =
+await purgeAlertViaRest({
+symbol: sym,
+shapeId: sid,
+id: cid || undefined
+});
+}
+
+if(
+ok
+){
 const stillThere =
 await resolveCloudAlertId(
 sym,
@@ -2538,7 +2556,9 @@ sid,
 null
 );
 
-if(stillThere){
+if(
+stillThere
+){
 console.warn(
 "alert cloud delete verify failed:",
 sym,
@@ -2549,7 +2569,9 @@ ok = false;
 }
 }
 
-if(!ok){
+if(
+!ok
+){
 console.warn(
 "alert cloud delete:",
 sym,
@@ -2559,9 +2581,17 @@ cid || ""
 return false;
 }
 
+const { forgetAlertDeleted } =
+await import("./alerts.js?v=97");
+
+forgetAlertDeleted(
+sym,
+sid
+);
+
 broadcastAlertsRegistrySync();
 
-return ok;
+return true;
 
 }
 
@@ -2860,6 +2890,40 @@ return null;
 /**
  * DELETE через PostgREST (не зависает, в отличие от sb.from().delete()).
  */
+async function purgeAlertDeleteResponseOk(
+res,
+all
+){
+
+const text =
+await res.text();
+
+if(
+!text
+){
+return !!all;
+}
+
+try{
+const rows =
+JSON.parse(text);
+const n =
+Array.isArray(rows)
+? rows.length
+: rows
+? 1
+: 0;
+
+return all
+? true
+: n >
+0;
+}catch{
+return !!all;
+}
+
+}
+
 async function purgeAlertViaRest(
 opts
 ){
@@ -3029,7 +3093,7 @@ headers: {
 apikey: anon,
 Authorization: `Bearer ${token}`,
 "Content-Type": "application/json",
-Prefer: "return=minimal"
+Prefer: "return=representation"
 },
 body: JSON.stringify({
 deleted_at: new Date().toISOString()
@@ -3038,7 +3102,9 @@ deleted_at: new Date().toISOString()
 10000
 );
 
-if(!res.ok){
+if(
+!res.ok
+){
 const text =
 await res.text();
 
@@ -3066,7 +3132,7 @@ headers: {
 apikey: anon,
 Authorization: `Bearer ${refreshed}`,
 "Content-Type": "application/json",
-Prefer: "return=minimal"
+Prefer: "return=representation"
 },
 body: JSON.stringify({
 deleted_at: new Date().toISOString()
@@ -3074,13 +3140,22 @@ deleted_at: new Date().toISOString()
 },
 10000
 );
-return retry.ok;
+return purgeAlertDeleteResponseOk(
+retry,
+all
+);
 }
 }
 return false;
 }
 
-return true;
+const patched =
+await purgeAlertDeleteResponseOk(
+res,
+all
+);
+
+return patched;
 }catch{
 return false;
 }
@@ -3231,13 +3306,15 @@ method: "DELETE",
 headers: {
 apikey: anon,
 Authorization: `Bearer ${token}`,
-Prefer: "return=minimal"
+Prefer: "return=representation"
 }
 },
 10000
 );
 
-if(!res.ok){
+if(
+!res.ok
+){
 const text =
 await res.text();
 
@@ -3261,13 +3338,22 @@ method: "DELETE",
 headers: {
 apikey: anon,
 Authorization: `Bearer ${token}`,
-Prefer: "return=minimal"
+Prefer: "return=representation"
 }
 },
 10000
 );
 
-if(retryRes.ok){
+if(
+retryRes.ok
+){
+const deleted =
+await purgeAlertDeleteResponseOk(
+retryRes,
+all
+);
+
+if(deleted){
 alertsDebugLog(
 "[alerts] purge REST ok (retry):",
 all
@@ -3275,6 +3361,7 @@ all
 : (id || `${sym} ${sid}`)
 );
 return true;
+}
 }
 
 const retryText =
@@ -3292,6 +3379,24 @@ console.warn(
 "[alerts] purge REST:",
 res.status,
 text.slice(0, 200)
+);
+return false;
+}
+
+const deleted =
+await purgeAlertDeleteResponseOk(
+res,
+all
+);
+
+if(
+!deleted
+){
+console.warn(
+"[alerts] purge REST: строка не найдена",
+all
+? "all active"
+: (id || `${sym} ${sid}`)
 );
 return false;
 }
@@ -4009,7 +4114,7 @@ return !!data?.id;
 /**
  * Запись алерта через Railway (service role) — надёжнее браузерного upsert.
  */
-export async function deleteAlertViaWorker(
+async function deleteAlertViaWorkerAttempt(
 symbol,
 shapeId,
 cloudId = null
@@ -4034,7 +4139,10 @@ String(symbol || "").trim().toUpperCase();
 const sid =
 String(shapeId || "").trim();
 const cid =
-String(cloudId || "").trim();
+String(
+cloudId ||
+""
+).trim();
 
 if(
 !sym ||
@@ -4089,7 +4197,11 @@ parsed = { raw: text };
 
 if(
 !res.ok ||
-!parsed.ok
+!parsed.ok ||
+Number(
+parsed.deleted
+) <=
+0
 ){
 console.warn(
 "[alerts] worker /delete-alert ОТКЛОНЁН:",
@@ -4104,10 +4216,54 @@ return false;
 alertsDebugLog(
 "[alerts] ✓ Supabase удалено (worker):",
 sym,
-sid
+sid,
+"deleted=",
+parsed.deleted
 );
 
 return true;
+
+}
+
+export async function deleteAlertViaWorker(
+symbol,
+shapeId,
+cloudId = null
+){
+
+const sym =
+String(symbol || "").trim().toUpperCase();
+const sid =
+String(shapeId || "").trim();
+const cid =
+String(
+cloudId ||
+""
+).trim();
+
+if(
+!sym ||
+!sid
+){
+return false;
+}
+
+if(
+cid &&
+await deleteAlertViaWorkerAttempt(
+sym,
+sid,
+cid
+)
+){
+return true;
+}
+
+return deleteAlertViaWorkerAttempt(
+sym,
+sid,
+null
+);
 
 }
 

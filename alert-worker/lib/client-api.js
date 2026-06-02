@@ -347,32 +347,70 @@ async function handleClientDeleteAlert(
     return true;
   }
 
-  const { restDelete } =
+  const { restDeleteReturning, restPatchReturning } =
     await import("./supabase-rest.js");
 
-  let restPath =
-    "";
-
-  if (alertId) {
-    restPath =
-      "price_alerts?id=eq." +
-      encodeURIComponent(alertId) +
-      "&user_id=eq." +
-      encodeURIComponent(user.id);
-  } else {
-    restPath =
-      "price_alerts?user_id=eq." +
-      encodeURIComponent(user.id) +
-      "&symbol=eq." +
-      encodeURIComponent(sym) +
-      "&shape_id=eq." +
-      encodeURIComponent(sid);
-  }
+  const userFilter =
+    "user_id=eq." +
+    encodeURIComponent(user.id);
 
   try{
-    await restDelete(restPath);
+    let deleted = 0;
+
+    if (alertId) {
+      const rows =
+        await restDeleteReturning(
+          "price_alerts?id=eq." +
+          encodeURIComponent(alertId) +
+          "&" +
+          userFilter
+        );
+      deleted += rows.length;
+    }
+
+    if (
+      deleted === 0 &&
+      sym &&
+      sid
+    ) {
+      const rows =
+        await restDeleteReturning(
+          "price_alerts?" +
+          userFilter +
+          "&symbol=eq." +
+          encodeURIComponent(sym) +
+          "&shape_id=eq." +
+          encodeURIComponent(sid)
+        );
+      deleted += rows.length;
+    }
+
+    if (
+      deleted === 0 &&
+      sym &&
+      sid
+    ) {
+      const rows =
+        await restPatchReturning(
+          "price_alerts?" +
+          userFilter +
+          "&symbol=eq." +
+          encodeURIComponent(sym) +
+          "&shape_id=eq." +
+          encodeURIComponent(sid) +
+          "&deleted_at=is.null",
+          {
+            deleted_at: new Date().toISOString()
+          }
+        );
+      deleted += rows.length;
+    }
+
     res.writeHead(200, { "Content-Type": "application/json" });
-    res.end(JSON.stringify({ ok: true }));
+    res.end(JSON.stringify({
+      ok: deleted > 0,
+      deleted
+    }));
   }catch(err){
     res.writeHead(500, { "Content-Type": "application/json" });
     res.end(JSON.stringify({
