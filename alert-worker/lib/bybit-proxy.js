@@ -5,7 +5,7 @@ import { fileURLToPath } from "url";
 
 const BASES = JSON.parse(
   readFileSync(
-    join(dirname(fileURLToPath(import.meta.url)), "../../shared/bybit-api-bases.json"),
+    join(dirname(fileURLToPath(import.meta.url)), "../bybit-api-bases.json"),
     "utf8"
   )
 );

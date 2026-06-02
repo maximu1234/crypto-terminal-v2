@@ -9,6 +9,8 @@
 
 Нужен `ALERT_WORKER_URL` на Vercel в `js/supabase-env.js`. При закрытой вкладке срабатывает только worker по свечам Bybit.
 
+`bybit-api-bases.json` в корне worker — копия `shared/bybit-api-bases.json` (Vercel); при смене баз обновлять оба файла.
+
 ## Railway (пустой дашборд)
 
 1. **New Project** → **Deploy from GitHub repo** → `crypto-terminal-v2`.
