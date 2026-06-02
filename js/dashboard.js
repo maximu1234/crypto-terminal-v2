@@ -7,7 +7,7 @@ loadLayout
 
 import {
 loadBybitHistory
-} from "./api.js?v=22";
+} from "./api.js?v=25";
 
 import {
 applyChartPriceFormat,

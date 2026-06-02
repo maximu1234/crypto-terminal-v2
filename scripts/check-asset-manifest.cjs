@@ -62,25 +62,41 @@ return assets;
 
 }
 
+const SKIP_DIRS =
+new Set([
+"node_modules",
+"vendor",
+".git",
+".venv-icons",
+".venv",
+"venv"
+]);
+
 function walk(
 dir,
 out =
 []
 ){
 
-for(
-const name of
+let entries;
+
+try{
+entries =
 fs.readdirSync(
 dir
-)
+);
+}catch{
+return out;
+}
+
+for(
+const name of
+entries
 ){
 if(
-name ===
-"node_modules" ||
-name ===
-"vendor" ||
-name ===
-".git"
+SKIP_DIRS.has(
+name
+)
 ){
 continue;
 }
@@ -89,10 +105,25 @@ path.join(
 dir,
 name
 );
-const st =
-fs.statSync(
+let st;
+
+try{
+st =
+fs.lstatSync(
 p
 );
+}catch(
+err
+){
+if(
+err?.code ===
+"ENOENT"
+){
+continue;
+}
+throw err;
+}
+
 if(
 st.isDirectory()
 ){
@@ -101,6 +132,7 @@ p,
 out
 );
 }else if(
+st.isFile() &&
 /\.(js|html|css)$/.test(
 name
 )

@@ -22,7 +22,7 @@ import {
 getTelegramChatId,
 saveTelegramChatId,
 clearTelegramChatId
-} from "./alerts-cloud-sync.js?v=103";
+} from "./alerts-cloud-sync.js?v=104";
 
 import {
 isSystemAdminUser

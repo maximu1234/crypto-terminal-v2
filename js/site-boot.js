@@ -17,7 +17,7 @@ scheduleDevicePull
 import {
 initAlertsCloudSync,
 scheduleRegistryCloudSync
-} from "./alerts-cloud-sync.js?v=103";
+} from "./alerts-cloud-sync.js?v=104";
 
 import {
 stripAlertFlagsNotInRegistry
@@ -143,7 +143,7 @@ new CustomEvent(
 }
 );
 
-import("./drawings-cloud-sync.js?v=33").then(
+import("./drawings-cloud-sync.js?v=35").then(
 ({ initDrawingsCloudSync })=>{
 initDrawingsCloudSync();
 }

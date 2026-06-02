@@ -3,7 +3,7 @@ loadBybitHistory,
 loadBybitSymbols,
 peekBybitSymbolsCache,
 symbolListSignature
-} from "./api.js?v=22";
+} from "./api.js?v=25";
 
 import {
 createScreenerChart,

@@ -39,7 +39,7 @@ import {
 createPullCoalescer,
 isAlertsPage,
 isDrawingsUiPage
-} from "./cloud-sync-throttle.js?v=2";
+} from "./cloud-sync-throttle.js?v=3";
 
 const IS_YANDEX =
 /YaBrowser|Yandex/i.test(
