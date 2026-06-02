@@ -5608,14 +5608,12 @@ series.priceToCoordinate(price);
 
 if(y != null){
 
-const x1 =
-Math.min(a.x, b.x);
-const x2 =
-Math.max(a.x, b.x);
+const plotW =
+getPlotWidth();
 
 if(
-px >= x1 - 8 &&
-px <= x2 + 8
+px >= -8 &&
+px <= plotW + 8
 ){
 dist = Math.min(
 dist,
@@ -8016,45 +8014,6 @@ shape.id === selectedId
 
 }
 
-function fibHorzDrawSpan(
-a,
-b,
-plotW
-){
-
-const minSpan =
-12;
-
-let x1 =
-Math.min(
-a.x,
-b.x
-);
-let x2 =
-Math.max(
-a.x,
-b.x
-);
-
-if(
-x2 - x1 <
-minSpan
-){
-return {
-x1: 0,
-x2: plotW,
-narrow: true
-};
-}
-
-return {
-x1,
-x2,
-narrow: false
-};
-
-}
-
 function drawFib(
 ctx,
 shape,
@@ -8072,31 +8031,40 @@ if(!a || !b){
 return;
 }
 
-const {
-x1,
-x2,
-narrow
-} =
-fibHorzDrawSpan(
-a,
-b,
-plotW
+/* Горизонтальные уровни — на всю ширину plot (как TV). Между якорями
+   линия могла иметь нулевую длину → объект есть, hit-test работает, но
+   на экране ничего не видно. */
+const x1 =
+0;
+const x2 =
+plotW;
+const labelX =
+Math.min(
+Math.max(
+a.x,
+b.x
+) + 4,
+plotW - 28
 );
 
 const useLog =
 isSeriesLogarithmic(series);
 
-const rows =
-getFibRows(shape);
+const fibLevels =
+ensureFibLevelsVisible(
+shape.fibLevels ??
+shape.levels
+);
 
-const levelRows =
-rows.some(row=>row.enabled)
-? rows
-: cloneDefaultFibRows();
+const rows =
+getFibRows({
+...shape,
+fibLevels
+});
 
 let drewLevel = false;
 
-levelRows.forEach(row=>{
+rows.forEach(row=>{
 
 if(!row.enabled){
 return;
@@ -8117,7 +8085,7 @@ return;
 }
 
 const y =
-plotPriceToCoordinate(price);
+series.priceToCoordinate(price);
 
 if(y == null){
 return;
@@ -8150,24 +8118,15 @@ ctx.fillStyle = lineColor;
 ctx.font = "11px Arial";
 ctx.fillText(
 formatFibLabel(row.v),
-Math.min(
-x2 + 4,
-plotW - 28
-),
+labelX,
 y + 4
 );
 
 });
 
-const showTrend =
-shape.fibShowTrendLine !== false ||
-(
-narrow &&
-!drewLevel
-);
-
 if(
-showTrend
+shape.fibShowTrendLine !== false ||
+!drewLevel
 ){
 
 drawLine(
