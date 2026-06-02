@@ -6,7 +6,7 @@ loadTwelveData
 
 import {
 filterRecentListings
-} from "./bybit-listings.js?v=1";
+} from "./bybit-listings.js?v=2";
 
 import {
 calculateRSI,
@@ -77,8 +77,8 @@ syncBackgroundAlertStreams
 } from "./alert-monitor.js?v=64";
 
 import {
-initDrawings
-} from "./drawings.js?v=176";
+initWidgetDrawings
+} from "./chart-widget-host.js?v=1";
 
 import {
 mountDrawToolbar,
@@ -1617,7 +1617,8 @@ mountDrawToolIcons(
 document
 );
 
-drawingTools = initDrawings({
+drawingTools =
+initWidgetDrawings({
 
 chart,
 series: candleSeries,
@@ -1718,9 +1719,17 @@ chart.clearCrosshairPosition();
 
 });
 
+if(
+!drawingTools
+){
+console.warn(
+"Drawings unavailable on coins page"
+);
+}
+
 }catch(err){
 
-console.error("Drawings init failed:", err);
+console.error("Drawings UI mount failed:", err);
 
 }
 
@@ -1797,7 +1806,8 @@ chart.clearCrosshairPosition();
 }
 
 if(
-TABLET_USE_CUSTOM_TOUCH_PAN
+TABLET_USE_CUSTOM_TOUCH_PAN &&
+isTabletChartViewport()
 ){
 
 function tabletHoldShouldBegin(

@@ -1,0 +1,273 @@
+/**
+ * Единый реестр cache-bust версий (?v=).
+ *
+ * Менять ТОЛЬКО здесь, затем:
+ *   node scripts/sync-asset-versions.cjs
+ *
+ * Bump одного файла:
+ *   node scripts/sync-asset-versions.cjs bump chart.js
+ */
+export const MANIFEST_V =
+1;
+
+/** @type {Readonly<Record<string, number>>} */
+export const ASSETS =
+Object.freeze({
+
+/* ── JS: boot / entry ── */
+"asset-manifest.js":
+1,
+"coins-asset-versions.js":
+1,
+"coins-page-boot.js":
+10,
+"chart-page.js":
+5,
+"terminal.js":
+251,
+"dashboard.js":
+71,
+"screener.js":
+63,
+"site-boot.js":
+80,
+"charts-lib-boot.js":
+3,
+"chart-import.js":
+13,
+"chart-widget-host.js":
+1,
+
+/* ── JS: chart / drawings ── */
+"chart.js":
+107,
+"chart-tablet-gestures.js":
+14,
+"drawings.js":
+178,
+"drawings-cloud-sync.js":
+32,
+"drawings-storage.js":
+6,
+"drawings-storage-poller.js":
+1,
+"draw-ui-shared.js":
+7,
+"draw-toolbar-icon-data.js":
+1,
+"draw-tools-visible.js":
+1,
+"dashboard-draw-ui.js":
+14,
+"price-alert-ui.js":
+33,
+"indicators.js":
+3,
+"storage.js":
+12,
+"terminal-page.js":
+3,
+"coins-mobile.js":
+4,
+"widget-favorite-flag.js":
+2,
+
+/* ── JS: market data ── */
+"api.js":
+22,
+"bybit-fetch.js":
+10,
+"bybit-listings.js":
+2,
+"bybit-network-ui.js":
+2,
+"bybit-route-pref.js":
+1,
+"twelvedata-fetch.js":
+1,
+"ws.js":
+15,
+"tickers.js":
+21,
+
+/* ── JS: cloud / auth ── */
+"cloud-sync.js":
+28,
+"cloud-sync-throttle.js":
+2,
+"supabase-client.js":
+6,
+"supabase-env.js":
+5,
+"auth-storage.js":
+1,
+"auth-ui.js":
+24,
+"alert-auth-cache.js":
+7,
+"favorites.js":
+1,
+"favorites-cloud-sync.js":
+1,
+
+/* ── JS: alerts ── */
+"alerts.js":
+97,
+"alerts-cloud-sync.js":
+101,
+"alerts-page.js":
+60,
+"alert-monitor.js":
+64,
+"alert-worker-url.js":
+1,
+
+/* ── JS: misc ── */
+"async-timeout.js":
+1,
+"site-css-gate.js":
+1,
+"site-css-ready.js":
+2,
+"site-mobile-nav.js":
+4,
+"mobile-nav-drawer.js":
+1,
+"mobile-recovery.js":
+1,
+"position-sizing.js":
+1,
+"symbol-autocomplete.js":
+1,
+"listings.js":
+4,
+"trade-calculator.js":
+3,
+"system-admin-page.js":
+3,
+"system-admin-access.js":
+3,
+
+/* ── CSS ── */
+"critical-shell.css":
+2,
+"common.css":
+21,
+"screener.css":
+21,
+"terminal.css":
+94,
+"dashboard.css":
+13,
+"coins.css":
+19,
+"terminal-page.css":
+1,
+"site-mobile-nav.css":
+3,
+"alerts.css":
+15,
+"listings.css":
+2,
+"trade-calculator.css":
+3,
+"system-admin.css":
+2
+
+});
+
+export const CHART_BUILD_ID =
+"20260529-probe-horiz-future";
+
+export function jsVer(
+name
+){
+
+const n =
+ASSETS[
+name
+];
+
+if(
+n ==
+null
+){
+throw new Error(
+`asset-manifest: unknown js asset "${name}"`
+);
+}
+
+return n;
+
+}
+
+export function cssVer(
+name
+){
+
+return jsVer(
+name
+);
+}
+
+export function jsImport(
+name
+){
+
+return `./${name}?v=${jsVer(name)}`;
+}
+
+export function jsUrl(
+name
+){
+
+return `/js/${name}?v=${jsVer(name)}`;
+}
+
+export function cssUrl(
+name
+){
+
+return `/css/${name}?v=${cssVer(name)}`;
+}
+
+/* Coins boot aliases (backward compat) */
+export const CHART_JS_V =
+ASSETS[
+"chart.js"
+];
+
+export const CHART_IMPORT_V =
+ASSETS[
+"chart-import.js"
+];
+
+export const TERMINAL_JS_V =
+ASSETS[
+"terminal.js"
+];
+
+export const COINS_BOOT_V =
+ASSETS[
+"coins-page-boot.js"
+];
+
+export const CHART_PAGE_V =
+ASSETS[
+"chart-page.js"
+];
+
+export const TERMINAL_ENTRY =
+jsUrl(
+"terminal.js"
+);
+
+export const CHART_PAGE_ENTRY =
+jsUrl(
+"chart-page.js"
+);
+
+export const CHART_IMPORT_ENTRY =
+jsUrl(
+"chart-import.js"
+);

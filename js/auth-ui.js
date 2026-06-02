@@ -16,7 +16,7 @@ isSupabaseConfigured
 
 import {
 readAlertTokenSync
-} from "./alert-auth-cache.js?v=6";
+} from "./alert-auth-cache.js?v=7";
 
 import {
 getTelegramChatId,

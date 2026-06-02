@@ -19,7 +19,7 @@ favoritesSignature
 import {
 readAlertTokenSync,
 resolveAlertAuthFast
-} from "./alert-auth-cache.js?v=6";
+} from "./alert-auth-cache.js?v=7";
 
 import {
 createPullCoalescer

@@ -10,14 +10,13 @@ loadBybitHistory
 } from "./api.js?v=22";
 
 import {
-createCandlestickChart,
 applyChartPriceFormat,
 applyDashboardZoom
 } from "./chart-import.js?v=13";
 
 import {
-initDrawings
-} from "./drawings.js?v=176";
+createDashboardChartWidget
+} from "./chart-widget-host.js?v=1";
 
 import {
 subscribeKline
@@ -181,14 +180,6 @@ widget.querySelector(
 ".widget-draw-tools"
 );
 
-const {
-chart,
-series
-} =
-createCandlestickChart(chartContainer);
-
-let candles = [];
-
 const symbolInput =
 widget.querySelector(".symbol-input");
 
@@ -206,6 +197,8 @@ widget.querySelector(".change");
 
 const loadSeq = { id: 0 };
 
+let candles = [];
+
 function getSymbol(){
 return symbolInput.value.trim().toUpperCase();
 }
@@ -214,30 +207,25 @@ function getTf(){
 return tfSelect.value;
 }
 
-let drawingTools = null;
-
-try{
-
-drawingTools = initDrawings({
-
+const {
 chart,
 series,
-wrapEl: chartWrap,
-uiRoot: chartWrap,
+drawingTools
+} =
+createDashboardChartWidget({
+
+chartContainer,
+chartWrap,
 toolsRoot,
 getSymbol,
 getTf,
 getCandles: ()=> candles,
-isActive: ()=> activeWidgetIndex === index,
+isActive: ()=>
+activeWidgetIndex ===
+index,
 barPosKey: `draw_bar_dashboard_${index}`
 
 });
-
-}catch(err){
-
-console.error("Widget drawings init:", err);
-
-}
 
 initWidgetDrawToolsDropdown(
 toolsRoot

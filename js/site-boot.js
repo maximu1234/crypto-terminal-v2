@@ -48,7 +48,7 @@ initMobileRecovery
 
 import {
 bindSiteMobileNav
-} from "./site-mobile-nav.js?v=3";
+} from "./site-mobile-nav.js?v=4";
 
 import {
 ensureDrawToolsVisible
@@ -142,7 +142,7 @@ initDrawingsCloudSync();
 }
 );
 
-import("./favorites-cloud-sync.js?v=2").then(
+import("./favorites-cloud-sync.js?v=1").then(
 ({ initFavoritesCloudSync })=>{
 initFavoritesCloudSync();
 }

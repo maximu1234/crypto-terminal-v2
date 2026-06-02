@@ -1,4 +1,8 @@
 {
   "private": true,
-  "description": "Static site + Vercel serverless /api (CommonJS handlers)"
+  "description": "Static site + Vercel serverless /api (CommonJS handlers)",
+  "scripts": {
+    "assets:sync": "node scripts/sync-asset-versions.cjs",
+    "assets:bump": "node scripts/sync-asset-versions.cjs bump"
+  }
 }

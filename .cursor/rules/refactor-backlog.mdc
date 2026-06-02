@@ -1,0 +1,40 @@
+---
+description: Очередь рефакторинга crypto-terminal-v2 — общий план и отложенные iPad-улучшения
+alwaysApply: true
+---
+
+# Refactor backlog (crypto-terminal-v2)
+
+## Рекомендуемый порядок (общий план)
+
+| # | Статус | Задача |
+|---|--------|--------|
+| 1 | ✅ | `drawings.js` destroy/teardown + убрать двойной redraw |
+| 2 | ✅ | Удалить мёртвый tablet-код из `chart.js` (~1.4k строк) |
+| 2b | ✅ | Tablet-жесты монтировать только при `isTabletChartViewport()` |
+| 3 | ✅ | Единый asset manifest + `scripts/sync-asset-versions.cjs` |
+| 4 | ✅ | Shared storage poller (`drawings-storage-poller.js`) |
+| 6 | ✅ | Chart widget host (`chart-widget-host.js`) |
+| 5 | ⏳ | **Следующий:** Split `drawings.js` на модули (крупный рефактор) |
+
+## iPad — после split `drawings.js` (пункт 5)
+
+Не делать до завершения общего плана, чтобы не смешивать рефактор с tablet-фичами.
+Все iPad-изменения — только за `isTabletChartViewport()` / `prefersTouchDrawInput()`, desktop не трогать.
+
+| # | Задача |
+|---|--------|
+| iPad-1 | Tablet-жесты на dashboard (`/terminal.html`) — сейчас только `/coins` |
+| iPad-2 | Lazy-import `chart-tablet-gestures.js` (не парсить на desktop) |
+| iPad-3 | Touch-рисование в `drawings-tablet-input.js` (отделить от desktop path) |
+| iPad-4 | Единый `tabletGesturePolicy()` вместо дублирующих проверок в `terminal.js` |
+
+## Напоминание пользователю
+
+Когда пункт 5 закрыт — напомнить про iPad-1…iPad-4 из этой таблицы.
+
+## Архитектура
+
+- Отдельные сайты для iPad/desktop **не нужны** — модульная изоляция достаточна.
+- Единственный модуль жестов: `chart-tablet-gestures.js`.
+- `terminal.js` = страница Монеты; `dashboard.js` = terminal.html.

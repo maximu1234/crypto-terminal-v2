@@ -13,7 +13,7 @@ import {
 CHART_BUILD_ID,
 CHART_PAGE_ENTRY,
 TERMINAL_ENTRY
-} from "./coins-asset-versions.js?v=1";
+} from "./asset-manifest.js?v=1";
 
 const IS_YANDEX =
 /YaBrowser|Yandex/i.test(

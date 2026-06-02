@@ -1,6 +1,7 @@
 /**
- * iPad: один конечный автомат на жест — свайп = pan, удержание = probe-перекрестие.
- * v=11: после отпускания пальца probe остаётся (crosshair-docked), можно таскать и нажать «+».
+ * iPad: единственный модуль touch/pan/probe-жестов на графике.
+ * На десктопе не монтируется (terminal.js + isTabletChartViewport).
+ * Старые mountTabletCrosshairLongPress / mountTabletCustomTouchPan удалены из chart.js.
  */
 const HOLD_MS =
 500;
@@ -96,9 +97,6 @@ let panSuspended =
 false;
 
 let crosshairMoved =
-false;
-
-let crosshairJustEntered =
 false;
 
 /** iOS: и pointerup, и touchend — снимаем probe один раз */
@@ -280,8 +278,6 @@ mode =
 "idle";
 
 crosshairMoved =
-false;
-crosshairJustEntered =
 false;
 crosshairFromDock =
 false;
@@ -508,8 +504,6 @@ mode =
 
 crosshairMoved =
 false;
-crosshairJustEntered =
-true;
 
 crosshairReleaseHandled =
 false;

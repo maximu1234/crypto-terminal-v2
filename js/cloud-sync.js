@@ -30,7 +30,7 @@ mergeTombstoneMaps,
 mergeDrawingsPayload,
 packCloudDrawings,
 unpackCloudDrawings
-} from "./drawings-storage.js?v=3";
+} from "./drawings-storage.js?v=6";
 
 import {
 withTimeout
@@ -1053,7 +1053,7 @@ realtimeUserId
 
 function handleRealtimeFavoritesRow(row){
 
-void import("./favorites-cloud-sync.js?v=2").then(
+void import("./favorites-cloud-sync.js?v=1").then(
 m=>{
 m.applyFavoritesFromRealtimeRow(
 row
@@ -1381,7 +1381,7 @@ return collectAllLocalDrawings();
 async function syncFavoritesWithCloud(){
 
 const m =
-await import("./favorites-cloud-sync.js?v=2");
+await import("./favorites-cloud-sync.js?v=1");
 
 await m.reconcileLocalFavoritesWithCloud();
 
@@ -1419,7 +1419,7 @@ favorites
 ){
 
 const m =
-await import("./favorites-cloud-sync.js?v=2");
+await import("./favorites-cloud-sync.js?v=1");
 
 m.pushFavoritesAfterLocalEdit(
 favorites
@@ -1976,7 +1976,7 @@ return;
 try{
 
 const favoritesCloud =
-await import("./favorites-cloud-sync.js?v=2");
+await import("./favorites-cloud-sync.js?v=1");
 
 await favoritesCloud.reconcileLocalFavoritesWithCloud();
 
@@ -2196,7 +2196,7 @@ await ensureCloudLoginResolved(
 const alertsCloud =
 await import("./alerts-cloud-sync.js?v=101");
 const favoritesCloud =
-await import("./favorites-cloud-sync.js?v=2");
+await import("./favorites-cloud-sync.js?v=1");
 const { stripAlertFlagsNotInRegistry } =
 await import("./alerts.js?v=97");
 

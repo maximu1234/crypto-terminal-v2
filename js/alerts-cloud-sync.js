@@ -19,7 +19,7 @@ clearAlertAuthCache,
 resolveAlertAuthFast,
 readAlertTokenSync,
 readPersistedAuthSession
-} from "./alert-auth-cache.js?v=6";
+} from "./alert-auth-cache.js?v=7";
 
 import {
 normalizeAlertWorkerBaseUrl
@@ -1567,7 +1567,7 @@ return null;
 async function getSupabaseHttpConfig(){
 
 const env =
-await import("./supabase-env.js?v=4");
+await import("./supabase-env.js?v=5");
 
 const base =
 String(env.SUPABASE_URL || "").replace(/\/$/, "");
@@ -1995,7 +1995,7 @@ return false;
 }
 
 const env =
-await import("./supabase-env.js?v=4");
+await import("./supabase-env.js?v=5");
 
 const base =
 String(env.SUPABASE_URL || "")
@@ -2953,7 +2953,7 @@ return false;
 let env;
 try{
 env =
-await import("./supabase-env.js?v=4");
+await import("./supabase-env.js?v=5");
 }catch{
 return false;
 }
@@ -3156,7 +3156,7 @@ let env;
 
 try{
 env =
-await import("./supabase-env.js?v=4");
+await import("./supabase-env.js?v=5");
 }catch{
 return false;
 }
@@ -3869,7 +3869,7 @@ let env;
 
 try{
 env =
-await import("./supabase-env.js?v=4");
+await import("./supabase-env.js?v=5");
 }catch{
 return false;
 }
@@ -4663,7 +4663,7 @@ let env;
 
 try{
 env =
-await import("./supabase-env.js?v=4");
+await import("./supabase-env.js?v=5");
 }catch{
 return null;
 }

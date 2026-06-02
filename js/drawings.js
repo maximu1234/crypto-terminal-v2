@@ -63,6 +63,11 @@ recordDrawingTombstone
 } from "./drawings-storage.js?v=6";
 
 import {
+registerDrawingsStoragePoller,
+touchDrawingsStorageSnap
+} from "./drawings-storage-poller.js?v=1";
+
+import {
 formatPrice,
 chartScaleFont,
 CHART_SCALE_LABEL_PAD_LEFT,
@@ -4070,6 +4075,14 @@ onPlacementPointerMove,
 true
 );
 
+return ()=>{
+wrapEl.removeEventListener(
+"pointermove",
+onPlacementPointerMove,
+true
+);
+};
+
 }
 
 function setupFinePointerChartClicks(){
@@ -4077,12 +4090,10 @@ function setupFinePointerChartClicks(){
 if(
 !tabletCustomPanHooked
 ){
-return;
+return ()=>{};
 }
 
-wrapEl.addEventListener(
-"pointerdown",
-e=>{
+const onFinePointerDown = e=>{
 
 if(
 !alive ||
@@ -4147,9 +4158,21 @@ true;
 
 e.preventDefault();
 
-},
+};
+
+wrapEl.addEventListener(
+"pointerdown",
+onFinePointerDown,
 true
 );
+
+return ()=>{
+wrapEl.removeEventListener(
+"pointerdown",
+onFinePointerDown,
+true
+);
+};
 
 }
 
@@ -7662,6 +7685,17 @@ window.addEventListener("pointermove", onEditMove);
 window.addEventListener("pointerup", onEditUp);
 window.addEventListener("pointercancel", onEditUp);
 
+return ()=>{
+wrapEl.removeEventListener(
+"pointerdown",
+onEditDown,
+true
+);
+window.removeEventListener("pointermove", onEditMove);
+window.removeEventListener("pointerup", onEditUp);
+window.removeEventListener("pointercancel", onEditUp);
+};
+
 }
 
 /**
@@ -7672,7 +7706,7 @@ function setupCoarseTouchChartGuard(){
 if(
 !isCoarseTouchViewport()
 ){
-return;
+return ()=>{};
 }
 
 const cap = {
@@ -7822,6 +7856,19 @@ onTouchMove,
 cap
 );
 
+return ()=>{
+wrapEl.removeEventListener(
+"touchstart",
+onTouchStart,
+cap
+);
+wrapEl.removeEventListener(
+"touchmove",
+onTouchMove,
+cap
+);
+};
+
 }
 
 function setupTouchDrawCrosshair(){
@@ -7957,6 +8004,29 @@ onTouchPlaceUp,
 true
 );
 
+return ()=>{
+wrapEl.removeEventListener(
+"pointerdown",
+onTouchPlaceDown,
+true
+);
+wrapEl.removeEventListener(
+"pointermove",
+onTouchPlaceMove,
+true
+);
+wrapEl.removeEventListener(
+"pointerup",
+onTouchPlaceUp,
+true
+);
+wrapEl.removeEventListener(
+"pointercancel",
+onTouchPlaceUp,
+true
+);
+};
+
 }
 
 function setupContextMenu(){
@@ -8075,7 +8145,7 @@ contextMenuEl.classList.remove("hidden");
 
 });
 
-document.addEventListener("click", e=>{
+const onContextDocClick = e=>{
 
 if(
 !contextMenuEl.contains(e.target)
@@ -8083,17 +8153,29 @@ if(
 hideContextMenu();
 }
 
-});
+};
 
-document.addEventListener("keydown", e=>{
+const onContextDocKeydown = e=>{
 
 if(e.key === "Escape"){
 hideContextMenu();
 }
 
-});
+};
 
-return hideContextMenu;
+document.addEventListener("click", onContextDocClick);
+document.addEventListener("keydown", onContextDocKeydown);
+
+const dispose = ()=>{
+hideContextMenu();
+document.removeEventListener("click", onContextDocClick);
+document.removeEventListener("keydown", onContextDocKeydown);
+};
+
+return {
+hide: hideContextMenu,
+dispose
+};
 
 }
 
@@ -10238,7 +10320,7 @@ toggleAlertOnShape(sel);
 function initFloatingBar(){
 
 if(!styleBar || !wrapEl){
-return;
+return ()=>{};
 }
 
 const key = barPosKey;
@@ -10425,6 +10507,13 @@ window.addEventListener("pointerup", onBarUp);
 window.addEventListener("pointercancel", onBarUp);
 document.addEventListener("click", onDocClick);
 
+return ()=>{
+window.removeEventListener("pointermove", onBarMove);
+window.removeEventListener("pointerup", onBarUp);
+window.removeEventListener("pointercancel", onBarUp);
+document.removeEventListener("click", onDocClick);
+};
+
 }
 
 function syncPopoversPosition(){
@@ -10435,7 +10524,6 @@ positionPopover(settingsPopover, 40);
 
 }
 
-initFloatingBar();
 initStylePopovers();
 if(
 !useChartProbeCrosshair()
@@ -10445,17 +10533,32 @@ wrapEl
 );
 }
 
+const teardownFloatingBar =
+initFloatingBar();
+
+const teardownEditInteraction =
 setupEditInteraction();
+
+const teardownCoarseTouchGuard =
 setupCoarseTouchChartGuard();
+
+const teardownTouchDrawCrosshair =
 setupTouchDrawCrosshair();
+
+const teardownFinePointerClicks =
 setupFinePointerChartClicks();
+
+const teardownPlacementPreview =
 setupPlacementPointerPreview();
 
 const teardownChartPanRedraw =
 setupChartPanRedraw();
 
-const hideContextMenu =
+const contextMenuCtrl =
 setupContextMenu();
+
+const hideContextMenu =
+contextMenuCtrl.hide;
 
 const onDrawingsUpdated = e=>{
 
@@ -10496,28 +10599,34 @@ return;
 
 loadDrawings();
 reconcileDrawingAlertsFromRegistry();
-redraw();
 scheduleRedraw();
 updateStyleBar();
 touchStorageSnap();
 
 };
 
-let lastStorageSnap =
-"";
-
 function touchStorageSnap(){
 
-try{
-lastStorageSnap =
-localStorage.getItem(
+touchDrawingsStorageSnap(
 storageKey()
-) ||
-"[]";
-}catch{
-lastStorageSnap =
-"[]";
+);
+
 }
+
+function syncDrawingsFromStorageIfChanged(){
+
+if(
+!alive ||
+!canUseDrawings()
+){
+return;
+}
+
+applyRemoteDrawingsToChart(
+[
+getSymbol()
+]
+);
 
 }
 
@@ -10609,7 +10718,6 @@ return;
 resizeCanvas();
 loadDrawings();
 reconcileDrawingAlertsFromRegistry();
-redraw();
 scheduleRedraw();
 updateStyleBar();
 touchStorageSnap();
@@ -10619,45 +10727,6 @@ startCoordRetryBurst();
 
 function syncDrawingsFromStorageNow(){
 
-applyRemoteDrawingsToChart(
-[
-getSymbol()
-]
-);
-
-}
-
-function syncDrawingsFromStorageIfChanged(){
-
-if(
-!alive ||
-!canUseDrawings()
-){
-return;
-}
-
-let raw =
-"[]";
-
-try{
-raw =
-localStorage.getItem(
-storageKey()
-) ||
-"[]";
-}catch{
-return;
-}
-
-if(
-raw ===
-lastStorageSnap
-){
-return;
-}
-
-lastStorageSnap =
-raw;
 applyRemoteDrawingsToChart(
 [
 getSymbol()
@@ -10690,6 +10759,19 @@ null
 );
 }
 );
+
+};
+
+const onVisibilityChange = ()=>{
+
+if(
+document.visibilityState ===
+"visible"
+){
+refreshDrawingsOnTabWake();
+}else{
+touchStorageSnap();
+}
 
 };
 
@@ -10753,18 +10835,7 @@ onChartCandlesLoaded
 
 document.addEventListener(
 "visibilitychange",
-()=>{
-
-if(
-document.visibilityState ===
-"visible"
-){
-refreshDrawingsOnTabWake();
-}else{
-touchStorageSnap();
-}
-
-}
+onVisibilityChange
 );
 
 window.addEventListener(
@@ -10772,22 +10843,14 @@ window.addEventListener(
 refreshDrawingsOnTabWake
 );
 
-let storageSyncTimer =
-setInterval(
-()=>{
-
-if(
-document.visibilityState !==
-"visible"
-){
-return;
-}
-
-syncDrawingsFromStorageIfChanged();
-
-},
-400
-);
+const unregisterStoragePoller =
+registerDrawingsStoragePoller({
+getKey: storageKey,
+shouldRun: ()=>
+alive &&
+canUseDrawings(),
+onChanged: syncDrawingsFromStorageIfChanged
+});
 
 const onPriceAlertsChanged =
 e=>{
@@ -11028,9 +11091,7 @@ window.addEventListener(
 onAlertsChanged
 );
 
-window.addEventListener(
-"pagehide",
-()=>{
+const onPageHide = ()=>{
 
 if(!alive){
 return;
@@ -11041,7 +11102,11 @@ getSymbol()
 );
 void flushDrawingsCloudPush();
 
-}
+};
+
+window.addEventListener(
+"pagehide",
+onPageHide
 );
 
 loadToolDefaults();
@@ -11255,6 +11320,14 @@ fibPanelCommitHook = null;
 hideContextMenu?.();
 contextMenuEl?.remove();
 
+teardownFloatingBar?.();
+teardownEditInteraction?.();
+teardownCoarseTouchGuard?.();
+teardownTouchDrawCrosshair?.();
+teardownFinePointerClicks?.();
+teardownPlacementPreview?.();
+contextMenuCtrl?.dispose?.();
+
 window.removeEventListener("keydown", onKeyDown);
 tools.removeEventListener(
 "pointerdown",
@@ -11278,7 +11351,7 @@ onDrawingsCloudChanged
 
 document.removeEventListener(
 "visibilitychange",
-refreshDrawingsOnTabWake
+onVisibilityChange
 );
 
 window.removeEventListener(
@@ -11286,19 +11359,26 @@ window.removeEventListener(
 refreshDrawingsOnTabWake
 );
 
-if(
-storageSyncTimer
-){
-clearInterval(
-storageSyncTimer
-);
-storageSyncTimer =
-null;
-}
+unregisterStoragePoller?.();
 
 window.removeEventListener(
 "alerts-changed",
 onAlertsChanged
+);
+
+window.removeEventListener(
+"alerts-registry-pulled",
+onAlertsRegistryPulled
+);
+
+window.removeEventListener(
+"draw-tools-access-changed",
+onCloudAuthChange
+);
+
+window.removeEventListener(
+"pagehide",
+onPageHide
 );
 
 unsubscribeCloudAuthChange?.();

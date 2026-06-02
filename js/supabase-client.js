@@ -141,7 +141,7 @@ if(envPromise){
 return envPromise;
 }
 
-envPromise = import("./supabase-env.js?v=2")
+envPromise = import("./supabase-env.js?v=5")
 .then(m=>m)
 .catch(()=>({
 SUPABASE_URL:"",

@@ -1,4 +1,5 @@
 /**
- * Единая точка импорта chart.js — версию менять в coins-asset-versions.js (CHART_JS_V).
+ * Единая точка импорта chart.js — версию менять в asset-manifest.js (chart.js).
+ * После правки: node scripts/sync-asset-versions.cjs
  */
-export * from "./chart.js?v=106";
+export * from "./chart.js?v=107";

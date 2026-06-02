@@ -59,7 +59,7 @@ errorBackoffMs: IS_YANDEX
 
 import {
 readAlertTokenSync
-} from "./alert-auth-cache.js?v=6";
+} from "./alert-auth-cache.js?v=7";
 
 import {
 getSupabase
@@ -627,7 +627,7 @@ let env;
 
 try{
 env =
-await import("./supabase-env.js?v=4");
+await import("./supabase-env.js?v=5");
 }catch{
 return false;
 }
@@ -1146,7 +1146,7 @@ let env;
 
 try{
 env =
-await import("./supabase-env.js?v=4");
+await import("./supabase-env.js?v=5");
 }catch{
 return null;
 }
@@ -1454,7 +1454,7 @@ let env;
 
 try{
 env =
-await import("./supabase-env.js?v=4");
+await import("./supabase-env.js?v=5");
 }catch{
 return false;
 }
@@ -1806,7 +1806,7 @@ let env;
 
 try{
 env =
-await import("./supabase-env.js?v=4");
+await import("./supabase-env.js?v=5");
 }catch{
 return;
 }

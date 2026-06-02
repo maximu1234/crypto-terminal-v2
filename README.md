@@ -73,6 +73,18 @@ sounds/                — cute_msg_alert.mp3 (звук срабатывания
   trade-calculator.js, symbol-autocomplete.js, draw-ui-shared.js
 ```
 
-## Версии скриптов
+## Версии скриптов и стилей
 
-В HTML указаны `?v=…` для сброса кэша после обновлений. При правках увеличивайте номер у изменённого файла.
+Единый реестр: **`js/asset-manifest.js`** (объект `ASSETS`).
+
+После правок в manifest:
+
+```bash
+node scripts/sync-asset-versions.cjs          # применить версии ко всем js/html
+node scripts/sync-asset-versions.cjs bump chart.js   # +1 и sync
+node scripts/sync-asset-versions.cjs list     # список
+```
+
+`coins-asset-versions.js` — алиасы для boot `/coins` (deprecated, см. `asset-manifest.js`).
+
+Жёсткое обновление в браузере (Cmd+Shift+R) после деплоя.

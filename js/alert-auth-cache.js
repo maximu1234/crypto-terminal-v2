@@ -452,7 +452,7 @@ export async function resolveAlertAuthFast() {
 
   try{
     const env =
-    await import("./supabase-env.js?v=4");
+    await import("./supabase-env.js?v=5");
 
     const url =
     String(env.SUPABASE_URL || "").trim();
