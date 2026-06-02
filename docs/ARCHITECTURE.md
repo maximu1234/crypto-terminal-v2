@@ -12,11 +12,11 @@
 
 | Facade | Подмодули |
 |--------|-----------|
-| `alerts-cloud-sync.js` | `alerts-cloud/{debug,telegram-id,worker-client,registry-sync,polling-realtime}.js` |
-| `drawings-cloud-sync.js` | `drawings-cloud/{worker-client,pull-reconcile,sync-lifecycle}.js` |
+| `alerts-cloud-sync.js` | монолит в проде; подмодули `alerts-cloud/*` подготовлены, wiring — TODO |
+| `drawings-cloud-sync.js` | монолит в проде; подмодули `drawings-cloud/*` подготовлены, wiring — TODO |
 | `chart.js` | `chart/{chart-options,chart-dom-crosshair,chart-factory}.js` |
 | `terminal.js` | `terminal/{coins-state,coins-prefs,coins-table}.js` |
-| `drawings.js` | `drawings/{init,draw-render,draw-hit,fib-spec,…}.js`, `drawings-tablet-input.js` |
+| `drawings.js` | `drawings/{init,fib-spec,…}.js`; `draw-render`, `draw-hit`, `drawings-tablet-input` — подготовлены, wiring — TODO |
 
 ## Performance
 
@@ -42,4 +42,6 @@ node scripts/check-site-nav.cjs
 
 ## Откат
 
-`metka-4` — см. [MARKER_4.md](./MARKER_4.md).
+**Текущий эталон:** `metka-5` — [MARKER_5.md](./MARKER_5.md).
+
+`metka-4` — [MARKER_4.md](./MARKER_4.md) (до site-wide refactor + CI).
