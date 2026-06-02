@@ -5,7 +5,7 @@ STROKE,
 FIB_TOOL_DEFAULTS_VERSION,
 FIB_LINE_DASH,
 WIDTH_OPTIONS
-} from "./constants.js";
+} from "./constants.js?v=1";
 
 const FIB_LINE_STYLE_OPTIONS = [
 { value: "solid", label: "Line" },

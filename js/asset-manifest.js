@@ -24,7 +24,7 @@ Object.freeze({
 "chart-page.js":
 5,
 "terminal.js":
-252,
+253,
 "dashboard.js":
 72,
 "screener.js":
@@ -48,15 +48,15 @@ Object.freeze({
 "chart-tablet-gestures.js":
 14,
 "drawings.js":
-180,
+181,
 "drawings/init.js":
-2,
+3,
 "drawings/constants.js":
 1,
 "drawings/math.js":
 1,
 "drawings/fib-spec.js":
-2,
+3,
 "drawings/fib-portals.js":
 1,
 "drawings/position.js":

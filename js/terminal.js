@@ -1214,12 +1214,10 @@ clientY
 
 }
 
-);
-
-}
-
 /* =========================================================
-   SYMBOLS
+   CHART INIT (price scale, RSI)
+========================================================= */
+
 const priceScaleTouchHooks = {
 getFallbackPriceRange(){
 return getVisibleCandlesPriceRange(

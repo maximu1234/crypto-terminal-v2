@@ -102,13 +102,13 @@ POSITION_DEFAULT_TP_ZONE_PX,
 POSITION_DEFAULT_SL_ZONE_PX,
 POSITION_DEFAULT_WIDTH_BARS,
 POSITION_RR_LABEL_SAMPLE
-} from "./constants.js";
+} from "./constants.js?v=1";
 
 import {
 uid,
 distToSegment,
 distToRect
-} from "./math.js";
+} from "./math.js?v=1";
 
 import {
 normalizeFibLineStyle,
@@ -131,7 +131,7 @@ getFibRows,
 isSeriesLogarithmic,
 setFibLineStyleButton,
 setFibLevelWidthButton
-} from "./fib-spec.js";
+} from "./fib-spec.js?v=3";
 
 import {
 setFibPanelCommitHook,
@@ -147,16 +147,16 @@ isFibLineWidthMenuOpenForAnchor,
 fibPortalHitTest,
 retainFibPortals,
 releaseFibPortals
-} from "./fib-portals.js";
+} from "./fib-portals.js?v=1";
 
 import {
 isPositionType,
 positionEntryPrice
-} from "./position.js";
+} from "./position.js?v=1";
 
 import {
 pickUi
-} from "./utils.js";
+} from "./utils.js?v=1";
 
 export function initDrawings({
 
