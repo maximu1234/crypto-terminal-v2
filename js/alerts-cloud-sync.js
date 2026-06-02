@@ -10,7 +10,7 @@ isCloudLoggedIn,
 isCloudLoggedInEffective,
 onCloudSyncChange,
 ensureCloudLoginResolved
-} from "./cloud-sync.js?v=30";
+} from "./cloud-sync.js?v=31";
 
 import {
 getCachedAlertAuth,
@@ -5420,7 +5420,7 @@ return 0;
 
 try{
 const { ensureCloudLoginResolved } =
-await import("./cloud-sync.js?v=30");
+await import("./cloud-sync.js?v=31");
 
 await ensureCloudLoginResolved(
 8000

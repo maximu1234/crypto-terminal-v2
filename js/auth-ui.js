@@ -8,7 +8,7 @@ signInWithEmailOtp,
 signOutCloud,
 recoverAuthSessionFromUrl,
 hasAuthCallbackInUrl
-} from "./cloud-sync.js?v=30";
+} from "./cloud-sync.js?v=31";
 
 import {
 isSupabaseConfigured

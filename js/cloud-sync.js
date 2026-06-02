@@ -118,10 +118,25 @@ reason
 authRefreshBlockedUntil =
 blockAuthRefreshUntil();
 
+const persisted =
+readPersistedAuthSession();
+
+const accessStillOk =
+!!(
+persisted?.access_token &&
+!isAccessTokenExpired(
+persisted
+)
+);
+
+if(
+!accessStillOk
+){
 warnAuthOnce(
 "auth-degraded",
 `[auth] ${reason} — войдите снова через шестерёнку`
 );
+}
 
 }
 
@@ -506,6 +521,18 @@ return false;
 
 if(
 !isCloudLoggedInEffective()
+){
+return false;
+}
+
+const persisted =
+readPersistedAuthSession();
+
+if(
+persisted?.access_token &&
+!isAccessTokenExpired(
+persisted
+)
 ){
 return false;
 }

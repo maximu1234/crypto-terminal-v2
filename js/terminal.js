@@ -31,7 +31,7 @@ ensureCloudReady
 import {
 persistFavoritesToCloud,
 onFavoritesRemoteUpdate
-} from "./cloud-sync.js?v=30";
+} from "./cloud-sync.js?v=31";
 
 import {
 createCandlestickChart,
