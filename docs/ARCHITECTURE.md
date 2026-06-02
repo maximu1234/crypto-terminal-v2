@@ -42,6 +42,4 @@ node scripts/check-site-nav.cjs
 
 ## Откат
 
-**Текущий эталон:** `metka-5` — [MARKER_5.md](./MARKER_5.md).
-
-`metka-4` — [MARKER_4.md](./MARKER_4.md) (до site-wide refactor + CI).
+**Текущий эталон:** `metka-7` — [MARKER_7.md](./MARKER_7.md) (самая рабочая версия, июнь 2026).
