@@ -87,6 +87,96 @@ const defaultSymbols = [
 
 const widgets = [];
 
+/** ~3×1000 свечей — хватает для zoom до 900 баров + прокрутка; меньше нагрузки на proxy. */
+const DASHBOARD_HISTORY_BATCHES =
+3;
+
+/** Смещение старта загрузки виджетов — не шторм из 9×N запросов сразу. */
+const DASHBOARD_STAGGER_MS =
+150;
+
+/** Одновременно не больше N историй Bybit (остальные ждут слот). */
+const DASHBOARD_MAX_CONCURRENT_LOADS =
+4;
+
+const DASHBOARD_BATCH_GAP_MS =
+50;
+
+let dashboardLoadInflight =
+0;
+
+const dashboardLoadWaiters =
+[];
+
+function sleep(
+ms
+){
+
+return new Promise(
+resolve=>{
+setTimeout(
+resolve,
+ms
+);
+}
+);
+
+}
+
+function acquireDashboardLoadSlot(){
+
+if(
+dashboardLoadInflight <
+DASHBOARD_MAX_CONCURRENT_LOADS
+){
+dashboardLoadInflight++;
+return Promise.resolve();
+}
+
+return new Promise(
+resolve=>{
+dashboardLoadWaiters.push(
+resolve
+);
+}
+).then(
+()=>{
+dashboardLoadInflight++;
+}
+);
+
+}
+
+function releaseDashboardLoadSlot(){
+
+dashboardLoadInflight =
+Math.max(
+0,
+dashboardLoadInflight -
+1
+);
+
+const next =
+dashboardLoadWaiters.shift();
+
+if(
+next
+){
+next();
+}
+
+}
+
+function reloadAllDashboardWidgets(){
+
+widgets.forEach(
+w=>{
+w.loadData?.();
+}
+);
+
+}
+
 function destroyAllWidgets(){
 
 widgets.forEach(w=>{
@@ -354,7 +444,36 @@ const symbol = getSymbol();
 const tf = getTf();
 const seq = ++loadSeq.id;
 
-saveWidgetState(index, symbol, tf);
+saveWidgetState(
+index,
+symbol,
+tf
+);
+
+await sleep(
+index *
+DASHBOARD_STAGGER_MS
+);
+
+if(
+seq !== loadSeq.id
+){
+return;
+}
+
+await acquireDashboardLoadSlot();
+
+let loadSlotHeld =
+true;
+
+if(
+seq !== loadSeq.id
+){
+releaseDashboardLoadSlot();
+loadSlotHeld =
+false;
+return;
+}
 
 try{
 
@@ -362,22 +481,51 @@ const data =
 await loadBybitHistory(
 symbol,
 tf,
-6,
-{ parallel: true }
+DASHBOARD_HISTORY_BATCHES,
+{
+parallel: true,
+batchGapMs: DASHBOARD_BATCH_GAP_MS
+}
 );
 
-if(seq !== loadSeq.id){
+if(
+seq !== loadSeq.id
+){
 return;
 }
 
 candles = data;
-entry.setCandles(data);
+entry.setCandles(
+data
+);
 
 entry.unsubKline?.();
 
-if(!candles.length){
-return;
+if(
+!candles.length
+){
+
+widget.classList.add(
+"widget-chart-empty"
+);
+
+void import("./bybit-network-ui.js?v=2").then(
+m=>{
+m.showBybitNetworkIssue(
+new Error(
+"История свечей Bybit пуста"
+)
+);
 }
+);
+
+return;
+
+}
+
+widget.classList.remove(
+"widget-chart-empty"
+);
 
 series.setData(candles);
 
@@ -476,9 +624,29 @@ widget,
 symbol
 );
 
-}catch(err){
+}catch(
+err
+){
 
-console.error("Dashboard widget load:", err);
+if(
+seq === loadSeq.id
+){
+widget.classList.add(
+"widget-chart-empty"
+);
+console.error(
+"Dashboard widget load:",
+err
+);
+}
+
+}finally{
+
+if(
+loadSlotHeld
+){
+releaseDashboardLoadSlot();
+}
 
 }
 
@@ -679,3 +847,8 @@ new CustomEvent(
 console.error("Dashboard chart lib:", err);
 
 });
+
+window.addEventListener(
+"bybit-network-retry",
+reloadAllDashboardWidgets
+);

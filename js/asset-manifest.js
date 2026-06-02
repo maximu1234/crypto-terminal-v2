@@ -32,7 +32,7 @@ Object.freeze({
 "telegram-bot-public.js":
 1,
 "dashboard.js":
-72,
+73,
 "screener.js":
 64,
 "site-boot.js":
