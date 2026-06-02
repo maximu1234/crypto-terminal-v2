@@ -8414,42 +8414,37 @@ placement.type ===
 "fib"
 ){
 
-const previewAnchor =
-previewPoint &&
-Number.isFinite(previewPoint.time) &&
-Number.isFinite(previewPoint.price)
-? previewPoint
-: pointFromXY(
-previewXYPoint.x,
-previewXYPoint.y
+const a =
+toXY(
+pts[
+0
+]
 );
 
 if(
-!previewAnchor
+a
 ){
-return;
-}
 
-const previewShape =
-{
-type: placement.type,
-color: style.color,
-lineWidth: style.lineWidth,
-fibLevels:
-ensureFibLevelsVisible(
-style.fibLevels
-),
-fibShowTrendLine: style.fibShowTrendLine,
-p1: pts[0],
-p2: previewAnchor
-};
-
-drawShape(
+drawAnchorCircle(
 ctx,
-previewShape,
-w,
-h
+a.x,
+a.y
 );
+
+/* До второй точки — только диагональ (как trendline). Полный drawFib
+   при совпадающих p1/p2 даёт fibLevelXSpan на всю ширину → мигающая
+   горизонталь 0.5 (и др.) через весь график. */
+drawLine(
+ctx,
+a.x,
+a.y,
+previewXYPoint.x,
+previewXYPoint.y,
+style.color,
+style.lineWidth
+);
+
+}
 
 return;
 
