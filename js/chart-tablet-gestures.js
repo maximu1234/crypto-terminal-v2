@@ -29,9 +29,28 @@ allowMousePan = ()=>false,
 onHoldStart = ()=>{},
 onHoldEnd = ()=>{},
 onProbeAt = ()=>{},
+onDocked = ()=>{},
 onPanStart = ()=>{}
 } = {}
 ){
+
+function fireProbeAt(
+clientX,
+clientY
+){
+
+lastProbeClientX =
+clientX;
+
+lastProbeClientY =
+clientY;
+
+onProbeAt(
+clientX,
+clientY
+);
+
+}
 
 const noop =
 ()=>{};
@@ -102,6 +121,16 @@ false;
 /** iOS: и pointerup, и touchend — снимаем probe один раз */
 let crosshairReleaseHandled =
 false;
+
+/** После dock игнорируем touchend того же касания (иначе сразу endCrosshair) */
+let dockSuppressTouchEndUntil =
+0;
+
+let lastProbeClientX =
+0;
+
+let lastProbeClientY =
+0;
 
 /** Повторное касание по chart-wrap при уже закреплённом probe */
 let crosshairFromDock =
@@ -290,6 +319,10 @@ onHoldEnd();
 
 function dockCrosshair(){
 
+dockSuppressTouchEndUntil =
+Date.now() +
+450;
+
 mode =
 "crosshair-docked";
 
@@ -338,6 +371,15 @@ return;
 crosshairFromDock =
 false;
 dockCrosshair();
+
+try{
+onDocked(
+lastProbeClientX,
+lastProbeClientY
+);
+}catch{
+/* ignore */
+}
 
 }
 
@@ -516,7 +558,7 @@ touchLayerEl.classList.add(
 
 onHoldStart();
 
-onProbeAt(
+fireProbeAt(
 startClientX,
 startClientY
 );
@@ -658,7 +700,7 @@ crosshairMoved = true;
 
 e.preventDefault();
 e.stopImmediatePropagation?.();
-onProbeAt(
+fireProbeAt(
 e.clientX,
 e.clientY
 );
@@ -699,7 +741,7 @@ return;
 
 e.preventDefault();
 e.stopImmediatePropagation?.();
-onProbeAt(
+fireProbeAt(
 t.clientX,
 t.clientY
 );
@@ -944,7 +986,7 @@ mode =
 
 attachDocListeners();
 
-onProbeAt(
+fireProbeAt(
 e.clientX,
 e.clientY
 );
@@ -1139,6 +1181,13 @@ mode !==
 "crosshair-docked" ||
 e.touches.length >
 0
+){
+return;
+}
+
+if(
+Date.now() <
+dockSuppressTouchEndUntil
 ){
 return;
 }

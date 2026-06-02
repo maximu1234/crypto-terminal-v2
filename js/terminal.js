@@ -47,24 +47,19 @@ applyTabletMainChartScroll,
 markTabletChartBody,
 mountTabletPriceScaleTouch,
 getVisibleCandlesPriceRange,
-mountChartRangeFreeze,
 positionTabletProbeCrosshair,
 hideTabletProbeCrosshair,
-ensureTabletProbeHorizLine,
-tabletProbeCrosshairOptions,
-hiddenCrosshairOptions,
-normalCrosshairOptions,
 mountAxisDoubleTapReset,
 TABLET_USE_CUSTOM_TOUCH_PAN,
 isTabletChartViewport,
-hasAnyFinePointer,
 isUserCrosshairEvent,
 resetChartPriceAutoScale
 } from "./chart-import.js?v=13";
 
 import {
-createTabletGesturePolicy
-} from "./tablet-gesture-policy.js?v=1";
+isCoinsTabletV2Enabled,
+mountCoinsTabletController
+} from "./coins-tablet-controller.js?v=1";
 
 import {
 disconnectKlineStream
@@ -831,9 +826,12 @@ let unmountTabletGestures =
 let unmountTabletCrosshair =
 ()=>{};
 
-/** iPad: true пока удержание активировало перекрестие (блокирует pan) */
-let tabletCrosshairProbe =
-false;
+/** iPad: true пока удержание probe (блокирует sync RSI pan) */
+function isTabletCrosshairProbeLocked(){
+
+return !!coinsTabletCtrl?.getProbeActive?.();
+
+}
 
 let abortTabletPan =
 ()=>{};
@@ -841,26 +839,8 @@ let abortTabletPan =
 let cancelTabletPanGesture =
 ()=>{};
 
-function emitChartProbeCrosshair(
-active,
-clientX = null,
-clientY = null
-){
-
-window.dispatchEvent(
-new CustomEvent(
-"chart-probe-crosshair",
-{
-detail:{
-active: !!active,
-clientX,
-clientY
-}
-}
-)
-);
-
-}
+let coinsTabletCtrl =
+null;
 
 /* =========================================================
    CHART INIT (price scale, RSI)
@@ -1434,232 +1414,52 @@ TABLET_USE_CUSTOM_TOUCH_PAN &&
 isTabletChartViewport()
 ){
 
-const tabletPolicy =
-createTabletGesturePolicy({
-chartWrap: document.getElementById(
-"chart-wrap"
-),
-getDrawingTools: ()=> drawingTools,
-getProbeActive: ()=> tabletCrosshairProbe
-});
-
-void import(
-"./chart-tablet-gestures.js?v=15"
-).then(
-({ mountTabletChartGestures })=>{
-
-function tabletHoldShouldBegin(
-e
-){
-
-return tabletPolicy.shouldBeginGesture(
-e
-);
-
-}
-
-const chartsStackEl =
-document.getElementById(
-"charts-stack"
-);
-
-const probeHorizEl =
-ensureTabletProbeHorizLine(
-chartsStackEl
-);
-
-const linkedVertEl =
-document.getElementById(
-"linked-crosshair-vert"
-);
-
-const crosshairTimeLabelEl =
-document.getElementById(
-"crosshair-time-label"
-);
-
-const mainRangeFreeze =
-mountChartRangeFreeze(
-chart
-);
-
-const rsiRangeFreeze =
-mountChartRangeFreeze(
-rsiChart
-);
-
-const tabletGestureCtrl =
-mountTabletChartGestures(
+void mountCoinsTabletController({
+v2: isCoinsTabletV2Enabled(),
 chart,
 chartEl,
 chartTouchLayerEl,
-{
-allowMousePan:()=>
-isTabletChartViewport() &&
-hasAnyFinePointer(),
-shouldBeginGesture:tabletHoldShouldBegin,
-shouldAllowPan:()=>
-tabletPolicy.shouldAllowPan(),
-shouldAllowPinch:()=>
-tabletPolicy.shouldAllowPinch(),
-blockChartScroll:()=>tabletCrosshairProbe,
-onHoldStart:()=>{
-setTabletPanSuspended?.(
-true
-);
-tabletCrosshairProbe = true;
-document.getElementById(
-"chart-wrap"
-)?.classList.add(
-"chart-touch-locked"
-);
-mainRangeFreeze.freeze();
-rsiRangeFreeze.freeze();
-try{
-chart.clearCrosshairPosition();
-rsiChart.clearCrosshairPosition();
-}catch{
-/* ignore */
-}
-emitChartProbeCrosshair(false);
-chart.applyOptions({
-crosshair:tabletProbeCrosshairOptions(),
-handleScroll:{
-mouseWheel:false,
-pressedMouseMove:false,
-horzTouchDrag:false,
-vertTouchDrag:false
-},
-handleScale:{
-mouseWheel:false,
-pinch:false,
-axisPressedMouseMove:{
-time:false,
-price:false
-}
-}
-});
-rsiChart.applyOptions({
-crosshair:hiddenCrosshairOptions(),
-handleScroll:{
-mouseWheel:false,
-pressedMouseMove:false,
-horzTouchDrag:false,
-vertTouchDrag:false
-},
-handleScale:{
-mouseWheel:false,
-pinch:false,
-axisPressedMouseMove:{
-time:false,
-price:false
-}
-}
-});
-},
-onHoldEnd:()=>{
-setTabletPanSuspended?.(
-false
-);
-tabletCrosshairProbe = false;
-document.getElementById(
-"chart-wrap"
-)?.classList.remove(
-"chart-touch-locked"
-);
-mainRangeFreeze.unfreeze();
-rsiRangeFreeze.unfreeze();
-try{
-chart.clearCrosshairPosition();
-}catch{
-/* ignore */
-}
-
-hideTabletProbeCrosshair({
-linkedVertEl,
-horizLineEl:probeHorizEl,
-timeLabelEl:crosshairTimeLabelEl,
-onClear(){
+chartWrapEl,
+rsiChart,
+candleSeries,
+getDrawingTools: ()=> drawingTools,
+updateRsiHudFromCrosshairTime,
+getRsiHudFallbackValue(){
 const last =
 rsiPointsCache[
 rsiPointsCache.length -
 1
 ];
 
-setRsiHudValue(
+return (
 last?.value ??
 null
 );
-}
-});
-emitChartProbeCrosshair(false);
-try{
-chart.applyOptions({
-crosshair:normalCrosshairOptions()
-});
-}catch{
-/* ignore */
-}
-applyTabletMainChartScroll(
-chart
-);
-applyTabletRsiChartOptions(
-rsiChart
-);
 },
-onProbeAt(
-clientX,
-clientY
-){
-positionTabletProbeCrosshair({
-chart,
-series:candleSeries,
-chartEl,
-chartsStackEl,
-linkedVertEl,
-horizLineEl:probeHorizEl,
-timeLabelEl:crosshairTimeLabelEl,
-clientX,
-clientY,
-onTime:updateRsiHudFromCrosshairTime
-});
-emitChartProbeCrosshair(
-true,
-clientX,
-clientY
-);
-}
-}
-);
+setRsiHudValue
+}).then(
+ctrl=>{
+
+coinsTabletCtrl =
+ctrl;
 
 abortTabletPan =
-tabletGestureCtrl.abortPan;
+ctrl.abortPan;
 
 cancelTabletPanGesture =
-tabletGestureCtrl.cancelCurrentGesture;
-
-const setTabletPanSuspended =
-tabletGestureCtrl.setPanSuspended;
-
-window.addEventListener(
-"chart-probe-crosshair-clear-request",
-()=>{
-tabletGestureCtrl.deactivateProbe?.();
-emitChartProbeCrosshair(false);
-}
-);
+ctrl.cancelCurrentGesture;
 
 unmountTabletGestures =
-tabletGestureCtrl.dispose;
+ctrl.dispose;
 
 unmountTabletCrosshair =
-unmountTabletGestures;
+ctrl.dispose;
 
 }
 ).catch(
 err=>{
 console.warn(
-"Tablet chart gestures:",
+"Coins tablet controller:",
 err
 );
 }
@@ -2303,7 +2103,7 @@ chart,
 rsiChart,
 layoutRsiBand,
 {
-isLocked:()=>tabletCrosshairProbe
+isLocked: isTabletCrosshairProbeLocked
 }
 );
 
