@@ -17,7 +17,7 @@ scheduleDevicePull
 import {
 initAlertsCloudSync,
 scheduleRegistryCloudSync
-} from "./alerts-cloud-sync.js?v=106";
+} from "./alerts-cloud-sync.js?v=107";
 
 import {
 stripAlertFlagsNotInRegistry

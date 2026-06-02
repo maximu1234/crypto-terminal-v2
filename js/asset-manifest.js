@@ -166,7 +166,7 @@ Object.freeze({
 "alerts.js":
 97,
 "alerts-cloud-sync.js":
-106,
+107,
 "alerts-cloud/debug.js":
 1,
 "alerts-cloud/telegram-id.js":

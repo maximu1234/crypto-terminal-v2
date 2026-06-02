@@ -55,11 +55,11 @@ navigator.userAgent || ""
 const coalesceRegistryPull =
 createPullCoalescer({
 minIntervalMs: IS_YANDEX
-? 4000
-: 2000,
+? 8000
+: 3500,
 errorBackoffMs: IS_YANDEX
-? 15000
-: 8000
+? 25000
+: 12000
 });
 
 function isAlertsSyncDebugEnabled(){
@@ -106,6 +106,22 @@ let alertsPullBackoffUntil =
 let lastAlertsPullWarnAt =
 0;
 
+let lastAlertsFetchWarnAt =
+0;
+
+function isBenignAlertsNetworkError(
+msg
+){
+
+return /INSUFFICIENT_RESOURCES|Failed to fetch|NetworkError|Load failed|aborted|HTTP2|ERR_HTTP2|network/i.test(
+String(
+msg ||
+""
+)
+);
+
+}
+
 function warnAlertsPullThrottled(
 ...args
 ){
@@ -115,7 +131,7 @@ Date.now();
 
 if(
 now - lastAlertsPullWarnAt <
-6000
+12000
 ){
 return;
 }
@@ -123,6 +139,51 @@ return;
 lastAlertsPullWarnAt =
 now;
 console.warn(...args);
+
+}
+
+function warnAlertsFetchRestThrottled(
+msg
+){
+
+if(
+isBenignAlertsNetworkError(
+msg
+)
+){
+return;
+}
+
+const now =
+Date.now();
+
+if(
+now - lastAlertsFetchWarnAt <
+15000
+){
+return;
+}
+
+lastAlertsFetchWarnAt =
+now;
+
+console.warn(
+"[alerts] fetch REST:",
+msg
+);
+
+}
+
+function noteAlertsRestStress(
+ms
+){
+
+alertsRestStressUntil =
+Math.max(
+alertsRestStressUntil,
+Date.now() +
+ms
+);
 
 }
 
@@ -150,6 +211,19 @@ Date.now() +
 15 *
 60 *
 1000;
+return;
+}
+
+if(
+isBenignAlertsNetworkError(
+reasonStr
+)
+){
+noteAlertsRestStress(
+IS_YANDEX
+? 30000
+: 15000
+);
 return;
 }
 
@@ -216,19 +290,21 @@ const REGISTRY_SYNC_DEBOUNCE_MS = 200;
 
 const FAST_POLL_MS =
 IS_YANDEX
-? 5000
-: 2500;
+? 9000
+: 4500;
 
 const FAST_POLL_HIDDEN_MS =
 IS_YANDEX
-? 15000
-: 8000;
+? 20000
+: 12000;
 
 const IOS_SAFARI_VISIBLE_PULL_MS =
 3500;
 
 const VISIBLE_PULL_FALLBACK_MS =
-2000;
+IS_YANDEX
+? 12000
+: 6000;
 
 const UNSYNCED_LOCAL_KEEP_MS =
 30000;
@@ -386,9 +462,7 @@ if(
 return;
 }
 
-void pullRegistryFromCloudNow({
-immediate: true
-})
+void pullRegistryFromCloudNow()
 .then(
 async n=>{
 
@@ -688,9 +762,7 @@ payload
 event: "alerts-registry-sync"
 },
 ()=>{
-void pullRegistryFromCloudNow({
-immediate: true
-}).then(
+void pullRegistryFromCloudNow().then(
 n=>{
 if(
 n >
@@ -766,9 +838,7 @@ return;
 lastAlertsPullMs =
 now;
 
-void pullRegistryFromCloudNow({
-immediate: true
-}).catch(
+void pullRegistryFromCloudNow().catch(
 ()=>{}
 );
 
@@ -833,9 +903,7 @@ FAST_POLL_HIDDEN_MS
 ){
 lastAlertsPullMs =
 now;
-void pullRegistryFromCloudNow({
-immediate: true
-}).catch(
+void pullRegistryFromCloudNow().catch(
 ()=>{}
 );
 }
@@ -914,9 +982,7 @@ true;
 void ensureCloudLoginResolved(8000)
 .catch(()=>null)
 .then(()=>
-pullRegistryFromCloudNow({
-immediate: true
-})
+pullRegistryFromCloudNow()
 )
 .catch(()=>{})
 .finally(()=>{
@@ -951,6 +1017,7 @@ false;
 function startVisiblePullFallback(){
 
 if(
+IS_YANDEX ||
 visiblePullFallbackTimer
 ){
 return;
@@ -980,9 +1047,7 @@ true;
 void ensureCloudLoginResolved(8000)
 .catch(()=>null)
 .then(()=>
-pullRegistryFromCloudNow({
-immediate: true
-})
+pullRegistryFromCloudNow()
 )
 .catch(()=>{})
 .finally(()=>{
@@ -4971,13 +5036,11 @@ return Array.isArray(legacyRows)
 }
 }
 
-console.warn(
-"[alerts] fetch REST:",
-res.status,
-errText.slice(
+warnAlertsFetchRestThrottled(
+`${res.status} ${errText.slice(
 0,
 160
-)
+)}`
 );
 return null;
 }
@@ -5001,22 +5064,17 @@ const msg =
 err?.message || err;
 
 if(
-/INSUFFICIENT_RESOURCES/i.test(
-String(
+isBenignAlertsNetworkError(
 msg
 )
-)
 ){
-alertsRestStressUntil =
-Date.now() +
-(
+noteAlertsRestStress(
 IS_YANDEX
-? 20000
-: 10000
+? 30000
+: 15000
 );
 }else{
-console.warn(
-"[alerts] fetch REST:",
+warnAlertsFetchRestThrottled(
 msg
 );
 }
@@ -5075,6 +5133,14 @@ if(
 data ===
 null
 ){
+
+if(
+Date.now() <
+alertsRestStressUntil ||
+isAlertsPullInBackoff()
+){
+return 0;
+}
 
 const ctx =
 await getAuthed();
@@ -5619,17 +5685,11 @@ await ensureCloudLoginResolved(
 /* ignore */
 }
 
-const immediate =
-opts.immediate ===
-true;
-
 let n = 0;
 
 try{
 n =
-immediate
-? await reconcileLocalRegistryWithCloud()
-: await coalesceRegistryPull(
+await coalesceRegistryPull(
 ()=>reconcileLocalRegistryWithCloud()
 );
 }catch(err){
@@ -5727,13 +5787,7 @@ stripFlags: stripOpts
 }
 
 await pushUnsyncedAlerts();
-await pullRegistryFromCloudNow({
-immediate: true
-});
-await pushUnsyncedAlerts();
-await pullRegistryFromCloudNow({
-immediate: true
-});
+await pullRegistryFromCloudNow();
 
 const { stripAlertFlagsNotInRegistry } =
 await import("./alerts.js?v=97");
@@ -5783,9 +5837,7 @@ return;
 
 void pushUnsyncedAlerts()
 .then(
-()=>pullRegistryFromCloudNow({
-immediate: true
-})
+()=>pullRegistryFromCloudNow()
 )
 .catch(
 err=>{
@@ -5920,9 +5972,7 @@ return;
 void ensureCloudLoginResolved(8000)
 .catch(()=>null)
 .then(()=>
-pullRegistryFromCloudNow({
-immediate: true
-})
+pullRegistryFromCloudNow()
 )
 .catch(err=>{
 console.warn(
