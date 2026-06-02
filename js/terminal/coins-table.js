@@ -26,7 +26,8 @@ processAlertCandle
 
 import {
 getFavoriteGroup,
-flagSortRank
+flagSortRank,
+emptyFavorites
 } from "../favorites.js?v=1";
 
 const hooks = {};
@@ -330,6 +331,12 @@ document.getElementById(
 "coins-body"
 );
 
+if(
+!list
+){
+return;
+}
+
 list.innerHTML = "";
 
 coinElements.clear();
@@ -564,17 +571,21 @@ return coinsState().sortAsc
 
 export function sortData(a,b){
 
+const favorites =
+coinsState().favorites ||
+emptyFavorites();
+
 if(coinsState().flagSortActive){
 
 const ar =
 flagSortRank(
-getFavoriteGroup(a.symbol, coinsState().favorites),
+getFavoriteGroup(a.symbol, favorites),
 coinsState().flagSortAsc
 );
 
 const br =
 flagSortRank(
-getFavoriteGroup(b.symbol, coinsState().favorites),
+getFavoriteGroup(b.symbol, favorites),
 coinsState().flagSortAsc
 );
 

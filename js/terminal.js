@@ -2,8 +2,9 @@ import {
 loadBybitHistory,
 loadBybitSymbols,
 loadTwelveData,
-peekBybitSymbolsCache
-} from "./api.js?v=24";
+peekBybitSymbolsCache,
+normalizeBybitSymbolList
+} from "./api.js?v=25";
 
 import {
 filterRecentListings
@@ -1666,16 +1667,57 @@ err
    SYMBOLS
 ========================================================= */
 
-async function initSymbols(){
+async function initSymbols(
+options = {}
+){
 
 const list =
-await loadBybitSymbols();
+await loadBybitSymbols(
+options
+);
 
 allBybitSymbols =
-list.map(x => x.symbol);
+normalizeBybitSymbolList(
+list
+);
 
 newListings =
-filterRecentListings(list).map(x => x.symbol);
+filterRecentListings(
+list
+).map(x=>
+typeof x === "string"
+? x
+: x.symbol
+).filter(Boolean);
+
+}
+
+function restoreSymbolsFromStaleCache(){
+
+if(
+allBybitSymbols.length
+){
+return true;
+}
+
+const stale =
+peekBybitSymbolsCache();
+
+if(
+!stale?.length
+){
+return false;
+}
+
+allBybitSymbols =
+normalizeBybitSymbolList(
+stale
+);
+
+return (
+allBybitSymbols.length >
+0
+);
 
 }
 
@@ -1749,14 +1791,18 @@ return;
 }
 
 allBybitSymbols =
-symbols.map(item=>
-typeof item === "string"
-? item
-: item.symbol
-).filter(Boolean);
+normalizeBybitSymbolList(
+symbols
+);
 
 newListings =
-filterRecentListings(symbols).map(x=>x.symbol);
+filterRecentListings(
+symbols
+).map(x=>
+typeof x === "string"
+? x
+: x.symbol
+).filter(Boolean);
 
 generateMarketData();
 renderList();
@@ -2974,41 +3020,43 @@ try{
 
 await initSymbols();
 
-}catch(err){
+}catch(
+err
+){
 
-console.error(
+console.warn(
 "Terminal symbols:",
 err
 );
 
-if(
-!allBybitSymbols.length
-){
-
-const stale =
-peekBybitSymbolsCache();
-
-if(
-stale?.length
-){
-
-allBybitSymbols =
-stale.map(item=>
-typeof item === "string"
-? item
-: item.symbol
-).filter(Boolean);
-
-}
+restoreSymbolsFromStaleCache();
 
 }
 
 if(
+(
+currentDataset === "crypto" ||
+currentDataset === "new"
+) &&
 !allBybitSymbols.length
 ){
 
-allBybitSymbols = [];
-newListings = [];
+try{
+
+await initSymbols({
+forceNetwork:true
+});
+
+}catch(
+retryErr
+){
+
+console.warn(
+"Terminal symbols retry:",
+retryErr
+);
+
+restoreSymbolsFromStaleCache();
 
 }
 
@@ -3026,7 +3074,20 @@ generateMarketData();
 
 renderList();
 
+try{
+
 await primeTickerSnapshots();
+
+}catch(
+err
+){
+
+console.warn(
+"Terminal tickers:",
+err
+);
+
+}
 
 renderList();
 
@@ -3070,7 +3131,14 @@ currentSymbol || displaySymbol
 
 applyUrlTimeframe();
 
-void refreshCoinsMarketUi();
+await refreshCoinsMarketUi().catch(
+err=>{
+console.warn(
+"Terminal market ui:",
+err
+);
+}
+);
 
 await loadSymbol(
 currentSymbol || displaySymbol || "BTCUSDT"

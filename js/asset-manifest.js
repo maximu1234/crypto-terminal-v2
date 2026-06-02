@@ -22,13 +22,13 @@ Object.freeze({
 "chart-page.js":
 5,
 "terminal.js":
-258,
+259,
 "terminal/coins-state.js":
 1,
 "terminal/coins-prefs.js":
 2,
 "terminal/coins-table.js":
-2,
+3,
 "telegram-bot-public.js":
 1,
 "dashboard.js":
@@ -62,7 +62,7 @@ Object.freeze({
 "drawings.js":
 194,
 "drawings/init.js":
-17,
+18,
 "drawings/constants.js":
 2,
 "drawings/math.js":
@@ -116,7 +116,7 @@ Object.freeze({
 
 /* ── JS: market data ── */
 "api.js":
-24,
+25,
 "bybit-fetch.js":
 10,
 "bybit-listings.js":

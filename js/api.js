@@ -383,6 +383,15 @@ String(s).toUpperCase()
 
 }
 
+/** Нормализация ответа loadBybitSymbols (объекты или строки из кэша). */
+export function normalizeBybitSymbolList(list){
+
+return symbolNamesFromList(
+list
+);
+
+}
+
 /** Сравнение списков инструментов — без лишнего renderPage на главной. */
 export function symbolListSignature(list){
 
