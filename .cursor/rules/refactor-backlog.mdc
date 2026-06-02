@@ -15,7 +15,8 @@ alwaysApply: true
 | 3 | ✅ | Единый asset manifest + `scripts/sync-asset-versions.cjs` |
 | 4 | ✅ | Shared storage poller (`drawings-storage-poller.js`) |
 | 6 | ✅ | Chart widget host (`chart-widget-host.js`) |
-| 5 | ⏳ | **Следующий:** Split `drawings.js` на модули (крупный рефактор) |
+| 5 | ✅ | Split `drawings.js` — фase 1: init + constants/math/fib/position |
+| | | **Следующий:** iPad-1…iPad-4 (см. ниже) |
 
 ## iPad — после split `drawings.js` (пункт 5)
 

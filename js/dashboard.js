@@ -16,7 +16,7 @@ applyDashboardZoom
 
 import {
 createDashboardChartWidget
-} from "./chart-widget-host.js?v=1";
+} from "./chart-widget-host.js?v=2";
 
 import {
 subscribeKline

@@ -36,7 +36,7 @@ Object.freeze({
 "chart-import.js":
 13,
 "chart-widget-host.js":
-1,
+2,
 
 /* ── JS: chart / drawings ── */
 "chart.js":
@@ -44,7 +44,21 @@ Object.freeze({
 "chart-tablet-gestures.js":
 14,
 "drawings.js":
-178,
+179,
+"drawings/init.js":
+1,
+"drawings/constants.js":
+1,
+"drawings/math.js":
+1,
+"drawings/fib-spec.js":
+1,
+"drawings/fib-portals.js":
+1,
+"drawings/position.js":
+1,
+"drawings/utils.js":
+1,
 "drawings-cloud-sync.js":
 32,
 "drawings-storage.js":
