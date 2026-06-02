@@ -7987,7 +7987,7 @@ ctx.setLineDash([]);
 
 }
 
-function drawShape(ctx, shape, w, h){
+function drawShape(ctx, shape, w, h, fibPlacementPreview = false){
 
 const { color, width, dash } =
 shapeStyle(shape);
@@ -8026,7 +8026,7 @@ dash
 }
 
 if(shape.type === "fib"){
-drawFib(ctx, shape, color, width, w);
+drawFib(ctx, shape, color, width, w, fibPlacementPreview);
 }
 
 if(shape.type === "channel"){
@@ -8046,7 +8046,9 @@ shape.id === selectedId
 function fibLevelXSpan(
 a,
 b,
-plotW
+plotW,
+expandNarrowSpan =
+true
 ){
 
 let x1 =
@@ -8060,8 +8062,10 @@ a.x,
 b.x
 );
 
-/* Узкий span (одна свеча) → линия нулевой длины, hit-test по Y всё ещё ловит */
+/* Узкий span (одна свеча) → линия нулевой длины, hit-test по Y всё ещё ловит.
+   При preview — только между якорями, без растягивания на весь график. */
 if(
+expandNarrowSpan &&
 x2 - x1 <
 12
 ){
@@ -8086,7 +8090,9 @@ ctx,
 shape,
 color,
 width,
-plotW
+plotW,
+fibPlacementPreview =
+false
 ){
 
 const a =
@@ -8106,7 +8112,8 @@ labelX
 fibLevelXSpan(
 a,
 b,
-plotW
+plotW,
+!fibPlacementPreview
 );
 
 const useLog =
@@ -8485,7 +8492,8 @@ drawShape(
 ctx,
 previewShape,
 w,
-h
+h,
+true
 );
 
 return;
@@ -8523,7 +8531,7 @@ drawShape(ctx, previewShape, w, h);
 }
 
 if(placement.type === "fib" && previewPts.length >= 2){
-drawShape(ctx, previewShape, w, h);
+drawShape(ctx, previewShape, w, h, true);
 }
 
 }
