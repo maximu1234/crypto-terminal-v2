@@ -5,7 +5,7 @@ coinElements,
 stockSymbols,
 commoditySymbols,
 forexSymbols
-} from "./coins-state.js";
+} from "./coins-state.js?v=2";
 
 import {
 connectKlineStream

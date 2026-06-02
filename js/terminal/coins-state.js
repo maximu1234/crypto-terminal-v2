@@ -91,18 +91,16 @@ bindings
 ){
 
 const desc =
-bindings[
+Object.getOwnPropertyDescriptor(
+bindings,
 key
-];
+);
 
 if(
 desc &&
-typeof desc === "object" &&
 (
-"get" in
-desc ||
-"set" in
-desc
+desc.get ||
+desc.set
 )
 ){
 
@@ -117,7 +115,9 @@ desc
 state[
 key
 ] =
-desc;
+bindings[
+key
+];
 
 }
 

@@ -96,7 +96,7 @@ marketMap,
 coinElements,
 COINS_TF_VALUES,
 isCoinsPage
-} from "./terminal/coins-state.js";
+} from "./terminal/coins-state.js?v=2";
 
 import {
 readCoinsPrefs,
