@@ -11,7 +11,8 @@
 | Приоритет | Источник | Что даёт |
 |-----------|----------|----------|
 | 1 | **CoinMarketCap Trial** (без ключа) | История `btc_dominance` — 1 запрос |
-| 2 | **CoinGecko** top-10 estimate | Fallback: BTC cap / Σ(top10)×scale |
+| 2 | **CoinGecko** top-6 estimate | Fallback: BTC cap / Σ(top6)×scale |
+| 3 | **`data/btc-dominance-cache.json`** | Offline fallback при 429 (stale) |
 | opt | `COINGECKO_API_KEY` | Точный `/global/market_cap_chart` (PRO) |
 
 ## Поток данных
@@ -25,8 +26,9 @@ btc-dominance-test.html
 api/coingecko.js (Vercel / dev-server)
   ├─ CoinGecko /global                          → current %
   ├─ CoinGecko /coins/bitcoin/market_chart      → BTC cap history
-  └─ total cap: PRO chart ИЛИ top-10 estimate (free)
+  └─ total cap: PRO chart ИЛИ top-6 estimate (free)
        └─ dominance[t] = btc_cap / total_cap × 100
+       └─ при 429 → data/btc-dominance-cache.json (stale, метка «cache»)
 ```
 
 ## API
@@ -34,7 +36,7 @@ api/coingecko.js (Vercel / dev-server)
 | Query | Ответ |
 |-------|--------|
 | `mode=global` | `{ ok, btcDominance, updatedAt }` |
-| `mode=dominance&days=90` | `{ ok, current, points: [{time,value}], days, pointCount }` |
+| `mode=dominance&days=90` | `{ ok, current, points: [{time,value}], days, pointCount, stale? }` |
 
 **days:** `1`, `7`, `14`, `30`, `90`, `180`, `365`, `max`
 
@@ -67,5 +69,5 @@ Intraday 15m «как у Bybit» — только через свой snapshot �
 
 ## Ограничения
 
-- CoinGecko free: rate limit; при 429 — подождать / увеличить cache на сервере.
+- CoinGecko free: rate limit; при 429 API отдаёт **static cache** (~90d, `stale: true`). Обновление: `node scripts/update-btc-dominance-cache.cjs`.
 - Число может чуть отличаться от TradingView `CRYPTOCAP:BTC.D` — один источник, не смешивать.

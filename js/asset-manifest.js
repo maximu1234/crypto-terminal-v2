@@ -137,7 +137,7 @@ Object.freeze({
 "btc-dominance/fetch.js":
 1,
 "btc-dominance/test-page.js":
-1,
+2,
 
 "ws.js":
 15,

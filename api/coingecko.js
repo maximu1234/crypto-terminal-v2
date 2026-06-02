@@ -16,8 +16,23 @@ const BASE =
 const CMC_TRIAL =
 "https://pro-api.coinmarketcap.com/trial-pro-api";
 
+const fs =
+require(
+"fs"
+);
+const path =
+require(
+"path"
+);
+
+const STATIC_CACHE_PATH =
+path.join(
+process.cwd(),
+"data/btc-dominance-cache.json"
+);
+
 const COINGECKO_GAP_MS =
-150;
+400;
 
 const ALLOWED_DAYS =
 new Set([
@@ -31,7 +46,7 @@ new Set([
 "max"
 ]);
 
-/** CoinGecko ids — ~90%+ рынка в сумме. */
+/** CoinGecko ids — top-6 (~85%+ cap). Меньше запросов → меньше 429. */
 const TOP_COIN_IDS =
 [
 "bitcoin",
@@ -39,11 +54,7 @@ const TOP_COIN_IDS =
 "tether",
 "binancecoin",
 "solana",
-"ripple",
-"usd-coin",
-"tron",
-"dogecoin",
-"cardano"
+"ripple"
 ];
 
 function sleep(
@@ -118,6 +129,19 @@ days ===
 
 const url =
 `${CMC_TRIAL}/v1/global-metrics/quotes/historical?interval=${interval}&count=${count}`;
+
+let lastErr =
+null;
+
+for(
+let attempt =
+0;
+attempt <
+4;
+attempt++
+){
+
+try{
 
 const res =
 await fetch(
@@ -216,6 +240,274 @@ return {
 points,
 method: "cmc_trial_historical",
 current: points[
+points.length -
+1
+].value
+};
+
+}catch(
+err
+){
+
+lastErr =
+err;
+
+if(
+attempt <
+3
+){
+await sleep(
+1200 *
+(
+attempt +
+1
+)
+);
+}
+
+}
+
+}
+
+throw (
+lastErr ||
+new Error(
+"CMC unavailable"
+)
+);
+
+}
+
+function filterPointsByDays(
+points,
+daysRaw
+){
+
+if(
+!points?.length
+){
+return [];
+}
+
+const nowSec =
+Math.floor(
+Date.now() /
+1000
+);
+
+let spanSec;
+
+if(
+daysRaw ===
+"max"
+){
+spanSec =
+365 *
+86400;
+}else{
+
+const n =
+parseInt(
+daysRaw,
+10
+);
+
+spanSec =
+(
+Number.isFinite(
+n
+)
+? n
+: 90
+) *
+86400;
+
+}
+
+const cut =
+nowSec -
+spanSec;
+
+return points.filter(
+p=>
+p.time >=
+cut
+);
+
+}
+
+function loadStaticDominanceCache(
+daysRaw
+){
+
+try{
+
+if(
+!fs.existsSync(
+STATIC_CACHE_PATH
+)
+){
+return null;
+}
+
+const raw =
+JSON.parse(
+fs.readFileSync(
+STATIC_CACHE_PATH,
+"utf8"
+)
+);
+
+const points =
+filterPointsByDays(
+raw.points ||
+[],
+daysRaw
+);
+
+if(
+!points.length
+){
+return null;
+}
+
+return {
+points,
+method: `${raw.method || "cache"}_static`,
+current:
+raw.current ??
+points[
+points.length -
+1
+].value,
+stale: true,
+cacheUpdatedAt: raw.updatedAt ||
+null
+};
+
+}catch{
+return null;
+}
+
+}
+
+function sendDominanceOk(
+res,
+payload,
+daysRaw
+){
+
+res.statusCode = 200;
+res.setHeader(
+"Content-Type",
+"application/json"
+);
+res.setHeader(
+"Cache-Control",
+payload.stale
+? "public, s-maxage=600, stale-while-revalidate=3600"
+: "public, s-maxage=300, stale-while-revalidate=900"
+);
+res.end(
+JSON.stringify({
+ok: true,
+source: payload.stale
+? "cache"
+: (
+payload.method?.startsWith(
+"cmc"
+)
+? "coinmarketcap"
+: "coingecko"
+),
+method: payload.method,
+days: daysRaw,
+current: payload.current,
+points: payload.points,
+pointCount: payload.points.length,
+stale: !!payload.stale,
+cacheUpdatedAt: payload.cacheUpdatedAt ||
+null,
+updatedAt: Date.now()
+})
+);
+
+}
+
+async function fetchCoingeckoDominanceLive(
+daysRaw
+){
+
+const totalSeries =
+await fetchTotalCapSeriesEstimated(
+daysRaw
+);
+
+const points =
+buildDominanceSeries(
+totalSeries.btcCaps ||
+[],
+totalSeries.caps ||
+[]
+);
+
+if(
+!points.length
+){
+throw new Error(
+"CoinGecko: пустая серия"
+);
+}
+
+let current =
+null;
+
+try{
+const globalSnap =
+await fetchCoinGecko(
+"/global"
+);
+current =
+Number(
+globalSnap?.data?.market_cap_percentage?.btc
+);
+}catch{
+
+try{
+const cmcLatest =
+await fetch(
+`${CMC_TRIAL}/v1/global-metrics/quotes/latest`,
+{
+headers: {
+Accept: "application/json"
+}
+}
+);
+const body =
+await cmcLatest.json();
+current =
+Number(
+body?.data?.btc_dominance
+);
+}catch{
+/* ignore */
+}
+
+}
+
+return {
+points,
+method: totalSeries.method,
+current:
+Number.isFinite(
+current
+)
+? Math.round(
+current *
+100
+) /
+100
+: points[
 points.length -
 1
 ].value
@@ -830,7 +1122,8 @@ scale
 
 return {
 caps: totalCaps,
-method: "coingecko_top10_estimate"
+btcCaps: btcChart.caps,
+method: "coingecko_top6_estimate"
 };
 
 }
@@ -953,103 +1246,63 @@ await fetchCmcDominanceSeries(
 daysRaw
 );
 
-res.statusCode = 200;
-res.setHeader(
-"Content-Type",
-"application/json"
-);
-res.setHeader(
-"Cache-Control",
-"public, s-maxage=300, stale-while-revalidate=900"
-);
-res.end(
-JSON.stringify({
-ok: true,
-source: "coinmarketcap",
-method: cmc.method,
-days: daysRaw,
-current: cmc.current,
-points: cmc.points,
-pointCount: cmc.points.length,
-updatedAt: Date.now()
-})
+sendDominanceOk(
+res,
+cmc,
+daysRaw
 );
 return;
 
 }catch{
-/* CoinGecko fallback */
+/* live APIs */
 }
 
-const [
-globalSnap,
-btcChart,
-totalSeries
-] =
-await Promise.all([
-fetchCoinGecko(
-"/global"
-),
-fetchCoinGecko(
-`/coins/bitcoin/market_chart?vs_currency=usd&days=${encodeURIComponent(daysRaw)}`
-),
-fetchTotalCapSeries(
+try{
+
+const live =
+await fetchCoingeckoDominanceLive(
 daysRaw
-)
-]);
-
-const btcCaps =
-btcChart?.market_caps ||
-[];
-const totalCaps =
-totalSeries.caps ||
-[];
-
-const points =
-buildDominanceSeries(
-btcCaps,
-totalCaps
 );
 
-const currentPct =
-Number(
-globalSnap?.data?.market_cap_percentage?.btc
+sendDominanceOk(
+res,
+live,
+daysRaw
+);
+return;
+
+}catch{
+/* static cache */
+}
+
+const cached =
+loadStaticDominanceCache(
+daysRaw
 );
 
-res.statusCode = 200;
+if(
+cached
+){
+
+sendDominanceOk(
+res,
+cached,
+daysRaw
+);
+return;
+
+}
+
+res.statusCode = 503;
 res.setHeader(
 "Content-Type",
 "application/json"
 );
-res.setHeader(
-"Cache-Control",
-"public, s-maxage=180, stale-while-revalidate=600"
-);
 res.end(
 JSON.stringify({
-ok: true,
-source: "coingecko",
-method: totalSeries.method,
-days: daysRaw,
-current:
-Number.isFinite(
-currentPct
-)
-? Math.round(
-currentPct *
-100
-) /
-100
-: (
-points.length
-? points[
-points.length -
-1
-].value
-: null
-),
-points,
-pointCount: points.length,
-updatedAt: Date.now()
+ok: false,
+error: "btc_dominance_unavailable",
+hint: "CoinGecko rate limit. Повторите через минуту или обновите data/btc-dominance-cache.json"
 })
 );
 return;
@@ -1075,6 +1328,38 @@ modes: [
 }catch(
 err
 ){
+
+if(
+mode ===
+"dominance"
+){
+
+const daysRaw =
+pickQuery(
+req.query,
+"days"
+) ||
+"90";
+
+const cached =
+loadStaticDominanceCache(
+daysRaw
+);
+
+if(
+cached
+){
+
+sendDominanceOk(
+res,
+cached,
+daysRaw
+);
+return;
+
+}
+
+}
 
 const status =
 err?.status ===

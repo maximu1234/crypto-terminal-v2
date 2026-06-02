@@ -271,20 +271,63 @@ class QuietHandler(http.server.SimpleHTTPRequestHandler):
                     s += cap
             if s > 0:
                 total_caps.append([t_ms, s * scale])
-        return total_caps, "coingecko_top10_estimate"
+        return total_caps, "coingecko_top6_estimate"
+
+    def _load_static_dominance_cache(self, days: str) -> dict | None:
+        import json
+        import time
+
+        cache_path = os.path.join(
+            os.path.dirname(__file__), "..", "data", "btc-dominance-cache.json"
+        )
+        cache_path = os.path.abspath(cache_path)
+        if not os.path.isfile(cache_path):
+            return None
+        try:
+            raw = json.loads(open(cache_path, encoding="utf-8").read())
+            now_sec = int(time.time())
+            if days == "max":
+                span = 365 * 86400
+            else:
+                try:
+                    span = max(2, int(days)) * 86400
+                except ValueError:
+                    span = 90 * 86400
+            cut = now_sec - span
+            points = [p for p in (raw.get("points") or []) if p.get("time", 0) >= cut]
+            if not points:
+                return None
+            return {
+                "ok": True,
+                "source": "cache",
+                "method": f"{raw.get('method', 'cache')}_static",
+                "days": days,
+                "current": raw.get("current") or points[-1]["value"],
+                "points": points,
+                "pointCount": len(points),
+                "stale": True,
+                "cacheUpdatedAt": raw.get("updatedAt"),
+                "updatedAt": int(time.time() * 1000),
+            }
+        except (OSError, ValueError, TypeError):
+            return None
 
     def _serve_coingecko_proxy(self, parsed: urllib.parse.ParseResult) -> None:
         qs = urllib.parse.parse_qs(parsed.query)
         mode = (qs.get("mode") or ["global"])[0].strip()
         try:
             if mode == "global":
-                data = self._fetch_coingecko_json("/global")
-                pct = (
-                    data.get("data", {})
-                    .get("market_cap_percentage", {})
-                    .get("btc")
-                )
-                current = round(float(pct), 2) if pct is not None else None
+                try:
+                    data = self._fetch_coingecko_json("/global")
+                    pct = (
+                        data.get("data", {})
+                        .get("market_cap_percentage", {})
+                        .get("btc")
+                    )
+                    current = round(float(pct), 2) if pct is not None else None
+                except (urllib.error.URLError, TimeoutError, OSError, ValueError):
+                    cached = self._load_static_dominance_cache("90")
+                    current = cached.get("current") if cached else None
                 self._send_json(
                     200,
                     {
@@ -308,43 +351,57 @@ class QuietHandler(http.server.SimpleHTTPRequestHandler):
                         },
                     )
                     return
-                global_snap = self._fetch_coingecko_json("/global")
-                btc_chart = self._fetch_coingecko_json(
-                    f"/coins/bitcoin/market_chart?vs_currency=usd&days={urllib.parse.quote(days)}"
-                )
-                total_caps, method = self._fetch_total_cap_series_estimated(days)
-                btc_caps = btc_chart.get("market_caps") or []
-                points = self._build_dominance_series(btc_caps, total_caps)
-                current_raw = (
-                    global_snap.get("data", {})
-                    .get("market_cap_percentage", {})
-                    .get("btc")
-                )
-                current = (
-                    round(float(current_raw), 2)
-                    if current_raw is not None
-                    else (points[-1]["value"] if points else None)
-                )
-                self._send_json(
-                    200,
-                    {
-                        "ok": True,
-                        "source": "coingecko",
-                        "method": method,
-                        "days": days,
-                        "current": current,
-                        "points": points,
-                        "pointCount": len(points),
-                        "updatedAt": int(__import__("time").time() * 1000),
-                    },
-                )
-                return
+                try:
+                    btc_chart = self._fetch_coingecko_json(
+                        f"/coins/bitcoin/market_chart?vs_currency=usd&days={urllib.parse.quote(days)}"
+                    )
+                    total_caps, method = self._fetch_total_cap_series_estimated(days)
+                    btc_caps = btc_chart.get("market_caps") or []
+                    points = self._build_dominance_series(btc_caps, total_caps)
+                    if not points:
+                        raise ValueError("empty series")
+                    self._send_json(
+                        200,
+                        {
+                            "ok": True,
+                            "source": "coingecko",
+                            "method": method,
+                            "days": days,
+                            "current": points[-1]["value"],
+                            "points": points,
+                            "pointCount": len(points),
+                            "stale": False,
+                            "updatedAt": int(__import__("time").time() * 1000),
+                        },
+                    )
+                    return
+                except (urllib.error.URLError, TimeoutError, OSError, ValueError) as err:
+                    cached = self._load_static_dominance_cache(days)
+                    if cached:
+                        self._send_json(200, cached)
+                        return
+                    self._send_json(
+                        503,
+                        {
+                            "ok": False,
+                            "error": str(err),
+                            "hint": "rate limit — retry later",
+                        },
+                    )
+                    return
 
             self._send_json(
                 400,
                 {"ok": False, "error": "invalid_mode", "modes": ["global", "dominance"]},
             )
         except urllib.error.HTTPError as err:
+            cached = None
+            if mode == "dominance":
+                days = (qs.get("days") or ["90"])[0].strip()
+                cached = self._load_static_dominance_cache(days)
+            if cached:
+                self._send_json(200, cached)
+                return
             self._send_json(
                 429 if err.code == 429 else 502,
                 {"ok": False, "error": f"CoinGecko HTTP {err.code}"},

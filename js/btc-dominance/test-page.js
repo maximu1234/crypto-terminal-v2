@@ -251,8 +251,12 @@ current
 if(
 metaEl
 ){
+const staleTag =
+data.stale
+? " · cache"
+: "";
 metaEl.textContent =
-`${data.pointCount || points.length} точек · ${data.days} · ${data.method || "coingecko"}`;
+`${data.pointCount || points.length} точек · ${data.days} · ${data.method || "—"}${staleTag}`;
 }
 
 setStatus(
