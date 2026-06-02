@@ -62,9 +62,9 @@ Object.freeze({
 "coins-tablet-controller.js":
 4,
 "drawings.js":
-197,
+198,
 "drawings/init.js":
-23,
+24,
 "drawings/constants.js":
 5,
 "drawings/math.js":
@@ -78,7 +78,7 @@ Object.freeze({
 "drawings/utils.js":
 1,
 "drawings/draw-render.js":
-4,
+5,
 "drawings/draw-hit.js":
 5,
 "drawings-cloud-sync.js":

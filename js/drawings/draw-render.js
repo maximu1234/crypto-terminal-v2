@@ -565,6 +565,7 @@ drawShape(ctx, previewShape, w, h, true);
 }
 
 return {
+drawLine,
 drawShape,
 drawFib,
 drawPlacementPreview,

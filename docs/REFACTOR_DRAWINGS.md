@@ -9,7 +9,7 @@
 | Фаза | Задача | Риск | Статус |
 |------|--------|------|--------|
 | **0** | Чеклист регрессии + autotests `draw-hit` + `check:all` | низкий | ✅ |
-| **1** | Wire `createDrawHitTester` + `createDrawRenderer`, удалить дубли из `init.js` | средний | pending |
+| **1** | Wire `createDrawHitTester` + `createDrawRenderer`, удалить дубли из `init.js` | средний | ✅ code — ждёт ручной чеклист + `metka-8` |
 | **2** | Wire `mountTabletDrawInput` из `drawings-tablet-input.js` | средний | pending |
 | **3** | Split `drawings-cloud-sync.js` | высокий | pending |
 | **4** | Split `alerts-cloud-sync.js` | высокий | pending |
