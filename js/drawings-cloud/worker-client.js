@@ -47,6 +47,17 @@ getDirtyDrawingSymbols,
 getAuthed
 } from "./sync-lifecycle.js?v=6";
 
+/** Worker нужен в первую очередь на iPad Safari (REST там ненадёжен). */
+const IS_IOS_SAFARI =
+/iP(hone|ad|od)/i.test(
+navigator.userAgent || ""
+) &&
+/Safari/i.test(
+navigator.userAgent || ""
+) &&
+!/CriOS|FxiOS|EdgiOS|YaBrowser|Yowser|OPiOS/i.test(
+navigator.userAgent || ""
+);
 
 let cachedDrawingsWorkerBaseUrl =
 null;
@@ -211,7 +222,7 @@ deleted_at: null
 }catch(
 err
 ){
-console.warn(
+drawingsDebugLog(
 "[drawings] worker /push-drawing:",
 err?.message || err
 );
@@ -241,7 +252,7 @@ if(
 !res.ok ||
 !body.ok
 ){
-console.warn(
+drawingsDebugLog(
 "[drawings] worker /push-drawing отклонён:",
 res.status,
 sym,
@@ -332,7 +343,7 @@ shape_id: sid
 }catch(
 err
 ){
-console.warn(
+drawingsDebugLog(
 "[drawings] worker /delete-drawing:",
 err?.message || err
 );
@@ -362,7 +373,7 @@ if(
 !res.ok ||
 !body.ok
 ){
-console.warn(
+drawingsDebugLog(
 "[drawings] worker /delete-drawing отклонён:",
 res.status,
 sym,
@@ -394,6 +405,7 @@ opts = {}
 ){
 
 if(
+IS_IOS_SAFARI &&
 await pushDrawingViaWorker(
 symbol,
 shape,
@@ -1346,6 +1358,7 @@ return false;
 }
 
 if(
+IS_IOS_SAFARI &&
 await deleteDrawingViaWorker(
 sym,
 sid

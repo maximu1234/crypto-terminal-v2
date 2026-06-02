@@ -37,7 +37,7 @@ isDeletedAtColumnError,
 upsertDrawingRow,
 resolveDrawingsRestAuth,
 fetchWithTimeout
-} from "./worker-client.js?v=5";
+} from "./worker-client.js?v=6";
 
 import {
 getAuthed,
@@ -89,7 +89,7 @@ let env;
 
 try{
 env =
-await import("../supabase-env.js?v=5");
+await import("../supabase-env.js?v=6");
 }catch{
 return null;
 }

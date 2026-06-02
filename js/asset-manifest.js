@@ -84,9 +84,9 @@ Object.freeze({
 "drawings-cloud-sync.js":
 41,
 "drawings-cloud/worker-client.js":
-5,
+6,
 "drawings-cloud/pull-reconcile.js":
-5,
+6,
 "drawings-cloud/sync-lifecycle.js":
 6,
 "drawings-tablet-input.js":
