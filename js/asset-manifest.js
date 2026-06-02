@@ -17,14 +17,14 @@ Object.freeze({
 /* ── JS: boot / entry ── */
 "asset-manifest.js":
 1,
-"coins-asset-versions.js":
-1,
 "coins-page-boot.js":
 10,
 "chart-page.js":
 5,
 "terminal.js":
 253,
+"telegram-bot-public.js":
+1,
 "dashboard.js":
 72,
 "screener.js":
@@ -120,7 +120,7 @@ Object.freeze({
 "auth-storage.js":
 1,
 "auth-ui.js":
-24,
+25,
 "alert-auth-cache.js":
 7,
 "favorites.js":

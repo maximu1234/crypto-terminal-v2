@@ -85,6 +85,4 @@ node scripts/sync-asset-versions.cjs bump chart.js   # +1 и sync
 node scripts/sync-asset-versions.cjs list     # список
 ```
 
-`coins-asset-versions.js` — алиасы для boot `/coins` (deprecated, см. `asset-manifest.js`).
-
 Жёсткое обновление в браузере (Cmd+Shift+R) после деплоя.

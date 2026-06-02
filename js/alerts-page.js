@@ -32,7 +32,7 @@ ensureCloudLoginResolved
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=24";
+} from "./auth-ui.js?v=25";
 
 import { formatPrice } from "./chart-import.js?v=13";
 

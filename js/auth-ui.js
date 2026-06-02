@@ -28,14 +28,17 @@ import {
 isSystemAdminUser
 } from "./system-admin-access.js?v=3";
 
+import {
+isAlertsPage
+} from "./cloud-sync-throttle.js?v=2";
+
+import {
+TELEGRAM_BOT_USERNAME,
+getTelegramBotUrl
+} from "./telegram-bot-public.js?v=1";
+
 let cloudEnvConfigured = false;
 let cloudSdkError = "";
-
-function isAlertsPage(){
-
-return window.location.pathname.includes("/alerts");
-
-}
 
 function pageHasCloudAuth(){
 
@@ -824,7 +827,7 @@ wrap.innerHTML = `
 <details class="cloud-telegram-howto">
 <summary>Как подключить</summary>
 <ol>
-<li>Откройте бота <a href="https://t.me/multichart_alerts_bot" target="_blank" rel="noopener noreferrer">@multichart_alerts_bot</a> и нажмите Start.</li>
+<li>Откройте бота <a href="${getTelegramBotUrl()}" target="_blank" rel="noopener noreferrer">@${TELEGRAM_BOT_USERNAME}</a> и нажмите Start.</li>
 <li>Скопируйте Chat ID из сообщения бота и сохраните его здесь.</li>
 </ol>
 </details>
