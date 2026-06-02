@@ -22,7 +22,7 @@ Object.freeze({
 "chart-page.js":
 5,
 "terminal.js":
-261,
+262,
 "terminal/coins-state.js":
 2,
 "terminal/coins-prefs.js":

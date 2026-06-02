@@ -107,6 +107,7 @@ persistCoinsPrefs,
 bootstrapCoinsPageState,
 resolveInitialSymbolAndTf,
 applyCoinsPrefs,
+applySortForCurrentMarket,
 readUrlParams
 } from "./terminal/coins-prefs.js";
 
