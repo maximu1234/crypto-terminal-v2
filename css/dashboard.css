@@ -271,6 +271,36 @@ body.terminal-page .widget-draw-tools{
     pointer-events:auto;
 }
 
+/* iPad: pan/probe через overlay (tablet-widget-chart.js) */
+.widget-chart-wrap .tablet-probe-touch-layer{
+    position:absolute;
+    inset:0;
+    right:var(--chart-scale-width, 56px);
+    bottom:var(--chart-time-scale-height, 28px);
+    z-index:10;
+    touch-action:none;
+}
+
+body.tablet-chart .widget-chart-wrap .tablet-probe-touch-layer{
+    pointer-events:auto;
+    -webkit-tap-highlight-color:transparent;
+}
+
+body.tablet-chart .widget .chart{
+    pointer-events:auto;
+    touch-action:none;
+}
+
+body.tablet-chart .widget-chart-wrap{
+    -webkit-user-select:none;
+    user-select:none;
+    -webkit-touch-callout:none;
+}
+
+body.tablet-chart .widget-chart-wrap.chart-touch-locked .chart{
+    pointer-events:none;
+}
+
 .left-controls{
     display:flex;
     align-items:center;

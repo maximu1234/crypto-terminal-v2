@@ -45,7 +45,6 @@ applyTabletMainChartScroll,
 markTabletChartBody,
 mountTabletPriceScaleTouch,
 getVisibleCandlesPriceRange,
-mountTabletChartGestures,
 mountChartRangeFreeze,
 positionTabletProbeCrosshair,
 hideTabletProbeCrosshair,
@@ -60,6 +59,10 @@ hasAnyFinePointer,
 isUserCrosshairEvent,
 resetChartPriceAutoScale
 } from "./chart-import.js?v=13";
+
+import {
+createTabletGesturePolicy
+} from "./tablet-gesture-policy.js?v=1";
 
 import {
 connectKlineStream,
@@ -1211,37 +1214,12 @@ clientY
 
 }
 
-function tabletPanAllowed(){
-
-const wrap =
-document.getElementById(
-"chart-wrap"
 );
 
-if(
-wrap?.classList.contains(
-"chart-touch-locked"
-)
-){
-return false;
 }
 
-if(
-tabletCrosshairProbe
-){
-return false;
-}
-
-if(
-drawingTools?.blocksTabletChartPan?.()
-){
-return false;
-}
-
-return true;
-
-}
-
+/* =========================================================
+   SYMBOLS
 const priceScaleTouchHooks = {
 getFallbackPriceRange(){
 return getVisibleCandlesPriceRange(
@@ -1810,65 +1788,27 @@ TABLET_USE_CUSTOM_TOUCH_PAN &&
 isTabletChartViewport()
 ){
 
+const tabletPolicy =
+createTabletGesturePolicy({
+chartWrap: document.getElementById(
+"chart-wrap"
+),
+getDrawingTools: ()=> drawingTools,
+getProbeActive: ()=> tabletCrosshairProbe
+});
+
+void import(
+"./chart-tablet-gestures.js?v=14"
+).then(
+({ mountTabletChartGestures })=>{
+
 function tabletHoldShouldBegin(
 e
 ){
 
-const wrap =
-document.getElementById(
-"chart-wrap"
+return tabletPolicy.shouldBeginGesture(
+e
 );
-
-if(
-wrap?.classList.contains(
-"chart-touch-locked"
-)
-){
-return false;
-}
-
-if(
-e.target?.closest?.(
-".price-scale-touch-strip"
-)
-){
-return false;
-}
-
-const rect =
-chartEl.getBoundingClientRect();
-
-const clientX =
-e.clientX ??
-e.touches?.[
-0
-]?.clientX;
-
-const clientY =
-e.clientY ??
-e.touches?.[
-0
-]?.clientY;
-
-if(
-clientX ===
-undefined ||
-clientY ===
-undefined
-){
-return false;
-}
-
-if(
-drawingTools?.blocksTabletChartGestures?.(
-clientX,
-clientY
-)
-){
-return false;
-}
-
-return true;
 
 }
 
@@ -1912,36 +1852,10 @@ allowMousePan:()=>
 isTabletChartViewport() &&
 hasAnyFinePointer(),
 shouldBeginGesture:tabletHoldShouldBegin,
-shouldAllowPan:tabletPanAllowed,
-shouldAllowPinch:()=>{
-if(
-tabletCrosshairProbe
-){
-return false;
-}
-if(
-drawingTools?.blocksTabletChartPan?.()
-){
-return false;
-}
-if(
-drawingTools?.isPlacementActive?.()
-){
-return false;
-}
-const wrap =
-document.getElementById(
-"chart-wrap"
-);
-if(
-wrap?.classList.contains(
-"chart-touch-locked"
-)
-){
-return false;
-}
-return true;
-},
+shouldAllowPan:()=>
+tabletPolicy.shouldAllowPan(),
+shouldAllowPinch:()=>
+tabletPolicy.shouldAllowPinch(),
 blockChartScroll:()=>tabletCrosshairProbe,
 onHoldStart:()=>{
 setTabletPanSuspended?.(
@@ -2094,6 +2008,16 @@ tabletGestureCtrl.dispose;
 
 unmountTabletCrosshair =
 unmountTabletGestures;
+
+}
+).catch(
+err=>{
+console.warn(
+"Tablet chart gestures:",
+err
+);
+}
+);
 
 }
 

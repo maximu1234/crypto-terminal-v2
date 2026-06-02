@@ -24,9 +24,9 @@ Object.freeze({
 "chart-page.js":
 5,
 "terminal.js":
-251,
+252,
 "dashboard.js":
-71,
+72,
 "screener.js":
 63,
 "site-boot.js":
@@ -37,6 +37,10 @@ Object.freeze({
 13,
 "chart-widget-host.js":
 2,
+"tablet-gesture-policy.js":
+1,
+"tablet-widget-chart.js":
+1,
 
 /* ── JS: chart / drawings ── */
 "chart.js":
@@ -172,7 +176,7 @@ Object.freeze({
 "terminal.css":
 94,
 "dashboard.css":
-13,
+15,
 "coins.css":
 19,
 "terminal-page.css":

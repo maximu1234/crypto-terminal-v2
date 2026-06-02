@@ -19,6 +19,14 @@ createDashboardChartWidget
 } from "./chart-widget-host.js?v=2";
 
 import {
+mountWidgetTabletChart
+} from "./tablet-widget-chart.js?v=1";
+
+import {
+markTabletChartBody
+} from "./chart-import.js?v=13";
+
+import {
 subscribeKline
 } from "./ws.js";
 
@@ -84,6 +92,7 @@ function destroyAllWidgets(){
 widgets.forEach(w=>{
 
 w.unsubKline?.();
+w.tabletGestures?.dispose?.();
 w.drawingTools?.destroy();
 w.chart?.remove();
 w.resizeObserver?.disconnect();
@@ -207,6 +216,9 @@ function getTf(){
 return tfSelect.value;
 }
 
+let cancelTabletPanGesture =
+()=>{};
+
 const {
 chart,
 series,
@@ -223,7 +235,10 @@ getCandles: ()=> candles,
 isActive: ()=>
 activeWidgetIndex ===
 index,
-barPosKey: `draw_bar_dashboard_${index}`
+barPosKey: `draw_bar_dashboard_${index}`,
+abortTabletChartGesture:()=>{
+cancelTabletPanGesture?.();
+}
 
 });
 
@@ -264,8 +279,34 @@ loadData,
 getSymbol,
 candlesRef: ()=> candles,
 setCandles: data=>{ candles = data; },
-unsubKline: null
+unsubKline: null,
+tabletGestures: null
 };
+
+void mountWidgetTabletChart({
+chart,
+series,
+chartEl: chartContainer,
+chartWrap,
+getDrawingTools: ()=> drawingTools,
+isWidgetActive: ()=>
+activeWidgetIndex ===
+index
+}).then(
+ctrl=>{
+cancelTabletPanGesture =
+ctrl.cancelCurrentGesture;
+entry.tabletGestures =
+ctrl;
+}
+).catch(
+err=>{
+console.warn(
+"Widget tablet gestures:",
+err
+);
+}
+);
 
 function setActive(
 e
@@ -616,6 +657,12 @@ w.getSymbol?.() ||
 );
 
 chartsReady.then(()=>{
+
+markTabletChartBody();
+window.addEventListener(
+"resize",
+markTabletChartBody
+);
 
 initTerminalPageUi();
 preloadTradingSymbols();

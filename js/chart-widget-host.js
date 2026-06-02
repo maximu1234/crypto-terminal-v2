@@ -44,7 +44,8 @@ return null;
  *   getTf: ()=>string,
  *   getCandles: ()=>Array,
  *   isActive: ()=>boolean,
- *   barPosKey: string
+ *   barPosKey: string,
+ *   abortTabletChartGesture?: ()=>void
  * }} opts
  */
 export function createDashboardChartWidget(
@@ -71,7 +72,8 @@ getSymbol: opts.getSymbol,
 getTf: opts.getTf,
 getCandles: opts.getCandles,
 isActive: opts.isActive,
-barPosKey: opts.barPosKey
+barPosKey: opts.barPosKey,
+abortTabletChartGesture:opts.abortTabletChartGesture
 
 });
 

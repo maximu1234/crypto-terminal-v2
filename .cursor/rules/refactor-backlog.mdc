@@ -16,19 +16,19 @@ alwaysApply: true
 | 4 | ✅ | Shared storage poller (`drawings-storage-poller.js`) |
 | 6 | ✅ | Chart widget host (`chart-widget-host.js`) |
 | 5 | ✅ | Split `drawings.js` — фase 1: init + constants/math/fib/position |
-| | | **Следующий:** iPad-1…iPad-4 (см. ниже) |
+| | | **Следующий:** iPad-3 (touch drawing split) |
 
 ## iPad — после split `drawings.js` (пункт 5)
 
 Не делать до завершения общего плана, чтобы не смешивать рефактор с tablet-фичами.
 Все iPad-изменения — только за `isTabletChartViewport()` / `prefersTouchDrawInput()`, desktop не трогать.
 
-| # | Задача |
-|---|--------|
-| iPad-1 | Tablet-жесты на dashboard (`/terminal.html`) — сейчас только `/coins` |
-| iPad-2 | Lazy-import `chart-tablet-gestures.js` (не парсить на desktop) |
-| iPad-3 | Touch-рисование в `drawings-tablet-input.js` (отделить от desktop path) |
-| iPad-4 | Единый `tabletGesturePolicy()` вместо дублирующих проверок в `terminal.js` |
+| # | Задача | Статус |
+|---|--------|--------|
+| iPad-1 | Tablet-жесты на dashboard (`/terminal.html`) | ✅ `tablet-widget-chart.js` |
+| iPad-2 | Lazy-import `chart-tablet-gestures.js` | ✅ coins + dashboard |
+| iPad-3 | Touch-рисование в `drawings-tablet-input.js` | — |
+| iPad-4 | Единый `tabletGesturePolicy()` | ✅ `tablet-gesture-policy.js` |
 
 ## Напоминание пользователю
 
