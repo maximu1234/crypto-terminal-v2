@@ -141,6 +141,147 @@ EXPLICIT_SIGNOUT_KEY
 
 }
 
+/** 400/401 от Supabase refresh — повторять бессмысленно, только спам в консоль. */
+export function isFatalAuthRefreshError(
+error
+){
+
+if(
+!error
+){
+return false;
+}
+
+const status =
+Number(
+error?.status ||
+error?.statusCode ||
+error?.code ||
+0
+);
+
+if(
+status ===
+400 ||
+status ===
+401 ||
+status ===
+403
+){
+return true;
+}
+
+const msg =
+String(
+error?.message ||
+error?.name ||
+error ||
+""
+).toLowerCase();
+
+return (
+/invalid refresh/.test(
+msg
+) ||
+/refresh token/.test(
+msg
+) ||
+/invalid_grant/.test(
+msg
+) ||
+/token.*revoked/.test(
+msg
+) ||
+/session.*not found/.test(
+msg
+)
+);
+
+}
+
+function stripRefreshTokenFromAuthRaw(
+raw
+){
+
+if(
+!raw
+){
+return raw;
+}
+
+try{
+
+const data =
+JSON.parse(
+raw
+);
+
+const session =
+data?.access_token
+? data
+: data?.currentSession ||
+data?.session ||
+null;
+
+if(
+session &&
+typeof session ===
+"object"
+){
+session.refresh_token =
+"";
+}
+
+if(
+data?.refresh_token
+){
+data.refresh_token =
+"";
+}
+
+return JSON.stringify(
+data
+);
+
+}catch{
+return raw;
+}
+
+}
+
+/** Убрать refresh_token из primary/backup — прекращает цикл 400 в консоли. */
+export function clearPersistedRefreshToken(){
+
+for(
+const key of
+[
+SUPABASE_AUTH_STORAGE_KEY,
+SUPABASE_AUTH_BACKUP_KEY
+]
+){
+
+const raw =
+readRaw(
+key
+);
+
+if(
+!raw
+){
+continue;
+}
+
+writeRaw(
+key,
+stripRefreshTokenFromAuthRaw(
+raw
+)
+);
+
+}
+
+}
+
 /**
  * Safari / WebKit: Supabase иногда вызывает removeItem после failed refresh.
  * Primary можно сбросить, backup остаётся для восстановления.
@@ -319,6 +460,23 @@ ua
 export function authNetworkTimeoutMs(
 label = ""
 ){
+
+const ua =
+typeof navigator !==
+"undefined"
+? (
+navigator.userAgent ||
+""
+)
+: "";
+
+if(
+/YaBrowser|Yandex/i.test(
+ua
+)
+){
+return 15000;
+}
 
 if(
 isSafariBrowser()

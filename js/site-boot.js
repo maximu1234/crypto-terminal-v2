@@ -30,7 +30,7 @@ isCloudSyncEnabled,
 getCloudUserEmail,
 pullDeviceStateFromCloud,
 onCloudSyncChange
-} from "./cloud-sync.js?v=28";
+} from "./cloud-sync.js?v=29";
 
 import {
 isSupabaseConfigured

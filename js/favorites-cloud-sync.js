@@ -5,7 +5,7 @@ import {
 isCloudLoggedInEffective,
 onCloudSyncChange,
 notifyFavoritesListeners
-} from "./cloud-sync.js?v=28";
+} from "./cloud-sync.js?v=29";
 
 import {
 loadFavoritesGroups,

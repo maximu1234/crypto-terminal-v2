@@ -8,7 +8,7 @@ getDrawToolbarButtonsHtml
 
 import {
 isCloudLoggedInEffective
-} from "./cloud-sync.js?v=28";
+} from "./cloud-sync.js?v=29";
 
 const widgetDrawMenuClosers =
 new Set();

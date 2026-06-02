@@ -8,6 +8,8 @@ SUPABASE_AUTH_STORAGE_KEY,
 authNetworkTimeoutMs,
 isExplicitAuthSignOut,
 isSafariBrowser,
+isFatalAuthRefreshError,
+clearPersistedRefreshToken,
 markExplicitAuthSignOut,
 restoreAuthSessionFromBackup
 } from "./auth-storage.js?v=1";
@@ -63,6 +65,66 @@ let loggedIn = false;
 let userEmail = "";
 let lastAppliedSessionKey = "__init__";
 const authListeners = new Set();
+
+let lastSilentRefreshMs =
+0;
+let authRefreshBlockedUntil =
+0;
+let lastAuthWarnKey =
+"";
+let lastAuthWarnMs =
+0;
+
+const SILENT_REFRESH_MIN_MS =
+45000;
+
+function warnAuthOnce(
+key,
+msg
+){
+
+const now =
+Date.now();
+
+if(
+lastAuthWarnKey ===
+key &&
+now -
+lastAuthWarnMs <
+120000
+){
+return;
+}
+
+lastAuthWarnKey =
+key;
+lastAuthWarnMs =
+now;
+
+console.warn(
+msg
+);
+
+}
+
+function blockAuthRefreshRetries(
+reason
+){
+
+authRefreshBlockedUntil =
+Date.now() +
+30 *
+60 *
+1000;
+
+clearPersistedRefreshToken();
+
+warnAuthOnce(
+"refresh-invalid",
+`[auth] ${reason} — войдите снова через шестерёнку`
+);
+
+}
 
 /** Сразу из localStorage — без getSession() (в Safari он часто зависает 12+ с). */
 function bootstrapAuthFromLocalStorage(){
@@ -252,9 +314,21 @@ authNetworkTimeoutMs(
 if(
 error
 ){
-console.warn(
-"[auth] restore setSession:",
-error.message
+
+if(
+isFatalAuthRefreshError(
+error
+)
+){
+blockAuthRefreshRetries(
+"restore setSession"
+);
+return null;
+}
+
+warnAuthOnce(
+"restore-setSession",
+`[auth] restore setSession: ${error.message}`
 );
 }else if(
 data?.session
@@ -264,10 +338,23 @@ return data.session;
 }catch(
 err
 ){
-console.warn(
-"[auth] restore setSession:",
-err?.message || err
+
+if(
+isFatalAuthRefreshError(
+err
+)
+){
+blockAuthRefreshRetries(
+"restore setSession"
 );
+return null;
+}
+
+warnAuthOnce(
+"restore-setSession",
+`[auth] restore setSession: ${err?.message || err}`
+);
+
 }
 
 if(
@@ -286,9 +373,21 @@ authNetworkTimeoutMs(
 if(
 error
 ){
-console.warn(
-"[auth] refreshSession:",
-error.message
+
+if(
+isFatalAuthRefreshError(
+error
+)
+){
+blockAuthRefreshRetries(
+"refreshSession"
+);
+return null;
+}
+
+warnAuthOnce(
+"restore-refresh",
+`[auth] refreshSession: ${error.message}`
 );
 return null;
 }
@@ -297,11 +396,24 @@ return data?.session ?? null;
 }catch(
 err
 ){
-console.warn(
-"[auth] refreshSession:",
-err?.message || err
+
+if(
+isFatalAuthRefreshError(
+err
+)
+){
+blockAuthRefreshRetries(
+"refreshSession"
 );
 return null;
+}
+
+warnAuthOnce(
+"restore-refresh",
+`[auth] refreshSession: ${err?.message || err}`
+);
+return null;
+
 }
 }
 
@@ -315,11 +427,32 @@ persisted
 
 async function refreshAuthSessionSilent(){
 
+const now =
+Date.now();
+
+if(
+now <
+authRefreshBlockedUntil
+){
+return false;
+}
+
+if(
+now -
+lastSilentRefreshMs <
+SILENT_REFRESH_MIN_MS
+){
+return false;
+}
+
 if(
 !isCloudLoggedInEffective()
 ){
 return false;
 }
+
+lastSilentRefreshMs =
+now;
 
 const sb =
 await getSupabase();
@@ -341,24 +474,30 @@ authNetworkTimeoutMs(
 );
 
 if(
-error ||
-!data?.session
+error
 ){
-restoreAuthSessionFromBackup();
-const recovered =
-await restoreSessionFromPersisted(
-sb
-);
 
 if(
-recovered
+isFatalAuthRefreshError(
+error
+)
 ){
-await applySession(
-recovered
+blockAuthRefreshRetries(
+"silent refresh"
 );
-return true;
+return false;
 }
 
+warnAuthOnce(
+"silent-refresh-error",
+`[auth] silent refresh: ${error.message}`
+);
+return false;
+}
+
+if(
+!data?.session
+){
 return false;
 }
 
@@ -369,11 +508,45 @@ return true;
 }catch(
 err
 ){
-console.warn(
-"[auth] silent refresh:",
-err?.message || err
+
+const msg =
+String(
+err?.message ||
+err
+);
+
+if(
+isFatalAuthRefreshError(
+err
+) ||
+/timeouts?/i.test(
+msg
+)
+){
+if(
+isFatalAuthRefreshError(
+err
+)
+){
+blockAuthRefreshRetries(
+"silent refresh"
+);
+}else{
+warnAuthOnce(
+"silent-refresh-timeout",
+`[auth] silent refresh: ${msg}`
+);
+}
+
+return false;
+}
+
+warnAuthOnce(
+"silent-refresh",
+`[auth] silent refresh: ${msg}`
 );
 return false;
+
 }
 
 }
@@ -2083,13 +2256,6 @@ void refreshAuthSessionSilent();
 }
 
 };
-
-window.addEventListener(
-"focus",
-()=>{
-void refreshAuthSessionSilent();
-}
-);
 
 document.addEventListener(
 "visibilitychange",
