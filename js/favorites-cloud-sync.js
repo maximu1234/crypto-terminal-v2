@@ -4,8 +4,12 @@
 import {
 isCloudLoggedInEffective,
 onCloudSyncChange,
-notifyFavoritesListeners
-} from "./cloud-sync.js?v=31";
+notifyFavoritesListeners,
+isCloudApiUsable,
+isCloudAuthError,
+reportCloudAuthFailure,
+tryCloudAuthRecovery
+} from "./cloud-sync.js?v=32";
 
 import {
 loadFavoritesGroups,
@@ -335,6 +339,23 @@ cache: "no-store"
 if(
 !res.ok
 ){
+const text =
+await res.text();
+
+if(
+res.status ===
+401 ||
+isCloudAuthError(
+text
+)
+){
+reportCloudAuthFailure(
+"favorites fetch",
+text
+);
+return null;
+}
+
 console.warn(
 "[favorites] fetch REST:",
 res.status
@@ -462,12 +483,27 @@ drawings_updated_at: updatedAt
 if(
 !res.ok
 ){
+const text =
+await res.text();
+
+if(
+res.status ===
+401 ||
+isCloudAuthError(
+text
+)
+){
+reportCloudAuthFailure(
+"favorites push",
+text
+);
+return null;
+}
+
 console.warn(
 "[favorites] push REST:",
 res.status,
-(
-await res.text()
-).slice(
+text.slice(
 0,
 120
 )
@@ -518,6 +554,16 @@ loadFavoritesGroups()
 }
 
 if(
+!isCloudApiUsable()
+){
+void tryCloudAuthRecovery();
+return favoritesToCloudList(
+loadFavoritesGroups()
+);
+
+}
+
+if(
 pushInFlight
 ){
 try{
@@ -533,9 +579,6 @@ await resolveFavoritesRestAuth();
 if(
 !auth
 ){
-console.warn(
-"[favorites] нет JWT для REST — войдите через шестерёнку"
-);
 return favoritesToCloudList(
 loadFavoritesGroups()
 );
@@ -686,15 +729,18 @@ async function pushFavoritesImpl(
 list
 ){
 
+if(
+!isCloudApiUsable()
+){
+return false;
+}
+
 const auth =
 await resolveFavoritesRestAuth();
 
 if(
 !auth
 ){
-console.warn(
-"[favorites] push: нет входа"
-);
 return false;
 }
 

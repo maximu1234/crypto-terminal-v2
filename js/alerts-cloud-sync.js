@@ -9,8 +9,12 @@ waitForCloudAuth,
 isCloudLoggedIn,
 isCloudLoggedInEffective,
 onCloudSyncChange,
-ensureCloudLoginResolved
-} from "./cloud-sync.js?v=31";
+ensureCloudLoginResolved,
+isCloudApiUsable,
+isCloudAuthError,
+reportCloudAuthFailure,
+tryCloudAuthRecovery
+} from "./cloud-sync.js?v=32";
 
 import {
 getCachedAlertAuth,
@@ -125,6 +129,29 @@ console.warn(...args);
 function markAlertsPullFailure(
 reason
 ){
+
+const reasonStr =
+String(
+reason ||
+""
+);
+
+if(
+isCloudAuthError(
+reasonStr
+)
+){
+reportCloudAuthFailure(
+"alerts pull",
+reasonStr
+);
+alertsPullBackoffUntil =
+Date.now() +
+15 *
+60 *
+1000;
+return;
+}
 
 alertsPullFailureStreak += 1;
 
@@ -5405,6 +5432,13 @@ return 0;
 }
 
 if(
+!isCloudApiUsable()
+){
+void tryCloudAuthRecovery();
+return 0;
+}
+
+if(
 Date.now() <
 alertsRestStressUntil
 ){
@@ -5420,7 +5454,7 @@ return 0;
 
 try{
 const { ensureCloudLoginResolved } =
-await import("./cloud-sync.js?v=31");
+await import("./cloud-sync.js?v=32");
 
 await ensureCloudLoginResolved(
 8000

@@ -5,8 +5,12 @@ isCloudLoggedInEffective,
 isCloudSyncEnabled,
 onCloudSyncChange,
 notifyDrawings as notifyDrawingsListeners,
-ensureCloudLoginResolved
-} from "./cloud-sync.js?v=31";
+ensureCloudLoginResolved,
+isCloudApiUsable,
+isCloudAuthError,
+reportCloudAuthFailure,
+tryCloudAuthRecovery
+} from "./cloud-sync.js?v=32";
 
 import {
 normalizeAlertWorkerBaseUrl
@@ -322,6 +326,33 @@ token: snap.token
 
 }
 
+function handleDrawingsAuthFailure(
+source,
+status,
+text =
+""
+){
+
+if(
+status ===
+401 ||
+isCloudAuthError(
+text,
+status
+)
+){
+reportCloudAuthFailure(
+source,
+text ||
+status
+);
+return true;
+}
+
+return false;
+
+}
+
 let cachedDrawingsWorkerBaseUrl =
 null;
 
@@ -461,6 +492,17 @@ if(
 !res.ok ||
 !body.ok
 ){
+
+if(
+handleDrawingsAuthFailure(
+"push-drawing",
+res.status,
+text
+)
+){
+return false;
+}
+
 console.warn(
 "[drawings] worker /push-drawing отклонён:",
 res.status,
@@ -1216,6 +1258,16 @@ text
 )
 ){
 continue;
+}
+
+if(
+handleDrawingsAuthFailure(
+"drawings fetch",
+res.status,
+text
+)
+){
+return null;
 }
 
 console.warn(
@@ -2088,6 +2140,21 @@ isDrawingsCloudSyncPaused()
 return 0;
 }
 
+if(
+!isCloudApiUsable()
+){
+
+if(
+!isCloudLoggedInEffective()
+){
+return 0;
+}
+
+void tryCloudAuthRecovery();
+return 0;
+
+}
+
 const auth =
 resolveDrawingsRestAuth();
 
@@ -2096,21 +2163,8 @@ if(
 !auth?.user?.id
 ){
 
-if(
-isCloudLoggedInEffective()
-){
-console.warn(
-"[drawings] в Supabase не отправлено: нет JWT. Шестерёнка → войти снова (часто на iPad)."
-);
-}else if(
-isCloudSyncEnabled()
-){
-console.warn(
-"[drawings] только в браузере — войдите: шестерёнка → email → ссылка из письма."
-);
-}
-
 return 0;
+
 }
 
 const ctx =
@@ -2675,6 +2729,15 @@ result.error
 ){
 
 if(
+reportCloudAuthFailure(
+"reconcile",
+result.error.message
+)
+){
+return 0;
+}
+
+if(
 result.error.code ===
 "42P01" ||
 /PGRST205|does not exist/i.test(
@@ -3166,7 +3229,8 @@ export function scheduleDrawingsCloudSync(){
 
 if(
 !isCloudLoggedInEffective() ||
-isDrawingsCloudSyncPaused()
+isDrawingsCloudSyncPaused() ||
+!isCloudApiUsable()
 ){
 return;
 }

@@ -1,6 +1,6 @@
 import {
 ensureCloudLoginResolved
-} from "../cloud-sync.js?v=31";
+} from "../cloud-sync.js?v=32";
 
 import {
 normalizeAlertWorkerBaseUrl
@@ -26,7 +26,7 @@ readAlertTokenSync
 import {
 isCloudLoggedInEffective,
 isCloudSyncEnabled
-} from "../cloud-sync.js?v=31";
+} from "../cloud-sync.js?v=32";
 
 import {
 markShapeSynced,

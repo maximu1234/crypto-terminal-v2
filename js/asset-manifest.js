@@ -80,7 +80,7 @@ Object.freeze({
 "drawings/draw-hit.js":
 2,
 "drawings-cloud-sync.js":
-35,
+36,
 "drawings-cloud/worker-client.js":
 1,
 "drawings-cloud/pull-reconcile.js":
@@ -134,7 +134,7 @@ Object.freeze({
 
 /* ── JS: cloud / auth ── */
 "cloud-sync.js":
-31,
+32,
 "cloud-sync-throttle.js":
 3,
 "page-routes.js":
@@ -158,13 +158,13 @@ Object.freeze({
 "favorites.js":
 1,
 "favorites-cloud-sync.js":
-1,
+2,
 
 /* ── JS: alerts ── */
 "alerts.js":
 97,
 "alerts-cloud-sync.js":
-104,
+105,
 "alerts-cloud/debug.js":
 1,
 "alerts-cloud/telegram-id.js":

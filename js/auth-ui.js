@@ -8,7 +8,7 @@ signInWithEmailOtp,
 signOutCloud,
 recoverAuthSessionFromUrl,
 hasAuthCallbackInUrl
-} from "./cloud-sync.js?v=31";
+} from "./cloud-sync.js?v=32";
 
 import {
 isSupabaseConfigured
@@ -22,7 +22,7 @@ import {
 getTelegramChatId,
 saveTelegramChatId,
 clearTelegramChatId
-} from "./alerts-cloud-sync.js?v=104";
+} from "./alerts-cloud-sync.js?v=105";
 
 import {
 isSystemAdminUser

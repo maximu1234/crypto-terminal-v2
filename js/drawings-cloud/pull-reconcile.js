@@ -25,7 +25,7 @@ getSupabase
 
 import {
 waitForCloudAuth
-} from "../cloud-sync.js?v=31";
+} from "../cloud-sync.js?v=32";
 
 import {
 createPullCoalescer,

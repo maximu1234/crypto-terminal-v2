@@ -6,7 +6,7 @@ isCloudSyncEnabled,
 onCloudSyncChange,
 notifyDrawings as notifyDrawingsListeners,
 ensureCloudLoginResolved
-} from "../cloud-sync.js?v=31";
+} from "../cloud-sync.js?v=32";
 
 import {
 normalizeAlertWorkerBaseUrl

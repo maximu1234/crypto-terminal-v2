@@ -17,7 +17,7 @@ scheduleDevicePull
 import {
 initAlertsCloudSync,
 scheduleRegistryCloudSync
-} from "./alerts-cloud-sync.js?v=104";
+} from "./alerts-cloud-sync.js?v=105";
 
 import {
 stripAlertFlagsNotInRegistry
@@ -30,7 +30,7 @@ isCloudSyncEnabled,
 getCloudUserEmail,
 pullDeviceStateFromCloud,
 onCloudSyncChange
-} from "./cloud-sync.js?v=31";
+} from "./cloud-sync.js?v=32";
 
 import {
 isSupabaseConfigured
@@ -143,13 +143,13 @@ new CustomEvent(
 }
 );
 
-import("./drawings-cloud-sync.js?v=35").then(
+import("./drawings-cloud-sync.js?v=36").then(
 ({ initDrawingsCloudSync })=>{
 initDrawingsCloudSync();
 }
 );
 
-import("./favorites-cloud-sync.js?v=1").then(
+import("./favorites-cloud-sync.js?v=2").then(
 ({ initFavoritesCloudSync })=>{
 initFavoritesCloudSync();
 }

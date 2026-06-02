@@ -284,6 +284,203 @@ Date.now() -
 
 }
 
+let cloudApiPausedUntil =
+0;
+let cloudAuthRecoveryAt =
+0;
+
+export function isCloudAuthError(
+...parts
+){
+
+const blob =
+parts
+.filter(
+Boolean
+)
+.map(
+String
+)
+.join(
+" "
+);
+
+return (
+/JWT expired|PGRST301|PGRST303|invalid jwt|Auth session missing|AuthSessionMissing/i.test(
+blob
+)
+);
+
+}
+
+export function isCloudAuthTokenUsable(){
+
+if(
+!isCloudLoggedInEffective()
+){
+return false;
+}
+
+const persisted =
+readPersistedAuthSession();
+const snap =
+readAlertTokenSync();
+
+const hasUser =
+!!(
+snap?.user?.id ||
+persisted?.user?.id
+);
+const hasToken =
+!!(
+snap?.token ||
+persisted?.access_token
+);
+
+if(
+!hasUser ||
+!hasToken
+){
+return false;
+}
+
+if(
+persisted?.expires_at &&
+isAccessTokenExpired(
+persisted
+)
+){
+return false;
+}
+
+return true;
+
+}
+
+export function isCloudApiUsable(){
+
+return (
+isCloudAuthTokenUsable() &&
+Date.now() >=
+cloudApiPausedUntil
+);
+
+}
+
+export function pauseCloudApi(
+ms =
+10 *
+60 *
+1000
+){
+
+cloudApiPausedUntil =
+Math.max(
+cloudApiPausedUntil,
+Date.now() +
+ms
+);
+
+}
+
+export function resumeCloudApi(){
+
+cloudApiPausedUntil =
+0;
+cloudAuthRecoveryAt =
+0;
+
+}
+
+export async function tryCloudAuthRecovery(){
+
+const now =
+Date.now();
+
+if(
+now <
+cloudAuthRecoveryAt
+){
+return false;
+}
+
+cloudAuthRecoveryAt =
+now +
+90000;
+
+const ok =
+await refreshAuthSessionSilent();
+
+if(
+ok
+){
+resumeCloudApi();
+authRefreshBlockedUntil =
+getAuthRefreshBlockedUntil();
+return true;
+}
+
+return false;
+
+}
+
+export function reportCloudAuthFailure(
+source,
+detail
+){
+
+const blob =
+`${source} ${detail ?? ""}`;
+
+if(
+!isCloudAuthError(
+blob
+) &&
+detail !==
+401
+){
+return false;
+}
+
+pauseCloudApi(
+15 *
+60 *
+1000
+);
+
+if(
+!isCloudAuthTokenUsable()
+){
+blockAuthRefreshRetries(
+String(
+source
+)
+);
+}else{
+warnAuthOnce(
+"cloud-auth-degraded",
+`[cloud] ${source} — синхронизация приостановлена`
+);
+}
+
+void tryCloudAuthRecovery();
+
+void import("./drawings-cloud-sync.js?v=36").then(
+m=>{
+m.pauseDrawingsCloudSync?.(
+15 *
+60 *
+1000
+);
+}
+).catch(
+()=>{}
+);
+
+return true;
+
+}
+
 /**
  * Восстановить сессию из localStorage (refresh после истечения access — типично на iPad).
  */
@@ -916,7 +1113,7 @@ true;
 return;
 }
 
-void import("./drawings-cloud-sync.js?v=35").then(
+void import("./drawings-cloud-sync.js?v=36").then(
 m=>{
 m.scheduleDrawingsCloudPush();
 }
@@ -937,7 +1134,7 @@ return Promise.resolve();
 pendingDrawingsCloudPush =
 false;
 
-return import("./drawings-cloud-sync.js?v=35").then(
+return import("./drawings-cloud-sync.js?v=36").then(
 m=>
 m.flushDrawingsCloudPush()
 );
@@ -1240,7 +1437,7 @@ function stopCloudSyncHelpers(){
 
 stopSyncPoll();
 
-void import("./drawings-cloud-sync.js?v=35").then(
+void import("./drawings-cloud-sync.js?v=36").then(
 m=>{
 m.stopDrawingsCloudSync();
 }
@@ -1258,7 +1455,12 @@ realtimeUserId = null;
 
 function scheduleRealtimeReconnect(){
 
-if(realtimeReconnectTimer){
+if(
+realtimeReconnectTimer ||
+!isCloudAuthTokenUsable() ||
+Date.now() <
+cloudApiPausedUntil
+){
 return;
 }
 
@@ -1284,7 +1486,16 @@ realtimeUserId
 
 async function refreshCloudConnection(){
 
-if(!loggedIn){
+if(
+!loggedIn
+){
+return;
+}
+
+if(
+!isCloudAuthTokenUsable()
+){
+void tryCloudAuthRecovery();
 return;
 }
 
@@ -1300,7 +1511,7 @@ realtimeUserId
 
 function handleRealtimeFavoritesRow(row){
 
-void import("./favorites-cloud-sync.js?v=1").then(
+void import("./favorites-cloud-sync.js?v=2").then(
 m=>{
 m.applyFavoritesFromRealtimeRow(
 row
@@ -1332,7 +1543,7 @@ function handleRealtimeSettingsRow(row){
 
 handleRealtimeFavoritesRow(row);
 
-void import("./drawings-cloud-sync.js?v=35").then(
+void import("./drawings-cloud-sync.js?v=36").then(
 m=>
 m.pullDrawingsFromCloud()
 );
@@ -1412,9 +1623,20 @@ if(
 status === "CHANNEL_ERROR" ||
 status === "TIMED_OUT"
 ){
-console.warn(
-"settings realtime:",
+
+if(
+!isCloudAuthTokenUsable()
+){
+reportCloudAuthFailure(
+"realtime",
 status
+);
+return;
+}
+
+warnAuthOnce(
+"settings-realtime",
+`settings realtime: ${status}`
 );
 scheduleRealtimeReconnect();
 }
@@ -1606,7 +1828,7 @@ return cloud.favorites;
 export async function mergeDrawingsWithCloud(){
 
 const drawingsCloud =
-await import("./drawings-cloud-sync.js?v=35");
+await import("./drawings-cloud-sync.js?v=36");
 
 await drawingsCloud.hydrateDrawingsAfterAuth();
 
@@ -1616,7 +1838,7 @@ return collectAllLocalDrawings();
 
 export async function pullDrawingsIfCloudNewer(){
 
-await import("./drawings-cloud-sync.js?v=35").then(
+await import("./drawings-cloud-sync.js?v=36").then(
 m=>
 m.pullDrawingsFromCloud()
 );
@@ -1628,7 +1850,7 @@ return collectAllLocalDrawings();
 async function syncFavoritesWithCloud(){
 
 const m =
-await import("./favorites-cloud-sync.js?v=1");
+await import("./favorites-cloud-sync.js?v=2");
 
 await m.reconcileLocalFavoritesWithCloud();
 
@@ -1637,7 +1859,7 @@ await m.reconcileLocalFavoritesWithCloud();
 async function syncDrawingsWithCloud(){
 
 const m =
-await import("./drawings-cloud-sync.js?v=35");
+await import("./drawings-cloud-sync.js?v=36");
 
 await m.flushDrawingsCloudPush();
 
@@ -1666,7 +1888,7 @@ favorites
 ){
 
 const m =
-await import("./favorites-cloud-sync.js?v=1");
+await import("./favorites-cloud-sync.js?v=2");
 
 m.pushFavoritesAfterLocalEdit(
 favorites
@@ -2131,6 +2353,7 @@ session?.refresh_token
 clearAuthRefreshBlock();
 authRefreshBlockedUntil =
 0;
+resumeCloudApi();
 }
 
 if(
@@ -2232,12 +2455,12 @@ return;
 try{
 
 const favoritesCloud =
-await import("./favorites-cloud-sync.js?v=1");
+await import("./favorites-cloud-sync.js?v=2");
 
 await favoritesCloud.reconcileLocalFavoritesWithCloud();
 
 const drawingsCloud =
-await import("./drawings-cloud-sync.js?v=35");
+await import("./drawings-cloud-sync.js?v=36");
 
 if(
 !isAlertsPage()
@@ -2272,7 +2495,7 @@ if(
 !isAlertsPage()
 ){
 const alertsCloud =
-await import("./alerts-cloud-sync.js?v=104");
+await import("./alerts-cloud-sync.js?v=105");
 
 await alertsCloud.hydrateAlertsAfterAuth({
 force: true
@@ -2444,9 +2667,9 @@ await ensureCloudLoginResolved(
 );
 
 const alertsCloud =
-await import("./alerts-cloud-sync.js?v=104");
+await import("./alerts-cloud-sync.js?v=105");
 const favoritesCloud =
-await import("./favorites-cloud-sync.js?v=1");
+await import("./favorites-cloud-sync.js?v=2");
 const { stripAlertFlagsNotInRegistry } =
 await import("./alerts.js?v=97");
 
@@ -2488,7 +2711,7 @@ favoritesCloud.pullFavoritesFromCloudNow()
 }else{
 
 const drawingsCloud =
-await import("./drawings-cloud-sync.js?v=35");
+await import("./drawings-cloud-sync.js?v=36");
 
 [
 drawSyms,
