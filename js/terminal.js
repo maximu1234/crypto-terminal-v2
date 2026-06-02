@@ -114,6 +114,8 @@ primeTickerSnapshots,
 startTickerStream,
 startRealtime,
 renderList,
+highlightActiveSymbol,
+getVisibleSymbolList,
 setCoinsTableHooks
 } from "./terminal/coins-table.js";
 
@@ -3007,6 +3009,8 @@ currentSymbol || displaySymbol
 
 applyUrlTimeframe();
 
+void refreshCoinsMarketUi();
+
 await loadSymbol(
 currentSymbol || displaySymbol || "BTCUSDT"
 );
@@ -3043,8 +3047,6 @@ false
 });
 
 void drawingTools?.refreshDrawToolsAccessUiAsync?.();
-
-void refreshCoinsMarketUi();
 
 syncCoinsTabletListNav();
 
