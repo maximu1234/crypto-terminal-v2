@@ -13,7 +13,7 @@ mergeDrawingsPayload,
 purgeAllLocalDrawingsStorage,
 BLOB_MIGRATED_KEY,
 DRAWINGS_GLOBAL_CLEAR_KEY
-} from "../drawings-storage.js?v=6";
+} from "../drawings-storage.js?v=7";
 
 import {
 withTimeout
@@ -35,8 +35,9 @@ isDrawingsUiPage
 import {
 isDeletedAtColumnError,
 upsertDrawingRow,
-resolveDrawingsRestAuth
-} from "./worker-client.js?v=1";
+resolveDrawingsRestAuth,
+fetchWithTimeout
+} from "./worker-client.js?v=5";
 
 import {
 getAuthed,
@@ -44,16 +45,19 @@ isDrawingsCloudSyncPaused,
 invokeDrawingsChartRefresh,
 notifyDrawings,
 markShapeSynced,
-shapeNeedsPush,
 shapeWasSynced,
-shapeRecentlySynced,
+shapeNeedsPush,
+shapePushPending,
+clearShapePushPending,
 drawingsDebugLog,
 runCloudOp,
 getDrawingsRestStressUntil,
 setDrawingsRestStressUntil,
 getLastCloudDrawingsFingerprint,
-setLastCloudDrawingsFingerprint
-} from "./sync-lifecycle.js?v=1";
+setLastCloudDrawingsFingerprint,
+markDrawingSymbolDirty,
+scheduleDrawingsCloudPush
+} from "./sync-lifecycle.js?v=6";
 
 const IS_YANDEX =
 /YaBrowser|Yandex/i.test(
@@ -70,6 +74,12 @@ errorBackoffMs: IS_YANDEX
 ? 15000
 : 8000
 });
+
+let lastEmptyCloudPendingWarnMs =
+0;
+
+const EMPTY_CLOUD_PENDING_WARN_MS =
+30000;
 
 async function fetchCloudDrawingsViaRest(
 auth
@@ -647,6 +657,11 @@ sym
 shape
 );
 
+clearShapePushPending(
+sym,
+sid
+);
+
 }
 
 void pruneDuplicateShapeIdsAcrossSymbols();
@@ -751,7 +766,7 @@ id
 ){
 
 if(
-shapeRecentlySynced(
+shapePushPending(
 sym,
 id
 )
@@ -869,8 +884,8 @@ fp
 );
 
 const refreshSyms =
-Object.keys(
-cloudBySymbol
+Array.from(
+symbols
 );
 
 if(
@@ -970,9 +985,34 @@ total >
 pending >
 0
 ){
+
+const now =
+Date.now();
+
+if(
+now -
+lastEmptyCloudPendingWarnMs >=
+EMPTY_CLOUD_PENDING_WARN_MS
+){
+lastEmptyCloudPendingWarnMs =
+now;
 console.warn(
 "[drawings] на графике есть рисунки, в Supabase 0 строк — отправка в облако…"
 );
+}
+
+for(
+const sym of Object.keys(
+local
+)
+){
+markDrawingSymbolDirty(
+sym
+);
+}
+
+scheduleDrawingsCloudPush();
+
 }
 
 }
@@ -1018,9 +1058,3 @@ null
 return n;
 
 }
-
-let drawingsPushTimer =
-null;
-
-const PUSH_DEBOUNCE_MS =
-250;

@@ -3,6 +3,7 @@ waitForCloudAuth,
 isCloudLoggedIn,
 isCloudLoggedInEffective,
 isCloudSyncEnabled,
+isCloudApiUsable,
 onCloudSyncChange,
 notifyDrawings as notifyDrawingsListeners,
 ensureCloudLoginResolved
@@ -29,7 +30,7 @@ packCloudDrawings,
 purgeAllLocalDrawingsStorage,
 DRAWINGS_TOMBSTONES_KEY,
 DRAWINGS_GLOBAL_CLEAR_KEY
-} from "../drawings-storage.js?v=6";
+} from "../drawings-storage.js?v=7";
 
 import {
 withTimeout
@@ -52,13 +53,13 @@ getSupabase
 import {
 pushUnsyncedDrawingsImpl,
 deleteDrawingFromCloud
-} from "./worker-client.js?v=1";
+} from "./worker-client.js?v=5";
 
 import {
 reconcileLocalDrawingsWithCloud,
 pullDrawingsFromCloudNow,
 migrateLegacyBlobOnce
-} from "./pull-reconcile.js?v=1";
+} from "./pull-reconcile.js?v=5";
 
 
 const IS_YANDEX =
@@ -80,15 +81,12 @@ errorBackoffMs: IS_YANDEX
 const DRAWINGS_ROW_SYNC_META_KEY =
 "drawings_row_sync_v1";
 
-const BLOB_MIGRATED_KEY =
-"drawings_table_migrated_v1";
-
 const REGISTRY_SYNC_DEBOUNCE_MS =
 200;
 
-/** Не удалять local-only shape сразу после push — REST/realtime часто отстают. */
-const RECENT_SYNC_GRACE_MS =
-20000;
+/** После push: не считать фигуру удалённой, пока REST/realtime не покажет строку. */
+const PUSH_PENDING_GRACE_MS =
+10000;
 
 const RECONCILE_AFTER_PUSH_MS =
 3000;
@@ -138,6 +136,9 @@ let drawingsRestStressUntil =
 
 let drawingsSyncPausedUntil =
 0;
+
+let drawingsPushTimer =
+null;
 
 const REMOTE_SYNC_MS =
 400;
@@ -255,7 +256,7 @@ null;
 }
 
 
-function isDrawingsCloudSyncPaused(){
+export function isDrawingsCloudSyncPaused(){
 
 return (
 Date.now() <
@@ -474,6 +475,96 @@ return `${String(symbol).trim().toUpperCase()}:${String(shapeId)}`;
 }
 
 
+function pushPendingMetaKey(
+symbol,
+shapeId
+){
+
+return `${syncMetaKey(
+symbol,
+shapeId
+)}:push_pending`;
+
+}
+
+
+function markShapePushPending(
+symbol,
+shapeId
+){
+
+const meta =
+loadSyncMeta();
+
+meta[
+pushPendingMetaKey(
+symbol,
+shapeId
+)
+] =
+Date.now();
+
+saveSyncMeta(
+meta
+);
+
+}
+
+
+function clearShapePushPending(
+symbol,
+shapeId
+){
+
+const meta =
+loadSyncMeta();
+
+delete meta[
+pushPendingMetaKey(
+symbol,
+shapeId
+)
+];
+
+saveSyncMeta(
+meta
+);
+
+}
+
+
+function shapePushPending(
+symbol,
+shapeId
+){
+
+const pendingAt =
+Number(
+loadSyncMeta()[
+pushPendingMetaKey(
+symbol,
+shapeId
+)
+]
+) ||
+0;
+
+if(
+pendingAt <=
+0
+){
+return false;
+}
+
+return (
+Date.now() -
+pendingAt
+) <
+PUSH_PENDING_GRACE_MS;
+
+}
+
+
 function markShapeSynced(
 symbol,
 shapeId,
@@ -549,40 +640,6 @@ key
 0
 ) >
 0;
-
-}
-
-
-function shapeRecentlySynced(
-symbol,
-shapeId
-){
-
-const key =
-syncMetaKey(
-symbol,
-shapeId
-);
-const syncedAt =
-Number(
-loadSyncMeta()[
-key
-]
-) ||
-0;
-
-if(
-syncedAt <=
-0
-){
-return false;
-}
-
-return (
-Date.now() -
-syncedAt
-) <
-RECENT_SYNC_GRACE_MS;
 
 }
 
@@ -692,7 +749,9 @@ REMOTE_SYNC_MS
 }
 
 
-function broadcastDrawingsSync(){
+function broadcastDrawingsSync(
+deleted = null
+){
 
 if(
 !drawingsRealtimeChannel
@@ -700,14 +759,43 @@ if(
 return;
 }
 
+const payload = {
+at: Date.now()
+};
+
+if(
+Array.isArray(
+deleted
+) &&
+deleted.length >
+0
+){
+payload.deleted =
+deleted.map(
+entry=>({
+symbol: String(
+entry?.symbol ||
+""
+).trim().toUpperCase(),
+shapeId: String(
+entry?.shapeId ||
+entry?.shape_id ||
+""
+).trim()
+})
+).filter(
+entry=>
+entry.symbol &&
+entry.shapeId
+);
+}
+
 try{
 
 drawingsRealtimeChannel.send({
 type: "broadcast",
 event: "drawings-rows-sync",
-payload: {
-at: Date.now()
-}
+payload
 });
 
 }catch{
@@ -717,11 +805,144 @@ at: Date.now()
 }
 
 
+function applyRemoteDrawingDeletes(
+deleted
+){
+
+if(
+!Array.isArray(
+deleted
+) ||
+deleted.length ===
+0
+){
+return false;
+}
+
+const local =
+collectAllLocalDrawings();
+const changed =
+new Set();
+
+for(
+const entry of
+deleted
+){
+
+const sym =
+String(
+entry?.symbol ||
+""
+).trim().toUpperCase();
+const id =
+String(
+entry?.shapeId ||
+entry?.shape_id ||
+""
+).trim();
+
+if(
+!sym ||
+!id
+){
+continue;
+}
+
+recordDrawingTombstone(
+sym,
+id
+);
+clearShapePushPending(
+sym,
+id
+);
+
+const meta =
+loadSyncMeta();
+
+delete meta[
+syncMetaKey(
+sym,
+id
+)
+];
+
+saveSyncMeta(
+meta
+);
+
+const list =
+local[
+sym
+];
+
+if(
+!Array.isArray(
+list
+)
+){
+continue;
+}
+
+const next =
+list.filter(
+shape=>
+String(
+shape?.id ||
+""
+).trim() !==
+id
+);
+
+if(
+next.length !==
+list.length
+){
+local[
+sym
+] =
+next;
+changed.add(
+sym
+);
+}
+
+}
+
+if(
+!changed.size
+){
+return false;
+}
+
+applyDrawingsMapToLocal(
+local,
+{ merge: false }
+);
+
+invokeDrawingsChartRefresh(
+[
+...changed
+]
+);
+
+notifyDrawings(
+[
+...changed
+]
+);
+
+return true;
+
+}
+
+
 export function scheduleDrawingsCloudSync(){
 
 if(
 !isCloudLoggedInEffective() ||
-isDrawingsCloudSyncPaused()
+isDrawingsCloudSyncPaused() ||
+!isCloudApiUsable()
 ){
 return;
 }
@@ -867,8 +1088,27 @@ void pullDrawingsFromCloudNow();
 {
 event: "drawings-rows-sync"
 },
-()=>{
+msg=>{
+
+const deleted =
+msg?.payload?.deleted;
+
+if(
+Array.isArray(
+deleted
+) &&
+deleted.length >
+0
+){
+applyRemoteDrawingDeletes(
+deleted
+);
+}
+
+lastDrawingsPullMs =
+0;
 void pullDrawingsFromCloudNow();
+
 }
 )
 .subscribe(
@@ -1371,13 +1611,13 @@ deleteDrawingFromCloudNow,
 deleteDrawingFromCloud,
 clearAllDrawingsFromCloud,
 resolveDrawingsRestAuth
-} from "./worker-client.js?v=1";
+} from "./worker-client.js?v=5";
 
 export {
 reconcileLocalDrawingsWithCloud,
 pullDrawingsFromCloud,
 pullDrawingsFromCloudNow
-} from "./pull-reconcile.js?v=1";
+} from "./pull-reconcile.js?v=5";
 
 export function getDirtyDrawingSymbols(){
 return dirtyDrawingSymbols;
@@ -1398,3 +1638,24 @@ return lastCloudDrawingsFingerprint;
 export function setLastCloudDrawingsFingerprint(fp){
 lastCloudDrawingsFingerprint = fp;
 }
+
+export {
+markShapeSynced,
+loadSyncMeta,
+saveSyncMeta,
+syncMetaKey,
+markShapePushPending,
+clearShapePushPending,
+shapePushPending,
+shapeNeedsPush,
+shapeWasSynced,
+broadcastDrawingsSync,
+applyRemoteDrawingDeletes,
+invokeDrawingsChartRefresh,
+notifyDrawings,
+drawingsDebugLog,
+getActiveChartSymbol,
+markDrawingSymbolDirty,
+markDrawingSymbolsDirty,
+getAuthed
+};

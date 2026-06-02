@@ -55,12 +55,12 @@ deleteDrawingFromCloud,
 flushDrawingsCloudPush,
 registerDrawingsChartRefresh,
 scheduleDrawingsCloudPush
-} from "../drawings-cloud-sync.js?v=38";
+} from "../drawings-cloud-sync.js?v=41";
 
 import {
 touchShapeRevision,
 recordDrawingTombstone
-} from "../drawings-storage.js?v=6";
+} from "../drawings-storage.js?v=7";
 
 import {
 registerDrawingsStoragePoller,
@@ -8793,7 +8793,7 @@ return;
 }
 
 void import(
-"../drawings-cloud-sync.js?v=38"
+"../drawings-cloud-sync.js?v=41"
 ).then(
 m=>{
 m.bumpDrawingsPullNow?.();

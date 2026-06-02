@@ -11,10 +11,12 @@ collectAllLocalDrawings,
 pruneDuplicateShapeIdsAcrossSymbols,
 loadLocalTombstones,
 clearDrawingTombstone,
+saveLocalTombstones,
 getShapeRevisionTime,
 packCloudDrawings,
-DRAWINGS_GLOBAL_CLEAR_KEY
-} from "../drawings-storage.js?v=6";
+DRAWINGS_GLOBAL_CLEAR_KEY,
+BLOB_MIGRATED_KEY
+} from "../drawings-storage.js?v=7";
 
 import {
 withTimeout
@@ -31,6 +33,7 @@ isCloudSyncEnabled
 
 import {
 markShapeSynced,
+markShapePushPending,
 loadSyncMeta,
 saveSyncMeta,
 syncMetaKey,
@@ -40,14 +43,15 @@ drawingsDebugLog,
 getActiveChartSymbol,
 isDrawingsCloudSyncPaused,
 markDrawingSymbolDirty,
-getDirtyDrawingSymbols
-} from "./sync-lifecycle.js?v=1";
+getDirtyDrawingSymbols,
+getAuthed
+} from "./sync-lifecycle.js?v=6";
 
 
 let cachedDrawingsWorkerBaseUrl =
 null;
 
-async function fetchWithTimeout(
+export async function fetchWithTimeout(
 url,
 options,
 ms = 12000
@@ -695,7 +699,7 @@ const chartRefreshHandlers =
 new Set();
 
 
-function isDeletedAtColumnError(
+export function isDeletedAtColumnError(
 err
 ){
 
@@ -877,7 +881,7 @@ return false;
 }
 
 
-async function upsertDrawingRow(
+export async function upsertDrawingRow(
 ctx,
 symbol,
 shape
@@ -937,6 +941,10 @@ markShapeSynced(
 sym,
 shapeId,
 rev
+);
+markShapePushPending(
+sym,
+shapeId
 );
 return true;
 }
@@ -1019,6 +1027,10 @@ markShapeSynced(
 sym,
 shapeId,
 rev
+);
+markShapePushPending(
+sym,
+shapeId
 );
 
 return true;
@@ -1358,7 +1370,12 @@ sym,
 sid
 );
 
-broadcastDrawingsSync();
+broadcastDrawingsSync([
+{
+symbol: sym,
+shapeId: sid
+}
+]);
 return true;
 }
 
@@ -1409,7 +1426,12 @@ sym,
 sid
 );
 
-broadcastDrawingsSync();
+broadcastDrawingsSync([
+{
+symbol: sym,
+shapeId: sid
+}
+]);
 
 return true;
 
@@ -1592,6 +1614,10 @@ shape.id,
 getShapeRevisionTime(
 shape
 )
+);
+markShapePushPending(
+sym,
+shape.id
 );
 pushed += 1;
 }else{

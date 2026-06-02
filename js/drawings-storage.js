@@ -8,6 +8,10 @@ export const DRAWINGS_TOMBSTONES_KEY =
 export const DRAWINGS_GLOBAL_CLEAR_KEY =
 "drawings_global_clear_v1";
 
+/** Флаг миграции drawings JSON blob → user_drawings table. */
+export const BLOB_MIGRATED_KEY =
+"drawings_table_migrated_v1";
+
 const LOCAL_TOMBSTONES_KEY =
 "drawings_tombstones_v1";
 
