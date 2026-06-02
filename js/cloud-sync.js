@@ -12,7 +12,7 @@ isFatalAuthRefreshError,
 clearPersistedRefreshToken,
 markExplicitAuthSignOut,
 restoreAuthSessionFromBackup
-} from "./auth-storage.js?v=1";
+} from "./auth-storage.js?v=2";
 
 import {
 loadFavoritesGroups,
