@@ -179,7 +179,7 @@ fibDefaultsVersion: FIB_TOOL_DEFAULTS_VERSION,
 color: STROKE,
 lineWidth: 1,
 fibLevels: cloneDefaultFibRows(),
-fibShowTrendLine: true
+fibShowTrendLine: false
 };
 
 }
@@ -221,7 +221,10 @@ fibLevels: ensureFibLevelsVisible(
 saved.fibLevels
 ),
 fibShowTrendLine:
-saved.fibShowTrendLine !== false
+typeof saved.fibShowTrendLine ===
+"boolean"
+? saved.fibShowTrendLine
+: false
 };
 
 }

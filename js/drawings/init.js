@@ -134,7 +134,7 @@ getFibDrawRows,
 isSeriesLogarithmic,
 setFibLineStyleButton,
 setFibLevelWidthButton
-} from "./fib-spec.js?v=5";
+} from "./fib-spec.js?v=6";
 
 import {
 setFibPanelCommitHook,
@@ -640,7 +640,10 @@ fibStore.fibLevels
 );
 
 out.fibShowTrendLine =
-fibStore.fibShowTrendLine !== false;
+typeof fibStore.fibShowTrendLine ===
+"boolean"
+? fibStore.fibShowTrendLine
+: false;
 
 if(
 saved?.color
@@ -861,18 +864,7 @@ typeof shape.fibShowTrendLine ===
 typeof shape.showFibTrend ===
 "boolean"
 ? !!shape.showFibTrend
-:true;
-
-/* c088d9f: trend off + все уровни disabled → объект есть, линий нет */
-if(
-!getFibDrawRows(
-shape
-).some(row=>row.enabled)
-){
-shape.fibLevels =
-cloneDefaultFibRows();
-shape.fibShowTrendLine = true;
-}
+:false;
 
 delete shape.levels;
 delete shape.showFibTrend;
@@ -1365,7 +1357,10 @@ fibStore.fibLevels
 )
 ),
 fibShowTrendLine:
-fibStore.fibShowTrendLine !== false
+typeof fibStore.fibShowTrendLine ===
+"boolean"
+? fibStore.fibShowTrendLine
+: false
 };
 
 }
@@ -1626,12 +1621,29 @@ return false;
 const shape =
 resolveFibStyleTarget();
 
-if(!shape){
-return false;
-}
-
 const panel =
 readFibPanelFromDOM();
+
+if(!shape){
+
+const style =
+readStyleFromUI();
+
+saveToolDefaults(
+"fib",
+{
+fibDefaultsVersion: FIB_TOOL_DEFAULTS_VERSION,
+color: style.color,
+lineWidth: style.lineWidth,
+fibLevels: panel.fibLevels,
+fibShowTrendLine: panel.fibShowTrendLine
+}
+);
+
+redraw();
+return true;
+
+}
 
 shape.fibLevels =
 JSON.parse(
@@ -1639,7 +1651,7 @@ JSON.stringify(panel.fibLevels)
 );
 
 shape.fibShowTrendLine =
-panel.fibShowTrendLine !== false;
+panel.fibShowTrendLine;
 
 saveDrawings();
 redraw();
@@ -1654,8 +1666,7 @@ fibDefaultsVersion: FIB_TOOL_DEFAULTS_VERSION,
 color: style.color,
 lineWidth: style.lineWidth,
 fibLevels: shape.fibLevels,
-fibShowTrendLine:
-shape.fibShowTrendLine !== false
+fibShowTrendLine: shape.fibShowTrendLine
 }
 );
 
@@ -1852,7 +1863,9 @@ const trendEl =
 settingsPopover.querySelector("#fib-show-trend-line");
 
 const fibShowTrendLine =
-!!(trendEl?.checked ?? true);
+trendEl
+? !!trendEl.checked
+: false;
 
 settingsPopover.querySelectorAll(".fib-level-row").forEach((row,i)=>{
 
@@ -2006,7 +2019,7 @@ levels[i].lineWidth = levelWidth;
 });
 
 shape.fibShowTrendLine =
-panel.fibShowTrendLine !== false;
+panel.fibShowTrendLine;
 
 }
 
@@ -2116,7 +2129,7 @@ settingsPopover.querySelector("#fib-show-trend-line");
 if(trendEl){
 
 trendEl.checked =
-fibShowTrendLine !== false;
+!!fibShowTrendLine;
 
 }
 
@@ -2604,7 +2617,10 @@ defaultsPayload.fibLevels =
 style.fibLevels;
 
 defaultsPayload.fibShowTrendLine =
-style.fibShowTrendLine !== false;
+typeof style.fibShowTrendLine ===
+"boolean"
+? style.fibShowTrendLine
+: false;
 
 }
 
@@ -5639,7 +5655,7 @@ Math.abs(py - y)
 });
 
 if(
-shape.fibShowTrendLine !== false
+shape.fibShowTrendLine === true
 ){
 
 dist = Math.min(
@@ -8162,7 +8178,7 @@ y + 4
 
 /* До c088d9f диагональ рисовалась всегда — оставляем как запасной видимый элемент */
 if(
-shape.fibShowTrendLine !== false
+shape.fibShowTrendLine === true
 ){
 
 drawLine(
@@ -8423,7 +8439,7 @@ fibLevels:
 ensureFibLevelsVisible(
 style.fibLevels
 ),
-fibShowTrendLine: true,
+fibShowTrendLine: style.fibShowTrendLine,
 p1: pts[0],
 p2: previewAnchor
 };
@@ -8452,7 +8468,7 @@ placement.type === "fib"
 : style.fibLevels,
 fibShowTrendLine:
 placement.type === "fib"
-? true
+? style.fibShowTrendLine
 : style.fibShowTrendLine,
 p1: previewPts[0],
 p2: previewPts[1],
@@ -8560,7 +8576,12 @@ cloneDefaultFibRows()
 )
 :undefined,
 fibShowTrendLine:type === "fib"
-? style.fibShowTrendLine !== false
+? (
+typeof style.fibShowTrendLine ===
+"boolean"
+? style.fibShowTrendLine
+: false
+)
 :undefined,
 ...data
 });
