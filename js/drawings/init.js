@@ -78,7 +78,6 @@ isTabletChartViewport,
 hasAnyFinePointer,
 TABLET_USE_CUSTOM_TOUCH_PAN,
 ensureDomChartCrosshair,
-positionDomChartCrosshair,
 hideDomChartCrosshair,
 positionTabletProbeHorizInStack,
 fullCrosshairOptions
@@ -160,7 +159,11 @@ createDrawHitTester
 
 import {
 createDrawRenderer
-} from "./draw-render.js?v=4";
+} from "./draw-render.js?v=5";
+
+import {
+mountTabletDrawInput
+} from "../drawings-tablet-input.js?v=2";
 
 export function initDrawings({
 
@@ -350,8 +353,7 @@ let placement = null;
 let placementPointerXY = null;
 let previewPoint = null;
 let previewXY = null;
-let touchDrawCrosshair = null;
-let touchPlaceTrack = null;
+let tabletDrawInput = null;
 let dragState = null;
 let blockChartClick = false;
 
@@ -2671,246 +2673,127 @@ popover.style.zIndex = "10051";
 
 }
 
-function prefersTouchDrawInput(){
-
-if(
-!isCoarseTouchViewport()
-){
-return false;
-}
-
-/* iPad: finger draw even when Safari reports any-pointer:fine */
-if(
-isTabletChartViewport()
-){
-return true;
-}
-
-return !hasAnyFinePointer();
-
-}
-
 function isTouchDrawTablet(){
 
-return prefersTouchDrawInput();
+return tabletDrawInput?.isTouchDrawTablet() ??
+false;
 
 }
 
-/** Touch: перекрестье + тап/перетаскивание точек (как iPad на Монетах). */
 function isTouchDrawPlacement(){
 
-return prefersTouchDrawInput();
+return tabletDrawInput?.isTouchDrawPlacement() ??
+false;
 
 }
 
 function useChartProbeCrosshair(){
 
-return (
-typeof onChartCrosshairAt ===
-"function" &&
-tabletCustomPanHooked &&
-isTabletChartViewport()
-);
-
-}
-
-function chartCanvasEl(){
-
-return (
-wrapEl?.querySelector(
-".chart"
-) ||
-wrapEl?.querySelector(
-"#chart"
-)
-);
-
-}
-
-function clampTouchCrosshairXY(x, y){
-
-const { w, h } =
-chartSize();
-
-return {
-x: Math.max(0, Math.min(w, x)),
-y: Math.max(0, Math.min(h, y))
-};
+return tabletDrawInput?.useChartProbeCrosshair() ??
+false;
 
 }
 
 function initTouchDrawCrosshair(){
 
-const { w, h } =
-chartSize();
-
-touchDrawCrosshair = {
-x: w / 2,
-y: h / 2
-};
-
-syncTouchDrawCrosshairPreview();
+tabletDrawInput?.initTouchDrawCrosshair();
 
 }
 
-function crosshairClientFromLocal(
-localX,
-localY
-){
+function syncTouchDrawCrosshairPreview(){
 
-const rect =
-wrapEl.getBoundingClientRect();
-
-return {
-clientX: rect.left + localX,
-clientY: rect.top + localY
-};
+tabletDrawInput?.syncTouchDrawCrosshairPreview();
 
 }
 
-/** Тот же курсор, что на графике: LW на десктопе, probe на iPad. */
 function showStandardChartCrosshair(
 e,
 localX,
 localY
 ){
 
-const xy =
-clampTouchCrosshairXY(
+tabletDrawInput?.showStandardChartCrosshair(
+e,
 localX,
 localY
 );
-
-const point =
-pointFromXY(
-xy.x,
-xy.y
-);
-
-if(
-!isTouchDrawTablet()
-){
-
-if(
-point &&
-chart &&
-series
-){
-
-try{
-chart.setCrosshairPosition(
-point.price,
-point.time,
-series
-);
-}catch{
-/* ignore */
-}
-
-}
-
-return;
-
-}
-
-const clientX =
-e?.clientX;
-
-const clientY =
-e?.clientY;
-
-const client =
-clientX != null &&
-clientY != null
-? { clientX, clientY }
-: crosshairClientFromLocal(
-xy.x,
-xy.y
-);
-
-if(
-useChartProbeCrosshair()
-){
-
-try{
-onChartCrosshairAt(
-client.clientX,
-client.clientY
-);
-}catch{
-/* ignore */
-}
-
-return;
-
-}
-
-positionDomChartCrosshair({
-wrapEl,
-chartEl:chartCanvasEl(),
-chart,
-series,
-clientX:client.clientX,
-clientY:client.clientY
-});
 
 }
 
 function hideStandardChartCrosshair(){
 
-if(
-isTouchDrawTablet()
-){
+tabletDrawInput?.hideStandardChartCrosshair();
 
-if(
-useChartProbeCrosshair()
-){
-
-try{
-onChartCrosshairClear?.();
-}catch{
-/* ignore */
 }
 
-}else{
+function suppressChartCrosshairForDrag(){
 
-hideDomChartCrosshair(
-wrapEl
+tabletDrawInput?.suppressChartCrosshairForDrag();
+
+}
+
+function syncEditDragCrosshair(
+e,
+localX,
+localY
+){
+
+tabletDrawInput?.syncEditDragCrosshair(
+e,
+localX,
+localY
 );
 
-if(
-chart
+}
+
+function beginEditDragCrosshair(
+e,
+localX,
+localY
 ){
 
-try{
-chart.clearCrosshairPosition();
-}catch{
-/* ignore */
-}
-
-}
-
-}
-
-return;
-
-}
-
-hideDomChartCrosshair(
-wrapEl
+tabletDrawInput?.beginEditDragCrosshair(
+e,
+localX,
+localY
 );
 
-if(
-chart
+}
+
+function clearEditDragCrosshair(){
+
+tabletDrawInput?.clearEditDragCrosshair();
+
+}
+
+function placementPointsNeeded(
+type
 ){
 
-try{
-chart.clearCrosshairPosition();
-}catch{
-/* ignore */
-}
+return tabletDrawInput?.placementPointsNeeded(
+type
+) ??
+2;
 
 }
+
+function clearTouchDrawState(){
+
+tabletDrawInput?.clearTouchDrawState();
+
+}
+
+function getTouchDrawCrosshair(){
+
+return tabletDrawInput?.getTouchDrawCrosshair() ??
+null;
+
+}
+
+function getTouchPlaceTrack(){
+
+return tabletDrawInput?.getTouchPlaceTrack() ??
+null;
 
 }
 
@@ -3330,165 +3213,6 @@ onFinePointerDown,
 true
 );
 };
-
-}
-
-function syncTouchDrawCrosshairPreview(){
-
-if(
-!touchDrawCrosshair
-){
-previewPoint = null;
-previewXY = null;
-return;
-}
-
-previewXY = {
-x: touchDrawCrosshair.x,
-y: touchDrawCrosshair.y
-};
-
-previewPoint =
-pointFromXY(
-touchDrawCrosshair.x,
-touchDrawCrosshair.y
-);
-
-if(
-placement &&
-isTouchDrawPlacement()
-){
-showStandardChartCrosshair(
-null,
-touchDrawCrosshair.x,
-touchDrawCrosshair.y
-);
-}
-
-}
-
-function suppressChartCrosshairForDrag(){
-
-try{
-onChartCrosshairSuppress?.();
-}catch{
-/* ignore */
-}
-
-hideStandardChartCrosshair();
-
-if(
-!isTouchDrawTablet() &&
-chart
-){
-
-try{
-chart.clearCrosshairPosition();
-}catch{
-/* ignore */
-}
-
-}
-
-}
-
-function syncEditDragCrosshair(
-e,
-localX,
-localY
-){
-
-if(
-!dragState
-){
-return;
-}
-
-showStandardChartCrosshair(
-e,
-localX,
-localY
-);
-
-}
-
-function beginEditDragCrosshair(
-e,
-localX,
-localY
-){
-
-suppressChartCrosshairForDrag();
-
-syncEditDragCrosshair(
-e,
-localX,
-localY
-);
-
-}
-
-function clearEditDragCrosshair(){
-
-hideStandardChartCrosshair();
-
-try{
-onChartCrosshairRelease?.();
-}catch{
-/* ignore */
-}
-
-}
-
-function placementPointsNeeded(type){
-
-if(type === "channel"){
-return 3;
-}
-
-if(
-type === "hray" ||
-isPositionType(type)
-){
-return 1;
-}
-
-return 2;
-
-}
-
-function placeTouchCrosshairPoint(){
-
-if(
-!placement ||
-!touchDrawCrosshair
-){
-return;
-}
-
-const point =
-pointFromXY(
-touchDrawCrosshair.x,
-touchDrawCrosshair.y
-);
-
-if(!point){
-return;
-}
-
-placement.points.push(point);
-blockChartClick = true;
-
-if(
-placement.points.length >=
-placementPointsNeeded(placement.type)
-){
-finishPlacement();
-return;
-}
-
-syncTouchDrawCrosshairPreview();
-redraw();
 
 }
 
@@ -6742,171 +6466,6 @@ cap
 
 }
 
-function setupTouchDrawCrosshair(){
-
-/** iPad: порог «тап», не «перетаскивание перекрестия» */
-const TAP_MOVE_PX =
-18;
-
-const onTouchPlaceDown = e=>{
-
-if(
-!placement ||
-tool === "cursor"
-){
-return;
-}
-
-if(!isTouchDrawPlacement()){
-return;
-}
-
-if(
-e.pointerType ===
-"mouse"
-){
-return;
-}
-
-if(isDrawChromePointerEvent(e)){
-return;
-}
-
-if(!e.isPrimary){
-return;
-}
-
-if(
-!touchDrawCrosshair
-){
-initTouchDrawCrosshair();
-}
-
-const { x, y } =
-pointerFromEvent(e);
-
-touchPlaceTrack = {
-id: e.pointerId,
-startX: x,
-startY: y,
-moved: false,
-crosshairX: touchDrawCrosshair.x,
-crosshairY: touchDrawCrosshair.y
-};
-
-e.preventDefault();
-
-};
-
-const onTouchPlaceMove = e=>{
-
-if(
-!placement ||
-!touchPlaceTrack ||
-e.pointerId !== touchPlaceTrack.id
-){
-return;
-}
-
-const { x, y } =
-pointerFromEvent(e);
-const dx =
-x - touchPlaceTrack.startX;
-const dy =
-y - touchPlaceTrack.startY;
-
-if(
-!touchPlaceTrack.moved &&
-dx * dx + dy * dy >
-TAP_MOVE_PX * TAP_MOVE_PX
-){
-touchPlaceTrack.moved = true;
-}
-
-if(touchPlaceTrack.moved){
-
-touchDrawCrosshair =
-clampTouchCrosshairXY(
-touchPlaceTrack.crosshairX + dx,
-touchPlaceTrack.crosshairY + dy
-);
-
-syncTouchDrawCrosshairPreview();
-e.preventDefault();
-redraw();
-
-}
-
-};
-
-const onTouchPlaceUp = e=>{
-
-if(
-!placement ||
-!touchPlaceTrack ||
-e.pointerId !== touchPlaceTrack.id
-){
-return;
-}
-
-if(!touchPlaceTrack.moved){
-placeTouchCrosshairPoint();
-e.preventDefault();
-}
-
-touchPlaceTrack = null;
-
-};
-
-wrapEl.addEventListener(
-"pointerdown",
-onTouchPlaceDown,
-true
-);
-
-wrapEl.addEventListener(
-"pointermove",
-onTouchPlaceMove,
-true
-);
-
-wrapEl.addEventListener(
-"pointerup",
-onTouchPlaceUp,
-true
-);
-
-wrapEl.addEventListener(
-"pointercancel",
-onTouchPlaceUp,
-true
-);
-
-return ()=>{
-wrapEl.removeEventListener(
-"pointerdown",
-onTouchPlaceDown,
-true
-);
-wrapEl.removeEventListener(
-"pointermove",
-onTouchPlaceMove,
-true
-);
-wrapEl.removeEventListener(
-"pointerup",
-onTouchPlaceUp,
-true
-);
-wrapEl.removeEventListener(
-"pointercancel",
-onTouchPlaceUp,
-true
-);
-};
-
-}
-
 function setupContextMenu(){
 
 contextMenuEl =
@@ -7917,8 +7476,7 @@ placement = null;
 previewPoint = null;
 previewXY = null;
 placementPointerXY = null;
-touchDrawCrosshair = null;
-touchPlaceTrack = null;
+clearTouchDrawState();
 blockChartClick = false;
 cancelPlacementPreviewRaf();
 resetPlacementCrosshairCache();
@@ -7939,10 +7497,10 @@ return false;
 
 const point =
 isTouchDrawPlacement() &&
-touchDrawCrosshair
+getTouchDrawCrosshair()
 ? pointFromXY(
-touchDrawCrosshair.x,
-touchDrawCrosshair.y
+getTouchDrawCrosshair().x,
+getTouchDrawCrosshair().y
 )
 : placementPointerXY
 ? pointFromXY(
@@ -8021,6 +7579,36 @@ updateStyleBar();
 redraw();
 
 }
+
+tabletDrawInput =
+mountTabletDrawInput({
+wrapEl,
+chart,
+series,
+chartSize,
+pointFromXY,
+pointerFromEvent,
+isDrawChromePointerEvent,
+getPlacement:()=>placement,
+getTool:()=>tool,
+finishPlacement,
+redraw,
+setBlockChartClick:v=>{
+blockChartClick = v;
+},
+setPreviewPoint:v=>{
+previewPoint = v;
+},
+setPreviewXY:v=>{
+previewXY = v;
+},
+onChartCrosshairAt,
+onChartCrosshairClear,
+onChartCrosshairSuppress,
+onChartCrosshairRelease,
+tabletCustomPanHooked,
+getDragState:()=>dragState
+});
 
 let lastToolPickStamp = {
 name: "",
@@ -8354,7 +7942,7 @@ return;
 }
 
 if(
-touchDrawCrosshair
+getTouchDrawCrosshair()
 ){
 syncTouchDrawCrosshairPreview();
 
@@ -8993,7 +8581,7 @@ const teardownCoarseTouchGuard =
 setupCoarseTouchChartGuard();
 
 const teardownTouchDrawCrosshair =
-setupTouchDrawCrosshair();
+()=>tabletDrawInput?.dispose?.();
 
 const teardownFinePointerClicks =
 setupFinePointerChartClicks();
@@ -9646,7 +9234,7 @@ return false;
 
 if(
 dragState ||
-touchPlaceTrack ||
+getTouchPlaceTrack() ||
 placement ||
 tool !==
 "cursor"

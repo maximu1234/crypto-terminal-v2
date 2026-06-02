@@ -285,23 +285,6 @@ return 2;
 
 }
 
-function placementPointsNeeded(type){
-
-if(type === "channel"){
-return 3;
-}
-
-if(
-type === "hray" ||
-isPositionType(type)
-){
-return 1;
-}
-
-return 2;
-
-}
-
 function suppressChartCrosshairForDrag(){
 
 try{

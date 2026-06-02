@@ -64,7 +64,7 @@ Object.freeze({
 "drawings.js":
 198,
 "drawings/init.js":
-26,
+28,
 "drawings/constants.js":
 5,
 "drawings/math.js":
@@ -90,7 +90,7 @@ Object.freeze({
 "drawings-cloud/sync-lifecycle.js":
 1,
 "drawings-tablet-input.js":
-1,
+2,
 "drawings-storage.js":
 6,
 "drawings-storage-poller.js":

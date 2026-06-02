@@ -10,7 +10,7 @@
 |------|--------|------|--------|
 | **0** | Чеклист регрессии + autotests `draw-hit` + `check:all` | низкий | ✅ metka-8 |
 | **1** | Wire `createDrawHitTester` + `createDrawRenderer` | средний | ✅ metka-8 |
-| **2** | Wire `mountTabletDrawInput` из `drawings-tablet-input.js` | средний | **next** |
+| **2** | Wire `mountTabletDrawInput` из `drawings-tablet-input.js` | средний | ✅ code — ждёт iPad чеклист + `metka-9` |
 | **3** | Split `drawings-cloud-sync.js` | высокий | pending |
 | **4** | Split `alerts-cloud-sync.js` | высокий | pending |
 
