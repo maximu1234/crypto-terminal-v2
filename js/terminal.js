@@ -1796,7 +1796,7 @@ getProbeActive: ()=> tabletCrosshairProbe
 });
 
 void import(
-"./chart-tablet-gestures.js?v=14"
+"./chart-tablet-gestures.js?v=15"
 ).then(
 ({ mountTabletChartGestures })=>{
 

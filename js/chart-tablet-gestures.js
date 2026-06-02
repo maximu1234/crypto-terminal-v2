@@ -915,8 +915,8 @@ mode ===
 ){
 
 if(
-!shouldBeginGesture(
-e
+e.target?.closest?.(
+".price-scale-touch-strip"
 )
 ){
 return;
@@ -1126,6 +1126,36 @@ mode =
 
 }
 
+function onWrapTouchEndCapture(
+e
+){
+
+onWrapPinchEnd(
+e
+);
+
+if(
+mode !==
+"crosshair-docked" ||
+e.touches.length >
+0
+){
+return;
+}
+
+if(
+e.target?.closest?.(
+".price-scale-touch-strip"
+)
+){
+return;
+}
+
+e.preventDefault();
+endCrosshair();
+
+}
+
 function onContextMenu(
 e
 ){
@@ -1187,14 +1217,14 @@ onWrapPinchMove,
 
 chartWrapEl.addEventListener(
 "touchend",
-onWrapPinchEnd,
-{ capture:true, passive:true }
+onWrapTouchEndCapture,
+{ capture:true, passive:false }
 );
 
 chartWrapEl.addEventListener(
 "touchcancel",
-onWrapPinchEnd,
-{ capture:true, passive:true }
+onWrapTouchEndCapture,
+{ capture:true, passive:false }
 );
 
 chartWrapEl.addEventListener(
@@ -1236,14 +1266,14 @@ onWrapPinchMove,
 
 chartWrapEl.removeEventListener(
 "touchend",
-onWrapPinchEnd,
-{ capture:true, passive:true }
+onWrapTouchEndCapture,
+{ capture:true, passive:false }
 );
 
 chartWrapEl.removeEventListener(
 "touchcancel",
-onWrapPinchEnd,
-{ capture:true, passive:true }
+onWrapTouchEndCapture,
+{ capture:true, passive:false }
 );
 
 chartWrapEl.removeEventListener(

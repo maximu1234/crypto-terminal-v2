@@ -2553,10 +2553,20 @@ popover.style.zIndex = "10051";
 
 function prefersTouchDrawInput(){
 
-return (
-isCoarseTouchViewport() &&
-!hasAnyFinePointer()
-);
+if(
+!isCoarseTouchViewport()
+){
+return false;
+}
+
+/* iPad: finger draw even when Safari reports any-pointer:fine */
+if(
+isTabletChartViewport()
+){
+return true;
+}
+
+return !hasAnyFinePointer();
 
 }
 
@@ -6890,6 +6900,13 @@ if(!isTouchDrawPlacement()){
 return;
 }
 
+if(
+e.pointerType ===
+"mouse"
+){
+return;
+}
+
 if(isDrawChromePointerEvent(e)){
 return;
 }
@@ -8561,10 +8578,17 @@ tool = next;
 cancelPlacement();
 
 if(
-next !== "cursor" &&
+next !== "cursor"
+){
+notifyTabletChartGestureAbort();
+
+if(
 isTouchDrawPlacement()
 ){
 startPlacement(next);
+}
+}else{
+notifyTabletChartGestureAbort();
 }
 
 tools.querySelectorAll("[data-draw-tool]").forEach(btn=>{
