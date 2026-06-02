@@ -1282,6 +1282,14 @@ false;
 function clearLinkedVert(){
 
 if(
+document.body.classList.contains(
+"chart-probe-active"
+)
+){
+return;
+}
+
+if(
 linkedVertOverlayEl
 ){
 

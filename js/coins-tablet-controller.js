@@ -271,6 +271,10 @@ true;
 probeDocked =
 false;
 
+document.body.classList.add(
+"chart-probe-active"
+);
+
 chartWrapEl.classList.add(
 "chart-touch-locked"
 );
@@ -338,6 +342,10 @@ false;
 
 probeDocked =
 false;
+
+document.body.classList.remove(
+"chart-probe-active"
+);
 
 chartWrapEl.classList.remove(
 "chart-touch-locked"
@@ -407,6 +415,10 @@ false;
 
 probeDocked =
 true;
+
+document.body.classList.add(
+"chart-probe-active"
+);
 
 chartWrapEl.classList.remove(
 "chart-touch-locked"

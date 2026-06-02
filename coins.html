@@ -16,7 +16,7 @@
 <link rel="stylesheet" href="/css/critical-shell.css?v=2">
 <script src="/js/site-css-ready.js?v=2"></script>
 <link rel="stylesheet" href="/css/common.css?v=21">
-<link rel="stylesheet" href="/css/terminal.css?v=98">
+<link rel="stylesheet" href="/css/terminal.css?v=99">
 <link rel="stylesheet" href="/css/dashboard.css?v=16">
 <link rel="stylesheet" href="/css/coins.css?v=19">
 
@@ -242,7 +242,9 @@ el.textContent=String(last.symbol).toUpperCase()+".P";
 </div>
 
 <div id="linked-crosshair-vert" class="linked-crosshair-vert hidden" aria-hidden="true"></div>
-<div id="tablet-probe-crosshair-h" class="tablet-probe-crosshair-h hidden" aria-hidden="true"></div>
+<svg id="tablet-probe-crosshair-h" class="tablet-probe-crosshair-h hidden" aria-hidden="true" focusable="false">
+<line class="tablet-probe-crosshair-h-line" stroke="#758696" stroke-width="1" vector-effect="non-scaling-stroke" stroke-dasharray="5 4"/>
+</svg>
 
 </div>
 

@@ -59,7 +59,7 @@ resetChartPriceAutoScale
 import {
 isCoinsTabletV2Enabled,
 mountCoinsTabletController
-} from "./coins-tablet-controller.js?v=2";
+} from "./coins-tablet-controller.js?v=3";
 
 import {
 disconnectKlineStream

@@ -90,6 +90,29 @@ horz
 
 }
 
+function resolveTabletProbeHorizLine(
+horizLineEl
+){
+
+const root =
+horizLineEl ||
+document.getElementById(
+"tablet-probe-crosshair-h"
+);
+
+if(
+!root
+){
+return null;
+}
+
+return root.querySelector?.(
+".tablet-probe-crosshair-h-line"
+) ||
+root;
+
+}
+
 function resolveTabletProbeHorizEl(
 horizLineEl,
 chartsStackEl
@@ -131,6 +154,12 @@ chartEl,
 chart,
 clientY
 }){
+
+chartsStackEl =
+chartsStackEl ||
+document.getElementById(
+"charts-stack"
+);
 
 if(
 !chartsStackEl ||
@@ -214,6 +243,141 @@ topInStack
 const plotLeft =
 chartR.left - stackR.left;
 
+const lineEl =
+resolveTabletProbeHorizLine(
+el
+);
+
+if(
+lineEl?.tagName ===
+"line"
+){
+
+el.style.removeProperty(
+"top"
+);
+
+el.style.removeProperty(
+"left"
+);
+
+el.style.removeProperty(
+"width"
+);
+
+el.style.removeProperty(
+"height"
+);
+
+el.style.removeProperty(
+"right"
+);
+
+el.style.removeProperty(
+"display"
+);
+
+el.style.removeProperty(
+"border"
+);
+
+el.style.removeProperty(
+"border-top"
+);
+
+el.style.removeProperty(
+"background"
+);
+
+const stackW =
+Math.max(
+1,
+Math.round(
+stackR.width
+)
+);
+
+const stackH =
+Math.max(
+1,
+Math.round(
+stackR.height
+)
+);
+
+el.setAttribute(
+"width",
+String(
+stackW
+)
+);
+
+el.setAttribute(
+"height",
+String(
+stackH
+)
+);
+
+el.setAttribute(
+"viewBox",
+`0 0 ${stackW} ${stackH}`
+);
+
+const x1 =
+Math.round(
+plotLeft
+);
+
+const x2 =
+Math.max(
+x1 + 1,
+Math.round(
+plotLeft + plotWidth
+)
+);
+
+const y =
+Math.round(
+clampedTop
+) + 0.5;
+
+lineEl.setAttribute(
+"x1",
+String(
+x1
+)
+);
+
+lineEl.setAttribute(
+"x2",
+String(
+x2
+)
+);
+
+lineEl.setAttribute(
+"y1",
+String(
+y
+)
+);
+
+lineEl.setAttribute(
+"y2",
+String(
+y
+)
+);
+
+el.classList.remove(
+"hidden"
+);
+
+return;
+
+}
+
 el.style.top =
 `${Math.round(
 clampedTop
@@ -225,8 +389,11 @@ plotLeft
 )}px`;
 
 el.style.width =
-`${Math.round(
+`${Math.max(
+1,
+Math.round(
 plotWidth
+)
 )}px`;
 
 el.style.removeProperty(
@@ -238,14 +405,20 @@ el.style.removeProperty(
 );
 
 el.style.removeProperty(
-"background"
+"height"
 );
 
-el.style.height =
-"0";
+el.style.removeProperty(
+"border"
+);
 
-el.style.borderTop =
-"1px dashed #758696";
+el.style.removeProperty(
+"border-top"
+);
+
+el.style.removeProperty(
+"background"
+);
 
 el.classList.remove(
 "hidden"
@@ -494,8 +667,9 @@ if(
 ){
 
 el =
-document.createElement(
-"div"
+document.createElementNS(
+"http://www.w3.org/2000/svg",
+"svg"
 );
 
 el.id =
@@ -507,6 +681,44 @@ el.className =
 el.setAttribute(
 "aria-hidden",
 "true"
+);
+
+el.setAttribute(
+"focusable",
+"false"
+);
+
+const line =
+document.createElementNS(
+"http://www.w3.org/2000/svg",
+"line"
+);
+
+line.className =
+"tablet-probe-crosshair-h-line";
+
+line.setAttribute(
+"stroke",
+"#758696"
+);
+
+line.setAttribute(
+"stroke-width",
+"1"
+);
+
+line.setAttribute(
+"vector-effect",
+"non-scaling-stroke"
+);
+
+line.setAttribute(
+"stroke-dasharray",
+"5 4"
+);
+
+el.appendChild(
+line
 );
 
 }
@@ -546,6 +758,18 @@ if(
 ){
 return null;
 }
+
+chartsStackEl =
+chartsStackEl ||
+document.getElementById(
+"charts-stack"
+);
+
+horizLineEl =
+horizLineEl ||
+document.getElementById(
+"tablet-probe-crosshair-h"
+);
 
 const chartR =
 chartEl.getBoundingClientRect();
@@ -632,6 +856,24 @@ linkedVertEl.style.left =
 linkedVertEl.classList.remove(
 "hidden"
 );
+
+}
+
+if(
+chartsStackEl &&
+horizLineEl &&
+Number.isFinite(
+clientY
+)
+){
+
+positionTabletProbeHorizInStack({
+horizLineEl,
+chartsStackEl,
+chartEl,
+chart,
+clientY
+});
 
 }
 
@@ -764,14 +1006,6 @@ chart.clearCrosshairPosition();
 }catch{
 /* ignore */
 }
-
-positionTabletProbeHorizInStack({
-horizLineEl,
-chartsStackEl,
-chartEl,
-chart,
-clientY
-});
 
 }else{
 
