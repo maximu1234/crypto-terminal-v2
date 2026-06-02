@@ -52,6 +52,38 @@ return pathQuery.startsWith("/")
 
 }
 
+/** localhost / 127.0.0.1 — dev-server.py прокси /api/bybit, не Railway. */
+function isLocalDevHost(){
+
+if(
+typeof location ===
+"undefined"
+){
+return false;
+}
+
+const host =
+location.hostname;
+
+return (
+host ===
+"localhost" ||
+host ===
+"127.0.0.1" ||
+host ===
+"[::1]"
+);
+
+}
+
+function localBybitProxyUrl(
+encodedPath
+){
+
+return `/api/bybit?path=${encodedPath}`;
+
+}
+
 function isChromiumBrowser(){
 
 const ua =
@@ -269,6 +301,7 @@ return workerProxyConfigPromise;
 export function warmBybitWorkerProxy(){
 
 if(
+isLocalDevHost() ||
 !prefersBybitWorkerProxy()
 ){
 return;
@@ -359,9 +392,18 @@ msg.includes("timeout")
 async function getWorkerProxyBase(){
 
 if(
-cachedWorkerProxyBase !== undefined
+cachedWorkerProxyBase !==
+undefined
 ){
 return cachedWorkerProxyBase;
+}
+
+if(
+isLocalDevHost()
+){
+cachedWorkerProxyBase =
+"";
+return "";
 }
 
 cachedWorkerProxyBase =
@@ -473,6 +515,21 @@ normalizePath(pathQuery);
 const encoded =
 encodeURIComponent(path);
 let lastErr = null;
+
+if(
+isLocalDevHost()
+){
+
+return fetchOneBybitProxyUrl(
+localBybitProxyUrl(
+encoded
+),
+path,
+timeoutMs,
+"local-dev-proxy"
+);
+
+}
 
 const workerBase =
 await getWorkerProxyBase();
@@ -617,6 +674,23 @@ options = {}
 const encoded =
 encodeURIComponent(path);
 
+if(
+isLocalDevHost()
+){
+
+return [
+fetchOneBybitProxyUrl(
+localBybitProxyUrl(
+encoded
+),
+path,
+timeoutMs,
+"local-dev-proxy"
+)
+];
+
+}
+
 const workerBase =
 await getWorkerProxyBase();
 
@@ -718,8 +792,20 @@ err.errors.length - 1
 ] ||
 err;
 
+const tryProxies =
+isNetworkFetchError(
+lastErr
+) ||
+(
+isLocalDevHost() &&
+Number(
+lastErr?.httpStatus
+) >=
+400
+);
+
 if(
-isNetworkFetchError(lastErr)
+tryProxies
 ){
 try{
 return await fetchBybitViaProxies(
@@ -762,7 +848,8 @@ normalizePath(pathQuery);
 let lastErr = null;
 
 if(
-prefersBybitWorkerProxy()
+prefersBybitWorkerProxy() &&
+!isLocalDevHost()
 ){
 
 const workerBase =

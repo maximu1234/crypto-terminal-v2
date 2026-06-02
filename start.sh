@@ -23,6 +23,8 @@ if [ -z "${TWELVEDATA_API_KEY:-}" ] && [ -z "${TWELVE_DATA_API_KEY:-}" ]; then
   echo "  export TWELVEDATA_API_KEY='ваш_ключ'"
   echo ""
 fi
+echo "  Локально Bybit → /api/bybit (dev-server), не Railway."
+echo ""
 echo "Нажмите Ctrl+C для остановки."
 echo ""
 

@@ -120,7 +120,7 @@ Object.freeze({
 "api.js":
 25,
 "bybit-fetch.js":
-10,
+11,
 "bybit-listings.js":
 2,
 "bybit-network-ui.js":
