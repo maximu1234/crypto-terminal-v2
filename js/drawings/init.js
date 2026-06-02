@@ -4749,6 +4749,17 @@ chartSize().w - getPriceGutterWidth()
 
 }
 
+function isPointerInPriceGutter(
+px
+){
+
+return (
+px >=
+getPlotWidth() - 4
+);
+
+}
+
 function removePriceGutterOverlay(){
 
 if(priceGutterEl){
