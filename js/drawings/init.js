@@ -437,6 +437,7 @@ styleBar?.classList.add("hidden");
 }
 
 let fibPanelBuilt = false;
+let fibPanelSyncing = false;
 let fibApplyTimer = null;
 let fibSettingsShapeId = null;
 let fibColorMenuPortal = null;
@@ -927,6 +928,24 @@ function storageKey(){
 return `drawings_${getSymbol()}`;
 }
 
+function normalizeDrawingShape(shape){
+
+try{
+return stripAlertFromShape(
+normalizeShape(shape)
+);
+}catch(err){
+console.warn(
+"normalize drawing shape",
+err,
+shape?.type,
+shape?.id
+);
+return shape;
+}
+
+}
+
 function loadDrawings(){
 
 if(
@@ -971,7 +990,7 @@ merged.push(shape);
 
 });
 
-drawings = merged.map(shape=>stripAlertFromShape(normalizeShape(shape)));
+drawings = merged.map(shape=>normalizeDrawingShape(shape));
 
 sanitizeDrawingsForCurrentSymbol();
 
@@ -986,7 +1005,7 @@ return;
 
 }
 
-drawings = JSON.parse(raw).map(shape=>stripAlertFromShape(normalizeShape(shape)));
+drawings = JSON.parse(raw).map(shape=>normalizeDrawingShape(shape));
 
 }catch{
 
@@ -1311,8 +1330,30 @@ function canApplyFibPanel(){
 
 return (
 alive &&
-(isFibContext() || isFibSettingsOpen())
+isFibSettingsOpen() &&
+!fibPanelSyncing
 );
+
+}
+
+function readFibDefaultsForStyle(){
+
+const fibStore =
+migrateFibToolDefaults(
+toolDefaults.fib
+);
+
+return {
+fibLevels: JSON.parse(
+JSON.stringify(
+ensureFibLevelsVisible(
+fibStore.fibLevels
+)
+)
+),
+fibShowTrendLine:
+fibStore.fibShowTrendLine !== false
+};
 
 }
 
@@ -1561,7 +1602,11 @@ window.addEventListener("resize", closeAllFibLineWidthMenus);
 
 function commitFibPanelToShape(){
 
-if(!canApplyFibPanel()){
+if(
+!alive ||
+!isFibSettingsOpen() ||
+fibPanelSyncing
+){
 return false;
 }
 
@@ -1736,21 +1781,30 @@ return el;
 
 function scheduleFibApplyImmediate(){
 
+if(
+!isFibSettingsOpen() ||
+fibPanelSyncing
+){
+return;
+}
+
 if(fibApplyTimer){
 clearTimeout(fibApplyTimer);
 fibApplyTimer = null;
 }
 
-if(isFibSettingsOpen()){
 applyFibSettingsFromPanel();
-return;
-}
-
-applyStyleFromUI();
 
 }
 
 function scheduleFibApplyDebounced(){
+
+if(
+!isFibSettingsOpen() ||
+fibPanelSyncing
+){
+return;
+}
 
 if(fibApplyTimer){
 clearTimeout(fibApplyTimer);
@@ -1761,12 +1815,14 @@ setTimeout(()=>{
 
 fibApplyTimer = null;
 
-if(isFibSettingsOpen()){
-applyFibSettingsFromPanel();
+if(
+!isFibSettingsOpen() ||
+fibPanelSyncing
+){
 return;
 }
 
-applyStyleFromUI();
+applyFibSettingsFromPanel();
 
 },320);
 
@@ -1950,8 +2006,7 @@ function applyFibGlobalColorFromToolbar(shape, color){
 shape.color = color;
 
 const panel =
-isFibSettingsOpen() ||
-fibPanelBuilt
+isFibSettingsOpen()
 ? readFibPanelFromDOM()
 : null;
 
@@ -1961,7 +2016,10 @@ panel,
 { clearColors: true, clearWidths: false }
 );
 
-if(fibPanelBuilt){
+if(
+fibPanelBuilt &&
+isFibSettingsOpen()
+){
 fillFibSettingsPanel(
 shape.fibLevels,
 shape.fibShowTrendLine,
@@ -1977,8 +2035,7 @@ function applyFibGlobalWidthFromToolbar(shape, lineWidth){
 shape.lineWidth = lineWidth;
 
 const panel =
-isFibSettingsOpen() ||
-fibPanelBuilt
+isFibSettingsOpen()
 ? readFibPanelFromDOM()
 : null;
 
@@ -1988,7 +2045,10 @@ panel,
 { clearColors: false, clearWidths: true }
 );
 
-if(fibPanelBuilt){
+if(
+fibPanelBuilt &&
+isFibSettingsOpen()
+){
 fillFibSettingsPanel(
 shape.fibLevels,
 shape.fibShowTrendLine,
@@ -2007,6 +2067,10 @@ fallbackWidth
 ){
 
 ensureFibSettingsPanel();
+
+fibPanelSyncing = true;
+
+try{
 
 const rows =
 Array.isArray(fibLevels) &&
@@ -2093,6 +2157,10 @@ row.lineStyle
 
 });
 
+}finally{
+fibPanelSyncing = false;
+}
+
 }
 
 function readStyleFromUI(){
@@ -2113,14 +2181,24 @@ const tgt =
 getStyleTargetType();
 
 if(
-tgt === "fib" ||
-tool === "fib"
+isFibSettingsOpen()
 ){
 
 Object.assign(
 base,
 readFibPanelFromDOM()
 );
+
+}else if(
+tgt === "fib" ||
+tool === "fib"
+){
+
+Object.assign(
+base,
+readFibDefaultsForStyle()
+);
+
 }
 
 return base;
@@ -2435,12 +2513,17 @@ const sel =
 getSelected();
 
 const fibTarget =
-type === "fib"
+type === "fib" &&
+!placement
 ? resolveFibStyleTarget()
 : null;
 
 const target =
-fibTarget || sel;
+fibTarget || (
+!placement
+? sel
+: null
+);
 
 if(target){
 
@@ -8530,6 +8613,7 @@ previewXY = null;
 placementPointerXY = null;
 touchDrawCrosshair = null;
 touchPlaceTrack = null;
+blockChartClick = false;
 cancelPlacementPreviewRaf();
 resetPlacementCrosshairCache();
 hideStandardChartCrosshair();
@@ -8593,6 +8677,8 @@ placement.points.length >=
 placementPointsNeeded(placement.type)
 ){
 finishPlacement();
+}else{
+redraw();
 }
 
 return true;
@@ -9636,6 +9722,17 @@ selectedId = null;
 cancelPlacement();
 loadDrawings();
 updateStyleBar();
+scheduleRedraw();
+return;
+
+}
+
+if(
+placement &&
+!e.detail?.remote &&
+!e.detail?.cleared
+){
+touchStorageSnap();
 scheduleRedraw();
 return;
 
