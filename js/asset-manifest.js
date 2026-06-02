@@ -50,9 +50,9 @@ Object.freeze({
 
 /* ── JS: chart / drawings ── */
 "chart.js":
-109,
+110,
 "chart/chart-options.js":
-1,
+2,
 "chart/chart-dom-crosshair.js":
 1,
 "chart/chart-factory.js":
@@ -62,7 +62,7 @@ Object.freeze({
 "drawings.js":
 194,
 "drawings/init.js":
-16,
+17,
 "drawings/constants.js":
 2,
 "drawings/math.js":
@@ -80,7 +80,7 @@ Object.freeze({
 "drawings/draw-hit.js":
 1,
 "drawings-cloud-sync.js":
-33,
+35,
 "drawings-cloud/worker-client.js":
 1,
 "drawings-cloud/pull-reconcile.js":
@@ -164,7 +164,7 @@ Object.freeze({
 "alerts.js":
 97,
 "alerts-cloud-sync.js":
-102,
+104,
 "alerts-cloud/debug.js":
 1,
 "alerts-cloud/telegram-id.js":

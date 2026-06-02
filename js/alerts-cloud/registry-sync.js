@@ -1861,19 +1861,3 @@ err?.message || err
 REGISTRY_SYNC_DEBOUNCE_MS);
 
 }
-
-export {
-pauseRegistryCloudSync,
-isRegistryCloudSyncPaused,
-pruneOrphanCloudAlerts,
-pushOneAlertRow,
-pushUnsyncedAlerts,
-syncAllLocalAlertsToCloud,
-syncAllLocalAlertsToCloudImmediate,
-flushAlertCloudPush,
-reconcileLocalRegistryWithCloud,
-pullRegistryFromCloud,
-pullRegistryFromCloudNow,
-scheduleRegistryCloudSync,
-removeAllAlertsEverywhere
-};

@@ -2262,9 +2262,6 @@ return true;
 }
 
 export {
-runCloudOp,
-enqueueAlertPush,
-enqueueAlertTrigger,
 fetchWithTimeout,
 withTimeout,
 getAuthed,
@@ -2273,15 +2270,5 @@ getWorkerRequestAuth,
 verifyAlertActiveInCloud,
 normalizeAlertTf,
 purgeAlertViaRest,
-softDeleteAlertViaRest,
-clearAllAlertsFromCloud,
-removeAlertFromCloud,
-triggerAlertViaWorkerById,
-triggerAlertViaWorker,
-triggerNotifyTelegramViaWorker,
-fireAlertCloudTrigger,
-purgeAlertRowByCloudId,
-isAlertRowInCloud,
-deleteAlertViaWorker,
-pushAlertViaWorker
+softDeleteAlertViaRest
 };

@@ -591,10 +591,3 @@ export async function clearTelegramChatId(){
 return saveTelegramChatId(null);
 
 }
-
-export {
-readCachedTelegramChatId,
-getTelegramChatId,
-saveTelegramChatId,
-clearTelegramChatId
-};

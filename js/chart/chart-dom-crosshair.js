@@ -1086,3 +1086,14 @@ timeLabelEl.style.removeProperty(
 }
 
 }
+
+export function isUserCrosshairEvent(
+param
+){
+
+return !!(
+param &&
+param.sourceEvent
+);
+
+}

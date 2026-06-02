@@ -286,7 +286,7 @@ coinsState().currentTF
 
 export function getFilteredMarketData(){
 
-let data = [...marketData];
+let data = [...coinsState().marketData];
 
 const query =
 coinsState().searchQuery.trim().toUpperCase();

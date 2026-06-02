@@ -82,6 +82,13 @@ let alertsPullBackoffUntil =
 let lastAlertsPullWarnAt =
 0;
 
+/** @type {import("@supabase/supabase-js").RealtimeChannel | null} */
+export let alertsRealtimeChannel =
+null;
+
+export let alertsRealtimeUserId =
+null;
+
 function warnAlertsPullThrottled(
 ...args
 ){
@@ -192,11 +199,6 @@ warnAlertsPullThrottled,
 markAlertsPullFailure,
 markAlertsPullSuccess,
 isAlertsPullInBackoff,
-broadcastAlertsRegistrySync
-};
-
-export {
-alertsRestStressUntil,
-alertsRealtimeChannel,
-alertsRealtimeUserId
+broadcastAlertsRegistrySync,
+alertsRestStressUntil
 };

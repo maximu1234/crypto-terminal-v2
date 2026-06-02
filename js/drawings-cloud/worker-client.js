@@ -99,10 +99,6 @@ token: snap.token
 
 }
 
-let cachedDrawingsWorkerBaseUrl =
-null;
-
-
 async function getDrawingsWorkerBaseUrl(){
 
 if(

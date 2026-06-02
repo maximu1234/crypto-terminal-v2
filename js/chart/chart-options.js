@@ -341,6 +341,7 @@ true
 )
 };
 
+}
 
 export function tabletProbeCrosshairOptions(){
 

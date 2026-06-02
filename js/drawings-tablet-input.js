@@ -4,11 +4,11 @@ isTabletChartViewport,
 hasAnyFinePointer,
 positionDomChartCrosshair,
 hideDomChartCrosshair
-} from "../chart-import.js?v=13";
+} from "./chart-import.js?v=13";
 
 import {
 isPositionType
-} from "./position.js?v=1";
+} from "./drawings/position.js?v=1";
 
 /**
  * Touch/pointer placement for iPad and coarse-touch viewports.

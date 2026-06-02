@@ -290,30 +290,6 @@ scheduleRemoteRegistrySync();
 
 }
 
-function broadcastAlertsRegistrySync(){
-
-if(
-!alertsRealtimeChannel
-){
-return;
-}
-
-try{
-
-alertsRealtimeChannel.send({
-type: "broadcast",
-event: "alerts-registry-sync",
-payload: {
-at: Date.now()
-}
-});
-
-}catch{
-/* ignore */
-}
-
-}
-
 function handleAlertsRealtimeUpsert(
 payload
 ){
@@ -1185,13 +1161,3 @@ retryPushWhenVisible
 );
 
 }
-
-export {
-scheduleRemoteRegistrySync,
-startAlertsFastPoll,
-stopAlertsFastPoll,
-setupAlertsRealtimeForUser,
-hydrateAlertsAfterAuth,
-syncAlertsWithCloud,
-initAlertsCloudSync
-};
