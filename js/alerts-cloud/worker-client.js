@@ -23,7 +23,7 @@ import {
 alertsDebugLog,
 broadcastAlertsRegistrySync,
 lastSeenCloudAlerts
-} from "./debug.js?v=2";
+} from "./debug.js?v=1";
 
 let cloudOpChain =
 Promise.resolve();
@@ -299,18 +299,6 @@ new RegExp(column, "i").test(msg) &&
 /PGRST204|42703|column|does not exist|schema cache/i.test(msg)
 )
 );
-
-}
-
-async function refreshTelegramRestAuth(){
-
-try{
-await ensureCloudLoginResolved(10000);
-}catch{
-/* ignore */
-}
-
-return resolveUserRestAuth();
 
 }
 

@@ -12,11 +12,11 @@
 
 | Facade | Подмодули |
 |--------|-----------|
-| `alerts-cloud-sync.js` | монолит в проде; подмодули `alerts-cloud/*` подготовлены, wiring — TODO |
-| `drawings-cloud-sync.js` | монолит в проде; подмодули `drawings-cloud/*` подготовлены, wiring — TODO |
+| `alerts-cloud-sync.js` | монолит в проде; `alerts-cloud/*` — prep, **не wired** (см. README там) |
+| `drawings-cloud-sync.js` | ✅ barrel → `drawings-cloud/{sync-lifecycle,worker-client,pull-reconcile}.js` |
 | `chart.js` | `chart/{chart-options,chart-dom-crosshair,chart-factory}.js` |
 | `terminal.js` | `terminal/{coins-state,coins-prefs,coins-table}.js` |
-| `drawings.js` | `drawings/{init,fib-spec,…}.js`; `draw-render`, `draw-hit`, `drawings-tablet-input` — подготовлены, wiring — TODO |
+| `drawings.js` | `drawings/{init,fib-spec,draw-hit,draw-render,…}.js`; tablet input wired |
 
 ## Performance
 

@@ -64,7 +64,7 @@ Object.freeze({
 "drawings.js":
 198,
 "drawings/init.js":
-28,
+29,
 "drawings/constants.js":
 5,
 "drawings/math.js":
@@ -72,7 +72,7 @@ Object.freeze({
 "drawings/fib-spec.js":
 9,
 "drawings/fib-portals.js":
-2,
+3,
 "drawings/position.js":
 1,
 "drawings/utils.js":
@@ -170,13 +170,13 @@ Object.freeze({
 "alerts-cloud/debug.js":
 1,
 "alerts-cloud/telegram-id.js":
-2,
+1,
 "alerts-cloud/worker-client.js":
-2,
+1,
 "alerts-cloud/registry-sync.js":
-2,
+1,
 "alerts-cloud/polling-realtime.js":
-2,
+1,
 "alerts-page.js":
 60,
 "alert-monitor.js":

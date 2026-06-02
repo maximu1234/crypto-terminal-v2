@@ -147,6 +147,82 @@ return out;
 
 }
 
+/** Manifest key for an import path relative to a source file (js/… or css/…). */
+function resolveImportKey(
+fromFile,
+importPath
+){
+
+const clean =
+importPath.split(
+"?"
+)[
+0
+];
+
+if(
+clean.startsWith(
+"/js/"
+)
+){
+return clean.slice(
+4
+);
+}
+
+if(
+clean.startsWith(
+"/css/"
+)
+){
+return clean.slice(
+5
+);
+}
+
+const abs =
+path.normalize(
+path.join(
+path.dirname(
+fromFile
+),
+clean
+)
+);
+
+const rel =
+path.relative(
+ROOT,
+abs
+).replace(
+/\\/g,
+"/"
+);
+
+if(
+rel.startsWith(
+"js/"
+)
+){
+return rel.slice(
+3
+);
+}
+
+if(
+rel.startsWith(
+"css/"
+)
+){
+return rel.slice(
+4
+);
+}
+
+return null;
+
+}
+
 const assets =
 readAssets();
 const files =
@@ -187,22 +263,18 @@ src
 null
 ){
 const base =
+resolveImportKey(
+file,
 m[
 1
-].replace(
-/^\.\//,
-""
-).replace(
-/^js\//,
-""
-).replace(
-/^css\//,
-""
+]
 );
 const found =
-assets[
 base
-];
+? assets[
+base
+]
+: null;
 
 if(
 found ==

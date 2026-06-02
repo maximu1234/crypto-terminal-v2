@@ -25,7 +25,7 @@ markAlertsPullSuccess,
 warnAlertsPullThrottled,
 isAlertsPullInBackoff,
 broadcastAlertsRegistrySync
-} from "./debug.js?v=2";
+} from "./debug.js?v=1";
 
 import {
 runCloudOp,
@@ -40,7 +40,7 @@ pushAlertViaWorker,
 clearAllAlertsFromCloud,
 fetchWithTimeout,
 softDeleteAlertViaRest
-} from "./worker-client.js?v=2";
+} from "./worker-client.js?v=1";
 
 const coalesceRegistryPull =
 createPullCoalescer({

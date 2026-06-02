@@ -32,12 +32,12 @@ alertsRealtimeChannel,
 alertsRealtimeUserId,
 isAlertsPullInBackoff,
 broadcastAlertsRegistrySync
-} from "./debug.js?v=2";
+} from "./debug.js?v=1";
 
 import {
 getAuthed,
 runCloudOp
-} from "./worker-client.js?v=2";
+} from "./worker-client.js?v=1";
 
 import {
 pullRegistryFromCloudNow,
@@ -45,7 +45,7 @@ pushUnsyncedAlerts,
 scheduleRegistryCloudSync,
 isRegistryCloudSyncPaused,
 syncAllLocalAlertsToCloud
-} from "./registry-sync.js?v=2";
+} from "./registry-sync.js?v=1";
 
 const IS_IOS_SAFARI =
 /iP(hone|ad|od)/i.test(

@@ -1,5 +1,7 @@
 # Метка 10 — стабильная сборка (июнь 2026)
 
+> **Superseded by [MARKER_11.md](./MARKER_11.md)** (`metka-11`) — текущий prod-эталон.
+
 **Тег:** `metka-10` · **Коммит:** `git rev-parse metka-10`
 
 **Эталон после фазы 3 refactor.** Наследует [MARKER_9.md](./MARKER_9.md).

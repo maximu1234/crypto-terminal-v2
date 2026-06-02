@@ -89,7 +89,7 @@ let env;
 
 try{
 env =
-await import("../supabase-env.js?v=6");
+await import("../supabase-env.js?v=5");
 }catch{
 return null;
 }

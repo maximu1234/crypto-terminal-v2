@@ -6,7 +6,7 @@ fibLineWidthMenuMarkup,
 normalizeFibLevelWidth,
 setFibLineStyleButton,
 setFibLevelWidthButton
-} from "./fib-spec.js?v=4";
+} from "./fib-spec.js?v=9";
 
 let fibLineStyleMenuPortal = null;
 let fibLineStyleMenuAnchor = null;

@@ -142,7 +142,7 @@ isFibLineWidthMenuOpenForAnchor,
 fibPortalHitTest,
 retainFibPortals,
 releaseFibPortals
-} from "./fib-portals.js?v=1";
+} from "./fib-portals.js?v=3";
 
 import {
 isPositionType,
