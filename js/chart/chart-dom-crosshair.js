@@ -512,8 +512,20 @@ Number.isFinite(
 crosshairPrice
 );
 
+const probeBeyondLastBar =
+isProbeTimeBeyondLastBar(
+series,
+probeTime
+);
+
+const useDomHorizLine =
+inFutureGap ||
+probeBeyondLastBar ||
+!lwHorizOk;
+
 if(
-lwHorizOk
+lwHorizOk &&
+!useDomHorizLine
 ){
 
 try{
@@ -542,7 +554,7 @@ chartsStackEl
 ){
 
 if(
-!lwHorizOk
+useDomHorizLine
 ){
 
 const stackR =
@@ -941,22 +953,81 @@ if(
 return false;
 }
 
+const ts =
+chart.timeScale();
+
 const lastX =
-chart.timeScale().timeToCoordinate(
+ts.timeToCoordinate(
 bars[
 bars.length - 1
 ].time
 );
 
 if(
-!Number.isFinite(
+Number.isFinite(
 lastX
 )
+){
+return x > lastX + 0.5;
+}
+
+const logical =
+ts.coordinateToLogical?.(
+x
+);
+
+if(
+logical !=
+null &&
+Number.isFinite(
+logical
+)
+){
+return logical > bars.length - 1 + 0.5;
+}
+
+return false;
+
+}
+
+function isProbeTimeBeyondLastBar(
+series,
+probeTime
+){
+
+const bars =
+series?.data?.();
+
+if(
+!bars?.length ||
+probeTime ==
+null
 ){
 return false;
 }
 
-return x > lastX + 0.5;
+const probeTs =
+crosshairUnix(
+probeTime
+);
+
+const lastTs =
+crosshairUnix(
+bars[
+bars.length - 1
+].time
+);
+
+if(
+probeTs ==
+null ||
+lastTs ==
+null
+){
+return false;
+}
+
+return probeTs > lastTs + 1;
 
 }
 

@@ -69,7 +69,7 @@ applyChartScaleWidthCss
 
 export {
 mountTabletChartGestures
-} from "./chart-tablet-gestures.js?v=16";
+} from "./chart-tablet-gestures.js?v=17";
 
 import {
 effectiveChartPriceScaleWidth,

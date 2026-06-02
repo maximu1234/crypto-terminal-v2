@@ -1144,22 +1144,19 @@ document.getElementById(
 "price-scale-touch-strip"
 );
 
-function onScaleStripPointer(
+function onScaleStripPointerDown(
 e
 ){
 
-if(dragAlertId){
+if(
+dragAlertId
+){
 return;
 }
 
-syncPlusFromClient(
-e.clientX,
-e.clientY,
-{
-fromTouch: true,
-forceShowFromProbe: true
-}
-);
+hidePlus({
+release: false
+});
 
 }
 
@@ -1168,12 +1165,7 @@ scaleStripEl
 ){
 scaleStripEl.addEventListener(
 "pointerdown",
-onScaleStripPointer,
-true
-);
-scaleStripEl.addEventListener(
-"pointermove",
-onScaleStripPointer,
+onScaleStripPointerDown,
 true
 );
 }

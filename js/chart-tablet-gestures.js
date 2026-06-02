@@ -986,11 +986,6 @@ mode =
 
 attachDocListeners();
 
-fireProbeAt(
-e.clientX,
-e.clientY
-);
-
 e.preventDefault();
 e.stopImmediatePropagation?.();
 return;
