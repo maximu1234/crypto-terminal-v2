@@ -1,8 +1,9 @@
 import {
 loadBybitHistory,
 loadBybitSymbols,
-loadTwelveData
-} from "./api.js?v=22";
+loadTwelveData,
+peekBybitSymbolsCache
+} from "./api.js?v=24";
 
 import {
 filterRecentListings
@@ -1733,6 +1734,36 @@ void reloadTerminalBybitData();
 }
 );
 
+window.addEventListener(
+"bybit-symbols-updated",
+e=>{
+
+const symbols =
+e.detail?.symbols;
+
+if(
+!Array.isArray(symbols) ||
+!symbols.length
+){
+return;
+}
+
+allBybitSymbols =
+symbols.map(item=>
+typeof item === "string"
+? item
+: item.symbol
+).filter(Boolean);
+
+newListings =
+filterRecentListings(symbols).map(x=>x.symbol);
+
+generateMarketData();
+renderList();
+
+}
+);
+
 
 /* =========================================================
    DEFAULT ZOOM
@@ -2950,8 +2981,36 @@ console.error(
 err
 );
 
+if(
+!allBybitSymbols.length
+){
+
+const stale =
+peekBybitSymbolsCache();
+
+if(
+stale?.length
+){
+
+allBybitSymbols =
+stale.map(item=>
+typeof item === "string"
+? item
+: item.symbol
+).filter(Boolean);
+
+}
+
+}
+
+if(
+!allBybitSymbols.length
+){
+
 allBybitSymbols = [];
 newListings = [];
+
+}
 
 }
 
@@ -2965,11 +3024,13 @@ hasUrlSymbol = false;
 
 generateMarketData();
 
+renderList();
+
 await primeTickerSnapshots();
 
-resizeCharts();
-
 renderList();
+
+resizeCharts();
 
 startTickerStream();
 

@@ -16,6 +16,86 @@ function sleep(ms){
 return new Promise(resolve=>setTimeout(resolve, ms));
 }
 
+const BYBIT_PUBLIC_BASES = [
+"https://api.bybit.com",
+"https://api.bytick.com"
+];
+
+async function fetchBybitJsonWithDirectFallback(
+pathQuery,
+options = {}
+){
+
+try{
+
+const { json } =
+await fetchBybit(
+pathQuery,
+options
+);
+
+return json;
+
+}catch(
+proxyErr
+){
+
+const path =
+pathQuery.startsWith("/")
+? pathQuery
+: `/${pathQuery}`;
+
+let lastErr =
+proxyErr;
+
+for(
+const base of
+BYBIT_PUBLIC_BASES
+){
+
+try{
+
+const res =
+await fetch(
+`${base}${path}`,
+{
+cache:"no-store",
+credentials:"omit"
+}
+);
+
+const json =
+await res.json();
+
+if(
+json.retCode ===
+0
+){
+return json;
+}
+
+lastErr =
+new Error(
+`Bybit ${json.retCode}: ${json.retMsg || res.status}`
+);
+
+}catch(
+err
+){
+
+lastErr =
+err;
+
+}
+
+}
+
+throw lastErr;
+
+}
+
+}
+
 async function fetchBybitKlineBatch(
 symbol,
 tf,
@@ -343,6 +423,106 @@ detail: { symbols: nextList }
 
 }
 
+async function loadBybitSymbolsFromTickers(){
+
+const json =
+await fetchBybitJsonWithDirectFallback(
+"/v5/market/tickers?category=linear",
+{
+timeoutMs:15000,
+retries:2,
+sequential:true
+}
+);
+
+if(
+!json.result ||
+!json.result.list?.length
+){
+return [];
+}
+
+return json.result.list
+.filter(ticker=>{
+
+const sym =
+String(
+ticker.symbol ||
+""
+).toUpperCase();
+
+return (
+sym.endsWith("USDT") &&
+!sym.endsWith("PERP")
+);
+
+})
+.map(ticker=>({
+symbol:ticker.symbol,
+status:"Trading",
+quoteCoin:"USDT"
+}));
+
+}
+
+async function resolveBybitSymbolsNetwork(){
+
+try{
+
+const symbols =
+await loadBybitSymbolsFromNetwork();
+
+if(
+symbols.length
+){
+return symbols;
+}
+
+}catch(
+primaryErr
+){
+
+const tickers =
+await loadBybitSymbolsFromTickers().catch(
+()=>[]
+);
+
+if(
+tickers.length
+){
+writeSymbolsCache(
+tickers
+);
+return tickers;
+}
+
+throw primaryErr;
+
+}
+
+const tickers =
+await loadBybitSymbolsFromTickers().catch(
+()=>[]
+);
+
+if(
+tickers.length
+){
+
+writeSymbolsCache(
+tickers
+);
+
+return tickers;
+
+}
+
+throw new Error(
+"Пустой список инструментов Bybit"
+);
+
+}
+
 async function loadBybitSymbolsFromNetwork(){
 
 const all = [];
@@ -362,13 +542,16 @@ const path =
 try{
 
 const { json } =
-await fetchBybit(
+{
+json: await fetchBybitJsonWithDirectFallback(
 path,
 {
 timeoutMs: 10000,
-retries: 1
+retries: 2,
+sequential: true
 }
-);
+)
+};
 
 if(
 !json.result ||
@@ -489,6 +672,12 @@ console.warn(
 "Bybit symbols refresh:",
 err?.message || err
 );
+void resolveBybitSymbolsNetwork().then(symbols=>{
+dispatchSymbolsUpdatedIfChanged(
+cached,
+symbols
+);
+}).catch(()=>{});
 });
 
 return cached;
@@ -516,13 +705,19 @@ console.warn(
 "Bybit symbols refresh:",
 err?.message || err
 );
+void resolveBybitSymbolsNetwork().then(symbols=>{
+dispatchSymbolsUpdatedIfChanged(
+stale,
+symbols
+);
+}).catch(()=>{});
 });
 
 return stale;
 
 }
 
-return loadBybitSymbolsFromNetwork();
+return resolveBybitSymbolsNetwork();
 
 }
 
