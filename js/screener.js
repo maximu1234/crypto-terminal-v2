@@ -42,7 +42,7 @@ migrateFavorites
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=26";
+} from "./auth-ui.js?v=27";
 
 import {
 ensureSettled,
@@ -57,7 +57,7 @@ bindMobileNavDrawerLinks
 import {
 persistFavoritesToCloud,
 onFavoritesRemoteUpdate
-} from "./cloud-sync.js?v=32";
+} from "./cloud-sync.js?v=33";
 
 const gridEl =
 document.getElementById("screener-grid");
@@ -1215,7 +1215,7 @@ toggle?.setAttribute(
 
 function openScreenerNav(){
 
-void import("./auth-ui.js?v=26").then(m=>{
+void import("./auth-ui.js?v=27").then(m=>{
 m.closeCloudSettingsDropdown?.();
 }).catch(()=>{});
 

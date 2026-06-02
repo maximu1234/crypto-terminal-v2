@@ -2,13 +2,14 @@ import {
 initCloudSync,
 isCloudSyncEnabled,
 isCloudLoggedIn,
+isCloudLoggedInEffective,
 getCloudUserEmail,
 onCloudSyncChange,
 signInWithEmailOtp,
 signOutCloud,
 recoverAuthSessionFromUrl,
 hasAuthCallbackInUrl
-} from "./cloud-sync.js?v=32";
+} from "./cloud-sync.js?v=33";
 
 import {
 isSupabaseConfigured
@@ -510,11 +511,7 @@ scheduleSettingsDropdownPlacement();
 
 function isAuthUiLoggedIn(){
 
-if(isCloudLoggedIn()){
-return true;
-}
-
-return !!readAlertTokenSync()?.user;
+return isCloudLoggedInEffective();
 
 }
 

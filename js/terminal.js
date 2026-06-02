@@ -26,12 +26,12 @@ flagSortRank
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=26";
+} from "./auth-ui.js?v=27";
 
 import {
 persistFavoritesToCloud,
 onFavoritesRemoteUpdate
-} from "./cloud-sync.js?v=32";
+} from "./cloud-sync.js?v=33";
 
 import {
 createCandlestickChart,

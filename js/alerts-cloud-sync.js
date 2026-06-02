@@ -14,7 +14,7 @@ isCloudApiUsable,
 isCloudAuthError,
 reportCloudAuthFailure,
 tryCloudAuthRecovery
-} from "./cloud-sync.js?v=32";
+} from "./cloud-sync.js?v=33";
 
 import {
 getCachedAlertAuth,
@@ -4357,7 +4357,7 @@ return false;
 }
 
 const { ensureCloudReady } =
-await import("./auth-ui.js?v=26");
+await import("./auth-ui.js?v=27");
 
 await ensureCloudReady();
 
@@ -4593,7 +4593,7 @@ return ok;
 async function syncAllLocalAlertsToCloudImpl(){
 
 const { ensureCloudReady } =
-await import("./auth-ui.js?v=26");
+await import("./auth-ui.js?v=27");
 
 await ensureCloudReady();
 
@@ -5454,7 +5454,7 @@ return 0;
 
 try{
 const { ensureCloudLoginResolved } =
-await import("./cloud-sync.js?v=32");
+await import("./cloud-sync.js?v=33");
 
 await ensureCloudLoginResolved(
 8000

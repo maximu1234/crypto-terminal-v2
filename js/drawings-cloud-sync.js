@@ -10,7 +10,7 @@ isCloudApiUsable,
 isCloudAuthError,
 reportCloudAuthFailure,
 tryCloudAuthRecovery
-} from "./cloud-sync.js?v=32";
+} from "./cloud-sync.js?v=33";
 
 import {
 normalizeAlertWorkerBaseUrl

@@ -32,7 +32,7 @@ document.getElementById(
 
 function openTerminalNav(){
 
-void import("./auth-ui.js?v=26").then(m=>{
+void import("./auth-ui.js?v=27").then(m=>{
 m.closeCloudSettingsDropdown?.();
 }).catch(()=>{});
 

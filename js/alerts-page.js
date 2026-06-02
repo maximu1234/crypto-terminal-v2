@@ -28,11 +28,11 @@ onCloudSyncChange,
 getCloudUserEmail,
 pullDeviceStateFromCloud,
 ensureCloudLoginResolved
-} from "./cloud-sync.js?v=32";
+} from "./cloud-sync.js?v=33";
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=26";
+} from "./auth-ui.js?v=27";
 
 import {
 TELEGRAM_BOT_USERNAME,

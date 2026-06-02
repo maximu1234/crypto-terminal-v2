@@ -130,12 +130,19 @@ persisted
 );
 
 if(
+!isCloudAuthTokenUsable()
+){
+syncCloudLoginFromStorage();
+
+if(
 !accessStillOk
 ){
 warnAuthOnce(
 "auth-degraded",
 `[auth] ${reason} — войдите снова через шестерёнку`
 );
+}
+
 }
 
 }
@@ -161,17 +168,23 @@ const user =
 snap?.user;
 
 if(
-user?.id
+!user?.id
 ){
+return;
+}
+
+if(
+!isCloudAuthTokenUsable()
+){
+return;
+}
+
 loggedIn = true;
 userEmail =
 user.email ||
 "";
-}
 
 }
-
-bootstrapAuthFromLocalStorage();
 
 async function tryRecoverSignedOutSession(
 sb
@@ -180,6 +193,30 @@ sb
 if(
 isExplicitAuthSignOut()
 ){
+return null;
+}
+
+if(
+isAuthRefreshBlockedNow()
+){
+syncCloudLoginFromStorage();
+return null;
+}
+
+const persistedEarly =
+readPersistedAuthSession();
+
+if(
+persistedEarly?.expires_at &&
+isAccessTokenExpired(
+persistedEarly
+) &&
+!String(
+persistedEarly.refresh_token ||
+""
+).trim()
+){
+syncCloudLoginFromStorage();
 return null;
 }
 
@@ -315,12 +352,6 @@ blob
 
 export function isCloudAuthTokenUsable(){
 
-if(
-!isCloudLoggedInEffective()
-){
-return false;
-}
-
 const persisted =
 readPersistedAuthSession();
 const snap =
@@ -364,6 +395,49 @@ isCloudAuthTokenUsable() &&
 Date.now() >=
 cloudApiPausedUntil
 );
+
+}
+
+function syncCloudLoginFromStorage(){
+
+const persisted =
+readPersistedAuthSession();
+const usable =
+isCloudAuthTokenUsable();
+
+if(
+usable &&
+persisted?.user?.id
+){
+
+if(
+!loggedIn
+){
+loggedIn = true;
+userEmail =
+persisted.user.email ||
+userEmail ||
+"";
+notifyAuth();
+}
+
+return true;
+
+}
+
+if(
+loggedIn
+){
+loggedIn = false;
+userEmail =
+persisted?.user?.email ||
+userEmail ||
+"";
+stopCloudSyncHelpers();
+notifyAuth();
+}
+
+return false;
 
 }
 
@@ -719,7 +793,35 @@ return false;
 if(
 !isCloudLoggedInEffective()
 ){
+
+const persistedLogin =
+readPersistedAuthSession();
+
+if(
+!persistedLogin?.user?.id
+){
 return false;
+}
+
+if(
+persistedLogin?.access_token &&
+!isAccessTokenExpired(
+persistedLogin
+)
+){
+return false;
+}
+
+if(
+!String(
+persistedLogin.refresh_token ||
+""
+).trim()
+){
+syncCloudLoginFromStorage();
+return false;
+}
+
 }
 
 const persisted =
@@ -787,6 +889,7 @@ return false;
 await applySession(
 data.session
 );
+syncCloudLoginFromStorage();
 return true;
 }catch(
 err
@@ -2270,13 +2373,13 @@ err?.message || err
 
 export function isCloudLoggedInEffective(){
 
-if(
-isCloudLoggedIn()
-){
-return true;
-}
-
-return !!readAlertTokenSync()?.user;
+return (
+isCloudAuthTokenUsable() &&
+(
+isCloudLoggedIn() ||
+!!readAlertTokenSync()?.user?.id
+)
+);
 
 }
 
@@ -2397,11 +2500,11 @@ sessionKey;
 loggedIn = !!session?.user;
 userEmail = session?.user?.email || "";
 
-notifyAuth();
-
 if(
 !loggedIn
 ){
+syncCloudLoginFromStorage();
+notifyAuth();
 stopCloudSyncHelpers();
 return;
 }
@@ -2434,6 +2537,16 @@ warmAlertAuthCache(
 sb,
 session
 );
+}
+
+syncCloudLoginFromStorage();
+notifyAuth();
+
+if(
+!loggedIn
+){
+stopCloudSyncHelpers();
+return;
 }
 
 void applySessionCloudWork(
