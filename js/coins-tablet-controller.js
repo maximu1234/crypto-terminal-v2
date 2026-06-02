@@ -242,6 +242,7 @@ positionTabletProbeCrosshair({
 chart,
 series: candleSeries,
 chartEl,
+chartWrapEl,
 chartsStackEl,
 linkedVertEl,
 horizLineEl: probeHorizEl,
@@ -359,6 +360,7 @@ hideTabletProbeCrosshair({
 linkedVertEl,
 horizLineEl: probeHorizEl,
 timeLabelEl: crosshairTimeLabelEl,
+chartWrapEl,
 onClear(){
 
 const fallback =

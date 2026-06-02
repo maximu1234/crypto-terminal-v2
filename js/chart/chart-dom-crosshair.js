@@ -77,6 +77,96 @@ horz
 
 }
 
+function hideProbeHorizInChartWrap(
+chartWrapEl
+){
+
+if(
+!chartWrapEl
+){
+return;
+}
+
+const horz =
+chartWrapEl.querySelector(
+`.${DOM_CROSSHAIR_HORZ}`
+);
+
+if(
+horz
+){
+horz.classList.add(
+"hidden"
+);
+}
+
+}
+
+function positionProbeHorizInChartWrap({
+chartWrapEl,
+chart,
+chartEl,
+clientY,
+plotWidthPx
+}){
+
+if(
+!chartWrapEl ||
+!chartEl ||
+!Number.isFinite(
+clientY
+)
+){
+return;
+}
+
+ensureDomChartCrosshair(
+chartWrapEl
+);
+
+const horz =
+chartWrapEl.querySelector(
+`.${DOM_CROSSHAIR_HORZ}`
+);
+
+if(
+!horz
+){
+return;
+}
+
+const wrapR =
+chartWrapEl.getBoundingClientRect();
+
+const y =
+clientY - wrapR.top;
+
+horz.style.top =
+`${Math.round(
+y
+)}px`;
+
+horz.style.left =
+"0px";
+
+horz.style.width =
+`${Math.max(
+1,
+Math.round(
+plotWidthPx
+)
+)}px`;
+
+horz.style.removeProperty(
+"right"
+);
+
+horz.classList.remove(
+"hidden"
+);
+
+}
+
 export function positionDomChartCrosshair({
 wrapEl,
 chartEl,
@@ -295,6 +385,7 @@ export function positionTabletProbeCrosshair({
 chart,
 series,
 chartEl,
+chartWrapEl = null,
 chartsStackEl,
 linkedVertEl,
 horizLineEl,
@@ -401,6 +492,11 @@ linkedVertEl.classList.remove(
 
 const inFutureGap =
 isPlotXBeyondLastCandle(
+chart,
+series,
+x
+) ||
+isPlotXBeyondLastCandleLogical(
 chart,
 series,
 x
@@ -548,13 +644,28 @@ chart.clearCrosshairPosition();
 
 }
 
-if(
-horizLineEl &&
-chartsStackEl
-){
+const plotWidthForHoriz =
+Math.max(
+0,
+chartR.width - scaleW
+);
+
+const wrapEl =
+chartWrapEl ||
+chartEl?.closest?.(
+"#chart-wrap"
+) ||
+document.getElementById(
+"chart-wrap"
+);
 
 if(
 useDomHorizLine
+){
+
+if(
+horizLineEl &&
+chartsStackEl
 ){
 
 const stackR =
@@ -581,12 +692,6 @@ topInStack
 const plotLeft =
 chartR.left - stackR.left;
 
-const plotWidth =
-Math.max(
-0,
-chartR.width - scaleW
-);
-
 horizLineEl.style.top =
 `${Math.round(clampedTop)}px`;
 
@@ -594,7 +699,7 @@ horizLineEl.style.left =
 `${Math.round(plotLeft)}px`;
 
 horizLineEl.style.width =
-`${Math.round(plotWidth)}px`;
+`${Math.round(plotWidthForHoriz)}px`;
 
 horizLineEl.style.removeProperty(
 "right"
@@ -607,24 +712,31 @@ horizLineEl.classList.remove(
 "hidden"
 );
 
+}
+
+positionProbeHorizInChartWrap({
+chartWrapEl: wrapEl,
+chart,
+chartEl,
+clientY,
+plotWidthPx: plotWidthForHoriz
+});
+
 }else{
 
+if(
+horizLineEl
+){
 horizLineEl.classList.add(
 "hidden"
 );
-
 horizLineEl.style.removeProperty(
 "display"
 );
-
 }
 
-}else if(
-horizLineEl
-){
-
-horizLineEl.classList.add(
-"hidden"
+hideProbeHorizInChartWrap(
+wrapEl
 );
 
 }
@@ -681,6 +793,7 @@ export function hideTabletProbeCrosshair({
 linkedVertEl,
 horizLineEl,
 timeLabelEl,
+chartWrapEl = null,
 onClear
 }){
 
@@ -694,6 +807,13 @@ linkedVertEl?.style.removeProperty(
 
 horizLineEl?.classList.add(
 "hidden"
+);
+
+hideProbeHorizInChartWrap(
+chartWrapEl ||
+document.getElementById(
+"chart-wrap"
+)
 );
 
 horizLineEl?.style.removeProperty(
@@ -987,6 +1107,40 @@ return logical > bars.length - 1 + 0.5;
 }
 
 return false;
+
+}
+
+function isPlotXBeyondLastCandleLogical(
+chart,
+series,
+x
+){
+
+const bars =
+series?.data?.();
+
+if(
+!bars?.length
+){
+return false;
+}
+
+const logical =
+chart.timeScale().coordinateToLogical?.(
+x
+);
+
+if(
+logical ==
+null ||
+!Number.isFinite(
+logical
+)
+){
+return false;
+}
+
+return logical > bars.length - 0.5;
 
 }
 

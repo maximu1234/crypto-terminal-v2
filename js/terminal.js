@@ -59,7 +59,7 @@ resetChartPriceAutoScale
 import {
 isCoinsTabletV2Enabled,
 mountCoinsTabletController
-} from "./coins-tablet-controller.js?v=1";
+} from "./coins-tablet-controller.js?v=2";
 
 import {
 disconnectKlineStream
@@ -1261,6 +1261,9 @@ positionTabletProbeCrosshair({
 chart,
 series: candleSeries,
 chartEl,
+chartWrapEl: document.getElementById(
+"chart-wrap"
+),
 chartsStackEl: document.getElementById(
 "charts-stack"
 ),
@@ -1296,6 +1299,9 @@ horizLineEl: document.getElementById(
 ),
 timeLabelEl: document.getElementById(
 "crosshair-time-label"
+),
+chartWrapEl: document.getElementById(
+"chart-wrap"
 ),
 onClear(){
 
