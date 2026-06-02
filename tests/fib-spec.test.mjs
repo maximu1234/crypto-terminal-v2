@@ -128,8 +128,7 @@ const span =
 fibLevelXSpan(
 { x: 100, y: 0 },
 { x: 200, y: 0 },
-800,
-true
+800
 );
 
 assert.equal(
@@ -167,63 +166,27 @@ const span =
 fibLevelXSpan(
 { x: 320, y: 10 },
 { x: 320, y: 200 },
-800,
-true
-);
-
-assert.equal(
-span.collapsed,
-true
-);
-assert.equal(
-span.x1,
-320
-);
-assert.equal(
-span.x2,
-320
-);
-
-}
-);
-
-test(
-"fibLevelXSpan expands narrow non-zero span to plot",
-async()=>{
-
-const {
-fibLevelXSpan
-} =
-await import(
-"../js/drawings/fib-spec.js"
-);
-
-const span =
-fibLevelXSpan(
-{ x: 100, y: 0 },
-{ x: 105, y: 0 },
-800,
-true
-);
-
-assert.equal(
-span.collapsed,
-false
-);
-assert.equal(
-span.x1,
-0
-);
-assert.equal(
-span.x2,
 800
 );
 
+assert.equal(
+span.collapsed,
+true
+);
+assert.equal(
+span.x1,
+320
+);
+assert.equal(
+span.x2,
+320
+);
+
 }
 );
 
 test(
-"fibLevelXSpan preview keeps narrow span",
+"fibLevelXSpan narrow span collapses not full plot",
 async()=>{
 
 const {
@@ -237,10 +200,13 @@ const span =
 fibLevelXSpan(
 { x: 100, y: 0 },
 { x: 105, y: 0 },
-800,
-false
+800
 );
 
+assert.equal(
+span.collapsed,
+true
+);
 assert.equal(
 span.x1,
 100
@@ -249,9 +215,9 @@ assert.equal(
 span.x2,
 105
 );
-assert.equal(
-span.collapsed,
-false
+assert.notEqual(
+span.x2,
+800
 );
 
 }

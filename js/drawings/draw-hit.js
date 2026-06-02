@@ -7,11 +7,11 @@ fibPriceAtRatio,
 getFibRows,
 isSeriesLogarithmic,
 fibLevelXSpan
-} from "./fib-spec.js?v=8";
+} from "./fib-spec.js?v=9";
 
 import {
 FIB_HIT_X_PAD_PX
-} from "./constants.js?v=4";
+} from "./constants.js?v=5";
 
 /**
  * @param {object} deps
@@ -130,8 +130,7 @@ collapsed
 fibLevelXSpan(
 a,
 b,
-plotW,
-true
+plotW
 );
 
 if(

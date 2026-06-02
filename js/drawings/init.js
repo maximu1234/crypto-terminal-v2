@@ -103,7 +103,7 @@ POSITION_DEFAULT_TP_ZONE_PX,
 POSITION_DEFAULT_SL_ZONE_PX,
 POSITION_DEFAULT_WIDTH_BARS,
 POSITION_RR_LABEL_SAMPLE
-} from "./constants.js?v=4";
+} from "./constants.js?v=5";
 
 import {
 uid,
@@ -132,7 +132,7 @@ isSeriesLogarithmic,
 setFibLineStyleButton,
 setFibLevelWidthButton,
 fibLevelXSpan
-} from "./fib-spec.js?v=8";
+} from "./fib-spec.js?v=9";
 
 import {
 setFibPanelCommitHook,
@@ -5652,8 +5652,7 @@ collapsed
 fibLevelXSpan(
 a,
 b,
-plotW,
-true
+plotW
 );
 
 if(
@@ -8068,7 +8067,7 @@ dash
 }
 
 if(shape.type === "fib"){
-drawFib(ctx, shape, color, width, w, fibPlacementPreview);
+drawFib(ctx, shape, color, width, w);
 }
 
 if(shape.type === "channel"){
@@ -8090,9 +8089,7 @@ ctx,
 shape,
 color,
 width,
-plotW,
-fibPlacementPreview =
-false
+plotW
 ){
 
 const a =
@@ -8113,8 +8110,7 @@ collapsed
 fibLevelXSpan(
 a,
 b,
-plotW,
-!fibPlacementPreview
+plotW
 );
 
 const useLog =
@@ -8443,8 +8439,8 @@ return;
 }
 
 /* Первая точка без движения — только маркер. Иначе drawFib с
-   совпадающими p1/p2 даёт fibLevelXSpan на всю ширину → горизонталь
-   через весь график. При растягивании ко второй точке — полная фиба. */
+   совпадающими p1/p2 рисует collapsed fib (без горизонтальных уровней).
+   При растягивании ко второй точке — полная фиба. */
 const stretchPx =
 Math.hypot(
 previewXYPoint.x - a.x,

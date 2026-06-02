@@ -7,7 +7,7 @@ fibPriceAtRatio,
 getFibDrawRows,
 isSeriesLogarithmic,
 fibLevelXSpan
-} from "./fib-spec.js?v=8";
+} from "./fib-spec.js?v=9";
 
 import {
 isPositionType
@@ -56,9 +56,7 @@ ctx,
 shape,
 color,
 width,
-plotW,
-fibPlacementPreview =
-false
+plotW
 ){
 
 const a =
@@ -79,8 +77,7 @@ collapsed
 fibLevelXSpan(
 a,
 b,
-plotW,
-!fibPlacementPreview
+plotW
 );
 
 const useLog =
@@ -257,7 +254,7 @@ dash
 }
 
 if(shape.type === "fib"){
-drawFib(ctx, shape, color, width, w, fibPlacementPreview);
+drawFib(ctx, shape, color, width, w);
 }
 
 if(shape.type === "channel"){
