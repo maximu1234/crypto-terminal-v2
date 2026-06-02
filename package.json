@@ -6,6 +6,7 @@
     "assets:bump": "node scripts/sync-asset-versions.cjs bump",
     "assets:check": "node scripts/check-asset-manifest.cjs",
     "nav:check": "node scripts/check-site-nav.cjs",
-    "test": "node --test tests/*.test.mjs"
+    "test": "node --test tests/*.test.mjs",
+    "check:all": "node scripts/pre-refactor-check.cjs"
   }
 }

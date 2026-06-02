@@ -35,10 +35,11 @@
 `.github/workflows/ci.yml` — syntax, manifest check, site-nav check, unit tests.
 
 ```bash
-node --test tests/*.test.mjs
-node scripts/check-asset-manifest.cjs
-node scripts/check-site-nav.cjs
+npm run check:all
 ```
+
+Регрессия рисования (ручная): [DRAWINGS_REGRESSION.md](./DRAWINGS_REGRESSION.md)  
+План refactor: [REFACTOR_DRAWINGS.md](./REFACTOR_DRAWINGS.md)
 
 ## Откат
 

@@ -48,7 +48,8 @@
 | `node --check` все `.js` (115 файлов, js/ + api/ + alert-worker/) | OK |
 | `node scripts/check-asset-manifest.cjs` | OK (104 assets, 136 html/js refs) |
 | `node scripts/check-site-nav.cjs` | OK (4 pages, 6 links) |
-| `node --test tests/*.test.mjs` | OK (8/8) |
+| `node --test tests/*.test.mjs` | OK (14/14) |
+| `npm run check:all` | OK |
 | CI `.github/workflows/ci.yml` | те же шаги |
 | Prod `crypto-terminal-v2.vercel.app` — основные URL | 200 × 7 |
 | iPad crosshair + coins tablet (ручной чеклист) | OK |
@@ -63,6 +64,8 @@
 - `js/drawings/{draw-hit,draw-render}.js`, `drawings-tablet-input.js` → wiring в `drawings/init.js` — TODO
 
 На bundle/рантайм не влияют (не импортируются из prod boot).
+
+**Фаза 0 refactor:** [DRAWINGS_REGRESSION.md](./DRAWINGS_REGRESSION.md), [REFACTOR_DRAWINGS.md](./REFACTOR_DRAWINGS.md), autotests `tests/draw-hit.test.mjs`.
 
 ## Ключевая структура
 
