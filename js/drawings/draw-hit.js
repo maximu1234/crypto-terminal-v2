@@ -7,11 +7,11 @@ fibPriceAtRatio,
 getFibRows,
 isSeriesLogarithmic,
 fibLevelXSpan
-} from "./fib-spec.js?v=7";
+} from "./fib-spec.js?v=8";
 
 import {
 FIB_HIT_X_PAD_PX
-} from "./constants.js?v=3";
+} from "./constants.js?v=4";
 
 /**
  * @param {object} deps
@@ -119,6 +119,25 @@ let dist = Infinity;
 const useLog =
 isSeriesLogarithmic(series);
 
+const plotW =
+getPlotWidth();
+
+const {
+x1,
+x2,
+collapsed
+} =
+fibLevelXSpan(
+a,
+b,
+plotW,
+true
+);
+
+if(
+!collapsed
+){
+
 getFibRows(shape).forEach(row=>{
 
 if(!row.enabled){
@@ -140,23 +159,8 @@ return;
 const y =
 series.priceToCoordinate(price);
 
-if(y != null){
-
-const plotW =
-getPlotWidth();
-
-const {
-x1,
-x2
-} =
-fibLevelXSpan(
-a,
-b,
-plotW,
-true
-);
-
 if(
+y != null &&
 px >= x1 - FIB_HIT_X_PAD_PX &&
 px <= x2 + FIB_HIT_X_PAD_PX
 ){
@@ -166,9 +170,9 @@ Math.abs(py - y)
 );
 }
 
-}
-
 });
+
+}
 
 if(
 shape.fibShowTrendLine === true

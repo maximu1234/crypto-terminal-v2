@@ -6,9 +6,10 @@ FIB_TOOL_DEFAULTS_VERSION,
 FIB_LINE_DASH,
 WIDTH_OPTIONS,
 FIB_MIN_ANCHOR_SPAN_PX,
+FIB_COLLAPSE_SPAN_PX,
 FIB_LABEL_X_PAD_PX,
 FIB_LABEL_RIGHT_RESERVE_PX
-} from "./constants.js?v=3";
+} from "./constants.js?v=4";
 
 const FIB_LINE_STYLE_OPTIONS = [
 { value: "solid", label: "Line" },
@@ -624,11 +625,10 @@ p1 + (p2 - p1) * ratio
 }
 
 /**
- * Горизонтальный span уровня fib между якорями (или на весь plot при узком span).
- * @param {{ x: number, y?: number }} a
- * @param {{ x: number, y?: number }} b
- * @param {number} plotW
- * @param {boolean} [expandNarrowSpan]
+ * Горизонтальный span уровня fib между якорями.
+ * - span &lt; FIB_COLLAPSE_SPAN_PX: якоря вертикально → collapsed (линии скрыты)
+ * - узкий но ненулевой span: expand на plot (одна свеча)
+ * @returns {{ x1: number, x2: number, labelX: number, collapsed: boolean }}
  */
 export function fibLevelXSpan(
 a,
@@ -649,9 +649,26 @@ a.x,
 b.x
 );
 
+const span =
+x2 - x1;
+
+if(
+span <
+FIB_COLLAPSE_SPAN_PX
+){
+
+return {
+x1,
+x2,
+labelX: x1,
+collapsed: true
+};
+
+}
+
 if(
 expandNarrowSpan &&
-x2 - x1 <
+span <
 FIB_MIN_ANCHOR_SPAN_PX
 ){
 x1 =
@@ -667,7 +684,8 @@ labelX:
 Math.min(
 x2 + FIB_LABEL_X_PAD_PX,
 plotW - FIB_LABEL_RIGHT_RESERVE_PX
-)
+),
+collapsed: false
 };
 
 }

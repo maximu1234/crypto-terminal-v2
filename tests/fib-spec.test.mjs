@@ -141,6 +141,10 @@ span.x2,
 200
 );
 assert.equal(
+span.collapsed,
+false
+);
+assert.equal(
 span.labelX,
 204
 );
@@ -149,7 +153,42 @@ span.labelX,
 );
 
 test(
-"fibLevelXSpan expands narrow span to plot",
+"fibLevelXSpan vertical anchors collapse",
+async()=>{
+
+const {
+fibLevelXSpan
+} =
+await import(
+"../js/drawings/fib-spec.js"
+);
+
+const span =
+fibLevelXSpan(
+{ x: 320, y: 10 },
+{ x: 320, y: 200 },
+800,
+true
+);
+
+assert.equal(
+span.collapsed,
+true
+);
+assert.equal(
+span.x1,
+320
+);
+assert.equal(
+span.x2,
+320
+);
+
+}
+);
+
+test(
+"fibLevelXSpan expands narrow non-zero span to plot",
 async()=>{
 
 const {
@@ -167,6 +206,10 @@ fibLevelXSpan(
 true
 );
 
+assert.equal(
+span.collapsed,
+false
+);
 assert.equal(
 span.x1,
 0
@@ -205,6 +248,10 @@ span.x1,
 assert.equal(
 span.x2,
 105
+);
+assert.equal(
+span.collapsed,
+false
 );
 
 }

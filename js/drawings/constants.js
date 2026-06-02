@@ -35,9 +35,13 @@ dashed: [8, 6],
 dotted: [2, 3]
 });
 
-/** Мин. расстояние между якорями fib; уже — линия на всю ширину plot */
+/** Мин. горизонтальный span для рисования; уже — expand на plot (одна свеча) */
 export const FIB_MIN_ANCHOR_SPAN_PX =
 12;
+
+/** Ниже — якоря «вертикально» (один X), горизонтальные уровни не рисуем */
+export const FIB_COLLAPSE_SPAN_PX =
+1;
 
 /** Hit-test: допуск по X вокруг span уровня */
 export const FIB_HIT_X_PAD_PX =

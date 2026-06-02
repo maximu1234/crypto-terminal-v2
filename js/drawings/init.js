@@ -103,7 +103,7 @@ POSITION_DEFAULT_TP_ZONE_PX,
 POSITION_DEFAULT_SL_ZONE_PX,
 POSITION_DEFAULT_WIDTH_BARS,
 POSITION_RR_LABEL_SAMPLE
-} from "./constants.js?v=3";
+} from "./constants.js?v=4";
 
 import {
 uid,
@@ -132,7 +132,7 @@ isSeriesLogarithmic,
 setFibLineStyleButton,
 setFibLevelWidthButton,
 fibLevelXSpan
-} from "./fib-spec.js?v=7";
+} from "./fib-spec.js?v=8";
 
 import {
 setFibPanelCommitHook,
@@ -5641,6 +5641,25 @@ let dist = Infinity;
 const useLog =
 isSeriesLogarithmic(series);
 
+const plotW =
+getPlotWidth();
+
+const {
+x1,
+x2,
+collapsed
+} =
+fibLevelXSpan(
+a,
+b,
+plotW,
+true
+);
+
+if(
+!collapsed
+){
+
 getFibRows(shape).forEach(row=>{
 
 if(!row.enabled){
@@ -5662,23 +5681,8 @@ return;
 const y =
 series.priceToCoordinate(price);
 
-if(y != null){
-
-const plotW =
-getPlotWidth();
-
-const {
-x1,
-x2
-} =
-fibLevelXSpan(
-a,
-b,
-plotW,
-true
-);
-
 if(
+y != null &&
 px >= x1 - 8 &&
 px <= x2 + 8
 ){
@@ -5688,9 +5692,9 @@ Math.abs(py - y)
 );
 }
 
-}
-
 });
+
+}
 
 if(
 shape.fibShowTrendLine === true
@@ -8103,7 +8107,8 @@ return;
 const {
 x1,
 x2,
-labelX
+labelX,
+collapsed
 } =
 fibLevelXSpan(
 a,
@@ -8113,7 +8118,13 @@ plotW,
 );
 
 const useLog =
-isSeriesLogarithmic(series);
+isSeriesLogarithmic(
+series
+);
+
+if(
+!collapsed
+){
 
 getFibDrawRows(
 shape
@@ -8179,7 +8190,8 @@ y + 4
 
 });
 
-/* До c088d9f диагональ рисовалась всегда — оставляем как запасной видимый элемент */
+}
+
 if(
 shape.fibShowTrendLine === true
 ){
