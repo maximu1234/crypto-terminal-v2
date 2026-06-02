@@ -5,7 +5,7 @@ STROKE,
 FIB_TOOL_DEFAULTS_VERSION,
 FIB_LINE_DASH,
 WIDTH_OPTIONS
-} from "./constants.js?v=1";
+} from "./constants.js?v=2";
 
 const FIB_LINE_STYLE_OPTIONS = [
 { value: "solid", label: "Line" },
@@ -678,6 +678,33 @@ rows[i].enabled = cell.enabled;
 });
 
 return rows;
+
+}
+
+/** Строки для отрисовки: всегда с хотя бы одним включённым уровнем. */
+export function getFibDrawRows(
+shape
+){
+
+const fibLevels =
+ensureFibLevelsVisible(
+shape?.fibLevels ??
+shape?.levels
+);
+
+const rows =
+getFibRows({
+...shape,
+fibLevels
+});
+
+if(
+rows.some(row=>row.enabled)
+){
+return rows;
+}
+
+return cloneDefaultFibRows();
 
 }
 

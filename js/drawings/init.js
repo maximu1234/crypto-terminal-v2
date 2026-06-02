@@ -102,7 +102,7 @@ POSITION_DEFAULT_TP_ZONE_PX,
 POSITION_DEFAULT_SL_ZONE_PX,
 POSITION_DEFAULT_WIDTH_BARS,
 POSITION_RR_LABEL_SAMPLE
-} from "./constants.js?v=1";
+} from "./constants.js?v=2";
 
 import {
 uid,
@@ -129,10 +129,11 @@ formatFibLabel,
 parseFibRatioField,
 fibPriceAtRatio,
 getFibRows,
+getFibDrawRows,
 isSeriesLogarithmic,
 setFibLineStyleButton,
 setFibLevelWidthButton
-} from "./fib-spec.js?v=4";
+} from "./fib-spec.js?v=5";
 
 import {
 setFibPanelCommitHook,
@@ -860,6 +861,17 @@ typeof shape.showFibTrend ===
 "boolean"
 ? !!shape.showFibTrend
 :true;
+
+/* c088d9f: trend off + все уровни disabled → объект есть, линий нет */
+if(
+!getFibDrawRows(
+shape
+).some(row=>row.enabled)
+){
+shape.fibLevels =
+cloneDefaultFibRows();
+shape.fibShowTrendLine = true;
+}
 
 delete shape.levels;
 delete shape.showFibTrend;
@@ -8014,6 +8026,44 @@ shape.id === selectedId
 
 }
 
+function fibLevelXSpan(
+a,
+b,
+plotW
+){
+
+let x1 =
+Math.min(
+a.x,
+b.x
+);
+let x2 =
+Math.max(
+a.x,
+b.x
+);
+
+/* Узкий span (одна свеча) → линия нулевой длины, hit-test по Y всё ещё ловит */
+if(
+x2 - x1 <
+12
+){
+x1 = 0;
+x2 = plotW;
+}
+
+return {
+x1,
+x2,
+labelX:
+Math.min(
+x2 + 4,
+plotW - 28
+)
+};
+
+}
+
 function drawFib(
 ctx,
 shape,
@@ -8031,40 +8081,23 @@ if(!a || !b){
 return;
 }
 
-/* Горизонтальные уровни — на всю ширину plot (как TV). Между якорями
-   линия могла иметь нулевую длину → объект есть, hit-test работает, но
-   на экране ничего не видно. */
-const x1 =
-0;
-const x2 =
-plotW;
-const labelX =
-Math.min(
-Math.max(
-a.x,
-b.x
-) + 4,
-plotW - 28
+const {
+x1,
+x2,
+labelX
+} =
+fibLevelXSpan(
+a,
+b,
+plotW
 );
 
 const useLog =
 isSeriesLogarithmic(series);
 
-const fibLevels =
-ensureFibLevelsVisible(
-shape.fibLevels ??
-shape.levels
-);
-
-const rows =
-getFibRows({
-...shape,
-fibLevels
-});
-
-let drewLevel = false;
-
-rows.forEach(row=>{
+getFibDrawRows(
+shape
+).forEach(row=>{
 
 if(!row.enabled){
 return;
@@ -8084,14 +8117,13 @@ if(
 return;
 }
 
+/* Те же координаты, что у якорей (plotPriceToCoordinate / toXY) */
 const y =
-series.priceToCoordinate(price);
+plotPriceToCoordinate(price);
 
 if(y == null){
 return;
 }
-
-drewLevel = true;
 
 const lineColor =
 row.color || color;
@@ -8100,8 +8132,11 @@ const dash =
 fibLevelDash(row.lineStyle);
 
 const lineWidth =
+Math.max(
+1,
 normalizeFibLevelWidth(row.lineWidth) ||
-width;
+width
+);
 
 drawLine(
 ctx,
@@ -8124,9 +8159,9 @@ y + 4
 
 });
 
+/* До c088d9f диагональ рисовалась всегда — оставляем как запасной видимый элемент */
 if(
-shape.fibShowTrendLine !== false ||
-!drewLevel
+shape.fibShowTrendLine !== false
 ){
 
 drawLine(

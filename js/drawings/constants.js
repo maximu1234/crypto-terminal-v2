@@ -26,8 +26,8 @@ export const HANDLE_STROKE = "#ffffff";
 export const WIDTH_OPTIONS = [1, 2, 3, 4];
 export const USER_PREFS_KEY = "draw_user_prefs";
 export const GLOBAL_STYLE_KEY = "draw_style_global_v1";
-/** Смена — полный сброс draw_defaults_fib на DEFAULT_FIB_SPEC */
-export const FIB_TOOL_DEFAULTS_VERSION = 4;
+/** Смена — полный сброс draw_defaults_fib (v5: repair invisible fib after c088d9f) */
+export const FIB_TOOL_DEFAULTS_VERSION = 5;
 
 export const FIB_LINE_DASH = Object.freeze({
 solid: [],
