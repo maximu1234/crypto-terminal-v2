@@ -2,7 +2,7 @@
 
 **Тег:** `metka-7` · **Коммит:** `git rev-parse metka-7`
 
-**Единственный эталон отката.** Предыдущие метки (`metka-4` … `metka-6`) сняты.
+**Единственный эталон отката (до metka-8):** см. [MARKER_8.md](./MARKER_8.md). Эта метка — историческая точка до refactor фазы 1 и cloud fixes.
 
 Стабильная сборка Multichart: desktop + iPad, все рынки на `/coins`, рисование (Fib), алерты, cloud sync, terminal dashboard.
 
