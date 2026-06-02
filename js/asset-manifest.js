@@ -48,9 +48,9 @@ Object.freeze({
 "chart-tablet-gestures.js":
 15,
 "drawings.js":
-190,
+191,
 "drawings/init.js":
-12,
+13,
 "drawings/constants.js":
 2,
 "drawings/math.js":

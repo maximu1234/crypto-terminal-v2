@@ -8422,7 +8422,23 @@ pts[
 );
 
 if(
-a
+!a
+){
+return;
+}
+
+/* Первая точка без движения — только маркер. Иначе drawFib с
+   совпадающими p1/p2 даёт fibLevelXSpan на всю ширину → горизонталь
+   через весь график. При растягивании ко второй точке — полная фиба. */
+const stretchPx =
+Math.hypot(
+previewXYPoint.x - a.x,
+previewXYPoint.y - a.y
+);
+
+if(
+stretchPx <
+12
 ){
 
 drawAnchorCircle(
@@ -8431,20 +8447,46 @@ a.x,
 a.y
 );
 
-/* До второй точки — только диагональ (как trendline). Полный drawFib
-   при совпадающих p1/p2 даёт fibLevelXSpan на всю ширину → мигающая
-   горизонталь 0.5 (и др.) через весь график. */
-drawLine(
-ctx,
-a.x,
-a.y,
-previewXYPoint.x,
-previewXYPoint.y,
-style.color,
-style.lineWidth
-);
+return;
 
 }
+
+const previewAnchor =
+previewPoint &&
+Number.isFinite(previewPoint.time) &&
+Number.isFinite(previewPoint.price)
+? previewPoint
+: pointFromXY(
+previewXYPoint.x,
+previewXYPoint.y
+);
+
+if(
+!previewAnchor
+){
+return;
+}
+
+const previewShape =
+{
+type: placement.type,
+color: style.color,
+lineWidth: style.lineWidth,
+fibLevels:
+ensureFibLevelsVisible(
+style.fibLevels
+),
+fibShowTrendLine: style.fibShowTrendLine,
+p1: pts[0],
+p2: previewAnchor
+};
+
+drawShape(
+ctx,
+previewShape,
+w,
+h
+);
 
 return;
 
