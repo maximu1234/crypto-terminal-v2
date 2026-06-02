@@ -24,7 +24,7 @@ BYBIT_ROUTE_PROXY
 
 import {
 resetBybitEndpoints
-} from "./bybit-fetch.js?v=10";
+} from "./bybit-fetch.js?v=11";
 
 const rootEl =
 document.getElementById("system-admin-root");
