@@ -118,11 +118,8 @@ normalizeFibLevelWidth,
 cloneDefaultFibRows,
 buildDefaultFibToolStorage,
 migrateFibToolDefaults,
-migrateFibFromNumberArray,
-migrateFibFromObjectRows,
-isClassicFibLevelNumbers,
-repairFibLevels,
 finalizeFibLevels,
+ensureFibLevelsVisible,
 ensureFibLevelsVisible,
 normalizeFibLevelsShape,
 formatFibInputValue,
@@ -8511,10 +8508,7 @@ fibLevels:
 placement.type === "fib"
 ? ensureFibLevelsVisible(style.fibLevels)
 : style.fibLevels,
-fibShowTrendLine:
-placement.type === "fib"
-? style.fibShowTrendLine
-: style.fibShowTrendLine,
+fibShowTrendLine: style.fibShowTrendLine,
 p1: previewPts[0],
 p2: previewPts[1],
 p3: previewPts[2],
