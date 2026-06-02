@@ -5,8 +5,9 @@ ensureFibLevelsVisible,
 formatFibLabel,
 fibPriceAtRatio,
 getFibDrawRows,
-isSeriesLogarithmic
-} from "./fib-spec.js?v=6";
+isSeriesLogarithmic,
+fibLevelXSpan
+} from "./fib-spec.js?v=7";
 
 import {
 isPositionType
@@ -47,46 +48,6 @@ ctx.lineTo(x2, y2);
 ctx.stroke();
 
 ctx.setLineDash([]);
-
-}
-
-function fibLevelXSpan(
-a,
-b,
-plotW,
-expandNarrowSpan =
-true
-){
-
-let x1 =
-Math.min(
-a.x,
-b.x
-);
-let x2 =
-Math.max(
-a.x,
-b.x
-);
-
-if(
-expandNarrowSpan &&
-x2 - x1 <
-12
-){
-x1 = 0;
-x2 = plotW;
-}
-
-return {
-x1,
-x2,
-labelX:
-Math.min(
-x2 + 4,
-plotW - 28
-)
-};
 
 }
 

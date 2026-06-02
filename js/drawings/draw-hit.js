@@ -5,8 +5,13 @@ distToSegment
 import {
 fibPriceAtRatio,
 getFibRows,
-isSeriesLogarithmic
-} from "./fib-spec.js?v=6";
+isSeriesLogarithmic,
+fibLevelXSpan
+} from "./fib-spec.js?v=7";
+
+import {
+FIB_HIT_X_PAD_PX
+} from "./constants.js?v=3";
 
 /**
  * @param {object} deps
@@ -140,28 +145,20 @@ if(y != null){
 const plotW =
 getPlotWidth();
 
-let x1 =
-Math.min(
-a.x,
-b.x
-);
-let x2 =
-Math.max(
-a.x,
-b.x
+const {
+x1,
+x2
+} =
+fibLevelXSpan(
+a,
+b,
+plotW,
+true
 );
 
 if(
-x2 - x1 <
-12
-){
-x1 = 0;
-x2 = plotW;
-}
-
-if(
-px >= x1 - 8 &&
-px <= x2 + 8
+px >= x1 - FIB_HIT_X_PAD_PX &&
+px <= x2 + FIB_HIT_X_PAD_PX
 ){
 dist = Math.min(
 dist,

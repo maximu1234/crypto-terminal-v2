@@ -112,3 +112,100 @@ null
 
 }
 );
+
+test(
+"fibLevelXSpan keeps wide anchor span",
+async()=>{
+
+const {
+fibLevelXSpan
+} =
+await import(
+"../js/drawings/fib-spec.js"
+);
+
+const span =
+fibLevelXSpan(
+{ x: 100, y: 0 },
+{ x: 200, y: 0 },
+800,
+true
+);
+
+assert.equal(
+span.x1,
+100
+);
+assert.equal(
+span.x2,
+200
+);
+assert.equal(
+span.labelX,
+204
+);
+
+}
+);
+
+test(
+"fibLevelXSpan expands narrow span to plot",
+async()=>{
+
+const {
+fibLevelXSpan
+} =
+await import(
+"../js/drawings/fib-spec.js"
+);
+
+const span =
+fibLevelXSpan(
+{ x: 100, y: 0 },
+{ x: 105, y: 0 },
+800,
+true
+);
+
+assert.equal(
+span.x1,
+0
+);
+assert.equal(
+span.x2,
+800
+);
+
+}
+);
+
+test(
+"fibLevelXSpan preview keeps narrow span",
+async()=>{
+
+const {
+fibLevelXSpan
+} =
+await import(
+"../js/drawings/fib-spec.js"
+);
+
+const span =
+fibLevelXSpan(
+{ x: 100, y: 0 },
+{ x: 105, y: 0 },
+800,
+false
+);
+
+assert.equal(
+span.x1,
+100
+);
+assert.equal(
+span.x2,
+105
+);
+
+}
+);

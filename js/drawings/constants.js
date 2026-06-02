@@ -35,6 +35,20 @@ dashed: [8, 6],
 dotted: [2, 3]
 });
 
+/** Мин. расстояние между якорями fib; уже — линия на всю ширину plot */
+export const FIB_MIN_ANCHOR_SPAN_PX =
+12;
+
+/** Hit-test: допуск по X вокруг span уровня */
+export const FIB_HIT_X_PAD_PX =
+8;
+
+export const FIB_LABEL_X_PAD_PX =
+4;
+
+export const FIB_LABEL_RIGHT_RESERVE_PX =
+28;
+
 export const POSITION_ENTRY_COLOR = "#FACC15";
 export const POSITION_TP_FILL = "rgba(20, 83, 45, 0.58)";
 export const POSITION_SL_FILL = "rgba(127, 29, 29, 0.58)";

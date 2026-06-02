@@ -103,7 +103,7 @@ POSITION_DEFAULT_TP_ZONE_PX,
 POSITION_DEFAULT_SL_ZONE_PX,
 POSITION_DEFAULT_WIDTH_BARS,
 POSITION_RR_LABEL_SAMPLE
-} from "./constants.js?v=2";
+} from "./constants.js?v=3";
 
 import {
 uid,
@@ -130,8 +130,9 @@ getFibRows,
 getFibDrawRows,
 isSeriesLogarithmic,
 setFibLineStyleButton,
-setFibLevelWidthButton
-} from "./fib-spec.js?v=6";
+setFibLevelWidthButton,
+fibLevelXSpan
+} from "./fib-spec.js?v=7";
 
 import {
 setFibPanelCommitHook,
@@ -8077,48 +8078,6 @@ shape,
 shape.id === selectedId
 );
 }
-
-}
-
-function fibLevelXSpan(
-a,
-b,
-plotW,
-expandNarrowSpan =
-true
-){
-
-let x1 =
-Math.min(
-a.x,
-b.x
-);
-let x2 =
-Math.max(
-a.x,
-b.x
-);
-
-/* Узкий span (одна свеча) → линия нулевой длины, hit-test по Y всё ещё ловит.
-   При preview — только между якорями, без растягивания на весь график. */
-if(
-expandNarrowSpan &&
-x2 - x1 <
-12
-){
-x1 = 0;
-x2 = plotW;
-}
-
-return {
-x1,
-x2,
-labelX:
-Math.min(
-x2 + 4,
-plotW - 28
-)
-};
 
 }
 

@@ -18,7 +18,7 @@ alwaysApply: true
 | 5 | ✅ | Split `drawings.js` — phase 1: init + constants/math/fib/position |
 | 5b | ✅ | Split render/hit/tablet-input, cloud/alerts/chart/terminal facades |
 | 6 | ✅ | `page-routes`, CI, tests, ticker rAF batch, device-pull-gate |
-| | | **Следующий:** fib polish (constants, tests, hit-test X) — после `metka-6` |
+| | | **Следующий:** wiring split-модулей (`draw-hit`, `draw-render`) — fib polish ✅ |
 
 ## iPad — после split `drawings.js` (пункт 5)
 

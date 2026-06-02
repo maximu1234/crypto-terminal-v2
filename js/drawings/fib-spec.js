@@ -4,8 +4,11 @@ DEFAULT_FIB_SPEC,
 STROKE,
 FIB_TOOL_DEFAULTS_VERSION,
 FIB_LINE_DASH,
-WIDTH_OPTIONS
-} from "./constants.js?v=2";
+WIDTH_OPTIONS,
+FIB_MIN_ANCHOR_SPAN_PX,
+FIB_LABEL_X_PAD_PX,
+FIB_LABEL_RIGHT_RESERVE_PX
+} from "./constants.js?v=3";
 
 const FIB_LINE_STYLE_OPTIONS = [
 { value: "solid", label: "Line" },
@@ -617,6 +620,55 @@ ratio
 return (
 p1 + (p2 - p1) * ratio
 );
+
+}
+
+/**
+ * Горизонтальный span уровня fib между якорями (или на весь plot при узком span).
+ * @param {{ x: number, y?: number }} a
+ * @param {{ x: number, y?: number }} b
+ * @param {number} plotW
+ * @param {boolean} [expandNarrowSpan]
+ */
+export function fibLevelXSpan(
+a,
+b,
+plotW,
+expandNarrowSpan =
+true
+){
+
+let x1 =
+Math.min(
+a.x,
+b.x
+);
+let x2 =
+Math.max(
+a.x,
+b.x
+);
+
+if(
+expandNarrowSpan &&
+x2 - x1 <
+FIB_MIN_ANCHOR_SPAN_PX
+){
+x1 =
+0;
+x2 =
+plotW;
+}
+
+return {
+x1,
+x2,
+labelX:
+Math.min(
+x2 + FIB_LABEL_X_PAD_PX,
+plotW - FIB_LABEL_RIGHT_RESERVE_PX
+)
+};
 
 }
 
