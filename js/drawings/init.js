@@ -122,6 +122,7 @@ migrateFibFromObjectRows,
 isClassicFibLevelNumbers,
 repairFibLevels,
 finalizeFibLevels,
+ensureFibLevelsVisible,
 normalizeFibLevelsShape,
 formatFibInputValue,
 formatFibLabel,
@@ -131,7 +132,7 @@ getFibRows,
 isSeriesLogarithmic,
 setFibLineStyleButton,
 setFibLevelWidthButton
-} from "./fib-spec.js?v=3";
+} from "./fib-spec.js?v=4";
 
 import {
 setFibPanelCommitHook,
@@ -628,11 +629,15 @@ saved
 
 out.fibLevels =
 JSON.parse(
-JSON.stringify(fibStore.fibLevels)
+JSON.stringify(
+ensureFibLevelsVisible(
+fibStore.fibLevels
+)
+)
 );
 
 out.fibShowTrendLine =
-fibStore.fibShowTrendLine === true;
+fibStore.fibShowTrendLine !== false;
 
 if(
 saved?.color
@@ -838,9 +843,11 @@ shape.lineWidth = shape.lineWidth || 1;
 if(shape.type === "fib"){
 
 shape.fibLevels =
+ensureFibLevelsVisible(
 finalizeFibLevels(
 shape.fibLevels ??
 shape.levels
+)
 );
 
 shape.fibShowTrendLine =
@@ -1590,7 +1597,7 @@ color: style.color,
 lineWidth: style.lineWidth,
 fibLevels: shape.fibLevels,
 fibShowTrendLine:
-shape.fibShowTrendLine === true
+shape.fibShowTrendLine !== false
 }
 );
 
@@ -2501,7 +2508,7 @@ defaultsPayload.fibLevels =
 style.fibLevels;
 
 defaultsPayload.fibShowTrendLine =
-style.fibShowTrendLine === true;
+style.fibShowTrendLine !== false;
 
 }
 
@@ -7945,7 +7952,12 @@ Math.max(a.x, b.x);
 const useLog =
 isSeriesLogarithmic(series);
 
-getFibRows(shape).forEach(row=>{
+const rows =
+getFibRows(shape);
+
+let drewLevel = false;
+
+rows.forEach(row=>{
 
 if(!row.enabled){
 return;
@@ -7971,6 +7983,8 @@ series.priceToCoordinate(price);
 if(y == null){
 return;
 }
+
+drewLevel = true;
 
 const lineColor =
 row.color || color;
@@ -8004,6 +8018,7 @@ y + 4
 });
 
 if(
+!drewLevel ||
 shape.fibShowTrendLine !== false
 ){
 
@@ -8240,12 +8255,21 @@ placement.type ===
 "fib"
 ){
 
-const previewPts = [
-pts[
-0
-],
-previewPoint
-];
+const previewAnchor =
+previewPoint &&
+Number.isFinite(previewPoint.time) &&
+Number.isFinite(previewPoint.price)
+? previewPoint
+: pointFromXY(
+previewXYPoint.x,
+previewXYPoint.y
+);
+
+if(
+!previewAnchor
+){
+return;
+}
 
 const previewShape =
 {
@@ -8253,15 +8277,12 @@ type: placement.type,
 color: style.color,
 lineWidth: style.lineWidth,
 fibLevels:
-style.fibLevels,
-fibShowTrendLine:
-style.fibShowTrendLine,
-p1: previewPts[
-0
-],
-p2: previewPts[
-1
-]
+ensureFibLevelsVisible(
+style.fibLevels
+),
+fibShowTrendLine: true,
+p1: pts[0],
+p2: previewAnchor
 };
 
 drawShape(
@@ -8283,9 +8304,13 @@ type: placement.type,
 color: style.color,
 lineWidth: style.lineWidth,
 fibLevels:
-style.fibLevels,
+placement.type === "fib"
+? ensureFibLevelsVisible(style.fibLevels)
+: style.fibLevels,
 fibShowTrendLine:
-style.fibShowTrendLine,
+placement.type === "fib"
+? true
+: style.fibShowTrendLine,
 p1: previewPts[0],
 p2: previewPts[1],
 p3: previewPts[2],
@@ -8384,13 +8409,15 @@ lineWidth: style.lineWidth,
 fibLevels:type === "fib"
 ? JSON.parse(
 JSON.stringify(
+ensureFibLevelsVisible(
 style.fibLevels ||
 cloneDefaultFibRows()
 )
 )
+)
 :undefined,
 fibShowTrendLine:type === "fib"
-? style.fibShowTrendLine === true
+? style.fibShowTrendLine !== false
 :undefined,
 ...data
 });

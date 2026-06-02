@@ -179,8 +179,26 @@ fibDefaultsVersion: FIB_TOOL_DEFAULTS_VERSION,
 color: STROKE,
 lineWidth: 1,
 fibLevels: cloneDefaultFibRows(),
-fibShowTrendLine: false
+fibShowTrendLine: true
 };
+
+}
+
+/** Если все уровни выключены (legacy localStorage), вернуть дефолтные. */
+export function ensureFibLevelsVisible(
+raw
+){
+
+const rows =
+finalizeFibLevels(raw);
+
+if(
+rows.some(row=>row.enabled)
+){
+return rows;
+}
+
+return cloneDefaultFibRows();
 
 }
 
@@ -199,11 +217,11 @@ return {
 ...buildDefaultFibToolStorage(),
 color: saved.color || STROKE,
 lineWidth: saved.lineWidth ?? 1,
-fibLevels: JSON.parse(
-JSON.stringify(saved.fibLevels)
+fibLevels: ensureFibLevelsVisible(
+saved.fibLevels
 ),
 fibShowTrendLine:
-saved.fibShowTrendLine === true
+saved.fibShowTrendLine !== false
 };
 
 }
