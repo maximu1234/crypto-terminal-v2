@@ -82,7 +82,7 @@ Object.freeze({
 "drawings/draw-hit.js":
 5,
 "drawings-cloud-sync.js":
-37,
+38,
 "drawings-cloud/worker-client.js":
 2,
 "drawings-cloud/pull-reconcile.js":
