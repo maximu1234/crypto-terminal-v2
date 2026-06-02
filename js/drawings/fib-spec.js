@@ -31,12 +31,6 @@ normalizeFibLineStyle(lineStyle)
 
 }
 
-const FIB_LINE_STYLE_OPTIONS = [
-{ value: "solid", label: "Line" },
-{ value: "dashed", label: "Dashed line" },
-{ value: "dotted", label: "Dotted line" }
-];
-
 export function fibLineStyleIconMarkup(style){
 
 const kind =
