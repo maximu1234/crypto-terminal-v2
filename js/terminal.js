@@ -57,7 +57,6 @@ resetChartPriceAutoScale
 } from "./chart-import.js?v=13";
 
 import {
-isCoinsTabletV2Enabled,
 mountCoinsTabletController
 } from "./coins-tablet-controller.js?v=3";
 
@@ -1421,7 +1420,6 @@ isTabletChartViewport()
 ){
 
 void mountCoinsTabletController({
-v2: isCoinsTabletV2Enabled(),
 chart,
 chartEl,
 chartTouchLayerEl,

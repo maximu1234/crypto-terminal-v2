@@ -22,7 +22,7 @@ Object.freeze({
 "chart-page.js":
 5,
 "terminal.js":
-264,
+265,
 "terminal/coins-state.js":
 2,
 "terminal/coins-prefs.js":
@@ -60,7 +60,7 @@ Object.freeze({
 "chart-tablet-gestures.js":
 17,
 "coins-tablet-controller.js":
-3,
+4,
 "drawings.js":
 194,
 "drawings/init.js":

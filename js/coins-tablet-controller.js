@@ -1,9 +1,6 @@
 /**
- * iPad /coins: единый контроллер probe + crosshair + «+» (sandbox v2).
+ * iPad /coins: единый контроллер probe + crosshair + «+».
  * Desktop не затрагивается — монтируется только при isTabletChartViewport().
- *
- * Включить v2: ?coins-tablet-v2=1 (сохраняется в localStorage)
- * Выключить: ?coins-tablet-v2=0
  */
 import {
 applyTabletMainChartScroll,
@@ -24,76 +21,18 @@ import {
 createTabletGesturePolicy
 } from "./tablet-gesture-policy.js?v=1";
 
-export const COINS_TABLET_V2_STORAGE_KEY =
+/** @deprecated legacy sandbox flag — удаляем из localStorage */
+const LEGACY_COINS_TABLET_V2_KEY =
 "coins-tablet-v2";
 
-/**
- * @returns {boolean}
- */
-export function isCoinsTabletV2Enabled(){
-
-if(
-!isTabletChartViewport()
-){
-return false;
-}
+function clearLegacyTabletV2Flag(){
 
 try{
-
-const params =
-new URLSearchParams(
-window.location.search
-);
-
-const q =
-params.get(
-"coins-tablet-v2"
-);
-
-if(
-q ===
-"1"
-){
-
-localStorage.setItem(
-COINS_TABLET_V2_STORAGE_KEY,
-"1"
-);
-
-return true;
-
-}
-
-if(
-q ===
-"0"
-){
-
 localStorage.removeItem(
-COINS_TABLET_V2_STORAGE_KEY
+LEGACY_COINS_TABLET_V2_KEY
 );
-
-return false;
-
-}
-
 }catch{
 /* ignore */
-}
-
-try{
-
-return (
-localStorage.getItem(
-COINS_TABLET_V2_STORAGE_KEY
-) ===
-"1"
-);
-
-}catch{
-
-return false;
-
 }
 
 }
@@ -148,8 +87,9 @@ if(
 return noopCtrl;
 }
 
+clearLegacyTabletV2Flag();
+
 const {
-v2 = false,
 chart,
 chartEl,
 chartTouchLayerEl,
@@ -170,18 +110,6 @@ if(
 !chartWrapEl
 ){
 return noopCtrl;
-}
-
-if(
-v2
-){
-document.body.classList.add(
-"coins-tablet-v2"
-);
-}else{
-document.body.classList.remove(
-"coins-tablet-v2"
-);
 }
 
 const chartsStackEl =
@@ -214,11 +142,11 @@ mountChartRangeFreeze(
 rsiChart
 );
 
-/** true = удержание probe (блок pan); false после dock в v2 */
+/** true = удержание probe (блок pan) */
 let probeSessionActive =
 false;
 
-/** crosshair закреплён после отпускания (v2) */
+/** crosshair закреплён после отпускания */
 let probeDocked =
 false;
 
@@ -404,7 +332,7 @@ rsiChart
 
 }
 
-/** v2: после отпускания — crosshair и «+» остаются, pan снова доступен */
+/** После отпускания — crosshair и «+» остаются, pan снова доступен */
 function enterDockedProbe(
 clientX,
 clientY
@@ -485,23 +413,7 @@ blockChartScroll:()=>probeSessionActive,
 onHoldStart: enterProbeSession,
 onHoldEnd: exitProbeSession,
 onProbeAt: probeAt,
-onDocked:(
-clientX,
-clientY
-)=>{
-
-if(
-!v2
-){
-return;
-}
-
-enterDockedProbe(
-clientX,
-clientY
-);
-
-}
+onDocked: enterDockedProbe
 }
 );
 
@@ -528,10 +440,6 @@ dispose(){
 window.removeEventListener(
 "chart-probe-crosshair-clear-request",
 onClearRequest
-);
-
-document.body.classList.remove(
-"coins-tablet-v2"
 );
 
 tabletGestureCtrl.dispose?.();
