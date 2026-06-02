@@ -7999,7 +7999,7 @@ dash
 }
 
 if(shape.type === "fib"){
-drawFib(ctx, shape, color, width);
+drawFib(ctx, shape, color, width, w);
 }
 
 if(shape.type === "channel"){
@@ -8016,7 +8016,52 @@ shape.id === selectedId
 
 }
 
-function drawFib(ctx, shape, color, width){
+function fibHorzDrawSpan(
+a,
+b,
+plotW
+){
+
+const minSpan =
+12;
+
+let x1 =
+Math.min(
+a.x,
+b.x
+);
+let x2 =
+Math.max(
+a.x,
+b.x
+);
+
+if(
+x2 - x1 <
+minSpan
+){
+return {
+x1: 0,
+x2: plotW,
+narrow: true
+};
+}
+
+return {
+x1,
+x2,
+narrow: false
+};
+
+}
+
+function drawFib(
+ctx,
+shape,
+color,
+width,
+plotW
+){
 
 const a =
 toXY(shape.p1);
@@ -8027,10 +8072,16 @@ if(!a || !b){
 return;
 }
 
-const x1 =
-Math.min(a.x, b.x);
-const x2 =
-Math.max(a.x, b.x);
+const {
+x1,
+x2,
+narrow
+} =
+fibHorzDrawSpan(
+a,
+b,
+plotW
+);
 
 const useLog =
 isSeriesLogarithmic(series);
@@ -8038,9 +8089,14 @@ isSeriesLogarithmic(series);
 const rows =
 getFibRows(shape);
 
+const levelRows =
+rows.some(row=>row.enabled)
+? rows
+: cloneDefaultFibRows();
+
 let drewLevel = false;
 
-rows.forEach(row=>{
+levelRows.forEach(row=>{
 
 if(!row.enabled){
 return;
@@ -8061,7 +8117,7 @@ return;
 }
 
 const y =
-series.priceToCoordinate(price);
+plotPriceToCoordinate(price);
 
 if(y == null){
 return;
@@ -8094,15 +8150,24 @@ ctx.fillStyle = lineColor;
 ctx.font = "11px Arial";
 ctx.fillText(
 formatFibLabel(row.v),
+Math.min(
 x2 + 4,
+plotW - 28
+),
 y + 4
 );
 
 });
 
+const showTrend =
+shape.fibShowTrendLine !== false ||
+(
+narrow &&
+!drewLevel
+);
+
 if(
-!drewLevel ||
-shape.fibShowTrendLine !== false
+showTrend
 ){
 
 drawLine(
