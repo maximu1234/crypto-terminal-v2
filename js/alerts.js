@@ -1367,7 +1367,7 @@ sym
 );
 
 const { ensureCloudReady } =
-await import("./auth-ui.js?v=25");
+await import("./auth-ui.js?v=26");
 
 await ensureCloudReady();
 
@@ -1462,7 +1462,7 @@ list.push(row);
 saveAlerts(list);
 
 const { ensureCloudReady } =
-await import("./auth-ui.js?v=25");
+await import("./auth-ui.js?v=26");
 
 await ensureCloudReady();
 

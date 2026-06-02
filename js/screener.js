@@ -42,7 +42,7 @@ migrateFavorites
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=25";
+} from "./auth-ui.js?v=26";
 
 import {
 ensureSettled,
@@ -1215,7 +1215,7 @@ toggle?.setAttribute(
 
 function openScreenerNav(){
 
-void import("./auth-ui.js?v=25").then(m=>{
+void import("./auth-ui.js?v=26").then(m=>{
 m.closeCloudSettingsDropdown?.();
 }).catch(()=>{});
 

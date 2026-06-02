@@ -154,13 +154,19 @@ return;
 }
 
 const anchor =
-document.createComment(
-"settings-dropdown-anchor"
+document.createElement(
+"span"
 );
 
 anchor.setAttribute(
 "data-settings-dropdown-anchor",
 ""
+);
+anchor.hidden =
+true;
+anchor.setAttribute(
+"aria-hidden",
+"true"
 );
 wrap.insertBefore(
 anchor,
