@@ -10,6 +10,7 @@ import {
 collectAllLocalDrawings,
 pruneDuplicateShapeIdsAcrossSymbols,
 loadLocalTombstones,
+clearDrawingTombstone,
 getShapeRevisionTime,
 packCloudDrawings,
 DRAWINGS_GLOBAL_CLEAR_KEY
@@ -256,6 +257,126 @@ shapeId
 );
 
 broadcastDrawingsSync();
+return true;
+
+}
+
+/**
+ * Удаление рисунка через Railway (service role).
+ */
+async function deleteDrawingViaWorker(
+symbol,
+shapeId
+){
+
+const base =
+await getDrawingsWorkerBaseUrl();
+
+if(
+!base
+){
+return false;
+}
+
+const token =
+readAlertTokenSync()?.token ||
+null;
+
+if(
+!token
+){
+return false;
+}
+
+const sym =
+String(
+symbol ||
+""
+).trim().toUpperCase();
+const sid =
+String(
+shapeId ||
+""
+).trim();
+
+if(
+!sym ||
+!sid
+){
+return false;
+}
+
+let res;
+
+try{
+res =
+await fetchWithTimeout(
+`${base}/delete-drawing`,
+{
+method: "POST",
+headers: {
+"Content-Type": "application/json",
+Authorization: `Bearer ${token}`
+},
+body: JSON.stringify({
+symbol: sym,
+shape_id: sid
+})
+},
+12000
+);
+}catch(
+err
+){
+console.warn(
+"[drawings] worker /delete-drawing:",
+err?.message || err
+);
+return false;
+}
+
+const text =
+await res.text();
+
+let body =
+{};
+
+try{
+body =
+text
+? JSON.parse(
+text
+)
+: {};
+}catch{
+body = {
+raw: text
+};
+}
+
+if(
+!res.ok ||
+!body.ok
+){
+console.warn(
+"[drawings] worker /delete-drawing отклонён:",
+res.status,
+sym,
+sid,
+text.slice(
+0,
+300
+)
+);
+return false;
+}
+
+drawingsDebugLog(
+"[drawings] ✓ Supabase (worker delete):",
+sym,
+sid
+);
+
 return true;
 
 }
@@ -1212,6 +1333,35 @@ if(
 return false;
 }
 
+if(
+await deleteDrawingViaWorker(
+sym,
+sid
+)
+){
+const meta =
+loadSyncMeta();
+
+delete meta[
+syncMetaKey(
+sym,
+sid
+)
+];
+
+saveSyncMeta(
+meta
+);
+
+clearDrawingTombstone(
+sym,
+sid
+);
+
+broadcastDrawingsSync();
+return true;
+}
+
 const auth =
 resolveDrawingsRestAuth();
 
@@ -1252,6 +1402,11 @@ sid
 
 saveSyncMeta(
 meta
+);
+
+clearDrawingTombstone(
+sym,
+sid
 );
 
 broadcastDrawingsSync();

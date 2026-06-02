@@ -64,7 +64,7 @@ Object.freeze({
 "drawings.js":
 198,
 "drawings/init.js":
-25,
+26,
 "drawings/constants.js":
 5,
 "drawings/math.js":
@@ -82,9 +82,9 @@ Object.freeze({
 "drawings/draw-hit.js":
 5,
 "drawings-cloud-sync.js":
-36,
+37,
 "drawings-cloud/worker-client.js":
-1,
+2,
 "drawings-cloud/pull-reconcile.js":
 1,
 "drawings-cloud/sync-lifecycle.js":

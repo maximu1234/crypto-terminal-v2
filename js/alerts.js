@@ -2860,7 +2860,7 @@ const { purgeAllLocalDrawingsStorage } =
 await import("./drawings-storage.js?v=6");
 
 const drawingsCloud =
-await import("./drawings-cloud-sync.js?v=36");
+await import("./drawings-cloud-sync.js?v=37");
 
 const alertsCloud =
 await import("./alerts-cloud-sync.js?v=105");

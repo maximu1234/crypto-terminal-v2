@@ -694,27 +694,6 @@ sym
 ] ||
 [];
 
-for(
-const shape of cloudList
-){
-
-const id =
-String(
-shape?.id ||
-""
-).trim();
-
-if(
-id
-){
-clearDrawingTombstone(
-sym,
-id
-);
-}
-
-}
-
 let mergedList =
 applyTombstonesToShapeList(
 mergeShapeLists(

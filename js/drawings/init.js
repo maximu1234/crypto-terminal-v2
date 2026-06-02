@@ -55,7 +55,7 @@ deleteDrawingFromCloud,
 flushDrawingsCloudPush,
 registerDrawingsChartRefresh,
 scheduleDrawingsCloudPush
-} from "../drawings-cloud-sync.js?v=36";
+} from "../drawings-cloud-sync.js?v=37";
 
 import {
 touchShapeRevision,
@@ -8136,6 +8136,13 @@ saveDrawings();
 updateStyleBar();
 redraw();
 
+void flushDrawingsCloudPush().catch(err=>{
+console.warn(
+"delete drawing cloud:",
+err?.message || err
+);
+});
+
 }
 
 function clearAllDrawingsOnChart(){
@@ -9198,7 +9205,7 @@ return;
 }
 
 void import(
-"../drawings-cloud-sync.js?v=36"
+"../drawings-cloud-sync.js?v=37"
 ).then(
 m=>{
 m.bumpDrawingsPullNow?.();

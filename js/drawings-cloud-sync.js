@@ -527,6 +527,138 @@ return true;
 
 }
 
+/**
+ * Удаление рисунка через Railway (service role) — как /push-drawing.
+ */
+async function deleteDrawingViaWorker(
+symbol,
+shapeId
+){
+
+const base =
+await getDrawingsWorkerBaseUrl();
+
+if(
+!base
+){
+return false;
+}
+
+const token =
+readAlertTokenSync()?.token ||
+null;
+
+if(
+!token
+){
+return false;
+}
+
+const sym =
+String(
+symbol ||
+""
+).trim().toUpperCase();
+const sid =
+String(
+shapeId ||
+""
+).trim();
+
+if(
+!sym ||
+!sid
+){
+return false;
+}
+
+let res;
+
+try{
+res =
+await fetchWithTimeout(
+`${base}/delete-drawing`,
+{
+method: "POST",
+headers: {
+"Content-Type": "application/json",
+Authorization: `Bearer ${token}`
+},
+body: JSON.stringify({
+symbol: sym,
+shape_id: sid
+})
+},
+12000
+);
+}catch(
+err
+){
+console.warn(
+"[drawings] worker /delete-drawing:",
+err?.message || err
+);
+return false;
+}
+
+const text =
+await res.text();
+
+let body =
+{};
+
+try{
+body =
+text
+? JSON.parse(
+text
+)
+: {};
+}catch{
+body = {
+raw: text
+};
+}
+
+if(
+!res.ok ||
+!body.ok
+){
+if(
+handleDrawingsAuthFailure(
+"delete-drawing",
+res.status,
+text
+)
+){
+return false;
+}
+
+console.warn(
+"[drawings] worker /delete-drawing отклонён:",
+res.status,
+sym,
+sid,
+text.slice(
+0,
+300
+)
+);
+return false;
+}
+
+drawingsDebugLog(
+"[drawings] ✓ Supabase (worker delete):",
+sym,
+sid,
+"deleted=",
+body.deleted
+);
+
+return true;
+
+}
+
 async function pushShapeToCloud(
 ctx,
 symbol,
@@ -596,6 +728,40 @@ return null;
 /**
  * DELETE через PostgREST (sb.from().delete() в Safari часто зависает).
  */
+async function purgeDeleteResponseOk(
+res,
+all
+){
+
+const text =
+await res.text();
+
+if(
+!text
+){
+return !!all;
+}
+
+try{
+const rows =
+JSON.parse(text);
+const n =
+Array.isArray(rows)
+? rows.length
+: rows
+? 1
+: 0;
+
+return all
+? true
+: n >
+0;
+}catch{
+return !!all;
+}
+
+}
+
 async function purgeDrawingsViaRest(
 opts
 ){
@@ -720,7 +886,7 @@ method: "DELETE",
 headers: {
 apikey: anon,
 Authorization: `Bearer ${token}`,
-Prefer: "return=minimal"
+Prefer: "return=representation"
 }
 },
 15000
@@ -782,13 +948,20 @@ method: "DELETE",
 headers: {
 apikey: anon,
 Authorization: `Bearer ${refreshed}`,
-Prefer: "return=minimal"
+Prefer: "return=representation"
 }
 },
 15000
 );
 
 if(retry.ok){
+const deleted =
+await purgeDeleteResponseOk(
+retry,
+all
+);
+
+if(deleted){
 drawingsDebugLog(
 "[drawings] purge REST ok (retry):",
 all
@@ -796,6 +969,7 @@ all
 : `${sym} ${sid}`
 );
 return true;
+}
 }
 }
 }
@@ -807,6 +981,24 @@ text.slice(
 0,
 200
 )
+);
+return false;
+}
+
+const deleted =
+await purgeDeleteResponseOk(
+res,
+all
+);
+
+if(
+!deleted
+){
+console.warn(
+"[drawings] purge REST: строка не найдена",
+all
+? "all"
+: `${sym} ${sid}`
 );
 return false;
 }
@@ -2072,6 +2264,35 @@ if(
 return false;
 }
 
+if(
+await deleteDrawingViaWorker(
+sym,
+sid
+)
+){
+const meta =
+loadSyncMeta();
+
+delete meta[
+syncMetaKey(
+sym,
+sid
+)
+];
+
+saveSyncMeta(
+meta
+);
+
+clearDrawingTombstone(
+sym,
+sid
+);
+
+broadcastDrawingsSync();
+return true;
+}
+
 const auth =
 resolveDrawingsRestAuth();
 
@@ -2112,6 +2333,11 @@ sid
 
 saveSyncMeta(
 meta
+);
+
+clearDrawingTombstone(
+sym,
+sid
 );
 
 broadcastDrawingsSync();
@@ -2876,27 +3102,6 @@ cloudBySymbol[
 sym
 ] ||
 [];
-
-for(
-const shape of cloudList
-){
-
-const id =
-String(
-shape?.id ||
-""
-).trim();
-
-if(
-id
-){
-clearDrawingTombstone(
-sym,
-id
-);
-}
-
-}
 
 let mergedList =
 applyTombstonesToShapeList(
