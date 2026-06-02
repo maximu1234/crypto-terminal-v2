@@ -5636,9 +5636,20 @@ if(y != null){
 const plotW =
 getPlotWidth();
 
+const {
+x1,
+x2
+} =
+fibLevelXSpan(
+a,
+b,
+plotW,
+true
+);
+
 if(
-px >= -8 &&
-px <= plotW + 8
+px >= x1 - 8 &&
+px <= x2 + 8
 ){
 dist = Math.min(
 dist,

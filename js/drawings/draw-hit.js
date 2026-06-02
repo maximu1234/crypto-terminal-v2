@@ -140,9 +140,28 @@ if(y != null){
 const plotW =
 getPlotWidth();
 
+let x1 =
+Math.min(
+a.x,
+b.x
+);
+let x2 =
+Math.max(
+a.x,
+b.x
+);
+
 if(
-px >= -8 &&
-px <= plotW + 8
+x2 - x1 <
+12
+){
+x1 = 0;
+x2 = plotW;
+}
+
+if(
+px >= x1 - 8 &&
+px <= x2 + 8
 ){
 dist = Math.min(
 dist,

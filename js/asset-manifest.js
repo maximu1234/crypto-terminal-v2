@@ -62,7 +62,7 @@ Object.freeze({
 "drawings.js":
 194,
 "drawings/init.js":
-18,
+19,
 "drawings/constants.js":
 2,
 "drawings/math.js":
@@ -78,7 +78,7 @@ Object.freeze({
 "drawings/draw-render.js":
 1,
 "drawings/draw-hit.js":
-1,
+2,
 "drawings-cloud-sync.js":
 35,
 "drawings-cloud/worker-client.js":
