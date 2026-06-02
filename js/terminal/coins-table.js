@@ -43,51 +43,76 @@ next
 
 export function getCurrentSymbols(){
 
-if(coinsState().currentDataset === "crypto"){
+const dataset =
+coinsState().currentDataset;
+
+if(
+dataset === "crypto"
+){
 return coinsState().allBybitSymbols;
 }
 
-if(coinsState().currentDataset === "new"){
+if(
+dataset === "new"
+){
 return coinsState().newListings;
 }
 
-if(coinsState().currentDataset === "stocks"){
+if(
+dataset === "stocks"
+){
 return stockSymbols;
 }
 
-if(coinsState().currentDataset === "commodities"){
+if(
+dataset === "commodities"
+){
 return commoditySymbols;
 }
 
+if(
+dataset === "forex"
+){
 return forexSymbols;
+}
+
+console.warn(
+"[coins] неизвестный рынок:",
+dataset
+);
+
+return [];
 
 }
 
 export function generateMarketData(){
 
-coinsState().marketData = [];
-
 marketMap.clear();
 
-getCurrentSymbols().forEach(symbol=>{
+const symbols =
+getCurrentSymbols();
 
-const item = {
-
+const next =
+symbols.map(
+symbol=>({
 symbol,
-
 price:0,
-
 change24:0,
-
 change1h:0
+})
+);
 
-};
+coinsState().marketData =
+next;
 
-coinsState().marketData.push(item);
-
-marketMap.set(symbol,item);
-
-});
+next.forEach(
+item=>{
+marketMap.set(
+item.symbol,
+item
+);
+}
+);
 
 }
 
@@ -120,6 +145,130 @@ resortPriceColsTimer = null;
 renderList();
 
 },200);
+
+}
+
+export async function primeAltMarketSnapshots(){
+
+const dataset =
+coinsState().currentDataset;
+
+if(
+dataset !== "stocks" &&
+dataset !== "commodities" &&
+dataset !== "forex"
+){
+return;
+}
+
+const symbols =
+getCurrentSymbols();
+
+if(
+!symbols.length
+){
+return;
+}
+
+try{
+const { fetchTwelveTimeSeries } =
+await import("../twelvedata-fetch.js?v=1");
+
+await Promise.all(
+symbols.map(
+async symbol=>{
+
+try{
+const json =
+await fetchTwelveTimeSeries(
+symbol,
+"1day",
+2
+);
+
+const rows =
+json?.values;
+
+if(
+!Array.isArray(
+rows
+) ||
+!rows.length
+){
+return;
+}
+
+const last =
+rows[
+0
+];
+const prev =
+rows[
+1
+];
+const close =
+Number(
+last?.close
+);
+const prevClose =
+Number(
+prev?.close ??
+last?.open
+);
+
+const item =
+marketMap.get(
+symbol
+);
+
+if(
+!item ||
+!Number.isFinite(
+close
+)
+){
+return;
+}
+
+item.price =
+close;
+
+if(
+Number.isFinite(
+prevClose
+) &&
+prevClose !==
+0
+){
+item.change24 =
+(
+(close - prevClose) /
+prevClose
+) *
+100;
+}
+
+}catch{
+/* один символ — не блокируем список */
+}
+
+}
+)
+);
+
+renderList();
+
+}catch(
+err
+){
+
+console.warn(
+"Twelve Data snapshots:",
+err?.message ||
+err
+);
+
+}
 
 }
 

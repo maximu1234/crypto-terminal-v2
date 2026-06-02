@@ -92,9 +92,11 @@ syncCoinsTfLabel
 
 import {
 registerCoinsState,
+coinsState,
 marketMap,
 coinElements,
 COINS_TF_VALUES,
+COINS_MARKETS,
 isCoinsPage
 } from "./terminal/coins-state.js?v=2";
 
@@ -113,13 +115,14 @@ getCurrentSymbols,
 generateMarketData,
 scheduleResortPriceColumns,
 primeTickerSnapshots,
+primeAltMarketSnapshots,
 startTickerStream,
 startRealtime,
 renderList,
 highlightActiveSymbol,
 getVisibleSymbolList,
 setCoinsTableHooks
-} from "./terminal/coins-table.js";
+} from "./terminal/coins-table.js?v=3";
 
 let currentDataset = "crypto";
 let currentTF = "60";
@@ -1676,19 +1679,149 @@ await loadBybitSymbols(
 options
 );
 
-allBybitSymbols =
+coinsState().allBybitSymbols =
 normalizeBybitSymbolList(
 list
 );
 
-newListings =
-filterRecentListings(
+coinsState().newListings =
+extractNewListingSymbolNames(
 list
-).map(x=>
-typeof x === "string"
+);
+
+}
+
+function extractNewListingSymbolNames(
+list
+){
+
+if(
+!Array.isArray(
+list
+) ||
+!list.length
+){
+return [];
+}
+
+const hasLaunchMeta =
+list.some(
+item=>
+item &&
+typeof item ===
+"object" &&
+item.launchTime !=
+null
+);
+
+if(
+!hasLaunchMeta
+){
+return [];
+}
+
+return filterRecentListings(
+list
+).map(
+x=>
+typeof x ===
+"string"
 ? x
 : x.symbol
-).filter(Boolean);
+).filter(
+Boolean
+);
+
+}
+
+async function switchCoinsMarket(
+nextMarket
+){
+
+if(
+!COINS_MARKETS.includes(
+nextMarket
+)
+){
+return;
+}
+
+disconnectKlineStream();
+
+coinsState().currentDataset =
+nextMarket;
+
+applySortForCurrentMarket();
+persistCoinsPrefs();
+
+coinsState().searchQuery =
+"";
+searchQuery =
+"";
+
+const searchInput =
+document.getElementById(
+"coin-search"
+);
+
+if(
+searchInput
+){
+searchInput.value =
+"";
+}
+
+if(
+nextMarket ===
+"new" &&
+!coinsState().newListings.length
+){
+
+try{
+await initSymbols({
+forceNetwork:true
+});
+}catch(
+err
+){
+console.warn(
+"Terminal new listings:",
+err?.message ||
+err
+);
+}
+
+}
+
+generateMarketData();
+
+if(
+nextMarket ===
+"crypto" ||
+nextMarket ===
+"new"
+){
+await primeTickerSnapshots();
+}else{
+await primeAltMarketSnapshots();
+}
+
+renderList();
+
+resolveInitialSymbolAndTf();
+
+applyUrlTimeframe();
+setCoinsChartSymbol(
+currentSymbol
+);
+
+if(
+currentSymbol
+){
+await loadSymbol(
+currentSymbol
+);
+}
 
 }
 
@@ -1780,6 +1913,15 @@ window.addEventListener(
 "bybit-symbols-updated",
 e=>{
 
+if(
+currentDataset !==
+"crypto" &&
+currentDataset !==
+"new"
+){
+return;
+}
+
 const symbols =
 e.detail?.symbols;
 
@@ -1790,19 +1932,15 @@ if(
 return;
 }
 
-allBybitSymbols =
+coinsState().allBybitSymbols =
 normalizeBybitSymbolList(
 symbols
 );
 
-newListings =
-filterRecentListings(
+coinsState().newListings =
+extractNewListingSymbolNames(
 symbols
-).map(x=>
-typeof x === "string"
-? x
-: x.symbol
-).filter(Boolean);
+);
 
 generateMarketData();
 renderList();
@@ -2254,43 +2392,21 @@ await setCoinsTimeframe(btn.dataset.tf);
    FILTER
 ========================================================= */
 
-document
-.getElementById("market-filter")
-.addEventListener("change", async e=>{
+const marketFilterEl =
+document.getElementById(
+"market-filter"
+);
 
-disconnectKlineStream();
+marketFilterEl?.addEventListener(
+"change",
+async e=>{
 
-currentDataset = e.target.value;
+await switchCoinsMarket(
+e.target.value
+);
 
-applySortForCurrentMarket();
-
-persistCoinsPrefs();
-
-searchQuery = "";
-
-const searchInput =
-document.getElementById("coin-search");
-
-if(searchInput){
-searchInput.value = "";
 }
-
-generateMarketData();
-
-await primeTickerSnapshots();
-
-renderList();
-
-resolveInitialSymbolAndTf();
-
-applyUrlTimeframe();
-setCoinsChartSymbol(currentSymbol);
-
-if(currentSymbol){
-await loadSymbol(currentSymbol);
-}
-
-});
+);
 
 /* =========================================================
    TABLE
@@ -3076,7 +3192,16 @@ renderList();
 
 try{
 
+if(
+currentDataset ===
+"crypto" ||
+currentDataset ===
+"new"
+){
 await primeTickerSnapshots();
+}else{
+await primeAltMarketSnapshots();
+}
 
 }catch(
 err
