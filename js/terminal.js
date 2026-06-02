@@ -142,6 +142,16 @@ let flagSortAsc = true;
 let searchQuery = "";
 let hasUrlSymbol = false;
 
+let favorites =
+loadFavoritesGroups();
+
+let allBybitSymbols = [];
+let newListings = [];
+
+let chart = null;
+let candleSeries = null;
+let rsiChart = null;
+
 registerCoinsState({
 
 get currentDataset(){
@@ -296,13 +306,6 @@ drawingTools = v;
 
 
 
-let favorites =
-loadFavoritesGroups();
-
-let allBybitSymbols = [];
-let newListings = [];
-
-
 /* =========================================================
    SYMBOLS
 ========================================================= */
@@ -317,10 +320,10 @@ createCandlestickChart(
 document.getElementById("chart")
 );
 
-const chart =
+chart =
 mainChart.chart;
 
-const candleSeries =
+candleSeries =
 mainChart.series;
 
 const chartWrapEl =
@@ -908,7 +911,7 @@ createRSIChart(
 document.getElementById("rsi-chart")
 );
 
-const rsiChart =
+rsiChart =
 rsi.chart;
 
 const rsiSeries =

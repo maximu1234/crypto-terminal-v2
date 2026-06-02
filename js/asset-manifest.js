@@ -22,13 +22,13 @@ Object.freeze({
 "chart-page.js":
 5,
 "terminal.js":
-255,
+256,
 "terminal/coins-state.js":
 1,
 "terminal/coins-prefs.js":
-1,
+2,
 "terminal/coins-table.js":
-1,
+2,
 "telegram-bot-public.js":
 1,
 "dashboard.js":

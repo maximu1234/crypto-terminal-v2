@@ -102,7 +102,7 @@ typeof entry.flagAsc === "boolean"
 ? entry.flagAsc
 : true;
 
-if(mode === "coinsState().favorites"){
+if(mode === "favorites"){
 byFlag = true;
 flagAsc = asc;
 mode = "symbol";

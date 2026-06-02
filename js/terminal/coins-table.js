@@ -122,7 +122,7 @@ renderList();
 
 }
 
-async function primeTickerSnapshots(){
+export async function primeTickerSnapshots(){
 
 if(
 coinsState().currentDataset !== "crypto" &&
