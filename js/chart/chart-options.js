@@ -348,15 +348,17 @@ export function tabletProbeCrosshairOptions(){
 const Normal =
 LightweightCharts.CrosshairMode?.Normal ?? 0;
 
+/* iPad probe: обе линии только DOM (#linked-crosshair-vert + .chart-dom-crosshair-horz) */
 return {
 mode:Normal,
 vertLine:{
 visible:false,
 labelVisible:false
 },
-horzLine:crosshairLineOptions(
-true
-)
+horzLine:{
+visible:false,
+labelVisible:false
+}
 };
 
 }

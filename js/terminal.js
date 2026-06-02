@@ -1373,7 +1373,7 @@ drawingTools?.endPriceScaleDragRedraw?.();
 drawingTools?.scheduleRedraw?.();
 };
 
-void import("./price-alert-ui.js?v=34").then(({ mountPriceAlertUi })=>{
+void import("./price-alert-ui.js?v=35").then(({ mountPriceAlertUi })=>{
 mountPriceAlertUi({
 chart,
 series: candleSeries,

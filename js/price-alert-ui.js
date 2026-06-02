@@ -619,6 +619,15 @@ showTouchStyle ||
 opts.forceShowFromProbe
 ){
 
+if(
+IS_COARSE_TOUCH &&
+opts.forceShowFromProbe
+){
+touchGuideLine.classList.add(
+"hidden"
+);
+}else{
+
 positionTouchGuideLine(
 touchGuideLine,
 y,
@@ -645,6 +654,8 @@ plusRightEdge
 
 }
 );
+
+}
 
 }else{
 touchGuideLine.classList.add(

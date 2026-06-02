@@ -98,6 +98,11 @@ horz
 horz.classList.add(
 "hidden"
 );
+
+horz.classList.remove(
+"chart-crosshair-probe-active"
+);
+
 }
 
 }
@@ -163,6 +168,10 @@ horz.style.removeProperty(
 
 horz.classList.remove(
 "hidden"
+);
+
+horz.classList.add(
+"chart-crosshair-probe-active"
 );
 
 }
@@ -598,51 +607,8 @@ last.close;
 
 }
 
-const lwHorizOk =
-!inFutureGap &&
-probeTime !=
-null &&
-crosshairPrice !=
-null &&
-Number.isFinite(
-crosshairPrice
-);
-
-const probeBeyondLastBar =
-isProbeTimeBeyondLastBar(
-series,
-probeTime
-);
-
-const useDomHorizLine =
-inFutureGap ||
-probeBeyondLastBar ||
-!lwHorizOk;
-
-if(
-lwHorizOk &&
-!useDomHorizLine
-){
-
-try{
-chart.setCrosshairPosition(
-crosshairPrice,
-probeTime,
-series
-);
-}catch{
-/* ignore */
-}
-
-}else{
-
-try{
-chart.clearCrosshairPosition();
-}catch{
-/* ignore */
-}
-
-}
+const tabletProbeMode =
+!!horizLineEl;
 
 const plotWidthForHoriz =
 Math.max(
@@ -660,8 +626,22 @@ document.getElementById(
 );
 
 if(
-useDomHorizLine
+tabletProbeMode
 ){
+
+try{
+chart.clearCrosshairPosition();
+}catch{
+/* ignore */
+}
+
+positionProbeHorizInChartWrap({
+chartWrapEl: wrapEl,
+chart,
+chartEl,
+clientY,
+plotWidthPx: plotWidthForHoriz
+});
 
 if(
 horizLineEl &&
@@ -714,6 +694,58 @@ horizLineEl.classList.remove(
 
 }
 
+}else{
+
+const lwHorizOk =
+!inFutureGap &&
+probeTime !=
+null &&
+crosshairPrice !=
+null &&
+Number.isFinite(
+crosshairPrice
+);
+
+const probeBeyondLastBar =
+isProbeTimeBeyondLastBar(
+series,
+probeTime
+);
+
+const useDomHorizLine =
+inFutureGap ||
+probeBeyondLastBar ||
+!lwHorizOk;
+
+if(
+lwHorizOk &&
+!useDomHorizLine
+){
+
+try{
+chart.setCrosshairPosition(
+crosshairPrice,
+probeTime,
+series
+);
+}catch{
+/* ignore */
+}
+
+}else{
+
+try{
+chart.clearCrosshairPosition();
+}catch{
+/* ignore */
+}
+
+}
+
+if(
+useDomHorizLine
+){
+
 positionProbeHorizInChartWrap({
 chartWrapEl: wrapEl,
 chart,
@@ -721,6 +753,57 @@ chartEl,
 clientY,
 plotWidthPx: plotWidthForHoriz
 });
+
+if(
+horizLineEl &&
+chartsStackEl
+){
+
+const stackR =
+chartsStackEl.getBoundingClientRect();
+
+const chartTopInStack =
+chartR.top - stackR.top;
+
+const chartBottomInStack =
+chartTopInStack + chartR.height;
+
+const topInStack =
+clientY - stackR.top;
+
+const clampedTop =
+Math.max(
+chartTopInStack,
+Math.min(
+chartBottomInStack,
+topInStack
+)
+);
+
+const plotLeft =
+chartR.left - stackR.left;
+
+horizLineEl.style.top =
+`${Math.round(clampedTop)}px`;
+
+horizLineEl.style.left =
+`${Math.round(plotLeft)}px`;
+
+horizLineEl.style.width =
+`${Math.round(plotWidthForHoriz)}px`;
+
+horizLineEl.style.removeProperty(
+"right"
+);
+
+horizLineEl.style.display =
+"block";
+
+horizLineEl.classList.remove(
+"hidden"
+);
+
+}
 
 }else{
 
@@ -738,6 +821,8 @@ horizLineEl.style.removeProperty(
 hideProbeHorizInChartWrap(
 wrapEl
 );
+
+}
 
 }
 

@@ -1114,6 +1114,10 @@ body.tablet-chart .price-alert-scale-plus-circle{
   transform:translateZ(0);
 }
 
+#chart-wrap .chart-dom-crosshair-horz.chart-crosshair-probe-active{
+  z-index:26;
+}
+
 #chart-wrap .chart-dom-crosshair-vert.hidden,
 #chart-wrap .chart-dom-crosshair-horz.hidden{
   display:none;

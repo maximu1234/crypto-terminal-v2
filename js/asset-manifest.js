@@ -50,11 +50,11 @@ Object.freeze({
 
 /* ── JS: chart / drawings ── */
 "chart.js":
-113,
+114,
 "chart/chart-options.js":
-2,
+3,
 "chart/chart-dom-crosshair.js":
-4,
+5,
 "chart/chart-factory.js":
 1,
 "chart-tablet-gestures.js":
@@ -104,7 +104,7 @@ Object.freeze({
 "dashboard-draw-ui.js":
 14,
 "price-alert-ui.js":
-34,
+35,
 "indicators.js":
 3,
 "storage.js":
@@ -218,7 +218,7 @@ Object.freeze({
 "screener.css":
 21,
 "terminal.css":
-96,
+97,
 "dashboard.css":
 16,
 "coins.css":
