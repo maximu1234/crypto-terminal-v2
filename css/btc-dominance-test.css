@@ -1,0 +1,137 @@
+.btc-d-page {
+  background: #0b1220;
+  color: #e2e8f0;
+  min-height: 100vh;
+}
+
+.btc-d-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid #1e293b;
+}
+
+.btc-d-logo {
+  color: #60a5fa;
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.btc-d-badge {
+  font-size: 12px;
+  color: #94a3b8;
+  background: #1e293b;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+.btc-d-main {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.btc-d-hero h1 {
+  margin: 0 0 8px;
+  font-size: 1.5rem;
+}
+
+.btc-d-sub {
+  margin: 0 0 16px;
+  color: #94a3b8;
+  font-size: 0.95rem;
+}
+
+.btc-d-current {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.btc-d-current-label {
+  color: #94a3b8;
+  font-size: 0.9rem;
+}
+
+.btc-d-current-value {
+  font-size: 2rem;
+  color: #f59e0b;
+  font-weight: 700;
+}
+
+.btc-d-meta {
+  margin: 0 0 4px;
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.btc-d-status {
+  margin: 0 0 16px;
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.btc-d-status.error {
+  color: #fca5a5;
+}
+
+.btc-d-ranges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.btc-d-range {
+  background: #1e293b;
+  border: 1px solid #334155;
+  color: #cbd5e1;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.btc-d-range:hover {
+  border-color: #475569;
+}
+
+.btc-d-range.active {
+  background: #334155;
+  border-color: #f59e0b;
+  color: #fff;
+}
+
+.btc-d-chart {
+  width: 100%;
+  height: min(420px, 55vh);
+  border: 1px solid #1e293b;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+
+.btc-d-notes {
+  border-top: 1px solid #1e293b;
+  padding-top: 16px;
+  font-size: 0.9rem;
+  color: #94a3b8;
+}
+
+.btc-d-notes h2 {
+  margin: 0 0 8px;
+  font-size: 1rem;
+  color: #cbd5e1;
+}
+
+.btc-d-notes ul {
+  margin: 0 0 12px;
+  padding-left: 1.2rem;
+}
+
+.btc-d-notes code {
+  color: #fcd34d;
+  font-size: 0.85em;
+}

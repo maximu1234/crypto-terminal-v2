@@ -14,6 +14,9 @@ export const MANIFEST_V =
 export const ASSETS =
 Object.freeze({
 
+"btc-dominance-test.css":
+1,
+
 /* ── JS: boot / entry ── */
 "asset-manifest.js":
 1,
@@ -129,6 +132,13 @@ Object.freeze({
 1,
 "twelvedata-fetch.js":
 1,
+
+/* ── JS: btc dominance (test) ── */
+"btc-dominance/fetch.js":
+1,
+"btc-dominance/test-page.js":
+1,
+
 "ws.js":
 15,
 "tickers.js":
