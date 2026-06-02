@@ -15,8 +15,10 @@ alwaysApply: true
 | 3 | ✅ | Единый asset manifest + `scripts/sync-asset-versions.cjs` |
 | 4 | ✅ | Shared storage poller (`drawings-storage-poller.js`) |
 | 6 | ✅ | Chart widget host (`chart-widget-host.js`) |
-| 5 | ✅ | Split `drawings.js` — фase 1: init + constants/math/fib/position |
-| | | **Следующий:** iPad-3 (touch drawing split) |
+| 5 | ✅ | Split `drawings.js` — phase 1: init + constants/math/fib/position |
+| 5b | ✅ | Split render/hit/tablet-input, cloud/alerts/chart/terminal facades |
+| 6 | ✅ | `page-routes`, CI, tests, ticker rAF batch, device-pull-gate |
+| | | **Следующий:** fib polish (constants, tests, hit-test X) |
 
 ## iPad — после split `drawings.js` (пункт 5)
 
@@ -27,7 +29,7 @@ alwaysApply: true
 |---|--------|--------|
 | iPad-1 | Tablet-жесты на dashboard (`/terminal.html`) | ✅ `tablet-widget-chart.js` |
 | iPad-2 | Lazy-import `chart-tablet-gestures.js` | ✅ coins + dashboard |
-| iPad-3 | Touch-рисование в `drawings-tablet-input.js` | — |
+| iPad-3 | Touch-рисование в `drawings-tablet-input.js` | ✅ |
 | iPad-4 | Единый `tabletGesturePolicy()` | ✅ `tablet-gesture-policy.js` |
 
 ## Напоминание пользователю

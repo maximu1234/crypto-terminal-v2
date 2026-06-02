@@ -15,7 +15,7 @@ removeAllAlerts
 import {
 getTelegramChatId,
 initAlertsCloudSync
-} from "./alerts-cloud-sync.js?v=101";
+} from "./alerts-cloud-sync.js?v=102";
 
 import {
 readAlertTokenSync
@@ -33,6 +33,11 @@ ensureCloudLoginResolved
 import {
 ensureCloudReady
 } from "./auth-ui.js?v=25";
+
+import {
+TELEGRAM_BOT_USERNAME,
+getTelegramBotUrl
+} from "./telegram-bot-public.js?v=1";
 
 import { formatPrice } from "./chart-import.js?v=13";
 
@@ -98,6 +103,26 @@ null;
 
 let telegramChatCacheAt =
 0;
+
+function mountTelegramBotLink(){
+
+const link =
+document.getElementById(
+"alerts-telegram-bot-link"
+);
+
+if(
+!link
+){
+return;
+}
+
+link.href =
+getTelegramBotUrl();
+link.textContent =
+`@${TELEGRAM_BOT_USERNAME}`;
+
+}
 
 const TELEGRAM_CACHE_MS =
 30000;
@@ -722,6 +747,7 @@ void syncAlertsPageOnce();
 });
 
 initAlertsCloudSync();
+mountTelegramBotLink();
 stripAlertFlagsNotInRegistry();
 render();
 

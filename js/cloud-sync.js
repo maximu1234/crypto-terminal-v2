@@ -44,7 +44,7 @@ readPersistedAuthSession
 import {
 createNotifyDebouncer,
 isAlertsPage
-} from "./cloud-sync-throttle.js?v=2";
+} from "./cloud-sync-throttle.js?v=3";
 
 const FAVORITES_LOCAL_TS_KEY =
 "favorites_local_updated_at";
@@ -669,7 +669,7 @@ true;
 return;
 }
 
-void import("./drawings-cloud-sync.js?v=32").then(
+void import("./drawings-cloud-sync.js?v=33").then(
 m=>{
 m.scheduleDrawingsCloudPush();
 }
@@ -690,7 +690,7 @@ return Promise.resolve();
 pendingDrawingsCloudPush =
 false;
 
-return import("./drawings-cloud-sync.js?v=32").then(
+return import("./drawings-cloud-sync.js?v=33").then(
 m=>
 m.flushDrawingsCloudPush()
 );
@@ -993,7 +993,7 @@ function stopCloudSyncHelpers(){
 
 stopSyncPoll();
 
-void import("./drawings-cloud-sync.js?v=32").then(
+void import("./drawings-cloud-sync.js?v=33").then(
 m=>{
 m.stopDrawingsCloudSync();
 }
@@ -1085,7 +1085,7 @@ function handleRealtimeSettingsRow(row){
 
 handleRealtimeFavoritesRow(row);
 
-void import("./drawings-cloud-sync.js?v=32").then(
+void import("./drawings-cloud-sync.js?v=33").then(
 m=>
 m.pullDrawingsFromCloud()
 );
@@ -1359,7 +1359,7 @@ return cloud.favorites;
 export async function mergeDrawingsWithCloud(){
 
 const drawingsCloud =
-await import("./drawings-cloud-sync.js?v=32");
+await import("./drawings-cloud-sync.js?v=33");
 
 await drawingsCloud.hydrateDrawingsAfterAuth();
 
@@ -1369,7 +1369,7 @@ return collectAllLocalDrawings();
 
 export async function pullDrawingsIfCloudNewer(){
 
-await import("./drawings-cloud-sync.js?v=32").then(
+await import("./drawings-cloud-sync.js?v=33").then(
 m=>
 m.pullDrawingsFromCloud()
 );
@@ -1390,7 +1390,7 @@ await m.reconcileLocalFavoritesWithCloud();
 async function syncDrawingsWithCloud(){
 
 const m =
-await import("./drawings-cloud-sync.js?v=32");
+await import("./drawings-cloud-sync.js?v=33");
 
 await m.flushDrawingsCloudPush();
 
@@ -1981,7 +1981,7 @@ await import("./favorites-cloud-sync.js?v=1");
 await favoritesCloud.reconcileLocalFavoritesWithCloud();
 
 const drawingsCloud =
-await import("./drawings-cloud-sync.js?v=32");
+await import("./drawings-cloud-sync.js?v=33");
 
 if(
 !isAlertsPage()
@@ -2016,7 +2016,7 @@ if(
 !isAlertsPage()
 ){
 const alertsCloud =
-await import("./alerts-cloud-sync.js?v=101");
+await import("./alerts-cloud-sync.js?v=102");
 
 await alertsCloud.hydrateAlertsAfterAuth({
 force: true
@@ -2194,7 +2194,7 @@ await ensureCloudLoginResolved(
 );
 
 const alertsCloud =
-await import("./alerts-cloud-sync.js?v=101");
+await import("./alerts-cloud-sync.js?v=102");
 const favoritesCloud =
 await import("./favorites-cloud-sync.js?v=1");
 const { stripAlertFlagsNotInRegistry } =
@@ -2238,7 +2238,7 @@ favoritesCloud.pullFavoritesFromCloudNow()
 }else{
 
 const drawingsCloud =
-await import("./drawings-cloud-sync.js?v=32");
+await import("./drawings-cloud-sync.js?v=33");
 
 [
 drawSyms,

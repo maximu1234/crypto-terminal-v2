@@ -55,7 +55,7 @@ deleteDrawingFromCloud,
 flushDrawingsCloudPush,
 registerDrawingsChartRefresh,
 scheduleDrawingsCloudPush
-} from "../drawings-cloud-sync.js?v=32";
+} from "../drawings-cloud-sync.js?v=33";
 
 import {
 touchShapeRevision,
@@ -158,6 +158,18 @@ import {
 pickUi
 } from "./utils.js?v=1";
 
+import {
+createDrawRenderer
+} from "./draw-render.js?v=1";
+
+import {
+createDrawHitTester
+} from "./draw-hit.js?v=1";
+
+import {
+mountTabletDrawInput
+} from "../drawings-tablet-input.js?v=1";
+
 export function initDrawings({
 
 chart,
@@ -195,6 +207,25 @@ abortTabletChartGesture?.();
 }
 
 let alive = true;
+
+let prefersTouchDrawInput = ()=>false;
+let isTouchDrawPlacement = ()=>false;
+let isTouchDrawTablet = ()=>false;
+let useChartProbeCrosshair = ()=>false;
+let initTouchDrawCrosshair = ()=>{};
+let syncTouchDrawCrosshairPreview = ()=>{};
+let placeTouchCrosshairPoint = ()=>{};
+let showStandardChartCrosshair = ()=>{};
+let hideStandardChartCrosshair = ()=>{};
+let suppressChartCrosshairForDrag = ()=>{};
+let syncEditDragCrosshair = ()=>{};
+let beginEditDragCrosshair = ()=>{};
+let clearEditDragCrosshair = ()=>{};
+let placementPointsNeeded = ()=>2;
+let clearTouchDrawState = ()=>{};
+let getTouchDrawCrosshair = ()=>null;
+let getTouchPlaceTrack = ()=>null;
+let teardownTouchDrawCrosshair = ()=>{};
 
 retainFibPortals();
 
@@ -346,8 +377,6 @@ let placement = null;
 let placementPointerXY = null;
 let previewPoint = null;
 let previewXY = null;
-let touchDrawCrosshair = null;
-let touchPlaceTrack = null;
 let dragState = null;
 let blockChartClick = false;
 
@@ -2667,798 +2696,6 @@ popover.style.zIndex = "10051";
 
 }
 
-function prefersTouchDrawInput(){
-
-if(
-!isCoarseTouchViewport()
-){
-return false;
-}
-
-/* iPad: finger draw even when Safari reports any-pointer:fine */
-if(
-isTabletChartViewport()
-){
-return true;
-}
-
-return !hasAnyFinePointer();
-
-}
-
-function isTouchDrawTablet(){
-
-return prefersTouchDrawInput();
-
-}
-
-/** Touch: перекрестье + тап/перетаскивание точек (как iPad на Монетах). */
-function isTouchDrawPlacement(){
-
-return prefersTouchDrawInput();
-
-}
-
-function useChartProbeCrosshair(){
-
-return (
-typeof onChartCrosshairAt ===
-"function" &&
-tabletCustomPanHooked &&
-isTabletChartViewport()
-);
-
-}
-
-function chartCanvasEl(){
-
-return (
-wrapEl?.querySelector(
-".chart"
-) ||
-wrapEl?.querySelector(
-"#chart"
-)
-);
-
-}
-
-function clampTouchCrosshairXY(x, y){
-
-const { w, h } =
-chartSize();
-
-return {
-x: Math.max(0, Math.min(w, x)),
-y: Math.max(0, Math.min(h, y))
-};
-
-}
-
-function initTouchDrawCrosshair(){
-
-const { w, h } =
-chartSize();
-
-touchDrawCrosshair = {
-x: w / 2,
-y: h / 2
-};
-
-syncTouchDrawCrosshairPreview();
-
-}
-
-function crosshairClientFromLocal(
-localX,
-localY
-){
-
-const rect =
-wrapEl.getBoundingClientRect();
-
-return {
-clientX: rect.left + localX,
-clientY: rect.top + localY
-};
-
-}
-
-/** Тот же курсор, что на графике: LW на десктопе, probe на iPad. */
-function showStandardChartCrosshair(
-e,
-localX,
-localY
-){
-
-const xy =
-clampTouchCrosshairXY(
-localX,
-localY
-);
-
-const point =
-pointFromXY(
-xy.x,
-xy.y
-);
-
-if(
-!isTouchDrawTablet()
-){
-
-if(
-point &&
-chart &&
-series
-){
-
-try{
-chart.setCrosshairPosition(
-point.price,
-point.time,
-series
-);
-}catch{
-/* ignore */
-}
-
-}
-
-return;
-
-}
-
-const clientX =
-e?.clientX;
-
-const clientY =
-e?.clientY;
-
-const client =
-clientX != null &&
-clientY != null
-? { clientX, clientY }
-: crosshairClientFromLocal(
-xy.x,
-xy.y
-);
-
-if(
-useChartProbeCrosshair()
-){
-
-try{
-onChartCrosshairAt(
-client.clientX,
-client.clientY
-);
-}catch{
-/* ignore */
-}
-
-return;
-
-}
-
-positionDomChartCrosshair({
-wrapEl,
-chartEl:chartCanvasEl(),
-chart,
-series,
-clientX:client.clientX,
-clientY:client.clientY
-});
-
-}
-
-function hideStandardChartCrosshair(){
-
-if(
-isTouchDrawTablet()
-){
-
-if(
-useChartProbeCrosshair()
-){
-
-try{
-onChartCrosshairClear?.();
-}catch{
-/* ignore */
-}
-
-}else{
-
-hideDomChartCrosshair(
-wrapEl
-);
-
-if(
-chart
-){
-
-try{
-chart.clearCrosshairPosition();
-}catch{
-/* ignore */
-}
-
-}
-
-}
-
-return;
-
-}
-
-hideDomChartCrosshair(
-wrapEl
-);
-
-if(
-chart
-){
-
-try{
-chart.clearCrosshairPosition();
-}catch{
-/* ignore */
-}
-
-}
-
-}
-
-function invalidateLastCandleRightXCache(){
-
-cachedLastCandleRightX = NaN;
-
-}
-
-function getLastCandleRightX(){
-
-if(
-Number.isFinite(
-cachedLastCandleRightX
-)
-){
-return cachedLastCandleRightX;
-}
-
-const candles =
-candleSeries();
-
-if(
-!candles.length
-){
-return null;
-}
-
-const x =
-xFromTime(
-candles[
-candles.length -
-1
-].time
-);
-
-if(
-x == null ||
-!Number.isFinite(
-x
-)
-){
-return null;
-}
-
-cachedLastCandleRightX = x;
-return x;
-
-}
-
-function isPlotXBeyondLastCandle(
-plotX
-){
-
-const right =
-getLastCandleRightX();
-
-if(
-right == null
-){
-return false;
-}
-
-return plotX > right + 0.5;
-
-}
-
-function resetPlacementCrosshairCache(){
-
-placementCrosshairVert = null;
-placementCrosshairHorz = null;
-
-}
-
-function cancelPlacementPreviewRaf(){
-
-if(
-placementPreviewRaf
-){
-cancelAnimationFrame(
-placementPreviewRaf
-);
-placementPreviewRaf = 0;
-}
-
-placementPreviewPending = null;
-
-}
-
-function ensurePlacementCrosshairEls(){
-
-if(
-!placementCrosshairVert
-){
-placementCrosshairVert =
-wrapEl.querySelector(
-".chart-dom-crosshair-vert"
-);
-}
-
-if(
-!placementCrosshairHorz
-){
-placementCrosshairHorz =
-wrapEl.querySelector(
-".chart-dom-crosshair-horz"
-);
-
-}
-
-}
-
-/** Только DOM-линии по локальным координатам (без getBoundingClientRect). */
-function updatePlacementCrosshairFast(
-localX,
-localY
-){
-
-ensurePlacementCrosshairEls();
-
-const { w, h } =
-chartSize();
-const plotW =
-getPlotWidth();
-
-const x =
-Math.max(
-0,
-Math.min(
-plotW,
-localX
-)
-);
-
-const y =
-Math.max(
-0,
-Math.min(
-h,
-localY
-)
-);
-
-if(
-placementCrosshairVert
-){
-
-placementCrosshairVert.style.left =
-`${Math.round(x)}px`;
-
-placementCrosshairVert.classList.remove(
-"hidden"
-);
-
-}
-
-if(
-placementCrosshairHorz
-){
-
-placementCrosshairHorz.style.top =
-`${Math.round(y)}px`;
-
-placementCrosshairHorz.style.width =
-`${Math.round(plotW)}px`;
-
-placementCrosshairHorz.classList.remove(
-"hidden"
-);
-
-}
-
-}
-
-function flushPlacementPreviewRedraw(){
-
-const pending =
-placementPreviewPending;
-
-if(
-!placement ||
-!pending
-){
-return;
-}
-
-previewXY = {
-x: pending.x,
-y: pending.y
-};
-
-previewPoint =
-pointFromXY(
-pending.x,
-pending.y
-);
-
-if(
-isPositionType(placement.type) &&
-placement.points.length >= 1 &&
-previewPoint
-){
-previewPoint.price = placement.points[0].price;
-}
-
-redraw();
-
-}
-
-function schedulePlacementPreviewRedraw(){
-
-if(
-placementPreviewRaf
-){
-return;
-}
-
-placementPreviewRaf =
-requestAnimationFrame(()=>{
-
-placementPreviewRaf = 0;
-flushPlacementPreviewRedraw();
-
-});
-
-}
-
-function setupPlacementPointerPreview(){
-
-const onPlacementPointerMove = e=>{
-
-if(
-!alive ||
-!isActive() ||
-!placement ||
-isTouchDrawPlacement()
-){
-return;
-}
-
-if(!e.isPrimary){
-return;
-}
-
-const { x, y } =
-pointerFromEvent(e);
-
-placementPointerXY = {
-x,
-y
-};
-
-if(
-!isPlotXBeyondLastCandle(
-x
-)
-){
-return;
-}
-
-updatePlacementCrosshairFast(
-x,
-y
-);
-
-if(
-chart
-){
-
-try{
-chart.clearCrosshairPosition();
-}catch{
-/* ignore */
-}
-
-}
-
-placementPreviewPending = {
-x,
-y
-};
-
-schedulePlacementPreviewRedraw();
-
-};
-
-wrapEl.addEventListener(
-"pointermove",
-onPlacementPointerMove,
-true
-);
-
-return ()=>{
-wrapEl.removeEventListener(
-"pointermove",
-onPlacementPointerMove,
-true
-);
-};
-
-}
-
-function setupFinePointerChartClicks(){
-
-if(
-!tabletCustomPanHooked
-){
-return ()=>{};
-}
-
-const onFinePointerDown = e=>{
-
-if(
-!alive ||
-!isActive()
-){
-return;
-}
-
-if(
-e.pointerType !==
-"mouse"
-){
-return;
-}
-
-if(
-!isTabletChartViewport() ||
-!hasAnyFinePointer()
-){
-return;
-}
-
-if(
-tool ===
-"cursor" ||
-isDrawChromePointerEvent(
-e
-)
-){
-return;
-}
-
-if(
-e.button !==
-0 ||
-!e.isPrimary
-){
-return;
-}
-
-const { x, y } =
-pointerFromEvent(
-e
-);
-
-const placed =
-handleToolClick({
-point:{
-x,
-y
-}
-});
-
-if(
-!placed
-){
-return;
-}
-
-blockChartClick =
-true;
-
-e.preventDefault();
-
-};
-
-wrapEl.addEventListener(
-"pointerdown",
-onFinePointerDown,
-true
-);
-
-return ()=>{
-wrapEl.removeEventListener(
-"pointerdown",
-onFinePointerDown,
-true
-);
-};
-
-}
-
-function syncTouchDrawCrosshairPreview(){
-
-if(
-!touchDrawCrosshair
-){
-previewPoint = null;
-previewXY = null;
-return;
-}
-
-previewXY = {
-x: touchDrawCrosshair.x,
-y: touchDrawCrosshair.y
-};
-
-previewPoint =
-pointFromXY(
-touchDrawCrosshair.x,
-touchDrawCrosshair.y
-);
-
-if(
-placement &&
-isTouchDrawPlacement()
-){
-showStandardChartCrosshair(
-null,
-touchDrawCrosshair.x,
-touchDrawCrosshair.y
-);
-}
-
-}
-
-function suppressChartCrosshairForDrag(){
-
-try{
-onChartCrosshairSuppress?.();
-}catch{
-/* ignore */
-}
-
-hideStandardChartCrosshair();
-
-if(
-!isTouchDrawTablet() &&
-chart
-){
-
-try{
-chart.clearCrosshairPosition();
-}catch{
-/* ignore */
-}
-
-}
-
-}
-
-function syncEditDragCrosshair(
-e,
-localX,
-localY
-){
-
-if(
-!dragState
-){
-return;
-}
-
-showStandardChartCrosshair(
-e,
-localX,
-localY
-);
-
-}
-
-function beginEditDragCrosshair(
-e,
-localX,
-localY
-){
-
-suppressChartCrosshairForDrag();
-
-syncEditDragCrosshair(
-e,
-localX,
-localY
-);
-
-}
-
-function clearEditDragCrosshair(){
-
-hideStandardChartCrosshair();
-
-try{
-onChartCrosshairRelease?.();
-}catch{
-/* ignore */
-}
-
-}
-
-function placementPointsNeeded(type){
-
-if(type === "channel"){
-return 3;
-}
-
-if(
-type === "hray" ||
-isPositionType(type)
-){
-return 1;
-}
-
-return 2;
-
-}
-
-function placeTouchCrosshairPoint(){
-
-if(
-!placement ||
-!touchDrawCrosshair
-){
-return;
-}
-
-const point =
-pointFromXY(
-touchDrawCrosshair.x,
-touchDrawCrosshair.y
-);
-
-if(!point){
-return;
-}
-
-placement.points.push(point);
-blockChartClick = true;
-
-if(
-placement.points.length >=
-placementPointsNeeded(placement.type)
-){
-finishPlacement();
-return;
-}
-
-syncTouchDrawCrosshairPreview();
-redraw();
-
-}
-
 function pointFromParam(param){
 
 if(!param.point){
@@ -3689,36 +2926,6 @@ return null;
 return series.priceToCoordinate(
 price
 );
-
-}
-
-function toXY(point){
-
-if(
-!point ||
-point.time ==
-null ||
-!Number.isFinite(
-point.price
-)
-){
-return null;
-}
-
-const x = xFromTime(point.time);
-const y = plotPriceToCoordinate(point.price);
-
-if(x == null || y == null){
-return null;
-}
-
-return { x, y };
-
-}
-
-function positionBadgeFont(){
-
-return '600 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif';
 
 }
 
@@ -5178,6 +4385,50 @@ ctx.stroke();
 
 }
 
+const {
+drawShape,
+drawFib,
+drawPlacementPreview,
+fibLevelXSpan
+} =
+createDrawRenderer({
+toXY,
+plotPriceToCoordinate,
+series,
+shapeStyle,
+drawPosition,
+baseDefaultStyle,
+defaultPositionP2,
+initialPositionTpSl,
+pointFromXY,
+drawAnchorCircle,
+getPlacement: ()=>placement,
+getPreviewPoint: ()=>previewPoint,
+getPreviewXY: ()=>previewXY,
+getSelectedId: ()=>selectedId,
+drawAnchorCircle
+});
+
+const {
+hrayLineDist,
+hitTestHrayLine,
+trendlineBodyDist,
+hitTestTrendlineBody,
+fibBodyDist,
+hitTestFibBody,
+channelP4XY,
+channelScreenGeometry,
+channelP4Point,
+channelBodyDist,
+hitTestChannelBody
+} =
+createDrawHitTester({
+toXY,
+getPlotWidth,
+series,
+pointFromXY
+});
+
 function drawPositionAnchor(ctx, x, y){
 
 ctx.save();
@@ -5495,344 +4746,6 @@ series.coordinateToPrice(py);
 
 if(price == null || !Number.isFinite(price)){
 return null;
-}
-
-const time = timeFromX(px);
-
-if(time == null){
-return null;
-}
-
-return { time, price };
-
-}
-
-function hrayLineDist(px, py, shape){
-
-const anchor = toXY({
-time: shape.time,
-price: shape.price
-});
-
-if(!anchor){
-return Infinity;
-}
-
-return distToSegment(
-px,
-py,
-anchor.x,
-anchor.y,
-getPlotWidth(),
-anchor.y
-);
-
-}
-
-function isPointerInPriceGutter(
-px
-){
-
-return (
-px >=
-getPlotWidth() - 4
-);
-
-}
-
-function hitTestHrayLine(px, py, shape, threshold = 8){
-
-if(
-shape?.type !== "hray"
-){
-return false;
-}
-
-return hrayLineDist(px, py, shape) <= threshold;
-
-}
-
-function trendlineBodyDist(px, py, shape){
-
-if(
-shape?.type !== "trendline"
-){
-return Infinity;
-}
-
-const a =
-toXY(shape.p1);
-const b =
-toXY(shape.p2);
-
-if(!a || !b){
-return Infinity;
-}
-
-return distToSegment(
-px,
-py,
-a.x,
-a.y,
-b.x,
-b.y
-);
-
-}
-
-function hitTestTrendlineBody(px, py, shape, threshold = 8){
-
-return (
-shape?.type === "trendline" &&
-trendlineBodyDist(px, py, shape) <= threshold
-);
-
-}
-
-function fibBodyDist(px, py, shape){
-
-if(
-shape?.type !== "fib"
-){
-return Infinity;
-}
-
-const a =
-toXY(shape.p1);
-const b =
-toXY(shape.p2);
-
-if(!a || !b){
-return Infinity;
-}
-
-let dist = Infinity;
-
-const useLog =
-isSeriesLogarithmic(series);
-
-getFibRows(shape).forEach(row=>{
-
-if(!row.enabled){
-return;
-}
-
-const price =
-fibPriceAtRatio(
-shape.p1.price,
-shape.p2.price,
-row.v,
-useLog
-);
-
-if(!Number.isFinite(price)){
-return;
-}
-
-const y =
-series.priceToCoordinate(price);
-
-if(y != null){
-
-const plotW =
-getPlotWidth();
-
-if(
-px >= -8 &&
-px <= plotW + 8
-){
-dist = Math.min(
-dist,
-Math.abs(py - y)
-);
-}
-
-}
-
-});
-
-if(
-shape.fibShowTrendLine === true
-){
-
-dist = Math.min(
-dist,
-distToSegment(
-px,
-py,
-a.x,
-a.y,
-b.x,
-b.y
-)
-);
-
-}
-
-return dist;
-
-}
-
-function hitTestFibBody(px, py, shape, threshold = 8){
-
-return (
-shape?.type === "fib" &&
-fibBodyDist(px, py, shape) <= threshold
-);
-
-}
-
-function channelP4XY(
-p1,
-p2,
-p3
-){
-
-if(
-!p1 ||
-!p2 ||
-!p3
-){
-return null;
-}
-
-return {
-x: p3.x + (p2.x - p1.x),
-y: p3.y + (p2.y - p1.y)
-};
-
-}
-
-function channelScreenGeometry(
-shape
-){
-
-const p1 =
-toXY(
-shape.p1
-);
-const p2 =
-toXY(
-shape.p2
-);
-const p3 =
-toXY(
-shape.p3
-);
-
-if(
-!p1 ||
-!p2 ||
-!p3
-){
-return null;
-}
-
-const p4 =
-channelP4XY(
-p1,
-p2,
-p3
-);
-
-if(
-!p4
-){
-return null;
-}
-
-return {
-p1,
-p2,
-p3,
-p4,
-edgeMidA: {
-x: (p1.x + p2.x) / 2,
-y: (p1.y + p2.y) / 2
-},
-edgeMidB: {
-x: (p3.x + p4.x) / 2,
-y: (p3.y + p4.y) / 2
-},
-midStart: {
-x: (p1.x + p3.x) / 2,
-y: (p1.y + p3.y) / 2
-},
-midEnd: {
-x: (p2.x + p4.x) / 2,
-y: (p2.y + p4.y) / 2
-}
-};
-
-}
-
-function channelP4Point(
-shape
-){
-
-const geom =
-channelScreenGeometry(
-shape
-);
-
-if(
-!geom?.p4
-){
-return null;
-}
-
-return pointFromXY(
-geom.p4.x,
-geom.p4.y
-);
-
-}
-
-function channelBodyDist(px, py, shape){
-
-if(
-shape?.type !==
-"channel"
-){
-return Infinity;
-}
-
-const geom =
-channelScreenGeometry(
-shape
-);
-
-if(
-!geom
-){
-return Infinity;
-}
-
-return Math.min(
-distToSegment(
-px,
-py,
-geom.p1.x,
-geom.p1.y,
-geom.p2.x,
-geom.p2.y
-),
-distToSegment(
-px,
-py,
-geom.p3.x,
-geom.p3.y,
-geom.p4.x,
-geom.p4.y
-),
-distToSegment(
-px,
-py,
-geom.midStart.x,
-geom.midStart.y,
-geom.midEnd.x,
-geom.midEnd.y
-)
 );
 
 }
@@ -6186,6 +5099,57 @@ e.clientY
 );
 
 }
+
+const tabletDrawInput =
+mountTabletDrawInput({
+wrapEl,
+chart,
+series,
+chartSize,
+pointFromXY,
+pointerFromEvent,
+isDrawChromePointerEvent,
+getPlacement: ()=>placement,
+getTool: ()=>tool,
+finishPlacement,
+redraw,
+setBlockChartClick: v=>{
+blockChartClick = v;
+},
+setPreviewPoint: v=>{
+previewPoint = v;
+},
+setPreviewXY: v=>{
+previewXY = v;
+},
+onChartCrosshairAt,
+onChartCrosshairClear,
+onChartCrosshairSuppress,
+onChartCrosshairRelease,
+tabletCustomPanHooked,
+getDragState: ()=>dragState
+});
+
+({
+prefersTouchDrawInput,
+isTouchDrawPlacement,
+isTouchDrawTablet,
+useChartProbeCrosshair,
+initTouchDrawCrosshair,
+syncTouchDrawCrosshairPreview,
+placeTouchCrosshairPoint,
+showStandardChartCrosshair,
+hideStandardChartCrosshair,
+suppressChartCrosshairForDrag,
+syncEditDragCrosshair,
+beginEditDragCrosshair,
+clearEditDragCrosshair,
+placementPointsNeeded,
+clearTouchDrawState,
+getTouchDrawCrosshair,
+getTouchPlaceTrack,
+dispose: teardownTouchDrawCrosshair
+} = tabletDrawInput);
 
 function setupEditInteraction(){
 
@@ -6983,170 +5947,6 @@ cap
 return ()=>{
 wrapEl.removeEventListener(
 "touchstart",
-onTouchStart,
-cap
-);
-wrapEl.removeEventListener(
-"touchmove",
-onTouchMove,
-cap
-);
-};
-
-}
-
-function setupTouchDrawCrosshair(){
-
-/** iPad: порог «тап», не «перетаскивание перекрестия» */
-const TAP_MOVE_PX =
-18;
-
-const onTouchPlaceDown = e=>{
-
-if(
-!placement ||
-tool === "cursor"
-){
-return;
-}
-
-if(!isTouchDrawPlacement()){
-return;
-}
-
-if(
-e.pointerType ===
-"mouse"
-){
-return;
-}
-
-if(isDrawChromePointerEvent(e)){
-return;
-}
-
-if(!e.isPrimary){
-return;
-}
-
-if(
-!touchDrawCrosshair
-){
-initTouchDrawCrosshair();
-}
-
-const { x, y } =
-pointerFromEvent(e);
-
-touchPlaceTrack = {
-id: e.pointerId,
-startX: x,
-startY: y,
-moved: false,
-crosshairX: touchDrawCrosshair.x,
-crosshairY: touchDrawCrosshair.y
-};
-
-e.preventDefault();
-
-};
-
-const onTouchPlaceMove = e=>{
-
-if(
-!placement ||
-!touchPlaceTrack ||
-e.pointerId !== touchPlaceTrack.id
-){
-return;
-}
-
-const { x, y } =
-pointerFromEvent(e);
-const dx =
-x - touchPlaceTrack.startX;
-const dy =
-y - touchPlaceTrack.startY;
-
-if(
-!touchPlaceTrack.moved &&
-dx * dx + dy * dy >
-TAP_MOVE_PX * TAP_MOVE_PX
-){
-touchPlaceTrack.moved = true;
-}
-
-if(touchPlaceTrack.moved){
-
-touchDrawCrosshair =
-clampTouchCrosshairXY(
-touchPlaceTrack.crosshairX + dx,
-touchPlaceTrack.crosshairY + dy
-);
-
-syncTouchDrawCrosshairPreview();
-e.preventDefault();
-redraw();
-
-}
-
-};
-
-const onTouchPlaceUp = e=>{
-
-if(
-!placement ||
-!touchPlaceTrack ||
-e.pointerId !== touchPlaceTrack.id
-){
-return;
-}
-
-if(!touchPlaceTrack.moved){
-placeTouchCrosshairPoint();
-e.preventDefault();
-}
-
-touchPlaceTrack = null;
-
-};
-
-wrapEl.addEventListener(
-"pointerdown",
-onTouchPlaceDown,
-true
-);
-
-wrapEl.addEventListener(
-"pointermove",
-onTouchPlaceMove,
-true
-);
-
-wrapEl.addEventListener(
-"pointerup",
-onTouchPlaceUp,
-true
-);
-
-wrapEl.addEventListener(
-"pointercancel",
-onTouchPlaceUp,
-true
-);
-
-return ()=>{
-wrapEl.removeEventListener(
-"pointerdown",
-onTouchPlaceDown,
-true
-);
-wrapEl.removeEventListener(
-"pointermove",
-onTouchPlaceMove,
-true
-);
-wrapEl.removeEventListener(
 "pointerup",
 onTouchPlaceUp,
 true
@@ -7969,567 +6769,6 @@ coordRetryCount = 0;
 
 }
 
-function drawLine(ctx, x1, y1, x2, y2, color, width, dash){
-
-ctx.strokeStyle = color;
-ctx.lineWidth = width;
-ctx.setLineDash(dash || []);
-
-ctx.beginPath();
-ctx.moveTo(x1, y1);
-ctx.lineTo(x2, y2);
-ctx.stroke();
-
-ctx.setLineDash([]);
-
-}
-
-function drawShape(ctx, shape, w, h, fibPlacementPreview = false){
-
-const { color, width, dash } =
-shapeStyle(shape);
-
-if(shape.type === "trendline"){
-
-const a = toXY(shape.p1);
-const b = toXY(shape.p2);
-
-if(a && b){
-drawLine(ctx, a.x, a.y, b.x, b.y, color, width, dash);
-}
-
-}
-
-if(shape.type === "hray"){
-
-const anchor = toXY({
-time: shape.time,
-price: shape.price
-});
-
-if(anchor){
-drawLine(
-ctx,
-anchor.x,
-anchor.y,
-w,
-anchor.y,
-color,
-width,
-dash
-);
-}
-
-}
-
-if(shape.type === "fib"){
-drawFib(ctx, shape, color, width, w, fibPlacementPreview);
-}
-
-if(shape.type === "channel"){
-drawChannel(ctx, shape, color, width);
-}
-
-if(isPositionType(shape.type)){
-drawPosition(
-ctx,
-shape,
-shape.id === selectedId
-);
-}
-
-}
-
-function fibLevelXSpan(
-a,
-b,
-plotW,
-expandNarrowSpan =
-true
-){
-
-let x1 =
-Math.min(
-a.x,
-b.x
-);
-let x2 =
-Math.max(
-a.x,
-b.x
-);
-
-/* Узкий span (одна свеча) → линия нулевой длины, hit-test по Y всё ещё ловит.
-   При preview — только между якорями, без растягивания на весь график. */
-if(
-expandNarrowSpan &&
-x2 - x1 <
-12
-){
-x1 = 0;
-x2 = plotW;
-}
-
-return {
-x1,
-x2,
-labelX:
-Math.min(
-x2 + 4,
-plotW - 28
-)
-};
-
-}
-
-function drawFib(
-ctx,
-shape,
-color,
-width,
-plotW,
-fibPlacementPreview =
-false
-){
-
-const a =
-toXY(shape.p1);
-const b =
-toXY(shape.p2);
-
-if(!a || !b){
-return;
-}
-
-const {
-x1,
-x2,
-labelX
-} =
-fibLevelXSpan(
-a,
-b,
-plotW,
-!fibPlacementPreview
-);
-
-const useLog =
-isSeriesLogarithmic(series);
-
-getFibDrawRows(
-shape
-).forEach(row=>{
-
-if(!row.enabled){
-return;
-}
-
-const price =
-fibPriceAtRatio(
-shape.p1.price,
-shape.p2.price,
-row.v,
-useLog
-);
-
-if(
-!Number.isFinite(price)
-){
-return;
-}
-
-/* Те же координаты, что у якорей (plotPriceToCoordinate / toXY) */
-const y =
-plotPriceToCoordinate(price);
-
-if(y == null){
-return;
-}
-
-const lineColor =
-row.color || color;
-
-const dash =
-fibLevelDash(row.lineStyle);
-
-const lineWidth =
-Math.max(
-1,
-normalizeFibLevelWidth(row.lineWidth) ||
-width
-);
-
-drawLine(
-ctx,
-x1,
-y,
-x2,
-y,
-lineColor,
-lineWidth,
-dash
-);
-
-ctx.fillStyle = lineColor;
-ctx.font = "11px Arial";
-ctx.fillText(
-formatFibLabel(row.v),
-labelX,
-y + 4
-);
-
-});
-
-/* До c088d9f диагональ рисовалась всегда — оставляем как запасной видимый элемент */
-if(
-shape.fibShowTrendLine === true
-){
-
-drawLine(
-ctx,
-a.x,
-a.y,
-b.x,
-b.y,
-color,
-width,
-[]
-);
-
-}
-
-}
-function drawChannelAtXY(ctx, p1, p2, p3, color, width){
-
-if(!p1 || !p2 || !p3){
-return;
-}
-
-const dx = p2.x - p1.x;
-const dy = p2.y - p1.y;
-
-const p4 = {
-x: p3.x + dx,
-y: p3.y + dy
-};
-
-drawLine(ctx, p1.x, p1.y, p2.x, p2.y, color, width);
-drawLine(ctx, p3.x, p3.y, p4.x, p4.y, color, width);
-
-ctx.globalAlpha = 0.55;
-drawLine(
-ctx,
-(p1.x + p3.x) / 2,
-(p1.y + p3.y) / 2,
-(p2.x + p4.x) / 2,
-(p2.y + p4.y) / 2,
-color,
-Math.max(1, width),
-[5, 4]
-);
-ctx.globalAlpha = 1;
-
-}
-
-function drawChannel(ctx, shape, color, width){
-
-const p1 = toXY(shape.p1);
-const p2 = toXY(shape.p2);
-const p3 = toXY(shape.p3);
-
-drawChannelAtXY(ctx, p1, p2, p3, color, width);
-
-}
-
-function previewPointToXY(point){
-
-const xy = toXY(point);
-
-if(xy){
-return xy;
-}
-
-if(point?._xy){
-return point._xy;
-}
-
-return null;
-
-}
-
-function drawPlacementPreview(ctx, w, h){
-
-if(!placement){
-return;
-}
-
-const style = baseDefaultStyle(placement.type);
-const pts = placement.points;
-
-if(placement.type === "channel"){
-
-if(pts.length === 1){
-
-const a = toXY(pts[0]);
-const b = previewPointToXY(
-previewPoint || (previewXY ? { _xy: previewXY } : null)
-);
-
-if(a && b){
-drawLine(ctx, a.x, a.y, b.x, b.y, style.color, style.lineWidth);
-}
-
-return;
-
-}
-
-if(pts.length >= 2){
-
-const a = toXY(pts[0]);
-const b = toXY(pts[1]);
-
-if(a && b){
-drawLine(ctx, a.x, a.y, b.x, b.y, style.color, style.lineWidth);
-}
-
-const c = previewPoint
-? previewPointToXY(previewPoint)
-: previewXY;
-
-if(c){
-drawChannelAtXY(ctx, a, b, c, style.color, style.lineWidth);
-}
-
-}
-
-return;
-
-}
-
-if(isPositionType(placement.type)){
-
-if(pts.length >= 1){
-
-const p1 =
-pts[0];
-let p2 =
-defaultPositionP2(p1);
-
-if(previewPoint){
-p2 = {
-time: previewPoint.time,
-price: p1.price
-};
-}
-
-const levels =
-initialPositionTpSl(
-placement.type,
-p1.price
-);
-
-drawPosition(
-ctx,
-{
-type: placement.type,
-p1,
-p2,
-tpPrice: levels.tpPrice,
-slPrice: levels.slPrice
-},
-false
-);
-
-}
-
-return;
-
-}
-
-if(!previewPoint){
-return;
-}
-
-const previewXYPoint =
-previewPointToXY(
-previewPoint
-);
-
-if(
-pts.length ===
-0 &&
-previewXYPoint &&
-(
-placement.type ===
-"trendline" ||
-placement.type ===
-"fib"
-)
-){
-
-drawAnchorCircle(
-ctx,
-previewXYPoint.x,
-previewXYPoint.y
-);
-
-return;
-
-}
-
-if(
-pts.length ===
-1 &&
-previewXYPoint &&
-placement.type ===
-"trendline"
-){
-
-const a =
-toXY(
-pts[
-0
-]
-);
-
-if(
-a
-){
-drawLine(
-ctx,
-a.x,
-a.y,
-previewXYPoint.x,
-previewXYPoint.y,
-style.color,
-style.lineWidth
-);
-}
-
-return;
-
-}
-
-if(
-pts.length ===
-1 &&
-previewXYPoint &&
-placement.type ===
-"fib"
-){
-
-const a =
-toXY(
-pts[
-0
-]
-);
-
-if(
-!a
-){
-return;
-}
-
-/* Первая точка без движения — только маркер. Иначе drawFib с
-   совпадающими p1/p2 даёт fibLevelXSpan на всю ширину → горизонталь
-   через весь график. При растягивании ко второй точке — полная фиба. */
-const stretchPx =
-Math.hypot(
-previewXYPoint.x - a.x,
-previewXYPoint.y - a.y
-);
-
-if(
-stretchPx <
-12
-){
-
-drawAnchorCircle(
-ctx,
-a.x,
-a.y
-);
-
-return;
-
-}
-
-const previewAnchor =
-previewPoint &&
-Number.isFinite(previewPoint.time) &&
-Number.isFinite(previewPoint.price)
-? previewPoint
-: pointFromXY(
-previewXYPoint.x,
-previewXYPoint.y
-);
-
-if(
-!previewAnchor
-){
-return;
-}
-
-const previewShape =
-{
-type: placement.type,
-color: style.color,
-lineWidth: style.lineWidth,
-fibLevels:
-ensureFibLevelsVisible(
-style.fibLevels
-),
-fibShowTrendLine: style.fibShowTrendLine,
-p1: pts[0],
-p2: previewAnchor
-};
-
-drawShape(
-ctx,
-previewShape,
-w,
-h,
-true
-);
-
-return;
-
-}
-
-const previewPts = [...pts, previewPoint];
-
-const previewShape =
-{
-type: placement.type,
-color: style.color,
-lineWidth: style.lineWidth,
-fibLevels:
-placement.type === "fib"
-? ensureFibLevelsVisible(style.fibLevels)
-: style.fibLevels,
-fibShowTrendLine: style.fibShowTrendLine,
-p1: previewPts[0],
-p2: previewPts[1],
-p3: previewPts[2],
-time: previewPts[0]?.time,
-price: previewPts[0]?.price
-};
-
-if(placement.type === "trendline" && previewPts.length >= 2){
-drawShape(ctx, previewShape, w, h);
-}
-
-if(placement.type === "hray" && previewPts.length >= 1){
-drawShape(ctx, previewShape, w, h);
-}
-
-if(placement.type === "fib" && previewPts.length >= 2){
-drawShape(ctx, previewShape, w, h, true);
-}
-
-}
-
 function hitTest(px, py){
 
 const threshold = 8;
@@ -8731,8 +6970,7 @@ placement = null;
 previewPoint = null;
 previewXY = null;
 placementPointerXY = null;
-touchDrawCrosshair = null;
-touchPlaceTrack = null;
+clearTouchDrawState();
 blockChartClick = false;
 cancelPlacementPreviewRaf();
 resetPlacementCrosshairCache();
@@ -8753,10 +6991,10 @@ return false;
 
 const point =
 isTouchDrawPlacement() &&
-touchDrawCrosshair
+getTouchDrawCrosshair()
 ? pointFromXY(
-touchDrawCrosshair.x,
-touchDrawCrosshair.y
+getTouchDrawCrosshair().x,
+getTouchDrawCrosshair().y
 )
 : placementPointerXY
 ? pointFromXY(
@@ -9161,7 +7399,7 @@ return;
 }
 
 if(
-touchDrawCrosshair
+getTouchDrawCrosshair()
 ){
 syncTouchDrawCrosshairPreview();
 
@@ -9799,9 +8037,6 @@ setupEditInteraction();
 const teardownCoarseTouchGuard =
 setupCoarseTouchChartGuard();
 
-const teardownTouchDrawCrosshair =
-setupTouchDrawCrosshair();
-
 const teardownFinePointerClicks =
 setupFinePointerChartClicks();
 
@@ -10012,7 +8247,7 @@ return;
 }
 
 void import(
-"./drawings-cloud-sync.js?v=32"
+"./drawings-cloud-sync.js?v=33"
 ).then(
 m=>{
 m.bumpDrawingsPullNow?.();
@@ -10453,7 +8688,7 @@ return false;
 
 if(
 dragState ||
-touchPlaceTrack ||
+getTouchPlaceTrack() ||
 placement ||
 tool !==
 "cursor"

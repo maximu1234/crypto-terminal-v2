@@ -3,6 +3,9 @@
   "description": "Static site + Vercel serverless /api (CommonJS handlers)",
   "scripts": {
     "assets:sync": "node scripts/sync-asset-versions.cjs",
-    "assets:bump": "node scripts/sync-asset-versions.cjs bump"
+    "assets:bump": "node scripts/sync-asset-versions.cjs bump",
+    "assets:check": "node scripts/check-asset-manifest.cjs",
+    "nav:check": "node scripts/check-site-nav.cjs",
+    "test": "node --test tests/*.test.mjs"
   }
 }

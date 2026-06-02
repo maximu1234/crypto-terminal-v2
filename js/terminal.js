@@ -65,17 +65,10 @@ createTabletGesturePolicy
 } from "./tablet-gesture-policy.js?v=1";
 
 import {
-connectKlineStream,
 disconnectKlineStream
 } from "./ws.js?v=15";
 
 import {
-connectTickerStream,
-fetchTickersInto
-} from "./tickers.js?v=21";
-
-import {
-processAlertCandle,
 syncBackgroundAlertStreams
 } from "./alert-monitor.js?v=64";
 
@@ -95,11 +88,38 @@ isCoinsMobile,
 syncCoinsTfLabel
 } from "./coins-mobile.js?v=4";
 
+import {
+registerCoinsState,
+marketMap,
+coinElements,
+COINS_TF_VALUES,
+isCoinsPage
+} from "./terminal/coins-state.js";
+
+import {
+readCoinsPrefs,
+writeCoinsPrefs,
+persistCoinsPrefs,
+bootstrapCoinsPageState,
+resolveInitialSymbolAndTf,
+applyCoinsPrefs,
+readUrlParams
+} from "./terminal/coins-prefs.js";
+
+import {
+getCurrentSymbols,
+generateMarketData,
+scheduleResortPriceColumns,
+primeTickerSnapshots,
+startTickerStream,
+startRealtime,
+renderList,
+setCoinsTableHooks
+} from "./terminal/coins-table.js";
+
 let currentDataset = "crypto";
 let currentTF = "60";
 let currentSymbol = "BTCUSDT";
-const isCoinsPage =
-window.location.pathname.includes("/coins");
 let isCoinsChartInverted =
 false;
 let drawingTools =
@@ -113,8 +133,6 @@ let candles = [];
 let symbolLoadSeq = 0;
 let marketData = [];
 
-const marketMap =
-new Map();
 
 let innerSortMode = "symbol";
 let sortAsc = true;
@@ -124,521 +142,159 @@ let flagSortAsc = true;
 let searchQuery = "";
 let hasUrlSymbol = false;
 
-const COINS_PREFS_KEY =
-"coins_page_prefs_v1";
+registerCoinsState({
 
-const COINS_MARKETS = [
-"crypto",
-"new",
-"stocks",
-"commodities",
-"forex"
-];
+get currentDataset(){
+return currentDataset;
+},
+set currentDataset(v){
+currentDataset = v;
+},
 
-const COINS_SORT_MODES =
-new Set([
-"favorites",
-"symbol",
-"24h",
-"1h"
-]);
+get currentTF(){
+return currentTF;
+},
+set currentTF(v){
+currentTF = v;
+},
 
-const COINS_TF_VALUES =
-new Set([
-"1",
-"5",
-"15",
-"60",
-"240",
-"D"
-]);
+get currentSymbol(){
+return currentSymbol;
+},
+set currentSymbol(v){
+currentSymbol = v;
+},
 
-function defaultSortEntry(){
+get isCoinsChartInverted(){
+return isCoinsChartInverted;
+},
+set isCoinsChartInverted(v){
+isCoinsChartInverted = v;
+},
 
-return {
-mode:"symbol",
-asc:true,
-byFlag:false,
-flagAsc:true
-};
+get displaySymbol(){
+return displaySymbol;
+},
+set displaySymbol(v){
+displaySymbol = v;
+},
 
+get candles(){
+return candles;
+},
+set candles(v){
+candles = v;
+},
+
+get symbolLoadSeq(){
+return symbolLoadSeq;
+},
+set symbolLoadSeq(v){
+symbolLoadSeq = v;
+},
+
+get marketData(){
+return marketData;
+},
+set marketData(v){
+marketData = v;
+},
+
+get innerSortMode(){
+return innerSortMode;
+},
+set innerSortMode(v){
+innerSortMode = v;
+},
+
+get sortAsc(){
+return sortAsc;
+},
+set sortAsc(v){
+sortAsc = v;
+},
+
+get flagSortActive(){
+return flagSortActive;
+},
+set flagSortActive(v){
+flagSortActive = v;
+},
+
+get flagSortAsc(){
+return flagSortAsc;
+},
+set flagSortAsc(v){
+flagSortAsc = v;
+},
+
+get searchQuery(){
+return searchQuery;
+},
+set searchQuery(v){
+searchQuery = v;
+},
+
+get hasUrlSymbol(){
+return hasUrlSymbol;
+},
+set hasUrlSymbol(v){
+hasUrlSymbol = v;
+},
+
+get favorites(){
+return favorites;
+},
+set favorites(v){
+favorites = v;
+},
+
+get allBybitSymbols(){
+return allBybitSymbols;
+},
+set allBybitSymbols(v){
+allBybitSymbols = v;
+},
+
+get newListings(){
+return newListings;
+},
+set newListings(v){
+newListings = v;
+},
+
+get candleSeries(){
+return candleSeries;
+},
+set candleSeries(v){
+candleSeries = v;
+},
+
+get chart(){
+return chart;
+},
+set chart(v){
+chart = v;
+},
+
+get rsiChart(){
+return rsiChart;
+},
+set rsiChart(v){
+rsiChart = v;
+},
+
+get drawingTools(){
+return drawingTools;
+},
+set drawingTools(v){
+drawingTools = v;
 }
 
-function defaultLastViewEntry(){
+});
 
-return {
-symbol:null,
-tf:"60"
-};
 
-}
 
-function normalizeLastViewEntry(entry){
-
-const tf =
-typeof entry?.tf === "string" &&
-COINS_TF_VALUES.has(entry.tf)
-? entry.tf
-: "60";
-
-const symbol =
-typeof entry?.symbol === "string" &&
-entry.symbol.trim()
-? entry.symbol.trim().toUpperCase()
-: null;
-
-return {
-symbol,
-tf
-};
-
-}
-
-function defaultCoinsPrefs(){
-
-const sortByMarket =
-{};
-
-const lastViewByMarket =
-{};
-
-for(const m of COINS_MARKETS){
-sortByMarket[m] = defaultSortEntry();
-lastViewByMarket[m] = defaultLastViewEntry();
-}
-
-return {
-market:"crypto",
-sortByMarket,
-lastViewByMarket,
-invertChart:false
-};
-
-}
-
-function normalizeSortEntry(entry){
-
-if(!entry || typeof entry !== "object"){
-return defaultSortEntry();
-}
-
-let mode =
-typeof entry.mode === "string" &&
-COINS_SORT_MODES.has(entry.mode)
-? entry.mode
-: "symbol";
-
-const asc =
-typeof entry.asc === "boolean"
-? entry.asc
-: true;
-
-let byFlag =
-typeof entry.byFlag === "boolean"
-? entry.byFlag
-: false;
-
-let flagAsc =
-typeof entry.flagAsc === "boolean"
-? entry.flagAsc
-: true;
-
-if(mode === "favorites"){
-byFlag = true;
-flagAsc = asc;
-mode = "symbol";
-}
-
-return {
-mode,
-asc,
-byFlag,
-flagAsc
-};
-
-}
-
-function mergeLegacySortIntoPrefs(
-prefs,
-legacySort
-){
-
-if(!legacySort || typeof legacySort !== "object"){
-return false;
-}
-
-let changed =
-false;
-
-if(
-legacySort.sortByMarket &&
-typeof legacySort.sortByMarket === "object"
-){
-
-for(const m of COINS_MARKETS){
-
-if(legacySort.sortByMarket[m]){
-
-prefs.sortByMarket[m] =
-normalizeSortEntry(
-legacySort.sortByMarket[m]
-);
-
-changed = true;
-
-}
-
-}
-
-}else if(
-typeof legacySort.mode === "string"
-){
-
-const entry =
-normalizeSortEntry(legacySort);
-
-for(const m of COINS_MARKETS){
-prefs.sortByMarket[m] = { ...entry };
-}
-
-changed = true;
-
-}else{
-
-for(const m of COINS_MARKETS){
-
-if(
-legacySort[m] &&
-typeof legacySort[m] === "object"
-){
-
-prefs.sortByMarket[m] =
-normalizeSortEntry(
-legacySort[m]
-);
-
-changed = true;
-
-}
-
-}
-
-}
-
-return changed;
-
-}
-
-function mergeLegacyCoinsStorage(prefs){
-
-let changed =
-false;
-
-const legacyMarket =
-localStorage.getItem("coins_market_dataset");
-
-if(
-legacyMarket &&
-COINS_MARKETS.includes(legacyMarket)
-){
-
-prefs.market = legacyMarket;
-changed = true;
-
-}
-
-const legacySortRaw =
-localStorage.getItem("coins_sort_state");
-
-if(legacySortRaw){
-
-try{
-
-const legacySort =
-JSON.parse(legacySortRaw);
-
-if(
-mergeLegacySortIntoPrefs(
-prefs,
-legacySort
-)
-){
-changed = true;
-}
-
-}catch(err){
-
-console.warn("legacy coins sort:", err);
-
-}
-
-}
-
-if(changed){
-
-writeCoinsPrefs(prefs);
-
-try{
-
-localStorage.removeItem("coins_market_dataset");
-localStorage.removeItem("coins_sort_state");
-
-}catch{}
-
-}
-
-return prefs;
-
-}
-
-function readCoinsPrefs(){
-
-try{
-
-let prefs =
-defaultCoinsPrefs();
-
-const raw =
-localStorage.getItem(COINS_PREFS_KEY);
-
-if(raw){
-
-const parsed =
-JSON.parse(raw);
-
-prefs.market =
-COINS_MARKETS.includes(parsed?.market)
-? parsed.market
-: "crypto";
-
-for(const m of COINS_MARKETS){
-prefs.sortByMarket[m] =
-normalizeSortEntry(
-parsed?.sortByMarket?.[m]
-);
-
-prefs.lastViewByMarket[m] =
-normalizeLastViewEntry(
-parsed?.lastViewByMarket?.[m]
-);
-
-}
-
-prefs.invertChart =
-!!parsed?.invertChart;
-
-try{
-
-localStorage.removeItem(
-"coins_market_dataset"
-);
-localStorage.removeItem(
-"coins_sort_state"
-);
-
-}catch(_){
-}
-
-return prefs;
-
-}
-
-writeCoinsPrefs(prefs);
-
-if(
-localStorage.getItem("coins_market_dataset") ||
-localStorage.getItem("coins_sort_state")
-){
-
-prefs =
-mergeLegacyCoinsStorage(prefs);
-
-}
-
-return prefs;
-
-}catch(err){
-
-console.warn("coins prefs read:", err);
-return defaultCoinsPrefs();
-
-}
-
-}
-
-function writeCoinsPrefs(prefs){
-
-try{
-
-const out =
-defaultCoinsPrefs();
-
-out.market =
-COINS_MARKETS.includes(prefs?.market)
-? prefs.market
-: "crypto";
-
-for(const m of COINS_MARKETS){
-out.sortByMarket[m] =
-normalizeSortEntry(
-prefs?.sortByMarket?.[m]
-);
-
-out.lastViewByMarket[m] =
-normalizeLastViewEntry(
-prefs?.lastViewByMarket?.[m]
-);
-}
-
-out.invertChart =
-!!prefs?.invertChart;
-
-localStorage.setItem(
-COINS_PREFS_KEY,
-JSON.stringify(out)
-);
-
-}catch(err){
-
-console.warn("coins prefs write:", err);
-
-}
-
-}
-
-function persistCoinsPrefs(){
-
-const prefs =
-readCoinsPrefs();
-
-prefs.market = currentDataset;
-prefs.sortByMarket[currentDataset] = {
-mode:innerSortMode,
-asc:sortAsc,
-byFlag:flagSortActive,
-flagAsc:flagSortAsc
-};
-
-if(!prefs.lastViewByMarket){
-prefs.lastViewByMarket = {};
-}
-
-prefs.lastViewByMarket[currentDataset] = {
-symbol:currentSymbol,
-tf:currentTF
-};
-
-if(
-isCoinsPage
-){
-prefs.invertChart =
-isCoinsChartInverted;
-}
-
-writeCoinsPrefs(prefs);
-
-}
-
-function readLastViewFromPrefs(){
-
-const prefs =
-readCoinsPrefs();
-
-return normalizeLastViewEntry(
-prefs.lastViewByMarket?.[currentDataset]
-);
-
-}
-
-function bootstrapCoinsPageState(){
-
-readUrlParams();
-applyCoinsPrefs();
-
-if(hasUrlSymbol){
-return;
-}
-
-const last =
-readLastViewFromPrefs();
-
-if(
-last.tf &&
-COINS_TF_VALUES.has(last.tf)
-){
-currentTF = last.tf;
-}
-
-if(last.symbol){
-currentSymbol = last.symbol;
-}
-
-}
-
-function resolveInitialSymbolAndTf(){
-
-const last =
-readLastViewFromPrefs();
-
-if(
-last.tf &&
-COINS_TF_VALUES.has(last.tf)
-){
-currentTF = last.tf;
-}
-
-const symbols =
-getCurrentSymbols();
-
-if(last.symbol){
-
-if(
-symbols.length === 0 ||
-symbols.includes(last.symbol)
-){
-currentSymbol = last.symbol;
-return;
-}
-
-}
-
-currentSymbol =
-getFirstVisibleSymbol() ||
-symbols[0] ||
-"BTCUSDT";
-
-}
-
-function applySortForCurrentMarket(){
-
-const prefs =
-readCoinsPrefs();
-
-const sort =
-prefs.sortByMarket[currentDataset] ||
-defaultSortEntry();
-
-innerSortMode = sort.mode;
-sortAsc = sort.asc;
-flagSortActive = sort.byFlag;
-flagSortAsc = sort.flagAsc;
-
-}
-
-function applyCoinsPrefs(){
-
-const prefs =
-readCoinsPrefs();
-
-if(!hasUrlSymbol){
-
-currentDataset = prefs.market;
-
-}
-
-applySortForCurrentMarket();
-
-}
 
 let favorites =
 loadFavoritesGroups();
@@ -646,30 +302,11 @@ loadFavoritesGroups();
 let allBybitSymbols = [];
 let newListings = [];
 
-const coinElements =
-new Map();
 
 /* =========================================================
    SYMBOLS
 ========================================================= */
 
-const stockSymbols = [
-"AAPL","TSLA","NVDA","MSFT","AMZN",
-"META","GOOGL","NFLX","AMD","COIN","PLTR"
-];
-
-const commoditySymbols = [
-"XAU/USD",
-"XAG/USD",
-"BRENT"
-];
-
-const forexSymbols = [
-"EUR/USD",
-"GBP/USD",
-"USD/JPY",
-"AUD/USD"
-];
 
 /* =========================================================
    CHARTS
@@ -2091,237 +1728,6 @@ void reloadTerminalBybitData();
 }
 );
 
-function getCurrentSymbols(){
-
-if(currentDataset === "crypto"){
-return allBybitSymbols;
-}
-
-if(currentDataset === "new"){
-return newListings;
-}
-
-if(currentDataset === "stocks"){
-return stockSymbols;
-}
-
-if(currentDataset === "commodities"){
-return commoditySymbols;
-}
-
-return forexSymbols;
-
-}
-
-/* =========================================================
-   MARKET DATA
-========================================================= */
-
-function generateMarketData(){
-
-marketData = [];
-
-marketMap.clear();
-
-getCurrentSymbols().forEach(symbol=>{
-
-const item = {
-
-symbol,
-
-price:0,
-
-change24:0,
-
-change1h:0
-
-};
-
-marketData.push(item);
-
-marketMap.set(symbol,item);
-
-});
-
-}
-
-/*
-  После обновления % рынка список должен перестраиваться, иначе
-  при сохранённой сортировке по 24h/1h все строки с нулём % после
-  перезагрузки выглядят «несохранённой» сортировкой.
-*/
-let resortPriceColsTimer =
-null;
-
-function scheduleResortPriceColumns(){
-
-if(
-innerSortMode !== "24h" &&
-innerSortMode !== "1h"
-){
-return;
-}
-
-if(resortPriceColsTimer){
-return;
-}
-
-resortPriceColsTimer =
-setTimeout(()=>{
-
-resortPriceColsTimer = null;
-
-renderList();
-
-},200);
-
-}
-
-async function primeTickerSnapshots(){
-
-if(
-currentDataset !== "crypto" &&
-currentDataset !== "new"
-){
-return;
-}
-
-try{
-
-const snap =
-new Map();
-
-await fetchTickersInto(snap);
-
-snap.forEach((payload,symbol)=>{
-
-const item =
-marketMap.get(symbol);
-
-if(!item){
-return;
-}
-
-item.price =
-payload.price;
-
-item.change24 =
-payload.change24;
-
-item.change1h =
-payload.change1h;
-
-});
-
-}catch(err){
-
-console.warn(
-"prime tickers:",
-err
-);
-
-}
-
-}
-
-/* =========================================================
-   REALTIME TICKERS
-========================================================= */
-
-function startTickerStream(){
-
-connectTickerStream(tick=>{
-
-const item =
-marketMap.get(tick.symbol);
-
-if(!item){
-return;
-}
-
-item.price =
-tick.price;
-
-item.change24 =
-tick.change24;
-
-item.change1h =
-tick.change1h;
-
-updateCoinRow(item);
-
-scheduleResortPriceColumns();
-
-});
-
-}
-
-/* =========================================================
-   REALTIME
-========================================================= */
-
-function startRealtime(){
-
-if(
-currentDataset !== "crypto" &&
-currentDataset !== "new"
-){
-return;
-}
-
-const streamSymbol =
-currentSymbol;
-
-connectKlineStream({
-
-symbol:currentSymbol,
-tf:currentTF,
-
-onCandle:candle=>{
-
-if(
-streamSymbol !== currentSymbol
-){
-return;
-}
-
-if(!candles.length){
-return;
-}
-
-const last =
-candles[candles.length - 1];
-
-if(candle.time === last.time){
-
-candles[candles.length - 1] =
-candle;
-
-}else if(candle.time > last.time){
-
-candles.push(candle);
-
-if(candles.length > 4000){
-candles.shift();
-}
-
-}
-
-candleSeries.update(candle);
-
-rebuildRsiFromCandles();
-
-processAlertCandle(
-streamSymbol,
-candle,
-currentTF
-);
-
-}
-
-});
-
-}
 
 /* =========================================================
    DEFAULT ZOOM
@@ -2808,78 +2214,6 @@ await loadSymbol(currentSymbol);
    TABLE
 ========================================================= */
 
-function getFilteredMarketData(){
-
-let data = [...marketData];
-
-const query =
-searchQuery.trim().toUpperCase();
-
-if(query){
-
-data = data.filter(item=>
-item.symbol.includes(query)
-);
-
-}
-
-return data;
-
-}
-
-function getVisibleSymbolList(){
-
-const data =
-getFilteredMarketData();
-
-data.sort(sortData);
-
-return data.map(item=>item.symbol);
-
-}
-
-function getFirstVisibleSymbol(){
-
-const symbols =
-getVisibleSymbolList();
-
-return symbols[0] || null;
-
-}
-
-function renderList(){
-
-const list =
-document.getElementById(
-"coins-body"
-);
-
-list.innerHTML = "";
-
-coinElements.clear();
-
-const data =
-getFilteredMarketData();
-
-data.sort(sortData);
-
-data.forEach(item=>{
-
-const div =
-createCoinRow(item);
-
-coinElements.set(
-item.symbol,
-div
-);
-
-list.appendChild(div);
-
-});
-
-highlightActiveSymbol();
-
-}
 
 function scrollActiveCoinIntoView(){
 
@@ -3167,163 +2501,6 @@ displaySymbol
 
 }
 
-function createCoinRow(item){
-
-const div =
-document.createElement("div");
-
-div.className = "coin";
-
-div.innerHTML = `
-
-<div class="col-flag">
-
-<div class="coin-flag-wrap">
-<button type="button" class="flag coin-flag-btn" data-coin-flag-trigger data-symbol="${item.symbol}" title="Выбрать флаг" aria-haspopup="true" aria-expanded="false" aria-pressed="false"></button>
-<div class="coin-flag-menu hidden" role="menu">
-<button type="button" class="flag coin-flag-pick flag--red" data-flag-group="red" title="Красный" role="menuitem"></button>
-<button type="button" class="flag coin-flag-pick flag--green" data-flag-group="green" title="Зелёный" role="menuitem"></button>
-<button type="button" class="flag coin-flag-pick flag--gray" data-flag-group="gray" title="Серый" role="menuitem"></button>
-<button type="button" class="flag coin-flag-pick coin-flag-clear" data-flag-group="clear" title="Снять флаг" role="menuitem"></button>
-</div>
-</div>
-
-</div>
-
-<div class="coin-symbol">
-${item.symbol}
-</div>
-
-<div class="coin-change24 col-change">
-0.00%
-</div>
-
-<div class="coin-change1h col-change">
-0.00%
-</div>
-
-`;
-
-div.onclick = async e=>{
-
-if(
-e.target.closest(".coin-flag-wrap")
-){
-return;
-}
-
-setCoinsChartSymbol(item.symbol);
-await loadSymbol(item.symbol);
-
-};
-
-const flagWrap =
-div.querySelector(".coin-flag-wrap");
-
-const flagTrigger =
-flagWrap?.querySelector("[data-coin-flag-trigger]");
-
-const flagMenu =
-flagWrap?.querySelector(".coin-flag-menu");
-
-if(flagTrigger){
-updateCoinFlagButton(flagTrigger, item.symbol);
-}
-
-flagTrigger?.addEventListener("click", e=>{
-
-e.stopPropagation();
-
-const open =
-!flagMenu?.classList.contains("hidden");
-
-closeAllCoinFlagMenus(flagWrap);
-
-if(open){
-flagMenu?.classList.add("hidden");
-flagTrigger.setAttribute("aria-expanded", "false");
-}else{
-flagMenu?.classList.remove("hidden");
-flagTrigger.setAttribute("aria-expanded", "true");
-}
-
-});
-
-flagMenu?.querySelectorAll("[data-flag-group]").forEach(btn=>{
-
-btn.addEventListener("click", e=>{
-
-e.stopPropagation();
-
-applyCoinFavoriteGroup(
-item.symbol,
-btn.dataset.flagGroup
-);
-
-flagMenu?.classList.add("hidden");
-flagTrigger?.setAttribute("aria-expanded", "false");
-
-});
-
-});
-
-updateCoinRow(item, div);
-
-return div;
-
-}
-
-function updateCoinRow(item, element=null){
-
-const div =
-element ||
-coinElements.get(item.symbol);
-
-if(!div){
-return;
-}
-
-const change24El =
-div.querySelector(".coin-change24");
-
-const change1hEl =
-div.querySelector(".coin-change1h");
-
-if(!change24El || !change1hEl){
-return;
-}
-
-if(item.change24 >= 0){
-
-change24El.classList.add("green");
-change24El.classList.remove("red");
-
-}else{
-
-change24El.classList.add("red");
-change24El.classList.remove("green");
-
-}
-
-if(item.change1h >= 0){
-
-change1hEl.classList.add("green");
-change1hEl.classList.remove("red");
-
-}else{
-
-change1hEl.classList.add("red");
-change1hEl.classList.remove("green");
-
-}
-
-change24El.innerText =
-`${item.change24.toFixed(2)}%`;
-
-change1hEl.innerText =
-`${item.change1h.toFixed(2)}%`;
-
-}
 
 function syncFavoriteButtonsFromStorage(){
 
@@ -3361,78 +2538,6 @@ renderList();
 
 });
 
-function highlightActiveSymbol(){
-
-coinElements.forEach((el,symbol)=>{
-
-if(symbol === currentSymbol){
-
-el.classList.add("active");
-
-}else{
-
-el.classList.remove("active");
-
-}
-
-});
-
-}
-
-function compareInnerSort(a, b){
-
-let result = 0;
-
-if(innerSortMode === "symbol"){
-
-result =
-a.symbol.localeCompare(
-b.symbol
-);
-
-}else if(innerSortMode === "24h"){
-
-result =
-a.change24 - b.change24;
-
-}else if(innerSortMode === "1h"){
-
-result =
-a.change1h - b.change1h;
-
-}
-
-return sortAsc
-? result
-: -result;
-
-}
-
-function sortData(a,b){
-
-if(flagSortActive){
-
-const ar =
-flagSortRank(
-getFavoriteGroup(a.symbol, favorites),
-flagSortAsc
-);
-
-const br =
-flagSortRank(
-getFavoriteGroup(b.symbol, favorites),
-flagSortAsc
-);
-
-if(ar !== br){
-return ar - br;
-}
-
-}
-
-return compareInnerSort(a, b);
-
-}
 
 /* =========================================================
    SORT
@@ -3728,28 +2833,6 @@ syncCoinsTabletListNav
    URL PARAMS
 ========================================================= */
 
-function readUrlParams(){
-
-const params =
-new URLSearchParams(window.location.search);
-
-const symbol =
-params.get("symbol");
-
-const tf =
-params.get("tf");
-
-if(symbol){
-currentSymbol = symbol.trim().toUpperCase();
-currentDataset = "crypto";
-hasUrlSymbol = true;
-}
-
-if(tf){
-currentTF = tf;
-}
-
-}
 
 function formatCoinsSymbolLabel(
 symbol
@@ -4002,6 +3085,15 @@ flushCoinsPrefs();
 );
 
 bootstrapCoinsPageState();
+
+setCoinsTableHooks({
+setCoinsChartSymbol,
+loadSymbol,
+closeAllCoinFlagMenus,
+applyCoinFavoriteGroup,
+updateCoinFlagButton,
+rebuildRsiFromCandles
+});
 
 setCoinsChartSymbol(
 currentSymbol

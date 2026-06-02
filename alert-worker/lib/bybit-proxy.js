@@ -1,9 +1,14 @@
 import { setPublicCors } from "./client-http.js";
+import { readFileSync } from "fs";
+import { dirname, join } from "path";
+import { fileURLToPath } from "url";
 
-const BASES = [
-  "https://api.bybit.com",
-  "https://api.bytick.com"
-];
+const BASES = JSON.parse(
+  readFileSync(
+    join(dirname(fileURLToPath(import.meta.url)), "../../shared/bybit-api-bases.json"),
+    "utf8"
+  )
+);
 
 /**
  * GET /bybit?path=/v5/market/tickers?category=linear

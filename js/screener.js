@@ -24,6 +24,10 @@ fetchTickersInto
 } from "./tickers.js?v=21";
 
 import {
+createTickerUiBatcher
+} from "./ticker-update-batch.js?v=1";
+
+import {
 saveScreenerState,
 loadScreenerState
 } from "./storage.js?v=12";
@@ -1906,13 +1910,30 @@ void reloadScreenerMarketData();
 
 }
 
-connectTickerStream(tick=>{
+const scheduleTickerUiFlush =
+createTickerUiBatcher(
+()=>{
 
-tickerMap.set(tick.symbol, tick);
+activeWidgets.forEach(
+w=>{
+updateWidgetMeta(
+w.symbol,
+w.root
+);
+}
+);
 
-activeWidgets.forEach(w=>{
-updateWidgetMeta(w.symbol, w.root);
-});
+}
+);
+
+connectTickerStream(
+tick=>{
+
+tickerMap.set(
+tick.symbol,
+tick
+);
+scheduleTickerUiFlush();
 
 });
 

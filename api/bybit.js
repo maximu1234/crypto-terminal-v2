@@ -3,10 +3,27 @@
  * GET /api/bybit?path=/v5/market/tickers?category=linear
  */
 
-const BASES = [
-"https://api.bybit.com",
-"https://api.bytick.com"
-];
+const fs =
+require(
+"fs"
+);
+const path =
+require(
+"path"
+);
+
+const BASES =
+JSON.parse(
+fs.readFileSync(
+path.join(
+__dirname,
+"..",
+"shared",
+"bybit-api-bases.json"
+),
+"utf8"
+)
+);
 
 module.exports = async function handler(
 req,

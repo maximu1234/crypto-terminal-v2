@@ -23,7 +23,7 @@ resolveAlertAuthFast
 
 import {
 createPullCoalescer
-} from "./cloud-sync-throttle.js?v=2";
+} from "./cloud-sync-throttle.js?v=3";
 
 const FAVORITES_LOCAL_TS_KEY =
 "favorites_local_updated_at";

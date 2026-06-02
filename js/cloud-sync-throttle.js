@@ -2,6 +2,22 @@
  * Ограничение частоты облачных pull/reconcile (Яндекс: ERR_INSUFFICIENT_RESOURCES).
  */
 
+import {
+isAlertsPage,
+isDrawingsUiPage
+} from "./page-routes.js?v=1";
+
+export {
+isAlertsPage,
+isDrawingsUiPage,
+isCoinsPage,
+isTerminalDashboardPage,
+isScreenerPage,
+isListingsPage,
+isTradeCalculatorPage,
+isSystemAdminPage
+} from "./page-routes.js?v=1";
+
 const IS_YANDEX =
 typeof navigator !==
 "undefined" &&
@@ -9,45 +25,6 @@ typeof navigator !==
 navigator.userAgent ||
 ""
 );
-
-function pagePath(){
-
-return typeof location !==
-"undefined"
-? (
-location.pathname ||
-""
-)
-: "";
-
-}
-
-export function isAlertsPage(){
-
-return /\/alerts(\.html)?\/?$/i.test(
-pagePath()
-);
-
-}
-
-export function isDrawingsUiPage(){
-
-const path =
-pagePath();
-
-return (
-/\/coins(\.html)?\/?$/i.test(
-path
-) ||
-/\/terminal/i.test(
-path
-) ||
-/\/index(\.html)?\/?$/i.test(
-path
-)
-);
-
-}
 
 export function createPullCoalescer(
 options = {}

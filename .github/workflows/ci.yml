@@ -1,0 +1,27 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Syntax check JS
+        run: |
+          find . -name '*.js' -not -path './node_modules/*' -not -path './vendor/*' | while read f; do
+            node --check "$f" || exit 1
+          done
+      - name: Asset manifest sync
+        run: node scripts/check-asset-manifest.cjs
+      - name: Site nav links
+        run: node scripts/check-site-nav.cjs
+      - name: Unit tests
+        run: node --test tests/*.test.mjs

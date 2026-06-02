@@ -239,25 +239,58 @@ new CustomEvent(
 boot().catch(
 err=>{
 
-const key =
+const retryV1 =
 sessionStorage.getItem(
 "coins_boot_retry_v1"
-)
-? "coins_boot_retry_v2"
-: "coins_boot_retry_v1";
+);
+const retryV2 =
+sessionStorage.getItem(
+"coins_boot_retry_v2"
+);
 
 if(
 IS_YANDEX &&
-!sessionStorage.getItem(
-key
-)
+!retryV1
 ){
+console.warn(
+"[coins boot] Yandex: первая ошибка загрузки, reload (1/2):",
+err?.message ||
+err
+);
 sessionStorage.setItem(
-key,
+"coins_boot_retry_v1",
 "1"
 );
 location.reload();
 return;
+}
+
+if(
+IS_YANDEX &&
+retryV1 &&
+!retryV2
+){
+console.warn(
+"[coins boot] Yandex: вторая ошибка загрузки, reload (2/2):",
+err?.message ||
+err
+);
+sessionStorage.setItem(
+"coins_boot_retry_v2",
+"1"
+);
+location.reload();
+return;
+}
+
+if(
+IS_YANDEX &&
+retryV2
+){
+console.error(
+"[coins boot] Yandex: загрузка не удалась после 2 reload:",
+err
+);
 }
 
 showBootError(

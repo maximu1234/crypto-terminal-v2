@@ -8,12 +8,16 @@ ensureCloudReady
 
 import {
 isAlertsPage
-} from "./cloud-sync-throttle.js?v=2";
+} from "./cloud-sync-throttle.js?v=3";
+
+import {
+scheduleDevicePull
+} from "./device-pull-gate.js?v=1";
 
 import {
 initAlertsCloudSync,
 scheduleRegistryCloudSync
-} from "./alerts-cloud-sync.js?v=101";
+} from "./alerts-cloud-sync.js?v=102";
 
 import {
 stripAlertFlagsNotInRegistry
@@ -124,7 +128,10 @@ if(
 isCloudLoggedInEffective() &&
 !isAlertsPage()
 ){
-void pullDeviceStateFromCloud();
+scheduleDevicePull(
+()=>
+pullDeviceStateFromCloud()
+);
 }
 
 window.dispatchEvent(
@@ -136,7 +143,7 @@ new CustomEvent(
 }
 );
 
-import("./drawings-cloud-sync.js?v=32").then(
+import("./drawings-cloud-sync.js?v=33").then(
 ({ initDrawingsCloudSync })=>{
 initDrawingsCloudSync();
 }
@@ -214,7 +221,10 @@ isCloudLoggedInEffective() &&
 !isAlertsPage()
 ){
 scheduleRegistryCloudSync();
-void pullDeviceStateFromCloud();
+scheduleDevicePull(
+()=>
+pullDeviceStateFromCloud()
+);
 }
 
 })
