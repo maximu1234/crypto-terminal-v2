@@ -134,7 +134,7 @@ Object.freeze({
 
 /* ── JS: cloud / auth ── */
 "cloud-sync.js":
-29,
+30,
 "cloud-sync-throttle.js":
 3,
 "page-routes.js":
@@ -146,11 +146,11 @@ Object.freeze({
 "types/chart-types.js":
 1,
 "supabase-client.js":
-6,
+7,
 "supabase-env.js":
 5,
 "auth-storage.js":
-2,
+3,
 "auth-ui.js":
 26,
 "alert-auth-cache.js":

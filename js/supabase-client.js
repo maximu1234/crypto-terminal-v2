@@ -1,7 +1,7 @@
 import {
 createAuthStorage,
 SUPABASE_AUTH_STORAGE_KEY
-} from "./auth-storage.js?v=2";
+} from "./auth-storage.js?v=3";
 
 export {
 SUPABASE_AUTH_STORAGE_KEY
@@ -194,7 +194,7 @@ env.SUPABASE_ANON_KEY,
 {
 auth:{
 persistSession:true,
-autoRefreshToken:true,
+autoRefreshToken:false,
 detectSessionInUrl:true,
 storage: createAuthStorage(),
 storageKey: SUPABASE_AUTH_STORAGE_KEY

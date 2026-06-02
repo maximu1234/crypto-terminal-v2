@@ -8,11 +8,11 @@ signInWithEmailOtp,
 signOutCloud,
 recoverAuthSessionFromUrl,
 hasAuthCallbackInUrl
-} from "./cloud-sync.js?v=29";
+} from "./cloud-sync.js?v=30";
 
 import {
 isSupabaseConfigured
-} from "./supabase-client.js?v=6";
+} from "./supabase-client.js?v=7";
 
 import {
 readAlertTokenSync

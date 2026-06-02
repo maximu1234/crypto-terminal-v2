@@ -2,7 +2,7 @@ import {
 getSupabase,
 isSupabaseConfigured,
 SUPABASE_AUTH_STORAGE_KEY
-} from "./supabase-client.js?v=6";
+} from "./supabase-client.js?v=7";
 
 import {
 waitForCloudAuth,
@@ -10,7 +10,7 @@ isCloudLoggedIn,
 isCloudLoggedInEffective,
 onCloudSyncChange,
 ensureCloudLoginResolved
-} from "./cloud-sync.js?v=29";
+} from "./cloud-sync.js?v=30";
 
 import {
 getCachedAlertAuth,
@@ -5420,7 +5420,7 @@ return 0;
 
 try{
 const { ensureCloudLoginResolved } =
-await import("./cloud-sync.js?v=29");
+await import("./cloud-sync.js?v=30");
 
 await ensureCloudLoginResolved(
 8000

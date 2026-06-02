@@ -7,7 +7,7 @@ import {
 SUPABASE_AUTH_STORAGE_KEY,
 SUPABASE_AUTH_BACKUP_KEY,
 restoreAuthSessionFromBackup
-} from "./auth-storage.js?v=2";
+} from "./auth-storage.js?v=3";
 
 let cache = null;
 
@@ -376,7 +376,7 @@ syncHit
 
   try{
     const { getSupabase } =
-    await import("./supabase-client.js?v=6");
+    await import("./supabase-client.js?v=7");
 
     const sb =
     await Promise.race([

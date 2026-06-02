@@ -9,6 +9,92 @@ export const SUPABASE_AUTH_BACKUP_KEY =
 const EXPLICIT_SIGNOUT_KEY =
 "ct_supabase_auth_explicit_signout";
 
+const AUTH_REFRESH_BLOCK_UNTIL_KEY =
+"ct_auth_refresh_blocked_until";
+
+export function isAuthRefreshBlocked(){
+
+try{
+
+const until =
+Number(
+sessionStorage.getItem(
+AUTH_REFRESH_BLOCK_UNTIL_KEY
+) ||
+0
+);
+
+return (
+until >
+0 &&
+Date.now() <
+until
+);
+
+}catch{
+return false;
+}
+
+}
+
+/** Блокировать refresh (после 400/таймаута) до повторного входа или истечения окна. */
+export function blockAuthRefreshUntil(
+msFromNow =
+30 *
+60 *
+1000
+){
+
+const until =
+Date.now() +
+msFromNow;
+
+try{
+sessionStorage.setItem(
+AUTH_REFRESH_BLOCK_UNTIL_KEY,
+String(
+until
+)
+);
+}catch{
+/* ignore */
+}
+
+clearPersistedRefreshToken();
+
+return until;
+
+}
+
+export function getAuthRefreshBlockedUntil(){
+
+try{
+
+return Number(
+sessionStorage.getItem(
+AUTH_REFRESH_BLOCK_UNTIL_KEY
+) ||
+0
+);
+
+}catch{
+return 0;
+}
+
+}
+
+export function clearAuthRefreshBlock(){
+
+try{
+sessionStorage.removeItem(
+AUTH_REFRESH_BLOCK_UNTIL_KEY
+);
+}catch{
+/* ignore */
+}
+
+}
+
 function readRaw(
 key
 ){
@@ -62,6 +148,15 @@ if(
 !value
 ){
 return;
+}
+
+if(
+isAuthRefreshBlocked()
+){
+value =
+stripRefreshTokenFromAuthRaw(
+value
+);
 }
 
 writeRaw(
@@ -312,6 +407,18 @@ readRaw(
 key
 );
 }
+}
+
+if(
+value &&
+key ===
+SUPABASE_AUTH_STORAGE_KEY &&
+isAuthRefreshBlocked()
+){
+value =
+stripRefreshTokenFromAuthRaw(
+value
+);
 }
 
 return value;

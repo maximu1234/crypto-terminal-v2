@@ -1,7 +1,7 @@
 import {
 getSupabase,
 isSupabaseConfigured
-} from "./supabase-client.js?v=6";
+} from "./supabase-client.js?v=7";
 
 import {
 SUPABASE_AUTH_STORAGE_KEY,
@@ -11,8 +11,12 @@ isSafariBrowser,
 isFatalAuthRefreshError,
 clearPersistedRefreshToken,
 markExplicitAuthSignOut,
-restoreAuthSessionFromBackup
-} from "./auth-storage.js?v=2";
+restoreAuthSessionFromBackup,
+isAuthRefreshBlocked,
+blockAuthRefreshUntil,
+clearAuthRefreshBlock,
+getAuthRefreshBlockedUntil
+} from "./auth-storage.js?v=3";
 
 import {
 loadFavoritesGroups,
@@ -69,7 +73,7 @@ const authListeners = new Set();
 let lastSilentRefreshMs =
 0;
 let authRefreshBlockedUntil =
-0;
+getAuthRefreshBlockedUntil();
 let lastAuthWarnKey =
 "";
 let lastAuthWarnMs =
@@ -112,16 +116,21 @@ reason
 ){
 
 authRefreshBlockedUntil =
-Date.now() +
-30 *
-60 *
-1000;
-
-clearPersistedRefreshToken();
+blockAuthRefreshUntil();
 
 warnAuthOnce(
-"refresh-invalid",
+"auth-degraded",
 `[auth] ${reason} — войдите снова через шестерёнку`
+);
+
+}
+
+function isAuthRefreshBlockedNow(){
+
+return (
+Date.now() <
+authRefreshBlockedUntil ||
+isAuthRefreshBlocked()
 );
 
 }
@@ -267,6 +276,12 @@ async function restoreSessionFromPersisted(
 sb
 ){
 
+if(
+isAuthRefreshBlockedNow()
+){
+return null;
+}
+
 const persisted =
 readPersistedAuthSession();
 
@@ -298,6 +313,12 @@ if(
 return persisted;
 }
 
+if(
+!isAccessTokenExpired(
+persisted
+)
+){
+
 try{
 const { data, error } =
 await withTimeout(
@@ -327,7 +348,7 @@ return null;
 }
 
 warnAuthOnce(
-"restore-setSession",
+"auth-degraded",
 `[auth] restore setSession: ${error.message}`
 );
 }else if(
@@ -350,10 +371,28 @@ blockAuthRefreshRetries(
 return null;
 }
 
+if(
+/timeouts?/i.test(
+String(
+err?.message ||
+err
+)
+)
+){
+blockAuthRefreshRetries(
+"restore setSession"
+);
+return null;
+}
+
 warnAuthOnce(
-"restore-setSession",
+"auth-degraded",
 `[auth] restore setSession: ${err?.message || err}`
 );
+
+}
+
+return persisted;
 
 }
 
@@ -386,7 +425,7 @@ return null;
 }
 
 warnAuthOnce(
-"restore-refresh",
+"auth-degraded",
 `[auth] refreshSession: ${error.message}`
 );
 return null;
@@ -408,8 +447,22 @@ blockAuthRefreshRetries(
 return null;
 }
 
+if(
+/timeouts?/i.test(
+String(
+err?.message ||
+err
+)
+)
+){
+blockAuthRefreshRetries(
+"refreshSession"
+);
+return null;
+}
+
 warnAuthOnce(
-"restore-refresh",
+"auth-degraded",
 `[auth] refreshSession: ${err?.message || err}`
 );
 return null;
@@ -426,6 +479,12 @@ persisted
 }
 
 async function refreshAuthSessionSilent(){
+
+if(
+isAuthRefreshBlockedNow()
+){
+return false;
+}
 
 const now =
 Date.now();
@@ -489,7 +548,7 @@ return false;
 }
 
 warnAuthOnce(
-"silent-refresh-error",
+"auth-degraded",
 `[auth] silent refresh: ${error.message}`
 );
 return false;
@@ -523,26 +582,14 @@ err
 msg
 )
 ){
-if(
-isFatalAuthRefreshError(
-err
-)
-){
 blockAuthRefreshRetries(
 "silent refresh"
 );
-}else{
-warnAuthOnce(
-"silent-refresh-timeout",
-`[auth] silent refresh: ${msg}`
-);
-}
-
 return false;
 }
 
 warnAuthOnce(
-"silent-refresh",
+"auth-degraded",
 `[auth] silent refresh: ${msg}`
 );
 return false;
@@ -2052,6 +2099,14 @@ return loggedIn;
 async function applySession(session){
 
 if(
+session?.refresh_token
+){
+clearAuthRefreshBlock();
+authRefreshBlockedUntil =
+0;
+}
+
+if(
 session?.access_token &&
 session?.user &&
 !session.refresh_token
@@ -2062,7 +2117,8 @@ readPersistedAuthSession();
 if(
 persisted?.refresh_token &&
 persisted?.user?.id ===
-session.user?.id
+session.user?.id &&
+!isAuthRefreshBlockedNow()
 ){
 session = {
 ...session,
@@ -2249,7 +2305,8 @@ refreshCloudConnection().catch(()=>{
 
 if(
 document.visibilityState ===
-"visible"
+"visible" &&
+!isAuthRefreshBlockedNow()
 ){
 restoreAuthSessionFromBackup();
 void refreshAuthSessionSilent();
@@ -2593,7 +2650,8 @@ sb
 null;
 
 if(
-!session
+!session &&
+!isAuthRefreshBlockedNow()
 ){
 restoreAuthSessionFromBackup();
 session =
@@ -2603,7 +2661,8 @@ sb
 }
 
 if(
-!session
+!session &&
+!isAuthRefreshBlockedNow()
 ){
 
 try{
@@ -2622,9 +2681,10 @@ session = data?.session ?? null;
 }catch(
 err
 ){
-console.warn(
-"cloud getSession:",
-err?.message || err
+
+warnAuthOnce(
+"auth-degraded",
+`[auth] getSession: ${err?.message || err}`
 );
 session = null;
 
@@ -2640,12 +2700,12 @@ readPersistedAuthSession();
 
 if(
 cached?.access_token &&
-cached?.user
+cached?.user &&
+!isAccessTokenExpired(
+cached
+)
 ){
 session =
-await restoreSessionFromPersisted(
-sb
-) ||
 cached;
 }
 }

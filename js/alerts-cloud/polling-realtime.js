@@ -1,14 +1,14 @@
 import {
 getSupabase,
 isSupabaseConfigured
-} from "../supabase-client.js?v=6";
+} from "../supabase-client.js?v=7";
 
 import {
 isCloudLoggedIn,
 isCloudLoggedInEffective,
 onCloudSyncChange,
 ensureCloudLoginResolved
-} from "../cloud-sync.js?v=29";
+} from "../cloud-sync.js?v=30";
 
 import {
 clearAlertAuthCache,
