@@ -174,9 +174,9 @@ Object.freeze({
 "screener.css":
 21,
 "terminal.css":
-94,
+95,
 "dashboard.css":
-15,
+16,
 "coins.css":
 19,
 "terminal-page.css":

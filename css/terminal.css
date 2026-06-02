@@ -1022,7 +1022,7 @@ body.tablet-chart .price-alert-scale-plus-circle{
   z-index:1;
 }
 
-/* iPad: overlay над свечами (pointer-events — body.tablet-chart выше) */
+/* iPad: overlay над свечами; на desktop — сквозной, клики в LW chart */
 .tablet-probe-touch-layer{
   position:absolute;
   inset:0;
@@ -1030,6 +1030,7 @@ body.tablet-chart .price-alert-scale-plus-circle{
   bottom:var(--chart-time-scale-height, 28px);
   z-index:10;
   touch-action:none;
+  pointer-events:none;
 }
 
 /* iPad: горизонталь probe в #charts-stack (ширина/left — из JS; дубль LW crosshair) */

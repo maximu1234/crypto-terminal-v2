@@ -279,6 +279,7 @@ body.terminal-page .widget-draw-tools{
     bottom:var(--chart-time-scale-height, 28px);
     z-index:10;
     touch-action:none;
+    pointer-events:none;
 }
 
 body.tablet-chart .widget-chart-wrap .tablet-probe-touch-layer{
