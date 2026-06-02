@@ -114,6 +114,7 @@ import {
 normalizeFibLineStyle,
 fibLevelDash,
 normalizeFibLevelColor,
+normalizeFibLevelWidth,
 cloneDefaultFibRows,
 buildDefaultFibToolStorage,
 migrateFibToolDefaults,
