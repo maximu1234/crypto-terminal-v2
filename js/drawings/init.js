@@ -80,6 +80,7 @@ TABLET_USE_CUSTOM_TOUCH_PAN,
 ensureDomChartCrosshair,
 positionDomChartCrosshair,
 hideDomChartCrosshair,
+positionTabletProbeHorizInStack,
 fullCrosshairOptions
 } from "../chart-import.js?v=13";
 
@@ -3066,6 +3067,33 @@ if(
 placementCrosshairHorz
 ){
 
+if(
+useChartProbeCrosshair()
+){
+
+const stackEl =
+document.getElementById(
+"charts-stack"
+);
+
+const probeHorizEl =
+document.getElementById(
+"tablet-probe-crosshair-h"
+);
+
+const wrapR =
+wrapEl.getBoundingClientRect();
+
+positionTabletProbeHorizInStack({
+horizLineEl: probeHorizEl,
+chartsStackEl: stackEl,
+chartEl: chartCanvasEl(),
+chart,
+clientY: wrapR.top + y
+});
+
+}else{
+
 placementCrosshairHorz.style.top =
 `${Math.round(y)}px`;
 
@@ -3075,6 +3103,8 @@ placementCrosshairHorz.style.width =
 placementCrosshairHorz.classList.remove(
 "hidden"
 );
+
+}
 
 }
 

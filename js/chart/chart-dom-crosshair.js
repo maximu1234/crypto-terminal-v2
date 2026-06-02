@@ -33,13 +33,16 @@ wrapEl
 ){
 
 if(
-!wrapEl ||
-wrapEl.querySelector(
-`.${DOM_CROSSHAIR_VERT}`
-)
+!wrapEl
 ){
 return;
 }
+
+if(
+!wrapEl.querySelector(
+`.${DOM_CROSSHAIR_VERT}`
+)
+){
 
 const vert =
 document.createElement(
@@ -53,6 +56,18 @@ vert.setAttribute(
 "aria-hidden",
 "true"
 );
+
+wrapEl.appendChild(
+vert
+);
+
+}
+
+if(
+!wrapEl.querySelector(
+`.${DOM_CROSSHAIR_HORZ}`
+)
+){
 
 const horz =
 document.createElement(
@@ -68,56 +83,59 @@ horz.setAttribute(
 );
 
 wrapEl.appendChild(
-vert
-);
-
-wrapEl.appendChild(
 horz
 );
 
 }
 
-function hideProbeHorizInChartWrap(
-chartWrapEl
-){
-
-if(
-!chartWrapEl
-){
-return;
 }
 
-const horz =
-chartWrapEl.querySelector(
-`.${DOM_CROSSHAIR_HORZ}`
+function resolveTabletProbeHorizEl(
+horizLineEl,
+chartsStackEl
+){
+
+let el =
+horizLineEl ||
+document.getElementById(
+"tablet-probe-crosshair-h"
 );
 
 if(
-horz
+!el ||
+!chartsStackEl
 ){
-horz.classList.add(
-"hidden"
-);
+return null;
+}
 
-horz.classList.remove(
-"chart-crosshair-probe-active"
+if(
+el.parentElement !==
+chartsStackEl
+){
+chartsStackEl.appendChild(
+el
 );
+}
+
+return el;
 
 }
 
-}
-
-function positionProbeHorizInChartWrap({
-chartWrapEl,
-chart,
+/**
+ * Горизонталь probe в #charts-stack (поверх canvas, как #linked-crosshair-vert).
+ */
+export function positionTabletProbeHorizInStack({
+horizLineEl,
+chartsStackEl,
 chartEl,
-clientY,
-plotWidthPx
+chart,
+clientY
 }){
 
 if(
-!chartWrapEl ||
+!chartsStackEl ||
 !chartEl ||
+!chart ||
 !Number.isFinite(
 clientY
 )
@@ -125,53 +143,146 @@ clientY
 return;
 }
 
-ensureDomChartCrosshair(
-chartWrapEl
-);
-
-const horz =
-chartWrapEl.querySelector(
-`.${DOM_CROSSHAIR_HORZ}`
+const el =
+resolveTabletProbeHorizEl(
+horizLineEl,
+chartsStackEl
 );
 
 if(
-!horz
+!el
 ){
 return;
 }
 
-const wrapR =
-chartWrapEl.getBoundingClientRect();
+const chartR =
+chartEl.getBoundingClientRect();
 
-const y =
-clientY - wrapR.top;
+const stackR =
+chartsStackEl.getBoundingClientRect();
 
-horz.style.top =
-`${Math.round(
-y
-)}px`;
+let scaleW =
+56;
 
-horz.style.left =
-"0px";
+try{
+scaleW =
+chart.priceScale?.(
+"right"
+)?.width?.() ||
+scaleW;
+}catch{
+/* ignore */
+}
 
-horz.style.width =
-`${Math.max(
-1,
+scaleW =
+Math.max(
+40,
+Math.min(
 Math.round(
-plotWidthPx
+scaleW
+),
+Math.round(
+chartR.width * 0.35
 )
+)
+);
+
+const plotWidth =
+Math.max(
+0,
+chartR.width - scaleW
+);
+
+const chartTopInStack =
+chartR.top - stackR.top;
+
+const chartBottomInStack =
+chartTopInStack + chartR.height;
+
+const topInStack =
+clientY - stackR.top;
+
+const clampedTop =
+Math.max(
+chartTopInStack,
+Math.min(
+chartBottomInStack,
+topInStack
+)
+);
+
+const plotLeft =
+chartR.left - stackR.left;
+
+el.style.top =
+`${Math.round(
+clampedTop
+) + 0.5}px`;
+
+el.style.left =
+`${Math.round(
+plotLeft
 )}px`;
 
-horz.style.removeProperty(
+el.style.width =
+`${Math.round(
+plotWidth
+)}px`;
+
+el.style.removeProperty(
 "right"
 );
 
-horz.classList.remove(
+el.style.removeProperty(
+"display"
+);
+
+el.style.removeProperty(
+"background"
+);
+
+el.style.height =
+"0";
+
+el.style.borderTop =
+"1px dashed #758696";
+
+el.classList.remove(
 "hidden"
 );
 
-horz.classList.add(
-"chart-crosshair-probe-active"
+}
+
+function hideTabletProbeHorizInStack(
+horizLineEl
+){
+
+const el =
+horizLineEl ||
+document.getElementById(
+"tablet-probe-crosshair-h"
+);
+
+if(
+!el
+){
+return;
+}
+
+el.classList.add(
+"hidden"
+);
+
+el.style.removeProperty(
+"top"
+);
+
+el.style.removeProperty(
+"left"
+);
+
+el.style.removeProperty(
+"width"
 );
 
 }
@@ -331,6 +442,31 @@ node.classList.add(
 );
 }
 );
+
+}
+
+function hideDomChartCrosshairHorz(
+wrapEl
+){
+
+if(
+!wrapEl
+){
+return;
+}
+
+const horz =
+wrapEl.querySelector(
+`.${DOM_CROSSHAIR_HORZ}`
+);
+
+if(
+horz
+){
+horz.classList.add(
+"hidden"
+);
+}
 
 }
 
@@ -610,12 +746,6 @@ last.close;
 const tabletProbeMode =
 !!horizLineEl;
 
-const plotWidthForHoriz =
-Math.max(
-0,
-chartR.width - scaleW
-);
-
 const wrapEl =
 chartWrapEl ||
 chartEl?.closest?.(
@@ -635,64 +765,13 @@ chart.clearCrosshairPosition();
 /* ignore */
 }
 
-positionProbeHorizInChartWrap({
-chartWrapEl: wrapEl,
-chart,
+positionTabletProbeHorizInStack({
+horizLineEl,
+chartsStackEl,
 chartEl,
-clientY,
-plotWidthPx: plotWidthForHoriz
+chart,
+clientY
 });
-
-if(
-horizLineEl &&
-chartsStackEl
-){
-
-const stackR =
-chartsStackEl.getBoundingClientRect();
-
-const chartTopInStack =
-chartR.top - stackR.top;
-
-const chartBottomInStack =
-chartTopInStack + chartR.height;
-
-const topInStack =
-clientY - stackR.top;
-
-const clampedTop =
-Math.max(
-chartTopInStack,
-Math.min(
-chartBottomInStack,
-topInStack
-)
-);
-
-const plotLeft =
-chartR.left - stackR.left;
-
-horizLineEl.style.top =
-`${Math.round(clampedTop)}px`;
-
-horizLineEl.style.left =
-`${Math.round(plotLeft)}px`;
-
-horizLineEl.style.width =
-`${Math.round(plotWidthForHoriz)}px`;
-
-horizLineEl.style.removeProperty(
-"right"
-);
-
-horizLineEl.style.display =
-"block";
-
-horizLineEl.classList.remove(
-"hidden"
-);
-
-}
 
 }else{
 
@@ -746,64 +825,13 @@ if(
 useDomHorizLine
 ){
 
-positionProbeHorizInChartWrap({
-chartWrapEl: wrapEl,
-chart,
+positionTabletProbeHorizInStack({
+horizLineEl,
+chartsStackEl,
 chartEl,
-clientY,
-plotWidthPx: plotWidthForHoriz
+chart,
+clientY
 });
-
-if(
-horizLineEl &&
-chartsStackEl
-){
-
-const stackR =
-chartsStackEl.getBoundingClientRect();
-
-const chartTopInStack =
-chartR.top - stackR.top;
-
-const chartBottomInStack =
-chartTopInStack + chartR.height;
-
-const topInStack =
-clientY - stackR.top;
-
-const clampedTop =
-Math.max(
-chartTopInStack,
-Math.min(
-chartBottomInStack,
-topInStack
-)
-);
-
-const plotLeft =
-chartR.left - stackR.left;
-
-horizLineEl.style.top =
-`${Math.round(clampedTop)}px`;
-
-horizLineEl.style.left =
-`${Math.round(plotLeft)}px`;
-
-horizLineEl.style.width =
-`${Math.round(plotWidthForHoriz)}px`;
-
-horizLineEl.style.removeProperty(
-"right"
-);
-
-horizLineEl.style.display =
-"block";
-
-horizLineEl.classList.remove(
-"hidden"
-);
-
-}
 
 }else{
 
@@ -813,12 +841,13 @@ horizLineEl
 horizLineEl.classList.add(
 "hidden"
 );
-horizLineEl.style.removeProperty(
-"display"
-);
 }
 
-hideProbeHorizInChartWrap(
+hideTabletProbeHorizInStack(
+horizLineEl
+);
+
+hideDomChartCrosshairHorz(
 wrapEl
 );
 
@@ -894,7 +923,11 @@ horizLineEl?.classList.add(
 "hidden"
 );
 
-hideProbeHorizInChartWrap(
+hideTabletProbeHorizInStack(
+horizLineEl
+);
+
+hideDomChartCrosshairHorz(
 chartWrapEl ||
 document.getElementById(
 "chart-wrap"

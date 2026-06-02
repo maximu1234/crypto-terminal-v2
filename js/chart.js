@@ -33,6 +33,7 @@ positionDomChartCrosshair,
 hideDomChartCrosshair,
 ensureTabletProbeHorizLine,
 positionTabletProbeCrosshair,
+positionTabletProbeHorizInStack,
 hideTabletProbeCrosshair,
 formatCrosshairTimeLabel,
 isUserCrosshairEvent
