@@ -1544,27 +1544,27 @@ const labelParam = {
 point: param.point ?? { x }
 };
 
-if(
-labelParam.time ==
-null &&
-mainChart?.timeScale
-){
-
 const labelX =
 crosshairVertX(
 param
 );
 
-const timeX =
+const snappedLabelX =
 Number.isFinite(
 labelX
 )
 ? labelX
 : x;
 
+if(
+labelParam.time ==
+null &&
+mainChart?.timeScale
+){
+
 const t =
 mainChart.timeScale().coordinateToTime?.(
-timeX
+snappedLabelX
 );
 
 if(
@@ -1578,12 +1578,7 @@ labelParam.time = t;
 updateCrosshairAxisLabels({
 param: labelParam,
 timeLabelEl:crosshairTimeLabelEl,
-snappedX:
-Number.isFinite(
-labelX
-)
-? labelX
-: x
+snappedX:snappedLabelX
 });
 
 if(

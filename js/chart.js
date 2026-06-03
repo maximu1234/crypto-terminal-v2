@@ -68,7 +68,7 @@ tfPeriodSec,
 rsiPlotTimeOffsetSec,
 mountChartPriceHud,
 applyChartScaleWidthCss
-} from "./chart/chart-factory.js?v=6";
+} from "./chart/chart-factory.js?v=7";
 
 
 export {
