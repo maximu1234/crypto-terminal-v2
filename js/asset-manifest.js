@@ -248,7 +248,7 @@ Object.freeze({
 "trade-calculator.css":
 3,
 "system-admin.css":
-3
+4
 
 });
 
