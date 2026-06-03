@@ -33,6 +33,10 @@ onCloudSyncChange
 } from "./cloud-sync.js?v=33";
 
 import {
+isAutoDevicePullDisabled
+} from "./supabase-usage-prefs.js?v=1";
+
+import {
 isSupabaseConfigured
 } from "./supabase-client.js?v=7";
 
@@ -126,7 +130,8 @@ onCloudSyncChange(
 
 if(
 isCloudLoggedInEffective() &&
-!isAlertsPage()
+!isAlertsPage() &&
+!isAutoDevicePullDisabled()
 ){
 scheduleDevicePull(
 ()=>

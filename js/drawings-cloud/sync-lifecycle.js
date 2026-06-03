@@ -43,6 +43,12 @@ isDrawingsUiPage
 } from "../cloud-sync-throttle.js?v=3";
 
 import {
+isSupabaseRealtimeDisabled,
+isDrawingsCloudDisabled,
+scaleSupabasePollMs
+} from "../supabase-usage-prefs.js?v=1";
+
+import {
 readAlertTokenSync
 } from "../alert-auth-cache.js?v=7";
 
@@ -940,6 +946,7 @@ return true;
 export function scheduleDrawingsCloudSync(){
 
 if(
+isDrawingsCloudDisabled() ||
 !isCloudLoggedInEffective() ||
 isDrawingsCloudSyncPaused() ||
 !isCloudApiUsable()
@@ -1041,6 +1048,13 @@ return reconcileLocalDrawingsWithCloud();
 async function setupDrawingsRealtime(
 userId
 ){
+
+if(
+isSupabaseRealtimeDisabled() ||
+isDrawingsCloudDisabled()
+){
+return;
+}
 
 await teardownDrawingsRealtime();
 
@@ -1172,6 +1186,12 @@ return;
 }
 
 if(
+isDrawingsCloudDisabled()
+){
+return;
+}
+
+if(
 document.visibilityState !==
 "visible"
 ){
@@ -1191,7 +1211,9 @@ Date.now();
 if(
 now -
 lastDrawingsPullMs <
+scaleSupabasePollMs(
 FAST_POLL_MS
+)
 ){
 return;
 }
@@ -1209,6 +1231,7 @@ void pullDrawingsFromCloudNow().catch(
 function startDrawingsFastPoll(){
 
 if(
+isDrawingsCloudDisabled() ||
 !isDrawingsUiPage()
 ){
 stopDrawingsFastPoll();
@@ -1224,7 +1247,9 @@ if(
 fastPollIntervalId =
 setInterval(
 drawingsFastPollTick,
+scaleSupabasePollMs(
 FAST_POLL_MS
+)
 );
 }
 
@@ -1260,7 +1285,9 @@ Date.now();
 if(
 now -
 lastDrawingsPullMs >=
+scaleSupabasePollMs(
 FAST_POLL_HIDDEN_MS
+)
 ){
 lastDrawingsPullMs =
 now;
@@ -1274,11 +1301,15 @@ void pullDrawingsFromCloudNow().catch(
 fastPollTimer =
 setTimeout(
 hiddenPoll,
+scaleSupabasePollMs(
 FAST_POLL_HIDDEN_MS
+)
 );
 
 },
+scaleSupabasePollMs(
 FAST_POLL_HIDDEN_MS
+)
 );
 
 }
@@ -1321,6 +1352,12 @@ void teardownDrawingsRealtime();
 
 
 export async function hydrateDrawingsAfterAuth(){
+
+if(
+isDrawingsCloudDisabled()
+){
+return;
+}
 
 return runCloudOp(
 async()=>{

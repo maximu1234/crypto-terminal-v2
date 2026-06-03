@@ -12,6 +12,10 @@ tryCloudAuthRecovery
 } from "./cloud-sync.js?v=33";
 
 import {
+isFavoritesCloudDisabled
+} from "./supabase-usage-prefs.js?v=1";
+
+import {
 loadFavoritesGroups,
 saveFavoritesGroups,
 favoritesToCloudList,
@@ -545,6 +549,14 @@ return null;
 export async function reconcileLocalFavoritesWithCloud(){
 
 if(
+isFavoritesCloudDisabled()
+){
+return favoritesToCloudList(
+loadFavoritesGroups()
+);
+}
+
+if(
 !isCloudLoggedInEffective()
 ){
 return favoritesToCloudList(
@@ -719,6 +731,12 @@ return cloud.favorites;
 
 export async function pullFavoritesFromCloudNow(){
 
+if(
+isFavoritesCloudDisabled()
+){
+return;
+}
+
 return coalesceFavoritesPull(
 ()=>reconcileLocalFavoritesWithCloud()
 );
@@ -728,6 +746,12 @@ return coalesceFavoritesPull(
 async function pushFavoritesImpl(
 list
 ){
+
+if(
+isFavoritesCloudDisabled()
+){
+return false;
+}
 
 if(
 !isCloudApiUsable()

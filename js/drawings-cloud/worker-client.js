@@ -3,6 +3,10 @@ ensureCloudLoginResolved
 } from "../cloud-sync.js?v=33";
 
 import {
+isDrawingsCloudDisabled
+} from "../supabase-usage-prefs.js?v=1";
+
+import {
 normalizeAlertWorkerBaseUrl
 } from "../alert-worker-url.js?v=1";
 
@@ -1467,6 +1471,7 @@ shapeId
 export async function pushUnsyncedDrawingsImpl(){
 
 if(
+isDrawingsCloudDisabled() ||
 isDrawingsCloudSyncPaused()
 ){
 return 0;

@@ -1,75 +1,222 @@
 .btc-d-page {
   background: #0b1220;
   color: #e2e8f0;
-  min-height: 100vh;
+  height: 100dvh;
+  max-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .btc-d-header {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 16px 20px;
-  border-bottom: 1px solid #1e293b;
+  padding: 10px 16px;
+  border-bottom: 1px solid #1f2937;
+  flex-shrink: 0;
 }
 
 .btc-d-logo {
   color: #60a5fa;
   text-decoration: none;
   font-weight: 700;
+  font-size: 14px;
 }
 
 .btc-d-badge {
-  font-size: 12px;
+  font-size: 11px;
   color: #94a3b8;
   background: #1e293b;
-  padding: 4px 8px;
+  padding: 3px 8px;
   border-radius: 6px;
 }
 
-.btc-d-main {
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 20px;
+.btc-d-app {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
-.btc-d-hero h1 {
-  margin: 0 0 8px;
-  font-size: 1.5rem;
+.btc-d-topbar {
+  min-height: 46px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 12px;
+  border-bottom: 1px solid #1f2937;
+  flex-shrink: 0;
+  flex-wrap: wrap;
 }
 
-.btc-d-sub {
-  margin: 0 0 16px;
+.btc-d-source-tabs {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+  padding: 2px;
+  background: #111827;
+  border-radius: 10px;
+  border: 1px solid #1f2937;
+}
+
+.btc-d-source-btn {
+  border: none;
+  background: transparent;
   color: #94a3b8;
-  font-size: 0.95rem;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.2;
 }
 
-.btc-d-current {
+.btc-d-source-btn:hover:not(.active) {
+  color: #e2e8f0;
+}
+
+.btc-d-source-btn.active {
+  background: #334155;
+  color: #fff;
+}
+
+.btc-d-mc-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-x: auto;
+}
+
+.btc-d-mc-controls.hidden,
+.btc-d-pane.hidden {
+  display: none !important;
+}
+
+.btc-d-tv-hint {
+  margin: 0;
+  margin-left: auto;
+  font-size: 12px;
+  color: #64748b;
+  white-space: nowrap;
+}
+
+.btc-d-tv-hint.hidden {
+  display: none;
+}
+
+.btc-d-pane {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.btc-d-tv-wrap {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+}
+
+.btc-d-tv-wrap .tradingview-widget-container {
+  height: 100%;
+  width: 100%;
+}
+
+.btc-d-tv-wrap .tradingview-widget-container__widget {
+  height: calc(100% - 28px);
+  width: 100%;
+}
+
+.btc-d-tv-wrap .tradingview-widget-copyright {
+  height: 28px;
+  line-height: 28px;
+  font-size: 11px;
+  text-align: center;
+  color: #64748b;
+}
+
+.btc-d-tv-wrap .tradingview-widget-copyright a {
+  color: #60a5fa;
+  text-decoration: none;
+}
+
+.btc-d-tv-wrap .trademark {
+  color: #64748b;
+}
+
+.btc-d-symbol-head {
   display: flex;
   align-items: baseline;
-  gap: 12px;
-  margin-bottom: 8px;
+  gap: 10px;
+  margin-right: 8px;
+  padding-right: 14px;
+  border-right: 1px solid #1f2937;
+  flex-shrink: 0;
 }
 
-.btc-d-current-label {
-  color: #94a3b8;
-  font-size: 0.9rem;
-}
-
-.btc-d-current-value {
-  font-size: 2rem;
-  color: #f59e0b;
+.btc-d-symbol-label {
+  font-size: 14px;
   font-weight: 700;
+  color: #e5e7eb;
+}
+
+.btc-d-symbol-value {
+  font-size: 14px;
+  font-weight: 700;
+  color: #f59e0b;
+}
+
+.btc-d-tf-group {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.btc-d-tf-btn {
+  border: none;
+  background: transparent;
+  color: #d1d4dc;
+  padding: 5px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.2;
+  flex-shrink: 0;
+}
+
+.btc-d-tf-btn:hover:not(.active) {
+  background: #1f2937;
+}
+
+.btc-d-tf-btn.active {
+  background: #334155;
+  color: #fff;
+}
+
+.btc-d-topbar-meta {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  color: #64748b;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .btc-d-meta {
-  margin: 0 0 4px;
-  font-size: 0.85rem;
   color: #64748b;
 }
 
 .btc-d-status {
-  margin: 0 0 16px;
-  font-size: 0.85rem;
   color: #64748b;
 }
 
@@ -77,61 +224,70 @@
   color: #fca5a5;
 }
 
-.btc-d-ranges {
+.btc-d-charts-stack {
+  flex: 1 1 auto;
+  min-height: 0;
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 12px;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
 }
 
-.btc-d-range {
-  background: #1e293b;
-  border: 1px solid #334155;
-  color: #cbd5e1;
-  padding: 6px 12px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 0.9rem;
-}
-
-.btc-d-range:hover {
-  border-color: #475569;
-}
-
-.btc-d-range.active {
-  background: #334155;
-  border-color: #f59e0b;
-  color: #fff;
+.btc-d-chart-wrap {
+  flex: 1 1 auto;
+  min-height: 0;
+  position: relative;
+  overflow: hidden;
 }
 
 .btc-d-chart {
+  position: absolute;
+  inset: 0;
   width: 100%;
-  height: min(420px, 55vh);
-  border: 1px solid #1e293b;
-  border-radius: 12px;
-  overflow: hidden;
-  margin-bottom: 24px;
+  height: 100%;
+  touch-action: pan-x pan-y;
 }
 
 .btc-d-notes {
-  border-top: 1px solid #1e293b;
-  padding-top: 16px;
-  font-size: 0.9rem;
+  flex-shrink: 0;
+  border-top: 1px solid #1f2937;
+  padding: 8px 16px 12px;
+  font-size: 0.85rem;
   color: #94a3b8;
 }
 
-.btc-d-notes h2 {
-  margin: 0 0 8px;
-  font-size: 1rem;
+.btc-d-notes summary {
+  cursor: pointer;
   color: #cbd5e1;
+  user-select: none;
 }
 
 .btc-d-notes ul {
-  margin: 0 0 12px;
+  margin: 8px 0;
   padding-left: 1.2rem;
 }
 
 .btc-d-notes code {
   color: #fcd34d;
   font-size: 0.85em;
+}
+
+@media (max-width: 640px) {
+
+.btc-d-topbar-meta {
+  display: none;
+}
+
+.btc-d-tv-hint {
+  width: 100%;
+  margin-left: 0;
+  order: 3;
+}
+
+.btc-d-symbol-head {
+  min-width: 0;
+  padding-right: 8px;
+  margin-right: 4px;
+}
+
 }

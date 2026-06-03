@@ -52,6 +52,15 @@ createNotifyDebouncer,
 isAlertsPage
 } from "./cloud-sync-throttle.js?v=3";
 
+import {
+isSupabaseRealtimeDisabled,
+isDrawingsCloudDisabled,
+isFavoritesCloudDisabled,
+isAlertsCloudDisabled,
+isAutoDevicePullDisabled,
+scaleSupabasePollMs
+} from "./supabase-usage-prefs.js?v=1";
+
 const FAVORITES_LOCAL_TS_KEY =
 "favorites_local_updated_at";
 
@@ -1517,7 +1526,10 @@ return;
 pullRemoteSettingsIfNewer();
 
 },
-SYNC_POLL_MS);
+scaleSupabasePollMs(
+SYNC_POLL_MS
+)
+);
 
 }
 
@@ -1614,6 +1626,12 @@ realtimeUserId
 
 function handleRealtimeFavoritesRow(row){
 
+if(
+isFavoritesCloudDisabled()
+){
+return;
+}
+
 void import("./favorites-cloud-sync.js?v=2").then(
 m=>{
 m.applyFavoritesFromRealtimeRow(
@@ -1646,6 +1664,12 @@ function handleRealtimeSettingsRow(row){
 
 handleRealtimeFavoritesRow(row);
 
+if(
+isDrawingsCloudDisabled()
+){
+return;
+}
+
 void import("./drawings-cloud-sync.js?v=41").then(
 m=>
 m.pullDrawingsFromCloud()
@@ -1654,6 +1678,12 @@ m.pullDrawingsFromCloud()
 }
 
 async function setupSettingsRealtime(userId){
+
+if(
+isSupabaseRealtimeDisabled()
+){
+return;
+}
 
 const sb =
 await getSupabase();
@@ -1970,10 +2000,15 @@ await m.flushDrawingsCloudPush();
 
 export async function pullRemoteSettingsIfNewer(){
 
+if(
+!isFavoritesCloudDisabled()
+){
 await syncFavoritesWithCloud();
+}
 
 if(
-!isAlertsPage()
+!isAlertsPage() &&
+!isDrawingsCloudDisabled()
 ){
 await syncDrawingsWithCloud();
 }
@@ -2570,25 +2605,38 @@ try{
 const favoritesCloud =
 await import("./favorites-cloud-sync.js?v=2");
 
+if(
+!isFavoritesCloudDisabled()
+){
 await favoritesCloud.reconcileLocalFavoritesWithCloud();
+}
 
 const drawingsCloud =
 await import("./drawings-cloud-sync.js?v=41");
 
 if(
-!isAlertsPage()
+!isAlertsPage() &&
+!isDrawingsCloudDisabled()
 ){
 await drawingsCloud.hydrateDrawingsAfterAuth();
+if(
+!isSupabaseRealtimeDisabled()
+){
 await drawingsCloud.setupDrawingsRealtimeForUser(
 session.user.id
 );
+}
 }else{
 drawingsCloud.stopDrawingsFastPoll();
 }
 
+if(
+!isSupabaseRealtimeDisabled()
+){
 await setupSettingsRealtime(
 session.user.id
 );
+}
 
 if(
 !isAlertsPage()
@@ -2597,7 +2645,8 @@ startSyncPoll();
 }
 
 if(
-pendingDrawingsCloudPush
+pendingDrawingsCloudPush &&
+!isDrawingsCloudDisabled()
 ){
 pendingDrawingsCloudPush =
 false;
@@ -2605,7 +2654,8 @@ void drawingsCloud.flushDrawingsCloudPush();
 }
 
 if(
-!isAlertsPage()
+!isAlertsPage() &&
+!isAlertsCloudDisabled()
 ){
 const alertsCloud =
 await import("./alerts-cloud-sync.js?v=107");
@@ -2613,9 +2663,13 @@ await import("./alerts-cloud-sync.js?v=107");
 await alertsCloud.hydrateAlertsAfterAuth({
 force: true
 });
+if(
+!isSupabaseRealtimeDisabled()
+){
 await alertsCloud.setupAlertsRealtimeForUser(
 session.user.id
 );
+}
 }
 
 }catch(
@@ -2653,7 +2707,8 @@ if(
 (
 loggedIn ||
 isCloudLoggedInEffective()
-)
+) &&
+!isAutoDevicePullDisabled()
 ){
 void pullDeviceStateFromCloud();
 }
@@ -2723,6 +2778,16 @@ const PULL_DEVICE_MIN_MS =
  * Загрузить рисунки и алерты из Supabase на это устройство (iPad после входа с Mac).
  */
 export async function pullDeviceStateFromCloud(){
+
+if(
+isAutoDevicePullDisabled()
+){
+return {
+ok: true,
+skipped: true,
+reason: "auto_pull_disabled"
+};
+}
 
 if(
 !isCloudLoggedInEffective()
@@ -2799,50 +2864,89 @@ let drawSyms =
 let alertRows =
 0;
 
-let favCount =
-0;
+const jobs =
+[];
 
 if(
-isAlertsPage()
+!isAlertsPage() &&
+!isDrawingsCloudDisabled()
 ){
 
-[
-alertRows,
-favCount
-] =
-await withTimeout(
-Promise.all([
-alertsCloud.hydrateAlertsAfterAuth({
-force: true
-}),
-favoritesCloud.pullFavoritesFromCloudNow()
-]),
-25000,
-"pull alerts+favorites from cloud"
+jobs.push(
+import("./drawings-cloud-sync.js?v=41").then(
+m=>
+m.pullDrawingsFromCloudNow()
+)
 );
 
-}else{
+}
 
-const drawingsCloud =
-await import("./drawings-cloud-sync.js?v=41");
+if(
+!isAlertsCloudDisabled()
+){
 
-[
-drawSyms,
-alertRows,
-favCount
-] =
-await withTimeout(
-Promise.all([
-drawingsCloud.pullDrawingsFromCloudNow(),
+jobs.push(
 alertsCloud.hydrateAlertsAfterAuth({
 force: true
-}),
+})
+);
+
+}
+
+if(
+!isFavoritesCloudDisabled()
+){
+
+jobs.push(
 favoritesCloud.pullFavoritesFromCloudNow()
-]),
+);
+
+}
+
+if(
+!jobs.length
+){
+
+return {
+ok: true,
+skipped: true
+};
+
+}
+
+const results =
+await withTimeout(
+Promise.all(
+jobs
+),
 25000,
 "pull device from cloud"
 );
 
+let idx =
+0;
+
+if(
+!isAlertsPage() &&
+!isDrawingsCloudDisabled()
+){
+
+drawSyms =
+results[
+idx++
+] ??
+0;
+}
+
+if(
+!isAlertsCloudDisabled()
+){
+
+alertRows =
+results[
+idx++
+] ??
+0;
 }
 
 stripAlertFlagsNotInRegistry(

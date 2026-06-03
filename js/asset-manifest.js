@@ -15,7 +15,7 @@ export const ASSETS =
 Object.freeze({
 
 "btc-dominance-test.css":
-1,
+3,
 
 /* ── JS: boot / entry ── */
 "asset-manifest.js":
@@ -39,7 +39,7 @@ Object.freeze({
 "screener.js":
 64,
 "site-boot.js":
-80,
+81,
 "charts-lib-boot.js":
 3,
 "chart-import.js":
@@ -85,13 +85,13 @@ Object.freeze({
 "drawings/draw-hit.js":
 5,
 "drawings-cloud-sync.js":
-41,
+42,
 "drawings-cloud/worker-client.js":
-6,
+7,
 "drawings-cloud/pull-reconcile.js":
 6,
 "drawings-cloud/sync-lifecycle.js":
-6,
+7,
 "drawings-tablet-input.js":
 2,
 "drawings-storage.js":
@@ -137,7 +137,7 @@ Object.freeze({
 "btc-dominance/fetch.js":
 1,
 "btc-dominance/test-page.js":
-2,
+4,
 
 "ws.js":
 15,
@@ -146,7 +146,7 @@ Object.freeze({
 
 /* ── JS: cloud / auth ── */
 "cloud-sync.js":
-33,
+34,
 "cloud-sync-throttle.js":
 3,
 "page-routes.js":
@@ -170,13 +170,13 @@ Object.freeze({
 "favorites.js":
 1,
 "favorites-cloud-sync.js":
-2,
+3,
 
 /* ── JS: alerts ── */
 "alerts.js":
 97,
 "alerts-cloud-sync.js":
-107,
+108,
 "alerts-cloud/debug.js":
 1,
 "alerts-cloud/telegram-id.js":
@@ -216,9 +216,13 @@ Object.freeze({
 "trade-calculator.js":
 3,
 "system-admin-page.js":
-3,
+4,
 "system-admin-access.js":
 3,
+"supabase-usage-prefs.js":
+1,
+"system-admin-supabase-prefs.js":
+1,
 
 /* ── CSS ── */
 "critical-shell.css":
@@ -244,7 +248,7 @@ Object.freeze({
 "trade-calculator.css":
 3,
 "system-admin.css":
-2
+3
 
 });
 

@@ -23,6 +23,10 @@ BYBIT_ROUTE_PROXY
 } from "./bybit-route-pref.js?v=1";
 
 import {
+bindSupabaseUsagePrefsForm
+} from "./system-admin-supabase-prefs.js?v=1";
+
+import {
 resetBybitEndpoints
 } from "./bybit-fetch.js?v=11";
 
@@ -229,6 +233,30 @@ admins.length
 }
 
 bindRouteForm();
+
+const supabaseMount =
+document.getElementById("system-supabase-usage-mount");
+const supabaseStatus =
+document.getElementById("system-supabase-usage-status");
+
+bindSupabaseUsagePrefsForm(
+supabaseMount,
+supabaseStatus
+);
+
+const supabaseReload =
+document.getElementById("system-supabase-reload-hint");
+
+if(
+supabaseReload
+){
+supabaseReload.addEventListener(
+"click",
+()=>{
+window.location.href = "/index.html";
+}
+);
+}
 
 }
 

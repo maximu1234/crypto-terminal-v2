@@ -7,6 +7,10 @@ fetchBtcDominanceHistory,
 rangeLabelToDays
 } from "./fetch.js?v=1";
 
+const chartWrapEl =
+document.getElementById(
+"btc-d-chart-wrap"
+);
 const chartEl =
 document.getElementById(
 "btc-d-chart"
@@ -27,6 +31,41 @@ const rangeBar =
 document.getElementById(
 "btc-d-ranges"
 );
+const sourceTabsEl =
+document.getElementById(
+"btc-d-source-tabs"
+);
+const mcControlsEl =
+document.getElementById(
+"btc-d-mc-controls"
+);
+const tvHintEl =
+document.getElementById(
+"btc-d-tv-hint"
+);
+const paneTvEl =
+document.getElementById(
+"btc-d-pane-tv"
+);
+const paneMcEl =
+document.getElementById(
+"btc-d-pane-mc"
+);
+
+let activeSource =
+"tv";
+let mcBooted =
+false;
+
+const VISIBLE_BARS =
+Object.freeze({
+"1D": Infinity,
+"1W": Infinity,
+"1M": 420,
+"3M": 520,
+"1Y": 720,
+ALL: 960
+});
 
 let chart =
 null;
@@ -36,6 +75,12 @@ let loadSeq =
 0;
 let activeRange =
 "3M";
+let currentPoints =
+[];
+let userAdjustedZoom =
+false;
+let resizeObserver =
+null;
 
 function setStatus(
 text,
@@ -73,7 +118,131 @@ return `${value.toFixed(2)}%`;
 
 }
 
+function markUserZoom(){
+
+userAdjustedZoom =
+true;
+
+}
+
+function applyDefaultZoom(
+points,
+rangeLabel
+){
+
+if(
+!chart ||
+!points?.length
+){
+return;
+}
+
+const maxVisible =
+VISIBLE_BARS[
+rangeLabel
+] ??
+520;
+
+if(
+!Number.isFinite(
+maxVisible
+) ||
+maxVisible >=
+points.length
+){
+
+chart.timeScale().fitContent();
+return;
+
+}
+
+const lastIndex =
+points.length -
+1;
+const visible =
+Math.min(
+maxVisible,
+points.length
+);
+const rightMargin =
+Math.max(
+12,
+Math.round(
+visible *
+0.08
+)
+);
+
+chart.timeScale().applyOptions({
+rightOffset: 12,
+fixRightEdge: false
+});
+
+chart.timeScale().setVisibleLogicalRange({
+
+from: Math.max(
+0,
+lastIndex -
+visible +
+1
+),
+
+to: lastIndex +
+rightMargin
+
+});
+
+}
+
+function syncChartSize(){
+
+if(
+!chart ||
+!chartEl
+){
+return;
+}
+
+const w =
+chartEl.clientWidth;
+const h =
+chartEl.clientHeight;
+
+if(
+w <
+2 ||
+h <
+2
+){
+return;
+}
+
+chart.applyOptions({
+width: w,
+height: h
+});
+
+if(
+!userAdjustedZoom &&
+currentPoints.length
+){
+applyDefaultZoom(
+currentPoints,
+activeRange
+);
+}
+
+}
+
 function destroyChart(){
+
+if(
+resizeObserver
+){
+resizeObserver.disconnect();
+resizeObserver =
+null;
+}
 
 if(
 chart
@@ -84,6 +253,11 @@ null;
 lineSeries =
 null;
 }
+
+userAdjustedZoom =
+false;
+currentPoints =
+[];
 
 }
 
@@ -109,28 +283,52 @@ layout: {
 background: {
 color: "#0b1220"
 },
-textColor: "#94a3b8"
+textColor: "#9ca3af"
 },
 grid: {
 vertLines: {
-color: "#1e293b"
+color: "#161b26"
 },
 horzLines: {
-color: "#1e293b"
+color: "#161b26"
 }
 },
 rightPriceScale: {
-borderColor: "#334155"
+borderColor: "#1f2937",
+autoScale: true,
+scaleMargins: {
+top: 0.12,
+bottom: 0.12
+}
 },
 timeScale: {
-borderColor: "#334155",
+borderColor: "#1f2937",
 timeVisible: true,
-secondsVisible: false
+secondsVisible: false,
+rightOffset: 12,
+fixRightEdge: false
 },
 crosshair: {
 mode: LightweightCharts.CrosshairMode.Normal
 },
-autoSize: true
+handleScroll: {
+mouseWheel: true,
+pressedMouseMove: true,
+horzTouchDrag: true,
+vertTouchDrag: false
+},
+handleScale: {
+axisPressedMouseMove: {
+time: true,
+price: true
+},
+axisDoubleClickReset: {
+time: true,
+price: true
+},
+mouseWheel: true,
+pinch: true
+}
 }
 );
 
@@ -143,23 +341,37 @@ type: "custom",
 formatter: v=>
 `${Number(v).toFixed(2)}%`
 },
-crosshairMarkerRadius: 4
+crosshairMarkerRadius: 4,
+lastValueVisible: true,
+priceLineVisible: true
 });
 
-const ro =
-new ResizeObserver(()=>{
-if(
-chart
-){
-chart.applyOptions({
-width: chartEl.clientWidth,
-height: chartEl.clientHeight
-});
-}
-});
+chartEl.addEventListener(
+"wheel",
+markUserZoom,
+{ passive: true }
+);
+chartEl.addEventListener(
+"mousedown",
+markUserZoom
+);
+chartEl.addEventListener(
+"touchstart",
+markUserZoom,
+{ passive: true }
+);
 
-ro.observe(
+resizeObserver =
+new ResizeObserver(
+syncChartSize
+);
+resizeObserver.observe(
+chartWrapEl ||
 chartEl
+);
+
+requestAnimationFrame(
+syncChartSize
 );
 
 }
@@ -171,6 +383,8 @@ label
 const seq = ++loadSeq;
 activeRange =
 label;
+userAdjustedZoom =
+false;
 
 if(
 rangeBar
@@ -192,7 +406,7 @@ label
 );
 
 setStatus(
-`Загрузка ${label} (CoinGecko)…`
+`Загрузка ${label}…`
 );
 
 try{
@@ -218,15 +432,21 @@ time: p.time,
 value: p.value
 }));
 
+currentPoints =
+points;
+
 lineSeries.setData(
 points
 );
 
-if(
-points.length
-){
-chart.timeScale().fitContent();
-}
+applyDefaultZoom(
+points,
+label
+);
+
+requestAnimationFrame(
+syncChartSize
+);
 
 const current =
 data.current ??
@@ -256,7 +476,7 @@ data.stale
 ? " · cache"
 : "";
 metaEl.textContent =
-`${data.pointCount || points.length} точек · ${data.days} · ${data.method || "—"}${staleTag}`;
+`${data.pointCount || points.length} · ${data.method || "—"}${staleTag}`;
 }
 
 setStatus(
@@ -333,7 +553,135 @@ btn.dataset.range
 
 }
 
-async function boot(){
+function bindSourceTabs(){
+
+if(
+!sourceTabsEl
+){
+return;
+}
+
+sourceTabsEl.addEventListener(
+"click",
+evt=>{
+
+const btn =
+evt.target.closest(
+"[data-source]"
+);
+
+if(
+!btn
+){
+return;
+}
+
+void setActiveSource(
+btn.dataset.source
+);
+
+});
+
+}
+
+function setPaneVisible(
+pane,
+visible
+){
+
+if(
+!pane
+){
+return;
+}
+
+pane.classList.toggle(
+"hidden",
+!visible
+);
+pane.hidden =
+!visible;
+
+}
+
+async function setActiveSource(
+source
+){
+
+if(
+source !==
+"tv" &&
+source !==
+"mc"
+){
+return;
+}
+
+activeSource =
+source;
+
+sourceTabsEl?.querySelectorAll(
+"[data-source]"
+).forEach(btn=>{
+const on =
+btn.dataset.source ===
+source;
+btn.classList.toggle(
+"active",
+on
+);
+btn.setAttribute(
+"aria-selected",
+on ?
+"true" :
+"false"
+);
+});
+
+mcControlsEl?.classList.toggle(
+"hidden",
+source !==
+"mc"
+);
+tvHintEl?.classList.toggle(
+"hidden",
+source !==
+"tv"
+);
+
+setPaneVisible(
+paneTvEl,
+source ===
+"tv"
+);
+setPaneVisible(
+paneMcEl,
+source ===
+"mc"
+);
+
+if(
+source ===
+"mc"
+){
+await bootMcChart();
+requestAnimationFrame(
+syncChartSize
+);
+}
+
+}
+
+async function bootMcChart(){
+
+if(
+mcBooted
+){
+return;
+}
+
+mcBooted =
+true;
 
 bindRanges();
 
@@ -351,6 +699,16 @@ return;
 
 await loadRange(
 activeRange
+);
+
+}
+
+async function boot(){
+
+bindSourceTabs();
+
+await setActiveSource(
+"tv"
 );
 
 }

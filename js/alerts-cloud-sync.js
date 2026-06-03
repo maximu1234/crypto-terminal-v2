@@ -17,6 +17,12 @@ tryCloudAuthRecovery
 } from "./cloud-sync.js?v=33";
 
 import {
+isAlertsCloudDisabled,
+isSupabaseRealtimeDisabled,
+scaleSupabasePollMs
+} from "./supabase-usage-prefs.js?v=1";
+
+import {
 getCachedAlertAuth,
 setAlertAuthCache,
 clearAlertAuthCache,
@@ -675,7 +681,11 @@ userId
 
 await teardownAlertsRealtime();
 
-if(!userId){
+if(
+!userId ||
+isSupabaseRealtimeDisabled() ||
+isAlertsCloudDisabled()
+){
 return;
 }
 
@@ -5738,6 +5748,12 @@ opts = {}
 ){
 
 if(
+isAlertsCloudDisabled()
+){
+return 0;
+}
+
+if(
 hydrateAlertsInflight
 ){
 return hydrateAlertsInflight;
@@ -5821,6 +5837,12 @@ return syncAllLocalAlertsToCloud();
 
 export function scheduleRegistryCloudSync(){
 
+if(
+isAlertsCloudDisabled()
+){
+return;
+}
+
 if(registrySyncTimer){
 clearTimeout(registrySyncTimer);
 }
@@ -5903,6 +5925,16 @@ stopAlertsFastPoll();
 stopIosSafariVisiblePull();
 stopVisiblePullFallback();
 clearAlertAuthCache();
+void teardownAlertsRealtime();
+return;
+}
+
+if(
+isAlertsCloudDisabled()
+){
+stopAlertsFastPoll();
+stopIosSafariVisiblePull();
+stopVisiblePullFallback();
 void teardownAlertsRealtime();
 return;
 }

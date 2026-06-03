@@ -17,6 +17,7 @@ echo "  http://127.0.0.1:$PORT/listings.html    (Листинги)"
 echo "  http://127.0.0.1:$PORT/terminal.html    (Терминал)"
 echo "  http://127.0.0.1:$PORT/alerts/         (Алерты)"
 echo "  http://127.0.0.1:$PORT/trade-calculator.html"
+echo "  http://127.0.0.1:$PORT/btc-dominance-test.html  (BTC.D test)"
 echo ""
 if [ -z "${TWELVEDATA_API_KEY:-}" ] && [ -z "${TWELVE_DATA_API_KEY:-}" ]; then
   echo "  Stocks/Forex: задайте TWELVEDATA_API_KEY (см. .env.example)"

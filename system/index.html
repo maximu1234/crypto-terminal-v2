@@ -13,7 +13,7 @@
 <link rel="stylesheet" href="/css/common.css?v=21">
 <link rel="stylesheet" href="/css/screener.css?v=21">
 <link rel="stylesheet" href="/css/site-mobile-nav.css?v=3">
-<link rel="stylesheet" href="/css/system-admin.css?v=2">
+<link rel="stylesheet" href="/css/system-admin.css?v=3">
 
 </head>
 
@@ -115,12 +115,29 @@ Safari → <code>api.bybit.com</code>; Chrome / Яндекс → <code>railway.a
 
 </section>
 
+<section class="system-admin-card" aria-labelledby="supabase-usage-heading">
+
+<h2 id="supabase-usage-heading">Экономия лимитов Supabase</h2>
+<p class="system-admin-card-lead">
+Если на Free-плане заканчиваются <strong>Egress</strong> или <strong>Realtime</strong>, включите нужные пункты.
+Каждый чекбокс отключает только описанную функцию — графики Bybit и просмотр без входа не затрагиваются.
+</p>
+<div id="system-supabase-usage-mount"></div>
+<p id="system-supabase-usage-status" class="system-admin-status" aria-live="polite"></p>
+<div class="system-admin-actions">
+<button type="button" class="system-admin-btn" id="system-supabase-reload-hint">
+Обновить главную (применить)
+</button>
+</div>
+
+</section>
+
 </main>
 
 </div>
 
 <script type="module" src="/js/site-boot.js?v=80"></script>
-<script type="module" src="/js/system-admin-page.js?v=3"></script>
+<script type="module" src="/js/system-admin-page.js?v=4"></script>
 
 </body>
 </html>
