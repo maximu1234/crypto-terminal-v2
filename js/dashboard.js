@@ -20,7 +20,7 @@ applyDashboardZoom
 
 import {
 createDashboardChartWidget
-} from "./chart-widget-host.js?v=2";
+} from "./chart-widget-host.js?v=3";
 
 import {
 mountWidgetTabletChart
@@ -109,6 +109,10 @@ isLocalDevHost()
 const DASHBOARD_BATCH_GAP_MS =
 0;
 
+/** Фаза 2: initDrawings по одному виджету — не блокируем появление свечей. */
+let dashboardDrawingsQueue =
+Promise.resolve();
+
 let dashboardLoadInflight =
 0;
 
@@ -174,6 +178,156 @@ next();
 
 }
 
+function idleYield(){
+
+if(
+typeof requestIdleCallback ===
+"function"
+){
+return new Promise(
+resolve=>{
+requestIdleCallback(
+resolve,
+{ timeout: 2500 }
+);
+}
+);
+}
+
+return sleep(
+0
+);
+
+}
+
+function mountWidgetTabletGestures(
+entry,
+chartContainer,
+chartWrap,
+chart,
+series
+){
+
+if(
+entry.tabletMountStarted
+){
+return;
+}
+
+entry.tabletMountStarted =
+true;
+
+void mountWidgetTabletChart({
+
+chart,
+series,
+chartEl: chartContainer,
+chartWrap,
+getDrawingTools: ()=>
+entry.drawingTools,
+isWidgetActive: ()=>
+activeWidgetIndex ===
+entry.index
+
+}).then(
+ctrl=>{
+
+entry.tabletGestures =
+ctrl;
+
+entry.cancelTabletPanGesture =
+ctrl.cancelCurrentGesture;
+
+}
+).catch(
+err=>{
+
+console.warn(
+"Widget tablet gestures:",
+err
+);
+
+}
+);
+
+}
+
+function queueWidgetDrawingsAttach(
+entry
+){
+
+if(
+entry.drawingsAttachPromise
+){
+return entry.drawingsAttachPromise;
+}
+
+entry.drawingsAttachPromise =
+dashboardDrawingsQueue =
+dashboardDrawingsQueue.then(
+async ()=>{
+
+await idleYield();
+
+const tools =
+await entry.ensureDrawings();
+
+entry.drawingTools =
+tools;
+
+if(
+!tools
+){
+return;
+}
+
+mountWidgetTabletGestures(
+entry,
+entry.chartContainer,
+entry.chartWrap,
+entry.chart,
+entry.series
+);
+
+tools.onSymbolChange();
+tools.resize();
+tools.scheduleRedraw?.();
+
+}
+).catch(
+err=>{
+
+console.error(
+"Dashboard drawings attach:",
+err
+);
+
+}
+);
+
+return entry.drawingsAttachPromise;
+
+}
+
+function refreshWidgetDrawings(
+entry
+){
+
+if(
+!entry.drawingTools
+){
+void queueWidgetDrawingsAttach(
+entry
+);
+return;
+}
+
+entry.drawingTools.onSymbolChange();
+entry.drawingTools.resize();
+entry.drawingTools.scheduleRedraw?.();
+
+}
+
 function reloadAllDashboardWidgets(){
 
 widgets.forEach(
@@ -197,6 +351,8 @@ w.resizeObserver?.disconnect();
 });
 
 widgets.length = 0;
+dashboardDrawingsQueue =
+Promise.resolve();
 resetWidgetDrawToolsMenus();
 dashboard.innerHTML = "";
 
@@ -316,11 +472,7 @@ return tfSelect.value;
 let cancelTabletPanGesture =
 ()=>{};
 
-const {
-chart,
-series,
-drawingTools
-} =
+const chartHost =
 createDashboardChartWidget({
 
 chartContainer,
@@ -337,7 +489,18 @@ abortTabletChartGesture:()=>{
 cancelTabletPanGesture?.();
 }
 
-});
+},
+{
+deferDrawings: true
+}
+);
+
+const {
+chart,
+series,
+ensureDrawings
+} =
+chartHost;
 
 initWidgetDrawToolsDropdown(
 toolsRoot
@@ -349,13 +512,38 @@ toolsRoot,
 pickTool:(
 name
 )=>{
-drawingTools?.pickDrawTool?.(
+void (
+async ()=>{
+
+const tools =
+chartHost.drawingTools ||
+await ensureDrawings();
+
+entry.drawingTools =
+tools;
+
+tools?.pickDrawTool?.(
 name
 );
+
+}
+)();
 },
-onClearAll:()=>
-drawingTools?.clearAllDrawings?.() ??
-false,
+onClearAll:()=>{
+
+if(
+chartHost.drawingTools
+){
+return (
+chartHost.drawingTools.clearAllDrawings?.() ??
+false
+);
+}
+
+void ensureDrawings();
+return false;
+
+},
 onActivate:setActive
 }
 );
@@ -371,39 +559,20 @@ widget,
 chart,
 series,
 chartWrap,
-drawingTools,
+chartContainer,
+ensureDrawings,
+drawingTools: null,
+drawingsAttachPromise: null,
+tabletMountStarted: false,
+cancelTabletPanGesture: ()=>{},
 loadData,
 getSymbol,
 candlesRef: ()=> candles,
 setCandles: data=>{ candles = data; },
 unsubKline: null,
-tabletGestures: null
+tabletGestures: null,
+resizeObserver: null
 };
-
-void mountWidgetTabletChart({
-chart,
-series,
-chartEl: chartContainer,
-chartWrap,
-getDrawingTools: ()=> drawingTools,
-isWidgetActive: ()=>
-activeWidgetIndex ===
-index
-}).then(
-ctrl=>{
-cancelTabletPanGesture =
-ctrl.cancelCurrentGesture;
-entry.tabletGestures =
-ctrl;
-}
-).catch(
-err=>{
-console.warn(
-"Widget tablet gestures:",
-err
-);
-}
-);
 
 function setActive(
 e
@@ -591,9 +760,9 @@ applyDashboardZoom(chart, candles, tf);
 
 resizeChart();
 
-drawingTools?.onSymbolChange();
-drawingTools?.resize();
-drawingTools?.scheduleRedraw?.();
+refreshWidgetDrawings(
+entry
+);
 
 const last =
 candles[candles.length - 1];
@@ -683,15 +852,16 @@ return;
 }
 
 chart.applyOptions({ width: w, height: h });
-drawingTools?.resize();
+entry.drawingTools?.resize();
 
 }
 
 const resizeObserver =
 new ResizeObserver(resizeChart);
 
+entry.resizeObserver =
+resizeObserver;
 resizeObserver.observe(chartWrap);
-entry.resizeObserver = resizeObserver;
 
 requestAnimationFrame(resizeChart);
 

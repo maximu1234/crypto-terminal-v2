@@ -34,8 +34,6 @@ return null;
 }
 
 /**
- * Dashboard widget: candlestick chart + drawings layer.
- *
  * @param {{
  *   chartContainer: Element,
  *   chartWrap: Element,
@@ -47,9 +45,11 @@ return null;
  *   barPosKey: string,
  *   abortTabletChartGesture?: ()=>void
  * }} opts
+ * @param {{ deferDrawings?: boolean }} [config]
  */
 export function createDashboardChartWidget(
-opts
+opts,
+config = {}
 ){
 
 const {
@@ -60,8 +60,7 @@ createCandlestickChart(
 opts.chartContainer
 );
 
-const drawingTools =
-initWidgetDrawings({
+const drawingOptions = {
 
 chart,
 series,
@@ -73,14 +72,69 @@ getTf: opts.getTf,
 getCandles: opts.getCandles,
 isActive: opts.isActive,
 barPosKey: opts.barPosKey,
-abortTabletChartGesture:opts.abortTabletChartGesture
+abortTabletChartGesture: opts.abortTabletChartGesture
 
-});
+};
 
-return {
+const host = {
 chart,
 series,
-drawingTools
+drawingTools: null,
+ensureDrawings: null
 };
+
+let ensureInflight = null;
+
+host.ensureDrawings =
+async function ensureDrawings(){
+
+if(
+host.drawingTools
+){
+return host.drawingTools;
+}
+
+if(
+ensureInflight
+){
+return ensureInflight;
+}
+
+ensureInflight =
+Promise.resolve().then(
+()=>{
+
+const tools =
+initWidgetDrawings(
+drawingOptions
+);
+
+host.drawingTools =
+tools;
+ensureInflight =
+null;
+
+return tools;
+
+}
+);
+
+return ensureInflight;
+
+};
+
+if(
+config.deferDrawings !==
+true
+){
+
+host.drawingTools =
+initWidgetDrawings(
+drawingOptions
+);
+
+}
+
+return host;
 
 }
