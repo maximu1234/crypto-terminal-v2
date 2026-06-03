@@ -464,7 +464,8 @@ export function positionDomChartCrosshairHorz({
 wrapEl,
 chartEl,
 chart,
-clientY
+clientY,
+plotY
 }){
 
 const el =
@@ -476,7 +477,21 @@ wrapEl
 if(
 !wrapEl ||
 !el ||
-!chart ||
+!chart
+){
+return;
+}
+
+let y =
+plotY;
+
+if(
+!Number.isFinite(
+y
+)
+){
+
+if(
 !Number.isFinite(
 clientY
 )
@@ -487,14 +502,20 @@ return;
 const chartR =
 el.getBoundingClientRect();
 
-let y =
+y =
 clientY - chartR.top;
+
+}
+
+const chartH =
+el.clientHeight ||
+el.getBoundingClientRect().height;
 
 y =
 Math.max(
 0,
 Math.min(
-chartR.height,
+chartH,
 y
 )
 );
@@ -616,7 +637,7 @@ positionDomChartCrosshairHorz({
 wrapEl,
 chartEl: el,
 chart,
-clientY
+plotY: y
 });
 
 try{

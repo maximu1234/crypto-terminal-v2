@@ -1367,6 +1367,131 @@ return param.point?.x;
 
 }
 
+/** DOM-линии следуют за курсором; привязка к свече — только для подписи времени / RSI. */
+function crosshairOverlayPlotX(
+param
+){
+
+const px =
+param?.point?.x;
+
+if(
+Number.isFinite(
+px
+)
+){
+return px;
+}
+
+return crosshairVertX(
+param
+);
+
+}
+
+function applyLinkedCrosshairPlot(
+x,
+y
+){
+
+if(
+linkedVertOverlayEl &&
+Number.isFinite(
+x
+)
+){
+
+linkedVertOverlayEl.style.left =
+`${Math.round(x)}px`;
+
+linkedVertOverlayEl.classList.remove(
+"hidden"
+);
+
+}
+
+if(
+chartWrapEl &&
+chartEl &&
+Number.isFinite(
+y
+)
+){
+
+positionDomChartCrosshairHorz({
+wrapEl:chartWrapEl,
+chartEl,
+chart:mainChart,
+plotY:y
+});
+
+}
+
+}
+
+function plotCoordsFromClient(
+clientX,
+clientY
+){
+
+if(
+!chartEl
+){
+return null;
+}
+
+const chartR =
+chartEl.getBoundingClientRect();
+
+let scaleW =
+effectiveChartPriceScaleWidth();
+
+try{
+scaleW =
+mainChart.priceScale(
+"right"
+).width() ||
+scaleW;
+}catch{
+/* ignore */
+}
+
+let x =
+clientX - chartR.left;
+let y =
+clientY - chartR.top;
+
+const plotW =
+Math.max(
+0,
+chartR.width - scaleW
+);
+
+x =
+Math.max(
+0,
+Math.min(
+plotW,
+x
+)
+);
+
+y =
+Math.max(
+0,
+Math.min(
+chartR.height,
+y
+)
+);
+
+return {
+x,
+y
+};
+
+}
+
 function showLinkedVert(
 param
 ){
@@ -1378,49 +1503,26 @@ return false;
 }
 
 const x =
-crosshairVertX(param);
+crosshairOverlayPlotX(
+param
+);
+
+const py =
+param?.point?.y;
 
 if(
-!Number.isFinite(x)
+!Number.isFinite(
+x
+)
 ){
 clearLinkedVert();
 return true;
 }
 
-syncLinkedChartPriceScales(
-mainChart,
-linkedChart
+applyLinkedCrosshairPlot(
+x,
+py
 );
-
-linkedVertOverlayEl.style.left =
-`${Math.round(x)}px`;
-
-linkedVertOverlayEl.classList.remove(
-"hidden"
-);
-
-if(
-chartWrapEl &&
-chartEl &&
-param?.point &&
-Number.isFinite(
-param.point.y
-)
-){
-
-const chartR =
-chartEl.getBoundingClientRect();
-
-positionDomChartCrosshairHorz({
-wrapEl:chartWrapEl,
-chartEl,
-chart:mainChart,
-clientY:
-chartR.top +
-param.point.y
-});
-
-}
 
 try{
 linkedChart.clearCrosshairPosition();
@@ -1439,9 +1541,21 @@ null &&
 mainChart?.timeScale
 ){
 
+const labelX =
+crosshairVertX(
+param
+);
+
+const timeX =
+Number.isFinite(
+labelX
+)
+? labelX
+: x;
+
 const t =
 mainChart.timeScale().coordinateToTime?.(
-x
+timeX
 );
 
 if(
@@ -1455,7 +1569,12 @@ labelParam.time = t;
 updateCrosshairAxisLabels({
 param: labelParam,
 timeLabelEl:crosshairTimeLabelEl,
-snappedX:x
+snappedX:
+Number.isFinite(
+labelX
+)
+? labelX
+: x
 });
 
 if(
@@ -1469,6 +1588,64 @@ param.time
 }
 
 return true;
+
+}
+
+function onChartWrapPointerMove(
+e
+){
+
+if(
+lock
+){
+return;
+}
+
+if(
+e.pointerType ===
+"touch"
+){
+return;
+}
+
+if(
+document.body.classList.contains(
+"chart-probe-active"
+)
+){
+return;
+}
+
+const plot =
+plotCoordsFromClient(
+e.clientX,
+e.clientY
+);
+
+if(
+!plot
+){
+return;
+}
+
+applyLinkedCrosshairPlot(
+plot.x,
+plot.y
+);
+
+}
+
+if(
+chartWrapEl
+){
+
+chartWrapEl.addEventListener(
+"pointermove",
+onChartWrapPointerMove,
+{
+passive:true
+}
+);
 
 }
 
@@ -1500,6 +1677,18 @@ param
 
 return {
 clearLinked,
+detachPointerCrosshair(){
+
+if(
+chartWrapEl
+){
+chartWrapEl.removeEventListener(
+"pointermove",
+onChartWrapPointerMove
+);
+}
+
+},
 setSuppressed(
 suppressed
 ){
