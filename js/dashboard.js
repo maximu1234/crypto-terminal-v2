@@ -91,24 +91,23 @@ const defaultSymbols = [
 
 const widgets = [];
 
-/** ~3×1000 свечей — хватает для zoom до 900 баров + прокрутка; меньше нагрузки на proxy. */
+/** Как на Главной: 2×1000 свечей — хватает для zoom; меньше запросов к proxy. */
 const DASHBOARD_HISTORY_BATCHES =
-3;
+2;
 
-/** Смещение старта загрузки виджетов — не шторм из 9×N запросов сразу. */
+/** Локально — смещение и слоты; на проде — все виджеты параллельно, как screener. */
 const DASHBOARD_STAGGER_MS =
 isLocalDevHost()
 ? 280
-: 150;
+: 0;
 
-/** Одновременно не больше N историй Bybit (остальные ждут слот). */
 const DASHBOARD_MAX_CONCURRENT_LOADS =
 isLocalDevHost()
 ? 2
-: 4;
+: 9;
 
 const DASHBOARD_BATCH_GAP_MS =
-50;
+0;
 
 let dashboardLoadInflight =
 0;
@@ -841,8 +840,27 @@ markTabletChartBody
 );
 
 initTerminalPageUi();
-preloadTradingSymbols();
 renderDashboard();
+
+const deferSymbolsPreload =
+()=>{
+preloadTradingSymbols();
+};
+
+if(
+typeof requestIdleCallback ===
+"function"
+){
+requestIdleCallback(
+deferSymbolsPreload,
+{ timeout: 4000 }
+);
+}else{
+setTimeout(
+deferSymbolsPreload,
+2000
+);
+}
 ensureDrawToolsVisible();
 window.dispatchEvent(
 new CustomEvent(
