@@ -1144,11 +1144,6 @@ rsiLookupAtOrBefore(ts)
 
 }
 
-const chartWrapEl =
-document.getElementById(
-"chart-wrap"
-);
-
 const chartCrosshairLink =
 linkChartsCrosshair({
 mainChart:chart,
@@ -1159,13 +1154,7 @@ linkedVertOverlayEl:document.getElementById(
 "linked-crosshair-vert"
 ),
 chartWrapEl,
-chartEl:
-chartWrapEl?.querySelector(
-".chart"
-) ||
-document.getElementById(
-"chart"
-),
+chartEl,
 crosshairTimeLabelEl:document.getElementById(
 "crosshair-time-label"
 ),
