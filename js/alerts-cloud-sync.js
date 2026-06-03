@@ -14,7 +14,7 @@ isCloudApiUsable,
 isCloudAuthError,
 reportCloudAuthFailure,
 tryCloudAuthRecovery
-} from "./cloud-sync.js?v=33";
+} from "./cloud-sync.js?v=34";
 
 import {
 isAlertsCloudDisabled,
@@ -5686,7 +5686,7 @@ return 0;
 
 try{
 const { ensureCloudLoginResolved } =
-await import("./cloud-sync.js?v=33");
+await import("./cloud-sync.js?v=34");
 
 await ensureCloudLoginResolved(
 8000

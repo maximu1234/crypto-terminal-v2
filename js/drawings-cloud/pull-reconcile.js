@@ -25,7 +25,7 @@ getSupabase
 
 import {
 waitForCloudAuth
-} from "../cloud-sync.js?v=33";
+} from "../cloud-sync.js?v=34";
 
 import {
 createPullCoalescer,
@@ -37,7 +37,7 @@ isDeletedAtColumnError,
 upsertDrawingRow,
 resolveDrawingsRestAuth,
 fetchWithTimeout
-} from "./worker-client.js?v=6";
+} from "./worker-client.js?v=7";
 
 import {
 getAuthed,
@@ -57,7 +57,7 @@ getLastCloudDrawingsFingerprint,
 setLastCloudDrawingsFingerprint,
 markDrawingSymbolDirty,
 scheduleDrawingsCloudPush
-} from "./sync-lifecycle.js?v=6";
+} from "./sync-lifecycle.js?v=7";
 
 const IS_YANDEX =
 /YaBrowser|Yandex/i.test(

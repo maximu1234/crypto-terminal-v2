@@ -7,7 +7,7 @@ isCloudApiUsable,
 onCloudSyncChange,
 notifyDrawings as notifyDrawingsListeners,
 ensureCloudLoginResolved
-} from "../cloud-sync.js?v=33";
+} from "../cloud-sync.js?v=34";
 
 import {
 normalizeAlertWorkerBaseUrl
@@ -59,7 +59,7 @@ getSupabase
 import {
 pushUnsyncedDrawingsImpl,
 deleteDrawingFromCloud
-} from "./worker-client.js?v=6";
+} from "./worker-client.js?v=7";
 
 import {
 reconcileLocalDrawingsWithCloud,
@@ -1648,7 +1648,7 @@ deleteDrawingFromCloudNow,
 deleteDrawingFromCloud,
 clearAllDrawingsFromCloud,
 resolveDrawingsRestAuth
-} from "./worker-client.js?v=6";
+} from "./worker-client.js?v=7";
 
 export {
 reconcileLocalDrawingsWithCloud,

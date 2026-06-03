@@ -44,7 +44,7 @@ isCloudLoggedInEffective,
 isCloudSyncEnabled,
 ensureCloudLoginResolved,
 onCloudSyncChange
-} from "../cloud-sync.js?v=33";
+} from "../cloud-sync.js?v=34";
 
 import {
 ensureDrawToolsVisible
@@ -55,7 +55,7 @@ deleteDrawingFromCloud,
 flushDrawingsCloudPush,
 registerDrawingsChartRefresh,
 scheduleDrawingsCloudPush
-} from "../drawings-cloud-sync.js?v=41";
+} from "../drawings-cloud-sync.js?v=42";
 
 import {
 touchShapeRevision,
@@ -8793,7 +8793,7 @@ return;
 }
 
 void import(
-"../drawings-cloud-sync.js?v=41"
+"../drawings-cloud-sync.js?v=42"
 ).then(
 m=>{
 m.bumpDrawingsPullNow?.();

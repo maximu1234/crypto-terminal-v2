@@ -1,6 +1,6 @@
 import {
 ensureCloudLoginResolved
-} from "../cloud-sync.js?v=33";
+} from "../cloud-sync.js?v=34";
 
 import {
 isDrawingsCloudDisabled
@@ -33,7 +33,7 @@ readAlertTokenSync
 import {
 isCloudLoggedInEffective,
 isCloudSyncEnabled
-} from "../cloud-sync.js?v=33";
+} from "../cloud-sync.js?v=34";
 
 import {
 markShapeSynced,
@@ -49,7 +49,7 @@ isDrawingsCloudSyncPaused,
 markDrawingSymbolDirty,
 getDirtyDrawingSymbols,
 getAuthed
-} from "./sync-lifecycle.js?v=6";
+} from "./sync-lifecycle.js?v=7";
 
 /** Worker нужен в первую очередь на iPad Safari (REST там ненадёжен). */
 const IS_IOS_SAFARI =

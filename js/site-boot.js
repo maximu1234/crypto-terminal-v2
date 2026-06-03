@@ -17,7 +17,7 @@ scheduleDevicePull
 import {
 initAlertsCloudSync,
 scheduleRegistryCloudSync
-} from "./alerts-cloud-sync.js?v=107";
+} from "./alerts-cloud-sync.js?v=108";
 
 import {
 stripAlertFlagsNotInRegistry
@@ -30,7 +30,7 @@ isCloudSyncEnabled,
 getCloudUserEmail,
 pullDeviceStateFromCloud,
 onCloudSyncChange
-} from "./cloud-sync.js?v=33";
+} from "./cloud-sync.js?v=34";
 
 import {
 isAutoDevicePullDisabled
@@ -148,13 +148,13 @@ new CustomEvent(
 }
 );
 
-import("./drawings-cloud-sync.js?v=41").then(
+import("./drawings-cloud-sync.js?v=42").then(
 ({ initDrawingsCloudSync })=>{
 initDrawingsCloudSync();
 }
 );
 
-import("./favorites-cloud-sync.js?v=2").then(
+import("./favorites-cloud-sync.js?v=3").then(
 ({ initFavoritesCloudSync })=>{
 initFavoritesCloudSync();
 }
