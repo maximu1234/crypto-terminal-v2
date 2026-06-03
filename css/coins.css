@@ -601,11 +601,16 @@ body.coins-page.coins-tablet-list-nav-on .coins-list-tablet-nav{
 display:flex;
 }
 
-body.coins-page.coins-tablet-list-nav-on #coins-body{
+body.coins-page.coins-tablet-list-nav-on #list{
 flex:1 1 auto;
 min-height:0;
-overflow:auto;
+overflow-y:auto;
 -webkit-overflow-scrolling:touch;
+}
+
+body.coins-page.coins-tablet-list-nav-on #coins-body{
+flex:0 0 auto;
+overflow:visible;
 }
 
 .coins-list-scroll-btn{
