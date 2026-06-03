@@ -1,6 +1,8 @@
 # BTC Dominance (BTC.D) — архитектура
 
-Тестовая страница: **`/btc-dominance-test.html`**. По умолчанию — **TradingView** (`CRYPTOCAP:BTC.D`); вкладка **Multichart API** — наш LW Charts + CoinGecko.
+**Ссылка на Монетах:** **`/coins.html`** → **BTC.D** (справа в шапке) → **`/btc-d.html`** (только TradingView, RSI).
+
+Тестовая страница: **`/btc-dominance-test.html`** — TV + вкладка Multichart API (CoinGecko).
 
 ## Зачем
 

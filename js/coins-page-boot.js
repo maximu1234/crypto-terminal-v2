@@ -12,7 +12,8 @@ loadLightweightCharts
 import {
 CHART_BUILD_ID,
 CHART_PAGE_ENTRY,
-TERMINAL_ENTRY
+TERMINAL_ENTRY,
+jsUrl
 } from "./asset-manifest.js?v=1";
 
 const IS_YANDEX =
@@ -231,6 +232,12 @@ true;
 window.dispatchEvent(
 new CustomEvent(
 "coins-app-ready"
+)
+);
+
+await import(
+jsUrl(
+"site-boot.js"
 )
 );
 

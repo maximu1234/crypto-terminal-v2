@@ -1,4 +1,10 @@
 /**
  * Точка входа графика для /coins (имя без «terminal» — реже блокируется в Яндексе).
  */
-import "./terminal.js?v=265";
+import {
+TERMINAL_ENTRY
+} from "./asset-manifest.js?v=1";
+
+await import(
+TERMINAL_ENTRY
+);

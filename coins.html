@@ -18,11 +18,10 @@
 <link rel="stylesheet" href="/css/common.css?v=21">
 <link rel="stylesheet" href="/css/terminal.css?v=99">
 <link rel="stylesheet" href="/css/dashboard.css?v=16">
-<link rel="stylesheet" href="/css/coins.css?v=19">
+<link rel="stylesheet" href="/css/coins.css?v=21">
 
 <script src="/vendor/lightweight-charts.standalone.production.js"></script>
 <link rel="modulepreload" href="/js/charts-lib-boot.js?v=3" crossorigin>
-<link rel="modulepreload" href="/js/coins-page-boot.js?v=10" crossorigin>
 
 </head>
 
@@ -73,6 +72,7 @@
 <div id="cloud-settings-mount"></div>
 </div>
 </div>
+<a href="/btc-d.html" class="coins-btc-d-link" title="Доминация Bitcoin (TradingView)">BTC.D</a>
 </nav>
 
 </header>
@@ -254,6 +254,8 @@ el.textContent=String(last.symbol).toUpperCase()+".P";
 
 <div id="filter-wrap">
 
+<a href="/btc-d.html" class="coins-btc-d-link coins-btc-d-link--list" title="Доминация Bitcoin (TradingView)">BTC.D</a>
+
 <select id="market-filter">
 
 <option value="crypto">
@@ -315,8 +317,7 @@ Symbol
 
 <div id="coins-chart-status" class="coins-chart-status hidden" aria-live="polite"></div>
 
-<script src="/js/coins-page-boot.js?v=10" type="module"></script>
-<script src="/js/site-boot.js?v=81" type="module"></script>
+<script src="/js/coins-page-boot.js?v=11" type="module"></script>
 
 </body>
 </html>

@@ -1,0 +1,29 @@
+body.btc-d-page.site-nav-page {
+  background: #0b1220;
+  color: #e2e8f0;
+  height: 100dvh;
+  max-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  margin: 0;
+}
+
+body.btc-d-page #header.screener-page-header {
+  flex-shrink: 0;
+}
+
+.btc-d-tv-host {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  position: relative;
+}
+
+.btc-d-tv-host .tradingview-widget-container,
+.btc-d-tv-host .coins-tv-widget {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}

@@ -1,6 +1,7 @@
 import {
-fetchBybit
-} from "./bybit-fetch.js?v=11";
+fetchBybit,
+isLocalDevHost
+} from "./bybit-fetch.js?v=13";
 
 import {
 fetchTwelveTimeSeries
@@ -112,7 +113,11 @@ const { json } =
 await fetchBybit(
 path,
 {
-sequential: true,
+...(isLocalDevHost()
+? {}
+: {
+sequential: true
+}),
 retries,
 timeoutMs: 10000
 }

@@ -4,7 +4,7 @@ loadBybitSymbols,
 loadTwelveData,
 peekBybitSymbolsCache,
 normalizeBybitSymbolList
-} from "./api.js?v=25";
+} from "./api.js?v=27";
 
 import {
 filterRecentListings

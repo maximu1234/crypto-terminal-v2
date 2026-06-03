@@ -15,8 +15,8 @@ import urllib.parse
 import urllib.request
 
 BYBIT_API_BASES = (
-"https://api.bybit.com",
 "https://api.bytick.com",
+"https://api.bybit.com",
 )
 
 TWELVEDATA_BASE = "https://api.twelvedata.com"
@@ -77,7 +77,7 @@ class QuietHandler(http.server.SimpleHTTPRequestHandler):
                     f"{base}{path}",
                     headers={"Accept": "application/json"},
                 )
-                with urllib.request.urlopen(req, timeout=20) as upstream:
+                with urllib.request.urlopen(req, timeout=8) as upstream:
                     body = upstream.read()
                     self.send_response(200)
                     self.send_header("Content-Type", "application/json")

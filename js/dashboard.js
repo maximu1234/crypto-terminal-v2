@@ -7,7 +7,11 @@ loadLayout
 
 import {
 loadBybitHistory
-} from "./api.js?v=25";
+} from "./api.js?v=27";
+
+import {
+isLocalDevHost
+} from "./bybit-fetch.js?v=13";
 
 import {
 applyChartPriceFormat,
@@ -93,11 +97,15 @@ const DASHBOARD_HISTORY_BATCHES =
 
 /** Смещение старта загрузки виджетов — не шторм из 9×N запросов сразу. */
 const DASHBOARD_STAGGER_MS =
-150;
+isLocalDevHost()
+? 280
+: 150;
 
 /** Одновременно не больше N историй Bybit (остальные ждут слот). */
 const DASHBOARD_MAX_CONCURRENT_LOADS =
-4;
+isLocalDevHost()
+? 2
+: 4;
 
 const DASHBOARD_BATCH_GAP_MS =
 50;

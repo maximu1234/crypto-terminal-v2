@@ -16,14 +16,20 @@ Object.freeze({
 
 "btc-dominance-test.css":
 3,
+"btc-d-page.css":
+3,
+"btc-dominance/btc-d-page.js":
+1,
+"btc-dominance/tv-embed.js":
+1,
 
 /* ── JS: boot / entry ── */
 "asset-manifest.js":
 1,
 "coins-page-boot.js":
-10,
+11,
 "chart-page.js":
-5,
+6,
 "terminal.js":
 265,
 "terminal/coins-state.js":
@@ -35,7 +41,7 @@ Object.freeze({
 "telegram-bot-public.js":
 1,
 "dashboard.js":
-73,
+74,
 "screener.js":
 64,
 "site-boot.js":
@@ -121,9 +127,9 @@ Object.freeze({
 
 /* ── JS: market data ── */
 "api.js":
-25,
+27,
 "bybit-fetch.js":
-11,
+13,
 "bybit-listings.js":
 2,
 "bybit-network-ui.js":
@@ -236,7 +242,7 @@ Object.freeze({
 "dashboard.css":
 16,
 "coins.css":
-19,
+21,
 "terminal-page.css":
 1,
 "site-mobile-nav.css":

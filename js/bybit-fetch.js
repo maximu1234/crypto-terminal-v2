@@ -53,7 +53,7 @@ return pathQuery.startsWith("/")
 }
 
 /** localhost / 127.0.0.1 — dev-server.py прокси /api/bybit, не Railway. */
-function isLocalDevHost(){
+export function isLocalDevHost(){
 
 if(
 typeof location ===
@@ -678,7 +678,7 @@ if(
 isLocalDevHost()
 ){
 
-return [
+const tasks = [
 fetchOneBybitProxyUrl(
 localBybitProxyUrl(
 encoded
@@ -688,6 +688,20 @@ timeoutMs,
 "local-dev-proxy"
 )
 ];
+
+BYBIT_API_BASES.forEach(
+(base, index)=>{
+tasks.push(
+fetchOneBybitUrl(
+`${base}${path}`,
+index,
+timeoutMs
+)
+);
+}
+);
+
+return tasks;
 
 }
 
@@ -846,6 +860,37 @@ const path =
 normalizePath(pathQuery);
 
 let lastErr = null;
+
+if(
+isLocalDevHost()
+){
+
+try{
+
+const tasks =
+await buildBybitRaceTasks(
+path,
+timeoutMs,
+options
+);
+
+return await Promise.any(
+tasks
+);
+
+}catch(
+err
+){
+
+lastErr =
+err?.errors?.[
+err.errors.length - 1
+] ||
+err;
+
+}
+
+}
 
 if(
 prefersBybitWorkerProxy() &&

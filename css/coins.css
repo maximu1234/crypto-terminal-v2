@@ -135,6 +135,26 @@ z-index:200;
 overflow:visible;
 }
 
+body.coins-page .coins-btc-d-link{
+position:absolute;
+right:10px;
+top:50%;
+transform:translateY(-50%);
+z-index:210;
+display:inline-flex;
+align-items:center;
+color:#9ca3af;
+font-size:14px;
+font-weight:400;
+line-height:1;
+text-decoration:none;
+-webkit-tap-highlight-color:transparent;
+}
+
+body.coins-page .coins-btc-d-link:hover{
+color:#e5e7eb;
+}
+
 body.coins-page #charts-stack{
 grid-column:1;
 grid-row:3;
@@ -503,6 +523,24 @@ padding:10px 12px calc(
 12px + env(safe-area-inset-bottom, 0px)
 );
 gap:10px;
+display:flex;
+flex-direction:column;
+}
+
+body.coins-page .coins-btc-d-link--list{
+display:inline-flex;
+align-self:flex-start;
+position:static;
+transform:none;
+margin:0 0 2px;
+}
+
+@media (min-width:641px){
+
+body.coins-page .coins-btc-d-link--list{
+display:none !important;
+}
+
 }
 
 #market-filter,

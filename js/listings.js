@@ -1,6 +1,6 @@
 import {
 loadBybitSymbols
-} from "./api.js?v=25";
+} from "./api.js?v=27";
 
 import {
 BYBIT_LISTINGS_PAGE_WINDOW_MS,
