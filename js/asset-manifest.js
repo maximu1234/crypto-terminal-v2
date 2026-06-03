@@ -65,7 +65,7 @@ Object.freeze({
 "chart/chart-dom-crosshair.js":
 8,
 "chart/chart-factory.js":
-3,
+4,
 "chart-tablet-gestures.js":
 17,
 "coins-tablet-controller.js":

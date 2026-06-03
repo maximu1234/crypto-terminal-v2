@@ -16,7 +16,7 @@ syncTabletFinePointerClass
 import {
 updateCrosshairAxisLabels,
 clearCrosshairAxisLabels,
-hideTabletProbeCrosshair
+hideTabletProbeCrosshair,
 hideDomChartCrosshairHorz,
 positionDomChartCrosshairHorz
 } from "./chart-dom-crosshair.js";
