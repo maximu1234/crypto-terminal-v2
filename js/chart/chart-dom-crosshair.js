@@ -482,6 +482,9 @@ if(
 return;
 }
 
+const chartR =
+el.getBoundingClientRect();
+
 let y =
 plotY;
 
@@ -499,23 +502,16 @@ clientY
 return;
 }
 
-const chartR =
-el.getBoundingClientRect();
-
 y =
 clientY - chartR.top;
 
 }
 
-const chartH =
-el.clientHeight ||
-el.getBoundingClientRect().height;
-
 y =
 Math.max(
 0,
 Math.min(
-chartH,
+chartR.height,
 y
 )
 );
