@@ -59,13 +59,13 @@ Object.freeze({
 
 /* ── JS: chart / drawings ── */
 "chart.js":
-118,
+119,
 "chart/chart-options.js":
 4,
 "chart/chart-dom-crosshair.js":
 10,
 "chart/chart-factory.js":
-5,
+6,
 "chart-tablet-gestures.js":
 17,
 "coins-tablet-controller.js":

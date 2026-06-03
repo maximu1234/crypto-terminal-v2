@@ -26,7 +26,7 @@ isCoarseTouchViewport,
 effectiveChartPriceScaleWidth,
 effectiveChartScaleFontSize,
 isTabletChartViewport
-} from "./chart/chart-options.js";
+} from "./chart/chart-options.js?v=4";
 
 export {
 ensureDomChartCrosshair,
@@ -40,7 +40,7 @@ positionTabletProbeHorizInStack,
 hideTabletProbeCrosshair,
 formatCrosshairTimeLabel,
 isUserCrosshairEvent
-} from "./chart/chart-dom-crosshair.js";
+} from "./chart/chart-dom-crosshair.js?v=10";
 
 export {
 createCandlestickChart,
@@ -68,7 +68,7 @@ tfPeriodSec,
 rsiPlotTimeOffsetSec,
 mountChartPriceHud,
 applyChartScaleWidthCss
-} from "./chart/chart-factory.js";
+} from "./chart/chart-factory.js?v=6";
 
 
 export {

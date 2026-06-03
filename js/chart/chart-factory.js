@@ -11,15 +11,16 @@ formatPrice,
 isTabletChartViewport,
 bindFinePointerMedia,
 syncTabletFinePointerClass
-} from "./chart-options.js";
+} from "./chart-options.js?v=4";
 
 import {
+ensureDomChartCrosshair,
 updateCrosshairAxisLabels,
 clearCrosshairAxisLabels,
 hideTabletProbeCrosshair,
 hideDomChartCrosshairHorz,
 positionDomChartCrosshairHorz
-} from "./chart-dom-crosshair.js";
+} from "./chart-dom-crosshair.js?v=10";
 
 export function mountChartRangeFreeze(
 chart
@@ -1283,6 +1284,14 @@ getMainValueAtTime
 
 let lock =
 false;
+
+if(
+chartWrapEl
+){
+ensureDomChartCrosshair(
+chartWrapEl
+);
+}
 
 function clearLinkedVert(){
 
