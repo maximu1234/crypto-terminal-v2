@@ -67,8 +67,9 @@ updateRsiBandLayout,
 tfPeriodSec,
 rsiPlotTimeOffsetSec,
 mountChartPriceHud,
-applyChartScaleWidthCss
-} from "./chart/chart-factory.js?v=7";
+applyChartScaleWidthCss,
+clearTabletProbeCrosshairForChart
+} from "./chart/chart-factory.js?v=8";
 
 
 export {
@@ -79,12 +80,7 @@ import {
 effectiveChartPriceScaleWidth,
 CHART_TIME_SCALE_HEIGHT,
 isTabletChartViewport
-} from "./chart/chart-options.js";
-
-import {
-TABLET_LW_NATIVE_PRICE_SCALE,
-clearTabletProbeCrosshairForChart
-} from "./chart/chart-factory.js";
+} from "./chart/chart-options.js?v=4";
 
 
 export const DEFAULT_PRICE_SCALE_MARGINS =
