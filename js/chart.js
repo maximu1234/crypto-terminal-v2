@@ -42,6 +42,11 @@ formatCrosshairTimeLabel,
 isUserCrosshairEvent
 } from "./chart/chart-dom-crosshair.js?v=10";
 
+import {
+TABLET_LW_NATIVE_PRICE_SCALE,
+clearTabletProbeCrosshairForChart
+} from "./chart/chart-factory.js?v=8";
+
 export {
 createCandlestickChart,
 createScreenerChart,
