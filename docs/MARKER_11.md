@@ -1,8 +1,10 @@
 # Метка 11 — стабильная прод-сборка (июнь 2026)
 
+> **Superseded by [MARKER_12.md](./MARKER_12.md)** (`metka-12`) — текущий рабочий эталон.
+
 **Тег:** `metka-11` · **Коммит:** `git rev-parse metka-11`
 
-**Текущий эталон отката.** Наследует [MARKER_10.md](./MARKER_10.md) / [MARKER_9.md](./MARKER_9.md).
+Наследует [MARKER_10.md](./MARKER_10.md) / [MARKER_9.md](./MARKER_9.md).
 
 Проверено на **prod** (`crypto-terminal-v2.vercel.app`): рисунки, sync, консоль без ошибок; desktop worker fix (REST напрямую, без лишних запросов на Railway).
 
