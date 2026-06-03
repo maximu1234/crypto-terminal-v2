@@ -16,7 +16,7 @@ isLocalDevHost
 import {
 applyChartPriceFormat,
 applyDashboardZoom
-} from "./chart-import.js?v=13";
+} from "./chart-import.js?v=14";
 
 import {
 createDashboardChartWidget
@@ -28,7 +28,7 @@ mountWidgetTabletChart
 
 import {
 markTabletChartBody
-} from "./chart-import.js?v=13";
+} from "./chart-import.js?v=14";
 
 import {
 subscribeKline

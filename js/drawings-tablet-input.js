@@ -4,7 +4,7 @@ isTabletChartViewport,
 hasAnyFinePointer,
 positionDomChartCrosshair,
 hideDomChartCrosshair
-} from "./chart-import.js?v=13";
+} from "./chart-import.js?v=14";
 
 import {
 isPositionType
@@ -135,38 +135,6 @@ localX,
 localY
 );
 
-const point =
-pointFromXY(
-xy.x,
-xy.y
-);
-
-if(
-!isTouchDrawTablet()
-){
-
-if(
-point &&
-chart &&
-series
-){
-
-try{
-chart.setCrosshairPosition(
-point.price,
-point.time,
-series
-);
-}catch{
-/* ignore */
-}
-
-}
-
-return;
-
-}
-
 const clientX =
 e?.clientX;
 
@@ -181,6 +149,23 @@ clientY != null
 xy.x,
 xy.y
 );
+
+if(
+!isTouchDrawTablet()
+){
+
+positionDomChartCrosshair({
+wrapEl,
+chartEl:chartCanvasEl(),
+chart,
+series,
+clientX:client.clientX,
+clientY:client.clientY
+});
+
+return;
+
+}
 
 if(
 useChartProbeCrosshair()

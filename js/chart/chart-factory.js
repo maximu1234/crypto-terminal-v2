@@ -4,6 +4,7 @@ CHART_SCALE_FONT_FAMILY,
 CHART_TIME_SCALE_HEIGHT,
 effectiveChartPriceScaleWidth,
 effectiveChartScaleFontSize,
+mainChartCrosshairOptions,
 fullCrosshairOptions,
 hiddenCrosshairOptions,
 formatPrice,
@@ -16,6 +17,8 @@ import {
 updateCrosshairAxisLabels,
 clearCrosshairAxisLabels,
 hideTabletProbeCrosshair
+hideDomChartCrosshairHorz,
+positionDomChartCrosshairHorz
 } from "./chart-dom-crosshair.js";
 
 export function mountChartRangeFreeze(
@@ -212,7 +215,7 @@ rightOffset:12,
 fixRightEdge:false
 },
 
-crosshair:fullCrosshairOptions(),
+crosshair:mainChartCrosshairOptions(),
 
 handleScroll:{
 mouseWheel:true,
@@ -237,7 +240,7 @@ pinch:true
 });
 
 chart.applyOptions({
-crosshair:fullCrosshairOptions()
+crosshair:mainChartCrosshairOptions()
 });
 
 const series =
@@ -1269,6 +1272,8 @@ linkedChart,
 mainSeries,
 linkedSeries,
 linkedVertOverlayEl,
+chartWrapEl = null,
+chartEl = null,
 crosshairTimeLabelEl,
 onLinkedCrosshairTime,
 onLinkedCrosshairClear,
@@ -1305,9 +1310,22 @@ linkedVertOverlayEl.style.removeProperty(
 
 }
 
+function clearLinkedHorz(){
+
+if(
+chartWrapEl
+){
+hideDomChartCrosshairHorz(
+chartWrapEl
+);
+}
+
+}
+
 function clearLinked(){
 
 clearLinkedVert();
+clearLinkedHorz();
 
 clearCrosshairAxisLabels(
 crosshairTimeLabelEl
@@ -1380,6 +1398,29 @@ linkedVertOverlayEl.style.left =
 linkedVertOverlayEl.classList.remove(
 "hidden"
 );
+
+if(
+chartWrapEl &&
+chartEl &&
+param?.point &&
+Number.isFinite(
+param.point.y
+)
+){
+
+const chartR =
+chartEl.getBoundingClientRect();
+
+positionDomChartCrosshairHorz({
+wrapEl:chartWrapEl,
+chartEl,
+chart:mainChart,
+clientY:
+chartR.top +
+param.point.y
+});
+
+}
 
 try{
 linkedChart.clearCrosshairPosition();

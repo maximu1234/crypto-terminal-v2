@@ -54,7 +54,7 @@ TABLET_USE_CUSTOM_TOUCH_PAN,
 isTabletChartViewport,
 isUserCrosshairEvent,
 resetChartPriceAutoScale
-} from "./chart-import.js?v=13";
+} from "./chart-import.js?v=14";
 
 import {
 mountCoinsTabletController
@@ -1144,6 +1144,11 @@ rsiLookupAtOrBefore(ts)
 
 }
 
+const chartWrapEl =
+document.getElementById(
+"chart-wrap"
+);
+
 const chartCrosshairLink =
 linkChartsCrosshair({
 mainChart:chart,
@@ -1152,6 +1157,14 @@ mainSeries:candleSeries,
 linkedSeries:rsiSeries,
 linkedVertOverlayEl:document.getElementById(
 "linked-crosshair-vert"
+),
+chartWrapEl,
+chartEl:
+chartWrapEl?.querySelector(
+".chart"
+) ||
+document.getElementById(
+"chart"
 ),
 crosshairTimeLabelEl:document.getElementById(
 "crosshair-time-label"

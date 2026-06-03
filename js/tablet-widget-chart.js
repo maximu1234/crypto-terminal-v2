@@ -10,7 +10,7 @@ applyTabletMainChartScroll,
 mountChartRangeFreeze,
 tabletProbeCrosshairOptions,
 normalCrosshairOptions
-} from "./chart-import.js?v=13";
+} from "./chart-import.js?v=14";
 
 import {
 createTabletGesturePolicy

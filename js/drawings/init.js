@@ -81,7 +81,7 @@ ensureDomChartCrosshair,
 hideDomChartCrosshair,
 positionTabletProbeHorizInStack,
 fullCrosshairOptions
-} from "../chart-import.js?v=13";
+} from "../chart-import.js?v=14";
 
 import {
 DEFAULT_FIB_SPEC,
@@ -163,7 +163,7 @@ createDrawRenderer
 
 import {
 mountTabletDrawInput
-} from "../drawings-tablet-input.js?v=2";
+} from "../drawings-tablet-input.js?v=3";
 
 export function initDrawings({
 

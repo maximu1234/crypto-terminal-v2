@@ -325,6 +325,29 @@ horzLine:crosshairLineOptions(true)
 
 }
 
+/**
+ * /coins и виджеты: крест только DOM (вертикаль #linked-crosshair-vert или .chart-dom-crosshair-*).
+ * LW-линии дают другой штрих (горизонталь часто выглядит dotted).
+ */
+export function mainChartCrosshairOptions(){
+
+const Normal =
+LightweightCharts.CrosshairMode?.Normal ?? 0;
+
+return {
+mode:Normal,
+vertLine:{
+visible:false,
+labelVisible:false
+},
+horzLine:{
+visible:false,
+labelVisible:false
+}
+};
+
+}
+
 /** Виджеты / touch: обе линии LW (нет отдельного DOM-оверлея в #charts-stack). */
 export function fullCrosshairOptions(){
 

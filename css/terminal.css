@@ -1096,10 +1096,15 @@ body.tablet-chart .price-alert-scale-plus-circle{
 #chart-wrap .chart-dom-crosshair-horz{
   position:absolute;
   left:0;
-  height:0;
+  height:1px;
   border:none;
-  border-top:1px dashed #758696;
-  background:none;
+  background:repeating-linear-gradient(
+    to right,
+    #758696 0,
+    #758696 5px,
+    transparent 5px,
+    transparent 9px
+  );
   box-sizing:border-box;
   pointer-events:none;
   z-index:10;

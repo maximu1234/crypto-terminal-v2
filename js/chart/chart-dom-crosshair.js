@@ -460,6 +460,90 @@ el.style.removeProperty(
 
 }
 
+export function positionDomChartCrosshairHorz({
+wrapEl,
+chartEl,
+chart,
+clientY
+}){
+
+const el =
+chartEl ||
+resolveChartCanvasEl(
+wrapEl
+);
+
+if(
+!wrapEl ||
+!el ||
+!chart ||
+!Number.isFinite(
+clientY
+)
+){
+return;
+}
+
+const chartR =
+el.getBoundingClientRect();
+
+let y =
+clientY - chartR.top;
+
+y =
+Math.max(
+0,
+Math.min(
+chartR.height,
+y
+)
+);
+
+let scaleW =
+56;
+
+try{
+scaleW =
+chart.priceScale(
+"right"
+).width() ||
+56;
+}catch{
+/* ignore */
+}
+
+const plotW =
+Math.max(
+0,
+chartR.width - scaleW
+);
+
+const horz =
+wrapEl.querySelector(
+`.${DOM_CROSSHAIR_HORZ}`
+);
+
+if(
+horz
+){
+
+horz.style.top =
+`${Math.round(y) + 0.5}px`;
+
+horz.style.left =
+"0px";
+
+horz.style.width =
+`${Math.round(plotW)}px`;
+
+horz.classList.remove(
+"hidden"
+);
+
+}
+
+}
+
 export function positionDomChartCrosshair({
 wrapEl,
 chartEl,
@@ -515,11 +599,6 @@ wrapEl.querySelector(
 `.${DOM_CROSSHAIR_VERT}`
 );
 
-const horz =
-wrapEl.querySelector(
-`.${DOM_CROSSHAIR_HORZ}`
-);
-
 if(
 vert
 ){
@@ -533,43 +612,12 @@ vert.classList.remove(
 
 }
 
-let scaleW =
-56;
-
-try{
-scaleW =
-chart.priceScale(
-"right"
-).width() ||
-56;
-}catch{
-/* ignore */
-}
-
-const plotW =
-Math.max(
-0,
-chartR.width - scaleW
-);
-
-if(
-horz
-){
-
-horz.style.top =
-`${Math.round(y) + 0.5}px`;
-
-horz.style.left =
-"0px";
-
-horz.style.width =
-`${Math.round(plotW)}px`;
-
-horz.classList.remove(
-"hidden"
-);
-
-}
+positionDomChartCrosshairHorz({
+wrapEl,
+chartEl: el,
+chart,
+clientY
+});
 
 try{
 chart.clearCrosshairPosition();
@@ -618,7 +666,7 @@ node.classList.add(
 
 }
 
-function hideDomChartCrosshairHorz(
+export function hideDomChartCrosshairHorz(
 wrapEl
 ){
 
