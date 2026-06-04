@@ -527,22 +527,6 @@ display:flex;
 flex-direction:column;
 }
 
-body.coins-page .coins-btc-d-link--list{
-display:inline-flex;
-align-self:flex-start;
-position:static;
-transform:none;
-margin:0 0 2px;
-}
-
-@media (min-width:641px){
-
-body.coins-page .coins-btc-d-link--list{
-display:none !important;
-}
-
-}
-
 #market-filter,
 #coin-search{
 font-size:16px;
