@@ -107,9 +107,9 @@ Object.freeze({
 "drawings-storage-poller.js":
 1,
 "draw-ui-shared.js":
-8,
+7,
 "draw-toolbar-icon-data.js":
-2,
+1,
 "draw-tools-visible.js":
 1,
 "dashboard-draw-ui.js":
