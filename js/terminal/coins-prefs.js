@@ -70,7 +70,8 @@ return {
 market:"crypto",
 sortByMarket,
 lastViewByMarket,
-invertChart:false
+invertChart:false,
+invertRsiChart:false
 };
 
 }
@@ -286,6 +287,9 @@ parsed?.lastViewByMarket?.[m]
 prefs.invertChart =
 !!parsed?.invertChart;
 
+prefs.invertRsiChart =
+!!parsed?.invertRsiChart;
+
 try{
 
 localStorage.removeItem(
@@ -352,6 +356,9 @@ prefs?.lastViewByMarket?.[m]
 out.invertChart =
 !!prefs?.invertChart;
 
+out.invertRsiChart =
+!!prefs?.invertRsiChart;
+
 localStorage.setItem(
 COINS_PREFS_KEY,
 JSON.stringify(out)
@@ -392,6 +399,9 @@ isCoinsPage
 ){
 prefs.invertChart =
 coinsState().isCoinsChartInverted;
+
+prefs.invertRsiChart =
+coinsState().isCoinsRsiInverted;
 }
 
 writeCoinsPrefs(prefs);

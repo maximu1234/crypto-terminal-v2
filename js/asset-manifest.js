@@ -31,11 +31,11 @@ Object.freeze({
 "chart-page.js":
 6,
 "terminal.js":
-267,
+268,
 "terminal/coins-state.js":
 2,
 "terminal/coins-prefs.js":
-2,
+3,
 "terminal/coins-table.js":
 3,
 "telegram-bot-public.js":
@@ -45,7 +45,9 @@ Object.freeze({
 "screener.js":
 64,
 "site-boot.js":
-81,
+82,
+"suppress-native-context-menu.js":
+1,
 "charts-lib-boot.js":
 3,
 "chart-import.js":
@@ -238,7 +240,7 @@ Object.freeze({
 "screener.css":
 21,
 "terminal.css":
-101,
+102,
 "dashboard.css":
 17,
 "coins.css":

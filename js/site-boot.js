@@ -62,6 +62,12 @@ import {
 ensureDrawToolsVisible
 } from "./draw-tools-visible.js?v=1";
 
+import {
+initSuppressNativeContextMenu
+} from "./suppress-native-context-menu.js?v=1";
+
+initSuppressNativeContextMenu();
+
 async function startSiteBoot(){
 
 const onCoins =
