@@ -244,7 +244,7 @@ Object.freeze({
 "dashboard.css":
 17,
 "coins.css":
-27,
+28,
 "terminal-page.css":
 1,
 "site-mobile-nav.css":

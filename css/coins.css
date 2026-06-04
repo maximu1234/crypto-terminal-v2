@@ -30,9 +30,8 @@ display:flex;
 align-items:center;
 gap:16px;
 flex:0 0 auto;
-padding:0 16px 0 0;
-margin-right:16px;
-border-right:1px solid #787b86;
+padding:0;
+margin-right:0;
 }
 
 body.coins-page .coins-tf-desktop .tf-btn{
