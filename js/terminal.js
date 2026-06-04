@@ -75,7 +75,7 @@ initWidgetDrawings
 import {
 mountDrawToolbar,
 mountDrawToolIcons
-} from "./draw-ui-shared.js?v=10";
+} from "./draw-ui-shared.js?v=12";
 
 import {
 initCoinsMobileUi,
@@ -3117,7 +3117,9 @@ if(
 currentDataset === "crypto" ||
 currentDataset === "new"
 ){
-return sym + ".P";
+return /\.P$/i.test(sym)
+? sym
+: sym + ".P";
 }
 
 return sym;

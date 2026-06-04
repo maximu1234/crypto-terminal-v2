@@ -31,7 +31,7 @@ Object.freeze({
 "chart-page.js":
 6,
 "terminal.js":
-268,
+269,
 "terminal/coins-state.js":
 2,
 "terminal/coins-prefs.js":
@@ -107,9 +107,9 @@ Object.freeze({
 "drawings-storage-poller.js":
 1,
 "draw-ui-shared.js":
-10,
+12,
 "draw-toolbar-icon-data.js":
-4,
+6,
 "draw-tools-visible.js":
 1,
 "dashboard-draw-ui.js":
@@ -240,11 +240,11 @@ Object.freeze({
 "screener.css":
 21,
 "terminal.css":
-102,
+105,
 "dashboard.css":
 17,
 "coins.css":
-25,
+27,
 "terminal-page.css":
 1,
 "site-mobile-nav.css":

@@ -119,6 +119,14 @@ body{
   object-fit:contain;
 }
 
+/* Монеты: размеры задаются в coins.css (эталон топбара) */
+body.coins-page #draw-toolbar.draw-toolbar-inline .draw-btn img,
+body.coins-page #draw-toolbar.draw-toolbar-inline .draw-tool-icon{
+  width:20px;
+  height:20px;
+  object-fit:contain;
+}
+
 /* Планшет с touch (iPad): чуть крупнее кнопки рисования */
 @media (pointer:coarse) and (min-width:768px){
   .draw-btn{
@@ -131,6 +139,17 @@ body{
   .draw-btn .draw-tool-icon{
     width:24px;
     height:24px;
+  }
+
+  body.coins-page #draw-toolbar.draw-toolbar-inline .draw-btn{
+    width:32px;
+    height:34px;
+  }
+
+  body.coins-page #draw-toolbar.draw-toolbar-inline .draw-btn img,
+  body.coins-page #draw-toolbar.draw-toolbar-inline .draw-tool-icon{
+    width:22px;
+    height:22px;
   }
 }
 

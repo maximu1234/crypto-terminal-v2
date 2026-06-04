@@ -430,12 +430,70 @@ out[di + 3] = 255;
 
 }
 
+function trimAlphaBounds(
+buf,
+width,
+h
+){
+
+let minX = width;
+let minY = h;
+let maxX = -1;
+let maxY = -1;
+
+for(let y = 0; y < h; y++){
+for(let x = 0; x < width; x++){
+const a = buf[(y * width + x) * 4 + 3];
+if(a > 12){
+if(x < minX){
+minX = x;
+}
+if(y < minY){
+minY = y;
+}
+if(x > maxX){
+maxX = x;
+}
+if(y > maxY){
+maxY = y;
+}
+}
+}
+}
+
+if(maxX < 0){
+return { buf, width, h };
+}
+
+const tw = maxX - minX + 1;
+const th = maxY - minY + 1;
+const trimmed = Buffer.alloc(tw * th * 4);
+
+for(let y = 0; y < th; y++){
+for(let x = 0; x < tw; x++){
+const si = ((minY + y) * width + (minX + x)) * 4;
+const di = (y * tw + x) * 4;
+trimmed[di] = buf[si];
+trimmed[di + 1] = buf[si + 1];
+trimmed[di + 2] = buf[si + 2];
+trimmed[di + 3] = buf[si + 3];
+}
+}
+
+return {
+buf:trimmed,
+width:tw,
+height:th
+};
+
+}
+
 for(let i = 0; i < NAMES.length; i++){
 const { x0, width } = useSlices[i];
-const out = Buffer.alloc(width * h * 4);
+const raw = Buffer.alloc(width * h * 4);
 
 copySlicePixels(
-out,
+raw,
 width,
 h,
 rgba,
@@ -443,12 +501,25 @@ w,
 x0
 );
 
+const trimmed = trimAlphaBounds(raw, width, h);
+
 const file = require("path").join(
 OUT_DIR,
 `${NAMES[i]}.png`
 );
-fs.writeFileSync(file, encodePng(width, h, out));
-console.log("wrote", file, `${width}x${h}`);
+fs.writeFileSync(
+file,
+encodePng(
+trimmed.width,
+trimmed.height,
+trimmed.buf
+)
+);
+console.log(
+"wrote",
+file,
+`${trimmed.width}x${trimmed.height}`
+);
 }
 
 }
