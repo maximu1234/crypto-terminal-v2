@@ -393,20 +393,55 @@ useSlices.map(s => s.width).join("+")
 
 }
 
-for(let i = 0; i < NAMES.length; i++){
-const { x0, x1, width } = useSlices[i];
-const out = Buffer.alloc(width * h * 4);
+function copySlicePixels(
+out,
+width,
+h,
+rgba,
+srcW,
+x0
+){
 
 for(let y = 0; y < h; y++){
 for(let x = 0; x < width; x++){
-const si = (y * w + (x0 + x)) * 4;
+const si = (y * srcW + (x0 + x)) * 4;
 const di = (y * width + x) * 4;
-out[di] = rgba[si];
-out[di + 1] = rgba[si + 1];
-out[di + 2] = rgba[si + 2];
-out[di + 3] = rgba[si + 3];
+const r = rgba[si];
+const g = rgba[si + 1];
+const b = rgba[si + 2];
+
+if(
+luminance(r, g, b) < 42
+){
+out[di] = 0;
+out[di + 1] = 0;
+out[di + 2] = 0;
+out[di + 3] = 0;
+}else{
+out[di] = r;
+out[di + 1] = g;
+out[di + 2] = b;
+out[di + 3] = 255;
 }
+
 }
+
+}
+
+}
+
+for(let i = 0; i < NAMES.length; i++){
+const { x0, width } = useSlices[i];
+const out = Buffer.alloc(width * h * 4);
+
+copySlicePixels(
+out,
+width,
+h,
+rgba,
+w,
+x0
+);
 
 const file = require("path").join(
 OUT_DIR,

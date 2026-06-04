@@ -107,9 +107,9 @@ Object.freeze({
 "drawings-storage-poller.js":
 1,
 "draw-ui-shared.js":
-9,
+10,
 "draw-toolbar-icon-data.js":
-3,
+4,
 "draw-tools-visible.js":
 1,
 "dashboard-draw-ui.js":
@@ -123,7 +123,7 @@ Object.freeze({
 "terminal-page.js":
 3,
 "coins-mobile.js":
-4,
+5,
 "widget-favorite-flag.js":
 2,
 
@@ -244,7 +244,7 @@ Object.freeze({
 "dashboard.css":
 17,
 "coins.css":
-24,
+25,
 "terminal-page.css":
 1,
 "site-mobile-nav.css":

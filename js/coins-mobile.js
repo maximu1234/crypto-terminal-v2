@@ -18,7 +18,7 @@ const TF_LABELS = {
 "15": "15m",
 "60": "1h",
 "240": "4h",
-"D": "1D"
+"D": "D"
 };
 
 let tfChangeHandler = null;

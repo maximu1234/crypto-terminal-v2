@@ -75,14 +75,14 @@ initWidgetDrawings
 import {
 mountDrawToolbar,
 mountDrawToolIcons
-} from "./draw-ui-shared.js?v=9";
+} from "./draw-ui-shared.js?v=10";
 
 import {
 initCoinsMobileUi,
 wireCoinsMobileDrawToolsMenu,
 isCoinsMobile,
 syncCoinsTfLabel
-} from "./coins-mobile.js?v=4";
+} from "./coins-mobile.js?v=5";
 
 import {
 registerCoinsState,
