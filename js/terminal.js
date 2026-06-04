@@ -75,7 +75,7 @@ initWidgetDrawings
 import {
 mountDrawToolbar,
 mountDrawToolIcons
-} from "./draw-ui-shared.js?v=7";
+} from "./draw-ui-shared.js?v=8";
 
 import {
 initCoinsMobileUi,
