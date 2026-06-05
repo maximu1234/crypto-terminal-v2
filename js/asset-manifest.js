@@ -17,9 +17,9 @@ Object.freeze({
 "btc-dominance-test.css":
 3,
 "btc-d-page.css":
-3,
+4,
 "btc-dominance/btc-d-page.js":
-1,
+2,
 "btc-dominance/tv-embed.js":
 1,
 

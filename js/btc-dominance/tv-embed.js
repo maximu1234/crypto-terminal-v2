@@ -70,7 +70,7 @@ document.createElement("script");
 script.type = "text/javascript";
 script.src = TV_SCRIPT_SRC;
 script.async = true;
-script.text =
+script.innerHTML =
 JSON.stringify({
 ...DEFAULT_OPTS,
 ...options
