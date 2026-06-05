@@ -1,16 +1,20 @@
 /**
- * /btc-d.html — статический TV embed в HTML (надёжнее на iPad Safari).
- * Скрипт только подстраховывает: iframe-fallback, если виджет не смонтировался.
+ * /btc-d.html — на iPad Safari script-embed TV не создаёт iframe.
+ * На touch / tablet сразу iframe; на десктопе — script, с подстраховкой через iframe.
  */
 import {
+isTabletChartViewport,
 isCoarseTouchViewport
 } from "../chart/chart-options.js?v=4";
 
-const TV_IFRAME_SRC =
-"https://www.tradingview-widget.com/embed-widget/advanced-chart/?locale=ru&symbol=CRYPTOCAP%3ABTC.D&interval=D&timezone=Etc%2FUTC&theme=dark&style=1&withdateranges=1&hide_side_toolbar=0&hide_top_toolbar=0&allow_symbol_change=0&save_image=0&calendar=0&studies=%5B%22RSI%40tv-basicstudies%22%5D";
+import {
+getTradingViewIframeSrc,
+mountTradingViewIframe,
+mountTradingViewAdvancedChart
+} from "./tv-embed.js?v=2";
 
-const WATCH_MS =
-12000;
+const SCRIPT_WATCH_MS =
+4000;
 
 function hostHasChart(
 host
@@ -22,48 +26,37 @@ if(
 return false;
 }
 
-return Boolean(
+const iframe =
 host.querySelector(
 "iframe"
-)
 );
-
-}
-
-function mountIframeFallback(
-host
-){
 
 if(
-!host ||
-host.querySelector(
-".btc-d-tv-iframe"
-)
+!iframe
 ){
-return;
+return false;
 }
 
-const iframe =
-document.createElement(
-"iframe"
-);
+const rect =
+iframe.getBoundingClientRect();
 
-iframe.className = "btc-d-tv-iframe";
-iframe.title = "BTC.D — TradingView";
-iframe.loading = "lazy";
-iframe.referrerPolicy = "no-referrer-when-downgrade";
-iframe.allow =
-"fullscreen";
-iframe.src = TV_IFRAME_SRC;
-
-host.innerHTML = "";
-host.appendChild(
-iframe
-);
+return rect.height >=
+120 &&
+rect.width >=
+120;
 
 }
 
-function watchTradingViewMount(){
+function shouldPreferIframe(){
+
+return (
+isTabletChartViewport() ||
+isCoarseTouchViewport()
+);
+
+}
+
+function mountBtcDChart(){
 
 const host =
 document.getElementById(
@@ -77,6 +70,34 @@ return;
 }
 
 if(
+shouldPreferIframe()
+){
+mountTradingViewIframe(
+host
+);
+return;
+}
+
+if(
+host.querySelector(
+".btc-d-tv-iframe"
+)
+){
+return;
+}
+
+if(
+!host.querySelector(
+".tradingview-widget-container"
+)
+){
+mountTradingViewAdvancedChart(
+host
+);
+return;
+}
+
+if(
 hostHasChart(
 host
 )
@@ -86,7 +107,7 @@ return;
 
 const deadline =
 Date.now() +
-WATCH_MS;
+SCRIPT_WATCH_MS;
 
 const tick =
 ()=>{
@@ -103,13 +124,9 @@ if(
 Date.now() >=
 deadline
 ){
-if(
-isCoarseTouchViewport()
-){
-mountIframeFallback(
+mountTradingViewIframe(
 host
 );
-}
 return;
 }
 
@@ -125,4 +142,8 @@ tick
 
 }
 
-watchTradingViewMount();
+mountBtcDChart();
+
+export {
+getTradingViewIframeSrc
+};

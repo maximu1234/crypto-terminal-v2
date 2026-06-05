@@ -17,11 +17,11 @@ Object.freeze({
 "btc-dominance-test.css":
 3,
 "btc-d-page.css":
-4,
+5,
 "btc-dominance/btc-d-page.js":
-2,
+3,
 "btc-dominance/tv-embed.js":
-1,
+2,
 
 /* ── JS: boot / entry ── */
 "asset-manifest.js":

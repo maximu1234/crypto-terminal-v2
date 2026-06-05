@@ -1,7 +1,10 @@
-/** TradingView Advanced Chart embed (CRYPTOCAP:BTC.D). */
+/** TradingView Advanced Chart — CRYPTOCAP:BTC.D */
 
 const TV_SCRIPT_SRC =
 "https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js";
+
+const TV_IFRAME_BASE =
+"https://www.tradingview-widget.com/embed-widget/advanced-chart/";
 
 const DEFAULT_OPTS = {
 autosize: true,
@@ -26,6 +29,104 @@ support_host: "https://www.tradingview.com"
 
 let activeHost = null;
 
+export function getTradingViewIframeSrc(
+options = {}
+){
+
+const opts = {
+...DEFAULT_OPTS,
+...options
+};
+
+const params =
+new URLSearchParams({
+locale: opts.locale,
+symbol: opts.symbol,
+interval: opts.interval,
+timezone: opts.timezone,
+theme: opts.theme,
+style: String(
+opts.style
+),
+withdateranges: opts.withdateranges
+? "1"
+: "0",
+hide_side_toolbar: opts.hide_side_toolbar
+? "0"
+: "1",
+hide_top_toolbar: opts.hide_top_toolbar
+? "0"
+: "1",
+allow_symbol_change: opts.allow_symbol_change
+? "1"
+: "0",
+save_image: opts.save_image
+? "1"
+: "0",
+calendar: opts.calendar
+? "1"
+: "0",
+backgroundColor: opts.backgroundColor,
+gridColor: opts.gridColor,
+autosize: "1"
+});
+
+if(
+Array.isArray(
+opts.studies
+) &&
+opts.studies.length
+){
+params.set(
+"studies",
+JSON.stringify(
+opts.studies
+)
+);
+}
+
+return `${TV_IFRAME_BASE}?${params.toString()}`;
+
+}
+
+export function mountTradingViewIframe(
+hostEl,
+options = {}
+){
+
+if(
+!hostEl ||
+typeof hostEl.appendChild !== "function"
+){
+return;
+}
+
+unmountTradingViewAdvancedChart();
+
+activeHost = hostEl;
+hostEl.innerHTML = "";
+
+const iframe =
+document.createElement(
+"iframe"
+);
+
+iframe.className = "btc-d-tv-iframe";
+iframe.title = "BTC.D — TradingView";
+iframe.loading = "eager";
+iframe.referrerPolicy = "no-referrer-when-downgrade";
+iframe.allow = "fullscreen";
+iframe.src =
+getTradingViewIframeSrc(
+options
+);
+
+hostEl.appendChild(
+iframe
+);
+
+}
+
 export function mountTradingViewAdvancedChart(
 hostEl,
 options = {}
@@ -40,7 +141,9 @@ return;
 
 if(
 activeHost === hostEl &&
-hostEl.querySelector(".tradingview-widget-container")
+hostEl.querySelector(
+".tradingview-widget-container, .btc-d-tv-iframe"
+)
 ){
 return;
 }
@@ -51,21 +154,29 @@ activeHost = hostEl;
 hostEl.innerHTML = "";
 
 const wrap =
-document.createElement("div");
+document.createElement(
+"div"
+);
 
 wrap.className =
 "coins-tv-widget tradingview-widget-container";
 
 const widgetSlot =
-document.createElement("div");
+document.createElement(
+"div"
+);
 
 widgetSlot.className =
 "tradingview-widget-container__widget";
 
-wrap.appendChild(widgetSlot);
+wrap.appendChild(
+widgetSlot
+);
 
 const script =
-document.createElement("script");
+document.createElement(
+"script"
+);
 
 script.type = "text/javascript";
 script.src = TV_SCRIPT_SRC;
@@ -76,14 +187,20 @@ JSON.stringify({
 ...options
 });
 
-wrap.appendChild(script);
-hostEl.appendChild(wrap);
+wrap.appendChild(
+script
+);
+hostEl.appendChild(
+wrap
+);
 
 }
 
 export function unmountTradingViewAdvancedChart(){
 
-if(activeHost){
+if(
+activeHost
+){
 activeHost.innerHTML = "";
 }
 
