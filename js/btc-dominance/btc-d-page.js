@@ -11,7 +11,7 @@ import {
 getTradingViewIframeSrc,
 mountTradingViewIframe,
 mountTradingViewAdvancedChart
-} from "./tv-embed.js?v=2";
+} from "./tv-embed.js?v=3";
 
 const SCRIPT_WATCH_MS =
 4000;

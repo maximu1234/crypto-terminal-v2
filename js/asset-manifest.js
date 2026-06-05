@@ -19,9 +19,9 @@ Object.freeze({
 "btc-d-page.css":
 5,
 "btc-dominance/btc-d-page.js":
-3,
+4,
 "btc-dominance/tv-embed.js":
-2,
+3,
 
 /* ── JS: boot / entry ── */
 "asset-manifest.js":

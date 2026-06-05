@@ -66,26 +66,26 @@ save_image: opts.save_image
 calendar: opts.calendar
 ? "1"
 : "0",
-backgroundColor: opts.backgroundColor,
-gridColor: opts.gridColor,
 autosize: "1"
 });
 
-if(
-Array.isArray(
-opts.studies
-) &&
-opts.studies.length
-){
-params.set(
-"studies",
+const hashConfig = {
+autosize: opts.autosize,
+backgroundColor: opts.backgroundColor,
+gridColor: opts.gridColor,
+enable_publishing: opts.enable_publishing,
+support_host: opts.support_host,
+studies: opts.studies
+};
+
+const hash =
+encodeURIComponent(
 JSON.stringify(
-opts.studies
+hashConfig
 )
 );
-}
 
-return `${TV_IFRAME_BASE}?${params.toString()}`;
+return `${TV_IFRAME_BASE}?${params.toString()}#${hash}`;
 
 }
 
