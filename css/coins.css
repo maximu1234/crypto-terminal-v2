@@ -638,15 +638,17 @@ display:flex;
 }
 
 body.coins-page.coins-tablet-list-nav-on #list{
+display:flex;
+flex-direction:column;
+overflow:hidden;
+min-height:0;
+}
+
+body.coins-page.coins-tablet-list-nav-on #coins-body{
 flex:1 1 auto;
 min-height:0;
 overflow-y:auto;
 -webkit-overflow-scrolling:touch;
-}
-
-body.coins-page.coins-tablet-list-nav-on #coins-body{
-flex:0 0 auto;
-overflow:visible;
 }
 
 .coins-list-scroll-btn{

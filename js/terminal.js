@@ -2986,15 +2986,11 @@ goDown ? 1 : -1
 
 });
 
-const COINS_TABLET_LIST_NAV_MQ =
-window.matchMedia(
-"(pointer: coarse) and (min-width: 768px)"
-);
-
 function syncCoinsTabletListNav(){
 
 const show =
-COINS_TABLET_LIST_NAV_MQ.matches &&
+isCoinsPage &&
+isTabletChartViewport() &&
 !isCoinsMobile();
 
 document.body.classList.toggle(
@@ -3090,9 +3086,12 @@ nav
 
 }
 
-COINS_TABLET_LIST_NAV_MQ.addEventListener(
-"change",
-syncCoinsTabletListNav
+window.addEventListener(
+"resize",
+syncCoinsTabletListNav,
+{
+passive:true
+}
 );
 
 /* =========================================================

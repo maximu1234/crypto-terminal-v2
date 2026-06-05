@@ -31,7 +31,7 @@ Object.freeze({
 "chart-page.js":
 6,
 "terminal.js":
-269,
+270,
 "terminal/coins-state.js":
 2,
 "terminal/coins-prefs.js":
@@ -244,7 +244,7 @@ Object.freeze({
 "dashboard.css":
 17,
 "coins.css":
-29,
+30,
 "terminal-page.css":
 1,
 "site-mobile-nav.css":
