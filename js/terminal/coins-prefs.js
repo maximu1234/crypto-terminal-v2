@@ -10,7 +10,7 @@ isCoinsPage
 import {
 getCurrentSymbols,
 getFirstVisibleSymbol
-} from "./coins-table.js";
+} from "./coins-table.js?v=3";
 
 export function defaultSortEntry(){
 

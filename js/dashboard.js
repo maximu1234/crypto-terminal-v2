@@ -3,7 +3,7 @@ saveWidgetState,
 loadWidgetState,
 saveLayout,
 loadLayout
-} from "./storage.js";
+} from "./storage.js?v=12";
 
 import {
 loadBybitHistory
@@ -15,7 +15,8 @@ isLocalDevHost
 
 import {
 applyChartPriceFormat,
-applyDashboardZoom
+applyDashboardZoom,
+markTabletChartBody
 } from "./chart-import.js?v=14";
 
 import {
@@ -27,12 +28,8 @@ mountWidgetTabletChart
 } from "./tablet-widget-chart.js?v=1";
 
 import {
-markTabletChartBody
-} from "./chart-import.js?v=14";
-
-import {
 subscribeKline
-} from "./ws.js";
+} from "./ws.js?v=15";
 
 import {
 getWidgetToolbarHtml,

@@ -103,7 +103,7 @@ resolveInitialSymbolAndTf,
 applyCoinsPrefs,
 applySortForCurrentMarket,
 readUrlParams
-} from "./terminal/coins-prefs.js";
+} from "./terminal/coins-prefs.js?v=4";
 
 import {
 getCurrentSymbols,

@@ -18,7 +18,7 @@ resetAlertWatchBaseline
 
 import {
 mountTvColorGrid
-} from "../draw-color-palette.js";
+} from "../draw-color-palette.js?v=1";
 
 import {
 ALARM_ICON_SVG,

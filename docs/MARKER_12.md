@@ -1,8 +1,10 @@
 # Метка 12 — рабочая версия (июнь 2026)
 
+> **Superseded by [MARKER_13.md](./MARKER_13.md)** (`metka-13`) — текущий рабочий эталон.
+
 **Тег:** `metka-12` · **Коммит:** `git rev-parse metka-12`
 
-**Текущий эталон отката.** Наследует [MARKER_11.md](./MARKER_11.md).
+Наследует предыдущие фазы refactor (см. git history до `metka-12`).
 
 Проверено: `check:all` OK; **Монеты** / **Терминал** / **Главная** — графики, крест, список монет; prod после деплоя `main` @ `dbf686b`.
 
@@ -83,9 +85,8 @@
 
 ```bash
 git fetch --tags
-git checkout metka-12   # текущий эталон (рабочая версия)
-git checkout metka-11   # до BTC.D / crosshair / terminal load
-git checkout metka-10   # после split drawings-cloud
+git checkout metka-13   # текущий эталон
+git checkout metka-12   # эта метка (до toolbar / iPad list)
 ```
 
 ## Следующий шаг

@@ -1,6 +1,6 @@
 # Refactor drawings — план (после metka-9)
 
-**Текущий эталон:** [MARKER_12.md](./MARKER_12.md) (`metka-12`).
+**Текущий эталон:** [MARKER_13.md](./MARKER_13.md) (`metka-13`).
 
 **Принцип:** одна фаза = одна метка = [DRAWINGS_REGRESSION.md](./DRAWINGS_REGRESSION.md) пройден.
 
@@ -43,10 +43,6 @@
 ## Rollback
 
 ```bash
-git checkout metka-9   # текущий эталон
-git checkout metka-8   # до фазы 2 (tablet wiring)
-git checkout metka-7   # до cloud/delete fixes и фазы 1
-git checkout metka-12  # текущий эталон (рабочая версия)
-git checkout metka-11  # до BTC.D / crosshair / terminal load
-git checkout metka-10  # после фазы 3 (когда появится)
+git checkout metka-13  # текущий эталон
+git checkout metka-12  # до toolbar / iPad list / RSI invert
 ```
