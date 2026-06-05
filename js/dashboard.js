@@ -47,7 +47,7 @@ ensureDrawToolsVisible
 import {
 preloadTradingSymbols,
 attachSymbolAutocomplete
-} from "./symbol-autocomplete.js";
+} from "./symbol-autocomplete.js?v=1";
 
 import {
 loadLightweightCharts

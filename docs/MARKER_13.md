@@ -17,14 +17,20 @@
 - Восстановлены кнопки **«Вверх по списку»** / **«Вниз по списку»** внизу правой колонки
 - Детекция через `isTabletChartViewport()`; скролл только `#coins-body`, кнопки закреплены
 
+### BTC.D (`/btc-d.html`)
+- iPad: график через **iframe** TradingView (`isTabletChartViewport` / touch), не script-embed
+- iOS layout: `html`/`body` `-webkit-fill-available`, `min-height` у `#btc-d-tv-host`
+- RSI по умолчанию: `studies` в **hash** URL iframe (`RSI@tv-basicstudies`)
+- Десктоп: script-embed с fallback на iframe при сбое
+
 ### UX / график
 - Сайт: отключено нативное контекстное меню (`suppress-native-context-menu.js`)
 - RSI на Монетах: **«Перевернуть график»** на шкале (как у основного графика)
 
-### Аудит и чистка (metka-13)
-- Версионированы импорты: `dashboard.js` (`storage`, `ws`), `terminal/coins-prefs.js`, `draw-color-palette.js` в manifest
+### Аудит и чистка
+- Версионированы импорты: `dashboard.js`, `terminal/coins-prefs.js`, `draw-color-palette.js`
 - Удалены: `docs/archive/tablet-price-scale.js`, `assets/draw-toolbar-icons/source-sprite.png`
-- Оставлены только метки **metka-12** и **metka-13** (старые теги 7–11 сняты)
+- В репозитории только метки **metka-12** и **metka-13**
 
 ## Ключевые версии ассетов
 
@@ -32,18 +38,20 @@
 |------|---|
 | `terminal.js` | 271 |
 | `terminal/coins-prefs.js` | 4 |
-| `dashboard.js` | 77 |
+| `dashboard.js` | 78 |
 | `drawings/init.js` | 30 |
 | `draw-ui-shared.js` | 12 |
 | `draw-toolbar-icon-data.js` | 6 |
 | `coins.css` | 30 |
 | `terminal.css` | 105 |
+| `btc-d-page.css` | 5 |
+| `btc-dominance/btc-d-page.js` | 4 |
+| `btc-dominance/tv-embed.js` | 3 |
 | `site-boot.js` | 82 |
-| `suppress-native-context-menu.js` | 1 |
 
 Полный список: `js/asset-manifest.js` → `node scripts/sync-asset-versions.cjs`.
 
-## Аудит (2026-06-04)
+## Аудит (2026-06-05)
 
 | Проверка | Результат |
 |----------|-----------|
@@ -51,6 +59,7 @@
 | Syntax (все `.js`) | OK |
 | Asset manifest + site nav | OK |
 | Unit tests | 14/14 |
+| Unversioned imports в `dashboard.js` | исправлено (`symbol-autocomplete`) |
 
 ### Ручной smoke
 
@@ -58,8 +67,9 @@
 |----------|----------------|
 | Монеты (desktop) | топбар TF + 8 иконок, один разделитель, крест |
 | Монеты (iPad) | кнопки листания списка внизу колонки |
+| `/btc-d.html` (iPad) | график + RSI под свечами |
+| `/btc-d.html` (desktop) | TradingView, RSI |
 | Терминал / Главная | виджеты, рисование |
-| Контекстное меню | нет системного ПКМ на графике (кроме input) |
 
 ### Известные ограничения
 
@@ -71,10 +81,10 @@
 ```bash
 git fetch --tags
 git checkout metka-13   # текущий эталон
-git checkout metka-12   # до toolbar / iPad list / RSI invert
+git checkout metka-12   # до toolbar / iPad list / BTC.D fixes
 ```
 
 ## Следующий шаг
 
 - Фаза 4 alerts-cloud **или** стабилизация Bybit proxy
-- После крупных правок: `sync-asset-versions` → `check:all` → новая метка
+- После крупных правок: `sync-asset-versions` → `check:all` → обновить метку
