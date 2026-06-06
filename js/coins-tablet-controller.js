@@ -132,6 +132,11 @@ document.getElementById(
 "crosshair-time-label"
 );
 
+const crosshairPriceLabelEl =
+document.getElementById(
+"crosshair-price-label"
+);
+
 const mainRangeFreeze =
 mountChartRangeFreeze(
 chart
@@ -175,6 +180,7 @@ chartsStackEl,
 linkedVertEl,
 horizLineEl: probeHorizEl,
 timeLabelEl: crosshairTimeLabelEl,
+priceLabelEl: crosshairPriceLabelEl,
 clientX,
 clientY,
 onTime: updateRsiHudFromCrosshairTime
@@ -296,6 +302,7 @@ hideTabletProbeCrosshair({
 linkedVertEl,
 horizLineEl: probeHorizEl,
 timeLabelEl: crosshairTimeLabelEl,
+priceLabelEl: crosshairPriceLabelEl,
 chartWrapEl,
 onClear(){
 

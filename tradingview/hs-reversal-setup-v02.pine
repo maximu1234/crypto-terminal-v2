@@ -1,0 +1,232 @@
+//@version=5
+indicator("HS Reversal — Setup v0.2", overlay=true, max_labels_count=500, max_lines_count=100)
+
+// ── Inputs ────────────────────────────────────────────────────────────────────
+int   pivotLeft    = input.int(5,   "Pivot Left",  minval=1, maxval=50, group="Pivots")
+int   pivotRight   = input.int(5,   "Pivot Right", minval=1, maxval=50, group="Pivots")
+float confirmFrac  = input.float(0.333, "Low confirm fraction (⅓)", minval=0.1, maxval=0.9, step=0.05, group="Setup")
+int   minLows      = input.int(3,   "Min lows (incl. Point 0)", minval=3, maxval=10, group="Setup")
+int   lookbackBars = input.int(150, "Point 0: lowest in N bars", minval=30, maxval=500, group="Setup")
+float minDropPct   = input.float(15.0, "Min drop from high to Point 0 (%)", minval=5, maxval=80, step=1, group="Setup")
+
+bool  showPivots   = input.bool(false, "Show debug H/L pivots", group="Display")
+bool  showNeck     = input.bool(true,  "Show yellow neckline",  group="Display")
+
+color colP0        = input.color(color.yellow, "Point 0",             group="Colors")
+color colYellow    = input.color(color.yellow, "Rising low (yellow)", group="Colors")
+color colCyan      = input.color(#00e5ff,      "Latest low (cyan)",   group="Colors")
+color colNeck      = input.color(color.yellow, "Neckline",            group="Colors")
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+maxHighBetween(int barA, int barB) =>
+    float mx = na
+    if barB >= barA
+        for i = barA to barB
+            int off = bar_index - i
+            if off >= 0
+                float h = high[off]
+                mx := na(mx) ? h : math.max(mx, h)
+    mx
+
+barOfHighBetween(int barA, int barB, float target) =>
+    int found = barB
+    if barB >= barA
+        for i = barA to barB
+            int off = bar_index - i
+            if off >= 0 and high[off] >= target
+                found := i
+                break
+    found
+
+legLowestBetween(int barA, int barB) =>
+    float mn = na
+    int   b  = barA
+    if barB >= barA
+        for i = barA to barB
+            int off = bar_index - i
+            if off >= 0
+                float v = low[off]
+                if na(mn) or v < mn
+                    mn := v
+                    b  := i
+    [mn, b]
+
+// ── Pivots (wicks) ──────────────────────────────────────────────────────────
+float pivHi = ta.pivothigh(high, pivotLeft, pivotRight)
+float pivLo = ta.pivotlow(low,  pivotLeft, pivotRight)
+
+if showPivots and not na(pivHi)
+    label.new(bar_index - pivotRight, high[pivotRight], "H", xloc.bar_index, yloc.price,
+         style=label.style_label_down, color=color.red, textcolor=color.white, size=size.tiny)
+if showPivots and not na(pivLo)
+    label.new(bar_index - pivotRight, low[pivotRight], "L", xloc.bar_index, yloc.price,
+         style=label.style_label_up, color=color.yellow, textcolor=color.black, size=size.tiny)
+
+// ── State ─────────────────────────────────────────────────────────────────────
+var float swLoA    = na
+var int   swLoABar = na
+var float swLoB    = na
+var int   swLoBBar = na
+
+var float point0Px  = na
+var int   point0Bar = na
+var bool  active    = false
+
+var float lastLoPx  = na
+var int   lastLoBar = na
+var int   loCount   = 0
+
+var float white1Px  = na
+var int   white1Bar = na
+var float green1Px  = na
+var int   green1Bar = na
+
+var label lblP0   = label(na)
+var label lblCyan = label(na)
+var line  lnNeck  = line(na)
+
+// ── White 1: earliest swing high after Point 0 ────────────────────────────────
+if active and not na(pivHi)
+    int hiB = bar_index - pivotRight
+    if hiB > point0Bar and (na(white1Bar) or hiB < white1Bar)
+        white1Px  := high[pivotRight]
+        white1Bar := hiB
+
+// ── Invalidate on ANY wick below Point 0 (not only pivot) ─────────────────────
+bool brokenP0 = active and not na(point0Px) and low < point0Px
+if brokenP0
+    if not na(lblP0)
+        label.delete(lblP0)
+        lblP0 := label(na)
+    if not na(lblCyan)
+        label.delete(lblCyan)
+        lblCyan := label(na)
+    if not na(lnNeck)
+        line.delete(lnNeck)
+        lnNeck := line(na)
+    swLoA     := low
+    swLoABar  := bar_index
+    swLoB     := na
+    swLoBBar  := na
+    point0Px  := na
+    point0Bar := na
+    active    := false
+    lastLoPx  := na
+    lastLoBar := na
+    loCount   := 0
+    white1Px  := na
+    white1Bar := na
+    green1Px  := na
+    green1Bar := na
+
+// ── Breakout complete → keep labels, reset state ────────────────────────────
+bool breakoutDone = active and not na(green1Px) and loCount >= minLows and high > green1Px
+if breakoutDone
+    if not na(lnNeck)
+        line.delete(lnNeck)
+        lnNeck := line(na)
+    lblP0   := label(na)
+    lblCyan := label(na)
+    swLoA     := na
+    swLoABar  := na
+    swLoB     := na
+    swLoBBar  := na
+    point0Px  := na
+    point0Bar := na
+    active    := false
+    lastLoPx  := na
+    lastLoBar := na
+    loCount   := 0
+    white1Px  := na
+    white1Bar := na
+    green1Px  := na
+    green1Bar := na
+
+// ── Swing low confirmed ───────────────────────────────────────────────────────
+if not na(pivLo) and not brokenP0 and not breakoutDone
+    float loPx  = low[pivotRight]
+    int   loBar = bar_index - pivotRight
+
+    // Search Point 0
+    if not active
+        if na(swLoA)
+            swLoA    := loPx
+            swLoABar := loBar
+        else if loPx < swLoA
+            swLoB    := swLoA
+            swLoBBar := swLoABar
+            swLoA    := loPx
+            swLoABar := loBar
+        else if loPx > swLoA and not na(swLoB) and swLoA < swLoB
+            float lbMin     = ta.lowest(low, lookbackBars)
+            float priorHigh = ta.highest(high, lookbackBars)
+            float dropPct   = priorHigh > 0 ? (priorHigh - swLoA) / priorHigh * 100 : 0
+            bool  sigLow    = swLoA <= lbMin * 1.002 and dropPct >= minDropPct
+
+            if sigLow
+                [legPx, legBar] = legLowestBetween(swLoBBar, loBar)
+                point0Px  := na(legPx) ? swLoA : legPx
+                point0Bar := na(legBar) ? swLoABar : legBar
+                active    := true
+                loCount   := 1
+                lastLoPx  := na
+                lastLoBar := na
+                white1Px  := na
+                white1Bar := na
+                green1Px  := na
+                green1Bar := na
+                lblP0 := label.new(point0Bar, point0Px, "0", xloc.bar_index, yloc.price,
+                     style=label.style_circle, color=colP0, textcolor=colP0, size=size.small)
+            else
+                swLoB    := swLoA
+                swLoBBar := swLoABar
+                swLoA    := loPx
+                swLoABar := loBar
+
+    // Confirm rising lows (⅓) — includes first higher low after Point 0
+    if active and loPx > point0Px and (na(lastLoPx) or loPx > lastLoPx)
+        int   peakFrom = na(lastLoBar) ? point0Bar : lastLoBar
+        float prevPeak = maxHighBetween(peakFrom, loBar)
+        float bounce   = maxHighBetween(loBar, bar_index)
+        float need     = loPx + (prevPeak - loPx) * confirmFrac
+
+        if not na(prevPeak) and prevPeak > loPx and bounce >= need
+            green1Px  := prevPeak
+            green1Bar := barOfHighBetween(peakFrom, loBar, prevPeak)
+
+            if not na(lblCyan)
+                label.set_color(lblCyan, colYellow)
+                label.set_textcolor(lblCyan, colYellow)
+
+            lblCyan := label.new(loBar, loPx, "", xloc.bar_index, yloc.price,
+                 style=label.style_circle, color=colCyan, textcolor=colCyan, size=size.small)
+
+            lastLoPx  := loPx
+            lastLoBar := loBar
+            loCount   += 1
+
+// ── Yellow neckline ───────────────────────────────────────────────────────────
+if showNeck and active and not na(white1Bar) and not na(lastLoBar) and loCount >= 2
+    float zonePeak   = maxHighBetween(white1Bar, lastLoBar)
+    float anchor2Px  = zonePeak
+    int   anchor2Bar = barOfHighBetween(white1Bar, lastLoBar, zonePeak)
+
+    if not na(green1Px) and green1Px > nz(zonePeak)
+        anchor2Px  := green1Px
+        anchor2Bar := green1Bar
+
+    if not na(anchor2Px) and anchor2Px <= white1Px and anchor2Bar > white1Bar
+        if not na(lnNeck)
+            line.delete(lnNeck)
+        float slope = (anchor2Px - white1Px) / (anchor2Bar - white1Bar)
+        float yNow  = white1Px + slope * (bar_index - white1Bar)
+        lnNeck := line.new(white1Bar, white1Px, bar_index, yNow,
+             xloc=xloc.bar_index, color=colNeck, width=2)
+
+// ── Status panel ──────────────────────────────────────────────────────────────
+var table status = table.new(position.top_right, 1, 4, bgcolor=color.new(color.black, 70))
+if barstate.islast
+    table.cell(status, 0, 0, "HS v0.2", text_color=color.white, text_size=size.small)
+    table.cell(status, 0, 1, active ? "Setup: ON" : "Setup: —", text_color=active ? color.lime : color.gray, text_size=size.small)
+    table.cell(status, 0, 2, "Lows: " + str.tostring(loCount), text_color=color.white, text_size=size.small)
+    table.cell(status, 0, 3, loCount >= minLows ? "Ready" : "Building…", text_color=loCount >= minLows ? color.yellow : color.gray, text_size=size.small)

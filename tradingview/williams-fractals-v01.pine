@@ -1,0 +1,399 @@
+//@version=6
+indicator("3 lower high", overlay = true, max_labels_count = 500)
+
+float atr14 = ta.atr(14)
+
+// ── Senior waves ──────────────────────────────────────────────────────────────
+int    senBars   = input.int(25, "Bars each side", minval = 1, maxval = 200, group = "Senior waves")
+float  senAtrOff = input.float(0.15, "Dot offset (× ATR)", minval = 0.0, maxval = 2.0, step = 0.05, group = "Senior waves")
+string senSize   = input.string("Tiny", "Dot size", options = ["Tiny", "Small", "Normal"], group = "Senior waves")
+bool   senShowHi = input.bool(true, "Fractal highs", group = "Senior waves")
+bool   senShowLo = input.bool(true, "Fractal lows",  group = "Senior waves")
+
+// ── Sub-waves ─────────────────────────────────────────────────────────────────
+int    subBars   = input.int(5, "Bars each side", minval = 1, maxval = 200, group = "Sub-waves")
+float  subAtrOff = input.float(0.15, "Dot offset (× ATR)", minval = 0.0, maxval = 2.0, step = 0.05, group = "Sub-waves")
+string subSize   = input.string("Tiny", "Dot size", options = ["Tiny", "Small", "Normal"], group = "Sub-waves")
+bool   subShowHi = input.bool(true, "Fractal highs", group = "Sub-waves")
+bool   subShowLo = input.bool(true, "Fractal lows",  group = "Sub-waves")
+
+// ── Long setup ────────────────────────────────────────────────────────────────
+bool setupOnly = input.bool(false, "Show setup dots only", group = "Long setup",
+     tooltip = "Вкл = только полный сетап: P0 лой → P1 хай (макс.) → P2 лой → 1-й голубой хай после P2.")
+int  setupLookback = input.int(500, "Setup lookback (bars)", minval = 50, maxval = 5000, group = "Long setup",
+     tooltip = "В режиме «только сетап» — сколько последних баров истории показывать.")
+
+color colSen = color.yellow
+color colSub = #00e5ff
+
+// ── Fractal detect ────────────────────────────────────────────────────────────
+float senHiPx = ta.pivothigh(high, senBars, senBars)
+float senLoPx = ta.pivotlow(low,  senBars, senBars)
+float subHiPx = ta.pivothigh(high, subBars, subBars)
+float subLoPx = ta.pivotlow(low,  subBars, subBars)
+
+bool senHiMark = senShowHi and not na(senHiPx)
+bool senLoMark = senShowLo and not na(senLoPx)
+bool subHiMark = subShowHi and not na(subHiPx)
+bool subLoMark = subShowLo and not na(subLoPx)
+
+int senLoBar = bar_index - senBars
+int senHiBar = bar_index - senBars
+int subLoBar = bar_index - subBars
+int subHiBar = bar_index - subBars
+
+float senYHi = senHiMark ? senHiPx + atr14[senBars] * senAtrOff : na
+float senYLo = senLoMark ? senLoPx - atr14[senBars] * senAtrOff : na
+float subYHi = subHiMark ? subHiPx + atr14[subBars] * subAtrOff : na
+float subYLo = subLoMark ? subLoPx - atr14[subBars] * subAtrOff : na
+
+// Самый высокий senior-high между барами (fromBar, toBar)
+findHighestSenHi(int fromBar, int toBar) =>
+    int   bestBar = na
+    float bestPx  = na
+    int   hiOff   = bar_index - fromBar - 1
+    int   loOff   = bar_index - toBar
+    int   span    = hiOff - loOff
+    if span >= 0
+        for i = 0 to span
+            int   off  = hiOff - i
+            int   pBar = bar_index - off
+            if pBar > fromBar and pBar < toBar
+                float h0 = high[off]
+                bool  ok = true
+                for k = 1 to senBars
+                    if h0 <= high[off - k] or h0 <= high[off + k]
+                        ok := false
+                        break
+                if ok and (na(bestPx) or h0 > bestPx)
+                    bestPx  := h0
+                    bestBar := pBar
+    [bestBar, bestPx]
+
+// Самый низкий senior-low в [fromBar … toBar]
+findLowestSenLo(int fromBar, int toBar) =>
+    int   bestBar = na
+    float bestPx  = na
+    int   hiOff   = bar_index - fromBar - 1
+    int   loOff   = bar_index - toBar
+    int   span    = hiOff - loOff
+    if span >= 0
+        for i = 0 to span
+            int   off  = hiOff - i
+            int   pBar = bar_index - off
+            if pBar >= fromBar and pBar <= toBar
+                float l0 = low[off]
+                bool  ok = true
+                for k = 1 to senBars
+                    if l0 >= low[off - k] or l0 >= low[off + k]
+                        ok := false
+                        break
+                if ok and (na(bestPx) or l0 < bestPx)
+                    bestPx  := l0
+                    bestBar := pBar
+    [bestBar, bestPx]
+
+barUsedInSetup(int b, int e0, int e1, int e2, int es) =>
+    b == e0 or b == e1 or b == e2 or b == es
+
+setupSharesBars(int p0, int p1, int p2, int sig, array<int> e0a, array<int> e1a, array<int> e2a, array<int> esa) =>
+    bool shares = false
+    int  n      = array.size(e0a)
+    if n > 0
+        for i = 0 to n - 1
+            int e0 = array.get(e0a, i)
+            int e1 = array.get(e1a, i)
+            int e2 = array.get(e2a, i)
+            int es = array.get(esa, i)
+            if barUsedInSetup(p0, e0, e1, e2, es) or barUsedInSetup(p1, e0, e1, e2, es) or barUsedInSetup(p2, e0, e1, e2, es) or barUsedInSetup(sig, e0, e1, e2, es)
+                shares := true
+                break
+    shares
+
+// Первый sub-pivot после бара (ретро — senior подтверждается с задержкой)
+findEarliestSubHi(int afterBar) =>
+    int   foundBar = na
+    float foundPx  = na
+    int   maxOff   = bar_index - afterBar - 1
+    int   span     = maxOff - subBars
+    if span >= 0
+        for i = 0 to span
+            int   off = maxOff - i
+            float h0  = high[off]
+            bool  ok  = true
+            for k = 1 to subBars
+                if h0 <= high[off - k] or h0 <= high[off + k]
+                    ok := false
+                    break
+            if ok
+                foundBar := bar_index - off
+                foundPx  := h0
+                break
+    [foundBar, foundPx]
+
+// ── Long setup FSM ────────────────────────────────────────────────────────────
+var int   phase         = 0
+var float descentMin    = na
+var int   descentMinBar = na
+var float p0Px          = na
+var int   p0Bar         = na
+var float p1Px          = na
+var int   p1Bar         = na
+var float p2Px          = na
+var int   p2Bar         = na
+var int   setupCount    = 0
+
+var array<int>   doneP0Time = array.new_int()
+var array<float> doneP0Y    = array.new_float()
+var array<int>   doneP1Time = array.new_int()
+var array<float> doneP1Y    = array.new_float()
+var array<int>   doneP2Time = array.new_int()
+var array<float> doneP2Y    = array.new_float()
+var array<int>   doneSigTime = array.new_int()
+var array<float> doneSigY    = array.new_float()
+var array<int>   doneP0Bar   = array.new_int()
+var array<int>   doneP1Bar   = array.new_int()
+var array<int>   doneP2Bar   = array.new_int()
+var array<int>   doneSigBar  = array.new_int()
+var array<label> setupLabs   = array.new<label>()
+var array<int>   senAllTime  = array.new_int()
+var array<float> senAllY     = array.new_float()
+var array<label> senAllLabs  = array.new<label>()
+
+bool breakP0 = phase > 0 and not na(p0Px) and senLoMark and senLoPx < p0Px
+if breakP0
+    phase := 0
+    descentMin := na
+    descentMinBar := na
+    p0Px := na
+    p0Bar := na
+    p1Px := na
+    p1Bar := na
+    p2Px := na
+    p2Bar := na
+
+if senLoMark and phase == 0
+    if na(descentMin) or senLoPx < descentMin
+        descentMin    := senLoPx
+        descentMinBar := senLoBar
+    else if senLoPx > descentMin
+        p0Px  := descentMin
+        p0Bar := descentMinBar
+        phase := 1
+        descentMin    := na
+        descentMinBar := na
+        p1Px := na
+        p1Bar := na
+        p2Px := na
+        p2Bar := na
+
+if senHiMark and phase == 0 and not na(descentMin) and senHiBar > descentMinBar
+    p0Px  := descentMin
+    p0Bar := descentMinBar
+    p1Px  := senHiPx
+    p1Bar := senHiBar
+    phase := 1
+    descentMin    := na
+    descentMinBar := na
+    p2Px := na
+    p2Bar := na
+
+// Фаза 1: P0 есть, копим максимальный P1; новый хай выше — обновляем и сбрасываем P2
+if senHiMark and phase == 1 and senHiBar > p0Bar
+    if na(p1Px) or senHiPx > p1Px
+        p1Px  := senHiPx
+        p1Bar := senHiBar
+        p2Px  := na
+        p2Bar := na
+
+// P2 → фаза 3; P1 пересчитываем ретро (самый верхний хай между P0 и P2)
+if senLoMark and phase == 1 and not na(p1Px) and senLoBar > p1Bar and senLoPx > p0Px and senLoPx < p1Px
+    p2Px  := senLoPx
+    p2Bar := senLoBar
+    [hiB, hiP] = findHighestSenHi(p0Bar, p2Bar)
+    if not na(hiB)
+        p1Bar := hiB
+        p1Px  := hiP
+    if p2Px < p1Px and p2Px > p0Px and p1Bar > p0Bar and p2Bar > p1Bar
+        phase := 3
+    else
+        p2Px := na
+        p2Bar := na
+
+// Выше P1 после P2 — отмена, снова копим хай
+if senHiMark and phase == 3 and senHiBar > p1Bar and senHiPx > p1Px
+    p1Px  := senHiPx
+    p1Bar := senHiBar
+    p2Px  := na
+    p2Bar := na
+    phase := 1
+
+// Голубая = только первый sub-HIGH после P2 (лой не подходит)
+[sigBar, sigPx] = if phase == 3
+    findEarliestSubHi(p2Bar)
+else
+    [na, na]
+
+bool sigConfirmed = not na(sigBar) and bar_index >= sigBar + subBars
+bool patternReady = phase == 3 and sigConfirmed and p0Bar < p1Bar and p1Bar < p2Bar and sigBar > p2Bar and p0Px < p2Px and p2Px < p1Px
+
+int p0WinStart = patternReady ? math.max(0, p0Bar - (p2Bar - p0Bar)) : 0
+[chkP0Bar, chkP0Px] = if patternReady
+    findLowestSenLo(p0WinStart, p2Bar)
+else
+    [na, na]
+
+bool p0IsLowest  = patternReady and not na(chkP0Bar) and p0Bar == chkP0Bar
+bool noBarReuse  = not setupSharesBars(p0Bar, p1Bar, p2Bar, sigBar, doneP0Bar, doneP1Bar, doneP2Bar, doneSigBar)
+bool setupComplete = patternReady and p0IsLowest and noBarReuse
+
+if patternReady and not setupComplete
+    phase := 0
+    descentMin := na
+    descentMinBar := na
+    p0Px := na
+    p0Bar := na
+    p1Px := na
+    p1Bar := na
+    p2Px := na
+    p2Bar := na
+
+if setupComplete
+    int off0 = bar_index - p0Bar
+    int off1 = bar_index - p1Bar
+    int off2 = bar_index - p2Bar
+    int offS = bar_index - sigBar
+    int confOff = bar_index - sigBar - subBars
+    float y0 = p0Px - atr14[senBars] * senAtrOff
+    float y1 = p1Px + atr14[senBars] * senAtrOff
+    float y2 = p2Px - atr14[senBars] * senAtrOff
+    float yS = sigPx + atr14[confOff] * subAtrOff
+    array.push(doneP0Time, time[off0])
+    array.push(doneP0Y, y0)
+    array.push(doneP1Time, time[off1])
+    array.push(doneP1Y, y1)
+    array.push(doneP2Time, time[off2])
+    array.push(doneP2Y, y2)
+    array.push(doneSigTime, time[offS])
+    array.push(doneSigY, yS)
+    array.push(doneP0Bar, p0Bar)
+    array.push(doneP1Bar, p1Bar)
+    array.push(doneP2Bar, p2Bar)
+    array.push(doneSigBar, sigBar)
+    setupCount += 1
+    phase := 0
+    descentMin := na
+    descentMinBar := na
+    p0Px := na
+    p0Bar := na
+    p1Px := na
+    p1Bar := na
+    p2Px := na
+    p2Bar := na
+
+// Режим «все точки»: жёлтые — label, голубые — plotshape
+if not setupOnly
+    if senHiMark
+        array.push(senAllTime, time[senBars])
+        array.push(senAllY, senYHi)
+    if senLoMark
+        array.push(senAllTime, time[senBars])
+        array.push(senAllY, senYLo)
+
+float outSubHi = not setupOnly and subHiMark ? subYHi : na
+float outSubLo = not setupOnly and subLoMark ? subYLo : na
+
+plotshape(subSize == "Tiny"   ? outSubHi : na, title = "Sub High", style = shape.circle,
+     location = location.absolute, color = colSub, size = size.tiny,   offset = -subBars)
+plotshape(subSize == "Small"  ? outSubHi : na, title = "Sub High", style = shape.circle,
+     location = location.absolute, color = colSub, size = size.small,  offset = -subBars)
+plotshape(subSize == "Normal" ? outSubHi : na, title = "Sub High", style = shape.circle,
+     location = location.absolute, color = colSub, size = size.normal, offset = -subBars)
+
+plotshape(subSize == "Tiny"   ? outSubLo : na, title = "Sub Low", style = shape.circle,
+     location = location.absolute, color = colSub, size = size.tiny,   offset = -subBars)
+plotshape(subSize == "Small"  ? outSubLo : na, title = "Sub Low", style = shape.circle,
+     location = location.absolute, color = colSub, size = size.small,  offset = -subBars)
+plotshape(subSize == "Normal" ? outSubLo : na, title = "Sub Low", style = shape.circle,
+     location = location.absolute, color = colSub, size = size.normal, offset = -subBars)
+
+// ── Status ────────────────────────────────────────────────────────────────────
+var array<string> phaseNames = array.from("Descent", "Wait P1/P2", "—", "Wait blue")
+var table st = table.new(position.top_right, 1, 5, bgcolor = color.new(color.black, 70))
+int phaseDisp = phase == 3 ? 3 : phase == 1 ? 1 : phase
+
+// Перерисовка label на последнем баре
+if barstate.islast
+    while array.size(setupLabs) > 0
+        label.delete(array.pop(setupLabs))
+    while array.size(senAllLabs) > 0
+        label.delete(array.pop(senAllLabs))
+    if not setupOnly
+        int m = array.size(senAllTime)
+        if m > 0
+            for i = 0 to m - 1
+                int   t = array.get(senAllTime, i)
+                float y = array.get(senAllY, i)
+                if senSize == "Tiny"
+                    array.push(senAllLabs, label.new(t, y, "", xloc = xloc.bar_time, yloc = yloc.price,
+                         color = colSen, style = label.style_circle, size = size.tiny))
+                else if senSize == "Small"
+                    array.push(senAllLabs, label.new(t, y, "", xloc = xloc.bar_time, yloc = yloc.price,
+                         color = colSen, style = label.style_circle, size = size.small))
+                else
+                    array.push(senAllLabs, label.new(t, y, "", xloc = xloc.bar_time, yloc = yloc.price,
+                         color = colSen, style = label.style_circle, size = size.normal))
+    int visibleDone = 0
+    if setupOnly
+        int n = array.size(doneP0Time)
+        int cutBar = bar_index - setupLookback
+        if n > 0
+            for i = 0 to n - 1
+                if array.get(doneSigBar, i) < cutBar
+                    continue
+                visibleDone += 1
+                int   t0 = array.get(doneP0Time, i)
+                float y0 = array.get(doneP0Y, i)
+                int   t1 = array.get(doneP1Time, i)
+                float y1 = array.get(doneP1Y, i)
+                int   t2 = array.get(doneP2Time, i)
+                float y2 = array.get(doneP2Y, i)
+                int   tS = array.get(doneSigTime, i)
+                float yS = array.get(doneSigY, i)
+                if senSize == "Tiny"
+                    array.push(setupLabs, label.new(t0, y0, "", xloc = xloc.bar_time, yloc = yloc.price,
+                         color = colSen, style = label.style_circle, size = size.tiny))
+                    array.push(setupLabs, label.new(t1, y1, "", xloc = xloc.bar_time, yloc = yloc.price,
+                         color = colSen, style = label.style_circle, size = size.tiny))
+                    array.push(setupLabs, label.new(t2, y2, "", xloc = xloc.bar_time, yloc = yloc.price,
+                         color = colSen, style = label.style_circle, size = size.tiny))
+                else if senSize == "Small"
+                    array.push(setupLabs, label.new(t0, y0, "", xloc = xloc.bar_time, yloc = yloc.price,
+                         color = colSen, style = label.style_circle, size = size.small))
+                    array.push(setupLabs, label.new(t1, y1, "", xloc = xloc.bar_time, yloc = yloc.price,
+                         color = colSen, style = label.style_circle, size = size.small))
+                    array.push(setupLabs, label.new(t2, y2, "", xloc = xloc.bar_time, yloc = yloc.price,
+                         color = colSen, style = label.style_circle, size = size.small))
+                else
+                    array.push(setupLabs, label.new(t0, y0, "", xloc = xloc.bar_time, yloc = yloc.price,
+                         color = colSen, style = label.style_circle, size = size.normal))
+                    array.push(setupLabs, label.new(t1, y1, "", xloc = xloc.bar_time, yloc = yloc.price,
+                         color = colSen, style = label.style_circle, size = size.normal))
+                    array.push(setupLabs, label.new(t2, y2, "", xloc = xloc.bar_time, yloc = yloc.price,
+                         color = colSen, style = label.style_circle, size = size.normal))
+                if subSize == "Tiny"
+                    array.push(setupLabs, label.new(tS, yS, "", xloc = xloc.bar_time, yloc = yloc.price,
+                         color = colSub, style = label.style_circle, size = size.tiny))
+                else if subSize == "Small"
+                    array.push(setupLabs, label.new(tS, yS, "", xloc = xloc.bar_time, yloc = yloc.price,
+                         color = colSub, style = label.style_circle, size = size.small))
+                else
+                    array.push(setupLabs, label.new(tS, yS, "", xloc = xloc.bar_time, yloc = yloc.price,
+                         color = colSub, style = label.style_circle, size = size.normal))
+    int doneDisp = setupOnly ? visibleDone : setupCount
+    table.cell(st, 0, 0, "3 lower high", text_color = color.white, text_size = size.small)
+    table.cell(st, 0, 1, setupOnly ? "Setup only" : "All dots", text_color = setupOnly ? color.lime : color.gray, text_size = size.small)
+    table.cell(st, 0, 2, array.get(phaseNames, math.min(phaseDisp, 3)), text_color = color.yellow, text_size = size.small)
+    table.cell(st, 0, 3, "Done " + str.tostring(doneDisp), text_color = doneDisp > 0 ? color.lime : color.red, text_size = size.small)
+    table.cell(st, 0, 4, "Sen " + str.tostring(2 * senBars + 1) + " / Sub " + str.tostring(2 * subBars + 1),
+         text_color = color.gray, text_size = size.small)

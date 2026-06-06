@@ -1,0 +1,52 @@
+//@version=5
+indicator("HS Reversal — Pivot Finder v0.1", overlay=true, max_labels_count=500)
+
+// ── Pivot sensitivity (wick-based: uses high / low) ──────────────────────────
+int pivotLeft  = input.int(5, "Pivot Left",  minval=1, maxval=50, group="Pivots")
+int pivotRight = input.int(5, "Pivot Right", minval=1, maxval=50, group="Pivots")
+
+bool showHighs = input.bool(true, "Show swing highs", group="Display")
+bool showLows  = input.bool(true, "Show swing lows",  group="Display")
+bool showLines = input.bool(true, "Connect pivots (debug)", group="Display")
+
+color colHigh = input.color(color.new(color.red,   0), "High color", group="Display")
+color colLow  = input.color(color.new(color.yellow, 0), "Low color",  group="Display")
+
+// ── Detect pivots on wick extremes ───────────────────────────────────────────
+float pivHi = ta.pivothigh(high, pivotLeft, pivotRight)
+float pivLo = ta.pivotlow(low,  pivotLeft, pivotRight)
+
+int hiBar = not na(pivHi) ? bar_index - pivotRight : na
+int loBar = not na(pivLo) ? bar_index - pivotRight : na
+float hiPx = not na(pivHi) ? high[pivotRight] : na
+float loPx = not na(pivLo) ? low[pivotRight]  : na
+
+// ── Mark confirmed pivots at the actual extremum bar ─────────────────────────
+if showHighs and not na(pivHi)
+    label.new(hiBar, hiPx, "H", xloc=xloc.bar_index, yloc=yloc.price,
+         style=label.style_label_down, color=colHigh, textcolor=color.white, size=size.tiny)
+
+if showLows and not na(pivLo)
+    label.new(loBar, loPx, "L", xloc=xloc.bar_index, yloc=yloc.price,
+         style=label.style_label_up, color=colLow, textcolor=color.black, size=size.tiny)
+
+// ── Optional zigzag (helps compare with eye) ───────────────────────────────────
+var int   prevBar = na
+var float prevPx  = na
+var bool  prevIsHi = na
+
+if showLines
+    if not na(pivHi)
+        if not na(prevBar)
+            line.new(prevBar, prevPx, hiBar, hiPx, xloc=xloc.bar_index,
+                 color=color.new(colHigh, 50), width=1)
+        prevBar  := hiBar
+        prevPx   := hiPx
+        prevIsHi := true
+    if not na(pivLo)
+        if not na(prevBar)
+            line.new(prevBar, prevPx, loBar, loPx, xloc=xloc.bar_index,
+                 color=color.new(colLow, 50), width=1)
+        prevBar  := loBar
+        prevPx   := loPx
+        prevIsHi := false

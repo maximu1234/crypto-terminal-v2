@@ -40,12 +40,12 @@ positionTabletProbeHorizInStack,
 hideTabletProbeCrosshair,
 formatCrosshairTimeLabel,
 isUserCrosshairEvent
-} from "./chart/chart-dom-crosshair.js?v=10";
+} from "./chart/chart-dom-crosshair.js?v=11";
 
 import {
 TABLET_LW_NATIVE_PRICE_SCALE,
 clearTabletProbeCrosshairForChart
-} from "./chart/chart-factory.js?v=8";
+} from "./chart/chart-factory.js?v=9";
 
 export {
 createCandlestickChart,
@@ -74,7 +74,7 @@ rsiPlotTimeOffsetSec,
 mountChartPriceHud,
 applyChartScaleWidthCss,
 clearTabletProbeCrosshairForChart
-} from "./chart/chart-factory.js?v=8";
+} from "./chart/chart-factory.js?v=9";
 
 
 export {

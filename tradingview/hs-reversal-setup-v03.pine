@@ -1,0 +1,348 @@
+//@version=6
+indicator("HS Reversal — Setup v0.4.1", overlay = true, max_labels_count = 500, max_lines_count = 100)
+
+// ── Inputs ────────────────────────────────────────────────────────────────────
+int   pivotLeft     = input.int(5,    "Pivot Left",  minval = 1, maxval = 50, group = "Pivots")
+int   pivotRight    = input.int(5,    "Pivot Right", minval = 1, maxval = 50, group = "Pivots")
+float confirmFrac     = input.float(0.333, "L2 confirm fraction (⅓)", minval = 0.1, maxval = 0.9, step = 0.05, group = "Setup")
+float confirmFracCyan = input.float(0.5,   "Cyan (G2) confirm fraction (½)", minval = 0.1, maxval = 0.9, step = 0.05, group = "Setup")
+int   lookbackBars  = input.int(150,  "Point 0: lowest in N bars", minval = 30, maxval = 500, group = "Setup")
+bool  useDropFilter = input.bool(true, "Require min drop %", group = "Setup")
+float minDropPct    = input.float(10.0, "Min drop from high to Point 0 (%)", minval = 3, maxval = 80, step = 1, group = "Setup")
+int   majorLookback = input.int(300,  "Major high lookback (bars)", minval = 50, maxval = 1000, group = "Setup")
+
+bool  showPivots    = input.bool(false, "Show debug H/L pivots", group = "Display")
+bool  showNeck      = input.bool(true,  "Show yellow neckline",  group = "Display")
+float dotAtrMult    = input.float(0.35, "Dot offset below wick (× ATR)", minval = 0.05, maxval = 2.0, step = 0.05, group = "Display")
+
+color colP0         = input.color(color.yellow, "Point 0",             group = "Colors")
+color colYellow     = input.color(color.yellow, "Rising low (yellow)", group = "Colors")
+color colCyan       = input.color(#00e5ff,      "Latest low (cyan)",   group = "Colors")
+color colNeck       = input.color(color.yellow, "Neckline",            group = "Colors")
+
+// Phases: 0=search 1=waitL2 2=waitL3 3=ready
+var int phase = 0
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+maxHighBetween(int barA, int barB) =>
+    float mx = na
+    if barB >= barA
+        for i = barA to barB
+            int off = bar_index - i
+            if off >= 0
+                float h = high[off]
+                mx := na(mx) ? h : math.max(mx, h)
+    mx
+
+minLowBetween(int barA, int barB) =>
+    float mn = na
+    int   b  = barA
+    if barB >= barA
+        for i = barA to barB
+            int off = bar_index - i
+            if off >= 0
+                float v = low[off]
+                if na(mn) or v < mn
+                    mn := v
+                    b  := i
+    [mn, b]
+
+barOfHighBetween(int barA, int barB, float target) =>
+    int found = barB
+    if barB >= barA
+        for i = barA to barB
+            int off = bar_index - i
+            if off >= 0 and high[off] >= target
+                found := i
+                break
+    found
+
+wickLowAt(int b, int radius) =>
+    minLowBetween(math.max(0, b - radius), b + radius)
+
+// ── TA: every bar (Pine v6) ───────────────────────────────────────────────────
+float atr14        = ta.atr(14)
+float lbMinCur     = ta.lowest(low, lookbackBars)
+float majorHighCur = ta.highest(high, majorLookback)
+
+// ── Pivots ────────────────────────────────────────────────────────────────────
+float pivHi = ta.pivothigh(high, pivotLeft, pivotRight)
+float pivLo = ta.pivotlow(low,  pivotLeft, pivotRight)
+
+if showPivots and not na(pivHi)
+    label.new(bar_index - pivotRight, high[pivotRight], "H", xloc.bar_index, yloc.price,
+         style = label.style_label_down, color = color.red, textcolor = color.white, size = size.tiny)
+if showPivots and not na(pivLo)
+    label.new(bar_index - pivotRight, low[pivotRight], "L", xloc.bar_index, yloc.price,
+         style = label.style_label_up, color = color.yellow, textcolor = color.black, size = size.tiny)
+
+// ── State ─────────────────────────────────────────────────────────────────────
+var float swLoA    = na
+var int   swLoABar = na
+var float swLoB    = na
+var int   swLoBBar = na
+
+var float point0Px  = na
+var int   point0Bar = na
+var float low2Px    = na
+var int   low2Bar    = na
+var float low3Px    = na
+var int   low3Bar    = na
+
+var float candPx    = na
+var int   candBar   = na
+var float candPeak  = na
+
+var float neckHi1   = na
+var int   neckBar1  = na
+var float neckHi2   = na
+var int   neckBar2  = na
+var float entryHi   = na
+
+var float green1Hi    = na
+var bool  green1Broke = false
+
+var line lnNeck = na
+
+// ── Invalidate: wick below Point 0 ────────────────────────────────────────────
+bool breakP0 = phase > 0 and not na(point0Px) and low < point0Px
+if breakP0
+    if not na(lnNeck)
+        line.delete(lnNeck)
+        lnNeck := na
+    phase     := 0
+    point0Px  := na
+    point0Bar := na
+    low2Px    := na
+    low2Bar   := na
+    low3Px    := na
+    low3Bar   := na
+    candPx    := na
+    candBar   := na
+    candPeak  := na
+    neckHi1   := na
+    neckBar1  := na
+    neckHi2   := na
+    neckBar2  := na
+    entryHi     := na
+    green1Hi    := na
+    green1Broke := false
+    swLoA       := low
+    swLoABar    := bar_index
+    swLoB       := na
+    swLoBBar    := na
+
+// ── Breakout above neckline peak → reset ──────────────────────────────────────
+bool breakoutDone = phase >= 3 and not na(entryHi) and high > entryHi
+if breakoutDone
+    if not na(lnNeck)
+        line.delete(lnNeck)
+        lnNeck := na
+    phase     := 0
+    point0Px  := na
+    point0Bar := na
+    low2Px    := na
+    low2Bar   := na
+    low3Px    := na
+    low3Bar   := na
+    candPx    := na
+    candBar   := na
+    candPeak  := na
+    neckHi1   := na
+    neckBar1  := na
+    neckHi2   := na
+    neckBar2  := na
+    entryHi     := na
+    green1Hi    := na
+    green1Broke := false
+    swLoA       := na
+    swLoABar    := na
+    swLoB       := na
+    swLoBBar    := na
+
+// ── PHASE 0: Point 0 — head on first higher-low after descending lows ─────────
+if not na(pivLo) and phase == 0
+    float loPx  = low[pivotRight]
+    int   loBar = bar_index - pivotRight
+
+    if na(swLoA)
+        swLoA    := loPx
+        swLoABar := loBar
+    else if loPx < swLoA
+        swLoB    := swLoA
+        swLoBBar := swLoABar
+        swLoA    := loPx
+        swLoABar := loBar
+    else if loPx > swLoA and not na(swLoB) and swLoA < swLoB
+        [legPx, legBar] = minLowBetween(swLoBBar, loBar)
+        float bottomPx   = na(legPx) ? swLoA : legPx
+        int   bottomBar  = na(legBar) ? swLoABar : legBar
+        [p0Px, p0Bar]    = wickLowAt(bottomBar, pivotRight)
+        float p0Final    = na(p0Px) ? bottomPx : p0Px
+        int   p0BarFinal = na(p0Bar) ? bottomBar : p0Bar
+
+        float dropPct = majorHighCur > 0.0 ? (majorHighCur - p0Final) / majorHighCur * 100.0 : 0.0
+        bool  sigLow  = p0Final <= lbMinCur * 1.005
+        bool  dropOk  = not useDropFilter or dropPct >= minDropPct
+
+        if sigLow and dropOk
+            point0Px  := p0Final
+            point0Bar := p0BarFinal
+            phase     := 1
+            candPx    := na
+            candBar   := na
+            candPeak  := na
+            int   offP0 = math.max(0, bar_index - p0BarFinal)
+            float yP0   = p0Final - atr14[offP0] * dotAtrMult
+            label.new(p0BarFinal, yP0, "0", xloc.bar_index, yloc.price,
+                 style = label.style_circle, color = colP0, textcolor = colP0, size = size.tiny)
+        else
+            swLoB    := swLoA
+            swLoBBar := swLoABar
+            swLoA    := loPx
+            swLoABar := loBar
+
+// ── PHASE 1: first higher low after P0 (yellow •) ─────────────────────────────
+if phase == 1
+    if not na(pivLo) and na(candBar)
+        int   loB  = bar_index - pivotRight
+        float loPx = low[pivotRight]
+        if loB > point0Bar and loPx > point0Px
+            candPx   := loPx
+            candBar  := loB
+            candPeak := maxHighBetween(point0Bar, loB)
+
+    if not na(candBar)
+        if low < point0Px or candPx <= point0Px
+            if not na(lnNeck)
+                line.delete(lnNeck)
+                lnNeck := na
+            phase     := 0
+            point0Px  := na
+            point0Bar := na
+            low2Px    := na
+            low2Bar   := na
+            low3Px    := na
+            low3Bar   := na
+            candPx    := na
+            candBar   := na
+            candPeak  := na
+            neckHi1   := na
+            neckBar1  := na
+            neckHi2   := na
+            neckBar2  := na
+            entryHi     := na
+            green1Hi    := na
+            green1Broke := false
+            swLoA       := low
+            swLoABar    := bar_index
+            swLoB       := na
+            swLoBBar    := na
+        else
+            float need   = candPx + (candPeak - candPx) * confirmFrac
+            float bounce = maxHighBetween(candBar, bar_index)
+            if bounce >= need
+                float savedPeak = candPeak
+                low2Px   := candPx
+                low2Bar  := candBar
+                phase    := 2
+                candPx   := na
+                candBar  := na
+                candPeak := na
+                green1Hi    := na
+                green1Broke := false
+                neckHi1  := savedPeak
+                neckBar1 := barOfHighBetween(point0Bar, low2Bar, neckHi1)
+                int   offL2 = math.max(0, bar_index - low2Bar)
+                float yL2   = low2Px - atr14[offL2] * dotAtrMult
+                label.new(low2Bar, yL2, "•", xloc.bar_index, yloc.price,
+                     style = label.style_circle, color = colYellow, textcolor = colYellow, size = size.tiny)
+
+// ── PHASE 2: cyan — G1 wave up, pullback, ½ bounce; cancel if no G1 break + < L2 ─
+if phase == 2
+    float prevG1Hi = green1Hi
+    float waveHi   = maxHighBetween(low2Bar, bar_index)
+    green1Hi       := na(green1Hi) ? waveHi : math.max(green1Hi, waveHi)
+    if not na(prevG1Hi) and high > prevG1Hi
+        green1Broke := true
+
+    bool failG1 = not green1Broke and green1Hi > low2Px and low < low2Px
+
+    if failG1 or low < point0Px
+        if not na(lnNeck)
+            line.delete(lnNeck)
+            lnNeck := na
+        phase       := 0
+        point0Px    := na
+        point0Bar   := na
+        low2Px      := na
+        low2Bar     := na
+        low3Px      := na
+        low3Bar     := na
+        candPx      := na
+        candBar     := na
+        candPeak    := na
+        neckHi1     := na
+        neckBar1    := na
+        neckHi2     := na
+        neckBar2    := na
+        entryHi     := na
+        green1Hi    := na
+        green1Broke := false
+        swLoA       := low
+        swLoABar    := bar_index
+        swLoB       := na
+        swLoBBar    := na
+    else
+        if not na(pivLo) and na(candBar)
+            int   loB  = bar_index - pivotRight
+            float loPx = low[pivotRight]
+            if loB > low2Bar and loPx > low2Px
+                candPx   := loPx
+                candBar  := loB
+                candPeak := green1Hi
+
+        if not na(candBar)
+            if low < low2Px or candPx <= low2Px
+                candPx   := na
+                candBar  := na
+                candPeak := na
+            else
+                float need   = candPx + (candPeak - candPx) * confirmFracCyan
+                float bounce = maxHighBetween(candBar, bar_index)
+                if bounce >= need
+                    float savedG1 = candPeak
+                    low3Px   := candPx
+                    low3Bar  := candBar
+                    phase    := 3
+                    candPx   := na
+                    candBar  := na
+                    candPeak := na
+                    neckHi2  := savedG1
+                    neckBar2 := barOfHighBetween(low2Bar, low3Bar, neckHi2)
+                    entryHi  := neckHi2
+                    int   offL3 = math.max(0, bar_index - low3Bar)
+                    float yL3   = low3Px - atr14[offL3] * dotAtrMult
+                    label.new(low3Bar, yL3, "•", xloc.bar_index, yloc.price,
+                         style = label.style_circle, color = colCyan, textcolor = colCyan, size = size.tiny)
+
+// ── Yellow neckline (peak₁ → peak₂) ───────────────────────────────────────────
+if showNeck and phase >= 2 and not na(neckHi1) and not na(neckBar1)
+    float y2    = nz(neckHi2, maxHighBetween(low2Bar, bar_index))
+    int   bar2  = not na(neckBar2) ? neckBar2 : barOfHighBetween(low2Bar, bar_index, y2)
+    if y2 >= neckHi1 and bar2 > neckBar1
+        if not na(lnNeck)
+            line.delete(lnNeck)
+        float slope = (y2 - neckHi1) / float(bar2 - neckBar1)
+        float yNow  = neckHi1 + slope * float(bar_index - neckBar1)
+        lnNeck := line.new(neckBar1, neckHi1, bar_index, yNow,
+             xloc = xloc.bar_index, color = colNeck, width = 2)
+
+// ── Status ────────────────────────────────────────────────────────────────────
+var array<string> phaseNames = array.from("Search", "Wait L2", "Wait L3", "Ready")
+var table status = table.new(position.top_right, 1, 3, bgcolor = color.new(color.black, 70))
+if barstate.islast
+    int pi = math.min(phase, 3)
+    table.cell(status, 0, 0, "HS v0.4.1", text_color = color.white, text_size = size.small)
+    table.cell(status, 0, 1, array.get(phaseNames, pi), text_color = phase > 0 ? color.lime : color.gray, text_size = size.small)
+    table.cell(status, 0, 2, not na(low2Px) ? "L2: " + str.tostring(low2Px, "#.#####") : "—", text_color = color.white, text_size = size.small)

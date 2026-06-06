@@ -1,3 +1,7 @@
+import {
+formatPrice
+} from "./chart-options.js";
+
 const DOM_CROSSHAIR_VERT =
 "chart-dom-crosshair-vert";
 
@@ -812,6 +816,7 @@ chartsStackEl,
 linkedVertEl,
 horizLineEl,
 timeLabelEl,
+priceLabelEl = null,
 clientX,
 clientY,
 onTime
@@ -1154,45 +1159,33 @@ wrapEl
 
 }
 
-if(
-probeTime == null &&
-timeLabelEl
-){
-timeLabelEl.classList.add(
-"hidden"
-);
-}
-
-if(
-probeTime != null
-){
 updateCrosshairAxisLabels({
 param:{
 time: probeTime,
 point:{
-x
+x,
+y
 }
 },
-timeLabelEl
+timeLabelEl,
+priceLabelEl,
+snappedX:x,
+plotY:y,
+mainSeries:series,
+mainChart:chart
 });
 
+if(
+probeTime !=
+null
+){
 onTime?.(
 probeTime
 );
-
-return {
-time: probeTime,
-x,
-y,
-price: hasPrice
-? price
-: null
-};
-
 }
 
 return {
-time: null,
+time: probeTime,
 x,
 y,
 price: hasPrice
@@ -1206,6 +1199,7 @@ export function hideTabletProbeCrosshair({
 linkedVertEl,
 horizLineEl,
 timeLabelEl,
+priceLabelEl = null,
 chartWrapEl = null,
 onClear
 }){
@@ -1250,7 +1244,8 @@ horizLineEl?.style.removeProperty(
 );
 
 clearCrosshairAxisLabels(
-timeLabelEl
+timeLabelEl,
+priceLabelEl
 );
 
 onClear?.();
@@ -1667,10 +1662,117 @@ return `${wd} ${day} ${mon} '${yr} ${hh}:${mm}`;
 
 }
 
+function crosshairPriceScaleWidth(
+mainChart
+){
+
+let gutter =
+56;
+
+try{
+gutter =
+mainChart?.priceScale?.(
+"right"
+)?.width?.() ||
+gutter;
+}catch{
+/* ignore */
+}
+
+return gutter;
+
+}
+
+function updateCrosshairPriceLabel({
+priceLabelEl,
+plotY,
+mainSeries,
+mainChart
+}){
+
+const y =
+plotY;
+
+if(
+!priceLabelEl ||
+!mainSeries ||
+!Number.isFinite(
+y
+)
+){
+
+if(
+priceLabelEl
+){
+priceLabelEl.classList.add(
+"hidden"
+);
+priceLabelEl.style.removeProperty(
+"top"
+);
+priceLabelEl.style.removeProperty(
+"width"
+);
+}
+
+return;
+}
+
+const price =
+mainSeries.coordinateToPrice?.(
+y
+);
+
+if(
+price == null ||
+!Number.isFinite(
+price
+)
+){
+
+priceLabelEl.classList.add(
+"hidden"
+);
+priceLabelEl.style.removeProperty(
+"top"
+);
+priceLabelEl.style.removeProperty(
+"width"
+);
+return;
+}
+
+const gutter =
+crosshairPriceScaleWidth(
+mainChart
+);
+
+priceLabelEl.textContent =
+formatPrice(
+price
+);
+priceLabelEl.style.top =
+`${Math.round(y)}px`;
+priceLabelEl.style.right =
+"0";
+priceLabelEl.style.left =
+"auto";
+priceLabelEl.style.width =
+`${gutter}px`;
+priceLabelEl.classList.remove(
+"hidden"
+);
+
+}
+
 export function updateCrosshairAxisLabels({
 param,
 timeLabelEl,
-snappedX
+priceLabelEl = null,
+snappedX,
+plotY,
+mainSeries = null,
+mainChart = null
 }){
 
 const x =
@@ -1680,7 +1782,9 @@ Number.isFinite(snappedX)
 
 if(
 timeLabelEl &&
-Number.isFinite(x)
+Number.isFinite(x) &&
+param.time !=
+null
 ){
 
 timeLabelEl.textContent =
@@ -1707,10 +1811,25 @@ timeLabelEl.style.removeProperty(
 
 }
 
+const y =
+Number.isFinite(
+plotY
+)
+? plotY
+: param.point?.y;
+
+updateCrosshairPriceLabel({
+priceLabelEl,
+plotY:y,
+mainSeries,
+mainChart
+});
+
 }
 
 export function clearCrosshairAxisLabels(
-timeLabelEl
+timeLabelEl,
+priceLabelEl = null
 ){
 
 if(
@@ -1723,6 +1842,22 @@ timeLabelEl.classList.add(
 
 timeLabelEl.style.removeProperty(
 "left"
+);
+
+}
+
+if(
+priceLabelEl
+){
+
+priceLabelEl.classList.add(
+"hidden"
+);
+priceLabelEl.style.removeProperty(
+"top"
+);
+priceLabelEl.style.removeProperty(
+"width"
 );
 
 }

@@ -1,0 +1,121 @@
+//@version=6
+indicator("Wave Structure v0.2", overlay = true, max_labels_count = 500)
+
+// Старшие (жёлтые): LH / LL на крупных пивотах.
+// Подволны (голубые): та же логика на мелких пивотах ВНУТРИ ноги между двумя жёлтыми.
+
+int   seniorLeft   = input.int(10, "Senior pivot left",  minval = 1, maxval = 50, group = "Senior (yellow)")
+int   seniorRight  = input.int(10, "Senior pivot right", minval = 1, maxval = 50, group = "Senior (yellow)")
+int   juniorLeft   = input.int(5,  "Junior pivot left",  minval = 1, maxval = 50, group = "Junior (cyan)")
+int   juniorRight  = input.int(5,  "Junior pivot right", minval = 1, maxval = 50, group = "Junior (cyan)")
+float dotAtrMult   = input.float(0.2, "Dot offset (× ATR)", minval = 0.0, maxval = 2.0, step = 0.05, group = "Display")
+
+color colSenior = input.color(color.yellow, "Senior wave", group = "Colors")
+color colJunior = input.color(#00e5ff,      "Sub-wave",    group = "Colors")
+
+float atr14 = ta.atr(14)
+
+float senHi = ta.pivothigh(high, seniorLeft,  seniorRight)
+float senLo = ta.pivotlow(low,  seniorLeft,  seniorRight)
+float junHi = ta.pivothigh(high, juniorLeft,  juniorRight)
+float junLo = ta.pivotlow(low,  juniorLeft,  juniorRight)
+
+// ── Senior ────────────────────────────────────────────────────────────────────
+// expect: 0=init  1=after high→wait low  -1=after low→wait high
+var int   senExpect  = 0
+var float senLastHi  = na
+var float senLastLo  = na
+var int   senLegBar  = -1
+
+// ── Junior (сброс при каждой жёлтой) ────────────────────────────────────────
+// legDown: true = нога вниз (LH/LL), false = нога вверх (HH/HL)
+var bool  legDown    = true
+var int   junExpect  = 0
+var float junLastHi  = na
+var float junLastLo  = na
+
+bool  seniorMarked = false
+float dotJunY      = na
+
+// ── Senior HIGH ───────────────────────────────────────────────────────────────
+if not na(senHi)
+    int   b  = bar_index - seniorRight
+    float px = high[seniorRight]
+    bool  ok = senExpect == 0 or (senExpect == -1 and (na(senLastHi) or px < senLastHi))
+    if ok
+        senLastHi    := px
+        senExpect    := 1
+        senLegBar    := b
+        seniorMarked := true
+        legDown      := true
+        junExpect    := 1
+        junLastHi    := px
+        junLastLo    := na
+        int   off = math.max(0, bar_index - b)
+        float y   = px + atr14[off] * dotAtrMult
+        label.new(b, y, "•", xloc.bar_index, yloc.price,
+             style = label.style_circle, color = colSenior, textcolor = colSenior, size = size.tiny)
+
+// ── Senior LOW ───────────────────────────────────────────────────────────────
+if not na(senLo)
+    int   b  = bar_index - seniorRight
+    float px = low[seniorRight]
+    bool  ok = senExpect == 0 or (senExpect == 1 and (na(senLastLo) or px < senLastLo))
+    if ok
+        senLastLo    := px
+        senExpect    := -1
+        senLegBar    := b
+        seniorMarked := true
+        legDown      := false
+        junExpect    := -1
+        junLastHi    := na
+        junLastLo    := px
+        int   off = math.max(0, bar_index - b)
+        float y   = px - atr14[off] * dotAtrMult
+        label.new(b, y, "•", xloc.bar_index, yloc.price,
+             style = label.style_circle, color = colSenior, textcolor = colSenior, size = size.tiny)
+
+// ── Junior HIGH ───────────────────────────────────────────────────────────────
+if not seniorMarked and senLegBar >= 0 and not na(junHi)
+    int   b  = bar_index - juniorRight
+    float px = high[juniorRight]
+    if b > senLegBar
+        bool ok = false
+        if legDown
+            ok := junExpect == 0 or (junExpect == -1 and (na(junLastHi) or px < junLastHi))
+        else
+            ok := junExpect == 0 or (junExpect == -1 and (na(junLastHi) or px > junLastHi))
+        if ok
+            junLastHi  := px
+            junExpect  := 1
+            int off    = math.max(0, bar_index - b)
+            dotJunY    := px + atr14[off] * dotAtrMult
+
+// ── Junior LOW ────────────────────────────────────────────────────────────────
+if not seniorMarked and senLegBar >= 0 and not na(junLo)
+    int   b  = bar_index - juniorRight
+    float px = low[juniorRight]
+    if b > senLegBar
+        bool ok = false
+        if legDown
+            ok := junExpect == 0 or (junExpect == 1 and (na(junLastLo) or px < junLastLo))
+        else
+            ok := junExpect == 0 or (junExpect == 1 and (na(junLastLo) or px > junLastLo))
+        if ok
+            junLastLo  := px
+            junExpect  := -1
+            int off    = math.max(0, bar_index - b)
+            dotJunY    := px - atr14[off] * dotAtrMult
+
+plotshape(dotJunY, title = "Junior", style = shape.circle, location = location.absolute,
+     color = colJunior, size = size.tiny, offset = -juniorRight)
+
+// ── Status ────────────────────────────────────────────────────────────────────
+var table st = table.new(position.top_right, 1, 4, bgcolor = color.new(color.black, 70))
+if barstate.islast
+    string expTxt = senExpect == 1 ? "Wait LOW" : senExpect == -1 ? "Wait HIGH" : "Init"
+    string legTxt = legDown ? "Leg DOWN" : "Leg UP"
+    table.cell(st, 0, 0, "Waves v0.2", text_color = color.white, text_size = size.small)
+    table.cell(st, 0, 1, expTxt, text_color = color.yellow, text_size = size.small)
+    table.cell(st, 0, 2, legTxt, text_color = color.aqua, text_size = size.small)
+    table.cell(st, 0, 3, "#" + str.tostring(senLegBar), text_color = color.gray, text_size = size.small)

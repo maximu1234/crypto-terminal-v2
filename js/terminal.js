@@ -58,7 +58,7 @@ resetChartPriceAutoScale
 
 import {
 mountCoinsTabletController
-} from "./coins-tablet-controller.js?v=4";
+} from "./coins-tablet-controller.js?v=5";
 
 import {
 disconnectKlineStream
@@ -1419,6 +1419,9 @@ chartEl,
 crosshairTimeLabelEl:document.getElementById(
 "crosshair-time-label"
 ),
+crosshairPriceLabelEl:document.getElementById(
+"crosshair-price-label"
+),
 onLinkedCrosshairTime:updateRsiHudFromCrosshairTime,
 onLinkedCrosshairClear(){
 const last =
@@ -1538,6 +1541,9 @@ horizLineEl: document.getElementById(
 timeLabelEl: document.getElementById(
 "crosshair-time-label"
 ),
+priceLabelEl: document.getElementById(
+"crosshair-price-label"
+),
 clientX,
 clientY,
 onTime: updateRsiHudFromCrosshairTime
@@ -1561,6 +1567,9 @@ horizLineEl: document.getElementById(
 ),
 timeLabelEl: document.getElementById(
 "crosshair-time-label"
+),
+priceLabelEl: document.getElementById(
+"crosshair-price-label"
 ),
 chartWrapEl: document.getElementById(
 "chart-wrap"

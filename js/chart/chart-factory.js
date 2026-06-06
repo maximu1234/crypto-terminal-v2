@@ -20,7 +20,7 @@ clearCrosshairAxisLabels,
 hideTabletProbeCrosshair,
 hideDomChartCrosshairHorz,
 positionDomChartCrosshairHorz
-} from "./chart-dom-crosshair.js?v=10";
+} from "./chart-dom-crosshair.js?v=11";
 
 export function mountChartRangeFreeze(
 chart
@@ -1209,6 +1209,9 @@ horizLineEl:document.getElementById(
 ),
 timeLabelEl:document.getElementById(
 "crosshair-time-label"
+),
+priceLabelEl:document.getElementById(
+"crosshair-price-label"
 )
 });
 
@@ -1276,6 +1279,7 @@ linkedVertOverlayEl,
 chartWrapEl = null,
 chartEl = null,
 crosshairTimeLabelEl,
+crosshairPriceLabelEl = null,
 onLinkedCrosshairTime,
 onLinkedCrosshairClear,
 getLinkedValueAtTime,
@@ -1337,7 +1341,8 @@ clearLinkedVert();
 clearLinkedHorz();
 
 clearCrosshairAxisLabels(
-crosshairTimeLabelEl
+crosshairTimeLabelEl,
+crosshairPriceLabelEl
 );
 
 onLinkedCrosshairClear?.();
@@ -1578,7 +1583,11 @@ labelParam.time = t;
 updateCrosshairAxisLabels({
 param: labelParam,
 timeLabelEl:crosshairTimeLabelEl,
-snappedX:snappedLabelX
+priceLabelEl:crosshairPriceLabelEl,
+snappedX:snappedLabelX,
+plotY:py,
+mainSeries,
+mainChart
 });
 
 if(
