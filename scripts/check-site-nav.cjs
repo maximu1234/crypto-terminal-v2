@@ -45,6 +45,7 @@ const pages =
 "alerts/index.html",
 "listings.html",
 "trade-calculator.html",
+"statistics.html",
 "system/index.html"
 ];
 

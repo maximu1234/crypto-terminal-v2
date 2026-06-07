@@ -223,6 +223,8 @@ Object.freeze({
 1,
 "listings.js":
 4,
+"statistics.js":
+6,
 "trade-calculator.js":
 3,
 "system-admin-page.js":
@@ -255,6 +257,8 @@ Object.freeze({
 15,
 "listings.css":
 2,
+"statistics.css":
+7,
 "trade-calculator.css":
 3,
 "system-admin.css":

@@ -226,6 +226,7 @@ const name of
 "terminal.html",
 "listings.html",
 "trade-calculator.html",
+"statistics.html",
 "alerts/index.html",
 "system/index.html"
 ]

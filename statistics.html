@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin/>
+<link rel="dns-prefetch" href="https://api.bybit.com"/>
+
+<title>Статистика — Multichart</title>
+
+<link rel="stylesheet" href="/css/critical-shell.css?v=2">
+<script src="/js/site-css-ready.js?v=2"></script>
+<link rel="stylesheet" href="/css/common.css?v=21">
+<link rel="stylesheet" href="/css/site-mobile-nav.css?v=3">
+<link rel="stylesheet" href="/css/statistics.css?v=7">
+
+</head>
+
+<body class="site-nav-page">
+
+<header id="header" class="screener-page-header">
+
+<a href="/index.html" id="logo">Multichart</a>
+
+<div class="screener-mobile-bar site-mobile-bar">
+<button type="button" class="screener-nav-toggle" id="site-nav-toggle" aria-label="Меню" aria-expanded="false" aria-controls="site-nav-panel">
+<span class="screener-nav-toggle-bars" aria-hidden="true"></span>
+</button>
+</div>
+
+<div class="screener-nav-backdrop hidden" id="site-nav-backdrop"></div>
+
+<nav class="menu screener-nav-panel" id="site-nav-panel">
+<a href="/index.html">Главная</a>
+<a href="/coins.html">Монеты</a>
+<a href="/terminal.html">Терминал</a>
+<a href="/alerts/">Алерты</a>
+<a href="/listings.html">Листинги</a>
+<a href="/trade-calculator.html">Калькулятор</a>
+<a href="/statistics.html" class="active">Статистика</a>
+</nav>
+
+</header>
+
+<main id="statistics-main">
+
+<h1>Статистика</h1>
+
+<p class="statistics-lead">
+Топ-100 монет с наибольшим ростом цены на Bybit (USDT perpetual).
+</p>
+
+<div class="stats-toolbar">
+<div class="stats-period-tabs" role="tablist" aria-label="Период">
+<button type="button" class="stats-period-btn active" data-period="1d" role="tab" aria-selected="true">1 день</button>
+<button type="button" class="stats-period-btn" data-period="1w" role="tab" aria-selected="false">1 неделя</button>
+<button type="button" class="stats-period-btn" data-period="1m" role="tab" aria-selected="false">1 месяц</button>
+<button type="button" class="stats-period-btn" data-period="1y" role="tab" aria-selected="false">1 год</button>
+</div>
+<button type="button" id="statistics-refresh" class="stats-refresh-btn">Обновить данные</button>
+</div>
+
+<div id="statistics-status"></div>
+
+<div class="stats-table-wrap">
+<div class="stats-table-head">
+<div class="stats-col-symbol">Топ-100</div>
+<div class="stats-col-bar" aria-hidden="true"></div>
+<div class="stats-col-move">Движение цены</div>
+</div>
+<div id="statistics-rows" class="stats-rows"></div>
+</div>
+
+</main>
+
+<script type="module" src="/js/site-boot.js?v=82"></script>
+<script type="module" src="/js/statistics.js?v=6"></script>
+
+</body>
+</html>

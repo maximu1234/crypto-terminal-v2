@@ -84,6 +84,14 @@ return pathMatches(
 
 }
 
+export function isStatisticsPage(){
+
+return pathMatches(
+/\/statistics(\.html)?\/?$/i
+);
+
+}
+
 export function isSystemAdminPage(){
 
 return pathMatches(
