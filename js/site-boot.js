@@ -66,7 +66,13 @@ import {
 initSuppressNativeContextMenu
 } from "./suppress-native-context-menu.js?v=2";
 
+import {
+resumeStatsBackgroundJob
+} from "./statistics-background.js?v=1";
+
 initSuppressNativeContextMenu();
+
+void resumeStatsBackgroundJob();
 
 async function startSiteBoot(){
 

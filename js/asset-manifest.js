@@ -45,7 +45,7 @@ Object.freeze({
 "screener.js":
 67,
 "site-boot.js":
-82,
+83,
 "suppress-native-context-menu.js":
 2,
 "charts-lib-boot.js":
@@ -224,7 +224,9 @@ Object.freeze({
 "listings.js":
 4,
 "statistics.js":
-6,
+7,
+"statistics-background.js":
+1,
 "trade-calculator.js":
 3,
 "system-admin-page.js":

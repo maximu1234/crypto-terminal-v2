@@ -1,33 +1,12 @@
 import {
-fetchTickersInto
-} from "./tickers.js?v=21";
-
-import {
-fetchBybit
-} from "./bybit-fetch.js?v=13";
-
-const PERIOD_DAYS = {
-"1d":1,
-"1w":7,
-"1m":30,
-"1y":365
-};
-
-const PERIOD_LABELS = {
-"1d":"1 день",
-"1w":"1 неделю",
-"1m":"1 месяц",
-"1y":"1 год"
-};
-
-const POOL_SIZE =
-2;
-
-const SYMBOL_DELAY_MS =
-220;
-
-const MIN_KLINE_SAMPLES =
-3;
+PERIOD_LABELS,
+STATS_JOB_UPDATE_EVENT,
+readCacheEntry,
+cacheStorageKey,
+getStatsJobState,
+startStatsBackgroundRefresh,
+resumeStatsBackgroundJob
+} from "./statistics-background.js?v=1";
 
 const statusEl =
 document.getElementById(
@@ -51,12 +30,6 @@ document.getElementById(
 
 let activePeriod =
 "1d";
-
-let loadToken =
-0;
-
-let isRefreshing =
-false;
 
 function setStatus(
 text,
@@ -262,475 +235,6 @@ return negative
 
 }
 
-function periodChangeFromTicker(
-tick
-){
-
-const endPrice =
-Number(
-tick?.price
-);
-
-const pct =
-Number(
-tick?.change24
-);
-
-if(
-!Number.isFinite(
-endPrice
-) ||
-endPrice <=
-0 ||
-!Number.isFinite(
-pct
-)
-){
-return null;
-}
-
-const startPrice =
-endPrice /
-(
-1 +
-pct /
-100
-);
-
-if(
-!Number.isFinite(
-startPrice
-) ||
-startPrice <=
-0
-){
-return null;
-}
-
-return {
-startPrice,
-endPrice,
-pct
-};
-
-}
-
-function sleep(
-ms
-){
-
-return new Promise(
-resolve=>
-setTimeout(
-resolve,
-ms
-)
-);
-
-}
-
-let nextKlineSlot =
-0;
-
-async function acquireKlineSlot(){
-
-const now =
-Date.now();
-
-const slot =
-Math.max(
-now,
-nextKlineSlot
-);
-
-nextKlineSlot =
-slot +
-SYMBOL_DELAY_MS;
-
-const wait =
-slot -
-now;
-
-if(
-wait >
-0
-){
-await sleep(
-wait
-);
-}
-
-}
-
-function isBybitRateLimit(
-json
-){
-
-const code =
-Number(
-json?.retCode
-);
-
-const msg =
-String(
-json?.retMsg ||
-""
-).toLowerCase();
-
-return (
-code ===
-10006 ||
-msg.includes(
-"too many"
-) ||
-msg.includes(
-"too frequent"
-) ||
-msg.includes(
-"access too frequent"
-)
-);
-
-}
-
-async function fetchDailyCandles(
-symbol,
-periodDays
-){
-
-const limit =
-Math.min(
-1000,
-periodDays +
-10
-);
-
-const path =
-`/v5/market/kline?category=linear&symbol=${encodeURIComponent(symbol)}&interval=D&limit=${limit}`;
-
-for(
-let attempt =
-0;
-attempt <
-3;
-attempt++
-){
-
-await acquireKlineSlot();
-
-try{
-
-const { json } =
-await fetchBybit(
-path,
-{
-timeoutMs:15000,
-retries:0,
-sequential:true
-}
-);
-
-if(
-isBybitRateLimit(
-json
-)
-){
-await sleep(
-2000 *
-(
-attempt +
-1
-)
-);
-continue;
-}
-
-if(
-json.retCode !==
-0 ||
-!json.result?.list?.length
-){
-return null;
-}
-
-return json.result.list
-.map(
-k=>({
-time:Number(
-k[0]
-) /
-1000,
-open:Number(
-k[1]
-),
-close:Number(
-k[4]
-)
-})
-)
-.sort(
-(
-a,
-b
-)=>
-a.time -
-b.time
-);
-
-}catch{
-
-if(
-attempt <
-2
-){
-await sleep(
-1500 *
-(
-attempt +
-1
-)
-);
-}
-
-}
-
-}
-
-return null;
-
-}
-
-function periodChangeFromDaily(
-candles,
-periodDays,
-currentPrice
-){
-
-if(
-!Array.isArray(
-candles
-) ||
-!candles.length ||
-!Number.isFinite(
-currentPrice
-) ||
-currentPrice <=
-0
-){
-return null;
-}
-
-const lookback =
-Math.min(
-periodDays,
-candles.length -
-1
-);
-
-if(
-lookback <
-1
-){
-return null;
-}
-
-const startIdx =
-candles.length -
-1 -
-lookback;
-
-const startCandle =
-candles[
-startIdx
-];
-
-const startPrice =
-Number(
-startCandle?.open ??
-startCandle?.close
-);
-
-if(
-!Number.isFinite(
-startPrice
-) ||
-startPrice <=
-0
-){
-return null;
-}
-
-const pct =
-(
-(
-currentPrice -
-startPrice
-) /
-startPrice
-) *
-100;
-
-return {
-startPrice,
-endPrice:currentPrice,
-pct
-};
-
-}
-
-async function runPool(
-items,
-size,
-worker
-){
-
-const results =
-[];
-
-let index =
-0;
-
-async function runner(){
-
-while(
-index <
-items.length
-){
-
-const i =
-index++;
-results[
-i
-] =
-await worker(
-items[
-i
-],
-i
-);
-}
-
-}
-
-const runners =
-Array.from(
-{
-length:Math.min(
-size,
-items.length
-)
-},
-()=>
-runner()
-);
-
-await Promise.all(
-runners
-);
-
-return results;
-
-}
-
-const CACHE_KEY_PREFIX =
-"stats_movers_";
-
-function cacheStorageKey(
-period
-){
-
-return `${CACHE_KEY_PREFIX}${period}`;
-
-}
-
-function readCacheEntry(
-period
-){
-
-const key =
-cacheStorageKey(
-period
-);
-
-try{
-
-let raw =
-localStorage.getItem(
-key
-);
-
-if(
-!raw
-){
-raw =
-sessionStorage.getItem(
-key
-);
-
-if(
-raw
-){
-try{
-localStorage.setItem(
-key,
-raw
-);
-sessionStorage.removeItem(
-key
-);
-}catch{
-/* ignore */
-}
-
-}
-
-}
-
-if(
-!raw
-){
-return null;
-}
-
-const parsed =
-JSON.parse(
-raw
-);
-
-if(
-!Array.isArray(
-parsed?.rows
-) ||
-!parsed.rows.length
-){
-return null;
-}
-
-return {
-rows:parsed.rows,
-at:Number(
-parsed?.at ||
-0
-)
-};
-
-}catch{
-return null;
-}
-
-}
-
-function readCacheAny(
-period
-){
-
-return readCacheEntry(
-period
-)?.rows ??
-null;
-
-}
-
 function formatCacheTime(
 at
 ){
@@ -784,43 +288,6 @@ return `Кэш · ${PERIOD_LABELS[period]} · ${entry.rows.length} ${entry.rows.
 
 }
 
-function setRefreshBusy(
-busy
-){
-
-isRefreshing = !!busy;
-
-if(
-refreshBtn
-){
-refreshBtn.disabled = busy;
-}
-
-}
-
-function writeCache(
-period,
-rows
-){
-
-try{
-
-localStorage.setItem(
-cacheStorageKey(
-period
-),
-JSON.stringify({
-at:Date.now(),
-rows
-})
-);
-
-}catch{
-/* ignore */
-}
-
-}
-
 function formatReadyStatus(
 period,
 count
@@ -830,219 +297,196 @@ return `Bybit linear · ${PERIOD_LABELS[period]} · ${count} ${count === 1 ? "м
 
 }
 
-async function loadMoversForPeriod(
-period,
-onProgress
+function isJobRunningForPeriod(
+period
 ){
 
-const tickers =
-new Map();
+const job =
+getStatsJobState();
 
-await fetchTickersInto(
-tickers
+return (
+job?.status ===
+"running" &&
+job.period ===
+period
 );
 
-const symbols =
-[
-...tickers.keys()
-].filter(
-symbol=>
-symbol.endsWith(
-"USDT"
-)
-);
+}
+
+function setRefreshBusy(
+busy
+){
 
 if(
-period ===
+refreshBtn
+){
+refreshBtn.disabled = !!busy;
+}
+
+}
+
+function jobProgressLabel(
+job
+){
+
+if(
+!job
+){
+return "";
+}
+
+if(
+job.period ===
 "1d"
 ){
+return "Обновляем…";
+}
 
-const rows =
-[];
-
-for(
-const symbol of
-symbols
-){
-
-const tick =
-tickers.get(
-symbol
+const total =
+Math.max(
+job.total,
+1
 );
 
-const change =
-periodChangeFromTicker(
-tick
+return `Считаем движение… ${job.done} / ${total}`;
+
+}
+
+function syncUiFromJob(){
+
+const job =
+getStatsJobState();
+
+const runningHere =
+isJobRunningForPeriod(
+activePeriod
+);
+
+setRefreshBusy(
+runningHere
 );
 
 if(
-!change ||
-change.pct <=
-0
+!job
 ){
-continue;
-}
-
-rows.push({
-symbol,
-...change
-});
-
-}
-
-rows.sort(
-(
-a,
-b
-)=>
-b.pct -
-a.pct
-);
-
-const top =
-rows.slice(
-0,
-100
-);
-
-writeCache(
-period,
-top
-);
-
-return top;
-
-}
-
-const days =
-PERIOD_DAYS[
-period
-] ||
-1;
-
-const rows =
-[];
-
-let done =
-0;
-
-let successCount =
-0;
-
-let failCount =
-0;
-
-await runPool(
-symbols,
-POOL_SIZE,
-async symbol=>{
-
-const tick =
-tickers.get(
-symbol
-);
-
-const currentPrice =
-Number(
-tick?.price
-);
-
-if(
-!Number.isFinite(
-currentPrice
-) ||
-currentPrice <=
-0
-){
-done++;
-onProgress?.(
-done,
-symbols.length
-);
 return;
 }
 
-const candles =
-await fetchDailyCandles(
-symbol,
-days
+if(
+job.period !==
+activePeriod
+){
+
+if(
+runningHere
+){
+return;
+}
+
+if(
+job.status ===
+"running"
+){
+setStatus(
+`${jobProgressLabel(
+job
+)} · в фоне (${PERIOD_LABELS[job.period]}) · можно перейти на другую страницу`,
+false,
+true
+);
+}
+
+return;
+
+}
+
+if(
+job.status ===
+"running"
+){
+
+const hasCache =
+!!readCacheEntry(
+activePeriod
+)?.rows?.length;
+
+setStatus(
+`${jobProgressLabel(
+job
+)}${hasCache ? "" : ""} · можно перейти на другую страницу`,
+false,
+true
+);
+
+return;
+
+}
+
+if(
+job.status ===
+"error"
+){
+
+setStatus(
+job.error ||
+"Не удалось загрузить данные Bybit",
+true
+);
+
+const entry =
+readCacheEntry(
+activePeriod
 );
 
 if(
-!candles ||
-candles.length <
-MIN_KLINE_SAMPLES
+entry?.rows?.length
 ){
-failCount++;
+renderRows(
+entry.rows
+);
+}
+
+return;
+
+}
+
+if(
+job.status ===
+"done"
+){
+
+const entry =
+readCacheEntry(
+activePeriod
+);
+
+if(
+entry?.rows?.length
+){
+
+renderRows(
+entry.rows
+);
+
+setStatus(
+formatCacheStatus(
+activePeriod,
+entry
+)
+);
+
 }else{
 
-const change =
-periodChangeFromDaily(
-candles,
-days,
-currentPrice
-);
-
-if(
-change &&
-change.pct >
+setStatus(
+formatReadyStatus(
+activePeriod,
 0
-){
-rows.push({
-symbol,
-...change
-});
-successCount++;
-}else{
-successCount++;
-}
-
-}
-
-done++;
-onProgress?.(
-done,
-symbols.length
+)
 );
 
 }
-);
 
-rows.sort(
-(
-a,
-b
-)=>
-b.pct -
-a.pct
-);
-
-const top =
-rows.slice(
-0,
-100
-);
-
-if(
-top.length
-){
-writeCache(
-period,
-top
-);
-}else if(
-failCount >
-symbols.length *
-0.5 ||
-successCount ===
-0
-){
-throw new Error(
-"Bybit временно ограничил запросы. Подождите 2–3 минуты и выберите период снова."
-);
 }
-
-return top;
 
 }
 
@@ -1336,6 +780,41 @@ readCacheEntry(
 period
 );
 
+const job =
+getStatsJobState();
+
+if(
+job?.status ===
+"running" &&
+job.period ===
+period
+){
+
+if(
+entry?.rows?.length
+){
+
+renderRows(
+entry.rows
+);
+
+}else if(
+rowsEl
+){
+
+rowsEl.innerHTML = "";
+renderRows(
+[]
+);
+
+}
+
+syncUiFromJob();
+
+return;
+
+}
+
 if(
 entry?.rows?.length
 ){
@@ -1364,18 +843,17 @@ entry
 
 }
 
-async function refreshPeriod(
+function refreshPeriod(
 period = activePeriod
 ){
 
 if(
-isRefreshing
+isJobRunningForPeriod(
+period
+)
 ){
 return;
 }
-
-const token =
-++loadToken;
 
 const entry =
 readCacheEntry(
@@ -1387,24 +865,16 @@ const hasCache =
 entry?.rows?.length
 );
 
-setRefreshBusy(
-true
-);
+if(
+!hasCache &&
+rowsEl
+){
+rowsEl.innerHTML = "";
+}
 
 if(
-hasCache
+!hasCache
 ){
-
-setStatus(
-period ===
-"1d"
-? "Обновляем…"
-: "Считаем движение…",
-false,
-true
-);
-
-}else{
 
 setStatus(
 period ===
@@ -1416,114 +886,12 @@ period !==
 "1d"
 );
 
-if(
-rowsEl
-){
-rowsEl.innerHTML = "";
 }
 
-}
-
-try{
-
-const rows =
-await loadMoversForPeriod(
-period,
-(
-done,
-total
-)=>{
-
-if(
-token !==
-loadToken
-){
-return;
-}
-
-if(
-period ===
-"1d"
-){
-setStatus(
-"Обновляем…",
-false,
-true
-);
-return;
-}
-
-setStatus(
-`Считаем движение… ${done} / ${total}`,
-false,
-true
-);
-
-}
-);
-
-if(
-token !==
-loadToken
-){
-return;
-}
-
-renderRows(
-rows
-);
-
-const fresh =
-readCacheEntry(
+startStatsBackgroundRefresh(
 period
 );
-
-setStatus(
-fresh
-? formatCacheStatus(
-period,
-fresh
-)
-: formatReadyStatus(
-period,
-rows.length
-)
-);
-
-}catch(
-err
-){
-
-console.error(
-err
-);
-
-if(
-token !==
-loadToken
-){
-return;
-}
-
-setStatus(
-err?.message ||
-"Не удалось загрузить данные Bybit",
-true
-);
-
-if(
-!hasCache
-){
-showPeriodFromCache(
-period
-);
-}
-
-}finally{
-setRefreshBusy(
-false
-);
-}
+syncUiFromJob();
 
 }
 
@@ -1582,10 +950,6 @@ active
 }
 );
 
-++loadToken;
-setRefreshBusy(
-false
-);
 showPeriodFromCache(
 period
 );
@@ -1614,13 +978,26 @@ activePeriod
 
 }
 
+function onStatsJobUpdate(){
+
+syncUiFromJob();
+}
+
 function init(){
 
 bindPeriodTabs();
 bindRefreshButton();
+
+window.addEventListener(
+STATS_JOB_UPDATE_EVENT,
+onStatsJobUpdate
+);
+
+resumeStatsBackgroundJob();
 showPeriodFromCache(
 "1d"
 );
+syncUiFromJob();
 
 }
 
@@ -1679,7 +1056,8 @@ document.addEventListener(
 ()=>{
 
 if(
-isRefreshing
+getStatsJobState()?.status ===
+"running"
 ){
 return;
 }
