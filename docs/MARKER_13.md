@@ -1,8 +1,10 @@
 # Метка 13 — рабочая версия (июнь 2026)
 
+> **Superseded by [MARKER_14.md](./MARKER_14.md)** (`metka-14`) — текущий рабочий эталон.
+
 **Тег:** `metka-13` · **Коммит:** `git rev-parse metka-13`
 
-**Текущий эталон отката.** Наследует [MARKER_12.md](./MARKER_12.md).
+Наследует [MARKER_12.md](./MARKER_12.md).
 
 Проверено: `check:all` OK (syntax, manifest, nav, 14/14 tests).
 

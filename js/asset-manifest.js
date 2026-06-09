@@ -31,27 +31,27 @@ Object.freeze({
 "chart-page.js":
 6,
 "terminal.js":
-271,
+285,
 "terminal/coins-state.js":
-2,
-"terminal/coins-prefs.js":
 4,
+"terminal/coins-prefs.js":
+5,
 "terminal/coins-table.js":
-3,
+6,
 "telegram-bot-public.js":
 1,
 "dashboard.js":
 78,
 "screener.js":
-64,
+67,
 "site-boot.js":
 82,
 "suppress-native-context-menu.js":
-1,
+2,
 "charts-lib-boot.js":
 3,
 "chart-import.js":
-14,
+25,
 "chart-widget-host.js":
 3,
 "tablet-gesture-policy.js":
@@ -61,13 +61,13 @@ Object.freeze({
 
 /* ── JS: chart / drawings ── */
 "chart.js":
-122,
+132,
 "chart/chart-options.js":
 4,
 "chart/chart-dom-crosshair.js":
-11,
+12,
 "chart/chart-factory.js":
-9,
+19,
 "chart-tablet-gestures.js":
 17,
 "coins-tablet-controller.js":
@@ -135,7 +135,7 @@ Object.freeze({
 "bybit-fetch.js":
 13,
 "bybit-listings.js":
-2,
+4,
 "bybit-network-ui.js":
 2,
 "bybit-route-pref.js":
@@ -242,7 +242,7 @@ Object.freeze({
 "common.css":
 21,
 "screener.css":
-21,
+24,
 "terminal.css":
 106,
 "dashboard.css":
@@ -267,7 +267,7 @@ Object.freeze({
 });
 
 export const CHART_BUILD_ID =
-"20260529-probe-horiz-future";
+"20260609-future-timescale-v10";
 
 export function jsVer(
 name

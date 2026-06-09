@@ -1,11 +1,12 @@
 import {
 coinsState,
 marketMap,
-coinElements,
-stockSymbols,
-commoditySymbols,
-forexSymbols
-} from "./coins-state.js?v=2";
+coinElements
+} from "./coins-state.js?v=4";
+
+import {
+isBybitCoinsDataset
+} from "../bybit-listings.js?v=4";
 
 import {
 connectKlineStream
@@ -59,21 +60,31 @@ return coinsState().newListings;
 }
 
 if(
-dataset === "stocks"
+dataset ===
+"innovation"
 ){
-return stockSymbols;
+return coinsState().innovationListings;
 }
 
 if(
-dataset === "commodities"
+dataset ===
+"stocks"
 ){
-return commoditySymbols;
+return coinsState().stockListings;
 }
 
 if(
-dataset === "forex"
+dataset ===
+"commodities"
 ){
-return forexSymbols;
+return coinsState().commodityListings;
+}
+
+if(
+dataset ===
+"forex"
+){
+return coinsState().forexListings;
 }
 
 console.warn(
@@ -124,6 +135,40 @@ item
 let resortPriceColsTimer =
 null;
 
+let coinListRenderFrozen =
+false;
+
+let coinListRenderPending =
+false;
+
+export function syncCoinListFreezeFromFlagMenus(){
+
+const anyOpen =
+!!document.querySelector(
+".coin-flag-menu:not(.hidden)"
+);
+
+if(
+anyOpen
+){
+coinListRenderFrozen =
+true;
+return;
+}
+
+coinListRenderFrozen =
+false;
+
+if(
+coinListRenderPending
+){
+coinListRenderPending =
+false;
+renderListImpl();
+}
+
+}
+
 export function scheduleResortPriceColumns(){
 
 if(
@@ -148,135 +193,12 @@ renderList();
 
 }
 
-export async function primeAltMarketSnapshots(){
-
-const dataset =
-coinsState().currentDataset;
-
-if(
-dataset !== "stocks" &&
-dataset !== "commodities" &&
-dataset !== "forex"
-){
-return;
-}
-
-const symbols =
-getCurrentSymbols();
-
-if(
-!symbols.length
-){
-return;
-}
-
-try{
-const { fetchTwelveTimeSeries } =
-await import("../twelvedata-fetch.js?v=1");
-
-await Promise.all(
-symbols.map(
-async symbol=>{
-
-try{
-const json =
-await fetchTwelveTimeSeries(
-symbol,
-"1day",
-2
-);
-
-const rows =
-json?.values;
-
-if(
-!Array.isArray(
-rows
-) ||
-!rows.length
-){
-return;
-}
-
-const last =
-rows[
-0
-];
-const prev =
-rows[
-1
-];
-const close =
-Number(
-last?.close
-);
-const prevClose =
-Number(
-prev?.close ??
-last?.open
-);
-
-const item =
-marketMap.get(
-symbol
-);
-
-if(
-!item ||
-!Number.isFinite(
-close
-)
-){
-return;
-}
-
-item.price =
-close;
-
-if(
-Number.isFinite(
-prevClose
-) &&
-prevClose !==
-0
-){
-item.change24 =
-(
-(close - prevClose) /
-prevClose
-) *
-100;
-}
-
-}catch{
-/* один символ — не блокируем список */
-}
-
-}
-)
-);
-
-renderList();
-
-}catch(
-err
-){
-
-console.warn(
-"Twelve Data snapshots:",
-err?.message ||
-err
-);
-
-}
-
-}
-
 export async function primeTickerSnapshots(){
 
 if(
-coinsState().currentDataset !== "crypto" &&
-coinsState().currentDataset !== "new"
+!isBybitCoinsDataset(
+coinsState().currentDataset
+)
 ){
 return;
 }
@@ -374,8 +296,9 @@ scheduleTickerUiFlush();
 export function startRealtime(){
 
 if(
-coinsState().currentDataset !== "crypto" &&
-coinsState().currentDataset !== "new"
+!isBybitCoinsDataset(
+coinsState().currentDataset
+)
 ){
 return;
 }
@@ -474,6 +397,22 @@ return symbols[0] || null;
 }
 
 export function renderList(){
+
+if(
+coinListRenderFrozen
+){
+coinListRenderPending =
+true;
+return;
+}
+
+coinListRenderPending =
+false;
+renderListImpl();
+
+}
+
+function renderListImpl(){
 
 const list =
 document.getElementById(
@@ -593,6 +532,8 @@ flagMenu?.classList.remove("hidden");
 flagTrigger.setAttribute("aria-expanded", "true");
 }
 
+syncCoinListFreezeFromFlagMenus();
+
 });
 
 flagMenu?.querySelectorAll("[data-flag-group]").forEach(btn=>{
@@ -601,13 +542,14 @@ btn.addEventListener("click", e=>{
 
 e.stopPropagation();
 
+flagMenu?.classList.add("hidden");
+flagTrigger?.setAttribute("aria-expanded", "false");
+syncCoinListFreezeFromFlagMenus();
+
 hooks.applyCoinFavoriteGroup(
 item.symbol,
 btn.dataset.flagGroup
 );
-
-flagMenu?.classList.add("hidden");
-flagTrigger?.setAttribute("aria-expanded", "false");
 
 });
 

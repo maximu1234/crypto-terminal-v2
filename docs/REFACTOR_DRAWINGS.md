@@ -1,6 +1,6 @@
 # Refactor drawings — план (после metka-9)
 
-**Текущий эталон:** [MARKER_13.md](./MARKER_13.md) (`metka-13`).
+**Текущий эталон:** [MARKER_14.md](./MARKER_14.md) (`metka-14`).
 
 **Принцип:** одна фаза = одна метка = [DRAWINGS_REGRESSION.md](./DRAWINGS_REGRESSION.md) пройден.
 
@@ -43,6 +43,7 @@
 ## Rollback
 
 ```bash
-git checkout metka-13  # текущий эталон
+git checkout metka-14  # текущий эталон
+git checkout metka-13  # до Statistics / future scale / screener search
 git checkout metka-12  # до toolbar / iPad list / RSI invert
 ```

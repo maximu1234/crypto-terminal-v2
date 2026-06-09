@@ -20,7 +20,7 @@ clearCrosshairAxisLabels,
 hideTabletProbeCrosshair,
 hideDomChartCrosshairHorz,
 positionDomChartCrosshairHorz
-} from "./chart-dom-crosshair.js?v=11";
+} from "./chart-dom-crosshair.js?v=12";
 
 export function mountChartRangeFreeze(
 chart
@@ -405,6 +405,402 @@ to: candles.length + 25
 
 }
 
+/**
+ * Пустое место справа на шкале времени (подписи «в будущее»).
+ * ~15% видимого окна, как у TradingView (без жёсткого потолка в 80 баров).
+ */
+export function computeChartFutureMarginBars(
+visibleBars
+){
+
+const visible =
+Math.max(
+1,
+Math.floor(
+Number(
+visibleBars
+) ||
+1
+)
+);
+
+return Math.max(
+12,
+Math.round(
+visible *
+0.15
+)
+);
+
+}
+
+/** Пустые точки справа — LW рисует подписи шкалы времени «в будущее». */
+export function appendFutureWhitespaceBars(
+candles,
+barCount,
+tf
+){
+
+if(
+!Array.isArray(
+candles
+) ||
+!candles.length ||
+barCount <
+1
+){
+return candles;
+}
+
+const period =
+tfPeriodSec(
+tf
+);
+
+const lastTime =
+candles[
+candles.length -
+1
+].time;
+
+const out =
+candles.slice();
+
+for(
+let i =
+1;
+i <=
+barCount;
+i++
+){
+
+out.push({
+time:
+lastTime +
+period *
+i
+});
+
+}
+
+return out;
+
+}
+
+export function coinsTfVisibleBars(
+tf,
+candleCount
+){
+
+let visibleBars =
+Math.max(
+1,
+Number(
+candleCount
+) ||
+1
+);
+
+if(
+tf ===
+"1"
+){
+visibleBars =
+Math.min(
+visibleBars,
+1500
+);
+}
+
+if(
+tf ===
+"5"
+){
+visibleBars =
+Math.min(
+visibleBars,
+2000
+);
+}
+
+if(
+tf ===
+"15"
+){
+visibleBars =
+Math.min(
+visibleBars,
+2500
+);
+}
+
+if(
+tf ===
+"60"
+){
+visibleBars =
+Math.min(
+visibleBars,
+3000
+);
+}
+
+if(
+tf ===
+"240"
+){
+visibleBars =
+Math.min(
+visibleBars,
+2000
+);
+}
+
+if(
+tf ===
+"D"
+){
+visibleBars =
+Math.min(
+visibleBars,
+1000
+);
+}
+
+return visibleBars;
+
+}
+
+/**
+ * Монеты: шкала времени с «хвостом» в будущее (как TradingView).
+ * Явный barSpacing + rightOffset — иначе LW жмёт последнюю свечу к правому краю.
+ */
+export function applyCoinsChartViewport(
+mainChart,
+linkedChart,
+candles,
+tf,
+chartWidthPx,
+realCandleCount
+){
+
+if(
+!mainChart ||
+!Array.isArray(
+candles
+) ||
+!candles.length
+){
+return 0;
+}
+
+const totalBars =
+candles.length;
+
+const realTotal =
+Math.max(
+1,
+Math.min(
+realCandleCount ??
+totalBars,
+totalBars
+)
+);
+
+const futureMargin =
+Math.max(
+0,
+totalBars -
+realTotal
+);
+
+const visibleBars =
+Math.min(
+coinsTfVisibleBars(
+tf,
+realTotal
+),
+realTotal
+);
+
+const lastRealIndex =
+realTotal -
+1;
+
+const lastIndex =
+totalBars -
+1;
+
+const from =
+Math.max(
+0,
+lastRealIndex -
+visibleBars +
+1
+);
+
+const width =
+Math.max(
+chartWidthPx ||
+0,
+120
+);
+
+const plotWidth =
+linkedChart?.timeScale().width() ||
+mainChart.timeScale().width() ||
+Math.max(
+width -
+effectiveChartPriceScaleWidth(),
+40
+);
+
+const logicalSpan =
+Math.max(
+lastIndex -
+from +
+1,
+visibleBars +
+futureMargin,
+1
+);
+
+const barSpacing =
+Math.max(
+0.01,
+plotWidth /
+logicalSpan
+);
+
+const range = {
+from,
+to:
+lastIndex
+};
+
+const timeOpts = {
+barSpacing,
+rightOffset:
+4,
+fixRightEdge:
+false,
+fixLeftEdge:
+false,
+shiftVisibleRangeOnNewBar:
+false,
+lockVisibleTimeRangeOnResize:
+false
+};
+
+mainChart.timeScale().applyOptions(
+timeOpts
+);
+
+mainChart.timeScale().setVisibleLogicalRange(
+range
+);
+
+if(
+linkedChart
+){
+
+linkedChart.timeScale().applyOptions({
+...timeOpts,
+visible:
+true,
+timeVisible:
+true,
+ticksVisible:
+true,
+secondsVisible:
+false
+});
+
+linkedChart.timeScale().setVisibleLogicalRange(
+range
+);
+
+}
+
+return futureMargin;
+
+}
+
+/** После resize — сохранить диапазон, пересчитать barSpacing (будущее не схлопывается). */
+export function refreshCoinsChartBarSpacing(
+mainChart,
+linkedChart
+){
+
+if(
+!mainChart
+){
+return;
+}
+
+const range =
+mainChart.timeScale().getVisibleLogicalRange();
+
+if(
+!range
+){
+return;
+}
+
+const plotWidth =
+linkedChart?.timeScale().width() ||
+mainChart.timeScale().width();
+
+if(
+!plotWidth ||
+plotWidth <
+2
+){
+return;
+}
+
+const span =
+Math.max(
+range.to -
+range.from +
+1,
+1
+);
+
+const barSpacing =
+Math.max(
+0.01,
+plotWidth /
+span
+);
+
+mainChart.timeScale().applyOptions({
+barSpacing
+});
+
+if(
+linkedChart
+){
+
+linkedChart.timeScale().applyOptions({
+barSpacing
+});
+
+const linkedRange =
+mainChart.timeScale().getVisibleLogicalRange();
+
+if(
+linkedRange
+){
+linkedChart.timeScale().setVisibleLogicalRange(
+linkedRange
+);
+}
+
+}
+
+}
+
 function applyScreenerViewport(
 chart,
 chartWidth,
@@ -426,9 +822,8 @@ const from =
 Math.max(0, total - visibleBars);
 
 const rightMargin =
-Math.max(
-8,
-Math.round(visibleBars * 0.1)
+computeChartFutureMarginBars(
+visibleBars
 );
 
 const width =
@@ -588,9 +983,10 @@ bottom:0
 timeScale:{
 visible:true,
 timeVisible:true,
+ticksVisible:true,
 borderColor:"#1f2937",
 secondsVisible:false,
-rightOffset:12,
+rightOffset:24,
 fixRightEdge:false
 },
 

@@ -1,6 +1,6 @@
 # Метка 12 — рабочая версия (июнь 2026)
 
-> **Superseded by [MARKER_13.md](./MARKER_13.md)** (`metka-13`) — текущий рабочий эталон.
+> **Superseded by [MARKER_14.md](./MARKER_14.md)** (`metka-14`) — текущий рабочий эталон.
 
 **Тег:** `metka-12` · **Коммит:** `git rev-parse metka-12`
 

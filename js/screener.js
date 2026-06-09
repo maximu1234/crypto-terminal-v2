@@ -12,7 +12,7 @@ applyScreenerZoom,
 restoreScreenerViewport,
 SCREENER_VISIBLE_BARS,
 SCREENER_MAX_BARS
-} from "./chart-import.js?v=14";
+} from "./chart-import.js?v=25";
 
 import {
 subscribeKline
@@ -59,6 +59,11 @@ persistFavoritesToCloud,
 onFavoritesRemoteUpdate
 } from "./cloud-sync.js?v=34";
 
+import {
+attachSymbolAutocomplete,
+preloadTradingSymbols
+} from "./symbol-autocomplete.js?v=1";
+
 const gridEl =
 document.getElementById("screener-grid");
 
@@ -76,6 +81,12 @@ window.matchMedia(
 const SORT_LABELS = {
 change24: "24ч %",
 symbol: "А–Я"
+};
+
+const LAYOUT_LABELS = {
+4: "4",
+6: "6",
+9: "9"
 };
 
 const TF_LABELS = {
@@ -236,6 +247,7 @@ let screenerMarketLoadFailed = false;
 const tickerMap = new Map();
 let activeWidgets = [];
 let renderToken = 0;
+let highlightDismissListener = null;
 
 function persistState(){
 
@@ -354,33 +366,238 @@ start + pageSize()
 
 }
 
-function updateBarsHint(widget, loadedCount, visibleSpan){
+function findPageForSymbol(
+symbol
+){
 
-const barsEl =
-widget.root?.querySelector(".screener-bars-hint");
+const normalized =
+String(
+symbol ||
+""
+).trim().toUpperCase();
 
-if(!barsEl){
+if(
+!normalized
+){
+return null;
+}
+
+const sorted =
+getSortedSymbols();
+
+const index =
+sorted.indexOf(
+normalized
+);
+
+if(
+index <
+0
+){
+return null;
+}
+
+return Math.floor(
+index /
+pageSize()
+) +
+1;
+
+}
+
+function clearWidgetHighlight(){
+
+document.querySelectorAll(
+".screener-widget-highlight"
+).forEach(
+el=>{
+el.classList.remove(
+"screener-widget-highlight"
+);
+}
+);
+
+if(
+highlightDismissListener
+){
+
+document.removeEventListener(
+"click",
+highlightDismissListener,
+true
+);
+
+highlightDismissListener =
+null;
+
+}
+
+}
+
+function highlightWidget(
+symbol
+){
+
+clearWidgetHighlight();
+
+const widget =
+activeWidgets.find(
+w=>
+w.symbol ===
+symbol
+);
+
+if(
+!widget?.root
+){
 return;
 }
 
-const inFrame =
-Math.min(SCREENER_VISIBLE_BARS, loadedCount);
+widget.root.classList.add(
+"screener-widget-highlight"
+);
 
-const shown =
-visibleSpan > 0
-? visibleSpan
-: inFrame;
+widget.root.scrollIntoView({
+behavior:"smooth",
+block:"nearest",
+inline:"nearest"
+});
 
-const scrollable =
-Math.max(0, loadedCount - inFrame);
+highlightDismissListener =
+()=>{
+clearWidgetHighlight();
+};
 
-barsEl.textContent =
-`${loadedCount} · кадр ${shown}`;
+document.addEventListener(
+"click",
+highlightDismissListener,
+true
+);
 
-barsEl.title =
-scrollable > 0
-? `В серии ${loadedCount} свечей, в кадре ~${shown}. Прокрутите влево — ещё ~${scrollable} старых.`
-: `В серии ${loadedCount} свечей, в кадре ~${shown}.`;
+}
+
+function syncSymbolSearchInputs(
+symbol
+){
+
+const value =
+String(
+symbol ||
+""
+).trim().toUpperCase();
+
+document.querySelectorAll(
+".screener-symbol-search"
+).forEach(
+input=>{
+input.value =
+value;
+}
+);
+
+}
+
+async function jumpToSymbol(
+symbol
+){
+
+const normalized =
+String(
+symbol ||
+""
+).trim().toUpperCase();
+
+if(
+!normalized
+){
+return;
+}
+
+if(
+!allSymbols.length
+){
+
+setStatus(
+"Список монет ещё загружается…",
+true
+);
+
+return;
+
+}
+
+if(
+!allSymbols.includes(
+normalized
+)
+){
+
+setStatus(
+`Монета ${normalized} не найдена`,
+true
+);
+
+setTimeout(
+()=>{
+setStatus(
+"",
+false
+);
+},
+2800
+);
+
+return;
+
+}
+
+const page =
+findPageForSymbol(
+normalized
+);
+
+if(
+!page
+){
+return;
+}
+
+setStatus(
+"",
+false
+);
+
+syncSymbolSearchInputs(
+normalized
+);
+
+if(
+page !==
+currentPage
+){
+
+currentPage =
+page;
+persistState();
+await renderPage();
+
+}else{
+
+renderPagination();
+
+}
+
+requestAnimationFrame(
+()=>{
+requestAnimationFrame(
+()=>{
+highlightWidget(
+normalized
+);
+}
+);
+}
+);
 
 }
 
@@ -583,12 +800,7 @@ loaded[loaded.length - 1].close
 );
 
 const runZoom = ()=>{
-
-const span =
-widget.syncChartSize?.() ?? 0;
-
-updateBarsHint(widget, loaded.length, span);
-
+widget.syncChartSize?.();
 };
 
 runZoom();
@@ -692,6 +904,7 @@ const root =
 document.createElement("article");
 
 root.className = "screener-widget";
+root.dataset.symbol = symbol;
 
 root.innerHTML = `
 
@@ -713,17 +926,19 @@ root.innerHTML = `
 
 </div>
 
+<div class="screener-header-right">
+
 <div class="screener-meta">
 
 <span class="screener-volume">Объём 24ч —</span>
 
 <span class="screener-change">—</span>
 
-<span class="screener-bars-hint" title="загружено · в кадре"></span>
-
 </div>
 
 <button class="screener-open" type="button" title="Открыть в Монетах">↗</button>
+
+</div>
 
 </div>
 
@@ -1118,14 +1333,7 @@ layout = next;
 
 currentPage = 1;
 
-document.querySelectorAll(".layout-btn").forEach(btn=>{
-btn.classList.toggle(
-"active",
-Number(btn.dataset.layout) === layout
-);
-});
-
-syncMobileControlLabels();
+syncHeaderControlLabels();
 
 persistState();
 renderPage();
@@ -1138,14 +1346,7 @@ sortMode = next;
 
 currentPage = 1;
 
-document.querySelectorAll(".sort-btn").forEach(btn=>{
-btn.classList.toggle(
-"active",
-btn.dataset.sort === sortMode
-);
-});
-
-syncMobileControlLabels();
+syncHeaderControlLabels();
 
 persistState();
 renderPage();
@@ -1156,36 +1357,35 @@ function setTf(next){
 
 currentTF = next;
 
-document.querySelectorAll(".tf-btn").forEach(btn=>{
-btn.classList.toggle(
-"active",
-btn.dataset.tf === currentTF
-);
-});
-
-syncMobileControlLabels();
+syncHeaderControlLabels();
 
 persistState();
 renderPage();
 
 }
 
-function closeScreenerMobilePickers(){
+function closeScreenerPickers(){
 
 document.querySelectorAll(
-".screener-mobile-menu"
+".screener-mobile-menu, .screener-header-pick-menu"
 ).forEach(menu=>{
 menu.classList.add("hidden");
 });
 
 document.querySelectorAll(
-".screener-mobile-select"
+".screener-mobile-select, .screener-header-pick"
 ).forEach(btn=>{
 btn.setAttribute(
 "aria-expanded",
 "false"
 );
 });
+
+}
+
+function closeScreenerMobilePickers(){
+
+closeScreenerPickers();
 
 }
 
@@ -1281,6 +1481,77 @@ btn.classList.toggle(
 btn.dataset.tf === currentTF
 );
 });
+
+}
+
+function syncDesktopControlLabels(){
+
+const layoutLabel =
+document.getElementById(
+"screener-desktop-layout-label"
+);
+
+if(layoutLabel){
+layoutLabel.textContent =
+LAYOUT_LABELS[layout] ||
+String(layout);
+}
+
+const sortLabel =
+document.getElementById(
+"screener-desktop-sort-label"
+);
+
+if(sortLabel){
+sortLabel.textContent =
+SORT_LABELS[sortMode] ||
+"24ч %";
+}
+
+const tfLabel =
+document.getElementById(
+"screener-desktop-tf-label"
+);
+
+if(tfLabel){
+tfLabel.textContent =
+TF_LABELS[currentTF] ||
+currentTF;
+}
+
+document.querySelectorAll(
+"#screener-desktop-layout-menu .screener-header-pick-item"
+).forEach(btn=>{
+btn.classList.toggle(
+"active",
+Number(btn.dataset.layout) === layout
+);
+});
+
+document.querySelectorAll(
+"#screener-desktop-sort-menu .screener-header-pick-item"
+).forEach(btn=>{
+btn.classList.toggle(
+"active",
+btn.dataset.sort === sortMode
+);
+});
+
+document.querySelectorAll(
+"#screener-desktop-tf-menu .screener-header-pick-item"
+).forEach(btn=>{
+btn.classList.toggle(
+"active",
+btn.dataset.tf === currentTF
+);
+});
+
+}
+
+function syncHeaderControlLabels(){
+
+syncMobileControlLabels();
+syncDesktopControlLabels();
 
 }
 
@@ -1467,7 +1738,6 @@ const onMobileMqChange =
 syncScreenerNavDrawer();
 clampPage();
 applySavedUi();
-syncMobileControlLabels();
 renderPage();
 
 };
@@ -1486,37 +1756,166 @@ onMobileMqChange
 );
 }
 
-syncMobileControlLabels();
+syncHeaderControlLabels();
+
+}
+
+function bindDesktopHeaderPicks(){
+
+const picks = [
+{
+triggerId:"screener-desktop-layout-trigger",
+menuId:"screener-desktop-layout-menu",
+onSelect:btn=>{
+setLayout(
+Number(btn.dataset.layout)
+);
+}
+},
+{
+triggerId:"screener-desktop-sort-trigger",
+menuId:"screener-desktop-sort-menu",
+onSelect:btn=>{
+setSort(
+btn.dataset.sort
+);
+}
+},
+{
+triggerId:"screener-desktop-tf-trigger",
+menuId:"screener-desktop-tf-menu",
+onSelect:btn=>{
+setTf(
+btn.dataset.tf
+);
+}
+}
+];
+
+picks.forEach(
+({
+triggerId,
+menuId,
+onSelect
+})=>{
+
+const trigger =
+document.getElementById(
+triggerId
+);
+const menu =
+document.getElementById(
+menuId
+);
+
+if(
+!trigger ||
+!menu
+){
+return;
+}
+
+trigger.addEventListener(
+"click",
+e=>{
+e.stopPropagation();
+
+const open =
+!menu.classList.contains(
+"hidden"
+);
+
+closeScreenerPickers();
+
+if(open){
+return;
+}
+
+menu.classList.remove(
+"hidden"
+);
+trigger.setAttribute(
+"aria-expanded",
+"true"
+);
+
+}
+);
+
+menu.querySelectorAll(
+"button"
+).forEach(
+btn=>{
+
+btn.addEventListener(
+"click",
+e=>{
+e.stopPropagation();
+onSelect(
+btn
+);
+closeScreenerPickers();
+}
+);
+
+}
+);
+
+}
+);
+
+document.addEventListener(
+"click",
+e=>{
+
+if(
+e.target.closest(
+".screener-header-pick-wrap"
+)
+){
+return;
+}
+
+closeScreenerPickers();
+
+},
+true
+);
 
 }
 
 function bindControls(){
 
-document.querySelectorAll(".layout-btn").forEach(btn=>{
-
-btn.onclick = ()=>{
-setLayout(Number(btn.dataset.layout));
-};
-
-});
-
-document.querySelectorAll(".sort-btn").forEach(btn=>{
-
-btn.onclick = ()=>{
-setSort(btn.dataset.sort);
-};
-
-});
-
-document.querySelectorAll(".tf-btn").forEach(btn=>{
-
-btn.onclick = ()=>{
-setTf(btn.dataset.tf);
-};
-
-});
-
+bindDesktopHeaderPicks();
 bindMobileControls();
+bindSymbolSearch();
+
+}
+
+function bindSymbolSearch(){
+
+void preloadTradingSymbols();
+
+document.querySelectorAll(
+".screener-symbol-search"
+).forEach(
+input=>{
+
+attachSymbolAutocomplete(
+input,
+{
+onCommit:(
+sym
+)=>{
+void jumpToSymbol(
+sym
+);
+}
+}
+);
+
+}
+);
 
 }
 
@@ -1618,28 +2017,7 @@ goToPage(currentPage - 1);
 
 function applySavedUi(){
 
-document.querySelectorAll(".layout-btn").forEach(btn=>{
-btn.classList.toggle(
-"active",
-Number(btn.dataset.layout) === layout
-);
-});
-
-document.querySelectorAll(".sort-btn").forEach(btn=>{
-btn.classList.toggle(
-"active",
-btn.dataset.sort === sortMode
-);
-});
-
-document.querySelectorAll(".tf-btn").forEach(btn=>{
-btn.classList.toggle(
-"active",
-btn.dataset.tf === currentTF
-);
-});
-
-syncMobileControlLabels();
+syncHeaderControlLabels();
 
 }
 
@@ -1957,6 +2335,21 @@ setStatus(
 true
 );
 
+}
+
+const urlSymbol =
+new URLSearchParams(
+location.search
+).get(
+"symbol"
+);
+
+if(
+urlSymbol?.trim()
+){
+void jumpToSymbol(
+urlSymbol
+);
 }
 
 }

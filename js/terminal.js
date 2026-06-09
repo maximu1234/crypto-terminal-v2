@@ -1,14 +1,13 @@
 import {
 loadBybitHistory,
 loadBybitSymbols,
-loadTwelveData,
-peekBybitSymbolsCache,
-normalizeBybitSymbolList
+peekBybitSymbolsCache
 } from "./api.js?v=27";
 
 import {
-filterRecentListings
-} from "./bybit-listings.js?v=2";
+buildCoinsMarketLists,
+isBybitCoinsDataset
+} from "./bybit-listings.js?v=4";
 
 import {
 calculateRSI,
@@ -53,8 +52,14 @@ mountAxisDoubleTapReset,
 TABLET_USE_CUSTOM_TOUCH_PAN,
 isTabletChartViewport,
 isUserCrosshairEvent,
-resetChartPriceAutoScale
-} from "./chart-import.js?v=14";
+resetChartPriceAutoScale,
+computeChartFutureMarginBars,
+appendFutureWhitespaceBars,
+coinsTfVisibleBars,
+applyCoinsChartViewport,
+refreshCoinsChartBarSpacing,
+tfPeriodSec
+} from "./chart-import.js?v=25";
 
 import {
 mountCoinsTabletController
@@ -92,7 +97,7 @@ coinElements,
 COINS_TF_VALUES,
 COINS_MARKETS,
 isCoinsPage
-} from "./terminal/coins-state.js?v=2";
+} from "./terminal/coins-state.js?v=4";
 
 import {
 readCoinsPrefs,
@@ -103,21 +108,21 @@ resolveInitialSymbolAndTf,
 applyCoinsPrefs,
 applySortForCurrentMarket,
 readUrlParams
-} from "./terminal/coins-prefs.js?v=4";
+} from "./terminal/coins-prefs.js?v=5";
 
 import {
 getCurrentSymbols,
 generateMarketData,
 scheduleResortPriceColumns,
 primeTickerSnapshots,
-primeAltMarketSnapshots,
 startTickerStream,
 startRealtime,
 renderList,
 highlightActiveSymbol,
 getVisibleSymbolList,
-setCoinsTableHooks
-} from "./terminal/coins-table.js?v=3";
+setCoinsTableHooks,
+syncCoinListFreezeFromFlagMenus
+} from "./terminal/coins-table.js?v=6";
 
 let currentDataset = "crypto";
 let currentTF = "60";
@@ -151,6 +156,10 @@ loadFavoritesGroups();
 
 let allBybitSymbols = [];
 let newListings = [];
+let innovationListings = [];
+let stockListings = [];
+let commodityListings = [];
+let forexListings = [];
 
 let chart = null;
 let candleSeries = null;
@@ -282,6 +291,34 @@ return newListings;
 },
 set newListings(v){
 newListings = v;
+},
+
+get innovationListings(){
+return innovationListings;
+},
+set innovationListings(v){
+innovationListings = v;
+},
+
+get stockListings(){
+return stockListings;
+},
+set stockListings(v){
+stockListings = v;
+},
+
+get commodityListings(){
+return commodityListings;
+},
+set commodityListings(v){
+commodityListings = v;
+},
+
+get forexListings(){
+return forexListings;
+},
+set forexListings(v){
+forexListings = v;
 },
 
 get candleSeries(){
@@ -1165,6 +1202,41 @@ readCoinsPrefs().invertRsiChart === true
 const rsiSeries =
 rsi.series;
 
+let coinsFutureTimeAnchorSeries =
+rsiChart.addLineSeries({
+
+color:
+"rgba(0,0,0,0)",
+
+lineWidth:
+1,
+
+lastValueVisible:
+false,
+
+priceLineVisible:
+false,
+
+crosshairMarkerVisible:
+false,
+
+autoscaleInfoProvider:
+()=>({
+
+priceRange:{
+
+minValue:
+0,
+
+maxValue:
+100
+
+}
+
+})
+
+});
+
 applyTabletRsiChartOptions(
 rsiChart
 );
@@ -1295,6 +1367,103 @@ formatRsiHud(v);
 
 }
 
+function syncCoinsFutureTimeAnchorSeries(){
+
+if(
+!coinsFutureTimeAnchorSeries ||
+!candles.length
+){
+return;
+}
+
+const visibleBars =
+coinsTfVisibleBars(
+currentTF,
+candles.length
+);
+
+const futureMargin =
+computeChartFutureMarginBars(
+visibleBars
+);
+
+if(
+futureMargin <
+1
+){
+
+coinsFutureTimeAnchorSeries.setData(
+[]
+);
+
+return;
+
+}
+
+const period =
+tfPeriodSec(
+currentTF
+);
+
+const lastTime =
+candles[
+candles.length -
+1
+].time;
+
+const anchor =
+[];
+
+for(
+let i =
+1;
+i <=
+futureMargin;
+i++
+){
+
+anchor.push({
+time:
+lastTime +
+period *
+i
+});
+
+}
+
+coinsFutureTimeAnchorSeries.setData(
+anchor
+);
+
+}
+
+function buildRsiDisplayPoints(){
+
+if(
+!rsiPointsCache?.length
+){
+return [];
+}
+
+const visibleBars =
+coinsTfVisibleBars(
+currentTF,
+candles.length
+);
+
+const futureMargin =
+computeChartFutureMarginBars(
+visibleBars
+);
+
+return appendFutureWhitespaceBars(
+rsiPointsCache,
+futureMargin,
+currentTF
+);
+
+}
+
 function rebuildRsiFromCandles(){
 
 const raw =
@@ -1309,13 +1478,10 @@ raw
 );
 
 rsiSeries.setData(
-rsiPointsCache
+buildRsiDisplayPoints()
 );
 
-syncLinkedChartTimescales(
-chart,
-rsiChart
-);
+syncCoinsFutureTimeAnchorSeries();
 
 layoutRsiBand();
 
@@ -1756,57 +1922,58 @@ await loadBybitSymbols(
 options
 );
 
-coinsState().allBybitSymbols =
-normalizeBybitSymbolList(
+applyInstrumentLists(
 list
 );
+
+}
+
+function applyInstrumentLists(
+list
+){
+
+const lists =
+buildCoinsMarketLists(
+list
+);
+
+coinsState().allBybitSymbols =
+lists.crypto;
 
 coinsState().newListings =
-extractNewListingSymbolNames(
-list
-);
+lists.new;
+
+coinsState().innovationListings =
+lists.innovation;
+
+coinsState().stockListings =
+lists.stocks;
+
+coinsState().commodityListings =
+lists.commodities;
+
+coinsState().forexListings =
+lists.forex;
 
 }
 
-function extractNewListingSymbolNames(
-list
+function coinsMarketHasSymbols(
+market
 ){
 
-if(
-!Array.isArray(
-list
-) ||
-!list.length
-){
-return [];
-}
+const map = {
+crypto:coinsState().allBybitSymbols,
+new:coinsState().newListings,
+innovation:coinsState().innovationListings,
+stocks:coinsState().stockListings,
+commodities:coinsState().commodityListings,
+forex:coinsState().forexListings
+};
 
-const hasLaunchMeta =
-list.some(
-item=>
-item &&
-typeof item ===
-"object" &&
-item.launchTime !=
-null
-);
-
-if(
-!hasLaunchMeta
-){
-return [];
-}
-
-return filterRecentListings(
-list
-).map(
-x=>
-typeof x ===
-"string"
-? x
-: x.symbol
-).filter(
-Boolean
+return !!(
+map[
+market
+]?.length
 );
 
 }
@@ -1849,9 +2016,12 @@ searchInput.value =
 }
 
 if(
-nextMarket ===
-"new" &&
-!coinsState().newListings.length
+isBybitCoinsDataset(
+nextMarket
+) &&
+!coinsMarketHasSymbols(
+nextMarket
+)
 ){
 
 try{
@@ -1862,7 +2032,7 @@ forceNetwork:true
 err
 ){
 console.warn(
-"Terminal new listings:",
+"Terminal market symbols:",
 err?.message ||
 err
 );
@@ -1872,16 +2042,7 @@ err
 
 generateMarketData();
 
-if(
-nextMarket ===
-"crypto" ||
-nextMarket ===
-"new"
-){
 await primeTickerSnapshots();
-}else{
-await primeAltMarketSnapshots();
-}
 
 renderList();
 
@@ -1919,8 +2080,7 @@ if(
 return false;
 }
 
-allBybitSymbols =
-normalizeBybitSymbolList(
+applyInstrumentLists(
 stale
 );
 
@@ -1977,8 +2137,9 @@ window.addEventListener(
 ()=>{
 
 if(
-currentDataset === "crypto" ||
-currentDataset === "new"
+isBybitCoinsDataset(
+currentDataset
+)
 ){
 void reloadTerminalBybitData();
 }
@@ -1990,15 +2151,6 @@ window.addEventListener(
 "bybit-symbols-updated",
 e=>{
 
-if(
-currentDataset !==
-"crypto" &&
-currentDataset !==
-"new"
-){
-return;
-}
-
 const symbols =
 e.detail?.symbols;
 
@@ -2009,13 +2161,7 @@ if(
 return;
 }
 
-coinsState().allBybitSymbols =
-normalizeBybitSymbolList(
-symbols
-);
-
-coinsState().newListings =
-extractNewListingSymbolNames(
+applyInstrumentLists(
 symbols
 );
 
@@ -2030,69 +2176,170 @@ renderList();
    DEFAULT ZOOM
 ========================================================= */
 
-function applyDefaultZoom(){
+function buildChartDisplayCandles(){
 
-if(!candles.length){
+if(
+!candles.length
+){
+return [];
+}
+
+const visibleBars =
+coinsTfVisibleBars(
+currentTF,
+candles.length
+);
+
+const futureMargin =
+computeChartFutureMarginBars(
+visibleBars
+);
+
+return appendFutureWhitespaceBars(
+candles,
+futureMargin,
+currentTF
+);
+
+}
+
+function applyChartDimensions(){
+
+const chartWrap =
+document.getElementById(
+"chart-wrap"
+);
+
+const rsiEl =
+document.getElementById(
+"rsi-chart"
+);
+
+if(
+!chartWrap ||
+!rsiEl ||
+!chart ||
+!rsiChart
+){
+return false;
+}
+
+const w =
+Math.max(
+chartWrap.clientWidth,
+1
+);
+
+const chartH =
+Math.max(
+chartWrap.clientHeight,
+1
+);
+
+const rsiH =
+Math.max(
+rsiEl.clientHeight,
+1
+);
+
+if(
+w <
+2 ||
+chartH <
+2 ||
+rsiH <
+2
+){
+return false;
+}
+
+chart.applyOptions({
+width:w,
+height:chartH
+});
+
+rsiChart.applyOptions({
+width:w,
+height:rsiH
+});
+
+return true;
+
+}
+
+function settleCoinsChartViewport(){
+
+if(
+!candles.length ||
+!chart ||
+!rsiChart
+){
 return;
 }
 
-chart.timeScale().resetTimeScale();
-
-let visibleBars = candles.length;
-
-/* =========================================================
-   TF LIMITS
-========================================================= */
-
-if(currentTF === "1"){
-visibleBars = Math.min(candles.length, 1500);
-}
-
-if(currentTF === "5"){
-visibleBars = Math.min(candles.length, 2000);
-}
-
-if(currentTF === "15"){
-visibleBars = Math.min(candles.length, 2500);
-}
-
-if(currentTF === "60"){
-visibleBars = Math.min(candles.length, 3000);
-}
-
-if(currentTF === "240"){
-visibleBars = Math.min(candles.length, 2000);
-}
-
-if(currentTF === "D"){
-visibleBars = Math.min(candles.length, 1000);
-}
-
-const lastIndex =
-candles.length - 1;
-
-const rightMargin =
-Math.max(
-48,
-Math.round(visibleBars * 0.1)
+const chartWrap =
+document.getElementById(
+"chart-wrap"
 );
 
-chart.timeScale().applyOptions({
-rightOffset:12,
-fixRightEdge:false
-});
+const chartWidth =
+Math.max(
+chartWrap?.clientWidth ||
+0,
+chartEl?.clientWidth ||
+0,
+1
+);
 
-chart.timeScale().setVisibleLogicalRange({
-
-from: Math.max(0, lastIndex - visibleBars + 1),
-
-to: lastIndex + rightMargin
-
-});
-
-syncLinkedChartTimescales(
+applyCoinsChartViewport(
 chart,
-rsiChart
+rsiChart,
+buildChartDisplayCandles(),
+currentTF,
+chartWidth,
+candles.length
+);
+
+layoutRsiBand();
+
+}
+
+let coinsViewportSettleRaf =
+0;
+
+function applyDefaultZoom(){
+
+if(
+!candles.length
+){
+return;
+}
+
+const run =
+()=>{
+applyChartDimensions();
+settleCoinsChartViewport();
+drawingTools?.resize?.();
+drawingTools?.scheduleRedraw?.();
+};
+
+run();
+
+if(
+coinsViewportSettleRaf
+){
+cancelAnimationFrame(
+coinsViewportSettleRaf
+);
+}
+
+coinsViewportSettleRaf =
+requestAnimationFrame(
+()=>{
+coinsViewportSettleRaf =
+0;
+run();
+}
 );
 
 }
@@ -2126,6 +2373,19 @@ el.classList.toggle(
 
 async function loadSymbol(symbol){
 
+if(
+coinsViewportSettleRaf
+){
+
+cancelAnimationFrame(
+coinsViewportSettleRaf
+);
+
+coinsViewportSettleRaf =
+0;
+
+}
+
 const loadSeq = ++symbolLoadSeq;
 
 currentSymbol = symbol;
@@ -2142,11 +2402,6 @@ try{
 
 let nextCandles = [];
 
-if(
-currentDataset === "crypto" ||
-currentDataset === "new"
-){
-
 nextCandles =
 await loadBybitHistory(
 symbol,
@@ -2161,16 +2416,6 @@ batchGapMs:0
 
 );
 
-}else{
-
-nextCandles =
-await loadTwelveData(
-symbol,
-currentTF
-);
-
-}
-
 if(loadSeq !== symbolLoadSeq){
 return;
 }
@@ -2179,9 +2424,8 @@ candles = nextCandles;
 
 if(
 !candles.length &&
-(
-currentDataset === "crypto" ||
-currentDataset === "new"
+isBybitCoinsDataset(
+currentDataset
 )
 ){
 
@@ -2197,7 +2441,9 @@ return;
 
 }
 
-candleSeries.setData(candles);
+candleSeries.setData(
+buildChartDisplayCandles()
+);
 
 const refPrice =
 candles[candles.length - 1]?.close ?? 1;
@@ -2214,12 +2460,6 @@ rebuildRsiFromCandles();
 ========================================================= */
 
 applyDefaultZoom();
-
-resizeCharts();
-
-requestAnimationFrame(resizeCharts);
-setTimeout(resizeCharts, 50);
-setTimeout(resizeCharts, 300);
 
 drawingTools?.onSymbolChange();
 drawingTools?.resize();
@@ -2272,77 +2512,59 @@ false
    RESIZE
 ========================================================= */
 
+let coinsResizeRaf =
+0;
+
 function resizeCharts(){
 
-const chartWrap =
-document.getElementById("chart-wrap");
-const rsiEl =
-document.getElementById("rsi-chart");
-
 if(
-!chartWrap ||
-!rsiEl
+!applyChartDimensions()
 ){
 return;
 }
 
-const w =
-Math.max(
-chartWrap.clientWidth,
-1
-);
-
-const chartH =
-Math.max(
-chartWrap.clientHeight,
-1
-);
-
-const rsiH =
-Math.max(
-rsiEl.clientHeight,
-1
-);
-
 if(
-w < 2 ||
-chartH < 2 ||
-rsiH < 2
+candles.length
 ){
-return;
-}
 
-chart.applyOptions({
-width:w,
-height:chartH
-});
-
-rsiChart.applyOptions({
-width:w,
-height:rsiH
-});
-
-syncLinkedChartTimescales(
+refreshCoinsChartBarSpacing(
 chart,
 rsiChart
 );
 
-drawingTools?.resize();
+layoutRsiBand();
+
+}
+
+drawingTools?.resize?.();
 drawingTools?.scheduleRedraw?.();
 
-requestAnimationFrame(()=>{
-syncLinkedChartTimescales(
-chart,
-rsiChart
+}
+
+function scheduleResizeCharts(){
+
+if(
+coinsResizeRaf
+){
+cancelAnimationFrame(
+coinsResizeRaf
 );
-layoutRsiBand();
-});
+}
+
+coinsResizeRaf =
+requestAnimationFrame(
+()=>{
+coinsResizeRaf =
+0;
+resizeCharts();
+}
+);
 
 }
 
 window.addEventListener(
 "resize",
-resizeCharts
+scheduleResizeCharts
 );
 
 const chartWrapForResize =
@@ -2355,9 +2577,9 @@ typeof ResizeObserver !==
 ){
 
 const chartResizeObserver =
-new ResizeObserver(()=>{
-resizeCharts();
-});
+new ResizeObserver(
+scheduleResizeCharts
+);
 
 chartResizeObserver.observe(chartWrapForResize);
 
@@ -2545,6 +2767,8 @@ wrap.querySelector("[data-coin-flag-trigger]")?.setAttribute(
 
 });
 
+syncCoinListFreezeFromFlagMenus();
+
 }
 
 function applyCoinFavoriteGroup(
@@ -2726,6 +2950,8 @@ flagTrigger.setAttribute(
 );
 }
 
+syncCoinListFreezeFromFlagMenus();
+
 }
 );
 
@@ -2750,17 +2976,18 @@ if(
 return;
 }
 
-applyCoinFavoriteGroup(
-sym,
-btn.dataset.flagGroup
-);
-
 flagMenu.classList.add(
 "hidden"
 );
 flagTrigger.setAttribute(
 "aria-expanded",
 "false"
+);
+syncCoinListFreezeFromFlagMenus();
+
+applyCoinFavoriteGroup(
+sym,
+btn.dataset.flagGroup
 );
 
 }
@@ -3122,8 +3349,9 @@ return "—";
 }
 
 if(
-currentDataset === "crypto" ||
-currentDataset === "new"
+isBybitCoinsDataset(
+currentDataset
+)
 ){
 return /\.P$/i.test(sym)
 ? sym
@@ -3228,9 +3456,8 @@ restoreSymbolsFromStaleCache();
 }
 
 if(
-(
-currentDataset === "crypto" ||
-currentDataset === "new"
+isBybitCoinsDataset(
+currentDataset
 ) &&
 !allBybitSymbols.length
 ){
@@ -3270,16 +3497,7 @@ renderList();
 
 try{
 
-if(
-currentDataset ===
-"crypto" ||
-currentDataset ===
-"new"
-){
 await primeTickerSnapshots();
-}else{
-await primeAltMarketSnapshots();
-}
 
 }catch(
 err
@@ -3422,6 +3640,94 @@ flushCoinsPrefs();
 );
 
 bootstrapCoinsPageState();
+
+window.__coinsChartDebug =
+function(){
+
+const lastIdx =
+Math.max(
+0,
+(candles?.length ||
+1) -
+1
+);
+
+const lastBarX =
+chart?.timeScale?.()?.logicalToCoordinate?.(
+lastIdx
+);
+
+const chartW =
+chartEl?.clientWidth ||
+0;
+
+const plotW =
+chart?.timeScale?.()?.width?.() ||
+0;
+
+const rsiPlotW =
+rsiChart?.timeScale?.()?.width?.() ||
+0;
+
+const rsiLastBarX =
+rsiChart?.timeScale?.()?.logicalToCoordinate?.(
+lastIdx
+);
+
+return {
+build:
+"20260609-future-timescale-v10",
+candles:
+candles?.length ||
+0,
+mainRange:
+chart?.timeScale?.()?.getVisibleLogicalRange?.(),
+rsiRange:
+rsiChart?.timeScale?.()?.getVisibleLogicalRange?.(),
+mainRightOffset:
+chart?.timeScale?.()?.options?.()?.rightOffset,
+rsiRightOffset:
+rsiChart?.timeScale?.()?.options?.()?.rightOffset,
+mainBarSpacing:
+chart?.timeScale?.()?.options?.()?.barSpacing,
+lastBarX,
+chartW,
+plotW,
+mainFutureGapPx:
+Number.isFinite(
+lastBarX
+) &&
+Number.isFinite(
+plotW
+) &&
+plotW >
+0
+? plotW -
+lastBarX
+: (
+Number.isFinite(
+lastBarX
+) &&
+Number.isFinite(
+chartW
+)
+? chartW -
+lastBarX
+: null
+),
+rsiFutureGapPx:
+Number.isFinite(
+rsiLastBarX
+) &&
+Number.isFinite(
+rsiPlotW
+)
+? rsiPlotW -
+rsiLastBarX
+: null
+};
+
+};
 
 setCoinsTableHooks({
 setCoinsChartSymbol,

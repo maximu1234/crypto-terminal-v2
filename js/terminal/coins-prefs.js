@@ -5,12 +5,12 @@ COINS_MARKETS,
 COINS_SORT_MODES,
 COINS_TF_VALUES,
 isCoinsPage
-} from "./coins-state.js?v=2";
+} from "./coins-state.js?v=4";
 
 import {
 getCurrentSymbols,
 getFirstVisibleSymbol
-} from "./coins-table.js?v=3";
+} from "./coins-table.js?v=6";
 
 export function defaultSortEntry(){
 

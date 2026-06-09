@@ -1,7 +1,52 @@
 /**
  * Блокирует стандартное браузерное меню (Save Image, Inspect…).
  * Кастомные меню (шкала, рисунки) сами вызывают preventDefault в своих обработчиках.
+ * В верхней навигации ссылки оставляем нативное меню («Открыть в новой вкладке» и т.д.).
  */
+const SITE_NAV_MENU_SELECTOR =
+[
+"nav.menu",
+"nav.screener-nav-panel",
+"nav.coins-header-desktop",
+"#coins-nav-panel",
+"#screener-nav-panel",
+"#site-nav-panel"
+].join(
+", "
+);
+
+function allowSiteNavContextMenu(
+target
+){
+
+if(
+!(
+target instanceof Element
+)
+){
+return false;
+}
+
+const navRoot =
+target.closest(
+SITE_NAV_MENU_SELECTOR
+);
+
+if(
+navRoot &&
+target.closest(
+"a[href]"
+)
+){
+return true;
+}
+
+return !!target.closest(
+"header #logo, .screener-page-header #logo, .coins-page-header #logo"
+);
+
+}
+
 export function initSuppressNativeContextMenu(){
 
 document.addEventListener(
@@ -22,6 +67,14 @@ return;
 if(
 t?.closest?.(
 'input, textarea, select, [contenteditable="true"]'
+)
+){
+return;
+}
+
+if(
+allowSiteNavContextMenu(
+t
 )
 ){
 return;

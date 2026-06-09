@@ -64,7 +64,7 @@ ensureDrawToolsVisible
 
 import {
 initSuppressNativeContextMenu
-} from "./suppress-native-context-menu.js?v=1";
+} from "./suppress-native-context-menu.js?v=2";
 
 initSuppressNativeContextMenu();
 

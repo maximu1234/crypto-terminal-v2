@@ -17,6 +17,10 @@ hasUrlSymbol:false,
 favorites:null,
 allBybitSymbols:[],
 newListings:[],
+innovationListings:[],
+stockListings:[],
+commodityListings:[],
+forexListings:[],
 candleSeries:null,
 chart:null,
 rsiChart:null,
@@ -24,7 +28,9 @@ drawingTools:null
 };
 
 export const isCoinsPage =
-window.location.pathname.includes("/coins");
+window.location.pathname.includes(
+"/coins"
+);
 
 export const marketMap =
 new Map();
@@ -38,6 +44,7 @@ export const COINS_PREFS_KEY =
 export const COINS_MARKETS = [
 "crypto",
 "new",
+"innovation",
 "stocks",
 "commodities",
 "forex"
@@ -60,24 +67,6 @@ new Set([
 "240",
 "D"
 ]);
-
-export const stockSymbols = [
-"AAPL","TSLA","NVDA","MSFT","AMZN",
-"META","GOOGL","NFLX","AMD","COIN","PLTR"
-];
-
-export const commoditySymbols = [
-"XAU/USD",
-"XAG/USD",
-"BRENT"
-];
-
-export const forexSymbols = [
-"EUR/USD",
-"GBP/USD",
-"USD/JPY",
-"AUD/USD"
-];
 
 export function registerCoinsState(
 bindings

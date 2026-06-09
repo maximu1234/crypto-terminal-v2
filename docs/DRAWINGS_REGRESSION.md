@@ -1,6 +1,6 @@
 # Регрессия рисования — чеклист перед wiring (Фаза 0)
 
-**База отката:** `git checkout metka-13` (текущий эталон) или `metka-12`
+**База отката:** `git checkout metka-14` (текущий эталон) или `metka-13`
 
 Проходить **до** и **после** каждой фазы refactor (`draw-hit`, `draw-render`, `drawings-tablet-input`, cloud).
 
@@ -92,5 +92,5 @@ npm run check:all
 | Фаза | Содержание | Метка |
 |------|------------|-------|
 | 0–3 | чеклист, draw-hit/render, tablet, cloud split | `metka-12` |
-| prod UI/toolbar/iPad list | toolbar, RSI invert, list nav | `metka-13` |
+| prod UI/toolbar/iPad list | toolbar, RSI invert, list nav | `metka-14` |
 | 4 | `alerts-cloud` split | TBD |
