@@ -68,7 +68,7 @@ initSuppressNativeContextMenu
 
 import {
 resumeStatsBackgroundJob
-} from "./statistics-background.js?v=1";
+} from "./statistics-background.js?v=2";
 
 initSuppressNativeContextMenu();
 

@@ -327,6 +327,21 @@ if(
 return null;
 }
 
+const resumeDone =
+Number(
+state.resume?.nextIndex ||
+0
+);
+
+const done =
+Math.max(
+Number(
+state.done ||
+0
+),
+resumeDone
+);
+
 return {
 period:state.period ||
 "1d",
@@ -336,12 +351,13 @@ gen:Number(
 state.gen ||
 0
 ),
-done:Number(
-state.done ||
-0
-),
+done,
 total:Number(
 state.total ||
+0
+) ||
+Number(
+state.resume?.symbols?.length ||
 0
 ),
 startedAt:Number(
@@ -707,11 +723,91 @@ pct
 
 }
 
+function canResumeJob(
+gen
+){
+
+const job =
+readJobState();
+
+if(
+!job ||
+job.gen !==
+gen ||
+!job.resume
+){
+return null;
+}
+
+const nextIndex =
+Math.max(
+0,
+Number(
+job.resume.nextIndex ||
+0
+)
+);
+
+if(
+!Array.isArray(
+job.resume.symbols
+) ||
+!job.resume.symbols.length ||
+nextIndex <=
+0
+){
+return null;
+}
+
+return {
+...job.resume,
+nextIndex
+};
+
+}
+
 async function loadMoversForPeriod(
 period,
 gen,
 onProgress
 ){
+
+const savedResume =
+canResumeJob(
+gen
+);
+
+let symbols =
+[];
+
+let tickersMap =
+new Map();
+
+if(
+savedResume
+){
+
+symbols =
+savedResume.symbols;
+tickersMap =
+tickersFromPlain(
+savedResume.tickers
+);
+
+const resumedDone =
+savedResume.nextIndex;
+
+patchJobState({
+total:symbols.length,
+done:resumedDone
+});
+
+onProgress?.(
+resumedDone,
+symbols.length
+);
+
+}else{
 
 const tickers =
 new Map();
@@ -728,7 +824,7 @@ gen
 return null;
 }
 
-const symbols =
+symbols =
 [
 ...tickers.keys()
 ].filter(
@@ -738,18 +834,30 @@ symbol.endsWith(
 )
 );
 
+tickersMap =
+tickers;
+
+if(
+period !==
+"1d"
+){
+
 patchJobState({
 total:symbols.length,
 done:0,
 resume:{
 symbols,
 tickers:tickersToPlain(
-tickers
+tickersMap
 ),
 rows:[],
 nextIndex:0
 }
 });
+
+}
+
+}
 
 if(
 period ===
@@ -765,7 +873,7 @@ symbols
 ){
 
 const tick =
-tickers.get(
+tickersMap.get(
 symbol
 );
 
@@ -826,6 +934,7 @@ period
 1;
 
 const resume =
+savedResume ||
 readJobState()?.resume;
 
 let rows =
@@ -846,20 +955,16 @@ resume?.nextIndex ||
 )
 );
 
-const tickersMap =
-resume?.tickers
-? tickersFromPlain(
-resume.tickers
-)
-: tickers;
-
 const symbolList =
+symbols.length
+? symbols
+: (
 Array.isArray(
 resume?.symbols
-) &&
-resume.symbols.length
+)
 ? resume.symbols
-: symbols;
+: []
+);
 
 let done =
 startIndex;

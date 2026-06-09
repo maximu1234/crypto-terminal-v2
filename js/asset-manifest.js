@@ -224,9 +224,9 @@ Object.freeze({
 "listings.js":
 4,
 "statistics.js":
-7,
+8,
 "statistics-background.js":
-1,
+2,
 "trade-calculator.js":
 3,
 "system-admin-page.js":

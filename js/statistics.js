@@ -6,7 +6,7 @@ cacheStorageKey,
 getStatsJobState,
 startStatsBackgroundRefresh,
 resumeStatsBackgroundJob
-} from "./statistics-background.js?v=1";
+} from "./statistics-background.js?v=2";
 
 const statusEl =
 document.getElementById(
