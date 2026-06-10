@@ -113,7 +113,7 @@ Object.freeze({
 "draw-ui-shared.js":
 20,
 "draw-toolbar-icon-data.js":
-10,
+11,
 "draw-tools-visible.js":
 1,
 "dashboard-draw-ui.js":
