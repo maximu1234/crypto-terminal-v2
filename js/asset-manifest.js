@@ -31,13 +31,13 @@ Object.freeze({
 "chart-page.js":
 6,
 "terminal.js":
-285,
+286,
 "terminal/coins-state.js":
-4,
-"terminal/coins-prefs.js":
 5,
-"terminal/coins-table.js":
+"terminal/coins-prefs.js":
 6,
+"terminal/coins-table.js":
+7,
 "telegram-bot-public.js":
 1,
 "dashboard.js":
@@ -135,7 +135,7 @@ Object.freeze({
 "bybit-fetch.js":
 13,
 "bybit-listings.js":
-4,
+5,
 "bybit-network-ui.js":
 2,
 "bybit-route-pref.js":

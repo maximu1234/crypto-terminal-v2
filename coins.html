@@ -144,7 +144,7 @@ if(!raw){
 return;
 }
 var prefs=JSON.parse(raw);
-var market=prefs.market||"crypto";
+var market=prefs.market||"all";
 var last=
 prefs.lastViewByMarket&&
 prefs.lastViewByMarket[market];
@@ -267,6 +267,10 @@ el.textContent=saved;
 <div id="filter-wrap">
 
 <select id="market-filter">
+
+<option value="all">
+Все
+</option>
 
 <option value="crypto">
 Crypto

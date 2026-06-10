@@ -2,11 +2,11 @@ import {
 coinsState,
 marketMap,
 coinElements
-} from "./coins-state.js?v=4";
+} from "./coins-state.js?v=5";
 
 import {
 isBybitCoinsDataset
-} from "../bybit-listings.js?v=4";
+} from "../bybit-listings.js?v=5";
 
 import {
 connectKlineStream
@@ -46,6 +46,13 @@ export function getCurrentSymbols(){
 
 const dataset =
 coinsState().currentDataset;
+
+if(
+dataset ===
+"all"
+){
+return coinsState().allListings;
+}
 
 if(
 dataset === "crypto"

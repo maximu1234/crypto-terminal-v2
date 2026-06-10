@@ -7,7 +7,7 @@ peekBybitSymbolsCache
 import {
 buildCoinsMarketLists,
 isBybitCoinsDataset
-} from "./bybit-listings.js?v=4";
+} from "./bybit-listings.js?v=5";
 
 import {
 calculateRSI,
@@ -97,7 +97,7 @@ coinElements,
 COINS_TF_VALUES,
 COINS_MARKETS,
 isCoinsPage
-} from "./terminal/coins-state.js?v=4";
+} from "./terminal/coins-state.js?v=5";
 
 import {
 readCoinsPrefs,
@@ -108,7 +108,7 @@ resolveInitialSymbolAndTf,
 applyCoinsPrefs,
 applySortForCurrentMarket,
 readUrlParams
-} from "./terminal/coins-prefs.js?v=5";
+} from "./terminal/coins-prefs.js?v=6";
 
 import {
 getCurrentSymbols,
@@ -122,9 +122,9 @@ highlightActiveSymbol,
 getVisibleSymbolList,
 setCoinsTableHooks,
 syncCoinListFreezeFromFlagMenus
-} from "./terminal/coins-table.js?v=6";
+} from "./terminal/coins-table.js?v=7";
 
-let currentDataset = "crypto";
+let currentDataset = "all";
 let currentTF = "60";
 let currentSymbol = "BTCUSDT";
 let isCoinsChartInverted =
@@ -154,6 +154,7 @@ let hasUrlSymbol = false;
 let favorites =
 loadFavoritesGroups();
 
+let allListings = [];
 let allBybitSymbols = [];
 let newListings = [];
 let innovationListings = [];
@@ -277,6 +278,13 @@ return favorites;
 },
 set favorites(v){
 favorites = v;
+},
+
+get allListings(){
+return allListings;
+},
+set allListings(v){
+allListings = v;
 },
 
 get allBybitSymbols(){
@@ -1937,6 +1945,9 @@ buildCoinsMarketLists(
 list
 );
 
+coinsState().allListings =
+lists.all;
+
 coinsState().allBybitSymbols =
 lists.crypto;
 
@@ -1962,6 +1973,7 @@ market
 ){
 
 const map = {
+all:coinsState().allListings,
 crypto:coinsState().allBybitSymbols,
 new:coinsState().newListings,
 innovation:coinsState().innovationListings,
@@ -2066,6 +2078,7 @@ currentSymbol
 function restoreSymbolsFromStaleCache(){
 
 if(
+allListings.length ||
 allBybitSymbols.length
 ){
 return true;
@@ -2085,6 +2098,8 @@ stale
 );
 
 return (
+allListings.length >
+0 ||
 allBybitSymbols.length >
 0
 );
@@ -3459,7 +3474,9 @@ if(
 isBybitCoinsDataset(
 currentDataset
 ) &&
-!allBybitSymbols.length
+!coinsMarketHasSymbols(
+currentDataset
+)
 ){
 
 try{

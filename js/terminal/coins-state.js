@@ -1,6 +1,6 @@
 /** Shared coins page state — wired from terminal.js via registerCoinsState(). */
 const state = {
-currentDataset:"crypto",
+currentDataset:"all",
 currentTF:"60",
 currentSymbol:"BTCUSDT",
 isCoinsChartInverted:false,
@@ -15,6 +15,7 @@ flagSortAsc:false,
 searchQuery:"",
 hasUrlSymbol:false,
 favorites:null,
+allListings:[],
 allBybitSymbols:[],
 newListings:[],
 innovationListings:[],
@@ -42,6 +43,7 @@ export const COINS_PREFS_KEY =
 "coins_page_prefs_v1";
 
 export const COINS_MARKETS = [
+"all",
 "crypto",
 "new",
 "innovation",

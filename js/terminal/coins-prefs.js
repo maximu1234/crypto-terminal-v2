@@ -5,7 +5,7 @@ COINS_MARKETS,
 COINS_SORT_MODES,
 COINS_TF_VALUES,
 isCoinsPage
-} from "./coins-state.js?v=4";
+} from "./coins-state.js?v=5";
 
 import {
 getCurrentSymbols,
@@ -67,7 +67,7 @@ lastViewByMarket[m] = defaultLastViewEntry();
 }
 
 return {
-market:"crypto",
+market:"all",
 sortByMarket,
 lastViewByMarket,
 invertChart:false,
@@ -269,7 +269,7 @@ JSON.parse(raw);
 prefs.market =
 COINS_MARKETS.includes(parsed?.market)
 ? parsed.market
-: "crypto";
+: "all";
 
 for(const m of COINS_MARKETS){
 prefs.sortByMarket[m] =
@@ -339,7 +339,7 @@ defaultCoinsPrefs();
 out.market =
 COINS_MARKETS.includes(prefs?.market)
 ? prefs.market
-: "crypto";
+: "all";
 
 for(const m of COINS_MARKETS){
 out.sortByMarket[m] =
@@ -523,7 +523,7 @@ params.get("tf");
 
 if(symbol){
 coinsState().currentSymbol = symbol.trim().toUpperCase();
-coinsState().currentDataset = "crypto";
+coinsState().currentDataset = "all";
 coinsState().hasUrlSymbol = true;
 }
 

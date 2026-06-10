@@ -20,6 +20,7 @@ export const BYBIT_LISTINGS_PAGE_WINDOW_MS =
 
 export const BYBIT_COINS_DATASETS =
 new Set([
+"all",
 "crypto",
 "new",
 "innovation",
@@ -228,6 +229,34 @@ b.symbol
 
 }
 
+export function filterAllListings(
+instruments
+){
+
+return tradingInstruments(
+instruments
+)
+.filter(
+item=>
+String(
+item.symbol ||
+""
+).endsWith(
+"USDT"
+)
+)
+.sort(
+(
+a,
+b
+)=>
+a.symbol.localeCompare(
+b.symbol
+)
+);
+
+}
+
 export function filterMainCryptoListings(
 instruments
 ){
@@ -285,7 +314,7 @@ s
 
 /**
  * Разбивка instruments-info по вкладкам /coins (как на Bybit).
- * @returns {{ crypto: string[], new: string[], innovation: string[], stocks: string[], commodities: string[], forex: string[] }}
+ * @returns {{ all: string[], crypto: string[], new: string[], innovation: string[], stocks: string[], commodities: string[], forex: string[] }}
  */
 export function buildCoinsMarketLists(
 instruments
@@ -298,6 +327,7 @@ instruments
 !instruments.length
 ){
 return {
+all:[],
 crypto:[],
 new:[],
 innovation:[],
@@ -345,6 +375,7 @@ s
 );
 
 return {
+all:names,
 crypto:names,
 new:[],
 innovation:[],
@@ -356,6 +387,11 @@ forex:[]
 }
 
 return {
+all:symbolNames(
+filterAllListings(
+instruments
+)
+),
 crypto:symbolNames(
 filterMainCryptoListings(
 instruments
