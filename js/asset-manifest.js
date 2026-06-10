@@ -31,11 +31,11 @@ Object.freeze({
 "chart-page.js":
 6,
 "terminal.js":
-293,
+294,
 "terminal/coins-state.js":
 5,
 "terminal/coins-prefs.js":
-6,
+7,
 "terminal/coins-table.js":
 9,
 "telegram-bot-public.js":
