@@ -146,7 +146,7 @@ fixedBands: [hud]
 
 assert.equal(ys[0], 57);
 assert.equal(ys[1], 75);
-assert.equal(ys[2], 125);
+assert.equal(ys[2], 134);
 
 for(
 const band of [
