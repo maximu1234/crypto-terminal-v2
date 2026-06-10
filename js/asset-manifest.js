@@ -75,11 +75,11 @@ Object.freeze({
 "coins-tablet-controller.js":
 5,
 "drawings.js":
-199,
+200,
 "drawings/init.js":
-42,
+43,
 "drawings/scale-label-layout.js":
-1,
+2,
 "drawings/constants.js":
 6,
 "drawings/math.js":

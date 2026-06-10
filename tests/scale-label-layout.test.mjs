@@ -73,3 +73,117 @@ assert.equal(ys[2], 118);
 
 }
 );
+
+test(
+"layoutScaleLabelYs: обходит фиксированную плашку текущей цены сверху",
+()=>{
+
+const th =
+18;
+const hud = {
+centerY: 100,
+height: 32
+};
+const ys =
+layoutScaleLabelYs(
+[98],
+th,
+400,
+{
+fixedBands: [hud]
+}
+);
+
+assert.equal(ys[0], 75);
+
+}
+);
+
+test(
+"layoutScaleLabelYs: обходит фиксированную плашку текущей цены снизу",
+()=>{
+
+const th =
+18;
+const hud = {
+centerY: 100,
+height: 32
+};
+const ys =
+layoutScaleLabelYs(
+[102],
+th,
+400,
+{
+fixedBands: [hud]
+}
+);
+
+assert.equal(ys[0], 125);
+
+}
+);
+
+test(
+"layoutScaleLabelYs: несколько меток и HUD без перекрытий",
+()=>{
+
+const th =
+18;
+const hud = {
+centerY: 100,
+height: 32
+};
+const ys =
+layoutScaleLabelYs(
+[98, 99, 102],
+th,
+400,
+{
+fixedBands: [hud]
+}
+);
+
+assert.equal(ys[0], 57);
+assert.equal(ys[1], 75);
+assert.equal(ys[2], 125);
+
+for(
+const band of [
+{ centerY: 100, height: 32 }
+]
+){
+for(
+const y of ys
+){
+const lTop = y - th / 2;
+const lBottom = y + th / 2;
+const bTop = band.centerY - band.height / 2;
+const bBottom = band.centerY + band.height / 2;
+assert.ok(
+lBottom <= bTop ||
+lTop >= bBottom
+);
+}
+
+}
+
+for(
+let i = 0;
+i < ys.length;
+i++
+){
+for(
+let j = i + 1;
+j < ys.length;
+j++
+){
+assert.ok(
+Math.abs(ys[i] - ys[j]) >= th
+);
+}
+
+}
+
+}
+);

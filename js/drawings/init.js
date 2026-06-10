@@ -70,8 +70,9 @@ touchDrawingsStorageSnap
 } from "../drawings-storage-poller.js?v=1";
 
 import {
-layoutScaleLabelYs
-} from "./scale-label-layout.js?v=1";
+layoutScaleLabelYs,
+CHART_PRICE_HUD_FALLBACK_HEIGHT
+} from "./scale-label-layout.js?v=2";
 
 import {
 formatPrice,
@@ -6044,6 +6045,75 @@ ctx.restore();
 
 }
 
+function getCurrentPriceHudBand(){
+
+const hud =
+wrapEl.querySelector(
+".chart-price-hud"
+);
+
+if(
+!hud ||
+hud.classList.contains(
+"hidden"
+)
+){
+return null;
+}
+
+let centerY =
+parseFloat(
+String(
+hud.style.top ||
+""
+)
+);
+
+if(
+!Number.isFinite(
+centerY
+)
+){
+
+const data =
+series.data();
+const last =
+data?.[data.length - 1];
+
+if(
+!last ||
+last.close == null
+){
+return null;
+}
+
+centerY =
+series.priceToCoordinate(
+last.close
+);
+
+if(
+centerY == null ||
+!Number.isFinite(
+centerY
+)
+){
+return null;
+}
+
+}
+
+const height =
+hud.offsetHeight ||
+CHART_PRICE_HUD_FALLBACK_HEIGHT;
+
+return {
+centerY,
+height
+};
+
+}
+
 function drawPriceScaleLabels(ctx){
 
 const entries = [];
@@ -6110,11 +6180,20 @@ if(!entries.length){
 return;
 }
 
+const hudBand =
+getCurrentPriceHudBand();
+
 const yDraws =
 layoutScaleLabelYs(
 entries.map(e=>e.yIdeal),
 CHART_SCALE_LABEL_LINE_HEIGHT,
-chartSize().h
+chartSize().h,
+{
+fixedBands:
+hudBand
+? [hudBand]
+: []
+}
 );
 
 entries.forEach((entry, i)=>{
