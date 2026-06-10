@@ -15,7 +15,7 @@ fibLevelXSpan
 
 import {
 FIB_HIT_X_PAD_PX
-} from "./constants.js?v=5";
+} from "./constants.js?v=6";
 
 /**
  * @param {object} deps

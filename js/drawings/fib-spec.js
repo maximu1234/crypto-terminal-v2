@@ -8,7 +8,7 @@ WIDTH_OPTIONS,
 FIB_MIN_ANCHOR_SPAN_PX,
 FIB_LABEL_X_PAD_PX,
 FIB_LABEL_RIGHT_RESERVE_PX
-} from "./constants.js?v=5";
+} from "./constants.js?v=6";
 
 const FIB_LINE_STYLE_OPTIONS = [
 { value: "solid", label: "Line" },
