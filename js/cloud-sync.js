@@ -25,7 +25,7 @@ favoritesToCloudList,
 favoritesFromCloudList,
 favoritesGroupsEqual,
 favoritesSignature as favoritesGroupsSignature
-} from "./favorites.js?v=1";
+} from "./favorites.js?v=2";
 
 import {
 collectAllLocalDrawings,

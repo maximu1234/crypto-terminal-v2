@@ -710,6 +710,18 @@ background:#9ca3af;
 border-color:#9ca3af;
 }
 
+.coin-flag-pick.flag--blue,
+.screener-flag-pick.flag--blue{
+background:#3b82f6;
+border-color:#3b82f6;
+}
+
+.coin-flag-pick.flag-pick--disabled,
+.screener-flag-pick.flag-pick--disabled{
+opacity:0.35;
+cursor:not-allowed;
+}
+
 .coin-flag-clear,
 .screener-flag-clear{
 width:var(--flag-color-size);
@@ -745,6 +757,14 @@ border-color:#22c55e;
 .flag--gray.favorite.screener-flag-btn::before{
 background:#9ca3af;
 border-color:#9ca3af;
+}
+
+.coin-flag-btn.flag--blue::before,
+.screener-flag-btn.flag--blue::before,
+.flag--blue.favorite.coin-flag-btn::before,
+.flag--blue.favorite.screener-flag-btn::before{
+background:#3b82f6;
+border-color:#3b82f6;
 }
 
 @media (max-width:640px){

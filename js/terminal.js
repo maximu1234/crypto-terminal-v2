@@ -20,8 +20,10 @@ loadFavoritesGroups,
 saveFavoritesGroups,
 getFavoriteGroup,
 setFavoriteGroup,
-flagSortRank
-} from "./favorites.js?v=1";
+flagSortRank,
+FLAG_TITLES,
+canSetBlueFlag
+} from "./favorites.js?v=2";
 
 import {
 ensureCloudReady
@@ -122,7 +124,7 @@ highlightActiveSymbol,
 getVisibleSymbolList,
 setCoinsTableHooks,
 syncCoinListFreezeFromFlagMenus
-} from "./terminal/coins-table.js?v=7";
+} from "./terminal/coins-table.js?v=9";
 
 let currentDataset = "all";
 let currentTF = "60";
@@ -2857,6 +2859,11 @@ if(!symbol){
 return;
 }
 
+const before =
+JSON.stringify(
+favorites
+);
+
 if(
 group === "clear" ||
 group === null
@@ -2866,6 +2873,15 @@ setFavoriteGroup(symbol, null, favorites);
 }else{
 favorites =
 setFavoriteGroup(symbol, group, favorites);
+}
+
+if(
+JSON.stringify(
+favorites
+) ===
+before
+){
+return;
 }
 
 saveFavoritesGroups(favorites);
@@ -2902,11 +2918,7 @@ function updateCoinFlagButton(btn, symbol){
 const group =
 getFavoriteGroup(symbol, favorites);
 
-const titles = {
-red:"Красный флаг",
-green:"Зелёный флаг",
-gray:"Серый флаг"
-};
+const titles = FLAG_TITLES;
 
 btn.className =
 "flag coin-flag-btn screener-flag-btn";
@@ -3814,7 +3826,12 @@ loadSymbol,
 closeAllCoinFlagMenus,
 applyCoinFavoriteGroup,
 updateCoinFlagButton,
-rebuildRsiFromCandles
+rebuildRsiFromCandles,
+applyChartLiveCandle(){
+candleSeries.setData(
+buildChartDisplayCandles()
+);
+}
 });
 
 setCoinsChartSymbol(

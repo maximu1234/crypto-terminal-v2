@@ -1,9 +1,11 @@
 import {
-saveWidgetState,
-loadWidgetState,
-saveLayout,
-loadLayout
-} from "./storage.js?v=12";
+saveWidgetStateBySymbol,
+loadWidgetStateBySymbol
+} from "./storage.js?v=13";
+
+import {
+getTerminalBlueSymbols
+} from "./favorites.js?v=2";
 
 import {
 loadBybitHistory
@@ -45,8 +47,7 @@ ensureDrawToolsVisible
 } from "./draw-tools-visible.js?v=1";
 
 import {
-preloadTradingSymbols,
-attachSymbolAutocomplete
+preloadTradingSymbols
 } from "./symbol-autocomplete.js?v=1";
 
 import {
@@ -64,27 +65,12 @@ getWidgetFlagHtml,
 wireWidgetFlagUi,
 updateWidgetFlagUi,
 bindWidgetFlagGlobalListeners
-} from "./widget-favorite-flag.js?v=2";
+} from "./widget-favorite-flag.js?v=3";
 
 const dashboard =
 document.getElementById("dashboard");
 
-let currentLayout =
-loadLayout();
-
 let activeWidgetIndex = 0;
-
-const defaultSymbols = [
-"BTCUSDT",
-"ETHUSDT",
-"SOLUSDT",
-"XRPUSDT",
-"BNBUSDT",
-"ADAUSDT",
-"DOGEUSDT",
-"LINKUSDT",
-"AVAXUSDT"
-];
 
 const widgets = [];
 
@@ -355,15 +341,20 @@ dashboard.innerHTML = "";
 
 }
 
-function createWidget(index){
+function createWidget(
+symbol,
+index
+){
+
+const fixedSymbol =
+String(
+symbol || ""
+).trim().toUpperCase();
 
 const saved =
-loadWidgetState(index);
-
-const startSymbol =
-saved?.symbol ||
-defaultSymbols[index] ||
-"BTCUSDT";
+loadWidgetStateBySymbol(
+fixedSymbol
+);
 
 const startTf =
 saved?.tf ||
@@ -374,6 +365,7 @@ document.createElement("div");
 
 widget.className = "widget";
 widget.dataset.index = String(index);
+widget.dataset.symbol = fixedSymbol;
 
 widget.innerHTML = `
 
@@ -387,7 +379,7 @@ ${getWidgetFlagHtml()}
 
 <div class="left-controls">
 
-<input class="symbol-input" value="${startSymbol}" spellcheck="false" autocomplete="off"/>
+<span class="widget-symbol screener-symbol">${fixedSymbol}</span>
 
 <select class="tf-select">
 <option value="1" ${startTf==="1"?"selected":""}>1m</option>
@@ -439,9 +431,6 @@ widget.querySelector(
 ".widget-draw-tools"
 );
 
-const symbolInput =
-widget.querySelector(".symbol-input");
-
 const tfSelect =
 widget.querySelector(".tf-select");
 
@@ -459,7 +448,7 @@ const loadSeq = { id: 0 };
 let candles = [];
 
 function getSymbol(){
-return symbolInput.value.trim().toUpperCase();
+return fixedSymbol;
 }
 
 function getTf(){
@@ -481,7 +470,7 @@ getCandles: ()=> candles,
 isActive: ()=>
 activeWidgetIndex ===
 index,
-barPosKey: `draw_bar_dashboard_${index}`,
+barPosKey: `draw_bar_dashboard_${fixedSymbol}`,
 abortTabletChartGesture:()=>{
 cancelTabletPanGesture?.();
 }
@@ -547,7 +536,8 @@ onActivate:setActive
 
 wireWidgetFlagUi(
 widget,
-getSymbol
+getSymbol,
+renderDashboard
 );
 
 const entry = {
@@ -617,8 +607,7 @@ const symbol = getSymbol();
 const tf = getTf();
 const seq = ++loadSeq.id;
 
-saveWidgetState(
-index,
+saveWidgetStateBySymbol(
 symbol,
 tf
 );
@@ -827,15 +816,6 @@ releaseDashboardLoadSlot();
 
 tfSelect.onchange = loadData;
 
-attachSymbolAutocomplete(
-symbolInput,
-{
-onCommit:()=>{
-loadData();
-}
-}
-);
-
 function resizeChart(){
 
 const w =
@@ -872,36 +852,32 @@ setActive();
 
 }
 
-function dashboardWidgetCount(){
+function dashboardGridClass(
+count
+){
+
+if(
+!count
+){
+return "terminal-empty-grid";
+}
 
 return isTerminalMobile()
-? 2
-: currentLayout;
+? `grid-mobile-scroll grid-n-${count}`
+: `grid-n-${count}`;
 
 }
 
-function dashboardGridClass(){
+function renderTerminalEmptyState(){
 
-return isTerminalMobile()
-? "grid-mobile-2"
-: `grid-${currentLayout}`;
+dashboard.className =
+"terminal-empty-grid";
 
-}
-
-function syncLayoutButtons(){
-
-if(isTerminalMobile()){
-return;
-}
-
-document.querySelectorAll(".layout-btn").forEach(btn=>{
-
-btn.classList.toggle(
-"active",
-Number(btn.dataset.layout) === currentLayout
-);
-
-});
+dashboard.innerHTML = `
+<div class="terminal-empty-state">
+<p class="terminal-empty-title">Нет выбранных графиков</p>
+<p class="terminal-empty-hint">Отметьте монеты синим флагом на Главной или в Монетах (не более 9).</p>
+</div>`;
 
 }
 
@@ -909,23 +885,30 @@ function renderDashboard(){
 
 destroyAllWidgets();
 
-dashboard.className =
-dashboardGridClass();
+const symbols =
+getTerminalBlueSymbols();
 
-const count =
-dashboardWidgetCount();
-
-if(!isTerminalMobile()){
-saveLayout(currentLayout);
+if(
+!symbols.length
+){
+renderTerminalEmptyState();
+return;
 }
 
-for(
-let i = 0;
-i < count;
-i++
-){
+dashboard.innerHTML = "";
+
+dashboard.className =
+dashboardGridClass(
+symbols.length
+);
+
+symbols.forEach(
+(symbol, i)=>{
 try{
-createWidget(i);
+createWidget(
+symbol,
+i
+);
 }catch(
 err
 ){
@@ -935,27 +918,9 @@ err
 );
 }
 }
-
-syncLayoutButtons();
+);
 
 }
-
-document.querySelectorAll(".layout-btn").forEach(btn=>{
-
-btn.onclick = ()=>{
-
-if(isTerminalMobile()){
-return;
-}
-
-currentLayout =
-Number(btn.dataset.layout);
-
-renderDashboard();
-
-};
-
-});
 
 const onTerminalMobileMqChange =
 ()=>{
@@ -983,19 +948,7 @@ typeof LightweightCharts !==
 : loadLightweightCharts();
 
 bindWidgetFlagGlobalListeners(
-()=>{
-
-widgets.forEach(
-w=>{
-updateWidgetFlagUi(
-w.widget,
-w.getSymbol?.() ||
-""
-);
-}
-);
-
-}
+renderDashboard
 );
 
 chartsReady.then(()=>{

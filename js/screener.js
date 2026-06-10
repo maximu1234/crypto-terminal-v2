@@ -29,20 +29,22 @@ createTickerUiBatcher
 
 import {
 mountReleaseMarker
-} from "./release-marker.js?v=1";
+} from "./release-marker.js?v=2";
 
 import {
 saveScreenerState,
 loadScreenerState
-} from "./storage.js?v=12";
+} from "./storage.js?v=13";
 
 import {
 loadFavoritesGroups,
 saveFavoritesGroups,
 getFavoriteGroup,
 setFavoriteGroup,
-migrateFavorites
-} from "./favorites.js?v=1";
+migrateFavorites,
+canSetBlueFlag,
+FLAG_TITLES
+} from "./favorites.js?v=2";
 
 import {
 ensureCloudReady
@@ -151,11 +153,7 @@ btn.classList.add(
 );
 }
 
-const titles = {
-red:"Красный флаг",
-green:"Зелёный флаг",
-gray:"Серый флаг"
-};
+const titles = FLAG_TITLES;
 
 btn.title =
 group
@@ -166,6 +164,34 @@ btn.setAttribute(
 "aria-pressed",
 group ? "true" : "false"
 );
+
+const blueBtn =
+root?.querySelector(
+'[data-flag-group="blue"]'
+);
+
+if(
+blueBtn
+){
+
+const full =
+!canSetBlueFlag(
+symbol,
+favorites
+);
+
+blueBtn.disabled =
+full;
+blueBtn.classList.toggle(
+"flag-pick--disabled",
+full
+);
+blueBtn.title =
+full
+? "Максимум 9 монет в Терминале"
+: "Синий (Терминал)";
+
+}
 
 }
 
@@ -194,6 +220,11 @@ if(!symbol){
 return;
 }
 
+const before =
+JSON.stringify(
+favorites
+);
+
 if(
 group === "clear" ||
 group === null
@@ -203,6 +234,15 @@ setFavoriteGroup(symbol, null, favorites);
 }else{
 favorites =
 setFavoriteGroup(symbol, group, favorites);
+}
+
+if(
+JSON.stringify(
+favorites
+) ===
+before
+){
+return;
 }
 
 saveFavoritesGroups(
@@ -922,6 +962,7 @@ root.innerHTML = `
 <button type="button" class="flag screener-flag-pick flag--red" data-flag-group="red" title="Красный" role="menuitem"></button>
 <button type="button" class="flag screener-flag-pick flag--green" data-flag-group="green" title="Зелёный" role="menuitem"></button>
 <button type="button" class="flag screener-flag-pick flag--gray" data-flag-group="gray" title="Серый" role="menuitem"></button>
+<button type="button" class="flag screener-flag-pick flag--blue" data-flag-group="blue" title="Синий (Терминал)" role="menuitem"></button>
 <button type="button" class="flag screener-flag-pick screener-flag-clear" data-flag-group="clear" title="Снять флаг" role="menuitem"></button>
 </div>
 </div>

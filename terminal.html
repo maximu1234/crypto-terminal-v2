@@ -13,11 +13,11 @@
 
 <link rel="stylesheet" href="/css/critical-shell.css?v=2">
 <script src="/js/site-css-ready.js?v=2"></script>
-<link rel="stylesheet" href="/css/common.css?v=21">
-<link rel="stylesheet" href="/css/dashboard.css?v=28">
+<link rel="stylesheet" href="/css/common.css?v=22">
+<link rel="stylesheet" href="/css/dashboard.css?v=29">
 <link rel="stylesheet" href="/css/screener.css?v=25">
 <link rel="stylesheet" href="/css/site-mobile-nav.css?v=3">
-<link rel="stylesheet" href="/css/terminal-page.css?v=1">
+<link rel="stylesheet" href="/css/terminal-page.css?v=2">
 
 <script src="/vendor/lightweight-charts.standalone.production.js"></script>
 
@@ -56,20 +56,9 @@
 </div>
 </nav>
 
-<div id="header-controls" class="screener-header-desktop">
-
-<div class="control-group screener-layout-group">
-<span class="control-label">Виджеты</span>
-<button type="button" class="layout-btn" data-layout="4">4</button>
-<button type="button" class="layout-btn" data-layout="6">6</button>
-<button type="button" class="layout-btn active" data-layout="9">9</button>
-</div>
-
-</div>
-
 </header>
 
-<main id="dashboard" class="grid-9"></main>
+<main id="dashboard"></main>
 
 <script type="module">
 
@@ -101,9 +90,11 @@ const { loadLightweightCharts } =
 await import("/js/charts-lib-boot.js?v=3");
 
 await loadLightweightCharts();
-await import("/js/site-boot.js?v=83");
-await import("./js/dashboard.js?v=78");
+await import("./js/dashboard.js?v=79");
 await import("./js/terminal-page.js?v=3");
+import("/js/site-boot.js?v=83").catch(err=>{
+console.warn("site-boot:", err);
+});
 
 }catch(err){
 

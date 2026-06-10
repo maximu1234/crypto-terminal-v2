@@ -5,8 +5,10 @@ import {
 loadFavoritesGroups,
 saveFavoritesGroups,
 setFavoriteGroup,
-getFavoriteGroup
-} from "./favorites.js?v=1";
+getFavoriteGroup,
+canSetBlueFlag,
+FLAG_TITLES
+} from "./favorites.js?v=2";
 
 import {
 persistFavoritesToCloud,
@@ -25,9 +27,45 @@ return `
 <button type="button" class="flag screener-flag-pick flag--red" data-flag-group="red" title="Красный" role="menuitem"></button>
 <button type="button" class="flag screener-flag-pick flag--green" data-flag-group="green" title="Зелёный" role="menuitem"></button>
 <button type="button" class="flag screener-flag-pick flag--gray" data-flag-group="gray" title="Серый" role="menuitem"></button>
+<button type="button" class="flag screener-flag-pick flag--blue" data-flag-group="blue" title="Синий (Терминал)" role="menuitem"></button>
 <button type="button" class="flag screener-flag-pick screener-flag-clear" data-flag-group="clear" title="Снять флаг" role="menuitem"></button>
 </div>
 </div>`;
+
+}
+
+function refreshFlagMenuPickStates(
+root,
+symbol
+){
+
+const blueBtn =
+root?.querySelector(
+'[data-flag-group="blue"]'
+);
+
+if(
+!blueBtn
+){
+return;
+}
+
+const full =
+!canSetBlueFlag(
+symbol,
+favorites
+);
+
+blueBtn.disabled =
+full;
+blueBtn.classList.toggle(
+"flag-pick--disabled",
+full
+);
+blueBtn.title =
+full
+? "Максимум 9 монет в Терминале"
+: "Синий (Терминал)";
 
 }
 
@@ -65,15 +103,9 @@ btn.classList.add(
 );
 }
 
-const titles = {
-red: "Красный флаг",
-green: "Зелёный флаг",
-gray: "Серый флаг"
-};
-
 btn.title =
 group
-? titles[group]
+? FLAG_TITLES[group]
 : "Выбрать флаг";
 
 btn.setAttribute(
@@ -81,6 +113,11 @@ btn.setAttribute(
 group
 ? "true"
 : "false"
+);
+
+refreshFlagMenuPickStates(
+root,
+symbol
 );
 
 }
@@ -121,7 +158,8 @@ wrap.querySelector(
 
 function applyFavoriteGroup(
 symbol,
-group
+group,
+onChanged
 ){
 
 if(
@@ -129,6 +167,11 @@ if(
 ){
 return;
 }
+
+const before =
+JSON.stringify(
+favorites
+);
 
 if(
 group ===
@@ -151,18 +194,29 @@ favorites
 );
 }
 
+if(
+JSON.stringify(
+favorites
+) ===
+before
+){
+return;
+}
+
 saveFavoritesGroups(
 favorites
 );
 persistFavoritesToCloud(
 favorites
 );
+onChanged?.();
 
 }
 
 export function wireWidgetFlagUi(
 root,
-getSymbol
+getSymbol,
+onChanged = null
 ){
 
 const flagWrap =
@@ -213,6 +267,10 @@ flagTrigger.setAttribute(
 "aria-expanded",
 "true"
 );
+refreshFlagMenuPickStates(
+root,
+getSymbol()
+);
 }
 
 }
@@ -231,7 +289,8 @@ e.stopPropagation();
 
 applyFavoriteGroup(
 getSymbol(),
-btn.dataset.flagGroup
+btn.dataset.flagGroup,
+onChanged
 );
 
 updateWidgetFlagUi(

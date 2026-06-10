@@ -1,13 +1,21 @@
-const GROUPS = ["red", "green", "gray"];
-const GROUP_PREFIX_RE = /^(red|green|gray):/;
+const GROUPS = ["red", "green", "gray", "blue"];
+const GROUP_PREFIX_RE = /^(red|green|gray|blue):/;
 
-const FLAG_SORT_ORDER_ASC = ["green", "gray", "red"];
-const FLAG_SORT_ORDER_DESC = ["red", "gray", "green"];
-const FLAG_CYCLE = [null, "red", "green", "gray"];
+export const TERMINAL_MAX_BLUE_FLAGS =
+9;
+
+const FLAG_SORT_ORDER_ASC = ["green", "gray", "blue", "red"];
+const FLAG_SORT_ORDER_DESC = ["red", "blue", "gray", "green"];
+const FLAG_CYCLE = [null, "red", "green", "gray", "blue"];
 
 export function emptyFavorites(){
 
-return { red: [], green: [], gray: [] };
+return {
+red: [],
+green: [],
+gray: [],
+blue: []
+};
 
 }
 
@@ -28,7 +36,8 @@ typeof raw === "object" &&
 return {
 red: Array.isArray(raw.red) ? raw.red.filter(s=>typeof s === "string") : [],
 green: Array.isArray(raw.green) ? raw.green.filter(s=>typeof s === "string") : [],
-gray: Array.isArray(raw.gray) ? raw.gray.filter(s=>typeof s === "string") : []
+gray: Array.isArray(raw.gray) ? raw.gray.filter(s=>typeof s === "string") : [],
+blue: Array.isArray(raw.blue) ? raw.blue.filter(s=>typeof s === "string") : []
 };
 
 }
@@ -114,21 +123,78 @@ return null;
 
 }
 
+export function canSetBlueFlag(
+symbol,
+groups,
+max = TERMINAL_MAX_BLUE_FLAGS
+){
+
+const sym =
+String(
+symbol || ""
+).trim().toUpperCase();
+
+if(
+!sym
+){
+return false;
+}
+
+if(
+groups.blue.includes(sym)
+){
+return true;
+}
+
+return (
+groups.blue.length <
+max
+);
+
+}
+
+export function getTerminalBlueSymbols(
+groups = loadFavoritesGroups()
+){
+
+return groups.blue.slice(
+0,
+TERMINAL_MAX_BLUE_FLAGS
+);
+
+}
+
 export function setFavoriteGroup(symbol, group, groups){
 
 if(!symbol){
 return groups;
 }
 
+const sym =
+String(symbol).trim().toUpperCase();
+
 GROUPS.forEach(g=>{
 groups[g] =
-groups[g].filter(s=>s !== symbol);
+groups[g].filter(s=>s !== sym);
 });
 
 if(group){
+
 const g =
 normalizeGroup(group);
-groups[g].push(symbol);
+
+if(
+g === "blue" &&
+!canSetBlueFlag(
+sym,
+groups
+)
+){
+return groups;
+}
+
+groups[g].push(sym);
+
 }
 
 return groups;
@@ -210,3 +276,10 @@ const next =
 return FLAG_CYCLE[next];
 
 }
+
+export const FLAG_TITLES = {
+red: "Красный флаг",
+green: "Зелёный флаг",
+gray: "Серый флаг",
+blue: "Синий флаг (Терминал)"
+};

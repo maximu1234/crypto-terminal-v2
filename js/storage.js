@@ -3,7 +3,7 @@ loadFavoritesGroups,
 saveFavoritesGroups,
 favoritesToCloudList,
 favoritesFromCloudList
-} from "./favorites.js?v=1";
+} from "./favorites.js?v=2";
 
 export function saveWidgetState(index, symbol, tf){
 
@@ -18,6 +18,70 @@ localStorage.setItem(
 `widget_${index}`,
 JSON.stringify(state)
 );
+
+saveWidgetStateBySymbol(
+symbol,
+tf
+);
+
+}
+
+export function saveWidgetStateBySymbol(symbol, tf){
+
+const sym =
+String(
+symbol || ""
+).trim().toUpperCase();
+
+if(
+!sym
+){
+return;
+}
+
+localStorage.setItem(
+`widget_sym_${sym}`,
+JSON.stringify({
+symbol: sym,
+tf
+})
+);
+
+}
+
+export function loadWidgetStateBySymbol(symbol){
+
+const sym =
+String(
+symbol || ""
+).trim().toUpperCase();
+
+if(
+!sym
+){
+return null;
+}
+
+const raw =
+localStorage.getItem(
+`widget_sym_${sym}`
+);
+
+if(
+!raw
+){
+return null;
+}
+
+try{
+
+return JSON.parse(raw);
+
+}catch{
+
+return null;
+
+}
 
 }
 

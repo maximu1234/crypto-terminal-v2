@@ -22,7 +22,7 @@ favoritesToCloudList,
 favoritesFromCloudList,
 favoritesGroupsEqual,
 favoritesSignature
-} from "./favorites.js?v=1";
+} from "./favorites.js?v=2";
 
 import {
 readAlertTokenSync,

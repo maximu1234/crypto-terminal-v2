@@ -11,14 +11,19 @@ min-height:100dvh;
 min-height:-webkit-fill-available;
 }
 
-body.terminal-page #dashboard.grid-mobile-2{
+body.terminal-page #dashboard.grid-mobile-scroll{
 grid-template-columns:1fr;
-grid-template-rows:1fr 1fr;
+grid-auto-rows:minmax(
+45vh,
+1fr
+);
 gap:6px;
 padding:6px;
 padding-bottom:calc(
 6px + env(safe-area-inset-bottom, 0px)
 );
+overflow-y:auto;
+-webkit-overflow-scrolling:touch;
 }
 
 .terminal-mobile-bar{

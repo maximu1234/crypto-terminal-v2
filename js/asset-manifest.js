@@ -31,21 +31,21 @@ Object.freeze({
 "chart-page.js":
 6,
 "terminal.js":
-290,
+293,
 "terminal/coins-state.js":
 5,
 "terminal/coins-prefs.js":
 6,
 "terminal/coins-table.js":
-7,
+9,
 "telegram-bot-public.js":
 1,
 "dashboard.js":
-78,
+79,
 "screener.js":
-68,
+70,
 "release-marker.js":
-1,
+2,
 "site-boot.js":
 83,
 "suppress-native-context-menu.js":
@@ -127,13 +127,13 @@ Object.freeze({
 "indicators.js":
 3,
 "storage.js":
-12,
+13,
 "terminal-page.js":
 3,
 "coins-mobile.js":
 5,
 "widget-favorite-flag.js":
-2,
+3,
 
 /* ── JS: market data ── */
 "api.js":
@@ -184,7 +184,7 @@ Object.freeze({
 "alert-auth-cache.js":
 7,
 "favorites.js":
-1,
+2,
 "favorites-cloud-sync.js":
 3,
 
@@ -248,17 +248,17 @@ Object.freeze({
 "critical-shell.css":
 2,
 "common.css":
-21,
+22,
 "screener.css":
 25,
 "terminal.css":
 118,
 "dashboard.css":
-28,
+29,
 "coins.css":
 35,
 "terminal-page.css":
-1,
+2,
 "site-mobile-nav.css":
 3,
 "alerts.css":

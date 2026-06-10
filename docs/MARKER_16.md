@@ -1,8 +1,8 @@
-# Метка 16 — рабочая версия (июнь 2026)
+# Метка 16 — предыдущий эталон (июнь 2026)
 
 **Тег:** `metka-16` · **Коммит:** `git rev-parse metka-16`
 
-**Текущий эталон отката.** Предыдущая: [MARKER_15.md](./MARKER_15.md) (`metka-15`).
+**Предыдущий эталон отката.** Текущая: [MARKER_17.md](./MARKER_17.md) (`metka-17`).
 
 Проверено: asset manifest (ручная сверка + CI `check-asset-manifest.cjs`); site-nav (CI `check-site-nav.cjs`); `npm run check:all` — syntax + unit tests (CI / локально при наличии Node).
 
@@ -120,25 +120,12 @@
 
 ## Метки в репозитории
 
-Только **две** git-метки:
-
-| Тег | Роль |
-|-----|------|
-| `metka-16` | **Текущий** эталон (arrow + rectangle) |
-| `metka-15` | **Предыдущий** эталон (fib polish, long/short, TV color picker) |
-
-Старые `metka-14` и прочие удалены.
+См. [MARKER_17.md](./MARKER_17.md) — актуальные теги `metka-17` (текущий) и `metka-16` (предыдущий).
 
 ## Откат
 
 ```bash
 git fetch --tags
-git checkout metka-16   # текущий эталон
-git checkout metka-15   # до arrow / rectangle
+git checkout metka-17   # текущий эталон
+git checkout metka-16   # этот документ (arrow + rectangle)
 ```
-
-## Следующий шаг
-
-- Фаза 4 alerts-cloud **или** стабилизация Bybit proxy
-- После крупных правок: `sync-asset-versions` → `check:all` → обновить эту метку (re-tag `metka-16`)
-- При новой metka-N: обновить `js/release-marker.js` (`METKA_NUMBER = N` → на Главной `v0.N`)

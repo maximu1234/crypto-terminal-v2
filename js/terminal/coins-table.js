@@ -29,7 +29,7 @@ import {
 getFavoriteGroup,
 flagSortRank,
 emptyFavorites
-} from "../favorites.js?v=1";
+} from "../favorites.js?v=2";
 
 const hooks = {};
 
@@ -330,31 +330,69 @@ if(!coinsState().candles.length){
 return;
 }
 
+const time =
+Number(
+candle?.time
+);
+
+if(
+!Number.isFinite(
+time
+)
+){
+return;
+}
+
+const bar = {
+...candle,
+time
+};
+
 const last =
 coinsState().candles[coinsState().candles.length - 1];
 
-if(candle.time === last.time){
+if(
+time === last.time
+){
 
 coinsState().candles[coinsState().candles.length - 1] =
-candle;
+bar;
 
-}else if(candle.time > last.time){
+}else if(
+time > last.time
+){
 
-coinsState().candles.push(candle);
+coinsState().candles.push(
+bar
+);
 
-if(coinsState().candles.length > 4000){
+if(
+coinsState().candles.length > 4000
+){
 coinsState().candles.shift();
 }
 
+}else{
+return;
 }
 
-coinsState().candleSeries.update(candle);
+if(
+hooks.applyChartLiveCandle
+){
+hooks.applyChartLiveCandle(
+bar
+);
+}else{
+coinsState().candleSeries.update(
+bar
+);
+}
 
 hooks.rebuildRsiFromCandles();
 
 processAlertCandle(
 streamSymbol,
-candle,
+bar,
 coinsState().currentTF
 );
 
@@ -476,6 +514,7 @@ div.innerHTML = `
 <button type="button" class="flag coin-flag-pick flag--red" data-flag-group="red" title="Красный" role="menuitem"></button>
 <button type="button" class="flag coin-flag-pick flag--green" data-flag-group="green" title="Зелёный" role="menuitem"></button>
 <button type="button" class="flag coin-flag-pick flag--gray" data-flag-group="gray" title="Серый" role="menuitem"></button>
+<button type="button" class="flag coin-flag-pick flag--blue" data-flag-group="blue" title="Синий (Терминал)" role="menuitem"></button>
 <button type="button" class="flag coin-flag-pick coin-flag-clear" data-flag-group="clear" title="Снять флаг" role="menuitem"></button>
 </div>
 </div>
