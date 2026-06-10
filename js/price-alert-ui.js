@@ -18,6 +18,8 @@ getTelegramChatId
 import {
 formatPrice,
 hideDomChartCrosshair,
+hideDomChartCrosshairHorz,
+hideDomChartCrosshairVert,
 positionDomChartCrosshair
 } from "./chart-import.js?v=25";
 
@@ -325,13 +327,25 @@ plusPriceHint.classList.add(
 touchGuideLine.classList.add(
 "hidden"
 );
-hideDomChartCrosshair(
+
+hideDomChartCrosshairVert(
 wrapEl
 );
 
+if(
+IS_COARSE_TOUCH ||
+opts.release !==
+false
+){
+hideDomChartCrosshairHorz(
+wrapEl
+);
+}
+
 try{
 if(
-opts.release !== false
+opts.release !==
+false
 ){
 onCrosshairRelease?.();
 }
@@ -464,6 +478,57 @@ symbol: sym()
 
 }
 
+function isClientOnChartPlot(
+clientX,
+clientY
+){
+
+const rect =
+wrapEl.getBoundingClientRect();
+const x =
+clientX - rect.left;
+const y =
+clientY - rect.top;
+const pw =
+plotWidth();
+
+const rawTimeH =
+getComputedStyle(
+wrapEl
+).getPropertyValue(
+"--chart-time-scale-height"
+);
+
+const timeH =
+Number.isFinite(
+parseFloat(
+rawTimeH
+)
+)
+? parseFloat(
+rawTimeH
+)
+: 28;
+
+const plotBottom =
+Math.max(
+0,
+rect.height - timeH
+);
+
+return (
+x >=
+0 &&
+x <
+pw - 0.5 &&
+y >=
+0 &&
+y <=
+plotBottom + 0.5
+);
+
+}
+
 function isInPriceScaleArea(
 clientX,
 clientY
@@ -551,9 +616,9 @@ rect.width - pw;
 
 if(
 !opts.forceShowFromProbe &&
-(
-x < pw - PLUS_HIT_PAD ||
-x > pw + scaleW + PLUS_HIT_PAD
+!isClientOnChartPlot(
+clientX,
+clientY
 )
 ){
 hidePlus({
@@ -664,7 +729,12 @@ touchGuideLine.classList.add(
 }
 
 if(
-!opts.forceShowFromProbe
+!opts.forceShowFromProbe &&
+(
+IS_COARSE_TOUCH ||
+opts.fromTouch ===
+true
+)
 ){
 positionDomChartCrosshair({
 wrapEl,
@@ -803,6 +873,13 @@ e.stopPropagation();
 plusBtn.addEventListener(
 "pointermove",
 e=>{
+
+if(
+!IS_COARSE_TOUCH
+){
+return;
+}
+
 positionDomChartCrosshair({
 wrapEl,
 chart,
@@ -810,6 +887,7 @@ series,
 clientX: e.clientX,
 clientY: e.clientY
 });
+
 }
 );
 

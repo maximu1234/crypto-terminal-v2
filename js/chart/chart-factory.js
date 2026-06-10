@@ -18,9 +18,11 @@ ensureDomChartCrosshair,
 updateCrosshairAxisLabels,
 clearCrosshairAxisLabels,
 hideTabletProbeCrosshair,
+hideDomChartCrosshair,
 hideDomChartCrosshairHorz,
+hideDomChartCrosshairVert,
 positionDomChartCrosshairHorz
-} from "./chart-dom-crosshair.js?v=12";
+} from "./chart-dom-crosshair.js?v=13";
 
 export function mountChartRangeFreeze(
 chart
@@ -1493,6 +1495,100 @@ return effectiveChartPriceScaleWidth();
 
 }
 
+function chartPlotMetrics(
+chartEl,
+chart
+){
+
+const chartR =
+chartEl.getBoundingClientRect();
+
+let scaleW =
+readChartScaleStripWidthPx(
+chartEl
+);
+
+try{
+scaleW =
+chart?.priceScale?.(
+"right"
+)?.width?.() ||
+scaleW;
+}catch{
+/* ignore */
+}
+
+scaleW =
+Math.max(
+40,
+Math.min(
+Math.round(
+scaleW
+),
+Math.round(
+chartR.width * 0.35
+)
+)
+);
+
+const plotW =
+Math.max(
+0,
+chartR.width - scaleW
+);
+
+return {
+chartR,
+scaleW,
+plotW
+};
+
+}
+
+/** Курсор над правой ценовой шкалой (не нижняя ось времени). */
+export function isClientOnChartPriceScale(
+chartEl,
+chart,
+clientX,
+clientY
+){
+
+if(
+!chartEl ||
+clientX ==
+null ||
+clientY ==
+null
+){
+return false;
+}
+
+const {
+chartR,
+scaleW
+} =
+chartPlotMetrics(
+chartEl,
+chart
+);
+
+const timeH =
+readChartTimeScaleHeightPx(
+chartEl
+);
+
+if(
+clientY >
+chartR.bottom - timeH
+){
+return false;
+}
+
+return clientX >=
+chartR.right - scaleW - 0.5;
+
+}
+
 export function isTabletEventOnPriceScale(
 chartEl,
 e
@@ -1504,14 +1600,6 @@ if(
 ){
 return false;
 }
-
-const rect =
-chartEl.getBoundingClientRect();
-
-const w =
-readChartScaleStripWidthPx(
-chartEl
-);
 
 const x =
 e.clientX ??
@@ -1525,29 +1613,12 @@ e.touches?.[
 0
 ]?.clientY;
 
-if(
-x ==
-null ||
-y ==
-null
-){
-return false;
-}
-
-const timeH =
-readChartTimeScaleHeightPx(
-chartEl
+return isClientOnChartPriceScale(
+chartEl,
+null,
+x,
+y
 );
-
-if(
-y >
-rect.bottom - timeH
-){
-return false;
-}
-
-return x >=
-rect.right - w - 0.5;
 
 }
 
@@ -1685,12 +1756,91 @@ getMainValueAtTime
 let lock =
 false;
 
+let lastPointerClientX =
+null;
+
+let lastPointerClientY =
+null;
+
 if(
 chartWrapEl
 ){
 ensureDomChartCrosshair(
 chartWrapEl
 );
+}
+
+function trackPointerClient(
+clientX,
+clientY
+){
+
+if(
+clientX ==
+null ||
+clientY ==
+null
+){
+return;
+}
+
+lastPointerClientX =
+clientX;
+lastPointerClientY =
+clientY;
+
+}
+
+function crosshairClientFromParam(
+param
+){
+
+const src =
+param?.sourceEvent;
+
+const cx =
+src?.clientX ??
+lastPointerClientX;
+
+const cy =
+src?.clientY ??
+lastPointerClientY;
+
+return {
+cx,
+cy
+};
+
+}
+
+function isCrosshairPointerOnPriceScale(
+param
+){
+
+const {
+cx,
+cy
+} =
+crosshairClientFromParam(
+param
+);
+
+if(
+cx ==
+null ||
+cy ==
+null
+){
+return false;
+}
+
+return isClientOnChartPriceScale(
+chartEl,
+mainChart,
+cx,
+cy
+);
+
 }
 
 function clearLinkedVert(){
@@ -1717,6 +1867,14 @@ linkedVertOverlayEl.style.removeProperty(
 
 }
 
+if(
+chartWrapEl
+){
+hideDomChartCrosshairVert(
+chartWrapEl
+);
+}
+
 }
 
 function clearLinkedHorz(){
@@ -1725,6 +1883,9 @@ if(
 chartWrapEl
 ){
 hideDomChartCrosshairHorz(
+chartWrapEl
+);
+hideDomChartCrosshair(
 chartWrapEl
 );
 }
@@ -1805,6 +1966,14 @@ y
 ){
 
 if(
+chartWrapEl
+){
+hideDomChartCrosshairVert(
+chartWrapEl
+);
+}
+
+if(
 linkedVertOverlayEl &&
 Number.isFinite(
 x
@@ -1850,55 +2019,101 @@ if(
 return null;
 }
 
-const chartR =
-chartEl.getBoundingClientRect();
-
-let scaleW =
-effectiveChartPriceScaleWidth();
-
-try{
-scaleW =
-mainChart.priceScale(
-"right"
-).width() ||
-scaleW;
-}catch{
-/* ignore */
+if(
+isClientOnChartPriceScale(
+chartEl,
+mainChart,
+clientX,
+clientY
+)
+){
+return null;
 }
+
+const {
+chartR,
+plotW
+} =
+chartPlotMetrics(
+chartEl,
+mainChart
+);
 
 let x =
 clientX - chartR.left;
 let y =
 clientY - chartR.top;
 
-const plotW =
-Math.max(
-0,
-chartR.width - scaleW
-);
-
-x =
-Math.max(
-0,
-Math.min(
-plotW,
-x
-)
-);
-
-y =
-Math.max(
-0,
-Math.min(
-chartR.height,
-y
-)
-);
+if(
+x < 0 ||
+x > plotW ||
+y < 0 ||
+y > chartR.height
+){
+return null;
+}
 
 return {
 x,
 y
 };
+
+}
+
+function isPlotCrosshairX(
+x
+){
+
+if(
+!chartEl ||
+!Number.isFinite(
+x
+)
+){
+return false;
+}
+
+const {
+plotW
+} =
+chartPlotMetrics(
+chartEl,
+mainChart
+);
+
+return x >= -0.5 && x <= plotW + 0.5;
+
+}
+
+function clearMainCrosshair(){
+
+try{
+mainChart.clearCrosshairPosition();
+}catch{
+/* ignore */
+}
+
+}
+
+function hideCrosshairOnPriceScale(
+clientX,
+clientY
+){
+
+if(
+!isClientOnChartPriceScale(
+chartEl,
+mainChart,
+clientX,
+clientY
+)
+){
+return false;
+}
+
+clearLinked();
+clearMainCrosshair();
+return true;
 
 }
 
@@ -1912,6 +2127,16 @@ if(
 return false;
 }
 
+if(
+isCrosshairPointerOnPriceScale(
+param
+)
+){
+clearLinked();
+clearMainCrosshair();
+return true;
+}
+
 const x =
 crosshairOverlayPlotX(
 param
@@ -1923,9 +2148,13 @@ param?.point?.y;
 if(
 !Number.isFinite(
 x
+) ||
+!isPlotCrosshairX(
+x
 )
 ){
-clearLinkedVert();
+clearLinked();
+clearMainCrosshair();
 return true;
 }
 
@@ -2000,9 +2229,35 @@ return true;
 
 }
 
+function onChartWrapPointerTrack(
+e
+){
+
+if(
+e.pointerType !==
+"touch"
+){
+trackPointerClient(
+e.clientX,
+e.clientY
+);
+}
+
+}
+
 function onChartWrapPointerMove(
 e
 ){
+
+if(
+e.pointerType !==
+"touch"
+){
+trackPointerClient(
+e.clientX,
+e.clientY
+);
+}
 
 if(
 lock
@@ -2025,6 +2280,15 @@ document.body.classList.contains(
 return;
 }
 
+if(
+hideCrosshairOnPriceScale(
+e.clientX,
+e.clientY
+)
+){
+return;
+}
+
 const plot =
 plotCoordsFromClient(
 e.clientX,
@@ -2034,6 +2298,8 @@ e.clientY
 if(
 !plot
 ){
+clearLinked();
+clearMainCrosshair();
 return;
 }
 
@@ -2047,6 +2313,15 @@ plot.y
 if(
 chartWrapEl
 ){
+
+chartWrapEl.addEventListener(
+"pointermove",
+onChartWrapPointerTrack,
+{
+passive:true,
+capture:true
+}
+);
 
 chartWrapEl.addEventListener(
 "pointermove",
@@ -2073,6 +2348,31 @@ return;
 }
 
 if(
+isCrosshairPointerOnPriceScale(
+param
+)
+){
+clearLinked();
+clearMainCrosshair();
+return;
+}
+
+const overlayX =
+crosshairOverlayPlotX(
+param
+);
+
+if(
+!isPlotCrosshairX(
+overlayX
+)
+){
+clearLinked();
+clearMainCrosshair();
+return;
+}
+
+if(
 linkedVertOverlayEl
 ){
 
@@ -2091,6 +2391,11 @@ detachPointerCrosshair(){
 if(
 chartWrapEl
 ){
+chartWrapEl.removeEventListener(
+"pointermove",
+onChartWrapPointerTrack,
+true
+);
 chartWrapEl.removeEventListener(
 "pointermove",
 onChartWrapPointerMove

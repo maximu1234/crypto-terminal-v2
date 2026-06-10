@@ -712,6 +712,31 @@ horz.classList.add(
 
 }
 
+export function hideDomChartCrosshairVert(
+wrapEl
+){
+
+if(
+!wrapEl
+){
+return;
+}
+
+const vert =
+wrapEl.querySelector(
+`.${DOM_CROSSHAIR_VERT}`
+);
+
+if(
+vert
+){
+vert.classList.add(
+"hidden"
+);
+}
+
+}
+
 
 /**
  * Горизонталь probe в #charts-stack (если в HTML ещё внутри #chart-wrap — переносим).

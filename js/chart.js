@@ -34,18 +34,19 @@ positionDomChartCrosshair,
 positionDomChartCrosshairHorz,
 hideDomChartCrosshair,
 hideDomChartCrosshairHorz,
+hideDomChartCrosshairVert,
 ensureTabletProbeHorizLine,
 positionTabletProbeCrosshair,
 positionTabletProbeHorizInStack,
 hideTabletProbeCrosshair,
 formatCrosshairTimeLabel,
 isUserCrosshairEvent
-} from "./chart/chart-dom-crosshair.js?v=12";
+} from "./chart/chart-dom-crosshair.js?v=13";
 
 import {
 TABLET_LW_NATIVE_PRICE_SCALE,
 clearTabletProbeCrosshairForChart
-} from "./chart/chart-factory.js?v=19";
+} from "./chart/chart-factory.js?v=22";
 
 export {
 createCandlestickChart,
@@ -79,7 +80,7 @@ appendFutureWhitespaceBars,
 coinsTfVisibleBars,
 applyCoinsChartViewport,
 refreshCoinsChartBarSpacing
-} from "./chart/chart-factory.js?v=19";
+} from "./chart/chart-factory.js?v=22";
 
 
 export {
