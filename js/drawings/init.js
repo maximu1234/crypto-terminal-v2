@@ -70,6 +70,10 @@ touchDrawingsStorageSnap
 } from "../drawings-storage-poller.js?v=1";
 
 import {
+layoutScaleLabelYs
+} from "./scale-label-layout.js?v=1";
+
+import {
 formatPrice,
 chartScaleFont,
 CHART_SCALE_LABEL_PAD_LEFT,
@@ -6042,6 +6046,8 @@ ctx.restore();
 
 function drawPriceScaleLabels(ctx){
 
+const entries = [];
+
 drawings.forEach(shape=>{
 
 if(shape.type !== "hray"){
@@ -6058,28 +6064,23 @@ return;
 const { color } =
 shapeStyle(shape);
 
-drawScalePriceBadge(
-ctx,
-y,
-shape.price,
+entries.push({
+yIdeal: y,
+price: shape.price,
 color
-);
+});
 
 });
 
-if(!selectedId){
-return;
-}
+if(selectedId){
 
 const sel =
 drawings.find(d=>d.id === selectedId);
 
 if(
-!sel ||
-sel.type === "hray"
+sel &&
+sel.type !== "hray"
 ){
-return;
-}
 
 listHandles(sel).forEach(handle=>{
 
@@ -6093,11 +6094,45 @@ return;
 const { color } =
 shapeStyle(sel);
 
+entries.push({
+yIdeal: xy.y,
+price: handle.point.price,
+color
+});
+
+});
+
+}
+
+}
+
+if(!entries.length){
+return;
+}
+
+const yDraws =
+layoutScaleLabelYs(
+entries.map(e=>e.yIdeal),
+CHART_SCALE_LABEL_LINE_HEIGHT,
+chartSize().h
+);
+
+entries.forEach((entry, i)=>{
+
+const yDraw =
+yDraws[i];
+
+if(
+!Number.isFinite(yDraw)
+){
+return;
+}
+
 drawScalePriceBadge(
 ctx,
-xy.y,
-handle.point.price,
-color
+yDraw,
+entry.price,
+entry.color
 );
 
 });
