@@ -80,7 +80,7 @@ initWidgetDrawings
 import {
 mountDrawToolbar,
 mountDrawToolIcons
-} from "./draw-ui-shared.js?v=20";
+} from "./draw-ui-shared.js?v=21";
 
 import {
 initCoinsMobileUi,

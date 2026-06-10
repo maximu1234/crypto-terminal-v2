@@ -111,7 +111,7 @@ Object.freeze({
 "draw-color-palette.js":
 3,
 "draw-ui-shared.js":
-20,
+21,
 "draw-toolbar-icon-data.js":
 11,
 "draw-tools-visible.js":
