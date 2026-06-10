@@ -665,19 +665,7 @@ document.createElement(
 
 bar.className = "stats-bar";
 
-const barWidth =
-Math.max(
-8,
-Math.round(
-(
-row.pct /
-maxPct
-) *
-100
-)
-);
-
-bar.style.width = `${barWidth}%`;
+bar.style.width = `${(row.pct / maxPct) * 100}%`;
 
 const pct =
 document.createElement(
