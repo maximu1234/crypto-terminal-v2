@@ -6,7 +6,7 @@ import {
 BYBIT_LISTINGS_PAGE_WINDOW_MS,
 filterRecentListings,
 formatListingDateTime
-} from "./bybit-listings.js?v=4";
+} from "./bybit-listings.js?v=5";
 
 const statusEl =
 document.getElementById("listings-status");
