@@ -70,3 +70,9 @@ POSITION_DEFAULT_ZONE_HEIGHT_MULT;
 export const POSITION_DEFAULT_WIDTH_BARS = 14;
 export const POSITION_RR_LABEL_SAMPLE =
 "Risk/reward ratio: 9.99";
+
+export const RECT_DEFAULT_FILL_COLOR =
+"#f97316";
+
+export const RECT_DEFAULT_FILL_OPACITY =
+0.25;

@@ -1,6 +1,6 @@
 import {
 getDrawToolIconSrc
-} from "./draw-toolbar-icon-data.js?v=8";
+} from "./draw-toolbar-icon-data.js?v=10";
 
 export const DRAW_TOOLS_GUEST_MSG =
 "Рисование доступно только для залогиненных пользователей.";
@@ -56,6 +56,8 @@ getDrawToolbarButtonsHtml();
 }
 
 export const CURSOR_TOOL_ICON_SVG = drawToolIconImg("cursor");
+export const ARROW_ICON_SVG = drawToolIconImg("arrow", "draw-tool-icon draw-tool-icon--xl", 41);
+export const RECTANGLE_ICON_SVG = drawToolIconImg("rectangle", "draw-tool-icon draw-tool-icon--xl", 41);
 export const TRENDLINE_ICON_SVG = drawToolIconImg("trendline");
 export const HRAY_ICON_SVG = drawToolIconImg("hray");
 export const FIB_ICON_SVG = drawToolIconImg("fib");
@@ -122,6 +124,10 @@ ${CURSOR_TOOL_ICON_SVG}
 ${TRENDLINE_ICON_SVG}
 </button>
 
+<button type="button" class="${btnClass}" data-draw-tool="arrow" title="Arrow — 2 клика">
+${ARROW_ICON_SVG}
+</button>
+
 <button type="button" class="${btnClass}" data-draw-tool="hray" title="Horizontal Ray — 1 клик">
 ${HRAY_ICON_SVG}
 </button>
@@ -132,6 +138,10 @@ ${FIB_ICON_SVG}
 
 <button type="button" class="${btnClass}" data-draw-tool="channel" title="Parallel Channel — 3 клика">
 ${CHANNEL_ICON_SVG}
+</button>
+
+<button type="button" class="${btnClass}" data-draw-tool="rectangle" title="Rectangle — 2 клика">
+${RECTANGLE_ICON_SVG}
 </button>
 
 ${getPositionDrawToolbarButtonsHtml(opts)}

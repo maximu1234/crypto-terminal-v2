@@ -622,7 +622,21 @@ formatted
 );
 
 slider?.addEventListener(
+"mousedown",
+e=>{
+e.stopPropagation();
+}
+);
+
+slider?.addEventListener(
 "click",
+e=>{
+e.stopPropagation();
+}
+);
+
+opacityWrap.addEventListener(
+"mousedown",
 e=>{
 e.stopPropagation();
 }

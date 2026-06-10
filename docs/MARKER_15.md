@@ -2,7 +2,7 @@
 
 **Тег:** `metka-15` · **Коммит:** `git rev-parse metka-15`
 
-**Текущий эталон отката.** Предыдущая: [MARKER_14.md](./MARKER_14.md) (`metka-14`).
+**Предыдущий эталон отката.** Текущая: [MARKER_16.md](./MARKER_16.md) (`metka-16`).
 
 Проверено: asset manifest (ручная сверка + CI `check-asset-manifest.cjs`); site-nav (CI `check-site-nav.cjs`); `npm run check:all` — syntax + unit tests (CI / локально при наличии Node).
 
@@ -113,24 +113,16 @@
 
 ## Метки в репозитории
 
-Только **две** git-метки:
-
-| Тег | Роль |
-|-----|------|
-| `metka-15` | **Текущий** эталон |
-| `metka-14` | **Предыдущий** эталон (Statistics, future scale, crosshair) |
-
-Старые `metka-12`, `metka-13` и их MARKER_*.md удалены.
+См. [MARKER_16.md](./MARKER_16.md) — в репозитории только **две** метки: `metka-16` (текущая) и `metka-15` (эта).
 
 ## Откат
 
 ```bash
 git fetch --tags
-git checkout metka-15   # текущий эталон
-git checkout metka-14   # до drawings polish / fib / long-short fixes
+git checkout metka-16   # текущий эталон
+git checkout metka-15   # этот снимок (fib polish, long/short)
 ```
 
 ## Следующий шаг
 
-- Фаза 4 alerts-cloud **или** стабилизация Bybit proxy
-- После крупных правок: `sync-asset-versions` → `check:all` → обновить эту метку (re-tag `metka-15`)
+- См. [MARKER_16.md](./MARKER_16.md)

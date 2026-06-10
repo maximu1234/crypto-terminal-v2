@@ -3,6 +3,10 @@ distToSegment
 } from "./math.js?v=1";
 
 import {
+rectangleBodyDist
+} from "./arrow-rect.js?v=2";
+
+import {
 fibPriceAtRatio,
 getFibRows,
 isSeriesLogarithmic,
@@ -63,7 +67,8 @@ return hrayLineDist(px, py, shape) <= threshold;
 function trendlineBodyDist(px, py, shape){
 
 if(
-shape?.type !== "trendline"
+shape?.type !== "trendline" &&
+shape?.type !== "arrow"
 ){
 return Infinity;
 }
@@ -91,7 +96,10 @@ b.y
 function hitTestTrendlineBody(px, py, shape, threshold = 8){
 
 return (
-shape?.type === "trendline" &&
+(
+shape?.type === "trendline" ||
+shape?.type === "arrow"
+) &&
 trendlineBodyDist(px, py, shape) <= threshold
 );
 
@@ -368,6 +376,27 @@ channelBodyDist(px, py, shape) <= threshold
 
 }
 
+function hitTestRectangleBody(
+px,
+py,
+shape,
+threshold = 8
+){
+
+return (
+shape?.type ===
+"rectangle" &&
+rectangleBodyDist(
+px,
+py,
+shape,
+toXY
+) <=
+threshold
+);
+
+}
+
 return {
 hrayLineDist,
 hitTestHrayLine,
@@ -379,7 +408,9 @@ channelP4XY,
 channelScreenGeometry,
 channelP4Point,
 channelBodyDist,
-hitTestChannelBody
+hitTestChannelBody,
+rectangleBodyDist,
+hitTestRectangleBody
 };
 
 }

@@ -93,6 +93,11 @@ object-fit:contain;
 object-position:center;
 }
 
+body.coins-page #topbar.coins-topbar #draw-toolbar.draw-toolbar-inline .draw-btn .draw-tool-icon--xl{
+width:37px;
+height:37px;
+}
+
 body.coins-page .coins-draw-desktop,
 body.coins-page #draw-toolbar.coins-draw-desktop{
 display:flex !important;

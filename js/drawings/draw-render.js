@@ -13,6 +13,11 @@ import {
 isPositionType
 } from "./position.js?v=1";
 
+import {
+drawFilledArrow,
+drawRectangleShape
+} from "./arrow-rect.js?v=2";
+
 /**
  * @param {object} deps
  * @returns {{ drawShape, drawFib, drawPlacementPreview, fibLevelXSpan }}
@@ -33,7 +38,9 @@ drawAnchorCircle,
 getPlacement,
 getPreviewPoint,
 getPreviewXY,
-getSelectedId
+getSelectedId,
+parseDrawColor,
+formatDrawColor
 } = deps;
 
 function drawLine(ctx, x1, y1, x2, y2, color, width, dash){
@@ -231,6 +238,48 @@ drawLine(ctx, a.x, a.y, b.x, b.y, color, width, dash);
 
 }
 
+if(shape.type === "arrow"){
+
+const a =
+toXY(
+shape.p1
+);
+const b =
+toXY(
+shape.p2
+);
+
+if(
+a &&
+b
+){
+drawFilledArrow(
+ctx,
+a.x,
+a.y,
+b.x,
+b.y,
+color
+);
+}
+
+}
+
+if(shape.type === "rectangle"){
+
+drawRectangleShape(
+ctx,
+shape,
+{
+toXY,
+shapeStyle,
+parseDrawColor,
+formatDrawColor
+}
+);
+
+}
+
 if(shape.type === "hray"){
 
 const anchor = toXY({
@@ -400,7 +449,11 @@ previewXYPoint &&
 placement.type ===
 "trendline" ||
 placement.type ===
-"fib"
+"fib" ||
+placement.type ===
+"arrow" ||
+placement.type ===
+"rectangle"
 )
 ){
 
@@ -440,6 +493,95 @@ previewXYPoint.x,
 previewXYPoint.y,
 style.color,
 style.lineWidth
+);
+}
+
+return;
+
+}
+
+if(
+pts.length ===
+1 &&
+previewXYPoint &&
+placement.type ===
+"arrow"
+){
+
+const a =
+toXY(
+pts[
+0
+]
+);
+
+if(
+a
+){
+drawFilledArrow(
+ctx,
+a.x,
+a.y,
+previewXYPoint.x,
+previewXYPoint.y,
+style.color
+);
+}
+
+return;
+
+}
+
+if(
+pts.length ===
+1 &&
+previewXYPoint &&
+placement.type ===
+"rectangle"
+){
+
+const a =
+toXY(
+pts[
+0
+]
+);
+
+if(
+a
+){
+drawRectangleShape(
+ctx,
+{
+type: "rectangle",
+p1: pts[0],
+p2:
+pointFromXY(
+previewXYPoint.x,
+previewXYPoint.y
+) ||
+pts[0],
+color: style.color,
+lineWidth: style.lineWidth,
+lineStyle: style.lineStyle,
+showFill: style.showFill,
+fillColor: style.fillColor,
+fillOpacity: style.fillOpacity,
+showMedian: style.showMedian,
+medianColor: style.medianColor,
+medianLineWidth: style.medianLineWidth,
+medianLineStyle: style.medianLineStyle
+},
+{
+toXY,
+shapeStyle:(s)=>({
+color: s.color || style.color,
+width: s.lineWidth || style.lineWidth,
+dash: null
+}),
+parseDrawColor,
+formatDrawColor
+}
 );
 }
 
@@ -551,6 +693,14 @@ price: previewPts[0]?.price
 };
 
 if(placement.type === "trendline" && previewPts.length >= 2){
+drawShape(ctx, previewShape, w, h);
+}
+
+if(placement.type === "arrow" && previewPts.length >= 2){
+drawShape(ctx, previewShape, w, h);
+}
+
+if(placement.type === "rectangle" && previewPts.length >= 2){
 drawShape(ctx, previewShape, w, h);
 }
 

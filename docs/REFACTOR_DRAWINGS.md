@@ -1,6 +1,6 @@
 # Refactor drawings — план (после metka-9)
 
-**Текущий эталон:** [MARKER_15.md](./MARKER_15.md) (`metka-15`).
+**Текущий эталон:** [MARKER_16.md](./MARKER_16.md) (`metka-16`).
 
 **Принцип:** одна фаза = одна метка = [DRAWINGS_REGRESSION.md](./DRAWINGS_REGRESSION.md) пройден.
 
@@ -43,6 +43,6 @@
 ## Rollback
 
 ```bash
-git checkout metka-15  # текущий эталон
-git checkout metka-14  # до drawings polish / fib / long-short fixes
+git checkout metka-16  # текущий эталон
+git checkout metka-15  # до arrow / rectangle
 ```

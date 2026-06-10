@@ -119,12 +119,22 @@ body{
   object-fit:contain;
 }
 
+.draw-btn .draw-tool-icon--xl{
+  width:41px;
+  height:41px;
+}
+
 /* Монеты: размеры задаются в coins.css (эталон топбара) */
 body.coins-page #draw-toolbar.draw-toolbar-inline .draw-btn img,
 body.coins-page #draw-toolbar.draw-toolbar-inline .draw-tool-icon{
   width:20px;
   height:20px;
   object-fit:contain;
+}
+
+body.coins-page #draw-toolbar.draw-toolbar-inline .draw-btn .draw-tool-icon--xl{
+  width:37px;
+  height:37px;
 }
 
 /* Планшет с touch (iPad): чуть крупнее кнопки рисования */
@@ -141,6 +151,11 @@ body.coins-page #draw-toolbar.draw-toolbar-inline .draw-tool-icon{
     height:24px;
   }
 
+  .draw-btn .draw-tool-icon--xl{
+    width:41px;
+    height:41px;
+  }
+
   body.coins-page #draw-toolbar.draw-toolbar-inline .draw-btn{
     width:32px;
     height:34px;
@@ -150,6 +165,11 @@ body.coins-page #draw-toolbar.draw-toolbar-inline .draw-tool-icon{
   body.coins-page #draw-toolbar.draw-toolbar-inline .draw-tool-icon{
     width:22px;
     height:22px;
+  }
+
+  body.coins-page #draw-toolbar.draw-toolbar-inline .draw-btn .draw-tool-icon--xl{
+    width:37px;
+    height:37px;
   }
 }
 
@@ -1544,4 +1564,66 @@ body.tablet-chart .price-alert-scale-plus-circle{
 
 .price-alert-touch-guide.hidden{
   display:none;
+}
+
+.rect-settings{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  min-width:220px;
+}
+
+.rect-settings-row{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+}
+
+.rect-settings-label{
+  flex:1 1 auto;
+  min-width:72px;
+  font-size:12px;
+  color:#d1d4dc;
+}
+
+.rect-settings-row input[type="checkbox"]{
+  width:14px;
+  height:14px;
+  accent-color:#3b82f6;
+  cursor:pointer;
+}
+
+.rect-border-style-btn,
+.rect-median-style-btn{
+  width:40px;
+  height:28px;
+  padding:0 4px;
+  border:1px solid #374151;
+  border-radius:6px;
+  background:#2a2e39;
+  color:#d1d4dc;
+  cursor:pointer;
+}
+
+.rect-median-width-btn{
+  width:40px;
+  height:28px;
+  font-size:11px;
+  color:#d1d4dc;
+  background:#2a2e39;
+  border:1px solid #374151;
+  border-radius:6px;
+  cursor:pointer;
+}
+
+.rect-median-color-btn,
+.rect-fill-color-btn{
+  width:28px;
+  height:28px;
+  padding:0;
+  border:1px solid #374151;
+  border-radius:6px;
+  background:var(--rect-swatch, #f97316);
+  cursor:pointer;
 }

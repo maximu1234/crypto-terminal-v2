@@ -1,6 +1,6 @@
 # Регрессия рисования — чеклист перед wiring (Фаза 0)
 
-**База отката:** `git checkout metka-15` (текущий эталон) или `metka-14`
+**База отката:** `git checkout metka-16` (текущий эталон) или `metka-15`
 
 Проходить **до** и **после** каждой фазы refactor (`draw-hit`, `draw-render`, `drawings-tablet-input`, cloud).
 
@@ -11,7 +11,7 @@
 ## Desktop — `/coins`
 
 ### Общее
-- [ ] Выбор инструмента: trendline, fib, hray, channel, long/short
+- [ ] Выбор инструмента: trendline, **arrow**, **rectangle**, fib, hray, channel, long/short
 - [ ] Escape / смена инструмента отменяет placement
 - [ ] Выделение кликом, контекстное меню, удаление
 - [ ] Drag handle p1/p2 (trendline, fib)
@@ -95,6 +95,6 @@ npm run check:all
 | Фаза | Содержание | Метка |
 |------|------------|-------|
 | 0–3 | чеклист, draw-hit/render, tablet, cloud split | *(архив, тег удалён)* |
-| prod + Statistics / crosshair | future scale, RSI crosshair, screener search | `metka-14` |
 | drawings polish | TV color picker, fib settings, long/short | `metka-15` |
+| arrow + rectangle | новые инструменты, cloud, icon xl | `metka-16` |
 | 4 | `alerts-cloud` split | TBD |
