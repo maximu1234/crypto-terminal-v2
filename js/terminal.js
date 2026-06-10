@@ -568,6 +568,14 @@ inverted
 ? "Вернуть обычную шкалу"
 : "Перевернуть график";
 
+item.title =
+menuTarget ===
+"rsi"
+? ""
+: inverted
+? "Вернуть обычную шкалу (Alt+I)"
+: "Перевернуть график (Alt+I)";
+
 item.setAttribute(
 "aria-pressed",
 inverted
@@ -1059,6 +1067,49 @@ hideMenu,
 true
 );
 
+function onInvertChartHotkey(
+e
+){
+
+if(
+!isCoinsPage
+){
+return;
+}
+
+if(
+shouldIgnoreListKeyNav(
+e
+)
+){
+return;
+}
+
+/*
+  Option+I (Mac) и Alt+I (Windows/Linux) — в браузере оба дают altKey.
+*/
+if(
+!e.altKey ||
+e.ctrlKey ||
+e.metaKey ||
+e.code !==
+"KeyI"
+){
+return;
+}
+
+e.preventDefault();
+hideMenu();
+toggleCoinsChartInversion();
+syncMenuLabel();
+
+}
+
+document.addEventListener(
+"keydown",
+onInvertChartHotkey
+);
+
 return ()=>{
 hideMenu();
 clearTimeout(touchHoldTimer);
@@ -1082,6 +1133,10 @@ document.removeEventListener(
 "pointerdown",
 onDocPointerDown,
 true
+);
+document.removeEventListener(
+"keydown",
+onInvertChartHotkey
 );
 window.removeEventListener(
 "blur",

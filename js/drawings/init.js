@@ -6051,6 +6051,72 @@ return next;
 
 }
 
+/**
+ * Shift во время drag тела объекта — движение только по времени (X) или цене (Y),
+ * как в TradingView. Ось фиксируется в момент первого Shift от начала drag.
+ */
+function constrainBodyDragPointer(
+dragState,
+x,
+y,
+shiftKey
+){
+
+const startX =
+dragState.startX;
+const startY =
+dragState.startY;
+
+if(
+startX == null ||
+startY == null ||
+!shiftKey
+){
+dragState.shiftAxisLock = null;
+return {
+x,
+y
+};
+}
+
+if(
+!dragState.shiftAxisLock
+){
+
+const adx =
+Math.abs(
+x - startX
+);
+const ady =
+Math.abs(
+y - startY
+);
+
+dragState.shiftAxisLock =
+adx >=
+ady
+? "x"
+: "y";
+
+}
+
+if(
+dragState.shiftAxisLock ===
+"x"
+){
+return {
+x,
+y: startY
+};
+}
+
+return {
+x: startX,
+y
+};
+
+}
+
 function applyPositionBodyMove(
 shape,
 startX,
@@ -6470,6 +6536,8 @@ return;
 dragState = {
 shapeId: sel.id,
 mode: "screen-move",
+startX: x,
+startY: y,
 pointOffsets: offsets
 };
 
@@ -6621,6 +6689,8 @@ return;
 dragState = {
 shapeId: sel.id,
 mode: "screen-move",
+startX: x,
+startY: y,
 pointOffsets: offsets
 };
 
@@ -6708,13 +6778,21 @@ y
 
 if(dragState.mode === "position-move"){
 
+const locked =
+constrainBodyDragPointer(
+dragState,
+x,
+y,
+e.shiftKey
+);
+
 if(
 !applyPositionBodyMove(
 shape,
 dragState.startX,
 dragState.startY,
-x,
-y,
+locked.x,
+locked.y,
 dragState.snapshot
 )
 ){
@@ -6723,12 +6801,20 @@ return;
 
 }else if(dragState.mode === "screen-move"){
 
+const locked =
+constrainBodyDragPointer(
+dragState,
+x,
+y,
+e.shiftKey
+);
+
 if(
 !applyScreenMoveToShape(
 shape,
 dragState.pointOffsets,
-x,
-y
+locked.x,
+locked.y
 )
 ){
 return;
@@ -7152,11 +7238,17 @@ if(!isActive()){
 return;
 }
 
-if(placement){
+if(
+placement ||
+tool !==
+"cursor"
+){
 
 e.preventDefault();
 e.stopPropagation();
-cancelPlacement();
+setTool(
+"cursor"
+);
 return;
 
 }
@@ -8719,13 +8811,17 @@ return;
 
 }
 
-if(placement){
-cancelPlacement();
+if(
+placement ||
+tool !==
+"cursor"
+){
+setTool(
+"cursor"
+);
 return;
-}
 
-cancelPlacement();
-setTool("cursor");
+}
 
 }
 
