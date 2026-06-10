@@ -52,6 +52,9 @@
 - [ ] Tap dismiss — crosshair не прыгает
 - [ ] Future area справа — обе линии
 - [ ] Scale tap — скрыть «+»; scale hold — invert
+- [ ] Desktop: crosshair скрывается на price scale (без залипания vert)
+- [ ] Desktop: «+» на plot, не только у шкалы
+- [ ] Desktop: RSI — horiz в панели RSI, vert общий; без дубля vert после scale → plot
 
 ### Touch-рисование
 - [ ] Fib placement двумя тапами/удержаниями

@@ -1590,6 +1590,12 @@ linkedVertOverlayEl:document.getElementById(
 ),
 chartWrapEl,
 chartEl,
+linkedWrapEl:document.getElementById(
+"rsi-wrap"
+),
+linkedChartEl:document.getElementById(
+"rsi-chart"
+),
 crosshairTimeLabelEl:document.getElementById(
 "crosshair-time-label"
 ),
@@ -1597,6 +1603,7 @@ crosshairPriceLabelEl:document.getElementById(
 "crosshair-price-label"
 ),
 onLinkedCrosshairTime:updateRsiHudFromCrosshairTime,
+onLinkedCrosshairRsiValue:setRsiHudValue,
 onLinkedCrosshairClear(){
 const last =
 rsiPointsCache[

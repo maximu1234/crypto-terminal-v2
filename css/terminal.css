@@ -1113,7 +1113,8 @@ body.tablet-chart .price-alert-scale-plus-circle{
   display:none;
 }
 
-#chart-wrap .chart-dom-crosshair-vert{
+#chart-wrap .chart-dom-crosshair-vert,
+#rsi-wrap .chart-dom-crosshair-vert{
   position:absolute;
   top:0;
   bottom:0;
@@ -1131,7 +1132,8 @@ body.tablet-chart .price-alert-scale-plus-circle{
   transform:translateZ(0);
 }
 
-#chart-wrap .chart-dom-crosshair-horz{
+#chart-wrap .chart-dom-crosshair-horz,
+#rsi-wrap .chart-dom-crosshair-horz{
   position:absolute;
   left:0;
   height:1px;
@@ -1154,7 +1156,9 @@ body.tablet-chart .price-alert-scale-plus-circle{
 }
 
 #chart-wrap .chart-dom-crosshair-vert.hidden,
-#chart-wrap .chart-dom-crosshair-horz.hidden{
+#chart-wrap .chart-dom-crosshair-horz.hidden,
+#rsi-wrap .chart-dom-crosshair-vert.hidden,
+#rsi-wrap .chart-dom-crosshair-horz.hidden{
   display:none;
 }
 

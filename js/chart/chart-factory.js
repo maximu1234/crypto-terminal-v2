@@ -1745,9 +1745,12 @@ linkedSeries,
 linkedVertOverlayEl,
 chartWrapEl = null,
 chartEl = null,
+linkedWrapEl = null,
+linkedChartEl = null,
 crosshairTimeLabelEl,
 crosshairPriceLabelEl = null,
 onLinkedCrosshairTime,
+onLinkedCrosshairRsiValue = null,
 onLinkedCrosshairClear,
 getLinkedValueAtTime,
 getMainValueAtTime
@@ -1762,11 +1765,25 @@ null;
 let lastPointerClientY =
 null;
 
+const chartsStackEl =
+linkedVertOverlayEl?.parentElement ||
+chartWrapEl?.parentElement ||
+linkedWrapEl?.parentElement ||
+null;
+
 if(
 chartWrapEl
 ){
 ensureDomChartCrosshair(
 chartWrapEl
+);
+}
+
+if(
+linkedWrapEl
+){
+ensureDomChartCrosshair(
+linkedWrapEl
 );
 }
 
@@ -1839,6 +1856,16 @@ chartEl,
 mainChart,
 cx,
 cy
+) ||
+(
+linkedChartEl &&
+linkedChart &&
+isClientOnChartPriceScale(
+linkedChartEl,
+linkedChart,
+cx,
+cy
+)
 );
 
 }
@@ -1887,6 +1914,14 @@ chartWrapEl
 );
 hideDomChartCrosshair(
 chartWrapEl
+);
+}
+
+if(
+linkedWrapEl
+){
+hideDomChartCrosshairHorz(
+linkedWrapEl
 );
 }
 
@@ -1960,7 +1995,57 @@ param
 
 }
 
-function applyLinkedCrosshairPlot(
+function linkedVertStackLeft(
+plotX,
+anchorEl
+){
+
+if(
+!linkedVertOverlayEl ||
+!Number.isFinite(
+plotX
+)
+){
+return;
+}
+
+const anchor =
+anchorEl ||
+chartEl;
+
+const stackEl =
+linkedVertOverlayEl.parentElement;
+
+if(
+!anchor ||
+!stackEl
+){
+
+linkedVertOverlayEl.style.left =
+`${Math.round(plotX)}px`;
+
+}else{
+
+const anchorR =
+anchor.getBoundingClientRect();
+
+const stackR =
+stackEl.getBoundingClientRect();
+
+linkedVertOverlayEl.style.left =
+`${Math.round(
+anchorR.left - stackR.left + plotX
+)}px`;
+
+}
+
+linkedVertOverlayEl.classList.remove(
+"hidden"
+);
+
+}
+
+function applyMainCrosshairPlot(
 x,
 y
 ){
@@ -1974,20 +2059,17 @@ chartWrapEl
 }
 
 if(
-linkedVertOverlayEl &&
-Number.isFinite(
-x
-)
+linkedWrapEl
 ){
-
-linkedVertOverlayEl.style.left =
-`${Math.round(x)}px`;
-
-linkedVertOverlayEl.classList.remove(
-"hidden"
+hideDomChartCrosshairHorz(
+linkedWrapEl
 );
-
 }
+
+linkedVertStackLeft(
+x,
+chartEl
+);
 
 if(
 chartWrapEl &&
@@ -2004,6 +2086,270 @@ chart:mainChart,
 plotY:y
 });
 
+}
+
+}
+
+function applyRsiCrosshairPlot(
+x,
+y
+){
+
+if(
+chartWrapEl
+){
+hideDomChartCrosshairVert(
+chartWrapEl
+);
+hideDomChartCrosshairHorz(
+chartWrapEl
+);
+}
+
+linkedVertStackLeft(
+x,
+linkedChartEl ||
+chartEl
+);
+
+if(
+linkedWrapEl &&
+linkedChartEl &&
+linkedChart &&
+Number.isFinite(
+y
+)
+){
+
+positionDomChartCrosshairHorz({
+wrapEl:linkedWrapEl,
+chartEl:linkedChartEl,
+chart:linkedChart,
+plotY:y
+});
+
+}
+
+}
+
+function applyLinkedCrosshairPlot(
+x,
+y
+){
+
+applyMainCrosshairPlot(
+x,
+y
+);
+
+}
+
+function plotCoordsFromRsiClient(
+clientX,
+clientY
+){
+
+if(
+!linkedChartEl ||
+!linkedChart
+){
+return null;
+}
+
+if(
+isClientOnChartPriceScale(
+linkedChartEl,
+linkedChart,
+clientX,
+clientY
+)
+){
+return null;
+}
+
+const {
+chartR,
+plotW
+} =
+chartPlotMetrics(
+linkedChartEl,
+linkedChart
+);
+
+let x =
+clientX - chartR.left;
+let y =
+clientY - chartR.top;
+
+if(
+x < 0 ||
+x > plotW ||
+y < 0 ||
+y > chartR.height
+){
+return null;
+}
+
+return {
+x,
+y
+};
+
+}
+
+function isClientOnRsiPlot(
+clientX,
+clientY
+){
+
+return plotCoordsFromRsiClient(
+clientX,
+clientY
+) !=
+null;
+
+}
+
+function hideCrosshairOnAnyPriceScale(
+clientX,
+clientY
+){
+
+if(
+hideCrosshairOnPriceScale(
+clientX,
+clientY
+)
+){
+return true;
+}
+
+if(
+linkedChartEl &&
+linkedChart &&
+isClientOnChartPriceScale(
+linkedChartEl,
+linkedChart,
+clientX,
+clientY
+)
+){
+clearLinked();
+clearMainCrosshair();
+return true;
+}
+
+return false;
+
+}
+
+function showRsiCrosshairFromClient(
+clientX,
+clientY
+){
+
+if(
+!linkedWrapEl ||
+!linkedChartEl ||
+!linkedChart
+){
+return;
+}
+
+if(
+hideCrosshairOnAnyPriceScale(
+clientX,
+clientY
+)
+){
+return;
+}
+
+const plot =
+plotCoordsFromRsiClient(
+clientX,
+clientY
+);
+
+if(
+!plot
+){
+return;
+}
+
+applyRsiCrosshairPlot(
+plot.x,
+plot.y
+);
+
+try{
+mainChart.clearCrosshairPosition();
+}catch{
+/* ignore */
+}
+
+try{
+linkedChart.clearCrosshairPosition();
+}catch{
+/* ignore */
+}
+
+let probeTime =
+linkedChart.timeScale().coordinateToTime?.(
+plot.x
+);
+
+if(
+probeTime ==
+null &&
+mainChart?.timeScale
+){
+
+probeTime =
+mainChart.timeScale().coordinateToTime?.(
+plot.x
+);
+
+}
+
+updateCrosshairAxisLabels({
+param:{
+time: probeTime,
+point:{
+x: plot.x,
+y: plot.y
+}
+},
+timeLabelEl:crosshairTimeLabelEl,
+priceLabelEl:crosshairPriceLabelEl,
+snappedX:plot.x,
+plotY:null,
+mainSeries:null,
+mainChart:null
+});
+
+const rsiVal =
+linkedSeries?.coordinateToPrice?.(
+plot.y
+);
+
+if(
+rsiVal !=
+null &&
+Number.isFinite(
+rsiVal
+)
+){
+onLinkedCrosshairRsiValue?.(
+rsiVal
+);
+}else if(
+probeTime !=
+null
+){
+onLinkedCrosshairTime?.(
+probeTime
+);
 }
 
 }
@@ -2158,7 +2504,7 @@ clearMainCrosshair();
 return true;
 }
 
-applyLinkedCrosshairPlot(
+applyMainCrosshairPlot(
 x,
 py
 );
@@ -2229,22 +2575,6 @@ return true;
 
 }
 
-function onChartWrapPointerTrack(
-e
-){
-
-if(
-e.pointerType !==
-"touch"
-){
-trackPointerClient(
-e.clientX,
-e.clientY
-);
-}
-
-}
-
 function onChartWrapPointerMove(
 e
 ){
@@ -2281,7 +2611,7 @@ return;
 }
 
 if(
-hideCrosshairOnPriceScale(
+hideCrosshairOnAnyPriceScale(
 e.clientX,
 e.clientY
 )
@@ -2298,14 +2628,140 @@ e.clientY
 if(
 !plot
 ){
+
+if(
+isClientOnRsiPlot(
+e.clientX,
+e.clientY
+)
+){
+showRsiCrosshairFromClient(
+e.clientX,
+e.clientY
+);
+return;
+}
+
 clearLinked();
 clearMainCrosshair();
 return;
 }
 
-applyLinkedCrosshairPlot(
+applyMainCrosshairPlot(
 plot.x,
 plot.y
+);
+
+}
+
+function onRsiWrapPointerMove(
+e
+){
+
+if(
+e.pointerType !==
+"touch"
+){
+trackPointerClient(
+e.clientX,
+e.clientY
+);
+}
+
+if(
+lock
+){
+return;
+}
+
+if(
+e.pointerType ===
+"touch"
+){
+return;
+}
+
+if(
+document.body.classList.contains(
+"chart-probe-active"
+)
+){
+return;
+}
+
+if(
+!linkedWrapEl
+){
+return;
+}
+
+if(
+hideCrosshairOnAnyPriceScale(
+e.clientX,
+e.clientY
+)
+){
+return;
+}
+
+const plot =
+plotCoordsFromRsiClient(
+e.clientX,
+e.clientY
+);
+
+if(
+!plot
+){
+
+if(
+plotCoordsFromClient(
+e.clientX,
+e.clientY
+)
+){
+return;
+}
+
+clearLinked();
+clearMainCrosshair();
+return;
+}
+
+showRsiCrosshairFromClient(
+e.clientX,
+e.clientY
+);
+
+}
+
+function onStackPointerTrack(
+e
+){
+
+if(
+e.pointerType !==
+"touch"
+){
+trackPointerClient(
+e.clientX,
+e.clientY
+);
+}
+
+}
+
+if(
+chartsStackEl
+){
+
+chartsStackEl.addEventListener(
+"pointermove",
+onStackPointerTrack,
+{
+passive:true,
+capture:true
+}
 );
 
 }
@@ -2316,16 +2772,21 @@ chartWrapEl
 
 chartWrapEl.addEventListener(
 "pointermove",
-onChartWrapPointerTrack,
+onChartWrapPointerMove,
 {
-passive:true,
-capture:true
+passive:true
 }
 );
 
-chartWrapEl.addEventListener(
+}
+
+if(
+linkedWrapEl
+){
+
+linkedWrapEl.addEventListener(
 "pointermove",
-onChartWrapPointerMove,
+onRsiWrapPointerMove,
 {
 passive:true
 }
@@ -2342,6 +2803,19 @@ return;
 if(
 param.point === undefined
 ){
+
+if(
+isClientOnRsiPlot(
+lastPointerClientX,
+lastPointerClientY
+)
+){
+showRsiCrosshairFromClient(
+lastPointerClientX,
+lastPointerClientY
+);
+return;
+}
 
 clearLinked();
 return;
@@ -2389,16 +2863,30 @@ clearLinked,
 detachPointerCrosshair(){
 
 if(
+chartsStackEl
+){
+chartsStackEl.removeEventListener(
+"pointermove",
+onStackPointerTrack,
+true
+);
+}
+
+if(
 chartWrapEl
 ){
 chartWrapEl.removeEventListener(
 "pointermove",
-onChartWrapPointerTrack,
-true
-);
-chartWrapEl.removeEventListener(
-"pointermove",
 onChartWrapPointerMove
+);
+}
+
+if(
+linkedWrapEl
+){
+linkedWrapEl.removeEventListener(
+"pointermove",
+onRsiWrapPointerMove
 );
 }
 
