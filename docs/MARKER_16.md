@@ -141,3 +141,4 @@ git checkout metka-15   # до arrow / rectangle
 
 - Фаза 4 alerts-cloud **или** стабилизация Bybit proxy
 - После крупных правок: `sync-asset-versions` → `check:all` → обновить эту метку (re-tag `metka-16`)
+- При новой metka-N: обновить `js/release-marker.js` (`METKA_NUMBER = N` → на Главной `v0.N`)

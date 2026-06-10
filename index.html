@@ -13,7 +13,7 @@
 <link rel="stylesheet" href="/css/critical-shell.css?v=2">
 <script src="/js/site-css-ready.js?v=2"></script>
 <link rel="stylesheet" href="/css/common.css?v=21">
-<link rel="stylesheet" href="/css/screener.css?v=24">
+<link rel="stylesheet" href="/css/screener.css?v=25">
 <link rel="stylesheet" href="/css/site-mobile-nav.css?v=3">
 
 <script src="/vendor/lightweight-charts.standalone.production.js"></script>
@@ -63,6 +63,8 @@ enterkeyhint="search"
 <button type="button" class="screener-mobile-menu-item" data-tf="D">1D</button>
 </div>
 </div>
+
+<span class="screener-release-marker screener-release-marker--mobile" data-release-marker aria-hidden="true"></span>
 
 <button type="button" class="screener-nav-toggle" id="screener-nav-toggle" aria-label="Меню" aria-expanded="false" aria-controls="screener-nav-panel">
 <span class="screener-nav-toggle-bars" aria-hidden="true"></span>
@@ -164,6 +166,8 @@ aria-expanded="false"
 </div>
 </div>
 
+<span class="screener-release-marker" data-release-marker aria-label="Версия"></span>
+
 </div>
 
 </div>
@@ -206,7 +210,7 @@ const { loadLightweightCharts } =
 await import("/js/charts-lib-boot.js?v=3");
 
 await loadLightweightCharts();
-await import("/js/screener.js?v=67");
+await import("/js/screener.js?v=68");
 await import("/js/site-boot.js?v=83");
 
 }catch(err){

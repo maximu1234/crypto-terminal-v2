@@ -28,6 +28,10 @@ createTickerUiBatcher
 } from "./ticker-update-batch.js?v=1";
 
 import {
+mountReleaseMarker
+} from "./release-marker.js?v=1";
+
+import {
 saveScreenerState,
 loadScreenerState
 } from "./storage.js?v=12";
@@ -2231,6 +2235,8 @@ await import(
 );
 
 await waitForSiteCssReady();
+
+mountReleaseMarker();
 
 void ensureCloudReady();
 

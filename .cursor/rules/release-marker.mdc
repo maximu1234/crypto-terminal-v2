@@ -1,0 +1,13 @@
+---
+description: Обновлять подпись v0.N на Главной при новой git-метке metka-N
+alwaysApply: true
+---
+
+# Release marker (metka)
+
+При создании новой git-метки `metka-N`:
+
+1. Обновить `js/release-marker.js` — `METKA_NUMBER = N` (на Главной отображается `v0.N` после выбора таймфрейма).
+2. Обновить `docs/MARKER_N.md` и тег как обычно.
+
+Подпись монтируется через `mountReleaseMarker()` в `screener.js`; HTML — `[data-release-marker]` в `index.html`.

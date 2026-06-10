@@ -43,7 +43,9 @@ Object.freeze({
 "dashboard.js":
 78,
 "screener.js":
-67,
+68,
+"release-marker.js":
+1,
 "site-boot.js":
 83,
 "suppress-native-context-menu.js":
@@ -246,7 +248,7 @@ Object.freeze({
 "common.css":
 21,
 "screener.css":
-24,
+25,
 "terminal.css":
 118,
 "dashboard.css":
