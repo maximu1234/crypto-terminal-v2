@@ -6,7 +6,7 @@ cacheStorageKey,
 getStatsJobState,
 startStatsBackgroundRefresh,
 resumeStatsBackgroundJob
-} from "./statistics-background.js?v=2";
+} from "./statistics-background.js?v=3";
 
 const statusEl =
 document.getElementById(
@@ -880,7 +880,7 @@ setStatus(
 period ===
 "1d"
 ? `Загрузка с Bybit за ${PERIOD_LABELS[period] || period}…`
-: `Загрузка истории за ${PERIOD_LABELS[period] || period}… (1–2 мин)`,
+: `Загрузка истории с Bybit (~${PERIOD_LABELS[period] || period}, параллельно)…`,
 false,
 period !==
 "1d"

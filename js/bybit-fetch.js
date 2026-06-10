@@ -1020,6 +1020,140 @@ new Error(
 
 }
 
+/**
+ * Один HTTP-запрос на path — для массовой статистики (без Promise.any / triple race).
+ */
+export async function fetchBybitBulk(
+pathQuery,
+options = {}
+){
+
+const timeoutMs =
+options.timeoutMs ??
+12000;
+const path =
+normalizePath(
+pathQuery
+);
+const encoded =
+encodeURIComponent(
+path
+);
+
+let lastErr =
+null;
+
+if(
+isLocalDevHost()
+){
+
+return fetchOneBybitProxyUrl(
+localBybitProxyUrl(
+encoded
+),
+path,
+timeoutMs,
+"local-dev-proxy"
+);
+
+}
+
+try{
+
+return await fetchOneBybitProxyUrl(
+`/api/bybit?path=${encoded}`,
+path,
+timeoutMs,
+"vercel-proxy"
+);
+
+}catch(
+err
+){
+
+lastErr =
+err;
+
+}
+
+if(
+!shouldSkipDirectBybit()
+){
+
+for(
+let attempt =
+0;
+attempt <
+2;
+attempt++
+){
+
+try{
+
+return await fetchOneBybitUrl(
+`${getBybitApiBase()}${path}`,
+activeApiBaseIndex,
+timeoutMs
+);
+
+}catch(
+err
+){
+
+lastErr =
+err;
+
+if(
+attempt <
+1
+){
+await sleep(
+250
+);
+}
+
+}
+
+}
+
+}
+
+const workerBase =
+await getWorkerProxyBase();
+
+if(
+workerBase
+){
+
+try{
+
+return await fetchOneBybitProxyUrl(
+`${workerBase}/bybit?path=${encoded}`,
+path,
+timeoutMs,
+"worker-proxy"
+);
+
+}catch(
+err
+){
+
+lastErr =
+err;
+
+}
+
+}
+
+throw (
+lastErr ||
+new Error(
+"Bybit API недоступен"
+)
+);
+
+}
+
 export async function fetchBybit(
 pathQuery,
 options = {}

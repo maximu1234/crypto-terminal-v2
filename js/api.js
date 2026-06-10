@@ -1,7 +1,7 @@
 import {
 fetchBybit,
 isLocalDevHost
-} from "./bybit-fetch.js?v=13";
+} from "./bybit-fetch.js?v=14";
 
 import {
 fetchTwelveTimeSeries

@@ -28,7 +28,7 @@ bindSupabaseUsagePrefsForm
 
 import {
 resetBybitEndpoints
-} from "./bybit-fetch.js?v=13";
+} from "./bybit-fetch.js?v=14";
 
 const rootEl =
 document.getElementById("system-admin-root");

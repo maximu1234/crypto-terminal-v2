@@ -139,7 +139,7 @@ Object.freeze({
 "api.js":
 27,
 "bybit-fetch.js":
-13,
+14,
 "bybit-listings.js":
 5,
 "bybit-network-ui.js":
@@ -230,9 +230,9 @@ Object.freeze({
 "listings.js":
 4,
 "statistics.js":
-8,
+9,
 "statistics-background.js":
-2,
+3,
 "trade-calculator.js":
 3,
 "system-admin-page.js":

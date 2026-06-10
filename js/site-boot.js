@@ -48,7 +48,7 @@ import {
 resetBybitEndpoints,
 preloadBybitProxyConfig,
 warmBybitWorkerProxy
-} from "./bybit-fetch.js?v=13";
+} from "./bybit-fetch.js?v=14";
 
 import {
 initMobileRecovery
@@ -68,7 +68,7 @@ initSuppressNativeContextMenu
 
 import {
 resumeStatsBackgroundJob
-} from "./statistics-background.js?v=2";
+} from "./statistics-background.js?v=3";
 
 initSuppressNativeContextMenu();
 

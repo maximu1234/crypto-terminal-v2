@@ -7,8 +7,8 @@ fetchTickersInto
 } from "./tickers.js?v=21";
 
 import {
-fetchBybit
-} from "./bybit-fetch.js?v=13";
+fetchBybitBulk
+} from "./bybit-fetch.js?v=14";
 
 export const STATS_JOB_UPDATE_EVENT =
 "stats-job-update";
@@ -27,11 +27,19 @@ export const PERIOD_LABELS = {
 "1y":"1 год"
 };
 
-const SYMBOL_DELAY_MS =
-220;
-
 const MIN_KLINE_SAMPLES =
 3;
+
+/** Параллельных kline-запросов (Bybit linear, один path на монету). */
+const STATS_KLINE_CONCURRENCY =
+8;
+
+/** Пауза после retCode 10006 — общая для всех воркеров. */
+const STATS_RATE_LIMIT_BASE_MS =
+1500;
+
+const STATS_PARTIAL_CACHE_EVERY =
+40;
 
 const CACHE_KEY_PREFIX =
 "stats_movers_";
@@ -45,6 +53,92 @@ let localRunnerGen =
 let localRunnerActive =
 false;
 
+let bulkRateLimitUntil =
+0;
+
+async function waitForBulkRateLimit(){
+
+const wait =
+bulkRateLimitUntil -
+Date.now();
+
+if(
+wait >
+0
+){
+await sleep(
+wait
+);
+}
+
+}
+
+function noteBulkRateLimit(
+delayMs = STATS_RATE_LIMIT_BASE_MS
+){
+
+bulkRateLimitUntil =
+Math.max(
+bulkRateLimitUntil,
+Date.now() +
+delayMs
+);
+
+}
+
+async function runSymbolPool(
+items,
+worker,
+concurrency
+){
+
+let cursor =
+0;
+
+const runners =
+Array.from(
+{
+length: Math.min(
+concurrency,
+Math.max(
+1,
+items.length
+)
+)
+},
+async ()=>{
+
+while(
+true
+){
+
+const i =
+cursor++;
+
+if(
+i >=
+items.length
+){
+return;
+}
+
+await worker(
+items[
+i
+]
+);
+
+}
+
+}
+);
+
+await Promise.all(
+runners
+);
+
+}
+
 function sleep(
 ms
 ){
@@ -56,39 +150,6 @@ resolve,
 ms
 )
 );
-
-}
-
-let nextKlineSlot =
-0;
-
-async function acquireKlineSlot(){
-
-const now =
-Date.now();
-
-const slot =
-Math.max(
-now,
-nextKlineSlot
-);
-
-nextKlineSlot =
-slot +
-SYMBOL_DELAY_MS;
-
-const wait =
-slot -
-now;
-
-if(
-wait >
-0
-){
-await sleep(
-wait
-);
-}
 
 }
 
@@ -561,17 +622,15 @@ attempt <
 attempt++
 ){
 
-await acquireKlineSlot();
+await waitForBulkRateLimit();
 
 try{
 
 const { json } =
-await fetchBybit(
+await fetchBybitBulk(
 path,
 {
-timeoutMs:15000,
-retries:0,
-sequential:true
+timeoutMs:12000
 }
 );
 
@@ -580,8 +639,9 @@ isBybitRateLimit(
 json
 )
 ){
-await sleep(
-2000 *
+
+noteBulkRateLimit(
+STATS_RATE_LIMIT_BASE_MS *
 (
 attempt +
 1
@@ -629,7 +689,7 @@ attempt <
 2
 ){
 await sleep(
-1500 *
+600 *
 (
 attempt +
 1
@@ -1084,31 +1144,50 @@ done,
 symbolList.length
 );
 
+maybeWritePartialCache();
+
 };
 
-for(
-let i =
-startIndex;
-i <
-symbolList.length;
-i++
-){
-
-await processSymbol(
-symbolList[
-i
-]
-);
+function maybeWritePartialCache(){
 
 if(
-isJobCancelled(
-gen
-)
+!rows.length ||
+done %
+STATS_PARTIAL_CACHE_EVERY !==
+0
 ){
-return null;
+return;
 }
 
+const partialTop =
+[
+...rows
+].sort(
+(
+a,
+b
+)=>
+b.pct -
+a.pct
+).slice(
+0,
+100
+);
+
+writeCache(
+period,
+partialTop
+);
+
 }
+
+await runSymbolPool(
+symbolList.slice(
+startIndex
+),
+processSymbol,
+STATS_KLINE_CONCURRENCY
+);
 
 if(
 isJobCancelled(
@@ -1143,12 +1222,16 @@ top
 }else if(
 failCount >
 symbolList.length *
-0.5 ||
-successCount ===
-0
+0.85 &&
+successCount <
+Math.max(
+10,
+symbolList.length *
+0.1
+)
 ){
 throw new Error(
-"Bybit временно ограничил запросы. Подождите 2–3 минуты и выберите период снова."
+`Bybit: не удалось загрузить данные (${failCount} из ${symbolList.length}). Подождите 2–3 минуты и попробуйте снова.`
 );
 }
 
