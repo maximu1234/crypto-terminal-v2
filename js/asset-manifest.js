@@ -75,7 +75,7 @@ Object.freeze({
 "drawings.js":
 198,
 "drawings/init.js":
-30,
+36,
 "drawings/constants.js":
 5,
 "drawings/math.js":
@@ -107,11 +107,11 @@ Object.freeze({
 "drawings-storage-poller.js":
 1,
 "draw-color-palette.js":
-1,
+2,
 "draw-ui-shared.js":
-12,
+14,
 "draw-toolbar-icon-data.js":
-6,
+8,
 "draw-tools-visible.js":
 1,
 "dashboard-draw-ui.js":
@@ -246,9 +246,9 @@ Object.freeze({
 "screener.css":
 24,
 "terminal.css":
-107,
+112,
 "dashboard.css":
-17,
+22,
 "coins.css":
 30,
 "terminal-page.css":

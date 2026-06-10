@@ -1,10 +1,8 @@
-# Метка 14 — рабочая версия (июнь 2026)
+# Метка 14 — предыдущий эталон (июнь 2026)
 
-**Тег:** `metka-14` · **Коммит:** `git rev-parse metka-14`
+> **Superseded by [MARKER_15.md](./MARKER_15.md)** (`metka-15`) — текущий рабочий эталон.
 
-**Текущий эталон отката.** Наследует [MARKER_13.md](./MARKER_13.md).
-
-Проверено: asset manifest OK, site-nav OK (автопроверки); `npm run check:all` — syntax + unit tests (локально при наличии Node).
+**Тег:** `metka-14` · **Коммит:** `13107e66ae678a05a488a30b15adc38bc62c0775`
 
 ## Что добавлено после metka-13
 
@@ -39,84 +37,21 @@
 - `suppress-native-context-menu.js` v2: контекстное меню на nav / логотипе
 - Флаг монеты: заморозка списка при color picker
 
-## Ключевые версии ассетов
+## Ключевые версии ассетов (на момент metka-14)
 
 | Файл | v |
 |------|---|
 | `terminal.js` | 289 |
 | `screener.js` | 67 |
-| `chart-import.js` | 25 |
 | `chart.js` | 133 |
-| `chart/chart-factory.js` | 23 |
-| `chart/chart-dom-crosshair.js` | 13 |
-| `price-alert-ui.js` | 37 |
-| `bybit-listings.js` | 5 |
-| `terminal/coins-table.js` | 7 |
-| `terminal/coins-prefs.js` | 6 |
-| `terminal/coins-state.js` | 5 |
-| `statistics.js` | 8 |
-| `statistics-background.js` | 2 |
-| `site-boot.js` | 83 |
-| `suppress-native-context-menu.js` | 2 |
-| `screener.css` | 24 |
 | `terminal.css` | 107 |
-| `coins.css` | 30 |
-| `statistics.css` | 7 |
-
-Полный список: `js/asset-manifest.js` → `node scripts/sync-asset-versions.cjs`.
-
-## Аудит (2026-06-10)
-
-| Проверка | Результат |
-|----------|-----------|
-| Asset manifest (`check-asset-manifest.cjs`) | OK — 117 assets, 150 files |
-| Site nav (`check-site-nav.cjs`) | OK — 5 pages, 7 links |
-| `chart-import` chain | v25 во всех потребителях |
-| Stale imports | нет (listings/coins-prefs CI fix в c233a97) |
-| Syntax / unit tests | `npm run check:all` (Node в CI) |
-
-### Страницы (inventory)
-
-| URL | Файл | Статус |
-|-----|------|--------|
-| `/` | `index.html` | screener, nav OK |
-| `/coins` | `coins.html` | chart + RSI + listings |
-| `/terminal` | `terminal.html` | dashboard widgets |
-| `/alerts` | `alerts/index.html` | alerts UI |
-| `/listings` | `listings.html` | Bybit listings |
-| `/statistics` | `statistics.html` | kline stats + bg job |
-| `/trade-calculator` | `trade-calculator.html` | position sizing |
-| `/system` | `system/index.html` | admin |
-| `/btc-d` | `btc-d.html` | BTC.D page |
-| `screener.html` | redirect → `/` | legacy |
-
-### Ручной smoke
-
-| Страница | Что проверить |
-|----------|----------------|
-| Главная | pick-меню, поиск символа, виджеты |
-| Монеты | вкладка «Все», future time scale, смена монеты |
-| Монеты | crosshair: plot / price scale / RSI horiz |
-| Монеты | «+» на plot, алерт, без дубля vert |
-| `/statistics.html` | периоды, refresh, уход со страницы и возврат |
-| Терминал | dashboard, рисование на виджете |
-| Nav | контекстное меню «открыть в новой вкладке» |
-
-### Известные ограничения
-
-- Forex на Bybit: публичный API может вернуть 0 инструментов — вкладка пустая
-- Фаза 4 refactor: split `alerts-cloud-sync.js` — отложена
-- `js/alerts-cloud/*` — prep, не wired в проде
+| `drawings/init.js` | 30 |
+| `statistics.js` | 8 |
 
 ## Откат
 
 ```bash
 git fetch --tags
-git checkout metka-14   # текущий эталон
-git checkout metka-13   # до Statistics / future scale / crosshair polish
+git checkout metka-14   # этот снимок (до drawings polish)
+git checkout metka-15   # текущий эталон
 ```
-
-## Следующий шаг
-
-- Фаза 4 alerts-cloud **или** стабилизация Bybit proxy
-- После крупных правок: `sync-asset-versions` → `check:all` → обновить эту метку (re-tag `metka-14`)

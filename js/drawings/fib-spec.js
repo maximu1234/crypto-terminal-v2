@@ -146,6 +146,17 @@ if(
 return s.toLowerCase();
 }
 
+if(
+/^rgba?\(\s*\d+\s*,\s*\d+\s*,\s*\d+(?:\s*,\s*[0-9.]+)?\s*\)$/i.test(
+s
+)
+){
+return s.replace(
+/\s+/g,
+""
+);
+}
+
 return null;
 
 }

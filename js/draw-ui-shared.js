@@ -1,6 +1,6 @@
 import {
 getDrawToolIconSrc
-} from "./draw-toolbar-icon-data.js?v=6";
+} from "./draw-toolbar-icon-data.js?v=8";
 
 export const DRAW_TOOLS_GUEST_MSG =
 "Рисование доступно только для залогиненных пользователей.";
@@ -63,6 +63,11 @@ export const CHANNEL_ICON_SVG = drawToolIconImg("channel");
 export const LONG_POSITION_ICON_SVG = drawToolIconImg("long", "draw-tool-icon draw-pos-icon draw-pos-icon--long");
 export const SHORT_POSITION_ICON_SVG = drawToolIconImg("short", "draw-tool-icon draw-pos-icon draw-pos-icon--short");
 export const TRASH_ICON_SVG = drawToolIconImg("trash");
+export const SETTINGS_ICON_SVG = `
+<svg class="draw-settings-icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+<path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" d="M12 3.75 19.25 7.875v8.25L12 20.25 4.75 16.125v-8.25L12 3.75z"/>
+<circle cx="12" cy="12" r="2.35" fill="none" stroke="currentColor" stroke-width="1.5"/>
+</svg>`;
 export const TOOLBAR_CLEAR_TRASH_ICON_SVG = TRASH_ICON_SVG;
 
 export const ALARM_ICON_SVG = `

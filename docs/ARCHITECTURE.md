@@ -43,4 +43,4 @@ npm run check:all
 
 ## Откат
 
-**Текущий эталон:** `metka-14` — [MARKER_14.md](./MARKER_14.md) (рабочая версия, июнь 2026). Предыдущая: `metka-13` — [MARKER_13.md](./MARKER_13.md).
+**Текущий эталон:** `metka-15` — [MARKER_15.md](./MARKER_15.md) (рабочая версия, июнь 2026). Предыдущая: `metka-14` — [MARKER_14.md](./MARKER_14.md).

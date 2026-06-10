@@ -25,7 +25,7 @@ positionDomChartCrosshair
 
 import {
 mountDrawToolIcons
-} from "./draw-ui-shared.js?v=12";
+} from "./draw-ui-shared.js?v=14";
 
 const PLUS_ICON_W =
 22;

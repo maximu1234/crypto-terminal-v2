@@ -2,9 +2,10 @@ import {
 DRAW_TOOLS_PALETTE_ICON_SVG,
 DRAW_TOOLS_GUEST_MSG,
 TRASH_ICON_SVG,
+SETTINGS_ICON_SVG,
 getAlertToggleButtonHtml,
 getDrawToolbarButtonsHtml
-} from "./draw-ui-shared.js?v=12";
+} from "./draw-ui-shared.js?v=14";
 
 import {
 isCloudLoggedInEffective
@@ -402,7 +403,7 @@ ${getAlertToggleButtonHtml()}
 </label>
 
 <button type="button" class="float-settings draw-settings-btn" title="Настройки">
-<svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z"/></svg>
+${SETTINGS_ICON_SVG}
 </button>
 
 <button type="button" class="float-delete draw-delete-one-btn" title="Удалить">

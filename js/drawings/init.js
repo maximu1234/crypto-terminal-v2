@@ -17,14 +17,15 @@ resetAlertWatchBaseline
 } from "../alert-monitor.js?v=64";
 
 import {
-mountTvColorGrid
-} from "../draw-color-palette.js?v=1";
+mountTvColorPicker,
+parseDrawColor
+} from "../draw-color-palette.js?v=2";
 
 import {
 ALARM_ICON_SVG,
 TRASH_ICON_SVG,
 DRAW_TOOLS_GUEST_MSG
-} from "../draw-ui-shared.js?v=12";
+} from "../draw-ui-shared.js?v=14";
 
 import {
 closeAllWidgetDrawToolsMenus
@@ -447,6 +448,34 @@ let fibApplyTimer = null;
 let fibSettingsShapeId = null;
 let fibColorMenuPortal = null;
 let fibColorMenuAnchor = null;
+let fibSettingsSyncDeferred = false;
+
+function shouldDeferExternalDrawingsSync(){
+
+return (
+isFibSettingsOpen() ||
+isPositionRiskInputFocused()
+);
+
+}
+
+function flushDeferredFibSettingsSync(){
+
+if(
+!fibSettingsSyncDeferred
+){
+return;
+}
+
+fibSettingsSyncDeferred = false;
+
+applyRemoteDrawingsToChart(
+[
+getSymbol()
+]
+);
+
+}
 
 let chartApplyPatchRestore = null;
 
@@ -479,7 +508,7 @@ return `draw_defaults_${name}`;
 
 function loadToolDefaults(){
 
-["trendline", "hray", "fib", "channel"].forEach(name=>{
+["trendline", "hray", "fib", "channel", "long", "short"].forEach(name=>{
 
 try{
 
@@ -783,60 +812,175 @@ return seg.x0 + (seg.x1 - seg.x0) * ((t - candles[lo].time) / seg.dt);
 
 function timeFromX(x){
 
-const ts = chart.timeScale();
-let time = normalizeTime(ts.coordinateToTime(x));
+const ts =
+chart.timeScale();
+const candles =
+candleSeries();
 
-if(time != null){
-return time;
+if(
+candles.length >=
+2
+){
+
+const first =
+candles[
+0
+];
+const second =
+candles[
+1
+];
+const prev =
+candles[
+candles.length - 2
+];
+const last =
+candles[
+candles.length - 1
+];
+
+const head =
+segmentX(
+ts,
+first.time,
+second.time
+);
+
+if(
+head &&
+head.dt >
+0 &&
+x <
+Math.min(
+head.x0,
+head.x1
+) -
+0.5
+){
+
+const ratio =
+(x - head.x0) /
+(head.x1 - head.x0);
+
+return (
+first.time +
+ratio *
+head.dt
+);
+
 }
 
-const candles = candleSeries();
+const tail =
+segmentX(
+ts,
+prev.time,
+last.time
+);
 
-if(candles.length < 2){
+if(
+tail &&
+tail.dt >
+0 &&
+x >
+Math.max(
+tail.x0,
+tail.x1
+) +
+0.5
+){
+
+const ratio =
+(x - tail.x1) /
+(tail.x1 - tail.x0);
+
+return (
+last.time +
+ratio *
+tail.dt
+);
+
+}
+
+}
+
+let time =
+normalizeTime(
+ts.coordinateToTime(
+x
+)
+);
+
+if(
+time !=
+null
+){
+
+return time;
+
+}
+
+if(
+candles.length <
+2
+){
 return null;
 }
 
-for(let i = 0; i < candles.length - 1; i++){
+for(
+let i =
+0;
+i <
+candles.length - 1;
+i++
+){
 
-const seg = segmentX(
+const seg =
+segmentX(
 ts,
-candles[i].time,
-candles[i + 1].time
+candles[
+i
+].time,
+candles[
+i + 1
+].time
 );
 
-if(!seg || seg.dt <= 0){
+if(
+!seg ||
+seg.dt <=
+0
+){
 continue;
 }
 
-const minX = Math.min(seg.x0, seg.x1);
-const maxX = Math.max(seg.x0, seg.x1);
+const minX =
+Math.min(
+seg.x0,
+seg.x1
+);
+const maxX =
+Math.max(
+seg.x0,
+seg.x1
+);
 
-if(x >= minX && x <= maxX){
-const ratio = (x - seg.x0) / (seg.x1 - seg.x0);
-return candles[i].time + ratio * seg.dt;
+if(
+x >=
+minX &&
+x <=
+maxX
+){
+const ratio =
+(x - seg.x0) /
+(seg.x1 - seg.x0);
+return (
+candles[
+i
+].time +
+ratio *
+seg.dt
+);
 }
-
-}
-
-const first = candles[0];
-const second = candles[1];
-const head = segmentX(ts, first.time, second.time);
-
-if(head && head.dt > 0 && x < Math.min(head.x0, head.x1)){
-
-const ratio = (x - head.x0) / (head.x1 - head.x0);
-return first.time + ratio * head.dt;
-
-}
-
-const prev = candles[candles.length - 2];
-const last = candles[candles.length - 1];
-const tail = segmentX(ts, prev.time, last.time);
-
-if(tail && tail.dt > 0 && x > Math.max(tail.x0, tail.x1)){
-
-const ratio = (x - tail.x1) / (tail.x1 - tail.x0);
-return last.time + ratio * tail.dt;
 
 }
 
@@ -1219,7 +1363,8 @@ new CustomEvent(
 "drawings-updated",
 {
 detail:{
-symbol: getSymbol()
+symbol: getSymbol(),
+local: true
 }
 }
 )
@@ -1398,10 +1543,43 @@ settingsPopover.innerHTML =
 <input type="checkbox" id="fib-show-trend-line" />
 <span>Линия тренда</span>
 </label>
-<div class="fib-levels-head">Уровни: значение, цвет, толщина и тип линии</div>
+<div class="fib-levels-global">
+<span class="fib-levels-global-label">Levels line</span>
+<button type="button" class="fib-global-line-style-btn" data-line-style="solid" title="Тип линии" aria-label="Тип линии"></button>
+<button type="button" class="fib-global-line-width-btn" title="Толщина линии" aria-label="Толщина линии">1px</button>
+</div>
 <div class="fib-levels-grid" id="fib-level-rows-root"></div>
 </div>
 `;
+
+const globalStyleBtn =
+settingsPopover.querySelector(
+".fib-global-line-style-btn"
+);
+
+const globalWidthBtn =
+settingsPopover.querySelector(
+".fib-global-line-width-btn"
+);
+
+if(
+globalStyleBtn
+){
+setFibLineStyleButton(
+globalStyleBtn,
+"solid"
+);
+}
+
+if(
+globalWidthBtn
+){
+setFibLevelWidthButton(
+globalWidthBtn,
+null,
+1
+);
+}
 
 const root =
 settingsPopover.querySelector("#fib-level-rows-root");
@@ -1420,8 +1598,6 @@ row.innerHTML =
 <input type="checkbox" class="fib-level-on"/>
 <input type="text" class="fib-level-val" autocomplete="off" spellcheck="false"/>
 <button type="button" class="fib-level-color-btn" title="Цвет уровня" aria-label="Цвет уровня"></button>
-<button type="button" class="fib-line-width-btn" title="Толщина уровня" aria-label="Толщина уровня">1px</button>
-<button type="button" class="fib-line-style-btn" data-line-style="solid" title="Тип линии" aria-label="Тип линии"></button>
 `;
 
 const on =
@@ -1430,10 +1606,6 @@ const val =
 row.querySelector(".fib-level-val");
 const colorBtn =
 row.querySelector(".fib-level-color-btn");
-const widthBtn =
-row.querySelector(".fib-line-width-btn");
-const styleBtn =
-row.querySelector(".fib-line-style-btn");
 
 if(on){
 on.checked = !!spec.enabled;
@@ -1448,17 +1620,6 @@ setFibLevelColorButton(
 colorBtn,
 normalizeFibLevelColor(spec.color),
 STROKE
-);
-
-setFibLevelWidthButton(
-widthBtn,
-null,
-1
-);
-
-setFibLineStyleButton(
-styleBtn,
-"solid"
 );
 
 root.appendChild(row);
@@ -1496,7 +1657,9 @@ return;
 }
 
 const styleBtn =
-e.target.closest(".fib-line-style-btn");
+e.target.closest(
+".fib-global-line-style-btn"
+);
 
 if(styleBtn){
 
@@ -1511,7 +1674,9 @@ styleBtn
 closeAllFibLineStyleMenus();
 
 if(!wasOpen){
-openFibLineStyleMenu(styleBtn);
+openFibLineStyleMenu(
+styleBtn
+);
 }
 
 return;
@@ -1519,7 +1684,9 @@ return;
 }
 
 const widthBtn =
-e.target.closest(".fib-line-width-btn");
+e.target.closest(
+".fib-global-line-width-btn"
+);
 
 if(widthBtn){
 
@@ -1590,7 +1757,7 @@ document.addEventListener("mousedown", e=>{
 
 if(
 e.target.closest(
-".fib-line-style-btn, .fib-line-style-menu--portal, .fib-line-width-btn, .fib-line-width-menu--portal"
+".fib-global-line-style-btn, .fib-line-style-menu--portal, .fib-global-line-width-btn, .fib-line-width-menu--portal"
 )
 ){
 return;
@@ -1655,6 +1822,19 @@ JSON.stringify(panel.fibLevels)
 
 shape.fibShowTrendLine =
 panel.fibShowTrendLine;
+
+if(
+Number.isFinite(
+panel.lineWidth
+)
+){
+shape.lineWidth =
+panel.lineWidth;
+}
+
+touchShapeRevision(
+shape
+);
 
 saveDrawings();
 redraw();
@@ -1734,15 +1914,27 @@ anchorBtn.dataset.customColor ||
 fallbackColor ||
 STROKE;
 
-mountTvColorGrid(
+mountTvColorPicker(
 portal,
 {
 activeColor: active,
-onSelect: hex=>{
+onChange: color=>{
 
 setFibLevelColorButton(
 anchorBtn,
-hex,
+color,
+fallbackColor
+);
+
+rememberFibSettingsTarget();
+commitFibPanelToShape();
+
+},
+onSelect: color=>{
+
+setFibLevelColorButton(
+anchorBtn,
+color,
 fallbackColor
 );
 
@@ -1870,6 +2062,30 @@ trendEl
 ? !!trendEl.checked
 : false;
 
+const globalStyleBtn =
+settingsPopover.querySelector(
+".fib-global-line-style-btn"
+);
+
+const globalWidthBtn =
+settingsPopover.querySelector(
+".fib-global-line-width-btn"
+);
+
+const globalLineStyle =
+normalizeFibLineStyle(
+globalStyleBtn?.dataset.lineStyle
+);
+
+const globalLineWidth =
+normalizeFibLevelWidth(
+globalWidthBtn?.dataset.customWidth
+) ||
+normalizeFibLevelWidth(
+globalWidthBtn?.textContent
+) ||
+1;
+
 settingsPopover.querySelectorAll(".fib-level-row").forEach((row,i)=>{
 
 if(
@@ -1884,10 +2100,6 @@ const chk =
 row.querySelector(".fib-level-on");
 const colorBtn =
 row.querySelector(".fib-level-color-btn");
-const widthBtn =
-row.querySelector(".fib-line-width-btn");
-const styleBtn =
-row.querySelector(".fib-line-style-btn");
 
 const parsed =
 parseFibRatioField(
@@ -1903,9 +2115,10 @@ template[i].enabled =
 !!chk?.checked;
 
 template[i].lineStyle =
-normalizeFibLineStyle(
-styleBtn?.dataset.lineStyle
-);
+globalLineStyle;
+
+template[i].lineWidth =
+globalLineWidth;
 
 const levelColor =
 normalizeFibLevelColor(
@@ -1929,22 +2142,13 @@ delete template[i].color;
 
 }
 
-const levelWidth =
-normalizeFibLevelWidth(
-widthBtn?.dataset.customWidth
-);
-
-if(levelWidth){
-template[i].lineWidth = levelWidth;
-}else{
-delete template[i].lineWidth;
-}
-
 });
 
 return {
 fibLevels:template,
-fibShowTrendLine
+fibShowTrendLine,
+lineWidth: globalLineWidth,
+lineStyle: globalLineStyle
 };
 
 }
@@ -2126,6 +2330,15 @@ fallbackColor || STROKE;
 const baseWidth =
 normalizeFibLevelWidth(fallbackWidth) || 1;
 
+const baseLineStyle =
+rows.find(
+row=>row.enabled
+)?.lineStyle ||
+rows[
+0
+]?.lineStyle ||
+"solid";
+
 const trendEl =
 settingsPopover.querySelector("#fib-show-trend-line");
 
@@ -2135,6 +2348,27 @@ trendEl.checked =
 !!fibShowTrendLine;
 
 }
+
+const globalStyleBtn =
+settingsPopover.querySelector(
+".fib-global-line-style-btn"
+);
+
+const globalWidthBtn =
+settingsPopover.querySelector(
+".fib-global-line-width-btn"
+);
+
+setFibLineStyleButton(
+globalStyleBtn,
+baseLineStyle
+);
+
+setFibLevelWidthButton(
+globalWidthBtn,
+baseWidth,
+baseWidth
+);
 
 rows.forEach((row,i)=>{
 
@@ -2153,10 +2387,6 @@ const val =
 wrap.querySelector(".fib-level-val");
 const colorBtn =
 wrap.querySelector(".fib-level-color-btn");
-const widthBtn =
-wrap.querySelector(".fib-line-width-btn");
-const styleBtn =
-wrap.querySelector(".fib-line-style-btn");
 
 if(on){
 on.checked = !!row.enabled;
@@ -2171,17 +2401,6 @@ setFibLevelColorButton(
 colorBtn,
 row.color,
 baseColor
-);
-
-setFibLevelWidthButton(
-widthBtn,
-row.lineWidth,
-baseWidth
-);
-
-setFibLineStyleButton(
-styleBtn,
-row.lineStyle
 );
 
 });
@@ -2243,10 +2462,25 @@ colorStripe.style.setProperty("--active-color", color);
 }
 
 colorPopover?.querySelectorAll(".tv-color-swatch").forEach(btn=>{
+
+const activeParsed =
+parseDrawColor(
+color
+);
+
+const swatchParsed =
+parseDrawColor(
+btn.dataset.color
+);
+
 btn.classList.toggle(
 "active",
-btn.dataset.color?.toLowerCase() === color?.toLowerCase()
+!!activeParsed &&
+!!swatchParsed &&
+activeParsed.hex.toLowerCase() ===
+swatchParsed.hex.toLowerCase()
 );
+
 });
 
 }
@@ -2293,6 +2527,9 @@ sel.riskUsd = parsed;
 delete sel.riskUsd;
 }
 
+touchShapeRevision(
+sel
+);
 saveDrawings();
 
 }
@@ -2322,6 +2559,18 @@ saveUserPrefs(prefs);
 }
 
 redraw();
+
+}
+
+function isPositionRiskInputFocused(){
+
+return (
+document.activeElement ===
+positionRiskInput ||
+positionRiskInput?.contains?.(
+document.activeElement
+)
+);
 
 }
 
@@ -2369,18 +2618,33 @@ positionRiskWrap?.classList.toggle(
 
 if(
 isPositionType(type) &&
-positionRiskInput
+positionRiskInput &&
+!isPositionRiskInputFocused()
 ){
 
 const sel =
 getSelected();
-const riskVal =
-(
+
+const shapeRisk =
 sel &&
 isPositionType(sel.type) &&
+Number.isFinite(
+Number(
 sel.riskUsd
-) ||
-style.riskUsd ||
+)
+) &&
+Number(
+sel.riskUsd
+) >
+0
+? Number(
+sel.riskUsd
+)
+: null;
+
+const riskVal =
+shapeRisk ??
+style.riskUsd ??
 toolDefaults[type]?.riskUsd;
 
 positionRiskInput.value =
@@ -2391,12 +2655,28 @@ riskVal > 0
 }
 
 if(type === "fib"){
+
+if(
+!isFibSettingsOpen()
+){
+
+const fibShape =
+getSelected()?.type === "fib"
+? getSelected()
+: getFibEditShape();
+
 fillFibSettingsPanel(
-style.fibLevels,
+getFibRows(
+fibShape ||
+{ fibLevels: style.fibLevels }
+),
 style.fibShowTrendLine,
 style.color,
 style.lineWidth
 );
+
+}
+
 }else{
 settingsPopover?.classList.add("hidden");
 }
@@ -2600,6 +2880,10 @@ target.lineWidth = style.lineWidth;
 
 }
 
+touchShapeRevision(
+target
+);
+
 saveDrawings();
 redraw();
 
@@ -2644,6 +2928,12 @@ function closePopovers(){
 const fibSettingsWasOpen =
 isFibSettingsOpen();
 
+if(
+fibSettingsWasOpen
+){
+commitFibPanelToShape();
+}
+
 colorPopover?.classList.add("hidden");
 widthPopover?.classList.add("hidden");
 settingsPopover?.classList.add("hidden");
@@ -2653,6 +2943,7 @@ closeFibColorMenu();
 
 if(fibSettingsWasOpen){
 fibSettingsShapeId = null;
+flushDeferredFibSettingsSync();
 }
 
 }
@@ -3565,6 +3856,34 @@ return Math.ceil(w);
 
 }
 
+function candleBarStepSec(){
+
+const candles =
+candleSeries();
+
+if(
+candles.length <
+2
+){
+return 3600;
+}
+
+const last =
+candles[
+candles.length - 1
+];
+const prev =
+candles[
+candles.length - 2
+];
+
+return Math.max(
+60,
+last.time - prev.time
+);
+
+}
+
 function ensurePositionP2MinWidth(p1, p2){
 
 const entry =
@@ -3596,6 +3915,73 @@ t2 = t1;
 
 const candles =
 candleSeries();
+
+if(
+candles.length >=
+2
+){
+
+const last =
+candles[
+candles.length - 1
+];
+const dt =
+candleBarStepSec();
+
+if(
+t1 >=
+last.time
+){
+
+let b =
+toXY({
+time: t2,
+price: entry
+});
+
+for(
+let step =
+0;
+step <
+320;
+step++
+){
+
+if(
+b &&
+Math.abs(
+b.x - a.x
+) >=
+minW
+){
+break;
+}
+
+t2 =
+t1 +
+dt *
+Math.max(
+step + 1,
+POSITION_DEFAULT_WIDTH_BARS
+);
+
+b =
+toXY({
+time: t2,
+price: entry
+});
+
+}
+
+return {
+time: t2,
+price: entry
+};
+
+}
+
+}
+
 let b =
 toXY({ time: t2, price: entry });
 
@@ -3675,8 +4061,40 @@ normalizeTime(p1.time);
 let idx =
 candles.findIndex(c=>c.time >= t0);
 
-if(idx < 0){
-idx = candles.length - 1;
+if(
+idx <
+0
+){
+
+const last =
+candles[
+candles.length - 1
+];
+const dt =
+candleBarStepSec();
+const barsFromLast =
+Math.max(
+1,
+Math.ceil(
+(t0 - last.time) /
+dt
+)
+);
+
+return ensurePositionP2MinWidth(
+p1,
+{
+time:
+last.time +
+dt *
+(
+barsFromLast +
+POSITION_DEFAULT_WIDTH_BARS
+),
+price: p1.price
+}
+);
+
 }
 
 const targetIdx =
@@ -3781,58 +4199,216 @@ shape,
 opts = {}
 ){
 
-const skipMinWidth =
-!!opts.skipMinWidth;
+const handleId =
+opts.handleId ||
+null;
+
+const preserveTpSl =
+!!opts.preserveTpSl ||
+handleId ===
+"entryL" ||
+handleId ===
+"entryR";
 
 const entry =
-positionEntryPrice(shape);
+positionEntryPrice(
+shape
+);
 
-if(!Number.isFinite(entry)){
+if(
+!Number.isFinite(
+entry
+)
+){
 return;
 }
 
 shape.p1.price = entry;
-
-if(!skipMinWidth){
-shape.p2 =
-ensurePositionP2MinWidth(
-shape.p1,
-shape.p2 || shape.p1
-);
-}
-
 shape.p2.price = entry;
 
-const tp =
-Number(shape.tpPrice);
-const sl =
-Number(shape.slPrice);
+if(
+preserveTpSl
+){
+return;
+}
 
-if(shape.type === "long"){
+const tp =
+Number(
+shape.tpPrice
+);
+const sl =
+Number(
+shape.slPrice
+);
+const eps =
+Math.max(
+Math.abs(
+entry
+) *
+1e-9,
+1e-12
+);
+
+if(
+shape.type ===
+"long"
+){
+
+if(
+handleId ===
+"tp"
+){
 
 shape.tpPrice =
-Number.isFinite(tp) && tp > entry
+Number.isFinite(
+tp
+)
+? (
+tp >
+entry +
+eps
 ? tp
-: entry * (1 + POSITION_DEFAULT_TP_PCT);
+: entry +
+eps
+)
+: entry *
+(
+1 +
+POSITION_DEFAULT_TP_PCT
+);
+
+}else if(
+handleId ===
+"sl"
+){
 
 shape.slPrice =
-Number.isFinite(sl) && sl < entry
+Number.isFinite(
+sl
+)
+? (
+sl <
+entry -
+eps
 ? sl
-: entry * (1 - POSITION_DEFAULT_SL_PCT);
+: entry -
+eps
+)
+: entry *
+(
+1 -
+POSITION_DEFAULT_SL_PCT
+);
+
+}else{
+
+shape.tpPrice =
+Number.isFinite(
+tp
+) &&
+tp >
+entry
+? tp
+: entry *
+(
+1 +
+POSITION_DEFAULT_TP_PCT
+);
+
+shape.slPrice =
+Number.isFinite(
+sl
+) &&
+sl <
+entry
+? sl
+: entry *
+(
+1 -
+POSITION_DEFAULT_SL_PCT
+);
+
+}
 
 return;
 
 }
 
+if(
+handleId ===
+"tp"
+){
+
 shape.tpPrice =
-Number.isFinite(tp) && tp < entry
+Number.isFinite(
+tp
+)
+? (
+tp <
+entry -
+eps
 ? tp
-: entry * (1 - POSITION_DEFAULT_TP_PCT);
+: entry -
+eps
+)
+: entry *
+(
+1 -
+POSITION_DEFAULT_TP_PCT
+);
+
+}else if(
+handleId ===
+"sl"
+){
 
 shape.slPrice =
-Number.isFinite(sl) && sl > entry
+Number.isFinite(
+sl
+)
+? (
+sl >
+entry +
+eps
 ? sl
-: entry * (1 + POSITION_DEFAULT_SL_PCT);
+: entry +
+eps
+)
+: entry *
+(
+1 +
+POSITION_DEFAULT_SL_PCT
+);
+
+}else{
+
+shape.tpPrice =
+Number.isFinite(
+tp
+) &&
+tp <
+entry
+? tp
+: entry *
+(
+1 -
+POSITION_DEFAULT_TP_PCT
+);
+
+shape.slPrice =
+Number.isFinite(
+sl
+) &&
+sl >
+entry
+? sl
+: entry *
+(
+1 +
+POSITION_DEFAULT_SL_PCT
+);
+
+}
 
 }
 
@@ -5196,7 +5772,7 @@ price: point.price
 
 clampPositionPrices(
 shape,
-{ skipMinWidth: true }
+{ handleId }
 );
 
 return;
@@ -5210,36 +5786,74 @@ time: point.time,
 price: entry
 };
 
+clampPositionPrices(
+shape,
+{ handleId }
+);
+
+return;
+
 }
 
 if(handleId === "tp"){
 
 const entryNow =
-positionEntryPrice(shape);
+positionEntryPrice(
+shape
+);
 
 shape.tpPrice =
-shape.type === "long"
-? Math.max(point.price, entryNow * 1.0000001)
-: Math.min(point.price, entryNow * 0.9999999);
+shape.type ===
+"long"
+? Math.max(
+point.price,
+entryNow *
+1.0000001
+)
+: Math.min(
+point.price,
+entryNow *
+0.9999999
+);
+
+clampPositionPrices(
+shape,
+{ handleId }
+);
+
+return;
 
 }
 
 if(handleId === "sl"){
 
 const entryNow =
-positionEntryPrice(shape);
+positionEntryPrice(
+shape
+);
 
 shape.slPrice =
-shape.type === "long"
-? Math.min(point.price, entryNow * 0.9999999)
-: Math.max(point.price, entryNow * 1.0000001);
-
-}
+shape.type ===
+"long"
+? Math.min(
+point.price,
+entryNow *
+0.9999999
+)
+: Math.max(
+point.price,
+entryNow *
+1.0000001
+);
 
 clampPositionPrices(
 shape,
-{ skipMinWidth: true }
+{ handleId }
 );
+
+return;
+
+}
 
 }
 
@@ -5493,7 +6107,7 @@ dy
 
 clampPositionPrices(
 shape,
-{ skipMinWidth: true }
+{ preserveTpSl: true }
 );
 
 return true;
@@ -5578,7 +6192,10 @@ shape.p1 = pts[0];
 shape.p2 = pts[1];
 shape.tpPrice = pts[2].price;
 shape.slPrice = pts[3].price;
-clampPositionPrices(shape);
+clampPositionPrices(
+shape,
+{ preserveTpSl: true }
+);
 return true;
 
 }
@@ -6204,15 +6821,33 @@ draggedShape
 ){
 
 if(
-dragState.mode ===
-"position-move" &&
 isPositionType(
 draggedShape.type
 )
 ){
+
+const preserveTpSl =
+dragState.mode ===
+"position-move" ||
+dragState.mode ===
+"screen-move";
+
 clampPositionPrices(
+draggedShape,
+{
+handleId:
+dragState.mode ===
+"handle"
+? dragState.handleId
+: null,
+preserveTpSl
+}
+);
+
+touchShapeRevision(
 draggedShape
 );
+
 }
 
 if(
@@ -8229,13 +8864,19 @@ closePopovers();
 
 if(open && colorPopover){
 
-mountTvColorGrid(
+mountTvColorPicker(
 colorPopover,
 {
 activeColor: activeColor || STROKE,
-onSelect: hex=>{
+onChange: color=>{
 
-updateColorStripe(hex);
+updateColorStripe(color);
+applyStyleFromUI("color");
+
+},
+onSelect: color=>{
+
+updateColorStripe(color);
 applyStyleFromUI("color");
 colorPopover.classList.add("hidden");
 
@@ -8293,6 +8934,37 @@ closePopovers();
 
 if(open){
 rememberFibSettingsTarget();
+
+const fibShape =
+getFibEditShape();
+
+if(
+fibShape
+){
+fillFibSettingsPanel(
+getFibRows(
+fibShape
+),
+fibShape.fibShowTrendLine,
+fibShape.color,
+fibShape.lineWidth
+);
+}else{
+
+const style =
+baseDefaultStyle(
+"fib"
+);
+
+fillFibSettingsPanel(
+style.fibLevels,
+style.fibShowTrendLine,
+style.color,
+style.lineWidth
+);
+
+}
+
 positionPopover(settingsPopover, 40);
 settingsPopover?.classList.remove("hidden");
 }
@@ -8327,6 +8999,13 @@ e.stopPropagation();
 
 positionRiskInput?.addEventListener(
 "input",
+()=>{
+applyPositionRiskUsd();
+}
+);
+
+positionRiskInput?.addEventListener(
+"change",
 ()=>{
 applyPositionRiskUsd();
 }
@@ -8629,6 +9308,15 @@ return;
 }
 
 if(
+e.detail?.local
+){
+touchStorageSnap();
+scheduleRedraw();
+return;
+
+}
+
+if(
 placement &&
 !e.detail?.remote &&
 !e.detail?.cleared
@@ -8643,6 +9331,13 @@ if(
 !isActive() &&
 !e.detail?.remote
 ){
+return;
+}
+
+if(
+shouldDeferExternalDrawingsSync()
+){
+fibSettingsSyncDeferred = true;
 return;
 }
 
@@ -8668,6 +9363,13 @@ if(
 !alive ||
 !canUseDrawings()
 ){
+return;
+}
+
+if(
+shouldDeferExternalDrawingsSync()
+){
+fibSettingsSyncDeferred = true;
 return;
 }
 
@@ -8725,6 +9427,13 @@ symbols
 if(
 !alive
 ){
+return;
+}
+
+if(
+shouldDeferExternalDrawingsSync()
+){
+fibSettingsSyncDeferred = true;
 return;
 }
 
