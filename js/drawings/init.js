@@ -6022,8 +6022,38 @@ const POSITION_EDGE_BADGE_GAP =
 const POSITION_EDGE_BADGE_H =
 18;
 
-const POSITION_BADGE_CORNER_RADIUS =
-4;
+function fillPositionBadgeRect(
+ctx,
+left,
+top,
+bw,
+bh,
+fill,
+stroke
+){
+
+ctx.fillStyle = fill;
+ctx.fillRect(
+left,
+top,
+bw,
+bh
+);
+
+if(
+stroke
+){
+ctx.strokeStyle = stroke;
+ctx.lineWidth = 1;
+ctx.strokeRect(
+left + 0.5,
+top + 0.5,
+bw - 1,
+bh - 1
+);
+}
+
+}
 
 function positionBadgeCyOutside(
 edgeY,
@@ -6179,15 +6209,12 @@ const pillTop =
 lineCy - pillH / 2;
 
 ctx.fillStyle = "rgba(0, 0, 0, 0.55)";
-ctx.beginPath();
-ctx.roundRect(
+ctx.fillRect(
 x - pad,
 pillTop,
 seg.width + pad * 2,
-pillH,
-4
+pillH
 );
-ctx.fill();
 
 }
 
@@ -6271,19 +6298,15 @@ cx - bw / 2;
 const top =
 cy - bh / 2;
 
-ctx.beginPath();
-ctx.roundRect(
+fillPositionBadgeRect(
+ctx,
 left,
 top,
 bw,
 bh,
-POSITION_BADGE_CORNER_RADIUS
+fill,
+stroke
 );
-ctx.fillStyle = fill;
-ctx.fill();
-ctx.strokeStyle = stroke;
-ctx.lineWidth = 1;
-ctx.stroke();
 
 ctx.textAlign = "left";
 
@@ -6355,19 +6378,15 @@ cx - bw / 2;
 const top =
 cy - bh / 2;
 
-ctx.beginPath();
-ctx.roundRect(
+fillPositionBadgeRect(
+ctx,
 left,
 top,
 bw,
 bh,
-POSITION_BADGE_CORNER_RADIUS
+fill,
+stroke
 );
-ctx.fillStyle = fill;
-ctx.fill();
-ctx.strokeStyle = stroke;
-ctx.lineWidth = 1;
-ctx.stroke();
 
 ctx.textAlign = "left";
 
@@ -6440,10 +6459,15 @@ fill = "rgba(127, 29, 29, 0.95)";
 fill = "rgba(113, 63, 18, 0.95)";
 }
 
-ctx.fillStyle = fill;
-ctx.beginPath();
-ctx.roundRect(left, top, tw, th, 3);
-ctx.fill();
+fillPositionBadgeRect(
+ctx,
+left,
+top,
+tw,
+th,
+fill,
+null
+);
 ctx.fillStyle = "#f8fafc";
 ctx.fillText(item.text, tagX - padX, item.y);
 ctx.restore();
