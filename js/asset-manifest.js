@@ -31,9 +31,9 @@ Object.freeze({
 "chart-page.js":
 6,
 "terminal.js":
-298,
+299,
 "coins-layout-resize.js":
-3,
+4,
 "coins-layout-math.js":
 2,
 "terminal/coins-state.js":
@@ -79,9 +79,9 @@ Object.freeze({
 "coins-tablet-controller.js":
 5,
 "drawings.js":
-206,
+207,
 "drawings/init.js":
-60,
+61,
 "drawings/chart-ruler.js":
 8,
 "drawings/draw-magnet.js":

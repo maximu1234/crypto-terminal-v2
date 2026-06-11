@@ -93,7 +93,7 @@ syncCoinsTfLabel
 
 import {
 mountCoinsLayoutResize
-} from "./coins-layout-resize.js?v=3";
+} from "./coins-layout-resize.js?v=4";
 
 import {
 registerCoinsState,

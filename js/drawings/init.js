@@ -7032,16 +7032,62 @@ entry.color
 
 function resizeCanvas(){
 
-const dpr = window.devicePixelRatio || 1;
-const { w, h } = chartSize();
+const dpr =
+window.devicePixelRatio ||
+1;
+const {
+w,
+h
+} =
+chartSize();
 
-canvas.width = Math.max(1, Math.floor(w * dpr));
-canvas.height = Math.max(1, Math.floor(h * dpr));
-canvas.style.width = `${w}px`;
-canvas.style.height = `${h}px`;
+const nextW =
+Math.max(
+1,
+Math.floor(
+w *
+dpr
+)
+);
+const nextH =
+Math.max(
+1,
+Math.floor(
+h *
+dpr
+)
+);
+const cssW =
+`${w}px`;
+const cssH =
+`${h}px`;
+
+if(
+canvas.width ===
+nextW &&
+canvas.height ===
+nextH &&
+canvas.style.width ===
+cssW &&
+canvas.style.height ===
+cssH
+){
+return;
+}
+
+canvas.width =
+nextW;
+canvas.height =
+nextH;
+canvas.style.width =
+cssW;
+canvas.style.height =
+cssH;
 
 removePriceGutterOverlay();
-scheduleRedraw();
+
+/* bitmap clear — сразу redraw (resizeCharts уже обновил LW chart). */
+redraw();
 
 }
 

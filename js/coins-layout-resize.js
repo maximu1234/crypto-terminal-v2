@@ -273,6 +273,52 @@ window.innerHeight
 
 }
 
+let layoutChangeRaf =
+0;
+
+function notifyLayoutChange(
+immediate = false
+){
+
+if(
+immediate ||
+!dragMode
+){
+
+if(
+layoutChangeRaf
+){
+cancelAnimationFrame(
+layoutChangeRaf
+);
+layoutChangeRaf =
+0;
+}
+
+onLayoutChange();
+return;
+
+}
+
+if(
+layoutChangeRaf
+){
+return;
+}
+
+layoutChangeRaf =
+requestAnimationFrame(
+()=>{
+
+layoutChangeRaf =
+0;
+onLayoutChange();
+
+}
+);
+
+}
+
 function applyLayout(
 {
 persist = false
@@ -343,7 +389,9 @@ rsiHeight
 
 }
 
-onLayoutChange();
+notifyLayoutChange(
+persist
+);
 
 }
 
@@ -579,6 +627,16 @@ chartsStack
 applyLayout();
 
 return ()=>{
+
+if(
+layoutChangeRaf
+){
+cancelAnimationFrame(
+layoutChangeRaf
+);
+layoutChangeRaf =
+0;
+}
 
 hHandle.remove();
 vHandle.remove();
