@@ -187,7 +187,7 @@ ensureChartRulerLabelEl,
 hideChartRulerLabelEl,
 isChartRulerGoingDown,
 updateChartRulerLabelEl
-} from "./chart-ruler.js?v=5";
+} from "./chart-ruler.js?v=8";
 
 import {
 mountTabletDrawInput
@@ -4534,6 +4534,8 @@ hideChartRulerLabelEl(
 chartRulerLabelEl
 );
 
+syncChartRulerLayerClass();
+
 if(
 chartRulerRedrawRaf
 ){
@@ -4542,6 +4544,15 @@ chartRulerRedrawRaf
 );
 chartRulerRedrawRaf = 0;
 }
+
+}
+
+function syncChartRulerLayerClass(){
+
+wrapEl?.classList.toggle(
+"chart-ruler-active",
+!!chartRulerStart
+);
 
 }
 
@@ -4753,6 +4764,7 @@ startPlot?.y ??
 0
 };
 
+syncChartRulerLayerClass();
 redraw();
 
 return true;

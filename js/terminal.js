@@ -92,6 +92,10 @@ syncCoinsTfLabel
 } from "./coins-mobile.js?v=5";
 
 import {
+mountCoinsLayoutResize
+} from "./coins-layout-resize.js?v=1";
+
+import {
 registerCoinsState,
 coinsState,
 marketMap,
@@ -2668,6 +2672,19 @@ document.getElementById("rsi-wrap");
 if(rsiWrapEl){
 chartResizeObserver.observe(rsiWrapEl);
 }
+
+}
+
+if(
+isCoinsPage
+){
+
+mountCoinsLayoutResize(
+{
+onLayoutChange:
+scheduleResizeCharts
+}
+);
 
 }
 

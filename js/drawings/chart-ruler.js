@@ -13,6 +13,39 @@ export const CHART_RULER_ARROW_LEN =
 export const CHART_RULER_ARROW_HALF =
 2.5;
 
+/** Горизонт «плечи» у курсора: ±N px от точки измерения. */
+export const CHART_RULER_SHOULDER_HALF =
+20;
+
+export function chartRulerShoulderSpan(
+cursorX,
+half = CHART_RULER_SHOULDER_HALF
+){
+
+const x =
+Number(
+cursorX
+);
+
+if(
+!Number.isFinite(
+x
+)
+){
+return null;
+}
+
+return {
+x0:
+x -
+half,
+x1:
+x +
+half
+};
+
+}
+
 export function tfPeriodSec(
 tf
 ){
@@ -449,6 +482,11 @@ if(
 !maxH
 ){
 
+const shift =
+CHART_RULER_LABEL_CROSSHAIR_SHIFT;
+const gap =
+CHART_RULER_LABEL_CURSOR_GAP;
+
 inner.style.left =
 `${shift}px`;
 inner.style.top =
@@ -598,9 +636,23 @@ startXY?.y ??
 }
 
 /**
- * L-линейка: горизонталь (время) от start, вертикаль (цена) к end.
+ * L-линейка: горизонталь (время) от start, вертикаль (цена) к end;
+ * «плечи» — короткая горизонталь ±20px у курсора.
  * Плашка — отдельный DOM (.chart-ruler-label), см. updateChartRulerLabelEl.
  */
+export function crispCanvasLineCoord(
+value
+){
+
+return Math.round(
+Number(
+value
+)
+) +
+0.5;
+
+}
+
 export function drawChartRuler(
 ctx,
 startXY,
@@ -616,13 +668,21 @@ return;
 }
 
 const ax =
-startXY.x;
+crispCanvasLineCoord(
+startXY.x
+);
 const ay =
-startXY.y;
+crispCanvasLineCoord(
+startXY.y
+);
 const bx =
-endXY.x;
+crispCanvasLineCoord(
+endXY.x
+);
 const by =
-endXY.y;
+crispCanvasLineCoord(
+endXY.y
+);
 
 const color =
 chartRulerColorForDirection(
@@ -683,6 +743,28 @@ by,
 vertAngle,
 color
 );
+
+const shoulder =
+chartRulerShoulderSpan(
+bx
+);
+
+if(
+shoulder
+){
+
+ctx.beginPath();
+ctx.moveTo(
+shoulder.x0,
+by
+);
+ctx.lineTo(
+shoulder.x1,
+by
+);
+ctx.stroke();
+
+}
 
 ctx.beginPath();
 ctx.arc(

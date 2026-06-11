@@ -5,7 +5,10 @@ import {
 countBarsBetween,
 computeChartRulerMetrics,
 formatRulerDuration,
-formatRulerPercent
+formatRulerPercent,
+CHART_RULER_SHOULDER_HALF,
+chartRulerShoulderSpan,
+crispCanvasLineCoord
 } from "../js/drawings/chart-ruler.js";
 
 const candles = [
@@ -111,6 +114,50 @@ metrics.pctLabel,
 assert.match(
 metrics.barsLabel,
 /^3 bars, /
+);
+
+}
+);
+
+test(
+"chartRulerShoulderSpan: ±20px at cursor",
+()=>{
+
+const span =
+chartRulerShoulderSpan(
+150
+);
+
+assert.equal(
+span.x0,
+150 -
+CHART_RULER_SHOULDER_HALF
+);
+assert.equal(
+span.x1,
+150 +
+CHART_RULER_SHOULDER_HALF
+);
+
+}
+);
+
+test(
+"crispCanvasLineCoord: half-pixel snap",
+()=>{
+
+assert.equal(
+crispCanvasLineCoord(
+100.2
+),
+100.5
+);
+
+assert.equal(
+crispCanvasLineCoord(
+100.6
+),
+101.5
 );
 
 }

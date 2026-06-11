@@ -309,6 +309,10 @@ body.terminal-page .widget-draw-tools{
     z-index:3;
 }
 
+.chart-ruler-active .drawings-layer{
+    z-index:27;
+}
+
 .chart-ruler-label{
     position:absolute;
     left:0;

@@ -146,7 +146,7 @@ text-overflow:ellipsis;
 body.coins-page #app{
 display:grid;
 /* #list — сосед #left в DOM, не внутри #left */
-grid-template-columns:minmax(0,1fr) 252px;
+grid-template-columns:minmax(0,1fr) var(--coins-list-w, 252px);
 grid-template-rows:minmax(0,1fr);
 height:100dvh;
 max-height:100dvh;
@@ -228,10 +228,86 @@ min-height:0;
 }
 
 body.coins-page #rsi-wrap{
-flex:0 0 clamp(102px,17.6dvh,160px);
-height:clamp(102px,17.6dvh,160px);
+flex:0 0 var(--coins-rsi-h, clamp(102px,17.6dvh,160px));
+height:var(--coins-rsi-h, clamp(102px,17.6dvh,160px));
 min-height:102px;
 max-height:none;
+position:relative;
+}
+
+body.coins-page #list{
+position:relative;
+}
+
+body.coins-page .coins-layout-resize{
+position:absolute;
+z-index:65;
+touch-action:none;
+-webkit-user-select:none;
+user-select:none;
+background:transparent;
+}
+
+body.coins-page .coins-layout-resize::after{
+content:"";
+position:absolute;
+background:#374151;
+opacity:0;
+transition:opacity .12s ease;
+pointer-events:none;
+}
+
+body.coins-page .coins-layout-resize:hover::after,
+body.coins-page .coins-layout-resize:focus-visible::after,
+body.coins-page.coins-layout-dragging-h .coins-layout-resize::after,
+body.coins-page.coins-layout-dragging-v .coins-layout-resize::after{
+opacity:1;
+}
+
+body.coins-page .coins-layout-resize--h{
+left:0;
+top:0;
+bottom:0;
+width:7px;
+margin-left:-3px;
+cursor:col-resize;
+}
+
+body.coins-page .coins-layout-resize--h::after{
+left:3px;
+top:0;
+bottom:0;
+width:1px;
+}
+
+body.coins-page .coins-layout-resize--v{
+left:0;
+right:0;
+top:0;
+height:7px;
+margin-top:-3px;
+cursor:row-resize;
+}
+
+body.coins-page .coins-layout-resize--v::after{
+left:0;
+right:0;
+top:3px;
+height:1px;
+}
+
+body.coins-page.coins-layout-dragging-h,
+body.coins-page.coins-layout-dragging-h *{
+cursor:col-resize !important;
+-webkit-user-select:none;
+user-select:none;
+}
+
+body.coins-page.coins-layout-dragging-v,
+body.coins-page.coins-layout-dragging-v *{
+cursor:row-resize !important;
+-webkit-user-select:none;
+user-select:none;
 }
 
 body.coins-page #list{

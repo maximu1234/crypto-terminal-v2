@@ -937,6 +937,11 @@ body.coins-page #draw-toolbar.draw-toolbar-inline .draw-btn .draw-tool-icon--xl{
   z-index:3;
 }
 
+/* Линейка (Shift): canvas поверх DOM-перекрестья внутри wrap. */
+.chart-ruler-active .drawings-layer{
+  z-index:27;
+}
+
 .chart-ruler-label{
   position:absolute;
   left:0;
