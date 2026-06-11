@@ -5311,6 +5311,15 @@ if(kind === "badge"){
 return positionBadgeFont();
 }
 
+if(
+kind === "tp" ||
+kind === "sl" ||
+kind === "long-center" ||
+kind === "short-center"
+){
+return positionBadgeFont();
+}
+
 if(kind === "entry"){
 return positionBadgeFontEntry();
 }
@@ -6277,7 +6286,11 @@ return 20;
 if(
 line.some(
 seg=>seg.font ===
-"badge"
+"badge" ||
+seg.font ===
+"tp" ||
+seg.font ===
+"sl"
 )
 ){
 return 18;
@@ -6707,7 +6720,7 @@ color: POSITION_VOLUME_COLOR
 [
 {
 text:`RR: ${sizing.rrNum.toFixed(2)}`,
-font:"badge"
+font:"tp"
 }
 ]
 ]

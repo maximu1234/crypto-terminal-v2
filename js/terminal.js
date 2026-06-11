@@ -77,7 +77,7 @@ syncBackgroundAlertStreams
 
 import {
 initWidgetDrawings
-} from "./chart-widget-host.js?v=3";
+} from "./chart-widget-host.js?v=4";
 
 import {
 mountDrawToolbar,

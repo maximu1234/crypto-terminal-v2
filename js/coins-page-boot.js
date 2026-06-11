@@ -14,7 +14,7 @@ CHART_BUILD_ID,
 CHART_PAGE_ENTRY,
 TERMINAL_ENTRY,
 jsUrl
-} from "./asset-manifest.js?v=1";
+} from "./asset-manifest.js?v=2";
 
 const IS_YANDEX =
 /YaBrowser|Yandex/i.test(

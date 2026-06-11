@@ -23,7 +23,7 @@ markTabletChartBody
 
 import {
 createDashboardChartWidget
-} from "./chart-widget-host.js?v=3";
+} from "./chart-widget-host.js?v=4";
 
 import {
 mountWidgetTabletChart

@@ -8,7 +8,7 @@
  *   node scripts/sync-asset-versions.cjs bump chart.js
  */
 export const MANIFEST_V =
-1;
+2;
 
 /** @type {Readonly<Record<string, number>>} */
 export const ASSETS =
@@ -25,13 +25,13 @@ Object.freeze({
 
 /* ── JS: boot / entry ── */
 "asset-manifest.js":
-1,
+2,
 "coins-page-boot.js":
-11,
+12,
 "chart-page.js":
 6,
 "terminal.js":
-294,
+295,
 "terminal/coins-state.js":
 5,
 "terminal/coins-prefs.js":
@@ -41,7 +41,7 @@ Object.freeze({
 "telegram-bot-public.js":
 1,
 "dashboard.js":
-79,
+80,
 "screener.js":
 70,
 "release-marker.js":
@@ -55,7 +55,7 @@ Object.freeze({
 "chart-import.js":
 25,
 "chart-widget-host.js":
-3,
+4,
 "tablet-gesture-policy.js":
 1,
 "tablet-widget-chart.js":
@@ -75,9 +75,9 @@ Object.freeze({
 "coins-tablet-controller.js":
 5,
 "drawings.js":
-200,
+201,
 "drawings/init.js":
-54,
+55,
 "drawings/chart-ruler.js":
 5,
 "drawings/draw-magnet.js":
