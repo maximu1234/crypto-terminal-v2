@@ -104,16 +104,20 @@ COINS_LIST_MIN_PX,
 minRsiH:
 COINS_RSI_MIN_DESKTOP_PX,
 maxListW:
+Math.round(
 Math.max(
 COINS_LIST_MIN_PX,
 appW -
 minChartW
+)
 ),
 maxRsiH:
+Math.round(
 Math.max(
 COINS_RSI_MIN_DESKTOP_PX,
 stackH -
 minChartH
+)
 )
 };
 

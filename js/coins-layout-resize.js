@@ -11,7 +11,7 @@ defaultRsiHeightPx,
 computeCoinsLayoutLimits,
 clampCoinsListWidth,
 clampCoinsRsiHeight
-} from "./coins-layout-math.js?v=1";
+} from "./coins-layout-math.js?v=2";
 
 export {
 COINS_LIST_DEFAULT_PX,

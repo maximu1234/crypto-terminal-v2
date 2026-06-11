@@ -90,8 +90,13 @@ limits.defaultChartH *
 
 assert.equal(
 limits.maxRsiH,
+Math.round(
+Math.max(
+COINS_RSI_MIN_DESKTOP_PX,
 600 -
 limits.minChartH
+)
+)
 );
 
 }
