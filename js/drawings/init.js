@@ -6015,12 +6015,15 @@ metrics.slPct
 
 }
 
-/** Таблетки TP/SL снаружи объекта (не на цветной зоне) */
+/** TP/SL/центр — прямоугольные плашки (не pill). */
 const POSITION_EDGE_BADGE_GAP =
 4;
 
 const POSITION_EDGE_BADGE_H =
 18;
+
+const POSITION_BADGE_CORNER_RADIUS =
+4;
 
 function positionBadgeCyOutside(
 edgeY,
@@ -6267,8 +6270,6 @@ const left =
 cx - bw / 2;
 const top =
 cy - bh / 2;
-const r =
-bh / 2;
 
 ctx.beginPath();
 ctx.roundRect(
@@ -6276,7 +6277,7 @@ left,
 top,
 bw,
 bh,
-r
+POSITION_BADGE_CORNER_RADIUS
 );
 ctx.fillStyle = fill;
 ctx.fill();
@@ -6353,8 +6354,6 @@ const left =
 cx - bw / 2;
 const top =
 cy - bh / 2;
-const r =
-bh / 2;
 
 ctx.beginPath();
 ctx.roundRect(
@@ -6362,7 +6361,7 @@ left,
 top,
 bw,
 bh,
-r
+POSITION_BADGE_CORNER_RADIUS
 );
 ctx.fillStyle = fill;
 ctx.fill();
