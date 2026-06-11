@@ -326,7 +326,7 @@ line-height:1.2;
 .screener-header-right{
 display:flex;
 align-items:center;
-gap:4px;
+gap:8px;
 margin-left:auto;
 flex-shrink:0;
 min-width:0;
@@ -361,10 +361,10 @@ color:#ef4444;
 .screener-open{
 border:none;
 background:transparent;
-color:#6b7280;
+color:#fff;
 font-size:12px;
 cursor:pointer;
-padding:0 4px;
+padding:0 4px 0 8px;
 border-radius:4px;
 flex-shrink:0;
 line-height:1;

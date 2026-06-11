@@ -975,9 +975,9 @@ root.innerHTML = `
 
 <div class="screener-meta">
 
-<span class="screener-volume">Объём 24ч —</span>
-
 <span class="screener-change">—</span>
+
+<span class="screener-volume">Объём 24ч —</span>
 
 </div>
 

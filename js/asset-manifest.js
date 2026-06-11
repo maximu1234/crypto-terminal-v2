@@ -47,7 +47,7 @@ Object.freeze({
 "dashboard.js":
 80,
 "screener.js":
-70,
+71,
 "release-marker.js":
 3,
 "site-boot.js":
@@ -258,7 +258,7 @@ Object.freeze({
 "common.css":
 22,
 "screener.css":
-25,
+26,
 "terminal.css":
 123,
 "dashboard.css":
