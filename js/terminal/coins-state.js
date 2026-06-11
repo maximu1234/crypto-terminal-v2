@@ -29,7 +29,11 @@ drawingTools:null
 };
 
 export const isCoinsPage =
-window.location.pathname.includes(
+typeof globalThis !==
+"undefined" &&
+typeof globalThis.window !==
+"undefined" &&
+globalThis.window.location.pathname.includes(
 "/coins"
 );
 

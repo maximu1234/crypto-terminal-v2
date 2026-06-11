@@ -120,22 +120,26 @@ metrics.barsLabel,
 );
 
 test(
-"chartRulerShoulderSpan: ±20px at cursor",
+"chartRulerShoulderSpan: ±20px at crisp cursor",
 ()=>{
 
+const bx =
+crispCanvasLineCoord(
+150
+);
 const span =
 chartRulerShoulderSpan(
-150
+bx
 );
 
 assert.equal(
 span.x0,
-150 -
+bx -
 CHART_RULER_SHOULDER_HALF
 );
 assert.equal(
 span.x1,
-150 +
+bx +
 CHART_RULER_SHOULDER_HALF
 );
 

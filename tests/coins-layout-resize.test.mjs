@@ -11,7 +11,7 @@ computeCoinsLayoutLimits,
 clampCoinsListWidth,
 clampCoinsRsiHeight,
 defaultRsiHeightPx
-} from "../js/coins-layout-resize.js";
+} from "../js/coins-layout-math.js";
 
 test(
 "defaultRsiHeightPx: clamp 102–160",

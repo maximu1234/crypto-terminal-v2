@@ -31,11 +31,13 @@ Object.freeze({
 "chart-page.js":
 6,
 "terminal.js":
-296,
+297,
 "coins-layout-resize.js":
+2,
+"coins-layout-math.js":
 1,
 "terminal/coins-state.js":
-5,
+6,
 "terminal/coins-prefs.js":
 7,
 "terminal/coins-table.js":

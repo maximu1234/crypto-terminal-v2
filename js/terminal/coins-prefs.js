@@ -5,7 +5,7 @@ COINS_MARKETS,
 COINS_SORT_MODES,
 COINS_TF_VALUES,
 isCoinsPage
-} from "./coins-state.js?v=5";
+} from "./coins-state.js?v=6";
 
 import {
 getCurrentSymbols,

@@ -3,195 +3,32 @@
  * Дефолты = текущая статичная вёрстка; минимумы = те же размеры.
  */
 import {
-isCoinsPage
-} from "./terminal/coins-state.js?v=5";
+COINS_LIST_DEFAULT_PX,
+COINS_LIST_MIN_PX,
+COINS_RSI_MIN_DESKTOP_PX,
+COINS_PANEL_MIN_RATIO,
+defaultRsiHeightPx,
+computeCoinsLayoutLimits,
+clampCoinsListWidth,
+clampCoinsRsiHeight
+} from "./coins-layout-math.js?v=1";
+
+export {
+COINS_LIST_DEFAULT_PX,
+COINS_LIST_MIN_PX,
+COINS_RSI_MIN_DESKTOP_PX,
+COINS_PANEL_MIN_RATIO,
+defaultRsiHeightPx,
+computeCoinsLayoutLimits,
+clampCoinsListWidth,
+clampCoinsRsiHeight
+};
 
 export const COINS_LAYOUT_KEY =
 "coins_layout_v1";
 
-export const COINS_LIST_DEFAULT_PX =
-252;
-
-export const COINS_LIST_MIN_PX =
-252;
-
-export const COINS_RSI_MIN_DESKTOP_PX =
-102;
-
-export const COINS_PANEL_MIN_RATIO =
-0.2;
-
 const DESKTOP_MQ =
 "(min-width:641px)";
-
-export function defaultRsiHeightPx(
-innerHeight =
-typeof window !==
-"undefined"
-? window.innerHeight
-: 800
-){
-
-return Math.round(
-Math.min(
-160,
-Math.max(
-COINS_RSI_MIN_DESKTOP_PX,
-innerHeight *
-0.176
-)
-)
-);
-
-}
-
-export function computeCoinsLayoutLimits(
-{
-appWidth,
-chartsStackHeight,
-innerHeight = typeof window !==
-"undefined"
-? window.innerHeight
-: 800
-} = {}
-){
-
-const appW =
-Math.max(
-0,
-Number(
-appWidth
-) ||
-0
-);
-
-const stackH =
-Math.max(
-0,
-Number(
-chartsStackHeight
-) ||
-0
-);
-
-const defaultListW =
-COINS_LIST_DEFAULT_PX;
-
-const defaultChartW =
-Math.max(
-0,
-appW -
-defaultListW
-);
-
-const defaultRsiH =
-defaultRsiHeightPx(
-innerHeight
-);
-
-const defaultChartH =
-Math.max(
-0,
-stackH -
-defaultRsiH
-);
-
-const minChartW =
-defaultChartW *
-COINS_PANEL_MIN_RATIO;
-
-const minChartH =
-defaultChartH *
-COINS_PANEL_MIN_RATIO;
-
-return {
-appW,
-stackH,
-defaultListW,
-defaultChartW,
-defaultRsiH,
-defaultChartH,
-minChartW,
-minChartH,
-minListW:
-COINS_LIST_MIN_PX,
-minRsiH:
-COINS_RSI_MIN_DESKTOP_PX,
-maxListW:
-Math.max(
-COINS_LIST_MIN_PX,
-appW -
-minChartW
-),
-maxRsiH:
-Math.max(
-COINS_RSI_MIN_DESKTOP_PX,
-stackH -
-minChartH
-)
-};
-
-}
-
-export function clampCoinsListWidth(
-listWidth,
-limits
-){
-
-const w =
-Number(
-listWidth
-);
-
-if(
-!Number.isFinite(
-w
-)
-){
-return limits.defaultListW;
-}
-
-return Math.round(
-Math.min(
-limits.maxListW,
-Math.max(
-limits.minListW,
-w
-)
-)
-);
-
-}
-
-export function clampCoinsRsiHeight(
-rsiHeight,
-limits
-){
-
-const h =
-Number(
-rsiHeight
-);
-
-if(
-!Number.isFinite(
-h
-)
-){
-return limits.defaultRsiH;
-}
-
-return Math.round(
-Math.min(
-limits.maxRsiH,
-Math.max(
-limits.minRsiH,
-h
-)
-)
-);
-
-}
 
 export function readCoinsLayoutPrefs(){
 
@@ -297,9 +134,11 @@ out
 function isDesktopCoinsLayout(){
 
 return (
-isCoinsPage &&
 typeof window !==
 "undefined" &&
+window.location.pathname.includes(
+"/coins"
+) &&
 window.matchMedia(
 DESKTOP_MQ
 ).matches

@@ -2,7 +2,7 @@ import {
 coinsState,
 marketMap,
 coinElements
-} from "./coins-state.js?v=5";
+} from "./coins-state.js?v=6";
 
 import {
 isBybitCoinsDataset
