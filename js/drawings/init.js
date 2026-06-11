@@ -6263,13 +6263,29 @@ line
 
 const lineHeights =
 text.lines.map(
-line=>
+line=>{
+
+if(
 line.some(
 seg=>seg.font ===
 "volume"
 )
-? 20
-:14
+){
+return 20;
+}
+
+if(
+line.some(
+seg=>seg.font ===
+"badge"
+)
+){
+return 18;
+}
+
+return 14;
+
+}
 );
 
 const textWidth =
@@ -6691,7 +6707,7 @@ color: POSITION_VOLUME_COLOR
 [
 {
 text:`RR: ${sizing.rrNum.toFixed(2)}`,
-font:"entry"
+font:"badge"
 }
 ]
 ]

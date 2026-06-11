@@ -77,7 +77,7 @@ Object.freeze({
 "drawings.js":
 200,
 "drawings/init.js":
-53,
+54,
 "drawings/chart-ruler.js":
 5,
 "drawings/draw-magnet.js":
