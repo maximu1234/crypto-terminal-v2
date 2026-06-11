@@ -77,7 +77,11 @@ Object.freeze({
 "drawings.js":
 200,
 "drawings/init.js":
-43,
+50,
+"drawings/chart-ruler.js":
+5,
+"drawings/draw-magnet.js":
+1,
 "drawings/scale-label-layout.js":
 2,
 "drawings/constants.js":
@@ -252,9 +256,9 @@ Object.freeze({
 "screener.css":
 25,
 "terminal.css":
-118,
+120,
 "dashboard.css":
-29,
+31,
 "coins.css":
 35,
 "terminal-page.css":

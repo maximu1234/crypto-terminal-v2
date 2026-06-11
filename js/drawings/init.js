@@ -177,6 +177,19 @@ createDrawRenderer
 } from "./draw-render.js?v=6";
 
 import {
+snapPlotToCandleWick
+} from "./draw-magnet.js?v=1";
+
+import {
+computeChartRulerMetrics,
+drawChartRuler,
+ensureChartRulerLabelEl,
+hideChartRulerLabelEl,
+isChartRulerGoingDown,
+updateChartRulerLabelEl
+} from "./chart-ruler.js?v=5";
+
+import {
 mountTabletDrawInput
 } from "../drawings-tablet-input.js?v=3";
 
@@ -366,6 +379,18 @@ let selectedId = null;
 let placement = null;
 /** Десктоп: сырой pointer внутри wrap (LW режет crosshair до последней свечи). */
 let placementPointerXY = null;
+/** Cmd/Meta зажат — перекрестье к хаю/лою свечи под вертикалью. */
+let drawMagnetKeyDown = false;
+/** Последняя позиция crosshair в plot (fallback для Cmd без pointermove). */
+let lastCrosshairPlotXY = null;
+/** Shift-линейка: начало { time, price } и текущий конец в plot px. */
+let chartRulerStart = null;
+let chartRulerEndPlot = null;
+let chartRulerShiftDown = false;
+let chartRulerLabelEl =
+ensureChartRulerLabelEl(
+wrapEl
+);
 let previewPoint = null;
 let previewXY = null;
 let tabletDrawInput = null;
@@ -501,6 +526,8 @@ let redrawRaf1 = 0;
 let redrawRaf2 = 0;
 /** Один rAF на кадр при рисовании (не scheduleRedraw с двойным rAF). */
 let placementPreviewRaf = 0;
+/** Линейка — один redraw на кадр без двойного rAF. */
+let chartRulerRedrawRaf = 0;
 /** Перетаскивание объектов / алертов — один redraw на кадр. */
 let dragRedrawRaf = 0;
 let placementPreviewPending = null;
@@ -4274,7 +4301,42 @@ const onPlacementPointerMove = e=>{
 
 if(
 !alive ||
-!isActive() ||
+!isActive()
+){
+return;
+}
+
+syncChartRulerShiftFromEvent(
+e
+);
+
+if(
+tool ===
+"cursor" &&
+chartRulerStart
+){
+
+if(
+!e.isPrimary
+){
+return;
+}
+
+const { x, y } =
+pointerFromEvent(
+e
+);
+
+syncChartRulerEndFromPlot(
+x,
+y
+);
+
+return;
+
+}
+
+if(
 !placement ||
 isTouchDrawPlacement()
 ){
@@ -4288,42 +4350,11 @@ return;
 const { x, y } =
 pointerFromEvent(e);
 
-placementPointerXY = {
+syncDesktopDrawPlacementPreview(
 x,
-y
-};
-
-if(
-!isPlotXBeyondLastCandle(
-x
-)
-){
-return;
-}
-
-updatePlacementCrosshairFast(
-x,
-y
+y,
+e
 );
-
-if(
-chart
-){
-
-try{
-chart.clearCrosshairPosition();
-}catch{
-/* ignore */
-}
-
-}
-
-placementPreviewPending = {
-x,
-y
-};
-
-schedulePlacementPreviewRedraw();
 
 };
 
@@ -4333,10 +4364,27 @@ onPlacementPointerMove,
 true
 );
 
+const onRulerPointerDown = e=>{
+syncChartRulerShiftFromEvent(
+e
+);
+};
+
+wrapEl.addEventListener(
+"pointerdown",
+onRulerPointerDown,
+true
+);
+
 return ()=>{
 wrapEl.removeEventListener(
 "pointermove",
 onPlacementPointerMove,
+true
+);
+wrapEl.removeEventListener(
+"pointerdown",
+onRulerPointerDown,
 true
 );
 };
@@ -4398,12 +4446,15 @@ e
 );
 
 const placed =
-handleToolClick({
+handleToolClick(
+{
 point:{
 x,
 y
+},
+metaKey: e.metaKey
 }
-});
+);
 
 if(
 !placed
@@ -4471,6 +4522,515 @@ return null;
 }
 
 return { time, price };
+
+}
+
+function clearChartRuler(){
+
+chartRulerStart = null;
+chartRulerEndPlot = null;
+
+hideChartRulerLabelEl(
+chartRulerLabelEl
+);
+
+if(
+chartRulerRedrawRaf
+){
+cancelAnimationFrame(
+chartRulerRedrawRaf
+);
+chartRulerRedrawRaf = 0;
+}
+
+}
+
+function scheduleChartRulerRedraw(){
+
+if(
+chartPanActive
+){
+return;
+}
+
+if(
+chartRulerRedrawRaf
+){
+return;
+}
+
+chartRulerRedrawRaf =
+requestAnimationFrame(()=>{
+
+chartRulerRedrawRaf = 0;
+redraw();
+
+});
+
+}
+
+function isChartRulerShiftActive(
+optEvent
+){
+
+return !!(
+chartRulerShiftDown ||
+optEvent?.shiftKey ===
+true
+);
+
+}
+
+function syncChartRulerShiftFromEvent(
+optEvent
+){
+
+if(
+optEvent?.shiftKey ===
+true
+){
+chartRulerShiftDown = true;
+}
+
+}
+
+function drawChartRulerOverlay(
+ctx,
+plotW,
+plotH
+){
+
+if(
+!chartRulerStart ||
+!chartRulerEndPlot
+){
+return;
+}
+
+const startXY =
+toXY(
+chartRulerStart
+);
+
+if(
+!startXY
+){
+return;
+}
+
+const endPoint =
+pointFromXY(
+chartRulerEndPlot.x,
+chartRulerEndPlot.y
+);
+
+if(
+!endPoint
+){
+return;
+}
+
+const metrics =
+computeChartRulerMetrics(
+chartRulerStart,
+endPoint,
+candleSeries()
+);
+
+const goesDown =
+isChartRulerGoingDown(
+startXY,
+chartRulerEndPlot
+);
+
+drawChartRuler(
+ctx,
+startXY,
+chartRulerEndPlot,
+goesDown
+);
+
+try{
+
+updateChartRulerLabelEl(
+chartRulerLabelEl,
+{
+bx: chartRulerEndPlot.x,
+by: chartRulerEndPlot.y,
+goesDown,
+metrics,
+plotW,
+plotH
+}
+);
+
+}catch(
+labelErr
+){
+console.warn(
+"chart ruler label",
+labelErr
+);
+}
+
+}
+
+function syncChartRulerEndFromPlot(
+rawX,
+rawY
+){
+
+if(
+tool !==
+"cursor" ||
+!chartRulerStart
+){
+return false;
+}
+
+if(
+!Number.isFinite(
+rawX
+) ||
+!Number.isFinite(
+rawY
+)
+){
+return false;
+}
+
+chartRulerEndPlot = {
+x: rawX,
+y: rawY
+};
+
+scheduleChartRulerRedraw();
+
+return true;
+
+}
+
+function handleChartRulerClick(
+point,
+param
+){
+
+if(
+tool !==
+"cursor" ||
+!isChartRulerShiftActive(
+param
+) ||
+!point
+){
+return false;
+}
+
+if(
+chartRulerStart
+){
+clearChartRuler();
+redraw();
+return true;
+}
+
+chartRulerStart = {
+time: point.time,
+price: point.price
+};
+
+const startPlot =
+toXY(
+chartRulerStart
+);
+
+chartRulerEndPlot = {
+x: param.point?.x ??
+startPlot?.x ??
+0,
+y: param.point?.y ??
+startPlot?.y ??
+0
+};
+
+redraw();
+
+return true;
+
+}
+
+function isDrawMagnetActive(
+optEvent
+){
+
+if(
+tool ===
+"cursor" ||
+isTouchDrawPlacement() ||
+!placement
+){
+return false;
+}
+
+return !!(
+drawMagnetKeyDown ||
+optEvent?.metaKey ===
+true
+);
+
+}
+
+function syncDrawMagnetModifierFromEvent(
+optEvent
+){
+
+if(
+optEvent?.metaKey ===
+true
+){
+drawMagnetKeyDown = true;
+}
+
+}
+
+function syncDesktopDrawPlacementPreview(
+rawX,
+rawY,
+optEvent
+){
+
+if(
+!placement ||
+isTouchDrawPlacement()
+){
+return null;
+}
+
+if(
+!Number.isFinite(
+rawX
+) ||
+!Number.isFinite(
+rawY
+)
+){
+return null;
+}
+
+syncDrawMagnetModifierFromEvent(
+optEvent
+);
+
+placementPointerXY = {
+x: rawX,
+y: rawY
+};
+
+lastCrosshairPlotXY = {
+x: rawX,
+y: rawY
+};
+
+const resolved =
+resolvePlacementPlotXY(
+rawX,
+rawY,
+optEvent
+);
+
+applyPlacementPreviewPoint(
+resolved
+);
+
+const lx =
+resolved.x;
+const ly =
+resolved.y;
+
+if(
+isPlotXBeyondLastCandle(
+rawX
+)
+){
+
+updatePlacementCrosshairFast(
+lx,
+ly
+);
+
+if(
+chart
+){
+
+try{
+chart.clearCrosshairPosition();
+}catch{
+/* ignore */
+}
+
+}
+
+}else{
+
+hideDomChartCrosshair(
+wrapEl
+);
+
+showStandardChartCrosshair(
+null,
+lx,
+ly
+);
+
+}
+
+redraw();
+
+return resolved;
+
+}
+
+function resolvePlacementPlotXY(
+rawX,
+rawY,
+optEvent
+){
+
+if(
+!Number.isFinite(
+rawX
+) ||
+!Number.isFinite(
+rawY
+)
+){
+return {
+x: rawX,
+y: rawY,
+snapped: false
+};
+}
+
+if(
+!isDrawMagnetActive(
+optEvent
+)
+){
+return {
+x: rawX,
+y: rawY,
+snapped: false
+};
+}
+
+const snap =
+snapPlotToCandleWick({
+plotX: rawX,
+plotY: rawY,
+candles: candleSeries(),
+timeFromX,
+xFromTime,
+priceToPlotY: plotPriceToCoordinate
+});
+
+if(
+!snap
+){
+return {
+x: rawX,
+y: rawY,
+snapped: false
+};
+}
+
+return {
+x: snap.x,
+y: snap.y,
+snapped: true,
+point: {
+time: snap.time,
+price: snap.price
+}
+};
+
+}
+
+function pointFromResolvedPlacementPlot(
+resolved
+){
+
+if(
+resolved?.point
+){
+return {
+time: resolved.point.time,
+price: resolved.point.price
+};
+}
+
+return pointFromXY(
+resolved.x,
+resolved.y
+);
+
+}
+
+function applyPlacementPreviewPoint(
+resolved
+){
+
+previewXY = {
+x: resolved.x,
+y: resolved.y
+};
+
+previewPoint =
+pointFromResolvedPlacementPlot(
+resolved
+);
+
+if(
+isPositionType(
+placement.type
+) &&
+placement.points.length >=
+1 &&
+previewPoint
+){
+previewPoint.price =
+placement.points[
+0
+].price;
+}
+
+}
+
+function refreshPlacementPreviewFromPointer(
+optEvent
+){
+
+if(
+!placement ||
+isTouchDrawPlacement()
+){
+return null;
+}
+
+const raw =
+placementPointerXY ||
+lastCrosshairPlotXY;
+
+if(
+!raw
+){
+return null;
+}
+
+return syncDesktopDrawPlacementPreview(
+raw.x,
+raw.y,
+optEvent
+);
 
 }
 
@@ -9159,6 +9719,12 @@ if(placement){
 drawPlacementPreview(ctx, plotW, h);
 }
 
+drawChartRulerOverlay(
+ctx,
+plotW,
+h
+);
+
 ctx.restore();
 
 drawRegistryPriceAlerts(
@@ -9399,6 +9965,8 @@ placement = null;
 previewPoint = null;
 previewXY = null;
 placementPointerXY = null;
+drawMagnetKeyDown = false;
+lastCrosshairPlotXY = null;
 cancelPlacementPreviewRaf();
 resetPlacementCrosshairCache();
 hideStandardChartCrosshair();
@@ -9431,6 +9999,8 @@ placement = null;
 previewPoint = null;
 previewXY = null;
 placementPointerXY = null;
+drawMagnetKeyDown = false;
+lastCrosshairPlotXY = null;
 clearTouchDrawState();
 blockChartClick = false;
 cancelPlacementPreviewRaf();
@@ -9450,6 +10020,13 @@ placement
 return false;
 }
 
+const rawClickX =
+placementPointerXY?.x ??
+param.point?.x;
+const rawClickY =
+placementPointerXY?.y ??
+param.point?.y;
+
 const point =
 isTouchDrawPlacement() &&
 getTouchDrawCrosshair()
@@ -9457,15 +10034,30 @@ getTouchDrawCrosshair()
 getTouchDrawCrosshair().x,
 getTouchDrawCrosshair().y
 )
-: placementPointerXY
-? pointFromXY(
-placementPointerXY.x,
-placementPointerXY.y
+: rawClickX !=
+null &&
+rawClickY !=
+null
+? pointFromResolvedPlacementPlot(
+resolvePlacementPlotXY(
+rawClickX,
+rawClickY,
+param
+)
 )
 : pointFromParam(param);
 
 if(!point){
 return false;
+}
+
+if(
+handleChartRulerClick(
+point,
+param
+)
+){
+return true;
 }
 
 if(tool === "cursor"){
@@ -9510,15 +10102,14 @@ tool = next;
 cancelPlacement();
 
 if(
-next !== "cursor"
+next !==
+"cursor"
 ){
+clearChartRuler();
 notifyTabletChartGestureAbort();
-
-if(
-isTouchDrawPlacement()
-){
-startPlacement(next);
-}
+startPlacement(
+next
+);
 }else{
 notifyTabletChartGestureAbort();
 }
@@ -9808,6 +10399,22 @@ handleToolClick(param);
 crosshairHandler = param=>{
 
 if(
+tool ===
+"cursor" &&
+chartRulerStart &&
+param?.point
+){
+
+syncChartRulerEndFromPlot(
+param.point.x,
+param.point.y
+);
+
+return;
+
+}
+
+if(
 placement &&
 param?.point
 ){
@@ -9816,81 +10423,19 @@ if(
 !isTouchDrawPlacement()
 ){
 
-const lx =
+const rawX =
 placementPointerXY?.x ??
 param.point.x;
 
-const ly =
+const rawY =
 placementPointerXY?.y ??
 param.point.y;
 
-if(
-isPlotXBeyondLastCandle(
-lx
-)
-){
-
-updatePlacementCrosshairFast(
-lx,
-ly
+syncDesktopDrawPlacementPreview(
+rawX,
+rawY,
+param
 );
-
-if(
-chart
-){
-
-try{
-chart.clearCrosshairPosition();
-}catch{
-/* ignore */
-}
-
-}
-
-}else{
-
-hideDomChartCrosshair(
-wrapEl
-);
-
-showStandardChartCrosshair(
-null,
-lx,
-ly
-);
-
-}
-
-previewXY = {
-x: lx,
-y: ly
-};
-
-previewPoint =
-pointFromXY(
-lx,
-ly
-);
-
-if(
-isPositionType(placement.type) &&
-placement.points.length >= 1 &&
-previewPoint
-){
-previewPoint.price = placement.points[0].price;
-}
-
-const channelPreviewDesktop =
-placement.type === "channel" &&
-placement.points.length > 0 &&
-placement.points.length < 3;
-
-if(
-placement ||
-channelPreviewDesktop
-){
-redraw();
-}
 
 return;
 
@@ -10029,6 +10574,15 @@ return;
 
 if(e.key === "Escape"){
 
+if(
+chartRulerStart
+){
+clearChartRuler();
+redraw();
+return;
+
+}
+
 if(isFibSettingsOpen()){
 
 closeAllFibLineStyleMenus();
@@ -10053,6 +10607,34 @@ return;
 
 }
 
+if(
+e.key ===
+"Shift"
+){
+
+chartRulerShiftDown = true;
+return;
+
+}
+
+if(
+e.key ===
+"Meta"
+){
+
+if(
+!drawMagnetKeyDown
+){
+drawMagnetKeyDown = true;
+refreshPlacementPreviewFromPointer(
+e
+);
+}
+
+return;
+
+}
+
 if(e.key === "Delete" || e.key === "Backspace"){
 
 const ae =
@@ -10074,7 +10656,83 @@ deleteSelected();
 
 };
 
-window.addEventListener("keydown", onKeyDown);
+window.addEventListener("keydown", onKeyDown, true);
+
+const onKeyUp = e=>{
+
+if(
+!alive ||
+!isActive()
+){
+return;
+}
+
+if(
+e.key ===
+"Shift"
+){
+chartRulerShiftDown = false;
+
+if(
+chartRulerStart
+){
+clearChartRuler();
+redraw();
+}
+
+return;
+}
+
+if(
+e.key !==
+"Meta"
+){
+return;
+}
+
+if(
+!drawMagnetKeyDown
+){
+return;
+}
+
+drawMagnetKeyDown = false;
+refreshPlacementPreviewFromPointer(
+e
+);
+
+};
+
+window.addEventListener("keyup", onKeyUp, true);
+
+const onWindowBlur = ()=>{
+
+if(
+drawMagnetKeyDown
+){
+drawMagnetKeyDown = false;
+
+if(
+placement &&
+placementPointerXY
+){
+refreshPlacementPreviewFromPointer();
+}
+
+}
+
+chartRulerShiftDown = false;
+
+if(
+chartRulerStart
+){
+clearChartRuler();
+redraw();
+}
+
+};
+
+window.addEventListener("blur", onWindowBlur);
 
 function handleToolbarToolPick(
 e
@@ -11408,6 +12066,7 @@ loadDrawings();
 reconcileDrawingAlertsFromRegistry();
 selectedId = null;
 cancelPlacement();
+clearChartRuler();
 
 if(tool !== "cursor"){
 const style =
@@ -11445,7 +12104,9 @@ teardownFinePointerClicks?.();
 teardownPlacementPreview?.();
 contextMenuCtrl?.dispose?.();
 
-window.removeEventListener("keydown", onKeyDown);
+window.removeEventListener("keydown", onKeyDown, true);
+window.removeEventListener("keyup", onKeyUp, true);
+window.removeEventListener("blur", onWindowBlur);
 tools.removeEventListener(
 "pointerdown",
 onToolsPointerDown,
@@ -11565,6 +12226,9 @@ chromePortal?.remove();
 chromePortal = null;
 
 canvas.remove();
+
+chartRulerLabelEl?.remove();
+chartRulerLabelEl = null;
 
 }
 
