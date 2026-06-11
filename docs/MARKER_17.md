@@ -1,8 +1,8 @@
-# Метка 17 — рабочая версия (июнь 2026)
+# Метка 17 — предыдущий эталон (июнь 2026)
 
 **Тег:** `metka-17` · **Коммит:** `git rev-parse metka-17`
 
-**Текущий эталон отката.** Предыдущая: [MARKER_16.md](./MARKER_16.md) (`metka-16`).
+**Предыдущий эталон отката.** Текущая: [MARKER_18.md](./MARKER_18.md) (`metka-18`).
 
 Проверено: asset manifest (ручная сверка ключевых `?v=`); site-nav (CI `check-site-nav.cjs`); unit tests `scale-label-layout.test.mjs` (CI при наличии Node).
 
@@ -111,25 +111,12 @@
 
 ## Метки в репозитории
 
-Только **две** git-метки:
-
-| Тег | Роль |
-|-----|------|
-| `metka-17` | **Текущий** эталон (Терминал + синий флаг + v0.17) |
-| `metka-16` | **Предыдущий** эталон (arrow + rectangle + scale labels) |
-
-`metka-15` и старее — удалены.
+См. [MARKER_18.md](./MARKER_18.md) — актуальные теги `metka-18` (текущий) и `metka-17` (предыдущий).
 
 ## Откат
 
 ```bash
 git fetch --tags
-git checkout metka-17   # текущий эталон
-git checkout metka-16   # до Терминала / синего флага
+git checkout metka-18   # текущий эталон
+git checkout metka-17   # этот документ (Терминал + синий флаг)
 ```
-
-## Следующий шаг
-
-- Скринер плотностей стакана (идея, отложена)
-- Фаза 4 alerts-cloud **или** стабилизация Bybit proxy
-- При новой metka-N: `release-marker.js`, `MARKER_N.md`, re-tag; на Главной `v0.N`

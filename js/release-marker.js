@@ -3,7 +3,7 @@
  * При каждой новой metka-N обновить METKA_NUMBER.
  */
 export const METKA_NUMBER =
-17;
+18;
 
 export const RELEASE_VERSION_LABEL =
 `v0.${METKA_NUMBER}`;
