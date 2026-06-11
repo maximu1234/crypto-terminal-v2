@@ -6082,6 +6082,8 @@ ctx.save();
 ctx.textBaseline = "middle";
 
 const padX = 8;
+const padY = 6;
+const lineGap = 2;
 let fill =
 "rgba(15, 23, 42, 0.92)";
 let stroke =
@@ -6107,19 +6109,17 @@ fill = "rgba(113, 63, 18, 0.95)";
 stroke = "rgba(250, 204, 21, 0.45)";
 }
 
-const segments =
-Array.isArray(text)
-? text
-: [{ text, font: variant }];
+function measureSegments(
+segments
+){
 
-const hasVolumeHighlight =
-segments.some(seg=>seg.font === "volume");
-
-const measured =
-segments.map(seg=>{
+return segments.map(seg=>{
 
 const font =
-resolvePositionBadgeFont(seg.font, variant);
+resolvePositionBadgeFont(
+seg.font,
+variant
+);
 
 ctx.font = font;
 
@@ -6128,50 +6128,52 @@ text: seg.text,
 font,
 color: seg.color,
 highlight: seg.highlight === true,
-width: ctx.measureText(seg.text).width
+width: ctx.measureText(
+seg.text
+).width
 };
 
 });
 
+}
+
+function lineTextWidth(
+measured
+){
+
+return measured.reduce(
+(sum, seg)=>sum + seg.width,
+0
+);
+
+}
+
+function drawMeasuredLine(
+measured,
+lineCy
+){
+
 const textWidth =
-measured.reduce((sum, seg)=>sum + seg.width, 0);
-const bw =
-textWidth + padX * 2;
-const bh =
-hasVolumeHighlight
-? 22
-: 18;
-const left =
-cx - bw / 2;
-const top =
-cy - bh / 2;
-const r =
-bh / 2;
-
-ctx.beginPath();
-ctx.roundRect(left, top, bw, bh, r);
-ctx.fillStyle = fill;
-ctx.fill();
-ctx.strokeStyle = stroke;
-ctx.lineWidth = 1;
-ctx.stroke();
-
-ctx.textAlign = "left";
+lineTextWidth(
+measured
+);
 
 let x =
 cx - textWidth / 2;
 
-measured.forEach(seg=>{
+measured.forEach(
+seg=>{
 
 ctx.font = seg.font;
 
-if(seg.highlight){
+if(
+seg.highlight
+){
 
 const pad = 4;
-const pillH =
-bh - 6;
+const pillH = 18;
 const pillTop =
-cy - pillH / 2;
+lineCy - pillH / 2;
 
 ctx.fillStyle = "rgba(0, 0, 0, 0.55)";
 ctx.beginPath();
@@ -6194,10 +6196,186 @@ variant === "short-center"
 ? "#ffffff"
 : "#f8fafc"
 );
-ctx.fillText(seg.text, x, cy);
+ctx.fillText(
+seg.text,
+x,
+lineCy
+);
 x += seg.width;
 
-});
+}
+);
+
+}
+
+const multiline =
+text &&
+typeof text ===
+"object" &&
+!Array.isArray(
+text
+) &&
+Array.isArray(
+text.lines
+);
+
+if(
+multiline
+){
+
+const measuredLines =
+text.lines.map(
+line=>
+measureSegments(
+line
+)
+);
+
+const lineHeights =
+text.lines.map(
+line=>
+line.some(
+seg=>seg.font ===
+"volume"
+)
+? 20
+:14
+);
+
+const textWidth =
+Math.max(
+...measuredLines.map(
+lineTextWidth
+)
+);
+
+const bw =
+textWidth + padX * 2;
+const bh =
+lineHeights.reduce(
+(sum, h)=>sum + h,
+0
+) +
+lineGap *
+(
+measuredLines.length -
+1
+) +
+padY * 2;
+
+const left =
+cx - bw / 2;
+const top =
+cy - bh / 2;
+const r =
+bh / 2;
+
+ctx.beginPath();
+ctx.roundRect(
+left,
+top,
+bw,
+bh,
+r
+);
+ctx.fillStyle = fill;
+ctx.fill();
+ctx.strokeStyle = stroke;
+ctx.lineWidth = 1;
+ctx.stroke();
+
+ctx.textAlign = "left";
+
+let y =
+top + padY;
+
+measuredLines.forEach(
+(measured, idx)=>{
+
+const lineH =
+lineHeights[
+idx
+];
+const lineCy =
+y + lineH / 2;
+
+drawMeasuredLine(
+measured,
+lineCy
+);
+
+y +=
+lineH + lineGap;
+
+}
+);
+
+ctx.restore();
+
+return;
+
+}
+
+const segments =
+Array.isArray(
+text
+)
+? text
+:[
+{
+text,
+font: variant
+}
+];
+
+const hasVolumeHighlight =
+segments.some(
+seg=>seg.font ===
+"volume"
+);
+
+const measured =
+measureSegments(
+segments
+);
+
+const textWidth =
+lineTextWidth(
+measured
+);
+const bw =
+textWidth + padX * 2;
+const bh =
+hasVolumeHighlight
+? 22
+: 18;
+const left =
+cx - bw / 2;
+const top =
+cy - bh / 2;
+const r =
+bh / 2;
+
+ctx.beginPath();
+ctx.roundRect(
+left,
+top,
+bw,
+bh,
+r
+);
+ctx.fillStyle = fill;
+ctx.fill();
+ctx.strokeStyle = stroke;
+ctx.lineWidth = 1;
+ctx.stroke();
+
+ctx.textAlign = "left";
+
+drawMeasuredLine(
+measured,
+cy
+);
 
 ctx.restore();
 
@@ -6474,6 +6652,8 @@ sizing
 
 drawPositionBadge(
 ctx,
+{
+lines: [
 [
 { text:"Объем ", font:"entry" },
 {
@@ -6483,8 +6663,16 @@ sizing.volume
 font: "volume",
 color: POSITION_VOLUME_COLOR
 },
-{ text:` $ RR: ${sizing.rrNum.toFixed(2)}`, font:"entry" }
+{ text:" $", font:"entry" }
 ],
+[
+{
+text:`RR: ${sizing.rrNum.toFixed(2)}`,
+font:"entry"
+}
+]
+]
+},
 cx,
 yEntry,
 centerVariant
