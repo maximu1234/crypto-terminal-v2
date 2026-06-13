@@ -260,7 +260,7 @@ Object.freeze({
 "screener.css":
 27,
 "terminal.css":
-126,
+127,
 "dashboard.css":
 35,
 "coins.css":
