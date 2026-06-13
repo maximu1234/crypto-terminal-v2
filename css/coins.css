@@ -670,6 +670,11 @@ padding:10px 12px;
 flex-shrink:0;
 }
 
+/* Положительные % — только строки списка монет, не виджеты шапки */
+#list .col-change.green{
+color:#459782;
+}
+
 #coins-body{
 flex:0 0 auto;
 }
