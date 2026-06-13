@@ -7,7 +7,7 @@ createCandlestickChart
 
 import {
 initDrawings
-} from "./drawings.js?v=207";
+} from "./drawings.js?v=211";
 
 /**
  * @param {Parameters<typeof initDrawings>[0]} options

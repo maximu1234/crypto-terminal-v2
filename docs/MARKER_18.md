@@ -2,7 +2,7 @@
 
 **Тег:** `metka-18` · **Коммит:** `git rev-parse metka-18`
 
-**Текущий эталон отката.** Предыдущая: [MARKER_17.md](./MARKER_17.md) (`metka-17`).
+**Предыдущий эталон отката.** Текущая: [MARKER_19.md](./MARKER_19.md) (`metka-19`).
 
 Проверено: asset manifest (`chart-page.js` → manifest v2); site-nav (7 ссылок на 5 страницах); unit tests `chart-ruler`, `draw-magnet`, `scale-label-layout`, `draw-hit`, `fib-spec`, `position-sizing`, `page-routes`.
 
@@ -118,17 +118,17 @@
 
 | Тег | Роль |
 |-----|------|
-| `metka-18` | **Текущий** эталон |
-| `metka-17` | **Предыдущий** эталон (Терминал + синий флаг + v0.17) |
+| `metka-19` | **Текущий** эталон — см. [MARKER_19.md](./MARKER_19.md) |
+| `metka-18` | **Предыдущий** эталон (этот документ) |
 
-`metka-16` и старее — удалены.
+`metka-17` и старее — удалены.
 
 ## Откат
 
 ```bash
 git fetch --tags
-git checkout metka-18   # текущий эталон
-git checkout metka-17   # до линейки / магнита / statistics bulk
+git checkout metka-19   # текущий эталон
+git checkout metka-18   # до charcoal / color picker / coins resize
 ```
 
 ## Следующий шаг

@@ -5,100 +5,100 @@
 /** @type {readonly (readonly string[])[]} */
 export const TV_COLOR_GRID = Object.freeze([
 [
-"#FFFFFF",
-"#D1D4DC",
-"#B2B5BE",
-"#9598A1",
-"#787B86",
-"#606060",
-"#434651",
-"#363A45",
-"#2A2E39",
+"#ffffff",
+"#dbdbdb",
+"#b8b8b8",
+"#9c9c9c",
+"#808080",
+"#636363",
+"#4a4a4a",
+"#2e2e2e",
+"#0f0f0f",
 "#000000"
 ],
 [
-"#FFEBEE",
-"#FFF3E0",
-"#FFF8E1",
-"#E8F5E9",
-"#E0F2F1",
-"#E1F5FE",
-"#E3F2FD",
-"#EDE7F6",
-"#F3E5F5",
-"#FCE4EC"
+"#df484c",
+"#f19d38",
+"#fcec60",
+"#67ad5c",
+"#459782",
+"#55b9d1",
+"#3861f6",
+"#613cb1",
+"#9031aa",
+"#d63865"
 ],
 [
-"#FFCDD2",
-"#FFE0B2",
-"#FFF9C4",
-"#C8E6C9",
-"#B2DFDB",
-"#B3E5FC",
-"#BBDEFB",
-"#D1C4E9",
-"#E1BEE7",
-"#F8BBD9"
+"#f4cdce",
+"#fae1b8",
+"#fef9ca",
+"#cee5cb",
+"#b8e4dc",
+"#beeaf1",
+"#c1d8f8",
+"#cfc5e6",
+"#dcc0e4",
+"#efbed0"
 ],
 [
-"#F23645",
-"#FF9800",
-"#FDD835",
-"#4CAF50",
-"#089981",
-"#00BCD4",
-"#2196F3",
-"#673AB7",
-"#9C27B0",
-"#E040FB"
+"#eea5a6",
+"#f7ce8b",
+"#fef6a8",
+"#afd5ab",
+"#87cabd",
+"#97dce8",
+"#9abef4",
+"#b09ed7",
+"#c596d4",
+"#e694b0"
 ],
 [
-"#E53935",
-"#FB8C00",
-"#FBC02D",
-"#43A047",
-"#00897B",
-"#039BE5",
-"#1E88E5",
-"#5E35B1",
-"#8E24AA",
-"#D81B60"
+"#e78383",
+"#f4ba61",
+"#fdf288",
+"#91c58a",
+"#67bba9",
+"#74cdde",
+"#6b9bef",
+"#9076c8",
+"#df6b92",
+"#df6b92"
 ],
 [
-"#C62828",
-"#EF6C00",
-"#F9A825",
-"#2E7D32",
-"#00695C",
-"#0277BD",
-"#1565C0",
-"#4527A0",
-"#6A1B9A",
-"#AD1457"
+"#e55e64",
+"#f3ab47",
+"#fcef72",
+"#7bb973",
+"#53a995",
+"#60c3d7",
+"#4578ed",
+"#7859bc",
+"#9f4db7",
+"#da4f7a"
 ],
 [
-"#B71C1C",
-"#E65100",
-"#F57F17",
-"#1B5E20",
-"#004D40",
-"#01579B",
-"#0D47A1",
-"#311B92",
-"#4A148C",
-"#880E4F"
+"#a43538",
+"#e68331",
+"#f2c34f",
+"#508c46",
+"#2c6557",
+"#4395a5",
+"#2647c5",
+"#4c2fa2",
+"#71279c",
+"#b22e5b"
 ],
 [
-"#801313",
-"#BF360C",
-"#FF6F00",
-"#33691E",
-"#00332A",
-"#004D56",
-"#002171",
-"#1A237E",
-"#311B92",
-"#4A0072"
+"#762326",
+"#d55c26",
+"#e68538",
+"#305d28",
+"#11322a",
+"#285f63",
+"#173193",
+"#2e1c8c",
+"#441887",
+"#7d1d4e"
 ]
 ]);
 
@@ -328,11 +328,6 @@ root.querySelector(
 ".tv-color-opacity-track"
 );
 
-const fill =
-root.querySelector(
-".tv-color-opacity-fill"
-);
-
 const pct =
 root.querySelector(
 ".tv-color-opacity-pct"
@@ -361,13 +356,6 @@ track.style.setProperty(
 "--tv-opacity-color",
 hex
 );
-}
-
-if(
-fill
-){
-fill.style.width =
-`${pctVal}%`;
 }
 
 if(
@@ -442,6 +430,48 @@ activeOpacity
 
 }
 
+function appendColorRow(
+grid,
+row,
+onPick
+){
+
+row.forEach(
+hex=>{
+
+const btn =
+document.createElement(
+"button"
+);
+
+btn.type = "button";
+btn.className =
+"tv-color-swatch";
+btn.dataset.color = hex;
+btn.style.background = hex;
+btn.title = hex;
+
+btn.addEventListener(
+"click",
+e=>{
+
+e.stopPropagation();
+onPick(
+hex
+);
+
+}
+);
+
+grid.appendChild(
+btn
+);
+
+}
+);
+
+}
+
 export function mountTvColorPicker(
 container,
 {
@@ -482,37 +512,10 @@ container.classList.add(
 "tv-color-picker"
 );
 
-const grid =
-document.createElement(
-"div"
-);
+function pickColor(
+hex
+){
 
-grid.className =
-"tv-color-grid";
-
-TV_COLOR_GRID.forEach(
-row=>{
-
-row.forEach(
-hex=>{
-
-const btn =
-document.createElement(
-"button"
-);
-
-btn.type = "button";
-btn.className =
-"tv-color-swatch";
-btn.dataset.color = hex;
-btn.style.background = hex;
-btn.title = hex;
-
-btn.addEventListener(
-"click",
-e=>{
-
-e.stopPropagation();
 pickedHex = hex;
 syncOpacityUi(
 container,
@@ -520,7 +523,7 @@ pickedHex,
 pickedOpacity
 );
 markActiveSwatch(
-grid,
+container,
 pickedHex
 );
 
@@ -538,20 +541,78 @@ formatted
 );
 
 }
+
+const gridsWrap =
+document.createElement(
+"div"
 );
 
-grid.appendChild(
-btn
+gridsWrap.className =
+"tv-color-grids";
+
+const greyGrid =
+document.createElement(
+"div"
 );
 
+greyGrid.className =
+"tv-color-grid tv-color-grid--grey";
+
+const accentGrid =
+document.createElement(
+"div"
+);
+
+accentGrid.className =
+"tv-color-grid tv-color-grid--accent";
+
+const shadesGrid =
+document.createElement(
+"div"
+);
+
+shadesGrid.className =
+"tv-color-grid tv-color-grid--shades";
+
+appendColorRow(
+greyGrid,
+TV_COLOR_GRID[
+0
+],
+pickColor
+);
+
+appendColorRow(
+accentGrid,
+TV_COLOR_GRID[
+1
+],
+pickColor
+);
+
+TV_COLOR_GRID.slice(
+2
+).forEach(
+row=>{
+appendColorRow(
+shadesGrid,
+row,
+pickColor
+);
 }
 );
 
-}
+gridsWrap.appendChild(
+greyGrid
 );
-
+gridsWrap.appendChild(
+accentGrid
+);
+gridsWrap.appendChild(
+shadesGrid
+);
 container.appendChild(
-grid
+gridsWrap
 );
 
 const opacityWrap =
@@ -565,7 +626,6 @@ opacityWrap.innerHTML =
 `<div class="tv-color-opacity-label">Opacity</div>
 <div class="tv-color-opacity-row">
 <div class="tv-color-opacity-track">
-<div class="tv-color-opacity-fill"></div>
 <input type="range" class="tv-color-opacity-slider" min="0" max="100" step="1" value="100" aria-label="Opacity"/>
 </div>
 <div class="tv-color-opacity-pct">100%</div>
@@ -596,7 +656,7 @@ pickedOpacity
 );
 
 markActiveSwatch(
-grid,
+container,
 pickedHex
 );
 
@@ -643,7 +703,7 @@ e.stopPropagation();
 );
 
 markActiveSwatch(
-grid,
+container,
 pickedHex
 );
 

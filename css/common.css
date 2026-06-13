@@ -767,6 +767,150 @@ background:#3b82f6;
 border-color:#3b82f6;
 }
 
+/* TradingView-style draw color picker (coins, terminal widgets, fib settings) */
+.draw-popover.draw-color-popover,
+.draw-popover.tv-color-popover{
+--tv-swatch-size:20px;
+--tv-swatch-gap:5px;
+--tv-swatch-gap-wide:10px;
+padding:7px;
+width:max-content;
+background:#131722;
+border:1px solid #363a45;
+border-radius:4px;
+box-shadow:0 2px 6px rgba(0,0,0,.35);
+}
+
+.tv-color-picker{
+display:flex;
+flex-direction:column;
+gap:5px;
+}
+
+.tv-color-grids{
+display:flex;
+flex-direction:column;
+gap:var(--tv-swatch-gap);
+}
+
+.tv-color-grid{
+display:grid;
+grid-template-columns:repeat(10,var(--tv-swatch-size));
+gap:var(--tv-swatch-gap);
+}
+
+.tv-color-grid--accent{
+margin-bottom:calc(var(--tv-swatch-gap-wide) - var(--tv-swatch-gap));
+}
+
+.tv-color-swatch{
+width:var(--tv-swatch-size);
+height:var(--tv-swatch-size);
+border-radius:3px;
+border:none;
+cursor:pointer;
+padding:0;
+box-sizing:border-box;
+}
+
+.tv-color-swatch:hover{
+filter:brightness(1.08);
+}
+
+.tv-color-swatch.active{
+box-shadow:0 0 0 1px #fff;
+}
+
+.tv-color-opacity{
+padding-top:7px;
+border-top:1px solid #363a45;
+}
+
+.tv-color-opacity-label{
+font-size:11px;
+line-height:14px;
+color:#787b86;
+margin-bottom:5px;
+}
+
+.tv-color-opacity-row{
+display:flex;
+align-items:center;
+gap:7px;
+}
+
+.tv-color-opacity-track{
+position:relative;
+flex:1;
+height:9px;
+border-radius:4px;
+overflow:hidden;
+background:
+linear-gradient(to right,transparent,var(--tv-opacity-color,#2196f3)),
+repeating-conic-gradient(#787b86 0 25%,#434651 0 50%) 0 0/7px 7px;
+}
+
+.tv-color-opacity-slider{
+position:absolute;
+left:0;
+top:50%;
+transform:translateY(-50%);
+width:100%;
+margin:0;
+height:14px;
+appearance:none;
+-webkit-appearance:none;
+background:transparent;
+cursor:pointer;
+}
+
+.tv-color-opacity-slider::-webkit-slider-runnable-track{
+height:9px;
+background:transparent;
+}
+
+.tv-color-opacity-slider::-moz-range-track{
+height:9px;
+background:transparent;
+border:none;
+}
+
+.tv-color-opacity-slider::-webkit-slider-thumb{
+appearance:none;
+-webkit-appearance:none;
+width:13px;
+height:13px;
+margin-top:-2px;
+border-radius:50%;
+border:2px solid #131722;
+background:#fff;
+box-shadow:0 0 0 1px rgba(0,0,0,.35);
+}
+
+.tv-color-opacity-slider::-moz-range-thumb{
+width:13px;
+height:13px;
+border-radius:50%;
+border:2px solid #131722;
+background:#fff;
+box-shadow:0 0 0 1px rgba(0,0,0,.35);
+}
+
+.tv-color-opacity-pct{
+min-width:40px;
+height:20px;
+padding:0 5px;
+border-radius:4px;
+background:#131722;
+border:1px solid #363a45;
+color:#d1d4dc;
+font-size:11px;
+line-height:18px;
+font-variant-numeric:tabular-nums;
+text-align:center;
+box-sizing:border-box;
+}
+
 @media (max-width:640px){
 
 .header-settings-dropdown.header-settings-dropdown--portaled{

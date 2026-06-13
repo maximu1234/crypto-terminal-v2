@@ -20,7 +20,7 @@ import {
 mountTvColorPicker,
 parseDrawColor,
 formatDrawColor
-} from "../draw-color-palette.js?v=3";
+} from "../draw-color-palette.js?v=6";
 
 import {
 ALARM_ICON_SVG,
@@ -7215,16 +7215,18 @@ redraw();
 
 function updateAlertStyleUI(){
 
-alertToggleBtn?.classList.add(
-"hidden"
-);
+const sel =
+getSelected();
 
-colorBtn?.classList.remove(
-"hidden"
-);
+const showAlertToggle =
+!!sel &&
+sel.type ===
+"hray" &&
+!sel.isAlert;
 
-widthBtn?.classList.remove(
-"hidden"
+alertToggleBtn?.classList.toggle(
+"hidden",
+!showAlertToggle
 );
 
 }

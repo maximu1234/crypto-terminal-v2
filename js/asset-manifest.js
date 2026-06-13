@@ -49,7 +49,7 @@ Object.freeze({
 "screener.js":
 71,
 "release-marker.js":
-3,
+4,
 "site-boot.js":
 83,
 "suppress-native-context-menu.js":
@@ -59,7 +59,7 @@ Object.freeze({
 "chart-import.js":
 26,
 "chart-widget-host.js":
-4,
+8,
 "tablet-gesture-policy.js":
 1,
 "tablet-widget-chart.js":
@@ -79,9 +79,9 @@ Object.freeze({
 "coins-tablet-controller.js":
 5,
 "drawings.js":
-207,
+211,
 "drawings/init.js":
-61,
+65,
 "drawings/chart-ruler.js":
 8,
 "drawings/draw-magnet.js":
@@ -121,7 +121,7 @@ Object.freeze({
 "drawings-storage-poller.js":
 1,
 "draw-color-palette.js":
-3,
+6,
 "draw-ui-shared.js":
 21,
 "draw-toolbar-icon-data.js":
@@ -256,7 +256,7 @@ Object.freeze({
 "critical-shell.css":
 3,
 "common.css":
-23,
+26,
 "screener.css":
 27,
 "terminal.css":

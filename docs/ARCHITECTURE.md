@@ -43,4 +43,4 @@ npm run check:all
 
 ## Откат
 
-**Текущий эталон:** `metka-18` — [MARKER_18.md](./MARKER_18.md). Предыдущая: `metka-17` — [MARKER_17.md](./MARKER_17.md).
+**Текущий эталон:** `metka-19` — [MARKER_19.md](./MARKER_19.md). Предыдущая: `metka-18` — [MARKER_18.md](./MARKER_18.md).

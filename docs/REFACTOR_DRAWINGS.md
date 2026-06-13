@@ -1,6 +1,6 @@
 # Refactor drawings — план (после metka-9)
 
-**Текущий эталон:** [MARKER_16.md](./MARKER_16.md) (`metka-16`).
+**Текущий эталон:** [MARKER_19.md](./MARKER_19.md) (`metka-19`).
 
 **Принцип:** одна фаза = одна метка = [DRAWINGS_REGRESSION.md](./DRAWINGS_REGRESSION.md) пройден.
 
