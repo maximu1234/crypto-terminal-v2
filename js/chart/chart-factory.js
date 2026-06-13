@@ -249,10 +249,10 @@ crosshair:mainChartCrosshairOptions()
 const series =
 chart.addCandlestickSeries({
 
-upColor:"#22c55e",
+upColor:"#459782",
 downColor:"#ef4444",
 borderVisible:false,
-wickUpColor:"#22c55e",
+wickUpColor:"#459782",
 wickDownColor:"#ef4444",
 
 priceLineVisible:true,
@@ -337,10 +337,10 @@ pinch:true
 const series =
 chart.addCandlestickSeries({
 
-upColor:"#22c55e",
+upColor:"#459782",
 downColor:"#ef4444",
 borderVisible:false,
-wickUpColor:"#22c55e",
+wickUpColor:"#459782",
 wickDownColor:"#ef4444",
 priceLineVisible:true,
 lastValueVisible:true

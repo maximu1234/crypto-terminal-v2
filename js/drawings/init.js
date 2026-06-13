@@ -88,7 +88,7 @@ ensureDomChartCrosshair,
 hideDomChartCrosshair,
 positionTabletProbeHorizInStack,
 fullCrosshairOptions
-} from "../chart-import.js?v=26";
+} from "../chart-import.js?v=27";
 
 import {
 DEFAULT_FIB_SPEC,
