@@ -31,7 +31,7 @@ Object.freeze({
 "chart-page.js":
 6,
 "terminal.js":
-300,
+301,
 "coins-layout-resize.js":
 4,
 "coins-layout-math.js":
@@ -41,7 +41,7 @@ Object.freeze({
 "terminal/coins-prefs.js":
 7,
 "terminal/coins-table.js":
-9,
+10,
 "telegram-bot-public.js":
 1,
 "dashboard.js":
@@ -260,7 +260,7 @@ Object.freeze({
 "screener.css":
 27,
 "terminal.css":
-125,
+126,
 "dashboard.css":
 35,
 "coins.css":

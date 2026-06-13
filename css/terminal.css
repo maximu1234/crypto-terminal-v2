@@ -1396,6 +1396,14 @@ body.tablet-chart .price-alert-scale-plus-circle{
   color:#ef4444;
 }
 
+#coins-body .coin-change-pos{
+  color:#459782;
+}
+
+#coins-body .coin-change-neg{
+  color:#ef4444;
+}
+
 .col-symbol,
 .coin-symbol{
   min-width:0;

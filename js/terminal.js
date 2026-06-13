@@ -128,7 +128,7 @@ highlightActiveSymbol,
 getVisibleSymbolList,
 setCoinsTableHooks,
 syncCoinListFreezeFromFlagMenus
-} from "./terminal/coins-table.js?v=9";
+} from "./terminal/coins-table.js?v=10";
 
 let currentDataset = "all";
 let currentTF = "60";

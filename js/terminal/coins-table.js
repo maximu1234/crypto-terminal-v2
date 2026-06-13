@@ -629,25 +629,25 @@ return;
 
 if(item.change24 >= 0){
 
-change24El.classList.add("green");
-change24El.classList.remove("red");
+change24El.classList.add("coin-change-pos");
+change24El.classList.remove("coin-change-neg");
 
 }else{
 
-change24El.classList.add("red");
-change24El.classList.remove("green");
+change24El.classList.add("coin-change-neg");
+change24El.classList.remove("coin-change-pos");
 
 }
 
 if(item.change1h >= 0){
 
-change1hEl.classList.add("green");
-change1hEl.classList.remove("red");
+change1hEl.classList.add("coin-change-pos");
+change1hEl.classList.remove("coin-change-neg");
 
 }else{
 
-change1hEl.classList.add("red");
-change1hEl.classList.remove("green");
+change1hEl.classList.add("coin-change-neg");
+change1hEl.classList.remove("coin-change-pos");
 
 }
 
