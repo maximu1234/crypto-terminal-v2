@@ -125,6 +125,12 @@
 
 <script>
 (function(){
+function coinsTabTitle(sym){
+if(!sym){
+return;
+}
+document.title=sym+" — Multichart";
+}
 var el=document.getElementById("current-symbol");
 if(!el){
 return;
@@ -137,6 +143,7 @@ if(!/\.P$/i.test(sym)){
 sym+=".P";
 }
 el.textContent=sym;
+coinsTabTitle(sym);
 return;
 }
 try{
@@ -155,6 +162,7 @@ if(!/\.P$/i.test(saved)){
 saved+=".P";
 }
 el.textContent=saved;
+coinsTabTitle(saved);
 }
 }catch(e){}
 })();

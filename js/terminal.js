@@ -3468,6 +3468,26 @@ return sym;
 
 }
 
+function syncCoinsPageTitle(){
+
+if(
+!isCoinsPage
+){
+return;
+}
+
+const label =
+formatCoinsSymbolLabel();
+
+document.title =
+label &&
+label !==
+"—"
+? `${label} — Multichart`
+:"Multichart";
+
+}
+
 function setCoinsChartSymbol(
 symbol
 ){
@@ -3498,6 +3518,8 @@ formatCoinsSymbolLabel(sym);
 updateCoinsChartHeaderFlag(
 sym
 );
+
+syncCoinsPageTitle();
 
 }
 
