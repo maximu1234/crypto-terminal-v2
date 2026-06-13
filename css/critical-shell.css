@@ -1,6 +1,17 @@
 /**
  * Первый кадр до полных CSS (Яндекс.Браузер часто рисует HTML раньше таблиц стилей).
+ *
+ * Палитра фона (нейтральный charcoal, без синего #0f141a):
+ * --app-bg      #0f141a  основной фон
+ * --app-surface #13181e  панели, шапки виджетов
+ * --app-input   #171b21  поля ввода, inset-блоки
  */
+:root{
+--app-bg:#0f141a;
+--app-surface:#13181e;
+--app-input:#171b21;
+}
+
 html:not(.css-ready){
 visibility:hidden;
 }
@@ -14,7 +25,7 @@ body{
 margin:0;
 width:100%;
 height:100%;
-background:#0b1220;
+background:#0f141a;
 color:#e5e7eb;
 font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
 }
@@ -52,7 +63,7 @@ align-items:center;
 gap:12px;
 padding:0 16px;
 min-height:56px;
-background:#0b1220;
+background:#0f141a;
 border-bottom:1px solid #1f2937;
 overflow:visible;
 }
@@ -120,7 +131,7 @@ grid-template-rows:repeat(3,1fr);
 .screener-widget{
 display:flex;
 flex-direction:column;
-background:#0b1220;
+background:#0f141a;
 border:1px solid #1f2937;
 border-radius:10px;
 min-height:0;

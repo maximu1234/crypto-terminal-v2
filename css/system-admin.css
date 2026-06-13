@@ -11,7 +11,7 @@ overflow-y:auto;
 body.system-admin-body{
 display:block;
 margin:0;
-background:#0b1220;
+background:#0f141a;
 color:#e5e7eb;
 }
 
@@ -40,7 +40,7 @@ line-height:1.5;
 }
 
 .system-admin-card{
-background:#111827;
+background:#171b21;
 border:1px solid #1f2937;
 border-radius:12px;
 padding:20px;

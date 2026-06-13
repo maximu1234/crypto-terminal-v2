@@ -19,7 +19,7 @@ import {
 applyChartPriceFormat,
 applyDashboardZoom,
 markTabletChartBody
-} from "./chart-import.js?v=25";
+} from "./chart-import.js?v=26";
 
 import {
 createDashboardChartWidget

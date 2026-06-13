@@ -6,7 +6,7 @@ html{
 html,body{
   margin:0;
   overflow:hidden;
-  background:#0b1220;
+  background:#0f141a;
   font-family:Arial,sans-serif;
   color:white;
 }
@@ -242,7 +242,7 @@ body.coins-page #draw-toolbar.draw-toolbar-inline .draw-btn .draw-tool-icon--xl{
   padding:0 8px;
   border:1px solid #374151;
   border-radius:6px;
-  background:#0f172a;
+  background:#13181e;
   color:#f8fafc;
   font-size:12px;
   box-sizing:border-box;
@@ -737,7 +737,7 @@ body.coins-page #draw-toolbar.draw-toolbar-inline .draw-btn .draw-tool-icon--xl{
   min-width:0;
   width:auto;
   box-sizing:border-box;
-  background:#111827;
+  background:#171b21;
   border:1px solid #374151;
   color:#e5e7eb;
   border-radius:6px;
@@ -904,7 +904,7 @@ body.coins-page #draw-toolbar.draw-toolbar-inline .draw-btn .draw-tool-icon--xl{
 .draw-settings-popover input{
   width:100%;
   box-sizing:border-box;
-  background:#0f172a;
+  background:#13181e;
   border:1px solid #374151;
   color:#e5e7eb;
   border-radius:6px;
@@ -1213,7 +1213,7 @@ body.tablet-chart .price-alert-scale-plus-circle{
   border-top:1px solid #2a2e39;
   padding-right:0;
   box-sizing:border-box;
-  background:#0b1220;
+  background:#0f141a;
 }
 
 @media (pointer:coarse) and (min-width:768px){
@@ -1418,7 +1418,7 @@ body.tablet-chart .price-alert-scale-plus-circle{
 #filter-wrap{
   padding:8px;
   border-bottom:1px solid #1f2937;
-  background:#0f172a;
+  background:#13181e;
   display:flex;
   flex-direction:column;
   gap:6px;
@@ -1426,7 +1426,7 @@ body.tablet-chart .price-alert-scale-plus-circle{
 
 #coin-search{
   width:100%;
-  background:#111827;
+  background:#171b21;
   color:white;
   border:1px solid #374151;
   border-radius:8px;
@@ -1446,7 +1446,7 @@ body.tablet-chart .price-alert-scale-plus-circle{
 
 #market-filter{
   width:100%;
-  background:#111827;
+  background:#171b21;
   color:white;
   border:1px solid #374151;
   border-radius:8px;
@@ -1462,7 +1462,7 @@ body.tablet-chart .price-alert-scale-plus-circle{
   border-bottom:1px solid #1f2937;
   font-size:11px;
   color:#9ca3af;
-  background:#0f172a;
+  background:#13181e;
   column-gap:5px;
   box-sizing:border-box;
   position:sticky;
@@ -1494,7 +1494,7 @@ body.tablet-chart .price-alert-scale-plus-circle{
 }
 
 .coin:hover{
-  background:#111827;
+  background:#171b21;
 }
 
 .coin.active{
@@ -1561,7 +1561,7 @@ body.tablet-chart .price-alert-scale-plus-circle{
   position:fixed;
   z-index:12000;
   min-width:190px;
-  background:#111827;
+  background:#171b21;
   border:1px solid rgba(148,163,184,.35);
   border-radius:8px;
   box-shadow:0 12px 28px rgba(0,0,0,.45);

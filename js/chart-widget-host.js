@@ -3,7 +3,7 @@
  */
 import {
 createCandlestickChart
-} from "./chart-import.js?v=25";
+} from "./chart-import.js?v=26";
 
 import {
 initDrawings

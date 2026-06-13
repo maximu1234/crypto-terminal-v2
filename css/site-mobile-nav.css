@@ -100,7 +100,7 @@ align-items:stretch;
 gap:0;
 margin:0;
 padding:max(16px, env(safe-area-inset-top)) 16px 24px;
-background:#0f172a;
+background:#13181e;
 border-left:1px solid #1f2937;
 box-shadow:-8px 0 32px rgba(0,0,0,.45);
 pointer-events:none;

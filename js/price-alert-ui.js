@@ -21,7 +21,7 @@ hideDomChartCrosshair,
 hideDomChartCrosshairHorz,
 hideDomChartCrosshairVert,
 positionDomChartCrosshair
-} from "./chart-import.js?v=25";
+} from "./chart-import.js?v=26";
 
 import {
 mountDrawToolIcons

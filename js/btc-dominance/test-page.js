@@ -281,7 +281,7 @@ chartEl,
 {
 layout: {
 background: {
-color: "#0b1220"
+color: "#0f141a"
 },
 textColor: "#9ca3af"
 },
