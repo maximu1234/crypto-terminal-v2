@@ -106,7 +106,7 @@ document.createElement(
 );
 
 box.style.cssText =
-"position:fixed;inset:0;z-index:9999;background:#0f141a;color:#fff;padding:32px;font-family:system-ui,sans-serif;overflow:auto";
+"position:fixed;inset:0;z-index:9999;background:#16181f;color:#fff;padding:32px;font-family:system-ui,sans-serif;overflow:auto";
 
 let detail =
 err?.message ||
@@ -204,7 +204,7 @@ location.protocol ===
 ){
 document.body.innerHTML =
 `
-<div style="padding:40px;background:#0f141a;color:#fff;max-width:520px">
+<div style="padding:40px;background:#16181f;color:#fff;max-width:520px">
 <h2>Нужен локальный сервер</h2>
 <p><a href="http://127.0.0.1:8080/coins.html">http://127.0.0.1:8080/coins.html</a></p>
 </div>`;

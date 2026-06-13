@@ -15,9 +15,9 @@ export const ASSETS =
 Object.freeze({
 
 "btc-dominance-test.css":
-4,
+5,
 "btc-d-page.css":
-6,
+7,
 "btc-dominance/btc-d-page.js":
 4,
 "btc-dominance/tv-embed.js":
@@ -27,7 +27,7 @@ Object.freeze({
 "asset-manifest.js":
 2,
 "coins-page-boot.js":
-13,
+14,
 "chart-page.js":
 6,
 "terminal.js":
@@ -57,7 +57,7 @@ Object.freeze({
 "charts-lib-boot.js":
 3,
 "chart-import.js":
-27,
+28,
 "chart-widget-host.js":
 8,
 "tablet-gesture-policy.js":
@@ -67,13 +67,13 @@ Object.freeze({
 
 /* ── JS: chart / drawings ── */
 "chart.js":
-135,
+136,
 "chart/chart-options.js":
 4,
 "chart/chart-dom-crosshair.js":
 13,
 "chart/chart-factory.js":
-25,
+26,
 "chart-tablet-gestures.js":
 17,
 "coins-tablet-controller.js":
@@ -254,31 +254,31 @@ Object.freeze({
 
 /* ── CSS ── */
 "critical-shell.css":
-3,
+4,
 "common.css":
-26,
-"screener.css":
 27,
+"screener.css":
+28,
 "terminal.css":
-127,
+128,
 "dashboard.css":
-35,
+36,
 "coins.css":
-38,
+39,
 "terminal-page.css":
 2,
 "site-mobile-nav.css":
 4,
 "alerts.css":
-16,
+17,
 "listings.css":
-3,
-"statistics.css":
-9,
-"trade-calculator.css":
 4,
+"statistics.css":
+10,
+"trade-calculator.css":
+5,
 "system-admin.css":
-5
+6
 
 });
 

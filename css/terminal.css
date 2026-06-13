@@ -6,7 +6,7 @@ html{
 html,body{
   margin:0;
   overflow:hidden;
-  background:#0f141a;
+  background:#16181f;
   font-family:Arial,sans-serif;
   color:white;
 }
@@ -1088,7 +1088,7 @@ body.tablet-chart .price-alert-scale-plus-circle{
   border-top:1px solid #2a2e39;
   padding-right:0;
   box-sizing:border-box;
-  background:#0f141a;
+  background:#16181f;
 }
 
 @media (pointer:coarse) and (min-width:768px){

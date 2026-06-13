@@ -3,7 +3,7 @@ body{
 margin:0;
 padding:0;
 min-height:100%;
-background:#0f141a;
+background:#16181f;
 color:#fff;
 font-family:Arial,sans-serif;
 }
@@ -182,7 +182,7 @@ min-width:140px;
 padding:8px 10px;
 border:1px solid #374151;
 border-radius:6px;
-background:#0f141a;
+background:#16181f;
 color:#f9fafb;
 font-size:0.95rem;
 }

@@ -183,7 +183,7 @@ container,
 {
 
 layout:{
-background:{ color:"#0f141a" },
+background:{ color:"#16181f" },
 textColor:CHART_SCALE_TEXT_COLOR,
 fontSize:effectiveChartScaleFontSize(),
 fontFamily:CHART_SCALE_FONT_FAMILY
@@ -286,7 +286,7 @@ width,
 height,
 
 layout:{
-background:{ color:"#0f141a" },
+background:{ color:"#16181f" },
 textColor:"#9ca3af"
 },
 

@@ -4,7 +4,7 @@ html,body{
     width:100%;
     height:100%;
     overflow:hidden;
-    background:#0f141a;
+    background:#16181f;
     color:white;
     font-family:Arial,sans-serif;
 }
@@ -110,7 +110,7 @@ white-space:nowrap;
 ========================================================= */
 
 .widget{
-    background:#0f141a;
+    background:#16181f;
     border:1px solid #1f2937;
     border-radius:12px;
     display:flex;

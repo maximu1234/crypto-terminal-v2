@@ -61,7 +61,7 @@ coinsTfVisibleBars,
 applyCoinsChartViewport,
 refreshCoinsChartBarSpacing,
 tfPeriodSec
-} from "./chart-import.js?v=27";
+} from "./chart-import.js?v=28";
 
 import {
 mountCoinsTabletController
