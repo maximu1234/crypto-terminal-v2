@@ -45,7 +45,7 @@ Object.freeze({
 "telegram-bot-public.js":
 1,
 "dashboard.js":
-80,
+81,
 "screener.js":
 71,
 "release-marker.js":
@@ -59,7 +59,7 @@ Object.freeze({
 "chart-import.js":
 28,
 "chart-widget-host.js":
-8,
+9,
 "tablet-gesture-policy.js":
 1,
 "tablet-widget-chart.js":
@@ -262,7 +262,7 @@ Object.freeze({
 "terminal.css":
 128,
 "dashboard.css":
-36,
+37,
 "coins.css":
 39,
 "terminal-page.css":

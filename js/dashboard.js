@@ -22,8 +22,9 @@ markTabletChartBody
 } from "./chart-import.js?v=28";
 
 import {
-createDashboardChartWidget
-} from "./chart-widget-host.js?v=8";
+createDashboardChartWidget,
+mountDashboardChartInteractions
+} from "./chart-widget-host.js?v=9";
 
 import {
 mountWidgetTabletChart
@@ -327,6 +328,7 @@ widgets.forEach(w=>{
 
 w.unsubKline?.();
 w.tabletGestures?.dispose?.();
+w.disposeChartInteractions?.();
 w.drawingTools?.destroy();
 w.chart?.remove();
 w.resizeObserver?.disconnect();
@@ -560,6 +562,21 @@ unsubKline: null,
 tabletGestures: null,
 resizeObserver: null
 };
+
+entry.disposeChartInteractions =
+mountDashboardChartInteractions({
+
+chart,
+series,
+wrapEl: chartWrap,
+chartContainer,
+getSymbol,
+getTf,
+getDrawingTools:()=>
+entry.drawingTools ||
+chartHost.drawingTools
+
+});
 
 function setActive(
 e
