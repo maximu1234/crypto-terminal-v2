@@ -2781,6 +2781,89 @@ persistCoinsPrefs();
 
 }
 
+const COINS_TF_HOTKEYS =
+Object.freeze({
+
+"1":
+"1",
+"2":
+"5",
+"3":
+"15",
+"4":
+"60",
+"5":
+"240",
+"6":
+"D"
+
+});
+
+function bindCoinsTfHotkeys(){
+
+window.addEventListener(
+"keydown",
+e=>{
+
+if(
+isCoinsMobile()
+){
+return;
+}
+
+if(
+e.defaultPrevented
+){
+return;
+}
+
+if(
+e.metaKey ||
+e.ctrlKey ||
+e.altKey
+){
+return;
+}
+
+const tag =
+e.target?.tagName;
+
+if(
+tag ===
+"INPUT" ||
+tag ===
+"TEXTAREA" ||
+tag ===
+"SELECT" ||
+e.target?.isContentEditable
+){
+return;
+}
+
+const tf =
+COINS_TF_HOTKEYS[
+e.key
+];
+
+if(
+!tf ||
+!COINS_TF_VALUES.has(
+tf
+)
+){
+return;
+}
+
+e.preventDefault();
+void setCoinsTimeframe(
+tf
+);
+
+}
+);
+
+}
+
 document
 .querySelectorAll(".tf-btn")
 .forEach(btn=>{
@@ -2790,6 +2873,8 @@ await setCoinsTimeframe(btn.dataset.tf);
 };
 
 });
+
+bindCoinsTfHotkeys();
 
 /* =========================================================
    FILTER
