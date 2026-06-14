@@ -1120,6 +1120,7 @@ body.tablet-chart .price-alert-scale-plus-circle{
   top:0;
   height:1px;
   border:none;
+  display:none;
   background:repeating-linear-gradient(
     to right,
     rgba(174,174,182,0.55) 0,
@@ -1133,6 +1134,10 @@ body.tablet-chart .price-alert-scale-plus-circle{
 
 .rsi-level-line.hidden{
   display:none;
+}
+
+.rsi-level-line:not(.hidden){
+  display:block;
 }
 
 .rsi-level-line[data-rsi-level="50"]{
@@ -1464,14 +1469,6 @@ body.tablet-chart .price-alert-scale-plus-circle{
   position:relative;
   z-index:1;
   background:inherit;
-}
-
-.coin-symbol{
-  overflow:visible;
-  white-space:nowrap;
-  position:relative;
-  z-index:0;
-  min-width:0;
 }
 
 .chart-scale-context-menu{

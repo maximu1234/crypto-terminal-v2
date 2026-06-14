@@ -300,6 +300,82 @@ body.terminal-page .widget-draw-tools{
     background:var(--app-chart-bg);
 }
 
+.widget-chart-body{
+    flex:1;
+    min-height:0;
+    display:flex;
+    flex-direction:column;
+}
+
+.widget.has-rsi .widget-chart-wrap{
+    flex:1 1 74%;
+    max-height:74%;
+}
+
+.widget-rsi-wrap{
+    position:relative;
+    flex:0 0 26%;
+    max-height:26%;
+    min-height:0;
+    border-top:1px solid #2a2e39;
+    background:var(--app-chart-bg);
+    box-sizing:border-box;
+}
+
+.widget-rsi-band{
+    position:absolute;
+    left:0;
+    right:var(--chart-scale-width, 56px);
+    top:0;
+    height:0;
+    background:#1e1e31;
+    pointer-events:none;
+    z-index:0;
+}
+
+.widget-rsi-wrap .rsi-level-line{
+    position:absolute;
+    left:0;
+    right:var(--chart-scale-width, 56px);
+    top:0;
+    height:1px;
+    border:none;
+    display:none;
+    background:repeating-linear-gradient(
+    to right,
+    rgba(174,174,182,0.55) 0,
+    rgba(174,174,182,0.55) 5px,
+    transparent 5px,
+    transparent 9px
+    );
+    pointer-events:none;
+    z-index:2;
+}
+
+.widget-rsi-wrap .rsi-level-line.hidden{
+    display:none;
+}
+
+.widget-rsi-wrap .rsi-level-line:not(.hidden){
+    display:block;
+}
+
+.widget-rsi-wrap .rsi-level-line[data-rsi-level="50"]{
+    background:repeating-linear-gradient(
+    to right,
+    rgba(174,174,182,0.385) 0,
+    rgba(174,174,182,0.385) 5px,
+    transparent 5px,
+    transparent 9px
+    );
+}
+
+.widget-rsi-chart{
+    position:absolute;
+    inset:0;
+    z-index:1;
+}
+
 /* Слой рисования поверх LW (на Монетах стили в terminal.css). */
 .widget-chart-wrap .drawings-layer{
     position:absolute;

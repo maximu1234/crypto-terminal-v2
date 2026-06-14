@@ -7,12 +7,21 @@ symbolListSignature
 
 import {
 createScreenerChart,
+createRSIChart,
 applyChartPriceFormat,
 applyScreenerZoom,
 restoreScreenerViewport,
+updateRsiBandLayout,
+updateRsiLevelLinesLayout,
+linkPairedChartTimeScales,
 SCREENER_VISIBLE_BARS,
 SCREENER_MAX_BARS
-} from "./chart-import.js?v=30";
+} from "./chart-import.js?v=31";
+
+import {
+calculateRSI,
+alignRsiWithCandleTimes
+} from "./indicators.js?v=3";
 
 import {
 subscribeKline
@@ -29,7 +38,7 @@ createTickerUiBatcher
 
 import {
 mountReleaseMarker
-} from "./release-marker.js?v=5";
+} from "./release-marker.js?v=6";
 
 import {
 saveScreenerState,
@@ -309,6 +318,98 @@ function pageSize(){
 return isScreenerMobile()
 ? 2
 : layout;
+
+}
+
+function screenerWidgetShowsRsi(){
+
+return !isScreenerMobile() && (
+layout ===
+4 ||
+layout ===
+6
+);
+
+}
+
+function layoutWidgetRsi(
+widget
+){
+
+if(
+!widget?.rsiSeries ||
+!widget?.rsiWrapEl
+){
+return;
+}
+
+updateRsiBandLayout(
+widget.rsiSeries,
+widget.rsiWrapEl.querySelector(
+".screener-rsi-band"
+)
+);
+
+updateRsiLevelLinesLayout(
+widget.rsiSeries,
+widget.rsiWrapEl
+);
+
+}
+
+function updateWidgetRsiData(
+widget
+){
+
+if(
+!widget?.rsiSeries ||
+!widget.candles?.length
+){
+return;
+}
+
+const raw =
+calculateRSI(
+widget.candles
+);
+
+const points =
+alignRsiWithCandleTimes(
+widget.candles,
+raw
+);
+
+widget.rsiSeries.setData(
+points
+);
+
+layoutWidgetRsi(
+widget
+);
+
+}
+
+function buildWidgetBodyHtml(
+showRsi
+){
+
+if(
+!showRsi
+){
+return `<div class="screener-chart"></div>`;
+}
+
+return `
+<div class="screener-widget-body">
+<div class="screener-chart"></div>
+<div class="screener-rsi-wrap">
+<div class="screener-rsi-band"></div>
+<div class="rsi-level-line hidden" data-rsi-level="70" aria-hidden="true"></div>
+<div class="rsi-level-line hidden" data-rsi-level="50" aria-hidden="true"></div>
+<div class="rsi-level-line hidden" data-rsi-level="30" aria-hidden="true"></div>
+<div class="screener-rsi-chart"></div>
+</div>
+</div>`;
 
 }
 
@@ -732,6 +833,10 @@ if(w.chart){
 w.chart.remove();
 }
 
+if(w.rsiChart){
+w.rsiChart.remove();
+}
+
 w.root?.remove();
 
 });
@@ -843,6 +948,10 @@ series,
 loaded[loaded.length - 1].close
 );
 
+updateWidgetRsiData(
+widget
+);
+
 const runZoom = ()=>{
 widget.syncChartSize?.();
 };
@@ -894,9 +1003,22 @@ widget.candles.slice(-SCREENER_MAX_BARS);
 
 series.setData(widget.candles);
 
+updateWidgetRsiData(
+widget
+);
+
 }else{
 
 series.update(candle);
+
+if(
+widget.rsiSeries &&
+isNewBar
+){
+updateWidgetRsiData(
+widget
+);
+}
 
 }
 
@@ -944,10 +1066,16 @@ chartEl.classList.remove("loading");
 
 function createWidget(symbol, loadId){
 
+const showRsi =
+screenerWidgetShowsRsi();
+
 const root =
 document.createElement("article");
 
-root.className = "screener-widget";
+root.className =
+showRsi
+? "screener-widget has-rsi"
+: "screener-widget";
 root.dataset.symbol = symbol;
 
 root.innerHTML = `
@@ -987,7 +1115,7 @@ root.innerHTML = `
 
 </div>
 
-<div class="screener-chart"></div>
+${buildWidgetBodyHtml(showRsi)}
 
 `;
 
@@ -1065,8 +1193,71 @@ series,
 chartEl,
 loadId,
 candles: [],
-userAdjustedZoom:false
+userAdjustedZoom:false,
+rsiChart:null,
+rsiSeries:null,
+rsiChartEl:null,
+rsiWrapEl:null
 };
+
+if(
+showRsi
+){
+
+const rsiWrapEl =
+root.querySelector(
+".screener-rsi-wrap"
+);
+
+const rsiChartEl =
+root.querySelector(
+".screener-rsi-chart"
+);
+
+const rsiPair =
+createRSIChart(
+rsiChartEl
+);
+
+widget.rsiWrapEl =
+rsiWrapEl;
+widget.rsiChartEl =
+rsiChartEl;
+widget.rsiChart =
+rsiPair.chart;
+widget.rsiSeries =
+rsiPair.series;
+
+chart.applyOptions({
+timeScale:{
+visible:false,
+borderVisible:false
+}
+});
+
+widget.rsiChart.applyOptions({
+timeScale:{
+visible:true,
+timeVisible:true,
+ticksVisible:true,
+borderColor:"#1f2937",
+borderVisible:true,
+secondsVisible:false
+},
+rightPriceScale:{
+borderVisible:false
+}
+});
+
+linkPairedChartTimeScales(
+chart,
+widget.rsiChart,
+()=>layoutWidgetRsi(
+widget
+)
+);
+
+}
 
 function markUserZoom(){
 
@@ -1091,6 +1282,51 @@ return 0;
 }
 
 chart.applyOptions({ width: w, height: h });
+
+if(
+widget.rsiChart &&
+widget.rsiChartEl
+){
+
+let scaleW =
+56;
+
+try{
+scaleW =
+chart.priceScale(
+"right"
+).width() ||
+scaleW;
+}catch{
+/* ignore */
+}
+
+widget.rsiWrapEl?.style.setProperty(
+"--chart-scale-width",
+`${scaleW}px`
+);
+
+const rw =
+widget.rsiChartEl.clientWidth;
+const rh =
+widget.rsiChartEl.clientHeight;
+
+if(
+rw >=
+2 &&
+rh >=
+2
+){
+widget.rsiChart.applyOptions({
+width: rw,
+height: rh
+});
+layoutWidgetRsi(
+widget
+);
+}
+
+}
 
 if(!widget.candles.length){
 return 0;
@@ -1122,10 +1358,16 @@ h
 
 }
 
+const resizeTarget =
+root.querySelector(
+".screener-widget-body"
+) ||
+chartEl;
+
 const resizeObserver =
 new ResizeObserver(syncChartSize);
 
-resizeObserver.observe(chartEl);
+resizeObserver.observe(resizeTarget);
 widget.resizeObserver = resizeObserver;
 widget.syncChartSize = syncChartSize;
 
@@ -1929,11 +2171,93 @@ true
 
 }
 
+function bindScreenerLayoutHotkeys(){
+
+window.addEventListener(
+"keydown",
+e=>{
+
+if(
+isScreenerMobile()
+){
+return;
+}
+
+if(
+e.defaultPrevented
+){
+return;
+}
+
+if(
+e.metaKey ||
+e.ctrlKey ||
+e.altKey
+){
+return;
+}
+
+const tag =
+e.target?.tagName;
+
+if(
+tag ===
+"INPUT" ||
+tag ===
+"TEXTAREA" ||
+tag ===
+"SELECT" ||
+e.target?.isContentEditable
+){
+return;
+}
+
+const key =
+e.key;
+
+if(
+key ===
+"1"
+){
+e.preventDefault();
+setLayout(
+4
+);
+return;
+}
+
+if(
+key ===
+"2"
+){
+e.preventDefault();
+setLayout(
+6
+);
+return;
+}
+
+if(
+key ===
+"3"
+){
+e.preventDefault();
+setLayout(
+9
+);
+}
+
+}
+);
+
+}
+
 function bindControls(){
 
 bindDesktopHeaderPicks();
 bindMobileControls();
 bindSymbolSearch();
+bindScreenerLayoutHotkeys();
 
 }
 

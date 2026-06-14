@@ -521,7 +521,7 @@ div.innerHTML = `
 
 </div>
 
-<div class="coin-symbol">
+<div class="coin-symbol" title="${item.symbol}">
 ${item.symbol}
 </div>
 

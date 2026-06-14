@@ -381,6 +381,82 @@ min-height:0;
 position:relative;
 }
 
+.screener-widget-body{
+flex:1;
+min-height:0;
+display:flex;
+flex-direction:column;
+}
+
+.screener-widget.has-rsi .screener-chart{
+flex:1 1 74%;
+max-height:74%;
+}
+
+.screener-rsi-wrap{
+position:relative;
+flex:0 0 26%;
+max-height:26%;
+min-height:0;
+border-top:1px solid #2a2e39;
+background:var(--app-chart-bg);
+box-sizing:border-box;
+}
+
+.screener-rsi-band{
+position:absolute;
+left:0;
+right:var(--chart-scale-width, 56px);
+top:0;
+height:0;
+background:#1e1e31;
+pointer-events:none;
+z-index:0;
+}
+
+.screener-rsi-wrap .rsi-level-line{
+position:absolute;
+left:0;
+right:var(--chart-scale-width, 56px);
+top:0;
+height:1px;
+border:none;
+display:none;
+background:repeating-linear-gradient(
+to right,
+rgba(174,174,182,0.55) 0,
+rgba(174,174,182,0.55) 5px,
+transparent 5px,
+transparent 9px
+);
+pointer-events:none;
+z-index:2;
+}
+
+.screener-rsi-wrap .rsi-level-line.hidden{
+display:none;
+}
+
+.screener-rsi-wrap .rsi-level-line:not(.hidden){
+display:block;
+}
+
+.screener-rsi-wrap .rsi-level-line[data-rsi-level="50"]{
+background:repeating-linear-gradient(
+to right,
+rgba(174,174,182,0.385) 0,
+rgba(174,174,182,0.385) 5px,
+transparent 5px,
+transparent 9px
+);
+}
+
+.screener-rsi-chart{
+position:absolute;
+inset:0;
+z-index:1;
+}
+
 .screener-chart.loading{
 opacity:0.45;
 }

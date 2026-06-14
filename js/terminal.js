@@ -62,7 +62,7 @@ coinsTfVisibleBars,
 applyCoinsChartViewport,
 refreshCoinsChartBarSpacing,
 tfPeriodSec
-} from "./chart-import.js?v=30";
+} from "./chart-import.js?v=31";
 
 import {
 mountCoinsTabletController
@@ -129,7 +129,7 @@ highlightActiveSymbol,
 getVisibleSymbolList,
 setCoinsTableHooks,
 syncCoinListFreezeFromFlagMenus
-} from "./terminal/coins-table.js?v=10";
+} from "./terminal/coins-table.js?v=11";
 
 let currentDataset = "all";
 let currentTF = "60";

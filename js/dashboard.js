@@ -18,8 +18,17 @@ isLocalDevHost
 import {
 applyChartPriceFormat,
 applyDashboardZoom,
-markTabletChartBody
-} from "./chart-import.js?v=30";
+markTabletChartBody,
+createRSIChart,
+updateRsiBandLayout,
+updateRsiLevelLinesLayout,
+linkPairedChartTimeScales
+} from "./chart-import.js?v=31";
+
+import {
+calculateRSI,
+alignRsiWithCandleTimes
+} from "./indicators.js?v=3";
 
 import {
 createDashboardChartWidget,
@@ -331,6 +340,7 @@ w.tabletGestures?.dispose?.();
 w.disposeChartInteractions?.();
 w.drawingTools?.destroy();
 w.chart?.remove();
+w.rsiChart?.remove();
 w.resizeObserver?.disconnect();
 
 });
@@ -343,9 +353,118 @@ dashboard.innerHTML = "";
 
 }
 
+function terminalWidgetShowsRsi(
+count
+){
+
+return !isTerminalMobile() && (
+count >=
+1 &&
+count <=
+6
+);
+
+}
+
+function layoutTerminalWidgetRsi(
+entry
+){
+
+if(
+!entry?.rsiSeries ||
+!entry?.rsiWrapEl
+){
+return;
+}
+
+updateRsiBandLayout(
+entry.rsiSeries,
+entry.rsiWrapEl.querySelector(
+".widget-rsi-band"
+)
+);
+
+updateRsiLevelLinesLayout(
+entry.rsiSeries,
+entry.rsiWrapEl
+);
+
+}
+
+function updateTerminalWidgetRsiData(
+entry
+){
+
+const candles =
+entry.candlesRef?.() ??
+[];
+
+if(
+!entry?.rsiSeries ||
+!candles.length
+){
+return;
+}
+
+const raw =
+calculateRSI(
+candles
+);
+
+const points =
+alignRsiWithCandleTimes(
+candles,
+raw
+);
+
+entry.rsiSeries.setData(
+points
+);
+
+layoutTerminalWidgetRsi(
+entry
+);
+
+}
+
+function buildTerminalWidgetChartHtml(
+showRsi
+){
+
+const chartUi =
+getWidgetChartUiHtml();
+
+if(
+!showRsi
+){
+return `
+<div class="widget-chart-wrap chart-wrap">
+<div class="chart"></div>
+${chartUi}
+</div>`;
+}
+
+return `
+<div class="widget-chart-body">
+<div class="widget-chart-wrap chart-wrap">
+<div class="chart"></div>
+${chartUi}
+</div>
+<div class="widget-rsi-wrap">
+<div class="widget-rsi-band"></div>
+<div class="rsi-level-line hidden" data-rsi-level="70" aria-hidden="true"></div>
+<div class="rsi-level-line hidden" data-rsi-level="50" aria-hidden="true"></div>
+<div class="rsi-level-line hidden" data-rsi-level="30" aria-hidden="true"></div>
+<div class="widget-rsi-chart"></div>
+</div>
+</div>`;
+
+}
+
 function createWidget(
 symbol,
-index
+index,
+showRsi = false
 ){
 
 const fixedSymbol =
@@ -365,7 +484,10 @@ saved?.tf ||
 const widget =
 document.createElement("div");
 
-widget.className = "widget";
+widget.className =
+showRsi
+? "widget has-rsi"
+: "widget";
 widget.dataset.index = String(index);
 widget.dataset.symbol = fixedSymbol;
 
@@ -413,10 +535,7 @@ ${getWidgetToolbarHtml()}
 
 </div>
 
-<div class="widget-chart-wrap chart-wrap">
-<div class="chart"></div>
-${getWidgetChartUiHtml()}
-</div>
+${buildTerminalWidgetChartHtml(showRsi)}
 
 `;
 
@@ -560,8 +679,72 @@ candlesRef: ()=> candles,
 setCandles: data=>{ candles = data; },
 unsubKline: null,
 tabletGestures: null,
-resizeObserver: null
+resizeObserver: null,
+showRsi,
+rsiChart: null,
+rsiSeries: null,
+rsiChartEl: null,
+rsiWrapEl: null
 };
+
+if(
+showRsi
+){
+
+const rsiWrapEl =
+widget.querySelector(
+".widget-rsi-wrap"
+);
+
+const rsiChartEl =
+widget.querySelector(
+".widget-rsi-chart"
+);
+
+const rsiPair =
+createRSIChart(
+rsiChartEl
+);
+
+entry.rsiWrapEl =
+rsiWrapEl;
+entry.rsiChartEl =
+rsiChartEl;
+entry.rsiChart =
+rsiPair.chart;
+entry.rsiSeries =
+rsiPair.series;
+
+chart.applyOptions({
+timeScale:{
+visible:false,
+borderVisible:false
+}
+});
+
+entry.rsiChart.applyOptions({
+timeScale:{
+visible:true,
+timeVisible:true,
+ticksVisible:true,
+borderColor:"#1f2937",
+borderVisible:true,
+secondsVisible:false
+},
+rightPriceScale:{
+borderVisible:false
+}
+});
+
+linkPairedChartTimeScales(
+chart,
+entry.rsiChart,
+()=>layoutTerminalWidgetRsi(
+entry
+)
+);
+
+}
 
 entry.disposeChartInteractions =
 mountDashboardChartInteractions({
@@ -708,6 +891,10 @@ widget.classList.remove(
 
 series.setData(candles);
 
+updateTerminalWidgetRsiData(
+entry
+);
+
 entry.unsubKline =
 subscribeKline(
 symbol,
@@ -735,6 +922,14 @@ candles.push(candle);
 
 if(candles.length > 6000){
 candles.shift();
+}
+
+if(
+entry.rsiSeries
+){
+updateTerminalWidgetRsiData(
+entry
+);
 }
 
 }else{
@@ -846,16 +1041,68 @@ return;
 }
 
 chart.applyOptions({ width: w, height: h });
+
+if(
+entry.rsiChart &&
+entry.rsiChartEl
+){
+
+let scaleW =
+56;
+
+try{
+scaleW =
+chart.priceScale(
+"right"
+).width() ||
+scaleW;
+}catch{
+/* ignore */
+}
+
+entry.rsiWrapEl?.style.setProperty(
+"--chart-scale-width",
+`${scaleW}px`
+);
+
+const rw =
+entry.rsiChartEl.clientWidth;
+const rh =
+entry.rsiChartEl.clientHeight;
+
+if(
+rw >=
+2 &&
+rh >=
+2
+){
+entry.rsiChart.applyOptions({
+width: rw,
+height: rh
+});
+layoutTerminalWidgetRsi(
+entry
+);
+}
+
+}
+
 entry.drawingTools?.resize();
 
 }
+
+const resizeTarget =
+widget.querySelector(
+".widget-chart-body"
+) ||
+chartWrap;
 
 const resizeObserver =
 new ResizeObserver(resizeChart);
 
 entry.resizeObserver =
 resizeObserver;
-resizeObserver.observe(chartWrap);
+resizeObserver.observe(resizeTarget);
 
 requestAnimationFrame(resizeChart);
 
@@ -919,12 +1166,18 @@ dashboardGridClass(
 symbols.length
 );
 
+const showRsi =
+terminalWidgetShowsRsi(
+symbols.length
+);
+
 symbols.forEach(
 (symbol, i)=>{
 try{
 createWidget(
 symbol,
-i
+i,
+showRsi
 );
 }catch(
 err

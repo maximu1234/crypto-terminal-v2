@@ -1679,6 +1679,18 @@ if(
 return;
 }
 
+const rsiData =
+rsiSeries.data?.() ??
+[];
+
+if(
+!rsiData.length
+){
+bandEl.style.height =
+"0";
+return;
+}
+
 const y70 =
 rsiSeries.priceToCoordinate?.(
 70
@@ -1726,9 +1738,32 @@ if(
 return;
 }
 
+const rsiData =
+rsiSeries.data?.() ??
+[];
+
+const lineEls =
 wrapEl.querySelectorAll(
 ".rsi-level-line[data-rsi-level]"
-).forEach(
+);
+
+if(
+!rsiData.length
+){
+
+lineEls.forEach(
+lineEl=>{
+lineEl.classList.add(
+"hidden"
+);
+}
+);
+
+return;
+
+}
+
+lineEls.forEach(
 lineEl=>{
 
 const price =
