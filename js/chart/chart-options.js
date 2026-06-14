@@ -546,3 +546,33 @@ return true;
 return false;
 
 }
+
+export const CHART_LAYOUT_BG_FALLBACK =
+"#141721";
+
+/** Фон LW-графиков; совпадает с --app-chart-bg в critical-shell.css */
+export function getChartLayoutBgColor(){
+
+if(
+typeof document !==
+"undefined"
+){
+
+const css =
+getComputedStyle(
+document.documentElement
+).getPropertyValue(
+"--app-chart-bg"
+).trim();
+
+if(
+css
+){
+return css;
+}
+
+}
+
+return CHART_LAYOUT_BG_FALLBACK;
+
+}

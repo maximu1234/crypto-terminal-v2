@@ -6,7 +6,7 @@ html{
 html,body{
   margin:0;
   overflow:hidden;
-  background:#16181f;
+  background:var(--app-bg);
   font-family:Arial,sans-serif;
   color:white;
 }
@@ -864,6 +864,7 @@ body.coins-page #draw-toolbar.draw-toolbar-inline .draw-btn .draw-tool-icon--xl{
   position:relative;
   pointer-events:none;
   overflow:hidden;
+  background:var(--app-chart-bg);
 }
 
 #chart{
@@ -1088,7 +1089,7 @@ body.tablet-chart .price-alert-scale-plus-circle{
   border-top:1px solid #2a2e39;
   padding-right:0;
   box-sizing:border-box;
-  background:#16181f;
+  background:var(--app-chart-bg);
 }
 
 @media (pointer:coarse) and (min-width:768px){
@@ -1109,6 +1110,39 @@ body.tablet-chart .price-alert-scale-plus-circle{
   background:#1e1e31;
   pointer-events:none;
   z-index:0;
+}
+
+/* Уровни 30 / 50 / 70 — DOM-пунктир (LW priceLine при 1px почти не виден) */
+.rsi-level-line{
+  position:absolute;
+  left:0;
+  right:var(--chart-scale-width, 56px);
+  top:0;
+  height:1px;
+  border:none;
+  background:repeating-linear-gradient(
+    to right,
+    rgba(174,174,182,0.55) 0,
+    rgba(174,174,182,0.55) 5px,
+    transparent 5px,
+    transparent 9px
+  );
+  pointer-events:none;
+  z-index:2;
+}
+
+.rsi-level-line.hidden{
+  display:none;
+}
+
+.rsi-level-line[data-rsi-level="50"]{
+  background:repeating-linear-gradient(
+    to right,
+    rgba(174,174,182,0.385) 0,
+    rgba(174,174,182,0.385) 5px,
+    transparent 5px,
+    transparent 9px
+  );
 }
 
 #rsi-hud{

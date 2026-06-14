@@ -2,12 +2,14 @@
  * Первый кадр до полных CSS (Яндекс.Браузер часто рисует HTML раньше таблиц стилей).
  *
  * Палитра фона:
- * --app-bg      #16181f  основной фон
- * --app-surface #13181e  панели, шапки виджетов
- * --app-input   #171b21  поля ввода, inset-блоки
+ * --app-bg       #16181f  основной фон сайта
+ * --app-chart-bg #141721  фон области графиков (LW, RSI, виджеты)
+ * --app-surface  #13181e  панели, шапки виджетов
+ * --app-input    #171b21  поля ввода, inset-блоки
  */
 :root{
 --app-bg:#16181f;
+--app-chart-bg:#141721;
 --app-surface:#13181e;
 --app-input:#171b21;
 }
@@ -25,7 +27,7 @@ body{
 margin:0;
 width:100%;
 height:100%;
-background:#16181f;
+background:var(--app-bg);
 color:#e5e7eb;
 font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
 }
@@ -63,7 +65,7 @@ align-items:center;
 gap:12px;
 padding:0 16px;
 min-height:56px;
-background:#16181f;
+background:var(--app-bg);
 border-bottom:1px solid #1f2937;
 overflow:visible;
 }
@@ -131,7 +133,7 @@ grid-template-rows:repeat(3,1fr);
 .screener-widget{
 display:flex;
 flex-direction:column;
-background:#16181f;
+background:var(--app-chart-bg);
 border:1px solid #1f2937;
 border-radius:10px;
 min-height:0;

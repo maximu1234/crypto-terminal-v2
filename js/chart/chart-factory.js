@@ -10,8 +10,9 @@ hiddenCrosshairOptions,
 formatPrice,
 isTabletChartViewport,
 bindFinePointerMedia,
-syncTabletFinePointerClass
-} from "./chart-options.js?v=4";
+syncTabletFinePointerClass,
+getChartLayoutBgColor
+} from "./chart-options.js?v=5";
 
 import {
 ensureDomChartCrosshair,
@@ -177,13 +178,16 @@ unfreeze
 
 export function createCandlestickChart(container){
 
+const chartBg =
+getChartLayoutBgColor();
+
 const chart =
 LightweightCharts.createChart(
 container,
 {
 
 layout:{
-background:{ color:"#16181f" },
+background:{ color:chartBg },
 textColor:CHART_SCALE_TEXT_COLOR,
 fontSize:effectiveChartScaleFontSize(),
 fontFamily:CHART_SCALE_FONT_FAMILY
@@ -271,6 +275,9 @@ series
 
 export function createScreenerChart(container){
 
+const chartBg =
+getChartLayoutBgColor();
+
 const width =
 Math.max(container.clientWidth, 120);
 
@@ -286,7 +293,7 @@ width,
 height,
 
 layout:{
-background:{ color:"#16181f" },
+background:{ color:chartBg },
 textColor:"#9ca3af"
 },
 
@@ -941,11 +948,6 @@ LightweightCharts.PriceScaleMode !== undefined
 ? LightweightCharts.PriceScaleMode.Normal
 : 0;
 
-const lineStyleDot =
-LightweightCharts.LineStyle !== undefined
-? LightweightCharts.LineStyle.Dotted
-: 1;
-
 const chart =
 LightweightCharts.createChart(
 container,
@@ -1056,31 +1058,6 @@ precision:2,
 minMove:0.01
 
 }
-
-});
-
-[
-70,
-50,
-30
-].forEach(price=>{
-
-series.createPriceLine({
-
-price,
-
-color:"rgba(174,174,182,0.35)",
-
-lineStyle:
-lineStyleDot,
-
-lineWidth:1,
-
-axisLabelVisible:false,
-
-title:""
-
-});
 
 });
 
@@ -1734,6 +1711,67 @@ bandEl.style.top =
 
 bandEl.style.height =
 `${Math.round(Math.abs(y30 - y70))}px`;
+
+}
+
+export function updateRsiLevelLinesLayout(
+rsiSeries,
+wrapEl
+){
+
+if(
+!rsiSeries ||
+!wrapEl
+){
+return;
+}
+
+wrapEl.querySelectorAll(
+".rsi-level-line[data-rsi-level]"
+).forEach(
+lineEl=>{
+
+const price =
+Number(
+lineEl.getAttribute(
+"data-rsi-level"
+)
+);
+
+if(
+!Number.isFinite(
+price
+)
+){
+return;
+}
+
+const y =
+rsiSeries.priceToCoordinate?.(
+price
+);
+
+if(
+y === null ||
+y === undefined ||
+!Number.isFinite(
+y
+)
+){
+lineEl.classList.add(
+"hidden"
+);
+return;
+}
+
+lineEl.style.top =
+`${Math.round(y) + 0.5}px`;
+lineEl.classList.remove(
+"hidden"
+);
+
+}
+);
 
 }
 

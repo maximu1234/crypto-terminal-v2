@@ -12,7 +12,7 @@ applyScreenerZoom,
 restoreScreenerViewport,
 SCREENER_VISIBLE_BARS,
 SCREENER_MAX_BARS
-} from "./chart-import.js?v=28";
+} from "./chart-import.js?v=30";
 
 import {
 subscribeKline
@@ -29,7 +29,7 @@ createTickerUiBatcher
 
 import {
 mountReleaseMarker
-} from "./release-marker.js?v=4";
+} from "./release-marker.js?v=5";
 
 import {
 saveScreenerState,

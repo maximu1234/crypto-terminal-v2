@@ -43,6 +43,7 @@ syncLinkedChartTimescales,
 linkPairedChartTimeScales,
 linkChartsCrosshair,
 updateRsiBandLayout,
+updateRsiLevelLinesLayout,
 applyTabletRsiChartOptions,
 applyTabletMainChartScroll,
 markTabletChartBody,
@@ -61,7 +62,7 @@ coinsTfVisibleBars,
 applyCoinsChartViewport,
 refreshCoinsChartBarSpacing,
 tfPeriodSec
-} from "./chart-import.js?v=28";
+} from "./chart-import.js?v=30";
 
 import {
 mountCoinsTabletController
@@ -1574,6 +1575,13 @@ updateRsiBandLayout(
 rsiSeries,
 document.getElementById(
 "rsi-band"
+)
+);
+
+updateRsiLevelLinesLayout(
+rsiSeries,
+document.getElementById(
+"rsi-wrap"
 )
 );
 

@@ -5,7 +5,7 @@
 import {
 isTabletChartViewport,
 isCoarseTouchViewport
-} from "../chart/chart-options.js?v=4";
+} from "../chart/chart-options.js?v=5";
 
 import {
 getTradingViewIframeSrc,

@@ -26,7 +26,7 @@ isCoarseTouchViewport,
 effectiveChartPriceScaleWidth,
 effectiveChartScaleFontSize,
 isTabletChartViewport
-} from "./chart/chart-options.js?v=4";
+} from "./chart/chart-options.js?v=5";
 
 export {
 ensureDomChartCrosshair,
@@ -46,7 +46,7 @@ isUserCrosshairEvent
 import {
 TABLET_LW_NATIVE_PRICE_SCALE,
 clearTabletProbeCrosshairForChart
-} from "./chart/chart-factory.js?v=26";
+} from "./chart/chart-factory.js?v=28";
 
 export {
 createCandlestickChart,
@@ -70,6 +70,7 @@ applyTabletMainChartScroll,
 markTabletChartBody,
 isTabletEventOnPriceScale,
 updateRsiBandLayout,
+updateRsiLevelLinesLayout,
 tfPeriodSec,
 rsiPlotTimeOffsetSec,
 mountChartPriceHud,
@@ -80,7 +81,7 @@ appendFutureWhitespaceBars,
 coinsTfVisibleBars,
 applyCoinsChartViewport,
 refreshCoinsChartBarSpacing
-} from "./chart/chart-factory.js?v=26";
+} from "./chart/chart-factory.js?v=28";
 
 
 export {
@@ -91,7 +92,7 @@ import {
 effectiveChartPriceScaleWidth,
 CHART_TIME_SCALE_HEIGHT,
 isTabletChartViewport
-} from "./chart/chart-options.js?v=4";
+} from "./chart/chart-options.js?v=5";
 
 
 export const DEFAULT_PRICE_SCALE_MARGINS =

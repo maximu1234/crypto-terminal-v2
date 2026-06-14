@@ -2,7 +2,7 @@
 
 **Тег:** `metka-19` · **Коммит:** `git rev-parse metka-19`
 
-**Текущий эталон отката.** Предыдущая: [MARKER_18.md](./MARKER_18.md) (`metka-18`).
+**Предыдущий эталон отката.** Текущая: [MARKER_20.md](./MARKER_20.md) (`metka-20`).
 
 Проверено: asset manifest (python audit + `check-asset-manifest.cjs` в CI); site-nav (7 ссылок на 5 страницах); unit tests — см. список ниже.
 
@@ -117,17 +117,17 @@
 
 | Тег | Роль |
 |-----|------|
-| `metka-19` | **Текущий** эталон |
-| `metka-18` | **Предыдущий** эталон (линейка, statistics bulk, magnet) |
+| `metka-20` | **Текущий** эталон — см. [MARKER_20.md](./MARKER_20.md) |
+| `metka-19` | **Предыдущий** эталон (этот документ) |
 
-`metka-17` и старее — удалены.
+`metka-18` и старее — удалены.
 
 ## Откат
 
 ```bash
 git fetch --tags
-git checkout metka-19   # текущий эталон
-git checkout metka-18   # до charcoal / color picker / coins resize
+git checkout metka-20   # текущий эталон
+git checkout metka-19   # charcoal / color picker / coins resize
 ```
 
 ## Следующий шаг
