@@ -57,7 +57,7 @@ Object.freeze({
 "charts-lib-boot.js":
 3,
 "chart-import.js":
-32,
+33,
 "chart-widget-host.js":
 9,
 "tablet-gesture-policy.js":
@@ -67,7 +67,7 @@ Object.freeze({
 
 /* ── JS: chart / drawings ── */
 "chart.js":
-138,
+139,
 "chart/chart-options.js":
 5,
 "chart/chart-dom-crosshair.js":

@@ -712,27 +712,6 @@ const onReset =
 hooks.onReset ||
 (()=>{});
 
-/* iPad: без кастомного Y-zoom — только LW, как на десктопе */
-if(
-isTabletChartViewport()
-){
-
-return {
-dispose:()=>{},
-resetPriceAutoScale:()=>{
-resetChartPriceAutoScale(
-chart,
-series
-);
-clearTabletProbeCrosshairForChart(
-chart
-);
-onReset?.();
-}
-};
-
-}
-
 let drag =
 null;
 
