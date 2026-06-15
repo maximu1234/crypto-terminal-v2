@@ -400,20 +400,6 @@ series
 ){
 
 if(
-series
-){
-
-try{
-series.applyOptions({
-autoscaleInfoProvider:()=>null
-});
-}catch{
-/* ignore */
-}
-
-}
-
-if(
 !chart
 ){
 return;
@@ -933,33 +919,9 @@ bottom:DEFAULT_PRICE_SCALE_MARGINS.bottom
 priceZoomRange =
 null;
 
-forceClearTabletPriceZoomProvider();
-
-resetChartPriceAutoScale(
-chart,
-series
-);
-
 pulsePriceScaleAutoscale(
 chart,
 series
-);
-
-dispatchNativePriceScaleResetClick();
-
-requestAnimationFrame(
-()=>{
-requestAnimationFrame(
-()=>{
-forceClearTabletPriceZoomProvider();
-pulsePriceScaleAutoscale(
-chart,
-series
-);
-hooks.onInteraction?.();
-}
-);
-}
 );
 
 clearTabletProbeCrosshairForChart(
@@ -969,63 +931,6 @@ chart
 hooks.onReset?.();
 hooks.onDragEnd?.();
 hooks.onInteraction?.();
-
-}
-
-function dispatchNativePriceScaleResetClick(){
-
-try{
-
-const chartR =
-chartEl.getBoundingClientRect();
-
-let scaleW =
-effectiveChartPriceScaleWidth();
-
-try{
-scaleW =
-chart.priceScale(
-"right"
-).width?.() ||
-scaleW;
-}catch{
-/* ignore */
-}
-
-const plotH =
-Math.max(
-1,
-chartR.height -
-CHART_TIME_SCALE_HEIGHT
-);
-
-const x =
-chartR.right -
-scaleW *
-0.5;
-
-const y =
-chartR.top +
-plotH *
-0.5;
-
-chartEl.dispatchEvent(
-new MouseEvent(
-"dblclick",
-{
-bubbles:true,
-cancelable:true,
-view:window,
-clientX:x,
-clientY:y,
-button:0
-}
-)
-);
-
-}catch{
-/* ignore */
-}
 
 }
 
@@ -1112,59 +1017,27 @@ max
 
 }
 
-let priceZoomProviderInstalled =
+let tabletAutoscaleProviderInstalled =
 false;
 
-function forceClearTabletPriceZoomProvider(){
-
-priceZoomProviderInstalled =
-false;
-
-try{
-series.applyOptions({
-autoscaleInfoProvider:()=>null
-});
-}catch{
-/* ignore */
-}
-
-}
-
-function uninstallTabletPriceZoomProvider(){
+function installTabletAutoscaleInfoProvider(){
 
 if(
-!priceZoomProviderInstalled
-){
-return;
-}
-
-forceClearTabletPriceZoomProvider();
-
-}
-
-function ensureTabletPriceZoomProvider(){
-
-if(
-!priceZoomRange
-){
-uninstallTabletPriceZoomProvider();
-return;
-}
-
-if(
-priceZoomProviderInstalled
+tabletAutoscaleProviderInstalled
 ){
 return;
 }
 
 try{
 series.applyOptions({
-autoscaleInfoProvider:()=>{
+autoscaleInfoProvider:(
+original
+)=>{
 
 if(
 !priceZoomRange
 ){
-return null;
+return original();
 }
 
 const safe =
@@ -1177,7 +1050,7 @@ priceZoomRange.max
 if(
 !safe
 ){
-return null;
+return original();
 }
 
 return {
@@ -1189,9 +1062,15 @@ maxValue:safe.max
 
 }
 });
+tabletAutoscaleProviderInstalled =
+true;
 }catch{
 /* ignore */
 }
+
+}
+
+function notifyChartPriceRangeChanged(){
 
 try{
 chart.priceScale(
@@ -1202,32 +1081,6 @@ scaleMargins:{
 top:DEFAULT_PRICE_SCALE_MARGINS.top,
 bottom:DEFAULT_PRICE_SCALE_MARGINS.bottom
 }
-});
-}catch{
-/* ignore */
-}
-
-priceZoomProviderInstalled =
-true;
-
-}
-
-function notifyChartPriceRangeChanged(){
-
-if(
-!priceZoomRange
-){
-uninstallTabletPriceZoomProvider();
-return;
-}
-
-ensureTabletPriceZoomProvider();
-
-try{
-chart.priceScale(
-"right"
-).applyOptions({
-autoScale:true
 });
 }catch{
 /* ignore */
@@ -1533,12 +1386,6 @@ abortDrag();
 
 function ensureStripZoomActive(){
 
-if(
-priceZoomProviderInstalled
-){
-return;
-}
-
 readMargins();
 
 if(
@@ -1554,7 +1401,6 @@ if(
 return;
 }
 
-ensureTabletPriceZoomProvider();
 notifyChartPriceRangeChanged();
 
 hooks.onDragStart?.(
@@ -2127,6 +1973,8 @@ stripEl.removeAttribute(
 "aria-hidden"
 );
 }
+
+installTabletAutoscaleInfoProvider();
 
 const stripCap = {
 capture:true,
