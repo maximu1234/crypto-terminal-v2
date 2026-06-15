@@ -386,6 +386,9 @@ let selectedId = null;
 /** Десктоп: клик закрепил выбор — hover/leave не снимают. */
 let desktopSelectionPinned =
 false;
+/** Десктоп: hitId в pointerdown — закрепляем на pointerup. */
+let desktopClickSelectId =
+null;
 let placement = null;
 /** Десктоп: сырой pointer внутри wrap (LW режет crosshair до последней свечи). */
 let placementPointerXY = null;
@@ -4108,6 +4111,8 @@ selectedId =
 null;
 desktopSelectionPinned =
 false;
+desktopClickSelectId =
+null;
 
 }
 
@@ -8557,6 +8562,82 @@ e.clientY
 
 function setupEditInteraction(){
 
+function finishDesktopPointerSelect(
+e
+){
+
+if(
+!alive ||
+!isActive()
+){
+return;
+}
+
+if(
+!isDesktopDrawHoverSelect() ||
+tool !==
+"cursor" ||
+placement
+){
+return;
+}
+
+if(
+!e ||
+e.button !==
+0 ||
+!e.isPrimary
+){
+return;
+}
+
+if(
+e.pointerType &&
+e.pointerType !==
+"mouse"
+){
+return;
+}
+
+if(
+isDrawChromePointerEvent(
+e
+)
+){
+return;
+}
+
+if(
+dragState
+){
+
+pinDrawingSelection(
+dragState.shapeId
+);
+desktopClickSelectId =
+null;
+updateStyleBar();
+redraw();
+return;
+
+}
+
+if(
+desktopClickSelectId
+){
+
+pinDrawingSelection(
+desktopClickSelectId
+);
+desktopClickSelectId =
+null;
+updateStyleBar();
+redraw();
+
+}
+
+}
+
 function applyDesktopHoverSelection(
 x,
 y,
@@ -8988,11 +9069,10 @@ return;
 if(
 hoverSelect
 ){
-pinDrawingSelection(
-hitId
-);
-updateStyleBar();
-redraw();
+
+desktopClickSelectId =
+hitId;
+
 }else if(
 hitId !==
 selectedId
@@ -9171,9 +9251,79 @@ wrapEl.setPointerCapture(e.pointerId);
 
 };
 
+const onDesktopSelectClick = e=>{
+
+if(
+!alive ||
+!isActive()
+){
+return;
+}
+
+if(
+!isDesktopDrawHoverSelect() ||
+tool !==
+"cursor" ||
+placement ||
+dragState
+){
+return;
+}
+
+if(
+isDrawChromePointerEvent(
+e
+)
+){
+return;
+}
+
+const { x, y } =
+pointerFromEvent(
+e
+);
+
+const hitId =
+hitTest(
+x,
+y
+);
+
+if(
+hitId
+){
+
+pinDrawingSelection(
+hitId
+);
+desktopClickSelectId =
+null;
+blockChartClick =
+true;
+updateStyleBar();
+redraw();
+e.preventDefault();
+e.stopPropagation();
+
+}else{
+
+clearDrawingSelection();
+updateStyleBar();
+redraw();
+
+}
+
+};
+
 wrapEl.addEventListener(
 "pointerdown",
 onEditDown,
+true
+);
+
+wrapEl.addEventListener(
+"click",
+onDesktopSelectClick,
 true
 );
 
@@ -9336,9 +9486,16 @@ scheduleDragRedraw();
 
 };
 
-const onEditUp = ()=>{
+const onEditUp = e=>{
 
-if(!alive || !dragState){
+finishDesktopPointerSelect(
+e
+);
+
+if(
+!alive ||
+!dragState
+){
 return;
 }
 
@@ -9449,14 +9606,28 @@ blockChartClick = true;
 
 };
 
-window.addEventListener("pointermove", onEditMove);
-window.addEventListener("pointerup", onEditUp);
-window.addEventListener("pointercancel", onEditUp);
+window.addEventListener(
+"pointermove",
+onEditMove
+);
+window.addEventListener(
+"pointerup",
+onEditUp
+);
+window.addEventListener(
+"pointercancel",
+onEditUp
+);
 
 return ()=>{
 wrapEl.removeEventListener(
 "pointerdown",
 onEditDown,
+true
+);
+wrapEl.removeEventListener(
+"click",
+onDesktopSelectClick,
 true
 );
 wrapEl.removeEventListener(
@@ -10833,6 +11004,8 @@ hitId
 pinDrawingSelection(
 hitId
 );
+desktopClickSelectId =
+null;
 }else if(
 !desktopSelectionPinned
 ){
