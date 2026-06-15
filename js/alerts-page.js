@@ -39,7 +39,7 @@ TELEGRAM_BOT_USERNAME,
 getTelegramBotUrl
 } from "./telegram-bot-public.js?v=1";
 
-import { formatPrice } from "./chart-import.js?v=33";
+import { formatPrice } from "./chart-import.js?v=35";
 
 const tbody =
 document.getElementById("alerts-tbody");

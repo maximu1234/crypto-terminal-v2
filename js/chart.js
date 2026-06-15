@@ -46,7 +46,7 @@ isUserCrosshairEvent
 import {
 TABLET_LW_NATIVE_PRICE_SCALE,
 clearTabletProbeCrosshairForChart
-} from "./chart/chart-factory.js?v=30";
+} from "./chart/chart-factory.js?v=31";
 
 export {
 createCandlestickChart,
@@ -81,7 +81,7 @@ appendFutureWhitespaceBars,
 coinsTfVisibleBars,
 applyCoinsChartViewport,
 refreshCoinsChartBarSpacing
-} from "./chart/chart-factory.js?v=30";
+} from "./chart/chart-factory.js?v=31";
 
 
 export {
@@ -1327,6 +1327,16 @@ null;
 let onDocEnd =
 null;
 
+let onDocTouchMove =
+null;
+
+let onDocTouchEnd =
+null;
+
+const touchOpts = {
+passive:false
+};
+
 function detachDocListeners(){
 
 if(
@@ -1357,6 +1367,37 @@ onDocEnd
 );
 
 onDocEnd = null;
+
+}
+
+if(
+onDocTouchMove
+){
+
+document.removeEventListener(
+"touchmove",
+onDocTouchMove
+);
+
+onDocTouchMove = null;
+
+}
+
+if(
+onDocTouchEnd
+){
+
+document.removeEventListener(
+"touchend",
+onDocTouchEnd
+);
+
+document.removeEventListener(
+"touchcancel",
+onDocTouchEnd
+);
+
+onDocTouchEnd = null;
 
 }
 
@@ -1425,8 +1466,6 @@ pointerId
 
 readMargins();
 
-detachDocListeners();
-
 drag = {
 id:
 pointerId ??
@@ -1447,24 +1486,53 @@ scaleFramePayload()
 
 }
 
-function onPointerDown(
+function isScaleStripTarget(
+e
+){
+
+return !!(
+stripEl &&
+e?.target &&
+stripEl.contains(
+e.target
+)
+);
+
+}
+
+function canStartScaleDrag(
 e
 ){
 
 if(
-e.pointerType ===
-"mouse"
-){
-return;
-}
-
-if(
-!isTabletEventOnPriceScale(
-chartEl,
+isScaleStripTarget(
 e
 )
 ){
-return;
+return true;
+}
+
+return isTabletEventOnPriceScale(
+chartEl,
+e,
+chart
+);
+
+}
+
+function beginScaleStripInteraction(
+clientX,
+clientY,
+pointerId,
+sourceEvent
+){
+
+if(
+!canStartScaleDrag(
+sourceEvent
+)
+){
+return false;
 }
 
 clearTabletProbeCrosshairForChart(
@@ -1473,50 +1541,42 @@ chart
 
 stripPointerDown = {
 id:
-e.pointerId ??
+pointerId ??
 0,
-x:e.clientX,
-y:e.clientY
+x:clientX,
+y:clientY
 };
 
 stripDidDrag =
 false;
 
+attachScaleDragDocListeners();
+
+return true;
+
+}
+
+function handleScaleDragMove(
+clientY,
+pointerId = 0
+){
+
 if(
-onDocMove
+!stripPointerDown
 ){
 return;
 }
-
-onDocMove =(
-moveEvent
-)=>{
-
-if(
-!stripPointerDown ||
-(
-moveEvent.pointerId !==
-undefined &&
-moveEvent.pointerId !==
-stripPointerDown.id
-)
-){
-return;
-}
-
-const dx =
-moveEvent.clientX - stripPointerDown.x;
-
-const dy =
-moveEvent.clientY - stripPointerDown.y;
 
 if(
 !drag
 ){
 
 if(
-dx * dx + dy * dy <
-STRIP_DRAG_START_PX * STRIP_DRAG_START_PX
+Math.abs(
+clientY -
+stripPointerDown.y
+) <
+STRIP_DRAG_START_PX
 ){
 return;
 }
@@ -1525,17 +1585,23 @@ stripDidDrag =
 true;
 
 beginStripDrag(
-moveEvent.clientY,
-stripPointerDown.id
+clientY,
+pointerId
 );
 
 }
 
+if(
+!drag
+){
+return;
+}
+
 const moveDy =
-moveEvent.clientY - drag.y;
+clientY - drag.y;
 
 drag.y =
-moveEvent.clientY;
+clientY;
 
 if(
 Math.abs(moveDy) <
@@ -1548,21 +1614,23 @@ applyVerticalScaleDrag(
 moveDy
 );
 
-moveEvent.preventDefault();
+}
 
-};
-
-onDocEnd =(
+function finishScaleStripInteraction(
 endEvent
-)=>{
+){
 
 if(
 stripPointerDown &&
 (
-endEvent.pointerId ===
+endEvent?.pointerId ===
 undefined ||
 endEvent.pointerId ===
-stripPointerDown.id
+stripPointerDown.id ||
+endEvent?.type ===
+"touchend" ||
+endEvent?.type ===
+"touchcancel"
 )
 ){
 
@@ -1597,12 +1665,93 @@ detachDocListeners();
 
 }
 
+}
+
+function attachScaleDragDocListeners(){
+
+if(
+onDocMove
+){
+return;
+}
+
+onDocMove =(
+moveEvent
+)=>{
+
+if(
+!stripPointerDown
+){
+return;
+}
+
+if(
+moveEvent.pointerId !==
+undefined &&
+moveEvent.pointerId !==
+stripPointerDown.id
+){
+return;
+}
+
+handleScaleDragMove(
+moveEvent.clientY,
+stripPointerDown.id
+);
+
+moveEvent.preventDefault?.();
+
+};
+
+onDocEnd =(
+endEvent
+)=>{
+
+finishScaleStripInteraction(
+endEvent
+);
+
+};
+
+onDocTouchMove =(
+moveEvent
+)=>{
+
+if(
+!stripPointerDown ||
+!moveEvent.touches ||
+moveEvent.touches.length !==
+1
+){
+return;
+}
+
+const t =
+moveEvent.touches[0];
+
+handleScaleDragMove(
+t.clientY,
+stripPointerDown.id
+);
+
+moveEvent.preventDefault();
+
+};
+
+onDocTouchEnd =(
+endEvent
+)=>{
+
+finishScaleStripInteraction(
+endEvent
+);
+
 };
 
 document.addEventListener(
 "pointermove",
 onDocMove,
-{ passive:false }
+touchOpts
 );
 
 document.addEventListener(
@@ -1615,6 +1764,133 @@ document.addEventListener(
 onDocEnd
 );
 
+document.addEventListener(
+"touchmove",
+onDocTouchMove,
+touchOpts
+);
+
+document.addEventListener(
+"touchend",
+onDocTouchEnd,
+touchOpts
+);
+
+document.addEventListener(
+"touchcancel",
+onDocTouchEnd,
+touchOpts
+);
+
+}
+
+function onPointerDown(
+e
+){
+
+if(
+e.pointerType ===
+"mouse"
+){
+return;
+}
+
+if(
+beginScaleStripInteraction(
+e.clientX,
+e.clientY,
+e.pointerId ??
+0,
+e
+)
+){
+try{
+e.preventDefault();
+e.stopPropagation();
+}catch{
+/* ignore */
+}
+}
+
+}
+
+function onStripTouchStart(
+e
+){
+
+if(
+useLwNativeScale
+){
+return;
+}
+
+if(
+!e.touches ||
+e.touches.length !==
+1
+){
+return;
+}
+
+const t =
+e.touches[0];
+
+if(
+beginScaleStripInteraction(
+t.clientX,
+t.clientY,
+0,
+{
+...e,
+target:e.target,
+clientX:t.clientX,
+clientY:t.clientY
+}
+)
+){
+try{
+e.preventDefault();
+e.stopImmediatePropagation?.();
+}catch{
+/* ignore */
+}
+}
+
+}
+
+function onStripTouchMove(
+e
+){
+
+if(
+useLwNativeScale ||
+!stripPointerDown
+){
+return;
+}
+
+if(
+!e.touches ||
+e.touches.length !==
+1
+){
+return;
+}
+
+const t =
+e.touches[0];
+
+handleScaleDragMove(
+t.clientY,
+stripPointerDown.id
+);
+
+try{
+e.preventDefault();
+}catch{
+/* ignore */
+}
+
 }
 
 function onScaleTouchEnd(
@@ -1622,23 +1898,22 @@ e
 ){
 
 if(
-!useLwNativeScale
+useLwNativeScale
 ){
-return;
-}
-
 scaleTouchEndAt =
 Date.now();
 
 tryScaleZoneDoubleTap(
 e
 );
-
+return;
 }
 
-const touchOpts = {
-passive:false
-};
+finishScaleStripInteraction(
+e
+);
+
+}
 
 function onChartScaleDblClick(
 e
@@ -1702,10 +1977,27 @@ stripEl.removeAttribute(
 );
 }
 
+const stripCap = {
+capture:true,
+passive:false
+};
+
+touchTargetEl.addEventListener(
+"touchstart",
+onStripTouchStart,
+stripCap
+);
+
+touchTargetEl.addEventListener(
+"touchmove",
+onStripTouchMove,
+stripCap
+);
+
 touchTargetEl.addEventListener(
 "pointerdown",
 onPointerDown,
-touchOpts
+stripCap
 );
 
 touchTargetEl.addEventListener(
@@ -1736,9 +2028,21 @@ const dispose = ()=>{
 clearScaleLastTap();
 
 touchTargetEl.removeEventListener(
+"touchstart",
+onStripTouchStart,
+stripCap
+);
+
+touchTargetEl.removeEventListener(
+"touchmove",
+onStripTouchMove,
+stripCap
+);
+
+touchTargetEl.removeEventListener(
 "pointerdown",
 onPointerDown,
-touchOpts
+stripCap
 );
 
 touchTargetEl.removeEventListener(

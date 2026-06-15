@@ -913,6 +913,7 @@ body.tablet-chart .price-scale-touch-strip{
   pointer-events:auto;
   z-index:30;
   bottom:var(--chart-time-scale-height, 28px);
+  touch-action:none;
 }
 
 body.tablet-chart .rsi-scale-touch-strip{

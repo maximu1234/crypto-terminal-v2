@@ -1576,7 +1576,8 @@ chartR.right - scaleW - 0.5;
 
 export function isTabletEventOnPriceScale(
 chartEl,
-e
+e,
+chart = null
 ){
 
 if(
@@ -1600,7 +1601,7 @@ e.touches?.[
 
 return isClientOnChartPriceScale(
 chartEl,
-null,
+chart,
 x,
 y
 );
