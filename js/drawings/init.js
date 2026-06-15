@@ -8608,6 +8608,23 @@ selectedId
 return;
 }
 
+if(
+!hitId
+){
+
+if(
+!desktopSelectionPinned
+){
+selectedId =
+null;
+updateStyleBar();
+redraw();
+}
+
+return;
+
+}
+
 selectedId =
 hitId;
 
@@ -9005,14 +9022,54 @@ return;
 const sel =
 getSelected();
 
-if(!sel){
+if(
+!sel
+){
 return;
 }
 
 const handleId =
-hitTestHandle(x, y, sel);
+hitTestHandle(
+x,
+y,
+sel
+);
 
-if(handleId){
+const onBody =
+hitTestShapeBody(
+x,
+y,
+sel
+);
+
+function blockDesktopChartClick(){
+
+blockChartClick =
+true;
+
+e.preventDefault();
+e.stopPropagation();
+
+}
+
+if(
+!handleId &&
+!onBody
+){
+
+if(
+hoverSelect
+){
+blockDesktopChartClick();
+}
+
+return;
+
+}
+
+if(
+handleId
+){
 
 dragState = {
 shapeId: sel.id,
@@ -9021,10 +9078,14 @@ handleId
 };
 
 }else if(
-hitTestShapeBody(x, y, sel)
+onBody
 ){
 
-if(isPositionType(sel.type)){
+if(
+isPositionType(
+sel.type
+)
+){
 
 dragState = {
 shapeId: sel.id,
@@ -9036,14 +9097,18 @@ p1: { ...sel.p1 },
 p2: { ...sel.p2 },
 tpPrice: sel.tpPrice,
 slPrice: sel.slPrice,
-entry: positionEntryPrice(sel)
+entry: positionEntryPrice(
+sel
+)
 }
 };
 
 }else{
 
 const movePoints =
-chartPointsForScreenMove(sel);
+chartPointsForScreenMove(
+sel
+);
 
 const offsets =
 movePoints
@@ -9054,8 +9119,18 @@ y
 )
 : null;
 
-if(!offsets){
+if(
+!offsets
+){
+
+if(
+hoverSelect
+){
+blockDesktopChartClick();
+}
+
 return;
+
 }
 
 dragState = {
@@ -9070,13 +9145,7 @@ pointOffsets: offsets
 
 notifyTabletChartGestureAbort();
 
-}else{
-return;
-}
-
-blockChartClick = true;
-e.preventDefault();
-e.stopPropagation();
+blockDesktopChartClick();
 
 if(
 sel.type ===
@@ -10764,7 +10833,9 @@ hitId
 pinDrawingSelection(
 hitId
 );
-}else{
+}else if(
+!desktopSelectionPinned
+){
 clearDrawingSelection();
 }
 
