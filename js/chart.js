@@ -914,6 +914,9 @@ return;
 scaleResetAt =
 now;
 
+didApplyZoomThisGesture =
+false;
+
 abortDrag();
 stripPointerDown =
 null;
@@ -930,16 +933,7 @@ bottom:DEFAULT_PRICE_SCALE_MARGINS.bottom
 priceZoomRange =
 null;
 
-priceZoomProviderInstalled =
-false;
-
-try{
-series.applyOptions({
-autoscaleInfoProvider:()=>null
-});
-}catch{
-/* ignore */
-}
+forceClearTabletPriceZoomProvider();
 
 resetChartPriceAutoScale(
 chart,
@@ -951,23 +945,17 @@ chart,
 series
 );
 
-requestAnimationFrame(
-()=>{
-requestAnimationFrame(
-()=>{
-try{
-series.applyOptions({
-autoscaleInfoProvider:()=>null
-});
-}catch{
-/* ignore */
-}
+dispatchNativePriceScaleResetClick();
 
+requestAnimationFrame(
+()=>{
+requestAnimationFrame(
+()=>{
+forceClearTabletPriceZoomProvider();
 pulsePriceScaleAutoscale(
 chart,
 series
 );
-
 hooks.onInteraction?.();
 }
 );
@@ -981,6 +969,63 @@ chart
 hooks.onReset?.();
 hooks.onDragEnd?.();
 hooks.onInteraction?.();
+
+}
+
+function dispatchNativePriceScaleResetClick(){
+
+try{
+
+const chartR =
+chartEl.getBoundingClientRect();
+
+let scaleW =
+effectiveChartPriceScaleWidth();
+
+try{
+scaleW =
+chart.priceScale(
+"right"
+).width?.() ||
+scaleW;
+}catch{
+/* ignore */
+}
+
+const plotH =
+Math.max(
+1,
+chartR.height -
+CHART_TIME_SCALE_HEIGHT
+);
+
+const x =
+chartR.right -
+scaleW *
+0.5;
+
+const y =
+chartR.top +
+plotH *
+0.5;
+
+chartEl.dispatchEvent(
+new MouseEvent(
+"dblclick",
+{
+bubbles:true,
+cancelable:true,
+view:window,
+clientX:x,
+clientY:y,
+button:0
+}
+)
+);
+
+}catch{
+/* ignore */
+}
 
 }
 
@@ -1070,13 +1115,10 @@ max
 let priceZoomProviderInstalled =
 false;
 
-function uninstallTabletPriceZoomProvider(){
+function forceClearTabletPriceZoomProvider(){
 
-if(
-!priceZoomProviderInstalled
-){
-return;
-}
+priceZoomProviderInstalled =
+false;
 
 try{
 series.applyOptions({
@@ -1086,8 +1128,17 @@ autoscaleInfoProvider:()=>null
 /* ignore */
 }
 
-priceZoomProviderInstalled =
-false;
+}
+
+function uninstallTabletPriceZoomProvider(){
+
+if(
+!priceZoomProviderInstalled
+){
+return;
+}
+
+forceClearTabletPriceZoomProvider();
 
 }
 
@@ -1445,9 +1496,17 @@ if(
 return;
 }
 
-drag = null;
-detachDocListeners();
+const hadZoom =
+didApplyZoomThisGesture;
+
+drag =
+null;
+
+if(
+hadZoom
+){
 hooks.onDragEnd?.();
+}
 
 }
 
@@ -1472,9 +1531,51 @@ abortDrag();
 
 }
 
+function ensureStripZoomActive(){
+
+if(
+priceZoomProviderInstalled
+){
+return;
+}
+
+readMargins();
+
+if(
+!priceZoomRange
+){
+priceZoomRange =
+captureVisiblePriceRange();
+}
+
+if(
+!priceZoomRange
+){
+return;
+}
+
+ensureTabletPriceZoomProvider();
+notifyChartPriceRangeChanged();
+
+hooks.onDragStart?.(
+scaleFramePayload()
+);
+
+}
+
 function applyVerticalScaleDrag(
 dy
 ){
+
+ensureStripZoomActive();
+
+if(
+!didApplyZoomThisGesture
+){
+didApplyZoomThisGesture =
+true;
+clearScaleLastTap();
+}
 
 zoomVisiblePriceRange(
 dy
@@ -1493,34 +1594,8 @@ null;
 let stripDidDrag =
 false;
 
-function beginStripDrag(
-clientY,
-pointerId
-){
-
-clearScaleLastTap();
-
-readMargins();
-
-drag = {
-id:
-pointerId ??
-0,
-y:clientY
-};
-
-priceZoomRange =
-captureVisiblePriceRange();
-
-ensureTabletPriceZoomProvider();
-
-notifyChartPriceRangeChanged();
-
-hooks.onDragStart?.(
-scaleFramePayload()
-);
-
-}
+let didApplyZoomThisGesture =
+false;
 
 function isScaleStripTarget(
 e
@@ -1586,6 +1661,9 @@ y:clientY
 stripDidDrag =
 false;
 
+didApplyZoomThisGesture =
+false;
+
 attachScaleDragDocListeners();
 
 return true;
@@ -1620,10 +1698,14 @@ return;
 stripDidDrag =
 true;
 
-beginStripDrag(
-clientY,
-pointerId
-);
+drag = {
+id:
+pointerId ??
+0,
+y:clientY
+};
+
+return;
 
 }
 
@@ -1672,12 +1754,14 @@ endEvent?.type ===
 return;
 }
 
-const wasDrag =
-!!drag ||
-stripDidDrag;
+const hadZoomThisGesture =
+didApplyZoomThisGesture;
+
+didApplyZoomThisGesture =
+false;
 
 if(
-!wasDrag
+!hadZoomThisGesture
 ){
 
 const pt =

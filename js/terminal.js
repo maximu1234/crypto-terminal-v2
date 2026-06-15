@@ -62,7 +62,7 @@ coinsTfVisibleBars,
 applyCoinsChartViewport,
 refreshCoinsChartBarSpacing,
 tfPeriodSec
-} from "./chart-import.js?v=39";
+} from "./chart-import.js?v=40";
 
 import {
 mountCoinsTabletController
@@ -1241,7 +1241,9 @@ function resetTabletPriceScale(){
 if(
 tabletPriceScaleCtrl?.resetPriceAutoScale
 ){
-tabletPriceScaleCtrl.resetPriceAutoScale();
+tabletPriceScaleCtrl.resetPriceAutoScale({
+force:true
+});
 return;
 }
 
