@@ -383,6 +383,9 @@ null;
 let drawUndoReplay =
 false;
 let selectedId = null;
+/** Десктоп: клик закрепил выбор — hover/leave не снимают. */
+let desktopSelectionPinned =
+false;
 let placement = null;
 /** Десктоп: сырой pointer внутри wrap (LW режет crosshair до последней свечи). */
 let placementPointerXY = null;
@@ -4096,6 +4099,44 @@ false;
 function isDesktopDrawHoverSelect(){
 
 return !isTabletChartViewport();
+
+}
+
+function clearDrawingSelection(){
+
+selectedId =
+null;
+desktopSelectionPinned =
+false;
+
+}
+
+function pinDrawingSelection(
+hitId
+){
+
+selectedId =
+hitId;
+
+desktopSelectionPinned =
+!!hitId;
+
+if(
+hitId
+){
+
+const picked =
+getSelected();
+
+if(
+picked?.type ===
+"fib"
+){
+fibSettingsShapeId =
+picked.id;
+}
+
+}
 
 }
 
@@ -8541,6 +8582,12 @@ return;
 }
 
 if(
+desktopSelectionPinned
+){
+return;
+}
+
+if(
 isDrawChromePointerEvent(
 e
 )
@@ -8633,13 +8680,13 @@ return;
 }
 
 if(
-!selectedId
+!selectedId ||
+desktopSelectionPinned
 ){
 return;
 }
 
-selectedId =
-null;
+clearDrawingSelection();
 updateStyleBar();
 redraw();
 
@@ -8913,20 +8960,23 @@ if(
 !hitId
 ){
 
-if(
-selectedId
-){
-selectedId =
-null;
+clearDrawingSelection();
 updateStyleBar();
 redraw();
-}
 
 return;
 
 }
 
 if(
+hoverSelect
+){
+pinDrawingSelection(
+hitId
+);
+updateStyleBar();
+redraw();
+}else if(
 hitId !==
 selectedId
 ){
@@ -8948,11 +8998,7 @@ picked.id;
 updateStyleBar();
 redraw();
 
-if(
-!hoverSelect
-){
 return;
-}
 
 }
 
@@ -10702,13 +10748,41 @@ return true;
 
 if(tool === "cursor"){
 
-selectedId = hitTest(param.point.x, param.point.y);
+const hitId =
+hitTest(
+param.point.x,
+param.point.y
+);
+
+if(
+isDesktopDrawHoverSelect()
+){
+
+if(
+hitId
+){
+pinDrawingSelection(
+hitId
+);
+}else{
+clearDrawingSelection();
+}
+
+}else{
+selectedId =
+hitId;
 
 const picked =
 getSelected();
 
-if(picked?.type === "fib"){
-fibSettingsShapeId = picked.id;
+if(
+picked?.type ===
+"fib"
+){
+fibSettingsShapeId =
+picked.id;
+}
+
 }
 
 updateStyleBar();
@@ -10905,7 +10979,7 @@ removed.id
 }
 
 drawings = drawings.filter(d=>d.id !== selectedId);
-selectedId = null;
+clearDrawingSelection();
 saveDrawings();
 updateStyleBar();
 redraw();
@@ -12749,7 +12823,7 @@ resetDrawUndoHistory();
 
 loadDrawings();
 reconcileDrawingAlertsFromRegistry();
-selectedId = null;
+clearDrawingSelection();
 cancelPlacement();
 clearChartRuler();
 
