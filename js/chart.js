@@ -736,6 +736,17 @@ let scaleResetAt =
 let scaleTouchEndAt =
 0;
 
+let suppressStripPointerUntil =
+0;
+
+function suppressStripPointerBriefly(){
+
+suppressStripPointerUntil =
+Date.now() +
+450;
+
+}
+
 function clearScaleLastTap(){
 
 scaleLastTap = null;
@@ -841,7 +852,10 @@ clearScaleLastTap();
 abortDrag();
 stripPointerDown =
 null;
+stripDidDrag =
+false;
 detachDocListeners();
+suppressStripPointerBriefly();
 resetStripPriceAutoScale({
 force:true
 });
@@ -1774,6 +1788,13 @@ return;
 }
 
 if(
+Date.now() <
+suppressStripPointerUntil
+){
+return;
+}
+
+if(
 stripPointerDown
 ){
 return;
@@ -1818,6 +1839,29 @@ return;
 
 const t =
 e.touches[0];
+
+if(
+Date.now() <
+suppressStripPointerUntil
+){
+return;
+}
+
+if(
+noteScaleZoneTapOnDown(
+t.clientX,
+t.clientY,
+e
+)
+){
+try{
+e.preventDefault();
+e.stopImmediatePropagation?.();
+}catch{
+/* ignore */
+}
+return;
+}
 
 if(
 beginScaleStripInteraction(

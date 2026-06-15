@@ -31,7 +31,7 @@ Object.freeze({
 "chart-page.js":
 6,
 "terminal.js":
-305,
+306,
 "coins-layout-resize.js":
 4,
 "coins-layout-math.js":
@@ -57,7 +57,7 @@ Object.freeze({
 "charts-lib-boot.js":
 3,
 "chart-import.js":
-37,
+38,
 "chart-widget-host.js":
 9,
 "tablet-gesture-policy.js":
@@ -67,7 +67,7 @@ Object.freeze({
 
 /* ── JS: chart / drawings ── */
 "chart.js":
-143,
+144,
 "chart/chart-options.js":
 5,
 "chart/chart-dom-crosshair.js":
