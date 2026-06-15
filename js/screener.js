@@ -16,7 +16,7 @@ updateRsiLevelLinesLayout,
 linkPairedChartTimeScales,
 SCREENER_VISIBLE_BARS,
 SCREENER_MAX_BARS
-} from "./chart-import.js?v=31";
+} from "./chart-import.js?v=32";
 
 import {
 calculateRSI,

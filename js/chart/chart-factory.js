@@ -1105,6 +1105,14 @@ document
 ?.style
 .setProperty("--chart-scale-width", px);
 
+document
+.getElementById("rsi-wrap")
+?.style
+.setProperty(
+"--chart-time-scale-height",
+`${CHART_TIME_SCALE_HEIGHT}px`
+);
+
 }
 
 export function syncLinkedChartPriceScales(
@@ -1726,6 +1734,81 @@ bandEl.style.height =
 
 }
 
+function rsiLevelLinePlotMaxY(
+wrapEl
+){
+
+const wrapH =
+wrapEl?.clientHeight ||
+0;
+
+if(
+wrapH <
+2
+){
+return wrapH;
+}
+
+let timeScaleH =
+28;
+
+try{
+
+const raw =
+getComputedStyle(
+wrapEl
+).getPropertyValue(
+"--chart-time-scale-height"
+).trim();
+
+if(
+raw.endsWith(
+"px"
+)
+){
+timeScaleH =
+parseFloat(
+raw
+) ||
+timeScaleH;
+}
+
+}catch{
+/* ignore */
+}
+
+return Math.max(
+1,
+wrapH -
+timeScaleH -
+1
+);
+
+}
+
+function clampRsiLevelLineY(
+y,
+wrapEl
+){
+
+const plotMax =
+rsiLevelLinePlotMaxY(
+wrapEl
+);
+
+return Math.max(
+0.5,
+Math.min(
+Math.round(
+y
+) +
+0.5,
+plotMax
+)
+);
+
+}
+
 export function updateRsiLevelLinesLayout(
 rsiSeries,
 wrapEl
@@ -1800,7 +1883,10 @@ return;
 }
 
 lineEl.style.top =
-`${Math.round(y) + 0.5}px`;
+`${clampRsiLevelLineY(
+y,
+wrapEl
+)}px`;
 lineEl.classList.remove(
 "hidden"
 );

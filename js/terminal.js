@@ -62,7 +62,7 @@ coinsTfVisibleBars,
 applyCoinsChartViewport,
 refreshCoinsChartBarSpacing,
 tfPeriodSec
-} from "./chart-import.js?v=31";
+} from "./chart-import.js?v=32";
 
 import {
 mountCoinsTabletController
@@ -1894,7 +1894,7 @@ drawingTools?.endPriceScaleDragRedraw?.();
 drawingTools?.scheduleRedraw?.();
 };
 
-void import("./price-alert-ui.js?v=37").then(({ mountPriceAlertUi })=>{
+void import("./price-alert-ui.js?v=38").then(({ mountPriceAlertUi })=>{
 mountPriceAlertUi({
 chart,
 series: candleSeries,
@@ -2353,6 +2353,12 @@ rsiChart.applyOptions({
 width:w,
 height:rsiH
 });
+
+if(
+candles.length
+){
+layoutRsiBand();
+}
 
 return true;
 

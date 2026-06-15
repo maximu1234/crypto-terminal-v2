@@ -6,7 +6,7 @@ createCandlestickChart,
 ensureDomChartCrosshair,
 positionDomChartCrosshair,
 hideDomChartCrosshair
-} from "./chart-import.js?v=31";
+} from "./chart-import.js?v=32";
 
 import {
 initDrawings
@@ -14,7 +14,7 @@ initDrawings
 
 import {
 mountPriceAlertUi
-} from "./price-alert-ui.js?v=37";
+} from "./price-alert-ui.js?v=38";
 
 function widgetPlotWidth(
 wrapEl,

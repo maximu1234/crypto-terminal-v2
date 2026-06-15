@@ -21,7 +21,7 @@ hideDomChartCrosshair,
 hideDomChartCrosshairHorz,
 hideDomChartCrosshairVert,
 positionDomChartCrosshair
-} from "./chart-import.js?v=31";
+} from "./chart-import.js?v=32";
 
 import {
 mountDrawToolIcons
@@ -40,6 +40,9 @@ window.matchMedia?.("(pointer: coarse)")?.matches ||
 const TOUCH_PLUS_OFFSET_PX =
 28;
 
+const PLUS_NEAR_RADIUS =
+18;
+
 const PLUS_SCALE_GAP_PX =
 4;
 
@@ -54,6 +57,33 @@ y
 ){
 
 return `${Math.round(y) + 0.5}px`;
+
+}
+
+function isNearPlusButton(
+plotX,
+plotY,
+plusLeft,
+crosshairY
+){
+
+const cx =
+plusLeft +
+PLUS_ICON_W /
+2;
+
+return (
+Math.abs(
+plotX -
+cx
+) <=
+PLUS_NEAR_RADIUS &&
+Math.abs(
+plotY -
+crosshairY
+) <=
+PLUS_NEAR_RADIUS
+);
 
 }
 
@@ -156,7 +186,7 @@ plusBtn.setAttribute(
 "Добавить алерт по цене"
 );
 plusBtn.innerHTML =
-`<span class="price-alert-scale-plus-circle" aria-hidden="true">+</span>`;
+`<span class="price-alert-scale-plus-icon" aria-hidden="true">+</span>`;
 
 const plusPriceHint =
 document.createElement(
@@ -321,8 +351,14 @@ opts = {}
 plusBtn.classList.add(
 "hidden"
 );
+plusBtn.classList.remove(
+"is-near"
+);
 plusPriceHint.classList.add(
 "hidden"
+);
+plusPriceHint.classList.remove(
+"is-near"
 );
 touchGuideLine.classList.add(
 "hidden"
@@ -678,6 +714,33 @@ plusBtn.dataset.pendingPrice =
 String(price);
 plusBtn.classList.remove("hidden");
 plusPriceHint.classList.remove("hidden");
+
+const inScaleZone =
+isInPriceScaleArea(
+clientX,
+clientY
+);
+
+const nearPlus =
+inScaleZone ||
+(
+!IS_COARSE_TOUCH &&
+isNearPlusButton(
+x,
+y,
+plusLeft,
+y
+)
+);
+
+plusBtn.classList.toggle(
+"is-near",
+nearPlus
+);
+plusPriceHint.classList.toggle(
+"is-near",
+nearPlus
+);
 
 if(
 showTouchStyle ||

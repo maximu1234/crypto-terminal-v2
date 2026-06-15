@@ -954,10 +954,10 @@ body.tablet-chart .rsi-scale-touch-strip{
   height:22px;
   margin:0;
   padding:0;
-  border:none;
-  border-radius:50%;
+  border:1px dashed rgba(209,212,220,.55);
+  border-radius:4px;
   background:rgba(42,46,57,.96);
-  box-shadow:0 1px 3px rgba(0,0,0,.5);
+  box-shadow:none;
   cursor:pointer;
   pointer-events:auto;
   touch-action:manipulation;
@@ -965,33 +965,34 @@ body.tablet-chart .rsi-scale-touch-strip{
   align-items:center;
   justify-content:center;
   font-family:-apple-system, BlinkMacSystemFont, "Trebuchet MS", Roboto, Ubuntu, sans-serif;
+  transition:background .12s ease, border-color .12s ease, color .12s ease;
 }
 
 .price-alert-scale-plus.hidden{
   display:none;
 }
 
-.price-alert-scale-plus-circle{
-  width:16px;
-  height:16px;
-  border:1px solid rgba(209,212,220,.55);
-  border-radius:50%;
+.price-alert-scale-plus-icon{
   display:flex;
   align-items:center;
   justify-content:center;
+  width:100%;
+  height:100%;
   color:#d1d4dc;
-  font-size:12px;
+  font-size:13px;
   font-weight:400;
   line-height:1;
 }
 
+.price-alert-scale-plus.is-near,
 .price-alert-scale-plus:hover{
-  background:rgba(50,54,66,.98);
+  border:1px solid #7878b8;
+  background:#7878b8;
 }
 
-.price-alert-scale-plus:hover .price-alert-scale-plus-circle{
+.price-alert-scale-plus.is-near .price-alert-scale-plus-icon,
+.price-alert-scale-plus:hover .price-alert-scale-plus-icon{
   color:#fff;
-  border-color:rgba(255,255,255,.35);
 }
 
 .price-alert-scale-price-hint{
@@ -1002,6 +1003,8 @@ body.tablet-chart .rsi-scale-touch-strip{
   display:flex;
   align-items:center;
   padding:0 6px;
+  border:1px dashed rgba(209,212,220,.45);
+  border-radius:3px;
   background:rgba(42,46,57,.96);
   color:#d1d4dc;
   font:400 11px/22px -apple-system, BlinkMacSystemFont, "Trebuchet MS", Roboto, Ubuntu, sans-serif;
@@ -1011,10 +1014,16 @@ body.tablet-chart .rsi-scale-touch-strip{
   text-overflow:ellipsis;
   pointer-events:none;
   user-select:none;
+  transition:background .12s ease, border-color .12s ease, color .12s ease;
 }
 
 .price-alert-scale-price-hint.hidden{
   display:none;
+}
+
+.price-alert-scale-price-hint.is-near{
+  border:1px dashed rgba(209,212,220,.72);
+  color:#fff;
 }
 
 .price-alert-style-float{
@@ -1024,12 +1033,11 @@ body.tablet-chart .rsi-scale-touch-strip{
 body.tablet-chart .price-alert-scale-plus{
   width:32px;
   height:32px;
+  border-radius:5px;
 }
 
-body.tablet-chart .price-alert-scale-plus-circle{
-  width:22px;
-  height:22px;
-  font-size:16px;
+body.tablet-chart .price-alert-scale-plus-icon{
+  font-size:18px;
 }
 
 .chart-price-hud{
@@ -1090,6 +1098,7 @@ body.tablet-chart .price-alert-scale-plus-circle{
   padding-right:0;
   box-sizing:border-box;
   background:var(--app-chart-bg);
+  isolation:isolate;
 }
 
 @media (pointer:coarse) and (min-width:768px){
@@ -1138,6 +1147,12 @@ body.tablet-chart .price-alert-scale-plus-circle{
 
 .rsi-level-line:not(.hidden){
   display:block;
+}
+
+body.tablet-chart #rsi-wrap .rsi-level-line:not(.hidden){
+  z-index:6;
+  height:2px;
+  transform:translateZ(2px);
 }
 
 .rsi-level-line[data-rsi-level="50"]{
