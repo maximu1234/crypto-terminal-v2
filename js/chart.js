@@ -709,10 +709,10 @@ const STRIP_DRAG_START_PX =
 
 /** iOS Safari: dblclick по canvas не приходит; LW тоже слушает dblclick */
 const SCALE_DBL_TAP_MS =
-500;
+550;
 
 const SCALE_DBL_TAP_PX =
-30;
+48;
 
 const useLwNativeScale =
 TABLET_LW_NATIVE_PRICE_SCALE &&
@@ -794,21 +794,14 @@ chart
 }
 
 /**
- * Двойной тап по шкале — на touchstart второго касания (как mountAxisDoubleTapReset).
+ * Двойной тап по шкале — на touchend (надёжнее touchstart на iOS).
  * @returns {boolean} true если сработал сброс
  */
-function noteScaleZoneTapOnDown(
+function tryScaleZoneDoubleTapAt(
 clientX,
 clientY,
 sourceEvent
 ){
-
-if(
-stripDidDrag ||
-drag
-){
-return false;
-}
 
 if(
 clientX ==
@@ -849,17 +842,9 @@ dx * dx + dy * dy <=
 SCALE_DBL_TAP_PX * SCALE_DBL_TAP_PX
 ){
 clearScaleLastTap();
-abortDrag();
-stripPointerDown =
-null;
-stripDidDrag =
-false;
-detachDocListeners();
-suppressStripPointerBriefly();
 resetStripPriceAutoScale({
 force:true
 });
-
 return true;
 
 }
@@ -900,7 +885,7 @@ e.changedTouches?.[
 ] ||
 e;
 
-return noteScaleZoneTapOnDown(
+return tryScaleZoneDoubleTapAt(
 pt.clientX,
 pt.clientY,
 e
@@ -945,11 +930,48 @@ bottom:DEFAULT_PRICE_SCALE_MARGINS.bottom
 priceZoomRange =
 null;
 
-uninstallTabletPriceZoomProvider();
+priceZoomProviderInstalled =
+false;
+
+try{
+series.applyOptions({
+autoscaleInfoProvider:()=>null
+});
+}catch{
+/* ignore */
+}
+
+resetChartPriceAutoScale(
+chart,
+series
+);
 
 pulsePriceScaleAutoscale(
 chart,
 series
+);
+
+requestAnimationFrame(
+()=>{
+requestAnimationFrame(
+()=>{
+try{
+series.applyOptions({
+autoscaleInfoProvider:()=>null
+});
+}catch{
+/* ignore */
+}
+
+pulsePriceScaleAutoscale(
+chart,
+series
+);
+
+hooks.onInteraction?.();
+}
+);
+}
 );
 
 clearTabletProbeCrosshairForChart(
@@ -1635,8 +1657,8 @@ endEvent
 ){
 
 if(
-stripPointerDown &&
-(
+!stripPointerDown ||
+!(
 endEvent?.pointerId ===
 undefined ||
 endEvent.pointerId ===
@@ -1647,6 +1669,41 @@ endEvent?.type ===
 "touchcancel"
 )
 ){
+return;
+}
+
+const wasDrag =
+!!drag ||
+stripDidDrag;
+
+if(
+!wasDrag
+){
+
+const pt =
+endEvent.changedTouches?.[
+0
+] ||
+endEvent;
+
+if(
+tryScaleZoneDoubleTapAt(
+pt.clientX,
+pt.clientY,
+endEvent
+)
+){
+abortDrag();
+stripPointerDown =
+null;
+stripDidDrag =
+false;
+detachDocListeners();
+suppressStripPointerBriefly();
+return;
+}
+
+}
 
 abortDrag();
 stripPointerDown =
@@ -1654,8 +1711,6 @@ null;
 stripDidDrag =
 false;
 detachDocListeners();
-
-}
 
 }
 
@@ -1844,22 +1899,6 @@ if(
 Date.now() <
 suppressStripPointerUntil
 ){
-return;
-}
-
-if(
-noteScaleZoneTapOnDown(
-t.clientX,
-t.clientY,
-e
-)
-){
-try{
-e.preventDefault();
-e.stopImmediatePropagation?.();
-}catch{
-/* ignore */
-}
 return;
 }
 
