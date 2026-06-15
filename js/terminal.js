@@ -62,7 +62,7 @@ coinsTfVisibleBars,
 applyCoinsChartViewport,
 refreshCoinsChartBarSpacing,
 tfPeriodSec
-} from "./chart-import.js?v=36";
+} from "./chart-import.js?v=37";
 
 import {
 mountCoinsTabletController
@@ -1893,6 +1893,32 @@ priceScaleTouchHooks.onReset =
 drawingTools?.endPriceScaleDragRedraw?.();
 drawingTools?.scheduleRedraw?.();
 };
+
+let unmountStripScaleDoubleTap =
+()=>{};
+
+if(
+isTabletChartViewport()
+){
+
+const scaleStripEl =
+document.getElementById(
+"price-scale-touch-strip"
+);
+
+if(
+scaleStripEl
+){
+unmountStripScaleDoubleTap =
+mountAxisDoubleTapReset(
+scaleStripEl,
+()=>{
+resetTabletPriceScale();
+}
+);
+}
+
+}
 
 void import("./price-alert-ui.js?v=38").then(({ mountPriceAlertUi })=>{
 mountPriceAlertUi({

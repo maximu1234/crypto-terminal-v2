@@ -695,23 +695,6 @@ callbacks ||
 {}
 );
 
-const onInteraction =
-hooks.onInteraction ||
-(()=>{});
-const onDragStart =
-hooks.onDragStart ||
-(()=>{});
-const onDragEnd =
-hooks.onDragEnd ||
-(()=>{});
-const onScaleFrame =
-hooks.onScaleFrame ||
-(()=>{});
-
-const onReset =
-hooks.onReset ||
-(()=>{});
-
 let drag =
 null;
 
@@ -932,6 +915,14 @@ return;
 scaleResetAt =
 now;
 
+abortDrag();
+stripPointerDown =
+null;
+stripDidDrag =
+false;
+detachDocListeners();
+clearScaleLastTap();
+
 margins = {
 top:DEFAULT_PRICE_SCALE_MARGINS.top,
 bottom:DEFAULT_PRICE_SCALE_MARGINS.bottom
@@ -951,9 +942,9 @@ clearTabletProbeCrosshairForChart(
 chart
 );
 
-onReset?.();
-onDragEnd?.();
-onInteraction?.();
+hooks.onReset?.();
+hooks.onDragEnd?.();
+hooks.onInteraction?.();
 
 }
 
@@ -1180,7 +1171,7 @@ scaleFramePayload();
 if(
 payload
 ){
-onScaleFrame?.(
+hooks.onScaleFrame?.(
 payload
 );
 }
@@ -1420,7 +1411,7 @@ return;
 
 drag = null;
 detachDocListeners();
-onDragEnd();
+hooks.onDragEnd?.();
 
 }
 
@@ -1455,7 +1446,7 @@ dy
 
 notifyChartPriceRangeChanged();
 
-onInteraction?.();
+hooks.onInteraction?.();
 notifyScaleFrame();
 
 }
@@ -1489,7 +1480,7 @@ ensureTabletPriceZoomProvider();
 
 notifyChartPriceRangeChanged();
 
-onDragStart?.(
+hooks.onDragStart?.(
 scaleFramePayload()
 );
 
@@ -1642,12 +1633,6 @@ endEvent?.type ===
 "touchcancel"
 )
 ){
-
-if(
-drag
-){
-onDragEnd?.();
-}
 
 abortDrag();
 stripPointerDown =
@@ -1833,22 +1818,6 @@ return;
 
 const t =
 e.touches[0];
-
-if(
-noteScaleZoneTapOnDown(
-t.clientX,
-t.clientY,
-e
-)
-){
-try{
-e.preventDefault();
-e.stopImmediatePropagation?.();
-}catch{
-/* ignore */
-}
-return;
-}
 
 if(
 beginScaleStripInteraction(

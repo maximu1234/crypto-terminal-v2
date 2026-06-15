@@ -6,7 +6,7 @@ createCandlestickChart,
 ensureDomChartCrosshair,
 positionDomChartCrosshair,
 hideDomChartCrosshair
-} from "./chart-import.js?v=36";
+} from "./chart-import.js?v=37";
 
 import {
 initDrawings

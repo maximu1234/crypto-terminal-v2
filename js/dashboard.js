@@ -23,7 +23,7 @@ createRSIChart,
 updateRsiBandLayout,
 updateRsiLevelLinesLayout,
 linkPairedChartTimeScales
-} from "./chart-import.js?v=36";
+} from "./chart-import.js?v=37";
 
 import {
 calculateRSI,
