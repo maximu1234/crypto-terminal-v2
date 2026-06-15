@@ -45,7 +45,23 @@ const CACHE_KEY_PREFIX =
 "stats_movers_";
 
 const JOB_STORAGE_KEY =
-"stats_bg_job_v1";
+"stats_bg_job_v2";
+
+/** Единый job: 1d из тикеров + 1w/1m/1y из одного kline-запроса на монету. */
+export const STATS_JOB_PERIOD_ALL =
+"all";
+
+export const STATS_KLINE_PERIODS =
+Object.freeze([
+"1w",
+"1m",
+"1y"
+]);
+
+const STATS_KLINE_FETCH_DAYS =
+PERIOD_DAYS[
+"1y"
+];
 
 let localRunnerGen =
 0;
@@ -405,7 +421,9 @@ resumeDone
 
 return {
 period:state.period ||
-"1d",
+STATS_JOB_PERIOD_ALL,
+phase:state.phase ||
+null,
 status:state.status ||
 "idle",
 gen:Number(
@@ -600,14 +618,13 @@ pct
 }
 
 async function fetchDailyCandles(
-symbol,
-periodDays
+symbol
 ){
 
 const limit =
 Math.min(
 1000,
-periodDays +
+STATS_KLINE_FETCH_DAYS +
 10
 );
 
@@ -812,9 +829,18 @@ if(
 !Array.isArray(
 job.resume.symbols
 ) ||
-!job.resume.symbols.length ||
+!job.resume.symbols.length
+){
+return null;
+}
+
+const day1Done =
+!!job.resume.day1Done;
+
+if(
 nextIndex <=
-0
+0 &&
+!day1Done
 ){
 return null;
 }
@@ -826,102 +852,99 @@ nextIndex
 
 }
 
-async function loadMoversForPeriod(
+function emptyRowsByPeriod(){
+
+return {
+"1w":[],
+"1m":[],
+"1y":[]
+};
+
+}
+
+function cloneRowsByPeriod(
+source
+){
+
+const out =
+emptyRowsByPeriod();
+
+for(
+const period of
+STATS_KLINE_PERIODS
+){
+
+out[
+period
+] = Array.isArray(
+source?.[
+period
+]
+)
+? [
+...source[
+period
+]
+]
+: [];
+
+}
+
+return out;
+
+}
+
+function topMoversFromRows(
+rows
+){
+
+return [
+...rows
+].sort(
+(
+a,
+b
+)=>
+b.pct -
+a.pct
+).slice(
+0,
+100
+);
+
+}
+
+function writeKlinePeriodCaches(
+rowsByPeriod
+){
+
+for(
+const period of
+STATS_KLINE_PERIODS
+){
+
+const top =
+topMoversFromRows(
+rowsByPeriod[
+period
+] ||
+[]
+);
+
+if(
+top.length
+){
+writeCache(
 period,
-gen,
-onProgress
-){
-
-const savedResume =
-canResumeJob(
-gen
+top
 );
-
-let symbols =
-[];
-
-let tickersMap =
-new Map();
-
-if(
-savedResume
-){
-
-symbols =
-savedResume.symbols;
-tickersMap =
-tickersFromPlain(
-savedResume.tickers
-);
-
-const resumedDone =
-savedResume.nextIndex;
-
-patchJobState({
-total:symbols.length,
-done:resumedDone
-});
-
-onProgress?.(
-resumedDone,
-symbols.length
-);
-
-}else{
-
-const tickers =
-new Map();
-
-await fetchTickersInto(
-tickers
-);
-
-if(
-isJobCancelled(
-gen
-)
-){
-return null;
 }
 
-symbols =
-[
-...tickers.keys()
-].filter(
-symbol=>
-symbol.endsWith(
-"USDT"
-)
-);
+}
 
-tickersMap =
-tickers;
-
-if(
-period !==
-"1d"
-){
-
-patchJobState({
-total:symbols.length,
-done:0,
-resume:{
+function loadMovers1dFromTickers(
 symbols,
-tickers:tickersToPlain(
 tickersMap
-),
-rows:[],
-nextIndex:0
-}
-});
-
-}
-
-}
-
-if(
-period ===
-"1d"
 ){
 
 const rows =
@@ -973,58 +996,182 @@ rows.slice(
 );
 
 writeCache(
-period,
+"1d",
 top
 );
-
-patchJobState({
-done:symbols.length,
-total:symbols.length,
-resume:null
-});
 
 return top;
 
 }
 
-const days =
-PERIOD_DAYS[
-period
-] ||
-1;
+async function loadAllMovers(
+gen,
+onProgress
+){
 
-const resume =
-savedResume ||
-readJobState()?.resume;
+const savedResume =
+canResumeJob(
+gen
+);
 
-let rows =
-Array.isArray(
-resume?.rows
-)
-? [
-...resume.rows
-]
-: [];
+let symbols =
+[];
+
+let tickersMap =
+new Map();
+
+let rowsByPeriod =
+emptyRowsByPeriod();
 
 let startIndex =
+0;
+
+let day1Done =
+false;
+
+if(
+savedResume
+){
+
+symbols =
+savedResume.symbols;
+tickersMap =
+tickersFromPlain(
+savedResume.tickers
+);
+rowsByPeriod =
+cloneRowsByPeriod(
+savedResume.rowsByPeriod
+);
+startIndex =
 Math.max(
 0,
 Number(
-resume?.nextIndex ||
+savedResume.nextIndex ||
 0
 )
 );
+day1Done =
+!!savedResume.day1Done;
+
+const resumedDone =
+day1Done
+? startIndex
+: 0;
+
+patchJobState({
+total:symbols.length,
+done:resumedDone,
+phase:day1Done
+? "kline"
+: "1d"
+});
+
+onProgress?.(
+resumedDone,
+symbols.length
+);
+
+}else{
+
+const tickers =
+new Map();
+
+patchJobState({
+phase:"tickers"
+});
+
+await fetchTickersInto(
+tickers
+);
+
+if(
+isJobCancelled(
+gen
+)
+){
+return null;
+}
+
+symbols =
+[
+...tickers.keys()
+].filter(
+symbol=>
+symbol.endsWith(
+"USDT"
+)
+);
+
+tickersMap =
+tickers;
+
+patchJobState({
+total:symbols.length,
+done:0,
+phase:"1d",
+resume:{
+symbols,
+tickers:tickersToPlain(
+tickersMap
+),
+rowsByPeriod:emptyRowsByPeriod(),
+nextIndex:0,
+day1Done:false
+}
+});
+
+}
+
+if(
+!day1Done
+){
+
+loadMovers1dFromTickers(
+symbols,
+tickersMap
+);
+
+if(
+isJobCancelled(
+gen
+)
+){
+return null;
+}
+
+day1Done =
+true;
+startIndex =
+0;
+rowsByPeriod =
+emptyRowsByPeriod();
+
+patchJobState({
+done:0,
+phase:"kline",
+resume:{
+symbols,
+tickers:tickersToPlain(
+tickersMap
+),
+rowsByPeriod,
+nextIndex:0,
+day1Done:true
+}
+});
+
+onProgress?.(
+0,
+symbols.length
+);
+
+}
 
 const symbolList =
 symbols.length
 ? symbols
-: (
-Array.isArray(
-resume?.symbols
-)
-? resume.symbols
-: []
-);
+: [];
 
 let done =
 startIndex;
@@ -1063,7 +1210,9 @@ currentPrice
 currentPrice <=
 0
 ){
+
 done++;
+
 patchJobState({
 done,
 resume:{
@@ -1071,21 +1220,24 @@ symbols:symbolList,
 tickers:tickersToPlain(
 tickersMap
 ),
-rows,
-nextIndex:done
+rowsByPeriod,
+nextIndex:done,
+day1Done:true
 }
 });
+
 onProgress?.(
 done,
 symbolList.length
 );
+
 return;
+
 }
 
 const candles =
 await fetchDailyCandles(
-symbol,
-days
+symbol
 );
 
 if(
@@ -1104,10 +1256,17 @@ MIN_KLINE_SAMPLES
 failCount++;
 }else{
 
+for(
+const period of
+STATS_KLINE_PERIODS
+){
+
 const change =
 periodChangeFromDaily(
 candles,
-days,
+PERIOD_DAYS[
+period
+],
 currentPrice
 );
 
@@ -1116,18 +1275,22 @@ change &&
 change.pct >
 0
 ){
-rows.push({
+rowsByPeriod[
+period
+].push({
 symbol,
 ...change
 });
-successCount++;
-}else{
-successCount++;
 }
+
+}
+
+successCount++;
 
 }
 
 done++;
+
 patchJobState({
 done,
 resume:{
@@ -1135,51 +1298,28 @@ symbols:symbolList,
 tickers:tickersToPlain(
 tickersMap
 ),
-rows,
-nextIndex:done
+rowsByPeriod,
+nextIndex:done,
+day1Done:true
 }
 });
+
 onProgress?.(
 done,
 symbolList.length
 );
 
-maybeWritePartialCache();
-
-};
-
-function maybeWritePartialCache(){
-
 if(
-!rows.length ||
 done %
-STATS_PARTIAL_CACHE_EVERY !==
+STATS_PARTIAL_CACHE_EVERY ===
 0
 ){
-return;
+writeKlinePeriodCaches(
+rowsByPeriod
+);
 }
 
-const partialTop =
-[
-...rows
-].sort(
-(
-a,
-b
-)=>
-b.pct -
-a.pct
-).slice(
-0,
-100
-);
-
-writeCache(
-period,
-partialTop
-);
-
-}
+};
 
 await runSymbolPool(
 symbolList.slice(
@@ -1197,29 +1337,21 @@ gen
 return null;
 }
 
-rows.sort(
-(
-a,
-b
-)=>
-b.pct -
-a.pct
+writeKlinePeriodCaches(
+rowsByPeriod
 );
 
-const top =
-rows.slice(
-0,
-100
+const hasAnyRows =
+STATS_KLINE_PERIODS.some(
+period=>
+rowsByPeriod[
+period
+]?.length >
+0
 );
 
 if(
-top.length
-){
-writeCache(
-period,
-top
-);
-}else if(
+!hasAnyRows &&
 failCount >
 symbolList.length *
 0.85 &&
@@ -1236,10 +1368,11 @@ throw new Error(
 }
 
 patchJobState({
-resume:null
+resume:null,
+phase:null
 });
 
-return top;
+return rowsByPeriod;
 
 }
 
@@ -1276,10 +1409,10 @@ return;
 }
 
 const period =
-state.period;
+state.period ||
+STATS_JOB_PERIOD_ALL;
 
-await loadMoversForPeriod(
-period,
+await loadAllMovers(
 gen,
 (
 done,
@@ -1345,15 +1478,14 @@ false;
 
 }
 
-export function startStatsBackgroundRefresh(
-period
-){
+export function startStatsBackgroundRefresh(){
 
 const gen =
 Date.now();
 
 writeJobState({
-period,
+period:STATS_JOB_PERIOD_ALL,
+phase:"tickers",
 status:"running",
 gen,
 done:0,

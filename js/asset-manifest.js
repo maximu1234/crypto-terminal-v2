@@ -51,7 +51,7 @@ Object.freeze({
 "release-marker.js":
 7,
 "site-boot.js":
-83,
+84,
 "suppress-native-context-menu.js":
 2,
 "charts-lib-boot.js":
@@ -238,9 +238,9 @@ Object.freeze({
 "listings.js":
 4,
 "statistics.js":
-10,
+11,
 "statistics-background.js":
-3,
+4,
 "trade-calculator.js":
 3,
 "system-admin-page.js":

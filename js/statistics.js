@@ -1,12 +1,13 @@
 import {
 PERIOD_LABELS,
 STATS_JOB_UPDATE_EVENT,
+STATS_JOB_PERIOD_ALL,
 readCacheEntry,
 cacheStorageKey,
 getStatsJobState,
 startStatsBackgroundRefresh,
 resumeStatsBackgroundJob
-} from "./statistics-background.js?v=3";
+} from "./statistics-background.js?v=4";
 
 const statusEl =
 document.getElementById(
@@ -297,18 +298,11 @@ return `Bybit linear · ${PERIOD_LABELS[period]} · ${count} ${count === 1 ? "м
 
 }
 
-function isJobRunningForPeriod(
-period
-){
-
-const job =
-getStatsJobState();
+function isStatsJobRunning(){
 
 return (
-job?.status ===
-"running" &&
-job.period ===
-period
+getStatsJobState()?.status ===
+"running"
 );
 
 }
@@ -336,10 +330,17 @@ return "";
 }
 
 if(
-job.period ===
+job.phase ===
 "1d"
 ){
-return "Обновляем…";
+return "Обновляем за 1 день…";
+}
+
+if(
+job.phase ===
+"tickers"
+){
+return "Загружаем тикеры Bybit…";
 }
 
 const total =
@@ -348,7 +349,7 @@ job.total,
 1
 );
 
-return `Считаем движение… ${job.done} / ${total}`;
+return `Загружаем историю (1w / 1m / 1y)… ${job.done} / ${total}`;
 
 }
 
@@ -357,13 +358,8 @@ function syncUiFromJob(){
 const job =
 getStatsJobState();
 
-const runningHere =
-isJobRunningForPeriod(
-activePeriod
-);
-
 setRefreshBusy(
-runningHere
+isStatsJobRunning()
 );
 
 if(
@@ -372,16 +368,15 @@ if(
 return;
 }
 
-if(
-job.period !==
-activePeriod
-){
+const jobMatchesTab =
+job.period ===
+STATS_JOB_PERIOD_ALL ||
+job.period ===
+activePeriod;
 
 if(
-runningHere
+!jobMatchesTab
 ){
-return;
-}
 
 if(
 job.status ===
@@ -390,7 +385,7 @@ job.status ===
 setStatus(
 `${jobProgressLabel(
 job
-)} · в фоне (${PERIOD_LABELS[job.period]}) · можно перейти на другую страницу`,
+)} · в фоне · можно перейти на другую страницу`,
 false,
 true
 );
@@ -405,15 +400,30 @@ job.status ===
 "running"
 ){
 
-const hasCache =
-!!readCacheEntry(
+const entry =
+readCacheEntry(
 activePeriod
-)?.rows?.length;
+);
+
+if(
+entry?.rows?.length
+){
+renderRows(
+entry.rows
+);
+}else if(
+rowsEl
+){
+rowsEl.innerHTML = "";
+renderRows(
+[]
+);
+}
 
 setStatus(
 `${jobProgressLabel(
 job
-)}${hasCache ? "" : ""} · можно перейти на другую страницу`,
+)} · можно перейти на другую страницу`,
 false,
 true
 );
@@ -774,8 +784,12 @@ getStatsJobState();
 if(
 job?.status ===
 "running" &&
+(
 job.period ===
-period
+activePeriod ||
+job.period ===
+STATS_JOB_PERIOD_ALL
+)
 ){
 
 if(
@@ -831,54 +845,29 @@ entry
 
 }
 
-function refreshPeriod(
-period = activePeriod
-){
+function refreshAllStats(){
 
 if(
-isJobRunningForPeriod(
-period
-)
+isStatsJobRunning()
 ){
 return;
 }
 
-const entry =
-readCacheEntry(
-period
-);
-
-const hasCache =
-!!(
-entry?.rows?.length
-);
+clearStatsCache();
 
 if(
-!hasCache &&
 rowsEl
 ){
 rowsEl.innerHTML = "";
 }
 
-if(
-!hasCache
-){
-
 setStatus(
-period ===
-"1d"
-? `Загрузка с Bybit за ${PERIOD_LABELS[period] || period}…`
-: `Загрузка истории с Bybit (~${PERIOD_LABELS[period] || period}, параллельно)…`,
+"Загрузка данных с Bybit (1 день + неделя / месяц / год)…",
 false,
-period !==
-"1d"
+true
 );
 
-}
-
-startStatsBackgroundRefresh(
-period
-);
+startStatsBackgroundRefresh();
 syncUiFromJob();
 
 }
@@ -958,9 +947,7 @@ return;
 refreshBtn.addEventListener(
 "click",
 ()=>{
-refreshPeriod(
-activePeriod
-);
+refreshAllStats();
 }
 );
 
