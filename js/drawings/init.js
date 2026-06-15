@@ -9223,6 +9223,8 @@ pointOffsets: offsets
 
 }
 
+}
+
 notifyTabletChartGestureAbort();
 
 blockDesktopChartClick();
