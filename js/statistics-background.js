@@ -942,6 +942,8 @@ top
 
 }
 
+}
+
 function loadMovers1dFromTickers(
 symbols,
 tickersMap
