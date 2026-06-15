@@ -10,7 +10,7 @@ hideDomChartCrosshair
 
 import {
 initDrawings
-} from "./drawings.js?v=211";
+} from "./drawings.js?v=212";
 
 import {
 mountPriceAlertUi

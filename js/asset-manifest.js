@@ -31,7 +31,7 @@ Object.freeze({
 "chart-page.js":
 6,
 "terminal.js":
-307,
+308,
 "coins-layout-resize.js":
 4,
 "coins-layout-math.js":
@@ -45,7 +45,7 @@ Object.freeze({
 "telegram-bot-public.js":
 1,
 "dashboard.js":
-82,
+83,
 "screener.js":
 74,
 "release-marker.js":
@@ -59,7 +59,7 @@ Object.freeze({
 "chart-import.js":
 40,
 "chart-widget-host.js":
-9,
+10,
 "tablet-gesture-policy.js":
 1,
 "tablet-widget-chart.js":
@@ -79,9 +79,9 @@ Object.freeze({
 "coins-tablet-controller.js":
 5,
 "drawings.js":
-211,
+212,
 "drawings/init.js":
-72,
+73,
 "drawings/chart-ruler.js":
 8,
 "drawings/draw-magnet.js":

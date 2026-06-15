@@ -33,7 +33,7 @@ alignRsiWithCandleTimes
 import {
 createDashboardChartWidget,
 mountDashboardChartInteractions
-} from "./chart-widget-host.js?v=9";
+} from "./chart-widget-host.js?v=10";
 
 import {
 mountWidgetTabletChart
