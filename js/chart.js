@@ -768,8 +768,45 @@ scaleTapTimer = 0;
 
 }
 
-function tryScaleZoneDoubleTap(
-e
+function isScaleZoneEvent(
+clientX,
+clientY,
+sourceEvent
+){
+
+if(
+isScaleStripTarget(
+sourceEvent
+)
+){
+return true;
+}
+
+return isTabletEventOnPriceScale(
+chartEl,
+{
+clientX,
+clientY,
+touches:[
+{
+clientX,
+clientY
+}
+]
+},
+chart
+);
+
+}
+
+/**
+ * Двойной тап по шкале — на touchstart второго касания (как mountAxisDoubleTapReset).
+ * @returns {boolean} true если сработал сброс
+ */
+function noteScaleZoneTapOnDown(
+clientX,
+clientY,
+sourceEvent
 ){
 
 if(
@@ -779,40 +816,20 @@ drag
 return false;
 }
 
-const pt =
-e.changedTouches?.[
-0
-] ||
-e;
-
-const x =
-pt.clientX;
-
-const y =
-pt.clientY;
-
 if(
-x ==
+clientX ==
 null ||
-y ==
+clientY ==
 null
 ){
 return false;
 }
 
 if(
-!isTabletEventOnPriceScale(
-chartEl,
-{
-clientX:x,
-clientY:y,
-touches:[
-{
-clientX:x,
-clientY:y
-}
-]
-}
+!isScaleZoneEvent(
+clientX,
+clientY,
+sourceEvent
 )
 ){
 return false;
@@ -828,10 +845,10 @@ SCALE_DBL_TAP_MS
 ){
 
 const dx =
-x - scaleLastTap.x;
+clientX - scaleLastTap.x;
 
 const dy =
-y - scaleLastTap.y;
+clientY - scaleLastTap.y;
 
 if(
 dx * dx + dy * dy <=
@@ -839,16 +856,12 @@ SCALE_DBL_TAP_PX * SCALE_DBL_TAP_PX
 ){
 clearScaleLastTap();
 abortDrag();
+stripPointerDown =
+null;
+detachDocListeners();
 resetStripPriceAutoScale({
 force:true
 });
-
-try{
-e.preventDefault?.();
-e.stopPropagation?.();
-}catch{
-/* ignore */
-}
 
 return true;
 
@@ -866,8 +879,8 @@ scaleTapTimer
 
 scaleLastTap = {
 t:now,
-x,
-y
+x:clientX,
+y:clientY
 };
 
 scaleTapTimer =
@@ -877,6 +890,24 @@ SCALE_DBL_TAP_MS + 60
 );
 
 return false;
+
+}
+
+function tryScaleZoneDoubleTap(
+e
+){
+
+const pt =
+e.changedTouches?.[
+0
+] ||
+e;
+
+return noteScaleZoneTapOnDown(
+pt.clientX,
+pt.clientY,
+e
+);
 
 }
 
@@ -909,8 +940,7 @@ bottom:DEFAULT_PRICE_SCALE_MARGINS.bottom
 priceZoomRange =
 null;
 
-priceZoomProviderInstalled =
-false;
+uninstallTabletPriceZoomProvider();
 
 pulsePriceScaleAutoscale(
 chart,
@@ -1142,25 +1172,7 @@ max:priceZoomRange.max
 
 }
 
-let scaleFrameNotifyRaf =
-0;
-
-function emitScaleFrame(){
-
-if(
-scaleFrameNotifyRaf
-){
-cancelAnimationFrame(
-scaleFrameNotifyRaf
-);
-}
-
-scaleFrameNotifyRaf =
-requestAnimationFrame(
-()=>{
-requestAnimationFrame(
-()=>{
-scaleFrameNotifyRaf = 0;
+function notifyScaleFrame(){
 
 const payload =
 scaleFramePayload();
@@ -1172,11 +1184,6 @@ onScaleFrame?.(
 payload
 );
 }
-
-}
-);
-}
-);
 
 }
 
@@ -1449,7 +1456,7 @@ dy
 notifyChartPriceRangeChanged();
 
 onInteraction?.();
-emitScaleFrame();
+notifyScaleFrame();
 
 }
 
@@ -1463,6 +1470,8 @@ function beginStripDrag(
 clientY,
 pointerId
 ){
+
+clearScaleLastTap();
 
 readMargins();
 
@@ -1635,24 +1644,6 @@ endEvent?.type ===
 ){
 
 if(
-!stripDidDrag &&
-!drag
-){
-
-if(
-Date.now() - scaleTouchEndAt <
-120
-){
-/* touchend уже обработал double-tap */
-}else{
-tryScaleZoneDoubleTap(
-endEvent
-);
-}
-
-}
-
-if(
 drag
 ){
 onDragEnd?.();
@@ -1661,6 +1652,8 @@ onDragEnd?.();
 abortDrag();
 stripPointerDown =
 null;
+stripDidDrag =
+false;
 detachDocListeners();
 
 }
@@ -1796,6 +1789,12 @@ return;
 }
 
 if(
+stripPointerDown
+){
+return;
+}
+
+if(
 beginScaleStripInteraction(
 e.clientX,
 e.clientY,
@@ -1834,6 +1833,22 @@ return;
 
 const t =
 e.touches[0];
+
+if(
+noteScaleZoneTapOnDown(
+t.clientX,
+t.clientY,
+e
+)
+){
+try{
+e.preventDefault();
+e.stopImmediatePropagation?.();
+}catch{
+/* ignore */
+}
+return;
+}
 
 if(
 beginScaleStripInteraction(
@@ -1920,7 +1935,7 @@ e
 ){
 
 if(
-!useLwNativeScale ||
+useLwNativeScale &&
 !isTabletEventOnPriceScale(
 chartEl,
 e
