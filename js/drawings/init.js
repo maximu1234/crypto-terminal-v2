@@ -3932,6 +3932,13 @@ false;
 
 }
 
+/** Десктоп: выбор объекта наведением (как TradingView), без клика. */
+function isDesktopDrawHoverSelect(){
+
+return !isTabletChartViewport();
+
+}
+
 function useChartProbeCrosshair(){
 
 return tabletDrawInput?.useChartProbeCrosshair() ??
@@ -8349,6 +8356,135 @@ e.clientY
 
 function setupEditInteraction(){
 
+function applyDesktopHoverSelection(
+x,
+y,
+e
+){
+
+if(
+!isDesktopDrawHoverSelect() ||
+tool !==
+"cursor" ||
+placement ||
+dragState
+){
+return;
+}
+
+if(
+e?.pointerType &&
+e.pointerType !==
+"mouse"
+){
+return;
+}
+
+if(
+isDrawChromePointerEvent(
+e
+)
+){
+return;
+}
+
+const hitId =
+hitTest(
+x,
+y
+);
+
+if(
+hitId ===
+selectedId
+){
+return;
+}
+
+selectedId =
+hitId;
+
+if(
+hitId
+){
+
+const picked =
+getSelected();
+
+if(
+picked?.type ===
+"fib"
+){
+fibSettingsShapeId =
+picked.id;
+}
+
+}
+
+updateStyleBar();
+redraw();
+
+}
+
+const onEditHover = e=>{
+
+if(
+!alive ||
+!isActive()
+){
+return;
+}
+
+const { x, y } =
+pointerFromEvent(
+e
+);
+
+applyDesktopHoverSelection(
+x,
+y,
+e
+);
+
+};
+
+const onEditLeave = e=>{
+
+if(
+!isDesktopDrawHoverSelect() ||
+tool !==
+"cursor" ||
+placement ||
+dragState
+){
+return;
+}
+
+const related =
+e.relatedTarget;
+
+if(
+related &&
+wrapEl.contains(
+related
+)
+){
+return;
+}
+
+if(
+!selectedId
+){
+return;
+}
+
+selectedId =
+null;
+updateStyleBar();
+redraw();
+
+};
+
 const onEditDown = e=>{
 
 if(tool !== "cursor" || placement){
@@ -8608,31 +8744,55 @@ x,
 y
 );
 
-if(!hitId){
+const hoverSelect =
+isDesktopDrawHoverSelect() &&
+e.pointerType ===
+"mouse";
 
-if(selectedId){
-selectedId = null;
+if(
+!hitId
+){
+
+if(
+selectedId
+){
+selectedId =
+null;
 updateStyleBar();
+redraw();
 }
 
 return;
 
 }
 
-if(hitId !== selectedId){
+if(
+hitId !==
+selectedId
+){
 
-selectedId = hitId;
+selectedId =
+hitId;
 
 const picked =
 getSelected();
 
-if(picked?.type === "fib"){
-fibSettingsShapeId = picked.id;
+if(
+picked?.type ===
+"fib"
+){
+fibSettingsShapeId =
+picked.id;
 }
 
 updateStyleBar();
 redraw();
+
+if(
+!hoverSelect
+){
 return;
+}
 
 }
 
@@ -8740,6 +8900,17 @@ wrapEl.addEventListener(
 "pointerdown",
 onEditDown,
 true
+);
+
+wrapEl.addEventListener(
+"pointermove",
+onEditHover,
+true
+);
+
+wrapEl.addEventListener(
+"pointerleave",
+onEditLeave
 );
 
 const onEditMove = e=>{
@@ -9012,6 +9183,15 @@ wrapEl.removeEventListener(
 "pointerdown",
 onEditDown,
 true
+);
+wrapEl.removeEventListener(
+"pointermove",
+onEditHover,
+true
+);
+wrapEl.removeEventListener(
+"pointerleave",
+onEditLeave
 );
 window.removeEventListener("pointermove", onEditMove);
 window.removeEventListener("pointerup", onEditUp);
