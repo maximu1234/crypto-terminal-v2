@@ -375,6 +375,13 @@ let activeColor = STROKE;
 let tool = "cursor";
 let drawings = [];
 let lastLoadedSymbol = null;
+/** Undo только для текущего графика в этой сессии (смена монеты / уход со страницы — сброс). */
+let drawUndoStack =
+[];
+let drawUndoBaselineSnapshot =
+null;
+let drawUndoReplay =
+false;
 let selectedId = null;
 let placement = null;
 /** Десктоп: сырой pointer внутри wrap (LW режет crosshair до последней свечи). */
@@ -1221,6 +1228,7 @@ if(
 ){
 drawings = [];
 selectedId = null;
+syncDrawUndoBaseline();
 return;
 }
 
@@ -1269,6 +1277,7 @@ JSON.stringify(drawings)
 );
 }
 
+syncDrawUndoBaseline();
 return;
 
 }
@@ -1282,6 +1291,125 @@ drawings = [];
 }
 
 sanitizeDrawingsForCurrentSymbol();
+
+syncDrawUndoBaseline();
+
+}
+
+function resetDrawUndoHistory(){
+
+drawUndoStack.length =
+0;
+drawUndoBaselineSnapshot =
+null;
+
+}
+
+function cloneDrawingsForUndo(){
+
+return drawings.map(shape=>
+normalizeDrawingShape(
+JSON.parse(
+JSON.stringify(
+shape
+)
+)
+)
+);
+
+}
+
+function drawingsUndoSnapshotsEqual(
+a,
+b
+){
+
+if(
+a ===
+b
+){
+return true;
+}
+
+if(
+!a ||
+!b ||
+a.length !==
+b.length
+){
+return false;
+}
+
+return (
+JSON.stringify(
+a
+) ===
+JSON.stringify(
+b
+)
+);
+
+}
+
+function syncDrawUndoBaseline(){
+
+drawUndoBaselineSnapshot =
+cloneDrawingsForUndo();
+
+}
+
+function undoLastDrawingChange(){
+
+if(
+!alive ||
+!isActive() ||
+placement ||
+dragState
+){
+return false;
+}
+
+if(
+!drawUndoStack.length
+){
+return false;
+}
+
+const prev =
+drawUndoStack.pop();
+
+const keepSelected =
+selectedId;
+
+drawUndoReplay =
+true;
+
+drawings =
+prev.map(shape=>
+normalizeDrawingShape(
+shape
+)
+);
+
+selectedId =
+keepSelected &&
+drawings.some(d=>d.id === keepSelected)
+? keepSelected
+: null;
+
+syncDrawUndoBaseline();
+
+saveDrawings({
+skipUndoRecord:true
+});
+
+drawUndoReplay =
+false;
+
+updateStyleBar();
+redraw();
+
+return true;
 
 }
 
@@ -1440,7 +1568,9 @@ JSON.stringify(drawings)
 
 }
 
-function saveDrawings(){
+function saveDrawings(
+options = {}
+){
 
 drawings =
 drawings.map(shape=>{
@@ -1453,6 +1583,36 @@ shape
 }
 return shape;
 });
+
+if(
+!options.skipUndoRecord &&
+!drawUndoReplay
+){
+
+const current =
+cloneDrawingsForUndo();
+
+const baseline =
+drawUndoBaselineSnapshot;
+
+if(
+baseline &&
+!drawingsUndoSnapshotsEqual(
+baseline,
+current
+)
+){
+
+drawUndoStack.push(
+baseline
+);
+
+}
+
+drawUndoBaselineSnapshot =
+current;
+
+}
 
 localStorage.setItem(
 storageKey(),
@@ -11115,6 +11275,41 @@ return;
 
 }
 
+if(
+(
+e.metaKey ||
+e.ctrlKey
+) &&
+e.key ===
+"z" &&
+!e.shiftKey
+){
+
+const ae =
+document.activeElement;
+const tag =
+ae?.tagName;
+
+if(
+tag !==
+"INPUT" &&
+tag !==
+"TEXTAREA" &&
+!ae?.isContentEditable
+){
+
+if(
+undoLastDrawingChange()
+){
+e.preventDefault();
+}
+
+}
+
+return;
+
+}
+
 if(e.key === "Delete" || e.key === "Backspace"){
 
 const ae =
@@ -11838,6 +12033,12 @@ fibSettingsSyncDeferred = true;
 return;
 }
 
+if(
+!e.detail?.local
+){
+resetDrawUndoHistory();
+}
+
 loadDrawings();
 reconcileDrawingAlertsFromRegistry();
 scheduleRedraw();
@@ -12352,6 +12553,8 @@ if(!alive){
 return;
 }
 
+resetDrawUndoHistory();
+
 persistDrawingsForSymbol(
 getSymbol()
 );
@@ -12542,6 +12745,8 @@ getSymbol();
 
 lastLoadedSymbol = next;
 
+resetDrawUndoHistory();
+
 loadDrawings();
 reconcileDrawingAlertsFromRegistry();
 selectedId = null;
@@ -12566,6 +12771,7 @@ resize: resizeCanvas,
 destroy(){
 
 alive = false;
+resetDrawUndoHistory();
 selectedId = null;
 hideDomChartCrosshair(
 wrapEl
