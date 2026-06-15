@@ -2,7 +2,7 @@
 
 **Тег:** `metka-21` · **Коммит:** `git rev-parse metka-21`
 
-**Текущий эталон отката.** Предыдущая: [MARKER_20.md](./MARKER_20.md) (`metka-20`).
+**Предыдущий эталон отката.** Текущая: [MARKER_22.md](./MARKER_22.md) (`metka-22`).
 
 Проверено: asset manifest (python audit, 0 mismatches); site-nav (7 ссылок × 5 страниц). Unit tests — `npm run check:all` (node).
 
@@ -92,8 +92,9 @@
 
 | Тег | Роль |
 |-----|------|
-| `metka-21` | **Текущий** эталон |
-| `metka-20` | **Предыдущий** эталон (до RSI на Главной/Терминале) |
+| `metka-22` | **Текущий** эталон |
+| `metka-21` | **Предыдущий** эталон (RSI widgets / ellipsis) |
+| `metka-20` | до RSI на Главной/Терминале |
 
 ## Откат
 

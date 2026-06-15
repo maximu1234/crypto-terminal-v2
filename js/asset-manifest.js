@@ -49,7 +49,7 @@ Object.freeze({
 "screener.js":
 74,
 "release-marker.js":
-6,
+7,
 "site-boot.js":
 83,
 "suppress-native-context-menu.js":
