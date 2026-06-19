@@ -27,60 +27,136 @@ return parts.length > 1
 
 }
 
-export function formatPrice(price){
+export function priceDecimalPlaces(
+referencePrice
+){
 
-if(!Number.isFinite(price)){
+const abs =
+Math.abs(
+Number(
+referencePrice
+)
+) ||
+1;
+
+if(
+abs >=
+1000
+){
+return 2;
+}
+
+if(
+abs >=
+1
+){
+return 4;
+}
+
+if(
+abs >=
+0.01
+){
+return 6;
+}
+
+return 8;
+
+}
+
+export function formatPriceWithDecimals(
+price,
+decimals
+){
+
+if(
+!Number.isFinite(
+price
+)
+){
 return "";
 }
 
 const negative =
-price < 0;
+price <
+0;
 
 const abs =
-Math.abs(price);
+Math.abs(
+price
+);
 
-let formatted;
-
-if(abs >= 1000){
-formatted = abs.toFixed(2);
-}else if(abs >= 1){
-formatted = trimTrailingZeros(abs.toFixed(4));
-}else if(abs >= 0.01){
-formatted = trimTrailingZeros(abs.toFixed(6));
-}else{
-formatted = trimTrailingZeros(abs.toFixed(8));
-}
-
-const withCommas =
-addThousandsSeparators(formatted);
+const formatted =
+addThousandsSeparators(
+abs.toFixed(
+decimals
+)
+);
 
 return negative
-? `-${withCommas}`
-: withCommas;
+? `-${formatted}`
+: formatted;
+
+}
+
+/** Единый формат шкалы: все цены с той же точностью, что у reference (как TV). */
+export function formatChartPrice(
+price,
+referencePrice
+){
+
+return formatPriceWithDecimals(
+price,
+priceDecimalPlaces(
+referencePrice
+)
+);
+
+}
+
+export function formatPrice(price){
+
+if(
+!Number.isFinite(
+price
+)
+){
+return "";
+}
+
+return formatChartPrice(
+price,
+price
+);
 
 }
 
 export function priceFormatForValue(referencePrice){
 
-const abs =
-Math.abs(referencePrice) || 1;
+const decimals =
+priceDecimalPlaces(
+referencePrice
+);
 
-let minMove;
-
-if(abs >= 1000){
-minMove = 0.01;
-}else if(abs >= 1){
-minMove = 0.0001;
-}else if(abs >= 0.01){
-minMove = 0.000001;
-}else{
-minMove = 0.00000001;
-}
+const minMove =
+Math.pow(
+10,
+-Math.min(
+decimals,
+8
+)
+);
 
 return {
 
 type:"custom",
-formatter:formatPrice,
+formatter:(
+p
+)=>
+formatPriceWithDecimals(
+p,
+decimals
+),
 minMove
 
 };

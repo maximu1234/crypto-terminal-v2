@@ -56,6 +56,7 @@ CHART_PRICE_HUD_FALLBACK_HEIGHT
 
 import {
 formatPrice,
+formatChartPrice,
 chartScaleFont,
 CHART_SCALE_LABEL_PAD_LEFT,
 CHART_SCALE_LABEL_LINE_HEIGHT,
@@ -68,7 +69,7 @@ ensureDomChartCrosshair,
 hideDomChartCrosshair,
 positionTabletProbeHorizInStack,
 fullCrosshairOptions
-} from "../chart-import.js?v=40";
+} from "../chart-import.js?v=41";
 
 import {
 STROKE,
@@ -89,7 +90,7 @@ POSITION_DEFAULT_WIDTH_BARS,
 POSITION_RR_LABEL_SAMPLE,
 RECT_DEFAULT_FILL_COLOR,
 RECT_DEFAULT_FILL_OPACITY
-} from "./constants.js?v=6";
+} from "./constants.js?v=8";
 
 import {
 getRectangleHandleScreens,
@@ -116,7 +117,7 @@ normalizeFibLevelsShape,
 parseFibRatioField,
 getFibRows,
 isSeriesLogarithmic
-} from "./fib-spec.js?v=9";
+} from "./fib-spec.js?v=11";
 
 import {
 setFibPanelCommitHook,
@@ -145,11 +146,11 @@ pickUi
 
 import {
 createDrawHitTester
-} from "./draw-hit.js?v=6";
+} from "./draw-hit.js?v=8";
 
 import {
 createDrawRenderer
-} from "./draw-render.js?v=6";
+} from "./draw-render.js?v=8";
 
 import {
 snapPlotToCandleWick
@@ -191,11 +192,11 @@ createDrawAlertsChart
 
 import {
 createDrawPlacement
-} from "./draw-placement.js?v=2";
+} from "./draw-placement.js?v=3";
 
 import {
 createDrawEditInteraction
-} from "./draw-edit-interaction.js?v=2";
+} from "./draw-edit-interaction.js?v=4";
 
 import {
 createDrawChartInput
@@ -203,7 +204,7 @@ createDrawChartInput
 
 import {
 createDrawPriceScale
-} from "./draw-price-scale.js?v=2";
+} from "./draw-price-scale.js?v=3";
 
 import {
 createDrawRedrawLoop
@@ -3668,6 +3669,26 @@ getSelectedId:()=>selectedId,
 listHandles,
 toXY,
 shapeStyle,
+formatScalePrice:(
+price
+)=>{
+
+const candles =
+getCandles?.() ??
+[];
+const ref =
+candles[
+candles.length -
+1
+]?.close ??
+price;
+
+return formatChartPrice(
+price,
+ref
+);
+
+},
 readChartScaleMargins,
 isPriceScaleInverted,
 manualPriceToCoordinate,
@@ -3756,7 +3777,8 @@ channelScreenGeometry,
 channelBodyDist,
 hitTestChannelBody,
 rectangleBodyDist,
-hitTestRectangleBody
+hitTestRectangleBody,
+drawBodyHitThreshold
 } =
 createDrawHitTester({
 toXY,
@@ -3946,9 +3968,37 @@ placementCtl);
 
 function hitTest(px, py){
 
-const threshold = 8;
+const bodyThreshold =
+drawBodyHitThreshold();
+
+for(
+let i =
+drawings.length -
+1;
+i >=
+0;
+i--
+){
+
+const d =
+drawings[
+i
+];
+
+if(
+hitTestHandle(
+px,
+py,
+d
+)
+){
+return d.id;
+}
+
+}
+
 let best = null;
-let bestDist = threshold;
+let bestDist = bodyThreshold;
 
 drawings.forEach(d=>{
 
@@ -4936,7 +4986,8 @@ hitTestTrendlineBody,
 hitTestFibBody,
 hitTestChannelBody,
 hitTestRectangleBody,
-hitTestHrayLine
+hitTestHrayLine,
+drawBodyHitThreshold
 });
 
 ({

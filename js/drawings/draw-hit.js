@@ -11,11 +11,18 @@ fibPriceAtRatio,
 getFibRows,
 isSeriesLogarithmic,
 fibLevelXSpan
-} from "./fib-spec.js?v=9";
+} from "./fib-spec.js?v=11";
 
 import {
-FIB_HIT_X_PAD_PX
-} from "./constants.js?v=6";
+FIB_HIT_X_PAD_PX,
+FIB_HIT_X_PAD_DESKTOP_PX,
+DRAW_BODY_HIT_THRESHOLD_TOUCH,
+DRAW_BODY_HIT_THRESHOLD_DESKTOP
+} from "./constants.js?v=8";
+
+import {
+isCoarseTouchViewport
+} from "../chart/chart-options.js?v=6";
 
 /**
  * @param {object} deps
@@ -29,6 +36,14 @@ getPlotWidth,
 series,
 pointFromXY
 } = deps;
+
+function fibHitXPadPx(){
+
+return isCoarseTouchViewport()
+? FIB_HIT_X_PAD_PX
+: FIB_HIT_X_PAD_DESKTOP_PX;
+
+}
 
 function hrayLineDist(px, py, shape){
 
@@ -132,18 +147,13 @@ getPlotWidth();
 
 const {
 x1,
-x2,
-collapsed
+x2
 } =
 fibLevelXSpan(
 a,
 b,
 plotW
 );
-
-if(
-!collapsed
-){
 
 getFibRows(shape).forEach(row=>{
 
@@ -168,8 +178,8 @@ series.priceToCoordinate(price);
 
 if(
 y != null &&
-px >= x1 - FIB_HIT_X_PAD_PX &&
-px <= x2 + FIB_HIT_X_PAD_PX
+px >= x1 - fibHitXPadPx() &&
+px <= x2 + fibHitXPadPx()
 ){
 dist = Math.min(
 dist,
@@ -178,8 +188,6 @@ Math.abs(py - y)
 }
 
 });
-
-}
 
 if(
 shape.fibShowTrendLine === true
@@ -410,7 +418,12 @@ channelP4Point,
 channelBodyDist,
 hitTestChannelBody,
 rectangleBodyDist,
-hitTestRectangleBody
+hitTestRectangleBody,
+drawBodyHitThreshold(){
+return isCoarseTouchViewport()
+? DRAW_BODY_HIT_THRESHOLD_TOUCH
+: DRAW_BODY_HIT_THRESHOLD_DESKTOP;
+}
 };
 
 }

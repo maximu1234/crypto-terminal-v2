@@ -1,5 +1,7 @@
 export {
 formatPrice,
+formatChartPrice,
+priceDecimalPlaces,
 priceFormatForValue,
 applyChartPriceFormat,
 CHART_PRICE_SCALE_WIDTH,
@@ -26,7 +28,7 @@ isCoarseTouchViewport,
 effectiveChartPriceScaleWidth,
 effectiveChartScaleFontSize,
 isTabletChartViewport
-} from "./chart/chart-options.js?v=5";
+} from "./chart/chart-options.js?v=6";
 
 export {
 ensureDomChartCrosshair,
@@ -41,7 +43,7 @@ positionTabletProbeHorizInStack,
 hideTabletProbeCrosshair,
 formatCrosshairTimeLabel,
 isUserCrosshairEvent
-} from "./chart/chart-dom-crosshair.js?v=13";
+} from "./chart/chart-dom-crosshair.js?v=14";
 
 import {
 TABLET_LW_NATIVE_PRICE_SCALE,
@@ -92,7 +94,7 @@ import {
 effectiveChartPriceScaleWidth,
 CHART_TIME_SCALE_HEIGHT,
 isTabletChartViewport
-} from "./chart/chart-options.js?v=5";
+} from "./chart/chart-options.js?v=6";
 
 
 export const DEFAULT_PRICE_SCALE_MARGINS =

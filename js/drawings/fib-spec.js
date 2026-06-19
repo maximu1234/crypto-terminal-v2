@@ -8,7 +8,7 @@ WIDTH_OPTIONS,
 FIB_MIN_ANCHOR_SPAN_PX,
 FIB_LABEL_X_PAD_PX,
 FIB_LABEL_RIGHT_RESERVE_PX
-} from "./constants.js?v=6";
+} from "./constants.js?v=8";
 
 const FIB_LINE_STYLE_OPTIONS = [
 { value: "solid", label: "Line" },
@@ -635,9 +635,158 @@ p1 + (p2 - p1) * ratio
 }
 
 /**
+ * После drag handle: не оставлять fib с нулевым горизонтальным span
+ * (иначе уровни скрыты и объект «пропадает»).
+ * @returns {boolean} якорь был скорректирован
+ */
+export function ensureFibAnchorMinSpan(
+shape,
+movedHandleId,
+deps
+){
+
+if(
+shape?.type !==
+"fib" ||
+!shape.p1 ||
+!shape.p2
+){
+return false;
+}
+
+const {
+toXY,
+pointFromXY,
+minSpanPx = FIB_MIN_ANCHOR_SPAN_PX
+} =
+deps ||
+{};
+
+if(
+typeof toXY !==
+"function" ||
+typeof pointFromXY !==
+"function"
+){
+return false;
+}
+
+const movedId =
+movedHandleId ===
+"p1"
+? "p1"
+: "p2";
+const fixedId =
+movedId ===
+"p2"
+? "p1"
+: "p2";
+
+const fixedPt =
+shape[
+fixedId
+];
+const movedPt =
+shape[
+movedId
+];
+
+const a =
+toXY(
+fixedPt
+);
+const b =
+toXY(
+movedPt
+);
+
+if(
+!a ||
+!b
+){
+return false;
+}
+
+const dx =
+b.x -
+a.x;
+
+if(
+Math.abs(
+dx
+) >=
+minSpanPx
+){
+return false;
+}
+
+const dir =
+Math.abs(
+dx
+) <
+0.01
+? 1
+: (
+dx >
+0
+? 1
+: -1
+);
+
+const targetX =
+a.x +
+dir *
+minSpanPx;
+const next =
+pointFromXY(
+targetX,
+b.y
+);
+
+if(
+!next
+){
+
+const fallback =
+pointFromXY(
+a.x -
+dir *
+minSpanPx,
+b.y
+);
+
+if(
+!fallback
+){
+return false;
+}
+
+shape[
+movedId
+] = {
+time: fallback.time,
+price: movedPt.price
+};
+
+return true;
+
+}
+
+shape[
+movedId
+] = {
+time: next.time,
+price: movedPt.price
+};
+
+return true;
+
+}
+
+/**
  * Горизонтальный span уровня fib между якорями.
- * span &lt; FIB_MIN_ANCHOR_SPAN_PX → collapsed (линии скрыты; без expand на весь plot).
- * @returns {{ x1: number, x2: number, labelX: number, collapsed: boolean }}
+ * Узкий span (&lt; FIB_MIN_ANCHOR_SPAN_PX) расширяется вокруг середины — уровни не скрываем.
+ * @returns {{ x1: number, x2: number, labelX: number }}
  */
 export function fibLevelXSpan(
 a,
@@ -656,7 +805,7 @@ a.x,
 b.x
 );
 
-const span =
+let span =
 x2 - x1;
 
 if(
@@ -664,12 +813,76 @@ span <
 FIB_MIN_ANCHOR_SPAN_PX
 ){
 
-return {
-x1,
-x2,
-labelX: x1,
-collapsed: true
-};
+const mid =
+(x1 + x2) /
+2;
+const half =
+FIB_MIN_ANCHOR_SPAN_PX /
+2;
+
+x1 =
+mid - half;
+x2 =
+mid + half;
+
+if(
+x1 <
+0
+){
+
+x2 -=
+x1;
+x1 =
+0;
+
+}
+
+if(
+x2 >
+plotW
+){
+
+const overflow =
+x2 - plotW;
+
+x1 -=
+overflow;
+x2 =
+plotW;
+
+}
+
+if(
+x1 <
+0
+){
+
+x1 =
+0;
+
+}
+
+if(
+x2 - x1 <
+FIB_MIN_ANCHOR_SPAN_PX &&
+plotW >=
+FIB_MIN_ANCHOR_SPAN_PX
+){
+
+x2 =
+Math.min(
+plotW,
+x1 +
+FIB_MIN_ANCHOR_SPAN_PX
+);
+x1 =
+Math.max(
+0,
+x2 -
+FIB_MIN_ANCHOR_SPAN_PX
+);
+
+}
 
 }
 
@@ -680,8 +893,7 @@ labelX:
 Math.min(
 x2 + FIB_LABEL_X_PAD_PX,
 plotW - FIB_LABEL_RIGHT_RESERVE_PX
-),
-collapsed: false
+)
 };
 
 }

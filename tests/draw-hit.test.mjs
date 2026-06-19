@@ -168,7 +168,7 @@ true
 );
 
 test(
-"hitTestFibBody collapsed vertical anchors misses level",
+"hitTestFibBody vertical anchors hit expanded level span",
 ()=>{
 
 const {
@@ -207,9 +207,9 @@ hit.hitTestFibBody(
 midY,
 shape
 ),
-false
+true
 );
-assert.equal(
+assert.notEqual(
 hit.fibBodyDist(
 320,
 midY,

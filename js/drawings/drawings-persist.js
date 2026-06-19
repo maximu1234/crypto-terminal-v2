@@ -6,12 +6,12 @@ import {
 STROKE,
 RECT_DEFAULT_FILL_COLOR,
 RECT_DEFAULT_FILL_OPACITY
-} from "./constants.js?v=6";
+} from "./constants.js?v=8";
 
 import {
 ensureFibLevelsVisible,
 finalizeFibLevels
-} from "./fib-spec.js?v=9";
+} from "./fib-spec.js?v=11";
 
 import {
 isPositionType,

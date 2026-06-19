@@ -4,7 +4,13 @@
  */
 import {
 isCoarseTouchViewport
-} from "../chart-import.js?v=40";
+} from "../chart-import.js?v=41";
+
+import {
+DRAW_HANDLE_HIT_THRESHOLD_DESKTOP,
+DRAW_HANDLE_HIT_THRESHOLD_DESKTOP_POSITION,
+DRAW_BODY_HIT_THRESHOLD_TOUCH
+} from "./constants.js?v=8";
 
 import {
 getRectangleHandleScreens,
@@ -15,6 +21,10 @@ import {
 isPositionType,
 positionEntryPrice
 } from "./position.js?v=1";
+
+import {
+ensureFibAnchorMinSpan
+} from "./fib-spec.js?v=11";
 
 import {
 touchShapeRevision
@@ -65,9 +75,14 @@ hitTestTrendlineBody,
 hitTestFibBody,
 hitTestChannelBody,
 hitTestRectangleBody,
-hitTestHrayLine
+hitTestHrayLine,
+drawBodyHitThreshold: drawBodyHitThresholdDep
 } =
 deps;
+
+let drawBodyHitThreshold =
+drawBodyHitThresholdDep ??
+(()=>DRAW_BODY_HIT_THRESHOLD_TOUCH);
 
 function handleHitThreshold(
 shape
@@ -79,8 +94,8 @@ if(
 return isPositionType(
 shape.type
 )
-? 16
-: 10;
+? DRAW_HANDLE_HIT_THRESHOLD_DESKTOP_POSITION
+: DRAW_HANDLE_HIT_THRESHOLD_DESKTOP;
 }
 
 const circleR =
@@ -644,33 +659,37 @@ return true;
 
 }
 
-function hitTestShapeBody(px, py, shape, threshold = 8){
+function hitTestShapeBody(px, py, shape, threshold){
+
+const bodyThreshold =
+threshold ??
+drawBodyHitThreshold();
 
 if(
 shape.type === "trendline" ||
 shape.type === "arrow"
 ){
-return hitTestTrendlineBody(px, py, shape, threshold);
+return hitTestTrendlineBody(px, py, shape, bodyThreshold);
 }
 
 if(shape.type === "fib"){
-return hitTestFibBody(px, py, shape, threshold);
+return hitTestFibBody(px, py, shape, bodyThreshold);
 }
 
 if(shape.type === "channel"){
-return hitTestChannelBody(px, py, shape, threshold);
+return hitTestChannelBody(px, py, shape, bodyThreshold);
 }
 
 if(shape.type === "rectangle"){
-return hitTestRectangleBody(px, py, shape, threshold);
+return hitTestRectangleBody(px, py, shape, bodyThreshold);
 }
 
 if(shape.type === "hray"){
-return hitTestHrayLine(px, py, shape, threshold);
+return hitTestHrayLine(px, py, shape, bodyThreshold);
 }
 
 if(isPositionType(shape.type)){
-return positionBodyDist(px, py, shape) <= threshold;
+return positionBodyDist(px, py, shape) <= bodyThreshold;
 }
 
 return false;
@@ -1344,8 +1363,20 @@ preserveTpSl
 }
 );
 
-touchShapeRevision(
-draggedShape
+}else if(
+draggedShape.type ===
+"fib" &&
+getDragState().mode ===
+"handle"
+){
+
+ensureFibAnchorMinSpan(
+draggedShape,
+getDragState().handleId,
+{
+toXY,
+pointFromXY
+}
 );
 
 }

@@ -1031,6 +1031,100 @@ body.tablet-chart .rsi-scale-touch-strip{
   pointer-events:auto;
 }
 
+.price-alert-badges-root{
+  position:absolute;
+  inset:0;
+  z-index:33;
+  pointer-events:none;
+  overflow:hidden;
+}
+
+.price-alert-badge{
+  position:absolute;
+  left:8px;
+  display:flex;
+  align-items:stretch;
+  height:26px;
+  transform:translateY(-50%);
+  pointer-events:auto;
+  border:1px solid #facc15;
+  border-radius:3px;
+  background:rgba(42,46,57,.96);
+  box-shadow:none;
+  touch-action:none;
+}
+
+.price-alert-badge.hidden{
+  display:none;
+}
+
+.price-alert-badge-body{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  margin:0;
+  min-width:9ch;
+  padding:0 10px;
+  border:none;
+  background:transparent;
+  color:#facc15;
+  cursor:grab;
+  font:400 11px/26px -apple-system, BlinkMacSystemFont, "Trebuchet MS", Roboto, Ubuntu, sans-serif;
+  font-variant-numeric:tabular-nums;
+  white-space:nowrap;
+  box-sizing:border-box;
+}
+
+.price-alert-badge-body:active{
+  cursor:grabbing;
+}
+
+.price-alert-badge-sep{
+  width:1px;
+  align-self:stretch;
+  flex-shrink:0;
+  background:#facc15;
+}
+
+.price-alert-badge-delete{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:36px;
+  min-width:36px;
+  margin:0;
+  padding:0;
+  border:none;
+  background:transparent;
+  color:#ef4444;
+  font-size:32px;
+  font-weight:300;
+  line-height:1;
+  cursor:pointer;
+}
+
+.price-alert-badge-delete:hover{
+  background:rgba(239,68,68,.14);
+}
+
+body.tablet-chart .price-alert-badge{
+  height:32px;
+  left:10px;
+}
+
+body.tablet-chart .price-alert-badge-body{
+  font-size:12px;
+  line-height:32px;
+  min-width:10ch;
+  padding:0 12px;
+}
+
+body.tablet-chart .price-alert-badge-delete{
+  width:48px;
+  min-width:48px;
+  font-size:36px;
+}
+
 body.tablet-chart .price-alert-scale-plus{
   width:32px;
   height:32px;

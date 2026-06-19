@@ -3,12 +3,11 @@
  * Phase 10 split from drawings/init.js.
  */
 import {
-formatPrice,
 chartScaleFont,
 CHART_SCALE_LABEL_PAD_LEFT,
 CHART_SCALE_LABEL_LINE_HEIGHT,
 scaleLabelTextColorForBackground
-} from "../chart-import.js?v=40";
+} from "../chart-import.js?v=41";
 
 import {
 layoutScaleLabelYs,
@@ -17,7 +16,7 @@ CHART_PRICE_HUD_FALLBACK_HEIGHT
 
 import {
 isSeriesLogarithmic
-} from "./fib-spec.js?v=9";
+} from "./fib-spec.js?v=11";
 
 export function createDrawPriceScale(
 deps
@@ -34,6 +33,7 @@ getSelectedId,
 listHandles,
 toXY,
 shapeStyle,
+formatScalePrice,
 readChartScaleMargins,
 isPriceScaleInverted,
 manualPriceToCoordinate,
@@ -105,7 +105,7 @@ return;
 }
 
 const text =
-formatPrice(Number(price));
+formatScalePrice(Number(price));
 
 const chartW =
 chartSize().w;

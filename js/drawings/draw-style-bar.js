@@ -14,7 +14,7 @@ DEFAULT_FIB_SPEC,
 FIB_TOOL_DEFAULTS_VERSION,
 RECT_DEFAULT_FILL_COLOR,
 RECT_DEFAULT_FILL_OPACITY
-} from "./constants.js?v=6";
+} from "./constants.js?v=8";
 
 import {
 normalizeFibLineStyle,
@@ -29,7 +29,7 @@ parseFibRatioField,
 getFibRows,
 setFibLineStyleButton,
 setFibLevelWidthButton
-} from "./fib-spec.js?v=9";
+} from "./fib-spec.js?v=11";
 
 import {
 setFibPanelCommitHook,

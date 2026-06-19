@@ -6,7 +6,7 @@ import {
 isCoarseTouchViewport,
 isTabletChartViewport,
 hasAnyFinePointer
-} from "../chart-import.js?v=40";
+} from "../chart-import.js?v=41";
 
 export function createDrawChartInput(
 deps

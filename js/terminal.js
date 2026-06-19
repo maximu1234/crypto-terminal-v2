@@ -62,7 +62,7 @@ coinsTfVisibleBars,
 applyCoinsChartViewport,
 refreshCoinsChartBarSpacing,
 tfPeriodSec
-} from "./chart-import.js?v=40";
+} from "./chart-import.js?v=41";
 
 import {
 mountCoinsTabletController
@@ -78,7 +78,7 @@ syncBackgroundAlertStreams
 
 import {
 initWidgetDrawings
-} from "./chart-widget-host.js?v=10";
+} from "./chart-widget-host.js?v=11";
 
 import {
 mountDrawToolbar,
@@ -95,6 +95,10 @@ syncCoinsTfLabel
 import {
 mountCoinsLayoutResize
 } from "./coins-layout-resize.js?v=4";
+
+import {
+mountQwertyKeyInput
+} from "./qwerty-key-input.js?v=1";
 
 import {
 registerCoinsState,
@@ -1896,16 +1900,21 @@ drawingTools?.endPriceScaleDragRedraw?.();
 drawingTools?.scheduleRedraw?.();
 };
 
-void import("./price-alert-ui.js?v=38").then(({ mountPriceAlertUi })=>{
+void import("./price-alert-ui.js?v=39").then(({ mountPriceAlertUi })=>{
+let disposeAlertUi =
 mountPriceAlertUi({
 chart,
 series: candleSeries,
 wrapEl: chartWrapEl,
 getSymbol: ()=> currentSymbol,
 getTf: ()=> currentTF,
-scheduleRedraw: ()=>
+scheduleRedraw: ()=>{
+disposeAlertUi?.syncBadges?.();
+return (
 drawingTools?.scheduleDragRedraw?.() ||
-drawingTools?.scheduleRedraw?.(),
+drawingTools?.scheduleRedraw?.()
+);
+},
 onCrosshairSuppress:()=>{
 chartCrosshairLink?.setSuppressed?.(
 true
@@ -2828,7 +2837,8 @@ return;
 if(
 e.metaKey ||
 e.ctrlKey ||
-e.altKey
+e.altKey ||
+e.shiftKey
 ){
 return;
 }
@@ -3310,15 +3320,27 @@ renderList();
    KEYBOARD NAVIGATION
 ========================================================= */
 
-document
-.getElementById("coin-search")
-?.addEventListener("input", e=>{
+const coinSearchEl =
+document.getElementById(
+"coin-search"
+);
 
-searchQuery = e.target.value;
+if(
+coinSearchEl
+){
 
+mountQwertyKeyInput(
+coinSearchEl,
+{
+onInput(){
+searchQuery =
+coinSearchEl.value;
 renderList();
+}
+}
+);
 
-});
+}
 
 function shouldIgnoreListKeyNav(e){
 
@@ -3967,9 +3989,20 @@ closeAllCoinFlagMenus,
 applyCoinFavoriteGroup,
 updateCoinFlagButton,
 rebuildRsiFromCandles,
-applyChartLiveCandle(){
+applyChartLiveCandle(
+bar
+){
 candleSeries.setData(
 buildChartDisplayCandles()
+);
+applyChartPriceFormat(
+candleSeries,
+bar?.close ??
+candles[
+candles.length -
+1
+]?.close ??
+1
 );
 }
 });

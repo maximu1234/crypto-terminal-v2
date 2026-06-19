@@ -8,11 +8,12 @@ mainChartCrosshairOptions,
 fullCrosshairOptions,
 hiddenCrosshairOptions,
 formatPrice,
+formatChartPrice,
 isTabletChartViewport,
 bindFinePointerMedia,
 syncTabletFinePointerClass,
 getChartLayoutBgColor
-} from "./chart-options.js?v=5";
+} from "./chart-options.js?v=6";
 
 import {
 ensureDomChartCrosshair,
@@ -23,7 +24,7 @@ hideDomChartCrosshair,
 hideDomChartCrosshairHorz,
 hideDomChartCrosshairVert,
 positionDomChartCrosshairHorz
-} from "./chart-dom-crosshair.js?v=13";
+} from "./chart-dom-crosshair.js?v=14";
 
 export function mountChartRangeFreeze(
 chart
@@ -3261,7 +3262,10 @@ hud.classList.toggle(
 );
 
 priceEl.textContent =
-formatPrice(last.close);
+formatChartPrice(
+last.close,
+last.close
+);
 
 const period =
 tfPeriodSec(getTf?.() || "60");

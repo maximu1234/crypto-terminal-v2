@@ -23,7 +23,7 @@ createRSIChart,
 updateRsiBandLayout,
 updateRsiLevelLinesLayout,
 linkPairedChartTimeScales
-} from "./chart-import.js?v=40";
+} from "./chart-import.js?v=41";
 
 import {
 calculateRSI,
@@ -33,7 +33,7 @@ alignRsiWithCandleTimes
 import {
 createDashboardChartWidget,
 mountDashboardChartInteractions
-} from "./chart-widget-host.js?v=10";
+} from "./chart-widget-host.js?v=11";
 
 import {
 mountWidgetTabletChart

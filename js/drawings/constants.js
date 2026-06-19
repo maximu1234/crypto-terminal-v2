@@ -35,12 +35,32 @@ dashed: [8, 6],
 dotted: [2, 3]
 });
 
-/** Мин. горизонтальный span; уже — горизонтальные уровни не рисуем */
+/** Мин. горизонтальный span якорей; уже — span уровней расширяется вокруг середины */
 export const FIB_MIN_ANCHOR_SPAN_PX =
 12;
 
-/** Hit-test: допуск по X вокруг span уровня */
+/** Hit-test: допуск по X вокруг span уровня (touch / iPad) */
 export const FIB_HIT_X_PAD_PX =
+8;
+
+/** Hit-test: desktop — только линия уровня, без горизонтального «коридора» */
+export const FIB_HIT_X_PAD_DESKTOP_PX =
+0;
+
+/** Perpendicular hit distance: тело линии (touch) */
+export const DRAW_BODY_HIT_THRESHOLD_TOUCH =
+8;
+
+/** Perpendicular hit distance: тело линии (desktop mouse) — ≈ толщина линии */
+export const DRAW_BODY_HIT_THRESHOLD_DESKTOP =
+2;
+
+/** Handle hit radius: desktop (≈ anchor r=5 + 1px) */
+export const DRAW_HANDLE_HIT_THRESHOLD_DESKTOP =
+6;
+
+/** Handle hit radius: desktop position tool (≈ drawPositionAnchor r=7) */
+export const DRAW_HANDLE_HIT_THRESHOLD_DESKTOP_POSITION =
 8;
 
 export const FIB_LABEL_X_PAD_PX =

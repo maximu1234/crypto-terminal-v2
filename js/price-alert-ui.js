@@ -4,7 +4,8 @@ getActiveAlerts,
 removeAlert,
 finalizeAlertPriceDrag,
 setAlertDragLivePrice,
-clearAlertDragLivePrice
+clearAlertDragLivePrice,
+alertPriceForDisplay
 } from "./alerts.js?v=97";
 
 import {
@@ -21,11 +22,7 @@ hideDomChartCrosshair,
 hideDomChartCrosshairHorz,
 hideDomChartCrosshairVert,
 positionDomChartCrosshair
-} from "./chart-import.js?v=40";
-
-import {
-mountDrawToolIcons
-} from "./draw-ui-shared.js?v=23";
+} from "./chart-import.js?v=41";
 
 const PLUS_ICON_W =
 22;
@@ -45,12 +42,6 @@ const PLUS_NEAR_RADIUS =
 
 const PLUS_SCALE_GAP_PX =
 4;
-
-const TOUCH_LINE_HIT_PX =
-22;
-
-const LINE_HIT_PX =
-10;
 
 function probeHorizTopPx(
 y
@@ -162,8 +153,6 @@ if(
 return ()=>{};
 }
 
-let selectedAlertId =
-null;
 let dragAlertId =
 null;
 let suppressPlusClickUntil =
@@ -214,57 +203,306 @@ wrapEl.appendChild(
 touchGuideLine
 );
 
-const deleteBar =
+const alertBadgesRoot =
 document.createElement(
 "div"
 );
-
-deleteBar.className =
-"draw-style-float price-alert-style-float hidden";
-
-deleteBar.innerHTML =
-`<button type="button" class="float-drag price-alert-style-drag" title="Перетащить панель" aria-label="Перетащить">
-<span class="drag-dots"></span>
-</button>
-<button type="button" class="float-delete price-alert-delete-btn" title="Удалить алерт" aria-label="Удалить алерт">
-<img class="draw-tool-icon" data-icon="trash" width="18" height="18" alt="" aria-hidden="true">
-</button>`;
-
-document.body.appendChild(
-deleteBar
+alertBadgesRoot.className =
+"price-alert-badges-root";
+wrapEl.appendChild(
+alertBadgesRoot
 );
 
-mountDrawToolIcons(
-deleteBar
+const badgeByShapeId =
+new Map();
+
+let badgesRaf =
+0;
+
+function scheduleBadgeSync(){
+
+if(
+badgesRaf
+){
+return;
+}
+
+badgesRaf =
+requestAnimationFrame(
+()=>{
+badgesRaf =
+0;
+syncAlertBadges();
+}
 );
 
+}
+
+function deleteAlertByShapeId(
+shapeId
+){
+
+if(
+!shapeId
+){
+return;
+}
+
+removeAlert(
+sym(),
+shapeId
+);
+dispatchAlertsChanged();
+scheduleRedraw?.();
+scheduleBadgeSync();
+
+}
+
+function bindAlertBadge(
+shapeId,
+el
+){
+
+const bodyBtn =
+el.querySelector(
+".price-alert-badge-body"
+);
 const deleteBtn =
-deleteBar.querySelector(
-".price-alert-delete-btn"
+el.querySelector(
+".price-alert-badge-delete"
 );
 
-const deleteBarDragHandle =
-deleteBar.querySelector(
-".price-alert-style-drag"
+deleteBtn?.addEventListener(
+"click",
+e=>{
+
+e.preventDefault();
+e.stopPropagation();
+deleteAlertByShapeId(
+shapeId
 );
 
-let alertBarOffset = {
-x: 12,
-y: -16
+}
+);
+
+deleteBtn?.addEventListener(
+"touchend",
+e=>{
+
+e.preventDefault();
+e.stopPropagation();
+deleteAlertByShapeId(
+shapeId
+);
+
+},
+{
+passive:false
+}
+);
+
+bodyBtn?.addEventListener(
+"pointerdown",
+e=>{
+
+if(
+e.pointerType ===
+"mouse" &&
+e.button !==
+0
+){
+return;
+}
+
+if(
+!e.isPrimary
+){
+return;
+}
+
+e.preventDefault();
+e.stopPropagation();
+
+const row =
+alertAt(
+shapeId
+);
+
+if(
+!row
+){
+return;
+}
+
+dragAlertId =
+shapeId;
+setAlertDragLivePrice(
+dragAlertId,
+row.price
+);
+
+try{
+onCrosshairSuppress?.();
+}catch{
+/* ignore */
+}
+
+hideDomChartCrosshair(
+wrapEl
+);
+
+try{
+chart.clearCrosshairPosition();
+}catch{
+/* ignore */
+}
+
+try{
+bodyBtn.setPointerCapture(
+e.pointerId
+);
+}catch{
+/* ignore */
+}
+
+}
+);
+
+}
+
+function createAlertBadge(
+shapeId
+){
+
+const el =
+document.createElement(
+"div"
+);
+el.className =
+"price-alert-badge";
+el.dataset.shapeId =
+shapeId;
+el.innerHTML =
+`<button type="button" class="price-alert-badge-body" aria-label="Перетащить алерт">
+<span class="price-alert-badge-price"></span>
+</button>
+<span class="price-alert-badge-sep" aria-hidden="true"></span>
+<button type="button" class="price-alert-badge-delete" aria-label="Удалить алерт">×</button>`;
+
+bindAlertBadge(
+shapeId,
+el
+);
+
+return {
+el,
+priceEl: el.querySelector(
+".price-alert-badge-price"
+)
 };
 
-let alertBarDragging =
-false;
+}
 
-let alertBarDragStart = {
-x: 0,
-y: 0
-};
+function syncAlertBadges(){
 
-let alertBarStart = {
-x: 0,
-y: 0
-};
+const alive =
+new Set();
+
+for(
+const alert of alertsForChart()
+){
+
+const shapeId =
+String(
+alert.shapeId
+);
+const level =
+alertPriceForDisplay(
+alert
+);
+
+if(
+!Number.isFinite(
+level
+)
+){
+continue;
+}
+
+const y =
+series.priceToCoordinate(
+level
+);
+
+if(
+y ==
+null
+){
+continue;
+}
+
+alive.add(
+shapeId
+);
+
+let badge =
+badgeByShapeId.get(
+shapeId
+);
+
+if(
+!badge
+){
+badge =
+createAlertBadge(
+shapeId
+);
+badgeByShapeId.set(
+shapeId,
+badge
+);
+alertBadgesRoot.appendChild(
+badge.el
+);
+}
+
+badge.priceEl.textContent =
+formatPrice(
+level
+);
+badge.el.style.top =
+`${Math.round(
+y
+)}px`;
+badge.el.classList.remove(
+"hidden"
+);
+
+}
+
+for(
+const [
+shapeId,
+badge
+] of
+badgeByShapeId
+){
+
+if(
+!alive.has(
+shapeId
+)
+){
+badge.el.remove();
+badgeByShapeId.delete(
+shapeId
+);
+
+}
+
+}
+
+}
 
 function sym(){
 
@@ -388,114 +626,6 @@ onCrosshairRelease?.();
 }catch{
 /* ignore */
 }
-
-}
-
-function hideDeleteBar(){
-
-deleteBar.classList.add(
-"hidden"
-);
-
-}
-
-function syncAlertDeleteBarLayout(
-price
-){
-
-const wrap =
-wrapEl.getBoundingClientRect();
-
-const barW =
-deleteBar.offsetWidth ||
-72;
-
-const barH =
-deleteBar.offsetHeight ||
-40;
-
-let top =
-wrap.top + alertBarOffset.y;
-
-if(
-price !=
-null
-){
-
-const y =
-series.priceToCoordinate(
-price
-);
-
-if(
-y ==
-null
-){
-hideDeleteBar();
-return;
-}
-
-top =
-wrap.top + y + alertBarOffset.y - barH / 2;
-}
-
-top =
-Math.max(
-wrap.top,
-Math.min(
-wrap.bottom - barH,
-top
-)
-);
-
-const left =
-Math.max(
-wrap.left,
-Math.min(
-wrap.right - barW,
-wrap.left + alertBarOffset.x
-)
-);
-
-deleteBar.style.position =
-"fixed";
-deleteBar.style.left =
-`${Math.round(left)}px`;
-deleteBar.style.top =
-`${Math.round(top)}px`;
-deleteBar.style.zIndex =
-"10050";
-
-}
-
-function positionDeleteBarFromPrice(
-price
-){
-
-if(
-price ==
-null
-){
-hideDeleteBar();
-return;
-}
-
-syncAlertDeleteBarLayout(
-price
-);
-deleteBar.classList.remove(
-"hidden"
-);
-
-}
-
-function positionDeleteBar(
-alertRow
-){
-
-positionDeleteBarFromPrice(
-alertRow.price
-);
 
 }
 
@@ -886,13 +1016,9 @@ tf()
 if(
 row
 ){
-selectedAlertId =
-row.shapeId;
-positionDeleteBar(
-row
-);
 dispatchAlertsChanged();
 scheduleRedraw?.();
+scheduleBadgeSync();
 window.dispatchEvent(
 new CustomEvent(
 "chart-probe-crosshair-clear-request"
@@ -1049,247 +1175,28 @@ onWrapDoubleClick,
 true
 );
 
-function deleteSelectedAlert(){
-
-if(
-!selectedAlertId
-){
-return;
-}
-
-removeAlert(
-sym(),
-selectedAlertId
+const badgeResizeObserver =
+new ResizeObserver(
+scheduleBadgeSync
 );
-selectedAlertId =
-null;
-hideDeleteBar();
-dispatchAlertsChanged();
-scheduleRedraw?.();
-
-}
-
-deleteBtn?.addEventListener(
-"click",
-e=>{
-
-e.preventDefault();
-e.stopPropagation();
-deleteSelectedAlert();
-
-}
+badgeResizeObserver.observe(
+wrapEl
 );
-
-deleteBtn?.addEventListener(
-"touchend",
-e=>{
-
-e.preventDefault();
-e.stopPropagation();
-deleteSelectedAlert();
-
-},
-{ passive: false }
-);
-
-deleteBarDragHandle?.addEventListener(
-"pointerdown",
-e=>{
-
-if(
-e.pointerType ===
-"mouse" &&
-e.button !==
-0
-){
-return;
-}
-
-if(
-!e.isPrimary
-){
-return;
-}
-
-e.preventDefault();
-e.stopPropagation();
-
-alertBarDragging =
-true;
-alertBarDragStart = {
-x: e.clientX,
-y: e.clientY
-};
-
-const barR =
-deleteBar.getBoundingClientRect();
-
-alertBarStart = {
-x: barR.left,
-y: barR.top
-};
 
 try{
-deleteBarDragHandle.setPointerCapture(
-e.pointerId
+chart.timeScale().subscribeVisibleLogicalRangeChange(
+scheduleBadgeSync
+);
+chart.priceScale(
+"right"
+).subscribeVisibleLogicalRangeChange?.(
+scheduleBadgeSync
 );
 }catch{
 /* ignore */
 }
 
-}
-);
-
-function onAlertBarDragMove(
-e
-){
-
-if(
-!alertBarDragging
-){
-return;
-}
-
-const wrap =
-wrapEl.getBoundingClientRect();
-const barW =
-deleteBar.offsetWidth ||
-72;
-const barH =
-deleteBar.offsetHeight ||
-40;
-
-const dx =
-e.clientX - alertBarDragStart.x;
-const dy =
-e.clientY - alertBarDragStart.y;
-
-let fx =
-alertBarStart.x + dx;
-let fy =
-alertBarStart.y + dy;
-
-fx =
-Math.max(
-wrap.left,
-Math.min(
-wrap.right - barW,
-fx
-)
-);
-
-fy =
-Math.max(
-wrap.top,
-Math.min(
-wrap.bottom - barH,
-fy
-)
-);
-
-deleteBar.style.left =
-`${Math.round(fx)}px`;
-deleteBar.style.top =
-`${Math.round(fy)}px`;
-
-}
-
-function onAlertBarDragEnd(){
-
-if(
-!alertBarDragging
-){
-return;
-}
-
-alertBarDragging =
-false;
-
-const wrap =
-wrapEl.getBoundingClientRect();
-const barR =
-deleteBar.getBoundingClientRect();
-const row =
-selectedAlertId
-? alertAt(
-selectedAlertId
-)
-: null;
-
-alertBarOffset.x =
-barR.left - wrap.left;
-
-if(
-row
-){
-
-const lineY =
-series.priceToCoordinate(
-row.price
-);
-
-const barH =
-deleteBar.offsetHeight ||
-40;
-
-if(
-lineY !=
-null
-){
-alertBarOffset.y =
-barR.top - (
-wrap.top + lineY - barH / 2
-);
-}else{
-alertBarOffset.y =
-barR.top - wrap.top;
-}
-
-}else{
-alertBarOffset.y =
-barR.top - wrap.top;
-}
-
-}
-
-window.addEventListener(
-"pointermove",
-onAlertBarDragMove
-);
-
-window.addEventListener(
-"pointerup",
-onAlertBarDragEnd
-);
-
-window.addEventListener(
-"pointercancel",
-onAlertBarDragEnd
-);
-
-window.addEventListener(
-"resize",
-()=>{
-if(
-selectedAlertId &&
-!deleteBar.classList.contains(
-"hidden"
-)
-){
-const row =
-alertAt(
-selectedAlertId
-);
-if(
-row
-){
-syncAlertDeleteBarLayout(
-row.price
-);
-}
-}
-}
-);
+scheduleBadgeSync();
 
 const scaleStripEl =
 document.getElementById(
@@ -1322,94 +1229,6 @@ true
 );
 }
 
-const onKeyDown =
-e=>{
-
-if(
-e.key !==
-"Delete" &&
-e.key !==
-"Backspace"
-){
-return;
-}
-
-const ae =
-document.activeElement;
-const tag =
-ae?.tagName;
-
-if(
-tag ===
-"INPUT" ||
-tag ===
-"TEXTAREA" ||
-ae?.isContentEditable
-){
-return;
-}
-
-if(
-!selectedAlertId
-){
-return;
-}
-
-e.preventDefault();
-deleteSelectedAlert();
-
-};
-
-window.addEventListener(
-"keydown",
-onKeyDown
-);
-
-function hitTestAlert(
-x,
-y
-){
-
-const hitPx =
-IS_COARSE_TOUCH
-? TOUCH_LINE_HIT_PX
-: LINE_HIT_PX;
-
-const row =
-alertsForChart().find(
-alert=>{
-
-const lineY =
-series.priceToCoordinate(
-alert.price
-);
-
-if(
-lineY ==
-null
-){
-return false;
-}
-
-return (
-x >=
-0 &&
-x <=
-plotWidth() &&
-Math.abs(
-y -
-lineY
-) <=
-hitPx
-);
-
-});
-
-return row ||
-null;
-
-}
-
 function onWrapPointerDown(
 e
 ){
@@ -1421,20 +1240,16 @@ e.button !==
 return;
 }
 
-const rect =
-wrapEl.getBoundingClientRect();
-const x =
-e.clientX -
-rect.left;
-const y =
-e.clientY -
-rect.top;
+if(
+alertBadgesRoot.contains(
+e.target
+)
+){
+return;
+}
 
 if(
 plusBtn.contains(
-e.target
-) ||
-deleteBar.contains(
 e.target
 )
 ){
@@ -1455,60 +1270,6 @@ release: false
 });
 return;
 }
-
-const hit =
-hitTestAlert(
-x,
-y
-);
-
-if(
-!hit
-){
-selectedAlertId =
-null;
-hideDeleteBar();
-return;
-}
-
-selectedAlertId =
-hit.shapeId;
-positionDeleteBar(
-hit
-);
-dragAlertId =
-hit.shapeId;
-setAlertDragLivePrice(
-dragAlertId,
-hit.price
-);
-
-try{
-onCrosshairSuppress?.();
-}catch{
-/* ignore */
-}
-
-hideDomChartCrosshair(
-wrapEl
-);
-
-try{
-chart.clearCrosshairPosition();
-}catch{
-/* ignore */
-}
-
-try{
-wrapEl.setPointerCapture(
-e.pointerId
-);
-}catch{
-/* ignore */
-}
-
-e.preventDefault();
-e.stopPropagation();
 
 }
 
@@ -1549,9 +1310,7 @@ dragAlertId,
 price
 );
 
-positionDeleteBarFromPrice(
-price
-);
+scheduleBadgeSync();
 
 try{
 chart.clearCrosshairPosition();
@@ -1627,6 +1386,7 @@ null;
 suppressPlusForScaleDrag =
 false;
 scheduleRedraw?.();
+scheduleBadgeSync();
 
 }
 
@@ -1659,21 +1419,11 @@ onWrapPointerUp
 
 window.addEventListener(
 "price-alerts-changed",
-()=>{
-if(
-selectedAlertId &&
-!alertAt(
-selectedAlertId
-)
-){
-selectedAlertId =
-null;
-hideDeleteBar();
-}
-}
+scheduleBadgeSync
 );
 
-return ()=>{
+const dispose =
+()=>{
 
 wrapEl.removeEventListener(
 "pointermove",
@@ -1719,28 +1469,28 @@ onWrapPointerUp
 );
 
 window.removeEventListener(
-"keydown",
-onKeyDown
+"price-alerts-changed",
+scheduleBadgeSync
 );
 
-window.removeEventListener(
-"pointermove",
-onAlertBarDragMove
-);
+badgeResizeObserver.disconnect();
 
-window.removeEventListener(
-"pointerup",
-onAlertBarDragEnd
+try{
+chart.timeScale().unsubscribeVisibleLogicalRangeChange(
+scheduleBadgeSync
 );
-
-window.removeEventListener(
-"pointercancel",
-onAlertBarDragEnd
+chart.priceScale(
+"right"
+).unsubscribeVisibleLogicalRangeChange?.(
+scheduleBadgeSync
 );
+}catch{
+/* ignore */
+}
 
 plusBtn.remove();
 plusPriceHint.remove();
-deleteBar.remove();
+alertBadgesRoot.remove();
 touchGuideLine.remove();
 
 if(
@@ -1748,16 +1498,16 @@ scaleStripEl
 ){
 scaleStripEl.removeEventListener(
 "pointerdown",
-onScaleStripPointer,
-true
-);
-scaleStripEl.removeEventListener(
-"pointermove",
-onScaleStripPointer,
+onScaleStripPointerDown,
 true
 );
 }
 
 };
+
+dispose.syncBadges =
+scheduleBadgeSync;
+
+return dispose;
 
 }

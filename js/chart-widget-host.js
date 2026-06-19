@@ -6,15 +6,15 @@ createCandlestickChart,
 ensureDomChartCrosshair,
 positionDomChartCrosshair,
 hideDomChartCrosshair
-} from "./chart-import.js?v=40";
+} from "./chart-import.js?v=41";
 
 import {
 initDrawings
-} from "./drawings.js?v=230";
+} from "./drawings.js?v=233";
 
 import {
 mountPriceAlertUi
-} from "./price-alert-ui.js?v=38";
+} from "./price-alert-ui.js?v=39";
 
 function widgetPlotWidth(
 wrapEl,
@@ -220,7 +220,7 @@ wrapEl.addEventListener(
 onCrosshairLeave
 );
 
-const disposeAlertUi =
+let disposeAlertUi =
 mountPriceAlertUi({
 
 chart,
@@ -229,6 +229,8 @@ wrapEl,
 getSymbol,
 getTf,
 scheduleRedraw:()=>{
+
+disposeAlertUi?.syncBadges?.();
 
 const tools =
 getDrawingTools?.();

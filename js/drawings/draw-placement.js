@@ -5,12 +5,13 @@
 import {
 hideDomChartCrosshair,
 positionTabletProbeHorizInStack
-} from "../chart-import.js?v=40";
+} from "../chart-import.js?v=41";
 
 import {
 ensureFibLevelsVisible,
-cloneDefaultFibRows
-} from "./fib-spec.js?v=9";
+cloneDefaultFibRows,
+ensureFibAnchorMinSpan
+} from "./fib-spec.js?v=11";
 
 import {
 isPositionType
@@ -798,6 +799,40 @@ price: pts[0].price
 
 if(getPlacement().type === "fib" && pts.length >= 2){
 created = makeShape("fib", { p1: pts[0], p2: pts[1] });
+ensureFibAnchorMinSpan(
+created,
+"p2",
+{
+toXY(
+pt
+){
+const x =
+xFromTime(
+pt.time
+);
+const y =
+plotPriceToCoordinate(
+pt.price
+);
+
+if(
+x ==
+null ||
+y ==
+null
+){
+return null;
+}
+
+return {
+x,
+y
+};
+
+},
+pointFromXY
+}
+);
 }
 
 if(getPlacement().type === "channel" && pts.length >= 3){

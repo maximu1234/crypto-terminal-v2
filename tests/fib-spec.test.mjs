@@ -114,6 +114,75 @@ null
 );
 
 test(
+"ensureFibAnchorMinSpan expands collapsed anchors",
+async()=>{
+
+const {
+ensureFibAnchorMinSpan,
+FIB_MIN_ANCHOR_SPAN_PX
+} =
+await import(
+"../js/drawings/fib-spec.js"
+);
+
+const shape = {
+type: "fib",
+p1: {
+time: 100,
+price: 50
+},
+p2: {
+time: 100,
+price: 200
+}
+};
+
+const changed =
+ensureFibAnchorMinSpan(
+shape,
+"p2",
+{
+toXY(
+pt
+){
+return {
+x: pt.time,
+y: pt.price
+};
+},
+pointFromXY(
+x,
+y
+){
+return {
+time: x,
+price: y
+};
+},
+minSpanPx: FIB_MIN_ANCHOR_SPAN_PX
+}
+);
+
+assert.equal(
+changed,
+true
+);
+assert.notEqual(
+shape.p2.time,
+100
+);
+assert.equal(
+Math.abs(
+shape.p2.time -
+100
+),
+FIB_MIN_ANCHOR_SPAN_PX
+);
+
+}
+);
+
+test(
 "fibLevelXSpan keeps wide anchor span",
 async()=>{
 
@@ -140,10 +209,6 @@ span.x2,
 200
 );
 assert.equal(
-span.collapsed,
-false
-);
-assert.equal(
 span.labelX,
 204
 );
@@ -152,11 +217,12 @@ span.labelX,
 );
 
 test(
-"fibLevelXSpan vertical anchors collapse",
+"fibLevelXSpan vertical anchors expand span",
 async()=>{
 
 const {
-fibLevelXSpan
+fibLevelXSpan,
+FIB_MIN_ANCHOR_SPAN_PX
 } =
 await import(
 "../js/drawings/fib-spec.js"
@@ -170,27 +236,28 @@ fibLevelXSpan(
 );
 
 assert.equal(
-span.collapsed,
-true
+span.x2 - span.x1,
+FIB_MIN_ANCHOR_SPAN_PX
 );
 assert.equal(
 span.x1,
-320
+320 - FIB_MIN_ANCHOR_SPAN_PX / 2
 );
 assert.equal(
 span.x2,
-320
+320 + FIB_MIN_ANCHOR_SPAN_PX / 2
 );
 
 }
 );
 
 test(
-"fibLevelXSpan narrow span collapses not full plot",
+"fibLevelXSpan narrow span expands not full plot",
 async()=>{
 
 const {
-fibLevelXSpan
+fibLevelXSpan,
+FIB_MIN_ANCHOR_SPAN_PX
 } =
 await import(
 "../js/drawings/fib-spec.js"
@@ -204,16 +271,16 @@ fibLevelXSpan(
 );
 
 assert.equal(
-span.collapsed,
-true
+span.x2 - span.x1,
+FIB_MIN_ANCHOR_SPAN_PX
 );
 assert.equal(
 span.x1,
-100
+96.5
 );
 assert.equal(
 span.x2,
-105
+108.5
 );
 assert.notEqual(
 span.x2,

@@ -1,6 +1,7 @@
 import {
-formatPrice
-} from "./chart-options.js?v=5";
+formatPrice,
+formatChartPrice
+} from "./chart-options.js?v=6";
 
 const DOM_CROSSHAIR_VERT =
 "chart-dom-crosshair-vert";
@@ -1772,9 +1773,19 @@ crosshairPriceScaleWidth(
 mainChart
 );
 
+const refData =
+mainSeries?.data?.();
+const refPrice =
+refData?.[
+refData.length -
+1
+]?.close ??
+price;
+
 priceLabelEl.textContent =
-formatPrice(
-price
+formatChartPrice(
+price,
+refPrice
 );
 priceLabelEl.style.top =
 `${Math.round(y)}px`;

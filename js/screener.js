@@ -16,7 +16,7 @@ updateRsiLevelLinesLayout,
 linkPairedChartTimeScales,
 SCREENER_VISIBLE_BARS,
 SCREENER_MAX_BARS
-} from "./chart-import.js?v=40";
+} from "./chart-import.js?v=41";
 
 import {
 calculateRSI,
@@ -103,6 +103,46 @@ const LAYOUT_LABELS = {
 6: "6",
 9: "9"
 };
+
+const SCREENER_TF_HOTKEYS =
+Object.freeze({
+
+"1":
+"1",
+"2":
+"5",
+"3":
+"15",
+"4":
+"60",
+"5":
+"240",
+"6":
+"D"
+
+});
+
+const SCREENER_LAYOUT_HOTKEYS =
+Object.freeze({
+
+Digit1:
+4,
+Digit2:
+6,
+Digit3:
+9
+
+});
+
+const SCREENER_TF_VALUES =
+new Set([
+"1",
+"5",
+"15",
+"60",
+"240",
+"D"
+]);
 
 const TF_LABELS = {
 "1": "1m",
@@ -295,6 +335,9 @@ saved.tf || "15";
 let currentPage =
 Number(saved.page) || 1;
 
+let invertCharts =
+saved.invertCharts === true;
+
 let allSymbols = [];
 let screenerMarketLoadFailed = false;
 const tickerMap = new Map();
@@ -308,8 +351,100 @@ saveScreenerState({
 layout,
 sort:sortMode,
 tf:currentTF,
-page:currentPage
+page:currentPage,
+invertCharts
 });
+
+}
+
+function applyChartInvertScale(
+chart,
+inverted
+){
+
+if(
+!chart
+){
+return;
+}
+
+try{
+chart.priceScale(
+"right"
+).applyOptions({
+invertScale:
+!!inverted
+});
+}catch{
+/* ignore */
+}
+
+}
+
+function applyWidgetInversion(
+widget,
+inverted
+){
+
+if(
+!widget
+){
+return;
+}
+
+applyChartInvertScale(
+widget.chart,
+inverted
+);
+applyChartInvertScale(
+widget.rsiChart,
+inverted
+);
+
+}
+
+function applyAllWidgetsInversion(
+inverted
+){
+
+activeWidgets.forEach(
+widget=>{
+applyWidgetInversion(
+widget,
+inverted
+);
+}
+);
+
+}
+
+function syncInvertChartsCheckbox(){
+
+const cb =
+document.getElementById(
+"screener-invert-charts"
+);
+
+if(
+cb
+){
+cb.checked =
+invertCharts;
+}
+
+}
+
+function setInvertCharts(
+next
+){
+
+invertCharts =
+!!next;
+syncInvertChartsCheckbox();
+applyAllWidgetsInversion(
+invertCharts
+);
+persistState();
 
 }
 
@@ -1259,6 +1394,11 @@ widget
 
 }
 
+applyWidgetInversion(
+widget,
+invertCharts
+);
+
 function markUserZoom(){
 
 widget.userAdjustedZoom = true;
@@ -1839,6 +1979,7 @@ function syncHeaderControlLabels(){
 
 syncMobileControlLabels();
 syncDesktopControlLabels();
+syncInvertChartsCheckbox();
 
 }
 
@@ -2216,37 +2357,71 @@ const key =
 e.key;
 
 if(
-key ===
-"1"
+e.shiftKey
+){
+
+const layoutNext =
+SCREENER_LAYOUT_HOTKEYS[
+e.code
+];
+
+if(
+layoutNext
 ){
 e.preventDefault();
 setLayout(
-4
+layoutNext
 );
+}
+
+return;
+
+}
+
+const tf =
+SCREENER_TF_HOTKEYS[
+key
+];
+
+if(
+tf &&
+SCREENER_TF_VALUES.has(
+tf
+)
+){
+e.preventDefault();
+setTf(
+tf
+);
+}
+
+}
+);
+
+}
+
+function bindInvertChartsCheckbox(){
+
+const cb =
+document.getElementById(
+"screener-invert-charts"
+);
+
+if(
+!cb
+){
 return;
 }
 
-if(
-key ===
-"2"
-){
-e.preventDefault();
-setLayout(
-6
-);
-return;
-}
+cb.checked =
+invertCharts;
 
-if(
-key ===
-"3"
-){
-e.preventDefault();
-setLayout(
-9
+cb.addEventListener(
+"change",
+()=>{
+setInvertCharts(
+cb.checked
 );
-}
-
 }
 );
 
@@ -2257,6 +2432,7 @@ function bindControls(){
 bindDesktopHeaderPicks();
 bindMobileControls();
 bindSymbolSearch();
+bindInvertChartsCheckbox();
 bindScreenerLayoutHotkeys();
 
 }

@@ -7,7 +7,7 @@ fibPriceAtRatio,
 getFibDrawRows,
 isSeriesLogarithmic,
 fibLevelXSpan
-} from "./fib-spec.js?v=9";
+} from "./fib-spec.js?v=11";
 
 import {
 isPositionType
@@ -78,8 +78,7 @@ return;
 const {
 x1,
 x2,
-labelX,
-collapsed
+labelX
 } =
 fibLevelXSpan(
 a,
@@ -91,10 +90,6 @@ const useLog =
 isSeriesLogarithmic(
 series
 );
-
-if(
-!collapsed
-){
 
 getFibDrawRows(
 shape
@@ -159,10 +154,9 @@ y + 4
 
 });
 
-}
-
 if(
-shape.fibShowTrendLine === true
+shape.fibShowTrendLine ===
+true
 ){
 
 drawLine(
