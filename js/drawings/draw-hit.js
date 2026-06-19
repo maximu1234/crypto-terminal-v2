@@ -22,7 +22,7 @@ DRAW_BODY_HIT_THRESHOLD_DESKTOP
 
 import {
 isCoarseTouchViewport
-} from "../chart/chart-options.js?v=6";
+} from "../chart/chart-options.js?v=7";
 
 /**
  * @param {object} deps

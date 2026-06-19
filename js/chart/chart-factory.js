@@ -13,7 +13,7 @@ isTabletChartViewport,
 bindFinePointerMedia,
 syncTabletFinePointerClass,
 getChartLayoutBgColor
-} from "./chart-options.js?v=6";
+} from "./chart-options.js?v=7";
 
 import {
 ensureDomChartCrosshair,

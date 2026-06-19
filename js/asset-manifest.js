@@ -71,7 +71,7 @@ Object.freeze({
 "chart.js":
 148,
 "chart/chart-options.js":
-6,
+7,
 "chart/chart-dom-crosshair.js":
 14,
 "chart/chart-factory.js":

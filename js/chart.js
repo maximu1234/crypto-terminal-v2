@@ -28,7 +28,7 @@ isCoarseTouchViewport,
 effectiveChartPriceScaleWidth,
 effectiveChartScaleFontSize,
 isTabletChartViewport
-} from "./chart/chart-options.js?v=6";
+} from "./chart/chart-options.js?v=7";
 
 export {
 ensureDomChartCrosshair,
@@ -94,7 +94,7 @@ import {
 effectiveChartPriceScaleWidth,
 CHART_TIME_SCALE_HEIGHT,
 isTabletChartViewport
-} from "./chart/chart-options.js?v=6";
+} from "./chart/chart-options.js?v=7";
 
 
 export const DEFAULT_PRICE_SCALE_MARGINS =

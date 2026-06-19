@@ -547,13 +547,30 @@ true
 /** Смартфон / планшет с touch — отдельно от isTabletChartViewport (≥768px). */
 export function isCoarseTouchViewport(){
 
+if(
+typeof window ===
+"undefined" ||
+typeof window.matchMedia !==
+"function"
+){
+return false;
+}
+
+try{
+
 return (
 window.matchMedia(
 "(pointer: coarse)"
 ).matches &&
+typeof navigator !==
+"undefined" &&
 navigator.maxTouchPoints >=
 1
 );
+
+}catch{
+return false;
+}
 
 }
 
