@@ -24,7 +24,7 @@ positionEntryPrice
 
 import {
 ensureFibAnchorMinSpan
-} from "./fib-spec.js?v=11";
+} from "./fib-spec.js?v=12";
 
 import {
 touchShapeRevision

@@ -115,7 +115,7 @@ Object.freeze({
 "drawings/math.js":
 1,
 "drawings/fib-spec.js":
-11,
+12,
 "drawings/fib-portals.js":
 3,
 "drawings/position.js":

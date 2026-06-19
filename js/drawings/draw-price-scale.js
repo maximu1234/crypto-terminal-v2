@@ -16,7 +16,7 @@ CHART_PRICE_HUD_FALLBACK_HEIGHT
 
 import {
 isSeriesLogarithmic
-} from "./fib-spec.js?v=11";
+} from "./fib-spec.js?v=12";
 
 export function createDrawPriceScale(
 deps
