@@ -2,7 +2,7 @@
 
 **Тег:** `metka-22` · **Коммит:** `git rev-parse metka-22`
 
-**Текущий эталон отката.** Предыдущая: [MARKER_21.md](./MARKER_21.md) (`metka-21`).
+**Предыдущий эталон отката.** Текущая: [MARKER_23.md](./MARKER_23.md) (`metka-23`).
 
 Проверено: asset manifest (python audit, 0 mismatches); site-nav (5 страниц × 7 ссылок). Unit tests — `npm run check:all` (CI / node локально).
 
@@ -93,13 +93,15 @@
 
 | Тег | Роль |
 |-----|------|
-| `metka-22` | **Текущий** эталон |
-| `metka-21` | **Предыдущий** эталон (RSI widgets / ellipsis) |
+| `metka-23` | **Текущий** эталон — см. [MARKER_23.md](./MARKER_23.md) |
+| `metka-22` | **Предыдущий** эталон (этот документ) |
+
+`metka-21` и старее — удалены.
 
 ## Откат
 
 ```bash
 git fetch --tags
-git checkout metka-22   # текущий эталон
-git checkout metka-21   # до iPad scale / hover / undo
+git checkout metka-23   # текущий эталон
+git checkout metka-22   # до pinned hover / stats job v2
 ```
