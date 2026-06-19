@@ -23,7 +23,7 @@ import {
 alertsDebugLog,
 broadcastAlertsRegistrySync,
 lastSeenCloudAlerts
-} from "./debug.js?v=1";
+} from "./debug.js?v=2";
 
 let cloudOpChain =
 Promise.resolve();
@@ -818,6 +818,8 @@ console.warn(
 err?.message || err
 );
 return false;
+
+}
 
 }
 

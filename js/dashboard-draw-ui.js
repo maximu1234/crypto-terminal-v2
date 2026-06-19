@@ -3,9 +3,8 @@ DRAW_TOOLS_PALETTE_ICON_SVG,
 DRAW_TOOLS_GUEST_MSG,
 TRASH_ICON_SVG,
 SETTINGS_ICON_SVG,
-getAlertToggleButtonHtml,
 getDrawToolbarButtonsHtml
-} from "./draw-ui-shared.js?v=21";
+} from "./draw-ui-shared.js?v=23";
 
 import {
 isCloudLoggedInEffective
@@ -394,8 +393,6 @@ return `
 <span class="width-line-preview draw-width-preview"></span>
 <span class="draw-width-label">1px</span>
 </button>
-
-${getAlertToggleButtonHtml()}
 
 <label class="draw-position-risk hidden" title="Сумма риска при срабатывании стопа">
 <span class="draw-position-risk-label">Стоп-лосс ($)</span>

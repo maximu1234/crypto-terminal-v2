@@ -1,6 +1,6 @@
 # Refactor drawings — план (после metka-9)
 
-**Текущий эталон:** [MARKER_20.md](./MARKER_20.md) (`metka-20`).
+**Текущий эталон:** [MARKER_26.md](./MARKER_26.md) (`metka-26`).
 
 **Принцип:** одна фаза = одна метка = [DRAWINGS_REGRESSION.md](./DRAWINGS_REGRESSION.md) пройден.
 
@@ -12,7 +12,7 @@
 | **1** | Wire `createDrawHitTester` + `createDrawRenderer` | средний | ✅ metka-8 |
 | **2** | Wire `mountTabletDrawInput` из `drawings-tablet-input.js` | средний | ✅ metka-9 |
 | **3** | Split `drawings-cloud-sync.js` | высокий | ✅ metka-10 / **metka-11** (prod) |
-| **4** | Split `alerts-cloud-sync.js` | высокий | pending — prep в `alerts-cloud/`, не wired |
+| **4** | Split `alerts-cloud-sync.js` | высокий | ✅ wired (barrel + `alerts-cloud/*`) |
 
 ## Фаза 2 — выполнено (metka-9)
 

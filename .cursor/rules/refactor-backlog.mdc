@@ -17,8 +17,9 @@ alwaysApply: true
 | 6 | ✅ | Chart widget host (`chart-widget-host.js`) |
 | 5 | ✅ | Split `drawings.js` — phase 1: init + constants/math/fib/position |
 | 5b | ✅ | Split render/hit/tablet-input, cloud/alerts/chart/terminal facades |
+| 5c | ✅ | Split `drawings/init.js` — orchestrator complete (~5.8k, 10 modules) |
 | 6 | ✅ | `page-routes`, CI, tests, ticker rAF batch, device-pull-gate |
-| | | **Следующий:** Фаза 1 — wire `draw-hit` + `draw-render` (см. docs/REFACTOR_DRAWINGS.md) |
+| | | **Эталон:** `metka-26` — дальше пользовательские изменения |
 
 ## iPad — после split `drawings.js` (пункт 5)
 

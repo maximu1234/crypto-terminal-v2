@@ -83,16 +83,6 @@ export const ALARM_ICON_SVG = `
 </svg>
 `;
 
-export function getAlertToggleButtonHtml(){
-
-return `
-<button type="button" class="float-alert draw-alert-toggle hidden" title="Сделать алертом" aria-label="Сделать алертом">
-${ALARM_ICON_SVG}
-</button>
-`;
-
-}
-
 /** Иконка «Объекты рисования» — палитра и кисть */
 export const DRAW_TOOLS_PALETTE_ICON_SVG = `
 <svg viewBox="0 0 24 24" aria-hidden="true">

@@ -1,11 +1,13 @@
-# alerts-cloud/ — подготовка к фазе 4
+# alerts-cloud/ — фаза 4 (wired)
 
-**Не подключено к прод.** Браузер грузит монолит `js/alerts-cloud-sync.js`.
+Браузер грузит barrel `js/alerts-cloud-sync.js` → модули ниже.
 
-Модули здесь — черновик split; перед wiring:
+| Модуль | Роль |
+|--------|------|
+| `debug.js` | ct_debug_alerts, pull backoff, lastSeenCloudAlerts |
+| `worker-client.js` | очереди, REST purge/push, Railway /trigger /push-alert |
+| `telegram-id.js` | user_settings.telegram_chat_id |
+| `registry-sync.js` | reconcile, pull, push unsynced, flush |
+| `polling-realtime.js` | Realtime channel, fast poll, initAlertsCloudSync |
 
-1. Починить дубли и зависимости (`worker-client.js`, `telegram-id.js`).
-2. Прогнать `npm run check:all` и cross-device регресс алертов.
-3. Заменить монолит на barrel (как `drawings-cloud-sync.js`).
-
-См. [REFACTOR_DRAWINGS.md](../../docs/REFACTOR_DRAWINGS.md) — фаза 4.
+Регресс: cross-device create/delete алертов; `npm run check:all`.

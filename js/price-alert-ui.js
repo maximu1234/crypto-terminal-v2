@@ -13,7 +13,7 @@ isCloudLoggedInEffective
 
 import {
 getTelegramChatId
-} from "./alerts-cloud-sync.js?v=108";
+} from "./alerts-cloud-sync.js?v=110";
 
 import {
 formatPrice,
@@ -25,7 +25,7 @@ positionDomChartCrosshair
 
 import {
 mountDrawToolIcons
-} from "./draw-ui-shared.js?v=21";
+} from "./draw-ui-shared.js?v=23";
 
 const PLUS_ICON_W =
 22;

@@ -6,7 +6,8 @@ ensureCloudLoginResolved
 import {
 resolveAlertAuthFast,
 readAlertTokenSync,
-readPersistedAuthSession
+readPersistedAuthSession,
+setAlertAuthCache
 } from "../alert-auth-cache.js?v=7";
 
 import {
@@ -25,7 +26,7 @@ markAlertsPullSuccess,
 warnAlertsPullThrottled,
 isAlertsPullInBackoff,
 broadcastAlertsRegistrySync
-} from "./debug.js?v=1";
+} from "./debug.js?v=2";
 
 import {
 runCloudOp,
@@ -40,7 +41,7 @@ pushAlertViaWorker,
 clearAllAlertsFromCloud,
 fetchWithTimeout,
 softDeleteAlertViaRest
-} from "./worker-client.js?v=1";
+} from "./worker-client.js?v=3";
 
 const coalesceRegistryPull =
 createPullCoalescer({

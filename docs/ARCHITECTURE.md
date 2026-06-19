@@ -12,11 +12,11 @@
 
 | Facade | Подмодули |
 |--------|-----------|
-| `alerts-cloud-sync.js` | монолит в проде; `alerts-cloud/*` — prep, **не wired** (см. README там) |
+| `alerts-cloud-sync.js` | ✅ barrel → `alerts-cloud/{debug,worker-client,telegram-id,registry-sync,polling-realtime}.js` |
 | `drawings-cloud-sync.js` | ✅ barrel → `drawings-cloud/{sync-lifecycle,worker-client,pull-reconcile}.js` |
 | `chart.js` | `chart/{chart-options,chart-dom-crosshair,chart-factory}.js` |
 | `terminal.js` | `terminal/{coins-state,coins-prefs,coins-table}.js` |
-| `drawings.js` | `drawings/{init,fib-spec,draw-hit,draw-render,…}.js`; tablet input wired |
+| `drawings.js` | `drawings/{init, persist, style-bar, placement, edit-interaction, chart-input, redraw-loop, price-scale, draw-hit, draw-render, …}.js` |
 
 ## Performance
 
@@ -43,4 +43,4 @@ npm run check:all
 
 ## Откат
 
-**Текущий эталон:** `metka-20` — [MARKER_20.md](./MARKER_20.md). Предыдущая: `metka-19` — [MARKER_19.md](./MARKER_19.md).
+**Текущий эталон:** `metka-26` — [MARKER_26.md](./MARKER_26.md). Предыдущая: `metka-25` — [MARKER_25.md](./MARKER_25.md).
