@@ -130,6 +130,63 @@ updateLifecycle !==
 );
 }
 
+autoUpdater.autoInstallOnAppQuit =
+true;
+
+let updateInstallWatchdog =
+null;
+
+function stopPowerBlockerForQuit(){
+
+if(
+powerBlockerId ==
+null
+){
+return;
+}
+
+if(
+powerSaveBlocker.isStarted(
+powerBlockerId
+)
+){
+powerSaveBlocker.stop(
+powerBlockerId
+);
+}
+
+powerBlockerId =
+null;
+
+}
+
+function teardownWindowsForUpdate(){
+
+app.removeAllListeners(
+"window-all-closed"
+);
+
+for(
+const win of
+BrowserWindow.getAllWindows()
+){
+win.removeAllListeners(
+"close"
+);
+
+if(
+!win.isDestroyed()
+){
+win.destroy();
+}
+
+}
+
+mainWindow =
+null;
+
+}
+
 function scheduleInstall(){
 
 if(
@@ -149,19 +206,68 @@ message:
 "Устанавливаем и перезапускаем…"
 });
 
+if(
+updateInstallWatchdog
+){
+clearTimeout(
+updateInstallWatchdog
+);
+}
+
+updateInstallWatchdog =
+setTimeout(
+()=>{
+
+log.warn(
+"Auto-update: quitAndInstall timeout — forcing app.quit()"
+);
+
+updateInstallWatchdog =
+null;
+
+broadcastUpdate({
+phase:
+"installing",
+message:
+"Завершаем установку…"
+});
+
+teardownWindowsForUpdate();
+stopPowerBlockerForQuit();
+app.quit();
+
+},
+12000
+);
+
+setImmediate(
+()=>{
+
+teardownWindowsForUpdate();
+stopPowerBlockerForQuit();
+
 log.info(
 "Auto-update: quitAndInstall"
 );
 
-setTimeout(
-()=>{
+try{
 autoUpdater.quitAndInstall(
 false,
 true
 );
-},
-800
+}catch(
+err
+){
+log.error(
+"quitAndInstall failed:",
+err
 );
+app.quit();
+}
+
+}
+);
+
 }
 
 if(
@@ -229,6 +335,27 @@ type:
 }
 
 function setupAutoUpdater(){
+
+autoUpdater.on(
+"before-quit-for-update",
+()=>{
+log.info(
+"Auto-update: before-quit-for-update"
+);
+
+if(
+updateInstallWatchdog
+){
+clearTimeout(
+updateInstallWatchdog
+);
+updateInstallWatchdog =
+null;
+}
+
+stopPowerBlockerForQuit();
+}
+);
 
 autoUpdater.on(
 "checking-for-update",
