@@ -134,6 +134,8 @@ path.endsWith("/alerts") ||
 path.endsWith("/alerts/") ||
 path.includes("coins.html") ||
 path.endsWith("/coins") ||
+path.includes("trade.html") ||
+path.endsWith("/trade") ||
 path.includes("terminal.html") ||
 path.endsWith("/terminal") ||
 path === "/system" ||

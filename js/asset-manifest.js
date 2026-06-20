@@ -28,6 +28,8 @@ Object.freeze({
 2,
 "coins-page-boot.js":
 14,
+"trade-page-boot.js":
+1,
 "qwerty-key-input.js":
 1,
 "chart-page.js":
@@ -53,9 +55,11 @@ Object.freeze({
 "release-marker.js":
 12,
 "site-boot.js":
-88,
+89,
 "desktop-app-ui.js":
 2,
+"desktop-trade-nav.js":
+1,
 "suppress-native-context-menu.js":
 2,
 "charts-lib-boot.js":

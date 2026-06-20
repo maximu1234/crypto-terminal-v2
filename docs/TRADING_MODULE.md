@@ -1,8 +1,17 @@
 # Торговый модуль (desktop)
 
-**Статус:** фаза 1 — каркас · **Эталон:** `metka-28`
+**Статус:** фаза 1 — каркас · **Эталон:** `metka-28` · **Песочница UI:** `/trade.html` (**только desktop .app**)
 
-Торговля только в **Multichart.app** (Electron main process). Сайт Vercel **не** хранит и **не** принимает API-ключи Bybit.
+Торговля **не видна на сайте Vercel** — пункт меню и страница доступны только в Electron (`cryptoTerminalDesktop.isDesktop`). На web `/trade` → редирект на `/coins`.
+
+## Desktop vs Web (разделение версий)
+
+| | Сайт (Vercel) | Desktop (.app) |
+|---|---------------|------------------|
+| Графики, алерты, синхронизация | ✅ | ✅ |
+| `/trade`, торговля, API keys | ❌ | ✅ |
+
+Единственное продуктовое отличие desktop — **модуль торговли**.
 
 ## Цели
 
@@ -36,7 +45,8 @@ Renderer (coins.html / trade panel)
 | `desktop/trading/credentials.cjs` | save/load/clear API keys |
 | `desktop/trading/bybit-rest.cjs` | REST client (фаза 2+) |
 | `desktop/trading/register-ipc.cjs` | `trading:*` handlers |
-| `js/trade-panel.js` | UI (фаза 2+, desktop-only) |
+| `trade.html` | Копия `/coins` для экспериментов (отдельные prefs `trade_page_prefs_v1`) |
+| `js/desktop-trade-nav.js` | Пункт «Торговля» в меню (inject, desktop-only) |
 
 ## IPC (фаза 1)
 

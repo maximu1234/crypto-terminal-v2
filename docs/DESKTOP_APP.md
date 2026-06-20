@@ -44,8 +44,9 @@ Multichart.app (Electron)
 | `/api/*` | serverless | **→ Vercel** (прокси в Electron) |
 | Bybit свечи / WS | браузер | **напрямую** |
 | Supabase, алерты | интернет | интернет |
+| **Торговля** (`/trade`), Bybit API keys | ❌ | ✅ |
 
-При каждом desktop-релизе CI копирует актуальную статику из репо (`npm run bundle:site`). Код один — две копии артефактов.
+При каждом desktop-релизе CI копирует актуальную статику из репо (`npm run bundle:site`). На Vercel `/trade` редиректится на `/coins`; пункт «Торговля» в меню — только в `.app`.
 
 ## Разработка
 

@@ -28,13 +28,34 @@ rsiChart:null,
 drawingTools:null
 };
 
+function pagePathname(){
+
+return (
+typeof globalThis !==
+"undefined" &&
+typeof globalThis.window !==
+"undefined"
+? globalThis.window.location.pathname
+: ""
+);
+
+}
+
+export const isTradePage =
+/\/trade(\.html)?\/?$/i.test(
+pagePathname()
+);
+
 export const isCoinsPage =
 typeof globalThis !==
 "undefined" &&
 typeof globalThis.window !==
 "undefined" &&
-globalThis.window.location.pathname.includes(
+(
+pagePathname().includes(
 "/coins"
+) ||
+isTradePage
 );
 
 export const marketMap =
@@ -44,7 +65,9 @@ export const coinElements =
 new Map();
 
 export const COINS_PREFS_KEY =
-"coins_page_prefs_v1";
+isTradePage
+? "trade_page_prefs_v1"
+: "coins_page_prefs_v1";
 
 export const COINS_MARKETS = [
 "all",

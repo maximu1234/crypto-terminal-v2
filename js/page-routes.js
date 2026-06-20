@@ -35,7 +35,26 @@ return pathMatches(
 
 }
 
+export function isTradePage(){
+
+return pathMatches(
+/\/trade(\.html)?\/?$/i
+);
+
+}
+
 export function isCoinsPage(){
+
+return (
+pathMatches(
+/\/coins(\.html)?\/?$/i
+) ||
+isTradePage()
+);
+
+}
+
+export function isCoinsPageOnly(){
 
 return pathMatches(
 /\/coins(\.html)?\/?$/i

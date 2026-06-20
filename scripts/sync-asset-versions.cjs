@@ -223,6 +223,7 @@ const name of
 [
 "index.html",
 "coins.html",
+"trade.html",
 "terminal.html",
 "listings.html",
 "trade-calculator.html",

@@ -71,11 +71,16 @@ initDesktopAppUi
 } from "./desktop-app-ui.js?v=2";
 
 import {
+initDesktopTradeNav
+} from "./desktop-trade-nav.js?v=1";
+
+import {
 resumeStatsBackgroundJob
 } from "./statistics-background.js?v=5";
 
 initSuppressNativeContextMenu();
 initDesktopAppUi();
+initDesktopTradeNav();
 
 void resumeStatsBackgroundJob();
 
@@ -83,6 +88,12 @@ async function startSiteBoot(){
 
 const onCoins =
 /\/coins(\.html)?\/?$/i.test(
+location.pathname ||
+""
+);
+
+const onTrade =
+/\/trade(\.html)?\/?$/i.test(
 location.pathname ||
 ""
 );
@@ -101,6 +112,33 @@ return;
 }
 window.addEventListener(
 "coins-app-ready",
+()=>{
+resolve();
+},
+{ once: true }
+);
+setTimeout(
+resolve,
+30000
+);
+}
+);
+}
+
+if(
+onTrade &&
+!window.__tradeAppReady
+){
+await new Promise(
+resolve=>{
+if(
+window.__tradeAppReady
+){
+resolve();
+return;
+}
+window.addEventListener(
+"trade-app-ready",
 ()=>{
 resolve();
 },
