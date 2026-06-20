@@ -1,5 +1,5 @@
 /**
- * Пункт меню «Торговля» — только desktop .app (не на сайте Vercel).
+ * Пункт «Торговля» — только desktop .app, только широкая шапка (.coins-header-desktop).
  */
 export function initDesktopTradeNav(){
 
@@ -17,32 +17,12 @@ const isTradeActive =
 path
 );
 
-function makeLink(
-slot
-){
-
-const a =
-document.createElement(
-"a"
-);
-a.href =
-"/trade.html";
-a.dataset.desktopTradeNav =
-slot;
-a.textContent =
-"Торговля";
-
 if(
-isTradeActive
+document.querySelector(
+'[data-desktop-trade-nav]'
+)
 ){
-a.classList.add(
-"active"
-);
-
-}
-
-return a;
-
+return;
 }
 
 const coinsDesktop =
@@ -51,95 +31,34 @@ document.querySelector(
 );
 
 if(
-coinsDesktop
+!coinsDesktop
 ){
+return;
+}
 
 const gear =
 coinsDesktop.querySelector(
 "#header-settings-wrap"
 );
 
-if(
-gear &&
-!coinsDesktop.querySelector(
-'[data-desktop-trade-nav="desktop"]'
-)
-){
-gear.insertAdjacentElement(
-"afterend",
-makeLink(
-"desktop"
-)
-);
-}
-
-const mobilePanel =
-document.getElementById(
-"coins-nav-panel"
-);
-
-if(
-mobilePanel &&
-!mobilePanel.querySelector(
-'[data-desktop-trade-nav="mobile"]'
-)
-){
-
-const settings =
-mobilePanel.querySelector(
-".coins-nav-settings"
-);
 const link =
-makeLink(
-"mobile"
+document.createElement(
+"a"
 );
+link.href =
+"/trade.html";
+link.dataset.desktopTradeNav =
+"desktop";
+link.textContent =
+"Торговля";
 
 if(
-settings
+isTradeActive
 ){
-settings.insertAdjacentElement(
-"beforebegin",
-link
-);
-}else{
-mobilePanel.appendChild(
-link
+link.classList.add(
+"active"
 );
 }
-
-}
-
-return;
-
-}
-
-if(
-document.querySelector(
-'[data-desktop-trade-nav="desktop"]'
-)
-){
-return;
-}
-
-const nav =
-document.querySelector(
-"#screener-nav-panel, #site-nav-panel, nav.menu.screener-nav-panel"
-);
-
-if(
-!nav
-){
-return;
-}
-
-const gear =
-nav.querySelector(
-"#header-settings-wrap"
-);
-const link =
-makeLink(
-"desktop"
-);
 
 if(
 gear
@@ -149,10 +68,9 @@ gear.insertAdjacentElement(
 link
 );
 }else{
-nav.appendChild(
+coinsDesktop.appendChild(
 link
 );
-
 }
 
 }

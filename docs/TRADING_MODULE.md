@@ -2,7 +2,7 @@
 
 **Статус:** фаза 1 — каркас · **Эталон:** `metka-28` · **Песочница UI:** `/trade.html` (**только desktop .app**)
 
-Торговля **не видна на сайте Vercel** — пункт меню и страница доступны только в Electron (`cryptoTerminalDesktop.isDesktop`). На web `/trade` → редирект на `/coins`.
+Торговля **только Multichart.app на Mac** (широкое окно): не Vercel, не iPad, не смартфон. Пункт «Торговля» и Bybit — в `.coins-header-desktop`, без mobile-nav.
 
 ## Desktop vs Web (разделение версий)
 

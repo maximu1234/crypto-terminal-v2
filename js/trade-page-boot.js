@@ -18,7 +18,7 @@ jsUrl
 
 import {
 initTradeExchangeSettings
-} from "./trade-exchange-settings.js?v=1";
+} from "./trade-exchange-settings.js?v=2";
 
 const IS_YANDEX =
 /YaBrowser|Yandex/i.test(

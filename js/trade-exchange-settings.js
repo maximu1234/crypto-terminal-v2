@@ -1,9 +1,6 @@
 /**
- * /trade — dropdown «Bybit»: API key / secret → desktop Keychain.
+ * /trade — dropdown «Bybit» (только desktop .app, широкая шапка).
  */
-import {
-jsUrl
-} from "./asset-manifest.js?v=2";
 
 function tradingApi(){
 
@@ -429,72 +426,6 @@ btn
 
 }
 
-function mountMobile(
-onSaved
-){
-
-const panel =
-document.getElementById(
-"coins-nav-panel"
-);
-
-if(
-!panel ||
-document.getElementById(
-"trade-exchange-mobile-block"
-)
-){
-return;
-}
-
-const settingsBlock =
-panel.querySelector(
-".coins-nav-settings"
-);
-
-const block =
-document.createElement(
-"div"
-);
-block.id =
-"trade-exchange-mobile-block";
-block.className =
-"trade-exchange-mobile-block";
-
-block.innerHTML =
-`
-<p class="header-settings-section-title">Bybit</p>
-<div class="header-settings-dropdown header-settings-dropdown--inline trade-exchange-dropdown" id="trade-exchange-mobile-panel"></div>
-`;
-
-if(
-settingsBlock
-){
-panel.insertBefore(
-block,
-settingsBlock
-);
-}else{
-panel.appendChild(
-block
-);
-}
-
-const panelInner =
-block.querySelector(
-"#trade-exchange-mobile-panel"
-);
-wireForm(
-buildForm(
-panelInner
-),
-{
-onSaved
-}
-);
-
-}
-
 function updateConnectionChrome(
 info
 ){
@@ -532,9 +463,6 @@ info
 };
 
 mountDesktop(
-onSaved
-);
-mountMobile(
 onSaved
 );
 

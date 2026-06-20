@@ -149,13 +149,3 @@ background:#2563eb;
 .trade-exchange-clear{
 color:#fca5a5;
 }
-
-.trade-exchange-mobile-block{
-padding:8px 0 4px;
-border-top:1px solid #1f2937;
-margin-top:8px;
-}
-
-.trade-exchange-mobile-block .header-settings-dropdown--inline{
-display:block !important;
-}

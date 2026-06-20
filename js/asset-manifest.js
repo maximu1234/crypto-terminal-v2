@@ -31,7 +31,7 @@ Object.freeze({
 "trade-page-boot.js":
 2,
 "trade-exchange-settings.js":
-1,
+2,
 "qwerty-key-input.js":
 1,
 "chart-page.js":
