@@ -126,6 +126,14 @@ if(
 return;
 }
 
+const busy =
+phase ===
+"checking" ||
+phase ===
+"downloading" ||
+phase ===
+"installing";
+
 if(
 phase ===
 "ready"
@@ -140,10 +148,7 @@ return;
 updateBtn.textContent =
 "Обновить";
 updateBtn.disabled =
-phase ===
-"checking" ||
-phase ===
-"downloading";
+busy;
 }
 
 void api.getVersion().then(
@@ -189,6 +194,17 @@ updateBtn?.addEventListener(
 
 if(
 phase ===
+"checking" ||
+phase ===
+"downloading" ||
+phase ===
+"installing"
+){
+return;
+}
+
+if(
+phase ===
 "ready"
 ){
 void api.installUpdate();
@@ -196,10 +212,10 @@ return;
 }
 
 if(
-phase ===
-"available"
+typeof api.performUpdate ===
+"function"
 ){
-void api.downloadUpdate();
+void api.performUpdate();
 return;
 }
 

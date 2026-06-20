@@ -52,6 +52,56 @@ null;
 let powerBlockerId =
 null;
 
+/** idle | checking | available | downloading | ready | installing */
+let updateLifecycle =
+"idle";
+
+function canCheckForUpdates(){
+
+return (
+updateLifecycle !==
+"downloading" &&
+updateLifecycle !==
+"ready" &&
+updateLifecycle !==
+"installing"
+);
+}
+
+function scheduleInstall(){
+
+if(
+updateLifecycle ===
+"installing"
+){
+return;
+}
+
+updateLifecycle =
+"installing";
+
+broadcastUpdate({
+phase:
+"installing",
+message:
+"Устанавливаем и перезапускаем…"
+});
+
+log.info(
+"Auto-update: quitAndInstall"
+);
+
+setTimeout(
+()=>{
+autoUpdater.quitAndInstall(
+false,
+true
+);
+},
+800
+);
+}
+
 if(
 process.platform ===
 "darwin"
@@ -115,6 +165,13 @@ function setupAutoUpdater(){
 autoUpdater.on(
 "checking-for-update",
 ()=>{
+if(
+!canCheckForUpdates()
+){
+return;
+}
+updateLifecycle =
+"checking";
 broadcastUpdate({
 phase:
 "checking",
@@ -127,6 +184,18 @@ message:
 autoUpdater.on(
 "update-available",
 info=>{
+if(
+updateLifecycle ===
+"ready" ||
+updateLifecycle ===
+"installing" ||
+updateLifecycle ===
+"downloading"
+){
+return;
+}
+updateLifecycle =
+"available";
 broadcastUpdate({
 phase:
 "available",
@@ -141,6 +210,14 @@ info.version
 autoUpdater.on(
 "update-not-available",
 ()=>{
+if(
+updateLifecycle !==
+"checking"
+){
+return;
+}
+updateLifecycle =
+"idle";
 broadcastUpdate({
 phase:
 "idle",
@@ -153,6 +230,18 @@ message:
 autoUpdater.on(
 "error",
 err=>{
+log.error(
+"Auto-update error:",
+err
+);
+if(
+updateLifecycle ===
+"installing"
+){
+return;
+}
+updateLifecycle =
+"idle";
 broadcastUpdate({
 phase:
 "error",
@@ -168,6 +257,8 @@ err
 autoUpdater.on(
 "download-progress",
 progress=>{
+updateLifecycle =
+"downloading";
 broadcastUpdate({
 phase:
 "downloading",
@@ -182,14 +273,31 @@ progress.percent || 0
 autoUpdater.on(
 "update-downloaded",
 info=>{
+updateLifecycle =
+"ready";
+log.info(
+"Auto-update downloaded:",
+info.version
+);
+const menuItem =
+Menu.getApplicationMenu()?.getMenuItemById(
+"install-update"
+);
+if(
+menuItem
+){
+menuItem.enabled =
+true;
+}
 broadcastUpdate({
 phase:
 "ready",
 message:
-`Версия ${info.version} готова к установке`,
+`Версия ${info.version} загружена`,
 version:
 info.version
 });
+scheduleInstall();
 }
 );
 
@@ -388,7 +496,11 @@ return;
 
 setTimeout(
 ()=>{
+if(
+canCheckForUpdates()
+){
 void autoUpdater.checkForUpdates();
+}
 },
 12000
 );
@@ -437,7 +549,11 @@ submenu:[
 label:
 "Проверить обновления…",
 click:()=>{
+if(
+canCheckForUpdates()
+){
 void autoUpdater.checkForUpdates();
+}
 }
 },
 {
@@ -448,10 +564,7 @@ false,
 id:
 "install-update",
 click:()=>{
-autoUpdater.quitAndInstall(
-false,
-true
-);
+scheduleInstall();
 }
 },
 { type:
@@ -540,22 +653,6 @@ template
 Menu.setApplicationMenu(
 menu
 );
-
-autoUpdater.on(
-"update-downloaded",
-()=>{
-const item =
-menu.getMenuItemById(
-"install-update"
-);
-if(
-item
-){
-item.enabled =
-true;
-}
-}
-);
 }
 
 function registerIpc(){
@@ -589,6 +686,16 @@ reason:
 "dev"
 };
 }
+if(
+!canCheckForUpdates()
+){
+return {
+ok:
+false,
+reason:
+"busy"
+};
+}
 try{
 const result =
 await autoUpdater.checkForUpdates();
@@ -602,6 +709,12 @@ null
 }catch(
 err
 ){
+log.error(
+"checkForUpdates failed:",
+err
+);
+updateLifecycle =
+"idle";
 broadcastUpdate({
 phase:
 "error",
@@ -622,6 +735,124 @@ reason:
 );
 
 ipcMain.handle(
+"app:performUpdate",
+async()=>{
+if(
+!app.isPackaged
+){
+broadcastUpdate({
+phase:
+"dev",
+message:
+"Обновления доступны только в установленной .app"
+});
+return {
+ok:
+false,
+reason:
+"dev"
+};
+}
+if(
+updateLifecycle ===
+"downloading" ||
+updateLifecycle ===
+"installing"
+){
+return {
+ok:
+false,
+reason:
+"busy"
+};
+}
+if(
+updateLifecycle ===
+"ready"
+){
+scheduleInstall();
+return {
+ok:
+true,
+action:
+"install"
+};
+}
+try{
+updateLifecycle =
+"checking";
+broadcastUpdate({
+phase:
+"checking",
+message:
+"Проверяем обновления…"
+});
+const result =
+await autoUpdater.checkForUpdates();
+const latest =
+result?.updateInfo?.version;
+if(
+!latest ||
+latest ===
+app.getVersion()
+){
+updateLifecycle =
+"idle";
+broadcastUpdate({
+phase:
+"idle",
+message:
+"Установлена последняя версия"
+});
+return {
+ok:
+true,
+upToDate:
+true
+};
+}
+updateLifecycle =
+"downloading";
+broadcastUpdate({
+phase:
+"downloading",
+message:
+"Загружаем обновление…"
+});
+await autoUpdater.downloadUpdate();
+return {
+ok:
+true,
+action:
+"downloaded"
+};
+}catch(
+err
+){
+log.error(
+"performUpdate failed:",
+err
+);
+updateLifecycle =
+"idle";
+broadcastUpdate({
+phase:
+"error",
+message:
+String(
+err?.message ||
+err
+)
+});
+return {
+ok:
+false
+};
+}
+}
+);
+
+ipcMain.handle(
 "app:downloadUpdate",
 async()=>{
 if(
@@ -632,7 +863,30 @@ ok:
 false
 };
 }
+if(
+updateLifecycle ===
+"downloading" ||
+updateLifecycle ===
+"ready" ||
+updateLifecycle ===
+"installing"
+){
+return {
+ok:
+false,
+reason:
+"busy"
+};
+}
 try{
+updateLifecycle =
+"downloading";
+broadcastUpdate({
+phase:
+"downloading",
+message:
+"Загружаем обновление…"
+});
 await autoUpdater.downloadUpdate();
 return {
 ok:
@@ -641,6 +895,12 @@ true
 }catch(
 err
 ){
+log.error(
+"downloadUpdate failed:",
+err
+);
+updateLifecycle =
+"idle";
 broadcastUpdate({
 phase:
 "error",
@@ -669,10 +929,7 @@ ok:
 false
 };
 }
-autoUpdater.quitAndInstall(
-false,
-true
-);
+scheduleInstall();
 return {
 ok:
 true

@@ -50,6 +50,10 @@ checkForUpdates:()=>
 ipcRenderer.invoke(
 "app:checkForUpdates"
 ),
+performUpdate:()=>
+ipcRenderer.invoke(
+"app:performUpdate"
+),
 downloadUpdate:()=>
 ipcRenderer.invoke(
 "app:downloadUpdate"

@@ -1,7 +1,7 @@
 {
   "name": "multichart-desktop",
   "productName": "Multichart",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Multichart desktop shell for macOS (remote UI + local auto-update)",
   "main": "main.js",
   "author": "Multichart",

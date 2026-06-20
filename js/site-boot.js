@@ -68,7 +68,7 @@ initSuppressNativeContextMenu
 
 import {
 initDesktopAppUi
-} from "./desktop-app-ui.js?v=1";
+} from "./desktop-app-ui.js?v=2";
 
 import {
 resumeStatsBackgroundJob
