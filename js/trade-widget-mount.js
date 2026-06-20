@@ -7,7 +7,7 @@ createTradeChartOverlay
 
 import {
 createTradeChartOrders
-} from "./trade-chart-orders.js?v=3";
+} from "./trade-chart-orders.js?v=7";
 
 import {
 createTradePlusMenuHandler
@@ -24,6 +24,10 @@ getActiveTradeVolumeUsdt
 import {
 marketMap
 } from "./terminal/coins-state.js?v=6";
+
+import {
+applyAutoStopsAfterEntry
+} from "./trade-auto-stops.js?v=1";
 
 function tradingApi(){
 
@@ -721,6 +725,11 @@ result.position
 }
 }
 )
+);
+
+void applyAutoStopsAfterEntry(
+symbol,
+result.position
 );
 }
 

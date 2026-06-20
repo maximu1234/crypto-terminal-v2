@@ -279,19 +279,47 @@ return null;
 
 }
 
+let orderDragListeners =
+null;
+let dragBadgeEl =
+null;
+
+function getChartCoordEl(){
+
+return (
+host?.chartEl ||
+host?.wrapEl?.querySelector?.(
+".chart"
+) ||
+host?.wrapEl?.querySelector?.(
+"#chart"
+) ||
+host?.wrapEl
+);
+
+}
+
 function clientYToPrice(
 clientY
 ){
 
 if(
-!host?.wrapEl ||
 !host?.series
 ){
 return null;
 }
 
+const el =
+getChartCoordEl();
+
+if(
+!el
+){
+return null;
+}
+
 const rect =
-host.wrapEl.getBoundingClientRect();
+el.getBoundingClientRect();
 const y =
 clientY -
 rect.top;
@@ -446,8 +474,13 @@ return specs;
 function getOrdersLayoutKey(){
 
 return orders.map(
-o=>
-`${o.orderId}:${getEffectiveOrderPrice(o)}:${o.label}`
+o=>{
+const dragging =
+dragOrder?.orderId ===
+o.orderId;
+
+return `${o.orderId}:${o.label}${dragging ? ":drag" : ""}`;
+}
 ).join(
 "|"
 );
@@ -596,6 +629,22 @@ gapW
 
 }
 
+function scheduleOrderDragRedraw(){
+
+const dt =
+host?.getDrawingTools?.();
+
+if(
+dt?.scheduleDragRedraw
+){
+dt.scheduleDragRedraw();
+return;
+}
+
+dt?.scheduleRedraw?.();
+
+}
+
 function scheduleDraw(){
 
 if(
@@ -640,6 +689,13 @@ return;
 
 root.hidden =
 false;
+
+if(
+dragOrder
+){
+scheduleOrderDragRedraw();
+return;
+}
 
 const badgeSpecs =
 buildBadgeSpecs();
@@ -698,41 +754,7 @@ if(
 return;
 }
 
-const order =
-orders.find(
-o=>
-o.orderId ===
-dragOrder.orderId
-);
-
-if(
-!order
-){
-return;
-}
-
-const y =
-priceToY(
-dragOrder.previewPrice
-);
-const el =
-badgeLayoutCache?.elementsById?.get(
-dragOrder.orderId
-);
-
-if(
-el &&
-y !=
-null &&
-Number.isFinite(
-y
-)
-){
-el.style.top =
-`${y}px`;
-}
-
-host?.getDrawingTools?.()?.scheduleRedraw?.();
+scheduleOrderDragRedraw();
 
 }
 
@@ -904,6 +926,9 @@ moved:
 false
 };
 
+dragBadgeEl =
+badge;
+
 badge.classList.add(
 "is-dragging"
 );
@@ -916,20 +941,52 @@ e.pointerId
 /* ignore */
 }
 
-const onMove =
-ev=>{
+attachOrderDragListeners();
+
+}
+
+function detachOrderDragListeners(){
+
+if(
+!orderDragListeners
+){
+return;
+}
+
+document.removeEventListener(
+"pointermove",
+orderDragListeners.move
+);
+document.removeEventListener(
+"pointerup",
+orderDragListeners.up
+);
+document.removeEventListener(
+"pointercancel",
+orderDragListeners.up
+);
+orderDragListeners =
+null;
+
+}
+
+function onOrderPointerMove(
+e
+){
 
 if(
 !dragOrder ||
-ev.pointerId !==
+e.pointerId !==
 dragOrder.pointerId
 ){
 return;
 }
 
+e.preventDefault();
+
 const price =
 clientYToPrice(
-ev.clientY
+e.clientY
 );
 
 if(
@@ -944,7 +1001,10 @@ Math.abs(
 price -
 dragOrder.startPrice
 ) /
-dragOrder.startPrice >
+Math.max(
+dragOrder.startPrice,
+1e-8
+) >
 0.00001
 ){
 dragOrder.moved =
@@ -953,61 +1013,68 @@ true;
 
 dragOrder.previewPrice =
 price;
-refreshDragPreview();
 
-};
+scheduleOrderDragRedraw();
 
-const onUp =
-ev=>{
+}
+
+function onOrderPointerUp(
+e
+){
 
 if(
 !dragOrder ||
-ev.pointerId !==
+e.pointerId !==
 dragOrder.pointerId
 ){
 return;
 }
 
-badge.classList.remove(
+const badge =
+dragBadgeEl;
+
+detachOrderDragListeners();
+badge?.classList.remove(
 "is-dragging"
 );
 
 try{
-badge.releasePointerCapture(
-ev.pointerId
+badge?.releasePointerCapture?.(
+e.pointerId
 );
 }catch{
 /* ignore */
 }
 
-badge.removeEventListener(
-"pointermove",
-onMove
-);
-badge.removeEventListener(
-"pointerup",
-onUp
-);
-badge.removeEventListener(
-"pointercancel",
-onUp
-);
-
+dragBadgeEl =
+null;
 void commitOrderDrag();
 
+}
+
+function attachOrderDragListeners(){
+
+detachOrderDragListeners();
+
+orderDragListeners =
+{
+move:
+onOrderPointerMove,
+up:
+onOrderPointerUp
 };
 
-badge.addEventListener(
+document.addEventListener(
 "pointermove",
-onMove
+onOrderPointerMove
 );
-badge.addEventListener(
+document.addEventListener(
 "pointerup",
-onUp
+onOrderPointerUp
 );
-badge.addEventListener(
+document.addEventListener(
 "pointercancel",
-onUp
+onOrderPointerUp
 );
 
 }
@@ -1514,6 +1581,9 @@ null;
 dragOrder =
 null;
 pendingAmend =
+null;
+detachOrderDragListeners();
+dragBadgeEl =
 null;
 orders =
 [];

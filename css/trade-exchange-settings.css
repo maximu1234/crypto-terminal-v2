@@ -267,3 +267,36 @@ font-weight:500;
 color:#6b7280;
 pointer-events:none;
 }
+
+.trade-auto-stops-panel{
+display:flex;
+flex-direction:column;
+gap:8px;
+margin-top:4px;
+}
+
+.trade-auto-stops-row{
+display:grid;
+grid-template-columns:auto 1fr minmax(88px, 120px);
+align-items:center;
+gap:8px;
+font-size:12px;
+color:#d1d5db;
+cursor:pointer;
+}
+
+.trade-auto-stops-row input[type="checkbox"]{
+width:14px;
+height:14px;
+margin:0;
+accent-color:#818cf8;
+cursor:pointer;
+}
+
+.trade-auto-stops-label{
+white-space:nowrap;
+}
+
+.trade-auto-stops-row .trade-volume-presets-field{
+width:100%;
+}

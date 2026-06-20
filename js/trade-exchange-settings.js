@@ -6,6 +6,10 @@ wireTradeVolumeDefaultsSettings,
 TRADE_VOLUME_SLOT_COUNT
 } from "./trade-volume-presets.js?v=7";
 
+import {
+wireAutoStopSettings
+} from "./trade-auto-stops.js?v=1";
+
 const TRADE_VOLUME_DEFAULT_INPUT_COUNT =
 Math.max(
 1,
@@ -82,6 +86,31 @@ ${buildDefaultVolumeFieldsHtml()}
 <button type="button" class="trade-exchange-save" data-role="save-volume-defaults">Сохранить</button>
 </div>
 <p class="trade-exchange-status-text" data-role="volume-defaults-status" aria-live="polite"></p>
+<hr class="trade-exchange-divider"/>
+<p class="header-settings-section-title">Auto SL/TP (USDT)</p>
+<p class="trade-exchange-hint">После исполнения рыночного входа автоматически выставляются стоп-лосс и тейк-профит. Значения — убыток/прибыль в USDT от позиции.</p>
+<div class="trade-auto-stops-panel" data-role="auto-stops-panel">
+<label class="trade-auto-stops-row">
+<input type="checkbox" data-role="auto-sl-enabled"/>
+<span class="trade-auto-stops-label">Stop Loss</span>
+<span class="trade-volume-presets-field">
+<input type="number" min="0" step="any" inputmode="decimal" data-role="auto-sl-usd" aria-label="Stop Loss USDT"/>
+<span class="trade-volume-presets-suffix">USDT</span>
+</span>
+</label>
+<label class="trade-auto-stops-row">
+<input type="checkbox" data-role="auto-tp-enabled"/>
+<span class="trade-auto-stops-label">Take Profit</span>
+<span class="trade-volume-presets-field">
+<input type="number" min="0" step="any" inputmode="decimal" data-role="auto-tp-usd" aria-label="Take Profit USDT"/>
+<span class="trade-volume-presets-suffix">USDT</span>
+</span>
+</label>
+</div>
+<div class="trade-exchange-actions">
+<button type="button" class="trade-exchange-save" data-role="save-auto-stops">Сохранить</button>
+</div>
+<p class="trade-exchange-status-text" data-role="auto-stops-status" aria-live="polite"></p>
 <hr class="trade-exchange-divider"/>
 <p class="header-settings-section-title">Пинг до Bybit</p>
 <p class="trade-exchange-hint">Задержка до API и signed-запросов (как при выставлении ордеров). Для быстрой торговли лучше &lt;100&nbsp;ms.</p>
@@ -1089,6 +1118,10 @@ controls;
 );
 
 wireTradeVolumeDefaultsSettings(
+form
+);
+
+wireAutoStopSettings(
 form
 );
 

@@ -38,7 +38,7 @@ createTickerUiBatcher
 
 import {
 mountReleaseMarker
-} from "./release-marker.js?v=14";
+} from "./release-marker.js?v=15";
 
 import {
 saveScreenerState,
@@ -78,6 +78,10 @@ import {
 attachSymbolAutocomplete,
 preloadTradingSymbols
 } from "./symbol-autocomplete.js?v=1";
+
+import {
+mountScreenerWidgetZoom
+} from "./screener-widget-zoom.js?v=2";
 
 const gridEl =
 document.getElementById("screener-grid");
@@ -2778,6 +2782,20 @@ await import(
 await waitForSiteCssReady();
 
 mountReleaseMarker();
+
+void mountScreenerWidgetZoom(
+{
+resolveWidget:
+widgetRoot=>
+activeWidgets.find(
+w=>
+w.root ===
+widgetRoot
+),
+getCurrentTF:()=>
+currentTF
+}
+);
 
 void ensureCloudReady();
 

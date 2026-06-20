@@ -6,6 +6,10 @@ getActiveTradeVolumeUsdt
 } from "./trade-volume-presets.js?v=7";
 
 import {
+applyAutoStopsAfterEntry
+} from "./trade-auto-stops.js?v=1";
+
+import {
 marketMap
 } from "./terminal/coins-state.js?v=6";
 
@@ -234,6 +238,11 @@ result.position
 }
 }
 )
+);
+
+void applyAutoStopsAfterEntry(
+symbol,
+result.position
 );
 }
 

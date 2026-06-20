@@ -147,6 +147,30 @@ target.closest(
 ) ||
 target.closest(
 ".draw-position-risk"
+) ||
+target.closest(
+".price-alert-scale-plus"
+) ||
+target.closest(
+".price-alert-scale-price-hint"
+) ||
+target.closest(
+".trade-order-plus-menu"
+) ||
+target.closest(
+".price-alert-badge"
+) ||
+target.closest(
+".trade-pos-entry-zone"
+) ||
+target.closest(
+".trade-pos-handles"
+) ||
+target.closest(
+".trade-pos-badge"
+) ||
+target.closest(
+".trade-order-badge"
 )
 );
 

@@ -1054,3 +1054,111 @@ display:none !important;
 }
 
 }
+
+.screener-widget-zoom-backdrop{
+position:fixed;
+inset:0;
+z-index:10050;
+display:flex;
+align-items:center;
+justify-content:center;
+background:rgba(8,8,14,0.72);
+backdrop-filter:blur(2px);
+}
+
+.screener-widget-zoom-panel{
+display:flex;
+flex-direction:column;
+width:70vw;
+height:70vh;
+max-width:calc(100vw - 32px);
+max-height:calc(100vh - 32px);
+border:1px solid rgba(99,102,241,0.35);
+border-radius:12px;
+background:#0b0b12;
+box-shadow:0 24px 80px rgba(0,0,0,0.55);
+overflow:hidden;
+}
+
+.screener-widget-zoom-header{
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:12px;
+padding:10px 14px;
+border-bottom:1px solid rgba(255,255,255,0.08);
+background:rgba(255,255,255,0.02);
+flex-wrap:wrap;
+}
+
+.screener-widget-zoom-tf{
+display:flex;
+align-items:center;
+gap:4px;
+flex:1 1 auto;
+justify-content:center;
+flex-wrap:wrap;
+}
+
+.screener-widget-zoom-tf-btn{
+border:1px solid rgba(255,255,255,0.1);
+background:rgba(255,255,255,0.04);
+color:#d1d5db;
+font-size:11px;
+font-weight:500;
+line-height:1;
+padding:5px 8px;
+border-radius:6px;
+cursor:pointer;
+}
+
+.screener-widget-zoom-tf-btn:hover{
+border-color:rgba(129,140,248,0.45);
+color:#f3f4f6;
+}
+
+.screener-widget-zoom-tf-btn.active{
+border-color:#6366f1;
+background:rgba(99,102,241,0.22);
+color:#eef2ff;
+}
+
+.screener-widget-zoom-body{
+flex:1;
+min-height:0;
+display:flex;
+flex-direction:column;
+}
+
+.screener-widget-zoom-body .screener-chart{
+flex:1 1 74%;
+max-height:74%;
+min-height:0;
+position:relative;
+}
+
+.screener-widget-zoom-body .screener-rsi-wrap{
+flex:0 0 26%;
+max-height:26%;
+min-height:0;
+border-top:1px solid #2a2e39;
+background:var(--app-chart-bg);
+box-sizing:border-box;
+position:relative;
+}
+
+.screener-widget-zoom-symbol{
+font:600 14px/1.2 ui-monospace,SFMono-Regular,Menlo,monospace;
+color:#f3f4f6;
+}
+
+.screener-widget-zoom-hint{
+font-size:11px;
+color:#9ca3af;
+white-space:nowrap;
+}
+
+.screener-widget-zoom-chart .tv-lightweight-charts{
+border-radius:0 !important;
+}
+

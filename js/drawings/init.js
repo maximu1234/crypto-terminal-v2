@@ -176,7 +176,7 @@ createDrawUndoStack
 
 import {
 createDrawDesktopSelection
-} from "./draw-edit-desktop.js?v=3";
+} from "./draw-edit-desktop.js?v=5";
 
 import {
 createDrawingsPersist

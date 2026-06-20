@@ -11,7 +11,7 @@ isTerminalDashboardPage
 
 import {
 initTradeExchangeSettings
-} from "./trade-exchange-settings.js?v=8";
+} from "./trade-exchange-settings.js?v=9";
 
 import {
 initTradeVolumePresets
@@ -19,7 +19,7 @@ initTradeVolumePresets
 
 import {
 initTradeMarketEntry
-} from "./trade-market-entry.js?v=2";
+} from "./trade-market-entry.js?v=3";
 
 import {
 initTradeBookPanel
@@ -186,7 +186,7 @@ const {
 initTradeChartOrders
 } =
 await import(
-"./trade-chart-orders.js?v=3"
+"./trade-chart-orders.js?v=7"
 );
 
 initTradeChartOrders();

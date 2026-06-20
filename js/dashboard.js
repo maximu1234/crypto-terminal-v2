@@ -122,7 +122,7 @@ return;
 
 const mod =
 await import(
-"./trade-widget-mount.js?v=4"
+"./trade-widget-mount.js?v=5"
 );
 
 mountTradeOnDashboardWidget =
