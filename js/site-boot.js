@@ -67,10 +67,15 @@ initSuppressNativeContextMenu
 } from "./suppress-native-context-menu.js?v=2";
 
 import {
+initDesktopAppUi
+} from "./desktop-app-ui.js?v=1";
+
+import {
 resumeStatsBackgroundJob
 } from "./statistics-background.js?v=5";
 
 initSuppressNativeContextMenu();
+initDesktopAppUi();
 
 void resumeStatsBackgroundJob();
 

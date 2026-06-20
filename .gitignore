@@ -2,3 +2,5 @@
 .vercel
 js/supabase-env.js
 .venv-icons/
+desktop/node_modules/
+desktop/dist/

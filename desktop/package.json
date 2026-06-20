@@ -1,0 +1,57 @@
+{
+  "name": "multichart-desktop",
+  "productName": "Multichart",
+  "version": "1.0.0",
+  "description": "Multichart desktop shell for macOS (remote UI + local auto-update)",
+  "main": "main.js",
+  "author": "Multichart",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "start:dev": "CRYPTO_TERMINAL_URL=http://127.0.0.1:8080 electron .",
+    "build:mac": "electron-builder --mac --publish never",
+    "build:mac:publish": "electron-builder --mac --publish always"
+  },
+  "dependencies": {
+    "electron-log": "^5.2.4",
+    "electron-updater": "^6.3.9"
+  },
+  "devDependencies": {
+    "electron": "^33.2.1",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.multichart.desktop",
+    "productName": "Multichart",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "entitlements.mac.plist"
+    ],
+    "mac": {
+      "category": "public.app-category.finance",
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "icon": "build/icon.png",
+      "hardenedRuntime": true,
+      "entitlements": "entitlements.mac.plist",
+      "entitlementsInherit": "entitlements.mac.plist",
+      "gatekeeperAssess": false
+    },
+    "dmg": {
+      "title": "Multichart ${version}"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "maximu1234",
+      "repo": "crypto-terminal-v2",
+      "releaseType": "release"
+    }
+  }
+}
