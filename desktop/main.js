@@ -797,10 +797,11 @@ url
 if(
 USE_BUNDLE &&
 target.protocol ===
-"app:"
+"multichart:" &&
+target.hostname ===
+"local"
 ){
-return target.hostname ===
-"local";
+return true;
 }
 
 const base =
@@ -1359,6 +1360,7 @@ registerAuthProtocol();
 if(
 USE_BUNDLE
 ){
+const bundleRoot =
 setupSiteProtocol({
 bundleRoot:
 BUNDLE_ROOT,
@@ -1367,7 +1369,7 @@ REMOTE_API_ORIGIN
 });
 log.info(
 "desktop UI: bundled site from",
-BUNDLE_ROOT
+bundleRoot
 );
 }else{
 log.info(

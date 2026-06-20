@@ -13,7 +13,7 @@ loadBybitHistory
 
 import {
 isLocalDevHost
-} from "./bybit-fetch.js?v=15";
+} from "./bybit-fetch.js?v=16";
 
 import {
 applyChartPriceFormat,

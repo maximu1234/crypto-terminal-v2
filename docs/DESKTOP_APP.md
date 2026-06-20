@@ -30,7 +30,7 @@
 
 ```
 Multichart.app (Electron)
-  └─ app://local — HTML/JS/CSS из site-bundle (копия репо на момент релиза)
+  └─ multichart://local — HTML/JS/CSS из site-bundle (копия репо на момент релиза)
   └─ /api/* → прокси на Vercel (Bybit fallback, Twelve Data, CoinGecko)
   └─ Bybit REST/WS — напрямую с api.bybit.com
   └─ Supabase / Railway worker — интернет

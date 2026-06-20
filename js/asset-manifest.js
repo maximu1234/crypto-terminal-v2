@@ -171,7 +171,7 @@ Object.freeze({
 "api.js":
 27,
 "bybit-fetch.js":
-15,
+16,
 "bybit-listings.js":
 5,
 "bybit-network-ui.js":
@@ -194,7 +194,7 @@ Object.freeze({
 
 /* ── JS: cloud / auth ── */
 "cloud-sync.js":
-36,
+37,
 "cloud-sync-throttle.js":
 3,
 "page-routes.js":

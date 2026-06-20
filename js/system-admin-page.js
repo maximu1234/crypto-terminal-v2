@@ -5,7 +5,7 @@ ensureCloudReady
 import {
 ensureCloudLoginResolved,
 getEffectiveCloudUserEmail
-} from "./cloud-sync.js?v=36";
+} from "./cloud-sync.js?v=37";
 
 import {
 isSystemAdminUser,
@@ -32,7 +32,7 @@ bindDrawingsGlobalPurge
 
 import {
 resetBybitEndpoints
-} from "./bybit-fetch.js?v=15";
+} from "./bybit-fetch.js?v=16";
 
 const rootEl =
 document.getElementById("system-admin-root");

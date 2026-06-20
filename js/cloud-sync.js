@@ -2171,7 +2171,7 @@ info.apiOrigin
 : info?.url && !String(
 info.url
 ).startsWith(
-"app:"
+"multichart:"
 )
 ? new URL(
 info.url

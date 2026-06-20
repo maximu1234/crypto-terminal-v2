@@ -30,7 +30,7 @@ isCloudSyncEnabled,
 getCloudUserEmail,
 pullDeviceStateFromCloud,
 onCloudSyncChange
-} from "./cloud-sync.js?v=36";
+} from "./cloud-sync.js?v=37";
 
 import {
 isAutoDevicePullDisabled
@@ -48,7 +48,7 @@ import {
 resetBybitEndpoints,
 preloadBybitProxyConfig,
 warmBybitWorkerProxy
-} from "./bybit-fetch.js?v=15";
+} from "./bybit-fetch.js?v=16";
 
 import {
 initMobileRecovery

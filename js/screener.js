@@ -72,7 +72,7 @@ bindMobileNavDrawerLinks
 import {
 persistFavoritesToCloud,
 onFavoritesRemoteUpdate
-} from "./cloud-sync.js?v=36";
+} from "./cloud-sync.js?v=37";
 
 import {
 attachSymbolAutocomplete,

@@ -1285,7 +1285,7 @@ tf
 ){
 
 const { isCloudLoggedIn } =
-await import("./cloud-sync.js?v=36");
+await import("./cloud-sync.js?v=37");
 
 if(
 !isCloudLoggedIn()

@@ -1,5 +1,6 @@
 /**
- * app://local — статика из site-bundle; /api/* → Vercel (Bybit proxy, Twelve Data, …).
+ * multichart://local — статика из site-bundle; /api/* → Vercel.
+ * Схема multichart уже в Info.plist (auth + UI).
  */
 const {
 protocol,
@@ -16,12 +17,9 @@ const path =
 require(
 "path"
 );
-const {
-pathToFileURL
-} =
-require(
-"url"
-);
+
+const APP_SCHEME =
+"multichart";
 
 const APP_HOST =
 "local";
@@ -62,7 +60,7 @@ const MIME =
 
 function bundledOrigin(){
 
-return `app://${APP_HOST}`;
+return `${APP_SCHEME}://${APP_HOST}`;
 
 }
 
@@ -71,7 +69,7 @@ function registerAppScheme(){
 protocol.registerSchemesAsPrivileged([
 {
 scheme:
-"app",
+APP_SCHEME,
 privileges:
 {
 standard:
@@ -89,6 +87,44 @@ true
 }
 }
 ]);
+
+}
+
+function resolveBundleRoot(
+bundleRoot
+){
+
+if(
+fs.existsSync(
+path.join(
+bundleRoot,
+"coins.html"
+)
+)
+){
+return bundleRoot;
+}
+
+const unpacked =
+path.join(
+bundleRoot,
+"..",
+"app.asar.unpacked",
+"site-bundle"
+);
+
+if(
+fs.existsSync(
+path.join(
+unpacked,
+"coins.html"
+)
+)
+){
+return unpacked;
+}
+
+return bundleRoot;
 
 }
 
@@ -215,8 +251,13 @@ bundleRoot,
 remoteApiOrigin
 }){
 
+const root =
+resolveBundleRoot(
+bundleRoot
+);
+
 protocol.handle(
-"app",
+APP_SCHEME,
 async(
 request
 )=>{
@@ -235,6 +276,20 @@ return new Response(
 {
 status:
 404
+}
+);
+}
+
+if(
+reqUrl.pathname.startsWith(
+"/auth/"
+)
+){
+return new Response(
+"Auth callback",
+{
+status:
+204
 }
 );
 }
@@ -269,7 +324,7 @@ request.body
 
 const filePath =
 resolveBundleFile(
-bundleRoot,
+root,
 reqUrl.pathname
 );
 
@@ -285,16 +340,6 @@ status:
 );
 
 }
-
-try{
-return net.fetch(
-pathToFileURL(
-filePath
-).href
-);
-}catch(
-err
-){
 
 const data =
 fs.readFileSync(
@@ -314,16 +359,18 @@ filePath
 );
 
 }
-
-}
 );
+
+return root;
 
 }
 
 module.exports =
 {
+APP_SCHEME,
 APP_HOST,
 bundledOrigin,
 registerAppScheme,
-setupSiteProtocol
+setupSiteProtocol,
+resolveBundleRoot
 };

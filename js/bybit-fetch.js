@@ -64,7 +64,7 @@ return false;
 
 if(
 location.protocol ===
-"app:"
+"multichart:"
 ){
 return false;
 }
