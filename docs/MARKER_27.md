@@ -2,7 +2,7 @@
 
 **Тег:** `metka-27` · **Коммит:** `git rev-parse metka-27`
 
-**Текущий эталон отката.** Предыдущий: [MARKER_26.md](./MARKER_26.md) (`metka-26`).
+**Предыдущий эталон отката.** Текущая: [MARKER_28.md](./MARKER_28.md) (`metka-28`).
 
 Проверено: `/coins` — топбар по Photoshop-макету, fib на вертикальных якорях, Plus-алерты, глобальная очистка рисунков в `/system`; CI gate (manifest, nav, unit tests).
 
@@ -55,8 +55,8 @@
 
 ```bash
 git fetch --tags
-git checkout metka-27   # текущий
-git checkout metka-26   # до fib/topbar/system-purge
+git checkout metka-28   # текущий
+git checkout metka-27   # до desktop bundled UI
 ```
 
 ## Smoke

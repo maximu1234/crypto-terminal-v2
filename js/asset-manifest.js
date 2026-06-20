@@ -51,7 +51,7 @@ Object.freeze({
 "screener.js":
 77,
 "release-marker.js":
-11,
+12,
 "site-boot.js":
 88,
 "desktop-app-ui.js":

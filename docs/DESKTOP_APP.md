@@ -30,7 +30,7 @@
 
 ```
 Multichart.app (Electron)
-  └─ multichart://local — HTML/JS/CSS из site-bundle (копия репо на момент релиза)
+  └─ http://127.0.0.1 — HTML/JS/CSS из site-bundle (локальный HTTP в main process)
   └─ /api/* → прокси на Vercel (Bybit fallback, Twelve Data, CoinGecko)
   └─ Bybit REST/WS — напрямую с api.bybit.com
   └─ Supabase / Railway worker — интернет
@@ -52,7 +52,7 @@ Multichart.app (Electron)
 ```bash
 cd desktop
 npm install
-npm start              # bundle + app://local (как в .app)
+npm start              # bundle + local HTTP (как в .app)
 npm run start:dev      # UI с http://127.0.0.1:8080 (./start.sh в корне)
 npm run start:remote   # старый режим — UI с Vercel
 ```
@@ -126,12 +126,6 @@ env:
   APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
 ```
 
-## Дальше: Bybit локально
+## Дальше: торговля
 
-План (не в этом PR):
-
-- `ipcMain` + safeStorage / Keychain для API key/secret
-- Отдельный модуль `desktop/trading/` — запросы на Bybit **из main process**, не через публичный сайт
-- UI ордеров в Electron-only panel или `cryptoTerminalDesktop` bridge
-
-Текущая .app уже использует partition `persist:multichart-desktop` — сессия и cookies изолированы от Safari/Chrome.
+См. [TRADING_MODULE.md](./TRADING_MODULE.md) — фаза 1 (Keychain + IPC) в `desktop/trading/`.
