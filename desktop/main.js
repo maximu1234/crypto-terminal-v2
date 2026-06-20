@@ -41,6 +41,13 @@ const APP_URL =
 process.env.CRYPTO_TERMINAL_URL ||
 "https://crypto-terminal-v2.vercel.app";
 
+const START_URL =
+process.env.DESKTOP_START_URL ||
+`${APP_URL.replace(
+/\/$/,
+""
+)}/coins.html`;
+
 const PARTITION =
 "persist:multichart-desktop";
 
@@ -141,6 +148,12 @@ app.commandLine.appendSwitch(
 app.commandLine.appendSwitch(
 "js-flags",
 "--max-old-space-size=4096"
+);
+app.commandLine.appendSwitch(
+"enable-gpu-rasterization"
+);
+app.commandLine.appendSwitch(
+"ignore-gpu-blocklist"
 );
 
 autoUpdater.logger =
@@ -463,7 +476,19 @@ new URL(
 APP_URL
 ).origin,
 numSockets:
-6
+8
+});
+ses.preconnect({
+url:
+"https://api.bybit.com",
+numSockets:
+4
+});
+ses.preconnect({
+url:
+"https://api.bytick.com",
+numSockets:
+2
 });
 }catch{
 /* ignore */
@@ -481,17 +506,27 @@ if(
 process.env.DESKTOP_SKIP_WARM_CACHE ===
 "1"
 ){
-return;
+return Promise.resolve(
+null
+);
 }
 
-void warmStaticCache(
+return warmStaticCache(
 ses,
 APP_URL
 ).then(
-count=>{
+result=>{
 log.info(
-`desktop warm-cache: ${count} assets`
+`desktop warm-cache: phase1=${result.phase1}, phase2=${result.phase2} queued`
 );
+void result.phase2Promise?.then(
+done=>{
+log.info(
+`desktop warm-cache: phase2 done (${done} assets)`
+);
+}
+);
+return result;
 }
 ).catch(
 err=>{
@@ -499,6 +534,7 @@ log.warn(
 "desktop warm-cache failed:",
 err
 );
+return null;
 }
 );
 
@@ -648,7 +684,7 @@ url
 );
 
 mainWindow.loadURL(
-APP_URL
+START_URL
 );
 
 mainWindow.webContents.once(
@@ -846,7 +882,9 @@ ipcMain.handle(
 app:
 app.getVersion(),
 url:
-APP_URL
+APP_URL,
+startUrl:
+START_URL
 })
 );
 
@@ -1249,7 +1287,7 @@ startupAuthUrl;
 }
 
 app.whenReady().then(
-()=>{
+async()=>{
 
 registerAuthProtocol();
 
@@ -1263,9 +1301,23 @@ PARTITION
 tuneDesktopSession(
 ses
 );
+
+const warmTimeout =
+new Promise(
+resolve=>{
+setTimeout(
+resolve,
+12000
+);
+}
+);
+
+await Promise.race([
 beginSessionWarmCache(
 ses
-);
+),
+warmTimeout
+]);
 
 setupAutoUpdater();
 registerIpc();

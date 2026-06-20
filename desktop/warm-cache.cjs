@@ -1,7 +1,16 @@
 /**
  * Прогрев HTTP-кэша Electron-сессии (только desktop).
- * Парсит index/coins HTML и подтягивает js/css до первого листания.
+ * 1) manifest с сервера → точные ?v= для chart/coins
+ * 2) phase1 (critical) блокирует окно, phase2 — фон
  */
+const fs =
+require(
+"fs"
+);
+const path =
+require(
+"path"
+);
 const {
 net
 } =
@@ -11,18 +20,55 @@ require(
 
 const WARM_PAGES =
 [
-"/index.html",
-"/coins.html"
+"/coins.html",
+"/index.html"
 ];
 
-const MAX_ASSETS =
-56;
+const MAX_PHASE2 =
+96;
 
 const MAX_CONCURRENT =
-10;
+14;
 
 const ASSET_RE =
 /(?:src|href)=["']([^"']+\.(?:js|css|mjs))(?:\?[^"']*)?["']/gi;
+
+/** Порядок = приоритет загрузки (график / монеты). */
+const MANIFEST_PRIORITY =
+[
+"asset-manifest.js",
+"site-css-gate.js",
+"charts-lib-boot.js",
+"coins-page-boot.js",
+"chart-page.js",
+"terminal.js",
+"chart.js",
+"chart-import.js",
+"chart-widget-host.js",
+"bybit-fetch.js",
+"bybit-route-pref.js",
+"bybit-network-ui.js",
+"drawings.js",
+"drawings/init.js",
+"chart/chart-factory.js",
+"chart/chart-options.js",
+"chart/chart-dom-crosshair.js",
+"cloud-sync.js",
+"supabase-client.js",
+"auth-ui.js",
+"site-boot.js",
+"critical-shell.css",
+"common.css",
+"terminal.css",
+"coins.css",
+"dashboard.css"
+];
+
+const CHART_KEY_RE =
+/^(chart|terminal|drawings|coins|bybit|dashboard|widget|chart-|coins-|site-css|alert-auth|cloud-sync|supabase|favorites|drawings-cloud|device-pull|ticker-update|page-routes|qwerty|charts-lib|chart-import|chart-page|chart-widget|tablet-|price-alert|alert-monitor|site-boot|auth-ui|release-marker|desktop-app|suppress-native|site-mobile|coins-layout|coins-tablet|telegram-bot|async-timeout|auth-storage)/;
+
+const CHART_CSS_RE =
+/^(critical-shell|common|terminal|coins|dashboard|desktop-app)\.css$/;
 
 function resolveUrl(
 base,
@@ -264,6 +310,156 @@ worker()
 
 }
 
+function parseManifestAssets(
+src
+){
+
+const assets =
+{};
+const re =
+/"([^"]+\.(?:js|css))"\s*:\s*(\d+)/g;
+let m;
+
+while(
+(
+m =
+re.exec(
+src
+)
+) !==
+null
+){
+assets[
+m[
+1
+]
+] =
+parseInt(
+m[
+2
+],
+10
+);
+}
+
+return assets;
+
+}
+
+function readBundledManifestAssets(){
+
+try{
+const bundled =
+path.join(
+__dirname,
+"..",
+"js",
+"asset-manifest.js"
+);
+const src =
+fs.readFileSync(
+bundled,
+"utf8"
+);
+const assets =
+parseManifestAssets(
+src
+);
+
+if(
+Object.keys(
+assets
+).length >
+10
+){
+return assets;
+}
+}catch{
+/* packaged .app — manifest только на сервере */
+}
+
+return null;
+
+}
+
+async function fetchRemoteManifestAssets(
+session,
+origin
+){
+
+const candidates =
+[
+`${origin}/js/asset-manifest.js?v=2`,
+`${origin}/js/asset-manifest.js`
+];
+
+for(
+const url of
+candidates
+){
+
+try{
+const src =
+await netGet(
+session,
+url,
+12000
+);
+const assets =
+parseManifestAssets(
+src
+);
+
+if(
+Object.keys(
+assets
+).length >
+10
+){
+return assets;
+}
+}catch{
+/* next */
+}
+
+}
+
+return readBundledManifestAssets();
+
+}
+
+function manifestAssetUrl(
+origin,
+key,
+ver
+){
+
+const prefix =
+key.endsWith(
+".css"
+)
+? "/css/"
+: "/js/";
+
+return `${origin}${prefix}${key}?v=${ver}`;
+
+}
+
+function isChartRelatedKey(
+key
+){
+
+return (
+CHART_KEY_RE.test(
+key
+) ||
+CHART_CSS_RE.test(
+key
+)
+);
+
+}
+
 function collectAssetUrls(
 html,
 pageUrl
@@ -308,6 +504,142 @@ return urls;
 
 }
 
+function buildWarmLists(
+origin,
+manifestAssets
+){
+
+const seen =
+new Set();
+const phase1 =
+[];
+
+function push(
+url
+){
+
+if(
+!url ||
+seen.has(
+url
+)
+){
+return;
+}
+
+seen.add(
+url
+);
+phase1.push(
+url
+);
+
+}
+
+push(
+`${origin}/vendor/lightweight-charts.standalone.production.js`
+);
+
+if(
+manifestAssets
+){
+
+for(
+const key of
+MANIFEST_PRIORITY
+){
+
+const ver =
+manifestAssets[
+key
+];
+
+if(
+ver !=
+null
+){
+push(
+manifestAssetUrl(
+origin,
+key,
+ver
+)
+);
+}
+
+}
+
+const phase2 =
+[];
+
+for(
+const [
+key,
+ver
+] of
+Object.entries(
+manifestAssets
+)
+){
+
+if(
+MANIFEST_PRIORITY.includes(
+key
+)
+){
+continue;
+}
+
+if(
+!isChartRelatedKey(
+key
+)
+){
+continue;
+}
+
+const url =
+manifestAssetUrl(
+origin,
+key,
+ver
+);
+
+if(
+seen.has(
+url
+)
+){
+continue;
+}
+
+seen.add(
+url
+);
+phase2.push(
+url
+);
+
+}
+
+return {
+phase1,
+phase2:
+phase2.slice(
+0,
+MAX_PHASE2
+)
+};
+
+}
+
+return {
+phase1,
+phase2:[]
+};
+
+}
+
 async function warmStaticCache(
 session,
 appUrl
@@ -322,12 +654,22 @@ const origin =
 new URL(
 base
 ).origin;
-const assets =
-new Set();
-
-assets.add(
-`${origin}/vendor/lightweight-charts.standalone.production.js`
+const manifestAssets =
+await fetchRemoteManifestAssets(
+session,
+origin
 );
+const {
+phase1,
+phase2
+} =
+buildWarmLists(
+origin,
+manifestAssets
+);
+
+const htmlExtras =
+new Set();
 
 for(
 const page of
@@ -335,13 +677,13 @@ WARM_PAGES
 ){
 
 try{
-
 const pageUrl =
 `${base}${page}`;
 const html =
 await netGet(
 session,
-pageUrl
+pageUrl,
+15000
 );
 
 for(
@@ -351,27 +693,53 @@ html,
 pageUrl
 )
 ){
-assets.add(
+htmlExtras.add(
 url
 );
 }
 
 }catch{
-/* страница недоступна — пропускаем */
+/* skip */
 }
 
 }
 
-const list =
+const phase2Merged =
 [
-...assets
-].slice(
-0,
-MAX_ASSETS
+...phase2
+];
+
+for(
+const url of
+htmlExtras
+){
+
+if(
+phase1.includes(
+url
+) ||
+phase2Merged.includes(
+url
+)
+){
+continue;
+}
+
+phase2Merged.push(
+url
 );
 
+if(
+phase2Merged.length >=
+MAX_PHASE2
+){
+break;
+}
+
+}
+
 await mapPool(
-list,
+phase1,
 MAX_CONCURRENT,
 url=>
 netFetchBody(
@@ -380,7 +748,27 @@ url
 )
 );
 
-return list.length;
+const phase2Promise =
+mapPool(
+phase2Merged,
+MAX_CONCURRENT,
+url=>
+netFetchBody(
+session,
+url
+)
+).then(
+()=>
+phase2Merged.length
+);
+
+return {
+phase1:
+phase1.length,
+phase2:
+phase2Merged.length,
+phase2Promise
+};
 
 }
 

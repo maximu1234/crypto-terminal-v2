@@ -61,7 +61,9 @@ npm run start:dev      # http://127.0.0.1:8080 (./start.sh в корне)
 - Отключён throttling рендерера / фоновых таймеров (macOS App Nap)
 - `powerSaveBlocker` — приложение не засыпает при работе
 - Кэш диска до ~512 MB, V8 code cache
-- **Warm-cache:** при старте подтягивает js/css с Главной и Монет в HTTP-кэш Electron (сайт в браузере не меняется)
+- **Warm-cache:** перед окном подтягивает chart/coins js/css по `asset-manifest.js` с сервера (phase1), остальное — в фоне; старт на `/coins.html`
+- По умолчанию открывается **Монеты** (`/coins.html`), не Главная — меньше лишних переходов
+- Preconnect к Vercel и **api.bybit.com** (история свечей)
 - UA как у Chrome (без `Electron/` в строке)
 - Проверка обновлений — через 12 с после загрузки страницы (не мешает старту)
 
