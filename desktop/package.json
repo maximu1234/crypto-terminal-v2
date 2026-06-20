@@ -1,7 +1,7 @@
 {
   "name": "multichart-desktop",
   "productName": "Multichart",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Multichart desktop shell for macOS (remote UI + local auto-update)",
   "main": "main.js",
   "author": "Multichart",
@@ -23,6 +23,7 @@
   "build": {
     "appId": "com.multichart.desktop",
     "productName": "Multichart",
+    "forceCodeSigning": false,
     "directories": {
       "output": "dist",
       "buildResources": "build"
@@ -30,18 +31,28 @@
     "files": [
       "main.js",
       "preload.js",
-      "entitlements.mac.plist"
+      "after-pack.cjs"
     ],
+    "afterPack": "./after-pack.cjs",
     "mac": {
       "category": "public.app-category.finance",
       "target": [
-        "dmg",
-        "zip"
+        {
+          "target": "dmg",
+          "arch": [
+            "universal"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "universal"
+          ]
+        }
       ],
       "icon": "build/icon.png",
-      "hardenedRuntime": true,
-      "entitlements": "entitlements.mac.plist",
-      "entitlementsInherit": "entitlements.mac.plist",
+      "identity": null,
+      "hardenedRuntime": false,
       "gatekeeperAssess": false
     },
     "dmg": {
