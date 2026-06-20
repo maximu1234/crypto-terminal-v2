@@ -8,7 +8,7 @@ fetchTickersInto
 
 import {
 fetchBybitBulk
-} from "./bybit-fetch.js?v=16";
+} from "./bybit-fetch.js?v=17";
 
 export const STATS_JOB_UPDATE_EVENT =
 "stats-job-update";

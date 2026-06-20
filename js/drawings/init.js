@@ -176,7 +176,7 @@ createDrawUndoStack
 
 import {
 createDrawDesktopSelection
-} from "./draw-edit-desktop.js?v=1";
+} from "./draw-edit-desktop.js?v=3";
 
 import {
 createDrawingsPersist
@@ -184,7 +184,7 @@ createDrawingsPersist
 
 import {
 createDrawStyleBar
-} from "./draw-style-bar.js?v=3";
+} from "./draw-style-bar.js?v=8";
 
 import {
 createDrawAlertsChart
@@ -4903,7 +4903,8 @@ saveUserPrefs,
 getToolDefaults:()=>toolDefaults,
 deleteSelected,
 flushDeferredFibSettingsSync,
-getDesktopEdit:()=>desktopEdit
+getDesktopEdit:()=>desktopEdit,
+getSymbol
 });
 
 ({

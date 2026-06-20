@@ -78,7 +78,7 @@ syncBackgroundAlertStreams
 
 import {
 initWidgetDrawings
-} from "./chart-widget-host.js?v=11";
+} from "./chart-widget-host.js?v=12";
 
 import {
 mountDrawToolbar,
@@ -2612,7 +2612,7 @@ if(
 isTradePage
 ){
 void import(
-"./trade-volume-presets.js?v=2"
+"./trade-volume-presets.js?v=7"
 ).then(
 ({
 switchTradeVolumeSymbol

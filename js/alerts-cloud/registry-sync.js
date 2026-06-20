@@ -26,7 +26,7 @@ markAlertsPullSuccess,
 warnAlertsPullThrottled,
 isAlertsPullInBackoff,
 broadcastAlertsRegistrySync
-} from "./debug.js?v=2";
+} from "./debug.js?v=4";
 
 import {
 runCloudOp,

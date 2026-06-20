@@ -114,7 +114,9 @@ wrapEl,
 chartContainer,
 getSymbol,
 getTf,
-getDrawingTools
+getDrawingTools,
+onPlusActivate =
+null
 }){
 
 if(
@@ -255,7 +257,8 @@ onCrosshairRelease:()=>{
 crosshairSuppressed =
 false;
 
-}
+},
+onPlusActivate
 
 });
 

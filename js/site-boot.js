@@ -48,7 +48,7 @@ import {
 resetBybitEndpoints,
 preloadBybitProxyConfig,
 warmBybitWorkerProxy
-} from "./bybit-fetch.js?v=16";
+} from "./bybit-fetch.js?v=17";
 
 import {
 initMobileRecovery
@@ -68,7 +68,7 @@ initSuppressNativeContextMenu
 
 import {
 initDesktopAppUi
-} from "./desktop-app-ui.js?v=2";
+} from "./desktop-app-ui.js?v=4";
 
 import {
 initDesktopTradeNav

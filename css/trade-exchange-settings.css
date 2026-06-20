@@ -206,10 +206,19 @@ line-height:1.35;
 color:#6b7280;
 }
 
-.trade-volume-defaults-panel{
+body.trade-page .trade-exchange-dropdown .trade-volume-defaults-panel.trade-volume-presets-panel{
+display:grid;
+grid-template-columns:1fr 1fr;
+column-gap:10px;
+row-gap:6px;
+}
+
+.trade-exchange-dropdown .trade-volume-defaults-row{
 display:flex;
-flex-direction:column;
-gap:6px;
+align-items:center;
+gap:5px;
+min-width:0;
+cursor:default;
 }
 
 .trade-volume-defaults-row{
@@ -217,22 +226,28 @@ cursor:default;
 }
 
 .trade-volume-defaults-label{
-flex:0 0 14px;
-font-size:11px;
+flex:0 0 12px;
+font-size:10px;
 font-weight:600;
 color:#6b7280;
 text-align:center;
 }
 
+.trade-exchange-dropdown .trade-volume-presets-field{
+position:relative;
+flex:1 1 auto;
+min-width:0;
+}
+
 .trade-exchange-dropdown .trade-volume-presets-field input[type="number"]{
 box-sizing:border-box;
 width:100%;
-padding:6px 40px 6px 7px;
+padding:5px 32px 5px 6px;
 border:1px solid #374151;
-border-radius:6px;
+border-radius:5px;
 background:#13181e;
 color:#e5e7eb;
-font:500 12px/1.2 ui-monospace,SFMono-Regular,Menlo,monospace;
+font:500 11px/1.2 ui-monospace,SFMono-Regular,Menlo,monospace;
 -moz-appearance:textfield;
 appearance:textfield;
 }
@@ -243,6 +258,12 @@ border-color:#6366f1;
 }
 
 .trade-exchange-dropdown .trade-volume-presets-suffix{
-font-size:11px;
-right:8px;
+position:absolute;
+top:50%;
+right:6px;
+transform:translateY(-50%);
+font-size:10px;
+font-weight:500;
+color:#6b7280;
+pointer-events:none;
 }

@@ -296,7 +296,10 @@ ctx.restore();
 
 }
 
-export function initTradeChartOverlay(){
+export function createTradeChartOverlay(
+initialHost =
+null
+){
 
 if(
 !document.body.classList.contains(
@@ -306,7 +309,11 @@ if(
 return null;
 }
 
+const widgetInstance =
+!!initialHost;
+
 let host =
+initialHost ||
 null;
 let root =
 null;
@@ -341,6 +348,8 @@ null;
 let entryHover =
 false;
 let stopDragListeners =
+null;
+let mountAbort =
 null;
 
 function getMarkPrice(){
@@ -1752,10 +1761,84 @@ scheduleDraw();
 
 }
 
+if(
+!widgetInstance
+){
 window.__tradeChartOverlay =
 {
 onPriceScaleDragEnd
 };
+}
+
+function destroy(){
+
+mountAbort?.abort();
+mountAbort =
+null;
+stopPoll();
+
+if(
+rafId
+){
+cancelAnimationFrame(
+rafId
+);
+rafId =
+0;
+}
+
+if(
+bindDrawingSyncTimer
+){
+clearTimeout(
+bindDrawingSyncTimer
+);
+bindDrawingSyncTimer =
+0;
+}
+
+const dt =
+host?.getDrawingTools?.();
+
+if(
+afterDrawingsRedraw
+){
+dt?.removeAfterRedrawListener?.(
+afterDrawingsRedraw
+);
+afterDrawingsRedraw =
+null;
+}
+
+stopDragListeners?.();
+stopDragListeners =
+null;
+dragStop =
+null;
+pendingStopPrice =
+null;
+position =
+null;
+badgeLayoutCache =
+null;
+
+root?.remove();
+root =
+null;
+badgesEl =
+null;
+entryZoneEl =
+null;
+handlesEl =
+null;
+slHandleEl =
+null;
+tpHandleEl =
+null;
+host =
+null;
+
+}
 
 function bindDrawingSync(){
 
@@ -1845,8 +1928,6 @@ root =
 document.createElement(
 "div"
 );
-root.id =
-"trade-chart-overlay";
 root.className =
 "trade-chart-overlay";
 
@@ -2450,6 +2531,12 @@ function mount(
 nextHost
 ){
 
+mountAbort?.abort();
+mountAbort =
+new AbortController();
+const signal =
+mountAbort.signal;
+
 host =
 nextHost;
 
@@ -2482,6 +2569,9 @@ window.addEventListener(
 void syncPosition(
 true
 );
+},
+{
+signal
 }
 );
 
@@ -2494,9 +2584,15 @@ event.detail?.position,
 event.detail?.symbol
 );
 
+},
+{
+signal
 }
 );
 
+if(
+!widgetInstance
+){
 const symEl =
 document.getElementById(
 "current-symbol"
@@ -2525,7 +2621,7 @@ subtree:
 true
 }
 );
-
+}
 }
 
 document.addEventListener(
@@ -2543,9 +2639,31 @@ true
 startPoll();
 }
 
+},
+{
+signal
 }
 );
 
+}
+
+const controller =
+{
+refresh:()=>
+syncPosition(
+true
+),
+destroy,
+onPriceScaleDragEnd
+};
+
+if(
+initialHost
+){
+mount(
+initialHost
+);
+return controller;
 }
 
 function tryMount(){
@@ -2581,11 +2699,12 @@ true
 );
 }
 
-return {
-refresh:()=>
-syncPosition(
-true
-)
-};
+return controller;
+
+}
+
+export function initTradeChartOverlay(){
+
+return createTradeChartOverlay();
 
 }

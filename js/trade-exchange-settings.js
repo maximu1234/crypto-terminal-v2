@@ -4,14 +4,20 @@
 import {
 wireTradeVolumeDefaultsSettings,
 TRADE_VOLUME_SLOT_COUNT
-} from "./trade-volume-presets.js?v=2";
+} from "./trade-volume-presets.js?v=7";
+
+const TRADE_VOLUME_DEFAULT_INPUT_COUNT =
+Math.max(
+1,
+TRADE_VOLUME_SLOT_COUNT - 1
+);
 
 function buildDefaultVolumeFieldsHtml(){
 
 return Array.from(
 {
 length:
-TRADE_VOLUME_SLOT_COUNT
+TRADE_VOLUME_DEFAULT_INPUT_COUNT
 },
 (
 _unused,
@@ -1010,6 +1016,10 @@ const settingsWrap =
 menu.querySelector(
 "#header-settings-wrap"
 );
+const btcLink =
+menu.querySelector(
+".coins-btc-d-link"
+);
 
 const wrap =
 document.createElement(
@@ -1030,6 +1040,13 @@ wrap.innerHTML =
 `;
 
 if(
+btcLink
+){
+btcLink.insertAdjacentElement(
+"afterend",
+wrap
+);
+}else if(
 settingsWrap
 ){
 menu.insertBefore(

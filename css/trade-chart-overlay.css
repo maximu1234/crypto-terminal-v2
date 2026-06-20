@@ -25,14 +25,14 @@ pointer-events:none;
 
 body.trade-page .trade-pos-badge{
 position:absolute;
-transform:translateY(-50%) scale(0.966);
+transform:translateY(-50%) scale(1.063);
 transform-origin:left center;
 display:inline-flex;
 align-items:stretch;
 border-radius:4px;
 overflow:hidden;
 border:1px solid transparent;
-font:600 9px/1.2 system-ui,-apple-system,sans-serif;
+font:600 10px/1.2 system-ui,-apple-system,sans-serif;
 white-space:nowrap;
 pointer-events:auto;
 box-shadow:0 2px 8px rgba(0,0,0,.45);
@@ -41,7 +41,7 @@ box-shadow:0 2px 8px rgba(0,0,0,.45);
 body.trade-page .trade-pos-badge .seg{
 display:inline-flex;
 align-items:center;
-padding:3px 6px;
+padding:3px 7px;
 border-right:1px solid rgba(255,255,255,.14);
 background:inherit;
 }
@@ -117,11 +117,11 @@ appearance:none;
 border:none;
 background:rgba(0,0,0,.22);
 color:inherit;
-font-size:11px;
+font-size:12px;
 line-height:1;
 cursor:pointer;
-padding:3px 6px;
-min-width:19px;
+padding:3px 7px;
+min-width:21px;
 justify-content:center;
 }
 

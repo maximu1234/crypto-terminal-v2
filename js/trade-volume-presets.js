@@ -13,6 +13,8 @@ const LEGACY_KEY =
 
 export const TRADE_VOLUME_SLOT_COUNT =
 6;
+export const TRADE_VOLUME_POSITION_APPLY_SLOT_INDEX =
+TRADE_VOLUME_SLOT_COUNT - 1;
 
 const SLOT_COUNT =
 TRADE_VOLUME_SLOT_COUNT;
@@ -443,12 +445,89 @@ currentSymbolNorm
 
 }
 
-export function getActiveTradeVolumeUsdt(){
+export function getActiveTradeVolumeUsdt(
+symbol
+){
+
+if(
+symbol
+){
+const entry =
+loadStateForSymbol(
+symbol
+);
+
+return entry.slots[
+entry.activeIndex
+] ??
+0;
+}
 
 return state.slots[
 state.activeIndex
 ] ??
 0;
+
+}
+
+export function getVolumeStateForSymbol(
+symbol
+){
+
+return loadStateForSymbol(
+symbol
+);
+
+}
+
+export function saveVolumeStateForSymbol(
+symbol,
+volumeState
+){
+
+const sym =
+normalizeSymbol(
+symbol
+);
+
+if(
+!sym ||
+!volumeState
+){
+return;
+}
+
+const bySymbol =
+readBySymbolMap();
+
+bySymbol[
+sym
+] =
+{
+slots:
+normalizeSlots(
+volumeState.slots
+),
+activeIndex:
+clampActiveIndex(
+volumeState.activeIndex
+)
+};
+
+writeBySymbolMap(
+bySymbol
+);
+
+if(
+sym ===
+currentSymbolNorm
+){
+state =
+loadStateForSymbol(
+sym
+);
+refreshVolumeUi();
+}
 
 }
 
@@ -465,6 +544,182 @@ getTradeVolumePresetsState()
 );
 
 }
+
+function setTradeVolumeSlotValue(
+index,
+value,
+{
+activate = false
+} = {}
+){
+
+if(
+!Number.isInteger(index) ||
+index < 0 ||
+index >= SLOT_COUNT
+){
+return false;
+}
+
+state.slots[index] =
+normalizeSlotValue(value);
+
+if(activate){
+state.activeIndex =
+index;
+}
+
+persistCurrentSymbolState();
+refreshVolumeUi();
+dispatchChange();
+return true;
+
+}
+
+export function applyPositionVolumeFromDrawing(
+{
+symbol,
+volumeUsdt
+} = {}
+){
+
+const normalized =
+normalizeSlotValue(
+volumeUsdt
+);
+
+if(
+!Number.isFinite(
+normalized
+) ||
+normalized <=
+0
+){
+return false;
+}
+
+const sym =
+normalizeSymbol(
+symbol ||
+currentSymbolNorm
+);
+const slotIndex =
+TRADE_VOLUME_POSITION_APPLY_SLOT_INDEX;
+
+if(
+sym
+){
+
+const entry =
+loadStateForSymbol(
+sym
+);
+
+entry.slots[
+slotIndex
+] =
+normalized;
+entry.activeIndex =
+slotIndex;
+
+saveVolumeStateForSymbol(
+sym,
+entry
+);
+
+if(
+sym ===
+currentSymbolNorm
+){
+state.slots[
+slotIndex
+] =
+normalized;
+state.activeIndex =
+slotIndex;
+refreshVolumeUi();
+}
+
+dispatchChange();
+
+return true;
+
+}
+
+return setTradeVolumeSlotValue(
+slotIndex,
+normalized,
+{
+activate: true
+}
+);
+
+}
+
+export function applyPositionVolumeToTradePreset(
+volumeUsdt
+){
+
+return applyPositionVolumeFromDrawing(
+{
+volumeUsdt
+}
+);
+
+}
+
+function installPositionVolumeApplyListener(){
+
+if(
+installPositionVolumeApplyListener.installed
+){
+return;
+}
+
+installPositionVolumeApplyListener.installed =
+true;
+
+window.addEventListener(
+"trade-apply-position-volume",
+event=>{
+
+if(
+!document.body.classList.contains(
+"trade-page"
+)
+){
+return;
+}
+
+const volumeUsdt =
+Number(
+event?.detail?.volumeUsdt
+);
+
+if(
+!Number.isFinite(
+volumeUsdt
+) ||
+volumeUsdt <=
+0
+){
+return;
+}
+
+applyPositionVolumeFromDrawing(
+{
+symbol:
+event?.detail?.symbol,
+volumeUsdt
+}
+);
+
+}
+);
+
+}
+
+installPositionVolumeApplyListener();
 
 function renderTriggerLabel(
 labelEl

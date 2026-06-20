@@ -191,6 +191,24 @@ at: Date.now()
 
 }
 
+export function setAlertsRealtimeChannel(
+channel
+){
+
+alertsRealtimeChannel =
+channel;
+
+}
+
+export function setAlertsRealtimeUserId(
+userId
+){
+
+alertsRealtimeUserId =
+userId;
+
+}
+
 export {
 IS_YANDEX,
 isAlertsSyncDebugEnabled,

@@ -241,6 +241,11 @@ body.coins-page .coins-header-desktop .coins-btc-d-link{
 margin-left:auto;
 }
 
+body.coins-page .coins-header-desktop .trade-exchange-wrap{
+margin-left:8px;
+flex-shrink:0;
+}
+
 body.coins-page .coins-btc-d-link:hover{
 color:#e5e7eb;
 }

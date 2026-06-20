@@ -31,8 +31,10 @@ alertsRestStressUntil,
 alertsRealtimeChannel,
 alertsRealtimeUserId,
 isAlertsPullInBackoff,
-broadcastAlertsRegistrySync
-} from "./debug.js?v=2";
+broadcastAlertsRegistrySync,
+setAlertsRealtimeChannel,
+setAlertsRealtimeUserId
+} from "./debug.js?v=4";
 
 import {
 getAuthed,
@@ -171,8 +173,12 @@ await sb.removeChannel(alertsRealtimeChannel);
 /* ignore */
 }
 
-alertsRealtimeChannel = null;
-alertsRealtimeUserId = null;
+setAlertsRealtimeChannel(
+null
+);
+setAlertsRealtimeUserId(
+null
+);
 }
 
 }
@@ -399,9 +405,11 @@ if(!sb){
 return;
 }
 
-alertsRealtimeUserId = userId;
+setAlertsRealtimeUserId(
+userId
+);
 
-alertsRealtimeChannel =
+setAlertsRealtimeChannel(
 sb
 .channel(
 `price_alerts:${userId}`,
@@ -510,7 +518,9 @@ status
 );
 }
 
-});
+}
+)
+);
 
 }
 

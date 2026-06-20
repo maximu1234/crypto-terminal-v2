@@ -69,6 +69,12 @@ location.protocol ===
 return false;
 }
 
+if(
+window.cryptoTerminalDesktop?.isDesktop
+){
+return false;
+}
+
 const host =
 location.hostname;
 

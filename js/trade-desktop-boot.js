@@ -1,17 +1,21 @@
 /**
- * Desktop-only trade layer on /coins — styles + module init.
+ * Desktop-only trade layer — /coins и /terminal (виджеты).
  */
 import {
 cssUrl
 } from "./asset-manifest.js?v=2";
 
 import {
+isTerminalDashboardPage
+} from "./page-routes.js?v=1";
+
+import {
 initTradeExchangeSettings
-} from "./trade-exchange-settings.js?v=6";
+} from "./trade-exchange-settings.js?v=8";
 
 import {
 initTradeVolumePresets
-} from "./trade-volume-presets.js?v=2";
+} from "./trade-volume-presets.js?v=7";
 
 import {
 initTradeMarketEntry
@@ -28,12 +32,22 @@ const TRADE_CSS =
 "trade-market-entry.css",
 "trade-book-panel.css",
 "trade-chart-overlay.css",
-"trade-order-plus-ui.css"
+"trade-order-plus-ui.css",
+"trade-widget-compact.css"
 ];
 
 export function isDesktopTradeMode(){
 
 return !!window.cryptoTerminalDesktop?.isDesktop;
+
+}
+
+export function isDashboardTradeMode(){
+
+return (
+isDesktopTradeMode() &&
+isTerminalDashboardPage()
+);
 
 }
 
@@ -56,19 +70,16 @@ const href =
 cssUrl(
 name
 );
-const exists =
-document.querySelector(
-`link[rel="stylesheet"][href^="/css/${name}"]`
-) ||
-document.querySelector(
-`link[rel="stylesheet"][href="${href}"]`
-);
+const prefix =
+`/css/${name}`;
 
-if(
-exists
-){
-continue;
+document.querySelectorAll(
+`link[rel="stylesheet"][href^="${prefix}"]`
+).forEach(
+el=>{
+el.remove();
 }
+);
 
 const link =
 document.createElement(
@@ -87,11 +98,32 @@ return true;
 
 }
 
-export async function initTradeDesktopBeforeChart(){
+export async function initTradeDesktopBeforeChart(
+options =
+{}
+){
+
+const mode =
+options.mode ||
+"coins";
 
 if(
 !enableTradeDesktopMode()
 ){
+return;
+}
+
+if(
+mode ===
+"terminal"
+){
+if(
+!isTerminalDashboardPage()
+){
+return;
+}
+
+initTradeExchangeSettings();
 return;
 }
 
@@ -111,7 +143,14 @@ initTradeOpenPositions();
 
 }
 
-export async function initTradeDesktopAfterChart(){
+export async function initTradeDesktopAfterChart(
+options =
+{}
+){
+
+const mode =
+options.mode ||
+"coins";
 
 if(
 !isDesktopTradeMode()
@@ -119,11 +158,26 @@ if(
 return;
 }
 
+if(
+mode ===
+"terminal"
+){
+window.__tradeAppReady =
+true;
+
+window.dispatchEvent(
+new CustomEvent(
+"trade-app-ready"
+)
+);
+return;
+}
+
 const {
 initTradeChartOverlay
 } =
 await import(
-"./trade-chart-overlay.js?v=13"
+"./trade-chart-overlay.js?v=14"
 );
 
 initTradeChartOverlay();
@@ -132,7 +186,7 @@ const {
 initTradeChartOrders
 } =
 await import(
-"./trade-chart-orders.js?v=2"
+"./trade-chart-orders.js?v=3"
 );
 
 initTradeChartOrders();

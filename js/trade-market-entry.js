@@ -3,7 +3,7 @@
  */
 import {
 getActiveTradeVolumeUsdt
-} from "./trade-volume-presets.js?v=2";
+} from "./trade-volume-presets.js?v=7";
 
 import {
 marketMap

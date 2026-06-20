@@ -48,4 +48,4 @@ setupAlertsRealtimeForUser,
 hydrateAlertsAfterAuth,
 syncAlertsWithCloud,
 initAlertsCloudSync
-} from "./alerts-cloud/polling-realtime.js?v=2";
+} from "./alerts-cloud/polling-realtime.js?v=4";

@@ -186,7 +186,10 @@ ctx.restore();
 
 }
 
-export function initTradeChartOrders(){
+export function createTradeChartOrders(
+initialHost =
+null
+){
 
 if(
 !document.body.classList.contains(
@@ -196,7 +199,11 @@ if(
 return null;
 }
 
+const widgetInstance =
+!!initialHost;
+
 let host =
+initialHost ||
 null;
 let root =
 null;
@@ -219,6 +226,8 @@ null;
 let dragOrder =
 null;
 let pendingAmend =
+null;
+let mountAbort =
 null;
 
 function priceToY(
@@ -1057,8 +1066,6 @@ root =
 document.createElement(
 "div"
 );
-root.id =
-"trade-chart-orders-overlay";
 root.className =
 "trade-chart-orders-overlay";
 
@@ -1351,6 +1358,12 @@ function mount(
 nextHost
 ){
 
+mountAbort?.abort();
+mountAbort =
+new AbortController();
+const signal =
+mountAbort.signal;
+
 host =
 nextHost;
 
@@ -1383,6 +1396,9 @@ window.addEventListener(
 void syncOrders(
 true
 );
+},
+{
+signal
 }
 );
 
@@ -1392,9 +1408,15 @@ window.addEventListener(
 void syncOrders(
 true
 );
+},
+{
+signal
 }
 );
 
+if(
+!widgetInstance
+){
 const symEl =
 document.getElementById(
 "current-symbol"
@@ -1423,7 +1445,7 @@ subtree:
 true
 }
 );
-
+}
 }
 
 document.addEventListener(
@@ -1441,9 +1463,89 @@ true
 startPoll();
 }
 
+},
+{
+signal
 }
 );
 
+}
+
+function destroy(){
+
+mountAbort?.abort();
+mountAbort =
+null;
+stopPoll();
+
+if(
+rafId
+){
+cancelAnimationFrame(
+rafId
+);
+rafId =
+0;
+}
+
+if(
+bindDrawingSyncTimer
+){
+clearTimeout(
+bindDrawingSyncTimer
+);
+bindDrawingSyncTimer =
+0;
+}
+
+const dt =
+host?.getDrawingTools?.();
+
+if(
+afterDrawingsRedraw
+){
+dt?.removeAfterRedrawListener?.(
+afterDrawingsRedraw
+);
+afterDrawingsRedraw =
+null;
+}
+
+dragOrder =
+null;
+pendingAmend =
+null;
+orders =
+[];
+badgeLayoutCache =
+null;
+
+root?.remove();
+root =
+null;
+badgesEl =
+null;
+host =
+null;
+
+}
+
+const controller =
+{
+refresh:()=>
+syncOrders(
+true
+),
+destroy
+};
+
+if(
+initialHost
+){
+mount(
+initialHost
+);
+return controller;
 }
 
 function tryMount(){
@@ -1479,11 +1581,12 @@ true
 );
 }
 
-return {
-refresh:()=>
-syncOrders(
-true
-)
-};
+return controller;
+
+}
+
+export function initTradeChartOrders(){
+
+return createTradeChartOrders();
 
 }

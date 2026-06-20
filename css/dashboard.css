@@ -1000,6 +1000,27 @@ body.tablet-chart .widget-chart-wrap.chart-touch-locked .chart{
     margin:0;
 }
 
+.draw-position-risk-apply{
+    height:26px;
+    padding:0 10px;
+    border:1px solid #2f7a4f;
+    border-radius:6px;
+    background:#14532d;
+    color:#eafff2;
+    font-size:10px;
+    font-weight:600;
+    cursor:pointer;
+    flex-shrink:0;
+}
+
+.draw-position-risk-apply:hover{
+    background:#166534;
+}
+
+.draw-position-risk-apply.hidden{
+    display:none;
+}
+
 .widget-chart-wrap .draw-popover{
     transform:scale(0.9);
     transform-origin:top left;

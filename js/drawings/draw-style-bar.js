@@ -42,8 +42,18 @@ isFibLineWidthMenuOpenForAnchor
 } from "./fib-portals.js?v=3";
 
 import {
-isPositionType
+isPositionType,
+positionEntryPrice
 } from "./position.js?v=1";
+
+import {
+parseMoneyInput,
+calcPositionVolumeUsd
+} from "../position-sizing.js?v=1";
+
+import {
+applyPositionVolumeFromDrawing
+} from "../trade-volume-presets.js?v=7";
 
 import {
 touchShapeRevision
@@ -90,7 +100,8 @@ getToolDefaults,
 touchShapeRevision: touchShapeRevisionDep,
 deleteSelected,
 flushDeferredFibSettingsSync,
-getDesktopEdit
+getDesktopEdit,
+getSymbol
 } =
 deps;
 
@@ -111,6 +122,12 @@ let activeColor = STROKE;
 let chromePortal = null;
 let barOffset = { x: 8, y: 8 };
 let chromeLayoutObserver = null;
+let positionRiskEditing =
+false;
+let positionRiskShapeId =
+null;
+let positionApplyBtn =
+null;
 
 function ensureChromePortal(){
 
@@ -2029,6 +2046,110 @@ widthPreview.style.height = `${lineWidth}px`;
 
 }
 
+function resolvePositionRiskTarget(){
+
+const sel =
+getSelected();
+
+if(
+sel &&
+isPositionType(
+sel.type
+)
+){
+return sel;
+}
+
+if(
+positionRiskShapeId
+){
+
+const pinned =
+getDrawings().find(
+d=>
+d.id ===
+positionRiskShapeId &&
+isPositionType(
+d.type
+)
+);
+
+if(
+pinned
+){
+return pinned;
+}
+
+}
+
+return null;
+
+}
+
+function getPositionEntryVolumeUsd(
+shape
+){
+
+if(
+!shape ||
+!isPositionType(
+shape.type
+)
+){
+return null;
+}
+
+const entry =
+positionEntryPrice(
+shape
+);
+
+if(
+!Number.isFinite(entry) ||
+entry <= 0
+){
+return null;
+}
+
+const slPrice =
+Number(shape.slPrice);
+
+if(
+!Number.isFinite(slPrice)
+){
+return null;
+}
+
+const slPct =
+Math.abs(
+slPrice - entry
+) / entry * 100;
+
+if(
+!Number.isFinite(slPct) ||
+slPct <= 0
+){
+return null;
+}
+
+const riskUsd =
+parseMoneyInput(
+shape.riskUsd
+);
+
+if(
+riskUsd == null
+){
+return null;
+}
+
+return calcPositionVolumeUsd(
+riskUsd,
+slPct
+);
+
+}
+
 function applyPositionRiskUsd(){
 
 const parsed =
@@ -2037,7 +2158,7 @@ positionRiskInput?.value ?? ""
 );
 
 const sel =
-getSelected();
+resolvePositionRiskTarget();
 const styleType =
 getStyleTargetType();
 
@@ -2090,6 +2211,7 @@ redraw();
 function isPositionRiskInputFocused(){
 
 return (
+positionRiskEditing ||
 document.activeElement ===
 positionRiskInput ||
 positionRiskInput?.contains?.(
@@ -2141,6 +2263,10 @@ isArrowTool
 );
 
 positionRiskWrap?.classList.toggle(
+"hidden",
+!isPosToolbar
+);
+positionApplyBtn?.classList.toggle(
 "hidden",
 !isPosToolbar
 );
@@ -2661,6 +2787,50 @@ e.stopPropagation();
 );
 
 positionRiskInput?.addEventListener(
+"focusin",
+()=>{
+
+positionRiskEditing =
+true;
+
+const sel =
+getSelected();
+const selId =
+getSelectedId?.() ??
+sel?.id;
+
+if(
+sel &&
+isPositionType(
+sel.type
+) &&
+selId
+){
+positionRiskShapeId =
+selId;
+getDesktopEdit?.()?.pinDrawingSelection?.(
+selId
+);
+}
+
+}
+);
+
+positionRiskInput?.addEventListener(
+"focusout",
+()=>{
+
+applyPositionRiskUsd();
+positionRiskEditing =
+false;
+positionRiskShapeId =
+null;
+getDesktopEdit?.()?.releaseDrawingSelectionPin?.();
+
+}
+);
+
+positionRiskInput?.addEventListener(
 "click",
 e=>{
 e.stopPropagation();
@@ -2687,6 +2857,93 @@ e=>{
 e.stopPropagation();
 }
 );
+
+if(
+positionRiskWrap &&
+!positionApplyBtn
+){
+positionApplyBtn =
+document.createElement("button");
+positionApplyBtn.type =
+"button";
+positionApplyBtn.className =
+"draw-position-risk-apply hidden";
+positionApplyBtn.textContent =
+"Применить";
+positionRiskWrap.appendChild(
+positionApplyBtn
+);
+
+positionApplyBtn.addEventListener(
+"mousedown",
+e=>{
+e.stopPropagation();
+}
+);
+
+positionApplyBtn.addEventListener(
+"click",
+e=>{
+
+e.preventDefault();
+e.stopPropagation();
+
+applyPositionRiskUsd();
+
+const shape =
+resolvePositionRiskTarget();
+const volumeUsdt =
+getPositionEntryVolumeUsd(
+shape
+);
+
+if(
+!Number.isFinite(volumeUsdt) ||
+volumeUsdt <= 0
+){
+window.alert(
+"Не удалось применить объём: укажите стоп-лосс ($) и проверьте границы позиции."
+);
+return;
+}
+
+const symbol =
+String(
+getSymbol?.() ||
+""
+).replace(
+/\.P$/i,
+""
+).trim().toUpperCase();
+
+if(
+document.body.classList.contains(
+"trade-page"
+)
+){
+applyPositionVolumeFromDrawing(
+{
+symbol,
+volumeUsdt
+}
+);
+}
+
+window.dispatchEvent(
+new CustomEvent(
+"trade-apply-position-volume",
+{
+detail:{
+volumeUsdt,
+symbol
+}
+}
+)
+);
+
+}
+);
+}
 
 }
 

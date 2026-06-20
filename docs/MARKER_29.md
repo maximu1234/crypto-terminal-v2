@@ -2,7 +2,7 @@
 
 **Тег:** `metka-29` · **Коммит:** `git rev-parse metka-29`
 
-**Текущий эталон отката.** Предыдущий: [MARKER_28.md](./MARKER_28.md) (`metka-28`).
+**Предыдущий эталон (до metka-30).** Текущий: [MARKER_30.md](./MARKER_30.md) (`metka-30`).
 
 Проверено: desktop **Multichart 1.0.16** — `/trade.html`, Bybit mainnet/testnet, CI gate (manifest, nav, unit tests).
 

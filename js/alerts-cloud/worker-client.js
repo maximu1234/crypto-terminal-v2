@@ -23,7 +23,7 @@ import {
 alertsDebugLog,
 broadcastAlertsRegistrySync,
 lastSeenCloudAlerts
-} from "./debug.js?v=2";
+} from "./debug.js?v=4";
 
 let cloudOpChain =
 Promise.resolve();

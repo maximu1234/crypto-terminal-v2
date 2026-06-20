@@ -20,7 +20,7 @@ import {
 initTradeDesktopBeforeChart,
 initTradeDesktopAfterChart,
 isDesktopTradeMode
-} from "./trade-desktop-boot.js?v=1";
+} from "./trade-desktop-boot.js?v=3";
 
 const IS_YANDEX =
 /YaBrowser|Yandex/i.test(

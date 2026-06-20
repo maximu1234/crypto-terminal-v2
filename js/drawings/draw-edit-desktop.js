@@ -56,6 +56,15 @@ null;
 
 }
 
+function releaseDrawingSelectionPin(){
+
+desktopSelectionPinned =
+false;
+desktopClickSelectId =
+null;
+
+}
+
 function pinDrawingSelection(
 hitId
 ){
@@ -449,11 +458,33 @@ e.relatedTarget;
 
 if(
 related &&
+(
 wrapEl.contains(
 related
+) ||
+isDrawChromeTarget(
+related
+)
 )
 ){
 return;
+}
+
+if(
+!related
+){
+const ae =
+document.activeElement;
+
+if(
+ae &&
+isDrawChromeTarget(
+ae
+)
+){
+return;
+}
+
 }
 
 if(
@@ -525,7 +556,9 @@ redraw();
 e.preventDefault();
 e.stopPropagation();
 
-}else{
+}else if(
+!desktopSelectionPinned
+){
 
 clearDrawingSelection();
 updateStyleBar();
@@ -605,6 +638,7 @@ return {
 isDesktopDrawHoverSelect,
 clearDrawingSelection,
 pinDrawingSelection,
+releaseDrawingSelectionPin,
 isDrawChromePointerEvent,
 finishDesktopPointerSelect,
 applyDesktopHoverSelection,

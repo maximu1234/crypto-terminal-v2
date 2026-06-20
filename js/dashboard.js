@@ -13,7 +13,7 @@ loadBybitHistory
 
 import {
 isLocalDevHost
-} from "./bybit-fetch.js?v=16";
+} from "./bybit-fetch.js?v=17";
 
 import {
 applyChartPriceFormat,
@@ -33,7 +33,7 @@ alignRsiWithCandleTimes
 import {
 createDashboardChartWidget,
 mountDashboardChartInteractions
-} from "./chart-widget-host.js?v=11";
+} from "./chart-widget-host.js?v=12";
 
 import {
 mountWidgetTabletChart
@@ -87,6 +87,48 @@ const widgets = [];
 /** Как на Главной: 2×1000 свечей — хватает для zoom; меньше запросов к proxy. */
 const DASHBOARD_HISTORY_BATCHES =
 2;
+
+/** @type {((opts: object)=>{ destroy: ()=>void, plusHandler?: Function }) | null} */
+let mountTradeOnDashboardWidget =
+null;
+
+function isDashboardTradeEnabled(){
+
+return !!(
+window.cryptoTerminalDesktop?.isDesktop &&
+/\/terminal(\.html)?\/?$/i.test(
+location.pathname ||
+""
+)
+);
+
+}
+
+async function ensureDashboardTradeMount(){
+
+if(
+!isDashboardTradeEnabled()
+){
+mountTradeOnDashboardWidget =
+null;
+return;
+}
+
+if(
+mountTradeOnDashboardWidget
+){
+return;
+}
+
+const mod =
+await import(
+"./trade-widget-mount.js?v=4"
+);
+
+mountTradeOnDashboardWidget =
+mod.mountTradeOnDashboardWidget;
+
+}
 
 /** Локально — смещение и слоты; на проде — все виджеты параллельно, как screener. */
 const DASHBOARD_STAGGER_MS =
@@ -335,6 +377,7 @@ function destroyAllWidgets(){
 
 widgets.forEach(w=>{
 
+w.tradeWidget?.destroy?.();
 w.unsubKline?.();
 w.tabletGestures?.dispose?.();
 w.disposeChartInteractions?.();
@@ -746,6 +789,36 @@ entry
 
 }
 
+if(
+mountTradeOnDashboardWidget
+){
+entry.tradeWidget =
+mountTradeOnDashboardWidget(
+{
+widgetEl:
+widget,
+chart,
+series,
+wrapEl:
+chartWrap,
+chartContainer,
+getSymbol,
+getTf,
+getDrawingTools:()=>
+entry.drawingTools ||
+chartHost.drawingTools,
+getMarkPrice:()=>{
+const last =
+candles[
+candles.length -
+1
+];
+return last?.close;
+}
+}
+);
+}
+
 entry.disposeChartInteractions =
 mountDashboardChartInteractions({
 
@@ -757,7 +830,10 @@ getSymbol,
 getTf,
 getDrawingTools:()=>
 entry.drawingTools ||
-chartHost.drawingTools
+chartHost.drawingTools,
+onPlusActivate:
+entry.tradeWidget?.plusHandler ||
+null
 
 });
 
@@ -1145,9 +1221,11 @@ dashboard.innerHTML = `
 
 }
 
-function renderDashboard(){
+async function renderDashboard(){
 
 destroyAllWidgets();
+
+await ensureDashboardTradeMount();
 
 const symbols =
 getTerminalBlueSymbols();

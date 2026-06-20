@@ -32,7 +32,7 @@ bindDrawingsGlobalPurge
 
 import {
 resetBybitEndpoints
-} from "./bybit-fetch.js?v=16";
+} from "./bybit-fetch.js?v=17";
 
 const rootEl =
 document.getElementById("system-admin-root");

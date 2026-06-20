@@ -55,13 +55,13 @@ background:#171b21;
 box-shadow:0 12px 32px rgba(0,0,0,.45);
 }
 
-body.trade-page .trade-volume-presets-panel{
+body.trade-page .trade-volume-presets-dropdown .trade-volume-presets-panel{
 display:flex;
 flex-direction:column;
 gap:8px;
 }
 
-body.trade-page .trade-volume-presets-row{
+body.trade-page .trade-volume-presets-dropdown .trade-volume-presets-row{
 display:flex;
 align-items:center;
 gap:10px;
@@ -69,7 +69,7 @@ cursor:pointer;
 user-select:none;
 }
 
-body.trade-page .trade-volume-presets-row input[type="radio"]{
+body.trade-page .trade-volume-presets-dropdown .trade-volume-presets-row input[type="radio"]{
 width:16px;
 height:16px;
 margin:0;
@@ -78,14 +78,14 @@ accent-color:#6366f1;
 cursor:pointer;
 }
 
-body.trade-page .trade-volume-presets-field{
+body.trade-page .trade-volume-presets-dropdown .trade-volume-presets-field{
 position:relative;
 flex:0 0 84%;
 max-width:84%;
 min-width:0;
 }
 
-body.trade-page .trade-volume-presets-field input[type="number"]{
+body.trade-page .trade-volume-presets-dropdown .trade-volume-presets-field input[type="number"]{
 box-sizing:border-box;
 width:100%;
 padding:8px 46px 8px 8px;
@@ -98,18 +98,18 @@ font:500 13px/1.2 ui-monospace,SFMono-Regular,Menlo,monospace;
 appearance:textfield;
 }
 
-body.trade-page .trade-volume-presets-field input[type="number"]::-webkit-outer-spin-button,
-body.trade-page .trade-volume-presets-field input[type="number"]::-webkit-inner-spin-button{
+body.trade-page .trade-volume-presets-dropdown .trade-volume-presets-field input[type="number"]::-webkit-outer-spin-button,
+body.trade-page .trade-volume-presets-dropdown .trade-volume-presets-field input[type="number"]::-webkit-inner-spin-button{
 -webkit-appearance:none;
 margin:0;
 }
 
-body.trade-page .trade-volume-presets-field input[type="number"]:focus{
+body.trade-page .trade-volume-presets-dropdown .trade-volume-presets-field input[type="number"]:focus{
 outline:none;
 border-color:#6366f1;
 }
 
-body.trade-page .trade-volume-presets-suffix{
+body.trade-page .trade-volume-presets-dropdown .trade-volume-presets-suffix{
 position:absolute;
 top:50%;
 right:10px;

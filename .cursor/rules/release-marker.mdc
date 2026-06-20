@@ -7,7 +7,10 @@ alwaysApply: true
 
 При создании новой git-метки `metka-N`:
 
-1. Обновить `js/release-marker.js` — `METKA_NUMBER = N` (на Главной отображается `v0.N` после выбора таймфрейма).
-2. Обновить `docs/MARKER_N.md` и тег как обычно.
+1. Обновить `js/release-marker.js` — `METKA_NUMBER = N` (веб → `v0.N`).
+2. При новом desktop-релизе — `DESKTOP_APP_VERSION` в том же файле (например `1.0.19`).
+3. Обновить `docs/MARKER_N.md` и тег как обычно.
 
-Подпись монтируется через `mountReleaseMarker()` в `screener.js`; HTML — `[data-release-marker]` в `index.html`.
+**Формат подписи:** на сайте `v0.N`; в desktop .app `v0.N / vX.Y.Z` (сначала веб, потом приложение).
+
+Подпись монтируется через `mountReleaseMarker()` в `screener.js` и `desktop-app-ui.js`; HTML — `[data-release-marker]` в `index.html`.
