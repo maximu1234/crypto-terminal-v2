@@ -318,6 +318,8 @@ scheduleInstall();
 function startPowerSaveBlocker(){
 
 if(
+powerBlockerId !=
+null &&
 powerSaveBlocker.isStarted(
 powerBlockerId
 )
@@ -325,10 +327,21 @@ powerBlockerId
 return;
 }
 
+try{
 powerBlockerId =
 powerSaveBlocker.start(
 "prevent-app-suspension"
 );
+}catch(
+err
+){
+log.warn(
+"powerSaveBlocker.start failed:",
+err
+);
+powerBlockerId =
+null;
+}
 
 }
 
@@ -1057,6 +1070,13 @@ app.on(
 ()=>{
 
 if(
+powerBlockerId ==
+null
+){
+return;
+}
+
+if(
 powerSaveBlocker.isStarted(
 powerBlockerId
 )
@@ -1064,6 +1084,8 @@ powerBlockerId
 powerSaveBlocker.stop(
 powerBlockerId
 );
+powerBlockerId =
+null;
 }
 
 }
