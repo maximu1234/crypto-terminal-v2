@@ -17,6 +17,12 @@ const path =
 require(
 "path"
 );
+const {
+pathToFileURL
+} =
+require(
+"url"
+);
 
 const APP_SCHEME =
 "multichart";
@@ -98,16 +104,6 @@ const candidates =
 [];
 
 if(
-fallbackRoot
-){
-candidates.push(
-path.normalize(
-fallbackRoot
-)
-);
-}
-
-if(
 process.resourcesPath
 ){
 candidates.push(
@@ -115,6 +111,16 @@ path.join(
 process.resourcesPath,
 "app.asar.unpacked",
 "site-bundle"
+)
+);
+}
+
+if(
+fallbackRoot
+){
+candidates.push(
+path.normalize(
+fallbackRoot
 )
 );
 }
@@ -178,20 +184,33 @@ pathname
 );
 
 if(
+clean ===
+"/"
+){
+clean =
+"coins.html";
+}else{
+clean =
+clean.replace(
+/^\/+/,
+""
+);
+}
+
+if(
+!clean
+){
+clean =
+"coins.html";
+}
+
+if(
 clean.endsWith(
 "/"
 )
 ){
 clean +=
 "index.html";
-}
-
-if(
-clean ===
-"/"
-){
-clean =
-"/coins.html";
 }
 
 let filePath =
@@ -354,6 +373,9 @@ reqUrl.pathname
 if(
 !filePath
 ){
+console.warn(
+`[site-protocol] 404 ${reqUrl.pathname} (root=${root})`
+);
 return new Response(
 "Not Found",
 {
@@ -364,20 +386,39 @@ status:
 
 }
 
-const data =
-fs.readFileSync(
+const fileUrl =
+pathToFileURL(
 filePath
+).href;
+const upstream =
+await net.fetch(
+fileUrl
 );
-
-return new Response(
-data,
-{
-headers:{
-"Content-Type":
+const headers =
+new Headers(
+upstream.headers
+);
+headers.set(
+"Content-Type",
 getMime(
 filePath
 )
-}
+);
+headers.set(
+"Access-Control-Allow-Origin",
+"*"
+);
+headers.set(
+"Cross-Origin-Resource-Policy",
+"cross-origin"
+);
+
+return new Response(
+upstream.body,
+{
+status:
+upstream.status,
+headers
 }
 );
 

@@ -874,18 +874,8 @@ failedUrl ||
 "multichart://"
 )
 ){
-bundleLoadFallback =
-true;
-log.warn(
-"Bundled UI failed — falling back to remote Vercel"
-);
-const remote =
-`${REMOTE_APP_URL.replace(
-/\/$/,
-""
-)}/coins.html`;
-void mainWindow?.loadURL(
-remote
+fallbackToRemoteUi(
+`load failed ${code} ${desc}`
 );
 return;
 }
@@ -933,13 +923,55 @@ url
 }
 );
 
+mainWindow.webContents.on(
+"console-message",
+(
+_event,
+_level,
+message
+)=>{
+log.info(
+`[renderer] ${message}`
+);
+}
+);
+
 mainWindow.loadURL(
 START_URL
 );
 
+function fallbackToRemoteUi(
+reason
+){
+
+if(
+!USE_BUNDLE ||
+bundleLoadFallback ||
+!mainWindow ||
+mainWindow.isDestroyed()
+){
+return;
+}
+
+bundleLoadFallback =
+true;
+log.warn(
+`Bundled UI fallback (${reason}) → remote Vercel`
+);
+const remote =
+`${REMOTE_APP_URL.replace(
+/\/$/,
+""
+)}/coins.html`;
+void mainWindow.loadURL(
+remote
+);
+
+}
+
 mainWindow.webContents.once(
 "did-finish-load",
-()=>{
+async()=>{
 
 if(
 pendingAuthCallbackUrl &&
@@ -955,6 +987,42 @@ mainWindow.webContents.send(
 url
 );
 revealMainWindow();
+}
+
+if(
+USE_BUNDLE &&
+!bundleLoadFallback &&
+mainWindow &&
+!mainWindow.isDestroyed()
+){
+
+try{
+const ok =
+await mainWindow.webContents.executeJavaScript(
+`Boolean(document.getElementById("app") || document.body?.childElementCount > 0)`,
+true
+);
+
+if(
+!ok
+){
+fallbackToRemoteUi(
+"empty DOM after load"
+);
+}
+
+}catch(
+err
+){
+log.warn(
+"bundled UI DOM check failed:",
+err
+);
+fallbackToRemoteUi(
+"DOM check error"
+);
+}
+
 }
 
 if(
