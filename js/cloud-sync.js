@@ -2157,8 +2157,22 @@ DESKTOP_AUTH_DEEP_LINK_MIN
 return DESKTOP_AUTH_CALLBACK;
 }
 
+if(
+info?.bundledUi
+){
+return DESKTOP_AUTH_CALLBACK;
+}
+
 const origin =
-info?.url
+info?.apiOrigin
+? new URL(
+info.apiOrigin
+).origin
+: info?.url && !String(
+info.url
+).startsWith(
+"app:"
+)
 ? new URL(
 info.url
 ).origin

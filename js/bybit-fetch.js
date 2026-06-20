@@ -62,6 +62,13 @@ typeof location ===
 return false;
 }
 
+if(
+location.protocol ===
+"app:"
+){
+return false;
+}
+
 const host =
 location.hostname;
 

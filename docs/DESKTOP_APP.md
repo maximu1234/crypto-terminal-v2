@@ -1,6 +1,6 @@
 # Multichart Desktop (macOS)
 
-Нативная оболочка **Multichart.app** для macOS: тот же интерфейс, что на [crypto-terminal-v2.vercel.app](https://crypto-terminal-v2.vercel.app), но в отдельном окне. Данные, Supabase, Railway worker — как в браузере. Следующий этап — локальный модуль торговли Bybit с ключами только на компе.
+Нативная оболочка **Multichart.app** для macOS: тот же код, что на [crypto-terminal-v2.vercel.app](https://crypto-terminal-v2.vercel.app), но **UI загружается с диска** (быстрые графики). Supabase, Bybit, Railway — через интернет.
 
 ## Для пользователя
 
@@ -30,42 +30,56 @@
 
 ```
 Multichart.app (Electron)
-  └─ BrowserWindow → https://crypto-terminal-v2.vercel.app
-       └─ preload → window.cryptoTerminalDesktop (обновления, позже — локальные ключи)
-  └─ electron-updater → GitHub Releases (latest-mac.yml + .zip)
+  └─ app://local — HTML/JS/CSS из site-bundle (копия репо на момент релиза)
+  └─ /api/* → прокси на Vercel (Bybit fallback, Twelve Data, CoinGecko)
+  └─ Bybit REST/WS — напрямую с api.bybit.com
+  └─ Supabase / Railway worker — интернет
+  └─ preload → window.cryptoTerminalDesktop
+  └─ electron-updater → GitHub Releases
 ```
 
-| Компонент | Где |
-|-----------|-----|
-| UI, графики, рисунки | Vercel (как сейчас) |
-| `/api/*` прокси | Vercel serverless |
-| Алерты / Telegram | Railway worker |
-| Оболочка + автообновление | `desktop/` |
-| Кнопка «Обновить» | `js/desktop-app-ui.js` (на сайте, видна только в .app) |
+| Компонент | Сайт (Vercel) | Desktop (.app) |
+|-----------|---------------|----------------|
+| UI, графики, рисунки (js/css) | деплой | **site-bundle внутри .app** |
+| `/api/*` | serverless | **→ Vercel** (прокси в Electron) |
+| Bybit свечи / WS | браузер | **напрямую** |
+| Supabase, алерты | интернет | интернет |
+
+При каждом desktop-релизе CI копирует актуальную статику из репо (`npm run bundle:site`). Код один — две копии артефактов.
 
 ## Разработка
 
 ```bash
 cd desktop
 npm install
-npm start              # production URL
-npm run start:dev      # http://127.0.0.1:8080 (./start.sh в корне)
+npm start              # bundle + app://local (как в .app)
+npm run start:dev      # UI с http://127.0.0.1:8080 (./start.sh в корне)
+npm run start:remote   # старый режим — UI с Vercel
 ```
 
-Переменная `CRYPTO_TERMINAL_URL` — любой origin для окна.
+`npm run bundle:site` — вручную пересобрать `site-bundle/` из корня репо.
 
-`DESKTOP_SKIP_WARM_CACHE=1` — отключить прогрев js/css при старте (отладка).
+`DESKTOP_REMOTE_UI=1` — загрузка UI с Vercel вместо bundle (отладка).
+
+## CI / секреты GitHub
+
+Для bundle с облаком в **Desktop release** добавьте Secrets (те же, что на Vercel):
+
+- `SUPABASE_URL`
+- `SUPABASE_ANON_KEY`
+- `ALERT_WORKER_URL`
+- `SYSTEM_ADMIN_EMAIL` (опционально)
+
+Без них соберётся stub — синхронизация в .app не заработает.
 
 ## Производительность (только .app)
 
+- **Локальный UI** — без загрузки js/css с CDN
 - Отключён throttling рендерера / фоновых таймеров (macOS App Nap)
 - `powerSaveBlocker` — приложение не засыпает при работе
-- Кэш диска до ~512 MB, V8 code cache
-- **Warm-cache:** перед окном подтягивает chart/coins js/css по `asset-manifest.js` с сервера (phase1), остальное — в фоне; старт на `/coins.html`
-- По умолчанию открывается **Монеты** (`/coins.html`), не Главная — меньше лишних переходов
-- Preconnect к Vercel и **api.bybit.com** (история свечей)
+- Старт на **Монеты** (`/coins.html`)
+- Preconnect к Bybit и Supabase
 - UA как у Chrome (без `Electron/` в строке)
-- Проверка обновлений — через 12 с после загрузки страницы (не мешает старту)
 
 ## Первый релиз через GitHub Desktop
 

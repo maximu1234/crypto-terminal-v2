@@ -20,9 +20,21 @@ const log =
 require(
 "electron-log"
 );
+const fs =
+require(
+"fs"
+);
 const path =
 require(
 "path"
+);
+const {
+registerAppScheme,
+setupSiteProtocol,
+bundledOrigin
+} =
+require(
+"./site-protocol.cjs"
 );
 const {
 warmStaticCache
@@ -37,16 +49,46 @@ require(
 "./chrome-user-agent.cjs"
 );
 
-const APP_URL =
-process.env.CRYPTO_TERMINAL_URL ||
+registerAppScheme();
+
+const REMOTE_API_ORIGIN =
+process.env.DESKTOP_API_ORIGIN ||
 "https://crypto-terminal-v2.vercel.app";
+
+const REMOTE_APP_URL =
+process.env.CRYPTO_TERMINAL_URL ||
+REMOTE_API_ORIGIN;
+
+const BUNDLE_ROOT =
+path.join(
+__dirname,
+"site-bundle"
+);
+
+const USE_BUNDLE =
+process.env.DESKTOP_REMOTE_UI !==
+"1" &&
+(
+app.isPackaged ||
+fs.existsSync(
+path.join(
+BUNDLE_ROOT,
+"coins.html"
+)
+)
+);
+
+const APP_ORIGIN =
+USE_BUNDLE
+? bundledOrigin()
+: REMOTE_APP_URL.replace(
+/\/$/,
+""
+);
 
 const START_URL =
 process.env.DESKTOP_START_URL ||
-`${APP_URL.replace(
-/\/$/,
-""
-)}/coins.html`;
+`${APP_ORIGIN}/coins.html`;
 
 const PARTITION =
 "persist:multichart-desktop";
@@ -473,10 +515,10 @@ try{
 ses.preconnect({
 url:
 new URL(
-APP_URL
+REMOTE_API_ORIGIN
 ).origin,
 numSockets:
-8
+4
 });
 ses.preconnect({
 url:
@@ -489,6 +531,12 @@ url:
 "https://api.bytick.com",
 numSockets:
 2
+});
+ses.preconnect({
+url:
+"https://ehygysphfsnluegeycjx.supabase.co",
+numSockets:
+4
 });
 }catch{
 /* ignore */
@@ -513,7 +561,7 @@ null
 
 return warmStaticCache(
 ses,
-APP_URL
+REMOTE_APP_URL
 ).then(
 result=>{
 log.info(
@@ -745,10 +793,23 @@ const target =
 new URL(
 url
 );
+
+if(
+USE_BUNDLE &&
+target.protocol ===
+"app:"
+){
+return target.hostname ===
+"local";
+}
+
 const base =
 new URL(
-APP_URL
+USE_BUNDLE
+? bundledOrigin()
+: REMOTE_APP_URL
 );
+
 return target.origin ===
 base.origin;
 }catch{
@@ -882,9 +943,13 @@ ipcMain.handle(
 app:
 app.getVersion(),
 url:
-APP_URL,
+APP_ORIGIN,
 startUrl:
-START_URL
+START_URL,
+bundledUi:
+USE_BUNDLE,
+apiOrigin:
+REMOTE_API_ORIGIN
 })
 );
 
@@ -1291,6 +1356,26 @@ async()=>{
 
 registerAuthProtocol();
 
+if(
+USE_BUNDLE
+){
+setupSiteProtocol({
+bundleRoot:
+BUNDLE_ROOT,
+remoteApiOrigin:
+REMOTE_API_ORIGIN
+});
+log.info(
+"desktop UI: bundled site from",
+BUNDLE_ROOT
+);
+}else{
+log.info(
+"desktop UI: remote",
+REMOTE_APP_URL
+);
+}
+
 startPowerSaveBlocker();
 
 const ses =
@@ -1301,6 +1386,10 @@ PARTITION
 tuneDesktopSession(
 ses
 );
+
+if(
+!USE_BUNDLE
+){
 
 const warmTimeout =
 new Promise(
@@ -1318,6 +1407,8 @@ ses
 ),
 warmTimeout
 ]);
+
+}
 
 setupAutoUpdater();
 registerIpc();

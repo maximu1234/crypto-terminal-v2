@@ -33,6 +33,18 @@ jobs:
         run: |
           if [ -f package-lock.json ]; then npm ci; else npm install; fi
 
+      - name: Prepare supabase-env for site bundle
+        working-directory: .
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          ALERT_WORKER_URL: ${{ secrets.ALERT_WORKER_URL }}
+          SYSTEM_ADMIN_EMAIL: ${{ secrets.SYSTEM_ADMIN_EMAIL }}
+        run: node scripts/write-supabase-env.cjs
+
+      - name: Bundle site into desktop
+        run: npm run bundle:site
+
       - name: Build macOS .app + .dmg + auto-update zip
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

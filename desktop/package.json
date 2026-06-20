@@ -1,14 +1,19 @@
 {
   "name": "multichart-desktop",
   "productName": "Multichart",
-  "version": "1.0.7",
-  "description": "Multichart desktop shell for macOS (remote UI + local auto-update)",
+  "version": "1.0.8",
+  "description": "Multichart desktop shell for macOS (bundled site UI + auto-update)",
   "main": "main.js",
   "author": "Multichart",
   "private": true,
   "scripts": {
+    "bundle:site": "node scripts/bundle-site.cjs",
+    "prestart": "npm run bundle:site",
     "start": "electron .",
-    "start:dev": "CRYPTO_TERMINAL_URL=http://127.0.0.1:8080 electron .",
+    "start:remote": "DESKTOP_REMOTE_UI=1 electron .",
+    "start:dev": "DESKTOP_REMOTE_UI=1 CRYPTO_TERMINAL_URL=http://127.0.0.1:8080 electron .",
+    "prebuild:mac": "npm run bundle:site",
+    "prebuild:mac:publish": "npm run bundle:site",
     "build:mac": "electron-builder --mac --publish never",
     "build:mac:publish": "electron-builder --mac --publish always"
   },
@@ -33,7 +38,9 @@
       "preload.js",
       "after-pack.cjs",
       "warm-cache.cjs",
-      "chrome-user-agent.cjs"
+      "chrome-user-agent.cjs",
+      "site-protocol.cjs",
+      "site-bundle/**"
     ],
     "afterPack": "./after-pack.cjs",
     "mac": {

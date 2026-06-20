@@ -1,6 +1,6 @@
 import {
 ensureCloudLoginResolved
-} from "../cloud-sync.js?v=35";
+} from "../cloud-sync.js?v=36";
 
 import {
 isDrawingsCloudDisabled
@@ -33,7 +33,7 @@ readAlertTokenSync
 import {
 isCloudLoggedInEffective,
 isCloudSyncEnabled
-} from "../cloud-sync.js?v=35";
+} from "../cloud-sync.js?v=36";
 
 import {
 markShapeSynced,
