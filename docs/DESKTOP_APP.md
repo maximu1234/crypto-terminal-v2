@@ -39,17 +39,27 @@ npm run start:dev      # http://127.0.0.1:8080 (./start.sh в корне)
 
 Переменная `CRYPTO_TERMINAL_URL` — любой origin для окна.
 
-## Новый релиз desktop (maintainer)
+## Первый релиз через GitHub Desktop
+
+Код desktop уже в `main`. **Releases появится только после push тега** `desktop-v1.0.0` (не от обычного коммита).
+
+1. **Fetch** в GitHub Desktop — подтянуть последний коммит с тегом (если ещё не на машине).
+2. **Push origin** — отправить коммит(ы), если GitHub Desktop показывает «N commits to push».
+3. **Опубликовать тег:** меню **Repository → Push tags…** (или галочка «Push tags» при push) — должен уйти **`desktop-v1.0.0`**.
+4. На GitHub: **Actions** → **Desktop release (macOS)** (~10–20 мин).
+5. **Releases** → скачать **Multichart-1.0.0.dmg**.
+
+Следующие версии: поднять `"version"` в `desktop/package.json`, коммит, новый тег `desktop-v1.0.1` → push + push tags.
+
+## Новый релиз desktop (maintainer, терминал)
 
 1. Обновите `"version"` в `desktop/package.json`.
-2. Закоммитьте и запушьте тег:
+2. Тег и push:
    ```bash
-   git tag desktop-v1.0.1
+   git tag -a desktop-v1.0.1 -m "Multichart desktop 1.0.1"
    git push origin desktop-v1.0.1
    ```
-3. Workflow **Desktop release (macOS)** соберёт `.dmg`, `.zip` и `latest-mac.yml` и опубликует в GitHub Releases.
-
-После деплоя UI на Vercel пользователи увидят кнопку «Обновить» в установленной .app.
+3. Workflow **Desktop release (macOS)** соберёт `.dmg`, `.zip` и `latest-mac.yml`.
 
 ## Подпись Apple (рекомендуется для автообновления)
 
