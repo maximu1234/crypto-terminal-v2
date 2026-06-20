@@ -62,7 +62,7 @@
 | `trade-book-panel.js` | 4 |
 | `terminal.js` | 317 |
 | `terminal/coins-table.js` | 12 |
-| `desktop/package.json` | 1.0.16 |
+| `desktop/package.json` | 1.0.17 |
 
 ## Откат
 
