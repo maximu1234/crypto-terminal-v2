@@ -10,11 +10,11 @@ hideDomChartCrosshair
 
 import {
 initDrawings
-} from "./drawings.js?v=233";
+} from "./drawings.js?v=234";
 
 import {
 mountPriceAlertUi
-} from "./price-alert-ui.js?v=39";
+} from "./price-alert-ui.js?v=40";
 
 function widgetPlotWidth(
 wrapEl,

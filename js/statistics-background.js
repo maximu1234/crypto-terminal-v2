@@ -4,7 +4,7 @@
  */
 import {
 fetchTickersInto
-} from "./tickers.js?v=21";
+} from "./tickers.js?v=22";
 
 import {
 fetchBybitBulk

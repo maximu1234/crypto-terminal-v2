@@ -1045,7 +1045,8 @@ body.tablet-chart .rsi-scale-touch-strip{
   display:flex;
   align-items:stretch;
   height:26px;
-  transform:translateY(-50%);
+  transform:translateY(-50%) scale(0.8);
+  transform-origin:left center;
   pointer-events:auto;
   border:1px solid #facc15;
   border-radius:3px;
@@ -1522,7 +1523,24 @@ body.tablet-chart #rsi-wrap .rsi-level-line:not(.hidden){
 }
 
 .coin.active{
-  background:#1e293b;
+  background:#283548;
+}
+
+body.trade-page .coin.has-position{
+  background:#3a2818;
+  box-shadow:inset 0 0 0 1px rgba(251,146,60,.42);
+  outline:1px dashed rgba(251,146,60,.55);
+  outline-offset:-1px;
+}
+
+body.trade-page .coin.has-position:hover{
+  background:#45301c;
+}
+
+body.trade-page .coin.has-position.active{
+  background:#45301c;
+  box-shadow:inset 0 0 0 1px rgba(251,146,60,.5);
+  outline:1px dashed rgba(147,197,253,.45);
 }
 
 .col-flag{

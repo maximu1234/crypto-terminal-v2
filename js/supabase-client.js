@@ -1,7 +1,7 @@
 import {
 createAuthStorage,
 SUPABASE_AUTH_STORAGE_KEY
-} from "./auth-storage.js?v=3";
+} from "./auth-storage.js?v=4";
 
 export {
 SUPABASE_AUTH_STORAGE_KEY

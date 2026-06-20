@@ -1,5 +1,5 @@
 /**
- * Десктоп /coins: перетаскивание границ списка монет и RSI.
+ * Десктоп /coins и /trade: перетаскивание границ списка монет и RSI.
  * Дефолты = текущая статичная вёрстка; минимумы = те же размеры.
  */
 import {
@@ -12,6 +12,10 @@ computeCoinsLayoutLimits,
 clampCoinsListWidth,
 clampCoinsRsiHeight
 } from "./coins-layout-math.js?v=2";
+
+import {
+isCoinsPage
+} from "./terminal/coins-state.js?v=6";
 
 export {
 COINS_LIST_DEFAULT_PX,
@@ -136,9 +140,7 @@ function isDesktopCoinsLayout(){
 return (
 typeof window !==
 "undefined" &&
-window.location.pathname.includes(
-"/coins"
-) &&
+isCoinsPage &&
 window.matchMedia(
 DESKTOP_MQ
 ).matches

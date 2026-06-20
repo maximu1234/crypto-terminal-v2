@@ -59,6 +59,14 @@ registerTradingIpc
 require(
 "./trading/register-ipc.cjs"
 );
+const {
+getAuthSession,
+saveAuthSession,
+clearAuthSession
+} =
+require(
+"./auth-session.cjs"
+);
 
 registerAppScheme();
 
@@ -1594,6 +1602,112 @@ true
 );
 
 registerTradingIpc();
+
+ipcMain.handle(
+"desktop:loadAuthSession",
+()=>{
+
+try{
+const raw =
+getAuthSession();
+
+return {
+ok:
+true,
+raw:
+raw ||
+null
+};
+}catch(
+err
+){
+log.warn(
+"desktop:loadAuthSession:",
+err.message
+);
+return {
+ok:
+false,
+raw:
+null
+};
+}
+
+}
+);
+
+ipcMain.handle(
+"desktop:saveAuthSession",
+(
+_event,
+raw
+)=>{
+
+try{
+if(
+typeof raw !==
+"string" ||
+!raw.trim()
+){
+clearAuthSession();
+return {
+ok:
+true
+};
+}
+
+saveAuthSession(
+raw
+);
+return {
+ok:
+true
+};
+}catch(
+err
+){
+log.warn(
+"desktop:saveAuthSession:",
+err.message
+);
+return {
+ok:
+false,
+message:
+err.message
+};
+}
+
+}
+);
+
+ipcMain.handle(
+"desktop:clearAuthSession",
+()=>{
+
+try{
+clearAuthSession();
+return {
+ok:
+true
+};
+}catch(
+err
+){
+log.warn(
+"desktop:clearAuthSession:",
+err.message
+);
+return {
+ok:
+false,
+message:
+err.message
+};
+}
+
+}
+);
 
 }
 

@@ -32,7 +32,7 @@ ensureCloudReady
 import {
 persistFavoritesToCloud,
 onFavoritesRemoteUpdate
-} from "./cloud-sync.js?v=37";
+} from "./cloud-sync.js?v=38";
 
 import {
 createCandlestickChart,
@@ -94,7 +94,7 @@ syncCoinsTfLabel
 
 import {
 mountCoinsLayoutResize
-} from "./coins-layout-resize.js?v=4";
+} from "./coins-layout-resize.js?v=5";
 
 import {
 mountQwertyKeyInput
@@ -107,7 +107,8 @@ marketMap,
 coinElements,
 COINS_TF_VALUES,
 COINS_MARKETS,
-isCoinsPage
+isCoinsPage,
+isTradePage
 } from "./terminal/coins-state.js?v=6";
 
 import {
@@ -133,7 +134,7 @@ highlightActiveSymbol,
 getVisibleSymbolList,
 setCoinsTableHooks,
 syncCoinListFreezeFromFlagMenus
-} from "./terminal/coins-table.js?v=11";
+} from "./terminal/coins-table.js?v=12";
 
 let currentDataset = "all";
 let currentTF = "60";
@@ -1864,6 +1865,45 @@ console.warn(
 );
 }
 
+if(
+isTradePage &&
+chart &&
+candleSeries
+){
+window.__tradeChartHost =
+{
+chart,
+series:
+candleSeries,
+wrapEl:
+document.getElementById(
+"chart-wrap"
+),
+chartEl:
+document.getElementById(
+"chart"
+),
+getSymbol(){
+return String(
+currentSymbol ||
+""
+).replace(
+/\.P$/i,
+""
+).trim().toUpperCase();
+},
+getDrawingTools:()=>
+drawingTools
+};
+
+window.dispatchEvent(
+new CustomEvent(
+"trade-chart-host-ready"
+)
+);
+
+}
+
 }catch(err){
 
 console.error("Drawings UI mount failed:", err);
@@ -1871,7 +1911,8 @@ console.error("Drawings UI mount failed:", err);
 }
 
 if(
-drawingTools
+drawingTools ||
+isTradePage
 ){
 
 priceScaleTouchHooks.onScaleFrame =
@@ -1892,23 +1933,83 @@ range
 priceScaleTouchHooks.onDragEnd =
 ()=>{
 drawingTools?.endPriceScaleDragRedraw?.();
+window.__tradeChartOverlay?.onPriceScaleDragEnd?.();
 };
 
 priceScaleTouchHooks.onReset =
 ()=>{
 drawingTools?.endPriceScaleDragRedraw?.();
+window.__tradeChartOverlay?.onPriceScaleDragEnd?.();
 drawingTools?.scheduleRedraw?.();
 };
 
-void import("./price-alert-ui.js?v=39").then(({ mountPriceAlertUi })=>{
+}
+
+if(
+drawingTools
+){
+
+const mountAlertUi =
+async()=>{
+
+let tradePlusHandler =
+null;
+
+if(
+isTradePage
+){
+try{
+const {
+createTradePlusMenuHandler
+} =
+await import(
+"./trade-order-plus-ui.js?v=1"
+);
+
+tradePlusHandler =
+createTradePlusMenuHandler(
+{
+getSymbol:()=>
+currentSymbol,
+getTf:()=>
+currentTF,
+scheduleRedraw:()=>
+(
+drawingTools?.scheduleDragRedraw?.() ||
+drawingTools?.scheduleRedraw?.()
+)
+}
+);
+}catch(
+err
+){
+console.warn(
+"trade order plus ui:",
+err
+);
+}
+}
+
+const {
+mountPriceAlertUi
+} =
+await import(
+"./price-alert-ui.js?v=40"
+);
+
 let disposeAlertUi =
-mountPriceAlertUi({
+mountPriceAlertUi(
+{
 chart,
-series: candleSeries,
-wrapEl: chartWrapEl,
-getSymbol: ()=> currentSymbol,
-getTf: ()=> currentTF,
-scheduleRedraw: ()=>{
+series:
+candleSeries,
+wrapEl:
+chartWrapEl,
+getSymbol:()=>
+currentSymbol,
+getTf:()=>
+currentTF,
+scheduleRedraw:()=>{
 disposeAlertUi?.syncBadges?.();
 return (
 drawingTools?.scheduleDragRedraw?.() ||
@@ -1924,14 +2025,22 @@ onCrosshairRelease:()=>{
 chartCrosshairLink?.setSuppressed?.(
 false
 );
+},
+onPlusActivate:
+tradePlusHandler
 }
-});
-}).catch(err=>{
+);
+
+};
+
+void mountAlertUi().catch(
+err=>{
 console.warn(
 "price alert ui:",
 err
 );
-});
+}
+);
 
 }
 
@@ -2498,6 +2607,26 @@ const loadSeq = ++symbolLoadSeq;
 
 currentSymbol = symbol;
 setCoinsChartSymbol(symbol);
+
+if(
+isTradePage
+){
+void import(
+"./trade-volume-presets.js?v=2"
+).then(
+({
+switchTradeVolumeSymbol
+})=>{
+switchTradeVolumeSymbol(
+symbol
+);
+}
+).catch(
+()=>{
+/* ignore */
+}
+);
+}
 
 persistCoinsPrefs();
 

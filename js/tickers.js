@@ -38,13 +38,31 @@ return {
 
 symbol:ticker.symbol,
 
-price:Number(ticker.lastPrice || 0),
+price:Number(
+ticker.lastPrice ||
+0
+),
+
+bid:Number(
+ticker.bid1Price ||
+ticker.lastPrice ||
+0
+),
+
+ask:Number(
+ticker.ask1Price ||
+ticker.lastPrice ||
+0
+),
 
 change24,
 
 change1h,
 
-volume24:Number(ticker.turnover24h || 0)
+volume24:Number(
+ticker.turnover24h ||
+0
+)
 
 };
 

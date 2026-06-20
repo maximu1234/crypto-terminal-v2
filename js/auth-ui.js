@@ -10,7 +10,7 @@ signOutCloud,
 recoverAuthSessionFromUrl,
 completeAuthFromCallbackUrl,
 hasAuthCallbackInUrl
-} from "./cloud-sync.js?v=37";
+} from "./cloud-sync.js?v=38";
 
 import {
 isSupabaseConfigured

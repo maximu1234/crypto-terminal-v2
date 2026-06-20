@@ -222,6 +222,8 @@ removeRaw(
 SUPABASE_AUTH_BACKUP_KEY
 );
 
+clearDesktopAuthSession();
+
 }
 
 export function clearExplicitAuthSignOut(){
@@ -232,6 +234,123 @@ EXPLICIT_SIGNOUT_KEY
 );
 }catch{
 /* ignore */
+}
+
+}
+
+function syncDesktopAuthSession(
+value
+){
+
+if(
+typeof window ===
+"undefined"
+){
+return;
+}
+
+const api =
+window.cryptoTerminalDesktop;
+
+if(
+!api?.saveAuthSession
+){
+return;
+}
+
+void api.saveAuthSession(
+value
+).catch(
+()=>{
+/* ignore */
+}
+);
+
+}
+
+function clearDesktopAuthSession(){
+
+if(
+typeof window ===
+"undefined"
+){
+return;
+}
+
+const api =
+window.cryptoTerminalDesktop;
+
+if(
+!api?.clearAuthSession
+){
+return;
+}
+
+void api.clearAuthSession().catch(
+()=>{
+/* ignore */
+}
+);
+
+}
+
+/** Desktop: восстановить сессию из userData, если origin/localStorage пуст. */
+export async function restoreDesktopAuthSession(){
+
+if(
+typeof window ===
+"undefined"
+){
+return false;
+}
+
+const api =
+window.cryptoTerminalDesktop;
+
+if(
+!api?.loadAuthSession
+){
+return false;
+}
+
+if(
+readRaw(
+SUPABASE_AUTH_STORAGE_KEY
+)
+){
+return false;
+}
+
+try{
+const result =
+await api.loadAuthSession();
+
+const raw =
+result?.raw;
+
+if(
+typeof raw !==
+"string" ||
+!raw.trim()
+){
+return false;
+}
+
+if(
+!writeRaw(
+SUPABASE_AUTH_STORAGE_KEY,
+raw
+)
+){
+return false;
+}
+
+mirrorAuthSessionBackup(
+raw
+);
+return true;
+}catch{
+return false;
 }
 
 }
@@ -443,6 +562,9 @@ value
 mirrorAuthSessionBackup(
 value
 );
+syncDesktopAuthSession(
+value
+);
 }
 
 },
@@ -473,6 +595,7 @@ SUPABASE_AUTH_STORAGE_KEY
 removeRaw(
 SUPABASE_AUTH_BACKUP_KEY
 );
+clearDesktopAuthSession();
 }
 
 }

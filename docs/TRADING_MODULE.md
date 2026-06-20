@@ -1,74 +1,83 @@
 # Торговый модуль (desktop)
 
-**Статус:** фаза 1 — каркас · **Эталон:** `metka-28` · **Песочница UI:** `/trade.html` (**только desktop .app**)
+**Статус:** MVP готов · **Эталон:** `metka-29` · **UI:** `/trade.html` (**только desktop .app**)
 
-Торговля **только Multichart.app на Mac** (широкое окно): не Vercel, не iPad, не смартфон. Пункт «Торговля» и Bybit — в `.coins-header-desktop`, без mobile-nav.
+Торговля **только Multichart.app на Mac** (широкое окно): не Vercel, не iPad, не смартфон.
 
-## Desktop vs Web (разделение версий)
+## Desktop vs Web
 
 | | Сайт (Vercel) | Desktop (.app) |
 |---|---------------|------------------|
 | Графики, алерты, синхронизация | ✅ | ✅ |
 | `/trade`, торговля, API keys | ❌ | ✅ |
 
-Единственное продуктовое отличие desktop — **модуль торговли**.
-
-## Цели
+## Функции (metka-29)
 
 | # | Задача | Статус |
 |---|--------|--------|
-| T-1 | Keychain (`safeStorage`) для apiKey / apiSecret | 🔄 фаза 1 |
-| T-2 | IPC bridge `cryptoTerminalDesktop.trading` | 🔄 фаза 1 |
-| T-3 | Bybit REST v5: баланс, позиции (read-only) | ⏳ фаза 2 |
-| T-4 | UI: панель ключей + статус подключения | 🔄 dropdown Bybit на `/trade` |
-| T-5 | Ордер: market/limit, reduce-only | ⏳ фаза 3 |
-| T-6 | TP/SL, confirm dialog, testnet toggle | ⏳ фаза 4 |
+| T-1 | Keychain для apiKey / apiSecret | ✅ |
+| T-2 | IPC `cryptoTerminalDesktop.trading` | ✅ |
+| T-3 | Bybit REST: баланс, позиции, ордера | ✅ |
+| T-4 | UI: dropdown Bybit (ключи, баланс, пинг) | ✅ |
+| T-5 | Market entry + limit/stop ордера | ✅ |
+| T-6 | SL/TP на графике (drag, validation) | ✅ |
+| T-7 | Объёмы USDT (per-coin + defaults) | ✅ |
+| T-8 | Панель позиций / ордеров | ✅ |
 
 ## Архитектура
 
 ```
-Renderer (coins.html / trade panel)
+Renderer (/trade.html)
   └─ preload → cryptoTerminalDesktop.trading.*
        └─ ipcMain (desktop/trading/register-ipc.cjs)
             ├─ credentials.cjs  → safeStorage (Keychain)
-            └─ bybit-rest.cjs   → api.bybit.com (signed, main only)
+            └─ bybit-rest.cjs   → api.bybit.com (signed)
 ```
 
-- **Main process** — единственное место подписи запросов HMAC.
-- **Renderer** — только UI; ключи не попадают в `localStorage` / DevTools.
-- **Testnet:** `BYBIT_TESTNET=1` или настройка в UI (фаза 4).
+- **Main process** — HMAC-подпись, ping, market entry с retry poll позиции.
+- **Renderer** — UI и оверлеи; ключи не в localStorage.
 
 ## Файлы
 
 | Путь | Назначение |
 |------|------------|
-| `desktop/trading/credentials.cjs` | save/load/clear API keys |
-| `desktop/trading/bybit-rest.cjs` | REST client (фаза 2+) |
-| `desktop/trading/register-ipc.cjs` | `trading:*` handlers |
-| `trade.html` | Копия `/coins` для экспериментов (отдельные prefs `trade_page_prefs_v1`) |
-| `js/desktop-trade-nav.js` | Пункт «Торговля» в меню (inject, desktop-only) |
+| `desktop/trading/bybit-rest.cjs` | REST client |
+| `desktop/trading/register-ipc.cjs` | IPC handlers |
+| `desktop/trading/credentials.cjs` | Keychain |
+| `trade.html` | Торговая страница |
+| `js/trade-page-boot.js` | Boot chain |
+| `js/trade-exchange-settings.js` | Bybit dropdown + ping |
+| `js/trade-market-entry.js` | Buy/Sell по рынку |
+| `js/trade-volume-presets.js` | Объёмы USDT |
+| `js/trade-book-panel.js` | Панель позиций |
+| `js/trade-chart-overlay.js` | Позиция / SL / TP на графике |
+| `js/trade-chart-orders.js` | Limit/stop линии |
+| `js/trade-order-plus-ui.js` | Меню «+» на шкале |
+| `js/trade-open-positions.js` | Пин символов с позицией |
+| `js/desktop-trade-nav.js` | Пункт «Торговля» в меню |
 
-## IPC (фаза 1)
+## IPC
 
 | Channel | Описание |
 |---------|----------|
-| `trading:getStatus` | `{ configured, testnet }` |
-| `trading:saveKeys` | сохранить key + secret |
-| `trading:clearKeys` | удалить из Keychain |
+| `trading:getStatus` | configured, testnet, apiKey prefix |
+| `trading:saveKeys` / `clearKeys` | Keychain |
+| `trading:getWalletBalance` | USDT unified |
+| `trading:getPositions` / `getPosition` | Открытые позиции |
+| `trading:openPosition` | Market entry |
+| `trading:placeOrder` / `cancelOrder` / `amendOrder` | Limit/stop |
+| `trading:setPositionStop` / `cancelPositionStop` | SL/TP |
+| `trading:closePosition` | Закрыть по рынку |
+| `trading:pingBybit` | RTT public + signed |
 
-## Безопасность
+## Smoke
 
-- Не логировать key/secret.
-- Не включать ключи в `site-bundle`.
-- Ордеры — только после явного confirm в UI (фаза 3+).
-
-## Smoke (после фазы 2)
-
-1. Desktop → настройки торговли → ввести testnet keys.
-2. Статус «Подключено», баланс USDT отображается.
-3. Logout / clear keys — Keychain пуст.
+1. Desktop → Bybit → testnet/mainnet keys → баланс, пинг.
+2. `/trade` → Buy → линия позиции на графике.
+3. Hover на линию → СЛ/ТП handles → drag → validation.
+4. «+» на шкале → limit/stop → линия ордера.
 
 ## Связанные документы
 
-- [DESKTOP_APP.md](./DESKTOP_APP.md) — оболочка Electron
-- [MARKER_28.md](./MARKER_28.md) — текущий эталон
+- [MARKER_29.md](./MARKER_29.md) — текущий эталон
+- [DESKTOP_APP.md](./DESKTOP_APP.md) — Electron shell

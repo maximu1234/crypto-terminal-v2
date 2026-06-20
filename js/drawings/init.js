@@ -26,7 +26,7 @@ isCloudLoggedInEffective,
 isCloudSyncEnabled,
 ensureCloudLoginResolved,
 onCloudSyncChange
-} from "../cloud-sync.js?v=37";
+} from "../cloud-sync.js?v=38";
 
 import {
 ensureDrawToolsVisible
@@ -208,7 +208,7 @@ createDrawPriceScale
 
 import {
 createDrawRedrawLoop
-} from "./draw-redraw-loop.js?v=1";
+} from "./draw-redraw-loop.js?v=3";
 
 export function initDrawings({
 
@@ -570,6 +570,39 @@ let chartPanActive = false;
 let chartPanWheelTimer = null;
 let priceScaleDragActive = false;
 let manualPriceScaleDrag = null;
+/** @type {Set<() => void>} */
+const afterRedrawListeners =
+new Set();
+
+function notifyAfterRedraw(
+ctx,
+plotW,
+h
+){
+
+afterRedrawListeners.forEach(
+listener=>{
+
+try{
+listener(
+ctx,
+plotW,
+h
+);
+}catch(
+err
+){
+console.warn(
+"afterRedraw",
+err
+);
+}
+
+}
+);
+
+}
+
 let priceScaleApplyPatchRestore = null;
 
 function defaultsStorageKey(name){
@@ -3855,7 +3888,8 @@ drawShape,
 drawPlacementPreview,
 drawChartRulerOverlay,
 drawRegistryPriceAlerts,
-drawPriceScaleLabels
+drawPriceScaleLabels,
+onAfterRedraw:notifyAfterRedraw
 });
 
 ({
@@ -5617,6 +5651,31 @@ schedulePriceScaleSyncedRedraw,
 beginPriceScaleDragRedraw,
 applyPriceScaleFrame,
 endPriceScaleDragRedraw,
+plotPriceToCoordinate,
+isPriceScaleDragActive:()=>
+priceScaleDragActive,
+addAfterRedrawListener(
+fn
+){
+
+if(
+typeof fn ===
+"function"
+){
+afterRedrawListeners.add(
+fn
+);
+}
+
+},
+removeAfterRedrawListener(
+fn
+){
+
+afterRedrawListeners.delete(
+fn
+);
+},
 
 blocksTabletChartPan(){
 

@@ -15,7 +15,7 @@ connectKlineStream
 import {
 connectTickerStream,
 fetchTickersInto
-} from "../tickers.js?v=21";
+} from "../tickers.js?v=22";
 
 import {
 createTickerUiBatcher
@@ -30,6 +30,14 @@ getFavoriteGroup,
 flagSortRank,
 emptyFavorites
 } from "../favorites.js?v=2";
+
+import {
+isTradePage
+} from "./coins-state.js?v=6";
+
+import {
+hasOpenPosition
+} from "../trade-open-positions.js?v=1";
 
 const hooks = {};
 
@@ -659,21 +667,36 @@ change1hEl.innerText =
 
 }
 
-export function highlightActiveSymbol(){
+export function applyCoinRowStates(){
 
-coinElements.forEach((el,symbol)=>{
+coinElements.forEach(
+(
+el,
+symbol
+)=>{
 
-if(symbol === coinsState().currentSymbol){
+el.classList.toggle(
+"active",
+symbol ===
+coinsState().currentSymbol
+);
 
-el.classList.add("active");
+el.classList.toggle(
+"has-position",
+isTradePage &&
+hasOpenPosition(
+symbol
+)
+);
 
-}else{
-
-el.classList.remove("active");
+}
+);
 
 }
 
-});
+export function highlightActiveSymbol(){
+
+applyCoinRowStates();
 
 }
 
@@ -707,6 +730,34 @@ return coinsState().sortAsc
 }
 
 export function sortData(a,b){
+
+if(
+isTradePage
+){
+const aPos =
+hasOpenPosition(
+a.symbol
+);
+const bPos =
+hasOpenPosition(
+b.symbol
+);
+
+if(
+aPos &&
+!bPos
+){
+return -1;
+}
+
+if(
+!aPos &&
+bPos
+){
+return 1;
+}
+
+}
 
 const favorites =
 coinsState().favorites ||

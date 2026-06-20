@@ -162,19 +162,37 @@ String(
 apiKey ||
 ""
 ).trim();
-const secret =
+let secret =
 String(
 apiSecret ||
 ""
 ).trim();
 
 if(
-!key ||
-!secret
+!key
 ){
 throw new Error(
-"API key and secret are required"
+"API key is required"
 );
+}
+
+if(
+!secret
+){
+const existing =
+getCredentials();
+
+if(
+existing?.apiSecret
+){
+secret =
+existing.apiSecret;
+}else{
+throw new Error(
+"API secret is required"
+);
+}
+
 }
 
 writeStore({
@@ -219,7 +237,12 @@ configured:
 testnet:
 !!creds?.testnet,
 encryptionAvailable:
-canEncrypt()
+canEncrypt(),
+apiKey:
+creds?.apiKey ||
+"",
+hasSecret:
+!!creds?.apiSecret
 };
 
 }

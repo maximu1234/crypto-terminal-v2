@@ -30,7 +30,7 @@ subscribeKline
 import {
 connectTickerStream,
 fetchTickersInto
-} from "./tickers.js?v=21";
+} from "./tickers.js?v=22";
 
 import {
 createTickerUiBatcher
@@ -72,7 +72,7 @@ bindMobileNavDrawerLinks
 import {
 persistFavoritesToCloud,
 onFavoritesRemoteUpdate
-} from "./cloud-sync.js?v=37";
+} from "./cloud-sync.js?v=38";
 
 import {
 attachSymbolAutocomplete,

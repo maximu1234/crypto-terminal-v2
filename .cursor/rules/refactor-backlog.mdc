@@ -19,7 +19,7 @@ alwaysApply: true
 | 5b | ✅ | Split render/hit/tablet-input, cloud/alerts/chart/terminal facades |
 | 5c | ✅ | Split `drawings/init.js` — orchestrator complete (~5.8k, 10 modules) |
 | 6 | ✅ | `page-routes`, CI, tests, ticker rAF batch, device-pull-gate |
-| | | **Эталон:** `metka-28` — блок торговли (desktop) |
+| | | **Эталон:** `metka-29` — блок торговли (desktop) |
 
 ## iPad — после split `drawings.js` (пункт 5)
 

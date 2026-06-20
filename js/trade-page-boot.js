@@ -18,7 +18,19 @@ jsUrl
 
 import {
 initTradeExchangeSettings
-} from "./trade-exchange-settings.js?v=2";
+} from "./trade-exchange-settings.js?v=6";
+
+import {
+initTradeVolumePresets
+} from "./trade-volume-presets.js?v=2";
+
+import {
+initTradeMarketEntry
+} from "./trade-market-entry.js?v=2";
+
+import {
+initTradeBookPanel
+} from "./trade-book-panel.js?v=4";
 
 const IS_YANDEX =
 /YaBrowser|Yandex/i.test(
@@ -226,8 +238,39 @@ return;
 
 await waitForSiteCssReady();
 initTradeExchangeSettings();
+initTradeVolumePresets();
+initTradeMarketEntry();
+initTradeBookPanel();
+
+const {
+initTradeOpenPositions
+} =
+await import(
+"./trade-open-positions.js?v=1"
+);
+
+initTradeOpenPositions();
+
 await loadLightweightCharts();
 await loadChartEntryWithRetry();
+
+const {
+initTradeChartOverlay
+} =
+await import(
+"./trade-chart-overlay.js?v=13"
+);
+
+initTradeChartOverlay();
+
+const {
+initTradeChartOrders
+} =
+await import(
+"./trade-chart-orders.js?v=2"
+);
+
+initTradeChartOrders();
 
 try{
 sessionStorage.removeItem(

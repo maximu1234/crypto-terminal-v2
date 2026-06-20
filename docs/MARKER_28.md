@@ -2,7 +2,7 @@
 
 **Тег:** `metka-28` · **Коммит:** `git rev-parse metka-28`
 
-**Текущий эталон отката.** Предыдущий: [MARKER_27.md](./MARKER_27.md) (`metka-27`).
+**Предыдущий эталон отката.** Текущая: [MARKER_29.md](./MARKER_29.md) (`metka-29`).
 
 Проверено: desktop **Multichart 1.0.15** — локальный UI, вход по email, графики на `/coins`; CI gate (manifest, nav, unit tests).
 
@@ -47,8 +47,8 @@
 
 ```bash
 git fetch --tags
-git checkout metka-28   # текущий
-git checkout metka-27   # до desktop bundled UI
+git checkout metka-29   # текущий
+git checkout metka-28   # до торгового модуля
 ```
 
 ## Smoke

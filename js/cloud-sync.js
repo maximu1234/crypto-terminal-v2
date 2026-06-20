@@ -12,11 +12,12 @@ isFatalAuthRefreshError,
 clearPersistedRefreshToken,
 markExplicitAuthSignOut,
 restoreAuthSessionFromBackup,
+restoreDesktopAuthSession,
 isAuthRefreshBlocked,
 blockAuthRefreshUntil,
 clearAuthRefreshBlock,
 getAuthRefreshBlockedUntil
-} from "./auth-storage.js?v=3";
+} from "./auth-storage.js?v=4";
 
 import {
 loadFavoritesGroups,
@@ -3418,6 +3419,7 @@ return;
 }
 
 configured = true;
+await restoreDesktopAuthSession();
 bootstrapAuthFromLocalStorage();
 notifyAuth();
 

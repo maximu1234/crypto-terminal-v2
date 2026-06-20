@@ -10,7 +10,7 @@ alertPriceForDisplay
 
 import {
 isCloudLoggedInEffective
-} from "./cloud-sync.js?v=37";
+} from "./cloud-sync.js?v=38";
 
 import {
 getTelegramChatId
@@ -142,7 +142,9 @@ getSymbol,
 getTf,
 scheduleRedraw,
 onCrosshairSuppress,
-onCrosshairRelease
+onCrosshairRelease,
+onPlusActivate =
+null
 }){
 
 if(
@@ -172,7 +174,10 @@ plusBtn.className =
 "price-alert-scale-plus hidden";
 plusBtn.setAttribute(
 "aria-label",
-"Добавить алерт по цене"
+typeof onPlusActivate ===
+"function"
+? "Ордер или алерт по цене"
+: "Добавить алерт по цене"
 );
 plusBtn.innerHTML =
 `<span class="price-alert-scale-plus-icon" aria-hidden="true">+</span>`;
@@ -975,8 +980,6 @@ Number(
 plusBtn.dataset.pendingPrice
 );
 
-hidePlus();
-
 if(
 !Number.isFinite(
 price
@@ -984,6 +987,24 @@ price
 ){
 return;
 }
+
+if(
+typeof onPlusActivate ===
+"function"
+){
+onPlusActivate(
+price,
+{
+plusBtn,
+plusPriceHint,
+wrapEl,
+hidePlus
+}
+);
+return;
+}
+
+hidePlus();
 
 if(
 !isCloudLoggedInEffective()

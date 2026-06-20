@@ -34,7 +34,8 @@ drawShape,
 drawPlacementPreview,
 drawChartRulerOverlay,
 drawRegistryPriceAlerts,
-drawPriceScaleLabels
+drawPriceScaleLabels,
+onAfterRedraw
 } =
 deps;
 
@@ -307,6 +308,17 @@ h
 );
 
 drawPriceScaleLabels(ctx);
+
+if(
+typeof onAfterRedraw ===
+"function"
+){
+onAfterRedraw(
+ctx,
+plotW,
+h
+);
+}
 
 }catch(err){
 console.warn("redraw", err);

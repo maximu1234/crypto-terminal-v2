@@ -579,7 +579,8 @@ body.terminal-page .widget-draw-tools{
     display:flex;
     align-items:stretch;
     height:26px;
-    transform:translateY(-50%);
+    transform:translateY(-50%) scale(0.8);
+    transform-origin:left center;
     pointer-events:auto;
     border:1px solid #facc15;
     border-radius:3px;

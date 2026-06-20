@@ -110,6 +110,23 @@ color:#86efac;
 color:#fca5a5;
 }
 
+.trade-exchange-balance{
+margin:0;
+font-size:13px;
+font-weight:500;
+color:#86efac;
+}
+
+.trade-exchange-balance.is-error{
+color:#fca5a5;
+font-weight:400;
+}
+
+.trade-exchange-field input:read-only{
+color:#9ca3af;
+cursor:default;
+}
+
 .trade-exchange-actions{
 display:flex;
 flex-wrap:wrap;
@@ -148,4 +165,84 @@ background:#2563eb;
 
 .trade-exchange-clear{
 color:#fca5a5;
+}
+
+.trade-exchange-refresh{
+color:#93c5fd;
+}
+
+.trade-exchange-divider{
+border:none;
+border-top:1px solid #374151;
+margin:6px 0 2px;
+}
+
+.trade-exchange-ping{
+margin:0;
+font:500 11px/1.35 ui-monospace,SFMono-Regular,Menlo,monospace;
+color:#d1d5db;
+}
+
+.trade-exchange-ping [data-role="ping-main"]{
+display:block;
+}
+
+.trade-exchange-ping.is-good{
+color:#86efac;
+}
+
+.trade-exchange-ping.is-warn{
+color:#fde047;
+}
+
+.trade-exchange-ping.is-bad{
+color:#fca5a5;
+}
+
+.trade-exchange-ping-detail{
+margin:3px 0 0;
+font-size:11px;
+line-height:1.35;
+color:#6b7280;
+}
+
+.trade-volume-defaults-panel{
+display:flex;
+flex-direction:column;
+gap:6px;
+}
+
+.trade-volume-defaults-row{
+cursor:default;
+}
+
+.trade-volume-defaults-label{
+flex:0 0 14px;
+font-size:11px;
+font-weight:600;
+color:#6b7280;
+text-align:center;
+}
+
+.trade-exchange-dropdown .trade-volume-presets-field input[type="number"]{
+box-sizing:border-box;
+width:100%;
+padding:6px 40px 6px 7px;
+border:1px solid #374151;
+border-radius:6px;
+background:#13181e;
+color:#e5e7eb;
+font:500 12px/1.2 ui-monospace,SFMono-Regular,Menlo,monospace;
+-moz-appearance:textfield;
+appearance:textfield;
+}
+
+.trade-exchange-dropdown .trade-volume-presets-field input[type="number"]:focus{
+outline:none;
+border-color:#6366f1;
+}
+
+.trade-exchange-dropdown .trade-volume-presets-suffix{
+font-size:11px;
+right:8px;
 }

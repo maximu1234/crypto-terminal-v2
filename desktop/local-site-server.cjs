@@ -1,5 +1,6 @@
 /**
  * Локальный HTTP для site-bundle — надёжнее custom protocol для /css, /js (type=module).
+ * Порт фиксированный / сохранённый: localStorage (сессия) привязан к origin.
  */
 const http =
 require(
@@ -8,6 +9,16 @@ require(
 const fs =
 require(
 "fs"
+);
+const path =
+require(
+"path"
+);
+const {
+app
+} =
+require(
+"electron"
 );
 const {
 net
@@ -22,6 +33,82 @@ getMime
 require(
 "./site-protocol.cjs"
 );
+
+const DEFAULT_LOCAL_SITE_PORT =
+47391;
+const PORT_FILE =
+"local-site-port.json";
+
+function portConfigPath(){
+
+return path.join(
+app.getPath(
+"userData"
+),
+PORT_FILE
+);
+
+}
+
+function readSavedPort(){
+
+try{
+const port =
+Number(
+JSON.parse(
+fs.readFileSync(
+portConfigPath(),
+"utf8"
+)
+)?.port
+);
+
+if(
+Number.isInteger(
+port
+) &&
+port >
+0 &&
+port <
+65536
+){
+return port;
+}
+}catch{
+/* ignore */
+}
+
+return null;
+
+}
+
+function writeSavedPort(
+port
+){
+
+try{
+fs.mkdirSync(
+path.dirname(
+portConfigPath()
+),
+{
+recursive:
+true
+}
+);
+fs.writeFileSync(
+portConfigPath(),
+JSON.stringify(
+{
+port
+}
+)
+);
+}catch{
+/* ignore */
+}
+
+}
 
 function readRequestBody(
 req
@@ -66,20 +153,12 @@ reject
 
 }
 
-function startLocalSiteServer({
+function createRequestHandler({
 bundleRoot,
 remoteApiOrigin
 }){
 
-return new Promise(
-(
-resolve,
-reject
-)=>{
-
-const server =
-http.createServer(
-(
+return (
 req,
 res
 )=>{
@@ -223,39 +302,132 @@ err
 }
 )();
 
+};
+
+}
+
+function listenServer(
+server,
+port
+){
+
+return new Promise(
+(
+resolve,
+reject
+)=>{
+
+const onError =
+err=>{
+server.off(
+"listening",
+onListening
+);
+reject(
+err
+);
+};
+
+const onListening =
+()=>{
+server.off(
+"error",
+onError
+);
+resolve(
+server.address()
+);
+};
+
+server.once(
+"error",
+onError
+);
+server.once(
+"listening",
+onListening
+);
+server.listen(
+port,
+"127.0.0.1"
+);
+
 }
 );
 
-server.on(
-"error",
-reject
-);
+}
 
-server.listen(
-0,
-"127.0.0.1",
-()=>{
+function startLocalSiteServer({
+bundleRoot,
+remoteApiOrigin
+}){
 
-const addr =
-server.address();
+const savedPort =
+readSavedPort();
+const portCandidates =
+[];
 
 if(
-!addr ||
-typeof addr ===
-"string"
+savedPort !=
+null
 ){
-reject(
-new Error(
-"local site server: no address"
-)
+portCandidates.push(
+savedPort
 );
-return;
 }
 
-const origin =
-`http://127.0.0.1:${addr.port}`;
+if(
+!portCandidates.includes(
+DEFAULT_LOCAL_SITE_PORT
+)
+){
+portCandidates.push(
+DEFAULT_LOCAL_SITE_PORT
+);
+}
 
-resolve({
+portCandidates.push(
+0
+);
+
+return (
+async()=>{
+
+for(
+const port of portCandidates
+){
+
+const server =
+http.createServer(
+createRequestHandler(
+{
+bundleRoot,
+remoteApiOrigin
+}
+)
+);
+
+try{
+const addr =
+await listenServer(
+server,
+port
+);
+const actualPort =
+typeof addr ===
+"object" &&
+addr?.port
+? addr.port
+: port;
+
+writeSavedPort(
+actualPort
+);
+
+const origin =
+`http://127.0.0.1:${actualPort}`;
+
+return {
 origin,
 close:()=>
 new Promise(
@@ -267,17 +439,40 @@ resolveClose();
 );
 }
 )
-});
+};
+}catch(
+err
+){
+
+if(
+err?.code ===
+"EADDRINUSE"
+){
+try{
+server.close();
+}catch{
+/* ignore */
+}
+continue;
+}
+
+throw err;
 
 }
+
+}
+
+throw new Error(
+"local site server: could not bind"
 );
 
 }
-);
+)();
 
 }
 
 module.exports =
 {
-startLocalSiteServer
+startLocalSiteServer,
+DEFAULT_LOCAL_SITE_PORT
 };

@@ -1,0 +1,100 @@
+/* /trade — меню «+» у шкалы цены */
+
+body.trade-page .trade-order-plus-menu{
+position:absolute;
+z-index:40;
+min-width:134px;
+display:flex;
+flex-direction:column;
+gap:5px;
+pointer-events:auto;
+font:600 9px/1.25 system-ui,-apple-system,sans-serif;
+}
+
+body.trade-page .trade-order-plus-menu-orders{
+display:flex;
+flex-direction:column;
+gap:0;
+border-radius:5px;
+overflow:hidden;
+background:rgba(28,32,42,.98);
+border:1px solid rgba(255,255,255,.08);
+box-shadow:0 6px 19px rgba(0,0,0,.45);
+}
+
+body.trade-page .trade-order-plus-item{
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:8px;
+width:100%;
+margin:0;
+padding:6px 8px;
+border:none;
+border-bottom:1px solid rgba(255,255,255,.06);
+background:transparent;
+color:#e4e4e7;
+cursor:pointer;
+text-align:left;
+text-transform:uppercase;
+letter-spacing:.02em;
+font:inherit;
+}
+
+body.trade-page .trade-order-plus-item:last-child{
+border-bottom:none;
+}
+
+body.trade-page .trade-order-plus-item:hover{
+background:rgba(255,255,255,.06);
+}
+
+body.trade-page .trade-order-plus-dot{
+flex-shrink:0;
+width:6px;
+height:6px;
+border-radius:50%;
+}
+
+body.trade-page .trade-order-plus-dot--green{
+background:#22c55e;
+}
+
+body.trade-page .trade-order-plus-dot--red{
+background:#ef4444;
+}
+
+body.trade-page .trade-order-plus-menu-alert{
+border-radius:5px;
+overflow:hidden;
+background:rgba(28,32,42,.98);
+border:1px solid rgba(255,255,255,.08);
+box-shadow:0 6px 19px rgba(0,0,0,.45);
+}
+
+body.trade-page .trade-order-plus-alert-item{
+display:flex;
+align-items:center;
+gap:6px;
+width:100%;
+margin:0;
+padding:6px 8px;
+border:none;
+background:transparent;
+color:#e4e4e7;
+cursor:pointer;
+font:inherit;
+}
+
+body.trade-page .trade-order-plus-alert-item:hover{
+background:rgba(255,255,255,.06);
+}
+
+body.trade-page .trade-order-plus-alert-icon{
+font-size:10px;
+line-height:1;
+}
+
+body.trade-page .trade-order-plus-alert-text{
+font-variant-numeric:tabular-nums;
+}
