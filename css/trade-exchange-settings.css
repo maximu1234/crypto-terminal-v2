@@ -1,0 +1,161 @@
+/* /trade — dropdown «Bybit» (desktop .app only) */
+
+.trade-exchange-wrap{
+position:relative;
+z-index:131;
+}
+
+.trade-exchange-btn{
+gap:6px;
+padding:8px 10px;
+font:500 13px/1 system-ui,-apple-system,sans-serif;
+color:#9ca3af;
+}
+
+.trade-exchange-btn:hover,
+.trade-exchange-btn[aria-expanded="true"]{
+color:#e5e7eb;
+background:rgba(255,255,255,.04);
+}
+
+.trade-exchange-btn.is-connected{
+color:#86efac;
+}
+
+.trade-exchange-status-dot{
+width:7px;
+height:7px;
+border-radius:50%;
+background:#4b5563;
+flex-shrink:0;
+}
+
+.trade-exchange-btn.is-connected .trade-exchange-status-dot{
+background:#22c55e;
+}
+
+.trade-exchange-dropdown{
+min-width:300px;
+max-width:min(360px,calc(100vw - 24px));
+}
+
+.trade-exchange-form{
+display:flex;
+flex-direction:column;
+gap:10px;
+}
+
+.trade-exchange-hint{
+margin:0;
+font-size:12px;
+line-height:1.45;
+color:#6b7280;
+}
+
+.trade-exchange-field{
+display:flex;
+flex-direction:column;
+gap:4px;
+font-size:12px;
+color:#9ca3af;
+}
+
+.trade-exchange-field input[type="text"],
+.trade-exchange-field input[type="password"]{
+box-sizing:border-box;
+width:100%;
+padding:8px 10px;
+border:1px solid #374151;
+border-radius:6px;
+background:#13181e;
+color:#e5e7eb;
+font:400 13px/1.3 ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+
+.trade-exchange-field input:focus{
+outline:none;
+border-color:#60a5fa;
+}
+
+.trade-exchange-check{
+display:flex;
+align-items:center;
+gap:8px;
+font-size:13px;
+color:#d1d5db;
+cursor:pointer;
+user-select:none;
+}
+
+.trade-exchange-check input{
+width:16px;
+height:16px;
+margin:0;
+accent-color:#3b82f6;
+}
+
+.trade-exchange-status-text{
+margin:0;
+min-height:1.2em;
+font-size:12px;
+line-height:1.4;
+color:#9ca3af;
+}
+
+.trade-exchange-status-text.is-ok{
+color:#86efac;
+}
+
+.trade-exchange-status-text.is-error{
+color:#fca5a5;
+}
+
+.trade-exchange-actions{
+display:flex;
+flex-wrap:wrap;
+gap:8px;
+margin-top:2px;
+}
+
+.trade-exchange-actions button{
+appearance:none;
+border-radius:6px;
+padding:8px 12px;
+font:500 13px/1 system-ui,-apple-system,sans-serif;
+cursor:pointer;
+border:1px solid #374151;
+background:#1f2937;
+color:#e5e7eb;
+}
+
+.trade-exchange-actions button:hover{
+background:#374151;
+}
+
+.trade-exchange-actions button:disabled{
+opacity:.55;
+cursor:default;
+}
+
+.trade-exchange-save{
+border-color:#2563eb;
+background:#1d4ed8;
+}
+
+.trade-exchange-save:hover{
+background:#2563eb;
+}
+
+.trade-exchange-clear{
+color:#fca5a5;
+}
+
+.trade-exchange-mobile-block{
+padding:8px 0 4px;
+border-top:1px solid #1f2937;
+margin-top:8px;
+}
+
+.trade-exchange-mobile-block .header-settings-dropdown--inline{
+display:block !important;
+}

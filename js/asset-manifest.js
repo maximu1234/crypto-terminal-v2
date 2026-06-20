@@ -29,6 +29,8 @@ Object.freeze({
 "coins-page-boot.js":
 14,
 "trade-page-boot.js":
+2,
+"trade-exchange-settings.js":
 1,
 "qwerty-key-input.js":
 1,
@@ -295,6 +297,8 @@ Object.freeze({
 42,
 "coins.css":
 41,
+"trade-exchange-settings.css":
+1,
 "terminal-page.css":
 2,
 "site-mobile-nav.css":

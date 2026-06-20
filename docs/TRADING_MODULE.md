@@ -20,7 +20,7 @@
 | T-1 | Keychain (`safeStorage`) для apiKey / apiSecret | 🔄 фаза 1 |
 | T-2 | IPC bridge `cryptoTerminalDesktop.trading` | 🔄 фаза 1 |
 | T-3 | Bybit REST v5: баланс, позиции (read-only) | ⏳ фаза 2 |
-| T-4 | UI: панель ключей + статус подключения | ⏳ фаза 2 |
+| T-4 | UI: панель ключей + статус подключения | 🔄 dropdown Bybit на `/trade` |
 | T-5 | Ордер: market/limit, reduce-only | ⏳ фаза 3 |
 | T-6 | TP/SL, confirm dialog, testnet toggle | ⏳ фаза 4 |
 

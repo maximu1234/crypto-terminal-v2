@@ -16,6 +16,10 @@ TERMINAL_ENTRY,
 jsUrl
 } from "./asset-manifest.js?v=2";
 
+import {
+initTradeExchangeSettings
+} from "./trade-exchange-settings.js?v=1";
+
 const IS_YANDEX =
 /YaBrowser|Yandex/i.test(
 navigator.userAgent ||
@@ -221,6 +225,7 @@ return;
 }
 
 await waitForSiteCssReady();
+initTradeExchangeSettings();
 await loadLightweightCharts();
 await loadChartEntryWithRetry();
 
