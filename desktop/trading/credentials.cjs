@@ -34,6 +34,8 @@ app.getPath(
 STORE_NAME
 );
 
+}
+
 function canEncrypt(){
 
 return (
