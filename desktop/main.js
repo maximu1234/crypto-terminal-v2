@@ -31,7 +31,8 @@ require(
 const {
 registerAppScheme,
 setupSiteProtocol,
-bundledOrigin
+bundledOrigin,
+resolveBundleRoot
 } =
 require(
 "./site-protocol.cjs"
@@ -65,18 +66,61 @@ __dirname,
 "site-bundle"
 );
 
-const USE_BUNDLE =
-process.env.DESKTOP_REMOTE_UI !==
-"1" &&
-(
-app.isPackaged ||
+let resolvedBundleRoot =
+null;
+
+function getBundleRoot(){
+
+if(
+!resolvedBundleRoot
+){
+resolvedBundleRoot =
+resolveBundleRoot(
+BUNDLE_ROOT
+);
+log.info(
+"site-bundle:",
+resolvedBundleRoot,
+"coins.html:",
 fs.existsSync(
 path.join(
-BUNDLE_ROOT,
+resolvedBundleRoot,
 "coins.html"
 )
 )
 );
+}
+
+return resolvedBundleRoot;
+
+}
+
+function shouldUseBundle(){
+
+if(
+process.env.DESKTOP_REMOTE_UI ===
+"1"
+){
+return false;
+}
+
+if(
+app.isPackaged
+){
+return true;
+}
+
+return fs.existsSync(
+path.join(
+BUNDLE_ROOT,
+"coins.html"
+)
+);
+
+}
+
+const USE_BUNDLE =
+shouldUseBundle();
 
 const APP_ORIGIN =
 USE_BUNDLE
@@ -741,6 +785,9 @@ mainWindow.maximize();
 mainWindow.focus();
 }
 
+let bundleLoadFallback =
+false;
+
 function createWindow(){
 
 mainWindowShown =
@@ -810,11 +857,39 @@ mainWindow.webContents.on(
 (
 _event,
 code,
-desc
+desc,
+failedUrl
 )=>{
 log.error(
-`Window load failed: ${code} ${desc}`
+`Window load failed: ${code} ${desc} ${failedUrl || ""}`
 );
+
+if(
+USE_BUNDLE &&
+!bundleLoadFallback &&
+String(
+failedUrl ||
+""
+).startsWith(
+"multichart://"
+)
+){
+bundleLoadFallback =
+true;
+log.warn(
+"Bundled UI failed — falling back to remote Vercel"
+);
+const remote =
+`${REMOTE_APP_URL.replace(
+/\/$/,
+""
+)}/coins.html`;
+void mainWindow?.loadURL(
+remote
+);
+return;
+}
+
 revealMainWindow();
 }
 );
@@ -1490,7 +1565,7 @@ USE_BUNDLE
 const bundleRoot =
 setupSiteProtocol({
 bundleRoot:
-BUNDLE_ROOT,
+getBundleRoot(),
 remoteApiOrigin:
 REMOTE_API_ORIGIN
 });

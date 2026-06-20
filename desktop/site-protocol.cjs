@@ -91,40 +91,63 @@ true
 }
 
 function resolveBundleRoot(
-bundleRoot
+fallbackRoot
 ){
+
+const candidates =
+[];
 
 if(
-fs.existsSync(
-path.join(
-bundleRoot,
-"coins.html"
-)
-)
+fallbackRoot
 ){
-return bundleRoot;
+candidates.push(
+path.normalize(
+fallbackRoot
+)
+);
 }
 
-const unpacked =
+if(
+process.resourcesPath
+){
+candidates.push(
 path.join(
-bundleRoot,
-"..",
+process.resourcesPath,
 "app.asar.unpacked",
 "site-bundle"
+)
 );
+}
 
+for(
+const root of
+candidates
+){
+
+try{
 if(
 fs.existsSync(
 path.join(
-unpacked,
+root,
 "coins.html"
 )
 )
 ){
-return unpacked;
+return root;
+}
+}catch{
+/* ignore */
 }
 
-return bundleRoot;
+}
+
+return (
+fallbackRoot ||
+candidates[
+0
+] ||
+""
+);
 
 }
 
