@@ -203,6 +203,25 @@ border-color:#2563eb;
 background:#1d4ed8;
 }
 
+.system-admin-card-danger{
+border-color:#7f1d1d;
+}
+
+.system-admin-btn-danger{
+background:#991b1b;
+border-color:#991b1b;
+color:#fff;
+}
+
+.system-admin-btn-danger:hover{
+background:#b91c1c;
+}
+
+.system-admin-btn-danger:disabled{
+opacity:0.55;
+cursor:not-allowed;
+}
+
 .system-admin-status{
 margin-top:12px;
 font-size:13px;

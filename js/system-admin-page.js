@@ -27,6 +27,10 @@ bindSupabaseUsagePrefsForm
 } from "./system-admin-supabase-prefs.js?v=1";
 
 import {
+bindDrawingsGlobalPurge
+} from "./system-admin-drawings-purge.js?v=1";
+
+import {
 resetBybitEndpoints
 } from "./bybit-fetch.js?v=14";
 
@@ -257,6 +261,10 @@ window.location.href = "/index.html";
 }
 );
 }
+
+bindDrawingsGlobalPurge({
+statusEl: document.getElementById("system-drawings-purge-status")
+});
 
 }
 

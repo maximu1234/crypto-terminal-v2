@@ -1969,6 +1969,31 @@ clientY;
 
 }
 
+function plotYFromLastPointer(){
+
+if(
+lastPointerClientX ==
+null ||
+lastPointerClientY ==
+null
+){
+return null;
+}
+
+const plot =
+plotCoordsFromClient(
+lastPointerClientX,
+lastPointerClientY
+);
+
+return Number.isFinite(
+plot?.y
+)
+? plot.y
+: null;
+
+}
+
 function crosshairClientFromParam(
 param
 ){
@@ -2211,6 +2236,18 @@ x,
 y
 ){
 
+let plotY =
+y;
+
+if(
+!Number.isFinite(
+plotY
+)
+){
+plotY =
+plotYFromLastPointer();
+}
+
 if(
 chartWrapEl
 ){
@@ -2236,7 +2273,7 @@ if(
 chartWrapEl &&
 chartEl &&
 Number.isFinite(
-y
+plotY
 )
 ){
 
@@ -2244,7 +2281,7 @@ positionDomChartCrosshairHorz({
 wrapEl:chartWrapEl,
 chartEl,
 chart:mainChart,
-plotY:y
+plotY
 });
 
 }
@@ -2649,8 +2686,17 @@ crosshairOverlayPlotX(
 param
 );
 
-const py =
+let py =
 param?.point?.y;
+
+if(
+!Number.isFinite(
+py
+)
+){
+py =
+plotYFromLastPointer();
+}
 
 if(
 !Number.isFinite(
@@ -3019,8 +3065,78 @@ param
 
 });
 
+function refreshPointerCrosshair(){
+
+if(
+lock
+){
+return;
+}
+
+if(
+document.body.classList.contains(
+"chart-probe-active"
+)
+){
+return;
+}
+
+if(
+lastPointerClientX ==
+null ||
+lastPointerClientY ==
+null
+){
+return;
+}
+
+if(
+hideCrosshairOnAnyPriceScale(
+lastPointerClientX,
+lastPointerClientY
+)
+){
+return;
+}
+
+const plot =
+plotCoordsFromClient(
+lastPointerClientX,
+lastPointerClientY
+);
+
+if(
+plot
+){
+
+applyMainCrosshairPlot(
+plot.x,
+plot.y
+);
+
+return;
+
+}
+
+if(
+isClientOnRsiPlot(
+lastPointerClientX,
+lastPointerClientY
+)
+){
+
+showRsiCrosshairFromClient(
+lastPointerClientX,
+lastPointerClientY
+);
+
+}
+
+}
+
 return {
 clearLinked,
+refreshPointerCrosshair,
 detachPointerCrosshair(){
 
 if(

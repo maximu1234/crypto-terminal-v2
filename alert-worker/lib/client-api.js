@@ -528,6 +528,129 @@ async function handleClientDeleteDrawing(
 
 }
 
+/**
+ * POST /admin/purge-all-drawings — удалить все строки user_drawings (все пользователи).
+ * Только SYSTEM_ADMIN_EMAIL + confirm в теле.
+ */
+async function handleClientAdminPurgeAllDrawings(
+  req,
+  res
+) {
+
+  const path =
+    (req.url || "").split("?")[0];
+
+  if (path !== "/admin/purge-all-drawings") {
+    return false;
+  }
+
+  setCors(res, req);
+
+  if (req.method === "OPTIONS") {
+    res.writeHead(204);
+    res.end();
+    return true;
+  }
+
+  if (req.method !== "POST") {
+    res.writeHead(405);
+    res.end("Method not allowed");
+    return true;
+  }
+
+  const { verifySystemAdminFromRequest } =
+    await import("./admin-auth.js");
+
+  const admin =
+    await verifySystemAdminFromRequest(req);
+
+  if (!admin) {
+    res.writeHead(403, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({
+      ok: false,
+      error: "admin_required"
+    }));
+    return true;
+  }
+
+  let body;
+
+  try{
+    body = await readJsonBody(req);
+  }catch(err){
+    res.writeHead(400, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({
+      ok: false,
+      error: err.message
+    }));
+    return true;
+  }
+
+  if (
+    body?.confirm !== "PURGE_ALL_DRAWINGS"
+  ) {
+    res.writeHead(400, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({
+      ok: false,
+      error: "confirm_required"
+    }));
+    return true;
+  }
+
+  const cfg = getWorkerConfig();
+
+  if (!cfg.ready) {
+    res.writeHead(503, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ ok: false, error: "worker_not_ready" }));
+    return true;
+  }
+
+  const {
+    restDeleteCount,
+    restPatchCount
+  } =
+    await import("./supabase-rest.js");
+
+  try{
+    const deletedDrawings =
+      await restDeleteCount(
+        "user_drawings?user_id=not.is.null"
+      );
+
+    const clearedLegacySettings =
+      await restPatchCount(
+        "user_settings?user_id=not.is.null",
+        {
+          drawings: {},
+          drawings_updated_at: new Date().toISOString()
+        }
+      );
+
+    console.warn(
+      `[admin] purge-all-drawings by ${admin.email}: ` +
+      `user_drawings=${deletedDrawings}, ` +
+      `user_settings=${clearedLegacySettings}`
+    );
+
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({
+      ok: true,
+      deletedDrawings,
+      clearedLegacySettings,
+      by: admin.email
+    }));
+  }catch(err){
+    res.writeHead(500, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({
+      ok: false,
+      error: err.message
+    }));
+  }
+
+  return true;
+
+}
+
 export async function handleClientApi(
   req,
   res
@@ -546,6 +669,10 @@ export async function handleClientApi(
   }
 
   if (await handleClientDeleteDrawing(req, res)) {
+    return true;
+  }
+
+  if (await handleClientAdminPurgeAllDrawings(req, res)) {
     return true;
   }
 

@@ -273,3 +273,74 @@ export async function restDeleteReturning(
     : [parsed];
 
 }
+
+/** DELETE с Prefer: count=exact (число в Content-Range). */
+export async function restDeleteCount(
+  pathAndQuery
+) {
+
+  const { base, key } = restBase();
+
+  const res = await fetch(`${base}/rest/v1/${pathAndQuery}`, {
+    method: "DELETE",
+    headers: {
+      apikey: key,
+      Authorization: `Bearer ${key}`,
+      Prefer: "return=minimal,count=exact"
+    }
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(
+      `REST DELETE ${res.status}: ${text.slice(0, 200)}`
+    );
+  }
+
+  const range =
+    res.headers.get("content-range") || "";
+  const m =
+    range.match(/\/(\d+)$/);
+
+  return m
+    ? parseInt(m[1], 10)
+    : 0;
+
+}
+
+/** PATCH с Prefer: count=exact (число в Content-Range). */
+export async function restPatchCount(
+  pathAndQuery,
+  body
+) {
+
+  const { base, key } = restBase();
+
+  const res = await fetch(`${base}/rest/v1/${pathAndQuery}`, {
+    method: "PATCH",
+    headers: {
+      apikey: key,
+      Authorization: `Bearer ${key}`,
+      "Content-Type": "application/json",
+      Prefer: "return=minimal,count=exact"
+    },
+    body: JSON.stringify(body)
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(
+      `REST PATCH ${res.status}: ${text.slice(0, 200)}`
+    );
+  }
+
+  const range =
+    res.headers.get("content-range") || "";
+  const m =
+    range.match(/\/(\d+)$/);
+
+  return m
+    ? parseInt(m[1], 10)
+    : 0;
+
+}

@@ -7,6 +7,7 @@
 - `POST /delete-alert` — удаление алерта (service role; id → symbol+shape_id → soft delete)
 - `POST /push-drawing` — запись рисунка в `user_drawings` (service role, для iPad)
 - `POST /delete-drawing` — удаление рисунка из `user_drawings` (service role)
+- `POST /admin/purge-all-drawings` — удалить **все** рисунки **всех** пользователей (только `SYSTEM_ADMIN_EMAIL`, тело `{ "confirm": "PURGE_ALL_DRAWINGS" }`)
 - `POST /trigger` — Telegram + удаление после срабатывания
 
 Нужен `ALERT_WORKER_URL` на Vercel в `js/supabase-env.js`. При закрытой вкладке срабатывает только worker по свечам Bybit.
@@ -60,6 +61,7 @@ Worker при старте регистрирует webhook `POST /telegram/webh
 
 | Variable | Зачем |
 |----------|--------|
+| `SYSTEM_ADMIN_EMAIL` | email админа для `POST /admin/purge-all-drawings` (тот же, что на Vercel для `/system`) |
 | `TELEGRAM_WEBHOOK_SECRET` | секрет для заголовка Telegram (случайная строка) |
 | `TELEGRAM_WEBHOOK_BASE_URL` | если авто-домен Railway не подхватился: `https://….up.railway.app` |
 | `SITE_PUBLIC_URL` | URL фронта для ссылки на график в Telegram, напр. `https://crypto-terminal-v2.vercel.app` |

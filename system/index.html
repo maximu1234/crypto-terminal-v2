@@ -13,7 +13,7 @@
 <link rel="stylesheet" href="/css/common.css?v=27">
 <link rel="stylesheet" href="/css/screener.css?v=34">
 <link rel="stylesheet" href="/css/site-mobile-nav.css?v=4">
-<link rel="stylesheet" href="/css/system-admin.css?v=6">
+<link rel="stylesheet" href="/css/system-admin.css?v=7">
 
 </head>
 
@@ -133,12 +133,33 @@ Safari → <code>api.bybit.com</code>; Chrome / Яндекс → <code>railway.a
 
 </section>
 
+<section class="system-admin-card system-admin-card-danger" aria-labelledby="drawings-purge-heading">
+
+<h2 id="drawings-purge-heading">Очистка облака рисунков</h2>
+<p class="system-admin-card-lead">
+На странице «Алерты» кнопка «Удалить все рисунки» очищает только <strong>ваш</strong> аккаунт на этом устройстве.
+Здесь — принудительная очистка таблицы <code>user_drawings</code> в Supabase для <strong>всех пользователей</strong>
+(например, после делистинга монеты с Bybit).
+</p>
+<p class="system-admin-pref-hint">
+Требуется <code>SYSTEM_ADMIN_EMAIL</code> на Railway (тот же email, что для доступа к этой странице).
+Локальные рисунки в браузерах пользователей не затрагиваются — только облако.
+</p>
+<p id="system-drawings-purge-status" class="system-admin-status" aria-live="polite"></p>
+<div class="system-admin-actions">
+<button type="button" class="system-admin-btn system-admin-btn-danger" id="system-purge-all-drawings-btn">
+Удалить все рисунки всех пользователей
+</button>
+</div>
+
+</section>
+
 </main>
 
 </div>
 
 <script type="module" src="/js/site-boot.js?v=85"></script>
-<script type="module" src="/js/system-admin-page.js?v=4"></script>
+<script type="module" src="/js/system-admin-page.js?v=5"></script>
 
 </body>
 </html>

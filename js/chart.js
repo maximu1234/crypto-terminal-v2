@@ -48,7 +48,7 @@ isUserCrosshairEvent
 import {
 TABLET_LW_NATIVE_PRICE_SCALE,
 clearTabletProbeCrosshairForChart
-} from "./chart/chart-factory.js?v=31";
+} from "./chart/chart-factory.js?v=32";
 
 export {
 createCandlestickChart,
@@ -83,7 +83,7 @@ appendFutureWhitespaceBars,
 coinsTfVisibleBars,
 applyCoinsChartViewport,
 refreshCoinsChartBarSpacing
-} from "./chart/chart-factory.js?v=31";
+} from "./chart/chart-factory.js?v=32";
 
 
 export {

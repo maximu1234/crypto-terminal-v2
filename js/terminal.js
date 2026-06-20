@@ -2573,6 +2573,16 @@ drawingTools?.onSymbolChange();
 drawingTools?.resize();
 drawingTools?.scheduleRedraw?.();
 
+requestAnimationFrame(
+()=>{
+requestAnimationFrame(
+()=>{
+chartCrosshairLink?.refreshPointerCrosshair?.();
+}
+);
+}
+);
+
 window.dispatchEvent(
 new CustomEvent(
 "chart-candles-loaded",

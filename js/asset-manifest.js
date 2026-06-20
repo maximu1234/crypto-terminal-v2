@@ -33,7 +33,7 @@ Object.freeze({
 "chart-page.js":
 6,
 "terminal.js":
-311,
+312,
 "coins-layout-resize.js":
 4,
 "coins-layout-math.js":
@@ -75,7 +75,7 @@ Object.freeze({
 "chart/chart-dom-crosshair.js":
 14,
 "chart/chart-factory.js":
-31,
+32,
 "chart-tablet-gestures.js":
 17,
 "coins-tablet-controller.js":
@@ -266,7 +266,9 @@ Object.freeze({
 "trade-calculator.js":
 3,
 "system-admin-page.js":
-4,
+5,
+"system-admin-drawings-purge.js":
+1,
 "system-admin-access.js":
 3,
 "supabase-usage-prefs.js":
@@ -300,7 +302,7 @@ Object.freeze({
 "trade-calculator.css":
 5,
 "system-admin.css":
-6
+7
 
 });
 
