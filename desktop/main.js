@@ -53,6 +53,12 @@ chromeLikeUserAgent
 require(
 "./chrome-user-agent.cjs"
 );
+const {
+registerTradingIpc
+} =
+require(
+"./trading/register-ipc.cjs"
+);
 
 registerAppScheme();
 
@@ -1586,6 +1592,8 @@ true
 };
 }
 );
+
+registerTradingIpc();
 
 }
 

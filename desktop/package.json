@@ -45,6 +45,7 @@
       "chrome-user-agent.cjs",
       "site-protocol.cjs",
       "local-site-server.cjs",
+      "trading/**",
       "site-bundle/**"
     ],
     "afterPack": "./after-pack.cjs",
