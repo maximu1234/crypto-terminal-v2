@@ -39,11 +39,32 @@ document.getElementById(
 "system-purge-all-drawings-btn"
 );
 
+const input =
+document.getElementById(
+"system-purge-all-drawings-confirm"
+);
+
 if(
-!btn
+!btn ||
+!input
 ){
 return;
 }
+
+function syncBtn(){
+
+btn.disabled =
+input.value.trim() !==
+CONFIRM_PHRASE;
+
+}
+
+input.addEventListener(
+"input",
+syncBtn
+);
+
+syncBtn();
 
 btn.addEventListener(
 "click",
@@ -55,36 +76,30 @@ btn.disabled
 return;
 }
 
-const ok =
-window.confirm(
-"Удалить все рисунки всех пользователей из Supabase?\n\n" +
-"Будут очищены таблица user_drawings и legacy JSON в user_settings.\n" +
-"Действие необратимо."
-);
-
 if(
-!ok
-){
-return;
-}
-
-const typed =
-window.prompt(
-`Введите ${CONFIRM_PHRASE} для подтверждения:`
-);
-
-if(
-typed !==
+input.value.trim() !==
 CONFIRM_PHRASE
 ){
 if(
 statusEl
 ){
 statusEl.textContent =
-"Отменено: неверная фраза подтверждения.";
+`Введите в поле: ${CONFIRM_PHRASE}`;
 statusEl.style.color =
 "#fca5a5";
 }
+return;
+}
+
+const ok =
+window.confirm(
+"Удалить все рисунки всех пользователей из Supabase?\n\n" +
+"Действие необратимо."
+);
+
+if(
+!ok
+){
 return;
 }
 
@@ -187,6 +202,10 @@ statusEl.style.color =
 "#86efac";
 }
 
+input.value =
+"";
+syncBtn();
+
 }catch(
 err
 ){
@@ -210,8 +229,7 @@ statusEl.style.color =
 }
 
 }finally{
-btn.disabled =
-false;
+syncBtn();
 
 }
 

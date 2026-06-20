@@ -13,7 +13,7 @@
 <link rel="stylesheet" href="/css/common.css?v=27">
 <link rel="stylesheet" href="/css/screener.css?v=34">
 <link rel="stylesheet" href="/css/site-mobile-nav.css?v=4">
-<link rel="stylesheet" href="/css/system-admin.css?v=7">
+<link rel="stylesheet" href="/css/system-admin.css?v=8">
 
 </head>
 
@@ -145,9 +145,14 @@ Safari → <code>api.bybit.com</code>; Chrome / Яндекс → <code>railway.a
 Требуется <code>SYSTEM_ADMIN_EMAIL</code> на Railway (тот же email, что для доступа к этой странице).
 Локальные рисунки в браузерах пользователей не затрагиваются — только облако.
 </p>
+<label class="system-admin-purge-confirm" for="system-purge-all-drawings-confirm">
+<span class="system-admin-purge-confirm-label">Подтверждение: скопируйте в поле текст</span>
+<code class="system-admin-purge-phrase" id="system-purge-confirm-phrase">PURGE_ALL_DRAWINGS</code>
+<input type="text" class="system-admin-purge-input" id="system-purge-all-drawings-confirm" autocomplete="off" spellcheck="false" placeholder="PURGE_ALL_DRAWINGS"/>
+</label>
 <p id="system-drawings-purge-status" class="system-admin-status" aria-live="polite"></p>
 <div class="system-admin-actions">
-<button type="button" class="system-admin-btn system-admin-btn-danger" id="system-purge-all-drawings-btn">
+<button type="button" class="system-admin-btn system-admin-btn-danger" id="system-purge-all-drawings-btn" disabled>
 Удалить все рисунки всех пользователей
 </button>
 </div>

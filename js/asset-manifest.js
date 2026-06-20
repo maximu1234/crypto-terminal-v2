@@ -268,7 +268,7 @@ Object.freeze({
 "system-admin-page.js":
 5,
 "system-admin-drawings-purge.js":
-1,
+2,
 "system-admin-access.js":
 3,
 "supabase-usage-prefs.js":
@@ -302,7 +302,7 @@ Object.freeze({
 "trade-calculator.css":
 5,
 "system-admin.css":
-7
+8
 
 });
 

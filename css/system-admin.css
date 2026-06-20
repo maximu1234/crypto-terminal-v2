@@ -222,6 +222,50 @@ opacity:0.55;
 cursor:not-allowed;
 }
 
+.system-admin-purge-confirm{
+display:flex;
+flex-direction:column;
+gap:8px;
+margin:16px 0 4px;
+}
+
+.system-admin-purge-confirm-label{
+font-size:13px;
+color:#d1d5db;
+}
+
+.system-admin-purge-phrase{
+display:inline-block;
+width:fit-content;
+padding:6px 10px;
+border-radius:6px;
+background:#0f141a;
+border:1px solid #374151;
+color:#fbbf24;
+font-size:13px;
+font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+user-select:all;
+cursor:text;
+}
+
+.system-admin-purge-input{
+width:100%;
+max-width:360px;
+box-sizing:border-box;
+padding:8px 10px;
+border-radius:8px;
+border:1px solid #374151;
+background:#0f141a;
+color:#fff;
+font-size:14px;
+font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.system-admin-purge-input:focus{
+outline:none;
+border-color:#f59e0b;
+}
+
 .system-admin-status{
 margin-top:12px;
 font-size:13px;

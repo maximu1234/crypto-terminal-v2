@@ -28,7 +28,7 @@ bindSupabaseUsagePrefsForm
 
 import {
 bindDrawingsGlobalPurge
-} from "./system-admin-drawings-purge.js?v=1";
+} from "./system-admin-drawings-purge.js?v=2";
 
 import {
 resetBybitEndpoints
