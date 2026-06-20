@@ -64,6 +64,8 @@ reject
 }
 );
 
+}
+
 function startLocalSiteServer({
 bundleRoot,
 remoteApiOrigin
