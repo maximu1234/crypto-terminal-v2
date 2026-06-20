@@ -282,7 +282,7 @@ Object.freeze({
 "critical-shell.css":
 5,
 "common.css":
-27,
+28,
 "screener.css":
 34,
 "terminal.css":

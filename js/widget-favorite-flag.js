@@ -13,7 +13,7 @@ FLAG_TITLES
 import {
 persistFavoritesToCloud,
 onFavoritesRemoteUpdate
-} from "./cloud-sync.js?v=34";
+} from "./cloud-sync.js?v=35";
 
 let favorites =
 loadFavoritesGroups();
