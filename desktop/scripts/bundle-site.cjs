@@ -78,6 +78,8 @@ true
 }
 );
 
+}
+
 function copyFile(
 src,
 dest
@@ -204,31 +206,6 @@ envFile
 )
 ){
 return;
-}
-
-const example =
-path.join(
-REPO_ROOT,
-"js",
-"supabase-env.example.js"
-);
-
-if(
-fs.existsSync(
-example
-)
-){
-console.warn(
-"bundle-site: supabase-env.js missing — copying example stub"
-);
-copyFile(
-example,
-path.join(
-OUT,
-"js",
-"supabase-env.js"
-)
-);
 }
 
 }
