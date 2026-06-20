@@ -56,6 +56,12 @@ null;
 let updateLifecycle =
 "idle";
 
+let userInitiatedUpdate =
+false;
+
+let mainWindowShown =
+false;
+
 function canCheckForUpdates(){
 
 return (
@@ -297,7 +303,13 @@ message:
 version:
 info.version
 });
+if(
+userInitiatedUpdate
+){
+userInitiatedUpdate =
+false;
 scheduleInstall();
+}
 }
 );
 
@@ -386,7 +398,36 @@ err
 
 }
 
+function revealMainWindow(){
+
+if(
+!mainWindow ||
+mainWindow.isDestroyed()
+){
+return;
+}
+
+if(
+!mainWindow.isVisible()
+){
+mainWindow.show();
+}
+
+if(
+!mainWindowShown
+){
+mainWindowShown =
+true;
+mainWindow.maximize();
+}
+
+mainWindow.focus();
+}
+
 function createWindow(){
+
+mainWindowShown =
+false;
 
 mainWindow =
 new BrowserWindow({
@@ -399,7 +440,7 @@ minWidth:
 minHeight:
 640,
 show:
-false,
+true,
 title:
 "Multichart",
 backgroundColor:
@@ -436,8 +477,28 @@ mainWindow.webContents.getUserAgent()
 mainWindow.once(
 "ready-to-show",
 ()=>{
-mainWindow?.maximize();
-mainWindow?.show();
+revealMainWindow();
+}
+);
+
+setTimeout(
+()=>{
+revealMainWindow();
+},
+4000
+);
+
+mainWindow.webContents.on(
+"did-fail-load",
+(
+_event,
+code,
+desc
+)=>{
+log.error(
+`Window load failed: ${code} ${desc}`
+);
+revealMainWindow();
 }
 );
 
@@ -779,6 +840,8 @@ action:
 };
 }
 try{
+userInitiatedUpdate =
+true;
 updateLifecycle =
 "checking";
 broadcastUpdate({
@@ -833,6 +896,8 @@ log.error(
 "performUpdate failed:",
 err
 );
+userInitiatedUpdate =
+false;
 updateLifecycle =
 "idle";
 broadcastUpdate({
@@ -879,6 +944,8 @@ reason:
 };
 }
 try{
+userInitiatedUpdate =
+true;
 updateLifecycle =
 "downloading";
 broadcastUpdate({
@@ -899,6 +966,8 @@ log.error(
 "downloadUpdate failed:",
 err
 );
+userInitiatedUpdate =
+false;
 updateLifecycle =
 "idle";
 broadcastUpdate({
@@ -964,6 +1033,13 @@ createWindow();
 app.on(
 "activate",
 ()=>{
+if(
+mainWindow &&
+!mainWindow.isDestroyed()
+){
+revealMainWindow();
+return;
+}
 if(
 BrowserWindow.getAllWindows().length ===
 0
