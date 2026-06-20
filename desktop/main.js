@@ -161,6 +161,8 @@ minWidth:
 960,
 minHeight:
 640,
+show:
+false,
 title:
 "Multichart",
 backgroundColor:
@@ -183,6 +185,14 @@ spellcheck:
 false
 }
 });
+
+mainWindow.once(
+"ready-to-show",
+()=>{
+mainWindow?.maximize();
+mainWindow?.show();
+}
+);
 
 mainWindow.webContents.setWindowOpenHandler(
 ({
