@@ -8,8 +8,9 @@ onCloudSyncChange,
 signInWithEmailOtp,
 signOutCloud,
 recoverAuthSessionFromUrl,
+completeAuthFromCallbackUrl,
 hasAuthCallbackInUrl
-} from "./cloud-sync.js?v=34";
+} from "./cloud-sync.js?v=35";
 
 import {
 isSupabaseConfigured
@@ -40,6 +41,71 @@ getTelegramBotUrl
 
 let cloudEnvConfigured = false;
 let cloudSdkError = "";
+
+function isDesktopShell(){
+
+return !!window.cryptoTerminalDesktop?.isDesktop;
+
+}
+
+let desktopAuthBound =
+false;
+
+function bindDesktopAuthCallback(){
+
+const api =
+window.cryptoTerminalDesktop;
+
+if(
+!api?.onAuthCallback ||
+desktopAuthBound
+){
+return;
+}
+
+desktopAuthBound =
+true;
+
+api.onAuthCallback(
+url=>{
+
+void (
+async()=>{
+
+try{
+const result =
+await completeAuthFromCallbackUrl(
+url
+);
+
+if(
+result.ok
+){
+cloudSdkError =
+"";
+}else{
+cloudSdkError =
+result.message ||
+"Не удалось войти по ссылке.";
+}
+
+}catch(
+err
+){
+cloudSdkError =
+err?.message ||
+"Не удалось войти по ссылке.";
+}
+
+refreshAuthUi();
+
+}
+)();
+
+}
+);
+
+}
 
 function pageHasCloudAuth(){
 
@@ -812,6 +878,11 @@ wrap.innerHTML = `
 <input type="email" id="${emailInputId}" name="email" class="cloud-auth-email" placeholder="email" autocomplete="email" inputmode="email"/>
 <button type="button" class="cloud-auth-send">Войти</button>
 </div>
+<div class="cloud-auth-desktop-link hidden">
+<p class="cloud-auth-desktop-link-help">Если ссылка открылась в браузере — скопируйте адрес страницы и вставьте:</p>
+<input type="text" class="cloud-auth-paste-link" placeholder="https://… или multichart://…" autocomplete="off" spellcheck="false"/>
+<button type="button" class="cloud-auth-paste-submit">Войти по ссылке</button>
+</div>
 <div class="cloud-auth-logged-in hidden">
 <span class="cloud-auth-email-label"></span>
 <button type="button" class="cloud-auth-out">Выйти</button>
@@ -849,6 +920,12 @@ const emailInput =
 wrap.querySelector(".cloud-auth-email");
 const sendBtn =
 wrap.querySelector(".cloud-auth-send");
+const desktopLinkWrap =
+wrap.querySelector(".cloud-auth-desktop-link");
+const pasteLinkInput =
+wrap.querySelector(".cloud-auth-paste-link");
+const pasteLinkBtn =
+wrap.querySelector(".cloud-auth-paste-submit");
 const outBtn =
 wrap.querySelector(".cloud-auth-out");
 const hintEl =
@@ -1030,6 +1107,9 @@ if(isAuthUiLoggedIn()){
 
 loggedOut.classList.add("hidden");
 loggedIn.classList.remove("hidden");
+desktopLinkWrap?.classList.add(
+"hidden"
+);
 emailLabel.textContent =
 getAuthUiEmail() || "Аккаунт";
 
@@ -1043,6 +1123,10 @@ void refreshTelegramOne();
 
 loggedIn.classList.add("hidden");
 loggedOut.classList.remove("hidden");
+desktopLinkWrap?.classList.toggle(
+"hidden",
+!isDesktopShell()
+);
 if(emailInput){
 emailInput.value =
 getAuthUiEmail() || "";
@@ -1094,10 +1178,22 @@ try{
 const redirectTo =
 await signInWithEmailOtp(email);
 
+if(
+isDesktopShell()
+){
+desktopLinkWrap?.classList.remove(
+"hidden"
+);
+setHint(
+"Ссылка отправлена. Нажмите на ссылку в письме на этом Mac — откроется Multichart. Если откроется браузер, скопируйте адрес и вставьте ниже.",
+false
+);
+}else{
 setHint(
 `Ссылка отправлена. Откройте письмо на этом устройстве. После входа откроется: ${redirectTo}`,
 false
 );
+}
 
 }catch(err){
 
@@ -1113,6 +1209,93 @@ sendBtn.disabled = false;
 };
 
 sendBtn?.addEventListener("click", submitAuthEmail);
+
+const submitPastedAuthLink = async()=>{
+
+const raw =
+pasteLinkInput?.value?.trim();
+
+if(
+!raw
+){
+setHint(
+"Вставьте ссылку из письма или из адресной строки браузера.",
+true
+);
+return;
+}
+
+pasteLinkBtn.disabled =
+true;
+setHint(
+"Входим по ссылке…",
+false
+);
+
+try{
+const result =
+await completeAuthFromCallbackUrl(
+raw
+);
+
+if(
+result.ok
+){
+cloudSdkError =
+"";
+setHint(
+"Вход выполнен.",
+false
+);
+pasteLinkInput.value =
+"";
+}else{
+setHint(
+result.message ||
+"Не удалось войти по ссылке.",
+true
+);
+}
+
+}catch(
+err
+){
+setHint(
+err?.message ||
+"Не удалось войти по ссылке.",
+true
+);
+}
+
+pasteLinkBtn.disabled =
+false;
+refreshAuthUi();
+
+};
+
+pasteLinkBtn?.addEventListener(
+"click",
+()=>{
+void submitPastedAuthLink();
+}
+);
+
+pasteLinkInput?.addEventListener(
+"keydown",
+e=>{
+
+if(
+e.key !==
+"Enter"
+){
+return;
+}
+
+e.preventDefault();
+void submitPastedAuthLink();
+
+}
+);
 
 emailInput?.addEventListener(
 "keydown",
@@ -1342,6 +1525,8 @@ let initPromise = null;
 let authUiMounted = false;
 
 async function initAuthUiInternal(){
+
+bindDesktopAuthCallback();
 
 try{
 cloudEnvConfigured =

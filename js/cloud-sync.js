@@ -2055,17 +2055,177 @@ return `${origin}${path}`;
 
 }
 
-export function hasAuthCallbackInUrl(){
+const DESKTOP_AUTH_CALLBACK =
+"multichart://auth/callback";
 
-const hash =
-window.location.hash || "";
-const search =
-window.location.search || "";
+const DESKTOP_AUTH_DEEP_LINK_MIN =
+"1.0.6";
+
+function parseAppSemver(
+version
+){
+
+const parts =
+String(
+version ||
+"0"
+).split(
+"."
+).map(
+n=>
+parseInt(
+n,
+10
+) ||
+0
+);
+
+return {
+major:
+parts[
+0
+] ||
+0,
+minor:
+parts[
+1
+] ||
+0,
+patch:
+parts[
+2
+] ||
+0
+};
+
+}
+
+function isAtLeastAppVersion(
+version,
+minVersion
+){
+
+const a =
+parseAppSemver(
+version
+);
+const b =
+parseAppSemver(
+minVersion
+);
+
+if(
+a.major !==
+b.major
+){
+return a.major >
+b.major;
+}
+
+if(
+a.minor !==
+b.minor
+){
+return a.minor >
+b.minor;
+}
+
+return a.patch >=
+b.patch;
+
+}
+
+export async function buildAuthRedirectUrlAsync(){
+
+const desktop =
+window.cryptoTerminalDesktop;
+
+if(
+desktop?.isDesktop
+){
+
+try{
+const info =
+await desktop.getVersion();
+
+if(
+isAtLeastAppVersion(
+info?.app,
+DESKTOP_AUTH_DEEP_LINK_MIN
+)
+){
+return DESKTOP_AUTH_CALLBACK;
+}
+
+const origin =
+info?.url
+? new URL(
+info.url
+).origin
+: "https://crypto-terminal-v2.vercel.app";
+
+return `${origin}/`;
+
+}catch{
+return DESKTOP_AUTH_CALLBACK;
+}
+
+}
+
+return buildAuthRedirectUrl();
+
+}
+
+function hasAuthCallbackInParts(
+search,
+hash
+){
 
 return (
-hash.includes("access_token=") ||
-hash.includes("error=") ||
-search.includes("code=")
+(hash ||
+"").includes(
+"access_token="
+) ||
+(hash ||
+"").includes(
+"error="
+) ||
+(search ||
+"").includes(
+"code="
+)
+);
+
+}
+
+export function hasAuthCallbackInUrl(
+rawUrl
+){
+
+if(
+rawUrl
+){
+
+try{
+const parsed =
+new URL(
+String(
+rawUrl
+).trim()
+);
+return hasAuthCallbackInParts(
+parsed.search,
+parsed.hash
+);
+}catch{
+return false;
+}
+
+}
+
+return hasAuthCallbackInParts(
+window.location.search,
+window.location.hash
 );
 
 }
@@ -2089,10 +2249,18 @@ clean
 
 }
 
-function readAuthHashParams(){
+function readAuthHashParams(
+hashFromUrl
+){
 
 const raw =
-(window.location.hash || "").replace(
+(
+hashFromUrl !==
+undefined
+? hashFromUrl
+: window.location.hash ||
+""
+).replace(
 /^#/,
 ""
 );
@@ -2126,19 +2294,61 @@ error: ""
 }
 
 async function recoverSessionFromAuthUrl(
-sb
+sb,
+rawUrl
 ){
+
+let search =
+"";
+let hash =
+"";
+
+if(
+rawUrl
+){
+
+try{
+const parsed =
+new URL(
+String(
+rawUrl
+).trim()
+);
+search =
+parsed.search ||
+"";
+hash =
+parsed.hash ||
+"";
+}catch{
+return null;
+}
+
+}else{
+search =
+window.location.search ||
+"";
+hash =
+window.location.hash ||
+"";
+}
 
 if(
 !sb ||
-!hasAuthCallbackInUrl()
+!hasAuthCallbackInParts(
+search,
+hash
+)
 ){
 return null;
 }
 
+const fromExternal =
+!!rawUrl;
+
 const searchParams =
 new URLSearchParams(
-window.location.search || ""
+search
 );
 const code =
 searchParams.get("code");
@@ -2156,13 +2366,20 @@ error.message
 return null;
 }
 
+if(
+!fromExternal
+){
 clearAuthCallbackFromUrl();
+}
+
 return data.session || null;
 
 }
 
 const hashParams =
-readAuthHashParams();
+readAuthHashParams(
+hash
+);
 
 if(
 hashParams?.error
@@ -2171,7 +2388,11 @@ console.warn(
 "[auth] magic link:",
 hashParams.error
 );
+if(
+!fromExternal
+){
 clearAuthCallbackFromUrl();
+}
 return null;
 }
 
@@ -2202,7 +2423,10 @@ try{
 const session =
 await trySetSession();
 
-if(session){
+if(
+session &&
+!fromExternal
+){
 clearAuthCallbackFromUrl();
 }
 
@@ -2228,7 +2452,10 @@ try{
 const session =
 await trySetSession();
 
-if(session){
+if(
+session &&
+!fromExternal
+){
 clearAuthCallbackFromUrl();
 }
 
@@ -2243,6 +2470,92 @@ return null;
 }
 
 }
+
+}
+
+export async function completeAuthFromCallbackUrl(
+rawUrl
+){
+
+if(
+!rawUrl ||
+typeof rawUrl !==
+"string"
+){
+return {
+ok:
+false,
+message:
+"Пустая ссылка"
+};
+}
+
+const trimmed =
+rawUrl.trim();
+
+if(
+!(await isSupabaseConfigured())
+){
+return {
+ok:
+false,
+message:
+"Supabase не настроен"
+};
+}
+
+if(
+!hasAuthCallbackInUrl(
+trimmed
+)
+){
+return {
+ok:
+false,
+message:
+"В ссылке нет данных для входа. Скопируйте URL после перехода по письму (с code= или access_token)."
+};
+}
+
+const sb =
+await getSupabase();
+
+if(
+!sb
+){
+return {
+ok:
+false,
+message:
+"Supabase недоступен"
+};
+}
+
+const recovered =
+await recoverSessionFromAuthUrl(
+sb,
+trimmed
+);
+
+if(
+!recovered
+){
+return {
+ok:
+false,
+message:
+"Ссылка устарела или уже использована. Запросите новую."
+};
+}
+
+await applySession(
+recovered
+);
+
+return {
+ok:
+true
+};
 
 }
 
@@ -2285,7 +2598,7 @@ throw new Error("Supabase не настроен");
 }
 
 const redirectTo =
-buildAuthRedirectUrl();
+await buildAuthRedirectUrlAsync();
 
 const { error } =
 await sb.auth.signInWithOtp({

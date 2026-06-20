@@ -27,7 +27,7 @@ canSetBlueFlag
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=27";
+} from "./auth-ui.js?v=28";
 
 import {
 persistFavoritesToCloud,

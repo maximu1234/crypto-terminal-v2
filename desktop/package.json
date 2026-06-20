@@ -1,7 +1,7 @@
 {
   "name": "multichart-desktop",
   "productName": "Multichart",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Multichart desktop shell for macOS (remote UI + local auto-update)",
   "main": "main.js",
   "author": "Multichart",
@@ -65,6 +65,14 @@
       "owner": "maximu1234",
       "repo": "crypto-terminal-v2",
       "releaseType": "release"
-    }
+    },
+    "protocols": [
+      {
+        "name": "Multichart Auth",
+        "schemes": [
+          "multichart"
+        ]
+      }
+    ]
   }
 }

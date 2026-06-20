@@ -57,7 +57,7 @@ FLAG_TITLES
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=27";
+} from "./auth-ui.js?v=28";
 
 import {
 ensureSettled,
@@ -1842,7 +1842,7 @@ toggle?.setAttribute(
 
 function openScreenerNav(){
 
-void import("./auth-ui.js?v=27").then(m=>{
+void import("./auth-ui.js?v=28").then(m=>{
 m.closeCloudSettingsDropdown?.();
 }).catch(()=>{});
 

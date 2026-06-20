@@ -44,6 +44,13 @@ process.env.CRYPTO_TERMINAL_URL ||
 const PARTITION =
 "persist:multichart-desktop";
 
+const AUTH_PROTOCOL =
+"multichart";
+
+/** @type {string | null} */
+let pendingAuthCallbackUrl =
+null;
+
 /** @type {BrowserWindow | null} */
 let mainWindow =
 null;
@@ -345,6 +352,92 @@ null;
 
 }
 
+function isAuthCallbackUrl(
+url
+){
+
+return (
+typeof url ===
+"string" &&
+(
+url.startsWith(
+`${AUTH_PROTOCOL}://`
+) ||
+url.includes(
+"access_token="
+) ||
+url.includes(
+"code="
+)
+)
+);
+
+}
+
+function deliverAuthCallbackUrl(
+url
+){
+
+if(
+!isAuthCallbackUrl(
+url
+)
+){
+return;
+}
+
+log.info(
+"Auth callback URL received"
+);
+
+const send =
+()=>{
+
+if(
+!mainWindow ||
+mainWindow.isDestroyed()
+){
+pendingAuthCallbackUrl =
+url;
+return;
+}
+
+pendingAuthCallbackUrl =
+null;
+
+mainWindow.webContents.send(
+"desktop:auth-callback",
+url
+);
+revealMainWindow();
+
+};
+
+if(
+!mainWindow ||
+mainWindow.isDestroyed()
+){
+pendingAuthCallbackUrl =
+url;
+return;
+}
+
+if(
+mainWindow.webContents.isLoading()
+){
+pendingAuthCallbackUrl =
+url;
+mainWindow.webContents.once(
+"did-finish-load",
+send
+);
+return;
+}
+
+send();
+
+}
+
 function tuneDesktopSession(
 ses
 ){
@@ -561,6 +654,22 @@ APP_URL
 mainWindow.webContents.once(
 "did-finish-load",
 ()=>{
+
+if(
+pendingAuthCallbackUrl &&
+mainWindow &&
+!mainWindow.isDestroyed()
+){
+const url =
+pendingAuthCallbackUrl;
+pendingAuthCallbackUrl =
+null;
+mainWindow.webContents.send(
+"desktop:auth-callback",
+url
+);
+revealMainWindow();
+}
 
 if(
 !app.isPackaged
@@ -1021,8 +1130,128 @@ true
 
 }
 
+function registerAuthProtocol(){
+
+if(
+process.defaultApp
+){
+
+if(
+process.argv.length >=
+2
+){
+app.setAsDefaultProtocolClient(
+AUTH_PROTOCOL,
+process.execPath,
+[
+path.resolve(
+process.argv[
+1
+]
+)
+]
+);
+}
+
+return;
+}
+
+if(
+!app.isDefaultProtocolClient(
+AUTH_PROTOCOL
+)
+){
+app.setAsDefaultProtocolClient(
+AUTH_PROTOCOL
+);
+}
+
+}
+
+const gotSingleInstanceLock =
+app.requestSingleInstanceLock();
+
+if(
+!gotSingleInstanceLock
+){
+
+app.quit();
+
+}else{
+
+app.on(
+"second-instance",
+(
+_event,
+argv
+)=>{
+
+const url =
+argv.find(
+arg=>
+arg.startsWith(
+`${AUTH_PROTOCOL}://`
+)
+);
+
+if(
+url
+){
+deliverAuthCallbackUrl(
+url
+);
+return;
+}
+
+if(
+mainWindow &&
+!mainWindow.isDestroyed()
+){
+revealMainWindow();
+}
+
+}
+);
+
+if(
+process.platform ===
+"darwin"
+){
+
+app.on(
+"open-url",
+(
+event,
+url
+)=>{
+event.preventDefault();
+deliverAuthCallbackUrl(
+url
+);
+}
+);
+
+}
+
+const startupAuthUrl =
+process.argv.find(
+arg=>
+arg.startsWith(
+`${AUTH_PROTOCOL}://`
+)
+);
+
+if(
+startupAuthUrl
+){
+pendingAuthCallbackUrl =
+startupAuthUrl;
+}
+
 app.whenReady().then(
 ()=>{
+
+registerAuthProtocol();
 
 startPowerSaveBlocker();
 
@@ -1064,6 +1293,8 @@ createWindow();
 
 }
 );
+
+}
 
 app.on(
 "before-quit",

@@ -62,6 +62,44 @@ installUpdate:()=>
 ipcRenderer.invoke(
 "app:installUpdate"
 ),
+onAuthCallback:(
+callback
+)=>{
+if(
+typeof callback !==
+"function"
+){
+return ()=>{};
+}
+const fn =
+(
+_event,
+url
+)=>{
+try{
+callback(
+url
+);
+}catch(
+err
+){
+console.warn(
+"desktop auth listener:",
+err
+);
+}
+};
+ipcRenderer.on(
+"desktop:auth-callback",
+fn
+);
+return ()=>{
+ipcRenderer.removeListener(
+"desktop:auth-callback",
+fn
+);
+};
+},
 onUpdateStatus:(
 callback
 )=>{

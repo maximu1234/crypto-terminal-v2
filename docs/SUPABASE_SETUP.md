@@ -23,7 +23,7 @@
 2. **Confirm email** — выключить (удобнее magic link)
 3. **URL Configuration**:
    - **Site URL** — **production**-URL сайта (не `127.0.0.1`), например `https://crypto-terminal-v2.vercel.app`
-   - **Redirect URLs** — production, preview, localhost (см. `PRODUCTION_DEPLOY.md`)
+   - **Redirect URLs** — production, preview, localhost (см. `PRODUCTION_DEPLOY.md`), плюс `multichart://auth/callback` для desktop .app (1.0.6+)
 
 ### Имя отправителя «Multichart» (не «Supabase Auth»)
 

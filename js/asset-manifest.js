@@ -53,7 +53,7 @@ Object.freeze({
 "release-marker.js":
 11,
 "site-boot.js":
-87,
+88,
 "desktop-app-ui.js":
 2,
 "suppress-native-context-menu.js":
@@ -194,7 +194,7 @@ Object.freeze({
 
 /* ── JS: cloud / auth ── */
 "cloud-sync.js":
-34,
+35,
 "cloud-sync-throttle.js":
 3,
 "page-routes.js":
@@ -212,7 +212,7 @@ Object.freeze({
 "auth-storage.js":
 3,
 "auth-ui.js":
-27,
+28,
 "alert-auth-cache.js":
 7,
 "favorites.js":
