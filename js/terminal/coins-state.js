@@ -41,10 +41,37 @@ typeof globalThis.window !==
 
 }
 
-export const isTradePage =
+function isTradePath(){
+
+const path =
+pagePathname();
+
+if(
 /\/trade(\.html)?\/?$/i.test(
-pagePathname()
+path
+)
+){
+return true;
+}
+
+if(
+!/\/coins(\.html)?\/?$/i.test(
+path
+)
+){
+return false;
+}
+
+return !!(
+typeof globalThis !==
+"undefined" &&
+globalThis.window?.cryptoTerminalDesktop?.isDesktop
 );
+
+}
+
+export const isTradePage =
+isTradePath();
 
 export const isCoinsPage =
 typeof globalThis !==

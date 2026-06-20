@@ -27,9 +27,9 @@ Object.freeze({
 "asset-manifest.js":
 2,
 "coins-page-boot.js":
-14,
-"trade-page-boot.js":
-10,
+15,
+"trade-desktop-boot.js":
+1,
 "trade-open-positions.js":
 1,
 "trade-exchange-settings.js":

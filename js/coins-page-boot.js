@@ -1,5 +1,5 @@
 /**
- * Загрузка /coins: для Яндекса — <script type="module">, не import().
+ * Загрузка /coins — web: графики; desktop .app: + торговый слой на той же странице.
  */
 import {
 waitForSiteCssReady
@@ -15,6 +15,12 @@ CHART_PAGE_ENTRY,
 TERMINAL_ENTRY,
 jsUrl
 } from "./asset-manifest.js?v=2";
+
+import {
+initTradeDesktopBeforeChart,
+initTradeDesktopAfterChart,
+isDesktopTradeMode
+} from "./trade-desktop-boot.js?v=1";
 
 const IS_YANDEX =
 /YaBrowser|Yandex/i.test(
@@ -195,7 +201,10 @@ async function boot(){
 console.info(
 "[coins boot]",
 COINS_CHART_BUILD,
-CHART_ENTRY
+CHART_ENTRY,
+isDesktopTradeMode()
+? "+ trade"
+: ""
 );
 
 if(
@@ -212,8 +221,10 @@ return;
 }
 
 await waitForSiteCssReady();
+await initTradeDesktopBeforeChart();
 await loadLightweightCharts();
 await loadChartEntryWithRetry();
+await initTradeDesktopAfterChart();
 
 try{
 sessionStorage.removeItem(
@@ -221,6 +232,12 @@ sessionStorage.removeItem(
 );
 sessionStorage.removeItem(
 "coins_boot_retry_v2"
+);
+sessionStorage.removeItem(
+"trade_boot_retry_v1"
+);
+sessionStorage.removeItem(
+"trade_boot_retry_v2"
 );
 }catch{
 /* ignore */

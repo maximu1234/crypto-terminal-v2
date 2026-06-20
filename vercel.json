@@ -57,19 +57,6 @@
       ]
     },
     {
-      "source": "/js/trade-page-boot.js",
-      "headers": [
-        {
-          "key": "Content-Type",
-          "value": "application/javascript; charset=utf-8"
-        },
-        {
-          "key": "Cache-Control",
-          "value": "no-cache, must-revalidate"
-        }
-      ]
-    },
-    {
       "source": "/js/coins-page-boot.js",
       "headers": [
         {

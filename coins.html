@@ -19,6 +19,11 @@
 <link rel="stylesheet" href="/css/terminal.css?v=140">
 <link rel="stylesheet" href="/css/dashboard.css?v=42">
 <link rel="stylesheet" href="/css/coins.css?v=43">
+<script>
+if(window.cryptoTerminalDesktop&&window.cryptoTerminalDesktop.isDesktop){
+document.documentElement.classList.add("trade-desktop");
+}
+</script>
 
 <script src="/vendor/lightweight-charts.standalone.production.js"></script>
 <link rel="modulepreload" href="/js/charts-lib-boot.js?v=3" crossorigin>
@@ -125,7 +130,9 @@
 
 <script>
 (function(){
-function coinsTabTitle(sym){
+var isDesktop=!!(window.cryptoTerminalDesktop&&window.cryptoTerminalDesktop.isDesktop);
+var prefsKey=isDesktop?"trade_page_prefs_v1":"coins_page_prefs_v1";
+function tabTitle(sym){
 if(!sym){
 return;
 }
@@ -143,11 +150,11 @@ if(!/\.P$/i.test(sym)){
 sym+=".P";
 }
 el.textContent=sym;
-coinsTabTitle(sym);
+tabTitle(sym);
 return;
 }
 try{
-var raw=localStorage.getItem("coins_page_prefs_v1");
+var raw=localStorage.getItem(prefsKey);
 if(!raw){
 return;
 }
@@ -162,7 +169,7 @@ if(!/\.P$/i.test(saved)){
 saved+=".P";
 }
 el.textContent=saved;
-coinsTabTitle(saved);
+tabTitle(saved);
 }
 }catch(e){}
 })();
@@ -337,7 +344,7 @@ Symbol
 
 <div id="coins-chart-status" class="coins-chart-status hidden" aria-live="polite"></div>
 
-<script src="/js/coins-page-boot.js?v=14" type="module"></script>
+<script src="/js/coins-page-boot.js?v=15" type="module"></script>
 
 </body>
 </html>

@@ -37,8 +37,29 @@ return pathMatches(
 
 export function isTradePage(){
 
-return pathMatches(
+const path =
+pagePath();
+
+if(
+pathMatches(
 /\/trade(\.html)?\/?$/i
+)
+){
+return true;
+}
+
+if(
+!pathMatches(
+/\/coins(\.html)?\/?$/i
+)
+){
+return false;
+}
+
+return !!(
+typeof globalThis !==
+"undefined" &&
+globalThis.window?.cryptoTerminalDesktop?.isDesktop
 );
 
 }

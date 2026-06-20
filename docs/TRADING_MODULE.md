@@ -1,6 +1,6 @@
 # Торговый модуль (desktop)
 
-**Статус:** MVP готов · **Эталон:** `metka-29` · **UI:** `/trade.html` (**только desktop .app**)
+**Статус:** MVP · **Эталон:** `metka-29` · **UI:** `/coins.html` (**desktop .app** — торговый слой; **web** — без торговли)
 
 Торговля **только Multichart.app на Mac** (широкое окно): не Vercel, не iPad, не смартфон.
 
@@ -27,7 +27,7 @@
 ## Архитектура
 
 ```
-Renderer (/trade.html)
+Renderer (/coins.html — desktop)
   └─ preload → cryptoTerminalDesktop.trading.*
        └─ ipcMain (desktop/trading/register-ipc.cjs)
             ├─ credentials.cjs  → safeStorage (Keychain)
@@ -44,8 +44,9 @@ Renderer (/trade.html)
 | `desktop/trading/bybit-rest.cjs` | REST client |
 | `desktop/trading/register-ipc.cjs` | IPC handlers |
 | `desktop/trading/credentials.cjs` | Keychain |
-| `trade.html` | Торговая страница |
-| `js/trade-page-boot.js` | Boot chain |
+| `coins.html` | Монеты (+ торговля в desktop .app) |
+| `js/coins-page-boot.js` | Boot: chart + условный trade-слой |
+| `js/trade-desktop-boot.js` | Trade CSS + init (только desktop) |
 | `js/trade-exchange-settings.js` | Bybit dropdown + ping |
 | `js/trade-market-entry.js` | Buy/Sell по рынку |
 | `js/trade-volume-presets.js` | Объёмы USDT |
