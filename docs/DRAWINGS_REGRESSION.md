@@ -1,6 +1,6 @@
 # Регрессия рисования — чеклист перед wiring (Фаза 0)
 
-**База отката:** `git checkout metka-16` (текущий эталон) или `metka-15`
+**База отката:** `git checkout metka-27` (текущий эталон) или `metka-26`
 
 Проходить **до** и **после** каждой фазы refactor (`draw-hit`, `draw-render`, `drawings-tablet-input`, cloud).
 

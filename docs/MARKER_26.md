@@ -2,7 +2,7 @@
 
 **Тег:** `metka-26` · **Коммит:** `git rev-parse metka-26`
 
-**Текущий эталон отката.** Предыдущий: [MARKER_25.md](./MARKER_25.md) (`metka-25`).
+**Предыдущий эталон отката.** Текущая: [MARKER_27.md](./MARKER_27.md) (`metka-27`).
 
 Проверено локально: `/coins` — график, инструменты рисования, edit/drag, pan/zoom, price-scale labels, Plus-алерты; консоль без SyntaxError в drawings-модулях.
 
@@ -60,8 +60,8 @@
 
 ```bash
 git fetch --tags
-git checkout metka-26   # текущий
-git checkout metka-25   # до orchestrator split (persist phase 3)
+git checkout metka-27   # текущий
+git checkout metka-26   # orchestrator split (persist phase 3–10)
 ```
 
 ## Smoke

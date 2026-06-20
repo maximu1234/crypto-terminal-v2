@@ -28,29 +28,42 @@ display:none !important;
 body.coins-page .coins-tf-desktop{
 display:flex;
 align-items:center;
-gap:16px;
+gap:2px;
 flex:0 0 auto;
-padding:0 16px 0 0;
-margin-right:0;
+padding:0 12px;
+margin:0;
+border-right:1px solid #787b86;
 }
 
 body.coins-page .coins-tf-desktop .tf-btn{
+box-sizing:border-box;
+display:inline-flex;
+align-items:center;
+justify-content:center;
+min-width:0;
+height:40px;
+padding:0 12px;
+margin:0;
+border:none;
+border-radius:4px;
+background:transparent;
 font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
 font-size:13px;
 font-weight:400;
 line-height:16px;
-padding:0;
-border-radius:4px;
 color:#d1d4dc;
 letter-spacing:0;
+cursor:pointer;
+flex-shrink:0;
+-webkit-tap-highlight-color:transparent;
 }
 
 body.coins-page .coins-tf-desktop .tf-btn:hover:not(.active){
+background:rgba(255,255,255,0.06);
 color:#f0f3fa;
 }
 
 body.coins-page .coins-tf-desktop .tf-btn.active{
-padding:4px 8px;
 background:#363a45;
 color:#fff;
 font-weight:400;
@@ -72,30 +85,50 @@ color:#fff;
 
 body.coins-page #topbar.coins-topbar #draw-toolbar.draw-toolbar-inline{
 margin-left:0;
-padding-left:16px;
-border-left:1px solid #787b86;
-gap:6px;
+padding-left:12px;
+border-left:none;
+gap:2px;
 box-sizing:border-box;
 }
 
 body.coins-page #topbar.coins-topbar #draw-toolbar.draw-toolbar-inline .draw-btn{
-width:28px;
-height:32px;
+box-sizing:border-box;
+width:34px;
+height:40px;
 padding:0;
+margin:0;
+border:none;
 border-radius:4px;
+background:transparent;
+color:#d1d4dc;
+}
+
+body.coins-page #topbar.coins-topbar #draw-toolbar.draw-toolbar-inline .draw-btn:hover:not(.active){
+background:rgba(255,255,255,0.06);
+color:#f0f3fa;
+}
+
+body.coins-page #topbar.coins-topbar #draw-toolbar.draw-toolbar-inline .draw-btn.active{
+background:#363a45;
+color:#fff;
 }
 
 body.coins-page #topbar.coins-topbar #draw-toolbar.draw-toolbar-inline .draw-btn img,
 body.coins-page #topbar.coins-topbar #draw-toolbar.draw-toolbar-inline .draw-tool-icon{
-width:20px;
-height:20px;
+width:22px;
+height:22px;
 object-fit:contain;
 object-position:center;
 }
 
 body.coins-page #topbar.coins-topbar #draw-toolbar.draw-toolbar-inline .draw-btn .draw-tool-icon--xl{
-width:37px;
-height:37px;
+width:41px;
+height:41px;
+}
+
+body.coins-page #topbar.coins-topbar #draw-toolbar.draw-toolbar-inline #draw-tool-delete:hover{
+background:rgba(239,68,68,0.18);
+color:#fecaca;
 }
 
 body.coins-page .coins-draw-desktop,
@@ -122,7 +155,7 @@ gap:8px;
 flex:0 1 auto;
 min-width:0;
 max-width:min(42vw, 260px);
-margin-right:12px;
+margin-right:0;
 padding-right:12px;
 border-right:1px solid #787b86;
 }

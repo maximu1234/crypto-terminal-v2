@@ -284,11 +284,11 @@ Object.freeze({
 "screener.css":
 34,
 "terminal.css":
-137,
+138,
 "dashboard.css":
 42,
 "coins.css":
-39,
+41,
 "terminal-page.css":
 2,
 "site-mobile-nav.css":
