@@ -30,12 +30,16 @@ require(
 );
 const {
 registerAppScheme,
-setupSiteProtocol,
-bundledOrigin,
 resolveBundleRoot
 } =
 require(
 "./site-protocol.cjs"
+);
+const {
+startLocalSiteServer
+} =
+require(
+"./local-site-server.cjs"
 );
 const {
 warmStaticCache
@@ -122,17 +126,63 @@ BUNDLE_ROOT,
 const USE_BUNDLE =
 shouldUseBundle();
 
-const APP_ORIGIN =
-USE_BUNDLE
-? bundledOrigin()
-: REMOTE_APP_URL.replace(
+/** @type {string | null} */
+let localSiteOrigin =
+null;
+
+/** @type {(() => Promise<void>) | null} */
+let closeLocalSiteServer =
+null;
+
+function getAppOrigin(){
+
+if(
+USE_BUNDLE &&
+localSiteOrigin
+){
+return localSiteOrigin;
+}
+
+return REMOTE_APP_URL.replace(
 /\/$/,
 ""
 );
 
-const START_URL =
+}
+
+function getStartUrl(){
+
+return (
 process.env.DESKTOP_START_URL ||
-`${APP_ORIGIN}/coins.html`;
+`${getAppOrigin()}/coins.html`
+);
+
+}
+
+function isBundledUiUrl(
+url
+){
+
+const value =
+String(
+url ||
+""
+);
+
+if(
+localSiteOrigin &&
+value.startsWith(
+localSiteOrigin
+)
+){
+return true;
+}
+
+return value.startsWith(
+"multichart://"
+);
+
+}
 
 const PARTITION =
 "persist:multichart-desktop";
@@ -582,21 +632,47 @@ function isAuthCallbackUrl(
 url
 ){
 
-return (
-typeof url ===
-"string" &&
-(
-url.startsWith(
-`${AUTH_PROTOCOL}://`
-) ||
+if(
+typeof url !==
+"string"
+){
+return false;
+}
+
+if(
 url.includes(
 "access_token="
 ) ||
 url.includes(
 "code="
 )
+){
+return true;
+}
+
+try{
+const parsed =
+new URL(
+url
+);
+
+if(
+parsed.protocol !==
+`${AUTH_PROTOCOL}:`
+){
+return false;
+}
+
+return (
+parsed.hostname ===
+"auth" ||
+parsed.pathname.startsWith(
+"/auth/"
 )
 );
+}catch{
+return false;
+}
 
 }
 
@@ -613,7 +689,8 @@ return;
 }
 
 log.info(
-"Auth callback URL received"
+"Auth callback URL received:",
+url
 );
 
 const send =
@@ -867,11 +944,8 @@ log.error(
 if(
 USE_BUNDLE &&
 !bundleLoadFallback &&
-String(
-failedUrl ||
-""
-).startsWith(
-"multichart://"
+isBundledUiUrl(
+failedUrl
 )
 ){
 fallbackToRemoteUi(
@@ -937,7 +1011,7 @@ log.info(
 );
 
 mainWindow.loadURL(
-START_URL
+getStartUrl()
 );
 
 function fallbackToRemoteUi(
@@ -973,6 +1047,11 @@ mainWindow.webContents.once(
 "did-finish-load",
 async()=>{
 
+log.info(
+"Window loaded:",
+mainWindow?.webContents.getURL()
+);
+
 if(
 pendingAuthCallbackUrl &&
 mainWindow &&
@@ -999,7 +1078,12 @@ mainWindow &&
 try{
 const ok =
 await mainWindow.webContents.executeJavaScript(
-`Boolean(document.getElementById("app") || document.body?.childElementCount > 0)`,
+`(() => {
+const app = document.getElementById("app");
+if (!app) return false;
+const vis = getComputedStyle(document.documentElement).visibility;
+return vis !== "hidden";
+})()`,
 true
 );
 
@@ -1067,18 +1151,19 @@ url
 if(
 USE_BUNDLE &&
 target.protocol ===
-"multichart:" &&
+"http:" &&
 target.hostname ===
-"local"
+"127.0.0.1" &&
+localSiteOrigin &&
+target.origin ===
+localSiteOrigin
 ){
 return true;
 }
 
 const base =
 new URL(
-USE_BUNDLE
-? bundledOrigin()
-: REMOTE_APP_URL
+getAppOrigin()
 );
 
 return target.origin ===
@@ -1214,9 +1299,9 @@ ipcMain.handle(
 app:
 app.getVersion(),
 url:
-APP_ORIGIN,
+getAppOrigin(),
 startUrl:
-START_URL,
+getStartUrl(),
 bundledUi:
 USE_BUNDLE,
 apiOrigin:
@@ -1563,8 +1648,8 @@ argv
 const url =
 argv.find(
 arg=>
-arg.startsWith(
-`${AUTH_PROTOCOL}://`
+isAuthCallbackUrl(
+arg
 )
 );
 
@@ -1610,8 +1695,8 @@ url
 const startupAuthUrl =
 process.argv.find(
 arg=>
-arg.startsWith(
-`${AUTH_PROTOCOL}://`
+isAuthCallbackUrl(
+arg
 )
 );
 
@@ -1631,14 +1716,21 @@ if(
 USE_BUNDLE
 ){
 const bundleRoot =
-setupSiteProtocol({
-bundleRoot:
-getBundleRoot(),
+getBundleRoot();
+const localSite =
+await startLocalSiteServer({
+bundleRoot,
 remoteApiOrigin:
 REMOTE_API_ORIGIN
 });
+localSiteOrigin =
+localSite.origin;
+closeLocalSiteServer =
+localSite.close;
 log.info(
-"desktop UI: bundled site from",
+"desktop UI: local HTTP",
+localSiteOrigin,
+"bundle",
 bundleRoot
 );
 }else{
@@ -1714,6 +1806,16 @@ createWindow();
 app.on(
 "before-quit",
 ()=>{
+
+if(
+closeLocalSiteServer
+){
+void closeLocalSiteServer();
+closeLocalSiteServer =
+null;
+localSiteOrigin =
+null;
+}
 
 if(
 powerBlockerId ==

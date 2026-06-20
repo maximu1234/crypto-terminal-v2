@@ -436,5 +436,7 @@ APP_HOST,
 bundledOrigin,
 registerAppScheme,
 setupSiteProtocol,
-resolveBundleRoot
+resolveBundleRoot,
+resolveBundleFile,
+getMime
 };
