@@ -52,6 +52,17 @@ npm run start:dev      # http://127.0.0.1:8080 (./start.sh в корне)
 
 Переменная `CRYPTO_TERMINAL_URL` — любой origin для окна.
 
+`DESKTOP_SKIP_WARM_CACHE=1` — отключить прогрев js/css при старте (отладка).
+
+## Производительность (только .app)
+
+- Отключён throttling рендерера / фоновых таймеров (macOS App Nap)
+- `powerSaveBlocker` — приложение не засыпает при работе
+- Кэш диска до ~512 MB, V8 code cache
+- **Warm-cache:** при старте подтягивает js/css с Главной и Монет в HTTP-кэш Electron (сайт в браузере не меняется)
+- UA как у Chrome (без `Electron/` в строке)
+- Проверка обновлений — через 12 с после загрузки страницы (не мешает старту)
+
 ## Первый релиз через GitHub Desktop
 
 Код desktop уже в `main`. **Releases появится только после push тега** `desktop-v1.0.0` (не от обычного коммита).

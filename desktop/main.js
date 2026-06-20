@@ -3,7 +3,9 @@ app,
 BrowserWindow,
 ipcMain,
 Menu,
-shell
+shell,
+session,
+powerSaveBlocker
 } =
 require(
 "electron"
@@ -22,6 +24,18 @@ const path =
 require(
 "path"
 );
+const {
+warmStaticCache
+} =
+require(
+"./warm-cache.cjs"
+);
+const {
+chromeLikeUserAgent
+} =
+require(
+"./chrome-user-agent.cjs"
+);
 
 const APP_URL =
 process.env.CRYPTO_TERMINAL_URL ||
@@ -33,6 +47,38 @@ const PARTITION =
 /** @type {BrowserWindow | null} */
 let mainWindow =
 null;
+
+/** @type {number | null} */
+let powerBlockerId =
+null;
+
+if(
+process.platform ===
+"darwin"
+){
+app.commandLine.appendSwitch(
+"enable-features",
+"Metal"
+);
+}
+
+app.commandLine.appendSwitch(
+"disable-renderer-backgrounding"
+);
+app.commandLine.appendSwitch(
+"disable-background-timer-throttling"
+);
+app.commandLine.appendSwitch(
+"disable-backgrounding-occluded-windows"
+);
+app.commandLine.appendSwitch(
+"disk-cache-size",
+"536870912"
+);
+app.commandLine.appendSwitch(
+"js-flags",
+"--max-old-space-size=4096"
+);
 
 autoUpdater.logger =
 log;
@@ -149,6 +195,89 @@ info.version
 
 }
 
+function startPowerSaveBlocker(){
+
+if(
+powerSaveBlocker.isStarted(
+powerBlockerId
+)
+){
+return;
+}
+
+powerBlockerId =
+powerSaveBlocker.start(
+"prevent-app-suspension"
+);
+
+}
+
+function tuneDesktopSession(
+ses
+){
+
+const ua =
+chromeLikeUserAgent(
+ses.getUserAgent()
+);
+
+ses.setUserAgent(
+ua
+);
+
+if(
+typeof ses.preconnect ===
+"function"
+){
+
+try{
+ses.preconnect({
+url:
+new URL(
+APP_URL
+).origin,
+numSockets:
+6
+});
+}catch{
+/* ignore */
+}
+
+}
+
+}
+
+function beginSessionWarmCache(
+ses
+){
+
+if(
+process.env.DESKTOP_SKIP_WARM_CACHE ===
+"1"
+){
+return;
+}
+
+void warmStaticCache(
+ses,
+APP_URL
+).then(
+count=>{
+log.info(
+`desktop warm-cache: ${count} assets`
+);
+}
+).catch(
+err=>{
+log.warn(
+"desktop warm-cache failed:",
+err
+);
+}
+);
+
+}
+
 function createWindow(){
 
 mainWindow =
@@ -182,9 +311,19 @@ true,
 partition:
 PARTITION,
 spellcheck:
-false
+false,
+backgroundThrottling:
+false,
+v8CacheOptions:
+"code"
 }
 });
+
+mainWindow.webContents.setUserAgent(
+chromeLikeUserAgent(
+mainWindow.webContents.getUserAgent()
+)
+);
 
 mainWindow.once(
 "ready-to-show",
@@ -235,6 +374,26 @@ url
 
 mainWindow.loadURL(
 APP_URL
+);
+
+mainWindow.webContents.once(
+"did-finish-load",
+()=>{
+
+if(
+!app.isPackaged
+){
+return;
+}
+
+setTimeout(
+()=>{
+void autoUpdater.checkForUpdates();
+},
+12000
+);
+
+}
 );
 
 mainWindow.on(
@@ -525,21 +684,25 @@ true
 
 app.whenReady().then(
 ()=>{
+
+startPowerSaveBlocker();
+
+const ses =
+session.fromPartition(
+PARTITION
+);
+
+tuneDesktopSession(
+ses
+);
+beginSessionWarmCache(
+ses
+);
+
 setupAutoUpdater();
 registerIpc();
 buildMenu();
 createWindow();
-
-if(
-app.isPackaged
-){
-setTimeout(
-()=>{
-void autoUpdater.checkForUpdates();
-},
-5000
-);
-}
 
 app.on(
 "activate",
@@ -552,6 +715,24 @@ createWindow();
 }
 }
 );
+
+}
+);
+
+app.on(
+"before-quit",
+()=>{
+
+if(
+powerSaveBlocker.isStarted(
+powerBlockerId
+)
+){
+powerSaveBlocker.stop(
+powerBlockerId
+);
+}
+
 }
 );
 

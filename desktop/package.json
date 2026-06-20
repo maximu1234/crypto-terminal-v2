@@ -1,7 +1,7 @@
 {
   "name": "multichart-desktop",
   "productName": "Multichart",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Multichart desktop shell for macOS (remote UI + local auto-update)",
   "main": "main.js",
   "author": "Multichart",
@@ -31,7 +31,9 @@
     "files": [
       "main.js",
       "preload.js",
-      "after-pack.cjs"
+      "after-pack.cjs",
+      "warm-cache.cjs",
+      "chrome-user-agent.cjs"
     ],
     "afterPack": "./after-pack.cjs",
     "mac": {
