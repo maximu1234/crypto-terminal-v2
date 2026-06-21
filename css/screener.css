@@ -1091,6 +1091,14 @@ background:rgba(255,255,255,0.02);
 flex-wrap:wrap;
 }
 
+.screener-widget-zoom-title{
+gap:6px;
+}
+
+.screener-widget-zoom-header-right{
+gap:10px;
+}
+
 .screener-widget-zoom-tf{
 display:flex;
 align-items:center;
@@ -1145,11 +1153,6 @@ border-top:1px solid #2a2e39;
 background:var(--app-chart-bg);
 box-sizing:border-box;
 position:relative;
-}
-
-.screener-widget-zoom-symbol{
-font:600 14px/1.2 ui-monospace,SFMono-Regular,Menlo,monospace;
-color:#f3f4f6;
 }
 
 .screener-widget-zoom-hint{

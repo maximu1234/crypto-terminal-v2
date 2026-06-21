@@ -38,7 +38,7 @@ createTickerUiBatcher
 
 import {
 mountReleaseMarker
-} from "./release-marker.js?v=15";
+} from "./release-marker.js?v=16";
 
 import {
 saveScreenerState,
@@ -80,8 +80,9 @@ preloadTradingSymbols
 } from "./symbol-autocomplete.js?v=1";
 
 import {
-mountScreenerWidgetZoom
-} from "./screener-widget-zoom.js?v=2";
+mountScreenerWidgetZoom,
+refreshZoomFavoriteUi
+} from "./screener-widget-zoom.js?v=4";
 
 const gridEl =
 document.getElementById("screener-grid");
@@ -320,6 +321,125 @@ symbol
 }
 
 });
+
+refreshZoomFavoriteUi(
+symbol
+);
+
+}
+
+const SCREENER_FLAG_WRAP_HTML =
+`
+<div class="screener-flag-wrap">
+<button type="button" class="flag screener-flag-btn" data-screener-flag-trigger title="Выбрать флаг" aria-haspopup="true" aria-expanded="false" aria-pressed="false"></button>
+<div class="screener-flag-menu hidden" role="menu">
+<button type="button" class="flag screener-flag-pick flag--red" data-flag-group="red" title="Красный" role="menuitem"></button>
+<button type="button" class="flag screener-flag-pick flag--green" data-flag-group="green" title="Зелёный" role="menuitem"></button>
+<button type="button" class="flag screener-flag-pick flag--gray" data-flag-group="gray" title="Серый" role="menuitem"></button>
+<button type="button" class="flag screener-flag-pick flag--blue" data-flag-group="blue" title="Синий (Терминал)" role="menuitem"></button>
+<button type="button" class="flag screener-flag-pick screener-flag-clear" data-flag-group="clear" title="Снять флаг" role="menuitem"></button>
+</div>
+</div>
+`;
+
+export function wireScreenerFlagWrap(
+root,
+symbol
+){
+
+const flagWrap =
+root?.querySelector(
+".screener-flag-wrap"
+);
+
+if(
+!flagWrap
+){
+return;
+}
+
+const flagTrigger =
+flagWrap.querySelector(
+"[data-screener-flag-trigger]"
+);
+
+const flagMenu =
+flagWrap.querySelector(
+".screener-flag-menu"
+);
+
+flagTrigger?.addEventListener(
+"click",
+e=>{
+
+e.stopPropagation();
+
+const open =
+!flagMenu?.classList.contains(
+"hidden"
+);
+
+closeAllScreenerFlagMenus(
+flagWrap
+);
+
+if(
+open
+){
+flagMenu?.classList.add(
+"hidden"
+);
+flagTrigger.setAttribute(
+"aria-expanded",
+"false"
+);
+}else{
+flagMenu?.classList.remove(
+"hidden"
+);
+flagTrigger.setAttribute(
+"aria-expanded",
+"true"
+);
+}
+
+}
+);
+
+flagMenu?.querySelectorAll(
+"[data-flag-group]"
+).forEach(
+btn=>{
+
+btn.addEventListener(
+"click",
+e=>{
+
+e.stopPropagation();
+
+applyFavoriteGroup(
+symbol,
+btn.dataset.flagGroup
+);
+
+flagMenu?.classList.add(
+"hidden"
+);
+flagTrigger?.setAttribute(
+"aria-expanded",
+"false"
+);
+
+}
+);
+
+}
+);
+
+updateWidgetFavoriteUi(
+root,
+symbol
+);
 
 }
 
@@ -1223,16 +1343,7 @@ root.innerHTML = `
 
 <div class="screener-header-left">
 
-<div class="screener-flag-wrap">
-<button type="button" class="flag screener-flag-btn" data-screener-flag-trigger title="Выбрать флаг" aria-haspopup="true" aria-expanded="false" aria-pressed="false"></button>
-<div class="screener-flag-menu hidden" role="menu">
-<button type="button" class="flag screener-flag-pick flag--red" data-flag-group="red" title="Красный" role="menuitem"></button>
-<button type="button" class="flag screener-flag-pick flag--green" data-flag-group="green" title="Зелёный" role="menuitem"></button>
-<button type="button" class="flag screener-flag-pick flag--gray" data-flag-group="gray" title="Серый" role="menuitem"></button>
-<button type="button" class="flag screener-flag-pick flag--blue" data-flag-group="blue" title="Синий (Терминал)" role="menuitem"></button>
-<button type="button" class="flag screener-flag-pick screener-flag-clear" data-flag-group="clear" title="Снять флаг" role="menuitem"></button>
-</div>
-</div>
+${SCREENER_FLAG_WRAP_HTML}
 
 <div class="screener-symbol">${symbol}</div>
 
@@ -1258,62 +1369,14 @@ ${buildWidgetBodyHtml(showRsi)}
 
 `;
 
-const flagWrap =
-root.querySelector(".screener-flag-wrap");
-
-const flagTrigger =
-flagWrap?.querySelector(
-"[data-screener-flag-trigger]"
+wireScreenerFlagWrap(
+root,
+symbol
 );
-
-const flagMenu =
-flagWrap?.querySelector(".screener-flag-menu");
-
-flagTrigger?.addEventListener("click", e=>{
-
-e.stopPropagation();
-
-const open =
-!flagMenu?.classList.contains("hidden");
-
-closeAllScreenerFlagMenus(flagWrap);
-
-if(open){
-flagMenu?.classList.add("hidden");
-flagTrigger.setAttribute("aria-expanded", "false");
-}else{
-flagMenu?.classList.remove("hidden");
-flagTrigger.setAttribute("aria-expanded", "true");
-}
-
-});
-
-flagMenu?.querySelectorAll("[data-flag-group]").forEach(btn=>{
-
-btn.addEventListener("click", e=>{
-
-e.stopPropagation();
-
-applyFavoriteGroup(
-symbol,
-btn.dataset.flagGroup
-);
-
-flagMenu?.classList.add("hidden");
-flagTrigger?.setAttribute("aria-expanded", "false");
-
-});
-
-});
 
 root.querySelector(".screener-open").onclick = e=>{
 openTerminal(symbol, e);
 };
-
-updateWidgetFavoriteUi(
-root,
-symbol
-);
 
 const chartEl =
 root.querySelector(".screener-chart");
@@ -2793,7 +2856,13 @@ w.root ===
 widgetRoot
 ),
 getCurrentTF:()=>
-currentTF
+currentTF,
+wireFlagUi:
+wireScreenerFlagWrap,
+updateFlagUi:
+updateWidgetFavoriteUi,
+flagWrapHtml:
+SCREENER_FLAG_WRAP_HTML
 }
 );
 

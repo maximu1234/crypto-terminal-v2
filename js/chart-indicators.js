@@ -244,12 +244,7 @@ createIndicatorSettingsDialog();
 root.innerHTML =
 `
 <button type="button" class="chart-indicators-btn" id="chart-indicators-btn" aria-haspopup="true" aria-expanded="false" title="Индикаторы" aria-label="Индикаторы">
-<svg class="chart-indicators-btn-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-<rect x="4" y="14" width="3" height="6" rx="0.5" fill="currentColor"/>
-<rect x="9" y="10" width="3" height="10" rx="0.5" fill="currentColor"/>
-<rect x="14" y="6" width="3" height="14" rx="0.5" fill="currentColor"/>
-<path d="M3 8 L8 5 L13 9 L21 3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-</svg>
+<span class="chart-indicators-btn-icon" aria-hidden="true"></span>
 </button>
 <div class="chart-indicators-menu hidden" id="chart-indicators-menu" role="menu">
 ${indicators.map(

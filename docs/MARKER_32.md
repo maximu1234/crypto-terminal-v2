@@ -2,7 +2,7 @@
 
 **Тег:** `metka-32` · **Desktop:** `desktop-v1.0.23`
 
-**Текущий эталон отката.** Предыдущий: [MARKER_31.md](./MARKER_31.md) (`metka-31`).
+**Текущий эталон отката.** См. [MARKER_33.md](./MARKER_33.md) (`metka-33`).
 
 Проверено: `npm run check:all` (syntax, asset-manifest, site-nav, 41 unit tests).
 

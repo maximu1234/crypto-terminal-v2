@@ -18,8 +18,8 @@
 <link rel="stylesheet" href="/css/common.css?v=28">
 <link rel="stylesheet" href="/css/terminal.css?v=147">
 <link rel="stylesheet" href="/css/dashboard.css?v=45">
-<link rel="stylesheet" href="/css/coins.css?v=46">
-<link rel="stylesheet" href="/css/chart-indicators.css?v=9">
+<link rel="stylesheet" href="/css/coins.css?v=48">
+<link rel="stylesheet" href="/css/chart-indicators.css?v=12">
 <script>
 if(window.cryptoTerminalDesktop&&window.cryptoTerminalDesktop.isDesktop){
 document.documentElement.classList.add("trade-desktop");
@@ -129,8 +129,6 @@ document.documentElement.classList.add("trade-desktop");
 
 <div id="chart-indicators-wrap" class="chart-indicators-wrap coins-draw-desktop"></div>
 
-<div id="draw-toolbar" class="draw-toolbar-inline coins-draw-desktop"></div>
-
 <script>
 (function(){
 var isDesktop=!!(window.cryptoTerminalDesktop&&window.cryptoTerminalDesktop.isDesktop);
@@ -183,6 +181,12 @@ tabTitle(saved);
 </div>
 
 <div id="charts-stack">
+
+<div class="coins-chart-pane">
+
+<div id="draw-toolbar" class="draw-toolbar-vertical coins-draw-desktop"></div>
+
+<div id="charts-stack-panes" class="charts-stack-panes">
 
 <div id="chart-wrap">
 <div id="chart"></div>
@@ -276,6 +280,10 @@ tabTitle(saved);
 <svg id="tablet-probe-crosshair-h" class="tablet-probe-crosshair-h hidden" aria-hidden="true" focusable="false">
 <line class="tablet-probe-crosshair-h-line" stroke="#758696" stroke-width="1" vector-effect="non-scaling-stroke" stroke-dasharray="5 4"/>
 </svg>
+
+</div>
+
+</div>
 
 </div>
 

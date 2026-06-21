@@ -87,7 +87,7 @@ mountDrawToolIcons
 
 import {
 initChartIndicators
-} from "./chart-indicators.js?v=10";
+} from "./chart-indicators.js?v=11";
 
 import {
 initCoinsMobileUi,
@@ -1806,7 +1806,7 @@ chart,
 series: candleSeries,
 wrapEl: document.getElementById("chart-wrap"),
 uiRoot: document.getElementById("chart-wrap"),
-toolsRoot: document.getElementById("topbar"),
+toolsRoot: document.getElementById("charts-stack"),
 getSymbol: ()=> currentSymbol,
 getTf: ()=> currentTF,
 getCandles: ()=> candles,

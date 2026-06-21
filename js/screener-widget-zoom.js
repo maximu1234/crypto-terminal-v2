@@ -54,6 +54,29 @@ const ZOOM_TF_VALUES =
 let zoomState =
 null;
 
+let zoomMountOptions =
+null;
+
+export function refreshZoomFavoriteUi(
+symbol
+){
+
+if(
+!zoomState ||
+zoomState.symbol !==
+symbol ||
+!zoomMountOptions?.updateFlagUi
+){
+return;
+}
+
+zoomMountOptions.updateFlagUi(
+zoomState.panel,
+symbol
+);
+
+}
+
 function closeWidgetZoom(){
 
 if(
@@ -481,9 +504,15 @@ panel.className =
 panel.innerHTML =
 `
 <div class="screener-widget-zoom-header">
-<span class="screener-widget-zoom-symbol">${symbol}</span>
+<div class="screener-header-left screener-widget-zoom-title">
+${zoomMountOptions?.flagWrapHtml || ""}
+<div class="screener-symbol">${symbol}</div>
+</div>
 <div class="screener-widget-zoom-tf" role="group" aria-label="Таймфрейм">${buildTfButtonsHtml(tf)}</div>
+<div class="screener-header-right screener-widget-zoom-header-right">
 <span class="screener-widget-zoom-hint">ПКМ — закрыть</span>
+<button type="button" class="screener-open screener-widget-zoom-open" title="Открыть в Монетах">↗</button>
+</div>
 </div>
 <div class="screener-widget-zoom-body screener-widget-body">
 <div class="screener-chart screener-widget-zoom-main-chart"></div>
@@ -605,6 +634,27 @@ null
 
 zoomState =
 state;
+
+const titleLeft =
+panel.querySelector(
+".screener-widget-zoom-title"
+);
+
+zoomMountOptions?.wireFlagUi?.(
+titleLeft,
+symbol
+);
+
+panel.querySelector(
+".screener-widget-zoom-open"
+)?.addEventListener(
+"click",
+event=>{
+event.stopPropagation();
+window.location.href =
+`coins.html?symbol=${encodeURIComponent(symbol)}&tf=${encodeURIComponent(state.tf)}`;
+}
+);
 
 panel.querySelectorAll(
 ".screener-widget-zoom-tf-btn"
@@ -817,9 +867,19 @@ export function mountScreenerWidgetZoom(
 {
 resolveWidget,
 getCurrentTF,
-isEnabled = ()=>true
+isEnabled = ()=>true,
+wireFlagUi,
+updateFlagUi,
+flagWrapHtml = ""
 }
 ){
+
+zoomMountOptions =
+{
+wireFlagUi,
+updateFlagUi,
+flagWrapHtml
+};
 
 function onContextMenu(
 event
