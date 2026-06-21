@@ -10,6 +10,10 @@ import {
 getRectangleHandleScreens
 } from "./arrow-rect.js?v=2";
 
+import {
+isChartLayoutReady
+} from "../chart-layout-gate.js?v=2";
+
 export function createDrawRedrawLoop(
 deps
 ){
@@ -225,6 +229,12 @@ return true;
 
 function scheduleRedraw(){
 
+if(
+!isChartLayoutReady()
+){
+return;
+}
+
 if(getChartPanActive()){
 return;
 }
@@ -254,6 +264,12 @@ redraw();
 }
 
 function redraw(){
+
+if(
+!isChartLayoutReady()
+){
+return;
+}
 
 try{
 

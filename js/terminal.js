@@ -2,7 +2,7 @@ import {
 loadBybitHistory,
 loadBybitSymbols,
 peekBybitSymbolsCache
-} from "./api.js?v=27";
+} from "./api.js?v=29";
 
 import {
 buildCoinsMarketLists,
@@ -62,7 +62,7 @@ coinsTfVisibleBars,
 applyCoinsChartViewport,
 refreshCoinsChartBarSpacing,
 tfPeriodSec
-} from "./chart-import.js?v=41";
+} from "./chart-import.js?v=42";
 
 import {
 mountCoinsTabletController
@@ -86,6 +86,10 @@ mountDrawToolIcons
 } from "./draw-ui-shared.js?v=23";
 
 import {
+initChartIndicators
+} from "./chart-indicators.js?v=10";
+
+import {
 initCoinsMobileUi,
 wireCoinsMobileDrawToolsMenu,
 isCoinsMobile,
@@ -94,11 +98,15 @@ syncCoinsTfLabel
 
 import {
 mountCoinsLayoutResize
-} from "./coins-layout-resize.js?v=5";
+} from "./coins-layout-resize.js?v=6";
 
 import {
 mountQwertyKeyInput
 } from "./qwerty-key-input.js?v=1";
+
+import {
+setChartLayoutReady
+} from "./chart-layout-gate.js?v=2";
 
 import {
 registerCoinsState,
@@ -112,6 +120,15 @@ isTradePage
 } from "./terminal/coins-state.js?v=6";
 
 import {
+stopTickerStream
+} from "./tickers.js?v=23";
+
+import {
+mountCoinsListRefreshControls,
+applyCoinsListRefreshInterval
+} from "./coins-list-refresh.js?v=1";
+
+import {
 readCoinsPrefs,
 writeCoinsPrefs,
 persistCoinsPrefs,
@@ -120,7 +137,7 @@ resolveInitialSymbolAndTf,
 applyCoinsPrefs,
 applySortForCurrentMarket,
 readUrlParams
-} from "./terminal/coins-prefs.js?v=7";
+} from "./terminal/coins-prefs.js?v=8";
 
 import {
 getCurrentSymbols,
@@ -144,6 +161,8 @@ false;
 let isCoinsRsiInverted =
 false;
 let drawingTools =
+null;
+let chartIndicators =
 null;
 
 /** То, что показано в #current-symbol (не сбрасывается на BTC при переключении). */
@@ -1541,7 +1560,42 @@ currentTF
 
 }
 
+let rsiPaneActive =
+true;
+
+function setRsiPaneActive(
+active
+){
+
+rsiPaneActive =
+!!active;
+
+if(
+rsiPaneActive
+){
+rebuildRsiFromCandles();
+return;
+}
+
+rsiSeries?.setData(
+[]
+);
+syncCoinsFutureTimeAnchorSeries();
+layoutRsiBand();
+setRsiHudValue(
+null
+);
+
+}
+
 function rebuildRsiFromCandles(){
+
+if(
+!rsiPaneActive
+){
+chartIndicators?.notifyCandlesUpdate?.();
+return;
+}
 
 const raw =
 calculateRSI(
@@ -1573,6 +1627,8 @@ last?.value ??
 null
 
 );
+
+chartIndicators?.notifyCandlesUpdate?.();
 
 }
 
@@ -1865,6 +1921,102 @@ console.warn(
 );
 }
 
+chartIndicators =
+initChartIndicators(
+{
+root:
+document.getElementById(
+"chart-indicators-wrap"
+),
+getHost:()=>({
+chart,
+series:
+candleSeries,
+wrapEl:
+document.getElementById(
+"chart-wrap"
+),
+getDrawingTools:()=>
+drawingTools,
+getSymbol:()=>
+currentSymbol,
+getCandles:()=>
+candles,
+getTf:()=>
+currentTF,
+loadIndicatorHistory:(
+symbol,
+tf
+)=>
+loadBybitHistory(
+symbol,
+tf,
+5,
+{
+parallel:
+true,
+batchGapMs:
+0
+}
+),
+getChartWrapWidth:()=>
+document.getElementById(
+"chart-wrap"
+)?.clientWidth ||
+0,
+getPaneHeight:()=>{
+
+const wrap =
+document.getElementById(
+"volume-wrap"
+);
+
+if(
+!wrap ||
+wrap.classList.contains(
+"indicator-pane-hidden"
+)
+){
+return 0;
+}
+
+return wrap.getBoundingClientRect().height ||
+0;
+
+},
+rsiChart,
+setRsiPaneActive,
+isRsiPaneVisible:()=>
+rsiPaneActive,
+layoutRsiBand,
+onIndicatorToggle(
+id,
+on
+){
+
+if(
+id ===
+"volume" ||
+id ===
+"rsi"
+){
+scheduleResizeCharts();
+
+if(
+candles.length
+){
+settleCoinsChartViewport();
+}
+
+chartIndicators?.notifyLayoutChange?.();
+
+}
+
+}
+})
+}
+);
+
 if(
 isTradePage &&
 chart &&
@@ -1963,7 +2115,7 @@ const {
 createTradePlusMenuHandler
 } =
 await import(
-"./trade-order-plus-ui.js?v=1"
+"./trade-order-plus-ui.js?v=2"
 );
 
 tradePlusHandler =
@@ -1994,7 +2146,7 @@ const {
 mountPriceAlertUi
 } =
 await import(
-"./price-alert-ui.js?v=40"
+"./price-alert-ui.js?v=44"
 );
 
 let disposeAlertUi =
@@ -2009,8 +2161,9 @@ getSymbol:()=>
 currentSymbol,
 getTf:()=>
 currentTF,
+getDrawingTools:()=>
+drawingTools,
 scheduleRedraw:()=>{
-disposeAlertUi?.syncBadges?.();
 return (
 drawingTools?.scheduleDragRedraw?.() ||
 drawingTools?.scheduleRedraw?.()
@@ -2414,6 +2567,53 @@ currentTF
 
 }
 
+function getCoinsPaneHeightPx(){
+
+const candidates =
+[
+document.getElementById(
+"rsi-wrap"
+),
+document.getElementById(
+"volume-wrap"
+)
+];
+
+for(
+const wrap of candidates
+){
+
+if(
+!wrap ||
+wrap.classList.contains(
+"indicator-pane-hidden"
+)
+){
+continue;
+}
+
+const h =
+wrap.getBoundingClientRect().height;
+
+if(
+h >=
+2
+){
+return h;
+}
+
+}
+
+return Math.max(
+document.getElementById(
+"rsi-wrap"
+)?.getBoundingClientRect().height ||
+0,
+102
+);
+
+}
+
 function applyChartDimensions(){
 
 const chartWrap =
@@ -2421,16 +2621,9 @@ document.getElementById(
 "chart-wrap"
 );
 
-const rsiEl =
-document.getElementById(
-"rsi-chart"
-);
-
 if(
 !chartWrap ||
-!rsiEl ||
-!chart ||
-!rsiChart
+!chart
 ){
 return false;
 }
@@ -2447,18 +2640,13 @@ chartWrap.clientHeight,
 1
 );
 
-const rsiH =
-Math.max(
-rsiEl.clientHeight,
-1
-);
+const paneH =
+getCoinsPaneHeightPx();
 
 if(
 w <
 2 ||
 chartH <
-2 ||
-rsiH <
 2
 ){
 return false;
@@ -2469,15 +2657,37 @@ width:w,
 height:chartH
 });
 
-rsiChart.applyOptions({
-width:w,
-height:rsiH
-});
+chartIndicators?.resizePanes?.(
+w
+);
 
 if(
-candles.length
+!chartIndicators &&
+rsiChart &&
+rsiPaneActive
 ){
+
+const rsiPaneH =
+document.getElementById(
+"rsi-wrap"
+)?.getBoundingClientRect().height ||
+paneH;
+
+if(
+rsiPaneH >=
+2
+){
+
+rsiChart.applyOptions({
+width:w,
+height:
+rsiPaneH
+});
+
 layoutRsiBand();
+
+}
+
 }
 
 return true;
@@ -2488,8 +2698,7 @@ function settleCoinsChartViewport(){
 
 if(
 !candles.length ||
-!chart ||
-!rsiChart
+!chart
 ){
 return;
 }
@@ -2508,10 +2717,34 @@ chartEl?.clientWidth ||
 1
 );
 
+const ctx =
+{
+mainChart:
+chart,
+candles:
+buildChartDisplayCandles(),
+tf:
+currentTF,
+chartWidth,
+realCandleCount:
+candles.length,
+applyCoinsChartViewport
+};
+
+chartIndicators?.syncViewports?.(
+ctx
+);
+
+if(
+!chartIndicators &&
+rsiChart &&
+rsiPaneActive
+){
+
 applyCoinsChartViewport(
 chart,
 rsiChart,
-buildChartDisplayCandles(),
+ctx.candles,
 currentTF,
 chartWidth,
 candles.length
@@ -2521,10 +2754,269 @@ layoutRsiBand();
 
 }
 
+}
+
 let coinsViewportSettleRaf =
 0;
 
-function applyDefaultZoom(){
+function normalizeChartEventSymbol(
+symbol
+){
+
+return String(
+symbol ||
+""
+).trim().toUpperCase();
+
+}
+
+function dispatchChartSwitchStart(
+symbol,
+loadSeq
+){
+
+setChartLayoutReady(
+false
+);
+
+window.dispatchEvent(
+new CustomEvent(
+"chart-switch-start",
+{
+detail:{
+symbol:
+normalizeChartEventSymbol(
+symbol
+),
+loadSeq:
+Number(
+loadSeq
+) ||
+0
+}
+}
+)
+);
+
+}
+
+function dispatchChartCandlesLoaded(
+symbol,
+loadSeq
+){
+
+window.dispatchEvent(
+new CustomEvent(
+"chart-candles-loaded",
+{
+detail:{
+symbol:
+normalizeChartEventSymbol(
+symbol
+),
+loadSeq:
+Number(
+loadSeq
+) ||
+0
+}
+}
+)
+);
+
+}
+
+const CHART_SWITCH_VEIL_MAX_MS =
+1000;
+
+let chartSwitchVeilRaf =
+0;
+
+let chartSwitchStartedAt =
+0;
+
+function chartSwitchVeilOpacity(
+elapsedMs
+){
+
+return Math.min(
+elapsedMs /
+CHART_SWITCH_VEIL_MAX_MS,
+1
+);
+
+}
+
+function tickChartSwitchVeil(){
+
+if(
+!chartWrapEl?.classList.contains(
+"chart-switch-loading"
+)
+){
+return;
+}
+
+const elapsed =
+Date.now() -
+chartSwitchStartedAt;
+
+chartWrapEl.style.setProperty(
+"--chart-switch-veil-opacity",
+String(
+chartSwitchVeilOpacity(
+elapsed
+)
+)
+);
+
+if(
+elapsed <
+CHART_SWITCH_VEIL_MAX_MS
+){
+chartSwitchVeilRaf =
+requestAnimationFrame(
+tickChartSwitchVeil
+);
+}
+
+}
+
+function stopChartSwitchVeil(){
+
+if(
+chartSwitchVeilRaf
+){
+cancelAnimationFrame(
+chartSwitchVeilRaf
+);
+chartSwitchVeilRaf =
+0;
+}
+
+if(
+!chartWrapEl
+){
+return;
+}
+
+chartWrapEl.classList.remove(
+"chart-switch-loading"
+);
+chartWrapEl.style.removeProperty(
+"--chart-switch-veil-opacity"
+);
+
+}
+
+function startChartSwitchVeil(){
+
+if(
+!chartWrapEl
+){
+return;
+}
+
+stopChartSwitchVeil();
+
+chartSwitchStartedAt =
+Date.now();
+chartWrapEl.classList.add(
+"chart-switch-loading"
+);
+chartWrapEl.style.setProperty(
+"--chart-switch-veil-opacity",
+"0"
+);
+chartSwitchVeilRaf =
+requestAnimationFrame(
+tickChartSwitchVeil
+);
+
+}
+
+function finishChartSwitchVeil(
+loadSeq
+){
+
+if(
+loadSeq !==
+symbolLoadSeq
+){
+return;
+}
+
+if(
+chartSwitchVeilRaf
+){
+cancelAnimationFrame(
+chartSwitchVeilRaf
+);
+chartSwitchVeilRaf =
+0;
+}
+
+const elapsed =
+Date.now() -
+chartSwitchStartedAt;
+
+if(
+chartWrapEl?.classList.contains(
+"chart-switch-loading"
+)
+){
+chartWrapEl.style.setProperty(
+"--chart-switch-veil-opacity",
+String(
+chartSwitchVeilOpacity(
+elapsed
+)
+)
+);
+}
+
+requestAnimationFrame(
+()=>{
+requestAnimationFrame(
+()=>{
+
+if(
+loadSeq !==
+symbolLoadSeq
+){
+return;
+}
+
+stopChartSwitchVeil();
+
+}
+);
+}
+);
+
+}
+
+function scheduleChartLayoutSettled(
+callback
+){
+
+requestAnimationFrame(
+()=>{
+requestAnimationFrame(
+callback
+);
+}
+);
+
+}
+
+function applyDefaultZoom(
+options = {}
+){
+
+const scheduleDrawingRedraw =
+options.scheduleDrawingRedraw !==
+false;
 
 if(
 !candles.length
@@ -2537,7 +3029,13 @@ const run =
 applyChartDimensions();
 settleCoinsChartViewport();
 drawingTools?.resize?.();
+
+if(
+scheduleDrawingRedraw
+){
 drawingTools?.scheduleRedraw?.();
+}
+
 };
 
 run();
@@ -2605,6 +3103,16 @@ coinsViewportSettleRaf =
 
 const loadSeq = ++symbolLoadSeq;
 
+disconnectKlineStream();
+startChartSwitchVeil();
+setChartLayoutReady(
+false
+);
+dispatchChartSwitchStart(
+symbol,
+loadSeq
+);
+
 currentSymbol = symbol;
 setCoinsChartSymbol(symbol);
 
@@ -2612,7 +3120,7 @@ if(
 isTradePage
 ){
 void import(
-"./trade-volume-presets.js?v=7"
+"./trade-volume-presets.js?v=8"
 ).then(
 ({
 switchTradeVolumeSymbol
@@ -2674,6 +3182,12 @@ new Error(
 );
 });
 
+setChartLayoutReady(
+true
+);
+finishChartSwitchVeil(
+loadSeq
+);
 return;
 
 }
@@ -2692,38 +3206,37 @@ refPrice
 
 rebuildRsiFromCandles();
 
-/* =========================================================
-   APPLY ZOOM
-========================================================= */
+applyDefaultZoom({
+scheduleDrawingRedraw:
+false
+});
 
-applyDefaultZoom();
+drawingTools?.onSymbolChange?.({
+skipRedraw:
+true
+});
+chartIndicators?.notifySymbolChange?.();
 
-drawingTools?.onSymbolChange();
-drawingTools?.resize();
+scheduleChartLayoutSettled(
+()=>{
+
+if(
+loadSeq !==
+symbolLoadSeq
+){
+return;
+}
+
+setChartLayoutReady(
+true
+);
+
 drawingTools?.scheduleRedraw?.();
-
-requestAnimationFrame(
-()=>{
-requestAnimationFrame(
-()=>{
 chartCrosshairLink?.refreshPointerCrosshair?.();
-}
-);
-}
-);
 
-window.dispatchEvent(
-new CustomEvent(
-"chart-candles-loaded",
-{
-detail:{
-symbol: String(
-currentSymbol ||
-""
-).trim().toUpperCase()
-}
-}
-)
+dispatchChartCandlesLoaded(
+currentSymbol,
+loadSeq
 );
 
 highlightActiveSymbol();
@@ -2741,6 +3254,13 @@ currentTF
 );
 
 persistCoinsPrefs();
+
+finishChartSwitchVeil(
+loadSeq
+);
+
+}
+);
 
 }finally{
 
@@ -2774,12 +3294,39 @@ if(
 candles.length
 ){
 
+const linked =
+chartIndicators?.getLinkedPaneCharts?.() ||
+[];
+
+if(
+linked.length
+){
+
+linked.forEach(
+linkedChart=>{
 refreshCoinsChartBarSpacing(
 chart,
-rsiChart
+linkedChart
+);
+}
 );
 
+}else{
+
+refreshCoinsChartBarSpacing(
+chart,
+rsiPaneActive
+? rsiChart
+: null
+);
+
+}
+
+if(
+rsiPaneActive
+){
 layoutRsiBand();
+}
 
 }
 
@@ -2837,6 +3384,13 @@ if(rsiWrapEl){
 chartResizeObserver.observe(rsiWrapEl);
 }
 
+const volumeWrapEl =
+document.getElementById("volume-wrap");
+
+if(volumeWrapEl){
+chartResizeObserver.observe(volumeWrapEl);
+}
+
 }
 
 if(
@@ -2861,7 +3415,9 @@ chart,
 rsiChart,
 layoutRsiBand,
 {
-isLocked: isTabletCrosshairProbeLocked
+isLocked:()=>
+!rsiPaneActive ||
+isTabletCrosshairProbeLocked()
 }
 );
 
@@ -3906,6 +4462,8 @@ renderList();
 
 resizeCharts();
 
+stopTickerStream();
+applyCoinsListRefreshInterval();
 startTickerStream();
 
 }
@@ -3917,6 +4475,8 @@ void drawingTools?.refreshDrawToolsAccessUiAsync?.();
 });
 
 applyCoinsPrefs();
+
+mountCoinsListRefreshControls();
 
 mountCoinsChartHeaderFlag();
 

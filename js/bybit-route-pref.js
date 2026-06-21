@@ -3,9 +3,11 @@
 export const BYBIT_ROUTE_PREF_KEY =
 "multichart_bybit_route_v1";
 
-export const BYBIT_ROUTE_AUTO = "auto";
 export const BYBIT_ROUTE_DIRECT = "direct";
 export const BYBIT_ROUTE_PROXY = "proxy";
+
+/** @deprecated legacy «auto» — читается как direct */
+export const BYBIT_ROUTE_AUTO = "auto";
 
 export function getBybitRouteMode(){
 
@@ -16,28 +18,31 @@ localStorage.getItem(BYBIT_ROUTE_PREF_KEY);
 
 if(
 v === BYBIT_ROUTE_DIRECT ||
-v === BYBIT_ROUTE_PROXY ||
 v === BYBIT_ROUTE_AUTO
 ){
-return v;
+return BYBIT_ROUTE_DIRECT;
+}
+
+if(
+v === BYBIT_ROUTE_PROXY
+){
+return BYBIT_ROUTE_PROXY;
 }
 
 }catch{
 /* ignore */
 }
 
-return BYBIT_ROUTE_AUTO;
+return BYBIT_ROUTE_DIRECT;
 
 }
 
 export function setBybitRouteMode(mode){
 
 const next =
-mode === BYBIT_ROUTE_DIRECT ||
-mode === BYBIT_ROUTE_PROXY ||
-mode === BYBIT_ROUTE_AUTO
-? mode
-: BYBIT_ROUTE_AUTO;
+mode === BYBIT_ROUTE_PROXY
+? BYBIT_ROUTE_PROXY
+: BYBIT_ROUTE_DIRECT;
 
 try{
 localStorage.setItem(
@@ -62,17 +67,11 @@ detail: { mode: next }
 export function bybitRouteModeLabel(mode){
 
 if(
-mode === BYBIT_ROUTE_DIRECT
-){
-return "Прямой → api.bybit.com";
-}
-
-if(
 mode === BYBIT_ROUTE_PROXY
 ){
 return "Прокси → railway.app/bybit → Bybit";
 }
 
-return "Авто (Safari прямой, Chrome/Яндекс прокси)";
+return "Прямой → api.bybit.com";
 
 }

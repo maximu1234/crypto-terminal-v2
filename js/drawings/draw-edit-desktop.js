@@ -171,6 +171,12 @@ target.closest(
 ) ||
 target.closest(
 ".trade-order-badge"
+) ||
+target.closest(
+".chart-indicators-wrap"
+) ||
+target.closest(
+".chart-indicators-menu"
 )
 );
 

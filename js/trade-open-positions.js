@@ -1,6 +1,10 @@
 /**
  * /trade — символы с открытыми позициями (для списка монет).
  */
+import {
+syncTradePositionsCache
+} from "./trade-positions-cache.js?v=1";
+
 const openPositionSymbols =
 new Set();
 
@@ -95,37 +99,9 @@ return true;
 
 async function syncOpenPositions(){
 
-const api =
-window.cryptoTerminalDesktop?.trading;
-
-if(
-!api?.getPositions
-){
-applySymbols(
-new Set()
-);
-return;
-}
-
-const status =
-await api.getStatus?.();
-
-if(
-!status?.configured
-){
-if(
-applySymbols(
-new Set()
-)
-){
-notifyChanged();
-}
-return;
-}
-
-try{
 const result =
-await api.getPositions();
+await syncTradePositionsCache();
+
 const next =
 new Set();
 
@@ -154,9 +130,6 @@ next
 )
 ){
 notifyChanged();
-}
-}catch{
-/* ignore */
 }
 
 }

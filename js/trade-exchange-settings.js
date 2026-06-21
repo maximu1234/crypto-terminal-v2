@@ -4,7 +4,7 @@
 import {
 wireTradeVolumeDefaultsSettings,
 TRADE_VOLUME_SLOT_COUNT
-} from "./trade-volume-presets.js?v=7";
+} from "./trade-volume-presets.js?v=8";
 
 import {
 wireAutoStopSettings
@@ -32,7 +32,7 @@ index
 <span class="trade-volume-defaults-label">${index + 1}</span>
 <span class="trade-volume-presets-field">
 <input type="number" min="0" step="any" inputmode="decimal" aria-label="Объём USDT ${index + 1}"/>
-<span class="trade-volume-presets-suffix">USDT</span>
+<span class="trade-volume-presets-suffix">$</span>
 </span>
 </label>
 `
@@ -56,7 +56,7 @@ root.innerHTML =
 `
 <form class="trade-exchange-form" autocomplete="off">
 <p class="header-settings-section-title">Bybit</p>
-<p class="trade-exchange-hint">Ключи сохраняются в Keychain. Secret после сохранения не показываем — только метку в поле.</p>
+<p class="trade-exchange-hint">Ключи хранятся локально. Secret после сохранения не показываем.</p>
 <label class="trade-exchange-field">
 <span>API Key</span>
 <input type="text" name="apiKey" autocomplete="off" spellcheck="false" inputmode="verbatim"/>
@@ -64,10 +64,6 @@ root.innerHTML =
 <label class="trade-exchange-field">
 <span>API Secret</span>
 <input type="password" name="apiSecret" autocomplete="new-password" spellcheck="false" placeholder=""/>
-</label>
-<label class="trade-exchange-check">
-<input type="checkbox" name="testnet" checked/>
-<span>Testnet (testnet.bybit.com)</span>
 </label>
 <p class="trade-exchange-balance" data-role="balance" hidden></p>
 <p class="trade-exchange-status-text" data-role="status" aria-live="polite"></p>
@@ -78,7 +74,7 @@ root.innerHTML =
 </div>
 <hr class="trade-exchange-divider"/>
 <p class="header-settings-section-title">Объёмы по умолчанию (USDT)</p>
-<p class="trade-exchange-hint">Эти значения показываются на всех монетах, пока вы не измените объём на конкретной монете. Повторное «Сохранить» ниже сбрасывает индивидуальные объёмы у всех монет.</p>
+<p class="trade-exchange-hint">Для всех монет, пока не задан свой объём. «Сохранить» сбрасывает индивидуальные значения.</p>
 <div class="trade-volume-defaults-panel trade-volume-presets-panel" data-role="volume-defaults-panel">
 ${buildDefaultVolumeFieldsHtml()}
 </div>
@@ -88,14 +84,14 @@ ${buildDefaultVolumeFieldsHtml()}
 <p class="trade-exchange-status-text" data-role="volume-defaults-status" aria-live="polite"></p>
 <hr class="trade-exchange-divider"/>
 <p class="header-settings-section-title">Auto SL/TP (USDT)</p>
-<p class="trade-exchange-hint">После исполнения рыночного входа автоматически выставляются стоп-лосс и тейк-профит. Значения — убыток/прибыль в USDT от позиции.</p>
+<p class="trade-exchange-hint">После рыночного входа — авто SL/TP в USDT от позиции.</p>
 <div class="trade-auto-stops-panel" data-role="auto-stops-panel">
 <label class="trade-auto-stops-row">
 <input type="checkbox" data-role="auto-sl-enabled"/>
 <span class="trade-auto-stops-label">Stop Loss</span>
 <span class="trade-volume-presets-field">
 <input type="number" min="0" step="any" inputmode="decimal" data-role="auto-sl-usd" aria-label="Stop Loss USDT"/>
-<span class="trade-volume-presets-suffix">USDT</span>
+<span class="trade-volume-presets-suffix">$</span>
 </span>
 </label>
 <label class="trade-auto-stops-row">
@@ -103,7 +99,7 @@ ${buildDefaultVolumeFieldsHtml()}
 <span class="trade-auto-stops-label">Take Profit</span>
 <span class="trade-volume-presets-field">
 <input type="number" min="0" step="any" inputmode="decimal" data-role="auto-tp-usd" aria-label="Take Profit USDT"/>
-<span class="trade-volume-presets-suffix">USDT</span>
+<span class="trade-volume-presets-suffix">$</span>
 </span>
 </label>
 </div>
@@ -113,12 +109,12 @@ ${buildDefaultVolumeFieldsHtml()}
 <p class="trade-exchange-status-text" data-role="auto-stops-status" aria-live="polite"></p>
 <hr class="trade-exchange-divider"/>
 <p class="header-settings-section-title">Пинг до Bybit</p>
-<p class="trade-exchange-hint">Задержка до API и signed-запросов (как при выставлении ордеров). Для быстрой торговли лучше &lt;100&nbsp;ms.</p>
+<p class="trade-exchange-hint">Задержка API и signed-запросов. Для торговли лучше &lt;100&nbsp;ms.</p>
+<div class="trade-exchange-ping-row">
 <p class="trade-exchange-ping" data-role="ping" aria-live="polite"><span data-role="ping-main">—</span></p>
-<p class="trade-exchange-ping-detail" data-role="ping-detail" hidden></p>
-<div class="trade-exchange-actions">
 <button type="button" class="trade-exchange-refresh" data-role="refresh-ping">Измерить</button>
 </div>
+<p class="trade-exchange-ping-detail" data-role="ping-detail" hidden></p>
 </form>
 `;
 
@@ -344,8 +340,7 @@ detail
 function wireForm(
 form,
 {
-onSaved,
-onOpen
+onSaved
 } = {}
 ){
 
@@ -365,10 +360,6 @@ form.querySelector(
 const secretInput =
 form.querySelector(
 'input[name="apiSecret"]'
-);
-const testnetInput =
-form.querySelector(
-'input[name="testnet"]'
 );
 const statusEl =
 form.querySelector(
@@ -406,24 +397,6 @@ const refreshPingBtn =
 form.querySelector(
 '[data-role="refresh-ping"]'
 );
-
-let pingTimer =
-null;
-
-function stopPingTimer(){
-
-if(
-pingTimer !=
-null
-){
-window.clearInterval(
-pingTimer
-);
-pingTimer =
-null;
-}
-
-}
 
 function setPing(
 text,
@@ -509,7 +482,7 @@ const result =
 await api.pingBybit(
 {
 testnet:
-testnetInput.checked
+false
 }
 );
 const formatted =
@@ -541,24 +514,6 @@ false;
 }
 
 }
-
-function startPingLoop(){
-
-stopPingTimer();
-void refreshPing();
-pingTimer =
-window.setInterval(
-refreshPing,
-10000
-);
-}
-
-onOpen?.(
-{
-startPingLoop,
-stopPingTimer
-}
-);
 
 const SECRET_SAVED_PLACEHOLDER =
 "••••••••••••••••";
@@ -782,8 +737,6 @@ async function refreshStatus(){
 try{
 const info =
 await api.getStatus();
-testnetInput.checked =
-!!info?.testnet;
 
 if(
 info?.apiKey
@@ -820,9 +773,7 @@ if(
 info?.configured
 ){
 setStatus(
-info.testnet
-? "Ключи сохранены · Testnet"
-: "Ключи сохранены · Mainnet",
+"Ключи сохранены",
 "is-ok"
 );
 }else{
@@ -869,7 +820,7 @@ const payload =
 apiKey:
 keyInput.value.trim(),
 testnet:
-testnetInput.checked
+false
 };
 
 if(
@@ -906,9 +857,7 @@ return;
 }
 
 setStatus(
-testnetInput.checked
-? "Сохранено · Testnet"
-: "Сохранено · Mainnet",
+"Сохранено",
 "is-ok"
 );
 await refreshBalance();
@@ -1014,12 +963,11 @@ void refreshPing();
 }
 );
 
-void refreshStatus();
+setPing(
+"—"
+);
 
-return {
-startPingLoop,
-stopPingTimer
-};
+void refreshStatus();
 
 }
 
@@ -1101,19 +1049,10 @@ buildForm(
 dropdown
 );
 
-let pingControls =
-null;
-
 wireForm(
 form,
 {
-onSaved,
-onOpen:(
-controls
-)=>{
-pingControls =
-controls;
-}
+onSaved
 }
 );
 
@@ -1128,13 +1067,7 @@ form
 bindDropdown(
 wrap,
 btn,
-dropdown,
-{
-onOpen:()=>
-pingControls?.startPingLoop?.(),
-onClose:()=>
-pingControls?.stopPingTimer?.()
-}
+dropdown
 );
 
 return {

@@ -1,6 +1,11 @@
 /**
  * /trade — линии и плашки открытой позиции, SL/TP на графике.
  */
+import {
+getCachedPosition,
+syncTradePositionsCache
+} from "./trade-positions-cache.js?v=1";
+
 const POLL_MS =
 5000;
 
@@ -8,7 +13,7 @@ const BADGE_LEFT =
 12;
 
 const LINE_OPACITY_SLTP =
-0.30;
+0.60;
 
 function tradingApi(){
 
@@ -1434,10 +1439,7 @@ color:
 opacity:
 LINE_OPACITY_SLTP,
 dash:
-[
-4,
-4
-]
+[]
 }
 }
 );
@@ -1491,10 +1493,7 @@ color:
 opacity:
 LINE_OPACITY_SLTP,
 dash:
-[
-4,
-4
-]
+[]
 }
 }
 );
@@ -1686,6 +1685,12 @@ function paintOnDrawingsCtx(
 ctx,
 plotW
 ){
+
+if(
+!ensureDom()
+){
+return;
+}
 
 if(
 !ctx ||
@@ -2330,7 +2335,29 @@ gapW
 
 }
 
-function scheduleDraw(){
+function scheduleDraw(
+immediate =
+false
+){
+
+if(
+immediate
+){
+
+if(
+rafId
+){
+cancelAnimationFrame(
+rafId
+);
+rafId =
+0;
+}
+
+draw();
+return;
+
+}
 
 if(
 rafId
@@ -2397,7 +2424,9 @@ return;
 position =
 nextPos;
 invalidateBadgeLayoutCache();
-scheduleDraw();
+scheduleDraw(
+true
+);
 
 }
 
@@ -2420,7 +2449,9 @@ if(
 ){
 position =
 null;
-scheduleDraw();
+scheduleDraw(
+true
+);
 return;
 }
 
@@ -2443,8 +2474,45 @@ if(
 ){
 position =
 null;
-scheduleDraw();
+scheduleDraw(
+true
+);
 return;
+}
+
+const cached =
+getCachedPosition(
+symbol
+);
+
+if(
+cached
+){
+position =
+cached;
+invalidateBadgeLayoutCache();
+scheduleDraw(
+true
+);
+}else{
+await syncTradePositionsCache();
+
+const bulk =
+getCachedPosition(
+symbol
+);
+
+if(
+bulk
+){
+position =
+bulk;
+invalidateBadgeLayoutCache();
+scheduleDraw(
+true
+);
+return;
+}
 }
 
 const result =
@@ -2453,11 +2521,24 @@ symbol
 );
 
 if(
+normalizeOverlaySymbol(
+host.getSymbol?.()
+) !==
+normalizeOverlaySymbol(
+symbol
+)
+){
+return;
+}
+
+if(
 !result?.ok
 ){
 position =
 null;
-scheduleDraw();
+scheduleDraw(
+true
+);
 return;
 }
 
@@ -2465,7 +2546,9 @@ position =
 result.position ||
 null;
 invalidateBadgeLayoutCache();
-scheduleDraw();
+scheduleDraw(
+true
+);
 }finally{
 fetching =
 false;
@@ -2490,12 +2573,102 @@ scheduleDraw
 }
 
 try{
-host.chart.subscribeCrosshairMove(
+host.chart.priceScale(
+"right"
+).subscribeVisibleLogicalRangeChange?.(
 scheduleDraw
 );
 }catch{
 /* ignore */
 }
+
+}
+
+function chartEventSymbolMatches(
+event,
+expectedSymbol
+){
+
+const eventSym =
+String(
+event?.detail?.symbol ||
+""
+).trim().toUpperCase();
+const expected =
+normalizeOverlaySymbol(
+expectedSymbol
+);
+
+if(
+!eventSym ||
+!expected
+){
+return true;
+}
+
+return eventSym ===
+expected;
+
+}
+
+function bindChartSwitchSync(
+signal
+){
+
+const onSwitchStart =
+()=>{
+
+position =
+null;
+invalidateBadgeLayoutCache();
+entryHover =
+false;
+scheduleDraw();
+
+};
+
+const onCandlesLoaded =
+e=>{
+
+if(
+!host
+){
+return;
+}
+
+if(
+!chartEventSymbolMatches(
+e,
+host.getSymbol?.()
+)
+){
+return;
+}
+
+void syncPosition(
+true
+);
+scheduleDraw(
+true
+);
+
+};
+
+window.addEventListener(
+"chart-switch-start",
+onSwitchStart,
+{
+signal
+}
+);
+
+window.addEventListener(
+"chart-candles-loaded",
+onCandlesLoaded,
+{
+signal
+}
+);
 
 }
 
@@ -2547,6 +2720,9 @@ return;
 }
 
 bindChart();
+bindChartSwitchSync(
+signal
+);
 ensureDrawingSync();
 
 const ro =
@@ -2562,6 +2738,26 @@ void syncPosition(
 true
 );
 startPoll();
+
+const sym =
+normalizeOverlaySymbol(
+host.getSymbol?.()
+);
+const cached =
+getCachedPosition(
+sym
+);
+
+if(
+cached
+){
+position =
+cached;
+invalidateBadgeLayoutCache();
+scheduleDraw(
+true
+);
+}
 
 window.addEventListener(
 "trade-book-refresh",
@@ -2590,40 +2786,6 @@ signal
 }
 );
 
-if(
-!widgetInstance
-){
-const symEl =
-document.getElementById(
-"current-symbol"
-);
-
-if(
-symEl
-){
-const symObserver =
-new MutationObserver(
-()=>{
-void syncPosition(
-true
-);
-}
-);
-
-symObserver.observe(
-symEl,
-{
-childList:
-true,
-characterData:
-true,
-subtree:
-true
-}
-);
-}
-}
-
 document.addEventListener(
 "visibilitychange",
 ()=>{
@@ -2651,6 +2813,10 @@ const controller =
 {
 refresh:()=>
 syncPosition(
+true
+),
+drawNow:()=>
+scheduleDraw(
 true
 ),
 destroy,

@@ -3,15 +3,15 @@
  */
 import {
 createTradeChartOverlay
-} from "./trade-chart-overlay.js?v=14";
+} from "./trade-chart-overlay.js?v=20";
 
 import {
 createTradeChartOrders
-} from "./trade-chart-orders.js?v=7";
+} from "./trade-chart-orders.js?v=10";
 
 import {
 createTradePlusMenuHandler
-} from "./trade-order-plus-ui.js?v=1";
+} from "./trade-order-plus-ui.js?v=2";
 
 import {
 TRADE_VOLUME_SLOT_COUNT,
@@ -19,7 +19,7 @@ TRADE_VOLUME_POSITION_APPLY_SLOT_INDEX,
 getVolumeStateForSymbol,
 saveVolumeStateForSymbol,
 getActiveTradeVolumeUsdt
-} from "./trade-volume-presets.js?v=7";
+} from "./trade-volume-presets.js?v=8";
 
 import {
 marketMap
@@ -178,7 +178,7 @@ index
 <input type="radio" name="${namePrefix}-active" value="${index}" aria-label="Пресет ${index + 1}"/>
 <span class="trade-volume-presets-field">
 <input type="number" min="0" step="any" inputmode="decimal" aria-label="Объём USDT ${index + 1}"/>
-<span class="trade-volume-presets-suffix">USDT</span>
+<span class="trade-volume-presets-suffix">$</span>
 </span>
 </label>
 `

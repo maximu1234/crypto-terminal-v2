@@ -15,7 +15,7 @@ connectKlineStream
 import {
 connectTickerStream,
 fetchTickersInto
-} from "../tickers.js?v=22";
+} from "../tickers.js?v=23";
 
 import {
 createTickerUiBatcher
@@ -35,9 +35,21 @@ import {
 isTradePage
 } from "./coins-state.js?v=6";
 
-import {
-hasOpenPosition
-} from "../trade-open-positions.js?v=1";
+/** Desktop /trade only — не тянем trade-open-positions в открытый web /coins. */
+let hasOpenPosition =
+()=>
+false;
+
+if(
+isTradePage
+){
+const tradePositions =
+await import(
+"../trade-open-positions.js?v=2"
+);
+hasOpenPosition =
+tradePositions.hasOpenPosition;
+}
 
 const hooks = {};
 

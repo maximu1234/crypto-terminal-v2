@@ -11,11 +11,11 @@ isTerminalDashboardPage
 
 import {
 initTradeExchangeSettings
-} from "./trade-exchange-settings.js?v=9";
+} from "./trade-exchange-settings.js?v=11";
 
 import {
 initTradeVolumePresets
-} from "./trade-volume-presets.js?v=7";
+} from "./trade-volume-presets.js?v=8";
 
 import {
 initTradeMarketEntry
@@ -136,7 +136,7 @@ const {
 initTradeOpenPositions
 } =
 await import(
-"./trade-open-positions.js?v=1"
+"./trade-open-positions.js?v=2"
 );
 
 initTradeOpenPositions();
@@ -162,6 +162,15 @@ if(
 mode ===
 "terminal"
 ){
+const {
+initTradePositionsCache
+} =
+await import(
+"./trade-positions-cache.js?v=1"
+);
+
+initTradePositionsCache();
+
 window.__tradeAppReady =
 true;
 
@@ -177,7 +186,7 @@ const {
 initTradeChartOverlay
 } =
 await import(
-"./trade-chart-overlay.js?v=14"
+"./trade-chart-overlay.js?v=20"
 );
 
 initTradeChartOverlay();
@@ -186,7 +195,7 @@ const {
 initTradeChartOrders
 } =
 await import(
-"./trade-chart-orders.js?v=7"
+"./trade-chart-orders.js?v=10"
 );
 
 initTradeChartOrders();

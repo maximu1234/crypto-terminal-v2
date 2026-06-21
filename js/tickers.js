@@ -2,54 +2,77 @@ import {
 fetchBybit
 } from "./bybit-fetch.js?v=17";
 
-let interval = null;
+const DEFAULT_POLL_INTERVAL_MS =
+3000;
 
-let subscribers = [];
+let pollIntervalMs =
+DEFAULT_POLL_INTERVAL_MS;
 
-function buildTickerPayload(ticker){
+let pollTimer =
+null;
+
+let subscribers =
+[];
+
+function buildTickerPayload(
+ticker
+){
 
 const change24 =
 Number(
-ticker.price24hPcnt || 0
-) * 100;
+ticker.price24hPcnt ||
+0
+) *
+100;
 
-let change1h = 0;
+let change1h =
+0;
 
 const highPrice24h =
 Number(
-ticker.highPrice24h || 0
+ticker.highPrice24h ||
+0
 );
 
 const lowPrice24h =
 Number(
-ticker.lowPrice24h || 0
+ticker.lowPrice24h ||
+0
 );
 
 if(
-highPrice24h > 0 &&
-lowPrice24h > 0
+highPrice24h >
+0 &&
+lowPrice24h >
+0
 ){
 
-change1h = change24 / 24;
+change1h =
+change24 /
+24;
 
 }
 
 return {
 
-symbol:ticker.symbol,
+symbol:
+ticker.symbol,
 
-price:Number(
+price:
+Number(
 ticker.lastPrice ||
 0
 ),
 
-bid:Number(
+bid:
+Number(
 ticker.bid1Price ||
 ticker.lastPrice ||
 0
 ),
 
-ask:Number(
+ask:
+Number(
 ticker.ask1Price ||
 ticker.lastPrice ||
 0
@@ -59,7 +82,8 @@ change24,
 
 change1h,
 
-volume24:Number(
+volume24:
+Number(
 ticker.turnover24h ||
 0
 )
@@ -68,16 +92,22 @@ ticker.turnover24h ||
 
 }
 
-export async function fetchTickersInto(targetMap){
+export async function fetchTickersInto(
+targetMap
+){
 
 try{
 
-const { json } =
+const {
+json
+} =
 await fetchBybit(
 "/v5/market/tickers?category=linear",
 {
-timeoutMs: 10000,
-retries: 1
+timeoutMs:
+10000,
+retries:
+1
 }
 );
 
@@ -88,14 +118,21 @@ if(
 return 0;
 }
 
-json.result.list.forEach(ticker=>{
+json.result.list.forEach(
+ticker=>{
 
 const payload =
-buildTickerPayload(ticker);
+buildTickerPayload(
+ticker
+);
 
-targetMap.set(payload.symbol, payload);
+targetMap.set(
+payload.symbol,
+payload
+);
 
-});
+}
+);
 
 return targetMap.size;
 
@@ -105,21 +142,80 @@ return 0;
 
 }
 
-export function connectTickerStream(onTick){
+export function setTickerPollInterval(
+ms
+){
 
-subscribers.push(onTick);
+const next =
+Number(
+ms
+);
 
-if(interval){
+pollIntervalMs =
+Number.isFinite(
+next
+) &&
+next >=
+0
+? next
+: DEFAULT_POLL_INTERVAL_MS;
+
+restartPolling();
+
+}
+
+export function getTickerPollInterval(){
+
+return pollIntervalMs;
+
+}
+
+function stopPolling(){
+
+if(
+pollTimer !=
+null
+){
+clearInterval(
+pollTimer
+);
+pollTimer =
+null;
+}
+
+}
+
+function restartPolling(){
+
+stopPolling();
+
+if(
+pollIntervalMs <=
+0 ||
+subscribers.length ===
+0
+){
 return;
 }
 
-loadTickers();
+void loadTickers();
 
-interval =
+pollTimer =
 setInterval(
 loadTickers,
-3000
+pollIntervalMs
 );
+
+}
+
+export function connectTickerStream(
+onTick
+){
+
+subscribers.push(
+onTick
+);
+restartPolling();
 
 }
 
@@ -127,12 +223,16 @@ async function loadTickers(){
 
 try{
 
-const { json } =
+const {
+json
+} =
 await fetchBybit(
 "/v5/market/tickers?category=linear",
 {
-timeoutMs: 10000,
-retries: 1
+timeoutMs:
+10000,
+retries:
+1
 }
 );
 
@@ -143,14 +243,23 @@ if(
 return;
 }
 
-json.result.list.forEach(ticker=>{
+json.result.list.forEach(
+ticker=>{
 
 const payload =
-buildTickerPayload(ticker);
+buildTickerPayload(
+ticker
+);
 
-subscribers.forEach(fn=>fn(payload));
+subscribers.forEach(
+fn=>
+fn(
+payload
+)
+);
 
-});
+}
+);
 
 }catch{
 /* тихо — следующий интервал или баннер уже от fetchBybit */
@@ -160,11 +269,8 @@ subscribers.forEach(fn=>fn(payload));
 
 export function stopTickerStream(){
 
-if(interval){
-clearInterval(interval);
-interval = null;
-}
-
-subscribers = [];
+stopPolling();
+subscribers =
+[];
 
 }

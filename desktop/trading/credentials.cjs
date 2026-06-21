@@ -1,12 +1,6 @@
 /**
- * Bybit API credentials — macOS Keychain via Electron safeStorage.
+ * Bybit API credentials — local userData file (no Keychain prompts).
  */
-const {
-safeStorage
-} =
-require(
-"electron"
-);
 const fs =
 require(
 "fs"
@@ -20,6 +14,13 @@ app
 } =
 require(
 "electron"
+);
+const {
+readPlainWithLegacyMigration,
+writePlain
+} =
+require(
+"../user-store.cjs"
 );
 
 const STORE_NAME =
@@ -36,53 +37,22 @@ STORE_NAME
 
 }
 
-function canEncrypt(){
-
-return (
-safeStorage.isEncryptionAvailable()
-);
-
-}
-
 function readStore(){
 
-const file =
-storePath();
+const raw =
+readPlainWithLegacyMigration(
+storePath()
+);
 
 if(
-!fs.existsSync(
-file
-)
+!raw
 ){
 return null;
 }
 
 try{
-const raw =
-fs.readFileSync(
-file
-);
-
-if(
-!raw.length
-){
-return null;
-}
-
-if(
-canEncrypt()
-){
 return JSON.parse(
-safeStorage.decryptString(
 raw
-)
-);
-}
-
-return JSON.parse(
-raw.toString(
-"utf8"
-)
 );
 }catch{
 return null;
@@ -94,32 +64,11 @@ function writeStore(
 data
 ){
 
-const payload =
+writePlain(
+storePath(),
 JSON.stringify(
 data
-);
-const buf =
-canEncrypt()
-? safeStorage.encryptString(
-payload
 )
-: Buffer.from(
-payload,
-"utf8"
-);
-
-fs.mkdirSync(
-path.dirname(
-storePath()
-),
-{
-recursive:
-true
-}
-);
-fs.writeFileSync(
-storePath(),
-buf
 );
 
 }
@@ -237,7 +186,7 @@ configured:
 testnet:
 !!creds?.testnet,
 encryptionAvailable:
-canEncrypt(),
+true,
 apiKey:
 creds?.apiKey ||
 "",

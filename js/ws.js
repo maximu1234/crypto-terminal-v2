@@ -101,7 +101,9 @@ high:Number(raw.high),
 
 low:Number(raw.low),
 
-close:Number(raw.close)
+close:Number(raw.close),
+
+volume:Number(raw.volume) || 0
 
 };
 

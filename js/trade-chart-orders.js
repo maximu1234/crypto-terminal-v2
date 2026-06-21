@@ -13,6 +13,20 @@ return window.cryptoTerminalDesktop?.trading;
 
 }
 
+function normalizeOverlaySymbol(
+symbol
+){
+
+return String(
+symbol ||
+""
+).replace(
+/\.P$/i,
+""
+).trim().toUpperCase();
+
+}
+
 function formatVolume(
 value
 ){
@@ -1333,6 +1347,17 @@ const result =
 await api.getOpenOrders();
 
 if(
+normalizeOverlaySymbol(
+host.getSymbol?.()
+) !==
+normalizeOverlaySymbol(
+symbol
+)
+){
+return;
+}
+
+if(
 !result?.ok
 ){
 orders =
@@ -1384,12 +1409,98 @@ scheduleDraw
 }
 
 try{
-host.chart.subscribeCrosshairMove(
+host.chart.priceScale(
+"right"
+).subscribeVisibleLogicalRangeChange?.(
 scheduleDraw
 );
 }catch{
 /* ignore */
 }
+
+}
+
+function chartEventSymbolMatches(
+event,
+expectedSymbol
+){
+
+const eventSym =
+String(
+event?.detail?.symbol ||
+""
+).trim().toUpperCase();
+const expected =
+normalizeOverlaySymbol(
+expectedSymbol
+);
+
+if(
+!eventSym ||
+!expected
+){
+return true;
+}
+
+return eventSym ===
+expected;
+
+}
+
+function bindChartSwitchSync(
+signal
+){
+
+const onSwitchStart =
+()=>{
+
+orders =
+[];
+badgeLayoutCache =
+null;
+scheduleDraw();
+
+};
+
+const onCandlesLoaded =
+e=>{
+
+if(
+!host
+){
+return;
+}
+
+if(
+!chartEventSymbolMatches(
+e,
+host.getSymbol?.()
+)
+){
+return;
+}
+
+void syncOrders(
+true
+);
+
+};
+
+window.addEventListener(
+"chart-switch-start",
+onSwitchStart,
+{
+signal
+}
+);
+
+window.addEventListener(
+"chart-candles-loaded",
+onCandlesLoaded,
+{
+signal
+}
+);
 
 }
 
@@ -1441,6 +1552,9 @@ return;
 }
 
 bindChart();
+bindChartSwitchSync(
+signal
+);
 ensureDrawingSync();
 
 const ro =
@@ -1480,40 +1594,6 @@ true
 signal
 }
 );
-
-if(
-!widgetInstance
-){
-const symEl =
-document.getElementById(
-"current-symbol"
-);
-
-if(
-symEl
-){
-const symObserver =
-new MutationObserver(
-()=>{
-void syncOrders(
-true
-);
-}
-);
-
-symObserver.observe(
-symEl,
-{
-childList:
-true,
-characterData:
-true,
-subtree:
-true
-}
-);
-}
-}
 
 document.addEventListener(
 "visibilitychange",

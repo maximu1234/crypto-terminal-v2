@@ -69,7 +69,7 @@ ensureDomChartCrosshair,
 hideDomChartCrosshair,
 positionTabletProbeHorizInStack,
 fullCrosshairOptions
-} from "../chart-import.js?v=41";
+} from "../chart-import.js?v=42";
 
 import {
 STROKE,
@@ -176,7 +176,7 @@ createDrawUndoStack
 
 import {
 createDrawDesktopSelection
-} from "./draw-edit-desktop.js?v=5";
+} from "./draw-edit-desktop.js?v=6";
 
 import {
 createDrawingsPersist
@@ -188,11 +188,11 @@ createDrawStyleBar
 
 import {
 createDrawAlertsChart
-} from "./draw-alerts-chart.js?v=2";
+} from "./draw-alerts-chart.js?v=3";
 
 import {
 createDrawPlacement
-} from "./draw-placement.js?v=3";
+} from "./draw-placement.js?v=4";
 
 import {
 createDrawEditInteraction
@@ -208,7 +208,7 @@ createDrawPriceScale
 
 import {
 createDrawRedrawLoop
-} from "./draw-redraw-loop.js?v=3";
+} from "./draw-redraw-loop.js?v=4";
 
 export function initDrawings({
 
@@ -5246,7 +5246,8 @@ tick
 }
 
 function applyRemoteDrawingsToChart(
-symbols
+symbols,
+options = {}
 ){
 
 if(
@@ -5298,9 +5299,19 @@ return;
 
 }
 
+const reload =
+options.reload !==
+false;
+
 resizeCanvas();
+
+if(
+reload
+){
 loadDrawings();
 stripOrphanAlertDrawings();
+}
+
 scheduleRedraw();
 updateStyleBar();
 touchStorageSnap();
@@ -5406,7 +5417,11 @@ return;
 }
 
 applyRemoteDrawingsToChart(
-null
+null,
+{
+reload:
+false
+}
 );
 
 };
@@ -5793,7 +5808,9 @@ y
 
 },
 
-onSymbolChange(){
+onSymbolChange(
+options = {}
+){
 
 const next =
 getSymbol();
@@ -5824,7 +5841,12 @@ setActiveWidth(style.lineWidth);
 }
 
 updateStyleBar();
+
+if(
+!options.skipRedraw
+){
 scheduleRedraw();
+}
 
 },
 

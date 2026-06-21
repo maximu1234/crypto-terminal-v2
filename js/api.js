@@ -213,7 +213,8 @@ time:Number(k[0])/1000,
 open:Number(k[1]),
 high:Number(k[2]),
 low:Number(k[3]),
-close:Number(k[4])
+close:Number(k[4]),
+volume:Number(k[5]) || 0
 
 });
 
@@ -789,5 +790,130 @@ low:Number(v.low),
 close:Number(v.close)
 
 }));
+
+}
+
+export async function loadBybitOrderbook(
+symbol,
+limit =
+1000
+){
+
+const sym =
+String(
+symbol ||
+""
+).replace(
+/\.P$/i,
+""
+).trim().toUpperCase();
+
+if(
+!sym
+){
+return {
+bids:[],
+asks:[]
+};
+}
+
+const capped =
+Math.min(
+Math.max(
+1,
+limit
+),
+1000
+);
+
+const path =
+`/v5/market/orderbook?category=linear&symbol=${encodeURIComponent(sym)}&limit=${capped}`;
+
+const json =
+await fetchBybitJsonWithDirectFallback(
+path,
+{
+timeoutMs:
+8000
+}
+);
+
+const result =
+json?.result ||
+{};
+
+const mapSide =
+rows=>
+(Array.isArray(
+rows
+)
+? rows
+: []
+).map(
+row=>{
+const price =
+Number(
+row?.[
+0
+]
+);
+const size =
+Number(
+row?.[
+1
+]
+);
+
+if(
+!Number.isFinite(
+price
+) ||
+!Number.isFinite(
+size
+) ||
+price <=
+0 ||
+size <=
+0
+){
+return null;
+}
+
+return {
+price,
+size,
+notional:
+price *
+size
+};
+}
+).filter(
+Boolean
+);
+
+return {
+bids:
+mapSide(
+result.b
+).sort(
+(
+a,
+b
+)=>
+b.price -
+a.price
+),
+asks:
+mapSide(
+result.a
+).sort(
+(
+a,
+b
+)=>
+a.price -
+b.price
+)
+};
 
 }

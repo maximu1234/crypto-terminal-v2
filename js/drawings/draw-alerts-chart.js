@@ -9,6 +9,10 @@ alertPriceForDisplay,
 getActiveAlerts
 } from "../alerts.js?v=97";
 
+import {
+isChartLayoutReady
+} from "../chart-layout-gate.js?v=2";
+
 export function createDrawAlertsChart(
 deps
 ){
@@ -29,6 +33,12 @@ ctx,
 plotW,
 h
 ){
+
+if(
+!isChartLayoutReady()
+){
+return;
+}
 
 const sym =
 String(

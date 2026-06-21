@@ -3,7 +3,7 @@ loadBybitHistory,
 loadBybitSymbols,
 peekBybitSymbolsCache,
 symbolListSignature
-} from "./api.js?v=27";
+} from "./api.js?v=29";
 
 import {
 createScreenerChart,
@@ -16,7 +16,7 @@ updateRsiLevelLinesLayout,
 linkPairedChartTimeScales,
 SCREENER_VISIBLE_BARS,
 SCREENER_MAX_BARS
-} from "./chart-import.js?v=41";
+} from "./chart-import.js?v=42";
 
 import {
 calculateRSI,
@@ -30,7 +30,7 @@ subscribeKline
 import {
 connectTickerStream,
 fetchTickersInto
-} from "./tickers.js?v=22";
+} from "./tickers.js?v=23";
 
 import {
 createTickerUiBatcher

@@ -53,7 +53,7 @@ calcPositionVolumeUsd
 
 import {
 applyPositionVolumeFromDrawing
-} from "../trade-volume-presets.js?v=7";
+} from "../trade-volume-presets.js?v=8";
 
 import {
 touchShapeRevision

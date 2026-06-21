@@ -48,12 +48,13 @@ isUserCrosshairEvent
 import {
 TABLET_LW_NATIVE_PRICE_SCALE,
 clearTabletProbeCrosshairForChart
-} from "./chart/chart-factory.js?v=32";
+} from "./chart/chart-factory.js?v=34";
 
 export {
 createCandlestickChart,
 createScreenerChart,
 createRSIChart,
+createVolumeChart,
 SCREENER_VISIBLE_BARS,
 SCREENER_MAX_BARS,
 SCREENER_LOAD_BARS,
@@ -83,7 +84,7 @@ appendFutureWhitespaceBars,
 coinsTfVisibleBars,
 applyCoinsChartViewport,
 refreshCoinsChartBarSpacing
-} from "./chart/chart-factory.js?v=32";
+} from "./chart/chart-factory.js?v=34";
 
 
 export {

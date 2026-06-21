@@ -116,13 +116,17 @@ body.trade-page .trade-pos-badge .seg-close{
 appearance:none;
 border:none;
 background:rgba(0,0,0,.22);
-color:inherit;
+color:#ef4444;
 font-size:12px;
 line-height:1;
 cursor:pointer;
 padding:3px 7px;
 min-width:21px;
+display:inline-flex;
+align-items:center;
 justify-content:center;
+transform:scale(1.44);
+transform-origin:center;
 }
 
 body.trade-page .trade-pos-badge--sl,
@@ -194,11 +198,12 @@ filter:brightness(1.08);
 
 body.trade-page .trade-pos-badge--sl .seg-close,
 body.trade-page .trade-pos-badge--tp .seg-close{
-color:#a1a1aa;
+color:#ef4444;
 }
 
 body.trade-page .trade-pos-badge .seg-close:hover{
-background:rgba(0,0,0,.35);
+background:rgba(239,68,68,.18);
+color:#f87171;
 }
 
 /* ── Лимитные / стоп-ордера ── */
@@ -287,18 +292,22 @@ body.trade-page .trade-order-badge .seg-close{
 appearance:none;
 border:none;
 background:rgba(0,0,0,.22);
-color:#a1a1aa;
+color:#ef4444;
 font-size:11px;
 line-height:1;
 cursor:pointer;
 padding:2px 5px;
 min-width:17px;
+display:inline-flex;
+align-items:center;
 justify-content:center;
+transform:scale(1.44);
+transform-origin:center;
 }
 
 body.trade-page .trade-order-badge .seg-close:hover{
-background:rgba(0,0,0,.35);
-color:#fff;
+background:rgba(239,68,68,.18);
+color:#f87171;
 }
 
 @media (max-width:640px){

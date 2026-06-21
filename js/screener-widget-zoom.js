@@ -10,11 +10,11 @@ updateRsiBandLayout,
 updateRsiLevelLinesLayout,
 linkPairedChartTimeScales,
 SCREENER_MAX_BARS
-} from "./chart-import.js?v=41";
+} from "./chart-import.js?v=42";
 
 import {
 loadBybitHistory
-} from "./api.js?v=27";
+} from "./api.js?v=29";
 
 import {
 calculateRSI,

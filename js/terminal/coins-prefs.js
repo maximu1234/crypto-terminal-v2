@@ -71,8 +71,44 @@ market:"all",
 sortByMarket,
 lastViewByMarket,
 invertChart:false,
-invertRsiChart:false
+invertRsiChart:false,
+listRefreshMs:
+10000
 };
+
+}
+
+export function normalizeListRefreshMs(
+value
+){
+
+const n =
+Number(
+value
+);
+
+if(
+n ===
+0
+){
+return 0;
+}
+
+if(
+n ===
+60000
+){
+return 60000;
+}
+
+if(
+n ===
+10000
+){
+return 10000;
+}
+
+return 10000;
 
 }
 
@@ -290,6 +326,11 @@ prefs.invertChart =
 prefs.invertRsiChart =
 !!parsed?.invertRsiChart;
 
+prefs.listRefreshMs =
+normalizeListRefreshMs(
+parsed?.listRefreshMs
+);
+
 try{
 
 localStorage.removeItem(
@@ -358,6 +399,11 @@ out.invertChart =
 
 out.invertRsiChart =
 !!prefs?.invertRsiChart;
+
+out.listRefreshMs =
+normalizeListRefreshMs(
+prefs?.listRefreshMs
+);
 
 localStorage.setItem(
 COINS_PREFS_KEY,

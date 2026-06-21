@@ -6,7 +6,7 @@ createCandlestickChart,
 ensureDomChartCrosshair,
 positionDomChartCrosshair,
 hideDomChartCrosshair
-} from "./chart-import.js?v=41";
+} from "./chart-import.js?v=42";
 
 import {
 initDrawings
@@ -14,7 +14,7 @@ initDrawings
 
 import {
 mountPriceAlertUi
-} from "./price-alert-ui.js?v=40";
+} from "./price-alert-ui.js?v=44";
 
 function widgetPlotWidth(
 wrapEl,
@@ -230,9 +230,8 @@ series,
 wrapEl,
 getSymbol,
 getTf,
+getDrawingTools,
 scheduleRedraw:()=>{
-
-disposeAlertUi?.syncBadges?.();
 
 const tools =
 getDrawingTools?.();

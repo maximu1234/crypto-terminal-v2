@@ -3,7 +3,11 @@
  */
 import {
 getActiveTradeVolumeUsdt
-} from "./trade-volume-presets.js?v=7";
+} from "./trade-volume-presets.js?v=8";
+
+import {
+formatPrice
+} from "./chart-import.js?v=42";
 
 import {
 createPriceAlert
@@ -27,26 +31,13 @@ function formatMenuPrice(
 price
 ){
 
-const num =
-Number(
+const text =
+formatPrice(
 price
 );
 
-if(
-!Number.isFinite(
-num
-)
-){
-return "—";
-}
-
-return num.toLocaleString(
-"en-US",
-{
-maximumFractionDigits:
-8
-}
-);
+return text ||
+"—";
 
 }
 

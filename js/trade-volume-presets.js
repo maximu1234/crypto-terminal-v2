@@ -997,7 +997,7 @@ index
 <input type="radio" name="${namePrefix}-active" value="${index}" aria-label="Пресет ${index + 1}"/>
 <span class="trade-volume-presets-field">
 <input type="number" min="0" step="any" inputmode="decimal" aria-label="Объём USDT ${index + 1}"/>
-<span class="trade-volume-presets-suffix">USDT</span>
+<span class="trade-volume-presets-suffix">$</span>
 </span>
 </label>
 `

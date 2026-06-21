@@ -22,7 +22,12 @@ hideDomChartCrosshair,
 hideDomChartCrosshairHorz,
 hideDomChartCrosshairVert,
 positionDomChartCrosshair
-} from "./chart-import.js?v=41";
+} from "./chart-import.js?v=42";
+
+import {
+isChartLayoutReady,
+shouldDeferAlertBadgeSync
+} from "./chart-layout-gate.js?v=2";
 
 const PLUS_ICON_W =
 22;
@@ -140,6 +145,8 @@ series,
 wrapEl,
 getSymbol,
 getTf,
+getDrawingTools =
+null,
 scheduleRedraw,
 onCrosshairSuppress,
 onCrosshairRelease,
@@ -221,27 +228,141 @@ alertBadgesRoot
 const badgeByShapeId =
 new Map();
 
-let badgesRaf =
+let badgesRaf1 =
+0;
+let badgesRaf2 =
 0;
 
 function scheduleBadgeSync(){
 
 if(
-badgesRaf
+badgesRaf1
 ){
 return;
 }
 
-badgesRaf =
+badgesRaf1 =
 requestAnimationFrame(
 ()=>{
-badgesRaf =
+badgesRaf2 =
+requestAnimationFrame(
+()=>{
+badgesRaf1 =
+0;
+badgesRaf2 =
 0;
 syncAlertBadges();
 }
 );
+}
+);
 
 }
+
+function cancelBadgeSync(){
+
+if(
+badgesRaf1
+){
+cancelAnimationFrame(
+badgesRaf1
+);
+badgesRaf1 =
+0;
+}
+
+if(
+badgesRaf2
+){
+cancelAnimationFrame(
+badgesRaf2
+);
+badgesRaf2 =
+0;
+}
+
+}
+
+const syncBadgesAfterDrawRedraw =
+()=>{
+syncAlertBadges();
+};
+
+function bindBadgesToDrawRedraw(){
+
+const dt =
+getDrawingTools?.();
+
+if(
+!dt?.addAfterRedrawListener
+){
+return false;
+}
+
+dt.addAfterRedrawListener(
+syncBadgesAfterDrawRedraw
+);
+return true;
+
+}
+
+let drawRedrawBound =
+bindBadgesToDrawRedraw();
+
+function hideAllAlertBadges(){
+
+for(
+const badge of
+badgeByShapeId.values()
+){
+badge.el.classList.add(
+"hidden"
+);
+}
+
+}
+
+function onChartSwitchStart(){
+
+cancelBadgeSync();
+hideAllAlertBadges();
+
+}
+
+function onChartCandlesLoaded(
+e
+){
+
+const eventSym =
+String(
+e.detail?.symbol ||
+""
+).trim().toUpperCase();
+const current =
+sym();
+
+if(
+eventSym &&
+current &&
+eventSym !==
+current
+){
+return;
+}
+
+scheduleBadgeSync();
+
+}
+
+window.addEventListener(
+"chart-switch-start",
+onChartSwitchStart
+);
+
+window.addEventListener(
+"chart-candles-loaded",
+onChartCandlesLoaded
+);
 
 function deleteAlertByShapeId(
 shapeId
@@ -409,6 +530,12 @@ priceEl: el.querySelector(
 }
 
 function syncAlertBadges(){
+
+if(
+shouldDeferAlertBadgeSync()
+){
+return;
+}
 
 const alive =
 new Set();
@@ -1446,6 +1573,28 @@ scheduleBadgeSync
 const dispose =
 ()=>{
 
+cancelBadgeSync();
+
+window.removeEventListener(
+"chart-switch-start",
+onChartSwitchStart
+);
+
+window.removeEventListener(
+"chart-candles-loaded",
+onChartCandlesLoaded
+);
+
+if(
+drawRedrawBound
+){
+getDrawingTools?.()?.removeAfterRedrawListener?.(
+syncBadgesAfterDrawRedraw
+);
+drawRedrawBound =
+false;
+}
+
 wrapEl.removeEventListener(
 "pointermove",
 onPointerMove,
@@ -1527,7 +1676,7 @@ true
 };
 
 dispose.syncBadges =
-scheduleBadgeSync;
+syncAlertBadges;
 
 return dispose;
 

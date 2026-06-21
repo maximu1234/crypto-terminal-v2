@@ -1071,6 +1071,101 @@ series
 
 }
 
+export function createVolumeChart(
+container
+){
+
+const chart =
+LightweightCharts.createChart(
+container,
+{
+
+layout:{
+background:{ color:"transparent" },
+textColor:CHART_SCALE_TEXT_COLOR,
+fontSize:effectiveChartScaleFontSize(),
+fontFamily:CHART_SCALE_FONT_FAMILY
+},
+
+grid:{
+vertLines:{
+color:"transparent",
+visible:false
+},
+horzLines:{
+visible:false
+}
+},
+
+rightPriceScale:{
+borderColor:"#2a2e39",
+autoScale:true,
+minimumWidth:effectiveChartPriceScaleWidth(),
+scaleMargins:{
+top:0.08,
+bottom:0
+}
+},
+
+timeScale:{
+visible:false,
+timeVisible:false,
+ticksVisible:false,
+borderColor:"#1f2937",
+secondsVisible:false,
+rightOffset:24,
+fixRightEdge:false
+},
+
+crosshair:hiddenCrosshairOptions(),
+
+handleScroll:{
+mouseWheel:false,
+pressedMouseMove:false,
+horzTouchDrag:false,
+vertTouchDrag:false
+},
+
+handleScale:{
+mouseWheel:false,
+pinch:false,
+axisPressedMouseMove:{
+time:false,
+price:false
+},
+axisDoubleClickReset:{
+time:true,
+price:false
+}
+}
+
+}
+);
+
+chart.applyOptions({
+crosshair:hiddenCrosshairOptions()
+});
+
+const series =
+chart.addHistogramSeries({
+
+priceFormat:{
+type:"volume"
+},
+
+priceScaleId:"right"
+
+});
+
+return {
+
+chart,
+series
+
+};
+
+}
+
 export function applyChartScaleWidthCss(
 mainChart
 ){
@@ -1310,6 +1405,7 @@ lock = false;
 
 }
 
+const subMain =
 mainChart.timeScale().subscribeVisibleLogicalRangeChange(
 range=>{
 if(range){
@@ -1318,6 +1414,7 @@ fromMain();
 }
 );
 
+const subLinked =
 linkedChart.timeScale().subscribeVisibleLogicalRangeChange(
 range=>{
 if(range){
@@ -1326,7 +1423,23 @@ fromLinked();
 }
 );
 
-return ()=>{};
+return ()=>{
+if(
+subMain
+){
+mainChart.timeScale().unsubscribeVisibleLogicalRangeChange(
+subMain
+);
+}
+
+if(
+subLinked
+){
+linkedChart.timeScale().unsubscribeVisibleLogicalRangeChange(
+subLinked
+);
+}
+};
 
 }
 

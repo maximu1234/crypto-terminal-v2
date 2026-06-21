@@ -8,10 +8,13 @@ COINS_LIST_MIN_PX,
 COINS_RSI_MIN_DESKTOP_PX,
 COINS_PANEL_MIN_RATIO,
 defaultRsiHeightPx,
+defaultVolumeHeightPx,
 computeCoinsLayoutLimits,
+computeVolumeHeightLimits,
 clampCoinsListWidth,
-clampCoinsRsiHeight
-} from "./coins-layout-math.js?v=2";
+clampCoinsRsiHeight,
+clampCoinsVolumeHeight
+} from "./coins-layout-math.js?v=3";
 
 import {
 isCoinsPage
@@ -23,9 +26,12 @@ COINS_LIST_MIN_PX,
 COINS_RSI_MIN_DESKTOP_PX,
 COINS_PANEL_MIN_RATIO,
 defaultRsiHeightPx,
+defaultVolumeHeightPx,
 computeCoinsLayoutLimits,
+computeVolumeHeightLimits,
 clampCoinsListWidth,
-clampCoinsRsiHeight
+clampCoinsRsiHeight,
+clampCoinsVolumeHeight
 };
 
 export const COINS_LAYOUT_KEY =
@@ -48,7 +54,8 @@ if(
 ){
 return {
 listWidth:null,
-rsiHeight:null
+rsiHeight:null,
+volumeHeight:null
 };
 }
 
@@ -71,16 +78,25 @@ parsed?.rsiHeight
 ? parsed.rsiHeight
 : null;
 
+const volumeHeight =
+Number.isFinite(
+parsed?.volumeHeight
+)
+? parsed.volumeHeight
+: null;
+
 return {
 listWidth,
-rsiHeight
+rsiHeight,
+volumeHeight
 };
 
 }catch{
 
 return {
 listWidth:null,
-rsiHeight:null
+rsiHeight:null,
+volumeHeight:null
 };
 
 }
@@ -105,6 +121,12 @@ Number.isFinite(
 prefs?.rsiHeight
 )
 ? prefs.rsiHeight
+: null,
+volumeHeight:
+Number.isFinite(
+prefs?.volumeHeight
+)
+? prefs.volumeHeight
 : null
 };
 
@@ -112,6 +134,8 @@ if(
 out.listWidth ===
 null &&
 out.rsiHeight ===
+null &&
+out.volumeHeight ===
 null
 ){
 
@@ -180,11 +204,17 @@ document.getElementById(
 "rsi-wrap"
 );
 
+const volumeWrap =
+document.getElementById(
+"volume-wrap"
+);
+
 if(
 !app ||
 !list ||
 !chartsStack ||
-!rsiWrap
+!rsiWrap ||
+!volumeWrap
 ){
 
 return ()=>{};
@@ -197,6 +227,8 @@ let listWidth =
 saved.listWidth;
 let rsiHeight =
 saved.rsiHeight;
+let volumeHeight =
+saved.volumeHeight;
 
 let dragMode =
 null;
@@ -207,6 +239,8 @@ let dragStartY =
 let dragStartListW =
 0;
 let dragStartRsiH =
+0;
+let dragStartVolumeH =
 0;
 
 const hHandle =
@@ -253,8 +287,33 @@ vHandle.setAttribute(
 vHandle.tabIndex =
 0;
 
+const volumeVHandle =
+document.createElement(
+"div"
+);
+
+volumeVHandle.className =
+"coins-layout-resize coins-layout-resize--v";
+volumeVHandle.setAttribute(
+"role",
+"separator"
+);
+volumeVHandle.setAttribute(
+"aria-orientation",
+"horizontal"
+);
+volumeVHandle.setAttribute(
+"aria-label",
+"Высота Volume"
+);
+volumeVHandle.tabIndex =
+0;
+
 list.appendChild(
 hHandle
+);
+volumeWrap.appendChild(
+volumeVHandle
 );
 rsiWrap.appendChild(
 vHandle
@@ -262,16 +321,73 @@ vHandle
 
 function measureLimits(){
 
-return computeCoinsLayoutLimits(
+const stackH =
+chartsStack.clientHeight;
+
+const rsiVisible =
+!rsiWrap.classList.contains(
+"indicator-pane-hidden"
+);
+
+const volumeVisible =
+!volumeWrap.classList.contains(
+"indicator-pane-hidden"
+);
+
+const innerHeight =
+window.innerHeight;
+
+const currentRsiH =
+rsiVisible
+? (
+rsiHeight ??
+defaultRsiHeightPx(
+innerHeight
+)
+)
+: 0;
+
+const currentVolumeH =
+volumeVisible
+? (
+volumeHeight ??
+defaultVolumeHeightPx(
+innerHeight
+)
+)
+: 0;
+
+const layoutLimits =
+computeCoinsLayoutLimits(
 {
 appWidth:
 app.clientWidth,
 chartsStackHeight:
-chartsStack.clientHeight,
-innerHeight:
-window.innerHeight
+stackH,
+innerHeight,
+volumeOccupiedHeight:
+volumeVisible
+? currentVolumeH
+: 0
 }
 );
+
+const volumeLimits =
+computeVolumeHeightLimits(
+{
+stackH,
+rsiOccupiedHeight:
+rsiVisible
+? currentRsiH
+: 0,
+innerHeight
+}
+);
+
+return {
+...layoutLimits,
+...volumeLimits
+};
 
 }
 
@@ -379,13 +495,38 @@ rsiWrap.style.setProperty(
 }
 
 if(
+volumeHeight ==
+null
+){
+
+volumeWrap.style.removeProperty(
+"--coins-volume-h"
+);
+
+}else{
+
+volumeHeight =
+clampCoinsVolumeHeight(
+volumeHeight,
+limits
+);
+
+volumeWrap.style.setProperty(
+"--coins-volume-h",
+`${volumeHeight}px`
+);
+
+}
+
+if(
 persist
 ){
 
 writeCoinsLayoutPrefs(
 {
 listWidth,
-rsiHeight
+rsiHeight,
+volumeHeight
 }
 );
 
@@ -420,6 +561,10 @@ limits.defaultListW;
 dragStartRsiH =
 rsiHeight ??
 limits.defaultRsiH;
+
+dragStartVolumeH =
+volumeHeight ??
+limits.defaultVolumeH;
 
 document.body.classList.add(
 mode ===
@@ -465,6 +610,9 @@ try{
 mode ===
 "h"
 ? hHandle
+: mode ===
+"volume"
+? volumeVHandle
 : vHandle
 ).setPointerCapture(
 e.pointerId
@@ -501,6 +649,19 @@ dragStartX;
 
 listWidth =
 dragStartListW -
+delta;
+
+}else if(
+dragMode ===
+"volume"
+){
+
+const delta =
+dragStartY -
+e.clientY;
+
+volumeHeight =
+dragStartVolumeH +
 delta;
 
 }else{
@@ -553,7 +714,14 @@ onPointerDown(
 vHandle.addEventListener(
 "pointerdown",
 onPointerDown(
-"v"
+"rsi"
+)
+);
+
+volumeVHandle.addEventListener(
+"pointerdown",
+onPointerDown(
+"volume"
 )
 );
 
@@ -642,6 +810,7 @@ layoutChangeRaf =
 
 hHandle.remove();
 vHandle.remove();
+volumeVHandle.remove();
 window.removeEventListener(
 "pointermove",
 onPointerMove
@@ -672,6 +841,9 @@ app.style.removeProperty(
 );
 rsiWrap.style.removeProperty(
 "--coins-rsi-h"
+);
+volumeWrap.style.removeProperty(
+"--coins-volume-h"
 );
 
 };

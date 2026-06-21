@@ -9,7 +9,7 @@ getTerminalBlueSymbols
 
 import {
 loadBybitHistory
-} from "./api.js?v=27";
+} from "./api.js?v=29";
 
 import {
 isLocalDevHost
@@ -23,7 +23,7 @@ createRSIChart,
 updateRsiBandLayout,
 updateRsiLevelLinesLayout,
 linkPairedChartTimeScales
-} from "./chart-import.js?v=41";
+} from "./chart-import.js?v=42";
 
 import {
 calculateRSI,
@@ -122,7 +122,7 @@ return;
 
 const mod =
 await import(
-"./trade-widget-mount.js?v=5"
+"./trade-widget-mount.js?v=6"
 );
 
 mountTradeOnDashboardWidget =
@@ -1037,6 +1037,26 @@ resizeChart();
 refreshWidgetDrawings(
 entry
 );
+
+const symNorm =
+String(
+symbol ||
+""
+).trim().toUpperCase();
+
+window.dispatchEvent(
+new CustomEvent(
+"chart-candles-loaded",
+{
+detail:{
+symbol:
+symNorm
+}
+}
+)
+);
+
+entry.tradeWidget?.overlay?.drawNow?.();
 
 const last =
 candles[candles.length - 1];

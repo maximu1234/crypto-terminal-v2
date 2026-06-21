@@ -9,6 +9,10 @@ export const COINS_LIST_MIN_PX =
 export const COINS_RSI_MIN_DESKTOP_PX =
 102;
 
+/** Volume не выше 50% высоты основного графика (chart-wrap). */
+export const COINS_VOLUME_MAX_CHART_RATIO =
+0.5;
+
 export const COINS_PANEL_MIN_RATIO =
 0.2;
 
@@ -33,12 +37,113 @@ innerHeight *
 
 }
 
+export function defaultVolumeHeightPx(
+innerHeight =
+COINS_LAYOUT_DEFAULT_INNER_HEIGHT
+){
+
+return defaultRsiHeightPx(
+innerHeight
+);
+
+}
+
+export function computeVolumeHeightLimits(
+{
+stackH,
+rsiOccupiedHeight = 0,
+innerHeight =
+COINS_LAYOUT_DEFAULT_INNER_HEIGHT
+} = {}
+){
+
+const stack =
+Math.max(
+0,
+Number(
+stackH
+) ||
+0
+);
+
+const rsiH =
+Math.max(
+0,
+Number(
+rsiOccupiedHeight
+) ||
+0
+);
+
+const defaultVolumeH =
+defaultVolumeHeightPx(
+innerHeight
+);
+
+const minVolumeH =
+COINS_RSI_MIN_DESKTOP_PX;
+
+const maxVolumeH =
+Math.round(
+Math.max(
+minVolumeH,
+(
+stack -
+rsiH
+) /
+(
+1 +
+1 /
+COINS_VOLUME_MAX_CHART_RATIO
+)
+)
+);
+
+return {
+defaultVolumeH,
+minVolumeH,
+maxVolumeH
+};
+
+}
+
+export function clampCoinsVolumeHeight(
+volumeHeight,
+limits
+){
+
+const h =
+Number(
+volumeHeight
+);
+
+if(
+!Number.isFinite(
+h
+)
+){
+return limits.defaultVolumeH;
+}
+
+return Math.round(
+Math.min(
+limits.maxVolumeH,
+Math.max(
+limits.minVolumeH,
+h
+)
+)
+);
+
+}
+
 export function computeCoinsLayoutLimits(
 {
 appWidth,
 chartsStackHeight,
 innerHeight =
-COINS_LAYOUT_DEFAULT_INNER_HEIGHT
+COINS_LAYOUT_DEFAULT_INNER_HEIGHT,
+volumeOccupiedHeight = 0
 } = {}
 ){
 
@@ -75,10 +180,26 @@ defaultRsiHeightPx(
 innerHeight
 );
 
-const defaultChartH =
+const volumeH =
+Math.max(
+0,
+Number(
+volumeOccupiedHeight
+) ||
+0
+);
+
+const stackForChartRsi =
 Math.max(
 0,
 stackH -
+volumeH
+);
+
+const defaultChartH =
+Math.max(
+0,
+stackForChartRsi -
 defaultRsiH
 );
 
@@ -115,7 +236,7 @@ maxRsiH:
 Math.round(
 Math.max(
 COINS_RSI_MIN_DESKTOP_PX,
-stackH -
+stackForChartRsi -
 minChartH
 )
 )

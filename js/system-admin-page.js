@@ -17,10 +17,9 @@ import {
 getBybitRouteMode,
 setBybitRouteMode,
 bybitRouteModeLabel,
-BYBIT_ROUTE_AUTO,
 BYBIT_ROUTE_DIRECT,
 BYBIT_ROUTE_PROXY
-} from "./bybit-route-pref.js?v=1";
+} from "./bybit-route-pref.js?v=2";
 
 import {
 bindSupabaseUsagePrefsForm

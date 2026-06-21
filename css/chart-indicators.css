@@ -1,0 +1,563 @@
+/* Индикаторы — кнопка в topbar и dropdown */
+
+.chart-indicators-wrap{
+position:relative;
+display:flex;
+align-items:center;
+flex:0 0 auto;
+height:100%;
+}
+
+.chart-indicators-btn{
+display:inline-flex;
+align-items:center;
+justify-content:center;
+box-sizing:border-box;
+width:34px;
+height:40px;
+margin:0;
+padding:0;
+border:none;
+border-radius:4px;
+background:transparent;
+color:#d1d4dc;
+cursor:pointer;
+-webkit-tap-highlight-color:transparent;
+}
+
+.chart-indicators-btn:hover,
+.chart-indicators-btn[aria-expanded="true"]{
+background:rgba(255,255,255,0.06);
+color:#f0f3fa;
+}
+
+.chart-indicators-btn-icon{
+width:22px;
+height:22px;
+display:block;
+}
+
+.chart-indicators-menu{
+position:absolute;
+top:calc(100% + 6px);
+left:0;
+z-index:120;
+min-width:220px;
+padding:6px;
+border:1px solid rgba(255,255,255,0.1);
+border-radius:8px;
+background:rgba(22,24,32,0.98);
+box-shadow:0 12px 32px rgba(0,0,0,0.45);
+}
+
+.chart-indicators-menu.hidden{
+display:none;
+}
+
+.chart-indicators-item{
+display:flex;
+align-items:center;
+gap:8px;
+padding:8px 10px;
+border-radius:6px;
+font:500 13px/1.25 system-ui,-apple-system,sans-serif;
+color:#e5e7eb;
+cursor:pointer;
+user-select:none;
+}
+
+.chart-indicators-item:hover{
+background:rgba(255,255,255,0.06);
+}
+
+.chart-indicators-item input{
+width:14px;
+height:14px;
+margin:0;
+accent-color:#818cf8;
+cursor:pointer;
+flex-shrink:0;
+}
+
+.chart-indicators-item.is-limit-blocked{
+opacity:0.45;
+cursor:not-allowed;
+}
+
+.chart-indicators-item.is-limit-blocked input{
+cursor:not-allowed;
+}
+
+.chart-indicators-limit-note{
+margin:6px 4px 2px;
+padding:6px 8px 4px;
+border-top:1px solid rgba(255,255,255,0.08);
+font:400 11px/1.35 system-ui,-apple-system,sans-serif;
+color:#787b86;
+}
+
+.chart-indicators-settings{
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:10px;
+margin:0 4px 6px;
+padding:6px 10px 8px 28px;
+}
+
+.chart-indicators-settings.hidden{
+display:none;
+}
+
+.chart-indicators-settings-label{
+font:500 11px/1.2 system-ui,-apple-system,sans-serif;
+color:#787b86;
+flex-shrink:0;
+}
+
+.chart-indicators-type-toggle{
+display:inline-flex;
+padding:2px;
+border-radius:6px;
+background:rgba(255,255,255,0.06);
+gap:2px;
+}
+
+.chart-indicators-type-btn{
+margin:0;
+padding:4px 10px;
+border:none;
+border-radius:4px;
+background:transparent;
+font:600 11px/1.2 system-ui,-apple-system,sans-serif;
+color:#9ca3af;
+cursor:pointer;
+-webkit-tap-highlight-color:transparent;
+}
+
+.chart-indicators-type-btn:hover{
+color:#e5e7eb;
+}
+
+.chart-indicators-type-btn.active{
+background:rgba(129,140,248,0.28);
+color:#f0f3fa;
+}
+
+.chart-indicator-legend{
+position:absolute;
+top:8px;
+left:10px;
+z-index:20;
+display:flex;
+flex-direction:column;
+align-items:flex-start;
+gap:2px;
+max-width:min(72%,420px);
+pointer-events:none;
+user-select:none;
+}
+
+.chart-indicator-legend.hidden{
+display:none;
+}
+
+.chart-indicator-legend-item{
+margin:0;
+padding:0;
+border:none;
+background:transparent;
+font:500 11px/1.35 system-ui,-apple-system,sans-serif;
+color:#787b86;
+letter-spacing:0.01em;
+white-space:nowrap;
+overflow:hidden;
+text-overflow:ellipsis;
+max-width:100%;
+text-align:left;
+}
+
+.chart-indicator-legend-item--settings{
+pointer-events:auto;
+cursor:default;
+}
+
+.chart-indicator-legend-item--settings:hover{
+color:#a3a6ad;
+}
+
+.chart-indicator-settings-backdrop{
+position:fixed;
+inset:0;
+z-index:15000;
+display:flex;
+align-items:center;
+justify-content:center;
+padding:24px 12px;
+background:rgba(0,0,0,0.45);
+box-sizing:border-box;
+pointer-events:auto;
+}
+
+.chart-indicator-settings-backdrop.hidden{
+display:none;
+}
+
+body.chart-indicator-modal-open #charts-stack{
+pointer-events:none !important;
+}
+
+body.chart-indicator-modal-open #chart-wrap,
+body.chart-indicator-modal-open #chart-wrap *{
+pointer-events:none !important;
+}
+
+.chart-indicator-settings-dialog{
+width:min(360px,100%);
+max-height:min(88vh,640px);
+display:flex;
+flex-direction:column;
+border:1px solid rgba(255,255,255,0.12);
+border-radius:10px;
+background:#1a1d29;
+box-shadow:0 18px 48px rgba(0,0,0,0.55);
+overflow:hidden;
+pointer-events:auto;
+}
+
+.chart-indicator-settings-dialog--compact{
+width:min(234px,100%);
+}
+
+.chart-indicator-settings-header{
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:12px;
+padding:12px 14px;
+border-bottom:1px solid rgba(255,255,255,0.08);
+}
+
+.chart-indicator-settings-title{
+margin:0;
+font:600 14px/1.25 system-ui,-apple-system,sans-serif;
+color:#e5e7eb;
+}
+
+.chart-indicator-settings-close{
+margin:0;
+padding:0 4px;
+border:none;
+background:transparent;
+font:400 22px/1 system-ui,sans-serif;
+color:#9ca3af;
+cursor:pointer;
+}
+
+.chart-indicator-settings-close:hover{
+color:#f3f4f6;
+}
+
+.chart-indicator-settings-body{
+padding:10px 12px 6px;
+overflow:auto;
+}
+
+.chart-indicator-settings-footer{
+display:flex;
+justify-content:flex-end;
+padding:10px 14px 12px;
+border-top:1px solid rgba(255,255,255,0.08);
+}
+
+.chart-indicator-settings-done{
+margin:0;
+padding:7px 14px;
+border:none;
+border-radius:6px;
+background:#4f46e5;
+font:600 12px/1.2 system-ui,-apple-system,sans-serif;
+color:#fff;
+cursor:pointer;
+}
+
+.chart-indicator-settings-done:hover{
+background:#6366f1;
+}
+
+.chart-indicator-settings-section{
+margin:0 0 12px;
+padding:0 0 10px;
+border-bottom:1px solid rgba(255,255,255,0.06);
+}
+
+.chart-indicator-settings-section:last-of-type{
+border-bottom:none;
+margin-bottom:0;
+}
+
+.chart-indicator-settings-section-title{
+margin:0 0 8px;
+font:600 12px/1.2 system-ui,-apple-system,sans-serif;
+color:#d1d4dc;
+}
+
+.chart-indicator-settings-field{
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:10px;
+margin:0 0 8px;
+}
+
+.chart-indicator-settings-field-label{
+font:500 11px/1.2 system-ui,-apple-system,sans-serif;
+color:#9ca3af;
+flex:1 1 auto;
+}
+
+.chart-indicator-settings-input,
+.chart-indicator-settings-select{
+width:112px;
+flex:0 0 auto;
+box-sizing:border-box;
+padding:5px 8px;
+border:1px solid rgba(255,255,255,0.12);
+border-radius:6px;
+background:#111827;
+font:500 12px/1.2 system-ui,-apple-system,sans-serif;
+color:#e5e7eb;
+-moz-appearance:textfield;
+appearance:textfield;
+}
+
+.chart-indicator-settings-input::-webkit-outer-spin-button,
+.chart-indicator-settings-input::-webkit-inner-spin-button{
+-webkit-appearance:none;
+margin:0;
+}
+
+.ind-ribbon-settings{
+display:flex;
+flex-direction:column;
+gap:4px;
+}
+
+.ind-ribbon-settings-head,
+.ind-ribbon-settings-row{
+display:grid;
+grid-template-columns:18px 44px 52px 44px 52px 58px;
+gap:6px;
+align-items:center;
+}
+
+.ind-ribbon-settings-head{
+margin:0 0 2px;
+padding:0 0 4px;
+border-bottom:1px solid rgba(255,255,255,0.06);
+}
+
+.ind-ribbon-settings-head-label{
+font:500 10px/1.2 system-ui,-apple-system,sans-serif;
+color:#787b86;
+text-align:center;
+}
+
+.ind-ribbon-settings-row{
+min-height:28px;
+}
+
+.ind-ribbon-settings-show{
+display:flex;
+align-items:center;
+margin:0;
+cursor:pointer;
+}
+
+.ind-ribbon-settings-show input{
+width:14px;
+height:14px;
+margin:0;
+accent-color:#818cf8;
+cursor:pointer;
+}
+
+.ind-ribbon-settings-name{
+font:500 11px/1.2 system-ui,-apple-system,sans-serif;
+color:#e5e7eb;
+white-space:nowrap;
+}
+
+.ind-ribbon-settings-color{
+position:relative;
+display:flex;
+align-items:center;
+justify-content:center;
+width:52px;
+height:24px;
+margin:0;
+padding:0;
+border:1px solid rgba(255,255,255,0.14);
+border-radius:5px;
+background:#111827;
+cursor:pointer;
+overflow:hidden;
+}
+
+.ind-ribbon-settings-color-input{
+display:none;
+}
+
+.ind-ribbon-settings-color-preview{
+display:flex;
+align-items:center;
+gap:4px;
+width:100%;
+padding:0 6px;
+pointer-events:none;
+}
+
+.ind-ribbon-settings-color-preview::before{
+content:"";
+width:12px;
+height:12px;
+border-radius:3px;
+background:var(--line-color,#22c55e);
+flex-shrink:0;
+}
+
+.ind-ribbon-settings-color-preview::after{
+content:"";
+flex:1 1 auto;
+height:2px;
+border-radius:1px;
+background:var(--line-color,#22c55e);
+}
+
+.ind-ribbon-settings-num{
+width:100%;
+min-width:0;
+padding:3px 5px;
+font-size:11px;
+border-radius:5px;
+text-align:center;
+}
+
+.ind-ribbon-settings-shift{
+width:100%;
+}
+
+.ind-ribbon-settings-tf{
+width:100%;
+min-width:0;
+padding:3px 4px;
+font-size:11px;
+border-radius:5px;
+}
+
+.ind-ribbon-settings-width{
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:10px;
+margin:8px 0 0;
+padding:8px 0 0;
+border-top:1px solid rgba(255,255,255,0.06);
+}
+
+.ind-ribbon-settings-width-label{
+font:500 11px/1.2 system-ui,-apple-system,sans-serif;
+color:#9ca3af;
+}
+
+.ind-ribbon-settings-width .ind-ribbon-settings-num{
+width:44px;
+}
+
+.ind-ma-settings{
+display:flex;
+flex-direction:column;
+gap:4px;
+margin-top:8px;
+}
+
+.ind-ma-settings-head,
+.ind-ma-settings-row{
+display:grid;
+grid-template-columns:36px 52px 52px;
+gap:6px;
+align-items:center;
+}
+
+.ind-ma-settings-head{
+margin:0 0 2px;
+padding:0 0 4px;
+border-bottom:1px solid rgba(255,255,255,0.06);
+}
+
+.ind-ma-settings-head-label{
+font:500 10px/1.2 system-ui,-apple-system,sans-serif;
+color:#787b86;
+text-align:center;
+}
+
+.ind-ma-settings-row{
+min-height:28px;
+}
+
+.ind-ma-settings-name{
+font:500 11px/1.2 system-ui,-apple-system,sans-serif;
+color:#e5e7eb;
+text-align:center;
+}
+
+.ind-ma-settings .ind-ribbon-settings-width{
+margin-top:6px;
+}
+
+.chart-indicator-settings-check{
+display:flex;
+align-items:center;
+gap:8px;
+margin:0 0 8px;
+font:500 12px/1.2 system-ui,-apple-system,sans-serif;
+color:#e5e7eb;
+cursor:pointer;
+}
+
+.chart-indicator-settings-check input{
+width:14px;
+height:14px;
+accent-color:#818cf8;
+}
+
+.chart-indicator-settings-hint{
+margin:8px 0 0;
+font:400 11px/1.35 system-ui,-apple-system,sans-serif;
+color:#787b86;
+}
+
+body.coins-page #topbar.coins-topbar .chart-indicators-wrap{
+padding:0 4px;
+}
+
+body.coins-page #topbar.coins-topbar #draw-toolbar.draw-toolbar-inline{
+padding-left:8px;
+border-left:1px solid #787b86;
+}
+
+body.coins-page .coins-topbar-divider{
+width:1px;
+align-self:stretch;
+flex:0 0 1px;
+background:#787b86;
+margin:6px 0;
+}
+
+@media (max-width:640px){
+
+body.coins-page .chart-indicators-wrap.coins-draw-desktop{
+display:none !important;
+}
+
+}

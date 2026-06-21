@@ -1,12 +1,6 @@
 /**
  * Supabase auth session — persist outside page origin (desktop updates / port changes).
  */
-const {
-safeStorage
-} =
-require(
-"electron"
-);
 const fs =
 require(
 "fs"
@@ -20,6 +14,13 @@ app
 } =
 require(
 "electron"
+);
+const {
+readPlainWithLegacyMigration,
+writePlain
+} =
+require(
+"./user-store.cjs"
 );
 
 const STORE_NAME =
@@ -36,51 +37,11 @@ STORE_NAME
 
 }
 
-function canEncrypt(){
-
-return safeStorage.isEncryptionAvailable();
-
-}
-
 function readStore(){
 
-const file =
-storePath();
-
-if(
-!fs.existsSync(
-file
-)
-){
-return null;
-}
-
-try{
-const raw =
-fs.readFileSync(
-file
+return readPlainWithLegacyMigration(
+storePath()
 );
-
-if(
-!raw.length
-){
-return null;
-}
-
-if(
-canEncrypt()
-){
-return safeStorage.decryptString(
-raw
-);
-}
-
-return raw.toString(
-"utf8"
-);
-}catch{
-return null;
-}
 
 }
 
@@ -96,28 +57,9 @@ typeof raw !==
 return false;
 }
 
-const buf =
-canEncrypt()
-? safeStorage.encryptString(
-raw
-)
-: Buffer.from(
-raw,
-"utf8"
-);
-
-fs.mkdirSync(
-path.dirname(
-storePath()
-),
-{
-recursive:
-true
-}
-);
-fs.writeFileSync(
+writePlain(
 storePath(),
-buf
+raw
 );
 return true;
 

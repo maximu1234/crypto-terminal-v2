@@ -5,7 +5,7 @@
 import {
 hideDomChartCrosshair,
 positionTabletProbeHorizInStack
-} from "../chart-import.js?v=41";
+} from "../chart-import.js?v=42";
 
 import {
 ensureFibLevelsVisible,
@@ -434,6 +434,37 @@ onRulerPointerDown,
 true
 );
 
+const onPlacementContextMenu = e=>{
+
+if(
+!getAlive() ||
+!isActive()
+){
+return;
+}
+
+if(
+getPlacement() ||
+getTool() !==
+"cursor"
+){
+
+e.preventDefault();
+e.stopPropagation();
+setTool(
+"cursor"
+);
+
+}
+
+};
+
+wrapEl.addEventListener(
+"contextmenu",
+onPlacementContextMenu,
+true
+);
+
 return ()=>{
 wrapEl.removeEventListener(
 "pointermove",
@@ -443,6 +474,11 @@ true
 wrapEl.removeEventListener(
 "pointerdown",
 onRulerPointerDown,
+true
+);
+wrapEl.removeEventListener(
+"contextmenu",
+onPlacementContextMenu,
 true
 );
 };

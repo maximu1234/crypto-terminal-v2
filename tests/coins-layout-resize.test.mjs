@@ -8,9 +8,12 @@ COINS_LIST_DEFAULT_PX,
 COINS_LIST_MIN_PX,
 COINS_RSI_MIN_DESKTOP_PX,
 computeCoinsLayoutLimits,
+computeVolumeHeightLimits,
 clampCoinsListWidth,
 clampCoinsRsiHeight,
-defaultRsiHeightPx
+clampCoinsVolumeHeight,
+defaultRsiHeightPx,
+defaultVolumeHeightPx
 } from "../js/coins-layout-math.js";
 
 test(
@@ -36,6 +39,22 @@ defaultRsiHeightPx(
 1200
 ),
 160
+);
+
+}
+);
+
+test(
+"defaultVolumeHeightPx matches RSI default",
+()=>{
+
+assert.equal(
+defaultVolumeHeightPx(
+800
+),
+defaultRsiHeightPx(
+800
+)
 );
 
 }
@@ -97,6 +116,49 @@ COINS_RSI_MIN_DESKTOP_PX,
 limits.minChartH
 )
 )
+);
+
+}
+);
+
+test(
+"computeVolumeHeightLimits: max 50% of chart area",
+()=>{
+
+const limits =
+computeVolumeHeightLimits(
+{
+stackH:
+900,
+rsiOccupiedHeight:
+140,
+innerHeight:
+800
+}
+);
+
+assert.equal(
+limits.defaultVolumeH,
+defaultVolumeHeightPx(
+800
+)
+);
+
+assert.equal(
+limits.maxVolumeH,
+253
+);
+
+const chartH =
+900 -
+253 -
+140;
+
+assert.ok(
+253 <=
+chartH *
+0.5 +
+0.51
 );
 
 }
@@ -185,6 +247,50 @@ clampCoinsRsiHeight(
 limits
 ),
 130
+);
+
+}
+);
+
+test(
+"clampCoinsVolumeHeight: min 102, max by chart ratio",
+()=>{
+
+const limits =
+computeVolumeHeightLimits(
+{
+stackH:
+600,
+rsiOccupiedHeight:
+120,
+innerHeight:
+800
+}
+);
+
+assert.equal(
+clampCoinsVolumeHeight(
+80,
+limits
+),
+COINS_RSI_MIN_DESKTOP_PX
+);
+
+assert.equal(
+clampCoinsVolumeHeight(
+limits.maxVolumeH +
+50,
+limits
+),
+limits.maxVolumeH
+);
+
+assert.equal(
+clampCoinsVolumeHeight(
+150,
+limits
+),
+150
 );
 
 }
