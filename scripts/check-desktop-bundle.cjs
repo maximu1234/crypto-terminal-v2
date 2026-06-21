@@ -15,6 +15,12 @@ const crypto =
 require(
 "crypto"
 );
+const {
+execSync
+} =
+require(
+"child_process"
+);
 
 const ROOT =
 path.join(
@@ -192,11 +198,17 @@ if(
 BUNDLE
 )
 ){
-console.error(
-"desktop/site-bundle missing — run: npm run bundle:sync"
+console.log(
+"desktop/site-bundle missing — running npm run bundle:sync"
 );
-process.exit(
-1
+execSync(
+"npm run bundle:sync",
+{
+cwd:
+ROOT,
+stdio:
+"inherit"
+}
 );
 }
 

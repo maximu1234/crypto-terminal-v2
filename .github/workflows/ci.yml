@@ -21,7 +21,9 @@ jobs:
           done
       - name: Asset manifest sync
         run: node scripts/check-asset-manifest.cjs
-      - name: Desktop bundle sync
+      - name: Build desktop site bundle
+        run: npm run bundle:sync
+      - name: Desktop bundle drift check
         run: node scripts/check-desktop-bundle.cjs
       - name: Site nav links
         run: node scripts/check-site-nav.cjs
