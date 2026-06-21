@@ -235,6 +235,12 @@ if(
 return;
 }
 
+if(
+document.hidden
+){
+return;
+}
+
 if(getChartPanActive()){
 return;
 }

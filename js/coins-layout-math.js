@@ -9,6 +9,10 @@ export const COINS_LIST_MIN_PX =
 export const COINS_RSI_MIN_DESKTOP_PX =
 102;
 
+/** Desktop vertical draw toolbar width (css/coins.css). */
+export const COINS_DRAW_TOOLBAR_WIDTH_PX =
+46;
+
 /** Volume не выше 50% высоты основного графика (chart-wrap). */
 export const COINS_VOLUME_MAX_CHART_RATIO =
 0.5;
@@ -44,6 +48,43 @@ COINS_LAYOUT_DEFAULT_INNER_HEIGHT
 
 return defaultRsiHeightPx(
 innerHeight
+);
+
+}
+
+/**
+ * Plot width for #chart-wrap inside .coins-chart-pane (list + optional toolbar).
+ */
+export function coinsMainChartWidthPx(
+leftPaneWidth,
+{
+listWidth = COINS_LIST_DEFAULT_PX,
+drawToolbarWidth = COINS_DRAW_TOOLBAR_WIDTH_PX
+} = {}
+){
+
+const paneW =
+Math.max(
+0,
+(
+Number(
+leftPaneWidth
+) ||
+0
+) -
+listWidth
+);
+
+return Math.max(
+0,
+paneW -
+Math.max(
+0,
+Number(
+drawToolbarWidth
+) ||
+0
+)
 );
 
 }

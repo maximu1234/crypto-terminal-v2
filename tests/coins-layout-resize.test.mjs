@@ -7,11 +7,13 @@ import {
 COINS_LIST_DEFAULT_PX,
 COINS_LIST_MIN_PX,
 COINS_RSI_MIN_DESKTOP_PX,
+COINS_DRAW_TOOLBAR_WIDTH_PX,
 computeCoinsLayoutLimits,
 computeVolumeHeightLimits,
 clampCoinsListWidth,
 clampCoinsRsiHeight,
 clampCoinsVolumeHeight,
+coinsMainChartWidthPx,
 defaultRsiHeightPx,
 defaultVolumeHeightPx
 } from "../js/coins-layout-math.js";
@@ -291,6 +293,50 @@ clampCoinsVolumeHeight(
 limits
 ),
 150
+);
+
+}
+);
+
+test(
+"coinsMainChartWidthPx: subtracts list and vertical toolbar",
+()=>{
+
+const leftPaneW =
+1252;
+
+assert.equal(
+coinsMainChartWidthPx(
+leftPaneW
+),
+leftPaneW -
+COINS_LIST_DEFAULT_PX -
+COINS_DRAW_TOOLBAR_WIDTH_PX
+);
+
+assert.equal(
+coinsMainChartWidthPx(
+leftPaneW,
+{
+drawToolbarWidth:
+0
+}
+),
+leftPaneW -
+COINS_LIST_DEFAULT_PX
+);
+
+assert.equal(
+coinsMainChartWidthPx(
+300,
+{
+listWidth:
+COINS_LIST_MIN_PX
+}
+),
+300 -
+COINS_LIST_MIN_PX -
+COINS_DRAW_TOOLBAR_WIDTH_PX
 );
 
 }

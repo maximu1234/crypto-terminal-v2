@@ -177,8 +177,50 @@ resetBybitEndpoints();
 );
 
 initAlertMonitor();
-initAlertsCloudSync();
 ensureDrawToolsVisible();
+
+function isCoinsPagePath(){
+
+return /\/coins(\.html)?\/?$/i.test(
+location.pathname ||
+""
+);
+
+}
+
+function deferCoinsNonCriticalBoot(
+fn
+){
+
+if(
+!isCoinsPagePath()
+){
+fn();
+return;
+}
+
+if(
+typeof requestIdleCallback ===
+"function"
+){
+requestIdleCallback(
+()=>{
+fn();
+},
+{ timeout: 3000 }
+);
+}else{
+setTimeout(
+fn,
+1
+);
+}
+
+}
+
+function runCloudBoot(){
+
+initAlertsCloudSync();
 
 onCloudSyncChange(
 ()=>{
@@ -214,6 +256,7 @@ import("./favorites-cloud-sync.js?v=3").then(
 initFavoritesCloudSync();
 }
 );
+
 void ensureCloudReady()
 .then(async()=>{
 
@@ -291,3 +334,9 @@ pullDeviceStateFromCloud()
 .catch(err=>{
 console.warn("cloud init failed:", err);
 });
+
+}
+
+deferCoinsNonCriticalBoot(
+runCloudBoot
+);

@@ -65,6 +65,11 @@ run(
 );
 
 run(
+"node scripts/check-desktop-bundle.cjs",
+"Desktop bundle"
+);
+
+run(
 "node scripts/check-site-nav.cjs",
 "Site nav"
 );

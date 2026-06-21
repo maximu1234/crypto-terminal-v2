@@ -59,6 +59,37 @@ if(
 return false;
 }
 
+for(
+const name of
+TRADE_CSS
+){
+const href =
+cssUrl(
+name
+);
+
+if(
+!document.querySelector(
+`link[rel="preload"][href="${href}"]`
+)
+){
+const preload =
+document.createElement(
+"link"
+);
+preload.rel =
+"preload";
+preload.as =
+"style";
+preload.href =
+href;
+document.head.appendChild(
+preload
+);
+}
+
+}
+
 document.body.classList.add(
 "trade-page"
 );

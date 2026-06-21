@@ -13,7 +13,7 @@
 
 <link rel="stylesheet" href="/css/critical-shell.css?v=5">
 <script src="/js/site-css-ready.js?v=2"></script>
-<link rel="stylesheet" href="/css/common.css?v=28">
+<link rel="stylesheet" href="/css/common.css?v=29">
 <link rel="stylesheet" href="/css/dashboard.css?v=45">
 <link rel="stylesheet" href="/css/screener.css?v=40">
 <link rel="stylesheet" href="/css/site-mobile-nav.css?v=4">
@@ -27,7 +27,7 @@
 
 <header id="header" class="screener-page-header">
 
-<a href="/index.html" id="logo">Multichart</a>
+<a href="/index.html" id="logo" aria-label="Multichart"><img src="/icons/brand-logo.png" alt="" width="32" height="32" class="site-logo-img" decoding="async"></a>
 
 <div class="screener-mobile-bar terminal-mobile-bar">
 <button type="button" class="screener-nav-toggle" id="screener-nav-toggle" aria-label="Меню" aria-expanded="false" aria-controls="screener-nav-panel">
@@ -122,7 +122,7 @@ mode:
 }
 
 await import("./js/terminal-page.js?v=3");
-import("/js/site-boot.js?v=89").catch(err=>{
+import("/js/site-boot.js?v=90").catch(err=>{
 console.warn("site-boot:", err);
 });
 

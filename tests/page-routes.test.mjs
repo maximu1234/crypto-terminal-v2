@@ -3,29 +3,65 @@ import assert from "node:assert/strict";
 
 function withPath(
 pathname,
-fn
+fn,
+{
+desktop = false
+} = {}
 ){
 
-const prev =
+const prevPath =
 globalThis.location;
+const prevDesktop =
+globalThis.window?.cryptoTerminalDesktop;
 
 globalThis.location =
 {
 pathname
 };
 
+if(
+desktop
+){
+globalThis.window =
+globalThis.window ||
+{};
+globalThis.window.cryptoTerminalDesktop =
+{
+isDesktop:
+true
+};
+}else if(
+globalThis.window
+){
+delete globalThis.window.cryptoTerminalDesktop;
+}
+
 try{
 fn();
 }finally{
 
 if(
-prev ===
+prevPath ===
 undefined
 ){
 delete globalThis.location;
 }else{
 globalThis.location =
-prev;
+prevPath;
+}
+
+if(
+prevDesktop ===
+undefined
+){
+if(
+globalThis.window
+){
+delete globalThis.window.cryptoTerminalDesktop;
+}
+}else{
+globalThis.window.cryptoTerminalDesktop =
+prevDesktop;
 }
 
 }
@@ -52,6 +88,10 @@ assert.equal(
 mod.isCoinsPage(),
 false
 );
+assert.equal(
+mod.isTradePage(),
+false
+);
 }
 );
 
@@ -59,8 +99,16 @@ withPath(
 "/coins.html",
 ()=>{
 assert.equal(
+mod.isCoinsPageOnly(),
+true
+);
+assert.equal(
 mod.isCoinsPage(),
 true
+);
+assert.equal(
+mod.isTradePage(),
+false
 );
 assert.equal(
 mod.isDrawingsUiPage(),
@@ -76,6 +124,10 @@ assert.equal(
 mod.isScreenerPage(),
 true
 );
+assert.equal(
+mod.isTradePage(),
+false
+);
 }
 );
 
@@ -86,6 +138,82 @@ assert.equal(
 mod.isTerminalDashboardPage(),
 true
 );
+assert.equal(
+mod.isTradePage(),
+false
+);
+}
+);
+
+}
+);
+
+test(
+"isTradePage: desktop /coins only",
+async()=>{
+
+const mod =
+await import(
+"../js/page-routes.js"
+);
+
+withPath(
+"/coins.html",
+()=>{
+assert.equal(
+mod.isTradePage(),
+false
+);
+},
+{
+desktop:
+false
+}
+);
+
+withPath(
+"/coins.html",
+()=>{
+assert.equal(
+mod.isTradePage(),
+true
+);
+assert.equal(
+mod.isCoinsPage(),
+true
+);
+},
+{
+desktop:
+true
+}
+);
+
+withPath(
+"/trade.html",
+()=>{
+assert.equal(
+mod.isTradePage(),
+true
+);
+},
+{
+desktop:
+false
+}
+);
+
+withPath(
+"/index.html",
+()=>{
+assert.equal(
+mod.isTradePage(),
+false
+);
+},
+{
+desktop:
+true
 }
 );
 

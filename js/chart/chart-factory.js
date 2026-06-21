@@ -873,36 +873,75 @@ visibleBars,
 totalBars
 ){
 
+try{
 applyScreenerViewport(
 chart,
 chartWidth,
 visibleBars,
 totalBars
 );
+}catch{
+/* chart disposed */
+}
 
 }
 
-export function applyScreenerZoom(chart, series, candles, chartWidth, chartHeight){
+export function applyScreenerZoom(
+chart,
+series,
+candles,
+chartWidth,
+chartHeight,
+options = {}
+){
 
-if(!chart || !series || !candles?.length){
+if(
+!chart ||
+!series ||
+!candles?.length
+){
 return 0;
 }
 
+const shouldContinue =
+typeof options.shouldContinue ===
+"function"
+? options.shouldContinue
+: ()=>true;
+
 const width =
-Math.max(chartWidth || 0, 120);
+Math.max(
+chartWidth ||
+0,
+120
+);
 
 const height =
-Math.max(chartHeight || 0, 80);
+Math.max(
+chartHeight ||
+0,
+80
+);
 
 const totalBars =
 candles.length;
 
 const visibleBars =
-Math.min(SCREENER_VISIBLE_BARS, totalBars);
+Math.min(
+SCREENER_VISIBLE_BARS,
+totalBars
+);
 
-chart.applyOptions({ width, height });
+try{
 
-series.setData(candles);
+chart.applyOptions({
+width,
+height
+});
+
+series.setData(
+candles
+);
 
 chart.timeScale().applyOptions({
 rightOffset:4,
@@ -911,34 +950,82 @@ lockVisibleTimeRangeOnResize:false,
 minBarSpacing:0.01
 });
 
-const fitViewport = ()=>{
+const fitViewport =
+()=>{
+
+if(
+!shouldContinue()
+){
+return;
+}
+
+try{
 applyScreenerViewport(
 chart,
 width,
 visibleBars,
 totalBars
 );
+}catch{
+/* chart disposed */
+}
+
 };
 
 fitViewport();
 
-requestAnimationFrame(fitViewport);
+requestAnimationFrame(
+()=>{
+if(
+shouldContinue()
+){
+fitViewport();
+}
+}
+);
 
-setTimeout(fitViewport, 100);
+setTimeout(
+()=>{
+if(
+shouldContinue()
+){
+fitViewport();
+}
+},
+100
+);
 
-setTimeout(fitViewport, 300);
+setTimeout(
+()=>{
+if(
+shouldContinue()
+){
+fitViewport();
+}
+},
+300
+);
 
 const range =
 chart.timeScale().getVisibleLogicalRange();
 
-if(!range){
+if(
+!range
+){
 return visibleBars;
 }
 
 return Math.max(
 0,
-Math.round(range.to - range.from)
+Math.round(
+range.to -
+range.from
+)
 );
+
+}catch{
+return 0;
+}
 
 }
 

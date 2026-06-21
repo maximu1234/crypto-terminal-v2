@@ -20,9 +20,9 @@ height:52px;
 padding-top:env(safe-area-inset-top, 0px);
 }
 
-body.site-nav-page .screener-page-header #logo{
-font-size:17px;
-flex-shrink:0;
+body.site-nav-page .screener-page-header #logo .site-logo-img{
+width:30px;
+height:30px;
 }
 
 body.site-nav-page .screener-page-header > .menu:not(.screener-nav-panel),

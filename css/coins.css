@@ -552,9 +552,9 @@ height:52px;
 padding-top:env(safe-area-inset-top, 0px);
 }
 
-body.coins-page .coins-page-header #logo{
-font-size:17px;
-flex-shrink:0;
+body.coins-page .coins-page-header #logo .site-logo-img{
+width:30px;
+height:30px;
 }
 
 body.coins-page .coins-mobile-bar{
@@ -787,6 +787,57 @@ border-radius:8px;
 .coins-draw-tools-mount .widget-draw-tools-menu{
 right:0;
 left:auto;
+}
+
+/* Mobile draw-tools menu (from dashboard.css — coins no longer loads that sheet) */
+.coins-draw-tools-mount .widget-draw-tools{
+position:relative;
+flex-shrink:0;
+display:flex !important;
+align-items:center;
+visibility:visible !important;
+}
+
+.coins-draw-tools-mount .widget-draw-tools.hidden{
+display:flex !important;
+}
+
+.coins-draw-tools-mount .widget-draw-tools-toggle.active,
+.coins-draw-tools-mount .widget-draw-tools--open .widget-draw-tools-toggle{
+background:#374151;
+color:#fff;
+}
+
+.coins-draw-tools-mount .widget-draw-tools-menu{
+position:absolute;
+top:calc(100% + 4px);
+z-index:300;
+pointer-events:auto;
+display:grid;
+grid-template-columns:repeat(4, 26px);
+gap:4px;
+padding:6px;
+background:#1e222d;
+border:1px solid #2a2e39;
+border-radius:8px;
+box-shadow:0 8px 24px rgba(0,0,0,0.5);
+}
+
+.coins-draw-tools-mount .widget-draw-tools-menu.hidden{
+display:none;
+}
+
+.coins-draw-tools-mount .draw-btn-sm{
+width:26px;
+height:26px;
+padding:0;
+}
+
+.coins-draw-tools-mount .draw-btn-sm svg,
+.coins-draw-tools-mount .draw-btn-sm img,
+.coins-draw-tools-mount .draw-btn-sm .draw-tool-icon{
+width:14px;
+height:14px;
 }
 
 #charts-stack{

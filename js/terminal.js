@@ -1,3 +1,9 @@
+/**
+ * Coins page (/coins.html) — main chart app implementation.
+ *
+ * Entry: coins-page.js (canonical). This file keeps the legacy name `terminal.js`.
+ * Dashboard widgets page (/terminal.html) is `dashboard.js` — not this module.
+ */
 import {
 loadBybitHistory,
 loadBybitSymbols,
@@ -153,6 +159,20 @@ setCoinsTableHooks,
 syncCoinListFreezeFromFlagMenus
 } from "./terminal/coins-table.js?v=12";
 
+import {
+createCoinsChartSwitchVeil
+} from "./terminal/coins-chart-switch-veil.js?v=1";
+
+import {
+registerCoinsChartLayoutContext,
+buildChartDisplayCandles,
+applyChartDimensions,
+settleCoinsChartViewport,
+resizeCharts,
+scheduleResizeCharts,
+applyDefaultZoom
+} from "./terminal/coins-chart-layout.js?v=2";
+
 let currentDataset = "all";
 let currentTF = "60";
 let currentSymbol = "BTCUSDT";
@@ -171,6 +191,10 @@ let displaySymbol =
 
 let candles = [];
 let symbolLoadSeq = 0;
+const viewportSettleRaf =
+{ value: 0 };
+let chartSwitchVeil =
+null;
 let marketData = [];
 
 
@@ -416,6 +440,14 @@ mainChart.series;
 const chartWrapEl =
 document.getElementById(
 "chart-wrap"
+);
+
+chartSwitchVeil =
+createCoinsChartSwitchVeil(
+()=>
+chartWrapEl,
+()=>
+symbolLoadSeq
 );
 
 const chartEl =
@@ -1921,6 +1953,27 @@ console.warn(
 );
 }
 
+registerCoinsChartLayoutContext({
+getCandles:()=>
+candles,
+chart,
+chartEl,
+getTf:()=>
+currentTF,
+getChartIndicators:()=>
+chartIndicators,
+getRsiChart:()=>
+rsiChart,
+rsiPaneActive:()=>
+rsiPaneActive,
+layoutRsiBand,
+applyCoinsChartViewport,
+refreshCoinsChartBarSpacing,
+getDrawingTools:()=>
+drawingTools,
+viewportSettleRaf
+});
+
 chartIndicators =
 initChartIndicators(
 {
@@ -2536,229 +2589,6 @@ renderList();
 );
 
 
-/* =========================================================
-   DEFAULT ZOOM
-========================================================= */
-
-function buildChartDisplayCandles(){
-
-if(
-!candles.length
-){
-return [];
-}
-
-const visibleBars =
-coinsTfVisibleBars(
-currentTF,
-candles.length
-);
-
-const futureMargin =
-computeChartFutureMarginBars(
-visibleBars
-);
-
-return appendFutureWhitespaceBars(
-candles,
-futureMargin,
-currentTF
-);
-
-}
-
-function getCoinsPaneHeightPx(){
-
-const candidates =
-[
-document.getElementById(
-"rsi-wrap"
-),
-document.getElementById(
-"volume-wrap"
-)
-];
-
-for(
-const wrap of candidates
-){
-
-if(
-!wrap ||
-wrap.classList.contains(
-"indicator-pane-hidden"
-)
-){
-continue;
-}
-
-const h =
-wrap.getBoundingClientRect().height;
-
-if(
-h >=
-2
-){
-return h;
-}
-
-}
-
-return Math.max(
-document.getElementById(
-"rsi-wrap"
-)?.getBoundingClientRect().height ||
-0,
-102
-);
-
-}
-
-function applyChartDimensions(){
-
-const chartWrap =
-document.getElementById(
-"chart-wrap"
-);
-
-if(
-!chartWrap ||
-!chart
-){
-return false;
-}
-
-const w =
-Math.max(
-chartWrap.clientWidth,
-1
-);
-
-const chartH =
-Math.max(
-chartWrap.clientHeight,
-1
-);
-
-const paneH =
-getCoinsPaneHeightPx();
-
-if(
-w <
-2 ||
-chartH <
-2
-){
-return false;
-}
-
-chart.applyOptions({
-width:w,
-height:chartH
-});
-
-chartIndicators?.resizePanes?.(
-w
-);
-
-if(
-!chartIndicators &&
-rsiChart &&
-rsiPaneActive
-){
-
-const rsiPaneH =
-document.getElementById(
-"rsi-wrap"
-)?.getBoundingClientRect().height ||
-paneH;
-
-if(
-rsiPaneH >=
-2
-){
-
-rsiChart.applyOptions({
-width:w,
-height:
-rsiPaneH
-});
-
-layoutRsiBand();
-
-}
-
-}
-
-return true;
-
-}
-
-function settleCoinsChartViewport(){
-
-if(
-!candles.length ||
-!chart
-){
-return;
-}
-
-const chartWrap =
-document.getElementById(
-"chart-wrap"
-);
-
-const chartWidth =
-Math.max(
-chartWrap?.clientWidth ||
-0,
-chartEl?.clientWidth ||
-0,
-1
-);
-
-const ctx =
-{
-mainChart:
-chart,
-candles:
-buildChartDisplayCandles(),
-tf:
-currentTF,
-chartWidth,
-realCandleCount:
-candles.length,
-applyCoinsChartViewport
-};
-
-chartIndicators?.syncViewports?.(
-ctx
-);
-
-if(
-!chartIndicators &&
-rsiChart &&
-rsiPaneActive
-){
-
-applyCoinsChartViewport(
-chart,
-rsiChart,
-ctx.candles,
-currentTF,
-chartWidth,
-candles.length
-);
-
-layoutRsiBand();
-
-}
-
-}
-
-let coinsViewportSettleRaf =
-0;
-
 function normalizeChartEventSymbol(
 symbol
 ){
@@ -2826,176 +2656,6 @@ loadSeq
 
 }
 
-const CHART_SWITCH_VEIL_MAX_MS =
-1000;
-
-let chartSwitchVeilRaf =
-0;
-
-let chartSwitchStartedAt =
-0;
-
-function chartSwitchVeilOpacity(
-elapsedMs
-){
-
-return Math.min(
-elapsedMs /
-CHART_SWITCH_VEIL_MAX_MS,
-1
-);
-
-}
-
-function tickChartSwitchVeil(){
-
-if(
-!chartWrapEl?.classList.contains(
-"chart-switch-loading"
-)
-){
-return;
-}
-
-const elapsed =
-Date.now() -
-chartSwitchStartedAt;
-
-chartWrapEl.style.setProperty(
-"--chart-switch-veil-opacity",
-String(
-chartSwitchVeilOpacity(
-elapsed
-)
-)
-);
-
-if(
-elapsed <
-CHART_SWITCH_VEIL_MAX_MS
-){
-chartSwitchVeilRaf =
-requestAnimationFrame(
-tickChartSwitchVeil
-);
-}
-
-}
-
-function stopChartSwitchVeil(){
-
-if(
-chartSwitchVeilRaf
-){
-cancelAnimationFrame(
-chartSwitchVeilRaf
-);
-chartSwitchVeilRaf =
-0;
-}
-
-if(
-!chartWrapEl
-){
-return;
-}
-
-chartWrapEl.classList.remove(
-"chart-switch-loading"
-);
-chartWrapEl.style.removeProperty(
-"--chart-switch-veil-opacity"
-);
-
-}
-
-function startChartSwitchVeil(){
-
-if(
-!chartWrapEl
-){
-return;
-}
-
-stopChartSwitchVeil();
-
-chartSwitchStartedAt =
-Date.now();
-chartWrapEl.classList.add(
-"chart-switch-loading"
-);
-chartWrapEl.style.setProperty(
-"--chart-switch-veil-opacity",
-"0"
-);
-chartSwitchVeilRaf =
-requestAnimationFrame(
-tickChartSwitchVeil
-);
-
-}
-
-function finishChartSwitchVeil(
-loadSeq
-){
-
-if(
-loadSeq !==
-symbolLoadSeq
-){
-return;
-}
-
-if(
-chartSwitchVeilRaf
-){
-cancelAnimationFrame(
-chartSwitchVeilRaf
-);
-chartSwitchVeilRaf =
-0;
-}
-
-const elapsed =
-Date.now() -
-chartSwitchStartedAt;
-
-if(
-chartWrapEl?.classList.contains(
-"chart-switch-loading"
-)
-){
-chartWrapEl.style.setProperty(
-"--chart-switch-veil-opacity",
-String(
-chartSwitchVeilOpacity(
-elapsed
-)
-)
-);
-}
-
-requestAnimationFrame(
-()=>{
-requestAnimationFrame(
-()=>{
-
-if(
-loadSeq !==
-symbolLoadSeq
-){
-return;
-}
-
-stopChartSwitchVeil();
-
-}
-);
-}
-);
-
-}
-
 function scheduleChartLayoutSettled(
 callback
 ){
@@ -3005,55 +2665,6 @@ requestAnimationFrame(
 requestAnimationFrame(
 callback
 );
-}
-);
-
-}
-
-function applyDefaultZoom(
-options = {}
-){
-
-const scheduleDrawingRedraw =
-options.scheduleDrawingRedraw !==
-false;
-
-if(
-!candles.length
-){
-return;
-}
-
-const run =
-()=>{
-applyChartDimensions();
-settleCoinsChartViewport();
-drawingTools?.resize?.();
-
-if(
-scheduleDrawingRedraw
-){
-drawingTools?.scheduleRedraw?.();
-}
-
-};
-
-run();
-
-if(
-coinsViewportSettleRaf
-){
-cancelAnimationFrame(
-coinsViewportSettleRaf
-);
-}
-
-coinsViewportSettleRaf =
-requestAnimationFrame(
-()=>{
-coinsViewportSettleRaf =
-0;
-run();
 }
 );
 
@@ -3089,14 +2700,14 @@ el.classList.toggle(
 async function loadSymbol(symbol){
 
 if(
-coinsViewportSettleRaf
+viewportSettleRaf.value
 ){
 
 cancelAnimationFrame(
-coinsViewportSettleRaf
+viewportSettleRaf.value
 );
 
-coinsViewportSettleRaf =
+viewportSettleRaf.value =
 0;
 
 }
@@ -3104,7 +2715,7 @@ coinsViewportSettleRaf =
 const loadSeq = ++symbolLoadSeq;
 
 disconnectKlineStream();
-startChartSwitchVeil();
+chartSwitchVeil.startChartSwitchVeil();
 setChartLayoutReady(
 false
 );
@@ -3185,7 +2796,7 @@ new Error(
 setChartLayoutReady(
 true
 );
-finishChartSwitchVeil(
+chartSwitchVeil.finishChartSwitchVeil(
 loadSeq
 );
 return;
@@ -3255,7 +2866,7 @@ currentTF
 
 persistCoinsPrefs();
 
-finishChartSwitchVeil(
+chartSwitchVeil.finishChartSwitchVeil(
 loadSeq
 );
 
@@ -3272,87 +2883,6 @@ false
 }
 
 }
-
-}
-
-/* =========================================================
-   RESIZE
-========================================================= */
-
-let coinsResizeRaf =
-0;
-
-function resizeCharts(){
-
-if(
-!applyChartDimensions()
-){
-return;
-}
-
-if(
-candles.length
-){
-
-const linked =
-chartIndicators?.getLinkedPaneCharts?.() ||
-[];
-
-if(
-linked.length
-){
-
-linked.forEach(
-linkedChart=>{
-refreshCoinsChartBarSpacing(
-chart,
-linkedChart
-);
-}
-);
-
-}else{
-
-refreshCoinsChartBarSpacing(
-chart,
-rsiPaneActive
-? rsiChart
-: null
-);
-
-}
-
-if(
-rsiPaneActive
-){
-layoutRsiBand();
-}
-
-}
-
-drawingTools?.resize?.();
-drawingTools?.scheduleRedraw?.();
-
-}
-
-function scheduleResizeCharts(){
-
-if(
-coinsResizeRaf
-){
-cancelAnimationFrame(
-coinsResizeRaf
-);
-}
-
-coinsResizeRaf =
-requestAnimationFrame(
-()=>{
-coinsResizeRaf =
-0;
-resizeCharts();
-}
-);
 
 }
 

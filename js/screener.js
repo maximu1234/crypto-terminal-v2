@@ -6,6 +6,10 @@ symbolListSignature
 } from "./api.js?v=29";
 
 import {
+isScreenerWidgetCurrent as isScreenerWidgetCurrentGuard
+} from "./screener-widget-guard.js?v=1";
+
+import {
 createScreenerChart,
 createRSIChart,
 applyChartPriceFormat,
@@ -38,7 +42,7 @@ createTickerUiBatcher
 
 import {
 mountReleaseMarker
-} from "./release-marker.js?v=16";
+} from "./release-marker.js?v=17";
 
 import {
 saveScreenerState,
@@ -591,6 +595,18 @@ layout ===
 
 }
 
+function isScreenerWidgetCurrent(
+widget
+){
+
+return isScreenerWidgetCurrentGuard(
+widget,
+renderToken,
+activeWidgets
+);
+
+}
+
 function layoutWidgetRsi(
 widget
 ){
@@ -621,11 +637,16 @@ widget
 ){
 
 if(
+!isScreenerWidgetCurrent(
+widget
+) ||
 !widget?.rsiSeries ||
 !widget.candles?.length
 ){
 return;
 }
+
+try{
 
 const raw =
 calculateRSI(
@@ -645,6 +666,10 @@ points
 layoutWidgetRsi(
 widget
 );
+
+}catch{
+/* chart disposed during page change */
+}
 
 }
 
@@ -1082,18 +1107,46 @@ function destroyWidgets(){
 
 activeWidgets.forEach(w=>{
 
+w.disposed =
+true;
+
+unobserveWidgetKlineVisibility(
+w
+);
+
 w.unsubKline?.();
+
+try{
+w.unlinkTimeScales?.();
+}catch{
+/* ignore */
+}
+
+w.unlinkTimeScales =
+null;
 
 if(w.resizeObserver){
 w.resizeObserver.disconnect();
 }
 
 if(w.chart){
+
+try{
 w.chart.remove();
+}catch{
+/* ignore */
+}
+
 }
 
 if(w.rsiChart){
+
+try{
 w.rsiChart.remove();
+}catch{
+/* ignore */
+}
+
 }
 
 w.root?.remove();
@@ -1151,6 +1204,277 @@ window.location.href =
 
 }
 
+const SCREENER_KLINE_VISIBILITY_MARGIN =
+"200px 0px";
+
+let screenerKlineVisibilityObserver =
+null;
+
+function ensureScreenerKlineVisibilityObserver(){
+
+if(
+screenerKlineVisibilityObserver ||
+typeof IntersectionObserver ===
+"undefined"
+){
+return;
+}
+
+screenerKlineVisibilityObserver =
+new IntersectionObserver(
+entries=>{
+
+entries.forEach(
+entry=>{
+
+const widget =
+activeWidgets.find(
+w=>
+w.root ===
+entry.target
+);
+
+if(
+!widget
+){
+return;
+}
+
+if(
+entry.isIntersecting
+){
+
+if(
+widget.candles.length &&
+!widget.unsubKline &&
+isScreenerWidgetCurrent(
+widget
+)
+){
+attachWidgetKlineStream(
+widget
+);
+}
+
+}else{
+
+widget.unsubKline?.();
+widget.unsubKline =
+null;
+
+}
+
+}
+);
+
+},
+{
+rootMargin:
+SCREENER_KLINE_VISIBILITY_MARGIN,
+threshold:
+0.01
+}
+);
+
+}
+
+function observeWidgetKlineVisibility(
+widget
+){
+
+ensureScreenerKlineVisibilityObserver();
+screenerKlineVisibilityObserver?.observe(
+widget.root
+);
+
+}
+
+function unobserveWidgetKlineVisibility(
+widget
+){
+
+screenerKlineVisibilityObserver?.unobserve(
+widget.root
+);
+
+}
+
+function isScreenerWidgetInView(
+root
+){
+
+if(
+typeof IntersectionObserver ===
+"undefined"
+){
+return true;
+}
+
+const rect =
+root.getBoundingClientRect();
+const margin =
+200;
+
+return (
+rect.bottom >=
+-margin &&
+rect.top <=
+window.innerHeight +
+margin
+);
+
+}
+
+function attachWidgetKlineStream(
+widget
+){
+
+if(
+!isScreenerWidgetCurrent(
+widget
+)
+){
+return;
+}
+
+const {
+symbol,
+chart,
+series,
+chartEl,
+loadId
+} =
+widget;
+
+if(
+!widget.candles.length
+){
+return;
+}
+
+widget.unsubKline?.();
+
+if(
+!isScreenerWidgetInView(
+widget.root
+)
+){
+widget.unsubKline =
+null;
+return;
+}
+
+widget.unsubKline =
+subscribeKline(
+symbol,
+currentTF,
+candle=>{
+
+if(
+!isScreenerWidgetCurrent(
+widget
+)
+){
+return;
+}
+
+try{
+
+const prevLast =
+widget.candles[
+widget.candles.length -
+1
+];
+
+const isNewBar =
+prevLast &&
+candle.time >
+prevLast.time;
+
+if(
+!mergeLiveCandle(
+widget.candles,
+candle,
+SCREENER_MAX_BARS
+)
+){
+return;
+}
+
+if(
+isNewBar &&
+widget.candles.length >
+SCREENER_MAX_BARS &&
+!widget.userAdjustedZoom
+){
+
+widget.candles =
+widget.candles.slice(
+-SCREENER_MAX_BARS
+);
+
+series.setData(
+widget.candles
+);
+
+updateWidgetRsiData(
+widget
+);
+
+}else{
+
+series.update(
+candle
+);
+
+if(
+widget.rsiSeries &&
+isNewBar
+){
+updateWidgetRsiData(
+widget
+);
+}
+
+}
+
+applyChartPriceFormat(
+series,
+candle.close
+);
+
+if(
+!widget.userAdjustedZoom &&
+isNewBar
+){
+
+const total =
+widget.candles.length;
+
+const visible =
+Math.min(
+SCREENER_VISIBLE_BARS,
+total
+);
+
+restoreScreenerViewport(
+chart,
+chartEl.clientWidth,
+visible,
+total
+);
+
+}
+
+}catch{
+/* chart disposed during page change */
+}
+
+}
+);
+
+}
+
 async function loadWidgetChart(widget){
 
 const {
@@ -1198,9 +1522,21 @@ candles.length > SCREENER_MAX_BARS
 widget.candles = loaded;
 widget.userAdjustedZoom = false;
 
+if(
+!isScreenerWidgetCurrent(
+widget
+)
+){
+return;
+}
+
+try{
+
 /* iPad/Safari: сетка иногда отдаёт 0×0 до первого layout — zoom ждёт размер,
    но свечи должны попасть в series сразу */
-series.setData(loaded);
+series.setData(
+loaded
+);
 
 applyChartPriceFormat(
 series,
@@ -1211,102 +1547,52 @@ updateWidgetRsiData(
 widget
 );
 
-const runZoom = ()=>{
-widget.syncChartSize?.();
-};
-
-runZoom();
-requestAnimationFrame(runZoom);
-setTimeout(runZoom, 50);
-setTimeout(runZoom, 200);
-setTimeout(runZoom, 500);
-setTimeout(runZoom, 1200);
-
-widget.unsubKline?.();
-
-widget.unsubKline =
-subscribeKline(
-symbol,
-currentTF,
-candle=>{
-
-if(loadId !== renderToken){
+}catch{
 return;
 }
 
-const prevLast =
-widget.candles[widget.candles.length - 1];
-
-const isNewBar =
-prevLast &&
-candle.time > prevLast.time;
+const runZoom =
+()=>{
 
 if(
-!mergeLiveCandle(
-widget.candles,
-candle,
-SCREENER_MAX_BARS
+!isScreenerWidgetCurrent(
+widget
 )
 ){
 return;
 }
 
-if(
-isNewBar &&
-widget.candles.length > SCREENER_MAX_BARS &&
-!widget.userAdjustedZoom
-){
+try{
+widget.syncChartSize?.();
+}catch{
+/* chart disposed during page change */
+}
 
-widget.candles =
-widget.candles.slice(-SCREENER_MAX_BARS);
+};
 
-series.setData(widget.candles);
+runZoom();
+requestAnimationFrame(
+runZoom
+);
+setTimeout(
+runZoom,
+50
+);
+setTimeout(
+runZoom,
+200
+);
+setTimeout(
+runZoom,
+500
+);
+setTimeout(
+runZoom,
+1200
+);
 
-updateWidgetRsiData(
+attachWidgetKlineStream(
 widget
-);
-
-}else{
-
-series.update(candle);
-
-if(
-widget.rsiSeries &&
-isNewBar
-){
-updateWidgetRsiData(
-widget
-);
-}
-
-}
-
-applyChartPriceFormat(
-series,
-candle.close
-);
-
-if(
-!widget.userAdjustedZoom &&
-isNewBar
-){
-
-const total =
-widget.candles.length;
-
-const visible =
-Math.min(SCREENER_VISIBLE_BARS, total);
-
-restoreScreenerViewport(
-chart,
-chartEl.clientWidth,
-visible,
-total
-);
-
-}
-
-}
 );
 
 }catch(err){
@@ -1394,6 +1680,10 @@ chart,
 series,
 chartEl,
 loadId,
+disposed:
+false,
+unlinkTimeScales:
+null,
 candles: [],
 userAdjustedZoom:false,
 rsiChart:null,
@@ -1451,12 +1741,23 @@ borderVisible:false
 }
 });
 
+widget.unlinkTimeScales =
 linkPairedChartTimeScales(
 chart,
 widget.rsiChart,
-()=>layoutWidgetRsi(
+()=>{
+
+if(
+isScreenerWidgetCurrent(
 widget
 )
+){
+layoutWidgetRsi(
+widget
+);
+}
+
+}
 );
 
 }
@@ -1477,6 +1778,16 @@ chartEl.addEventListener("mousedown", markUserZoom);
 chartEl.addEventListener("touchstart", markUserZoom, { passive:true });
 
 function syncChartSize(){
+
+if(
+!isScreenerWidgetCurrent(
+widget
+)
+){
+return 0;
+}
+
+try{
 
 const w =
 chartEl.clientWidth;
@@ -1560,8 +1871,18 @@ chart,
 series,
 widget.candles,
 w,
-h
+h,
+{
+shouldContinue:()=>
+isScreenerWidgetCurrent(
+widget
+)
+}
 );
+
+}catch{
+return 0;
+}
 
 }
 
@@ -1799,6 +2120,14 @@ widget.symbol
 
 gridEl.appendChild(fragment);
 activeWidgets = nextWidgets;
+
+activeWidgets.forEach(
+widget=>{
+observeWidgetKlineVisibility(
+widget
+);
+}
+);
 
 const chartLoads =
 activeWidgets.map(w=>

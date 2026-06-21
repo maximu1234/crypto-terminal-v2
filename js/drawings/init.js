@@ -208,7 +208,7 @@ createDrawPriceScale
 
 import {
 createDrawRedrawLoop
-} from "./draw-redraw-loop.js?v=4";
+} from "./draw-redraw-loop.js?v=5";
 
 export function initDrawings({
 

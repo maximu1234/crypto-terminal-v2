@@ -10,9 +10,11 @@
 
 <title>Главная — Multichart</title>
 
+<link rel="icon" href="/icons/brand-logo.png" type="image/png">
+
 <link rel="stylesheet" href="/css/critical-shell.css?v=5">
 <script src="/js/site-css-ready.js?v=2"></script>
-<link rel="stylesheet" href="/css/common.css?v=28">
+<link rel="stylesheet" href="/css/common.css?v=29">
 <link rel="stylesheet" href="/css/screener.css?v=40">
 <link rel="stylesheet" href="/css/site-mobile-nav.css?v=4">
 
@@ -24,7 +26,7 @@
 
 <header id="header" class="screener-page-header">
 
-<a href="/index.html" id="logo">Multichart</a>
+<a href="/index.html" id="logo" aria-label="Multichart"><img src="/icons/brand-logo.png" alt="" width="32" height="32" class="site-logo-img" decoding="async"></a>
 
 <div class="screener-mobile-bar" id="screener-mobile-bar">
 
@@ -215,8 +217,8 @@ const { loadLightweightCharts } =
 await import("/js/charts-lib-boot.js?v=3");
 
 await loadLightweightCharts();
-await import("/js/screener.js?v=80");
-await import("/js/site-boot.js?v=89");
+await import("/js/screener.js?v=83");
+await import("/js/site-boot.js?v=90");
 
 }catch(err){
 

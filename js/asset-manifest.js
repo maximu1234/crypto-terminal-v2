@@ -28,6 +28,8 @@ Object.freeze({
 2,
 "coins-page-boot.js":
 16,
+"coins-page.js":
+1,
 "coins-list-refresh.js":
 1,
 "trade-desktop-boot.js":
@@ -59,7 +61,11 @@ Object.freeze({
 "chart-page.js":
 6,
 "terminal.js":
-331,
+333,
+"terminal/coins-chart-layout.js":
+2,
+"terminal/coins-chart-switch-veil.js":
+1,
 "chart-layout-gate.js":
 2,
 "chart-indicators.js":
@@ -89,7 +95,7 @@ Object.freeze({
 "coins-layout-resize.js":
 6,
 "coins-layout-math.js":
-3,
+4,
 "terminal/coins-state.js":
 6,
 "terminal/coins-prefs.js":
@@ -101,13 +107,15 @@ Object.freeze({
 "dashboard.js":
 86,
 "screener.js":
-80,
+83,
+"screener-widget-guard.js":
+1,
 "screener-widget-zoom.js":
 4,
 "release-marker.js":
-16,
+17,
 "site-boot.js":
-89,
+90,
 "desktop-app-ui.js":
 4,
 "desktop-trade-nav.js":
@@ -133,7 +141,7 @@ Object.freeze({
 "chart/chart-dom-crosshair.js":
 14,
 "chart/chart-factory.js":
-34,
+35,
 "chart-tablet-gestures.js":
 17,
 "coins-tablet-controller.js":
@@ -155,7 +163,7 @@ Object.freeze({
 "drawings/draw-price-scale.js":
 3,
 "drawings/draw-redraw-loop.js":
-4,
+5,
 "drawings/draw-chart-input.js":
 1,
 "drawings/draw-edit-interaction.js":
@@ -338,15 +346,15 @@ Object.freeze({
 "critical-shell.css":
 5,
 "common.css":
-28,
+29,
 "screener.css":
 40,
 "terminal.css":
-147,
+150,
 "dashboard.css":
 45,
 "coins.css":
-48,
+49,
 "chart-indicators.css":
 12,
 "trade-exchange-settings.css":
@@ -465,8 +473,12 @@ ASSETS[
 
 export const TERMINAL_ENTRY =
 jsUrl(
-"terminal.js"
+"coins-page.js"
 );
+
+/** @deprecated use TERMINAL_ENTRY / COINS_PAGE_ENTRY */
+export const COINS_PAGE_ENTRY =
+TERMINAL_ENTRY;
 
 export const CHART_PAGE_ENTRY =
 jsUrl(

@@ -6,7 +6,19 @@
 
 `js/page-routes.js` — единое определение страницы (`isAlertsPage`, `isCoinsPage`, …).
 
+## Имена страниц (не путать)
+
+| URL | HTML | JS entry |
+|-----|------|----------|
+| `/coins.html` | Монеты | `coins-page.js` → `terminal.js` |
+| `/terminal.html` | Терминал (виджеты) | `dashboard.js` |
+| `/` | Главная (screener) | `screener.js` |
+
+`terminal.js` — **legacy** имя для страницы Монеты; не связано с `terminal.html`.
+
 `js/asset-manifest.js` + `scripts/sync-asset-versions.cjs` — версии `?v=`.
+
+Desktop: `npm run bundle:sync` после правок web-статики; `npm run bundle:check` в CI.
 
 ## Модули (facade → подмодули)
 
@@ -15,7 +27,7 @@
 | `alerts-cloud-sync.js` | ✅ barrel → `alerts-cloud/{debug,worker-client,telegram-id,registry-sync,polling-realtime}.js` |
 | `drawings-cloud-sync.js` | ✅ barrel → `drawings-cloud/{sync-lifecycle,worker-client,pull-reconcile}.js` |
 | `chart.js` | `chart/{chart-options,chart-dom-crosshair,chart-factory}.js` |
-| `terminal.js` | `terminal/{coins-state,coins-prefs,coins-table}.js` |
+| `terminal.js` | `terminal/{coins-state,coins-prefs,coins-table,coins-chart-*}.js`; entry alias `coins-page.js` |
 | `drawings.js` | `drawings/{init, persist, style-bar, placement, edit-interaction, chart-input, redraw-loop, price-scale, draw-hit, draw-render, …}.js` |
 
 ## Performance
@@ -32,7 +44,7 @@
 
 ## CI
 
-`.github/workflows/ci.yml` — syntax, manifest check, site-nav check, unit tests.
+`.github/workflows/ci.yml` — syntax, manifest check, **desktop bundle check**, site-nav check, unit tests.
 
 ```bash
 npm run check:all

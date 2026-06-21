@@ -14,7 +14,7 @@ computeVolumeHeightLimits,
 clampCoinsListWidth,
 clampCoinsRsiHeight,
 clampCoinsVolumeHeight
-} from "./coins-layout-math.js?v=3";
+} from "./coins-layout-math.js?v=4";
 
 import {
 isCoinsPage
