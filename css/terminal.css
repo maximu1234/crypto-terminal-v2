@@ -1492,8 +1492,21 @@ body.tablet-chart .price-alert-scale-plus-icon{
   isolation:isolate;
 }
 
+#ao-wrap{
+  position:relative;
+  flex:0 0 clamp(102px,17.6dvh,160px);
+  height:clamp(102px,17.6dvh,160px);
+  min-height:102px;
+  border-top:1px solid #2a2e39;
+  padding-right:0;
+  box-sizing:border-box;
+  background:var(--app-chart-bg);
+  isolation:isolate;
+}
+
 #rsi-wrap.indicator-pane-hidden,
-#volume-wrap.indicator-pane-hidden{
+#volume-wrap.indicator-pane-hidden,
+#ao-wrap.indicator-pane-hidden{
   display:none !important;
 }
 
@@ -1507,6 +1520,27 @@ body.tablet-chart .price-alert-scale-plus-icon{
   pointer-events:none;
 }
 
+#ao-hud{
+  position:absolute;
+  top:6px;
+  left:10px;
+  z-index:3;
+  font:600 11px/1.2 system-ui,-apple-system,sans-serif;
+  color:#787b86;
+  pointer-events:none;
+  display:flex;
+  gap:6px;
+}
+
+.ao-hud-title{
+  color:#787b86;
+}
+
+#ao-hud-value{
+  color:#d1d4dc;
+  font-variant-numeric:tabular-nums;
+}
+
 .volume-hud-title{
   color:#787b86;
 }
@@ -1516,6 +1550,21 @@ body.tablet-chart .price-alert-scale-plus-icon{
   inset:0;
   width:100%;
   height:100%;
+}
+
+#ao-chart{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+}
+
+@media (pointer:coarse) and (min-width:768px){
+  #ao-wrap{
+    flex-basis:clamp(90px,16dvh,141px);
+    height:clamp(90px,16dvh,141px);
+    min-height:90px;
+  }
 }
 
 @media (pointer:coarse) and (min-width:768px){
@@ -1807,6 +1856,12 @@ body.tablet-chart #rsi-wrap .rsi-level-line:not(.hidden){
   padding:8px 10px;
   font-size:13px;
   box-sizing:border-box;
+  outline:none;
+}
+
+#market-filter:focus,
+#market-filter:focus-visible{
+  outline:none;
 }
 
 #table-header{

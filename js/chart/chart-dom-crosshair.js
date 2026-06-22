@@ -118,6 +118,40 @@ root;
 
 }
 
+/**
+ * #linked-crosshair-vert lives in #charts-stack-panes (beside #draw-toolbar).
+ * Position relative to that parent — not outer #charts-stack — or X is off by toolbar width.
+ */
+function resolveTabletProbeVertStackEl(
+linkedVertEl,
+chartsStackEl
+){
+
+const parent =
+linkedVertEl?.parentElement;
+
+if(
+parent &&
+parent !==
+document.body &&
+parent !==
+document.documentElement
+){
+return parent;
+}
+
+return (
+document.getElementById(
+"charts-stack-panes"
+) ||
+chartsStackEl ||
+document.getElementById(
+"charts-stack"
+)
+);
+
+}
+
 function resolveTabletProbeHorizEl(
 horizLineEl,
 chartsStackEl
@@ -927,12 +961,17 @@ y
 );
 
 if(
-chartsStackEl &&
 linkedVertEl
 ){
 
+const vertStackEl =
+resolveTabletProbeVertStackEl(
+linkedVertEl,
+chartsStackEl
+);
+
 const stackR =
-chartsStackEl.getBoundingClientRect();
+vertStackEl.getBoundingClientRect();
 
 const plotRightInStack =
 chartR.left - stackR.left + Math.max(

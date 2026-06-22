@@ -15,10 +15,10 @@
 
 <link rel="stylesheet" href="/css/critical-shell.css?v=5">
 <script src="/js/site-css-ready.js?v=2"></script>
-<link rel="stylesheet" href="/css/common.css?v=29">
-<link rel="stylesheet" href="/css/terminal.css?v=153">
+<link rel="stylesheet" href="/css/common.css?v=30">
+<link rel="stylesheet" href="/css/terminal.css?v=155">
 <link rel="stylesheet" href="/css/terminal-layout.css?v=52">
-<link rel="stylesheet" href="/css/chart-indicators.css?v=12">
+<link rel="stylesheet" href="/css/chart-indicators.css?v=13">
 <script>
 if(window.cryptoTerminalDesktop&&window.cryptoTerminalDesktop.isDesktop){
 document.documentElement.classList.add("trade-desktop");
@@ -261,6 +261,13 @@ tabTitle(saved);
 
 </div>
 
+<div id="ao-wrap" class="indicator-pane-hidden">
+<div id="ao-hud" aria-hidden="false">
+<span class="ao-hud-title">AO</span><span id="ao-hud-value">—</span>
+</div>
+<div id="ao-chart"></div>
+</div>
+
 <div id="volume-wrap" class="indicator-pane-hidden">
 <div id="volume-hud" aria-hidden="false">
 <span class="volume-hud-title">Vol</span>
@@ -376,7 +383,7 @@ Symbol
 
 <div id="coins-chart-status" class="coins-chart-status hidden" aria-live="polite"></div>
 
-<script src="/js/terminal-page-boot.js?v=18" type="module"></script>
+<script src="/js/terminal-page-boot.js?v=19" type="module"></script>
 
 </body>
 </html>

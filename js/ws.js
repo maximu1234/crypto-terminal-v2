@@ -109,6 +109,49 @@ volume:Number(raw.volume) || 0
 
 }
 
+function parseTicker(raw){
+
+const mark =
+Number(
+raw?.markPrice
+);
+const last =
+Number(
+raw?.lastPrice
+);
+
+return {
+markPrice:
+Number.isFinite(
+mark
+) &&
+mark >
+0
+? mark
+: (
+Number.isFinite(
+last
+) &&
+last >
+0
+? last
+: null
+)
+};
+
+}
+
+function tickerTopicFor(
+symbol
+){
+
+return `tickers.${String(
+symbol ||
+""
+).trim().toUpperCase()}`;
+
+}
+
 function resubscribeAll(){
 
 if(
@@ -185,8 +228,7 @@ const msg =
 JSON.parse(event.data);
 
 if(
-!msg.topic ||
-!msg.data?.[0]
+!msg.topic
 ){
 return;
 }
@@ -194,7 +236,21 @@ return;
 const callbacks =
 topicCallbacks.get(msg.topic);
 
-if(!callbacks?.size){
+if(
+!callbacks?.size
+){
+return;
+}
+
+if(
+msg.topic.startsWith(
+"kline."
+)
+){
+
+if(
+!msg.data?.[0]
+){
 return;
 }
 
@@ -207,6 +263,46 @@ candle
 );
 
 scheduleKlineFlush();
+return;
+
+}
+
+if(
+msg.topic.startsWith(
+"tickers."
+)
+){
+
+const raw =
+Array.isArray(
+msg.data
+)
+? msg.data[
+msg.data.length -
+1
+]
+: msg.data;
+
+const tick =
+parseTicker(
+raw
+);
+
+if(
+!tick.markPrice
+){
+return;
+}
+
+callbacks.forEach(
+fn=>{
+fn(
+tick
+);
+}
+);
+
+}
 
 };
 
@@ -385,6 +481,67 @@ set.delete(onCandle);
 
 if(!set.size){
 removeTopic(topic);
+}
+
+};
+
+}
+
+export function subscribeTicker(
+symbol,
+onTick
+){
+
+const topic =
+tickerTopicFor(
+symbol
+);
+
+if(
+!topicCallbacks.has(
+topic
+)
+){
+
+topicCallbacks.set(
+topic,
+new Set()
+);
+addTopic(
+topic
+);
+
+}
+
+topicCallbacks.get(
+topic
+).add(
+onTick
+);
+
+return ()=>{
+
+const set =
+topicCallbacks.get(
+topic
+);
+
+if(
+!set
+){
+return;
+}
+
+set.delete(
+onTick
+);
+
+if(
+!set.size
+){
+removeTopic(
+topic
+);
 }
 
 };

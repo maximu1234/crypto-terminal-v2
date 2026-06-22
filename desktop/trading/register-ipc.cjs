@@ -38,6 +38,15 @@ getTradeDiaryDetail
 require(
 "./bybit-rest.cjs"
 );
+const {
+setTradingStreamTarget,
+startTradingStream,
+stopTradingStream,
+replayTradingStream
+} =
+require(
+"./trading-stream.cjs"
+);
 
 function registerTradingIpc(){
 
@@ -60,6 +69,7 @@ saveCredentials(
 payload ||
 {}
 );
+startTradingStream();
 return {
 ok:
 true,
@@ -89,6 +99,7 @@ ipcMain.handle(
 
 try{
 clearCredentials();
+stopTradingStream();
 return {
 ok:
 true,
@@ -484,9 +495,40 @@ err.message
 }
 );
 
+ipcMain.handle(
+"trading:replayStream",
+()=>{
+
+try{
+replayTradingStream();
+return {
+ok:
+true
+};
+}catch(
+err
+){
+log.warn(
+"trading:replayStream:",
+err.message
+);
+return {
+ok:
+false,
+message:
+err.message
+};
+}
+
+}
+);
+
 }
 
 module.exports =
 {
-registerTradingIpc
+registerTradingIpc,
+setTradingStreamTarget,
+startTradingStream,
+stopTradingStream
 };

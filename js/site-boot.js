@@ -67,6 +67,10 @@ initSuppressNativeContextMenu
 } from "./suppress-native-context-menu.js?v=2";
 
 import {
+initFocusBlurAfterPick
+} from "./focus-blur-after-pick.js?v=1";
+
+import {
 initDesktopAppUi
 } from "./desktop-app-ui.js?v=4";
 
@@ -79,6 +83,7 @@ resumeStatsBackgroundJob
 } from "./statistics-background.js?v=5";
 
 initSuppressNativeContextMenu();
+initFocusBlurAfterPick();
 initDesktopAppUi();
 initDesktopTradeNav();
 

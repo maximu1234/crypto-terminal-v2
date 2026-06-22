@@ -781,6 +781,11 @@ body.tablet-chart .widget-chart-wrap.chart-touch-locked .chart{
     border-radius:6px;
     font-size:12px;
     cursor:pointer;
+    outline:none;
+}
+
+.tf-select:focus{
+    outline:none;
 }
 
 .open-chart-btn{

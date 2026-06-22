@@ -4,6 +4,9 @@
 const cacheBySymbol =
 new Map();
 
+let positionsDispatchRaf =
+0;
+
 function normalizeSymbol(
 symbol
 ){
@@ -15,6 +18,57 @@ symbol ||
 /\.P$/i,
 ""
 ).trim().toUpperCase();
+
+}
+
+function calcUnrealisedPnl(
+side,
+avgPrice,
+markPrice,
+size
+){
+
+const e =
+Number(
+avgPrice
+);
+const m =
+Number(
+markPrice
+);
+const s =
+Number(
+size
+);
+
+if(
+!Number.isFinite(
+e
+) ||
+!Number.isFinite(
+m
+) ||
+!Number.isFinite(
+s
+) ||
+s ===
+0
+){
+return 0;
+}
+
+return side ===
+"Buy"
+? (
+m -
+e
+) *
+s
+: (
+e -
+m
+) *
+s;
 
 }
 
@@ -40,6 +94,29 @@ null;
 
 }
 
+export function getAllCachedPositions(){
+
+return [
+...cacheBySymbol.values()
+].sort(
+(
+a,
+b
+)=>
+String(
+a.ticker ||
+a.symbol
+).localeCompare(
+String(
+b.ticker ||
+b.symbol
+),
+"ru"
+)
+);
+
+}
+
 function dispatchPositionUpdate(
 symbol,
 position
@@ -60,6 +137,43 @@ null
 }
 }
 )
+);
+
+}
+
+function dispatchAllPositions(){
+
+window.dispatchEvent(
+new CustomEvent(
+"trade-stream-positions",
+{
+detail:{
+positions:
+getAllCachedPositions()
+}
+}
+)
+);
+
+}
+
+function scheduleDispatchAllPositions(){
+
+if(
+positionsDispatchRaf
+){
+return;
+}
+
+positionsDispatchRaf =
+requestAnimationFrame(
+()=>{
+
+positionsDispatchRaf =
+0;
+dispatchAllPositions();
+
+}
 );
 
 }
@@ -102,6 +216,9 @@ new Set(
 next.keys()
 );
 
+let listChanged =
+false;
+
 for(
 const sym of prevKeys
 ){
@@ -114,6 +231,8 @@ sym
 cacheBySymbol.delete(
 sym
 );
+listChanged =
+true;
 dispatchPositionUpdate(
 sym,
 null
@@ -150,6 +269,8 @@ row
 if(
 changed
 ){
+listChanged =
+true;
 dispatchPositionUpdate(
 sym,
 row
@@ -158,10 +279,128 @@ row
 
 }
 
+if(
+listChanged
+){
+scheduleDispatchAllPositions();
+
+window.dispatchEvent(
+new CustomEvent(
+"trade-open-positions-changed"
+)
+);
+}
+
+}
+
+export function applyLiveMarkPrice(
+symbol,
+markPrice
+){
+
+const sym =
+normalizeSymbol(
+symbol
+);
+const prev =
+cacheBySymbol.get(
+sym
+);
+
+if(
+!prev
+){
+return false;
+}
+
+const mark =
+Number(
+markPrice
+);
+
+if(
+!Number.isFinite(
+mark
+) ||
+mark <=
+0
+){
+return false;
+}
+
+const prevMark =
+Number(
+prev.markPrice
+);
+
+if(
+Number.isFinite(
+prevMark
+) &&
+Math.abs(
+mark -
+prevMark
+) <
+1e-12
+){
+return false;
+}
+
+const pnl =
+calcUnrealisedPnl(
+prev.side,
+prev.avgPrice,
+mark,
+prev.size
+);
+
+const next =
+{
+...prev,
+markPrice:
+mark,
+pnl,
+pnlFromMark:
+true
+};
+
+if(
+JSON.stringify(
+prev
+) ===
+JSON.stringify(
+next
+)
+){
+return false;
+}
+
+cacheBySymbol.set(
+sym,
+next
+);
+dispatchPositionUpdate(
+sym,
+next
+);
+scheduleDispatchAllPositions();
+
+return true;
+
 }
 
 let inflightSync =
 null;
+
+export function applyTradePositionsStream(
+positions
+){
+
+applyPositionsList(
+positions
+);
+
+}
 
 export async function syncTradePositionsCache(
 options = {}
@@ -258,12 +497,5 @@ return;
 }
 
 void syncTradePositionsCache();
-
-window.addEventListener(
-"trade-book-refresh",
-()=>{
-void syncTradePositionsCache();
-}
-);
 
 }

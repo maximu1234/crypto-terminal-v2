@@ -41,7 +41,7 @@ mountWidgetTabletChart
 
 import {
 subscribeKline
-} from "./ws.js?v=15";
+} from "./ws.js?v=16";
 
 import {
 getWidgetToolbarHtml,
@@ -1122,7 +1122,13 @@ releaseDashboardLoadSlot();
 
 }
 
-tfSelect.onchange = loadData;
+tfSelect.addEventListener(
+"change",
+()=>{
+void loadData();
+tfSelect.blur();
+}
+);
 
 function resizeChart(){
 

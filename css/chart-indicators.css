@@ -333,6 +333,12 @@ font:500 12px/1.2 system-ui,-apple-system,sans-serif;
 color:#e5e7eb;
 -moz-appearance:textfield;
 appearance:textfield;
+outline:none;
+}
+
+.chart-indicator-settings-select:focus,
+.chart-indicator-settings-select:focus-visible{
+outline:none;
 }
 
 .chart-indicator-settings-input::-webkit-outer-spin-button,

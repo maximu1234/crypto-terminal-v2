@@ -3,11 +3,11 @@
  */
 import {
 createTradeChartOverlay
-} from "./trade-chart-overlay.js?v=22";
+} from "./trade-chart-overlay.js?v=24";
 
 import {
 createTradeChartOrders
-} from "./trade-chart-orders.js?v=11";
+} from "./trade-chart-orders.js?v=12";
 
 import {
 createTradePlusMenuHandler

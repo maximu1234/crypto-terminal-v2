@@ -76,7 +76,7 @@ mountCoinsTabletController
 
 import {
 disconnectKlineStream
-} from "./ws.js?v=15";
+} from "./ws.js?v=16";
 
 import {
 syncBackgroundAlertStreams
@@ -93,7 +93,7 @@ mountDrawToolIcons
 
 import {
 initChartIndicators
-} from "./chart-indicators.js?v=11";
+} from "./chart-indicators.js?v=12";
 
 import {
 initCoinsMobileUi,
@@ -171,7 +171,7 @@ settleCoinsChartViewport,
 resizeCharts,
 scheduleResizeCharts,
 applyDefaultZoom
-} from "./terminal/terminal-chart-layout.js?v=2";
+} from "./terminal/terminal-chart-layout.js?v=3";
 
 let currentDataset = "all";
 let currentTF = "60";
@@ -2058,6 +2058,8 @@ if(
 id ===
 "volume" ||
 id ===
+"ao" ||
+id ===
 "rsi"
 ){
 scheduleResizeCharts();
@@ -3196,6 +3198,7 @@ async e=>{
 await switchCoinsMarket(
 e.target.value
 );
+e.target.blur();
 
 }
 );

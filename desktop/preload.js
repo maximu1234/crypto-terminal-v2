@@ -201,7 +201,54 @@ ipcRenderer.invoke(
 "trading:getTradeDiaryDetail",
 payload ||
 {}
-)
+),
+replayStream:()=>
+ipcRenderer.invoke(
+"trading:replayStream"
+),
+onStream:(
+callback
+)=>{
+
+if(
+typeof callback !==
+"function"
+){
+return ()=>{};
+}
+
+const fn =
+(
+_event,
+payload
+)=>{
+try{
+callback(
+payload
+);
+}catch(
+err
+){
+console.warn(
+"trading stream listener:",
+err
+);
+}
+};
+
+ipcRenderer.on(
+"trading:stream",
+fn
+);
+
+return ()=>{
+ipcRenderer.removeListener(
+"trading:stream",
+fn
+);
+};
+
+}
 }
 }
 );

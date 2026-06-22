@@ -77,6 +77,9 @@ document.getElementById(
 ),
 document.getElementById(
 "volume-wrap"
+),
+document.getElementById(
+"ao-wrap"
 )
 ];
 

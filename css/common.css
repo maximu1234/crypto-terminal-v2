@@ -971,3 +971,24 @@ z-index:auto;
 }
 
 }
+
+/* Выпадашки: без залипающего focus ring после выбора (Electron/macOS). */
+select:focus,
+select:focus-visible{
+outline:none;
+}
+
+.chart-indicator-settings-select:focus,
+.chart-indicator-settings-select:focus-visible,
+.screener-mobile-select:focus,
+.screener-mobile-select:focus-visible,
+.screener-header-pick:focus,
+.screener-header-pick:focus-visible,
+body.terminal-page .coins-list-refresh-btn:focus,
+body.terminal-page .coins-list-refresh-btn:focus-visible,
+body.terminal-page #market-filter:focus,
+body.terminal-page #market-filter:focus-visible,
+body.trade-page .trade-book-mode:focus,
+body.trade-page .trade-book-mode:focus-visible{
+outline:none;
+}

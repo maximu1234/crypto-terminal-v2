@@ -48,7 +48,10 @@ require(
 "./chrome-user-agent.cjs"
 );
 const {
-registerTradingIpc
+registerTradingIpc,
+setTradingStreamTarget,
+startTradingStream,
+stopTradingStream
 } =
 require(
 "./trading/register-ipc.cjs"
@@ -782,12 +785,26 @@ fallbackToRemoteUi(
 
 }
 
+if(
+mainWindow &&
+!mainWindow.isDestroyed()
+){
+setTradingStreamTarget(
+mainWindow.webContents
+);
+startTradingStream();
+}
+
 }
 );
 
 mainWindow.on(
 "closed",
 ()=>{
+setTradingStreamTarget(
+null
+);
+stopTradingStream();
 mainWindow =
 null;
 }

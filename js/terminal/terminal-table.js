@@ -10,7 +10,7 @@ isBybitCoinsDataset
 
 import {
 connectKlineStream
-} from "../ws.js?v=15";
+} from "../ws.js?v=16";
 
 import {
 connectTickerStream,
@@ -45,7 +45,7 @@ isTradePage
 ){
 const tradePositions =
 await import(
-"../trade-open-positions.js?v=2"
+"../trade-open-positions.js?v=3"
 );
 hasOpenPosition =
 tradePositions.hasOpenPosition;

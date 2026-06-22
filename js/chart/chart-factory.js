@@ -24,7 +24,7 @@ hideDomChartCrosshair,
 hideDomChartCrosshairHorz,
 hideDomChartCrosshairVert,
 positionDomChartCrosshairHorz
-} from "./chart-dom-crosshair.js?v=14";
+} from "./chart-dom-crosshair.js?v=15";
 
 export function mountChartRangeFreeze(
 chart
@@ -1285,6 +1285,16 @@ wrapEl?.style.setProperty(
 
 document
 .getElementById("rsi-wrap")
+?.style
+.setProperty("--chart-scale-width", px);
+
+document
+.getElementById("volume-wrap")
+?.style
+.setProperty("--chart-scale-width", px);
+
+document
+.getElementById("ao-wrap")
 ?.style
 .setProperty("--chart-scale-width", px);
 

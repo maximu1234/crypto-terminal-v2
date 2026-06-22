@@ -2,6 +2,9 @@
  * Индикаторы на странице Монеты — меню, лимит, легенда на графике.
  */
 import {
+createAoPaneIndicator
+} from "./indicators/ao-pane.js?v=1";
+import {
 createHorizontalVolumeIndicator
 } from "./indicators/horizontal-volume.js?v=8";
 import {
@@ -9,7 +12,7 @@ createRsiPaneIndicator
 } from "./indicators/rsi-pane.js?v=2";
 import {
 createVolumePaneIndicator
-} from "./indicators/volume-pane.js?v=3";
+} from "./indicators/volume-pane.js?v=4";
 import {
 createMovingAverageIndicator
 } from "./indicators/moving-average.js?v=4";
@@ -193,6 +196,9 @@ createRsiPaneIndicator(
 getHost
 ),
 createVolumePaneIndicator(
+getHost
+),
+createAoPaneIndicator(
 getHost
 ),
 createMovingAverageIndicator(

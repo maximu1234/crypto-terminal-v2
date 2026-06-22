@@ -43,7 +43,7 @@ positionTabletProbeHorizInStack,
 hideTabletProbeCrosshair,
 formatCrosshairTimeLabel,
 isUserCrosshairEvent
-} from "./chart/chart-dom-crosshair.js?v=14";
+} from "./chart/chart-dom-crosshair.js?v=15";
 
 import {
 TABLET_LW_NATIVE_PRICE_SCALE,

@@ -125,6 +125,12 @@ background:#1f2937;
 color:#e5e7eb;
 font:600 13px/1.2 system-ui,-apple-system,sans-serif;
 cursor:pointer;
+outline:none;
+}
+
+body.trade-page .trade-book-mode:focus,
+body.trade-page .trade-book-mode:focus-visible{
+outline:none;
 }
 
 body.trade-page .trade-book-refresh{

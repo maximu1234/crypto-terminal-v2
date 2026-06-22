@@ -1,9 +1,6 @@
 /**
  * /trade — линии и плашки лимитных / стоп-ордеров на графике.
  */
-const POLL_MS =
-5000;
-
 const BADGE_LEFT =
 12;
 
@@ -225,8 +222,6 @@ let badgesEl =
 null;
 let orders =
 [];
-let pollTimer =
-null;
 let rafId =
 0;
 let fetching =
@@ -1498,31 +1493,36 @@ signal
 
 }
 
-function startPoll(){
-
-stopPoll();
-pollTimer =
-window.setInterval(
-()=>{
-void syncOrders();
-},
-POLL_MS
-);
-
-}
-
-function stopPoll(){
+function applyStreamOrders(
+allOrders
+){
 
 if(
-pollTimer !=
-null
+!host
 ){
-window.clearInterval(
-pollTimer
-);
-pollTimer =
-null;
+return;
 }
+
+const symbol =
+normalizeOverlaySymbol(
+host.getSymbol?.()
+);
+
+orders =
+(
+allOrders ||
+[]
+).filter(
+order=>
+normalizeOverlaySymbol(
+order?.symbol
+) ===
+symbol
+);
+
+scheduleDraw(
+true
+);
 
 }
 
@@ -1563,7 +1563,18 @@ host.wrapEl
 void syncOrders(
 true
 );
-startPoll();
+
+window.addEventListener(
+"trade-stream-orders",
+event=>{
+applyStreamOrders(
+event.detail?.orders
+);
+},
+{
+signal
+}
+);
 
 window.addEventListener(
 "trade-book-refresh",
@@ -1579,30 +1590,22 @@ signal
 
 window.addEventListener(
 "trade-orders-refresh",
-()=>{
-void syncOrders(
-true
-);
-},
-{
-signal
-}
-);
-
-document.addEventListener(
-"visibilitychange",
-()=>{
+event=>{
 
 if(
-document.hidden
+Array.isArray(
+event.detail?.orders
+)
 ){
-stopPoll();
-}else{
+applyStreamOrders(
+event.detail.orders
+);
+return;
+}
+
 void syncOrders(
 true
 );
-startPoll();
-}
 
 },
 {
@@ -1617,7 +1620,6 @@ function destroy(){
 mountAbort?.abort();
 mountAbort =
 null;
-stopPoll();
 
 if(
 rafId

@@ -4,10 +4,12 @@
 import {
 getCachedPosition,
 syncTradePositionsCache
-} from "./trade-positions-cache.js?v=1";
+} from "./trade-positions-cache.js?v=3";
 
-const POLL_MS =
-5000;
+import {
+formatTradePnl,
+formatTradeUsdt
+} from "./trade-format.js?v=1";
 
 const BADGE_LEFT =
 12;
@@ -25,25 +27,8 @@ function formatVolume(
 value
 ){
 
-const num =
-Number(
+return formatTradeUsdt(
 value
-);
-
-if(
-!Number.isFinite(
-num
-)
-){
-return "0";
-}
-
-return num.toLocaleString(
-"ru-RU",
-{
-maximumFractionDigits:
-0
-}
 );
 
 }
@@ -52,29 +37,17 @@ function formatPnl(
 value
 ){
 
-const num =
-Number(
+const text =
+formatTradePnl(
 value
 );
 
 if(
-!Number.isFinite(
-num
-)
+text ===
+"—"
 ){
 return "0 USDT";
 }
-
-const text =
-num.toLocaleString(
-"ru-RU",
-{
-maximumFractionDigits:
-2,
-signDisplay:
-"exceptZero"
-}
-);
 
 return `${text} USDT`;
 
@@ -325,8 +298,6 @@ null;
 let badgesEl =
 null;
 let position =
-null;
-let pollTimer =
 null;
 let rafId =
 0;
@@ -1743,7 +1714,6 @@ function destroy(){
 mountAbort?.abort();
 mountAbort =
 null;
-stopPoll();
 
 if(
 rafId
@@ -2383,11 +2353,22 @@ symbol
 );
 
 if(
-!nextPos ||
 !target ||
 current !==
 target
 ){
+return;
+}
+
+if(
+!nextPos
+){
+position =
+null;
+invalidateBadgeLayoutCache();
+scheduleDraw(
+true
+);
 return;
 }
 
@@ -2635,34 +2616,6 @@ signal
 
 }
 
-function startPoll(){
-
-stopPoll();
-pollTimer =
-window.setInterval(
-()=>{
-void syncPosition();
-},
-POLL_MS
-);
-
-}
-
-function stopPoll(){
-
-if(
-pollTimer !=
-null
-){
-window.clearInterval(
-pollTimer
-);
-pollTimer =
-null;
-}
-
-}
-
 function mount(
 nextHost
 ){
@@ -2700,7 +2653,6 @@ host.wrapEl
 void syncPosition(
 true
 );
-startPoll();
 
 const sym =
 normalizeOverlaySymbol(
@@ -2742,27 +2694,6 @@ applyPositionUpdate(
 event.detail?.position,
 event.detail?.symbol
 );
-
-},
-{
-signal
-}
-);
-
-document.addEventListener(
-"visibilitychange",
-()=>{
-
-if(
-document.hidden
-){
-stopPoll();
-}else{
-void syncPosition(
-true
-);
-startPoll();
-}
 
 },
 {

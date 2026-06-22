@@ -29,7 +29,7 @@ alignRsiWithCandleTimes
 
 import {
 subscribeKline
-} from "./ws.js?v=15";
+} from "./ws.js?v=16";
 
 import {
 connectTickerStream,
@@ -42,7 +42,7 @@ createTickerUiBatcher
 
 import {
 mountReleaseMarker
-} from "./release-marker.js?v=20";
+} from "./release-marker.js?v=21";
 
 import {
 saveScreenerState,

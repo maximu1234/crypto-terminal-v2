@@ -625,7 +625,8 @@ row.size
 ),
 avgPrice:
 Number(
-row?.avgPrice
+row?.avgPrice ||
+row?.entryPrice
 ) ||
 0,
 markPrice:
@@ -2186,7 +2187,7 @@ merged
 
 }
 
-async function getPositions(){
+async function fetchPositionListRaw(){
 
 const result =
 await privateGet(
@@ -2209,6 +2210,33 @@ return result;
 
 const list =
 result.data?.result?.list;
+
+return {
+ok:
+true,
+list:
+Array.isArray(
+list
+)
+? list
+: []
+};
+
+}
+
+async function getPositions(){
+
+const result =
+await fetchPositionListRaw();
+
+if(
+!result.ok
+){
+return result;
+}
+
+const list =
+result.list;
 
 const positions =
 Array.isArray(
@@ -4192,6 +4220,7 @@ position
 module.exports =
 {
 getWalletBalance,
+fetchPositionListRaw,
 getPositions,
 getOpenOrders,
 getPosition,
@@ -4204,5 +4233,7 @@ cancelTradeOrder,
 amendTradeOrder,
 pingBybit,
 getClosedPnlHistory,
-getTradeDiaryDetail
+getTradeDiaryDetail,
+mapPositionRow,
+mapOrderRow
 };

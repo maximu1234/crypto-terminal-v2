@@ -1,5 +1,5 @@
 /**
- * Volume — вертикальные объёмы на отдельной панели (высота как у RSI).
+ * Awesome Oscillator — гистограмма на отдельной панели (как Volume).
  */
 import {
 createVolumeChart,
@@ -11,25 +11,36 @@ coinsTfVisibleBars
 } from "../chart-import.js?v=42";
 
 import {
+calculateAwesomeOscillator,
+aoBarColor,
+formatAoLegendValue
+} from "./ao-math.js?v=1";
+
+import {
 isBottomIndicatorPane
 } from "./indicator-pane-order.js?v=1";
 
-export const VOLUME_PANE_ID =
-"volume";
+export const AO_PANE_ID =
+"ao";
 
-const VOL_UP =
-"rgba(38, 166, 154, 0.72)";
-
-const VOL_DOWN =
-"rgba(239, 68, 68, 0.72)";
-
-function buildVolumeDisplayPoints(
+function buildAoDisplayPoints(
 candles,
 tf
 ){
 
 if(
 !candles?.length
+){
+return [];
+}
+
+const aoPoints =
+calculateAwesomeOscillator(
+candles
+);
+
+if(
+!aoPoints.length
 ){
 return [];
 }
@@ -45,49 +56,38 @@ computeChartFutureMarginBars(
 visibleBars
 );
 
-return appendFutureWhitespaceBars(
+const byTime =
+new Map(
+aoPoints.map(
+p=>[
+p.time,
+p.value
+]
+)
+);
+
+const merged =
 candles.map(
 bar=>({
 time:
 bar.time,
-volume:
-Number(
-bar.volume
-) ||
-0,
-open:
-bar.open,
-close:
-bar.close
+value:
+byTime.get(
+bar.time
+) ??
+null
 })
-),
+);
+
+return appendFutureWhitespaceBars(
+merged,
 futureMargin,
 tf
 );
 
 }
 
-function volumeBarColor(
-bar
-){
-
-if(
-bar.volume ==
-null ||
-bar.volume <=
-0
-){
-return "rgba(120,123,134,0.35)";
-}
-
-return bar.close >=
-bar.open
-? VOL_UP
-: VOL_DOWN;
-
-}
-
-export function createVolumePaneIndicator(
+export function createAoPaneIndicator(
 getHost
 ){
 
@@ -99,11 +99,13 @@ let series =
 null;
 let unbindTimeSync =
 null;
+let lastAoValue =
+null;
 
 function wrapEl(){
 
 return document.getElementById(
-"volume-wrap"
+"ao-wrap"
 );
 
 }
@@ -111,7 +113,33 @@ return document.getElementById(
 function chartEl(){
 
 return document.getElementById(
-"volume-chart"
+"ao-chart"
+);
+
+}
+
+function hudValueEl(){
+
+return document.getElementById(
+"ao-hud-value"
+);
+
+}
+
+function updateHud(){
+
+const el =
+hudValueEl();
+
+if(
+!el
+){
+return;
+}
+
+el.textContent =
+formatAoLegendValue(
+lastAoValue
 );
 
 }
@@ -126,7 +154,7 @@ return;
 
 const showTimeScale =
 isBottomIndicatorPane(
-VOLUME_PANE_ID
+AO_PANE_ID
 );
 
 chart.timeScale().applyOptions(
@@ -199,6 +227,22 @@ chart =
 created.chart;
 series =
 created.series;
+
+series.applyOptions(
+{
+base:
+0,
+priceFormat:{
+type:
+"price",
+precision:
+4,
+minMove:
+0.0001
+}
+}
+);
+
 return true;
 
 }
@@ -222,6 +266,8 @@ chart.remove();
 chart =
 null;
 series =
+null;
+lastAoValue =
 null;
 
 }
@@ -256,26 +302,63 @@ host?.getTf?.() ||
 "D";
 
 const points =
-buildVolumeDisplayPoints(
+buildAoDisplayPoints(
 raw,
 tf
 );
 
-series.setData(
+let prev =
+null;
+lastAoValue =
+null;
+
+const data =
 points.map(
-bar=>({
+bar=>{
+
+if(
+bar.value ==
+null ||
+!Number.isFinite(
+bar.value
+)
+){
+return {
 time:
 bar.time,
 value:
-bar.volume ||
 0,
 color:
-volumeBarColor(
-bar
-)
-})
-)
+"rgba(120,123,134,0.2)"
+};
+}
+
+const color =
+aoBarColor(
+bar.value,
+prev
 );
+
+prev =
+bar.value;
+lastAoValue =
+bar.value;
+
+return {
+time:
+bar.time,
+value:
+bar.value,
+color
+};
+
+}
+);
+
+series.setData(
+data
+);
+updateHud();
 
 }
 
@@ -304,14 +387,9 @@ getHost?.();
 const w =
 host?.getChartWrapWidth?.() ||
 0;
-const h =
-host?.getPaneHeight?.() ||
-0;
 
 if(
 w >
-0 &&
-h >
 0
 ){
 onResize(
@@ -343,6 +421,9 @@ series.setData(
 );
 }
 
+lastAoValue =
+null;
+updateHud();
 applyVisibility();
 
 }
@@ -435,11 +516,11 @@ paneHeight
 
 return {
 id:
-VOLUME_PANE_ID,
+AO_PANE_ID,
 label:
-"Volume",
+"AO",
 legendLabel:
-"Vol",
+"AO",
 exemptFromLimit:
 false,
 defaultEnabled:
@@ -452,6 +533,11 @@ getChart:()=>
 enabled
 ? chart
 : null,
+getLegendLabel:()=>
+lastAoValue !=
+null
+? `AO ${formatAoLegendValue(lastAoValue)}`
+: "AO",
 onSymbolChange,
 onCandlesUpdate,
 syncViewport,

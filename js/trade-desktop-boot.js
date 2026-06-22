@@ -23,7 +23,7 @@ initTradeMarketEntry
 
 import {
 initTradeBookPanel
-} from "./trade-book-panel.js?v=5";
+} from "./trade-book-panel.js?v=8";
 
 const TRADE_CSS =
 [
@@ -161,6 +161,25 @@ return;
 initTradeExchangeSettings();
 initTradeVolumePresets();
 initTradeMarketEntry();
+
+const {
+initTradeStreamBridge
+} =
+await import(
+"./trade-stream-bridge.js?v=2"
+);
+
+await initTradeStreamBridge();
+
+const {
+initTradePositionsLive
+} =
+await import(
+"./trade-positions-live.js?v=1"
+);
+
+initTradePositionsLive();
+
 initTradeBookPanel();
 
 const {
@@ -176,7 +195,7 @@ const {
 initTradeOpenPositions
 } =
 await import(
-"./trade-open-positions.js?v=2"
+"./trade-open-positions.js?v=3"
 );
 
 initTradeOpenPositions();
@@ -206,7 +225,7 @@ const {
 initTradePositionsCache
 } =
 await import(
-"./trade-positions-cache.js?v=1"
+"./trade-positions-cache.js?v=3"
 );
 
 initTradePositionsCache();
@@ -226,7 +245,7 @@ const {
 initTradeChartOverlay
 } =
 await import(
-"./trade-chart-overlay.js?v=22"
+"./trade-chart-overlay.js?v=24"
 );
 
 initTradeChartOverlay();
@@ -235,7 +254,7 @@ const {
 initTradeChartOrders
 } =
 await import(
-"./trade-chart-orders.js?v=11"
+"./trade-chart-orders.js?v=12"
 );
 
 initTradeChartOrders();

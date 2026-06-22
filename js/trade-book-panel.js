@@ -1,8 +1,15 @@
 /**
  * /trade — панель позиций и ордеров (низ списка монет).
  */
-const REFRESH_MS =
-10000;
+import {
+formatTradePnl,
+formatTradeUsdt
+} from "./trade-format.js?v=1";
+
+import {
+getAllCachedPositions,
+syncTradePositionsCache
+} from "./trade-positions-cache.js?v=3";
 
 const PANEL_HEIGHT_KEY =
 "trade_book_panel_height_v1";
@@ -588,8 +595,6 @@ panel.querySelector(
 
 let mode =
 "positions";
-let pollTimer =
-null;
 let loading =
 false;
 let activeChartSymbol =
@@ -692,8 +697,8 @@ return `
 <span class="trade-book-fut" title="Futures">F</span>
 <span class="trade-book-ticker-text">${row.ticker}</span>
 </button>
-<span class="col-pnl ${pnlClass(row.pnl)}">${formatPnl(row.pnl)}</span>
-<span class="col-volume">${formatUsdt(row.volumeUsdt)}</span>
+<span class="col-pnl ${pnlClass(row.pnl)}">${formatTradePnl(row.pnl)}</span>
+<span class="col-volume">${formatTradeUsdt(row.volumeUsdt)}</span>
 <button type="button" class="trade-book-close" title="Закрыть по рынку" aria-label="Закрыть ${row.ticker}">×</button>
 </div>
 `;
@@ -1013,42 +1018,13 @@ true
 
 }
 
-function startPoll(){
-
-stopPoll();
-pollTimer =
-window.setInterval(
-()=>{
-void refresh(
-true
-);
-},
-REFRESH_MS
-);
-
-}
-
-function stopPoll(){
-
-if(
-pollTimer !=
-null
-){
-window.clearInterval(
-pollTimer
-);
-pollTimer =
-null;
-}
-
-}
-
 modeSelect.addEventListener(
 "change",
 ()=>{
 setMode(
 modeSelect.value
 );
+modeSelect.blur();
 }
 );
 
@@ -1062,10 +1038,92 @@ false
 );
 
 renderTableHead();
+
+void (
+async()=>{
+
+if(
+mode ===
+"orders"
+){
 void refresh(
 false
 );
-startPoll();
+return;
+}
+
+let positions =
+getAllCachedPositions();
+
+if(
+!positions.length
+){
+await syncTradePositionsCache();
+positions =
+getAllCachedPositions();
+}
+
+if(
+positions.length
+){
+renderPositions(
+positions
+);
+setStatus(
+""
+);
+}else{
+void refresh(
+false
+);
+}
+
+}
+)();
+
+window.addEventListener(
+"trade-stream-positions",
+event=>{
+
+if(
+mode !==
+"positions"
+){
+return;
+}
+
+renderPositions(
+event.detail?.positions ||
+[]
+);
+setStatus(
+""
+);
+
+}
+);
+
+window.addEventListener(
+"trade-stream-orders",
+event=>{
+
+if(
+mode !==
+"orders"
+){
+return;
+}
+
+renderOrders(
+event.detail?.orders ||
+[]
+);
+setStatus(
+""
+);
+
+}
+);
 
 document.addEventListener(
 "visibilitychange",
@@ -1074,13 +1132,12 @@ document.addEventListener(
 if(
 document.hidden
 ){
-stopPoll();
-}else{
+return;
+}
+
 void refresh(
 true
 );
-startPoll();
-}
 
 }
 );
@@ -1136,8 +1193,7 @@ nextActive
 );
 
 return {
-refresh,
-stopPoll
+refresh
 };
 
 }

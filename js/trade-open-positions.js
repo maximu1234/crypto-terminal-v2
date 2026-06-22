@@ -3,7 +3,7 @@
  */
 import {
 syncTradePositionsCache
-} from "./trade-positions-cache.js?v=1";
+} from "./trade-positions-cache.js?v=3";
 
 const openPositionSymbols =
 new Set();
@@ -169,6 +169,41 @@ return;
 }
 
 void syncOpenPositions();
+
+window.addEventListener(
+"trade-stream-positions",
+event=>{
+
+const next =
+new Set();
+
+for(
+const row of event.detail?.positions ||
+[]
+){
+
+if(
+row?.symbol
+){
+next.add(
+normalizeSymbol(
+row.symbol
+)
+);
+}
+
+}
+
+if(
+applySymbols(
+next
+)
+){
+notifyChanged();
+}
+
+}
+);
 
 window.addEventListener(
 "trade-book-refresh",
