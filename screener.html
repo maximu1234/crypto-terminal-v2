@@ -1,12 +1,253 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
+
 <meta charset="UTF-8"/>
-<meta http-equiv="refresh" content="0; url=./"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Скринер переехал</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin/>
+<link rel="dns-prefetch" href="https://api.bybit.com"/>
+
+<title>Скринер — Multichart</title>
+
+<link rel="icon" href="/icons/brand-logo.png" type="image/png">
+
+<link rel="stylesheet" href="/css/critical-shell.css?v=5">
+<script src="/js/site-css-ready.js?v=2"></script>
+<link rel="stylesheet" href="/css/common.css?v=29">
+<link rel="stylesheet" href="/css/screener.css?v=40">
+<link rel="stylesheet" href="/css/site-mobile-nav.css?v=4">
+
+<script src="/vendor/lightweight-charts.standalone.production.js"></script>
+
 </head>
+
 <body>
-<p><a href="./">Открыть главную (бывший скринер)</a></p>
+
+<header id="header" class="screener-page-header">
+
+<a href="/screener.html" id="logo" aria-label="Multichart"><img src="/icons/brand-logo.png" alt="" width="32" height="32" class="site-logo-img" decoding="async"></a>
+
+<div class="screener-mobile-bar" id="screener-mobile-bar">
+
+<div class="screener-mobile-search-wrap">
+<input
+type="search"
+class="screener-symbol-search"
+placeholder="Поиск"
+spellcheck="false"
+autocomplete="off"
+aria-label="Поиск монеты"
+enterkeyhint="search"
+/>
+</div>
+
+<div class="screener-mobile-select-wrap">
+<button type="button" class="screener-mobile-select" id="screener-sort-trigger" aria-haspopup="listbox" aria-expanded="false">
+<span id="screener-sort-label">24ч %</span>
+</button>
+<div class="screener-mobile-menu hidden" id="screener-sort-menu" role="listbox">
+<button type="button" class="screener-mobile-menu-item active" data-sort="change24">24ч %</button>
+<button type="button" class="screener-mobile-menu-item" data-sort="symbol">А–Я</button>
+</div>
+</div>
+
+<div class="screener-mobile-select-wrap">
+<button type="button" class="screener-mobile-select" id="screener-tf-trigger" aria-haspopup="listbox" aria-expanded="false">
+<span id="screener-tf-label">15m</span>
+</button>
+<div class="screener-mobile-menu hidden" id="screener-tf-menu" role="listbox">
+<button type="button" class="screener-mobile-menu-item" data-tf="1">1m</button>
+<button type="button" class="screener-mobile-menu-item" data-tf="5">5m</button>
+<button type="button" class="screener-mobile-menu-item active" data-tf="15">15m</button>
+<button type="button" class="screener-mobile-menu-item" data-tf="60">1h</button>
+<button type="button" class="screener-mobile-menu-item" data-tf="240">4h</button>
+<button type="button" class="screener-mobile-menu-item" data-tf="D">1D</button>
+</div>
+</div>
+
+<span class="screener-release-marker screener-release-marker--mobile" data-release-marker aria-hidden="true"></span>
+
+<button type="button" class="screener-nav-toggle" id="screener-nav-toggle" aria-label="Меню" aria-expanded="false" aria-controls="screener-nav-panel">
+<span class="screener-nav-toggle-bars" aria-hidden="true"></span>
+</button>
+
+</div>
+
+<div class="screener-nav-backdrop hidden" id="screener-nav-backdrop"></div>
+
+<nav class="menu screener-nav-panel" id="screener-nav-panel">
+<a href="/screener.html" class="active">Скринер</a>
+<a href="/terminal.html">Терминал</a>
+<a href="/watchlist.html">Вотчлист</a>
+<a href="/alerts/">Алерты</a>
+<a href="/listings.html">Листинги</a>
+<a href="/trade-calculator.html">Калькулятор</a>
+<a href="/statistics.html">Статистика</a>
+<div class="header-settings-wrap" id="header-settings-wrap">
+<button type="button" class="header-settings-btn" id="header-settings-btn" title="Настройки" aria-label="Настройки" aria-expanded="false" aria-haspopup="true">
+<svg class="header-settings-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.75"/><path fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+</button>
+<div class="header-settings-dropdown hidden" id="header-settings-dropdown" role="menu">
+<p class="header-settings-section-title">Синхронизация</p>
+<div id="cloud-settings-mount"></div>
+</div>
+</div>
+</nav>
+
+<div id="header-controls" class="screener-header-desktop">
+
+<div class="screener-search-group">
+
+<label class="screener-invert-charts-label" for="screener-invert-charts" title="Перевернуть график">
+<input type="checkbox" id="screener-invert-charts" title="Перевернуть график" aria-label="Перевернуть график"/>
+</label>
+
+<input
+type="search"
+id="screener-symbol-search"
+class="screener-symbol-search"
+placeholder="Поиск"
+spellcheck="false"
+autocomplete="off"
+aria-label="Поиск монеты"
+enterkeyhint="search"
+/>
+</div>
+
+<div class="screener-header-toolbar">
+
+<div class="screener-header-pick-wrap">
+<button
+type="button"
+class="screener-header-pick"
+id="screener-desktop-layout-trigger"
+aria-haspopup="listbox"
+aria-expanded="false"
+>
+<span id="screener-desktop-layout-label">9</span>
+<span class="screener-header-pick-caret" aria-hidden="true">▾</span>
+</button>
+<div class="screener-header-pick-menu hidden" id="screener-desktop-layout-menu" role="listbox" aria-label="Количество виджетов">
+<button type="button" class="screener-header-pick-item" data-layout="4">4 виджета</button>
+<button type="button" class="screener-header-pick-item" data-layout="6">6 виджетов</button>
+<button type="button" class="screener-header-pick-item active" data-layout="9">9 виджетов</button>
+</div>
+</div>
+
+<div class="screener-header-pick-wrap">
+<button
+type="button"
+class="screener-header-pick"
+id="screener-desktop-sort-trigger"
+aria-haspopup="listbox"
+aria-expanded="false"
+>
+<span id="screener-desktop-sort-label">24ч %</span>
+<span class="screener-header-pick-caret" aria-hidden="true">▾</span>
+</button>
+<div class="screener-header-pick-menu hidden" id="screener-desktop-sort-menu" role="listbox" aria-label="Сортировка">
+<button type="button" class="screener-header-pick-item active" data-sort="change24">24ч %</button>
+<button type="button" class="screener-header-pick-item" data-sort="symbol">А–Я</button>
+</div>
+</div>
+
+<div class="screener-header-pick-wrap">
+<button
+type="button"
+class="screener-header-pick"
+id="screener-desktop-tf-trigger"
+aria-haspopup="listbox"
+aria-expanded="false"
+>
+<span id="screener-desktop-tf-label">15m</span>
+<span class="screener-header-pick-caret" aria-hidden="true">▾</span>
+</button>
+<div class="screener-header-pick-menu hidden" id="screener-desktop-tf-menu" role="listbox" aria-label="Таймфрейм">
+<button type="button" class="screener-header-pick-item" data-tf="1">1m</button>
+<button type="button" class="screener-header-pick-item" data-tf="5">5m</button>
+<button type="button" class="screener-header-pick-item active" data-tf="15">15m</button>
+<button type="button" class="screener-header-pick-item" data-tf="60">1h</button>
+<button type="button" class="screener-header-pick-item" data-tf="240">4h</button>
+<button type="button" class="screener-header-pick-item" data-tf="D">1D</button>
+</div>
+</div>
+
+<span class="screener-release-marker" data-release-marker aria-label="Версия"></span>
+
+</div>
+
+</div>
+
+</header>
+
+<main id="screener-grid" class="grid-9" aria-live="polite"></main>
+
+<footer id="pagination" aria-label="Страницы"></footer>
+
+<div id="screener-status" class="hidden">Загрузка…</div>
+
+<script type="module">
+
+if(location.protocol === "file:"){
+
+document.body.innerHTML = `
+<div style="padding:40px;font-family:Arial,sans-serif;background:#16181f;color:#fff;max-width:520px">
+<h2>Нужен локальный сервер</h2>
+<p>Страницу нельзя открывать двойным кликом по файлу.</p>
+<p>В терминале:</p>
+<pre style="background:#1f2937;padding:12px;border-radius:8px">cd crypto-terminal-v2
+./start.sh</pre>
+<p>Затем откройте:<br>
+<a href="http://127.0.0.1:8080/screener.html" style="color:#60a5fa">http://127.0.0.1:8080/screener.html</a>
+</p>
+</div>`;
+
+}else{
+
+try{
+
+if(
+window.waitForSiteCssReady
+){
+await window.waitForSiteCssReady();
+}
+
+const { loadLightweightCharts } =
+await import("/js/charts-lib-boot.js?v=3");
+
+await loadLightweightCharts();
+await import("/js/screener.js?v=83");
+await import("/js/site-boot.js?v=90");
+
+}catch(err){
+
+console.error(err);
+
+const msg =
+String(
+err?.message ||
+err
+);
+
+const exportHint =
+/export/i.test(msg)
+? "<p>Обычно это кэш или открытие без сервера. Запустите <code>./start.sh</code>, откройте ссылку ниже и сделайте жёсткое обновление (Cmd+Shift+R).</p>"
+: "";
+
+document.body.innerHTML = `
+<div style="padding:32px;font-family:Arial,sans-serif;background:#16181f;color:#fff;max-width:520px">
+<h2>Не удалось загрузить графики</h2>
+<p style="color:#fca5a5">${msg}</p>
+${exportHint}
+<p>Запустите <code>./start.sh</code> и откройте <a href="http://127.0.0.1:8080/screener.html" style="color:#60a5fa">http://127.0.0.1:8080/screener.html</a></p>
+</div>`;
+
+}
+
+}
+
+</script>
+
 </body>
 </html>

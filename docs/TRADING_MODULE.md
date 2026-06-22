@@ -1,6 +1,6 @@
 # Торговый модуль (desktop)
 
-**Статус:** MVP · **Эталон:** `metka-29` · **UI:** `/coins.html` (**desktop .app** — торговый слой; **web** — без торговли)
+**Статус:** MVP · **Эталон:** `metka-29` · **UI:** `/terminal.html` (**desktop .app** — торговый слой; **web** — без торговли)
 
 Торговля **только Multichart.app на Mac** (широкое окно): не Vercel, не iPad, не смартфон.
 
@@ -45,7 +45,7 @@ Renderer (/coins.html — desktop)
 | `desktop/trading/register-ipc.cjs` | IPC handlers |
 | `desktop/trading/credentials.cjs` | Keychain |
 | `coins.html` | Монеты (+ торговля в desktop .app) |
-| `js/coins-page-boot.js` | Boot: chart + условный trade-слой |
+| `js/terminal-page-boot.js` | Boot: chart + условный trade-слой |
 | `js/trade-desktop-boot.js` | Trade CSS + init (только desktop) |
 | `js/trade-exchange-settings.js` | Bybit dropdown + ping |
 | `js/trade-market-entry.js` | Buy/Sell по рынку |

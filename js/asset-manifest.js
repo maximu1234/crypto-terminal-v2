@@ -26,11 +26,11 @@ Object.freeze({
 /* ── JS: boot / entry ── */
 "asset-manifest.js":
 2,
-"coins-page-boot.js":
+"terminal-page-boot.js":
 18,
-"coins-page.js":
+"terminal-entry.js":
 1,
-"coins-list-refresh.js":
+"terminal-list-refresh.js":
 1,
 "trade-desktop-boot.js":
 7,
@@ -76,9 +76,9 @@ Object.freeze({
 6,
 "terminal.js":
 336,
-"terminal/coins-chart-layout.js":
+"terminal/terminal-chart-layout.js":
 2,
-"terminal/coins-chart-switch-veil.js":
+"terminal/terminal-chart-switch-veil.js":
 7,
 "chart-layout-gate.js":
 2,
@@ -95,7 +95,7 @@ Object.freeze({
 "indicators/ma-math.js":
 1,
 "indicators/ema-shift-ribbon.js":
-4,
+5,
 "indicators/indicator-color-picker-ui.js":
 1,
 "indicators/htf-loader.js":
@@ -106,20 +106,20 @@ Object.freeze({
 6,
 "indicators/registry.js":
 1,
-"coins-layout-resize.js":
+"terminal-layout-resize.js":
 6,
-"coins-layout-math.js":
+"terminal-layout-math.js":
 4,
-"terminal/coins-state.js":
+"terminal/terminal-state.js":
 6,
-"terminal/coins-prefs.js":
-8,
-"terminal/coins-table.js":
+"terminal/terminal-prefs.js":
+9,
+"terminal/terminal-table.js":
 12,
 "telegram-bot-public.js":
 1,
-"dashboard.js":
-86,
+"watchlist.js":
+87,
 "screener.js":
 83,
 "screener-widget-guard.js":
@@ -158,7 +158,7 @@ Object.freeze({
 35,
 "chart-tablet-gestures.js":
 17,
-"coins-tablet-controller.js":
+"terminal-tablet-controller.js":
 5,
 "drawings.js":
 234,
@@ -232,7 +232,7 @@ Object.freeze({
 11,
 "draw-tools-visible.js":
 1,
-"dashboard-draw-ui.js":
+"watchlist-draw-ui.js":
 15,
 "price-alert-ui.js":
 45,
@@ -240,9 +240,9 @@ Object.freeze({
 3,
 "storage.js":
 13,
-"terminal-page.js":
+"watchlist-page.js":
 3,
-"coins-mobile.js":
+"terminal-mobile.js":
 5,
 "widget-favorite-flag.js":
 3,
@@ -367,9 +367,9 @@ Object.freeze({
 40,
 "terminal.css":
 153,
-"dashboard.css":
+"watchlist.css":
 47,
-"coins.css":
+"terminal-layout.css":
 52,
 "chart-indicators.css":
 12,
@@ -391,7 +391,7 @@ Object.freeze({
 4,
 "trade-widget-compact.css":
 3,
-"terminal-page.css":
+"watchlist-page.css":
 2,
 "site-mobile-nav.css":
 4,
@@ -481,9 +481,9 @@ ASSETS[
 "terminal.js"
 ];
 
-export const COINS_BOOT_V =
+export const TERMINAL_BOOT_V =
 ASSETS[
-"coins-page-boot.js"
+"terminal-page-boot.js"
 ];
 
 export const CHART_PAGE_V =
@@ -493,10 +493,10 @@ ASSETS[
 
 export const TERMINAL_ENTRY =
 jsUrl(
-"coins-page.js"
+"terminal-entry.js"
 );
 
-/** @deprecated use TERMINAL_ENTRY / COINS_PAGE_ENTRY */
+/** @deprecated use TERMINAL_ENTRY */
 export const COINS_PAGE_ENTRY =
 TERMINAL_ENTRY;
 

@@ -1,6 +1,6 @@
 /* Монеты: не тянуть screener.css — у него body { display:flex } ломает десктоп */
 
-body.coins-page{
+body.terminal-page{
 display:block;
 overflow:hidden;
 }
@@ -8,24 +8,24 @@ overflow:hidden;
 /* ——— Десктоп (как было: график | список) ——— */
 @media (min-width:641px){
 
-body.coins-page .coins-mobile-bar,
-body.coins-page #coins-nav-panel,
-body.coins-page #coins-nav-backdrop{
+body.terminal-page .coins-mobile-bar,
+body.terminal-page #coins-nav-panel,
+body.terminal-page #coins-nav-backdrop{
 display:none !important;
 }
 
-body.coins-page .coins-header-desktop{
+body.terminal-page .coins-header-desktop{
 display:flex !important;
 align-items:center;
 gap:18px;
 }
 
-body.coins-page .coins-tf-mobile-wrap,
-body.coins-page .coins-draw-tools-mount{
+body.terminal-page .coins-tf-mobile-wrap,
+body.terminal-page .coins-draw-tools-mount{
 display:none !important;
 }
 
-body.coins-page .coins-tf-desktop{
+body.terminal-page .coins-tf-desktop{
 display:flex;
 align-items:center;
 gap:2px;
@@ -35,7 +35,7 @@ margin:0;
 border-right:1px solid #787b86;
 }
 
-body.coins-page .coins-tf-desktop .tf-btn{
+body.terminal-page .coins-tf-desktop .tf-btn{
 box-sizing:border-box;
 display:inline-flex;
 align-items:center;
@@ -58,36 +58,36 @@ flex-shrink:0;
 -webkit-tap-highlight-color:transparent;
 }
 
-body.coins-page .coins-tf-desktop .tf-btn:hover:not(.active){
+body.terminal-page .coins-tf-desktop .tf-btn:hover:not(.active){
 background:rgba(255,255,255,0.06);
 color:#f0f3fa;
 }
 
-body.coins-page .coins-tf-desktop .tf-btn.active{
+body.terminal-page .coins-tf-desktop .tf-btn.active{
 background:#363a45;
 color:#fff;
 font-weight:400;
 }
 
-body.coins-page .coins-tf-desktop .tf-btn:focus{
+body.terminal-page .coins-tf-desktop .tf-btn:focus{
 outline:none;
 }
 
-body.coins-page #topbar.coins-topbar{
+body.terminal-page #topbar.coins-topbar{
 height:40px;
 padding:0 16px;
 gap:0;
 align-items:center;
 }
 
-body.coins-page #topbar.coins-topbar #current-symbol{
+body.terminal-page #topbar.coins-topbar #current-symbol{
 font-size:14px;
 font-weight:700;
 line-height:16px;
 color:#fff;
 }
 
-body.coins-page #charts-stack{
+body.terminal-page #charts-stack{
 grid-column:1;
 grid-row:3;
 display:flex;
@@ -97,7 +97,7 @@ min-width:0;
 overflow:hidden;
 }
 
-body.coins-page .coins-chart-pane{
+body.terminal-page .coins-chart-pane{
 display:flex;
 flex:1 1 auto;
 flex-direction:row;
@@ -107,7 +107,7 @@ min-width:0;
 overflow:hidden;
 }
 
-body.coins-page .charts-stack-panes{
+body.terminal-page .charts-stack-panes{
 display:flex;
 flex:1 1 auto;
 flex-direction:column;
@@ -117,7 +117,7 @@ overflow:hidden;
 position:relative;
 }
 
-body.coins-page #draw-toolbar.draw-toolbar-vertical{
+body.terminal-page #draw-toolbar.draw-toolbar-vertical{
 display:flex;
 flex-direction:column;
 align-items:center;
@@ -133,7 +133,7 @@ overflow-y:auto;
 -webkit-overflow-scrolling:touch;
 }
 
-body.coins-page #draw-toolbar.draw-toolbar-vertical .draw-btn{
+body.terminal-page #draw-toolbar.draw-toolbar-vertical .draw-btn{
 box-sizing:border-box;
 width:38px;
 height:38px;
@@ -146,53 +146,53 @@ color:#d1d4dc;
 flex-shrink:0;
 }
 
-body.coins-page #draw-toolbar.draw-toolbar-vertical .draw-btn:hover:not(.active){
+body.terminal-page #draw-toolbar.draw-toolbar-vertical .draw-btn:hover:not(.active){
 background:rgba(255,255,255,0.06);
 color:#f0f3fa;
 }
 
-body.coins-page #draw-toolbar.draw-toolbar-vertical .draw-btn.active{
+body.terminal-page #draw-toolbar.draw-toolbar-vertical .draw-btn.active{
 background:#363a45;
 color:#fff;
 }
 
-body.coins-page #draw-toolbar.draw-toolbar-vertical .draw-btn img,
-body.coins-page #draw-toolbar.draw-toolbar-vertical .draw-tool-icon{
+body.terminal-page #draw-toolbar.draw-toolbar-vertical .draw-btn img,
+body.terminal-page #draw-toolbar.draw-toolbar-vertical .draw-tool-icon{
 width:22px;
 height:22px;
 object-fit:contain;
 object-position:center;
 }
 
-body.coins-page #draw-toolbar.draw-toolbar-vertical .draw-btn .draw-tool-icon--xl{
+body.terminal-page #draw-toolbar.draw-toolbar-vertical .draw-btn .draw-tool-icon--xl{
 width:30px;
 height:30px;
 }
 
-body.coins-page #draw-toolbar.draw-toolbar-vertical .draw-tool-clear-all:hover,
-body.coins-page #draw-toolbar.draw-toolbar-vertical #draw-tool-delete:hover{
+body.terminal-page #draw-toolbar.draw-toolbar-vertical .draw-tool-clear-all:hover,
+body.terminal-page #draw-toolbar.draw-toolbar-vertical #draw-tool-delete:hover{
 background:rgba(239,68,68,0.18);
 color:#fecaca;
 }
 
-body.coins-page .coins-draw-desktop,
-body.coins-page #draw-toolbar.coins-draw-desktop{
+body.terminal-page .coins-draw-desktop,
+body.terminal-page #draw-toolbar.coins-draw-desktop{
 display:flex !important;
 visibility:visible !important;
 flex:0 0 auto;
 min-width:0;
 }
 
-body.coins-page #draw-toolbar.coins-draw-desktop.hidden,
-body.coins-page .coins-draw-desktop.hidden{
+body.terminal-page #draw-toolbar.coins-draw-desktop.hidden,
+body.terminal-page .coins-draw-desktop.hidden{
 display:flex !important;
 }
 
-body.coins-page #draw-toolbar.draw-toolbar-vertical .draw-btn.hidden{
+body.terminal-page #draw-toolbar.draw-toolbar-vertical .draw-btn.hidden{
 display:inline-flex !important;
 }
 
-body.coins-page #topbar.coins-topbar .coins-symbol-head{
+body.terminal-page #topbar.coins-topbar .coins-symbol-head{
 display:flex;
 align-items:center;
 gap:8px;
@@ -204,11 +204,11 @@ padding-right:12px;
 border-right:1px solid #787b86;
 }
 
-body.coins-page #topbar.coins-topbar #coins-chart-flag-wrap{
+body.terminal-page #topbar.coins-topbar #coins-chart-flag-wrap{
 flex-shrink:0;
 }
 
-body.coins-page #topbar.coins-topbar #current-symbol{
+body.terminal-page #topbar.coins-topbar #current-symbol{
 flex:1 1 auto;
 min-width:0;
 max-width:none;
@@ -220,7 +220,7 @@ overflow:hidden;
 text-overflow:ellipsis;
 }
 
-body.coins-page #app{
+body.terminal-page #app{
 display:grid;
 /* #list — сосед #left в DOM, не внутри #left */
 grid-template-columns:minmax(0,1fr) var(--coins-list-w, 252px);
@@ -231,7 +231,7 @@ box-sizing:border-box;
 padding-bottom:env(safe-area-inset-bottom, 0px);
 }
 
-body.coins-page #left{
+body.terminal-page #left{
 display:grid;
 grid-template-columns:minmax(0,1fr);
 grid-template-rows:auto auto minmax(0,1fr);
@@ -243,33 +243,33 @@ overflow:hidden;
 align-self:stretch;
 }
 
-body.coins-page #header,
-body.coins-page #topbar{
+body.terminal-page #header,
+body.terminal-page #topbar{
 grid-column:1 / -1;
 }
 
-body.coins-page #topbar.coins-topbar{
+body.terminal-page #topbar.coins-topbar{
 overflow:visible;
 position:relative;
 z-index:50;
 }
 
-body.coins-page #topbar.coins-topbar .coins-symbol-head,
-body.coins-page #topbar.coins-topbar #coins-chart-flag-wrap{
+body.terminal-page #topbar.coins-topbar .coins-symbol-head,
+body.terminal-page #topbar.coins-topbar #coins-chart-flag-wrap{
 overflow:visible;
 }
 
-body.coins-page #topbar.coins-topbar .coin-flag-menu{
+body.terminal-page #topbar.coins-topbar .coin-flag-menu{
 z-index:10020;
 }
 
-body.coins-page #header{
+body.terminal-page #header{
 position:relative;
 z-index:200;
 overflow:visible;
 }
 
-body.coins-page .coins-btc-d-link{
+body.terminal-page .coins-btc-d-link{
 display:inline-flex;
 align-items:center;
 flex-shrink:0;
@@ -281,20 +281,20 @@ text-decoration:none;
 -webkit-tap-highlight-color:transparent;
 }
 
-body.coins-page .coins-header-desktop .coins-btc-d-link{
+body.terminal-page .coins-header-desktop .coins-btc-d-link{
 margin-left:auto;
 }
 
-body.coins-page .coins-header-desktop .trade-exchange-wrap{
+body.terminal-page .coins-header-desktop .trade-exchange-wrap{
 margin-left:8px;
 flex-shrink:0;
 }
 
-body.coins-page .coins-btc-d-link:hover{
+body.terminal-page .coins-btc-d-link:hover{
 color:#e5e7eb;
 }
 
-body.coins-page .coins-diary-link{
+body.terminal-page .coins-diary-link{
 display:inline-flex;
 align-items:center;
 flex-shrink:0;
@@ -307,20 +307,20 @@ text-decoration:none;
 -webkit-tap-highlight-color:transparent;
 }
 
-body.coins-page .coins-diary-link:hover{
+body.terminal-page .coins-diary-link:hover{
 color:#e5e7eb;
 }
 
-body.coins-page .coins-diary-link.active{
+body.terminal-page .coins-diary-link.active{
 color:#fff;
 }
 
-body.coins-page #chart-wrap{
+body.terminal-page #chart-wrap{
 flex:1 1 auto;
 min-height:0;
 }
 
-body.coins-page #rsi-wrap{
+body.terminal-page #rsi-wrap{
 flex:0 0 var(--coins-rsi-h, clamp(102px,17.6dvh,160px));
 height:var(--coins-rsi-h, clamp(102px,17.6dvh,160px));
 min-height:102px;
@@ -328,7 +328,7 @@ max-height:none;
 position:relative;
 }
 
-body.coins-page #volume-wrap{
+body.terminal-page #volume-wrap{
 flex:0 0 var(--coins-volume-h, clamp(102px,17.6dvh,160px));
 height:var(--coins-volume-h, clamp(102px,17.6dvh,160px));
 min-height:102px;
@@ -336,11 +336,11 @@ max-height:none;
 position:relative;
 }
 
-body.coins-page #list{
+body.terminal-page #list{
 position:relative;
 }
 
-body.coins-page .coins-layout-resize{
+body.terminal-page .coins-layout-resize{
 position:absolute;
 z-index:65;
 touch-action:none;
@@ -349,7 +349,7 @@ user-select:none;
 background:transparent;
 }
 
-body.coins-page .coins-layout-resize::after{
+body.terminal-page .coins-layout-resize::after{
 content:"";
 position:absolute;
 background:#374151;
@@ -358,14 +358,14 @@ transition:opacity .12s ease;
 pointer-events:none;
 }
 
-body.coins-page .coins-layout-resize:hover::after,
-body.coins-page .coins-layout-resize:focus-visible::after,
-body.coins-page.coins-layout-dragging-h .coins-layout-resize::after,
-body.coins-page.coins-layout-dragging-v .coins-layout-resize::after{
+body.terminal-page .coins-layout-resize:hover::after,
+body.terminal-page .coins-layout-resize:focus-visible::after,
+body.terminal-page.coins-layout-dragging-h .coins-layout-resize::after,
+body.terminal-page.coins-layout-dragging-v .coins-layout-resize::after{
 opacity:1;
 }
 
-body.coins-page .coins-layout-resize--h{
+body.terminal-page .coins-layout-resize--h{
 left:0;
 top:0;
 bottom:0;
@@ -374,7 +374,7 @@ margin-left:-6px;
 cursor:col-resize;
 }
 
-body.coins-page .coins-layout-resize--h::after{
+body.terminal-page .coins-layout-resize--h::after{
 left:50%;
 top:0;
 bottom:0;
@@ -382,7 +382,7 @@ width:2px;
 transform:translateX(-50%);
 }
 
-body.coins-page .coins-layout-resize--v{
+body.terminal-page .coins-layout-resize--v{
 left:0;
 right:0;
 top:0;
@@ -391,7 +391,7 @@ margin-top:-6px;
 cursor:row-resize;
 }
 
-body.coins-page .coins-layout-resize--v::after{
+body.terminal-page .coins-layout-resize--v::after{
 left:0;
 right:0;
 top:50%;
@@ -399,21 +399,21 @@ height:2px;
 transform:translateY(-50%);
 }
 
-body.coins-page.coins-layout-dragging-h,
-body.coins-page.coins-layout-dragging-h *{
+body.terminal-page.coins-layout-dragging-h,
+body.terminal-page.coins-layout-dragging-h *{
 cursor:col-resize !important;
 -webkit-user-select:none;
 user-select:none;
 }
 
-body.coins-page.coins-layout-dragging-v,
-body.coins-page.coins-layout-dragging-v *{
+body.terminal-page.coins-layout-dragging-v,
+body.terminal-page.coins-layout-dragging-v *{
 cursor:row-resize !important;
 -webkit-user-select:none;
 user-select:none;
 }
 
-body.coins-page #list{
+body.terminal-page #list{
 grid-column:2;
 grid-row:1;
 min-height:0;
@@ -427,13 +427,13 @@ border-top:none;
 max-height:none;
 }
 
-body.coins-page #filter-wrap,
-body.coins-page #coins-list-refresh,
-body.coins-page #table-header{
+body.terminal-page #filter-wrap,
+body.terminal-page #coins-list-refresh,
+body.terminal-page #table-header{
 flex-shrink:0;
 }
 
-body.coins-page .coins-list-refresh{
+body.terminal-page .coins-list-refresh{
 display:flex;
 align-items:center;
 justify-content:space-between;
@@ -442,7 +442,7 @@ padding:0 12px 8px;
 border-bottom:1px solid #1f2937;
 }
 
-body.coins-page .coins-list-refresh-label{
+body.terminal-page .coins-list-refresh-label{
 font:600 10px/1.2 system-ui,-apple-system,sans-serif;
 letter-spacing:.03em;
 text-transform:uppercase;
@@ -450,7 +450,7 @@ color:#6b7280;
 white-space:nowrap;
 }
 
-body.coins-page .coins-list-refresh-options{
+body.terminal-page .coins-list-refresh-options{
 display:inline-flex;
 align-items:center;
 gap:4px;
@@ -458,7 +458,7 @@ flex:1 1 auto;
 justify-content:flex-end;
 }
 
-body.coins-page .coins-list-refresh-btn{
+body.terminal-page .coins-list-refresh-btn{
 margin:0;
 padding:4px 8px;
 border:1px solid #374151;
@@ -471,18 +471,18 @@ white-space:nowrap;
 -webkit-tap-highlight-color:transparent;
 }
 
-body.coins-page .coins-list-refresh-btn:hover{
+body.terminal-page .coins-list-refresh-btn:hover{
 color:#e5e7eb;
 border-color:#4b5563;
 }
 
-body.coins-page .coins-list-refresh-btn.active{
+body.terminal-page .coins-list-refresh-btn.active{
 color:#e5e7eb;
 border-color:#6366f1;
 background:rgba(99,102,241,.14);
 }
 
-body.coins-page #coins-body{
+body.terminal-page #coins-body{
 flex:1 1 auto;
 min-height:0;
 overflow-x:hidden;
@@ -492,18 +492,18 @@ overflow-y:auto;
 
 @media (pointer:coarse) and (min-width:768px){
 
-body.coins-page #draw-toolbar.draw-toolbar-vertical .draw-btn{
+body.terminal-page #draw-toolbar.draw-toolbar-vertical .draw-btn{
 width:40px;
 height:40px;
 }
 
-body.coins-page #draw-toolbar.draw-toolbar-vertical .draw-btn img,
-body.coins-page #draw-toolbar.draw-toolbar-vertical .draw-tool-icon{
+body.terminal-page #draw-toolbar.draw-toolbar-vertical .draw-btn img,
+body.terminal-page #draw-toolbar.draw-toolbar-vertical .draw-tool-icon{
 width:24px;
 height:24px;
 }
 
-body.coins-page #draw-toolbar.draw-toolbar-vertical .draw-btn .draw-tool-icon--xl{
+body.terminal-page #draw-toolbar.draw-toolbar-vertical .draw-btn .draw-tool-icon--xl{
 width:32px;
 height:32px;
 }
@@ -521,8 +521,8 @@ display:none;
 
 @media (max-width:640px){
 
-html.coins-page,
-body.coins-page{
+html.terminal-page,
+body.terminal-page{
 overflow-x:hidden;
 overflow-y:auto;
 -webkit-overflow-scrolling:touch;
@@ -530,7 +530,7 @@ height:auto;
 min-height:100dvh;
 }
 
-body.coins-page #app{
+body.terminal-page #app{
 display:flex;
 flex-direction:column;
 height:auto;
@@ -541,7 +541,7 @@ padding-bottom:0;
 }
 
 /* Первый экран: только шапка + график; список — ниже, за скроллом */
-body.coins-page #left{
+body.terminal-page #left{
 display:flex;
 flex-direction:column;
 flex:0 0 auto;
@@ -552,7 +552,7 @@ max-height:100dvh;
 overflow:hidden;
 }
 
-body.coins-page #list{
+body.terminal-page #list{
 flex:0 0 auto;
 max-height:none;
 min-height:min(55vh, 480px);
@@ -560,16 +560,16 @@ border-left:none;
 border-top:1px solid #1f2937;
 }
 
-body.coins-page .coins-header-desktop{
+body.terminal-page .coins-header-desktop{
 display:none !important;
 }
 
-body.coins-page.coins-nav-open{
+body.terminal-page.coins-nav-open{
 overflow:hidden;
 }
 
 /* Шапка */
-body.coins-page .coins-page-header{
+body.terminal-page .coins-page-header{
 flex-wrap:nowrap;
 gap:8px;
 padding:0 10px;
@@ -577,12 +577,12 @@ height:52px;
 padding-top:env(safe-area-inset-top, 0px);
 }
 
-body.coins-page .coins-page-header #logo .site-logo-img{
+body.terminal-page .coins-page-header #logo .site-logo-img{
 width:30px;
 height:30px;
 }
 
-body.coins-page .coins-mobile-bar{
+body.terminal-page .coins-mobile-bar{
 display:flex !important;
 align-items:center;
 gap:6px;
@@ -590,7 +590,7 @@ margin-left:auto;
 flex-shrink:0;
 }
 
-body.coins-page .screener-nav-toggle{
+body.terminal-page .screener-nav-toggle{
 flex-shrink:0;
 display:inline-flex;
 align-items:center;
@@ -605,7 +605,7 @@ border-radius:8px;
 -webkit-tap-highlight-color:transparent;
 }
 
-body.coins-page .screener-nav-toggle-bars{
+body.terminal-page .screener-nav-toggle-bars{
 display:block;
 width:22px;
 height:16px;
@@ -616,7 +616,7 @@ linear-gradient(#fff,#fff) 0 100% / 100% 3px no-repeat;
 border-radius:2px;
 }
 
-body.coins-page #coins-nav-backdrop{
+body.terminal-page #coins-nav-backdrop{
 display:none;
 position:fixed;
 inset:0;
@@ -624,11 +624,11 @@ z-index:10014;
 background:rgba(0,0,0,.55);
 }
 
-body.coins-page.coins-nav-open #coins-nav-backdrop{
+body.terminal-page.coins-nav-open #coins-nav-backdrop{
 display:block;
 }
 
-body.coins-page #coins-nav-panel{
+body.terminal-page #coins-nav-panel{
 display:none !important;
 position:fixed;
 top:0;
@@ -648,12 +648,12 @@ pointer-events:none;
 overflow-y:auto;
 }
 
-body.coins-page.coins-nav-open #coins-nav-panel{
+body.terminal-page.coins-nav-open #coins-nav-panel{
 display:flex !important;
 pointer-events:auto;
 }
 
-body.coins-page #coins-nav-panel a{
+body.terminal-page #coins-nav-panel a{
 display:block;
 padding:14px 12px;
 font-size:16px;
@@ -662,12 +662,12 @@ color:#e5e7eb;
 text-decoration:none;
 }
 
-body.coins-page #coins-nav-panel a.active{
+body.terminal-page #coins-nav-panel a.active{
 color:#fff;
 background:#1e293b;
 }
 
-body.coins-page #coins-nav-panel .coins-nav-settings{
+body.terminal-page #coins-nav-panel .coins-nav-settings{
 display:block;
 width:100%;
 margin-top:12px;
@@ -675,16 +675,16 @@ padding-top:12px;
 border-top:1px solid #1f2937;
 }
 
-body.coins-page #coins-nav-panel .coins-nav-settings .header-settings-section-title{
+body.terminal-page #coins-nav-panel .coins-nav-settings .header-settings-section-title{
 margin-bottom:8px;
 }
 
-body.coins-page #coins-nav-panel .cloud-auth-wrap--panel{
+body.terminal-page #coins-nav-panel .cloud-auth-wrap--panel{
 max-width:none;
 }
 
-body.coins-page #coins-nav-panel .cloud-auth-email,
-body.coins-page #coins-nav-panel .cloud-auth-send{
+body.terminal-page #coins-nav-panel .cloud-auth-email,
+body.terminal-page #coins-nav-panel .cloud-auth-send{
 width:100%;
 box-sizing:border-box;
 }
@@ -713,7 +713,7 @@ overflow:hidden;
 text-overflow:ellipsis;
 }
 
-body.coins-page #topbar.coins-topbar .coins-symbol-head{
+body.terminal-page #topbar.coins-topbar .coins-symbol-head{
 flex:1 1 auto;
 max-width:none;
 margin-right:0;
@@ -721,7 +721,7 @@ padding-right:0;
 border-right:none;
 }
 
-body.coins-page #topbar.coins-topbar #current-symbol{
+body.terminal-page #topbar.coins-topbar #current-symbol{
 font-size:15px;
 font-weight:700;
 }
@@ -873,7 +873,7 @@ flex-direction:column;
 overflow:hidden;
 }
 
-body.coins-page .coins-chart-pane{
+body.terminal-page .coins-chart-pane{
 display:flex;
 flex-direction:column;
 flex:1 1 auto;
@@ -882,7 +882,7 @@ min-width:0;
 overflow:hidden;
 }
 
-body.coins-page .charts-stack-panes{
+body.terminal-page .charts-stack-panes{
 display:flex;
 flex-direction:column;
 flex:1 1 auto;
@@ -973,18 +973,18 @@ background:#13181e;
 box-sizing:border-box;
 }
 
-body.coins-page.coins-tablet-list-nav-on .coins-list-tablet-nav{
+body.terminal-page.coins-tablet-list-nav-on .coins-list-tablet-nav{
 display:flex;
 }
 
-body.coins-page.coins-tablet-list-nav-on #list{
+body.terminal-page.coins-tablet-list-nav-on #list{
 display:flex;
 flex-direction:column;
 overflow:hidden;
 min-height:0;
 }
 
-body.coins-page.coins-tablet-list-nav-on #coins-body{
+body.terminal-page.coins-tablet-list-nav-on #coins-body{
 flex:1 1 auto;
 min-height:0;
 overflow-y:auto;

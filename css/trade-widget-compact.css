@@ -1,6 +1,6 @@
 /* Терминал — компактные торговые контролы в шапке виджета */
 
-body.terminal-page.trade-page .trade-widget-toolbar{
+body.watchlist-page.trade-page .trade-widget-toolbar{
 display:inline-flex;
 align-items:center;
 gap:8px;
@@ -8,12 +8,12 @@ flex-shrink:0;
 margin-right:4px;
 }
 
-body.terminal-page.trade-page .trade-widget-volume-wrap{
+body.watchlist-page.trade-page .trade-widget-volume-wrap{
 position:relative;
 z-index:40;
 }
 
-body.terminal-page.trade-page .trade-widget-volume-wrap .trade-volume-presets-btn{
+body.watchlist-page.trade-page .trade-widget-volume-wrap .trade-volume-presets-btn{
 height:28px;
 padding:0 6px;
 gap:4px;
@@ -21,43 +21,43 @@ font-size:11px;
 border-radius:4px;
 }
 
-body.terminal-page.trade-page .trade-widget-volume-wrap .trade-volume-presets-grid{
+body.watchlist-page.trade-page .trade-widget-volume-wrap .trade-volume-presets-grid{
 width:10px;
 height:10px;
 background-size:4px 4px;
 }
 
-body.terminal-page.trade-page .trade-widget-volume-wrap .trade-volume-presets-value{
+body.watchlist-page.trade-page .trade-widget-volume-wrap .trade-volume-presets-value{
 min-width:2ch;
 font-size:11px;
 }
 
-body.terminal-page.trade-page .trade-widget-volume-wrap .trade-volume-presets-dropdown{
+body.watchlist-page.trade-page .trade-widget-volume-wrap .trade-volume-presets-dropdown{
 min-width:148px;
 padding:6px;
 right:auto;
 left:0;
 }
 
-body.terminal-page.trade-page .trade-widget-volume-wrap .trade-volume-presets-panel{
+body.watchlist-page.trade-page .trade-widget-volume-wrap .trade-volume-presets-panel{
 gap:5px;
 }
 
-body.terminal-page.trade-page .trade-widget-volume-wrap .trade-volume-presets-row{
+body.watchlist-page.trade-page .trade-widget-volume-wrap .trade-volume-presets-row{
 gap:5px;
 }
 
-body.terminal-page.trade-page .trade-widget-volume-wrap .trade-volume-presets-row input[type="radio"]{
+body.watchlist-page.trade-page .trade-widget-volume-wrap .trade-volume-presets-row input[type="radio"]{
 width:12px;
 height:12px;
 }
 
-body.terminal-page.trade-page .trade-widget-volume-wrap .trade-volume-presets-field{
+body.watchlist-page.trade-page .trade-widget-volume-wrap .trade-volume-presets-field{
 flex:1 1 auto;
 max-width:none;
 }
 
-body.terminal-page.trade-page .trade-widget-volume-wrap .trade-volume-presets-field input[type="number"]{
+body.watchlist-page.trade-page .trade-widget-volume-wrap .trade-volume-presets-field input[type="number"]{
 padding:4px 18px 4px 5px;
 font-size:11px;
 border-radius:5px;
@@ -67,62 +67,62 @@ font-variant-numeric:tabular-nums;
 appearance:textfield;
 }
 
-body.terminal-page.trade-page .trade-widget-volume-wrap input[type="number"]::-webkit-outer-spin-button,
-body.terminal-page.trade-page .trade-widget-volume-wrap input[type="number"]::-webkit-inner-spin-button{
+body.watchlist-page.trade-page .trade-widget-volume-wrap input[type="number"]::-webkit-outer-spin-button,
+body.watchlist-page.trade-page .trade-widget-volume-wrap input[type="number"]::-webkit-inner-spin-button{
 -webkit-appearance:none;
 margin:0;
 }
 
-body.terminal-page.trade-page .trade-widget-volume-wrap .trade-volume-presets-suffix{
+body.watchlist-page.trade-page .trade-widget-volume-wrap .trade-volume-presets-suffix{
 right:6px;
 font-size:10px;
 font-weight:600;
 color:#9ca3af;
 }
 
-body.terminal-page.trade-page .trade-widget-market-entry{
+body.watchlist-page.trade-page .trade-widget-market-entry{
 display:inline-flex;
 border-radius:4px;
 overflow:hidden;
 box-shadow:0 1px 0 rgba(0,0,0,.3);
 }
 
-body.terminal-page.trade-page .trade-widget-market-entry .trade-market-entry-btn{
+body.watchlist-page.trade-page .trade-widget-market-entry .trade-market-entry-btn{
 height:28px;
 padding:0 6px;
 gap:3px;
 font-size:10px;
 }
 
-body.terminal-page.trade-page .trade-widget-market-entry .trade-market-entry-arrow{
+body.watchlist-page.trade-page .trade-widget-market-entry .trade-market-entry-arrow{
 font-size:9px;
 }
 
-body.terminal-page.trade-page .trade-widget-market-entry .trade-market-entry-price{
+body.watchlist-page.trade-page .trade-widget-market-entry .trade-market-entry-price{
 min-width:3ch;
 font-size:10px;
 }
 
-body.terminal-page.trade-page .widget-chart-wrap .trade-chart-overlay,
-body.terminal-page.trade-page .widget-chart-wrap .trade-chart-orders-overlay{
+body.watchlist-page.trade-page .widget-chart-wrap .trade-chart-overlay,
+body.watchlist-page.trade-page .widget-chart-wrap .trade-chart-orders-overlay{
 z-index:11;
 }
 
-body.terminal-page.trade-page .widget-header .price-info{
+body.watchlist-page.trade-page .widget-header .price-info{
 gap:6px;
 }
 
-body.terminal-page.trade-page .widget-header .price-info .price{
+body.watchlist-page.trade-page .widget-header .price-info .price{
 font-size:12px;
 }
 
-body.terminal-page.trade-page .widget-header .price-info .change{
+body.watchlist-page.trade-page .widget-header .price-info .change{
 font-size:11px;
 }
 
 @media (max-width:640px){
 
-body.terminal-page.trade-page .trade-widget-toolbar{
+body.watchlist-page.trade-page .trade-widget-toolbar{
 display:none !important;
 }
 

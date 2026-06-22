@@ -1,8 +1,8 @@
 /**
  * Coins page (/coins.html) — main chart app implementation.
  *
- * Entry: coins-page.js (canonical). This file keeps the legacy name `terminal.js`.
- * Dashboard widgets page (/terminal.html) is `dashboard.js` — not this module.
+ * Entry: terminal-entry.js (canonical). This file keeps the legacy name `terminal.js`.
+ * Dashboard widgets page (/terminal.html) is `watchlist.js` — not this module.
  */
 import {
 loadBybitHistory,
@@ -72,7 +72,7 @@ tfPeriodSec
 
 import {
 mountCoinsTabletController
-} from "./coins-tablet-controller.js?v=5";
+} from "./terminal-tablet-controller.js?v=5";
 
 import {
 disconnectKlineStream
@@ -100,11 +100,11 @@ initCoinsMobileUi,
 wireCoinsMobileDrawToolsMenu,
 isCoinsMobile,
 syncCoinsTfLabel
-} from "./coins-mobile.js?v=5";
+} from "./terminal-mobile.js?v=5";
 
 import {
 mountCoinsLayoutResize
-} from "./coins-layout-resize.js?v=6";
+} from "./terminal-layout-resize.js?v=6";
 
 import {
 mountQwertyKeyInput
@@ -121,9 +121,9 @@ marketMap,
 coinElements,
 COINS_TF_VALUES,
 COINS_MARKETS,
-isCoinsPage,
+isTerminalPage,
 isTradePage
-} from "./terminal/coins-state.js?v=6";
+} from "./terminal/terminal-state.js?v=6";
 
 import {
 stopTickerStream
@@ -132,7 +132,7 @@ stopTickerStream
 import {
 mountCoinsListRefreshControls,
 applyCoinsListRefreshInterval
-} from "./coins-list-refresh.js?v=1";
+} from "./terminal-list-refresh.js?v=1";
 
 import {
 readCoinsPrefs,
@@ -143,7 +143,7 @@ resolveInitialSymbolAndTf,
 applyCoinsPrefs,
 applySortForCurrentMarket,
 readUrlParams
-} from "./terminal/coins-prefs.js?v=8";
+} from "./terminal/terminal-prefs.js?v=9";
 
 import {
 getCurrentSymbols,
@@ -157,11 +157,11 @@ highlightActiveSymbol,
 getVisibleSymbolList,
 setCoinsTableHooks,
 syncCoinListFreezeFromFlagMenus
-} from "./terminal/coins-table.js?v=12";
+} from "./terminal/terminal-table.js?v=12";
 
 import {
 createCoinsChartSwitchVeil
-} from "./terminal/coins-chart-switch-veil.js?v=7";
+} from "./terminal/terminal-chart-switch-veil.js?v=7";
 
 import {
 registerCoinsChartLayoutContext,
@@ -171,7 +171,7 @@ settleCoinsChartViewport,
 resizeCharts,
 scheduleResizeCharts,
 applyDefaultZoom
-} from "./terminal/coins-chart-layout.js?v=2";
+} from "./terminal/terminal-chart-layout.js?v=2";
 
 let currentDataset = "all";
 let currentTF = "60";
@@ -490,7 +490,7 @@ drawingTools?.scheduleRedraw?.();
 function persistCoinsChartInversion(){
 
 if(
-!isCoinsPage
+!isTerminalPage
 ){
 return;
 }
@@ -508,7 +508,7 @@ writeCoinsPrefs(prefs);
 function toggleCoinsChartInversion(){
 
 if(
-!isCoinsPage
+!isTerminalPage
 ){
 return;
 }
@@ -543,7 +543,7 @@ isCoinsRsiInverted
 function persistCoinsRsiInversion(){
 
 if(
-!isCoinsPage
+!isTerminalPage
 ){
 return;
 }
@@ -561,7 +561,7 @@ writeCoinsPrefs(prefs);
 function toggleCoinsRsiInversion(){
 
 if(
-!isCoinsPage
+!isTerminalPage
 ){
 return;
 }
@@ -576,7 +576,7 @@ persistCoinsRsiInversion();
 function mountCoinsScaleInvertMenu(){
 
 if(
-!isCoinsPage ||
+!isTerminalPage ||
 !chartWrapEl ||
 !chartEl
 ){
@@ -1140,7 +1140,7 @@ e
 ){
 
 if(
-!isCoinsPage
+!isTerminalPage
 ){
 return;
 }
@@ -1230,7 +1230,7 @@ let unmountCoinsScaleInvertMenu =
 ()=>{};
 
 if(
-isCoinsPage
+isTerminalPage
 ){
 applyCoinsChartInversion(
 readCoinsPrefs().invertChart === true
@@ -2047,6 +2047,8 @@ setRsiPaneActive,
 isRsiPaneVisible:()=>
 rsiPaneActive,
 layoutRsiBand,
+settleChartViewport:
+settleCoinsChartViewport,
 onIndicatorToggle(
 id,
 on
@@ -2952,7 +2954,7 @@ chartResizeObserver.observe(volumeWrapEl);
 }
 
 if(
-isCoinsPage
+isTerminalPage
 ){
 
 mountCoinsLayoutResize(
@@ -3738,7 +3740,7 @@ goDown ? 1 : -1
 function syncCoinsTabletListNav(){
 
 const show =
-isCoinsPage &&
+isTerminalPage &&
 isTabletChartViewport() &&
 !isCoinsMobile();
 
@@ -3878,7 +3880,7 @@ return sym;
 function syncCoinsPageTitle(){
 
 if(
-!isCoinsPage
+!isTerminalPage
 ){
 return;
 }

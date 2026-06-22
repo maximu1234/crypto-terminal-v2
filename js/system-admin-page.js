@@ -152,7 +152,7 @@ reloadBtn
 reloadBtn.addEventListener(
 "click",
 ()=>{
-window.location.href = "/index.html";
+window.location.href = "/screener.html";
 }
 );
 
@@ -256,7 +256,7 @@ supabaseReload
 supabaseReload.addEventListener(
 "click",
 ()=>{
-window.location.href = "/index.html";
+window.location.href = "/screener.html";
 }
 );
 }

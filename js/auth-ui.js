@@ -121,7 +121,7 @@ window.location.pathname;
 
 if(
 path === "/" ||
-path.endsWith("/index.html") ||
+path.endsWith("/screener.html") ||
 path.endsWith("/index")
 ){
 return true;
@@ -132,12 +132,13 @@ path === "/alerts" ||
 path === "/alerts/" ||
 path.endsWith("/alerts") ||
 path.endsWith("/alerts/") ||
-path.includes("coins.html") ||
+path.includes("terminal.html") ||
+path.endsWith("/terminal") ||
 path.endsWith("/coins") ||
 path.includes("trade.html") ||
 path.endsWith("/trade") ||
-path.includes("terminal.html") ||
-path.endsWith("/terminal") ||
+path.includes("watchlist.html") ||
+path.endsWith("/watchlist") ||
 path === "/system" ||
 path.endsWith("/system") ||
 path.includes("/system/")

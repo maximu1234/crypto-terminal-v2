@@ -541,11 +541,11 @@ font:400 11px/1.35 system-ui,-apple-system,sans-serif;
 color:#787b86;
 }
 
-body.coins-page #topbar.coins-topbar .chart-indicators-wrap{
+body.terminal-page #topbar.coins-topbar .chart-indicators-wrap{
 padding:0 4px;
 }
 
-body.coins-page .coins-topbar-divider{
+body.terminal-page .coins-topbar-divider{
 width:1px;
 align-self:stretch;
 flex:0 0 1px;
@@ -555,7 +555,7 @@ margin:6px 0;
 
 @media (max-width:640px){
 
-body.coins-page .chart-indicators-wrap.coins-draw-desktop{
+body.terminal-page .chart-indicators-wrap.coins-draw-desktop{
 display:none !important;
 }
 

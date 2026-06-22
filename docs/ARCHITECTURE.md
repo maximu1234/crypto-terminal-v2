@@ -4,14 +4,14 @@
 
 `site-boot.js` — алерты, cloud, auth, mobile nav, lazy sync модулей.
 
-`js/page-routes.js` — единое определение страницы (`isAlertsPage`, `isCoinsPage`, …).
+`js/page-routes.js` — единое определение страницы (`isAlertsPage`, `isTerminalPage`, …).
 
 ## Имена страниц (не путать)
 
 | URL | HTML | JS entry |
 |-----|------|----------|
-| `/coins.html` | Монеты | `coins-page.js` → `terminal.js` |
-| `/terminal.html` | Терминал (виджеты) | `dashboard.js` |
+| `/terminal.html` | Монеты | `terminal-entry.js` → `terminal.js` |
+| `/terminal.html` | Терминал (виджеты) | `watchlist.js` |
 | `/` | Главная (screener) | `screener.js` |
 
 `terminal.js` — **legacy** имя для страницы Монеты; не связано с `terminal.html`.
@@ -27,7 +27,7 @@ Desktop: `npm run bundle:sync` после правок web-статики; `npm 
 | `alerts-cloud-sync.js` | ✅ barrel → `alerts-cloud/{debug,worker-client,telegram-id,registry-sync,polling-realtime}.js` |
 | `drawings-cloud-sync.js` | ✅ barrel → `drawings-cloud/{sync-lifecycle,worker-client,pull-reconcile}.js` |
 | `chart.js` | `chart/{chart-options,chart-dom-crosshair,chart-factory}.js` |
-| `terminal.js` | `terminal/{coins-state,coins-prefs,coins-table,coins-chart-*}.js`; entry alias `coins-page.js` |
+| `terminal.js` | `terminal/{coins-state,coins-prefs,coins-table,coins-chart-*}.js`; entry alias `terminal-entry.js` |
 | `drawings.js` | `drawings/{init, persist, style-bar, placement, edit-interaction, chart-input, redraw-loop, price-scale, draw-hit, draw-render, …}.js` |
 
 ## Performance

@@ -9,7 +9,7 @@ export const COINS_LIST_MIN_PX =
 export const COINS_RSI_MIN_DESKTOP_PX =
 102;
 
-/** Desktop vertical draw toolbar width (css/coins.css). */
+/** Desktop vertical draw toolbar width (css/terminal-layout.css). */
 export const COINS_DRAW_TOOLBAR_WIDTH_PX =
 46;
 

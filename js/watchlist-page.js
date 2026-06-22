@@ -3,7 +3,7 @@ window.matchMedia(
 "(max-width: 640px)"
 );
 
-function isTerminalMobile(){
+function isWatchlistMobile(){
 
 return TERMINAL_MOBILE_MQ.matches;
 
@@ -139,13 +139,13 @@ closeTerminalNav
 
 }
 
-export function initTerminalPageUi(){
+export function initWatchlistPageUi(){
 
 bindTerminalMobileNav();
 
 }
 
 export {
-isTerminalMobile,
+isWatchlistMobile,
 TERMINAL_MOBILE_MQ
 };

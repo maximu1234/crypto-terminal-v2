@@ -1,12 +1,12 @@
 /**
- * Desktop-only trade layer — /coins и /terminal (виджеты).
+ * Desktop-only trade layer — /terminal (график) и /watchlist (виджеты).
  */
 import {
 cssUrl
 } from "./asset-manifest.js?v=2";
 
 import {
-isTerminalDashboardPage
+isWatchlistPage
 } from "./page-routes.js?v=1";
 
 import {
@@ -42,11 +42,11 @@ return !!window.cryptoTerminalDesktop?.isDesktop;
 
 }
 
-export function isDashboardTradeMode(){
+export function isWatchlistTradeMode(){
 
 return (
 isDesktopTradeMode() &&
-isTerminalDashboardPage()
+isWatchlistPage()
 );
 
 }
@@ -136,7 +136,7 @@ options =
 
 const mode =
 options.mode ||
-"coins";
+"terminal";
 
 if(
 !enableTradeDesktopMode()
@@ -146,10 +146,10 @@ return;
 
 if(
 mode ===
-"terminal"
+"watchlist"
 ){
 if(
-!isTerminalDashboardPage()
+!isWatchlistPage()
 ){
 return;
 }
@@ -190,7 +190,7 @@ options =
 
 const mode =
 options.mode ||
-"coins";
+"terminal";
 
 if(
 !isDesktopTradeMode()
@@ -200,7 +200,7 @@ return;
 
 if(
 mode ===
-"terminal"
+"watchlist"
 ){
 const {
 initTradePositionsCache

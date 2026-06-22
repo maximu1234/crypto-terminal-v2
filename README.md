@@ -51,7 +51,7 @@
 
 ```
 index.html, coins.html, listings.html, terminal.html, trade-calculator.html
-alerts/index.html
+alerts/screener.html
 screener.html          — редирект
 vercel.json, start.sh, .env.example
 
@@ -65,7 +65,7 @@ js/
   screener.js          — главная
   terminal.js          — монеты
   listings.js          — страница листингов
-  dashboard.js         — терминал
+  watchlist.js         — терминал
   drawings.js          — инструменты на графике
   alerts.js, alert-monitor.js, alert-auth-cache.js, alerts-cloud-sync.js
   alerts-page.js, site-boot.js

@@ -14,11 +14,11 @@ computeVolumeHeightLimits,
 clampCoinsListWidth,
 clampCoinsRsiHeight,
 clampCoinsVolumeHeight
-} from "./coins-layout-math.js?v=4";
+} from "./terminal-layout-math.js?v=4";
 
 import {
-isCoinsPage
-} from "./terminal/coins-state.js?v=6";
+isTerminalPage
+} from "./terminal/terminal-state.js?v=6";
 
 export {
 COINS_LIST_DEFAULT_PX,
@@ -164,7 +164,7 @@ function isDesktopCoinsLayout(){
 return (
 typeof window !==
 "undefined" &&
-isCoinsPage &&
+isTerminalPage &&
 window.matchMedia(
 DESKTOP_MQ
 ).matches

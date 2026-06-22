@@ -267,7 +267,7 @@ document.body.innerHTML =
 `
 <div style="padding:40px;background:#16181f;color:#fff;max-width:520px">
 <h2>Нужен локальный сервер</h2>
-<p><a href="http://127.0.0.1:8080/coins.html">http://127.0.0.1:8080/coins.html</a></p>
+<p><a href="http://127.0.0.1:8080/watchlist.html">http://127.0.0.1:8080/watchlist.html</a></p>
 </div>`;
 return;
 }
@@ -295,12 +295,12 @@ sessionStorage.removeItem(
 /* ignore */
 }
 
-window.__coinsAppReady =
+window.__terminalAppReady =
 true;
 
 window.dispatchEvent(
 new CustomEvent(
-"coins-app-ready"
+"terminal-app-ready"
 )
 );
 

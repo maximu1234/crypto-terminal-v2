@@ -641,7 +641,7 @@ document.createElement(
 
 symbolLink.className = "stats-symbol";
 symbolLink.href =
-`/coins.html?symbol=${encodeURIComponent(row.symbol)}`;
+`/terminal.html?symbol=${encodeURIComponent(row.symbol)}`;
 symbolLink.append(
 createCoinIcon(
 base,

@@ -1,6 +1,6 @@
 # BTC Dominance (BTC.D) — архитектура
 
-**Ссылка на Монетах:** **`/coins.html`** → **BTC.D** (справа в шапке) → **`/btc-d.html`** (только TradingView, RSI).
+**Ссылка на Монетах:** **`/terminal.html`** → **BTC.D** (справа в шапке) → **`/btc-d.html`** (только TradingView, RSI).
 
 Тестовая страница: **`/btc-dominance-test.html`** — TV + вкладка Multichart API (CoinGecko).
 

@@ -66,7 +66,7 @@ document.createElement("a");
 
 link.className = "listing-symbol";
 link.href =
-`/coins.html?symbol=${encodeURIComponent(row.symbol)}`;
+`/terminal.html?symbol=${encodeURIComponent(row.symbol)}`;
 link.textContent = row.symbol;
 
 li.append(time, link);

@@ -222,14 +222,16 @@ for(
 const name of
 [
 "index.html",
-"coins.html",
-"trade.html",
+"screener.html",
 "terminal.html",
+"watchlist.html",
+"trade.html",
 "listings.html",
 "trade-calculator.html",
 "statistics.html",
 "alerts/index.html",
-"system/index.html"
+"system/index.html",
+"diary/index.html"
 ]
 ){
 

@@ -2,7 +2,7 @@ import {
 coinsState,
 marketMap,
 coinElements
-} from "./coins-state.js?v=6";
+} from "./terminal-state.js?v=6";
 
 import {
 isBybitCoinsDataset
@@ -33,7 +33,7 @@ emptyFavorites
 
 import {
 isTradePage
-} from "./coins-state.js?v=6";
+} from "./terminal-state.js?v=6";
 
 /** Desktop /trade only — не тянем trade-open-positions в открытый web /coins. */
 let hasOpenPosition =

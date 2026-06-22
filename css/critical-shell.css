@@ -144,21 +144,21 @@ min-height:0;
 overflow:hidden;
 }
 
-body.coins-page{
+body.terminal-page{
 display:block;
 overflow:hidden;
 }
 
-body.coins-page #coins-nav-panel,
-body.coins-page #coins-nav-backdrop{
+body.terminal-page #coins-nav-panel,
+body.terminal-page #coins-nav-backdrop{
 display:none !important;
 }
 
-body.coins-page.coins-nav-open #coins-nav-panel{
+body.terminal-page.coins-nav-open #coins-nav-panel{
 display:flex !important;
 }
 
-body.coins-page.coins-nav-open #coins-nav-backdrop{
+body.terminal-page.coins-nav-open #coins-nav-backdrop{
 display:block !important;
 }
 

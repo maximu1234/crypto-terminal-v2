@@ -16,7 +16,7 @@ clampCoinsVolumeHeight,
 coinsMainChartWidthPx,
 defaultRsiHeightPx,
 defaultVolumeHeightPx
-} from "../js/coins-layout-math.js";
+} from "../js/terminal-layout-math.js";
 
 test(
 "defaultRsiHeightPx: clamp 102–160",

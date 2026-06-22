@@ -10,8 +10,8 @@ isDrawingsUiPage
 export {
 isAlertsPage,
 isDrawingsUiPage,
-isCoinsPage,
-isTerminalDashboardPage,
+isTerminalPage,
+isWatchlistPage,
 isScreenerPage,
 isListingsPage,
 isTradeCalculatorPage,

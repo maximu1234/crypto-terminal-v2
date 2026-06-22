@@ -2,7 +2,7 @@
 
 **Тег:** `metka-36` · **Desktop:** `desktop-v1.0.28` (DMG)
 
-**Текущий эталон отката.** Предыдущий: [MARKER_35.md](./MARKER_35.md) (`metka-35` / `desktop-v1.0.27`).
+**Предыдущий эталон отката** (до metka-37). Текущий: [MARKER_37.md](./MARKER_37.md) (`metka-37` / `desktop-v1.0.29`).
 
 Проверено: `npm run check:all` (syntax, asset-manifest, desktop bundle, site-nav, unit tests).
 
@@ -45,7 +45,7 @@
 | Компонент | Описание |
 |-----------|----------|
 | Web isolation | `coins-page-boot` / `terminal.html` — lazy `trade-desktop-boot` |
-| Bundle CI | `diary/index.html` в `check-desktop-bundle.cjs` |
+| Bundle CI | `diary/screener.html` в `check-desktop-bundle.cjs` |
 | Manifest | Версии синхронизированы |
 
 ## Ключевые версии
@@ -53,7 +53,7 @@
 | Файл | v |
 |------|---|
 | `release-marker.js` | METKA=36, desktop=1.0.28 |
-| `coins-page-boot.js` | 18 |
+| `terminal-page-boot.js` | 18 |
 | `trade-diary-page.js` | 11 |
 | `trade-diary-chart.js` | 7 |
 | `trade-diary-detail.js` | 6 |

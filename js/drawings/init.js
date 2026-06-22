@@ -10,7 +10,7 @@ DRAW_TOOLS_GUEST_MSG
 
 import {
 closeAllWidgetDrawToolsMenus
-} from "../dashboard-draw-ui.js?v=15";
+} from "../watchlist-draw-ui.js?v=15";
 
 import {
 calcPositionSizing,

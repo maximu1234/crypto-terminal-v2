@@ -2,13 +2,33 @@
   "cleanUrls": true,
   "redirects": [
     {
+      "source": "/index",
+      "destination": "/screener",
+      "permanent": false
+    },
+    {
+      "source": "/screener.html",
+      "destination": "/screener",
+      "permanent": false
+    },
+    {
+      "source": "/coins",
+      "destination": "/terminal",
+      "permanent": false
+    },
+    {
+      "source": "/terminal.html",
+      "destination": "/terminal.html",
+      "permanent": false
+    },
+    {
       "source": "/trade",
-      "destination": "/coins",
+      "destination": "/terminal",
       "permanent": false
     },
     {
       "source": "/trade.html",
-      "destination": "/coins.html",
+      "destination": "/terminal.html",
       "permanent": false
     }
   ],
@@ -21,7 +41,7 @@
   },
   "headers": [
     {
-      "source": "/coins",
+      "source": "/terminal",
       "headers": [
         {
           "key": "Cache-Control",
@@ -30,7 +50,7 @@
       ]
     },
     {
-      "source": "/coins.html",
+      "source": "/terminal.html",
       "headers": [
         {
           "key": "Cache-Control",
@@ -57,7 +77,7 @@
       ]
     },
     {
-      "source": "/js/coins-page-boot.js",
+      "source": "/js/terminal-page-boot.js",
       "headers": [
         {
           "key": "Content-Type",

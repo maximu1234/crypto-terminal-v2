@@ -85,7 +85,7 @@ mod.isAlertsPage(),
 true
 );
 assert.equal(
-mod.isCoinsPage(),
+mod.isTerminalPage(),
 false
 );
 assert.equal(
@@ -96,14 +96,14 @@ false
 );
 
 withPath(
-"/coins.html",
+"/terminal.html",
 ()=>{
 assert.equal(
-mod.isCoinsPageOnly(),
+mod.isTerminalPageOnly(),
 true
 );
 assert.equal(
-mod.isCoinsPage(),
+mod.isTerminalPage(),
 true
 );
 assert.equal(
@@ -112,6 +112,20 @@ false
 );
 assert.equal(
 mod.isDrawingsUiPage(),
+true
+);
+}
+);
+
+withPath(
+"/coins.html",
+()=>{
+assert.equal(
+mod.isTerminalPageOnly(),
+true
+);
+assert.equal(
+mod.isTerminalPage(),
 true
 );
 }
@@ -132,10 +146,20 @@ false
 );
 
 withPath(
-"/terminal.html",
+"/screener.html",
 ()=>{
 assert.equal(
-mod.isTerminalDashboardPage(),
+mod.isScreenerPage(),
+true
+);
+}
+);
+
+withPath(
+"/watchlist.html",
+()=>{
+assert.equal(
+mod.isWatchlistPage(),
 true
 );
 assert.equal(
@@ -149,7 +173,7 @@ false
 );
 
 test(
-"isTradePage: desktop /coins only",
+"isTradePage: desktop /terminal only",
 async()=>{
 
 const mod =
@@ -158,7 +182,7 @@ await import(
 );
 
 withPath(
-"/coins.html",
+"/terminal.html",
 ()=>{
 assert.equal(
 mod.isTradePage(),
@@ -172,14 +196,14 @@ false
 );
 
 withPath(
-"/coins.html",
+"/terminal.html",
 ()=>{
 assert.equal(
 mod.isTradePage(),
 true
 );
 assert.equal(
-mod.isCoinsPage(),
+mod.isTerminalPage(),
 true
 );
 },
@@ -204,7 +228,7 @@ false
 );
 
 withPath(
-"/index.html",
+"/screener.html",
 ()=>{
 assert.equal(
 mod.isTradePage(),

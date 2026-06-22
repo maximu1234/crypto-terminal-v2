@@ -1,6 +1,9 @@
 /**
  * @module page-routes
  * Единое определение «на какой странице мы» — pathname без query/hash.
+ *
+ * Имена страниц (2026): Скринер / Терминал / Вотчлист.
+ * Legacy URL: /index → Скринер, /coins → Терминал, /terminal → Вотчлист.
  */
 
 /** @returns {string} */
@@ -27,10 +30,64 @@ pagePath()
 
 }
 
+const SCREENER_PATH_RE =
+/^\/(?:screener|index)(?:\.html)?\/?$/i;
+
+const TERMINAL_PATH_RE =
+/^\/(?:terminal|coins|trade)(?:\.html)?\/?$/i;
+
+const TERMINAL_ONLY_PATH_RE =
+/^\/(?:terminal|coins)(?:\.html)?\/?$/i;
+
+const WATCHLIST_PATH_RE =
+/^\/watchlist(?:\.html)?\/?$/i;
+
 export function isAlertsPage(){
 
 return pathMatches(
 /\/alerts(\.html)?\/?$/i
+);
+
+}
+
+export function isScreenerPage(){
+
+const path =
+pagePath();
+
+return (
+path ===
+"/" ||
+path ===
+"" ||
+SCREENER_PATH_RE.test(
+path
+)
+);
+
+}
+
+export function isTerminalPageOnly(){
+
+return TERMINAL_ONLY_PATH_RE.test(
+pagePath()
+);
+
+}
+
+export function isTerminalPage(){
+
+return (
+isTerminalPageOnly() ||
+isTradePage()
+);
+
+}
+
+export function isWatchlistPage(){
+
+return WATCHLIST_PATH_RE.test(
+pagePath()
 );
 
 }
@@ -49,8 +106,8 @@ return true;
 }
 
 if(
-!pathMatches(
-/\/coins(\.html)?\/?$/i
+!TERMINAL_ONLY_PATH_RE.test(
+path
 )
 ){
 return false;
@@ -64,47 +121,24 @@ globalThis.window?.cryptoTerminalDesktop?.isDesktop
 
 }
 
+/** @deprecated use isTerminalPage */
 export function isCoinsPage(){
 
-return (
-pathMatches(
-/\/coins(\.html)?\/?$/i
-) ||
-isTradePage()
-);
+return isTerminalPage();
 
 }
 
+/** @deprecated use isTerminalPageOnly */
 export function isCoinsPageOnly(){
 
-return pathMatches(
-/\/coins(\.html)?\/?$/i
-);
+return isTerminalPageOnly();
 
 }
 
+/** @deprecated use isWatchlistPage */
 export function isTerminalDashboardPage(){
 
-return pathMatches(
-/\/terminal(\.html)?\/?$/i
-);
-
-}
-
-export function isScreenerPage(){
-
-const path =
-pagePath();
-
-return (
-path ===
-"/" ||
-path ===
-"" ||
-pathMatches(
-/^\/index(\.html)?\/?$/i
-)
-);
+return isWatchlistPage();
 
 }
 
@@ -140,12 +174,12 @@ return pathMatches(
 
 }
 
-/** Страницы с canvas рисования (coins, dashboard, screener widgets). */
+/** Страницы с canvas рисования (терминал, вотчлист, скринер). */
 export function isDrawingsUiPage(){
 
 return (
-isCoinsPage() ||
-isTerminalDashboardPage() ||
+isTerminalPage() ||
+isWatchlistPage() ||
 isScreenerPage()
 );
 

@@ -143,7 +143,7 @@ new CustomEvent(
 );
 
 void import(
-"./terminal/coins-table.js?v=12"
+"./terminal/terminal-table.js?v=12"
 ).then(
 ({
 renderList

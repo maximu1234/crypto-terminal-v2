@@ -86,7 +86,11 @@ void resumeStatsBackgroundJob();
 
 async function startSiteBoot(){
 
-const onCoins =
+const onTerminal =
+/\/terminal(\.html)?\/?$/i.test(
+location.pathname ||
+""
+) ||
 /\/coins(\.html)?\/?$/i.test(
 location.pathname ||
 ""
@@ -99,19 +103,19 @@ location.pathname ||
 );
 
 if(
-onCoins &&
-!window.__coinsAppReady
+onTerminal &&
+!window.__terminalAppReady
 ){
 await new Promise(
 resolve=>{
 if(
-window.__coinsAppReady
+window.__terminalAppReady
 ){
 resolve();
 return;
 }
 window.addEventListener(
-"coins-app-ready",
+"terminal-app-ready",
 ()=>{
 resolve();
 },
@@ -179,21 +183,27 @@ resetBybitEndpoints();
 initAlertMonitor();
 ensureDrawToolsVisible();
 
-function isCoinsPagePath(){
+function isTerminalPagePath(){
 
-return /\/coins(\.html)?\/?$/i.test(
+return (
+/\/terminal(\.html)?\/?$/i.test(
 location.pathname ||
 ""
+) ||
+/\/coins(\.html)?\/?$/i.test(
+location.pathname ||
+""
+)
 );
 
 }
 
-function deferCoinsNonCriticalBoot(
+function deferTerminalNonCriticalBoot(
 fn
 ){
 
 if(
-!isCoinsPagePath()
+!isTerminalPagePath()
 ){
 fn();
 return;
@@ -337,6 +347,6 @@ console.warn("cloud init failed:", err);
 
 }
 
-deferCoinsNonCriticalBoot(
+deferTerminalNonCriticalBoot(
 runCloudBoot
 );

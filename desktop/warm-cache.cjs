@@ -20,8 +20,8 @@ require(
 
 const WARM_PAGES =
 [
-"/coins.html",
-"/index.html"
+"/terminal.html",
+"/screener.html"
 ];
 
 const MAX_PHASE2 =
@@ -39,7 +39,7 @@ const MANIFEST_PRIORITY =
 "asset-manifest.js",
 "site-css-gate.js",
 "charts-lib-boot.js",
-"coins-page-boot.js",
+"terminal-page-boot.js",
 "chart-page.js",
 "terminal.js",
 "chart.js",
@@ -60,15 +60,15 @@ const MANIFEST_PRIORITY =
 "critical-shell.css",
 "common.css",
 "terminal.css",
-"coins.css",
-"dashboard.css"
+"terminal-layout.css",
+"watchlist.css"
 ];
 
 const CHART_KEY_RE =
 /^(chart|terminal|drawings|coins|bybit|dashboard|widget|chart-|coins-|site-css|alert-auth|cloud-sync|supabase|favorites|drawings-cloud|device-pull|ticker-update|page-routes|qwerty|charts-lib|chart-import|chart-page|chart-widget|tablet-|price-alert|alert-monitor|site-boot|auth-ui|release-marker|desktop-app|suppress-native|site-mobile|coins-layout|coins-tablet|telegram-bot|async-timeout|auth-storage)/;
 
 const CHART_CSS_RE =
-/^(critical-shell|common|terminal|coins|dashboard|desktop-app)\.css$/;
+/^(critical-shell|common|terminal|terminal-layout|watchlist|desktop-app)\.css$/;
 
 function resolveUrl(
 base,

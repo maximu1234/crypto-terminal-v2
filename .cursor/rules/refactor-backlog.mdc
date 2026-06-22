@@ -41,4 +41,4 @@ alwaysApply: true
 
 - Отдельные сайты для iPad/desktop **не нужны** — модульная изоляция достаточна.
 - Единственный модуль жестов: `chart-tablet-gestures.js`.
-- `terminal.js` = страница Монеты; `dashboard.js` = terminal.html.
+- `terminal.js` = страница Терминал (`/terminal.html`); `watchlist.js` = Вотчлист (`/watchlist.html`).

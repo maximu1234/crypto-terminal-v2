@@ -23,7 +23,7 @@ getActiveTradeVolumeUsdt
 
 import {
 marketMap
-} from "./terminal/coins-state.js?v=6";
+} from "./terminal/terminal-state.js?v=6";
 
 import {
 applyAutoStopsAfterEntry

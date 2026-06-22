@@ -55,7 +55,7 @@ return true;
 }
 
 if(
-!/\/coins(\.html)?\/?$/i.test(
+!/\/terminal(\.html)?\/?$/i.test(
 path
 )
 ){
@@ -73,12 +73,15 @@ globalThis.window?.cryptoTerminalDesktop?.isDesktop
 export const isTradePage =
 isTradePath();
 
-export const isCoinsPage =
+export const isTerminalPage =
 typeof globalThis !==
 "undefined" &&
 typeof globalThis.window !==
 "undefined" &&
 (
+pagePathname().includes(
+"/terminal"
+) ||
 pagePathname().includes(
 "/coins"
 ) ||

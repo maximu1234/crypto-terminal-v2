@@ -553,6 +553,8 @@ points
 
 }
 
+host?.settleChartViewport?.();
+
 }
 
 function applySettings(

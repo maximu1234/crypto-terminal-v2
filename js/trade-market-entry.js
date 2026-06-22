@@ -11,7 +11,7 @@ applyAutoStopsAfterEntry
 
 import {
 marketMap
-} from "./terminal/coins-state.js?v=6";
+} from "./terminal/terminal-state.js?v=6";
 
 const REFRESH_MS =
 1500;

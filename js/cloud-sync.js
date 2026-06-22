@@ -2043,12 +2043,12 @@ let path =
 window.location.pathname || "/";
 
 if(
-path.endsWith("/index.html")
+path.endsWith("/screener.html")
 ){
 path =
 path.slice(
 0,
--"/index.html".length
+-"/screener.html".length
 ) || "/";
 }
 

@@ -78,7 +78,7 @@ npm run start:remote   # старый режим — UI с Vercel
 - **Локальный UI** — без загрузки js/css с CDN
 - Отключён throttling рендерера / фоновых таймеров (macOS App Nap)
 - `powerSaveBlocker` — приложение не засыпает при работе
-- Старт на **Монеты** (`/coins.html`)
+- Старт на **Монеты** (`/terminal.html`)
 - Preconnect к Bybit и Supabase
 - UA как у Chrome (без `Electron/` в строке)
 

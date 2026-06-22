@@ -15,7 +15,7 @@ createMovingAverageIndicator
 } from "./indicators/moving-average.js?v=4";
 import {
 createEmaShiftRibbonIndicator
-} from "./indicators/ema-shift-ribbon.js?v=4";
+} from "./indicators/ema-shift-ribbon.js?v=5";
 import {
 createIndicatorSettingsDialog
 } from "./indicators/indicator-settings-dialog.js?v=6";

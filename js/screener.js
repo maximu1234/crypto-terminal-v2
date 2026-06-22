@@ -1200,7 +1200,7 @@ e.stopPropagation();
 }
 
 window.location.href =
-`coins.html?symbol=${encodeURIComponent(symbol)}&tf=${encodeURIComponent(currentTF)}`;
+`terminal.html?symbol=${encodeURIComponent(symbol)}&tf=${encodeURIComponent(currentTF)}`;
 
 }
 

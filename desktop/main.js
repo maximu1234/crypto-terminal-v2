@@ -93,11 +93,11 @@ BUNDLE_ROOT
 log.info(
 "site-bundle:",
 resolvedBundleRoot,
-"coins.html:",
+"terminal.html:",
 fs.existsSync(
 path.join(
 resolvedBundleRoot,
-"coins.html"
+"terminal.html"
 )
 )
 );
@@ -125,7 +125,7 @@ return true;
 return fs.existsSync(
 path.join(
 BUNDLE_ROOT,
-"coins.html"
+"terminal.html"
 )
 );
 
@@ -162,7 +162,7 @@ function getStartUrl(){
 
 return (
 process.env.DESKTOP_START_URL ||
-`${getAppOrigin()}/coins.html`
+`${getAppOrigin()}/terminal.html`
 );
 
 }
@@ -709,7 +709,7 @@ const remote =
 `${REMOTE_APP_URL.replace(
 /\/$/,
 ""
-)}/coins.html`;
+)}/terminal.html`;
 void mainWindow.loadURL(
 remote
 );

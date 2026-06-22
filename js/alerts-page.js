@@ -534,7 +534,7 @@ alerts.map(alert=>`
 <td>${formatAlertDate(alert.createdAt)}</td>
 
 <td>
-<a class="alerts-symbol-link" href="/coins.html?symbol=${encodeURIComponent(alert.symbol)}&tf=${encodeURIComponent(alert.tf || "60")}">
+<a class="alerts-symbol-link" href="/terminal.html?symbol=${encodeURIComponent(alert.symbol)}&tf=${encodeURIComponent(alert.tf || "60")}">
 ${formatAlertTicker(alert.symbol)}
 </a>
 </td>
@@ -609,7 +609,7 @@ history.map(alert=>`
 <td>${formatAlertDate(alert.createdAt)}</td>
 
 <td>
-<a class="alerts-symbol-link" href="/coins.html?symbol=${encodeURIComponent(alert.symbol)}&tf=${encodeURIComponent(alert.tf || "60")}">
+<a class="alerts-symbol-link" href="/terminal.html?symbol=${encodeURIComponent(alert.symbol)}&tf=${encodeURIComponent(alert.tf || "60")}">
 ${formatAlertTicker(alert.symbol)}
 </a>
 </td>

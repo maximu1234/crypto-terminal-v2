@@ -1,9 +1,9 @@
 /**
  * @module coins-page
- * Canonical entry script for `/coins.html` («Монеты»).
+ * Canonical entry script for `/terminal.html` («Монеты»).
  *
  * Implementation lives in `terminal.js` (legacy filename).
- * Do not confuse with `/terminal.html` — that page loads `dashboard.js`.
+ * Do not confuse with `/terminal.html` — that page loads `watchlist.js`.
  */
 import {
 jsUrl

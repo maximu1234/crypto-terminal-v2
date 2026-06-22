@@ -5,10 +5,10 @@
  * В desktop подпись: «v0.N / vX.Y.Z» (сначала веб, потом приложение).
  */
 export const METKA_NUMBER =
-36;
+37;
 
 export const DESKTOP_APP_VERSION =
-"1.0.28";
+"1.0.29";
 
 export const RELEASE_VERSION_LABEL =
 `v0.${METKA_NUMBER}`;

@@ -652,7 +652,7 @@ panel.querySelector(
 event=>{
 event.stopPropagation();
 window.location.href =
-`coins.html?symbol=${encodeURIComponent(symbol)}&tf=${encodeURIComponent(state.tf)}`;
+`terminal.html?symbol=${encodeURIComponent(symbol)}&tf=${encodeURIComponent(state.tf)}`;
 }
 );
 

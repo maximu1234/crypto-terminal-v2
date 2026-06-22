@@ -135,7 +135,7 @@ if(
 fs.existsSync(
 path.join(
 root,
-"coins.html"
+"terminal.html"
 )
 )
 ){
@@ -188,7 +188,7 @@ clean ===
 "/"
 ){
 clean =
-"coins.html";
+"terminal.html";
 }else{
 clean =
 clean.replace(
@@ -201,7 +201,7 @@ if(
 !clean
 ){
 clean =
-"coins.html";
+"terminal.html";
 }
 
 if(

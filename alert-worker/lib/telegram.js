@@ -120,7 +120,7 @@ export function buildCoinsChartUrl(symbol, tf) {
       tf: String(tf || "60")
     });
 
-  return `${getSitePublicUrl()}/coins.html?${params}`;
+  return `${getSitePublicUrl()}/terminal.html?${params}`;
 
 }
 

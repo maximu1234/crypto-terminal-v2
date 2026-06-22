@@ -50,7 +50,7 @@ initWidgetDrawToolsDropdown,
 wireWidgetDrawToolMenu,
 closeAllWidgetDrawToolsMenus,
 resetWidgetDrawToolsMenus
-} from "./dashboard-draw-ui.js?v=15";
+} from "./watchlist-draw-ui.js?v=15";
 
 import {
 ensureDrawToolsVisible
@@ -65,10 +65,10 @@ loadLightweightCharts
 } from "./charts-lib-boot.js?v=3";
 
 import {
-initTerminalPageUi,
-isTerminalMobile,
+initWatchlistPageUi,
+isWatchlistMobile,
 TERMINAL_MOBILE_MQ
-} from "./terminal-page.js?v=3";
+} from "./watchlist-page.js?v=3";
 
 import {
 getWidgetFlagHtml,
@@ -92,11 +92,11 @@ const DASHBOARD_HISTORY_BATCHES =
 let mountTradeOnDashboardWidget =
 null;
 
-function isDashboardTradeEnabled(){
+function isWatchlistTradeEnabled(){
 
 return !!(
 window.cryptoTerminalDesktop?.isDesktop &&
-/\/terminal(\.html)?\/?$/i.test(
+/\/watchlist(\.html)?\/?$/i.test(
 location.pathname ||
 ""
 )
@@ -104,10 +104,10 @@ location.pathname ||
 
 }
 
-async function ensureDashboardTradeMount(){
+async function ensureWatchlistTradeMount(){
 
 if(
-!isDashboardTradeEnabled()
+!isWatchlistTradeEnabled()
 ){
 mountTradeOnDashboardWidget =
 null;
@@ -400,7 +400,7 @@ function terminalWidgetShowsRsi(
 count
 ){
 
-return !isTerminalMobile() && (
+return !isWatchlistMobile() && (
 count >=
 1 &&
 count <=
@@ -873,7 +873,7 @@ openChartBtn.onclick = e=>{
 e.stopPropagation();
 
 window.location.href =
-`coins.html?symbol=${encodeURIComponent(getSymbol())}&tf=${encodeURIComponent(getTf())}`;
+`terminal.html?symbol=${encodeURIComponent(getSymbol())}&tf=${encodeURIComponent(getTf())}`;
 
 };
 
@@ -1222,7 +1222,7 @@ if(
 return "terminal-empty-grid";
 }
 
-return isTerminalMobile()
+return isWatchlistMobile()
 ? `grid-mobile-scroll grid-n-${count}`
 : `grid-n-${count}`;
 
@@ -1245,7 +1245,7 @@ async function renderDashboard(){
 
 destroyAllWidgets();
 
-await ensureDashboardTradeMount();
+await ensureWatchlistTradeMount();
 
 const symbols =
 getTerminalBlueSymbols();
@@ -1327,7 +1327,7 @@ window.addEventListener(
 markTabletChartBody
 );
 
-initTerminalPageUi();
+initWatchlistPageUi();
 renderDashboard();
 
 const deferSymbolsPreload =
