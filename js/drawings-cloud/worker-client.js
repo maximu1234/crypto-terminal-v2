@@ -4,7 +4,7 @@ ensureCloudLoginResolved
 
 import {
 isDrawingsCloudDisabled
-} from "../supabase-usage-prefs.js?v=1";
+} from "../supabase-usage-prefs.js?v=2";
 
 import {
 normalizeAlertWorkerBaseUrl
