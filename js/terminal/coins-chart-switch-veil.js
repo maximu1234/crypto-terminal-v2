@@ -6,7 +6,7 @@ const CHART_SWITCH_VEIL_MAX_MS =
 
 /** Максимальная непрозрачность затемнения (1 = полная темнота). */
 const CHART_SWITCH_VEIL_MAX_OPACITY =
-0.4;
+0.3;
 
 export function createCoinsChartSwitchVeil(
 getChartWrapEl,

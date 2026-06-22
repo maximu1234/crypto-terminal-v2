@@ -161,7 +161,7 @@ syncCoinListFreezeFromFlagMenus
 
 import {
 createCoinsChartSwitchVeil
-} from "./terminal/coins-chart-switch-veil.js?v=2";
+} from "./terminal/coins-chart-switch-veil.js?v=3";
 
 import {
 registerCoinsChartLayoutContext,

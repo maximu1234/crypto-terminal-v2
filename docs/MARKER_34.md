@@ -1,6 +1,6 @@
 # Метка 34 — refactor coins/screener, brand logo, bundle CI (июнь 2026)
 
-**Тег:** `metka-34` · **Desktop:** `desktop-v1.0.25`
+**Тег:** `metka-34` · **Desktop:** `desktop-v1.0.26` (актуальный DMG)
 
 **Текущий эталон отката.** Предыдущий: [MARKER_33.md](./MARKER_33.md) (`metka-33`).
 
@@ -66,13 +66,13 @@
 
 | Файл | v |
 |------|---|
-| `release-marker.js` | METKA=34, desktop=1.0.25 |
+| `release-marker.js` | METKA=34, desktop=1.0.26 |
 | `terminal.js` | см. `asset-manifest.js` |
 | `coins-page.js` | 1 |
 | `screener.js` | 83 |
 | `terminal.css` | 150 |
 | `common.css` | 29 |
-| `desktop/package.json` | 1.0.25 |
+| `desktop/package.json` | 1.0.26 |
 
 ## Откат
 
@@ -96,4 +96,5 @@ git checkout metka-33   # до refactor + logo
 ```bash
 git tag -a metka-34 -m "metka-34: coins refactor, screener perf, brand logo, bundle CI"
 git tag -a desktop-v1.0.25 -m "desktop-v1.0.25: bundled UI metka-34"
+git tag -a desktop-v1.0.26 -m "desktop-v1.0.26: coins veil, mobile layout, SL/TP drag, alerts prefs"
 ```

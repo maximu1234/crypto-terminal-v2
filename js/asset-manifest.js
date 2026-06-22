@@ -65,7 +65,7 @@ Object.freeze({
 "terminal/coins-chart-layout.js":
 2,
 "terminal/coins-chart-switch-veil.js":
-2,
+3,
 "chart-layout-gate.js":
 2,
 "chart-indicators.js":
@@ -113,7 +113,7 @@ Object.freeze({
 "screener-widget-zoom.js":
 4,
 "release-marker.js":
-17,
+18,
 "site-boot.js":
 90,
 "desktop-app-ui.js":
