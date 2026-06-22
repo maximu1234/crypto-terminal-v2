@@ -1453,13 +1453,7 @@ signal
 
 const onSwitchStart =
 ()=>{
-
-orders =
-[];
-badgeLayoutCache =
-null;
-scheduleDraw();
-
+/* Оставляем бейджи до chart-candles-loaded — veil затемняет вместе с линиями. */
 };
 
 const onCandlesLoaded =

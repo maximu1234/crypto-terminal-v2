@@ -39,7 +39,7 @@ setAlertsRealtimeUserId
 import {
 getAuthed,
 runCloudOp
-} from "./worker-client.js?v=3";
+} from "./worker-client.js?v=4";
 
 import {
 pullRegistryFromCloudNow,
@@ -47,7 +47,12 @@ pushUnsyncedAlerts,
 scheduleRegistryCloudSync,
 isRegistryCloudSyncPaused,
 syncAllLocalAlertsToCloud
-} from "./registry-sync.js?v=3";
+} from "./registry-sync.js?v=4";
+
+import {
+isAlertsCloudDisabled,
+syncAlertsCloudPauseToServer
+} from "../supabase-usage-prefs.js?v=2";
 
 const IS_IOS_SAFARI =
 /iP(hone|ad|od)/i.test(
@@ -813,6 +818,14 @@ false;
 
 async function refreshCloudAlertModeImpl(){
 
+if(
+isAlertsCloudDisabled()
+){
+stopAlertsFastPoll();
+await teardownAlertsRealtime();
+return;
+}
+
 await updateBrowserCrossMode();
 
 const configured =
@@ -883,6 +896,12 @@ userId
 ){
 
 if(
+isAlertsCloudDisabled()
+){
+return;
+}
+
+if(
 userId
 ){
 await setupAlertsRealtime(
@@ -895,6 +914,12 @@ userId
 export async function hydrateAlertsAfterAuth(
 opts = {}
 ){
+
+if(
+isAlertsCloudDisabled()
+){
+return 0;
+}
 
 if(
 hydrateAlertsInflight
@@ -999,9 +1024,47 @@ return;
 alertsCloudSyncReady = true;
 
 window.addEventListener(
+"supabase-usage-prefs-changed",
+e=>{
+
+const disabled =
+!!e.detail?.prefs?.disableAlertsCloud;
+
+void syncAlertsCloudPauseToServer(
+disabled
+);
+
+if(
+disabled
+){
+stopAlertsFastPoll();
+stopIosSafariVisiblePull();
+stopVisiblePullFallback();
+void teardownAlertsRealtime();
+return;
+}
+
+if(
+isCloudLoggedInEffective()
+){
+void refreshCloudAlertMode();
+}
+
+}
+);
+
+window.addEventListener(
 "alerts-changed",
 ()=>{
+
+if(
+isAlertsCloudDisabled()
+){
+return;
+}
+
 scheduleRegistryCloudSync();
+
 }
 );
 
@@ -1062,6 +1125,15 @@ startVisiblePullFallback();
 void refreshCloudAlertMode();
 
 if(
+isAlertsCloudDisabled()
+){
+void syncAlertsCloudPauseToServer(
+true
+);
+return;
+}
+
+if(
 isCloudLoggedInEffective() &&
 !isAlertsPage()
 ){
@@ -1087,6 +1159,7 @@ startVisiblePullFallback();
 const pullWhenVisible = ()=>{
 
 if(
+isAlertsCloudDisabled() ||
 !isCloudLoggedInEffective()
 ){
 return;

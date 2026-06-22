@@ -34,7 +34,7 @@ onCloudSyncChange
 
 import {
 isAutoDevicePullDisabled
-} from "./supabase-usage-prefs.js?v=1";
+} from "./supabase-usage-prefs.js?v=2";
 
 import {
 isSupabaseConfigured

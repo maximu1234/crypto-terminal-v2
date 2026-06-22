@@ -80,7 +80,7 @@ export async function fetchTelegramAlerts() {
 
   try{
     settings = await restGet(
-      `user_settings?select=user_id,telegram_chat_id&user_id=in.(${inList})&telegram_chat_id=not.is.null`
+      `user_settings?select=user_id,telegram_chat_id,alerts_cloud_disabled&user_id=in.(${inList})&telegram_chat_id=not.is.null`
     );
   }catch(err){
     console.warn("fetch settings (REST):", err.message);
@@ -88,7 +88,9 @@ export async function fetchTelegramAlerts() {
   }
 
   const chatByUser = new Map(
-    (settings || []).map(s => [s.user_id, Number(s.telegram_chat_id)])
+    (settings || [])
+      .filter(s => !s.alerts_cloud_disabled)
+      .map(s => [s.user_id, Number(s.telegram_chat_id)])
   );
 
   const out = [];

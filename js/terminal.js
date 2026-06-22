@@ -161,7 +161,7 @@ syncCoinListFreezeFromFlagMenus
 
 import {
 createCoinsChartSwitchVeil
-} from "./terminal/coins-chart-switch-veil.js?v=1";
+} from "./terminal/coins-chart-switch-veil.js?v=2";
 
 import {
 registerCoinsChartLayoutContext,
@@ -2199,7 +2199,7 @@ const {
 mountPriceAlertUi
 } =
 await import(
-"./price-alert-ui.js?v=44"
+"./price-alert-ui.js?v=45"
 );
 
 let disposeAlertUi =

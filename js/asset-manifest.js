@@ -49,9 +49,9 @@ Object.freeze({
 "trade-book-panel.js":
 4,
 "trade-chart-overlay.js":
-20,
+22,
 "trade-chart-orders.js":
-10,
+11,
 "trade-order-plus-ui.js":
 2,
 "trade-widget-mount.js":
@@ -65,7 +65,7 @@ Object.freeze({
 "terminal/coins-chart-layout.js":
 2,
 "terminal/coins-chart-switch-veil.js":
-1,
+2,
 "chart-layout-gate.js":
 2,
 "chart-indicators.js":
@@ -219,7 +219,7 @@ Object.freeze({
 "dashboard-draw-ui.js":
 15,
 "price-alert-ui.js":
-44,
+45,
 "indicators.js":
 3,
 "storage.js":
@@ -294,11 +294,11 @@ Object.freeze({
 "alerts-cloud/telegram-id.js":
 2,
 "alerts-cloud/worker-client.js":
-3,
-"alerts-cloud/registry-sync.js":
-3,
-"alerts-cloud/polling-realtime.js":
 4,
+"alerts-cloud/registry-sync.js":
+4,
+"alerts-cloud/polling-realtime.js":
+5,
 "alerts-page.js":
 60,
 "alert-monitor.js":
@@ -338,7 +338,7 @@ Object.freeze({
 "system-admin-access.js":
 3,
 "supabase-usage-prefs.js":
-1,
+2,
 "system-admin-supabase-prefs.js":
 1,
 
@@ -354,7 +354,7 @@ Object.freeze({
 "dashboard.css":
 45,
 "coins.css":
-49,
+50,
 "chart-indicators.css":
 12,
 "trade-exchange-settings.css":

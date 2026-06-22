@@ -16,7 +16,7 @@ triggerNotifyTelegramViaWorker,
 isAlertRowInCloud,
 deleteAlertViaWorker,
 pushAlertViaWorker
-} from "./alerts-cloud/worker-client.js?v=3";
+} from "./alerts-cloud/worker-client.js?v=4";
 
 export {
 readCachedTelegramChatId,
@@ -38,7 +38,7 @@ reconcileLocalRegistryWithCloud,
 pullRegistryFromCloud,
 pullRegistryFromCloudNow,
 scheduleRegistryCloudSync
-} from "./alerts-cloud/registry-sync.js?v=3";
+} from "./alerts-cloud/registry-sync.js?v=4";
 
 export {
 scheduleRemoteRegistrySync,
@@ -48,4 +48,4 @@ setupAlertsRealtimeForUser,
 hydrateAlertsAfterAuth,
 syncAlertsWithCloud,
 initAlertsCloudSync
-} from "./alerts-cloud/polling-realtime.js?v=4";
+} from "./alerts-cloud/polling-realtime.js?v=5";

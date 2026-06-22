@@ -4,6 +4,10 @@
 const CHART_SWITCH_VEIL_MAX_MS =
 1000;
 
+/** Максимальная непрозрачность затемнения (1 = полная темнота). */
+const CHART_SWITCH_VEIL_MAX_OPACITY =
+0.4;
+
 export function createCoinsChartSwitchVeil(
 getChartWrapEl,
 getSymbolLoadSeq
@@ -22,7 +26,8 @@ return Math.min(
 elapsedMs /
 CHART_SWITCH_VEIL_MAX_MS,
 1
-);
+) *
+CHART_SWITCH_VEIL_MAX_OPACITY;
 
 }
 

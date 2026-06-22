@@ -41,7 +41,11 @@ pushAlertViaWorker,
 clearAllAlertsFromCloud,
 fetchWithTimeout,
 softDeleteAlertViaRest
-} from "./worker-client.js?v=3";
+} from "./worker-client.js?v=4";
+
+import {
+isAlertsCloudDisabled
+} from "../supabase-usage-prefs.js?v=2";
 
 const coalesceRegistryPull =
 createPullCoalescer({
@@ -828,6 +832,12 @@ options
 
 /** Все локальные алерты без cloudSynced — повторить push (после возврата на вкладку и т.п.). */
 export async function pushUnsyncedAlerts(){
+
+if(
+isAlertsCloudDisabled()
+){
+return 0;
+}
 
 if(
 !isCloudLoggedInEffective() ||
@@ -1828,6 +1838,12 @@ return n;
 }
 
 export function scheduleRegistryCloudSync(){
+
+if(
+isAlertsCloudDisabled()
+){
+return;
+}
 
 if(registrySyncTimer){
 clearTimeout(registrySyncTimer);

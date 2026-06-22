@@ -25,6 +25,16 @@ broadcastAlertsRegistrySync,
 lastSeenCloudAlerts
 } from "./debug.js?v=4";
 
+import {
+isAlertsCloudDisabled
+} from "../supabase-usage-prefs.js?v=2";
+
+function alertsCloudBlocked(){
+
+return isAlertsCloudDisabled();
+
+}
+
 let cloudOpChain =
 Promise.resolve();
 
@@ -33,6 +43,12 @@ let alertPushChain =
 Promise.resolve();
 
 export function runCloudOp(fn){
+
+if(
+alertsCloudBlocked()
+){
+return Promise.resolve();
+}
 
 const job =
 cloudOpChain.then(()=>fn());
@@ -45,6 +61,12 @@ return job;
 }
 
 export function enqueueAlertPush(fn){
+
+if(
+alertsCloudBlocked()
+){
+return Promise.resolve();
+}
 
 const job =
 alertPushChain.then(()=>fn());
@@ -60,6 +82,12 @@ let alertTriggerChain =
 Promise.resolve();
 
 export function enqueueAlertTrigger(fn){
+
+if(
+alertsCloudBlocked()
+){
+return Promise.resolve();
+}
 
 const job =
 alertTriggerChain.then(()=>fn());

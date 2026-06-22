@@ -14,7 +14,7 @@ initDrawings
 
 import {
 mountPriceAlertUi
-} from "./price-alert-ui.js?v=44";
+} from "./price-alert-ui.js?v=45";
 
 function widgetPlotWidth(
 wrapEl,

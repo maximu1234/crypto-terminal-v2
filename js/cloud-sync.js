@@ -60,7 +60,7 @@ isFavoritesCloudDisabled,
 isAlertsCloudDisabled,
 isAutoDevicePullDisabled,
 scaleSupabasePollMs
-} from "./supabase-usage-prefs.js?v=1";
+} from "./supabase-usage-prefs.js?v=2";
 
 const FAVORITES_LOCAL_TS_KEY =
 "favorites_local_updated_at";

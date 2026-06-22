@@ -325,7 +325,7 @@ badge.el.classList.add(
 function onChartSwitchStart(){
 
 cancelBadgeSync();
-hideAllAlertBadges();
+/* Бейджи алертов не скрываем — veil на графике затемняет их вместе с линиями. */
 
 }
 

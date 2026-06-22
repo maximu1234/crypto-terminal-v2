@@ -572,74 +572,31 @@ kind ===
 
 }
 
+function scheduleStopDragRedraw(){
+
+const dt =
+host?.getDrawingTools?.();
+
+if(
+dt?.scheduleDragRedraw
+){
+dt.scheduleDragRedraw();
+return;
+}
+
+dt?.scheduleRedraw?.();
+
+}
+
 function refreshDragPreview(){
 
 if(
-!dragStop ||
-!position
+!dragStop
 ){
 return;
 }
 
-const y =
-priceToY(
-dragStop.previewPrice
-);
-const el =
-badgeLayoutCache?.elementsByKind?.get(
-dragStop.kind
-);
-
-if(
-el &&
-y !=
-null &&
-Number.isFinite(
-y
-)
-){
-el.style.top =
-`${y}px`;
-
-const entry =
-Number(
-position.avgPrice
-);
-const usd =
-pnlAtPrice(
-position.side,
-entry,
-dragStop.previewPrice,
-position.size
-);
-const amtEl =
-el.querySelector(
-".seg-amt"
-);
-
-if(
-amtEl
-){
-amtEl.textContent =
-`${formatStopUsd(usd)} USDT`;
-}
-
-const invalid =
-validateStopPrice(
-dragStop.kind,
-position.side,
-dragStop.previewPrice,
-getMarkPrice()
-);
-
-el.classList.toggle(
-"is-invalid",
-!!invalid
-);
-
-}
-
-host?.getDrawingTools?.()?.scheduleRedraw?.();
+scheduleStopDragRedraw();
 
 }
 
@@ -970,7 +927,6 @@ price;
 dragStop.moved =
 true;
 refreshDragPreview();
-host?.getDrawingTools?.()?.scheduleRedraw?.();
 
 }
 
@@ -1574,16 +1530,10 @@ position.pnl
 }
 
 if(
-(
 spec.kind ===
 "sl" ||
 spec.kind ===
 "tp"
-) &&
-!(
-dragStop?.kind ===
-spec.kind
-)
 ){
 const amtEl =
 el.querySelector(
@@ -1598,13 +1548,8 @@ Number(
 position.avgPrice
 );
 const stop =
-spec.kind ===
-"sl"
-? getCommittedStopPrice(
-"sl"
-)
-: getCommittedStopPrice(
-"tp"
+getEffectiveStopPrice(
+spec.kind
 );
 const usd =
 pnlAtPrice(
@@ -1615,6 +1560,24 @@ position.size
 );
 amtEl.textContent =
 `${formatStopUsd(usd)} USDT`;
+}
+
+if(
+dragStop?.kind ===
+spec.kind
+){
+const invalid =
+validateStopPrice(
+spec.kind,
+position.side,
+dragStop.previewPrice,
+getMarkPrice()
+);
+
+el.classList.toggle(
+"is-invalid",
+!!invalid
+);
 }
 
 }
@@ -2268,6 +2231,13 @@ return;
 root.hidden =
 false;
 
+if(
+dragStop
+){
+scheduleStopDragRedraw();
+return;
+}
+
 const badgeSpecs =
 buildBadgeSpecs();
 const layoutKey =
@@ -2617,14 +2587,7 @@ signal
 
 const onSwitchStart =
 ()=>{
-
-position =
-null;
-invalidateBadgeLayoutCache();
-entryHover =
-false;
-scheduleDraw();
-
+/* Бейджи и линии гаснут вместе через veil на #chart-wrap — не чистим DOM заранее. */
 };
 
 const onCandlesLoaded =

@@ -126,7 +126,99 @@ detail: { prefs: next }
 )
 );
 
+if(
+key ===
+"disableAlertsCloud"
+){
+void syncAlertsCloudPauseToServer(
+!!value
+);
+}
+
 return next;
+
+}
+
+/**
+ * Синхронизирует флаг «облачные алерты выкл» в user_settings — worker не шлёт Telegram.
+ */
+export async function syncAlertsCloudPauseToServer(
+disabled
+){
+
+try{
+const {
+ensureCloudLoginResolved
+} =
+await import("./cloud-sync.js?v=38");
+
+const ctx =
+await ensureCloudLoginResolved(
+8000
+).catch(
+()=>null
+);
+
+const userId =
+ctx?.user?.id;
+
+if(
+!userId
+){
+return;
+}
+
+const {
+getSupabase
+} =
+await import("./supabase-client.js?v=7");
+
+const sb =
+await getSupabase();
+
+if(
+!sb
+){
+return;
+}
+
+const {
+error
+} =
+await sb.from(
+"user_settings"
+).upsert(
+{
+user_id:
+userId,
+alerts_cloud_disabled:
+!!disabled,
+updated_at:
+new Date().toISOString()
+},
+{
+onConflict:
+"user_id"
+}
+);
+
+if(
+error
+){
+console.warn(
+"[prefs] alerts_cloud_disabled sync:",
+error.message
+);
+}
+
+}catch(
+err
+){
+console.warn(
+"[prefs] alerts cloud pause:",
+err?.message || err
+);
+}
 
 }
 

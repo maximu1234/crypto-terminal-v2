@@ -1,8 +1,9 @@
 import {
 getSupabaseUsagePrefs,
 setSupabaseUsagePref,
+syncAlertsCloudPauseToServer,
 SUPABASE_USAGE_PREF_KEYS
-} from "./supabase-usage-prefs.js?v=1";
+} from "./supabase-usage-prefs.js?v=2";
 
 const FIELDS =
 [
@@ -182,6 +183,14 @@ statusEl.textContent =
 }
 
 syncFromStorage();
+
+if(
+getSupabaseUsagePrefs().disableAlertsCloud
+){
+void syncAlertsCloudPauseToServer(
+true
+);
+}
 
 form.addEventListener(
 "change",
