@@ -874,6 +874,7 @@ body.tablet-chart .widget-chart-wrap.chart-touch-locked .chart{
 
 .float-color-btn,
 .float-width-btn,
+.float-template,
 .float-settings,
 .float-delete,
 .float-alert{
@@ -883,6 +884,100 @@ body.tablet-chart .widget-chart-wrap.chart-touch-locked .chart{
     cursor:pointer;
     border-radius:4px;
     flex-shrink:0;
+}
+
+.float-template{
+    width:36px;
+    height:32px;
+    padding:0;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+}
+
+.float-template.hidden{
+    display:none;
+}
+
+.float-template:hover{
+    background:#2a2e39;
+}
+
+.float-template .draw-tool-icon{
+    display:block;
+    width:18px;
+    height:18px;
+    object-fit:contain;
+    pointer-events:none;
+}
+
+.draw-template-menu{
+    min-width:220px;
+    padding:4px 0;
+    display:flex;
+    flex-direction:column;
+}
+
+.draw-template-menu-item{
+    display:block;
+    width:100%;
+    padding:8px 14px;
+    border:none;
+    background:transparent;
+    color:#e5e7eb;
+    font-size:13px;
+    text-align:left;
+    cursor:pointer;
+}
+
+.draw-template-menu-item:hover{
+    background:#2a2e39;
+}
+
+.draw-template-menu-row{
+    display:flex;
+    align-items:center;
+    min-width:0;
+}
+
+.draw-template-menu-row:hover{
+    background:#2a2e39;
+}
+
+.draw-template-menu-item--saved{
+    flex:1;
+    min-width:0;
+}
+
+.draw-template-menu-row:hover .draw-template-menu-item--saved{
+    background:transparent;
+}
+
+.draw-template-menu-delete{
+    flex-shrink:0;
+    width:28px;
+    height:28px;
+    margin-right:4px;
+    padding:0;
+    border:none;
+    background:transparent;
+    color:#ef4444;
+    font-size:17px;
+    font-weight:500;
+    line-height:1;
+    cursor:pointer;
+    border-radius:4px;
+}
+
+.draw-template-menu-delete:hover{
+    background:rgba(239,68,68,0.14);
+    color:#f87171;
+}
+
+.draw-template-menu-sep{
+    height:1px;
+    margin:4px 0;
+    background:#2a2e39;
 }
 
 .float-color-btn{
@@ -965,6 +1060,7 @@ body.tablet-chart .widget-chart-wrap.chart-touch-locked .chart{
 
 .draw-style-float.draw-style-float--position .draw-color-btn,
 .draw-style-float.draw-style-float--position .draw-width-btn,
+.draw-style-float.draw-style-float--position .draw-template-btn,
 .draw-style-float.draw-style-float--position .draw-settings-btn,
 .draw-style-float.draw-style-float--position .draw-alert-toggle{
     display:none !important;

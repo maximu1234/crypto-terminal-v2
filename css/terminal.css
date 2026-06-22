@@ -211,6 +211,7 @@ body.coins-page #draw-toolbar.draw-toolbar-inline .draw-btn .draw-tool-icon--xl{
 /* Long / Short: стоп ($), перетаскивание и удаление */
 .draw-style-float.draw-style-float--position .draw-color-btn,
 .draw-style-float.draw-style-float--position .draw-width-btn,
+.draw-style-float.draw-style-float--position .draw-template-btn,
 .draw-style-float.draw-style-float--position .draw-settings-btn,
 .draw-style-float.draw-style-float--position .draw-alert-toggle{
   display:none !important;
@@ -306,6 +307,248 @@ body.coins-page #draw-toolbar.draw-toolbar-inline .draw-btn .draw-tool-icon--xl{
     radial-gradient(circle,#9ca3af 1px,transparent 1.5px);
   background-size:6px 5px;
   opacity:0.85;
+}
+
+.float-template{
+  width:36px;
+  height:32px;
+  padding:0;
+  border:none;
+  background:transparent;
+  cursor:pointer;
+  border-radius:4px;
+  flex-shrink:0;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.float-template.hidden{
+  display:none;
+}
+
+.float-template:hover{
+  background:#2a2e39;
+}
+
+.float-template .draw-tool-icon{
+  display:block;
+  width:18px;
+  height:18px;
+  object-fit:contain;
+  pointer-events:none;
+}
+
+.draw-template-menu{
+  min-width:220px;
+  padding:4px 0;
+  display:flex;
+  flex-direction:column;
+}
+
+.draw-template-menu-item{
+  display:block;
+  width:100%;
+  padding:8px 14px;
+  border:none;
+  background:transparent;
+  color:#e5e7eb;
+  font-size:13px;
+  text-align:left;
+  cursor:pointer;
+}
+
+.draw-template-menu-item:hover{
+  background:#2a2e39;
+}
+
+.draw-template-menu-item--saved{
+  flex:1;
+  min-width:0;
+  color:#d1d5db;
+}
+
+.draw-template-menu-row{
+  display:flex;
+  align-items:center;
+  min-width:0;
+}
+
+.draw-template-menu-row:hover{
+  background:#2a2e39;
+}
+
+.draw-template-menu-row:hover .draw-template-menu-item--saved{
+  background:transparent;
+}
+
+.draw-template-menu-delete{
+  flex-shrink:0;
+  width:28px;
+  height:28px;
+  margin-right:4px;
+  padding:0;
+  border:none;
+  background:transparent;
+  color:#ef4444;
+  font-size:17px;
+  font-weight:500;
+  line-height:1;
+  cursor:pointer;
+  border-radius:4px;
+}
+
+.draw-template-menu-delete:hover{
+  background:rgba(239,68,68,0.14);
+  color:#f87171;
+}
+
+.draw-template-menu-sep{
+  height:1px;
+  margin:4px 0;
+  background:#2a2e39;
+}
+
+.draw-template-save-modal{
+  position:fixed;
+  inset:0;
+  z-index:10100;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:16px;
+}
+
+.draw-template-save-modal.hidden{
+  display:none;
+}
+
+.draw-template-save-backdrop{
+  position:absolute;
+  inset:0;
+  background:rgba(0,0,0,0.55);
+}
+
+.draw-template-save-dialog{
+  position:relative;
+  width:min(420px,100%);
+  padding:18px 18px 16px;
+  border:1px solid #2a2e39;
+  border-radius:10px;
+  background:#1e222d;
+  box-shadow:0 12px 40px rgba(0,0,0,0.55);
+}
+
+.draw-template-save-close{
+  position:absolute;
+  top:10px;
+  right:10px;
+  width:28px;
+  height:28px;
+  border:none;
+  border-radius:6px;
+  background:transparent;
+  color:#9ca3af;
+  font-size:20px;
+  line-height:1;
+  cursor:pointer;
+}
+
+.draw-template-save-close:hover{
+  background:#2a2e39;
+  color:#f3f4f6;
+}
+
+.draw-template-save-title{
+  margin:0 28px 14px 0;
+  font-size:16px;
+  font-weight:600;
+  color:#f3f4f6;
+}
+
+.draw-template-save-label{
+  display:block;
+  margin:0 0 6px;
+  font-size:12px;
+  color:#9ca3af;
+}
+
+.draw-template-save-field{
+  display:flex;
+  align-items:stretch;
+}
+
+.draw-template-save-input{
+  flex:1;
+  min-width:0;
+  height:36px;
+  padding:0 12px;
+  border:1px solid #374151;
+  border-right:none;
+  border-radius:8px 0 0 8px;
+  background:#13181e;
+  color:#f8fafc;
+  font-size:13px;
+  box-sizing:border-box;
+}
+
+.draw-template-save-input:focus{
+  outline:none;
+  border-color:#3b82f6;
+  box-shadow:0 0 0 1px #3b82f6;
+}
+
+.draw-template-save-toggle{
+  width:36px;
+  height:36px;
+  border:1px solid #374151;
+  border-radius:0 8px 8px 0;
+  background:#13181e;
+  color:#9ca3af;
+  font-size:14px;
+  cursor:pointer;
+}
+
+.draw-template-save-toggle:hover{
+  background:#1f2937;
+  color:#e5e7eb;
+}
+
+.draw-template-save-list{
+  margin:8px 0 0;
+  padding:4px 0;
+  max-height:180px;
+  overflow:auto;
+  list-style:none;
+  border:1px solid #2a2e39;
+  border-radius:8px;
+  background:#13181e;
+}
+
+.draw-template-save-list.hidden{
+  display:none;
+}
+
+.draw-template-save-list-item{
+  display:block;
+  width:100%;
+  padding:8px 12px;
+  border:none;
+  background:transparent;
+  color:#e5e7eb;
+  font-size:13px;
+  text-align:left;
+  cursor:pointer;
+}
+
+.draw-template-save-list-item:hover{
+  background:#2a2e39;
+}
+
+.draw-template-save-list-empty{
+  padding:10px 12px;
+  color:#6b7280;
+  font-size:12px;
 }
 
 .float-color-btn{
@@ -888,8 +1131,12 @@ body.coins-page #draw-toolbar.draw-toolbar-inline .draw-btn .draw-tool-icon--xl{
   background:var(--app-chart-bg);
 }
 
-/* Переключение монеты: «след» старого графика гаснет на время загрузки (до 1s). */
-#chart-wrap.chart-switch-loading::after{
+/* Переключение монеты: затемнение всего стека (свечи + Vol + RSI) на время загрузки (до 1s). */
+#charts-stack-panes{
+  position:relative;
+}
+
+#charts-stack-panes.chart-switch-loading::after{
   content:"";
   position:absolute;
   inset:0;

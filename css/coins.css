@@ -69,6 +69,10 @@ color:#fff;
 font-weight:400;
 }
 
+body.coins-page .coins-tf-desktop .tf-btn:focus{
+outline:none;
+}
+
 body.coins-page #topbar.coins-topbar{
 height:40px;
 padding:0 16px;

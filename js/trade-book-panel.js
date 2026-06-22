@@ -493,6 +493,20 @@ return num >
 
 }
 
+function normalizeBookSymbol(
+symbol
+){
+
+return String(
+symbol ||
+""
+).replace(
+/\.P$/i,
+""
+).trim().toUpperCase();
+
+}
+
 export function initTradeBookPanel(){
 
 if(
@@ -578,6 +592,8 @@ let pollTimer =
 null;
 let loading =
 false;
+let activeChartSymbol =
+"";
 
 function renderTableHead(){
 
@@ -661,17 +677,65 @@ return;
 
 rowsEl.innerHTML =
 rows.map(
-row=>
-`
-<div class="trade-book-row trade-book-row--position" data-symbol="${row.symbol}">
-<span class="col-ticker"><span class="trade-book-fut" title="Futures">F</span>${row.ticker}</span>
+row=>{
+const active =
+normalizeBookSymbol(
+row.symbol
+) ===
+normalizeBookSymbol(
+activeChartSymbol
+);
+
+return `
+<div class="trade-book-row trade-book-row--position${active ? " is-active" : ""}" data-symbol="${row.symbol}">
+<button type="button" class="trade-book-ticker-btn" title="Открыть график ${row.ticker}">
+<span class="trade-book-fut" title="Futures">F</span>
+<span class="trade-book-ticker-text">${row.ticker}</span>
+</button>
 <span class="col-pnl ${pnlClass(row.pnl)}">${formatPnl(row.pnl)}</span>
 <span class="col-volume">${formatUsdt(row.volumeUsdt)}</span>
 <button type="button" class="trade-book-close" title="Закрыть по рынку" aria-label="Закрыть ${row.ticker}">×</button>
 </div>
-`
+`;
+}
 ).join(
 ""
+);
+
+rowsEl.querySelectorAll(
+".trade-book-ticker-btn"
+).forEach(
+btn=>{
+btn.addEventListener(
+"click",
+event=>{
+event.stopPropagation();
+const row =
+btn.closest(
+".trade-book-row--position"
+);
+const symbol =
+row?.dataset?.symbol;
+
+if(
+!symbol
+){
+return;
+}
+
+window.dispatchEvent(
+new CustomEvent(
+"trade-book-open-symbol",
+{
+detail:{
+symbol
+}
+}
+)
+);
+}
+);
+}
 );
 
 rowsEl.querySelectorAll(
@@ -697,12 +761,8 @@ return;
 
 const ticker =
 row.querySelector(
-".col-ticker"
-)?.textContent?.
-replace(
-/^F/,
-""
-) ||
+".trade-book-ticker-text"
+)?.textContent ||
 symbol;
 
 if(
@@ -1021,6 +1081,56 @@ true
 );
 startPoll();
 }
+
+}
+);
+
+window.addEventListener(
+"coins-chart-symbol-changed",
+e=>{
+
+const sym =
+e.detail?.symbol;
+
+if(
+!sym
+){
+return;
+}
+
+activeChartSymbol =
+sym;
+
+if(
+mode !==
+"positions" ||
+!rowsEl.querySelector(
+".trade-book-row--position"
+)
+){
+return;
+}
+
+const nextActive =
+normalizeBookSymbol(
+sym
+);
+
+rowsEl.querySelectorAll(
+".trade-book-row--position"
+).forEach(
+row=>{
+const rowSym =
+normalizeBookSymbol(
+row.dataset.symbol
+);
+row.classList.toggle(
+"is-active",
+rowSym ===
+nextActive
+);
+}
+);
 
 }
 );

@@ -16,8 +16,8 @@
 <link rel="stylesheet" href="/css/critical-shell.css?v=5">
 <script src="/js/site-css-ready.js?v=2"></script>
 <link rel="stylesheet" href="/css/common.css?v=29">
-<link rel="stylesheet" href="/css/terminal.css?v=150">
-<link rel="stylesheet" href="/css/coins.css?v=50">
+<link rel="stylesheet" href="/css/terminal.css?v=153">
+<link rel="stylesheet" href="/css/coins.css?v=51">
 <link rel="stylesheet" href="/css/chart-indicators.css?v=12">
 <script>
 if(window.cryptoTerminalDesktop&&window.cryptoTerminalDesktop.isDesktop){
@@ -199,6 +199,10 @@ tabTitle(saved);
 <span class="drag-dots"></span>
 </button>
 
+<button type="button" class="float-template draw-template-btn" id="draw-template-btn" title="Шаблоны" aria-label="Шаблоны" aria-haspopup="menu" aria-expanded="false">
+<img class="draw-tool-icon" src="assets/draw-toolbar-icons/template.png" width="18" height="18" alt="" aria-hidden="true">
+</button>
+
 <button type="button" class="float-color-btn draw-color-btn" id="draw-color-btn" title="Цвет">
 <svg class="pencil-icon" viewBox="0 0 24 24" aria-hidden="true">
 <path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" d="M4 20l4-1 9-9-3-3-9 9-1 4zM14 6l3 3"/>
@@ -252,6 +256,8 @@ tabTitle(saved);
 
 <div id="draw-settings-popover" class="draw-popover draw-settings-popover draw-settings-popover--fib hidden">
 </div>
+
+<div id="draw-template-menu" class="draw-popover draw-template-menu hidden" role="menu" aria-label="Шаблоны"></div>
 
 </div>
 

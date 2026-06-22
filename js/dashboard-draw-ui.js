@@ -382,6 +382,10 @@ return `
 <span class="drag-dots"></span>
 </button>
 
+<button type="button" class="float-template draw-template-btn" title="Шаблоны" aria-label="Шаблоны" aria-haspopup="menu" aria-expanded="false">
+<img class="draw-tool-icon" src="assets/draw-toolbar-icons/template.png" width="18" height="18" alt="" aria-hidden="true">
+</button>
+
 <button type="button" class="float-color-btn draw-color-btn" title="Цвет">
 <svg class="pencil-icon" viewBox="0 0 24 24" aria-hidden="true">
 <path fill="none" stroke="currentColor" stroke-width="1.5" d="M4 20l4-1 9-9-3-3-9 9-1 4zM14 6l3 3"/>
@@ -420,6 +424,8 @@ ${TRASH_ICON_SVG}
 
 <div class="draw-popover draw-settings-popover draw-settings-popover--fib hidden">
 </div>
+
+<div class="draw-popover draw-template-menu hidden" role="menu" aria-label="Шаблоны"></div>
 
 `;
 

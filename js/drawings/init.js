@@ -184,7 +184,7 @@ createDrawingsPersist
 
 import {
 createDrawStyleBar
-} from "./draw-style-bar.js?v=8";
+} from "./draw-style-bar.js?v=11";
 
 import {
 createDrawAlertsChart
@@ -304,6 +304,12 @@ pickUi(uiRoot, "draw-position-risk-usd", ".draw-position-risk-input");
 
 const dragHandle =
 pickUi(uiRoot, "style-bar-drag", ".draw-style-drag");
+
+const templateBtn =
+pickUi(uiRoot, "draw-template-btn", ".draw-template-btn");
+
+const templateMenu =
+pickUi(uiRoot, "draw-template-menu", ".draw-template-menu");
 
 
 let tool = "cursor";
@@ -4892,6 +4898,8 @@ deleteOneBtn,
 positionRiskWrap,
 positionRiskInput,
 dragHandle,
+templateBtn,
+templateMenu,
 syncChartTouchPan,
 saveDrawings,
 redraw,

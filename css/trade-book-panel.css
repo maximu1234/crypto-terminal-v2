@@ -195,6 +195,46 @@ body.trade-page .trade-book-row:hover{
 background:rgba(255,255,255,.03);
 }
 
+body.trade-page .trade-book-row--position.is-active{
+background:rgba(59,130,246,.08);
+}
+
+body.trade-page .trade-book-ticker-btn{
+display:flex;
+align-items:center;
+gap:0;
+min-width:0;
+flex:1 1 auto;
+margin:0;
+padding:0;
+border:none;
+background:transparent;
+font:inherit;
+line-height:inherit;
+color:inherit;
+cursor:pointer;
+text-align:left;
+-webkit-tap-highlight-color:transparent;
+}
+
+body.trade-page .trade-book-ticker-btn:hover .trade-book-ticker-text{
+color:#fff;
+text-decoration:underline;
+}
+
+body.trade-page .trade-book-row--position.is-active .trade-book-ticker-text{
+color:#93c5fd;
+}
+
+body.trade-page .trade-book-ticker-text{
+min-width:0;
+overflow:hidden;
+text-overflow:ellipsis;
+white-space:nowrap;
+font-weight:600;
+color:#e5e7eb;
+}
+
 body.trade-page .trade-book-fut{
 display:inline-flex;
 align-items:center;

@@ -1,8 +1,8 @@
 # Метка 34 — refactor coins/screener, brand logo, bundle CI (июнь 2026)
 
-**Тег:** `metka-34` · **Desktop:** `desktop-v1.0.26` (актуальный DMG)
+**Тег:** `metka-34` · **Desktop:** `desktop-v1.0.26`
 
-**Текущий эталон отката.** Предыдущий: [MARKER_33.md](./MARKER_33.md) (`metka-33`).
+Предыдущий эталон. Актуальный: [MARKER_35.md](./MARKER_35.md) (`metka-35` / `desktop-v1.0.27`).
 
 Проверено: `npm run check:all` (syntax, asset-manifest, desktop bundle, site-nav, **47** unit tests) + `npm run bundle:sync`.
 

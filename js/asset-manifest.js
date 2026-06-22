@@ -33,7 +33,7 @@ Object.freeze({
 "coins-list-refresh.js":
 1,
 "trade-desktop-boot.js":
-3,
+4,
 "trade-positions-cache.js":
 1,
 "trade-open-positions.js":
@@ -47,7 +47,7 @@ Object.freeze({
 "trade-market-entry.js":
 3,
 "trade-book-panel.js":
-4,
+5,
 "trade-chart-overlay.js":
 22,
 "trade-chart-orders.js":
@@ -61,11 +61,11 @@ Object.freeze({
 "chart-page.js":
 6,
 "terminal.js":
-333,
+336,
 "terminal/coins-chart-layout.js":
 2,
 "terminal/coins-chart-switch-veil.js":
-3,
+7,
 "chart-layout-gate.js":
 2,
 "chart-indicators.js":
@@ -113,7 +113,7 @@ Object.freeze({
 "screener-widget-zoom.js":
 4,
 "release-marker.js":
-18,
+19,
 "site-boot.js":
 90,
 "desktop-app-ui.js":
@@ -149,7 +149,7 @@ Object.freeze({
 "drawings.js":
 234,
 "drawings/init.js":
-106,
+109,
 "drawings/draw-edit-desktop.js":
 6,
 "drawings/draw-undo.js":
@@ -157,7 +157,9 @@ Object.freeze({
 "drawings/drawings-persist.js":
 2,
 "drawings/draw-style-bar.js":
-8,
+11,
+"drawings/draw-templates.js":
+3,
 "drawings/draw-alerts-chart.js":
 3,
 "drawings/draw-price-scale.js":
@@ -350,11 +352,11 @@ Object.freeze({
 "screener.css":
 40,
 "terminal.css":
-150,
+153,
 "dashboard.css":
-45,
+47,
 "coins.css":
-50,
+51,
 "chart-indicators.css":
 12,
 "trade-exchange-settings.css":
@@ -364,7 +366,7 @@ Object.freeze({
 "trade-market-entry.css":
 2,
 "trade-book-panel.css":
-4,
+5,
 "trade-chart-overlay.css":
 12,
 "trade-order-plus-ui.css":

@@ -1,12 +1,16 @@
 /**
- * Coins page — veil overlay while switching symbol (chart-wrap loading state).
+ * Coins page — veil overlay while switching symbol (charts-stack-panes: candles + indicators).
+ *
+ * Терминология (договорённость):
+ * — «затемнение N%» = непрозрачность тёмного слоя N/100 (0…1). 80% → график еле виден (~20% яркости).
+ * — «яркость графика N%» = обратное: видимость свечей; 20% яркости = затемнение 80%.
  */
 const CHART_SWITCH_VEIL_MAX_MS =
 1000;
 
-/** Максимальная непрозрачность затемнения (1 = полная темнота). */
-const CHART_SWITCH_VEIL_MAX_OPACITY =
-0.3;
+/** Пик затемнения: 0 = нет veil, 1 = график полностью скрыт. Сейчас 60% затемнения. */
+const CHART_SWITCH_VEIL_MAX_DARKEN =
+0.6;
 
 export function createCoinsChartSwitchVeil(
 getChartWrapEl,
@@ -27,7 +31,7 @@ elapsedMs /
 CHART_SWITCH_VEIL_MAX_MS,
 1
 ) *
-CHART_SWITCH_VEIL_MAX_OPACITY;
+CHART_SWITCH_VEIL_MAX_DARKEN;
 
 }
 

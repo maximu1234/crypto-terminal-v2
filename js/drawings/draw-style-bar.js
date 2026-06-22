@@ -59,6 +59,17 @@ import {
 touchShapeRevision
 } from "../drawings-storage.js?v=7";
 
+import {
+applyStyleSnapshotToShape,
+buildFactoryDefaultSnapshot,
+extractStyleSnapshot,
+isTemplateEligibleType,
+listTemplatesForType,
+mergeStyleSnapshot,
+saveNamedTemplate,
+deleteTemplateAtIndex
+} from "./draw-templates.js?v=3";
+
 export function createDrawStyleBar(
 deps
 ){
@@ -88,6 +99,8 @@ deleteOneBtn,
 positionRiskWrap,
 positionRiskInput,
 dragHandle,
+templateBtn,
+templateMenu,
 syncChartTouchPan,
 saveDrawings,
 redraw,
@@ -128,6 +141,10 @@ let positionRiskShapeId =
 null;
 let positionApplyBtn =
 null;
+let templateSaveModal =
+null;
+let templateNameInput =
+null;
 
 function ensureChromePortal(){
 
@@ -154,7 +171,9 @@ ensureChromePortal();
 styleBar,
 colorPopover,
 widthPopover,
-settingsPopover
+settingsPopover,
+templateMenu,
+templateSaveModal
 ].forEach(node=>{
 
 if(!node){
@@ -2251,6 +2270,14 @@ styleBar?.classList.toggle(
 isPosToolbar
 );
 
+templateBtn?.classList.toggle(
+"hidden",
+isPosToolbar ||
+!isTemplateEligibleType(
+type
+)
+);
+
 colorBtn?.classList.toggle(
 "hidden",
 isPosToolbar
@@ -2571,7 +2598,808 @@ lineWidth: style.lineWidth
 
 }
 
-function closePopovers(){
+function captureCurrentStyleSnapshot(){
+
+const type =
+getStyleTargetType();
+
+if(
+!isTemplateEligibleType(
+type
+)
+){
+return null;
+}
+
+const sel =
+getSelected();
+const widthActive =
+widthPopover?.querySelector(
+".width-option.active"
+);
+
+let snapshot =
+extractStyleSnapshot(
+sel ||
+{
+color:
+activeColor ||
+STROKE,
+lineWidth: Number(
+widthActive?.dataset.width ||
+1
+)
+},
+type
+);
+
+const ui =
+readStyleFromUI();
+
+snapshot = mergeStyleSnapshot(
+{
+...snapshot,
+...ui
+},
+type
+);
+
+if(
+type ===
+"rectangle" &&
+isRectSettingsOpen()
+){
+
+Object.assign(
+snapshot,
+readRectPanelFromDOM()
+);
+
+snapshot =
+mergeStyleSnapshot(
+snapshot,
+type
+);
+
+}
+
+if(
+type ===
+"fib" &&
+isFibSettingsOpen()
+){
+
+Object.assign(
+snapshot,
+readFibPanelFromDOM()
+);
+
+snapshot =
+mergeStyleSnapshot(
+snapshot,
+type
+);
+
+}
+
+return snapshot;
+
+}
+
+function persistStyleSnapshotToTarget(
+snapshot,
+{
+updateToolDefaults = true
+} = {}
+){
+
+const type =
+getStyleTargetType();
+
+if(
+!type ||
+!snapshot
+){
+return;
+}
+
+const sel =
+getSelected();
+const target =
+!getPlacement()
+? sel
+: null;
+
+if(
+target &&
+isTemplateEligibleType(
+target.type
+)
+){
+
+applyStyleSnapshotToShape(
+target,
+snapshot
+);
+
+touchShapeRevisionFn(
+target
+);
+saveDrawings();
+
+}
+
+if(
+updateToolDefaults &&
+isTemplateEligibleType(
+type
+)
+){
+
+const defaultsPayload =
+{
+...snapshot
+};
+
+if(
+type ===
+"arrow"
+){
+delete defaultsPayload.lineWidth;
+}
+
+if(
+type ===
+"fib" &&
+snapshot.fibLevels
+){
+defaultsPayload.fibDefaultsVersion =
+FIB_TOOL_DEFAULTS_VERSION;
+}
+
+saveToolDefaults(
+type,
+defaultsPayload
+);
+
+if(
+snapshot.color
+){
+saveGlobalStyle({
+color: snapshot.color,
+lineWidth:
+snapshot.lineWidth ??
+1
+});
+}
+
+}
+
+fillStyleUI(
+snapshot,
+type
+);
+
+if(
+type ===
+"fib" &&
+isFibSettingsOpen()
+){
+
+fillFibSettingsPanel(
+getFibRows({
+fibLevels:
+snapshot.fibLevels
+}),
+snapshot.fibShowTrendLine,
+snapshot.color,
+snapshot.lineWidth
+);
+
+}
+
+if(
+type ===
+"rectangle" &&
+isRectSettingsOpen()
+){
+
+fillRectSettingsPanel({
+...snapshot,
+color:
+snapshot.color,
+lineWidth:
+snapshot.lineWidth
+});
+
+}
+
+redraw();
+
+}
+
+function applyDefaultStyleToTarget(){
+
+const type =
+getStyleTargetType();
+
+if(
+!isTemplateEligibleType(
+type
+)
+){
+return;
+}
+
+const snapshot =
+buildFactoryDefaultSnapshot(
+type
+);
+
+if(
+!snapshot
+){
+return;
+}
+
+persistStyleSnapshotToTarget(
+snapshot
+);
+
+}
+
+function applyNamedTemplate(
+idx
+){
+
+const type =
+getStyleTargetType();
+const list =
+listTemplatesForType(
+type
+);
+const entry =
+list[
+Number(
+idx
+)
+];
+
+if(
+!entry
+){
+return;
+}
+
+persistStyleSnapshotToTarget(
+mergeStyleSnapshot(
+entry.data,
+type
+)
+);
+
+}
+
+function refreshTemplateMenu(){
+
+if(
+!templateMenu
+){
+return;
+}
+
+const type =
+getStyleTargetType();
+const saved =
+listTemplatesForType(
+type
+);
+
+templateMenu.innerHTML =
+`
+<button type="button" class="draw-template-menu-item" data-action="save" role="menuitem">Save Template</button>
+<button type="button" class="draw-template-menu-item" data-action="apply-default" role="menuitem">Apply Default</button>
+${
+saved.length
+? `<div class="draw-template-menu-sep" role="separator"></div>${saved.map((item,idx)=>`
+<div class="draw-template-menu-row" role="none">
+<button type="button" class="draw-template-menu-item draw-template-menu-item--saved" data-action="apply-template" data-template-idx="${idx}" role="menuitem">${escapeTemplateMenuName(item.name)}</button>
+<button type="button" class="draw-template-menu-delete" data-action="delete-template" data-template-idx="${idx}" title="Удалить" aria-label="Удалить">×</button>
+</div>`).join("")}`
+: ""
+}
+`;
+
+}
+
+function escapeTemplateMenuName(
+name
+){
+
+return String(
+name || ""
+).replace(
+/&/g,
+"&amp;"
+).replace(
+/</g,
+"&lt;"
+).replace(
+/>/g,
+"&gt;"
+).replace(
+/"/g,
+"&quot;"
+);
+
+}
+
+function closeTemplateMenu(){
+
+templateMenu?.classList.add(
+"hidden"
+);
+
+templateBtn?.setAttribute(
+"aria-expanded",
+"false"
+);
+
+}
+
+function openTemplateMenu(){
+
+if(
+!templateMenu ||
+!styleBar
+){
+return;
+}
+
+refreshTemplateMenu();
+closePopovers({
+keepTemplateMenu: true
+});
+
+positionPopover(
+templateMenu,
+40
+);
+templateMenu.classList.remove(
+"hidden"
+);
+templateBtn?.setAttribute(
+"aria-expanded",
+"true"
+);
+
+}
+
+function ensureTemplateSaveModal(){
+
+if(
+templateSaveModal
+){
+return templateSaveModal;
+}
+
+const root =
+document.createElement(
+"div"
+);
+
+root.className =
+"draw-template-save-modal hidden";
+root.innerHTML =
+`
+<div class="draw-template-save-backdrop" data-action="close"></div>
+<div class="draw-template-save-dialog" role="dialog" aria-modal="true" aria-labelledby="draw-template-save-title">
+<button type="button" class="draw-template-save-close" data-action="close" aria-label="Закрыть">×</button>
+<h2 class="draw-template-save-title" id="draw-template-save-title">Save drawing template</h2>
+<label class="draw-template-save-label" for="draw-template-save-input">New template name</label>
+<div class="draw-template-save-field">
+<input type="text" class="draw-template-save-input" id="draw-template-save-input" autocomplete="off" spellcheck="false" placeholder=""/>
+<button type="button" class="draw-template-save-toggle" data-action="toggle-list" aria-label="Показать сохранённые шаблоны" aria-expanded="false">▾</button>
+</div>
+<ul class="draw-template-save-list hidden" role="listbox"></ul>
+</div>
+`;
+
+document.body.appendChild(
+root
+);
+templateSaveModal = root;
+templateNameInput =
+root.querySelector(
+".draw-template-save-input"
+);
+
+root.addEventListener(
+"click",
+e=>{
+
+const action =
+e.target.closest(
+"[data-action]"
+)?.dataset.action;
+
+if(
+action ===
+"close"
+){
+closeTemplateSaveModal();
+return;
+}
+
+if(
+action ===
+"toggle-list"
+){
+toggleTemplateSaveList();
+}
+
+}
+);
+
+root.querySelector(
+".draw-template-save-list"
+)?.addEventListener(
+"click",
+e=>{
+
+const item =
+e.target.closest(
+"[data-template-idx]"
+);
+
+if(
+!item ||
+!templateNameInput
+){
+return;
+}
+
+const type =
+getStyleTargetType();
+const saved =
+listTemplatesForType(
+type
+);
+const entry =
+saved[
+Number(
+item.dataset.templateIdx
+)
+];
+
+templateNameInput.value =
+entry?.name ||
+"";
+closeTemplateSaveList();
+
+}
+);
+
+templateNameInput?.addEventListener(
+"keydown",
+e=>{
+
+if(
+e.key ===
+"Enter"
+){
+e.preventDefault();
+submitTemplateSave();
+}
+
+if(
+e.key ===
+"Escape"
+){
+e.preventDefault();
+closeTemplateSaveModal();
+}
+
+}
+);
+
+return root;
+
+}
+
+function refreshTemplateSaveList(){
+
+const listEl =
+templateSaveModal?.querySelector(
+".draw-template-save-list"
+);
+
+if(
+!listEl
+){
+return;
+}
+
+const type =
+getStyleTargetType();
+const saved =
+listTemplatesForType(
+type
+);
+
+listEl.innerHTML =
+saved.length
+? saved.map((item,idx)=>`
+<li><button type="button" class="draw-template-save-list-item" data-template-idx="${idx}" role="option">${escapeTemplateMenuName(item.name)}</button></li>`).join("")
+: `<li class="draw-template-save-list-empty">Нет сохранённых шаблонов</li>`;
+
+}
+
+function openTemplateSaveList(){
+
+const listEl =
+templateSaveModal?.querySelector(
+".draw-template-save-list"
+);
+const toggle =
+templateSaveModal?.querySelector(
+".draw-template-save-toggle"
+);
+
+refreshTemplateSaveList();
+listEl?.classList.remove(
+"hidden"
+);
+toggle?.setAttribute(
+"aria-expanded",
+"true"
+);
+toggle &&
+(toggle.textContent = "▴");
+
+}
+
+function closeTemplateSaveList(){
+
+const listEl =
+templateSaveModal?.querySelector(
+".draw-template-save-list"
+);
+const toggle =
+templateSaveModal?.querySelector(
+".draw-template-save-toggle"
+);
+
+listEl?.classList.add(
+"hidden"
+);
+toggle?.setAttribute(
+"aria-expanded",
+"false"
+);
+toggle &&
+(toggle.textContent = "▾");
+
+}
+
+function toggleTemplateSaveList(){
+
+const listEl =
+templateSaveModal?.querySelector(
+".draw-template-save-list"
+);
+
+if(
+listEl?.classList.contains(
+"hidden"
+)
+){
+openTemplateSaveList();
+}else{
+closeTemplateSaveList();
+}
+
+}
+
+function openTemplateSaveModal(){
+
+const type =
+getStyleTargetType();
+
+if(
+!isTemplateEligibleType(
+type
+)
+){
+return;
+}
+
+closeTemplateMenu();
+closePopovers();
+
+const modal =
+ensureTemplateSaveModal();
+portalDrawChrome();
+
+refreshTemplateSaveList();
+closeTemplateSaveList();
+
+if(
+templateNameInput
+){
+templateNameInput.value = "";
+}
+
+modal.classList.remove(
+"hidden"
+);
+
+requestAnimationFrame(()=>{
+templateNameInput?.focus();
+});
+
+}
+
+function closeTemplateSaveModal(){
+
+templateSaveModal?.classList.add(
+"hidden"
+);
+closeTemplateSaveList();
+
+}
+
+function submitTemplateSave(){
+
+const type =
+getStyleTargetType();
+const name =
+templateNameInput?.value ||
+"";
+
+if(
+!isTemplateEligibleType(
+type
+) ||
+!String(
+name
+).trim()
+){
+templateNameInput?.focus();
+return;
+}
+
+const snapshot =
+captureCurrentStyleSnapshot();
+
+if(
+!snapshot
+){
+return;
+}
+
+saveNamedTemplate(
+type,
+name,
+snapshot
+);
+closeTemplateSaveModal();
+
+}
+
+function initTemplateUi(){
+
+templateBtn?.addEventListener(
+"click",
+e=>{
+
+e.stopPropagation();
+
+const type =
+getStyleTargetType();
+
+if(
+!isTemplateEligibleType(
+type
+)
+){
+return;
+}
+
+const open =
+templateMenu?.classList.contains(
+"hidden"
+);
+
+closePopovers();
+
+if(
+open
+){
+openTemplateMenu();
+}else{
+closeTemplateMenu();
+}
+
+}
+);
+
+templateMenu?.addEventListener(
+"click",
+e=>{
+
+const btn =
+e.target.closest(
+"[data-action]"
+);
+
+if(
+!btn
+){
+return;
+}
+
+e.stopPropagation();
+
+const action =
+btn.dataset.action;
+
+if(
+action ===
+"save"
+){
+closeTemplateMenu();
+openTemplateSaveModal();
+return;
+}
+
+if(
+action ===
+"apply-default"
+){
+closeTemplateMenu();
+applyDefaultStyleToTarget();
+return;
+}
+
+if(
+action ===
+"apply-template"
+){
+closeTemplateMenu();
+applyNamedTemplate(
+btn.dataset.templateIdx
+);
+return;
+}
+
+if(
+action ===
+"delete-template"
+){
+e.preventDefault();
+deleteTemplateAtIndex(
+getStyleTargetType(),
+btn.dataset.templateIdx
+);
+refreshTemplateMenu();
+}
+
+}
+);
+
+templateMenu?.addEventListener(
+"mousedown",
+e=>{
+e.stopPropagation();
+}
+);
+
+}
+
+function closePopovers(
+opts = {}
+){
 
 const fibSettingsWasOpen =
 isFibSettingsOpen();
@@ -2588,6 +3416,12 @@ settingsPopover?.classList.add("hidden");
 closeAllFibLineStyleMenus();
 closeAllFibLineWidthMenus();
 closeFibColorMenu();
+
+if(
+!opts.keepTemplateMenu
+){
+closeTemplateMenu();
+}
 
 if(fibSettingsWasOpen){
 fibSettingsShapeId = null;
@@ -2613,6 +3447,8 @@ popover.style.zIndex = "10051";
 }
 
 function initStylePopovers(){
+
+initTemplateUi();
 
 if(colorPopover){
 colorPopover.classList.add("tv-color-popover");
@@ -3125,6 +3961,8 @@ positionRiskWrap?.contains(e.target) ||
 colorPopover?.contains(e.target) ||
 widthPopover?.contains(e.target) ||
 settingsPopover?.contains(e.target) ||
+templateMenu?.contains(e.target) ||
+templateSaveModal?.contains(e.target) ||
 e.target.closest(".widget-draw-tools") ||
 e.target.closest(".draw-tool-clear-all") ||
 e.target.closest(".fib-line-style-menu--portal") ||
@@ -3194,6 +4032,13 @@ null;
 
 chromePortal?.remove();
 chromePortal =
+null;
+
+closeTemplateSaveModal();
+templateSaveModal?.remove();
+templateSaveModal =
+null;
+templateNameInput =
 null;
 
 };

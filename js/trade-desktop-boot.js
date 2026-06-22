@@ -23,7 +23,7 @@ initTradeMarketEntry
 
 import {
 initTradeBookPanel
-} from "./trade-book-panel.js?v=4";
+} from "./trade-book-panel.js?v=5";
 
 const TRADE_CSS =
 [

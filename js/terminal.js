@@ -161,7 +161,7 @@ syncCoinListFreezeFromFlagMenus
 
 import {
 createCoinsChartSwitchVeil
-} from "./terminal/coins-chart-switch-veil.js?v=3";
+} from "./terminal/coins-chart-switch-veil.js?v=7";
 
 import {
 registerCoinsChartLayoutContext,
@@ -442,10 +442,15 @@ document.getElementById(
 "chart-wrap"
 );
 
+const chartStackPanesEl =
+document.getElementById(
+"charts-stack-panes"
+);
+
 chartSwitchVeil =
 createCoinsChartSwitchVeil(
 ()=>
-chartWrapEl,
+chartStackPanesEl,
 ()=>
 symbolLoadSeq
 );
@@ -2565,6 +2570,29 @@ void reloadTerminalBybitData();
 );
 
 window.addEventListener(
+"trade-book-open-symbol",
+e=>{
+
+const symbol =
+String(
+e.detail?.symbol ||
+""
+).trim().toUpperCase();
+
+if(
+!symbol
+){
+return;
+}
+
+void loadSymbol(
+symbol
+);
+
+}
+);
+
+window.addEventListener(
 "bybit-symbols-updated",
 e=>{
 
@@ -3111,8 +3139,39 @@ document
 .querySelectorAll(".tf-btn")
 .forEach(btn=>{
 
+btn.addEventListener(
+"mousedown",
+e=>{
+
+if(
+e.button ===
+0
+){
+e.preventDefault();
+}
+
+}
+);
+
+btn.addEventListener(
+"keydown",
+e=>{
+
+if(
+e.code ===
+"Space" ||
+e.code ===
+"Enter"
+){
+e.preventDefault();
+}
+
+}
+);
+
 btn.onclick = async ()=>{
 await setCoinsTimeframe(btn.dataset.tf);
+btn.blur();
 };
 
 });
@@ -3862,6 +3921,18 @@ return;
 
 el.textContent =
 formatCoinsSymbolLabel(sym);
+
+window.dispatchEvent(
+new CustomEvent(
+"coins-chart-symbol-changed",
+{
+detail:{
+symbol:
+sym
+}
+}
+)
+);
 
 updateCoinsChartHeaderFlag(
 sym
