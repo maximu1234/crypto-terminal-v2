@@ -86,22 +86,25 @@ window.waitForSiteCssReady
 await window.waitForSiteCssReady();
 }
 
-const {
-isDashboardTradeMode,
-initTradeDesktopBeforeChart,
-initTradeDesktopAfterChart
-} =
-await import("/js/trade-desktop-boot.js?v=4");
+let tradeBoot =
+null;
 
 if(
-isDashboardTradeMode()
+window.cryptoTerminalDesktop?.isDesktop
 ){
-await initTradeDesktopBeforeChart(
+tradeBoot =
+await import("/js/trade-desktop-boot.js?v=7");
+
+if(
+tradeBoot.isDashboardTradeMode()
+){
+await tradeBoot.initTradeDesktopBeforeChart(
 {
 mode:
 "terminal"
 }
 );
+}
 }
 
 const { loadLightweightCharts } =
@@ -111,9 +114,9 @@ await loadLightweightCharts();
 await import("./js/dashboard.js?v=86");
 
 if(
-isDashboardTradeMode()
+tradeBoot?.isDashboardTradeMode()
 ){
-await initTradeDesktopAfterChart(
+await tradeBoot.initTradeDesktopAfterChart(
 {
 mode:
 "terminal"

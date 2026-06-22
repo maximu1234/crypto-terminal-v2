@@ -16,11 +16,63 @@ TERMINAL_ENTRY,
 jsUrl
 } from "./asset-manifest.js?v=2";
 
-import {
-initTradeDesktopBeforeChart,
-initTradeDesktopAfterChart,
-isDesktopTradeMode
-} from "./trade-desktop-boot.js?v=4";
+function isDesktopTradeMode(){
+
+return !!window.cryptoTerminalDesktop?.isDesktop;
+
+}
+
+let tradeDesktopBootPromise =
+null;
+
+function loadTradeDesktopBoot(){
+
+if(
+!isDesktopTradeMode()
+){
+return Promise.resolve(
+null
+);
+}
+
+if(
+!tradeDesktopBootPromise
+){
+tradeDesktopBootPromise =
+import(
+"./trade-desktop-boot.js?v=7"
+);
+}
+
+return tradeDesktopBootPromise;
+
+}
+
+async function initTradeDesktopBeforeChart(){
+
+const m =
+await loadTradeDesktopBoot();
+
+if(
+m
+){
+await m.initTradeDesktopBeforeChart();
+}
+
+}
+
+async function initTradeDesktopAfterChart(){
+
+const m =
+await loadTradeDesktopBoot();
+
+if(
+m
+){
+await m.initTradeDesktopAfterChart();
+}
+
+}
 
 const IS_YANDEX =
 /YaBrowser|Yandex/i.test(

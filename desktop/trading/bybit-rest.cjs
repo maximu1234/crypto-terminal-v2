@@ -655,6 +655,1537 @@ row.positionIdx ??
 
 }
 
+function parseBybitTimeMs(
+raw
+){
+
+const n =
+Number(
+raw
+);
+
+if(
+!Number.isFinite(
+n
+) ||
+n <=
+0
+){
+return null;
+}
+
+if(
+n <
+1e12
+){
+return Math.round(
+n *
+1000
+);
+}
+
+return Math.round(
+n
+);
+
+}
+
+function closedPnlPositionSide(
+closeSide
+){
+
+return String(
+closeSide ||
+""
+).toLowerCase() ===
+"sell"
+? "long"
+: "short";
+
+}
+
+function mapExecutionRow(
+row
+){
+
+if(
+!row
+){
+return null;
+}
+
+const execTimeMs =
+parseBybitTimeMs(
+row.execTime
+);
+
+if(
+!execTimeMs
+){
+return null;
+}
+
+return {
+symbol:
+stripSymbolSuffix(
+row.symbol
+).toUpperCase(),
+execTimeMs,
+side:
+String(
+row.side ||
+""
+),
+execQty:
+Number(
+row.execQty
+) ||
+0,
+execPrice:
+Number(
+row.execPrice
+) ||
+0,
+execFee:
+Number(
+row.execFee
+) ||
+0,
+execValue:
+Number(
+row.execValue
+) ||
+0,
+orderId:
+String(
+row.orderId ||
+""
+),
+feeRate:
+Number(
+row.feeRate
+) ||
+0,
+execId:
+String(
+row.execId ||
+""
+)
+};
+
+}
+
+function executionKey(
+ex
+){
+
+return ex.execId ||
+[
+ex.execTimeMs,
+ex.side,
+ex.execQty,
+ex.execPrice,
+ex.orderId
+].join(
+"|"
+);
+
+}
+
+function sumExecQty(
+fills
+){
+
+return fills.reduce(
+(
+sum,
+fill
+)=>
+sum +
+(
+Number(
+fill.execQty
+) ||
+0
+),
+0
+);
+
+}
+
+function collectOpenFills(
+trade,
+pool,
+exits,
+targetQty,
+{
+wide = false
+} = {}
+){
+
+const openSide =
+trade.side ===
+"long"
+? "Buy"
+: "Sell";
+const closeMs =
+Number(
+trade.closeTimeMs
+);
+const openMs =
+Number(
+trade.openTimeMs
+);
+const exitKeys =
+new Set(
+exits.map(
+executionKey
+)
+);
+const lookbackMs =
+wide
+? 24 *
+60 *
+60 *
+1000
+: Math.max(
+closeMs -
+openMs +
+60000,
+5 *
+60 *
+1000
+);
+const minTime =
+closeMs -
+lookbackMs;
+
+const candidates =
+pool
+.filter(
+ex=>
+ex.side ===
+openSide &&
+!exitKeys.has(
+executionKey(
+ex
+)
+) &&
+ex.execTimeMs <=
+closeMs +
+2000 &&
+ex.execTimeMs >=
+minTime
+)
+.sort(
+(
+a,
+b
+)=>
+b.execTimeMs -
+a.execTimeMs
+);
+
+let need =
+targetQty;
+const entries =
+[];
+
+for(
+const ex of
+candidates
+){
+
+if(
+need <=
+1e-8
+){
+break;
+}
+
+entries.push(
+ex
+);
+need -=
+ex.execQty;
+
+}
+
+entries.reverse();
+
+return entries;
+
+}
+
+async function getExecutionHistory(
+options =
+{}
+){
+
+const startTime =
+options.startTime;
+const endTime =
+options.endTime;
+const executions =
+[];
+let cursor =
+"";
+
+for(
+let page =
+0;
+page <
+40;
+page++
+){
+
+const query =
+{
+category:
+"linear",
+limit:
+"100"
+};
+
+if(
+startTime !=
+null
+){
+query.startTime =
+String(
+startTime
+);
+}
+
+if(
+endTime !=
+null
+){
+query.endTime =
+String(
+endTime
+);
+}
+
+if(
+cursor
+){
+query.cursor =
+cursor;
+}
+
+const result =
+await privateGet(
+"/v5/execution/list",
+query
+);
+
+if(
+!result.ok
+){
+
+if(
+executions.length
+){
+return {
+ok:
+true,
+executions
+};
+}
+
+return result;
+
+}
+
+const list =
+result.data?.result?.list;
+
+if(
+Array.isArray(
+list
+)
+){
+
+for(
+const row of
+list
+){
+
+const mapped =
+mapExecutionRow(
+row
+);
+
+if(
+mapped
+){
+executions.push(
+mapped
+);
+}
+
+}
+
+}
+
+const next =
+result.data?.result?.nextPageCursor;
+
+if(
+!next ||
+next ===
+cursor
+){
+break;
+}
+
+cursor =
+next;
+
+}
+
+return {
+ok:
+true,
+executions
+};
+
+}
+
+function inferOpenTimeMs(
+closedRow,
+executions
+){
+
+const closeMs =
+parseBybitTimeMs(
+closedRow.updatedTime
+);
+
+const symbol =
+stripSymbolSuffix(
+closedRow.symbol
+).toUpperCase();
+
+const qty =
+Number(
+closedRow.closedSize
+) ||
+Number(
+closedRow.qty
+) ||
+0;
+
+if(
+!closeMs ||
+!symbol ||
+qty <=
+0
+){
+return null;
+}
+
+const closeSide =
+String(
+closedRow.side ||
+""
+);
+const openSide =
+closeSide ===
+"Buy"
+? "Sell"
+: "Buy";
+
+const lookbackMs =
+90 *
+24 *
+60 *
+60 *
+1000;
+
+const symExecs =
+executions
+.filter(
+ex=>
+ex.symbol ===
+symbol &&
+ex.execTimeMs <=
+closeMs &&
+ex.execTimeMs >=
+closeMs -
+lookbackMs
+)
+.sort(
+(
+a,
+b
+)=>
+b.execTimeMs -
+a.execTimeMs
+);
+
+let need =
+qty;
+let openMs =
+null;
+
+for(
+const ex of
+symExecs
+){
+
+if(
+ex.side !==
+openSide
+){
+continue;
+}
+
+if(
+ex.execQty <=
+0
+){
+continue;
+}
+
+openMs =
+ex.execTimeMs;
+need -=
+ex.execQty;
+
+if(
+need <=
+1e-8
+){
+break;
+}
+
+}
+
+return openMs;
+
+}
+
+function weightedAvgPrice(
+fills
+){
+
+let sumQty =
+0;
+let sumVal =
+0;
+
+for(
+const fill of
+fills
+){
+
+const qty =
+Number(
+fill.execQty
+) ||
+0;
+const price =
+Number(
+fill.execPrice
+) ||
+0;
+
+if(
+qty <=
+0 ||
+price <=
+0
+){
+continue;
+}
+
+sumQty +=
+qty;
+sumVal +=
+qty *
+price;
+
+}
+
+return sumQty >
+0
+? sumVal /
+sumQty
+: 0;
+
+}
+
+function matchTradeExecutions(
+trade,
+allExecutions
+){
+
+const symbol =
+String(
+trade.symbol ||
+""
+).toUpperCase();
+const qty =
+Number(
+trade.qty
+) ||
+0;
+const positionSide =
+trade.side;
+const closeSide =
+positionSide ===
+"long"
+? "Sell"
+: "Buy";
+const openSide =
+positionSide ===
+"long"
+? "Buy"
+: "Sell";
+
+const closeMs =
+Number(
+trade.closeTimeMs
+);
+const openMs =
+Number(
+trade.openTimeMs
+);
+const closeOrderId =
+String(
+trade.orderId ||
+""
+);
+
+const pool =
+allExecutions
+.filter(
+ex=>
+ex.symbol ===
+symbol &&
+ex.execTimeMs <=
+closeMs +
+120000 &&
+ex.execTimeMs >=
+Math.min(
+openMs,
+closeMs
+) -
+24 *
+60 *
+60 *
+1000
+)
+.sort(
+(
+a,
+b
+)=>
+a.execTimeMs -
+b.execTimeMs
+);
+
+let exits =
+[];
+
+if(
+closeOrderId
+){
+exits =
+pool.filter(
+ex=>
+ex.side ===
+closeSide &&
+ex.orderId ===
+closeOrderId
+);
+}
+
+if(
+!exits.length
+){
+
+const candidates =
+pool
+.filter(
+ex=>
+ex.side ===
+closeSide &&
+ex.execTimeMs <=
+closeMs +
+5000
+)
+.sort(
+(
+a,
+b
+)=>
+b.execTimeMs -
+a.execTimeMs
+);
+
+let need =
+qty;
+
+if(
+need <=
+0
+){
+exits =
+candidates.filter(
+ex=>
+Math.abs(
+ex.execTimeMs -
+closeMs
+) <
+5000
+);
+}else{
+
+for(
+const ex of
+candidates
+){
+
+if(
+need <=
+1e-8
+){
+break;
+}
+
+exits.push(
+ex
+);
+need -=
+ex.execQty;
+
+}
+
+exits.reverse();
+
+}
+
+}
+
+let entries =
+[];
+
+const exitQty =
+sumExecQty(
+exits
+);
+const targetQty =
+Math.max(
+qty,
+exitQty
+);
+
+if(
+targetQty >
+0
+){
+
+entries =
+collectOpenFills(
+trade,
+pool,
+exits,
+targetQty
+);
+
+if(
+!entries.length
+){
+
+entries =
+collectOpenFills(
+trade,
+allExecutions.filter(
+ex=>
+ex.symbol ===
+symbol &&
+ex.execTimeMs <=
+closeMs +
+2000 &&
+ex.execTimeMs >=
+closeMs -
+24 *
+60 *
+60 *
+1000
+),
+exits,
+targetQty,
+{
+wide:
+true
+}
+);
+
+}
+
+}
+
+const executions =
+[
+...entries,
+...exits
+].sort(
+(
+a,
+b
+)=>
+a.execTimeMs -
+b.execTimeMs
+);
+
+const avgEntryPrice =
+weightedAvgPrice(
+entries
+) ||
+Number(
+trade.avgEntryPrice
+) ||
+0;
+const avgExitPrice =
+weightedAvgPrice(
+exits
+) ||
+Number(
+trade.avgExitPrice
+) ||
+0;
+
+return {
+entries,
+exits,
+executions,
+avgEntryPrice,
+avgExitPrice
+};
+
+}
+
+async function getTradeDiaryDetail(
+options =
+{}
+){
+
+const symbol =
+String(
+options.symbol ||
+""
+).toUpperCase();
+const openTimeMs =
+Number(
+options.openTimeMs
+);
+const closeTimeMs =
+Number(
+options.closeTimeMs
+);
+
+if(
+!symbol ||
+!Number.isFinite(
+openTimeMs
+) ||
+!Number.isFinite(
+closeTimeMs
+)
+){
+return {
+ok:
+false,
+message:
+"Некорректные параметры сделки"
+};
+}
+
+const execResult =
+await getExecutionHistory({
+startTime:
+Math.max(
+0,
+openTimeMs -
+24 *
+60 *
+60 *
+1000
+),
+endTime:
+closeTimeMs +
+60 *
+1000
+});
+
+if(
+!execResult.ok
+){
+return execResult;
+}
+
+const trade =
+{
+symbol,
+openTimeMs,
+closeTimeMs,
+side:
+options.side,
+qty:
+options.qty,
+orderId:
+options.orderId,
+avgEntryPrice:
+options.avgEntryPrice,
+avgExitPrice:
+options.avgExitPrice
+};
+
+const matched =
+matchTradeExecutions(
+trade,
+execResult.executions ||
+[]
+);
+
+return {
+ok:
+true,
+...matched
+};
+
+}
+
+function mapClosedPnlRow(
+row,
+executions =
+[]
+){
+
+if(
+!row
+){
+return null;
+}
+
+const closedPnl =
+Number(
+row.closedPnl
+);
+
+if(
+!Number.isFinite(
+closedPnl
+)
+){
+return null;
+}
+
+const cumEntryValue =
+Number(
+row.cumEntryValue
+) ||
+0;
+const openFee =
+Number(
+row.openFee
+) ||
+0;
+const closeFee =
+Number(
+row.closeFee
+) ||
+0;
+const closeTimeMs =
+parseBybitTimeMs(
+row.updatedTime
+);
+
+if(
+!closeTimeMs
+){
+return null;
+}
+
+const inferredOpen =
+inferOpenTimeMs(
+row,
+executions
+);
+const recordCreated =
+parseBybitTimeMs(
+row.createdTime
+);
+
+let openTimeMs =
+inferredOpen ||
+(
+recordCreated &&
+recordCreated <
+closeTimeMs
+? recordCreated
+: null
+);
+
+if(
+!openTimeMs
+){
+openTimeMs =
+closeTimeMs;
+}
+
+let durationMs =
+Math.max(
+0,
+closeTimeMs -
+openTimeMs
+);
+
+if(
+durationMs <
+1000 &&
+openTimeMs <
+closeTimeMs
+){
+durationMs =
+closeTimeMs -
+openTimeMs;
+}
+
+return {
+symbol:
+stripSymbolSuffix(
+row.symbol
+),
+closeTimeMs,
+openTimeMs,
+durationMs,
+pnlUsd:
+closedPnl,
+pnlPct:
+cumEntryValue >
+0
+? (
+closedPnl /
+cumEntryValue
+) *
+100
+: 0,
+commissionUsd:
+openFee +
+closeFee,
+side:
+closedPnlPositionSide(
+row.side
+),
+qty:
+Number(
+row.closedSize
+) ||
+Number(
+row.qty
+) ||
+(
+Number(
+row.avgEntryPrice
+) >
+0 &&
+Number(
+row.cumEntryValue
+) >
+0
+? Number(
+row.cumEntryValue
+) /
+Number(
+row.avgEntryPrice
+)
+: 0
+),
+avgEntryPrice:
+Number(
+row.avgEntryPrice
+) ||
+0,
+avgExitPrice:
+Number(
+row.avgExitPrice
+) ||
+0,
+orderId:
+String(
+row.orderId ||
+""
+)
+};
+
+}
+
+const BYBIT_QUERY_MAX_MS =
+7 *
+24 *
+60 *
+60 *
+1000;
+
+function chunkTimeRange(
+startMs,
+endMs,
+maxWindowMs =
+BYBIT_QUERY_MAX_MS
+){
+
+const chunks =
+[];
+
+if(
+!Number.isFinite(
+startMs
+) ||
+!Number.isFinite(
+endMs
+) ||
+endMs <
+startMs
+){
+return chunks;
+}
+
+let cursor =
+startMs;
+
+while(
+cursor <=
+endMs
+){
+
+const chunkEnd =
+Math.min(
+cursor +
+maxWindowMs -
+1,
+endMs
+);
+chunks.push({
+startMs:
+cursor,
+endMs:
+chunkEnd
+});
+cursor =
+chunkEnd +
+1;
+
+}
+
+return chunks;
+
+}
+
+function tradeHistoryKey(
+trade
+){
+
+return `${trade.symbol}-${trade.closeTimeMs}-${trade.orderId ||
+""}`;
+
+}
+
+async function fetchExecutionHistoryRange(
+startMs,
+endMs
+){
+
+if(
+startMs ==
+null ||
+endMs ==
+null
+){
+return getExecutionHistory({
+startTime:
+startMs,
+endTime:
+endMs
+});
+}
+
+const merged =
+[];
+const seen =
+new Set();
+
+for(
+const chunk of
+chunkTimeRange(
+startMs,
+endMs
+)
+){
+
+const result =
+await getExecutionHistory({
+startTime:
+chunk.startMs,
+endTime:
+chunk.endMs
+});
+
+if(
+!result.ok
+){
+
+if(
+merged.length
+){
+break;
+}
+
+return result;
+
+}
+
+for(
+const ex of
+result.executions ||
+[]
+){
+
+const key =
+executionKey(
+ex
+);
+
+if(
+seen.has(
+key
+)
+){
+continue;
+}
+
+seen.add(
+key
+);
+merged.push(
+ex
+);
+
+}
+
+}
+
+return {
+ok:
+true,
+executions:
+merged
+};
+
+}
+
+async function fetchClosedPnlPaged(
+startTime,
+endTime,
+executions
+){
+
+const trades =
+[];
+let cursor =
+"";
+
+for(
+let page =
+0;
+page <
+40;
+page++
+){
+
+const query =
+{
+category:
+"linear",
+limit:
+"100"
+};
+
+if(
+startTime !=
+null
+){
+query.startTime =
+String(
+startTime
+);
+}
+
+if(
+endTime !=
+null
+){
+query.endTime =
+String(
+endTime
+);
+}
+
+if(
+cursor
+){
+query.cursor =
+cursor;
+}
+
+const result =
+await privateGet(
+"/v5/position/closed-pnl",
+query
+);
+
+if(
+!result.ok
+){
+
+if(
+trades.length
+){
+return {
+ok:
+true,
+trades
+};
+}
+
+return result;
+
+}
+
+const list =
+result.data?.result?.list;
+
+if(
+Array.isArray(
+list
+)
+){
+
+for(
+const row of
+list
+){
+
+const mapped =
+mapClosedPnlRow(
+row,
+executions
+);
+
+if(
+mapped
+){
+trades.push(
+mapped
+);
+}
+
+}
+
+}
+
+const next =
+result.data?.result?.nextPageCursor;
+
+if(
+!next ||
+next ===
+cursor
+){
+break;
+}
+
+cursor =
+next;
+
+}
+
+return {
+ok:
+true,
+trades
+};
+
+}
+
+async function getClosedPnlHistory(
+options =
+{}
+){
+
+const startTime =
+options.startTime;
+const endTime =
+options.endTime;
+
+const execLookbackMs =
+30 *
+24 *
+60 *
+60 *
+1000;
+let execResult;
+
+if(
+startTime !=
+null
+){
+
+execResult =
+await fetchExecutionHistoryRange(
+Math.max(
+0,
+startTime -
+execLookbackMs
+),
+endTime !=
+null
+? endTime
+: Date.now()
+);
+
+}else{
+
+execResult =
+await getExecutionHistory({
+endTime
+});
+
+}
+
+const executions =
+execResult.ok &&
+Array.isArray(
+execResult.executions
+)
+? execResult.executions
+: [];
+
+if(
+startTime ==
+null ||
+endTime ==
+null ||
+endTime -
+startTime <=
+BYBIT_QUERY_MAX_MS
+){
+return fetchClosedPnlPaged(
+startTime,
+endTime,
+executions
+);
+
+}
+
+const merged =
+[];
+const seen =
+new Set();
+
+for(
+const chunk of
+chunkTimeRange(
+startTime,
+endTime
+)
+){
+
+const result =
+await fetchClosedPnlPaged(
+chunk.startMs,
+chunk.endMs,
+executions
+);
+
+if(
+!result.ok
+){
+
+if(
+merged.length
+){
+return {
+ok:
+true,
+trades:
+merged.sort(
+(
+a,
+b
+)=>
+b.closeTimeMs -
+a.closeTimeMs
+)
+};
+}
+
+return result;
+
+}
+
+for(
+const trade of
+result.trades ||
+[]
+){
+
+const key =
+tradeHistoryKey(
+trade
+);
+
+if(
+seen.has(
+key
+)
+){
+continue;
+}
+
+seen.add(
+key
+);
+merged.push(
+trade
+);
+
+}
+
+}
+
+merged.sort(
+(
+a,
+b
+)=>
+b.closeTimeMs -
+a.closeTimeMs
+);
+
+return {
+ok:
+true,
+trades:
+merged
+};
+
+}
+
 async function getPositions(){
 
 const result =
@@ -2671,5 +4202,7 @@ setPositionStop,
 placeTradeOrder,
 cancelTradeOrder,
 amendTradeOrder,
-pingBybit
+pingBybit,
+getClosedPnlHistory,
+getTradeDiaryDetail
 };

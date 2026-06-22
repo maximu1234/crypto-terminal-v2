@@ -47,7 +47,7 @@ pushUnsyncedAlerts,
 scheduleRegistryCloudSync,
 isRegistryCloudSyncPaused,
 syncAllLocalAlertsToCloud
-} from "./registry-sync.js?v=4";
+} from "./registry-sync.js?v=5";
 
 import {
 isAlertsCloudDisabled,
@@ -189,6 +189,12 @@ null
 }
 
 export function scheduleRemoteRegistrySync(){
+
+if(
+isAlertsCloudDisabled()
+){
+return;
+}
 
 if(isRegistryCloudSyncPaused()){
 return;
@@ -545,6 +551,7 @@ return;
 }
 
 if(
+isAlertsCloudDisabled() ||
 !isCloudLoggedInEffective() ||
 isRegistryCloudSyncPaused() ||
 Date.now() <
@@ -622,6 +629,7 @@ return;
 if(
 document.visibilityState ===
 "hidden" &&
+!isAlertsCloudDisabled() &&
 isCloudLoggedInEffective() &&
 !isRegistryCloudSyncPaused()
 ){
@@ -686,6 +694,13 @@ null;
 function startIosSafariVisiblePull(){
 
 if(
+isAlertsCloudDisabled()
+){
+stopIosSafariVisiblePull();
+return;
+}
+
+if(
 !IS_IOS_SAFARI ||
 iosSafariPullTimer
 ){
@@ -698,6 +713,7 @@ setInterval(
 
 if(
 iosSafariPullInFlight ||
+isAlertsCloudDisabled() ||
 !isCloudLoggedInEffective() ||
 document.visibilityState !== "visible" ||
 isAlertsPage() ||
@@ -753,6 +769,13 @@ false;
 function startVisiblePullFallback(){
 
 if(
+isAlertsCloudDisabled()
+){
+stopVisiblePullFallback();
+return;
+}
+
+if(
 visiblePullFallbackTimer
 ){
 return;
@@ -764,6 +787,7 @@ setInterval(
 
 if(
 visiblePullFallbackInFlight ||
+isAlertsCloudDisabled() ||
 !isCloudLoggedInEffective() ||
 document.visibilityState !== "visible" ||
 isAlertsPage() ||
@@ -1116,8 +1140,12 @@ err?.message || err
 );
 }
 
+if(
+!isAlertsCloudDisabled()
+){
 startIosSafariVisiblePull();
 startVisiblePullFallback();
+}
 
 }
 );

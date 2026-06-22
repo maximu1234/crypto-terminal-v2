@@ -1214,6 +1214,12 @@ return null;
 
 export async function reconcileLocalRegistryWithCloud(){
 
+if(
+isAlertsCloudDisabled()
+){
+return 0;
+}
+
 const snap =
 readAlertTokenSync();
 
@@ -1659,6 +1665,14 @@ if(
 !a.cloudSynced &&
 !a.cloudId
 ){
+if(
+isAlertsCloudDisabled()
+){
+next.push(a);
+seen.add(key);
+continue;
+}
+
 const localTs =
 Number(a.priceUpdatedAt) ||
 Number(a.createdAt) ||
@@ -1765,6 +1779,12 @@ return n;
 export async function pullRegistryFromCloudNow(
 opts = {}
 ){
+
+if(
+isAlertsCloudDisabled()
+){
+return 0;
+}
 
 if(
 isRegistryCloudSyncPaused()

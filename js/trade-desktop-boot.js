@@ -164,6 +164,15 @@ initTradeMarketEntry();
 initTradeBookPanel();
 
 const {
+initTradeDiaryNav
+} =
+await import(
+"./trade-diary-nav.js?v=3"
+);
+
+void initTradeDiaryNav();
+
+const {
 initTradeOpenPositions
 } =
 await import(

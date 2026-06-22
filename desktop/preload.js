@@ -185,6 +185,22 @@ ipcRenderer.invoke(
 "trading:pingBybit",
 payload ||
 {}
+),
+getClosedPnl:(
+payload
+)=>
+ipcRenderer.invoke(
+"trading:getClosedPnl",
+payload ||
+{}
+),
+getTradeDiaryDetail:(
+payload
+)=>
+ipcRenderer.invoke(
+"trading:getTradeDiaryDetail",
+payload ||
+{}
 )
 }
 }

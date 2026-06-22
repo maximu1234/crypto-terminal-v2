@@ -31,7 +31,9 @@ setPositionStop,
 placeTradeOrder,
 cancelTradeOrder,
 amendTradeOrder,
-pingBybit
+pingBybit,
+getClosedPnlHistory,
+getTradeDiaryDetail
 } =
 require(
 "./bybit-rest.cjs"
@@ -409,6 +411,66 @@ err
 ){
 log.warn(
 "trading:pingBybit:",
+err.message
+);
+return {
+ok:
+false,
+message:
+err.message
+};
+}
+
+}
+);
+
+ipcMain.handle(
+"trading:getClosedPnl",
+async(
+_event,
+payload
+)=>{
+
+try{
+return await getClosedPnlHistory(
+payload ||
+{}
+);
+}catch(
+err
+){
+log.warn(
+"trading:getClosedPnl:",
+err.message
+);
+return {
+ok:
+false,
+message:
+err.message
+};
+}
+
+}
+);
+
+ipcMain.handle(
+"trading:getTradeDiaryDetail",
+async(
+_event,
+payload
+)=>{
+
+try{
+return await getTradeDiaryDetail(
+payload ||
+{}
+);
+}catch(
+err
+){
+log.warn(
+"trading:getTradeDiaryDetail:",
 err.message
 );
 return {

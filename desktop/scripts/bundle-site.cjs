@@ -47,7 +47,8 @@ const COPY_DIRS =
 const NESTED_PAGES =
 [
 "alerts/index.html",
-"system/index.html"
+"system/index.html",
+"diary/index.html"
 ];
 
 function rimraf(
