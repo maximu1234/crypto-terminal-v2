@@ -1,5 +1,9 @@
 /* /trade — позиции и ордера (низ списка монет) */
 
+body.trade-page{
+--trade-block-separator:2px solid #2a2e39;
+}
+
 @media (min-width:641px){
 
 body.trade-page #list{
@@ -8,6 +12,7 @@ flex-direction:column;
 min-height:0;
 overflow:hidden;
 background:#16181f;
+border-left:var(--trade-block-separator);
 }
 
 body.trade-page #table-header{
@@ -19,8 +24,18 @@ flex:1 1 auto;
 min-height:0;
 overflow-y:auto;
 overflow-x:hidden;
-border-bottom:1px solid #3f4a5c;
+border-bottom:var(--trade-block-separator);
 box-shadow:inset 0 -10px 16px -12px rgba(0,0,0,.55);
+}
+
+body.trade-page #draw-toolbar.draw-toolbar-vertical{
+border-right:var(--trade-block-separator);
+}
+
+body.trade-page #rsi-wrap,
+body.trade-page #volume-wrap,
+body.trade-page #ao-wrap{
+border-top:var(--trade-block-separator);
 }
 
 }
@@ -32,14 +47,13 @@ height:var(--trade-book-panel-h,168px);
 min-height:120px;
 display:flex;
 flex-direction:column;
-margin-top:6px;
-border:1px solid #3f4a5c;
+margin-top:0;
+border:var(--trade-block-separator);
+border-top:none;
 border-bottom:none;
-border-radius:10px 10px 0 0;
+border-radius:0;
 background:#11151c;
-box-shadow:
-0 -10px 28px rgba(0,0,0,.42),
-inset 0 1px 0 rgba(255,255,255,.05);
+box-shadow:inset 0 1px 0 rgba(255,255,255,.04);
 }
 
 body.trade-page .trade-book-resize{
@@ -174,6 +188,30 @@ color:#6b7280;
 font-weight:500;
 }
 
+body.trade-page .trade-book-table-head .sortable{
+cursor:pointer;
+-webkit-user-select:none;
+user-select:none;
+}
+
+body.trade-page .trade-book-table-head .sortable:hover{
+color:#9ca3af;
+}
+
+body.trade-page .trade-book-table-head .sortable.is-sorted{
+color:#cbd5e1;
+}
+
+body.trade-page .trade-book-table-head .sortable.is-sorted::after{
+content:" ▾";
+font-size:10px;
+opacity:.85;
+}
+
+body.trade-page .trade-book-table-head .sortable.is-sorted.is-asc::after{
+content:" ▴";
+}
+
 body.trade-page .trade-book-table-head--positions,
 body.trade-page .trade-book-row--position{
 grid-template-columns:minmax(0,1.2fr) minmax(0,.8fr) minmax(0,.9fr) 24px;
@@ -197,47 +235,41 @@ border-top:1px solid #1f2937;
 color:#d1d5db;
 }
 
+body.trade-page .trade-book-row--position,
+body.trade-page .trade-book-row--order{
+cursor:pointer;
+-webkit-tap-highlight-color:transparent;
+}
+
 body.trade-page .trade-book-row:hover{
-background:rgba(255,255,255,.03);
+background:#171b21;
 }
 
-body.trade-page .trade-book-row--position.is-active{
-background:rgba(59,130,246,.08);
+body.trade-page .trade-book-row--position.is-active,
+body.trade-page .trade-book-row--order.is-active{
+background:#283548;
 }
 
-body.trade-page .trade-book-ticker-btn{
+body.trade-page .trade-book-ticker{
 display:flex;
 align-items:center;
 gap:0;
 min-width:0;
 flex:1 1 auto;
-margin:0;
-padding:0;
-border:none;
-background:transparent;
-font:inherit;
-line-height:inherit;
-color:inherit;
-cursor:pointer;
-text-align:left;
--webkit-tap-highlight-color:transparent;
 }
 
-body.trade-page .trade-book-ticker-btn:hover .trade-book-ticker-text{
-color:#fff;
-text-decoration:underline;
-}
-
-body.trade-page .trade-book-row--position.is-active .trade-book-ticker-text{
-color:#93c5fd;
-}
-
-body.trade-page .trade-book-ticker-text{
+body.trade-page .trade-book-ticker-text,
+body.trade-page .col-ticker{
 min-width:0;
 overflow:hidden;
 text-overflow:ellipsis;
 white-space:nowrap;
 font-weight:600;
+color:#e5e7eb;
+}
+
+body.trade-page .trade-book-row--position.is-active .trade-book-ticker-text,
+body.trade-page .trade-book-row--order.is-active .trade-book-ticker-text{
 color:#e5e7eb;
 }
 
@@ -254,15 +286,6 @@ color:#9ca3af;
 font-size:9px;
 font-weight:700;
 vertical-align:middle;
-}
-
-body.trade-page .col-ticker{
-min-width:0;
-overflow:hidden;
-text-overflow:ellipsis;
-white-space:nowrap;
-font-weight:600;
-color:#e5e7eb;
 }
 
 body.trade-page .col-pnl.is-pos{
@@ -287,6 +310,9 @@ color:#9ca3af;
 
 body.trade-page .trade-book-close{
 appearance:none;
+position:relative;
+z-index:2;
+flex-shrink:0;
 width:22px;
 height:22px;
 padding:0;

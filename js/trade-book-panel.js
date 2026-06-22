@@ -9,7 +9,7 @@ formatTradeUsdt
 import {
 getAllCachedPositions,
 syncTradePositionsCache
-} from "./trade-positions-cache.js?v=3";
+} from "./trade-positions-cache.js?v=5";
 
 const PANEL_HEIGHT_KEY =
 "trade_book_panel_height_v1";
@@ -22,6 +22,297 @@ const PANEL_MIN_H =
 
 const PANEL_MIN_COINS_BODY =
 72;
+
+const SORT_STORAGE_KEY =
+"trade_book_sort_v1";
+
+const DEFAULT_SORT =
+{
+positions:{
+key:
+"ticker",
+asc:
+true
+},
+orders:{
+key:
+"time",
+asc:
+false
+}
+};
+
+function readSortState(){
+
+try{
+const raw =
+localStorage.getItem(
+SORT_STORAGE_KEY
+);
+
+if(
+!raw
+){
+return structuredClone(
+DEFAULT_SORT
+);
+}
+
+const parsed =
+JSON.parse(
+raw
+);
+
+return {
+positions:{
+key:
+parsed?.positions?.key ||
+DEFAULT_SORT.positions.key,
+asc:
+parsed?.positions?.asc ??
+DEFAULT_SORT.positions.asc
+},
+orders:{
+key:
+parsed?.orders?.key ||
+DEFAULT_SORT.orders.key,
+asc:
+parsed?.orders?.asc ??
+DEFAULT_SORT.orders.asc
+}
+};
+
+}catch{
+return structuredClone(
+DEFAULT_SORT
+);
+}
+
+}
+
+function writeSortState(
+state
+){
+
+try{
+localStorage.setItem(
+SORT_STORAGE_KEY,
+JSON.stringify(
+state
+)
+);
+}catch{
+/* ignore */
+}
+
+}
+
+function compareBookText(
+a,
+b
+){
+
+return String(
+a ||
+""
+).localeCompare(
+String(
+b ||
+""
+),
+"ru",
+{
+sensitivity:
+"base"
+}
+);
+
+}
+
+function sortPositionRows(
+rows,
+key,
+asc
+){
+
+const sorted =
+[
+...rows
+];
+
+sorted.sort(
+(
+a,
+b
+)=>{
+
+let cmp =
+0;
+
+if(
+key ===
+"ticker"
+){
+cmp =
+compareBookText(
+normalizeBookSymbol(
+a.symbol
+),
+normalizeBookSymbol(
+b.symbol
+)
+);
+}else if(
+key ===
+"pnl"
+){
+cmp =
+(
+Number(
+a.pnl
+) ||
+0
+) -
+(
+Number(
+b.pnl
+) ||
+0
+);
+}else if(
+key ===
+"volume"
+){
+cmp =
+(
+Number(
+a.volumeUsdt
+) ||
+0
+) -
+(
+Number(
+b.volumeUsdt
+) ||
+0
+);
+}
+
+return asc
+? cmp
+: -cmp;
+
+}
+);
+
+return sorted;
+
+}
+
+function sortOrderRows(
+rows,
+key,
+asc
+){
+
+const sorted =
+[
+...rows
+];
+
+sorted.sort(
+(
+a,
+b
+)=>{
+
+let cmp =
+0;
+
+if(
+key ===
+"ticker"
+){
+cmp =
+compareBookText(
+normalizeBookSymbol(
+a.symbol
+),
+normalizeBookSymbol(
+b.symbol
+)
+);
+}else if(
+key ===
+"price"
+){
+cmp =
+(
+Number(
+a.price
+) ||
+0
+) -
+(
+Number(
+b.price
+) ||
+0
+);
+}else if(
+key ===
+"time"
+){
+cmp =
+(
+Number(
+a.createdAt
+) ||
+0
+) -
+(
+Number(
+b.createdAt
+) ||
+0
+);
+}
+
+return asc
+? cmp
+: -cmp;
+
+}
+);
+
+return sorted;
+
+}
+
+function defaultSortAsc(
+mode,
+key
+){
+
+if(
+key ===
+"ticker"
+){
+return true;
+}
+
+if(
+mode ===
+"orders" &&
+key ===
+"time"
+){
+return false;
+}
+
+return false;
+
+}
 
 function readPanelHeight(){
 
@@ -599,6 +890,479 @@ let loading =
 false;
 let activeChartSymbol =
 "";
+let lastPositionRows =
+[];
+let lastOrderRows =
+[];
+
+const sortState =
+readSortState();
+
+const positionRowNodes =
+new Map();
+const orderRowNodes =
+new Map();
+
+function requestOpenSymbol(
+symbol
+){
+
+if(
+!symbol
+){
+return;
+}
+
+window.dispatchEvent(
+new CustomEvent(
+"trade-book-open-symbol",
+{
+detail:{
+symbol
+}
+}
+)
+);
+
+}
+
+function requestClosePosition(
+symbol,
+ticker
+){
+
+if(
+!symbol
+){
+return;
+}
+
+if(
+!confirm(
+`Закрыть ${ticker} по рынку?`
+)
+){
+return;
+}
+
+void closePosition(
+symbol
+);
+
+}
+
+function wirePositionRowOpen(
+el,
+symbol
+){
+
+el.addEventListener(
+"pointerup",
+event=>{
+
+if(
+event.button !==
+0
+){
+return;
+}
+
+if(
+event.target.closest(
+".trade-book-close"
+)
+){
+return;
+}
+
+if(
+mode !==
+"positions"
+){
+return;
+}
+
+requestOpenSymbol(
+symbol
+);
+
+}
+);
+
+}
+
+function wireOrderRowOpen(
+el,
+symbol
+){
+
+el.addEventListener(
+"pointerup",
+event=>{
+
+if(
+event.button !==
+0
+){
+return;
+}
+
+if(
+mode !==
+"orders"
+){
+return;
+}
+
+requestOpenSymbol(
+symbol
+);
+
+}
+);
+
+}
+
+function reorderBookRows(
+container,
+elements
+){
+
+const desired =
+elements.filter(
+Boolean
+);
+
+if(
+!desired.length
+){
+return;
+}
+
+const current =
+[
+...container.children
+].filter(
+node=>
+node.classList?.contains(
+"trade-book-row"
+)
+);
+
+if(
+current.length !==
+desired.length
+){
+for(
+const el of desired
+){
+container.appendChild(
+el
+);
+}
+return;
+}
+
+for(
+let i =
+0;
+i <
+desired.length;
+i++
+){
+
+if(
+current[i] !==
+desired[i]
+){
+for(
+const el of desired
+){
+container.appendChild(
+el
+);
+}
+return;
+}
+
+}
+
+}
+
+function createPositionRow(
+row
+){
+
+const el =
+document.createElement(
+"div"
+);
+const active =
+normalizeBookSymbol(
+row.symbol
+) ===
+normalizeBookSymbol(
+activeChartSymbol
+);
+
+el.className =
+`trade-book-row trade-book-row--position${active ? " is-active" : ""}`;
+el.dataset.symbol =
+row.symbol;
+
+el.innerHTML =
+`
+<div class="trade-book-ticker" title="${row.ticker}">
+<span class="trade-book-fut" title="Futures">F</span>
+<span class="trade-book-ticker-text">${row.ticker}</span>
+</div>
+<span class="col-pnl ${pnlClass(row.pnl)}">${formatTradePnl(row.pnl)}</span>
+<span class="col-volume">${formatTradeUsdt(row.volumeUsdt)}</span>
+<button type="button" class="trade-book-close" title="Закрыть по рынку" aria-label="Закрыть ${row.ticker}">×</button>
+`;
+
+el.querySelector(
+".trade-book-close"
+)?.addEventListener(
+"mousedown",
+event=>{
+event.stopPropagation();
+}
+);
+
+el.querySelector(
+".trade-book-close"
+)?.addEventListener(
+"click",
+event=>{
+event.stopPropagation();
+requestClosePosition(
+row.symbol,
+row.ticker ||
+row.symbol
+);
+}
+);
+
+wirePositionRowOpen(
+el,
+row.symbol
+);
+
+return el;
+
+}
+
+function createOrderRow(
+row
+){
+
+const el =
+document.createElement(
+"div"
+);
+const active =
+normalizeBookSymbol(
+row.symbol
+) ===
+normalizeBookSymbol(
+activeChartSymbol
+);
+
+el.className =
+`trade-book-row trade-book-row--order${active ? " is-active" : ""}`;
+el.dataset.symbol =
+row.symbol;
+el.dataset.orderId =
+row.orderId;
+
+el.innerHTML =
+`
+<div class="trade-book-ticker" title="${row.ticker}">
+<span class="trade-book-fut" title="Futures">F</span>
+<span class="trade-book-ticker-text">${row.ticker}</span>
+</div>
+<span class="col-price">${row.label || "—"} · ${formatPrice(row.price)}</span>
+<span class="col-time">${formatDateTime(row.createdAt)}</span>
+`;
+
+wireOrderRowOpen(
+el,
+row.symbol
+);
+
+return el;
+
+}
+
+function updateOrderRow(
+el,
+row
+){
+
+const active =
+normalizeBookSymbol(
+row.symbol
+) ===
+normalizeBookSymbol(
+activeChartSymbol
+);
+
+el.classList.toggle(
+"is-active",
+active
+);
+
+const priceEl =
+el.querySelector(
+".col-price"
+);
+
+if(
+priceEl
+){
+const nextPrice =
+`${row.label || "—"} · ${formatPrice(row.price)}`;
+
+if(
+priceEl.textContent !==
+nextPrice
+){
+priceEl.textContent =
+nextPrice;
+}
+
+}
+
+const timeEl =
+el.querySelector(
+".col-time"
+);
+
+if(
+timeEl
+){
+const nextTime =
+formatDateTime(
+row.createdAt
+);
+
+if(
+timeEl.textContent !==
+nextTime
+){
+timeEl.textContent =
+nextTime;
+}
+
+}
+
+}
+
+function updatePositionRow(
+el,
+row
+){
+
+const active =
+normalizeBookSymbol(
+row.symbol
+) ===
+normalizeBookSymbol(
+activeChartSymbol
+);
+
+el.classList.toggle(
+"is-active",
+active
+);
+
+const pnlEl =
+el.querySelector(
+".col-pnl"
+);
+
+if(
+pnlEl
+){
+const nextPnl =
+formatTradePnl(
+row.pnl
+);
+const nextClass =
+`col-pnl ${pnlClass(row.pnl)}`.trim();
+
+if(
+pnlEl.textContent !==
+nextPnl
+){
+pnlEl.textContent =
+nextPnl;
+}
+
+if(
+pnlEl.className !==
+nextClass
+){
+pnlEl.className =
+nextClass;
+}
+
+}
+
+const volEl =
+el.querySelector(
+".col-volume"
+);
+
+if(
+volEl
+){
+const nextVol =
+formatTradeUsdt(
+row.volumeUsdt
+);
+
+if(
+volEl.textContent !==
+nextVol
+){
+volEl.textContent =
+nextVol;
+}
+
+}
+
+}
+
+function sortableHeadClass(
+key
+){
+
+const state =
+sortState[
+mode
+];
+const active =
+state.key ===
+key;
+
+return [
+"sortable",
+active
+? "is-sorted"
+: "",
+active &&
+state.asc
+? "is-asc"
+: ""
+].filter(
+Boolean
+).join(
+" "
+);
+
+}
 
 function renderTableHead(){
 
@@ -616,9 +1380,9 @@ tableHead.classList.add(
 );
 tableHead.innerHTML =
 `
-<span class="col-ticker">Тикер</span>
-<span class="col-price">Цена</span>
-<span class="col-time">Время</span>
+<span class="col-ticker ${sortableHeadClass("ticker")}" data-sort="ticker">Тикер</span>
+<span class="col-price ${sortableHeadClass("price")}" data-sort="price">Цена</span>
+<span class="col-time ${sortableHeadClass("time")}" data-sort="time">Время</span>
 `;
 return;
 }
@@ -628,9 +1392,9 @@ tableHead.classList.add(
 );
 tableHead.innerHTML =
 `
-<span class="col-ticker">Тикер</span>
-<span class="col-pnl">PnL</span>
-<span class="col-volume">Объём</span>
+<span class="col-ticker ${sortableHeadClass("ticker")}" data-sort="ticker">Тикер</span>
+<span class="col-pnl ${sortableHeadClass("pnl")}" data-sort="pnl">PnL</span>
+<span class="col-volume ${sortableHeadClass("volume")}" data-sort="volume">Объём</span>
 <span class="col-action" aria-hidden="true"></span>
 `;
 
@@ -662,6 +1426,8 @@ function renderEmpty(
 message
 ){
 
+positionRowNodes.clear();
+orderRowNodes.clear();
 rowsEl.innerHTML =
 `<p class="trade-book-empty">${message}</p>`;
 
@@ -671,8 +1437,24 @@ function renderPositions(
 rows
 ){
 
+lastPositionRows =
+Array.isArray(
+rows
+)
+? rows
+: [];
+
+const sorted =
+sortPositionRows(
+lastPositionRows,
+sortState.positions.key,
+sortState.positions.asc
+);
+
+purgeOrderRows();
+
 if(
-!rows.length
+!sorted.length
 ){
 renderEmpty(
 "Нет открытых позиций"
@@ -680,111 +1462,122 @@ renderEmpty(
 return;
 }
 
-rowsEl.innerHTML =
-rows.map(
-row=>{
-const active =
+const emptyEl =
+rowsEl.querySelector(
+".trade-book-empty"
+);
+
+if(
+emptyEl
+){
+emptyEl.remove();
+}
+
+const nextKeys =
+new Set();
+
+for(
+const row of sorted
+){
+
+const sym =
 normalizeBookSymbol(
 row.symbol
-) ===
+);
+
+if(
+!sym
+){
+continue;
+}
+
+nextKeys.add(
+sym
+);
+
+let el =
+positionRowNodes.get(
+sym
+);
+
+if(
+!el
+){
+el =
+createPositionRow(
+row
+);
+positionRowNodes.set(
+sym,
+el
+);
+rowsEl.appendChild(
+el
+);
+}else{
+updatePositionRow(
+el,
+row
+);
+}
+
+}
+
+for(
+const [
+sym,
+el
+] of positionRowNodes
+){
+
+if(
+!nextKeys.has(
+sym
+)
+){
+el.remove();
+positionRowNodes.delete(
+sym
+);
+}
+
+}
+
+reorderBookRows(
+rowsEl,
+sorted.map(
+row=>
+positionRowNodes.get(
 normalizeBookSymbol(
-activeChartSymbol
-);
-
-return `
-<div class="trade-book-row trade-book-row--position${active ? " is-active" : ""}" data-symbol="${row.symbol}">
-<button type="button" class="trade-book-ticker-btn" title="Открыть график ${row.ticker}">
-<span class="trade-book-fut" title="Futures">F</span>
-<span class="trade-book-ticker-text">${row.ticker}</span>
-</button>
-<span class="col-pnl ${pnlClass(row.pnl)}">${formatTradePnl(row.pnl)}</span>
-<span class="col-volume">${formatTradeUsdt(row.volumeUsdt)}</span>
-<button type="button" class="trade-book-close" title="Закрыть по рынку" aria-label="Закрыть ${row.ticker}">×</button>
-</div>
-`;
-}
-).join(
-""
-);
-
-rowsEl.querySelectorAll(
-".trade-book-ticker-btn"
-).forEach(
-btn=>{
-btn.addEventListener(
-"click",
-event=>{
-event.stopPropagation();
-const row =
-btn.closest(
-".trade-book-row--position"
-);
-const symbol =
-row?.dataset?.symbol;
-
-if(
-!symbol
-){
-return;
-}
-
-window.dispatchEvent(
-new CustomEvent(
-"trade-book-open-symbol",
-{
-detail:{
-symbol
-}
-}
+row.symbol
+)
+)
 )
 );
-}
-);
-}
-);
 
-rowsEl.querySelectorAll(
-".trade-book-close"
-).forEach(
-btn=>{
-btn.addEventListener(
-"click",
-event=>{
-event.stopPropagation();
-const row =
-btn.closest(
-".trade-book-row--position"
-);
-const symbol =
-row?.dataset?.symbol;
+}
 
-if(
-!symbol
+function purgeOrderRows(){
+
+for(
+const el of orderRowNodes.values()
 ){
-return;
+el.remove();
 }
 
-const ticker =
-row.querySelector(
-".trade-book-ticker-text"
-)?.textContent ||
-symbol;
+orderRowNodes.clear();
 
-if(
-!confirm(
-`Закрыть ${ticker} по рынку?`
-)
+}
+
+function purgePositionRows(){
+
+for(
+const el of positionRowNodes.values()
 ){
-return;
+el.remove();
 }
 
-void closePosition(
-symbol
-);
-}
-);
-}
-);
+positionRowNodes.clear();
 
 }
 
@@ -792,8 +1585,24 @@ function renderOrders(
 rows
 ){
 
+lastOrderRows =
+Array.isArray(
+rows
+)
+? rows
+: [];
+
+const sorted =
+sortOrderRows(
+lastOrderRows,
+sortState.orders.key,
+sortState.orders.asc
+);
+
+purgePositionRows();
+
 if(
-!rows.length
+!sorted.length
 ){
 renderEmpty(
 "Нет отложенных ордеров"
@@ -801,18 +1610,99 @@ renderEmpty(
 return;
 }
 
-rowsEl.innerHTML =
-rows.map(
-row=>
-`
-<div class="trade-book-row trade-book-row--order">
-<span class="col-ticker"><span class="trade-book-fut" title="Futures">F</span>${row.ticker}</span>
-<span class="col-price">${row.label || "—"} · ${formatPrice(row.price)}</span>
-<span class="col-time">${formatDateTime(row.createdAt)}</span>
-</div>
-`
-).join(
+const emptyEl =
+rowsEl.querySelector(
+".trade-book-empty"
+);
+
+if(
+emptyEl
+){
+emptyEl.remove();
+}
+
+const nextKeys =
+new Set();
+
+for(
+const row of sorted
+){
+
+const orderId =
+String(
+row.orderId ||
 ""
+).trim();
+
+if(
+!orderId
+){
+continue;
+}
+
+nextKeys.add(
+orderId
+);
+
+let el =
+orderRowNodes.get(
+orderId
+);
+
+if(
+!el
+){
+el =
+createOrderRow(
+row
+);
+orderRowNodes.set(
+orderId,
+el
+);
+rowsEl.appendChild(
+el
+);
+}else{
+updateOrderRow(
+el,
+row
+);
+}
+
+}
+
+for(
+const [
+orderId,
+el
+] of orderRowNodes
+){
+
+if(
+!nextKeys.has(
+orderId
+)
+){
+el.remove();
+orderRowNodes.delete(
+orderId
+);
+}
+
+}
+
+reorderBookRows(
+rowsEl,
+sorted.map(
+row=>
+orderRowNodes.get(
+String(
+row.orderId ||
+""
+).trim()
+)
+)
 );
 
 }
@@ -980,11 +1870,6 @@ result.positions ||
 setStatus(
 ""
 );
-window.dispatchEvent(
-new CustomEvent(
-"trade-book-refresh"
-)
-);
 }catch(
 err
 ){
@@ -1011,6 +1896,16 @@ next ===
 "orders"
 ? "orders"
 : "positions";
+
+if(
+mode ===
+"orders"
+){
+purgePositionRows();
+}else{
+purgeOrderRows();
+}
+
 renderTableHead();
 void refresh(
 true
@@ -1034,6 +1929,73 @@ refreshBtn.addEventListener(
 void refresh(
 false
 );
+}
+);
+
+tableHead.addEventListener(
+"click",
+event=>{
+
+const el =
+event.target.closest(
+".sortable"
+);
+
+if(
+!el
+){
+return;
+}
+
+const key =
+el.dataset.sort;
+
+if(
+!key
+){
+return;
+}
+
+const state =
+sortState[
+mode
+];
+
+if(
+state.key ===
+key
+){
+state.asc =
+!state.asc;
+}else{
+state.key =
+key;
+state.asc =
+defaultSortAsc(
+mode,
+key
+);
+}
+
+writeSortState(
+sortState
+);
+renderTableHead();
+
+if(
+mode ===
+"positions"
+){
+renderPositions(
+lastPositionRows
+);
+return;
+}
+
+renderOrders(
+lastOrderRows
+);
+
 }
 );
 
@@ -1085,6 +2047,13 @@ window.addEventListener(
 "trade-stream-positions",
 event=>{
 
+const positions =
+event.detail?.positions ||
+[];
+
+lastPositionRows =
+positions;
+
 if(
 mode !==
 "positions"
@@ -1093,8 +2062,7 @@ return;
 }
 
 renderPositions(
-event.detail?.positions ||
-[]
+positions
 );
 setStatus(
 ""
@@ -1107,6 +2075,13 @@ window.addEventListener(
 "trade-stream-orders",
 event=>{
 
+const orders =
+event.detail?.orders ||
+[];
+
+lastOrderRows =
+orders;
+
 if(
 mode !==
 "orders"
@@ -1115,11 +2090,51 @@ return;
 }
 
 renderOrders(
-event.detail?.orders ||
-[]
+orders
 );
 setStatus(
 ""
+);
+
+}
+);
+
+window.addEventListener(
+"trade-book-refresh",
+()=>{
+void refresh(
+true
+);
+}
+);
+
+window.addEventListener(
+"trade-orders-refresh",
+event=>{
+
+if(
+mode !==
+"orders"
+){
+return;
+}
+
+if(
+Array.isArray(
+event.detail?.orders
+)
+){
+renderOrders(
+event.detail.orders
+);
+setStatus(
+""
+);
+return;
+}
+
+void refresh(
+true
 );
 
 }
@@ -1158,23 +2173,13 @@ return;
 activeChartSymbol =
 sym;
 
-if(
-mode !==
-"positions" ||
-!rowsEl.querySelector(
-".trade-book-row--position"
-)
-){
-return;
-}
-
 const nextActive =
 normalizeBookSymbol(
 sym
 );
 
 rowsEl.querySelectorAll(
-".trade-book-row--position"
+".trade-book-row--position, .trade-book-row--order"
 ).forEach(
 row=>{
 const rowSym =

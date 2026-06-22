@@ -241,9 +241,22 @@ size <=
 return;
 }
 
+const existingSl =
+Number(
+position.stopLoss
+) ||
+0;
+const existingTp =
+Number(
+position.takeProfit
+) ||
+0;
+
 if(
 settings.slEnabled &&
 settings.slUsd >
+0 &&
+existingSl <=
 0
 ){
 
@@ -277,6 +290,8 @@ slPrice
 if(
 settings.tpEnabled &&
 settings.tpUsd >
+0 &&
+existingTp <=
 0
 ){
 
@@ -323,6 +338,153 @@ position
 }
 )
 );
+
+}
+
+const autoStopInflight =
+new Set();
+
+function normalizeAutoStopSymbol(
+symbol
+){
+
+return String(
+symbol ||
+""
+).replace(
+/\.P$/i,
+""
+).trim().toUpperCase();
+
+}
+
+/**
+ * Stop/limit fill и другие входы вне market-кнопок — выставить SL/TP из настроек.
+ */
+export function maybeApplyAutoStopsForNewPosition(
+symbol,
+position
+){
+
+if(
+!document.body.classList.contains(
+"trade-page"
+)
+){
+return;
+}
+
+if(
+!symbol ||
+!position
+){
+return;
+}
+
+const sym =
+normalizeAutoStopSymbol(
+symbol
+);
+
+const size =
+Number(
+position.size
+);
+
+if(
+!sym ||
+!Number.isFinite(
+size
+) ||
+size <=
+0
+){
+return;
+}
+
+const settings =
+getAutoStopSettings();
+
+if(
+!settings.slEnabled &&
+!settings.tpEnabled
+){
+return;
+}
+
+const existingSl =
+Number(
+position.stopLoss
+) ||
+0;
+const existingTp =
+Number(
+position.takeProfit
+) ||
+0;
+
+const needsSl =
+settings.slEnabled &&
+settings.slUsd >
+0 &&
+existingSl <=
+0;
+const needsTp =
+settings.tpEnabled &&
+settings.tpUsd >
+0 &&
+existingTp <=
+0;
+
+if(
+!needsSl &&
+!needsTp
+){
+return;
+}
+
+if(
+autoStopInflight.has(
+sym
+)
+){
+return;
+}
+
+autoStopInflight.add(
+sym
+);
+
+void (
+async()=>{
+
+try{
+await new Promise(
+resolve=>{
+setTimeout(
+resolve,
+200
+);
+}
+);
+
+await applyAutoStopsAfterEntry(
+symbol,
+position
+);
+}finally{
+setTimeout(
+()=>{
+autoStopInflight.delete(
+sym
+);
+},
+3000
+);
+}
+
+}
+)();
 
 }
 

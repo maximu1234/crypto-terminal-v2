@@ -51,6 +51,104 @@ new Map();
 const ordersById =
 new Map();
 
+let reconcileTimer =
+null;
+
+const RECONCILE_DEBOUNCE_MS =
+250;
+
+function isClosedPositionRow(
+row
+){
+
+if(
+!row ||
+typeof row !==
+"object"
+){
+return false;
+}
+
+if(
+"size" in
+row
+){
+
+const size =
+Number(
+row.size
+);
+
+if(
+Number.isFinite(
+size
+) &&
+size ===
+0
+){
+return true;
+}
+
+}
+
+if(
+"side" in
+row &&
+String(
+row.side
+).trim() ===
+""
+){
+return true;
+}
+
+return false;
+
+}
+
+function removePosition(
+sym
+){
+
+const had =
+positionsBySymbol.has(
+sym
+) ||
+rawPositionBySymbol.has(
+sym
+);
+
+positionsBySymbol.delete(
+sym
+);
+rawPositionBySymbol.delete(
+sym
+);
+
+return had;
+
+}
+
+function schedulePositionReconcile(){
+
+if(
+reconcileTimer
+){
+return;
+}
+
+reconcileTimer =
+setTimeout(
+()=>{
+reconcileTimer =
+null;
+void seedFromRest();
+},
+RECONCILE_DEBOUNCE_MS
+);
+
+}
+
 function normalizeSymbol(
 symbol
 ){
@@ -129,6 +227,57 @@ type:
 "orders",
 orders
 });
+
+}
+
+function removeStreamOrder(
+orderId
+){
+
+const id =
+String(
+orderId ||
+""
+).trim();
+
+if(
+!id
+){
+return;
+}
+
+if(
+ordersById.delete(
+id
+)
+){
+emitOrders();
+}
+
+}
+
+function removeStreamPosition(
+symbol
+){
+
+const sym =
+normalizeSymbol(
+symbol
+);
+
+if(
+!sym
+){
+return;
+}
+
+if(
+removePosition(
+sym
+)
+){
+emitPositions();
+}
 
 }
 
@@ -214,6 +363,25 @@ if(
 continue;
 }
 
+if(
+isClosedPositionRow(
+row
+)
+){
+
+if(
+removePosition(
+sym
+)
+){
+changed =
+true;
+}
+
+continue;
+
+}
+
 const merged =
 {
 ...(
@@ -235,17 +403,19 @@ if(
 size
 ) ||
 size ===
-0
+0 ||
+String(
+merged?.side ||
+""
+).trim() ===
+""
 ){
 
 if(
-positionsBySymbol.delete(
+removePosition(
 sym
 )
 ){
-rawPositionBySymbol.delete(
-sym
-);
 changed =
 true;
 }
@@ -269,13 +439,10 @@ if(
 ){
 
 if(
-positionsBySymbol.delete(
+removePosition(
 sym
 )
 ){
-rawPositionBySymbol.delete(
-sym
-);
 changed =
 true;
 }
@@ -323,11 +490,33 @@ rows
 
 let changed =
 false;
+let reconcile =
+false;
 
 for(
 const row of rows ||
 []
 ){
+
+const status =
+String(
+row?.orderStatus ||
+""
+);
+
+if(
+[
+"Filled",
+"Cancelled",
+"Deactivated",
+"Rejected"
+].includes(
+status
+)
+){
+reconcile =
+true;
+}
 
 const orderId =
 String(
@@ -394,6 +583,29 @@ changed
 emitOrders();
 }
 
+if(
+reconcile
+){
+schedulePositionReconcile();
+}
+
+}
+
+function applyExecutionRows(
+rows
+){
+
+if(
+!Array.isArray(
+rows
+) ||
+!rows.length
+){
+return;
+}
+
+schedulePositionReconcile();
+
 }
 
 async function seedFromRest(){
@@ -440,6 +652,17 @@ row?.symbol
 if(
 !sym
 ){
+continue;
+}
+
+if(
+isClosedPositionRow(
+row
+)
+){
+removePosition(
+sym
+);
 continue;
 }
 
@@ -553,6 +776,17 @@ null;
 function stopTradingStream(){
 
 stopSocket();
+
+if(
+reconcileTimer
+){
+clearTimeout(
+reconcileTimer
+);
+reconcileTimer =
+null;
+}
+
 positionsBySymbol.clear();
 rawPositionBySymbol.clear();
 ordersById.clear();
@@ -612,6 +846,13 @@ topic ===
 applyOrderRows(
 rows
 );
+}else if(
+topic ===
+"execution"
+){
+applyExecutionRows(
+rows
+);
 }
 
 },
@@ -636,5 +877,7 @@ setTradingStreamTarget,
 startTradingStream,
 stopTradingStream,
 seedFromRest,
-replayTradingStream
+replayTradingStream,
+removeStreamOrder,
+removeStreamPosition
 };

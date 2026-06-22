@@ -1118,7 +1118,13 @@ order.orderId
 scheduleDraw();
 window.dispatchEvent(
 new CustomEvent(
-"trade-book-refresh"
+"trade-book-refresh",
+{
+detail:{
+skipChartOrdersSync:
+true
+}
+}
 )
 );
 
@@ -1578,7 +1584,14 @@ signal
 
 window.addEventListener(
 "trade-book-refresh",
-()=>{
+event=>{
+
+if(
+event.detail?.skipChartOrdersSync
+){
+return;
+}
+
 void syncOrders(
 true
 );

@@ -23,7 +23,7 @@ initTradeMarketEntry
 
 import {
 initTradeBookPanel
-} from "./trade-book-panel.js?v=8";
+} from "./trade-book-panel.js?v=17";
 
 const TRADE_CSS =
 [
@@ -166,7 +166,7 @@ const {
 initTradeStreamBridge
 } =
 await import(
-"./trade-stream-bridge.js?v=2"
+"./trade-stream-bridge.js?v=3"
 );
 
 await initTradeStreamBridge();
@@ -225,7 +225,7 @@ const {
 initTradePositionsCache
 } =
 await import(
-"./trade-positions-cache.js?v=3"
+"./trade-positions-cache.js?v=5"
 );
 
 initTradePositionsCache();
@@ -254,7 +254,7 @@ const {
 initTradeChartOrders
 } =
 await import(
-"./trade-chart-orders.js?v=12"
+"./trade-chart-orders.js?v=13"
 );
 
 initTradeChartOrders();

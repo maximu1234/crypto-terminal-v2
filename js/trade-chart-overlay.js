@@ -4,7 +4,7 @@
 import {
 getCachedPosition,
 syncTradePositionsCache
-} from "./trade-positions-cache.js?v=3";
+} from "./trade-positions-cache.js?v=5";
 
 import {
 formatTradePnl,

@@ -293,7 +293,8 @@ op:
 "subscribe",
 args:[
 "position",
-"order"
+"order",
+"execution"
 ]
 })
 );
@@ -314,7 +315,9 @@ if(
 msg.topic ===
 "position" ||
 msg.topic ===
-"order"
+"order" ||
+msg.topic ===
+"execution"
 ){
 
 const rows =

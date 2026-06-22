@@ -7,7 +7,7 @@ createTradeChartOverlay
 
 import {
 createTradeChartOrders
-} from "./trade-chart-orders.js?v=12";
+} from "./trade-chart-orders.js?v=13";
 
 import {
 createTradePlusMenuHandler
@@ -27,7 +27,7 @@ marketMap
 
 import {
 applyAutoStopsAfterEntry
-} from "./trade-auto-stops.js?v=1";
+} from "./trade-auto-stops.js?v=2";
 
 function tradingApi(){
 

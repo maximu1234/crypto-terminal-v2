@@ -1,6 +1,10 @@
 /**
  * Кэш открытых позиций Bybit — один getPositions вместо N× getPosition на виджеты.
  */
+import {
+maybeApplyAutoStopsForNewPosition
+} from "./trade-auto-stops.js?v=2";
+
 const cacheBySymbol =
 new Map();
 
@@ -261,6 +265,13 @@ JSON.stringify(
 row
 );
 
+const isNewOpen =
+!prev &&
+Number(
+row?.size
+) >
+0;
+
 cacheBySymbol.set(
 sym,
 row
@@ -275,6 +286,17 @@ dispatchPositionUpdate(
 sym,
 row
 );
+
+if(
+isNewOpen
+){
+maybeApplyAutoStopsForNewPosition(
+row.symbol ||
+sym,
+row
+);
+}
+
 }
 
 }

@@ -42,7 +42,9 @@ const {
 setTradingStreamTarget,
 startTradingStream,
 stopTradingStream,
-replayTradingStream
+replayTradingStream,
+removeStreamOrder,
+removeStreamPosition
 } =
 require(
 "./trading-stream.cjs"
@@ -203,9 +205,22 @@ payload
 )=>{
 
 try{
-return await closePositionAtMarket(
+const result =
+await closePositionAtMarket(
 payload?.symbol
 );
+
+if(
+result?.ok !==
+false &&
+payload?.symbol
+){
+removeStreamPosition(
+payload.symbol
+);
+}
+
+return result;
 }catch(
 err
 ){
@@ -352,10 +367,23 @@ payload
 )=>{
 
 try{
-return await cancelTradeOrder(
+const result =
+await cancelTradeOrder(
 payload?.symbol,
 payload?.orderId
 );
+
+if(
+result?.ok !==
+false &&
+payload?.orderId
+){
+removeStreamOrder(
+payload.orderId
+);
+}
+
+return result;
 }catch(
 err
 ){

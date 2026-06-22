@@ -2,10 +2,13 @@
  * Desktop: Bybit private WS → renderer (positions/orders без polling).
  */
 import {
-applyTradePositionsStream
-} from "./trade-positions-cache.js?v=3";
+applyTradePositionsStream,
+syncTradePositionsCache
+} from "./trade-positions-cache.js?v=5";
 
 let unsubscribe =
+null;
+let visibilityHandler =
 null;
 
 function dispatch(
@@ -139,10 +142,40 @@ await api.replayStream?.();
 /* ignore */
 }
 
+visibilityHandler =
+()=>{
+
+if(
+document.hidden
+){
+return;
+}
+
+void syncTradePositionsCache();
+
+};
+
+document.addEventListener(
+"visibilitychange",
+visibilityHandler
+);
+
 return ()=>{
 unsubscribe?.();
 unsubscribe =
 null;
+
+if(
+visibilityHandler
+){
+document.removeEventListener(
+"visibilitychange",
+visibilityHandler
+);
+visibilityHandler =
+null;
+}
+
 };
 
 }

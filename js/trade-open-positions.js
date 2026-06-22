@@ -3,7 +3,7 @@
  */
 import {
 syncTradePositionsCache
-} from "./trade-positions-cache.js?v=3";
+} from "./trade-positions-cache.js?v=5";
 
 const openPositionSymbols =
 new Set();
