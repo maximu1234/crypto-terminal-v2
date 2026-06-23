@@ -437,35 +437,37 @@ body.terminal-page .coins-list-refresh{
 display:flex;
 align-items:center;
 justify-content:space-between;
-gap:8px;
-padding:0 12px 8px;
+gap:6px;
+padding:0 10px 8px;
 border-bottom:1px solid #1f2937;
+min-width:0;
 }
 
 body.terminal-page .coins-list-refresh-label{
-font:600 10px/1.2 system-ui,-apple-system,sans-serif;
-letter-spacing:.03em;
-text-transform:uppercase;
-color:#6b7280;
+flex:0 1 auto;
+min-width:0;
+font:500 9px/1.2 system-ui,-apple-system,sans-serif;
+letter-spacing:.02em;
+color:#fff;
 white-space:nowrap;
 }
 
 body.terminal-page .coins-list-refresh-options{
 display:inline-flex;
 align-items:center;
-gap:4px;
-flex:1 1 auto;
+gap:3px;
+flex:0 0 auto;
 justify-content:flex-end;
 }
 
 body.terminal-page .coins-list-refresh-btn{
 margin:0;
-padding:4px 8px;
+padding:3px 6px;
 border:1px solid #374151;
 border-radius:5px;
 background:#13181e;
 color:#9ca3af;
-font:600 10px/1.2 system-ui,-apple-system,sans-serif;
+font:600 9px/1.2 system-ui,-apple-system,sans-serif;
 cursor:pointer;
 white-space:nowrap;
 -webkit-tap-highlight-color:transparent;

@@ -54,8 +54,14 @@ new Map();
 let reconcileTimer =
 null;
 
+let delayedReconcileTimer =
+null;
+
 const RECONCILE_DEBOUNCE_MS =
 250;
+
+const RECONCILE_DELAYED_MS =
+450;
 
 function isClosedPositionRow(
 row
@@ -129,7 +135,130 @@ return had;
 
 }
 
-function schedulePositionReconcile(){
+function schedulePositionReconcileDelayed(){
+
+if(
+delayedReconcileTimer
+){
+clearTimeout(
+delayedReconcileTimer
+);
+}
+
+delayedReconcileTimer =
+setTimeout(
+()=>{
+delayedReconcileTimer =
+null;
+void seedFromRest();
+},
+RECONCILE_DELAYED_MS
+);
+
+}
+
+function getOpenPositionSize(
+sym
+){
+
+const raw =
+rawPositionBySymbol.get(
+sym
+);
+const mapped =
+positionsBySymbol.get(
+sym
+);
+const size =
+Number(
+raw?.size ??
+mapped?.size ??
+0
+);
+
+return Number.isFinite(
+size
+)
+? size
+: 0;
+
+}
+
+function tryRemoveClosedPositionFromExecution(
+row
+){
+
+const sym =
+normalizeSymbol(
+row?.symbol
+);
+
+if(
+!sym
+){
+return false;
+}
+
+const closedSize =
+Number(
+row?.closedSize ??
+0
+);
+
+if(
+!Number.isFinite(
+closedSize
+) ||
+closedSize <=
+0
+){
+return false;
+}
+
+const openSize =
+getOpenPositionSize(
+sym
+);
+
+if(
+openSize <=
+0 ||
+closedSize >=
+openSize -
+1e-12
+){
+return removePosition(
+sym
+);
+}
+
+return false;
+
+}
+
+function schedulePositionReconcile(
+immediate =
+false
+){
+
+if(
+immediate
+){
+
+if(
+reconcileTimer
+){
+clearTimeout(
+reconcileTimer
+);
+reconcileTimer =
+null;
+}
+
+void seedFromRest();
+return;
+
+}
 
 if(
 reconcileTimer
@@ -146,6 +275,108 @@ void seedFromRest();
 },
 RECONCILE_DEBOUNCE_MS
 );
+
+}
+
+function executionClosesPosition(
+row
+){
+
+if(
+!row ||
+typeof row !==
+"object"
+){
+return false;
+}
+
+const closedSize =
+Number(
+row.closedSize ??
+0
+);
+
+if(
+Number.isFinite(
+closedSize
+) &&
+closedSize >
+0
+){
+return true;
+}
+
+const stopOrderType =
+String(
+row.stopOrderType ||
+""
+).trim();
+
+if(
+stopOrderType ===
+"StopLoss" ||
+stopOrderType ===
+"TakeProfit" ||
+stopOrderType ===
+"TrailingStop" ||
+stopOrderType ===
+"Stop"
+){
+return true;
+}
+
+const execPnl =
+row.execPnl;
+
+if(
+execPnl !=
+null &&
+String(
+execPnl
+).trim() !==
+""
+){
+const closedSize =
+Number(
+row?.closedSize ??
+0
+);
+
+if(
+Number.isFinite(
+closedSize
+) &&
+closedSize >
+0
+){
+return true;
+}
+
+}
+
+const reduceOnly =
+row.reduceOnly ===
+true ||
+row.reduceOnly ===
+"true" ||
+row.reduceOnly ===
+1;
+
+const execType =
+String(
+row.execType ||
+""
+);
+
+if(
+reduceOnly &&
+execType ===
+"Trade"
+){
+return true;
+}
+
+return false;
 
 }
 
@@ -393,6 +624,25 @@ sym
 ...row
 };
 
+if(
+isClosedPositionRow(
+merged
+)
+){
+
+if(
+removePosition(
+sym
+)
+){
+changed =
+true;
+}
+
+continue;
+
+}
+
 const size =
 Number(
 merged?.size
@@ -503,6 +753,40 @@ String(
 row?.orderStatus ||
 ""
 );
+const sym =
+normalizeSymbol(
+row?.symbol
+);
+const stopOrderType =
+String(
+row?.stopOrderType ||
+""
+).trim();
+
+if(
+sym &&
+status ===
+"Filled" &&
+(
+stopOrderType ===
+"StopLoss" ||
+stopOrderType ===
+"TakeProfit" ||
+stopOrderType ===
+"TrailingStop"
+)
+){
+
+if(
+removePosition(
+sym
+)
+){
+changed =
+true;
+}
+
+}
 
 if(
 [
@@ -586,7 +870,10 @@ emitOrders();
 if(
 reconcile
 ){
-schedulePositionReconcile();
+schedulePositionReconcile(
+true
+);
+schedulePositionReconcileDelayed();
 }
 
 }
@@ -604,7 +891,46 @@ rows
 return;
 }
 
-schedulePositionReconcile();
+let changed =
+false;
+let reconcileImmediate =
+false;
+
+for(
+const row of rows
+){
+
+if(
+tryRemoveClosedPositionFromExecution(
+row
+)
+){
+changed =
+true;
+continue;
+}
+
+if(
+executionClosesPosition(
+row
+)
+){
+reconcileImmediate =
+true;
+}
+
+}
+
+if(
+changed
+){
+emitPositions();
+}
+
+schedulePositionReconcile(
+reconcileImmediate
+);
+schedulePositionReconcileDelayed();
 
 }
 
@@ -784,6 +1110,16 @@ clearTimeout(
 reconcileTimer
 );
 reconcileTimer =
+null;
+}
+
+if(
+delayedReconcileTimer
+){
+clearTimeout(
+delayedReconcileTimer
+);
+delayedReconcileTimer =
 null;
 }
 

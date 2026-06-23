@@ -6,7 +6,7 @@ createAoPaneIndicator
 } from "./indicators/ao-pane.js?v=1";
 import {
 createHorizontalVolumeIndicator
-} from "./indicators/horizontal-volume.js?v=8";
+} from "./indicators/horizontal-volume.js?v=9";
 import {
 createRsiPaneIndicator
 } from "./indicators/rsi-pane.js?v=2";

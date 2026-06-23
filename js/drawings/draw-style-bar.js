@@ -53,7 +53,7 @@ calcPositionVolumeUsd
 
 import {
 applyPositionVolumeFromDrawing
-} from "../trade-volume-presets.js?v=8";
+} from "../trade-volume-presets.js?v=9";
 
 import {
 touchShapeRevision
@@ -2396,8 +2396,17 @@ if(!styleBar){
 return;
 }
 
+const pinnedSelection =
+getDesktopEdit?.()?.isDrawingSelectionPinned?.() ??
+false;
+
 const show =
-getTool() !== "cursor" || !!getSelectedId();
+getTool() !==
+"cursor" ||
+(
+!!getSelectedId() &&
+pinnedSelection
+);
 
 styleBar.classList.toggle("hidden", !show);
 

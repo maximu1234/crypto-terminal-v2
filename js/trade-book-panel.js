@@ -23,6 +23,9 @@ const PANEL_MIN_H =
 const PANEL_MIN_COINS_BODY =
 72;
 
+const SPLIT_HANDLE_H =
+10;
+
 const SORT_STORAGE_KEY =
 "trade_book_sort_v1";
 
@@ -360,21 +363,29 @@ height
 
 }
 
-function measurePanelMaxHeight(
-listEl
+function measureCoinsListPaneMinHeight(
+coinsListPane
 ){
 
 const filter =
-document.getElementById(
-"filter-wrap"
+coinsListPane?.querySelector(
+"#filter-wrap"
+);
+const refresh =
+coinsListPane?.querySelector(
+"#coins-list-refresh"
 );
 const header =
-document.getElementById(
-"table-header"
+coinsListPane?.querySelector(
+"#table-header"
 );
-const reserved =
-(
+
+return (
 filter?.offsetHeight ||
+0
+) +
+(
+refresh?.offsetHeight ||
 0
 ) +
 (
@@ -383,10 +394,108 @@ header?.offsetHeight ||
 ) +
 PANEL_MIN_COINS_BODY;
 
+}
+
+function measurePanelMaxHeight(
+listEl,
+coinsListPane
+){
+
 return Math.max(
 PANEL_MIN_H,
 listEl.clientHeight -
-reserved
+measureCoinsListPaneMinHeight(
+coinsListPane
+) -
+SPLIT_HANDLE_H
+);
+
+}
+
+function wrapCoinsListPane(
+listEl
+){
+
+const existing =
+listEl.querySelector(
+".coins-list-pane"
+);
+
+if(
+existing
+){
+return existing;
+}
+
+const pane =
+document.createElement(
+"div"
+);
+pane.className =
+"coins-list-pane";
+
+while(
+listEl.firstChild
+){
+pane.appendChild(
+listEl.firstChild
+);
+}
+
+listEl.appendChild(
+pane
+);
+
+return pane;
+
+}
+
+function wrapCoinsTableScroll(
+coinsListPane
+){
+
+if(
+coinsListPane.querySelector(
+".coins-table-scroll"
+)
+){
+return;
+}
+
+const header =
+coinsListPane.querySelector(
+"#table-header"
+);
+const body =
+coinsListPane.querySelector(
+"#coins-body"
+);
+
+if(
+!header ||
+!body
+){
+return;
+}
+
+const scroll =
+document.createElement(
+"div"
+);
+scroll.id =
+"coins-table-scroll";
+scroll.className =
+"coins-table-scroll";
+
+header.parentNode.insertBefore(
+scroll,
+header
+);
+scroll.appendChild(
+header
+);
+scroll.appendChild(
+body
 );
 
 }
@@ -394,12 +503,14 @@ reserved
 function applyPanelHeight(
 panel,
 listEl,
+coinsListPane,
 height
 ){
 
 const maxH =
 measurePanelMaxHeight(
-listEl
+listEl,
+coinsListPane
 );
 const h =
 Math.min(
@@ -421,7 +532,9 @@ return h;
 
 function wirePanelResize(
 panel,
-listEl
+listEl,
+splitHandle,
+coinsListPane
 ){
 
 let panelHeight =
@@ -435,30 +548,7 @@ let dragStartH =
 0;
 
 const handle =
-document.createElement(
-"div"
-);
-
-handle.className =
-"trade-book-resize";
-handle.setAttribute(
-"role",
-"separator"
-);
-handle.setAttribute(
-"aria-orientation",
-"horizontal"
-);
-handle.setAttribute(
-"aria-label",
-"Высота панели позиций"
-);
-handle.tabIndex =
-0;
-
-panel.prepend(
-handle
-);
+splitHandle;
 
 function syncHeight(
 persist =
@@ -469,6 +559,7 @@ panelHeight =
 applyPanelHeight(
 panel,
 listEl,
+coinsListPane,
 panelHeight
 );
 
@@ -791,6 +882,32 @@ return num >
 
 }
 
+function isLongSide(
+side
+){
+
+return side ===
+"Buy" ||
+String(
+side ||
+""
+).toLowerCase() ===
+"long";
+
+}
+
+function positionSideClass(
+side
+){
+
+return isLongSide(
+side
+)
+? "trade-book-side--long"
+: "trade-book-side--short";
+
+}
+
 function normalizeBookSymbol(
 symbol
 ){
@@ -829,6 +946,35 @@ document.getElementById(
 return null;
 }
 
+const coinsListPane =
+wrapCoinsListPane(
+list
+);
+wrapCoinsTableScroll(
+coinsListPane
+);
+
+const splitResize =
+document.createElement(
+"div"
+);
+splitResize.className =
+"trade-book-split-resize";
+splitResize.setAttribute(
+"role",
+"separator"
+);
+splitResize.setAttribute(
+"aria-orientation",
+"horizontal"
+);
+splitResize.setAttribute(
+"aria-label",
+"Высота панели позиций"
+);
+splitResize.tabIndex =
+0;
+
 const panel =
 document.createElement(
 "section"
@@ -847,18 +993,35 @@ panel.innerHTML =
 </select>
 <button type="button" class="trade-book-refresh" title="Обновить">↻</button>
 </div>
+<div class="trade-book-table-scroll" data-role="table-scroll">
 <div class="trade-book-table-head" data-role="table-head"></div>
 <div class="trade-book-rows" data-role="rows"></div>
+</div>
+<div class="trade-book-positions-total" data-role="positions-total" hidden>
+<div class="trade-book-total-row">
+<span class="trade-book-total-spacer" aria-hidden="true"></span>
+<div class="trade-book-trail">
+<span class="col-pnl" data-role="positions-total-pnl"></span>
+<span class="trade-book-total-spacer" aria-hidden="true"></span>
+<span class="trade-book-total-action" aria-hidden="true"></span>
+</div>
+</div>
+</div>
 <p class="trade-book-status" data-role="status" aria-live="polite"></p>
 `;
 
+list.appendChild(
+splitResize
+);
 list.appendChild(
 panel
 );
 
 wirePanelResize(
 panel,
-list
+list,
+splitResize,
+coinsListPane
 );
 
 const api =
@@ -878,6 +1041,14 @@ panel.querySelector(
 const rowsEl =
 panel.querySelector(
 '[data-role="rows"]'
+);
+const positionsTotalEl =
+panel.querySelector(
+'[data-role="positions-total"]'
+);
+const positionsTotalPnlEl =
+panel.querySelector(
+'[data-role="positions-total-pnl"]'
 );
 const statusEl =
 panel.querySelector(
@@ -1113,12 +1284,14 @@ row.symbol;
 el.innerHTML =
 `
 <div class="trade-book-ticker" title="${row.ticker}">
-<span class="trade-book-fut" title="Futures">F</span>
+<span class="trade-book-side ${positionSideClass(row.side)}" aria-hidden="true"></span>
 <span class="trade-book-ticker-text">${row.ticker}</span>
 </div>
+<div class="trade-book-trail">
 <span class="col-pnl ${pnlClass(row.pnl)}">${formatTradePnl(row.pnl)}</span>
 <span class="col-volume">${formatTradeUsdt(row.volumeUsdt)}</span>
 <button type="button" class="trade-book-close" title="Закрыть по рынку" aria-label="Закрыть ${row.ticker}">×</button>
+</div>
 `;
 
 el.querySelector(
@@ -1179,11 +1352,12 @@ row.orderId;
 el.innerHTML =
 `
 <div class="trade-book-ticker" title="${row.ticker}">
-<span class="trade-book-fut" title="Futures">F</span>
 <span class="trade-book-ticker-text">${row.ticker}</span>
 </div>
+<div class="trade-book-trail trade-book-trail--orders">
 <span class="col-price">${row.label || "—"} · ${formatPrice(row.price)}</span>
 <span class="col-time">${formatDateTime(row.createdAt)}</span>
+</div>
 `;
 
 wireOrderRowOpen(
@@ -1276,6 +1450,27 @@ el.classList.toggle(
 "is-active",
 active
 );
+
+const sideEl =
+el.querySelector(
+".trade-book-side"
+);
+
+if(
+sideEl
+){
+const nextSideClass =
+`trade-book-side ${positionSideClass(row.side)}`.trim();
+
+if(
+sideEl.className !==
+nextSideClass
+){
+sideEl.className =
+nextSideClass;
+}
+
+}
 
 const pnlEl =
 el.querySelector(
@@ -1381,8 +1576,10 @@ tableHead.classList.add(
 tableHead.innerHTML =
 `
 <span class="col-ticker ${sortableHeadClass("ticker")}" data-sort="ticker">Тикер</span>
+<div class="trade-book-trail trade-book-trail--orders">
 <span class="col-price ${sortableHeadClass("price")}" data-sort="price">Цена</span>
 <span class="col-time ${sortableHeadClass("time")}" data-sort="time">Время</span>
+</div>
 `;
 return;
 }
@@ -1393,9 +1590,11 @@ tableHead.classList.add(
 tableHead.innerHTML =
 `
 <span class="col-ticker ${sortableHeadClass("ticker")}" data-sort="ticker">Тикер</span>
+<div class="trade-book-trail">
 <span class="col-pnl ${sortableHeadClass("pnl")}" data-sort="pnl">PnL</span>
 <span class="col-volume ${sortableHeadClass("volume")}" data-sort="volume">Объём</span>
 <span class="col-action" aria-hidden="true"></span>
+</div>
 `;
 
 }
@@ -1428,8 +1627,98 @@ message
 
 positionRowNodes.clear();
 orderRowNodes.clear();
+hidePositionsTotal();
 rowsEl.innerHTML =
 `<p class="trade-book-empty">${message}</p>`;
+
+}
+
+function sumPositionsPnl(
+rows
+){
+
+let total =
+0;
+let has =
+false;
+
+for(
+const row of rows ||
+[]
+){
+
+const num =
+Number(
+row?.pnl
+);
+
+if(
+!Number.isFinite(
+num
+)
+){
+continue;
+}
+
+total +=
+num;
+has =
+true;
+
+}
+
+return has
+? total
+: null;
+
+}
+
+function hidePositionsTotal(){
+
+if(
+positionsTotalEl
+){
+positionsTotalEl.hidden =
+true;
+}
+
+}
+
+function updatePositionsTotal(
+rows
+){
+
+if(
+!positionsTotalEl ||
+!positionsTotalPnlEl ||
+mode !==
+"positions"
+){
+hidePositionsTotal();
+return;
+}
+
+const total =
+sumPositionsPnl(
+rows
+);
+
+if(
+total ==
+null
+){
+hidePositionsTotal();
+return;
+}
+
+positionsTotalEl.hidden =
+false;
+positionsTotalPnlEl.textContent =
+formatTradePnl(
+total
+);
+positionsTotalPnlEl.className =
+`col-pnl ${pnlClass(total)}`.trim();
 
 }
 
@@ -1461,6 +1750,10 @@ renderEmpty(
 );
 return;
 }
+
+updatePositionsTotal(
+lastPositionRows
+);
 
 const emptyEl =
 rowsEl.querySelector(
@@ -1584,6 +1877,8 @@ positionRowNodes.clear();
 function renderOrders(
 rows
 ){
+
+hidePositionsTotal();
 
 lastOrderRows =
 Array.isArray(
@@ -1902,6 +2197,7 @@ mode ===
 "orders"
 ){
 purgePositionRows();
+hidePositionsTotal();
 }else{
 purgeOrderRows();
 }
@@ -2067,6 +2363,129 @@ positions
 setStatus(
 ""
 );
+
+}
+);
+
+window.addEventListener(
+"trade-open-positions-changed",
+()=>{
+
+if(
+mode !==
+"positions"
+){
+return;
+}
+
+const positions =
+getAllCachedPositions();
+
+lastPositionRows =
+positions;
+renderPositions(
+positions
+);
+setStatus(
+""
+);
+
+}
+);
+
+window.addEventListener(
+"trade-position-updated",
+event=>{
+
+if(
+mode !==
+"positions"
+){
+return;
+}
+
+const sym =
+normalizeBookSymbol(
+event.detail?.symbol
+);
+const pos =
+event.detail?.position;
+
+if(
+!sym
+){
+return;
+}
+
+if(
+!pos
+){
+lastPositionRows =
+lastPositionRows.filter(
+row=>
+normalizeBookSymbol(
+row.symbol
+) !==
+sym
+);
+renderPositions(
+lastPositionRows
+);
+return;
+}
+
+const index =
+lastPositionRows.findIndex(
+row=>
+normalizeBookSymbol(
+row.symbol
+) ===
+sym
+);
+
+if(
+index <
+0
+){
+return;
+}
+
+lastPositionRows[
+index
+] =
+pos;
+
+const el =
+positionRowNodes.get(
+sym
+);
+
+if(
+el
+){
+updatePositionRow(
+el,
+pos
+);
+updatePositionsTotal(
+lastPositionRows
+);
+reorderBookRows(
+rowsEl,
+sortPositionRows(
+lastPositionRows,
+sortState.positions.key,
+sortState.positions.asc
+).map(
+row=>
+positionRowNodes.get(
+normalizeBookSymbol(
+row.symbol
+)
+)
+)
+);
+}
 
 }
 );

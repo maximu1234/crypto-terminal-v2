@@ -570,7 +570,7 @@ return {
 id:
 HORIZONTAL_VOLUME_ID,
 label:
-"Горизонтальный объём",
+"Стакан",
 enable,
 disable,
 isEnabled:()=>

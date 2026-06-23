@@ -150,7 +150,7 @@ createDrawHitTester
 
 import {
 createDrawRenderer
-} from "./draw-render.js?v=8";
+} from "./draw-render.js?v=9";
 
 import {
 snapPlotToCandleWick
@@ -176,7 +176,7 @@ createDrawUndoStack
 
 import {
 createDrawDesktopSelection
-} from "./draw-edit-desktop.js?v=6";
+} from "./draw-edit-desktop.js?v=7";
 
 import {
 createDrawingsPersist
@@ -184,7 +184,7 @@ createDrawingsPersist
 
 import {
 createDrawStyleBar
-} from "./draw-style-bar.js?v=11";
+} from "./draw-style-bar.js?v=12";
 
 import {
 createDrawAlertsChart
@@ -192,7 +192,7 @@ createDrawAlertsChart
 
 import {
 createDrawPlacement
-} from "./draw-placement.js?v=4";
+} from "./draw-placement.js?v=5";
 
 import {
 createDrawEditInteraction
@@ -4124,6 +4124,13 @@ if(
 next !==
 "cursor"
 ){
+desktopEdit?.clearDrawingSelection?.();
+}
+
+if(
+next !==
+"cursor"
+){
 clearChartRuler();
 notifyTabletChartGestureAbort();
 startPlacement(
@@ -4504,6 +4511,14 @@ redraw();
 rangeHandler =
 ()=>{
 invalidateLastCandleRightXCache();
+
+if(
+placement
+){
+refreshPlacementPreviewFromPointer();
+return;
+}
+
 redraw();
 };
 

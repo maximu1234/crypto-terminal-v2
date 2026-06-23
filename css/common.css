@@ -992,3 +992,33 @@ body.trade-page .trade-book-mode:focus,
 body.trade-page .trade-book-mode:focus-visible{
 outline:none;
 }
+
+:root{
+--site-scrollbar-size:6px;
+--site-scrollbar-track:#13181e;
+--site-scrollbar-thumb:#3d4654;
+--site-scrollbar-thumb-hover:#525d6e;
+}
+
+*{
+scrollbar-width:thin;
+scrollbar-color:var(--site-scrollbar-thumb) var(--site-scrollbar-track);
+}
+
+*::-webkit-scrollbar{
+width:var(--site-scrollbar-size);
+height:var(--site-scrollbar-size);
+}
+
+*::-webkit-scrollbar-track{
+background:var(--site-scrollbar-track);
+}
+
+*::-webkit-scrollbar-thumb{
+background:var(--site-scrollbar-thumb);
+border-radius:999px;
+}
+
+*::-webkit-scrollbar-thumb:hover{
+background:var(--site-scrollbar-thumb-hover);
+}

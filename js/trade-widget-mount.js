@@ -3,7 +3,7 @@
  */
 import {
 createTradeChartOverlay
-} from "./trade-chart-overlay.js?v=24";
+} from "./trade-chart-overlay.js?v=26";
 
 import {
 createTradeChartOrders
@@ -16,10 +16,11 @@ createTradePlusMenuHandler
 import {
 TRADE_VOLUME_SLOT_COUNT,
 TRADE_VOLUME_POSITION_APPLY_SLOT_INDEX,
+focusActiveVolumePresetInput,
 getVolumeStateForSymbol,
 saveVolumeStateForSymbol,
 getActiveTradeVolumeUsdt
-} from "./trade-volume-presets.js?v=8";
+} from "./trade-volume-presets.js?v=9";
 
 import {
 marketMap
@@ -351,6 +352,29 @@ volumeState.activeIndex =
 index;
 persist();
 refreshLabel();
+focusActiveVolumePresetInput(
+dropdown,
+index
+);
+
+}
+);
+
+input.addEventListener(
+"focus",
+()=>{
+
+if(
+volumeState.activeIndex !==
+index
+){
+volumeState.activeIndex =
+index;
+radio.checked =
+true;
+persist();
+refreshLabel();
+}
 
 }
 );
@@ -393,6 +417,16 @@ open
 ? "true"
 : "false"
 );
+
+if(
+open
+){
+syncInputs();
+focusActiveVolumePresetInput(
+dropdown,
+volumeState.activeIndex
+);
+}
 
 }
 

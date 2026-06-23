@@ -1644,7 +1644,7 @@ pauseRegistryCloudSync(
 );
 });
 
-void import("./alert-monitor.js?v=64").then(m=>{
+void import("./alert-monitor.js?v=65").then(m=>{
 m.armAlertQuietAfterDrag(
 sym,
 sid
@@ -2099,7 +2099,7 @@ sid
 );
 
 if(existing){
-void import("./alert-monitor.js?v=64").then(m=>{
+void import("./alert-monitor.js?v=65").then(m=>{
 m.notifyAlertTriggered({
 symbol: sym,
 shapeId: sid,
@@ -2349,7 +2349,7 @@ sym,
 sid
 );
 
-void import("./alert-monitor.js?v=64").then(m=>{
+void import("./alert-monitor.js?v=65").then(m=>{
 m.notifyAlertTriggered({
 symbol: sym,
 shapeId: sid,

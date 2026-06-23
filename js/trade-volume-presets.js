@@ -800,6 +800,58 @@ index;
 
 }
 
+export function focusActiveVolumePresetInput(
+dropdown,
+activeIndex =
+state.activeIndex
+){
+
+if(
+!dropdown
+){
+return;
+}
+
+const index =
+clampActiveIndex(
+activeIndex
+);
+const row =
+dropdown.querySelector(
+`[data-volume-slot="${index}"]`
+);
+const input =
+row?.querySelector(
+'input[type="number"]'
+);
+
+if(
+!input
+){
+return;
+}
+
+requestAnimationFrame(
+()=>{
+
+input.focus(
+{
+preventScroll:
+true
+}
+);
+
+try{
+input.select();
+}catch{
+/* ignore */
+}
+
+}
+);
+
+}
+
 function bindDropdown(
 wrap,
 btn,
@@ -820,6 +872,15 @@ open
 ? "true"
 : "false"
 );
+
+if(
+open
+){
+refreshVolumeUi();
+focusActiveVolumePresetInput(
+dropdown
+);
+}
 
 }
 
@@ -919,6 +980,32 @@ renderTriggerLabel(
 labelEl
 );
 dispatchChange();
+focusActiveVolumePresetInput(
+root,
+index
+);
+
+}
+);
+
+input.addEventListener(
+"focus",
+()=>{
+
+if(
+state.activeIndex !==
+index
+){
+state.activeIndex =
+index;
+radio.checked =
+true;
+persistCurrentSymbolState();
+renderTriggerLabel(
+labelEl
+);
+dispatchChange();
+}
 
 }
 );

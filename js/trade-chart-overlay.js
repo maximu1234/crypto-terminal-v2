@@ -918,12 +918,82 @@ void commitStopDrag();
 
 }
 
-function refreshEntryHoverFromPointer(){
+function isDrawPlacementActive(){
+
+const dt =
+host?.getDrawingTools?.();
+
+return !!dt?.isPlacementActive?.();
+
+}
+
+function isPointerNearEntryY(
+clientY
+){
+
+if(
+!host?.wrapEl ||
+!position ||
+!Number.isFinite(
+clientY
+)
+){
+return false;
+}
+
+const rect =
+host.wrapEl.getBoundingClientRect();
+const y =
+clientY -
+rect.top;
+const entryY =
+priceToY(
+Number(
+position.avgPrice
+)
+);
+
+if(
+entryY ==
+null ||
+!Number.isFinite(
+entryY
+)
+){
+return false;
+}
+
+return Math.abs(
+y -
+entryY
+) <=
+8;
+
+}
+
+function refreshEntryHoverFromPointer(
+clientY
+){
 
 if(
 !position ||
 dragStop
 ){
+return;
+}
+
+if(
+isDrawPlacementActive()
+){
+
+if(
+entryHover
+){
+entryHover =
+false;
+syncEntryHoverUI();
+}
+
 return;
 }
 
@@ -933,8 +1003,13 @@ badgeLayoutCache?.elementsByKind?.get(
 );
 const hovered =
 !!(
-entryZoneEl?.matches?.(
-":hover"
+(
+Number.isFinite(
+clientY
+) &&
+isPointerNearEntryY(
+clientY
+)
 ) ||
 handlesEl?.matches?.(
 ":hover"
@@ -959,6 +1034,31 @@ host?.getDrawingTools?.()?.scheduleRedraw?.();
 }
 
 }
+
+}
+
+function onWrapPointerMove(
+e
+){
+
+refreshEntryHoverFromPointer(
+e.clientY
+);
+
+}
+
+function onWrapPointerLeave(){
+
+if(
+!entryHover
+){
+return;
+}
+
+entryHover =
+false;
+syncEntryHoverUI();
+host?.getDrawingTools?.()?.scheduleRedraw?.();
 
 }
 
@@ -1765,6 +1865,14 @@ root =
 null;
 badgesEl =
 null;
+host?.wrapEl?.removeEventListener(
+"pointermove",
+onWrapPointerMove
+);
+host?.wrapEl?.removeEventListener(
+"pointerleave",
+onWrapPointerLeave
+);
 entryZoneEl =
 null;
 handlesEl =
@@ -1940,6 +2048,15 @@ handlesEl
 );
 host.wrapEl.appendChild(
 root
+);
+
+host.wrapEl.addEventListener(
+"pointermove",
+onWrapPointerMove
+);
+host.wrapEl.addEventListener(
+"pointerleave",
+onWrapPointerLeave
 );
 
 entryZoneEl.addEventListener(
@@ -2431,6 +2548,10 @@ true
 return;
 }
 
+if(
+!force
+){
+
 const cached =
 getCachedPosition(
 symbol
@@ -2445,26 +2566,12 @@ invalidateBadgeLayoutCache();
 scheduleDraw(
 true
 );
-}else{
-await syncTradePositionsCache();
-
-const bulk =
-getCachedPosition(
-symbol
-);
-
-if(
-bulk
-){
-position =
-bulk;
-invalidateBadgeLayoutCache();
-scheduleDraw(
-true
-);
 return;
 }
+
 }
+
+await syncTradePositionsCache();
 
 const result =
 await api.getPosition(
@@ -2483,19 +2590,19 @@ return;
 }
 
 if(
-!result?.ok
+result?.ok
 ){
-position =
-null;
-scheduleDraw(
-true
-);
-return;
-}
-
 position =
 result.position ||
 null;
+}else{
+position =
+getCachedPosition(
+symbol
+) ||
+null;
+}
+
 invalidateBadgeLayoutCache();
 scheduleDraw(
 true
@@ -2504,6 +2611,52 @@ true
 fetching =
 false;
 }
+
+}
+
+function applyStreamPositions(
+positions
+){
+
+if(
+!host
+){
+return;
+}
+
+const sym =
+normalizeOverlaySymbol(
+host.getSymbol?.()
+);
+const list =
+Array.isArray(
+positions
+)
+? positions
+: [];
+const row =
+list.find(
+item=>
+normalizeOverlaySymbol(
+item?.symbol
+) ===
+sym
+);
+
+if(
+row
+){
+position =
+row;
+}else{
+position =
+null;
+}
+
+invalidateBadgeLayoutCache();
+scheduleDraw(
+true
+);
 
 }
 
@@ -2654,31 +2807,23 @@ void syncPosition(
 true
 );
 
-const sym =
-normalizeOverlaySymbol(
-host.getSymbol?.()
-);
-const cached =
-getCachedPosition(
-sym
-);
-
-if(
-cached
-){
-position =
-cached;
-invalidateBadgeLayoutCache();
-scheduleDraw(
-true
-);
-}
-
 window.addEventListener(
 "trade-book-refresh",
 ()=>{
 void syncPosition(
 true
+);
+},
+{
+signal
+}
+);
+
+window.addEventListener(
+"trade-stream-positions",
+event=>{
+applyStreamPositions(
+event.detail?.positions
 );
 },
 {

@@ -153,7 +153,7 @@ left:0;
 right:0;
 height:16px;
 transform:translateY(-50%);
-pointer-events:auto;
+pointer-events:none;
 z-index:1;
 }
 

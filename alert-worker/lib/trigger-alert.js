@@ -4,6 +4,9 @@ import { executeAlertTrigger } from "./execute-trigger.js";
 /** alert key -> last price for cross detection */
 const lastPriceByAlert = new Map();
 
+/** alert key -> candle time of last baseline */
+const lastCandleTimeByAlert = new Map();
+
 export function alertKey(row) {
   return `${row.user_id}::${row.symbol}::${row.shape_id}`;
 }
@@ -13,6 +16,7 @@ export function pruneWatchState(activeAlerts) {
   for (const key of lastPriceByAlert.keys()) {
     if (!activeAlerts.has(key)) {
       lastPriceByAlert.delete(key);
+      lastCandleTimeByAlert.delete(key);
     }
   }
 
@@ -49,14 +53,25 @@ export async function evaluateAlertsForCandle(
     }
 
     let prev = lastPriceByAlert.get(key);
+    const candleTime = candle?.time;
 
     if (prev === undefined) {
       lastPriceByAlert.set(key, close);
+      if (candleTime != null) {
+        lastCandleTimeByAlert.set(key, candleTime);
+      }
       continue;
     }
 
-    if (!didCrossWithCandle(prev, candle, level)) {
+    const sameBar =
+      candleTime != null &&
+      lastCandleTimeByAlert.get(key) === candleTime;
+
+    if (!didCrossWithCandle(prev, candle, level, { sameBar })) {
       lastPriceByAlert.set(key, close);
+      if (candleTime != null) {
+        lastCandleTimeByAlert.set(key, candleTime);
+      }
       continue;
     }
 
@@ -70,6 +85,7 @@ export async function evaluateAlertsForCandle(
 
     activeAlerts.delete(key);
     lastPriceByAlert.delete(key);
+    lastCandleTimeByAlert.delete(key);
 
     if (!result.ok) {
       continue;

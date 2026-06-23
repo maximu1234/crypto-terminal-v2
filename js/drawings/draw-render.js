@@ -330,6 +330,103 @@ return null;
 
 }
 
+function resolvePreviewScreenXY(){
+
+const previewPoint =
+getPreviewPoint();
+const previewXY =
+getPreviewXY();
+const fromPoint =
+previewPoint
+? previewPointToXY(
+previewPoint
+)
+: null;
+
+if(
+fromPoint
+){
+return fromPoint;
+}
+
+if(
+previewXY &&
+Number.isFinite(
+previewXY.x
+) &&
+Number.isFinite(
+previewXY.y
+)
+){
+return previewXY;
+}
+
+return null;
+
+}
+
+function resolvePreviewAnchorPoint(
+p1ForPosition =
+null
+){
+
+const previewXY =
+getPreviewXY();
+const previewPoint =
+getPreviewPoint();
+
+if(
+previewXY
+){
+const fromXY =
+pointFromXY(
+previewXY.x,
+previewXY.y
+);
+
+if(
+fromXY
+){
+
+if(
+p1ForPosition
+){
+return {
+time: fromXY.time,
+price: p1ForPosition.price
+};
+}
+
+return fromXY;
+
+}
+
+}
+
+if(
+previewPoint &&
+Number.isFinite(
+previewPoint.time
+)
+){
+
+if(
+p1ForPosition
+){
+return {
+time: previewPoint.time,
+price: p1ForPosition.price
+};
+}
+
+return previewPoint;
+
+}
+
+return null;
+
+}
+
 function drawPlacementPreview(ctx, w, h){
 
 const placement =
@@ -392,15 +489,13 @@ if(pts.length >= 1){
 
 const p1 =
 pts[0];
-let p2 =
-defaultPositionP2(p1);
-
-if(previewPoint){
-p2 = {
-time: previewPoint.time,
-price: p1.price
-};
-}
+const p2 =
+resolvePreviewAnchorPoint(
+p1
+) ||
+defaultPositionP2(
+p1
+);
 
 const levels =
 initialPositionTpSl(
@@ -426,19 +521,18 @@ return;
 
 }
 
-if(!previewPoint){
+const previewXYPoint =
+resolvePreviewScreenXY();
+
+if(
+!previewXYPoint
+){
 return;
 }
-
-const previewXYPoint =
-previewPointToXY(
-previewPoint
-);
 
 if(
 pts.length ===
 0 &&
-previewXYPoint &&
 (
 placement.type ===
 "trendline" ||
@@ -626,11 +720,8 @@ return;
 }
 
 const previewAnchor =
-previewPoint &&
-Number.isFinite(previewPoint.time) &&
-Number.isFinite(previewPoint.price)
-? previewPoint
-: pointFromXY(
+resolvePreviewAnchorPoint() ||
+pointFromXY(
 previewXYPoint.x,
 previewXYPoint.y
 );

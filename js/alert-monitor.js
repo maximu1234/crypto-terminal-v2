@@ -13,6 +13,10 @@ subscribeKline
 const lastPriceByAlert =
 new Map();
 
+/** Время свечи, на которой зафиксирован baseline (для same-bar wick guard). */
+const lastCandleTimeByAlert =
+new Map();
+
 /** Фоновые WS на TF алертов, когда график на другом TF. */
 const backgroundAlertUnsubs =
 new Map();
@@ -147,6 +151,8 @@ baseline
 lastPriceByAlert.delete(key);
 }
 
+lastCandleTimeByAlert.delete(key);
+
 recentlyTriggered.delete(key);
 
 }
@@ -173,40 +179,78 @@ curr - level
 
 }
 
-function didCrossWithCandle(prev, candle, level){
+function didCrossWithCandle(
+prev,
+candle,
+level,
+{
+sameBar =
+false
+} = {}
+){
 
 if(
-!Number.isFinite(prev) ||
-!Number.isFinite(level) ||
+!Number.isFinite(
+prev
+) ||
+!Number.isFinite(
+level
+) ||
 !candle
 ){
 return false;
 }
 
 const close =
-Number(candle.close);
-
-if(didCrossLine(prev, close, level)){
-return true;
-}
-
-const high =
-Number(candle.high);
-const low =
-Number(candle.low);
+Number(
+candle.close
+);
 
 if(
-Number.isFinite(high) &&
-prev < level &&
-high >= level
+didCrossLine(
+prev,
+close,
+level
+)
 ){
 return true;
 }
 
 if(
-Number.isFinite(low) &&
-prev > level &&
-low <= level
+sameBar
+){
+return false;
+}
+
+const high =
+Number(
+candle.high
+);
+const low =
+Number(
+candle.low
+);
+
+if(
+Number.isFinite(
+high
+) &&
+prev <
+level &&
+high >=
+level
+){
+return true;
+}
+
+if(
+Number.isFinite(
+low
+) &&
+prev >
+level &&
+low <=
+level
 ){
 return true;
 }
@@ -236,6 +280,7 @@ for(const key of [
 
 if(!activeKeys.has(key)){
 lastPriceByAlert.delete(key);
+lastCandleTimeByAlert.delete(key);
 recentlyTriggered.delete(key);
 }
 
@@ -487,33 +532,76 @@ continue;
 }
 
 const level =
-Number(alert.price);
+Number(
+alert.price
+);
+
+const candleTime =
+candle?.time;
 
 let prev =
-lastPriceByAlert.get(key);
+lastPriceByAlert.get(
+key
+);
 
-if(prev === undefined){
+if(
+prev ===
+undefined
+){
 
 /* Новый алерт: запомнить текущую цену, не проверять пересечение сразу */
 lastPriceByAlert.set(
 key,
 close
 );
+
+if(
+candleTime !=
+null
+){
+lastCandleTimeByAlert.set(
+key,
+candleTime
+);
+}
+
 continue;
 
 }
+
+const sameBar =
+candleTime !=
+null &&
+lastCandleTimeByAlert.get(
+key
+) ===
+candleTime;
 
 if(
 !didCrossWithCandle(
 prev,
 candle,
-level
+level,
+{
+sameBar
+}
 )
 ){
 lastPriceByAlert.set(
 key,
 close
 );
+
+if(
+candleTime !=
+null
+){
+lastCandleTimeByAlert.set(
+key,
+candleTime
+);
+}
+
 continue;
 
 }

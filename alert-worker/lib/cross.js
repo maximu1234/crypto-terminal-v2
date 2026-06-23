@@ -17,7 +17,14 @@ export function didCrossLine(prev, curr, level) {
 }
 
 /** Свеча целиком (включая тень) — как на графике */
-export function didCrossWithCandle(prev, candle, level) {
+export function didCrossWithCandle(
+prev,
+candle,
+level,
+{
+sameBar = false
+} = {}
+) {
 
   if (
     !Number.isFinite(prev) ||
@@ -31,6 +38,10 @@ export function didCrossWithCandle(prev, candle, level) {
 
   if (didCrossLine(prev, close, level)) {
     return true;
+  }
+
+  if (sameBar) {
+    return false;
   }
 
   const high = Number(candle.high);

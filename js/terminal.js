@@ -80,7 +80,7 @@ disconnectKlineStream
 
 import {
 syncBackgroundAlertStreams
-} from "./alert-monitor.js?v=64";
+} from "./alert-monitor.js?v=65";
 
 import {
 initWidgetDrawings
@@ -2763,7 +2763,7 @@ if(
 isTradePage
 ){
 void import(
-"./trade-volume-presets.js?v=8"
+"./trade-volume-presets.js?v=9"
 ).then(
 ({
 switchTradeVolumeSymbol
@@ -3073,6 +3073,24 @@ Object.freeze({
 
 });
 
+const COINS_POSITION_DRAW_HOTKEYS =
+new Map(
+[
+[
+"KeyL",
+"long"
+],
+[
+"KeyS",
+"short"
+],
+[
+"KeyF",
+"fib"
+]
+]
+);
+
 function bindCoinsTfHotkeys(){
 
 window.addEventListener(
@@ -3139,6 +3157,69 @@ tf
 
 }
 
+function bindCoinsPositionDrawHotkeys(){
+
+window.addEventListener(
+"keydown",
+e=>{
+
+if(
+!isTerminalPage
+){
+return;
+}
+
+if(
+isCoinsMobile()
+){
+return;
+}
+
+if(
+e.defaultPrevented
+){
+return;
+}
+
+if(
+e.metaKey ||
+e.ctrlKey ||
+e.altKey ||
+e.shiftKey
+){
+return;
+}
+
+if(
+shouldIgnoreListKeyNav(
+e
+)
+){
+return;
+}
+
+const tool =
+COINS_POSITION_DRAW_HOTKEYS.get(
+e.code
+);
+
+if(
+!tool ||
+!drawingTools?.pickDrawTool
+){
+return;
+}
+
+e.preventDefault();
+drawingTools.pickDrawTool(
+tool
+);
+
+}
+);
+
+}
+
 document
 .querySelectorAll(".tf-btn")
 .forEach(btn=>{
@@ -3181,6 +3262,7 @@ btn.blur();
 });
 
 bindCoinsTfHotkeys();
+bindCoinsPositionDrawHotkeys();
 
 /* =========================================================
    FILTER

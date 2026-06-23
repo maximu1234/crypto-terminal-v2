@@ -4,7 +4,7 @@
 import {
 wireTradeVolumeDefaultsSettings,
 TRADE_VOLUME_SLOT_COUNT
-} from "./trade-volume-presets.js?v=8";
+} from "./trade-volume-presets.js?v=9";
 
 import {
 wireAutoStopSettings

@@ -3,7 +3,7 @@
  */
 import {
 getActiveTradeVolumeUsdt
-} from "./trade-volume-presets.js?v=8";
+} from "./trade-volume-presets.js?v=9";
 
 import {
 applyAutoStopsAfterEntry

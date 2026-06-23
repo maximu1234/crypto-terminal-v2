@@ -15,7 +15,7 @@ initTradeExchangeSettings
 
 import {
 initTradeVolumePresets
-} from "./trade-volume-presets.js?v=8";
+} from "./trade-volume-presets.js?v=9";
 
 import {
 initTradeMarketEntry
@@ -23,7 +23,7 @@ initTradeMarketEntry
 
 import {
 initTradeBookPanel
-} from "./trade-book-panel.js?v=17";
+} from "./trade-book-panel.js?v=22";
 
 const TRADE_CSS =
 [
@@ -166,7 +166,7 @@ const {
 initTradeStreamBridge
 } =
 await import(
-"./trade-stream-bridge.js?v=3"
+"./trade-stream-bridge.js?v=5"
 );
 
 await initTradeStreamBridge();
@@ -245,7 +245,7 @@ const {
 initTradeChartOverlay
 } =
 await import(
-"./trade-chart-overlay.js?v=24"
+"./trade-chart-overlay.js?v=26"
 );
 
 initTradeChartOverlay();

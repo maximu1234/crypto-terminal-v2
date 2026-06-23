@@ -2,7 +2,7 @@
 
 **Тег:** `metka-39` · **Desktop:** `desktop-v1.0.31` (DMG)
 
-**Текущий эталон отката.** Предыдущий: [MARKER_38.md](./MARKER_38.md) (`metka-38` / `desktop-v1.0.30`).
+Предыдущий: [MARKER_38.md](./MARKER_38.md) — удалён; см. [MARKER_40.md](./MARKER_40.md) (текущий).
 
 Проверено: `npm run check:all`, `npm run bundle:sync`.
 

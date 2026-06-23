@@ -316,19 +316,35 @@ x: pending.x,
 y: pending.y
 });
 
-setPreviewPoint(
+const fromXY =
 pointFromXY(
 pending.x,
 pending.y
-)
 );
 
 if(
-isPositionType(getPlacement().type) &&
-getPlacement().points.length >= 1 &&
-getPreviewPoint()
+fromXY
 ){
-getPreviewPoint().price = getPlacement().points[0].price;
+
+const prev =
+getPreviewPoint();
+
+if(
+prev
+){
+prev.time =
+fromXY.time;
+lockPositionPreviewPrice(
+prev
+);
+}else{
+setPreviewPoint(
+lockPositionPreviewPrice(
+fromXY
+)
+);
+}
+
 }
 
 redraw();
@@ -700,7 +716,31 @@ resolved.y
 
 }
 
-function applyPlacementPreviewPoint(
+function lockPositionPreviewPrice(
+point
+){
+
+if(
+!point ||
+!isPositionType(
+getPlacement()?.type
+) ||
+getPlacement().points.length <
+1
+){
+return point;
+}
+
+point.price =
+getPlacement().points[
+0
+].price;
+
+return point;
+
+}
+
+function commitPlacementPreviewPlot(
 resolved
 ){
 
@@ -709,25 +749,63 @@ x: resolved.x,
 y: resolved.y
 });
 
-setPreviewPoint(
+const next =
 pointFromResolvedPlacementPlot(
 resolved
-)
 );
 
 if(
-isPositionType(
-getPlacement().type
-) &&
-getPlacement().points.length >=
-1 &&
-getPreviewPoint()
+next
 ){
-getPreviewPoint().price =
-getPlacement().points[
-0
-].price;
+setPreviewPoint(
+lockPositionPreviewPrice(
+next
+)
+);
+return;
 }
+
+const fromXY =
+pointFromXY(
+resolved.x,
+resolved.y
+);
+
+if(
+!fromXY
+){
+return;
+}
+
+const prev =
+getPreviewPoint();
+
+if(
+prev
+){
+prev.time =
+fromXY.time;
+lockPositionPreviewPrice(
+prev
+);
+return;
+}
+
+setPreviewPoint(
+lockPositionPreviewPrice(
+fromXY
+)
+);
+
+}
+
+function applyPlacementPreviewPoint(
+resolved
+){
+
+commitPlacementPreviewPlot(
+resolved
+);
 
 }
 
