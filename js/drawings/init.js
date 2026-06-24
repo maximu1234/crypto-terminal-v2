@@ -176,15 +176,15 @@ createDrawUndoStack
 
 import {
 createDrawDesktopSelection
-} from "./draw-edit-desktop.js?v=7";
+} from "./draw-edit-desktop.js?v=8";
 
 import {
 createDrawingsPersist
-} from "./drawings-persist.js?v=4";
+} from "./drawings-persist.js?v=5";
 
 import {
 createDrawStyleBar
-} from "./draw-style-bar.js?v=13";
+} from "./draw-style-bar.js?v=14";
 
 import {
 createDrawAlertsChart
@@ -196,7 +196,7 @@ createDrawPlacement
 
 import {
 createDrawEditInteraction
-} from "./draw-edit-interaction.js?v=6";
+} from "./draw-edit-interaction.js?v=7";
 
 import {
 createDrawChartInput

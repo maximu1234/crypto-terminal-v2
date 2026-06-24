@@ -65,7 +65,7 @@ import {
 reconcileLocalDrawingsWithCloud,
 pullDrawingsFromCloudNow,
 migrateLegacyBlobOnce
-} from "./pull-reconcile.js?v=6";
+} from "./pull-reconcile.js?v=7";
 
 
 const IS_YANDEX =
@@ -1654,7 +1654,7 @@ export {
 reconcileLocalDrawingsWithCloud,
 pullDrawingsFromCloud,
 pullDrawingsFromCloudNow
-} from "./pull-reconcile.js?v=6";
+} from "./pull-reconcile.js?v=7";
 
 export function getDirtyDrawingSymbols(){
 return dirtyDrawingSymbols;
