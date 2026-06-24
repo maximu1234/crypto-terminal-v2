@@ -180,11 +180,11 @@ createDrawDesktopSelection
 
 import {
 createDrawingsPersist
-} from "./drawings-persist.js?v=3";
+} from "./drawings-persist.js?v=4";
 
 import {
 createDrawStyleBar
-} from "./draw-style-bar.js?v=12";
+} from "./draw-style-bar.js?v=13";
 
 import {
 createDrawAlertsChart
@@ -196,7 +196,7 @@ createDrawPlacement
 
 import {
 createDrawEditInteraction
-} from "./draw-edit-interaction.js?v=5";
+} from "./draw-edit-interaction.js?v=6";
 
 import {
 createDrawChartInput
@@ -5213,6 +5213,8 @@ getToolDefaults:()=>toolDefaults,
 deleteSelected,
 flushDeferredFibSettingsSync,
 getDesktopEdit:()=>desktopEdit,
+getIsTouchDrawTablet:()=>
+isTouchDrawTablet(),
 getSymbol
 });
 
@@ -6213,6 +6215,21 @@ scheduleRedraw();
 resize: resizeCanvas,
 
 destroy(){
+
+if(
+drawings.length
+){
+
+try{
+saveDrawings({
+skipUndoRecord:
+true
+});
+}catch{
+/* ignore */
+}
+
+}
 
 alive = false;
 resetDrawUndoHistory();

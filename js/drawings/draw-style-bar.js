@@ -114,9 +114,23 @@ touchShapeRevision: touchShapeRevisionDep,
 deleteSelected,
 flushDeferredFibSettingsSync,
 getDesktopEdit,
+getIsTouchDrawTablet,
 getSymbol
 } =
 deps;
+
+function isTradeDesktopApp(){
+
+return (
+typeof document !==
+"undefined" &&
+document.body.classList.contains(
+"trade-page"
+) &&
+!!globalThis.window?.cryptoTerminalDesktop?.isDesktop
+);
+
+}
 
 const touchShapeRevisionFn =
 touchShapeRevisionDep ||
@@ -2295,7 +2309,8 @@ positionRiskWrap?.classList.toggle(
 );
 positionApplyBtn?.classList.toggle(
 "hidden",
-!isPosToolbar
+!isPosToolbar ||
+!isTradeDesktopApp()
 );
 
 if(
@@ -2399,13 +2414,19 @@ return;
 const pinnedSelection =
 getDesktopEdit?.()?.isDrawingSelectionPinned?.() ??
 false;
+const touchChartSelect =
+getIsTouchDrawTablet?.() ??
+false;
 
 const show =
 getTool() !==
 "cursor" ||
 (
 !!getSelectedId() &&
-pinnedSelection
+(
+pinnedSelection ||
+touchChartSelect
+)
 );
 
 styleBar.classList.toggle("hidden", !show);
@@ -3733,6 +3754,12 @@ e=>{
 e.preventDefault();
 e.stopPropagation();
 
+if(
+!isTradeDesktopApp()
+){
+return;
+}
+
 applyPositionRiskUsd();
 
 const shape =
@@ -3761,18 +3788,12 @@ getSymbol?.() ||
 ""
 ).trim().toUpperCase();
 
-if(
-document.body.classList.contains(
-"trade-page"
-)
-){
 applyPositionVolumeFromDrawing(
 {
 symbol,
 volumeUsdt
 }
 );
-}
 
 window.dispatchEvent(
 new CustomEvent(

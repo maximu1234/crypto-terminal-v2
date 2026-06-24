@@ -1256,6 +1256,9 @@ styleBarCtl?.setFibSettingsShapeId?.(picked.id);
 
 updateStyleBar();
 redraw();
+setBlockChartClick(
+true
+);
 return;
 
 }

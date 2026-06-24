@@ -310,23 +310,75 @@ getDrawings()
 
 }
 
+function loadDrawingsFromStorageKey(
+key
+){
+
+try{
+
+const raw =
+localStorage.getItem(
+key
+);
+
+if(
+!raw
+){
+return false;
+}
+
+setDrawings(
+JSON.parse(
+raw
+).map(
+shape=>
+normalizeDrawingShape(
+shape
+)
+)
+);
+
+return true;
+
+}catch{
+
+setDrawings(
+[]
+);
+
+return false;
+
+}
+
+}
+
 function loadDrawings(){
+
+const key =
+storageKey();
 
 if(
 !canUseDrawings()
 ){
+
+if(
+!loadDrawingsFromStorageKey(
+key
+)
+){
 setDrawings(
 []
 );
+}
+
+sanitizeDrawingsForCurrentSymbol();
 setSelectedId(
 null
 );
 syncDrawUndoBaseline();
 return;
-}
 
-const key =
-storageKey();
+}
 
 try{
 
