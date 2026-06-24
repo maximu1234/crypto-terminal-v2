@@ -13,6 +13,7 @@ __dirname,
 const NAMES = [
 "cursor",
 "trendline",
+"brush",
 "arrow",
 "hray",
 "fib",

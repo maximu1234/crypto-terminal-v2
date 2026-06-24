@@ -19,6 +19,10 @@ positionEntryPrice
 } from "./position.js?v=1";
 
 import {
+ensureBrushShape
+} from "./brush.js?v=2";
+
+import {
 normalizeRectangleShape
 } from "./arrow-rect.js?v=2";
 
@@ -203,6 +207,17 @@ STROKE,
 medianLineWidth: 1,
 medianLineStyle: "dashed"
 }
+);
+
+}
+
+if(
+shape.type ===
+"brush"
+){
+
+ensureBrushShape(
+shape
 );
 
 }

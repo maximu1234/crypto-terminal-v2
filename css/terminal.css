@@ -754,6 +754,12 @@ body.terminal-page #draw-toolbar.draw-toolbar-inline .draw-btn .draw-tool-icon--
   object-fit:contain;
 }
 
+/* 2× trash asset (50×70); glyph has padding — scale up to match 20px SVG neighbors */
+.float-delete .draw-tool-icon{
+  width:24px;
+  height:34px;
+}
+
 .draw-settings-icon{
   width:20px;
   height:20px;

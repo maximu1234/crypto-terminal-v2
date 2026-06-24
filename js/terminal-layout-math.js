@@ -11,7 +11,7 @@ export const COINS_RSI_MIN_DESKTOP_PX =
 
 /** Desktop vertical draw toolbar width (css/terminal-layout.css). */
 export const COINS_DRAW_TOOLBAR_WIDTH_PX =
-46;
+49.5;
 
 /** Volume / AO: min 50% и max 200% от дефолтной высоты (как у RSI). */
 export const COINS_INDICATOR_PANE_MIN_RATIO =

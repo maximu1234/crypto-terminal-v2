@@ -1,20 +1,19 @@
 import {
 getDrawToolIconSrc
-} from "./draw-toolbar-icon-data.js?v=11";
+} from "./draw-toolbar-icon-data.js?v=29";
 
 export const DRAW_TOOLS_GUEST_MSG =
 "Рисование доступно только для залогиненных пользователей.";
 
 export function drawToolIconImg(
 name,
-className = "draw-tool-icon",
-size = 20
+className = "draw-tool-icon"
 ){
 
 const src =
 getDrawToolIconSrc(name);
 
-return `<img class="${className}" src="${src}" width="${size}" height="${size}" alt="" aria-hidden="true" decoding="async">`;
+return `<img class="${className}" src="${src}" alt="" aria-hidden="true" decoding="async">`;
 
 }
 
@@ -56,9 +55,10 @@ getDrawToolbarButtonsHtml();
 }
 
 export const CURSOR_TOOL_ICON_SVG = drawToolIconImg("cursor");
-export const ARROW_ICON_SVG = drawToolIconImg("arrow", "draw-tool-icon draw-tool-icon--xl", 41);
-export const RECTANGLE_ICON_SVG = drawToolIconImg("rectangle", "draw-tool-icon draw-tool-icon--xl", 41);
+export const ARROW_ICON_SVG = drawToolIconImg("arrow");
+export const RECTANGLE_ICON_SVG = drawToolIconImg("rectangle");
 export const TRENDLINE_ICON_SVG = drawToolIconImg("trendline");
+export const BRUSH_ICON_SVG = drawToolIconImg("brush");
 export const HRAY_ICON_SVG = drawToolIconImg("hray");
 export const FIB_ICON_SVG = drawToolIconImg("fib");
 export const CHANNEL_ICON_SVG = drawToolIconImg("channel");
@@ -122,12 +122,16 @@ ${ARROW_ICON_SVG}
 ${HRAY_ICON_SVG}
 </button>
 
-<button type="button" class="${btnClass}" data-draw-tool="fib" title="Fib Retracement — 2 клика">
-${FIB_ICON_SVG}
-</button>
-
 <button type="button" class="${btnClass}" data-draw-tool="channel" title="Parallel Channel — 3 клика">
 ${CHANNEL_ICON_SVG}
+</button>
+
+<button type="button" class="${btnClass}" data-draw-tool="brush" title="Кисть — рисуйте мышью">
+${BRUSH_ICON_SVG}
+</button>
+
+<button type="button" class="${btnClass}" data-draw-tool="fib" title="Fib Retracement — 2 клика">
+${FIB_ICON_SVG}
 </button>
 
 <button type="button" class="${btnClass}" data-draw-tool="rectangle" title="Rectangle — 2 клика">

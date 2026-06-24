@@ -4,7 +4,7 @@ DRAW_TOOLS_GUEST_MSG,
 TRASH_ICON_SVG,
 SETTINGS_ICON_SVG,
 getDrawToolbarButtonsHtml
-} from "./draw-ui-shared.js?v=23";
+} from "./draw-ui-shared.js?v=29";
 
 import {
 isCloudLoggedInEffective

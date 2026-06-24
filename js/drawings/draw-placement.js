@@ -1047,6 +1047,13 @@ redraw();
 function handleToolClick(param){
 
 if(
+getTool() ===
+"brush"
+){
+return false;
+}
+
+if(
 getTool() !== "cursor" &&
 isTouchDrawPlacement() &&
 getPlacement()

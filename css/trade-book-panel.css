@@ -17,7 +17,7 @@ border-left:var(--trade-block-separator);
 }
 
 body.terminal-page.trade-page #draw-toolbar.draw-toolbar-vertical{
-border-right:var(--trade-block-separator);
+border-right:3.5px solid #2e2e30;
 }
 
 body.terminal-page.trade-page #rsi-wrap,
@@ -103,7 +103,7 @@ background:#374151;
 }
 
 body.trade-page #draw-toolbar.draw-toolbar-vertical{
-border-right:var(--trade-block-separator);
+border-right:3.5px solid #2e2e30;
 }
 
 body.trade-page #rsi-wrap,

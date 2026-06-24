@@ -72,7 +72,7 @@ listTemplatesForType,
 mergeStyleSnapshot,
 saveNamedTemplate,
 deleteTemplateAtIndex
-} from "./draw-templates.js?v=3";
+} from "./draw-templates.js?v=4";
 
 export function createDrawStyleBar(
 deps

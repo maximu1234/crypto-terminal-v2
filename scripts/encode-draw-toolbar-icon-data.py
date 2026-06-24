@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
-"""Rebuild js/draw-toolbar-icon-data.js from assets/draw-toolbar-icons/*.png"""
+"""Rebuild js/draw-toolbar-icon-data.js from assets/draw-toolbar-icons-work/*.png"""
 from __future__ import annotations
 
 import base64
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-ICON_DIR = ROOT / "assets" / "draw-toolbar-icons"
+ICON_DIR = ROOT / "assets" / "draw-toolbar-icons-work"
 OUT = ROOT / "js" / "draw-toolbar-icon-data.js"
 
 NAMES = [
     "cursor",
     "trendline",
+    "brush",
     "arrow",
     "hray",
     "fib",

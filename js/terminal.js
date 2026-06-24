@@ -89,7 +89,7 @@ initWidgetDrawings
 import {
 mountDrawToolbar,
 mountDrawToolIcons
-} from "./draw-ui-shared.js?v=23";
+} from "./draw-ui-shared.js?v=29";
 
 import {
 initChartIndicators

@@ -3,6 +3,10 @@ distToSegment
 } from "./math.js?v=1";
 
 import {
+brushBodyDist as brushStrokeBodyDist
+} from "./brush.js?v=2";
+
+import {
 rectangleBodyDist
 } from "./arrow-rect.js?v=2";
 
@@ -116,6 +120,34 @@ shape?.type === "trendline" ||
 shape?.type === "arrow"
 ) &&
 trendlineBodyDist(px, py, shape) <= threshold
+);
+
+}
+
+function brushBodyDist(px, py, shape){
+
+if(
+shape?.type !==
+"brush"
+){
+return Infinity;
+}
+
+return brushStrokeBodyDist(
+px,
+py,
+shape,
+toXY
+);
+
+}
+
+function hitTestBrushBody(px, py, shape, threshold = 8){
+
+return (
+shape?.type ===
+"brush" &&
+brushBodyDist(px, py, shape) <= threshold
 );
 
 }
@@ -410,6 +442,8 @@ hrayLineDist,
 hitTestHrayLine,
 trendlineBodyDist,
 hitTestTrendlineBody,
+brushBodyDist,
+hitTestBrushBody,
 fibBodyDist,
 hitTestFibBody,
 channelP4XY,

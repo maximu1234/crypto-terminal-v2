@@ -18,6 +18,10 @@ drawFilledArrow,
 drawRectangleShape
 } from "./arrow-rect.js?v=2";
 
+import {
+drawBrushPath
+} from "./brush.js?v=2";
+
 /**
  * @param {object} deps
  * @returns {{ drawShape, drawFib, drawPlacementPreview, fibLevelXSpan }}
@@ -229,6 +233,19 @@ const b = toXY(shape.p2);
 if(a && b){
 drawLine(ctx, a.x, a.y, b.x, b.y, color, width, dash);
 }
+
+}
+
+if(shape.type === "brush"){
+
+drawBrushPath(
+ctx,
+shape,
+toXY,
+color,
+width,
+dash
+);
 
 }
 

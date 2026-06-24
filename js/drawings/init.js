@@ -6,7 +6,7 @@ formatDrawColor
 import {
 TRASH_ICON_SVG,
 DRAW_TOOLS_GUEST_MSG
-} from "../draw-ui-shared.js?v=23";
+} from "../draw-ui-shared.js?v=29";
 
 import {
 closeAllWidgetDrawToolsMenus
@@ -146,11 +146,11 @@ pickUi
 
 import {
 createDrawHitTester
-} from "./draw-hit.js?v=8";
+} from "./draw-hit.js?v=9";
 
 import {
 createDrawRenderer
-} from "./draw-render.js?v=9";
+} from "./draw-render.js?v=10";
 
 import {
 snapPlotToCandleWick
@@ -180,11 +180,11 @@ createDrawDesktopSelection
 
 import {
 createDrawingsPersist
-} from "./drawings-persist.js?v=5";
+} from "./drawings-persist.js?v=6";
 
 import {
 createDrawStyleBar
-} from "./draw-style-bar.js?v=14";
+} from "./draw-style-bar.js?v=15";
 
 import {
 createDrawAlertsChart
@@ -192,11 +192,15 @@ createDrawAlertsChart
 
 import {
 createDrawPlacement
-} from "./draw-placement.js?v=6";
+} from "./draw-placement.js?v=7";
+
+import {
+createBrushPlacement
+} from "./brush-placement.js?v=2";
 
 import {
 createDrawEditInteraction
-} from "./draw-edit-interaction.js?v=7";
+} from "./draw-edit-interaction.js?v=9";
 
 import {
 createDrawChartInput
@@ -208,7 +212,7 @@ createDrawPriceScale
 
 import {
 createDrawRedrawLoop
-} from "./draw-redraw-loop.js?v=5";
+} from "./draw-redraw-loop.js?v=6";
 
 export function initDrawings({
 
@@ -513,6 +517,11 @@ null;
 /** @type {ReturnType<typeof createDrawRedrawLoop> | null} */
 let redrawLoopCtl =
 null;
+/** @type {ReturnType<typeof createBrushPlacement> | null} */
+let brushPlacementCtl =
+null;
+let teardownBrushPlacement =
+()=>{};
 let getPlotWidth =
 ()=>0;
 let getPriceGutterWidth =
@@ -625,7 +634,7 @@ return `draw_defaults_${name}`;
 
 function loadToolDefaults(){
 
-["trendline", "hray", "fib", "channel", "arrow", "rectangle", "long", "short"].forEach(name=>{
+["trendline", "brush", "hray", "fib", "channel", "arrow", "rectangle", "long", "short"].forEach(name=>{
 
 try{
 
@@ -3888,7 +3897,7 @@ ctx.strokeRect(x - h - 0.5, y - h - 0.5, h * 2 + 1, h * 2 + 1);
 
 function listHandles(shape){
 
-if(shape.type === "trendline" || shape.type === "fib" || shape.type === "arrow"){
+if(shape.type === "trendline" || shape.type === "fib" || shape.type === "arrow" || shape.type === "brush"){
 
 return [
 { id: "p1", point: shape.p1 },
@@ -4057,6 +4066,7 @@ hrayLineDist,
 hitTestHrayLine,
 trendlineBodyDist,
 hitTestTrendlineBody,
+brushBodyDist,
 fibBodyDist,
 hitTestFibBody,
 channelP4Point,
@@ -4127,6 +4137,58 @@ alertsChart);
 }
 
 
+function drawBrushPlacementPreview(
+ctx,
+plotW,
+h
+){
+
+const stroke =
+brushPlacementCtl?.getBrushStroke?.();
+
+if(
+!stroke?.points?.length
+){
+return;
+}
+
+const pts =
+stroke.points;
+
+if(
+pts.length <
+2
+){
+return;
+}
+
+const style =
+baseDefaultStyle(
+"brush"
+);
+
+drawShape(
+ctx,
+{
+type: "brush",
+path: pts,
+p1: pts[
+0
+],
+p2: pts[
+pts.length -
+1
+],
+color: style.color,
+lineWidth: style.lineWidth
+},
+plotW,
+h
+);
+
+}
+
+
 redrawLoopCtl =
 createDrawRedrawLoop({
 canvas,
@@ -4146,6 +4208,7 @@ getPositionHandleScreens,
 drawPositionAnchor,
 drawShape,
 drawPlacementPreview,
+drawBrushPlacementPreview,
 drawChartRulerOverlay,
 drawRegistryPriceAlerts,
 drawPriceScaleLabels,
@@ -4353,6 +4416,12 @@ dist = channelBodyDist(px, py, d);
 
 }
 
+if(d.type === "brush"){
+
+dist = brushBodyDist(px, py, d);
+
+}
+
 if(isPositionType(d.type)){
 
 dist = positionBodyDist(px, py, d);
@@ -4390,7 +4459,9 @@ clearChartRuler();
 notifyTabletChartGestureAbort();
 
 if(
-isActive()
+isActive() &&
+next !==
+"brush"
 ){
 startPlacement(
 next
@@ -5288,6 +5359,35 @@ blockChartClick =
 v;
 }
 });
+
+brushPlacementCtl =
+createBrushPlacement({
+getAlive:()=>alive,
+isActive,
+getTool:()=>tool,
+wrapEl,
+toXY,
+pointerFromEvent,
+pointFromXY,
+desktopEdit,
+setBlockChartClick:v=>{
+blockChartClick =
+v;
+},
+makeShape,
+getDrawings:()=>drawings,
+setSelectedId:id=>{
+selectedId =
+id;
+},
+saveDrawings,
+updateStyleBar,
+redraw,
+isTouchDrawPlacement
+});
+
+teardownBrushPlacement =
+brushPlacementCtl.dispose;
 
 if(
 !useChartProbeCrosshair()
@@ -6304,6 +6404,7 @@ teardownCoarseTouchGuard?.();
 teardownTouchDrawCrosshair?.();
 teardownFinePointerClicks?.();
 teardownPlacementPreview?.();
+teardownBrushPlacement?.();
 
 window.removeEventListener("keydown", onKeyDown, true);
 window.removeEventListener("keyup", onKeyUp, true);

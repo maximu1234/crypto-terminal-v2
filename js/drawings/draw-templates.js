@@ -26,6 +26,7 @@ export const DRAW_TEMPLATES_STORAGE_KEY =
 export const TEMPLATE_ELIGIBLE_TYPES =
 Object.freeze([
 "trendline",
+"brush",
 "hray",
 "fib",
 "channel",

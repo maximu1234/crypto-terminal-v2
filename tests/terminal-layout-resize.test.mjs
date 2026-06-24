@@ -463,9 +463,12 @@ listWidth:
 COINS_LIST_MIN_PX
 }
 ),
+Math.max(
+0,
 300 -
 COINS_LIST_MIN_PX -
 COINS_DRAW_TOOLBAR_WIDTH_PX
+)
 );
 
 }

@@ -36,6 +36,7 @@ getPositionHandleScreens,
 drawPositionAnchor,
 drawShape,
 drawPlacementPreview,
+drawBrushPlacementPreview,
 drawChartRulerOverlay,
 drawRegistryPriceAlerts,
 drawPriceScaleLabels,
@@ -49,7 +50,7 @@ let redrawRaf2 = 0;
 
 function drawSelectionHandles(ctx, shape){
 
-if(shape.type === "trendline" || shape.type === "fib" || shape.type === "arrow"){
+if(shape.type === "trendline" || shape.type === "fib" || shape.type === "arrow" || shape.type === "brush"){
 
 const a = toXY(shape.p1);
 const b = toXY(shape.p2);
@@ -172,7 +173,7 @@ drawPositionAnchor(ctx, handle.x, handle.y);
 
 function shapeCoordsReady(shape){
 
-if(shape.type === "trendline" || shape.type === "fib" || shape.type === "arrow"){
+if(shape.type === "trendline" || shape.type === "fib" || shape.type === "arrow" || shape.type === "brush"){
 
 return !!(
 toXY(shape.p1) &&
@@ -314,6 +315,12 @@ console.warn("draw shape", err);
 if(getPlacement()){
 drawPlacementPreview(ctx, plotW, h);
 }
+
+drawBrushPlacementPreview?.(
+ctx,
+plotW,
+h
+);
 
 drawChartRulerOverlay(
 ctx,

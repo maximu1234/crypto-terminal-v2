@@ -30,6 +30,13 @@ import {
 touchShapeRevision
 } from "../drawings-storage.js?v=7";
 
+import {
+moveBrushHandle,
+applyBrushScreenMove,
+brushChartPointsForMove,
+brushBodyDist
+} from "./brush.js?v=2";
+
 export function createDrawEditInteraction(
 deps
 ){
@@ -217,7 +224,9 @@ handleId
 if(
 shape.type === "trendline" ||
 shape.type === "fib" ||
-shape.type === "arrow"
+shape.type === "arrow" ||
+shape.type ===
+"brush"
 ){
 
 if(
@@ -606,6 +615,20 @@ shape.p2 = { ...point };
 
 if(
 shape.type ===
+"brush"
+){
+
+moveBrushHandle(
+shape,
+handleId,
+point
+);
+return;
+
+}
+
+if(
+shape.type ===
 "rectangle"
 ){
 
@@ -857,6 +880,15 @@ return [shape.p1, shape.p2];
 
 if(
 shape.type ===
+"brush"
+){
+return brushChartPointsForMove(
+shape
+);
+}
+
+if(
+shape.type ===
 "rectangle"
 ){
 return [shape.p1, shape.p2];
@@ -1055,6 +1087,21 @@ shape.type === "arrow"
 return hitTestTrendlineBody(px, py, shape, bodyThreshold);
 }
 
+if(
+shape.type ===
+"brush"
+){
+return (
+brushBodyDist(
+px,
+py,
+shape,
+toXY
+) <=
+bodyThreshold
+);
+}
+
 if(shape.type === "fib"){
 return hitTestFibBody(px, py, shape, bodyThreshold);
 }
@@ -1106,6 +1153,21 @@ shape.type === "arrow"
 shape.p1 = pts[0];
 shape.p2 = pts[1];
 return true;
+
+}
+
+if(
+shape.type ===
+"brush"
+){
+
+return applyBrushScreenMove(
+shape,
+offsets,
+grabX,
+grabY,
+pointFromXY
+);
 
 }
 
