@@ -177,9 +177,9 @@ Object.freeze({
 "terminal-tablet-controller.js":
 5,
 "drawings.js":
-240,
+241,
 "drawings/init.js":
-120,
+121,
 "drawings/draw-edit-desktop.js":
 8,
 "drawings/draw-undo.js":

@@ -3796,13 +3796,22 @@ function drawAnchorCircle(ctx, x, y){
 
 const r =
 anchorCircleRadius();
+const touch =
+isCoarseTouchViewport();
 
 ctx.beginPath();
 ctx.arc(x, y, r, 0, Math.PI * 2);
+
+if(
+!touch
+){
 ctx.fillStyle = HANDLE_FILL;
 ctx.fill();
+}
+
 ctx.strokeStyle = HANDLE_STROKE;
-ctx.lineWidth = 1.5;
+ctx.lineWidth =
+touch ? 2 : 1.5;
 ctx.stroke();
 
 }
@@ -3860,11 +3869,19 @@ function drawAnchorSquare(ctx, x, y){
 
 const h =
 anchorSquareHalfSize();
+const touch =
+isCoarseTouchViewport();
 
+if(
+!touch
+){
 ctx.fillStyle = HANDLE_FILL;
 ctx.fillRect(x - h, y - h, h * 2, h * 2);
+}
+
 ctx.strokeStyle = HANDLE_STROKE;
-ctx.lineWidth = 1.5;
+ctx.lineWidth =
+touch ? 2 : 1.5;
 ctx.strokeRect(x - h - 0.5, y - h - 0.5, h * 2 + 1, h * 2 + 1);
 
 }
