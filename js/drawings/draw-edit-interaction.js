@@ -1209,10 +1209,10 @@ return;
 }
 
 /*
-  iPad: тап в пустоту снимает выделение; drag только с выбранного объекта.
+  Touch (iPad / phone): тап в пустоту снимает выделение; drag только с выбранного объекта.
 */
 if(
-isTouchDrawTablet()
+isCoarseTouchViewport()
 ){
 
 const hitId =
@@ -1253,6 +1253,10 @@ picked?.type ===
 ){
 styleBarCtl?.setFibSettingsShapeId?.(picked.id);
 }
+
+desktopEdit?.pinDrawingSelection?.(
+hitId
+);
 
 updateStyleBar();
 redraw();
@@ -1432,6 +1436,17 @@ picked?.type ===
 ){
 styleBarCtl?.setFibSettingsShapeId?.(
 picked.id
+);
+}
+
+if(
+isCoarseTouchViewport()
+){
+desktopEdit?.pinDrawingSelection?.(
+hitId
+);
+setBlockChartClick(
+true
 );
 }
 

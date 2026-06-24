@@ -521,6 +521,8 @@ normalizeDrawingShape
 
 }
 
+try{
+
 localStorage.setItem(
 storageKey(),
 JSON.stringify(
@@ -529,6 +531,10 @@ getDrawings()
 );
 
 touchStorageSnap();
+
+}catch{
+/* ignore quota / private mode */
+}
 
 if(
 canUseDrawings() &&

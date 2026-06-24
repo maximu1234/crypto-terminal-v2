@@ -936,55 +936,25 @@ countLocalDrawingStats();
 
 if(
 total >
-0 &&
+0
+){
+
+if(
 pending ===
 0
 ){
 
-const syms =
-purgeAllLocalDrawingsStorage();
-
-if(
-syms.size >
-0
-){
-notifyDrawings(
-[
-...syms
-],
-{
-skipWindowEvent: true
-}
-);
-
 for(
-const symbol of syms
-){
-window.dispatchEvent(
-new CustomEvent(
-"drawings-updated",
-{
-detail:{
-symbol,
-cleared: true,
-remote: true
-}
-}
+const sym of Object.keys(
+local
 )
-);
-}
-
-drawingsDebugLog(
-"[drawings] Supabase пусто — локальные рисунки сняты с графиков"
-);
-}
-
-}else if(
-total >
-0 &&
-pending >
-0
 ){
+markDrawingSymbolDirty(
+sym
+);
+}
+
+}else{
 
 const now =
 Date.now();
@@ -1011,9 +981,9 @@ sym
 );
 }
 
-scheduleDrawingsCloudPush();
-
 }
+
+scheduleDrawingsCloudPush();
 
 }
 

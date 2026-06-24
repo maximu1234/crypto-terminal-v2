@@ -3,6 +3,10 @@
  * Phase 2 split from drawings/init.js.
  */
 
+import {
+isCoarseTouchViewport
+} from "../chart-import.js?v=42";
+
 export function createDrawDesktopSelection(
 deps
 ){
@@ -472,6 +476,12 @@ e
 
 const onEditLeave =
 e=>{
+
+if(
+isCoarseTouchViewport()
+){
+return;
+}
 
 if(
 !isDesktopDrawHoverSelect() ||

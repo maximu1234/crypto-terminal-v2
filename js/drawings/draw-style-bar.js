@@ -9,6 +9,10 @@ formatDrawColor
 } from "../draw-color-palette.js?v=6";
 
 import {
+isCoarseTouchViewport
+} from "../chart-import.js?v=42";
+
+import {
 STROKE,
 DEFAULT_FIB_SPEC,
 FIB_TOOL_DEFAULTS_VERSION,
@@ -114,7 +118,6 @@ touchShapeRevision: touchShapeRevisionDep,
 deleteSelected,
 flushDeferredFibSettingsSync,
 getDesktopEdit,
-getIsTouchDrawTablet,
 getSymbol
 } =
 deps;
@@ -2415,8 +2418,7 @@ const pinnedSelection =
 getDesktopEdit?.()?.isDrawingSelectionPinned?.() ??
 false;
 const touchChartSelect =
-getIsTouchDrawTablet?.() ??
-false;
+isCoarseTouchViewport();
 
 const show =
 getTool() !==

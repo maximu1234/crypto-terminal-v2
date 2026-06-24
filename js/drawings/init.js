@@ -5213,8 +5213,6 @@ getToolDefaults:()=>toolDefaults,
 deleteSelected,
 flushDeferredFibSettingsSync,
 getDesktopEdit:()=>desktopEdit,
-getIsTouchDrawTablet:()=>
-isTouchDrawTablet(),
 getSymbol
 });
 
@@ -5678,7 +5676,7 @@ document.visibilityState ===
 ){
 refreshDrawingsOnTabWake();
 }else{
-touchStorageSnap();
+onVisibilityHidden();
 }
 
 };
@@ -5968,9 +5966,52 @@ return;
 
 resetDrawUndoHistory();
 
-persistDrawingsForSymbol(
-getSymbol()
-);
+if(
+drawings.length
+){
+
+try{
+saveDrawings({
+skipUndoRecord:
+true
+});
+}catch{
+/* ignore */
+}
+
+}
+
+void flushDrawingsCloudPush();
+
+};
+
+const onVisibilityHidden = ()=>{
+
+if(
+document.visibilityState !==
+"hidden" ||
+!alive
+){
+return;
+}
+
+touchStorageSnap();
+
+if(
+drawings.length
+){
+
+try{
+saveDrawings({
+skipUndoRecord:
+true
+});
+}catch{
+/* ignore */
+}
+
+}
+
 void flushDrawingsCloudPush();
 
 };
