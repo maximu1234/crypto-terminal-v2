@@ -2,7 +2,7 @@
 
 **Тег:** `metka-43` · **Desktop:** `desktop-v1.0.35` (DMG)
 
-**Текущий эталон отката.** Предыдущий: [MARKER_42.md](./MARKER_42.md) (`metka-42` / `desktop-v1.0.34`).
+Предыдущий: `metka-42` / `desktop-v1.0.34` (см. git tag `metka-42`).
 
 Проверено: `npm run check:all`, `npm run bundle:sync`.
 

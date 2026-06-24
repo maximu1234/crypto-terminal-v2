@@ -390,9 +390,9 @@ Object.freeze({
 "watchlist.css":
 49,
 "terminal-layout.css":
-68,
+69,
 "chart-indicators.css":
-13,
+14,
 "trade-exchange-settings.css":
 12,
 "trade-volume-presets.css":
@@ -402,7 +402,7 @@ Object.freeze({
 "trade-market-entry.css":
 2,
 "trade-book-panel.css":
-25,
+26,
 "trade-diary.css":
 14,
 "trade-diary-period.css":

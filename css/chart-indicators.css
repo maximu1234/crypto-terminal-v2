@@ -552,11 +552,11 @@ padding:0 4px;
 }
 
 body.terminal-page .coins-topbar-divider{
-width:1px;
+width:3.5px;
 align-self:stretch;
-flex:0 0 1px;
-background:#787b86;
-margin:6px 0;
+flex:0 0 3.5px;
+background:#2e2e30;
+margin:0;
 }
 
 @media (max-width:640px){

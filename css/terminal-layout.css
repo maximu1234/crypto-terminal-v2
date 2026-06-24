@@ -3,6 +3,8 @@
 body.terminal-page{
 display:block;
 overflow:hidden;
+--coins-panel-bg:#0f0f0f;
+--coins-block-separator:3.5px solid #2e2e30;
 }
 
 /* ——— Десктоп (как было: график | список) ——— */
@@ -32,7 +34,7 @@ gap:2px;
 flex:0 0 auto;
 padding:0 12px;
 margin:0;
-border-right:1px solid #787b86;
+border-right:var(--coins-block-separator);
 }
 
 body.terminal-page .coins-tf-desktop .tf-btn{
@@ -78,6 +80,8 @@ height:40px;
 padding:0 16px;
 gap:0;
 align-items:center;
+background:var(--coins-panel-bg);
+border-bottom:var(--coins-block-separator);
 }
 
 body.terminal-page #topbar.coins-topbar #current-symbol{
@@ -127,8 +131,8 @@ flex:0 0 auto;
 width:49.5px;
 box-sizing:border-box;
 padding:8px 0;
-border-right:3.5px solid #2e2e30;
-background:#0f0f0f;
+border-right:var(--coins-block-separator);
+background:var(--coins-panel-bg);
 overflow-x:hidden;
 overflow-y:auto;
 -webkit-overflow-scrolling:touch;
@@ -211,7 +215,7 @@ min-width:0;
 max-width:min(42vw, 260px);
 margin-right:0;
 padding-right:12px;
-border-right:1px solid #787b86;
+border-right:var(--coins-block-separator);
 }
 
 body.terminal-page #topbar.coins-topbar #coins-chart-flag-wrap{
@@ -323,6 +327,12 @@ color:#e5e7eb;
 
 body.terminal-page .coins-diary-link.active{
 color:#fff;
+}
+
+body.terminal-page #rsi-wrap,
+body.terminal-page #volume-wrap,
+body.terminal-page #ao-wrap{
+border-top:var(--coins-block-separator);
 }
 
 body.terminal-page #chart-wrap{
@@ -440,9 +450,16 @@ display:flex;
 flex-direction:column;
 overflow:hidden;
 min-width:0;
-border-left:1px solid #1f2937;
+background:var(--coins-panel-bg);
+border-left:var(--coins-block-separator);
 border-top:none;
 max-height:none;
+}
+
+body.terminal-page #filter-wrap,
+body.terminal-page #table-header{
+border-bottom:var(--coins-block-separator);
+background:var(--coins-panel-bg);
 }
 
 body.terminal-page #filter-wrap,
@@ -457,7 +474,7 @@ align-items:center;
 justify-content:space-between;
 gap:6px;
 padding:0 10px 8px;
-border-bottom:1px solid #1f2937;
+border-bottom:var(--coins-block-separator);
 min-width:0;
 }
 
@@ -567,8 +584,9 @@ body.terminal-page #list{
 flex:0 0 auto;
 max-height:none;
 min-height:min(55vh, 480px);
+background:var(--coins-panel-bg);
 border-left:none;
-border-top:1px solid #1f2937;
+border-top:var(--coins-block-separator);
 }
 
 body.terminal-page .coins-header-desktop{
@@ -708,7 +726,8 @@ padding:0 10px;
 gap:0;
 align-items:center;
 overflow:visible;
-border-bottom:1px solid #1f2937;
+background:var(--coins-panel-bg);
+border-bottom:var(--coins-block-separator);
 }
 
 #current-symbol{
