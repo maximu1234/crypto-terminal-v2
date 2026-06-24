@@ -49,7 +49,7 @@ isDrawingsCloudSyncPaused,
 markDrawingSymbolDirty,
 getDirtyDrawingSymbols,
 getAuthed
-} from "./sync-lifecycle.js?v=7";
+} from "./sync-lifecycle.js?v=9";
 
 /** Worker нужен в первую очередь на iPad Safari (REST там ненадёжен). */
 const IS_IOS_SAFARI =

@@ -227,13 +227,13 @@ Object.freeze({
 "drawings/draw-hit.js":
 8,
 "drawings-cloud-sync.js":
-42,
+45,
 "drawings-cloud/worker-client.js":
-7,
+8,
 "drawings-cloud/pull-reconcile.js":
-7,
+10,
 "drawings-cloud/sync-lifecycle.js":
-7,
+9,
 "drawings-tablet-input.js":
 3,
 "drawings-storage.js":

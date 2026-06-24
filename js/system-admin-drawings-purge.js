@@ -8,7 +8,7 @@ normalizeAlertWorkerBaseUrl
 
 import {
 fetchWithTimeout
-} from "./drawings-cloud/worker-client.js?v=7";
+} from "./drawings-cloud/worker-client.js?v=8";
 
 const CONFIRM_PHRASE =
 "PURGE_ALL_DRAWINGS";

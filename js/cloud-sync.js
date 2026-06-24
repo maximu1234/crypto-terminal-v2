@@ -642,7 +642,7 @@ warnAuthOnce(
 
 void tryCloudAuthRecovery();
 
-void import("./drawings-cloud-sync.js?v=42").then(
+void import("./drawings-cloud-sync.js?v=45").then(
 m=>{
 m.pauseDrawingsCloudSync?.(
 15 *
@@ -1319,7 +1319,7 @@ true;
 return;
 }
 
-void import("./drawings-cloud-sync.js?v=42").then(
+void import("./drawings-cloud-sync.js?v=45").then(
 m=>{
 m.scheduleDrawingsCloudPush();
 }
@@ -1340,7 +1340,7 @@ return Promise.resolve();
 pendingDrawingsCloudPush =
 false;
 
-return import("./drawings-cloud-sync.js?v=42").then(
+return import("./drawings-cloud-sync.js?v=45").then(
 m=>
 m.flushDrawingsCloudPush()
 );
@@ -1646,7 +1646,7 @@ function stopCloudSyncHelpers(){
 
 stopSyncPoll();
 
-void import("./drawings-cloud-sync.js?v=42").then(
+void import("./drawings-cloud-sync.js?v=45").then(
 m=>{
 m.stopDrawingsCloudSync();
 }
@@ -1764,7 +1764,7 @@ isDrawingsCloudDisabled()
 return;
 }
 
-void import("./drawings-cloud-sync.js?v=42").then(
+void import("./drawings-cloud-sync.js?v=45").then(
 m=>
 m.pullDrawingsFromCloud()
 );
@@ -2055,7 +2055,7 @@ return cloud.favorites;
 export async function mergeDrawingsWithCloud(){
 
 const drawingsCloud =
-await import("./drawings-cloud-sync.js?v=42");
+await import("./drawings-cloud-sync.js?v=45");
 
 await drawingsCloud.hydrateDrawingsAfterAuth();
 
@@ -2065,7 +2065,7 @@ return collectAllLocalDrawings();
 
 export async function pullDrawingsIfCloudNewer(){
 
-await import("./drawings-cloud-sync.js?v=42").then(
+await import("./drawings-cloud-sync.js?v=45").then(
 m=>
 m.pullDrawingsFromCloud()
 );
@@ -2086,7 +2086,7 @@ await m.reconcileLocalFavoritesWithCloud();
 async function syncDrawingsWithCloud(){
 
 const m =
-await import("./drawings-cloud-sync.js?v=42");
+await import("./drawings-cloud-sync.js?v=45");
 
 await m.flushDrawingsCloudPush();
 
@@ -3033,7 +3033,7 @@ await favoritesCloud.reconcileLocalFavoritesWithCloud();
 }
 
 const drawingsCloud =
-await import("./drawings-cloud-sync.js?v=42");
+await import("./drawings-cloud-sync.js?v=45");
 
 if(
 !isAlertsPage() &&
@@ -3294,7 +3294,7 @@ if(
 ){
 
 jobs.push(
-import("./drawings-cloud-sync.js?v=42").then(
+import("./drawings-cloud-sync.js?v=45").then(
 m=>
 m.pullDrawingsFromCloudNow()
 )

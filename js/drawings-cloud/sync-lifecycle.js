@@ -59,13 +59,13 @@ getSupabase
 import {
 pushUnsyncedDrawingsImpl,
 deleteDrawingFromCloud
-} from "./worker-client.js?v=7";
+} from "./worker-client.js?v=8";
 
 import {
 reconcileLocalDrawingsWithCloud,
 pullDrawingsFromCloudNow,
 migrateLegacyBlobOnce
-} from "./pull-reconcile.js?v=7";
+} from "./pull-reconcile.js?v=10";
 
 
 const IS_YANDEX =
@@ -1648,13 +1648,13 @@ deleteDrawingFromCloudNow,
 deleteDrawingFromCloud,
 clearAllDrawingsFromCloud,
 resolveDrawingsRestAuth
-} from "./worker-client.js?v=7";
+} from "./worker-client.js?v=8";
 
 export {
 reconcileLocalDrawingsWithCloud,
 pullDrawingsFromCloud,
 pullDrawingsFromCloudNow
-} from "./pull-reconcile.js?v=7";
+} from "./pull-reconcile.js?v=10";
 
 export function getDirtyDrawingSymbols(){
 return dirtyDrawingSymbols;

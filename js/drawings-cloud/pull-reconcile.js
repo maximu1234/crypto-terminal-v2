@@ -37,7 +37,7 @@ isDeletedAtColumnError,
 upsertDrawingRow,
 resolveDrawingsRestAuth,
 fetchWithTimeout
-} from "./worker-client.js?v=7";
+} from "./worker-client.js?v=8";
 
 import {
 getAuthed,
@@ -57,7 +57,7 @@ getLastCloudDrawingsFingerprint,
 setLastCloudDrawingsFingerprint,
 markDrawingSymbolDirty,
 scheduleDrawingsCloudPush
-} from "./sync-lifecycle.js?v=7";
+} from "./sync-lifecycle.js?v=9";
 
 const IS_YANDEX =
 /YaBrowser|Yandex/i.test(
@@ -984,6 +984,8 @@ sym
 }
 
 scheduleDrawingsCloudPush();
+
+}
 
 }
 
