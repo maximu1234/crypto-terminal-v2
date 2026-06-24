@@ -9,12 +9,15 @@ COINS_RSI_MIN_DESKTOP_PX,
 COINS_PANEL_MIN_RATIO,
 defaultRsiHeightPx,
 defaultVolumeHeightPx,
+defaultAoHeightPx,
 computeCoinsLayoutLimits,
 computeVolumeHeightLimits,
+computeAoHeightLimits,
 clampCoinsListWidth,
 clampCoinsRsiHeight,
-clampCoinsVolumeHeight
-} from "./terminal-layout-math.js?v=4";
+clampCoinsVolumeHeight,
+clampCoinsAoHeight
+} from "./terminal-layout-math.js?v=5";
 
 import {
 isTerminalPage
@@ -27,11 +30,14 @@ COINS_RSI_MIN_DESKTOP_PX,
 COINS_PANEL_MIN_RATIO,
 defaultRsiHeightPx,
 defaultVolumeHeightPx,
+defaultAoHeightPx,
 computeCoinsLayoutLimits,
 computeVolumeHeightLimits,
+computeAoHeightLimits,
 clampCoinsListWidth,
 clampCoinsRsiHeight,
-clampCoinsVolumeHeight
+clampCoinsVolumeHeight,
+clampCoinsAoHeight
 };
 
 export const COINS_LAYOUT_KEY =
@@ -55,7 +61,8 @@ if(
 return {
 listWidth:null,
 rsiHeight:null,
-volumeHeight:null
+volumeHeight:null,
+aoHeight:null
 };
 }
 
@@ -85,10 +92,18 @@ parsed?.volumeHeight
 ? parsed.volumeHeight
 : null;
 
+const aoHeight =
+Number.isFinite(
+parsed?.aoHeight
+)
+? parsed.aoHeight
+: null;
+
 return {
 listWidth,
 rsiHeight,
-volumeHeight
+volumeHeight,
+aoHeight
 };
 
 }catch{
@@ -96,7 +111,8 @@ volumeHeight
 return {
 listWidth:null,
 rsiHeight:null,
-volumeHeight:null
+volumeHeight:null,
+aoHeight:null
 };
 
 }
@@ -127,6 +143,12 @@ Number.isFinite(
 prefs?.volumeHeight
 )
 ? prefs.volumeHeight
+: null,
+aoHeight:
+Number.isFinite(
+prefs?.aoHeight
+)
+? prefs.aoHeight
 : null
 };
 
@@ -136,6 +158,8 @@ null &&
 out.rsiHeight ===
 null &&
 out.volumeHeight ===
+null &&
+out.aoHeight ===
 null
 ){
 
@@ -209,6 +233,11 @@ document.getElementById(
 "volume-wrap"
 );
 
+const aoWrap =
+document.getElementById(
+"ao-wrap"
+);
+
 if(
 !app ||
 !list ||
@@ -229,6 +258,8 @@ let rsiHeight =
 saved.rsiHeight;
 let volumeHeight =
 saved.volumeHeight;
+let aoHeight =
+saved.aoHeight;
 
 let dragMode =
 null;
@@ -241,6 +272,8 @@ let dragStartListW =
 let dragStartRsiH =
 0;
 let dragStartVolumeH =
+0;
+let dragStartAoH =
 0;
 
 const hHandle =
@@ -309,9 +342,38 @@ volumeVHandle.setAttribute(
 volumeVHandle.tabIndex =
 0;
 
+const aoVHandle =
+document.createElement(
+"div"
+);
+
+aoVHandle.className =
+"coins-layout-resize coins-layout-resize--v";
+aoVHandle.setAttribute(
+"role",
+"separator"
+);
+aoVHandle.setAttribute(
+"aria-orientation",
+"horizontal"
+);
+aoVHandle.setAttribute(
+"aria-label",
+"Высота AO"
+);
+aoVHandle.tabIndex =
+0;
+
 list.appendChild(
 hHandle
 );
+if(
+aoWrap
+){
+aoWrap.appendChild(
+aoVHandle
+);
+}
 volumeWrap.appendChild(
 volumeVHandle
 );
@@ -331,6 +393,12 @@ const rsiVisible =
 
 const volumeVisible =
 !volumeWrap.classList.contains(
+"indicator-pane-hidden"
+);
+
+const aoVisible =
+!!aoWrap &&
+!aoWrap.classList.contains(
 "indicator-pane-hidden"
 );
 
@@ -357,6 +425,16 @@ innerHeight
 )
 : 0;
 
+const currentAoH =
+aoVisible
+? (
+aoHeight ??
+defaultAoHeightPx(
+innerHeight
+)
+)
+: 0;
+
 const layoutLimits =
 computeCoinsLayoutLimits(
 {
@@ -368,6 +446,10 @@ innerHeight,
 volumeOccupiedHeight:
 volumeVisible
 ? currentVolumeH
+: 0,
+aoOccupiedHeight:
+aoVisible
+? currentAoH
 : 0
 }
 );
@@ -375,18 +457,21 @@ volumeVisible
 const volumeLimits =
 computeVolumeHeightLimits(
 {
-stackH,
-rsiOccupiedHeight:
-rsiVisible
-? currentRsiH
-: 0,
+innerHeight
+}
+);
+
+const aoLimits =
+computeAoHeightLimits(
+{
 innerHeight
 }
 );
 
 return {
 ...layoutLimits,
-...volumeLimits
+...volumeLimits,
+...aoLimits
 };
 
 }
@@ -519,6 +604,34 @@ volumeWrap.style.setProperty(
 }
 
 if(
+!aoWrap
+){
+/* AO pane missing */
+}else if(
+aoHeight ==
+null
+){
+
+aoWrap.style.removeProperty(
+"--coins-ao-h"
+);
+
+}else{
+
+aoHeight =
+clampCoinsAoHeight(
+aoHeight,
+limits
+);
+
+aoWrap.style.setProperty(
+"--coins-ao-h",
+`${aoHeight}px`
+);
+
+}
+
+if(
 persist
 ){
 
@@ -526,7 +639,8 @@ writeCoinsLayoutPrefs(
 {
 listWidth,
 rsiHeight,
-volumeHeight
+volumeHeight,
+aoHeight
 }
 );
 
@@ -565,6 +679,10 @@ limits.defaultRsiH;
 dragStartVolumeH =
 volumeHeight ??
 limits.defaultVolumeH;
+
+dragStartAoH =
+aoHeight ??
+limits.defaultAoH;
 
 document.body.classList.add(
 mode ===
@@ -613,6 +731,9 @@ mode ===
 : mode ===
 "volume"
 ? volumeVHandle
+: mode ===
+"ao"
+? aoVHandle
 : vHandle
 ).setPointerCapture(
 e.pointerId
@@ -662,6 +783,19 @@ e.clientY;
 
 volumeHeight =
 dragStartVolumeH +
+delta;
+
+}else if(
+dragMode ===
+"ao"
+){
+
+const delta =
+dragStartY -
+e.clientY;
+
+aoHeight =
+dragStartAoH +
 delta;
 
 }else{
@@ -724,6 +858,19 @@ onPointerDown(
 "volume"
 )
 );
+
+if(
+aoWrap
+){
+
+aoVHandle.addEventListener(
+"pointerdown",
+onPointerDown(
+"ao"
+)
+);
+
+}
 
 window.addEventListener(
 "pointermove",
@@ -811,6 +958,7 @@ layoutChangeRaf =
 hHandle.remove();
 vHandle.remove();
 volumeVHandle.remove();
+aoVHandle.remove();
 window.removeEventListener(
 "pointermove",
 onPointerMove
@@ -844,6 +992,9 @@ rsiWrap.style.removeProperty(
 );
 volumeWrap.style.removeProperty(
 "--coins-volume-h"
+);
+aoWrap?.style.removeProperty(
+"--coins-ao-h"
 );
 
 };

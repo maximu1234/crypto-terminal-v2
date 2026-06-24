@@ -84,7 +84,9 @@ cloneDrawingsForUndo,
 initialPositionTpSl,
 bumpDrawingsLocalRevision,
 scheduleDrawingsCloudPush,
-touchStorageSnap
+touchStorageSnap,
+storageKeySuffix = "",
+cloudSync = true
 } =
 deps;
 
@@ -235,7 +237,7 @@ return shape;
 
 function storageKey(){
 
-return `drawings_${getSymbol()}`;
+return `drawings_${getSymbol()}${storageKeySuffix}`;
 
 }
 
@@ -477,7 +479,8 @@ getDrawings()
 touchStorageSnap();
 
 if(
-canUseDrawings()
+canUseDrawings() &&
+cloudSync
 ){
 bumpDrawingsLocalRevision();
 scheduleDrawingsCloudPush();

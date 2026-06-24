@@ -18,17 +18,22 @@ initTradeVolumePresets
 } from "./trade-volume-presets.js?v=9";
 
 import {
+initTradeLeverageSettings
+} from "./trade-leverage-settings.js?v=2";
+
+import {
 initTradeMarketEntry
 } from "./trade-market-entry.js?v=3";
 
 import {
 initTradeBookPanel
-} from "./trade-book-panel.js?v=22";
+} from "./trade-book-panel.js?v=27";
 
 const TRADE_CSS =
 [
 "trade-exchange-settings.css",
 "trade-volume-presets.css",
+"trade-leverage-settings.css",
 "trade-market-entry.css",
 "trade-book-panel.css",
 "trade-chart-overlay.css",
@@ -160,6 +165,7 @@ return;
 
 initTradeExchangeSettings();
 initTradeVolumePresets();
+initTradeLeverageSettings();
 initTradeMarketEntry();
 
 const {
@@ -245,7 +251,7 @@ const {
 initTradeChartOverlay
 } =
 await import(
-"./trade-chart-overlay.js?v=26"
+"./trade-chart-overlay.js?v=27"
 );
 
 initTradeChartOverlay();
@@ -254,7 +260,7 @@ const {
 initTradeChartOrders
 } =
 await import(
-"./trade-chart-orders.js?v=13"
+"./trade-chart-orders.js?v=14"
 );
 
 initTradeChartOrders();

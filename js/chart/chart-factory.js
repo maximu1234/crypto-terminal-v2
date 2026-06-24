@@ -402,6 +402,10 @@ if(tf === "D"){
 visibleBars = 300;
 }
 
+if(tf === "W"){
+visibleBars = 200;
+}
+
 visibleBars =
 Math.min(visibleBars, candles.length);
 
@@ -574,6 +578,17 @@ visibleBars =
 Math.min(
 visibleBars,
 1000
+);
+}
+
+if(
+tf ===
+"W"
+){
+visibleBars =
+Math.min(
+visibleBars,
+800
 );
 }
 
@@ -3403,7 +3418,8 @@ const map = {
 "15":900,
 "60":3600,
 "240":14400,
-"D":86400
+"D":86400,
+"W":604800
 };
 
 return map[tf] || 900;

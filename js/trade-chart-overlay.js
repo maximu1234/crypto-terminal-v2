@@ -327,6 +327,22 @@ let stopDragListeners =
 null;
 let mountAbort =
 null;
+let chartSwitchFrozen =
+false;
+let frozenPosition =
+null;
+
+function getDisplayPosition(){
+
+if(
+chartSwitchFrozen
+){
+return frozenPosition;
+}
+
+return position;
+
+}
 
 function getMarkPrice(){
 
@@ -498,8 +514,8 @@ kind
 return Number(
 kind ===
 "sl"
-? position?.stopLoss
-: position?.takeProfit
+? getDisplayPosition()?.stopLoss
+: getDisplayPosition()?.takeProfit
 ) ||
 0;
 
@@ -536,8 +552,8 @@ return pendingStopPrice.price;
 return Number(
 kind ===
 "sl"
-? position?.stopLoss
-: position?.takeProfit
+? getDisplayPosition()?.stopLoss
+: getDisplayPosition()?.takeProfit
 ) ||
 0;
 
@@ -1341,22 +1357,25 @@ null;
 
 function buildBadgeSpecs(){
 
+const activePosition =
+getDisplayPosition();
+
 if(
-!position
+!activePosition
 ){
 return [];
 }
 
 const entry =
 Number(
-position.avgPrice
+activePosition.avgPrice
 );
 const entryY =
 priceToY(
 entry
 );
 const isLong =
-position.side ===
+activePosition.side ===
 "Buy";
 const entryColor =
 isLong
@@ -1371,13 +1390,13 @@ getEffectiveStopPrice(
 "tp"
 );
 const pnlClass =
-position.pnl >=
+activePosition.pnl >=
 0
 ? "is-pos"
 : "is-neg";
 const lev =
-position.leverage
-? `${position.leverage}x`
+activePosition.leverage
+? `${activePosition.leverage}x`
 : "—";
 const badgeSpecs =
 [];
@@ -1401,9 +1420,9 @@ isLong
 : "trade-pos-badge--short",
 html:
 `
-<span class="seg seg-vol">${formatVolume(position.volumeUsdt)}</span>
+<span class="seg seg-vol">${formatVolume(activePosition.volumeUsdt)}</span>
 <span class="seg seg-lev">${lev}</span>
-<span class="seg seg-pnl ${pnlClass}">${formatPnl(position.pnl)}</span>
+<span class="seg seg-pnl ${pnlClass}">${formatPnl(activePosition.pnl)}</span>
 <button type="button" class="seg seg-close" data-action="close" title="Закрыть по рынку" aria-label="Закрыть позицию">×</button>
 `,
 line:{
@@ -1438,10 +1457,10 @@ slY
 ){
 const slUsd =
 pnlAtPrice(
-position.side,
+activePosition.side,
 entry,
 sl,
-position.size
+activePosition.size
 );
 
 badgeSpecs.push(
@@ -1492,10 +1511,10 @@ tpY
 ){
 const tpUsd =
 pnlAtPrice(
-position.side,
+activePosition.side,
 entry,
 tp,
-position.size
+activePosition.size
 );
 
 badgeSpecs.push(
@@ -1728,7 +1747,7 @@ return;
 
 if(
 !ctx ||
-!position ||
+!getDisplayPosition() ||
 !Number.isFinite(
 plotW
 )
@@ -1740,7 +1759,7 @@ const badgeSpecs =
 buildBadgeSpecs();
 const layoutKey =
 getPositionLayoutKey(
-position
+getDisplayPosition()
 );
 const gapByKind =
 syncBadgeDom(
@@ -1777,7 +1796,7 @@ plotW
 ){
 
 if(
-!position
+!getDisplayPosition()
 ){
 return;
 }
@@ -1858,6 +1877,10 @@ null;
 position =
 null;
 badgeLayoutCache =
+null;
+chartSwitchFrozen =
+false;
+frozenPosition =
 null;
 
 root?.remove();
@@ -2287,7 +2310,7 @@ return;
 }
 
 if(
-!position
+!getDisplayPosition()
 ){
 badgesEl.innerHTML =
 "";
@@ -2329,7 +2352,7 @@ const badgeSpecs =
 buildBadgeSpecs();
 const layoutKey =
 getPositionLayoutKey(
-position
+getDisplayPosition()
 );
 
 syncBadgeDom(
@@ -2460,6 +2483,12 @@ if(
 return;
 }
 
+if(
+chartSwitchFrozen
+){
+return;
+}
+
 const current =
 normalizeOverlaySymbol(
 host.getSymbol?.()
@@ -2502,6 +2531,13 @@ async function syncPosition(
 force =
 false
 ){
+
+if(
+chartSwitchFrozen &&
+!force
+){
+return;
+}
 
 if(
 !host
@@ -2619,6 +2655,12 @@ positions
 ){
 
 if(
+chartSwitchFrozen
+){
+return;
+}
+
+if(
 !host
 ){
 return;
@@ -2721,7 +2763,14 @@ signal
 
 const onSwitchStart =
 ()=>{
-/* Бейджи и линии гаснут вместе через veil на #chart-wrap — не чистим DOM заранее. */
+chartSwitchFrozen =
+true;
+frozenPosition =
+position;
+scheduleDraw(
+true
+);
+host?.getDrawingTools?.()?.scheduleRedraw?.();
 };
 
 const onCandlesLoaded =
@@ -2741,6 +2790,11 @@ host.getSymbol?.()
 ){
 return;
 }
+
+chartSwitchFrozen =
+false;
+frozenPosition =
+null;
 
 void syncPosition(
 true

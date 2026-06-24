@@ -13,9 +13,12 @@ export const COINS_RSI_MIN_DESKTOP_PX =
 export const COINS_DRAW_TOOLBAR_WIDTH_PX =
 46;
 
-/** Volume не выше 50% высоты основного графика (chart-wrap). */
-export const COINS_VOLUME_MAX_CHART_RATIO =
+/** Volume / AO: min 50% и max 200% от дефолтной высоты (как у RSI). */
+export const COINS_INDICATOR_PANE_MIN_RATIO =
 0.5;
+
+export const COINS_INDICATOR_PANE_MAX_RATIO =
+2;
 
 export const COINS_PANEL_MIN_RATIO =
 0.2;
@@ -49,6 +52,54 @@ COINS_LAYOUT_DEFAULT_INNER_HEIGHT
 return defaultRsiHeightPx(
 innerHeight
 );
+
+}
+
+export function defaultAoHeightPx(
+innerHeight =
+COINS_LAYOUT_DEFAULT_INNER_HEIGHT
+){
+
+return defaultRsiHeightPx(
+innerHeight
+);
+
+}
+
+/**
+ * Дефолтная высота индикаторной панели (Volume, AO): как RSI;
+ * сжатие до 50%, растяжение до 200%.
+ */
+export function computeIndicatorPaneHeightLimits(
+innerHeight =
+COINS_LAYOUT_DEFAULT_INNER_HEIGHT
+){
+
+const defaultH =
+defaultRsiHeightPx(
+innerHeight
+);
+
+const minH =
+Math.max(
+1,
+Math.round(
+defaultH *
+COINS_INDICATOR_PANE_MIN_RATIO
+)
+);
+
+const maxH =
+Math.round(
+defaultH *
+COINS_INDICATOR_PANE_MAX_RATIO
+);
+
+return {
+defaultH,
+minH,
+maxH
+};
 
 }
 
@@ -91,59 +142,54 @@ drawToolbarWidth
 
 export function computeVolumeHeightLimits(
 {
-stackH,
-rsiOccupiedHeight = 0,
 innerHeight =
 COINS_LAYOUT_DEFAULT_INNER_HEIGHT
 } = {}
 ){
 
-const stack =
-Math.max(
-0,
-Number(
-stackH
-) ||
-0
-);
-
-const rsiH =
-Math.max(
-0,
-Number(
-rsiOccupiedHeight
-) ||
-0
-);
-
-const defaultVolumeH =
-defaultVolumeHeightPx(
+const {
+defaultH,
+minH,
+maxH
+} =
+computeIndicatorPaneHeightLimits(
 innerHeight
 );
 
-const minVolumeH =
-COINS_RSI_MIN_DESKTOP_PX;
+return {
+defaultVolumeH:
+defaultH,
+minVolumeH:
+minH,
+maxVolumeH:
+maxH
+};
 
-const maxVolumeH =
-Math.round(
-Math.max(
-minVolumeH,
-(
-stack -
-rsiH
-) /
-(
-1 +
-1 /
-COINS_VOLUME_MAX_CHART_RATIO
-)
-)
+}
+
+export function computeAoHeightLimits(
+{
+innerHeight =
+COINS_LAYOUT_DEFAULT_INNER_HEIGHT
+} = {}
+){
+
+const {
+defaultH,
+minH,
+maxH
+} =
+computeIndicatorPaneHeightLimits(
+innerHeight
 );
 
 return {
-defaultVolumeH,
-minVolumeH,
-maxVolumeH
+defaultAoH:
+defaultH,
+minAoH:
+minH,
+maxAoH:
+maxH
 };
 
 }
@@ -178,13 +224,44 @@ h
 
 }
 
+export function clampCoinsAoHeight(
+aoHeight,
+limits
+){
+
+const h =
+Number(
+aoHeight
+);
+
+if(
+!Number.isFinite(
+h
+)
+){
+return limits.defaultAoH;
+}
+
+return Math.round(
+Math.min(
+limits.maxAoH,
+Math.max(
+limits.minAoH,
+h
+)
+)
+);
+
+}
+
 export function computeCoinsLayoutLimits(
 {
 appWidth,
 chartsStackHeight,
 innerHeight =
 COINS_LAYOUT_DEFAULT_INNER_HEIGHT,
-volumeOccupiedHeight = 0
+volumeOccupiedHeight = 0,
+aoOccupiedHeight = 0
 } = {}
 ){
 
@@ -230,11 +307,21 @@ volumeOccupiedHeight
 0
 );
 
+const aoH =
+Math.max(
+0,
+Number(
+aoOccupiedHeight
+) ||
+0
+);
+
 const stackForChartRsi =
 Math.max(
 0,
 stackH -
-volumeH
+volumeH -
+aoH
 );
 
 const defaultChartH =

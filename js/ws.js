@@ -79,6 +79,10 @@ if(tf === "D"){
 return "D";
 }
 
+if(tf === "W"){
+return "W";
+}
+
 return tf;
 
 }

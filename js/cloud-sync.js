@@ -273,10 +273,26 @@ persisted
 
 }
 
-function bindSafariAuthKeepalive(){
+function isAuthKeepaliveTarget(){
 
 if(
-!isSafariBrowser()
+isSafariBrowser()
+){
+return true;
+}
+
+return !!(
+typeof window !==
+"undefined" &&
+window.cryptoTerminalDesktop?.isDesktop
+);
+
+}
+
+function bindAuthSessionKeepalive(){
+
+if(
+!isAuthKeepaliveTarget()
 ){
 return;
 }
@@ -299,6 +315,7 @@ return;
 if(
 !isCloudLoggedInEffective()
 ){
+void tryCloudAuthRecovery();
 return;
 }
 
@@ -327,6 +344,46 @@ exp *
 1000 <
 Date.now() -
 5000
+);
+
+}
+
+function hasPersistedRefreshToken(
+session
+){
+
+return !!String(
+session?.refresh_token ||
+""
+).trim();
+
+}
+
+/** user + refresh или ещё живой access — сессию можно восстановить без «гостя». */
+function isRecoverableAuthSession(
+session = readPersistedAuthSession()
+){
+
+if(
+!session?.user?.id ||
+isExplicitAuthSignOut()
+){
+return false;
+}
+
+if(
+hasPersistedRefreshToken(
+session
+)
+){
+return true;
+}
+
+return !!(
+session.access_token &&
+!isAccessTokenExpired(
+session
+)
 );
 
 }
@@ -391,7 +448,21 @@ isAccessTokenExpired(
 persisted
 )
 ){
+const snapRefresh =
+String(
+snap?.refresh_token ||
+""
+).trim();
+
+if(
+!hasPersistedRefreshToken(
+persisted
+) &&
+!snapRefresh
+){
 return false;
+}
+
 }
 
 return true;
@@ -432,6 +503,28 @@ notifyAuth();
 }
 
 return true;
+
+}
+
+if(
+isRecoverableAuthSession(
+persisted
+)
+){
+
+if(
+!loggedIn
+){
+loggedIn = true;
+userEmail =
+persisted?.user?.email ||
+userEmail ||
+"";
+notifyAuth();
+}
+
+void refreshAuthSessionSilent();
+return false;
 
 }
 
@@ -3586,6 +3679,6 @@ notifyAuth();
 }
 );
 
-bindSafariAuthKeepalive();
+bindAuthSessionKeepalive();
 
 }

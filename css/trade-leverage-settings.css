@@ -1,0 +1,198 @@
+/* /trade — плечо и margin mode (desktop) */
+
+body.trade-page .trade-leverage-wrap,
+body.watchlist-page.trade-page .trade-leverage-wrap{
+position:relative;
+flex:0 0 auto;
+z-index:120;
+}
+
+body.trade-page .trade-leverage-btn,
+body.watchlist-page.trade-page .trade-leverage-btn{
+display:inline-flex;
+align-items:center;
+height:40px;
+padding:0 10px;
+border:none;
+border-radius:6px;
+background:transparent;
+color:#d1d4dc;
+cursor:pointer;
+font:600 12px/1 system-ui,-apple-system,sans-serif;
+font-variant-numeric:tabular-nums;
+-webkit-tap-highlight-color:transparent;
+white-space:nowrap;
+}
+
+body.trade-page .trade-leverage-btn:hover,
+body.trade-page .trade-leverage-btn[aria-expanded="true"],
+body.watchlist-page.trade-page .trade-leverage-btn:hover,
+body.watchlist-page.trade-page .trade-leverage-btn[aria-expanded="true"]{
+background:rgba(255,255,255,.06);
+color:#f3f4f6;
+}
+
+body.trade-page .trade-leverage-dropdown,
+body.watchlist-page.trade-page .trade-leverage-dropdown{
+position:absolute;
+top:calc(100% + 6px);
+right:0;
+width:min(156px,calc(100vw - 24px));
+padding:8px 10px;
+border:1px solid #374151;
+border-radius:10px;
+background:#171b21;
+box-shadow:0 12px 32px rgba(0,0,0,.45);
+}
+
+body.trade-page .trade-leverage-panel,
+body.watchlist-page.trade-page .trade-leverage-panel{
+display:flex;
+flex-direction:column;
+gap:8px;
+}
+
+body.trade-page .trade-leverage-section-kicker,
+body.watchlist-page.trade-page .trade-leverage-section-kicker{
+margin:0;
+font:600 10px/1.2 system-ui,-apple-system,sans-serif;
+letter-spacing:.08em;
+text-transform:uppercase;
+color:#9ca3af;
+}
+
+body.trade-page .trade-leverage-hint,
+body.watchlist-page.trade-page .trade-leverage-hint{
+margin:-4px 0 0;
+font:400 11px/1.35 system-ui,-apple-system,sans-serif;
+color:#6b7280;
+}
+
+body.trade-page .trade-leverage-mode-row,
+body.watchlist-page.trade-page .trade-leverage-mode-row{
+display:flex;
+gap:14px;
+}
+
+body.trade-page .trade-leverage-mode-opt,
+body.watchlist-page.trade-page .trade-leverage-mode-opt{
+display:inline-flex;
+align-items:center;
+gap:8px;
+cursor:pointer;
+user-select:none;
+font:500 11px/1 system-ui,-apple-system,sans-serif;
+color:#e5e7eb;
+}
+
+body.trade-page .trade-leverage-mode-opt input,
+body.watchlist-page.trade-page .trade-leverage-mode-opt input{
+width:16px;
+height:16px;
+margin:0;
+accent-color:#8b5cf6;
+cursor:pointer;
+}
+
+body.trade-page .trade-leverage-field,
+body.watchlist-page.trade-page .trade-leverage-field{
+display:flex;
+align-items:center;
+gap:6px;
+padding:4px 8px;
+border:1px solid #6366f1;
+border-radius:8px;
+background:#11151b;
+}
+
+body.trade-page .trade-leverage-field input,
+body.watchlist-page.trade-page .trade-leverage-field input{
+flex:1 1 auto;
+min-width:0;
+border:none;
+background:transparent;
+color:#f9fafb;
+font:600 14px/1 ui-monospace,SFMono-Regular,Menlo,monospace;
+outline:none;
+-moz-appearance:textfield;
+appearance:textfield;
+}
+
+body.trade-page .trade-leverage-field input::-webkit-outer-spin-button,
+body.trade-page .trade-leverage-field input::-webkit-inner-spin-button,
+body.watchlist-page.trade-page .trade-leverage-field input::-webkit-outer-spin-button,
+body.watchlist-page.trade-page .trade-leverage-field input::-webkit-inner-spin-button{
+-webkit-appearance:none;
+margin:0;
+}
+
+body.trade-page .trade-leverage-field-suffix,
+body.watchlist-page.trade-page .trade-leverage-field-suffix{
+font:600 11px/1 system-ui,-apple-system,sans-serif;
+color:#9ca3af;
+}
+
+body.trade-page .trade-leverage-max,
+body.watchlist-page.trade-page .trade-leverage-max{
+margin:0;
+font:400 11px/1.35 system-ui,-apple-system,sans-serif;
+color:#6b7280;
+}
+
+body.trade-page .trade-leverage-note,
+body.watchlist-page.trade-page .trade-leverage-note{
+margin:0;
+font:400 11px/1.4 system-ui,-apple-system,sans-serif;
+color:#6b7280;
+}
+
+body.trade-page .trade-leverage-confirm,
+body.watchlist-page.trade-page .trade-leverage-confirm{
+margin-top:2px;
+height:32px;
+border:none;
+border-radius:999px;
+background:#7c3aed;
+color:#fff;
+font:600 12px/1 system-ui,-apple-system,sans-serif;
+cursor:pointer;
+}
+
+body.trade-page .trade-leverage-confirm:hover:not(:disabled),
+body.watchlist-page.trade-page .trade-leverage-confirm:hover:not(:disabled){
+background:#6d28d9;
+}
+
+body.trade-page .trade-leverage-confirm:disabled,
+body.watchlist-page.trade-page .trade-leverage-confirm:disabled{
+opacity:.55;
+cursor:default;
+}
+
+body.trade-page .trade-leverage-status,
+body.watchlist-page.trade-page .trade-leverage-status{
+margin:0;
+font:400 11px/1.35 system-ui,-apple-system,sans-serif;
+color:#9ca3af;
+}
+
+body.trade-page .trade-leverage-status.is-error,
+body.watchlist-page.trade-page .trade-leverage-status.is-error{
+color:#f87171;
+}
+
+body.watchlist-page.trade-page .trade-widget-toolbar .trade-leverage-wrap{
+margin-left:4px;
+}
+
+body.watchlist-page.trade-page .trade-widget-toolbar .trade-leverage-btn{
+height:28px;
+padding:0 8px;
+font-size:11px;
+}
+
+body.watchlist-page.trade-page .trade-widget-toolbar .trade-leverage-dropdown{
+top:calc(100% + 4px);
+width:min(148px,calc(100vw - 24px));
+padding:6px 8px;
+}

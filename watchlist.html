@@ -93,7 +93,7 @@ if(
 window.cryptoTerminalDesktop?.isDesktop
 ){
 tradeBoot =
-await import("/js/trade-desktop-boot.js?v=11");
+await import("/js/trade-desktop-boot.js?v=13");
 
 if(
 tradeBoot.isWatchlistTradeMode()
@@ -111,7 +111,7 @@ const { loadLightweightCharts } =
 await import("/js/charts-lib-boot.js?v=3");
 
 await loadLightweightCharts();
-await import("./js/watchlist.js?v=88");
+await import("./js/watchlist.js?v=89");
 
 if(
 tradeBoot?.isWatchlistTradeMode()

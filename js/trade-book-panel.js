@@ -17,8 +17,9 @@ const PANEL_HEIGHT_KEY =
 const PANEL_DEFAULT_H =
 168;
 
+/** Шапка + заголовки колонок + строка суммарного PnL — без строк позиций. */
 const PANEL_MIN_H =
-120;
+106;
 
 const PANEL_MIN_COINS_BODY =
 72;
@@ -28,6 +29,15 @@ const SPLIT_HANDLE_H =
 
 const SORT_STORAGE_KEY =
 "trade_book_sort_v1";
+
+const TOTAL_PNL_HIDDEN_KEY =
+"trade_book_total_pnl_hidden_v1";
+
+const EYE_OPEN_SVG =
+`<svg class="trade-book-eye-svg trade-book-eye-svg--open" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
+
+const EYE_CLOSED_SVG =
+`<svg class="trade-book-eye-svg trade-book-eye-svg--closed" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><path d="M1 1l22 22"/></svg>`;
 
 const DEFAULT_SORT =
 {
@@ -44,6 +54,44 @@ asc:
 false
 }
 };
+
+function readTotalPnlHidden(){
+
+try{
+return localStorage.getItem(
+TOTAL_PNL_HIDDEN_KEY
+) ===
+"1";
+}catch{
+return false;
+}
+
+}
+
+function writeTotalPnlHidden(
+hidden
+){
+
+try{
+
+if(
+hidden
+){
+localStorage.setItem(
+TOTAL_PNL_HIDDEN_KEY,
+"1"
+);
+}else{
+localStorage.removeItem(
+TOTAL_PNL_HIDDEN_KEY
+);
+}
+
+}catch{
+/* ignore */
+}
+
+}
 
 function readSortState(){
 
@@ -412,6 +460,36 @@ SPLIT_HANDLE_H
 
 }
 
+function applyPanelHeight(
+panel,
+listEl,
+coinsListPane,
+height
+){
+
+const maxH =
+measurePanelMaxHeight(
+listEl,
+coinsListPane
+);
+const h =
+Math.min(
+maxH,
+Math.max(
+PANEL_MIN_H,
+height
+)
+);
+
+panel.style.setProperty(
+"--trade-book-panel-h",
+`${h}px`
+);
+
+return h;
+
+}
+
 function wrapCoinsListPane(
 listEl
 ){
@@ -497,36 +575,6 @@ header
 scroll.appendChild(
 body
 );
-
-}
-
-function applyPanelHeight(
-panel,
-listEl,
-coinsListPane,
-height
-){
-
-const maxH =
-measurePanelMaxHeight(
-listEl,
-coinsListPane
-);
-const h =
-Math.min(
-maxH,
-Math.max(
-PANEL_MIN_H,
-height
-)
-);
-
-panel.style.setProperty(
-"--trade-book-panel-h",
-`${h}px`
-);
-
-return h;
 
 }
 
@@ -998,11 +1046,16 @@ panel.innerHTML =
 <div class="trade-book-rows" data-role="rows"></div>
 </div>
 <div class="trade-book-positions-total" data-role="positions-total" hidden>
-<div class="trade-book-total-row">
-<span class="trade-book-total-spacer" aria-hidden="true"></span>
+<div class="trade-book-total-row trade-book-row--position">
+<div class="trade-book-ticker trade-book-total-leading">
+<button type="button" class="trade-book-total-eye" data-role="positions-total-eye" aria-label="Скрыть суммарный PnL" aria-pressed="false" title="Скрыть суммарный PnL">
+${EYE_OPEN_SVG}
+${EYE_CLOSED_SVG}
+</button>
+</div>
 <div class="trade-book-trail">
 <span class="col-pnl" data-role="positions-total-pnl"></span>
-<span class="trade-book-total-spacer" aria-hidden="true"></span>
+<span class="col-volume trade-book-total-volume" aria-hidden="true"></span>
 <span class="trade-book-total-action" aria-hidden="true"></span>
 </div>
 </div>
@@ -1050,6 +1103,10 @@ const positionsTotalPnlEl =
 panel.querySelector(
 '[data-role="positions-total-pnl"]'
 );
+const positionsTotalEyeBtn =
+panel.querySelector(
+'[data-role="positions-total-eye"]'
+);
 const statusEl =
 panel.querySelector(
 '[data-role="status"]'
@@ -1073,6 +1130,11 @@ const positionRowNodes =
 new Map();
 const orderRowNodes =
 new Map();
+
+let totalPnlHidden =
+readTotalPnlHidden();
+let lastTotalPnl =
+null;
 
 function requestOpenSymbol(
 symbol
@@ -1682,6 +1744,56 @@ positionsTotalEl.hidden =
 true;
 }
 
+lastTotalPnl =
+null;
+
+}
+
+function applyTotalPnlVisibility(){
+
+if(
+!positionsTotalPnlEl ||
+lastTotalPnl ==
+null
+){
+return;
+}
+
+if(
+totalPnlHidden
+){
+positionsTotalPnlEl.textContent =
+"***";
+positionsTotalPnlEl.className =
+"col-pnl is-masked";
+}else{
+positionsTotalPnlEl.textContent =
+formatTradePnl(
+lastTotalPnl
+);
+positionsTotalPnlEl.className =
+`col-pnl ${pnlClass(lastTotalPnl)}`.trim();
+}
+
+if(
+positionsTotalEyeBtn
+){
+positionsTotalEyeBtn.setAttribute(
+"aria-pressed",
+totalPnlHidden
+? "true"
+: "false"
+);
+positionsTotalEyeBtn.title =
+totalPnlHidden
+? "Показать суммарный PnL"
+: "Скрыть суммарный PnL";
+positionsTotalEyeBtn.setAttribute(
+"aria-label",
+positionsTotalEyeBtn.title
+);
+}
+
 }
 
 function updatePositionsTotal(
@@ -1713,12 +1825,28 @@ return;
 
 positionsTotalEl.hidden =
 false;
-positionsTotalPnlEl.textContent =
-formatTradePnl(
-total
+lastTotalPnl =
+total;
+applyTotalPnlVisibility();
+
+}
+
+if(
+positionsTotalEyeBtn
+){
+
+positionsTotalEyeBtn.addEventListener(
+"click",
+event=>{
+event.stopPropagation();
+totalPnlHidden =
+!totalPnlHidden;
+writeTotalPnlHidden(
+totalPnlHidden
 );
-positionsTotalPnlEl.className =
-`col-pnl ${pnlClass(total)}`.trim();
+applyTotalPnlVisibility();
+}
+);
 
 }
 

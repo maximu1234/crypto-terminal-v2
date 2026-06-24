@@ -9,13 +9,17 @@ COINS_LIST_MIN_PX,
 COINS_RSI_MIN_DESKTOP_PX,
 COINS_DRAW_TOOLBAR_WIDTH_PX,
 computeCoinsLayoutLimits,
+computeIndicatorPaneHeightLimits,
 computeVolumeHeightLimits,
+computeAoHeightLimits,
 clampCoinsListWidth,
 clampCoinsRsiHeight,
 clampCoinsVolumeHeight,
+clampCoinsAoHeight,
 coinsMainChartWidthPx,
 defaultRsiHeightPx,
-defaultVolumeHeightPx
+defaultVolumeHeightPx,
+defaultAoHeightPx
 } from "../js/terminal-layout-math.js";
 
 test(
@@ -47,7 +51,7 @@ defaultRsiHeightPx(
 );
 
 test(
-"defaultVolumeHeightPx matches RSI default",
+"defaultVolumeHeightPx and defaultAoHeightPx match RSI default",
 ()=>{
 
 assert.equal(
@@ -57,6 +61,42 @@ defaultVolumeHeightPx(
 defaultRsiHeightPx(
 800
 )
+);
+
+assert.equal(
+defaultAoHeightPx(
+800
+),
+defaultRsiHeightPx(
+800
+)
+);
+
+}
+);
+
+test(
+"computeIndicatorPaneHeightLimits: 50%–200% of default",
+()=>{
+
+const limits =
+computeIndicatorPaneHeightLimits(
+800
+);
+
+assert.equal(
+limits.defaultH,
+141
+);
+
+assert.equal(
+limits.minH,
+71
+);
+
+assert.equal(
+limits.maxH,
+282
 );
 
 }
@@ -124,16 +164,48 @@ limits.minChartH
 );
 
 test(
-"computeVolumeHeightLimits: max 50% of chart area",
+"computeCoinsLayoutLimits: subtracts AO and Volume from RSI headroom",
+()=>{
+
+const limits =
+computeCoinsLayoutLimits(
+{
+appWidth:
+1000,
+chartsStackHeight:
+700,
+innerHeight:
+800,
+volumeOccupiedHeight:
+140,
+aoOccupiedHeight:
+120
+}
+);
+
+assert.equal(
+limits.maxRsiH,
+Math.round(
+Math.max(
+COINS_RSI_MIN_DESKTOP_PX,
+700 -
+140 -
+120 -
+limits.minChartH
+)
+)
+);
+
+}
+);
+
+test(
+"computeVolumeHeightLimits: 50%–200% of default",
 ()=>{
 
 const limits =
 computeVolumeHeightLimits(
 {
-stackH:
-900,
-rsiOccupiedHeight:
-140,
 innerHeight:
 800
 }
@@ -141,26 +213,47 @@ innerHeight:
 
 assert.equal(
 limits.defaultVolumeH,
-defaultVolumeHeightPx(
-800
-)
+141
+);
+
+assert.equal(
+limits.minVolumeH,
+71
 );
 
 assert.equal(
 limits.maxVolumeH,
-253
+282
 );
 
-const chartH =
-900 -
-253 -
-140;
+}
+);
 
-assert.ok(
-253 <=
-chartH *
-0.5 +
-0.51
+test(
+"computeAoHeightLimits: 50%–200% of default",
+()=>{
+
+const limits =
+computeAoHeightLimits(
+{
+innerHeight:
+800
+}
+);
+
+assert.equal(
+limits.defaultAoH,
+141
+);
+
+assert.equal(
+limits.minAoH,
+71
+);
+
+assert.equal(
+limits.maxAoH,
+282
 );
 
 }
@@ -255,16 +348,12 @@ limits
 );
 
 test(
-"clampCoinsVolumeHeight: min 102, max by chart ratio",
+"clampCoinsVolumeHeight: 50%–200% of default",
 ()=>{
 
 const limits =
 computeVolumeHeightLimits(
 {
-stackH:
-600,
-rsiOccupiedHeight:
-120,
 innerHeight:
 800
 }
@@ -272,10 +361,10 @@ innerHeight:
 
 assert.equal(
 clampCoinsVolumeHeight(
-80,
+50,
 limits
 ),
-COINS_RSI_MIN_DESKTOP_PX
+limits.minVolumeH
 );
 
 assert.equal(
@@ -289,6 +378,46 @@ limits.maxVolumeH
 
 assert.equal(
 clampCoinsVolumeHeight(
+150,
+limits
+),
+150
+);
+
+}
+);
+
+test(
+"clampCoinsAoHeight: 50%–200% of default",
+()=>{
+
+const limits =
+computeAoHeightLimits(
+{
+innerHeight:
+800
+}
+);
+
+assert.equal(
+clampCoinsAoHeight(
+50,
+limits
+),
+limits.minAoH
+);
+
+assert.equal(
+clampCoinsAoHeight(
+limits.maxAoH +
+50,
+limits
+),
+limits.maxAoH
+);
+
+assert.equal(
+clampCoinsAoHeight(
 150,
 limits
 ),

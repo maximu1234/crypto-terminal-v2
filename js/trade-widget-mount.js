@@ -3,11 +3,11 @@
  */
 import {
 createTradeChartOverlay
-} from "./trade-chart-overlay.js?v=26";
+} from "./trade-chart-overlay.js?v=27";
 
 import {
 createTradeChartOrders
-} from "./trade-chart-orders.js?v=13";
+} from "./trade-chart-orders.js?v=14";
 
 import {
 createTradePlusMenuHandler
@@ -29,6 +29,10 @@ marketMap
 import {
 applyAutoStopsAfterEntry
 } from "./trade-auto-stops.js?v=2";
+
+import {
+mountTradeLeverageControl
+} from "./trade-leverage-settings.js?v=2";
 
 function tradingApi(){
 
@@ -887,6 +891,14 @@ const volume =
 mountWidgetVolumeControl(
 toolbar,
 getSymbol()
+);
+
+const leverage =
+mountTradeLeverageControl(
+toolbar,
+{
+getSymbol
+}
 );
 
 const market =

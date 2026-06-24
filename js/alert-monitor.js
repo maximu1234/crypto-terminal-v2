@@ -7,7 +7,7 @@ getActiveAlerts
 
 import {
 subscribeKline
-} from "./ws.js?v=16";
+} from "./ws.js?v=17";
 
 /* Базовая цена отдельно для каждого алерта (symbol + shapeId) */
 const lastPriceByAlert =

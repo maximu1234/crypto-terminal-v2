@@ -10,7 +10,7 @@ isBybitCoinsDataset
 
 import {
 connectKlineStream
-} from "../ws.js?v=16";
+} from "../ws.js?v=17";
 
 import {
 connectTickerStream,

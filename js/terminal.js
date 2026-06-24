@@ -38,7 +38,7 @@ ensureCloudReady
 import {
 persistFavoritesToCloud,
 onFavoritesRemoteUpdate
-} from "./cloud-sync.js?v=38";
+} from "./cloud-sync.js?v=39";
 
 import {
 createCandlestickChart,
@@ -76,7 +76,7 @@ mountCoinsTabletController
 
 import {
 disconnectKlineStream
-} from "./ws.js?v=16";
+} from "./ws.js?v=17";
 
 import {
 syncBackgroundAlertStreams
@@ -104,7 +104,7 @@ syncCoinsTfLabel
 
 import {
 mountCoinsLayoutResize
-} from "./terminal-layout-resize.js?v=6";
+} from "./terminal-layout-resize.js?v=7";
 
 import {
 mountQwertyKeyInput
@@ -182,6 +182,10 @@ let isCoinsRsiInverted =
 false;
 let drawingTools =
 null;
+let rsiDrawingTools =
+null;
+let activeDrawPane =
+"chart";
 let chartIndicators =
 null;
 
@@ -1667,6 +1671,8 @@ null
 
 chartIndicators?.notifyCandlesUpdate?.();
 
+rsiDrawingTools?.scheduleRedraw?.();
+
 }
 
 function layoutRsiBand(){
@@ -1836,6 +1842,16 @@ mountDrawToolIcons(
 document
 );
 
+let mainSetDrawTool =
+null;
+let rsiSetDrawTool =
+null;
+const drawClearAllPeers =
+{
+call:
+null
+};
+
 drawingTools =
 initWidgetDrawings({
 
@@ -1844,10 +1860,14 @@ series: candleSeries,
 wrapEl: document.getElementById("chart-wrap"),
 uiRoot: document.getElementById("chart-wrap"),
 toolsRoot: document.getElementById("charts-stack"),
+clearAllPeers:
+drawClearAllPeers,
 getSymbol: ()=> currentSymbol,
 getTf: ()=> currentTF,
 getCandles: ()=> candles,
-isActive: ()=>true,
+isActive: ()=>
+activeDrawPane ===
+"chart",
 abortTabletChartGesture:()=>{
 cancelTabletPanGesture?.();
 },
@@ -1949,6 +1969,284 @@ chart.clearCrosshairPosition();
 }
 
 });
+
+const chartWrapEl =
+document.getElementById(
+"chart-wrap"
+);
+const rsiWrapEl =
+document.getElementById(
+"rsi-wrap"
+);
+
+function resolveCoinsDrawPaneFromPointer(
+clientY
+){
+
+const rsiRect =
+rsiWrapEl?.getBoundingClientRect?.();
+
+if(
+rsiRect &&
+clientY >=
+rsiRect.top &&
+clientY <=
+rsiRect.bottom
+){
+return "rsi";
+}
+
+const chartRect =
+chartWrapEl?.getBoundingClientRect?.();
+
+if(
+chartRect &&
+clientY >=
+chartRect.top &&
+clientY <=
+chartRect.bottom
+){
+return "chart";
+}
+
+return null;
+
+}
+
+function setActiveDrawPane(
+pane
+){
+
+const next =
+pane ===
+"rsi"
+? "rsi"
+: "chart";
+
+if(
+next ===
+activeDrawPane
+){
+return;
+}
+
+const prevTools =
+activeDrawPane ===
+"rsi"
+? rsiDrawingTools
+: drawingTools;
+
+const prevTool =
+prevTools?.getTool?.() ??
+"cursor";
+
+activeDrawPane =
+next;
+
+if(
+prevTool ===
+"cursor" ||
+!mainSetDrawTool ||
+!rsiSetDrawTool
+){
+return;
+}
+
+mainSetDrawTool(
+"cursor"
+);
+rsiSetDrawTool(
+"cursor"
+);
+
+if(
+next ===
+"rsi"
+){
+rsiSetDrawTool(
+prevTool
+);
+}else{
+mainSetDrawTool(
+prevTool
+);
+}
+
+}
+
+const chartsStackEl =
+document.getElementById(
+"charts-stack"
+);
+
+chartsStackEl?.addEventListener(
+"pointermove",
+e=>{
+
+const pane =
+resolveCoinsDrawPaneFromPointer(
+e.clientY
+);
+
+if(
+pane
+){
+setActiveDrawPane(
+pane
+);
+}
+
+},
+true
+);
+
+chartWrapEl?.addEventListener(
+"pointerenter",
+()=>
+setActiveDrawPane(
+"chart"
+),
+true
+);
+
+rsiWrapEl?.addEventListener(
+"pointerenter",
+()=>
+setActiveDrawPane(
+"rsi"
+),
+true
+);
+
+function getRsiCandlesForDraw(){
+
+if(
+!Array.isArray(
+rsiPointsCache
+)
+){
+return [];
+}
+
+return rsiPointsCache.map(
+point=>({
+
+time:
+point.time,
+
+open:
+point.value,
+
+high:
+point.value,
+
+low:
+point.value,
+
+close:
+point.value
+
+})
+);
+
+}
+
+rsiDrawingTools =
+initWidgetDrawings({
+
+chart:
+rsiChart,
+
+series:
+rsiSeries,
+
+wrapEl:
+rsiWrapEl,
+
+uiRoot:
+null,
+
+toolsRoot:
+document.getElementById(
+"charts-stack"
+),
+
+bindToolbar:
+false,
+
+styleBar:
+false,
+
+mountStyleBar:
+false,
+
+storageKeySuffix:
+"_rsi",
+
+cloudSync:
+false,
+
+drawPriceAlerts:
+false,
+
+getSymbol: ()=>
+currentSymbol,
+
+getTf: ()=>
+currentTF,
+
+getCandles:
+getRsiCandlesForDraw,
+
+isActive: ()=>
+activeDrawPane ===
+"rsi" &&
+rsiPaneActive,
+
+barPosKey:
+"draw_bar_pos_rsi",
+
+abortTabletChartGesture:()=>{
+cancelTabletPanGesture?.();
+}
+
+});
+
+if(
+drawingTools &&
+rsiDrawingTools
+){
+
+const mainSetTool =
+drawingTools.setTool.bind(
+drawingTools
+);
+const rsiSetTool =
+rsiDrawingTools.setTool.bind(
+rsiDrawingTools
+);
+
+mainSetDrawTool =
+mainSetTool;
+rsiSetDrawTool =
+rsiSetTool;
+
+drawingTools.setTool =
+next=>{
+mainSetTool(
+next
+);
+rsiSetTool(
+next
+);
+};
+
+drawClearAllPeers.call =
+()=>{
+rsiDrawingTools?.clearAllDrawings?.();
+};
+
+}
 
 if(
 !drawingTools
@@ -2858,6 +3156,10 @@ drawingTools?.onSymbolChange?.({
 skipRedraw:
 true
 });
+rsiDrawingTools?.onSymbolChange?.({
+skipRedraw:
+true
+});
 chartIndicators?.notifySymbolChange?.();
 
 scheduleChartLayoutSettled(
@@ -2875,6 +3177,7 @@ true
 );
 
 drawingTools?.scheduleRedraw?.();
+rsiDrawingTools?.scheduleRedraw?.();
 chartCrosshairLink?.refreshPointerCrosshair?.();
 
 dispatchChartCandlesLoaded(
@@ -3002,6 +3305,7 @@ rsiChartEl,
 applyDefaultZoom();
 layoutRsiBand();
 drawingTools?.scheduleRedraw?.();
+rsiDrawingTools?.scheduleRedraw?.();
 }
 );
 
@@ -3069,7 +3373,9 @@ Object.freeze({
 "5":
 "240",
 "6":
-"D"
+"D",
+"7":
+"W"
 
 });
 

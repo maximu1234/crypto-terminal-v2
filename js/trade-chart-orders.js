@@ -238,6 +238,23 @@ let pendingAmend =
 null;
 let mountAbort =
 null;
+let chartSwitchFrozen =
+false;
+let frozenOrders =
+null;
+
+function getDisplayOrders(){
+
+if(
+chartSwitchFrozen
+){
+return frozenOrders ??
+[];
+}
+
+return orders;
+
+}
 
 function priceToY(
 price
@@ -405,7 +422,7 @@ const specs =
 [];
 
 for(
-const order of orders
+const order of getDisplayOrders()
 ){
 const price =
 getEffectiveOrderPrice(
@@ -482,7 +499,7 @@ return specs;
 
 function getOrdersLayoutKey(){
 
-return orders.map(
+return getDisplayOrders().map(
 o=>{
 const dragging =
 dragOrder?.orderId ===
@@ -684,7 +701,7 @@ return;
 }
 
 if(
-!orders.length
+!getDisplayOrders().length
 ){
 badgesEl.innerHTML =
 "";
@@ -725,7 +742,7 @@ plotW
 ){
 
 if(
-!orders.length
+!getDisplayOrders().length
 ){
 return;
 }
@@ -1292,6 +1309,13 @@ false
 ){
 
 if(
+chartSwitchFrozen &&
+!force
+){
+return;
+}
+
+if(
 !host
 ){
 return;
@@ -1454,7 +1478,14 @@ signal
 
 const onSwitchStart =
 ()=>{
-/* Оставляем бейджи до chart-candles-loaded — veil затемняет вместе с линиями. */
+chartSwitchFrozen =
+true;
+frozenOrders =
+orders.slice();
+scheduleDraw(
+true
+);
+host?.getDrawingTools?.()?.scheduleRedraw?.();
 };
 
 const onCandlesLoaded =
@@ -1475,7 +1506,15 @@ host.getSymbol?.()
 return;
 }
 
+chartSwitchFrozen =
+false;
+frozenOrders =
+null;
+
 void syncOrders(
+true
+);
+scheduleDraw(
 true
 );
 
@@ -1502,6 +1541,12 @@ signal
 function applyStreamOrders(
 allOrders
 ){
+
+if(
+chartSwitchFrozen
+){
+return;
+}
 
 if(
 !host
@@ -1677,6 +1722,10 @@ null;
 orders =
 [];
 badgeLayoutCache =
+null;
+chartSwitchFrozen =
+false;
+frozenOrders =
 null;
 
 root?.remove();

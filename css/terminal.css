@@ -1911,20 +1911,12 @@ body.tablet-chart #rsi-wrap .rsi-level-line:not(.hidden){
 }
 
 body.trade-page .coin.has-position{
-  background:#27221c;
-  box-shadow:inset 0 0 0 1px rgba(251,146,60,.14);
-  outline:1px dashed rgba(251,146,60,.20);
+  outline:1px dashed rgba(250,204,21,.36);
   outline-offset:-1px;
 }
 
-body.trade-page .coin.has-position:hover{
-  background:#2e2822;
-}
-
 body.trade-page .coin.has-position.active{
-  background:#2e2822;
-  box-shadow:inset 0 0 0 1px rgba(251,146,60,.18);
-  outline:1px dashed rgba(147,197,253,.26);
+  outline:1px dashed rgba(250,204,21,.36);
 }
 
 .col-flag{

@@ -41,7 +41,7 @@ mountWidgetTabletChart
 
 import {
 subscribeKline
-} from "./ws.js?v=16";
+} from "./ws.js?v=17";
 
 import {
 getWidgetToolbarHtml,
@@ -122,7 +122,7 @@ return;
 
 const mod =
 await import(
-"./trade-widget-mount.js?v=6"
+"./trade-widget-mount.js?v=8"
 );
 
 mountTradeOnDashboardWidget =
@@ -555,6 +555,7 @@ ${getWidgetFlagHtml()}
 <option value="60" ${startTf==="60"?"selected":""}>1h</option>
 <option value="240" ${startTf==="240"?"selected":""}>4h</option>
 <option value="D" ${startTf==="D"?"selected":""}>1D</option>
+<option value="W" ${startTf==="W"?"selected":""}>W</option>
 </select>
 
 </div>
@@ -1072,7 +1073,8 @@ tf === "1" ? 300 :
 tf === "5" ? 500 :
 tf === "15" ? 900 :
 tf === "60" ? 700 :
-tf === "240" ? 500 : 300
+tf === "240" ? 500 :
+tf === "W" ? 200 : 300
 )
 )
 ];

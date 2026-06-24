@@ -33,7 +33,9 @@ cancelTradeOrder,
 amendTradeOrder,
 pingBybit,
 getClosedPnlHistory,
-getTradeDiaryDetail
+getTradeDiaryDetail,
+getSymbolPositionSettings,
+applySymbolPositionSettings
 } =
 require(
 "./bybit-rest.cjs"
@@ -510,6 +512,70 @@ err
 ){
 log.warn(
 "trading:getTradeDiaryDetail:",
+err.message
+);
+return {
+ok:
+false,
+message:
+err.message
+};
+}
+
+}
+);
+
+ipcMain.handle(
+"trading:getSymbolPositionSettings",
+async(
+_event,
+payload
+)=>{
+
+try{
+return await getSymbolPositionSettings(
+payload?.symbol
+);
+}catch(
+err
+){
+log.warn(
+"trading:getSymbolPositionSettings:",
+err.message
+);
+return {
+ok:
+false,
+message:
+err.message
+};
+}
+
+}
+);
+
+ipcMain.handle(
+"trading:applySymbolPositionSettings",
+async(
+_event,
+payload
+)=>{
+
+try{
+return await applySymbolPositionSettings(
+payload?.symbol,
+{
+leverage:
+payload?.leverage,
+marginMode:
+payload?.marginMode
+}
+);
+}catch(
+err
+){
+log.warn(
+"trading:applySymbolPositionSettings:",
 err.message
 );
 return {

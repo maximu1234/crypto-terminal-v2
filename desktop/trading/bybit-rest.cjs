@@ -639,6 +639,19 @@ String(
 row?.leverage ||
 ""
 ).trim(),
+tradeMode:
+Number(
+row?.tradeMode ??
+0
+),
+marginMode:
+Number(
+row?.tradeMode ??
+0
+) ===
+1
+? "isolated"
+: "cross",
 stopLoss:
 Number(
 row?.stopLoss
@@ -2793,7 +2806,11 @@ let rules =
 qtyStep:
 "0.001",
 minOrderQty:
-"0.001"
+"0.001",
+maxLeverage:
+"100",
+minLeverage:
+"1"
 };
 
 if(
@@ -2819,8 +2836,26 @@ lot.minOrderQty ||
 lot.qtyStep ||
 "0.001",
 maxOrderQty:
-lot.maxOrderQty
+lot.maxOrderQty,
+maxLeverage:
+rules.maxLeverage,
+minLeverage:
+rules.minLeverage
 };
+}
+
+const lev =
+row?.leverageFilter;
+
+if(
+lev
+){
+rules.maxLeverage =
+lev.maxLeverage ||
+rules.maxLeverage;
+rules.minLeverage =
+lev.minLeverage ||
+rules.minLeverage;
 }
 }
 
@@ -4217,6 +4252,255 @@ position
 
 }
 
+async function getSymbolPositionSettings(
+symbol
+){
+
+const sym =
+stripSymbolSuffix(
+symbol
+);
+
+if(
+!sym
+){
+return {
+ok:
+false,
+message:
+"Symbol required"
+};
+}
+
+const [
+posResult,
+rules
+] =
+await Promise.all(
+[
+privateGet(
+"/v5/position/list",
+{
+category:
+"linear",
+symbol:
+sym
+}
+),
+getInstrumentRules(
+sym
+)
+]
+);
+
+if(
+!posResult.ok
+){
+return posResult;
+}
+
+const row =
+posResult.data?.result?.list?.[
+0
+];
+const leverage =
+Math.max(
+1,
+Math.round(
+Number(
+row?.leverage
+) ||
+10
+)
+);
+const marginMode =
+Number(
+row?.tradeMode ??
+0
+) ===
+1
+? "isolated"
+: "cross";
+const maxLeverage =
+Math.max(
+1,
+Math.round(
+Number(
+rules?.maxLeverage
+) ||
+100
+)
+);
+
+return {
+ok:
+true,
+symbol:
+sym,
+leverage:
+Math.min(
+leverage,
+maxLeverage
+),
+marginMode,
+maxLeverage,
+minLeverage:
+Math.max(
+1,
+Math.round(
+Number(
+rules?.minLeverage
+) ||
+1
+)
+)
+};
+
+}
+
+async function applySymbolPositionSettings(
+symbol,
+settings
+){
+
+const sym =
+stripSymbolSuffix(
+symbol
+);
+
+if(
+!sym
+){
+return {
+ok:
+false,
+message:
+"Symbol required"
+};
+}
+
+const marginMode =
+String(
+settings?.marginMode ||
+""
+).toLowerCase() ===
+"isolated"
+? "isolated"
+: "cross";
+const leverage =
+Math.max(
+1,
+Math.round(
+Number(
+settings?.leverage
+)
+)
+);
+
+if(
+!Number.isFinite(
+leverage
+)
+){
+return {
+ok:
+false,
+message:
+"Invalid leverage"
+};
+}
+
+const current =
+await getSymbolPositionSettings(
+sym
+);
+
+if(
+!current.ok
+){
+return current;
+}
+
+const levStr =
+String(
+Math.min(
+leverage,
+current.maxLeverage
+)
+);
+const marginChanged =
+current.marginMode !==
+marginMode;
+const leverageChanged =
+String(
+current.leverage
+) !==
+levStr;
+
+if(
+!marginChanged &&
+!leverageChanged
+){
+return {
+ok:
+true
+};
+}
+
+if(
+marginChanged
+){
+
+const switchResult =
+await privatePost(
+"/v5/position/switch-isolated",
+{
+category:
+"linear",
+symbol:
+sym,
+tradeMode:
+marginMode ===
+"isolated"
+? 1
+: 0,
+buyLeverage:
+levStr,
+sellLeverage:
+levStr
+}
+);
+
+if(
+switchResult.ok
+){
+return switchResult;
+}
+
+if(
+!leverageChanged
+){
+return switchResult;
+}
+
+}
+
+return privatePost(
+"/v5/position/set-leverage",
+{
+category:
+"linear",
+symbol:
+sym,
+buyLeverage:
+levStr,
+sellLeverage:
+levStr
+}
+);
+
+}
+
 module.exports =
 {
 getWalletBalance,
@@ -4235,5 +4519,7 @@ pingBybit,
 getClosedPnlHistory,
 getTradeDiaryDetail,
 mapPositionRow,
-mapOrderRow
+mapOrderRow,
+getSymbolPositionSettings,
+applySymbolPositionSettings
 };

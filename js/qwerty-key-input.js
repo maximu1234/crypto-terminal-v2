@@ -318,7 +318,15 @@ insertAtCursor(
 input,
 ch
 );
-notify();
+input.dispatchEvent(
+new Event(
+"input",
+{
+bubbles:
+true
+}
+)
+);
 
 };
 
@@ -341,7 +349,15 @@ insertAtCursor(
 input,
 text
 );
-notify();
+input.dispatchEvent(
+new Event(
+"input",
+{
+bubbles:
+true
+}
+)
+);
 
 };
 

@@ -26,7 +26,7 @@ isCloudLoggedInEffective,
 isCloudSyncEnabled,
 ensureCloudLoginResolved,
 onCloudSyncChange
-} from "../cloud-sync.js?v=38";
+} from "../cloud-sync.js?v=39";
 
 import {
 ensureDrawToolsVisible
@@ -180,7 +180,7 @@ createDrawDesktopSelection
 
 import {
 createDrawingsPersist
-} from "./drawings-persist.js?v=2";
+} from "./drawings-persist.js?v=3";
 
 import {
 createDrawStyleBar
@@ -192,11 +192,11 @@ createDrawAlertsChart
 
 import {
 createDrawPlacement
-} from "./draw-placement.js?v=5";
+} from "./draw-placement.js?v=6";
 
 import {
 createDrawEditInteraction
-} from "./draw-edit-interaction.js?v=4";
+} from "./draw-edit-interaction.js?v=5";
 
 import {
 createDrawChartInput
@@ -221,6 +221,10 @@ getCandles,
 uiRoot = null,
 toolsRoot = null,
 isActive = ()=>true,
+bindToolbar = true,
+mountStyleBar = true,
+storageKeySuffix = "",
+cloudSync = true,
 barPosKey = "draw_bar_pos",
 abortTabletChartGesture = null,
 tabletCustomPanHooked =
@@ -229,7 +233,9 @@ typeof abortTabletChartGesture ===
 onChartCrosshairAt = null,
 onChartCrosshairClear = null,
 onChartCrosshairSuppress = null,
-onChartCrosshairRelease = null
+onChartCrosshairRelease = null,
+clearAllPeers = null,
+drawPriceAlerts = true
 
 }){
 
@@ -1893,6 +1899,233 @@ return plotTop + ratio * plotHeight;
 
 }
 
+function plotCoordinateToPrice(
+py
+){
+
+if(
+!Number.isFinite(
+py
+)
+){
+return null;
+}
+
+if(
+priceScaleDragActive &&
+manualPriceScaleDrag
+){
+
+const s =
+manualPriceScaleDrag;
+
+const {
+minPrice,
+maxPrice,
+top,
+bottom,
+h,
+inverted,
+logarithmic
+} =
+s;
+
+const plotTop =
+h * top;
+
+const plotHeight =
+h * (
+1 - top - bottom
+);
+
+if(
+plotHeight <=
+0
+){
+return null;
+}
+
+const ratio =
+(py - plotTop) /
+plotHeight;
+
+if(
+logarithmic &&
+minPrice >
+0 &&
+maxPrice >
+0
+){
+
+const logMin =
+Math.log(
+minPrice
+);
+
+const logMax =
+Math.log(
+maxPrice
+);
+
+const logSpan =
+logMax - logMin;
+
+if(
+!Number.isFinite(
+logSpan
+) ||
+logSpan ===
+0
+){
+return null;
+}
+
+const logP =
+inverted
+? logMin +
+ratio *
+logSpan
+: logMax -
+ratio *
+logSpan;
+
+const price =
+Math.exp(
+logP
+);
+
+return Number.isFinite(
+price
+)
+? price
+: null;
+
+}
+
+const span =
+maxPrice - minPrice;
+
+if(
+!Number.isFinite(
+span
+) ||
+span ===
+0
+){
+return null;
+}
+
+const price =
+inverted
+? minPrice +
+ratio *
+span
+: maxPrice -
+ratio *
+span;
+
+return Number.isFinite(
+price
+)
+? price
+: null;
+
+}
+
+return series.coordinateToPrice(
+py
+);
+
+}
+
+function pointFromXY(px, py){
+
+const price =
+plotCoordinateToPrice(
+py
+);
+
+if(price == null || !Number.isFinite(price)){
+return null;
+}
+
+const time = timeFromX(px);
+
+if(time == null){
+return null;
+}
+
+return { time, price };
+
+}
+
+/** Не сбрасывать якорь при кратком сбое time/price (зум, скролл, redraw). */
+function resolvePointFromPlotXY(
+px,
+py,
+prev = null
+){
+
+const price =
+plotCoordinateToPrice(
+py
+);
+const time =
+timeFromX(
+px
+);
+
+if(
+price !=
+null &&
+Number.isFinite(
+price
+) &&
+time !=
+null
+){
+return {
+time,
+price
+};
+}
+
+if(
+!prev
+){
+return null;
+}
+
+const merged = {
+time:
+time ??
+prev.time,
+price:
+price !=
+null &&
+Number.isFinite(
+price
+)
+? price
+: prev.price
+};
+
+if(
+merged.time ==
+null ||
+merged.price ==
+null ||
+!Number.isFinite(
+merged.price
+)
+){
+return null;
+}
+
+return merged;
+
+}
+
 function plotPriceToCoordinate(
 price
 ){
@@ -2385,7 +2618,9 @@ cloneDrawingsForUndo,
 initialPositionTpSl,
 bumpDrawingsLocalRevision,
 scheduleDrawingsCloudPush,
-touchStorageSnap
+touchStorageSnap,
+storageKeySuffix,
+cloudSync
 }));
 
 function clampPositionPrices(
@@ -2639,9 +2874,13 @@ return Infinity;
 }
 
 const yTp =
-series.priceToCoordinate(shape.tpPrice);
+plotPriceToCoordinate(
+shape.tpPrice
+);
 const ySl =
-series.priceToCoordinate(shape.slPrice);
+plotPriceToCoordinate(
+shape.slPrice
+);
 
 if(
 yTp == null ||
@@ -3137,9 +3376,13 @@ positionEntryPrice(shape);
 const yEntry =
 series.priceToCoordinate(entry);
 const yTp =
-series.priceToCoordinate(shape.tpPrice);
+plotPriceToCoordinate(
+shape.tpPrice
+);
 const ySl =
-series.priceToCoordinate(shape.slPrice);
+plotPriceToCoordinate(
+shape.slPrice
+);
 
 if(
 yEntry == null ||
@@ -3213,9 +3456,13 @@ return;
 }
 
 const yTp =
-series.priceToCoordinate(shape.tpPrice);
+plotPriceToCoordinate(
+shape.tpPrice
+);
 const ySl =
-series.priceToCoordinate(shape.slPrice);
+plotPriceToCoordinate(
+shape.slPrice
+);
 
 if(
 yTp == null ||
@@ -3582,9 +3829,13 @@ return [];
 }
 
 const yTp =
-series.priceToCoordinate(shape.tpPrice);
+plotPriceToCoordinate(
+shape.tpPrice
+);
 const ySl =
-series.priceToCoordinate(shape.slPrice);
+plotPriceToCoordinate(
+shape.slPrice
+);
 
 if(
 yTp == null ||
@@ -3784,26 +4035,6 @@ wrapEl?.querySelector(
 
 }
 
-function pointFromXY(px, py){
-
-const price =
-series.coordinateToPrice(py);
-
-if(price == null || !Number.isFinite(price)){
-return null;
-}
-
-const time = timeFromX(px);
-
-if(time == null){
-return null;
-}
-
-return { time, price };
-
-}
-
-
 const {
 hrayLineDist,
 hitTestHrayLine,
@@ -3851,6 +4082,10 @@ formatDrawColor
 });
 
 
+if(
+drawPriceAlerts
+){
+
 alertsChart =
 createDrawAlertsChart({
 getSymbol,
@@ -3871,6 +4106,8 @@ drawRegistryPriceAlerts,
 stripOrphanAlertDrawings
 } =
 alertsChart);
+
+}
 
 
 redrawLoopCtl =
@@ -3958,6 +4195,7 @@ candleSeries,
 xFromTime,
 timeFromX,
 pointFromXY,
+resolvePointFromPlotXY,
 pointFromParam,
 plotPriceToCoordinate,
 hitTest,
@@ -4133,9 +4371,15 @@ next !==
 ){
 clearChartRuler();
 notifyTabletChartGestureAbort();
+
+if(
+isActive()
+){
 startPlacement(
 next
 );
+}
+
 }else{
 notifyTabletChartGestureAbort();
 }
@@ -4351,6 +4595,16 @@ cleared: true
 updateStyleBar();
 scheduleRedraw();
 
+if(
+clearAllPeers?.call
+){
+try{
+clearAllPeers.call();
+}catch{
+/* ignore */
+}
+}
+
 return true;
 
 }
@@ -4398,8 +4652,16 @@ runClear
 
 clickHandler = param=>{
 
-if(blockChartClick){
+if(
+blockChartClick
+){
 blockChartClick = false;
+return;
+}
+
+if(
+!isActive()
+){
 return;
 }
 
@@ -4423,6 +4685,13 @@ param.point.y
 
 return;
 
+}
+
+if(
+placement &&
+!isActive()
+){
+return;
 }
 
 if(
@@ -4516,6 +4785,14 @@ if(
 placement
 ){
 refreshPlacementPreviewFromPointer();
+return;
+}
+
+if(
+dragState &&
+editInteractionCtl?.reapplyHandleDragFromPlot
+){
+editInteractionCtl.reapplyHandleDragFromPlot();
 return;
 }
 
@@ -4869,6 +5146,10 @@ e
 
 };
 
+if(
+bindToolbar
+){
+
 tools.addEventListener(
 "pointerdown",
 onToolsPointerDown,
@@ -4883,6 +5164,11 @@ true
 
 bindClearAllToolbarButtons();
 
+}
+
+if(
+mountStyleBar
+){
 
 styleBarCtl =
 createDrawStyleBar({
@@ -4946,6 +5232,7 @@ styleBarCtl.portalDrawChrome();
 const teardownStyleBar =
 styleBarCtl.mount();
 
+}
 
 desktopEdit =
 createDrawDesktopSelection({
@@ -5021,6 +5308,7 @@ wrapEl,
 series,
 toXY,
 pointFromXY,
+resolvePointFromPlotXY,
 timeFromX,
 listHandles,
 getPositionHandleScreens,
@@ -5045,6 +5333,7 @@ hitTestFibBody,
 hitTestChannelBody,
 hitTestRectangleBody,
 hitTestHrayLine,
+channelP4Point,
 drawBodyHitThreshold
 });
 
@@ -5506,10 +5795,16 @@ scheduleRedraw();
 
 };
 
+if(
+drawPriceAlerts
+){
+
 window.addEventListener(
 "price-alerts-changed",
 onPriceAlertsChanged
 );
+
+}
 
 function defaultHrayAnchorTime(){
 
@@ -5573,6 +5868,9 @@ applyRemoteDrawingsToChart
 
 touchStorageSnap();
 
+let drawAuthLossTimer =
+0;
+
 const onCloudAuthChange = ()=>{
 void refreshDrawToolsAccessUiAsync();
 };
@@ -5592,11 +5890,49 @@ refreshDrawToolsAccessUi();
 if(
 canUseDrawings()
 ){
+
+if(
+drawAuthLossTimer
+){
+window.clearTimeout(
+drawAuthLossTimer
+);
+drawAuthLossTimer =
+0;
+}
+
 loadDrawings();
 }else{
+
+if(
+drawAuthLossTimer
+){
+window.clearTimeout(
+drawAuthLossTimer
+);
+}
+
+drawAuthLossTimer =
+window.setTimeout(
+()=>{
+
+drawAuthLossTimer =
+0;
+
+if(
+!canUseDrawings()
+){
 drawings = [];
 selectedId = null;
 cancelPlacement();
+updateStyleBar();
+scheduleRedraw();
+}
+
+},
+1500
+);
+
 }
 
 updateStyleBar();
@@ -5676,6 +6012,7 @@ scheduleRedraw();
 
 return {
 
+getTool: ()=> tool,
 setTool,
 pickDrawTool,
 refreshDrawToolsAccessUi,
@@ -5982,10 +6319,16 @@ chartApplyPatchRestore();
 
 releaseFibPortals();
 
+if(
+drawPriceAlerts
+){
+
 window.removeEventListener(
 "price-alerts-changed",
 onPriceAlertsChanged
 );
+
+}
 
 canvas.remove();
 

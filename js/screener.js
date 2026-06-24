@@ -29,7 +29,7 @@ alignRsiWithCandleTimes
 
 import {
 subscribeKline
-} from "./ws.js?v=16";
+} from "./ws.js?v=17";
 
 import {
 connectTickerStream,
@@ -76,7 +76,7 @@ bindMobileNavDrawerLinks
 import {
 persistFavoritesToCloud,
 onFavoritesRemoteUpdate
-} from "./cloud-sync.js?v=38";
+} from "./cloud-sync.js?v=39";
 
 import {
 attachSymbolAutocomplete,
@@ -84,9 +84,13 @@ preloadTradingSymbols
 } from "./symbol-autocomplete.js?v=1";
 
 import {
+mountQwertyKeyInput
+} from "./qwerty-key-input.js?v=1";
+
+import {
 mountScreenerWidgetZoom,
 refreshZoomFavoriteUi
-} from "./screener-widget-zoom.js?v=4";
+} from "./screener-widget-zoom.js?v=5";
 
 const gridEl =
 document.getElementById("screener-grid");
@@ -127,7 +131,9 @@ Object.freeze({
 "5":
 "240",
 "6":
-"D"
+"D",
+"7":
+"W"
 
 });
 
@@ -150,7 +156,8 @@ new Set([
 "15",
 "60",
 "240",
-"D"
+"D",
+"W"
 ]);
 
 const TF_LABELS = {
@@ -159,7 +166,8 @@ const TF_LABELS = {
 "15": "15m",
 "60": "1h",
 "240": "4h",
-"D": "1D"
+"D": "1D",
+"W": "W"
 };
 
 let favorites =
@@ -2841,6 +2849,10 @@ document.querySelectorAll(
 ".screener-symbol-search"
 ).forEach(
 input=>{
+
+mountQwertyKeyInput(
+input
+);
 
 attachSymbolAutocomplete(
 input,

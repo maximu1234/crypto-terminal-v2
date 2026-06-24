@@ -63,6 +63,7 @@ enterkeyhint="search"
 <button type="button" class="screener-mobile-menu-item" data-tf="60">1h</button>
 <button type="button" class="screener-mobile-menu-item" data-tf="240">4h</button>
 <button type="button" class="screener-mobile-menu-item" data-tf="D">1D</button>
+<button type="button" class="screener-mobile-menu-item" data-tf="W">W</button>
 </div>
 </div>
 
@@ -170,6 +171,7 @@ aria-expanded="false"
 <button type="button" class="screener-header-pick-item" data-tf="60">1h</button>
 <button type="button" class="screener-header-pick-item" data-tf="240">4h</button>
 <button type="button" class="screener-header-pick-item" data-tf="D">1D</button>
+<button type="button" class="screener-header-pick-item" data-tf="W">W</button>
 </div>
 </div>
 
@@ -217,7 +219,7 @@ const { loadLightweightCharts } =
 await import("/js/charts-lib-boot.js?v=3");
 
 await loadLightweightCharts();
-await import("/js/screener.js?v=83");
+await import("/js/screener.js?v=84");
 await import("/js/site-boot.js?v=91");
 
 }catch(err){

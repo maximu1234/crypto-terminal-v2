@@ -124,7 +124,8 @@ new Set([
 "15",
 "60",
 "240",
-"D"
+"D",
+"W"
 ]);
 
 export function registerCoinsState(

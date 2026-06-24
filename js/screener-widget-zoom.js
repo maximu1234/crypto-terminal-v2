@@ -23,7 +23,7 @@ alignRsiWithCandleTimes
 
 import {
 subscribeKline
-} from "./ws.js?v=16";
+} from "./ws.js?v=17";
 
 const ZOOM_TF_LABELS =
 {
@@ -38,7 +38,9 @@ const ZOOM_TF_LABELS =
 "240":
 "4h",
 "D":
-"1D"
+"1D",
+"W":
+"W"
 };
 
 const ZOOM_TF_VALUES =
@@ -48,7 +50,8 @@ const ZOOM_TF_VALUES =
 "15",
 "60",
 "240",
-"D"
+"D",
+"W"
 ];
 
 let zoomState =

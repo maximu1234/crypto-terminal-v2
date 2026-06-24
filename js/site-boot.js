@@ -30,7 +30,7 @@ isCloudSyncEnabled,
 getCloudUserEmail,
 pullDeviceStateFromCloud,
 onCloudSyncChange
-} from "./cloud-sync.js?v=38";
+} from "./cloud-sync.js?v=39";
 
 import {
 isAutoDevicePullDisabled

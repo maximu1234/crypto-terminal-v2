@@ -52,6 +52,7 @@ wrapEl,
 series,
 toXY,
 pointFromXY,
+resolvePointFromPlotXY,
 timeFromX,
 listHandles,
 getPositionHandleScreens,
@@ -76,6 +77,7 @@ hitTestFibBody,
 hitTestChannelBody,
 hitTestRectangleBody,
 hitTestHrayLine,
+channelP4Point,
 drawBodyHitThreshold: drawBodyHitThresholdDep
 } =
 deps;
@@ -204,6 +206,387 @@ return handle.id;
 }
 
 return null;
+
+}
+
+function handleDataPoint(
+shape,
+handleId
+){
+
+if(
+shape.type === "trendline" ||
+shape.type === "fib" ||
+shape.type === "arrow"
+){
+
+if(
+handleId ===
+"p1"
+){
+return shape.p1;
+}
+
+if(
+handleId ===
+"p2"
+){
+return shape.p2;
+}
+
+}
+
+if(
+shape.type ===
+"rectangle"
+){
+
+if(
+handleId ===
+"p1"
+){
+return shape.p1;
+}
+
+if(
+handleId ===
+"p2"
+){
+return shape.p2;
+}
+
+}
+
+if(
+shape.type ===
+"hray" &&
+handleId ===
+"anchor"
+){
+return {
+time: shape.time,
+price: shape.price
+};
+}
+
+if(
+shape.type ===
+"channel"
+){
+
+if(
+handleId ===
+"p1"
+){
+return shape.p1;
+}
+
+if(
+handleId ===
+"p2"
+){
+return shape.p2;
+}
+
+if(
+handleId ===
+"p3"
+){
+return shape.p3;
+}
+
+if(
+handleId ===
+"p4"
+){
+return channelP4Point(
+shape
+);
+}
+
+}
+
+if(
+isPositionType(
+shape.type
+)
+){
+
+if(
+handleId ===
+"entryL"
+){
+return shape.p1;
+}
+
+if(
+handleId ===
+"entryR"
+){
+return shape.p2;
+}
+
+if(
+handleId ===
+"tp"
+){
+return {
+time: shape.p1.time,
+price: shape.tpPrice
+};
+}
+
+if(
+handleId ===
+"sl"
+){
+return {
+time: shape.p1.time,
+price: shape.slPrice
+};
+}
+
+}
+
+return null;
+
+}
+
+function handleScreenPoint(
+shape,
+handleId
+){
+
+if(
+isPositionType(
+shape.type
+)
+){
+
+for(
+const handle of
+getPositionHandleScreens(
+shape
+)
+){
+
+if(
+handle.id ===
+handleId
+){
+return {
+x: handle.x,
+y: handle.y
+};
+}
+
+}
+
+return null;
+
+}
+
+if(
+shape.type ===
+"rectangle"
+){
+
+for(
+const handle of
+getRectangleHandleScreens(
+shape,
+toXY
+)
+){
+
+if(
+handle.id ===
+handleId
+){
+return {
+x: handle.x,
+y: handle.y
+};
+}
+
+}
+
+return null;
+
+}
+
+for(
+const handle of
+listHandles(
+shape
+)
+){
+
+if(
+handle.id !==
+handleId
+){
+continue;
+}
+
+const xy =
+toXY(
+handle.point
+);
+
+if(
+xy
+){
+return xy;
+}
+
+}
+
+return null;
+
+}
+
+function beginHandleDragState(
+shape,
+handleId,
+x,
+y
+){
+
+const screen =
+handleScreenPoint(
+shape,
+handleId
+);
+const dataPoint =
+handleDataPoint(
+shape,
+handleId
+);
+
+setDragState({
+shapeId: shape.id,
+mode: "handle",
+handleId,
+grabOffsetX:
+screen
+? x - screen.x
+: 0,
+grabOffsetY:
+screen
+? y - screen.y
+: 0,
+lastPoint:
+dataPoint
+? {
+time: dataPoint.time,
+price: dataPoint.price
+}
+: null,
+lastPlotX: x,
+lastPlotY: y
+});
+
+}
+
+function applyHandleDragAtPlot(
+shape,
+x,
+y
+){
+
+const drag =
+getDragState();
+
+if(
+!drag ||
+drag.mode !==
+"handle"
+){
+return false;
+}
+
+const ox =
+drag.grabOffsetX ||
+0;
+const oy =
+drag.grabOffsetY ||
+0;
+const plotX =
+x - ox;
+const plotY =
+y - oy;
+
+const point =
+resolvePointFromPlotXY(
+plotX,
+plotY,
+drag.lastPoint
+);
+
+if(
+!point
+){
+return false;
+}
+
+drag.lastPoint = {
+time: point.time,
+price: point.price
+};
+drag.lastPlotX = x;
+drag.lastPlotY = y;
+
+moveHandle(
+shape,
+drag.handleId,
+point
+);
+
+return true;
+
+}
+
+function reapplyHandleDragFromPlot(){
+
+const drag =
+getDragState();
+
+if(
+!drag ||
+drag.mode !==
+"handle" ||
+drag.lastPlotX ==
+null ||
+drag.lastPlotY ==
+null
+){
+redraw();
+return;
+}
+
+const shape =
+getDrawings().find(d=>d.id === drag.shapeId);
+
+if(
+!shape
+){
+redraw();
+return;
+}
+
+if(
+!applyHandleDragAtPlot(
+shape,
+drag.lastPlotX,
+drag.lastPlotY
+)
+){
+redraw();
+return;
+}
+
+scheduleDragRedraw();
 
 }
 
@@ -916,11 +1299,12 @@ if(
 handleId
 ){
 
-setDragState({
-shapeId: sel.id,
-mode: "handle",
-handleId
-});
+beginHandleDragState(
+sel,
+handleId,
+x,
+y
+);
 
 }else if(
 onBody
@@ -1106,11 +1490,12 @@ if(
 handleId
 ){
 
-setDragState({
-shapeId: sel.id,
-mode: "handle",
-handleId
-});
+beginHandleDragState(
+sel,
+handleId,
+x,
+y
+);
 
 }else if(
 onBody
@@ -1296,13 +1681,15 @@ return;
 
 }else{
 
-const point = pointFromXY(x, y);
-
-if(!point){
+if(
+!applyHandleDragAtPlot(
+shape,
+x,
+y
+)
+){
 return;
 }
-
-moveHandle(shape, getDragState().handleId, point);
 
 }
 
@@ -1464,7 +1851,8 @@ return {
 setupEditInteraction,
 hitTestHandle,
 hitTestShapeBody,
-scheduleDragRedraw
+scheduleDragRedraw,
+reapplyHandleDragFromPlot
 };
 
 }

@@ -65,6 +65,7 @@ candleSeries,
 xFromTime,
 timeFromX,
 pointFromXY,
+resolvePointFromPlotXY,
 pointFromParam,
 plotPriceToCoordinate,
 hitTest,
@@ -766,9 +767,10 @@ return;
 }
 
 const fromXY =
-pointFromXY(
+resolvePointFromPlotXY(
 resolved.x,
-resolved.y
+resolved.y,
+getPreviewPoint()
 );
 
 if(

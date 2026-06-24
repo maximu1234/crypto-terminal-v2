@@ -336,6 +336,14 @@ max-height:none;
 position:relative;
 }
 
+body.terminal-page #ao-wrap{
+flex:0 0 var(--coins-ao-h, clamp(102px,17.6dvh,160px));
+height:var(--coins-ao-h, clamp(102px,17.6dvh,160px));
+min-height:102px;
+max-height:none;
+position:relative;
+}
+
 body.terminal-page #list{
 position:relative;
 }
