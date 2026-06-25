@@ -34,6 +34,14 @@ flex-shrink:0;
 background:#22c55e;
 }
 
+.trade-exchange-nav-btn.is-connected{
+color:#86efac;
+}
+
+.trade-exchange-nav-btn.is-connected:hover{
+color:#bbf7d0;
+}
+
 .trade-exchange-dropdown{
 min-width:300px;
 max-width:min(360px,calc(100vw - 24px));
@@ -44,6 +52,15 @@ overscroll-behavior:contain;
 padding:10px 12px;
 scrollbar-gutter:stable;
 -webkit-overflow-scrolling:touch;
+}
+
+.trade-exchange-dropdown.trade-exchange-dropdown--portaled{
+position:fixed;
+z-index:10060;
+background:#171b21;
+border:1px solid #374151;
+border-radius:8px;
+box-shadow:0 8px 24px rgba(0,0,0,.45);
 }
 
 .trade-exchange-form{

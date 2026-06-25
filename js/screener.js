@@ -61,7 +61,7 @@ FLAG_TITLES
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=28";
+} from "./auth-ui.js?v=29";
 
 import {
 ensureSettled,
@@ -89,8 +89,9 @@ mountQwertyKeyInput
 
 import {
 mountScreenerWidgetZoom,
-refreshZoomFavoriteUi
-} from "./screener-widget-zoom.js?v=5";
+refreshZoomFavoriteUi,
+syncWidgetZoomInversion
+} from "./screener-widget-zoom.js?v=8";
 
 const gridEl =
 document.getElementById("screener-grid");
@@ -578,6 +579,9 @@ invertCharts =
 !!next;
 syncInvertChartsCheckbox();
 applyAllWidgetsInversion(
+invertCharts
+);
+syncWidgetZoomInversion(
 invertCharts
 );
 persistState();
@@ -2246,7 +2250,7 @@ toggle?.setAttribute(
 
 function openScreenerNav(){
 
-void import("./auth-ui.js?v=28").then(m=>{
+void import("./auth-ui.js?v=29").then(m=>{
 m.closeCloudSettingsDropdown?.();
 }).catch(()=>{});
 
@@ -2926,6 +2930,25 @@ if(shouldIgnoreScreenerKeyNav(e)){
 return;
 }
 
+/*
+  Option+I (Mac) и Alt+I (Windows/Linux) — в браузере оба дают altKey.
+  Совпадает с хоткеем «Перевернуть график» на странице Терминал.
+*/
+if(
+!isScreenerMobile() &&
+e.altKey &&
+!e.ctrlKey &&
+!e.metaKey &&
+e.code ===
+"KeyI"
+){
+e.preventDefault();
+setInvertCharts(
+!invertCharts
+);
+return;
+}
+
 if(e.code === "ArrowRight"){
 
 e.preventDefault();
@@ -3198,6 +3221,8 @@ widgetRoot
 ),
 getCurrentTF:()=>
 currentTF,
+getInvertCharts:()=>
+invertCharts,
 wireFlagUi:
 wireScreenerFlagWrap,
 updateFlagUi:

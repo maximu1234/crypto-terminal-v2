@@ -1,6 +1,7 @@
 /**
- * Снимает focus после выбора в select и кнопках-триггерах выпадашек.
- * Electron/macOS оставляет оранжевое кольцо, если не вызвать blur().
+ * Снимает focus после выбора в select, checkbox/radio и кнопках-триггерах выпадашек.
+ * Иначе Electron/macOS оставляет кольцо фокуса, а Пробел снова переключает контрол
+ * вместо глобальных хоткеев (листание страниц скринера, список монет и т.д.).
  */
 export function initFocusBlurAfterPick(
 root =
@@ -28,6 +29,24 @@ target?.tagName ===
 "SELECT"
 ){
 target.blur();
+return;
+}
+
+if(
+target?.tagName ===
+"INPUT" &&
+(
+target.type ===
+"checkbox" ||
+target.type ===
+"radio"
+)
+){
+queueMicrotask(
+()=>{
+target.blur();
+}
+);
 }
 
 },

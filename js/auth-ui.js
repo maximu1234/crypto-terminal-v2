@@ -263,6 +263,12 @@ target.closest(
 ) ||
 target.closest(
 "#header-settings-dropdown"
+) ||
+target.closest(
+"#trade-exchange-dropdown"
+) ||
+target.closest(
+"#trade-exchange-wrap"
 )
 );
 

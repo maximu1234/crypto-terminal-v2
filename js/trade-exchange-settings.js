@@ -130,7 +130,8 @@ btn,
 dropdown,
 {
 onOpen,
-onClose
+onClose,
+positionPanel
 } = {}
 ){
 
@@ -152,9 +153,21 @@ open
 if(
 open
 ){
+positionPanel?.();
 onOpen?.();
 }else{
 onClose?.();
+dropdown.classList.remove(
+"trade-exchange-dropdown--portaled"
+);
+dropdown.style.left =
+"";
+dropdown.style.top =
+"";
+dropdown.style.right =
+"";
+dropdown.style.bottom =
+"";
 }
 
 }
@@ -180,10 +193,23 @@ event.stopPropagation();
 
 document.addEventListener(
 "click",
-()=>{
+event=>{
+
+if(
+wrap.contains(
+event.target
+) ||
+dropdown.contains(
+event.target
+)
+){
+return;
+}
+
 setOpen(
 false
 );
+
 }
 );
 
@@ -975,28 +1001,19 @@ function mountDesktop(
 onSaved
 ){
 
-const menu =
-document.querySelector(
-".coins-header-desktop"
+const host =
+document.getElementById(
+"header-settings-dropdown"
 );
 
 if(
-!menu ||
+!host ||
 document.getElementById(
 "trade-exchange-wrap"
 )
 ){
 return null;
 }
-
-const settingsWrap =
-menu.querySelector(
-"#header-settings-wrap"
-);
-const btcLink =
-menu.querySelector(
-".coins-btc-d-link"
-);
 
 const wrap =
 document.createElement(
@@ -1005,33 +1022,31 @@ document.createElement(
 wrap.id =
 "trade-exchange-wrap";
 wrap.className =
-"header-settings-wrap trade-exchange-wrap";
+"trade-exchange-settings-entry";
 
 wrap.innerHTML =
 `
-<button type="button" class="header-settings-btn trade-exchange-btn" id="trade-exchange-btn" title="Подключение к Bybit" aria-label="Подключение к Bybit" aria-expanded="false" aria-haspopup="true">
+<button type="button" class="header-settings-system-link header-settings-menu-btn trade-exchange-nav-btn" id="trade-exchange-btn" title="Подключение к Bybit" aria-label="Настройки Bybit" aria-expanded="false" aria-haspopup="dialog">
 <span class="trade-exchange-status-dot" aria-hidden="true"></span>
 <span>Bybit</span>
 </button>
 <div class="header-settings-dropdown trade-exchange-dropdown hidden" id="trade-exchange-dropdown" role="dialog" aria-label="Настройки Bybit"></div>
 `;
 
-if(
-btcLink
-){
-btcLink.insertAdjacentElement(
-"afterend",
-wrap
+const systemLink =
+host.querySelector(
+"[data-system-admin-link]"
 );
-}else if(
-settingsWrap
+
+if(
+systemLink
 ){
-menu.insertBefore(
+host.insertBefore(
 wrap,
-settingsWrap
+systemLink
 );
 }else{
-menu.appendChild(
+host.appendChild(
 wrap
 );
 }
@@ -1064,14 +1079,146 @@ wireAutoStopSettings(
 form
 );
 
+function positionTradeExchangeDropdown(){
+
+const settingsMenu =
+document.getElementById(
+"header-settings-dropdown"
+);
+const settingsWrap =
+document.getElementById(
+"header-settings-wrap"
+);
+
+if(
+!settingsMenu ||
+!dropdown
+){
+return;
+}
+
+if(
+dropdown.parentElement !==
+document.body
+){
+document.body.appendChild(
+dropdown
+);
+}
+
+dropdown.classList.add(
+"trade-exchange-dropdown--portaled",
+"header-settings-dropdown"
+);
+dropdown.classList.remove(
+"hidden"
+);
+
+const gap =
+12;
+const settingsRect =
+settingsMenu.getBoundingClientRect();
+const wrapRect =
+settingsWrap?.getBoundingClientRect?.();
+const anchorLeft =
+wrapRect?.left ??
+settingsRect.left;
+const panelW =
+dropdown.offsetWidth ||
+360;
+const panelH =
+dropdown.offsetHeight ||
+480;
+
+let left =
+anchorLeft -
+panelW -
+gap;
+
+if(
+left <
+8
+){
+left =
+Math.max(
+8,
+settingsRect.right +
+gap
+);
+}
+
+let top =
+(
+window.innerHeight -
+panelH
+) /
+2;
+top =
+Math.max(
+8,
+Math.min(
+top,
+window.innerHeight -
+panelH -
+8
+)
+);
+
+dropdown.style.position =
+"fixed";
+dropdown.style.left =
+`${Math.round(
+left
+)}px`;
+dropdown.style.top =
+`${Math.round(
+top
+)}px`;
+dropdown.style.right =
+"auto";
+dropdown.style.bottom =
+"auto";
+dropdown.style.zIndex =
+"10060";
+
+}
+
+const dropdownCtl =
 bindDropdown(
 wrap,
 btn,
-dropdown
+dropdown,
+{
+positionPanel:
+positionTradeExchangeDropdown,
+onOpen(){
+void form.querySelector(
+'[data-role="refresh-ping"]'
+)?.click?.();
+}
+}
+);
+
+window.addEventListener(
+"resize",
+()=>{
+
+if(
+dropdown.classList.contains(
+"hidden"
+)
+){
+return;
+}
+
+positionTradeExchangeDropdown();
+
+}
 );
 
 return {
-btn
+btn,
+close:dropdownCtl.close
 };
 
 }

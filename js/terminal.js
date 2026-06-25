@@ -33,7 +33,7 @@ canSetBlueFlag
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=28";
+} from "./auth-ui.js?v=29";
 
 import {
 persistFavoritesToCloud,
@@ -171,7 +171,7 @@ settleCoinsChartViewport,
 resizeCharts,
 scheduleResizeCharts,
 applyDefaultZoom
-} from "./terminal/terminal-chart-layout.js?v=3";
+} from "./terminal/terminal-chart-layout.js?v=4";
 
 let currentDataset = "all";
 let currentTF = "60";
@@ -462,6 +462,11 @@ symbolLoadSeq
 const chartEl =
 document.getElementById(
 "chart"
+);
+
+const rsiChartEl =
+document.getElementById(
+"rsi-chart"
 );
 
 const chartTouchLayerEl =
@@ -1290,6 +1295,20 @@ onDragEnd(){},
 onReset(){}
 };
 
+const rsiPriceScaleTouchHooks = {
+getFallbackPriceRange(){
+return {
+min:0,
+max:100
+};
+},
+onInteraction(){},
+onScaleFrame(){},
+onDragStart(){},
+onDragEnd(){},
+onReset(){}
+};
+
 let tabletPriceScaleCtrl =
 mountTabletPriceScaleTouch(
 chart,
@@ -1376,6 +1395,16 @@ maxValue:
 
 applyTabletRsiChartOptions(
 rsiChart
+);
+
+mountTabletPriceScaleTouch(
+rsiChart,
+document.getElementById(
+"rsi-scale-touch-strip"
+),
+rsiChartEl,
+rsiSeries,
+rsiPriceScaleTouchHooks
 );
 
 /*
@@ -2040,6 +2069,14 @@ const prevTool =
 prevTools?.getTool?.() ??
 "cursor";
 
+if(
+prevTool !==
+"cursor" &&
+prevTools?.blocksDrawPaneSwitch?.()
+){
+return;
+}
+
 activeDrawPane =
 next;
 
@@ -2156,6 +2193,9 @@ initWidgetDrawings({
 
 chart:
 rsiChart,
+
+timeChart:
+chart,
 
 series:
 rsiSeries,
@@ -2274,6 +2314,12 @@ applyCoinsChartViewport,
 refreshCoinsChartBarSpacing,
 getDrawingTools:()=>
 drawingTools,
+getLinkedDrawingTools:()=>
+rsiDrawingTools
+? [
+rsiDrawingTools
+]
+: [],
 viewportSettleRaf
 });
 
@@ -2454,6 +2500,46 @@ drawingTools?.endPriceScaleDragRedraw?.();
 window.__tradeChartOverlay?.onPriceScaleDragEnd?.();
 drawingTools?.scheduleRedraw?.();
 };
+
+}
+
+if(
+rsiDrawingTools
+){
+
+rsiPriceScaleTouchHooks.onScaleFrame =
+range=>{
+rsiDrawingTools?.applyPriceScaleFrame?.(
+range
+);
+};
+
+rsiPriceScaleTouchHooks.onDragStart =
+range=>{
+rsiDrawingTools?.beginPriceScaleDragRedraw?.(
+range
+);
+};
+
+rsiPriceScaleTouchHooks.onDragEnd =
+()=>{
+rsiDrawingTools?.endPriceScaleDragRedraw?.();
+};
+
+rsiPriceScaleTouchHooks.onReset =
+()=>{
+rsiDrawingTools?.endPriceScaleDragRedraw?.();
+rsiDrawingTools?.scheduleRedraw?.();
+};
+
+}
+
+if(
+drawingTools ||
+rsiDrawingTools
+){
+
+wireCoinsLinkedDrawPanRedraw();
 
 }
 
@@ -3275,20 +3361,112 @@ scheduleResizeCharts
    SYNC
 ========================================================= */
 
+function wireCoinsLinkedDrawPanRedraw(){
+
+const stackEl =
+document.getElementById(
+"charts-stack"
+);
+
+if(
+!stackEl
+){
+return;
+}
+
+const drawToolPeers =
+()=>[
+drawingTools,
+rsiDrawingTools
+].filter(
+Boolean
+);
+
+const holdPeers =
+()=>{
+for(
+const tools of
+drawToolPeers()
+){
+tools.holdChartPanRedraw?.();
+}
+};
+
+const bumpPeers =
+()=>{
+for(
+const tools of
+drawToolPeers()
+){
+tools.bumpChartPanRedraw?.();
+}
+};
+
+const onLinkedPanDown =
+e=>{
+
+if(
+e.button !==
+0 &&
+e.button !==
+1
+){
+return;
+}
+
+if(
+drawingTools?.blocksTabletChartPan?.() ||
+rsiDrawingTools?.blocksTabletChartPan?.()
+){
+return;
+}
+
+holdPeers();
+
+};
+
+const onLinkedPanWheel =
+()=>{
+bumpPeers();
+};
+
+stackEl.addEventListener(
+"mousedown",
+onLinkedPanDown
+);
+stackEl.addEventListener(
+"wheel",
+onLinkedPanWheel,
+{
+passive:true
+}
+);
+window.addEventListener(
+"mouseup",
+bumpPeers
+);
+window.addEventListener(
+"blur",
+bumpPeers
+);
+
+}
+
+function syncLinkedChartsLayout(){
+
+layoutRsiBand();
+
+}
+
 linkPairedChartTimeScales(
 chart,
 rsiChart,
-layoutRsiBand,
+syncLinkedChartsLayout,
 {
 isLocked:()=>
 !rsiPaneActive ||
 isTabletCrosshairProbeLocked()
 }
-);
-
-const rsiChartEl =
-document.getElementById(
-"rsi-chart"
 );
 
 let unmountRsiTimeAxisDoubleTap =

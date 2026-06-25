@@ -652,6 +652,32 @@ text-decoration:none;
 color:#bfdbfe;
 }
 
+.header-settings-menu-btn{
+width:100%;
+border-left:0;
+border-right:0;
+border-bottom:0;
+background:none;
+font:inherit;
+text-align:left;
+cursor:pointer;
+}
+
+.header-settings-menu-btn .trade-exchange-status-dot{
+display:inline-block;
+vertical-align:middle;
+margin-right:6px;
+}
+
+#header-settings-dropdown .trade-exchange-settings-entry{
+position:relative;
+}
+
+#header-settings-dropdown .trade-exchange-dropdown.header-settings-dropdown--inline{
+margin-top:8px;
+padding:10px 12px;
+}
+
 .coins-nav-settings .header-settings-system-link,
 #coins-nav-panel .header-settings-system-link{
 margin-top:14px;

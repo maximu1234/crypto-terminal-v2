@@ -33,6 +33,68 @@ return layoutCtx;
 
 }
 
+function forEachDrawingTool(
+fn
+){
+
+const primary =
+ctx().getDrawingTools?.();
+
+const linked =
+ctx().getLinkedDrawingTools?.() ||
+[];
+
+const tools =
+[];
+
+if(
+primary
+){
+tools.push(
+primary
+);
+}
+
+for(
+const tool of
+linked
+){
+
+if(
+tool &&
+!tools.includes(
+tool
+)
+){
+tools.push(
+tool
+);
+}
+
+}
+
+for(
+const tool of
+tools
+){
+fn(
+tool
+);
+}
+
+}
+
+function syncDrawingToolsLayout(){
+
+forEachDrawingTool(
+tool=>{
+tool.resize?.();
+tool.scheduleRedraw?.();
+}
+);
+
+}
+
 export function buildChartDisplayCandles(){
 
 const {
@@ -320,17 +382,13 @@ getChartIndicators,
 getRsiChart,
 rsiPaneActive,
 layoutRsiBand,
-refreshCoinsChartBarSpacing,
-getDrawingTools
+refreshCoinsChartBarSpacing
 } =
 ctx();
 
 const candles =
 getCandles?.() ||
 [];
-const drawingTools =
-getDrawingTools?.();
-
 if(
 candles.length
 ){
@@ -374,8 +432,7 @@ layoutRsiBand?.();
 
 }
 
-drawingTools?.resize?.();
-drawingTools?.scheduleRedraw?.();
+syncDrawingToolsLayout();
 
 }
 
@@ -413,7 +470,6 @@ false;
 
 const {
 getCandles,
-getDrawingTools,
 viewportSettleRaf
 } =
 ctx();
@@ -428,19 +484,21 @@ if(
 return;
 }
 
-const drawingTools =
-getDrawingTools?.();
-
 const run =
 ()=>{
 applyChartDimensions();
 settleCoinsChartViewport();
-drawingTools?.resize?.();
 
 if(
 scheduleDrawingRedraw
 ){
-drawingTools?.scheduleRedraw?.();
+syncDrawingToolsLayout();
+}else{
+forEachDrawingTool(
+tool=>{
+tool.resize?.();
+}
+);
 }
 
 };

@@ -1,6 +1,6 @@
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=28";
+} from "./auth-ui.js?v=29";
 
 import {
 ensureCloudLoginResolved,
@@ -38,7 +38,7 @@ mountTradeDiaryPeriodPicker
 
 import {
 initTradeDiaryNav
-} from "./trade-diary-nav.js?v=3";
+} from "./trade-diary-nav.js?v=5";
 
 const guestEl =
 document.getElementById(

@@ -11,7 +11,7 @@ isWatchlistPage
 
 import {
 initTradeExchangeSettings
-} from "./trade-exchange-settings.js?v=11";
+} from "./trade-exchange-settings.js?v=14";
 
 import {
 initTradeVolumePresets
@@ -192,7 +192,7 @@ const {
 initTradeDiaryNav
 } =
 await import(
-"./trade-diary-nav.js?v=3"
+"./trade-diary-nav.js?v=5"
 );
 
 void initTradeDiaryNav();

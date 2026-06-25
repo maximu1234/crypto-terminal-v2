@@ -4,7 +4,7 @@ initAlertMonitor
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=28";
+} from "./auth-ui.js?v=29";
 
 import {
 isAlertsPage
@@ -68,7 +68,7 @@ initSuppressNativeContextMenu
 
 import {
 initFocusBlurAfterPick
-} from "./focus-blur-after-pick.js?v=1";
+} from "./focus-blur-after-pick.js?v=2";
 
 import {
 initDesktopAppUi

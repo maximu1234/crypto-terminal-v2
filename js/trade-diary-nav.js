@@ -11,6 +11,23 @@ return location.pathname.startsWith(
 
 }
 
+function findDiaryNavHost(){
+
+const dropdown =
+document.getElementById(
+"header-settings-dropdown"
+);
+
+if(dropdown){
+return dropdown;
+}
+
+return document.querySelector(
+"#coins-nav-panel .coins-nav-settings"
+);
+
+}
+
 export async function initTradeDiaryNav(){
 
 if(
@@ -43,17 +60,9 @@ link.id =
 link.href =
 "/diary/";
 link.className =
-"coins-diary-link trade-diary-nav-link";
+"header-settings-system-link trade-diary-nav-link";
 link.textContent =
 "Дневник";
-
-if(
-isDiaryPage()
-){
-link.classList.add(
-"active"
-);
-}
 
 if(
 isDiaryPage()
@@ -67,8 +76,14 @@ document.getElementById(
 if(
 aside
 ){
+const asideLink =
+link.cloneNode(
+true
+);
+asideLink.className =
+"coins-diary-link trade-diary-nav-link active";
 aside.appendChild(
-link
+asideLink
 );
 }
 
@@ -76,48 +91,45 @@ return;
 
 }
 
-const menu =
-document.querySelector(
-".coins-header-desktop"
-);
+const host =
+findDiaryNavHost();
 
 if(
-!menu
+!host
 ){
 return;
 }
 
-const bybitWrap =
-document.getElementById(
-"trade-exchange-wrap"
+const bybitEntry =
+host.querySelector(
+"#trade-exchange-wrap"
+);
+const systemLink =
+host.querySelector(
+"[data-system-admin-link]"
 );
 
 if(
-bybitWrap
+bybitEntry
 ){
-bybitWrap.insertAdjacentElement(
-"beforebegin",
-link
-);
-return;
-}
-
-const btcLink =
-menu.querySelector(
-".coins-btc-d-link"
-);
-
-if(
-btcLink
-){
-btcLink.insertAdjacentElement(
+bybitEntry.insertAdjacentElement(
 "afterend",
 link
 );
 return;
 }
 
-menu.appendChild(
+if(
+systemLink
+){
+systemLink.insertAdjacentElement(
+"beforebegin",
+link
+);
+return;
+}
+
+host.appendChild(
 link
 );
 

@@ -28,6 +28,9 @@ chart,
 series,
 wrapEl,
 chartSize,
+pointerFromEvent,
+holdChartPanRedraw,
+bumpChartPanRedraw,
 getDrawings,
 getSelectedId,
 listHandles,
@@ -415,6 +418,85 @@ null;
 
 }
 
+function captureVisiblePriceRangeFromSeries(){
+
+const { h } =
+chartSize();
+const m =
+readChartScaleMargins();
+const plotTop =
+h * m.top;
+const plotBottom =
+h * (
+1 - m.bottom
+);
+
+let priceAtTop =
+series.coordinateToPrice(
+plotTop
+);
+let priceAtBottom =
+series.coordinateToPrice(
+plotBottom
+);
+
+if(
+priceAtTop ==
+null ||
+priceAtBottom ==
+null
+){
+return null;
+}
+
+const min =
+Math.min(
+priceAtTop,
+priceAtBottom
+);
+const max =
+Math.max(
+priceAtTop,
+priceAtBottom
+);
+
+if(
+!Number.isFinite(
+min
+) ||
+!Number.isFinite(
+max
+) ||
+min ===
+max
+){
+return null;
+}
+
+return {
+min,
+max
+};
+
+}
+
+function refreshPriceScaleDragRangeFromSeries(){
+
+const range =
+captureVisiblePriceRangeFromSeries();
+
+if(
+!range
+){
+return false;
+}
+
+return applyLockedPriceRangeFromChart(
+range
+);
+
+}
+
 function applyLockedPriceRangeFromChart(
 range
 ){
@@ -466,6 +548,7 @@ priceScalePaintRaf = 0;
 return;
 }
 
+refreshPriceScaleDragRangeFromSeries();
 redraw();
 priceScalePaintRaf =
 requestAnimationFrame(
@@ -565,6 +648,137 @@ restoreSeriesPriceToCoordinate();
 
 }
 
+function setupDesktopPriceScaleDrag(){
+
+if(
+typeof pointerFromEvent !==
+"function"
+){
+return ()=>{};
+}
+
+let dragPointerId =
+null;
+
+const onPointerDown = e=>{
+
+if(
+!getAlive() ||
+e.pointerType !==
+"mouse" ||
+e.button !==
+0 ||
+!e.isPrimary
+){
+return;
+}
+
+const { x } =
+pointerFromEvent(
+e
+);
+
+if(
+!isPointerInPriceGutter(
+x
+)
+){
+return;
+}
+
+const range =
+captureVisiblePriceRangeFromSeries();
+
+if(
+!range
+){
+return;
+}
+
+dragPointerId =
+e.pointerId ??
+0;
+holdChartPanRedraw?.();
+beginPriceScaleDragRedraw(
+range
+);
+
+};
+
+const endDesktopPriceScaleDrag = e=>{
+
+if(
+dragPointerId ==
+null
+){
+return;
+}
+
+if(
+e?.pointerId !==
+undefined &&
+e.pointerId !==
+dragPointerId
+){
+return;
+}
+
+dragPointerId =
+null;
+endPriceScaleDragRedraw();
+bumpChartPanRedraw?.();
+
+};
+
+wrapEl.addEventListener(
+"pointerdown",
+onPointerDown,
+true
+);
+window.addEventListener(
+"pointerup",
+endDesktopPriceScaleDrag
+);
+window.addEventListener(
+"pointercancel",
+endDesktopPriceScaleDrag
+);
+window.addEventListener(
+"blur",
+endDesktopPriceScaleDrag
+);
+
+return ()=>{
+wrapEl.removeEventListener(
+"pointerdown",
+onPointerDown,
+true
+);
+window.removeEventListener(
+"pointerup",
+endDesktopPriceScaleDrag
+);
+window.removeEventListener(
+"pointercancel",
+endDesktopPriceScaleDrag
+);
+window.removeEventListener(
+"blur",
+endDesktopPriceScaleDrag
+);
+if(
+dragPointerId !=
+null
+){
+dragPointerId =
+null;
+endPriceScaleDragRedraw();
+bumpChartPanRedraw?.();
+}
+};
+
+}
+
 return {
 getPriceGutterWidth,
 getPlotWidth,
@@ -576,7 +790,8 @@ beginPriceScaleDragRedraw,
 applyPriceScaleFrame,
 endPriceScaleDragRedraw,
 redrawDuringPriceScaleDrag,
-cancelPriceScalePaint
+cancelPriceScalePaint,
+setupDesktopPriceScaleDrag
 };
 
 }

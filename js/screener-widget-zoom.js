@@ -60,6 +60,42 @@ null;
 let zoomMountOptions =
 null;
 
+function applyZoomInversion(
+state,
+inverted
+){
+
+const flag =
+!!inverted;
+
+for(
+const chart of [
+state?.chart,
+state?.rsiChart
+]
+){
+
+if(
+!chart
+){
+continue;
+}
+
+try{
+chart.priceScale(
+"right"
+).applyOptions({
+invertScale:
+flag
+});
+}catch{
+/* ignore */
+}
+
+}
+
+}
+
 export function refreshZoomFavoriteUi(
 symbol
 ){
@@ -76,6 +112,23 @@ return;
 zoomMountOptions.updateFlagUi(
 zoomState.panel,
 symbol
+);
+
+}
+
+export function syncWidgetZoomInversion(
+inverted
+){
+
+if(
+!zoomState
+){
+return;
+}
+
+applyZoomInversion(
+zoomState,
+inverted
 );
 
 }
@@ -322,6 +375,11 @@ state.series,
 state.candles,
 w,
 h
+);
+
+applyZoomInversion(
+state,
+zoomMountOptions?.getInvertCharts?.() === true
 );
 
 }
@@ -638,6 +696,11 @@ null
 zoomState =
 state;
 
+applyZoomInversion(
+state,
+zoomMountOptions?.getInvertCharts?.() === true
+);
+
 const titleLeft =
 panel.querySelector(
 ".screener-widget-zoom-title"
@@ -870,6 +933,7 @@ export function mountScreenerWidgetZoom(
 {
 resolveWidget,
 getCurrentTF,
+getInvertCharts = ()=>false,
 isEnabled = ()=>true,
 wireFlagUi,
 updateFlagUi,
@@ -881,7 +945,8 @@ zoomMountOptions =
 {
 wireFlagUi,
 updateFlagUi,
-flagWrapHtml
+flagWrapHtml,
+getInvertCharts
 };
 
 function onContextMenu(

@@ -563,20 +563,30 @@ syncDrawMagnetModifierFromEvent(
 optEvent
 );
 
+const { w, h } =
+chartSize();
+const plotW =
+getPlotWidth();
+
+const x =
+Math.max(0, Math.min(plotW, rawX));
+const y =
+Math.max(0, Math.min(h, rawY));
+
 setPlacementPointerXY({
-x: rawX,
-y: rawY
+x,
+y
 });
 
 setLastCrosshairPlotXY({
-x: rawX,
-y: rawY
+x,
+y
 });
 
 const resolved =
 resolvePlacementPlotXY(
-rawX,
-rawY,
+x,
+y,
 optEvent
 );
 
@@ -591,7 +601,7 @@ resolved.y;
 
 if(
 isPlotXBeyondLastCandle(
-rawX
+x
 )
 ){
 

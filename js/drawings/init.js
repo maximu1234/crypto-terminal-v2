@@ -192,7 +192,7 @@ createDrawAlertsChart
 
 import {
 createDrawPlacement
-} from "./draw-placement.js?v=7";
+} from "./draw-placement.js?v=8";
 
 import {
 createBrushPlacement
@@ -200,7 +200,7 @@ createBrushPlacement
 
 import {
 createDrawEditInteraction
-} from "./draw-edit-interaction.js?v=9";
+} from "./draw-edit-interaction.js?v=11";
 
 import {
 createDrawChartInput
@@ -208,7 +208,7 @@ createDrawChartInput
 
 import {
 createDrawPriceScale
-} from "./draw-price-scale.js?v=3";
+} from "./draw-price-scale.js?v=6";
 
 import {
 createDrawRedrawLoop
@@ -219,6 +219,7 @@ export function initDrawings({
 chart,
 series,
 wrapEl,
+timeChart = null,
 getSymbol,
 getTf,
 getCandles,
@@ -242,6 +243,10 @@ clearAllPeers = null,
 drawPriceAlerts = true
 
 }){
+
+const coordChart =
+timeChart ||
+chart;
 
 const tools =
 toolsRoot || document;
@@ -358,6 +363,10 @@ let toolDefaults = {};
 let clickHandler = null;
 let crosshairHandler = null;
 let rangeHandler = null;
+let rangeHandlerChartSub =
+null;
+let rangeHandlerCoordSub =
+null;
 
 function canUseDrawings(){
 return isCloudLoggedInEffective();
@@ -508,6 +517,8 @@ let setupCoarseTouchChartGuard =
 ()=>()=>{};
 let setupChartPanRedraw =
 ()=>()=>{};
+let startChartPanRedraw =
+()=>{};
 let stopChartPanRedraw =
 ()=>{};
 
@@ -552,15 +563,48 @@ let redrawDuringPriceScaleDrag =
 ()=>{};
 let cancelPriceScalePaint =
 ()=>{};
+let setupDesktopPriceScaleDrag =
+()=>()=>{};
+let holdChartPanRedraw =
+()=>{};
+let bumpChartPanRedraw =
+()=>{
+redraw();
+};
+let chartPanSettleTimer =
+0;
 
 
 
+
+function isDrawingInteractionLocked(){
+
+return !!(
+dragState ||
+placement ||
+brushPlacementCtl?.getBrushStroke?.()
+);
+
+}
+
+function blocksDrawPaneSwitch(){
+
+return !!(
+dragState ||
+placement?.points?.length ||
+brushPlacementCtl?.getBrushStroke?.()
+);
+
+}
 
 function shouldDeferExternalDrawingsSync(){
 
 return (
+isDrawingInteractionLocked() ||
+(
 styleBarCtl?.shouldDeferExternalDrawingsSync?.() ??
 false
+)
 );
 
 }
@@ -917,8 +961,10 @@ if(t == null){
 return null;
 }
 
-const ts = chart.timeScale();
-const direct = ts.timeToCoordinate(t);
+const ts =
+coordChart.timeScale();
+const direct =
+ts.timeToCoordinate(t);
 
 if(direct != null){
 return direct;
@@ -991,7 +1037,7 @@ return seg.x0 + (seg.x1 - seg.x0) * ((t - candles[lo].time) / seg.dt);
 function timeFromX(x){
 
 const ts =
-chart.timeScale();
+coordChart.timeScale();
 const candles =
 candleSeries();
 
@@ -3980,6 +4026,11 @@ chart,
 series,
 wrapEl,
 chartSize,
+pointerFromEvent,
+holdChartPanRedraw:()=>
+holdChartPanRedraw(),
+bumpChartPanRedraw:()=>
+bumpChartPanRedraw(),
 getDrawings:()=>drawings,
 getSelectedId:()=>selectedId,
 listHandles,
@@ -4031,7 +4082,8 @@ beginPriceScaleDragRedraw,
 applyPriceScaleFrame,
 endPriceScaleDragRedraw,
 redrawDuringPriceScaleDrag,
-cancelPriceScalePaint
+cancelPriceScalePaint,
+setupDesktopPriceScaleDrag
 } =
 priceScaleCtl);
 
@@ -4215,13 +4267,32 @@ drawPriceScaleLabels,
 onAfterRedraw:notifyAfterRedraw
 });
 
+let redrawCore;
+/** @type {(() => boolean) | null} */
+let reapplyActiveDragCoordsHook =
+null;
+
 ({
 scheduleRedraw,
-redraw,
+redraw: redrawCore,
 shapeCoordsReady,
 cancelPendingRedraws
 } =
 redrawLoopCtl);
+
+redraw =
+function(){
+
+if(
+dragState &&
+reapplyActiveDragCoordsHook
+){
+reapplyActiveDragCoordsHook();
+}
+
+redrawCore();
+
+};
 
 
 placementCtl =
@@ -4877,14 +4948,15 @@ return;
 }
 
 if(
-dragState &&
-editInteractionCtl?.reapplyHandleDragFromPlot
+dragState
 ){
-editInteractionCtl.reapplyHandleDragFromPlot();
+scheduleDragRedraw?.();
 return;
 }
 
+holdChartPanRedraw();
 redraw();
+
 };
 
 const origChartApplyOptions =
@@ -4907,6 +4979,7 @@ opts &&
 opts.rightPriceScale !==
 undefined
 ){
+holdChartPanRedraw();
 redraw();
 }
 
@@ -4942,13 +5015,34 @@ priceScaleDragActive
 return;
 }
 
-scheduleRedraw();
+if(
+dragState
+){
+scheduleDragRedraw?.();
+return;
+}
+
+holdChartPanRedraw();
+redraw();
 
 };
 
 chart.subscribeClick(clickHandler);
 chart.subscribeCrosshairMove(crosshairHandler);
-chart.timeScale().subscribeVisibleLogicalRangeChange(rangeHandler);
+rangeHandlerChartSub =
+chart.timeScale().subscribeVisibleLogicalRangeChange(
+rangeHandler
+);
+
+if(
+coordChart !==
+chart
+){
+rangeHandlerCoordSub =
+coordChart.timeScale().subscribeVisibleLogicalRangeChange(
+rangeHandler
+);
+}
 
 const onKeyDown = e=>{
 
@@ -5444,6 +5538,7 @@ notifyTabletChartGestureAbort,
 beginEditDragCrosshair,
 clearEditDragCrosshair,
 syncEditDragCrosshair,
+flushDeferredFibSettingsSync,
 syncChartTouchPan,
 hitTestTrendlineBody,
 hitTestFibBody,
@@ -5461,6 +5556,10 @@ hitTestShapeBody,
 scheduleDragRedraw
 } =
 editInteractionCtl);
+
+reapplyActiveDragCoordsHook =
+()=>
+editInteractionCtl.reapplyActiveDragCoords();
 
 
 chartInputCtl =
@@ -5502,9 +5601,44 @@ redraw
 setupFinePointerChartClicks,
 setupCoarseTouchChartGuard,
 setupChartPanRedraw,
+startChartPanRedraw,
 stopChartPanRedraw
 } =
 chartInputCtl);
+
+holdChartPanRedraw =
+()=>{
+
+if(
+chartPanSettleTimer
+){
+clearTimeout(
+chartPanSettleTimer
+);
+chartPanSettleTimer =
+0;
+}
+
+startChartPanRedraw();
+
+};
+
+bumpChartPanRedraw =
+()=>{
+
+holdChartPanRedraw();
+
+chartPanSettleTimer =
+setTimeout(
+()=>{
+chartPanSettleTimer =
+0;
+stopChartPanRedraw();
+},
+280
+);
+
+};
 
 
 const teardownEditInteraction =
@@ -5524,6 +5658,9 @@ setupPlacementPointerPreview();
 
 const teardownChartPanRedraw =
 setupChartPanRedraw();
+
+const teardownDesktopPriceScaleDrag =
+setupDesktopPriceScaleDrag();
 
 const onDrawingsUpdated = e=>{
 
@@ -5875,7 +6012,8 @@ registerDrawingsStoragePoller({
 getKey: storageKey,
 shouldRun: ()=>
 alive &&
-canUseDrawings(),
+canUseDrawings() &&
+!isDrawingInteractionLocked(),
 onChanged: syncDrawingsFromStorageIfChanged
 });
 
@@ -6183,6 +6321,14 @@ clearAllDrawingsOnChart,
 
 scheduleRedraw,
 scheduleDragRedraw,
+forceRedraw:()=>
+redraw(),
+isChartPanActive:()=>
+chartPanActive,
+startChartPanRedraw,
+stopChartPanRedraw,
+holdChartPanRedraw,
+bumpChartPanRedraw,
 schedulePriceScaleSyncedRedraw,
 beginPriceScaleDragRedraw,
 applyPriceScaleFrame,
@@ -6212,6 +6358,12 @@ afterRedrawListeners.delete(
 fn
 );
 },
+
+hasActiveDrawInteraction: ()=>
+isDrawingInteractionLocked(),
+
+blocksDrawPaneSwitch: ()=>
+blocksDrawPaneSwitch(),
 
 blocksTabletChartPan(){
 
@@ -6473,6 +6625,7 @@ onChartCandlesLoaded
 cancelPendingRedraws();
 
 teardownChartPanRedraw?.();
+teardownDesktopPriceScaleDrag?.();
 stopChartPanRedraw();
 endPriceScaleDragRedraw();
 cancelPriceScalePaint();
@@ -6485,7 +6638,26 @@ priceScaleApplyPatchRestore();
 
 chart.unsubscribeClick(clickHandler);
 chart.unsubscribeCrosshairMove(crosshairHandler);
-chart.timeScale().unsubscribeVisibleLogicalRangeChange(rangeHandler);
+
+if(
+rangeHandlerChartSub
+){
+chart.timeScale().unsubscribeVisibleLogicalRangeChange(
+rangeHandlerChartSub
+);
+rangeHandlerChartSub =
+null;
+}
+
+if(
+rangeHandlerCoordSub
+){
+coordChart.timeScale().unsubscribeVisibleLogicalRangeChange(
+rangeHandlerCoordSub
+);
+rangeHandlerCoordSub =
+null;
+}
 
 if(chartApplyPatchRestore){
 

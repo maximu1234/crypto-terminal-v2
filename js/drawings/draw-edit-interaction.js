@@ -78,6 +78,7 @@ notifyTabletChartGestureAbort,
 beginEditDragCrosshair,
 clearEditDragCrosshair,
 syncEditDragCrosshair,
+flushDeferredFibSettingsSync,
 syncChartTouchPan,
 hitTestTrendlineBody,
 hitTestFibBody,
@@ -556,22 +557,15 @@ return true;
 
 }
 
-function reapplyHandleDragFromPlot(){
+function reapplyActiveDragCoords(){
 
 const drag =
 getDragState();
 
 if(
-!drag ||
-drag.mode !==
-"handle" ||
-drag.lastPlotX ==
-null ||
-drag.lastPlotY ==
-null
+!drag
 ){
-redraw();
-return;
+return false;
 }
 
 const shape =
@@ -580,16 +574,74 @@ getDrawings().find(d=>d.id === drag.shapeId);
 if(
 !shape
 ){
-redraw();
-return;
+return false;
+}
+
+const x =
+drag.lastPlotX;
+const y =
+drag.lastPlotY;
+
+if(
+x ==
+null ||
+y ==
+null
+){
+return false;
 }
 
 if(
-!applyHandleDragAtPlot(
+drag.mode ===
+"handle"
+){
+
+return applyHandleDragAtPlot(
 shape,
-drag.lastPlotX,
-drag.lastPlotY
-)
+x,
+y
+);
+
+}
+
+if(
+drag.mode ===
+"screen-move"
+){
+
+return applyScreenMoveToShape(
+shape,
+drag.pointOffsets,
+x,
+y
+);
+
+}
+
+if(
+drag.mode ===
+"position-move"
+){
+
+return applyPositionBodyMove(
+shape,
+drag.startX,
+drag.startY,
+x,
+y,
+drag.snapshot
+);
+
+}
+
+return false;
+
+}
+
+function reapplyActiveDragFromPlot(){
+
+if(
+!reapplyActiveDragCoords()
 ){
 redraw();
 return;
@@ -1386,6 +1438,8 @@ shapeId: sel.id,
 mode: "position-move",
 startX: x,
 startY: y,
+lastPlotX: x,
+lastPlotY: y,
 snapshot: {
 p1: { ...sel.p1 },
 p2: { ...sel.p2 },
@@ -1418,6 +1472,8 @@ shapeId: sel.id,
 mode: "screen-move",
 startX: x,
 startY: y,
+lastPlotX: x,
+lastPlotY: y,
 pointOffsets: offsets
 });
 
@@ -1592,6 +1648,8 @@ shapeId: sel.id,
 mode: "position-move",
 startX: x,
 startY: y,
+lastPlotX: x,
+lastPlotY: y,
 snapshot: {
 p1: { ...sel.p1 },
 p2: { ...sel.p2 },
@@ -1638,6 +1696,8 @@ shapeId: sel.id,
 mode: "screen-move",
 startX: x,
 startY: y,
+lastPlotX: x,
+lastPlotY: y,
 pointOffsets: offsets
 });
 
@@ -1738,6 +1798,11 @@ getDragState().snapshot
 return;
 }
 
+getDragState().lastPlotX =
+locked.x;
+getDragState().lastPlotY =
+locked.y;
+
 }else if(getDragState().mode === "screen-move"){
 
 const locked =
@@ -1758,6 +1823,11 @@ locked.y
 ){
 return;
 }
+
+getDragState().lastPlotX =
+locked.x;
+getDragState().lastPlotY =
+locked.y;
 
 }else{
 
@@ -1857,6 +1927,7 @@ saveDrawings();
 
 setDragState(null);
 clearEditDragCrosshair();
+flushDeferredFibSettingsSync?.();
 syncChartTouchPan();
 redraw();
 setBlockChartClick(true);
@@ -1932,7 +2003,8 @@ setupEditInteraction,
 hitTestHandle,
 hitTestShapeBody,
 scheduleDragRedraw,
-reapplyHandleDragFromPlot
+reapplyActiveDragCoords,
+reapplyActiveDragFromPlot
 };
 
 }
