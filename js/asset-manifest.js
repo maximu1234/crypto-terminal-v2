@@ -141,7 +141,7 @@ Object.freeze({
 "screener-widget-zoom.js":
 8,
 "release-marker.js":
-22,
+23,
 "focus-blur-after-pick.js":
 2,
 "site-boot.js":
