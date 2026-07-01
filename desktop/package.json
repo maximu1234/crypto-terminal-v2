@@ -1,7 +1,7 @@
 {
   "name": "multichart-desktop",
   "productName": "Multichart",
-  "version": "1.0.40",
+  "version": "1.0.41",
   "description": "Multichart desktop shell for macOS (bundled site UI + auto-update)",
   "main": "main.js",
   "author": "Multichart",
@@ -75,6 +75,20 @@
     "dmg": {
       "title": "Multichart ${version}"
     },
+    "extraResources": [
+      {
+        "from": "build/menu-bar-tray.png",
+        "to": "menu-bar-tray.png"
+      },
+      {
+        "from": "build/side-dot-long.png",
+        "to": "side-dot-long.png"
+      },
+      {
+        "from": "build/side-dot-short.png",
+        "to": "side-dot-short.png"
+      }
+    ],
     "publish": {
       "provider": "github",
       "owner": "maximu1234",

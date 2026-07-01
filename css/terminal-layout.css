@@ -554,20 +554,20 @@ body.terminal-page .coins-multi-chart-grid--3{
 grid-template-columns:1fr 1fr;
 grid-template-rows:1fr 1fr;
 grid-template-areas:
-"a c"
-"b c";
+"c a"
+"c b";
 }
 
 body.terminal-page .coins-multi-chart-grid--3 .coins-chart-slot--0{
-grid-area:a;
+grid-area:c;
 }
 
 body.terminal-page .coins-multi-chart-grid--3 .coins-chart-slot--1{
-grid-area:b;
+grid-area:a;
 }
 
 body.terminal-page .coins-multi-chart-grid--3 .coins-chart-slot--2{
-grid-area:c;
+grid-area:b;
 }
 
 body.terminal-page .coins-multi-chart-grid--4{
@@ -620,6 +620,47 @@ min-height:0;
 display:flex;
 flex-direction:column;
 position:relative;
+}
+
+body.terminal-page.coins-multi-chart-on .coins-chart-slot-body .screener-chart .chart-dom-crosshair-vert{
+position:absolute;
+top:0;
+bottom:0;
+width:1px;
+border:none;
+background:repeating-linear-gradient(
+to bottom,
+#758696 0,
+#758696 5px,
+transparent 5px,
+transparent 9px
+);
+pointer-events:none;
+z-index:4;
+transform:translateZ(0);
+}
+
+body.terminal-page.coins-multi-chart-on .coins-chart-slot-body .screener-chart .chart-dom-crosshair-horz{
+position:absolute;
+left:0;
+height:1px;
+border:none;
+background:repeating-linear-gradient(
+to right,
+#758696 0,
+#758696 5px,
+transparent 5px,
+transparent 9px
+);
+box-sizing:border-box;
+pointer-events:none;
+z-index:10;
+transform:translateZ(0);
+}
+
+body.terminal-page.coins-multi-chart-on .coins-chart-slot-body .screener-chart .chart-dom-crosshair-vert.hidden,
+body.terminal-page.coins-multi-chart-on .coins-chart-slot-body .screener-chart .chart-dom-crosshair-horz.hidden{
+display:none;
 }
 
 body.terminal-page .coins-chart-slot-body .screener-chart{

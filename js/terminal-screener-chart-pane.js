@@ -33,6 +33,10 @@ import {
 subscribeKline
 } from "./ws.js?v=17";
 
+import {
+mountWidgetDomCrosshair
+} from "./chart-widget-host.js?v=14";
+
 function mergeLiveCandle(
 candles,
 candle,
@@ -179,6 +183,8 @@ let symbol =
 "";
 let tf =
 "15";
+let disposeCrosshair =
+null;
 
 function layoutRsi(){
 
@@ -545,6 +551,18 @@ chart =
 pair.chart;
 series =
 pair.series;
+
+if(
+!disposeCrosshair
+){
+disposeCrosshair =
+mountWidgetDomCrosshair({
+chart,
+series,
+wrapEl: chartContainer,
+chartContainer
+});
+}
 
 ensureRsiChart();
 
@@ -1035,6 +1053,9 @@ function destroy(){
 alive =
 false;
 detachKline();
+disposeCrosshair?.();
+disposeCrosshair =
+null;
 resizeObserver.disconnect();
 rsiResizeObserver?.disconnect?.();
 rsiResizeObserver =

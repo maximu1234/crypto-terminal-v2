@@ -125,10 +125,36 @@
 }
 
 .app-settings-panel-lead{
-  margin:0 0 14px;
-  font-size:13px;
-  line-height:1.45;
-  color:#9ca3af;
+margin:0 0 14px;
+font-size:13px;
+line-height:1.45;
+color:#9ca3af;
+}
+
+.app-settings-toggle-row{
+display:flex;
+align-items:center;
+gap:10px;
+margin:0;
+font-size:13px;
+line-height:1.35;
+color:#e5e7eb;
+cursor:pointer;
+user-select:none;
+}
+
+.app-settings-toggle-input{
+width:14px;
+height:14px;
+margin:0;
+flex:0 0 auto;
+accent-color:#818cf8;
+cursor:pointer;
+}
+
+.app-settings-toggle-label{
+flex:1 1 auto;
+min-width:0;
 }
 
 .app-settings-subtitle{

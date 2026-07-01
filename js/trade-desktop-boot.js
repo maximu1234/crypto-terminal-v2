@@ -199,6 +199,15 @@ initTradePositionsLive();
 initTradeBookPanel();
 
 const {
+initDesktopMenuBarTray
+} =
+await import(
+"./desktop-menu-bar-tray.js?v=5"
+);
+
+initDesktopMenuBarTray();
+
+const {
 initTradeDiaryNav
 } =
 await import(
@@ -261,7 +270,7 @@ const {
 initTradeChartOverlay
 } =
 await import(
-"./trade-chart-overlay.js?v=28"
+"./trade-chart-overlay.js?v=30"
 );
 
 initTradeChartOverlay();
@@ -270,7 +279,7 @@ const {
 initTradeChartOrders
 } =
 await import(
-"./trade-chart-orders.js?v=15"
+"./trade-chart-orders.js?v=17"
 );
 
 initTradeChartOrders();

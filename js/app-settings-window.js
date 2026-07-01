@@ -1,5 +1,5 @@
 /**
- * Окно «Настройки» — sidebar: Синхронизация / Подключения / Секретные.
+ * Окно «Настройки» — sidebar: Системные / Синхронизация / Подключения / Секретные.
  */
 import {
 cssUrl
@@ -21,8 +21,20 @@ import {
 mountFavoritesCloudSettingsPanel
 } from "./favorites-settings-panel.js?v=1";
 
+import {
+isMenuBarTrayPlatform
+} from "./desktop-menu-bar-tray-prefs.js?v=1";
+
 const SECTIONS =
 [
+{
+id:
+"system",
+label:
+"Системные",
+desktopOnly:
+true
+},
 {
 id:
 "sync",
@@ -55,6 +67,8 @@ let telegramCtl =
 null;
 let favoritesCloudCtl =
 null;
+let systemCtl =
+null;
 let bybitCtl =
 null;
 let cssLoaded =
@@ -65,6 +79,12 @@ false;
 function showConnectionsSettings(){
 
 return isTradePage();
+
+}
+
+function showSystemSettings(){
+
+return isMenuBarTrayPlatform();
 
 }
 
@@ -297,10 +317,21 @@ btn.textContent =
 section.label;
 
 if(
-section.desktopOnly
+section.desktopOnly &&
+section.id ===
+"connections"
 ){
 btn.hidden =
 !showConnectionsSettings();
+}
+
+if(
+section.desktopOnly &&
+section.id ===
+"system"
+){
+btn.hidden =
+!showSystemSettings();
 }
 
 if(
@@ -406,6 +437,26 @@ return;
 
 panel.dataset.mounted =
 "1";
+
+if(
+sectionId ===
+"system"
+){
+
+const {
+mountSystemSettingsPanel
+} =
+await import(
+"./app-settings-system-panel.js?v=1"
+);
+
+systemCtl =
+mountSystemSettingsPanel(
+panel
+);
+return;
+
+}
 
 if(
 sectionId ===
@@ -575,6 +626,13 @@ sectionId
 
 if(
 sectionId ===
+"system"
+){
+systemCtl?.refresh?.();
+}
+
+if(
+sectionId ===
 "sync"
 ){
 telegramCtl?.refresh?.();
@@ -647,6 +705,15 @@ resolved =
 
 if(
 resolved ===
+"system" &&
+!showSystemSettings()
+){
+resolved =
+"sync";
+}
+
+if(
+resolved ===
 "secret" &&
 !adminNavVisible
 ){
@@ -690,6 +757,18 @@ connectionsBtn
 ){
 connectionsBtn.hidden =
 !showConnectionsSettings();
+}
+
+const systemBtn =
+overlayEl?.querySelector(
+'.app-settings-nav-btn[data-section="system"]'
+);
+
+if(
+systemBtn
+){
+systemBtn.hidden =
+!showSystemSettings();
 }
 
 if(

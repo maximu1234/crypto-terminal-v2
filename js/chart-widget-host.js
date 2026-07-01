@@ -105,18 +105,16 @@ chart
 }
 
 /**
- * DOM-крест + «+» алерта на виджете Терминала (как на /coins).
+ * DOM-крест на виджете (без «+» алерта).
  */
-export function mountDashboardChartInteractions({
+export function mountWidgetDomCrosshair({
 chart,
 series,
 wrapEl,
 chartContainer,
-getSymbol,
-getTf,
-getDrawingTools,
-onPlusActivate =
-null
+isSuppressed =
+()=>
+false
 }){
 
 if(
@@ -140,6 +138,7 @@ e
 ){
 
 if(
+isSuppressed() ||
 crosshairSuppressed ||
 e.pointerType ===
 "touch"
@@ -197,6 +196,7 @@ clientY: e.clientY
 function onCrosshairLeave(){
 
 if(
+isSuppressed() ||
 crosshairSuppressed
 ){
 return;
@@ -221,6 +221,66 @@ wrapEl.addEventListener(
 "pointerleave",
 onCrosshairLeave
 );
+
+return ()=>{
+
+wrapEl.removeEventListener(
+"pointermove",
+onCrosshairMove,
+{
+capture:true
+}
+);
+
+wrapEl.removeEventListener(
+"pointerleave",
+onCrosshairLeave
+);
+
+hideDomChartCrosshair(
+wrapEl
+);
+
+};
+
+}
+
+/**
+ * DOM-крест + «+» алерта на виджете Терминала (как на /coins).
+ */
+export function mountDashboardChartInteractions({
+chart,
+series,
+wrapEl,
+chartContainer,
+getSymbol,
+getTf,
+getDrawingTools,
+onPlusActivate =
+null
+}){
+
+if(
+!chart ||
+!series ||
+!wrapEl ||
+!chartContainer
+){
+return ()=>{};
+}
+
+let crosshairSuppressed =
+false;
+
+const disposeCrosshair =
+mountWidgetDomCrosshair({
+chart,
+series,
+wrapEl,
+chartContainer,
+isSuppressed:()=>
+crosshairSuppressed
+});
 
 let disposeAlertUi =
 mountPriceAlertUi({
@@ -263,22 +323,7 @@ onPlusActivate
 
 return ()=>{
 
-wrapEl.removeEventListener(
-"pointermove",
-onCrosshairMove,
-{
-capture:true
-}
-);
-
-wrapEl.removeEventListener(
-"pointerleave",
-onCrosshairLeave
-);
-
-hideDomChartCrosshair(
-wrapEl
-);
+disposeCrosshair?.();
 disposeAlertUi?.();
 
 };

@@ -1,5 +1,20 @@
 /* Мобильное меню — алерты, листинги, калькулятор */
 
+html:has(body.site-nav-page),
+body.site-nav-page{
+height:auto;
+min-height:100%;
+min-height:100dvh;
+overflow-x:hidden;
+overflow-y:auto;
+-webkit-overflow-scrolling:touch;
+}
+
+body.site-nav-page{
+display:flex;
+flex-direction:column;
+}
+
 body.site-nav-page .site-mobile-bar,
 body.site-nav-page .screener-nav-backdrop{
 display:none;

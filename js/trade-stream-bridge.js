@@ -6,12 +6,18 @@ applyTradePositionsStream,
 syncTradePositionsCache
 } from "./trade-positions-cache.js?v=6";
 
+import {
+isTradePositionSoundBaselineReady
+} from "./trade-position-sounds.js?v=2";
+
 let unsubscribe =
 null;
 let visibilityHandler =
 null;
 let syncTimer =
 null;
+let initialStreamSyncDone =
+false;
 
 const POSITIONS_SYNC_INTERVAL_MS =
 5000;
@@ -83,6 +89,9 @@ syncTradePositionsCache(),
 syncTradeOrdersFromRest()
 ]);
 
+initialStreamSyncDone =
+true;
+
 }
 
 function dispatch(
@@ -126,7 +135,12 @@ payload.positions
 : [];
 
 applyTradePositionsStream(
-positions
+positions,
+{
+establishBaseline:
+initialStreamSyncDone &&
+!isTradePositionSoundBaselineReady()
+}
 );
 
 dispatch(

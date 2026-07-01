@@ -6,10 +6,10 @@ maybeApplyAutoStopsForNewPosition
 } from "./trade-auto-stops.js?v=2";
 
 import {
-markTradePositionSoundsSeeded,
-playTradePositionCloseSound,
-playTradePositionOpenSound,
-shouldPlayTradePositionSounds
+applyTradePositionSoundDiff,
+establishTradePositionSoundBaseline,
+isTradePositionSoundBaselineReady,
+resetTradePositionSoundBaseline
 } from "./trade-position-sounds.js?v=2";
 
 const cacheBySymbol =
@@ -217,17 +217,120 @@ dispatchAllPositions();
 
 }
 
-function applyPositionsList(
-positions
+function activePositionSoundKey(
+row
 ){
 
-const playSounds =
-shouldPlayTradePositionSounds();
+const sym =
+normalizeSymbol(
+row?.symbol
+);
 
-let openedCount =
-0;
-let closedCount =
-0;
+if(
+!sym
+){
+return "";
+}
+
+const side =
+String(
+row?.side ||
+""
+).trim();
+
+return side
+? `${sym}:${side}`
+: sym;
+
+}
+
+function collectActivePositionSoundKeys(
+rowsBySymbol
+){
+
+const keys =
+new Set();
+
+for(
+const row of rowsBySymbol.values()
+){
+
+if(
+!isActivePosition(
+row
+)
+){
+continue;
+}
+
+const key =
+activePositionSoundKey(
+row
+);
+
+if(
+key
+){
+keys.add(
+key
+);
+}
+
+}
+
+return keys;
+
+}
+
+function syncPositionSounds(
+options = {}
+){
+
+const activeKeys =
+collectActivePositionSoundKeys(
+cacheBySymbol
+);
+
+if(
+options.resetBaseline
+){
+resetTradePositionSoundBaseline();
+return;
+}
+
+if(
+options.establishBaseline
+){
+
+if(
+!isTradePositionSoundBaselineReady()
+){
+establishTradePositionSoundBaseline(
+activeKeys
+);
+}else{
+applyTradePositionSoundDiff(
+activeKeys
+);
+}
+
+return;
+}
+
+if(
+isTradePositionSoundBaselineReady()
+){
+applyTradePositionSoundDiff(
+activeKeys
+);
+}
+
+}
+
+function applyPositionsList(
+positions,
+options = {}
+){
 
 const next =
 new Map();
@@ -281,15 +384,6 @@ cacheBySymbol.get(
 sym
 );
 
-if(
-playSounds &&
-isActivePosition(
-prev
-)
-){
-closedCount++;
-}
-
 cacheBySymbol.delete(
 sym
 );
@@ -323,18 +417,11 @@ JSON.stringify(
 row
 );
 
-const wasActive =
-isActivePosition(
-prev
-);
-const isActive =
+const isNewOpen =
+!prev &&
 isActivePosition(
 row
 );
-
-const isNewOpen =
-!prev &&
-isActive;
 
 cacheBySymbol.set(
 sym,
@@ -352,24 +439,6 @@ row
 );
 
 if(
-playSounds
-){
-
-if(
-!wasActive &&
-isActive
-){
-openedCount++;
-}else if(
-wasActive &&
-!isActive
-){
-closedCount++;
-}
-
-}
-
-if(
 isNewOpen
 ){
 maybeApplyAutoStopsForNewPosition(
@@ -383,27 +452,9 @@ row
 
 }
 
-if(
-playSounds
-){
-
-if(
-openedCount >
-0
-){
-playTradePositionOpenSound();
-}
-
-if(
-closedCount >
-0
-){
-playTradePositionCloseSound();
-}
-
-}else{
-markTradePositionSoundsSeeded();
-}
+syncPositionSounds(
+options
+);
 
 if(
 listChanged
@@ -519,11 +570,13 @@ let inflightSync =
 null;
 
 export function applyTradePositionsStream(
-positions
+positions,
+options = {}
 ){
 
 applyPositionsList(
-positions
+positions,
+options
 );
 
 }
@@ -547,9 +600,6 @@ window.cryptoTerminalDesktop?.trading;
 if(
 !api?.getPositions
 ){
-applyPositionsList(
-[]
-);
 return {
 ok:
 false
@@ -563,7 +613,11 @@ if(
 !status?.configured
 ){
 applyPositionsList(
-[]
+[],
+{
+resetBaseline:
+true
+}
 );
 return {
 ok:
@@ -583,7 +637,11 @@ return result;
 
 applyPositionsList(
 result.positions ||
-[]
+[],
+{
+establishBaseline:
+true
+}
 );
 
 return result;

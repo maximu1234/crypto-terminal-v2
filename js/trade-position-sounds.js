@@ -15,8 +15,9 @@ let audioUnlocked =
 false;
 let unlockListenersBound =
 false;
-let soundsSeeded =
-false;
+/** @type {Set<string> | null} */
+let baselineActiveKeys =
+null;
 
 function unlockAudioOnGesture(){
 
@@ -212,16 +213,101 @@ play.catch(
 
 }
 
-export function shouldPlayTradePositionSounds(){
+export function resetTradePositionSoundBaseline(){
 
-return soundsSeeded;
+baselineActiveKeys =
+null;
 
 }
 
-export function markTradePositionSoundsSeeded(){
+export function isTradePositionSoundBaselineReady(){
 
-soundsSeeded =
+return baselineActiveKeys !==
+null;
+
+}
+
+export function establishTradePositionSoundBaseline(
+activeKeys
+){
+
+baselineActiveKeys =
+new Set(
+activeKeys ||
+[]
+);
+
+}
+
+export function applyTradePositionSoundDiff(
+nextActiveKeys
+){
+
+const next =
+new Set(
+nextActiveKeys ||
+[]
+);
+
+if(
+baselineActiveKeys ===
+null
+){
+establishTradePositionSoundBaseline(
+next
+);
+return;
+}
+
+let opened =
+false;
+let closed =
+false;
+
+for(
+const key of next
+){
+
+if(
+!baselineActiveKeys.has(
+key
+)
+){
+opened =
 true;
+}
+
+}
+
+for(
+const key of baselineActiveKeys
+){
+
+if(
+!next.has(
+key
+)
+){
+closed =
+true;
+}
+
+}
+
+if(
+opened
+){
+playTradePositionOpenSound();
+}
+
+if(
+closed
+){
+playTradePositionCloseSound();
+}
+
+baselineActiveKeys =
+next;
 
 }
 

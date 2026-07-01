@@ -329,15 +329,25 @@ let mountAbort =
 null;
 let chartSwitchFrozen =
 false;
-let frozenPosition =
+let switchVeilVisible =
+false;
+let switchVeilPosition =
 null;
+let switchLoadSeq =
+0;
 
 function getDisplayPosition(){
 
 if(
+switchVeilVisible
+){
+return switchVeilPosition;
+}
+
+if(
 chartSwitchFrozen
 ){
-return frozenPosition;
+return null;
 }
 
 return position;
@@ -1880,8 +1890,12 @@ badgeLayoutCache =
 null;
 chartSwitchFrozen =
 false;
-frozenPosition =
+switchVeilVisible =
+false;
+switchVeilPosition =
 null;
+switchLoadSeq =
+0;
 
 root?.remove();
 root =
@@ -2774,11 +2788,51 @@ signal
 ){
 
 const onSwitchStart =
-()=>{
+e=>{
+
+switchLoadSeq =
+Number(
+e.detail?.loadSeq
+) ||
+0;
 chartSwitchFrozen =
 true;
-frozenPosition =
+switchVeilVisible =
+true;
+switchVeilPosition =
 position;
+stopDragListeners?.();
+stopDragListeners =
+null;
+dragStop =
+null;
+pendingStopPrice =
+null;
+scheduleDraw(
+true
+);
+host?.getDrawingTools?.()?.scheduleRedraw?.();
+};
+
+const onCandlesApply =
+e=>{
+
+const seq =
+Number(
+e.detail?.loadSeq
+) ||
+0;
+
+if(
+seq &&
+seq !==
+switchLoadSeq
+){
+return;
+}
+
+switchVeilVisible =
+false;
 scheduleDraw(
 true
 );
@@ -2805,7 +2859,9 @@ return;
 
 chartSwitchFrozen =
 false;
-frozenPosition =
+switchVeilVisible =
+false;
+switchVeilPosition =
 null;
 
 void syncPosition(
@@ -2820,6 +2876,14 @@ true
 window.addEventListener(
 "chart-switch-start",
 onSwitchStart,
+{
+signal
+}
+);
+
+window.addEventListener(
+"chart-switch-candles-apply",
+onCandlesApply,
 {
 signal
 }

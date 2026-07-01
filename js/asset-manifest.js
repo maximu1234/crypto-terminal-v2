@@ -33,7 +33,9 @@ Object.freeze({
 "terminal-list-refresh.js":
 1,
 "trade-desktop-boot.js":
-15,
+16,
+"desktop-menu-bar-tray.js":
+5,
 "trade-diary-access.js":
 1,
 "trade-diary-format.js":
@@ -77,9 +79,9 @@ Object.freeze({
 "trade-book-columns.js":
 11,
 "trade-chart-overlay.js":
-28,
+30,
 "trade-chart-orders.js":
-15,
+17,
 "trade-order-plus-ui.js":
 2,
 "trade-widget-mount.js":
@@ -171,7 +173,7 @@ Object.freeze({
 "chart-import.js":
 43,
 "chart-widget-host.js":
-13,
+14,
 "tablet-gesture-policy.js":
 1,
 "tablet-widget-chart.js":
@@ -330,7 +332,7 @@ Object.freeze({
 "header-settings-shell.js":
 1,
 "app-settings-window.js":
-4,
+5,
 "app-settings-secret.js":
 1,
 "telegram-settings-panel.js":
@@ -408,13 +410,13 @@ Object.freeze({
 "common.css":
 34,
 "screener.css":
-41,
+42,
 "terminal.css":
 157,
 "watchlist.css":
 49,
 "terminal-layout.css":
-79,
+80,
 "chart-indicators.css":
 15,
 "trade-exchange-settings.css":
@@ -444,7 +446,7 @@ Object.freeze({
 "watchlist-page.css":
 2,
 "site-mobile-nav.css":
-6,
+7,
 "alerts.css":
 17,
 "listings.css":

@@ -64,6 +64,17 @@ clearAuthSession
 require(
 "./auth-session.cjs"
 );
+const {
+initMenuBarTray,
+updateMenuBarTray,
+setMenuBarTrayVisible,
+configureMenuBarTray,
+dismissTrayPopup,
+destroyMenuBarTray
+} =
+require(
+"./menu-bar-tray.cjs"
+);
 
 registerAppScheme();
 
@@ -527,6 +538,8 @@ if(
 mainWindow.show();
 }
 
+ensureMacDockVisible();
+
 if(
 !mainWindowShown
 ){
@@ -540,6 +553,26 @@ mainWindow.focus();
 
 let bundleLoadFallback =
 false;
+let isQuitting =
+false;
+
+function ensureMacDockVisible(){
+
+if(
+process.platform !==
+"darwin" ||
+!app.dock?.show
+){
+return;
+}
+
+try{
+app.dock.show();
+}catch{
+/* ignore */
+}
+
+}
 
 function createWindow(){
 
@@ -793,6 +826,24 @@ setTradingStreamTarget(
 mainWindow.webContents
 );
 startTradingStream();
+}
+
+}
+);
+
+mainWindow.on(
+"close",
+event=>{
+
+if(
+process.platform ===
+"darwin" &&
+!isQuitting
+){
+event.preventDefault();
+dismissTrayPopup();
+mainWindow.hide();
+ensureMacDockVisible();
 }
 
 }
@@ -1065,6 +1116,73 @@ err.message
 }
 );
 
+ipcMain.handle(
+"desktop:updateMenuBarTray",
+(
+_event,
+state
+)=>{
+
+try{
+updateMenuBarTray(
+state ||
+{}
+);
+return {
+ok:
+true
+};
+}catch(
+err
+){
+log.warn(
+"desktop:updateMenuBarTray:",
+err.message
+);
+return {
+ok:
+false,
+message:
+err.message
+};
+}
+
+}
+);
+
+ipcMain.handle(
+"desktop:setMenuBarTrayVisible",
+(
+_event,
+visible
+)=>{
+
+try{
+setMenuBarTrayVisible(
+!!visible
+);
+return {
+ok:
+true
+};
+}catch(
+err
+){
+log.warn(
+"desktop:setMenuBarTrayVisible:",
+err.message
+);
+return {
+ok:
+false,
+message:
+err.message
+};
+}
+
+}
+);
+
 }
 
 function registerAuthProtocol(){
@@ -1188,6 +1306,8 @@ startupAuthUrl;
 app.whenReady().then(
 async()=>{
 
+ensureMacDockVisible();
+
 registerAuthProtocol();
 
 if(
@@ -1255,10 +1375,16 @@ warmTimeout
 registerIpc();
 buildMenu();
 createWindow();
+configureMenuBarTray(
+revealMainWindow
+);
 
 app.on(
 "activate",
 ()=>{
+
+ensureMacDockVisible();
+
 if(
 mainWindow &&
 !mainWindow.isDestroyed()
@@ -1283,6 +1409,11 @@ createWindow();
 app.on(
 "before-quit",
 ()=>{
+
+isQuitting =
+true;
+
+destroyMenuBarTray();
 
 if(
 closeLocalSiteServer

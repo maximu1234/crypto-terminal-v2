@@ -106,6 +106,12 @@ TOTAL_PNL_HIDDEN_KEY
 );
 }
 
+window.dispatchEvent(
+new CustomEvent(
+"trade-total-pnl-visibility-changed"
+)
+);
+
 }catch{
 /* ignore */
 }

@@ -88,7 +88,7 @@ createSharedDrawUndoStack
 
 import {
 initWidgetDrawings
-} from "./chart-widget-host.js?v=13";
+} from "./chart-widget-host.js?v=14";
 
 import {
 mountDrawToolbar,
@@ -3185,6 +3185,32 @@ loadSeq
 
 }
 
+function dispatchChartSwitchCandlesApply(
+symbol,
+loadSeq
+){
+
+window.dispatchEvent(
+new CustomEvent(
+"chart-switch-candles-apply",
+{
+detail:{
+symbol:
+normalizeChartEventSymbol(
+symbol
+),
+loadSeq:
+Number(
+loadSeq
+) ||
+0
+}
+}
+)
+);
+
+}
+
 function dispatchChartCandlesLoaded(
 symbol,
 loadSeq
@@ -3357,6 +3383,11 @@ loadSeq
 return;
 
 }
+
+dispatchChartSwitchCandlesApply(
+currentSymbol,
+loadSeq
+);
 
 candleSeries.setData(
 buildChartDisplayCandles()
