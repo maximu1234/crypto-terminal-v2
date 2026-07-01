@@ -1,6 +1,6 @@
 # Метка 46 — торговля, PnL share, BANDWIDTH-CUT, SMA/EMA (июль 2026)
 
-**Тег:** `metka-46` · **Веб:** `v0.46` · **Desktop:** `desktop-v1.0.39` → `v1.0.39`
+**Тег:** `metka-46` · **Веб:** `v0.46` · **Desktop:** `desktop-v1.0.40` → `v1.0.40`
 
 **Предыдущий эталон:** [MARKER_45.md](./MARKER_45.md) (`metka-45` / `desktop-v1.0.37`).
 
@@ -23,8 +23,8 @@
 ## Desktop DMG
 
 ```bash
-git tag desktop-v1.0.39   # GitHub Actions → .dmg
-git push origin desktop-v1.0.39
+git tag desktop-v1.0.40
+git push origin desktop-v1.0.40
 ```
 
 ## Ключевые версии
@@ -35,4 +35,4 @@ git push origin desktop-v1.0.39
 | `trade-book-panel.js` | 42 |
 | `cloud-sync.js` | 40 |
 | `moving-average.js` | 14 |
-| `release-marker.js` | METKA 46 / desktop 1.0.39 |
+| `release-marker.js` | METKA 46 / desktop 1.0.40 |
