@@ -5,6 +5,15 @@ on:
     tags:
       - "desktop-v*"
   workflow_dispatch:
+    inputs:
+      desktop_version:
+        description: "Desktop semver (must match release-marker.js and desktop/package.json)"
+        required: true
+        default: "1.0.43"
+
+concurrency:
+  group: desktop-release-${{ github.event.inputs.desktop_version && format('desktop-v{0}', github.event.inputs.desktop_version) || github.ref_name }}
+  cancel-in-progress: true
 
 permissions:
   contents: write
@@ -27,11 +36,30 @@ jobs:
         with:
           node-version: "20"
 
-      - name: Sync desktop version from tag
-        if: startsWith(github.ref, 'refs/tags/desktop-v')
+      - name: Resolve desktop release tag and version
+        id: release
+        working-directory: .
         run: |
-          VERSION="${GITHUB_REF_NAME#desktop-v}"
-          npm version "$VERSION" --no-git-tag-version --allow-same-version
+          set -euo pipefail
+          if [[ "${GITHUB_REF}" == refs/tags/desktop-v* ]]; then
+            TAG="${GITHUB_REF_NAME}"
+            VERSION="${TAG#desktop-v}"
+          else
+            VERSION="${{ github.event.inputs.desktop_version }}"
+            TAG="desktop-v${VERSION}"
+            PKG=$(node -p "require('./desktop/package.json').version")
+            MARKER=$(node --input-type=module -e "import { DESKTOP_APP_VERSION } from './js/release-marker.js'; console.log(DESKTOP_APP_VERSION)")
+            if [ "$PKG" != "$VERSION" ] || [ "$MARKER" != "$VERSION" ]; then
+              echo "Version mismatch: input=${VERSION}, package.json=${PKG}, release-marker=${MARKER}"
+              exit 1
+            fi
+          fi
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "Release target: ${TAG} (v${VERSION})"
+
+      - name: Sync desktop package version
+        run: npm version "${{ steps.release.outputs.version }}" --no-git-tag-version --allow-same-version
 
       - name: Install dependencies
         run: |
@@ -57,7 +85,7 @@ jobs:
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: multichart-macos
+          name: multichart-macos-${{ steps.release.outputs.version }}
           path: |
             desktop/dist/*.dmg
             desktop/dist/*.zip
@@ -65,14 +93,16 @@ jobs:
           if-no-files-found: error
 
       - name: Publish GitHub Release
-        if: startsWith(github.ref, 'refs/tags/desktop-v')
+        if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/desktop-v')
         working-directory: .
         env:
           GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.release.outputs.tag }}
+          RELEASE_VERSION: ${{ steps.release.outputs.version }}
         run: |
           set -euo pipefail
-          TAG="${GITHUB_REF_NAME}"
-          VERSION="${TAG#desktop-v}"
+          TAG="${RELEASE_TAG}"
+          VERSION="${RELEASE_VERSION}"
           REPO="${GITHUB_REPOSITORY}"
           ASSETS=(desktop/dist/*.dmg desktop/dist/*.zip desktop/dist/latest-mac.yml)
 
@@ -87,8 +117,18 @@ jobs:
             if gh release view "$TAG" --repo "$REPO" >/dev/null 2>&1; then
               echo "Release ${TAG} exists — uploading assets"
               gh release upload "$TAG" --repo "$REPO" "${ASSETS[@]}" --clobber
+              return 0
+            fi
+
+            echo "Creating release ${TAG}"
+            if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
+              gh release create "$TAG" \
+                --repo "$REPO" \
+                --target "${GITHUB_SHA}" \
+                --title "Desktop ${VERSION}" \
+                --generate-notes \
+                "${ASSETS[@]}"
             else
-              echo "Creating release ${TAG}"
               gh release create "$TAG" \
                 --repo "$REPO" \
                 --title "Desktop ${VERSION}" \
