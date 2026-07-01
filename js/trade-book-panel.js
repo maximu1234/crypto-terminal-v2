@@ -1418,21 +1418,29 @@ el,
 symbol
 ){
 
-el.addEventListener(
+const tickerEl =
+el.querySelector(
+".col-ticker"
+);
+
+if(
+!tickerEl ||
+tickerEl.dataset.openBound ===
+"1"
+){
+return;
+}
+
+tickerEl.dataset.openBound =
+"1";
+
+tickerEl.addEventListener(
 "pointerup",
 event=>{
 
 if(
 event.button !==
 0
-){
-return;
-}
-
-if(
-event.target.closest(
-".trade-book-close"
-)
 ){
 return;
 }

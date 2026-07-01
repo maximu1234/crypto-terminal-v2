@@ -10,7 +10,7 @@ import {
 cloneDefaultFibRows,
 ensureFibLevelsVisible,
 getFibRows
-} from "./fib-spec.js?v=12";
+} from "./fib-spec.js?v=13";
 
 import {
 normalizeRectangleShape

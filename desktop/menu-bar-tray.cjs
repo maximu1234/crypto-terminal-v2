@@ -6,7 +6,8 @@ Tray,
 BrowserWindow,
 ipcMain,
 nativeImage,
-app
+app,
+screen
 } =
 require(
 "electron"
@@ -158,7 +159,7 @@ const nextHeight =
 Math.max(
 120,
 Math.min(
-640,
+trayPopupMaxHeight(),
 Number(
 height
 ) ||
@@ -172,7 +173,32 @@ nextHeight,
 false
 );
 
+positionTrayPopup();
+
 });
+
+function trayPopupMaxHeight(){
+
+try{
+const workArea =
+screen.getPrimaryDisplay()?.workAreaSize;
+
+if(
+workArea?.height
+){
+return Math.max(
+220,
+workArea.height -
+24
+);
+}
+}catch{
+/* ignore */
+}
+
+return 720;
+
+}
 
 ipcMain.on(
 "tray-popup:open-app",

@@ -117,7 +117,7 @@ normalizeFibLevelsShape,
 parseFibRatioField,
 getFibRows,
 isSeriesLogarithmic
-} from "./fib-spec.js?v=12";
+} from "./fib-spec.js?v=13";
 
 import {
 setFibPanelCommitHook,
@@ -150,7 +150,7 @@ createDrawHitTester
 
 import {
 createDrawRenderer
-} from "./draw-render.js?v=11";
+} from "./draw-render.js?v=13";
 
 import {
 snapPlotToCandleWick
@@ -184,7 +184,7 @@ createDrawingsPersist
 
 import {
 createDrawStyleBar
-} from "./draw-style-bar.js?v=15";
+} from "./draw-style-bar.js?v=16";
 
 import {
 createDrawAlertsChart

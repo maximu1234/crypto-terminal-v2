@@ -65,6 +65,45 @@ return num >
 
 }
 
+function scheduleTrayPopupResize(){
+
+requestAnimationFrame(
+()=>{
+requestAnimationFrame(
+()=>{
+
+const root =
+document.getElementById(
+"root"
+);
+
+if(
+!root
+){
+return;
+}
+
+const height =
+Math.ceil(
+root.getBoundingClientRect().height
+);
+
+if(
+height >
+0
+){
+window.trayPopup?.resize?.(
+height
+);
+}
+
+}
+);
+}
+);
+
+}
+
 function render(
 state
 ){
@@ -200,14 +239,7 @@ window.trayPopup?.quit?.();
 }
 );
 
-const height =
-Math.ceil(
-document.body.getBoundingClientRect().height
-);
-
-window.trayPopup?.resize?.(
-height
-);
+scheduleTrayPopupResize();
 
 }
 

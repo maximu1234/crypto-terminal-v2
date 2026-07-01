@@ -11,7 +11,7 @@ import {
 ensureFibLevelsVisible,
 cloneDefaultFibRows,
 ensureFibAnchorMinSpan
-} from "./fib-spec.js?v=12";
+} from "./fib-spec.js?v=13";
 
 import {
 isPositionType

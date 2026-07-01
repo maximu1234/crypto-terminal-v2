@@ -752,6 +752,11 @@ flex:1 1 auto;
 
 body.trade-page .trade-book-positions-table--grid .trade-book-row--position > .col-ticker{
 overflow:visible;
+cursor:pointer;
+}
+
+body.trade-page .trade-book-row--position > .col-ticker:hover .trade-book-ticker-text{
+color:#fff;
 }
 
 body.trade-page .trade-book-ticker-text{

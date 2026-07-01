@@ -11,7 +11,7 @@ RECT_DEFAULT_FILL_OPACITY
 import {
 ensureFibLevelsVisible,
 finalizeFibLevels
-} from "./fib-spec.js?v=12";
+} from "./fib-spec.js?v=13";
 
 import {
 isPositionType,

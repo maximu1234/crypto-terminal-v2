@@ -73,7 +73,7 @@ Object.freeze({
 "trade-market-entry.js":
 3,
 "trade-book-panel.js":
-42,
+43,
 "trade-pnl-share-modal.js":
 5,
 "trade-book-columns.js":
@@ -203,7 +203,7 @@ Object.freeze({
 "drawings/drawings-persist.js":
 7,
 "drawings/draw-style-bar.js":
-15,
+16,
 "drawings/draw-templates.js":
 4,
 "drawings/draw-alerts-chart.js":
@@ -229,7 +229,7 @@ Object.freeze({
 "drawings/math.js":
 1,
 "drawings/fib-spec.js":
-12,
+13,
 "drawings/fib-portals.js":
 3,
 "drawings/position.js":
@@ -243,7 +243,7 @@ Object.freeze({
 "drawings/brush-placement.js":
 2,
 "drawings/draw-render.js":
-11,
+13,
 "drawings/draw-hit.js":
 9,
 "drawings-cloud-sync.js":
@@ -430,7 +430,7 @@ Object.freeze({
 "trade-market-entry.css":
 2,
 "trade-book-panel.css":
-44,
+45,
 "trade-pnl-share-modal.css":
 2,
 "trade-diary.css":

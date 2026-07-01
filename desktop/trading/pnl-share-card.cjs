@@ -27,15 +27,25 @@ require(
 "electron"
 );
 
-const ROOT =
-path.resolve(
+function getAppRoot(){
+
+if(
+app.isPackaged
+){
+return process.resourcesPath;
+}
+
+return path.resolve(
 __dirname,
 "..",
 ".."
 );
+
+}
+
 const SCRIPT =
 path.join(
-ROOT,
+getAppRoot(),
 "scripts",
 "generate-bybit-pnl-card.py"
 );
@@ -118,7 +128,7 @@ spawn(
 args,
 {
 cwd:
-ROOT,
+getAppRoot(),
 stdio:
 [
 "ignore",

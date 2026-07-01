@@ -33,7 +33,7 @@ parseFibRatioField,
 getFibRows,
 setFibLineStyleButton,
 setFibLevelWidthButton
-} from "./fib-spec.js?v=12";
+} from "./fib-spec.js?v=13";
 
 import {
 setFibPanelCommitHook,
@@ -1081,6 +1081,9 @@ row.innerHTML =
 <input type="checkbox" class="fib-level-on"/>
 <input type="text" class="fib-level-val" autocomplete="off" spellcheck="false"/>
 <button type="button" class="fib-level-color-btn" title="Цвет уровня" aria-label="Цвет уровня"></button>
+<label class="fib-level-bg-label" title="Включить фон">
+<input type="checkbox" class="fib-level-bg" aria-label="Включить фон"/>
+</label>
 `;
 
 const on =
@@ -1211,7 +1214,8 @@ return;
 
 if(
 e.target?.id === "fib-show-trend-line" ||
-e.target?.classList.contains("fib-level-on")
+e.target?.classList.contains("fib-level-on") ||
+e.target?.classList.contains("fib-level-bg")
 ){
 scheduleFibApplyImmediate();
 }
@@ -1667,6 +1671,8 @@ const valInp =
 row.querySelector(".fib-level-val");
 const chk =
 row.querySelector(".fib-level-on");
+const bgChk =
+row.querySelector(".fib-level-bg");
 const colorBtn =
 row.querySelector(".fib-level-color-btn");
 
@@ -1682,6 +1688,9 @@ parsed != null
 
 template[i].enabled =
 !!chk?.checked;
+
+template[i].fillBg =
+!!bgChk?.checked;
 
 template[i].lineStyle =
 globalLineStyle;
@@ -1768,6 +1777,7 @@ return;
 }
 
 levels[i].enabled = !!pr.enabled;
+levels[i].fillBg = !!pr.fillBg;
 levels[i].v = pr.v;
 levels[i].lineStyle =
 normalizeFibLineStyle(pr.lineStyle);
@@ -1886,6 +1896,7 @@ normalizeFibLevelColor(def?.color);
 return {
 v: Number.isFinite(row.v) ? row.v : def?.v ?? 0,
 enabled: !!row.enabled,
+fillBg: !!row.fillBg,
 lineStyle: normalizeFibLineStyle(row.lineStyle) || "solid",
 lineWidth: normalizeFibLevelWidth(row.lineWidth) || 1,
 ...(levelColor ? { color: levelColor } : {})
@@ -1952,6 +1963,8 @@ return;
 
 const on =
 wrap.querySelector(".fib-level-on");
+const bg =
+wrap.querySelector(".fib-level-bg");
 const val =
 wrap.querySelector(".fib-level-val");
 const colorBtn =
@@ -1959,6 +1972,10 @@ wrap.querySelector(".fib-level-color-btn");
 
 if(on){
 on.checked = !!row.enabled;
+}
+
+if(bg){
+bg.checked = !!row.fillBg;
 }
 
 if(val){

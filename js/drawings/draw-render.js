@@ -5,9 +5,10 @@ ensureFibLevelsVisible,
 formatFibLabel,
 fibPriceAtRatio,
 getFibDrawRows,
+getFibFillPairs,
 isSeriesLogarithmic,
 fibLevelXSpan
-} from "./fib-spec.js?v=12";
+} from "./fib-spec.js?v=13";
 
 import {
 isPositionType
@@ -97,9 +98,108 @@ isSeriesLogarithmic(
 series
 );
 
+const drawRows =
 getFibDrawRows(
 shape
-).forEach(row=>{
+);
+
+getFibFillPairs(
+drawRows
+).forEach(
+pair=>{
+
+const priceFrom =
+fibPriceAtRatio(
+shape.p1.price,
+shape.p2.price,
+pair.from.v,
+useLog
+);
+const priceTo =
+fibPriceAtRatio(
+shape.p1.price,
+shape.p2.price,
+pair.to.v,
+useLog
+);
+
+if(
+!Number.isFinite(
+priceFrom
+) ||
+!Number.isFinite(
+priceTo
+)
+){
+return;
+}
+
+const yFrom =
+plotPriceToCoordinate(
+priceFrom
+);
+const yTo =
+plotPriceToCoordinate(
+priceTo
+);
+
+if(
+yFrom ==
+null ||
+yTo ==
+null
+){
+return;
+}
+
+const top =
+Math.min(
+yFrom,
+yTo
+);
+const bandH =
+Math.abs(
+yTo -
+yFrom
+);
+
+if(
+bandH <
+1
+){
+return;
+}
+
+const fillColor =
+pair.from.color ||
+color;
+const parsed =
+parseDrawColor(
+fillColor
+);
+
+ctx.save();
+ctx.globalAlpha =
+0.074;
+ctx.fillStyle =
+formatDrawColor(
+parsed?.hex ||
+fillColor,
+100
+);
+ctx.fillRect(
+x1,
+top,
+x2 -
+x1,
+bandH
+);
+ctx.restore();
+
+}
+);
+
+drawRows.forEach(row=>{
 
 if(!row.enabled){
 return;

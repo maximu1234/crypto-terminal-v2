@@ -337,6 +337,15 @@ next[i].enabled = cell.enabled;
 
 }
 
+if(
+typeof cell.fillBg ===
+"boolean"
+){
+
+next[i].fillBg = cell.fillBg;
+
+}
+
 const levelColor =
 normalizeFibLevelColor(cell.color);
 
@@ -424,6 +433,9 @@ v: Number.isFinite(row.v)
 enabled: typeof row.enabled === "boolean"
 ? row.enabled
 : def.enabled,
+fillBg: typeof row.fillBg === "boolean"
+? row.fillBg
+: false,
 lineStyle: normalizeFibLineStyle(
 row.lineStyle
 ) ||
@@ -960,9 +972,92 @@ typeof cell.enabled ===
 rows[i].enabled = cell.enabled;
 }
 
+if(
+typeof cell.fillBg ===
+"boolean"
+){
+rows[i].fillBg = cell.fillBg;
+}
+
 });
 
 return rows;
+
+}
+
+/**
+ * Пары уровней для фоновой заливки: от включённого fillBg до следующего enabled по v.
+ * @returns {{ from: object, to: object }[]}
+ */
+export function getFibFillPairs(
+rows
+){
+
+const enabled =
+(
+Array.isArray(
+rows
+)
+? rows
+: []
+).filter(
+row=>row?.enabled
+);
+
+const sorted =
+[
+...enabled
+].sort(
+(
+a,
+b
+)=>
+a.v -
+b.v
+);
+
+const pairs =
+[];
+
+for(
+let i =
+0;
+i <
+sorted.length;
+i++
+){
+
+const from =
+sorted[
+i
+];
+
+if(
+!from?.fillBg
+){
+continue;
+}
+
+const to =
+sorted[
+i +
+1
+];
+
+if(
+!to
+){
+continue;
+}
+
+pairs.push({
+from,
+to
+});
+
+}
+
+return pairs;
 
 }
 
