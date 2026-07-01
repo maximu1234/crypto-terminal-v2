@@ -12,6 +12,8 @@ permissions:
 jobs:
   macos:
     runs-on: macos-latest
+    permissions:
+      contents: write
     defaults:
       run:
         working-directory: desktop
@@ -47,9 +49,20 @@ jobs:
 
       - name: Build macOS .app + .dmg + auto-update zip
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CSC_IDENTITY_AUTO_DISCOVERY: "false"
-        run: npm run build:mac:publish
+        run: npm run build:mac
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            desktop/dist/*.dmg
+            desktop/dist/*.zip
+            desktop/dist/latest-mac.yml
+          draft: false
+          prerelease: false
+          fail_on_unmatched_files: true
+          generate_release_notes: true
 
       - name: Upload artifacts (backup)
         uses: actions/upload-artifact@v4
