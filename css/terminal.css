@@ -202,6 +202,9 @@ body.terminal-page #draw-toolbar.draw-toolbar-inline .draw-btn .draw-tool-icon--
   border-radius:8px;
   box-shadow:0 4px 20px rgba(0,0,0,0.45);
   pointer-events:auto;
+  -webkit-user-select:none;
+  user-select:none;
+  -webkit-touch-callout:none;
 }
 
 .draw-style-float.hidden{
@@ -1228,6 +1231,20 @@ body.tablet-chart #charts-stack *{
 
 body.tablet-chart .tablet-probe-touch-layer{
   pointer-events:auto;
+}
+
+body.tablet-chart #chart-wrap.chart-draw-interaction,
+body.tablet-chart #chart-wrap.chart-draw-interaction *{
+  -webkit-user-select:none;
+  user-select:none;
+  -webkit-touch-callout:none;
+}
+
+body.tablet-chart .draw-style-float,
+body.tablet-chart .draw-style-float *{
+  -webkit-user-select:none;
+  user-select:none;
+  -webkit-touch-callout:none;
 }
 
 body.tablet-chart .price-scale-touch-strip{

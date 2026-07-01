@@ -37,7 +37,7 @@ mountDashboardChartInteractions
 
 import {
 mountWidgetTabletChart
-} from "./tablet-widget-chart.js?v=1";
+} from "./tablet-widget-chart.js?v=2";
 
 import {
 subscribeKline

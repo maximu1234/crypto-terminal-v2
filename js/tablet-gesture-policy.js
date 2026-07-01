@@ -109,6 +109,21 @@ return true;
 
 }
 
+function shouldSuppressNativeSelection(){
+
+if(
+!isInteractionAllowed()
+){
+return false;
+}
+
+const drawingTools =
+getDrawingTools();
+
+return !!drawingTools?.shouldSuppressNativeSelection?.();
+
+}
+
 function shouldAllowPinch(){
 
 if(
@@ -153,7 +168,8 @@ return true;
 return {
 shouldBeginGesture,
 shouldAllowPan,
-shouldAllowPinch
+shouldAllowPinch,
+shouldSuppressNativeSelection
 };
 
 }

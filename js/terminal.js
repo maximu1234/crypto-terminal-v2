@@ -72,7 +72,7 @@ tfPeriodSec
 
 import {
 mountCoinsTabletController
-} from "./terminal-tablet-controller.js?v=5";
+} from "./terminal-tablet-controller.js?v=6";
 
 import {
 disconnectKlineStream

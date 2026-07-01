@@ -23,6 +23,7 @@ touchLayerEl,
 shouldBeginGesture = ()=>true,
 shouldAllowPan = ()=>true,
 shouldAllowPinch = ()=>true,
+shouldSuppressNativeSelection = ()=>false,
 blockChartScroll = ()=>false,
 /** iPad + Bluetooth-мышь; на чистом десктопе LW сам ловит click/pan */
 allowMousePan = ()=>false,
@@ -1205,6 +1206,7 @@ e
 ){
 
 if(
+shouldSuppressNativeSelection() ||
 mode ===
 "pending" ||
 mode ===
@@ -1222,6 +1224,7 @@ e
 ){
 
 if(
+shouldSuppressNativeSelection() ||
 mode ===
 "pending" ||
 mode ===

@@ -593,6 +593,23 @@ brushPlacementCtl?.getBrushStroke?.()
 
 }
 
+function shouldSuppressNativeSelection(){
+
+if(
+!alive ||
+!isActive()
+){
+return false;
+}
+
+return (
+tool !==
+"cursor" ||
+isDrawingInteractionLocked()
+);
+
+}
+
 function blocksDrawPaneSwitch(){
 
 return !!(
@@ -4627,6 +4644,12 @@ function setTool(next){
 tool = next;
 cancelPlacement();
 
+wrapEl.classList.toggle(
+"chart-draw-interaction",
+next !==
+"cursor"
+);
+
 if(
 next !==
 "cursor"
@@ -5798,6 +5821,81 @@ setupFinePointerChartClicks();
 const teardownPlacementPreview =
 setupPlacementPointerPreview();
 
+function setupTabletNativeSelectionBlock(){
+
+if(
+!isCoarseTouchViewport()
+){
+return ()=>{};
+}
+
+const cap = {
+capture:true
+};
+
+const targets =
+[
+wrapEl,
+styleBar,
+tools
+].filter(
+Boolean
+);
+
+const onBlock =
+e=>{
+
+if(
+!shouldSuppressNativeSelection()
+){
+return;
+}
+
+e.preventDefault();
+
+};
+
+for(
+const el of
+targets
+){
+el.addEventListener(
+"selectstart",
+onBlock,
+cap
+);
+el.addEventListener(
+"contextmenu",
+onBlock,
+cap
+);
+}
+
+return ()=>{
+
+for(
+const el of
+targets
+){
+el.removeEventListener(
+"selectstart",
+onBlock,
+cap
+);
+el.removeEventListener(
+"contextmenu",
+onBlock,
+cap
+);
+}
+
+};
+
+}
+
+const teardownTabletNativeSelectionBlock =
+setupTabletNativeSelectionBlock();
+
 const teardownChartPanRedraw =
 setupChartPanRedraw();
 
@@ -6525,6 +6623,8 @@ tool ===
 
 },
 
+shouldSuppressNativeSelection,
+
 blocksTabletChartGestures(
 clientX,
 clientY
@@ -6706,6 +6806,7 @@ teardownCoarseTouchGuard?.();
 teardownTouchDrawCrosshair?.();
 teardownFinePointerClicks?.();
 teardownPlacementPreview?.();
+teardownTabletNativeSelectionBlock?.();
 teardownBrushPlacement?.();
 
 window.removeEventListener("keydown", onKeyDown, true);

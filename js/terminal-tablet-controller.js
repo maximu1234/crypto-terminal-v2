@@ -19,7 +19,7 @@ TABLET_USE_CUSTOM_TOUCH_PAN
 
 import {
 createTabletGesturePolicy
-} from "./tablet-gesture-policy.js?v=1";
+} from "./tablet-gesture-policy.js?v=2";
 
 /** @deprecated legacy sandbox flag — удаляем из localStorage */
 const LEGACY_COINS_TABLET_V2_KEY =
@@ -394,7 +394,7 @@ const {
 mountTabletChartGestures
 } =
 await import(
-"./chart-tablet-gestures.js?v=17"
+"./chart-tablet-gestures.js?v=18"
 );
 
 const tabletGestureCtrl =
@@ -416,6 +416,8 @@ shouldAllowPan:()=>
 tabletPolicy.shouldAllowPan(),
 shouldAllowPinch:()=>
 tabletPolicy.shouldAllowPinch(),
+shouldSuppressNativeSelection:()=>
+tabletPolicy.shouldSuppressNativeSelection(),
 blockChartScroll:()=>probeSessionActive,
 onHoldStart: enterProbeSession,
 onHoldEnd: exitProbeSession,

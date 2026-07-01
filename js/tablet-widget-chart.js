@@ -14,7 +14,7 @@ normalCrosshairOptions
 
 import {
 createTabletGesturePolicy
-} from "./tablet-gesture-policy.js?v=1";
+} from "./tablet-gesture-policy.js?v=2";
 
 const noop =
 ()=>{};
@@ -143,7 +143,7 @@ const {
 mountTabletChartGestures
 } =
 await import(
-"./chart-tablet-gestures.js?v=17"
+"./chart-tablet-gestures.js?v=18"
 );
 
 let probeActive =
@@ -178,6 +178,7 @@ hasAnyFinePointer(),
 shouldBeginGesture:policy.shouldBeginGesture,
 shouldAllowPan:policy.shouldAllowPan,
 shouldAllowPinch:policy.shouldAllowPinch,
+shouldSuppressNativeSelection:policy.shouldSuppressNativeSelection,
 blockChartScroll:()=>probeActive,
 onHoldStart:()=>{
 

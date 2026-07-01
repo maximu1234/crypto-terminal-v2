@@ -700,6 +700,20 @@ body.tablet-chart .widget-chart-wrap{
     -webkit-touch-callout:none;
 }
 
+body.tablet-chart .widget-chart-wrap.chart-draw-interaction,
+body.tablet-chart .widget-chart-wrap.chart-draw-interaction *{
+    -webkit-user-select:none;
+    user-select:none;
+    -webkit-touch-callout:none;
+}
+
+body.tablet-chart .widget-chart-wrap .draw-style-float,
+body.tablet-chart .widget-chart-wrap .draw-style-float *{
+    -webkit-user-select:none;
+    user-select:none;
+    -webkit-touch-callout:none;
+}
+
 body.tablet-chart .widget-chart-wrap.chart-touch-locked .chart{
     pointer-events:none;
 }
@@ -850,6 +864,9 @@ body.tablet-chart .widget-chart-wrap.chart-touch-locked .chart{
     box-shadow:0 4px 20px rgba(0,0,0,0.45);
     pointer-events:auto;
     color:#e5e7eb;
+    -webkit-user-select:none;
+    user-select:none;
+    -webkit-touch-callout:none;
 }
 
 .draw-style-float.hidden{
