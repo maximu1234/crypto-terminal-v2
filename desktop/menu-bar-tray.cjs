@@ -43,6 +43,10 @@ false;
 let ignoreTrayPopupBlur =
 false;
 
+/** Экранные x,y popup — фиксируем при открытии, пока меню видимо. */
+let popupScreenPosition =
+null;
+
 let stopPopupDismissHooks =
 null;
 
@@ -311,6 +315,27 @@ return popup;
 
 }
 
+function unlockTrayPopupPosition(){
+
+popupScreenPosition =
+null;
+
+}
+
+function lockTrayPopupPosition(){
+
+if(
+!popup ||
+popup.isDestroyed()
+){
+return;
+}
+
+popupScreenPosition =
+popup.getPosition();
+
+}
+
 function positionTrayPopup(){
 
 if(
@@ -318,6 +343,20 @@ if(
 !popup ||
 popup.isDestroyed()
 ){
+return;
+}
+
+if(
+popupScreenPosition
+){
+popup.setPosition(
+popupScreenPosition[
+0
+],
+popupScreenPosition[
+1
+]
+);
 return;
 }
 
@@ -476,6 +515,7 @@ ensureMacDockVisible();
 ignoreTrayPopupBlur =
 true;
 
+unlockTrayPopupPosition();
 positionTrayPopup();
 win.show();
 win.focus();
@@ -483,6 +523,7 @@ sendTrayPopupState(
 lastTrayState
 );
 positionTrayPopup();
+lockTrayPopupPosition();
 startPopupDismissHooks();
 
 setTimeout(
@@ -504,9 +545,11 @@ if(
 popup.isDestroyed() ||
 !popup.isVisible()
 ){
+unlockTrayPopupPosition();
 return;
 }
 
+unlockTrayPopupPosition();
 popup.hide();
 
 }

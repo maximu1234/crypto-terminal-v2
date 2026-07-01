@@ -1247,6 +1247,14 @@ body.tablet-chart .draw-style-float *{
   -webkit-touch-callout:none;
 }
 
+body.tablet-chart.tablet-chart-draw-mode #charts-stack,
+body.tablet-chart.tablet-chart-draw-mode #charts-stack *{
+  -webkit-user-select:none !important;
+  user-select:none !important;
+  -webkit-touch-callout:none !important;
+  touch-action:none;
+}
+
 body.tablet-chart .price-scale-touch-strip{
   display:block;
   pointer-events:auto;

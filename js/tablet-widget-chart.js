@@ -143,7 +143,7 @@ const {
 mountTabletChartGestures
 } =
 await import(
-"./chart-tablet-gestures.js?v=18"
+"./chart-tablet-gestures.js?v=19"
 );
 
 let probeActive =

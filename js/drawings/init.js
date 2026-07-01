@@ -4651,6 +4651,17 @@ next !==
 );
 
 if(
+isCoarseTouchViewport() ||
+isTabletChartViewport()
+){
+document.body.classList.toggle(
+"tablet-chart-draw-mode",
+next !==
+"cursor"
+);
+}
+
+if(
 next !==
 "cursor"
 ){
@@ -5833,11 +5844,22 @@ const cap = {
 capture:true
 };
 
+const touchCap = {
+capture:true,
+passive:false
+};
+
+const chartsStack =
+document.getElementById(
+"charts-stack"
+);
+
 const targets =
 [
 wrapEl,
 styleBar,
-tools
+tools,
+chartsStack
 ].filter(
 Boolean
 );
@@ -5847,6 +5869,26 @@ e=>{
 
 if(
 !shouldSuppressNativeSelection()
+){
+return;
+}
+
+e.preventDefault();
+
+};
+
+const onTouchBlock =
+e=>{
+
+if(
+!shouldSuppressNativeSelection()
+){
+return;
+}
+
+if(
+e.touches?.length >
+1
 ){
 return;
 }
@@ -5869,6 +5911,16 @@ el.addEventListener(
 onBlock,
 cap
 );
+el.addEventListener(
+"touchstart",
+onTouchBlock,
+touchCap
+);
+el.addEventListener(
+"touchmove",
+onTouchBlock,
+touchCap
+);
 }
 
 return ()=>{
@@ -5887,7 +5939,21 @@ el.removeEventListener(
 onBlock,
 cap
 );
+el.removeEventListener(
+"touchstart",
+onTouchBlock,
+touchCap
+);
+el.removeEventListener(
+"touchmove",
+onTouchBlock,
+touchCap
+);
 }
+
+document.body.classList.remove(
+"tablet-chart-draw-mode"
+);
 
 };
 

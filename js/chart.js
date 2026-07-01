@@ -91,7 +91,7 @@ refreshCoinsChartBarSpacing
 
 export {
 mountTabletChartGestures
-} from "./chart-tablet-gestures.js?v=18";
+} from "./chart-tablet-gestures.js?v=19";
 
 import {
 effectiveChartPriceScaleWidth,

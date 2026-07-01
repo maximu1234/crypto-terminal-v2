@@ -189,13 +189,13 @@ Object.freeze({
 "chart/chart-factory.js":
 38,
 "chart-tablet-gestures.js":
-18,
+19,
 "terminal-tablet-controller.js":
 6,
 "drawings.js":
 247,
 "drawings/init.js":
-139,
+140,
 "drawings/draw-edit-desktop.js":
 8,
 "drawings/draw-undo.js":
@@ -412,9 +412,9 @@ Object.freeze({
 "screener.css":
 42,
 "terminal.css":
-158,
+159,
 "watchlist.css":
-50,
+51,
 "terminal-layout.css":
 80,
 "chart-indicators.css":

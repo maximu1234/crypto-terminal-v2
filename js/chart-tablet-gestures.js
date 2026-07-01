@@ -1034,6 +1034,12 @@ if(
 e
 )
 ){
+if(
+shouldSuppressNativeSelection()
+){
+e.preventDefault();
+}
+
 return;
 }
 
@@ -1078,9 +1084,39 @@ attachDocListeners();
 
 }
 
+function onWrapTouchMoveDrawBlock(
+e
+){
+
+if(
+!shouldSuppressNativeSelection()
+){
+return;
+}
+
+if(
+e.touches?.length !==
+1
+){
+return;
+}
+
+e.preventDefault();
+
+}
+
 function onWrapTouchStart(
 e
 ){
+
+if(
+e.touches.length ===
+1 &&
+shouldSuppressNativeSelection()
+){
+e.preventDefault();
+return;
+}
 
 if(
 e.touches.length <
@@ -1251,6 +1287,12 @@ capDown
 );
 
 chartWrapEl.addEventListener(
+"touchmove",
+onWrapTouchMoveDrawBlock,
+{ capture:true, passive:false }
+);
+
+chartWrapEl.addEventListener(
 "touchstart",
 onWrapTouchStart,
 { capture:true, passive:false }
@@ -1297,6 +1339,12 @@ chartWrapEl.removeEventListener(
 "pointerdown",
 onWrapPointerDown,
 capDown
+);
+
+chartWrapEl.removeEventListener(
+"touchmove",
+onWrapTouchMoveDrawBlock,
+{ capture:true, passive:false }
 );
 
 chartWrapEl.removeEventListener(
