@@ -12,7 +12,7 @@
 <link rel="stylesheet" href="/css/common.css?v=34">
 <link rel="stylesheet" href="/css/screener.css?v=42">
 <link rel="stylesheet" href="/css/site-mobile-nav.css?v=7">
-<link rel="stylesheet" href="/css/alerts.css?v=17">
+<link rel="stylesheet" href="/css/alerts.css?v=20">
 
 </head>
 
@@ -102,10 +102,10 @@
 <th>ТФ</th>
 <th>Цена алерта</th>
 <th class="alerts-col-delete">
-<label class="alerts-delete-all-label">
-<input type="checkbox" id="alerts-delete-all" title="Удалить все алерты"/>
-<span>Удалить все Алерты</span>
-</label>
+<span class="alerts-delete-all-wrap">
+<button type="button" id="alerts-delete-all" class="alerts-delete-all-btn" title="Удалить все алерты" aria-label="Удалить все алерты">×</button>
+<span class="alerts-delete-all-text">Удалить все Алерты</span>
+</span>
 </th>
 </tr>
 </thead>
@@ -160,7 +160,7 @@
 </main>
 
 <script type="module" src="/js/site-boot.js?v=92"></script>
-<script type="module" src="/js/alerts-page.js?v=61"></script>
+<script type="module" src="/js/alerts-page.js?v=63"></script>
 
 </body>
 </html>

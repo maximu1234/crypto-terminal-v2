@@ -2790,6 +2790,15 @@ signal
 const onSwitchStart =
 e=>{
 
+if(
+!chartEventSymbolMatches(
+e,
+host?.getSymbol?.()
+)
+){
+return;
+}
+
 switchLoadSeq =
 Number(
 e.detail?.loadSeq
@@ -2798,9 +2807,12 @@ e.detail?.loadSeq
 chartSwitchFrozen =
 true;
 switchVeilVisible =
-true;
+false;
 switchVeilPosition =
-position;
+null;
+position =
+null;
+invalidateBadgeLayoutCache();
 stopDragListeners?.();
 stopDragListeners =
 null;
@@ -2816,6 +2828,15 @@ host?.getDrawingTools?.()?.scheduleRedraw?.();
 
 const onCandlesApply =
 e=>{
+
+if(
+!chartEventSymbolMatches(
+e,
+host?.getSymbol?.()
+)
+){
+return;
+}
 
 const seq =
 Number(
@@ -2833,6 +2854,8 @@ return;
 
 switchVeilVisible =
 false;
+switchVeilPosition =
+null;
 scheduleDraw(
 true
 );
@@ -2840,7 +2863,40 @@ host?.getDrawingTools?.()?.scheduleRedraw?.();
 };
 
 const onCandlesLoaded =
-e=>{
+async e=>{
+
+if(
+!host
+){
+return;
+}
+
+if(
+!chartEventSymbolMatches(
+e,
+host?.getSymbol?.()
+)
+){
+return;
+}
+
+switchVeilVisible =
+false;
+switchVeilPosition =
+null;
+position =
+null;
+invalidateBadgeLayoutCache();
+scheduleDraw(
+true
+);
+host?.getDrawingTools?.()?.scheduleRedraw?.();
+
+try{
+await syncPosition(
+true
+);
+}finally{
 
 if(
 !host
@@ -2859,17 +2915,11 @@ return;
 
 chartSwitchFrozen =
 false;
-switchVeilVisible =
-false;
-switchVeilPosition =
-null;
-
-void syncPosition(
-true
-);
 scheduleDraw(
 true
 );
+host?.getDrawingTools?.()?.scheduleRedraw?.();
+}
 
 };
 

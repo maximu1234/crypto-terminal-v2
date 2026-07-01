@@ -3282,7 +3282,7 @@ await import("./alerts-cloud-sync.js?v=110");
 const favoritesCloud =
 await import("./favorites-cloud-sync.js?v=5");
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=98");
+await import("./alerts.js?v=100");
 
 const stripOpts =
 isAlertsPage()

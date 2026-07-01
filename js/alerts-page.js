@@ -10,7 +10,7 @@ getAlertsSorted,
 removeAlert,
 stripAlertFlagsNotInRegistry,
 removeAllAlerts
-} from "./alerts.js?v=98";
+} from "./alerts.js?v=100";
 
 import {
 getTelegramChatId,
@@ -50,7 +50,7 @@ document.getElementById("alerts-empty");
 const tableWrap =
 document.getElementById("alerts-table-wrap");
 
-const deleteAllCb =
+const deleteAllBtn =
 document.getElementById("alerts-delete-all");
 
 const historyTbody =
@@ -498,10 +498,6 @@ function renderActive(){
 const alerts =
 getAlertsSorted();
 
-if(deleteAllCb){
-deleteAllCb.checked = false;
-}
-
 if(
 !emptyEl ||
 !tableWrap ||
@@ -540,26 +536,20 @@ ${formatAlertTicker(alert.symbol)}
 <td class="alerts-price">${formatPrice(alert.price)}</td>
 
 <td class="alerts-col-delete">
-<label class="alerts-row-delete">
-<input type="checkbox" class="alerts-delete-one" data-shape-id="${alert.shapeId}" data-symbol="${alert.symbol}" title="Удалить алерт"/>
-</label>
+<button type="button" class="alerts-row-delete-btn" data-shape-id="${alert.shapeId}" data-symbol="${alert.symbol}" title="Удалить алерт" aria-label="Удалить алерт">×</button>
 </td>
 
 </tr>
 
 `).join("");
 
-tbody.querySelectorAll(".alerts-delete-one").forEach(cb=>{
+tbody.querySelectorAll(".alerts-row-delete-btn").forEach(btn=>{
 
-cb.addEventListener("change", ()=>{
-
-if(!cb.checked){
-return;
-}
+btn.addEventListener("click", ()=>{
 
 removeOne(
-cb.dataset.symbol,
-cb.dataset.shapeId
+btn.dataset.symbol,
+btn.dataset.shapeId
 );
 
 });
@@ -692,17 +682,18 @@ render();
 
 }
 
-deleteAllCb?.addEventListener("change", ()=>{
-
-if(!deleteAllCb.checked){
-return;
-}
+deleteAllBtn?.addEventListener("click", ()=>{
 
 const alerts =
 getAlertsSorted();
 
+if(
+!alerts.length
+){
+return;
+}
+
 removeAllAlerts();
-deleteAllCb.checked = false;
 render();
 
 });

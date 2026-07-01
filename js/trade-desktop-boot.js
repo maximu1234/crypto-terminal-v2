@@ -27,7 +27,7 @@ initTradeMarketEntry
 
 import {
 initTradeBookPanel
-} from "./trade-book-panel.js?v=43";
+} from "./trade-book-panel.js?v=49";
 
 const TRADE_CSS =
 [
@@ -270,7 +270,7 @@ const {
 initTradeChartOverlay
 } =
 await import(
-"./trade-chart-overlay.js?v=30"
+"./trade-chart-overlay.js?v=31"
 );
 
 initTradeChartOverlay();
@@ -279,7 +279,7 @@ const {
 initTradeChartOrders
 } =
 await import(
-"./trade-chart-orders.js?v=17"
+"./trade-chart-orders.js?v=18"
 );
 
 initTradeChartOrders();

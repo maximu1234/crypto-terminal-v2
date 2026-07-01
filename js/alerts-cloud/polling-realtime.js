@@ -221,7 +221,7 @@ immediate: true
 async n=>{
 
 const { stripAlertFlagsNotInRegistry } =
-await import("../alerts.js?v=98");
+await import("../alerts.js?v=100");
 
 stripAlertFlagsNotInRegistry({
 emitDrawingsEvents: false
@@ -269,7 +269,7 @@ String(rawTriggered).trim().toLowerCase() !== "null";
 if(triggered){
 
 const { applyRemoteAlertFired } =
-await import("../alerts.js?v=98");
+await import("../alerts.js?v=100");
 
 applyRemoteAlertFired(oldRow);
 return;
@@ -293,7 +293,7 @@ sid
 ){
 
 const { applyRemoteAlertRemoved } =
-await import("../alerts.js?v=98");
+await import("../alerts.js?v=100");
 
 applyRemoteAlertRemoved(oldRow);
 
@@ -319,7 +319,7 @@ row?.deleted_at &&
 row.symbol &&
 row.shape_id
 ){
-void import("../alerts.js?v=98").then(
+void import("../alerts.js?v=100").then(
 ({ applyRemoteAlertRemoved })=>{
 applyRemoteAlertRemoved(row);
 }
@@ -336,7 +336,7 @@ row.symbol &&
 row.shape_id
 ){
 
-void import("../alerts.js?v=98").then(
+void import("../alerts.js?v=100").then(
 ({ applyRemoteAlertUpsert })=>{
 
 if(
@@ -382,7 +382,7 @@ if(
 return;
 }
 
-void import("../alerts.js?v=98").then(
+void import("../alerts.js?v=100").then(
 ({ applyRemoteAlertHistoryFromCloud })=>{
 applyRemoteAlertHistoryFromCloud(
 row
@@ -987,7 +987,7 @@ if(
 !isAlertsPage()
 ){
 const { mergeRegistryFromChartDrawings } =
-await import("../alerts.js?v=98");
+await import("../alerts.js?v=100");
 
 mergeRegistryFromChartDrawings({
 stripFlags: stripOpts
@@ -1004,7 +1004,7 @@ immediate: true
 });
 
 const { stripAlertFlagsNotInRegistry } =
-await import("../alerts.js?v=98");
+await import("../alerts.js?v=100");
 
 stripAlertFlagsNotInRegistry(
 stripOpts

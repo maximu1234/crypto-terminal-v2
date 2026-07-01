@@ -2003,6 +2003,62 @@ dispatchAlertsHistoryChanged();
 
 }
 
+export function removeAlertHistoryEntry(
+symbol,
+shapeId,
+triggeredAt
+){
+
+const sym =
+String(
+symbol ||
+""
+).trim().toUpperCase();
+const sid =
+String(
+shapeId ||
+""
+).trim();
+const ts =
+Number(
+triggeredAt
+);
+
+if(
+!sym ||
+!sid ||
+!Number.isFinite(
+ts
+)
+){
+return;
+}
+
+const list =
+loadAlertsHistory().filter(
+h=>!
+(
+String(
+h.symbol
+).toUpperCase() ===
+sym &&
+String(
+h.shapeId
+) ===
+sid &&
+Number(
+h.triggeredAt
+) ===
+ts
+)
+);
+
+saveAlertsHistory(
+list
+);
+
+}
+
 const remoteFiredCooldown =
 new Map();
 
@@ -2953,6 +3009,6 @@ new Date(ts);
 const pad =
 n=>String(n).padStart(2, "0");
 
-return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${pad(d.getFullYear() % 100)} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 
 }

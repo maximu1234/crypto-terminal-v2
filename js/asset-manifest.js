@@ -73,15 +73,15 @@ Object.freeze({
 "trade-market-entry.js":
 3,
 "trade-book-panel.js":
-43,
+49,
 "trade-pnl-share-modal.js":
 5,
 "trade-book-columns.js":
-11,
+14,
 "trade-chart-overlay.js":
-30,
+31,
 "trade-chart-orders.js":
-17,
+18,
 "trade-order-plus-ui.js":
 2,
 "trade-widget-mount.js":
@@ -348,7 +348,7 @@ Object.freeze({
 
 /* ── JS: alerts ── */
 "alerts.js":
-98,
+100,
 "alerts-cloud-sync.js":
 110,
 "alerts-cloud/debug.js":
@@ -362,7 +362,7 @@ Object.freeze({
 "alerts-cloud/polling-realtime.js":
 6,
 "alerts-page.js":
-61,
+63,
 "alert-monitor.js":
 65,
 "alert-worker-url.js":
@@ -430,7 +430,7 @@ Object.freeze({
 "trade-market-entry.css":
 2,
 "trade-book-panel.css":
-45,
+49,
 "trade-pnl-share-modal.css":
 2,
 "trade-diary.css":
@@ -448,7 +448,7 @@ Object.freeze({
 "site-mobile-nav.css":
 7,
 "alerts.css":
-17,
+20,
 "listings.css":
 5,
 "statistics.css":

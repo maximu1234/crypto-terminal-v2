@@ -6,7 +6,7 @@ finalizeAlertPriceDrag,
 setAlertDragLivePrice,
 clearAlertDragLivePrice,
 alertPriceForDisplay
-} from "./alerts.js?v=98";
+} from "./alerts.js?v=100";
 
 import {
 isCloudLoggedInEffective

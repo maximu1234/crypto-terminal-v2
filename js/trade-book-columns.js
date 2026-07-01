@@ -1,86 +1,18 @@
 /**
- * Панель позиций — ширины колонок и перетаскивание границ.
- *
- * Колонки — фиксированные px (таблица скроллится горизонтально).
- * Ресайз: граница тянет левую колонку; ширину берём у правой соседней,
- * а если та на min — левая растёт и таблица становится шире.
+ * Панель позиций / ордеров — ширины колонок и перетаскивание границ.
  */
-const STORAGE_KEY =
-"trade_book_columns_v5";
+function createColumnModule(
+config
+){
 
-/** @type {Readonly<Record<string, { default: number, min: number, max?: number }>>} */
-export const POSITION_COLUMN_WIDTHS =
-Object.freeze({
-ticker:{
-default:
-136,
-min:
-48,
-max:
-440
-},
-pnl:{
-default:
-116,
-min:
-96,
-max:
-280
-},
-volume:{
-default:
-116,
-min:
-48,
-max:
-220
-},
-entry:{
-default:
-144,
-min:
-56,
-max:
-240
-},
-liq:{
-default:
-144,
-min:
-56,
-max:
-240
-}
-});
-
-const RESIZABLE_KEYS =
-[
-"ticker",
-"pnl",
-"volume",
-"entry",
-"liq"
-];
-
-const RESIZE_PAIRS =
-[
-[
-"ticker",
-"pnl"
-],
-[
-"pnl",
-"volume"
-],
-[
-"volume",
-"entry"
-],
-[
-"entry",
-"liq"
-]
-];
+const {
+storageKey,
+columnWidths,
+resizableKeys,
+resizePairs,
+cssVarName
+} =
+config;
 
 function clampWidth(
 key,
@@ -88,7 +20,7 @@ value
 ){
 
 const meta =
-POSITION_COLUMN_WIDTHS[
+columnWidths[
 key
 ];
 const max =
@@ -111,7 +43,7 @@ function readRaw(){
 try{
 const raw =
 localStorage.getItem(
-STORAGE_KEY
+storageKey
 );
 if(
 !raw
@@ -133,7 +65,7 @@ return {};
 
 }
 
-export function readPositionColumnWidths(){
+function readColumnWidths(){
 
 const raw =
 readRaw();
@@ -142,11 +74,11 @@ const out =
 
 for(
 const key of
-RESIZABLE_KEYS
+resizableKeys
 ){
 
 const meta =
-POSITION_COLUMN_WIDTHS[
+columnWidths[
 key
 ];
 const saved =
@@ -174,13 +106,13 @@ return out;
 
 }
 
-function writePositionColumnWidths(
+function writeColumnWidths(
 widths
 ){
 
 try{
 localStorage.setItem(
-STORAGE_KEY,
+storageKey,
 JSON.stringify(
 widths
 )
@@ -202,30 +134,21 @@ if(
 return;
 }
 
+for(
+const key of
+resizableKeys
+){
 root.style.setProperty(
-"--tb-col-ticker",
-`${widths.ticker}px`
+cssVarName(
+key
+),
+`${widths[key]}px`
 );
-root.style.setProperty(
-"--tb-col-pnl",
-`${widths.pnl}px`
-);
-root.style.setProperty(
-"--tb-col-volume",
-`${widths.volume}px`
-);
-root.style.setProperty(
-"--tb-col-entry",
-`${widths.entry}px`
-);
-root.style.setProperty(
-"--tb-col-liq",
-`${widths.liq}px`
-);
+}
 
 }
 
-function readPositionColumnWidthsFromPanel(
+function readColumnWidthsFromPanel(
 panel
 ){
 
@@ -249,7 +172,7 @@ const out =
 
 for(
 const key of
-RESIZABLE_KEYS
+resizableKeys
 ){
 out[
 key
@@ -257,7 +180,9 @@ key
 clampWidth(
 key,
 parse(
-`--tb-col-${key}`
+cssVarName(
+key
+)
 )
 );
 }
@@ -282,7 +207,7 @@ key
 ];
 }
 
-return POSITION_COLUMN_WIDTHS[
+return columnWidths[
 key
 ]?.default ??
 0;
@@ -293,16 +218,12 @@ function isResizableColumn(
 key
 ){
 
-return RESIZABLE_KEYS.includes(
+return resizableKeys.includes(
 key
 );
 
 }
 
-/**
- * delta > 0 — разделитель вправо (левая шире).
- * delta < 0 — разделитель влево (левая уже).
- */
 function resizePair(
 widths,
 leftKey,
@@ -316,11 +237,11 @@ widths,
 rightKey
 );
 const leftMeta =
-POSITION_COLUMN_WIDTHS[
+columnWidths[
 leftKey
 ];
 const rightMeta =
-POSITION_COLUMN_WIDTHS[
+columnWidths[
 rightKey
 ];
 const leftMax =
@@ -332,7 +253,6 @@ rightMeta.max ??
 const rightMin =
 rightMeta.min ??
 0;
-
 const left =
 widths[
 leftKey
@@ -458,18 +378,18 @@ return widths;
 
 }
 
-export function applyPositionColumnLayout(
+function applyColumnLayout(
 panel
 ){
 
 applyVars(
 panel,
-readPositionColumnWidths()
+readColumnWidths()
 );
 
 }
 
-export function wirePositionColumnResize(
+function wireColumnResize(
 panel,
 tableHead
 ){
@@ -481,7 +401,7 @@ if(
 return;
 }
 
-applyPositionColumnLayout(
+applyColumnLayout(
 panel
 );
 
@@ -519,7 +439,7 @@ event.stopPropagation();
 const leftKey =
 handle.dataset.resizeCol;
 const pair =
-RESIZE_PAIRS.find(
+resizePairs.find(
 (
 [
 left
@@ -543,7 +463,7 @@ pair;
 const startX =
 event.clientX;
 const initial =
-readPositionColumnWidthsFromPanel(
+readColumnWidthsFromPanel(
 panel
 );
 
@@ -585,8 +505,8 @@ window.removeEventListener(
 "pointercancel",
 onUp
 );
-writePositionColumnWidths(
-readPositionColumnWidthsFromPanel(
+writeColumnWidths(
+readColumnWidthsFromPanel(
 panel
 )
 );
@@ -613,6 +533,306 @@ onUp
 );
 
 }
+
+}
+
+return {
+columnWidths,
+readColumnWidths,
+applyColumnLayout,
+wireColumnResize
+};
+
+}
+
+const POSITION_STORAGE_KEY =
+"trade_book_columns_v5";
+
+/** @type {Readonly<Record<string, { default: number, min: number, max?: number }>>} */
+export const POSITION_COLUMN_WIDTHS =
+Object.freeze({
+ticker:{
+default:
+136,
+min:
+48,
+max:
+440
+},
+pnl:{
+default:
+116,
+min:
+96,
+max:
+280
+},
+volume:{
+default:
+116,
+min:
+48,
+max:
+220
+},
+entry:{
+default:
+144,
+min:
+56,
+max:
+240
+},
+liq:{
+default:
+144,
+min:
+56,
+max:
+240
+}
+});
+
+const positionColumns =
+createColumnModule({
+storageKey:
+POSITION_STORAGE_KEY,
+columnWidths:
+POSITION_COLUMN_WIDTHS,
+resizableKeys:
+[
+"ticker",
+"pnl",
+"volume",
+"entry",
+"liq"
+],
+resizePairs:
+[
+[
+"ticker",
+"pnl"
+],
+[
+"pnl",
+"volume"
+],
+[
+"volume",
+"entry"
+],
+[
+"entry",
+"liq"
+]
+],
+cssVarName:
+key=>
+`--tb-col-${key}`
+});
+
+const ORDER_STORAGE_KEY =
+"trade_book_order_columns_v1";
+
+/** @type {Readonly<Record<string, { default: number, min: number, max?: number }>>} */
+export const ORDER_COLUMN_WIDTHS =
+Object.freeze({
+ticker:{
+default:
+136,
+min:
+48,
+max:
+440
+},
+type:{
+default:
+52,
+min:
+40,
+max:
+120
+},
+price:{
+default:
+96,
+min:
+56,
+max:
+220
+},
+time:{
+default:
+88,
+min:
+64,
+max:
+180
+}
+});
+
+const orderColumns =
+createColumnModule({
+storageKey:
+ORDER_STORAGE_KEY,
+columnWidths:
+ORDER_COLUMN_WIDTHS,
+resizableKeys:
+[
+"ticker",
+"type",
+"price",
+"time"
+],
+resizePairs:
+[
+[
+"ticker",
+"type"
+],
+[
+"type",
+"price"
+],
+[
+"price",
+"time"
+]
+],
+cssVarName:
+key=>
+`--tb-order-col-${key}`
+});
+
+export function readPositionColumnWidths(){
+
+return positionColumns.readColumnWidths();
+
+}
+
+export function applyPositionColumnLayout(
+panel
+){
+
+positionColumns.applyColumnLayout(
+panel
+);
+
+}
+
+export function wirePositionColumnResize(
+panel,
+tableHead
+){
+
+positionColumns.wireColumnResize(
+panel,
+tableHead
+);
+
+}
+
+export function applyOrderColumnLayout(
+panel
+){
+
+orderColumns.applyColumnLayout(
+panel
+);
+
+}
+
+export function wireOrderColumnResize(
+panel,
+tableHead
+){
+
+orderColumns.wireColumnResize(
+panel,
+tableHead
+);
+
+}
+
+const ALERT_STORAGE_KEY =
+"trade_book_alert_columns_v2";
+
+/** @type {Readonly<Record<string, { default: number, min: number, max?: number }>>} */
+export const ALERT_COLUMN_WIDTHS =
+Object.freeze({
+date:{
+default:
+90,
+min:
+78,
+max:
+130
+},
+ticker:{
+default:
+80,
+min:
+48,
+max:
+440
+},
+action:{
+default:
+24,
+min:
+24,
+max:
+32
+}
+});
+
+const alertColumns =
+createColumnModule({
+storageKey:
+ALERT_STORAGE_KEY,
+columnWidths:
+ALERT_COLUMN_WIDTHS,
+resizableKeys:
+[
+"date",
+"ticker",
+"action"
+],
+resizePairs:
+[
+[
+"date",
+"ticker"
+],
+[
+"ticker",
+"action"
+]
+],
+cssVarName:
+key=>
+`--tb-alert-col-${key}`
+});
+
+export function applyAlertColumnLayout(
+panel
+){
+
+alertColumns.applyColumnLayout(
+panel
+);
+
+}
+
+export function wireAlertColumnResize(
+panel,
+tableHead
+){
+
+alertColumns.wireColumnResize(
+panel,
+tableHead
+);
 
 }
 

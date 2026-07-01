@@ -13,13 +13,26 @@ syncTradePositionsCache
 
 import {
 applyPositionColumnLayout,
+applyOrderColumnLayout,
+applyAlertColumnLayout,
 wirePositionColumnResize,
+wireOrderColumnResize,
+wireAlertColumnResize,
 columnResizeHandle
-} from "./trade-book-columns.js?v=11";
+} from "./trade-book-columns.js?v=14";
 
 import {
 openPnlShareModal
 } from "./trade-pnl-share-modal.js?v=5";
+
+import {
+formatAlertDate,
+formatAlertTicker,
+getAlertsSorted,
+getAlertsHistorySorted,
+removeAlert,
+removeAlertHistoryEntry
+} from "./alerts.js?v=100";
 
 const SHARE_ICON_V =
 2;
@@ -316,6 +329,21 @@ a.symbol
 ),
 normalizeBookSymbol(
 b.symbol
+)
+);
+}else if(
+key ===
+"type"
+){
+cmp =
+compareBookText(
+String(
+a.label ||
+""
+),
+String(
+b.label ||
+""
 )
 );
 }else if(
@@ -1060,9 +1088,11 @@ panel.className =
 panel.innerHTML =
 `
 <div class="trade-book-head">
-<select class="trade-book-mode" aria-label="Позиции или ордера">
+<select class="trade-book-mode" aria-label="Позиции, ордера или алерты">
 <option value="positions">Позиции</option>
 <option value="orders">Ордера</option>
+<option value="alerts-active">Активные алерты</option>
+<option value="alerts-history">Исполненные алерты</option>
 </select>
 <button type="button" class="trade-book-close-all" title="Закрыть все позиции по рынку" aria-label="Закрыть все позиции по рынку" hidden>×</button>
 </div>
@@ -1099,6 +1129,12 @@ panel
 );
 
 applyPositionColumnLayout(
+panel
+);
+applyOrderColumnLayout(
+panel
+);
+applyAlertColumnLayout(
 panel
 );
 
@@ -1727,13 +1763,12 @@ row.orderId;
 
 el.innerHTML =
 `
-<div class="trade-book-ticker" title="${row.ticker}">
+<span class="col-ticker" title="${row.ticker}">
 <span class="trade-book-ticker-text">${row.ticker}</span>
-</div>
-<div class="trade-book-trail trade-book-trail--orders">
-<span class="col-price">${row.label || "—"} · ${formatPrice(row.price)}</span>
+</span>
+<span class="col-order-type">${row.label || "—"}</span>
+<span class="col-price">${formatPrice(row.price)}</span>
 <span class="col-time">${formatDateTime(row.createdAt)}</span>
-</div>
 `;
 
 wireOrderRowOpen(
@@ -1763,6 +1798,28 @@ el.classList.toggle(
 active
 );
 
+const typeEl =
+el.querySelector(
+".col-order-type"
+);
+
+if(
+typeEl
+){
+const nextType =
+row.label ||
+"—";
+
+if(
+typeEl.textContent !==
+nextType
+){
+typeEl.textContent =
+nextType;
+}
+
+}
+
 const priceEl =
 el.querySelector(
 ".col-price"
@@ -1772,7 +1829,9 @@ if(
 priceEl
 ){
 const nextPrice =
-`${row.label || "—"} · ${formatPrice(row.price)}`;
+formatPrice(
+row.price
+);
 
 if(
 priceEl.textContent !==
@@ -1981,36 +2040,316 @@ Boolean
 
 }
 
+function isAlertsMode(){
+
+return mode ===
+"alerts-active" ||
+mode ===
+"alerts-history";
+
+}
+
+function wireAlertRowOpen(
+el,
+symbol
+){
+
+el.addEventListener(
+"pointerup",
+event=>{
+
+if(
+event.button !==
+0
+){
+return;
+}
+
+if(
+event.target.closest(
+".trade-book-close"
+)
+){
+return;
+}
+
+if(
+!isAlertsMode()
+){
+return;
+}
+
+requestOpenSymbol(
+symbol
+);
+
+}
+);
+
+}
+
+function renderAlertsTable(
+alerts,
+options
+){
+
+const {
+emptyMessage,
+dateField,
+onDelete
+} =
+options;
+
+hidePositionsTotal();
+purgePositionRows();
+purgeOrderRows();
+purgeAlertRows();
+
+if(
+!alerts.length
+){
+renderEmpty(
+emptyMessage
+);
+return;
+}
+
+const emptyEl =
+rowsEl.querySelector(
+".trade-book-empty"
+);
+
+if(
+emptyEl
+){
+emptyEl.remove();
+}
+
+rowsEl.innerHTML =
+alerts.map(
+alert=>{
+
+const shapeId =
+String(
+alert.shapeId ||
+""
+);
+const symbol =
+String(
+alert.symbol ||
+""
+);
+const triggeredAt =
+Number(
+alert.triggeredAt
+) ||
+0;
+const active =
+normalizeBookSymbol(
+symbol
+) ===
+normalizeBookSymbol(
+activeChartSymbol
+);
+
+return `
+<div class="trade-book-row trade-book-row--alert${active ? " is-active" : ""}" data-symbol="${symbol}" data-shape-id="${shapeId}" data-triggered-at="${triggeredAt}">
+<span class="col-date">${formatAlertDate(alert[dateField])}</span>
+<span class="col-ticker" title="${formatAlertTicker(symbol)}">
+<span class="trade-book-ticker-text">${formatAlertTicker(symbol)}</span>
+</span>
+<span class="col-action">
+<button type="button" class="trade-book-close" title="Удалить алерт" aria-label="Удалить алерт">×</button>
+</span>
+</div>
+`;
+
+}
+).join(
+""
+);
+
+rowsEl.querySelectorAll(
+".trade-book-row--alert"
+).forEach(
+row=>{
+
+const symbol =
+row.dataset.symbol;
+const shapeId =
+row.dataset.shapeId;
+const triggeredAt =
+Number(
+row.dataset.triggeredAt
+) ||
+0;
+
+wireAlertRowOpen(
+row,
+symbol
+);
+
+const deleteBtn =
+row.querySelector(
+".trade-book-close"
+);
+
+deleteBtn?.addEventListener(
+"click",
+event=>{
+
+event.stopPropagation();
+onDelete(
+symbol,
+shapeId,
+triggeredAt
+);
+
+}
+);
+
+}
+);
+
+updateCloseAllBtnState();
+
+}
+
+function renderAlertsActive(){
+
+renderAlertsTable(
+getAlertsSorted(),
+{
+emptyMessage:
+"Нет активных алертов",
+dateField:
+"createdAt",
+onDelete(
+symbol,
+shapeId
+){
+removeAlert(
+symbol,
+shapeId
+);
+renderAlertsActive();
+}
+}
+);
+
+}
+
+function renderAlertsHistory(){
+
+renderAlertsTable(
+getAlertsHistorySorted(),
+{
+emptyMessage:
+"Нет исполненных алертов",
+dateField:
+"triggeredAt",
+onDelete(
+symbol,
+shapeId,
+triggeredAt
+){
+removeAlertHistoryEntry(
+symbol,
+shapeId,
+triggeredAt
+);
+renderAlertsHistory();
+}
+}
+);
+
+}
+
 function renderTableHead(){
 
 tableHead.classList.remove(
 "trade-book-table-head--positions",
-"trade-book-table-head--orders"
+"trade-book-table-head--orders",
+"trade-book-table-head--alerts"
 );
+
+if(
+isAlertsMode()
+){
+panel.classList.add(
+"trade-book-panel--alerts"
+);
+positionsTableEl?.classList.remove(
+"trade-book-positions-table--grid",
+"trade-book-orders-table--grid"
+);
+positionsTableEl?.classList.add(
+"trade-book-alerts-table--grid"
+);
+tableHead.classList.add(
+"trade-book-table-head--alerts"
+);
+tableHead.innerHTML =
+`
+<span class="col-date">Дата${columnResizeHandle("date")}</span>
+<span class="col-ticker">Тикер${columnResizeHandle("ticker")}</span>
+<span class="col-action" aria-hidden="true"></span>
+`;
+
+applyAlertColumnLayout(
+panel
+);
+wireAlertColumnResize(
+panel,
+tableHead
+);
+return;
+}
 
 if(
 mode ===
 "orders"
 ){
+panel.classList.remove(
+"trade-book-panel--alerts"
+);
 positionsTableEl?.classList.remove(
-"trade-book-positions-table--grid"
+"trade-book-positions-table--grid",
+"trade-book-alerts-table--grid"
+);
+positionsTableEl?.classList.add(
+"trade-book-orders-table--grid"
 );
 tableHead.classList.add(
 "trade-book-table-head--orders"
 );
 tableHead.innerHTML =
 `
-<span class="col-ticker ${sortableHeadClass("ticker")}" data-sort="ticker">Тикер</span>
-<div class="trade-book-trail trade-book-trail--orders">
-<span class="col-price ${sortableHeadClass("price")}" data-sort="price">Цена</span>
+<span class="col-ticker ${sortableHeadClass("ticker")}" data-sort="ticker">Тикер${columnResizeHandle("ticker")}</span>
+<span class="col-order-type ${sortableHeadClass("type")}" data-sort="type">Тип${columnResizeHandle("type")}</span>
+<span class="col-price ${sortableHeadClass("price")}" data-sort="price">Цена${columnResizeHandle("price")}</span>
 <span class="col-time ${sortableHeadClass("time")}" data-sort="time">Время</span>
-</div>
 `;
+
+applyOrderColumnLayout(
+panel
+);
+wireOrderColumnResize(
+panel,
+tableHead
+);
 return;
 }
 
 tableHead.classList.add(
 "trade-book-table-head--positions"
+);
+panel.classList.remove(
+"trade-book-panel--alerts"
+);
+positionsTableEl?.classList.remove(
+"trade-book-orders-table--grid",
+"trade-book-alerts-table--grid"
 );
 positionsTableEl?.classList.add(
 "trade-book-positions-table--grid"
@@ -2243,6 +2582,7 @@ sortState.positions.asc
 );
 
 purgeOrderRows();
+purgeAlertRows();
 
 if(
 !sorted.length
@@ -2366,6 +2706,24 @@ orderRowNodes.clear();
 
 }
 
+function purgeAlertRows(){
+
+if(
+!rowsEl
+){
+return;
+}
+
+rowsEl.querySelectorAll(
+".trade-book-row--alert"
+).forEach(
+el=>{
+el.remove();
+}
+);
+
+}
+
 function purgePositionRows(){
 
 for(
@@ -2399,6 +2757,7 @@ sortState.orders.asc
 );
 
 purgePositionRows();
+purgeAlertRows();
 
 if(
 !sorted.length
@@ -2678,6 +3037,27 @@ false
 ){
 
 if(
+isAlertsMode()
+){
+renderTableHead();
+
+if(
+mode ===
+"alerts-active"
+){
+renderAlertsActive();
+}else{
+renderAlertsHistory();
+}
+
+setStatus(
+""
+);
+updateCloseAllBtnState();
+return;
+}
+
+if(
 !api
 ){
 renderTableHead();
@@ -2794,20 +3174,40 @@ function setMode(
 next
 ){
 
+const allowed =
+new Set(
+[
+"positions",
+"orders",
+"alerts-active",
+"alerts-history"
+]
+);
+
 mode =
-next ===
-"orders"
-? "orders"
+allowed.has(
+next
+)
+? next
 : "positions";
 
 if(
 mode ===
+"positions"
+){
+purgeOrderRows();
+purgeAlertRows();
+}else if(
+mode ===
 "orders"
 ){
 purgePositionRows();
+purgeAlertRows();
 hidePositionsTotal();
 }else{
+purgePositionRows();
 purgeOrderRows();
+hidePositionsTotal();
 }
 
 renderTableHead();
@@ -2873,6 +3273,12 @@ mode
 ];
 
 if(
+!state
+){
+return;
+}
+
+if(
 state.key ===
 key
 ){
@@ -2903,9 +3309,42 @@ lastPositionRows
 return;
 }
 
+if(
+mode ===
+"orders"
+){
 renderOrders(
 lastOrderRows
 );
+}
+
+}
+);
+
+window.addEventListener(
+"alerts-changed",
+()=>{
+
+if(
+mode ===
+"alerts-active"
+){
+renderAlertsActive();
+}
+
+}
+);
+
+window.addEventListener(
+"alerts-history-changed",
+()=>{
+
+if(
+mode ===
+"alerts-history"
+){
+renderAlertsHistory();
+}
 
 }
 );
@@ -3213,7 +3652,7 @@ sym
 );
 
 rowsEl.querySelectorAll(
-".trade-book-row--position, .trade-book-row--order"
+".trade-book-row--position, .trade-book-row--order, .trade-book-row--alert"
 ).forEach(
 row=>{
 const rowSym =

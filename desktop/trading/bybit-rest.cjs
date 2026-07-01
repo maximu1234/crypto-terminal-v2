@@ -2362,8 +2362,8 @@ orderType ===
 label =
 side ===
 "Buy"
-? "Buy Stop"
-: "Sell Stop";
+? "BST"
+: "SST";
 orderKind =
 "stop";
 }else if(
@@ -2376,7 +2376,10 @@ limitPrice >
 0
 ){
 label =
-"Limit";
+side ===
+"Buy"
+? "BLT"
+: "SLT";
 orderKind =
 "limit";
 }else{
