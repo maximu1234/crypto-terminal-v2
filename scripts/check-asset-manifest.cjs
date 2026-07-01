@@ -69,7 +69,8 @@ new Set([
 ".git",
 ".venv-icons",
 ".venv",
-"venv"
+"venv",
+"dist"
 ]);
 
 function walk(
