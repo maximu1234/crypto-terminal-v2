@@ -1,7 +1,7 @@
 import {
 isCloudLoggedInEffective,
 ensureCloudLoginResolved
-} from "../cloud-sync.js?v=39";
+} from "../cloud-sync.js?v=40";
 
 import {
 resolveAlertAuthFast,
@@ -45,7 +45,7 @@ softDeleteAlertViaRest
 
 import {
 isAlertsCloudDisabled
-} from "../supabase-usage-prefs.js?v=2";
+} from "../supabase-usage-prefs.js?v=4";
 
 const coalesceRegistryPull =
 createPullCoalescer({
@@ -692,7 +692,7 @@ return false;
 }
 
 const { ensureCloudReady } =
-await import("../auth-ui.js?v=29");
+await import("../auth-ui.js?v=35");
 
 await ensureCloudReady();
 
@@ -934,7 +934,7 @@ return ok;
 async function syncAllLocalAlertsToCloudImpl(){
 
 const { ensureCloudReady } =
-await import("../auth-ui.js?v=29");
+await import("../auth-ui.js?v=35");
 
 await ensureCloudReady();
 
@@ -1808,7 +1808,7 @@ return 0;
 
 try{
 const { ensureCloudLoginResolved } =
-await import("../cloud-sync.js?v=39");
+await import("../cloud-sync.js?v=40");
 
 await ensureCloudLoginResolved(
 8000

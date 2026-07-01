@@ -1,11 +1,11 @@
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=29";
+} from "./auth-ui.js?v=35";
 
 import {
 ensureCloudLoginResolved,
 getEffectiveCloudUserEmail
-} from "./cloud-sync.js?v=39";
+} from "./cloud-sync.js?v=40";
 
 import {
 isSystemAdminUser,
@@ -23,7 +23,7 @@ BYBIT_ROUTE_PROXY
 
 import {
 bindSupabaseUsagePrefsForm
-} from "./system-admin-supabase-prefs.js?v=1";
+} from "./system-admin-supabase-prefs.js?v=2";
 
 import {
 bindDrawingsGlobalPurge

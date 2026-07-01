@@ -26,7 +26,7 @@ isCloudLoggedInEffective,
 isCloudSyncEnabled,
 ensureCloudLoginResolved,
 onCloudSyncChange
-} from "../cloud-sync.js?v=39";
+} from "../cloud-sync.js?v=40";
 
 import {
 ensureDrawToolsVisible
@@ -37,7 +37,7 @@ deleteDrawingFromCloud,
 flushDrawingsCloudPush,
 registerDrawingsChartRefresh,
 scheduleDrawingsCloudPush
-} from "../drawings-cloud-sync.js?v=45";
+} from "../drawings-cloud-sync.js?v=46";
 
 import {
 touchShapeRevision,
@@ -69,7 +69,7 @@ ensureDomChartCrosshair,
 hideDomChartCrosshair,
 positionTabletProbeHorizInStack,
 fullCrosshairOptions
-} from "../chart-import.js?v=42";
+} from "../chart-import.js?v=43";
 
 import {
 STROKE,
@@ -150,7 +150,7 @@ createDrawHitTester
 
 import {
 createDrawRenderer
-} from "./draw-render.js?v=10";
+} from "./draw-render.js?v=11";
 
 import {
 snapPlotToCandleWick
@@ -172,7 +172,7 @@ mountTabletDrawInput
 import {
 cloneDrawingsForUndo,
 createDrawUndoStack
-} from "./draw-undo.js?v=1";
+} from "./draw-undo.js?v=2";
 
 import {
 createDrawDesktopSelection
@@ -180,7 +180,7 @@ createDrawDesktopSelection
 
 import {
 createDrawingsPersist
-} from "./drawings-persist.js?v=6";
+} from "./drawings-persist.js?v=7";
 
 import {
 createDrawStyleBar
@@ -200,7 +200,7 @@ createBrushPlacement
 
 import {
 createDrawEditInteraction
-} from "./draw-edit-interaction.js?v=11";
+} from "./draw-edit-interaction.js?v=12";
 
 import {
 createDrawChartInput
@@ -212,7 +212,7 @@ createDrawPriceScale
 
 import {
 createDrawRedrawLoop
-} from "./draw-redraw-loop.js?v=6";
+} from "./draw-redraw-loop.js?v=7";
 
 export function initDrawings({
 
@@ -240,7 +240,11 @@ onChartCrosshairClear = null,
 onChartCrosshairSuppress = null,
 onChartCrosshairRelease = null,
 clearAllPeers = null,
-drawPriceAlerts = true
+drawPriceAlerts = true,
+sharedDrawUndo =
+null,
+deferKeyboardUndo =
+false
 
 }){
 
@@ -532,6 +536,8 @@ null;
 let brushPlacementCtl =
 null;
 let teardownBrushPlacement =
+()=>{};
+let teardownStyleBar =
 ()=>{};
 let getPlotWidth =
 ()=>0;
@@ -1222,6 +1228,13 @@ function resetDrawUndoHistory(){
 
 drawUndo.reset();
 
+if(
+sharedDrawUndo &&
+deferKeyboardUndo
+){
+sharedDrawUndo.reset();
+}
+
 }
 
 function syncDrawUndoBaseline(){
@@ -1235,25 +1248,15 @@ normalizeDrawingShape
 
 }
 
-function undoLastDrawingChange(){
+function applyDrawingsUndoSnapshot(
+prev
+){
 
 if(
-!alive ||
-!isActive() ||
-placement ||
-dragState
+!prev
 ){
 return false;
 }
-
-if(
-!drawUndo.canUndo()
-){
-return false;
-}
-
-const prev =
-drawUndo.pop();
 
 const keepSelected =
 selectedId;
@@ -1289,6 +1292,35 @@ updateStyleBar();
 redraw();
 
 return true;
+
+}
+
+function undoLastDrawingChange(){
+
+if(
+!alive ||
+placement ||
+dragState
+){
+return false;
+}
+
+if(
+sharedDrawUndo?.canUndo?.()
+){
+return sharedDrawUndo.undo();
+}
+
+if(
+!isActive() ||
+!drawUndo.canUndo()
+){
+return false;
+}
+
+return applyDrawingsUndoSnapshot(
+drawUndo.pop()
+);
 
 }
 
@@ -2118,8 +2150,39 @@ return { time, price };
 function resolvePointFromPlotXY(
 px,
 py,
-prev = null
+prev = null,
+optEvent = null
 ){
+
+const magnetActive =
+drawMagnetKeyDown ||
+optEvent?.metaKey ===
+true;
+
+if(
+magnetActive
+){
+
+const snap =
+snapPlotToCandleWick({
+plotX: px,
+plotY: py,
+candles: candleSeries(),
+timeFromX,
+xFromTime,
+priceToPlotY: plotPriceToCoordinate
+});
+
+if(
+snap
+){
+return {
+time: snap.time,
+price: snap.price
+};
+}
+
+}
 
 const price =
 plotCoordinateToPrice(
@@ -2670,6 +2733,18 @@ selectedId = id;
 syncDrawUndoBaseline,
 drawUndo,
 cloneDrawingsForUndo,
+onDrawUndoPush:
+sharedDrawUndo
+? baseline=>{
+sharedDrawUndo.push(
+()=>{
+applyDrawingsUndoSnapshot(
+baseline
+);
+}
+);
+}
+: null,
 initialPositionTpSl,
 bumpDrawingsLocalRevision,
 scheduleDrawingsCloudPush,
@@ -3857,12 +3932,8 @@ isCoarseTouchViewport();
 ctx.beginPath();
 ctx.arc(x, y, r, 0, Math.PI * 2);
 
-if(
-!touch
-){
 ctx.fillStyle = HANDLE_FILL;
 ctx.fill();
-}
 
 ctx.strokeStyle = HANDLE_STROKE;
 ctx.lineWidth =
@@ -3927,12 +3998,8 @@ anchorSquareHalfSize();
 const touch =
 isCoarseTouchViewport();
 
-if(
-!touch
-){
 ctx.fillStyle = HANDLE_FILL;
 ctx.fillRect(x - h, y - h, h * 2, h * 2);
-}
 
 ctx.strokeStyle = HANDLE_STROKE;
 ctx.lineWidth =
@@ -4152,6 +4219,8 @@ defaultPositionP2,
 initialPositionTpSl,
 pointFromXY,
 drawAnchorCircle,
+drawPositionAnchor,
+getPositionHandleScreens,
 getPlacement:()=>placement,
 getPreviewPoint:()=>previewPoint,
 getPreviewXY:()=>previewXY,
@@ -4209,7 +4278,7 @@ stroke.points;
 
 if(
 pts.length <
-2
+1
 ){
 return;
 }
@@ -4218,6 +4287,11 @@ const style =
 baseDefaultStyle(
 "brush"
 );
+
+if(
+pts.length >=
+2
+){
 
 drawShape(
 ctx,
@@ -4237,6 +4311,44 @@ lineWidth: style.lineWidth
 plotW,
 h
 );
+
+}
+
+const start =
+toXY(
+pts[
+0
+]
+);
+const end =
+toXY(
+pts[
+pts.length -
+1
+]
+);
+
+if(
+start
+){
+drawAnchorCircle(
+ctx,
+start.x,
+start.y
+);
+}
+
+if(
+end &&
+pts.length >
+1
+){
+drawAnchorCircle(
+ctx,
+end.x,
+end.y
+);
+}
 
 }
 
@@ -4954,8 +5066,7 @@ scheduleDragRedraw?.();
 return;
 }
 
-holdChartPanRedraw();
-redraw();
+bumpChartPanRedraw();
 
 };
 
@@ -5107,6 +5218,15 @@ drawMagnetKeyDown = true;
 refreshPlacementPreviewFromPointer(
 e
 );
+
+if(
+dragState &&
+reapplyActiveDragCoordsHook
+){
+reapplyActiveDragCoordsHook();
+scheduleDragRedraw();
+}
+
 }
 
 return;
@@ -5121,6 +5241,10 @@ e.ctrlKey
 e.key ===
 "z" &&
 !e.shiftKey
+){
+
+if(
+!deferKeyboardUndo
 ){
 
 const ae =
@@ -5140,6 +5264,8 @@ if(
 undoLastDrawingChange()
 ){
 e.preventDefault();
+}
+
 }
 
 }
@@ -5214,6 +5340,14 @@ refreshPlacementPreviewFromPointer(
 e
 );
 
+if(
+dragState &&
+reapplyActiveDragCoordsHook
+){
+reapplyActiveDragCoordsHook();
+scheduleDragRedraw();
+}
+
 };
 
 window.addEventListener("keyup", onKeyUp, true);
@@ -5230,6 +5364,14 @@ placement &&
 placementPointerXY
 ){
 refreshPlacementPreviewFromPointer();
+}
+
+if(
+dragState &&
+reapplyActiveDragCoordsHook
+){
+reapplyActiveDragCoordsHook();
+scheduleDragRedraw();
 }
 
 }
@@ -5411,7 +5553,7 @@ styleBarCtl);
 
 styleBarCtl.portalDrawChrome();
 
-const teardownStyleBar =
+teardownStyleBar =
 styleBarCtl.mount();
 
 }
@@ -5904,7 +6046,7 @@ return;
 }
 
 void import(
-"../drawings-cloud-sync.js?v=45"
+"../drawings-cloud-sync.js?v=46"
 ).then(
 m=>{
 m.bumpDrawingsPullNow?.();

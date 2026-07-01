@@ -172,6 +172,25 @@ new Error(
  *   onDisconnect: (reason: string)=>void
  * }} handlers
  */
+function getWsConstructor(){
+
+if(
+WsConstructor
+){
+return WsConstructor;
+}
+
+if(
+typeof WebSocket !==
+"undefined"
+){
+return WebSocket;
+}
+
+return null;
+
+}
+
 function connectBybitPrivateWs(
 handlers
 ){
@@ -182,6 +201,20 @@ getCredentials();
 if(
 !creds
 ){
+return {
+close:()=>{}
+};
+}
+
+const Ws =
+getWsConstructor();
+
+if(
+!Ws
+){
+handlers.onDisconnect?.(
+"WebSocket module unavailable"
+);
 return {
 close:()=>{}
 };
@@ -206,11 +239,7 @@ creds.testnet
 );
 
 socket =
-WsConstructor
-? new WsConstructor(
-url
-)
-: new WebSocket(
+new Ws(
 url
 );
 

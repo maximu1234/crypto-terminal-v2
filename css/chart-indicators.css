@@ -494,7 +494,7 @@ margin-top:8px;
 .ind-ma-settings-head,
 .ind-ma-settings-row{
 display:grid;
-grid-template-columns:36px 52px 52px;
+grid-template-columns:18px 28px 52px 52px;
 gap:6px;
 align-items:center;
 }

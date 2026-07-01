@@ -10,7 +10,7 @@ isCloudLoggedIn,
 isCloudLoggedInEffective,
 onCloudSyncChange,
 ensureCloudLoginResolved
-} from "../cloud-sync.js?v=39";
+} from "../cloud-sync.js?v=40";
 
 import {
 getCachedAlertAuth,

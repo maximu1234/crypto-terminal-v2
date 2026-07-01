@@ -44,7 +44,7 @@ nav.menu{
 display:flex;
 flex-wrap:wrap;
 align-items:center;
-gap:18px;
+gap:var(--site-header-nav-gap, 18px);
 }
 
 .menu a{
@@ -97,10 +97,11 @@ margin-left:auto;
 display:none !important;
 }
 
-#screener-nav-panel{
+#screener-nav-panel,
+#site-nav-panel{
 display:flex;
 align-items:center;
-gap:18px;
+gap:var(--site-header-nav-gap, 18px);
 }
 
 body:has(#screener-grid){

@@ -1337,6 +1337,12 @@ const status =
 await api.getStatus?.();
 
 if(
+!host
+){
+return;
+}
+
+if(
 !status?.configured
 ){
 orders =
@@ -1357,7 +1363,7 @@ true;
 
 try{
 const symbol =
-host.getSymbol?.();
+host?.getSymbol?.();
 
 if(
 !symbol
@@ -1372,8 +1378,14 @@ const result =
 await api.getOpenOrders();
 
 if(
+!host
+){
+return;
+}
+
+if(
 normalizeOverlaySymbol(
-host.getSymbol?.()
+host?.getSymbol?.()
 ) !==
 normalizeOverlaySymbol(
 symbol
@@ -1500,7 +1512,7 @@ return;
 if(
 !chartEventSymbolMatches(
 e,
-host.getSymbol?.()
+host?.getSymbol?.()
 )
 ){
 return;
@@ -1556,7 +1568,7 @@ return;
 
 const symbol =
 normalizeOverlaySymbol(
-host.getSymbol?.()
+host?.getSymbol?.()
 );
 
 orders =

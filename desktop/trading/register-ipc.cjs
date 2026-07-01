@@ -52,6 +52,15 @@ require(
 "./trading-stream.cjs"
 );
 
+const {
+generatePnlShareCard,
+savePnlShareCard,
+discardPnlShareCard
+} =
+require(
+"./pnl-share-card.cjs"
+);
+
 function registerTradingIpc(){
 
 ipcMain.handle(
@@ -73,7 +82,27 @@ saveCredentials(
 payload ||
 {}
 );
+
+try{
 startTradingStream();
+}catch(
+streamErr
+){
+log.warn(
+"trading:saveKeys stream:",
+streamErr.message
+);
+return {
+ok:
+true,
+streamWarning:
+true,
+message:
+"Ключи сохранены. Поток позиций подключится после перезапуска приложения.",
+...getStatus()
+};
+}
+
 return {
 ok:
 true,
@@ -610,6 +639,95 @@ return {
 ok:
 false,
 message:
+err.message
+};
+}
+
+}
+);
+
+ipcMain.handle(
+"trading:generatePnlShareCard",
+async(
+_event,
+payload
+)=>{
+
+try{
+return await generatePnlShareCard(
+payload ||
+{}
+);
+}catch(
+err
+){
+log.warn(
+"trading:generatePnlShareCard:",
+err.message
+);
+return {
+ok:
+false,
+error:
+err.message
+};
+}
+
+}
+);
+
+ipcMain.handle(
+"trading:savePnlShareCard",
+async(
+_event,
+payload
+)=>{
+
+try{
+return await savePnlShareCard(
+payload?.tempPath,
+payload?.defaultName
+);
+}catch(
+err
+){
+log.warn(
+"trading:savePnlShareCard:",
+err.message
+);
+return {
+ok:
+false,
+error:
+err.message
+};
+}
+
+}
+);
+
+ipcMain.handle(
+"trading:discardPnlShareCard",
+(
+_event,
+payload
+)=>{
+
+try{
+return discardPnlShareCard(
+payload?.tempPath
+);
+}catch(
+err
+){
+log.warn(
+"trading:discardPnlShareCard:",
+err.message
+);
+return {
+ok:
+false,
+error:
 err.message
 };
 }

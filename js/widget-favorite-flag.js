@@ -6,17 +6,23 @@ loadFavoritesGroups,
 saveFavoritesGroups,
 setFavoriteGroup,
 getFavoriteGroup,
-canSetBlueFlag,
-FLAG_TITLES
-} from "./favorites.js?v=2";
+canSetBlueFlag
+} from "./favorites.js?v=4";
 
 import {
 persistFavoritesToCloud,
 onFavoritesRemoteUpdate
-} from "./cloud-sync.js?v=39";
+} from "./cloud-sync.js?v=40";
 
 let favorites =
 loadFavoritesGroups();
+
+function syncFavoritesFromStorage(){
+
+favorites =
+loadFavoritesGroups();
+
+}
 
 export function getWidgetFlagHtml(){
 
@@ -28,7 +34,6 @@ return `
 <button type="button" class="flag screener-flag-pick flag--green" data-flag-group="green" title="Зелёный" role="menuitem"></button>
 <button type="button" class="flag screener-flag-pick flag--gray" data-flag-group="gray" title="Серый" role="menuitem"></button>
 <button type="button" class="flag screener-flag-pick flag--blue" data-flag-group="blue" title="Синий (Терминал)" role="menuitem"></button>
-<button type="button" class="flag screener-flag-pick screener-flag-clear" data-flag-group="clear" title="Снять флаг" role="menuitem"></button>
 </div>
 </div>`;
 
@@ -74,6 +79,8 @@ root,
 symbol
 ){
 
+syncFavoritesFromStorage();
+
 const group =
 getFavoriteGroup(
 symbol,
@@ -105,7 +112,7 @@ btn.classList.add(
 
 btn.title =
 group
-? FLAG_TITLES[group]
+? "Снять флаг"
 : "Выбрать флаг";
 
 btn.setAttribute(
@@ -158,15 +165,16 @@ wrap.querySelector(
 
 function applyFavoriteGroup(
 symbol,
-group,
-onChanged
+group
 ){
 
 if(
 !symbol
 ){
-return;
+return false;
 }
+
+syncFavoritesFromStorage();
 
 const before =
 JSON.stringify(
@@ -200,7 +208,7 @@ favorites
 ) ===
 before
 ){
-return;
+return false;
 }
 
 saveFavoritesGroups(
@@ -209,7 +217,8 @@ favorites
 persistFavoritesToCloud(
 favorites
 );
-onChanged?.();
+
+return true;
 
 }
 
@@ -240,6 +249,53 @@ e=>{
 
 e.stopPropagation();
 
+const sym =
+getSymbol();
+
+if(
+flagTrigger.classList.contains(
+"favorite"
+)
+){
+closeAllWidgetFlagMenus(
+flagWrap
+);
+flagMenu?.classList.add(
+"hidden"
+);
+flagTrigger.setAttribute(
+"aria-expanded",
+"false"
+);
+
+if(
+!applyFavoriteGroup(
+sym,
+"clear"
+)
+){
+favorites =
+setFavoriteGroup(
+sym,
+null,
+loadFavoritesGroups()
+);
+saveFavoritesGroups(
+favorites
+);
+persistFavoritesToCloud(
+favorites
+);
+}
+
+onChanged?.();
+updateWidgetFlagUi(
+root,
+sym
+);
+return;
+}
+
 const open =
 !flagMenu?.classList.contains(
 "hidden"
@@ -269,7 +325,7 @@ flagTrigger.setAttribute(
 );
 refreshFlagMenuPickStates(
 root,
-getSymbol()
+sym
 );
 }
 
@@ -289,9 +345,9 @@ e.stopPropagation();
 
 applyFavoriteGroup(
 getSymbol(),
-btn.dataset.flagGroup,
-onChanged
+btn.dataset.flagGroup
 );
+onChanged?.();
 
 updateWidgetFlagUi(
 root,

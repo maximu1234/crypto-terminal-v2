@@ -21,7 +21,7 @@ clampCoinsAoHeight
 
 import {
 isTerminalPage
-} from "./terminal/terminal-state.js?v=6";
+} from "./terminal/terminal-state.js?v=7";
 
 export {
 COINS_LIST_DEFAULT_PX,

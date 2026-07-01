@@ -4,15 +4,11 @@ initAlertMonitor
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=29";
+} from "./auth-ui.js?v=35";
 
 import {
 isAlertsPage
 } from "./cloud-sync-throttle.js?v=3";
-
-import {
-scheduleDevicePull
-} from "./device-pull-gate.js?v=1";
 
 import {
 initAlertsCloudSync,
@@ -28,13 +24,8 @@ isCloudLoggedIn,
 isCloudLoggedInEffective,
 isCloudSyncEnabled,
 getCloudUserEmail,
-pullDeviceStateFromCloud,
 onCloudSyncChange
-} from "./cloud-sync.js?v=39";
-
-import {
-isAutoDevicePullDisabled
-} from "./supabase-usage-prefs.js?v=2";
+} from "./cloud-sync.js?v=40";
 
 import {
 isSupabaseConfigured
@@ -240,6 +231,8 @@ initAlertsCloudSync();
 onCloudSyncChange(
 ()=>{
 
+/* BANDWIDTH-CUT: автозагрузка device state при логине */
+/*
 if(
 isCloudLoggedInEffective() &&
 !isAlertsPage() &&
@@ -250,6 +243,7 @@ scheduleDevicePull(
 pullDeviceStateFromCloud()
 );
 }
+*/
 
 window.dispatchEvent(
 new CustomEvent(
@@ -260,13 +254,16 @@ new CustomEvent(
 }
 );
 
-import("./drawings-cloud-sync.js?v=45").then(
+/* BANDWIDTH-CUT: облако рисунков (Realtime + fast poll + push) */
+/*
+import("./drawings-cloud-sync.js?v=46").then(
 ({ initDrawingsCloudSync })=>{
 initDrawingsCloudSync();
 }
 );
+*/
 
-import("./favorites-cloud-sync.js?v=3").then(
+import("./favorites-cloud-sync.js?v=4").then(
 ({ initFavoritesCloudSync })=>{
 initFavoritesCloudSync();
 }

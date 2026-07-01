@@ -27,22 +27,22 @@ saveFavoritesGroups,
 getFavoriteGroup,
 setFavoriteGroup,
 flagSortRank,
-FLAG_TITLES,
 canSetBlueFlag
-} from "./favorites.js?v=2";
+} from "./favorites.js?v=4";
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=29";
+} from "./auth-ui.js?v=35";
 
 import {
 persistFavoritesToCloud,
 onFavoritesRemoteUpdate
-} from "./cloud-sync.js?v=39";
+} from "./cloud-sync.js?v=40";
 
 import {
 createCandlestickChart,
 createRSIChart,
+applyRsiFixedPriceScale,
 applyChartPriceFormat,
 mountChartPriceHud,
 syncLinkedChartTimescales,
@@ -61,14 +61,14 @@ mountAxisDoubleTapReset,
 TABLET_USE_CUSTOM_TOUCH_PAN,
 isTabletChartViewport,
 isUserCrosshairEvent,
-resetChartPriceAutoScale,
+pulsePriceScaleAutoscale,
 computeChartFutureMarginBars,
 appendFutureWhitespaceBars,
 coinsTfVisibleBars,
 applyCoinsChartViewport,
 refreshCoinsChartBarSpacing,
 tfPeriodSec
-} from "./chart-import.js?v=42";
+} from "./chart-import.js?v=43";
 
 import {
 mountCoinsTabletController
@@ -83,8 +83,12 @@ syncBackgroundAlertStreams
 } from "./alert-monitor.js?v=65";
 
 import {
+createSharedDrawUndoStack
+} from "./drawings/draw-undo.js?v=2";
+
+import {
 initWidgetDrawings
-} from "./chart-widget-host.js?v=12";
+} from "./chart-widget-host.js?v=13";
 
 import {
 mountDrawToolbar,
@@ -93,7 +97,7 @@ mountDrawToolIcons
 
 import {
 initChartIndicators
-} from "./chart-indicators.js?v=12";
+} from "./chart-indicators.js?v=19";
 
 import {
 initCoinsMobileUi,
@@ -123,7 +127,7 @@ COINS_TF_VALUES,
 COINS_MARKETS,
 isTerminalPage,
 isTradePage
-} from "./terminal/terminal-state.js?v=6";
+} from "./terminal/terminal-state.js?v=7";
 
 import {
 stopTickerStream
@@ -157,7 +161,7 @@ highlightActiveSymbol,
 getVisibleSymbolList,
 setCoinsTableHooks,
 syncCoinListFreezeFromFlagMenus
-} from "./terminal/terminal-table.js?v=12";
+} from "./terminal/terminal-table.js?v=15";
 
 import {
 createCoinsChartSwitchVeil
@@ -171,7 +175,17 @@ settleCoinsChartViewport,
 resizeCharts,
 scheduleResizeCharts,
 applyDefaultZoom
-} from "./terminal/terminal-chart-layout.js?v=4";
+} from "./terminal/terminal-chart-layout.js?v=5";
+
+import {
+initTerminalMultiChart,
+syncPrimaryTfToLayout,
+isTerminalMultiChartLayout
+} from "./terminal-multi-chart.js?v=9";
+
+import {
+mountTerminalLayoutPicker
+} from "./terminal-layout-picker.js?v=3";
 
 let currentDataset = "all";
 let currentTF = "60";
@@ -186,7 +200,13 @@ let rsiDrawingTools =
 null;
 let activeDrawPane =
 "chart";
+const sharedDrawUndo =
+createSharedDrawUndoStack();
+let terminalSharedDrawUndoMounted =
+false;
 let chartIndicators =
+null;
+let terminalMultiChartApi =
 null;
 
 /** То, что показано в #current-symbol (не сбрасывается на BTC при переключении). */
@@ -1296,6 +1316,14 @@ onReset(){}
 };
 
 const rsiPriceScaleTouchHooks = {
+fixedAutoscaleRange:{
+min:0,
+max:100
+},
+scaleMargins:{
+top:0,
+bottom:0
+},
 getFallbackPriceRange(){
 return {
 min:0,
@@ -1320,22 +1348,27 @@ candleSeries,
 priceScaleTouchHooks
 );
 
-function resetTabletPriceScale(){
+function resetCoinsChartPriceScale(){
 
 if(
 tabletPriceScaleCtrl?.resetPriceAutoScale
 ){
-tabletPriceScaleCtrl.resetPriceAutoScale({
+tabletPriceScaleCtrl.resetPriceAutoScale(
+{
 force:true
-});
-return;
 }
-
-resetChartPriceAutoScale(
+);
+}else{
+pulsePriceScaleAutoscale(
 chart,
 candleSeries
 );
+}
+
 priceScaleTouchHooks.onReset?.();
+drawingTools?.endPriceScaleDragRedraw?.();
+rsiDrawingTools?.endPriceScaleDragRedraw?.();
+window.__tradeChartOverlay?.onPriceScaleDragEnd?.();
 
 }
 
@@ -1397,6 +1430,10 @@ applyTabletRsiChartOptions(
 rsiChart
 );
 
+if(
+isTabletChartViewport()
+){
+
 mountTabletPriceScaleTouch(
 rsiChart,
 document.getElementById(
@@ -1406,6 +1443,8 @@ rsiChartEl,
 rsiSeries,
 rsiPriceScaleTouchHooks
 );
+
+}
 
 /*
   Кеш точек RSI: пересборка только при данных свечей;
@@ -1684,6 +1723,11 @@ buildRsiDisplayPoints()
 
 syncCoinsFutureTimeAnchorSeries();
 
+applyRsiFixedPriceScale(
+rsiChart,
+rsiSeries
+);
+
 layoutRsiBand();
 
 const last =
@@ -1862,6 +1906,15 @@ document.body.classList.remove(
 "drawings-tablet-test-off"
 );
 
+if(
+isTerminalMultiChartLayout()
+){
+document.body.classList.add(
+"coins-multi-chart-on",
+"coins-drawings-ui-off"
+);
+}
+
 try{
 
 mountDrawToolbar(
@@ -1997,6 +2050,11 @@ chart.clearCrosshairPosition();
 
 }
 
+,
+sharedDrawUndo,
+deferKeyboardUndo:
+true
+
 });
 
 const chartWrapEl =
@@ -2039,6 +2097,72 @@ return "chart";
 }
 
 return null;
+
+}
+
+function mountTerminalSharedDrawUndoKeyboard(){
+
+if(
+terminalSharedDrawUndoMounted
+){
+return;
+}
+
+terminalSharedDrawUndoMounted =
+true;
+
+window.addEventListener(
+"keydown",
+e=>{
+
+if(
+!(
+(
+e.metaKey ||
+e.ctrlKey
+) &&
+e.key ===
+"z" &&
+!e.shiftKey
+)
+){
+return;
+}
+
+const ae =
+document.activeElement;
+const tag =
+ae?.tagName;
+
+if(
+tag ===
+"INPUT" ||
+tag ===
+"TEXTAREA" ||
+ae?.isContentEditable
+){
+return;
+}
+
+if(
+drawingTools?.hasActiveDrawInteraction?.() ||
+rsiDrawingTools?.hasActiveDrawInteraction?.()
+){
+return;
+}
+
+if(
+!sharedDrawUndo.canUndo()
+){
+return;
+}
+
+sharedDrawUndo.undo();
+e.preventDefault();
+
+},
+true
+);
 
 }
 
@@ -2248,7 +2372,11 @@ barPosKey:
 
 abortTabletChartGesture:()=>{
 cancelTabletPanGesture?.();
-}
+},
+
+sharedDrawUndo,
+deferKeyboardUndo:
+true
 
 });
 
@@ -2256,6 +2384,8 @@ if(
 drawingTools &&
 rsiDrawingTools
 ){
+
+mountTerminalSharedDrawUndoKeyboard();
 
 const mainSetTool =
 drawingTools.setTool.bind(
@@ -2296,33 +2426,6 @@ console.warn(
 );
 }
 
-registerCoinsChartLayoutContext({
-getCandles:()=>
-candles,
-chart,
-chartEl,
-getTf:()=>
-currentTF,
-getChartIndicators:()=>
-chartIndicators,
-getRsiChart:()=>
-rsiChart,
-rsiPaneActive:()=>
-rsiPaneActive,
-layoutRsiBand,
-applyCoinsChartViewport,
-refreshCoinsChartBarSpacing,
-getDrawingTools:()=>
-drawingTools,
-getLinkedDrawingTools:()=>
-rsiDrawingTools
-? [
-rsiDrawingTools
-]
-: [],
-viewportSettleRaf
-});
-
 chartIndicators =
 initChartIndicators(
 {
@@ -2344,6 +2447,8 @@ getSymbol:()=>
 currentSymbol,
 getCandles:()=>
 candles,
+getDisplayCandles:()=>
+buildChartDisplayCandles(),
 getTf:()=>
 currentTF,
 loadIndicatorHistory:(
@@ -2422,6 +2527,33 @@ chartIndicators?.notifyLayoutChange?.();
 })
 }
 );
+
+registerCoinsChartLayoutContext({
+getCandles:()=>
+candles,
+chart,
+chartEl,
+getTf:()=>
+currentTF,
+getChartIndicators:()=>
+chartIndicators,
+getRsiChart:()=>
+rsiChart,
+rsiPaneActive:()=>
+rsiPaneActive,
+layoutRsiBand,
+applyCoinsChartViewport,
+refreshCoinsChartBarSpacing,
+getDrawingTools:()=>
+drawingTools,
+getLinkedDrawingTools:()=>
+rsiDrawingTools
+? [
+rsiDrawingTools
+]
+: [],
+viewportSettleRaf
+});
 
 if(
 isTradePage &&
@@ -2766,6 +2898,13 @@ lists.forex;
 function coinsMarketHasSymbols(
 market
 ){
+
+if(
+market ===
+"indexes"
+){
+return true;
+}
 
 const map = {
 all:coinsState().allListings,
@@ -3231,12 +3370,16 @@ candleSeries,
 refPrice
 );
 
+resetCoinsChartPriceScale();
+
 rebuildRsiFromCandles();
 
 applyDefaultZoom({
 scheduleDrawingRedraw:
 false
 });
+
+chartIndicators?.notifyMainChartOverlaysSync?.();
 
 drawingTools?.onSymbolChange?.({
 skipRedraw:
@@ -3246,7 +3389,6 @@ rsiDrawingTools?.onSymbolChange?.({
 skipRedraw:
 true
 });
-chartIndicators?.notifySymbolChange?.();
 
 scheduleChartLayoutSettled(
 ()=>{
@@ -3261,6 +3403,10 @@ return;
 setChartLayoutReady(
 true
 );
+
+chartIndicators?.notifySymbolChange?.();
+chartIndicators?.notifyLayoutSettled?.();
+settleCoinsChartViewport();
 
 drawingTools?.scheduleRedraw?.();
 rsiDrawingTools?.scheduleRedraw?.();
@@ -3279,6 +3425,8 @@ ensureCoinsMobileShowsChart();
 
 startRealtime();
 startPriceHud();
+
+void terminalMultiChartApi?.scheduleSecondaryReload?.();
 
 syncBackgroundAlertStreams(
 currentSymbol,
@@ -3519,6 +3667,9 @@ return;
 }
 
 currentTF = tf;
+syncPrimaryTfToLayout(
+currentTF
+);
 
 document
 .querySelectorAll(".tf-btn")
@@ -3901,8 +4052,6 @@ function updateCoinFlagButton(btn, symbol){
 const group =
 getFavoriteGroup(symbol, favorites);
 
-const titles = FLAG_TITLES;
-
 btn.className =
 "flag coin-flag-btn screener-flag-btn";
 
@@ -3915,7 +4064,7 @@ btn.classList.add(
 
 btn.title =
 group
-? titles[group]
+? "Снять флаг"
 : "Выбрать флаг";
 
 btn.setAttribute(
@@ -3992,6 +4141,43 @@ flagTrigger.addEventListener(
 e=>{
 
 e.stopPropagation();
+
+const sym =
+String(
+currentSymbol ||
+displaySymbol ||
+""
+).trim().toUpperCase();
+
+if(
+!sym
+){
+return;
+}
+
+if(
+getFavoriteGroup(
+sym,
+favorites
+)
+){
+closeAllCoinFlagMenus(
+flagWrap
+);
+flagMenu.classList.add(
+"hidden"
+);
+flagTrigger.setAttribute(
+"aria-expanded",
+"false"
+);
+applyCoinFavoriteGroup(
+sym,
+"clear"
+);
+syncCoinListFreezeFromFlagMenus();
+return;
+}
 
 const open =
 !flagMenu.classList.contains(
@@ -4652,6 +4838,26 @@ mountCoinsListRefreshControls();
 
 mountCoinsChartHeaderFlag();
 
+terminalMultiChartApi =
+initTerminalMultiChart({
+getSymbol:()=>
+currentSymbol,
+getPrimaryTf:()=>
+currentTF,
+setPrimaryTf:
+setCoinsTimeframe,
+scheduleResizeCharts,
+setRsiPaneActive,
+onMultiChartLayout:()=>{
+scheduleResizeCharts();
+},
+onSingleChartLayout:()=>{
+scheduleResizeCharts();
+},
+mountPicker:
+mountTerminalLayoutPicker
+});
+
 favorites =
 loadFavoritesGroups();
 
@@ -4875,6 +5081,7 @@ candles.length -
 ]?.close ??
 1
 );
+chartIndicators?.notifyMainChartOverlaysSync?.();
 }
 });
 

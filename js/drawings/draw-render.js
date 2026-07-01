@@ -39,6 +39,8 @@ defaultPositionP2,
 initialPositionTpSl,
 pointFromXY,
 drawAnchorCircle,
+drawPositionAnchor,
+getPositionHandleScreens,
 getPlacement,
 getPreviewPoint,
 getPreviewXY,
@@ -444,19 +446,156 @@ return null;
 
 }
 
-function drawPlacementPreview(ctx, w, h){
+function placementPointsNeeded(
+type
+){
 
-const placement =
-getPlacement();
+if(
+type ===
+"channel"
+){
+return 3;
+}
+
+if(
+type ===
+"hray" ||
+isPositionType(
+type
+)
+){
+return 1;
+}
+
+return 2;
+
+}
+
+function drawPlacementAnchorPoints(
+ctx,
+placementType,
+placedPts
+){
+
+const needed =
+placementPointsNeeded(
+placementType
+);
+const preview =
+resolvePreviewScreenXY();
+const showPreview =
+!!preview &&
+placedPts.length <
+needed;
+
+if(
+isPositionType(
+placementType
+)
+){
+
+if(
+placedPts.length <
+1
+){
+
+if(
+showPreview
+){
+drawAnchorCircle(
+ctx,
+preview.x,
+preview.y
+);
+}
+
+return;
+
+}
+
+const p1 =
+placedPts[
+0
+];
+const p2 =
+resolvePreviewAnchorPoint(
+p1
+) ||
+defaultPositionP2(
+p1
+);
+const levels =
+initialPositionTpSl(
+placementType,
+p1.price
+);
+
+getPositionHandleScreens(
+{
+type: placementType,
+p1,
+p2,
+tpPrice: levels.tpPrice,
+slPrice: levels.slPrice
+}
+).forEach(
+handle=>{
+drawPositionAnchor(
+ctx,
+handle.x,
+handle.y
+);
+}
+);
+
+return;
+
+}
+
+placedPts.forEach(
+pt=>{
+
+const xy =
+toXY(
+pt
+);
+
+if(
+xy
+){
+drawAnchorCircle(
+ctx,
+xy.x,
+xy.y
+);
+}
+
+}
+);
+
+if(
+showPreview
+){
+drawAnchorCircle(
+ctx,
+preview.x,
+preview.y
+);
+}
+
+}
+
+function drawPlacementPreviewBody(
+ctx,
+w,
+h,
+placement
+){
+
 const previewPoint =
 getPreviewPoint();
 const previewXY =
 getPreviewXY();
-
-if(!placement){
-return;
-}
-
 const style = baseDefaultStyle(placement.type);
 const pts = placement.points;
 
@@ -545,31 +684,6 @@ if(
 !previewXYPoint
 ){
 return;
-}
-
-if(
-pts.length ===
-0 &&
-(
-placement.type ===
-"trendline" ||
-placement.type ===
-"fib" ||
-placement.type ===
-"arrow" ||
-placement.type ===
-"rectangle"
-)
-){
-
-drawAnchorCircle(
-ctx,
-previewXYPoint.x,
-previewXYPoint.y
-);
-
-return;
-
 }
 
 if(
@@ -725,15 +839,7 @@ if(
 stretchPx <
 12
 ){
-
-drawAnchorCircle(
-ctx,
-a.x,
-a.y
-);
-
 return;
-
 }
 
 const previewAnchor =
@@ -813,6 +919,32 @@ drawShape(ctx, previewShape, w, h);
 if(placement.type === "fib" && previewPts.length >= 2){
 drawShape(ctx, previewShape, w, h, true);
 }
+
+}
+
+function drawPlacementPreview(ctx, w, h){
+
+const placement =
+getPlacement();
+
+if(
+!placement
+){
+return;
+}
+
+drawPlacementPreviewBody(
+ctx,
+w,
+h,
+placement
+);
+
+drawPlacementAnchorPoints(
+ctx,
+placement.type,
+placement.points
+);
 
 }
 

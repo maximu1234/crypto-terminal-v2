@@ -1916,13 +1916,8 @@ body.tablet-chart #rsi-wrap .rsi-level-line:not(.hidden){
   background:#283548;
 }
 
-body.trade-page .coin.has-position{
-  outline:1px dashed rgba(250,204,21,.36);
-  outline-offset:-1px;
-}
-
-body.trade-page .coin.has-position.active{
-  outline:1px dashed rgba(250,204,21,.36);
+body.trade-page .coin.has-position .coin-symbol{
+  color:#facc15;
 }
 
 .col-flag{

@@ -15,7 +15,7 @@ normalCrosshairOptions,
 positionTabletProbeCrosshair,
 tabletProbeCrosshairOptions,
 TABLET_USE_CUSTOM_TOUCH_PAN
-} from "./chart-import.js?v=42";
+} from "./chart-import.js?v=43";
 
 import {
 createTabletGesturePolicy

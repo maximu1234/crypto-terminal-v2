@@ -1,6 +1,6 @@
 import {
 calculateEMA
-} from "./ma-math.js?v=1";
+} from "./ma-math.js?v=2";
 
 export function calculateShiftedEmaSeries(
 chartCandles,

@@ -1,8 +1,13 @@
 import {
 coinsState,
 marketMap,
-coinElements
-} from "./terminal-state.js?v=6";
+coinElements,
+COINS_INDEX_ITEMS
+} from "./terminal-state.js?v=7";
+
+import {
+fetchBtcDominanceHistory
+} from "../btc-dominance/fetch.js?v=1";
 
 import {
 isBybitCoinsDataset
@@ -29,11 +34,11 @@ import {
 getFavoriteGroup,
 flagSortRank,
 emptyFavorites
-} from "../favorites.js?v=2";
+} from "../favorites.js?v=4";
 
 import {
 isTradePage
-} from "./terminal-state.js?v=6";
+} from "./terminal-state.js?v=7";
 
 /** Desktop /trade only — не тянем trade-open-positions в открытый web /coins. */
 let hasOpenPosition =
@@ -114,6 +119,16 @@ dataset ===
 return coinsState().forexListings;
 }
 
+if(
+dataset ===
+"indexes"
+){
+return COINS_INDEX_ITEMS.map(
+item=>
+item.symbol
+);
+}
+
 console.warn(
 "[coins] неизвестный рынок:",
 dataset
@@ -130,14 +145,46 @@ marketMap.clear();
 const symbols =
 getCurrentSymbols();
 
+const dataset =
+coinsState().currentDataset;
+
+const indexMeta =
+dataset ===
+"indexes"
+? new Map(
+COINS_INDEX_ITEMS.map(
+item=>[
+item.symbol,
+item
+]
+)
+)
+: null;
+
 const next =
 symbols.map(
-symbol=>({
+symbol=>{
+const meta =
+indexMeta?.get(
+symbol
+);
+
+return {
 symbol,
-price:0,
-change24:0,
-change1h:0
-})
+price:
+0,
+change24:
+0,
+change1h:
+0,
+href:
+meta?.href ||
+"",
+indexTitle:
+meta?.title ||
+""
+};
+}
 );
 
 coinsState().marketData =
@@ -223,6 +270,14 @@ renderList();
 export async function primeTickerSnapshots(){
 
 if(
+coinsState().currentDataset ===
+"indexes"
+){
+await primeIndexSnapshots();
+return;
+}
+
+if(
 !isBybitCoinsDataset(
 coinsState().currentDataset
 )
@@ -261,6 +316,187 @@ payload.change1h;
 
 console.warn(
 "prime tickers:",
+err
+);
+
+}
+
+}
+
+function dominancePointTimeMs(
+point
+){
+
+const t =
+Number(
+point?.time
+);
+
+if(
+!Number.isFinite(
+t
+)
+){
+return null;
+}
+
+return t <
+1e12
+? t *
+1000
+: t;
+
+}
+
+function dominanceValueAtOrBefore(
+points,
+targetMs
+){
+
+let ref =
+null;
+
+for(
+const point of
+points
+){
+
+const tMs =
+dominancePointTimeMs(
+point
+);
+
+if(
+tMs ==
+null
+){
+continue;
+}
+
+if(
+tMs <=
+targetMs
+){
+ref =
+point;
+}else{
+break;
+}
+
+}
+
+return ref;
+
+}
+
+function dominanceDelta(
+points,
+msAgo
+){
+
+if(
+!Array.isArray(
+points
+) ||
+!points.length
+){
+return 0;
+}
+
+const last =
+points[
+points.length -
+1
+];
+const lastMs =
+dominancePointTimeMs(
+last
+);
+
+if(
+lastMs ==
+null ||
+last.value ==
+null
+){
+return 0;
+}
+
+const ref =
+dominanceValueAtOrBefore(
+points,
+lastMs -
+msAgo
+);
+
+if(
+!ref ||
+ref.value ==
+null
+){
+return 0;
+}
+
+return Number(
+last.value
+) -
+Number(
+ref.value
+);
+
+}
+
+async function primeIndexSnapshots(){
+
+try{
+
+const hist =
+await fetchBtcDominanceHistory({
+days:
+"7"
+});
+
+const points =
+hist.points ||
+[];
+const item =
+marketMap.get(
+"BTC.D"
+);
+
+if(
+!item
+){
+return;
+}
+
+item.change24 =
+dominanceDelta(
+points,
+24 *
+60 *
+60 *
+1000
+);
+
+item.change1h =
+dominanceDelta(
+points,
+60 *
+60 *
+1000
+);
+
+updateCoinRow(
+item
+);
+
+}catch(
+err
+){
+
+console.warn(
+"index tickers:",
 err
 );
 
@@ -522,10 +758,18 @@ export function createCoinRow(item){
 const div =
 document.createElement("div");
 
-div.className = "coin";
+const isIndexLink =
+!!item.href;
 
-div.innerHTML = `
+div.className =
+isIndexLink
+? "coin coin-index-link"
+: "coin";
 
+const flagCol =
+isIndexLink
+? `<div class="col-flag" aria-hidden="true"></div>`
+: `
 <div class="col-flag">
 
 <div class="coin-flag-wrap">
@@ -535,16 +779,16 @@ div.innerHTML = `
 <button type="button" class="flag coin-flag-pick flag--green" data-flag-group="green" title="Зелёный" role="menuitem"></button>
 <button type="button" class="flag coin-flag-pick flag--gray" data-flag-group="gray" title="Серый" role="menuitem"></button>
 <button type="button" class="flag coin-flag-pick flag--blue" data-flag-group="blue" title="Синий (Терминал)" role="menuitem"></button>
-<button type="button" class="flag coin-flag-pick coin-flag-clear" data-flag-group="clear" title="Снять флаг" role="menuitem"></button>
 </div>
 </div>
 
-</div>
+</div>`;
 
-<div class="coin-symbol" title="${item.symbol}">
+div.innerHTML = `
+${flagCol}
+<div class="coin-symbol" title="${item.indexTitle || item.symbol}">
 ${item.symbol}
 </div>
-
 <div class="coin-change24 col-change">
 0.00%
 </div>
@@ -552,8 +796,25 @@ ${item.symbol}
 <div class="coin-change1h col-change">
 0.00%
 </div>
-
 `;
+
+if(
+isIndexLink
+){
+
+div.onclick = ()=>{
+window.location.href =
+item.href;
+};
+
+updateCoinRow(
+item,
+div
+);
+
+return div;
+
+}
 
 div.onclick = async e=>{
 
@@ -584,6 +845,29 @@ hooks.updateCoinFlagButton(flagTrigger, item.symbol);
 flagTrigger?.addEventListener("click", e=>{
 
 e.stopPropagation();
+
+if(
+flagTrigger.classList.contains(
+"favorite"
+)
+){
+hooks.closeAllCoinFlagMenus(
+flagWrap
+);
+flagMenu?.classList.add(
+"hidden"
+);
+flagTrigger.setAttribute(
+"aria-expanded",
+"false"
+);
+hooks.applyCoinFavoriteGroup(
+item.symbol,
+"clear"
+);
+syncCoinListFreezeFromFlagMenus();
+return;
+}
 
 const open =
 !flagMenu?.classList.contains("hidden");

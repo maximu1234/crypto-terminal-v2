@@ -20,7 +20,7 @@ updateRsiLevelLinesLayout,
 linkPairedChartTimeScales,
 SCREENER_VISIBLE_BARS,
 SCREENER_MAX_BARS
-} from "./chart-import.js?v=42";
+} from "./chart-import.js?v=43";
 
 import {
 calculateRSI,
@@ -55,13 +55,12 @@ saveFavoritesGroups,
 getFavoriteGroup,
 setFavoriteGroup,
 migrateFavorites,
-canSetBlueFlag,
-FLAG_TITLES
-} from "./favorites.js?v=2";
+canSetBlueFlag
+} from "./favorites.js?v=4";
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=29";
+} from "./auth-ui.js?v=35";
 
 import {
 ensureSettled,
@@ -76,7 +75,7 @@ bindMobileNavDrawerLinks
 import {
 persistFavoritesToCloud,
 onFavoritesRemoteUpdate
-} from "./cloud-sync.js?v=39";
+} from "./cloud-sync.js?v=40";
 
 import {
 attachSymbolAutocomplete,
@@ -220,11 +219,9 @@ btn.classList.add(
 );
 }
 
-const titles = FLAG_TITLES;
-
 btn.title =
 group
-? titles[group]
+? "Снять флаг"
 : "Выбрать флаг";
 
 btn.setAttribute(
@@ -350,7 +347,6 @@ const SCREENER_FLAG_WRAP_HTML =
 <button type="button" class="flag screener-flag-pick flag--green" data-flag-group="green" title="Зелёный" role="menuitem"></button>
 <button type="button" class="flag screener-flag-pick flag--gray" data-flag-group="gray" title="Серый" role="menuitem"></button>
 <button type="button" class="flag screener-flag-pick flag--blue" data-flag-group="blue" title="Синий (Терминал)" role="menuitem"></button>
-<button type="button" class="flag screener-flag-pick screener-flag-clear" data-flag-group="clear" title="Снять флаг" role="menuitem"></button>
 </div>
 </div>
 `;
@@ -386,6 +382,28 @@ flagTrigger?.addEventListener(
 e=>{
 
 e.stopPropagation();
+
+if(
+flagTrigger.classList.contains(
+"favorite"
+)
+){
+closeAllScreenerFlagMenus(
+flagWrap
+);
+flagMenu?.classList.add(
+"hidden"
+);
+flagTrigger.setAttribute(
+"aria-expanded",
+"false"
+);
+applyFavoriteGroup(
+symbol,
+"clear"
+);
+return;
+}
 
 const open =
 !flagMenu?.classList.contains(
@@ -2250,7 +2268,7 @@ toggle?.setAttribute(
 
 function openScreenerNav(){
 
-void import("./auth-ui.js?v=29").then(m=>{
+void import("./auth-ui.js?v=35").then(m=>{
 m.closeCloudSettingsDropdown?.();
 }).catch(()=>{});
 

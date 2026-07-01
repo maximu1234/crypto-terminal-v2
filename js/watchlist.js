@@ -5,7 +5,7 @@ loadWidgetStateBySymbol
 
 import {
 getTerminalBlueSymbols
-} from "./favorites.js?v=2";
+} from "./favorites.js?v=4";
 
 import {
 loadBybitHistory
@@ -23,7 +23,7 @@ createRSIChart,
 updateRsiBandLayout,
 updateRsiLevelLinesLayout,
 linkPairedChartTimeScales
-} from "./chart-import.js?v=42";
+} from "./chart-import.js?v=43";
 
 import {
 calculateRSI,
@@ -33,7 +33,7 @@ alignRsiWithCandleTimes
 import {
 createDashboardChartWidget,
 mountDashboardChartInteractions
-} from "./chart-widget-host.js?v=12";
+} from "./chart-widget-host.js?v=13";
 
 import {
 mountWidgetTabletChart
@@ -75,7 +75,7 @@ getWidgetFlagHtml,
 wireWidgetFlagUi,
 updateWidgetFlagUi,
 bindWidgetFlagGlobalListeners
-} from "./widget-favorite-flag.js?v=3";
+} from "./widget-favorite-flag.js?v=6";
 
 const dashboard =
 document.getElementById("dashboard");
@@ -122,7 +122,7 @@ return;
 
 const mod =
 await import(
-"./trade-widget-mount.js?v=8"
+"./trade-widget-mount.js?v=9"
 );
 
 mountTradeOnDashboardWidget =
@@ -373,26 +373,107 @@ w.loadData?.();
 
 }
 
+function destroyWidgetEntry(
+entry
+){
+
+entry.tradeWidget?.destroy?.();
+entry.unsubKline?.();
+entry.tabletGestures?.dispose?.();
+entry.disposeChartInteractions?.();
+try{
+entry.drawingTools?.destroy();
+}catch(
+err
+){
+console.warn(
+"Watchlist widget drawings destroy:",
+err
+);
+}
+entry.chart?.remove();
+entry.rsiChart?.remove();
+entry.resizeObserver?.disconnect();
+entry.widget?.remove();
+
+}
+
 function destroyAllWidgets(){
 
-widgets.forEach(w=>{
+widgets.forEach(
+destroyWidgetEntry
+);
 
-w.tradeWidget?.destroy?.();
-w.unsubKline?.();
-w.tabletGestures?.dispose?.();
-w.disposeChartInteractions?.();
-w.drawingTools?.destroy();
-w.chart?.remove();
-w.rsiChart?.remove();
-w.resizeObserver?.disconnect();
-
-});
-
-widgets.length = 0;
+widgets.length =
+0;
 dashboardDrawingsQueue =
 Promise.resolve();
 resetWidgetDrawToolsMenus();
-dashboard.innerHTML = "";
+dashboard.innerHTML =
+"";
+
+}
+
+function mountDashboardFromBlueFlags(){
+
+const symbols =
+getTerminalBlueSymbols();
+
+if(
+!symbols.length
+){
+renderTerminalEmptyState();
+return;
+}
+
+dashboard.innerHTML =
+"";
+
+dashboard.className =
+dashboardGridClass(
+symbols.length
+);
+
+const showRsi =
+terminalWidgetShowsRsi(
+symbols.length
+);
+
+symbols.forEach(
+(
+symbol,
+i
+)=>{
+try{
+createWidget(
+symbol,
+i,
+showRsi
+);
+}catch(
+err
+){
+console.error(
+"Dashboard widget create:",
+err
+);
+}
+}
+);
+
+}
+
+async function refreshWatchlistDashboard(){
+
+await ensureWatchlistTradeMount();
+destroyAllWidgets();
+mountDashboardFromBlueFlags();
+
+}
+
+async function renderDashboard(){
+
+await refreshWatchlistDashboard();
 
 }
 
@@ -702,7 +783,9 @@ onActivate:setActive
 wireWidgetFlagUi(
 widget,
 getSymbol,
-renderDashboard
+()=>{
+void refreshWatchlistDashboard();
+}
 );
 
 const entry = {
@@ -1249,58 +1332,9 @@ dashboard.innerHTML = `
 
 }
 
-async function renderDashboard(){
-
-destroyAllWidgets();
-
-await ensureWatchlistTradeMount();
-
-const symbols =
-getTerminalBlueSymbols();
-
-if(
-!symbols.length
-){
-renderTerminalEmptyState();
-return;
-}
-
-dashboard.innerHTML = "";
-
-dashboard.className =
-dashboardGridClass(
-symbols.length
-);
-
-const showRsi =
-terminalWidgetShowsRsi(
-symbols.length
-);
-
-symbols.forEach(
-(symbol, i)=>{
-try{
-createWidget(
-symbol,
-i,
-showRsi
-);
-}catch(
-err
-){
-console.error(
-"Dashboard widget create:",
-err
-);
-}
-}
-);
-
-}
-
 const onTerminalMobileMqChange =
 ()=>{
-renderDashboard();
+void refreshWatchlistDashboard();
 };
 
 if(
@@ -1324,7 +1358,16 @@ typeof LightweightCharts !==
 : loadLightweightCharts();
 
 bindWidgetFlagGlobalListeners(
-renderDashboard
+()=>{
+void refreshWatchlistDashboard();
+}
+);
+
+window.addEventListener(
+"favorites-local-changed",
+()=>{
+void refreshWatchlistDashboard();
+}
 );
 
 chartsReady.then(()=>{
@@ -1336,7 +1379,7 @@ markTabletChartBody
 );
 
 initWatchlistPageUi();
-renderDashboard();
+void refreshWatchlistDashboard();
 
 const deferSymbolsPreload =
 ()=>{

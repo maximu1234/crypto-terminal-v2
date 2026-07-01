@@ -220,3 +220,87 @@ period
 );
 
 }
+
+/** Те же logical-индексы, что у buildChartDisplayCandles (включая whitespace). */
+export function alignMaPointsToDisplayCandles(
+maPoints,
+displayCandles
+){
+
+if(
+!Array.isArray(
+displayCandles
+) ||
+!displayCandles.length
+){
+return Array.isArray(
+maPoints
+)
+? maPoints
+: [];
+}
+
+const byTime =
+new Map(
+(
+Array.isArray(
+maPoints
+)
+? maPoints
+: []
+).map(
+point=>[
+point.time,
+point.value
+]
+)
+);
+
+const out =
+[];
+
+for(
+const bar of displayCandles
+){
+
+const time =
+bar?.time;
+
+if(
+time ==
+null
+){
+continue;
+}
+
+const value =
+byTime.get(
+time
+);
+
+if(
+value !=
+null &&
+Number.isFinite(
+value
+)
+){
+out.push(
+{
+time,
+value
+}
+);
+}else{
+out.push(
+{
+time
+}
+);
+}
+
+}
+
+return out;
+
+}

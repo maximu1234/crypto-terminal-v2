@@ -634,6 +634,11 @@ Number(
 row?.markPrice
 ) ||
 0,
+liqPrice:
+Number(
+row?.liqPrice
+) ||
+0,
 leverage:
 String(
 row?.leverage ||

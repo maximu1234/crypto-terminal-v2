@@ -2,8 +2,17 @@
  * SMA / EMA — три линии на основном графике (настраиваемые периоды).
  */
 import {
-calculateMaPoints
-} from "./ma-math.js?v=1";
+calculateMaPoints,
+alignMaPointsToDisplayCandles
+} from "./ma-math.js?v=2";
+
+import {
+runWithPreservedVisibleLogicalRange
+} from "../chart-visible-range.js?v=1";
+
+import {
+isChartLayoutReady
+} from "../chart-layout-gate.js?v=2";
 import {
 openIndicatorColorPicker,
 previewColorHex,
@@ -20,18 +29,24 @@ const LINE_COUNT =
 const DEFAULT_LINES =
 [
 {
+show:
+true,
 period:
 50,
 color:
 "#2962FF"
 },
 {
+show:
+true,
 period:
 100,
 color:
 "#FF6D00"
 },
 {
+show:
+true,
 period:
 200,
 color:
@@ -164,6 +179,11 @@ clampPeriod(
 item.period,
 fallback.period
 ),
+show:
+typeof item.show ===
+"boolean"
+? item.show
+: fallback.show,
 color:
 isValidDrawColor(
 item.color
@@ -225,14 +245,56 @@ settings.type ===
 : "SMA";
 
 const periods =
-settings.lines.map(
+settings.lines
+.filter(
+line=>
+line.show
+)
+.map(
 line=>
 line.period
 );
 
+if(
+!periods.length
+){
+return label;
+}
+
 return `${label} ${periods.join(
 " "
 )}`;
+
+}
+
+function hideSeries(){
+
+for(
+const series of seriesByIndex.values()
+){
+
+if(
+!series
+){
+continue;
+}
+
+series.setData(
+[]
+);
+
+try{
+series.applyOptions(
+{
+visible:
+false
+}
+);
+}catch{
+/* ignore */
+}
+
+}
 
 }
 
@@ -300,7 +362,10 @@ previewColorHex(
 line.color
 ),
 lineWidth:
-settings.lineWidth
+settings.lineWidth,
+visible:
+enabled &&
+!!line.show
 }
 );
 
@@ -354,7 +419,12 @@ false,
 lastValueVisible:
 false,
 crosshairMarkerVisible:
-false
+false,
+visible:
+enabled &&
+!!line?.show,
+autoscaleInfoProvider:
+()=>null
 }
 );
 
@@ -370,6 +440,27 @@ return true;
 
 }
 
+function warmupChartSeries(){
+
+if(
+seriesByIndex.size >=
+LINE_COUNT
+){
+return;
+}
+
+readSettings();
+
+if(
+!ensureSeries()
+){
+return;
+}
+
+hideSeries();
+
+}
+
 function refreshData(){
 
 if(
@@ -378,9 +469,22 @@ if(
 return;
 }
 
+if(
+!isChartLayoutReady()
+){
+return;
+}
+
+const host =
+getHost?.();
+const chart =
+host?.chart;
 const candles =
-getHost?.()?.getCandles?.() ||
+host?.getCandles?.() ||
 [];
+const displayCandles =
+host?.getDisplayCandles?.() ||
+candles;
 
 if(
 !candles.length ||
@@ -388,6 +492,10 @@ if(
 ){
 return;
 }
+
+runWithPreservedVisibleLogicalRange(
+chart,
+()=>{
 
 for(
 let index =
@@ -414,15 +522,56 @@ if(
 continue;
 }
 
+if(
+!line.show
+){
 series.setData(
+[]
+);
+
+try{
+series.applyOptions(
+{
+visible:
+false
+}
+);
+}catch{
+/* ignore */
+}
+
+continue;
+}
+
+try{
+series.applyOptions(
+{
+visible:
+true
+}
+);
+}catch{
+/* ignore */
+}
+
+const points =
+alignMaPointsToDisplayCandles(
 calculateMaPoints(
 candles,
 line.period,
 settings.type
-)
+),
+displayCandles
+);
+
+series.setData(
+points
 );
 
 }
+
+}
+);
 
 }
 
@@ -465,6 +614,7 @@ root.innerHTML =
 </div>
 <div class="ind-ma-settings">
 <div class="ind-ma-settings-head">
+<span></span>
 <span class="ind-ma-settings-head-label">Линия</span>
 <span class="ind-ma-settings-head-label">Цвет</span>
 <span class="ind-ma-settings-head-label">Период</span>
@@ -475,6 +625,9 @@ line,
 index
 )=>`
 <div class="ind-ma-settings-row">
+<label class="ind-ribbon-settings-show" title="Показать линию ${index + 1}">
+<input type="checkbox" data-line="${index}" data-field="show" ${line.show ? "checked" : ""}/>
+</label>
 <span class="ind-ma-settings-name">${index + 1}</span>
 <button type="button" class="ind-ribbon-settings-color" data-line="${index}" data-field="color" data-color="${line.color}" style="--line-color:${previewColorHex(line.color)}" title="Цвет линии">
 <span class="ind-ribbon-settings-color-preview"></span>
@@ -528,6 +681,11 @@ settings.lines.map(
 line,
 index
 )=>({
+show:
+root.querySelector(
+`[data-line="${index}"][data-field="show"]`
+)?.checked ===
+true,
 period:
 clampPeriod(
 root.querySelector(
@@ -686,6 +844,48 @@ commit();
 
 }
 
+function showSeries(){
+
+for(
+let index =
+0;
+index <
+LINE_COUNT;
+index++
+){
+
+const series =
+seriesByIndex.get(
+index
+);
+
+const line =
+settings.lines[
+index
+];
+
+if(
+!series ||
+!line
+){
+continue;
+}
+
+try{
+series.applyOptions(
+{
+visible:
+!!line.show
+}
+);
+}catch{
+/* ignore */
+}
+
+}
+
+}
+
 function enable(){
 
 if(
@@ -706,7 +906,19 @@ false;
 return;
 }
 
+showSeries();
+applySeriesStyle();
+
+requestAnimationFrame(
+()=>{
+requestAnimationFrame(
+()=>{
 refreshData();
+getHost?.()?.settleChartViewport?.();
+}
+);
+}
+);
 
 }
 
@@ -720,7 +932,7 @@ return;
 
 enabled =
 false;
-removeSeries();
+hideSeries();
 
 }
 
@@ -729,12 +941,30 @@ function onSymbolChange(){
 if(
 enabled
 ){
-refreshData();
+void refreshData();
 }
 
 }
 
 function onCandlesUpdate(){
+
+if(
+!enabled
+){
+return;
+}
+
+refreshData();
+
+}
+
+function syncMainChartOverlay(){
+
+if(
+!enabled
+){
+return;
+}
 
 refreshData();
 
@@ -761,17 +991,21 @@ getLegendLabel:
 getLegendText,
 populateSettingsDialog,
 applySettings,
+warmupChartSeries,
 enable,
 disable,
 isEnabled:()=>
 enabled,
+syncMainChartOverlay,
 onSymbolChange,
 onCandlesUpdate,
 onSettingsDialogClose:()=>{
 closeIndicatorColorPicker();
 },
 destroy:()=>{
-disable();
+enabled =
+false;
+removeSeries();
 closeIndicatorColorPicker();
 }
 };

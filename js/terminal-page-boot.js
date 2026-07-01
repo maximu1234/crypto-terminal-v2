@@ -40,7 +40,7 @@ if(
 ){
 tradeDesktopBootPromise =
 import(
-"./trade-desktop-boot.js?v=14"
+"./trade-desktop-boot.js?v=15"
 );
 }
 

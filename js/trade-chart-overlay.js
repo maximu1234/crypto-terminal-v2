@@ -4,7 +4,7 @@
 import {
 getCachedPosition,
 syncTradePositionsCache
-} from "./trade-positions-cache.js?v=5";
+} from "./trade-positions-cache.js?v=6";
 
 import {
 formatTradePnl,
@@ -2491,7 +2491,7 @@ return;
 
 const current =
 normalizeOverlaySymbol(
-host.getSymbol?.()
+host?.getSymbol?.()
 );
 const target =
 normalizeOverlaySymbol(
@@ -2571,7 +2571,7 @@ true;
 
 try{
 const symbol =
-host.getSymbol?.();
+host?.getSymbol?.();
 
 if(
 !symbol
@@ -2609,14 +2609,26 @@ return;
 
 await syncTradePositionsCache();
 
+if(
+!host
+){
+return;
+}
+
 const result =
 await api.getPosition(
 symbol
 );
 
 if(
+!host
+){
+return;
+}
+
+if(
 normalizeOverlaySymbol(
-host.getSymbol?.()
+host?.getSymbol?.()
 ) !==
 normalizeOverlaySymbol(
 symbol
@@ -2668,7 +2680,7 @@ return;
 
 const sym =
 normalizeOverlaySymbol(
-host.getSymbol?.()
+host?.getSymbol?.()
 );
 const list =
 Array.isArray(
@@ -2785,7 +2797,7 @@ return;
 if(
 !chartEventSymbolMatches(
 e,
-host.getSymbol?.()
+host?.getSymbol?.()
 )
 ){
 return;

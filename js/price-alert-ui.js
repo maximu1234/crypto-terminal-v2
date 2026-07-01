@@ -10,7 +10,7 @@ alertPriceForDisplay
 
 import {
 isCloudLoggedInEffective
-} from "./cloud-sync.js?v=39";
+} from "./cloud-sync.js?v=40";
 
 import {
 getTelegramChatId
@@ -22,7 +22,7 @@ hideDomChartCrosshair,
 hideDomChartCrosshairHorz,
 hideDomChartCrosshairVert,
 positionDomChartCrosshair
-} from "./chart-import.js?v=42";
+} from "./chart-import.js?v=43";
 
 import {
 isChartLayoutReady,

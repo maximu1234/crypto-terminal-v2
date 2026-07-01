@@ -11,6 +11,7 @@ Object.freeze([
 "disableRealtime",
 "disableDrawingsCloud",
 "disableFavoritesCloud",
+"disableFavoritesAutoCloud",
 "disableAlertsCloud",
 "disableAutoDevicePull",
 "slowBackgroundSync"
@@ -21,10 +22,36 @@ Object.freeze({
 disableRealtime: false,
 disableDrawingsCloud: false,
 disableFavoritesCloud: false,
+disableFavoritesAutoCloud: false,
 disableAlertsCloud: false,
 disableAutoDevicePull: false,
 slowBackgroundSync: false
 });
+
+/**
+ * BANDWIDTH-CUT: экономия Supabase Free (egress / Realtime).
+ * Чтобы вернуть автосинхру — закомментируйте весь блок BANDWIDTH_CUT
+ * и раскомментируйте помеченные BANDWIDTH-CUT участки в site-boot.js и cloud-sync.js.
+ */
+const BANDWIDTH_CUT =
+Object.freeze({
+disableRealtime: true,
+disableDrawingsCloud: true,
+disableFavoritesAutoCloud: true,
+disableAutoDevicePull: true,
+slowBackgroundSync: true
+});
+
+function bandwidthCutEnabled(
+key
+){
+
+return BANDWIDTH_CUT[
+key
+] ===
+true;
+
+}
 
 function readRaw(){
 
@@ -150,7 +177,7 @@ try{
 const {
 ensureCloudLoginResolved
 } =
-await import("./cloud-sync.js?v=39");
+await import("./cloud-sync.js?v=40");
 
 const ctx =
 await ensureCloudLoginResolved(
@@ -224,19 +251,41 @@ err?.message || err
 
 export function isSupabaseRealtimeDisabled(){
 
-return getSupabaseUsagePrefs().disableRealtime;
+return (
+bandwidthCutEnabled(
+"disableRealtime"
+) ||
+getSupabaseUsagePrefs().disableRealtime
+);
 
 }
 
 export function isDrawingsCloudDisabled(){
 
-return getSupabaseUsagePrefs().disableDrawingsCloud;
+return (
+bandwidthCutEnabled(
+"disableDrawingsCloud"
+) ||
+getSupabaseUsagePrefs().disableDrawingsCloud
+);
 
 }
 
 export function isFavoritesCloudDisabled(){
 
 return getSupabaseUsagePrefs().disableFavoritesCloud;
+
+}
+
+/** Авто push/pull флагов (Realtime, focus, после клика). Ручная кнопка в настройках не блокируется. */
+export function isFavoritesAutoCloudDisabled(){
+
+return (
+bandwidthCutEnabled(
+"disableFavoritesAutoCloud"
+) ||
+getSupabaseUsagePrefs().disableFavoritesAutoCloud
+);
 
 }
 
@@ -248,13 +297,23 @@ return getSupabaseUsagePrefs().disableAlertsCloud;
 
 export function isAutoDevicePullDisabled(){
 
-return getSupabaseUsagePrefs().disableAutoDevicePull;
+return (
+bandwidthCutEnabled(
+"disableAutoDevicePull"
+) ||
+getSupabaseUsagePrefs().disableAutoDevicePull
+);
 
 }
 
 export function isSlowBackgroundSync(){
 
-return getSupabaseUsagePrefs().slowBackgroundSync;
+return (
+bandwidthCutEnabled(
+"slowBackgroundSync"
+) ||
+getSupabaseUsagePrefs().slowBackgroundSync
+);
 
 }
 

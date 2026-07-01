@@ -3,11 +3,11 @@
  */
 import {
 createTradeChartOverlay
-} from "./trade-chart-overlay.js?v=27";
+} from "./trade-chart-overlay.js?v=28";
 
 import {
 createTradeChartOrders
-} from "./trade-chart-orders.js?v=14";
+} from "./trade-chart-orders.js?v=15";
 
 import {
 createTradePlusMenuHandler
@@ -24,7 +24,7 @@ getActiveTradeVolumeUsdt
 
 import {
 marketMap
-} from "./terminal/terminal-state.js?v=6";
+} from "./terminal/terminal-state.js?v=7";
 
 import {
 applyAutoStopsAfterEntry

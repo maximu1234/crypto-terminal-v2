@@ -48,6 +48,178 @@ return window.cryptoTerminalDesktop?.trading;
 
 }
 
+function formatTradingUserError(
+message,
+context =
+"save"
+){
+
+const raw =
+String(
+message ||
+""
+).trim();
+
+if(
+!raw
+){
+return context ===
+"clear"
+? "Не удалось удалить ключи."
+: "Не удалось сохранить ключи.";
+}
+
+const lower =
+raw.toLowerCase();
+
+if(
+lower.includes(
+"websocket is not defined"
+) ||
+lower.includes(
+"websocket module unavailable"
+)
+){
+return "Ключи сохранены, но поток сделок не запустился. Закройте и откройте приложение заново.";
+}
+
+if(
+raw ===
+"API key is required"
+){
+return "Укажите API Key.";
+}
+
+if(
+raw ===
+"API secret is required"
+){
+return "Укажите API Secret.";
+}
+
+if(
+lower.includes(
+"failed to clear credentials"
+)
+){
+return "Не удалось удалить ключи с компьютера.";
+}
+
+if(
+!/[\u0400-\u04FF]/.test(
+raw
+)
+){
+return context ===
+"clear"
+? "Не удалось удалить ключи. Попробуйте ещё раз или перезапустите приложение."
+: "Не удалось сохранить ключи. Проверьте API Key и Secret в личном кабинете Bybit.";
+}
+
+return raw;
+
+}
+
+function showClearKeysConfirm(){
+
+return new Promise(
+resolve=>{
+
+const overlay =
+document.createElement(
+"div"
+);
+overlay.className =
+"trade-exchange-confirm-overlay";
+overlay.innerHTML =
+`
+<div class="trade-exchange-confirm-dialog" role="alertdialog" aria-modal="true" aria-labelledby="trade-exchange-clear-title">
+<p id="trade-exchange-clear-title" class="trade-exchange-confirm-message">Удалить сохранённые API-ключи Bybit с этого компьютера?</p>
+<div class="trade-exchange-confirm-actions">
+<button type="button" class="trade-exchange-confirm-cancel" data-action="cancel">Отмена</button>
+<button type="button" class="trade-exchange-confirm-yes" data-action="yes">Удалить</button>
+</div>
+</div>`;
+
+document.body.appendChild(
+overlay
+);
+
+const finish =
+confirmed=>{
+
+overlay.remove();
+document.removeEventListener(
+"keydown",
+onKey
+);
+resolve(
+confirmed
+);
+
+};
+
+const onKey =
+event=>{
+
+if(
+event.key ===
+"Escape"
+){
+finish(
+false
+);
+}
+
+};
+
+document.addEventListener(
+"keydown",
+onKey
+);
+
+overlay.addEventListener(
+"click",
+event=>{
+
+const action =
+event.target.closest(
+"[data-action]"
+)?.dataset.action;
+
+if(
+action ===
+"yes"
+){
+finish(
+true
+);
+return;
+}
+
+if(
+action ===
+"cancel" ||
+event.target ===
+overlay
+){
+finish(
+false
+);
+}
+
+}
+);
+
+overlay.querySelector(
+".trade-exchange-confirm-cancel"
+)?.focus();
+
+}
+);
+
+}
+
 function buildForm(
 root
 ){
@@ -56,6 +228,10 @@ root.innerHTML =
 `
 <form class="trade-exchange-form" autocomplete="off">
 <p class="header-settings-section-title">Bybit</p>
+<div class="trade-exchange-connection-status" data-role="connection-status" hidden>
+<span class="trade-exchange-connection-dot" aria-hidden="true"></span>
+<span>Активно</span>
+</div>
 <p class="trade-exchange-hint">Ключи хранятся локально. Secret после сохранения не показываем.</p>
 <label class="trade-exchange-field">
 <span>API Key</span>
@@ -816,7 +992,7 @@ err
 ){
 setStatus(
 err?.message ||
-"Не удалось прочитать статус",
+"Не удалось прочитать статус подключения",
 "is-error"
 );
 }
@@ -836,15 +1012,45 @@ clearBtn.disabled =
 true;
 
 try{
+const info =
+await api.getStatus();
+const keyTrim =
+keyInput.value.trim();
 const secretValue =
 secretInput.value.trim();
 const secretSaved =
 secretInput.dataset.secretSaved ===
 "1";
+const keyUnchanged =
+!!info?.configured &&
+keyTrim ===
+String(
+info?.apiKey ||
+""
+).trim();
+const secretUnchanged =
+secretSaved &&
+(
+!secretValue ||
+secretValue ===
+SECRET_SAVED_PLACEHOLDER
+);
+
+if(
+keyUnchanged &&
+secretUnchanged
+){
+setStatus(
+"Ключи уже сохранены — менять нечего",
+"is-ok"
+);
+return;
+}
+
 const payload =
 {
 apiKey:
-keyInput.value.trim(),
+keyTrim,
 testnet:
 false
 };
@@ -875,17 +1081,29 @@ result?.ok ===
 false
 ){
 setStatus(
-result.message ||
-"Не удалось сохранить",
+formatTradingUserError(
+result.message,
+"save"
+),
 "is-error"
 );
 return;
 }
 
+if(
+result?.streamWarning
+){
+setStatus(
+result.message ||
+"Ключи сохранены. Перезапустите приложение, если позиции не обновляются.",
+"is-ok"
+);
+}else{
 setStatus(
 "Сохранено",
 "is-ok"
 );
+}
 await refreshBalance();
 onSaved?.(
 result
@@ -894,8 +1112,10 @@ result
 err
 ){
 setStatus(
-err?.message ||
-"Ошибка сохранения",
+formatTradingUserError(
+err?.message,
+"save"
+),
 "is-error"
 );
 }finally{
@@ -915,6 +1135,15 @@ clearBtn.addEventListener(
 ()=>{
 void (
 async()=>{
+
+const confirmed =
+await showClearKeysConfirm();
+
+if(
+!confirmed
+){
+return;
+}
 
 saveBtn.disabled =
 true;
@@ -942,8 +1171,10 @@ result?.ok ===
 false
 ){
 setStatus(
-result.message ||
-"Не удалось удалить",
+formatTradingUserError(
+result.message,
+"clear"
+),
 "is-error"
 );
 return;
@@ -959,8 +1190,10 @@ result
 err
 ){
 setStatus(
-err?.message ||
-"Ошибка удаления",
+formatTradingUserError(
+err?.message,
+"clear"
+),
 "is-error"
 );
 }finally{
@@ -997,71 +1230,29 @@ void refreshStatus();
 
 }
 
-function mountDesktop(
+export function mountBybitSettingsPanel(
+host,
+{
 onSaved
+} = {}
 ){
-
-const host =
-document.getElementById(
-"header-settings-dropdown"
-);
 
 if(
 !host ||
-document.getElementById(
-"trade-exchange-wrap"
-)
+host.dataset.bybitMounted ===
+"1"
 ){
-return null;
+return {
+refreshPing:()=>{}
+};
 }
 
-const wrap =
-document.createElement(
-"div"
-);
-wrap.id =
-"trade-exchange-wrap";
-wrap.className =
-"trade-exchange-settings-entry";
+host.dataset.bybitMounted =
+"1";
 
-wrap.innerHTML =
-`
-<button type="button" class="header-settings-system-link header-settings-menu-btn trade-exchange-nav-btn" id="trade-exchange-btn" title="Подключение к Bybit" aria-label="Настройки Bybit" aria-expanded="false" aria-haspopup="dialog">
-<span class="trade-exchange-status-dot" aria-hidden="true"></span>
-<span>Bybit</span>
-</button>
-<div class="header-settings-dropdown trade-exchange-dropdown hidden" id="trade-exchange-dropdown" role="dialog" aria-label="Настройки Bybit"></div>
-`;
-
-const systemLink =
-host.querySelector(
-"[data-system-admin-link]"
-);
-
-if(
-systemLink
-){
-host.insertBefore(
-wrap,
-systemLink
-);
-}else{
-host.appendChild(
-wrap
-);
-}
-
-const btn =
-wrap.querySelector(
-"#trade-exchange-btn"
-);
-const dropdown =
-wrap.querySelector(
-"#trade-exchange-dropdown"
-);
 const form =
 buildForm(
-dropdown
+host
 );
 
 wireForm(
@@ -1079,147 +1270,35 @@ wireAutoStopSettings(
 form
 );
 
-function positionTradeExchangeDropdown(){
-
-const settingsMenu =
-document.getElementById(
-"header-settings-dropdown"
-);
-const settingsWrap =
-document.getElementById(
-"header-settings-wrap"
-);
-
-if(
-!settingsMenu ||
-!dropdown
-){
-return;
-}
-
-if(
-dropdown.parentElement !==
-document.body
-){
-document.body.appendChild(
-dropdown
-);
-}
-
-dropdown.classList.add(
-"trade-exchange-dropdown--portaled",
-"header-settings-dropdown"
-);
-dropdown.classList.remove(
-"hidden"
-);
-
-const gap =
-12;
-const settingsRect =
-settingsMenu.getBoundingClientRect();
-const wrapRect =
-settingsWrap?.getBoundingClientRect?.();
-const anchorLeft =
-wrapRect?.left ??
-settingsRect.left;
-const panelW =
-dropdown.offsetWidth ||
-360;
-const panelH =
-dropdown.offsetHeight ||
-480;
-
-let left =
-anchorLeft -
-panelW -
-gap;
-
-if(
-left <
-8
-){
-left =
-Math.max(
-8,
-settingsRect.right +
-gap
-);
-}
-
-let top =
-(
-window.innerHeight -
-panelH
-) /
-2;
-top =
-Math.max(
-8,
-Math.min(
-top,
-window.innerHeight -
-panelH -
-8
-)
-);
-
-dropdown.style.position =
-"fixed";
-dropdown.style.left =
-`${Math.round(
-left
-)}px`;
-dropdown.style.top =
-`${Math.round(
-top
-)}px`;
-dropdown.style.right =
-"auto";
-dropdown.style.bottom =
-"auto";
-dropdown.style.zIndex =
-"10060";
-
-}
-
-const dropdownCtl =
-bindDropdown(
-wrap,
-btn,
-dropdown,
-{
-positionPanel:
-positionTradeExchangeDropdown,
-onOpen(){
+return {
+refreshPing:()=>{
 void form.querySelector(
 '[data-role="refresh-ping"]'
 )?.click?.();
 }
-}
-);
-
-window.addEventListener(
-"resize",
-()=>{
-
-if(
-dropdown.classList.contains(
-"hidden"
-)
-){
-return;
-}
-
-positionTradeExchangeDropdown();
-
-}
-);
-
-return {
-btn,
-close:dropdownCtl.close
 };
+
+}
+
+export function updateTradeExchangeConnectionChrome(
+info
+){
+
+const connected =
+!!info?.configured;
+
+document.querySelectorAll(
+'[data-role="connection-status"]'
+).forEach(
+el=>{
+el.hidden =
+!connected;
+el.classList.toggle(
+"is-active",
+connected
+);
+}
+);
 
 }
 
@@ -1227,19 +1306,9 @@ function updateConnectionChrome(
 info
 ){
 
-const btn =
-document.getElementById(
-"trade-exchange-btn"
+updateTradeExchangeConnectionChrome(
+info
 );
-
-if(
-btn
-){
-btn.classList.toggle(
-"is-connected",
-!!info?.configured
-);
-}
 
 }
 
@@ -1259,14 +1328,13 @@ info
 );
 };
 
-mountDesktop(
-onSaved
-);
-
 void tradingApi().getStatus().then(
 updateConnectionChrome
 ).catch(
 ()=>{}
 );
+
+window.__tradeExchangeOnSaved =
+onSaved;
 
 }

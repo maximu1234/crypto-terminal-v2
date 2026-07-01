@@ -10,7 +10,7 @@ signOutCloud,
 recoverAuthSessionFromUrl,
 completeAuthFromCallbackUrl,
 hasAuthCallbackInUrl
-} from "./cloud-sync.js?v=39";
+} from "./cloud-sync.js?v=40";
 
 import {
 isSupabaseConfigured
@@ -21,23 +21,17 @@ readAlertTokenSync
 } from "./alert-auth-cache.js?v=7";
 
 import {
-getTelegramChatId,
-saveTelegramChatId,
-clearTelegramChatId
-} from "./alerts-cloud-sync.js?v=110";
-
-import {
-isSystemAdminUser
-} from "./system-admin-access.js?v=3";
-
-import {
 isAlertsPage
 } from "./cloud-sync-throttle.js?v=3";
 
 import {
-TELEGRAM_BOT_USERNAME,
-getTelegramBotUrl
-} from "./telegram-bot-public.js?v=1";
+initAppSettingsWindow,
+refreshAppSettingsAdminNav
+} from "./app-settings-window.js?v=4";
+
+import {
+ensureHeaderSettingsShell
+} from "./header-settings-shell.js?v=1";
 
 let cloudEnvConfigured = false;
 let cloudSdkError = "";
@@ -139,9 +133,17 @@ path.includes("trade.html") ||
 path.endsWith("/trade") ||
 path.includes("watchlist.html") ||
 path.endsWith("/watchlist") ||
+path.includes("listings.html") ||
+path.endsWith("/listings") ||
+path.includes("trade-calculator.html") ||
+path.endsWith("/trade-calculator") ||
+path.includes("statistics.html") ||
+path.endsWith("/statistics") ||
+path.includes("/diary") ||
 path === "/system" ||
 path.endsWith("/system") ||
-path.includes("/system/")
+path.includes("/system/") ||
+path.includes("btc-d.html")
 );
 
 }
@@ -641,6 +643,90 @@ return "";
 
 }
 
+function bindTerminalMobileSettingsDropdown(){
+
+const btn =
+document.getElementById(
+"header-settings-btn-mobile"
+);
+const dropdown =
+document.getElementById(
+"header-settings-dropdown-mobile"
+);
+const wrap =
+document.getElementById(
+"header-settings-wrap-mobile"
+);
+
+if(
+!btn ||
+!dropdown ||
+!wrap
+){
+return;
+}
+
+function setOpen(
+open
+){
+
+dropdown.classList.toggle(
+"hidden",
+!open
+);
+btn.setAttribute(
+"aria-expanded",
+open
+? "true"
+: "false"
+);
+
+}
+
+btn.addEventListener(
+"click",
+e=>{
+e.preventDefault();
+e.stopPropagation();
+setOpen(
+dropdown.classList.contains(
+"hidden"
+)
+);
+}
+);
+
+dropdown.addEventListener(
+"click",
+e=>{
+e.stopPropagation();
+}
+);
+
+document.addEventListener(
+"click",
+e=>{
+
+if(
+wrap.contains(
+e.target
+) ||
+dropdown.contains(
+e.target
+)
+){
+return;
+}
+
+setOpen(
+false
+);
+
+}
+);
+
+}
+
 function setupSettingsDropdown(){
 
 if(settingsDropdownReady){
@@ -737,6 +823,8 @@ closeSettingsDropdown();
 });
 
 settingsDropdownReady = true;
+
+bindTerminalMobileSettingsDropdown();
 
 if(isMobileNavViewport()){
 
@@ -896,30 +984,6 @@ wrap.innerHTML = `
 <span class="cloud-auth-email-label"></span>
 <button type="button" class="cloud-auth-out">Выйти</button>
 </div>
-<div class="cloud-telegram-wrap hidden">
-<p class="cloud-telegram-title">Telegram для алертов</p>
-<div class="cloud-telegram-connected hidden" role="status">
-<p class="cloud-telegram-connected-text"></p>
-</div>
-<div class="cloud-telegram-setup">
-<p class="cloud-telegram-help">Введите Chat ID. Без Chat ID алерты недоступны.</p>
-<div class="cloud-telegram-row">
-<input type="text" class="cloud-telegram-chat-id" placeholder="Chat ID" inputmode="numeric" autocomplete="off"/>
-<button type="button" class="cloud-telegram-save">Сохранить</button>
-</div>
-<details class="cloud-telegram-howto">
-<summary>Как подключить</summary>
-<ol>
-<li>Откройте бота <a href="${getTelegramBotUrl()}" target="_blank" rel="noopener noreferrer">@${TELEGRAM_BOT_USERNAME}</a> и нажмите Start.</li>
-<li>Скопируйте Chat ID из сообщения бота и сохраните его здесь.</li>
-</ol>
-</details>
-</div>
-<div class="cloud-telegram-actions">
-<button type="button" class="cloud-telegram-edit hidden">Изменить Chat ID</button>
-<button type="button" class="cloud-telegram-clear">Отключить Telegram</button>
-</div>
-</div>
 <p class="cloud-auth-hint hidden"></p>
 `;
 
@@ -945,133 +1009,6 @@ const loggedIn =
 wrap.querySelector(".cloud-auth-logged-in");
 const emailLabel =
 wrap.querySelector(".cloud-auth-email-label");
-const tgWrap =
-wrap.querySelector(".cloud-telegram-wrap");
-const tgSetup =
-wrap.querySelector(".cloud-telegram-setup");
-const tgConnected =
-wrap.querySelector(".cloud-telegram-connected");
-const tgConnectedText =
-wrap.querySelector(".cloud-telegram-connected-text");
-const tgInput =
-wrap.querySelector(".cloud-telegram-chat-id");
-const tgSave =
-wrap.querySelector(".cloud-telegram-save");
-const tgEdit =
-wrap.querySelector(".cloud-telegram-edit");
-const tgClear =
-wrap.querySelector(".cloud-telegram-clear");
-
-let tgLoadedForEmail = "";
-let tgEditMode =
-false;
-
-function telegramConnectedMessage(){
-
-const account =
-getAuthUiEmail() || "аккаунт";
-
-return (
-"Chat ID сохранён. Алерты будут приходить в Telegram " +
-`(${account}).`
-);
-
-}
-
-function applyTelegramUiMode(
-hasChatId
-){
-
-const showConnected =
-hasChatId &&
-!tgEditMode;
-
-tgSetup?.classList.toggle(
-"hidden",
-showConnected
-);
-tgConnected?.classList.toggle(
-"hidden",
-!showConnected
-);
-tgEdit?.classList.toggle(
-"hidden",
-!showConnected
-);
-
-if(
-showConnected &&
-tgConnectedText
-){
-tgConnectedText.textContent =
-telegramConnectedMessage();
-}
-
-}
-
-function setTelegramUiLocked(locked){
-
-tgInput && (tgInput.disabled = !!locked);
-tgSave && (tgSave.disabled = !!locked);
-tgEdit && (tgEdit.disabled = !!locked);
-tgClear && (tgClear.disabled = !!locked);
-
-}
-
-async function refreshTelegramOne(){
-
-if(
-variant !== "panel" ||
-!isAuthUiLoggedIn()
-){
-tgWrap?.classList.add("hidden");
-tgLoadedForEmail = "";
-tgEditMode = false;
-return;
-}
-
-tgWrap?.classList.remove("hidden");
-
-const email =
-getAuthUiEmail() || "";
-
-if(
-tgLoadedForEmail === email &&
-tgInput?.dataset.loaded === "1"
-){
-return;
-}
-
-setTelegramUiLocked(true);
-
-try{
-const chatId =
-await getTelegramChatId();
-const hasChatId =
-chatId != null;
-
-if(tgInput){
-tgInput.value =
-hasChatId ? String(chatId) : "";
-tgInput.dataset.loaded = "1";
-}
-
-applyTelegramUiMode(
-hasChatId
-);
-tgLoadedForEmail = email;
-}catch{
-if(tgInput){
-tgInput.dataset.loaded = "0";
-}
-applyTelegramUiMode(
-false
-);
-}finally{
-setTelegramUiLocked(false);
-}
-
-}
 
 function setHint(text, isError){
 
@@ -1123,10 +1060,9 @@ emailLabel.textContent =
 getAuthUiEmail() || "Аккаунт";
 
 setHint(
-"Избранное и рисунки синхронизируются. Ниже — Chat ID для алертов в Telegram.",
+"Избранное и рисунки синхронизируются между устройствами.",
 false
 );
-void refreshTelegramOne();
 
 }else{
 
@@ -1153,10 +1089,6 @@ false
 }else{
 setHint("", false);
 }
-
-tgWrap?.classList.add("hidden");
-tgLoadedForEmail = "";
-tgEditMode = false;
 
 }
 
@@ -1322,100 +1254,6 @@ void submitAuthEmail();
 }
 );
 
-tgSave?.addEventListener("click", async()=>{
-
-if(!isAuthUiLoggedIn()){
-setHint("Войдите в аккаунт, затем сохраните Chat ID.", true);
-return;
-}
-
-const value =
-tgInput?.value?.trim() || "";
-
-setTelegramUiLocked(true);
-
-if(
-!value
-){
-setHint(
-"Введите Chat ID из сообщения бота.",
-true
-);
-setTelegramUiLocked(false);
-return;
-}
-
-try{
-await saveTelegramChatId(value);
-tgEditMode = false;
-tgLoadedForEmail = "";
-setHint(
-"Избранное и рисунки синхронизируются. Ниже — Chat ID для алертов в Telegram.",
-false
-);
-await refreshTelegramOne();
-}catch(err){
-setHint(
-err?.message || "Не удалось сохранить Chat ID.",
-true
-);
-}finally{
-setTelegramUiLocked(false);
-}
-
-});
-
-tgEdit?.addEventListener("click", ()=>{
-
-tgEditMode = true;
-applyTelegramUiMode(
-false
-);
-setHint("", false);
-
-});
-
-tgClear?.addEventListener("click", async()=>{
-
-if(!isAuthUiLoggedIn()){
-return;
-}
-
-if(
-!window.confirm(
-"Отключить Telegram? Алерты в боте приходить не будут."
-)
-){
-return;
-}
-
-setTelegramUiLocked(true);
-
-try{
-await clearTelegramChatId();
-tgEditMode = false;
-tgLoadedForEmail = "";
-if(tgInput){
-tgInput.value = "";
-}
-applyTelegramUiMode(
-false
-);
-setHint(
-"Telegram отключён. Без Chat ID алерты недоступны.",
-false
-);
-}catch(err){
-setHint(
-err?.message || "Не удалось отключить Telegram.",
-true
-);
-}finally{
-setTelegramUiLocked(false);
-}
-
-});
-
 outBtn?.addEventListener(
 "click",
 async e=>{
@@ -1504,6 +1342,7 @@ return ()=>{};
 }
 
 setupSettingsDropdown();
+initAppSettingsWindow();
 
 function refreshAll(){
 
@@ -1521,7 +1360,7 @@ new CustomEvent(
 
 onCloudSyncChange(()=>{
 refreshAll();
-void syncSystemAdminNavLinks();
+void refreshAppSettingsAdminNav();
 });
 refreshAll();
 
@@ -1545,6 +1384,7 @@ cloudEnvConfigured = false;
 }
 
 if(!authUiMounted){
+ensureHeaderSettingsShell();
 refreshAuthUi = mountAuthUi() || (()=>{});
 refreshSettingsAuthUi = refreshAuthUi;
 authUiMounted = true;
@@ -1582,7 +1422,7 @@ cloudEnvConfigured
 
 refreshAuthUi();
 
-void syncSystemAdminNavLinks();
+void refreshAppSettingsAdminNav();
 
 }
 
@@ -1596,79 +1436,10 @@ node.remove();
 
 }
 
-function createSystemAdminNavLink(){
-
-const link =
-document.createElement("a");
-
-link.href = "/system";
-link.className = "header-settings-system-link";
-link.setAttribute(
-"data-system-admin-link",
-"1"
-);
-link.textContent = "Системные настройки";
-
-return link;
-
-}
-
-function getSystemAdminNavLinkHosts(){
-
-const hosts = [];
-
-const dropdown =
-document.getElementById(
-"header-settings-dropdown"
-);
-
-if(dropdown){
-hosts.push(dropdown);
-}
-
-const coinsNavSettings =
-document.querySelector(
-"#coins-nav-panel .coins-nav-settings"
-);
-
-if(coinsNavSettings){
-hosts.push(coinsNavSettings);
-}
-
-return hosts;
-
-}
-
 export async function syncSystemAdminNavLinks(){
 
-try{
-
 removeSystemAdminNavLinks();
-
-if(
-!await isSystemAdminUser()
-){
-return;
-}
-
-const hosts =
-getSystemAdminNavLinkHosts();
-
-if(
-!hosts.length
-){
-return;
-}
-
-hosts.forEach(host=>{
-host.appendChild(
-createSystemAdminNavLink()
-);
-});
-
-}catch{
-/* ignore */
-}
+await refreshAppSettingsAdminNav();
 
 }
 

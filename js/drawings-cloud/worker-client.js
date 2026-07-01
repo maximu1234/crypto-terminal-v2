@@ -1,10 +1,10 @@
 import {
 ensureCloudLoginResolved
-} from "../cloud-sync.js?v=39";
+} from "../cloud-sync.js?v=40";
 
 import {
 isDrawingsCloudDisabled
-} from "../supabase-usage-prefs.js?v=2";
+} from "../supabase-usage-prefs.js?v=4";
 
 import {
 normalizeAlertWorkerBaseUrl
@@ -33,7 +33,7 @@ readAlertTokenSync
 import {
 isCloudLoggedInEffective,
 isCloudSyncEnabled
-} from "../cloud-sync.js?v=39";
+} from "../cloud-sync.js?v=40";
 
 import {
 markShapeSynced,

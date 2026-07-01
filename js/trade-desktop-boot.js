@@ -11,7 +11,7 @@ isWatchlistPage
 
 import {
 initTradeExchangeSettings
-} from "./trade-exchange-settings.js?v=14";
+} from "./trade-exchange-settings.js?v=17";
 
 import {
 initTradeVolumePresets
@@ -27,7 +27,7 @@ initTradeMarketEntry
 
 import {
 initTradeBookPanel
-} from "./trade-book-panel.js?v=27";
+} from "./trade-book-panel.js?v=42";
 
 const TRADE_CSS =
 [
@@ -36,6 +36,7 @@ const TRADE_CSS =
 "trade-leverage-settings.css",
 "trade-market-entry.css",
 "trade-book-panel.css",
+"trade-pnl-share-modal.css",
 "trade-chart-overlay.css",
 "trade-order-plus-ui.css",
 "trade-widget-compact.css"
@@ -169,10 +170,19 @@ initTradeLeverageSettings();
 initTradeMarketEntry();
 
 const {
+initTradePositionSounds
+} =
+await import(
+"./trade-position-sounds.js?v=2"
+);
+
+initTradePositionSounds();
+
+const {
 initTradeStreamBridge
 } =
 await import(
-"./trade-stream-bridge.js?v=5"
+"./trade-stream-bridge.js?v=6"
 );
 
 await initTradeStreamBridge();
@@ -192,7 +202,7 @@ const {
 initTradeDiaryNav
 } =
 await import(
-"./trade-diary-nav.js?v=5"
+"./trade-diary-nav.js?v=7"
 );
 
 void initTradeDiaryNav();
@@ -231,7 +241,7 @@ const {
 initTradePositionsCache
 } =
 await import(
-"./trade-positions-cache.js?v=5"
+"./trade-positions-cache.js?v=6"
 );
 
 initTradePositionsCache();
@@ -251,7 +261,7 @@ const {
 initTradeChartOverlay
 } =
 await import(
-"./trade-chart-overlay.js?v=27"
+"./trade-chart-overlay.js?v=28"
 );
 
 initTradeChartOverlay();
@@ -260,7 +270,7 @@ const {
 initTradeChartOrders
 } =
 await import(
-"./trade-chart-orders.js?v=14"
+"./trade-chart-orders.js?v=15"
 );
 
 initTradeChartOrders();

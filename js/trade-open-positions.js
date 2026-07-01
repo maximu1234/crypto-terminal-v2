@@ -3,7 +3,7 @@
  */
 import {
 syncTradePositionsCache
-} from "./trade-positions-cache.js?v=5";
+} from "./trade-positions-cache.js?v=6";
 
 const openPositionSymbols =
 new Set();
@@ -143,7 +143,7 @@ new CustomEvent(
 );
 
 void import(
-"./terminal/terminal-table.js?v=12"
+"./terminal/terminal-table.js?v=15"
 ).then(
 ({
 renderList

@@ -185,3 +185,68 @@ margin-top:8px;
 }
 
 }
+
+/* ——— Десктоп: единая шапка как на Скринере / Алертах ——— */
+@media (min-width:641px){
+
+body.site-nav-page #header.screener-page-header{
+height:56px;
+min-height:56px;
+padding:0 16px;
+gap:20px;
+align-items:center;
+flex-wrap:nowrap;
+background:#16181f;
+}
+
+body.site-nav-page #site-nav-panel,
+body.site-nav-page .screener-nav-panel#site-nav-panel{
+display:flex !important;
+position:static !important;
+top:auto !important;
+right:auto !important;
+bottom:auto !important;
+width:auto !important;
+flex:1 1 auto !important;
+min-width:0 !important;
+flex-direction:row !important;
+align-items:center !important;
+gap:var(--site-header-nav-gap, 18px) !important;
+margin:0 !important;
+padding:0 !important;
+background:transparent !important;
+border:none !important;
+box-shadow:none !important;
+pointer-events:auto !important;
+overflow:visible !important;
+}
+
+body.site-nav-page #site-nav-panel a,
+body.site-nav-page .screener-nav-panel#site-nav-panel a{
+display:inline-flex !important;
+align-items:center !important;
+padding:0 !important;
+font-size:14px !important;
+line-height:1 !important;
+border-radius:0 !important;
+}
+
+body.site-nav-page #site-nav-panel .header-settings-wrap,
+body.site-nav-page .screener-nav-panel .header-settings-wrap{
+display:inline-flex !important;
+width:auto !important;
+margin:0 !important;
+padding:0 !important;
+border-top:none !important;
+align-self:center !important;
+}
+
+body.site-nav-page #site-nav-panel .header-settings-btn,
+body.site-nav-page .screener-nav-panel .header-settings-btn{
+min-width:36px !important;
+min-height:36px !important;
+padding:8px !important;
+justify-content:center !important;
+}
+
+}

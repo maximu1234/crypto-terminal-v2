@@ -4,7 +4,11 @@
 import {
 clearAllHtfCache,
 fetchHtfCandles
-} from "./htf-loader.js?v=1";
+} from "./htf-loader.js?v=2";
+
+import {
+isChartLayoutReady
+} from "../chart-layout-gate.js?v=2";
 import {
 calculateShiftedEmaSeries
 } from "./htf-ema.js?v=1";
@@ -449,6 +453,12 @@ if(
 return;
 }
 
+if(
+!isChartLayoutReady()
+){
+return;
+}
+
 const host =
 getHost?.();
 const chartCandles =
@@ -526,7 +536,8 @@ sourceCandles =
 await fetchHtfCandles(
 symbol,
 tf,
-loadHistory
+loadHistory,
+chartCandles
 );
 
 }
@@ -552,8 +563,6 @@ points
 );
 
 }
-
-host?.settleChartViewport?.();
 
 }
 

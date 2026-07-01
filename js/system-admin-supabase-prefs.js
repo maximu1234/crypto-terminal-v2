@@ -2,8 +2,59 @@ import {
 getSupabaseUsagePrefs,
 setSupabaseUsagePref,
 syncAlertsCloudPauseToServer,
-SUPABASE_USAGE_PREF_KEYS
-} from "./supabase-usage-prefs.js?v=2";
+isSupabaseRealtimeDisabled,
+isDrawingsCloudDisabled,
+isFavoritesAutoCloudDisabled,
+isAutoDevicePullDisabled,
+isSlowBackgroundSync
+} from "./supabase-usage-prefs.js?v=4";
+
+/** Зашито в BANDWIDTH_CUT — только напоминание в UI; менять нельзя. */
+const FROZEN_PREF_KEYS =
+new Set(
+[
+"disableRealtime",
+"disableDrawingsCloud",
+"disableFavoritesCloud",
+"disableAutoDevicePull",
+"slowBackgroundSync"
+]
+);
+
+function isFrozenPref(
+key
+){
+
+return FROZEN_PREF_KEYS.has(
+key
+);
+
+}
+
+function effectivePrefChecked(
+key
+){
+
+switch(
+key
+){
+case "disableRealtime":
+return isSupabaseRealtimeDisabled();
+case "disableDrawingsCloud":
+return isDrawingsCloudDisabled();
+case "disableFavoritesCloud":
+return isFavoritesAutoCloudDisabled();
+case "disableAutoDevicePull":
+return isAutoDevicePullDisabled();
+case "slowBackgroundSync":
+return isSlowBackgroundSync();
+default:
+return !!getSupabaseUsagePrefs()[
+key
+];
+}
+
+}
 
 const FIELDS =
 [
@@ -27,9 +78,8 @@ hint:
 key: "disableFavoritesCloud",
 label: "Отключить облако флагов (избранное)",
 hint:
-"Не синхронизирует цветные флаги на монетах в user_settings. " +
-"Флаги только локально на этом устройстве. " +
-"Снижает Egress и нагрузку на Realtime (если он включён)."
+"Сейчас: авто-синхронизация выключена (BANDWIDTH-CUT). Флаги — вручную: Настройки → Синхронизация → «Обновить». " +
+"Ранее: полное отключение синхронизации user_settings."
 },
 {
 key: "disableAlertsCloud",
@@ -103,6 +153,18 @@ field.key;
 input.dataset.pref =
 field.key;
 
+if(
+isFrozenPref(
+field.key
+)
+){
+input.disabled =
+true;
+label.classList.add(
+"system-admin-pref-option--frozen"
+);
+}
+
 const text =
 document.createElement(
 "span"
@@ -147,7 +209,7 @@ document.createElement(
 note.className =
 "system-admin-pref-note";
 note.textContent =
-"Настройки сохраняются в этом браузере (localStorage). Чтобы каналы Realtime закрылись, обновите открытые вкладки Multichart (F5).";
+"Пункты с серой подсветкой зашиты в коде (BANDWIDTH-CUT) и не переключаются — напоминание. Активен только переключатель алертов. Realtime/облако: обновите вкладки (F5) после смены алертов.";
 
 form.append(
 note
@@ -166,9 +228,18 @@ form.querySelectorAll(
 "input[data-pref]"
 ).forEach(input=>{
 
+const key =
+input.dataset.pref;
+
 input.checked =
-!!prefs[
-input.dataset.pref
+isFrozenPref(
+key
+)
+? effectivePrefChecked(
+key
+)
+: !!prefs[
+key
 ];
 
 });
@@ -200,7 +271,10 @@ const input =
 e.target;
 
 if(
-!input?.dataset?.pref
+!input?.dataset?.pref ||
+isFrozenPref(
+input.dataset.pref
+)
 ){
 return;
 }

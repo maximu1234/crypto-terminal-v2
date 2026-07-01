@@ -103,6 +103,41 @@ localStorage.setItem(
 JSON.stringify(groups)
 );
 
+try{
+window.dispatchEvent(
+new CustomEvent(
+"favorites-local-changed"
+)
+);
+}catch{
+/* ignore */
+}
+
+}
+
+export function isTerminalBlueSymbol(
+symbol,
+groups = loadFavoritesGroups()
+){
+
+const sym =
+String(
+symbol ||
+""
+).trim().toUpperCase();
+
+if(
+!sym
+){
+return false;
+}
+
+return getTerminalBlueSymbols(
+groups
+).includes(
+sym
+);
+
 }
 
 export function getFavoriteGroup(symbol, groups){
@@ -111,9 +146,22 @@ if(!symbol){
 return null;
 }
 
+const sym =
+String(
+symbol
+).trim().toUpperCase();
+
 for(const g of GROUPS){
 
-if(groups[g].includes(symbol)){
+if(
+groups[g].some(
+entry=>
+String(
+entry
+).trim().toUpperCase() ===
+sym
+)
+){
 return g;
 }
 
@@ -141,7 +189,13 @@ return false;
 }
 
 if(
-groups.blue.includes(sym)
+groups.blue.some(
+entry=>
+String(
+entry
+).trim().toUpperCase() ===
+sym
+)
 ){
 return true;
 }
@@ -157,10 +211,47 @@ export function getTerminalBlueSymbols(
 groups = loadFavoritesGroups()
 ){
 
-return groups.blue.slice(
-0,
-TERMINAL_MAX_BLUE_FLAGS
+const seen =
+new Set();
+const out =
+[];
+
+for(
+const entry of groups.blue
+){
+
+const sym =
+String(
+entry ||
+""
+).trim().toUpperCase();
+
+if(
+!sym ||
+seen.has(
+sym
+)
+){
+continue;
+}
+
+seen.add(
+sym
 );
+out.push(
+sym
+);
+
+if(
+out.length >=
+TERMINAL_MAX_BLUE_FLAGS
+){
+break;
+}
+
+}
+
+return out;
 
 }
 
@@ -175,7 +266,13 @@ String(symbol).trim().toUpperCase();
 
 GROUPS.forEach(g=>{
 groups[g] =
-groups[g].filter(s=>s !== sym);
+groups[g].filter(
+entry=>
+String(
+entry
+).trim().toUpperCase() !==
+sym
+);
 });
 
 if(group){

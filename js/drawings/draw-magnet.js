@@ -1,5 +1,5 @@
 /**
- * Магнит к хаю/лою свечи под вертикалью курсора (Cmd при placement).
+ * Магнит к хаю/лою свечи под вертикалью курсора (Cmd при placement и edit).
  */
 
 export function findCandleNearestTime(

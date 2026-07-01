@@ -85,6 +85,8 @@ setSelectedId,
 syncDrawUndoBaseline,
 drawUndo,
 cloneDrawingsForUndo,
+onDrawUndoPush =
+null,
 initialPositionTpSl,
 bumpDrawingsLocalRevision,
 scheduleDrawingsCloudPush,
@@ -531,7 +533,13 @@ drawUndo.recordIfChanged(
 cloneDrawingsForUndo(
 getDrawings(),
 normalizeDrawingShape
-)
+),
+onDrawUndoPush
+? {
+onPush:
+onDrawUndoPush
+}
+: undefined
 );
 
 }

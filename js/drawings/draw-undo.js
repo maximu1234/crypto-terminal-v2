@@ -92,7 +92,9 @@ clone;
 },
 
 recordIfChanged(
-currentClone
+currentClone,
+options =
+{}
 ){
 
 if(
@@ -111,9 +113,23 @@ baseline,
 currentClone
 )
 ){
+
+const onPush =
+options.onPush;
+
+if(
+typeof onPush ===
+"function"
+){
+onPush(
+baseline
+);
+}else{
 stack.push(
 baseline
 );
+}
+
 }
 
 baselineSnapshot =
@@ -128,6 +144,65 @@ return stack.length >
 
 pop(){
 return stack.pop();
+}
+
+};
+
+}
+
+/**
+ * Общий undo (график + RSI): последнее действие на любой панели.
+ */
+export function createSharedDrawUndoStack(){
+
+const entries =
+[];
+
+return {
+
+reset(){
+
+entries.length =
+0;
+
+},
+
+canUndo(){
+
+return entries.length >
+0;
+
+},
+
+push(
+restore
+){
+
+if(
+typeof restore ===
+"function"
+){
+entries.push(
+restore
+);
+}
+
+},
+
+undo(){
+
+const restore =
+entries.pop();
+
+if(
+!restore
+){
+return false;
+}
+
+restore();
+return true;
+
 }
 
 };

@@ -60,7 +60,7 @@ link.id =
 link.href =
 "/diary/";
 link.className =
-"header-settings-system-link trade-diary-nav-link";
+"header-settings-nav-item trade-diary-nav-link";
 link.textContent =
 "Дневник";
 
@@ -102,7 +102,7 @@ return;
 
 const bybitEntry =
 host.querySelector(
-"#trade-exchange-wrap"
+"#app-settings-menu-wrap"
 );
 const systemLink =
 host.querySelector(

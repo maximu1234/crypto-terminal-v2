@@ -1,0 +1,257 @@
+/* Окно «Настройки» — sidebar + панели */
+
+.app-settings-menu-wrap{
+  position:relative;
+}
+
+.app-settings-overlay{
+  position:fixed;
+  inset:0;
+  z-index:10100;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:24px 16px;
+  background:rgba(0,0,0,.55);
+}
+
+.app-settings-overlay.hidden{
+  display:none;
+}
+
+.app-settings-dialog{
+  display:flex;
+  flex-direction:column;
+  width:min(640px,100%);
+  height:min(680px,calc(100dvh - 48px));
+  border:1px solid #2a3140;
+  border-radius:12px;
+  background:#151a21;
+  color:#e5e7eb;
+  box-shadow:0 24px 48px rgba(0,0,0,.45);
+  overflow:hidden;
+}
+
+.app-settings-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:14px 18px;
+  border-bottom:1px solid #1f2937;
+  flex-shrink:0;
+}
+
+.app-settings-head h2{
+  margin:0;
+  font-size:16px;
+  font-weight:600;
+  color:#f3f4f6;
+}
+
+.app-settings-close{
+  border:0;
+  background:transparent;
+  color:#9ca3af;
+  font-size:22px;
+  line-height:1;
+  cursor:pointer;
+  padding:0 4px;
+}
+
+.app-settings-close:hover{
+  color:#f3f4f6;
+}
+
+.app-settings-body{
+  display:flex;
+  flex:1;
+  min-height:0;
+  overflow:hidden;
+}
+
+.app-settings-nav{
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+  width:168px;
+  flex-shrink:0;
+  padding:10px 8px;
+  border-right:1px solid #1f2937;
+  overflow-y:auto;
+}
+
+.app-settings-nav-btn{
+  display:block;
+  width:100%;
+  border:0;
+  border-radius:8px;
+  background:transparent;
+  color:#9ca3af;
+  text-align:left;
+  padding:9px 12px;
+  font:500 13px/1.3 system-ui,-apple-system,sans-serif;
+  cursor:pointer;
+}
+
+.app-settings-nav-btn:hover{
+  background:rgba(255,255,255,.04);
+  color:#e5e7eb;
+}
+
+.app-settings-nav-btn.is-active{
+  background:rgba(255,255,255,.08);
+  color:#f3f4f6;
+}
+
+.app-settings-panels{
+  flex:1;
+  min-width:0;
+  min-height:0;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+}
+
+.app-settings-panel{
+  display:none;
+  min-height:100%;
+  padding:16px 20px 20px;
+  box-sizing:border-box;
+}
+
+.app-settings-panel.is-active{
+  display:block;
+}
+
+.app-settings-panel-lead{
+  margin:0 0 14px;
+  font-size:13px;
+  line-height:1.45;
+  color:#9ca3af;
+}
+
+.app-settings-subtitle{
+  margin:0 0 8px;
+  font-size:14px;
+  font-weight:600;
+  color:#f3f4f6;
+}
+
+.app-settings-admin-meta{
+  margin:0 0 16px;
+  font-size:12px;
+  color:#6b7280;
+}
+
+.app-settings-admin-email{
+  color:#e5e7eb;
+}
+
+.app-settings-bybit-host .trade-exchange-form{
+  max-width:100%;
+}
+
+.app-settings-bybit-guest{
+  margin:0;
+  font-size:13px;
+  color:#9ca3af;
+}
+
+/* Telegram в окне настроек */
+.app-settings-panel .cloud-telegram-wrap{
+margin-bottom:0;
+}
+
+.app-settings-sync-block{
+margin-bottom:20px;
+}
+
+.app-settings-sync-block--favorites{
+padding-top:16px;
+border-top:1px solid rgba(255,255,255,0.08);
+}
+
+.cloud-favorites-cloud-title{
+margin:0 0 8px;
+font:600 13px/1.3 system-ui,-apple-system,sans-serif;
+color:#e5e7eb;
+}
+
+.cloud-favorites-sync-btn{
+margin-top:10px;
+padding:8px 14px;
+border:1px solid rgba(129,140,248,0.45);
+border-radius:8px;
+background:rgba(99,102,241,0.18);
+color:#e0e7ff;
+font:500 12px/1.2 system-ui,-apple-system,sans-serif;
+cursor:pointer;
+}
+
+.cloud-favorites-sync-btn:hover:not(:disabled){
+background:rgba(99,102,241,0.28);
+}
+
+.cloud-favorites-sync-btn:disabled{
+opacity:0.45;
+cursor:not-allowed;
+}
+
+.cloud-favorites-status{
+margin:8px 0 0;
+font:500 11px/1.35 system-ui,-apple-system,sans-serif;
+color:#9ca3af;
+}
+
+.cloud-favorites-status.is-error{
+color:#f87171;
+}
+
+.cloud-favorites-connected-text{
+margin:0 0 4px;
+font:500 11px/1.35 system-ui,-apple-system,sans-serif;
+color:#9ca3af;
+}
+
+.app-settings-panel .cloud-telegram-wrap{
+  max-width:100%;
+}
+
+.app-settings-panel .cloud-telegram-title{
+  margin:0 0 8px;
+  font-size:11px;
+  font-weight:600;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+  color:#6b7280;
+}
+
+/* Секретные настройки */
+.app-settings-panel .system-admin-card{
+  max-width:100%;
+}
+
+@media (max-width:640px){
+  .app-settings-dialog{
+    height:min(92dvh,calc(100dvh - 24px));
+  }
+
+  .app-settings-body{
+    flex-direction:column;
+  }
+
+  .app-settings-nav{
+    flex-direction:row;
+    width:auto;
+    border-right:0;
+    border-bottom:1px solid #1f2937;
+    overflow-x:auto;
+    flex-wrap:nowrap;
+  }
+
+  .app-settings-nav-btn{
+    white-space:nowrap;
+    flex-shrink:0;
+  }
+}

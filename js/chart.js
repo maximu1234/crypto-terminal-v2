@@ -48,12 +48,14 @@ isUserCrosshairEvent
 import {
 TABLET_LW_NATIVE_PRICE_SCALE,
 clearTabletProbeCrosshairForChart
-} from "./chart/chart-factory.js?v=36";
+} from "./chart/chart-factory.js?v=37";
 
 export {
 createCandlestickChart,
 createScreenerChart,
 createRSIChart,
+applyRsiFixedPriceScale,
+RSI_FIXED_PRICE_RANGE,
 createVolumeChart,
 SCREENER_VISIBLE_BARS,
 SCREENER_MAX_BARS,
@@ -84,7 +86,7 @@ appendFutureWhitespaceBars,
 coinsTfVisibleBars,
 applyCoinsChartViewport,
 refreshCoinsChartBarSpacing
-} from "./chart/chart-factory.js?v=36";
+} from "./chart/chart-factory.js?v=37";
 
 
 export {
@@ -399,7 +401,9 @@ max + pad
 
 export function resetChartPriceAutoScale(
 chart,
-series
+series,
+options =
+{}
 ){
 
 if(
@@ -408,14 +412,18 @@ if(
 return;
 }
 
+const margins =
+options.scaleMargins ??
+DEFAULT_PRICE_SCALE_MARGINS;
+
 try{
 chart.priceScale(
 "right"
 ).applyOptions({
 autoScale:true,
 scaleMargins:{
-top:DEFAULT_PRICE_SCALE_MARGINS.top,
-bottom:DEFAULT_PRICE_SCALE_MARGINS.bottom
+top:margins.top,
+bottom:margins.bottom
 }
 });
 }catch{
@@ -427,12 +435,15 @@ bottom:DEFAULT_PRICE_SCALE_MARGINS.bottom
 /** Сброс залипшего ручного диапазона — пересчёт autoscale LW (смена монеты). */
 export function pulsePriceScaleAutoscale(
 chart,
-series
+series,
+options =
+{}
 ){
 
 resetChartPriceAutoScale(
 chart,
-series
+series,
+options
 );
 
 if(
@@ -451,11 +462,15 @@ ps.applyOptions({
 autoScale:false
 });
 
+const margins =
+options.scaleMargins ??
+DEFAULT_PRICE_SCALE_MARGINS;
+
 ps.applyOptions({
 autoScale:true,
 scaleMargins:{
-top:DEFAULT_PRICE_SCALE_MARGINS.top,
-bottom:DEFAULT_PRICE_SCALE_MARGINS.bottom
+top:margins.top,
+bottom:margins.bottom
 }
 });
 }catch{
@@ -693,6 +708,45 @@ top:DEFAULT_PRICE_SCALE_MARGINS.top,
 bottom:DEFAULT_PRICE_SCALE_MARGINS.bottom
 };
 
+function effectiveScaleMargins(){
+
+return {
+top:
+hooks.scaleMargins?.top ??
+DEFAULT_PRICE_SCALE_MARGINS.top,
+bottom:
+hooks.scaleMargins?.bottom ??
+DEFAULT_PRICE_SCALE_MARGINS.bottom
+};
+
+}
+
+function fixedAutoscaleRange(){
+
+const fixed =
+hooks.fixedAutoscaleRange;
+
+if(
+!fixed ||
+!Number.isFinite(
+fixed.min
+) ||
+!Number.isFinite(
+fixed.max
+)
+){
+return null;
+}
+
+return {
+minValue:
+fixed.min,
+maxValue:
+fixed.max
+};
+
+}
+
 const STRIP_DRAG_START_PX =
 10;
 
@@ -914,17 +968,19 @@ false;
 detachDocListeners();
 clearScaleLastTap();
 
-margins = {
-top:DEFAULT_PRICE_SCALE_MARGINS.top,
-bottom:DEFAULT_PRICE_SCALE_MARGINS.bottom
-};
+margins =
+effectiveScaleMargins();
 
 priceZoomRange =
 null;
 
 pulsePriceScaleAutoscale(
 chart,
-series
+series,
+{
+scaleMargins:
+margins
+}
 );
 
 clearTabletProbeCrosshairForChart(
@@ -1040,7 +1096,21 @@ original
 if(
 !priceZoomRange
 ){
+
+const fixed =
+fixedAutoscaleRange();
+
+if(
+fixed
+){
+return {
+priceRange:
+fixed
+};
+}
+
 return original();
+
 }
 
 const safe =
@@ -1081,8 +1151,8 @@ chart.priceScale(
 ).applyOptions({
 autoScale:true,
 scaleMargins:{
-top:DEFAULT_PRICE_SCALE_MARGINS.top,
-bottom:DEFAULT_PRICE_SCALE_MARGINS.bottom
+top:margins.top,
+bottom:margins.bottom
 }
 });
 }catch{

@@ -226,6 +226,31 @@ replayStream:()=>
 ipcRenderer.invoke(
 "trading:replayStream"
 ),
+generatePnlShareCard:(
+payload
+)=>
+ipcRenderer.invoke(
+"trading:generatePnlShareCard",
+payload ||
+{}
+),
+savePnlShareCard:(
+payload
+)=>
+ipcRenderer.invoke(
+"trading:savePnlShareCard",
+payload ||
+{}
+),
+discardPnlShareCard:(
+tempPath
+)=>
+ipcRenderer.invoke(
+"trading:discardPnlShareCard",
+{
+tempPath
+}
+),
 onStream:(
 callback
 )=>{

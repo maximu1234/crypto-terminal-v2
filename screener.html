@@ -12,11 +12,11 @@
 
 <link rel="icon" href="/icons/brand-logo.png" type="image/png">
 
-<link rel="stylesheet" href="/css/critical-shell.css?v=5">
+<link rel="stylesheet" href="/css/critical-shell.css?v=6">
 <script src="/js/site-css-ready.js?v=2"></script>
-<link rel="stylesheet" href="/css/common.css?v=32">
+<link rel="stylesheet" href="/css/common.css?v=34">
 <link rel="stylesheet" href="/css/screener.css?v=41">
-<link rel="stylesheet" href="/css/site-mobile-nav.css?v=4">
+<link rel="stylesheet" href="/css/site-mobile-nav.css?v=6">
 
 <script src="/vendor/lightweight-charts.standalone.production.js"></script>
 
@@ -90,7 +90,7 @@ enterkeyhint="search"
 <svg class="header-settings-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.75"/><path fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
 </button>
 <div class="header-settings-dropdown hidden" id="header-settings-dropdown" role="menu">
-<p class="header-settings-section-title">Синхронизация</p>
+<p class="header-settings-section-title">Аккаунт</p>
 <div id="cloud-settings-mount"></div>
 </div>
 </div>
@@ -219,8 +219,8 @@ const { loadLightweightCharts } =
 await import("/js/charts-lib-boot.js?v=3");
 
 await loadLightweightCharts();
-await import("/js/screener.js?v=86");
-await import("/js/site-boot.js?v=91");
+await import("/js/screener.js?v=87");
+await import("/js/site-boot.js?v=92");
 
 }catch(err){
 

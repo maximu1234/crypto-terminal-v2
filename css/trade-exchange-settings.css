@@ -84,6 +84,33 @@ line-height:1.35;
 color:#6b7280;
 }
 
+.trade-exchange-connection-status{
+display:inline-flex;
+align-items:center;
+gap:6px;
+margin:0 0 6px;
+padding:4px 10px;
+border-radius:999px;
+border:1px solid #14532d;
+background:rgba(34,197,94,.12);
+font-size:12px;
+font-weight:500;
+line-height:1.3;
+color:#86efac;
+}
+
+.trade-exchange-connection-status[hidden]{
+display:none;
+}
+
+.trade-exchange-connection-dot{
+width:7px;
+height:7px;
+border-radius:50%;
+background:#22c55e;
+flex-shrink:0;
+}
+
 .trade-exchange-field{
 display:flex;
 flex-direction:column;
@@ -281,14 +308,14 @@ opacity:.55;
 cursor:default;
 }
 
-body.trade-page .trade-exchange-dropdown .trade-volume-defaults-panel.trade-volume-presets-panel{
+:is(.trade-exchange-dropdown,.app-settings-bybit-host) .trade-volume-defaults-panel.trade-volume-presets-panel{
 display:grid;
 grid-template-columns:repeat(3,minmax(0,1fr));
 column-gap:8px;
 row-gap:4px;
 }
 
-.trade-exchange-dropdown .trade-volume-defaults-row{
+:is(.trade-exchange-dropdown,.app-settings-bybit-host) .trade-volume-defaults-row{
 display:flex;
 align-items:center;
 gap:5px;
@@ -308,13 +335,13 @@ color:#6b7280;
 text-align:center;
 }
 
-.trade-exchange-dropdown .trade-volume-presets-field{
+:is(.trade-exchange-dropdown,.app-settings-bybit-host) .trade-volume-presets-field{
 position:relative;
 flex:1 1 auto;
 min-width:0;
 }
 
-.trade-exchange-dropdown .trade-volume-presets-field input[type="number"]{
+:is(.trade-exchange-dropdown,.app-settings-bybit-host) .trade-volume-presets-field input[type="number"]{
 box-sizing:border-box;
 width:100%;
 padding:5px 20px 5px 6px;
@@ -328,18 +355,18 @@ font-variant-numeric:tabular-nums;
 appearance:textfield;
 }
 
-.trade-exchange-dropdown input[type="number"]::-webkit-outer-spin-button,
-.trade-exchange-dropdown input[type="number"]::-webkit-inner-spin-button{
+:is(.trade-exchange-dropdown,.app-settings-bybit-host) input[type="number"]::-webkit-outer-spin-button,
+:is(.trade-exchange-dropdown,.app-settings-bybit-host) input[type="number"]::-webkit-inner-spin-button{
 -webkit-appearance:none;
 margin:0;
 }
 
-.trade-exchange-dropdown .trade-volume-presets-field input[type="number"]:focus{
+:is(.trade-exchange-dropdown,.app-settings-bybit-host) .trade-volume-presets-field input[type="number"]:focus{
 outline:none;
 border-color:#6366f1;
 }
 
-.trade-exchange-dropdown .trade-volume-presets-suffix{
+:is(.trade-exchange-dropdown,.app-settings-bybit-host) .trade-volume-presets-suffix{
 position:absolute;
 top:50%;
 right:7px;
@@ -377,6 +404,71 @@ cursor:pointer;
 
 .trade-auto-stops-label{
 white-space:nowrap;
+}
+
+.trade-exchange-confirm-overlay{
+position:fixed;
+inset:0;
+z-index:10070;
+display:flex;
+align-items:center;
+justify-content:center;
+padding:16px;
+background:rgba(0,0,0,.62);
+}
+
+.trade-exchange-confirm-dialog{
+width:min(100%,360px);
+padding:18px 18px 16px;
+border:1px solid #374151;
+border-radius:10px;
+background:#171717;
+box-shadow:0 18px 48px rgba(0,0,0,.45);
+}
+
+.trade-exchange-confirm-message{
+margin:0 0 16px;
+font-size:14px;
+line-height:1.45;
+color:#e5e7eb;
+}
+
+.trade-exchange-confirm-actions{
+display:flex;
+justify-content:flex-end;
+gap:8px;
+}
+
+.trade-exchange-confirm-cancel,
+.trade-exchange-confirm-yes{
+min-width:88px;
+padding:8px 12px;
+border-radius:8px;
+font:500 13px/1.2 system-ui,-apple-system,sans-serif;
+cursor:pointer;
+}
+
+.trade-exchange-confirm-cancel{
+border:1px solid #4b5563;
+background:#1f2937;
+color:#f3f4f6;
+}
+
+.trade-exchange-confirm-cancel:hover,
+.trade-exchange-confirm-cancel:focus-visible{
+border-color:#6b7280;
+background:#374151;
+outline:none;
+}
+
+.trade-exchange-confirm-yes{
+border:1px solid #7f1d1d;
+background:#991b1b;
+color:#fff;
+}
+
+.trade-exchange-confirm-yes:hover{
+background:#b91c1c;
 }
 
 .trade-auto-stops-row .trade-volume-presets-field{

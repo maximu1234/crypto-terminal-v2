@@ -9,11 +9,12 @@ isCloudApiUsable,
 isCloudAuthError,
 reportCloudAuthFailure,
 tryCloudAuthRecovery
-} from "./cloud-sync.js?v=39";
+} from "./cloud-sync.js?v=40";
 
 import {
-isFavoritesCloudDisabled
-} from "./supabase-usage-prefs.js?v=2";
+isFavoritesCloudDisabled,
+isFavoritesAutoCloudDisabled
+} from "./supabase-usage-prefs.js?v=4";
 
 import {
 loadFavoritesGroups,
@@ -22,7 +23,7 @@ favoritesToCloudList,
 favoritesFromCloudList,
 favoritesGroupsEqual,
 favoritesSignature
-} from "./favorites.js?v=2";
+} from "./favorites.js?v=4";
 
 import {
 readAlertTokenSync,
@@ -847,6 +848,12 @@ export function pushFavoritesAfterLocalEdit(
 favorites
 ){
 
+if(
+isFavoritesAutoCloudDisabled()
+){
+return;
+}
+
 markFavoritesDirty();
 
 void persistFavoritesToCloudNow(
@@ -875,6 +882,12 @@ favorites
 export function applyFavoritesFromRealtimeRow(
 row
 ){
+
+if(
+isFavoritesAutoCloudDisabled()
+){
+return;
+}
 
 if(
 !row
@@ -966,6 +979,28 @@ void pullFavoritesFromCloudNow().catch(
 
 }
 
+export async function syncFavoritesCloudOnDemand(){
+
+if(
+isFavoritesCloudDisabled()
+){
+throw new Error(
+"Облако флагов отключено в настройках"
+);
+}
+
+if(
+!isCloudLoggedInEffective()
+){
+throw new Error(
+"Войдите по email в меню шестерёнки"
+);
+}
+
+await pullFavoritesFromCloudNow();
+
+}
+
 export function initFavoritesCloudSync(){
 
 if(
@@ -977,6 +1012,8 @@ return;
 ready =
 true;
 
+/* BANDWIDTH-CUT: авто pull при входе / focus */
+/*
 onCloudSyncChange(
 ()=>{
 
@@ -1028,9 +1065,10 @@ isCloudLoggedInEffective()
 ){
 scheduleAuthPull();
 }
+*/
 
 console.log(
-"[favorites] sync: user_settings.favorites (ts wins)"
+"[favorites] sync: manual only (BANDWIDTH-CUT)"
 );
 
 }

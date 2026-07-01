@@ -28,18 +28,18 @@ onCloudSyncChange,
 getCloudUserEmail,
 pullDeviceStateFromCloud,
 ensureCloudLoginResolved
-} from "./cloud-sync.js?v=39";
+} from "./cloud-sync.js?v=40";
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=29";
+} from "./auth-ui.js?v=35";
 
 import {
 TELEGRAM_BOT_USERNAME,
 getTelegramBotUrl
 } from "./telegram-bot-public.js?v=1";
 
-import { formatPrice } from "./chart-import.js?v=42";
+import { formatPrice } from "./chart-import.js?v=43";
 
 const tbody =
 document.getElementById("alerts-tbody");

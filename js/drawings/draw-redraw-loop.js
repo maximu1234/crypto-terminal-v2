@@ -278,6 +278,41 @@ if(
 return;
 }
 
+const drawingList =
+getDrawings();
+
+const anyCoordsNotReady =
+drawingList.length >
+0 &&
+drawingList.some(
+d=>!shapeCoordsReady(
+d
+)
+);
+
+if(
+anyCoordsNotReady &&
+!getPlacement()
+){
+
+if(
+!getChartPanActive() &&
+coordRetryCount <
+12
+){
+
+coordRetryCount++;
+scheduleRedraw();
+
+}
+
+return;
+
+}
+
+coordRetryCount =
+0;
+
 try{
 
 const ctx = canvas.getContext("2d");
@@ -351,23 +386,6 @@ h
 
 }catch(err){
 console.warn("redraw", err);
-}
-
-if(
-!getChartPanActive() &&
-coordRetryCount < 8 &&
-getDrawings().some(
-d=>!shapeCoordsReady(d)
-)
-){
-
-coordRetryCount++;
-scheduleRedraw();
-
-}else{
-
-coordRetryCount = 0;
-
 }
 
 }

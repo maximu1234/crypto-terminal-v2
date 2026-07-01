@@ -106,8 +106,22 @@ export const COINS_MARKETS = [
 "innovation",
 "stocks",
 "commodities",
-"forex"
+"forex",
+"indexes"
 ];
+
+/** Статические индексы в фильтре «Индексы». */
+export const COINS_INDEX_ITEMS =
+Object.freeze([
+{
+symbol:
+"BTC.D",
+href:
+"/btc-d.html",
+title:
+"Доминация Bitcoin (TradingView)"
+}
+]);
 
 export const COINS_SORT_MODES =
 new Set([

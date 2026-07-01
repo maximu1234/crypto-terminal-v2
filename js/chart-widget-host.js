@@ -6,11 +6,11 @@ createCandlestickChart,
 ensureDomChartCrosshair,
 positionDomChartCrosshair,
 hideDomChartCrosshair
-} from "./chart-import.js?v=42";
+} from "./chart-import.js?v=43";
 
 import {
 initDrawings
-} from "./drawings.js?v=245";
+} from "./drawings.js?v=247";
 
 import {
 mountPriceAlertUi

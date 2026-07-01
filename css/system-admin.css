@@ -91,6 +91,28 @@ border-color:#f59e0b;
 background:rgba(245,158,11,0.08);
 }
 
+.system-admin-pref-option--frozen{
+opacity:0.42;
+cursor:default;
+pointer-events:none;
+border-color:#2d3748;
+background:rgba(15,23,42,0.35);
+}
+
+.system-admin-pref-option--frozen:has(input:checked){
+border-color:#4b5563;
+background:rgba(55,65,81,0.2);
+}
+
+.system-admin-pref-option--frozen:hover{
+border-color:#2d3748;
+}
+
+.system-admin-pref-option--frozen input{
+accent-color:#6b7280;
+cursor:not-allowed;
+}
+
 .system-admin-pref-option input{
 margin-top:3px;
 flex-shrink:0;

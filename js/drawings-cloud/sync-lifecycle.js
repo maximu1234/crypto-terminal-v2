@@ -7,7 +7,7 @@ isCloudApiUsable,
 onCloudSyncChange,
 notifyDrawings as notifyDrawingsListeners,
 ensureCloudLoginResolved
-} from "../cloud-sync.js?v=39";
+} from "../cloud-sync.js?v=40";
 
 import {
 normalizeAlertWorkerBaseUrl
@@ -46,7 +46,7 @@ import {
 isSupabaseRealtimeDisabled,
 isDrawingsCloudDisabled,
 scaleSupabasePollMs
-} from "../supabase-usage-prefs.js?v=2";
+} from "../supabase-usage-prefs.js?v=4";
 
 import {
 readAlertTokenSync
@@ -1579,6 +1579,8 @@ void pullDrawingsFromCloudNow();
 
 };
 
+/* BANDWIDTH-CUT: автозагрузка рисунков при focus */
+/*
 document.addEventListener(
 "visibilitychange",
 pullWhenVisible
@@ -1588,8 +1590,10 @@ window.addEventListener(
 "focus",
 pullWhenVisible
 );
+*/
 
 if(
+false &&
 isCloudLoggedInEffective() &&
 !isAlertsPage()
 ){

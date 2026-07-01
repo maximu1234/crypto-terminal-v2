@@ -5,7 +5,7 @@ import {
 appendFutureWhitespaceBars,
 computeChartFutureMarginBars,
 coinsTfVisibleBars
-} from "../chart-import.js?v=42";
+} from "../chart-import.js?v=43";
 
 let layoutCtx =
 null;
@@ -94,6 +94,10 @@ tool.scheduleRedraw?.();
 );
 
 }
+
+export {
+syncDrawingToolsLayout
+};
 
 export function buildChartDisplayCandles(){
 

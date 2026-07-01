@@ -4,7 +4,7 @@
  */
 import {
 isCoarseTouchViewport
-} from "../chart-import.js?v=42";
+} from "../chart-import.js?v=43";
 
 import {
 DRAW_HANDLE_HIT_THRESHOLD_DESKTOP,
@@ -502,7 +502,8 @@ lastPlotY: y
 function applyHandleDragAtPlot(
 shape,
 x,
-y
+y,
+optEvent = null
 ){
 
 const drag =
@@ -531,7 +532,8 @@ const point =
 resolvePointFromPlotXY(
 plotX,
 plotY,
-drag.lastPoint
+drag.lastPoint,
+optEvent
 );
 
 if(
@@ -1835,7 +1837,8 @@ if(
 !applyHandleDragAtPlot(
 shape,
 x,
-y
+y,
+e
 )
 ){
 return;

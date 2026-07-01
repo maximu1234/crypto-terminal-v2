@@ -13,12 +13,12 @@
 
 <link rel="icon" href="/icons/brand-logo.png" type="image/png">
 
-<link rel="stylesheet" href="/css/critical-shell.css?v=5">
+<link rel="stylesheet" href="/css/critical-shell.css?v=6">
 <script src="/js/site-css-ready.js?v=2"></script>
-<link rel="stylesheet" href="/css/common.css?v=32">
-<link rel="stylesheet" href="/css/terminal.css?v=156">
-<link rel="stylesheet" href="/css/terminal-layout.css?v=69">
-<link rel="stylesheet" href="/css/chart-indicators.css?v=14">
+<link rel="stylesheet" href="/css/common.css?v=34">
+<link rel="stylesheet" href="/css/terminal.css?v=157">
+<link rel="stylesheet" href="/css/terminal-layout.css?v=79">
+<link rel="stylesheet" href="/css/chart-indicators.css?v=15">
 <script>
 if(window.cryptoTerminalDesktop&&window.cryptoTerminalDesktop.isDesktop){
 document.documentElement.classList.add("trade-desktop");
@@ -56,9 +56,14 @@ document.documentElement.classList.add("trade-desktop");
 <a href="/listings.html">Листинги</a>
 <a href="/trade-calculator.html">Калькулятор</a>
 <a href="/statistics.html">Статистика</a>
-<div class="header-settings-wrap coins-nav-settings">
-<p class="header-settings-section-title">Синхронизация</p>
+<div class="header-settings-wrap coins-nav-settings" id="header-settings-wrap-mobile">
+<button type="button" class="header-settings-btn" id="header-settings-btn-mobile" title="Аккаунт и настройки" aria-label="Настройки" aria-expanded="false" aria-haspopup="true">
+<svg class="header-settings-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.75"/><path fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+</button>
+<div class="header-settings-dropdown hidden" id="header-settings-dropdown-mobile" role="menu">
+<p class="header-settings-section-title">Аккаунт</p>
 <div id="cloud-settings-mount-mobile"></div>
+</div>
 </div>
 </nav>
 
@@ -75,11 +80,10 @@ document.documentElement.classList.add("trade-desktop");
 <svg class="header-settings-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.75"/><path fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
 </button>
 <div class="header-settings-dropdown hidden" id="header-settings-dropdown" role="menu">
-<p class="header-settings-section-title">Синхронизация</p>
+<p class="header-settings-section-title">Аккаунт</p>
 <div id="cloud-settings-mount"></div>
 </div>
 </div>
-<a href="/btc-d.html" class="coins-btc-d-link" title="Доминация Bitcoin (TradingView)">BTC.D</a>
 </nav>
 
 </header>
@@ -95,7 +99,6 @@ document.documentElement.classList.add("trade-desktop");
 <button type="button" class="flag coin-flag-pick screener-flag-pick flag--green" data-flag-group="green" title="Зелёный" role="menuitem"></button>
 <button type="button" class="flag coin-flag-pick screener-flag-pick flag--gray" data-flag-group="gray" title="Серый" role="menuitem"></button>
 <button type="button" class="flag coin-flag-pick screener-flag-pick flag--blue" data-flag-group="blue" title="Синий (Терминал)" role="menuitem"></button>
-<button type="button" class="flag coin-flag-pick screener-flag-clear screener-flag-clear" data-flag-group="clear" title="Снять флаг" role="menuitem"></button>
 </div>
 </div>
 
@@ -335,6 +338,10 @@ Commodities
 
 <option value="forex">
 Forex
+</option>
+
+<option value="indexes">
+Индексы
 </option>
 
 </select>

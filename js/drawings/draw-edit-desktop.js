@@ -5,7 +5,7 @@
 
 import {
 isCoarseTouchViewport
-} from "../chart-import.js?v=42";
+} from "../chart-import.js?v=43";
 
 export function createDrawDesktopSelection(
 deps

@@ -9,7 +9,26 @@ formatTradeUsdt
 import {
 getAllCachedPositions,
 syncTradePositionsCache
-} from "./trade-positions-cache.js?v=5";
+} from "./trade-positions-cache.js?v=6";
+
+import {
+applyPositionColumnLayout,
+wirePositionColumnResize,
+columnResizeHandle
+} from "./trade-book-columns.js?v=11";
+
+import {
+openPnlShareModal
+} from "./trade-pnl-share-modal.js?v=5";
+
+const SHARE_ICON_V =
+2;
+
+const SHARE_BUTTON_HTML =
+`<button type="button" class="trade-book-share" aria-label="Поделиться PnL" title="Поделиться PnL">
+<img class="trade-book-share-icon trade-book-share-icon--off" src="assets/share_off.png?v=${SHARE_ICON_V}" width="14" height="14" alt="">
+<img class="trade-book-share-icon trade-book-share-icon--on" src="assets/share_on.png?v=${SHARE_ICON_V}" width="14" height="14" alt="">
+</button>`;
 
 const PANEL_HEIGHT_KEY =
 "trade_book_panel_height_v1";
@@ -1039,25 +1058,28 @@ panel.innerHTML =
 <option value="positions">Позиции</option>
 <option value="orders">Ордера</option>
 </select>
-<button type="button" class="trade-book-refresh" title="Обновить">↻</button>
+<button type="button" class="trade-book-close-all" title="Закрыть все позиции по рынку" aria-label="Закрыть все позиции по рынку" hidden>×</button>
 </div>
 <div class="trade-book-table-scroll" data-role="table-scroll">
+<div class="trade-book-positions-table trade-book-positions-table--grid" data-role="positions-table">
 <div class="trade-book-table-head" data-role="table-head"></div>
 <div class="trade-book-rows" data-role="rows"></div>
 </div>
+</div>
 <div class="trade-book-positions-total" data-role="positions-total" hidden>
 <div class="trade-book-total-row trade-book-row--position">
-<div class="trade-book-ticker trade-book-total-leading">
+<span class="col-ticker trade-book-total-leading">
 <button type="button" class="trade-book-total-eye" data-role="positions-total-eye" aria-label="Скрыть суммарный PnL" aria-pressed="false" title="Скрыть суммарный PnL">
 ${EYE_OPEN_SVG}
 ${EYE_CLOSED_SVG}
 </button>
-</div>
-<div class="trade-book-trail">
+</span>
+<span class="col-pnl-wrap">
 <span class="col-pnl" data-role="positions-total-pnl"></span>
+</span>
 <span class="col-volume trade-book-total-volume" aria-hidden="true"></span>
-<span class="trade-book-total-action" aria-hidden="true"></span>
-</div>
+<span class="col-entry" aria-hidden="true"></span>
+<span class="col-liq" aria-hidden="true"></span>
 </div>
 </div>
 <p class="trade-book-status" data-role="status" aria-live="polite"></p>
@@ -1067,6 +1089,10 @@ list.appendChild(
 splitResize
 );
 list.appendChild(
+panel
+);
+
+applyPositionColumnLayout(
 panel
 );
 
@@ -1083,13 +1109,17 @@ const modeSelect =
 panel.querySelector(
 ".trade-book-mode"
 );
-const refreshBtn =
+const closeAllBtn =
 panel.querySelector(
-".trade-book-refresh"
+".trade-book-close-all"
 );
 const tableHead =
 panel.querySelector(
 '[data-role="table-head"]'
+);
+const positionsTableEl =
+panel.querySelector(
+'[data-role="positions-table"]'
 );
 const rowsEl =
 panel.querySelector(
@@ -1115,6 +1145,10 @@ panel.querySelector(
 let mode =
 "positions";
 let loading =
+false;
+let closingAll =
+false;
+let closingPosition =
 false;
 let activeChartSymbol =
 "";
@@ -1159,6 +1193,147 @@ symbol
 
 }
 
+function showCloseAllConfirm(){
+
+return new Promise(
+resolve=>{
+
+const overlay =
+document.createElement(
+"div"
+);
+overlay.className =
+"trade-book-confirm-overlay";
+overlay.innerHTML =
+`
+<div class="trade-book-confirm-dialog" role="alertdialog" aria-modal="true" aria-labelledby="trade-book-close-all-title">
+<p id="trade-book-close-all-title" class="trade-book-confirm-message">Вы действительно хотите закрыть все открытые позиции по рыночной цене?</p>
+<div class="trade-book-confirm-actions">
+<button type="button" class="trade-book-confirm-cancel" data-action="cancel">Отмена</button>
+<button type="button" class="trade-book-confirm-yes" data-action="yes">Да</button>
+</div>
+</div>`;
+
+document.body.appendChild(
+overlay
+);
+
+const finish =
+confirmed=>{
+
+overlay.remove();
+document.removeEventListener(
+"keydown",
+onKey
+);
+resolve(
+confirmed
+);
+
+};
+
+const onKey =
+event=>{
+
+if(
+event.key ===
+"Escape"
+){
+finish(
+false
+);
+}
+
+};
+
+document.addEventListener(
+"keydown",
+onKey
+);
+
+overlay.addEventListener(
+"click",
+event=>{
+
+const action =
+event.target.closest(
+"[data-action]"
+)?.dataset.action;
+
+if(
+action ===
+"yes"
+){
+finish(
+true
+);
+return;
+}
+
+if(
+action ===
+"cancel" ||
+event.target ===
+overlay
+){
+finish(
+false
+);
+}
+
+}
+);
+
+const cancelBtn =
+overlay.querySelector(
+".trade-book-confirm-cancel"
+);
+cancelBtn?.focus();
+
+}
+);
+
+}
+
+function updateCloseAllBtnState(){
+
+if(
+!closeAllBtn
+){
+return;
+}
+
+const show =
+mode ===
+"positions" &&
+!!api?.closePosition;
+
+closeAllBtn.hidden =
+!show;
+
+if(
+!show
+){
+return;
+}
+
+const hasPositions =
+lastPositionRows.some(
+row=>
+String(
+row?.symbol ||
+""
+).trim()
+);
+
+closeAllBtn.disabled =
+loading ||
+closingAll ||
+closingPosition ||
+!hasPositions;
+
+}
+
 function requestClosePosition(
 symbol,
 ticker
@@ -1180,6 +1355,54 @@ return;
 
 void closePosition(
 symbol
+);
+
+}
+
+async function requestCloseAllPositions(){
+
+if(
+!api?.closePosition ||
+mode !==
+"positions"
+){
+return;
+}
+
+const symbols =
+lastPositionRows
+.map(
+row=>
+String(
+row?.symbol ||
+""
+).trim()
+)
+.filter(
+Boolean
+);
+
+if(
+!symbols.length
+){
+setStatus(
+"Нет открытых позиций",
+true
+);
+return;
+}
+
+const confirmed =
+await showCloseAllConfirm();
+
+if(
+!confirmed
+){
+return;
+}
+
+void closeAllPositions(
+symbols
 );
 
 }
@@ -1322,6 +1545,75 @@ return;
 
 }
 
+function formatPositionPrice(
+value
+){
+
+const num =
+Number(
+value
+);
+
+if(
+!Number.isFinite(
+num
+) ||
+num ===
+0
+){
+return "—";
+}
+
+return num.toLocaleString(
+"ru-RU",
+{
+maximumFractionDigits:
+8
+}
+);
+
+}
+
+function wireShareButton(
+el,
+row
+){
+
+const btn =
+el.querySelector(
+".trade-book-share"
+);
+
+if(
+!btn ||
+btn.dataset.shareBound ===
+"1"
+){
+return;
+}
+
+btn.dataset.shareBound =
+"1";
+
+btn.addEventListener(
+"mousedown",
+event=>{
+event.stopPropagation();
+}
+);
+
+btn.addEventListener(
+"click",
+event=>{
+event.stopPropagation();
+void openPnlShareModal(
+row
+);
+}
+);
+
+}
+
 function createPositionRow(
 row
 ){
@@ -1345,15 +1637,18 @@ row.symbol;
 
 el.innerHTML =
 `
-<div class="trade-book-ticker" title="${row.ticker}">
+<span class="col-ticker" title="${row.ticker}">
 <span class="trade-book-side ${positionSideClass(row.side)}" aria-hidden="true"></span>
 <span class="trade-book-ticker-text">${row.ticker}</span>
-</div>
-<div class="trade-book-trail">
+</span>
+<span class="col-pnl-wrap">
 <span class="col-pnl ${pnlClass(row.pnl)}">${formatTradePnl(row.pnl)}</span>
-<span class="col-volume">${formatTradeUsdt(row.volumeUsdt)}</span>
+${SHARE_BUTTON_HTML}
 <button type="button" class="trade-book-close" title="Закрыть по рынку" aria-label="Закрыть ${row.ticker}">×</button>
-</div>
+</span>
+<span class="col-volume">${formatTradeUsdt(row.volumeUsdt)}</span>
+<span class="col-entry">${formatPositionPrice(row.avgPrice)}</span>
+<span class="col-liq">${formatPositionPrice(row.liqPrice)}</span>
 `;
 
 el.querySelector(
@@ -1382,6 +1677,11 @@ row.symbol
 wirePositionRowOpen(
 el,
 row.symbol
+);
+
+wireShareButton(
+el,
+row
 );
 
 return el;
@@ -1536,7 +1836,7 @@ nextSideClass;
 
 const pnlEl =
 el.querySelector(
-".col-pnl"
+".col-pnl-wrap .col-pnl"
 );
 
 if(
@@ -1590,6 +1890,52 @@ nextVol;
 
 }
 
+const entryEl =
+el.querySelector(
+".col-entry"
+);
+
+if(
+entryEl
+){
+const nextEntry =
+formatPositionPrice(
+row.avgPrice
+);
+
+if(
+entryEl.textContent !==
+nextEntry
+){
+entryEl.textContent =
+nextEntry;
+}
+
+}
+
+const liqEl =
+el.querySelector(
+".col-liq"
+);
+
+if(
+liqEl
+){
+const nextLiq =
+formatPositionPrice(
+row.liqPrice
+);
+
+if(
+liqEl.textContent !==
+nextLiq
+){
+liqEl.textContent =
+nextLiq;
+}
+
+}
+
 }
 
 function sortableHeadClass(
@@ -1632,6 +1978,9 @@ if(
 mode ===
 "orders"
 ){
+positionsTableEl?.classList.remove(
+"trade-book-positions-table--grid"
+);
 tableHead.classList.add(
 "trade-book-table-head--orders"
 );
@@ -1649,15 +1998,25 @@ return;
 tableHead.classList.add(
 "trade-book-table-head--positions"
 );
+positionsTableEl?.classList.add(
+"trade-book-positions-table--grid"
+);
 tableHead.innerHTML =
 `
-<span class="col-ticker ${sortableHeadClass("ticker")}" data-sort="ticker">Тикер</span>
-<div class="trade-book-trail">
-<span class="col-pnl ${sortableHeadClass("pnl")}" data-sort="pnl">PnL</span>
-<span class="col-volume ${sortableHeadClass("volume")}" data-sort="volume">Объём</span>
-<span class="col-action" aria-hidden="true"></span>
-</div>
+<span class="col-ticker ${sortableHeadClass("ticker")}" data-sort="ticker">Тикер${columnResizeHandle("ticker")}</span>
+<span class="col-pnl-head ${sortableHeadClass("pnl")}" data-sort="pnl">PnL${columnResizeHandle("pnl")}</span>
+<span class="col-volume ${sortableHeadClass("volume")}" data-sort="volume">Объём${columnResizeHandle("volume")}</span>
+<span class="col-entry">Цена входа${columnResizeHandle("entry")}</span>
+<span class="col-liq">Ликвидация</span>
 `;
+
+applyPositionColumnLayout(
+panel
+);
+wirePositionColumnResize(
+panel,
+tableHead
+);
 
 }
 
@@ -1692,6 +2051,7 @@ orderRowNodes.clear();
 hidePositionsTotal();
 rowsEl.innerHTML =
 `<p class="trade-book-empty">${message}</p>`;
+updateCloseAllBtnState();
 
 }
 
@@ -1976,6 +2336,8 @@ row.symbol
 )
 );
 
+updateCloseAllBtnState();
+
 }
 
 function purgeOrderRows(){
@@ -2143,8 +2505,9 @@ return;
 setStatus(
 "Закрываем…"
 );
-refreshBtn.disabled =
+closingPosition =
 true;
+updateCloseAllBtnState();
 
 try{
 const result =
@@ -2184,8 +2547,113 @@ err?.message ||
 true
 );
 }finally{
-refreshBtn.disabled =
+closingPosition =
 false;
+updateCloseAllBtnState();
+}
+
+}
+
+async function closeAllPositions(
+symbols
+){
+
+if(
+!api?.closePosition
+){
+return;
+}
+
+closingAll =
+true;
+updateCloseAllBtnState();
+setStatus(
+"Закрываем…"
+);
+
+let failed =
+0;
+const errors =
+[];
+
+for(
+const symbol of symbols
+){
+
+try{
+const result =
+await api.closePosition(
+symbol
+);
+
+if(
+result?.ok ===
+false
+){
+failed++;
+if(
+result.message
+){
+errors.push(
+result.message
+);
+}
+}
+}catch(
+err
+){
+failed++;
+if(
+err?.message
+){
+errors.push(
+err.message
+);
+}
+
+}
+
+}
+
+if(
+failed >
+0
+){
+const msg =
+failed ===
+symbols.length
+? (
+errors[
+0
+] ||
+"Не удалось закрыть позиции"
+)
+: `Закрыто ${symbols.length - failed} из ${symbols.length}`;
+setStatus(
+msg,
+true
+);
+}else{
+setStatus(
+"Все позиции закрыты"
+);
+}
+
+try{
+await refresh(
+true
+);
+window.dispatchEvent(
+new CustomEvent(
+"trade-book-refresh"
+)
+);
+}catch{
+/* refresh status already set */
+}finally{
+closingAll =
+false;
+updateCloseAllBtnState();
 }
 
 }
@@ -2233,8 +2701,7 @@ true;
 if(
 !silent
 ){
-refreshBtn.disabled =
-true;
+updateCloseAllBtnState();
 }
 
 try{
@@ -2304,8 +2771,7 @@ true
 }finally{
 loading =
 false;
-refreshBtn.disabled =
-false;
+updateCloseAllBtnState();
 }
 
 }
@@ -2331,6 +2797,7 @@ purgeOrderRows();
 }
 
 renderTableHead();
+updateCloseAllBtnState();
 void refresh(
 true
 );
@@ -2347,18 +2814,24 @@ modeSelect.blur();
 }
 );
 
-refreshBtn.addEventListener(
+closeAllBtn.addEventListener(
 "click",
 ()=>{
-void refresh(
-false
-);
+void requestCloseAllPositions();
 }
 );
 
 tableHead.addEventListener(
 "click",
 event=>{
+
+if(
+event.target.closest(
+".trade-book-col-resize"
+)
+){
+return;
+}
 
 const el =
 event.target.closest(

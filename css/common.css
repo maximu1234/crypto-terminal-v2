@@ -4,6 +4,10 @@
 box-sizing:border-box;
 }
 
+:root{
+--site-header-nav-gap:18px;
+}
+
 html,
 body{
 margin:0;
@@ -13,7 +17,7 @@ padding:0;
 .menu{
 display:flex;
 align-items:center;
-gap:18px;
+gap:var(--site-header-nav-gap);
 overflow:visible;
 }
 
@@ -22,6 +26,7 @@ display:inline-flex;
 align-items:center;
 color:#9ca3af;
 text-decoration:none;
+font-family:Arial,sans-serif;
 font-size:14px;
 line-height:1;
 }
@@ -534,6 +539,25 @@ min-width:0;
 overflow:visible;
 }
 
+#header .menu a,
+#header .screener-nav-panel a,
+#coins-nav-panel.coins-header-desktop a{
+font-family:Arial,sans-serif;
+}
+
+@media (min-width:641px){
+
+#header .menu,
+#header .screener-nav-panel,
+#screener-nav-panel,
+#site-nav-panel,
+#coins-nav-panel.coins-header-desktop{
+flex-wrap:nowrap;
+gap:var(--site-header-nav-gap);
+}
+
+}
+
 #header-controls,
 #header .screener-header-desktop{
 position:relative;
@@ -661,6 +685,35 @@ background:none;
 font:inherit;
 text-align:left;
 cursor:pointer;
+}
+
+#header-settings-dropdown .header-settings-nav-item,
+#header-settings-dropdown .header-settings-nav-item.header-settings-menu-btn{
+display:block;
+box-sizing:border-box;
+margin:0;
+padding:12px 0 0;
+border:0;
+border-top:1px solid #1f2937;
+border-radius:0;
+font:500 13px/1.35 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+color:#9ca3af;
+text-decoration:none;
+text-align:left;
+width:100%;
+background:none;
+cursor:pointer;
+}
+
+#header-settings-dropdown .header-settings-nav-item:hover,
+#header-settings-dropdown .header-settings-nav-item:focus-visible{
+color:#e5e7eb;
+outline:none;
+}
+
+#header-settings-dropdown .app-settings-menu-wrap{
+margin:0;
+padding:0;
 }
 
 .header-settings-menu-btn .trade-exchange-status-dot{

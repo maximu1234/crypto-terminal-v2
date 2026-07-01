@@ -1044,6 +1044,62 @@ return 0;
 
 }
 
+export const RSI_FIXED_PRICE_RANGE =
+Object.freeze({
+min:0,
+max:100
+});
+
+export function applyRsiFixedPriceScale(
+chart,
+series
+){
+
+if(
+!chart ||
+!series
+){
+return;
+}
+
+try{
+
+series.applyOptions({
+autoscaleInfoProvider:()=>(
+{
+priceRange:{
+minValue:
+RSI_FIXED_PRICE_RANGE.min,
+maxValue:
+RSI_FIXED_PRICE_RANGE.max
+}
+}
+)
+});
+
+}catch{
+/* ignore */
+}
+
+try{
+
+chart.priceScale(
+"right"
+).applyOptions({
+autoScale:
+true,
+scaleMargins:{
+top:0,
+bottom:0
+}
+});
+
+}catch{
+/* ignore */
+}
+
+}
+
 export function createRSIChart(container){
 
 const normalMode =
@@ -1163,6 +1219,11 @@ minMove:0.01
 }
 
 });
+
+applyRsiFixedPriceScale(
+chart,
+series
+);
 
 return {
 

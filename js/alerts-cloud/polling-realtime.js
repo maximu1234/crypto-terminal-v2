@@ -8,7 +8,7 @@ isCloudLoggedIn,
 isCloudLoggedInEffective,
 onCloudSyncChange,
 ensureCloudLoginResolved
-} from "../cloud-sync.js?v=39";
+} from "../cloud-sync.js?v=40";
 
 import {
 clearAlertAuthCache,
@@ -52,7 +52,7 @@ syncAllLocalAlertsToCloud
 import {
 isAlertsCloudDisabled,
 syncAlertsCloudPauseToServer
-} from "../supabase-usage-prefs.js?v=2";
+} from "../supabase-usage-prefs.js?v=4";
 
 const IS_IOS_SAFARI =
 /iP(hone|ad|od)/i.test(

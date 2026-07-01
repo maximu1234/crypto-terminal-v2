@@ -5,7 +5,7 @@ SUPABASE_AUTH_STORAGE_KEY
 import {
 waitForCloudAuth,
 ensureCloudLoginResolved
-} from "../cloud-sync.js?v=39";
+} from "../cloud-sync.js?v=40";
 
 import {
 getCachedAlertAuth,
@@ -27,7 +27,7 @@ lastSeenCloudAlerts
 
 import {
 isAlertsCloudDisabled
-} from "../supabase-usage-prefs.js?v=2";
+} from "../supabase-usage-prefs.js?v=4";
 
 function alertsCloudBlocked(){
 

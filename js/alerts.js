@@ -1286,7 +1286,7 @@ tf
 ){
 
 const { isCloudLoggedIn } =
-await import("./cloud-sync.js?v=39");
+await import("./cloud-sync.js?v=40");
 
 if(
 !isCloudLoggedIn()
@@ -1368,7 +1368,7 @@ sym
 );
 
 const { ensureCloudReady } =
-await import("./auth-ui.js?v=29");
+await import("./auth-ui.js?v=35");
 
 await ensureCloudReady();
 
@@ -1463,7 +1463,7 @@ list.push(row);
 saveAlerts(list);
 
 const { ensureCloudReady } =
-await import("./auth-ui.js?v=29");
+await import("./auth-ui.js?v=35");
 
 await ensureCloudReady();
 
@@ -2861,7 +2861,7 @@ const { purgeAllLocalDrawingsStorage } =
 await import("./drawings-storage.js?v=7");
 
 const drawingsCloud =
-await import("./drawings-cloud-sync.js?v=45");
+await import("./drawings-cloud-sync.js?v=46");
 
 const alertsCloud =
 await import("./alerts-cloud-sync.js?v=110");

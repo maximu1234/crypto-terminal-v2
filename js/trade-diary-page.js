@@ -1,11 +1,11 @@
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=29";
+} from "./auth-ui.js?v=35";
 
 import {
 ensureCloudLoginResolved,
 getEffectiveCloudUserEmail
-} from "./cloud-sync.js?v=39";
+} from "./cloud-sync.js?v=40";
 
 import {
 isDesktopTradeDiaryContext,
@@ -38,7 +38,7 @@ mountTradeDiaryPeriodPicker
 
 import {
 initTradeDiaryNav
-} from "./trade-diary-nav.js?v=5";
+} from "./trade-diary-nav.js?v=7";
 
 const guestEl =
 document.getElementById(

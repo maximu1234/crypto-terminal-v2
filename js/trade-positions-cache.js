@@ -5,6 +5,13 @@ import {
 maybeApplyAutoStopsForNewPosition
 } from "./trade-auto-stops.js?v=2";
 
+import {
+markTradePositionSoundsSeeded,
+playTradePositionCloseSound,
+playTradePositionOpenSound,
+shouldPlayTradePositionSounds
+} from "./trade-position-sounds.js?v=2";
+
 const cacheBySymbol =
 new Map();
 
@@ -73,6 +80,34 @@ e -
 m
 ) *
 s;
+
+}
+
+function isActivePosition(
+row
+){
+
+if(
+!row
+){
+return false;
+}
+
+const size =
+Number(
+row?.size
+);
+
+return Number.isFinite(
+size
+) &&
+size >
+0 &&
+String(
+row?.side ||
+""
+).trim() !==
+"";
 
 }
 
@@ -186,6 +221,14 @@ function applyPositionsList(
 positions
 ){
 
+const playSounds =
+shouldPlayTradePositionSounds();
+
+let openedCount =
+0;
+let closedCount =
+0;
+
 const next =
 new Map();
 
@@ -232,6 +275,21 @@ if(
 sym
 )
 ){
+
+const prev =
+cacheBySymbol.get(
+sym
+);
+
+if(
+playSounds &&
+isActivePosition(
+prev
+)
+){
+closedCount++;
+}
+
 cacheBySymbol.delete(
 sym
 );
@@ -265,12 +323,18 @@ JSON.stringify(
 row
 );
 
+const wasActive =
+isActivePosition(
+prev
+);
+const isActive =
+isActivePosition(
+row
+);
+
 const isNewOpen =
 !prev &&
-Number(
-row?.size
-) >
-0;
+isActive;
 
 cacheBySymbol.set(
 sym,
@@ -288,6 +352,24 @@ row
 );
 
 if(
+playSounds
+){
+
+if(
+!wasActive &&
+isActive
+){
+openedCount++;
+}else if(
+wasActive &&
+!isActive
+){
+closedCount++;
+}
+
+}
+
+if(
 isNewOpen
 ){
 maybeApplyAutoStopsForNewPosition(
@@ -299,6 +381,28 @@ row
 
 }
 
+}
+
+if(
+playSounds
+){
+
+if(
+openedCount >
+0
+){
+playTradePositionOpenSound();
+}
+
+if(
+closedCount >
+0
+){
+playTradePositionCloseSound();
+}
+
+}else{
+markTradePositionSoundsSeeded();
 }
 
 if(

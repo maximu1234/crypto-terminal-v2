@@ -15,10 +15,10 @@ createVolumePaneIndicator
 } from "./indicators/volume-pane.js?v=4";
 import {
 createMovingAverageIndicator
-} from "./indicators/moving-average.js?v=4";
+} from "./indicators/moving-average.js?v=14";
 import {
 createEmaShiftRibbonIndicator
-} from "./indicators/ema-shift-ribbon.js?v=5";
+} from "./indicators/ema-shift-ribbon.js?v=6";
 import {
 createIndicatorSettingsDialog
 } from "./indicators/indicator-settings-dialog.js?v=6";
@@ -27,6 +27,10 @@ MAX_ACTIVE_INDICATORS,
 canEnableIndicator,
 countLimitedActive
 } from "./indicators/registry.js?v=1";
+
+import {
+isChartLayoutReady
+} from "./chart-layout-gate.js?v=2";
 
 const STORAGE_KEY =
 "chart_indicators_v1";
@@ -223,6 +227,12 @@ ind
 ]
 )
 );
+
+for(
+const ind of indicators
+){
+ind.warmupChartSeries?.();
+}
 
 const chartWrap =
 getHost?.()?.wrapEl ||
@@ -469,7 +479,17 @@ prefs
 
 updateLegend();
 updateMenuAvailability();
+
+requestAnimationFrame(
+()=>{
+requestAnimationFrame(
+()=>{
 getHost?.()?.getDrawingTools?.()?.scheduleRedraw?.();
+}
+);
+}
+);
+
 return true;
 
 }
@@ -541,21 +561,114 @@ ind.onLayoutChange?.()
 
 }
 
-function notifySymbolChange(){
+let indicatorRefreshRaf =
+0;
+let pendingSymbolRefresh =
+false;
+let pendingCandlesRefresh =
+false;
+
+function flushIndicatorDataRefresh(){
+
+indicatorRefreshRaf =
+0;
+
+if(
+!isChartLayoutReady()
+){
+return;
+}
+
+if(
+pendingSymbolRefresh
+){
+
+pendingSymbolRefresh =
+false;
+pendingCandlesRefresh =
+false;
 
 indicators.forEach(
 ind=>
 ind.onSymbolChange?.()
 );
 
+return;
+
 }
 
-function notifyCandlesUpdate(){
+if(
+pendingCandlesRefresh
+){
+
+pendingCandlesRefresh =
+false;
 
 indicators.forEach(
 ind=>
 ind.onCandlesUpdate?.()
 );
+
+}
+
+}
+
+function scheduleIndicatorDataRefresh(){
+
+if(
+!isChartLayoutReady()
+){
+return;
+}
+
+if(
+indicatorRefreshRaf
+){
+return;
+}
+
+indicatorRefreshRaf =
+requestAnimationFrame(
+flushIndicatorDataRefresh
+);
+
+}
+
+function notifySymbolChange(){
+
+pendingSymbolRefresh =
+true;
+scheduleIndicatorDataRefresh();
+
+}
+
+function notifyCandlesUpdate(){
+
+pendingCandlesRefresh =
+true;
+scheduleIndicatorDataRefresh();
+
+}
+
+function notifyMainChartOverlaysSync(){
+
+if(
+!isChartLayoutReady()
+){
+return;
+}
+
+indicators.forEach(
+ind=>
+ind.syncMainChartOverlay?.()
+);
+
+}
+
+function notifyLayoutSettled(){
+
+scheduleIndicatorDataRefresh();
+notifyMainChartOverlaysSync();
 
 }
 
@@ -704,6 +817,8 @@ return {
 notifyLayoutChange,
 notifySymbolChange,
 notifyCandlesUpdate,
+notifyLayoutSettled,
+notifyMainChartOverlaysSync,
 syncViewports,
 resizePanes,
 getLinkedPaneCharts,
