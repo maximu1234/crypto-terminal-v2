@@ -8,14 +8,12 @@ on:
 
 permissions:
   contents: write
-  actions: read
 
 jobs:
   macos:
     runs-on: macos-latest
     permissions:
       contents: write
-      actions: read
     defaults:
       run:
         working-directory: desktop
@@ -29,19 +27,11 @@ jobs:
         with:
           node-version: "20"
 
-      - name: Resolve desktop version and release tag
-        id: release
+      - name: Sync desktop version from tag
+        if: startsWith(github.ref, 'refs/tags/desktop-v')
         run: |
-          if [[ "${GITHUB_REF}" == refs/tags/desktop-v* ]]; then
-            TAG="${GITHUB_REF_NAME}"
-            VERSION="${TAG#desktop-v}"
-            npm version "$VERSION" --no-git-tag-version --allow-same-version
-          else
-            VERSION=$(node -p "require('./package.json').version")
-            TAG="desktop-v${VERSION}"
-          fi
-          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
-          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          VERSION="${GITHUB_REF_NAME#desktop-v}"
+          npm version "$VERSION" --no-git-tag-version --allow-same-version
 
       - name: Install dependencies
         run: |
@@ -64,44 +54,7 @@ jobs:
           CSC_IDENTITY_AUTO_DISCOVERY: "false"
         run: npm run build:mac
 
-      - name: Publish GitHub Release
-        working-directory: .
-        env:
-          GH_TOKEN: ${{ github.token }}
-          GITHUB_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          TAG="${{ steps.release.outputs.tag }}"
-          VERSION="${{ steps.release.outputs.version }}"
-          ASSETS=(desktop/dist/*.dmg desktop/dist/*.zip desktop/dist/latest-mac.yml)
-
-          publish() {
-            if gh release view "$TAG" >/dev/null 2>&1; then
-              echo "Release $TAG exists — uploading assets"
-              gh release upload "$TAG" "${ASSETS[@]}" --clobber
-            else
-              echo "Creating release $TAG"
-              gh release create "$TAG" \
-                --title "Desktop ${VERSION}" \
-                --target "${GITHUB_SHA}" \
-                --generate-notes \
-                "${ASSETS[@]}"
-            fi
-          }
-
-          for attempt in 1 2 3 4 5; do
-            if publish; then
-              echo "Published $TAG (attempt ${attempt})"
-              exit 0
-            fi
-            echo "Publish attempt ${attempt} failed — retry in 20s"
-            sleep 20
-          done
-
-          echo "Publish failed after 5 attempts"
-          exit 1
-
-      - name: Upload artifacts (backup)
+      - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: multichart-macos
@@ -110,3 +63,48 @@ jobs:
             desktop/dist/*.zip
             desktop/dist/latest-mac.yml
           if-no-files-found: error
+
+      - name: Publish GitHub Release
+        if: startsWith(github.ref, 'refs/tags/desktop-v')
+        working-directory: .
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          TAG="${GITHUB_REF_NAME}"
+          VERSION="${TAG#desktop-v}"
+          REPO="${GITHUB_REPOSITORY}"
+          ASSETS=(desktop/dist/*.dmg desktop/dist/*.zip desktop/dist/latest-mac.yml)
+
+          for asset in "${ASSETS[@]}"; do
+            if [ ! -e "$asset" ]; then
+              echo "Missing build asset: ${asset}"
+              exit 1
+            fi
+          done
+
+          publish() {
+            if gh release view "$TAG" --repo "$REPO" >/dev/null 2>&1; then
+              echo "Release ${TAG} exists — uploading assets"
+              gh release upload "$TAG" --repo "$REPO" "${ASSETS[@]}" --clobber
+            else
+              echo "Creating release ${TAG}"
+              gh release create "$TAG" \
+                --repo "$REPO" \
+                --title "Desktop ${VERSION}" \
+                --generate-notes \
+                "${ASSETS[@]}"
+            fi
+          }
+
+          for attempt in 1 2 3 4 5; do
+            if publish; then
+              echo "Published ${TAG} (attempt ${attempt})"
+              exit 0
+            fi
+            echo "Publish attempt ${attempt} failed — retry in 25s"
+            sleep 25
+          done
+
+          echo "Publish failed after 5 attempts"
+          exit 1
