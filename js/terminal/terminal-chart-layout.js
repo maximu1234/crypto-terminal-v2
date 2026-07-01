@@ -340,6 +340,15 @@ candles.length,
 applyCoinsChartViewport
 };
 
+applyCoinsChartViewport(
+chart,
+null,
+viewportCtx.candles,
+currentTF,
+chartWidth,
+candles.length
+);
+
 const chartIndicators =
 getChartIndicators?.();
 

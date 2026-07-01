@@ -11,6 +11,10 @@ coinsTfVisibleBars
 } from "../chart-import.js?v=43";
 
 import {
+runWithPreservedVisibleLogicalRange
+} from "../chart-visible-range.js?v=1";
+
+import {
 isBottomIndicatorPane
 } from "./indicator-pane-order.js?v=1";
 
@@ -162,7 +166,11 @@ unbindTimeSync =
 linkPairedChartTimeScales(
 mainChart,
 chart,
-updateTimeScaleVisibility
+updateTimeScaleVisibility,
+{
+linkedDrivesMain:
+false
+}
 );
 
 syncLinkedChartTimescales(
@@ -261,6 +269,9 @@ raw,
 tf
 );
 
+runWithPreservedVisibleLogicalRange(
+chart,
+()=>{
 series.setData(
 points.map(
 bar=>({
@@ -275,6 +286,8 @@ bar
 )
 })
 )
+);
+}
 );
 
 }
@@ -377,9 +390,13 @@ if(
 return;
 }
 
-syncLinkedChartTimescales(
+ctx.applyCoinsChartViewport?.(
 ctx.mainChart,
-chart
+chart,
+ctx.candles,
+ctx.tf,
+ctx.chartWidth,
+ctx.realCandleCount
 );
 updateTimeScaleVisibility();
 

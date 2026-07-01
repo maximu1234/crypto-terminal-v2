@@ -3,7 +3,7 @@
  */
 import {
 createAoPaneIndicator
-} from "./indicators/ao-pane.js?v=1";
+} from "./indicators/ao-pane.js?v=2";
 import {
 createHorizontalVolumeIndicator
 } from "./indicators/horizontal-volume.js?v=9";
@@ -12,7 +12,7 @@ createRsiPaneIndicator
 } from "./indicators/rsi-pane.js?v=2";
 import {
 createVolumePaneIndicator
-} from "./indicators/volume-pane.js?v=4";
+} from "./indicators/volume-pane.js?v=5";
 import {
 createMovingAverageIndicator
 } from "./indicators/moving-average.js?v=14";

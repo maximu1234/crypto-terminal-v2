@@ -10,7 +10,7 @@ getAlertsSorted,
 removeAlert,
 stripAlertFlagsNotInRegistry,
 removeAllAlerts
-} from "./alerts.js?v=97";
+} from "./alerts.js?v=98";
 
 import {
 getTelegramChatId,
@@ -185,16 +185,13 @@ false;
 function shouldOfferGlobalClear(){
 
 if(
-getAlertsSorted().length >
+countAllDrawings() >
 0
 ){
 return true;
 }
 
-return (
-countAllDrawings() >
-0
-);
+return isCloudLoggedIn();
 
 }
 
@@ -232,7 +229,7 @@ return;
 
 if(
 !window.confirm(
-"Удалить все объекты рисования и все алерты на всех монетах? Это нельзя отменить."
+"Удалить все объекты рисования на всех монетах? Это нельзя отменить."
 )
 ){
 return;
@@ -256,7 +253,6 @@ clearDrawingsStatus.style.color =
 
 try{
 await clearAllDrawings();
-stripAlertFlagsNotInRegistry();
 render();
 showClearDrawingsSuccess();
 }catch(err){
@@ -652,7 +648,7 @@ isCloudLoggedIn()
 ){
 
 clearDrawingsAction.innerHTML =
-`<span class="alerts-clear-drawings-text" title="В браузере и в списке алертов ничего нет">Нечего удалять</span>`;
+`<span class="alerts-clear-drawings-text" title="Локальных рисунков нет">Нечего удалять</span>`;
 
 }else{
 

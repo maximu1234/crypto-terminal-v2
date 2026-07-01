@@ -1728,7 +1728,7 @@ isFavoritesAutoCloudDisabled()
 return;
 }
 
-void import("./favorites-cloud-sync.js?v=4").then(
+void import("./favorites-cloud-sync.js?v=5").then(
 m=>{
 m.applyFavoritesFromRealtimeRow(
 row
@@ -2079,7 +2079,7 @@ return collectAllLocalDrawings();
 async function syncFavoritesWithCloud(){
 
 const m =
-await import("./favorites-cloud-sync.js?v=4");
+await import("./favorites-cloud-sync.js?v=5");
 
 await m.reconcileLocalFavoritesWithCloud();
 
@@ -2129,7 +2129,7 @@ return;
 }
 
 const m =
-await import("./favorites-cloud-sync.js?v=4");
+await import("./favorites-cloud-sync.js?v=5");
 
 m.pushFavoritesAfterLocalEdit(
 favorites
@@ -3033,7 +3033,7 @@ return;
 try{
 
 const favoritesCloud =
-await import("./favorites-cloud-sync.js?v=4");
+await import("./favorites-cloud-sync.js?v=5");
 
 if(
 !isFavoritesAutoCloudDisabled() &&
@@ -3280,9 +3280,9 @@ await ensureCloudLoginResolved(
 const alertsCloud =
 await import("./alerts-cloud-sync.js?v=110");
 const favoritesCloud =
-await import("./favorites-cloud-sync.js?v=4");
+await import("./favorites-cloud-sync.js?v=5");
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=97");
+await import("./alerts.js?v=98");
 
 const stripOpts =
 isAlertsPage()

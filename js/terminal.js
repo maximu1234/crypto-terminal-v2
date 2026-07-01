@@ -97,7 +97,7 @@ mountDrawToolIcons
 
 import {
 initChartIndicators
-} from "./chart-indicators.js?v=19";
+} from "./chart-indicators.js?v=20";
 
 import {
 initCoinsMobileUi,
@@ -175,7 +175,7 @@ settleCoinsChartViewport,
 resizeCharts,
 scheduleResizeCharts,
 applyDefaultZoom
-} from "./terminal/terminal-chart-layout.js?v=5";
+} from "./terminal/terminal-chart-layout.js?v=6";
 
 import {
 initTerminalMultiChart,

@@ -17,7 +17,7 @@ scheduleRegistryCloudSync
 
 import {
 stripAlertFlagsNotInRegistry
-} from "./alerts.js?v=97";
+} from "./alerts.js?v=98";
 
 import {
 isCloudLoggedIn,
@@ -263,7 +263,7 @@ initDrawingsCloudSync();
 );
 */
 
-import("./favorites-cloud-sync.js?v=4").then(
+import("./favorites-cloud-sync.js?v=5").then(
 ({ initFavoritesCloudSync })=>{
 initFavoritesCloudSync();
 }

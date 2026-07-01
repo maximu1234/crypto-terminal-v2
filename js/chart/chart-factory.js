@@ -1512,6 +1512,11 @@ const isLocked =
 options.isLocked ??
 (()=>false);
 
+/** false — только main → linked (панели Volume/AO не двигают основной график после setData). */
+const linkedDrivesMain =
+options.linkedDrivesMain !==
+false;
+
 let lock =
 false;
 
@@ -1588,13 +1593,15 @@ fromMain();
 );
 
 const subLinked =
-linkedChart.timeScale().subscribeVisibleLogicalRangeChange(
+linkedDrivesMain
+? linkedChart.timeScale().subscribeVisibleLogicalRangeChange(
 range=>{
 if(range){
 fromLinked();
 }
 }
-);
+)
+: null;
 
 return ()=>{
 if(

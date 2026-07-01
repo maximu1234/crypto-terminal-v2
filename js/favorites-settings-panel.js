@@ -9,7 +9,7 @@ onCloudSyncChange
 
 import {
 syncFavoritesCloudOnDemand
-} from "./favorites-cloud-sync.js?v=4";
+} from "./favorites-cloud-sync.js?v=5";
 
 function setStatus(
 el,

@@ -547,9 +547,13 @@ return null;
 /**
  * Побеждает более новый updated_at. hasUnsynced не перетирает более свежее облако.
  */
-export async function reconcileLocalFavoritesWithCloud(){
+export async function reconcileLocalFavoritesWithCloud(
+options =
+{}
+){
 
 if(
+!options.onDemand &&
 isFavoritesCloudDisabled()
 ){
 return favoritesToCloudList(
@@ -730,16 +734,22 @@ return cloud.favorites;
 
 }
 
-export async function pullFavoritesFromCloudNow(){
+export async function pullFavoritesFromCloudNow(
+options =
+{}
+){
 
 if(
+!options.onDemand &&
 isFavoritesCloudDisabled()
 ){
 return;
 }
 
 return coalesceFavoritesPull(
-()=>reconcileLocalFavoritesWithCloud()
+()=>reconcileLocalFavoritesWithCloud(
+options
+)
 );
 
 }
@@ -982,14 +992,6 @@ void pullFavoritesFromCloudNow().catch(
 export async function syncFavoritesCloudOnDemand(){
 
 if(
-isFavoritesCloudDisabled()
-){
-throw new Error(
-"Облако флагов отключено в настройках"
-);
-}
-
-if(
 !isCloudLoggedInEffective()
 ){
 throw new Error(
@@ -997,7 +999,9 @@ throw new Error(
 );
 }
 
-await pullFavoritesFromCloudNow();
+await pullFavoritesFromCloudNow(
+{ onDemand: true }
+);
 
 }
 

@@ -99,7 +99,7 @@ Object.freeze({
 "terminal-layout-picker.js":
 3,
 "terminal/terminal-chart-layout.js":
-5,
+6,
 "terminal/terminal-chart-switch-veil.js":
 7,
 "chart-layout-gate.js":
@@ -107,17 +107,17 @@ Object.freeze({
 "chart-visible-range.js":
 1,
 "chart-indicators.js":
-19,
+20,
 "indicators/horizontal-volume.js":
 9,
 "indicators/rsi-pane.js":
 2,
 "indicators/volume-pane.js":
-4,
+5,
 "indicators/ao-math.js":
 1,
 "indicators/ao-pane.js":
-1,
+2,
 "indicators/indicator-pane-order.js":
 1,
 "indicators/moving-average.js":
@@ -181,13 +181,13 @@ Object.freeze({
 
 /* ── JS: chart / drawings ── */
 "chart.js":
-151,
+152,
 "chart/chart-options.js":
 7,
 "chart/chart-dom-crosshair.js":
 15,
 "chart/chart-factory.js":
-37,
+38,
 "chart-tablet-gestures.js":
 17,
 "terminal-tablet-controller.js":
@@ -344,11 +344,11 @@ Object.freeze({
 "favorites.js":
 4,
 "favorites-cloud-sync.js":
-4,
+5,
 
 /* ── JS: alerts ── */
 "alerts.js":
-97,
+98,
 "alerts-cloud-sync.js":
 110,
 "alerts-cloud/debug.js":
@@ -362,7 +362,7 @@ Object.freeze({
 "alerts-cloud/polling-realtime.js":
 6,
 "alerts-page.js":
-60,
+61,
 "alert-monitor.js":
 65,
 "alert-worker-url.js":

@@ -2863,18 +2863,11 @@ await import("./drawings-storage.js?v=7");
 const drawingsCloud =
 await import("./drawings-cloud-sync.js?v=46");
 
-const alertsCloud =
-await import("./alerts-cloud-sync.js?v=110");
-
 const hadLocalDrawings =
 countAllDrawings() >
 0;
-const hadLocalAlerts =
-getAlertsSorted().length >
-0;
 const alreadyEmpty =
-!hadLocalDrawings &&
-!hadLocalAlerts;
+!hadLocalDrawings;
 
 let symbols =
 purgeAllLocalDrawingsStorage();
@@ -2882,15 +2875,8 @@ purgeAllLocalDrawingsStorage();
 drawingsCloud.pauseDrawingsCloudSync(
 120000
 );
-alertsCloud.pauseRegistryCloudSync(
-120000
-);
 
 try{
-clearAllChartAlertFlags();
-saveAlertsFromCloudMerge(
-[]
-);
 
 symbols =
 purgeAllLocalDrawingsStorage();
@@ -2918,39 +2904,6 @@ throw new Error(
 symbols =
 purgeAllLocalDrawingsStorage();
 
-const alertsOk =
-await withTimeout(
-alertsCloud.removeAllAlertsEverywhere({
-skipReconcile: true
-}),
-12000,
-"clear all alerts"
-).then(
-()=>true
-).catch(
-err=>{
-console.warn(
-"[alerts] clear all:",
-err?.message || err
-);
-return false;
-}
-);
-
-if(
-alertsOk === false &&
-(
-hadLocalAlerts ||
-!alreadyEmpty
-)
-){
-console.warn(
-"[alerts] не удалось очистить алерты в облаке"
-);
-}
-
-stripAlertFlagsNotInRegistry();
-
 symbols.forEach(symbol=>{
 
 window.dispatchEvent(
@@ -2975,16 +2928,12 @@ new CustomEvent(
 
 return {
 symbols: symbols.size,
-cloudDrawingsOk,
-alertsOk
+cloudDrawingsOk
 };
 
 }finally{
 
 drawingsCloud.pauseDrawingsCloudSync(
-0
-);
-alertsCloud.pauseRegistryCloudSync(
 0
 );
 
