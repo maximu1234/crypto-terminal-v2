@@ -24,7 +24,7 @@ setSelectedId,
 saveDrawings,
 updateStyleBar,
 redraw,
-isTouchDrawPlacement
+abortTabletChartGesture
 } =
 deps;
 
@@ -65,8 +65,7 @@ if(
 !getAlive() ||
 !isActive() ||
 getTool() !==
-"brush" ||
-isTouchDrawPlacement()
+"brush"
 ){
 return;
 }
@@ -104,6 +103,12 @@ points: [
 pt
 ]
 };
+
+try{
+abortTabletChartGesture?.();
+}catch{
+/* ignore */
+}
 
 setBlockChartClick(
 true

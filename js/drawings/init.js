@@ -196,7 +196,7 @@ createDrawPlacement
 
 import {
 createBrushPlacement
-} from "./brush-placement.js?v=2";
+} from "./brush-placement.js?v=3";
 
 import {
 createDrawEditInteraction
@@ -5619,7 +5619,7 @@ id;
 saveDrawings,
 updateStyleBar,
 redraw,
-isTouchDrawPlacement
+abortTabletChartGesture:notifyTabletChartGestureAbort
 });
 
 teardownBrushPlacement =
@@ -6516,7 +6516,12 @@ if(
 return false;
 }
 
-return !!dragState;
+return (
+!!dragState ||
+tool ===
+"brush" ||
+!!brushPlacementCtl?.getBrushStroke?.()
+);
 
 },
 
@@ -6600,7 +6605,10 @@ y
 
 isPlacementActive(){
 
-return !!placement;
+return (
+!!placement ||
+!!brushPlacementCtl?.getBrushStroke?.()
+);
 
 },
 

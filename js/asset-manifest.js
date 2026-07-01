@@ -195,7 +195,7 @@ Object.freeze({
 "drawings.js":
 247,
 "drawings/init.js":
-137,
+138,
 "drawings/draw-edit-desktop.js":
 8,
 "drawings/draw-undo.js":
@@ -241,7 +241,7 @@ Object.freeze({
 "drawings/brush.js":
 2,
 "drawings/brush-placement.js":
-2,
+3,
 "drawings/draw-render.js":
 13,
 "drawings/draw-hit.js":
