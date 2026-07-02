@@ -174,8 +174,13 @@ min-width:0;
   color:#e5e7eb;
 }
 
-.app-settings-bybit-host .trade-exchange-form{
+:is(.app-settings-bybit-host,.app-settings-trading-host) .trade-exchange-form{
   max-width:100%;
+}
+
+.app-settings-trading-host{
+  max-width:100%;
+  overflow-x:hidden;
 }
 
 .app-settings-bybit-guest{

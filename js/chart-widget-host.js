@@ -5,7 +5,8 @@ import {
 createCandlestickChart,
 ensureDomChartCrosshair,
 positionDomChartCrosshair,
-hideDomChartCrosshair
+hideDomChartCrosshair,
+mountChartPriceHud
 } from "./chart-import.js?v=43";
 
 import {
@@ -401,7 +402,13 @@ const host = {
 chart,
 series,
 drawingTools: null,
-ensureDrawings: null
+ensureDrawings: null,
+priceHudCtrl: mountChartPriceHud({
+chart,
+series,
+wrapEl: opts.chartWrap,
+getTf: opts.getTf
+})
 };
 
 let ensureInflight = null;

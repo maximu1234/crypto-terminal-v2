@@ -7,8 +7,9 @@ fetchTickersInto
 } from "./tickers.js?v=23";
 
 import {
-fetchBybitBulk
-} from "./bybit-fetch.js?v=17";
+getActiveExchangeId,
+fetchMarketDailyCandles
+} from "./market-api.js?v=1";
 
 export const STATS_JOB_UPDATE_EVENT =
 "stats-job-update";
@@ -45,7 +46,7 @@ const CACHE_KEY_PREFIX =
 "stats_movers_";
 
 const JOB_STORAGE_KEY =
-"stats_bg_job_v2";
+"stats_bg_job_v3";
 
 /** Единый job: 1d из тикеров + 1w/1m/1y из одного kline-запроса на монету. */
 export const STATS_JOB_PERIOD_ALL =
@@ -173,6 +174,14 @@ function isBybitRateLimit(
 json
 ){
 
+if(
+!json ||
+typeof json !==
+"object"
+){
+return false;
+}
+
 const code =
 Number(
 json?.retCode
@@ -181,6 +190,7 @@ json?.retCode
 const msg =
 String(
 json?.retMsg ||
+json?.msg ||
 ""
 ).toLowerCase();
 
@@ -195,16 +205,26 @@ msg.includes(
 ) ||
 msg.includes(
 "access too frequent"
+) ||
+msg.includes(
+"rate limit"
 )
 );
 
 }
 
 export function cacheStorageKey(
-period
+period,
+exchangeId
 ){
 
-return `${CACHE_KEY_PREFIX}${period}`;
+const ex =
+String(
+exchangeId ||
+getActiveExchangeId()
+).trim().toLowerCase();
+
+return `${CACHE_KEY_PREFIX}${ex}_${period}`;
 
 }
 
@@ -400,6 +420,19 @@ readJobState();
 
 if(
 !state
+){
+return null;
+}
+
+const jobExchange =
+String(
+state.exchangeId ||
+"bybit"
+).trim().toLowerCase();
+
+if(
+jobExchange !==
+getActiveExchangeId()
 ){
 return null;
 }
@@ -628,9 +661,6 @@ STATS_KLINE_FETCH_DAYS +
 10
 );
 
-const path =
-`/v5/market/kline?category=linear&symbol=${encodeURIComponent(symbol)}&interval=D&limit=${limit}`;
-
 for(
 let attempt =
 0;
@@ -643,61 +673,19 @@ await waitForBulkRateLimit();
 
 try{
 
-const { json } =
-await fetchBybitBulk(
-path,
-{
-timeoutMs:12000
-}
+const candles =
+await fetchMarketDailyCandles(
+symbol,
+limit
 );
 
 if(
-isBybitRateLimit(
-json
-)
+candles?.length
 ){
-
-noteBulkRateLimit(
-STATS_RATE_LIMIT_BASE_MS *
-(
-attempt +
-1
-)
-);
-continue;
+return candles;
 }
 
-if(
-json.retCode !==
-0 ||
-!json.result?.list?.length
-){
 return null;
-}
-
-return json.result.list
-.map(
-k=>({
-time:Number(
-k[0]
-) /
-1000,
-open:Number(
-k[1]
-),
-close:Number(
-k[4]
-)
-})
-)
-.sort(
-(
-a,
-b
-)=>
-a.time -
-b.time
-);
 
 }catch{
 
@@ -1490,6 +1478,7 @@ period:STATS_JOB_PERIOD_ALL,
 phase:"tickers",
 status:"running",
 gen,
+exchangeId:getActiveExchangeId(),
 done:0,
 total:0,
 startedAt:gen,

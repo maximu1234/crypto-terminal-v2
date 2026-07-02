@@ -32,6 +32,10 @@ isSupabaseConfigured
 } from "./supabase-client.js?v=7";
 
 import {
+initExchangeContext
+} from "./market-api.js?v=1";
+
+import {
 initBybitNetworkUi
 } from "./bybit-network-ui.js?v=2";
 
@@ -152,6 +156,7 @@ resolve,
 );
 }
 
+initExchangeContext();
 initBybitNetworkUi();
 preloadBybitProxyConfig();
 warmBybitWorkerProxy();

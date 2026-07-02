@@ -1,4 +1,11 @@
+import {
+getActiveExchangeId
+} from "./exchanges/context.js?v=1";
+
 const GROUPS = ["red", "green", "gray", "blue"];
+const LEGACY_FAVORITES_KEY = "favorites";
+export const FAVORITES_BY_EXCHANGE_KEY =
+"favorites_by_exchange_v1";
 const GROUP_PREFIX_RE = /^(red|green|gray|blue):/;
 
 export const TERMINAL_MAX_BLUE_FLAGS =
@@ -77,30 +84,127 @@ return out;
 
 }
 
-export function loadFavoritesGroups(){
+function readFavoritesByExchangeStore(){
 
 try{
 
 const raw =
 JSON.parse(
-localStorage.getItem("favorites") || "null"
+localStorage.getItem(
+FAVORITES_BY_EXCHANGE_KEY
+) ||
+"null"
 );
 
-return migrateFavorites(raw);
+if(
+raw &&
+typeof raw ===
+"object" &&
+!Array.isArray(
+raw
+)
+){
+return raw;
+}
 
 }catch{
+/* ignore */
+}
 
-return emptyFavorites();
+let legacy =
+null;
+
+try{
+legacy =
+JSON.parse(
+localStorage.getItem(
+LEGACY_FAVORITES_KEY
+) ||
+"null"
+);
+}catch{
+/* ignore */
+}
+
+const store =
+{
+bybit:
+migrateFavorites(
+legacy
+)
+};
+
+try{
+localStorage.setItem(
+FAVORITES_BY_EXCHANGE_KEY,
+JSON.stringify(
+store
+)
+);
+localStorage.removeItem(
+LEGACY_FAVORITES_KEY
+);
+}catch{
+/* ignore */
+}
+
+return store;
 
 }
 
+function resolveFavoritesExchangeId(
+exchangeId
+){
+
+return String(
+exchangeId ||
+getActiveExchangeId()
+).trim().toLowerCase();
+
 }
 
-export function saveFavoritesGroups(groups){
+export function loadFavoritesGroups(
+exchangeId
+){
+
+const id =
+resolveFavoritesExchangeId(
+exchangeId
+);
+const store =
+readFavoritesByExchangeStore();
+
+return migrateFavorites(
+store[
+id
+] ||
+null
+);
+
+}
+
+export function saveFavoritesGroups(
+groups,
+exchangeId
+){
+
+const id =
+resolveFavoritesExchangeId(
+exchangeId
+);
+const store =
+readFavoritesByExchangeStore();
+
+store[
+id
+] =
+groups;
 
 localStorage.setItem(
-"favorites",
-JSON.stringify(groups)
+FAVORITES_BY_EXCHANGE_KEY,
+JSON.stringify(
+store
+)
 );
 
 try{

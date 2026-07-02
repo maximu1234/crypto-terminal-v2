@@ -90,7 +90,8 @@ syncChartRulerShiftFromEvent,
 syncChartRulerEndFromPlot,
 getChartRulerStart,
 showStandardChartCrosshair,
-hideStandardChartCrosshair
+hideStandardChartCrosshair,
+syncChartTouchPan
 } =
 deps;
 
@@ -99,6 +100,38 @@ let placementPreviewPending = null;
 let placementCrosshairVert = null;
 let placementCrosshairHorz = null;
 let cachedLastCandleRightX = NaN;
+let placementSkipNextPointerUp =
+false;
+let placementStrokeDown =
+false;
+
+const DESKTOP_STROKE_PLACEMENT_TOOLS =
+new Set([
+"rectangle",
+"trendline",
+"fib",
+"channel",
+"arrow"
+]);
+
+function usesDesktopStrokePlacement(
+type
+){
+
+return DESKTOP_STROKE_PLACEMENT_TOOLS.has(
+type
+);
+
+}
+
+function resetDesktopStrokePlacementState(){
+
+placementSkipNextPointerUp =
+false;
+placementStrokeDown =
+false;
+
+}
 
 function invalidateLastCandleRightXCache(){
 
@@ -439,15 +472,242 @@ onPlacementPointerMove,
 true
 );
 
-const onRulerPointerDown = e=>{
+const onPlacementPointerDown =
+e=>{
+
 syncChartRulerShiftFromEvent(
 e
 );
+
+if(
+!getAlive() ||
+!isActive() ||
+isTouchDrawPlacement()
+){
+return;
+}
+
+if(
+!e.isPrimary ||
+e.button !==
+0
+){
+return;
+}
+
+if(
+desktopEdit?.isDrawChromePointerEvent?.(
+e
+)
+){
+return;
+}
+
+const placement =
+getPlacement();
+
+if(
+!placement ||
+!usesDesktopStrokePlacement(
+placement.type
+)
+){
+return;
+}
+
+const needed =
+placementPointsNeeded(
+placement.type
+);
+const { x, y } =
+pointerFromEvent(
+e
+);
+
+if(
+placement.points.length >=
+1 &&
+placement.points.length <
+needed
+){
+placementStrokeDown =
+true;
+syncDrawMagnetModifierFromEvent(
+e
+);
+syncDesktopDrawPlacementPreview(
+x,
+y,
+e
+);
+return;
+}
+
+if(
+placement.points.length !==
+0
+){
+return;
+}
+
+syncDrawMagnetModifierFromEvent(
+e
+);
+
+const resolved =
+resolvePlacementPlotXY(
+x,
+y,
+e
+);
+const point =
+pointFromResolvedPlacementPlot(
+resolved
+);
+
+if(
+!point
+){
+return;
+}
+
+placement.points.push(
+point
+);
+placementSkipNextPointerUp =
+true;
+setBlockChartClick(
+true
+);
+syncDesktopDrawPlacementPreview(
+x,
+y,
+e
+);
+syncChartTouchPan?.();
+redraw();
+
+e.preventDefault();
+e.stopPropagation();
+
 };
 
 wrapEl.addEventListener(
 "pointerdown",
-onRulerPointerDown,
+onPlacementPointerDown,
+true
+);
+
+const onPlacementPointerUp =
+e=>{
+
+if(
+!getAlive() ||
+!isActive() ||
+isTouchDrawPlacement()
+){
+return;
+}
+
+if(
+!e.isPrimary ||
+e.button !==
+0
+){
+return;
+}
+
+const placement =
+getPlacement();
+
+if(
+!placement ||
+!usesDesktopStrokePlacement(
+placement.type
+)
+){
+return;
+}
+
+const needed =
+placementPointsNeeded(
+placement.type
+);
+
+if(
+placement.points.length ===
+0 ||
+placement.points.length >=
+needed
+){
+return;
+}
+
+if(
+placementSkipNextPointerUp
+){
+placementSkipNextPointerUp =
+false;
+return;
+}
+
+if(
+!placementStrokeDown
+){
+return;
+}
+
+placementStrokeDown =
+false;
+
+const { x, y } =
+pointerFromEvent(
+e
+);
+
+syncDrawMagnetModifierFromEvent(
+e
+);
+
+const resolved =
+resolvePlacementPlotXY(
+x,
+y,
+e
+);
+const point =
+pointFromResolvedPlacementPlot(
+resolved
+);
+
+if(
+!point
+){
+return;
+}
+
+placement.points.push(
+point
+);
+
+if(
+placement.points.length >=
+needed
+){
+finishPlacement();
+}else{
+syncChartTouchPan?.();
+redraw();
+}
+
+e.preventDefault();
+e.stopPropagation();
+
+};
+
+window.addEventListener(
+"pointerup",
+onPlacementPointerUp,
 true
 );
 
@@ -490,7 +750,12 @@ true
 );
 wrapEl.removeEventListener(
 "pointerdown",
-onRulerPointerDown,
+onPlacementPointerDown,
+true
+);
+window.removeEventListener(
+"pointerup",
+onPlacementPointerUp,
 true
 );
 wrapEl.removeEventListener(
@@ -1011,12 +1276,14 @@ setPreviewXY(null);
 setPlacementPointerXY(null);
 setDrawMagnetKeyDown(false);
 setLastCrosshairPlotXY(null);
+resetDesktopStrokePlacementState();
 cancelPlacementPreviewRaf();
 resetPlacementCrosshairCache();
 hideStandardChartCrosshair();
 saveDrawings();
 setTool("cursor");
 updateStyleBar();
+syncChartTouchPan?.();
 redraw();
 
 }
@@ -1045,11 +1312,13 @@ setPreviewXY(null);
 setPlacementPointerXY(null);
 setDrawMagnetKeyDown(false);
 setLastCrosshairPlotXY(null);
+resetDesktopStrokePlacementState();
 clearTouchDrawState();
 setBlockChartClick(false);
 cancelPlacementPreviewRaf();
 resetPlacementCrosshairCache();
 hideStandardChartCrosshair();
+syncChartTouchPan?.();
 redraw();
 
 }
@@ -1128,6 +1397,26 @@ return true;
 
 if(!getPlacement()){
 startPlacement(getTool());
+}
+
+if(
+usesDesktopStrokePlacement(
+getPlacement().type
+) &&
+getPlacement().points.length ===
+0
+){
+return true;
+}
+
+if(
+usesDesktopStrokePlacement(
+getPlacement().type
+) &&
+getPlacement().points.length >=
+1
+){
+return true;
 }
 
 getPlacement().points.push(point);

@@ -1,6 +1,16 @@
 import {
+getActiveExchangeId,
+EXCHANGE_CHANGED_EVENT,
+loadMarketTickers
+} from "./market-api.js?v=1";
+
+import {
 fetchBybit
 } from "./bybit-fetch.js?v=17";
+
+import {
+toCanonicalSymbol
+} from "./exchanges/symbol.js?v=1";
 
 const DEFAULT_POLL_INTERVAL_MS =
 3000;
@@ -14,7 +24,32 @@ null;
 let subscribers =
 [];
 
-function buildTickerPayload(
+let boundExchangeListener =
+false;
+
+function ensureExchangeListener(){
+
+if(
+boundExchangeListener ||
+typeof window ===
+"undefined"
+){
+return;
+}
+
+boundExchangeListener =
+true;
+
+window.addEventListener(
+EXCHANGE_CHANGED_EVENT,
+()=>{
+restartPolling();
+}
+);
+
+}
+
+function buildBybitTickerPayload(
 ticker
 ){
 
@@ -92,11 +127,67 @@ ticker.turnover24h ||
 
 }
 
-export async function fetchTickersInto(
-targetMap
+function buildBingxTickerPayload(
+ticker
 ){
 
-try{
+const sym =
+toCanonicalSymbol(
+ticker.symbol
+);
+const change24 =
+Number(
+ticker.priceChangePercent ||
+ticker.change24h ||
+0
+);
+
+return {
+
+symbol:
+sym,
+
+price:
+Number(
+ticker.lastPrice ||
+ticker.last ||
+0
+),
+
+bid:
+Number(
+ticker.bidPrice ||
+ticker.lastPrice ||
+0
+),
+
+ask:
+Number(
+ticker.askPrice ||
+ticker.lastPrice ||
+0
+),
+
+change24,
+
+change1h:
+change24 /
+24,
+
+volume24:
+Number(
+ticker.quoteVolume ||
+ticker.volume ||
+0
+)
+
+};
+
+}
+
+async function fetchBybitTickersInto(
+targetMap
+){
 
 const {
 json
@@ -122,7 +213,7 @@ json.result.list.forEach(
 ticker=>{
 
 const payload =
-buildTickerPayload(
+buildBybitTickerPayload(
 ticker
 );
 
@@ -135,6 +226,67 @@ payload
 );
 
 return targetMap.size;
+
+}
+
+async function fetchBingxTickersInto(
+targetMap
+){
+
+const map =
+await loadMarketTickers();
+
+if(
+!map
+){
+return 0;
+}
+
+map.forEach(
+(
+ticker,
+sym
+)=>{
+
+const payload =
+buildBingxTickerPayload({
+...ticker,
+symbol:
+sym
+});
+
+targetMap.set(
+payload.symbol,
+payload
+);
+
+}
+);
+
+return targetMap.size;
+
+}
+
+export async function fetchTickersInto(
+targetMap
+){
+
+ensureExchangeListener();
+
+try{
+
+if(
+getActiveExchangeId() ===
+"bingx"
+){
+return await fetchBingxTickersInto(
+targetMap
+);
+}
+
+return await fetchBybitTickersInto(
+targetMap
+);
 
 }catch{
 return 0;
@@ -212,6 +364,8 @@ export function connectTickerStream(
 onTick
 ){
 
+ensureExchangeListener();
+
 subscribers.push(
 onTick
 );
@@ -221,7 +375,50 @@ restartPolling();
 
 async function loadTickers(){
 
+ensureExchangeListener();
+
 try{
+
+if(
+getActiveExchangeId() ===
+"bingx"
+){
+
+const map =
+await loadMarketTickers();
+
+if(
+!map
+){
+return;
+}
+
+map.forEach(
+(
+ticker,
+sym
+)=>{
+
+const payload =
+buildBingxTickerPayload({
+...ticker,
+symbol:
+sym
+});
+
+subscribers.forEach(
+fn=>
+fn(
+payload
+)
+);
+
+}
+);
+
+return;
+
+}
 
 const {
 json
@@ -247,7 +444,7 @@ json.result.list.forEach(
 ticker=>{
 
 const payload =
-buildTickerPayload(
+buildBybitTickerPayload(
 ticker
 );
 
@@ -262,7 +459,7 @@ payload
 );
 
 }catch{
-/* тихо — следующий интервал или баннер уже от fetchBybit */
+/* тихо */
 }
 
 }

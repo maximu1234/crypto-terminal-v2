@@ -14,24 +14,12 @@ isLoggedInEffective
 } from "./system-admin-access.js?v=3";
 
 import {
-getBybitRouteMode,
-setBybitRouteMode,
-bybitRouteModeLabel,
-BYBIT_ROUTE_DIRECT,
-BYBIT_ROUTE_PROXY
-} from "./bybit-route-pref.js?v=2";
-
-import {
 bindSupabaseUsagePrefsForm
 } from "./system-admin-supabase-prefs.js?v=2";
 
 import {
 bindDrawingsGlobalPurge
 } from "./system-admin-drawings-purge.js?v=2";
-
-import {
-resetBybitEndpoints
-} from "./bybit-fetch.js?v=17";
 
 const rootEl =
 document.getElementById("system-admin-root");
@@ -44,9 +32,6 @@ document.getElementById("system-admin-denied");
 
 const panelEl =
 document.getElementById("system-admin-panel");
-
-const statusEl =
-document.getElementById("system-admin-status");
 
 const emailEl =
 document.getElementById("system-admin-email");
@@ -71,92 +56,6 @@ node !== el
 );
 
 });
-
-}
-
-function bindRouteForm(){
-
-const form =
-document.getElementById("system-bybit-route-form");
-
-if(
-!form
-){
-return;
-}
-
-const syncChecked =
-()=>{
-
-const mode =
-getBybitRouteMode();
-
-form.querySelectorAll(
-'input[name="bybit-route"]'
-).forEach(input=>{
-
-input.checked =
-input.value === mode;
-
-});
-
-if(
-statusEl
-){
-statusEl.textContent =
-`Сейчас: ${bybitRouteModeLabel(mode)}`;
-}
-
-};
-
-syncChecked();
-
-form.addEventListener(
-"change",
-e=>{
-
-const input =
-e.target;
-
-if(
-!input?.name ||
-input.name !== "bybit-route"
-){
-return;
-}
-
-setBybitRouteMode(
-input.value
-);
-resetBybitEndpoints();
-
-syncChecked();
-
-if(
-statusEl
-){
-statusEl.textContent =
-"Сохранено. Обновите главную/монеты, если графики уже открыты.";
-}
-
-}
-);
-
-const reloadBtn =
-document.getElementById("system-admin-reload-site");
-
-if(
-reloadBtn
-){
-
-reloadBtn.addEventListener(
-"click",
-()=>{
-window.location.href = "/screener.html";
-}
-);
-
-}
 
 }
 
@@ -234,8 +133,6 @@ admins.length
 ? `Доступ: ${admins.join(", ")}`
 : "SYSTEM_ADMIN_EMAIL не задан в supabase-env.js";
 }
-
-bindRouteForm();
 
 const supabaseMount =
 document.getElementById("system-supabase-usage-mount");

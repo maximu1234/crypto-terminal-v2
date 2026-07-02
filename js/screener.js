@@ -1,9 +1,13 @@
 import {
-loadBybitHistory,
-loadBybitSymbols,
-peekBybitSymbolsCache,
 symbolListSignature
 } from "./api.js?v=29";
+
+import {
+loadMarketHistory,
+loadMarketSymbols,
+peekMarketSymbolsCache,
+EXCHANGE_CHANGED_EVENT
+} from "./market-api.js?v=1";
 
 import {
 isScreenerWidgetCurrent as isScreenerWidgetCurrentGuard
@@ -29,7 +33,7 @@ alignRsiWithCandleTimes
 
 import {
 subscribeKline
-} from "./ws.js?v=17";
+} from "./market-ws.js?v=1";
 
 import {
 connectTickerStream,
@@ -54,8 +58,8 @@ loadFavoritesGroups,
 saveFavoritesGroups,
 getFavoriteGroup,
 setFavoriteGroup,
-migrateFavorites,
-canSetBlueFlag
+canSetBlueFlag,
+FAVORITES_BY_EXCHANGE_KEY
 } from "./favorites.js?v=4";
 
 import {
@@ -1520,7 +1524,7 @@ chartEl.classList.add("loading");
 try{
 
 const candles =
-await loadBybitHistory(
+await loadMarketHistory(
 symbol,
 currentTF,
 2,
@@ -3015,30 +3019,10 @@ syncHeaderControlLabels();
 
 }
 
-window.addEventListener(
-"storage",
-e=>{
-
-if(e.key !== "favorites"){
-return;
-}
-
-try{
-
-favorites =
-JSON.parse(
-e.newValue || "null"
-);
-
-favorites =
-migrateFavorites(favorites);
-
-}catch{
+function syncScreenerFavoritesFromStorage(){
 
 favorites =
 loadFavoritesGroups();
-
-}
 
 activeWidgets.forEach(widget=>{
 updateWidgetFavoriteUi(
@@ -3048,6 +3032,28 @@ widget.symbol
 });
 
 }
+
+window.addEventListener(
+"storage",
+e=>{
+
+if(
+e.key !==
+FAVORITES_BY_EXCHANGE_KEY &&
+e.key !==
+"favorites"
+){
+return;
+}
+
+syncScreenerFavoritesFromStorage();
+
+}
+);
+
+window.addEventListener(
+"favorites-local-changed",
+syncScreenerFavoritesFromStorage
 );
 
 onFavoritesRemoteUpdate(()=>{
@@ -3095,7 +3101,7 @@ true
 );
 
 const instant =
-peekBybitSymbolsCache();
+peekMarketSymbolsCache();
 
 if(
 instant?.length
@@ -3111,7 +3117,7 @@ refreshWidgetTickerMeta();
 });
 
 const list =
-await loadBybitSymbols();
+await loadMarketSymbols();
 
 screenerMarketLoadFailed = false;
 allSymbols =
@@ -3134,7 +3140,7 @@ screenerMarketReloading = true;
 try{
 
 const list =
-await loadBybitSymbols({
+await loadMarketSymbols({
 forceNetwork: true
 });
 
@@ -3180,6 +3186,15 @@ screenerMarketReloading = false;
 window.addEventListener(
 "bybit-network-retry",
 ()=>{
+void reloadScreenerMarketData();
+}
+);
+
+window.addEventListener(
+EXCHANGE_CHANGED_EVENT,
+()=>{
+favorites =
+loadFavoritesGroups();
 void reloadScreenerMarketData();
 }
 );

@@ -1,6 +1,10 @@
 /**
  * /trade — линии и плашки лимитных / стоп-ордеров на графике.
  */
+import {
+isExchangeTradingEnabled
+} from "./market-api.js?v=1";
+
 const BADGE_LEFT =
 12;
 
@@ -248,6 +252,12 @@ let switchLoadSeq =
 0;
 
 function getDisplayOrders(){
+
+if(
+!isExchangeTradingEnabled()
+){
+return [];
+}
 
 if(
 switchVeilVisible
@@ -1502,10 +1512,7 @@ const onSwitchStart =
 e=>{
 
 if(
-!chartEventSymbolMatches(
-e,
-host?.getSymbol?.()
-)
+!host
 ){
 return;
 }
@@ -1517,14 +1524,15 @@ e.detail?.loadSeq
 0;
 chartSwitchFrozen =
 true;
-switchVeilVisible =
-false;
 switchVeilOrders =
-null;
+orders.length
+? orders.slice()
+: null;
+switchVeilVisible =
+orders.length >
+0;
 orders =
 [];
-badgeLayoutCache =
-null;
 detachOrderDragListeners();
 dragOrder =
 null;
@@ -1565,6 +1573,10 @@ return;
 switchVeilVisible =
 false;
 switchVeilOrders =
+null;
+orders =
+[];
+badgeLayoutCache =
 null;
 scheduleDraw(
 true
@@ -1743,6 +1755,16 @@ event=>{
 applyStreamOrders(
 event.detail?.orders
 );
+},
+{
+signal
+}
+);
+
+window.addEventListener(
+"exchange-trading-gate-changed",
+()=>{
+draw();
 },
 {
 signal

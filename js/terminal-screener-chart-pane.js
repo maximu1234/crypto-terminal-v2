@@ -26,12 +26,12 @@ alignRsiWithCandleTimes
 } from "./indicators.js?v=3";
 
 import {
-loadBybitHistory
-} from "./api.js?v=29";
+loadMarketHistory
+} from "./market-api.js?v=1";
 
 import {
 subscribeKline
-} from "./ws.js?v=17";
+} from "./market-ws.js?v=1";
 
 import {
 mountWidgetDomCrosshair
@@ -951,7 +951,7 @@ return;
 try{
 
 const raw =
-await loadBybitHistory(
+await loadMarketHistory(
 symbol,
 tf,
 2,

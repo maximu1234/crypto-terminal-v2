@@ -1,4 +1,8 @@
 import {
+getActiveExchangeId
+} from "./exchanges/context.js?v=1";
+
+import {
 readAlertTokenSync
 } from "./alert-auth-cache.js?v=7";
 
@@ -10,6 +14,20 @@ import {
 pauseRegistryCloudSync,
 scheduleRemoteRegistrySync
 } from "./alerts-cloud-sync.js?v=110";
+
+import {
+drawingsStorageKey as exchangeDrawingsStorageKey,
+isDrawingsStorageKey,
+symbolFromDrawingsKey,
+parseDrawingsStorageKey,
+exchangeFromDrawingsKey,
+migrateLegacyDrawingsStorage
+} from "./drawings-exchange-key.js?v=1";
+
+export {
+isDrawingsStorageKey,
+symbolFromDrawingsKey
+} from "./drawings-exchange-key.js?v=1";
 
 const STORAGE_KEY = "price_alerts_v1";
 
@@ -565,7 +583,7 @@ return false;
 }
 
 const list =
-loadAlerts();
+loadAllAlerts();
 
 let changed =
 false;
@@ -649,7 +667,9 @@ try{
 
 const raw =
 localStorage.getItem(
-`drawings_${sym}`
+exchangeDrawingsStorageKey(
+sym
+)
 );
 
 if(!raw){
@@ -752,6 +772,10 @@ shapeId,
 symbol,
 price,
 tf: tf || "60",
+exchangeId:
+alertExchangeId(
+alert
+),
 createdAt:
 Number(createdAt) ||
 Date.now()
@@ -762,6 +786,45 @@ row.triggeredAt = triggeredAt;
 }
 
 return row;
+
+}
+
+function alertExchangeId(
+alert
+){
+
+return String(
+alert?.exchangeId ||
+alert?.exchange_id ||
+"bybit"
+).trim().toLowerCase();
+
+}
+
+export {
+alertExchangeId
+};
+
+function filterAlertsForActiveExchange(
+list
+){
+
+const ex =
+getActiveExchangeId();
+
+return (
+Array.isArray(
+list
+)
+? list
+: []
+).filter(
+alert=>
+alertExchangeId(
+alert
+) ===
+ex
+);
 
 }
 
@@ -800,7 +863,7 @@ Number.isFinite(price)
 
 }
 
-export function loadAlerts(){
+export function loadAllAlerts(){
 
 try{
 
@@ -827,6 +890,14 @@ return list
 return [];
 
 }
+
+}
+
+export function loadAlerts(){
+
+return filterAlertsForActiveExchange(
+loadAllAlerts()
+);
 
 }
 
@@ -887,7 +958,7 @@ return;
 }
 
 const list =
-loadAlerts();
+loadAllAlerts();
 
 let changed =
 false;
@@ -937,7 +1008,7 @@ return;
 }
 
 const list =
-loadAlerts();
+loadAllAlerts();
 
 let changed =
 false;
@@ -987,12 +1058,6 @@ return loadAlerts().sort(
 
 }
 
-function drawingsStorageKey(symbol){
-
-return `drawings_${String(symbol || "").trim().toUpperCase()}`;
-
-}
-
 function alertRegistryKey(
 sym,
 sid
@@ -1018,7 +1083,26 @@ const key =
 localStorage.key(i);
 
 if(
-!key?.startsWith("drawings_")
+!isDrawingsStorageKey(
+key
+)
+){
+continue;
+}
+
+if(
+exchangeFromDrawingsKey(
+key
+) !==
+getActiveExchangeId()
+){
+continue;
+}
+
+if(
+parseDrawingsStorageKey(
+key
+)?.tfSuffix
 ){
 continue;
 }
@@ -1093,7 +1177,7 @@ const byKey =
 new Map();
 
 for(
-const row of loadAlerts()
+const row of loadAllAlerts()
 ){
 byKey.set(
 alertRegistryKey(
@@ -1213,6 +1297,8 @@ price,
 tf: normalizeAlertTf(
 shape.alertTf
 ),
+exchangeId:
+getActiveExchangeId(),
 createdAt:
 Number(
 shape.alertCreatedAt
@@ -1264,7 +1350,7 @@ opts.stripFlags ||
 }
 
 const list =
-loadAlerts();
+loadAllAlerts();
 
 console.log(
 "[alerts] реестр:",
@@ -1336,12 +1422,14 @@ price: level,
 tf: normalizeAlertTf(
 tf
 ),
+exchangeId:
+getActiveExchangeId(),
 createdAt: Date.now(),
 cloudSynced: false
 };
 
 const list =
-loadAlerts().filter(
+loadAllAlerts().filter(
 a=>!
 (
 String(
@@ -1442,6 +1530,8 @@ tf: normalizeAlertTf(
 shape?.alertTf ||
 shape?.tf
 ),
+exchangeId:
+getActiveExchangeId(),
 createdAt:
 Number(shape?.alertCreatedAt) ||
 Number(shape?.createdAt) ||
@@ -1450,7 +1540,7 @@ cloudSynced: false
 };
 
 const list =
-loadAlerts().filter(
+loadAllAlerts().filter(
 a=>!
 (
 String(a.symbol).toUpperCase() === sym &&
@@ -1515,7 +1605,7 @@ return;
 }
 
 const list =
-loadAlerts().filter(
+loadAllAlerts().filter(
 a=>!
 (
 String(a.symbol).toUpperCase() === sym &&
@@ -1573,7 +1663,7 @@ let row =
 null;
 
 const list =
-loadAlerts().map(a=>{
+loadAllAlerts().map(a=>{
 
 if(
 String(a.symbol).toUpperCase() === sym &&
@@ -1678,14 +1768,14 @@ pauseRegistryCloudSync(
 );
 
 const row =
-loadAlerts().find(
+loadAllAlerts().find(
 a=>
 String(a.symbol).toUpperCase() === sym &&
 String(a.shapeId) === sid
 );
 
 const list =
-loadAlerts().filter(
+loadAllAlerts().filter(
 a=>!
 (
 String(a.symbol).toUpperCase() === sym &&
@@ -1747,7 +1837,7 @@ pauseRegistryCloudSync(
 export function removeDrawingShape(symbol, shapeId){
 
 const key =
-drawingsStorageKey(symbol);
+exchangeDrawingsStorageKey(symbol);
 
 const raw =
 localStorage.getItem(key);
@@ -1843,6 +1933,10 @@ shapeId,
 symbol,
 price,
 tf: entry.tf || "60",
+exchangeId:
+alertExchangeId(
+entry
+),
 createdAt:
 Number(entry.createdAt) ||
 triggeredAt,
@@ -1905,7 +1999,18 @@ dispatchAlertsHistoryChanged();
 
 export function getAlertsHistorySorted(){
 
-return loadAlertsHistory().sort(
+const ex =
+getActiveExchangeId();
+
+return loadAlertsHistory()
+.filter(
+alert=>
+alertExchangeId(
+alert
+) ===
+ex
+)
+.sort(
 (a, b)=>
 (b.triggeredAt || 0) - (a.triggeredAt || 0)
 );
@@ -2107,7 +2212,7 @@ return false;
 }
 
 const existing =
-loadAlerts().find(
+loadAllAlerts().find(
 a=>
 String(a.symbol).toUpperCase() === sym &&
 String(a.shapeId) === sid
@@ -2196,7 +2301,7 @@ return false;
 }
 
 const before =
-loadAlerts();
+loadAllAlerts();
 const list =
 before.filter(
 a=>!
@@ -2268,7 +2373,7 @@ return false;
 }
 
 const list =
-loadAlerts();
+loadAllAlerts();
 const idx =
 list.findIndex(
 a=>
@@ -2298,6 +2403,16 @@ price,
 tf: normalizeAlertTf(
 cloudRow?.tf ||
 prev?.tf
+),
+exchangeId:
+alertExchangeId(
+{
+exchangeId:
+cloudRow?.exchange_id,
+exchange_id:
+cloudRow?.exchange_id,
+...prev
+}
 ),
 createdAt:
 prev?.createdAt ||
@@ -2372,7 +2487,7 @@ return;
 }
 
 const existing =
-loadAlerts().find(
+loadAllAlerts().find(
 a=>
 String(a.symbol).toUpperCase() === sym &&
 a.shapeId === sid
@@ -2476,7 +2591,7 @@ continue;
 }
 
 localStorage.setItem(
-drawingsStorageKey(sym),
+exchangeDrawingsStorageKey(sym),
 JSON.stringify(next)
 );
 
@@ -2501,8 +2616,22 @@ console.log(
 
 export function removeAllAlerts(){
 
+const ex =
+getActiveExchangeId();
+
+const remaining =
+loadAllAlerts().filter(
+alert=>
+alertExchangeId(
+alert
+) !==
+ex
+);
+
 clearAllChartAlertFlags();
-saveAlertsFromCloudMerge([]);
+saveAlertsFromCloudMerge(
+remaining
+);
 stripAlertFlagsNotInRegistry();
 
 void import("./alerts-cloud-sync.js?v=110").then(m=>{
@@ -2569,7 +2698,7 @@ opts.emitDrawingsEvents !==
 false;
 
 const registry =
-loadAlerts();
+loadAllAlerts();
 
 const bySymbol =
 new Map();
@@ -2688,7 +2817,7 @@ continue;
 }
 
 localStorage.setItem(
-drawingsStorageKey(
+exchangeDrawingsStorageKey(
 sym
 ),
 JSON.stringify(
@@ -2735,7 +2864,7 @@ const sid =
 String(shapeId || "").trim();
 
 const key =
-drawingsStorageKey(sym);
+exchangeDrawingsStorageKey(sym);
 
 const raw =
 localStorage.getItem(key);
@@ -2795,115 +2924,153 @@ return false;
 
 }
 
-function isLegacyDrawingsKey(key){
+function isLegacyDrawingsKey(
+key
+){
 
-const rest =
-key?.slice("drawings_".length) || "";
-
-return !!rest.match(
-/^(.+)_(1|5|15|60|240|D)$/
-);
+return !!parseDrawingsStorageKey(
+key
+)?.legacy;
 
 }
 
 function listDrawingStorageEntries(){
 
-const entries = [];
+migrateLegacyDrawingsStorage();
 
-for(let i = 0; i < localStorage.length; i++){
+const activeExchange =
+getActiveExchangeId();
+const entries =
+[];
+
+for(
+let i =
+0;
+i <
+localStorage.length;
+i++
+){
 
 const key =
-localStorage.key(i);
+localStorage.key(
+i
+);
 
-if(!isDrawingsStorageKey(key)){
+if(
+!isDrawingsStorageKey(
+key
+)
+){
+continue;
+}
+
+if(
+exchangeFromDrawingsKey(
+key
+) !==
+activeExchange
+){
+continue;
+}
+
+const parsed =
+parseDrawingsStorageKey(
+key
+);
+
+if(
+parsed?.tfSuffix
+){
 continue;
 }
 
 entries.push({
 key,
-symbol: symbolFromDrawingsKey(key),
-legacy: isLegacyDrawingsKey(key)
+symbol:
+symbolFromDrawingsKey(
+key
+),
+legacy:
+!!parsed?.legacy
 });
 
 }
 
-const canonical =
-new Set(
-entries
-.filter(e=>!e.legacy)
-.map(e=>e.symbol)
-);
-
-return entries.filter(
-e=>!e.legacy || !canonical.has(e.symbol)
-);
-
-}
-
-export function isDrawingsStorageKey(key){
-
-if(!key?.startsWith("drawings_")){
-return false;
-}
-
-const rest =
-key.slice("drawings_".length);
-
-return !!rest;
-
-}
-
-export function symbolFromDrawingsKey(key){
-
-const rest =
-key.slice("drawings_".length);
-
-const legacy =
-rest.match(
-/^(.+)_(1|5|15|60|240|D)$/
-);
-
-if(legacy){
-return legacy[1];
-}
-
-return rest;
+return entries;
 
 }
 
 export function countAllDrawings(){
 
-let total = 0;
+migrateLegacyDrawingsStorage();
 
-for(let i = 0; i < localStorage.length; i++){
+let total =
+0;
+const activeExchange =
+getActiveExchangeId();
+
+for(
+let i =
+0;
+i <
+localStorage.length;
+i++
+){
 
 const key =
-localStorage.key(i);
+localStorage.key(
+i
+);
 
-if(!isDrawingsStorageKey(key)){
+if(
+!isDrawingsStorageKey(
+key
+)
+){
+continue;
+}
+
+if(
+exchangeFromDrawingsKey(
+key
+) !==
+activeExchange
+){
 continue;
 }
 
 try{
 
 const drawings =
-JSON.parse(localStorage.getItem(key) || "[]");
+JSON.parse(
+localStorage.getItem(
+key
+) ||
+"[]"
+);
 
 if(
-Array.isArray(drawings) &&
+Array.isArray(
+drawings
+) &&
 drawings.length >
 0
 ){
-total += drawings.length;
+total +=
+drawings.length;
 }else if(
-Array.isArray(drawings)
+Array.isArray(
+drawings
+)
 ){
 localStorage.removeItem(
 key
 );
 }
 
-}catch{}
+}catch{
+/* ignore */
+}
 
 }
 
@@ -2913,20 +3080,13 @@ return total;
 
 export async function clearAllDrawings(){
 
-const { purgeAllLocalDrawingsStorage } =
+const {
+purgeExchangeLocalDrawingsStorage
+} =
 await import("./drawings-storage.js?v=7");
 
 const drawingsCloud =
 await import("./drawings-cloud-sync.js?v=46");
-
-const hadLocalDrawings =
-countAllDrawings() >
-0;
-const alreadyEmpty =
-!hadLocalDrawings;
-
-let symbols =
-purgeAllLocalDrawingsStorage();
 
 drawingsCloud.pauseDrawingsCloudSync(
 120000
@@ -2934,31 +3094,10 @@ drawingsCloud.pauseDrawingsCloudSync(
 
 try{
 
-symbols =
-purgeAllLocalDrawingsStorage();
-
-let cloudDrawingsOk =
-null;
-
-if(
-alreadyEmpty
-){
-void drawingsCloud.clearAllDrawingsFromCloud();
-}else{
-cloudDrawingsOk =
-await drawingsCloud.clearAllDrawingsFromCloud();
-
-if(
-cloudDrawingsOk === false
-){
-throw new Error(
-"Не удалось удалить рисунки в Supabase. Обновите страницу и войдите через шестерёнку."
+const symbols =
+purgeExchangeLocalDrawingsStorage(
+getActiveExchangeId()
 );
-}
-}
-
-symbols =
-purgeAllLocalDrawingsStorage();
 
 symbols.forEach(symbol=>{
 
@@ -2984,7 +3123,7 @@ new CustomEvent(
 
 return {
 symbols: symbols.size,
-cloudDrawingsOk
+cloudDrawingsOk: null
 };
 
 }finally{

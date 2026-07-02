@@ -170,6 +170,15 @@ initTradeLeverageSettings();
 initTradeMarketEntry();
 
 const {
+initExchangeTradingGate
+} =
+await import(
+"./exchange-trading-gate.js?v=1"
+);
+
+initExchangeTradingGate();
+
+const {
 initTradePositionSounds
 } =
 await import(
@@ -177,15 +186,6 @@ await import(
 );
 
 initTradePositionSounds();
-
-const {
-initTradeStreamBridge
-} =
-await import(
-"./trade-stream-bridge.js?v=6"
-);
-
-await initTradeStreamBridge();
 
 const {
 initTradePositionsLive

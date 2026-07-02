@@ -581,6 +581,18 @@ options
 
 }
 
+export function clearTradePositionsCache(){
+
+applyTradePositionsStream(
+[],
+{
+resetBaseline:
+true
+}
+);
+
+}
+
 export async function syncTradePositionsCache(
 options = {}
 ){

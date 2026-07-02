@@ -9,6 +9,11 @@ startStatsBackgroundRefresh,
 resumeStatsBackgroundJob
 } from "./statistics-background.js?v=5";
 
+import {
+getActiveExchangeDefinition,
+EXCHANGE_CHANGED_EVENT
+} from "./market-api.js?v=1";
+
 const statusEl =
 document.getElementById(
 "statistics-status"
@@ -289,12 +294,19 @@ return `Кэш · ${PERIOD_LABELS[period]} · ${entry.rows.length} ${entry.rows.
 
 }
 
+function exchangeLabel(){
+
+return getActiveExchangeDefinition()?.name ||
+"биржа";
+
+}
+
 function formatReadyStatus(
 period,
 count
 ){
 
-return `Bybit linear · ${PERIOD_LABELS[period]} · ${count} ${count === 1 ? "монета" : count < 5 ? "монеты" : "монет"}`;
+return `${exchangeLabel()} · ${PERIOD_LABELS[period]} · ${count} ${count === 1 ? "монета" : count < 5 ? "монеты" : "монет"}`;
 
 }
 
@@ -340,7 +352,7 @@ if(
 job.phase ===
 "tickers"
 ){
-return "Загружаем тикеры Bybit…";
+return `Загружаем тикеры ${exchangeLabel()}…`;
 }
 
 const total =
@@ -439,7 +451,7 @@ job.status ===
 
 setStatus(
 job.error ||
-"Не удалось загрузить данные Bybit",
+`Не удалось загрузить данные ${exchangeLabel()}`,
 true
 );
 
@@ -862,7 +874,7 @@ rowsEl.innerHTML = "";
 }
 
 setStatus(
-"Загрузка данных с Bybit (1 день + неделя / месяц / год)…",
+`Загрузка данных с ${exchangeLabel()} (1 день + неделя / месяц / год)…`,
 false,
 true
 );
@@ -973,6 +985,16 @@ showPeriodFromCache(
 "1d"
 );
 syncUiFromJob();
+
+window.addEventListener(
+EXCHANGE_CHANGED_EVENT,
+()=>{
+syncUiFromJob();
+showPeriodFromCache(
+activePeriod
+);
+}
+);
 
 }
 

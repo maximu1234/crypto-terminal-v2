@@ -1,6 +1,8 @@
 import {
-loadBybitSymbols
-} from "./api.js?v=29";
+loadMarketSymbols,
+getActiveExchangeDefinition,
+EXCHANGE_CHANGED_EVENT
+} from "./market-api.js?v=1";
 
 import {
 BYBIT_LISTINGS_PAGE_WINDOW_MS,
@@ -16,6 +18,13 @@ document.getElementById("listings-list");
 
 const retentionDays =
 Math.round(BYBIT_LISTINGS_PAGE_WINDOW_MS / (24 * 60 * 60 * 1000));
+
+function exchangeLabel(){
+
+return getActiveExchangeDefinition()?.name ||
+"бирже";
+
+}
 
 function setStatus(text, isError = false){
 
@@ -43,7 +52,7 @@ document.createElement("li");
 
 empty.className = "listings-empty";
 empty.textContent =
-`За последние ${retentionDays} дн. листингов на Bybit не найдено.`;
+`За последние ${retentionDays} дн. листингов на ${exchangeLabel()} не найдено.`;
 
 listEl.appendChild(empty);
 return;
@@ -78,12 +87,17 @@ listEl.appendChild(li);
 
 async function init(){
 
-setStatus("Загрузка с Bybit…");
+setStatus(
+`Загрузка с ${exchangeLabel()}…`
+);
 
 try{
 
 const instruments =
-await loadBybitSymbols();
+await loadMarketSymbols({
+skipCache:
+true
+});
 
 const rows =
 filterRecentListings(
@@ -106,7 +120,8 @@ setStatus(
 
 console.error(err);
 setStatus(
-err?.message || "Не удалось загрузить данные Bybit",
+err?.message ||
+`Не удалось загрузить данные ${exchangeLabel()}`,
 true
 );
 
@@ -120,6 +135,13 @@ listEl.innerHTML = "";
 
 window.addEventListener(
 "bybit-network-retry",
+()=>{
+void init();
+}
+);
+
+window.addEventListener(
+EXCHANGE_CHANGED_EVENT,
 ()=>{
 void init();
 }

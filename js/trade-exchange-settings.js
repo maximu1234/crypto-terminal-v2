@@ -1,46 +1,20 @@
 /**
- * /trade — dropdown «Bybit» (только desktop .app, широкая шапка).
+ * Подключения к биржам — desktop .app.
  */
 import {
-wireTradeVolumeDefaultsSettings,
-TRADE_VOLUME_SLOT_COUNT
-} from "./trade-volume-presets.js?v=9";
+EXCHANGE_IDS,
+EXCHANGE_DEFINITIONS,
+getActiveExchangeId,
+setActiveExchangeId,
+pingActiveExchangePublic
+} from "./market-api.js?v=1";
 
 import {
-wireAutoStopSettings
-} from "./trade-auto-stops.js?v=2";
-
-const TRADE_VOLUME_DEFAULT_INPUT_COUNT =
-Math.max(
-1,
-TRADE_VOLUME_SLOT_COUNT - 1
-);
-
-function buildDefaultVolumeFieldsHtml(){
-
-return Array.from(
-{
-length:
-TRADE_VOLUME_DEFAULT_INPUT_COUNT
-},
-(
-_unused,
-index
-)=>
-`
-<label class="trade-volume-presets-row trade-volume-defaults-row" data-default-volume-slot="${index}">
-<span class="trade-volume-defaults-label">${index + 1}</span>
-<span class="trade-volume-presets-field">
-<input type="number" min="0" step="any" inputmode="decimal" aria-label="Объём USDT ${index + 1}"/>
-<span class="trade-volume-presets-suffix">$</span>
-</span>
-</label>
-`
-).join(
-""
-);
-
-}
+readExchangeCredentials,
+writeExchangeCredentials,
+clearExchangeCredentials,
+getExchangeSecretForSave
+} from "./exchange-credentials.js?v=1";
 
 function tradingApi(){
 
@@ -120,7 +94,9 @@ return raw;
 
 }
 
-function showClearKeysConfirm(){
+function showClearKeysConfirm(
+exchangeName
+){
 
 return new Promise(
 resolve=>{
@@ -134,7 +110,7 @@ overlay.className =
 overlay.innerHTML =
 `
 <div class="trade-exchange-confirm-dialog" role="alertdialog" aria-modal="true" aria-labelledby="trade-exchange-clear-title">
-<p id="trade-exchange-clear-title" class="trade-exchange-confirm-message">Удалить сохранённые API-ключи Bybit с этого компьютера?</p>
+<p id="trade-exchange-clear-title" class="trade-exchange-confirm-message">Удалить сохранённые API-ключи ${exchangeName} с этого компьютера?</p>
 <div class="trade-exchange-confirm-actions">
 <button type="button" class="trade-exchange-confirm-cancel" data-action="cancel">Отмена</button>
 <button type="button" class="trade-exchange-confirm-yes" data-action="yes">Удалить</button>
@@ -220,14 +196,19 @@ overlay.querySelector(
 
 }
 
-function buildForm(
-root
+function buildConnectionFormHtml(
+exchangeId
 ){
 
-root.innerHTML =
-`
-<form class="trade-exchange-form" autocomplete="off">
-<p class="header-settings-section-title">Bybit</p>
+const def =
+EXCHANGE_DEFINITIONS[
+exchangeId
+] ||
+EXCHANGE_DEFINITIONS.bybit;
+
+return `
+<form class="trade-exchange-form" data-exchange="${exchangeId}" autocomplete="off">
+<p class="header-settings-section-title">${def.name}</p>
 <div class="trade-exchange-connection-status" data-role="connection-status" hidden>
 <span class="trade-exchange-connection-dot" aria-hidden="true"></span>
 <span>Активно</span>
@@ -249,43 +230,8 @@ root.innerHTML =
 <button type="button" class="trade-exchange-refresh" data-role="refresh-balance" hidden title="Обновить баланс USDT">Обновить</button>
 </div>
 <hr class="trade-exchange-divider"/>
-<p class="header-settings-section-title">Объёмы по умолчанию (USDT)</p>
-<p class="trade-exchange-hint">Для всех монет, пока не задан свой объём. «Сохранить» сбрасывает индивидуальные значения.</p>
-<div class="trade-volume-defaults-panel trade-volume-presets-panel" data-role="volume-defaults-panel">
-${buildDefaultVolumeFieldsHtml()}
-</div>
-<div class="trade-exchange-actions">
-<button type="button" class="trade-exchange-save" data-role="save-volume-defaults">Сохранить</button>
-</div>
-<p class="trade-exchange-status-text" data-role="volume-defaults-status" aria-live="polite"></p>
-<hr class="trade-exchange-divider"/>
-<p class="header-settings-section-title">Auto SL/TP (USDT)</p>
-<p class="trade-exchange-hint">После рыночного входа — авто SL/TP в USDT от позиции.</p>
-<div class="trade-auto-stops-panel" data-role="auto-stops-panel">
-<label class="trade-auto-stops-row">
-<input type="checkbox" data-role="auto-sl-enabled"/>
-<span class="trade-auto-stops-label">Stop Loss</span>
-<span class="trade-volume-presets-field">
-<input type="number" min="0" step="any" inputmode="decimal" data-role="auto-sl-usd" aria-label="Stop Loss USDT"/>
-<span class="trade-volume-presets-suffix">$</span>
-</span>
-</label>
-<label class="trade-auto-stops-row">
-<input type="checkbox" data-role="auto-tp-enabled"/>
-<span class="trade-auto-stops-label">Take Profit</span>
-<span class="trade-volume-presets-field">
-<input type="number" min="0" step="any" inputmode="decimal" data-role="auto-tp-usd" aria-label="Take Profit USDT"/>
-<span class="trade-volume-presets-suffix">$</span>
-</span>
-</label>
-</div>
-<div class="trade-exchange-actions">
-<button type="button" class="trade-exchange-save" data-role="save-auto-stops">Сохранить</button>
-</div>
-<p class="trade-exchange-status-text" data-role="auto-stops-status" aria-live="polite"></p>
-<hr class="trade-exchange-divider"/>
-<p class="header-settings-section-title">Пинг до Bybit</p>
-<p class="trade-exchange-hint">Задержка API и signed-запросов. Для торговли лучше &lt;100&nbsp;ms.</p>
+<p class="header-settings-section-title">Пинг до ${def.name}</p>
+<p class="trade-exchange-hint">Задержка публичного API${exchangeId === "bybit" ? " и signed-запросов" : ""}. Для торговли лучше &lt;100&nbsp;ms.</p>
 <div class="trade-exchange-ping-row">
 <p class="trade-exchange-ping" data-role="ping" aria-live="polite"><span data-role="ping-main">—</span></p>
 <button type="button" class="trade-exchange-refresh" data-role="refresh-ping">Измерить</button>
@@ -294,8 +240,49 @@ ${buildDefaultVolumeFieldsHtml()}
 </form>
 `;
 
+}
+
+function buildExchangeSwitcherHtml(){
+
+return EXCHANGE_IDS.map(
+id=>{
+const def =
+EXCHANGE_DEFINITIONS[
+id
+];
+return `
+<div class="exchange-switcher-badge" data-exchange="${id}">
+<span class="exchange-switcher-name">${def.name}</span>
+<label class="exchange-switcher-toggle" aria-label="${def.name}">
+<input type="checkbox" data-role="exchange-toggle" data-exchange="${id}"/>
+<span class="exchange-switcher-slider" aria-hidden="true"></span>
+</label>
+</div>
+`;
+}
+).join(
+""
+);
+
+}
+
+function buildPanelShell(
+root
+){
+
+root.innerHTML =
+`
+<div class="exchange-connections-panel">
+<p class="header-settings-section-title exchange-connections-heading">Биржи</p>
+<div class="exchange-switcher-row" data-role="exchange-switcher">
+${buildExchangeSwitcherHtml()}
+</div>
+<div class="exchange-connection-form-host" data-role="connection-form-host"></div>
+</div>
+`;
+
 return root.querySelector(
-".trade-exchange-form"
+".exchange-connections-panel"
 );
 
 }
@@ -461,8 +448,15 @@ kind:
 }
 
 function formatPingText(
-result
+result,
+exchangeId
 ){
+
+const name =
+EXCHANGE_DEFINITIONS[
+exchangeId
+]?.name ||
+"биржи";
 
 if(
 !result?.ok
@@ -470,9 +464,27 @@ if(
 return {
 text:
 result?.message ||
-"Нет связи с Bybit",
+`Нет связи с ${name}`,
 kind:
 "is-bad",
+detail:
+""
+};
+}
+
+if(
+exchangeId !==
+"bybit"
+){
+const quality =
+pingQuality(
+result.publicMs
+);
+return {
+text:
+`API ${result.publicMs} ms — ${quality.label}`,
+kind:
+quality.kind,
 detail:
 ""
 };
@@ -542,6 +554,7 @@ detail
 function wireForm(
 form,
 {
+exchangeId,
 onSaved
 } = {}
 ){
@@ -549,10 +562,26 @@ onSaved
 const api =
 tradingApi();
 
+const isBybit =
+exchangeId ===
+"bybit";
+
 if(
+!isBybit &&
+!form
+){
+return {
+refreshPing:()=>{}
+};
+}
+
+if(
+isBybit &&
 !api
 ){
-return;
+return {
+refreshPing:()=>{}
+};
 }
 
 const keyInput =
@@ -660,15 +689,6 @@ pingDetailEl.textContent =
 async function refreshPing(){
 
 if(
-!api?.pingBybit
-){
-setPing(
-"Пинг доступен только в desktop-приложении"
-);
-return;
-}
-
-if(
 refreshPingBtn
 ){
 refreshPingBtn.disabled =
@@ -680,16 +700,39 @@ setPing(
 );
 
 try{
-const result =
-await api.pingBybit(
-{
+
+let result;
+
+if(
+isBybit
+){
+
+if(
+!api?.pingBybit
+){
+setPing(
+"Пинг доступен только в desktop-приложении"
+);
+return;
+}
+
+result =
+await api.pingBybit({
 testnet:
 false
+});
+
+}else{
+
+result =
+await pingActiveExchangePublic();
+
 }
-);
+
 const formatted =
 formatPingText(
-result
+result,
+exchangeId
 );
 setPing(
 formatted.text,
@@ -818,7 +861,17 @@ refreshBtn.hidden =
 async function refreshBalance(){
 
 if(
-!api.getWalletBalance
+!isBybit
+){
+setBalance(
+null,
+false
+);
+return;
+}
+
+if(
+!api?.getWalletBalance
 ){
 setBalance(
 null,
@@ -937,6 +990,11 @@ kind
 async function refreshStatus(){
 
 try{
+
+if(
+isBybit
+){
+
 const info =
 await api.getStatus();
 
@@ -987,6 +1045,56 @@ setStatus(
 onSaved?.(
 info
 );
+return;
+
+}
+
+const info =
+readExchangeCredentials(
+exchangeId
+);
+
+if(
+info?.apiKey
+){
+keyInput.value =
+info.apiKey;
+}
+
+if(
+info?.configured &&
+info?.hasSecret
+){
+applySecretSavedUi(
+true
+);
+}else{
+applySecretSavedUi(
+false
+);
+}
+
+setRefreshVisible(
+false
+);
+setBalance(
+null,
+false
+);
+
+setStatus(
+info?.configured
+? "Ключи сохранены"
+: "Ключи не заданы",
+info?.configured
+? "is-ok"
+: ""
+);
+
+onSaved?.(
+info
+);
+
 }catch(
 err
 ){
@@ -1012,8 +1120,7 @@ clearBtn.disabled =
 true;
 
 try{
-const info =
-await api.getStatus();
+
 const keyTrim =
 keyInput.value.trim();
 const secretValue =
@@ -1021,6 +1128,13 @@ secretInput.value.trim();
 const secretSaved =
 secretInput.dataset.secretSaved ===
 "1";
+
+if(
+isBybit
+){
+
+const info =
+await api.getStatus();
 const keyUnchanged =
 !!info?.configured &&
 keyTrim ===
@@ -1108,6 +1222,85 @@ await refreshBalance();
 onSaved?.(
 result
 );
+return;
+
+}
+
+const prev =
+readExchangeCredentials(
+exchangeId
+);
+const keyUnchanged =
+!!prev?.configured &&
+keyTrim ===
+String(
+prev?.apiKey ||
+""
+).trim();
+const secretUnchanged =
+secretSaved &&
+!getExchangeSecretForSave(
+exchangeId,
+secretValue,
+secretSaved
+);
+
+if(
+keyUnchanged &&
+secretUnchanged
+){
+setStatus(
+"Ключи уже сохранены — менять нечего",
+"is-ok"
+);
+return;
+}
+
+const secretToSave =
+getExchangeSecretForSave(
+exchangeId,
+secretValue,
+secretSaved
+);
+
+if(
+!secretSaved &&
+!secretToSave
+){
+setStatus(
+"Укажите API Secret.",
+"is-error"
+);
+return;
+}
+
+writeExchangeCredentials(
+exchangeId,
+{
+apiKey:
+keyTrim,
+apiSecret:
+secretToSave ||
+undefined
+}
+);
+
+applySecretSavedUi(
+true
+);
+setStatus(
+"Сохранено",
+"is-ok"
+);
+onSaved?.({
+configured:
+true,
+apiKey:
+keyTrim,
+hasSecret:
+true
+});
+
 }catch(
 err
 ){
@@ -1136,8 +1329,16 @@ clearBtn.addEventListener(
 void (
 async()=>{
 
+const exchangeName =
+EXCHANGE_DEFINITIONS[
+exchangeId
+]?.name ||
+exchangeId;
+
 const confirmed =
-await showClearKeysConfirm();
+await showClearKeysConfirm(
+exchangeName
+);
 
 if(
 !confirmed
@@ -1151,6 +1352,11 @@ clearBtn.disabled =
 true;
 
 try{
+
+if(
+isBybit
+){
+
 const result =
 await api.clearKeys();
 keyInput.value =
@@ -1186,6 +1392,33 @@ setStatus(
 onSaved?.(
 result
 );
+return;
+
+}
+
+clearExchangeCredentials(
+exchangeId
+);
+keyInput.value =
+"";
+applySecretSavedUi(
+false
+);
+setRefreshVisible(
+false
+);
+setBalance(
+null,
+false
+);
+setStatus(
+"Ключи удалены"
+);
+onSaved?.({
+configured:
+false
+});
+
 }catch(
 err
 ){
@@ -1228,9 +1461,85 @@ setPing(
 
 void refreshStatus();
 
+return {
+refreshPing:()=>{
+void refreshPing();
+}
+};
+
 }
 
-export function mountBybitSettingsPanel(
+function syncExchangeToggleUi(
+panel,
+activeId
+){
+
+panel.querySelectorAll(
+'[data-role="exchange-toggle"]'
+).forEach(
+input=>{
+
+const id =
+input.dataset.exchange;
+const on =
+id ===
+activeId;
+input.checked =
+on;
+input.closest(
+".exchange-switcher-badge"
+)?.classList.toggle(
+"is-active",
+on
+);
+
+}
+);
+
+}
+
+function mountConnectionForm(
+host,
+exchangeId,
+{
+onSaved
+}
+){
+
+const formHost =
+host.querySelector(
+'[data-role="connection-form-host"]'
+);
+
+if(
+!formHost
+){
+return {
+refreshPing:()=>{}
+};
+}
+
+formHost.innerHTML =
+buildConnectionFormHtml(
+exchangeId
+);
+
+const form =
+formHost.querySelector(
+".trade-exchange-form"
+);
+
+return wireForm(
+form,
+{
+exchangeId,
+onSaved
+}
+);
+
+}
+
+export function mountExchangeConnectionsPanel(
 host,
 {
 onSaved
@@ -1239,44 +1548,137 @@ onSaved
 
 if(
 !host ||
-host.dataset.bybitMounted ===
+host.dataset.connectionsMounted ===
 "1"
 ){
-return {
+return host.__connectionsCtl || {
 refreshPing:()=>{}
 };
 }
 
-host.dataset.bybitMounted =
+host.dataset.connectionsMounted =
 "1";
 
-const form =
-buildForm(
+const panel =
+buildPanelShell(
 host
 );
 
-wireForm(
-form,
+let activeId =
+getActiveExchangeId();
+let formCtl =
+mountConnectionForm(
+panel,
+activeId,
 {
 onSaved
 }
 );
 
-wireTradeVolumeDefaultsSettings(
-form
+syncExchangeToggleUi(
+panel,
+activeId
 );
 
-wireAutoStopSettings(
-form
+panel.querySelectorAll(
+'[data-role="exchange-toggle"]'
+).forEach(
+input=>{
+input.addEventListener(
+"change",
+()=>{
+
+const id =
+input.dataset.exchange;
+
+if(
+!input.checked
+){
+
+if(
+id ===
+activeId
+){
+input.checked =
+true;
+
+if(
+id !==
+"bybit"
+){
+activeId =
+setActiveExchangeId(
+"bybit"
+);
+syncExchangeToggleUi(
+panel,
+activeId
+);
+formCtl =
+mountConnectionForm(
+panel,
+activeId,
+{
+onSaved
+}
+);
+void formCtl.refreshPing?.();
+}
+
+return;
+
+}
+
+return;
+
+}
+
+activeId =
+setActiveExchangeId(
+id
+);
+syncExchangeToggleUi(
+panel,
+activeId
+);
+formCtl =
+mountConnectionForm(
+panel,
+activeId,
+{
+onSaved
+}
+);
+void formCtl.refreshPing?.();
+
+}
+);
+}
 );
 
-return {
+const ctl =
+{
 refreshPing:()=>{
-void form.querySelector(
-'[data-role="refresh-ping"]'
-)?.click?.();
+void formCtl.refreshPing?.();
 }
 };
+
+host.__connectionsCtl =
+ctl;
+
+return ctl;
+
+}
+
+export function mountBybitSettingsPanel(
+host,
+opts
+){
+
+return mountExchangeConnectionsPanel(
+host,
+opts
+);
 
 }
 

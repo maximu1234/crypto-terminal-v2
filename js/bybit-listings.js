@@ -39,6 +39,115 @@ dataset
 
 }
 
+function instrumentLaunchTime(
+item
+){
+
+if(
+!item ||
+typeof item !==
+"object"
+){
+return null;
+}
+
+const raw =
+item.raw &&
+typeof item.raw ===
+"object"
+? item.raw
+: null;
+
+const launchTime =
+item.launchTime ??
+raw?.launchTime ??
+raw?.onboardDate ??
+raw?.listingTime ??
+null;
+
+if(
+launchTime ==
+null
+){
+return null;
+}
+
+const ts =
+Number(
+launchTime
+);
+
+return Number.isFinite(
+ts
+) &&
+ts >
+0
+? ts
+: null;
+
+}
+
+function isTradingInstrument(
+item
+){
+
+if(
+!item ||
+typeof item !==
+"object" ||
+!item.symbol
+){
+return false;
+}
+
+const status =
+item.status;
+const rawStatus =
+item.raw &&
+typeof item.raw ===
+"object"
+? item.raw.status
+: null;
+
+if(
+status ===
+"Trading"
+){
+return true;
+}
+
+if(
+status ===
+1 ||
+status ===
+"1"
+){
+return true;
+}
+
+if(
+String(
+status ||
+""
+).toLowerCase() ===
+"online"
+){
+return true;
+}
+
+if(
+rawStatus ===
+1 ||
+rawStatus ===
+"1"
+){
+return true;
+}
+
+return false;
+
+}
+
 function tradingInstruments(
 instruments
 ){
@@ -52,13 +161,7 @@ return [];
 }
 
 return instruments.filter(
-item=>
-item &&
-typeof item ===
-"object" &&
-item.status ===
-"Trading" &&
-item.symbol
+isTradingInstrument
 );
 
 }
@@ -81,16 +184,19 @@ instruments
 .filter(
 item=>{
 
+const launchTime =
+instrumentLaunchTime(
+item
+);
+
 if(
-item.launchTime ==
+launchTime ==
 null
 ){
 return false;
 }
 
-return Number(
-item.launchTime
-) >
+return launchTime >
 cutoff;
 
 }
@@ -99,8 +205,9 @@ cutoff;
 item=>({
 
 symbol: item.symbol,
-launchTime: Number(
-item.launchTime
+launchTime:
+instrumentLaunchTime(
+item
 ),
 baseCoin: item.baseCoin ||
 ""

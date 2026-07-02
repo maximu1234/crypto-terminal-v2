@@ -3,12 +3,280 @@ import WebSocket from "ws";
 import { getWorkerConfig } from "./config.js";
 import {
   restGet,
+  restHeadCount,
   restPatch,
   restDelete,
   restPatchReturning
 } from "./supabase-rest.js";
 
 let client = null;
+
+/** @type {object|null} */
+let cachedReloadFingerprint = null;
+
+/** @type {Array<object>|null} */
+let cachedTelegramAlerts = null;
+
+function fingerprintKey(
+fp
+) {
+
+  return JSON.stringify(fp);
+
+}
+
+function activeAlertsFilter(
+withDeletedAt
+) {
+
+  const base =
+    "triggered_at=is.null";
+
+  return withDeletedAt
+    ? `${base}&deleted_at=is.null`
+    : base;
+
+}
+
+async function fetchMaxUpdatedAt(
+table,
+filter
+) {
+
+  try{
+    const rows = await restGet(
+      `${table}?select=updated_at&${filter}` +
+      "&order=updated_at.desc&limit=1"
+    );
+
+    return rows?.[0]?.updated_at ?? null;
+  }catch{
+    return null;
+  }
+
+}
+
+async function fetchActiveAlertsFingerprint(){
+
+  try{
+    const filter =
+      activeAlertsFilter(
+        true
+      );
+
+    const alertCount = await restHeadCount(
+      `price_alerts?select=id&${filter}`
+    );
+    const alertMaxUpdatedAt =
+      await fetchMaxUpdatedAt(
+        "price_alerts",
+        filter
+      );
+
+    return {
+      alertCount,
+      alertMaxUpdatedAt,
+      softDelete: true
+    };
+  }catch{
+    const filter =
+      activeAlertsFilter(
+        false
+      );
+
+    const alertCount = await restHeadCount(
+      `price_alerts?select=id&${filter}`
+    );
+    const alertMaxUpdatedAt =
+      await fetchMaxUpdatedAt(
+        "price_alerts",
+        filter
+      );
+
+    return {
+      alertCount,
+      alertMaxUpdatedAt,
+      softDelete: false
+    };
+  }
+
+}
+
+async function fetchTelegramSettingsFingerprint(){
+
+  try{
+    const telegramUsersCount = await restHeadCount(
+      "user_settings?select=user_id&telegram_chat_id=not.is.null"
+    );
+    const telegramEnabledCount = await restHeadCount(
+      "user_settings?select=user_id&telegram_chat_id=not.is.null&alerts_cloud_disabled=eq.false"
+    );
+    const settingsMaxUpdatedAt =
+      await fetchMaxUpdatedAt(
+        "user_settings",
+        "telegram_chat_id=not.is.null"
+      );
+
+    return {
+      telegramUsersCount,
+      telegramEnabledCount,
+      settingsMaxUpdatedAt
+    };
+  }catch{
+    const telegramUsersCount = await restHeadCount(
+      "user_settings?select=user_id&telegram_chat_id=not.is.null"
+    );
+    const settingsMaxUpdatedAt =
+      await fetchMaxUpdatedAt(
+        "user_settings",
+        "telegram_chat_id=not.is.null"
+      );
+
+    return {
+      telegramUsersCount,
+      telegramEnabledCount: telegramUsersCount,
+      settingsMaxUpdatedAt
+    };
+  }
+
+}
+
+async function fetchReloadFingerprint(){
+
+  const [
+    alerts,
+    settings
+  ] = await Promise.all([
+    fetchActiveAlertsFingerprint(),
+    fetchTelegramSettingsFingerprint()
+  ]);
+
+  return {
+    ...alerts,
+    ...settings
+  };
+
+}
+
+export function invalidateTelegramAlertsReloadCache(){
+
+  cachedReloadFingerprint = null;
+  cachedTelegramAlerts = null;
+
+}
+
+async function fetchTelegramAlertsFull(){
+
+  const cfg = getWorkerConfig();
+
+  if (!cfg.ready) {
+    return [];
+  }
+
+  let alerts;
+  let settings;
+  let filter =
+    activeAlertsFilter(
+      true
+    );
+
+  try{
+    alerts = await restGet(
+      `price_alerts?select=id,user_id,symbol,shape_id,price,tf,exchange_id&${filter}`
+    );
+  }catch(err){
+  if(
+    String(
+      err?.message || ""
+    ).includes(
+      "deleted_at"
+    )
+  ){
+    filter =
+      activeAlertsFilter(
+        false
+      );
+
+    try{
+      alerts = await restGet(
+        `price_alerts?select=id,user_id,symbol,shape_id,price,tf,exchange_id&${filter}`
+      );
+    }catch(retryErr){
+      console.warn(
+        "fetch alerts (REST):",
+        retryErr.message
+      );
+      return [];
+    }
+  }else{
+    console.warn(
+      "fetch alerts (REST):",
+      err.message
+    );
+    return [];
+  }
+  }
+
+  if (!alerts?.length) {
+    return [];
+  }
+
+  const userIds = [...new Set(alerts.map(a => a.user_id))];
+  const inList = userIds.join(",");
+
+  try{
+    settings = await restGet(
+      `user_settings?select=user_id,telegram_chat_id,alerts_cloud_disabled&user_id=in.(${inList})&telegram_chat_id=not.is.null`
+    );
+  }catch(err){
+    console.warn("fetch settings (REST):", err.message);
+    return [];
+  }
+
+  const chatByUser = new Map(
+    (settings || [])
+      .filter(s => !s.alerts_cloud_disabled)
+      .map(s => [s.user_id, Number(s.telegram_chat_id)])
+  );
+
+  const out = [];
+
+  for (const row of alerts) {
+
+    const exchangeId =
+      String(
+        row.exchange_id ||
+        "bybit"
+      ).trim().toLowerCase();
+
+    if (
+      exchangeId !==
+      "bybit"
+    ) {
+      continue;
+    }
+
+    const chatId = chatByUser.get(row.user_id);
+
+    if (chatId == null) {
+      continue;
+    }
+
+    out.push({
+      id: row.id,
+      user_id: row.user_id,
+      symbol: row.symbol,
+      shape_id: row.shape_id,
+      price: Number(row.price),
+      tf: row.tf || "60",
+      telegram_chat_id: chatId
+    });
+
+  }
+
+  return out;
+
+}
 
 export function getSupabaseAdmin() {
 
@@ -41,81 +309,104 @@ export function getSupabaseAdmin() {
 }
 
 /**
- * @returns {Promise<Array<{
- *   id: string,
- *   user_id: string,
- *   symbol: string,
- *   shape_id: string,
- *   price: number,
- *   tf: string,
- *   telegram_chat_id: number
- * }>>}
+ * Полная загрузка (без probe). Для /health и принудительного refresh.
  */
-export async function fetchTelegramAlerts() {
+export async function fetchTelegramAlerts(
+opts = {}
+){
+
+  if (
+    opts.force ===
+    true
+  ) {
+    invalidateTelegramAlertsReloadCache();
+  }
+
+  const result =
+    await resolveTelegramAlertsReload(
+      opts
+    );
+
+  return result.rows;
+
+}
+
+/**
+ * Probe count/max(updated_at) → полный fetch только при изменении.
+ * @returns {Promise<{ skipped: boolean, rows: Array<object> }>}
+ */
+export async function resolveTelegramAlertsReload(
+opts = {}
+){
 
   const cfg = getWorkerConfig();
 
   if (!cfg.ready) {
-    return [];
+    cachedReloadFingerprint = null;
+    cachedTelegramAlerts = [];
+    return {
+      skipped: false,
+      rows: []
+    };
   }
 
-  let alerts;
-  let settings;
+  if (
+    opts.force ===
+    true
+  ) {
+    invalidateTelegramAlertsReloadCache();
+  }
+
+  let fingerprint;
 
   try{
-    alerts = await restGet(
-      "price_alerts?select=id,user_id,symbol,shape_id,price,tf&triggered_at=is.null"
-    );
+    fingerprint =
+      await fetchReloadFingerprint();
   }catch(err){
-    console.warn("fetch alerts (REST):", err.message);
-    return [];
-  }
-
-  if (!alerts?.length) {
-    return [];
-  }
-
-  const userIds = [...new Set(alerts.map(a => a.user_id))];
-  const inList = userIds.join(",");
-
-  try{
-    settings = await restGet(
-      `user_settings?select=user_id,telegram_chat_id,alerts_cloud_disabled&user_id=in.(${inList})&telegram_chat_id=not.is.null`
+    console.warn(
+      "alerts reload probe:",
+      err.message
     );
-  }catch(err){
-    console.warn("fetch settings (REST):", err.message);
-    return [];
+    fingerprint = null;
   }
 
-  const chatByUser = new Map(
-    (settings || [])
-      .filter(s => !s.alerts_cloud_disabled)
-      .map(s => [s.user_id, Number(s.telegram_chat_id)])
-  );
+  const fpKey =
+    fingerprint
+      ? fingerprintKey(
+        fingerprint
+      )
+      : null;
 
-  const out = [];
-
-  for (const row of alerts) {
-
-    const chatId = chatByUser.get(row.user_id);
-
-    if (chatId == null) {
-      continue;
-    }
-
-    out.push({
-      id: row.id,
-      user_id: row.user_id,
-      symbol: row.symbol,
-      shape_id: row.shape_id,
-      price: Number(row.price),
-      tf: row.tf || "60",
-      telegram_chat_id: chatId
-    });
-
+  if (
+    fpKey &&
+    cachedReloadFingerprint &&
+    fpKey ===
+    fingerprintKey(
+      cachedReloadFingerprint
+    ) &&
+    cachedTelegramAlerts
+  ) {
+    return {
+      skipped: true,
+      rows: cachedTelegramAlerts
+    };
   }
 
-  return out;
+  const rows =
+    await fetchTelegramAlertsFull();
+
+  if (fingerprint) {
+    cachedReloadFingerprint =
+      fingerprint;
+  }
+
+  cachedTelegramAlerts =
+    rows;
+
+  return {
+    skipped: false,
+    rows
+  };
 
 }
 
@@ -186,7 +477,9 @@ export async function fetchAlertDiagnostics() {
     }
   }
 
-  const loaded = await fetchTelegramAlerts();
+  const loaded = await fetchTelegramAlerts({
+    force: true
+  });
 
   return {
     activeInDb,

@@ -45,6 +45,10 @@ recordDrawingTombstone
 } from "../drawings-storage.js?v=7";
 
 import {
+EXCHANGE_CHANGED_EVENT
+} from "../market-api.js?v=1";
+
+import {
 registerDrawingsStoragePoller,
 touchDrawingsStorageSnap
 } from "../drawings-storage-poller.js?v=1";
@@ -1403,6 +1407,24 @@ return CHART_SCROLL_DEFAULT;
 
 function syncChartTouchPan(){
 
+const desktopStrokePlacementDrag =
+!!placement &&
+!isTouchDrawPlacement() &&
+(
+placement.type ===
+"rectangle" ||
+placement.type ===
+"trendline" ||
+placement.type ===
+"fib" ||
+placement.type ===
+"channel" ||
+placement.type ===
+"arrow"
+) &&
+placement.points.length >=
+1;
+
 const lock =
 alive &&
 (
@@ -1410,7 +1432,8 @@ alive &&
 (
 placement &&
 isTouchDrawPlacement()
-)
+) ||
+desktopStrokePlacementDrag
 );
 
 try{
@@ -4500,7 +4523,8 @@ syncChartRulerShiftFromEvent,
 syncChartRulerEndFromPlot,
 getChartRulerStart:()=>chartRulerStart,
 showStandardChartCrosshair,
-hideStandardChartCrosshair
+hideStandardChartCrosshair,
+syncChartTouchPan
 });
 
 ({
@@ -6255,9 +6279,30 @@ e.detail?.symbols
 
 };
 
+const onExchangeChanged = ()=>{
+
+if(
+!alive
+){
+return;
+}
+
+loadDrawings();
+stripOrphanAlertDrawings();
+scheduleRedraw();
+updateStyleBar();
+touchStorageSnap();
+
+};
+
 window.addEventListener(
 "drawings-cloud-changed",
 onDrawingsCloudChanged
+);
+
+window.addEventListener(
+EXCHANGE_CHANGED_EVENT,
+onExchangeChanged
 );
 
 const onChartCandlesLoaded = e=>{
@@ -6896,6 +6941,11 @@ onDrawingsUpdated
 window.removeEventListener(
 "drawings-cloud-changed",
 onDrawingsCloudChanged
+);
+
+window.removeEventListener(
+EXCHANGE_CHANGED_EVENT,
+onExchangeChanged
 );
 
 document.removeEventListener(

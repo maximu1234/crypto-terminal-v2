@@ -1,5 +1,18 @@
+import {
+getActiveExchangeId
+} from "./exchanges/context.js?v=1";
+
+import {
+drawingsStorageKey,
+parseDrawingsStorageKey,
+migrateLegacyDrawingsStorage,
+listDrawingsStorageKeys
+} from "./drawings-exchange-key.js?v=1";
+
 const LEGACY_TF_RE =
 /^(.+)_(1|5|15|60|240|D)$/;
+
+migrateLegacyDrawingsStorage();
 
 export const DRAWINGS_TOMBSTONES_KEY =
 "__tombstones__";
@@ -859,17 +872,54 @@ tombstones: mergedTombs
 }
 
 /**
- * Удалить все ключи drawings_* и метаданные синхронизации (страница «Алерты»).
+ * Удалить рисунки активной биржи (страница «Алерты»).
  */
-export function purgeAllLocalDrawingsStorage(){
+export function purgeExchangeLocalDrawingsStorage(
+exchangeId
+){
+
+migrateLegacyDrawingsStorage();
+
+const ex =
+String(
+exchangeId ||
+getActiveExchangeId()
+).trim().toLowerCase();
 
 const symbols =
 new Set();
 
-const keys = [];
+const keys =
+listDrawingsStorageKeys(
+ex
+);
 
 for(
-let i = 0;
+const key of keys
+){
+
+const parsed =
+parseDrawingsStorageKey(
+key
+);
+
+if(
+parsed?.symbol
+){
+symbols.add(
+parsed.symbol
+);
+}
+
+localStorage.removeItem(
+key
+);
+
+}
+
+for(
+let i =
+0;
 i <
 localStorage.length;
 i++
@@ -879,67 +929,46 @@ const key =
 localStorage.key(
 i
 );
-
-if(
-!key?.startsWith(
-"drawings_"
-)
-){
-continue;
-}
-
-const suffix =
-key.slice(
-"drawings_".length
-);
-
-if(
-!suffix
-){
-continue;
-}
-
-keys.push(
+const parsed =
+parseDrawingsStorageKey(
 key
 );
 
-const legacy =
-suffix.match(
-LEGACY_TF_RE
-);
-
-symbols.add(
-legacy
-? legacy[1]
-: suffix
-);
-
+if(
+!parsed ||
+parsed.exchangeId !==
+ex ||
+!parsed.tfSuffix
+){
+continue;
 }
 
-keys.forEach(k=>{
-localStorage.removeItem(
-k
+if(
+parsed.symbol
+){
+symbols.add(
+parsed.symbol
 );
-});
+}
 
-try{
 localStorage.removeItem(
-"drawings_row_sync_v1"
+key
 );
-localStorage.removeItem(
-"drawings_tombstones_v1"
-);
-localStorage.setItem(
-DRAWINGS_GLOBAL_CLEAR_KEY,
-String(
-Date.now()
-)
-);
-}catch{
-/* ignore */
+
 }
 
 return symbols;
+
+}
+
+/**
+ * @deprecated use purgeExchangeLocalDrawingsStorage
+ */
+export function purgeAllLocalDrawingsStorage(){
+
+return purgeExchangeLocalDrawingsStorage(
+getActiveExchangeId()
+);
 
 }
 
@@ -1053,7 +1082,9 @@ id
 ){
 
 const key =
-`drawings_${sym}`;
+drawingsStorageKey(
+sym
+);
 let list =
 [];
 
@@ -1111,40 +1142,34 @@ return removed;
 
 }
 
-export function collectAllLocalDrawings(){
+export function collectAllLocalDrawings(
+exchangeId
+){
+
+migrateLegacyDrawingsStorage();
+
+const ex =
+String(
+exchangeId ||
+getActiveExchangeId()
+).trim().toLowerCase();
 
 const out =
 {};
 
 for(
-let i = 0;
-i <
-localStorage.length;
-i++
+const key of listDrawingsStorageKeys(
+ex
+)
 ){
 
-const key =
-localStorage.key(
-i
+const parsed =
+parseDrawingsStorageKey(
+key
 );
 
 if(
-!key?.startsWith(
-"drawings_"
-)
-){
-continue;
-}
-
-const suffix =
-key.slice(
-"drawings_".length
-);
-
-if(
-LEGACY_TF_RE.test(
-suffix
-)
+!parsed?.symbol
 ){
 continue;
 }
@@ -1165,7 +1190,7 @@ list
 )
 ){
 out[
-suffix
+parsed.symbol
 ] =
 list;
 }
@@ -1211,41 +1236,31 @@ Boolean
 )
 );
 
+const mergeExchangeId =
+String(
+opts.exchangeId ||
+getActiveExchangeId()
+).trim().toLowerCase();
+
 if(
 !merge
 ){
 
 for(
-let i = 0;
-i <
-localStorage.length;
-i++
-){
-
-const key =
-localStorage.key(
-i
-);
-
-if(
-!key?.startsWith(
-"drawings_"
+const key of listDrawingsStorageKeys(
+mergeExchangeId
 )
 ){
-continue;
-}
 
-const suffix =
-key.slice(
-"drawings_".length
+const parsed =
+parseDrawingsStorageKey(
+key
 );
 
 if(
-LEGACY_TF_RE.test(
-suffix
-) ||
+!parsed?.symbol ||
 cloudSyms.has(
-suffix
+parsed.symbol
 )
 ){
 continue;
@@ -1260,41 +1275,20 @@ key
 }else{
 
 for(
-let i = 0;
-i <
-localStorage.length;
-i++
+const key of listDrawingsStorageKeys(
+mergeExchangeId
+)
 ){
 
-const key =
-localStorage.key(
-i
+const parsed =
+parseDrawingsStorageKey(
+key
 );
 
 if(
-!key?.startsWith(
-"drawings_"
-)
-){
-continue;
-}
-
-const suffix =
-key.slice(
-"drawings_".length
-);
-
-if(
-LEGACY_TF_RE.test(
-suffix
-)
-){
-continue;
-}
-
-if(
+!parsed?.symbol ||
 cloudSyms.has(
-suffix
+parsed.symbol
 )
 ){
 continue;
@@ -1325,7 +1319,13 @@ continue;
 }
 
 const key =
-`drawings_${norm}`;
+drawingsStorageKey(
+norm,
+{
+exchangeId:
+mergeExchangeId
+}
+);
 
 if(
 !Array.isArray(

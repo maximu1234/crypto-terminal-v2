@@ -41,6 +41,11 @@ getTelegramBotUrl
 
 import { formatPrice } from "./chart-import.js?v=43";
 
+import {
+EXCHANGE_CHANGED_EVENT,
+getActiveExchangeDefinition
+} from "./market-api.js?v=1";
+
 const tbody =
 document.getElementById("alerts-tbody");
 
@@ -184,14 +189,7 @@ false;
 
 function shouldOfferGlobalClear(){
 
-if(
-countAllDrawings() >
-0
-){
-return true;
-}
-
-return isCloudLoggedIn();
+return countAllDrawings() > 0;
 
 }
 
@@ -222,14 +220,18 @@ if(
 !shouldOfferGlobalClear()
 ){
 window.alert(
-"Нет локальных рисунков. Войдите в аккаунт, чтобы очистить облако."
+"Нет локальных рисунков на активной бирже."
 );
 return;
 }
 
+const exchangeLabel =
+getActiveExchangeDefinition()?.name ||
+"бирже";
+
 if(
 !window.confirm(
-"Удалить все объекты рисования на всех монетах? Это нельзя отменить."
+`Удалить все объекты рисования на ${exchangeLabel}? Это нельзя отменить.`
 )
 ){
 return;
@@ -282,7 +284,7 @@ err?.message ||
 }finally{
 clearDrawingsBusy =
 false;
-btn.disabled = false;
+updateClearDrawingsUi();
 }
 
 }
@@ -633,17 +635,10 @@ shouldOfferGlobalClear()
 clearDrawingsAction.innerHTML =
 `<button type="button" class="alerts-clear-drawings-link">Удалить</button>`;
 
-}else if(
-isCloudLoggedIn()
-){
-
-clearDrawingsAction.innerHTML =
-`<span class="alerts-clear-drawings-text" title="Локальных рисунков нет">Нечего удалять</span>`;
-
 }else{
 
 clearDrawingsAction.innerHTML =
-`<span class="alerts-clear-drawings-text" title="Войдите в аккаунт">Удалить</span>`;
+`<span class="alerts-clear-drawings-text" title="Локальных рисунков на активной бирже нет">Нечего удалять</span>`;
 
 }
 
@@ -707,6 +702,14 @@ render();
 
 window.addEventListener("alerts-changed", render);
 window.addEventListener("alerts-registry-pulled", render);
+window.addEventListener(
+EXCHANGE_CHANGED_EVENT,
+render
+);
+window.addEventListener(
+"drawings-cleared-all",
+render
+);
 window.addEventListener("alerts-history-changed", render);
 
 onCloudSyncChange(()=>{

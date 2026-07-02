@@ -386,6 +386,44 @@ body.terminal-page .widget-draw-tools{
     z-index:3;
 }
 
+.widget-chart-wrap .chart-price-hud{
+    position:absolute;
+    right:0;
+    z-index:4;
+    transform:translateY(-50%);
+    box-sizing:border-box;
+    padding:0 4px 0 10px;
+    border-radius:0;
+    font-family:-apple-system, BlinkMacSystemFont, "Trebuchet MS", Roboto, Ubuntu, sans-serif;
+    font-size:12px;
+    font-weight:400;
+    line-height:16px;
+    text-align:left;
+    font-variant-numeric:tabular-nums;
+    pointer-events:none;
+    color:#d1d5db;
+}
+
+.widget-chart-wrap .chart-price-hud.hidden{
+    display:none;
+}
+
+.widget-chart-wrap .chart-price-hud--up{
+    background:#16a34a;
+}
+
+.widget-chart-wrap .chart-price-hud--down{
+    background:#dc2626;
+}
+
+.widget-chart-wrap .chart-price-hud-cd{
+    display:block;
+    font-size:12px;
+    font-weight:400;
+    line-height:16px;
+    opacity:1;
+}
+
 .chart-ruler-active .drawings-layer{
     z-index:27;
 }

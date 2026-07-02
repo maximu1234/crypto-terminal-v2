@@ -8,8 +8,9 @@ getTerminalBlueSymbols
 } from "./favorites.js?v=4";
 
 import {
-loadBybitHistory
-} from "./api.js?v=29";
+loadMarketHistory,
+EXCHANGE_CHANGED_EVENT
+} from "./market-api.js?v=1";
 
 import {
 isLocalDevHost
@@ -41,7 +42,7 @@ mountWidgetTabletChart
 
 import {
 subscribeKline
-} from "./ws.js?v=17";
+} from "./market-ws.js?v=1";
 
 import {
 getWidgetToolbarHtml,
@@ -379,6 +380,7 @@ entry
 
 entry.tradeWidget?.destroy?.();
 entry.unsubKline?.();
+entry.priceHudCtrl?.stop?.();
 entry.tabletGestures?.dispose?.();
 entry.disposeChartInteractions?.();
 try{
@@ -730,7 +732,8 @@ deferDrawings: true
 const {
 chart,
 series,
-ensureDrawings
+ensureDrawings,
+priceHudCtrl
 } =
 chartHost;
 
@@ -796,6 +799,7 @@ series,
 chartWrap,
 chartContainer,
 ensureDrawings,
+priceHudCtrl,
 drawingTools: null,
 drawingsAttachPromise: null,
 tabletMountStarted: false,
@@ -1000,7 +1004,7 @@ return;
 try{
 
 const data =
-await loadBybitHistory(
+await loadMarketHistory(
 symbol,
 tf,
 DASHBOARD_HISTORY_BATCHES,
@@ -1050,6 +1054,8 @@ widget.classList.remove(
 );
 
 series.setData(candles);
+
+priceHudCtrl?.refresh?.();
 
 updateTerminalWidgetRsiData(
 entry
@@ -1102,6 +1108,8 @@ applyChartPriceFormat(
 series,
 candle.close
 );
+
+priceHudCtrl?.refresh?.();
 
 priceEl.innerText =
 candle.close.toFixed(2);
@@ -1365,6 +1373,13 @@ void refreshWatchlistDashboard();
 
 window.addEventListener(
 "favorites-local-changed",
+()=>{
+void refreshWatchlistDashboard();
+}
+);
+
+window.addEventListener(
+EXCHANGE_CHANGED_EVENT,
 ()=>{
 void refreshWatchlistDashboard();
 }

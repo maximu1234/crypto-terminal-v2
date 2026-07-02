@@ -36,6 +36,8 @@ require(
 
 const DEFAULT_LOCAL_SITE_PORT =
 47391;
+const BINGX_API_BASE =
+"https://open-api.bingx.com";
 const PORT_FILE =
 "local-site-port.json";
 
@@ -153,6 +155,80 @@ reject
 
 }
 
+async function serveBingxProxy(
+reqUrl,
+res
+){
+
+const apiPath =
+reqUrl.searchParams.get(
+"path"
+) ||
+"";
+
+if(
+!apiPath.startsWith(
+"/openApi/"
+)
+){
+res.writeHead(
+400,
+{
+"Content-Type":
+"application/json; charset=utf-8",
+"Access-Control-Allow-Origin":
+"*"
+}
+);
+res.end(
+JSON.stringify({
+code:
+-1,
+msg:
+"invalid path"
+})
+);
+return;
+}
+
+const upstream =
+await net.fetch(
+`${BINGX_API_BASE}${apiPath}`,
+{
+headers:{
+Accept:
+"application/json",
+"User-Agent":
+"Multichart-Desktop/1.0"
+}
+}
+);
+
+const buf =
+Buffer.from(
+await upstream.arrayBuffer()
+);
+
+res.writeHead(
+upstream.status,
+{
+"Content-Type":
+upstream.headers.get(
+"content-type"
+) ||
+"application/json",
+"Access-Control-Allow-Origin":
+"*",
+"Cache-Control":
+"no-cache"
+}
+);
+res.end(
+buf
+);
+
+}
+
 function createRequestHandler({
 bundleRoot,
 remoteApiOrigin
@@ -173,6 +249,17 @@ req.url ||
 "/",
 "http://127.0.0.1"
 );
+
+if(
+reqUrl.pathname ===
+"/api/bingx"
+){
+await serveBingxProxy(
+reqUrl,
+res
+);
+return;
+}
 
 if(
 reqUrl.pathname.startsWith(

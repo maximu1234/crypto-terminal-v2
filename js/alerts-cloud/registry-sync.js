@@ -47,6 +47,18 @@ import {
 isAlertsCloudDisabled
 } from "../supabase-usage-prefs.js?v=4";
 
+function resolveAlertExchangeId(
+entry
+){
+
+return String(
+entry?.exchangeId ||
+entry?.exchange_id ||
+"bybit"
+).trim().toLowerCase();
+
+}
+
 const coalesceRegistryPull =
 createPullCoalescer({
 minIntervalMs: IS_YANDEX
@@ -286,6 +298,10 @@ symbol,
 shape_id: shapeId,
 price,
 tf: normalizeAlertTf(entry.tf),
+exchange_id:
+resolveAlertExchangeId(
+entry
+),
 triggered_at: null,
 deleted_at: null
 };
@@ -454,6 +470,10 @@ symbol,
 shape_id: shapeId,
 price,
 tf: normalizeAlertTf(entry.tf),
+exchange_id:
+resolveAlertExchangeId(
+entry
+),
 triggered_at: null
 };
 
@@ -1062,12 +1082,12 @@ const url =
 `${base}/rest/v1/price_alerts?user_id=eq.${encodeURIComponent(uid)}` +
 `&triggered_at=is.null` +
 `&deleted_at=is.null` +
-`&select=id,symbol,shape_id,price,tf,created_at,updated_at`;
+`&select=id,symbol,shape_id,price,tf,exchange_id,created_at,updated_at`;
 
 const legacyUrl =
 `${base}/rest/v1/price_alerts?user_id=eq.${encodeURIComponent(uid)}` +
 `&triggered_at=is.null` +
-`&select=id,symbol,shape_id,price,tf,created_at`;
+`&select=id,symbol,shape_id,price,tf,exchange_id,created_at`;
 
 try{
 let token =
@@ -1286,7 +1306,7 @@ ctx.sb
 "price_alerts"
 )
 .select(
-"id, symbol, shape_id, price, tf, created_at, updated_at, deleted_at"
+"id, symbol, shape_id, price, tf, exchange_id, created_at, updated_at, deleted_at"
 )
 .eq(
 "user_id",
@@ -1378,7 +1398,7 @@ result.data;
 const {
 saveAlertsFromCloudMerge,
 alertEntryKey,
-loadAlerts,
+loadAllAlerts,
 normalizeAlertTf,
 isAlertDeleted,
 forgetAlertDeleted
@@ -1512,7 +1532,7 @@ applyRemoteAlertRemoved(row);
 }
 
 const local =
-loadAlerts();
+loadAllAlerts();
 const localByKey =
 new Map();
 
@@ -1617,6 +1637,16 @@ price: mergedPrice,
 tf: normalizeAlertTf(
 cloud.tf ||
 prev?.tf
+),
+exchangeId:
+resolveAlertExchangeId(
+{
+exchangeId:
+cloud.exchange_id,
+exchange_id:
+cloud.exchange_id,
+...prev
+}
 ),
 createdAt:
 prev?.createdAt ||

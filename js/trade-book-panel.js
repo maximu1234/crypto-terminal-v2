@@ -196,6 +196,19 @@ state
 
 }
 
+function orderPanelTypeLabel(
+row
+){
+
+return String(
+row?.shortLabel ||
+row?.label ||
+""
+).trim() ||
+"—";
+
+}
+
 function compareBookText(
 a,
 b
@@ -337,13 +350,11 @@ key ===
 ){
 cmp =
 compareBookText(
-String(
-a.label ||
-""
+orderPanelTypeLabel(
+a
 ),
-String(
-b.label ||
-""
+orderPanelTypeLabel(
+b
 )
 );
 }else if(
@@ -1766,7 +1777,7 @@ el.innerHTML =
 <span class="col-ticker" title="${row.ticker}">
 <span class="trade-book-ticker-text">${row.ticker}</span>
 </span>
-<span class="col-order-type">${row.label || "—"}</span>
+<span class="col-order-type">${orderPanelTypeLabel(row)}</span>
 <span class="col-price">${formatPrice(row.price)}</span>
 <span class="col-time">${formatDateTime(row.createdAt)}</span>
 `;
@@ -1807,8 +1818,9 @@ if(
 typeEl
 ){
 const nextType =
-row.label ||
-"—";
+orderPanelTypeLabel(
+row
+);
 
 if(
 typeEl.textContent !==

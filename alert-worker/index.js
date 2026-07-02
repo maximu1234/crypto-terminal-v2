@@ -3,7 +3,8 @@ import { createBybitKlineHub } from "./lib/bybit-kline.js";
 import { getConfigStatus, getWorkerConfig } from "./lib/config.js";
 import {
   fetchTelegramAlerts,
-  fetchAlertDiagnostics
+  fetchAlertDiagnostics,
+  resolveTelegramAlertsReload
 } from "./lib/alerts-db.js";
 import {
   telegramConfigured
@@ -61,7 +62,13 @@ async function reloadAlerts(klineHub) {
     return;
   }
 
-  const rows = await fetchTelegramAlerts();
+  const { skipped, rows } =
+    await resolveTelegramAlertsReload();
+
+  if (skipped) {
+    return;
+  }
+
   const next = new Map();
 
   for (const row of rows) {

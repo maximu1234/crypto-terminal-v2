@@ -51,6 +51,14 @@ true
 },
 {
 id:
+"trading",
+label:
+"Торговля",
+desktopOnly:
+true
+},
+{
+id:
 "secret",
 label:
 "Секретные настройки",
@@ -70,6 +78,8 @@ null;
 let systemCtl =
 null;
 let bybitCtl =
+null;
+let tradingCtl =
 null;
 let cssLoaded =
 false;
@@ -328,6 +338,15 @@ btn.hidden =
 if(
 section.desktopOnly &&
 section.id ===
+"trading"
+){
+btn.hidden =
+!showConnectionsSettings();
+}
+
+if(
+section.desktopOnly &&
+section.id ===
 "system"
 ){
 btn.hidden =
@@ -533,7 +552,7 @@ link
 }
 
 const {
-mountBybitSettingsPanel,
+mountExchangeConnectionsPanel,
 updateTradeExchangeConnectionChrome
 } =
 await import(
@@ -551,7 +570,7 @@ host
 );
 
 bybitCtl =
-mountBybitSettingsPanel(
+mountExchangeConnectionsPanel(
 host,
 {
 onSaved:
@@ -560,6 +579,66 @@ updateTradeExchangeConnectionChrome
 );
 
 void bybitCtl?.refreshPing?.();
+return;
+
+}
+
+if(
+sectionId ===
+"trading"
+){
+
+if(
+!showConnectionsSettings()
+){
+panel.innerHTML =
+`<p class="app-settings-bybit-guest">Торговые настройки доступны в desktop-приложении Multichart.</p>`;
+return;
+}
+
+const tradeCss =
+cssUrl(
+"trade-exchange-settings.css"
+);
+
+if(
+!document.querySelector(
+`link[rel="stylesheet"][href^="/css/trade-exchange-settings.css"]`
+)
+){
+const link =
+document.createElement(
+"link"
+);
+link.rel =
+"stylesheet";
+link.href =
+tradeCss;
+document.head.appendChild(
+link
+);
+}
+
+const {
+mountTradingSettingsPanel
+} =
+await import(
+"./trade-trading-settings-panel.js?v=1"
+);
+
+const host =
+document.createElement(
+"div"
+);
+host.className =
+"app-settings-trading-host";
+panel.appendChild(
+host
+);
+
+mountTradingSettingsPanel(
+host
+);
 return;
 
 }
@@ -705,6 +784,15 @@ resolved =
 
 if(
 resolved ===
+"trading" &&
+!showConnectionsSettings()
+){
+resolved =
+"sync";
+}
+
+if(
+resolved ===
 "system" &&
 !showSystemSettings()
 ){
@@ -756,6 +844,18 @@ if(
 connectionsBtn
 ){
 connectionsBtn.hidden =
+!showConnectionsSettings();
+}
+
+const tradingBtn =
+overlayEl?.querySelector(
+'.app-settings-nav-btn[data-section="trading"]'
+);
+
+if(
+tradingBtn
+){
+tradingBtn.hidden =
 !showConnectionsSettings();
 }
 

@@ -10,6 +10,10 @@ import {
 isTradePositionSoundBaselineReady
 } from "./trade-position-sounds.js?v=2";
 
+import {
+isExchangeTradingEnabled
+} from "./market-api.js?v=1";
+
 let unsubscribe =
 null;
 let visibilityHandler =
@@ -17,6 +21,8 @@ null;
 let syncTimer =
 null;
 let initialStreamSyncDone =
+false;
+let bridgeStarted =
 false;
 
 const POSITIONS_SYNC_INTERVAL_MS =
@@ -194,12 +200,71 @@ orders
 
 }
 
+export function stopTradeStreamBridge(){
+
+if(
+unsubscribe
+){
+unsubscribe();
+unsubscribe =
+null;
+}
+
+if(
+syncTimer
+){
+clearInterval(
+syncTimer
+);
+syncTimer =
+null;
+}
+
+if(
+visibilityHandler
+){
+document.removeEventListener(
+"visibilitychange",
+visibilityHandler
+);
+visibilityHandler =
+null;
+}
+
+bridgeStarted =
+false;
+initialStreamSyncDone =
+false;
+
+}
+
+export async function startTradeStreamBridge(){
+
+if(
+bridgeStarted ||
+!isExchangeTradingEnabled()
+){
+return;
+}
+
+bridgeStarted =
+true;
+await initTradeStreamBridge();
+
+}
+
 export async function initTradeStreamBridge(){
 
 if(
 !document.body.classList.contains(
 "trade-page"
 )
+){
+return ()=>{};
+}
+
+if(
+!isExchangeTradingEnabled()
 ){
 return ()=>{};
 }
@@ -218,6 +283,9 @@ unsubscribe
 ){
 return unsubscribe;
 }
+
+bridgeStarted =
+true;
 
 unsubscribe =
 api.onStream(
@@ -266,31 +334,7 @@ POSITIONS_SYNC_INTERVAL_MS
 );
 
 return ()=>{
-unsubscribe?.();
-unsubscribe =
-null;
-
-if(
-syncTimer
-){
-clearInterval(
-syncTimer
-);
-syncTimer =
-null;
-}
-
-if(
-visibilityHandler
-){
-document.removeEventListener(
-"visibilitychange",
-visibilityHandler
-);
-visibilityHandler =
-null;
-}
-
+stopTradeStreamBridge();
 };
 
 }

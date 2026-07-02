@@ -2362,8 +2362,8 @@ orderType ===
 label =
 side ===
 "Buy"
-? "BST"
-: "SST";
+? "Buy Stop"
+: "Sell Stop";
 orderKind =
 "stop";
 }else if(
@@ -2376,15 +2376,28 @@ limitPrice >
 0
 ){
 label =
-side ===
-"Buy"
-? "BLT"
-: "SLT";
+"Limit";
 orderKind =
 "limit";
 }else{
 return null;
 }
+
+const shortLabel =
+orderKind ===
+"stop"
+? (
+side ===
+"Buy"
+? "BST"
+: "SST"
+)
+: (
+side ===
+"Buy"
+? "BLT"
+: "SLT"
+);
 
 const displayPrice =
 orderKind ===
@@ -2425,6 +2438,7 @@ price:
 displayPrice,
 side,
 label,
+shortLabel,
 orderKind,
 badgeSide:
 side ===

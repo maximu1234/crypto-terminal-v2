@@ -19,6 +19,8 @@ BYBIT_API_BASES = (
 "https://api.bybit.com",
 )
 
+BINGX_API_BASE = "https://open-api.bingx.com"
+
 TWELVEDATA_BASE = "https://api.twelvedata.com"
 COINGECKO_BASE = "https://api.coingecko.com/api/v3"
 COINGECKO_ALLOWED_DAYS = frozenset(
@@ -57,6 +59,9 @@ class QuietHandler(http.server.SimpleHTTPRequestHandler):
         if parsed.path == "/api/bybit":
             self._serve_bybit_proxy(parsed)
             return
+        if parsed.path == "/api/bingx":
+            self._serve_bingx_proxy(parsed)
+            return
         if parsed.path == "/api/twelvedata":
             self._serve_twelvedata_proxy(parsed)
             return
@@ -88,6 +93,30 @@ class QuietHandler(http.server.SimpleHTTPRequestHandler):
             except (urllib.error.URLError, TimeoutError, OSError):
                 continue
         self.send_error(502, "Bybit upstream failed")
+
+    def _serve_bingx_proxy(self, parsed: urllib.parse.ParseResult) -> None:
+        qs = urllib.parse.parse_qs(parsed.query)
+        path = (qs.get("path") or [""])[0]
+        if not path.startswith("/openApi/"):
+            self.send_error(400, "invalid path")
+            return
+        try:
+            req = urllib.request.Request(
+                f"{BINGX_API_BASE}{path}",
+                headers={
+                    "Accept": "application/json",
+                    "User-Agent": "Multichart-Dev/1.0",
+                },
+            )
+            with urllib.request.urlopen(req, timeout=12) as upstream:
+                body = upstream.read()
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Cache-Control", "no-cache")
+                self.end_headers()
+                self.wfile.write(body)
+        except (urllib.error.URLError, TimeoutError, OSError) as err:
+            self.send_error(502, f"BingX upstream failed: {err}")
 
     def _serve_twelvedata_proxy(self, parsed: urllib.parse.ParseResult) -> None:
         api_key = (

@@ -5,15 +5,17 @@
  * Dashboard widgets page (/terminal.html) is `watchlist.js` — not this module.
  */
 import {
-loadBybitHistory,
-loadBybitSymbols,
-peekBybitSymbolsCache
-} from "./api.js?v=29";
-
-import {
-buildCoinsMarketLists,
-isBybitCoinsDataset
-} from "./bybit-listings.js?v=5";
+loadMarketHistory,
+loadMarketSymbols,
+buildMarketLists,
+peekMarketSymbolsCache,
+isActiveRealtimeMarketDataset,
+formatExchangeDisplayLabel,
+getActiveCoinsMarkets,
+getActiveExchangeMarkets,
+getActiveExchangeId,
+EXCHANGE_CHANGED_EVENT
+} from "./market-api.js?v=1";
 
 import {
 calculateRSI,
@@ -76,7 +78,7 @@ mountCoinsTabletController
 
 import {
 disconnectKlineStream
-} from "./ws.js?v=17";
+} from "./market-ws.js?v=1";
 
 import {
 syncBackgroundAlertStreams
@@ -2455,7 +2457,7 @@ loadIndicatorHistory:(
 symbol,
 tf
 )=>
-loadBybitHistory(
+loadMarketHistory(
 symbol,
 tf,
 5,
@@ -2853,7 +2855,7 @@ options = {}
 ){
 
 const list =
-await loadBybitSymbols(
+await loadMarketSymbols(
 options
 );
 
@@ -2868,7 +2870,7 @@ list
 ){
 
 const lists =
-buildCoinsMarketLists(
+buildMarketLists(
 list
 );
 
@@ -2929,7 +2931,7 @@ nextMarket
 ){
 
 if(
-!COINS_MARKETS.includes(
+!getActiveCoinsMarkets().includes(
 nextMarket
 )
 ){
@@ -2962,7 +2964,7 @@ searchInput.value =
 }
 
 if(
-isBybitCoinsDataset(
+isActiveRealtimeMarketDataset(
 nextMarket
 ) &&
 !coinsMarketHasSymbols(
@@ -3019,7 +3021,7 @@ return true;
 }
 
 const stale =
-peekBybitSymbolsCache();
+peekMarketSymbolsCache();
 
 if(
 !stale?.length
@@ -3086,7 +3088,7 @@ window.addEventListener(
 ()=>{
 
 if(
-isBybitCoinsDataset(
+isActiveRealtimeMarketDataset(
 currentDataset
 )
 ){
@@ -3340,7 +3342,7 @@ try{
 let nextCandles = [];
 
 nextCandles =
-await loadBybitHistory(
+await loadMarketHistory(
 symbol,
 currentTF,
 
@@ -3361,7 +3363,7 @@ candles = nextCandles;
 
 if(
 !candles.length &&
-isBybitCoinsDataset(
+isActiveRealtimeMarketDataset(
 currentDataset
 )
 ){
@@ -4329,6 +4331,16 @@ renderList();
 
 });
 
+window.addEventListener(
+"favorites-local-changed",
+()=>{
+syncFavoriteButtonsFromStorage();
+if(flagSortActive){
+renderList();
+}
+}
+);
+
 
 /* =========================================================
    SORT
@@ -4645,21 +4657,16 @@ symbol ||
 displaySymbol ||
 currentSymbol;
 
-if(!sym){
+if(
+!sym
+){
 return "—";
 }
 
-if(
-isBybitCoinsDataset(
-currentDataset
-)
-){
-return /\.P$/i.test(sym)
-? sym
-: sym + ".P";
-}
-
-return sym;
+return formatExchangeDisplayLabel(
+getActiveExchangeId(),
+sym
+);
 
 }
 
@@ -4771,6 +4778,113 @@ closeAllCoinFlagMenus();
 
 });
 
+function syncCoinsMarketFilterOptions(){
+
+const marketFilter =
+document.getElementById(
+"market-filter"
+);
+
+if(
+!marketFilter
+){
+return;
+}
+
+const markets =
+getActiveExchangeMarkets();
+const prev =
+marketFilter.value;
+
+marketFilter.innerHTML =
+markets.map(
+m=>
+`<option value="${m.id}">${m.label}</option>`
+).join(
+""
+);
+
+const allowed =
+markets.map(
+m=>
+m.id
+);
+
+if(
+allowed.includes(
+prev
+)
+){
+marketFilter.value =
+prev;
+}else if(
+allowed.includes(
+currentDataset
+)
+){
+marketFilter.value =
+currentDataset;
+}else{
+marketFilter.value =
+"all";
+currentDataset =
+"all";
+}
+
+}
+
+async function handleExchangeChanged(){
+
+stopTickerStream();
+disconnectKlineStream();
+
+favorites =
+loadFavoritesGroups();
+
+syncCoinsMarketFilterOptions();
+
+coinsState().allListings =
+[];
+coinsState().allBybitSymbols =
+[];
+coinsState().newListings =
+[];
+coinsState().innovationListings =
+[];
+coinsState().stockListings =
+[];
+coinsState().commodityListings =
+[];
+coinsState().forexListings =
+[];
+
+if(
+!getActiveCoinsMarkets().includes(
+currentDataset
+)
+){
+currentDataset =
+"all";
+}
+
+await refreshCoinsMarketUi().catch(
+err=>{
+console.warn(
+"Terminal exchange switch:",
+err
+);
+}
+);
+
+}
+
+window.addEventListener(
+EXCHANGE_CHANGED_EVENT,
+()=>{
+void handleExchangeChanged();
+}
+);
+
 async function refreshCoinsMarketUi(){
 
 try{
@@ -4791,7 +4905,7 @@ restoreSymbolsFromStaleCache();
 }
 
 if(
-isBybitCoinsDataset(
+isActiveRealtimeMarketDataset(
 currentDataset
 ) &&
 !coinsMarketHasSymbols(
@@ -4894,6 +5008,8 @@ loadFavoritesGroups();
 
 const marketFilter =
 document.getElementById("market-filter");
+
+syncCoinsMarketFilterOptions();
 
 if(marketFilter){
 marketFilter.value = currentDataset;

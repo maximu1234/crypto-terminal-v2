@@ -7,7 +7,11 @@ getActiveAlerts
 
 import {
 subscribeKline
-} from "./ws.js?v=17";
+} from "./market-ws.js?v=1";
+
+import {
+EXCHANGE_CHANGED_EVENT
+} from "./market-api.js?v=1";
 
 /* Базовая цена отдельно для каждого алерта (symbol + shapeId) */
 const lastPriceByAlert =
@@ -1063,6 +1067,11 @@ resyncAlertStreams
 
 window.addEventListener(
 "price-alerts-changed",
+resyncAlertStreams
+);
+
+window.addEventListener(
+EXCHANGE_CHANGED_EVENT,
 resyncAlertStreams
 );
 

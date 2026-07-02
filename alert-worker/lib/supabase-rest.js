@@ -12,6 +12,45 @@ function restBase() {
 
 }
 
+/**
+ * HEAD + Prefer: count=exact — только Content-Range, без тела ответа.
+ */
+export async function restHeadCount(
+  pathAndQuery
+) {
+
+  const { base, key } = restBase();
+
+  const res = await fetch(
+    `${base}/rest/v1/${pathAndQuery}`,
+    {
+      method: "HEAD",
+      headers: {
+        apikey: key,
+        Authorization: `Bearer ${key}`,
+        Prefer: "count=exact"
+      }
+    }
+  );
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(
+      `REST HEAD ${res.status}: ${text.slice(0, 200)}`
+    );
+  }
+
+  const range =
+    res.headers.get("content-range") || "";
+  const m =
+    range.match(/\/(\d+)$/);
+
+  return m
+    ? parseInt(m[1], 10)
+    : 0;
+
+}
+
 export async function restGet(pathAndQuery) {
 
   const { base, key } = restBase();

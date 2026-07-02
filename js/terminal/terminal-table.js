@@ -10,12 +10,13 @@ fetchBtcDominanceHistory
 } from "../btc-dominance/fetch.js?v=1";
 
 import {
-isBybitCoinsDataset
-} from "../bybit-listings.js?v=5";
+isActiveRealtimeMarketDataset,
+isExchangeTradingEnabled
+} from "../market-api.js?v=1";
 
 import {
 connectKlineStream
-} from "../ws.js?v=17";
+} from "../market-ws.js?v=1";
 
 import {
 connectTickerStream,
@@ -278,7 +279,7 @@ return;
 }
 
 if(
-!isBybitCoinsDataset(
+!isActiveRealtimeMarketDataset(
 coinsState().currentDataset
 )
 ){
@@ -559,7 +560,7 @@ scheduleTickerUiFlush();
 export function startRealtime(){
 
 if(
-!isBybitCoinsDataset(
+!isActiveRealtimeMarketDataset(
 coinsState().currentDataset
 )
 ){
@@ -766,10 +767,12 @@ isIndexLink
 ? "coin coin-index-link"
 : "coin";
 
+const showFlags =
+!isIndexLink;
+
 const flagCol =
-isIndexLink
-? `<div class="col-flag" aria-hidden="true"></div>`
-: `
+showFlags
+? `
 <div class="col-flag">
 
 <div class="coin-flag-wrap">
@@ -782,7 +785,8 @@ isIndexLink
 </div>
 </div>
 
-</div>`;
+</div>`
+: `<div class="col-flag" aria-hidden="true"></div>`;
 
 div.innerHTML = `
 ${flagCol}
@@ -980,6 +984,7 @@ coinsState().currentSymbol
 el.classList.toggle(
 "has-position",
 isTradePage &&
+isExchangeTradingEnabled() &&
 hasOpenPosition(
 symbol
 )

@@ -3,6 +3,7 @@ import {
   restUpsertPriceAlert,
   restUpsertUserDrawing
 } from "./supabase-rest.js";
+import { invalidateTelegramAlertsReloadCache } from "./alerts-db.js";
 import { handleClientTrigger } from "./client-trigger.js";
 import { handleClientNotifyTelegram } from "./client-notify-telegram.js";
 import {
@@ -107,8 +108,16 @@ async function handleClientPushAlert(
       shape_id: sid,
       price,
       tf: normalizeTf(body.tf),
+      exchange_id:
+        String(
+          body.exchange_id ||
+          body.exchangeId ||
+          "bybit"
+        ).trim().toLowerCase(),
       triggered_at: null
     });
+
+    invalidateTelegramAlertsReloadCache();
 
     res.writeHead(200, { "Content-Type": "application/json" });
     res.end(JSON.stringify({

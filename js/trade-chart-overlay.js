@@ -7,6 +7,10 @@ syncTradePositionsCache
 } from "./trade-positions-cache.js?v=6";
 
 import {
+isExchangeTradingEnabled
+} from "./market-api.js?v=1";
+
+import {
 formatTradePnl,
 formatTradeUsdt
 } from "./trade-format.js?v=1";
@@ -337,6 +341,12 @@ let switchLoadSeq =
 0;
 
 function getDisplayPosition(){
+
+if(
+!isExchangeTradingEnabled()
+){
+return null;
+}
 
 if(
 switchVeilVisible
@@ -2791,10 +2801,7 @@ const onSwitchStart =
 e=>{
 
 if(
-!chartEventSymbolMatches(
-e,
-host?.getSymbol?.()
-)
+!host
 ){
 return;
 }
@@ -2806,13 +2813,12 @@ e.detail?.loadSeq
 0;
 chartSwitchFrozen =
 true;
-switchVeilVisible =
-false;
 switchVeilPosition =
-null;
+position;
+switchVeilVisible =
+!!position;
 position =
 null;
-invalidateBadgeLayoutCache();
 stopDragListeners?.();
 stopDragListeners =
 null;
@@ -2856,6 +2862,9 @@ switchVeilVisible =
 false;
 switchVeilPosition =
 null;
+position =
+null;
+invalidateBadgeLayoutCache();
 scheduleDraw(
 true
 );
@@ -3005,6 +3014,16 @@ event=>{
 applyStreamPositions(
 event.detail?.positions
 );
+},
+{
+signal
+}
+);
+
+window.addEventListener(
+"exchange-trading-gate-changed",
+()=>{
+draw();
 },
 {
 signal

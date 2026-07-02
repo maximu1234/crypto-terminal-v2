@@ -13,8 +13,8 @@ SCREENER_MAX_BARS
 } from "./chart-import.js?v=43";
 
 import {
-loadBybitHistory
-} from "./api.js?v=29";
+loadMarketHistory
+} from "./market-api.js?v=1";
 
 import {
 calculateRSI,
@@ -23,7 +23,7 @@ alignRsiWithCandleTimes
 
 import {
 subscribeKline
-} from "./ws.js?v=17";
+} from "./market-ws.js?v=1";
 
 const ZOOM_TF_LABELS =
 {
@@ -257,7 +257,7 @@ tf
 ){
 
 const loaded =
-await loadBybitHistory(
+await loadMarketHistory(
 symbol,
 tf,
 2,

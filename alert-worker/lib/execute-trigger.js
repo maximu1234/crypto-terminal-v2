@@ -3,7 +3,8 @@ import {
   restInsertAlertEvent
 } from "./supabase-rest.js";
 import {
-  fetchTelegramChatId
+  fetchTelegramChatId,
+  invalidateTelegramAlertsReloadCache
 } from "./alerts-db.js";
 import {
   formatAlertMessage,
@@ -44,6 +45,8 @@ export async function executeAlertTrigger(
   if (!rows?.length) {
     return { ok: false, reason: "not_claimed" };
   }
+
+  invalidateTelegramAlertsReloadCache();
 
   const claimed = rows[0];
 

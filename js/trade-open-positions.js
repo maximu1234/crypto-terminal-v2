@@ -5,6 +5,10 @@ import {
 syncTradePositionsCache
 } from "./trade-positions-cache.js?v=6";
 
+import {
+isExchangeTradingEnabled
+} from "./market-api.js?v=1";
+
 const openPositionSymbols =
 new Set();
 
@@ -99,6 +103,22 @@ return true;
 
 async function syncOpenPositions(){
 
+if(
+!isExchangeTradingEnabled()
+){
+
+if(
+applySymbols(
+new Set()
+)
+){
+notifyChanged();
+}
+
+return;
+
+}
+
 const result =
 await syncTradePositionsCache();
 
@@ -174,6 +194,22 @@ window.addEventListener(
 "trade-stream-positions",
 event=>{
 
+if(
+!isExchangeTradingEnabled()
+){
+
+if(
+applySymbols(
+new Set()
+)
+){
+notifyChanged();
+}
+
+return;
+
+}
+
 const next =
 new Set();
 
@@ -209,6 +245,28 @@ window.addEventListener(
 "trade-book-refresh",
 ()=>{
 void syncOpenPositions();
+}
+);
+
+window.addEventListener(
+"exchange-trading-gate-changed",
+event=>{
+
+if(
+event.detail?.active
+){
+void syncOpenPositions();
+return;
+}
+
+if(
+applySymbols(
+new Set()
+)
+){
+notifyChanged();
+}
+
 }
 );
 

@@ -10,6 +10,12 @@ formatTradePnl
 } from "./trade-format.js?v=1";
 
 import {
+isExchangeTradingEnabled,
+getActiveExchangeDefinition,
+EXCHANGE_CHANGED_EVENT
+} from "./market-api.js?v=1";
+
+import {
 isMenuBarTrayEnabled,
 MENU_BAR_TRAY_PREF_EVENT
 } from "./desktop-menu-bar-tray-prefs.js?v=1";
@@ -226,19 +232,35 @@ options = {}
 rafId =
 0;
 
+const tradingActive =
+isExchangeTradingEnabled();
+const exchangeName =
+getActiveExchangeDefinition().name;
+
 const positions =
-getAllCachedPositions();
+tradingActive
+? getAllCachedPositions()
+: [];
 const pnlHidden =
 isTotalPnlHidden();
 const totalPnl =
-sumOpenPositionsPnl(
+tradingActive
+? sumOpenPositionsPnl(
 positions
-);
+)
+: null;
 
 let statusLabel =
-"Не подключено";
+tradingActive
+? "Не подключено"
+: "Рынок";
 
 try{
+
+if(
+tradingActive
+){
+
 const status =
 await desktop.trading?.getStatus?.();
 
@@ -248,29 +270,36 @@ status?.configured
 statusLabel =
 "Активно";
 }
+
+}
+
 }catch{
 /* ignore */
 }
 
 const balanceLabel =
-await fetchBalanceLabel(
+tradingActive
+? await fetchBalanceLabel(
 desktop,
 !!options.forceBalance
-);
+)
+: "—";
 
 try{
 await desktop.updateMenuBarTray({
 totalPnl,
 pnlHidden,
 exchange:
-"Bybit",
+exchangeName,
 statusLabel,
 balanceLabel,
 positions:
-mapPositionsForTray(
+tradingActive
+? mapPositionsForTray(
 positions,
 pnlHidden
 )
+: []
 });
 }catch{
 /* ignore */
@@ -346,6 +375,16 @@ schedulePush
 );
 
 window.addEventListener(
+"exchange-trading-gate-changed",
+schedulePush
+);
+
+window.addEventListener(
+EXCHANGE_CHANGED_EVENT,
+schedulePush
+);
+
+window.addEventListener(
 "storage",
 onStorage
 );
@@ -388,6 +427,14 @@ onBookRefresh
 );
 window.removeEventListener(
 "trade-total-pnl-visibility-changed",
+schedulePush
+);
+window.removeEventListener(
+"exchange-trading-gate-changed",
+schedulePush
+);
+window.removeEventListener(
+EXCHANGE_CHANGED_EVENT,
 schedulePush
 );
 window.removeEventListener(

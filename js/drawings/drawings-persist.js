@@ -26,6 +26,10 @@ import {
 normalizeRectangleShape
 } from "./arrow-rect.js?v=2";
 
+import {
+drawingsStorageKey
+} from "../drawings-exchange-key.js?v=1";
+
 const LEGACY_TF_KEYS =
 Object.freeze([
 "1",
@@ -254,7 +258,13 @@ return shape;
 
 function storageKey(){
 
-return `drawings_${getSymbol()}${storageKeySuffix}`;
+return drawingsStorageKey(
+getSymbol(),
+{
+tfSuffix:
+storageKeySuffix
+}
+);
 
 }
 
@@ -422,6 +432,15 @@ try{
 
 const legacy =
 JSON.parse(
+localStorage.getItem(
+drawingsStorageKey(
+sym,
+{
+tfSuffix:
+`_${tf}`
+}
+)
+) ||
 localStorage.getItem(
 `drawings_${sym}_${tf}`
 ) ||
@@ -601,7 +620,9 @@ return;
 try{
 
 localStorage.setItem(
-`drawings_${sym}`,
+drawingsStorageKey(
+sym
+),
 JSON.stringify(
 getDrawings()
 )

@@ -1085,6 +1085,10 @@ body.trade-page .trade-book-status.is-error{
 color:#fca5a5;
 }
 
+body.exchange-trading-inactive.trade-page .trade-book-panel{
+display:none !important;
+}
+
 @media (max-width:640px){
 
 body.trade-page .trade-book-panel{

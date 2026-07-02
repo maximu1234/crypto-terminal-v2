@@ -1,7 +1,11 @@
 import {
+getAllCoinsMarketIds,
+getActiveCoinsMarkets
+} from "../market-api.js?v=1";
+
+import {
 coinsState,
 COINS_PREFS_KEY,
-COINS_MARKETS,
 COINS_SORT_MODES,
 COINS_TF_VALUES,
 isTerminalPage
@@ -61,7 +65,10 @@ const sortByMarket =
 const lastViewByMarket =
 {};
 
-for(const m of COINS_MARKETS){
+for(
+const m of
+getAllCoinsMarketIds()
+){
 sortByMarket[m] = defaultSortEntry();
 lastViewByMarket[m] = defaultLastViewEntry();
 }
@@ -171,7 +178,10 @@ legacySort.sortByMarket &&
 typeof legacySort.sortByMarket === "object"
 ){
 
-for(const m of COINS_MARKETS){
+for(
+const m of
+getAllCoinsMarketIds()
+){
 
 if(legacySort.sortByMarket[m]){
 
@@ -193,7 +203,10 @@ typeof legacySort.mode === "string"
 const entry =
 normalizeSortEntry(legacySort);
 
-for(const m of COINS_MARKETS){
+for(
+const m of
+getAllCoinsMarketIds()
+){
 prefs.sortByMarket[m] = { ...entry };
 }
 
@@ -201,7 +214,10 @@ changed = true;
 
 }else{
 
-for(const m of COINS_MARKETS){
+for(
+const m of
+getAllCoinsMarketIds()
+){
 
 if(
 legacySort[m] &&
@@ -235,7 +251,7 @@ localStorage.getItem("coins_market_dataset");
 
 if(
 legacyMarket &&
-COINS_MARKETS.includes(legacyMarket)
+getActiveCoinsMarkets().includes(legacyMarket)
 ){
 
 prefs.market = legacyMarket;
@@ -303,11 +319,14 @@ const parsed =
 JSON.parse(raw);
 
 prefs.market =
-COINS_MARKETS.includes(parsed?.market)
+getActiveCoinsMarkets().includes(parsed?.market)
 ? parsed.market
 : "all";
 
-for(const m of COINS_MARKETS){
+for(
+const m of
+getAllCoinsMarketIds()
+){
 prefs.sortByMarket[m] =
 normalizeSortEntry(
 parsed?.sortByMarket?.[m]
@@ -378,11 +397,14 @@ const out =
 defaultCoinsPrefs();
 
 out.market =
-COINS_MARKETS.includes(prefs?.market)
+getActiveCoinsMarkets().includes(prefs?.market)
 ? prefs.market
 : "all";
 
-for(const m of COINS_MARKETS){
+for(
+const m of
+getAllCoinsMarketIds()
+){
 out.sortByMarket[m] =
 normalizeSortEntry(
 prefs?.sortByMarket?.[m]

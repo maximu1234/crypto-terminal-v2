@@ -6,13 +6,18 @@ loadFavoritesGroups,
 saveFavoritesGroups,
 setFavoriteGroup,
 getFavoriteGroup,
-canSetBlueFlag
+canSetBlueFlag,
+FAVORITES_BY_EXCHANGE_KEY
 } from "./favorites.js?v=4";
 
 import {
 persistFavoritesToCloud,
 onFavoritesRemoteUpdate
 } from "./cloud-sync.js?v=40";
+
+import {
+EXCHANGE_CHANGED_EVENT
+} from "./market-api.js?v=1";
 
 let favorites =
 loadFavoritesGroups();
@@ -407,10 +412,36 @@ e=>{
 
 if(
 e.key !==
+FAVORITES_BY_EXCHANGE_KEY &&
+e.key !==
 "favorites"
 ){
 return;
 }
+
+favorites =
+loadFavoritesGroups();
+
+refreshAll();
+
+}
+);
+
+window.addEventListener(
+"favorites-local-changed",
+()=>{
+
+favorites =
+loadFavoritesGroups();
+
+refreshAll();
+
+}
+);
+
+window.addEventListener(
+EXCHANGE_CHANGED_EVENT,
+()=>{
 
 favorites =
 loadFavoritesGroups();
