@@ -21,19 +21,13 @@ import {
 mountFavoritesCloudSettingsPanel
 } from "./favorites-settings-panel.js?v=1";
 
-import {
-isMenuBarTrayPlatform
-} from "./desktop-menu-bar-tray-prefs.js?v=1";
-
 const SECTIONS =
 [
 {
 id:
 "system",
 label:
-"Системные",
-desktopOnly:
-true
+"Системные"
 },
 {
 id:
@@ -94,7 +88,7 @@ return isTradePage();
 
 function showSystemSettings(){
 
-return isMenuBarTrayPlatform();
+return true;
 
 }
 
@@ -345,15 +339,6 @@ btn.hidden =
 }
 
 if(
-section.desktopOnly &&
-section.id ===
-"system"
-){
-btn.hidden =
-!showSystemSettings();
-}
-
-if(
 section.adminOnly
 ){
 btn.hidden =
@@ -466,7 +451,7 @@ const {
 mountSystemSettingsPanel
 } =
 await import(
-"./app-settings-system-panel.js?v=1"
+"./app-settings-system-panel.js?v=2"
 );
 
 systemCtl =

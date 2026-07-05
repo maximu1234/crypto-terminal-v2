@@ -131,6 +131,10 @@ line-height:1.45;
 color:#9ca3af;
 }
 
+.app-settings-panel-lead--spaced{
+margin-top:22px;
+}
+
 .app-settings-toggle-row{
 display:flex;
 align-items:center;

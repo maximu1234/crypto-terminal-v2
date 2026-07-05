@@ -25,6 +25,64 @@ import {
 subscribeKline
 } from "./market-ws.js?v=1";
 
+import {
+isScreenerPatternEnabled,
+SCREENER_PATTERN_PREF_EVENT
+} from "./screener-pattern-prefs.js?v=1";
+
+let zoomPatternOverlayApi =
+null;
+
+async function ensureZoomPatternOverlayApi(){
+
+if(
+!zoomPatternOverlayApi
+){
+zoomPatternOverlayApi =
+await import(
+"./screener-pattern-overlay.js?v=1"
+);
+}
+
+return zoomPatternOverlayApi;
+
+}
+
+async function mountZoomPattern(
+state
+){
+
+if(
+!state ||
+state.disposed ||
+!isScreenerPatternEnabled()
+){
+return;
+}
+
+const api =
+await ensureZoomPatternOverlayApi();
+
+if(
+state.disposed
+){
+return;
+}
+
+api.mountScreenerPatternOverlay(
+state
+);
+
+}
+
+function destroyZoomPattern(
+state
+){
+
+state?.patternOverlayDestroy?.();
+
+}
+
 const ZOOM_TF_LABELS =
 {
 "1":
@@ -59,6 +117,60 @@ null;
 
 let zoomMountOptions =
 null;
+
+function updateZoomPatternData(
+state
+){
+
+if(
+!state ||
+state.disposed ||
+!isScreenerPatternEnabled()
+){
+return;
+}
+
+try{
+state.patternOverlayRecompute?.();
+}catch{
+/* zoom closed */
+}
+
+}
+
+function applyZoomPatternPref(
+enabled
+){
+
+if(
+!zoomState ||
+zoomState.disposed
+){
+return;
+}
+
+if(
+enabled
+){
+void mountZoomPattern(
+zoomState
+);
+}else{
+destroyZoomPattern(
+zoomState
+);
+}
+
+}
+
+window.addEventListener(
+SCREENER_PATTERN_PREF_EVENT,
+e=>{
+applyZoomPatternPref(
+!!e.detail?.enabled
+);
+}
+);
 
 function applyZoomInversion(
 state,
@@ -140,6 +252,13 @@ if(
 ){
 return;
 }
+
+zoomState.disposed =
+true;
+
+destroyZoomPattern(
+zoomState
+);
 
 try{
 zoomState.unsubKline?.();
@@ -382,6 +501,8 @@ state,
 zoomMountOptions?.getInvertCharts?.() === true
 );
 
+state.patternOverlayRedraw?.();
+
 }
 
 async function applyZoomTimeframe(
@@ -432,6 +553,9 @@ candles.length -
 ].close
 );
 updateZoomRsiData(
+state
+);
+updateZoomPatternData(
 state
 );
 syncZoomChartSize(
@@ -498,11 +622,17 @@ state.candles
 updateZoomRsiData(
 state
 );
+updateZoomPatternData(
+state
+);
 }else{
 state.series.update(
 candle
 );
 updateZoomRsiData(
+state
+);
+updateZoomPatternData(
 state
 );
 }
@@ -690,7 +820,9 @@ candles:
 unsubKline:
 null,
 resizeObserver:
-null
+null,
+disposed:
+false
 };
 
 zoomState =
@@ -836,6 +968,9 @@ updateZoomRsiData(
 state
 );
 runSize();
+void mountZoomPattern(
+state
+);
 }
 
 state.unsubKline =
@@ -896,11 +1031,17 @@ state.candles
 updateZoomRsiData(
 state
 );
+updateZoomPatternData(
+state
+);
 }else{
 series.update(
 candle
 );
 updateZoomRsiData(
+state
+);
+updateZoomPatternData(
 state
 );
 }

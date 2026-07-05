@@ -21,7 +21,7 @@ createEmaShiftRibbonIndicator
 } from "./indicators/ema-shift-ribbon.js?v=6";
 import {
 createPattern12Indicator
-} from "./indicators/pattern-12.js?v=1";
+} from "./indicators/pattern-12.js?v=2";
 import {
 createIndicatorSettingsDialog
 } from "./indicators/indicator-settings-dialog.js?v=6";
