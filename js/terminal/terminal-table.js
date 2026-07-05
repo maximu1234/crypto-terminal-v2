@@ -3,7 +3,7 @@ coinsState,
 marketMap,
 coinElements,
 COINS_INDEX_ITEMS
-} from "./terminal-state.js?v=7";
+} from "./terminal-state.js?v=8";
 
 import {
 fetchBtcDominanceHistory
@@ -39,7 +39,7 @@ emptyFavorites
 
 import {
 isTradePage
-} from "./terminal-state.js?v=7";
+} from "./terminal-state.js?v=8";
 
 /** Desktop /trade only — не тянем trade-open-positions в открытый web /coins. */
 let hasOpenPosition =

@@ -126,10 +126,11 @@ coinsState,
 marketMap,
 coinElements,
 COINS_TF_VALUES,
+COINS_TF_HOTKEYS,
 COINS_MARKETS,
 isTerminalPage,
 isTradePage
-} from "./terminal/terminal-state.js?v=7";
+} from "./terminal/terminal-state.js?v=8";
 
 import {
 stopTickerStream
@@ -149,7 +150,7 @@ resolveInitialSymbolAndTf,
 applyCoinsPrefs,
 applySortForCurrentMarket,
 readUrlParams
-} from "./terminal/terminal-prefs.js?v=9";
+} from "./terminal/terminal-prefs.js?v=10";
 
 import {
 getCurrentSymbols,
@@ -163,7 +164,7 @@ highlightActiveSymbol,
 getVisibleSymbolList,
 setCoinsTableHooks,
 syncCoinListFreezeFromFlagMenus
-} from "./terminal/terminal-table.js?v=15";
+} from "./terminal/terminal-table.js?v=16";
 
 import {
 createCoinsChartSwitchVeil
@@ -3720,26 +3721,6 @@ await loadSymbol(currentSymbol);
 persistCoinsPrefs();
 
 }
-
-const COINS_TF_HOTKEYS =
-Object.freeze({
-
-"1":
-"1",
-"2":
-"5",
-"3":
-"15",
-"4":
-"60",
-"5":
-"240",
-"6":
-"D",
-"7":
-"W"
-
-});
 
 const COINS_POSITION_DRAW_HOTKEYS =
 new Map(

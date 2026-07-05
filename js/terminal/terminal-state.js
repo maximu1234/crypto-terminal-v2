@@ -142,6 +142,27 @@ new Set([
 "W"
 ]);
 
+/** Клавиши 1–7 → ТФ (как на Терминале). */
+export const COINS_TF_HOTKEYS =
+Object.freeze({
+
+"1":
+"1",
+"2":
+"5",
+"3":
+"15",
+"4":
+"60",
+"5":
+"240",
+"6":
+"D",
+"7":
+"W"
+
+});
+
 export function registerCoinsState(
 bindings
 ){

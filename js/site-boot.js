@@ -74,6 +74,14 @@ initDesktopTradeNav
 } from "./desktop-trade-nav.js?v=1";
 
 import {
+initScriptDesktopNav
+} from "./script-desktop-nav.js?v=1";
+
+import {
+resumeScriptScanBackgroundJob
+} from "./script-scan-background.js?v=2";
+
+import {
 resumeStatsBackgroundJob
 } from "./statistics-background.js?v=5";
 
@@ -81,8 +89,15 @@ initSuppressNativeContextMenu();
 initFocusBlurAfterPick();
 initDesktopAppUi();
 initDesktopTradeNav();
+initScriptDesktopNav();
 
 void resumeStatsBackgroundJob();
+
+if(
+window.cryptoTerminalDesktop?.isDesktop
+){
+void resumeScriptScanBackgroundJob();
+}
 
 async function startSiteBoot(){
 

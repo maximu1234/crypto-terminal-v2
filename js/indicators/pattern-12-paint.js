@@ -69,6 +69,31 @@ x
 
 }
 
+function pt4AnchorPrice(
+candles,
+bar,
+side,
+fallbackPrice
+){
+
+const candle =
+candles[
+bar
+];
+
+if(
+!candle
+){
+return fallbackPrice;
+}
+
+return side ===
+"long"
+? candle.high
+: candle.low;
+
+}
+
 export function paintPattern12Scene(
 ctx,
 plotW,
@@ -295,7 +320,12 @@ candles
 );
 const y =
 series.priceToCoordinate(
+pt4AnchorPrice(
+candles,
+mark.bar,
+mark.side,
 mark.price
+)
 );
 
 if(
@@ -388,7 +418,12 @@ candles
 );
 const y =
 series.priceToCoordinate(
+pt4AnchorPrice(
+candles,
+dot.bar,
+dot.side,
 dot.price
+)
 );
 
 if(
@@ -400,17 +435,6 @@ null
 continue;
 }
 
-const pad =
-dot.price *
-0.006;
-const cy =
-dot.side ===
-"long"
-? y +
-pad
-: y -
-pad;
-
 ctx.fillStyle =
 dot.side ===
 "long"
@@ -419,7 +443,7 @@ dot.side ===
 ctx.beginPath();
 ctx.arc(
 x,
-cy,
+y,
 4,
 0,
 Math.PI *

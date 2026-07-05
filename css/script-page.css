@@ -1,0 +1,262 @@
+/* Страница Скрипт: график слева, панель справа (как Терминал). */
+
+body.script-page{
+--coins-list-w:minmax(280px, 340px);
+}
+
+body.script-page .script-list-panel{
+display:flex;
+flex-direction:column;
+min-height:0;
+height:100%;
+}
+
+.script-scan-toolbar{
+flex-shrink:0;
+padding:8px 10px 6px;
+border-bottom:var(--coins-block-separator);
+background:var(--coins-panel-bg);
+}
+
+.script-tf-filter{
+display:flex;
+flex-wrap:wrap;
+gap:3px;
+}
+
+.script-tf-btn{
+min-width:0;
+padding:2px 5px;
+border:1px solid transparent;
+border-radius:4px;
+background:transparent;
+color:#6b7280;
+font-size:10px;
+line-height:1.2;
+cursor:pointer;
+}
+
+.script-tf-btn:hover{
+color:#9ca3af;
+border-color:#374151;
+}
+
+.script-tf-btn.active{
+color:#d1d5db;
+border-color:#4b5563;
+background:#1f2937;
+}
+
+.script-scan-actions{
+flex-shrink:0;
+padding:10px;
+border-bottom:var(--coins-block-separator);
+background:var(--coins-panel-bg);
+display:flex;
+flex-direction:column;
+gap:8px;
+}
+
+.script-refresh-all-btn{
+width:100%;
+padding:8px 12px;
+border:1px solid #374151;
+border-radius:6px;
+background:#1f2937;
+color:#e5e7eb;
+font-size:13px;
+cursor:pointer;
+}
+
+.script-refresh-all-btn:hover:not(:disabled){
+background:#374151;
+}
+
+.script-refresh-all-btn:disabled{
+opacity:.55;
+cursor:not-allowed;
+}
+
+.script-scan-status,
+.script-auto-status{
+font-size:12px;
+line-height:1.35;
+color:#9ca3af;
+}
+
+.script-scan-settings{
+flex-shrink:0;
+padding:10px;
+border-bottom:var(--coins-block-separator);
+background:var(--coins-panel-bg);
+display:flex;
+flex-direction:column;
+gap:8px;
+}
+
+.script-scan-settings label{
+display:flex;
+flex-direction:column;
+gap:4px;
+font-size:12px;
+color:#9ca3af;
+}
+
+.script-scan-settings select{
+font-size:13px;
+padding:6px 8px;
+border:1px solid #374151;
+border-radius:6px;
+background:#111827;
+color:#e5e7eb;
+}
+
+.script-auto-actions{
+display:flex;
+gap:6px;
+}
+
+.script-auto-actions button{
+flex:1 1 0;
+padding:7px 8px;
+border:1px solid #374151;
+border-radius:6px;
+background:#1f2937;
+color:#e5e7eb;
+font-size:12px;
+cursor:pointer;
+}
+
+.script-auto-actions button:hover:not(:disabled){
+background:#374151;
+}
+
+.script-auto-actions button:disabled{
+opacity:.55;
+cursor:not-allowed;
+}
+
+.script-table-header{
+flex-shrink:0;
+display:grid;
+grid-template-columns:minmax(0, 1fr) 44px 72px;
+gap:8px;
+padding:8px 10px;
+font-size:11px;
+font-weight:600;
+letter-spacing:.04em;
+text-transform:uppercase;
+color:#6b7280;
+border-bottom:var(--coins-block-separator);
+background:var(--coins-panel-bg);
+}
+
+.script-table-body{
+flex:1 1 auto;
+min-height:0;
+overflow:auto;
+-webkit-overflow-scrolling:touch;
+}
+
+.script-table-row{
+display:grid;
+grid-template-columns:minmax(0, 1fr) 44px 72px;
+gap:8px;
+padding:8px 10px;
+border-bottom:1px solid #1f2937;
+font-size:13px;
+cursor:pointer;
+color:#e5e7eb;
+width:100%;
+text-align:left;
+border-left:none;
+border-right:none;
+border-top:none;
+background:transparent;
+}
+
+.script-table-row:hover,
+.script-table-row.active{
+background:#1f2937;
+}
+
+.script-col-tf{
+color:#9ca3af;
+font-size:12px;
+text-align:center;
+}
+
+.script-side-long{
+color:#34d399;
+}
+
+.script-side-short{
+color:#f87171;
+}
+
+.script-table-empty{
+padding:16px 10px;
+font-size:13px;
+color:#6b7280;
+}
+
+body.script-page #chart-wrap{
+pointer-events:auto;
+display:flex;
+flex-direction:column;
+}
+
+body.script-page .coins-chart-slot-body{
+flex:1 1 auto;
+min-height:0;
+display:flex;
+flex-direction:column;
+}
+
+body.script-page #charts-stack{
+min-height:0;
+flex:1 1 auto;
+display:flex;
+flex-direction:column;
+}
+
+body.script-page .coins-chart-pane,
+body.script-page .charts-stack-panes{
+flex:1 1 auto;
+min-height:0;
+display:flex;
+flex-direction:column;
+position:relative;
+}
+
+body.script-page .script-topbar .script-open-terminal{
+margin-left:8px;
+flex-shrink:0;
+}
+
+body.script-page .coins-header-desktop a.active{
+color:#fff;
+}
+
+@media (max-width:640px){
+
+body.script-page #app{
+display:flex;
+flex-direction:column;
+height:100dvh;
+}
+
+body.script-page #left{
+order:2;
+flex:1 1 auto;
+min-height:0;
+}
+
+body.script-page #list{
+order:1;
+max-height:42dvh;
+border-left:none;
+border-bottom:var(--coins-block-separator);
+}
+
+}

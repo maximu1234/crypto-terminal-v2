@@ -13,12 +13,17 @@ updateRsiLevelLinesLayout,
 applyRsiFixedPriceScale,
 CHART_TIME_SCALE_HEIGHT,
 SCREENER_MAX_BARS,
-SCREENER_VISIBLE_BARS
+SCREENER_VISIBLE_BARS,
+applyCoinsChartViewport,
+appendFutureWhitespaceBars,
+computeChartFutureMarginBars,
+coinsTfVisibleBars,
+linkChartsCrosshair
 } from "./chart-import.js?v=43";
 
 import {
 readCoinsPrefs
-} from "./terminal/terminal-prefs.js?v=9";
+} from "./terminal/terminal-prefs.js?v=10";
 
 import {
 calculateRSI,
@@ -123,7 +128,13 @@ return `
 export function createTerminalScreenerChartPane({
 mountEl,
 showRsi =
-true
+true,
+historyRequests =
+2,
+viewportMode =
+"screener",
+linkedCrosshairVertEl =
+null
 }){
 
 const target =
@@ -238,6 +249,116 @@ return;
 rsiHudValueEl.textContent =
 value.toFixed(
 2
+);
+
+}
+
+function resetRsiHudToLast(){
+
+if(
+!candles.length
+){
+setRsiHudValue(
+null
+);
+return;
+}
+
+try{
+
+const raw =
+calculateRSI(
+candles
+);
+const points =
+alignRsiWithCandleTimes(
+candles,
+raw
+);
+const last =
+points[
+points.length -
+1
+];
+
+setRsiHudValue(
+last?.value ??
+null
+);
+
+}catch{
+setRsiHudValue(
+null
+);
+}
+
+}
+
+function ensureCrosshair(){
+
+if(
+disposeCrosshair ||
+!chart ||
+!series ||
+!chartContainer
+){
+return;
+}
+
+if(
+showRsi &&
+linkedCrosshairVertEl &&
+rsiChart &&
+rsiSeries
+){
+
+const link =
+linkChartsCrosshair(
+{
+mainChart:
+chart,
+linkedChart:
+rsiChart,
+mainSeries:
+series,
+linkedSeries:
+rsiSeries,
+linkedVertOverlayEl:
+linkedCrosshairVertEl,
+chartWrapEl:
+chartContainer,
+chartEl:
+chartContainer,
+linkedWrapEl:
+rsiWrapEl,
+linkedChartEl:
+rsiChartEl,
+onLinkedCrosshairRsiValue:
+setRsiHudValue,
+onLinkedCrosshairClear:
+resetRsiHudToLast
+}
+);
+
+disposeCrosshair =
+()=>{
+link.detachPointerCrosshair?.();
+link.clearLinked?.();
+};
+
+return;
+
+}
+
+disposeCrosshair =
+mountWidgetDomCrosshair(
+{
+chart,
+series,
+wrapEl:
+chartContainer,
+chartContainer
+}
 );
 
 }
@@ -468,6 +589,7 @@ rsiPair.series;
 
 bindRsiChartOptions();
 syncRsiPaneSize();
+ensureCrosshair();
 
 return true;
 
@@ -497,7 +619,9 @@ raw
 );
 
 rsiSeries.setData(
+buildRsiDisplayPoints(
 points
+)
 );
 
 const last =
@@ -516,6 +640,86 @@ scheduleRsiLayoutRetries();
 }catch{
 /* chart disposed */
 }
+
+}
+
+function getFutureMarginBars(){
+
+if(
+viewportMode !==
+"coins" ||
+!candles.length
+){
+return 0;
+}
+
+const visibleBars =
+coinsTfVisibleBars(
+tf,
+candles.length
+);
+
+return computeChartFutureMarginBars(
+visibleBars
+);
+
+}
+
+function buildDisplayCandles(){
+
+if(
+viewportMode !==
+"coins" ||
+!candles.length
+){
+return candles;
+}
+
+const futureMargin =
+getFutureMarginBars();
+
+if(
+futureMargin <
+1
+){
+return candles;
+}
+
+return appendFutureWhitespaceBars(
+candles,
+futureMargin,
+tf
+);
+
+}
+
+function buildRsiDisplayPoints(
+points
+){
+
+if(
+viewportMode !==
+"coins" ||
+!points?.length
+){
+return points;
+}
+
+const futureMargin =
+getFutureMarginBars();
+
+if(
+futureMargin <
+1
+){
+return points;
+}
+
+return appendFutureWhitespaceBars(
+points,
+futureMargin,
+tf
+);
 
 }
 
@@ -552,19 +756,13 @@ pair.chart;
 series =
 pair.series;
 
-if(
-!disposeCrosshair
-){
-disposeCrosshair =
-mountWidgetDomCrosshair({
-chart,
-series,
-wrapEl: chartContainer,
-chartContainer
-});
-}
-
 ensureRsiChart();
+
+if(
+!showRsi
+){
+ensureCrosshair();
+}
 
 const markUserZoom =
 ()=>{
@@ -624,6 +822,59 @@ resolve
 }
 
 return ensureChart();
+
+}
+
+function applyViewportZoom(){
+
+if(
+!chart ||
+!candles.length
+){
+return 0;
+}
+
+const w =
+chartContainer.clientWidth;
+const h =
+chartContainer.clientHeight;
+
+if(
+w <
+2 ||
+h <
+2
+){
+return 0;
+}
+
+if(
+viewportMode ===
+"coins"
+){
+
+return applyCoinsChartViewport(
+chart,
+rsiChart,
+buildDisplayCandles(),
+tf,
+w,
+candles.length
+);
+
+}
+
+return applyScreenerZoom(
+chart,
+series,
+candles,
+w,
+h,
+{
+shouldContinue:()=>
+alive
+}
+);
 
 }
 
@@ -692,17 +943,7 @@ range.from
 
 }
 
-return applyScreenerZoom(
-chart,
-series,
-candles,
-w,
-h,
-{
-shouldContinue:()=>
-alive
-}
-);
+return applyViewportZoom();
 
 }catch{
 return 0;
@@ -829,15 +1070,24 @@ candles.slice(
 );
 
 series.setData(
-candles
+buildDisplayCandles()
 );
 updateRsiData();
 
 }else{
 
+if(
+viewportMode ===
+"coins"
+){
 series.update(
 candle
 );
+}else{
+series.update(
+candle
+);
+}
 
 if(
 isNewBar &&
@@ -858,6 +1108,13 @@ if(
 isNewBar
 ){
 
+if(
+viewportMode ===
+"coins"
+){
+applyViewportZoom();
+}else{
+
 const total =
 candles.length;
 const visible =
@@ -872,6 +1129,8 @@ chartContainer.clientWidth,
 visible,
 total
 );
+
+}
 
 }
 
@@ -954,10 +1213,15 @@ const raw =
 await loadMarketHistory(
 symbol,
 tf,
-2,
+historyRequests,
 {
 parallel:
-true
+true,
+batchGapMs:
+viewportMode ===
+"coins"
+? 0
+: undefined
 }
 );
 
@@ -991,7 +1255,7 @@ return;
 }
 
 series.setData(
-candles
+buildDisplayCandles()
 );
 updateRsiData();
 
@@ -1088,8 +1352,20 @@ null;
 }
 
 return {
-chart,
-series,
+get chart(){
+return chart;
+},
+get series(){
+return series;
+},
+getCandles:()=>
+candles.slice(),
+getSymbol:()=>
+symbol,
+getTf:()=>
+tf,
+getChartEl:()=>
+chartContainer,
 load,
 destroy,
 syncChartSize,

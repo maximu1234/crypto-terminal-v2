@@ -13,7 +13,7 @@ normalizePattern12Settings
 
 import {
 paintPattern12Scene
-} from "./pattern-12-paint.js?v=1";
+} from "./pattern-12-paint.js?v=2";
 
 function readSettings(
 store

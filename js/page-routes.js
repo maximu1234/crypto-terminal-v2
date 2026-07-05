@@ -166,6 +166,14 @@ return pathMatches(
 
 }
 
+export function isScriptPage(){
+
+return pathMatches(
+/\/script(\.html)?\/?$/i
+);
+
+}
+
 export function isSystemAdminPage(){
 
 return pathMatches(

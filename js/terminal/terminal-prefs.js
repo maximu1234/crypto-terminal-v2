@@ -9,12 +9,12 @@ COINS_PREFS_KEY,
 COINS_SORT_MODES,
 COINS_TF_VALUES,
 isTerminalPage
-} from "./terminal-state.js?v=7";
+} from "./terminal-state.js?v=8";
 
 import {
 getCurrentSymbols,
 getFirstVisibleSymbol
-} from "./terminal-table.js?v=15";
+} from "./terminal-table.js?v=16";
 
 export function defaultSortEntry(){
 

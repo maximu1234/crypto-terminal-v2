@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ru" class="terminal-page script-page">
+<head>
+
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin/>
+<link rel="dns-prefetch" href="https://api.bybit.com"/>
+
+<title>Скрипт — Multichart</title>
+
+<link rel="icon" href="/icons/brand-logo.png" type="image/png">
+
+<link rel="stylesheet" href="/css/critical-shell.css?v=6">
+<script src="/js/site-css-ready.js?v=2"></script>
+<link rel="stylesheet" href="/css/common.css?v=34">
+<link rel="stylesheet" href="/css/terminal.css?v=159">
+<link rel="stylesheet" href="/css/terminal-layout.css?v=82">
+<link rel="stylesheet" href="/css/screener.css?v=42">
+<link rel="stylesheet" href="/css/script-page.css?v=9">
+
+<script src="/vendor/lightweight-charts.standalone.production.js"></script>
+<link rel="modulepreload" href="/js/charts-lib-boot.js?v=3" crossorigin>
+
+</head>
+
+<body class="terminal-page script-page">
+
+<div id="app">
+
+<div id="left">
+
+<header id="header" class="coins-page-header">
+
+<a href="/screener.html" id="logo" aria-label="Multichart"><img src="/icons/brand-logo.png" alt="" width="32" height="32" class="site-logo-img" decoding="async"></a>
+
+<div class="screener-mobile-bar coins-mobile-bar">
+<button type="button" class="screener-nav-toggle" id="coins-nav-toggle" aria-label="Меню" aria-expanded="false" aria-controls="coins-nav-panel">
+<span class="screener-nav-toggle-bars" aria-hidden="true"></span>
+</button>
+</div>
+
+<div class="screener-nav-backdrop hidden" id="coins-nav-backdrop"></div>
+
+<nav class="screener-nav-panel" id="coins-nav-panel">
+<a href="/screener.html">Скринер</a>
+<a href="/terminal.html">Терминал</a>
+<a href="/watchlist.html">Вотчлист</a>
+<a href="/alerts/">Алерты</a>
+<a href="/listings.html">Листинги</a>
+<a href="/trade-calculator.html">Калькулятор</a>
+<a href="/statistics.html">Статистика</a>
+</nav>
+
+<nav class="menu coins-header-desktop">
+<a href="/screener.html">Скринер</a>
+<a href="/terminal.html">Терминал</a>
+<a href="/watchlist.html">Вотчлист</a>
+<a href="/alerts/">Алерты</a>
+<a href="/listings.html">Листинги</a>
+<a href="/trade-calculator.html">Калькулятор</a>
+<a href="/statistics.html">Статистика</a>
+<div class="header-settings-wrap" id="header-settings-wrap">
+<button type="button" class="header-settings-btn" id="header-settings-btn" title="Вход и синхронизация" aria-label="Настройки" aria-expanded="false" aria-haspopup="true">
+<svg class="header-settings-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.75"/><path fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+</button>
+<div class="header-settings-dropdown hidden" id="header-settings-dropdown" role="menu">
+<p class="header-settings-section-title">Аккаунт</p>
+<div id="cloud-settings-mount"></div>
+</div>
+</div>
+</nav>
+
+</header>
+
+<div id="topbar" class="coins-topbar script-topbar">
+
+<div class="coins-symbol-head" id="coins-symbol-head">
+<div id="current-symbol">—</div>
+</div>
+
+<div class="coins-tf-desktop" id="script-chart-tf-desktop">
+<button type="button" class="tf-btn" data-tf="1">1m</button>
+<button type="button" class="tf-btn" data-tf="5">5m</button>
+<button type="button" class="tf-btn" data-tf="15">15m</button>
+<button type="button" class="tf-btn active" data-tf="60">1h</button>
+<button type="button" class="tf-btn" data-tf="240">4h</button>
+<button type="button" class="tf-btn" data-tf="D">D</button>
+<button type="button" class="tf-btn" data-tf="W">W</button>
+</div>
+
+<button type="button" class="screener-open script-open-terminal" id="script-open-terminal" title="Открыть на странице Терминал">↗</button>
+
+<div class="screener-mobile-select-wrap coins-tf-mobile-wrap">
+<button type="button" class="screener-mobile-select" id="script-chart-tf-trigger" aria-haspopup="listbox" aria-expanded="false">
+<span id="script-chart-tf-label">1h</span>
+</button>
+<div class="screener-mobile-menu hidden" id="script-chart-tf-menu" role="listbox">
+<button type="button" class="screener-mobile-menu-item" data-tf="1">1m</button>
+<button type="button" class="screener-mobile-menu-item" data-tf="5">5m</button>
+<button type="button" class="screener-mobile-menu-item" data-tf="15">15m</button>
+<button type="button" class="screener-mobile-menu-item active" data-tf="60">1h</button>
+<button type="button" class="screener-mobile-menu-item" data-tf="240">4h</button>
+<button type="button" class="screener-mobile-menu-item" data-tf="D">D</button>
+<button type="button" class="screener-mobile-menu-item" data-tf="W">W</button>
+</div>
+</div>
+
+</div>
+
+<div id="charts-stack">
+
+<div class="coins-chart-pane">
+
+<div id="charts-stack-panes" class="charts-stack-panes">
+
+<div id="chart-wrap">
+<div id="script-chart-mount" class="coins-chart-slot-body"></div>
+</div>
+
+<div id="linked-crosshair-vert" class="linked-crosshair-vert hidden" aria-hidden="true"></div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<div id="list" class="script-list-panel">
+
+<div class="script-scan-toolbar">
+<div class="script-tf-filter" id="script-tf-filter" role="tablist" aria-label="Фильтр таймфрейма">
+<button type="button" class="script-tf-btn active" data-tf="all">Все</button>
+<button type="button" class="script-tf-btn" data-tf="1">1m</button>
+<button type="button" class="script-tf-btn" data-tf="5">5m</button>
+<button type="button" class="script-tf-btn" data-tf="15">15m</button>
+<button type="button" class="script-tf-btn" data-tf="60">1h</button>
+<button type="button" class="script-tf-btn" data-tf="240">4h</button>
+<button type="button" class="script-tf-btn" data-tf="D">D</button>
+<button type="button" class="script-tf-btn" data-tf="W">W</button>
+</div>
+</div>
+
+<div class="script-scan-actions">
+<button type="button" class="script-refresh-all-btn" id="script-refresh-all">Обновить все таймфреймы</button>
+<div class="script-scan-status" id="script-scan-status">Нажмите «Обновить все таймфреймы» для полного сканирования</div>
+</div>
+
+<div class="script-scan-settings">
+<label>
+Проверять таймфрейм
+<select id="script-auto-tf">
+<option value="1">1m</option>
+<option value="5">5m</option>
+<option value="15" selected>15m</option>
+<option value="60">1h</option>
+<option value="240">4h</option>
+<option value="D">1D</option>
+<option value="W">W</option>
+</select>
+</label>
+<label>
+Проверять 1 раз в…
+<select id="script-auto-period">
+<option value="15m">15 мин</option>
+<option value="1h" selected>1 час</option>
+<option value="6h">6 часов</option>
+<option value="24h">24 часа</option>
+</select>
+</label>
+<div class="script-auto-actions">
+<button type="button" id="script-auto-start">Запустить скрипт</button>
+<button type="button" id="script-auto-stop" disabled>Остановить скрипт</button>
+</div>
+<div class="script-auto-status" id="script-auto-status">Авто-сканирование выключено</div>
+</div>
+
+<div class="script-table-header">
+<div class="script-col-ticker">Тикер</div>
+<div class="script-col-tf">ТФ</div>
+<div class="script-col-side">Направление</div>
+</div>
+
+<div class="script-table-body" id="script-table-body"></div>
+
+</div>
+
+</div>
+
+<script type="module" src="/js/script-page-boot.js?v=9"></script>
+
+</body>
+</html>
