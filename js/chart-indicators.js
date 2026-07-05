@@ -20,6 +20,9 @@ import {
 createEmaShiftRibbonIndicator
 } from "./indicators/ema-shift-ribbon.js?v=6";
 import {
+createPattern12Indicator
+} from "./indicators/pattern-12.js?v=1";
+import {
 createIndicatorSettingsDialog
 } from "./indicators/indicator-settings-dialog.js?v=6";
 import {
@@ -210,6 +213,10 @@ getHost,
 settingsStore
 ),
 createEmaShiftRibbonIndicator(
+getHost,
+settingsStore
+),
+createPattern12Indicator(
 getHost,
 settingsStore
 ),

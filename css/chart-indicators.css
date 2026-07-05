@@ -229,6 +229,20 @@ overflow:hidden;
 pointer-events:auto;
 }
 
+.chart-indicator-settings-dialog--pattern12{
+width:min(520px,calc(100vw - 32px));
+max-height:min(88vh,760px);
+}
+
+.chart-indicator-settings-dialog--pattern12 .chart-indicator-settings-body{
+max-height:min(62vh,560px);
+overflow:auto;
+}
+
+.ind-pattern12-settings .chart-indicator-settings-section{
+margin-bottom:14px;
+}
+
 .chart-indicator-settings-dialog--compact{
 width:min(234px,100%);
 }

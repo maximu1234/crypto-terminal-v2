@@ -107,7 +107,11 @@ Object.freeze({
 "chart-visible-range.js":
 1,
 "chart-indicators.js":
-20,
+21,
+"indicators/pattern-12.js":
+1,
+"indicators/pattern-12-math.js":
+1,
 "indicators/horizontal-volume.js":
 9,
 "indicators/rsi-pane.js":
@@ -418,7 +422,7 @@ Object.freeze({
 "terminal-layout.css":
 80,
 "chart-indicators.css":
-15,
+16,
 "trade-exchange-settings.css":
 16,
 "app-settings-window.css":

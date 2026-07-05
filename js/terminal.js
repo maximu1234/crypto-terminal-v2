@@ -99,7 +99,7 @@ mountDrawToolIcons
 
 import {
 initChartIndicators
-} from "./chart-indicators.js?v=20";
+} from "./chart-indicators.js?v=21";
 
 import {
 initCoinsMobileUi,
