@@ -19,10 +19,14 @@ alwaysApply: false
 
 ## 3. Изоляция торгового модуля
 
-Проверить, что код торговли **не утекает** в открытую веб-версию:
+Проверить, что код торговли **и Скрипта** **не утекает** в открытую веб-версию:
 - lazy-import / `trade-desktop-boot` / `isDesktop` guards;
-- нет прямых импортов trade-модулей на публичных страницах без гейта;
-- `trade.html`, API-ключи, Bybit — только desktop или явно закрытые маршруты.
+- `script-page-boot.js` → редирект вне desktop; `script-desktop-nav.js` убирает пункт меню;
+- `script-scan-background.js` — только `isDesktopShell()`;
+- нет прямых импортов trade/script-модулей на публичных страницах без гейта;
+- `trade.html`, `/script.html`, API-ключи, Bybit — только desktop или явно закрытые маршруты.
+
+**Целостность торгового модуля** — в одном проходе с **Скриптом** (см. `.cursor/rules/trading-module-script.mdc`, `docs/TRADING_MODULE.md`).
 
 ## 4. Новая метка (metka)
 

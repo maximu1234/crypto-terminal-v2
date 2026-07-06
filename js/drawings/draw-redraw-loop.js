@@ -4,7 +4,7 @@
  */
 import {
 isPositionType
-} from "./position.js?v=1";
+} from "./position.js?v=2";
 
 import {
 getRectangleHandleScreens

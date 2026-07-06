@@ -99,7 +99,7 @@ import {
 mountScreenerWidgetZoom,
 refreshZoomFavoriteUi,
 syncWidgetZoomInversion
-} from "./screener-widget-zoom.js?v=9";
+} from "./screener-widget-zoom.js?v=10";
 
 const gridEl =
 document.getElementById("screener-grid");
@@ -518,7 +518,7 @@ if(
 ){
 screenerPatternOverlayApi =
 await import(
-"./screener-pattern-overlay.js?v=1"
+"./screener-pattern-overlay.js?v=2"
 );
 }
 

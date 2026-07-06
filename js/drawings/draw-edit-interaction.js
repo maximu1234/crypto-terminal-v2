@@ -10,7 +10,7 @@ import {
 DRAW_HANDLE_HIT_THRESHOLD_DESKTOP,
 DRAW_HANDLE_HIT_THRESHOLD_DESKTOP_POSITION,
 DRAW_BODY_HIT_THRESHOLD_TOUCH
-} from "./constants.js?v=8";
+} from "./constants.js?v=9";
 
 import {
 getRectangleHandleScreens,
@@ -20,7 +20,7 @@ moveRectangleHandle
 import {
 isPositionType,
 positionEntryPrice
-} from "./position.js?v=1";
+} from "./position.js?v=2";
 
 import {
 ensureFibAnchorMinSpan

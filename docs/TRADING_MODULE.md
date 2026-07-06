@@ -10,6 +10,19 @@
 |---|---------------|------------------|
 | Графики, алерты, синхронизация | ✅ | ✅ |
 | `/trade`, торговля, API keys | ❌ | ✅ |
+| `/script.html`, сканер паттерна 1-2 | ❌ (редирект) | ✅ |
+
+## Скрипт (desktop, часть торгового модуля)
+
+Страница **Скрипт** и фоновый сканер паттерна **1-2** — не отдельный продуктовый модуль, а **расширение торгового слоя** (как `/trade`, позиции, оверлеи). Только **Multichart.app**; на вебе `/script.html` → редирект на Скринер.
+
+| Компонент | Файлы |
+|-----------|--------|
+| Страница / boot | `script.html`, `js/script-page-boot.js`, `js/script-page.js`, `js/script-page-widgets.js`, `js/script-page-storage.js` |
+| Фоновый скан | `js/script-scan-background.js`, `js/pattern-12-scanner.js`, `js/pattern-scan-results.js` |
+| Nav / статус | `js/script-desktop-nav.js`, `js/script-terminal-status.js`, `js/site-boot.js` |
+
+**Аудит торгового модуля** → проверять Скрипт в том же проходе (desktop-gate, bundle, nav, фоновый таймер). См. `.cursor/rules/trading-module-script.mdc`.
 
 ## Функции (metka-29)
 
@@ -56,6 +69,10 @@ Renderer (/coins.html — desktop)
 | `js/trade-order-plus-ui.js` | Меню «+» на шкале |
 | `js/trade-open-positions.js` | Пин символов с позицией |
 | `js/desktop-trade-nav.js` | Пункт «Торговля» в меню |
+| `script.html` | Скрипт — сканер 1-2 (только desktop) |
+| `js/script-page-boot.js` | Boot + редирект вне desktop |
+| `js/script-scan-background.js` | Фоновое авто-сканирование |
+| `js/script-terminal-status.js` | Статус скана в шапке Терминала |
 
 ## IPC
 

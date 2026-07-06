@@ -40,9 +40,31 @@ body.trade-diary-body .trade-diary-header-aside{
 }
 
 .trade-diary-shell{
-  max-width:1320px;
+  --trade-diary-inner-width:916px;
+  box-sizing:border-box;
+  width:min(
+100%,
+calc(
+var(
+--trade-diary-inner-width
+) +
+32px
+)
+);
+  max-width:calc(
+var(
+--trade-diary-inner-width
+) +
+32px
+);
   margin:0 auto;
   padding:20px 16px 40px;
+}
+
+.trade-diary-page,
+.trade-diary-content,
+.trade-diary-week{
+  width:100%;
 }
 
 .trade-diary-gate{
@@ -126,10 +148,16 @@ body.trade-diary-body .trade-diary-header-aside{
 
 .trade-diary-grid{
   display:grid;
-  grid-template-columns:104px minmax(160px,1.6fr) 108px 96px 84px 84px 88px;
+  width:100%;
+  max-width:var(
+--trade-diary-inner-width,
+916px
+);
+  grid-template-columns:104px 220px 108px 96px 84px 84px 88px;
   column-gap:16px;
   align-items:center;
   padding:8px 18px;
+  box-sizing:border-box;
 }
 
 .trade-diary-week-head.trade-diary-grid,
@@ -357,7 +385,14 @@ body.trade-diary-body .trade-diary-header-aside{
 
 .trade-diary-detail-split{
   display:grid;
-  grid-template-columns:minmax(280px,1.05fr) minmax(320px,1fr);
+  grid-template-columns:minmax(
+0,
+1.05fr
+) minmax(
+0,
+1fr
+);
+  width:100%;
   min-height:320px;
 }
 

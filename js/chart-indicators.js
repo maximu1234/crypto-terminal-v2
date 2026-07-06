@@ -21,10 +21,10 @@ createEmaShiftRibbonIndicator
 } from "./indicators/ema-shift-ribbon.js?v=6";
 import {
 createPattern12Indicator
-} from "./indicators/pattern-12.js?v=2";
+} from "./indicators/pattern-12.js?v=5";
 import {
 createIndicatorSettingsDialog
-} from "./indicators/indicator-settings-dialog.js?v=6";
+} from "./indicators/indicator-settings-dialog.js?v=7";
 import {
 MAX_ACTIVE_INDICATORS,
 canEnableIndicator,
@@ -262,7 +262,24 @@ legendEl
 );
 
 const settingsDialog =
-createIndicatorSettingsDialog();
+createIndicatorSettingsDialog(
+{
+getDragBoundsEl:()=>{
+
+const wrap =
+getHost?.()?.wrapEl;
+
+return wrap?.closest?.(
+"#charts-stack-panes"
+) ||
+wrap ||
+document.getElementById(
+"charts-stack-panes"
+);
+
+}
+}
+);
 
 root.innerHTML =
 `

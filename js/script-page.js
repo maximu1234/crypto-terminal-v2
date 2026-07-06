@@ -1,82 +1,121 @@
 /**
- * Страница Скрипт — сканер паттерна 1-2, фильтр по ТФ, авто-обновление.
+ * Страница Скрипт — сканер паттерна 1-2, результаты виджетами (как Скринер).
  */
 import {
-createScriptPageChart
-} from "./script-page-chart.js?v=4";
+createScriptWidgetGrid
+} from "./script-page-widgets.js?v=5";
 
 import {
-getSharedPatternScanner,
+getScriptScanJobState,
 getScriptScanNextRunAt,
 scheduleScriptScanRun,
 triggerScriptScanNow,
 stopScriptScanBackground,
+stopActivePatternScan,
+startFullPatternScan,
 isScriptScanBackgroundRunning,
 SCRIPT_SCAN_BG_EVENT
-} from "./script-scan-background.js?v=2";
+} from "./script-scan-background.js?v=7";
 
 import {
-PATTERN_SCAN_ALL_TFS,
 PATTERN_SCAN_TF_LABELS,
-PATTERN_SCAN_SIDE_LABELS
-} from "./pattern-12-scanner.js?v=9";
+PATTERN_SCAN_DEPTH_OPTIONS
+} from "./pattern-12-scanner.js?v=11";
 
 import {
 loadScriptPageState,
 saveScriptPageState,
 SCRIPT_AUTO_PERIODS,
 periodMsById
-} from "./script-page-storage.js?v=7";
+} from "./script-page-storage.js?v=9";
 
 import {
-COINS_TF_VALUES,
-COINS_TF_HOTKEYS
+COINS_TF_HOTKEYS,
+COINS_TF_VALUES
 } from "./terminal/terminal-state.js?v=8";
+
+const SCRIPT_LAYOUT_HOTKEYS =
+Object.freeze({
+
+Digit1:
+4,
+Digit2:
+6,
+Digit3:
+9
+
+});
 
 const els =
 {};
 
 let state =
 null;
-
-function scanner(){
-
-return getSharedPatternScanner();
-
-}
-
-let scriptChart =
+let widgetGrid =
 null;
-let chartSymbol =
-"";
-let chartTf =
-"60";
-let selectedRowKey =
-"";
 let autoCountdownTimerId =
 null;
 let scanMode =
 null;
 
-function rowKey(
-row
+function scanStatusPrefix(
+mode =
+scanMode
 ){
 
-return `${row.symbol}:${row.tf}`;
+return mode ===
+"auto"
+? "Авто: "
+: "";
 
 }
 
-function displaySymbol(
-symbol
-){
+function syncScanJobUi(){
 
-return String(
-symbol ||
-""
-).replace(
-/\.P$/i,
-""
+const job =
+getScriptScanJobState();
+
+if(
+job?.status !==
+"running"
+){
+return false;
+}
+
+scanMode =
+job.mode ||
+"auto";
+
+if(
+job.phase ===
+"symbols"
+){
+setScanStatus(
+`${scanStatusPrefix()}Загрузка списка монет…`,
+true
 );
+}else{
+setScanStatus(
+`${scanStatusPrefix()}${formatProgress(
+{
+done:
+job.done,
+total:
+job.total,
+running:
+true,
+symbol:
+job.symbol,
+tf:
+job.tf
+}
+)}`,
+true
+);
+}
+
+updateActionButtons();
+return true;
 
 }
 
@@ -88,36 +127,6 @@ state
 
 }
 
-function persistSelection(
-symbol,
-tf
-){
-
-state.selection =
-{
-symbol:
-String(
-symbol ||
-""
-),
-tf:
-String(
-tf ||
-chartTf
-),
-rowKey:
-selectedRowKey ||
-rowKey(
-{
-symbol,
-tf
-}
-)
-};
-persist();
-
-}
-
 function markPageVisited(){
 
 state.lastVisitedAt =
@@ -126,121 +135,46 @@ persist();
 
 }
 
-function shouldOpenAfterBgScan(){
-
-return (
-state.auto.active &&
-state.auto.lastScanAt >
-(
-state.lastVisitedAt ||
-0
-)
-);
-
-}
-
-function openFirstFilteredRow(){
-
-const rows =
-filteredRows();
-
-if(
-!rows.length
-){
-return false;
-}
-
-const row =
-rows[
-0
-];
-selectScriptRow(
+function resolveWidgetChartTf(
+chartTfFilter,
 row
-);
-return true;
-
-}
-
-function restoreInitialChart(){
+){
 
 if(
-!state.rows.length
+chartTfFilter ===
+"all"
 ){
-return;
+return row.tf;
 }
 
-if(
-shouldOpenAfterBgScan()
-){
-setFilterTf(
-state.auto.tf
-);
-openFirstFilteredRow();
-return;
-}
-
-const sel =
-state.selection;
-
-if(
-sel?.symbol &&
-sel?.tf
-){
-selectedRowKey =
-sel.rowKey ||
-rowKey(
-sel
-);
-renderTable();
-void openChart(
-sel.symbol,
-sel.tf
-);
-return;
-}
-
-if(
-state.auto.active
-){
-setFilterTf(
-state.auto.tf
-);
-openFirstFilteredRow();
-}
+return chartTfFilter;
 
 }
 
 function filteredRows(){
 
-const all =
-state.rows
-.slice()
-.sort(
-(
-a,
-b
-)=>
-displaySymbol(
-a.symbol
-).localeCompare(
-displaySymbol(
-b.symbol
-)
-)
-);
+return state.rows.slice();
 
-if(
-state.filterTf ===
-"all"
-){
-return all;
 }
 
-return all.filter(
-row=>
-row.tf ===
+function refreshGrid(){
+
+void widgetGrid?.renderPage(
+state.rows,
 state.filterTf
 );
+
+}
+
+function replaceAllRows(
+rows
+){
+
+state.rows =
+rows.slice();
+persist();
+refreshGrid();
+updateActionButtons();
 
 }
 
@@ -250,7 +184,13 @@ tf
 
 state.filterTf =
 tf;
+state.page =
+1;
 persist();
+widgetGrid?.restoreLayoutState(
+state.layout,
+1
+);
 
 els.tfFilter?.querySelectorAll(
 ".script-tf-btn"
@@ -264,306 +204,30 @@ tf
 }
 );
 
-renderTable();
+refreshGrid();
+
 }
 
-function shouldIgnoreScriptListKeyNav(
-e
+function setSearchDepth(
+depth
 ){
 
-const target =
-e.target;
-
-if(
-!target
-){
-return false;
-}
-
-const tag =
-target.tagName?.toLowerCase();
-
-if(
-tag ===
-"input" ||
-tag ===
-"textarea" ||
-tag ===
-"select"
-){
-return true;
-}
-
-if(
-target.isContentEditable
-){
-return true;
-}
-
-return false;
-
-}
-
-function scrollActiveScriptRowIntoView(){
-
-requestAnimationFrame(
-()=>{
-
-const active =
-els.tableBody?.querySelector(
-".script-table-row.active"
-);
-
-active?.scrollIntoView(
-{
-block:
-"nearest"
-}
-);
-
-}
-);
-
-}
-
-function selectScriptRow(
-row
-){
-
-if(
-!row
-){
-return;
-}
-
-selectedRowKey =
-rowKey(
-row
-);
-renderTable();
-void openChart(
-row.symbol,
-row.tf
-);
-scrollActiveScriptRowIntoView();
-
-}
-
-function navigateScriptList(
-direction
-){
-
-const rows =
-filteredRows();
-
-if(
-!rows.length
-){
-return;
-}
-
-const goDown =
-direction >
-0;
-
-let index =
-rows.findIndex(
-row=>
-rowKey(
-row
-) ===
-selectedRowKey
+const n =
+Number(
+depth
 );
 
 if(
-index <
-0
-){
-index =
-goDown ?
--1 :
-0;
-}
-
-if(
-goDown
-){
-index =
-(
-index +
-1
-) %
-rows.length;
-}else{
-index =
-(
-index -
-1 +
-rows.length
-) %
-rows.length;
-}
-
-selectScriptRow(
-rows[
-index
-]
-);
-
-}
-
-function bindScriptTfHotkeys(){
-
-window.addEventListener(
-"keydown",
-e=>{
-
-if(
-e.defaultPrevented
-){
-return;
-}
-
-if(
-e.metaKey ||
-e.ctrlKey ||
-e.altKey ||
-e.shiftKey
-){
-return;
-}
-
-if(
-shouldIgnoreScriptListKeyNav(
-e
+!PATTERN_SCAN_DEPTH_OPTIONS.includes(
+n
 )
 ){
 return;
 }
 
-const tf =
-COINS_TF_HOTKEYS[
-e.key
-];
-
-if(
-!tf ||
-!COINS_TF_VALUES.has(
-tf
-)
-){
-return;
-}
-
-e.preventDefault();
-setChartTfUi(
-tf
-);
-
-if(
-chartSymbol
-){
-void openChart(
-chartSymbol,
-tf
-);
-}
-
-}
-);
-
-}
-
-function mergeRowsForTf(
-tf,
-incoming
-){
-
-const kept =
-state.rows.filter(
-row=>
-row.tf !==
-tf
-);
-state.rows =
-[
-...kept,
-...incoming
-];
+state.searchDepth =
+n;
 persist();
-renderTable();
-}
-
-function replaceAllRows(
-rows
-){
-
-state.rows =
-rows.slice();
-persist();
-renderTable();
-}
-
-function renderTable(){
-
-if(
-!els.tableBody
-){
-return;
-}
-
-const rows =
-filteredRows();
-
-if(
-!rows.length
-){
-
-const filterLabel =
-state.filterTf ===
-"all"
-? "всех ТФ"
-: (
-PATTERN_SCAN_TF_LABELS[
-state.filterTf
-] ||
-state.filterTf
-);
-
-els.tableBody.innerHTML =
-`<div class="script-table-empty">Нет сетапов (${filterLabel})</div>`;
-return;
-
-}
-
-els.tableBody.innerHTML =
-rows
-.map(
-row=>{
-const key =
-rowKey(
-row
-);
-const sideClass =
-row.side ===
-"long"
-? "script-side-long"
-: "script-side-short";
-const tfLabel =
-PATTERN_SCAN_TF_LABELS[
-row.tf
-] ||
-row.tf;
-return `<button type="button" class="script-table-row${key === selectedRowKey ? " active" : ""}" data-row-key="${key}" data-symbol="${row.symbol}" data-tf="${row.tf}">
-<span class="script-col-ticker">${displaySymbol(row.symbol)}</span>
-<span class="script-col-tf">${tfLabel}</span>
-<span class="script-col-side ${sideClass}">${PATTERN_SCAN_SIDE_LABELS[row.side] || row.side}</span>
-</button>`;
-}
-)
-.join(
-""
-);
 
 }
 
@@ -593,31 +257,104 @@ progress.tf
 progress.tf ||
 "";
 const sym =
-displaySymbol(
-progress.symbol
+String(
+progress.symbol ||
+""
+).replace(
+/\.P$/i,
+""
 );
 
 return `${pct}% · ${sym} ${tfLabel}`.trim();
 
 }
 
-function setScanStatus(
+function setScanToolbarProgress(
 text
 ){
 
 if(
-els.scanStatus
+!els.scanProgress
 ){
-els.scanStatus.textContent =
-text;
+return;
 }
+
+if(
+!text
+){
+els.scanProgress.textContent =
+"";
+els.scanProgress.classList.add(
+"hidden"
+);
+return;
+}
+
+els.scanProgress.textContent =
+text;
+els.scanProgress.classList.remove(
+"hidden"
+);
+
+}
+
+function setFloatingScanStatus(
+text,
+loading =
+false
+){
+
+if(
+!els.status
+){
+return;
+}
+
+if(
+!text
+){
+els.status.classList.add(
+"hidden"
+);
+els.status.textContent =
+"";
+els.status.classList.remove(
+"loading"
+);
+return;
+}
+
+els.status.textContent =
+text;
+els.status.classList.remove(
+"hidden"
+);
+els.status.classList.toggle(
+"loading",
+loading
+);
+
+}
+
+function setScanStatus(
+text,
+loading =
+false
+){
+
+setScanToolbarProgress(
+text
+);
+setFloatingScanStatus(
+text,
+loading
+);
 
 }
 
 function updateActionButtons(){
 
 const running =
-scanner().isRunning() ||
 isScriptScanBackgroundRunning();
 
 if(
@@ -711,16 +448,6 @@ state.auto.periodId
 )?.label ||
 "";
 
-if(
-scanner().isRunning() &&
-scanMode ===
-"auto"
-){
-els.autoStatus.textContent =
-`Сканирование ${tfLabel}…`;
-return;
-}
-
 const left =
 getScriptScanNextRunAt() -
 Date.now();
@@ -759,7 +486,8 @@ updateAutoStatus,
 async function runFullScan(){
 
 setScanStatus(
-"Запуск полного сканирования…"
+"Запуск полного сканирования…",
+true
 );
 
 if(
@@ -768,115 +496,18 @@ state.auto.active
 stopAuto();
 }
 
-if(
-scanner().isRunning()
-){
-scanner().stop();
-await new Promise(
-resolve=>{
-setTimeout(
-resolve,
-120
-);
-}
-);
-}
-
-if(
-scanner().isRunning()
-){
-scanner().reset();
-}
+stopActivePatternScan();
 
 scanMode =
 "full";
 updateActionButtons();
 
-try{
-
-const rows =
-await scanner().run(
+startFullPatternScan(
 {
-tfs:
-PATTERN_SCAN_ALL_TFS,
-onHit(
-_hit,
-allRows
-){
-replaceAllRows(
-allRows
-);
-},
-onProgress(
-progress
-){
-
-if(
-progress.phase ===
-"symbols"
-){
-setScanStatus(
-"Загрузка списка монет…"
-);
-return;
-}
-
-if(
-progress.running
-){
-setScanStatus(
-formatProgress(
-progress
-)
-);
-}else{
-setScanStatus(
-progress.stopped
-? "Сканирование остановлено"
-: `Готово · найдено ${state.rows.length}`
-);
-}
-
-updateActionButtons();
-
-}
+lookbackBars:
+state.searchDepth
 }
 );
-
-if(
-rows ===
-null
-){
-setScanStatus(
-"Не удалось запустить сканирование"
-);
-}else if(
-Array.isArray(
-rows
-)
-){
-replaceAllRows(
-rows
-);
-}
-
-}catch(
-err
-){
-console.error(
-"[script scan]",
-err
-);
-setScanStatus(
-`Ошибка: ${err?.message || err}`
-);
-}finally{
-
-scanMode =
-null;
-updateActionButtons();
-
-}
 
 }
 
@@ -905,7 +536,10 @@ stopScriptScanBackground();
 clearAutoCountdown();
 updateActionButtons();
 updateAutoStatus();
-setScanStatus(
+setScanToolbarProgress(
+""
+);
+setFloatingScanStatus(
 "Авто-сканирование остановлено"
 );
 }
@@ -935,16 +569,22 @@ if(
 type ===
 "started"
 ){
+state =
+loadScriptPageState();
 scanMode =
+detail.mode ||
 "auto";
 updateActionButtons();
+refreshGrid();
 const tfLabel =
 PATTERN_SCAN_TF_LABELS[
 detail.tf
 ] ||
 detail.tf;
 setScanStatus(
-`Авто: сканирование ${tfLabel}…`
+`${scanStatusPrefix(
+scanMode
+)}сканирование ${tfLabel}…`
 );
 return;
 }
@@ -953,9 +593,10 @@ if(
 type ===
 "progress"
 ){
+
 const {
 progress,
-tf
+mode
 } =
 detail;
 
@@ -963,7 +604,12 @@ if(
 progress?.running
 ){
 setScanStatus(
-`Авто: ${formatProgress(progress)}`
+`${scanStatusPrefix(
+mode
+)}${formatProgress(
+progress
+)}`,
+true
 );
 }else if(
 progress &&
@@ -971,11 +617,13 @@ progress &&
 ){
 const tfLabel =
 PATTERN_SCAN_TF_LABELS[
-tf
+detail.tf
 ] ||
-tf;
+detail.tf;
 setScanStatus(
-`Авто: готово · ${filteredRows().length} на ${tfLabel}`
+`${scanStatusPrefix(
+mode
+)}готово · ${filteredRows().length} на ${tfLabel}`
 );
 }
 updateActionButtons();
@@ -984,17 +632,43 @@ return;
 
 if(
 type ===
-"hit" ||
+"hit"
+){
+state =
+loadScriptPageState();
+refreshGrid();
+updateActionButtons();
+return;
+}
+
+if(
 type ===
 "finished"
 ){
 state =
 loadScriptPageState();
-renderTable();
+refreshGrid();
 scanMode =
 null;
 updateActionButtons();
 startAutoCountdown();
+setScanStatus(
+""
+);
+return;
+}
+
+if(
+type ===
+"error"
+){
+scanMode =
+null;
+setScanStatus(
+`Ошибка: ${detail.message || "сканирование"}`
+);
+updateActionButtons();
+return;
 }
 
 if(
@@ -1003,216 +677,21 @@ type ===
 ){
 scanMode =
 null;
+setScanToolbarProgress(
+""
+);
 updateActionButtons();
+updateAutoStatus();
 }
 
 }
 
-function setChartTfUi(
-tf
-){
-
-chartTf =
-tf;
-
-els.chartTfDesktop?.querySelectorAll(
-".tf-btn"
-).forEach(
-btn=>{
-btn.classList.toggle(
-"active",
-btn.dataset.tf ===
-tf
-);
-}
-);
-
-const tfLabel =
-PATTERN_SCAN_TF_LABELS[
-tf
-] ||
-tf;
-
-if(
-els.chartTfLabel
-){
-els.chartTfLabel.textContent =
-tfLabel;
-}
-
-els.chartTfMenu?.querySelectorAll(
-".screener-mobile-menu-item"
-).forEach(
-btn=>{
-btn.classList.toggle(
-"active",
-btn.dataset.tf ===
-tf
-);
-}
-);
-
-}
-
-function initScriptChart(){
-
-if(
-scriptChart ||
-!els.chartMount
-){
-return;
-}
-
-scriptChart =
-createScriptPageChart(
-els.chartMount
-);
-
-}
-
-async function waitForChartMountSize(
-el,
-maxFrames =
-60
-){
-
-for(
-let i =
-0;
-i <
-maxFrames;
-i++
-){
-
-if(
-el.clientWidth >=
-2 &&
-el.clientHeight >=
-2
-){
-return true;
-}
-
-await new Promise(
-resolve=>{
-requestAnimationFrame(
-resolve
-);
-}
-);
-
-}
-
-return (
-el.clientWidth >=
-2 &&
-el.clientHeight >=
-2
-);
-
-}
-
-async function openChart(
-symbol,
-tf
-){
-
-if(
-tf
-){
-setChartTfUi(
-tf
-);
-}
-
-if(
-!symbol
-){
-return;
-}
-
-initScriptChart();
-
-if(
-!scriptChart ||
-!els.chartMount
-){
-return;
-}
-
-await waitForChartMountSize(
-els.chartMount
-);
-
-chartSymbol =
-symbol;
-
-if(
-els.currentSymbol
-){
-els.currentSymbol.textContent =
-displaySymbol(
-symbol
-);
-}
-
-try{
-await scriptChart.load(
-symbol,
-chartTf
-);
-persistSelection(
-symbol,
-chartTf
-);
-}catch(
-err
-){
-console.error(
-"[script chart]",
-err
-);
-}
-
-}
-
-function openTerminalPage(
-event
-){
-
-if(
-event
-){
-event.stopPropagation();
-}
-
-const symbol =
-scriptChart?.getSymbol?.() ||
-chartSymbol;
-
-const tf =
-scriptChart?.getTf?.() ||
-chartTf;
-
-if(
-!symbol
-){
-return;
-}
-
-window.location.href =
-`/terminal.html?symbol=${encodeURIComponent(symbol)}&tf=${encodeURIComponent(tf)}`;
-
-}
-
-function toggleChartTfMenu(
-open
-){
+function closeLayoutPicker(){
 
 const menu =
-els.chartTfMenu;
+els.layoutMenu;
 const trigger =
-els.chartTfTrigger;
+els.layoutTrigger;
 
 if(
 !menu ||
@@ -1221,23 +700,319 @@ if(
 return;
 }
 
-const show =
-typeof open ===
-"boolean"
-? open
-: menu.classList.contains(
+menu.classList.add(
 "hidden"
-);
-
-menu.classList.toggle(
-"hidden",
-!show
 );
 trigger.setAttribute(
 "aria-expanded",
-show ?
+"false"
+);
+
+}
+
+function bindLayoutPicker(){
+
+const trigger =
+els.layoutTrigger;
+const menu =
+els.layoutMenu;
+
+if(
+!trigger ||
+!menu
+){
+return;
+}
+
+trigger.addEventListener(
+"click",
+event=>{
+event.stopPropagation();
+const open =
+!menu.classList.contains(
+"hidden"
+);
+closeLayoutPicker();
+
+if(
+open
+){
+return;
+}
+
+menu.classList.remove(
+"hidden"
+);
+trigger.setAttribute(
+"aria-expanded",
 "true"
-: "false"
+);
+}
+);
+
+menu.querySelectorAll(
+"button[data-layout]"
+).forEach(
+btn=>{
+
+btn.addEventListener(
+"click",
+event=>{
+event.stopPropagation();
+const next =
+Number(
+btn.dataset.layout
+);
+widgetGrid?.setLayout(
+next
+);
+state.layout =
+next;
+state.page =
+1;
+persist();
+widgetGrid?.syncLayoutLabel(
+els.layoutLabel
+);
+widgetGrid?.syncLayoutMenu(
+menu
+);
+closeLayoutPicker();
+refreshGrid();
+}
+);
+
+}
+);
+
+document.addEventListener(
+"click",
+()=>{
+closeLayoutPicker();
+}
+);
+
+}
+
+function shouldIgnoreScriptKeyNav(
+event
+){
+
+const target =
+event.target;
+
+if(
+!target
+){
+return false;
+}
+
+const tag =
+target.tagName?.toLowerCase?.();
+
+if(
+tag ===
+"input" ||
+tag ===
+"textarea" ||
+tag ===
+"select"
+){
+return true;
+}
+
+if(
+target.isContentEditable
+){
+return true;
+}
+
+return false;
+
+}
+
+function applyLayoutHotkey(
+next
+){
+
+widgetGrid?.setLayout(
+next
+);
+state.layout =
+next;
+state.page =
+1;
+persist();
+widgetGrid?.syncLayoutLabel(
+els.layoutLabel
+);
+widgetGrid?.syncLayoutMenu(
+els.layoutMenu
+);
+refreshGrid();
+
+}
+
+function bindScriptHotkeys(){
+
+window.addEventListener(
+"keydown",
+event=>{
+
+if(
+event.defaultPrevented
+){
+return;
+}
+
+if(
+event.metaKey ||
+event.ctrlKey ||
+event.altKey
+){
+return;
+}
+
+if(
+shouldIgnoreScriptKeyNav(
+event
+)
+){
+return;
+}
+
+if(
+event.shiftKey
+){
+
+const layoutNext =
+SCRIPT_LAYOUT_HOTKEYS[
+event.code
+];
+
+if(
+layoutNext
+){
+event.preventDefault();
+applyLayoutHotkey(
+layoutNext
+);
+}
+
+return;
+
+}
+
+const tf =
+COINS_TF_HOTKEYS[
+event.key
+];
+
+if(
+tf &&
+COINS_TF_VALUES.has(
+tf
+)
+){
+event.preventDefault();
+setFilterTf(
+tf
+);
+}
+
+}
+);
+
+}
+
+function bindScriptPageNavHotkeys(){
+
+document.addEventListener(
+"keydown",
+event=>{
+
+if(
+shouldIgnoreScriptKeyNav(
+event
+)
+){
+return;
+}
+
+if(
+event.code ===
+"ArrowRight"
+){
+
+event.preventDefault();
+widgetGrid?.goToPage(
+(
+widgetGrid?.getPage?.() ||
+1
+) +
+1,
+filteredRows().length
+);
+return;
+
+}
+
+if(
+event.code ===
+"ArrowLeft"
+){
+
+event.preventDefault();
+widgetGrid?.goToPage(
+(
+widgetGrid?.getPage?.() ||
+1
+) -
+1,
+filteredRows().length
+);
+return;
+
+}
+
+if(
+event.code ===
+"Space" &&
+!event.shiftKey
+){
+
+event.preventDefault();
+widgetGrid?.goToPage(
+(
+widgetGrid?.getPage?.() ||
+1
+) +
+1,
+filteredRows().length
+);
+return;
+
+}
+
+if(
+event.code ===
+"Space" &&
+event.shiftKey
+){
+
+event.preventDefault();
+widgetGrid?.goToPage(
+(
+widgetGrid?.getPage?.() ||
+1
+) -
+1,
+filteredRows().length
+);
+
+}
+
+}
 );
 
 }
@@ -1252,9 +1027,9 @@ els.refreshAll =
 document.getElementById(
 "script-refresh-all"
 );
-els.scanStatus =
+els.searchDepth =
 document.getElementById(
-"script-scan-status"
+"script-search-depth"
 );
 els.autoTf =
 document.getElementById(
@@ -1276,207 +1051,149 @@ els.autoStatus =
 document.getElementById(
 "script-auto-status"
 );
-els.tableBody =
+els.scanProgress =
 document.getElementById(
-"script-table-body"
+"script-scan-progress"
 );
-els.currentSymbol =
+els.grid =
 document.getElementById(
-"current-symbol"
+"script-grid"
 );
-els.chartMount =
+els.pagination =
 document.getElementById(
-"script-chart-mount"
+"pagination"
 );
-els.chartTfDesktop =
+els.status =
 document.getElementById(
-"script-chart-tf-desktop"
+"script-status"
 );
-els.openTerminal =
+els.layoutTrigger =
 document.getElementById(
-"script-open-terminal"
+"script-desktop-layout-trigger"
 );
-els.chartTfTrigger =
+els.layoutMenu =
 document.getElementById(
-"script-chart-tf-trigger"
+"script-desktop-layout-menu"
 );
-els.chartTfMenu =
+els.layoutLabel =
 document.getElementById(
-"script-chart-tf-menu"
-);
-els.chartTfLabel =
-document.getElementById(
-"script-chart-tf-label"
+"script-desktop-layout-label"
 );
 
 }
 
-export function mountScriptPage(){
+const SCRIPT_TOOLBAR_NO_FOCUS_SELECTOR =
+".script-tf-btn, .script-auto-btn, .script-refresh-all-btn";
 
-bindEls();
-state =
-loadScriptPageState();
+function bindScriptToolbarNoFocus(
+toolbarEl
+){
 
-wireEvents();
-restoreUi();
-initScriptChart();
-bindScriptTfHotkeys();
+if(
+!toolbarEl ||
+toolbarEl.__scriptToolbarNoFocus
+){
+return;
+}
 
-window.__scriptPageReady =
+toolbarEl.__scriptToolbarNoFocus =
 true;
 
-}
+toolbarEl.addEventListener(
+"mousedown",
+event=>{
 
-function restoreUi(){
-
-setFilterTf(
-state.filterTf
+const btn =
+event.target?.closest?.(
+SCRIPT_TOOLBAR_NO_FOCUS_SELECTOR
 );
 
 if(
-els.autoTf
+btn &&
+event.button ===
+0
 ){
-els.autoTf.value =
-state.auto.tf;
+event.preventDefault();
 }
 
-if(
-els.autoPeriod
-){
-els.autoPeriod.value =
-state.auto.periodId;
-}
-
-renderTable();
-updateActionButtons();
-updateAutoStatus();
-
-if(
-state.rows.length
-){
-setScanStatus(
-`В списке ${state.rows.length} сетапов`
+},
+true
 );
+
+toolbarEl.addEventListener(
+"keydown",
+event=>{
+
+const btn =
+event.target?.closest?.(
+SCRIPT_TOOLBAR_NO_FOCUS_SELECTOR
+);
+
+if(
+!btn
+){
+return;
 }
 
 if(
-state.auto.active
+event.code ===
+"Space" ||
+event.code ===
+"Enter"
 ){
-startAutoCountdown();
+event.preventDefault();
 }
 
-requestAnimationFrame(
+},
+true
+);
+
+toolbarEl.addEventListener(
+"click",
+event=>{
+
+const btn =
+event.target?.closest?.(
+SCRIPT_TOOLBAR_NO_FOCUS_SELECTOR
+);
+
+if(
+!btn
+){
+return;
+}
+
+queueMicrotask(
 ()=>{
-requestAnimationFrame(
-()=>{
-void restoreInitialChart();
+btn.blur();
 }
 );
-}
+
+},
+true
 );
 
 }
 
 function wireEvents(){
 
+bindScriptToolbarNoFocus(
+document.getElementById(
+"script-toolbar"
+)
+);
+
 window.addEventListener(
 "pagehide",
-markPageVisited
+()=>{
+markPageVisited();
+widgetGrid?.destroy?.();
+}
 );
 
 window.addEventListener(
 SCRIPT_SCAN_BG_EVENT,
 handleBackgroundScanEvent
-);
-
-els.chartTfDesktop?.addEventListener(
-"click",
-event=>{
-
-const btn =
-event.target?.closest?.(
-".tf-btn"
-);
-
-if(
-!btn?.dataset?.tf
-){
-return;
-}
-
-void openChart(
-chartSymbol,
-btn.dataset.tf
-);
-
-}
-);
-
-els.openTerminal?.addEventListener(
-"click",
-openTerminalPage
-);
-
-els.chartTfTrigger?.addEventListener(
-"click",
-event=>{
-event.stopPropagation();
-toggleChartTfMenu();
-}
-);
-
-els.chartTfMenu?.addEventListener(
-"click",
-event=>{
-
-const btn =
-event.target?.closest?.(
-".screener-mobile-menu-item"
-);
-
-if(
-!btn?.dataset?.tf
-){
-return;
-}
-
-toggleChartTfMenu(
-false
-);
-void openChart(
-chartSymbol,
-btn.dataset.tf
-);
-
-}
-);
-
-document.addEventListener(
-"click",
-event=>{
-
-if(
-!els.chartTfMenu ||
-els.chartTfMenu.classList.contains(
-"hidden"
-)
-){
-return;
-}
-
-if(
-event.target?.closest?.(
-"#script-chart-tf-trigger, #script-chart-tf-menu"
-)
-){
-return;
-}
-
-toggleChartTfMenu(
-false
-);
-
-}
 );
 
 els.tfFilter?.addEventListener(
@@ -1522,15 +1239,20 @@ els.autoTf?.addEventListener(
 "change",
 ()=>{
 
-if(
-!state.auto.active
-){
-return;
-}
-
 state.auto.tf =
 els.autoTf.value;
 persist();
+
+if(
+state.auto.active
+){
+scheduleScriptScanRun(
+periodMsById(
+state.auto.periodId
+)
+);
+startAutoCountdown();
+}
 
 }
 );
@@ -1538,12 +1260,6 @@ persist();
 els.autoPeriod?.addEventListener(
 "change",
 ()=>{
-
-if(
-!state.auto.active
-){
-return;
-}
 
 state.auto.periodId =
 els.autoPeriod.value;
@@ -1563,73 +1279,140 @@ startAutoCountdown();
 }
 );
 
-els.tableBody?.addEventListener(
-"click",
-event=>{
-
-const row =
-event.target?.closest?.(
-".script-table-row"
+els.searchDepth?.addEventListener(
+"change",
+()=>{
+setSearchDepth(
+els.searchDepth.value
+);
+}
 );
 
+}
+
+function restoreAfterBgScan(){
+
 if(
-!row
+!state.auto.active
 ){
 return;
 }
 
-selectedRowKey =
-row.dataset.rowKey ||
-"";
-renderTable();
-void openChart(
-row.dataset.symbol,
-row.dataset.tf
-);
-scrollActiveScriptRowIntoView();
-
-}
-);
-
-document.addEventListener(
-"keydown",
-e=>{
-
 if(
-shouldIgnoreScriptListKeyNav(
-e
+state.auto.lastScanAt <=
+(
+state.lastVisitedAt ||
+0
 )
 ){
 return;
 }
 
-const goDown =
-e.code ===
-"ArrowDown" ||
-e.code ===
-"Space" ||
-e.key ===
-" ";
+setFilterTf(
+state.auto.tf
+);
+state.page =
+1;
+persist();
 
-const goUp =
-e.code ===
-"ArrowUp";
+}
+
+export function mountScriptPage(){
+
+bindEls();
+state =
+loadScriptPageState();
+
+widgetGrid =
+createScriptWidgetGrid(
+{
+gridEl:
+els.grid,
+paginationEl:
+els.pagination,
+statusEl:
+els.status,
+onPersist(
+{
+layout,
+page
+}
+){
 
 if(
-!goDown &&
-!goUp
+layout
 ){
-return;
+state.layout =
+layout;
 }
 
-e.preventDefault();
-navigateScriptList(
-goDown ?
-1 :
--1
-);
+if(
+page
+){
+state.page =
+page;
+}
+
+persist();
 
 }
+}
 );
+
+widgetGrid.restoreLayoutState(
+state.layout,
+state.page
+);
+widgetGrid.syncLayoutLabel(
+els.layoutLabel
+);
+widgetGrid.syncLayoutMenu(
+els.layoutMenu
+);
+
+wireEvents();
+bindLayoutPicker();
+bindScriptHotkeys();
+bindScriptPageNavHotkeys();
+
+setFilterTf(
+state.filterTf
+);
+
+if(
+els.autoTf
+){
+els.autoTf.value =
+state.auto.tf;
+}
+
+if(
+els.autoPeriod
+){
+els.autoPeriod.value =
+state.auto.periodId;
+}
+
+if(
+els.searchDepth
+){
+els.searchDepth.value =
+String(
+state.searchDepth
+);
+}
+
+updateActionButtons();
+updateAutoStatus();
+
+if(
+state.auto.active
+){
+startAutoCountdown();
+}
+
+restoreAfterBgScan();
+syncScanJobUi();
+refreshGrid();
 
 }

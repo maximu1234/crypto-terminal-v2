@@ -8,7 +8,7 @@ createTerminalScreenerChartPane
 import {
 mountScreenerPatternOverlay,
 destroyScreenerPatternOverlay
-} from "./screener-pattern-overlay.js?v=1";
+} from "./screener-pattern-overlay.js?v=2";
 
 export function createScriptPageChart(
 mountEl
@@ -94,6 +94,7 @@ tf
 );
 ensureOverlay();
 pane.syncChartSize?.();
+overlayWidget?.patternOverlayRedraw?.();
 
 },
 getSymbol:()=>

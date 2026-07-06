@@ -323,8 +323,22 @@ margin-left:8px;
 flex-shrink:0;
 }
 
-body.terminal-page .coins-header-desktop .coins-layout-picker-wrap{
+body.terminal-page .script-terminal-status{
 margin-left:auto;
+flex-shrink:0;
+font-size:12px;
+line-height:1.3;
+color:#6b7280;
+white-space:nowrap;
+padding-right:8px;
+}
+
+body.terminal-page .script-terminal-status.is-active{
+color:#e5e7eb;
+}
+
+body.terminal-page .coins-header-desktop .coins-layout-picker-wrap{
+margin-left:0;
 flex-shrink:0;
 position:relative;
 }

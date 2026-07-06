@@ -1,0 +1,32 @@
+---
+description: Скрипт — часть desktop-торгового модуля; проверять вместе с торговлей
+alwaysApply: true
+---
+
+# Скрипт ⊂ торговый модуль (desktop only)
+
+**Страница «Скрипт»** (`/script.html`) и **сканер паттерна 1-2** — часть **торгового модуля**, не общего веб-сайта.
+
+| | Web (Vercel) | Desktop (.app) |
+|---|--------------|----------------|
+| `/script.html` | редирект → `/screener.html` | ✅ |
+| Пункт меню «Скрипт» | скрыт (`script-desktop-nav.js`) | ✅ |
+| Фоновое авто-сканирование | нет (`isDesktopShell`) | ✅ |
+| Статус в шапке Терминала | нет | ✅ (`script-terminal-status.js`) |
+
+## При аудите целостности торгового модуля — включать Скрипт
+
+Вместе с trade-слоем проверять:
+
+- **Маршрут / boot:** `script.html`, `js/script-page-boot.js` (gate `cryptoTerminalDesktop.isDesktop`), `js/page-routes.js` (`isScriptPage`)
+- **Навигация:** `js/script-desktop-nav.js`, `js/site-boot.js` (`initScriptDesktopNav`, `resumeScriptScanBackgroundJob`)
+- **Страница:** `js/script-page.js`, `js/script-page-widgets.js`, `js/script-page-storage.js`, `css/script-page.css`
+- **Сканер:** `js/script-scan-background.js`, `js/pattern-12-scanner.js`, `js/pattern-scan-results.js`
+- **Связь с Терминалом:** `js/script-terminal-status.js`
+
+Гейты как у торговли: не импортировать script-модули на публичных страницах без `isDesktop`; фоновый скан — только desktop.
+
+## Документация
+
+- [docs/TRADING_MODULE.md](../docs/TRADING_MODULE.md) — торговый модуль + Скрипт
+- [docs/MARKER_54.md](../docs/MARKER_54.md) — релиз страницы Скрипт

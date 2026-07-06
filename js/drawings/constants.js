@@ -72,6 +72,10 @@ export const FIB_LABEL_RIGHT_RESERVE_PX =
 export const POSITION_ENTRY_COLOR = "#FACC15";
 export const POSITION_TP_FILL = "rgba(20, 83, 45, 0.58)";
 export const POSITION_SL_FILL = "rgba(127, 29, 29, 0.58)";
+/** Фон меток уровней Long/Short на ценовой шкале */
+export const POSITION_SCALE_TP_BG = "rgba(22, 101, 52, 0.95)";
+export const POSITION_SCALE_SL_BG = "rgba(127, 29, 29, 0.95)";
+export const POSITION_SCALE_ENTRY_BG = "rgba(113, 63, 18, 0.95)";
 /** Запасной %, если не удалось перевести пиксели в цену */
 export const POSITION_DEFAULT_TP_PCT = 0.03;
 export const POSITION_DEFAULT_SL_PCT = 0.015;

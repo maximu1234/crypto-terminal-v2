@@ -2,10 +2,10 @@
  * Звуки исполнения позиции (открытие / закрытие), не выставление ордеров.
  */
 const OPEN_SOUND_URL =
-"/sounds/trade-open-position.mp3";
+"/sounds/trade-close-position.mp3";
 
 const CLOSE_SOUND_URL =
-"/sounds/trade-close-position.mp3";
+"/sounds/trade-open-position.mp3";
 
 let openAudio =
 null;

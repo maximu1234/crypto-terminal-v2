@@ -194,10 +194,8 @@ color:#a3a6ad;
 position:fixed;
 inset:0;
 z-index:15000;
-display:flex;
-align-items:center;
-justify-content:center;
-padding:24px 12px;
+display:block;
+padding:0;
 background:rgba(0,0,0,0.45);
 box-sizing:border-box;
 pointer-events:auto;
@@ -217,6 +215,9 @@ pointer-events:none !important;
 }
 
 .chart-indicator-settings-dialog{
+position:fixed;
+left:0;
+top:0;
 width:min(360px,100%);
 max-height:min(88vh,640px);
 display:flex;
@@ -229,9 +230,24 @@ overflow:hidden;
 pointer-events:auto;
 }
 
+.chart-indicator-settings-dialog--positioned{
+margin:0;
+}
+
 .chart-indicator-settings-dialog--pattern12{
 width:min(520px,calc(100vw - 32px));
 max-height:min(88vh,760px);
+}
+
+.chart-indicator-settings-color{
+width:112px;
+flex:0 0 auto;
+height:32px;
+padding:2px;
+border:1px solid rgba(255,255,255,0.12);
+border-radius:6px;
+background:#111827;
+cursor:pointer;
 }
 
 .chart-indicator-settings-dialog--pattern12 .chart-indicator-settings-body{
@@ -254,6 +270,13 @@ justify-content:space-between;
 gap:12px;
 padding:12px 14px;
 border-bottom:1px solid rgba(255,255,255,0.08);
+cursor:grab;
+user-select:none;
+touch-action:none;
+}
+
+.chart-indicator-settings-header--dragging{
+cursor:grabbing;
 }
 
 .chart-indicator-settings-title{
@@ -301,6 +324,31 @@ cursor:pointer;
 
 .chart-indicator-settings-done:hover{
 background:#6366f1;
+}
+
+.chart-indicator-settings-reset-row{
+display:flex;
+justify-content:flex-start;
+margin:12px 0 0;
+padding:12px 0 0;
+border-top:1px solid rgba(255,255,255,0.08);
+}
+
+.chart-indicator-settings-reset{
+margin:0;
+padding:7px 12px;
+border:1px solid rgba(255,255,255,0.14);
+border-radius:6px;
+background:transparent;
+font:500 12px/1.2 system-ui,-apple-system,sans-serif;
+color:#9ca3af;
+cursor:pointer;
+}
+
+.chart-indicator-settings-reset:hover{
+border-color:rgba(255,255,255,0.22);
+color:#e5e7eb;
+background:rgba(255,255,255,0.04);
 }
 
 .chart-indicator-settings-section{

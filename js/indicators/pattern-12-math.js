@@ -26,6 +26,10 @@ ascHighsBeforePt1:
 1,
 waveAMode:
 "both",
+lngWaveCMode:
+"2",
+shtWaveCMode:
+"2",
 lngRsiLength:
 14,
 lngShowFractals:
@@ -33,7 +37,7 @@ false,
 lngShowRsiSwingLines:
 false,
 lngMicRsiLength:
-7,
+4,
 lngShowMicFractals:
 false,
 lngShowMicRsiSwingLines:
@@ -45,7 +49,7 @@ false,
 shtShowRsiSwingLines:
 false,
 shtMicRsiLength:
-7,
+4,
 shtShowMicFractals:
 false,
 shtShowMicRsiSwingLines:
@@ -122,6 +126,24 @@ raw?.waveAMode
 )
 ? raw.waveAMode
 : base.waveAMode,
+lngWaveCMode:
+[
+"1",
+"2"
+].includes(
+raw?.lngWaveCMode
+)
+? raw.lngWaveCMode
+: base.lngWaveCMode,
+shtWaveCMode:
+[
+"1",
+"2"
+].includes(
+raw?.shtWaveCMode
+)
+? raw.shtWaveCMode
+: base.shtWaveCMode,
 lngRsiLength:
 clampInt(
 raw?.lngRsiLength,
@@ -988,6 +1010,64 @@ return waveAMode ===
 
 }
 
+function lngWaveCMicNth(
+lngWaveCMode
+){
+
+return lngWaveCMode ===
+"2"
+? 2
+: 1;
+
+}
+
+function shtWaveCMicNth(
+shtWaveCMode
+){
+
+return shtWaveCMode ===
+"2"
+? 2
+: 1;
+
+}
+
+function lngPt4PriceValid(
+pk,
+pr1,
+pr2,
+pr3
+){
+
+return (
+pk >=
+pr1 &&
+pk >=
+pr3 &&
+pk <=
+pr2
+);
+
+}
+
+function shtPt4PriceValid(
+pk,
+pr1,
+pr2,
+pr3
+){
+
+return (
+pk <=
+pr1 &&
+pk <=
+pr3 &&
+pk >=
+pr2
+);
+
+}
+
 function lngBoxIntact(
 candles,
 fromBar,
@@ -1677,7 +1757,8 @@ candles,
 b3,
 pr1,
 pr2,
-pr3
+pr3,
+nthMicUp
 ){
 
 let i4 =
@@ -1685,6 +1766,12 @@ let i4 =
 let b4 =
 null;
 let pr4 =
+null;
+let foundFirst =
+false;
+let prFirstUp =
+null;
+let bFirstUp =
 null;
 const sz =
 micLog.types.length;
@@ -1699,7 +1786,9 @@ null ||
 pr3 ==
 null ||
 pr2 <=
-pr1
+pr1 ||
+nthMicUp <
+1
 ){
 return {
 i4,
@@ -1744,18 +1833,6 @@ break;
 }
 
 if(
-!lngBoxIntact(
-candles,
-b3,
-bk,
-pr1,
-pr2
-)
-){
-break;
-}
-
-if(
 micLog.types[
 k
 ] !==
@@ -1770,18 +1847,42 @@ k
 ];
 
 if(
-!(
-pk >=
-pr1 &&
-pk >=
-pr3 &&
-pk <=
-pr2
+!lngPt4PriceValid(
+pk,
+pr1,
+pr2,
+pr3
 )
 ){
 continue;
 }
 
+if(
+!lngBoxIntact(
+candles,
+b3,
+bk,
+pr1,
+pr2
+)
+){
+break;
+}
+
+if(
+!foundFirst
+){
+foundFirst =
+true;
+prFirstUp =
+pk;
+bFirstUp =
+bk;
+
+if(
+nthMicUp ===
+1
+){
 i4 =
 k;
 b4 =
@@ -1789,6 +1890,32 @@ bk;
 pr4 =
 pk;
 break;
+}
+
+}else if(
+pk >
+prFirstUp
+){
+
+if(
+lngBottomIntact(
+candles,
+bFirstUp,
+bk,
+pr3
+)
+){
+i4 =
+k;
+b4 =
+bk;
+pr4 =
+pk;
+}
+
+break;
+
+}
 
 }
 
@@ -2292,7 +2419,8 @@ candles,
 b3,
 pr1,
 pr2,
-pr3
+pr3,
+nthMicDn
 ){
 
 let i4 =
@@ -2300,6 +2428,12 @@ let i4 =
 let b4 =
 null;
 let pr4 =
+null;
+let foundFirst =
+false;
+let prFirstDn =
+null;
+let bFirstDn =
 null;
 const sz =
 micLog.types.length;
@@ -2314,7 +2448,9 @@ null ||
 pr3 ==
 null ||
 pr1 <=
-pr2
+pr2 ||
+nthMicDn <
+1
 ){
 return {
 i4,
@@ -2359,18 +2495,6 @@ break;
 }
 
 if(
-!shtBoxIntact(
-candles,
-b3,
-bk,
-pr1,
-pr2
-)
-){
-break;
-}
-
-if(
 micLog.types[
 k
 ] !==
@@ -2385,18 +2509,42 @@ k
 ];
 
 if(
-!(
-pk <=
-pr1 &&
-pk <=
-pr3 &&
-pk >=
-pr2
+!shtPt4PriceValid(
+pk,
+pr1,
+pr2,
+pr3
 )
 ){
 continue;
 }
 
+if(
+!shtBoxIntact(
+candles,
+b3,
+bk,
+pr1,
+pr2
+)
+){
+break;
+}
+
+if(
+!foundFirst
+){
+foundFirst =
+true;
+prFirstDn =
+pk;
+bFirstDn =
+bk;
+
+if(
+nthMicDn ===
+1
+){
 i4 =
 k;
 b4 =
@@ -2404,6 +2552,32 @@ bk;
 pr4 =
 pk;
 break;
+}
+
+}else if(
+pk <
+prFirstDn
+){
+
+if(
+shtTopIntact(
+candles,
+bFirstDn,
+bk,
+pr3
+)
+){
+i4 =
+k;
+b4 =
+bk;
+pr4 =
+pk;
+}
+
+break;
+
+}
 
 }
 
@@ -2561,7 +2735,10 @@ candles,
 pt3.b3,
 pr1,
 pt2.pr2,
-pt3.pr3
+pt3.pr3,
+lngWaveCMicNth(
+settings.lngWaveCMode
+)
 )
 : shtPt4AfterPt3(
 micLog,
@@ -2569,7 +2746,10 @@ candles,
 pt3.b3,
 pr1,
 pt2.pr2,
-pt3.pr3
+pt3.pr3,
+shtWaveCMicNth(
+settings.shtWaveCMode
+)
 );
 
 if(

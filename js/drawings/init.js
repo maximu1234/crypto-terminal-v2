@@ -85,6 +85,9 @@ GLOBAL_STYLE_KEY,
 POSITION_ENTRY_COLOR,
 POSITION_TP_FILL,
 POSITION_SL_FILL,
+POSITION_SCALE_TP_BG,
+POSITION_SCALE_SL_BG,
+POSITION_SCALE_ENTRY_BG,
 POSITION_DEFAULT_TP_PCT,
 POSITION_DEFAULT_SL_PCT,
 POSITION_DEFAULT_ZONE_HEIGHT_MULT,
@@ -94,7 +97,7 @@ POSITION_DEFAULT_WIDTH_BARS,
 POSITION_RR_LABEL_SAMPLE,
 RECT_DEFAULT_FILL_COLOR,
 RECT_DEFAULT_FILL_OPACITY
-} from "./constants.js?v=8";
+} from "./constants.js?v=9";
 
 import {
 getRectangleHandleScreens,
@@ -142,7 +145,7 @@ releaseFibPortals
 import {
 isPositionType,
 positionEntryPrice
-} from "./position.js?v=1";
+} from "./position.js?v=2";
 
 import {
 pickUi
@@ -212,7 +215,7 @@ createDrawChartInput
 
 import {
 createDrawPriceScale
-} from "./draw-price-scale.js?v=6";
+} from "./draw-price-scale.js?v=7";
 
 import {
 createDrawRedrawLoop
@@ -3592,11 +3595,11 @@ let fill =
 "rgba(30, 41, 59, 0.95)";
 
 if(item.variant === "tp"){
-fill = "rgba(22, 101, 52, 0.95)";
+fill = POSITION_SCALE_TP_BG;
 }else if(item.variant === "sl"){
-fill = "rgba(127, 29, 29, 0.95)";
+fill = POSITION_SCALE_SL_BG;
 }else{
-fill = "rgba(113, 63, 18, 0.95)";
+fill = POSITION_SCALE_ENTRY_BG;
 }
 
 fillPositionBadgeRect(

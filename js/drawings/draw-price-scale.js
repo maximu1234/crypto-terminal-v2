@@ -18,6 +18,11 @@ import {
 isSeriesLogarithmic
 } from "./fib-spec.js?v=13";
 
+import {
+isPositionType,
+positionScaleLabelColor
+} from "./position.js?v=2";
+
 export function createDrawPriceScale(
 deps
 ){
@@ -250,6 +255,16 @@ sel.type !== "hray"
 
 listHandles(sel).forEach(handle=>{
 
+if(
+isPositionType(
+sel.type
+) &&
+handle.id ===
+"entryR"
+){
+return;
+}
+
 const xy =
 toXY(handle.point);
 
@@ -257,8 +272,16 @@ if(!xy){
 return;
 }
 
-const { color } =
-shapeStyle(sel);
+const color =
+isPositionType(
+sel.type
+)
+? positionScaleLabelColor(
+handle.id
+)
+: shapeStyle(
+sel
+).color;
 
 entries.push({
 yIdeal: xy.y,

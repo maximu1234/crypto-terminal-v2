@@ -2219,6 +2219,12 @@ null;
 let lastPointerClientY =
 null;
 
+let livePointerClientX =
+null;
+
+let livePointerClientY =
+null;
+
 const chartsStackEl =
 linkedVertOverlayEl?.parentElement ||
 chartWrapEl?.parentElement ||
@@ -2264,10 +2270,18 @@ clientY;
 
 function plotYFromLastPointer(){
 
+const clientX =
+livePointerClientX ??
+lastPointerClientX;
+
+const clientY =
+livePointerClientY ??
+lastPointerClientY;
+
 if(
-lastPointerClientX ==
+clientX ==
 null ||
-lastPointerClientY ==
+clientY ==
 null
 ){
 return null;
@@ -2275,8 +2289,8 @@ return null;
 
 const plot =
 plotCoordsFromClient(
-lastPointerClientX,
-lastPointerClientY
+clientX,
+clientY
 );
 
 return Number.isFinite(
@@ -2296,10 +2310,12 @@ param?.sourceEvent;
 
 const cx =
 src?.clientX ??
+livePointerClientX ??
 lastPointerClientX;
 
 const cy =
 src?.clientY ??
+livePointerClientY ??
 lastPointerClientY;
 
 return {
@@ -2698,6 +2714,43 @@ clientX,
 clientY
 ) !=
 null;
+
+}
+
+function isClientOverChartPlots(
+clientX,
+clientY
+){
+
+if(
+clientX ==
+null ||
+clientY ==
+null
+){
+return false;
+}
+
+return (
+plotCoordsFromClient(
+clientX,
+clientY
+) !=
+null ||
+isClientOnRsiPlot(
+clientX,
+clientY
+)
+);
+
+}
+
+function isLivePointerOverChartPlots(){
+
+return isClientOverChartPlots(
+livePointerClientX,
+livePointerClientY
+);
 
 }
 
@@ -3294,6 +3347,54 @@ passive:true
 
 }
 
+function onDocumentPointerMove(
+e
+){
+
+if(
+e.pointerType ===
+"touch"
+){
+return;
+}
+
+livePointerClientX =
+e.clientX;
+livePointerClientY =
+e.clientY;
+
+if(
+lock
+){
+return;
+}
+
+if(
+document.body.classList.contains(
+"chart-probe-active"
+)
+){
+return;
+}
+
+if(
+!isLivePointerOverChartPlots()
+){
+clearLinked();
+clearMainCrosshair();
+}
+
+}
+
+document.addEventListener(
+"pointermove",
+onDocumentPointerMove,
+{
+passive:true,
+capture:true
+}
+);
+
 mainChart.subscribeCrosshairMove(param=>{
 
 if(lock){
@@ -3301,23 +3402,18 @@ return;
 }
 
 if(
-param.point === undefined
+param.point ===
+undefined
 ){
-
-if(
-isClientOnRsiPlot(
-lastPointerClientX,
-lastPointerClientY
-)
-){
-showRsiCrosshairFromClient(
-lastPointerClientX,
-lastPointerClientY
-);
+clearLinked();
 return;
 }
 
+if(
+!isLivePointerOverChartPlots()
+){
 clearLinked();
+clearMainCrosshair();
 return;
 }
 
@@ -3375,18 +3471,25 @@ return;
 }
 
 if(
-lastPointerClientX ==
-null ||
-lastPointerClientY ==
-null
+!isLivePointerOverChartPlots()
 ){
+clearLinked();
+clearMainCrosshair();
 return;
 }
 
+const clientX =
+livePointerClientX ??
+lastPointerClientX;
+
+const clientY =
+livePointerClientY ??
+lastPointerClientY;
+
 if(
 hideCrosshairOnAnyPriceScale(
-lastPointerClientX,
-lastPointerClientY
+clientX,
+clientY
 )
 ){
 return;
@@ -3394,8 +3497,8 @@ return;
 
 const plot =
 plotCoordsFromClient(
-lastPointerClientX,
-lastPointerClientY
+clientX,
+clientY
 );
 
 if(
@@ -3413,17 +3516,22 @@ return;
 
 if(
 isClientOnRsiPlot(
-lastPointerClientX,
-lastPointerClientY
+clientX,
+clientY
 )
 ){
 
 showRsiCrosshairFromClient(
-lastPointerClientX,
-lastPointerClientY
+clientX,
+clientY
 );
 
+return;
+
 }
+
+clearLinked();
+clearMainCrosshair();
 
 }
 
@@ -3459,6 +3567,12 @@ linkedWrapEl.removeEventListener(
 onRsiWrapPointerMove
 );
 }
+
+document.removeEventListener(
+"pointermove",
+onDocumentPointerMove,
+true
+);
 
 },
 setSuppressed(

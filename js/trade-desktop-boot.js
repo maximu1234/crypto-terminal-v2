@@ -182,7 +182,7 @@ const {
 initTradePositionSounds
 } =
 await import(
-"./trade-position-sounds.js?v=2"
+"./trade-position-sounds.js?v=3"
 );
 
 initTradePositionSounds();

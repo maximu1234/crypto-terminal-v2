@@ -8,7 +8,7 @@ syncTradePositionsCache
 
 import {
 isTradePositionSoundBaselineReady
-} from "./trade-position-sounds.js?v=2";
+} from "./trade-position-sounds.js?v=3";
 
 import {
 isExchangeTradingEnabled

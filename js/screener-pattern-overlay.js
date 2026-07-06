@@ -4,11 +4,11 @@
 import {
 computePattern12Scene,
 defaultPattern12Settings
-} from "./indicators/pattern-12-math.js?v=1";
+} from "./indicators/pattern-12-math.js?v=4";
 
 import {
 paintPattern12Scene
-} from "./indicators/pattern-12-paint.js?v=2";
+} from "./indicators/pattern-12-paint.js?v=3";
 
 const PATTERN_SETTINGS =
 defaultPattern12Settings();
@@ -216,6 +216,30 @@ redraw();
 
 }
 
+function scheduleLayoutRedraws(){
+
+[
+0,
+50,
+200,
+500
+].forEach(
+delay=>{
+setTimeout(
+()=>{
+if(
+!widget.disposed
+){
+redraw();
+}
+},
+delay
+);
+}
+);
+
+}
+
 const onViewport =
 ()=>{
 redraw();
@@ -248,6 +272,29 @@ onViewport
 );
 }catch{
 /* ignore */
+}
+
+if(
+typeof ResizeObserver !==
+"undefined"
+){
+
+const resizeObs =
+new ResizeObserver(
+()=>{
+redraw();
+}
+);
+
+resizeObs.observe(
+chartEl
+);
+unsubs.push(
+()=>{
+resizeObs.disconnect();
+}
+);
+
 }
 
 widget.patternOverlayRecompute =
@@ -293,6 +340,7 @@ null;
 };
 
 recompute();
+scheduleLayoutRedraws();
 
 return widget;
 

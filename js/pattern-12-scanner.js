@@ -11,10 +11,21 @@ buildMarketLists
 import {
 computePattern12Scene,
 defaultPattern12Settings
-} from "./indicators/pattern-12-math.js?v=1";
+} from "./indicators/pattern-12-math.js?v=4";
 
 export const PATTERN_SCAN_LOOKBACK_BARS =
-100;
+30;
+
+export const PATTERN_SCAN_DEPTH_OPTIONS =
+[
+10,
+30,
+50,
+100
+];
+
+export const PATTERN_SCAN_DEFAULT_LOOKBACK =
+30;
 
 export const PATTERN_SCAN_HISTORY_REQUESTS =
 2;
@@ -209,6 +220,16 @@ const onProgress =
 options.onProgress;
 const onHit =
 options.onHit;
+const lookbackBars =
+PATTERN_SCAN_DEPTH_OPTIONS.includes(
+Number(
+options.lookbackBars
+)
+)
+? Number(
+options.lookbackBars
+)
+: PATTERN_SCAN_DEFAULT_LOOKBACK;
 
 onProgress?.(
 {
@@ -281,12 +302,47 @@ tf
 
 const results =
 new Map();
+
+for(
+const row of
+Array.isArray(
+options.seedRows
+)
+? options.seedRows
+: []
+){
+
+if(
+!row?.symbol ||
+!row?.tf
+){
+continue;
+}
+
+results.set(
+`${row.symbol}:${row.tf}`,
+row
+);
+
+}
+
+const startIndex =
+Math.max(
+0,
+Number(
+options.startIndex
+) ||
+0
+);
 done =
-0;
+Math.min(
+startIndex,
+tasks.length
+);
 total =
 tasks.length;
 let cursor =
-0;
+startIndex;
 
 async function worker(){
 
@@ -336,7 +392,8 @@ return;
 
 const hit =
 findLatestPattern12InLookback(
-candles
+candles,
+lookbackBars
 );
 
 if(

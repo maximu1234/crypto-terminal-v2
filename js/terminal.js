@@ -90,7 +90,7 @@ createSharedDrawUndoStack
 
 import {
 initWidgetDrawings
-} from "./chart-widget-host.js?v=14";
+} from "./chart-widget-host.js?v=15";
 
 import {
 mountDrawToolbar,
@@ -99,7 +99,7 @@ mountDrawToolIcons
 
 import {
 initChartIndicators
-} from "./chart-indicators.js?v=21";
+} from "./chart-indicators.js?v=30";
 
 import {
 initCoinsMobileUi,
@@ -189,6 +189,14 @@ isTerminalMultiChartLayout
 import {
 mountTerminalLayoutPicker
 } from "./terminal-layout-picker.js?v=3";
+
+import {
+mountScriptTerminalStatus
+} from "./script-terminal-status.js?v=1";
+
+import {
+resumeScriptScanBackgroundJob
+} from "./script-scan-background.js?v=7";
 
 let currentDataset = "all";
 let currentTF = "60";
@@ -1471,7 +1479,9 @@ rsiHudPeriodEl
 ){
 
 rsiHudPeriodEl.textContent =
-String(RSI_PERIOD);
+String(
+RSI_PERIOD
+);
 
 }
 
@@ -3308,6 +3318,20 @@ symbol,
 loadSeq
 );
 
+chartCrosshairLink?.clearLinked?.();
+
+try{
+chart.clearCrosshairPosition();
+}catch{
+/* ignore */
+}
+
+try{
+rsiChart?.clearCrosshairPosition();
+}catch{
+/* ignore */
+}
+
 currentSymbol = symbol;
 setCoinsChartSymbol(symbol);
 
@@ -3444,7 +3468,6 @@ settleCoinsChartViewport();
 
 drawingTools?.scheduleRedraw?.();
 rsiDrawingTools?.scheduleRedraw?.();
-chartCrosshairLink?.refreshPointerCrosshair?.();
 
 dispatchChartCandlesLoaded(
 currentSymbol,
@@ -4983,6 +5006,9 @@ scheduleResizeCharts();
 mountPicker:
 mountTerminalLayoutPicker
 });
+
+mountScriptTerminalStatus();
+resumeScriptScanBackgroundJob();
 
 favorites =
 loadFavoritesGroups();

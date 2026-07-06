@@ -18,7 +18,7 @@ DEFAULT_FIB_SPEC,
 FIB_TOOL_DEFAULTS_VERSION,
 RECT_DEFAULT_FILL_COLOR,
 RECT_DEFAULT_FILL_OPACITY
-} from "./constants.js?v=8";
+} from "./constants.js?v=9";
 
 import {
 normalizeFibLineStyle,
@@ -48,7 +48,7 @@ isFibLineWidthMenuOpenForAnchor
 import {
 isPositionType,
 positionEntryPrice
-} from "./position.js?v=1";
+} from "./position.js?v=2";
 
 import {
 parseMoneyInput,

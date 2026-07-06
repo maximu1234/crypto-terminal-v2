@@ -40,11 +40,20 @@ if(
 ){
 zoomPatternOverlayApi =
 await import(
-"./screener-pattern-overlay.js?v=1"
+"./screener-pattern-overlay.js?v=2"
 );
 }
 
 return zoomPatternOverlayApi;
+
+}
+
+function zoomPatternOverlayEnabled(){
+
+return (
+zoomMountOptions?.isPatternOverlayEnabled?.() ??
+isScreenerPatternEnabled()
+);
 
 }
 
@@ -55,7 +64,7 @@ state
 if(
 !state ||
 state.disposed ||
-!isScreenerPatternEnabled()
+!zoomPatternOverlayEnabled()
 ){
 return;
 }
@@ -125,7 +134,7 @@ state
 if(
 !state ||
 state.disposed ||
-!isScreenerPatternEnabled()
+!zoomPatternOverlayEnabled()
 ){
 return;
 }
@@ -676,6 +685,7 @@ return;
 }
 
 const tf =
+widget?.tf ||
 getCurrentTF?.() ||
 "15";
 
@@ -1076,6 +1086,8 @@ resolveWidget,
 getCurrentTF,
 getInvertCharts = ()=>false,
 isEnabled = ()=>true,
+isPatternOverlayEnabled,
+gridElId = "screener-grid",
 wireFlagUi,
 updateFlagUi,
 flagWrapHtml = ""
@@ -1087,7 +1099,9 @@ zoomMountOptions =
 wireFlagUi,
 updateFlagUi,
 flagWrapHtml,
-getInvertCharts
+getInvertCharts,
+gridElId,
+isPatternOverlayEnabled
 };
 
 function onContextMenu(
@@ -1113,6 +1127,7 @@ return;
 
 const grid =
 document.getElementById(
+zoomMountOptions?.gridElId ||
 "screener-grid"
 );
 

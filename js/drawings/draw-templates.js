@@ -4,7 +4,7 @@ STROKE,
 RECT_DEFAULT_FILL_COLOR,
 RECT_DEFAULT_FILL_OPACITY,
 FIB_TOOL_DEFAULTS_VERSION
-} from "./constants.js?v=8";
+} from "./constants.js?v=9";
 
 import {
 cloneDefaultFibRows,
@@ -18,7 +18,7 @@ normalizeRectangleShape
 
 import {
 isPositionType
-} from "./position.js?v=1";
+} from "./position.js?v=2";
 
 export const DRAW_TEMPLATES_STORAGE_KEY =
 "draw_templates_v1";

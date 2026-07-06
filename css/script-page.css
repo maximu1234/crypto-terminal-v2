@@ -1,21 +1,39 @@
-/* Страница Скрипт: график слева, панель справа (как Терминал). */
+/* Страница Скрипт — сетка виджетов как Скринер. */
 
 body.script-page{
---coins-list-w:minmax(280px, 340px);
-}
-
-body.script-page .script-list-panel{
 display:flex;
 flex-direction:column;
-min-height:0;
-height:100%;
+height:100dvh;
+overflow:hidden;
+background:#0b0f14;
 }
 
-.script-scan-toolbar{
+body.script-page #script-grid{
+flex:1;
+display:grid;
+gap:8px;
+padding:8px;
+min-height:0;
+overflow:hidden;
+}
+
+body.script-page .script-page-header{
 flex-shrink:0;
-padding:8px 10px 6px;
-border-bottom:var(--coins-block-separator);
-background:var(--coins-panel-bg);
+}
+
+body.script-page .script-header-controls{
+margin-left:auto;
+}
+
+.script-toolbar{
+flex-shrink:0;
+display:flex;
+flex-wrap:wrap;
+align-items:center;
+gap:8px 12px;
+padding:8px 12px;
+border-bottom:1px solid #1f2937;
+background:#111827;
 }
 
 .script-tf-filter{
@@ -26,12 +44,12 @@ gap:3px;
 
 .script-tf-btn{
 min-width:0;
-padding:2px 5px;
+padding:3px 6px;
 border:1px solid transparent;
 border-radius:4px;
 background:transparent;
 color:#6b7280;
-font-size:10px;
+font-size:11px;
 line-height:1.2;
 cursor:pointer;
 }
@@ -47,143 +65,110 @@ border-color:#4b5563;
 background:#1f2937;
 }
 
-.script-scan-actions{
-flex-shrink:0;
-padding:10px;
-border-bottom:var(--coins-block-separator);
-background:var(--coins-panel-bg);
-display:flex;
-flex-direction:column;
-gap:8px;
+.script-tf-btn:focus,
+.script-tf-btn:focus-visible,
+.script-auto-btn:focus,
+.script-auto-btn:focus-visible,
+.script-refresh-all-btn:focus,
+.script-refresh-all-btn:focus-visible{
+outline:none;
 }
 
-.script-refresh-all-btn{
-width:100%;
-padding:8px 12px;
+.script-toolbar-field select:focus,
+.script-toolbar-field select:focus-visible{
+outline:none;
+}
+
+.script-refresh-all-btn,
+.script-auto-btn{
+padding:6px 10px;
 border:1px solid #374151;
 border-radius:6px;
 background:#1f2937;
 color:#e5e7eb;
-font-size:13px;
+font-size:12px;
 cursor:pointer;
+white-space:nowrap;
 }
 
-.script-refresh-all-btn:hover:not(:disabled){
+.script-refresh-all-btn:hover:not(:disabled),
+.script-auto-btn:hover:not(:disabled){
 background:#374151;
 }
 
-.script-refresh-all-btn:disabled{
+.script-refresh-all-btn:disabled,
+.script-auto-btn:disabled{
 opacity:.55;
 cursor:not-allowed;
 }
 
-.script-scan-status,
+.script-toolbar-field{
+display:flex;
+align-items:center;
+gap:6px;
+font-size:12px;
+color:#9ca3af;
+}
+
+.script-toolbar-field select{
+font-size:12px;
+padding:5px 8px;
+border:1px solid #374151;
+border-radius:6px;
+background:#0f172a;
+color:#e5e7eb;
+}
+
+.script-toolbar-status,
+.script-scan-status{
+display:none;
+}
+
+.script-toolbar-spacer{
+flex:1 1 auto;
+min-width:8px;
+}
+
+.script-toolbar-status{
+display:flex;
+flex-direction:row;
+align-items:center;
+flex-wrap:wrap;
+gap:8px;
+}
+
+.script-scan-progress{
+font-size:12px;
+line-height:1.35;
+color:#fff;
+white-space:nowrap;
+}
+
+.script-scan-progress.hidden{
+display:none;
+}
+
 .script-auto-status{
 font-size:12px;
 line-height:1.35;
 color:#9ca3af;
+white-space:nowrap;
 }
 
-.script-scan-settings{
-flex-shrink:0;
-padding:10px;
-border-bottom:var(--coins-block-separator);
-background:var(--coins-panel-bg);
-display:flex;
-flex-direction:column;
-gap:8px;
+.script-refresh-all-btn{
+margin-left:0;
 }
 
-.script-scan-settings label{
-display:flex;
-flex-direction:column;
-gap:4px;
-font-size:12px;
+.script-widget-meta{
+font-size:11px;
 color:#9ca3af;
+margin-left:6px;
 }
 
-.script-scan-settings select{
-font-size:13px;
-padding:6px 8px;
-border:1px solid #374151;
-border-radius:6px;
-background:#111827;
-color:#e5e7eb;
-}
-
-.script-auto-actions{
-display:flex;
-gap:6px;
-}
-
-.script-auto-actions button{
-flex:1 1 0;
-padding:7px 8px;
-border:1px solid #374151;
-border-radius:6px;
-background:#1f2937;
-color:#e5e7eb;
-font-size:12px;
-cursor:pointer;
-}
-
-.script-auto-actions button:hover:not(:disabled){
-background:#374151;
-}
-
-.script-auto-actions button:disabled{
-opacity:.55;
-cursor:not-allowed;
-}
-
-.script-table-header{
-flex-shrink:0;
-display:grid;
-grid-template-columns:minmax(0, 1fr) 44px 72px;
-gap:8px;
-padding:8px 10px;
+.script-widget-side{
 font-size:11px;
 font-weight:600;
-letter-spacing:.04em;
-text-transform:uppercase;
-color:#6b7280;
-border-bottom:var(--coins-block-separator);
-background:var(--coins-panel-bg);
-}
-
-.script-table-body{
-flex:1 1 auto;
-min-height:0;
-overflow:auto;
--webkit-overflow-scrolling:touch;
-}
-
-.script-table-row{
-display:grid;
-grid-template-columns:minmax(0, 1fr) 44px 72px;
-gap:8px;
-padding:8px 10px;
-border-bottom:1px solid #1f2937;
-font-size:13px;
-cursor:pointer;
-color:#e5e7eb;
-width:100%;
-text-align:left;
-border-left:none;
-border-right:none;
-border-top:none;
-background:transparent;
-}
-
-.script-table-row:hover,
-.script-table-row.active{
-background:#1f2937;
-}
-
-.script-col-tf{
-color:#9ca3af;
-font-size:12px;
-text-align:center;
+margin-left:6px;
 }
 
 .script-side-long{
@@ -194,69 +179,28 @@ color:#34d399;
 color:#f87171;
 }
 
-.script-table-empty{
-padding:16px 10px;
-font-size:13px;
-color:#6b7280;
-}
-
-body.script-page #chart-wrap{
-pointer-events:auto;
-display:flex;
-flex-direction:column;
-}
-
-body.script-page .coins-chart-slot-body{
-flex:1 1 auto;
-min-height:0;
-display:flex;
-flex-direction:column;
-}
-
-body.script-page #charts-stack{
-min-height:0;
-flex:1 1 auto;
-display:flex;
-flex-direction:column;
-}
-
-body.script-page .coins-chart-pane,
-body.script-page .charts-stack-panes{
-flex:1 1 auto;
-min-height:0;
-display:flex;
-flex-direction:column;
-position:relative;
-}
-
-body.script-page .script-topbar .script-open-terminal{
-margin-left:8px;
+body.script-page #pagination{
 flex-shrink:0;
 }
 
-body.script-page .coins-header-desktop a.active{
-color:#fff;
+body.script-page #script-status{
+position:fixed;
+left:50%;
+bottom:72px;
+transform:translateX(-50%);
+z-index:20;
+padding:8px 14px;
+border-radius:8px;
+background:rgba(17,24,39,.92);
+color:#e5e7eb;
+font-size:13px;
+pointer-events:none;
 }
 
-@media (max-width:640px){
-
-body.script-page #app{
-display:flex;
-flex-direction:column;
-height:100dvh;
+body.script-page #script-status.loading{
+color:#9ca3af;
 }
 
-body.script-page #left{
-order:2;
-flex:1 1 auto;
-min-height:0;
-}
-
-body.script-page #list{
-order:1;
-max-height:42dvh;
-border-left:none;
-border-bottom:var(--coins-block-separator);
-}
-
+body.script-page #script-status.hidden{
+display:none;
 }

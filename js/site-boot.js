@@ -79,7 +79,7 @@ initScriptDesktopNav
 
 import {
 resumeScriptScanBackgroundJob
-} from "./script-scan-background.js?v=2";
+} from "./script-scan-background.js?v=7";
 
 import {
 resumeStatsBackgroundJob
@@ -93,10 +93,30 @@ initScriptDesktopNav();
 
 void resumeStatsBackgroundJob();
 
+function bootScriptScanBackground(){
+
 if(
 window.cryptoTerminalDesktop?.isDesktop
 ){
-void resumeScriptScanBackgroundJob();
+resumeScriptScanBackgroundJob();
+}
+
+}
+
+bootScriptScanBackground();
+
+if(
+typeof document !==
+"undefined"
+){
+document.addEventListener(
+"DOMContentLoaded",
+bootScriptScanBackground,
+{
+once:
+true
+}
+);
 }
 
 async function startSiteBoot(){
@@ -176,6 +196,7 @@ initBybitNetworkUi();
 preloadBybitProxyConfig();
 warmBybitWorkerProxy();
 initMobileRecovery();
+bootScriptScanBackground();
 
 }
 

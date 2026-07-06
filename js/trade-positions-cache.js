@@ -10,7 +10,7 @@ applyTradePositionSoundDiff,
 establishTradePositionSoundBaseline,
 isTradePositionSoundBaselineReady,
 resetTradePositionSoundBaseline
-} from "./trade-position-sounds.js?v=2";
+} from "./trade-position-sounds.js?v=3";
 
 const cacheBySymbol =
 new Map();

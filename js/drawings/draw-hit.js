@@ -22,7 +22,7 @@ FIB_HIT_X_PAD_PX,
 FIB_HIT_X_PAD_DESKTOP_PX,
 DRAW_BODY_HIT_THRESHOLD_TOUCH,
 DRAW_BODY_HIT_THRESHOLD_DESKTOP
-} from "./constants.js?v=8";
+} from "./constants.js?v=9";
 
 import {
 isCoarseTouchViewport

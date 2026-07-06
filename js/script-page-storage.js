@@ -6,6 +6,10 @@ loadPatternScanResults,
 savePatternScanResults
 } from "./pattern-scan-results.js?v=1";
 
+import {
+PATTERN_SCAN_DEPTH_OPTIONS
+} from "./pattern-12-scanner.js?v=11";
+
 export const SCRIPT_PAGE_STORAGE_KEY =
 "script_page_pattern_scan_v1";
 
@@ -59,6 +63,12 @@ const DEFAULT_STATE =
 {
 filterTf:
 "all",
+searchDepth:
+30,
+layout:
+9,
+page:
+1,
 auto:
 {
 active:
@@ -72,8 +82,6 @@ nextRunAt:
 lastScanAt:
 0
 },
-selection:
-null,
 lastVisitedAt:
 0
 };
@@ -131,6 +139,38 @@ String(
 raw.filterTf ||
 DEFAULT_STATE.filterTf
 ),
+searchDepth:
+PATTERN_SCAN_DEPTH_OPTIONS.includes(
+Number(
+raw.searchDepth
+)
+)
+? Number(
+raw.searchDepth
+)
+: DEFAULT_STATE.searchDepth,
+layout:
+[
+4,
+6,
+9
+].includes(
+Number(
+raw.layout
+)
+)
+? Number(
+raw.layout
+)
+: DEFAULT_STATE.layout,
+page:
+Math.max(
+1,
+Number(
+raw.page
+) ||
+DEFAULT_STATE.page
+),
 rows,
 auto:
 {
@@ -161,28 +201,6 @@ raw.auto?.lastScanAt
 ) ||
 0
 },
-selection:
-raw.selection &&
-typeof raw.selection ===
-"object" &&
-raw.selection.symbol
-? {
-symbol:
-String(
-raw.selection.symbol
-),
-tf:
-String(
-raw.selection.tf ||
-"60"
-),
-rowKey:
-String(
-raw.selection.rowKey ||
-""
-)
-}
-: null,
 lastVisitedAt:
 Number(
 raw.lastVisitedAt
@@ -216,10 +234,14 @@ JSON.stringify(
 {
 filterTf:
 state.filterTf,
+searchDepth:
+state.searchDepth,
+layout:
+state.layout,
+page:
+state.page,
 auto:
 state.auto,
-selection:
-state.selection,
 lastVisitedAt:
 state.lastVisitedAt
 }

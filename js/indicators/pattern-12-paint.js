@@ -37,6 +37,296 @@ dt
 
 }
 
+function segmentX(
+ts,
+t0,
+t1
+){
+
+const x0 =
+ts.timeToCoordinate(
+t0
+);
+const x1 =
+ts.timeToCoordinate(
+t1
+);
+
+if(
+x0 ==
+null ||
+x1 ==
+null
+){
+return null;
+}
+
+return {
+x0,
+x1,
+dt:
+t1 -
+t0
+};
+
+}
+
+export function timeToX(
+ts,
+time,
+candles
+){
+
+const direct =
+ts.timeToCoordinate(
+time
+);
+
+if(
+direct !=
+null &&
+Number.isFinite(
+direct
+)
+){
+return direct;
+}
+
+if(
+!Array.isArray(
+candles
+) ||
+candles.length <
+2
+){
+return null;
+}
+
+const first =
+candles[
+0
+];
+const second =
+candles[
+1
+];
+const prev =
+candles[
+candles.length -
+2
+];
+const last =
+candles[
+candles.length -
+1
+];
+
+if(
+time <=
+first.time
+){
+
+const seg =
+segmentX(
+ts,
+first.time,
+second.time
+);
+
+if(
+!seg ||
+seg.dt <=
+0
+){
+return seg?.x0 ??
+null;
+}
+
+return seg.x0 +
+(
+seg.x1 -
+seg.x0
+) *
+((
+time -
+first.time
+) /
+seg.dt);
+
+}
+
+if(
+time >=
+last.time
+){
+
+const seg =
+segmentX(
+ts,
+prev.time,
+last.time
+);
+
+if(
+!seg ||
+seg.dt <=
+0
+){
+return seg?.x1 ??
+null;
+}
+
+return seg.x1 +
+(
+seg.x1 -
+seg.x0
+) *
+((
+time -
+last.time
+) /
+seg.dt);
+
+}
+
+let lo =
+0;
+let hi =
+candles.length -
+1;
+
+while(
+lo +
+1 <
+hi
+){
+
+const mid =
+(
+lo +
+hi
+) >>
+1;
+
+if(
+candles[
+mid
+].time <=
+time
+){
+lo =
+mid;
+}else{
+hi =
+mid;
+}
+
+}
+
+const seg =
+segmentX(
+ts,
+candles[
+lo
+].time,
+candles[
+lo +
+1
+].time
+);
+
+if(
+!seg ||
+seg.dt <=
+0
+){
+return seg?.x0 ??
+null;
+}
+
+return seg.x0 +
+(
+seg.x1 -
+seg.x0
+) *
+((
+time -
+candles[
+lo
+].time
+) /
+seg.dt);
+
+}
+
+function logicalBarToX(
+ts,
+bar
+){
+
+try{
+const x =
+ts.logicalToCoordinate?.(
+bar
+);
+
+return x !=
+null &&
+Number.isFinite(
+x
+)
+? x
+: null;
+}catch{
+return null;
+}
+
+}
+
+function pt4LineEndX(
+ts,
+mark,
+t1,
+candles,
+plotW
+){
+
+let x1 =
+timeToX(
+ts,
+t1,
+candles
+);
+
+if(
+x1 ==
+null
+){
+x1 =
+logicalBarToX(
+ts,
+mark.bar +
+mark.lineBars
+);
+}
+
+if(
+x1 ==
+null &&
+Number.isFinite(
+plotW
+) &&
+plotW >
+0
+){
+x1 =
+plotW;
+}
+
+return x1;
+
+}
+
 export function barToX(
 ts,
 bar,
@@ -54,18 +344,11 @@ if(
 return null;
 }
 
-const x =
-ts.timeToCoordinate(
-candle.time
+return timeToX(
+ts,
+candle.time,
+candles
 );
-
-return x !=
-null &&
-Number.isFinite(
-x
-)
-? x
-: null;
 
 }
 
@@ -123,6 +406,14 @@ const ts =
 chart.timeScale();
 
 ctx.save();
+ctx.beginPath();
+ctx.rect(
+0,
+0,
+plotW,
+plotH
+);
+ctx.clip();
 
 for(
 const line of scene.swingLines
@@ -350,8 +641,12 @@ const t1 =
 t0 +
 span;
 const x1 =
-ts.timeToCoordinate(
-t1
+pt4LineEndX(
+ts,
+mark,
+t1,
+candles,
+plotW
 );
 
 if(

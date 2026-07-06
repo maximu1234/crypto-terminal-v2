@@ -9,11 +9,11 @@ PATTERN_12_ID,
 computePattern12Scene,
 defaultPattern12Settings,
 normalizePattern12Settings
-} from "./pattern-12-math.js?v=1";
+} from "./pattern-12-math.js?v=4";
 
 import {
 paintPattern12Scene
-} from "./pattern-12-paint.js?v=2";
+} from "./pattern-12-paint.js?v=3";
 
 function readSettings(
 store
@@ -371,6 +371,24 @@ settings.waveAMode,
 { value: "both", label: "оба" }
 ]
 )}
+${fieldSelect(
+"Волна 1 оф С состоит из (Лонг)",
+"lngWaveCMode",
+settings.lngWaveCMode,
+[
+{ value: "1", label: "1 микро-свинг" },
+{ value: "2", label: "2 микро-свинга" }
+]
+)}
+${fieldSelect(
+"Волна 1 оф С состоит из (Шорт)",
+"shtWaveCMode",
+settings.shtWaveCMode,
+[
+{ value: "1", label: "1 микро-свинг" },
+{ value: "2", label: "2 микро-свинга" }
+]
+)}
 `
 )}
 ${settingsSection(
@@ -520,6 +538,9 @@ settings.showPatternLines
 )}
 `
 )}
+<div class="chart-indicator-settings-reset-row">
+<button type="button" class="chart-indicator-settings-reset">Сбросить в дефолт</button>
+</div>
 </div>
 `;
 
@@ -600,6 +621,29 @@ el.addEventListener(
 "change",
 commit
 );
+}
+);
+
+root.querySelector(
+".chart-indicator-settings-reset"
+)?.addEventListener(
+"click",
+()=>{
+
+settings =
+normalizePattern12Settings(
+defaultPattern12Settings()
+);
+persistSettings(
+settingsStore,
+settings
+);
+recompute();
+getHost?.()?.getDrawingTools?.()?.scheduleRedraw?.();
+populateSettingsDialog(
+root
+);
+
 }
 );
 
