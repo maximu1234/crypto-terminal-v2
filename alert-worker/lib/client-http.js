@@ -15,7 +15,7 @@ export function setCors(res, req) {
   );
   res.setHeader(
     "Access-Control-Allow-Methods",
-    "POST, OPTIONS"
+    "GET, POST, OPTIONS"
   );
   res.setHeader(
     "Access-Control-Allow-Headers",

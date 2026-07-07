@@ -16,6 +16,7 @@ import {
 } from "./lib/trigger-alert.js";
 import { handleClientApi } from "./lib/client-api.js";
 import { handleBybitProxy } from "./lib/bybit-proxy.js";
+import { setPublicCors } from "./lib/client-http.js";
 import {
   ensureTelegramWebhook,
   handleTelegramInfo,
@@ -156,6 +157,12 @@ async function main() {
       (req.url || "").split("?")[0];
 
     if (pathOnly === "/health" || pathOnly === "/") {
+      setPublicCors(res, req);
+      if (req.method === "OPTIONS") {
+        res.writeHead(204);
+        res.end();
+        return;
+      }
       const st = getConfigStatus();
       const diag = await fetchAlertDiagnostics().catch(() => null);
       res.writeHead(200, { "Content-Type": "application/json" });
