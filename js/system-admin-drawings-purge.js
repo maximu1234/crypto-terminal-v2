@@ -4,7 +4,7 @@ readAlertTokenSync
 
 import {
 normalizeAlertWorkerBaseUrl
-} from "./alert-worker-url.js?v=1";
+} from "./alert-worker-url.js?v=2";
 
 import {
 fetchWithTimeout

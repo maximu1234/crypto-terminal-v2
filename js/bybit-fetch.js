@@ -1,6 +1,6 @@
 import {
 normalizeAlertWorkerBaseUrl
-} from "./alert-worker-url.js?v=1";
+} from "./alert-worker-url.js?v=2";
 
 /** Публичные REST API Bybit (зеркало — запас при блокировках DNS/региона). */
 export const BYBIT_API_BASES = [
