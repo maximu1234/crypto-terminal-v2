@@ -934,6 +934,20 @@ if(
 return null;
 }
 
+const nextRunAt =
+Number(
+state.auto?.nextRunAt
+) ||
+0;
+
+if(
+nextRunAt &&
+Date.now() + 500 <
+nextRunAt
+){
+return null;
+}
+
 if(
 isPatternScanJobActive() ||
 getScanner().isRunning()

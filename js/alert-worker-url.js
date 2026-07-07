@@ -44,6 +44,14 @@ u.protocol !== "https:"
 return "";
 }
 
+if(
+u.protocol === "http:" &&
+u.hostname !== "localhost" &&
+u.hostname !== "127.0.0.1"
+){
+u.protocol = "https:";
+}
+
 return u.origin;
 
 }catch{

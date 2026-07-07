@@ -188,7 +188,7 @@ isTerminalMultiChartLayout
 
 import {
 mountTerminalLayoutPicker
-} from "./terminal-layout-picker.js?v=3";
+} from "./terminal-layout-picker.js?v=6";
 
 import {
 mountScriptTerminalStatus
@@ -196,7 +196,7 @@ mountScriptTerminalStatus
 
 import {
 resumeScriptScanBackgroundJob
-} from "./script-scan-background.js?v=7";
+} from "./script-scan-background.js?v=8";
 
 let currentDataset = "all";
 let currentTF = "60";
@@ -3339,7 +3339,7 @@ if(
 isTradePage
 ){
 void import(
-"./trade-volume-presets.js?v=9"
+"./trade-volume-presets.js?v=10"
 ).then(
 ({
 switchTradeVolumeSymbol
@@ -4445,7 +4445,8 @@ target.tagName?.toLowerCase();
 if(
 tag === "input" ||
 tag === "textarea" ||
-tag === "select"
+tag === "select" ||
+tag === "button"
 ){
 return true;
 }

@@ -13,7 +13,7 @@ isAlertsPage
 import {
 initAlertsCloudSync,
 scheduleRegistryCloudSync
-} from "./alerts-cloud-sync.js?v=110";
+} from "./alerts-cloud-sync.js?v=111";
 
 import {
 stripAlertFlagsNotInRegistry
@@ -79,7 +79,7 @@ initScriptDesktopNav
 
 import {
 resumeScriptScanBackgroundJob
-} from "./script-scan-background.js?v=7";
+} from "./script-scan-background.js?v=8";
 
 import {
 resumeStatsBackgroundJob

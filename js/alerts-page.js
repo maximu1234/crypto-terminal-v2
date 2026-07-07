@@ -15,7 +15,7 @@ removeAllAlerts
 import {
 getTelegramChatId,
 initAlertsCloudSync
-} from "./alerts-cloud-sync.js?v=110";
+} from "./alerts-cloud-sync.js?v=111";
 
 import {
 readAlertTokenSync
@@ -57,6 +57,8 @@ document.getElementById("alerts-table-wrap");
 
 const deleteAllBtn =
 document.getElementById("alerts-delete-all");
+const activeHeadingEl =
+document.getElementById("alerts-active-heading");
 
 const historyTbody =
 document.getElementById("alerts-history-tbody");
@@ -499,6 +501,13 @@ function renderActive(){
 
 const alerts =
 getAlertsSorted();
+
+if(
+activeHeadingEl
+){
+activeHeadingEl.textContent =
+`Активные алерты (${alerts.length})`;
+}
 
 if(
 !emptyEl ||

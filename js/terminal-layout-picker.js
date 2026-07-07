@@ -94,9 +94,19 @@ opt=>`
 ).join("")}
 </div>`;
 
+if(
+anchor.id ===
+"header-settings-wrap"
+){
+anchor.parentElement.insertBefore(
+wrap,
+anchor.nextSibling
+);
+}else{
 anchor.parentElement.appendChild(
 wrap
 );
+}
 
 const btn =
 wrap.querySelector(
@@ -167,6 +177,32 @@ el.classList.add(
 );
 }
 );
+
+btn?.addEventListener(
+"mousedown",
+event=>{
+if(
+event.button ===
+0
+){
+event.preventDefault();
+}
+},
+true
+);
+
+btn?.addEventListener(
+"keydown",
+event=>{
+if(
+event.code === "Space" ||
+event.code === "Enter"
+){
+event.preventDefault();
+}
+},
+true
+);
 if(
 open
 ){
@@ -208,6 +244,12 @@ onSelect?.(
 count
 );
 syncIcon();
+queueMicrotask(
+()=>{
+item.blur();
+btn?.blur();
+}
+);
 }
 );
 }

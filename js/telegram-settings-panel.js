@@ -5,7 +5,7 @@ import {
 getTelegramChatId,
 saveTelegramChatId,
 clearTelegramChatId
-} from "./alerts-cloud-sync.js?v=110";
+} from "./alerts-cloud-sync.js?v=111";
 
 import {
 TELEGRAM_BOT_USERNAME,

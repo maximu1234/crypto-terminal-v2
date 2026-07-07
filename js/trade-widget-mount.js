@@ -20,7 +20,7 @@ focusActiveVolumePresetInput,
 getVolumeStateForSymbol,
 saveVolumeStateForSymbol,
 getActiveTradeVolumeUsdt
-} from "./trade-volume-presets.js?v=9";
+} from "./trade-volume-presets.js?v=10";
 
 import {
 marketMap
@@ -32,7 +32,7 @@ applyAutoStopsAfterEntry
 
 import {
 mountTradeLeverageControl
-} from "./trade-leverage-settings.js?v=2";
+} from "./trade-leverage-settings.js?v=3";
 
 function tradingApi(){
 

@@ -41,6 +41,10 @@ scheduleRegistryCloudSync
 } from "./alerts-cloud/registry-sync.js?v=5";
 
 export {
+purgeAlertGarbageFromCloud
+} from "./alerts-cloud/garbage-purge.js?v=1";
+
+export {
 scheduleRemoteRegistrySync,
 startAlertsFastPoll,
 stopAlertsFastPoll,

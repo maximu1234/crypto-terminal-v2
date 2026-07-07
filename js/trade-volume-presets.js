@@ -10,6 +10,8 @@ const BY_SYMBOL_KEY =
 
 const LEGACY_KEY =
 "trade_volume_presets_v1";
+const TOTAL_PNL_HIDDEN_KEY =
+"trade_book_total_pnl_hidden_v1";
 
 export const TRADE_VOLUME_SLOT_COUNT =
 6;
@@ -731,13 +733,23 @@ if(
 return;
 }
 
-labelEl.textContent =
+const nextLabel =
 formatVolumeLabel(
 state.slots[
 state.activeIndex
 ] ??
 0
 );
+const pnlHidden =
+localStorage.getItem(
+TOTAL_PNL_HIDDEN_KEY
+) ===
+"1";
+
+labelEl.textContent =
+pnlHidden
+? "***"
+: nextLabel;
 
 }
 
@@ -1288,6 +1300,44 @@ wrap.querySelector(
 '[data-role="volume-label"]'
 );
 
+btn?.addEventListener(
+"mousedown",
+event=>{
+if(
+event.button ===
+0
+){
+event.preventDefault();
+}
+},
+true
+);
+
+btn?.addEventListener(
+"keydown",
+event=>{
+if(
+event.code === "Space" ||
+event.code === "Enter"
+){
+event.preventDefault();
+}
+},
+true
+);
+
+btn?.addEventListener(
+"click",
+()=>{
+queueMicrotask(
+()=>{
+btn.blur();
+}
+);
+},
+true
+);
+
 buildChartDropdown(
 dropdown
 );
@@ -1340,6 +1390,13 @@ sym
 );
 }
 
+}
+);
+
+window.addEventListener(
+"trade-total-pnl-visibility-changed",
+()=>{
+refreshVolumeUi();
 }
 );
 

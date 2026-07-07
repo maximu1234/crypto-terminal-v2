@@ -15,19 +15,19 @@ initTradeExchangeSettings
 
 import {
 initTradeVolumePresets
-} from "./trade-volume-presets.js?v=9";
+} from "./trade-volume-presets.js?v=10";
 
 import {
 initTradeLeverageSettings
-} from "./trade-leverage-settings.js?v=2";
+} from "./trade-leverage-settings.js?v=3";
 
 import {
 initTradeMarketEntry
-} from "./trade-market-entry.js?v=3";
+} from "./trade-market-entry.js?v=4";
 
 import {
 initTradeBookPanel
-} from "./trade-book-panel.js?v=49";
+} from "./trade-book-panel.js?v=51";
 
 const TRADE_CSS =
 [

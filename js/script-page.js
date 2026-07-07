@@ -15,7 +15,7 @@ stopActivePatternScan,
 startFullPatternScan,
 isScriptScanBackgroundRunning,
 SCRIPT_SCAN_BG_EVENT
-} from "./script-scan-background.js?v=7";
+} from "./script-scan-background.js?v=8";
 
 import {
 PATTERN_SCAN_TF_LABELS,
@@ -120,6 +120,24 @@ return true;
 }
 
 function persist(){
+
+const latest =
+loadScriptPageState();
+
+if(
+latest?.auto
+){
+state.auto.nextRunAt =
+Number(
+latest.auto.nextRunAt
+) ||
+0;
+state.auto.lastScanAt =
+Number(
+latest.auto.lastScanAt
+) ||
+0;
+}
 
 saveScriptPageState(
 state
@@ -560,6 +578,8 @@ if(
 type ===
 "scheduled"
 ){
+state =
+loadScriptPageState();
 startAutoCountdown();
 updateAutoStatus();
 return;

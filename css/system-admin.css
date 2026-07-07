@@ -288,6 +288,17 @@ outline:none;
 border-color:#f59e0b;
 }
 
+#system-worker-reload-seconds{
+-moz-appearance:textfield;
+appearance:textfield;
+}
+
+#system-worker-reload-seconds::-webkit-outer-spin-button,
+#system-worker-reload-seconds::-webkit-inner-spin-button{
+-webkit-appearance:none;
+margin:0;
+}
+
 .system-admin-status{
 margin-top:12px;
 font-size:13px;

@@ -13,7 +13,7 @@
 <link rel="stylesheet" href="/css/common.css?v=34">
 <link rel="stylesheet" href="/css/screener.css?v=42">
 <link rel="stylesheet" href="/css/site-mobile-nav.css?v=7">
-<link rel="stylesheet" href="/css/system-admin.css?v=9">
+<link rel="stylesheet" href="/css/system-admin.css?v=10">
 
 </head>
 
@@ -117,12 +117,63 @@
 
 </section>
 
+<section class="system-admin-card system-admin-card-danger" aria-labelledby="alerts-purge-heading">
+
+<h2 id="alerts-purge-heading">Очистка мусора алертов</h2>
+<p class="system-admin-card-lead">
+Удаляет из Supabase зомби и сироты в <code>price_alerts</code> и всю историю <code>price_alert_events</code>
+для <strong>вашего</strong> аккаунта. Активные алерты из localStorage на этом устройстве сохраняются.
+</p>
+<p class="system-admin-pref-hint">
+Требуется вход в аккаунт и (для истории событий) SQL-миграция
+<code>migration-price-alert-events-delete-own.sql</code> в Supabase.
+</p>
+<label class="system-admin-purge-confirm" for="system-purge-alert-garbage-confirm">
+<span class="system-admin-purge-confirm-label">Подтверждение: скопируйте в поле текст</span>
+<code class="system-admin-purge-phrase" id="system-purge-alert-garbage-phrase">PURGE_ALERT_GARBAGE</code>
+<input type="text" class="system-admin-purge-input" id="system-purge-alert-garbage-confirm" autocomplete="off" spellcheck="false" placeholder="PURGE_ALERT_GARBAGE"/>
+</label>
+<p id="system-alerts-purge-status" class="system-admin-status" aria-live="polite"></p>
+<div class="system-admin-actions">
+<button type="button" class="system-admin-btn system-admin-btn-danger" id="system-purge-alert-garbage-btn" disabled>
+Очистить мусор алертов в Supabase
+</button>
+</div>
+
+</section>
+
+<section class="system-admin-card" aria-labelledby="worker-reload-heading">
+
+<h2 id="worker-reload-heading">Период проверки для worker</h2>
+<p class="system-admin-card-lead">
+Подстраховочный reload активных алертов из Supabase (основной подхват идёт сразу после POST push/delete). По умолчанию: 30 минут.
+</p>
+<div class="system-admin-actions">
+<label class="system-admin-purge-confirm" for="system-worker-reload-seconds">
+<span class="system-admin-purge-confirm-label">Секунды (мин. 3, макс. 3600)</span>
+<input type="number" class="system-admin-purge-input" id="system-worker-reload-seconds" min="3" max="3600" step="1" value="1800" inputmode="numeric" autocomplete="off"/>
+</label>
+<button type="button" class="system-admin-btn" id="system-worker-reload-save">
+Сохранить период
+</button>
+</div>
+<p id="system-worker-reload-status" class="system-admin-status" aria-live="polite"></p>
+<div class="system-admin-actions">
+<button type="button" class="system-admin-btn" id="system-worker-health-refresh">Обновить health</button>
+<button type="button" class="system-admin-btn" id="system-worker-reload-now">Reload сейчас</button>
+<button type="button" class="system-admin-btn" id="system-worker-canary-send">Контрольный алерт</button>
+</div>
+<p id="system-worker-health-status" class="system-admin-status" aria-live="polite"></p>
+
+</section>
+
+
 </main>
 
 </div>
 
 <script type="module" src="/js/site-boot.js?v=94"></script>
-<script type="module" src="/js/system-admin-page.js?v=6"></script>
+<script type="module" src="/js/system-admin-page.js?v=9"></script>
 
 </body>
 </html>

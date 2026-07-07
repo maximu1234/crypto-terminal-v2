@@ -3,7 +3,7 @@
  */
 import {
 getActiveTradeVolumeUsdt
-} from "./trade-volume-presets.js?v=9";
+} from "./trade-volume-presets.js?v=10";
 
 import {
 applyAutoStopsAfterEntry
@@ -346,6 +346,48 @@ entry.querySelector(
 const sellPriceEl =
 entry.querySelector(
 '[data-role="sell-price"]'
+);
+
+[buyBtn, sellBtn].forEach(
+btn=>{
+btn?.addEventListener(
+"mousedown",
+event=>{
+if(
+event.button ===
+0
+){
+event.preventDefault();
+}
+},
+true
+);
+
+btn?.addEventListener(
+"keydown",
+event=>{
+if(
+event.code === "Space" ||
+event.code === "Enter"
+){
+event.preventDefault();
+}
+},
+true
+);
+
+btn?.addEventListener(
+"click",
+()=>{
+queueMicrotask(
+()=>{
+btn.blur();
+}
+);
+},
+true
+);
+}
 );
 
 function refreshPrices(){

@@ -131,6 +131,17 @@ new CustomEvent(
 
 }
 
+function maskTradeValue(
+hidden,
+value
+){
+
+return hidden
+? "***"
+: value;
+
+}
+
 function readSortState(){
 
 try{
@@ -1703,11 +1714,11 @@ el.innerHTML =
 <span class="trade-book-ticker-text">${row.ticker}</span>
 </span>
 <span class="col-pnl-wrap">
-<span class="col-pnl ${pnlClass(row.pnl)}">${formatTradePnl(row.pnl)}</span>
+<span class="col-pnl ${totalPnlHidden ? "is-masked" : pnlClass(row.pnl)}">${maskTradeValue(totalPnlHidden, formatTradePnl(row.pnl))}</span>
 ${SHARE_BUTTON_HTML}
 <button type="button" class="trade-book-close" title="Закрыть по рынку" aria-label="Закрыть ${row.ticker}">×</button>
 </span>
-<span class="col-volume">${formatTradeUsdt(row.volumeUsdt)}</span>
+<span class="col-volume">${maskTradeValue(totalPnlHidden, formatTradeUsdt(row.volumeUsdt))}</span>
 <span class="col-entry">${formatPositionPrice(row.avgPrice)}</span>
 <span class="col-liq">${formatPositionPrice(row.liqPrice)}</span>
 `;
@@ -1927,12 +1938,18 @@ el.querySelector(
 if(
 pnlEl
 ){
-const nextPnl =
+const nextPnlRaw =
 formatTradePnl(
 row.pnl
 );
-const nextClass =
-`col-pnl ${pnlClass(row.pnl)}`.trim();
+const nextPnl =
+maskTradeValue(
+totalPnlHidden,
+nextPnlRaw
+);
+const nextClass = totalPnlHidden
+? "col-pnl is-masked"
+: `col-pnl ${pnlClass(row.pnl)}`.trim();
 
 if(
 pnlEl.textContent !==
@@ -1960,9 +1977,14 @@ el.querySelector(
 if(
 volEl
 ){
-const nextVol =
+const nextVolRaw =
 formatTradeUsdt(
 row.volumeUsdt
+);
+const nextVol =
+maskTradeValue(
+totalPnlHidden,
+nextVolRaw
 );
 
 if(
@@ -2521,6 +2543,31 @@ positionsTotalEyeBtn.title
 
 }
 
+function refreshPositionRowsVisibility(){
+
+for(
+const [key, rowEl] of positionRowNodes
+){
+const row =
+lastPositionRows.find(
+item=>positionRowKey(item) === key
+);
+
+if(
+!row ||
+!rowEl
+){
+continue;
+}
+
+updatePositionRow(
+rowEl,
+row
+);
+}
+
+}
+
 function updatePositionsTotal(
 rows
 ){
@@ -2561,6 +2608,32 @@ positionsTotalEyeBtn
 ){
 
 positionsTotalEyeBtn.addEventListener(
+"mousedown",
+event=>{
+if(
+event.button ===
+0
+){
+event.preventDefault();
+}
+},
+true
+);
+
+positionsTotalEyeBtn.addEventListener(
+"keydown",
+event=>{
+if(
+event.code === "Space" ||
+event.code === "Enter"
+){
+event.preventDefault();
+}
+},
+true
+);
+
+positionsTotalEyeBtn.addEventListener(
 "click",
 event=>{
 event.stopPropagation();
@@ -2570,6 +2643,12 @@ writeTotalPnlHidden(
 totalPnlHidden
 );
 applyTotalPnlVisibility();
+refreshPositionRowsVisibility();
+queueMicrotask(
+()=>{
+positionsTotalEyeBtn.blur();
+}
+);
 }
 );
 

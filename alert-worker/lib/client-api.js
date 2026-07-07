@@ -1,16 +1,28 @@
 import { getWorkerConfig } from "./config.js";
 import {
   restUpsertPriceAlert,
-  restUpsertUserDrawing
+  restUpsertUserDrawing,
+  restUpsertSystemSetting
 } from "./supabase-rest.js";
-import { invalidateTelegramAlertsReloadCache } from "./alerts-db.js";
+import {
+  invalidateTelegramAlertsReloadCache,
+  fetchTelegramChatId
+} from "./alerts-db.js";
 import { handleClientTrigger } from "./client-trigger.js";
 import { handleClientNotifyTelegram } from "./client-notify-telegram.js";
+import { sendTelegramMessage } from "./telegram.js";
+import { requestWorkerReload } from "./reload-request.js";
 import {
   readJsonBody,
   setCors,
   verifyUserFromRequest
 } from "./client-http.js";
+import {
+  getReloadIntervalMs,
+  getReloadIntervalLimitsMs,
+  ensureReloadIntervalHydrated,
+  saveReloadIntervalSeconds
+} from "./reload-interval.js";
 
 function normalizeTf(tf) {
 
@@ -118,6 +130,7 @@ async function handleClientPushAlert(
     });
 
     invalidateTelegramAlertsReloadCache();
+    requestWorkerReload("push-alert");
 
     res.writeHead(200, { "Content-Type": "application/json" });
     res.end(JSON.stringify({
@@ -420,6 +433,9 @@ async function handleClientDeleteAlert(
       ok: deleted > 0,
       deleted
     }));
+    if (deleted > 0) {
+      requestWorkerReload("delete-alert");
+    }
   }catch(err){
     res.writeHead(500, { "Content-Type": "application/json" });
     res.end(JSON.stringify({
@@ -660,6 +676,326 @@ async function handleClientAdminPurgeAllDrawings(
 
 }
 
+/**
+ * POST /admin/purge-alert-garbage — мусор price_alerts / price_alert_events для аккаунта админа.
+ */
+async function handleClientAdminPurgeAlertGarbage(
+  req,
+  res
+) {
+
+  const path =
+    (req.url || "").split("?")[0];
+
+  if (path !== "/admin/purge-alert-garbage") {
+    return false;
+  }
+
+  setCors(res, req);
+
+  if (req.method === "OPTIONS") {
+    res.writeHead(204);
+    res.end();
+    return true;
+  }
+
+  if (req.method !== "POST") {
+    res.writeHead(405);
+    res.end("Method not allowed");
+    return true;
+  }
+
+  const { verifySystemAdminFromRequest } =
+    await import("./admin-auth.js");
+
+  const admin =
+    await verifySystemAdminFromRequest(req);
+
+  if (!admin) {
+    res.writeHead(403, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({
+      ok: false,
+      error: "admin_required"
+    }));
+    return true;
+  }
+
+  let body;
+
+  try{
+    body = await readJsonBody(req);
+  }catch(err){
+    res.writeHead(400, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({
+      ok: false,
+      error: err.message
+    }));
+    return true;
+  }
+
+  if (
+    body?.confirm !== "PURGE_ALERT_GARBAGE"
+  ) {
+    res.writeHead(400, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({
+      ok: false,
+      error: "confirm_required"
+    }));
+    return true;
+  }
+
+  const cfg = getWorkerConfig();
+
+  if (!cfg.ready) {
+    res.writeHead(503, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ ok: false, error: "worker_not_ready" }));
+    return true;
+  }
+
+  const { purgeAlertGarbageForUser } =
+    await import("./admin-purge-alerts.js");
+
+  try{
+    const stats =
+      await purgeAlertGarbageForUser(
+        admin.id,
+        Array.isArray(
+          body?.keepActive
+        )
+          ? body.keepActive
+          : []
+      );
+
+    console.warn(
+      `[admin] purge-alert-garbage by ${admin.email}: ` +
+      `zombies=${stats.deletedZombies}, ` +
+      `soft=${stats.deletedSoft}, ` +
+      `orphans=${stats.deletedOrphans}, ` +
+      `events=${stats.deletedEvents}, ` +
+      `kept=${stats.keptActive}`
+    );
+
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({
+      ok: true,
+      by: admin.email,
+      ...stats
+    }));
+  }catch(err){
+    res.writeHead(500, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({
+      ok: false,
+      error: err.message
+    }));
+  }
+
+  return true;
+
+}
+
+/**
+ * GET/POST /admin/worker-reload-ms — период reload списка алертов.
+ */
+async function handleClientAdminWorkerReloadMs(
+  req,
+  res
+) {
+
+  const path =
+    (req.url || "").split("?")[0];
+
+  if (path !== "/admin/worker-reload-ms") {
+    return false;
+  }
+
+  setCors(res, req);
+
+  if (req.method === "OPTIONS") {
+    res.writeHead(204);
+    res.end();
+    return true;
+  }
+
+  const { verifySystemAdminFromRequest } =
+    await import("./admin-auth.js");
+
+  const admin =
+    await verifySystemAdminFromRequest(req);
+
+  if (!admin) {
+    res.writeHead(403, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({
+      ok: false,
+      error: "admin_required"
+    }));
+    return true;
+  }
+
+  if (req.method === "GET") {
+    await ensureReloadIntervalHydrated();
+
+    const limits =
+      getReloadIntervalLimitsMs();
+    const reloadMs =
+      getReloadIntervalMs();
+
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({
+      ok: true,
+      reloadMs,
+      reloadSec: Math.round(reloadMs / 1000),
+      minMs: limits.min,
+      maxMs: limits.max,
+      minSec: Math.round(limits.min / 1000),
+      maxSec: Math.round(limits.max / 1000)
+    }));
+    return true;
+  }
+
+  if (req.method !== "POST") {
+    res.writeHead(405);
+    res.end("Method not allowed");
+    return true;
+  }
+
+  let body;
+
+  try{
+    body = await readJsonBody(req);
+  }catch(err){
+    res.writeHead(400, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({
+      ok: false,
+      error: err.message
+    }));
+    return true;
+  }
+
+  try{
+    const appliedMs =
+      await saveReloadIntervalSeconds(Number(body?.seconds));
+    const limits =
+      getReloadIntervalLimitsMs();
+
+    console.warn(
+      `[admin] worker-reload-ms by ${admin.email}: ${appliedMs}ms`
+    );
+
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({
+      ok: true,
+      reloadMs: appliedMs,
+      reloadSec: Math.round(appliedMs / 1000),
+      minSec: Math.round(limits.min / 1000),
+      maxSec: Math.round(limits.max / 1000),
+      by: admin.email
+    }));
+  }catch(err){
+    res.writeHead(400, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({
+      ok: false,
+      error: err?.message || "bad_reload_ms"
+    }));
+  }
+
+  return true;
+
+}
+
+/**
+ * POST /admin/worker-canary-alert — тестовый Telegram alert для админа.
+ */
+async function handleClientAdminWorkerCanaryAlert(
+  req,
+  res
+) {
+
+  const path =
+    (req.url || "").split("?")[0];
+
+  if (path !== "/admin/worker-canary-alert") {
+    return false;
+  }
+
+  setCors(res, req);
+
+  if (req.method === "OPTIONS") {
+    res.writeHead(204);
+    res.end();
+    return true;
+  }
+
+  if (req.method !== "POST") {
+    res.writeHead(405);
+    res.end("Method not allowed");
+    return true;
+  }
+
+  const { verifySystemAdminFromRequest } =
+    await import("./admin-auth.js");
+
+  const admin =
+    await verifySystemAdminFromRequest(req);
+
+  if (!admin) {
+    res.writeHead(403, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({
+      ok: false,
+      error: "admin_required"
+    }));
+    return true;
+  }
+
+  try{
+    const chatId =
+      await fetchTelegramChatId(admin.id);
+
+    if (chatId == null) {
+      res.writeHead(400, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({
+        ok: false,
+        error: "telegram_chat_missing"
+      }));
+      return true;
+    }
+
+    const ts =
+      new Date().toISOString();
+    const sent =
+      await sendTelegramMessage(
+        chatId,
+        `CONTROL ALERT\nWorker canary check\n${ts}`
+      );
+
+    if (!sent) {
+      throw new Error("telegram_send_failed");
+    }
+
+    await restUpsertSystemSetting(
+      "alerts_worker_canary",
+      {
+        sentAt: ts,
+        by: admin.email
+      }
+    );
+
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({
+      ok: true,
+      sentAt: ts
+    }));
+  }catch(err){
+    res.writeHead(500, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({
+      ok: false,
+      error: err?.message || "canary_failed"
+    }));
+  }
+
+  return true;
+
+}
+
 export async function handleClientApi(
   req,
   res
@@ -682,6 +1018,18 @@ export async function handleClientApi(
   }
 
   if (await handleClientAdminPurgeAllDrawings(req, res)) {
+    return true;
+  }
+
+  if (await handleClientAdminPurgeAlertGarbage(req, res)) {
+    return true;
+  }
+
+  if (await handleClientAdminWorkerReloadMs(req, res)) {
+    return true;
+  }
+
+  if (await handleClientAdminWorkerCanaryAlert(req, res)) {
     return true;
   }
 

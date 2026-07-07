@@ -65,15 +65,15 @@ Object.freeze({
 "trade-exchange-settings.js":
 17,
 "trade-volume-presets.js":
-9,
+10,
 "trade-leverage-settings.js":
-2,
+3,
 "trade-auto-stops.js":
 2,
 "trade-market-entry.js":
-3,
+4,
 "trade-book-panel.js":
-49,
+51,
 "trade-pnl-share-modal.js":
 5,
 "trade-book-columns.js":
@@ -91,13 +91,13 @@ Object.freeze({
 "chart-page.js":
 6,
 "terminal.js":
-372,
+373,
 "terminal-multi-chart.js":
 9,
 "terminal-screener-chart-pane.js":
 13,
 "terminal-layout-picker.js":
-3,
+6,
 "terminal/terminal-chart-layout.js":
 6,
 "terminal/terminal-chart-switch-veil.js":
@@ -119,7 +119,7 @@ Object.freeze({
 "pattern-scan-results.js":
 1,
 "script-page.js":
-22,
+23,
 "script-page-boot.js":
 15,
 "script-page-chart.js":
@@ -131,7 +131,7 @@ Object.freeze({
 "script-terminal-status.js":
 1,
 "script-scan-background.js":
-7,
+8,
 "script-desktop-nav.js":
 1,
 "indicators/horizontal-volume.js":
@@ -362,9 +362,9 @@ Object.freeze({
 "header-settings-shell.js":
 1,
 "app-settings-window.js":
-5,
+6,
 "app-settings-secret.js":
-1,
+6,
 "telegram-settings-panel.js":
 1,
 "favorites-settings-panel.js":
@@ -380,7 +380,9 @@ Object.freeze({
 "alerts.js":
 100,
 "alerts-cloud-sync.js":
-110,
+111,
+"alerts-cloud/garbage-purge.js":
+1,
 "alerts-cloud/debug.js":
 4,
 "alerts-cloud/telegram-id.js":
@@ -392,11 +394,11 @@ Object.freeze({
 "alerts-cloud/polling-realtime.js":
 6,
 "alerts-page.js":
-63,
+64,
 "alert-monitor.js":
 65,
 "alert-worker-url.js":
-1,
+2,
 
 /* ── JS: misc ── */
 "async-timeout.js":
@@ -424,9 +426,13 @@ Object.freeze({
 "trade-calculator.js":
 3,
 "system-admin-page.js":
-6,
+9,
 "system-admin-drawings-purge.js":
 2,
+"system-admin-alerts-purge.js":
+2,
+"system-admin-worker-reload-ms.js":
+3,
 "system-admin-access.js":
 3,
 "supabase-usage-prefs.js":
@@ -446,7 +452,7 @@ Object.freeze({
 "watchlist.css":
 51,
 "terminal-layout.css":
-83,
+87,
 "script-page.css":
 13,
 "chart-indicators.css":
@@ -490,7 +496,7 @@ Object.freeze({
 "trade-calculator.css":
 6,
 "system-admin.css":
-9,
+10,
 "desktop-app.css":
 2,
 

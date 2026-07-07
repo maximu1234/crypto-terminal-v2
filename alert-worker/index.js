@@ -21,12 +21,23 @@ import {
   handleTelegramInfo,
   handleTelegramWebhook
 } from "./lib/telegram-webhook.js";
+import {
+  getReloadIntervalMs,
+  ensureReloadIntervalHydrated
+} from "./lib/reload-interval.js";
+import {
+  setWorkerReloadRequestHandler
+} from "./lib/reload-request.js";
 
 const PORT = Number(process.env.PORT) || 8080;
-const RELOAD_MS = Number(process.env.ALERTS_RELOAD_MS) || 3000;
 
 /** alert key -> row */
 let activeAlerts = new Map();
+let lastReloadAt = 0;
+let lastReloadOk = false;
+let lastReloadError = "";
+let lastReloadDurationMs = 0;
+let reloadCycles = 0;
 
 let configLogged = false;
 
@@ -53,12 +64,18 @@ function logConfigOnce() {
 }
 
 async function reloadAlerts(klineHub) {
+  const startedAt = Date.now();
 
   logConfigOnce();
 
   const cfg = getWorkerConfig();
 
   if (!cfg.ready) {
+    lastReloadAt = Date.now();
+    lastReloadOk = false;
+    lastReloadError = "worker_not_ready";
+    lastReloadDurationMs = lastReloadAt - startedAt;
+    reloadCycles += 1;
     return;
   }
 
@@ -66,6 +83,11 @@ async function reloadAlerts(klineHub) {
     await resolveTelegramAlertsReload();
 
   if (skipped) {
+    lastReloadAt = Date.now();
+    lastReloadOk = true;
+    lastReloadError = "";
+    lastReloadDurationMs = lastReloadAt - startedAt;
+    reloadCycles += 1;
     return;
   }
 
@@ -79,6 +101,11 @@ async function reloadAlerts(klineHub) {
 
   activeAlerts = next;
   pruneWatchState(activeAlerts);
+  lastReloadAt = Date.now();
+  lastReloadOk = true;
+  lastReloadError = "";
+  lastReloadDurationMs = lastReloadAt - startedAt;
+  reloadCycles += 1;
 
   console.log(`alerts loaded: ${next.size} active (telegram)`);
 
@@ -86,7 +113,13 @@ async function reloadAlerts(klineHub) {
 
 async function main() {
 
+  await ensureReloadIntervalHydrated();
+
   const klineHub = createBybitKlineHub();
+
+  setWorkerReloadRequestHandler(async () => {
+    await reloadAlerts(klineHub);
+  });
 
   klineHub.onKline((symbol, tf, candle) => {
     evaluateAlertsForCandle(
@@ -131,8 +164,72 @@ async function main() {
         alerts: activeAlerts.size,
         telegram: telegramConfigured(),
         config: st,
-        diag
+        diag,
+        reload: {
+          intervalMs: getReloadIntervalMs(),
+          cycles: reloadCycles,
+          lastReloadAt: lastReloadAt || null,
+          lastReloadOk,
+          lastReloadError: lastReloadError || null,
+          lastReloadDurationMs
+        }
       }));
+      return;
+    }
+
+    if (pathOnly === "/admin/worker-reload-now") {
+      const { setCors } =
+        await import("./lib/client-http.js");
+      setCors(res, req);
+
+      if (req.method === "OPTIONS") {
+        res.writeHead(204);
+        res.end();
+        return;
+      }
+
+      if (req.method !== "POST") {
+        res.writeHead(405);
+        res.end("Method not allowed");
+        return;
+      }
+
+      const { verifySystemAdminFromRequest } =
+        await import("./lib/admin-auth.js");
+      const admin =
+        await verifySystemAdminFromRequest(req);
+
+      if (!admin) {
+        res.writeHead(403, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({
+          ok: false,
+          error: "admin_required"
+        }));
+        return;
+      }
+
+      try{
+        await reloadAlerts(klineHub);
+        res.writeHead(200, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({
+          ok: true,
+          alerts: activeAlerts.size,
+          reload: {
+            intervalMs: getReloadIntervalMs(),
+            cycles: reloadCycles,
+            lastReloadAt: lastReloadAt || null,
+            lastReloadOk,
+            lastReloadError: lastReloadError || null,
+            lastReloadDurationMs
+          }
+        }));
+      }catch(err){
+        res.writeHead(500, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({
+          ok: false,
+          error: err?.message || "reload_failed"
+        }));
+      }
       return;
     }
 
@@ -172,11 +269,22 @@ async function main() {
     });
   });
 
-  setInterval(() => {
-    reloadAlerts(klineHub).catch(err => {
-      console.warn("reloadAlerts:", err.message);
-    });
-  }, RELOAD_MS);
+  function scheduleReloadTick() {
+
+    const waitMs =
+      getReloadIntervalMs();
+
+    setTimeout(() => {
+      reloadAlerts(klineHub).catch(err => {
+        console.warn("reloadAlerts:", err.message);
+      }).finally(() => {
+        scheduleReloadTick();
+      });
+    }, waitMs);
+
+  }
+
+  scheduleReloadTick();
 
 }
 

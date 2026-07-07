@@ -27,7 +27,7 @@ isAlertsPage
 import {
 initAppSettingsWindow,
 refreshAppSettingsAdminNav
-} from "./app-settings-window.js?v=5";
+} from "./app-settings-window.js?v=6";
 
 import {
 ensureHeaderSettingsShell

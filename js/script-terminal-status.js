@@ -4,7 +4,7 @@
 import {
 getScriptScanNextRunAt,
 SCRIPT_SCAN_BG_EVENT
-} from "./script-scan-background.js?v=7";
+} from "./script-scan-background.js?v=8";
 
 import {
 loadScriptPageState

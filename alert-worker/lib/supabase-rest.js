@@ -253,6 +253,59 @@ export async function restInsertAlertEvent(row) {
 
 }
 
+export async function restGetSystemSetting(settingKey) {
+
+  const rows = await restGet(
+    `system_settings?key=eq.${encodeURIComponent(settingKey)}&select=key,value,updated_at&limit=1`
+  );
+
+  return Array.isArray(rows)
+    ? rows[0] || null
+    : null;
+
+}
+
+export async function restUpsertSystemSetting(settingKey, value) {
+
+  const { base, key } = restBase();
+
+  const res = await fetch(
+    `${base}/rest/v1/system_settings?on_conflict=key`,
+    {
+      method: "POST",
+      headers: {
+        apikey: key,
+        Authorization: `Bearer ${key}`,
+        "Content-Type": "application/json",
+        Prefer: "resolution=merge-duplicates,return=representation"
+      },
+      body: JSON.stringify({
+        key: settingKey,
+        value
+      })
+    }
+  );
+
+  const text = await res.text();
+
+  if (!res.ok) {
+    throw new Error(
+      `REST UPSERT system_settings ${res.status}: ${text.slice(0, 200)}`
+    );
+  }
+
+  if (!text) {
+    return null;
+  }
+
+  const parsed = JSON.parse(text);
+
+  return Array.isArray(parsed)
+    ? parsed[0]
+    : parsed;
+
+}
+
 export async function restDelete(pathAndQuery) {
 
   const { base, key } = restBase();

@@ -14,7 +14,7 @@ isCloudLoggedInEffective
 
 import {
 getTelegramChatId
-} from "./alerts-cloud-sync.js?v=110";
+} from "./alerts-cloud-sync.js?v=111";
 
 import {
 formatPrice,

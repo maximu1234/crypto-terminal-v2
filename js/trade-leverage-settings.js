@@ -223,6 +223,44 @@ wrap.querySelectorAll(
 'input[name="trade-margin-mode"]'
 );
 
+btn?.addEventListener(
+"mousedown",
+event=>{
+if(
+event.button ===
+0
+){
+event.preventDefault();
+}
+},
+true
+);
+
+btn?.addEventListener(
+"keydown",
+event=>{
+if(
+event.code === "Space" ||
+event.code === "Enter"
+){
+event.preventDefault();
+}
+},
+true
+);
+
+btn?.addEventListener(
+"click",
+()=>{
+queueMicrotask(
+()=>{
+btn.blur();
+}
+);
+},
+true
+);
+
 let currentSymbol =
 "";
 let loaded =

@@ -18,6 +18,14 @@ import {
 bindDrawingsGlobalPurge
 } from "./system-admin-drawings-purge.js?v=2";
 
+import {
+bindAlertsGarbagePurge
+} from "./system-admin-alerts-purge.js?v=2";
+
+import {
+bindWorkerReloadMsSettings
+} from "./system-admin-worker-reload-ms.js?v=3";
+
 export async function mountSecretSettingsPanel(
 host
 ){
@@ -84,6 +92,39 @@ host.innerHTML =
 <button type="button" class="system-admin-btn system-admin-btn-danger" id="system-purge-all-drawings-btn" disabled>Удалить все рисунки всех пользователей</button>
 </div>
 </section>
+
+<section class="system-admin-card system-admin-card-danger" aria-labelledby="app-alerts-purge-heading">
+<h2 id="app-alerts-purge-heading" class="app-settings-subtitle">Очистка мусора алертов</h2>
+<p class="system-admin-card-lead">Удаляет из Supabase зомби и сироты в <code>price_alerts</code> и историю <code>price_alert_events</code> для <strong>вашего</strong> аккаунта. Активные алерты из localStorage на этом устройстве сохраняются. Для удаления событий выполните <code>migration-price-alert-events-delete-own.sql</code> в Supabase.</p>
+<label class="system-admin-purge-confirm" for="system-purge-alert-garbage-confirm">
+<span class="system-admin-purge-confirm-label">Подтверждение: скопируйте в поле текст</span>
+<code class="system-admin-purge-phrase" id="system-purge-alert-garbage-phrase">PURGE_ALERT_GARBAGE</code>
+<input type="text" class="system-admin-purge-input" id="system-purge-alert-garbage-confirm" autocomplete="off" spellcheck="false" placeholder="PURGE_ALERT_GARBAGE"/>
+</label>
+<p id="system-alerts-purge-status" class="system-admin-status" aria-live="polite"></p>
+<div class="system-admin-actions">
+<button type="button" class="system-admin-btn system-admin-btn-danger" id="system-purge-alert-garbage-btn" disabled>Очистить мусор алертов в Supabase</button>
+</div>
+</section>
+
+<section class="system-admin-card" aria-labelledby="app-worker-reload-heading">
+<h2 id="app-worker-reload-heading" class="app-settings-subtitle">Период проверки для worker</h2>
+<p class="system-admin-card-lead">Подстраховочный reload активных алертов из Supabase (основной подхват идёт сразу после POST push/delete). По умолчанию: 30 минут.</p>
+<div class="system-admin-actions">
+<label class="system-admin-purge-confirm" for="system-worker-reload-seconds">
+<span class="system-admin-purge-confirm-label">Секунды (мин. 3, макс. 3600)</span>
+<input type="number" min="3" max="3600" step="1" value="1800" class="system-admin-purge-input" id="system-worker-reload-seconds" inputmode="numeric" autocomplete="off"/>
+</label>
+<button type="button" class="system-admin-btn" id="system-worker-reload-save">Сохранить период</button>
+</div>
+<p id="system-worker-reload-status" class="system-admin-status" aria-live="polite"></p>
+<div class="system-admin-actions">
+<button type="button" class="system-admin-btn" id="system-worker-health-refresh">Обновить health</button>
+<button type="button" class="system-admin-btn" id="system-worker-reload-now">Reload сейчас</button>
+<button type="button" class="system-admin-btn" id="system-worker-canary-send">Контрольный алерт</button>
+</div>
+<p id="system-worker-health-status" class="system-admin-status" aria-live="polite"></p>
+</section>
 `;
 
 bindSupabaseUsagePrefsForm(
@@ -108,6 +149,20 @@ bindDrawingsGlobalPurge({
 statusEl:
 host.querySelector(
 "#system-drawings-purge-status"
+)
+});
+
+bindAlertsGarbagePurge({
+statusEl:
+host.querySelector(
+"#system-alerts-purge-status"
+)
+});
+
+bindWorkerReloadMsSettings({
+statusEl:
+host.querySelector(
+"#system-worker-reload-status"
 )
 });
 

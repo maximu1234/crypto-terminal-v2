@@ -8,6 +8,10 @@
 - `POST /push-drawing` — запись рисунка в `user_drawings` (service role, для iPad)
 - `POST /delete-drawing` — удаление рисунка из `user_drawings` (service role)
 - `POST /admin/purge-all-drawings` — удалить **все** рисунки **всех** пользователей (только `SYSTEM_ADMIN_EMAIL`, тело `{ "confirm": "PURGE_ALL_DRAWINGS" }`)
+- `POST /admin/purge-alert-garbage` — мусор алертов **вашего** аккаунта: зомби/сироты `price_alerts`, вся `price_alert_events` (тело `{ "confirm": "PURGE_ALERT_GARBAGE", "keepActive": [...] }`)
+- `GET/POST /admin/worker-reload-ms` — посмотреть/изменить период reload worker (секунды: минимум 3, максимум 3600; только `SYSTEM_ADMIN_EMAIL`)
+- `POST /admin/worker-reload-now` — принудительно перечитать активные алерты из Supabase (только `SYSTEM_ADMIN_EMAIL`)
+- `POST /admin/worker-canary-alert` — отправить контрольный Telegram-алерт администратору (только `SYSTEM_ADMIN_EMAIL`)
 - `POST /trigger` — Telegram + удаление после срабатывания
 
 Нужен `ALERT_WORKER_URL` на Vercel в `js/supabase-env.js`. При закрытой вкладке срабатывает только worker по свечам Bybit.
@@ -49,6 +53,8 @@ curl -sS "https://YOUR.up.railway.app/bybit?path=%2Fv5%2Fmarket%2Ftime"
 ## Supabase SQL
 
 Выполни `supabase/migration-alerts-telegram.sql` в SQL Editor.
+Для persistence периода reload worker между рестартами также выполни `supabase/migration-worker-reload-settings.sql`.
+По умолчанию safety-reload: 30 минут (если `ALERTS_RELOAD_MS` не задан).
 
 ## Telegram chat_id (для пользователя)
 

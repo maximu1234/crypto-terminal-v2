@@ -21,6 +21,13 @@ import {
 bindDrawingsGlobalPurge
 } from "./system-admin-drawings-purge.js?v=2";
 
+import {
+bindAlertsGarbagePurge
+} from "./system-admin-alerts-purge.js?v=2";
+import {
+bindWorkerReloadMsSettings
+} from "./system-admin-worker-reload-ms.js?v=3";
+
 const rootEl =
 document.getElementById("system-admin-root");
 
@@ -160,6 +167,14 @@ window.location.href = "/screener.html";
 
 bindDrawingsGlobalPurge({
 statusEl: document.getElementById("system-drawings-purge-status")
+});
+
+bindAlertsGarbagePurge({
+statusEl: document.getElementById("system-alerts-purge-status")
+});
+
+bindWorkerReloadMsSettings({
+statusEl: document.getElementById("system-worker-reload-status")
 });
 
 }

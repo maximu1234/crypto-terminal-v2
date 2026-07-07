@@ -3,7 +3,7 @@
  */
 import {
 getActiveTradeVolumeUsdt
-} from "./trade-volume-presets.js?v=9";
+} from "./trade-volume-presets.js?v=10";
 
 import {
 formatPrice
@@ -19,7 +19,7 @@ isCloudLoggedInEffective
 
 import {
 getTelegramChatId
-} from "./alerts-cloud-sync.js?v=110";
+} from "./alerts-cloud-sync.js?v=111";
 
 function tradingApi(){
 

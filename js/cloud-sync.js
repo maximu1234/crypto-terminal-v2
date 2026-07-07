@@ -3094,7 +3094,7 @@ if(
 !isAlertsCloudDisabled()
 ){
 const alertsCloud =
-await import("./alerts-cloud-sync.js?v=110");
+await import("./alerts-cloud-sync.js?v=111");
 
 await alertsCloud.hydrateAlertsAfterAuth({
 force: true
@@ -3278,7 +3278,7 @@ await ensureCloudLoginResolved(
 );
 
 const alertsCloud =
-await import("./alerts-cloud-sync.js?v=110");
+await import("./alerts-cloud-sync.js?v=111");
 const favoritesCloud =
 await import("./favorites-cloud-sync.js?v=5");
 const { stripAlertFlagsNotInRegistry } =
