@@ -46,7 +46,7 @@ bindWidgetFlagGlobalListeners
 import {
 PATTERN_SCAN_TF_LABELS,
 PATTERN_SCAN_SIDE_LABELS
-} from "./pattern-12-scanner.js?v=11";
+} from "./pattern-12-scanner.js?v=15";
 
 let patternOverlayApi =
 null;
@@ -58,7 +58,7 @@ if(
 ){
 patternOverlayApi =
 await import(
-"./screener-pattern-overlay.js?v=2"
+"./screener-pattern-overlay.js?v=3"
 );
 }
 

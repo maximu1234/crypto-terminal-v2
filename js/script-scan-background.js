@@ -6,7 +6,7 @@
 import {
 createPattern12Scanner,
 PATTERN_SCAN_ALL_TFS
-} from "./pattern-12-scanner.js?v=11";
+} from "./pattern-12-scanner.js?v=15";
 
 import {
 loadScriptPageState,
@@ -372,6 +372,8 @@ function beginScanJob(
 mode,
 tfs,
 lookbackBars,
+sideFilter =
+"both",
 clearRows =
 false
 }
@@ -397,6 +399,7 @@ gen,
 tfs:
 tfs.slice(),
 lookbackBars,
+sideFilter,
 done:
 0,
 total:
@@ -496,6 +499,9 @@ tfs:
 job.tfs,
 lookbackBars:
 job.lookbackBars,
+sideFilter:
+job.sideFilter ||
+"both",
 startIndex:
 Number(
 job.done
@@ -979,6 +985,9 @@ tf
 ],
 lookbackBars:
 state.searchDepth,
+sideFilter:
+state.sideFilter ||
+"both",
 clearRows:
 true
 }
@@ -990,7 +999,8 @@ return true;
 
 export function startFullPatternScan(
 {
-lookbackBars
+lookbackBars,
+sideFilter
 } =
 {}
 ){
@@ -1012,6 +1022,10 @@ PATTERN_SCAN_ALL_TFS.slice(),
 lookbackBars:
 lookbackBars ??
 loadScriptPageState().searchDepth,
+sideFilter:
+sideFilter ??
+loadScriptPageState().sideFilter ??
+"both",
 clearRows:
 true
 }

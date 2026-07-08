@@ -55,7 +55,7 @@ resetWidgetDrawToolsMenus
 
 import {
 ensureDrawToolsVisible
-} from "./draw-tools-visible.js?v=1";
+} from "./draw-tools-visible.js?v=2";
 
 import {
 preloadTradingSymbols
@@ -66,10 +66,8 @@ loadLightweightCharts
 } from "./charts-lib-boot.js?v=3";
 
 import {
-initWatchlistPageUi,
-isWatchlistMobile,
-TERMINAL_MOBILE_MQ
-} from "./watchlist-page.js?v=3";
+initWatchlistPageUi
+} from "./watchlist-page.js?v=4";
 
 import {
 getWidgetFlagHtml,
@@ -483,7 +481,7 @@ function terminalWidgetShowsRsi(
 count
 ){
 
-return !isWatchlistMobile() && (
+return (
 count >=
 1 &&
 count <=
@@ -1321,9 +1319,7 @@ if(
 return "terminal-empty-grid";
 }
 
-return isWatchlistMobile()
-? `grid-mobile-scroll grid-n-${count}`
-: `grid-n-${count}`;
+return `grid-n-${count}`;
 
 }
 
@@ -1338,25 +1334,6 @@ dashboard.innerHTML = `
 <p class="terminal-empty-hint">Отметьте монеты синим флагом на Главной или в Монетах (не более 9).</p>
 </div>`;
 
-}
-
-const onTerminalMobileMqChange =
-()=>{
-void refreshWatchlistDashboard();
-};
-
-if(
-typeof TERMINAL_MOBILE_MQ.addEventListener ===
-"function"
-){
-TERMINAL_MOBILE_MQ.addEventListener(
-"change",
-onTerminalMobileMqChange
-);
-}else{
-TERMINAL_MOBILE_MQ.addListener(
-onTerminalMobileMqChange
-);
 }
 
 const chartsReady =

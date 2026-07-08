@@ -26,12 +26,13 @@ isAlertsPage
 
 import {
 initAppSettingsWindow,
-refreshAppSettingsAdminNav
-} from "./app-settings-window.js?v=6";
+refreshAppSettingsAdminNav,
+openAppSettingsWindow
+} from "./app-settings-window.js?v=9";
 
 import {
 ensureHeaderSettingsShell
-} from "./header-settings-shell.js?v=1";
+} from "./header-settings-shell.js?v=3";
 
 let cloudEnvConfigured = false;
 let cloudSdkError = "";
@@ -149,32 +150,19 @@ path.includes("btc-d.html")
 }
 
 let settingsDropdownReady = false;
+let settingsToggleDelegatedBound =
+false;
 let refreshSettingsAuthUi = ()=>{};
+let settingsCloudPanel = null;
 
 const AUTH_UI_LAST_EMAIL_KEY =
 "cloud_auth_last_email_v1";
-
-const MOBILE_NAV_MQ =
-window.matchMedia(
-"(max-width: 640px)"
-);
-
-function isMobileNavViewport(){
-
-return MOBILE_NAV_MQ.matches;
-
-}
 
 function isSettingsInlineMode(
 wrap
 ){
 
-return !!(
-isMobileNavViewport() &&
-wrap?.closest(
-".screener-nav-panel, #coins-nav-panel"
-)
-);
+return false;
 
 }
 
@@ -282,7 +270,6 @@ wrap
 
 if(
 !wrap ||
-isMobileNavViewport() ||
 isSettingsInlineMode(wrap)
 ){
 return false;
@@ -407,30 +394,6 @@ if(
 !wrap
 ){
 return;
-}
-
-if(isMobileNavViewport()){
-
-restoreDropdownHome(
-dropdown,
-wrap
-);
-clearPortaledPosition(dropdown);
-dropdown.classList.remove(
-"header-settings-dropdown--portaled"
-);
-
-if(
-dropdown.classList.contains("hidden")
-){
-return;
-}
-
-dropdown.classList.add(
-"header-settings-dropdown--inline"
-);
-return;
-
 }
 
 if(
@@ -643,95 +606,7 @@ return "";
 
 }
 
-function bindTerminalMobileSettingsDropdown(){
-
-const btn =
-document.getElementById(
-"header-settings-btn-mobile"
-);
-const dropdown =
-document.getElementById(
-"header-settings-dropdown-mobile"
-);
-const wrap =
-document.getElementById(
-"header-settings-wrap-mobile"
-);
-
-if(
-!btn ||
-!dropdown ||
-!wrap
-){
-return;
-}
-
-function setOpen(
-open
-){
-
-dropdown.classList.toggle(
-"hidden",
-!open
-);
-btn.setAttribute(
-"aria-expanded",
-open
-? "true"
-: "false"
-);
-
-}
-
-btn.addEventListener(
-"click",
-e=>{
-e.preventDefault();
-e.stopPropagation();
-setOpen(
-dropdown.classList.contains(
-"hidden"
-)
-);
-}
-);
-
-dropdown.addEventListener(
-"click",
-e=>{
-e.stopPropagation();
-}
-);
-
-document.addEventListener(
-"click",
-e=>{
-
-if(
-wrap.contains(
-e.target
-) ||
-dropdown.contains(
-e.target
-)
-){
-return;
-}
-
-setOpen(
-false
-);
-
-}
-);
-
-}
-
 function setupSettingsDropdown(){
-
-if(settingsDropdownReady){
-return;
-}
 
 const btn =
 document.getElementById("header-settings-btn");
@@ -756,21 +631,45 @@ e.preventDefault();
 e.stopPropagation();
 
 if(
-typeof e.stopImmediatePropagation === "function"
+typeof e.stopImmediatePropagation ===
+"function"
 ){
 e.stopImmediatePropagation();
 }
 
-if(
-dropdown.classList.contains("hidden")
-){
-openSettingsDropdown();
-}else{
 closeSettingsDropdown();
-}
+void openAppSettingsWindow(
+"sync"
+);
 
 }
 
+if(
+!settingsToggleDelegatedBound
+){
+document.addEventListener(
+"click",
+e=>{
+const gearBtn =
+e.target?.closest?.(
+"#header-settings-btn"
+);
+if(
+!gearBtn
+){
+return;
+}
+onSettingsToggle(e);
+},
+true
+);
+settingsToggleDelegatedBound =
+true;
+}
+
+if(
+!btn.dataset.settingsToggleBound
+){
 btn.addEventListener(
 "click",
 onSettingsToggle
@@ -783,6 +682,13 @@ e.stopPropagation();
 },
 true
 );
+btn.dataset.settingsToggleBound =
+"1";
+}
+
+if(settingsDropdownReady){
+return;
+}
 
 document.addEventListener(
 "pointerdown",
@@ -823,103 +729,6 @@ closeSettingsDropdown();
 });
 
 settingsDropdownReady = true;
-
-bindTerminalMobileSettingsDropdown();
-
-if(isMobileNavViewport()){
-
-const drop =
-document.getElementById("header-settings-dropdown");
-const shell =
-document.getElementById("header-settings-wrap");
-
-if(
-drop &&
-shell
-){
-restoreDropdownHome(
-drop,
-shell
-);
-clearPortaledPosition(drop);
-drop.classList.remove(
-"header-settings-dropdown--portaled"
-);
-}
-
-}
-
-function onSettingsViewportChange(){
-
-const drop =
-document.getElementById("header-settings-dropdown");
-const shell =
-document.getElementById("header-settings-wrap");
-
-if(
-!drop ||
-!shell
-){
-return;
-}
-
-if(
-isMobileNavViewport()
-){
-if(
-drop.parentElement === document.body
-){
-restoreDropdownHome(
-drop,
-shell
-);
-clearPortaledPosition(drop);
-}
-
-if(
-drop.classList.contains("hidden")
-){
-return;
-}
-
-drop.classList.remove(
-"header-settings-dropdown--portaled"
-);
-drop.classList.add(
-"header-settings-dropdown--inline"
-);
-clearPortaledPosition(drop);
-return;
-}
-
-if(
-!drop.classList.contains("hidden")
-){
-syncSettingsDropdownPlacement();
-}
-
-}
-
-window.addEventListener(
-"resize",
-onSettingsViewportChange,
-{ passive: true }
-);
-
-if(
-typeof MOBILE_NAV_MQ.addEventListener === "function"
-){
-MOBILE_NAV_MQ.addEventListener(
-"change",
-onSettingsViewportChange
-);
-}else if(
-typeof MOBILE_NAV_MQ.addListener === "function"
-){
-MOBILE_NAV_MQ.addListener(
-onSettingsViewportChange
-);
-}
 
 }
 
@@ -1295,6 +1104,39 @@ emailInput
 
 }
 
+export function mountCloudAuthPanelInSettings(
+host
+){
+
+if(
+!host
+){
+return null;
+}
+
+if(
+settingsCloudPanel?.wrap?.isConnected
+){
+settingsCloudPanel.refreshOne?.();
+return settingsCloudPanel;
+}
+
+settingsCloudPanel =
+createAuthPanel(
+host,
+"panel"
+);
+
+if(
+settingsCloudPanel
+){
+settingsCloudPanel.refreshOne?.();
+}
+
+return settingsCloudPanel;
+
+}
+
 function mountAuthUi(){
 
 if(!pageHasCloudAuth()){
@@ -1313,28 +1155,15 @@ if(headerPanel){
 panels.push(headerPanel);
 }
 
-const mobileAuthHost =
+const settingsPanel =
+mountCloudAuthPanelInSettings(
 document.getElementById(
-"cloud-settings-mount-mobile"
-);
-
-if(
-mobileAuthHost &&
-!mobileAuthHost.querySelector(
-".cloud-auth-wrap"
+"app-settings-cloud-auth-host"
 )
-){
-
-const mobilePanel =
-createAuthPanel(
-mobileAuthHost,
-"panel"
 );
 
-if(mobilePanel){
-panels.push(mobilePanel);
-}
-
+if(settingsPanel){
+panels.push(settingsPanel);
 }
 
 if(!panels.length){
@@ -1487,29 +1316,23 @@ export async function openCloudSettingsPanel(){
 
 await ensureCloudReady();
 
-const wrap =
-document.getElementById("header-settings-wrap");
-const dropdown =
-document.getElementById("header-settings-dropdown");
-const btn =
-document.getElementById("header-settings-btn");
+await openAppSettingsWindow(
+"sync"
+);
+
+const emailInput =
+document.querySelector(
+"#app-settings-cloud-auth-host .cloud-auth-email"
+);
 
 if(
-!wrap ||
-!dropdown ||
-!btn ||
-!(
-cloudEnvConfigured ||
-isCloudSyncEnabled()
-)
+emailInput
 ){
-return false;
+emailInput.focus();
+return true;
 }
 
-openSettingsDropdown();
-
-wrap.querySelector(".cloud-auth-email")?.focus();
-return true;
+return false;
 
 }
 

@@ -19,8 +19,9 @@ SCRIPT_SCAN_BG_EVENT
 
 import {
 PATTERN_SCAN_TF_LABELS,
-PATTERN_SCAN_DEPTH_OPTIONS
-} from "./pattern-12-scanner.js?v=11";
+PATTERN_SCAN_DEPTH_OPTIONS,
+PATTERN_SCAN_SIDE_FILTERS
+} from "./pattern-12-scanner.js?v=15";
 
 import {
 loadScriptPageState,
@@ -145,6 +146,27 @@ state
 
 }
 
+function effectiveSideFilter(){
+
+const fromUi =
+String(
+els.sideFilter?.value ||
+""
+);
+
+if(
+PATTERN_SCAN_SIDE_FILTERS.includes(
+fromUi
+)
+){
+return fromUi;
+}
+
+return state.sideFilter ||
+"both";
+
+}
+
 function markPageVisited(){
 
 state.lastVisitedAt =
@@ -171,14 +193,28 @@ return chartTfFilter;
 
 function filteredRows(){
 
+const side =
+effectiveSideFilter();
+
+if(
+side ===
+"both"
+){
 return state.rows.slice();
+}
+
+return state.rows.filter(
+row=>
+row?.side ===
+side
+);
 
 }
 
 function refreshGrid(){
 
 void widgetGrid?.renderPage(
-state.rows,
+filteredRows(),
 state.filterTf
 );
 
@@ -245,6 +281,65 @@ return;
 
 state.searchDepth =
 n;
+persist();
+
+}
+
+function syncSearchParamsFromUi(){
+
+if(
+els.searchDepth
+){
+const n =
+Number(
+els.searchDepth.value
+);
+
+if(
+PATTERN_SCAN_DEPTH_OPTIONS.includes(
+n
+)
+){
+state.searchDepth =
+n;
+}
+}
+
+if(
+els.sideFilter
+){
+const next =
+String(
+els.sideFilter.value ||
+"both"
+);
+
+if(
+PATTERN_SCAN_SIDE_FILTERS.includes(
+next
+)
+){
+state.sideFilter =
+next;
+}
+}
+
+if(
+els.autoTf
+){
+state.auto.tf =
+els.autoTf.value ||
+state.auto.tf;
+}
+
+if(
+els.autoPeriod
+){
+state.auto.periodId =
+els.autoPeriod.value ||
+state.auto.periodId;
+}
+
 persist();
 
 }
@@ -503,6 +598,8 @@ updateAutoStatus,
 
 async function runFullScan(){
 
+syncSearchParamsFromUi();
+
 setScanStatus(
 "Запуск полного сканирования…",
 true
@@ -523,7 +620,9 @@ updateActionButtons();
 startFullPatternScan(
 {
 lookbackBars:
-state.searchDepth
+state.searchDepth,
+sideFilter:
+effectiveSideFilter()
 }
 );
 
@@ -531,12 +630,7 @@ state.searchDepth
 
 function startAuto(){
 
-state.auto.tf =
-els.autoTf?.value ||
-"15";
-state.auto.periodId =
-els.autoPeriod?.value ||
-"1h";
+syncSearchParamsFromUi();
 state.auto.active =
 true;
 persist();
@@ -1051,6 +1145,10 @@ els.searchDepth =
 document.getElementById(
 "script-search-depth"
 );
+els.sideFilter =
+document.getElementById(
+"script-side-filter"
+);
 els.autoTf =
 document.getElementById(
 "script-auto-tf"
@@ -1308,6 +1406,45 @@ els.searchDepth.value
 }
 );
 
+els.sideFilter?.addEventListener(
+"change",
+()=>{
+
+const next =
+String(
+els.sideFilter.value ||
+"both"
+);
+
+if(
+!PATTERN_SCAN_SIDE_FILTERS.includes(
+next
+)
+){
+return;
+}
+
+state.sideFilter =
+next;
+
+if(
+next !==
+"both"
+){
+state.rows =
+state.rows.filter(
+row=>
+row?.side ===
+next
+);
+}
+
+persist();
+refreshGrid();
+
+}
+);
+
 }
 
 function restoreAfterBgScan(){
@@ -1328,12 +1465,10 @@ state.lastVisitedAt ||
 return;
 }
 
-setFilterTf(
-state.auto.tf
-);
 state.page =
 1;
 persist();
+refreshGrid();
 
 }
 
@@ -1420,6 +1555,16 @@ els.searchDepth.value =
 String(
 state.searchDepth
 );
+}
+
+if(
+els.sideFilter &&
+PATTERN_SCAN_SIDE_FILTERS.includes(
+state.sideFilter
+)
+){
+els.sideFilter.value =
+state.sideFilter;
 }
 
 updateActionButtons();

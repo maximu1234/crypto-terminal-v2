@@ -12,11 +12,11 @@
 
 <link rel="icon" href="/icons/brand-logo.png" type="image/png">
 
-<link rel="stylesheet" href="/css/critical-shell.css?v=6">
-<script src="/js/site-css-ready.js?v=2"></script>
-<link rel="stylesheet" href="/css/common.css?v=34">
-<link rel="stylesheet" href="/css/screener.css?v=42">
-<link rel="stylesheet" href="/css/script-page.css?v=13">
+<link rel="stylesheet" href="/css/critical-shell.css?v=9">
+<script src="/js/site-css-ready.js?v=3"></script>
+<link rel="stylesheet" href="/css/common.css?v=49">
+<link rel="stylesheet" href="/css/screener.css?v=48">
+<link rel="stylesheet" href="/css/script-page.css?v=15">
 
 <script src="/vendor/lightweight-charts.standalone.production.js"></script>
 <link rel="modulepreload" href="/js/charts-lib-boot.js?v=3" crossorigin>
@@ -25,11 +25,11 @@
 
 <body class="script-page">
 
-<header id="header" class="screener-page-header script-page-header">
+<header id="header" class="app-page-header script-page-header">
 
 <a href="/screener.html" id="logo" aria-label="Multichart"><img src="/icons/brand-logo.png" alt="" width="32" height="32" class="site-logo-img" decoding="async"></a>
 
-<nav class="menu screener-nav-panel" id="script-nav-panel">
+<nav class="menu app-header-nav" id="app-header-nav">
 <a href="/screener.html">Скринер</a>
 <a href="/terminal.html">Терминал</a>
 <a href="/watchlist.html">Вотчлист</a>
@@ -80,6 +80,8 @@ aria-expanded="false"
 
 <div id="script-toolbar" class="script-toolbar" aria-label="Настройки скрипта">
 
+<div class="script-toolbar-left">
+
 <div class="script-tf-filter" id="script-tf-filter" role="tablist" aria-label="Фильтр таймфрейма">
 <button type="button" class="script-tf-btn active" data-tf="all">Все</button>
 <button type="button" class="script-tf-btn" data-tf="1">1m</button>
@@ -98,6 +100,15 @@ aria-expanded="false"
 <option value="30" selected>30 баров</option>
 <option value="50">50 баров</option>
 <option value="100">100 баров</option>
+</select>
+</label>
+
+<label class="script-toolbar-field">
+<span>Направление</span>
+<select id="script-side-filter" aria-label="Направление сканирования">
+<option value="both" selected>Long + Short</option>
+<option value="long">Long</option>
+<option value="short">Short</option>
 </select>
 </label>
 
@@ -132,9 +143,11 @@ aria-expanded="false"
 <div class="script-auto-status" id="script-auto-status">Авто-сканирование выключено</div>
 </div>
 
-<div class="script-toolbar-spacer" aria-hidden="true"></div>
+</div>
 
+<div class="script-toolbar-end">
 <button type="button" class="script-refresh-all-btn" id="script-refresh-all">Обновить все таймфреймы</button>
+</div>
 
 </div>
 

@@ -4,11 +4,15 @@ initAlertMonitor
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=35";
+} from "./auth-ui.js?v=38";
 
 import {
 isAlertsPage
 } from "./cloud-sync-throttle.js?v=3";
+
+import {
+scheduleDevicePull
+} from "./device-pull-gate.js?v=1";
 
 import {
 initAlertsCloudSync,
@@ -24,8 +28,13 @@ isCloudLoggedIn,
 isCloudLoggedInEffective,
 isCloudSyncEnabled,
 getCloudUserEmail,
+pullDeviceStateFromCloud,
 onCloudSyncChange
 } from "./cloud-sync.js?v=40";
+
+import {
+isAutoDevicePullDisabled
+} from "./supabase-usage-prefs.js?v=4";
 
 import {
 isSupabaseConfigured
@@ -46,24 +55,16 @@ warmBybitWorkerProxy
 } from "./bybit-fetch.js?v=17";
 
 import {
-initMobileRecovery
-} from "./mobile-recovery.js?v=1";
-
-import {
-bindSiteMobileNav
-} from "./site-mobile-nav.js?v=4";
-
-import {
 ensureDrawToolsVisible
-} from "./draw-tools-visible.js?v=1";
+} from "./draw-tools-visible.js?v=2";
 
 import {
 initSuppressNativeContextMenu
-} from "./suppress-native-context-menu.js?v=2";
+} from "./suppress-native-context-menu.js?v=4";
 
 import {
 initFocusBlurAfterPick
-} from "./focus-blur-after-pick.js?v=2";
+} from "./focus-blur-after-pick.js?v=3";
 
 import {
 initDesktopAppUi
@@ -74,8 +75,9 @@ initDesktopTradeNav
 } from "./desktop-trade-nav.js?v=1";
 
 import {
-initScriptDesktopNav
-} from "./script-desktop-nav.js?v=1";
+initSiteHeader,
+enforceSiteHeaderAfterBoot
+} from "./site-header.js?v=3";
 
 import {
 resumeScriptScanBackgroundJob
@@ -89,7 +91,8 @@ initSuppressNativeContextMenu();
 initFocusBlurAfterPick();
 initDesktopAppUi();
 initDesktopTradeNav();
-initScriptDesktopNav();
+initSiteHeader();
+enforceSiteHeaderAfterBoot();
 
 void resumeStatsBackgroundJob();
 
@@ -195,20 +198,11 @@ initExchangeContext();
 initBybitNetworkUi();
 preloadBybitProxyConfig();
 warmBybitWorkerProxy();
-initMobileRecovery();
 bootScriptScanBackground();
 
 }
 
 void startSiteBoot();
-
-if(
-document.body.classList.contains(
-"site-nav-page"
-)
-){
-bindSiteMobileNav();
-}
 
 window.addEventListener(
 "bybit-network-retry",

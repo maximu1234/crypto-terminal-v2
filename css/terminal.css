@@ -30,7 +30,10 @@ body{
 #left{
   display:grid;
   grid-template-rows:auto auto minmax(0,1fr);
+  grid-column:1;
+  grid-row:1;
   min-height:0;
+  min-width:0;
   overflow:hidden;
 }
 
@@ -1877,6 +1880,8 @@ body.tablet-chart #rsi-wrap .rsi-level-line:not(.hidden){
 
 
 #list{
+  grid-column:2;
+  grid-row:1;
   border-left:1px solid #1f2937;
   display:flex;
   flex-direction:column;
@@ -1884,6 +1889,7 @@ body.tablet-chart #rsi-wrap .rsi-level-line:not(.hidden){
   overflow-y:auto;
   min-width:0;
   min-height:0;
+  align-self:stretch;
 }
 
 #filter-wrap{

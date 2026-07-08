@@ -4,7 +4,7 @@
 export function ensureDrawToolsVisible(){
 
 document.querySelectorAll(
-"#draw-toolbar, .widget-draw-tools, #coins-draw-tools-mount"
+"#draw-toolbar, .widget-draw-tools"
 ).forEach(el=>{
 el.classList.remove(
 "hidden"

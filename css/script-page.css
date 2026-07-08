@@ -28,12 +28,28 @@ margin-left:auto;
 .script-toolbar{
 flex-shrink:0;
 display:flex;
-flex-wrap:wrap;
+flex-wrap:nowrap;
 align-items:center;
 gap:8px 12px;
 padding:8px 12px;
 border-bottom:1px solid #1f2937;
 background:#111827;
+min-height:44px;
+}
+
+.script-toolbar-left{
+display:flex;
+flex-wrap:wrap;
+flex:1 1 auto;
+min-width:0;
+align-items:center;
+gap:8px 12px;
+}
+
+.script-toolbar-end{
+flex:0 0 auto;
+display:flex;
+align-items:center;
 }
 
 .script-tf-filter{
@@ -121,20 +137,25 @@ color:#e5e7eb;
 
 .script-toolbar-status,
 .script-scan-status{
-display:none;
-}
-
-.script-toolbar-spacer{
-flex:1 1 auto;
-min-width:8px;
-}
-
-.script-toolbar-status{
 display:flex;
 flex-direction:row;
 align-items:center;
-flex-wrap:wrap;
+justify-content:flex-start;
+flex-wrap:nowrap;
 gap:8px;
+flex:1 1 120px;
+min-width:0;
+max-width:100%;
+overflow:hidden;
+text-align:left;
+}
+
+.script-toolbar-status:has(
+.script-scan-progress:not(
+.hidden
+)
+) .script-auto-status{
+display:none;
 }
 
 .script-scan-progress{
@@ -142,6 +163,10 @@ font-size:12px;
 line-height:1.35;
 color:#fff;
 white-space:nowrap;
+overflow:hidden;
+text-overflow:ellipsis;
+min-width:0;
+flex:1 1 auto;
 }
 
 .script-scan-progress.hidden{
@@ -153,10 +178,15 @@ font-size:12px;
 line-height:1.35;
 color:#9ca3af;
 white-space:nowrap;
+overflow:hidden;
+text-overflow:ellipsis;
+min-width:0;
+flex:0 1 auto;
 }
 
 .script-refresh-all-btn{
 margin-left:0;
+flex:0 0 auto;
 }
 
 .script-widget-meta{

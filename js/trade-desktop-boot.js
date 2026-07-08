@@ -211,7 +211,7 @@ const {
 initTradeDiaryNav
 } =
 await import(
-"./trade-diary-nav.js?v=7"
+"./trade-diary-nav.js?v=9"
 );
 
 void initTradeDiaryNav();

@@ -65,7 +65,7 @@ const MANIFEST_PRIORITY =
 ];
 
 const CHART_KEY_RE =
-/^(chart|terminal|drawings|coins|bybit|dashboard|widget|chart-|coins-|site-css|alert-auth|cloud-sync|supabase|favorites|drawings-cloud|device-pull|ticker-update|page-routes|qwerty|charts-lib|chart-import|chart-page|chart-widget|tablet-|price-alert|alert-monitor|site-boot|auth-ui|release-marker|desktop-app|suppress-native|site-mobile|coins-layout|coins-tablet|telegram-bot|async-timeout|auth-storage)/;
+/^(chart|terminal|drawings|coins|bybit|dashboard|widget|chart-|coins-|site-css|alert-auth|cloud-sync|supabase|favorites|drawings-cloud|device-pull|ticker-update|page-routes|qwerty|charts-lib|chart-import|chart-page|chart-widget|tablet-|price-alert|alert-monitor|site-boot|auth-ui|release-marker|desktop-app|suppress-native|coins-layout|coins-tablet|telegram-bot|async-timeout|auth-storage)/;
 
 const CHART_CSS_RE =
 /^(critical-shell|common|terminal|terminal-layout|watchlist|desktop-app)\.css$/;

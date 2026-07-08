@@ -51,7 +51,7 @@ createTickerUiBatcher
 
 import {
 mountReleaseMarker
-} from "./release-marker.js?v=25";
+} from "./release-marker.js?v=26";
 
 import {
 saveScreenerState,
@@ -69,17 +69,12 @@ FAVORITES_BY_EXCHANGE_KEY
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=35";
+} from "./auth-ui.js?v=38";
 
 import {
 ensureSettled,
 withTimeout
 } from "./async-timeout.js?v=1";
-
-import {
-syncMobileNavDrawerMount,
-bindMobileNavDrawerLinks
-} from "./mobile-nav-drawer.js?v=1";
 
 import {
 persistFavoritesToCloud,
@@ -109,11 +104,6 @@ document.getElementById("pagination");
 
 const statusEl =
 document.getElementById("screener-status");
-
-const SCREENER_MOBILE_MQ =
-window.matchMedia(
-"(max-width: 640px)"
-);
 
 const SORT_LABELS = {
 change24: "24ч %",
@@ -182,17 +172,9 @@ const TF_LABELS = {
 let favorites =
 loadFavoritesGroups();
 
-function isScreenerMobile(){
-
-return SCREENER_MOBILE_MQ.matches;
-
-}
-
 function screenerGridClass(){
 
-return isScreenerMobile()
-? "grid-mobile-2"
-: `grid-${layout}`;
+return `grid-${layout}`;
 
 }
 
@@ -518,7 +500,7 @@ if(
 ){
 screenerPatternOverlayApi =
 await import(
-"./screener-pattern-overlay.js?v=2"
+"./screener-pattern-overlay.js?v=3"
 );
 }
 
@@ -716,15 +698,13 @@ persistState();
 
 function pageSize(){
 
-return isScreenerMobile()
-? 2
-: layout;
+return layout;
 
 }
 
 function screenerWidgetShowsRsi(){
 
-return !isScreenerMobile() && (
+return (
 layout ===
 4 ||
 layout ===
@@ -2106,9 +2086,7 @@ pagesWrap.setAttribute(
 paginationEl.appendChild(pagesWrap);
 
 const maxButtons =
-isScreenerMobile()
-? 3
-: 11;
+11;
 const half =
 Math.floor(maxButtons / 2);
 let start = Math.max(1, currentPage - half);
@@ -2157,22 +2135,6 @@ renderPage();
 };
 
 paginationEl.appendChild(next);
-
-if(isScreenerMobile()){
-
-const active =
-pagesWrap.querySelector(".page-btn.active");
-
-if(active){
-requestAnimationFrame(()=>{
-active.scrollIntoView({
-inline: "center",
-block: "nearest"
-});
-});
-}
-
-}
 
 function addPageButton(page){
 
@@ -2321,10 +2283,6 @@ setStatus("", false);
 
 function setLayout(next){
 
-if(isScreenerMobile()){
-return;
-}
-
 layout = next;
 
 currentPage = 1;
@@ -2363,13 +2321,13 @@ renderPage();
 function closeScreenerPickers(){
 
 document.querySelectorAll(
-".screener-mobile-menu, .screener-header-pick-menu"
+".screener-header-pick-menu"
 ).forEach(menu=>{
 menu.classList.add("hidden");
 });
 
 document.querySelectorAll(
-".screener-mobile-select, .screener-header-pick"
+".screener-header-pick"
 ).forEach(btn=>{
 btn.setAttribute(
 "aria-expanded",
@@ -2379,106 +2337,6 @@ btn.setAttribute(
 
 }
 
-function closeScreenerMobilePickers(){
-
-closeScreenerPickers();
-
-}
-
-function closeScreenerNav(){
-
-document.body.classList.remove(
-"screener-nav-open"
-);
-
-document.getElementById(
-"screener-nav-backdrop"
-)?.classList.add(
-"hidden"
-);
-
-const toggle =
-document.getElementById(
-"screener-nav-toggle"
-);
-
-toggle?.setAttribute(
-"aria-expanded",
-"false"
-);
-
-}
-
-function openScreenerNav(){
-
-void import("./auth-ui.js?v=35").then(m=>{
-m.closeCloudSettingsDropdown?.();
-}).catch(()=>{});
-
-document.body.classList.add(
-"screener-nav-open"
-);
-
-document.getElementById(
-"screener-nav-backdrop"
-)?.classList.remove(
-"hidden"
-);
-
-document.getElementById(
-"screener-nav-toggle"
-)?.setAttribute(
-"aria-expanded",
-"true"
-);
-
-closeScreenerMobilePickers();
-
-}
-
-function syncMobileControlLabels(){
-
-const sortLabel =
-document.getElementById(
-"screener-sort-label"
-);
-
-if(sortLabel){
-sortLabel.textContent =
-SORT_LABELS[sortMode] ||
-"24ч %";
-}
-
-const tfLabel =
-document.getElementById(
-"screener-tf-label"
-);
-
-if(tfLabel){
-tfLabel.textContent =
-TF_LABELS[currentTF] ||
-currentTF;
-}
-
-document.querySelectorAll(
-"#screener-sort-menu .screener-mobile-menu-item"
-).forEach(btn=>{
-btn.classList.toggle(
-"active",
-btn.dataset.sort === sortMode
-);
-});
-
-document.querySelectorAll(
-"#screener-tf-menu .screener-mobile-menu-item"
-).forEach(btn=>{
-btn.classList.toggle(
-"active",
-btn.dataset.tf === currentTF
-);
-});
-
-}
 
 function syncDesktopControlLabels(){
 
@@ -2546,216 +2404,11 @@ btn.dataset.tf === currentTF
 
 function syncHeaderControlLabels(){
 
-syncMobileControlLabels();
 syncDesktopControlLabels();
 syncInvertChartsCheckbox();
 
 }
 
-function syncScreenerNavDrawer(){
-
-syncMobileNavDrawerMount({
-header: document.getElementById("header"),
-panel: document.getElementById("screener-nav-panel"),
-backdrop: document.getElementById("screener-nav-backdrop"),
-insertAfter: document.getElementById("screener-mobile-bar")
-});
-
-bindMobileNavDrawerLinks(
-document.getElementById("screener-nav-panel"),
-closeScreenerNav
-);
-
-}
-
-function bindMobileControls(){
-
-syncScreenerNavDrawer();
-
-const sortTrigger =
-document.getElementById(
-"screener-sort-trigger"
-);
-const sortMenu =
-document.getElementById(
-"screener-sort-menu"
-);
-const tfTrigger =
-document.getElementById(
-"screener-tf-trigger"
-);
-const tfMenu =
-document.getElementById(
-"screener-tf-menu"
-);
-const navToggle =
-document.getElementById(
-"screener-nav-toggle"
-);
-const navBackdrop =
-document.getElementById(
-"screener-nav-backdrop"
-);
-
-if(
-!sortTrigger ||
-!tfTrigger
-){
-return;
-}
-
-sortTrigger.addEventListener(
-"click",
-e=>{
-e.stopPropagation();
-
-const open =
-!sortMenu?.classList.contains(
-"hidden"
-);
-
-closeScreenerMobilePickers();
-closeScreenerNav();
-
-if(open){
-return;
-}
-
-sortMenu?.classList.remove(
-"hidden"
-);
-sortTrigger.setAttribute(
-"aria-expanded",
-"true"
-);
-
-}
-);
-
-tfTrigger.addEventListener(
-"click",
-e=>{
-e.stopPropagation();
-
-const open =
-!tfMenu?.classList.contains(
-"hidden"
-);
-
-closeScreenerMobilePickers();
-closeScreenerNav();
-
-if(open){
-return;
-}
-
-tfMenu?.classList.remove(
-"hidden"
-);
-tfTrigger.setAttribute(
-"aria-expanded",
-"true"
-);
-
-}
-);
-
-sortMenu?.querySelectorAll(
-"[data-sort]"
-).forEach(btn=>{
-
-btn.addEventListener(
-"click",
-e=>{
-e.stopPropagation();
-setSort(btn.dataset.sort);
-closeScreenerMobilePickers();
-}
-);
-
-});
-
-tfMenu?.querySelectorAll(
-"[data-tf]"
-).forEach(btn=>{
-
-btn.addEventListener(
-"click",
-e=>{
-e.stopPropagation();
-setTf(btn.dataset.tf);
-closeScreenerMobilePickers();
-}
-);
-
-});
-
-navToggle?.addEventListener(
-"click",
-()=>{
-
-if(
-document.body.classList.contains(
-"screener-nav-open"
-)
-){
-closeScreenerNav();
-}else{
-openScreenerNav();
-}
-
-}
-);
-
-navBackdrop?.addEventListener(
-"click",
-closeScreenerNav
-);
-
-document.addEventListener(
-"click",
-e=>{
-
-if(
-e.target.closest(
-".screener-mobile-select-wrap"
-)
-){
-return;
-}
-
-closeScreenerMobilePickers();
-
-}
-);
-
-const onMobileMqChange =
-()=>{
-
-syncScreenerNavDrawer();
-clampPage();
-applySavedUi();
-renderPage();
-
-};
-
-if(
-typeof SCREENER_MOBILE_MQ.addEventListener ===
-"function"
-){
-SCREENER_MOBILE_MQ.addEventListener(
-"change",
-onMobileMqChange
-);
-}else{
-SCREENER_MOBILE_MQ.addListener(
-onMobileMqChange
-);
-}
-
-syncHeaderControlLabels();
-
-}
 
 function bindDesktopHeaderPicks(){
 
@@ -2888,12 +2541,6 @@ window.addEventListener(
 e=>{
 
 if(
-isScreenerMobile()
-){
-return;
-}
-
-if(
 e.defaultPrevented
 ){
 return;
@@ -2999,7 +2646,6 @@ cb.checked
 function bindControls(){
 
 bindDesktopHeaderPicks();
-bindMobileControls();
 bindSymbolSearch();
 bindInvertChartsCheckbox();
 bindScreenerLayoutHotkeys();
@@ -3096,7 +2742,6 @@ return;
   Совпадает с хоткеем «Перевернуть график» на странице Терминал.
 */
 if(
-!isScreenerMobile() &&
 e.altKey &&
 !e.ctrlKey &&
 !e.metaKey &&

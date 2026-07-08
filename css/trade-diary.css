@@ -4,14 +4,6 @@
   color:#d1d4dc;
 }
 
-body.trade-diary-body .trade-diary-header-aside{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  margin-left:auto;
-  flex-shrink:0;
-}
-
 body.trade-diary-body .coins-diary-link{
   display:inline-flex;
   align-items:center;
@@ -29,14 +21,6 @@ body.trade-diary-body .coins-diary-link:hover{
 
 body.trade-diary-body .coins-diary-link.active{
   color:#fff;
-}
-
-@media (max-width:640px){
-
-body.trade-diary-body .trade-diary-header-aside{
-  display:none;
-}
-
 }
 
 .trade-diary-shell{

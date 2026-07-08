@@ -13,18 +13,7 @@ return location.pathname.startsWith(
 
 function findDiaryNavHost(){
 
-const dropdown =
-document.getElementById(
-"header-settings-dropdown"
-);
-
-if(dropdown){
-return dropdown;
-}
-
-return document.querySelector(
-"#coins-nav-panel .coins-nav-settings"
-);
+return null;
 
 }
 
@@ -67,70 +56,13 @@ link.textContent =
 if(
 isDiaryPage()
 ){
-
-const aside =
-document.getElementById(
-"trade-diary-header-aside"
-);
-
-if(
-aside
-){
-const asideLink =
-link.cloneNode(
-true
-);
-asideLink.className =
-"coins-diary-link trade-diary-nav-link active";
-aside.appendChild(
-asideLink
-);
-}
-
 return;
 
 }
 
-const host =
-findDiaryNavHost();
-
-if(
-!host
-){
-return;
+const host = findDiaryNavHost();
+if(host){
+host.appendChild(link);
 }
-
-const bybitEntry =
-host.querySelector(
-"#app-settings-menu-wrap"
-);
-const systemLink =
-host.querySelector(
-"[data-system-admin-link]"
-);
-
-if(
-bybitEntry
-){
-bybitEntry.insertAdjacentElement(
-"afterend",
-link
-);
-return;
-}
-
-if(
-systemLink
-){
-systemLink.insertAdjacentElement(
-"beforebegin",
-link
-);
-return;
-}
-
-host.appendChild(
-link
-);
 
 }

@@ -5,10 +5,10 @@
  * В desktop подпись: «v0.N / vX.Y.Z» (сначала веб, потом приложение).
  */
 export const METKA_NUMBER =
-56;
+58;
 
 export const DESKTOP_APP_VERSION =
-"1.0.50";
+"1.0.51";
 
 export const RELEASE_VERSION_LABEL =
 `v0.${METKA_NUMBER}`;
@@ -78,7 +78,7 @@ return;
 
 const mount =
 root.querySelector(
-".coins-header-desktop"
+".app-header-nav"
 ) ||
 root.querySelector(
 "#header-controls.screener-header-desktop"

@@ -86,7 +86,7 @@ return;
 
 const menuItem =
 target.closest(
-".screener-mobile-menu-item, .screener-header-pick-item"
+".screener-header-pick-item"
 );
 
 if(
@@ -102,7 +102,7 @@ menuItem.blur();
 
 const wrap =
 menuItem.closest(
-".screener-mobile-select-wrap, .screener-header-pick-wrap, .coins-tf-mobile-wrap"
+".screener-header-pick-wrap"
 );
 
 wrap?.querySelector(

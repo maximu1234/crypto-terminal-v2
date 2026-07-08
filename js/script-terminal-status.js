@@ -63,35 +63,52 @@ if(
 return null;
 }
 
-const nav =
-document.querySelector(
-".coins-header-desktop"
+const header =
+document.getElementById(
+"header"
 );
-
-if(
-!nav
-){
-return null;
-}
 
 const existing =
 document.getElementById(
 "script-terminal-status"
 );
 
+let anchor =
+header?.querySelector(
+"#header-status-cell, .header-status-cell"
+);
+
+if(
+!anchor &&
+header
+){
+anchor =
+document.createElement(
+"div"
+);
+anchor.id =
+"header-status-cell";
+anchor.className =
+"header-status-cell";
+header.appendChild(
+anchor
+);
+}
+
 if(
 existing
 ){
+if(
+anchor &&
+existing.parentElement !==
+anchor
+){
+anchor.appendChild(
+existing
+);
+}
 return existing;
 }
-
-const anchor =
-nav.querySelector(
-".coins-layout-picker-wrap"
-) ||
-nav.querySelector(
-"#header-settings-wrap"
-);
 
 const el =
 document.createElement(
@@ -110,14 +127,11 @@ el.setAttribute(
 if(
 anchor
 ){
-nav.insertBefore(
-el,
-anchor
-);
-}else{
-nav.appendChild(
-el
-);
+anchor.appendChild(el);
+}else if(
+header
+){
+header.appendChild(el);
 }
 
 function render(){

@@ -1,0 +1,66 @@
+---
+description: Чеклист перед полным коммитом — аудит, изоляция desktop, метка, desktop-тег
+alwaysApply: false
+---
+
+# Полный коммит — обязательный чеклист
+
+Когда пользователь просит **сделать полный коммит** (или «полный коммит», «собери коммит» в этом смысле), **до** `git commit` выполнить все пункты ниже. **Пуш делает только пользователь.**
+
+Старый чеклист pre-commit-release **не использовать** — действует только этот список.
+
+## 1. Полный аудит
+
+- `npm run check:all` — тесты, линты, согласованность версий в манифесте.
+- Проверка на ошибки, мёртвый код, явные регрессии по затронутым областям.
+- `npm run bundle:sync` в `desktop/` — `desktop/site-bundle/` актуален.
+
+## 2. Изоляция desktop-only (Торговля, Скрипт, Дневник)
+
+Убедиться, что **не попадают в открытую веб-версию**, остаются только в desktop-приложении:
+
+- Торговый модуль: `trade-desktop-boot`, `isDesktop` / `isDesktopShell` gates, нет прямых импортов trade-модулей на публичных страницах без гейта.
+- **Скрипт:** `script-page-boot` → редирект вне desktop; пункт меню и фоновый скан только desktop (`script-scan-background.js`, `docs/TRADING_MODULE.md`).
+- **Дневник:** маршрут и навигация только desktop (`trade-diary-nav`, diary в desktop-меню).
+
+См. также `.cursor/rules/trading-module-script.mdc`, `docs/TRADING_MODULE.md`.
+
+## 3. Настройки (шестерёнка) — веб
+
+В **веб-версии** в окне настроек подпункты **Подключения** и **Торговля** должны быть **скрыты** (не показываться). Только desktop: `app-settings-window.js` → `showConnectionsSettings()` через `cryptoTerminalDesktop?.isDesktop`.
+
+## 4. Подпись версии на Скринере
+
+В **верхнем правом углу** страницы Скринер — корректная подпись:
+
+- Веб: `v0.N` (из `METKA_NUMBER` в `js/release-marker.js`).
+- Desktop: `v0.N / vX.Y.Z` (веб + `DESKTOP_APP_VERSION`).
+
+Монтирование: `mountReleaseMarker()` в `screener.js` / `desktop-app-ui.js`, элемент `[data-release-marker]` на screener.
+
+## 5. Версии и CI
+
+- `node scripts/sync-asset-versions.cjs` — импорты `?v=` согласованы с `js/asset-manifest.js`.
+- `npm run check:all` без ошибок (чтобы CI на GitHub не ругался).
+- При изменении ассетов — bundle sync выполнен.
+
+## 6. Новая метка (metka-N)
+
+Пример: новая **metka-10** → оставить документы и теги **metka-10, metka-9, metka-8**; все **старше 8** удалить.
+
+1. `js/release-marker.js`: `METKA_NUMBER = N` → подпись веб `v0.N`.
+2. Создать/обновить `docs/MARKER_N.md`.
+3. Удалить `docs/MARKER_{k}.md` для всех `k < N-2`.
+4. Локальные git-теги `metka-*`: оставить `metka-N`, `metka-{N-1}`, `metka-{N-2}`; удалить более старые.
+
+## 7. Desktop .dmg — новый тег
+
+1. `js/release-marker.js`: `DESKTOP_APP_VERSION` (patch +1 при desktop-релизе, semver).
+2. `desktop/package.json`: `"version"` = тот же semver.
+3. Git-тег `desktop-vX.Y.Z` на коммит (для сборки нового .dmg).
+4. Локальные теги `desktop-v*`: оставить новый и **один** предыдущий; остальные удалить.
+
+## 8. Коммит и пуш
+
+- Создать коммит только после прохождения пунктов 1–7.
+- **Не пушить** — пуш делает только пользователь.

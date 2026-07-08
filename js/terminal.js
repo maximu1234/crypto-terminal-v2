@@ -34,7 +34,7 @@ canSetBlueFlag
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=35";
+} from "./auth-ui.js?v=38";
 
 import {
 persistFavoritesToCloud,
@@ -100,13 +100,6 @@ mountDrawToolIcons
 import {
 initChartIndicators
 } from "./chart-indicators.js?v=30";
-
-import {
-initCoinsMobileUi,
-wireCoinsMobileDrawToolsMenu,
-isCoinsMobile,
-syncCoinsTfLabel
-} from "./terminal-mobile.js?v=5";
 
 import {
 mountCoinsLayoutResize
@@ -184,15 +177,15 @@ import {
 initTerminalMultiChart,
 syncPrimaryTfToLayout,
 isTerminalMultiChartLayout
-} from "./terminal-multi-chart.js?v=9";
+} from "./terminal-multi-chart.js?v=11";
 
 import {
 mountTerminalLayoutPicker
-} from "./terminal-layout-picker.js?v=6";
+} from "./terminal-layout-picker.js?v=11";
 
 import {
 mountScriptTerminalStatus
-} from "./script-terminal-status.js?v=1";
+} from "./script-terminal-status.js?v=5";
 
 import {
 resumeScriptScanBackgroundJob
@@ -3478,8 +3471,6 @@ highlightActiveSymbol();
 
 scrollActiveCoinIntoView();
 
-ensureCoinsMobileShowsChart();
-
 startRealtime();
 startPriceHud();
 
@@ -3737,8 +3728,6 @@ b.dataset.tf === currentTF
 );
 });
 
-syncCoinsTfLabel(currentTF);
-
 await loadSymbol(currentSymbol);
 
 persistCoinsPrefs();
@@ -3768,12 +3757,6 @@ function bindCoinsTfHotkeys(){
 window.addEventListener(
 "keydown",
 e=>{
-
-if(
-isCoinsMobile()
-){
-return;
-}
 
 if(
 e.defaultPrevented
@@ -3837,12 +3820,6 @@ e=>{
 
 if(
 !isTerminalPage
-){
-return;
-}
-
-if(
-isCoinsMobile()
 ){
 return;
 }
@@ -3964,10 +3941,6 @@ e.target.blur();
 
 function scrollActiveCoinIntoView(){
 
-if(isCoinsMobile()){
-return;
-}
-
 const el =
 coinElements.get(currentSymbol);
 
@@ -3979,22 +3952,6 @@ el.scrollIntoView({
 block:"nearest",
 behavior:"smooth"
 });
-
-}
-
-function ensureCoinsMobileShowsChart(){
-
-if(!isCoinsMobile()){
-return;
-}
-
-if(window.scrollY > 0){
-window.scrollTo({
-top:0,
-left:0,
-behavior:"instant"
-});
-}
 
 }
 
@@ -4544,8 +4501,7 @@ function syncCoinsTabletListNav(){
 
 const show =
 isTerminalPage &&
-isTabletChartViewport() &&
-!isCoinsMobile();
+isTabletChartViewport();
 
 document.body.classList.toggle(
 "coins-tablet-list-nav-on",
@@ -4762,8 +4718,6 @@ btn.dataset.tf === currentTF
 );
 
 });
-
-syncCoinsTfLabel(currentTF);
 
 }
 
@@ -5049,37 +5003,6 @@ err
 await loadSymbol(
 currentSymbol || displaySymbol || "BTCUSDT"
 );
-
-initCoinsMobileUi({
-getTf: ()=> currentTF,
-onTfChange: setCoinsTimeframe,
-wireDrawToolsMenu:(
-container
-)=>{
-if(
-!container ||
-!drawingTools
-){
-return;
-}
-
-wireCoinsMobileDrawToolsMenu(
-container,
-{
-pickTool:(
-name
-)=>{
-drawingTools.pickDrawTool(
-name
-);
-},
-onClearAll:()=>
-drawingTools.clearAllDrawings?.() ??
-false
-}
-);
-}
-});
 
 void drawingTools?.refreshDrawToolsAccessUiAsync?.();
 

@@ -34,7 +34,6 @@ font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-se
 
 .hidden,
 .header-settings-dropdown.hidden,
-.screener-mobile-menu.hidden,
 [hidden]{
 display:none !important;
 }
@@ -42,7 +41,7 @@ display:none !important;
 .menu,
 nav.menu{
 display:flex;
-flex-wrap:wrap;
+flex-wrap:nowrap;
 align-items:center;
 gap:var(--site-header-nav-gap, 18px);
 }
@@ -58,13 +57,14 @@ color:#fff;
 }
 
 #header,
-.screener-page-header{
+.app-page-header{
 display:flex;
 flex-wrap:nowrap;
 align-items:center;
-gap:12px;
+gap:20px;
 padding:0 16px;
-min-height:56px;
+height:var(--app-header-h, 56px);
+min-height:var(--app-header-h, 56px);
 background:var(--app-bg);
 border-bottom:1px solid #1f2937;
 overflow:visible;
@@ -89,16 +89,8 @@ align-items:center;
 gap:12px;
 margin-left:auto;
 }
-
-/* Screener: без screener.css мобильная панель «24ч %» наезжает на меню */
-.screener-mobile-bar,
-.screener-nav-backdrop,
-#screener-nav-backdrop{
-display:none !important;
-}
-
-#screener-nav-panel,
-#site-nav-panel{
+#app-header-nav,
+#app-header-nav{
 display:flex;
 align-items:center;
 gap:var(--site-header-nav-gap, 18px);
@@ -150,46 +142,3 @@ display:block;
 overflow:hidden;
 }
 
-body.terminal-page #coins-nav-panel,
-body.terminal-page #coins-nav-backdrop{
-display:none !important;
-}
-
-body.terminal-page.coins-nav-open #coins-nav-panel{
-display:flex !important;
-}
-
-body.terminal-page.coins-nav-open #coins-nav-backdrop{
-display:block !important;
-}
-
-@media (max-width:640px){
-
-.screener-mobile-bar{
-display:flex !important;
-align-items:center;
-gap:6px;
-margin-left:auto;
-min-width:0;
-}
-
-#header-controls.screener-header-desktop{
-display:none !important;
-}
-
-#screener-nav-panel{
-display:none !important;
-}
-
-body.screener-nav-open #screener-nav-panel{
-display:flex !important;
-flex-direction:column;
-align-items:stretch;
-}
-
-body.screener-nav-open #screener-nav-backdrop,
-body.screener-nav-open .screener-nav-backdrop{
-display:block !important;
-}
-
-}

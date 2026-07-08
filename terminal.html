@@ -13,12 +13,12 @@
 
 <link rel="icon" href="/icons/brand-logo.png" type="image/png">
 
-<link rel="stylesheet" href="/css/critical-shell.css?v=6">
-<script src="/js/site-css-ready.js?v=2"></script>
-<link rel="stylesheet" href="/css/common.css?v=34">
-<link rel="stylesheet" href="/css/terminal.css?v=161">
-<link rel="stylesheet" href="/css/terminal-layout.css?v=87">
-<link rel="stylesheet" href="/css/chart-indicators.css?v=20">
+<link rel="stylesheet" href="/css/critical-shell.css?v=9">
+<script src="/js/site-css-ready.js?v=3"></script>
+<link rel="stylesheet" href="/css/common.css?v=49">
+<link rel="stylesheet" href="/css/terminal.css?v=163">
+<link rel="stylesheet" href="/css/terminal-layout.css?v=96">
+<link rel="stylesheet" href="/css/chart-indicators.css?v=21">
 <script>
 if(window.cryptoTerminalDesktop&&window.cryptoTerminalDesktop.isDesktop){
 document.documentElement.classList.add("trade-desktop");
@@ -36,38 +36,11 @@ document.documentElement.classList.add("trade-desktop");
 
 <div id="left">
 
-<header id="header" class="coins-page-header">
+<header id="header" class="app-page-header">
 
 <a href="/screener.html" id="logo" aria-label="Multichart"><img src="/icons/brand-logo.png" alt="" width="32" height="32" class="site-logo-img" decoding="async"></a>
 
-<div class="screener-mobile-bar coins-mobile-bar">
-<button type="button" class="screener-nav-toggle" id="coins-nav-toggle" aria-label="Меню" aria-expanded="false" aria-controls="coins-nav-panel">
-<span class="screener-nav-toggle-bars" aria-hidden="true"></span>
-</button>
-</div>
-
-<div class="screener-nav-backdrop hidden" id="coins-nav-backdrop"></div>
-
-<nav class="screener-nav-panel" id="coins-nav-panel">
-<a href="/screener.html">Скринер</a>
-<a href="/terminal.html" class="active">Терминал</a>
-<a href="/watchlist.html">Вотчлист</a>
-<a href="/alerts/">Алерты</a>
-<a href="/listings.html">Листинги</a>
-<a href="/trade-calculator.html">Калькулятор</a>
-<a href="/statistics.html">Статистика</a>
-<div class="header-settings-wrap coins-nav-settings" id="header-settings-wrap-mobile">
-<button type="button" class="header-settings-btn" id="header-settings-btn-mobile" title="Аккаунт и настройки" aria-label="Настройки" aria-expanded="false" aria-haspopup="true">
-<svg class="header-settings-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.75"/><path fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-</button>
-<div class="header-settings-dropdown hidden" id="header-settings-dropdown-mobile" role="menu">
-<p class="header-settings-section-title">Аккаунт</p>
-<div id="cloud-settings-mount-mobile"></div>
-</div>
-</div>
-</nav>
-
-<nav class="menu coins-header-desktop">
+<nav class="menu app-header-nav" id="app-header-nav">
 <a href="/screener.html">Скринер</a>
 <a href="/terminal.html" class="active">Терминал</a>
 <a href="/watchlist.html">Вотчлист</a>
@@ -114,21 +87,6 @@ document.documentElement.classList.add("trade-desktop");
 <button class="tf-btn" data-tf="240">4h</button>
 <button class="tf-btn" data-tf="D">D</button>
 <button class="tf-btn" data-tf="W">W</button>
-</div>
-
-<div class="screener-mobile-select-wrap coins-tf-mobile-wrap">
-<button type="button" class="screener-mobile-select" id="coins-tf-trigger" aria-haspopup="listbox" aria-expanded="false">
-<span id="coins-tf-label">1h</span>
-</button>
-<div class="screener-mobile-menu hidden" id="coins-tf-menu" role="listbox">
-<button type="button" class="screener-mobile-menu-item" data-tf="1">1m</button>
-<button type="button" class="screener-mobile-menu-item" data-tf="5">5m</button>
-<button type="button" class="screener-mobile-menu-item" data-tf="15">15m</button>
-<button type="button" class="screener-mobile-menu-item active" data-tf="60">1h</button>
-<button type="button" class="screener-mobile-menu-item" data-tf="240">4h</button>
-<button type="button" class="screener-mobile-menu-item" data-tf="D">D</button>
-<button type="button" class="screener-mobile-menu-item" data-tf="W">W</button>
-</div>
 </div>
 
 <div id="chart-indicators-wrap" class="chart-indicators-wrap coins-draw-desktop"></div>
@@ -179,8 +137,6 @@ tabTitle(saved);
 }catch(e){}
 })();
 </script>
-
-<div id="coins-draw-tools-mount" class="coins-draw-tools-mount"></div>
 
 </div>
 
@@ -392,7 +348,7 @@ Symbol
 
 <div id="coins-chart-status" class="coins-chart-status hidden" aria-live="polite"></div>
 
-<script src="/js/terminal-page-boot.js?v=21" type="module"></script>
+<script src="/js/terminal-page-boot.js?v=23" type="module"></script>
 
 </body>
 </html>

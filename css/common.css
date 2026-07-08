@@ -6,6 +6,7 @@ box-sizing:border-box;
 
 :root{
 --site-header-nav-gap:18px;
+--app-header-h:56px;
 }
 
 html,
@@ -16,6 +17,7 @@ padding:0;
 
 .menu{
 display:flex;
+flex-wrap:nowrap;
 align-items:center;
 gap:var(--site-header-nav-gap);
 overflow:visible;
@@ -47,10 +49,71 @@ display:flex;
 align-items:center;
 gap:20px;
 padding:0 16px;
-height:56px;
+height:var(--app-header-h);
+min-height:var(--app-header-h);
 border-bottom:1px solid #1f2937;
 background:#16181f;
 overflow:visible;
+}
+
+#header.header-three-cells{
+display:grid;
+grid-template-columns:max-content minmax(0,1fr) max-content;
+align-items:center;
+column-gap:20px;
+height:var(--app-header-h);
+min-height:var(--app-header-h);
+max-height:var(--app-header-h);
+padding-top:0;
+padding-bottom:0;
+box-sizing:border-box;
+}
+
+#header.header-three-cells > .header-main-cell{
+grid-column:1;
+min-width:0;
+display:flex;
+align-items:center;
+gap:20px;
+}
+
+#header.header-three-cells > .header-main-cell > #logo{
+flex-shrink:0;
+}
+
+#header.header-three-cells > .header-main-cell > .menu,
+#header.header-three-cells > .header-main-cell > .app-header-nav,
+#header.header-three-cells > .header-main-cell > .app-header-nav{
+flex:0 0 auto;
+min-width:0;
+display:flex;
+flex-wrap:nowrap;
+align-items:center;
+gap:var(--site-header-nav-gap);
+}
+
+#header.header-three-cells > .header-status-cell{
+grid-column:2;
+display:flex;
+align-items:center;
+justify-content:flex-start;
+min-width:0;
+color:#9ca3af;
+font-size:12px;
+line-height:1.3;
+white-space:nowrap;
+overflow:hidden;
+text-overflow:ellipsis;
+}
+
+#header.header-three-cells > #header-controls{
+grid-column:3;
+min-width:max-content;
+margin-left:0;
+display:flex;
+align-items:center;
+flex-wrap:nowrap;
+justify-content:flex-end;
 }
 
 #logo{
@@ -531,7 +594,7 @@ background:#fbbf24;
 }
 
 #header .menu,
-#header .screener-nav-panel{
+#header .app-header-nav{
 position:relative;
 z-index:2;
 flex:1 1 auto;
@@ -540,18 +603,20 @@ overflow:visible;
 }
 
 #header .menu a,
-#header .screener-nav-panel a,
-#coins-nav-panel.coins-header-desktop a{
+#header .app-header-nav a{
 font-family:Arial,sans-serif;
+}
+
+#header .app-header-nav:not([data-nav-ready="1"]){
+visibility:hidden;
 }
 
 @media (min-width:641px){
 
 #header .menu,
-#header .screener-nav-panel,
-#screener-nav-panel,
-#site-nav-panel,
-#coins-nav-panel.coins-header-desktop{
+#header .app-header-nav,
+#app-header-nav,
+#app-header-nav{
 flex-wrap:nowrap;
 gap:var(--site-header-nav-gap);
 }
@@ -731,11 +796,6 @@ margin-top:8px;
 padding:10px 12px;
 }
 
-.coins-nav-settings .header-settings-system-link,
-#coins-nav-panel .header-settings-system-link{
-margin-top:14px;
-padding-top:14px;
-}
 
 /* Флаги монет: Монеты, Главная (скринер), везде с меню выбора цвета */
 .coin-flag-wrap,
@@ -1037,18 +1097,87 @@ text-align:center;
 box-sizing:border-box;
 }
 
-@media (max-width:640px){
-
-.header-settings-dropdown.header-settings-dropdown--portaled{
-display:none !important;
-visibility:hidden !important;
-pointer-events:none !important;
+/* site-nav-page: десктоп-шапка (раньше в site-mobile-nav.css) */
+html:has(body.site-nav-page),
+body.site-nav-page{
+height:auto;
+min-height:100%;
+min-height:100dvh;
+overflow-x:hidden;
+overflow-y:auto;
+-webkit-overflow-scrolling:touch;
 }
 
-#header .header-settings-wrap{
-z-index:auto;
+body.site-nav-page{
+display:flex;
+flex-direction:column;
 }
 
+body.site-nav-page #header.app-page-header{
+height:var(--app-header-h);
+min-height:var(--app-header-h);
+padding:0 16px;
+gap:20px;
+align-items:center;
+flex-wrap:nowrap;
+background:#16181f;
+}
+
+body.site-nav-page #header.app-page-header.header-three-cells{
+height:var(--app-header-h);
+min-height:var(--app-header-h);
+padding-top:0;
+padding-bottom:0;
+}
+
+body.site-nav-page #app-header-nav,
+body.site-nav-page .app-header-nav#app-header-nav{
+display:flex !important;
+position:static !important;
+top:auto !important;
+right:auto !important;
+bottom:auto !important;
+width:auto !important;
+flex:1 1 auto !important;
+min-width:0 !important;
+flex-direction:row !important;
+align-items:center !important;
+gap:var(--site-header-nav-gap, 18px) !important;
+margin:0 !important;
+padding:0 !important;
+background:transparent !important;
+border:none !important;
+box-shadow:none !important;
+pointer-events:auto !important;
+overflow:visible !important;
+}
+
+body.site-nav-page #app-header-nav a,
+body.site-nav-page .app-header-nav#app-header-nav a{
+display:inline-flex !important;
+align-items:center !important;
+padding:0 !important;
+font-size:14px !important;
+line-height:1 !important;
+border-radius:0 !important;
+}
+
+body.site-nav-page #app-header-nav .header-settings-wrap,
+body.site-nav-page .app-header-nav .header-settings-wrap{
+display:inline-flex !important;
+width:auto !important;
+margin:0 !important;
+padding:0 !important;
+border-top:none !important;
+align-self:center !important;
+}
+
+body.site-nav-page #app-header-nav .header-settings-btn,
+body.site-nav-page .app-header-nav .header-settings-btn{
+min-width:36px !important;
+min-height:36px !important;
+padding:8px !important;
+justify-content:center !important;
 }
 
 /* Выпадашки: без залипающего focus ring после выбора (Electron/macOS). */
@@ -1059,8 +1188,6 @@ outline:none;
 
 .chart-indicator-settings-select:focus,
 .chart-indicator-settings-select:focus-visible,
-.screener-mobile-select:focus,
-.screener-mobile-select:focus-visible,
 .screener-header-pick:focus,
 .screener-header-pick:focus-visible,
 body.terminal-page .coins-list-refresh-btn:focus,
@@ -1070,6 +1197,85 @@ body.terminal-page #market-filter:focus-visible,
 body.trade-page .trade-book-mode:focus,
 body.trade-page .trade-book-mode:focus-visible{
 outline:none;
+}
+
+/* Desktop .app: единый контракт шапки (app-page-header) */
+html.desktop-app-shell body #header,
+html.desktop-app-shell body #header.app-page-header{
+height:var(--app-header-h) !important;
+min-height:var(--app-header-h) !important;
+max-height:var(--app-header-h) !important;
+padding-top:0 !important;
+padding-bottom:0 !important;
+align-items:center !important;
+flex-wrap:nowrap !important;
+box-sizing:border-box !important;
+}
+
+html.desktop-app-shell body #header .header-main-cell,
+html.desktop-app-shell body #header .header-status-cell,
+html.desktop-app-shell body #header #header-controls{
+display:flex !important;
+align-items:center !important;
+height:auto !important;
+min-height:0 !important;
+box-sizing:border-box !important;
+}
+
+html.desktop-app-shell body #header .header-status-cell{
+justify-content:flex-start !important;
+}
+
+html.desktop-app-shell body #header .header-main-cell > .menu,
+html.desktop-app-shell body #header .header-main-cell > .app-header-nav,
+html.desktop-app-shell body #header > .menu,
+html.desktop-app-shell body #header > .app-header-nav{
+display:flex !important;
+flex-wrap:nowrap !important;
+align-items:center !important;
+gap:var(--site-header-nav-gap) !important;
+flex:1 1 auto !important;
+min-width:0 !important;
+height:auto !important;
+margin:0 !important;
+padding:0 !important;
+}
+
+html.desktop-app-shell body #header .header-main-cell a,
+html.desktop-app-shell body #header .header-main-cell .menu a,
+html.desktop-app-shell body #header .header-main-cell .app-header-nav a,
+html.desktop-app-shell body #header > .menu a,
+html.desktop-app-shell body #header > .app-header-nav a{
+display:inline-flex !important;
+align-items:center !important;
+height:auto !important;
+line-height:1 !important;
+padding:0 !important;
+font-size:14px !important;
+font-family:Arial,sans-serif !important;
+}
+
+html.desktop-app-shell body #header .header-main-cell .header-settings-wrap,
+html.desktop-app-shell body #header > .menu .header-settings-wrap,
+html.desktop-app-shell body #header > .app-header-nav .header-settings-wrap{
+display:inline-flex !important;
+align-items:center !important;
+align-self:center !important;
+flex-shrink:0 !important;
+margin:0 !important;
+padding:0 !important;
+}
+
+html.desktop-app-shell body #header .script-terminal-status{
+flex-shrink:0;
+font-size:12px;
+line-height:1.3;
+color:#6b7280;
+white-space:nowrap;
+}
+
+html.desktop-app-shell body #header .script-terminal-status.is-active{
+color:#e5e7eb;
 }
 
 :root{

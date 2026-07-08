@@ -61,7 +61,7 @@ host.innerHTML =
 <p class="cloud-favorites-cloud-title">Облако флагов</p>
 <p class="app-settings-panel-lead">Загрузить флаги из облака и объединить с локальными (без фоновых запросов к Supabase).</p>
 <div class="cloud-favorites-guest hidden" role="status">
-<p class="cloud-telegram-help">Войдите по email в меню шестерёнки, затем нажмите «Обновить».</p>
+<p class="cloud-telegram-help">Войдите по email в разделе «Синхронизация», затем нажмите «Обновить».</p>
 </div>
 <div class="cloud-favorites-connected hidden" role="status">
 <p class="cloud-favorites-connected-text"></p>

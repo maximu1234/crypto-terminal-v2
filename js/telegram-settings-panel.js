@@ -67,7 +67,7 @@ host.innerHTML =
 <div class="cloud-telegram-wrap">
 <p class="cloud-telegram-title">Telegram для алертов</p>
 <div class="cloud-telegram-guest hidden" role="status">
-<p class="cloud-telegram-help">Войдите по email в меню шестерёнки, затем вернитесь сюда.</p>
+<p class="cloud-telegram-help">Войдите по email в разделе «Синхронизация», затем вернитесь сюда.</p>
 </div>
 <div class="cloud-telegram-connected hidden" role="status">
 <p class="cloud-telegram-connected-text"></p>
@@ -339,7 +339,7 @@ if(
 ){
 setStatus(
 statusEl,
-"Сначала войдите по email в меню шестерёнки.",
+"Сначала войдите по email в разделе «Синхронизация».",
 true
 );
 return;

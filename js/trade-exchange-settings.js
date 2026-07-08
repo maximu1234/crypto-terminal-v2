@@ -250,11 +250,14 @@ const def =
 EXCHANGE_DEFINITIONS[
 id
 ];
+const isBingx =
+id ===
+"bingx";
 return `
 <div class="exchange-switcher-badge" data-exchange="${id}">
 <span class="exchange-switcher-name">${def.name}</span>
 <label class="exchange-switcher-toggle" aria-label="${def.name}">
-<input type="checkbox" data-role="exchange-toggle" data-exchange="${id}"/>
+<input type="checkbox" data-role="exchange-toggle" data-exchange="${id}" ${isBingx ? 'disabled aria-disabled="true"' : ""}/>
 <span class="exchange-switcher-slider" aria-hidden="true"></span>
 </label>
 </div>
@@ -1566,6 +1569,17 @@ host
 
 let activeId =
 getActiveExchangeId();
+
+if(
+activeId ===
+"bingx"
+){
+activeId =
+setActiveExchangeId(
+"bybit"
+);
+}
+
 let formCtl =
 mountConnectionForm(
 panel,
@@ -1590,6 +1604,19 @@ input.addEventListener(
 
 const id =
 input.dataset.exchange;
+
+if(
+id ===
+"bingx"
+){
+input.checked =
+false;
+syncExchangeToggleUi(
+panel,
+activeId
+);
+return;
+}
 
 if(
 !input.checked

@@ -30,7 +30,7 @@ onCloudSyncChange
 
 import {
 ensureDrawToolsVisible
-} from "../draw-tools-visible.js?v=1";
+} from "../draw-tools-visible.js?v=2";
 
 import {
 deleteDrawingFromCloud,
@@ -400,7 +400,7 @@ return;
 }
 
 root.querySelectorAll(
-".widget-draw-tools, #coins-draw-tools-mount, #draw-toolbar"
+".widget-draw-tools, #draw-toolbar"
 ).forEach(el=>{
 found.add(
 el

@@ -17,7 +17,7 @@ body.btc-d-page.site-nav-page {
   margin: 0;
 }
 
-body.btc-d-page #header.screener-page-header {
+body.btc-d-page #header.app-page-header {
   flex-shrink: 0;
 }
 
@@ -27,8 +27,8 @@ body.btc-d-page #header.screener-page-header {
   width: 100%;
   position: relative;
   overflow: hidden;
-  min-height: calc(100vh - 56px);
-  min-height: calc(100dvh - 56px - env(safe-area-inset-top, 0px));
+  min-height: calc(100vh - var(--app-header-h, 56px));
+  min-height: calc(100dvh - var(--app-header-h, 56px) - env(safe-area-inset-top, 0px));
 }
 
 .btc-d-tv-host .tradingview-widget-container,

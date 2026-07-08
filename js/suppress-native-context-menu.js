@@ -6,11 +6,8 @@
 const SITE_NAV_MENU_SELECTOR =
 [
 "nav.menu",
-"nav.screener-nav-panel",
-"nav.coins-header-desktop",
-"#coins-nav-panel",
-"#screener-nav-panel",
-"#site-nav-panel"
+"nav.app-header-nav",
+"#app-header-nav"
 ].join(
 ", "
 );
@@ -42,7 +39,7 @@ return true;
 }
 
 return !!target.closest(
-"header #logo, .screener-page-header #logo, .coins-page-header #logo"
+"header #logo, .app-page-header #logo"
 );
 
 }

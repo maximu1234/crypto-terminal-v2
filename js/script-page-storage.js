@@ -8,7 +8,7 @@ savePatternScanResults
 
 import {
 PATTERN_SCAN_DEPTH_OPTIONS
-} from "./pattern-12-scanner.js?v=11";
+} from "./pattern-12-scanner.js?v=15";
 
 export const SCRIPT_PAGE_STORAGE_KEY =
 "script_page_pattern_scan_v1";
@@ -65,6 +65,8 @@ filterTf:
 "all",
 searchDepth:
 30,
+sideFilter:
+"both",
 layout:
 9,
 page:
@@ -149,6 +151,14 @@ raw.searchDepth
 raw.searchDepth
 )
 : DEFAULT_STATE.searchDepth,
+sideFilter:
+(
+raw.sideFilter === "long" ||
+raw.sideFilter === "short" ||
+raw.sideFilter === "both"
+)
+? raw.sideFilter
+: DEFAULT_STATE.sideFilter,
 layout:
 [
 4,
@@ -236,6 +246,8 @@ filterTf:
 state.filterTf,
 searchDepth:
 state.searchDepth,
+sideFilter:
+state.sideFilter,
 layout:
 state.layout,
 page:

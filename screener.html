@@ -12,11 +12,10 @@
 
 <link rel="icon" href="/icons/brand-logo.png" type="image/png">
 
-<link rel="stylesheet" href="/css/critical-shell.css?v=6">
-<script src="/js/site-css-ready.js?v=2"></script>
-<link rel="stylesheet" href="/css/common.css?v=34">
-<link rel="stylesheet" href="/css/screener.css?v=42">
-<link rel="stylesheet" href="/css/site-mobile-nav.css?v=7">
+<link rel="stylesheet" href="/css/critical-shell.css?v=9">
+<script src="/js/site-css-ready.js?v=3"></script>
+<link rel="stylesheet" href="/css/common.css?v=49">
+<link rel="stylesheet" href="/css/screener.css?v=48">
 
 <script src="/vendor/lightweight-charts.standalone.production.js"></script>
 
@@ -24,60 +23,12 @@
 
 <body>
 
-<header id="header" class="screener-page-header">
+<header id="header" class="app-page-header">
 
 <a href="/screener.html" id="logo" aria-label="Multichart"><img src="/icons/brand-logo.png" alt="" width="32" height="32" class="site-logo-img" decoding="async"></a>
 
-<div class="screener-mobile-bar" id="screener-mobile-bar">
 
-<div class="screener-mobile-search-wrap">
-<input
-type="search"
-class="screener-symbol-search"
-placeholder="Поиск"
-spellcheck="false"
-autocomplete="off"
-aria-label="Поиск монеты"
-enterkeyhint="search"
-/>
-</div>
-
-<div class="screener-mobile-select-wrap">
-<button type="button" class="screener-mobile-select" id="screener-sort-trigger" aria-haspopup="listbox" aria-expanded="false">
-<span id="screener-sort-label">24ч %</span>
-</button>
-<div class="screener-mobile-menu hidden" id="screener-sort-menu" role="listbox">
-<button type="button" class="screener-mobile-menu-item active" data-sort="change24">24ч %</button>
-<button type="button" class="screener-mobile-menu-item" data-sort="symbol">А–Я</button>
-</div>
-</div>
-
-<div class="screener-mobile-select-wrap">
-<button type="button" class="screener-mobile-select" id="screener-tf-trigger" aria-haspopup="listbox" aria-expanded="false">
-<span id="screener-tf-label">15m</span>
-</button>
-<div class="screener-mobile-menu hidden" id="screener-tf-menu" role="listbox">
-<button type="button" class="screener-mobile-menu-item" data-tf="1">1m</button>
-<button type="button" class="screener-mobile-menu-item" data-tf="5">5m</button>
-<button type="button" class="screener-mobile-menu-item active" data-tf="15">15m</button>
-<button type="button" class="screener-mobile-menu-item" data-tf="60">1h</button>
-<button type="button" class="screener-mobile-menu-item" data-tf="240">4h</button>
-<button type="button" class="screener-mobile-menu-item" data-tf="D">1D</button>
-<button type="button" class="screener-mobile-menu-item" data-tf="W">W</button>
-</div>
-</div>
-
-<span class="screener-release-marker screener-release-marker--mobile" data-release-marker aria-hidden="true"></span>
-
-<button type="button" class="screener-nav-toggle" id="screener-nav-toggle" aria-label="Меню" aria-expanded="false" aria-controls="screener-nav-panel">
-<span class="screener-nav-toggle-bars" aria-hidden="true"></span>
-</button>
-
-</div>
-
-<div class="screener-nav-backdrop hidden" id="screener-nav-backdrop"></div>
-
-<nav class="menu screener-nav-panel" id="screener-nav-panel">
+<nav class="menu app-header-nav" id="app-header-nav">
 <a href="/screener.html" class="active">Скринер</a>
 <a href="/terminal.html">Терминал</a>
 <a href="/watchlist.html">Вотчлист</a>
@@ -219,8 +170,8 @@ const { loadLightweightCharts } =
 await import("/js/charts-lib-boot.js?v=3");
 
 await loadLightweightCharts();
-await import("/js/screener.js?v=90");
-await import("/js/site-boot.js?v=94");
+await import("/js/screener.js?v=91");
+await import("/js/site-boot.js?v=102");
 
 }catch(err){
 

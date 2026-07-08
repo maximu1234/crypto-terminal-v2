@@ -33,34 +33,6 @@ new Event(
 
 function stylesLookApplied(){
 
-if(
-window.matchMedia(
-"(min-width: 641px)"
-).matches
-){
-
-const mobileBar =
-document.querySelector(
-".screener-mobile-bar"
-);
-
-if(
-mobileBar
-){
-const display =
-getComputedStyle(
-mobileBar
-).display;
-if(
-display !==
-"none"
-){
-return false;
-}
-}
-
-}
-
 const header =
 document.getElementById(
 "header"

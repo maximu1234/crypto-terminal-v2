@@ -600,13 +600,6 @@ document.querySelector(
 layoutCount >
 1
 );
-document.querySelector(
-".coins-tf-mobile-wrap"
-)?.classList.toggle(
-"hidden",
-layoutCount >
-1
-);
 
 syncPrimaryRsiDom();
 
@@ -876,6 +869,8 @@ count
 );
 }
 });
+
+pickerUi?.syncIcon?.();
 
 if(
 layoutCount >

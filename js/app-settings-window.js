@@ -10,10 +10,6 @@ isSystemAdminUser
 } from "./system-admin-access.js?v=3";
 
 import {
-isTradePage
-} from "./page-routes.js?v=1";
-
-import {
 mountTelegramSettingsPanel
 } from "./telegram-settings-panel.js?v=1";
 
@@ -82,7 +78,7 @@ false;
 
 function showConnectionsSettings(){
 
-return isTradePage();
+return !!window.cryptoTerminalDesktop?.isDesktop;
 
 }
 
@@ -177,13 +173,8 @@ el.textContent =
 
 function findMenuHost(){
 
-return (
-document.getElementById(
+return document.getElementById(
 "header-settings-dropdown"
-) ||
-document.querySelector(
-"#coins-nav-panel .coins-nav-settings"
-)
 );
 
 }
@@ -247,7 +238,7 @@ const {
 closeCloudSettingsDropdown
 } =
 await import(
-"./auth-ui.js?v=35"
+"./auth-ui.js?v=38"
 );
 closeCloudSettingsDropdown();
 await openAppSettingsWindow();
@@ -326,7 +317,7 @@ section.id ===
 "connections"
 ){
 btn.hidden =
-!showConnectionsSettings();
+false;
 }
 
 if(
@@ -335,7 +326,7 @@ section.id ===
 "trading"
 ){
 btn.hidden =
-!showConnectionsSettings();
+false;
 }
 
 if(
@@ -467,6 +458,18 @@ sectionId ===
 "sync"
 ){
 
+const cloudAuthHost =
+document.createElement(
+"div"
+);
+cloudAuthHost.className =
+"app-settings-sync-block app-settings-sync-block--account";
+cloudAuthHost.id =
+"app-settings-cloud-auth-host";
+panel.appendChild(
+cloudAuthHost
+);
+
 const telegramHost =
 document.createElement(
 "div"
@@ -480,6 +483,17 @@ telegramHost
 telegramCtl =
 mountTelegramSettingsPanel(
 telegramHost
+);
+
+const {
+mountCloudAuthPanelInSettings
+} =
+await import(
+"./auth-ui.js?v=38"
+);
+
+mountCloudAuthPanelInSettings(
+cloudAuthHost
 );
 
 const favoritesHost =
@@ -506,7 +520,7 @@ sectionId ===
 ){
 
 if(
-!showConnectionsSettings()
+!window.cryptoTerminalDesktop?.isDesktop
 ){
 panel.innerHTML =
 `<p class="app-settings-bybit-guest">Подключение Bybit доступно в desktop-приложении Multichart.</p>`;
@@ -574,7 +588,7 @@ sectionId ===
 ){
 
 if(
-!showConnectionsSettings()
+!window.cryptoTerminalDesktop?.isDesktop
 ){
 panel.innerHTML =
 `<p class="app-settings-bybit-guest">Торговые настройки доступны в desktop-приложении Multichart.</p>`;
@@ -761,7 +775,11 @@ target;
 if(
 resolved ===
 "connections" &&
-!showConnectionsSettings()
+!SECTIONS.some(
+s=>
+s.id ===
+"connections"
+)
 ){
 resolved =
 "sync";
@@ -770,7 +788,11 @@ resolved =
 if(
 resolved ===
 "trading" &&
-!showConnectionsSettings()
+!SECTIONS.some(
+s=>
+s.id ===
+"trading"
+)
 ){
 resolved =
 "sync";
@@ -829,7 +851,7 @@ if(
 connectionsBtn
 ){
 connectionsBtn.hidden =
-!showConnectionsSettings();
+false;
 }
 
 const tradingBtn =
@@ -841,7 +863,7 @@ if(
 tradingBtn
 ){
 tradingBtn.hidden =
-!showConnectionsSettings();
+false;
 }
 
 const systemBtn =
@@ -871,7 +893,6 @@ await setActiveSection(
 export function initAppSettingsWindow(){
 
 renameAccountSectionTitles();
-mountMenuEntry();
 
 void refreshAppSettingsAdminNav();
 

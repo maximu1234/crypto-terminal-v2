@@ -75,6 +75,13 @@ short:
 "Шорт"
 };
 
+export const PATTERN_SCAN_SIDE_FILTERS =
+[
+"both",
+"long",
+"short"
+];
+
 const PATTERN_SETTINGS =
 defaultPattern12Settings();
 
@@ -99,46 +106,89 @@ ms
 
 }
 
-export function findLatestPattern12InLookback(
-candles,
-lookbackBars =
-PATTERN_SCAN_LOOKBACK_BARS
+function scanSettingsForSideFilter(
+sideFilter
+){
+
+const mode =
+PATTERN_SCAN_SIDE_FILTERS.includes(
+String(
+sideFilter ||
+""
+)
+)
+? String(
+sideFilter
+)
+: "both";
+
+return {
+...PATTERN_SETTINGS,
+patternMode:
+mode ===
+"both"
+? "both"
+: mode
+};
+
+}
+
+export function rowMatchesPatternSideFilter(
+row,
+sideFilter =
+"both"
 ){
 
 if(
-!Array.isArray(
-candles
-) ||
-candles.length <
-3
+!row
 ){
-return null;
+return false;
 }
 
-const scene =
-computePattern12Scene(
-candles,
-PATTERN_SETTINGS
-);
-const minBar =
-Math.max(
-0,
-candles.length -
-lookbackBars
-);
+if(
+sideFilter ===
+"both"
+){
+return true;
+}
+
+return row.side ===
+sideFilter;
+
+}
+
+function patternRowKey(
+symbol,
+tf,
+side
+){
+
+return `${symbol}:${tf}:${side}`;
+
+}
+
+function pickLatestDot(
+dots,
+minBar,
+candlesLength,
+side
+){
 
 let best =
 null;
 
 for(
-const dot of scene.pt4Dots
+const dot of
+dots
 ){
 
 if(
+dot.side !==
+side ||
 dot.bar <
 minBar ||
 dot.bar >=
-candles.length
+candlesLength
 ){
 continue;
 }
@@ -153,18 +203,154 @@ best =
 bar:
 dot.bar,
 side:
-dot.side,
-time:
-candles[
-dot.bar
-]?.time ??
-null
+dot.side
 };
 }
 
 }
 
 return best;
+
+}
+
+/**
+ * Активные паттерны в окне lookbackBars от текущего бара.
+ * long/short — один последний паттерн выбранной стороны;
+ * both — до двух строк: последний long и последний short.
+ */
+export function findPattern12HitsInLookback(
+candles,
+lookbackBars =
+PATTERN_SCAN_LOOKBACK_BARS,
+sideFilter =
+"both"
+){
+
+if(
+!Array.isArray(
+candles
+) ||
+candles.length <
+3
+){
+return [];
+}
+
+const normalizedSideFilter =
+PATTERN_SCAN_SIDE_FILTERS.includes(
+String(
+sideFilter ||
+""
+)
+)
+? String(
+sideFilter
+)
+: "both";
+
+const scene =
+computePattern12Scene(
+candles,
+scanSettingsForSideFilter(
+normalizedSideFilter
+)
+);
+const minBar =
+Math.max(
+0,
+candles.length -
+lookbackBars
+);
+const hits =
+[];
+
+function pushHit(
+hit
+){
+
+if(
+!hit
+){
+return;
+}
+
+hit.time =
+candles[
+hit.bar
+]?.time ??
+null;
+hits.push(
+hit
+);
+
+}
+
+if(
+normalizedSideFilter ===
+"long" ||
+normalizedSideFilter ===
+"both"
+){
+pushHit(
+pickLatestDot(
+scene.pt4Dots,
+minBar,
+candles.length,
+"long"
+)
+);
+}
+
+if(
+normalizedSideFilter ===
+"short" ||
+normalizedSideFilter ===
+"both"
+){
+pushHit(
+pickLatestDot(
+scene.pt4Dots,
+minBar,
+candles.length,
+"short"
+)
+);
+}
+
+return hits;
+
+}
+
+export function findLatestPattern12InLookback(
+candles,
+lookbackBars,
+sideFilter
+){
+
+const hits =
+findPattern12HitsInLookback(
+candles,
+lookbackBars,
+sideFilter
+);
+
+if(
+!hits.length
+){
+return null;
+}
+
+return hits.reduce(
+(
+best,
+hit
+)=>
+!best ||
+hit.bar >
+best.bar
+? hit
+: best
+);
 
 }
 
@@ -230,6 +416,12 @@ options.lookbackBars
 options.lookbackBars
 )
 : PATTERN_SCAN_DEFAULT_LOOKBACK;
+const sideFilter =
+PATTERN_SCAN_SIDE_FILTERS.includes(
+String(options.sideFilter || "")
+)
+? String(options.sideFilter)
+: "both";
 
 onProgress?.(
 {
@@ -314,13 +506,22 @@ options.seedRows
 
 if(
 !row?.symbol ||
-!row?.tf
+!row?.tf ||
+!rowMatchesPatternSideFilter(
+row,
+sideFilter
+)
 ){
 continue;
 }
 
 results.set(
-`${row.symbol}:${row.tf}`,
+patternRowKey(
+row.symbol,
+row.tf,
+row.side ||
+"long"
+),
 row
 );
 
@@ -390,14 +591,16 @@ runId
 return;
 }
 
-const hit =
-findLatestPattern12InLookback(
+const hits =
+findPattern12HitsInLookback(
 candles,
-lookbackBars
+lookbackBars,
+sideFilter
 );
 
-if(
-hit
+for(
+const hit of
+hits
 ){
 
 const row =
@@ -413,7 +616,11 @@ hit.time
 };
 
 results.set(
-`${symbol}:${tf}`,
+patternRowKey(
+symbol,
+tf,
+hit.side
+),
 row
 );
 const snapshot =

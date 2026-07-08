@@ -2,7 +2,7 @@
 
 ## Spine
 
-`site-boot.js` — алерты, cloud, auth, mobile nav, lazy sync модулей.
+`site-boot.js` — алерты, cloud, auth, lazy sync модулей.
 
 `js/page-routes.js` — единое определение страницы (`isAlertsPage`, `isTerminalPage`, …).
 

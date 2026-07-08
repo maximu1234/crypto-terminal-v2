@@ -50,9 +50,8 @@ return false;
 
 const navSelectors =
 [
-"#screener-nav-panel",
-"#site-nav-panel",
-"#coins-nav-panel"
+"#app-header-nav",
+"nav.app-header-nav"
 ];
 
 for(
@@ -77,22 +76,6 @@ headerSettingsShellHtml()
 return true;
 }
 
-}
-
-const coinsNavSettings =
-document.querySelector(
-"#coins-nav-panel .coins-nav-settings"
-);
-
-if(
-coinsNavSettings &&
-!coinsNavSettings.querySelector(
-".header-settings-btn"
-)
-){
-coinsNavSettings.outerHTML =
-headerSettingsShellHtml();
-return true;
 }
 
 return false;

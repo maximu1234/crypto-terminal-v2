@@ -620,11 +620,3 @@ flex:0 0 3.5px;
 background:#2e2e30;
 margin:0;
 }
-
-@media (max-width:640px){
-
-body.terminal-page .chart-indicators-wrap.coins-draw-desktop{
-display:none !important;
-}
-
-}

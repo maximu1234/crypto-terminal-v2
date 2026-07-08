@@ -7,16 +7,9 @@ overflow:hidden;
 --coins-block-separator:3.5px solid #2e2e30;
 }
 
-/* ——— Десктоп (как было: график | список) ——— */
-@media (min-width:641px){
+/* Десктоп: график | список (без phone-ветки; desktop — default) */
 
-body.terminal-page .coins-mobile-bar,
-body.terminal-page #coins-nav-panel,
-body.terminal-page #coins-nav-backdrop{
-display:none !important;
-}
-
-body.terminal-page .coins-header-desktop{
+body.terminal-page .app-header-nav{
 display:flex !important;
 align-items:center;
 gap:18px;
@@ -24,16 +17,23 @@ flex:1 1 auto;
 min-width:0;
 }
 
-body.terminal-page .coins-page-header{
-height:56px;
-min-height:56px;
+body.terminal-page .app-page-header{
+height:var(--app-header-h, 56px);
+min-height:var(--app-header-h, 56px);
 padding:0 16px;
 gap:20px;
 align-items:center;
 flex-wrap:nowrap;
 }
 
-body.terminal-page .coins-header-desktop .header-settings-wrap{
+body.terminal-page .app-page-header.header-three-cells{
+height:var(--app-header-h, 56px);
+min-height:var(--app-header-h, 56px);
+padding-top:0;
+padding-bottom:0;
+}
+
+body.terminal-page .app-header-nav .header-settings-wrap{
 display:inline-flex;
 flex-shrink:0;
 margin:0;
@@ -41,13 +41,8 @@ padding:0;
 border:0;
 }
 
-body.terminal-page .coins-header-desktop a{
+body.terminal-page .app-header-nav a{
 font-size:14px;
-}
-
-body.terminal-page .coins-tf-mobile-wrap,
-body.terminal-page .coins-draw-tools-mount{
-display:none !important;
 }
 
 body.terminal-page .coins-tf-desktop{
@@ -318,88 +313,42 @@ text-decoration:none;
 -webkit-tap-highlight-color:transparent;
 }
 
-body.terminal-page .coins-header-desktop .coins-btc-d-link{
+body.terminal-page .app-header-nav .coins-btc-d-link{
 margin-left:8px;
 flex-shrink:0;
 }
 
 body.terminal-page .script-terminal-status{
-margin-left:8px;
 flex-shrink:0;
 font-size:12px;
 line-height:1.3;
 color:#6b7280;
 white-space:nowrap;
-padding-right:8px;
+padding-right:0;
 }
 
 body.terminal-page .script-terminal-status.is-active{
 color:#e5e7eb;
 }
 
-body.terminal-page .coins-header-desktop .coins-layout-picker-wrap{
-margin-left:auto;
+body.terminal-page #header-controls .coins-layout-picker-wrap{
+display:inline-flex;
+align-items:center;
+gap:6px;
 flex-shrink:0;
-position:relative;
 }
 
 body.terminal-page .coin.coin-index-link{
 cursor:pointer;
 }
 
-body.terminal-page .coins-layout-picker-btn{
-display:inline-flex;
-align-items:center;
-justify-content:center;
-width:20px;
-height:16px;
-padding:0;
-border:1px solid transparent;
-border-radius:4px;
-background:transparent;
-cursor:pointer;
-}
-
-body.terminal-page .coins-layout-picker-btn:hover,
-body.terminal-page .coins-layout-picker-btn[aria-expanded="true"]{
-border-color:#374151;
-background:#1f2937;
-}
-
-body.terminal-page .coins-layout-picker-icon{
-display:block;
-width:18px;
-height:16px;
-object-fit:contain;
-pointer-events:none;
-}
-
-body.terminal-page .coins-layout-picker-menu{
-position:absolute;
-top:calc(100% + 6px);
-right:0;
-z-index:10030;
-display:flex;
-align-items:center;
-gap:6px;
-padding:8px;
-border:1px solid #374151;
-border-radius:8px;
-background:#171717;
-box-shadow:0 12px 32px rgba(0,0,0,.45);
-}
-
-body.terminal-page .coins-layout-picker-menu.hidden{
-display:none;
-}
-
 body.terminal-page .coins-layout-picker-item{
 display:inline-flex;
 align-items:center;
 justify-content:center;
-width:20px;
-height:16px;
-padding:0;
+width:24px;
+height:20px;
+padding:2px;
 border:1px solid transparent;
 border-radius:4px;
 background:transparent;
@@ -420,8 +369,7 @@ object-fit:contain;
 pointer-events:none;
 }
 
-body.terminal-page .coins-tf-desktop.hidden,
-body.terminal-page .coins-tf-mobile-wrap.hidden{
+body.terminal-page .coins-tf-desktop.hidden{
 display:none !important;
 }
 
@@ -560,9 +508,7 @@ z-index:1;
 
 body.terminal-page.coins-drawings-ui-off #draw-toolbar,
 body.terminal-page.coins-multi-chart-on #chart-indicators-wrap,
-body.terminal-page.coins-drawings-ui-off #chart-indicators-wrap,
-body.terminal-page.coins-multi-chart-on #coins-draw-tools-mount,
-body.terminal-page.coins-drawings-ui-off #coins-draw-tools-mount{
+body.terminal-page.coins-drawings-ui-off #chart-indicators-wrap{
 display:none !important;
 }
 
@@ -710,7 +656,7 @@ position:relative;
 width:100%;
 }
 
-body.terminal-page .coins-header-desktop .trade-exchange-wrap{
+body.terminal-page .app-header-nav .trade-exchange-wrap{
 margin-left:8px;
 flex-shrink:0;
 }
@@ -949,432 +895,6 @@ flex:0 0 35px;
 
 }
 
-}
-
-/* ——— Смартфон ——— */
-.coins-mobile-bar,
-.coins-tf-mobile-wrap,
-.coins-draw-tools-mount{
-display:none;
-}
-
-@media (max-width:640px){
-
-html.terminal-page,
-body.terminal-page{
-overflow-x:hidden;
-overflow-y:auto;
--webkit-overflow-scrolling:touch;
-height:auto;
-min-height:100dvh;
-}
-
-body.terminal-page #app{
-display:flex;
-flex-direction:column;
-height:auto;
-min-height:100dvh;
-max-height:none;
-grid-template-columns:1fr;
-padding-bottom:0;
-}
-
-/* Первый экран: только шапка + график; список — ниже, за скроллом */
-body.terminal-page #left{
-display:flex;
-flex-direction:column;
-flex:0 0 auto;
-width:100%;
-height:100dvh;
-min-height:100dvh;
-max-height:100dvh;
-overflow:hidden;
-}
-
-body.terminal-page #list{
-flex:0 0 auto;
-max-height:none;
-min-height:min(55vh, 480px);
-background:var(--coins-panel-bg);
-border-left:none;
-border-top:var(--coins-block-separator);
-}
-
-body.terminal-page .coins-header-desktop{
-display:none !important;
-}
-
-body.terminal-page.coins-nav-open{
-overflow:hidden;
-}
-
-/* Шапка */
-body.terminal-page .coins-page-header{
-flex-wrap:nowrap;
-gap:8px;
-padding:0 10px;
-height:52px;
-padding-top:env(safe-area-inset-top, 0px);
-}
-
-body.terminal-page .coins-page-header #logo .site-logo-img{
-width:30px;
-height:30px;
-}
-
-body.terminal-page .coins-mobile-bar{
-display:flex !important;
-align-items:center;
-gap:6px;
-margin-left:auto;
-flex-shrink:0;
-}
-
-body.terminal-page .screener-nav-toggle{
-flex-shrink:0;
-display:inline-flex;
-align-items:center;
-justify-content:center;
-width:44px;
-height:40px;
-padding:0;
-border:none;
-background:transparent;
-cursor:pointer;
-border-radius:8px;
--webkit-tap-highlight-color:transparent;
-}
-
-body.terminal-page .screener-nav-toggle-bars{
-display:block;
-width:22px;
-height:16px;
-background:
-linear-gradient(#fff,#fff) 0 0 / 100% 3px no-repeat,
-linear-gradient(#fff,#fff) 0 50% / 100% 3px no-repeat,
-linear-gradient(#fff,#fff) 0 100% / 100% 3px no-repeat;
-border-radius:2px;
-}
-
-body.terminal-page #coins-nav-backdrop{
-display:none;
-position:fixed;
-inset:0;
-z-index:10014;
-background:rgba(0,0,0,.55);
-}
-
-body.terminal-page.coins-nav-open #coins-nav-backdrop{
-display:block;
-}
-
-body.terminal-page #coins-nav-panel{
-display:none !important;
-position:fixed;
-top:0;
-right:0;
-bottom:0;
-z-index:10025;
-width:min(280px, 86vw);
-flex-direction:column;
-align-items:stretch;
-margin:0;
-padding:max(16px, env(safe-area-inset-top)) 16px 24px;
-background:#13181e;
-border-left:1px solid #1f2937;
-box-shadow:-8px 0 32px rgba(0,0,0,.45);
-pointer-events:none;
--webkit-overflow-scrolling:touch;
-overflow-y:auto;
-}
-
-body.terminal-page.coins-nav-open #coins-nav-panel{
-display:flex !important;
-pointer-events:auto;
-}
-
-body.terminal-page #coins-nav-panel a{
-display:block;
-padding:14px 12px;
-font-size:16px;
-border-radius:8px;
-color:#e5e7eb;
-text-decoration:none;
-}
-
-body.terminal-page #coins-nav-panel a.active{
-color:#fff;
-background:#1e293b;
-}
-
-body.terminal-page #coins-nav-panel .coins-nav-settings{
-display:block;
-width:100%;
-margin-top:12px;
-padding-top:12px;
-border-top:1px solid #1f2937;
-}
-
-body.terminal-page #coins-nav-panel .coins-nav-settings .header-settings-section-title{
-margin-bottom:8px;
-}
-
-body.terminal-page #coins-nav-panel .cloud-auth-wrap--panel{
-max-width:none;
-}
-
-body.terminal-page #coins-nav-panel .cloud-auth-email,
-body.terminal-page #coins-nav-panel .cloud-auth-send{
-width:100%;
-box-sizing:border-box;
-}
-
-/* Панель графика (мобильная) */
-#topbar.coins-topbar{
-flex-shrink:0;
-height:48px;
-padding:0 10px;
-gap:0;
-align-items:center;
-overflow:visible;
-background:var(--coins-panel-bg);
-border-bottom:var(--coins-block-separator);
-}
-
-#current-symbol{
-font-size:15px;
-font-weight:700;
-min-width:0;
-flex:1 1 auto;
-margin-right:0;
-padding-right:0;
-border-right:none;
-white-space:nowrap;
-overflow:hidden;
-text-overflow:ellipsis;
-}
-
-body.terminal-page #topbar.coins-topbar .coins-symbol-head{
-flex:1 1 auto;
-max-width:none;
-margin-right:0;
-padding-right:0;
-border-right:none;
-}
-
-body.terminal-page #topbar.coins-topbar #current-symbol{
-font-size:15px;
-font-weight:700;
-}
-
-.coins-tf-desktop,
-.coins-draw-desktop{
-display:none !important;
-}
-
-.coins-tf-mobile-wrap{
-display:block;
-flex:0 0 auto;
-min-width:72px;
-max-width:88px;
-}
-
-.screener-mobile-select-wrap{
-position:relative;
-}
-
-.screener-mobile-select{
-width:100%;
-box-sizing:border-box;
-border:1px solid #374151;
-background:#1f2937;
-color:#e5e7eb;
-border-radius:8px;
-padding:8px 10px;
-font-size:14px;
-font-weight:600;
-cursor:pointer;
-text-align:left;
--webkit-tap-highlight-color:transparent;
-}
-
-.screener-mobile-menu{
-position:absolute;
-top:calc(100% + 4px);
-left:0;
-right:0;
-z-index:10020;
-min-width:100%;
-background:#171b21;
-border:1px solid #374151;
-border-radius:8px;
-box-shadow:0 8px 24px rgba(0,0,0,.5);
-overflow:hidden;
-}
-
-.screener-mobile-menu-item{
-display:block;
-width:100%;
-box-sizing:border-box;
-border:none;
-background:transparent;
-color:#e5e7eb;
-padding:10px 12px;
-font-size:13px;
-text-align:left;
-cursor:pointer;
-}
-
-.screener-mobile-menu-item.active{
-background:#2563eb;
-color:#fff;
-}
-
-.coins-draw-tools-mount{
-display:flex;
-align-items:center;
-flex-shrink:0;
-}
-
-.coins-draw-tools-mount .widget-draw-tools{
-margin-left:0;
-padding-left:0;
-border-left:none;
-}
-
-.coins-draw-tools-mount .widget-draw-tools-toggle{
-width:40px;
-height:40px;
-border:1px solid #374151;
-background:#1f2937;
-border-radius:8px;
-}
-
-.coins-draw-tools-mount .widget-draw-tools-menu{
-right:0;
-left:auto;
-}
-
-/* Mobile draw-tools menu (from dashboard.css — coins no longer loads that sheet) */
-.coins-draw-tools-mount .widget-draw-tools{
-position:relative;
-flex-shrink:0;
-display:flex !important;
-align-items:center;
-visibility:visible !important;
-}
-
-.coins-draw-tools-mount .widget-draw-tools.hidden{
-display:flex !important;
-}
-
-.coins-draw-tools-mount .widget-draw-tools-toggle.active,
-.coins-draw-tools-mount .widget-draw-tools--open .widget-draw-tools-toggle{
-background:#374151;
-color:#fff;
-}
-
-.coins-draw-tools-mount .widget-draw-tools-menu{
-position:absolute;
-top:calc(100% + 4px);
-z-index:300;
-pointer-events:auto;
-display:grid;
-grid-template-columns:repeat(4, 26px);
-gap:4px;
-padding:6px;
-background:#1e222d;
-border:1px solid #2a2e39;
-border-radius:8px;
-box-shadow:0 8px 24px rgba(0,0,0,0.5);
-}
-
-.coins-draw-tools-mount .widget-draw-tools-menu.hidden{
-display:none;
-}
-
-.coins-draw-tools-mount .draw-btn-sm{
-width:26px;
-height:26px;
-padding:0;
-}
-
-.coins-draw-tools-mount .draw-btn-sm svg,
-.coins-draw-tools-mount .draw-btn-sm img,
-.coins-draw-tools-mount .draw-btn-sm .draw-tool-icon{
-width:14px;
-height:14px;
-}
-
-#charts-stack{
-flex:1 1 auto;
-min-height:0;
-display:flex;
-flex-direction:column;
-overflow:hidden;
-}
-
-body.terminal-page .coins-chart-pane{
-display:flex;
-flex-direction:column;
-flex:1 1 auto;
-min-height:0;
-min-width:0;
-overflow:hidden;
-}
-
-body.terminal-page .charts-stack-panes{
-display:flex;
-flex-direction:column;
-flex:1 1 auto;
-min-height:0;
-min-width:0;
-overflow:hidden;
-}
-
-#chart-wrap{
-flex:1 1 auto;
-min-height:0;
-}
-
-#rsi-wrap{
-flex:0 0 clamp(72px,14dvh,118px);
-height:clamp(72px,14dvh,118px);
-min-height:72px;
-max-height:none;
-}
-
-#list{
-display:flex;
-flex-direction:column;
-background:#16181f;
-}
-
-#filter-wrap{
-flex-shrink:0;
-padding:10px 12px calc(
-12px + env(safe-area-inset-bottom, 0px)
-);
-gap:10px;
-display:flex;
-flex-direction:column;
-}
-
-#market-filter,
-#coin-search{
-font-size:16px;
-padding:10px 12px;
-}
-
-#table-header{
-flex-shrink:0;
-}
-
-#coins-body{
-flex:0 0 auto;
-}
-
-}
 
 /* Плашка загрузки графика (как #screener-status на главной) */
 .coins-chart-status{
@@ -1458,14 +978,3 @@ background:#374151;
 margin-bottom:0;
 }
 
-@media (max-width:640px){
-
-.coins-chart-status{
-bottom:calc(
-12px + env(safe-area-inset-bottom, 0px)
-);
-font-size:12px;
-padding:6px 12px;
-}
-
-}
