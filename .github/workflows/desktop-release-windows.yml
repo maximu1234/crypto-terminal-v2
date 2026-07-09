@@ -1,0 +1,148 @@
+name: Desktop release (Windows)
+
+on:
+  push:
+    tags:
+      - "desktop-win-v*"
+  workflow_dispatch:
+    inputs:
+      desktop_version:
+        description: "Desktop semver (must match release-marker.js and desktop/package.json)"
+        required: true
+        default: "1.0.52"
+
+concurrency:
+  group: desktop-release-windows-${{ github.event.inputs.desktop_version && format('desktop-win-v{0}', github.event.inputs.desktop_version) || github.ref_name }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    defaults:
+      run:
+        working-directory: desktop
+        shell: bash
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Resolve desktop release tag and version
+        id: release
+        working-directory: .
+        run: |
+          set -euo pipefail
+          if [[ "${GITHUB_REF}" == refs/tags/desktop-win-v* ]]; then
+            TAG="${GITHUB_REF_NAME}"
+            VERSION="${TAG#desktop-win-v}"
+          else
+            VERSION="${{ github.event.inputs.desktop_version }}"
+            TAG="desktop-win-v${VERSION}"
+            PKG=$(node -p "require('./desktop/package.json').version")
+            MARKER=$(node --input-type=module -e "import { DESKTOP_APP_VERSION } from './js/release-marker.js'; console.log(DESKTOP_APP_VERSION)")
+            if [ "$PKG" != "$VERSION" ] || [ "$MARKER" != "$VERSION" ]; then
+              echo "Version mismatch: input=${VERSION}, package.json=${PKG}, release-marker=${MARKER}"
+              exit 1
+            fi
+          fi
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "Release target: ${TAG} (v${VERSION})"
+
+      - name: Sync desktop package version
+        run: npm version "${{ steps.release.outputs.version }}" --no-git-tag-version --allow-same-version
+
+      - name: Install dependencies
+        run: |
+          if [ -f package-lock.json ]; then npm ci; else npm install; fi
+
+      - name: Prepare supabase-env for site bundle
+        working-directory: .
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          ALERT_WORKER_URL: ${{ secrets.ALERT_WORKER_URL }}
+          SYSTEM_ADMIN_EMAIL: ${{ secrets.SYSTEM_ADMIN_EMAIL }}
+        run: node scripts/write-supabase-env.cjs
+
+      - name: Bundle site into desktop
+        run: npm run bundle:site
+
+      - name: Build Windows installer + portable
+        run: npm run build:win
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: multichart-windows-${{ steps.release.outputs.version }}
+          path: |
+            desktop/dist/*.exe
+            desktop/dist/*.yml
+          if-no-files-found: error
+
+      - name: Publish GitHub Release
+        if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/desktop-win-v')
+        working-directory: .
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.release.outputs.tag }}
+          RELEASE_VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          set -euo pipefail
+          TAG="${RELEASE_TAG}"
+          VERSION="${RELEASE_VERSION}"
+          REPO="${GITHUB_REPOSITORY}"
+          ASSETS=(desktop/dist/*.exe desktop/dist/*.yml)
+
+          for asset in "${ASSETS[@]}"; do
+            if [ ! -e "$asset" ]; then
+              echo "Missing build asset: ${asset}"
+              exit 1
+            fi
+          done
+
+          publish() {
+            if gh release view "$TAG" --repo "$REPO" >/dev/null 2>&1; then
+              echo "Release ${TAG} exists — uploading assets"
+              gh release upload "$TAG" --repo "$REPO" "${ASSETS[@]}" --clobber
+              return 0
+            fi
+
+            echo "Creating release ${TAG}"
+            if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
+              gh release create "$TAG" \
+                --repo "$REPO" \
+                --target "${GITHUB_SHA}" \
+                --title "Desktop Windows ${VERSION}" \
+                --generate-notes \
+                "${ASSETS[@]}"
+            else
+              gh release create "$TAG" \
+                --repo "$REPO" \
+                --title "Desktop Windows ${VERSION}" \
+                --generate-notes \
+                "${ASSETS[@]}"
+            fi
+          }
+
+          for attempt in 1 2 3 4 5; do
+            if publish; then
+              echo "Published ${TAG} (attempt ${attempt})"
+              exit 0
+            fi
+            echo "Publish attempt ${attempt} failed — retry in 25s"
+            sleep 25
+          done
+
+          echo "Publish failed after 5 attempts"
+          exit 1
