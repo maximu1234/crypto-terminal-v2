@@ -65,6 +65,9 @@ FONT_CANDIDATES = [
     "/System/Library/Fonts/Helvetica.ttc",
     "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
     "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+    "C:/Windows/Fonts/arialbd.ttf",
+    "C:/Windows/Fonts/arial.ttf",
+    "C:/Windows/Fonts/segoeuib.ttf",
 ]
 
 
@@ -537,8 +540,21 @@ def demo_examples() -> list[tuple[TradeCard, Path]]:
     ]
 
 
+def apply_app_root(root: Path) -> None:
+    global ROOT, TEMPLATE_POS, TEMPLATE_NEG
+    ROOT = root.resolve()
+    TEMPLATE_POS = ROOT / "assets/bybit-pnl-template-positive.png"
+    TEMPLATE_NEG = ROOT / "assets/bybit-pnl-template-negative.png"
+
+
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Generate Bybit PnL share card PNG")
+    p.add_argument(
+        "--app-root",
+        type=Path,
+        default=None,
+        help="Корень assets/ и scripts/ (packaged desktop)",
+    )
     p.add_argument("--demo", action="store_true", help="Render two verification examples")
     p.add_argument(
         "--compose-reference",
@@ -558,6 +574,9 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
+
+    if args.app_root is not None:
+        apply_app_root(args.app_root)
 
     if args.compose_reference:
         out = args.output if args.output.is_absolute() else ROOT / args.output

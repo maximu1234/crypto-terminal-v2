@@ -10,7 +10,7 @@ getAlertsSorted,
 removeAlert,
 stripAlertFlagsNotInRegistry,
 removeAllAlerts
-} from "./alerts.js?v=100";
+} from "./alerts.js?v=101";
 
 import {
 getTelegramChatId,
@@ -32,7 +32,7 @@ ensureCloudLoginResolved
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=39";
+} from "./auth-ui.js?v=40";
 
 import {
 TELEGRAM_BOT_USERNAME,

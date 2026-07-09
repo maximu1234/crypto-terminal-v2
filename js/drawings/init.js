@@ -195,7 +195,7 @@ createDrawingsPersist
 
 import {
 createDrawStyleBar
-} from "./draw-style-bar.js?v=16";
+} from "./draw-style-bar.js?v=17";
 
 import {
 createDrawAlertsChart
@@ -6313,6 +6313,43 @@ EXCHANGE_CHANGED_EVENT,
 onExchangeChanged
 );
 
+let chartAlertsPullTimer =
+0;
+
+const scheduleChartAlertsPull = ()=>{
+
+if(
+chartAlertsPullTimer
+){
+window.clearTimeout(
+chartAlertsPullTimer
+);
+}
+
+chartAlertsPullTimer =
+window.setTimeout(
+()=>{
+
+chartAlertsPullTimer =
+0;
+
+void import(
+"../alerts-cloud-sync.js?v=111"
+).then(
+({ pullRegistryFromCloudNow })=>
+pullRegistryFromCloudNow({
+immediate: true
+})
+).catch(
+()=>{}
+);
+
+},
+200
+);
+
+};
+
 const onChartCandlesLoaded = e=>{
 
 if(
@@ -6340,6 +6377,8 @@ sym
 ){
 return;
 }
+
+scheduleChartAlertsPull();
 
 applyRemoteDrawingsToChart(
 null,
@@ -6405,6 +6444,7 @@ symNorm
 return;
 }
 
+loadDrawings();
 scheduleRedraw();
 
 };
@@ -6462,10 +6502,13 @@ scheduleRedraw();
 
 const onAlertsRegistryPulled = ()=>{
 
-if(!alive || !isActive()){
+if(
+!alive
+){
 return;
 }
 
+loadDrawings();
 scheduleRedraw();
 
 };
@@ -6867,6 +6910,7 @@ lastLoadedSymbol = next;
 
 resetDrawUndoHistory();
 
+scheduleChartAlertsPull();
 loadDrawings();
 stripOrphanAlertDrawings();
 desktopEdit.clearDrawingSelection();
@@ -6996,6 +7040,16 @@ window.removeEventListener(
 "chart-candles-loaded",
 onChartCandlesLoaded
 );
+
+if(
+chartAlertsPullTimer
+){
+window.clearTimeout(
+chartAlertsPullTimer
+);
+chartAlertsPullTimer =
+0;
+}
 
 cancelPendingRedraws();
 

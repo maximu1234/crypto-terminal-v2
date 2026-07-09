@@ -37,13 +37,13 @@ Object.freeze({
 "desktop-menu-bar-tray.js":
 5,
 "trade-diary-access.js":
-1,
+3,
 "trade-diary-format.js":
 3,
 "trade-diary-nav.js":
-9,
-"trade-diary-page.js":
 11,
+"trade-diary-page.js":
+13,
 "trade-diary-period.js":
 3,
 "trade-diary-detail.js":
@@ -71,9 +71,9 @@ Object.freeze({
 "trade-auto-stops.js":
 2,
 "trade-market-entry.js":
-4,
+5,
 "trade-book-panel.js":
-51,
+52,
 "trade-pnl-share-modal.js":
 5,
 "trade-book-columns.js":
@@ -119,7 +119,7 @@ Object.freeze({
 "pattern-scan-results.js":
 1,
 "script-page.js":
-26,
+27,
 "script-page-boot.js":
 15,
 "script-page-chart.js":
@@ -169,7 +169,7 @@ Object.freeze({
 "terminal/terminal-prefs.js":
 11,
 "terminal/terminal-table.js":
-17,
+18,
 "telegram-bot-public.js":
 1,
 "watchlist.js":
@@ -231,7 +231,7 @@ Object.freeze({
 "drawings.js":
 248,
 "drawings/init.js":
-144,
+146,
 "drawings/draw-edit-desktop.js":
 8,
 "drawings/draw-undo.js":
@@ -239,7 +239,7 @@ Object.freeze({
 "drawings/drawings-persist.js":
 7,
 "drawings/draw-style-bar.js":
-16,
+17,
 "drawings/draw-templates.js":
 4,
 "drawings/draw-alerts-chart.js":
@@ -362,7 +362,7 @@ Object.freeze({
 "auth-storage.js":
 4,
 "auth-ui.js":
-39,
+40,
 "header-settings-shell.js":
 3,
 "app-settings-window.js":
@@ -382,7 +382,7 @@ Object.freeze({
 
 /* ── JS: alerts ── */
 "alerts.js":
-100,
+101,
 "alerts-cloud-sync.js":
 111,
 "alerts-cloud/garbage-purge.js":
@@ -394,9 +394,9 @@ Object.freeze({
 "alerts-cloud/worker-client.js":
 4,
 "alerts-cloud/registry-sync.js":
-5,
+6,
 "alerts-cloud/polling-realtime.js":
-7,
+8,
 "alerts-page.js":
 64,
 "alert-monitor.js":
@@ -452,7 +452,7 @@ Object.freeze({
 "terminal-layout.css":
 96,
 "script-page.css":
-15,
+16,
 "chart-indicators.css":
 21,
 "pattern-12-scanner.css":

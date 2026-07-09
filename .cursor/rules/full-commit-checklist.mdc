@@ -22,6 +22,7 @@ alwaysApply: false
 - Торговый модуль: `trade-desktop-boot`, `isDesktop` / `isDesktopShell` gates, нет прямых импортов trade-модулей на публичных страницах без гейта.
 - **Скрипт:** `script-page-boot` → редирект вне desktop; пункт меню и фоновый скан только desktop (`script-scan-background.js`, `docs/TRADING_MODULE.md`).
 - **Дневник:** маршрут и навигация только desktop (`trade-diary-nav`, diary в desktop-меню).
+- **Desktop Mac/Win:** платформенные правки — `desktop/platform/win32.cjs` или `js/desktop/win/*`; `darwin.cjs` не трогать без Mac-бага (см. `.cursor/rules/desktop-platform.mdc`).
 
 См. также `.cursor/rules/trading-module-script.mdc`, `docs/TRADING_MODULE.md`.
 
@@ -59,6 +60,12 @@ alwaysApply: false
 2. `desktop/package.json`: `"version"` = тот же semver.
 3. Git-тег `desktop-vX.Y.Z` на коммит (для сборки нового .dmg).
 4. Локальные теги `desktop-v*`: оставить новый и **один** предыдущий; остальные удалить.
+
+## 7b. Desktop Windows (.exe) — новый тег
+
+1. Версия Windows desktop = тот же `DESKTOP_APP_VERSION` / `desktop/package.json` semver.
+2. Git-тег `desktop-win-vX.Y.Z` на коммит (для сборки нового `.exe` workflow).
+3. Локальные теги `desktop-win-v*`: оставить новый и **один** предыдущий; остальные удалить.
 
 ## 8. Коммит и пуш
 

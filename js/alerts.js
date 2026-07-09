@@ -1456,7 +1456,7 @@ sym
 );
 
 const { ensureCloudReady } =
-await import("./auth-ui.js?v=39");
+await import("./auth-ui.js?v=40");
 
 await ensureCloudReady();
 
@@ -1553,7 +1553,7 @@ list.push(row);
 saveAlerts(list);
 
 const { ensureCloudReady } =
-await import("./auth-ui.js?v=39");
+await import("./auth-ui.js?v=40");
 
 await ensureCloudReady();
 
@@ -2096,6 +2096,36 @@ cloudRow?.triggered_at
 ) ||
 Date.now()
 });
+
+const existing =
+loadAllAlerts().find(
+a=>
+String(a.symbol).toUpperCase() === sym &&
+String(a.shapeId) === sid
+);
+
+if(
+existing
+){
+disarmAlertLocally(
+sym,
+sid
+);
+}else{
+removeDrawingShape(
+sym,
+sid
+);
+clearAlertOnDrawing(
+sym,
+sid
+);
+stripAlertFlagsNotInRegistry();
+}
+
+dispatchPriceAlertsChanged(
+sym
+);
 
 return true;
 

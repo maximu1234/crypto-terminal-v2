@@ -156,6 +156,11 @@ return actions;
 
 }
 
+let entryBusy =
+false;
+let closeBusy =
+false;
+
 async function submitMarketEntry(
 side,
 btn
@@ -170,6 +175,12 @@ if(
 window.alert(
 "Торговля доступна только в десктоп-приложении."
 );
+return;
+}
+
+if(
+entryBusy
+){
 return;
 }
 
@@ -201,7 +212,14 @@ window.alert(
 return;
 }
 
+if(
+btn
+){
 btn.disabled =
+true;
+}
+
+entryBusy =
 true;
 
 try{
@@ -264,8 +282,197 @@ err?.message ||
 "Ошибка входа"
 );
 }finally{
+entryBusy =
+false;
+
+if(
+btn
+){
 btn.disabled =
 false;
+}
+
+}
+
+}
+
+function shouldIgnoreTradeHotkey(
+event
+){
+
+const target =
+event.target;
+
+if(
+!target
+){
+return false;
+}
+
+const tag =
+target.tagName?.toLowerCase();
+
+if(
+tag ===
+"input" ||
+tag ===
+"textarea" ||
+tag ===
+"select"
+){
+return true;
+}
+
+if(
+target.isContentEditable
+){
+return true;
+}
+
+return false;
+
+}
+
+async function closeActiveChartPosition(){
+
+const api =
+tradingApi();
+
+if(
+!api?.closePosition
+){
+window.alert(
+"Торговля доступна только в десктоп-приложении."
+);
+return;
+}
+
+if(
+closeBusy ||
+entryBusy
+){
+return;
+}
+
+const symbol =
+getCurrentSymbol();
+
+if(
+!symbol
+){
+window.alert(
+"Символ не выбран."
+);
+return;
+}
+
+closeBusy =
+true;
+
+try{
+const result =
+await api.closePosition(
+symbol
+);
+
+if(
+result?.ok ===
+false
+){
+window.alert(
+result.message ||
+"Не удалось закрыть позицию"
+);
+return;
+}
+
+window.dispatchEvent(
+new CustomEvent(
+"trade-book-refresh"
+)
+);
+window.dispatchEvent(
+new CustomEvent(
+"trade-open-positions-changed"
+)
+);
+}catch(
+err
+){
+window.alert(
+err?.message ||
+"Ошибка закрытия"
+);
+}finally{
+closeBusy =
+false;
+}
+
+}
+
+function onTradeMarketHotkey(
+event
+){
+
+if(
+shouldIgnoreTradeHotkey(
+event
+)
+){
+return;
+}
+
+if(
+event.isComposing
+){
+return;
+}
+
+/*
+  Option+D (Mac) и Alt+D (Windows/Linux) — закрыть позицию на активном графике.
+*/
+if(
+event.altKey &&
+!event.ctrlKey &&
+!event.metaKey &&
+event.code ===
+"KeyD"
+){
+event.preventDefault();
+void closeActiveChartPosition();
+return;
+}
+
+if(
+event.altKey ||
+event.ctrlKey ||
+event.metaKey ||
+event.shiftKey
+){
+return;
+}
+
+if(
+event.code ===
+"KeyT"
+){
+event.preventDefault();
+void submitMarketEntry(
+"Buy",
+null
+);
+return;
+}
+
+if(
+event.code ===
+"KeyY"
+){
+event.preventDefault();
+void submitMarketEntry(
+"Sell",
+null
+);
 }
 
 }
@@ -316,11 +523,11 @@ entry.className =
 
 entry.innerHTML =
 `
-<button type="button" class="trade-market-entry-btn trade-market-entry-btn--buy" data-side="Buy" title="Купить по рынку">
+<button type="button" class="trade-market-entry-btn trade-market-entry-btn--buy" data-side="Buy" title="Купить по рынку (T)">
 <span class="trade-market-entry-arrow" aria-hidden="true">↑</span>
 <span class="trade-market-entry-price" data-role="buy-price">—</span>
 </button>
-<button type="button" class="trade-market-entry-btn trade-market-entry-btn--sell" data-side="Sell" title="Продать по рынку">
+<button type="button" class="trade-market-entry-btn trade-market-entry-btn--sell" data-side="Sell" title="Продать по рынку (Y)">
 <span class="trade-market-entry-arrow" aria-hidden="true">↓</span>
 <span class="trade-market-entry-price" data-role="sell-price">—</span>
 </button>
@@ -491,10 +698,19 @@ true
 );
 }
 
+document.addEventListener(
+"keydown",
+onTradeMarketHotkey
+);
+
 return {
 destroy:()=>{
 window.clearInterval(
 timer
+);
+document.removeEventListener(
+"keydown",
+onTradeMarketHotkey
 );
 entry.remove();
 }

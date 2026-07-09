@@ -75,8 +75,17 @@ destroyMenuBarTray
 require(
 "./menu-bar-tray.cjs"
 );
+const platform =
+require(
+"./platform/index.cjs"
+);
 
 registerAppScheme();
+
+log.info(
+"desktop platform:",
+platform.platform
+);
 
 const REMOTE_API_ORIGIN =
 process.env.DESKTOP_API_ORIGIN ||
@@ -209,9 +218,6 @@ return value.startsWith(
 const PARTITION =
 "persist:multichart-desktop";
 
-const AUTH_PROTOCOL =
-"multichart";
-
 /** @type {string | null} */
 let pendingAuthCallbackUrl =
 null;
@@ -226,6 +232,18 @@ null;
 
 let mainWindowShown =
 false;
+
+let bundleLoadFallback =
+false;
+let isQuitting =
+false;
+
+platform.applyCommonCommandLineSwitches(
+app
+);
+platform.impl.applyPlatformCommandLineSwitches(
+app
+);
 
 function stopPowerBlockerForQuit(){
 
@@ -250,40 +268,6 @@ powerBlockerId =
 null;
 
 }
-
-if(
-process.platform ===
-"darwin"
-){
-app.commandLine.appendSwitch(
-"enable-features",
-"Metal"
-);
-}
-
-app.commandLine.appendSwitch(
-"disable-renderer-backgrounding"
-);
-app.commandLine.appendSwitch(
-"disable-background-timer-throttling"
-);
-app.commandLine.appendSwitch(
-"disable-backgrounding-occluded-windows"
-);
-app.commandLine.appendSwitch(
-"disk-cache-size",
-"536870912"
-);
-app.commandLine.appendSwitch(
-"js-flags",
-"--max-old-space-size=4096"
-);
-app.commandLine.appendSwitch(
-"enable-gpu-rasterization"
-);
-app.commandLine.appendSwitch(
-"ignore-gpu-blocklist"
-);
 
 function startPowerSaveBlocker(){
 
@@ -315,118 +299,82 @@ null;
 
 }
 
-function isAuthCallbackUrl(
-url
-){
+function ensureAppVisible(){
 
-if(
-typeof url !==
-"string"
-){
-return false;
-}
-
-if(
-url.includes(
-"access_token="
-) ||
-url.includes(
-"code="
-)
-){
-return true;
-}
-
-try{
-const parsed =
-new URL(
-url
+platform.impl.ensureAppVisible(
+app
 );
 
-if(
-parsed.protocol !==
-`${AUTH_PROTOCOL}:`
-){
-return false;
 }
 
-return (
-parsed.hostname ===
-"auth" ||
-parsed.pathname.startsWith(
-"/auth/"
-)
-);
-}catch{
-return false;
-}
-
-}
-
-function deliverAuthCallbackUrl(
-url
-){
-
-if(
-!isAuthCallbackUrl(
-url
-)
-){
-return;
-}
-
-log.info(
-"Auth callback URL received:",
-url
-);
-
-const send =
-()=>{
+function revealMainWindow(){
 
 if(
 !mainWindow ||
 mainWindow.isDestroyed()
 ){
-pendingAuthCallbackUrl =
-url;
 return;
 }
 
-pendingAuthCallbackUrl =
-null;
+if(
+!mainWindow.isVisible()
+){
+mainWindow.show();
+}
 
-mainWindow.webContents.send(
-"desktop:auth-callback",
+ensureAppVisible();
+
+if(
+!mainWindowShown
+){
+mainWindowShown =
+true;
+mainWindow.maximize();
+}
+
+mainWindow.focus();
+
+}
+
+const deliverAuthCallbackUrl =
+platform.createDeliverAuthCallback({
+log,
+authProtocol:
+platform.AUTH_PROTOCOL,
+getMainWindow:()=>mainWindow,
+getPendingAuthUrl:()=>pendingAuthCallbackUrl,
+setPendingAuthUrl:(
 url
-);
-revealMainWindow();
+)=>{
+pendingAuthCallbackUrl =
+url;
+},
+revealMainWindow
+});
 
+const platformCtx = {
+app,
+path,
+log,
+BrowserWindow,
+createWindow:()=>{
+createWindow();
+},
+revealMainWindow,
+deliverAuthCallbackUrl,
+isAuthCallbackUrl:(
+url
+)=>
+platform.isAuthCallbackUrl(
+url,
+platform.AUTH_PROTOCOL
+),
+authProtocol:
+platform.AUTH_PROTOCOL,
+getMainWindow:()=>mainWindow,
+getIsQuitting:()=>isQuitting,
+dismissTrayPopup
 };
-
-if(
-!mainWindow ||
-mainWindow.isDestroyed()
-){
-pendingAuthCallbackUrl =
-url;
-return;
-}
-
-if(
-mainWindow.webContents.isLoading()
-){
-pendingAuthCallbackUrl =
-url;
-mainWindow.webContents.once(
-"did-finish-load",
-send
-);
-return;
-}
-
-send();
-
-}
 
 function tuneDesktopSession(
 ses
@@ -436,6 +384,7 @@ const ua =
 chromeLikeUserAgent(
 ses.getUserAgent()
 );
+
 
 ses.setUserAgent(
 ua
@@ -520,57 +469,6 @@ err
 return null;
 }
 );
-
-}
-
-function revealMainWindow(){
-
-if(
-!mainWindow ||
-mainWindow.isDestroyed()
-){
-return;
-}
-
-if(
-!mainWindow.isVisible()
-){
-mainWindow.show();
-}
-
-ensureMacDockVisible();
-
-if(
-!mainWindowShown
-){
-mainWindowShown =
-true;
-mainWindow.maximize();
-}
-
-mainWindow.focus();
-}
-
-let bundleLoadFallback =
-false;
-let isQuitting =
-false;
-
-function ensureMacDockVisible(){
-
-if(
-process.platform !==
-"darwin" ||
-!app.dock?.show
-){
-return;
-}
-
-try{
-app.dock.show();
-}catch{
-/* ignore */
-}
 
 }
 
@@ -831,22 +729,9 @@ startTradingStream();
 }
 );
 
-mainWindow.on(
-"close",
-event=>{
-
-if(
-process.platform ===
-"darwin" &&
-!isQuitting
-){
-event.preventDefault();
-dismissTrayPopup();
-mainWindow.hide();
-ensureMacDockVisible();
-}
-
-}
+platform.impl.attachMainWindowCloseHandler(
+mainWindow,
+platformCtx
 );
 
 mainWindow.on(
@@ -895,6 +780,7 @@ base.origin;
 }catch{
 return false;
 }
+
 }
 
 function buildMenu(){
@@ -1004,7 +890,9 @@ getStartUrl(),
 bundledUi:
 USE_BUNDLE,
 apiOrigin:
-REMOTE_API_ORIGIN
+REMOTE_API_ORIGIN,
+platform:
+platform.platform
 })
 );
 
@@ -1185,115 +1073,35 @@ err.message
 
 }
 
-function registerAuthProtocol(){
-
-if(
-process.defaultApp
-){
-
-if(
-process.argv.length >=
-2
-){
-app.setAsDefaultProtocolClient(
-AUTH_PROTOCOL,
-process.execPath,
-[
-path.resolve(
-process.argv[
-1
-]
-)
-]
-);
-}
-
-return;
-}
-
-if(
-!app.isDefaultProtocolClient(
-AUTH_PROTOCOL
-)
-){
-app.setAsDefaultProtocolClient(
-AUTH_PROTOCOL
-);
-}
-
-}
-
-const gotSingleInstanceLock =
-app.requestSingleInstanceLock();
-
-if(
-!gotSingleInstanceLock
-){
-
-app.quit();
-
-}else{
-
-app.on(
-"second-instance",
-(
-_event,
-argv
-)=>{
-
-const url =
-argv.find(
-arg=>
-isAuthCallbackUrl(
-arg
-)
-);
-
-if(
+const shouldContinue =
+platform.registerSingleInstance({
+app,
+log,
+isAuthCallbackUrl:(
 url
-){
-deliverAuthCallbackUrl(
-url
-);
-return;
-}
+)=>
+platform.isAuthCallbackUrl(
+url,
+platform.AUTH_PROTOCOL
+),
+deliverAuthCallbackUrl,
+revealMainWindow,
+authProtocol:
+platform.AUTH_PROTOCOL
+});
 
 if(
-mainWindow &&
-!mainWindow.isDestroyed()
-){
-revealMainWindow();
-}
-
-}
-);
-
-if(
-process.platform ===
-"darwin"
+shouldContinue
 ){
 
-app.on(
-"open-url",
-(
-event,
-url
-)=>{
-event.preventDefault();
-deliverAuthCallbackUrl(
-url
+platform.impl.registerPlatformHandlers(
+platformCtx
 );
-}
-);
-
-}
 
 const startupAuthUrl =
-process.argv.find(
-arg=>
-isAuthCallbackUrl(
-arg
-)
+platform.findAuthCallbackUrl(
+process.argv,
+platform.AUTH_PROTOCOL
 );
 
 if(
@@ -1306,9 +1114,11 @@ startupAuthUrl;
 app.whenReady().then(
 async()=>{
 
-ensureMacDockVisible();
+ensureAppVisible();
 
-registerAuthProtocol();
+platform.impl.registerAuthProtocol(
+platformCtx
+);
 
 if(
 USE_BUNDLE
@@ -1379,26 +1189,8 @@ configureMenuBarTray(
 revealMainWindow
 );
 
-app.on(
-"activate",
-()=>{
-
-ensureMacDockVisible();
-
-if(
-mainWindow &&
-!mainWindow.isDestroyed()
-){
-revealMainWindow();
-return;
-}
-if(
-BrowserWindow.getAllWindows().length ===
-0
-){
-createWindow();
-}
-}
+platform.impl.registerActivateHandler(
+platformCtx
 );
 
 }
@@ -1425,24 +1217,7 @@ localSiteOrigin =
 null;
 }
 
-if(
-powerBlockerId ==
-null
-){
-return;
-}
-
-if(
-powerSaveBlocker.isStarted(
-powerBlockerId
-)
-){
-powerSaveBlocker.stop(
-powerBlockerId
-);
-powerBlockerId =
-null;
-}
+stopPowerBlockerForQuit();
 
 }
 );
@@ -1450,11 +1225,12 @@ null;
 app.on(
 "window-all-closed",
 ()=>{
+
 if(
-process.platform !==
-"darwin"
+platform.impl.shouldQuitWhenAllWindowsClosed()
 ){
 app.quit();
 }
+
 }
 );

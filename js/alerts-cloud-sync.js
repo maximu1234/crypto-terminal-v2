@@ -38,7 +38,7 @@ reconcileLocalRegistryWithCloud,
 pullRegistryFromCloud,
 pullRegistryFromCloudNow,
 scheduleRegistryCloudSync
-} from "./alerts-cloud/registry-sync.js?v=5";
+} from "./alerts-cloud/registry-sync.js?v=6";
 
 export {
 purgeAlertGarbageFromCloud
@@ -52,4 +52,4 @@ setupAlertsRealtimeForUser,
 hydrateAlertsAfterAuth,
 syncAlertsWithCloud,
 initAlertsCloudSync
-} from "./alerts-cloud/polling-realtime.js?v=7";
+} from "./alerts-cloud/polling-realtime.js?v=8";

@@ -486,6 +486,37 @@ renderListImpl();
 
 }
 
+function updateCoinsSymbolHeaderCount(
+count
+){
+
+const header =
+document.querySelector(
+"#table-header .col-symbol"
+);
+
+if(
+!header
+){
+return;
+}
+
+const n =
+Number(
+count
+);
+
+header.textContent =
+Number.isFinite(
+n
+) &&
+n >=
+0
+? `Symbol (${n})`
+: "Symbol";
+
+}
+
 function renderListImpl(){
 
 const list =
@@ -507,6 +538,10 @@ const data =
 getFilteredMarketData();
 
 data.sort(sortData);
+
+updateCoinsSymbolHeaderCount(
+data.length
+);
 
 data.forEach(item=>{
 

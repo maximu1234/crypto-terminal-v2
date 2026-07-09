@@ -1,0 +1,39 @@
+---
+description: Desktop Mac vs Windows — изоляция платформенных правок
+alwaysApply: true
+---
+
+# Desktop platform adapters (Mac / Windows)
+
+Один репозиторий, **отдельные файлы** под платформу. Win-фиксы **не трогают** Mac.
+
+## Main process (Electron)
+
+| Файл | Только |
+|------|--------|
+| `desktop/platform/darwin.cjs` | macOS: dock, `open-url`, hide-on-close, Metal |
+| `desktop/trading/pnl-share-card-win.cjs` | Windows: Python (`py`/`python`), пути шаблонов PnL |
+| `desktop/platform/shared.cjs` | Общее: auth URL parse, single-instance, CLI switches |
+| `desktop/main.js` | Оркестратор — **без** новых `if (win32)` / `if (darwin)` |
+
+**Правило:** баг только на Windows → правка **только** `win32.cjs` (или `js/desktop/win/*`). `darwin.cjs` не менять.
+
+## Renderer (site UI)
+
+| Файл | Назначение |
+|------|------------|
+| `js/desktop/platform.js` | `isDesktopWin()`, `isDesktopMac()`, `loadDesktopWinPatch()` |
+| `js/desktop/win/*` | Win-only патчи; dynamic import за `isDesktopWin()` |
+
+Общий `js/*.js` не раздувать `if (win32)` — вынести в `js/desktop/win/`.
+
+## Релизы
+
+- Mac: тег `desktop-vX.Y.Z` → workflow `desktop-release.yml`
+- Windows: тег `desktop-win-vX.Y.Z` → workflow `desktop-release-windows.yml`
+
+Win-фикс можно выкатить отдельным `desktop-win-v*` без пересборки Mac.
+
+## Preload
+
+`cryptoTerminalDesktop.platform` — `darwin` | `win32` (уже в `preload.js`).

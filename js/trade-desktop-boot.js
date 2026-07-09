@@ -23,11 +23,11 @@ initTradeLeverageSettings
 
 import {
 initTradeMarketEntry
-} from "./trade-market-entry.js?v=4";
+} from "./trade-market-entry.js?v=5";
 
 import {
 initTradeBookPanel
-} from "./trade-book-panel.js?v=51";
+} from "./trade-book-panel.js?v=52";
 
 const TRADE_CSS =
 [
@@ -211,7 +211,7 @@ const {
 initTradeDiaryNav
 } =
 await import(
-"./trade-diary-nav.js?v=9"
+"./trade-diary-nav.js?v=11"
 );
 
 void initTradeDiaryNav();

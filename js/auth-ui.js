@@ -140,7 +140,6 @@ path.includes("trade-calculator.html") ||
 path.endsWith("/trade-calculator") ||
 path.includes("statistics.html") ||
 path.endsWith("/statistics") ||
-path.includes("/diary") ||
 path === "/system" ||
 path.endsWith("/system") ||
 path.includes("/system/")
