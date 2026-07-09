@@ -14,8 +14,12 @@
     "start:dev": "DESKTOP_REMOTE_UI=1 CRYPTO_TERMINAL_URL=http://127.0.0.1:8080 electron .",
     "prebuild:mac": "npm run bundle:site",
     "prebuild:mac:publish": "npm run bundle:site",
+    "prebuild:win": "npm run bundle:site",
+    "prebuild:win:publish": "npm run bundle:site",
     "build:mac": "electron-builder --mac --publish never",
-    "build:mac:publish": "electron-builder --mac --publish always"
+    "build:mac:publish": "electron-builder --mac --publish always",
+    "build:win": "electron-builder --win --publish never",
+    "build:win:publish": "electron-builder --win --publish always"
   },
   "dependencies": {
     "electron-log": "^5.2.4",
@@ -75,6 +79,22 @@
       "identity": null,
       "hardenedRuntime": false,
       "gatekeeperAssess": false
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
     },
     "dmg": {
       "title": "Multichart ${version}"
