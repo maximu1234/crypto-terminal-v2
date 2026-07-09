@@ -1,17 +1,6 @@
 import {
-ensureCloudReady
-} from "./auth-ui.js?v=39";
-
-import {
-ensureCloudLoginResolved,
-getEffectiveCloudUserEmail
-} from "./cloud-sync.js?v=42";
-
-import {
-isDesktopTradeDiaryContext,
-isTradeDiaryOwner,
-isLoggedInEffective
-} from "./trade-diary-access.js?v=1";
+isDesktopTradeDiaryContext
+} from "./trade-diary-access.js?v=3";
 
 import {
 diaryDayKeyLocal,
@@ -38,26 +27,11 @@ mountTradeDiaryPeriodPicker
 
 import {
 initTradeDiaryNav
-} from "./trade-diary-nav.js?v=9";
-
-const guestEl =
-document.getElementById(
-"trade-diary-guest"
-);
+} from "./trade-diary-nav.js?v=11";
 
 const deniedDesktopEl =
 document.getElementById(
 "trade-diary-denied-desktop"
-);
-
-const deniedEl =
-document.getElementById(
-"trade-diary-denied"
-);
-
-const deniedEmailEl =
-document.getElementById(
-"trade-diary-denied-email"
 );
 
 const panelEl =
@@ -116,9 +90,7 @@ el
 ){
 
 [
-guestEl,
 deniedDesktopEl,
-deniedEl,
 panelEl
 ].forEach(
 node=>{
@@ -989,45 +961,6 @@ if(
 ){
 showOnly(
 deniedDesktopEl
-);
-return;
-}
-
-try{
-await ensureCloudReady();
-await ensureCloudLoginResolved();
-}catch(
-err
-){
-console.warn(
-"trade diary cloud:",
-err
-);
-}
-
-if(
-!isLoggedInEffective()
-){
-showOnly(
-guestEl
-);
-return;
-}
-
-if(
-!await isTradeDiaryOwner()
-){
-
-if(
-deniedEmailEl
-){
-deniedEmailEl.textContent =
-getEffectiveCloudUserEmail() ||
-"—";
-}
-
-showOnly(
-deniedEl
 );
 return;
 }

@@ -34,7 +34,7 @@ canSetBlueFlag
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=39";
+} from "./auth-ui.js?v=40";
 
 import {
 persistFavoritesToCloud,
@@ -157,7 +157,7 @@ highlightActiveSymbol,
 getVisibleSymbolList,
 setCoinsTableHooks,
 syncCoinListFreezeFromFlagMenus
-} from "./terminal/terminal-table.js?v=17";
+} from "./terminal/terminal-table.js?v=18";
 
 import {
 createCoinsChartSwitchVeil

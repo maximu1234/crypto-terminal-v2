@@ -1,7 +1,6 @@
 import {
-isDesktopTradeDiaryContext,
-isTradeDiaryOwner
-} from "./trade-diary-access.js?v=1";
+isDesktopTradeDiaryContext
+} from "./trade-diary-access.js?v=3";
 
 function isDiaryPage(){
 
@@ -21,12 +20,6 @@ export async function initTradeDiaryNav(){
 
 if(
 !isDesktopTradeDiaryContext()
-){
-return;
-}
-
-if(
-!await isTradeDiaryOwner()
 ){
 return;
 }

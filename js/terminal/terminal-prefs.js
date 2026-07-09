@@ -14,7 +14,7 @@ isTerminalPage
 import {
 getCurrentSymbols,
 getFirstVisibleSymbol
-} from "./terminal-table.js?v=17";
+} from "./terminal-table.js?v=18";
 
 export function defaultSortEntry(){
 

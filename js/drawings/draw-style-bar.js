@@ -2261,6 +2261,63 @@ redraw();
 
 }
 
+function submitPositionVolumeApply(){
+
+if(
+!isTradeDesktopApp()
+){
+return;
+}
+
+applyPositionRiskUsd();
+
+const shape =
+resolvePositionRiskTarget();
+const volumeUsdt =
+getPositionEntryVolumeUsd(
+shape
+);
+
+if(
+!Number.isFinite(volumeUsdt) ||
+volumeUsdt <= 0
+){
+window.alert(
+"Не удалось применить объём: укажите стоп-лосс ($) и проверьте границы позиции."
+);
+return;
+}
+
+const symbol =
+String(
+getSymbol?.() ||
+""
+).replace(
+/\.P$/i,
+""
+).trim().toUpperCase();
+
+applyPositionVolumeFromDrawing(
+{
+symbol,
+volumeUsdt
+}
+);
+
+window.dispatchEvent(
+new CustomEvent(
+"trade-apply-position-volume",
+{
+detail:{
+volumeUsdt,
+symbol
+}
+}
+)
+);
+
+}
+
 function isPositionRiskInputFocused(){
 
 return (
@@ -3702,6 +3759,26 @@ selId
 );
 
 positionRiskInput?.addEventListener(
+"keydown",
+e=>{
+
+if(
+e.key !==
+"Enter"
+){
+return;
+}
+
+e.preventDefault();
+e.stopPropagation();
+
+submitPositionVolumeApply();
+positionRiskInput?.blur();
+
+}
+);
+
+positionRiskInput?.addEventListener(
 "focusout",
 ()=>{
 
@@ -3773,58 +3850,7 @@ e=>{
 e.preventDefault();
 e.stopPropagation();
 
-if(
-!isTradeDesktopApp()
-){
-return;
-}
-
-applyPositionRiskUsd();
-
-const shape =
-resolvePositionRiskTarget();
-const volumeUsdt =
-getPositionEntryVolumeUsd(
-shape
-);
-
-if(
-!Number.isFinite(volumeUsdt) ||
-volumeUsdt <= 0
-){
-window.alert(
-"Не удалось применить объём: укажите стоп-лосс ($) и проверьте границы позиции."
-);
-return;
-}
-
-const symbol =
-String(
-getSymbol?.() ||
-""
-).replace(
-/\.P$/i,
-""
-).trim().toUpperCase();
-
-applyPositionVolumeFromDrawing(
-{
-symbol,
-volumeUsdt
-}
-);
-
-window.dispatchEvent(
-new CustomEvent(
-"trade-apply-position-volume",
-{
-detail:{
-volumeUsdt,
-symbol
-}
-}
-)
-);
+submitPositionVolumeApply();
 
 }
 );

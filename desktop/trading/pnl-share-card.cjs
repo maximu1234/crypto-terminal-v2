@@ -55,6 +55,30 @@ outPath,
 payload
 ){
 
+if(
+process.platform ===
+"win32"
+){
+return require(
+"./pnl-share-card-win.cjs"
+).runGenerateScript(
+outPath,
+payload
+);
+}
+
+return runGenerateScriptMac(
+outPath,
+payload
+);
+
+}
+
+function runGenerateScriptMac(
+outPath,
+payload
+){
+
 return new Promise(
 (
 resolve,

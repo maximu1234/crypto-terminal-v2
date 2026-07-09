@@ -69,7 +69,7 @@ FAVORITES_BY_EXCHANGE_KEY
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=39";
+} from "./auth-ui.js?v=40";
 
 import {
 ensureSettled,

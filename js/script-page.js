@@ -12,7 +12,6 @@ scheduleScriptScanRun,
 triggerScriptScanNow,
 stopScriptScanBackground,
 stopActivePatternScan,
-startFullPatternScan,
 isScriptScanBackgroundRunning,
 SCRIPT_SCAN_BG_EVENT
 } from "./script-scan-background.js?v=8";
@@ -471,13 +470,6 @@ const running =
 isScriptScanBackgroundRunning();
 
 if(
-els.refreshAll
-){
-els.refreshAll.disabled =
-running;
-}
-
-if(
 els.autoStart
 ){
 els.autoStart.disabled =
@@ -592,38 +584,6 @@ autoCountdownTimerId =
 setInterval(
 updateAutoStatus,
 1000
-);
-
-}
-
-async function runFullScan(){
-
-syncSearchParamsFromUi();
-
-setScanStatus(
-"Запуск полного сканирования…",
-true
-);
-
-if(
-state.auto.active
-){
-stopAuto();
-}
-
-stopActivePatternScan();
-
-scanMode =
-"full";
-updateActionButtons();
-
-startFullPatternScan(
-{
-lookbackBars:
-state.searchDepth,
-sideFilter:
-effectiveSideFilter()
-}
 );
 
 }
@@ -1137,10 +1097,6 @@ els.tfFilter =
 document.getElementById(
 "script-tf-filter"
 );
-els.refreshAll =
-document.getElementById(
-"script-refresh-all"
-);
 els.searchDepth =
 document.getElementById(
 "script-search-depth"
@@ -1201,7 +1157,7 @@ document.getElementById(
 }
 
 const SCRIPT_TOOLBAR_NO_FOCUS_SELECTOR =
-".script-tf-btn, .script-auto-btn, .script-refresh-all-btn";
+".script-tf-btn, .script-auto-btn";
 
 function bindScriptToolbarNoFocus(
 toolbarEl
@@ -1333,13 +1289,6 @@ setFilterTf(
 btn.dataset.tf
 );
 
-}
-);
-
-els.refreshAll?.addEventListener(
-"click",
-()=>{
-void runFullScan();
 }
 );
 

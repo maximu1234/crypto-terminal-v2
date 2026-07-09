@@ -32,7 +32,7 @@ getAlertsSorted,
 getAlertsHistorySorted,
 removeAlert,
 removeAlertHistoryEntry
-} from "./alerts.js?v=100";
+} from "./alerts.js?v=101";
 
 const SHARE_ICON_V =
 2;
@@ -2550,7 +2550,11 @@ const [key, rowEl] of positionRowNodes
 ){
 const row =
 lastPositionRows.find(
-item=>positionRowKey(item) === key
+item=>
+normalizeBookSymbol(
+item.symbol
+) ===
+key
 );
 
 if(
@@ -2649,6 +2653,16 @@ queueMicrotask(
 positionsTotalEyeBtn.blur();
 }
 );
+}
+);
+
+window.addEventListener(
+"trade-total-pnl-visibility-changed",
+()=>{
+totalPnlHidden =
+readTotalPnlHidden();
+applyTotalPnlVisibility();
+refreshPositionRowsVisibility();
 }
 );
 
