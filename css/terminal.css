@@ -557,6 +557,25 @@ body.terminal-page #draw-toolbar.draw-toolbar-inline .draw-btn .draw-tool-icon--
   font-size:12px;
 }
 
+.draw-template-save-submit{
+  display:block;
+  width:100%;
+  margin-top:14px;
+  padding:8px 12px;
+  border:1px solid #2563eb;
+  border-radius:6px;
+  background:#2563eb;
+  color:#fff;
+  font-size:13px;
+  font-weight:600;
+  cursor:pointer;
+}
+
+.draw-template-save-submit:hover{
+  background:#1d4ed8;
+  border-color:#1d4ed8;
+}
+
 .float-color-btn{
   position:relative;
   width:36px;
@@ -2148,6 +2167,7 @@ body.trade-page .coin.has-position .coin-symbol{
   cursor:pointer;
 }
 
+.rect-border-color-btn,
 .rect-median-color-btn,
 .rect-fill-color-btn{
   width:28px;

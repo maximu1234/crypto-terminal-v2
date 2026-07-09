@@ -3,8 +3,9 @@ import {
 STROKE,
 RECT_DEFAULT_FILL_COLOR,
 RECT_DEFAULT_FILL_OPACITY,
+createRectangleToolDefaults,
 FIB_TOOL_DEFAULTS_VERSION
-} from "./constants.js?v=9";
+} from "./constants.js?v=10";
 
 import {
 cloneDefaultFibRows,
@@ -159,7 +160,7 @@ return false;
 
 const store =
 loadStore();
-const list =
+let list =
 Array.isArray(
 store[type]
 )
@@ -192,6 +193,38 @@ list[idx] = entry;
 }else{
 list.push(entry);
 }
+
+const byName =
+new Map();
+
+for(
+const item of
+list
+){
+
+const key =
+String(
+item?.name ||
+""
+).trim().toLowerCase();
+
+if(
+!key
+){
+continue;
+}
+
+byName.set(
+key,
+item
+);
+
+}
+
+list =
+[
+...byName.values()
+];
 
 list.sort(
 (a,b)=>
@@ -527,20 +560,15 @@ type ===
 "rectangle"
 ){
 
+const rectDefaults =
+createRectangleToolDefaults();
+
+out.color =
+rectDefaults.color;
+
 normalizeRectangleShape(
 out,
-{
-showFill: true,
-fillColor:
-RECT_DEFAULT_FILL_COLOR,
-fillOpacity:
-RECT_DEFAULT_FILL_OPACITY,
-medianColor: STROKE,
-medianLineWidth: 1,
-medianLineStyle: "dashed",
-lineStyle: "solid",
-showMedian: false
-}
+rectDefaults
 );
 
 }

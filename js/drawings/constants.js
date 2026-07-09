@@ -95,8 +95,62 @@ export const POSITION_DEFAULT_WIDTH_BARS = 14;
 export const POSITION_RR_LABEL_SAMPLE =
 "Risk/reward ratio: 9.99";
 
+export const RECT_DEFAULT_COLOR =
+"#a855f7";
+
 export const RECT_DEFAULT_FILL_COLOR =
-"#f97316";
+RECT_DEFAULT_COLOR;
 
 export const RECT_DEFAULT_FILL_OPACITY =
-0.25;
+0.15;
+
+export const RECT_TOOL_DEFAULTS_VERSION =
+1;
+
+export function createRectangleToolDefaults(
+overrides =
+{}
+){
+
+return {
+rectDefaultsVersion:
+RECT_TOOL_DEFAULTS_VERSION,
+color:
+RECT_DEFAULT_COLOR,
+lineWidth:
+1,
+lineStyle:
+"solid",
+showFill:
+true,
+fillColor:
+RECT_DEFAULT_FILL_COLOR,
+fillOpacity:
+RECT_DEFAULT_FILL_OPACITY,
+showMedian:
+false,
+medianColor:
+RECT_DEFAULT_COLOR,
+medianLineWidth:
+1,
+medianLineStyle:
+"dashed",
+...overrides
+};
+
+}
+
+export function migrateRectangleToolDefaults(
+saved
+){
+
+if(
+saved?.rectDefaultsVersion ===
+RECT_TOOL_DEFAULTS_VERSION
+){
+return saved;
+}
+
+return createRectangleToolDefaults();
+
+}

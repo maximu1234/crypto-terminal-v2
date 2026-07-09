@@ -34,7 +34,7 @@ isScreenerWidgetCurrent as isWidgetCurrentGuard
 import {
 mountScreenerWidgetZoom,
 refreshZoomFavoriteUi
-} from "./screener-widget-zoom.js?v=10";
+} from "./screener-widget-zoom.js?v=11";
 
 import {
 getWidgetFlagHtml,

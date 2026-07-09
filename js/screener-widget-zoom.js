@@ -9,6 +9,8 @@ applyScreenerZoom,
 updateRsiBandLayout,
 updateRsiLevelLinesLayout,
 linkPairedChartTimeScales,
+linkChartsCrosshair,
+mainChartCrosshairOptions,
 SCREENER_MAX_BARS
 } from "./chart-import.js?v=43";
 
@@ -275,6 +277,12 @@ zoomState.unsubKline?.();
 /* ignore */
 }
 
+try{
+zoomState.disposeCrosshair?.();
+}catch{
+/* ignore */
+}
+
 zoomState.resizeObserver?.disconnect?.();
 
 try{
@@ -514,6 +522,64 @@ state.patternOverlayRedraw?.();
 
 }
 
+function setupZoomCrosshair(
+state
+){
+
+if(
+!state ||
+state.disposed ||
+!state.chart ||
+!state.series ||
+!state.chartEl ||
+!state.rsiChart ||
+!state.rsiSeries ||
+!state.linkedCrosshairVertEl
+){
+return;
+}
+
+state.chart.applyOptions(
+{
+crosshair:
+mainChartCrosshairOptions()
+}
+);
+
+const link =
+linkChartsCrosshair(
+{
+mainChart:
+state.chart,
+linkedChart:
+state.rsiChart,
+mainSeries:
+state.series,
+linkedSeries:
+state.rsiSeries,
+linkedVertOverlayEl:
+state.linkedCrosshairVertEl,
+chartWrapEl:
+state.chartEl,
+chartEl:
+state.chartEl,
+linkedWrapEl:
+state.rsiWrapEl,
+linkedChartEl:
+state.rsiChartEl
+}
+);
+
+state.disposeCrosshair =
+()=>{
+link.detachPointerCrosshair?.();
+link.clearLinked?.();
+state.disposeCrosshair =
+null;
+};
+
+}
+
 async function applyZoomTimeframe(
 state,
 tf
@@ -716,6 +782,7 @@ ${zoomMountOptions?.flagWrapHtml || ""}
 </div>
 </div>
 <div class="screener-widget-zoom-body screener-widget-body">
+<div class="linked-crosshair-vert hidden" aria-hidden="true"></div>
 <div class="screener-chart screener-widget-zoom-main-chart"></div>
 <div class="screener-rsi-wrap">
 <div class="screener-rsi-band"></div>
@@ -745,6 +812,10 @@ panel.querySelector(
 const rsiChartEl =
 panel.querySelector(
 ".screener-rsi-chart"
+);
+const linkedCrosshairVertEl =
+panel.querySelector(
+".screener-widget-zoom-body .linked-crosshair-vert"
 );
 
 const {
@@ -825,11 +896,14 @@ rsiSeries:
 rsiPair.series,
 rsiWrapEl,
 rsiChartEl,
+linkedCrosshairVertEl,
 candles:
 [],
 unsubKline:
 null,
 resizeObserver:
+null,
+disposeCrosshair:
 null,
 disposed:
 false
@@ -837,6 +911,10 @@ false
 
 zoomState =
 state;
+
+setupZoomCrosshair(
+state
+);
 
 applyZoomInversion(
 state,

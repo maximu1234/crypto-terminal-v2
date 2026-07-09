@@ -100,8 +100,11 @@ POSITION_DEFAULT_SL_ZONE_PX,
 POSITION_DEFAULT_WIDTH_BARS,
 POSITION_RR_LABEL_SAMPLE,
 RECT_DEFAULT_FILL_COLOR,
-RECT_DEFAULT_FILL_OPACITY
-} from "./constants.js?v=9";
+RECT_DEFAULT_FILL_OPACITY,
+RECT_DEFAULT_COLOR,
+migrateRectangleToolDefaults,
+createRectangleToolDefaults
+} from "./constants.js?v=10";
 
 import {
 getRectangleHandleScreens,
@@ -191,11 +194,11 @@ createDrawDesktopSelection
 
 import {
 createDrawingsPersist
-} from "./drawings-persist.js?v=7";
+} from "./drawings-persist.js?v=8";
 
 import {
 createDrawStyleBar
-} from "./draw-style-bar.js?v=17";
+} from "./draw-style-bar.js?v=23";
 
 import {
 createDrawAlertsChart
@@ -747,6 +750,26 @@ JSON.stringify(migrated)
 
 }
 
+if(
+name ===
+"rectangle"
+){
+
+const migrated =
+migrateRectangleToolDefaults(
+toolDefaults.rectangle
+);
+
+toolDefaults.rectangle =
+migrated;
+
+localStorage.setItem(
+defaultsStorageKey("rectangle"),
+JSON.stringify(migrated)
+);
+
+}
+
 });
 
 }
@@ -901,49 +924,23 @@ type ===
 ){
 
 const rectSaved =
+migrateRectangleToolDefaults(
 toolDefaults.rectangle ||
-saved;
+saved ||
+null
+);
+
+out.color =
+rectSaved.color ||
+RECT_DEFAULT_COLOR;
+out.lineWidth =
+rectSaved.lineWidth ??
+1;
 
 normalizeRectangleShape(
 out,
-{
-showFill:
-rectSaved?.showFill !==
-false,
-fillColor:
-rectSaved?.fillColor ||
-RECT_DEFAULT_FILL_COLOR,
-fillOpacity:
-rectSaved?.fillOpacity ??
-RECT_DEFAULT_FILL_OPACITY,
-medianColor:
-rectSaved?.medianColor ||
-out.color,
-medianLineWidth:
-rectSaved?.medianLineWidth ||
-1,
-medianLineStyle:
-rectSaved?.medianLineStyle ||
-"dashed",
-lineStyle:
-rectSaved?.lineStyle ||
-"solid",
-showMedian:
-!!rectSaved?.showMedian
-}
+rectSaved
 );
-
-if(
-rectSaved?.color
-){
-out.color = rectSaved.color;
-}
-
-if(
-rectSaved?.lineWidth != null
-){
-out.lineWidth = rectSaved.lineWidth;
-}
 
 }
 

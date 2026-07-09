@@ -17,8 +17,9 @@ STROKE,
 DEFAULT_FIB_SPEC,
 FIB_TOOL_DEFAULTS_VERSION,
 RECT_DEFAULT_FILL_COLOR,
-RECT_DEFAULT_FILL_OPACITY
-} from "./constants.js?v=9";
+RECT_DEFAULT_FILL_OPACITY,
+RECT_TOOL_DEFAULTS_VERSION
+} from "./constants.js?v=10";
 
 import {
 normalizeFibLineStyle,
@@ -72,7 +73,7 @@ listTemplatesForType,
 mergeStyleSnapshot,
 saveNamedTemplate,
 deleteTemplateAtIndex
-} from "./draw-templates.js?v=4";
+} from "./draw-templates.js?v=7";
 
 export function createDrawStyleBar(
 deps
@@ -402,6 +403,7 @@ settingsPopover.innerHTML =
 <div class="rect-settings">
 <label class="rect-settings-row">
 <span class="rect-settings-label">Border</span>
+<button type="button" class="rect-border-color-btn" title="Цвет линии" aria-label="Цвет линии"></button>
 <button type="button" class="rect-border-style-btn" title="Тип линии" aria-label="Тип линии"></button>
 </label>
 <label class="rect-settings-row rect-settings-row--check">
@@ -422,6 +424,10 @@ settingsPopover.innerHTML =
 const borderStyleBtn =
 settingsPopover.querySelector(
 ".rect-border-style-btn"
+);
+const borderColorBtn =
+settingsPopover.querySelector(
+".rect-border-color-btn"
 );
 const medianStyleBtn =
 settingsPopover.querySelector(
@@ -549,7 +555,7 @@ return;
 
 const colorBtn =
 e.target.closest(
-".rect-median-color-btn, .rect-fill-color-btn"
+".rect-border-color-btn, .rect-median-color-btn, .rect-fill-color-btn"
 );
 
 if(
@@ -565,10 +571,19 @@ const isFill =
 colorBtn.classList.contains(
 "rect-fill-color-btn"
 );
+const isBorder =
+colorBtn.classList.contains(
+"rect-border-color-btn"
+);
 const fallback =
 isFill
 ? (
 shape?.fillColor ||
+shape?.color ||
+STROKE
+)
+: isBorder
+? (
 shape?.color ||
 STROKE
 )
@@ -613,6 +628,7 @@ applyRectSettingsFromPanel();
 
 [
 borderStyleBtn,
+borderColorBtn,
 medianStyleBtn,
 medianWidthBtn,
 medianColorBtn,
@@ -658,6 +674,10 @@ const borderStyleBtn =
 settingsPopover.querySelector(
 ".rect-border-style-btn"
 );
+const borderColorBtn =
+settingsPopover.querySelector(
+".rect-border-color-btn"
+);
 const medianStyleBtn =
 settingsPopover.querySelector(
 ".rect-median-style-btn"
@@ -690,6 +710,16 @@ setFibLineStyleButton(
 borderStyleBtn,
 shape?.lineStyle ||
 "solid"
+);
+}
+
+if(
+borderColorBtn
+){
+borderColorBtn.style.setProperty(
+"--rect-swatch",
+shape?.color ||
+STROKE
 );
 }
 
@@ -827,6 +857,10 @@ const borderStyleBtn =
 settingsPopover.querySelector(
 ".rect-border-style-btn"
 );
+const borderColorBtn =
+settingsPopover.querySelector(
+".rect-border-color-btn"
+);
 const medianStyleBtn =
 settingsPopover.querySelector(
 ".rect-median-style-btn"
@@ -855,6 +889,11 @@ fillSwatch
 );
 
 return {
+color:
+borderColorBtn?.style.getPropertyValue(
+"--rect-swatch"
+)?.trim() ||
+STROKE,
 lineStyle:
 normalizeFibLineStyle(
 borderStyleBtn?.dataset.lineStyle
@@ -922,6 +961,8 @@ shape
 
 shape.lineStyle =
 panel.lineStyle;
+shape.color =
+panel.color;
 shape.showMedian =
 panel.showMedian;
 shape.showFill =
@@ -950,10 +991,8 @@ saveToolDefaults(
 {
 ...getToolDefaults().rectangle,
 ...panel,
-color:
-shape?.color ||
-activeColor ||
-STROKE,
+rectDefaultsVersion:
+RECT_TOOL_DEFAULTS_VERSION,
 lineWidth:
 shape?.lineWidth ||
 1
@@ -1410,6 +1449,11 @@ anchorBtn;
 const shape =
 getRectEditShape();
 
+const isFill =
+anchorBtn.classList.contains(
+"rect-fill-color-btn"
+);
+
 const active =
 anchorBtn.style.getPropertyValue(
 "--rect-swatch"
@@ -1418,6 +1462,7 @@ fallbackColor ||
 STROKE;
 
 const activeOpacity =
+isFill &&
 Number.isFinite(
 Number(
 shape?.fillOpacity
@@ -1429,10 +1474,12 @@ shape.fillOpacity
 ) *
 100
 )
-: Math.round(
+: isFill
+? Math.round(
 RECT_DEFAULT_FILL_OPACITY *
 100
-);
+)
+: 100;
 
 mountTvColorPicker(
 portal,
@@ -2318,6 +2365,163 @@ symbol
 
 }
 
+function isUnrelatedFormFieldFocused(
+active
+){
+
+if(
+!active
+){
+return false;
+}
+
+const tag =
+active.tagName?.toLowerCase();
+
+if(
+tag ===
+"textarea" ||
+tag ===
+"select"
+){
+return true;
+}
+
+if(
+tag ===
+"input"
+){
+
+const inputEl =
+positionRiskInput ||
+positionRiskWrap?.querySelector(
+".draw-position-risk-input"
+);
+
+if(
+active ===
+inputEl ||
+positionRiskWrap?.contains(
+active
+)
+){
+return false;
+}
+
+return true;
+}
+
+if(
+active.isContentEditable
+){
+return true;
+}
+
+return false;
+
+}
+
+function isPositionApplyEnterHotkey(
+event
+){
+
+if(
+event.key !==
+"Enter" &&
+event.code !==
+"Enter" &&
+event.code !==
+"NumpadEnter"
+){
+return false;
+}
+
+if(
+!isTradeDesktopApp()
+){
+return false;
+}
+
+if(
+positionRiskWrap?.classList.contains(
+"hidden"
+)
+){
+return false;
+}
+
+if(
+positionApplyBtn?.classList.contains(
+"hidden"
+)
+){
+return false;
+}
+
+const sel =
+getSelected();
+
+if(
+!sel ||
+!isPositionType(
+sel.type
+)
+){
+return false;
+}
+
+if(
+isUnrelatedFormFieldFocused(
+document.activeElement
+)
+){
+return false;
+}
+
+return true;
+
+}
+
+function onPositionApplyEnterHotkey(
+event
+){
+
+if(
+!isPositionApplyEnterHotkey(
+event
+)
+){
+return;
+}
+
+event.preventDefault();
+event.stopPropagation();
+
+submitPositionVolumeApply();
+
+const inputEl =
+positionRiskInput ||
+positionRiskWrap?.querySelector(
+".draw-position-risk-input"
+);
+const active =
+document.activeElement;
+
+if(
+inputEl &&
+(
+active ===
+inputEl ||
+positionRiskWrap?.contains(
+active
+)
+)
+){
+inputEl.blur();
+}
+
+}
+
 function isPositionRiskInputFocused(){
 
 return (
@@ -2371,7 +2575,9 @@ type
 
 colorBtn?.classList.toggle(
 "hidden",
-isPosToolbar
+isPosToolbar ||
+type ===
+"rectangle"
 );
 
 widthBtn?.classList.toggle(
@@ -3102,12 +3308,13 @@ root.innerHTML =
 <div class="draw-template-save-dialog" role="dialog" aria-modal="true" aria-labelledby="draw-template-save-title">
 <button type="button" class="draw-template-save-close" data-action="close" aria-label="Закрыть">×</button>
 <h2 class="draw-template-save-title" id="draw-template-save-title">Save drawing template</h2>
-<label class="draw-template-save-label" for="draw-template-save-input">New template name</label>
+<label class="draw-template-save-label" for="draw-template-save-input">Template name</label>
 <div class="draw-template-save-field">
 <input type="text" class="draw-template-save-input" id="draw-template-save-input" autocomplete="off" spellcheck="false" placeholder=""/>
 <button type="button" class="draw-template-save-toggle" data-action="toggle-list" aria-label="Показать сохранённые шаблоны" aria-expanded="false">▾</button>
 </div>
 <ul class="draw-template-save-list hidden" role="listbox"></ul>
+<button type="button" class="draw-template-save-submit" data-action="save">Save</button>
 </div>
 `;
 
@@ -3142,6 +3349,14 @@ action ===
 "toggle-list"
 ){
 toggleTemplateSaveList();
+return;
+}
+
+if(
+action ===
+"save"
+){
+submitTemplateSave();
 }
 
 }
@@ -3182,6 +3397,7 @@ templateNameInput.value =
 entry?.name ||
 "";
 closeTemplateSaveList();
+submitTemplateSave();
 
 }
 );
@@ -3207,6 +3423,44 @@ closeTemplateSaveModal();
 }
 
 }
+);
+
+root.addEventListener(
+"keydown",
+e=>{
+
+if(
+templateSaveModal?.classList.contains(
+"hidden"
+)
+){
+return;
+}
+
+if(
+e.key !==
+"Enter" &&
+e.code !==
+"Enter" &&
+e.code !==
+"NumpadEnter"
+){
+return;
+}
+
+if(
+e.target.closest(
+".draw-template-save-list"
+)
+){
+return;
+}
+
+e.preventDefault();
+submitTemplateSave();
+
+},
+true
 );
 
 return root;
@@ -3389,6 +3643,7 @@ type,
 name,
 snapshot
 );
+refreshTemplateMenu();
 closeTemplateSaveModal();
 
 }
@@ -3856,6 +4111,12 @@ submitPositionVolumeApply();
 );
 }
 
+document.addEventListener(
+"keydown",
+onPositionApplyEnterHotkey,
+true
+);
+
 }
 
 function isFibSettingsChromePointerEvent(e){
@@ -4079,11 +4340,21 @@ function mountStyleBar(){
 
 initStylePopovers();
 
+const teardownPositionRiskEnter =
+()=>{
+document.removeEventListener(
+"keydown",
+onPositionApplyEnterHotkey,
+true
+);
+};
+
 const teardownFloatingBar =
 initFloatingBar();
 
 return ()=>{
 
+teardownPositionRiskEnter();
 teardownFloatingBar?.();
 
 chromeLayoutObserver?.disconnect();

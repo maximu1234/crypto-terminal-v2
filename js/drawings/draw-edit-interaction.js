@@ -10,7 +10,7 @@ import {
 DRAW_HANDLE_HIT_THRESHOLD_DESKTOP,
 DRAW_HANDLE_HIT_THRESHOLD_DESKTOP_POSITION,
 DRAW_BODY_HIT_THRESHOLD_TOUCH
-} from "./constants.js?v=9";
+} from "./constants.js?v=10";
 
 import {
 getRectangleHandleScreens,

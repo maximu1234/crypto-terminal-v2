@@ -3,7 +3,7 @@ import {
 POSITION_SCALE_ENTRY_BG,
 POSITION_SCALE_SL_BG,
 POSITION_SCALE_TP_BG
-} from "./constants.js?v=9";
+} from "./constants.js?v=10";
 
 export function isPositionType(type){
 

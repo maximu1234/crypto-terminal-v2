@@ -4,9 +4,8 @@
  */
 import {
 STROKE,
-RECT_DEFAULT_FILL_COLOR,
-RECT_DEFAULT_FILL_OPACITY
-} from "./constants.js?v=9";
+createRectangleToolDefaults
+} from "./constants.js?v=10";
 
 import {
 ensureFibLevelsVisible,
@@ -203,16 +202,14 @@ shape.type ===
 
 normalizeRectangleShape(
 shape,
-{
-showFill: true,
-fillColor: RECT_DEFAULT_FILL_COLOR,
-fillOpacity: RECT_DEFAULT_FILL_OPACITY,
+createRectangleToolDefaults({
+fillColor:
+shape.color ||
+createRectangleToolDefaults().color,
 medianColor:
 shape.color ||
-STROKE,
-medianLineWidth: 1,
-medianLineStyle: "dashed"
-}
+createRectangleToolDefaults().color
+})
 );
 
 }
