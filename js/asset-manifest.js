@@ -91,7 +91,7 @@ Object.freeze({
 "chart-page.js":
 6,
 "terminal.js":
-374,
+375,
 "terminal-multi-chart.js":
 11,
 "terminal-screener-chart-pane.js":
@@ -165,11 +165,11 @@ Object.freeze({
 "terminal-layout-math.js":
 5,
 "terminal/terminal-state.js":
-8,
+9,
 "terminal/terminal-prefs.js":
-10,
+11,
 "terminal/terminal-table.js":
-16,
+17,
 "telegram-bot-public.js":
 1,
 "watchlist.js":
@@ -185,11 +185,11 @@ Object.freeze({
 "screener-widget-zoom.js":
 10,
 "release-marker.js":
-26,
+27,
 "focus-blur-after-pick.js":
 3,
 "site-boot.js":
-102,
+103,
 "site-header.js":
 3,
 "site-header-nav.js":
@@ -231,7 +231,7 @@ Object.freeze({
 "drawings.js":
 248,
 "drawings/init.js":
-143,
+144,
 "drawings/draw-edit-desktop.js":
 8,
 "drawings/draw-undo.js":
@@ -287,9 +287,9 @@ Object.freeze({
 "drawings-cloud/worker-client.js":
 8,
 "drawings-cloud/pull-reconcile.js":
-10,
+12,
 "drawings-cloud/sync-lifecycle.js":
-9,
+10,
 "drawings-tablet-input.js":
 3,
 "drawings-storage.js":
@@ -344,7 +344,7 @@ Object.freeze({
 
 /* ── JS: cloud / auth ── */
 "cloud-sync.js":
-40,
+42,
 "cloud-sync-throttle.js":
 3,
 "page-routes.js":
@@ -362,7 +362,7 @@ Object.freeze({
 "auth-storage.js":
 4,
 "auth-ui.js":
-38,
+39,
 "header-settings-shell.js":
 3,
 "app-settings-window.js":
@@ -378,7 +378,7 @@ Object.freeze({
 "favorites.js":
 4,
 "favorites-cloud-sync.js":
-5,
+6,
 
 /* ── JS: alerts ── */
 "alerts.js":
@@ -396,7 +396,7 @@ Object.freeze({
 "alerts-cloud/registry-sync.js":
 5,
 "alerts-cloud/polling-realtime.js":
-6,
+7,
 "alerts-page.js":
 64,
 "alert-monitor.js":

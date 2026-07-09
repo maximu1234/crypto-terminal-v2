@@ -73,14 +73,6 @@ label:
 "Forex",
 realtime:
 true
-},
-{
-id:
-"indexes",
-label:
-"Индексы",
-realtime:
-false
 }
 ]
 },
@@ -116,14 +108,6 @@ label:
 "Новые",
 realtime:
 true
-},
-{
-id:
-"indexes",
-label:
-"Индексы",
-realtime:
-false
 }
 ]
 
@@ -246,7 +230,6 @@ return row.realtime !==
 false;
 }
 
-return dataset !==
-"indexes";
+return true;
 
 }

@@ -33,7 +33,7 @@ periodMsById
 import {
 COINS_TF_HOTKEYS,
 COINS_TF_VALUES
-} from "./terminal/terminal-state.js?v=8";
+} from "./terminal/terminal-state.js?v=9";
 
 const SCRIPT_LAYOUT_HOTKEYS =
 Object.freeze({

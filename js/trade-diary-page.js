@@ -1,11 +1,11 @@
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=38";
+} from "./auth-ui.js?v=39";
 
 import {
 ensureCloudLoginResolved,
 getEffectiveCloudUserEmail
-} from "./cloud-sync.js?v=40";
+} from "./cloud-sync.js?v=42";
 
 import {
 isDesktopTradeDiaryContext,

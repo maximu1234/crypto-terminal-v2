@@ -9,7 +9,7 @@ isCloudApiUsable,
 isCloudAuthError,
 reportCloudAuthFailure,
 tryCloudAuthRecovery
-} from "./cloud-sync.js?v=40";
+} from "./cloud-sync.js?v=42";
 
 import {
 isFavoritesCloudDisabled,
@@ -554,7 +554,10 @@ options =
 
 if(
 !options.onDemand &&
-isFavoritesCloudDisabled()
+(
+isFavoritesCloudDisabled() ||
+isFavoritesAutoCloudDisabled()
+)
 ){
 return favoritesToCloudList(
 loadFavoritesGroups()
@@ -741,7 +744,10 @@ options =
 
 if(
 !options.onDemand &&
-isFavoritesCloudDisabled()
+(
+isFavoritesCloudDisabled() ||
+isFavoritesAutoCloudDisabled()
+)
 ){
 return;
 }

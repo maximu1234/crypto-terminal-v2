@@ -34,12 +34,12 @@ canSetBlueFlag
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=38";
+} from "./auth-ui.js?v=39";
 
 import {
 persistFavoritesToCloud,
 onFavoritesRemoteUpdate
-} from "./cloud-sync.js?v=40";
+} from "./cloud-sync.js?v=42";
 
 import {
 createCandlestickChart,
@@ -123,7 +123,7 @@ COINS_TF_HOTKEYS,
 COINS_MARKETS,
 isTerminalPage,
 isTradePage
-} from "./terminal/terminal-state.js?v=8";
+} from "./terminal/terminal-state.js?v=9";
 
 import {
 stopTickerStream
@@ -143,7 +143,7 @@ resolveInitialSymbolAndTf,
 applyCoinsPrefs,
 applySortForCurrentMarket,
 readUrlParams
-} from "./terminal/terminal-prefs.js?v=10";
+} from "./terminal/terminal-prefs.js?v=11";
 
 import {
 getCurrentSymbols,
@@ -157,7 +157,7 @@ highlightActiveSymbol,
 getVisibleSymbolList,
 setCoinsTableHooks,
 syncCoinListFreezeFromFlagMenus
-} from "./terminal/terminal-table.js?v=16";
+} from "./terminal/terminal-table.js?v=17";
 
 import {
 createCoinsChartSwitchVeil
@@ -2904,13 +2904,6 @@ lists.forex;
 function coinsMarketHasSymbols(
 market
 ){
-
-if(
-market ===
-"indexes"
-){
-return true;
-}
 
 const map = {
 all:coinsState().allListings,

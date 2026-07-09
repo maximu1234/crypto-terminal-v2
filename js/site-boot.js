@@ -4,15 +4,11 @@ initAlertMonitor
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=38";
+} from "./auth-ui.js?v=39";
 
 import {
 isAlertsPage
 } from "./cloud-sync-throttle.js?v=3";
-
-import {
-scheduleDevicePull
-} from "./device-pull-gate.js?v=1";
 
 import {
 initAlertsCloudSync,
@@ -28,13 +24,8 @@ isCloudLoggedIn,
 isCloudLoggedInEffective,
 isCloudSyncEnabled,
 getCloudUserEmail,
-pullDeviceStateFromCloud,
 onCloudSyncChange
-} from "./cloud-sync.js?v=40";
-
-import {
-isAutoDevicePullDisabled
-} from "./supabase-usage-prefs.js?v=4";
+} from "./cloud-sync.js?v=42";
 
 import {
 isSupabaseConfigured
@@ -298,7 +289,7 @@ initDrawingsCloudSync();
 );
 */
 
-import("./favorites-cloud-sync.js?v=5").then(
+import("./favorites-cloud-sync.js?v=6").then(
 ({ initFavoritesCloudSync })=>{
 initFavoritesCloudSync();
 }
@@ -371,10 +362,6 @@ isCloudLoggedInEffective() &&
 !isAlertsPage()
 ){
 scheduleRegistryCloudSync();
-scheduleDevicePull(
-()=>
-pullDeviceStateFromCloud()
-);
 }
 
 })

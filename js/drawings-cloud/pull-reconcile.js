@@ -25,12 +25,16 @@ getSupabase
 
 import {
 waitForCloudAuth
-} from "../cloud-sync.js?v=40";
+} from "../cloud-sync.js?v=42";
 
 import {
 createPullCoalescer,
 isDrawingsUiPage
 } from "../cloud-sync-throttle.js?v=3";
+
+import {
+isDrawingsCloudDisabled
+} from "../supabase-usage-prefs.js?v=4";
 
 import {
 isDeletedAtColumnError,
@@ -57,7 +61,7 @@ getLastCloudDrawingsFingerprint,
 setLastCloudDrawingsFingerprint,
 markDrawingSymbolDirty,
 scheduleDrawingsCloudPush
-} from "./sync-lifecycle.js?v=9";
+} from "./sync-lifecycle.js?v=10";
 
 const IS_YANDEX =
 /YaBrowser|Yandex/i.test(
@@ -468,6 +472,7 @@ return `${sym}:${sid}:${ts}`;
 export async function reconcileLocalDrawingsWithCloud(){
 
 if(
+isDrawingsCloudDisabled() ||
 isDrawingsCloudSyncPaused()
 ){
 return 0;
@@ -1007,6 +1012,7 @@ return runCloudOp(
 export async function pullDrawingsFromCloudNow(){
 
 if(
+isDrawingsCloudDisabled() ||
 isDrawingsCloudSyncPaused()
 ){
 return 0;

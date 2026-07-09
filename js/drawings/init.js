@@ -26,11 +26,15 @@ isCloudLoggedInEffective,
 isCloudSyncEnabled,
 ensureCloudLoginResolved,
 onCloudSyncChange
-} from "../cloud-sync.js?v=40";
+} from "../cloud-sync.js?v=42";
 
 import {
 ensureDrawToolsVisible
 } from "../draw-tools-visible.js?v=2";
+
+import {
+isDrawingsCloudDisabled
+} from "../supabase-usage-prefs.js?v=4";
 
 import {
 deleteDrawingFromCloud,
@@ -6231,7 +6235,8 @@ getSymbol()
 const refreshDrawingsOnTabWake = ()=>{
 
 if(
-!alive
+!alive ||
+isDrawingsCloudDisabled()
 ){
 return;
 }

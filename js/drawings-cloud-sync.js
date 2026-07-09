@@ -28,4 +28,4 @@ resolveDrawingsRestAuth,
 reconcileLocalDrawingsWithCloud,
 pullDrawingsFromCloud,
 pullDrawingsFromCloudNow
-} from "./drawings-cloud/sync-lifecycle.js?v=9";
+} from "./drawings-cloud/sync-lifecycle.js?v=10";

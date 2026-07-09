@@ -15,7 +15,7 @@ getTelegramBotUrl
 import {
 isCloudLoggedIn,
 getCloudUserEmail
-} from "./cloud-sync.js?v=40";
+} from "./cloud-sync.js?v=42";
 
 function setStatus(
 el,

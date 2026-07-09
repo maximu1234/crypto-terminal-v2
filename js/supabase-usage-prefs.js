@@ -177,7 +177,7 @@ try{
 const {
 ensureCloudLoginResolved
 } =
-await import("./cloud-sync.js?v=40");
+await import("./cloud-sync.js?v=42");
 
 const ctx =
 await ensureCloudLoginResolved(

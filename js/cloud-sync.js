@@ -1728,7 +1728,7 @@ isFavoritesAutoCloudDisabled()
 return;
 }
 
-void import("./favorites-cloud-sync.js?v=5").then(
+void import("./favorites-cloud-sync.js?v=6").then(
 m=>{
 m.applyFavoritesFromRealtimeRow(
 row
@@ -2079,7 +2079,7 @@ return collectAllLocalDrawings();
 async function syncFavoritesWithCloud(){
 
 const m =
-await import("./favorites-cloud-sync.js?v=5");
+await import("./favorites-cloud-sync.js?v=6");
 
 await m.reconcileLocalFavoritesWithCloud();
 
@@ -2129,7 +2129,7 @@ return;
 }
 
 const m =
-await import("./favorites-cloud-sync.js?v=5");
+await import("./favorites-cloud-sync.js?v=6");
 
 m.pushFavoritesAfterLocalEdit(
 favorites
@@ -3033,7 +3033,7 @@ return;
 try{
 
 const favoritesCloud =
-await import("./favorites-cloud-sync.js?v=5");
+await import("./favorites-cloud-sync.js?v=6");
 
 if(
 !isFavoritesAutoCloudDisabled() &&
@@ -3279,8 +3279,6 @@ await ensureCloudLoginResolved(
 
 const alertsCloud =
 await import("./alerts-cloud-sync.js?v=111");
-const favoritesCloud =
-await import("./favorites-cloud-sync.js?v=5");
 const { stripAlertFlagsNotInRegistry } =
 await import("./alerts.js?v=100");
 
@@ -3292,27 +3290,11 @@ emitDrawingsEvents: false
 }
 : {};
 
-let drawSyms =
-0;
 let alertRows =
 0;
 
 const jobs =
 [];
-
-if(
-!isAlertsPage() &&
-!isDrawingsCloudDisabled()
-){
-
-jobs.push(
-import("./drawings-cloud-sync.js?v=46").then(
-m=>
-m.pullDrawingsFromCloudNow()
-)
-);
-
-}
 
 if(
 !isAlertsCloudDisabled()
@@ -3322,16 +3304,6 @@ jobs.push(
 alertsCloud.hydrateAlertsAfterAuth({
 force: true
 })
-);
-
-}
-
-if(
-!isFavoritesCloudDisabled()
-){
-
-jobs.push(
-favoritesCloud.pullFavoritesFromCloudNow()
 );
 
 }
@@ -3358,18 +3330,6 @@ jobs
 
 let idx =
 0;
-
-if(
-!isAlertsPage() &&
-!isDrawingsCloudDisabled()
-){
-
-drawSyms =
-results[
-idx++
-] ??
-0;
-}
 
 if(
 !isAlertsCloudDisabled()
@@ -3402,27 +3362,14 @@ new CustomEvent(
 )
 );
 
-const favGroups =
-loadFavoritesGroups();
-const favTotal =
-favGroups.red.length +
-favGroups.green.length +
-favGroups.gray.length;
-
 console.log(
-"[Multichart] загружено из облака: рисунки —",
-drawSyms,
-"| алерты —",
-alertRows,
-"| флаги —",
-favTotal
+"[Multichart] загружено из облака: алерты —",
+alertRows
 );
 
 return {
 ok: true,
-drawSyms,
-alertRows,
-favCount: favTotal
+alertRows
 };
 
 }catch(

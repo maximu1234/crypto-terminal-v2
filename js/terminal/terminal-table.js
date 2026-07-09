@@ -1,13 +1,8 @@
 import {
 coinsState,
 marketMap,
-coinElements,
-COINS_INDEX_ITEMS
-} from "./terminal-state.js?v=8";
-
-import {
-fetchBtcDominanceHistory
-} from "../btc-dominance/fetch.js?v=1";
+coinElements
+} from "./terminal-state.js?v=9";
 
 import {
 isActiveRealtimeMarketDataset,
@@ -39,7 +34,7 @@ emptyFavorites
 
 import {
 isTradePage
-} from "./terminal-state.js?v=8";
+} from "./terminal-state.js?v=9";
 
 /** Desktop /trade only — не тянем trade-open-positions в открытый web /coins. */
 let hasOpenPosition =
@@ -120,16 +115,6 @@ dataset ===
 return coinsState().forexListings;
 }
 
-if(
-dataset ===
-"indexes"
-){
-return COINS_INDEX_ITEMS.map(
-item=>
-item.symbol
-);
-}
-
 console.warn(
 "[coins] неизвестный рынок:",
 dataset
@@ -149,27 +134,9 @@ getCurrentSymbols();
 const dataset =
 coinsState().currentDataset;
 
-const indexMeta =
-dataset ===
-"indexes"
-? new Map(
-COINS_INDEX_ITEMS.map(
-item=>[
-item.symbol,
-item
-]
-)
-)
-: null;
-
 const next =
 symbols.map(
 symbol=>{
-const meta =
-indexMeta?.get(
-symbol
-);
-
 return {
 symbol,
 price:
@@ -177,13 +144,7 @@ price:
 change24:
 0,
 change1h:
-0,
-href:
-meta?.href ||
-"",
-indexTitle:
-meta?.title ||
-""
+0
 };
 }
 );
@@ -271,14 +232,6 @@ renderList();
 export async function primeTickerSnapshots(){
 
 if(
-coinsState().currentDataset ===
-"indexes"
-){
-await primeIndexSnapshots();
-return;
-}
-
-if(
 !isActiveRealtimeMarketDataset(
 coinsState().currentDataset
 )
@@ -317,187 +270,6 @@ payload.change1h;
 
 console.warn(
 "prime tickers:",
-err
-);
-
-}
-
-}
-
-function dominancePointTimeMs(
-point
-){
-
-const t =
-Number(
-point?.time
-);
-
-if(
-!Number.isFinite(
-t
-)
-){
-return null;
-}
-
-return t <
-1e12
-? t *
-1000
-: t;
-
-}
-
-function dominanceValueAtOrBefore(
-points,
-targetMs
-){
-
-let ref =
-null;
-
-for(
-const point of
-points
-){
-
-const tMs =
-dominancePointTimeMs(
-point
-);
-
-if(
-tMs ==
-null
-){
-continue;
-}
-
-if(
-tMs <=
-targetMs
-){
-ref =
-point;
-}else{
-break;
-}
-
-}
-
-return ref;
-
-}
-
-function dominanceDelta(
-points,
-msAgo
-){
-
-if(
-!Array.isArray(
-points
-) ||
-!points.length
-){
-return 0;
-}
-
-const last =
-points[
-points.length -
-1
-];
-const lastMs =
-dominancePointTimeMs(
-last
-);
-
-if(
-lastMs ==
-null ||
-last.value ==
-null
-){
-return 0;
-}
-
-const ref =
-dominanceValueAtOrBefore(
-points,
-lastMs -
-msAgo
-);
-
-if(
-!ref ||
-ref.value ==
-null
-){
-return 0;
-}
-
-return Number(
-last.value
-) -
-Number(
-ref.value
-);
-
-}
-
-async function primeIndexSnapshots(){
-
-try{
-
-const hist =
-await fetchBtcDominanceHistory({
-days:
-"7"
-});
-
-const points =
-hist.points ||
-[];
-const item =
-marketMap.get(
-"BTC.D"
-);
-
-if(
-!item
-){
-return;
-}
-
-item.change24 =
-dominanceDelta(
-points,
-24 *
-60 *
-60 *
-1000
-);
-
-item.change1h =
-dominanceDelta(
-points,
-60 *
-60 *
-1000
-);
-
-updateCoinRow(
-item
-);
-
-}catch(
-err
-){
-
-console.warn(
-"index tickers:",
 err
 );
 

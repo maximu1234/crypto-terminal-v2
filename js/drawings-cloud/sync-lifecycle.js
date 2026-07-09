@@ -7,7 +7,7 @@ isCloudApiUsable,
 onCloudSyncChange,
 notifyDrawings as notifyDrawingsListeners,
 ensureCloudLoginResolved
-} from "../cloud-sync.js?v=40";
+} from "../cloud-sync.js?v=42";
 
 import {
 normalizeAlertWorkerBaseUrl
@@ -65,7 +65,7 @@ import {
 reconcileLocalDrawingsWithCloud,
 pullDrawingsFromCloudNow,
 migrateLegacyBlobOnce
-} from "./pull-reconcile.js?v=10";
+} from "./pull-reconcile.js?v=12";
 
 
 const IS_YANDEX =
@@ -1622,6 +1622,12 @@ startDrawingsFastPoll();
 
 export function bumpDrawingsPullNow(){
 
+if(
+isDrawingsCloudDisabled()
+){
+return;
+}
+
 lastDrawingsPullMs =
 0;
 
@@ -1658,7 +1664,7 @@ export {
 reconcileLocalDrawingsWithCloud,
 pullDrawingsFromCloud,
 pullDrawingsFromCloudNow
-} from "./pull-reconcile.js?v=10";
+} from "./pull-reconcile.js?v=12";
 
 export function getDirtyDrawingSymbols(){
 return dirtyDrawingSymbols;

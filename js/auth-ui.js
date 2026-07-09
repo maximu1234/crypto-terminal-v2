@@ -10,7 +10,7 @@ signOutCloud,
 recoverAuthSessionFromUrl,
 completeAuthFromCallbackUrl,
 hasAuthCallbackInUrl
-} from "./cloud-sync.js?v=40";
+} from "./cloud-sync.js?v=42";
 
 import {
 isSupabaseConfigured
@@ -143,8 +143,7 @@ path.endsWith("/statistics") ||
 path.includes("/diary") ||
 path === "/system" ||
 path.endsWith("/system") ||
-path.includes("/system/") ||
-path.includes("btc-d.html")
+path.includes("/system/")
 );
 
 }

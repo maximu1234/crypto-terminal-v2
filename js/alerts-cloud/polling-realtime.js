@@ -8,7 +8,7 @@ isCloudLoggedIn,
 isCloudLoggedInEffective,
 onCloudSyncChange,
 ensureCloudLoginResolved
-} from "../cloud-sync.js?v=40";
+} from "../cloud-sync.js?v=42";
 
 import {
 clearAlertAuthCache,
@@ -84,21 +84,16 @@ let alertsFastPollIntervalId =
 let lastAlertsPullMs =
 0;
 
+const ALERTS_FALLBACK_PULL_MS =
+30 *
+60 *
+1000;
+
 const FAST_POLL_MS =
-IS_YANDEX
-? 5000
-: 2500;
+ALERTS_FALLBACK_PULL_MS;
 
 const FAST_POLL_HIDDEN_MS =
-IS_YANDEX
-? 15000
-: 8000;
-
-const IOS_SAFARI_VISIBLE_PULL_MS =
-3500;
-
-const VISIBLE_PULL_FALLBACK_MS =
-2000;
+ALERTS_FALLBACK_PULL_MS;
 
 let iosSafariPullTimer =
 null;
@@ -693,6 +688,10 @@ null;
 
 function startIosSafariVisiblePull(){
 
+/* FALLBACK-CUT: частый pull отключён, остаётся safety в startAlertsFastPoll(). */
+stopIosSafariVisiblePull();
+return;
+
 if(
 isAlertsCloudDisabled()
 ){
@@ -767,6 +766,10 @@ false;
 }
 
 function startVisiblePullFallback(){
+
+/* FALLBACK-CUT: частый fallback отключён, остаётся safety в startAlertsFastPoll(). */
+stopVisiblePullFallback();
+return;
 
 if(
 isAlertsCloudDisabled()
