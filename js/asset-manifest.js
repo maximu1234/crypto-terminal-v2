@@ -23,6 +23,21 @@ Object.freeze({
 "btc-dominance/tv-embed.js":
 3,
 
+"trade-markers-test.css":
+1,
+"trade-markers-sandbox/boot.js":
+5,
+"trade-markers-sandbox/chart.js":
+7,
+"trade-markers-sandbox/klines.js":
+6,
+"trade-markers-sandbox/marker-math.js":
+8,
+"trade-markers-sandbox/trade-fetch.js":
+6,
+"trade-markers-sandbox/terminal-nav-link.js":
+1,
+
 /* ── JS: boot / entry ── */
 "asset-manifest.js":
 2,
@@ -33,7 +48,7 @@ Object.freeze({
 "terminal-list-refresh.js":
 1,
 "trade-desktop-boot.js":
-16,
+18,
 "desktop-menu-bar-tray.js":
 5,
 "trade-diary-access.js":
@@ -79,7 +94,7 @@ Object.freeze({
 "trade-book-columns.js":
 14,
 "trade-chart-overlay.js":
-31,
+32,
 "trade-chart-orders.js":
 18,
 "trade-order-plus-ui.js":
@@ -91,7 +106,7 @@ Object.freeze({
 "chart-page.js":
 6,
 "terminal.js":
-375,
+376,
 "terminal-multi-chart.js":
 11,
 "terminal-screener-chart-pane.js":
@@ -231,7 +246,7 @@ Object.freeze({
 "drawings.js":
 250,
 "drawings/init.js":
-152,
+153,
 "drawings/draw-edit-desktop.js":
 8,
 "drawings/draw-undo.js":
@@ -239,7 +254,7 @@ Object.freeze({
 "drawings/drawings-persist.js":
 8,
 "drawings/draw-style-bar.js":
-23,
+24,
 "drawings/draw-templates.js":
 7,
 "drawings/draw-alerts-chart.js":

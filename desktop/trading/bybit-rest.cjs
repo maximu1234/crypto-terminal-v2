@@ -1910,13 +1910,20 @@ merged
 async function fetchClosedPnlPaged(
 startTime,
 endTime,
-executions
+executions,
+pagedOptions =
+{}
 ){
 
 const trades =
 [];
 let cursor =
 "";
+
+const symbolFilter =
+stripSymbolSuffix(
+pagedOptions.symbol
+);
 
 for(
 let page =
@@ -1959,6 +1966,13 @@ cursor
 ){
 query.cursor =
 cursor;
+}
+
+if(
+symbolFilter
+){
+query.symbol =
+symbolFilter;
 }
 
 const result =
@@ -2041,6 +2055,144 @@ trades
 
 }
 
+async function fetchClosedPnlChunkedParallel(
+startTime,
+endTime,
+executions,
+pagedOpts,
+concurrency =
+8
+){
+
+const chunks =
+chunkTimeRange(
+startTime,
+endTime
+);
+
+if(
+!chunks.length
+){
+return {
+ok:
+true,
+trades:
+[]
+};
+}
+
+const merged =
+[];
+const seen =
+new Set();
+let hardError =
+null;
+
+for(
+let i =
+0;
+i <
+chunks.length;
+i +=
+concurrency
+){
+
+const slice =
+chunks.slice(
+i,
+i +
+concurrency
+);
+const results =
+await Promise.all(
+slice.map(
+chunk=>
+fetchClosedPnlPaged(
+chunk.startMs,
+chunk.endMs,
+executions,
+pagedOpts
+)
+)
+);
+
+for(
+const result of
+results
+){
+
+if(
+!result.ok
+){
+
+if(
+merged.length
+){
+continue;
+}
+
+hardError =
+result;
+continue;
+}
+
+for(
+const trade of
+result.trades ||
+[]
+){
+
+const key =
+tradeHistoryKey(
+trade
+);
+
+if(
+seen.has(
+key
+)
+){
+continue;
+}
+
+seen.add(
+key
+);
+merged.push(
+trade
+);
+
+}
+
+}
+
+}
+
+if(
+hardError &&
+!merged.length
+){
+return hardError;
+}
+
+merged.sort(
+(
+a,
+b
+)=>
+b.closeTimeMs -
+a.closeTimeMs
+);
+
+return {
+ok:
+true,
+trades:
+merged
+};
+
+}
+
 async function getClosedPnlHistory(
 options =
 {}
@@ -2050,6 +2202,23 @@ const startTime =
 options.startTime;
 const endTime =
 options.endTime;
+const skipExecutions =
+options.skipExecutions ===
+true;
+const parallelChunks =
+options.parallelChunks ===
+true;
+const symbolFilter =
+stripSymbolSuffix(
+options.symbol
+);
+const pagedOpts =
+symbolFilter
+? {
+symbol:
+symbolFilter
+}
+: {};
 
 const execLookbackMs =
 30 *
@@ -2061,7 +2230,8 @@ let execResult;
 
 if(
 startTime !=
-null
+null &&
+!skipExecutions
 ){
 
 execResult =
@@ -2080,9 +2250,12 @@ null
 }else{
 
 execResult =
-await getExecutionHistory({
-endTime
-});
+{
+ok:
+true,
+executions:
+[]
+};
 
 }
 
@@ -2106,7 +2279,8 @@ BYBIT_QUERY_MAX_MS
 return fetchClosedPnlPaged(
 startTime,
 endTime,
-executions
+executions,
+pagedOpts
 );
 
 }
@@ -2115,6 +2289,19 @@ const merged =
 [];
 const seen =
 new Set();
+
+if(
+parallelChunks
+){
+
+return fetchClosedPnlChunkedParallel(
+startTime,
+endTime,
+executions,
+pagedOpts
+);
+
+}
 
 for(
 const chunk of
@@ -2128,7 +2315,8 @@ const result =
 await fetchClosedPnlPaged(
 chunk.startMs,
 chunk.endMs,
-executions
+executions,
+pagedOpts
 );
 
 if(

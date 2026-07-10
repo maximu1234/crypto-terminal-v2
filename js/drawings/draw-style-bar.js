@@ -149,6 +149,7 @@ let fibColorMenuAnchor = null;
 let rectPanelBuilt = false;
 let rectPanelSyncing = false;
 let rectSettingsShapeId = null;
+let settingsPanelAbort = null;
 let activeColor = STROKE;
 let chromePortal = null;
 let barOffset = { x: 8, y: 8 };
@@ -329,6 +330,35 @@ return getTool() ===
 
 }
 
+function resetSettingsPanelListeners(){
+
+settingsPanelAbort?.abort();
+settingsPanelAbort =
+new AbortController();
+
+return settingsPanelAbort.signal;
+
+}
+
+function settingsPopoverHasPanel(
+kind
+){
+
+if(
+!settingsPopover
+){
+return false;
+}
+
+return !!settingsPopover.querySelector(
+kind ===
+"fib"
+? ".fib-settings"
+: ".rect-settings"
+);
+
+}
+
 function isFibSettingsOpen(){
 
 return !!(
@@ -390,13 +420,25 @@ return sel?.type ===
 function ensureRectSettingsPanel(){
 
 if(
-!settingsPopover ||
-rectPanelBuilt
+!settingsPopover
+){
+return;
+}
+
+if(
+rectPanelBuilt &&
+settingsPopoverHasPanel(
+"rect"
+)
 ){
 return;
 }
 
 rectPanelBuilt = true;
+fibPanelBuilt = false;
+
+const signal =
+resetSettingsPanelListeners();
 
 settingsPopover.innerHTML =
 `
@@ -602,7 +644,10 @@ fallback
 }
 
 },
-true
+{
+capture:true,
+signal
+}
 );
 
 settingsPopover.addEventListener(
@@ -623,6 +668,9 @@ e.target.matches(
 applyRectSettingsFromPanel();
 }
 
+},
+{
+signal
 }
 );
 
@@ -646,6 +694,9 @@ btn.addEventListener(
 "click",
 e=>{
 e.stopPropagation();
+},
+{
+signal
 }
 );
 
@@ -1050,13 +1101,25 @@ return null;
 function ensureFibSettingsPanel(){
 
 if(
-!settingsPopover ||
-fibPanelBuilt
+!settingsPopover
+){
+return;
+}
+
+if(
+fibPanelBuilt &&
+settingsPopoverHasPanel(
+"fib"
+)
 ){
 return;
 }
 
 fibPanelBuilt = true;
+rectPanelBuilt = false;
+
+const signal =
+resetSettingsPanelListeners();
 
 settingsPopover.innerHTML =
 `
@@ -1243,7 +1306,12 @@ return;
 
 }
 
-}, true);
+},
+{
+capture:true,
+signal
+}
+);
 
 settingsPopover.addEventListener("change", e=>{
 
@@ -1259,7 +1327,11 @@ e.target?.classList.contains("fib-level-bg")
 scheduleFibApplyImmediate();
 }
 
-});
+},
+{
+signal
+}
+);
 
 settingsPopover.addEventListener("input", e=>{
 
@@ -1273,7 +1345,11 @@ e.target?.classList.contains("fib-level-val")
 scheduleFibApplyDebounced();
 }
 
-});
+},
+{
+signal
+}
+);
 
 if(!settingsPopover.dataset.fibLineMenuBound){
 

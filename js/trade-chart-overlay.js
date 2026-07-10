@@ -1585,6 +1585,9 @@ if(
 canFast
 ){
 
+const displayPosition =
+getDisplayPosition();
+
 for(
 const spec of badgeSpecs
 ){
@@ -1622,10 +1625,10 @@ el.querySelector(
 
 if(
 pnlEl &&
-position
+displayPosition
 ){
 const pnlClass =
-position.pnl >=
+displayPosition.pnl >=
 0
 ? "is-pos"
 : "is-neg";
@@ -1633,7 +1636,7 @@ pnlEl.className =
 `seg seg-pnl ${pnlClass}`;
 pnlEl.textContent =
 formatPnl(
-position.pnl
+displayPosition.pnl
 );
 }
 
@@ -1651,11 +1654,12 @@ el.querySelector(
 );
 
 if(
-amtEl
+amtEl &&
+displayPosition
 ){
 const entry =
 Number(
-position.avgPrice
+displayPosition.avgPrice
 );
 const stop =
 getEffectiveStopPrice(
@@ -1663,10 +1667,10 @@ spec.kind
 );
 const usd =
 pnlAtPrice(
-position.side,
+displayPosition.side,
 entry,
 stop,
-position.size
+displayPosition.size
 );
 amtEl.textContent =
 `${formatStopUsd(usd)} USDT`;
@@ -1674,12 +1678,13 @@ amtEl.textContent =
 
 if(
 dragStop?.kind ===
-spec.kind
+spec.kind &&
+displayPosition
 ){
 const invalid =
 validateStopPrice(
 spec.kind,
-position.side,
+displayPosition.side,
 dragStop.previewPrice,
 getMarkPrice()
 );

@@ -225,6 +225,15 @@ await import(
 
 initTradeOpenPositions();
 
+const {
+mountTradeMarkersSandboxLink
+} =
+await import(
+"./trade-markers-sandbox/terminal-nav-link.js?v=1"
+);
+
+mountTradeMarkersSandboxLink();
+
 }
 
 export async function initTradeDesktopAfterChart(
@@ -270,7 +279,7 @@ const {
 initTradeChartOverlay
 } =
 await import(
-"./trade-chart-overlay.js?v=31"
+"./trade-chart-overlay.js?v=32"
 );
 
 initTradeChartOverlay();

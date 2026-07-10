@@ -1,0 +1,147 @@
+body.trade-markers-test-page{
+margin:0;
+min-height:100vh;
+background:#0b1018;
+color:#e5e7eb;
+font-family:system-ui,-apple-system,sans-serif;
+}
+
+.trade-markers-test-header{
+display:flex;
+align-items:center;
+gap:12px;
+padding:12px 16px;
+border-bottom:1px solid #1f2937;
+background:#111827;
+}
+
+.trade-markers-test-logo{
+color:#93c5fd;
+text-decoration:none;
+font-weight:600;
+}
+
+.trade-markers-test-badge{
+font-size:12px;
+color:#9ca3af;
+padding:2px 8px;
+border:1px solid #374151;
+border-radius:999px;
+}
+
+.trade-markers-test-gate,
+.trade-markers-test-app{
+max-width:1280px;
+margin:0 auto;
+padding:16px;
+}
+
+.trade-markers-test-gate h1{
+margin:0 0 8px;
+font-size:20px;
+}
+
+.trade-markers-test-gate p{
+margin:0;
+color:#9ca3af;
+}
+
+.trade-markers-test-toolbar{
+display:flex;
+flex-wrap:wrap;
+align-items:center;
+gap:12px 16px;
+margin-bottom:8px;
+}
+
+.trade-markers-test-symbol{
+display:flex;
+align-items:baseline;
+gap:8px;
+}
+
+.trade-markers-test-symbol-sub{
+font-size:12px;
+color:#6b7280;
+}
+
+.trade-markers-test-tf{
+display:flex;
+gap:4px;
+}
+
+.trade-markers-test-tf-btn{
+border:1px solid #374151;
+background:#1f2937;
+color:#d1d5db;
+border-radius:6px;
+padding:4px 10px;
+font-size:12px;
+cursor:pointer;
+}
+
+.trade-markers-test-tf-btn.active{
+background:#2563eb;
+border-color:#3b82f6;
+color:#fff;
+}
+
+.trade-markers-test-toggle{
+display:inline-flex;
+align-items:center;
+gap:6px;
+font-size:13px;
+color:#d1d5db;
+cursor:pointer;
+user-select:none;
+}
+
+.trade-markers-test-toggle input{
+accent-color:#22c55e;
+}
+
+.trade-markers-test-refresh{
+border:1px solid #374151;
+background:#111827;
+color:#e5e7eb;
+border-radius:6px;
+padding:5px 12px;
+font-size:12px;
+cursor:pointer;
+}
+
+.trade-markers-test-refresh:hover{
+background:#1f2937;
+}
+
+.trade-markers-test-status{
+min-height:18px;
+margin:0 0 8px;
+font-size:12px;
+color:#9ca3af;
+}
+
+.trade-markers-test-status.is-error{
+color:#fca5a5;
+}
+
+.trade-markers-test-chart-wrap{
+height:calc(
+100vh -
+140px
+);
+min-height:420px;
+border:1px solid #1f2937;
+border-radius:8px;
+overflow:hidden;
+background:#0f1419;
+}
+
+.trade-markers-test-chart{
+width:100%;
+height:100%;
+}
+
+.hidden{
+display:none !important;
+}

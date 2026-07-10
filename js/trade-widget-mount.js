@@ -3,7 +3,7 @@
  */
 import {
 createTradeChartOverlay
-} from "./trade-chart-overlay.js?v=31";
+} from "./trade-chart-overlay.js?v=32";
 
 import {
 createTradeChartOrders
