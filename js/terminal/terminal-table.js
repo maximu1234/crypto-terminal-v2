@@ -24,7 +24,7 @@ createTickerUiBatcher
 
 import {
 processAlertCandle
-} from "../alert-monitor.js?v=65";
+} from "../alert-monitor.js?v=67";
 
 import {
 getFavoriteGroup,

@@ -6,7 +6,7 @@ formatDrawColor
 import {
 TRASH_ICON_SVG,
 DRAW_TOOLS_GUEST_MSG
-} from "../draw-ui-shared.js?v=29";
+} from "../draw-ui-shared.js?v=30";
 
 import {
 closeAllWidgetDrawToolsMenus
@@ -198,7 +198,7 @@ createDrawingsPersist
 
 import {
 createDrawStyleBar
-} from "./draw-style-bar.js?v=24";
+} from "./draw-style-bar.js?v=25";
 
 import {
 createDrawAlertsChart

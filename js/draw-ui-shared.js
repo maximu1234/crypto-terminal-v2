@@ -110,31 +110,31 @@ return `
 ${CURSOR_TOOL_ICON_SVG}
 </button>
 
-<button type="button" class="${btnClass}" data-draw-tool="trendline" title="Trendline — 2 клика">
+<button type="button" class="${btnClass}" data-draw-tool="trendline" title="Trendline">
 ${TRENDLINE_ICON_SVG}
 </button>
 
-<button type="button" class="${btnClass}" data-draw-tool="arrow" title="Arrow — 2 клика">
+<button type="button" class="${btnClass}" data-draw-tool="arrow" title="Arrow">
 ${ARROW_ICON_SVG}
 </button>
 
-<button type="button" class="${btnClass}" data-draw-tool="hray" title="Horizontal Ray — 1 клик">
+<button type="button" class="${btnClass}" data-draw-tool="hray" title="Horizontal Ray">
 ${HRAY_ICON_SVG}
 </button>
 
-<button type="button" class="${btnClass}" data-draw-tool="channel" title="Parallel Channel — 3 клика">
+<button type="button" class="${btnClass}" data-draw-tool="channel" title="Parallel Channel">
 ${CHANNEL_ICON_SVG}
 </button>
 
-<button type="button" class="${btnClass}" data-draw-tool="brush" title="Кисть — рисуйте мышью">
+<button type="button" class="${btnClass}" data-draw-tool="brush" title="Кисть">
 ${BRUSH_ICON_SVG}
 </button>
 
-<button type="button" class="${btnClass}" data-draw-tool="fib" title="Fib Retracement — 2 клика">
+<button type="button" class="${btnClass}" data-draw-tool="fib" title="Fib Retracement (F)">
 ${FIB_ICON_SVG}
 </button>
 
-<button type="button" class="${btnClass}" data-draw-tool="rectangle" title="Rectangle — 2 клика">
+<button type="button" class="${btnClass}" data-draw-tool="rectangle" title="Rectangle">
 ${RECTANGLE_ICON_SVG}
 </button>
 
@@ -156,10 +156,10 @@ opts.compact
 : "draw-btn";
 
 return `
-<button type="button" class="${btnClass}" data-draw-tool="long" title="Позиция Long — клик на вход, затем тяните тейк/стоп">
+<button type="button" class="${btnClass}" data-draw-tool="long" title="Позиция Long (L)">
 ${LONG_POSITION_ICON_SVG}
 </button>
-<button type="button" class="${btnClass}" data-draw-tool="short" title="Позиция Short — клик на вход, затем тяните тейк/стоп">
+<button type="button" class="${btnClass}" data-draw-tool="short" title="Позиция Short (S)">
 ${SHORT_POSITION_ICON_SVG}
 </button>`;
 

@@ -1,6 +1,6 @@
 import {
 initAlertMonitor
-} from "./alert-monitor.js?v=65";
+} from "./alert-monitor.js?v=67";
 
 import {
 ensureCloudReady

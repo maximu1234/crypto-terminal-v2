@@ -23,20 +23,10 @@ Object.freeze({
 "btc-dominance/tv-embed.js":
 3,
 
-"trade-markers-test.css":
-1,
-"trade-markers-sandbox/boot.js":
-5,
-"trade-markers-sandbox/chart.js":
-7,
-"trade-markers-sandbox/klines.js":
-6,
 "trade-markers-sandbox/marker-math.js":
 8,
 "trade-markers-sandbox/trade-fetch.js":
-6,
-"trade-markers-sandbox/terminal-nav-link.js":
-1,
+9,
 
 /* ── JS: boot / entry ── */
 "asset-manifest.js":
@@ -48,7 +38,7 @@ Object.freeze({
 "terminal-list-refresh.js":
 1,
 "trade-desktop-boot.js":
-18,
+20,
 "desktop-menu-bar-tray.js":
 5,
 "trade-diary-access.js":
@@ -58,13 +48,13 @@ Object.freeze({
 "trade-diary-nav.js":
 11,
 "trade-diary-page.js":
-13,
+14,
 "trade-diary-period.js":
 3,
 "trade-diary-detail.js":
 6,
 "trade-diary-chart.js":
-8,
+9,
 "trade-positions-cache.js":
 6,
 "trade-position-sounds.js":
@@ -86,13 +76,15 @@ Object.freeze({
 "trade-auto-stops.js":
 2,
 "trade-market-entry.js":
-5,
+6,
 "trade-book-panel.js":
 52,
 "trade-pnl-share-modal.js":
 5,
 "trade-book-columns.js":
 14,
+"trade-chart-execution-markers.js":
+1,
 "trade-chart-overlay.js":
 32,
 "trade-chart-orders.js":
@@ -106,7 +98,7 @@ Object.freeze({
 "chart-page.js":
 6,
 "terminal.js":
-376,
+377,
 "terminal-multi-chart.js":
 11,
 "terminal-screener-chart-pane.js":
@@ -254,7 +246,7 @@ Object.freeze({
 "drawings/drawings-persist.js":
 8,
 "drawings/draw-style-bar.js":
-24,
+25,
 "drawings/draw-templates.js":
 7,
 "drawings/draw-alerts-chart.js":
@@ -314,7 +306,7 @@ Object.freeze({
 "draw-color-palette.js":
 6,
 "draw-ui-shared.js":
-29,
+30,
 "draw-toolbar-icon-data.js":
 29,
 "draw-tools-visible.js":
@@ -415,7 +407,9 @@ Object.freeze({
 "alerts-page.js":
 64,
 "alert-monitor.js":
-65,
+67,
+"alert-ui-prefs.js":
+1,
 "alert-worker-url.js":
 2,
 
@@ -457,7 +451,7 @@ Object.freeze({
 "critical-shell.css":
 9,
 "common.css":
-49,
+50,
 "screener.css":
 49,
 "terminal.css":
@@ -475,19 +469,19 @@ Object.freeze({
 "trade-exchange-settings.css":
 16,
 "app-settings-window.css":
-4,
+5,
 "trade-volume-presets.css":
 6,
 "trade-leverage-settings.css":
 2,
 "trade-market-entry.css":
-2,
+3,
 "trade-book-panel.css":
 49,
 "trade-pnl-share-modal.css":
 2,
 "trade-diary.css":
-16,
+17,
 "trade-diary-period.css":
 1,
 "trade-chart-overlay.css":

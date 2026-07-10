@@ -24,7 +24,7 @@ body.trade-diary-body .coins-diary-link.active{
 }
 
 .trade-diary-shell{
-  --trade-diary-inner-width:916px;
+  --trade-diary-inner-width:960px;
   box-sizing:border-box;
   width:min(
 100%,
@@ -137,7 +137,7 @@ var(
 --trade-diary-inner-width,
 916px
 );
-  grid-template-columns:104px 220px 108px 96px 84px 84px 88px;
+  grid-template-columns:104px 220px 28px 108px 96px 84px 84px 88px;
   column-gap:16px;
   align-items:center;
   padding:8px 18px;
@@ -167,18 +167,18 @@ var(
 }
 
 .trade-diary-week-range{
-  grid-column:1 / span 3;
+  grid-column:1 / span 4;
   color:#f3f4f6;
 }
 
 .trade-diary-week-pnl{
-  grid-column:4;
+  grid-column:5;
   text-align:right;
   font-variant-numeric:tabular-nums;
 }
 
 .trade-diary-week-com{
-  grid-column:6;
+  grid-column:7;
   text-align:right;
   font-variant-numeric:tabular-nums;
 }
@@ -260,13 +260,13 @@ var(
 }
 
 .trade-diary-day-pnl{
-  grid-column:4;
+  grid-column:5;
   text-align:right;
   font-variant-numeric:tabular-nums;
 }
 
 .trade-diary-day-com{
-  grid-column:6;
+  grid-column:7;
   text-align:right;
   font-variant-numeric:tabular-nums;
 }
@@ -311,6 +311,29 @@ var(
   white-space:nowrap;
   overflow:hidden;
   text-overflow:ellipsis;
+}
+
+.trade-diary-chart-link{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:24px;
+  height:24px;
+  border:none;
+  background:transparent;
+  color:#6b7280;
+  cursor:pointer;
+  font-size:12px;
+  padding:0;
+  border-radius:4px;
+  flex-shrink:0;
+  line-height:1;
+  transition:color 0.15s ease,background 0.15s ease;
+}
+
+.trade-diary-chart-link:hover{
+  color:#fff;
+  background:#1f2937;
 }
 
 .trade-diary-duration{
@@ -516,7 +539,8 @@ var(
 .trade-diary-day-com,
 .trade-diary-num,
 .trade-diary-side,
-.trade-diary-duration{
+.trade-diary-duration,
+.trade-diary-chart-link{
   grid-column:auto;
   text-align:left;
 }

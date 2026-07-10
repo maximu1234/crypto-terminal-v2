@@ -13,6 +13,10 @@ import {
 marketMap
 } from "./terminal/terminal-state.js?v=9";
 
+import {
+mountTradeChartMarkersToggle
+} from "./trade-chart-execution-markers.js?v=1";
+
 const REFRESH_MS =
 1500;
 
@@ -536,6 +540,11 @@ entry.innerHTML =
 actions.insertBefore(
 entry,
 volumeWrap
+);
+
+mountTradeChartMarkersToggle(
+actions,
+entry
 );
 
 const buyBtn =

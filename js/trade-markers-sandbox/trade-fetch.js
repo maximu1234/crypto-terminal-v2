@@ -21,8 +21,14 @@ return window.cryptoTerminalDesktop?.trading;
 }
 
 function filterSymbolTrades(
-trades
+trades,
+symbol
 ){
+
+const want =
+normalizeSymbol(
+symbol
+);
 
 return (
 Array.isArray(
@@ -35,14 +41,20 @@ trade=>
 normalizeSymbol(
 trade?.symbol
 ) ===
-SANDBOX_SYMBOL
+want
 );
 
 }
 
-export async function fetchSandboxTrades(
+export async function fetchTradesForSymbol(
+symbol,
 chartStartSec
 ){
+
+const want =
+normalizeSymbol(
+symbol
+);
 
 const api =
 tradingApi();
@@ -59,6 +71,21 @@ executions:
 [],
 message:
 "trading API недоступен"
+};
+}
+
+if(
+!want
+){
+return {
+ok:
+false,
+trades:
+[],
+executions:
+[],
+message:
+"символ не задан"
 };
 }
 
@@ -90,7 +117,7 @@ pnlResult =
 await api.getClosedPnl(
 {
 symbol:
-SANDBOX_SYMBOL,
+want,
 startTime,
 endTime,
 skipExecutions:
@@ -135,7 +162,8 @@ pnlResult?.message ||
 
 const trades =
 filterSymbolTrades(
-pnlResult.trades
+pnlResult.trades,
+want
 );
 
 if(
@@ -163,7 +191,7 @@ trades,
 executions:
 closedPnlTradesToExecutions(
 trades,
-SANDBOX_SYMBOL
+want
 ),
 message:
 "без детализации"
@@ -287,7 +315,7 @@ executions.push(
 [
 trade
 ],
-SANDBOX_SYMBOL
+want
 )
 );
 
@@ -301,5 +329,16 @@ executions,
 message:
 ""
 };
+
+}
+
+export async function fetchSandboxTrades(
+chartStartSec
+){
+
+return fetchTradesForSymbol(
+SANDBOX_SYMBOL,
+chartStartSec
+);
 
 }

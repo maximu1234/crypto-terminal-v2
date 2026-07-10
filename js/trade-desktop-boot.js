@@ -23,7 +23,7 @@ initTradeLeverageSettings
 
 import {
 initTradeMarketEntry
-} from "./trade-market-entry.js?v=5";
+} from "./trade-market-entry.js?v=6";
 
 import {
 initTradeBookPanel
@@ -225,15 +225,6 @@ await import(
 
 initTradeOpenPositions();
 
-const {
-mountTradeMarkersSandboxLink
-} =
-await import(
-"./trade-markers-sandbox/terminal-nav-link.js?v=1"
-);
-
-mountTradeMarkersSandboxLink();
-
 }
 
 export async function initTradeDesktopAfterChart(
@@ -292,6 +283,15 @@ await import(
 );
 
 initTradeChartOrders();
+
+const {
+initTradeChartExecutionMarkers
+} =
+await import(
+"./trade-chart-execution-markers.js?v=1"
+);
+
+initTradeChartExecutionMarkers();
 
 window.__tradeAppReady =
 true;

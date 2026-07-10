@@ -2,7 +2,8 @@ import {
 alertEntryKey,
 commitAlertTriggeredLocally,
 formatAlertTelegramText,
-getActiveAlerts
+getActiveAlerts,
+normalizeAlertTf
 } from "./alerts.js?v=101";
 
 import {
@@ -12,6 +13,11 @@ subscribeKline
 import {
 EXCHANGE_CHANGED_EVENT
 } from "./market-api.js?v=1";
+
+import {
+getAlertNotifyMode,
+getAlertToastDurationMs
+} from "./alert-ui-prefs.js?v=1";
 
 /* Базовая цена отдельно для каждого алерта (symbol + shapeId) */
 const lastPriceByAlert =
@@ -397,45 +403,201 @@ return host;
 
 }
 
-function showToast(title, body){
+function isTerminalPagePath(){
+
+return /\/terminal(\.html)?\/?$/i.test(
+location.pathname ||
+""
+);
+
+}
+
+export function openAlertTarget(
+alert
+){
+
+const symbol =
+String(
+alert?.symbol ||
+""
+).trim().toUpperCase();
+const tf =
+normalizeAlertTf(
+alert?.tf
+);
+
+if(
+!symbol
+){
+return false;
+}
+
+if(
+isTerminalPagePath()
+){
+window.dispatchEvent(
+new CustomEvent(
+"trade-book-open-symbol",
+{
+detail:{
+symbol,
+tf
+}
+}
+)
+);
+return true;
+}
+
+location.href =
+`/terminal.html?symbol=${encodeURIComponent(
+symbol
+)}&tf=${encodeURIComponent(
+tf
+)}`;
+
+return true;
+
+}
+
+function dismissToast(
+el,
+host
+){
+
+if(
+!el?.isConnected
+){
+return;
+}
+
+el.classList.add(
+"alert-toast--out"
+);
+
+setTimeout(
+()=>{
+el.remove();
+
+if(
+host &&
+!host.children.length
+){
+host.remove();
+}
+},
+350
+);
+
+}
+
+function showToast(
+title,
+body,
+alert
+){
 
 const host =
 ensureToastHost();
+const durationMs =
+getAlertToastDurationMs();
 
 while(host.children.length > 4){
 host.firstElementChild?.remove();
 }
 
 const el =
-document.createElement("div");
+document.createElement(
+"button"
+);
 
-el.className = "alert-toast";
+el.type =
+"button";
+el.className =
+"alert-toast";
 
-el.innerHTML = `
-<div class="alert-toast-title">${title}</div>
-<div class="alert-toast-body">${body}</div>
-`;
+const titleEl =
+document.createElement(
+"div"
+);
+titleEl.className =
+"alert-toast-title";
+titleEl.textContent =
+title;
 
-host.appendChild(el);
+const bodyEl =
+document.createElement(
+"div"
+);
+bodyEl.className =
+"alert-toast-body";
+bodyEl.textContent =
+body;
 
-setTimeout(()=>{
-el.classList.add("alert-toast--out");
-}, 5000);
+const hintEl =
+document.createElement(
+"div"
+);
+hintEl.className =
+"alert-toast-hint";
+hintEl.textContent =
+"Нажмите, чтобы открыть график";
 
-setTimeout(()=>{
-el.remove();
-if(!host.children.length){
-host.remove();
+el.append(
+titleEl,
+bodyEl,
+hintEl
+);
+
+el.setAttribute(
+"aria-label",
+`${title}. ${body}. Открыть график.`
+);
+
+let hideTimer =
+setTimeout(
+()=>{
+dismissToast(
+el,
+host
+);
+},
+durationMs
+);
+
+el.addEventListener(
+"click",
+()=>{
+clearTimeout(
+hideTimer
+);
+openAlertTarget(
+alert
+);
+dismissToast(
+el,
+host
+);
 }
-}, 5350);
+);
+
+host.appendChild(
+el
+);
 
 }
 
-function showSystemNotification(title, body){
+function showSystemNotification(
+title,
+body,
+alert
+){
 
 if(
-typeof Notification === "undefined" ||
-Notification.permission !== "granted"
+typeof Notification ===
+"undefined" ||
+Notification.permission !==
+"granted"
 ){
 return;
 }
@@ -449,7 +611,19 @@ tag: `alert-${Date.now()}`,
 requireInteraction: false
 });
 
-setTimeout(()=>n.close(), 8000);
+n.onclick =
+()=>{
+window.focus?.();
+openAlertTarget(
+alert
+);
+n.close();
+};
+
+setTimeout(
+()=>n.close(),
+getAlertToastDurationMs()
+);
 
 }catch{}
 
@@ -470,8 +644,26 @@ lines.slice(1).join("\n") ||
 "";
 
 playAlertSound();
-showToast(title, body);
-showSystemNotification(title, body);
+
+const notifyMode =
+getAlertNotifyMode();
+
+if(
+notifyMode ===
+"internal"
+){
+showToast(
+title,
+body,
+alert
+);
+}else{
+showSystemNotification(
+title,
+body,
+alert
+);
+}
 
 }
 

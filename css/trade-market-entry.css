@@ -48,6 +48,23 @@ color:#ecfdf5;
 border-right:1px solid rgba(0,0,0,.25);
 }
 
+body.trade-page .trade-chart-markers-toggle{
+display:inline-flex;
+align-items:center;
+gap:6px;
+flex:0 0 auto;
+font:500 12px/1 system-ui,-apple-system,sans-serif;
+color:#d1d5db;
+cursor:pointer;
+user-select:none;
+white-space:nowrap;
+}
+
+body.trade-page .trade-chart-markers-toggle input{
+margin:0;
+accent-color:#22c55e;
+}
+
 body.trade-page .trade-market-entry-btn--buy:hover:not(:disabled){
 filter:brightness(1.08);
 }

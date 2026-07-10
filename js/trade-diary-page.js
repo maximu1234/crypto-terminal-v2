@@ -248,6 +248,7 @@ return `
 <div class="trade-diary-colhead trade-diary-grid" aria-hidden="true">
 <span></span>
 <span>Тикер</span>
+<span></span>
 <span>Время</span>
 <span class="trade-diary-num">PnL $</span>
 <span class="trade-diary-num">PnL %</span>
@@ -289,6 +290,9 @@ trade.closeTimeMs
 <span class="trade-diary-symbol">${escapeHtml(
 trade.symbol
 )}</span>
+<span class="trade-diary-chart-link" data-action="open-terminal" data-symbol="${escapeHtml(
+trade.symbol
+)}" title="Открыть в Терминале" role="link" tabindex="-1">↗</span>
 <span class="trade-diary-duration">${escapeHtml(
 formatDiaryDuration(
 trade.durationMs
@@ -759,6 +763,37 @@ contentEl.dataset.bound =
 contentEl.addEventListener(
 "click",
 event=>{
+
+const chartLink =
+event.target.closest(
+"[data-action='open-terminal']"
+);
+
+if(
+chartLink
+){
+
+event.preventDefault();
+event.stopPropagation();
+
+const symbol =
+String(
+chartLink.dataset.symbol ||
+""
+).trim();
+
+if(
+symbol
+){
+window.location.href =
+`/terminal.html?symbol=${encodeURIComponent(
+symbol
+)}&tf=60`;
+}
+
+return;
+
+}
 
 const dayBtn =
 event.target.closest(

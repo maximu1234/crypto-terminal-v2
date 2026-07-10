@@ -2653,7 +2653,9 @@ colorBtn?.classList.toggle(
 "hidden",
 isPosToolbar ||
 type ===
-"rectangle"
+"rectangle" ||
+type ===
+"fib"
 );
 
 widthBtn?.classList.toggle(

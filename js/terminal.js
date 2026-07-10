@@ -82,7 +82,7 @@ disconnectKlineStream
 
 import {
 syncBackgroundAlertStreams
-} from "./alert-monitor.js?v=65";
+} from "./alert-monitor.js?v=67";
 
 import {
 createSharedDrawUndoStack
@@ -95,7 +95,7 @@ initWidgetDrawings
 import {
 mountDrawToolbar,
 mountDrawToolIcons
-} from "./draw-ui-shared.js?v=29";
+} from "./draw-ui-shared.js?v=30";
 
 import {
 initChartIndicators
@@ -3104,6 +3104,11 @@ String(
 e.detail?.symbol ||
 ""
 ).trim().toUpperCase();
+const tf =
+String(
+e.detail?.tf ||
+""
+).trim();
 
 if(
 !symbol
@@ -3114,6 +3119,17 @@ return;
 void loadSymbol(
 symbol
 );
+
+if(
+tf &&
+COINS_TF_VALUES.has(
+tf
+)
+){
+void setCoinsTimeframe(
+tf
+);
+}
 
 }
 );

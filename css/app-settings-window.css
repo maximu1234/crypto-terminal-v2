@@ -161,6 +161,34 @@ flex:1 1 auto;
 min-width:0;
 }
 
+.app-settings-field-row{
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:12px;
+margin:0 0 10px;
+font-size:13px;
+line-height:1.35;
+color:#e5e7eb;
+}
+
+.app-settings-field-label{
+flex:1 1 auto;
+min-width:0;
+}
+
+.app-settings-field-select{
+flex:0 0 auto;
+min-width:168px;
+max-width:min(100%, 220px);
+padding:6px 8px;
+border-radius:8px;
+border:1px solid #374151;
+background:#111827;
+color:#f3f4f6;
+font-size:13px;
+}
+
 .app-settings-subtitle{
   margin:0 0 8px;
   font-size:14px;

@@ -67,12 +67,9 @@ Object.freeze({
 "W"
 });
 
-/** Целевое число свечей слева/справа от сделки (итого ~2× вокруг трейда). */
+/** Свечей слева от входа и справа от выхода (одинаково на всех ТФ). */
 const DIARY_CHART_BARS_EACH_SIDE =
-40;
-
-const DIARY_CHART_MIN_BARS =
-24;
+200;
 
 export function diaryChartTfLabel(
 tf
@@ -201,10 +198,7 @@ closeTimeMs -
 openTimeMs
 );
 const sideBars =
-Math.max(
-DIARY_CHART_MIN_BARS,
-DIARY_CHART_BARS_EACH_SIDE
-);
+DIARY_CHART_BARS_EACH_SIDE;
 const startMs =
 openTimeMs -
 sideBars *
@@ -804,19 +798,7 @@ tf
 )
 );
 const pad =
-Math.max(
-12,
-Math.floor(
-40 *
-60 /
-(
-TF_MINUTES[
-tf
-] ||
-15
-)
-)
-);
+DIARY_CHART_BARS_EACH_SIDE;
 const from =
 Math.max(
 0,
