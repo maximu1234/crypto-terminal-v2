@@ -1,6 +1,8 @@
 /**
- * Windows-only: генерация PnL-бейджа (Python, пути, шаблоны).
- * Mac — pnl-share-card.cjs (python3).
+ * Windows-only: генерация PnL-бейджа.
+ * 1) bundled tools/pnl-card-generator.exe (PyInstaller, без Python у пользователя)
+ * 2) fallback: py / python + Pillow
+ * Mac — pnl-share-card.cjs (python3), этот файл не используется.
  */
 const {
 spawn
@@ -346,6 +348,98 @@ tryNext();
 
 }
 
+function getBundledGeneratorExe(){
+
+return path.join(
+getAppRoot(),
+"tools",
+"pnl-card-generator.exe"
+);
+
+}
+
+function spawnBundledGenerator(
+exePath,
+scriptArgs,
+cwd
+){
+
+return new Promise(
+(
+resolve,
+reject
+)=>{
+
+const args =
+scriptArgs.slice(
+1
+);
+
+const child =
+spawn(
+exePath,
+args,
+{
+cwd,
+stdio:[
+"ignore",
+"pipe",
+"pipe"
+],
+windowsHide:
+true
+}
+);
+
+let stderr =
+"";
+
+child.stderr.on(
+"data",
+chunk=>{
+stderr +=
+String(
+chunk
+);
+}
+);
+
+child.on(
+"error",
+err=>{
+reject(
+err
+);
+}
+);
+
+child.on(
+"close",
+code=>{
+
+if(
+code !==
+0
+){
+reject(
+new Error(
+stderr.trim() ||
+`pnl-card-generator.exe exited ${code}`
+)
+);
+return;
+}
+
+resolve();
+
+}
+);
+
+}
+);
+
+}
+
 function runGenerateScript(
 outPath,
 payload
@@ -401,10 +495,24 @@ payload,
 appRoot
 );
 
-return runPythonWithFallback(
+const bundledExe =
+getBundledGeneratorExe();
+
+const run =
+fs.existsSync(
+bundledExe
+)
+? spawnBundledGenerator(
+bundledExe,
 scriptArgs,
 appRoot
-).then(
+)
+: runPythonWithFallback(
+scriptArgs,
+appRoot
+);
+
+return run.then(
 ()=>{
 
 if(

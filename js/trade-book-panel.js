@@ -23,7 +23,7 @@ columnResizeHandle
 
 import {
 openPnlShareModal
-} from "./trade-pnl-share-modal.js?v=7";
+} from "./trade-pnl-share-modal.js?v=8";
 
 import {
 formatAlertDate,

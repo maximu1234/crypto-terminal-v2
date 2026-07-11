@@ -25,6 +25,11 @@ border:1px solid #2a3140;
 box-shadow:0 18px 48px rgba(0,0,0,.45);
 }
 
+/* Высота превью = портретная карточка Позиций @ 360px ширины (960×1323). */
+.trade-pnl-share-dialog--diary{
+width:min(92vw,720px);
+}
+
 .trade-pnl-share-close{
 position:absolute;
 top:8px;
@@ -47,11 +52,17 @@ background:rgba(255,255,255,.06);
 }
 
 .trade-pnl-share-preview-wrap{
+--pnl-share-preview-h:min(
+496px,
+calc(92vh - 120px)
+);
 display:flex;
 justify-content:center;
 align-items:center;
-overflow:auto;
-max-height:calc(92vh - 120px);
+overflow:hidden;
+height:var(--pnl-share-preview-h);
+min-height:var(--pnl-share-preview-h);
+max-height:var(--pnl-share-preview-h);
 }
 
 .trade-pnl-share-overlay[hidden]{
@@ -60,10 +71,24 @@ display:none !important;
 
 .trade-pnl-share-preview{
 display:block;
-width:100%;
-max-width:360px;
-height:auto;
+width:auto;
+height:100%;
+max-height:100%;
+object-fit:contain;
 border-radius:8px;
+}
+
+.trade-pnl-share-dialog:not(
+.trade-pnl-share-dialog--diary
+) .trade-pnl-share-preview{
+max-width:360px;
+}
+
+.trade-pnl-share-dialog--diary .trade-pnl-share-preview{
+max-width:min(
+684px,
+calc(92vw - 36px)
+);
 }
 
 .trade-pnl-share-preview:not([src]),

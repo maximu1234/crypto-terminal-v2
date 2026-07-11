@@ -137,7 +137,7 @@ var(
 --trade-diary-inner-width,
 916px
 );
-  grid-template-columns:104px 220px 28px 108px 120px 84px 84px 88px;
+  grid-template-columns:96px minmax(148px,1fr) 28px 96px 88px 28px 72px 72px 92px;
   column-gap:16px;
   align-items:center;
   padding:8px 18px;
@@ -178,7 +178,7 @@ var(
 }
 
 .trade-diary-week-com{
-  grid-column:7;
+  grid-column:8;
   text-align:right;
   font-variant-numeric:tabular-nums;
 }
@@ -266,7 +266,7 @@ var(
 }
 
 .trade-diary-day-com{
-  grid-column:7;
+  grid-column:8;
   text-align:right;
   font-variant-numeric:tabular-nums;
 }
@@ -348,23 +348,11 @@ var(
   white-space:nowrap;
 }
 
-.trade-diary-pnl-wrap{
+.trade-diary-share-col{
   display:flex;
   align-items:center;
-  justify-content:flex-end;
-  gap:3px;
+  justify-content:center;
   min-width:0;
-  width:100%;
-  overflow:visible;
-}
-
-.trade-diary-pnl-value{
-  min-width:0;
-  flex:1 1 auto;
-  overflow:hidden;
-  text-overflow:ellipsis;
-  white-space:nowrap;
-  text-align:right;
 }
 
 body.trade-diary-body .trade-book-share{
@@ -404,6 +392,7 @@ body.trade-diary-body .trade-book-share:hover .trade-book-share-icon--on{
   text-align:right;
   font-weight:500;
   white-space:nowrap;
+  overflow:visible;
 }
 
 .trade-diary-pos{
@@ -589,6 +578,7 @@ body.trade-diary-body .trade-book-share:hover .trade-book-share-icon--on{
 .trade-diary-day-label,
 .trade-diary-day-pnl,
 .trade-diary-day-com,
+.trade-diary-share-col,
 .trade-diary-num,
 .trade-diary-side,
 .trade-diary-duration,

@@ -192,6 +192,26 @@ function inferLeverageFromTrade(
 trade
 ){
 
+const fromApi =
+Number(
+trade?.leverage
+);
+
+if(
+Number.isFinite(
+fromApi
+) &&
+fromApi >=
+1
+){
+return Math.min(
+Math.round(
+fromApi
+),
+200
+);
+}
+
 const entry =
 Number(
 trade?.avgEntryPrice
@@ -792,6 +812,21 @@ preview
 ){
 preview.src =
 result.dataUrl;
+}
+
+const dialog =
+overlay.querySelector(
+".trade-pnl-share-dialog"
+);
+
+if(
+dialog
+){
+dialog.classList.toggle(
+"trade-pnl-share-dialog--diary",
+payload?.variant ===
+"diary"
+);
 }
 
 if(

@@ -78,6 +78,21 @@ jobs:
       - name: Bundle site into desktop
         run: npm run bundle:site
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Build PnL card generator (Windows exe)
+        working-directory: .
+        run: |
+          pip install pillow pyinstaller
+          pyinstaller scripts/pnl-card-win.spec \
+            --distpath desktop/build \
+            --workpath desktop/build/.pyi-work \
+            -y
+          test -f desktop/build/pnl-card-generator.exe
+
       - name: Build Windows installer + portable
         run: npm run build:win
 

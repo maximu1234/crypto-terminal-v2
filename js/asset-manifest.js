@@ -48,7 +48,7 @@ Object.freeze({
 "trade-diary-nav.js":
 11,
 "trade-diary-page.js":
-16,
+17,
 "trade-diary-period.js":
 3,
 "trade-diary-detail.js":
@@ -80,7 +80,7 @@ Object.freeze({
 "trade-book-panel.js":
 52,
 "trade-pnl-share-modal.js":
-7,
+8,
 "trade-book-columns.js":
 14,
 "trade-chart-execution-markers.js":
@@ -479,9 +479,9 @@ Object.freeze({
 "trade-book-panel.css":
 49,
 "trade-pnl-share-modal.css":
-3,
+4,
 "trade-diary.css":
-19,
+20,
 "trade-diary-period.css":
 1,
 "trade-chart-overlay.css":

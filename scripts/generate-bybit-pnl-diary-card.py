@@ -24,14 +24,14 @@ LAYOUT = {
     "ticker_font": 60.5,
     "ticker_tracking": -4,
     "ticker_bl_x": 61,
-    "ticker_bl_y": 118,
+    "ticker_bl_y": 249,
     "badge_gap": 45,
-    "badge_pill_y": 64,
+    "badge_pill_y_offset": -54,
     "badge_pill_h": 60,
     "badge_pill_radius": 12,
     "badge_pill_pad_x": 26,
     "badge_text_pad_left": 14,
-    "badge_text_y": 84,
+    "badge_text_y_offset": -34,
     "badge_font": 30,
     "roi_font": 102,
     "roi_bl_x": 64,
@@ -249,6 +249,7 @@ def pick_template(roi_pct: float) -> Path:
 def draw_badge(
     base: Image.Image,
     text_left: int,
+    ticker_bl_y: int,
     side: str,
     leverage: int,
     font: ImageFont.FreeTypeFont,
@@ -261,7 +262,8 @@ def draw_badge(
     bl_off, br_off = _visual_origin_offset(font, label, text_color, text_pred)
     text_w = br_off[0] - bl_off[0] + 1
     pill_left = text_left - lay["badge_text_pad_left"]
-    pill_top = lay["badge_pill_y"]
+    pill_top = int(ticker_bl_y) + int(lay["badge_pill_y_offset"])
+    badge_text_y = int(ticker_bl_y) + int(lay["badge_text_y_offset"])
     pill_w = text_w + lay["badge_pill_pad_x"]
     pill_h = lay["badge_pill_h"]
     pill_box = (
@@ -284,7 +286,7 @@ def draw_badge(
     )
     tl_off = _visual_tl_offset(font, label, text_color, text_pred)
     draw.text(
-        (text_left - tl_off[0], lay["badge_text_y"] - tl_off[1]),
+        (text_left - tl_off[0], badge_text_y - tl_off[1]),
         label,
         font=font,
         fill=text_color + (255,),
@@ -316,13 +318,19 @@ def render_card(trade: TradeCard) -> Image.Image:
         _is_white,
         ticker_tracking,
     )
-    ticker_box = (30, 40, 550, 110)
+    ticker_box = (
+        30,
+        max(0, int(lay["ticker_bl_y"]) - 90),
+        550,
+        int(lay["ticker_bl_y"]) + 15,
+    )
     ticker_metrics = _visual_bbox(base.convert("RGB"), ticker_box, _is_white)
     ticker_br = ticker_metrics[1][0] if ticker_metrics else lay["ticker_bl_x"]
     badge_text_left = ticker_br + lay["badge_gap"]
     draw_badge(
         base,
         badge_text_left,
+        int(lay["ticker_bl_y"]),
         trade.side,
         trade.leverage,
         badge_font,

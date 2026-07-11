@@ -32,7 +32,7 @@ initTradeDiaryNav
 import {
 openPnlShareDiaryModal,
 PNL_SHARE_CONTROL_HTML
-} from "./trade-pnl-share-modal.js?v=7";
+} from "./trade-pnl-share-modal.js?v=8";
 
 const deniedDesktopEl =
 document.getElementById(
@@ -256,6 +256,7 @@ return `
 <span></span>
 <span>Время</span>
 <span class="trade-diary-num">PnL $</span>
+<span class="trade-diary-share-col" aria-hidden="true"></span>
 <span class="trade-diary-num">PnL %</span>
 <span class="trade-diary-num">Com. $</span>
 <span class="trade-diary-num">Long/Short</span>
@@ -303,16 +304,14 @@ formatDiaryDuration(
 trade.durationMs
 )
 )}</span>
-<span class="trade-diary-pnl-wrap trade-diary-num ${pnlToneClass(
+<span class="trade-diary-num ${pnlToneClass(
 trade.pnlUsd
-)}">
-<span class="trade-diary-pnl-value">${escapeHtml(
+)}">${escapeHtml(
 formatDiaryUsd(
 trade.pnlUsd
 )
 )}</span>
-${PNL_SHARE_CONTROL_HTML}
-</span>
+<span class="trade-diary-share-col">${PNL_SHARE_CONTROL_HTML}</span>
 <span class="trade-diary-num ${pnlToneClass(
 trade.pnlPct
 )}">${escapeHtml(

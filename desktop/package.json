@@ -1,7 +1,7 @@
 {
   "name": "multichart-desktop",
   "productName": "Multichart",
-  "version": "1.0.58",
+  "version": "1.0.59",
   "description": "Multichart desktop shell for macOS (bundled site UI + auto-update)",
   "main": "main.js",
   "author": "Multichart",
@@ -94,6 +94,12 @@
           "arch": [
             "x64"
           ]
+        }
+      ],
+      "extraResources": [
+        {
+          "from": "build/pnl-card-generator.exe",
+          "to": "tools/pnl-card-generator.exe"
         }
       ]
     },
