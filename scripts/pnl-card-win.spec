@@ -3,16 +3,15 @@
 from pathlib import Path
 
 block_cipher = None
-root = Path(SPECPATH).resolve().parent
-scripts = root
+scripts_dir = Path(SPECPATH).resolve()
 
 a = Analysis(
-    [str(scripts / "pnl-card-win-entry.py")],
-    pathex=[str(scripts)],
+    [str(scripts_dir / "pnl-card-win-entry.py")],
+    pathex=[str(scripts_dir)],
     binaries=[],
     datas=[
-        (str(scripts / "generate-bybit-pnl-card.py"), "."),
-        (str(scripts / "generate-bybit-pnl-diary-card.py"), "."),
+        (str(scripts_dir / "generate-bybit-pnl-card.py"), "."),
+        (str(scripts_dir / "generate-bybit-pnl-diary-card.py"), "."),
     ],
     hiddenimports=["PIL", "PIL.Image", "PIL.ImageDraw", "PIL.ImageFont"],
     hookspath=[],
