@@ -399,9 +399,9 @@ Object.freeze({
 "alerts-cloud/telegram-id.js":
 2,
 "alerts-cloud/worker-client.js":
-4,
+5,
 "alerts-cloud/registry-sync.js":
-6,
+7,
 "alerts-cloud/polling-realtime.js":
 8,
 "alerts-page.js":

@@ -17,7 +17,7 @@ isAlertRowInCloud,
 deleteAlertViaWorker,
 pushAlertViaWorker,
 hintWorkerReloadAlerts
-} from "./alerts-cloud/worker-client.js?v=4";
+} from "./alerts-cloud/worker-client.js?v=5";
 
 export {
 readCachedTelegramChatId,
@@ -39,7 +39,7 @@ reconcileLocalRegistryWithCloud,
 pullRegistryFromCloud,
 pullRegistryFromCloudNow,
 scheduleRegistryCloudSync
-} from "./alerts-cloud/registry-sync.js?v=6";
+} from "./alerts-cloud/registry-sync.js?v=7";
 
 export {
 purgeAlertGarbageFromCloud
