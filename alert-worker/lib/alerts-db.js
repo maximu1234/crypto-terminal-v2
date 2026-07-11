@@ -184,7 +184,7 @@ async function fetchTelegramAlertsFull(){
 
   try{
     alerts = await restGet(
-      `price_alerts?select=id,user_id,symbol,shape_id,price,tf,exchange_id&${filter}`
+      `price_alerts?select=id,user_id,symbol,shape_id,price,tf,exchange_id,created_at&${filter}`
     );
   }catch(err){
   if(
@@ -201,7 +201,7 @@ async function fetchTelegramAlertsFull(){
 
     try{
       alerts = await restGet(
-        `price_alerts?select=id,user_id,symbol,shape_id,price,tf,exchange_id&${filter}`
+        `price_alerts?select=id,user_id,symbol,shape_id,price,tf,exchange_id,created_at&${filter}`
       );
     }catch(retryErr){
       console.warn(
@@ -271,6 +271,7 @@ async function fetchTelegramAlertsFull(){
       shape_id: row.shape_id,
       price: Number(row.price),
       tf: normalizeWorkerTf(row.tf),
+      created_at: row.created_at || null,
       telegram_chat_id: chatId
     });
 

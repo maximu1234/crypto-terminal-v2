@@ -16,7 +16,8 @@ import {
   evaluateAlertsForCandle,
   evaluateAlertsForTicker,
   seedMissingAlertBaselines,
-  seedTickerBaselines
+  seedTickerBaselines,
+  sweepAlertsWithMarket
 } from "./lib/trigger-alert.js";
 import { handleClientApi } from "./lib/client-api.js";
 import { handleBybitProxy } from "./lib/bybit-proxy.js";
@@ -35,7 +36,7 @@ import {
 } from "./lib/reload-request.js";
 
 const PORT = Number(process.env.PORT) || 8080;
-const WORKER_BUILD = "2026-07-11-ticker";
+const WORKER_BUILD = "2026-07-11-ticker-v2";
 
 /** alert key -> row */
 let activeAlerts = new Map();
@@ -125,6 +126,7 @@ async function reloadAlerts(
   try {
     await seedMissingAlertBaselines(activeAlerts);
     await seedTickerBaselines(activeAlerts);
+    await sweepAlertsWithMarket(activeAlerts);
   } catch (err) {
     console.warn(
       "seed alert baselines:",
@@ -222,6 +224,7 @@ async function main() {
         telegram: telegramConfigured(),
         config: st,
         diag,
+        ticker: tickerHub.getStats?.() || null,
         reload: {
           intervalMs: getReloadIntervalMs(),
           cycles: reloadCycles,
@@ -342,6 +345,19 @@ async function main() {
   }
 
   scheduleReloadTick();
+
+  const SWEEP_MS =
+    Number(process.env.ALERTS_SWEEP_MS) ||
+    15000;
+
+  setInterval(() => {
+    sweepAlertsWithMarket(activeAlerts).catch(err => {
+      console.warn(
+        "sweep alerts:",
+        err?.message || err
+      );
+    });
+  }, SWEEP_MS);
 
 }
 

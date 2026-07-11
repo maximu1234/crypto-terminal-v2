@@ -189,14 +189,20 @@ async function claimAlertTrigger(
       }
     );
 
+  if (!result.ok) {
+    console.warn(
+      `trigger failed (${channel})`,
+      alert.symbol,
+      alert.id,
+      result.reason || result.error || "unknown"
+    );
+    return false;
+  }
+
   activeAlerts.delete(key);
   lastPriceByAlert.delete(key);
   lastCandleTimeByAlert.delete(key);
   lastTickerPriceByAlert.delete(key);
-
-  if (!result.ok) {
-    return;
-  }
 
   const tfNorm =
     normalizeWorkerTf(alert.tf);
@@ -226,6 +232,8 @@ async function claimAlertTrigger(
       level
     );
   }
+
+  return true;
 
 }
 
@@ -291,6 +299,175 @@ export async function evaluateAlertsForTicker(
     );
 
   }
+
+}
+
+/**
+ * REST + kline sweep — ловит cross, пропущенный delta-ticker WS.
+ */
+export async function sweepAlertsWithMarket(
+  activeAlerts
+) {
+
+  const byTopic = new Map();
+
+  for (const [key, alert] of activeAlerts) {
+
+    const sym =
+      normalizeBybitSymbol(alert.symbol);
+    const tf =
+      normalizeWorkerTf(alert.tf);
+    const topicKey =
+      `${sym}::${tf}`;
+
+    if (!byTopic.has(topicKey)) {
+      byTopic.set(
+        topicKey,
+        { sym, tf, items: [] }
+      );
+    }
+
+    byTopic.get(topicKey).items.push({
+      key,
+      alert
+    });
+
+  }
+
+  await Promise.all(
+    [...byTopic.values()].map(async ({ sym, tf, items }) => {
+
+      const candles =
+        await fetchRecentKlines(
+          sym,
+          tf,
+          3
+        );
+
+      const lastBar =
+        candles.length
+          ? candles[candles.length - 1]
+          : null;
+      const restPrice =
+        await fetchLastPrice(sym);
+
+      for (const { key, alert } of items) {
+
+        if (!activeAlerts.has(key)) {
+          continue;
+        }
+
+        const level =
+          Number(alert.price);
+
+        if (!Number.isFinite(level)) {
+          continue;
+        }
+
+        const createdSec =
+          alert.created_at
+            ? Math.floor(
+              new Date(
+                alert.created_at
+              ).getTime() / 1000
+            )
+            : 0;
+
+        if (candles.length >= 2) {
+          let prev =
+            Number(
+              candles[
+                candles.length - 2
+              ].close
+            );
+          let triggered =
+            false;
+
+          for (let i = 1; i < candles.length; i++) {
+            const candle =
+              candles[i];
+
+            if (
+              createdSec &&
+              Number(candle.time) <
+              createdSec
+            ) {
+              prev =
+                Number(candle.close);
+              continue;
+            }
+
+            if (
+              didCrossWithCandle(
+                prev,
+                candle,
+                level,
+                { sameBar: false }
+              )
+            ) {
+              triggered =
+                await claimAlertTrigger(
+                  activeAlerts,
+                  key,
+                  alert,
+                  Number(candle.close),
+                  "sweep-kline"
+                );
+              break;
+            }
+
+            prev =
+              Number(candle.close);
+          }
+
+          if (triggered) {
+            continue;
+          }
+        }
+
+        if (
+          !activeAlerts.has(key) ||
+          !Number.isFinite(restPrice)
+        ) {
+          continue;
+        }
+
+        let prev =
+          lastTickerPriceByAlert.get(key);
+
+        if (!Number.isFinite(prev)) {
+          prev =
+            lastBar
+              ? Number(lastBar.close)
+              : restPrice;
+        }
+
+        if (
+          didCrossLine(
+            prev,
+            restPrice,
+            level
+          )
+        ) {
+          await claimAlertTrigger(
+            activeAlerts,
+            key,
+            alert,
+            restPrice,
+            "sweep-rest"
+          );
+          continue;
+        }
+
+        lastTickerPriceByAlert.set(
+          key,
+          restPrice
+        );
+
+      }
+
+    })
+  );
 
 }
 

@@ -4,6 +4,31 @@ import { normalizeBybitSymbol } from "./bybit-symbol.js";
 const WS_URL =
   "wss://stream.bybit.com/v5/public/linear";
 
+function pickTickerPrice(row) {
+
+  const last =
+    Number(row?.lastPrice);
+  const mark =
+    Number(row?.markPrice);
+  const index =
+    Number(row?.indexPrice);
+
+  if (Number.isFinite(last)) {
+    return last;
+  }
+
+  if (Number.isFinite(mark)) {
+    return mark;
+  }
+
+  if (Number.isFinite(index)) {
+    return index;
+  }
+
+  return NaN;
+
+}
+
 export function createBybitTickerHub() {
 
   /** @type {WebSocket | null} */
@@ -14,7 +39,11 @@ export function createBybitTickerHub() {
 
   const wanted = new Set();
   const lastPrice = new Map();
+  /** symbol → merged snapshot (delta updates часто без lastPrice) */
+  const rowBySymbol = new Map();
   const listeners = new Set();
+  let lastTickAt = 0;
+  let tickCount = 0;
 
   function emit(symbol, price) {
 
@@ -25,6 +54,8 @@ export function createBybitTickerHub() {
     }
 
     lastPrice.set(symbol, price);
+    lastTickAt = Date.now();
+    tickCount += 1;
 
     for (const fn of listeners) {
       try {
@@ -33,6 +64,39 @@ export function createBybitTickerHub() {
         console.warn("ticker listener:", err);
       }
     }
+
+  }
+
+  function mergeRow(row) {
+
+    const symbol =
+      normalizeBybitSymbol(row?.symbol);
+
+    if (!symbol) {
+      return null;
+    }
+
+    const prev =
+      rowBySymbol.get(symbol) || {};
+    const merged = {
+      ...prev,
+      ...row,
+      symbol
+    };
+
+    rowBySymbol.set(symbol, merged);
+
+    const price =
+      pickTickerPrice(merged);
+
+    if (!Number.isFinite(price)) {
+      return null;
+    }
+
+    return {
+      symbol,
+      price
+    };
 
   }
 
@@ -60,7 +124,7 @@ export function createBybitTickerHub() {
     socket = new WebSocket(WS_URL);
 
     socket.on("open", () => {
-      console.log("bybit ws connected");
+      console.log("bybit ticker ws connected");
       subscribeOnWire();
     });
 
@@ -86,24 +150,36 @@ export function createBybitTickerHub() {
         return;
       }
 
-      const row = Array.isArray(data) ? data[0] : data;
-      const symbol = row.symbol;
-      const price = Number(row.lastPrice);
+      const rows =
+        Array.isArray(data)
+          ? data
+          : [data];
 
-      if (symbol && Number.isFinite(price)) {
-        emit(symbol, price);
+      for (const row of rows) {
+        const merged =
+          mergeRow(row);
+
+        if (merged) {
+          emit(
+            merged.symbol,
+            merged.price
+          );
+        }
       }
 
     });
 
     socket.on("close", () => {
-      console.warn("bybit ws closed, reconnect in 3s");
+      console.warn("bybit ticker ws closed, reconnect in 3s");
       socket = null;
+      if (reconnectTimer) {
+        clearTimeout(reconnectTimer);
+      }
       reconnectTimer = setTimeout(connect, 3000);
     });
 
     socket.on("error", err => {
-      console.warn("bybit ws error:", err.message);
+      console.warn("bybit ticker ws error:", err.message);
     });
 
   }
@@ -131,7 +207,17 @@ export function createBybitTickerHub() {
     },
 
     getLastPrice(symbol) {
-      return lastPrice.get(symbol);
+      return lastPrice.get(
+        normalizeBybitSymbol(symbol)
+      );
+    },
+
+    getStats() {
+      return {
+        symbols: wanted.size,
+        lastTickAt: lastTickAt || null,
+        tickCount
+      };
     },
 
     close() {
