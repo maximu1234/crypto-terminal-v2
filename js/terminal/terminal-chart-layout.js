@@ -7,6 +7,10 @@ computeChartFutureMarginBars,
 coinsTfVisibleBars
 } from "../chart-import.js?v=43";
 
+import {
+isChartLayoutReady
+} from "../chart-layout-gate.js?v=2";
+
 let layoutCtx =
 null;
 
@@ -352,9 +356,16 @@ candles.length
 const chartIndicators =
 getChartIndicators?.();
 
-chartIndicators?.syncViewports?.(
+if(
+chartIndicators &&
+isChartLayoutReady()
+){
+
+chartIndicators.syncViewports?.(
 viewportCtx
 );
+
+}
 
 const rsiChart =
 getRsiChart?.();

@@ -11,12 +11,16 @@ coinsTfVisibleBars
 } from "../chart-import.js?v=43";
 
 import {
-runWithPreservedVisibleLogicalRange
-} from "../chart-visible-range.js?v=1";
+isChartLayoutReady
+} from "../chart-layout-gate.js?v=2";
 
 import {
 isBottomIndicatorPane
 } from "./indicator-pane-order.js?v=1";
+
+import {
+syncPaneViewportAfterData
+} from "./indicator-pane-viewport.js?v=2";
 
 export const VOLUME_PANE_ID =
 "volume";
@@ -169,7 +173,9 @@ chart,
 updateTimeScaleVisibility,
 {
 linkedDrivesMain:
-false
+false,
+isLocked:()=>
+!isChartLayoutReady()
 }
 );
 
@@ -243,6 +249,82 @@ wrapEl()?.classList.toggle(
 
 }
 
+function ensurePaneChartSized(){
+
+if(
+!enabled ||
+!chart
+){
+return;
+}
+
+const host =
+getHost?.();
+
+const w =
+host?.getChartWrapWidth?.() ||
+0;
+
+if(
+w >
+0
+){
+onResize(
+w
+);
+}
+
+}
+
+function pulseVolumeAutoscale(){
+
+if(
+!chart
+){
+return;
+}
+
+try{
+const ps =
+chart.priceScale(
+"right"
+);
+
+ps.applyOptions({
+autoScale:
+false
+});
+
+ps.applyOptions({
+autoScale:
+true,
+scaleMargins:{
+top:
+0.08,
+bottom:
+0
+}
+});
+}catch{
+/* ignore */
+}
+
+}
+
+function syncVolumeAfterData(){
+
+syncPaneViewportAfterData(
+getHost,
+chart,
+{
+pulseAutoscale:
+pulseVolumeAutoscale,
+updateTimeScaleVisibility
+}
+);
+
+}
+
 function refreshData(){
 
 if(
@@ -251,6 +333,8 @@ if(
 ){
 return;
 }
+
+ensurePaneChartSized();
 
 const host =
 getHost?.();
@@ -269,9 +353,6 @@ raw,
 tf
 );
 
-runWithPreservedVisibleLogicalRange(
-chart,
-()=>{
 series.setData(
 points.map(
 bar=>({
@@ -287,8 +368,8 @@ bar
 })
 )
 );
-}
-);
+
+syncVolumeAfterData();
 
 }
 
@@ -309,28 +390,9 @@ return;
 enabled =
 true;
 applyVisibility();
+ensurePaneChartSized();
 refreshData();
 bindTimeSync();
-
-const host =
-getHost?.();
-const w =
-host?.getChartWrapWidth?.() ||
-0;
-const h =
-host?.getPaneHeight?.() ||
-0;
-
-if(
-w >
-0 &&
-h >
-0
-){
-onResize(
-w
-);
-}
 
 }
 
@@ -447,6 +509,8 @@ height:
 paneHeight
 }
 );
+
+pulseVolumeAutoscale();
 
 }
 

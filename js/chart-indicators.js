@@ -3,7 +3,7 @@
  */
 import {
 createAoPaneIndicator
-} from "./indicators/ao-pane.js?v=2";
+} from "./indicators/ao-pane.js?v=8";
 import {
 createHorizontalVolumeIndicator
 } from "./indicators/horizontal-volume.js?v=9";
@@ -12,7 +12,7 @@ createRsiPaneIndicator
 } from "./indicators/rsi-pane.js?v=2";
 import {
 createVolumePaneIndicator
-} from "./indicators/volume-pane.js?v=5";
+} from "./indicators/volume-pane.js?v=11";
 import {
 createMovingAverageIndicator
 } from "./indicators/moving-average.js?v=14";
@@ -637,6 +637,25 @@ ind.onCandlesUpdate?.()
 
 }
 
+function flushIndicatorDataRefreshNow(){
+
+if(
+indicatorRefreshRaf
+){
+
+cancelAnimationFrame(
+indicatorRefreshRaf
+);
+
+indicatorRefreshRaf =
+0;
+
+}
+
+flushIndicatorDataRefresh();
+
+}
+
 function scheduleIndicatorDataRefresh(){
 
 if(
@@ -843,6 +862,7 @@ notifySymbolChange,
 notifyCandlesUpdate,
 notifyLayoutSettled,
 notifyMainChartOverlaysSync,
+flushIndicatorDataRefreshNow,
 syncViewports,
 resizePanes,
 getLinkedPaneCharts,

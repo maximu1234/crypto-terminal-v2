@@ -11,18 +11,22 @@ coinsTfVisibleBars
 } from "../chart-import.js?v=43";
 
 import {
-runWithPreservedVisibleLogicalRange
-} from "../chart-visible-range.js?v=1";
-
-import {
 calculateAwesomeOscillator,
 aoBarColor,
 formatAoLegendValue
 } from "./ao-math.js?v=1";
 
 import {
+isChartLayoutReady
+} from "../chart-layout-gate.js?v=2";
+
+import {
 isBottomIndicatorPane
 } from "./indicator-pane-order.js?v=1";
+
+import {
+syncPaneViewportAfterData
+} from "./indicator-pane-viewport.js?v=2";
 
 export const AO_PANE_ID =
 "ao";
@@ -197,7 +201,9 @@ chart,
 updateTimeScaleVisibility,
 {
 linkedDrivesMain:
-false
+false,
+isLocked:()=>
+!isChartLayoutReady()
 }
 );
 
@@ -289,6 +295,82 @@ wrapEl()?.classList.toggle(
 
 }
 
+function ensurePaneChartSized(){
+
+if(
+!enabled ||
+!chart
+){
+return;
+}
+
+const host =
+getHost?.();
+
+const w =
+host?.getChartWrapWidth?.() ||
+0;
+
+if(
+w >
+0
+){
+onResize(
+w
+);
+}
+
+}
+
+function pulseAoAutoscale(){
+
+if(
+!chart
+){
+return;
+}
+
+try{
+const ps =
+chart.priceScale(
+"right"
+);
+
+ps.applyOptions({
+autoScale:
+false
+});
+
+ps.applyOptions({
+autoScale:
+true,
+scaleMargins:{
+top:
+0.1,
+bottom:
+0.1
+}
+});
+}catch{
+/* ignore */
+}
+
+}
+
+function syncAoAfterData(){
+
+syncPaneViewportAfterData(
+getHost,
+chart,
+{
+pulseAutoscale:
+pulseAoAutoscale,
+updateTimeScaleVisibility
+}
+);
+
+}
+
 function refreshData(){
 
 if(
@@ -297,6 +379,8 @@ if(
 ){
 return;
 }
+
+ensurePaneChartSized();
 
 const host =
 getHost?.();
@@ -363,14 +447,10 @@ color
 }
 );
 
-runWithPreservedVisibleLogicalRange(
-chart,
-()=>{
 series.setData(
 data
 );
-}
-);
+syncAoAfterData();
 updateHud();
 
 }
@@ -392,23 +472,9 @@ return;
 enabled =
 true;
 applyVisibility();
+ensurePaneChartSized();
 refreshData();
 bindTimeSync();
-
-const host =
-getHost?.();
-const w =
-host?.getChartWrapWidth?.() ||
-0;
-
-if(
-w >
-0
-){
-onResize(
-w
-);
-}
 
 }
 
@@ -528,6 +594,8 @@ height:
 paneHeight
 }
 );
+
+pulseAoAutoscale();
 
 }
 

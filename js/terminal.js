@@ -99,7 +99,7 @@ mountDrawToolIcons
 
 import {
 initChartIndicators
-} from "./chart-indicators.js?v=30";
+} from "./chart-indicators.js?v=37";
 
 import {
 mountCoinsLayoutResize
@@ -171,7 +171,7 @@ settleCoinsChartViewport,
 resizeCharts,
 scheduleResizeCharts,
 applyDefaultZoom
-} from "./terminal/terminal-chart-layout.js?v=6";
+} from "./terminal/terminal-chart-layout.js?v=7";
 
 import {
 initTerminalMultiChart,
@@ -3465,8 +3465,10 @@ true
 );
 
 chartIndicators?.notifySymbolChange?.();
-chartIndicators?.notifyLayoutSettled?.();
 settleCoinsChartViewport();
+chartIndicators?.flushIndicatorDataRefreshNow?.();
+settleCoinsChartViewport();
+chartIndicators?.notifyLayoutSettled?.();
 
 drawingTools?.scheduleRedraw?.();
 rsiDrawingTools?.scheduleRedraw?.();

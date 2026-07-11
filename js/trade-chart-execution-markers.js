@@ -273,9 +273,9 @@ label.id =
 label.className =
 "trade-chart-markers-toggle";
 label.title =
-"Показать историю сделок на графике";
+"История сделок";
 label.innerHTML =
-`<input type="checkbox" id="trade-chart-markers-show" /><span>История сделок</span>`;
+`<input type="checkbox" id="trade-chart-markers-show" aria-label="История сделок" />`;
 
 const anchor =
 beforeEl ||

@@ -106,7 +106,7 @@ Object.freeze({
 "terminal-layout-picker.js":
 11,
 "terminal/terminal-chart-layout.js":
-6,
+7,
 "terminal/terminal-chart-switch-veil.js":
 7,
 "chart-layout-gate.js":
@@ -114,7 +114,7 @@ Object.freeze({
 "chart-visible-range.js":
 1,
 "chart-indicators.js":
-30,
+37,
 "indicators/pattern-12.js":
 5,
 "indicators/pattern-12-math.js":
@@ -144,13 +144,15 @@ Object.freeze({
 "indicators/rsi-pane.js":
 2,
 "indicators/volume-pane.js":
-5,
+11,
 "indicators/ao-math.js":
 1,
 "indicators/ao-pane.js":
-2,
+8,
 "indicators/indicator-pane-order.js":
 1,
+"indicators/indicator-pane-viewport.js":
+2,
 "indicators/moving-average.js":
 14,
 "indicators/ma-math.js":
@@ -455,7 +457,7 @@ Object.freeze({
 "screener.css":
 49,
 "terminal.css":
-165,
+166,
 "watchlist.css":
 53,
 "terminal-layout.css":
