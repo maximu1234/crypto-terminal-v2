@@ -12,12 +12,20 @@ from pathlib import Path
 SCRIPTS_DIR = Path(__file__).resolve().parent
 
 
+def _scripts_dir() -> Path:
+    if getattr(sys, "frozen", False):
+        return Path(sys._MEIPASS)
+    return SCRIPTS_DIR
+
+
 def _load(name: str, filename: str):
-    path = SCRIPTS_DIR / filename
+    path = _scripts_dir() / filename
     spec = importlib.util.spec_from_file_location(name, path)
     if spec is None or spec.loader is None:
         raise RuntimeError(f"Cannot load {path}")
     mod = importlib.util.module_from_spec(spec)
+    # dataclasses требуют модуль в sys.modules до exec_module (importlib dynamic load).
+    sys.modules[name] = mod
     spec.loader.exec_module(mod)
     return mod
 

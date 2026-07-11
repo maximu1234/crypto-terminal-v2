@@ -8,7 +8,7 @@ export const METKA_NUMBER =
 67;
 
 export const DESKTOP_APP_VERSION =
-"1.0.60";
+"1.0.61";
 
 export const RELEASE_VERSION_LABEL =
 `v0.${METKA_NUMBER}`;
