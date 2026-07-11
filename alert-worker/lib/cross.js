@@ -40,9 +40,8 @@ sameBar = false
     return true;
   }
 
-  if (sameBar) {
-    return false;
-  }
+  /* sameBar: не блокируем wick — иначе пропуск cross внутри свечи */
+  void sameBar;
 
   const high = Number(candle.high);
   const low = Number(candle.low);

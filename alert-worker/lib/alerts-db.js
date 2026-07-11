@@ -9,6 +9,7 @@ import {
   restPatchReturning
 } from "./supabase-rest.js";
 import { normalizeBybitSymbol } from "./bybit-symbol.js";
+import { normalizeWorkerTf } from "./tf-normalize.js";
 
 let client = null;
 
@@ -269,7 +270,7 @@ async function fetchTelegramAlertsFull(){
       symbol: normalizeBybitSymbol(row.symbol),
       shape_id: row.shape_id,
       price: Number(row.price),
-      tf: row.tf || "60",
+      tf: normalizeWorkerTf(row.tf),
       telegram_chat_id: chatId
     });
 

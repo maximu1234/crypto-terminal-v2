@@ -1,5 +1,6 @@
 import WebSocket from "ws";
 import { normalizeBybitSymbol } from "./bybit-symbol.js";
+import { normalizeWorkerTf } from "./tf-normalize.js";
 
 const WS_URL =
   "wss://stream.bybit.com/v5/public/linear";
@@ -7,7 +8,7 @@ const WS_URL =
 function topicFor(symbol, tf) {
 
   const interval =
-    tf === "D" ? "D" : String(tf || "60");
+    normalizeWorkerTf(tf);
   const sym =
     normalizeBybitSymbol(symbol);
 

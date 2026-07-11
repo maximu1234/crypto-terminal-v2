@@ -1,13 +1,17 @@
-import { didCrossWithCandle } from "./cross.js";
+import { didCrossWithCandle, didCrossLine } from "./cross.js";
 import { executeAlertTrigger } from "./execute-trigger.js";
 import { normalizeBybitSymbol } from "./bybit-symbol.js";
-import { fetchRecentKlines } from "./bybit-kline-fetch.js";
+import { normalizeWorkerTf } from "./tf-normalize.js";
+import { fetchRecentKlines, fetchLastPrice } from "./bybit-kline-fetch.js";
 
-/** alert key -> last price for cross detection */
+/** alert key -> last price for kline cross detection */
 const lastPriceByAlert = new Map();
 
 /** alert key -> candle time of last baseline */
 const lastCandleTimeByAlert = new Map();
+
+/** alert key -> last ticker price */
+const lastTickerPriceByAlert = new Map();
 
 export function alertKey(row) {
   return `${row.user_id}::${normalizeBybitSymbol(row.symbol)}::${row.shape_id}`;
@@ -19,6 +23,13 @@ export function pruneWatchState(activeAlerts) {
     if (!activeAlerts.has(key)) {
       lastPriceByAlert.delete(key);
       lastCandleTimeByAlert.delete(key);
+      lastTickerPriceByAlert.delete(key);
+    }
+  }
+
+  for (const key of lastTickerPriceByAlert.keys()) {
+    if (!activeAlerts.has(key)) {
+      lastTickerPriceByAlert.delete(key);
     }
   }
 
@@ -43,7 +54,7 @@ export async function seedMissingAlertBaselines(
     const sym =
       normalizeBybitSymbol(alert.symbol);
     const tf =
-      String(alert.tf || "60");
+      normalizeWorkerTf(alert.tf);
     const topicKey =
       `${sym}::${tf}`;
 
@@ -115,6 +126,174 @@ export async function seedMissingAlertBaselines(
 
 }
 
+/**
+ * REST lastPrice — baseline для ticker (каждый алерт свой prev).
+ */
+export async function seedTickerBaselines(
+  activeAlerts
+) {
+
+  const bySymbol = new Map();
+
+  for (const [key, alert] of activeAlerts) {
+
+    if (lastTickerPriceByAlert.has(key)) {
+      continue;
+    }
+
+    const sym =
+      normalizeBybitSymbol(alert.symbol);
+
+    if (!bySymbol.has(sym)) {
+      bySymbol.set(sym, []);
+    }
+
+    bySymbol.get(sym).push(key);
+
+  }
+
+  await Promise.all(
+    [...bySymbol.entries()].map(async ([sym, keys]) => {
+
+      const price =
+        await fetchLastPrice(sym);
+
+      if (!Number.isFinite(price)) {
+        return;
+      }
+
+      for (const key of keys) {
+        if (!lastTickerPriceByAlert.has(key)) {
+          lastTickerPriceByAlert.set(key, price);
+        }
+      }
+
+    })
+  );
+
+}
+
+async function claimAlertTrigger(
+  activeAlerts,
+  key,
+  alert,
+  triggerPrice,
+  channel
+) {
+
+  const result =
+    await executeAlertTrigger(
+      alert.id,
+      {
+        trigger_price: triggerPrice
+      }
+    );
+
+  activeAlerts.delete(key);
+  lastPriceByAlert.delete(key);
+  lastCandleTimeByAlert.delete(key);
+  lastTickerPriceByAlert.delete(key);
+
+  if (!result.ok) {
+    return;
+  }
+
+  const tfNorm =
+    normalizeWorkerTf(alert.tf);
+  const level =
+    Number(alert.price);
+
+  if (result.telegram) {
+    console.log(
+      `triggered (${channel})`,
+      alert.symbol,
+      tfNorm,
+      level,
+      "→",
+      alert.telegram_chat_id
+    );
+  } else if (alert.telegram_chat_id != null) {
+    console.warn(
+      `telegram failed (${channel})`,
+      alert.symbol,
+      alert.telegram_chat_id
+    );
+  } else {
+    console.log(
+      `triggered (${channel}, no telegram chat)`,
+      alert.symbol,
+      tfNorm,
+      level
+    );
+  }
+
+}
+
+/**
+ * Bybit tickers.{symbol} — основной триггер при закрытом приложении.
+ */
+export async function evaluateAlertsForTicker(
+  activeAlerts,
+  symbol,
+  price,
+  hubPrev
+) {
+
+  const sym =
+    normalizeBybitSymbol(symbol);
+  const curr =
+    Number(price);
+
+  if (!Number.isFinite(curr)) {
+    return;
+  }
+
+  for (const [key, alert] of activeAlerts) {
+
+    if (normalizeBybitSymbol(alert.symbol) !== sym) {
+      continue;
+    }
+
+    const level =
+      Number(alert.price);
+
+    if (!Number.isFinite(level)) {
+      continue;
+    }
+
+    let prev =
+      lastTickerPriceByAlert.get(key);
+
+    if (
+      prev === undefined &&
+      hubPrev != null &&
+      Number.isFinite(Number(hubPrev))
+    ) {
+      prev = Number(hubPrev);
+    }
+
+    if (!Number.isFinite(prev)) {
+      lastTickerPriceByAlert.set(key, curr);
+      continue;
+    }
+
+    if (!didCrossLine(prev, curr, level)) {
+      lastTickerPriceByAlert.set(key, curr);
+      continue;
+    }
+
+    await claimAlertTrigger(
+      activeAlerts,
+      key,
+      alert,
+      curr,
+      "ticker"
+    );
+
+  }
+
+}
+
 export async function evaluateAlertsForCandle(
   activeAlerts,
   symbol,
@@ -124,7 +303,8 @@ export async function evaluateAlertsForCandle(
 
   const sym =
     normalizeBybitSymbol(symbol);
-  const tfNorm = String(tf || "60");
+  const tfNorm =
+    normalizeWorkerTf(tf);
   const close = Number(candle?.close);
 
   if (!Number.isFinite(close)) {
@@ -137,7 +317,7 @@ export async function evaluateAlertsForCandle(
       continue;
     }
 
-    if (String(alert.tf || "60") !== tfNorm) {
+    if (normalizeWorkerTf(alert.tf) !== tfNorm) {
       continue;
     }
 
@@ -167,45 +347,13 @@ export async function evaluateAlertsForCandle(
       continue;
     }
 
-    const result =
-      await executeAlertTrigger(
-        alert.id,
-        {
-          trigger_price: close
-        }
-      );
-
-    activeAlerts.delete(key);
-    lastPriceByAlert.delete(key);
-    lastCandleTimeByAlert.delete(key);
-
-    if (!result.ok) {
-      continue;
-    }
-
-    if (result.telegram) {
-      console.log(
-        "triggered",
-        alert.symbol,
-        tfNorm,
-        level,
-        "→",
-        alert.telegram_chat_id
-      );
-    } else if (alert.telegram_chat_id != null) {
-      console.warn(
-        "telegram failed",
-        alert.symbol,
-        alert.telegram_chat_id
-      );
-    } else {
-      console.log(
-        "triggered (no telegram chat)",
-        alert.symbol,
-        tfNorm,
-        level
-      );
-    }
+    await claimAlertTrigger(
+      activeAlerts,
+      key,
+      alert,
+      close,
+      "kline"
+    );
 
   }
 

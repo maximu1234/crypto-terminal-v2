@@ -59,7 +59,7 @@ test("didCrossWithCandle first tick open→close cross", () => {
   );
 });
 
-test("didCrossWithCandle sameBar skips wick-only after close path fails", () => {
+test("didCrossWithCandle wick cross on sameBar", () => {
   const candle = {
     open: 100,
     high: 101,
@@ -74,7 +74,7 @@ test("didCrossWithCandle sameBar skips wick-only after close path fails", () => 
       95,
       { sameBar: true }
     ),
-    false
+    true
   );
 });
 

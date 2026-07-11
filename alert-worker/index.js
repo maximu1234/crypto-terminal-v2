@@ -1,5 +1,6 @@
 import http from "http";
 import { createBybitKlineHub } from "./lib/bybit-kline.js";
+import { createBybitTickerHub } from "./lib/bybit.js";
 import { getConfigStatus, getWorkerConfig } from "./lib/config.js";
 import {
   fetchTelegramAlerts,
@@ -13,7 +14,9 @@ import {
   alertKey,
   pruneWatchState,
   evaluateAlertsForCandle,
-  seedMissingAlertBaselines
+  evaluateAlertsForTicker,
+  seedMissingAlertBaselines,
+  seedTickerBaselines
 } from "./lib/trigger-alert.js";
 import { handleClientApi } from "./lib/client-api.js";
 import { handleBybitProxy } from "./lib/bybit-proxy.js";
@@ -32,6 +35,7 @@ import {
 } from "./lib/reload-request.js";
 
 const PORT = Number(process.env.PORT) || 8080;
+const WORKER_BUILD = "2026-07-11-ticker";
 
 /** alert key -> row */
 let activeAlerts = new Map();
@@ -67,6 +71,7 @@ function logConfigOnce() {
 
 async function reloadAlerts(
   klineHub,
+  tickerHub,
   opts = {}
 ) {
   const startedAt = Date.now();
@@ -111,6 +116,7 @@ async function reloadAlerts(
     const key = alertKey(row);
     next.set(key, row);
     klineHub.ensureKline(row.symbol, row.tf || "60");
+    tickerHub.ensureSymbol(row.symbol);
   }
 
   activeAlerts = next;
@@ -118,6 +124,7 @@ async function reloadAlerts(
 
   try {
     await seedMissingAlertBaselines(activeAlerts);
+    await seedTickerBaselines(activeAlerts);
   } catch (err) {
     console.warn(
       "seed alert baselines:",
@@ -140,10 +147,12 @@ async function main() {
   await ensureReloadIntervalHydrated();
 
   const klineHub = createBybitKlineHub();
+  const tickerHub = createBybitTickerHub();
 
   setWorkerReloadRequestHandler(async (_reason, opts = {}) => {
     await reloadAlerts(
       klineHub,
+      tickerHub,
       {
         force:
           opts.force !== false
@@ -158,7 +167,18 @@ async function main() {
       tf,
       candle
     ).catch(err => {
-      console.warn("evaluate:", err.message);
+      console.warn("evaluate kline:", err.message);
+    });
+  });
+
+  tickerHub.onTick((symbol, price, prev) => {
+    evaluateAlertsForTicker(
+      activeAlerts,
+      symbol,
+      price,
+      prev
+    ).catch(err => {
+      console.warn("evaluate ticker:", err.message);
     });
   });
 
@@ -197,6 +217,7 @@ async function main() {
       res.writeHead(200, { "Content-Type": "application/json" });
       res.end(JSON.stringify({
         ok: st.ready,
+        build: WORKER_BUILD,
         alerts: activeAlerts.size,
         telegram: telegramConfigured(),
         config: st,
@@ -245,7 +266,7 @@ async function main() {
       }
 
       try{
-        await reloadAlerts(klineHub);
+        await reloadAlerts(klineHub, tickerHub);
         res.writeHead(200, { "Content-Type": "application/json" });
         res.end(JSON.stringify({
           ok: true,
@@ -300,7 +321,7 @@ async function main() {
     ensureTelegramWebhook().catch(err => {
       console.warn("telegram webhook:", err.message);
     });
-    reloadAlerts(klineHub).catch(err => {
+    reloadAlerts(klineHub, tickerHub).catch(err => {
       console.warn("reloadAlerts:", err.message);
     });
   });
@@ -311,7 +332,7 @@ async function main() {
       getReloadIntervalMs();
 
     setTimeout(() => {
-      reloadAlerts(klineHub).catch(err => {
+      reloadAlerts(klineHub, tickerHub).catch(err => {
         console.warn("reloadAlerts:", err.message);
       }).finally(() => {
         scheduleReloadTick();

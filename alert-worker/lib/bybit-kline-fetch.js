@@ -2,6 +2,7 @@ import { readFileSync } from "fs";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
 import { normalizeBybitSymbol } from "./bybit-symbol.js";
+import { normalizeWorkerTf } from "./tf-normalize.js";
 
 const BASES = JSON.parse(
   readFileSync(
@@ -15,15 +16,7 @@ const BASES = JSON.parse(
 
 function intervalFor(tf) {
 
-  if (tf === "D") {
-    return "D";
-  }
-
-  if (tf === "W") {
-    return "W";
-  }
-
-  return String(tf || "60");
+  return normalizeWorkerTf(tf);
 
 }
 
@@ -108,5 +101,66 @@ export async function fetchRecentKlines(
   }
 
   return [];
+
+}
+
+/**
+ * Последняя цена linear — baseline для ticker-алертов.
+ */
+export async function fetchLastPrice(
+  symbol
+) {
+
+  const sym =
+    normalizeBybitSymbol(symbol);
+
+  if (!sym) {
+    return NaN;
+  }
+
+  const path =
+    `/v5/market/tickers?category=linear&symbol=${encodeURIComponent(sym)}`;
+
+  let lastErr = null;
+
+  for (const base of BASES) {
+
+    try {
+      const res = await fetch(
+        `${base}${path}`,
+        {
+          headers: {
+            Accept: "application/json"
+          }
+        }
+      );
+
+      const json = await res.json();
+      const row =
+        json?.result?.list?.[0];
+      const price =
+        Number(row?.lastPrice);
+
+      if (Number.isFinite(price)) {
+        return price;
+      }
+
+      return NaN;
+
+    } catch (err) {
+      lastErr = err;
+    }
+
+  }
+
+  if (lastErr) {
+    console.warn(
+      "fetchLastPrice:",
+      sym,
+      lastErr.message
+    );
+  }
+
+  return NaN;
 
 }

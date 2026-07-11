@@ -1,4 +1,5 @@
 import WebSocket from "ws";
+import { normalizeBybitSymbol } from "./bybit-symbol.js";
 
 const WS_URL =
   "wss://stream.bybit.com/v5/public/linear";
@@ -116,11 +117,14 @@ export function createBybitTickerHub() {
 
     ensureSymbol(symbol) {
 
-      if (!symbol || wanted.has(symbol)) {
+      const sym =
+        normalizeBybitSymbol(symbol);
+
+      if (!sym || wanted.has(sym)) {
         return;
       }
 
-      wanted.add(symbol);
+      wanted.add(sym);
       connect();
       subscribeOnWire();
 
