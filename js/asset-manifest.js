@@ -85,10 +85,12 @@ Object.freeze({
 14,
 "trade-chart-execution-markers.js":
 1,
+"trade-pnl-privacy.js":
+1,
 "trade-chart-overlay.js":
-32,
+33,
 "trade-chart-orders.js":
-18,
+19,
 "trade-order-plus-ui.js":
 2,
 "trade-widget-mount.js":

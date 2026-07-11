@@ -270,7 +270,7 @@ const {
 initTradeChartOverlay
 } =
 await import(
-"./trade-chart-overlay.js?v=32"
+"./trade-chart-overlay.js?v=33"
 );
 
 initTradeChartOverlay();
@@ -279,7 +279,7 @@ const {
 initTradeChartOrders
 } =
 await import(
-"./trade-chart-orders.js?v=18"
+"./trade-chart-orders.js?v=19"
 );
 
 initTradeChartOrders();

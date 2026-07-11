@@ -5,6 +5,10 @@ import {
 isExchangeTradingEnabled
 } from "./market-api.js?v=1";
 
+import {
+maskTradeDisplay
+} from "./trade-pnl-privacy.js?v=1";
+
 const BADGE_LEFT =
 12;
 
@@ -53,6 +57,18 @@ minimumFractionDigits:
 maximumFractionDigits:
 2
 }
+);
+
+}
+
+function displayVolume(
+value
+){
+
+return maskTradeDisplay(
+formatVolume(
+value
+)
 );
 
 }
@@ -498,7 +514,7 @@ className:
 sideClass,
 html:
 `
-<span class="seg seg-vol">${formatVolume(order.volumeUsdt)}</span>
+<span class="seg seg-vol">${displayVolume(order.volumeUsdt)}</span>
 <span class="seg seg-type">${order.label}</span>
 <button type="button" class="seg seg-close" data-action="cancel-order" title="Отменить ордер" aria-label="Отменить ордер">×</button>
 `,
@@ -514,6 +530,13 @@ dash
 }
 
 return specs;
+
+}
+
+function invalidateBadgeLayoutCache(){
+
+badgeLayoutCache =
+null;
 
 }
 
@@ -1809,6 +1832,19 @@ void syncOrders(
 true
 );
 
+},
+{
+signal
+}
+);
+
+window.addEventListener(
+"trade-total-pnl-visibility-changed",
+()=>{
+invalidateBadgeLayoutCache();
+scheduleDraw(
+true
+);
 },
 {
 signal

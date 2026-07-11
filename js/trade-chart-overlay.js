@@ -15,6 +15,10 @@ formatTradePnl,
 formatTradeUsdt
 } from "./trade-format.js?v=1";
 
+import {
+maskTradeDisplay
+} from "./trade-pnl-privacy.js?v=1";
+
 const BADGE_LEFT =
 12;
 
@@ -82,6 +86,50 @@ maximumFractionDigits:
 signDisplay:
 "exceptZero"
 }
+);
+
+}
+
+function displayVolume(
+value
+){
+
+return maskTradeDisplay(
+formatVolume(
+value
+)
+);
+
+}
+
+function displayPnl(
+value
+){
+
+return maskTradeDisplay(
+formatPnl(
+value
+)
+);
+
+}
+
+function displayStopAmount(
+value
+){
+
+return maskTradeDisplay(
+`${formatStopUsd(value)} USDT`
+);
+
+}
+
+function displayLeverage(
+lev
+){
+
+return maskTradeDisplay(
+lev
 );
 
 }
@@ -1440,9 +1488,9 @@ isLong
 : "trade-pos-badge--short",
 html:
 `
-<span class="seg seg-vol">${formatVolume(activePosition.volumeUsdt)}</span>
-<span class="seg seg-lev">${lev}</span>
-<span class="seg seg-pnl ${pnlClass}">${formatPnl(activePosition.pnl)}</span>
+<span class="seg seg-vol">${displayVolume(activePosition.volumeUsdt)}</span>
+<span class="seg seg-lev">${displayLeverage(lev)}</span>
+<span class="seg seg-pnl ${pnlClass}">${displayPnl(activePosition.pnl)}</span>
 <button type="button" class="seg seg-close" data-action="close" title="Закрыть по рынку" aria-label="Закрыть позицию">×</button>
 `,
 line:{
@@ -1494,7 +1542,7 @@ className:
 html:
 `
 <span class="seg seg-tag">SL</span>
-<span class="seg seg-amt">${formatStopUsd(slUsd)} USDT</span>
+<span class="seg seg-amt">${displayStopAmount(slUsd)}</span>
 <button type="button" class="seg seg-close" data-action="cancel-sl" title="Убрать стоп-лосс" aria-label="Убрать SL">×</button>
 `,
 line:{
@@ -1548,7 +1596,7 @@ className:
 html:
 `
 <span class="seg seg-tag">TP</span>
-<span class="seg seg-amt">${formatStopUsd(tpUsd)} USDT</span>
+<span class="seg seg-amt">${displayStopAmount(tpUsd)}</span>
 <button type="button" class="seg seg-close" data-action="cancel-tp" title="Убрать тейк-профит" aria-label="Убрать TP">×</button>
 `,
 line:{
@@ -1635,7 +1683,7 @@ displayPosition.pnl >=
 pnlEl.className =
 `seg seg-pnl ${pnlClass}`;
 pnlEl.textContent =
-formatPnl(
+displayPnl(
 displayPosition.pnl
 );
 }
@@ -1673,7 +1721,9 @@ stop,
 displayPosition.size
 );
 amtEl.textContent =
-`${formatStopUsd(usd)} USDT`;
+displayStopAmount(
+usd
+);
 }
 
 if(
@@ -3044,6 +3094,19 @@ event.detail?.position,
 event.detail?.symbol
 );
 
+},
+{
+signal
+}
+);
+
+window.addEventListener(
+"trade-total-pnl-visibility-changed",
+()=>{
+invalidateBadgeLayoutCache();
+scheduleDraw(
+true
+);
 },
 {
 signal
