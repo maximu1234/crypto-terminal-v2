@@ -4,6 +4,7 @@
 
 Браузерные алерты (звук/тост) при открытой вкладке:
 - `POST /push-alert` — запись алерта в Supabase (service role)
+- `POST /reload-hint` — после REST upsert в браузере: принудительно перечитать алерты (JWT пользователя)
 - `POST /delete-alert` — удаление алерта (service role; id → symbol+shape_id → soft delete)
 - `POST /push-drawing` — запись рисунка в `user_drawings` (service role, для iPad)
 - `POST /delete-drawing` — удаление рисунка из `user_drawings` (service role)

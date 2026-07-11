@@ -43,12 +43,104 @@ __dirname,
 
 }
 
-const SCRIPT =
+const SCRIPT_POSITION =
 path.join(
 getAppRoot(),
 "scripts",
 "generate-bybit-pnl-card.py"
 );
+
+const SCRIPT_DIARY =
+path.join(
+getAppRoot(),
+"scripts",
+"generate-bybit-pnl-diary-card.py"
+);
+
+function getScriptPath(
+variant
+){
+
+return variant ===
+"diary"
+? SCRIPT_DIARY
+: SCRIPT_POSITION;
+
+}
+
+function buildGenerateArgs(
+scriptPath,
+outPath,
+payload
+){
+
+const args =
+[
+scriptPath,
+"--ticker",
+String(
+payload.ticker ||
+""
+),
+"--side",
+payload.side ===
+"short"
+? "short"
+: "long",
+"--leverage",
+String(
+Math.max(
+1,
+Number(
+payload.leverage
+) ||
+1
+)
+),
+"--roi",
+String(
+Number(
+payload.roiPct
+) ||
+0
+),
+"--entry",
+String(
+Number(
+payload.entryPrice
+) ||
+0
+),
+payload.variant ===
+"diary"
+? "--filled"
+: "--market",
+String(
+Number(
+payload.marketPrice
+) ||
+0
+),
+"-o",
+outPath
+];
+
+if(
+Number.isInteger(
+payload.priceDecimals
+)
+){
+args.push(
+"--decimals",
+String(
+payload.priceDecimals
+)
+);
+}
+
+return args;
+
+}
 
 function runGenerateScript(
 outPath,
@@ -85,66 +177,16 @@ resolve,
 reject
 )=>{
 
-const args =
-[
-SCRIPT,
-"--ticker",
-String(
-payload.ticker ||
-""
-),
-"--side",
-payload.side ===
-"short"
-? "short"
-: "long",
-"--leverage",
-String(
-Math.max(
-1,
-Number(
-payload.leverage
-) ||
-1
-)
-),
-"--roi",
-String(
-Number(
-payload.roiPct
-) ||
-0
-),
-"--entry",
-String(
-Number(
-payload.entryPrice
-) ||
-0
-),
-"--market",
-String(
-Number(
-payload.marketPrice
-) ||
-0
-),
-"-o",
-outPath
-];
-
-if(
-Number.isInteger(
-payload.priceDecimals
-)
-){
-args.push(
-"--decimals",
-String(
-payload.priceDecimals
-)
+const scriptPath =
+getScriptPath(
+payload?.variant
 );
-}
+const args =
+buildGenerateArgs(
+scriptPath,
+outPath,
+payload
+);
 
 const child =
 spawn(

@@ -29,6 +29,11 @@ import {
 initTradeDiaryNav
 } from "./trade-diary-nav.js?v=11";
 
+import {
+openPnlShareDiaryModal,
+PNL_SHARE_CONTROL_HTML
+} from "./trade-pnl-share-modal.js?v=7";
+
 const deniedDesktopEl =
 document.getElementById(
 "trade-diary-denied-desktop"
@@ -298,13 +303,16 @@ formatDiaryDuration(
 trade.durationMs
 )
 )}</span>
-<span class="trade-diary-num ${pnlToneClass(
+<span class="trade-diary-pnl-wrap trade-diary-num ${pnlToneClass(
 trade.pnlUsd
-)}">${escapeHtml(
+)}">
+<span class="trade-diary-pnl-value">${escapeHtml(
 formatDiaryUsd(
 trade.pnlUsd
 )
 )}</span>
+${PNL_SHARE_CONTROL_HTML}
+</span>
 <span class="trade-diary-num ${pnlToneClass(
 trade.pnlPct
 )}">${escapeHtml(
@@ -763,6 +771,40 @@ contentEl.dataset.bound =
 contentEl.addEventListener(
 "click",
 event=>{
+
+const shareBtn =
+event.target.closest(
+"[data-action='share-pnl']"
+);
+
+if(
+shareBtn
+){
+
+event.preventDefault();
+event.stopPropagation();
+
+const wrap =
+shareBtn.closest(
+"[data-trade-key]"
+);
+const trade =
+findTradeByKey(
+wrap?.dataset.tradeKey ||
+""
+);
+
+if(
+trade
+){
+void openPnlShareDiaryModal(
+trade
+);
+}
+
+return;
+
+}
 
 const chartLink =
 event.target.closest(

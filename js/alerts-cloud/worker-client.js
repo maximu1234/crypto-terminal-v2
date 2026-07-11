@@ -993,6 +993,8 @@ return false;
 
 let ok =
 false;
+let usedWorkerDelete =
+false;
 
 if(
 await deleteAlertViaWorker(
@@ -1002,6 +1004,7 @@ cid
 )
 ){
 ok = true;
+usedWorkerDelete = true;
 }
 
 if(
@@ -1082,6 +1085,12 @@ forgetAlertDeleted(
 sym,
 sid
 );
+
+if(
+!usedWorkerDelete
+){
+void hintWorkerReloadAlerts().catch(()=>{});
+}
 
 broadcastAlertsRegistrySync();
 
@@ -2229,9 +2238,6 @@ null
 
 }
 
-/**
- * Запись алерта через Railway (service role) — надёжнее браузерного upsert.
- */
 export async function pushAlertViaWorker(
 entry
 ){
@@ -2357,6 +2363,58 @@ cloudId || ""
 );
 
 return true;
+
+}
+
+/**
+ * REST push/delete не бьёт в /push-alert — попросить worker перечитать Supabase.
+ */
+export async function hintWorkerReloadAlerts(){
+
+const base =
+await getAlertWorkerBaseUrl();
+
+if(!base){
+return false;
+}
+
+const auth =
+await getWorkerRequestAuth();
+
+if(!auth){
+return false;
+}
+
+try{
+const res =
+await fetchWithTimeout(
+`${base}/reload-hint`,
+{
+method: "POST",
+headers: {
+Authorization: `Bearer ${auth.token}`
+}
+},
+8000
+);
+
+if(!res.ok){
+return false;
+}
+
+const body =
+await res.json().catch(()=>({}));
+
+return body?.ok === true;
+
+}catch(err){
+alertsDebugLog(
+"worker /reload-hint:",
+err?.message || err
+);
+return false;
+
+}
 
 }
 

@@ -15,7 +15,8 @@ triggerAlertViaWorker,
 triggerNotifyTelegramViaWorker,
 isAlertRowInCloud,
 deleteAlertViaWorker,
-pushAlertViaWorker
+pushAlertViaWorker,
+hintWorkerReloadAlerts
 } from "./alerts-cloud/worker-client.js?v=4";
 
 export {

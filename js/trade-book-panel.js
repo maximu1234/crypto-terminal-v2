@@ -23,7 +23,7 @@ columnResizeHandle
 
 import {
 openPnlShareModal
-} from "./trade-pnl-share-modal.js?v=5";
+} from "./trade-pnl-share-modal.js?v=7";
 
 import {
 formatAlertDate,
@@ -38,9 +38,9 @@ const SHARE_ICON_V =
 2;
 
 const SHARE_BUTTON_HTML =
-`<button type="button" class="trade-book-share" aria-label="Поделиться PnL" title="Поделиться PnL">
-<img class="trade-book-share-icon trade-book-share-icon--off" src="assets/share_off.png?v=${SHARE_ICON_V}" width="14" height="14" alt="">
-<img class="trade-book-share-icon trade-book-share-icon--on" src="assets/share_on.png?v=${SHARE_ICON_V}" width="14" height="14" alt="">
+`<button type="button" class="trade-book-share" data-action="share-pnl" aria-label="Поделиться PnL" title="Поделиться PnL">
+<img class="trade-book-share-icon trade-book-share-icon--off" src="/assets/share_off.png?v=${SHARE_ICON_V}" width="14" height="14" alt="">
+<img class="trade-book-share-icon trade-book-share-icon--on" src="/assets/share_on.png?v=${SHARE_ICON_V}" width="14" height="14" alt="">
 </button>`;
 
 const PANEL_HEIGHT_KEY =

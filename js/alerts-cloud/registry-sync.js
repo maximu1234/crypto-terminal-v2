@@ -40,8 +40,9 @@ purgeAlertRowByCloudId,
 pushAlertViaWorker,
 clearAllAlertsFromCloud,
 fetchWithTimeout,
-softDeleteAlertViaRest
-} from "./worker-client.js?v=4";
+softDeleteAlertViaRest,
+hintWorkerReloadAlerts
+} from "./worker-client.js?v=5";
 
 import {
 isAlertsCloudDisabled
@@ -382,6 +383,8 @@ symbol,
 shapeId,
 cloudId || ""
 );
+
+void hintWorkerReloadAlerts().catch(()=>{});
 
 return true;
 

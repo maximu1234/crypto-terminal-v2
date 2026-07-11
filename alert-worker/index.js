@@ -64,8 +64,13 @@ function logConfigOnce() {
 
 }
 
-async function reloadAlerts(klineHub) {
+async function reloadAlerts(
+  klineHub,
+  opts = {}
+) {
   const startedAt = Date.now();
+  const force =
+    opts.force === true;
 
   logConfigOnce();
 
@@ -81,9 +86,16 @@ async function reloadAlerts(klineHub) {
   }
 
   const { skipped, rows } =
-    await resolveTelegramAlertsReload();
+    await resolveTelegramAlertsReload(
+      force
+        ? { force: true }
+        : {}
+    );
 
-  if (skipped) {
+  if (
+    skipped &&
+    !force
+  ) {
     lastReloadAt = Date.now();
     lastReloadOk = true;
     lastReloadError = "";
@@ -118,8 +130,14 @@ async function main() {
 
   const klineHub = createBybitKlineHub();
 
-  setWorkerReloadRequestHandler(async () => {
-    await reloadAlerts(klineHub);
+  setWorkerReloadRequestHandler(async (_reason, opts = {}) => {
+    await reloadAlerts(
+      klineHub,
+      {
+        force:
+          opts.force !== false
+      }
+    );
   });
 
   klineHub.onKline((symbol, tf, candle) => {

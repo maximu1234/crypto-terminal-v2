@@ -13,7 +13,7 @@ withTimeout
 
 import {
 purgeAlertRowByCloudId
-} from "./worker-client.js?v=4";
+} from "./worker-client.js?v=5";
 
 function alertKeepKey(
 symbol,

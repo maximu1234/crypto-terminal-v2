@@ -1,6 +1,23 @@
 /**
  * Модальное окно бейджа «Поделиться PnL».
  */
+const SHARE_ICON_V =
+2;
+
+/** Как в панели Позиций; span — чтобы не вкладывать button в trade-diary-row (button). */
+export const PNL_SHARE_CONTROL_HTML =
+`<span class="trade-book-share" data-action="share-pnl" role="button" tabindex="-1" aria-label="Поделиться PnL" title="Поделиться PnL">
+<img class="trade-book-share-icon trade-book-share-icon--off" src="/assets/share_off.png?v=${SHARE_ICON_V}" width="14" height="14" alt="">
+<img class="trade-book-share-icon trade-book-share-icon--on" src="/assets/share_on.png?v=${SHARE_ICON_V}" width="14" height="14" alt="">
+</span>`;
+
+/** Desktop row (не внутри другого button). */
+export const PNL_SHARE_BUTTON_HTML =
+`<button type="button" class="trade-book-share" data-action="share-pnl" aria-label="Поделиться PnL" title="Поделиться PnL">
+<img class="trade-book-share-icon trade-book-share-icon--off" src="/assets/share_off.png?v=${SHARE_ICON_V}" width="14" height="14" alt="">
+<img class="trade-book-share-icon trade-book-share-icon--on" src="/assets/share_on.png?v=${SHARE_ICON_V}" width="14" height="14" alt="">
+</button>`;
+
 function tradingApi(){
 
 return window.cryptoTerminalDesktop?.trading ||
@@ -121,7 +138,7 @@ leverage *
 
 }
 
-function buildPayload(
+function buildPositionPayload(
 row
 ){
 
@@ -135,6 +152,8 @@ row?.markPrice
 );
 
 return {
+variant:
+"position",
 ticker:
 String(
 row?.ticker ||
@@ -161,6 +180,135 @@ entryPrice:
 entry,
 marketPrice:
 market,
+priceDecimals:
+inferPriceDecimals(
+entry
+)
+};
+
+}
+
+function inferLeverageFromTrade(
+trade
+){
+
+const entry =
+Number(
+trade?.avgEntryPrice
+);
+const exit =
+Number(
+trade?.avgExitPrice
+);
+const pnlPct =
+Number(
+trade?.pnlPct
+);
+
+if(
+!Number.isFinite(
+entry
+) ||
+!Number.isFinite(
+exit
+) ||
+entry ===
+0
+){
+return 1;
+}
+
+const isLong =
+normalizeSide(
+trade?.side
+) ===
+"long";
+const priceChange =
+isLong
+? (
+exit -
+entry
+) /
+entry
+: (
+entry -
+exit
+) /
+entry;
+
+if(
+Math.abs(
+priceChange
+) <
+1e-9
+){
+return 1;
+}
+
+const leverage =
+Math.round(
+pnlPct /
+(
+priceChange *
+100
+)
+);
+
+if(
+!Number.isFinite(
+leverage
+) ||
+leverage <
+1
+){
+return 1;
+}
+
+return Math.min(
+leverage,
+200
+);
+
+}
+
+export function buildDiaryPayload(
+trade
+){
+
+const entry =
+Number(
+trade?.avgEntryPrice
+);
+const exit =
+Number(
+trade?.avgExitPrice
+);
+
+return {
+variant:
+"diary",
+ticker:
+String(
+trade?.symbol ||
+""
+).toUpperCase(),
+side:
+normalizeSide(
+trade?.side
+),
+leverage:
+inferLeverageFromTrade(
+trade
+),
+roiPct:
+Number(
+trade?.pnlPct
+) ||
+0,
+entryPrice:
+entry,
+marketPrice:
+exit,
 priceDecimals:
 inferPriceDecimals(
 entry
@@ -566,8 +714,9 @@ return el;
 
 }
 
-export async function openPnlShareModal(
-row
+async function openPnlShareModalWithPayload(
+payload,
+rowForName
 ){
 
 const api =
@@ -595,10 +744,6 @@ try{
 
 await cleanupTemp();
 
-const payload =
-buildPayload(
-row
-);
 const result =
 await api.generatePnlShareCard(
 payload
@@ -639,7 +784,7 @@ overlay.querySelector(
 
 overlay.dataset.defaultName =
 defaultFileName(
-row
+rowForName
 );
 
 if(
@@ -728,5 +873,36 @@ busy =
 false;
 
 }
+
+}
+
+export async function openPnlShareModal(
+row
+){
+
+return openPnlShareModalWithPayload(
+buildPositionPayload(
+row
+),
+row
+);
+
+}
+
+export async function openPnlShareDiaryModal(
+trade
+){
+
+return openPnlShareModalWithPayload(
+buildDiaryPayload(
+trade
+),
+{
+ticker:
+trade?.symbol,
+side:
+trade?.side
+}
+);
 
 }

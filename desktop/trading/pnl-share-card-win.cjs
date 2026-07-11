@@ -39,36 +39,51 @@ __dirname,
 
 }
 
-function getScriptPath(){
+function getScriptPath(
+variant
+){
+
+const name =
+variant ===
+"diary"
+? "generate-bybit-pnl-diary-card.py"
+: "generate-bybit-pnl-card.py";
 
 return path.join(
 getAppRoot(),
 "scripts",
-"generate-bybit-pnl-card.py"
+name
 );
 
 }
 
 function templatePaths(
-appRoot
+appRoot,
+variant
 ){
 
 const root =
 appRoot ||
 getAppRoot();
 
+const prefix =
+variant ===
+"diary"
+? "bybit-pnl-diary-template"
+: "bybit-pnl-template";
+
 return {
 positive:
 path.join(
 root,
 "assets",
-"bybit-pnl-template-positive.png"
+`${prefix}-positive.png`
 ),
 negative:
 path.join(
 root,
 "assets",
-"bybit-pnl-template-negative.png"
+`${prefix}-negative.png`
 )
 };
 
@@ -120,7 +135,10 @@ payload.entryPrice
 ) ||
 0
 ),
-"--market",
+payload.variant ===
+"diary"
+? "--filled"
+: "--market",
 String(
 Number(
 payload.marketPrice
@@ -335,8 +353,12 @@ payload
 
 const appRoot =
 getAppRoot();
+const variant =
+payload?.variant;
 const scriptPath =
-getScriptPath();
+getScriptPath(
+variant
+);
 
 if(
 !fs.existsSync(
@@ -352,7 +374,8 @@ new Error(
 
 const templates =
 templatePaths(
-appRoot
+appRoot,
+variant
 );
 
 if(

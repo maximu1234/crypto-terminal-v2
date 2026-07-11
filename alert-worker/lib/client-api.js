@@ -130,7 +130,10 @@ async function handleClientPushAlert(
     });
 
     invalidateTelegramAlertsReloadCache();
-    requestWorkerReload("push-alert");
+    requestWorkerReload(
+      "push-alert",
+      { force: true }
+    );
 
     res.writeHead(200, { "Content-Type": "application/json" });
     res.end(JSON.stringify({
@@ -434,7 +437,11 @@ async function handleClientDeleteAlert(
       deleted
     }));
     if (deleted > 0) {
-      requestWorkerReload("delete-alert");
+      invalidateTelegramAlertsReloadCache();
+      requestWorkerReload(
+        "delete-alert",
+        { force: true }
+      );
     }
   }catch(err){
     res.writeHead(500, { "Content-Type": "application/json" });
@@ -996,6 +1003,64 @@ async function handleClientAdminWorkerCanaryAlert(
 
 }
 
+/**
+ * POST /reload-hint — браузер записал алерт через REST; перечитать Supabase сразу.
+ */
+async function handleClientReloadHint(
+  req,
+  res
+) {
+
+  const path =
+    (req.url || "").split("?")[0];
+
+  if (path !== "/reload-hint") {
+    return false;
+  }
+
+  setCors(res, req);
+
+  if (req.method === "OPTIONS") {
+    res.writeHead(204);
+    res.end();
+    return true;
+  }
+
+  if (req.method !== "POST") {
+    res.writeHead(405);
+    res.end("Method not allowed");
+    return true;
+  }
+
+  const user =
+    await verifyUserFromRequest(req);
+
+  if (!user) {
+    res.writeHead(401, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ ok: false, error: "invalid_token" }));
+    return true;
+  }
+
+  const cfg = getWorkerConfig();
+
+  if (!cfg.ready) {
+    res.writeHead(503, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ ok: false, error: "worker_not_ready" }));
+    return true;
+  }
+
+  invalidateTelegramAlertsReloadCache();
+  requestWorkerReload(
+    "client-hint",
+    { force: true }
+  );
+
+  res.writeHead(200, { "Content-Type": "application/json" });
+  res.end(JSON.stringify({ ok: true }));
+  return true;
+
+}
+
 export async function handleClientApi(
   req,
   res
@@ -1038,6 +1103,10 @@ export async function handleClientApi(
   }
 
   if (await handleClientNotifyTelegram(req, res)) {
+    return true;
+  }
+
+  if (await handleClientReloadHint(req, res)) {
     return true;
   }
 

@@ -9,14 +9,17 @@ export function setWorkerReloadRequestHandler(fn) {
 
 }
 
-export function requestWorkerReload(reason = "manual") {
+export function requestWorkerReload(
+  reason = "manual",
+  opts = {}
+) {
 
   if (!handler) {
     return false;
   }
 
   void Promise.resolve()
-    .then(() => handler(reason))
+    .then(() => handler(reason, opts))
     .catch(err => {
       console.warn(
         "worker reload request:",

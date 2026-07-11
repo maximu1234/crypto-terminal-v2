@@ -1,7 +1,7 @@
 {
   "name": "multichart-desktop",
   "productName": "Multichart",
-  "version": "1.0.57",
+  "version": "1.0.58",
   "description": "Multichart desktop shell for macOS (bundled site UI + auto-update)",
   "main": "main.js",
   "author": "Multichart",
@@ -124,6 +124,18 @@
       {
         "from": "../assets/bybit-pnl-template-negative.png",
         "to": "assets/bybit-pnl-template-negative.png"
+      },
+      {
+        "from": "../scripts/generate-bybit-pnl-diary-card.py",
+        "to": "scripts/generate-bybit-pnl-diary-card.py"
+      },
+      {
+        "from": "../assets/bybit-pnl-diary-template-positive.png",
+        "to": "assets/bybit-pnl-diary-template-positive.png"
+      },
+      {
+        "from": "../assets/bybit-pnl-diary-template-negative.png",
+        "to": "assets/bybit-pnl-diary-template-negative.png"
       }
     ],
     "publish": {

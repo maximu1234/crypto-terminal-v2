@@ -39,7 +39,7 @@ setAlertsRealtimeUserId
 import {
 getAuthed,
 runCloudOp
-} from "./worker-client.js?v=4";
+} from "./worker-client.js?v=5";
 
 import {
 pullRegistryFromCloudNow,
@@ -47,7 +47,7 @@ pushUnsyncedAlerts,
 scheduleRegistryCloudSync,
 isRegistryCloudSyncPaused,
 syncAllLocalAlertsToCloud
-} from "./registry-sync.js?v=6";
+} from "./registry-sync.js?v=7";
 
 import {
 isAlertsCloudDisabled,
@@ -1293,6 +1293,27 @@ retryPushWhenVisible
 window.addEventListener(
 "focus",
 retryPushWhenVisible
+);
+
+window.addEventListener(
+"pagehide",
+()=>{
+
+if(
+isAlertsCloudDisabled() ||
+!isCloudLoggedInEffective()
+){
+return;
+}
+
+void pushUnsyncedAlerts().catch(err=>{
+console.warn(
+"alert push on pagehide:",
+err?.message || err
+);
+});
+
+}
 );
 
 }
