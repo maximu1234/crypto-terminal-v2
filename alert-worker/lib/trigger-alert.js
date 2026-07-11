@@ -1,5 +1,7 @@
 import { didCrossWithCandle } from "./cross.js";
 import { executeAlertTrigger } from "./execute-trigger.js";
+import { normalizeBybitSymbol } from "./bybit-symbol.js";
+import { fetchRecentKlines } from "./bybit-kline-fetch.js";
 
 /** alert key -> last price for cross detection */
 const lastPriceByAlert = new Map();
@@ -8,7 +10,7 @@ const lastPriceByAlert = new Map();
 const lastCandleTimeByAlert = new Map();
 
 export function alertKey(row) {
-  return `${row.user_id}::${row.symbol}::${row.shape_id}`;
+  return `${row.user_id}::${normalizeBybitSymbol(row.symbol)}::${row.shape_id}`;
 }
 
 export function pruneWatchState(activeAlerts) {
@@ -22,6 +24,97 @@ export function pruneWatchState(activeAlerts) {
 
 }
 
+/**
+ * REST backfill для новых алертов: prev = close предыдущей свечи.
+ * Без этого первый WS-тик только ставит baseline и пропускает уже случившийся cross.
+ */
+export async function seedMissingAlertBaselines(
+  activeAlerts
+) {
+
+  const topics = new Map();
+
+  for (const [key, alert] of activeAlerts) {
+
+    if (lastPriceByAlert.has(key)) {
+      continue;
+    }
+
+    const sym =
+      normalizeBybitSymbol(alert.symbol);
+    const tf =
+      String(alert.tf || "60");
+    const topicKey =
+      `${sym}::${tf}`;
+
+    if (!topics.has(topicKey)) {
+      topics.set(
+        topicKey,
+        { sym, tf, keys: [] }
+      );
+    }
+
+    topics.get(topicKey).keys.push(key);
+
+  }
+
+  await Promise.all(
+    [...topics.values()].map(async ({ sym, tf, keys }) => {
+
+      const candles =
+        await fetchRecentKlines(
+          sym,
+          tf,
+          2
+        );
+
+      if (!candles.length) {
+        return;
+      }
+
+      const prevBar =
+        candles.length > 1
+          ? candles[candles.length - 2]
+          : null;
+      const lastBar =
+        candles[candles.length - 1];
+
+      const prevClose =
+        Number(prevBar?.close);
+      const lastOpen =
+        Number(lastBar?.open);
+
+      const seed =
+        Number.isFinite(prevClose)
+          ? prevClose
+          : (
+            Number.isFinite(lastOpen)
+              ? lastOpen
+              : NaN
+          );
+
+      if (!Number.isFinite(seed)) {
+        return;
+      }
+
+      for (const key of keys) {
+        if (!lastPriceByAlert.has(key)) {
+          lastPriceByAlert.set(key, seed);
+
+          if (lastBar?.time != null) {
+            lastCandleTimeByAlert.set(
+              key,
+              lastBar.time
+            );
+          }
+        }
+      }
+
+    })
+  );
+
+}
+
 export async function evaluateAlertsForCandle(
   activeAlerts,
   symbol,
@@ -29,6 +122,8 @@ export async function evaluateAlertsForCandle(
   candle
 ) {
 
+  const sym =
+    normalizeBybitSymbol(symbol);
   const tfNorm = String(tf || "60");
   const close = Number(candle?.close);
 
@@ -38,7 +133,7 @@ export async function evaluateAlertsForCandle(
 
   for (const [key, alert] of activeAlerts) {
 
-    if (alert.symbol !== symbol) {
+    if (normalizeBybitSymbol(alert.symbol) !== sym) {
       continue;
     }
 
@@ -56,11 +151,8 @@ export async function evaluateAlertsForCandle(
     const candleTime = candle?.time;
 
     if (prev === undefined) {
-      lastPriceByAlert.set(key, close);
-      if (candleTime != null) {
-        lastCandleTimeByAlert.set(key, candleTime);
-      }
-      continue;
+      const open = Number(candle.open);
+      prev = Number.isFinite(open) ? open : close;
     }
 
     const sameBar =

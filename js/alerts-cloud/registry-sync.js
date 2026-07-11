@@ -854,7 +854,12 @@ options
 }
 
 /** Все локальные алерты без cloudSynced — повторить push (после возврата на вкладку и т.п.). */
-export async function pushUnsyncedAlerts(){
+export async function pushUnsyncedAlerts(
+options = {}
+){
+
+const forceAll =
+options.forceAll === true;
 
 if(
 isAlertsCloudDisabled()
@@ -879,6 +884,10 @@ const pending =
 getActiveAlerts().filter(a=>{
 if(a.cloudSynced){
 return false;
+}
+
+if(forceAll){
+return true;
 }
 
 const localTs =

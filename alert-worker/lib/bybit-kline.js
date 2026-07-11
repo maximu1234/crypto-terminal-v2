@@ -1,4 +1,5 @@
 import WebSocket from "ws";
+import { normalizeBybitSymbol } from "./bybit-symbol.js";
 
 const WS_URL =
   "wss://stream.bybit.com/v5/public/linear";
@@ -7,8 +8,10 @@ function topicFor(symbol, tf) {
 
   const interval =
     tf === "D" ? "D" : String(tf || "60");
+  const sym =
+    normalizeBybitSymbol(symbol);
 
-  return `kline.${interval}.${symbol}`;
+  return `kline.${interval}.${sym}`;
 
 }
 
@@ -94,7 +97,8 @@ export function createBybitKlineHub() {
 
       const parts = topic.split(".");
       const tf = parts[1];
-      const symbol = parts[2];
+      const symbol =
+        normalizeBybitSymbol(parts[2]);
       const row = Array.isArray(msg.data) ? msg.data[0] : msg.data;
 
       if (!symbol || !row) {

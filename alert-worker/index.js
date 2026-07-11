@@ -12,7 +12,8 @@ import {
 import {
   alertKey,
   pruneWatchState,
-  evaluateAlertsForCandle
+  evaluateAlertsForCandle,
+  seedMissingAlertBaselines
 } from "./lib/trigger-alert.js";
 import { handleClientApi } from "./lib/client-api.js";
 import { handleBybitProxy } from "./lib/bybit-proxy.js";
@@ -114,6 +115,16 @@ async function reloadAlerts(
 
   activeAlerts = next;
   pruneWatchState(activeAlerts);
+
+  try {
+    await seedMissingAlertBaselines(activeAlerts);
+  } catch (err) {
+    console.warn(
+      "seed alert baselines:",
+      err?.message || err
+    );
+  }
+
   lastReloadAt = Date.now();
   lastReloadOk = true;
   lastReloadError = "";

@@ -47,7 +47,7 @@ pushUnsyncedAlerts,
 scheduleRegistryCloudSync,
 isRegistryCloudSyncPaused,
 syncAllLocalAlertsToCloud
-} from "./registry-sync.js?v=7";
+} from "./registry-sync.js?v=8";
 
 import {
 isAlertsCloudDisabled,
@@ -1306,7 +1306,9 @@ isAlertsCloudDisabled() ||
 return;
 }
 
-void pushUnsyncedAlerts().catch(err=>{
+void pushUnsyncedAlerts({
+forceAll: true
+}).catch(err=>{
 console.warn(
 "alert push on pagehide:",
 err?.message || err

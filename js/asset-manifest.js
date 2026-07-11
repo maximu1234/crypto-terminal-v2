@@ -401,9 +401,9 @@ Object.freeze({
 "alerts-cloud/worker-client.js":
 5,
 "alerts-cloud/registry-sync.js":
-7,
-"alerts-cloud/polling-realtime.js":
 8,
+"alerts-cloud/polling-realtime.js":
+9,
 "alerts-page.js":
 64,
 "alert-monitor.js":
