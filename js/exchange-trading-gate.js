@@ -9,7 +9,7 @@ EXCHANGE_CHANGED_EVENT
 
 import {
 clearTradePositionsCache
-} from "./trade-positions-cache.js?v=6";
+} from "./trade-positions-cache.js?v=9";
 
 import {
 stopTradeStreamBridge,

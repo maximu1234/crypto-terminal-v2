@@ -2,8 +2,17 @@
  * Кэш открытых позиций Bybit — один getPositions вместо N× getPosition на виджеты.
  */
 import {
-maybeApplyAutoStopsForNewPosition
-} from "./trade-auto-stops.js?v=2";
+maybeApplyAutoStopsForNewPosition,
+clearDismissedStops
+} from "./trade-auto-stops.js?v=3";
+
+import {
+maybeReconcileOrdersOnPositionOpen
+} from "./trade-position-open-orders.js?v=1";
+
+import {
+maybeReconcileOrdersOnPositionClose
+} from "./trade-position-close-orders.js?v=1";
 
 import {
 applyTradePositionSoundDiff,
@@ -384,11 +393,28 @@ cacheBySymbol.get(
 sym
 );
 
+if(
+isActivePosition(
+prev
+) &&
+!options.establishBaseline
+){
+maybeReconcileOrdersOnPositionClose(
+prev?.symbol ||
+sym,
+prev
+);
+}
+
 cacheBySymbol.delete(
 sym
 );
 listChanged =
 true;
+clearDismissedStops(
+sym,
+prev
+);
 dispatchPositionUpdate(
 sym,
 null
@@ -418,8 +444,21 @@ row
 );
 
 const isNewOpen =
-!prev &&
 isActivePosition(
+row
+) &&
+(
+!prev ||
+!isActivePosition(
+prev
+)
+);
+const isClosed =
+prev &&
+isActivePosition(
+prev
+) &&
+!isActivePosition(
 row
 );
 
@@ -439,12 +478,29 @@ row
 );
 
 if(
-isNewOpen
+isNewOpen &&
+!options.establishBaseline
 ){
+maybeReconcileOrdersOnPositionOpen(
+row.symbol ||
+sym,
+row
+);
 maybeApplyAutoStopsForNewPosition(
 row.symbol ||
 sym,
 row
+);
+}
+
+if(
+isClosed &&
+!options.establishBaseline
+){
+maybeReconcileOrdersOnPositionClose(
+row.symbol ||
+sym,
+prev
 );
 }
 
@@ -652,7 +708,7 @@ result.positions ||
 [],
 {
 establishBaseline:
-true
+!isTradePositionSoundBaselineReady()
 }
 );
 

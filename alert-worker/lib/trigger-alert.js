@@ -1,8 +1,23 @@
 import { didCrossWithCandle, didCrossLine } from "./cross.js";
 import { executeAlertTrigger } from "./execute-trigger.js";
 import { normalizeBybitSymbol } from "./bybit-symbol.js";
-import { normalizeWorkerTf } from "./tf-normalize.js";
+import { normalizeWorkerTf, alertCreatedOnBar } from "./tf-normalize.js";
 import { fetchRecentKlines, fetchLastPrice } from "./bybit-kline-fetch.js";
+
+function normalizeBarTimeSec(time) {
+
+  if (time == null) {
+    return null;
+  }
+
+  const sec =
+    Math.floor(Number(time));
+
+  return Number.isFinite(sec)
+    ? sec
+    : null;
+
+}
 
 /** alert key -> last price for kline cross detection */
 const lastPriceByAlert = new Map();
@@ -94,6 +109,8 @@ export async function seedMissingAlertBaselines(
         Number(prevBar?.close);
       const lastOpen =
         Number(lastBar?.open);
+      const lastClose =
+        Number(lastBar?.close);
 
       const seed =
         Number.isFinite(prevClose)
@@ -110,7 +127,29 @@ export async function seedMissingAlertBaselines(
 
       for (const key of keys) {
         if (!lastPriceByAlert.has(key)) {
-          lastPriceByAlert.set(key, seed);
+          const alert =
+            activeAlerts.get(key);
+          const createdOnLastBar =
+            alert &&
+            lastBar?.time !=
+            null &&
+            alertCreatedOnBar(
+              alert.created_at,
+              lastBar.time,
+              tf
+            );
+          const baseline =
+            createdOnLastBar &&
+            Number.isFinite(
+              lastClose
+            )
+              ? lastClose
+              : seed;
+
+          lastPriceByAlert.set(
+            key,
+            baseline
+          );
 
           if (lastBar?.time != null) {
             lastCandleTimeByAlert.set(
@@ -402,7 +441,16 @@ export async function sweepAlertsWithMarket(
                 prev,
                 candle,
                 level,
-                { sameBar: false }
+                {
+                  sameBar:
+                    alertCreatedOnBar(
+                      alert.created_at,
+                      Number(
+                        candle.time
+                      ),
+                      tf
+                    )
+                }
               )
             ) {
               triggered =
@@ -505,16 +553,28 @@ export async function evaluateAlertsForCandle(
     }
 
     let prev = lastPriceByAlert.get(key);
-    const candleTime = candle?.time;
+    const candleTime = normalizeBarTimeSec(candle?.time);
 
     if (prev === undefined) {
-      const open = Number(candle.open);
-      prev = Number.isFinite(open) ? open : close;
+      lastPriceByAlert.set(key, close);
+      if (candleTime != null) {
+        lastCandleTimeByAlert.set(key, candleTime);
+      }
+      continue;
     }
 
     const sameBar =
-      candleTime != null &&
-      lastCandleTimeByAlert.get(key) === candleTime;
+      (
+        candleTime != null &&
+        normalizeBarTimeSec(
+          lastCandleTimeByAlert.get(key)
+        ) === candleTime
+      ) ||
+      alertCreatedOnBar(
+        alert.created_at,
+        candleTime,
+        tfNorm
+      );
 
     if (!didCrossWithCandle(prev, candle, level, { sameBar })) {
       lastPriceByAlert.set(key, close);

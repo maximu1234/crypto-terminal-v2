@@ -250,7 +250,7 @@ const {
 initTradePositionsCache
 } =
 await import(
-"./trade-positions-cache.js?v=6"
+"./trade-positions-cache.js?v=9"
 );
 
 initTradePositionsCache();
@@ -270,7 +270,7 @@ const {
 initTradeChartOverlay
 } =
 await import(
-"./trade-chart-overlay.js?v=33"
+"./trade-chart-overlay.js?v=34"
 );
 
 initTradeChartOverlay();
@@ -279,7 +279,7 @@ const {
 initTradeChartOrders
 } =
 await import(
-"./trade-chart-orders.js?v=19"
+"./trade-chart-orders.js?v=22"
 );
 
 initTradeChartOrders();

@@ -4,6 +4,9 @@
 const STORAGE_KEY =
 "trade_auto_stops_v1";
 
+const DISMISSED_STOPS_KEY =
+"trade_auto_stops_dismissed_v1";
+
 function normalizeUsd(
 value
 ){
@@ -85,6 +88,227 @@ tpUsd:
 0
 };
 }
+
+}
+
+function normalizeAutoStopSymbol(
+symbol
+){
+
+return String(
+symbol ||
+""
+).replace(
+/\.P$/i,
+""
+).trim().toUpperCase();
+
+}
+
+function readDismissedStops(){
+
+try{
+const raw =
+localStorage.getItem(
+DISMISSED_STOPS_KEY
+);
+
+if(
+!raw
+){
+return {};
+}
+
+const parsed =
+JSON.parse(
+raw
+);
+
+return parsed &&
+typeof parsed ===
+"object"
+? parsed
+: {};
+}catch{
+return {};
+}
+
+}
+
+function writeDismissedStops(
+map
+){
+
+try{
+localStorage.setItem(
+DISMISSED_STOPS_KEY,
+JSON.stringify(
+map
+)
+);
+}catch{
+/* ignore */
+}
+
+}
+
+export function positionStopIdentity(
+symbol,
+position
+){
+
+const sym =
+normalizeAutoStopSymbol(
+symbol
+);
+const side =
+position?.side ===
+"Sell"
+? "Sell"
+: "Buy";
+const entry =
+Number(
+position?.avgPrice
+);
+
+const entryKey =
+Number.isFinite(
+entry
+) &&
+entry >
+0
+? entry.toFixed(
+6
+)
+: "0";
+
+return `${sym}:${side}:${entryKey}`;
+
+}
+
+export function markStopDismissed(
+symbol,
+position,
+target
+){
+
+const id =
+positionStopIdentity(
+symbol,
+position
+);
+
+if(
+!id
+){
+return;
+}
+
+const map =
+readDismissedStops();
+const prev =
+map[
+id
+] ||
+{};
+const next =
+{
+...prev
+};
+
+if(
+target ===
+"sl" ||
+target ===
+"both"
+){
+next.sl =
+true;
+}
+
+if(
+target ===
+"tp" ||
+target ===
+"both"
+){
+next.tp =
+true;
+}
+
+map[
+id
+] =
+next;
+writeDismissedStops(
+map
+);
+
+}
+
+export function clearDismissedStops(
+symbol,
+position
+){
+
+const id =
+positionStopIdentity(
+symbol,
+position
+);
+
+if(
+!id
+){
+return;
+}
+
+const map =
+readDismissedStops();
+
+if(
+!map[
+id
+]
+){
+return;
+}
+
+delete map[
+id
+];
+writeDismissedStops(
+map
+);
+
+}
+
+function isStopDismissed(
+symbol,
+position,
+target
+){
+
+const id =
+positionStopIdentity(
+symbol,
+position
+);
+const flags =
+readDismissedStops()[
+id
+];
+
+if(
+!flags
+){
+return false;
+}
+
+return target ===
+"sl"
+? !!flags.sl
+: !!flags.tp;
 
 }
 
@@ -257,7 +481,12 @@ settings.slEnabled &&
 settings.slUsd >
 0 &&
 existingSl <=
-0
+0 &&
+!isStopDismissed(
+symbol,
+position,
+"sl"
+)
 ){
 
 const slPrice =
@@ -292,7 +521,12 @@ settings.tpEnabled &&
 settings.tpUsd >
 0 &&
 existingTp <=
-0
+0 &&
+!isStopDismissed(
+symbol,
+position,
+"tp"
+)
 ){
 
 const tpPrice =
@@ -343,20 +577,6 @@ position
 
 const autoStopInflight =
 new Set();
-
-function normalizeAutoStopSymbol(
-symbol
-){
-
-return String(
-symbol ||
-""
-).replace(
-/\.P$/i,
-""
-).trim().toUpperCase();
-
-}
 
 /**
  * Stop/limit fill и другие входы вне market-кнопок — выставить SL/TP из настроек.
@@ -428,13 +648,23 @@ settings.slEnabled &&
 settings.slUsd >
 0 &&
 existingSl <=
-0;
+0 &&
+!isStopDismissed(
+symbol,
+position,
+"sl"
+);
 const needsTp =
 settings.tpEnabled &&
 settings.tpUsd >
 0 &&
 existingTp <=
-0;
+0 &&
+!isStopDismissed(
+symbol,
+position,
+"tp"
+);
 
 if(
 !needsSl &&

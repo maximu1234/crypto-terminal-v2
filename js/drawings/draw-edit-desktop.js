@@ -33,7 +33,8 @@ widthPopover,
 settingsPopover,
 positionRiskWrap,
 fibPortalHitTest,
-setBlockChartClick
+setBlockChartClick,
+clearPeerSelections = null
 } =
 deps;
 
@@ -583,6 +584,12 @@ if(
 hitId
 ){
 
+try{
+clearPeerSelections?.();
+}catch{
+/* ignore */
+}
+
 pinDrawingSelection(
 hitId
 );
@@ -596,13 +603,23 @@ redraw();
 e.preventDefault();
 e.stopPropagation();
 
-}else if(
+}else{
+
+try{
+clearPeerSelections?.();
+}catch{
+/* ignore */
+}
+
+if(
 !desktopSelectionPinned
 ){
 
 clearDrawingSelection();
 updateStyleBar();
 redraw();
+
+}
 
 }
 
@@ -658,15 +675,33 @@ return;
 if(
 hitId
 ){
+
+try{
+clearPeerSelections?.();
+}catch{
+/* ignore */
+}
+
 pinDrawingSelection(
 hitId
 );
 desktopClickSelectId =
 null;
-}else if(
+
+}else{
+
+try{
+clearPeerSelections?.();
+}catch{
+/* ignore */
+}
+
+if(
 !desktopSelectionPinned
 ){
 clearDrawingSelection();
+}
+
 }
 
 updateStyleBar();

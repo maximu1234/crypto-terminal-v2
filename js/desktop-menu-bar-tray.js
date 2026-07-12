@@ -3,7 +3,7 @@
  */
 import {
 getAllCachedPositions
-} from "./trade-positions-cache.js?v=6";
+} from "./trade-positions-cache.js?v=9";
 
 import {
 formatTradePnl

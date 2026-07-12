@@ -2477,6 +2477,32 @@ positions
 
 }
 
+function isPositionTpslOrderRow(
+row
+){
+
+const orderFilter =
+String(
+row?.orderFilter ||
+""
+).trim();
+const stopOrderType =
+String(
+row?.stopOrderType ||
+""
+).trim();
+
+return orderFilter ===
+"tpslOrder" ||
+stopOrderType ===
+"TakeProfit" ||
+stopOrderType ===
+"StopLoss" ||
+stopOrderType ===
+"TrailingStop";
+
+}
+
 function mapOrderRow(
 row
 ){
@@ -2545,8 +2571,29 @@ true ||
 row?.reduceOnly ===
 "true";
 
+const orderFilter =
+String(
+row?.orderFilter ||
+""
+).trim();
+const stopOrderType =
+String(
+row?.stopOrderType ||
+""
+).trim();
+
 if(
-isReduceOnly
+isReduceOnly &&
+(
+orderFilter ===
+"tpslOrder" ||
+stopOrderType ===
+"TakeProfit" ||
+stopOrderType ===
+"StopLoss" ||
+stopOrderType ===
+"TrailingStop"
+)
 ){
 return null;
 }
@@ -2578,7 +2625,10 @@ limitPrice >
 0
 ){
 label =
-"Limit";
+side ===
+"Buy"
+? "Buy Limit"
+: "Sell Limit";
 orderKind =
 "limit";
 }else{
@@ -2647,6 +2697,8 @@ side ===
 "Buy"
 ? "long"
 : "short",
+reduceOnly:
+isReduceOnly,
 qty:
 Number.isFinite(
 qty
@@ -3280,6 +3332,77 @@ message:
 
 }
 
+const posResult =
+await getPosition(
+sym
+);
+const openPos =
+posResult?.ok
+? posResult.position
+: null;
+const openSize =
+Number(
+openPos?.size
+);
+const posSide =
+String(
+openPos?.side ||
+""
+);
+
+if(
+Number.isFinite(
+openSize
+) &&
+openSize >
+0 &&
+posSide
+){
+const orderSide =
+kind.startsWith(
+"sell"
+)
+? "Sell"
+: "Buy";
+const closesPosition =
+(
+posSide ===
+"Buy" &&
+orderSide ===
+"Sell"
+) ||
+(
+posSide ===
+"Sell" &&
+orderSide ===
+"Buy"
+);
+
+if(
+closesPosition
+){
+body.reduceOnly =
+true;
+}
+}
+
+if(
+payload?.forceReduceOnly ===
+true
+){
+body.reduceOnly =
+true;
+}
+
+if(
+body.reduceOnly ===
+true &&
+body.triggerPrice
+){
+body.closeOnTrigger =
+true;
+}
+
 return privatePost(
 "/v5/order/create",
 body
@@ -3426,6 +3549,514 @@ return privatePost(
 "/v5/order/amend",
 body
 );
+
+}
+
+function orderKindFromMappedRow(
+mapped
+){
+
+const side =
+String(
+mapped?.side ||
+""
+);
+const orderKind =
+String(
+mapped?.orderKind ||
+""
+);
+
+if(
+orderKind ===
+"stop"
+){
+return side ===
+"Buy"
+? "buy-stop"
+: "sell-stop";
+}
+
+if(
+orderKind ===
+"limit"
+){
+return side ===
+"Buy"
+? "buy-limit"
+: "sell-limit";
+}
+
+return "";
+
+}
+
+async function reconcileOrdersOnPositionOpen(
+symbol,
+positionSide
+){
+
+const sym =
+stripSymbolSuffix(
+symbol
+);
+const posSide =
+String(
+positionSide ||
+""
+).trim();
+
+if(
+!sym ||
+(
+posSide !==
+"Buy" &&
+posSide !==
+"Sell"
+)
+){
+return {
+ok:
+false,
+message:
+"Symbol and position side required"
+};
+}
+
+const openingSide =
+posSide;
+const closingSide =
+posSide ===
+"Buy"
+? "Sell"
+: "Buy";
+
+const ordersResult =
+await privateGet(
+"/v5/order/realtime",
+{
+category:
+"linear",
+symbol:
+sym,
+openOnly:
+"0",
+limit:
+"50"
+}
+);
+
+if(
+!ordersResult.ok
+){
+return ordersResult;
+}
+
+const list =
+ordersResult.data?.result?.list;
+const rows =
+Array.isArray(
+list
+)
+? list
+: [];
+
+const posResult =
+await getPosition(
+sym
+);
+const markPrice =
+Number(
+posResult?.position?.markPrice
+) ||
+0;
+
+const canceledOrderIds =
+[];
+const stats =
+{
+canceled:
+0,
+converted:
+0,
+skipped:
+0,
+errors:
+[]
+};
+
+for(
+const row of rows
+){
+
+if(
+isPositionTpslOrderRow(
+row
+)
+){
+stats.skipped++;
+continue;
+}
+
+const mapped =
+mapOrderRow(
+row
+);
+
+if(
+!mapped
+){
+stats.skipped++;
+continue;
+}
+
+const side =
+String(
+row?.side ||
+""
+);
+const isReduceOnly =
+row?.reduceOnly ===
+true ||
+row?.reduceOnly ===
+"true";
+const orderId =
+String(
+row?.orderId ||
+""
+).trim();
+
+if(
+!orderId
+){
+stats.skipped++;
+continue;
+}
+
+if(
+side ===
+openingSide
+){
+
+const cancelResult =
+await cancelTradeOrder(
+sym,
+orderId
+);
+
+if(
+cancelResult?.ok ===
+false
+){
+stats.errors.push(
+{
+orderId,
+action:
+"cancel-opening",
+message:
+cancelResult.message ||
+"cancel failed"
+}
+);
+continue;
+}
+
+canceledOrderIds.push(
+orderId
+);
+stats.canceled++;
+continue;
+
+}
+
+if(
+side !==
+closingSide
+){
+stats.skipped++;
+continue;
+}
+
+if(
+isReduceOnly
+){
+stats.skipped++;
+continue;
+}
+
+const cancelResult =
+await cancelTradeOrder(
+sym,
+orderId
+);
+
+if(
+cancelResult?.ok ===
+false
+){
+stats.errors.push(
+{
+orderId,
+action:
+"cancel-for-ro",
+message:
+cancelResult.message ||
+"cancel failed"
+}
+);
+continue;
+}
+
+canceledOrderIds.push(
+orderId
+);
+
+const kind =
+orderKindFromMappedRow(
+mapped
+);
+
+if(
+!kind
+){
+stats.errors.push(
+{
+orderId,
+action:
+"replace-ro",
+message:
+"Unknown order kind"
+}
+);
+continue;
+}
+
+const refMark =
+markPrice >
+0
+? markPrice
+: mapped.price;
+const volumeUsdt =
+Number(
+mapped.volumeUsdt
+) ||
+(
+Number(
+mapped.qty
+) *
+Number(
+mapped.price
+)
+);
+
+if(
+!Number.isFinite(
+volumeUsdt
+) ||
+volumeUsdt <=
+0
+){
+stats.errors.push(
+{
+orderId,
+action:
+"replace-ro",
+message:
+"Invalid order volume"
+}
+);
+continue;
+}
+
+const placeResult =
+await placeTradeOrder(
+{
+symbol:
+sym,
+kind,
+price:
+mapped.price,
+volumeUsdt,
+markPrice:
+refMark,
+forceReduceOnly:
+true
+}
+);
+
+if(
+placeResult?.ok ===
+false
+){
+stats.errors.push(
+{
+orderId,
+action:
+"replace-ro",
+message:
+placeResult.message ||
+"replace failed"
+}
+);
+continue;
+}
+
+stats.converted++;
+
+}
+
+return {
+ok:
+true,
+symbol:
+sym,
+positionSide:
+posSide,
+canceledOrderIds,
+...stats
+};
+
+}
+
+async function reconcileOrdersOnPositionClose(
+symbol
+){
+
+const sym =
+stripSymbolSuffix(
+symbol
+);
+
+if(
+!sym
+){
+return {
+ok:
+false,
+message:
+"Symbol required"
+};
+}
+
+const ordersResult =
+await privateGet(
+"/v5/order/realtime",
+{
+category:
+"linear",
+symbol:
+sym,
+openOnly:
+"0",
+limit:
+"50"
+}
+);
+
+if(
+!ordersResult.ok
+){
+return ordersResult;
+}
+
+const list =
+ordersResult.data?.result?.list;
+const rows =
+Array.isArray(
+list
+)
+? list
+: [];
+
+const canceledOrderIds =
+[];
+const stats =
+{
+canceled:
+0,
+skipped:
+0,
+errors:
+[]
+};
+
+for(
+const row of rows
+){
+
+if(
+isPositionTpslOrderRow(
+row
+)
+){
+stats.skipped++;
+continue;
+}
+
+const isReduceOnly =
+row?.reduceOnly ===
+true ||
+row?.reduceOnly ===
+"true";
+
+if(
+!isReduceOnly
+){
+stats.skipped++;
+continue;
+}
+
+const orderId =
+String(
+row?.orderId ||
+""
+).trim();
+
+if(
+!orderId
+){
+stats.skipped++;
+continue;
+}
+
+const cancelResult =
+await cancelTradeOrder(
+sym,
+orderId
+);
+
+if(
+cancelResult?.ok ===
+false
+){
+stats.errors.push(
+{
+orderId,
+action:
+"cancel-ro",
+message:
+cancelResult.message ||
+"cancel failed"
+}
+);
+continue;
+}
+
+canceledOrderIds.push(
+orderId
+);
+stats.canceled++;
+
+}
+
+return {
+ok:
+true,
+symbol:
+sym,
+canceledOrderIds,
+...stats
+};
 
 }
 
@@ -4739,6 +5370,8 @@ setPositionStop,
 placeTradeOrder,
 cancelTradeOrder,
 amendTradeOrder,
+reconcileOrdersOnPositionOpen,
+reconcileOrdersOnPositionClose,
 pingBybit,
 getClosedPnlHistory,
 getTradeDiaryDetail,

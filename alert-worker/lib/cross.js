@@ -40,8 +40,10 @@ sameBar = false
     return true;
   }
 
-  /* sameBar: не блокируем wick — иначе пропуск cross внутри свечи */
-  void sameBar;
+  /* sameBar: не считать тени — алерт поставлен на текущем баре */
+  if (sameBar) {
+    return false;
+  }
 
   const high = Number(candle.high);
   const low = Number(candle.low);

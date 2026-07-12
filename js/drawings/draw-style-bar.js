@@ -119,9 +119,80 @@ touchShapeRevision: touchShapeRevisionDep,
 deleteSelected,
 flushDeferredFibSettingsSync,
 getDesktopEdit,
-getSymbol
+getSymbol,
+getStyleDelegate = null
 } =
 deps;
+
+function styleCtx(){
+
+const delegate =
+getStyleDelegate?.();
+
+if(
+!delegate
+){
+return {
+getTool,
+getSelectedId,
+getSelected,
+getPlacement,
+getDrawings,
+saveDrawings,
+redraw,
+saveToolDefaults,
+saveGlobalStyle,
+baseDefaultStyle,
+getDesktopEdit
+};
+}
+
+return {
+getTool:
+delegate.getTool ||
+getTool,
+getSelectedId:
+delegate.getSelectedId ||
+getSelectedId,
+getSelected:
+delegate.getSelected ||
+getSelected,
+getPlacement:
+delegate.getPlacement ||
+getPlacement,
+getDrawings:
+delegate.getDrawings ||
+getDrawings,
+saveDrawings:
+delegate.saveDrawings ||
+saveDrawings,
+redraw:
+delegate.redraw ||
+redraw,
+saveToolDefaults:
+delegate.saveToolDefaults ||
+saveToolDefaults,
+saveGlobalStyle:
+delegate.saveGlobalStyle ||
+saveGlobalStyle,
+baseDefaultStyle:
+delegate.baseDefaultStyle ||
+baseDefaultStyle,
+getDesktopEdit:
+delegate.getDesktopEdit ||
+getDesktopEdit
+};
+
+}
+
+function isStyleBarContextActive(){
+
+return (
+isActive() ||
+!!getStyleDelegate?.()
+);
+
+}
 
 function isTradeDesktopApp(){
 
@@ -1088,12 +1159,23 @@ typeof fibStore.fibShowTrendLine ===
 
 function getStyleTargetType(){
 
-const sel = getSelected();
+const {
+getTool: toolForStyle,
+getSelected: selectedForStyle
+} =
+styleCtx();
+
+const sel =
+selectedForStyle();
+
 if(sel){
 return sel.type;
 }
-if(getTool() !== "cursor"){
-return getTool();
+if(
+toolForStyle() !==
+"cursor"
+){
+return toolForStyle();
 }
 return null;
 }
@@ -2772,20 +2854,31 @@ if(!styleBar){
 return;
 }
 
+const {
+getTool: toolForStyle,
+getSelectedId: selectedIdForStyle,
+getSelected: selectedForStyle,
+baseDefaultStyle: defaultStyleFor
+} =
+styleCtx();
+
 const pinnedSelection =
-getDesktopEdit?.()?.isDrawingSelectionPinned?.() ??
+styleCtx().getDesktopEdit?.()?.isDrawingSelectionPinned?.() ??
 false;
 const touchChartSelect =
 isCoarseTouchViewport();
+const delegatedStyleBar =
+!!getStyleDelegate?.();
 
 const show =
-getTool() !==
+toolForStyle() !==
 "cursor" ||
 (
-!!getSelectedId() &&
+!!selectedIdForStyle() &&
 (
 pinnedSelection ||
-touchChartSelect
+touchChartSelect ||
+delegatedStyleBar
 )
 );
 
@@ -2797,7 +2890,7 @@ syncDrawChromeLayout();
 
 if(deleteOneBtn){
 deleteOneBtn.style.display =
-getSelectedId() ? "inline-flex" : "none";
+selectedIdForStyle() ? "inline-flex" : "none";
 }
 
 if(!show){
@@ -2805,21 +2898,41 @@ closePopovers();
 return;
 }
 
-const sel = getSelected();
-const type = getStyleTargetType();
+const sel =
+selectedForStyle();
+const type =
+getStyleTargetType();
 
 if(sel){
 fillStyleUI(sel, sel.type);
 return;
 }
 
-if(getTool() !== "cursor"){
-fillStyleUI(baseDefaultStyle(getTool()), getTool());
+if(
+toolForStyle() !==
+"cursor"
+){
+fillStyleUI(
+defaultStyleFor(
+toolForStyle()
+),
+toolForStyle()
+);
 }
 
 }
 
 function applyStyleFromUI(scope){
+
+const {
+getSelected: selectedForStyle,
+getPlacement: placementForStyle,
+saveDrawings: saveDrawingsForStyle,
+redraw: redrawForStyle,
+saveToolDefaults: saveToolDefaultsForStyle,
+saveGlobalStyle: saveGlobalStyleForStyle
+} =
+styleCtx();
 
 const style = readStyleFromUI();
 const type = getStyleTargetType();
@@ -2829,17 +2942,17 @@ return;
 }
 
 const sel =
-getSelected();
+selectedForStyle();
 
 const fibTarget =
 type === "fib" &&
-!getPlacement()
+!placementForStyle()
 ? resolveFibStyleTarget()
 : null;
 
 const target =
 fibTarget || (
-!getPlacement()
+!placementForStyle()
 ? sel
 : null
 );
@@ -2928,8 +3041,8 @@ touchShapeRevisionFn(
 target
 );
 
-saveDrawings();
-redraw();
+saveDrawingsForStyle();
+redrawForStyle();
 
 }
 
@@ -2976,12 +3089,12 @@ delete defaultsPayload.lineWidth;
 
 }
 
-saveToolDefaults(
+saveToolDefaultsForStyle(
 type,
 defaultsPayload
 );
 
-saveGlobalStyle({
+saveGlobalStyleForStyle({
 color: style.color,
 lineWidth: style.lineWidth
 });
@@ -4361,7 +4474,7 @@ JSON.stringify(barOffset)
 
 const onDocClick = e=>{
 
-if(!getAlive() || !isActive()){
+if(!getAlive() || !isStyleBarContextActive()){
 return;
 }
 

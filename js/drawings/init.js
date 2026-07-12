@@ -190,7 +190,7 @@ createDrawUndoStack
 
 import {
 createDrawDesktopSelection
-} from "./draw-edit-desktop.js?v=8";
+} from "./draw-edit-desktop.js?v=9";
 
 import {
 createDrawingsPersist
@@ -198,7 +198,7 @@ createDrawingsPersist
 
 import {
 createDrawStyleBar
-} from "./draw-style-bar.js?v=25";
+} from "./draw-style-bar.js?v=27";
 
 import {
 createDrawAlertsChart
@@ -258,7 +258,10 @@ drawPriceAlerts = true,
 sharedDrawUndo =
 null,
 deferKeyboardUndo =
-false
+false,
+getStyleDelegate = null,
+sharedStyleBarSync = null,
+clearPeerSelections = null
 
 }){
 
@@ -471,7 +474,11 @@ let fibSettingsSyncDeferred = false;
 let styleBarCtl =
 null;
 let updateStyleBar =
-()=>{};
+sharedStyleBarSync
+? ()=>{
+sharedStyleBarSync();
+}
+: ()=>{};
 let closePopovers =
 ()=>{};
 let syncDrawChromeLayout =
@@ -5599,7 +5606,8 @@ getToolDefaults:()=>toolDefaults,
 deleteSelected,
 flushDeferredFibSettingsSync,
 getDesktopEdit:()=>desktopEdit,
-getSymbol
+getSymbol,
+getStyleDelegate
 });
 
 ({
@@ -5655,7 +5663,8 @@ fibPortalHitTest,
 setBlockChartClick:v=>{
 blockChartClick =
 v;
-}
+},
+clearPeerSelections
 });
 
 brushPlacementCtl =
@@ -6712,6 +6721,85 @@ return {
 getTool: ()=> tool,
 setTool,
 pickDrawTool,
+getStyleBarDelegate(){
+
+return {
+getTool: ()=> tool,
+getSelectedId: ()=> selectedId,
+getSelected,
+getPlacement: ()=> placement,
+getDrawings: ()=> drawings,
+getDesktopEdit: ()=> desktopEdit,
+saveDrawings,
+redraw,
+saveToolDefaults,
+saveGlobalStyle,
+baseDefaultStyle
+};
+
+},
+syncStyleBar: ()=>{
+updateStyleBar();
+},
+clearDrawingSelection(){
+
+desktopEdit?.clearDrawingSelection?.();
+updateStyleBar();
+scheduleRedraw();
+
+},
+hitTestAtClient(
+clientX,
+clientY
+){
+
+if(
+!alive
+){
+return null;
+}
+
+const rect =
+wrapEl.getBoundingClientRect();
+const x =
+clientX -
+rect.left;
+const y =
+clientY -
+rect.top;
+
+if(
+x <
+0 ||
+y <
+0 ||
+x >
+rect.width ||
+y >
+rect.height
+){
+return null;
+}
+
+return hitTest(
+x,
+y
+) ||
+null;
+
+},
+isDrawChromePointerEvent(
+e
+){
+
+return (
+desktopEdit?.isDrawChromePointerEvent?.(
+e
+) ??
+false
+);
+
+},
 refreshDrawToolsAccessUi,
 refreshDrawToolsAccessUiAsync,
 canUseDrawings,

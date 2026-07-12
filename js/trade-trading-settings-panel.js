@@ -8,7 +8,7 @@ TRADE_VOLUME_SLOT_COUNT
 
 import {
 wireAutoStopSettings
-} from "./trade-auto-stops.js?v=2";
+} from "./trade-auto-stops.js?v=3";
 
 const TRADE_VOLUME_DEFAULT_INPUT_COUNT =
 Math.max(

@@ -27,6 +27,10 @@ new Map();
 const lastCandleTimeByAlert =
 new Map();
 
+/** Последний TF графика по символу — для rebaseline при смене TF. */
+const lastChartTfBySymbol =
+new Map();
+
 /** Фоновые WS на TF алертов, когда график на другом TF. */
 const backgroundAlertUnsubs =
 new Map();
@@ -39,6 +43,197 @@ const recentlyTriggered =
 new Map();
 
 const TRIGGER_COOLDOWN_MS = 60000;
+
+/** Длительность бара в секундах (как chart-ruler). */
+function tfBarDurationSec(tf){
+
+const norm =
+String(tf || "60");
+
+const map = {
+"1":60,
+"5":300,
+"15":900,
+"60":3600,
+"240":14400,
+"D":86400,
+"W":604800
+};
+
+return map[norm] || 3600;
+
+}
+
+function normalizeBarTimeSec(
+time
+){
+
+if(
+time ==
+null
+){
+return null;
+}
+
+const sec =
+Math.floor(
+Number(
+time
+)
+);
+
+return Number.isFinite(
+sec
+)
+? sec
+: null;
+
+}
+
+/** Алерт создан на этой свече — не считать исторические тени бара. */
+function alertCreatedOnBar(
+alert,
+barTimeSec
+){
+
+const barSec =
+normalizeBarTimeSec(
+barTimeSec
+);
+
+const createdMs =
+Number(
+alert?.createdAt
+);
+
+if(
+!Number.isFinite(
+createdMs
+) ||
+barSec ==
+null
+){
+return false;
+}
+
+const createdSec =
+Math.floor(
+createdMs /
+1000
+);
+const duration =
+tfBarDurationSec(
+alert?.tf
+);
+
+return (
+createdSec >=
+barSec &&
+createdSec <
+barSec +
+duration
+);
+
+}
+
+/**
+ * После смены TF графика — сбросить baseline алертов на этом TF,
+ * чтобы handoff chart↔background не давал ложный wick-cross.
+ */
+function rebaselineAlertsForChartTf(
+symbol,
+candle,
+chartTf
+){
+
+const close =
+Number(
+candle?.close
+);
+
+if(
+!Number.isFinite(
+close
+)
+){
+return;
+}
+
+const sym =
+String(
+symbol ||
+""
+).trim().toUpperCase();
+const tfNorm =
+String(
+chartTf ||
+"60"
+);
+const candleTime =
+normalizeBarTimeSec(
+candle?.time
+);
+
+for(
+const alert of getActiveAlerts()
+){
+
+if(
+String(
+alert.symbol ||
+""
+).toUpperCase() !==
+sym
+){
+continue;
+}
+
+if(
+String(
+alert.tf ||
+"60"
+) !==
+tfNorm
+){
+continue;
+}
+
+const key =
+alertEntryKey(
+sym,
+alert.shapeId
+);
+
+if(
+dragPausedAlerts.has(
+key
+)
+){
+continue;
+}
+
+lastPriceByAlert.set(
+key,
+close
+);
+
+if(
+candleTime !=
+null
+){
+lastCandleTimeByAlert.set(
+key,
+candleTime
+);
+}
+
+recentlyTriggered.delete(
+key
+);
+
+}
+
+}
 
 /** После отпускания линии — не считать ложное пересечение (перетаскивали к цене). */
 const POST_DRAG_QUIET_MS = 3000;
@@ -733,7 +928,9 @@ alert.price
 );
 
 const candleTime =
-candle?.time;
+normalizeBarTimeSec(
+candle?.time
+);
 
 let prev =
 lastPriceByAlert.get(
@@ -766,12 +963,20 @@ continue;
 }
 
 const sameBar =
+(
 candleTime !=
 null &&
+normalizeBarTimeSec(
 lastCandleTimeByAlert.get(
 key
+)
 ) ===
-candleTime;
+candleTime
+) ||
+alertCreatedOnBar(
+alert,
+candleTime
+);
 
 if(
 !didCrossWithCandle(
@@ -1093,6 +1298,33 @@ return;
 
 const sym =
 String(symbol || "").trim().toUpperCase();
+const tfNorm =
+String(
+chartTf ||
+"60"
+);
+const prevChartTf =
+lastChartTfBySymbol.get(
+sym
+);
+
+if(
+prevChartTf !==
+undefined &&
+prevChartTf !==
+tfNorm
+){
+rebaselineAlertsForChartTf(
+sym,
+candle,
+tfNorm
+);
+}
+
+lastChartTfBySymbol.set(
+sym,
+tfNorm
+);
 
 const active =
 getActiveAlerts().filter(

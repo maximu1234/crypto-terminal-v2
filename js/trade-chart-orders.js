@@ -441,9 +441,44 @@ order.price
 
 }
 
+function formatOrderBadgeLabel(
+order
+){
+
+const base =
+String(
+order?.label ||
+""
+).trim();
+
+if(
+!base
+){
+return "";
+}
+
+if(
+order?.reduceOnly
+){
+return `${base} (RO)`;
+}
+
+return base;
+
+}
+
 function orderLineColor(
 order
 ){
+
+if(
+order.reduceOnly
+){
+return order.badgeSide ===
+"long"
+? "#15803d"
+: "#f97316";
+}
 
 return order.badgeSide ===
 "long"
@@ -488,10 +523,19 @@ continue;
 }
 
 const sideClass =
+order.reduceOnly
+? (
+order.badgeSide ===
+"long"
+? "trade-order-badge--reduce-buy"
+: "trade-order-badge--reduce-sell"
+)
+: (
 order.badgeSide ===
 "long"
 ? "trade-order-badge--long"
-: "trade-order-badge--short";
+: "trade-order-badge--short"
+);
 const color =
 orderLineColor(
 order
@@ -515,7 +559,7 @@ sideClass,
 html:
 `
 <span class="seg seg-vol">${displayVolume(order.volumeUsdt)}</span>
-<span class="seg seg-type">${order.label}</span>
+<span class="seg seg-type">${formatOrderBadgeLabel(order)}</span>
 <button type="button" class="seg seg-close" data-action="cancel-order" title="Отменить ордер" aria-label="Отменить ордер">×</button>
 `,
 line:{
@@ -548,7 +592,7 @@ const dragging =
 dragOrder?.orderId ===
 o.orderId;
 
-return `${o.orderId}:${o.label}${dragging ? ":drag" : ""}`;
+return `${o.orderId}:${o.label}${o.reduceOnly ? ":ro" : ""}${dragging ? ":drag" : ""}`;
 }
 ).join(
 "|"

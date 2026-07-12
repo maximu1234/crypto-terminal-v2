@@ -7,7 +7,7 @@ getActiveTradeVolumeUsdt
 
 import {
 applyAutoStopsAfterEntry
-} from "./trade-auto-stops.js?v=2";
+} from "./trade-auto-stops.js?v=3";
 
 import {
 marketMap

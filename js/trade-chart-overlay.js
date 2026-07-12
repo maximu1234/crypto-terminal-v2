@@ -4,7 +4,11 @@
 import {
 getCachedPosition,
 syncTradePositionsCache
-} from "./trade-positions-cache.js?v=6";
+} from "./trade-positions-cache.js?v=9";
+
+import {
+markStopDismissed
+} from "./trade-auto-stops.js?v=3";
 
 import {
 isExchangeTradingEnabled
@@ -2367,6 +2371,16 @@ result.message ||
 "Не удалось отменить"
 );
 return;
+}
+
+if(
+position
+){
+markStopDismissed(
+position.symbol,
+position,
+target
+);
 }
 
 await syncPosition(

@@ -31,6 +31,8 @@ setPositionStop,
 placeTradeOrder,
 cancelTradeOrder,
 amendTradeOrder,
+reconcileOrdersOnPositionOpen,
+reconcileOrdersOnPositionClose,
 pingBybit,
 getClosedPnlHistory,
 getTradeDiaryDetail,
@@ -420,6 +422,135 @@ err
 ){
 log.warn(
 "trading:cancelOrder:",
+err.message
+);
+return {
+ok:
+false,
+message:
+err.message
+};
+}
+
+}
+);
+
+ipcMain.handle(
+"trading:reconcileOrdersOnPositionOpen",
+async(
+_event,
+payload
+)=>{
+
+try{
+const result =
+await reconcileOrdersOnPositionOpen(
+payload?.symbol,
+payload?.positionSide
+);
+
+if(
+result?.ok !==
+false &&
+Array.isArray(
+result.canceledOrderIds
+)
+){
+for(
+const orderId of result.canceledOrderIds
+){
+removeStreamOrder(
+orderId
+);
+}
+}
+
+if(
+result?.ok !==
+false
+){
+log.info(
+"reconcileOrdersOnPositionOpen:",
+payload?.symbol,
+result.positionSide,
+`canceled=${result.canceled}`,
+`converted=${result.converted}`,
+`skipped=${result.skipped}`,
+result.errors?.length
+? `errors=${result.errors.length}`
+: ""
+);
+}
+
+return result;
+}catch(
+err
+){
+log.warn(
+"trading:reconcileOrdersOnPositionOpen:",
+err.message
+);
+return {
+ok:
+false,
+message:
+err.message
+};
+}
+
+}
+);
+
+ipcMain.handle(
+"trading:reconcileOrdersOnPositionClose",
+async(
+_event,
+payload
+)=>{
+
+try{
+const result =
+await reconcileOrdersOnPositionClose(
+payload?.symbol
+);
+
+if(
+result?.ok !==
+false &&
+Array.isArray(
+result.canceledOrderIds
+)
+){
+for(
+const orderId of result.canceledOrderIds
+){
+removeStreamOrder(
+orderId
+);
+}
+}
+
+if(
+result?.ok !==
+false
+){
+log.info(
+"reconcileOrdersOnPositionClose:",
+payload?.symbol,
+`canceled=${result.canceled}`,
+`skipped=${result.skipped}`,
+result.errors?.length
+? `errors=${result.errors.length}`
+: ""
+);
+}
+
+return result;
+}catch(
+err
+){
+log.warn(
+"trading:reconcileOrdersOnPositionClose:",
 err.message
 );
 return {

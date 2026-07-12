@@ -82,7 +82,7 @@ disconnectKlineStream
 
 import {
 syncBackgroundAlertStreams
-} from "./alert-monitor.js?v=67";
+} from "./alert-monitor.js?v=69";
 
 import {
 createSharedDrawUndoStack
@@ -1940,6 +1940,255 @@ call:
 null
 };
 
+function rsiStyleBarDelegateIfNeeded(){
+
+if(
+!rsiDrawingTools ||
+!drawingTools
+){
+return null;
+}
+
+const delegate =
+rsiDrawingTools.getStyleBarDelegate?.();
+
+if(
+!delegate
+){
+return null;
+}
+
+const rsiTool =
+delegate.getTool?.() ??
+"cursor";
+const rsiSelId =
+delegate.getSelectedId?.() ??
+null;
+const rsiNeedsBar =
+rsiTool !==
+"cursor" ||
+!!rsiSelId;
+
+if(
+!rsiNeedsBar
+){
+return null;
+}
+
+const mainTool =
+drawingTools.getTool?.() ??
+"cursor";
+
+if(
+mainTool !==
+"cursor" &&
+activeDrawPane ===
+"chart"
+){
+return null;
+}
+
+return delegate;
+
+}
+
+function mountSharedDrawSelectionDismiss(){
+
+const stackPanes =
+document.getElementById(
+"charts-stack-panes"
+);
+const indicatorsWrap =
+document.getElementById(
+"chart-indicators-wrap"
+);
+
+if(
+!stackPanes ||
+!drawingTools
+){
+return;
+}
+
+function shouldIgnoreDismissClick(
+e
+){
+
+if(
+indicatorsWrap?.contains(
+e.target
+)
+){
+return !!e.target.closest(
+".chart-indicators-menu"
+);
+}
+
+return (
+drawingTools.isDrawChromePointerEvent?.(
+e
+) ??
+false
+);
+
+}
+
+function onSharedDismissClick(
+e
+){
+
+if(
+e.button !==
+0 ||
+!e.isPrimary
+){
+return;
+}
+
+if(
+shouldIgnoreDismissClick(
+e
+)
+){
+return;
+}
+
+const mainTool =
+drawingTools.getTool?.() ??
+"cursor";
+const rsiTool =
+rsiDrawingTools?.getTool?.() ??
+"cursor";
+
+if(
+mainTool !==
+"cursor" ||
+rsiTool !==
+"cursor"
+){
+return;
+}
+
+if(
+drawingTools.hasActiveDrawInteraction?.() ||
+rsiDrawingTools?.hasActiveDrawInteraction?.()
+){
+return;
+}
+
+const chartWrap =
+document.getElementById(
+"chart-wrap"
+);
+const rsiWrap =
+document.getElementById(
+"rsi-wrap"
+);
+const target =
+e.target;
+const onChart =
+chartWrap?.contains(
+target
+);
+const onRsi =
+rsiWrap?.contains(
+target
+);
+const onIndicators =
+indicatorsWrap?.contains(
+target
+);
+
+if(
+!onChart &&
+!onRsi &&
+!onIndicators
+){
+return;
+}
+
+const mainSel =
+drawingTools.getStyleBarDelegate?.()?.getSelectedId?.();
+const rsiSel =
+rsiDrawingTools?.getStyleBarDelegate?.()?.getSelectedId?.();
+
+if(
+!mainSel &&
+!rsiSel
+){
+return;
+}
+
+let hitMain =
+null;
+let hitRsi =
+null;
+
+if(
+onChart
+){
+hitMain =
+drawingTools.hitTestAtClient?.(
+e.clientX,
+e.clientY
+);
+}
+
+if(
+onRsi
+){
+hitRsi =
+rsiDrawingTools?.hitTestAtClient?.(
+e.clientX,
+e.clientY
+);
+}
+
+if(
+hitMain &&
+!hitRsi
+){
+rsiDrawingTools?.clearDrawingSelection?.();
+drawingTools.syncStyleBar?.();
+return;
+}
+
+if(
+hitRsi &&
+!hitMain
+){
+drawingTools.clearDrawingSelection?.();
+drawingTools.syncStyleBar?.();
+return;
+}
+
+if(
+hitMain ||
+hitRsi
+){
+return;
+}
+
+drawingTools.clearDrawingSelection?.();
+rsiDrawingTools?.clearDrawingSelection?.();
+drawingTools.syncStyleBar?.();
+
+}
+
+stackPanes.addEventListener(
+"click",
+onSharedDismissClick,
+true
+);
+
+indicatorsWrap?.addEventListener(
+"click",
+onSharedDismissClick,
+true
+);
+
+}
+
 drawingTools =
 initWidgetDrawings({
 
@@ -1956,6 +2205,8 @@ getCandles: ()=> candles,
 isActive: ()=>
 activeDrawPane ===
 "chart",
+getStyleDelegate: ()=>
+rsiStyleBarDelegateIfNeeded(),
 abortTabletChartGesture:()=>{
 cancelTabletPanGesture?.();
 },
@@ -2059,7 +2310,11 @@ chart.clearCrosshairPosition();
 ,
 sharedDrawUndo,
 deferKeyboardUndo:
-true
+true,
+clearPeerSelections: ()=>{
+rsiDrawingTools?.clearDrawingSelection?.();
+drawingTools?.syncStyleBar?.();
+}
 
 });
 
@@ -2216,6 +2471,7 @@ prevTool ===
 !mainSetDrawTool ||
 !rsiSetDrawTool
 ){
+drawingTools?.syncStyleBar?.();
 return;
 }
 
@@ -2238,6 +2494,8 @@ mainSetDrawTool(
 prevTool
 );
 }
+
+drawingTools?.syncStyleBar?.();
 
 }
 
@@ -2350,6 +2608,10 @@ false,
 mountStyleBar:
 false,
 
+sharedStyleBarSync: ()=>{
+drawingTools?.syncStyleBar?.();
+},
+
 storageKeySuffix:
 "_rsi",
 
@@ -2382,7 +2644,11 @@ cancelTabletPanGesture?.();
 
 sharedDrawUndo,
 deferKeyboardUndo:
-true
+true,
+clearPeerSelections: ()=>{
+drawingTools?.clearDrawingSelection?.();
+drawingTools?.syncStyleBar?.();
+}
 
 });
 
@@ -2421,6 +2687,8 @@ drawClearAllPeers.call =
 ()=>{
 rsiDrawingTools?.clearAllDrawings?.();
 };
+
+mountSharedDrawSelectionDismiss();
 
 }
 

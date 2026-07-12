@@ -11,7 +11,7 @@ mountChartPriceHud
 
 import {
 initDrawings
-} from "./drawings.js?v=250";
+} from "./drawings.js?v=253";
 
 import {
 mountPriceAlertUi
