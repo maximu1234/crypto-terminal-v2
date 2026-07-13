@@ -5,11 +5,11 @@ readPersistedAuthSession
 
 import {
 ensureCloudLoginResolved
-} from "../cloud-sync.js?v=42";
+} from "../cloud-sync.js?v=45";
 
 import {
 withTimeout
-} from "../async-timeout.js?v=1";
+} from "../async-timeout.js?v=2";
 
 import {
 purgeAlertRowByCloudId

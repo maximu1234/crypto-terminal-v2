@@ -432,6 +432,359 @@ Array.isArray(list) ? list : []
 
 }
 
+export function favoritesGroupsToRows(
+groups,
+exchangeId
+){
+
+const id =
+resolveFavoritesExchangeId(
+exchangeId
+);
+const rows =
+[];
+
+GROUPS.forEach(
+g=>{
+
+groups[
+g
+].forEach(
+sym=>{
+
+const normalized =
+String(
+sym ||
+""
+).trim().toUpperCase();
+
+if(
+!normalized
+){
+return;
+}
+
+rows.push(
+{
+exchange_id: id,
+symbol: normalized,
+flag_group: g
+}
+);
+
+}
+);
+
+}
+);
+
+return rows;
+
+}
+
+export function favoritesRowsToGroups(
+rows
+){
+
+const groups =
+emptyFavorites();
+
+if(
+!Array.isArray(
+rows
+)
+){
+return groups;
+}
+
+for(
+const row of rows
+){
+
+const sym =
+String(
+row?.symbol ||
+""
+).trim().toUpperCase();
+
+if(
+!sym
+){
+continue;
+}
+
+const g =
+normalizeGroup(
+row?.flag_group ||
+row?.flagGroup ||
+"red"
+);
+
+if(
+groups[
+g
+].some(
+entry=>
+String(
+entry
+).trim().toUpperCase() ===
+sym
+)
+){
+continue;
+}
+
+groups[
+g
+].push(
+sym
+);
+
+}
+
+return groups;
+
+}
+
+const FAVORITES_CLOUD_SYNC_KEY =
+"favorites_cloud_sync_v1";
+
+const LEGACY_FAVORITES_LOCAL_TS_KEY =
+"favorites_local_updated_at";
+
+const LEGACY_FAVORITES_SYNCED_SIG_KEY =
+"favorites_synced_signature";
+
+function readFavoritesCloudSyncStore(){
+
+try{
+
+const raw =
+JSON.parse(
+localStorage.getItem(
+FAVORITES_CLOUD_SYNC_KEY
+) ||
+"null"
+);
+
+if(
+raw &&
+typeof raw ===
+"object" &&
+!Array.isArray(
+raw
+)
+){
+return raw;
+}
+
+}catch{
+/* ignore */
+}
+
+const legacyTs =
+localStorage.getItem(
+LEGACY_FAVORITES_LOCAL_TS_KEY
+) ||
+"";
+const legacySig =
+localStorage.getItem(
+LEGACY_FAVORITES_SYNCED_SIG_KEY
+) ||
+"";
+const store =
+{};
+
+if(
+legacyTs ||
+legacySig
+){
+
+store.bybit =
+{
+updatedAt: legacyTs,
+signature: legacySig
+};
+
+}
+
+return store;
+
+}
+
+function writeFavoritesCloudSyncStore(
+store
+){
+
+localStorage.setItem(
+FAVORITES_CLOUD_SYNC_KEY,
+JSON.stringify(
+store
+)
+);
+
+}
+
+function favoritesCloudSyncBucket(
+exchangeId
+){
+
+const id =
+resolveFavoritesExchangeId(
+exchangeId
+);
+const store =
+readFavoritesCloudSyncStore();
+
+if(
+!store[
+id
+]
+){
+store[
+id
+] =
+{
+updatedAt: "",
+signature: ""
+};
+}
+
+return {
+id,
+store,
+bucket: store[
+id
+]
+};
+
+}
+
+export function loadFavoritesCloudUpdatedAt(
+exchangeId
+){
+
+return favoritesCloudSyncBucket(
+exchangeId
+).bucket.updatedAt ||
+"";
+
+}
+
+export function saveFavoritesCloudUpdatedAt(
+iso,
+exchangeId
+){
+
+const {
+id,
+store,
+bucket
+} =
+favoritesCloudSyncBucket(
+exchangeId
+);
+
+if(
+iso
+){
+bucket.updatedAt =
+iso;
+}else{
+bucket.updatedAt =
+"";
+}
+
+store[
+id
+] =
+bucket;
+writeFavoritesCloudSyncStore(
+store
+);
+
+}
+
+export function saveFavoritesCloudSyncedSignature(
+groups,
+exchangeId
+){
+
+const {
+id,
+store,
+bucket
+} =
+favoritesCloudSyncBucket(
+exchangeId
+);
+
+bucket.signature =
+favoritesSignature(
+groups
+);
+store[
+id
+] =
+bucket;
+writeFavoritesCloudSyncStore(
+store
+);
+
+}
+
+export function hasUnsyncedFavoritesCloud(
+exchangeId
+){
+
+const {
+bucket
+} =
+favoritesCloudSyncBucket(
+exchangeId
+);
+
+return favoritesSignature(
+loadFavoritesGroups(
+exchangeId
+)
+) !== (
+bucket.signature ||
+""
+);
+
+}
+
+export function markFavoritesCloudDirty(
+exchangeId
+){
+
+saveFavoritesCloudUpdatedAt(
+new Date().toISOString(),
+exchangeId
+);
+
+const {
+id,
+store,
+bucket
+} =
+favoritesCloudSyncBucket(
+exchangeId
+);
+
+bucket.signature =
+"";
+store[
+id
+] =
+bucket;
+writeFavoritesCloudSyncStore(
+store
+);
+
+}
+
 export function favoritesSignature(groups){
 
 return GROUPS.map(g=>

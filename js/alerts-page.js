@@ -9,8 +9,13 @@ getAlertsHistorySorted,
 getAlertsSorted,
 removeAlert,
 stripAlertFlagsNotInRegistry,
-removeAllAlerts
-} from "./alerts.js?v=101";
+removeAllAlerts,
+alertExchangeId
+} from "./alerts.js?v=102";
+
+import {
+buildAlertChartUrl
+} from "./alert-deep-link-exchange.js?v=1";
 
 import {
 getTelegramChatId,
@@ -28,7 +33,7 @@ onCloudSyncChange,
 getCloudUserEmail,
 pullDeviceStateFromCloud,
 ensureCloudLoginResolved
-} from "./cloud-sync.js?v=42";
+} from "./cloud-sync.js?v=45";
 
 import {
 ensureCloudReady
@@ -537,7 +542,11 @@ alerts.map(alert=>`
 <td>${formatAlertDate(alert.createdAt)}</td>
 
 <td>
-<a class="alerts-symbol-link" href="/terminal.html?symbol=${encodeURIComponent(alert.symbol)}&tf=${encodeURIComponent(alert.tf || "60")}">
+<a class="alerts-symbol-link" href="${buildAlertChartUrl({
+symbol: alert.symbol,
+tf: alert.tf || "60",
+exchangeId: alertExchangeId(alert)
+})}">
 ${formatAlertTicker(alert.symbol)}
 </a>
 </td>
@@ -606,7 +615,11 @@ history.map(alert=>`
 <td>${formatAlertDate(alert.createdAt)}</td>
 
 <td>
-<a class="alerts-symbol-link" href="/terminal.html?symbol=${encodeURIComponent(alert.symbol)}&tf=${encodeURIComponent(alert.tf || "60")}">
+<a class="alerts-symbol-link" href="${buildAlertChartUrl({
+symbol: alert.symbol,
+tf: alert.tf || "60",
+exchangeId: alertExchangeId(alert)
+})}">
 ${formatAlertTicker(alert.symbol)}
 </a>
 </td>

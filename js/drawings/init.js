@@ -4,13 +4,12 @@ formatDrawColor
 } from "../draw-color-palette.js?v=6";
 
 import {
-TRASH_ICON_SVG,
-DRAW_TOOLS_GUEST_MSG
-} from "../draw-ui-shared.js?v=30";
+TRASH_ICON_SVG
+} from "../draw-ui-shared.js?v=31";
 
 import {
 closeAllWidgetDrawToolsMenus
-} from "../watchlist-draw-ui.js?v=15";
+} from "../watchlist-draw-ui.js?v=16";
 
 import {
 calcPositionSizing,
@@ -20,28 +19,8 @@ parseMoneyInput
 } from "../position-sizing.js?v=1";
 
 import {
-bumpDrawingsLocalRevision,
-isCloudLoggedIn,
-isCloudLoggedInEffective,
-isCloudSyncEnabled,
-ensureCloudLoginResolved,
-onCloudSyncChange
-} from "../cloud-sync.js?v=42";
-
-import {
 ensureDrawToolsVisible
 } from "../draw-tools-visible.js?v=2";
-
-import {
-isDrawingsCloudDisabled
-} from "../supabase-usage-prefs.js?v=4";
-
-import {
-deleteDrawingFromCloud,
-flushDrawingsCloudPush,
-registerDrawingsChartRefresh,
-scheduleDrawingsCloudPush
-} from "../drawings-cloud-sync.js?v=46";
 
 import {
 touchShapeRevision,
@@ -194,7 +173,7 @@ createDrawDesktopSelection
 
 import {
 createDrawingsPersist
-} from "./drawings-persist.js?v=8";
+} from "./drawings-persist.js?v=9";
 
 import {
 createDrawStyleBar
@@ -243,7 +222,6 @@ isActive = ()=>true,
 bindToolbar = true,
 mountStyleBar = true,
 storageKeySuffix = "",
-cloudSync = true,
 barPosKey = "draw_bar_pos",
 abortTabletChartGesture = null,
 tabletCustomPanHooked =
@@ -389,8 +367,31 @@ null;
 let rangeHandlerCoordSub =
 null;
 
-function canUseDrawings(){
-return isCloudLoggedInEffective();
+function refreshDrawToolsAccessUi(){
+
+ensureDrawToolsVisible();
+
+getDrawToolsContainers().forEach(el=>{
+el.classList.remove(
+"hidden",
+"draw-tools--locked"
+);
+el.setAttribute(
+"aria-disabled",
+"false"
+);
+});
+
+tools.querySelectorAll(
+"[data-draw-tool], .draw-tool-clear-all"
+).forEach(btn=>{
+btn.classList.remove(
+"hidden",
+"draw-tools-btn--locked"
+);
+btn.disabled = false;
+});
+
 }
 
 function getDrawToolsContainers(){
@@ -422,49 +423,6 @@ el
 return [
 ...found
 ];
-
-}
-
-function refreshDrawToolsAccessUi(){
-
-ensureDrawToolsVisible();
-
-const canUse =
-canUseDrawings();
-
-getDrawToolsContainers().forEach(el=>{
-el.classList.remove(
-"hidden"
-);
-el.classList.toggle(
-"draw-tools--locked",
-!canUse
-);
-el.setAttribute(
-"aria-disabled",
-canUse ? "false" : "true"
-);
-});
-
-tools.querySelectorAll(
-"[data-draw-tool], .draw-tool-clear-all"
-).forEach(btn=>{
-btn.classList.remove(
-"hidden"
-);
-btn.disabled = false;
-btn.classList.toggle(
-"draw-tools-btn--locked",
-!canUse
-);
-});
-
-if(!canUse){
-tool = "cursor";
-selectedId = null;
-cancelPlacement();
-styleBar?.classList.add("hidden");
-}
 
 }
 
@@ -2771,8 +2729,6 @@ persistDrawingsForSymbol
 } =
 createDrawingsPersist({
 getSymbol,
-canUseDrawings,
-isCloudSyncEnabled,
 getDrawings: ()=>drawings,
 setDrawings: next=>{
 drawings = next;
@@ -2797,11 +2753,8 @@ baseline
 }
 : null,
 initialPositionTpSl,
-bumpDrawingsLocalRevision,
-scheduleDrawingsCloudPush,
 touchStorageSnap,
-storageKeySuffix,
-cloudSync
+storageKeySuffix
 }));
 
 function clampPositionPrices(
@@ -4785,15 +4738,6 @@ if(
 return;
 }
 
-if(
-!canUseDrawings()
-){
-window.alert(
-DRAW_TOOLS_GUEST_MSG
-);
-return;
-}
-
 const now =
 performance.now();
 
@@ -4864,11 +4808,6 @@ recordDrawingTombstone(
 symDel,
 removed.id
 );
-
-void deleteDrawingFromCloud(
-symDel,
-removed.id
-);
 }
 
 drawings = drawings.filter(d=>d.id !== selectedId);
@@ -4876,13 +4815,6 @@ desktopEdit.clearDrawingSelection();
 saveDrawings();
 updateStyleBar();
 redraw();
-
-void flushDrawingsCloudPush().catch(err=>{
-console.warn(
-"delete drawing cloud:",
-err?.message || err
-);
-});
 
 }
 
@@ -4902,23 +4834,12 @@ recordDrawingTombstone(
 sym,
 d.id
 );
-void deleteDrawingFromCloud(
-sym,
-d.id
-);
 }
 
 drawings = [];
 selectedId = null;
 cancelPlacement();
 saveDrawings();
-
-void flushDrawingsCloudPush().catch(err=>{
-console.warn(
-"clear drawings cloud:",
-err?.message || err
-);
-});
 
 window.dispatchEvent(
 new CustomEvent(
@@ -6094,8 +6015,7 @@ storageKey()
 function syncDrawingsFromStorageIfChanged(){
 
 if(
-!alive ||
-!canUseDrawings()
+!alive
 ){
 return;
 }
@@ -6241,28 +6161,12 @@ getSymbol()
 const refreshDrawingsOnTabWake = ()=>{
 
 if(
-!alive ||
-isDrawingsCloudDisabled()
+!alive
 ){
 return;
 }
 
-void import(
-"../drawings-cloud-sync.js?v=46"
-).then(
-m=>{
-m.bumpDrawingsPullNow?.();
-return m.pullDrawingsFromCloudNow();
-}
-).catch(
-()=>{}
-).finally(
-()=>{
-applyRemoteDrawingsToChart(
-null
-);
-}
-);
+syncDrawingsFromStorageNow();
 
 };
 
@@ -6276,20 +6180,6 @@ refreshDrawingsOnTabWake();
 }else{
 onVisibilityHidden();
 }
-
-};
-
-const onDrawingsCloudChanged = e=>{
-
-if(
-!alive
-){
-return;
-}
-
-applyRemoteDrawingsToChart(
-e.detail?.symbols
-);
 
 };
 
@@ -6308,11 +6198,6 @@ updateStyleBar();
 touchStorageSnap();
 
 };
-
-window.addEventListener(
-"drawings-cloud-changed",
-onDrawingsCloudChanged
-);
 
 window.addEventListener(
 EXCHANGE_CHANGED_EVENT,
@@ -6416,7 +6301,6 @@ registerDrawingsStoragePoller({
 getKey: storageKey,
 shouldRun: ()=>
 alive &&
-canUseDrawings() &&
 !isDrawingInteractionLocked(),
 onChanged: syncDrawingsFromStorageIfChanged
 });
@@ -6524,91 +6408,15 @@ window.addEventListener(
 onAlertsRegistryPulled
 );
 
-const unregisterDrawingsChartRefresh =
-registerDrawingsChartRefresh(
-applyRemoteDrawingsToChart
-);
-
 touchStorageSnap();
 
-let drawAuthLossTimer =
-0;
-
-const onCloudAuthChange = ()=>{
-void refreshDrawToolsAccessUiAsync();
-};
-
-async function refreshDrawToolsAccessUiAsync(){
-
-try{
-await ensureCloudLoginResolved(
-8000
-);
-}catch{
-/* ignore */
-}
-
+const onDrawToolsAccessChanged = ()=>{
 refreshDrawToolsAccessUi();
-
-if(
-canUseDrawings()
-){
-
-if(
-drawAuthLossTimer
-){
-window.clearTimeout(
-drawAuthLossTimer
-);
-drawAuthLossTimer =
-0;
-}
-
-loadDrawings();
-}else{
-
-if(
-drawAuthLossTimer
-){
-window.clearTimeout(
-drawAuthLossTimer
-);
-}
-
-drawAuthLossTimer =
-window.setTimeout(
-()=>{
-
-drawAuthLossTimer =
-0;
-
-if(
-!canUseDrawings()
-){
-drawings = [];
-selectedId = null;
-cancelPlacement();
-updateStyleBar();
-scheduleRedraw();
-}
-
-},
-1500
-);
-
-}
-
-updateStyleBar();
-scheduleRedraw();
-
-}
-
-const unsubscribeCloudAuthChange =
-onCloudSyncChange(onCloudAuthChange);
+};
 
 window.addEventListener(
 "draw-tools-access-changed",
-onCloudAuthChange
+onDrawToolsAccessChanged
 );
 
 window.addEventListener(
@@ -6644,8 +6452,6 @@ true
 
 }
 
-void flushDrawingsCloudPush();
-
 };
 
 const onVisibilityHidden = ()=>{
@@ -6674,8 +6480,6 @@ true
 }
 
 }
-
-void flushDrawingsCloudPush();
 
 };
 
@@ -6711,7 +6515,7 @@ saveUserPrefs(legacyPrefs);
 loadDrawings();
 stripOrphanAlertDrawings();
 lastLoadedSymbol = getSymbol();
-void refreshDrawToolsAccessUiAsync();
+refreshDrawToolsAccessUi();
 resizeCanvas();
 updateStyleBar();
 scheduleRedraw();
@@ -6801,8 +6605,6 @@ false
 
 },
 refreshDrawToolsAccessUi,
-refreshDrawToolsAccessUiAsync,
-canUseDrawings,
 clearAllDrawings:
 clearAllDrawingsOnChart,
 
@@ -7076,11 +6878,6 @@ onDrawingsUpdated
 );
 
 window.removeEventListener(
-"drawings-cloud-changed",
-onDrawingsCloudChanged
-);
-
-window.removeEventListener(
 EXCHANGE_CHANGED_EVENT,
 onExchangeChanged
 );
@@ -7109,17 +6906,13 @@ onAlertsRegistryPulled
 
 window.removeEventListener(
 "draw-tools-access-changed",
-onCloudAuthChange
+onDrawToolsAccessChanged
 );
 
 window.removeEventListener(
 "pagehide",
 onPageHide
 );
-
-unsubscribeCloudAuthChange?.();
-
-unregisterDrawingsChartRefresh?.();
 
 window.removeEventListener(
 "chart-candles-loaded",

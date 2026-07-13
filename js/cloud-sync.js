@@ -25,8 +25,16 @@ saveFavoritesGroups,
 favoritesToCloudList,
 favoritesFromCloudList,
 favoritesGroupsEqual,
-favoritesSignature as favoritesGroupsSignature
-} from "./favorites.js?v=4";
+favoritesSignature as favoritesGroupsSignature,
+loadFavoritesCloudUpdatedAt,
+saveFavoritesCloudUpdatedAt,
+saveFavoritesCloudSyncedSignature,
+hasUnsyncedFavoritesCloud
+} from "./favorites.js?v=5";
+
+import {
+getActiveExchangeId
+} from "./exchanges/context.js?v=1";
 
 import {
 collectAllLocalDrawings,
@@ -41,7 +49,7 @@ unpackCloudDrawings
 
 import {
 withTimeout
-} from "./async-timeout.js?v=1";
+} from "./async-timeout.js?v=2";
 
 import {
 readAlertTokenSync,
@@ -55,22 +63,15 @@ isAlertsPage
 
 import {
 isSupabaseRealtimeDisabled,
-isDrawingsCloudDisabled,
 isFavoritesCloudDisabled,
 isFavoritesAutoCloudDisabled,
 isAlertsCloudDisabled,
 isAutoDevicePullDisabled,
 scaleSupabasePollMs
-} from "./supabase-usage-prefs.js?v=4";
-
-const FAVORITES_LOCAL_TS_KEY =
-"favorites_local_updated_at";
+} from "./supabase-usage-prefs.js?v=5";
 
 const DRAWINGS_LOCAL_TS_KEY =
 "drawings_local_updated_at";
-
-const FAVORITES_SYNCED_SIG_KEY =
-"favorites_synced_signature";
 
 const DRAWINGS_SYNCED_SIG_KEY =
 "drawings_synced_signature";
@@ -643,18 +644,6 @@ warnAuthOnce(
 
 void tryCloudAuthRecovery();
 
-void import("./drawings-cloud-sync.js?v=46").then(
-m=>{
-m.pauseDrawingsCloudSync?.(
-15 *
-60 *
-1000
-);
-}
-).catch(
-()=>{}
-);
-
 return true;
 
 }
@@ -1151,26 +1140,24 @@ return userEmail;
 
 }
 
-function loadLocalFavoritesUpdatedAt(){
+function loadLocalFavoritesUpdatedAt(
+exchangeId = getActiveExchangeId()
+){
 
-return localStorage.getItem(
-FAVORITES_LOCAL_TS_KEY
-) || "";
-
-}
-
-function saveLocalFavoritesUpdatedAt(iso){
-
-if(!iso){
-localStorage.removeItem(
-FAVORITES_LOCAL_TS_KEY
+return loadFavoritesCloudUpdatedAt(
+exchangeId
 );
-return;
+
 }
 
-localStorage.setItem(
-FAVORITES_LOCAL_TS_KEY,
-iso
+function saveLocalFavoritesUpdatedAt(
+iso,
+exchangeId = getActiveExchangeId()
+){
+
+saveFavoritesCloudUpdatedAt(
+iso,
+exchangeId
 );
 
 }
@@ -1237,23 +1224,24 @@ return tsMs(a) > tsMs(b);
 
 }
 
-function saveFavoritesSyncedSignature(groups){
+function saveFavoritesSyncedSignature(
+groups,
+exchangeId = getActiveExchangeId()
+){
 
-localStorage.setItem(
-FAVORITES_SYNCED_SIG_KEY,
-favoritesGroupsSignature(groups)
+saveFavoritesCloudSyncedSignature(
+groups,
+exchangeId
 );
 
 }
 
-function hasUnsyncedFavorites(){
+function hasUnsyncedFavorites(
+exchangeId = getActiveExchangeId()
+){
 
-return favoritesGroupsSignature(
-loadFavoritesGroups()
-) !== (
-localStorage.getItem(
-FAVORITES_SYNCED_SIG_KEY
-) || ""
+return hasUnsyncedFavoritesCloud(
+exchangeId
 );
 
 }
@@ -1311,41 +1299,10 @@ DRAWINGS_SYNCED_SIG_KEY
 }
 
 export function scheduleDrawingsCloudPush(){
-
-if(
-!loggedIn
-){
-pendingDrawingsCloudPush =
-true;
-return;
-}
-
-void import("./drawings-cloud-sync.js?v=46").then(
-m=>{
-m.scheduleDrawingsCloudPush();
-}
-);
-
 }
 
 export function flushDrawingsCloudPush(){
-
-if(
-!loggedIn
-){
-pendingDrawingsCloudPush =
-true;
 return Promise.resolve();
-}
-
-pendingDrawingsCloudPush =
-false;
-
-return import("./drawings-cloud-sync.js?v=46").then(
-m=>
-m.flushDrawingsCloudPush()
-);
-
 }
 
 function normalizeDrawingsMap(raw){
@@ -1518,19 +1475,27 @@ return { sb, user: session.user };
 
 function applyFavoritesLocally(
 favoritesList,
-updatedAt
+updatedAt,
+exchangeId = getActiveExchangeId()
 ){
 
 saveFavoritesGroups(
-favoritesFromCloudList(favoritesList)
+favoritesFromCloudList(favoritesList),
+exchangeId
 );
 
 if(updatedAt){
-saveLocalFavoritesUpdatedAt(updatedAt);
+saveLocalFavoritesUpdatedAt(
+updatedAt,
+exchangeId
+);
 }
 
 saveFavoritesSyncedSignature(
-loadFavoritesGroups()
+loadFavoritesGroups(
+exchangeId
+),
+exchangeId
 );
 
 notifyFavorites();
@@ -1647,12 +1612,6 @@ function stopCloudSyncHelpers(){
 
 stopSyncPoll();
 
-void import("./drawings-cloud-sync.js?v=46").then(
-m=>{
-m.stopDrawingsCloudSync();
-}
-);
-
 if(realtimeReconnectTimer){
 clearTimeout(realtimeReconnectTimer);
 realtimeReconnectTimer = null;
@@ -1728,7 +1687,7 @@ isFavoritesAutoCloudDisabled()
 return;
 }
 
-void import("./favorites-cloud-sync.js?v=6").then(
+void import("./favorites-cloud-sync.js?v=7").then(
 m=>{
 m.applyFavoritesFromRealtimeRow(
 row
@@ -1759,17 +1718,6 @@ row.updated_at ||
 function handleRealtimeSettingsRow(row){
 
 handleRealtimeFavoritesRow(row);
-
-if(
-isDrawingsCloudDisabled()
-){
-return;
-}
-
-void import("./drawings-cloud-sync.js?v=46").then(
-m=>
-m.pullDrawingsFromCloud()
-);
 
 }
 
@@ -1879,198 +1827,33 @@ settingsChannel = channel;
 /** Слияние по updated_at — побеждает последнее изменение (в т.ч. пустой список). */
 export async function mergeFavoritesWithCloud(){
 
-const authed =
-await getAuthedClient();
+const m =
+await import("./favorites-cloud-sync.js?v=7");
 
-if(!authed){
-return favoritesToCloudList(
-loadFavoritesGroups()
-);
-}
-
-const { sb, user } =
-authed;
-
-const localGroups =
-loadFavoritesGroups();
-const localList =
-favoritesToCloudList(localGroups);
-const localTs =
-loadLocalFavoritesUpdatedAt();
-const cloud =
-await fetchUserSettings(
-sb,
-user.id
-);
-
-if(!cloud){
-
-if(localList.length > 0){
-
-const ts =
-await pushCloudFavorites(
-sb,
-user.id,
-localList
-);
-
-if(ts){
-saveLocalFavoritesUpdatedAt(ts);
-saveFavoritesSyncedSignature(localGroups);
-}
-
-}
-
-return localList;
-
-}
-
-if(
-favoritesGroupsEqual(
-localGroups,
-favoritesFromCloudList(cloud.favorites)
-)
-){
-
-if(cloud.updatedAt){
-saveLocalFavoritesUpdatedAt(
-cloud.updatedAt
-);
-}
-
-saveFavoritesSyncedSignature(localGroups);
-return localList;
-
-}
-
-if(
-hasUnsyncedFavorites() ||
-!localTs ||
-!isTsNewer(
-cloud.updatedAt,
-localTs
-)
-){
-
-const ts =
-await pushCloudFavorites(
-sb,
-user.id,
-localList
-);
-
-if(ts){
-saveLocalFavoritesUpdatedAt(ts);
-saveFavoritesSyncedSignature(localGroups);
-}
-
-return localList;
-
-}
-
-applyFavoritesLocally(
-cloud.favorites,
-cloud.updatedAt
-);
-
-return cloud.favorites;
+return m.reconcileLocalFavoritesWithCloud();
 
 }
 
 /** Подтянуть с другого устройства (вкладка / refresh). */
 export async function pullFavoritesIfCloudNewer(){
 
-const authed =
-await getAuthedClient();
+const m =
+await import("./favorites-cloud-sync.js?v=7");
 
-if(!authed){
+await m.pullFavoritesFromCloudNow();
 return favoritesToCloudList(
 loadFavoritesGroups()
 );
-}
-
-const { sb, user } =
-authed;
-
-const localGroups =
-loadFavoritesGroups();
-const localList =
-favoritesToCloudList(localGroups);
-const localTs =
-loadLocalFavoritesUpdatedAt();
-const cloud =
-await fetchUserSettings(
-sb,
-user.id
-);
-
-if(
-!cloud
-){
-return localList;
-}
-
-if(
-favoritesGroupsEqual(
-localGroups,
-favoritesFromCloudList(cloud.favorites)
-)
-){
-
-if(cloud.updatedAt){
-saveLocalFavoritesUpdatedAt(
-cloud.updatedAt
-);
-}
-
-saveFavoritesSyncedSignature(localGroups);
-return localList;
-
-}
-
-if(hasUnsyncedFavorites()){
-return localList;
-}
-
-if(
-!cloud.updatedAt ||
-(
-localTs &&
-!isTsNewer(
-cloud.updatedAt,
-localTs
-)
-)
-){
-return localList;
-}
-
-applyFavoritesLocally(
-cloud.favorites,
-cloud.updatedAt
-);
-
-return cloud.favorites;
 
 }
 
 export async function mergeDrawingsWithCloud(){
-
-const drawingsCloud =
-await import("./drawings-cloud-sync.js?v=46");
-
-await drawingsCloud.hydrateDrawingsAfterAuth();
 
 return collectAllLocalDrawings();
 
 }
 
 export async function pullDrawingsIfCloudNewer(){
-
-await import("./drawings-cloud-sync.js?v=46").then(
-m=>
-m.pullDrawingsFromCloud()
-);
 
 return collectAllLocalDrawings();
 
@@ -2079,18 +1862,9 @@ return collectAllLocalDrawings();
 async function syncFavoritesWithCloud(){
 
 const m =
-await import("./favorites-cloud-sync.js?v=6");
+await import("./favorites-cloud-sync.js?v=7");
 
 await m.reconcileLocalFavoritesWithCloud();
-
-}
-
-async function syncDrawingsWithCloud(){
-
-const m =
-await import("./drawings-cloud-sync.js?v=46");
-
-await m.flushDrawingsCloudPush();
 
 }
 
@@ -2101,13 +1875,6 @@ if(
 !isFavoritesCloudDisabled()
 ){
 await syncFavoritesWithCloud();
-}
-
-if(
-!isAlertsPage() &&
-!isDrawingsCloudDisabled()
-){
-await syncDrawingsWithCloud();
 }
 
 }
@@ -2129,7 +1896,7 @@ return;
 }
 
 const m =
-await import("./favorites-cloud-sync.js?v=6");
+await import("./favorites-cloud-sync.js?v=7");
 
 m.pushFavoritesAfterLocalEdit(
 favorites
@@ -3033,60 +2800,13 @@ return;
 try{
 
 const favoritesCloud =
-await import("./favorites-cloud-sync.js?v=6");
+await import("./favorites-cloud-sync.js?v=7");
 
 if(
 !isFavoritesAutoCloudDisabled() &&
 !isFavoritesCloudDisabled()
 ){
 await favoritesCloud.reconcileLocalFavoritesWithCloud();
-}
-
-const drawingsCloud =
-await import("./drawings-cloud-sync.js?v=46");
-
-/* BANDWIDTH-CUT: облако рисунков + Realtime рисунков */
-if(
-false &&
-!isAlertsPage() &&
-!isDrawingsCloudDisabled()
-){
-await drawingsCloud.hydrateDrawingsAfterAuth();
-if(
-!isSupabaseRealtimeDisabled()
-){
-await drawingsCloud.setupDrawingsRealtimeForUser(
-session.user.id
-);
-}
-}else{
-drawingsCloud.stopDrawingsFastPoll();
-}
-
-/* BANDWIDTH-CUT: Realtime user_settings (флаги) */
-if(
-false &&
-!isSupabaseRealtimeDisabled()
-){
-await setupSettingsRealtime(
-session.user.id
-);
-}
-
-if(
-!isAlertsPage()
-){
-/* BANDWIDTH-CUT: фоновый опрос user_settings (флаги/рисунки) */
-// startSyncPoll();
-}
-
-if(
-pendingDrawingsCloudPush &&
-!isDrawingsCloudDisabled()
-){
-pendingDrawingsCloudPush =
-false;
-void drawingsCloud.flushDrawingsCloudPush();
 }
 
 if(
@@ -3125,13 +2845,6 @@ if(
 document.visibilityState ===
 "hidden"
 ){
-
-if(
-loggedIn
-){
-void flushDrawingsCloudPush();
-}
-
 return;
 }
 
@@ -3280,7 +2993,7 @@ await ensureCloudLoginResolved(
 const alertsCloud =
 await import("./alerts-cloud-sync.js?v=111");
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=101");
+await import("./alerts.js?v=102");
 
 const stripOpts =
 isAlertsPage()

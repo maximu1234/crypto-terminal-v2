@@ -7,7 +7,7 @@ createTradeChartOverlay
 
 import {
 createTradeChartOrders
-} from "./trade-chart-orders.js?v=22";
+} from "./trade-chart-orders.js?v=23";
 
 import {
 createTradePlusMenuHandler
@@ -24,7 +24,7 @@ getActiveTradeVolumeUsdt
 
 import {
 marketMap
-} from "./terminal/terminal-state.js?v=9";
+} from "./terminal/terminal-state.js?v=10";
 
 import {
 applyAutoStopsAfterEntry

@@ -3,7 +3,7 @@
  */
 import {
 coinsState
-} from "./terminal/terminal-state.js?v=9";
+} from "./terminal/terminal-state.js?v=10";
 
 import {
 buildMarkersForCandles,

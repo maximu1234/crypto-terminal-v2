@@ -1,7 +1,7 @@
 import {
 isCloudLoggedInEffective,
 ensureCloudLoginResolved
-} from "../cloud-sync.js?v=42";
+} from "../cloud-sync.js?v=45";
 
 import {
 resolveAlertAuthFast,
@@ -46,7 +46,7 @@ hintWorkerReloadAlerts
 
 import {
 isAlertsCloudDisabled
-} from "../supabase-usage-prefs.js?v=4";
+} from "../supabase-usage-prefs.js?v=5";
 
 function resolveAlertExchangeId(
 entry
@@ -114,7 +114,7 @@ cloudId
 ){
 
 const { markAlertCloudSynced, markAlertCloudId } =
-await import("../alerts.js?v=101");
+await import("../alerts.js?v=102");
 
 const ok =
 await verifyAlertActiveInCloud(
@@ -368,7 +368,7 @@ null;
 
 if(cloudId){
 const { markAlertCloudId } =
-await import("../alerts.js?v=101");
+await import("../alerts.js?v=102");
 
 markAlertCloudId(
 symbol,
@@ -579,7 +579,7 @@ registrySyncTimer = null;
 }
 
 const { stripAlertFlagsNotInRegistry } =
-await import("../alerts.js?v=101");
+await import("../alerts.js?v=102");
 
 const ok =
 await clearAllAlertsFromCloud();
@@ -615,7 +615,7 @@ return 0;
 }
 
 const { getActiveAlerts } =
-await import("../alerts.js?v=101");
+await import("../alerts.js?v=102");
 
 const localKeys =
 new Set(
@@ -746,7 +746,7 @@ attempt++
 if(await pushAlertViaWorker(row)){
 
 const { markAlertCloudSynced } =
-await import("../alerts.js?v=101");
+await import("../alerts.js?v=102");
 
 /* Worker пишет service role — не ждём SELECT по JWT пользователя */
 markAlertCloudSynced(
@@ -777,7 +777,7 @@ ctx
 ){
 
 const { markAlertCloudSynced } =
-await import("../alerts.js?v=101");
+await import("../alerts.js?v=102");
 
 if(
 await markRowSyncedAfterVerify(
@@ -875,7 +875,7 @@ return 0;
 }
 
 const { getActiveAlerts, countAlertsOnChart } =
-await import("../alerts.js?v=101");
+await import("../alerts.js?v=102");
 
 const onChart =
 countAlertsOnChart();
@@ -981,7 +981,7 @@ return 0;
 }
 
 const { getActiveAlerts } =
-await import("../alerts.js?v=101");
+await import("../alerts.js?v=102");
 
 const list =
 getActiveAlerts();
@@ -1415,7 +1415,7 @@ normalizeAlertTf,
 isAlertDeleted,
 forgetAlertDeleted
 } =
-await import("../alerts.js?v=101");
+await import("../alerts.js?v=102");
 
 const cloudByKey =
 new Map();
@@ -1533,7 +1533,7 @@ tf: row.tf || "60"
 if(removedRows.length){
 
 const { applyRemoteAlertRemoved } =
-await import("../alerts.js?v=101");
+await import("../alerts.js?v=102");
 
 for(const row of removedRows){
 
@@ -1800,7 +1800,7 @@ const n =
 await reconcileLocalRegistryWithCloud();
 
 const { stripAlertFlagsNotInRegistry } =
-await import("../alerts.js?v=101");
+await import("../alerts.js?v=102");
 
 stripAlertFlagsNotInRegistry(
 isAlertsPage()
@@ -1850,7 +1850,7 @@ return 0;
 
 try{
 const { ensureCloudLoginResolved } =
-await import("../cloud-sync.js?v=42");
+await import("../cloud-sync.js?v=45");
 
 await ensureCloudLoginResolved(
 8000
@@ -1884,7 +1884,7 @@ return 0;
 }
 
 const { stripAlertFlagsNotInRegistry } =
-await import("../alerts.js?v=101");
+await import("../alerts.js?v=102");
 
 stripAlertFlagsNotInRegistry(
 isAlertsPage()

@@ -283,30 +283,6 @@ color:#fff;
 border-right-color:rgba(0,0,0,.15);
 }
 
-body.trade-page .trade-order-badge--reduce-sell{
-background:#2a1c12;
-border-color:#f97316;
-color:#fff7ed;
-}
-
-body.trade-page .trade-order-badge--reduce-sell .seg-vol{
-background:#f97316;
-color:#fff;
-border-right-color:rgba(0,0,0,.15);
-}
-
-body.trade-page .trade-order-badge--reduce-buy{
-background:#0f1f14;
-border-color:#15803d;
-color:#ecfdf5;
-}
-
-body.trade-page .trade-order-badge--reduce-buy .seg-vol{
-background:#15803d;
-color:#fff;
-border-right-color:rgba(0,0,0,.15);
-}
-
 body.trade-page .trade-order-badge .seg-vol,
 body.trade-page .trade-order-badge .seg-type{
 font-weight:700;

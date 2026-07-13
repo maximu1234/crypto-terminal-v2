@@ -2,9 +2,6 @@ import {
 getDrawToolIconSrc
 } from "./draw-toolbar-icon-data.js?v=29";
 
-export const DRAW_TOOLS_GUEST_MSG =
-"Рисование доступно только для залогиненных пользователей.";
-
 export function drawToolIconImg(
 name,
 className = "draw-tool-icon"

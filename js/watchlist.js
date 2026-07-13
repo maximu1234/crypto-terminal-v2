@@ -5,7 +5,7 @@ loadWidgetStateBySymbol
 
 import {
 getTerminalBlueSymbols
-} from "./favorites.js?v=4";
+} from "./favorites.js?v=5";
 
 import {
 loadMarketHistory,
@@ -51,7 +51,7 @@ initWidgetDrawToolsDropdown,
 wireWidgetDrawToolMenu,
 closeAllWidgetDrawToolsMenus,
 resetWidgetDrawToolsMenus
-} from "./watchlist-draw-ui.js?v=15";
+} from "./watchlist-draw-ui.js?v=16";
 
 import {
 ensureDrawToolsVisible

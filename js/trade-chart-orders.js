@@ -471,15 +471,6 @@ function orderLineColor(
 order
 ){
 
-if(
-order.reduceOnly
-){
-return order.badgeSide ===
-"long"
-? "#15803d"
-: "#f97316";
-}
-
 return order.badgeSide ===
 "long"
 ? "#22c55e"
@@ -523,19 +514,10 @@ continue;
 }
 
 const sideClass =
-order.reduceOnly
-? (
-order.badgeSide ===
-"long"
-? "trade-order-badge--reduce-buy"
-: "trade-order-badge--reduce-sell"
-)
-: (
 order.badgeSide ===
 "long"
 ? "trade-order-badge--long"
-: "trade-order-badge--short"
-);
+: "trade-order-badge--short";
 const color =
 orderLineColor(
 order

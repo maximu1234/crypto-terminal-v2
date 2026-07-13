@@ -8,7 +8,7 @@ readAlertTokenSync
 
 import {
 withTimeout
-} from "./async-timeout.js?v=1";
+} from "./async-timeout.js?v=2";
 
 import {
 pauseRegistryCloudSync,
@@ -1372,7 +1372,7 @@ tf
 ){
 
 const { isCloudLoggedIn } =
-await import("./cloud-sync.js?v=42");
+await import("./cloud-sync.js?v=45");
 
 if(
 !isCloudLoggedIn()
@@ -1735,7 +1735,7 @@ pauseRegistryCloudSync(
 );
 });
 
-void import("./alert-monitor.js?v=69").then(m=>{
+void import("./alert-monitor.js?v=70").then(m=>{
 m.armAlertQuietAfterDrag(
 sym,
 sid
@@ -2291,7 +2291,7 @@ sid
 );
 
 if(existing){
-void import("./alert-monitor.js?v=69").then(m=>{
+void import("./alert-monitor.js?v=70").then(m=>{
 m.notifyAlertTriggered({
 symbol: sym,
 shapeId: sid,
@@ -2551,7 +2551,7 @@ sym,
 sid
 );
 
-void import("./alert-monitor.js?v=69").then(m=>{
+void import("./alert-monitor.js?v=70").then(m=>{
 m.notifyAlertTriggered({
 symbol: sym,
 shapeId: sid,
@@ -3115,15 +3115,6 @@ purgeExchangeLocalDrawingsStorage
 } =
 await import("./drawings-storage.js?v=7");
 
-const drawingsCloud =
-await import("./drawings-cloud-sync.js?v=46");
-
-drawingsCloud.pauseDrawingsCloudSync(
-120000
-);
-
-try{
-
 const symbols =
 purgeExchangeLocalDrawingsStorage(
 getActiveExchangeId()
@@ -3152,17 +3143,8 @@ new CustomEvent(
 );
 
 return {
-symbols: symbols.size,
-cloudDrawingsOk: null
+symbols: symbols.size
 };
-
-}finally{
-
-drawingsCloud.pauseDrawingsCloudSync(
-0
-);
-
-}
 
 }
 

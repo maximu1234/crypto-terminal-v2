@@ -279,7 +279,7 @@ const {
 initTradeChartOrders
 } =
 await import(
-"./trade-chart-orders.js?v=22"
+"./trade-chart-orders.js?v=23"
 );
 
 initTradeChartOrders();

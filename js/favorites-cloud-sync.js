@@ -1,5 +1,5 @@
 /**
- * Синхронизация флагов: user_settings.favorites (REST + realtime).
+ * Синхронизация флагов: user_favorites (REST + realtime), per exchange_id.
  */
 import {
 isCloudLoggedInEffective,
@@ -9,21 +9,33 @@ isCloudApiUsable,
 isCloudAuthError,
 reportCloudAuthFailure,
 tryCloudAuthRecovery
-} from "./cloud-sync.js?v=42";
+} from "./cloud-sync.js?v=45";
 
 import {
 isFavoritesCloudDisabled,
 isFavoritesAutoCloudDisabled
-} from "./supabase-usage-prefs.js?v=4";
+} from "./supabase-usage-prefs.js?v=5";
+
+import {
+getActiveExchangeId
+} from "./exchanges/context.js?v=1";
 
 import {
 loadFavoritesGroups,
 saveFavoritesGroups,
 favoritesToCloudList,
 favoritesFromCloudList,
+favoritesGroupsToRows,
+favoritesRowsToGroups,
 favoritesGroupsEqual,
-favoritesSignature
-} from "./favorites.js?v=4";
+favoritesSignature,
+setFavoriteGroup,
+loadFavoritesCloudUpdatedAt,
+saveFavoritesCloudUpdatedAt,
+saveFavoritesCloudSyncedSignature,
+hasUnsyncedFavoritesCloud,
+markFavoritesCloudDirty
+} from "./favorites.js?v=5";
 
 import {
 readAlertTokenSync,
@@ -33,12 +45,6 @@ resolveAlertAuthFast
 import {
 createPullCoalescer
 } from "./cloud-sync-throttle.js?v=3";
-
-const FAVORITES_LOCAL_TS_KEY =
-"favorites_local_updated_at";
-
-const FAVORITES_SYNCED_SIG_KEY =
-"favorites_synced_signature";
 
 const coalesceFavoritesPull =
 createPullCoalescer({
@@ -55,55 +61,14 @@ null;
 let authPullTimer =
 null;
 
-function loadLocalFavoritesUpdatedAt(){
-
-return (
-localStorage.getItem(
-FAVORITES_LOCAL_TS_KEY
-) ||
-""
-);
-
-}
-
-function saveLocalFavoritesUpdatedAt(
-iso
+function resolveFavoritesExchangeId(
+exchangeId
 ){
 
-if(
-iso
-){
-localStorage.setItem(
-FAVORITES_LOCAL_TS_KEY,
-iso
-);
-}
-
-}
-
-function saveFavoritesSyncedSignature(
-groups
-){
-
-localStorage.setItem(
-FAVORITES_SYNCED_SIG_KEY,
-favoritesSignature(
-groups
-)
-);
-
-}
-
-function hasUnsyncedFavorites(){
-
-return favoritesSignature(
-loadFavoritesGroups()
-) !== (
-localStorage.getItem(
-FAVORITES_SYNCED_SIG_KEY
-) ||
-""
-);
+return String(
+exchangeId ||
+getActiveExchangeId()
+).trim().toLowerCase();
 
 }
 
@@ -144,6 +109,42 @@ b
 
 }
 
+function maxUpdatedAt(
+rows
+){
+
+let max =
+"";
+
+for(
+const row of rows ||
+[]
+){
+
+const ts =
+row?.updated_at ||
+"";
+
+if(
+ts &&
+(
+!max ||
+isTsNewer(
+ts,
+max
+)
+)
+){
+max =
+ts;
+}
+
+}
+
+return max;
+
+}
+
 function normalizeFavoritesList(
 list
 ){
@@ -163,44 +164,66 @@ s=>typeof s ===
 
 }
 
-/** Вызвать сразу при клике по флагу — до push в облако. */
-export function markFavoritesDirty(){
+function isMissingTableError(
+text
+){
 
-saveLocalFavoritesUpdatedAt(
-new Date().toISOString()
+const msg =
+String(
+text ||
+"");
+
+return (
+/PGRST205|42P01|relation.*does not exist|schema cache/i.test(
+msg
+)
 );
 
-try{
-localStorage.removeItem(
-FAVORITES_SYNCED_SIG_KEY
-);
-}catch{
-/* ignore */
 }
+
+/** Вызвать сразу при клике по флагу — до push в облако. */
+export function markFavoritesDirty(
+exchangeId
+){
+
+markFavoritesCloudDirty(
+resolveFavoritesExchangeId(
+exchangeId
+)
+);
 
 }
 
 function applyCloudFavorites(
-list,
-updatedAt
+groups,
+updatedAt,
+exchangeId
 ){
 
+const id =
+resolveFavoritesExchangeId(
+exchangeId
+);
+
 saveFavoritesGroups(
-favoritesFromCloudList(
-list
-)
+groups,
+id
 );
 
 if(
 updatedAt
 ){
-saveLocalFavoritesUpdatedAt(
-updatedAt
+saveFavoritesCloudUpdatedAt(
+updatedAt,
+id
 );
 }
 
-saveFavoritesSyncedSignature(
-loadFavoritesGroups()
+saveFavoritesCloudSyncedSignature(
+loadFavoritesGroups(
+id
+),
+id
 );
 
 notifyFavoritesListeners();
@@ -304,7 +327,7 @@ timer
 
 }
 
-async function fetchFavoritesViaRest(
+async function fetchLegacyFavoritesViaRest(
 auth
 ){
 
@@ -344,27 +367,6 @@ cache: "no-store"
 if(
 !res.ok
 ){
-const text =
-await res.text();
-
-if(
-res.status ===
-401 ||
-isCloudAuthError(
-text
-)
-){
-reportCloudAuthFailure(
-"favorites fetch",
-text
-);
-return null;
-}
-
-console.warn(
-"[favorites] fetch REST:",
-res.status
-);
 return null;
 }
 
@@ -382,18 +384,137 @@ if(
 !row
 ){
 return {
-favorites: [],
-updatedAt: ""
+rows: [],
+updatedAt: "",
+legacy: true
 };
 
 }
 
 return {
-favorites: normalizeFavoritesList(
+rows: favoritesGroupsToRows(
+favoritesFromCloudList(
+normalizeFavoritesList(
 row.favorites
+)
+),
+"bybit"
 ),
 updatedAt: row.updated_at ||
-""
+"",
+legacy: true
+};
+
+}catch{
+return null;
+}
+
+}
+
+async function fetchFavoritesViaRest(
+auth,
+exchangeId
+){
+
+const http =
+await getSupabaseHttpConfig();
+
+if(
+!http ||
+!auth?.token ||
+!auth?.userId
+){
+return null;
+}
+
+const uid =
+encodeURIComponent(
+auth.userId
+);
+const ex =
+encodeURIComponent(
+resolveFavoritesExchangeId(
+exchangeId
+)
+);
+
+try{
+const res =
+await fetchWithTimeout(
+`${http.base}/rest/v1/user_favorites?user_id=eq.${uid}` +
+`&exchange_id=eq.${ex}` +
+`&deleted_at=is.null` +
+`&select=symbol,flag_group,updated_at`,
+{
+method: "GET",
+headers: {
+apikey: http.anon,
+Authorization: `Bearer ${auth.token}`,
+Accept: "application/json",
+"Cache-Control": "no-cache"
+},
+cache: "no-store"
+},
+12000
+);
+
+if(
+!res.ok
+){
+const text =
+await res.text();
+
+if(
+res.status ===
+401 ||
+isCloudAuthError(
+text
+)
+){
+reportCloudAuthFailure(
+"favorites fetch",
+text
+);
+return null;
+}
+
+if(
+isMissingTableError(
+text
+)
+){
+return fetchLegacyFavoritesViaRest(
+auth
+);
+}
+
+console.warn(
+"[favorites] fetch REST:",
+res.status,
+text.slice(
+0,
+120
+)
+);
+return null;
+}
+
+const rows =
+await res.json();
+
+const list =
+Array.isArray(
+rows
+)
+? rows
+: [];
+
+return {
+rows: list,
+updatedAt: maxUpdatedAt(
+list
+),
+legacy: false
 };
 
 }catch(
@@ -409,7 +530,332 @@ return null;
 
 }
 
+async function upsertFavoriteRowViaRest(
+auth,
+row
+){
+
+const http =
+await getSupabaseHttpConfig();
+
+if(
+!http ||
+!auth?.token ||
+!auth?.userId
+){
+return false;
+}
+
+const payload =
+{
+user_id: auth.userId,
+exchange_id:
+resolveFavoritesExchangeId(
+row.exchange_id
+),
+symbol:
+String(
+row.symbol ||
+""
+).trim().toUpperCase(),
+flag_group:
+String(
+row.flag_group ||
+"red"
+).trim().toLowerCase(),
+deleted_at: null
+};
+
+try{
+const res =
+await fetchWithTimeout(
+`${http.base}/rest/v1/user_favorites?on_conflict=user_id,exchange_id,symbol`,
+{
+method: "POST",
+headers: {
+apikey: http.anon,
+Authorization: `Bearer ${auth.token}`,
+Accept: "application/json",
+"Content-Type": "application/json",
+Prefer: "resolution=merge-duplicates,return=representation"
+},
+body: JSON.stringify(
+payload
+)
+},
+15000
+);
+
+if(
+!res.ok
+){
+const text =
+await res.text();
+
+if(
+res.status ===
+401 ||
+isCloudAuthError(
+text
+)
+){
+reportCloudAuthFailure(
+"favorites upsert",
+text
+);
+return false;
+}
+
+console.warn(
+"[favorites] upsert REST:",
+res.status,
+text.slice(
+0,
+120
+)
+);
+return false;
+}
+
+return true;
+
+}catch(
+err
+){
+console.warn(
+"[favorites] upsert REST:",
+err?.message || err
+);
+return false;
+
+}
+
+}
+
+async function softDeleteFavoriteRowViaRest(
+auth,
+exchangeId,
+symbol
+){
+
+const http =
+await getSupabaseHttpConfig();
+
+if(
+!http ||
+!auth?.token ||
+!auth?.userId
+){
+return false;
+}
+
+const uid =
+encodeURIComponent(
+auth.userId
+);
+const ex =
+encodeURIComponent(
+resolveFavoritesExchangeId(
+exchangeId
+)
+);
+const sym =
+encodeURIComponent(
+String(
+symbol ||
+""
+).trim().toUpperCase()
+);
+const deletedAt =
+new Date().toISOString();
+
+try{
+const res =
+await fetchWithTimeout(
+`${http.base}/rest/v1/user_favorites?user_id=eq.${uid}` +
+`&exchange_id=eq.${ex}` +
+`&symbol=eq.${sym}`,
+{
+method: "PATCH",
+headers: {
+apikey: http.anon,
+Authorization: `Bearer ${auth.token}`,
+Accept: "application/json",
+"Content-Type": "application/json",
+Prefer: "return=representation"
+},
+body: JSON.stringify({
+deleted_at: deletedAt
+})
+},
+15000
+);
+
+if(
+!res.ok
+){
+const text =
+await res.text();
+
+if(
+res.status ===
+401 ||
+isCloudAuthError(
+text
+)
+){
+reportCloudAuthFailure(
+"favorites delete",
+text
+);
+return false;
+}
+
+console.warn(
+"[favorites] delete REST:",
+res.status,
+text.slice(
+0,
+120
+)
+);
+return false;
+}
+
+return true;
+
+}catch(
+err
+){
+console.warn(
+"[favorites] delete REST:",
+err?.message || err
+);
+return false;
+
+}
+
+}
+
 async function pushFavoritesViaRest(
+auth,
+groups,
+exchangeId
+){
+
+const id =
+resolveFavoritesExchangeId(
+exchangeId
+);
+const localRows =
+favoritesGroupsToRows(
+groups,
+id
+);
+const localSymbols =
+new Set(
+localRows.map(
+row=>row.symbol
+)
+);
+
+if(
+localRows.length ===
+0 &&
+!hasUnsyncedFavoritesCloud(
+id
+)
+){
+return loadFavoritesCloudUpdatedAt(
+id
+) ||
+new Date().toISOString();
+}
+
+const cloud =
+await fetchFavoritesViaRest(
+auth,
+id
+);
+
+if(
+cloud?.legacy
+){
+const legacyList =
+favoritesToCloudList(
+groups
+);
+
+return pushLegacyFavoritesViaRest(
+auth,
+legacyList
+);
+
+}
+
+let ok =
+true;
+
+for(
+const row of localRows
+){
+
+if(
+!await upsertFavoriteRowViaRest(
+auth,
+row
+)
+){
+ok =
+false;
+}
+
+}
+
+for(
+const row of cloud?.rows ||
+[]
+){
+
+const sym =
+String(
+row.symbol ||
+""
+).trim().toUpperCase();
+
+if(
+!sym ||
+localSymbols.has(
+sym
+)
+){
+continue;
+}
+
+if(
+!await softDeleteFavoriteRowViaRest(
+auth,
+id,
+sym
+)
+){
+ok =
+false;
+}
+
+}
+
+if(
+!ok
+){
+return null;
+}
+
+return new Date().toISOString();
+
+}
+
+async function pushLegacyFavoritesViaRest(
 auth,
 list
 ){
@@ -488,31 +934,6 @@ drawings_updated_at: updatedAt
 if(
 !res.ok
 ){
-const text =
-await res.text();
-
-if(
-res.status ===
-401 ||
-isCloudAuthError(
-text
-)
-){
-reportCloudAuthFailure(
-"favorites push",
-text
-);
-return null;
-}
-
-console.warn(
-"[favorites] push REST:",
-res.status,
-text.slice(
-0,
-120
-)
-);
 return null;
 }
 
@@ -531,15 +952,8 @@ row?.updated_at ||
 updatedAt
 );
 
-}catch(
-err
-){
-console.warn(
-"[favorites] push REST:",
-err?.message || err
-);
+}catch{
 return null;
-
 }
 
 }
@@ -552,6 +966,11 @@ options =
 {}
 ){
 
+const exchangeId =
+resolveFavoritesExchangeId(
+options.exchangeId
+);
+
 if(
 !options.onDemand &&
 (
@@ -560,7 +979,9 @@ isFavoritesAutoCloudDisabled()
 )
 ){
 return favoritesToCloudList(
-loadFavoritesGroups()
+loadFavoritesGroups(
+exchangeId
+)
 );
 }
 
@@ -568,7 +989,9 @@ if(
 !isCloudLoggedInEffective()
 ){
 return favoritesToCloudList(
-loadFavoritesGroups()
+loadFavoritesGroups(
+exchangeId
+)
 );
 
 }
@@ -578,7 +1001,9 @@ if(
 ){
 void tryCloudAuthRecovery();
 return favoritesToCloudList(
-loadFavoritesGroups()
+loadFavoritesGroups(
+exchangeId
+)
 );
 
 }
@@ -600,23 +1025,30 @@ if(
 !auth
 ){
 return favoritesToCloudList(
-loadFavoritesGroups()
+loadFavoritesGroups(
+exchangeId
+)
 );
 
 }
 
 const localGroups =
-loadFavoritesGroups();
+loadFavoritesGroups(
+exchangeId
+);
 const localList =
 favoritesToCloudList(
 localGroups
 );
 const localTs =
-loadLocalFavoritesUpdatedAt();
+loadFavoritesCloudUpdatedAt(
+exchangeId
+);
 
 const cloud =
 await fetchFavoritesViaRest(
-auth
+auth,
+exchangeId
 );
 
 if(
@@ -626,8 +1058,8 @@ return localList;
 }
 
 const cloudGroups =
-favoritesFromCloudList(
-cloud.favorites
+favoritesRowsToGroups(
+cloud.rows
 );
 
 if(
@@ -640,13 +1072,15 @@ cloudGroups
 if(
 cloud.updatedAt
 ){
-saveLocalFavoritesUpdatedAt(
-cloud.updatedAt
+saveFavoritesCloudUpdatedAt(
+cloud.updatedAt,
+exchangeId
 );
 }
 
-saveFavoritesSyncedSignature(
-localGroups
+saveFavoritesCloudSyncedSignature(
+localGroups,
+exchangeId
 );
 return localList;
 
@@ -675,52 +1109,66 @@ cloudNewer &&
 ){
 
 applyCloudFavorites(
-cloud.favorites,
-cloud.updatedAt
+cloudGroups,
+cloud.updatedAt,
+exchangeId
 );
 
 console.log(
 "[favorites] с облака:",
-cloud.favorites.length,
-"флагов"
+cloud.rows.length,
+"флагов (",
+exchangeId,
+")"
 );
 
-return cloud.favorites;
+return favoritesToCloudList(
+cloudGroups
+);
 
 }
 
 if(
 localList.length >
 0 ||
-hasUnsyncedFavorites() ||
+hasUnsyncedFavoritesCloud(
+exchangeId
+) ||
 !cloud.updatedAt
 ){
 
 const ts =
 await pushFavoritesViaRest(
 auth,
-localList
+localGroups,
+exchangeId
 );
 
 if(
 ts
 ){
-saveLocalFavoritesUpdatedAt(
-ts
+saveFavoritesCloudUpdatedAt(
+ts,
+exchangeId
 );
-saveFavoritesSyncedSignature(
-localGroups
+saveFavoritesCloudSyncedSignature(
+localGroups,
+exchangeId
 );
 
 console.log(
 "[favorites] в облако:",
 localList.length,
-"флагов"
+"флагов (",
+exchangeId,
+")"
 );
 
 }else{
 console.warn(
-"[favorites] push не удался"
+"[favorites] push не удался (",
+exchangeId,
+")"
 );
 }
 
@@ -729,11 +1177,14 @@ return localList;
 }
 
 applyCloudFavorites(
-cloud.favorites,
-cloud.updatedAt
+cloudGroups,
+cloud.updatedAt,
+exchangeId
 );
 
-return cloud.favorites;
+return favoritesToCloudList(
+cloudGroups
+);
 
 }
 
@@ -761,7 +1212,8 @@ options
 }
 
 async function pushFavoritesImpl(
-list
+groups,
+exchangeId
 ){
 
 if(
@@ -785,33 +1237,40 @@ if(
 return false;
 }
 
-const normalized =
-normalizeFavoritesList(
-list
+const id =
+resolveFavoritesExchangeId(
+exchangeId
 );
-const groups =
-favoritesFromCloudList(
-normalized
+const normalized =
+favoritesRowsToGroups(
+favoritesGroupsToRows(
+groups,
+id
+)
 );
 
 saveFavoritesGroups(
-groups
+normalized,
+id
 );
 
 const ts =
 await pushFavoritesViaRest(
 auth,
-normalized
+normalized,
+id
 );
 
 if(
 ts
 ){
-saveLocalFavoritesUpdatedAt(
-ts
+saveFavoritesCloudUpdatedAt(
+ts,
+id
 );
-saveFavoritesSyncedSignature(
-groups
+saveFavoritesCloudSyncedSignature(
+normalized,
+id
 );
 return true;
 }
@@ -821,23 +1280,36 @@ return false;
 }
 
 export async function persistFavoritesToCloudNow(
-favorites
+favorites,
+exchangeId
 ){
 
-const list =
+const id =
+resolveFavoritesExchangeId(
+exchangeId
+);
+const groups =
 Array.isArray(
 favorites
 )
-? favorites
-: favoritesToCloudList(
+? favoritesFromCloudList(
 favorites
+)
+: (
+favorites ||
+loadFavoritesGroups(
+id
+)
 );
 
-markFavoritesDirty();
+markFavoritesDirty(
+id
+);
 
 const job =
 pushFavoritesImpl(
-list
+groups,
+id
 );
 
 pushInFlight =
@@ -861,7 +1333,8 @@ return job;
 
 /** После клика по флагу: сразу push (не только debounce). */
 export function pushFavoritesAfterLocalEdit(
-favorites
+favorites,
+exchangeId
 ){
 
 if(
@@ -870,10 +1343,18 @@ isFavoritesAutoCloudDisabled()
 return;
 }
 
-markFavoritesDirty();
+const id =
+resolveFavoritesExchangeId(
+exchangeId
+);
+
+markFavoritesDirty(
+id
+);
 
 void persistFavoritesToCloudNow(
-favorites
+favorites,
+id
 ).catch(
 err=>{
 console.warn(
@@ -886,11 +1367,13 @@ err?.message || err
 }
 
 export function scheduleFavoritesCloudPush(
-favorites
+favorites,
+exchangeId
 ){
 
 pushFavoritesAfterLocalEdit(
-favorites
+favorites,
+exchangeId
 );
 
 }
@@ -911,12 +1394,92 @@ if(
 return;
 }
 
+if(
+row.symbol
+){
+
+const exchangeId =
+resolveFavoritesExchangeId(
+row.exchange_id
+);
+const sym =
+String(
+row.symbol ||
+""
+).trim().toUpperCase();
+
+if(
+!sym
+){
+return;
+}
+
+const groups =
+loadFavoritesGroups(
+exchangeId
+);
+const cloudTs =
+row.updated_at ||
+"";
+const localTs =
+loadFavoritesCloudUpdatedAt(
+exchangeId
+);
+
+if(
+localTs &&
+cloudTs &&
+isTsNewer(
+localTs,
+cloudTs
+) &&
+hasUnsyncedFavoritesCloud(
+exchangeId
+)
+){
+return;
+}
+
+let next =
+groups;
+
+if(
+row.deleted_at
+){
+next =
+setFavoriteGroup(
+sym,
+null,
+groups
+);
+}else{
+next =
+setFavoriteGroup(
+sym,
+row.flag_group,
+groups
+);
+}
+
+applyCloudFavorites(
+next,
+cloudTs,
+exchangeId
+);
+return;
+
+}
+
 const cloudFavorites =
 normalizeFavoritesList(
 row.favorites
 );
+const exchangeId =
+"bybit";
 const localGroups =
-loadFavoritesGroups();
+loadFavoritesGroups(
+exchangeId
+);
 const cloudGroups =
 favoritesFromCloudList(
 cloudFavorites
@@ -925,7 +1488,9 @@ const cloudTs =
 row.updated_at ||
 "";
 const localTs =
-loadLocalFavoritesUpdatedAt();
+loadFavoritesCloudUpdatedAt(
+exchangeId
+);
 
 if(
 favoritesGroupsEqual(
@@ -937,13 +1502,15 @@ cloudGroups
 if(
 cloudTs
 ){
-saveLocalFavoritesUpdatedAt(
-cloudTs
+saveFavoritesCloudUpdatedAt(
+cloudTs,
+exchangeId
 );
 }
 
-saveFavoritesSyncedSignature(
-localGroups
+saveFavoritesCloudSyncedSignature(
+localGroups,
+exchangeId
 );
 return;
 
@@ -956,14 +1523,17 @@ isTsNewer(
 localTs,
 cloudTs
 ) &&
-hasUnsyncedFavorites()
+hasUnsyncedFavoritesCloud(
+exchangeId
+)
 ){
 return;
 }
 
 applyCloudFavorites(
-cloudFavorites,
-cloudTs
+cloudGroups,
+cloudTs,
+exchangeId
 );
 
 }
@@ -995,7 +1565,9 @@ void pullFavoritesFromCloudNow().catch(
 
 }
 
-export async function syncFavoritesCloudOnDemand(){
+export async function syncFavoritesCloudOnDemand(
+exchangeId
+){
 
 if(
 !isCloudLoggedInEffective()
@@ -1006,7 +1578,10 @@ throw new Error(
 }
 
 await pullFavoritesFromCloudNow(
-{ onDemand: true }
+{
+onDemand: true,
+exchangeId
+}
 );
 
 }

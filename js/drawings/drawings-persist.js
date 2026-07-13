@@ -1,6 +1,6 @@
 /**
  * LocalStorage load/save + shape normalization for drawings.
- * Phase 3 split from drawings/init.js.
+ * Drawings are local-only — no cloud sync.
  */
 import {
 STROKE,
@@ -79,8 +79,6 @@ deps
 
 const {
 getSymbol,
-canUseDrawings,
-isCloudSyncEnabled,
 getDrawings,
 setDrawings,
 getSelectedId,
@@ -91,11 +89,8 @@ cloneDrawingsForUndo,
 onDrawUndoPush =
 null,
 initialPositionTpSl,
-bumpDrawingsLocalRevision,
-scheduleDrawingsCloudPush,
 touchStorageSnap,
-storageKeySuffix = "",
-cloudSync = true
+storageKeySuffix = ""
 } =
 deps;
 
@@ -381,29 +376,6 @@ function loadDrawings(){
 const key =
 storageKey();
 
-if(
-!canUseDrawings()
-){
-
-if(
-!loadDrawingsFromStorageKey(
-key
-)
-){
-setDrawings(
-[]
-);
-}
-
-sanitizeDrawingsForCurrentSymbol();
-setSelectedId(
-null
-);
-syncDrawUndoBaseline();
-return;
-
-}
-
 try{
 
 let raw =
@@ -575,20 +547,6 @@ touchStorageSnap();
 /* ignore quota / private mode */
 }
 
-if(
-canUseDrawings() &&
-cloudSync
-){
-bumpDrawingsLocalRevision();
-scheduleDrawingsCloudPush();
-}else if(
-isCloudSyncEnabled()
-){
-console.warn(
-"[drawings] сохранено только локально — войдите в аккаунт (шестерёнка), чтобы строки попали в Supabase."
-);
-}
-
 window.dispatchEvent(
 new CustomEvent(
 "drawings-updated",
@@ -608,8 +566,7 @@ sym
 ){
 
 if(
-!sym ||
-!canUseDrawings()
+!sym
 ){
 return;
 }
@@ -624,9 +581,6 @@ JSON.stringify(
 getDrawings()
 )
 );
-
-bumpDrawingsLocalRevision();
-scheduleDrawingsCloudPush();
 
 }catch{
 /* ignore */

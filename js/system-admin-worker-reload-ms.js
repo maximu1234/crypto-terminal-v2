@@ -8,7 +8,7 @@ normalizeAlertWorkerBaseUrl
 
 import {
 fetchWithTimeout
-} from "./drawings-cloud/worker-client.js?v=8";
+} from "./async-timeout.js?v=2";
 
 async function getWorkerBaseUrl(){
 

@@ -11,11 +11,11 @@ formatPrice
 
 import {
 createPriceAlert
-} from "./alerts.js?v=101";
+} from "./alerts.js?v=102";
 
 import {
 isCloudLoggedInEffective
-} from "./cloud-sync.js?v=42";
+} from "./cloud-sync.js?v=45";
 
 import {
 getTelegramChatId

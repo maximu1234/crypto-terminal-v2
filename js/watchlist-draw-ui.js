@@ -1,14 +1,9 @@
 import {
 DRAW_TOOLS_PALETTE_ICON_SVG,
-DRAW_TOOLS_GUEST_MSG,
 TRASH_ICON_SVG,
 SETTINGS_ICON_SVG,
 getDrawToolbarButtonsHtml
-} from "./draw-ui-shared.js?v=30";
-
-import {
-isCloudLoggedInEffective
-} from "./cloud-sync.js?v=42";
+} from "./draw-ui-shared.js?v=31";
 
 const widgetDrawMenuClosers =
 new Set();
@@ -184,15 +179,6 @@ toggle.addEventListener(
 e=>{
 
 e.stopPropagation();
-
-if(
-!isCloudLoggedInEffective()
-){
-window.alert(
-DRAW_TOOLS_GUEST_MSG
-);
-return;
-}
 
 if(
 menu.classList.contains(

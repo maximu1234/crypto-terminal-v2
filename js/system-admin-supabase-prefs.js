@@ -1,110 +1,22 @@
 import {
 getSupabaseUsagePrefs,
 setSupabaseUsagePref,
-syncAlertsCloudPauseToServer,
-isSupabaseRealtimeDisabled,
-isDrawingsCloudDisabled,
-isFavoritesAutoCloudDisabled,
-isAutoDevicePullDisabled,
-isSlowBackgroundSync
-} from "./supabase-usage-prefs.js?v=4";
+syncAlertsCloudPauseToServer
+} from "./supabase-usage-prefs.js?v=5";
 
-/** Зашито в BANDWIDTH_CUT — только напоминание в UI; менять нельзя. */
-const FROZEN_PREF_KEYS =
-new Set(
-[
-"disableRealtime",
-"disableDrawingsCloud",
-"disableFavoritesCloud",
-"disableAutoDevicePull",
-"slowBackgroundSync"
-]
-);
+const BANDWIDTH_CUT_NOTE =
+"Realtime, авто-синхронизация флагов и автозагрузка из облака при фокусе отключены в коде (экономия лимитов Supabase Free). " +
+"Флаги подтягиваются вручную: Настройки → Синхронизация → «Обновить». " +
+"Рисунки хранятся только на устройстве.";
 
-function isFrozenPref(
-key
-){
-
-return FROZEN_PREF_KEYS.has(
-key
-);
-
-}
-
-function effectivePrefChecked(
-key
-){
-
-switch(
-key
-){
-case "disableRealtime":
-return isSupabaseRealtimeDisabled();
-case "disableDrawingsCloud":
-return isDrawingsCloudDisabled();
-case "disableFavoritesCloud":
-return isFavoritesAutoCloudDisabled();
-case "disableAutoDevicePull":
-return isAutoDevicePullDisabled();
-case "slowBackgroundSync":
-return isSlowBackgroundSync();
-default:
-return !!getSupabaseUsagePrefs()[
-key
-];
-}
-
-}
-
-const FIELDS =
-[
-{
-key: "disableRealtime",
-label: "Отключить Supabase Realtime",
-hint:
-"Не держать WebSocket-каналы к БД (user_settings, user_drawings, price_alerts). " +
-"Между вкладками и устройствами изменения не прилетают мгновенно — только после открытия вкладки, фокуса или фонового опроса. " +
-"Сильно снижает расход лимита Realtime Messages."
-},
-{
-key: "disableDrawingsCloud",
-label: "Отключить облако рисунков",
-hint:
-"Не отправляет и не скачивает линии, Fib и прочие рисунки в таблицу user_drawings. " +
-"Рисунки остаются только в этом браузере (localStorage). " +
-"Снижает Egress и запросы к API Supabase."
-},
-{
-key: "disableFavoritesCloud",
-label: "Отключить облако флагов (избранное)",
-hint:
-"Сейчас: авто-синхронизация выключена (BANDWIDTH-CUT). Флаги — вручную: Настройки → Синхронизация → «Обновить». " +
-"Ранее: полное отключение синхронизации user_settings."
-},
+const ALERTS_FIELD =
 {
 key: "disableAlertsCloud",
 label: "Отключить облачные алерты (Telegram)",
 hint:
-"Не синхронизирует price_alerts с Supabase и не обращается к alert-worker на Railway. " +
-"Уведомления в Telegram с сервера не уходят; локальная работа страницы алертов может остаться ограниченной. " +
-"Снижает Egress и Realtime."
-},
-{
-key: "disableAutoDevicePull",
-label: "Отключить автозагрузку из облака при фокусе",
-hint:
-"При возврате на вкладку сайта не запускает пакетный pull (рисунки + флаги + алерты разом). " +
-"Полезно, если открыто много вкладок Multichart — меньше повторных скачиваний. " +
-"После входа на новом устройстве данные можно подтянуть вручную (обновить страницу)."
-},
-{
-key: "slowBackgroundSync",
-label: "Медленный фоновый опрос (×2 интервал)",
-hint:
-"Реже повторяет фоновые проверки облака (опрос настроек ~5 с, быстрый poll рисунков/алертов), " +
-"если Realtime выключен или событие не пришло. Синхронизация чуть запаздывает, меньше мелких REST-запросов."
-}
-];
+"Не синхронизирует price_alerts с Supabase и не обращается к alert-worker. " +
+"Уведомления в Telegram с сервера не уходят. Снижает Egress и Realtime."
+};
 
 export function bindSupabaseUsagePrefsForm(
 rootEl,
@@ -130,10 +42,18 @@ form.setAttribute(
 "off"
 );
 
-for(
-const field of
-FIELDS
-){
+const note =
+document.createElement(
+"p"
+);
+note.className =
+"system-admin-pref-note";
+note.textContent =
+BANDWIDTH_CUT_NOTE;
+
+form.append(
+note
+);
 
 const label =
 document.createElement(
@@ -149,21 +69,9 @@ document.createElement(
 input.type =
 "checkbox";
 input.name =
-field.key;
+ALERTS_FIELD.key;
 input.dataset.pref =
-field.key;
-
-if(
-isFrozenPref(
-field.key
-)
-){
-input.disabled =
-true;
-label.classList.add(
-"system-admin-pref-option--frozen"
-);
-}
+ALERTS_FIELD.key;
 
 const text =
 document.createElement(
@@ -177,7 +85,7 @@ document.createElement(
 "strong"
 );
 strong.textContent =
-field.label;
+ALERTS_FIELD.label;
 
 const hint =
 document.createElement(
@@ -186,7 +94,7 @@ document.createElement(
 hint.className =
 "system-admin-pref-hint";
 hint.textContent =
-field.hint;
+ALERTS_FIELD.hint;
 
 text.append(
 strong,
@@ -200,21 +108,6 @@ form.append(
 label
 );
 
-}
-
-const note =
-document.createElement(
-"p"
-);
-note.className =
-"system-admin-pref-note";
-note.textContent =
-"Пункты с серой подсветкой зашиты в коде (BANDWIDTH-CUT) и не переключаются — напоминание. Активен только переключатель алертов. Realtime/облако: обновите вкладки (F5) после смены алертов.";
-
-form.append(
-note
-);
-
 rootEl.append(
 form
 );
@@ -224,25 +117,8 @@ function syncFromStorage(){
 const prefs =
 getSupabaseUsagePrefs();
 
-form.querySelectorAll(
-"input[data-pref]"
-).forEach(input=>{
-
-const key =
-input.dataset.pref;
-
 input.checked =
-isFrozenPref(
-key
-)
-? effectivePrefChecked(
-key
-)
-: !!prefs[
-key
-];
-
-});
+!!prefs.disableAlertsCloud;
 
 if(
 statusEl
@@ -267,28 +143,25 @@ form.addEventListener(
 "change",
 e=>{
 
-const input =
+const target =
 e.target;
 
 if(
-!input?.dataset?.pref ||
-isFrozenPref(
-input.dataset.pref
-)
+!target?.dataset?.pref
 ){
 return;
 }
 
 setSupabaseUsagePref(
-input.dataset.pref,
-input.checked
+target.dataset.pref,
+target.checked
 );
 
 if(
 statusEl
 ){
 statusEl.textContent =
-"Сохранено. Обновите вкладки с Монетами / Терминалом / Алертами (F5), чтобы применить Realtime и облако.";
+"Сохранено. Обновите вкладки с Терминалом / Алертами (F5), чтобы применить.";
 }
 
 }

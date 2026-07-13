@@ -106,7 +106,11 @@ function symbolForCoinsUrl(symbol) {
 
 }
 
-export function buildCoinsChartUrl(symbol, tf) {
+export function buildCoinsChartUrl(
+symbol,
+tf,
+exchangeId
+) {
 
   const sym =
     symbolForCoinsUrl(symbol);
@@ -120,6 +124,24 @@ export function buildCoinsChartUrl(symbol, tf) {
       symbol: sym,
       tf: String(tf || "60")
     });
+
+  const ex =
+    String(
+      exchangeId ||
+      ""
+    ).trim().toLowerCase();
+
+  if (
+    ex ===
+    "bybit" ||
+    ex ===
+    "bingx"
+  ) {
+    params.set(
+      "exchange",
+      ex
+    );
+  }
 
   return `${getSitePublicUrl()}/terminal.html?${params}`;
 
@@ -175,7 +197,9 @@ export function formatAlertMessage(alert) {
   const chartUrl =
     buildCoinsChartUrl(
       alert.symbol,
-      tfRaw
+      tfRaw,
+      alert.exchange_id ||
+      alert.exchangeId
     );
 
   const symHtml =

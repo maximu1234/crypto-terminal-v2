@@ -1,6 +1,6 @@
 import {
 initAlertMonitor
-} from "./alert-monitor.js?v=69";
+} from "./alert-monitor.js?v=70";
 
 import {
 ensureCloudReady
@@ -17,7 +17,7 @@ scheduleRegistryCloudSync
 
 import {
 stripAlertFlagsNotInRegistry
-} from "./alerts.js?v=101";
+} from "./alerts.js?v=102";
 
 import {
 isCloudLoggedIn,
@@ -25,7 +25,7 @@ isCloudLoggedInEffective,
 isCloudSyncEnabled,
 getCloudUserEmail,
 onCloudSyncChange
-} from "./cloud-sync.js?v=42";
+} from "./cloud-sync.js?v=45";
 
 import {
 isSupabaseConfigured
@@ -282,14 +282,14 @@ new CustomEvent(
 
 /* BANDWIDTH-CUT: облако рисунков (Realtime + fast poll + push) */
 /*
-import("./drawings-cloud-sync.js?v=46").then(
+import("./drawings-cloud-sync.js?v=47").then(
 ({ initDrawingsCloudSync })=>{
 initDrawingsCloudSync();
 }
 );
 */
 
-import("./favorites-cloud-sync.js?v=6").then(
+import("./favorites-cloud-sync.js?v=7").then(
 ({ initFavoritesCloudSync })=>{
 initFavoritesCloudSync();
 }

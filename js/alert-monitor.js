@@ -1,10 +1,11 @@
 import {
 alertEntryKey,
+alertExchangeId,
 commitAlertTriggeredLocally,
 formatAlertTelegramText,
 getActiveAlerts,
 normalizeAlertTf
-} from "./alerts.js?v=101";
+} from "./alerts.js?v=102";
 
 import {
 subscribeKline
@@ -13,6 +14,11 @@ subscribeKline
 import {
 EXCHANGE_CHANGED_EVENT
 } from "./market-api.js?v=1";
+
+import {
+buildAlertChartUrl,
+gateAlertExchangeNavigation
+} from "./alert-deep-link-exchange.js?v=1";
 
 import {
 getAlertNotifyMode,
@@ -607,7 +613,7 @@ location.pathname ||
 
 }
 
-export function openAlertTarget(
+export async function openAlertTarget(
 alert
 ){
 
@@ -620,9 +626,24 @@ const tf =
 normalizeAlertTf(
 alert?.tf
 );
+const exchangeId =
+alertExchangeId(
+alert
+);
 
 if(
 !symbol
+){
+return false;
+}
+
+const gate =
+await gateAlertExchangeNavigation({
+exchangeId
+});
+
+if(
+!gate.proceed
 ){
 return false;
 }
@@ -644,12 +665,21 @@ tf
 return true;
 }
 
+const href =
+buildAlertChartUrl({
+symbol,
+tf,
+exchangeId
+});
+
+if(
+!href
+){
+return false;
+}
+
 location.href =
-`/terminal.html?symbol=${encodeURIComponent(
-symbol
-)}&tf=${encodeURIComponent(
-tf
-)}`;
+href;
 
 return true;
 
@@ -766,7 +796,7 @@ el.addEventListener(
 clearTimeout(
 hideTimer
 );
-openAlertTarget(
+void openAlertTarget(
 alert
 );
 dismissToast(
@@ -809,7 +839,7 @@ requireInteraction: false
 n.onclick =
 ()=>{
 window.focus?.();
-openAlertTarget(
+void openAlertTarget(
 alert
 );
 n.close();

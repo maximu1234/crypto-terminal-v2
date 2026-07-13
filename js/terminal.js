@@ -18,6 +18,10 @@ EXCHANGE_CHANGED_EVENT
 } from "./market-api.js?v=1";
 
 import {
+resolveUrlExchangeDeepLink
+} from "./alert-deep-link-exchange.js?v=1";
+
+import {
 calculateRSI,
 alignRsiWithCandleTimes,
 RSI_PERIOD
@@ -30,7 +34,7 @@ getFavoriteGroup,
 setFavoriteGroup,
 flagSortRank,
 canSetBlueFlag
-} from "./favorites.js?v=4";
+} from "./favorites.js?v=5";
 
 import {
 ensureCloudReady
@@ -39,7 +43,7 @@ ensureCloudReady
 import {
 persistFavoritesToCloud,
 onFavoritesRemoteUpdate
-} from "./cloud-sync.js?v=42";
+} from "./cloud-sync.js?v=45";
 
 import {
 createCandlestickChart,
@@ -82,7 +86,7 @@ disconnectKlineStream
 
 import {
 syncBackgroundAlertStreams
-} from "./alert-monitor.js?v=69";
+} from "./alert-monitor.js?v=70";
 
 import {
 createSharedDrawUndoStack
@@ -95,7 +99,7 @@ initWidgetDrawings
 import {
 mountDrawToolbar,
 mountDrawToolIcons
-} from "./draw-ui-shared.js?v=30";
+} from "./draw-ui-shared.js?v=31";
 
 import {
 initChartIndicators
@@ -123,7 +127,7 @@ COINS_TF_HOTKEYS,
 COINS_MARKETS,
 isTerminalPage,
 isTradePage
-} from "./terminal/terminal-state.js?v=9";
+} from "./terminal/terminal-state.js?v=10";
 
 import {
 stopTickerStream
@@ -143,7 +147,7 @@ resolveInitialSymbolAndTf,
 applyCoinsPrefs,
 applySortForCurrentMarket,
 readUrlParams
-} from "./terminal/terminal-prefs.js?v=11";
+} from "./terminal/terminal-prefs.js?v=15";
 
 import {
 getCurrentSymbols,
@@ -157,7 +161,7 @@ highlightActiveSymbol,
 getVisibleSymbolList,
 setCoinsTableHooks,
 syncCoinListFreezeFromFlagMenus
-} from "./terminal/terminal-table.js?v=18";
+} from "./terminal/terminal-table.js?v=19";
 
 import {
 createCoinsChartSwitchVeil
@@ -233,6 +237,7 @@ let flagSortAsc = true;
 
 let searchQuery = "";
 let hasUrlSymbol = false;
+let urlExchangeId = "";
 
 let favorites =
 loadFavoritesGroups();
@@ -354,6 +359,17 @@ return hasUrlSymbol;
 },
 set hasUrlSymbol(v){
 hasUrlSymbol = v;
+},
+
+get urlExchangeId(){
+return urlExchangeId;
+},
+set urlExchangeId(v){
+urlExchangeId =
+String(
+v ||
+""
+);
 },
 
 get favorites(){
@@ -2614,9 +2630,6 @@ drawingTools?.syncStyleBar?.();
 
 storageKeySuffix:
 "_rsi",
-
-cloudSync:
-false,
 
 drawPriceAlerts:
 false,
@@ -5212,10 +5225,26 @@ startTickerStream();
 async function init(){
 
 void ensureCloudReady().then(()=>{
-void drawingTools?.refreshDrawToolsAccessUiAsync?.();
+void drawingTools?.refreshDrawToolsAccessUi?.();
 });
 
 applyCoinsPrefs();
+
+const urlExchangeAllowed =
+await resolveUrlExchangeDeepLink({
+silentSwitch:
+true
+});
+
+if(
+!urlExchangeAllowed
+){
+hasUrlSymbol =
+false;
+urlExchangeId =
+"";
+resolveInitialSymbolAndTf();
+}
 
 mountCoinsListRefreshControls();
 
@@ -5283,7 +5312,7 @@ await loadSymbol(
 currentSymbol || displaySymbol || "BTCUSDT"
 );
 
-void drawingTools?.refreshDrawToolsAccessUiAsync?.();
+void drawingTools?.refreshDrawToolsAccessUi?.();
 
 syncCoinsTabletListNav();
 

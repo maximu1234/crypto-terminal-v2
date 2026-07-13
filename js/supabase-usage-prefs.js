@@ -9,7 +9,6 @@ export const SUPABASE_USAGE_PREFS_KEY =
 export const SUPABASE_USAGE_PREF_KEYS =
 Object.freeze([
 "disableRealtime",
-"disableDrawingsCloud",
 "disableFavoritesCloud",
 "disableFavoritesAutoCloud",
 "disableAlertsCloud",
@@ -20,7 +19,6 @@ Object.freeze([
 const DEFAULTS =
 Object.freeze({
 disableRealtime: false,
-disableDrawingsCloud: false,
 disableFavoritesCloud: false,
 disableFavoritesAutoCloud: false,
 disableAlertsCloud: false,
@@ -36,7 +34,6 @@ slowBackgroundSync: false
 const BANDWIDTH_CUT =
 Object.freeze({
 disableRealtime: true,
-disableDrawingsCloud: true,
 disableFavoritesAutoCloud: true,
 disableAutoDevicePull: true,
 slowBackgroundSync: true
@@ -177,7 +174,7 @@ try{
 const {
 ensureCloudLoginResolved
 } =
-await import("./cloud-sync.js?v=42");
+await import("./cloud-sync.js?v=45");
 
 const ctx =
 await ensureCloudLoginResolved(
@@ -256,17 +253,6 @@ bandwidthCutEnabled(
 "disableRealtime"
 ) ||
 getSupabaseUsagePrefs().disableRealtime
-);
-
-}
-
-export function isDrawingsCloudDisabled(){
-
-return (
-bandwidthCutEnabled(
-"disableDrawingsCloud"
-) ||
-getSupabaseUsagePrefs().disableDrawingsCloud
 );
 
 }

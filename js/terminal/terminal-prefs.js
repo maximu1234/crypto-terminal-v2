@@ -9,12 +9,16 @@ COINS_PREFS_KEY,
 COINS_SORT_MODES,
 COINS_TF_VALUES,
 isTerminalPage
-} from "./terminal-state.js?v=9";
+} from "./terminal-state.js?v=10";
 
 import {
 getCurrentSymbols,
 getFirstVisibleSymbol
-} from "./terminal-table.js?v=18";
+} from "./terminal-table.js?v=19";
+
+import {
+parseAlertDeepLinkExchange
+} from "../alert-deep-link-url.js?v=2";
 
 export function defaultSortEntry(){
 
@@ -588,6 +592,14 @@ params.get("symbol");
 
 const tf =
 params.get("tf");
+const urlExchange =
+parseAlertDeepLinkExchange(
+params
+);
+
+coinsState().urlExchangeId =
+urlExchange ||
+"";
 
 if(symbol){
 coinsState().currentSymbol = symbol.trim().toUpperCase();

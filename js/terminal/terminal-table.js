@@ -2,7 +2,7 @@ import {
 coinsState,
 marketMap,
 coinElements
-} from "./terminal-state.js?v=9";
+} from "./terminal-state.js?v=10";
 
 import {
 isActiveRealtimeMarketDataset,
@@ -24,17 +24,17 @@ createTickerUiBatcher
 
 import {
 processAlertCandle
-} from "../alert-monitor.js?v=69";
+} from "../alert-monitor.js?v=70";
 
 import {
 getFavoriteGroup,
 flagSortRank,
 emptyFavorites
-} from "../favorites.js?v=4";
+} from "../favorites.js?v=5";
 
 import {
 isTradePage
-} from "./terminal-state.js?v=9";
+} from "./terminal-state.js?v=10";
 
 /** Desktop /trade only — не тянем trade-open-positions в открытый web /coins. */
 let hasOpenPosition =

@@ -51,7 +51,7 @@ createTickerUiBatcher
 
 import {
 mountReleaseMarker
-} from "./release-marker.js?v=28";
+} from "./release-marker.js?v=29";
 
 import {
 saveScreenerState,
@@ -65,7 +65,7 @@ getFavoriteGroup,
 setFavoriteGroup,
 canSetBlueFlag,
 FAVORITES_BY_EXCHANGE_KEY
-} from "./favorites.js?v=4";
+} from "./favorites.js?v=5";
 
 import {
 ensureCloudReady
@@ -74,12 +74,12 @@ ensureCloudReady
 import {
 ensureSettled,
 withTimeout
-} from "./async-timeout.js?v=1";
+} from "./async-timeout.js?v=2";
 
 import {
 persistFavoritesToCloud,
 onFavoritesRemoteUpdate
-} from "./cloud-sync.js?v=42";
+} from "./cloud-sync.js?v=45";
 
 import {
 attachSymbolAutocomplete,

@@ -5,7 +5,7 @@ ensureCloudReady
 import {
 ensureCloudLoginResolved,
 getEffectiveCloudUserEmail
-} from "./cloud-sync.js?v=42";
+} from "./cloud-sync.js?v=45";
 
 import {
 isSystemAdminUser,
@@ -15,18 +15,14 @@ isLoggedInEffective
 
 import {
 bindSupabaseUsagePrefsForm
-} from "./system-admin-supabase-prefs.js?v=2";
-
-import {
-bindDrawingsGlobalPurge
-} from "./system-admin-drawings-purge.js?v=2";
+} from "./system-admin-supabase-prefs.js?v=4";
 
 import {
 bindAlertsGarbagePurge
 } from "./system-admin-alerts-purge.js?v=2";
 import {
 bindWorkerReloadMsSettings
-} from "./system-admin-worker-reload-ms.js?v=3";
+} from "./system-admin-worker-reload-ms.js?v=4";
 
 const rootEl =
 document.getElementById("system-admin-root");
@@ -164,10 +160,6 @@ window.location.href = "/screener.html";
 }
 );
 }
-
-bindDrawingsGlobalPurge({
-statusEl: document.getElementById("system-drawings-purge-status")
-});
 
 bindAlertsGarbagePurge({
 statusEl: document.getElementById("system-alerts-purge-status")

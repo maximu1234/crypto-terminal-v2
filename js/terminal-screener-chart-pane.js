@@ -23,7 +23,7 @@ linkChartsCrosshair
 
 import {
 readCoinsPrefs
-} from "./terminal/terminal-prefs.js?v=11";
+} from "./terminal/terminal-prefs.js?v=15";
 
 import {
 calculateRSI,

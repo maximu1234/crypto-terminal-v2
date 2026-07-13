@@ -8,12 +8,12 @@ setFavoriteGroup,
 getFavoriteGroup,
 canSetBlueFlag,
 FAVORITES_BY_EXCHANGE_KEY
-} from "./favorites.js?v=4";
+} from "./favorites.js?v=5";
 
 import {
 persistFavoritesToCloud,
 onFavoritesRemoteUpdate
-} from "./cloud-sync.js?v=42";
+} from "./cloud-sync.js?v=45";
 
 import {
 EXCHANGE_CHANGED_EVENT

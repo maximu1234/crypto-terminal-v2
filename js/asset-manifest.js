@@ -94,7 +94,7 @@ Object.freeze({
 "trade-chart-overlay.js":
 34,
 "trade-chart-orders.js":
-22,
+23,
 "trade-order-plus-ui.js":
 2,
 "trade-widget-mount.js":
@@ -104,7 +104,7 @@ Object.freeze({
 "chart-page.js":
 6,
 "terminal.js":
-381,
+383,
 "terminal-multi-chart.js":
 11,
 "terminal-screener-chart-pane.js":
@@ -180,11 +180,11 @@ Object.freeze({
 "terminal-layout-math.js":
 5,
 "terminal/terminal-state.js":
-9,
+10,
 "terminal/terminal-prefs.js":
-11,
+15,
 "terminal/terminal-table.js":
-18,
+19,
 "telegram-bot-public.js":
 1,
 "watchlist.js":
@@ -200,7 +200,7 @@ Object.freeze({
 "screener-widget-zoom.js":
 11,
 "release-marker.js":
-28,
+29,
 "focus-blur-after-pick.js":
 3,
 "site-boot.js":
@@ -246,13 +246,13 @@ Object.freeze({
 "drawings.js":
 253,
 "drawings/init.js":
-158,
+159,
 "drawings/draw-edit-desktop.js":
 9,
 "drawings/draw-undo.js":
 2,
 "drawings/drawings-persist.js":
-8,
+9,
 "drawings/draw-style-bar.js":
 27,
 "drawings/draw-templates.js":
@@ -298,13 +298,7 @@ Object.freeze({
 "drawings/draw-hit.js":
 9,
 "drawings-cloud-sync.js":
-46,
-"drawings-cloud/worker-client.js":
-8,
-"drawings-cloud/pull-reconcile.js":
-12,
-"drawings-cloud/sync-lifecycle.js":
-10,
+47,
 "drawings-tablet-input.js":
 3,
 "drawings-storage.js":
@@ -314,13 +308,13 @@ Object.freeze({
 "draw-color-palette.js":
 6,
 "draw-ui-shared.js":
-30,
+31,
 "draw-toolbar-icon-data.js":
 29,
 "draw-tools-visible.js":
 2,
 "watchlist-draw-ui.js":
-15,
+16,
 "price-alert-ui.js":
 45,
 "indicators.js":
@@ -359,7 +353,7 @@ Object.freeze({
 
 /* ── JS: cloud / auth ── */
 "cloud-sync.js":
-42,
+45,
 "cloud-sync-throttle.js":
 3,
 "page-routes.js":
@@ -383,7 +377,7 @@ Object.freeze({
 "app-settings-window.js":
 9,
 "app-settings-secret.js":
-6,
+7,
 "telegram-settings-panel.js":
 1,
 "favorites-settings-panel.js":
@@ -391,13 +385,13 @@ Object.freeze({
 "alert-auth-cache.js":
 7,
 "favorites.js":
-4,
+5,
 "favorites-cloud-sync.js":
-6,
+7,
 
 /* ── JS: alerts ── */
 "alerts.js":
-101,
+102,
 "alerts-cloud-sync.js":
 111,
 "alerts-cloud/garbage-purge.js":
@@ -413,9 +407,13 @@ Object.freeze({
 "alerts-cloud/polling-realtime.js":
 9,
 "alerts-page.js":
-64,
+65,
 "alert-monitor.js":
-69,
+70,
+"alert-deep-link-exchange.js":
+1,
+"alert-deep-link-url.js":
+2,
 "alert-ui-prefs.js":
 1,
 "alert-worker-url.js":
@@ -423,7 +421,7 @@ Object.freeze({
 
 /* ── JS: misc ── */
 "async-timeout.js":
-1,
+2,
 "site-css-gate.js":
 1,
 "site-css-ready.js":
@@ -441,19 +439,17 @@ Object.freeze({
 "trade-calculator.js":
 3,
 "system-admin-page.js":
-9,
-"system-admin-drawings-purge.js":
-2,
+10,
 "system-admin-alerts-purge.js":
 2,
 "system-admin-worker-reload-ms.js":
-3,
+4,
 "system-admin-access.js":
 3,
 "supabase-usage-prefs.js":
-4,
+5,
 "system-admin-supabase-prefs.js":
-2,
+4,
 
 /* ── CSS ── */
 "critical-shell.css":
@@ -493,7 +489,7 @@ Object.freeze({
 "trade-diary-period.css":
 1,
 "trade-chart-overlay.css":
-15,
+16,
 "trade-order-plus-ui.css":
 4,
 "trade-widget-compact.css":
