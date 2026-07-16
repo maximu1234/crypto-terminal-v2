@@ -8,7 +8,15 @@ TRADE_VOLUME_SLOT_COUNT
 
 import {
 wireAutoStopSettings
-} from "./trade-auto-stops.js?v=14";
+} from "./trade-auto-stops.js?v=16";
+
+import {
+loadTradeExchangeModules
+} from "./trade/module-router.js?v=2";
+
+import {
+getActiveExchangeId
+} from "./market-api.js?v=2";
 
 const TRADE_VOLUME_DEFAULT_INPUT_COUNT =
 Math.max(
@@ -93,7 +101,7 @@ return root.querySelector(
 
 }
 
-export function mountTradingSettingsPanel(
+export async function mountTradingSettingsPanel(
 host
 ){
 
@@ -107,6 +115,10 @@ return;
 
 host.dataset.tradingMounted =
 "1";
+
+await loadTradeExchangeModules(
+getActiveExchangeId()
+);
 
 const form =
 buildTradingSettingsForm(

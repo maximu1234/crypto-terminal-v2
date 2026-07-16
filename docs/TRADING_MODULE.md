@@ -41,6 +41,9 @@
 
 ```
 Renderer (/coins.html — desktop)
+  ├─ trade/module-router.js → active renderer bundle
+  │    ├─ trade/bybit/*
+  │    └─ trade/bingx/*
   └─ preload → cryptoTerminalDesktop.trading.*
        └─ ipcMain (desktop/trading/register-ipc.cjs)
             ├─ trading-router.cjs → active exchange
@@ -61,10 +64,22 @@ Renderer (/coins.html — desktop)
 | Private stream | `desktop/trading/bingx-trading-stream.cjs` |
 | Credentials | `bingx-api-credentials.json` в userData (plaintext, mode 0600) |
 | Подпись | `desktop/trading/bingx-sign.cjs` |
-| UI policy | `js/trade/exchanges/bingx-trade-policy.js` |
+| Renderer | `js/trade/bingx/*` |
 
-**Изоляция бирж:** правки BingX — только `bingx-*` + `bingx-trade-policy.js`. Правки Bybit — только `bybit-*` + `bybit-trade-policy.js`.  
-Общие фасады без биржевой логики: `trading-router.cjs`, `trading-stream.cjs` (delegate), `register-ipc.cjs`, `js/trade/exchanges/index.js`.
+**Изоляция бирж:** правки BingX — только `desktop/trading/bingx-*` и
+`js/trade/bingx/*`. Правки Bybit — только `desktop/trading/bybit-*` и
+`js/trade/bybit/*`.
+
+Общие файлы без биржевой логики: `trading-router.cjs`,
+`trading-stream.cjs`, `register-ipc.cjs`, `js/trade/module-router.js` и
+тонкие renderer-facades `js/trade-positions-cache.js`,
+`js/trade-stream-bridge.js`, `js/trade-chart-overlay.js`,
+`js/trade-auto-stops.js`, `js/trade-market-entry.js`,
+`js/trade-book-panel.js`.
+
+При смене биржи старый renderer-модуль останавливается и страница
+перезагружается: DOM listeners, stream subscriptions и кэши одной биржи не
+переживают переход в другую.
 
 **Дефолты аккаунта:** hedge (`dualSidePosition=true`) + multi-asset (`multiAssetsMode`) + cross margin на символ. Stream/cache/book ключуют позиции как `SYMBOL:LONG|SHORT`; close/setStop/getPosition передают `positionSide`.
 
@@ -90,16 +105,18 @@ Renderer (/coins.html — desktop)
 | `desktop/trading/bybit-rest.cjs` | Bybit REST client |
 | `desktop/trading/bingx-rest.cjs` | BingX REST client |
 | `desktop/trading/register-ipc.cjs` | IPC handlers |
-| `js/trade/exchanges/*-trade-policy.js` | UI quirks per exchange |
+| `js/trade/module-router.js` | Thin renderer bundle switch |
+| `js/trade/bybit/*` | Bybit renderer: cache/stream/overlay/entry/book/stops |
+| `js/trade/bingx/*` | BingX renderer: cache/stream/overlay/entry/book/stops |
 | `desktop/trading/credentials.cjs` | Bybit credentials shim |
 | `coins.html` | Монеты (+ торговля в desktop .app) |
 | `js/terminal-page-boot.js` | Boot: chart + условный trade-слой |
 | `js/trade-desktop-boot.js` | Trade CSS + init (только desktop) |
 | `js/trade-exchange-settings.js` | Exchange dropdown + ping |
-| `js/trade-market-entry.js` | Buy/Sell по рынку |
+| `js/trade-market-entry.js` | Thin facade → active exchange renderer |
 | `js/trade-volume-presets.js` | Объёмы USDT |
-| `js/trade-book-panel.js` | Панель позиций |
-| `js/trade-chart-overlay.js` | Позиция / SL / TP на графике |
+| `js/trade-book-panel.js` | Thin facade → active exchange book |
+| `js/trade-chart-overlay.js` | Thin facade → active exchange overlay |
 | `js/trade-chart-orders.js` | Limit/stop линии |
 | `js/trade-order-plus-ui.js` | Меню «+» на шкале |
 | `js/trade-open-positions.js` | Пин символов с позицией |

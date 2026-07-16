@@ -611,7 +611,7 @@ const {
 mountTradingSettingsPanel
 } =
 await import(
-"./trade-trading-settings-panel.js?v=1"
+"./trade-trading-settings-panel.js?v=2"
 );
 
 const host =
@@ -624,67 +624,7 @@ panel.appendChild(
 host
 );
 
-mountTradingSettingsPanel(
-host
-);
-return;
-
-}
-
-if(
-sectionId ===
-"trading"
-){
-
-if(
-!showConnectionsSettings()
-){
-panel.innerHTML =
-`<p class="app-settings-bybit-guest">Торговые настройки доступны в desktop-приложении Multichart.</p>`;
-return;
-}
-
-const tradeCss =
-cssUrl(
-"trade-exchange-settings.css"
-);
-
-if(
-!document.querySelector(
-`link[rel="stylesheet"][href^="/css/trade-exchange-settings.css"]`
-)
-){
-const link =
-document.createElement(
-"link"
-);
-link.rel =
-"stylesheet";
-link.href =
-tradeCss;
-document.head.appendChild(
-link
-);
-}
-
-const {
-mountTradingSettingsPanel
-} =
-await import(
-"./trade-trading-settings-panel.js?v=1"
-);
-
-const host =
-document.createElement(
-"div"
-);
-host.className =
-"app-settings-trading-host";
-panel.appendChild(
-host
-);
-
-mountTradingSettingsPanel(
+await mountTradingSettingsPanel(
 host
 );
 return;

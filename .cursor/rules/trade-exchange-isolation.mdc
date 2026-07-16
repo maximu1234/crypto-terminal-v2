@@ -1,0 +1,69 @@
+---
+description: Bybit и BingX — полностью раздельные торговые модули, без общих слоёв
+alwaysApply: true
+---
+
+# Торговля Bybit / BingX — полная изоляция (обязательно)
+
+## Главное правило
+
+**Bybit и BingX — два независимых торговых модуля.** Один не зависит от другого.
+
+Любая правка для Bybit **не должна** затрагивать код BingX. Любая правка для BingX **не должна** затрагивать код Bybit.
+
+**Общих торговых слоёв между биржами быть не может.**
+
+## Запрещено
+
+- `if (exchange === "bingx")` / `if (getActiveExchangeId() === "bybit")` в общих `js/trade-*.js`, `trade-chart-overlay.js`, `trade-positions-cache.js` и т.п.
+- Общие policy-флаги (`skipSync…`, `streamMissClearsCache`, `recentlyClosedMs` …) в **одном** shared-файле, из-за которых меняется поведение обеих бирж.
+- Импорты `bybit-*` ↔ `bingx-*` в `desktop/trading/`.
+- Копипаст фикса из одной биржи в shared-модуль «чтобы и там работало».
+- Менять `bybit-rest.cjs` / `bybit-trading-stream.cjs` при задаче только про BingX (и наоборот).
+
+## Разрешено (тонкий роутер, без логики биржи)
+
+- `desktop/trading/trading-router.cjs` — **только** выбор адаптера по `activeExchangeId` и делегирование.
+- `desktop/trading/trading-stream.cjs` — **только** start/stop активного stream-модуля.
+- `desktop/preload.js` + `register-ipc.cjs` — единый IPC-фасад, handlers делегируют в router.
+- `desktop/trading/exchange-credentials.cjs` — хранение ключей по `exchangeId` (без торговой логики).
+
+В роутере **нет** бизнес-логики, tombstone, optimistic, кэшей позиций.
+
+## Текущая структура (metka-72+)
+
+| Слой | Bybit | BingX | Общее (только роутер) |
+|------|-------|-------|------------------------|
+| Renderer | `js/trade/bybit/*` | `js/trade/bingx/*` | `js/trade/module-router.js` + тонкие `js/trade-*.js` facades |
+| Main | `bybit-rest.cjs`, `bybit-trading-stream.cjs` | `bingx-rest.cjs`, `bingx-trading-stream.cjs` | `trading-router.cjs`, `trading-stream.cjs` |
+
+Файлы `js/trade-positions-cache.js`, `trade-chart-overlay.js` и т.д. — **только facades** (прокси), без логики биржи.
+
+## Где живёт код каждой биржи
+
+| Слой | Bybit | BingX |
+|------|-------|-------|
+| Main REST | `bybit-rest.cjs` | `bingx-rest.cjs` |
+| Main WS | `bybit-private-ws.cjs` | `bingx-private-ws.cjs` |
+| Main stream | `bybit-trading-stream.cjs` | `bingx-trading-stream.cjs` |
+| Renderer | `js/trade/bybit/**` | `js/trade/bingx/**` |
+
+Общие renderer-файлы `trade-positions-cache.js`, `trade-chart-overlay.js`,
+`trade-stream-bridge.js`, `trade-auto-stops.js`, `trade-market-entry.js`,
+`trade-book-panel.js` — только тонкие facades. Биржевая логика живёт только в
+`js/trade/bybit/*` или `js/trade/bingx/*`.
+
+## Как делать фичу / фикс
+
+1. Определи биржу: задача **только** Bybit или **только** BingX?
+2. Правь **только** файлы этой биржи (+ router IPC-имя, если нужен новый вызов).
+3. Перед коммитом: `git diff` не содержит файлов второй биржи и shared `trade-*.js` с exchange-ветками.
+4. Регрессия: мысленно проверь, что второй модуль **не импортирует** и **не читает** изменённые файлы.
+
+## Антипример (metka-71)
+
+BingX-фикс ghost/tombstone попал в общий `trade-chart-overlay.js` и `trade-positions-cache.js` → сломался мгновенный показ позиции на **Bybit**. Правильно: только `bingx-trading-stream.cjs` + `js/trade/bingx/*`.
+
+## Документация
+
+См. `docs/TRADING_MODULE.md` — обновлять при изменении границ модулей.

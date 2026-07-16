@@ -23,11 +23,19 @@ initTradeLeverageSettings
 
 import {
 initTradeMarketEntry
-} from "./trade-market-entry.js?v=31";
+} from "./trade-market-entry.js?v=34";
 
 import {
 initTradeBookPanel
-} from "./trade-book-panel.js?v=58";
+} from "./trade-book-panel.js?v=60";
+
+import {
+loadTradeExchangeModules
+} from "./trade/module-router.js?v=2";
+
+import {
+getActiveExchangeId
+} from "./market-api.js?v=2";
 
 const TRADE_CSS =
 [
@@ -161,10 +169,26 @@ return;
 }
 
 initTradeExchangeSettings();
+await loadTradeExchangeModules(
+getActiveExchangeId()
+);
+
+const {
+initExchangeTradingGate
+} =
+await import(
+"./exchange-trading-gate.js?v=3"
+);
+
+await initExchangeTradingGate();
 return;
 }
 
 initTradeExchangeSettings();
+
+await loadTradeExchangeModules(
+getActiveExchangeId()
+);
 initTradeVolumePresets();
 initTradeLeverageSettings();
 initTradeMarketEntry();
@@ -173,10 +197,10 @@ const {
 initExchangeTradingGate
 } =
 await import(
-"./exchange-trading-gate.js?v=2"
+"./exchange-trading-gate.js?v=3"
 );
 
-initExchangeTradingGate();
+await initExchangeTradingGate();
 
 const {
 initTradePositionSounds
@@ -250,7 +274,7 @@ const {
 initTradePositionsCache
 } =
 await import(
-"./trade-positions-cache.js?v=32"
+"./trade-positions-cache.js?v=35"
 );
 
 initTradePositionsCache();
@@ -270,7 +294,7 @@ const {
 initTradeChartOverlay
 } =
 await import(
-"./trade-chart-overlay.js?v=58"
+"./trade-chart-overlay.js?v=62"
 );
 
 initTradeChartOverlay();

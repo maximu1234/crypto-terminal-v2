@@ -1,5 +1,5 @@
 /**
- * BingX trade UI policy — edit here without touching Bybit.
+ * BingX trade config — только BingX, без Bybit.
  */
 
 function normalizeSymbol(symbol) {
@@ -34,15 +34,15 @@ function keysMatchSymbol(key, symbol) {
   return key === sym || key.startsWith(`${sym}:`);
 }
 
-export default {
+const BINGX_TRADE = {
   id: "bingx",
-  positionsSyncIntervalMs: 2500,
-  restPositionsForceRefresh: true,
-  restOrdersForceRefresh: true,
+  positionsSyncIntervalMs: 6000,
+  restPositionsForceRefresh: false,
+  restOrdersForceRefresh: false,
   autoStopDelayMs: 2500,
   setStopMaxAttempts: 4,
   pauseBeforeTpMs: 400,
-  reconcileOnOpenDelayMs: 0,
+  reconcileOnOpenDelayMs: 1200,
   attachStopsInMainProcess: false,
   passAutoStopUsdOnOpen: true,
   skipSyncPositionAfterClose: true,
@@ -51,6 +51,8 @@ export default {
   mergePositionStopsFromPrev: false,
   recentlyClosedMs: 2500,
   verifyEmptyPositionViaList: true,
+  streamMissClearsCache: true,
+  softKeepCachedOnEmptyGetPosition: false,
   filterRecentlyClosedInBookRefresh: true,
   emptyCredentialsHint: "Подключите BingX в шапке",
   rateLimitedMessage:
@@ -58,3 +60,9 @@ export default {
   positionMapKey,
   keysMatchSymbol
 };
+
+export function getTradeConfig() {
+  return BINGX_TRADE;
+}
+
+export default BINGX_TRADE;

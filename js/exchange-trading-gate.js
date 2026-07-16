@@ -3,18 +3,24 @@
  * Публичные данные (график, список монет) — от выбранной биржи.
  */
 import {
+getActiveExchangeId,
 isExchangeTradingEnabled,
 EXCHANGE_CHANGED_EVENT
 } from "./market-api.js?v=2";
 
 import {
 clearTradePositionsCache
-} from "./trade-positions-cache.js?v=32";
+} from "./trade-positions-cache.js?v=35";
 
 import {
 stopTradeStreamBridge,
 startTradeStreamBridge
-} from "./trade-stream-bridge.js?v=17";
+} from "./trade-stream-bridge.js?v=19";
+
+import {
+loadTradeExchangeModules,
+resetTradeExchangeModules
+} from "./trade/module-router.js?v=2";
 
 const BODY_CLASS =
 "exchange-trading-inactive";
@@ -125,17 +131,17 @@ async function restartExchangeTrading(){
 const active =
 isExchangeTradingActive();
 
+/* Exchange modules own DOM listeners and caches. Reload after stopping the old
+ * module so no Bybit instance can survive into BingX (or vice versa). */
+await suspendExchangeTrading();
+
+resetTradeExchangeModules();
+
 setTradingUiActive(
 active
 );
 
-await suspendExchangeTrading();
-
-if(
-active
-){
-await resumeExchangeTrading();
-}
+window.location.reload();
 
 }
 
@@ -158,7 +164,7 @@ void suspendExchangeTrading();
 
 }
 
-export function initExchangeTradingGate(){
+export async function initExchangeTradingGate(){
 
 if(
 gateReady
@@ -169,6 +175,10 @@ return;
 
 gateReady =
 true;
+
+await loadTradeExchangeModules(
+getActiveExchangeId()
+);
 
 window.addEventListener(
 EXCHANGE_CHANGED_EVENT,

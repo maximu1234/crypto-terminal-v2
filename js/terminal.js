@@ -3003,7 +3003,7 @@ const {
 createTradePlusMenuHandler
 } =
 await import(
-"./trade-order-plus-ui.js?v=5"
+"./trade-order-plus-ui.js?v=6"
 );
 
 tradePlusHandler =

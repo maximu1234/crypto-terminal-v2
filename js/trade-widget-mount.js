@@ -3,7 +3,7 @@
  */
 import {
 createTradeChartOverlay
-} from "./trade-chart-overlay.js?v=58";
+} from "./trade-chart-overlay.js?v=62";
 
 import {
 createTradeChartOrders
@@ -11,7 +11,7 @@ createTradeChartOrders
 
 import {
 createTradePlusMenuHandler
-} from "./trade-order-plus-ui.js?v=5";
+} from "./trade-order-plus-ui.js?v=6";
 
 import {
 TRADE_VOLUME_SLOT_COUNT,
@@ -29,11 +29,11 @@ marketMap
 import {
 applyAutoStopsAfterEntry,
 getAutoStopSettings
-} from "./trade-auto-stops.js?v=14";
+} from "./trade-auto-stops.js?v=16";
 
 import {
-getTradeExchangePolicy
-} from "./trade/exchanges/index.js?v=12";
+getActiveTradeConfig
+} from "./trade/module-router.js?v=2";
 
 import {
 mountTradeLeverageControl
@@ -738,7 +738,8 @@ try{
 const settings =
 getAutoStopSettings();
 const policy =
-getTradeExchangePolicy();
+getActiveTradeConfig() ||
+{};
 const openOptions =
 {};
 

@@ -4,8 +4,8 @@
  * Short: cancel Sell orders, convert Buy orders to reduce-only.
  */
 import {
-getTradeExchangePolicy
-} from "./trade/exchanges/index.js?v=12";
+getTradeConfig
+} from "./config.js?v=1";
 
 function normalizeSymbol(
 symbol
@@ -109,7 +109,7 @@ async()=>{
 
 try{
 const reconcileDelayMs =
-getTradeExchangePolicy().reconcileOnOpenDelayMs;
+getTradeConfig().reconcileOnOpenDelayMs;
 
 if(
 reconcileDelayMs >
