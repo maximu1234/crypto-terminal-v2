@@ -20,7 +20,8 @@ return true;
 
 /* Electron desktop-shell доступен с первого кадра по UA. */
 return /Electron\//i.test(
-navigator.userAgent || ""
+navigator.userAgent ||
+""
 );
 
 }

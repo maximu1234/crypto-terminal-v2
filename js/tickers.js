@@ -2,7 +2,7 @@ import {
 getActiveExchangeId,
 EXCHANGE_CHANGED_EVENT,
 loadMarketTickers
-} from "./market-api.js?v=1";
+} from "./market-api.js?v=2";
 
 import {
 fetchBybit
@@ -127,6 +127,98 @@ ticker.turnover24h ||
 
 }
 
+export function resolveBingxChange24Percent(
+ticker
+){
+
+const last =
+Number(
+ticker.lastPrice ||
+ticker.last
+);
+const open =
+Number(
+ticker.openPrice
+);
+
+if(
+open >
+0 &&
+Number.isFinite(
+last
+) &&
+last >
+0
+){
+
+return (
+(
+last -
+open
+) /
+open
+) *
+100;
+
+}
+
+const pct =
+Number(
+ticker.priceChangePercent ??
+ticker.change24h
+);
+
+if(
+Number.isFinite(
+pct
+) &&
+Math.abs(
+pct
+) <=
+500
+){
+
+return pct;
+
+}
+
+const change =
+Number(
+ticker.priceChange
+);
+
+if(
+Number.isFinite(
+change
+) &&
+Number.isFinite(
+last
+)
+){
+
+const base =
+last -
+change;
+
+if(
+base >
+0
+){
+
+return (
+change /
+base
+) *
+100;
+
+}
+
+}
+
+return 0;
+
+}
+
 function buildBingxTickerPayload(
 ticker
 ){
@@ -136,10 +228,8 @@ toCanonicalSymbol(
 ticker.symbol
 );
 const change24 =
-Number(
-ticker.priceChangePercent ||
-ticker.change24h ||
-0
+resolveBingxChange24Percent(
+ticker
 );
 
 return {

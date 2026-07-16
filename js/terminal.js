@@ -14,8 +14,13 @@ formatExchangeDisplayLabel,
 getActiveCoinsMarkets,
 getActiveExchangeMarkets,
 getActiveExchangeId,
+getActiveExchangeDefinition,
 EXCHANGE_CHANGED_EVENT
-} from "./market-api.js?v=1";
+} from "./market-api.js?v=2";
+
+import {
+clearBybitNetworkIssue
+} from "./bybit-network-ui.js?v=3";
 
 import {
 resolveUrlExchangeDeepLink
@@ -127,7 +132,7 @@ COINS_TF_HOTKEYS,
 COINS_MARKETS,
 isTerminalPage,
 isTradePage
-} from "./terminal/terminal-state.js?v=10";
+} from "./terminal/terminal-state.js?v=11";
 
 import {
 stopTickerStream
@@ -144,10 +149,12 @@ writeCoinsPrefs,
 persistCoinsPrefs,
 bootstrapCoinsPageState,
 resolveInitialSymbolAndTf,
+resolveSymbolForExchange,
+saveLastViewForExchange,
 applyCoinsPrefs,
 applySortForCurrentMarket,
 readUrlParams
-} from "./terminal/terminal-prefs.js?v=15";
+} from "./terminal/terminal-prefs.js?v=17";
 
 import {
 getCurrentSymbols,
@@ -161,7 +168,7 @@ highlightActiveSymbol,
 getVisibleSymbolList,
 setCoinsTableHooks,
 syncCoinListFreezeFromFlagMenus
-} from "./terminal/terminal-table.js?v=19";
+} from "./terminal/terminal-table.js?v=20";
 
 import {
 createCoinsChartSwitchVeil
@@ -193,7 +200,7 @@ mountScriptTerminalStatus
 
 import {
 resumeScriptScanBackgroundJob
-} from "./script-scan-background.js?v=8";
+} from "./script-scan-background.js?v=11";
 
 let currentDataset = "all";
 let currentTF = "60";
@@ -217,7 +224,7 @@ null;
 let terminalMultiChartApi =
 null;
 
-/** То, что показано в #current-symbol (не сбрасывается на BTC при переключении). */
+/** Label in #current-symbol (updated on loadSymbol / exchange switch). */
 let displaySymbol =
 "";
 
@@ -244,6 +251,8 @@ loadFavoritesGroups();
 
 let allListings = [];
 let allBybitSymbols = [];
+let usdcListings = [];
+let indicesListings = [];
 let newListings = [];
 let innovationListings = [];
 let stockListings = [];
@@ -391,6 +400,20 @@ return allBybitSymbols;
 },
 set allBybitSymbols(v){
 allBybitSymbols = v;
+},
+
+get usdcListings(){
+return usdcListings;
+},
+set usdcListings(v){
+usdcListings = v;
+},
+
+get indicesListings(){
+return indicesListings;
+},
+set indicesListings(v){
+indicesListings = v;
 },
 
 get newListings(){
@@ -2980,7 +3003,7 @@ const {
 createTradePlusMenuHandler
 } =
 await import(
-"./trade-order-plus-ui.js?v=2"
+"./trade-order-plus-ui.js?v=5"
 );
 
 tradePlusHandler =
@@ -3165,6 +3188,14 @@ lists.all;
 coinsState().allBybitSymbols =
 lists.crypto;
 
+coinsState().usdcListings =
+lists.usdc ||
+[];
+
+coinsState().indicesListings =
+lists.indices ||
+[];
+
 coinsState().newListings =
 lists.new;
 
@@ -3191,7 +3222,9 @@ all:coinsState().allListings,
 crypto:coinsState().allBybitSymbols,
 new:coinsState().newListings,
 innovation:coinsState().innovationListings,
+usdc:coinsState().usdcListings,
 stocks:coinsState().stockListings,
+indices:coinsState().indicesListings,
 commodities:coinsState().commodityListings,
 forex:coinsState().forexListings
 };
@@ -3676,10 +3709,10 @@ currentDataset
 )
 ){
 
-void import("./bybit-network-ui.js?v=2").then(m=>{
+void import("./bybit-network-ui.js?v=3").then(m=>{
 m.showBybitNetworkIssue(
 new Error(
-"История свечей Bybit пуста"
+`История свечей ${getActiveExchangeDefinition().name} пуста`
 )
 );
 });
@@ -3693,6 +3726,8 @@ loadSeq
 return;
 
 }
+
+clearBybitNetworkIssue();
 
 dispatchChartSwitchCandlesApply(
 currentSymbol,
@@ -5084,7 +5119,26 @@ currentDataset =
 
 }
 
-async function handleExchangeChanged(){
+async function handleExchangeChanged(
+e
+){
+
+const prevExchangeId =
+String(
+e?.detail?.previousExchangeId ||
+""
+).trim().toLowerCase();
+
+if(
+prevExchangeId &&
+currentSymbol
+){
+saveLastViewForExchange(
+prevExchangeId,
+currentSymbol,
+currentTF
+);
+}
 
 stopTickerStream();
 disconnectKlineStream();
@@ -5097,6 +5151,10 @@ syncCoinsMarketFilterOptions();
 coinsState().allListings =
 [];
 coinsState().allBybitSymbols =
+[];
+coinsState().usdcListings =
+[];
+coinsState().indicesListings =
 [];
 coinsState().newListings =
 [];
@@ -5127,12 +5185,40 @@ err
 }
 );
 
+if(
+hasUrlSymbol &&
+currentSymbol &&
+getCurrentSymbols().includes(
+currentSymbol
+)
+){
+applyUrlTimeframe();
+await loadSymbol(
+currentSymbol
+);
+return;
+}
+
+hasUrlSymbol = false;
+
+resolveSymbolForExchange(
+getActiveExchangeId()
+);
+
+applyUrlTimeframe();
+
+await loadSymbol(
+currentSymbol
+);
+
 }
 
 window.addEventListener(
 EXCHANGE_CHANGED_EVENT,
-()=>{
-void handleExchangeChanged();
+e=>{
+void handleExchangeChanged(
+e
+);
 }
 );
 

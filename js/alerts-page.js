@@ -49,7 +49,7 @@ import { formatPrice } from "./chart-import.js?v=43";
 import {
 EXCHANGE_CHANGED_EVENT,
 getActiveExchangeDefinition
-} from "./market-api.js?v=1";
+} from "./market-api.js?v=2";
 
 const tbody =
 document.getElementById("alerts-tbody");
@@ -724,6 +724,10 @@ render();
 
 window.addEventListener("alerts-changed", render);
 window.addEventListener("alerts-registry-pulled", render);
+window.addEventListener(
+EXCHANGE_CHANGED_EVENT,
+render
+);
 window.addEventListener(
 EXCHANGE_CHANGED_EVENT,
 render

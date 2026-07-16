@@ -18,6 +18,8 @@ urlExchangeId:"",
 favorites:null,
 allListings:[],
 allBybitSymbols:[],
+usdcListings:[],
+indicesListings:[],
 newListings:[],
 innovationListings:[],
 stockListings:[],
@@ -105,7 +107,9 @@ export const COINS_MARKETS = [
 "crypto",
 "new",
 "innovation",
+"usdc",
 "stocks",
+"indices",
 "commodities",
 "forex"
 ];

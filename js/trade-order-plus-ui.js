@@ -21,6 +21,10 @@ import {
 getTelegramChatId
 } from "./alerts-cloud-sync.js?v=111";
 
+import {
+getTradeExchangePolicy
+} from "./trade/exchanges/index.js?v=12";
+
 function tradingApi(){
 
 return window.cryptoTerminalDesktop?.trading;
@@ -278,7 +282,8 @@ if(
 !status?.configured
 ){
 window.alert(
-"Подключите API-ключи Bybit в настройках."
+getTradeExchangePolicy().emptyCredentialsHint ||
+"Подключите API-ключи биржи в настройках."
 );
 return false;
 }

@@ -12,14 +12,11 @@ require(
 "electron-log"
 );
 const {
-getStatus,
-saveCredentials,
-clearCredentials
-} =
-require(
-"./credentials.cjs"
-);
-const {
+getStatusFor,
+saveCredentialsFor,
+clearCredentialsFor,
+setActiveExchange,
+getActiveExchange,
 getWalletBalance,
 getPositions,
 getOpenOrders,
@@ -36,19 +33,23 @@ reconcileOrdersOnPositionClose,
 pingBybit,
 getClosedPnlHistory,
 getTradeDiaryDetail,
+getSymbolExecutionHistory,
 getSymbolPositionSettings,
-applySymbolPositionSettings
+applySymbolPositionSettings,
+getRateLimitBackoffMs
 } =
 require(
-"./bybit-rest.cjs"
+"./trading-router.cjs"
 );
 const {
 setTradingStreamTarget,
 startTradingStream,
 stopTradingStream,
 replayTradingStream,
+seedFromRest,
 removeStreamOrder,
-removeStreamPosition
+removeStreamPosition,
+upsertStreamPosition
 } =
 require(
 "./trading-stream.cjs"
@@ -66,9 +67,69 @@ require(
 function registerTradingIpc(){
 
 ipcMain.handle(
+"trading:setActiveExchange",
+(
+_event,
+payload
+)=>{
+
+const prevId =
+getActiveExchange();
+const exchangeId =
+setActiveExchange(
+payload?.exchangeId
+);
+
+try{
+
+if(
+prevId !==
+exchangeId
+){
+stopTradingStream();
+startTradingStream();
+}else{
+startTradingStream();
+}
+
+}catch(
+err
+){
+log.warn(
+"trading:setActiveExchange stream:",
+err.message
+);
+}
+
+return {
+ok:
+true,
+exchangeId,
+...getStatusFor({
+exchangeId
+})
+};
+
+}
+);
+
+ipcMain.handle(
 "trading:getStatus",
+(
+_event,
+payload
+)=>{
+return getStatusFor(
+payload ||
+{}
+);
+}
+);
+
+ipcMain.handle(
+"trading:getRateLimitBackoffMs",
 ()=>{
-return getStatus();
+return getRateLimitBackoffMs();
 }
 );
 
@@ -80,7 +141,19 @@ payload
 )=>{
 
 try{
-saveCredentials(
+const exchangeId =
+payload?.exchangeId;
+
+if(
+exchangeId
+){
+setActiveExchange(
+exchangeId
+);
+}
+
+const status =
+saveCredentialsFor(
 payload ||
 {}
 );
@@ -101,14 +174,14 @@ streamWarning:
 true,
 message:
 "Ключи сохранены. Поток позиций подключится после перезапуска приложения.",
-...getStatus()
+...status
 };
 }
 
 return {
 ok:
 true,
-...getStatus()
+...status
 };
 }catch(
 err
@@ -130,15 +203,22 @@ err.message
 
 ipcMain.handle(
 "trading:clearKeys",
-()=>{
+(
+_event,
+payload
+)=>{
 
 try{
-clearCredentials();
+const status =
+clearCredentialsFor(
+payload ||
+{}
+);
 stopTradingStream();
 return {
 ok:
 true,
-...getStatus()
+...status
 };
 }catch(
 err
@@ -160,10 +240,16 @@ err.message
 
 ipcMain.handle(
 "trading:getWalletBalance",
-async()=>{
+async(
+_event,
+payload
+)=>{
 
 try{
-return await getWalletBalance();
+return await getWalletBalance(
+payload ||
+{}
+);
 }catch(
 err
 ){
@@ -184,10 +270,16 @@ err.message
 
 ipcMain.handle(
 "trading:getPositions",
-async()=>{
+async(
+_event,
+payload
+)=>{
 
 try{
-return await getPositions();
+return await getPositions(
+payload ||
+{}
+);
 }catch(
 err
 ){
@@ -208,10 +300,16 @@ err.message
 
 ipcMain.handle(
 "trading:getOpenOrders",
-async()=>{
+async(
+_event,
+payload
+)=>{
 
 try{
-return await getOpenOrders();
+return await getOpenOrders(
+payload ||
+{}
+);
 }catch(
 err
 ){
@@ -240,7 +338,8 @@ payload
 try{
 const result =
 await closePositionAtMarket(
-payload?.symbol
+payload ||
+{}
 );
 
 if(
@@ -249,7 +348,8 @@ false &&
 payload?.symbol
 ){
 removeStreamPosition(
-payload.symbol
+payload.symbol,
+payload
 );
 }
 
@@ -281,7 +381,8 @@ payload
 
 try{
 return await getPosition(
-payload?.symbol
+payload ||
+{}
 );
 }catch(
 err
@@ -310,8 +411,8 @@ payload
 
 try{
 return await cancelPositionStop(
-payload?.symbol,
-payload?.target
+payload ||
+{}
 );
 }catch(
 err
@@ -340,9 +441,8 @@ payload
 
 try{
 return await setPositionStop(
-payload?.symbol,
-payload?.target,
-payload?.price
+payload ||
+{}
 );
 }catch(
 err
@@ -393,6 +493,36 @@ err.message
 );
 
 ipcMain.handle(
+"trading:amendOrder",
+async(
+_event,
+payload
+)=>{
+
+try{
+return await amendTradeOrder(
+payload ||
+{}
+);
+}catch(
+err
+){
+log.warn(
+"trading:amendOrder:",
+err.message
+);
+return {
+ok:
+false,
+message:
+err.message
+};
+}
+
+}
+);
+
+ipcMain.handle(
 "trading:cancelOrder",
 async(
 _event,
@@ -402,8 +532,8 @@ payload
 try{
 const result =
 await cancelTradeOrder(
-payload?.symbol,
-payload?.orderId
+payload ||
+{}
 );
 
 if(
@@ -445,8 +575,8 @@ payload
 try{
 const result =
 await reconcileOrdersOnPositionOpen(
-payload?.symbol,
-payload?.positionSide
+payload ||
+{}
 );
 
 if(
@@ -511,7 +641,8 @@ payload
 try{
 const result =
 await reconcileOrdersOnPositionClose(
-payload?.symbol
+payload ||
+{}
 );
 
 if(
@@ -572,11 +703,23 @@ payload
 )=>{
 
 try{
-return await openPositionAtMarket(
-payload?.symbol,
-payload?.side,
-payload?.volumeUsdt
+const result =
+await openPositionAtMarket(
+payload ||
+{}
 );
+
+if(
+result?.ok !==
+false &&
+result?.position
+){
+upsertStreamPosition(
+result.position
+);
+}
+
+return result;
 }catch(
 err
 ){
@@ -656,6 +799,36 @@ err.message
 );
 
 ipcMain.handle(
+"trading:getSymbolExecutions",
+async(
+_event,
+payload
+)=>{
+
+try{
+return await getSymbolExecutionHistory(
+payload ||
+{}
+);
+}catch(
+err
+){
+log.warn(
+"trading:getSymbolExecutions:",
+err.message
+);
+return {
+ok:
+false,
+message:
+err.message
+};
+}
+
+}
+);
+
+ipcMain.handle(
 "trading:getTradeDiaryDetail",
 async(
 _event,
@@ -694,7 +867,8 @@ payload
 
 try{
 return await getSymbolPositionSettings(
-payload?.symbol
+payload ||
+{}
 );
 }catch(
 err
@@ -723,13 +897,8 @@ payload
 
 try{
 return await applySymbolPositionSettings(
-payload?.symbol,
-{
-leverage:
-payload?.leverage,
-marginMode:
-payload?.marginMode
-}
+payload ||
+{}
 );
 }catch(
 err

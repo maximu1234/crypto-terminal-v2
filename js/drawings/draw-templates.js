@@ -35,6 +35,184 @@ Object.freeze([
 "rectangle"
 ]);
 
+const STANDARD_FIB_TEMPLATE_NAME =
+"Стандартная фиба";
+
+/** Colors from the Standard Fib settings screenshot. */
+const STANDARD_FIB_COLORS =
+Object.freeze({
+mustard:
+"#b49b40",
+maroon:
+"#6b3539",
+brown:
+"#896739",
+white:
+"#ffffff",
+grey:
+"#787c87",
+purple:
+"#673180",
+green:
+"#7bb972"
+});
+
+function standardFibLevel(
+v,
+enabled,
+color
+){
+
+return {
+v,
+enabled:
+!!enabled,
+fillBg:
+false,
+lineStyle:
+"solid",
+lineWidth:
+1,
+color
+};
+
+}
+
+/**
+ * Built-in fib preset — matches «Стандартная фиба» settings panel layout
+ * (18 slots, 2-column grid order).
+ */
+export function buildStandardFibTemplateSnapshot(){
+
+return {
+color:
+STROKE,
+lineWidth:
+1,
+fibDefaultsVersion:
+FIB_TOOL_DEFAULTS_VERSION,
+fibShowTrendLine:
+false,
+fibLevels:[
+standardFibLevel(
+0,
+true,
+STANDARD_FIB_COLORS.mustard
+),
+standardFibLevel(
+0.236,
+true,
+STANDARD_FIB_COLORS.maroon
+),
+standardFibLevel(
+0.382,
+true,
+STANDARD_FIB_COLORS.brown
+),
+standardFibLevel(
+0.5,
+true,
+STANDARD_FIB_COLORS.white
+),
+standardFibLevel(
+0.618,
+true,
+STANDARD_FIB_COLORS.brown
+),
+standardFibLevel(
+0.786,
+true,
+STANDARD_FIB_COLORS.maroon
+),
+standardFibLevel(
+1,
+true,
+STANDARD_FIB_COLORS.mustard
+),
+standardFibLevel(
+1.618,
+true,
+STANDARD_FIB_COLORS.maroon
+),
+standardFibLevel(
+0,
+false,
+STANDARD_FIB_COLORS.mustard
+),
+standardFibLevel(
+2.618,
+true,
+STANDARD_FIB_COLORS.grey
+),
+standardFibLevel(
+0,
+false,
+STANDARD_FIB_COLORS.green
+),
+standardFibLevel(
+3.618,
+true,
+STANDARD_FIB_COLORS.purple
+),
+standardFibLevel(
+0,
+false,
+STANDARD_FIB_COLORS.green
+),
+standardFibLevel(
+0,
+false,
+STANDARD_FIB_COLORS.white
+),
+standardFibLevel(
+0,
+false,
+STANDARD_FIB_COLORS.mustard
+),
+standardFibLevel(
+0,
+false,
+STANDARD_FIB_COLORS.white
+),
+standardFibLevel(
+0,
+false,
+STANDARD_FIB_COLORS.white
+),
+standardFibLevel(
+0,
+false,
+STANDARD_FIB_COLORS.white
+)
+]
+};
+
+}
+
+function listBuiltInTemplatesForType(
+type
+){
+
+if(
+type !==
+"fib"
+){
+return [];
+}
+
+return [
+{
+name:
+STANDARD_FIB_TEMPLATE_NAME,
+builtin:
+true,
+data:
+buildStandardFibTemplateSnapshot()
+}
+];
+
+}
+
 export function isTemplateEligibleType(
 type
 ){
@@ -104,21 +282,29 @@ type
 return [];
 }
 
+const builtIn =
+listBuiltInTemplatesForType(
+type
+);
+const builtInNames =
+new Set(
+builtIn.map(
+item=>
+item.name.trim().toLowerCase()
+)
+);
+
 const store =
 loadStore();
 
 const list =
 store[type];
 
-if(
-!Array.isArray(
+const saved =
+Array.isArray(
 list
 )
-){
-return [];
-}
-
-return list
+? list
 .filter(
 item=>
 item &&
@@ -127,14 +313,25 @@ typeof item.name ===
 item.name.trim() &&
 item.data &&
 typeof item.data ===
-"object"
+"object" &&
+!builtInNames.has(
+item.name.trim().toLowerCase()
+)
 )
 .map(
 item=>({
 name: item.name.trim(),
-data: item.data
+data: item.data,
+builtin:
+false
 })
-);
+)
+: [];
+
+return [
+...builtIn,
+...saved
+];
 
 }
 
@@ -272,7 +469,8 @@ idx
 ];
 
 if(
-!entry
+!entry ||
+entry.builtin
 ){
 return false;
 }

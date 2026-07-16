@@ -1,8 +1,13 @@
 import {
 loadMarketSymbols,
 getActiveExchangeDefinition,
+getActiveExchangeId,
 EXCHANGE_CHANGED_EVENT
-} from "./market-api.js?v=1";
+} from "./market-api.js?v=2";
+
+import {
+buildAlertChartUrl
+} from "./alert-deep-link-url.js?v=2";
 
 import {
 BYBIT_LISTINGS_PAGE_WINDOW_MS,
@@ -75,6 +80,12 @@ document.createElement("a");
 
 link.className = "listing-symbol";
 link.href =
+buildAlertChartUrl({
+symbol:
+row.symbol,
+exchangeId:
+getActiveExchangeId()
+}) ||
 `/terminal.html?symbol=${encodeURIComponent(row.symbol)}`;
 link.textContent = row.symbol;
 

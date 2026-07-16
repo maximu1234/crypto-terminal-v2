@@ -3,16 +3,21 @@
  */
 import {
 coinsState
-} from "./terminal/terminal-state.js?v=10";
+} from "./terminal/terminal-state.js?v=11";
+
+import {
+EXCHANGE_CHANGED_EVENT,
+getActiveExchangeId
+} from "./market-api.js?v=2";
 
 import {
 buildMarkersForCandles,
 normalizeSymbol
-} from "./trade-markers-sandbox/marker-math.js?v=8";
+} from "./trade-markers-sandbox/marker-math.js?v=9";
 
 import {
 fetchTradesForSymbol
-} from "./trade-markers-sandbox/trade-fetch.js?v=9";
+} from "./trade-markers-sandbox/trade-fetch.js?v=12";
 
 let showMarkers =
 false;
@@ -80,14 +85,44 @@ if(
 return;
 }
 
-try{
-series.setMarkers(
+const markers =
 showMarkers
 ? cachedMarkers
-: []
+: [];
+
+try{
+if(
+typeof series.setMarkers ===
+"function"
+){
+series.setMarkers(
+markers
 );
-}catch{
-/* ignore */
+}else if(
+typeof LightweightCharts !==
+"undefined" &&
+typeof LightweightCharts.createSeriesMarkers ===
+"function"
+){
+if(
+series.__tradeMarkersPlugin?.detach
+){
+series.__tradeMarkersPlugin.detach();
+}
+series.__tradeMarkersPlugin =
+LightweightCharts.createSeriesMarkers(
+series,
+markers
+);
+}
+}catch(
+err
+){
+console.warn(
+"[trade-chart-markers]",
+err?.message ||
+err
+);
 }
 
 }
@@ -110,8 +145,11 @@ force =
 false
 ){
 
+const exchangeId =
+getActiveExchangeId() ||
+"bybit";
 const key =
-`${symbol}:${chartStartSec}`;
+`${exchangeId}:${symbol}:${chartStartSec}`;
 
 if(
 cachedTradeData?.ok &&
@@ -214,6 +252,18 @@ if(
 cachedMarkers =
 [];
 applyMarkers();
+const box =
+ensureCheckbox();
+const label =
+box?.closest(
+"label"
+);
+if(
+label
+){
+label.title =
+`История сделок — ${tradeData?.message || "ошибка"}`;
+}
 return {
 markerCount:
 0,
@@ -234,6 +284,22 @@ candles
 );
 
 applyMarkers();
+
+const box =
+ensureCheckbox();
+const label =
+box?.closest(
+"label"
+);
+
+if(
+label
+){
+label.title =
+tradeData.message
+? `История сделок — ${tradeData.message}`
+: `История сделок — сделок ${tradeData.trades?.length || 0}, маркеров ${cachedMarkers.length}`;
+}
 
 return {
 markerCount:
@@ -274,6 +340,10 @@ label.className =
 "trade-chart-markers-toggle";
 label.title =
 "История сделок";
+label.setAttribute(
+"aria-label",
+"История сделок"
+);
 label.innerHTML =
 `<input type="checkbox" id="trade-chart-markers-show" aria-label="История сделок" />`;
 
@@ -437,6 +507,27 @@ onCandlesLoaded
 window.addEventListener(
 "chart-switch-start",
 onChartSwitchStart
+);
+
+window.addEventListener(
+EXCHANGE_CHANGED_EVENT,
+()=>{
+clearTradeCache();
+if(
+showMarkers
+){
+void rebuildMarkers(
+{
+forceTrades:
+true
+}
+);
+}else{
+cachedMarkers =
+[];
+applyMarkers();
+}
+}
 );
 
 }

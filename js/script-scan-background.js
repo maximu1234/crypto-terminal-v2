@@ -5,14 +5,21 @@
  */
 import {
 createPattern12Scanner,
-PATTERN_SCAN_ALL_TFS
-} from "./pattern-12-scanner.js?v=15";
+PATTERN_SCAN_ALL_TFS,
+filterPatternScanRowsBySide,
+normalizePatternScanSideFilter
+} from "./pattern-12-scanner.js?v=16";
 
 import {
 loadScriptPageState,
 saveScriptPageState,
 periodMsById
-} from "./script-page-storage.js?v=9";
+} from "./script-page-storage.js?v=11";
+
+import {
+EXCHANGE_CHANGED_EVENT,
+getActiveExchangeId
+} from "./market-api.js?v=2";
 
 export const SCRIPT_SCAN_BG_EVENT =
 "script-scan-bg-update";
@@ -20,7 +27,10 @@ export const SCRIPT_SCAN_BG_EVENT =
 const WATCHDOG_MS =
 20_000;
 
-const SCRIPT_SCAN_JOB_KEY =
+const SCRIPT_SCAN_JOB_KEY_PREFIX =
+"script_scan_job_v1";
+
+const SCRIPT_SCAN_JOB_LEGACY_KEY =
 "script_scan_job_v1";
 
 const STALE_JOB_MS =
@@ -37,12 +47,42 @@ let visibilityBound =
 false;
 let pageShowBound =
 false;
+let exchangeBound =
+false;
 let scanner =
 null;
 let localRunnerActive =
 false;
 let localRunnerGen =
 0;
+
+function normalizeExchangeId(
+exchangeId
+){
+
+const id =
+String(
+exchangeId ||
+""
+).trim().toLowerCase();
+
+return id ===
+"bingx"
+? "bingx"
+: "bybit";
+
+}
+
+function scanJobStorageKey(
+exchangeId
+){
+
+return `${SCRIPT_SCAN_JOB_KEY_PREFIX}:${normalizeExchangeId(
+exchangeId ||
+getActiveExchangeId()
+)}`;
+
+}
 
 function isDesktopShell(){
 
@@ -97,26 +137,69 @@ return state.rows;
 
 }
 
-function readScanJob(){
+function readScanJob(
+exchangeId
+){
+
+const key =
+scanJobStorageKey(
+exchangeId
+);
 
 try{
 const raw =
 JSON.parse(
 localStorage.getItem(
-SCRIPT_SCAN_JOB_KEY
+key
 ) ||
 "null"
 );
 
 if(
-!raw ||
-typeof raw !==
+raw &&
+typeof raw ===
 "object"
 ){
-return null;
+return raw;
 }
 
-return raw;
+/* One-time migrate legacy unscoped job → bybit. */
+if(
+normalizeExchangeId(
+exchangeId ||
+getActiveExchangeId()
+) ===
+"bybit"
+){
+
+const legacy =
+JSON.parse(
+localStorage.getItem(
+SCRIPT_SCAN_JOB_LEGACY_KEY
+) ||
+"null"
+);
+
+if(
+legacy &&
+typeof legacy ===
+"object"
+){
+localStorage.setItem(
+key,
+JSON.stringify(
+legacy
+)
+);
+localStorage.removeItem(
+SCRIPT_SCAN_JOB_LEGACY_KEY
+);
+return legacy;
+}
+
+}
+
+return null;
 
 }catch{
 return null;
@@ -125,8 +208,14 @@ return null;
 }
 
 function writeScanJob(
-job
+job,
+exchangeId
 ){
+
+const key =
+scanJobStorageKey(
+exchangeId
+);
 
 try{
 
@@ -134,13 +223,13 @@ if(
 !job
 ){
 localStorage.removeItem(
-SCRIPT_SCAN_JOB_KEY
+key
 );
 return;
 }
 
 localStorage.setItem(
-SCRIPT_SCAN_JOB_KEY,
+key,
 JSON.stringify(
 job
 )
@@ -373,7 +462,7 @@ mode,
 tfs,
 lookbackBars,
 sideFilter =
-"both",
+"all",
 clearRows =
 false
 }
@@ -399,7 +488,10 @@ gen,
 tfs:
 tfs.slice(),
 lookbackBars,
-sideFilter,
+sideFilter:
+normalizePatternScanSideFilter(
+sideFilter
+),
 done:
 0,
 total:
@@ -508,7 +600,11 @@ job.done
 ) ||
 0,
 seedRows:
+filterPatternScanRowsBySide(
 loadScriptPageState().rows,
+job.sideFilter ||
+"both"
+),
 onHit(
 _hit,
 allRows
@@ -940,20 +1036,6 @@ if(
 return null;
 }
 
-const nextRunAt =
-Number(
-state.auto?.nextRunAt
-) ||
-0;
-
-if(
-nextRunAt &&
-Date.now() + 500 <
-nextRunAt
-){
-return null;
-}
-
 if(
 isPatternScanJobActive() ||
 getScanner().isRunning()
@@ -986,8 +1068,7 @@ tf
 lookbackBars:
 state.searchDepth,
 sideFilter:
-state.sideFilter ||
-"both",
+state.searchSide,
 clearRows:
 true
 }
@@ -1013,6 +1094,9 @@ return null;
 
 stopActivePatternScan();
 
+const state =
+loadScriptPageState();
+
 beginScanJob(
 {
 mode:
@@ -1021,11 +1105,10 @@ tfs:
 PATTERN_SCAN_ALL_TFS.slice(),
 lookbackBars:
 lookbackBars ??
-loadScriptPageState().searchDepth,
+state.searchDepth,
 sideFilter:
 sideFilter ??
-loadScriptPageState().sideFilter ??
-"both",
+state.searchSide,
 clearRows:
 true
 }
@@ -1111,6 +1194,55 @@ state
 
 }
 
+function onExchangeChanged(){
+
+localRunnerGen++;
+stopActivePatternScan();
+clearScriptScanTimer();
+
+dispatchUpdate(
+{
+type:
+"exchange-changed",
+exchangeId:
+getActiveExchangeId()
+}
+);
+
+const state =
+loadScriptPageState();
+
+if(
+state.auto.active
+){
+/* Reschedule against the new exchange's results/job bucket. */
+scheduleScriptScanRun(
+{
+immediate:
+false
+}
+);
+}
+
+}
+
+function bindExchangeSync(){
+
+if(
+exchangeBound
+){
+return;
+}
+
+exchangeBound =
+true;
+window.addEventListener(
+EXCHANGE_CHANGED_EVENT,
+onExchangeChanged
+);
+
+}
+
 export function resumeScriptScanBackgroundJob(){
 
 if(
@@ -1121,6 +1253,7 @@ return;
 
 bindVisibilitySync();
 bindPageShowSync();
+bindExchangeSync();
 discardStaleScanJob();
 
 const job =

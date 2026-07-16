@@ -2,8 +2,9 @@
  * Горизонтальный объём — крупные лимитные заявки у ценовой шкалы.
  */
 import {
-loadBybitOrderbook
-} from "../api.js?v=29";
+EXCHANGE_CHANGED_EVENT,
+loadMarketOrderbook
+} from "../market-api.js?v=2";
 
 const POLL_MS =
 2500;
@@ -231,7 +232,7 @@ true;
 
 try{
 book =
-await loadBybitOrderbook(
+await loadMarketOrderbook(
 symbol,
 BOOK_LIMIT
 );
@@ -566,6 +567,25 @@ void refreshBook();
 
 }
 
+function onExchangeChanged(){
+
+if(
+!enabled
+){
+return;
+}
+
+book =
+null;
+void refreshBook();
+
+}
+
+window.addEventListener(
+EXCHANGE_CHANGED_EVENT,
+onExchangeChanged
+);
+
 return {
 id:
 HORIZONTAL_VOLUME_ID,
@@ -577,6 +597,10 @@ isEnabled:()=>
 enabled,
 onSymbolChange,
 destroy:()=>{
+window.removeEventListener(
+EXCHANGE_CHANGED_EVENT,
+onExchangeChanged
+);
 disable();
 }
 };

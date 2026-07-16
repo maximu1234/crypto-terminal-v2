@@ -1,8 +1,12 @@
 import { didCrossWithCandle, didCrossLine } from "./cross.js";
 import { executeAlertTrigger } from "./execute-trigger.js";
-import { normalizeBybitSymbol } from "./bybit-symbol.js";
+import {
+normalizeAlertSymbol,
+normalizeExchangeId,
+symbolsMatch
+} from "./exchange-symbol.js";
 import { normalizeWorkerTf, alertCreatedOnBar } from "./tf-normalize.js";
-import { fetchRecentKlines, fetchLastPrice } from "./bybit-kline-fetch.js";
+import { fetchRecentKlines, fetchLastPrice } from "./market-fetch.js";
 
 function normalizeBarTimeSec(time) {
 
@@ -29,7 +33,11 @@ const lastCandleTimeByAlert = new Map();
 const lastTickerPriceByAlert = new Map();
 
 export function alertKey(row) {
-  return `${row.user_id}::${normalizeBybitSymbol(row.symbol)}::${row.shape_id}`;
+  const ex =
+    normalizeExchangeId(
+      row.exchange_id
+    );
+  return `${ex}::${row.user_id}::${normalizeAlertSymbol(row.symbol, ex)}::${row.shape_id}`;
 }
 
 export function pruneWatchState(activeAlerts) {
@@ -67,16 +75,23 @@ export async function seedMissingAlertBaselines(
     }
 
     const sym =
-      normalizeBybitSymbol(alert.symbol);
+      normalizeAlertSymbol(
+        alert.symbol,
+        alert.exchange_id
+      );
     const tf =
       normalizeWorkerTf(alert.tf);
+    const ex =
+      normalizeExchangeId(
+        alert.exchange_id
+      );
     const topicKey =
-      `${sym}::${tf}`;
+      `${ex}::${sym}::${tf}`;
 
     if (!topics.has(topicKey)) {
       topics.set(
         topicKey,
-        { sym, tf, keys: [] }
+        { sym, tf, ex, keys: [] }
       );
     }
 
@@ -85,13 +100,14 @@ export async function seedMissingAlertBaselines(
   }
 
   await Promise.all(
-    [...topics.values()].map(async ({ sym, tf, keys }) => {
+    [...topics.values()].map(async ({ sym, tf, keys, ex }) => {
 
       const candles =
         await fetchRecentKlines(
           sym,
           tf,
-          2
+          2,
+          ex
         );
 
       if (!candles.length) {
@@ -181,27 +197,39 @@ export async function seedTickerBaselines(
     }
 
     const sym =
-      normalizeBybitSymbol(alert.symbol);
+      normalizeAlertSymbol(
+        alert.symbol,
+        alert.exchange_id
+      );
 
     if (!bySymbol.has(sym)) {
-      bySymbol.set(sym, []);
+      bySymbol.set(sym, {
+        exchangeId:
+          normalizeExchangeId(
+            alert.exchange_id
+          ),
+        keys: []
+      });
     }
 
-    bySymbol.get(sym).push(key);
+    bySymbol.get(sym).keys.push(key);
 
   }
 
   await Promise.all(
-    [...bySymbol.entries()].map(async ([sym, keys]) => {
+    [...bySymbol.entries()].map(async ([sym, bucket]) => {
 
       const price =
-        await fetchLastPrice(sym);
+        await fetchLastPrice(
+          sym,
+          bucket.exchangeId
+        );
 
       if (!Number.isFinite(price)) {
         return;
       }
 
-      for (const key of keys) {
+      for (const key of bucket.keys) {
         if (!lastTickerPriceByAlert.has(key)) {
           lastTickerPriceByAlert.set(key, price);
         }
@@ -283,11 +311,14 @@ export async function evaluateAlertsForTicker(
   activeAlerts,
   symbol,
   price,
-  hubPrev
+  hubPrev,
+  exchangeId = "bybit"
 ) {
 
-  const sym =
-    normalizeBybitSymbol(symbol);
+  const ex =
+    normalizeExchangeId(
+      exchangeId
+    );
   const curr =
     Number(price);
 
@@ -297,7 +328,22 @@ export async function evaluateAlertsForTicker(
 
   for (const [key, alert] of activeAlerts) {
 
-    if (normalizeBybitSymbol(alert.symbol) !== sym) {
+    if (
+      normalizeExchangeId(
+        alert.exchange_id
+      ) !==
+      ex
+    ) {
+      continue;
+    }
+
+    if (
+      !symbolsMatch(
+        alert.symbol,
+        symbol,
+        ex
+      )
+    ) {
       continue;
     }
 
@@ -353,16 +399,23 @@ export async function sweepAlertsWithMarket(
   for (const [key, alert] of activeAlerts) {
 
     const sym =
-      normalizeBybitSymbol(alert.symbol);
+      normalizeAlertSymbol(
+        alert.symbol,
+        alert.exchange_id
+      );
     const tf =
       normalizeWorkerTf(alert.tf);
+    const ex =
+      normalizeExchangeId(
+        alert.exchange_id
+      );
     const topicKey =
-      `${sym}::${tf}`;
+      `${ex}::${sym}::${tf}`;
 
     if (!byTopic.has(topicKey)) {
       byTopic.set(
         topicKey,
-        { sym, tf, items: [] }
+        { sym, tf, ex, items: [] }
       );
     }
 
@@ -374,21 +427,24 @@ export async function sweepAlertsWithMarket(
   }
 
   await Promise.all(
-    [...byTopic.values()].map(async ({ sym, tf, items }) => {
+    [...byTopic.values()].map(async ({ sym, tf, ex, items }) => {
 
       const candles =
         await fetchRecentKlines(
           sym,
           tf,
-          3
+          3,
+          ex
         );
-
       const lastBar =
         candles.length
           ? candles[candles.length - 1]
           : null;
       const restPrice =
-        await fetchLastPrice(sym);
+        await fetchLastPrice(
+          sym,
+          ex
+        );
 
       for (const { key, alert } of items) {
 
@@ -523,11 +579,14 @@ export async function evaluateAlertsForCandle(
   activeAlerts,
   symbol,
   tf,
-  candle
+  candle,
+  exchangeId = "bybit"
 ) {
 
-  const sym =
-    normalizeBybitSymbol(symbol);
+  const ex =
+    normalizeExchangeId(
+      exchangeId
+    );
   const tfNorm =
     normalizeWorkerTf(tf);
   const close = Number(candle?.close);
@@ -538,7 +597,22 @@ export async function evaluateAlertsForCandle(
 
   for (const [key, alert] of activeAlerts) {
 
-    if (normalizeBybitSymbol(alert.symbol) !== sym) {
+    if (
+      normalizeExchangeId(
+        alert.exchange_id
+      ) !==
+      ex
+    ) {
+      continue;
+    }
+
+    if (
+      !symbolsMatch(
+        alert.symbol,
+        symbol,
+        ex
+      )
+    ) {
       continue;
     }
 

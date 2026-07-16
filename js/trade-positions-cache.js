@@ -3,12 +3,13 @@
  */
 import {
 maybeApplyAutoStopsForNewPosition,
-clearDismissedStops
-} from "./trade-auto-stops.js?v=3";
+clearDismissedStops,
+isStopDismissed
+} from "./trade-auto-stops.js?v=14";
 
 import {
 maybeReconcileOrdersOnPositionOpen
-} from "./trade-position-open-orders.js?v=1";
+} from "./trade-position-open-orders.js?v=4";
 
 import {
 maybeReconcileOrdersOnPositionClose
@@ -21,11 +22,21 @@ isTradePositionSoundBaselineReady,
 resetTradePositionSoundBaseline
 } from "./trade-position-sounds.js?v=3";
 
+import {
+getTradeExchangePolicy
+} from "./trade/exchanges/index.js?v=12";
+
 const cacheBySymbol =
+new Map();
+
+const recentlyClosedUntilBySymbol =
 new Map();
 
 let positionsDispatchRaf =
 0;
+
+let lastPositionsSyncError =
+null;
 
 function normalizeSymbol(
 symbol
@@ -38,6 +49,167 @@ symbol ||
 /\.P$/i,
 ""
 ).trim().toUpperCase();
+
+}
+
+export function markTradePositionRecentlyClosed(
+symbol
+){
+
+const sym =
+normalizeSymbol(
+symbol
+);
+
+if(
+!sym
+){
+return;
+}
+
+recentlyClosedUntilBySymbol.set(
+sym,
+Date.now() +
+getTradeExchangePolicy().recentlyClosedMs
+);
+
+}
+
+export function isTradePositionRecentlyClosed(
+symbolOrKey,
+options =
+{}
+){
+
+const policy =
+getTradeExchangePolicy();
+const raw =
+String(
+symbolOrKey ||
+""
+).trim();
+
+if(
+!raw
+){
+return false;
+}
+
+/* Prefer side-key when row/options provided (hedge). */
+if(
+typeof policy.positionMapKey ===
+"function" &&
+(
+options.positionSide ||
+options.side ||
+options.position ||
+(
+typeof options ===
+"object" &&
+options.symbol
+)
+)
+){
+const key =
+policy.positionMapKey({
+symbol:
+options.symbol ||
+raw,
+positionSide:
+options.positionSide ||
+options.position?.positionSide,
+side:
+options.side ||
+options.position?.side
+});
+
+if(
+key &&
+isTradePositionRecentlyClosedKey(
+key
+)
+){
+return true;
+}
+
+/* Hedge: bare-symbol marks must not hide the other side. */
+if(
+key &&
+key !==
+normalizeSymbol(
+options.symbol ||
+raw
+)
+){
+return false;
+}
+
+}
+
+return isTradePositionRecentlyClosedKey(
+raw
+);
+
+}
+
+function isTradePositionRecentlyClosedKey(
+key
+){
+
+const sym =
+normalizeSymbol(
+key
+);
+
+if(
+!sym
+){
+return false;
+}
+
+const until =
+recentlyClosedUntilBySymbol.get(
+sym
+);
+
+if(
+!until
+){
+return false;
+}
+
+if(
+Date.now() >
+until
+){
+recentlyClosedUntilBySymbol.delete(
+sym
+);
+return false;
+}
+
+return true;
+
+}
+
+export function clearTradePositionRecentlyClosed(
+symbolOrKey
+){
+
+const key =
+normalizeSymbol(
+symbolOrKey
+);
+
+if(
+!key
+){
+return;
+}
+
+recentlyClosedUntilBySymbol.delete(
+key
+);
 
 }
 
@@ -120,8 +292,205 @@ row?.side ||
 
 }
 
+function mergePositionStops(
+prev,
+next
+){
+
+if(
+!prev ||
+!next
+){
+return next;
+}
+
+if(
+String(
+prev.side ||
+""
+).trim() !==
+String(
+next.side ||
+""
+).trim()
+){
+return next;
+}
+
+/* Prefer exchange enrichment when merge-from-prev is off, but still honor
+ * local dismiss so cancelled SL/TP do not reincarnate from lagging openOrders. */
+if(
+!getTradeExchangePolicy().mergePositionStopsFromPrev
+){
+let merged =
+{
+...next
+};
+
+if(
+isStopDismissed(
+next.symbol ||
+prev.symbol,
+prev,
+"sl"
+)
+){
+merged =
+{
+...merged,
+stopLoss:
+0
+};
+delete merged.slOrderId;
+}
+
+if(
+isStopDismissed(
+next.symbol ||
+prev.symbol,
+prev,
+"tp"
+)
+){
+merged =
+{
+...merged,
+takeProfit:
+0
+};
+delete merged.tpOrderId;
+}
+
+return merged;
+}
+
+let merged =
+{
+...next
+};
+const prevSl =
+Number(
+prev.stopLoss
+) ||
+0;
+const prevTp =
+Number(
+prev.takeProfit
+) ||
+0;
+let nextSl =
+Number(
+merged.stopLoss
+) ||
+0;
+let nextTp =
+Number(
+merged.takeProfit
+) ||
+0;
+
+if(
+isStopDismissed(
+next.symbol ||
+prev.symbol,
+prev,
+"sl"
+)
+){
+merged =
+{
+...merged,
+stopLoss:
+0
+};
+delete merged.slOrderId;
+nextSl =
+0;
+}
+
+if(
+isStopDismissed(
+next.symbol ||
+prev.symbol,
+prev,
+"tp"
+)
+){
+merged =
+{
+...merged,
+takeProfit:
+0
+};
+delete merged.tpOrderId;
+nextTp =
+0;
+}
+
+if(
+nextSl <=
+0 &&
+prevSl >
+0 &&
+!isStopDismissed(
+next.symbol ||
+prev.symbol,
+prev,
+"sl"
+)
+){
+merged =
+{
+...merged,
+stopLoss:
+prevSl
+};
+
+if(
+prev.slOrderId
+){
+merged.slOrderId =
+prev.slOrderId;
+}
+
+}
+
+if(
+nextTp <=
+0 &&
+prevTp >
+0 &&
+!isStopDismissed(
+next.symbol ||
+prev.symbol,
+prev,
+"tp"
+)
+){
+merged =
+{
+...merged,
+takeProfit:
+prevTp
+};
+
+if(
+prev.tpOrderId
+){
+merged.tpOrderId =
+prev.tpOrderId;
+}
+
+}
+
+return merged;
+
+}
+
 export function getCachedPosition(
-symbol
+symbol,
+options =
+{}
 ){
 
 const sym =
@@ -135,10 +504,152 @@ if(
 return null;
 }
 
-return cacheBySymbol.get(
+const policy =
+getTradeExchangePolicy();
+const hintKey =
+typeof policy.positionMapKey ===
+"function"
+? policy.positionMapKey({
+symbol:
+sym,
+positionSide:
+options.positionSide,
+side:
+options.side
+})
+: "";
+
+if(
+hintKey
+){
+const hinted =
+cacheBySymbol.get(
+hintKey
+);
+
+if(
+hinted
+){
+return hinted;
+}
+}
+
+const direct =
+cacheBySymbol.get(
 sym
-) ||
-null;
+);
+
+if(
+direct
+){
+return direct;
+}
+
+const matches =
+[];
+
+for(
+const [
+key,
+row
+] of cacheBySymbol
+){
+
+if(
+!policy.keysMatchSymbol?.(
+key,
+sym
+)
+){
+continue;
+}
+
+if(
+options.positionSide ||
+options.side
+){
+const rowKey =
+typeof policy.positionMapKey ===
+"function"
+? policy.positionMapKey(
+row
+)
+: key;
+
+if(
+hintKey &&
+rowKey !==
+hintKey
+){
+continue;
+}
+
+return row;
+}
+
+matches.push(
+row
+);
+
+}
+
+if(
+matches.length ===
+1
+){
+return matches[
+0
+];
+}
+
+/* Hedge: do not guess when LONG and SHORT both open. */
+return null;
+
+}
+
+export function listCachedPositionsForSymbol(
+symbol
+){
+
+const sym =
+normalizeSymbol(
+symbol
+);
+
+if(
+!sym
+){
+return [];
+}
+
+const policy =
+getTradeExchangePolicy();
+const out =
+[];
+
+for(
+const [
+key,
+row
+] of cacheBySymbol
+){
+
+if(
+key ===
+sym ||
+policy.keysMatchSymbol?.(
+key,
+sym
+)
+){
+out.push(
+row
+);
+}
+
+}
+
+return out;
 
 }
 
@@ -349,19 +860,51 @@ const row of positions ||
 []
 ){
 
+const policy =
+getTradeExchangePolicy();
+const key =
+typeof policy.positionMapKey ===
+"function"
+? policy.positionMapKey(
+row
+)
+: normalizeSymbol(
+row?.symbol
+);
+
+if(
+!key
+){
+continue;
+}
+
 const sym =
 normalizeSymbol(
 row?.symbol
 );
 
 if(
-!sym
+isTradePositionRecentlyClosed(
+key
+)
 ){
+/* Stale REST after close also has size>0 — only our optimistic open clears tombstone. */
+if(
+row?._optimistic &&
+isActivePosition(
+row
+)
+){
+clearTradePositionRecentlyClosed(
+key
+);
+}else{
 continue;
+}
 }
 
 next.set(
-sym,
+key,
 row
 );
 }
@@ -416,6 +959,7 @@ sym,
 prev
 );
 dispatchPositionUpdate(
+prev?.symbol ||
 sym,
 null
 );
@@ -434,18 +978,25 @@ const prev =
 cacheBySymbol.get(
 sym
 );
+const rowWithStops =
+prev
+? mergePositionStops(
+prev,
+row
+)
+: row;
 const changed =
 !prev ||
 JSON.stringify(
 prev
 ) !==
 JSON.stringify(
-row
+rowWithStops
 );
 
 const isNewOpen =
 isActivePosition(
-row
+rowWithStops
 ) &&
 (
 !prev ||
@@ -459,12 +1010,12 @@ isActivePosition(
 prev
 ) &&
 !isActivePosition(
-row
+rowWithStops
 );
 
 cacheBySymbol.set(
 sym,
-row
+rowWithStops
 );
 
 if(
@@ -473,8 +1024,9 @@ changed
 listChanged =
 true;
 dispatchPositionUpdate(
+rowWithStops.symbol ||
 sym,
-row
+rowWithStops
 );
 
 if(
@@ -482,14 +1034,14 @@ isNewOpen &&
 !options.establishBaseline
 ){
 maybeReconcileOrdersOnPositionOpen(
-row.symbol ||
+rowWithStops.symbol ||
 sym,
-row
+rowWithStops
 );
 maybeApplyAutoStopsForNewPosition(
-row.symbol ||
+rowWithStops.symbol ||
 sym,
-row
+rowWithStops
 );
 }
 
@@ -498,7 +1050,7 @@ isClosed &&
 !options.establishBaseline
 ){
 maybeReconcileOrdersOnPositionClose(
-row.symbol ||
+rowWithStops.symbol ||
 sym,
 prev
 );
@@ -535,23 +1087,13 @@ const sym =
 normalizeSymbol(
 symbol
 );
-const prev =
-cacheBySymbol.get(
-sym
-);
-
-if(
-!prev
-){
-return false;
-}
-
 const mark =
 Number(
 markPrice
 );
 
 if(
+!sym ||
 !Number.isFinite(
 mark
 ) ||
@@ -561,64 +1103,284 @@ mark <=
 return false;
 }
 
-const prevMark =
-Number(
-prev.markPrice
-);
+const policy =
+getTradeExchangePolicy();
+let any =
+false;
+
+for(
+const [
+key,
+prev
+] of cacheBySymbol
+){
 
 if(
-Number.isFinite(
-prevMark
+!policy.keysMatchSymbol?.(
+key,
+sym
 ) &&
-Math.abs(
-mark -
-prevMark
-) <
-1e-12
+key !==
+sym
 ){
-return false;
+continue;
 }
-
-const pnl =
-calcUnrealisedPnl(
-prev.side,
-prev.avgPrice,
-mark,
-prev.size
-);
 
 const next =
 {
 ...prev,
 markPrice:
 mark,
-pnl,
+pnl:
+calcUnrealisedPnl(
+prev.side,
+prev.avgPrice,
+mark,
+prev.size
+),
 pnlFromMark:
 true
 };
 
-if(
-JSON.stringify(
-prev
-) ===
-JSON.stringify(
+cacheBySymbol.set(
+key,
 next
-)
+);
+dispatchPositionUpdate(
+prev.symbol ||
+sym,
+next
+);
+any =
+true;
+
+}
+
+if(
+any
+){
+scheduleDispatchAllPositions();
+}
+
+return any;
+
+}
+
+export function removeTradePositionFromCache(
+symbol,
+options =
+{}
+){
+
+const sym =
+normalizeSymbol(
+symbol
+);
+
+if(
+!sym
 ){
 return false;
 }
 
-cacheBySymbol.set(
+const policy =
+getTradeExchangePolicy();
+const hintKey =
+typeof policy.positionMapKey ===
+"function" &&
+(
+options.positionSide ||
+options.side ||
+options.position
+)
+? policy.positionMapKey({
+symbol:
 sym,
-next
+positionSide:
+options.positionSide ||
+options.position?.positionSide,
+side:
+options.side ||
+options.position?.side
+})
+: "";
+
+if(
+hintKey
+){
+markTradePositionRecentlyClosed(
+hintKey
+);
+
+const prev =
+cacheBySymbol.get(
+hintKey
+);
+
+if(
+prev
+){
+cacheBySymbol.delete(
+hintKey
+);
+clearDismissedStops(
+prev?.symbol ||
+sym,
+prev
 );
 dispatchPositionUpdate(
+prev?.symbol ||
 sym,
-next
+null
 );
 scheduleDispatchAllPositions();
-
+syncPositionSounds();
 return true;
+}
+
+/* Side was known but cache already empty — do not mark bare symbol. */
+scheduleDispatchAllPositions();
+syncPositionSounds();
+return true;
+
+}
+
+const policySideKeyed =
+typeof policy.positionMapKey ===
+"function" &&
+policy.positionMapKey({
+symbol:
+sym,
+positionSide:
+"LONG"
+}) !==
+policy.positionMapKey({
+symbol:
+sym
+});
+
+if(
+!policySideKeyed
+){
+markTradePositionRecentlyClosed(
+sym
+);
+}
+
+let removed =
+false;
+
+for(
+const [
+key,
+prev
+] of [
+...cacheBySymbol
+]
+){
+
+if(
+!policy.keysMatchSymbol?.(
+key,
+sym
+) &&
+key !==
+sym
+){
+continue;
+}
+
+markTradePositionRecentlyClosed(
+key
+);
+cacheBySymbol.delete(
+key
+);
+clearDismissedStops(
+prev?.symbol ||
+sym,
+prev
+);
+dispatchPositionUpdate(
+prev?.symbol ||
+sym,
+null
+);
+removed =
+true;
+
+}
+
+if(
+removed
+){
+scheduleDispatchAllPositions();
+/* UI close already confirmed — play sound now, not after exchange WS/REST lag. */
+syncPositionSounds();
+return true;
+}
+
+dispatchPositionUpdate(
+sym,
+null
+);
+return false;
+
+}
+
+export function upsertTradePositionInCache(
+position
+){
+
+const policy =
+getTradeExchangePolicy();
+const key =
+typeof policy.positionMapKey ===
+"function"
+? policy.positionMapKey(
+position
+)
+: normalizeSymbol(
+position?.symbol
+);
+
+if(
+!key ||
+!position
+){
+return false;
+}
+
+const prev =
+cacheBySymbol.get(
+key
+);
+const changed =
+!prev ||
+JSON.stringify(
+prev
+) !==
+JSON.stringify(
+position
+);
+
+cacheBySymbol.set(
+key,
+position
+);
+
+if(
+changed
+){
+dispatchPositionUpdate(
+position.symbol ||
+key,
+position
+);
+scheduleDispatchAllPositions();
+}
+
+return changed;
 
 }
 
@@ -646,6 +1408,12 @@ resetBaseline:
 true
 }
 );
+
+}
+
+export function getTradePositionsCacheSyncError(){
+
+return lastPositionsSyncError;
 
 }
 
@@ -694,14 +1462,37 @@ false
 }
 
 try{
+const policy =
+getTradeExchangePolicy();
 const result =
-await api.getPositions();
+await api.getPositions(
+policy.restPositionsForceRefresh
+? {
+forceRefresh:
+true
+}
+: {}
+);
 
 if(
 !result?.ok
 ){
+lastPositionsSyncError =
+result;
 return result;
 }
+
+if(
+result.stale ||
+result.rateLimited
+){
+lastPositionsSyncError =
+result;
+return result;
+}
+
+lastPositionsSyncError =
+null;
 
 applyPositionsList(
 result.positions ||

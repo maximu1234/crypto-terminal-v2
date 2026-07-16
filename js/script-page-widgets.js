@@ -15,8 +15,10 @@ SCREENER_VISIBLE_BARS
 } from "./chart-import.js?v=43";
 
 import {
-loadMarketHistory
-} from "./market-api.js?v=1";
+loadMarketHistory,
+getActiveExchangeId,
+getExchangeDefinition
+} from "./market-api.js?v=2";
 
 import {
 calculateRSI,
@@ -46,7 +48,7 @@ bindWidgetFlagGlobalListeners
 import {
 PATTERN_SCAN_TF_LABELS,
 PATTERN_SCAN_SIDE_LABELS
-} from "./pattern-12-scanner.js?v=15";
+} from "./pattern-12-scanner.js?v=16";
 
 let patternOverlayApi =
 null;
@@ -156,6 +158,15 @@ symbol ||
 /\.P$/i,
 ""
 );
+
+}
+
+function activeExchangeLabel(){
+
+return getExchangeDefinition(
+getActiveExchangeId()
+)?.name ||
+"";
 
 }
 
@@ -767,13 +778,28 @@ chartTf;
 root.dataset.scanTf =
 row.tf;
 
+const exchangeLabel =
+activeExchangeLabel();
+const metaParts =
+[
+tfLabel
+];
+
+if(
+exchangeLabel
+){
+metaParts.push(
+exchangeLabel
+);
+}
+
 root.innerHTML =
 `
 <div class="screener-widget-header">
 <div class="screener-header-left">
 ${getWidgetFlagHtml()}
 <div class="screener-symbol">${displaySymbol(row.symbol)}</div>
-<span class="script-widget-meta">${tfLabel}</span>
+<span class="script-widget-meta">${metaParts.join(" · ")}</span>
 <span class="script-widget-side ${sideClass}">${sideLabel}</span>
 </div>
 <div class="screener-header-right">
@@ -802,8 +828,13 @@ root.querySelector(
 ).onclick =
 event=>{
 event.stopPropagation();
+const exchangeId =
+encodeURIComponent(
+getActiveExchangeId() ||
+""
+);
 window.location.href =
-`/terminal.html?symbol=${encodeURIComponent(row.symbol)}&tf=${encodeURIComponent(chartTf)}`;
+`/terminal.html?symbol=${encodeURIComponent(row.symbol)}&tf=${encodeURIComponent(chartTf)}${exchangeId ? `&exchange=${exchangeId}` : ""}`;
 };
 
 const chartEl =

@@ -13,17 +13,17 @@ subscribeKline
 
 import {
 EXCHANGE_CHANGED_EVENT
-} from "./market-api.js?v=1";
-
-import {
-buildAlertChartUrl,
-gateAlertExchangeNavigation
-} from "./alert-deep-link-exchange.js?v=1";
+} from "./market-api.js?v=2";
 
 import {
 getAlertNotifyMode,
 getAlertToastDurationMs
 } from "./alert-ui-prefs.js?v=1";
+
+import {
+buildAlertChartUrl,
+gateAlertExchangeNavigation
+} from "./alert-deep-link-exchange.js?v=1";
 
 /* Базовая цена отдельно для каждого алерта (symbol + shapeId) */
 const lastPriceByAlert =
@@ -895,6 +895,13 @@ alert
 function maybeRequestNotificationPermission(){
 
 if(
+getAlertNotifyMode() !==
+"system"
+){
+return;
+}
+
+if(
 typeof Notification === "undefined" ||
 Notification.permission !== "default"
 ){
@@ -1521,6 +1528,11 @@ resyncAlertStreams
 
 window.addEventListener(
 "price-alerts-changed",
+resyncAlertStreams
+);
+
+window.addEventListener(
+EXCHANGE_CHANGED_EVENT,
 resyncAlertStreams
 );
 

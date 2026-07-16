@@ -3,15 +3,15 @@
  */
 import {
 createTradeChartOverlay
-} from "./trade-chart-overlay.js?v=34";
+} from "./trade-chart-overlay.js?v=58";
 
 import {
 createTradeChartOrders
-} from "./trade-chart-orders.js?v=23";
+} from "./trade-chart-orders.js?v=30";
 
 import {
 createTradePlusMenuHandler
-} from "./trade-order-plus-ui.js?v=2";
+} from "./trade-order-plus-ui.js?v=5";
 
 import {
 TRADE_VOLUME_SLOT_COUNT,
@@ -24,11 +24,16 @@ getActiveTradeVolumeUsdt
 
 import {
 marketMap
-} from "./terminal/terminal-state.js?v=10";
+} from "./terminal/terminal-state.js?v=11";
 
 import {
-applyAutoStopsAfterEntry
-} from "./trade-auto-stops.js?v=3";
+applyAutoStopsAfterEntry,
+getAutoStopSettings
+} from "./trade-auto-stops.js?v=14";
+
+import {
+getTradeExchangePolicy
+} from "./trade/exchanges/index.js?v=12";
 
 import {
 mountTradeLeverageControl
@@ -730,11 +735,36 @@ btn.disabled =
 true;
 
 try{
+const settings =
+getAutoStopSettings();
+const policy =
+getTradeExchangePolicy();
+const openOptions =
+{};
+
+if(
+policy.passAutoStopUsdOnOpen
+){
+openOptions.autoSlUsd =
+settings.slEnabled &&
+settings.slUsd >
+0
+? settings.slUsd
+: 0;
+openOptions.autoTpUsd =
+settings.tpEnabled &&
+settings.tpUsd >
+0
+? settings.tpUsd
+: 0;
+}
+
 const result =
 await api.openPosition(
 symbol,
 side,
-volumeUsdt
+volumeUsdt,
+openOptions
 );
 
 if(
@@ -765,10 +795,45 @@ result.position
 )
 );
 
+if(
+policy.passAutoStopUsdOnOpen
+){
+const missingSl =
+settings.slEnabled &&
+settings.slUsd >
+0 &&
+!(
+Number(
+result.position.stopLoss
+) >
+0
+);
+const missingTp =
+settings.tpEnabled &&
+settings.tpUsd >
+0 &&
+!(
+Number(
+result.position.takeProfit
+) >
+0
+);
+
+if(
+missingSl ||
+missingTp
+){
 void applyAutoStopsAfterEntry(
 symbol,
 result.position
 );
+}
+}else{
+void applyAutoStopsAfterEntry(
+symbol,
+result.position
+);
+}
 }
 
 window.dispatchEvent(

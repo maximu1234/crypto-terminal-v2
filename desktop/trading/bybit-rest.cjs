@@ -986,6 +986,18 @@ endTime
 );
 }
 
+const symbol =
+stripSymbolSuffix(
+options.symbol
+);
+
+if(
+symbol
+){
+query.symbol =
+symbol;
+}
+
 if(
 cursor
 ){
@@ -1765,6 +1777,13 @@ const BYBIT_QUERY_MAX_MS =
 60 *
 1000;
 
+const EXEC_HISTORY_MAX_LOOKBACK_MS =
+90 *
+24 *
+60 *
+60 *
+1000;
+
 function chunkTimeRange(
 startMs,
 endMs,
@@ -1830,7 +1849,9 @@ return `${trade.symbol}-${trade.closeTimeMs}-${trade.orderId ||
 
 async function fetchExecutionHistoryRange(
 startMs,
-endMs
+endMs,
+symbol =
+null
 ){
 
 if(
@@ -1843,7 +1864,8 @@ return getExecutionHistory({
 startTime:
 startMs,
 endTime:
-endMs
+endMs,
+symbol
 });
 }
 
@@ -1865,7 +1887,8 @@ await getExecutionHistory({
 startTime:
 chunk.startMs,
 endTime:
-chunk.endMs
+chunk.endMs,
+symbol
 });
 
 if(
@@ -1918,6 +1941,139 @@ true,
 executions:
 merged
 };
+
+}
+
+async function getSymbolExecutionHistory(
+options =
+{}
+){
+
+const symbol =
+stripSymbolSuffix(
+options.symbol
+);
+
+if(
+!symbol
+){
+return {
+ok:
+false,
+message:
+"symbol required"
+};
+}
+
+const startTime =
+options.startTime !=
+null
+? Number(
+options.startTime
+)
+: null;
+const endTime =
+options.endTime !=
+null
+? Number(
+options.endTime
+)
+: Date.now();
+
+if(
+startTime !=
+null &&
+Number.isFinite(
+startTime
+)
+){
+
+const effectiveStart =
+Math.max(
+startTime,
+endTime -
+EXEC_HISTORY_MAX_LOOKBACK_MS
+);
+
+const result =
+await fetchExecutionHistoryRange(
+effectiveStart,
+endTime,
+null
+);
+
+if(
+!result.ok
+){
+return result;
+}
+
+return {
+ok:
+true,
+executions:
+filterExecutionsBySymbol(
+result.executions,
+symbol
+)
+};
+
+}
+
+const lookbackStart =
+endTime -
+EXEC_HISTORY_MAX_LOOKBACK_MS;
+const result =
+await getExecutionHistory({
+startTime:
+lookbackStart,
+endTime
+});
+
+if(
+!result.ok
+){
+return result;
+}
+
+return {
+ok:
+true,
+executions:
+filterExecutionsBySymbol(
+result.executions,
+symbol
+)
+};
+
+}
+
+function filterExecutionsBySymbol(
+executions,
+symbol
+){
+
+const want =
+stripSymbolSuffix(
+symbol
+).toUpperCase();
+
+if(
+!want ||
+!Array.isArray(
+executions
+)
+){
+return [];
+}
+
+return executions.filter(
+ex=>
+stripSymbolSuffix(
+ex?.symbol
+).toUpperCase() ===
+want
+);
 
 }
 
@@ -3733,40 +3889,13 @@ stats.skipped++;
 continue;
 }
 
+/* Same-side triggers stay on the chart — only opposite side → RO. */
 if(
 side ===
 openingSide
 ){
-
-const cancelResult =
-await cancelTradeOrder(
-sym,
-orderId
-);
-
-if(
-cancelResult?.ok ===
-false
-){
-stats.errors.push(
-{
-orderId,
-action:
-"cancel-opening",
-message:
-cancelResult.message ||
-"cancel failed"
-}
-);
+stats.skipped++;
 continue;
-}
-
-canceledOrderIds.push(
-orderId
-);
-stats.canceled++;
-continue;
-
 }
 
 if(
@@ -4867,6 +4996,17 @@ return out;
 
 }
 
+async function pingExchange(
+options =
+{}
+){
+
+return pingBybit(
+options
+);
+
+}
+
 async function getTickerPrices(
 symbol
 ){
@@ -4926,7 +5066,9 @@ row.lastPrice
 async function openPositionAtMarket(
 symbol,
 side,
-volumeUsdt
+volumeUsdt,
+_options =
+{}
 ){
 
 const sym =
@@ -5373,8 +5515,10 @@ amendTradeOrder,
 reconcileOrdersOnPositionOpen,
 reconcileOrdersOnPositionClose,
 pingBybit,
+pingExchange,
 getClosedPnlHistory,
 getTradeDiaryDetail,
+getSymbolExecutionHistory,
 mapPositionRow,
 mapOrderRow,
 getSymbolPositionSettings,

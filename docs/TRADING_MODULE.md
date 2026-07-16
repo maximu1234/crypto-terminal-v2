@@ -43,24 +43,59 @@
 Renderer (/coins.html — desktop)
   └─ preload → cryptoTerminalDesktop.trading.*
        └─ ipcMain (desktop/trading/register-ipc.cjs)
-            ├─ credentials.cjs  → safeStorage (Keychain)
-            └─ bybit-rest.cjs   → api.bybit.com (signed)
+            ├─ trading-router.cjs → active exchange
+            ├─ exchange-credentials.cjs → per-exchange Keychain files
+            ├─ bybit-rest.cjs / bingx-rest.cjs → signed REST
+            └─ trading-stream.cjs → private WS + REST seed
 ```
 
 - **Main process** — HMAC-подпись, ping, market entry с retry poll позиции.
-- **Renderer** — UI и оверлеи; ключи не в localStorage.
+- **Renderer** — UI и оверлеи; ключи не в localStorage (Bybit и BingX).
+
+## BingX (desktop — isolated module)
+
+| Компонент | Файлы |
+|-----------|--------|
+| REST client | `desktop/trading/bingx-rest.cjs` (**не трогать** `bybit-rest.cjs`) |
+| Private WS | `desktop/trading/bingx-private-ws.cjs` |
+| Private stream | `desktop/trading/bingx-trading-stream.cjs` |
+| Credentials | `bingx-api-credentials.json` в userData (plaintext, mode 0600) |
+| Подпись | `desktop/trading/bingx-sign.cjs` |
+| UI policy | `js/trade/exchanges/bingx-trade-policy.js` |
+
+**Изоляция бирж:** правки BingX — только `bingx-*` + `bingx-trade-policy.js`. Правки Bybit — только `bybit-*` + `bybit-trade-policy.js`.  
+Общие фасады без биржевой логики: `trading-router.cjs`, `trading-stream.cjs` (delegate), `register-ipc.cjs`, `js/trade/exchanges/index.js`.
+
+**Дефолты аккаунта:** hedge (`dualSidePosition=true`) + multi-asset (`multiAssetsMode`) + cross margin на символ. Stream/cache/book ключуют позиции как `SYMBOL:LONG|SHORT`; close/setStop/getPosition передают `positionSide`.
+
+**Работает:** ключи → баланс → пинг → market open → TRIGGER_MARKET/LIMIT → auto SL/TP после fill (`setPositionStop`, не attach JSON на MARKET) → позиции/ордера → set/cancel SL/TP.
+
+**Триггеры:** `TRIGGER_MARKET` с `quantity` + `stopPrice` + `price` + `workingType` (без `quoteOrderQty`). Cancel — DELETE с params в query.
+
+**Поток позиций:** private WS `ACCOUNT_UPDATE` / `ORDER_TRADE_UPDATE` (компактные поля `s/pa/ps`, `X/i/o`, `z/l`). Cross часто без `a.P` → immediate REST seed. WS delta не ждёт `seedDone`. Optimistic FILL из ORDER_TRADE (`z` cumulative / `l` last). Empty REST soft-skip только для fresh optimistic open (~2s); confirmed + empty REST снимает позицию сразу (close на бирже). Backup poll 1s.
+
+**Amend (drag на графике):** цена триггера/лимитки меняется через `POST /openApi/swap/v1/trade/cancelReplace` (не `/amend` — тот меняет только quantity). При cancel ok / place fail — повторный place.
+
+**Отложено / частично:** trade diary (closed PnL) — BingX: `income` → до 40× `positionHistory` по символу (публичный API без all-pairs); кэш ~5 мин. PnL share cards пока Bybit-only.
 
 ## Файлы
 
 | Путь | Назначение |
 |------|------------|
-| `desktop/trading/bybit-rest.cjs` | REST client |
+| `desktop/trading/exchange-credentials.cjs` | Per-exchange credential store |
+| `desktop/trading/trading-router.cjs` | Thin IPC adapter switch |
+| `desktop/trading/trading-stream.cjs` | Thin stream facade → bybit/bingx stream |
+| `desktop/trading/bybit-trading-stream.cjs` | Bybit private stream |
+| `desktop/trading/bingx-trading-stream.cjs` | BingX private stream |
+| `desktop/trading/bybit-rest.cjs` | Bybit REST client |
+| `desktop/trading/bingx-rest.cjs` | BingX REST client |
 | `desktop/trading/register-ipc.cjs` | IPC handlers |
-| `desktop/trading/credentials.cjs` | Keychain |
+| `js/trade/exchanges/*-trade-policy.js` | UI quirks per exchange |
+| `desktop/trading/credentials.cjs` | Bybit credentials shim |
 | `coins.html` | Монеты (+ торговля в desktop .app) |
 | `js/terminal-page-boot.js` | Boot: chart + условный trade-слой |
 | `js/trade-desktop-boot.js` | Trade CSS + init (только desktop) |
-| `js/trade-exchange-settings.js` | Bybit dropdown + ping |
+| `js/trade-exchange-settings.js` | Exchange dropdown + ping |
 | `js/trade-market-entry.js` | Buy/Sell по рынку |
 | `js/trade-volume-presets.js` | Объёмы USDT |
 | `js/trade-book-panel.js` | Панель позиций |
@@ -78,8 +113,9 @@ Renderer (/coins.html — desktop)
 
 | Channel | Описание |
 |---------|----------|
-| `trading:getStatus` | configured, testnet, apiKey prefix |
-| `trading:saveKeys` / `clearKeys` | Keychain |
+| `trading:setActiveExchange` | Активная биржа для IPC/потока |
+| `trading:getStatus` | configured, testnet, apiKey prefix (`exchangeId`) |
+| `trading:saveKeys` / `clearKeys` | Keychain (`exchangeId`) |
 | `trading:getWalletBalance` | USDT unified |
 | `trading:getPositions` / `getPosition` | Открытые позиции |
 | `trading:openPosition` | Market entry |

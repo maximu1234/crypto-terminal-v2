@@ -21,9 +21,27 @@ openTradeDetail
 } from "./trade-diary-detail.js?v=6";
 
 import {
-getDefaultDiaryPeriod,
 mountTradeDiaryPeriodPicker
 } from "./trade-diary-period.js?v=3";
+
+import {
+clearDiaryDayTrades,
+endOfDayMs,
+listDiaryDayKeysInRange,
+msFromDayKey,
+readDiaryDayTrades,
+resolveDiaryIncrementalFetchStartMs,
+resolveInitialDiaryPeriod,
+saveDiaryPeriod,
+startOfDayMs,
+todayDiaryDayKey,
+writeDiaryDayTrades
+} from "./trade-diary-storage.js?v=2";
+
+import {
+EXCHANGE_CHANGED_EVENT,
+getActiveExchangeId
+} from "./market-api.js?v=2";
 
 import {
 initTradeDiaryNav
@@ -69,7 +87,7 @@ let weekTrades =
 let openTradeKey =
 null;
 let activePeriod =
-getDefaultDiaryPeriod();
+resolveInitialDiaryPeriod();
 let periodPicker =
 null;
 const collapsedDayKeys =
@@ -304,13 +322,16 @@ formatDiaryDuration(
 trade.durationMs
 )
 )}</span>
-<span class="trade-diary-num ${pnlToneClass(
+<span class="trade-diary-pnl-wrap trade-diary-num ${pnlToneClass(
 trade.pnlUsd
-)}">${escapeHtml(
+)}">
+<span class="trade-diary-pnl-value">${escapeHtml(
 formatDiaryUsd(
 trade.pnlUsd
 )
 )}</span>
+${PNL_SHARE_CONTROL_HTML}
+</span>
 <span class="trade-diary-share-col">${PNL_SHARE_CONTROL_HTML}</span>
 <span class="trade-diary-num ${pnlToneClass(
 trade.pnlPct
@@ -898,7 +919,11 @@ key
 }
 
 async function loadTradesForPeriod(
-period
+period,
+{
+forceRefresh =
+false
+} = {}
 ){
 
 const api =
@@ -915,78 +940,665 @@ message:
 };
 }
 
+const exchangeId =
+getActiveExchangeId() ||
+"bybit";
+const todayKey =
+todayDiaryDayKey();
+const dayKeys =
+listDiaryDayKeysInRange(
+period.startMs,
+period.endMs
+);
+
+if(
+forceRefresh
+){
+clearDiaryDayTrades(
+exchangeId,
+dayKeys
+);
+}
+
+const cachedPast =
+[];
+const missingPastKeys =
+[];
+let cachedToday =
+[];
+const periodIncludesTodayOrFuture =
+dayKeys.some(
+key=>
+key >=
+todayKey
+);
+const periodIncludesToday =
+periodIncludesTodayOrFuture &&
+dayKeys.includes(
+todayKey
+);
+
+for(
+const dayKey of dayKeys
+){
+
+if(
+dayKey >=
+todayKey
+){
+continue;
+}
+
+if(
+!forceRefresh
+){
+const hit =
+readDiaryDayTrades(
+exchangeId,
+dayKey
+);
+
+/* null = never cached; [] = cached empty day */
+if(
+hit !==
+null
+){
+cachedPast.push(
+...hit
+);
+continue;
+}
+
+}
+
+missingPastKeys.push(
+dayKey
+);
+
+}
+
+if(
+periodIncludesToday &&
+!forceRefresh
+){
+const todayHit =
+readDiaryDayTrades(
+exchangeId,
+todayKey
+);
+
+if(
+todayHit !==
+null
+){
+cachedToday =
+todayHit;
+}
+
+}
+
+let fetched =
+[];
+let networkMeta =
+{};
+let didTodayNetworkFetch =
+false;
+
+async function fetchClosedPnlRange(
+startMs,
+endMs
+){
+
 return api.getClosedPnl({
 startTime:
-period.startMs,
+startMs,
 endTime:
-period.endMs
+endMs,
+forceRefresh,
+exchangeId
 });
 
 }
 
-async function refreshDiary(){
-
 if(
-!contentEl
+forceRefresh
 ){
-return;
-}
-
-setStatus(
-"Идет загрузка сделок ...",
-{
-loading:
-true
-}
-);
-contentEl.innerHTML =
-"";
-openTradeKey =
-null;
-refreshBtn &&
-(refreshBtn.disabled =
-true);
-
-try{
-
+const fetchStartMs =
+period.startMs;
+const fetchEndMs =
+period.endMs;
 const result =
-await loadTradesForPeriod(
-activePeriod
+await fetchClosedPnlRange(
+fetchStartMs,
+fetchEndMs
 );
 
 if(
 !result?.ok
 ){
-setStatus(
-result?.message ||
-"Не удалось загрузить сделки",
-{
-error:
-true
-}
-);
-contentEl.innerHTML =
-"";
-return;
+
+if(
+cachedPast.length ||
+cachedToday.length
+){
+return {
+ok:
+true,
+trades:
+dedupeDiaryTrades(
+[
+...cachedPast,
+...cachedToday
+].filter(
+trade=>
+Number(
+trade.closeTimeMs
+) >=
+period.startMs &&
+Number(
+trade.closeTimeMs
+) <=
+period.endMs
+)
+),
+fromCache:
+true,
+stale:
+true,
+partial:
+true,
+message:
+result.message
+};
 }
 
-const trades =
+return result;
+}
+
+fetched =
+Array.isArray(
+result.trades
+)
+? result.trades
+: [];
+networkMeta =
+{
+source:
+result.source
+};
+didTodayNetworkFetch =
+periodIncludesToday;
+
+cachePastDaysFromFetch(
+exchangeId,
+fetchStartMs,
+fetchEndMs,
+fetched,
+todayKey
+);
+
+}else{
+
+if(
+missingPastKeys.length
+){
+missingPastKeys.sort();
+const pastFetchStart =
+startOfDayMs(
+msFromDayKey(
+missingPastKeys[
+0
+]
+)
+);
+const yesterdayEnd =
+startOfDayMs(
+Date.now()
+) -
+1;
+const pastFetchEnd =
+Math.min(
+period.endMs,
+yesterdayEnd
+);
+
+if(
+pastFetchStart <=
+pastFetchEnd
+){
+const result =
+await fetchClosedPnlRange(
+pastFetchStart,
+pastFetchEnd
+);
+
+if(
+!result?.ok
+){
+
+if(
+cachedPast.length ||
+cachedToday.length
+){
+return {
+ok:
+true,
+trades:
+dedupeDiaryTrades(
+[
+...cachedPast,
+...cachedToday
+].filter(
+trade=>
+Number(
+trade.closeTimeMs
+) >=
+period.startMs &&
+Number(
+trade.closeTimeMs
+) <=
+period.endMs
+)
+),
+fromCache:
+true,
+stale:
+true,
+partial:
+true,
+message:
+result.message
+};
+}
+
+return result;
+}
+
+const pastFetched =
 Array.isArray(
 result.trades
 )
 ? result.trades
 : [];
 
+fetched.push(
+...pastFetched
+);
+networkMeta =
+{
+source:
+result.source
+};
+
+cachePastDaysFromFetch(
+exchangeId,
+pastFetchStart,
+pastFetchEnd,
+pastFetched,
+todayKey
+);
+
+}
+
+}
+
+if(
+periodIncludesToday
+){
+const todayEnd =
+Math.min(
+period.endMs,
+endOfDayMs(
+startOfDayMs(
+Date.now()
+)
+)
+);
+const todayFetchStart =
+resolveDiaryIncrementalFetchStartMs(
+exchangeId,
+todayKey,
+cachedToday
+);
+
+if(
+todayFetchStart <=
+todayEnd
+){
+const result =
+await fetchClosedPnlRange(
+todayFetchStart,
+todayEnd
+);
+
+if(
+!result?.ok
+){
+
+if(
+cachedPast.length ||
+cachedToday.length
+){
+return {
+ok:
+true,
+trades:
+dedupeDiaryTrades(
+[
+...cachedPast,
+...cachedToday
+].filter(
+trade=>
+Number(
+trade.closeTimeMs
+) >=
+period.startMs &&
+Number(
+trade.closeTimeMs
+) <=
+period.endMs
+)
+),
+fromCache:
+true,
+stale:
+true,
+partial:
+true,
+message:
+result.message
+};
+}
+
+return result;
+}
+
+const todayFetched =
+Array.isArray(
+result.trades
+)
+? result.trades
+: [];
+
+fetched.push(
+...todayFetched
+);
+networkMeta =
+{
+source:
+result.source
+};
+didTodayNetworkFetch =
+true;
+
+}
+
+}
+
+if(
+!fetched.length
+){
+networkMeta =
+{
+fromCache:
+true
+};
+}
+
+}
+
+const todayStart =
+startOfDayMs(
+msFromDayKey(
+todayKey
+)
+);
+const todayEndMs =
+endOfDayMs(
+todayStart
+);
+let mergedToday =
+cachedToday;
+
+if(
+periodIncludesToday &&
+didTodayNetworkFetch
+){
+const fetchedToday =
+fetched.filter(
+trade=>{
+const t =
+Number(
+trade.closeTimeMs
+);
+
+return t >=
+todayStart &&
+t <=
+todayEndMs;
+}
+);
+
+mergedToday =
+dedupeDiaryTrades(
+[
+...cachedToday,
+...fetchedToday
+]
+);
+writeDiaryDayTrades(
+exchangeId,
+todayKey,
+mergedToday
+);
+
+}
+
+const trades =
+dedupeDiaryTrades(
+[
+...cachedPast,
+...(
+periodIncludesToday
+? mergedToday
+: []
+),
+...fetched.filter(
+trade=>{
+const t =
+Number(
+trade.closeTimeMs
+);
+
+if(
+periodIncludesToday &&
+t >=
+todayStart &&
+t <=
+todayEndMs
+){
+return false;
+}
+
+return t >=
+period.startMs &&
+t <=
+period.endMs;
+}
+)
+].filter(
+trade=>{
+const t =
+Number(
+trade.closeTimeMs
+);
+
+return t >=
+period.startMs &&
+t <=
+period.endMs;
+}
+)
+);
+
+return {
+ok:
+true,
+trades,
+fromCache:
+(
+cachedPast.length >
+0 ||
+cachedToday.length >
+0
+) &&
+fetched.length ===
+0,
+partialCache:
+(
+cachedPast.length >
+0 ||
+cachedToday.length >
+0
+) &&
+fetched.length >
+0,
+...networkMeta
+};
+
+}
+
+function cachePastDaysFromFetch(
+exchangeId,
+fetchStartMs,
+fetchEndMs,
+fetchedTrades,
+todayKey
+){
+
+const yesterdayEnd =
+startOfDayMs(
+Date.now()
+) -
+1;
+
+if(
+yesterdayEnd <
+fetchStartMs
+){
+return;
+}
+
+const cacheEndMs =
+Math.min(
+fetchEndMs,
+yesterdayEnd
+);
+const byDay =
+new Map(
+groupTradesByDay(
+fetchedTrades
+)
+);
+
+for(
+const dayKey of listDiaryDayKeysInRange(
+fetchStartMs,
+cacheEndMs
+)
+){
+
+if(
+dayKey >=
+todayKey
+){
+continue;
+}
+
+writeDiaryDayTrades(
+exchangeId,
+dayKey,
+byDay.get(
+dayKey
+) ||
+[]
+);
+
+}
+
+}
+
+function collectCachedTradesForPeriod(
+period
+){
+
+const exchangeId =
+getActiveExchangeId() ||
+"bybit";
+const cached =
+[];
+
+for(
+const dayKey of listDiaryDayKeysInRange(
+period.startMs,
+period.endMs
+)
+){
+
+const hit =
+readDiaryDayTrades(
+exchangeId,
+dayKey
+);
+
+if(
+hit !==
+null
+){
+cached.push(
+...hit
+);
+}
+
+}
+
+return dedupeDiaryTrades(
+cached.filter(
+trade=>{
+const t =
+Number(
+trade.closeTimeMs
+);
+
+return t >=
+period.startMs &&
+t <=
+period.endMs;
+}
+)
+);
+
+}
+
+function paintDiaryTrades(
+trades,
+statusText,
+{
+loading = false,
+error = false
+} = {}
+){
+
 weekTrades =
 trades;
-
+openTradeKey =
+null;
 collapsedDayKeys.clear();
 
 for(
 const [
 dayKey
-] of
-groupTradesByDay(
+] of groupTradesByDay(
 trades
 )
 ){
@@ -1000,10 +1612,185 @@ trades,
 activePeriod.startMs,
 activePeriod.endMs
 );
-
 setStatus(
+statusText,
+{
+loading,
+error
+}
+);
+
+}
+
+function dedupeDiaryTrades(
+trades
+){
+
+const seen =
+new Set();
+const out =
+[];
+
+for(
+const trade of trades ||
+[]
+){
+const key =
+tradeKey(
+trade
+);
+
+if(
+seen.has(
+key
+)
+){
+continue;
+}
+
+seen.add(
+key
+);
+out.push(
+trade
+);
+}
+
+out.sort(
+(
+a,
+b
+)=>
+Number(
+b.closeTimeMs
+) -
+Number(
+a.closeTimeMs
+)
+);
+
+return out;
+
+}
+
+async function refreshDiary(
+{
+forceRefresh =
+false
+} = {}
+){
+
+if(
+!contentEl
+){
+return;
+}
+
+refreshBtn &&
+(refreshBtn.disabled =
+true);
+saveDiaryPeriod(
+activePeriod
+);
+
+if(
+!forceRefresh
+){
+const preview =
+collectCachedTradesForPeriod(
+activePeriod
+);
+
+if(
+preview.length
+){
+paintDiaryTrades(
+preview,
+`Сделок за период: ${preview.length} · кэш · обновляем…`,
+{
+loading:
+true
+}
+);
+}else{
+setStatus(
+"Идет загрузка сделок ...",
+{
+loading:
+true
+}
+);
+contentEl.innerHTML =
+"";
+openTradeKey =
+null;
+}
+}else{
+setStatus(
+"Идет загрузка сделок ...",
+{
+loading:
+true
+}
+);
+contentEl.innerHTML =
+"";
+openTradeKey =
+null;
+}
+
+try{
+
+const result =
+await loadTradesForPeriod(
+activePeriod,
+{
+forceRefresh
+}
+);
+
+if(
+!result?.ok
+){
+setStatus(
+result?.message ||
+"Не удалось загрузить сделки",
+{
+error:
+true
+}
+);
+
+if(
+!weekTrades.length
+){
+contentEl.innerHTML =
+"";
+}
+
+return;
+}
+
+const trades =
+Array.isArray(
+result.trades
+)
+? result.trades
+: [];
+
+const statusSuffix =
+result?.fromCache
+? " · кэш"
+: result?.partialCache
+? " · кэш + сегодня"
+: "";
+
+paintDiaryTrades(
+trades,
 trades.length
-? `Сделок за период: ${trades.length}`
+? `Сделок за период: ${trades.length}${statusSuffix}`
+: result?.fromCache
+? "Нет сделок · кэш"
 : ""
 );
 
@@ -1019,8 +1806,13 @@ error:
 true
 }
 );
+
+if(
+!weekTrades.length
+){
 contentEl.innerHTML =
 "";
+}
 
 }finally{
 refreshBtn &&
@@ -1035,8 +1827,8 @@ async function boot(){
 if(
 !isDesktopTradeDiaryContext()
 ){
-showOnly(
-deniedDesktopEl
+location.replace(
+"/screener.html"
 );
 return;
 }
@@ -1058,7 +1850,13 @@ period
 ){
 activePeriod =
 period;
-void refreshDiary();
+saveDiaryPeriod(
+period
+);
+void refreshDiary({
+forceRefresh:
+true
+});
 }
 }
 );
@@ -1067,6 +1865,16 @@ bindDiaryInteractions();
 
 refreshBtn?.addEventListener(
 "click",
+()=>{
+void refreshDiary({
+forceRefresh:
+true
+});
+}
+);
+
+window.addEventListener(
+EXCHANGE_CHANGED_EVENT,
 ()=>{
 void refreshDiary();
 }

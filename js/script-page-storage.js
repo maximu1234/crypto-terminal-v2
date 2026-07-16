@@ -1,5 +1,5 @@
 /**
- * Состояние страницы Скрипт (фильтр + авто-настройки).
+ * Состояние страницы Скрипт (фильтр + авто-настройки) — отдельно по бирже.
  */
 import {
 loadPatternScanResults,
@@ -7,11 +7,20 @@ savePatternScanResults
 } from "./pattern-scan-results.js?v=1";
 
 import {
-PATTERN_SCAN_DEPTH_OPTIONS
-} from "./pattern-12-scanner.js?v=15";
+PATTERN_SCAN_DEPTH_OPTIONS,
+normalizePatternScanSideFilter
+} from "./pattern-12-scanner.js?v=16";
 
+import {
+getActiveExchangeId
+} from "./exchanges/context.js?v=1";
+
+/** @deprecated flat prefs; migrated → by_exchange */
 export const SCRIPT_PAGE_STORAGE_KEY =
 "script_page_pattern_scan_v1";
+
+export const SCRIPT_PAGE_STORAGE_BY_EXCHANGE_KEY =
+"script_page_pattern_scan_by_exchange_v1";
 
 export const SCRIPT_AUTO_PERIODS =
 [
@@ -63,10 +72,10 @@ const DEFAULT_STATE =
 {
 filterTf:
 "all",
+searchSide:
+"both",
 searchDepth:
 30,
-sideFilter:
-"both",
 layout:
 9,
 page:
@@ -88,50 +97,34 @@ lastVisitedAt:
 0
 };
 
-export function loadScriptPageState(){
+function normalizeExchangeId(
+exchangeId
+){
 
-try{
-const raw =
-JSON.parse(
-localStorage.getItem(
-SCRIPT_PAGE_STORAGE_KEY
-) ||
-"null"
-);
+const id =
+String(
+exchangeId ||
+""
+).trim().toLowerCase();
+
+return id ===
+"bingx"
+? "bingx"
+: "bybit";
+
+}
+
+function prefsFromRaw(
+raw
+){
 
 if(
 !raw ||
 typeof raw !==
 "object"
 ){
-return {
-...structuredClone(
+return structuredClone(
 DEFAULT_STATE
-),
-rows:
-loadPatternScanResults()
-};
-}
-
-const legacyRows =
-Array.isArray(
-raw.rows
-)
-? raw.rows
-: [];
-const scanRows =
-loadPatternScanResults();
-const rows =
-scanRows.length
-? scanRows
-: legacyRows;
-
-if(
-!scanRows.length &&
-legacyRows.length
-){
-savePatternScanResults(
-legacyRows
 );
 }
 
@@ -140,6 +133,10 @@ filterTf:
 String(
 raw.filterTf ||
 DEFAULT_STATE.filterTf
+),
+searchSide:
+normalizePatternScanSideFilter(
+raw.searchSide
 ),
 searchDepth:
 PATTERN_SCAN_DEPTH_OPTIONS.includes(
@@ -151,14 +148,6 @@ raw.searchDepth
 raw.searchDepth
 )
 : DEFAULT_STATE.searchDepth,
-sideFilter:
-(
-raw.sideFilter === "long" ||
-raw.sideFilter === "short" ||
-raw.sideFilter === "both"
-)
-? raw.sideFilter
-: DEFAULT_STATE.sideFilter,
 layout:
 [
 4,
@@ -181,7 +170,6 @@ raw.page
 ) ||
 DEFAULT_STATE.page
 ),
-rows,
 auto:
 {
 active:
@@ -218,36 +206,204 @@ raw.lastVisitedAt
 0
 };
 
+}
+
+function readByExchangeRoot(){
+
+try{
+
+const raw =
+JSON.parse(
+localStorage.getItem(
+SCRIPT_PAGE_STORAGE_BY_EXCHANGE_KEY
+) ||
+"null"
+);
+
+if(
+raw &&
+typeof raw ===
+"object" &&
+!Array.isArray(
+raw
+)
+){
+return raw;
+}
+
+}catch{
+/* ignore */
+}
+
+/* Migrate legacy flat prefs → bybit (Script historically used Bybit). */
+try{
+
+const legacy =
+JSON.parse(
+localStorage.getItem(
+SCRIPT_PAGE_STORAGE_KEY
+) ||
+"null"
+);
+
+if(
+legacy &&
+typeof legacy ===
+"object"
+){
+
+const {
+rows: _legacyRows,
+...prefs
+} =
+legacy;
+
+const migrated =
+{
+bybit:
+prefsFromRaw(
+prefs
+)
+};
+
+localStorage.setItem(
+SCRIPT_PAGE_STORAGE_BY_EXCHANGE_KEY,
+JSON.stringify(
+migrated
+)
+);
+
+/*
+ * Legacy result rows belong to Bybit only.
+ * Never write them into the active (possibly BingX) bucket.
+ */
+if(
+Array.isArray(
+legacy.rows
+) &&
+legacy.rows.length
+){
+const existing =
+loadPatternScanResults(
+"bybit"
+);
+
+if(
+!existing.length
+){
+savePatternScanResults(
+legacy.rows,
+"bybit"
+);
+}
+}
+
+return migrated;
+
+}
+
+}catch{
+/* ignore */
+}
+
+return {};
+
+}
+
+function writeByExchangeRoot(
+root
+){
+
+try{
+localStorage.setItem(
+SCRIPT_PAGE_STORAGE_BY_EXCHANGE_KEY,
+JSON.stringify(
+root &&
+typeof root ===
+"object"
+? root
+: {}
+)
+);
+}catch{
+/* ignore */
+}
+
+}
+
+export function loadScriptPageState(
+exchangeId
+){
+
+const ex =
+normalizeExchangeId(
+exchangeId ||
+getActiveExchangeId()
+);
+
+try{
+
+const root =
+readByExchangeRoot();
+const prefs =
+prefsFromRaw(
+root[
+ex
+]
+);
+
+return {
+...prefs,
+rows:
+loadPatternScanResults(
+ex
+)
+};
+
 }catch{
 return {
 ...structuredClone(
 DEFAULT_STATE
 ),
 rows:
-loadPatternScanResults()
+loadPatternScanResults(
+ex
+)
 };
 }
 
 }
 
 export function saveScriptPageState(
-state
+state,
+exchangeId
 ){
+
+const ex =
+normalizeExchangeId(
+exchangeId ||
+getActiveExchangeId()
+);
 
 try{
 savePatternScanResults(
-state.rows
+state.rows,
+ex
 );
-localStorage.setItem(
-SCRIPT_PAGE_STORAGE_KEY,
-JSON.stringify(
+
+const root =
+readByExchangeRoot();
+
+root[
+ex
+] =
 {
 filterTf:
 state.filterTf,
+searchSide:
+state.searchSide,
 searchDepth:
 state.searchDepth,
-sideFilter:
-state.sideFilter,
 layout:
 state.layout,
 page:
@@ -256,8 +412,10 @@ auto:
 state.auto,
 lastVisitedAt:
 state.lastVisitedAt
-}
-)
+};
+
+writeByExchangeRoot(
+root
 );
 }catch{
 /* ignore */

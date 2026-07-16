@@ -2,12 +2,16 @@
  * Единая шапка сайта: одна разметка, одни селекторы, одна логика на всех страницах.
  */
 import {
+ensureHeaderSettingsShell
+} from "./header-settings-shell.js?v=3";
+
+import {
 mountScriptTerminalStatus
 } from "./script-terminal-status.js?v=5";
 
 import {
 renderHeaderNav
-} from "./site-header-nav.js?v=3";
+} from "./site-header-nav.js?v=4";
 
 export const APP_HEADER_NAV_ID =
 "app-header-nav";
@@ -106,6 +110,13 @@ document.querySelectorAll(
 "#header"
 ).forEach(
 header=>{
+
+if(
+header.dataset.threeCellsReady ===
+"1"
+){
+return;
+}
 
 const nav =
 findAppHeaderNav(
@@ -234,7 +245,7 @@ scriptStatus
 }
 
 const layoutPicker =
-header.querySelector(
+mainCell.querySelector(
 ".coins-layout-picker-wrap"
 );
 
@@ -262,6 +273,7 @@ header.dataset.threeCellsReady =
 export function initSiteHeader(){
 
 normalizeAppHeaderMarkup();
+ensureHeaderSettingsShell();
 initDesktopHeaderLayout();
 
 if(
@@ -278,6 +290,7 @@ if(
 !window.cryptoTerminalDesktop?.isDesktop
 ){
 normalizeAppHeaderMarkup();
+ensureHeaderSettingsShell();
 return;
 }
 

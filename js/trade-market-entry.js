@@ -2,20 +2,32 @@
  * /trade — кнопки входа по рынку (Buy / Sell) в шапке графика.
  */
 import {
+applyTradePositionsStream,
+getCachedPosition,
+listCachedPositionsForSymbol,
+removeTradePositionFromCache
+} from "./trade-positions-cache.js?v=32";
+
+import {
 getActiveTradeVolumeUsdt
 } from "./trade-volume-presets.js?v=10";
 
 import {
-applyAutoStopsAfterEntry
-} from "./trade-auto-stops.js?v=3";
+applyAutoStopsAfterEntry,
+getAutoStopSettings
+} from "./trade-auto-stops.js?v=14";
 
 import {
 marketMap
-} from "./terminal/terminal-state.js?v=10";
+} from "./terminal/terminal-state.js?v=11";
+
+import {
+getActiveExchangeId
+} from "./market-api.js?v=2";
 
 import {
 mountTradeChartMarkersToggle
-} from "./trade-chart-execution-markers.js?v=1";
+} from "./trade-chart-execution-markers.js?v=2";
 
 const REFRESH_MS =
 1500;
@@ -227,11 +239,35 @@ entryBusy =
 true;
 
 try{
+const settings =
+getAutoStopSettings();
+const openOptions =
+{};
+
+if(
+getActiveExchangeId() ===
+"bingx"
+){
+openOptions.autoSlUsd =
+settings.slEnabled &&
+settings.slUsd >
+0
+? settings.slUsd
+: 0;
+openOptions.autoTpUsd =
+settings.tpEnabled &&
+settings.tpUsd >
+0
+? settings.tpUsd
+: 0;
+}
+
 const result =
 await api.openPosition(
 symbol,
 side,
-volumeUsdt
+volumeUsdt,
+openOptions
 );
 
 if(
@@ -248,6 +284,12 @@ return;
 if(
 result?.position
 ){
+applyTradePositionsStream(
+[
+result.position
+]
+);
+
 window.dispatchEvent(
 new CustomEvent(
 "trade-position-updated",
@@ -262,10 +304,31 @@ result.position
 )
 );
 
+const attached =
+result?.stopsAttached ||
+{};
+
+if(
+attached.sl ||
+attached.tp
+){
+markAutoStopsHandled(
+symbol
+);
+}
+
+const needsAutoStops =
+!attached.sl ||
+!attached.tp;
+
+if(
+needsAutoStops
+){
 void applyAutoStopsAfterEntry(
 symbol,
 result.position
 );
+}
 }
 
 window.dispatchEvent(
@@ -374,9 +437,53 @@ closeBusy =
 true;
 
 try{
+const matches =
+listCachedPositionsForSymbol(
+symbol
+);
+let cached =
+null;
+
+if(
+matches.length >
+1
+){
+window.alert(
+"По символу открыты long и short. Закройте нужную сторону в панели позиций."
+);
+return;
+}
+
+if(
+matches.length ===
+1
+){
+cached =
+matches[
+0
+];
+}else{
+cached =
+getCachedPosition(
+symbol
+);
+}
+
+const closeOptions =
+cached
+? {
+positionSide:
+cached.positionSide,
+side:
+cached.side,
+position:
+cached
+}
+: {};
 const result =
 await api.closePosition(
-symbol
+symbol,
+closeOptions
 );
 
 if(
@@ -390,11 +497,11 @@ result.message ||
 return;
 }
 
-window.dispatchEvent(
-new CustomEvent(
-"trade-book-refresh"
-)
+removeTradePositionFromCache(
+symbol,
+closeOptions
 );
+
 window.dispatchEvent(
 new CustomEvent(
 "trade-open-positions-changed"
@@ -481,6 +588,7 @@ null
 
 }
 
+
 export function initTradeMarketEntry(){
 
 if(
@@ -540,6 +648,11 @@ entry.innerHTML =
 actions.insertBefore(
 entry,
 volumeWrap
+);
+
+mountTradeChartMarkersToggle(
+actions,
+entry
 );
 
 mountTradeChartMarkersToggle(

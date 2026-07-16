@@ -9,7 +9,7 @@ fetchTickersInto
 import {
 getActiveExchangeId,
 fetchMarketDailyCandles
-} from "./market-api.js?v=1";
+} from "./market-api.js?v=2";
 
 export const STATS_JOB_UPDATE_EVENT =
 "stats-job-update";

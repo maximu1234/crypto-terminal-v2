@@ -29,7 +29,7 @@ recordDrawingTombstone
 
 import {
 EXCHANGE_CHANGED_EVENT
-} from "../market-api.js?v=1";
+} from "../market-api.js?v=2";
 
 import {
 registerDrawingsStoragePoller,
@@ -177,7 +177,7 @@ createDrawingsPersist
 
 import {
 createDrawStyleBar
-} from "./draw-style-bar.js?v=27";
+} from "./draw-style-bar.js?v=28";
 
 import {
 createDrawAlertsChart
@@ -5123,8 +5123,7 @@ scheduleDragRedraw?.();
 return;
 }
 
-holdChartPanRedraw();
-redraw();
+bumpChartPanRedraw();
 
 };
 
@@ -5257,6 +5256,41 @@ e.preventDefault();
 }
 
 }
+
+}
+
+return;
+
+}
+
+if(
+e.shiftKey &&
+(
+e.key ===
+"Backspace" ||
+e.code ===
+"Backspace"
+) &&
+!e.metaKey &&
+!e.ctrlKey &&
+!e.altKey
+){
+
+const ae =
+document.activeElement;
+const tag =
+ae?.tagName;
+
+if(
+tag !==
+"INPUT" &&
+tag !==
+"TEXTAREA" &&
+!ae?.isContentEditable
+){
+
+e.preventDefault();
+clearAllDrawingsOnChart();
 
 }
 
@@ -6544,6 +6578,65 @@ baseDefaultStyle
 },
 syncStyleBar: ()=>{
 updateStyleBar();
+},
+clearDrawingSelection(){
+
+desktopEdit?.clearDrawingSelection?.();
+updateStyleBar();
+scheduleRedraw();
+
+},
+hitTestAtClient(
+clientX,
+clientY
+){
+
+if(
+!alive
+){
+return null;
+}
+
+const rect =
+wrapEl.getBoundingClientRect();
+const x =
+clientX -
+rect.left;
+const y =
+clientY -
+rect.top;
+
+if(
+x <
+0 ||
+y <
+0 ||
+x >
+rect.width ||
+y >
+rect.height
+){
+return null;
+}
+
+return hitTest(
+x,
+y
+) ||
+null;
+
+},
+isDrawChromePointerEvent(
+e
+){
+
+return (
+desktopEdit?.isDrawChromePointerEvent?.(
+e
+) ??
+false
+);
+
 },
 clearDrawingSelection(){
 

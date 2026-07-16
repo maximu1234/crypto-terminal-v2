@@ -15,7 +15,7 @@ jsImport
 
 import {
 mountScriptPage
-} from "./script-page.js?v=27";
+} from "./script-page.js?v=28";
 
 async function boot(){
 
@@ -31,13 +31,13 @@ return;
 await waitForSiteCssReady();
 await loadLightweightCharts();
 
-mountScriptPage();
-
 await import(
 jsImport(
 "site-boot.js"
 )
 );
+
+mountScriptPage();
 
 }
 

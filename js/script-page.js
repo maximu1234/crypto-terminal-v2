@@ -6,33 +6,42 @@ createScriptWidgetGrid
 } from "./script-page-widgets.js?v=5";
 
 import {
+getSharedPatternScanner,
 getScriptScanJobState,
 getScriptScanNextRunAt,
 scheduleScriptScanRun,
 triggerScriptScanNow,
 stopScriptScanBackground,
 stopActivePatternScan,
+startFullPatternScan,
 isScriptScanBackgroundRunning,
 SCRIPT_SCAN_BG_EVENT
-} from "./script-scan-background.js?v=8";
+} from "./script-scan-background.js?v=11";
 
 import {
 PATTERN_SCAN_TF_LABELS,
 PATTERN_SCAN_DEPTH_OPTIONS,
-PATTERN_SCAN_SIDE_FILTERS
-} from "./pattern-12-scanner.js?v=15";
+normalizePatternScanSideFilter,
+matchesPatternScanSideFilter
+} from "./pattern-12-scanner.js?v=16";
 
 import {
 loadScriptPageState,
 saveScriptPageState,
 SCRIPT_AUTO_PERIODS,
 periodMsById
-} from "./script-page-storage.js?v=9";
+} from "./script-page-storage.js?v=11";
 
 import {
 COINS_TF_HOTKEYS,
 COINS_TF_VALUES
-} from "./terminal/terminal-state.js?v=10";
+} from "./terminal/terminal-state.js?v=11";
+
+import {
+EXCHANGE_CHANGED_EVENT,
+getActiveExchangeId,
+getExchangeDefinition
+} from "./market-api.js?v=2";
 
 const SCRIPT_LAYOUT_HOTKEYS =
 Object.freeze({
@@ -67,6 +76,39 @@ return mode ===
 "auto"
 ? "Авто: "
 : "";
+
+}
+
+function activeExchangeLabel(){
+
+return getExchangeDefinition(
+getActiveExchangeId()
+)?.name ||
+getActiveExchangeId() ||
+"";
+
+}
+
+function reloadForActiveExchange(){
+
+state =
+loadScriptPageState();
+scanMode =
+null;
+updateActionButtons();
+updateAutoStatus();
+refreshGrid();
+
+const name =
+activeExchangeLabel();
+
+if(
+name
+){
+setFloatingScanStatus(
+`Биржа: ${name}`
+);
+}
 
 }
 
@@ -121,48 +163,9 @@ return true;
 
 function persist(){
 
-const latest =
-loadScriptPageState();
-
-if(
-latest?.auto
-){
-state.auto.nextRunAt =
-Number(
-latest.auto.nextRunAt
-) ||
-0;
-state.auto.lastScanAt =
-Number(
-latest.auto.lastScanAt
-) ||
-0;
-}
-
 saveScriptPageState(
 state
 );
-
-}
-
-function effectiveSideFilter(){
-
-const fromUi =
-String(
-els.sideFilter?.value ||
-""
-);
-
-if(
-PATTERN_SCAN_SIDE_FILTERS.includes(
-fromUi
-)
-){
-return fromUi;
-}
-
-return state.sideFilter ||
-"both";
 
 }
 
@@ -192,20 +195,12 @@ return chartTfFilter;
 
 function filteredRows(){
 
-const side =
-effectiveSideFilter();
-
-if(
-side ===
-"both"
-){
-return state.rows.slice();
-}
-
 return state.rows.filter(
 row=>
-row?.side ===
-side
+matchesPatternScanSideFilter(
+row?.side,
+state.searchSide
+)
 );
 
 }
@@ -284,43 +279,39 @@ persist();
 
 }
 
+function setSearchSide(
+side
+){
+
+const normalized =
+normalizePatternScanSideFilter(
+side
+);
+
+state.searchSide =
+normalized;
+persist();
+refreshGrid();
+updateActionButtons();
+
+}
+
 function syncSearchParamsFromUi(){
 
 if(
 els.searchDepth
 ){
-const n =
-Number(
+setSearchDepth(
 els.searchDepth.value
 );
-
-if(
-PATTERN_SCAN_DEPTH_OPTIONS.includes(
-n
-)
-){
-state.searchDepth =
-n;
-}
 }
 
 if(
-els.sideFilter
+els.searchSide
 ){
-const next =
-String(
-els.sideFilter.value ||
-"both"
+setSearchSide(
+els.searchSide.value
 );
-
-if(
-PATTERN_SCAN_SIDE_FILTERS.includes(
-next
-)
-){
-state.sideFilter =
-next;
-}
 }
 
 if(
@@ -588,6 +579,38 @@ updateAutoStatus,
 
 }
 
+async function runFullScan(){
+
+syncSearchParamsFromUi();
+
+setScanStatus(
+"Запуск полного сканирования…",
+true
+);
+
+if(
+state.auto.active
+){
+stopAuto();
+}
+
+stopActivePatternScan();
+
+scanMode =
+"full";
+updateActionButtons();
+
+startFullPatternScan(
+{
+lookbackBars:
+state.searchDepth,
+sideFilter:
+state.searchSide
+}
+);
+
+}
+
 function startAuto(){
 
 syncSearchParamsFromUi();
@@ -632,8 +655,6 @@ if(
 type ===
 "scheduled"
 ){
-state =
-loadScriptPageState();
 startAutoCountdown();
 updateAutoStatus();
 return;
@@ -756,6 +777,14 @@ setScanToolbarProgress(
 );
 updateActionButtons();
 updateAutoStatus();
+return;
+}
+
+if(
+type ===
+"exchange-changed"
+){
+reloadForActiveExchange();
 }
 
 }
@@ -1101,7 +1130,7 @@ els.searchDepth =
 document.getElementById(
 "script-search-depth"
 );
-els.sideFilter =
+els.searchSide =
 document.getElementById(
 "script-side-filter"
 );
@@ -1270,6 +1299,13 @@ SCRIPT_SCAN_BG_EVENT,
 handleBackgroundScanEvent
 );
 
+window.addEventListener(
+EXCHANGE_CHANGED_EVENT,
+()=>{
+reloadForActiveExchange();
+}
+);
+
 els.tfFilter?.addEventListener(
 "click",
 event=>{
@@ -1355,42 +1391,12 @@ els.searchDepth.value
 }
 );
 
-els.sideFilter?.addEventListener(
+els.searchSide?.addEventListener(
 "change",
 ()=>{
-
-const next =
-String(
-els.sideFilter.value ||
-"both"
+setSearchSide(
+els.searchSide.value
 );
-
-if(
-!PATTERN_SCAN_SIDE_FILTERS.includes(
-next
-)
-){
-return;
-}
-
-state.sideFilter =
-next;
-
-if(
-next !==
-"both"
-){
-state.rows =
-state.rows.filter(
-row=>
-row?.side ===
-next
-);
-}
-
-persist();
-refreshGrid();
-
 }
 );
 
@@ -1507,13 +1513,10 @@ state.searchDepth
 }
 
 if(
-els.sideFilter &&
-PATTERN_SCAN_SIDE_FILTERS.includes(
-state.sideFilter
-)
+els.searchSide
 ){
-els.sideFilter.value =
-state.sideFilter;
+els.searchSide.value =
+state.searchSide;
 }
 
 updateActionButtons();

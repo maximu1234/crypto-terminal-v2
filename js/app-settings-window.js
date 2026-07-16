@@ -312,21 +312,10 @@ btn.textContent =
 section.label;
 
 if(
-section.desktopOnly &&
-section.id ===
-"connections"
+section.desktopOnly
 ){
 btn.hidden =
-false;
-}
-
-if(
-section.desktopOnly &&
-section.id ===
-"trading"
-){
-btn.hidden =
-false;
+!showConnectionsSettings();
 }
 
 if(
@@ -442,7 +431,7 @@ const {
 mountSystemSettingsPanel
 } =
 await import(
-"./app-settings-system-panel.js?v=3"
+"./app-settings-system-panel.js?v=5"
 );
 
 systemCtl =
@@ -555,7 +544,7 @@ mountExchangeConnectionsPanel,
 updateTradeExchangeConnectionChrome
 } =
 await import(
-"./trade-exchange-settings.js?v=17"
+"./trade-exchange-settings.js?v=18"
 );
 
 const host =
@@ -589,6 +578,66 @@ sectionId ===
 
 if(
 !window.cryptoTerminalDesktop?.isDesktop
+){
+panel.innerHTML =
+`<p class="app-settings-bybit-guest">Торговые настройки доступны в desktop-приложении Multichart.</p>`;
+return;
+}
+
+const tradeCss =
+cssUrl(
+"trade-exchange-settings.css"
+);
+
+if(
+!document.querySelector(
+`link[rel="stylesheet"][href^="/css/trade-exchange-settings.css"]`
+)
+){
+const link =
+document.createElement(
+"link"
+);
+link.rel =
+"stylesheet";
+link.href =
+tradeCss;
+document.head.appendChild(
+link
+);
+}
+
+const {
+mountTradingSettingsPanel
+} =
+await import(
+"./trade-trading-settings-panel.js?v=1"
+);
+
+const host =
+document.createElement(
+"div"
+);
+host.className =
+"app-settings-trading-host";
+panel.appendChild(
+host
+);
+
+mountTradingSettingsPanel(
+host
+);
+return;
+
+}
+
+if(
+sectionId ===
+"trading"
+){
+
+if(
+!showConnectionsSettings()
 ){
 panel.innerHTML =
 `<p class="app-settings-bybit-guest">Торговые настройки доступны в desktop-приложении Multichart.</p>`;
@@ -773,26 +822,13 @@ let resolved =
 target;
 
 if(
+(
 resolved ===
-"connections" &&
-!SECTIONS.some(
-s=>
-s.id ===
-"connections"
-)
-){
-resolved =
-"sync";
-}
-
-if(
+"connections" ||
 resolved ===
-"trading" &&
-!SECTIONS.some(
-s=>
-s.id ===
 "trading"
-)
+) &&
+!showConnectionsSettings()
 ){
 resolved =
 "sync";
@@ -851,7 +887,7 @@ if(
 connectionsBtn
 ){
 connectionsBtn.hidden =
-false;
+!showConnectionsSettings();
 }
 
 const tradingBtn =
@@ -863,7 +899,7 @@ if(
 tradingBtn
 ){
 tradingBtn.hidden =
-false;
+!showConnectionsSettings();
 }
 
 const systemBtn =

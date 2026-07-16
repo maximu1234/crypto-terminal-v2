@@ -6,8 +6,10 @@ import {
 loadMarketHistory,
 loadMarketSymbols,
 peekMarketSymbolsCache,
+getActiveExchangeDefinition,
+getActiveExchangeId,
 EXCHANGE_CHANGED_EVENT
-} from "./market-api.js?v=1";
+} from "./market-api.js?v=2";
 
 import {
 isScreenerWidgetCurrent as isScreenerWidgetCurrentGuard
@@ -84,7 +86,7 @@ onFavoritesRemoteUpdate
 import {
 attachSymbolAutocomplete,
 preloadTradingSymbols
-} from "./symbol-autocomplete.js?v=1";
+} from "./symbol-autocomplete.js?v=2";
 
 import {
 mountQwertyKeyInput
@@ -171,6 +173,41 @@ const TF_LABELS = {
 
 let favorites =
 loadFavoritesGroups();
+
+function activeExchangeName(){
+
+return getActiveExchangeDefinition().name;
+
+}
+
+function applyMarketSymbolsUpdated(
+symbols
+){
+
+if(
+!Array.isArray(symbols) ||
+!symbols.length
+){
+return;
+}
+
+const nextSymbols =
+mapSymbolList(symbols);
+
+if(
+symbolListSignature(nextSymbols) ===
+symbolListSignature(allSymbols) &&
+activeWidgets.length > 0
+){
+allSymbols = nextSymbols;
+return;
+}
+
+allSymbols = nextSymbols;
+
+void renderPage();
+
+}
 
 function screenerGridClass(){
 
@@ -1639,7 +1676,7 @@ if(!candles.length){
 
 if(loadId === renderToken){
 setStatus(
-"График Bybit не загрузился — «Повторить» внизу экрана",
+`График ${activeExchangeName()} не загрузился — «Повторить» внизу экрана`,
 true
 );
 }
@@ -2196,7 +2233,7 @@ if(
 screenerMarketLoadFailed
 ){
 setStatus(
-"Список монет Bybit не загрузился — «Повторить» внизу экрана",
+`Список монет ${activeExchangeName()} не загрузился — «Повторить» внизу экрана`,
 true
 );
 }else{
@@ -2946,18 +2983,18 @@ false
 }catch(err){
 
 console.error(
-"Screener Bybit reload:",
+`Screener ${activeExchangeName()} reload:`,
 err
 );
 
 screenerMarketLoadFailed = true;
 
 setStatus(
-"Список монет Bybit не загрузился — «Повторить» внизу экрана",
+`Список монет ${activeExchangeName()} не загрузился — «Повторить» внизу экрана`,
 true
 );
 
-void import("./bybit-network-ui.js?v=2").then(m=>{
+void import("./bybit-network-ui.js?v=3").then(m=>{
 m.showBybitNetworkIssue(err);
 });
 
@@ -2996,31 +3033,41 @@ window.addEventListener(
 "bybit-symbols-updated",
 e=>{
 
-const symbols =
-e.detail?.symbols;
-
 if(
-!Array.isArray(symbols) ||
-!symbols.length
+getActiveExchangeId() !==
+"bybit"
 ){
 return;
 }
 
-const nextSymbols =
-mapSymbolList(symbols);
+applyMarketSymbolsUpdated(
+e.detail?.symbols
+);
+
+}
+);
+
+window.addEventListener(
+"market-symbols-updated",
+e=>{
+
+const exchangeId =
+String(
+e.detail?.exchangeId ||
+""
+).trim().toLowerCase();
 
 if(
-symbolListSignature(nextSymbols) ===
-symbolListSignature(allSymbols) &&
-activeWidgets.length > 0
+exchangeId &&
+exchangeId !==
+getActiveExchangeId()
 ){
-allSymbols = nextSymbols;
 return;
 }
 
-allSymbols = nextSymbols;
-
-void renderPage();
+applyMarketSymbolsUpdated(
+e.detail?.symbols
+);
 
 }
 );
@@ -3097,7 +3144,7 @@ err
 screenerMarketLoadFailed = true;
 allSymbols = [];
 
-void import("./bybit-network-ui.js?v=2").then(m=>{
+void import("./bybit-network-ui.js?v=3").then(m=>{
 m.showBybitNetworkIssue(err);
 });
 

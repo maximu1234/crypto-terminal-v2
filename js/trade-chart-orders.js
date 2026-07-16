@@ -3,7 +3,7 @@
  */
 import {
 isExchangeTradingEnabled
-} from "./market-api.js?v=1";
+} from "./market-api.js?v=2";
 
 import {
 maskTradeDisplay
@@ -915,6 +915,10 @@ price:
 saved.previewPrice,
 orderKind:
 order.orderKind,
+qty:
+order.qty,
+quantity:
+order.qty,
 markPrice:
 getMarkPrice(
 host
@@ -940,8 +944,19 @@ return;
 
 order.price =
 saved.previewPrice;
+if(
+result?.orderId
+){
+order.orderId =
+String(
+result.orderId
+);
+}
 pendingAmend =
 null;
+await syncOrders(
+true
+);
 window.dispatchEvent(
 new CustomEvent(
 "trade-book-refresh"
@@ -1444,7 +1459,14 @@ return;
 }
 
 const result =
-await api.getOpenOrders();
+await api.getOpenOrders(
+force
+? {
+forceRefresh:
+true
+}
+: undefined
+);
 
 if(
 !host
@@ -1466,8 +1488,6 @@ return;
 if(
 !result?.ok
 ){
-orders =
-[];
 scheduleDraw();
 return;
 }

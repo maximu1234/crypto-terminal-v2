@@ -73,7 +73,7 @@ listTemplatesForType,
 mergeStyleSnapshot,
 saveNamedTemplate,
 deleteTemplateAtIndex
-} from "./draw-templates.js?v=7";
+} from "./draw-templates.js?v=8";
 
 export function createDrawStyleBar(
 deps
@@ -3407,7 +3407,11 @@ saved.length
 ? `<div class="draw-template-menu-sep" role="separator"></div>${saved.map((item,idx)=>`
 <div class="draw-template-menu-row" role="none">
 <button type="button" class="draw-template-menu-item draw-template-menu-item--saved" data-action="apply-template" data-template-idx="${idx}" role="menuitem">${escapeTemplateMenuName(item.name)}</button>
-<button type="button" class="draw-template-menu-delete" data-action="delete-template" data-template-idx="${idx}" title="Удалить" aria-label="Удалить">×</button>
+${
+item.builtin
+? ""
+: `<button type="button" class="draw-template-menu-delete" data-action="delete-template" data-template-idx="${idx}" title="Удалить" aria-label="Удалить">×</button>`
+}
 </div>`).join("")}`
 : ""
 }
@@ -3651,7 +3655,10 @@ e.preventDefault();
 submitTemplateSave();
 
 },
-true
+{
+capture:true,
+signal
+}
 );
 
 return root;
@@ -4200,6 +4207,26 @@ getDesktopEdit?.()?.pinDrawingSelection?.(
 selId
 );
 }
+
+}
+);
+
+positionRiskInput?.addEventListener(
+"keydown",
+e=>{
+
+if(
+e.key !==
+"Enter"
+){
+return;
+}
+
+e.preventDefault();
+e.stopPropagation();
+
+submitPositionVolumeApply();
+positionRiskInput?.blur();
 
 }
 );

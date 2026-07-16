@@ -8,8 +8,14 @@ formatTradeUsdt
 
 import {
 getAllCachedPositions,
+isTradePositionRecentlyClosed,
+removeTradePositionFromCache,
 syncTradePositionsCache
-} from "./trade-positions-cache.js?v=9";
+} from "./trade-positions-cache.js?v=32";
+
+import {
+getTradeExchangePolicy
+} from "./trade/exchanges/index.js?v=12";
 
 import {
 applyPositionColumnLayout,
@@ -1398,10 +1404,63 @@ closingPosition ||
 
 }
 
+function bookPositionRowKey(
+row
+){
+
+const policy =
+getTradeExchangePolicy();
+
+if(
+typeof policy.positionMapKey ===
+"function"
+){
+return policy.positionMapKey(
+row
+);
+}
+
+return normalizeBookSymbol(
+row?.symbol
+);
+
+}
+
+function tradeCloseOptionsFromRow(
+row
+){
+
+return {
+positionSide:
+row?.positionSide,
+side:
+row?.side,
+position:
+row
+};
+
+}
+
 function requestClosePosition(
-symbol,
+rowOrSymbol,
 ticker
 ){
+
+const row =
+rowOrSymbol &&
+typeof rowOrSymbol ===
+"object"
+? rowOrSymbol
+: {
+symbol:
+rowOrSymbol,
+ticker
+};
+const symbol =
+String(
+row?.symbol ||
+""
+).trim();
 
 if(
 !symbol
@@ -1409,16 +1468,24 @@ if(
 return;
 }
 
+const label =
+ticker ||
+row.ticker ||
+symbol;
+
 if(
 !confirm(
-`Закрыть ${ticker} по рынку?`
+`Закрыть ${label} по рынку?`
 )
 ){
 return;
 }
 
 void closePosition(
-symbol
+symbol,
+tradeCloseOptionsFromRow(
+row
+)
 );
 
 }
@@ -1434,17 +1501,7 @@ return;
 }
 
 const symbols =
-lastPositionRows
-.map(
-row=>
-String(
-row?.symbol ||
-""
-).trim()
-)
-.filter(
-Boolean
-);
+lastPositionRows;
 
 if(
 !symbols.length
@@ -1702,10 +1759,23 @@ normalizeBookSymbol(
 activeChartSymbol
 );
 
+const rowKey =
+bookPositionRowKey(
+row
+);
+
 el.className =
 `trade-book-row trade-book-row--position${active ? " is-active" : ""}`;
 el.dataset.symbol =
 row.symbol;
+el.dataset.rowKey =
+rowKey;
+if(
+row.positionSide
+){
+el.dataset.positionSide =
+row.positionSide;
+}
 
 el.innerHTML =
 `
@@ -1739,7 +1809,7 @@ el.querySelector(
 event=>{
 event.stopPropagation();
 requestClosePosition(
-row.symbol,
+row,
 row.ticker ||
 row.symbol
 );
@@ -2720,24 +2790,24 @@ for(
 const row of sorted
 ){
 
-const sym =
-normalizeBookSymbol(
-row.symbol
+const rowKey =
+bookPositionRowKey(
+row
 );
 
 if(
-!sym
+!rowKey
 ){
 continue;
 }
 
 nextKeys.add(
-sym
+rowKey
 );
 
 let el =
 positionRowNodes.get(
-sym
+rowKey
 );
 
 if(
@@ -2748,7 +2818,7 @@ createPositionRow(
 row
 );
 positionRowNodes.set(
-sym,
+rowKey,
 el
 );
 rowsEl.appendChild(
@@ -2765,19 +2835,19 @@ row
 
 for(
 const [
-sym,
+rowKey,
 el
 ] of positionRowNodes
 ){
 
 if(
 !nextKeys.has(
-sym
+rowKey
 )
 ){
 el.remove();
 positionRowNodes.delete(
-sym
+rowKey
 );
 }
 
@@ -2788,8 +2858,8 @@ rowsEl,
 sorted.map(
 row=>
 positionRowNodes.get(
-normalizeBookSymbol(
-row.symbol
+bookPositionRowKey(
+row
 )
 )
 )
@@ -2971,7 +3041,9 @@ row.orderId ||
 }
 
 async function closePosition(
-symbol
+symbol,
+options =
+{}
 ){
 
 if(
@@ -2990,7 +3062,8 @@ updateCloseAllBtnState();
 try{
 const result =
 await api.closePosition(
-symbol
+symbol,
+options
 );
 
 if(
@@ -3004,6 +3077,11 @@ true
 );
 return;
 }
+
+removeTradePositionFromCache(
+symbol,
+options
+);
 
 setStatus(
 "Позиция закрыта"
@@ -3033,7 +3111,7 @@ updateCloseAllBtnState();
 }
 
 async function closeAllPositions(
-symbols
+rows
 ){
 
 if(
@@ -3041,6 +3119,13 @@ if(
 ){
 return;
 }
+
+const list =
+Array.isArray(
+rows
+)
+? rows
+: [];
 
 closingAll =
 true;
@@ -3055,13 +3140,37 @@ const errors =
 [];
 
 for(
-const symbol of symbols
+const row of list
 ){
+
+const symbol =
+typeof row ===
+"string"
+? row
+: String(
+row?.symbol ||
+""
+).trim();
+const options =
+typeof row ===
+"object" &&
+row
+? tradeCloseOptionsFromRow(
+row
+)
+: {};
+
+if(
+!symbol
+){
+continue;
+}
 
 try{
 const result =
 await api.closePosition(
-symbol
+symbol,
+options
 );
 
 if(
@@ -3076,6 +3185,11 @@ errors.push(
 result.message
 );
 }
+}else{
+removeTradePositionFromCache(
+symbol,
+options
+);
 }
 }catch(
 err
@@ -3099,14 +3213,14 @@ failed >
 ){
 const msg =
 failed ===
-symbols.length
+list.length
 ? (
 errors[
 0
 ] ||
 "Не удалось закрыть позиции"
 )
-: `Закрыто ${symbols.length - failed} из ${symbols.length}`;
+: `Закрыто ${list.length - failed} из ${list.length}`;
 setStatus(
 msg,
 true
@@ -3180,7 +3294,7 @@ if(
 ){
 renderTableHead();
 renderEmpty(
-"Подключите Bybit в шапке"
+getTradeExchangePolicy().emptyCredentialsHint
 );
 setStatus(
 ""
@@ -3214,9 +3328,15 @@ await api.getOpenOrders();
 if(
 !result?.ok
 ){
+
+if(
+!lastOrderRows.length
+){
 renderOrders(
 []
 );
+}
+
 setStatus(
 result.message ||
 "Ошибка загрузки ордеров",
@@ -3241,9 +3361,33 @@ await api.getPositions();
 if(
 !result?.ok
 ){
+
+const cachedPositions =
+getAllCachedPositions();
+
+if(
+cachedPositions.length
+){
+renderPositions(
+cachedPositions
+);
+
+if(
+result?.rateLimited
+){
+setStatus(
+""
+);
+return;
+}
+}else if(
+!lastPositionRows.length
+){
 renderPositions(
 []
 );
+}
+
 setStatus(
 result.message ||
 "Ошибка загрузки позиций",
@@ -3252,9 +3396,36 @@ true
 return;
 }
 
-renderPositions(
+let positions =
 result.positions ||
-[]
+[];
+
+if(
+getTradeExchangePolicy().filterRecentlyClosedInBookRefresh
+){
+const policy =
+getTradeExchangePolicy();
+positions =
+positions.filter(
+row=>{
+const key =
+typeof policy.positionMapKey ===
+"function"
+? policy.positionMapKey(
+row
+)
+: row?.symbol;
+
+return !isTradePositionRecentlyClosed(
+key,
+row
+);
+}
+);
+}
+
+renderPositions(
+positions
 );
 setStatus(
 ""
@@ -3563,12 +3734,27 @@ mode !==
 return;
 }
 
-const sym =
-normalizeBookSymbol(
-event.detail?.symbol
-);
 const pos =
 event.detail?.position;
+const sym =
+normalizeBookSymbol(
+event.detail?.symbol ||
+pos?.symbol
+);
+const detailSide =
+event.detail?.positionSide ||
+event.detail?.side ||
+pos?.positionSide ||
+pos?.side;
+const eventKey =
+bookPositionRowKey({
+symbol:
+sym,
+positionSide:
+detailSide,
+side:
+detailSide
+});
 
 if(
 !sym
@@ -3581,11 +3767,27 @@ if(
 ){
 lastPositionRows =
 lastPositionRows.filter(
-row=>
+row=>{
+if(
 normalizeBookSymbol(
 row.symbol
 ) !==
 sym
+){
+return true;
+}
+
+if(
+!detailSide
+){
+return false;
+}
+
+return bookPositionRowKey(
+row
+) !==
+eventKey;
+}
 );
 renderPositions(
 lastPositionRows
@@ -3593,7 +3795,24 @@ lastPositionRows
 return;
 }
 
-const index =
+const posKey =
+bookPositionRowKey(
+pos
+);
+let index =
+lastPositionRows.findIndex(
+row=>
+bookPositionRowKey(
+row
+) ===
+posKey
+);
+
+if(
+index <
+0
+){
+index =
 lastPositionRows.findIndex(
 row=>
 normalizeBookSymbol(
@@ -3601,6 +3820,7 @@ row.symbol
 ) ===
 sym
 );
+}
 
 if(
 index <
@@ -3615,6 +3835,9 @@ index
 pos;
 
 const el =
+positionRowNodes.get(
+posKey
+) ||
 positionRowNodes.get(
 sym
 );
@@ -3638,8 +3861,8 @@ sortState.positions.asc
 ).map(
 row=>
 positionRowNodes.get(
-normalizeBookSymbol(
-row.symbol
+bookPositionRowKey(
+row
 )
 )
 )

@@ -3,6 +3,9 @@
  * Long: cancel Buy orders, convert Sell orders to reduce-only.
  * Short: cancel Sell orders, convert Buy orders to reduce-only.
  */
+import {
+getTradeExchangePolicy
+} from "./trade/exchanges/index.js?v=12";
 
 function normalizeSymbol(
 symbol
@@ -105,14 +108,22 @@ void (
 async()=>{
 
 try{
+const reconcileDelayMs =
+getTradeExchangePolicy().reconcileOnOpenDelayMs;
+
+if(
+reconcileDelayMs >
+0
+){
 await new Promise(
 resolve=>{
 setTimeout(
 resolve,
-200
+reconcileDelayMs
 );
 }
 );
+}
 
 const result =
 await api.reconcileOrdersOnPositionOpen(

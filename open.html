@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Multichart</title>
+<style>
+html, body {
+margin: 0;
+min-height: 100%;
+background: #0b0f14;
+color: #c8d0d8;
+font: 15px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+main {
+max-width: 28rem;
+margin: 0 auto;
+padding: 3rem 1.25rem;
+}
+p { margin: 0 0 0.75rem; }
+.muted { color: #8b96a3; font-size: 0.9rem; }
+</style>
+</head>
+<body>
+<main>
+<p id="msg">Открываем…</p>
+<p class="muted" id="hint"></p>
+</main>
+<script>
+(function () {
+  var HANDOFF_PORT = 47392;
+  var TIMEOUT_MS = 450;
+  var params = new URLSearchParams(window.location.search);
+  var symbol = String(params.get("symbol") || "").trim();
+  var tf = String(params.get("tf") || "60").trim() || "60";
+  var exchange = String(params.get("exchange") || "").trim().toLowerCase();
+
+  var webParams = new URLSearchParams();
+  if (symbol) webParams.set("symbol", symbol);
+  webParams.set("tf", tf);
+  if (exchange === "bybit" || exchange === "bingx") {
+    webParams.set("exchange", exchange);
+  }
+  var webUrl = "/terminal.html?" + webParams.toString();
+
+  var msg = document.getElementById("msg");
+  var hint = document.getElementById("hint");
+
+  function goWeb() {
+    window.location.replace(webUrl);
+  }
+
+  if (!symbol) {
+    goWeb();
+    return;
+  }
+
+  var openUrl = new URL("http://127.0.0.1:" + HANDOFF_PORT + "/open");
+  openUrl.searchParams.set("symbol", symbol);
+  openUrl.searchParams.set("tf", tf);
+  if (exchange === "bybit" || exchange === "bingx") {
+    openUrl.searchParams.set("exchange", exchange);
+  }
+
+  var ctrl = typeof AbortController !== "undefined" ? new AbortController() : null;
+  var timer = setTimeout(function () {
+    if (ctrl) ctrl.abort();
+  }, TIMEOUT_MS);
+
+  fetch(openUrl.toString(), {
+    method: "GET",
+    mode: "cors",
+    cache: "no-store",
+    signal: ctrl ? ctrl.signal : undefined
+  })
+    .then(function (res) {
+      clearTimeout(timer);
+      if (!res.ok) throw new Error("handoff " + res.status);
+      return res.json();
+    })
+    .then(function (body) {
+      if (!body || !body.ok) throw new Error("handoff rejected");
+      msg.textContent = "Открыто в приложении Multichart";
+      hint.textContent = "Эту вкладку можно закрыть.";
+    })
+    .catch(function () {
+      clearTimeout(timer);
+      goWeb();
+    });
+})();
+</script>
+</body>
+</html>

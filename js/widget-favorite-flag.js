@@ -17,7 +17,7 @@ onFavoritesRemoteUpdate
 
 import {
 EXCHANGE_CHANGED_EVENT
-} from "./market-api.js?v=1";
+} from "./market-api.js?v=2";
 
 let favorites =
 loadFavoritesGroups();

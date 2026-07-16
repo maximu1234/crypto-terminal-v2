@@ -5,3 +5,4 @@ js/supabase-env.js
 desktop/node_modules/
 desktop/dist/
 desktop/site-bundle/
+desktop/.asar-check/

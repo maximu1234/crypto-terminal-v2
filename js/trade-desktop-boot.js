@@ -11,7 +11,7 @@ isWatchlistPage
 
 import {
 initTradeExchangeSettings
-} from "./trade-exchange-settings.js?v=17";
+} from "./trade-exchange-settings.js?v=18";
 
 import {
 initTradeVolumePresets
@@ -23,11 +23,11 @@ initTradeLeverageSettings
 
 import {
 initTradeMarketEntry
-} from "./trade-market-entry.js?v=6";
+} from "./trade-market-entry.js?v=30";
 
 import {
 initTradeBookPanel
-} from "./trade-book-panel.js?v=52";
+} from "./trade-book-panel.js?v=58";
 
 const TRADE_CSS =
 [
@@ -173,7 +173,7 @@ const {
 initExchangeTradingGate
 } =
 await import(
-"./exchange-trading-gate.js?v=1"
+"./exchange-trading-gate.js?v=2"
 );
 
 initExchangeTradingGate();
@@ -250,7 +250,7 @@ const {
 initTradePositionsCache
 } =
 await import(
-"./trade-positions-cache.js?v=9"
+"./trade-positions-cache.js?v=32"
 );
 
 initTradePositionsCache();
@@ -270,7 +270,7 @@ const {
 initTradeChartOverlay
 } =
 await import(
-"./trade-chart-overlay.js?v=34"
+"./trade-chart-overlay.js?v=58"
 );
 
 initTradeChartOverlay();
@@ -279,7 +279,7 @@ const {
 initTradeChartOrders
 } =
 await import(
-"./trade-chart-orders.js?v=23"
+"./trade-chart-orders.js?v=30"
 );
 
 initTradeChartOrders();
@@ -288,7 +288,7 @@ const {
 initTradeChartExecutionMarkers
 } =
 await import(
-"./trade-chart-execution-markers.js?v=1"
+"./trade-chart-execution-markers.js?v=2"
 );
 
 initTradeChartExecutionMarkers();

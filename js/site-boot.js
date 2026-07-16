@@ -33,11 +33,11 @@ isSupabaseConfigured
 
 import {
 initExchangeContext
-} from "./market-api.js?v=1";
+} from "./market-api.js?v=2";
 
 import {
 initBybitNetworkUi
-} from "./bybit-network-ui.js?v=2";
+} from "./bybit-network-ui.js?v=3";
 
 import {
 resetBybitEndpoints,
@@ -68,11 +68,11 @@ initDesktopTradeNav
 import {
 initSiteHeader,
 enforceSiteHeaderAfterBoot
-} from "./site-header.js?v=3";
+} from "./site-header.js?v=4";
 
 import {
 resumeScriptScanBackgroundJob
-} from "./script-scan-background.js?v=8";
+} from "./script-scan-background.js?v=11";
 
 import {
 resumeStatsBackgroundJob

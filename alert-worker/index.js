@@ -1,6 +1,5 @@
 import http from "http";
-import { createBybitKlineHub } from "./lib/bybit-kline.js";
-import { createBybitTickerHub } from "./lib/bybit.js";
+import { createMarketHubs } from "./lib/market-hubs.js";
 import { getConfigStatus, getWorkerConfig } from "./lib/config.js";
 import {
   fetchTelegramAlerts,
@@ -36,7 +35,7 @@ import {
 } from "./lib/reload-request.js";
 
 const PORT = Number(process.env.PORT) || 8080;
-const WORKER_BUILD = "2026-07-11-ticker-v2";
+const WORKER_BUILD = "2026-07-13-bingx-alerts-v1";
 
 /** alert key -> row */
 let activeAlerts = new Map();
@@ -71,8 +70,7 @@ function logConfigOnce() {
 }
 
 async function reloadAlerts(
-  klineHub,
-  tickerHub,
+  marketHubs,
   opts = {}
 ) {
   const startedAt = Date.now();
@@ -115,9 +113,19 @@ async function reloadAlerts(
 
   for (const row of rows) {
     const key = alertKey(row);
+    const exchangeId =
+      row.exchange_id ||
+      "bybit";
     next.set(key, row);
-    klineHub.ensureKline(row.symbol, row.tf || "60");
-    tickerHub.ensureSymbol(row.symbol);
+    marketHubs.ensureKline(
+      row.symbol,
+      row.tf || "60",
+      exchangeId
+    );
+    marketHubs.ensureSymbol(
+      row.symbol,
+      exchangeId
+    );
   }
 
   activeAlerts = next;
@@ -148,13 +156,11 @@ async function main() {
 
   await ensureReloadIntervalHydrated();
 
-  const klineHub = createBybitKlineHub();
-  const tickerHub = createBybitTickerHub();
+  const marketHubs = createMarketHubs();
 
   setWorkerReloadRequestHandler(async (_reason, opts = {}) => {
     await reloadAlerts(
-      klineHub,
-      tickerHub,
+      marketHubs,
       {
         force:
           opts.force !== false
@@ -162,23 +168,25 @@ async function main() {
     );
   });
 
-  klineHub.onKline((symbol, tf, candle) => {
+  marketHubs.onKline((exchangeId, symbol, tf, candle) => {
     evaluateAlertsForCandle(
       activeAlerts,
       symbol,
       tf,
-      candle
+      candle,
+      exchangeId
     ).catch(err => {
       console.warn("evaluate kline:", err.message);
     });
   });
 
-  tickerHub.onTick((symbol, price, prev) => {
+  marketHubs.onTick((exchangeId, symbol, price, prev) => {
     evaluateAlertsForTicker(
       activeAlerts,
       symbol,
       price,
-      prev
+      prev,
+      exchangeId
     ).catch(err => {
       console.warn("evaluate ticker:", err.message);
     });
@@ -224,7 +232,7 @@ async function main() {
         telegram: telegramConfigured(),
         config: st,
         diag,
-        ticker: tickerHub.getStats?.() || null,
+        ticker: marketHubs.getStats?.() || null,
         reload: {
           intervalMs: getReloadIntervalMs(),
           cycles: reloadCycles,
@@ -269,7 +277,7 @@ async function main() {
       }
 
       try{
-        await reloadAlerts(klineHub, tickerHub);
+        await reloadAlerts(marketHubs);
         res.writeHead(200, { "Content-Type": "application/json" });
         res.end(JSON.stringify({
           ok: true,
@@ -324,7 +332,7 @@ async function main() {
     ensureTelegramWebhook().catch(err => {
       console.warn("telegram webhook:", err.message);
     });
-    reloadAlerts(klineHub, tickerHub).catch(err => {
+    reloadAlerts(marketHubs).catch(err => {
       console.warn("reloadAlerts:", err.message);
     });
   });
@@ -335,7 +343,7 @@ async function main() {
       getReloadIntervalMs();
 
     setTimeout(() => {
-      reloadAlerts(klineHub, tickerHub).catch(err => {
+      reloadAlerts(marketHubs).catch(err => {
         console.warn("reloadAlerts:", err.message);
       }).finally(() => {
         scheduleReloadTick();

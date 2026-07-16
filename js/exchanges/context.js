@@ -71,6 +71,20 @@ id ||
 
 }
 
+function notifyMainActiveExchange(
+exchangeId
+){
+
+try{
+window.cryptoTerminalDesktop?.trading?.setActiveExchange?.(
+exchangeId
+);
+}catch{
+/* ignore */
+}
+
+}
+
 /**
  * @param {string} exchangeId
  * @param {{ silent?: boolean }} [opts]
@@ -117,6 +131,16 @@ next
 }
 
 if(
+typeof window !==
+"undefined" &&
+window.cryptoTerminalDesktop?.isDesktop
+){
+notifyMainActiveExchange(
+next
+);
+}
+
+if(
 !opts.silent &&
 typeof window !==
 "undefined"
@@ -149,6 +173,16 @@ activeExchangeId
 ){
 return setActiveExchangeId(
 DEFAULT_EXCHANGE
+);
+}
+
+if(
+typeof window !==
+"undefined" &&
+window.cryptoTerminalDesktop?.isDesktop
+){
+notifyMainActiveExchange(
+activeExchangeId
 );
 }
 

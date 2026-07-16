@@ -3,11 +3,11 @@
  */
 import {
 syncTradePositionsCache
-} from "./trade-positions-cache.js?v=9";
+} from "./trade-positions-cache.js?v=32";
 
 import {
 isExchangeTradingEnabled
-} from "./market-api.js?v=1";
+} from "./market-api.js?v=2";
 
 const openPositionSymbols =
 new Set();
@@ -163,7 +163,7 @@ new CustomEvent(
 );
 
 void import(
-"./terminal/terminal-table.js?v=19"
+"./terminal/terminal-table.js?v=20"
 ).then(
 ({
 renderList

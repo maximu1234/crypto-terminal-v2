@@ -3,7 +3,7 @@
  */
 import {
 getAllCachedPositions
-} from "./trade-positions-cache.js?v=9";
+} from "./trade-positions-cache.js?v=32";
 
 import {
 formatTradePnl
@@ -13,7 +13,7 @@ import {
 isExchangeTradingEnabled,
 getActiveExchangeDefinition,
 EXCHANGE_CHANGED_EVENT
-} from "./market-api.js?v=1";
+} from "./market-api.js?v=2";
 
 import {
 isMenuBarTrayEnabled,

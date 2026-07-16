@@ -8,7 +8,7 @@ import {
   restDelete,
   restPatchReturning
 } from "./supabase-rest.js";
-import { normalizeBybitSymbol } from "./bybit-symbol.js";
+import { normalizeAlertSymbol, normalizeExchangeId } from "./exchange-symbol.js";
 import { normalizeWorkerTf } from "./tf-normalize.js";
 
 let client = null;
@@ -246,17 +246,9 @@ async function fetchTelegramAlertsFull(){
   for (const row of alerts) {
 
     const exchangeId =
-      String(
-        row.exchange_id ||
-        "bybit"
-      ).trim().toLowerCase();
-
-    if (
-      exchangeId !==
-      "bybit"
-    ) {
-      continue;
-    }
+      normalizeExchangeId(
+        row.exchange_id
+      );
 
     const chatId = chatByUser.get(row.user_id);
 
@@ -267,10 +259,11 @@ async function fetchTelegramAlertsFull(){
     out.push({
       id: row.id,
       user_id: row.user_id,
-      symbol: normalizeBybitSymbol(row.symbol),
+      symbol: normalizeAlertSymbol(row.symbol, exchangeId),
       shape_id: row.shape_id,
       price: Number(row.price),
       tf: normalizeWorkerTf(row.tf),
+      exchange_id: exchangeId,
       created_at: row.created_at || null,
       telegram_chat_id: chatId
     });

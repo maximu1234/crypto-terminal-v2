@@ -1,7 +1,7 @@
 import {
 destroyDiaryTradeChart,
 mountDiaryTradeChart
-} from "./trade-diary-chart.js?v=9";
+} from "./trade-diary-chart.js?v=10";
 
 import {
 executionSideLabel,
@@ -12,6 +12,10 @@ formatDiaryQty,
 formatDiaryTime,
 formatDiaryUsd
 } from "./trade-diary-format.js?v=3";
+
+import {
+getActiveExchangeId
+} from "./market-api.js?v=2";
 
 function tradingApi(){
 
@@ -122,11 +126,19 @@ detail
 ){
 
 const entryPrice =
-detail.avgEntryPrice ||
-trade.avgEntryPrice;
+Number(
+detail.avgEntryPrice
+) >
+0
+? detail.avgEntryPrice
+: trade.avgEntryPrice;
 const exitPrice =
-detail.avgExitPrice ||
-trade.avgExitPrice;
+Number(
+detail.avgExitPrice
+) >
+0
+? detail.avgExitPrice
+: trade.avgExitPrice;
 const isLong =
 trade.side ===
 "long";
@@ -217,10 +229,17 @@ qty:
 trade.qty,
 orderId:
 trade.orderId,
+positionId:
+trade.positionId ||
+trade.orderId,
 avgEntryPrice:
 trade.avgEntryPrice,
 avgExitPrice:
-trade.avgExitPrice
+trade.avgExitPrice,
+sparse:
+!!trade.sparse,
+exchangeId:
+getActiveExchangeId()
 });
 
 if(

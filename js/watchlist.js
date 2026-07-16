@@ -9,8 +9,18 @@ getTerminalBlueSymbols
 
 import {
 loadMarketHistory,
+getActiveExchangeId,
+getActiveExchangeDefinition,
 EXCHANGE_CHANGED_EVENT
-} from "./market-api.js?v=1";
+} from "./market-api.js?v=2";
+
+import {
+clearBybitNetworkIssue
+} from "./bybit-network-ui.js?v=3";
+
+import {
+buildAlertChartUrl
+} from "./alert-deep-link-url.js?v=2";
 
 import {
 isLocalDevHost
@@ -59,7 +69,7 @@ ensureDrawToolsVisible
 
 import {
 preloadTradingSymbols
-} from "./symbol-autocomplete.js?v=1";
+} from "./symbol-autocomplete.js?v=2";
 
 import {
 loadLightweightCharts
@@ -121,7 +131,7 @@ return;
 
 const mod =
 await import(
-"./trade-widget-mount.js?v=9"
+"./trade-widget-mount.js?v=13"
 );
 
 mountTradeOnDashboardWidget =
@@ -959,6 +969,14 @@ openChartBtn.onclick = e=>{
 e.stopPropagation();
 
 window.location.href =
+buildAlertChartUrl({
+symbol:
+getSymbol(),
+tf:
+getTf(),
+exchangeId:
+getActiveExchangeId()
+}) ||
 `terminal.html?symbol=${encodeURIComponent(getSymbol())}&tf=${encodeURIComponent(getTf())}`;
 
 };
@@ -1033,11 +1051,11 @@ widget.classList.add(
 "widget-chart-empty"
 );
 
-void import("./bybit-network-ui.js?v=2").then(
+void import("./bybit-network-ui.js?v=3").then(
 m=>{
 m.showBybitNetworkIssue(
 new Error(
-"История свечей Bybit пуста"
+`История свечей ${getActiveExchangeDefinition().name} пуста`
 )
 );
 }
@@ -1046,6 +1064,8 @@ new Error(
 return;
 
 }
+
+clearBybitNetworkIssue();
 
 widget.classList.remove(
 "widget-chart-empty"

@@ -30,6 +30,26 @@
       "source": "/trade.html",
       "destination": "/terminal.html",
       "permanent": false
+    },
+    {
+      "source": "/script",
+      "destination": "/screener",
+      "permanent": false
+    },
+    {
+      "source": "/script.html",
+      "destination": "/screener.html",
+      "permanent": false
+    },
+    {
+      "source": "/diary",
+      "destination": "/screener",
+      "permanent": false
+    },
+    {
+      "source": "/diary/",
+      "destination": "/screener",
+      "permanent": false
     }
   ],
   "buildCommand": "node scripts/write-supabase-env.cjs",

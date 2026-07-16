@@ -73,6 +73,19 @@ return `${s.slice(
 )}-USDT`;
 }
 
+if(
+s.endsWith(
+"USDC"
+) &&
+s.length >
+4
+){
+return `${s.slice(
+0,
+-4
+)}-USDC`;
+}
+
 return s;
 
 }

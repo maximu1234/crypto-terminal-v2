@@ -16,7 +16,7 @@ SCREENER_MAX_BARS
 
 import {
 loadMarketHistory
-} from "./market-api.js?v=1";
+} from "./market-api.js?v=2";
 
 import {
 calculateRSI,

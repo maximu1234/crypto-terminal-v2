@@ -4,7 +4,7 @@
 import {
 applyTradePositionsStream,
 syncTradePositionsCache
-} from "./trade-positions-cache.js?v=9";
+} from "./trade-positions-cache.js?v=32";
 
 import {
 isTradePositionSoundBaselineReady
@@ -12,7 +12,11 @@ isTradePositionSoundBaselineReady
 
 import {
 isExchangeTradingEnabled
-} from "./market-api.js?v=1";
+} from "./market-api.js?v=2";
+
+import {
+getTradeExchangePolicy
+} from "./trade/exchanges/index.js?v=12";
 
 let unsubscribe =
 null;
@@ -20,13 +24,26 @@ let visibilityHandler =
 null;
 let syncTimer =
 null;
+let restSyncDelayTimer =
+null;
 let initialStreamSyncDone =
 false;
 let bridgeStarted =
 false;
-
-const POSITIONS_SYNC_INTERVAL_MS =
+let currentSyncIntervalMs =
 5000;
+
+const POSITIONS_SYNC_RATE_LIMIT_MS =
+60000;
+
+const REST_SYNC_DELAY_MS =
+400;
+
+function defaultPositionsSyncIntervalMs(){
+
+return getTradeExchangePolicy().positionsSyncIntervalMs;
+
+}
 
 async function syncTradeOrdersFromRest(){
 
@@ -36,7 +53,7 @@ window.cryptoTerminalDesktop?.trading;
 if(
 !api?.getOpenOrders
 ){
-return;
+return null;
 }
 
 const status =
@@ -45,17 +62,26 @@ await api.getStatus?.();
 if(
 !status?.configured
 ){
-return;
+return null;
 }
 
 try{
+const policy =
+getTradeExchangePolicy();
 const result =
-await api.getOpenOrders();
+await api.getOpenOrders(
+policy.restOrdersForceRefresh
+? {
+forceRefresh:
+true
+}
+: {}
+);
 
 if(
 !result?.ok
 ){
-return;
+return result;
 }
 
 const orders =
@@ -82,18 +108,138 @@ orders
 }
 )
 );
+
+return result;
+}catch{
+return null;
+}
+
+}
+
+function scheduleSyncTimer(){
+
+if(
+syncTimer
+){
+clearInterval(
+syncTimer
+);
+}
+
+syncTimer =
+setInterval(
+()=>{
+
+if(
+document.hidden
+){
+return;
+}
+
+void syncTradeStreamFromRest();
+
+},
+currentSyncIntervalMs
+);
+
+}
+
+function applySyncIntervalFromResult(
+result
+){
+
+if(
+result?.rateLimited
+){
+currentSyncIntervalMs =
+POSITIONS_SYNC_RATE_LIMIT_MS;
+}else if(
+result?.ok
+){
+currentSyncIntervalMs =
+defaultPositionsSyncIntervalMs();
+}
+
+scheduleSyncTimer();
+
+}
+
+async function applySyncIntervalFromRateLimit(
+result
+){
+
+if(
+!result?.rateLimited
+){
+applySyncIntervalFromResult(
+result
+);
+return;
+}
+
+let backoffMs =
+POSITIONS_SYNC_RATE_LIMIT_MS;
+
+try{
+const api =
+window.cryptoTerminalDesktop?.trading;
+
+if(
+api?.getRateLimitBackoffMs
+){
+const remoteMs =
+Number(
+await api.getRateLimitBackoffMs()
+);
+
+if(
+Number.isFinite(
+remoteMs
+) &&
+remoteMs >
+0
+){
+backoffMs =
+Math.max(
+backoffMs,
+remoteMs
+);
+}
+}
 }catch{
 /* ignore */
 }
+
+currentSyncIntervalMs =
+backoffMs;
+scheduleSyncTimer();
 
 }
 
 async function syncTradeStreamFromRest(){
 
-await Promise.all([
-syncTradePositionsCache(),
-syncTradeOrdersFromRest()
-]);
+if(
+document.hidden
+){
+return;
+}
+
+const posResult =
+await syncTradePositionsCache();
+
+await applySyncIntervalFromRateLimit(
+posResult
+);
+
+if(
+posResult?.rateLimited
+){
+initialStreamSyncDone =
+true;
+return;
+}
+
+await syncTradeOrdersFromRest();
 
 initialStreamSyncDone =
 true;
@@ -221,6 +367,16 @@ null;
 }
 
 if(
+restSyncDelayTimer
+){
+clearTimeout(
+restSyncDelayTimer
+);
+restSyncDelayTimer =
+null;
+}
+
+if(
 visibilityHandler
 ){
 document.removeEventListener(
@@ -235,6 +391,8 @@ bridgeStarted =
 false;
 initialStreamSyncDone =
 false;
+currentSyncIntervalMs =
+defaultPositionsSyncIntervalMs();
 
 }
 
@@ -294,7 +452,17 @@ handleStreamPayload
 
 try{
 await api.replayStream?.();
-await syncTradeStreamFromRest();
+initialStreamSyncDone =
+true;
+restSyncDelayTimer =
+setTimeout(
+()=>{
+restSyncDelayTimer =
+null;
+void syncTradeStreamFromRest();
+},
+REST_SYNC_DELAY_MS
+);
 }catch{
 /* ignore */
 }
@@ -317,21 +485,7 @@ document.addEventListener(
 visibilityHandler
 );
 
-syncTimer =
-setInterval(
-()=>{
-
-if(
-document.hidden
-){
-return;
-}
-
-void syncTradeStreamFromRest();
-
-},
-POSITIONS_SYNC_INTERVAL_MS
-);
+scheduleSyncTimer();
 
 return ()=>{
 stopTradeStreamBridge();

@@ -5,7 +5,11 @@ import {
 closedPnlTradesToExecutions,
 normalizeSymbol,
 SANDBOX_SYMBOL
-} from "./marker-math.js?v=8";
+} from "./marker-math.js?v=9";
+
+import {
+getActiveExchangeId
+} from "../market-api.js?v=2";
 
 /** Буфер до первой свечи при запросе closed PnL. */
 const CHART_START_BUFFER_MS =
@@ -43,6 +47,14 @@ trade?.symbol
 ) ===
 want
 );
+
+}
+
+function shouldFetchTradeDetails(){
+
+/* BingX: N× allFillOrders storms rate-limit; positionHistory open/close is enough for markers. */
+return getActiveExchangeId() !==
+"bingx";
 
 }
 
@@ -112,6 +124,9 @@ CHART_START_BUFFER_MS
 
 let pnlResult;
 
+const exchangeId =
+getActiveExchangeId();
+
 try{
 pnlResult =
 await api.getClosedPnl(
@@ -123,7 +138,8 @@ endTime,
 skipExecutions:
 true,
 parallelChunks:
-true
+true,
+exchangeId
 }
 );
 }catch(
@@ -182,7 +198,8 @@ message:
 }
 
 if(
-!api.getTradeDiaryDetail
+!api.getTradeDiaryDetail ||
+!shouldFetchTradeDetails()
 ){
 return {
 ok:
@@ -194,7 +211,9 @@ trades,
 want
 ),
 message:
-"без детализации"
+shouldFetchTradeDetails()
+? "без детализации"
+: ""
 };
 }
 
@@ -248,11 +267,15 @@ details[
 i
 ];
 const isLong =
+[
+"long",
+"buy"
+].includes(
 String(
 trade?.side ||
 ""
-).toLowerCase() ===
-"long";
+).toLowerCase()
+);
 
 if(
 detail?.ok

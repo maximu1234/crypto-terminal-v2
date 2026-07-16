@@ -14,6 +14,31 @@ import {
 fetchBybit
 } from "./bybit-fetch.js?v=17";
 
+import {
+getActiveExchangeId
+} from "./market-api.js?v=2";
+
+import {
+getExchangeDefinition
+} from "./exchanges/registry.js?v=1";
+
+import {
+toBingxSymbol
+} from "./exchanges/symbol.js?v=1";
+
+import {
+fetchBingx
+} from "./exchanges/bingx/fetch.js?v=3";
+
+import {
+tfToBingxInterval
+} from "./exchanges/bingx/intervals.js?v=1";
+
+import {
+candleAlignSec,
+markerForExecutionSide
+} from "./trade-markers-sandbox/marker-math.js?v=9";
+
 export const DIARY_CHART_TFS =
 Object.freeze([
 "1",
@@ -100,38 +125,119 @@ return raw.endsWith(
 
 }
 
-function candleAlignSec(
-ms,
-tf
-){
-
-const tfMin =
-TF_MINUTES[
-tf
-] ||
-15;
-const tfSec =
-tfMin *
-60;
-const sec =
-Math.floor(
-ms /
-1000
-);
-
-return Math.floor(
-sec /
-tfSec
-) *
-tfSec;
-
-}
-
 async function fetchKlineBatch(
 symbol,
 tf,
 end
 ){
+
+const exchangeId =
+getActiveExchangeId() ||
+"bybit";
+
+if(
+exchangeId ===
+"bingx"
+){
+
+try{
+
+const params =
+new URLSearchParams({
+symbol:
+toBingxSymbol(
+symbol
+),
+interval:
+tfToBingxInterval(
+tf
+),
+limit:
+"1000"
+});
+
+if(
+Number.isFinite(
+end
+) &&
+end >
+0
+){
+params.set(
+"endTime",
+String(
+end
+)
+);
+}
+
+const json =
+await fetchBingx(
+`/openApi/swap/v2/quote/klines?${params}`
+);
+
+const rows =
+Array.isArray(
+json?.data
+)
+? json.data
+: [];
+
+return rows.map(
+row=>{
+
+const ts =
+Number(
+row.time ||
+row.openTime ||
+row.t ||
+0
+);
+
+return {
+timeMs:
+ts >
+1e12
+? ts
+: ts *
+1000,
+open:
+Number(
+row.open
+),
+high:
+Number(
+row.high
+),
+low:
+Number(
+row.low
+),
+close:
+Number(
+row.close
+),
+volume:
+Number(
+row.volume ||
+row.vol ||
+0
+) ||
+0
+};
+
+}
+).filter(
+row=>
+row.timeMs >
+0
+);
+
+}catch{
+return null;
+}
+
+}
 
 const path =
 `/v5/market/kline?category=linear&symbol=${encodeURIComponent(
@@ -164,7 +270,47 @@ Array.isArray(
 json.result?.list
 )
 ){
-return json.result.list;
+return json.result.list.map(
+row=>({
+timeMs:
+Number(
+row[
+0
+]
+),
+open:
+Number(
+row[
+1
+]
+),
+high:
+Number(
+row[
+2
+]
+),
+low:
+Number(
+row[
+3
+]
+),
+close:
+Number(
+row[
+4
+]
+),
+volume:
+Number(
+row[
+5
+]
+) ||
+0
+})
+);
 }
 
 }catch{
@@ -264,9 +410,7 @@ batch
 const time =
 Math.floor(
 Number(
-row[
-0
-]
+row.timeMs
 ) /
 1000
 );
@@ -277,33 +421,23 @@ time,
 time,
 open:
 Number(
-row[
-1
-]
+row.open
 ),
 high:
 Number(
-row[
-2
-]
+row.high
 ),
 low:
 Number(
-row[
-3
-]
+row.low
 ),
 close:
 Number(
-row[
-4
-]
+row.close
 ),
 volume:
 Number(
-row[
-5
-]
+row.volume
 ) ||
 0
 }
@@ -316,9 +450,7 @@ Math.min(
 ...batch.map(
 k=>
 Number(
-k[
-0
-]
+k.timeMs
 )
 )
 );
@@ -450,8 +582,16 @@ document.createElement(
 );
 meta.className =
 "trade-diary-detail-chart-meta";
+const exchangeId =
+getActiveExchangeId() ||
+"bybit";
+const exchangeName =
+getExchangeDefinition(
+exchangeId
+)?.name ||
+exchangeId;
 meta.textContent =
-`LINEAR:${symbol} · Bybit`;
+`LINEAR:${symbol} · ${exchangeName}`;
 
 const tfBar =
 document.createElement(
@@ -505,43 +645,6 @@ mount
 );
 
 return shell;
-
-}
-
-function markerForExecutionSide(
-side,
-execTimeMs,
-tf
-){
-
-const isBuy =
-String(
-side ||
-""
-).toLowerCase() ===
-"buy";
-
-return {
-time:
-candleAlignSec(
-execTimeMs,
-tf
-),
-position:
-isBuy
-? "belowBar"
-: "aboveBar",
-color:
-isBuy
-? "#22c55e"
-: "#ef4444",
-shape:
-isBuy
-? "arrowUp"
-: "arrowDown",
-size:
-2
-};
 
 }
 

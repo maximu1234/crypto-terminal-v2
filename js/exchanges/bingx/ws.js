@@ -121,9 +121,84 @@ symbol
 
 }
 
+export function extractKlineRow(
+msg
+){
+
+const raw =
+msg?.data;
+
+if(
+Array.isArray(
+raw
+)
+){
+return raw[
+0
+] ||
+null;
+}
+
+return (
+raw?.kline ||
+raw ||
+msg?.k ||
+null
+);
+
+}
+
+export function extractKlineTimestamp(
+row
+){
+
+return Number(
+row?.t ||
+row?.T ||
+row?.time ||
+row?.openTime ||
+0
+);
+
+}
+
+function handleSocketPing(
+raw
+){
+
+const text =
+typeof raw ===
+"string"
+? raw.trim()
+: "";
+
+if(
+text ===
+"Ping"
+){
+socket?.send(
+"Pong"
+);
+return true;
+}
+
+return false;
+
+}
+
 async function parseMessage(
 data
 ){
+
+if(
+typeof data ===
+"string" &&
+handleSocketPing(
+data
+)
+){
+return null;
+}
 
 if(
 typeof data ===
@@ -354,6 +429,14 @@ resubscribeAll();
 socket.onmessage =
 async event=>{
 
+if(
+handleSocketPing(
+event.data
+)
+){
+return;
+}
+
 let msg =
 null;
 
@@ -406,9 +489,9 @@ dataType.split(
 const topic =
 `kline:${bingxSym}:${rest}`;
 const row =
-msg?.data?.kline ||
-msg?.data ||
-msg?.k;
+extractKlineRow(
+msg
+);
 
 if(
 !row
@@ -417,11 +500,8 @@ return;
 }
 
 const ts =
-Number(
-row.t ||
-row.time ||
-row.openTime ||
-0
+extractKlineTimestamp(
+row
 );
 const sec =
 ts >

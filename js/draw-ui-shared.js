@@ -137,7 +137,7 @@ ${RECTANGLE_ICON_SVG}
 
 ${getPositionDrawToolbarButtonsHtml(opts)}
 
-<button type="button" class="${btnClass} draw-tool-clear-all" title="Удалить все объекты на графике">
+<button type="button" class="${btnClass} draw-tool-clear-all" title="Удалить все объекты на графике (Shift+Backspace)">
 ${TOOLBAR_CLEAR_TRASH_ICON_SVG}
 </button>`;
 

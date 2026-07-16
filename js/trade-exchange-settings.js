@@ -7,7 +7,7 @@ EXCHANGE_DEFINITIONS,
 getActiveExchangeId,
 setActiveExchangeId,
 pingActiveExchangePublic
-} from "./market-api.js?v=1";
+} from "./market-api.js?v=2";
 
 import {
 readExchangeCredentials,
@@ -25,8 +25,16 @@ return window.cryptoTerminalDesktop?.trading;
 function formatTradingUserError(
 message,
 context =
-"save"
+"save",
+exchangeId =
+"bybit"
 ){
+
+const exchangeName =
+EXCHANGE_DEFINITIONS[
+exchangeId
+]?.name ||
+"биржи";
 
 const raw =
 String(
@@ -73,6 +81,23 @@ return "Укажите API Secret.";
 
 if(
 lower.includes(
+"frequency limit"
+) ||
+lower.includes(
+"trigger frequency"
+) ||
+/code:100410/i.test(
+raw
+) ||
+/\b100410\b/.test(
+raw
+)
+){
+return "Превышен лимит запросов BingX. Подождите немного — данные обновятся автоматически.";
+}
+
+if(
+lower.includes(
 "failed to clear credentials"
 )
 ){
@@ -87,7 +112,7 @@ raw
 return context ===
 "clear"
 ? "Не удалось удалить ключи. Попробуйте ещё раз или перезапустите приложение."
-: "Не удалось сохранить ключи. Проверьте API Key и Secret в личном кабинете Bybit.";
+: `Не удалось сохранить ключи. Проверьте API Key и Secret в личном кабинете ${exchangeName}.`;
 }
 
 return raw;
@@ -231,7 +256,7 @@ return `
 </div>
 <hr class="trade-exchange-divider"/>
 <p class="header-settings-section-title">Пинг до ${def.name}</p>
-<p class="trade-exchange-hint">Задержка публичного API${exchangeId === "bybit" ? " и signed-запросов" : ""}. Для торговли лучше &lt;100&nbsp;ms.</p>
+<p class="trade-exchange-hint">Задержка публичного API и signed-запросов. Для торговли лучше &lt;100&nbsp;ms.</p>
 <div class="trade-exchange-ping-row">
 <p class="trade-exchange-ping" data-role="ping" aria-live="polite"><span data-role="ping-main">—</span></p>
 <button type="button" class="trade-exchange-refresh" data-role="refresh-ping">Измерить</button>
@@ -250,14 +275,11 @@ const def =
 EXCHANGE_DEFINITIONS[
 id
 ];
-const isBingx =
-id ===
-"bingx";
 return `
 <div class="exchange-switcher-badge" data-exchange="${id}">
 <span class="exchange-switcher-name">${def.name}</span>
 <label class="exchange-switcher-toggle" aria-label="${def.name}">
-<input type="checkbox" data-role="exchange-toggle" data-exchange="${id}" ${isBingx ? 'disabled aria-disabled="true"' : ""}/>
+<input type="checkbox" data-role="exchange-toggle" data-exchange="${id}"/>
 <span class="exchange-switcher-slider" aria-hidden="true"></span>
 </label>
 </div>
@@ -477,7 +499,9 @@ detail:
 
 if(
 exchangeId !==
-"bybit"
+"bybit" &&
+exchangeId !==
+"bingx"
 ){
 const quality =
 pingQuality(
@@ -564,13 +588,13 @@ onSaved
 
 const api =
 tradingApi();
-
-const isBybit =
+const usesDesktopKeys =
 exchangeId ===
-"bybit";
+"bybit" ||
+exchangeId ===
+"bingx";
 
 if(
-!isBybit &&
 !form
 ){
 return {
@@ -579,7 +603,7 @@ refreshPing:()=>{}
 }
 
 if(
-isBybit &&
+usesDesktopKeys &&
 !api
 ){
 return {
@@ -707,7 +731,7 @@ try{
 let result;
 
 if(
-isBybit
+usesDesktopKeys
 ){
 
 if(
@@ -721,6 +745,7 @@ return;
 
 result =
 await api.pingBybit({
+exchangeId,
 testnet:
 false
 });
@@ -864,7 +889,7 @@ refreshBtn.hidden =
 async function refreshBalance(){
 
 if(
-!isBybit
+!usesDesktopKeys
 ){
 setBalance(
 null,
@@ -896,14 +921,20 @@ setBalance(
 
 try{
 const bal =
-await api.getWalletBalance();
+await api.getWalletBalance({
+exchangeId
+});
 
 if(
 !bal?.ok
 ){
 setBalance(
 bal?.message
-? `Баланс: ${bal.message}`
+? `Баланс: ${formatTradingUserError(
+bal.message,
+"balance",
+exchangeId
+)}`
 : "Баланс: ошибка",
 true
 );
@@ -995,11 +1026,13 @@ async function refreshStatus(){
 try{
 
 if(
-isBybit
+usesDesktopKeys
 ){
 
 const info =
-await api.getStatus();
+await api.getStatus({
+exchangeId
+});
 
 if(
 info?.apiKey
@@ -1133,11 +1166,13 @@ secretInput.dataset.secretSaved ===
 "1";
 
 if(
-isBybit
+usesDesktopKeys
 ){
 
 const info =
-await api.getStatus();
+await api.getStatus({
+exchangeId
+});
 const keyUnchanged =
 !!info?.configured &&
 keyTrim ===
@@ -1166,6 +1201,7 @@ return;
 
 const payload =
 {
+exchangeId,
 apiKey:
 keyTrim,
 testnet:
@@ -1200,7 +1236,8 @@ false
 setStatus(
 formatTradingUserError(
 result.message,
-"save"
+"save",
+exchangeId
 ),
 "is-error"
 );
@@ -1357,11 +1394,13 @@ true;
 try{
 
 if(
-isBybit
+usesDesktopKeys
 ){
 
 const result =
-await api.clearKeys();
+await api.clearKeys({
+exchangeId
+});
 keyInput.value =
 "";
 applySecretSavedUi(
@@ -1382,7 +1421,8 @@ false
 setStatus(
 formatTradingUserError(
 result.message,
-"clear"
+"clear",
+exchangeId
 ),
 "is-error"
 );
@@ -1570,16 +1610,6 @@ host
 let activeId =
 getActiveExchangeId();
 
-if(
-activeId ===
-"bingx"
-){
-activeId =
-setActiveExchangeId(
-"bybit"
-);
-}
-
 let formCtl =
 mountConnectionForm(
 panel,
@@ -1606,19 +1636,6 @@ const id =
 input.dataset.exchange;
 
 if(
-id ===
-"bingx"
-){
-input.checked =
-false;
-syncExchangeToggleUi(
-panel,
-activeId
-);
-return;
-}
-
-if(
 !input.checked
 ){
 
@@ -1629,13 +1646,19 @@ activeId
 input.checked =
 true;
 
+const other =
+EXCHANGE_IDS.find(
+ex=>
+ex !==
+id
+);
+
 if(
-id !==
-"bybit"
+other
 ){
 activeId =
 setActiveExchangeId(
-"bybit"
+other
 );
 syncExchangeToggleUi(
 panel,
@@ -1750,18 +1773,49 @@ if(
 return;
 }
 
+const activeId =
+getActiveExchangeId();
+
+void tradingApi().getStatus().then(
+mainStatus=>{
+
+void tradingApi().getStatus({
+exchangeId:
+activeId
+}).then(
+status=>{
+
+updateConnectionChrome(
+status
+);
+
+if(
+mainStatus?.exchangeId !==
+activeId
+){
+void tradingApi().setActiveExchange?.(
+activeId
+).catch(
+()=>{}
+);
+}
+
+}
+).catch(
+()=>{}
+);
+
+}
+).catch(
+()=>{}
+);
+
 const onSaved =
 info=>{
 updateConnectionChrome(
 info
 );
 };
-
-void tradingApi().getStatus().then(
-updateConnectionChrome
-).catch(
-()=>{}
-);
 
 window.__tradeExchangeOnSaved =
 onSaved;

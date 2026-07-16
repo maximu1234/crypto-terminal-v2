@@ -3,13 +3,13 @@ fetchBingx
 } from "./fetch.js?v=3";
 
 import {
-buildBingxMarketLists
-} from "./markets.js?v=1";
+buildBingxMarketLists,
+classifyBingxContract
+} from "./markets.js?v=3";
 
 import {
 toBingxSymbol,
-toCanonicalSymbol,
-isUsdtMarginedSymbol
+toCanonicalSymbol
 } from "../symbol.js?v=1";
 
 import {
@@ -91,6 +91,33 @@ instruments
 }catch{
 /* ignore */
 }
+
+}
+
+function dispatchBingxSymbolsUpdated(
+instruments
+){
+
+if(
+typeof window ===
+"undefined"
+){
+return;
+}
+
+window.dispatchEvent(
+new CustomEvent(
+"market-symbols-updated",
+{
+detail: {
+exchangeId:
+"bingx",
+symbols:
+instruments
+}
+}
+)
+);
 
 }
 
@@ -346,10 +373,18 @@ if(
 return null;
 }
 
+const category =
+classifyBingxContract({
+symbol:
+item.symbol ||
+raw?.symbol,
+status:
+raw?.status ??
+item.status
+});
+
 if(
-!isUsdtMarginedSymbol(
-symbol
-)
+!category
 ){
 return null;
 }
@@ -403,6 +438,8 @@ symbol,
 status:
 "Trading",
 launchTime,
+bingxMarketCategory:
+category,
 raw:
 raw ||
 item.raw ||
@@ -475,6 +512,8 @@ options = {}
 
 if(
 options.skipCache !==
+true &&
+options.forceNetwork !==
 true
 ){
 
@@ -495,6 +534,10 @@ const instruments =
 await loadContractsFromNetwork();
 
 writeSymbolsCache(
+instruments
+);
+
+dispatchBingxSymbolsUpdated(
 instruments
 );
 
@@ -548,10 +591,7 @@ row.symbol
 );
 
 if(
-!sym ||
-!isUsdtMarginedSymbol(
-sym
-)
+!sym
 ){
 return;
 }
@@ -632,125 +672,125 @@ const {
 pingBingxPublic
 } =
 await import(
-"./fetch.js?v=1"
+"./fetch.js?v=3"
 );
 
 return pingBingxPublic();
 
-},
+}
 
-async fetchDailyCandles(
-symbol,
-limit = 375
+};
+
+function clampBingxDepthLimit(
+depth
 ){
 
-const bingxSym =
-toBingxSymbol(
-symbol
-);
-
-const params =
-new URLSearchParams({
-symbol:
-bingxSym,
-interval:
-"1d",
-limit:
-String(
-Math.min(
-1000,
-Math.max(
-1,
+const n =
 Number(
-limit
-) ||
-375
-)
-)
-)
-});
-
-const json =
-await fetchBingx(
-`/openApi/swap/v2/quote/klines?${params}`
+depth
 );
-
-const rows =
-Array.isArray(
-json?.data
-)
-? json.data
-: [];
 
 if(
-!rows.length
+!Number.isFinite(
+n
+) ||
+n <=
+5
+){
+return 5;
+}
+
+if(
+n <=
+10
+){
+return 10;
+}
+
+/* BingX swap depth accepts 5 / 10 / 20. */
+return 20;
+
+}
+
+function mapBingxDepthSide(
+rows
+){
+
+return (
+Array.isArray(
+rows
+)
+? rows
+: []
+).map(
+row=>{
+
+const price =
+Number(
+Array.isArray(
+row
+)
+? row[
+0
+]
+: row?.price
+);
+const size =
+Number(
+Array.isArray(
+row
+)
+? row[
+1
+]
+: row?.size ??
+row?.qty
+);
+
+if(
+!Number.isFinite(
+price
+) ||
+!Number.isFinite(
+size
+) ||
+price <=
+0 ||
+size <=
+0
 ){
 return null;
 }
 
-return rows
-.map(
-row=>{
-
-const ts =
-Number(
-row.time ||
-row.openTime ||
-row.t ||
-0
-);
-const sec =
-ts >
-1e12
-? Math.floor(
-ts /
-1000
-)
-: ts;
-
 return {
-time:
-sec,
-open:Number(
-row.open
-),
-close:Number(
-row.close
-)
+price,
+size,
+notional:
+price *
+size
 };
 
 }
-)
-.filter(
-row=>
-Number.isFinite(
-row.time
-) &&
-row.time >
-0
-)
-.sort(
-(
-a,
-b
-)=>
-a.time -
-b.time
+).filter(
+Boolean
 );
 
 }
-
-};
 
 export async function loadBingxOrderbook(
 symbol,
 depth =
-50
+20
 ){
 
 const bingxSym =
 toBingxSymbol(
 symbol
+);
+
+const capped =
+clampBingxDepthLimit(
+depth
 );
 
 const json =
@@ -759,7 +799,7 @@ await fetchBingx(
 bingxSym
 )}&limit=${encodeURIComponent(
 String(
-depth
+capped
 )
 )}`
 );
@@ -769,39 +809,27 @@ json?.data ||
 {};
 
 return {
-bids:(
-data.bids ||
-[]
-).map(
-pair=>[
-Number(
-pair[
-0
-]
+bids:
+mapBingxDepthSide(
+data.bids
+).sort(
+(
+a,
+b
+)=>
+b.price -
+a.price
 ),
-Number(
-pair[
-1
-]
-)
-]
-),
-asks:(
-data.asks ||
-[]
-).map(
-pair=>[
-Number(
-pair[
-0
-]
-),
-Number(
-pair[
-1
-]
-)
-]
+asks:
+mapBingxDepthSide(
+data.asks
+).sort(
+(
+a,
+b
+)=>
+a.price -
+b.price
 )
 };
 

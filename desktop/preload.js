@@ -85,9 +85,26 @@ ipcRenderer.invoke(
 visible
 ),
 trading:{
-getStatus:()=>
+getStatus:(
+payload
+)=>
 ipcRenderer.invoke(
-"trading:getStatus"
+"trading:getStatus",
+payload ||
+{}
+),
+getRateLimitBackoffMs:()=>
+ipcRenderer.invoke(
+"trading:getRateLimitBackoffMs"
+),
+setActiveExchange:(
+exchangeId
+)=>
+ipcRenderer.invoke(
+"trading:setActiveExchange",
+{
+exchangeId
+}
 ),
 saveKeys:(
 payload
@@ -96,62 +113,114 @@ ipcRenderer.invoke(
 "trading:saveKeys",
 payload
 ),
-clearKeys:()=>
+clearKeys:(
+payload
+)=>
 ipcRenderer.invoke(
-"trading:clearKeys"
+"trading:clearKeys",
+payload ||
+{}
 ),
-getWalletBalance:()=>
+getWalletBalance:(
+payload
+)=>
 ipcRenderer.invoke(
-"trading:getWalletBalance"
+"trading:getWalletBalance",
+payload ||
+{}
 ),
-getPositions:()=>
+getPositions:(
+options
+)=>
 ipcRenderer.invoke(
-"trading:getPositions"
+"trading:getPositions",
+options ||
+{}
 ),
-getOpenOrders:()=>
+getOpenOrders:(
+options
+)=>
 ipcRenderer.invoke(
-"trading:getOpenOrders"
+"trading:getOpenOrders",
+options ||
+{}
 ),
 getPosition:(
-symbol
+symbol,
+options =
+{}
 )=>
 ipcRenderer.invoke(
 "trading:getPosition",
 {
-symbol
+symbol,
+...(
+typeof options ===
+"object" &&
+options
+? options
+: {}
+)
 }
 ),
 closePosition:(
-symbol
+symbol,
+options =
+{}
 )=>
 ipcRenderer.invoke(
 "trading:closePosition",
 {
-symbol
+symbol,
+...(
+typeof options ===
+"object" &&
+options
+? options
+: {}
+)
 }
 ),
 cancelPositionStop:(
 symbol,
-target
+target,
+options =
+{}
 )=>
 ipcRenderer.invoke(
 "trading:cancelPositionStop",
 {
 symbol,
-target
+target,
+...(
+typeof options ===
+"object" &&
+options
+? options
+: {}
+)
 }
 ),
 setPositionStop:(
 symbol,
 target,
-price
+price,
+options =
+{}
 )=>
 ipcRenderer.invoke(
 "trading:setPositionStop",
 {
 symbol,
 target,
-price
+price,
+...(
+typeof options ===
+"object" &&
+options
+? options
+: {}
+)
 }
 ),
 placeOrder:(
@@ -202,14 +271,17 @@ symbol
 openPosition:(
 symbol,
 side,
-volumeUsdt
+volumeUsdt,
+options =
+{}
 )=>
 ipcRenderer.invoke(
 "trading:openPosition",
 {
 symbol,
 side,
-volumeUsdt
+volumeUsdt,
+...options
 }
 ),
 getSymbolPositionSettings:(

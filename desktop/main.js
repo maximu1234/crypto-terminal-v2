@@ -36,6 +36,12 @@ require(
 "./local-site-server.cjs"
 );
 const {
+startDesktopHandoffServer
+} =
+require(
+"./desktop-handoff-server.cjs"
+);
+const {
 warmStaticCache
 } =
 require(
@@ -222,6 +228,14 @@ const PARTITION =
 let pendingAuthCallbackUrl =
 null;
 
+/** @type {string | null} */
+let pendingDesktopOpenUrl =
+null;
+
+/** @type {(() => Promise<void>) | null} */
+let closeHandoffServer =
+null;
+
 /** @type {BrowserWindow | null} */
 let mainWindow =
 null;
@@ -333,6 +347,86 @@ mainWindow.maximize();
 }
 
 mainWindow.focus();
+
+}
+
+function buildDesktopAlertOpenUrl(
+payload
+){
+
+const params =
+new URLSearchParams({
+symbol:
+String(
+payload?.symbol ||
+""
+).trim(),
+tf:
+String(
+payload?.tf ||
+"60"
+).trim() ||
+"60"
+});
+
+const exchange =
+String(
+payload?.exchange ||
+""
+).trim().toLowerCase();
+
+if(
+exchange ===
+"bybit" ||
+exchange ===
+"bingx"
+){
+params.set(
+"exchange",
+exchange
+);
+}
+
+return `${getAppOrigin()}/terminal.html?${params}`;
+
+}
+
+function deliverDesktopAlertOpen(
+payload
+){
+
+const symbol =
+String(
+payload?.symbol ||
+""
+).trim();
+
+if(
+!symbol
+){
+return;
+}
+
+const url =
+buildDesktopAlertOpenUrl(
+payload
+);
+
+if(
+!mainWindow ||
+mainWindow.isDestroyed()
+){
+pendingDesktopOpenUrl =
+url;
+return;
+}
+
+pendingDesktopOpenUrl =
+null;
+void mainWindow.loadURL(
+url
+);
+revealMainWindow();
 
 }
 
@@ -671,6 +765,21 @@ null;
 mainWindow.webContents.send(
 "desktop:auth-callback",
 url
+);
+revealMainWindow();
+}
+
+if(
+pendingDesktopOpenUrl &&
+mainWindow &&
+!mainWindow.isDestroyed()
+){
+const openUrl =
+pendingDesktopOpenUrl;
+pendingDesktopOpenUrl =
+null;
+void mainWindow.loadURL(
+openUrl
 );
 revealMainWindow();
 }
@@ -1148,6 +1257,25 @@ REMOTE_APP_URL
 );
 }
 
+try{
+const handoff =
+await startDesktopHandoffServer({
+log,
+onOpen:
+deliverDesktopAlertOpen
+});
+closeHandoffServer =
+handoff.close;
+}catch(
+err
+){
+log.warn(
+"desktop-handoff start:",
+err?.message ||
+err
+);
+}
+
 startPowerSaveBlocker();
 
 const ses =
@@ -1214,6 +1342,14 @@ void closeLocalSiteServer();
 closeLocalSiteServer =
 null;
 localSiteOrigin =
+null;
+}
+
+if(
+closeHandoffServer
+){
+void closeHandoffServer();
+closeHandoffServer =
 null;
 }
 

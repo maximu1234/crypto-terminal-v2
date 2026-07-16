@@ -2,7 +2,7 @@ import {
 getActiveExchangeId,
 setActiveExchangeId,
 getExchangeDefinition
-} from "./market-api.js?v=1";
+} from "./market-api.js?v=2";
 
 import {
 isKnownExchangeId
@@ -115,9 +115,9 @@ overlay.className =
 overlay.innerHTML =
 `
 <div class="trade-exchange-confirm-dialog" role="alertdialog" aria-modal="true" aria-labelledby="alert-exchange-switch-title">
-<p id="alert-exchange-switch-title" class="trade-exchange-confirm-message">Переключиться на биржу ${safeName}?</p>
+<p id="alert-exchange-switch-title" class="trade-exchange-confirm-message">Перейти на биржу ${safeName}?</p>
 <div class="trade-exchange-confirm-actions">
-<button type="button" class="trade-exchange-confirm-cancel" data-action="cancel">Нет</button>
+<button type="button" class="trade-exchange-confirm-cancel" data-action="cancel">Отмена</button>
 <button type="button" class="trade-exchange-confirm-yes" data-action="yes">Да</button>
 </div>
 </div>`;

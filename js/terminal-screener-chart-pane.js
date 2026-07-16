@@ -23,7 +23,7 @@ linkChartsCrosshair
 
 import {
 readCoinsPrefs
-} from "./terminal/terminal-prefs.js?v=15";
+} from "./terminal/terminal-prefs.js?v=17";
 
 import {
 calculateRSI,
@@ -32,7 +32,7 @@ alignRsiWithCandleTimes
 
 import {
 loadMarketHistory
-} from "./market-api.js?v=1";
+} from "./market-api.js?v=2";
 
 import {
 subscribeKline

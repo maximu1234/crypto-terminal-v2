@@ -188,11 +188,15 @@ Number(
 trade?.closeTimeMs
 );
 const isLong =
+[
+"long",
+"buy"
+].includes(
 String(
 trade?.side ||
 ""
-).toLowerCase() ===
-"long";
+).toLowerCase()
+);
 
 if(
 Number.isFinite(

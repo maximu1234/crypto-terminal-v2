@@ -1,20 +1,20 @@
 /**
- * При активной бирже ≠ Bybit — скрыть торговый слой (позиции, ордера).
- * Публичные данные (график, список монет, цветовые флаги) — от выбранной биржи.
+ * При активной бирже без desktop IPC торговли — скрыть торговый слой.
+ * Публичные данные (график, список монет) — от выбранной биржи.
  */
 import {
 isExchangeTradingEnabled,
 EXCHANGE_CHANGED_EVENT
-} from "./market-api.js?v=1";
+} from "./market-api.js?v=2";
 
 import {
 clearTradePositionsCache
-} from "./trade-positions-cache.js?v=9";
+} from "./trade-positions-cache.js?v=32";
 
 import {
 stopTradeStreamBridge,
 startTradeStreamBridge
-} from "./trade-stream-bridge.js?v=6";
+} from "./trade-stream-bridge.js?v=17";
 
 const BODY_CLASS =
 "exchange-trading-inactive";
@@ -76,7 +76,7 @@ orders:[]
 
 }
 
-async function suspendBybitTrading(){
+async function suspendExchangeTrading(){
 
 stopTradeStreamBridge();
 clearTradePositionsCache();
@@ -96,7 +96,7 @@ new CustomEvent(
 
 }
 
-async function resumeBybitTrading(){
+async function resumeExchangeTrading(){
 
 if(
 !document.body.classList.contains(
@@ -116,6 +116,29 @@ new CustomEvent(
 
 }
 
+/**
+ * Bybit↔BingX both count as trading-enabled — must stop/clear/restart
+ * the renderer bridge so positions/orders cannot leak across exchanges.
+ */
+async function restartExchangeTrading(){
+
+const active =
+isExchangeTradingActive();
+
+setTradingUiActive(
+active
+);
+
+await suspendExchangeTrading();
+
+if(
+active
+){
+await resumeExchangeTrading();
+}
+
+}
+
 export function applyExchangeTradingGate(){
 
 const active =
@@ -128,9 +151,9 @@ active
 if(
 active
 ){
-void resumeBybitTrading();
+void resumeExchangeTrading();
 }else{
-void suspendBybitTrading();
+void suspendExchangeTrading();
 }
 
 }
@@ -150,7 +173,7 @@ true;
 window.addEventListener(
 EXCHANGE_CHANGED_EVENT,
 ()=>{
-applyExchangeTradingGate();
+void restartExchangeTrading();
 }
 );
 

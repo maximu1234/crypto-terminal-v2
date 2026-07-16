@@ -1,6 +1,14 @@
 /**
  * Auto SL/TP в USDT при открытии позиции (desktop trade).
  */
+import {
+getTradeExchangePolicy
+} from "./trade/exchanges/index.js?v=12";
+
+import {
+getCachedPosition
+} from "./trade-positions-cache.js?v=32";
+
 const STORAGE_KEY =
 "trade_auto_stops_v1";
 
@@ -283,7 +291,7 @@ map
 
 }
 
-function isStopDismissed(
+export function isStopDismissed(
 symbol,
 position,
 target
@@ -413,6 +421,154 @@ qty;
 
 }
 
+function isRetryableStopError(
+result
+){
+
+if(
+!result ||
+result.ok !==
+false
+){
+return false;
+}
+
+if(
+result.rateLimited
+){
+return false;
+}
+
+const msg =
+String(
+result.message ||
+""
+).trim();
+
+return /нет открытой позиции/i.test(
+msg
+);
+
+}
+
+function tradeStopIpcOptions(
+position
+){
+
+if(
+!position
+){
+return {};
+}
+
+return {
+positionSide:
+position.positionSide,
+side:
+position.side,
+position
+};
+
+}
+
+function autoStopInflightKey(
+symbol,
+position
+){
+
+const policy =
+getTradeExchangePolicy();
+
+if(
+typeof policy.positionMapKey ===
+"function"
+){
+return policy.positionMapKey({
+symbol,
+positionSide:
+position?.positionSide,
+side:
+position?.side
+}) ||
+normalizeAutoStopSymbol(
+symbol
+);
+}
+
+return normalizeAutoStopSymbol(
+symbol
+);
+
+}
+
+async function setPositionStopWithRetry(
+api,
+symbol,
+target,
+price,
+options =
+{}
+){
+
+const maxAttempts =
+getTradeExchangePolicy().setStopMaxAttempts;
+
+for(
+let attempt =
+0;
+attempt <
+maxAttempts;
+attempt++
+){
+
+if(
+attempt >
+0
+){
+await new Promise(
+resolve=>{
+setTimeout(
+resolve,
+attempt ===
+1
+? 200
+: attempt *
+500
+);
+}
+);
+}
+
+const result =
+await api.setPositionStop(
+symbol,
+target,
+price,
+options
+);
+
+if(
+!isRetryableStopError(
+result
+) ||
+attempt ===
+maxAttempts -
+1
+){
+return result;
+}
+
+}
+
+return {
+ok:
+false,
+message:
+"setPositionStop failed"
+};
+
+}
+
 export async function applyAutoStopsAfterEntry(
 symbol,
 position
@@ -475,6 +631,10 @@ Number(
 position.takeProfit
 ) ||
 0;
+let nextPosition =
+{
+...position
+};
 
 if(
 settings.slEnabled &&
@@ -507,13 +667,58 @@ if(
 slPrice >
 0
 ){
-await api.setPositionStop(
+const slResult =
+await setPositionStopWithRetry(
+api,
 symbol,
 "sl",
-slPrice
+slPrice,
+tradeStopIpcOptions(
+nextPosition
+)
 );
+
+if(
+slResult?.ok ===
+false
+){
+console.warn(
+"[trade-auto-stops]",
+symbol,
+"sl",
+slResult.message ||
+"failed"
+);
+
+if(
+slResult?.rateLimited
+){
+return;
+}
+}else{
+nextPosition.stopLoss =
+slPrice;
 }
 
+}
+
+}
+
+if(
+getTradeExchangePolicy().pauseBeforeTpMs >
+0 &&
+settings.tpEnabled &&
+settings.tpUsd >
+0
+){
+await new Promise(
+resolve=>{
+setTimeout(
+resolve,
+getTradeExchangePolicy().pauseBeforeTpMs
+);
+}
+);
 }
 
 if(
@@ -547,27 +752,81 @@ if(
 tpPrice >
 0
 ){
-await api.setPositionStop(
+const tpResult =
+await setPositionStopWithRetry(
+api,
 symbol,
 "tp",
-tpPrice
-);
-}
-
-}
-
-window.dispatchEvent(
-new CustomEvent(
-"trade-book-refresh"
+tpPrice,
+tradeStopIpcOptions(
+nextPosition
 )
 );
+
+if(
+tpResult?.ok ===
+false
+){
+console.warn(
+"[trade-auto-stops]",
+symbol,
+"tp",
+tpResult.message ||
+"failed"
+);
+}else{
+nextPosition.takeProfit =
+tpPrice;
+}
+}
+}
+
+try{
+const refreshed =
+await api.getPosition?.(
+symbol,
+tradeStopIpcOptions(
+nextPosition
+)
+);
+
+if(
+refreshed?.ok &&
+refreshed.position
+){
+const sl =
+Number(
+refreshed.position.stopLoss
+) ||
+0;
+const tp =
+Number(
+refreshed.position.takeProfit
+) ||
+0;
+
+if(
+sl >
+0 ||
+tp >
+0
+){
+nextPosition =
+refreshed.position;
+}
+}
+}catch{
+/* ignore */
+}
+
 window.dispatchEvent(
 new CustomEvent(
 "trade-position-updated",
 {
 detail:{
 symbol,
-position
+position:
+nextPosition
 }
 }
 )
@@ -673,40 +932,113 @@ if(
 return;
 }
 
+const inflightKey =
+autoStopInflightKey(
+sym,
+position
+);
+
 if(
 autoStopInflight.has(
-sym
+inflightKey
 )
 ){
 return;
 }
 
 autoStopInflight.add(
-sym
+inflightKey
 );
 
 void (
 async()=>{
 
 try{
+const policy =
+getTradeExchangePolicy();
+
 await new Promise(
 resolve=>{
 setTimeout(
 resolve,
-200
+policy.autoStopDelayMs
 );
 }
 );
 
+let pos =
+position;
+const cached =
+getCachedPosition(
+symbol,
+tradeStopIpcOptions(
+position
+)
+);
+
+if(
+cached &&
+Number(
+cached.size
+) >
+0
+){
+pos =
+cached;
+}
+
+const freshSettings =
+getAutoStopSettings();
+const existingSl =
+Number(
+pos.stopLoss
+) ||
+0;
+const existingTp =
+Number(
+pos.takeProfit
+) ||
+0;
+const stillNeedsSl =
+freshSettings.slEnabled &&
+freshSettings.slUsd >
+0 &&
+existingSl <=
+0 &&
+!isStopDismissed(
+symbol,
+pos,
+"sl"
+);
+const stillNeedsTp =
+freshSettings.tpEnabled &&
+freshSettings.tpUsd >
+0 &&
+existingTp <=
+0 &&
+!isStopDismissed(
+symbol,
+pos,
+"tp"
+);
+
+if(
+!stillNeedsSl &&
+!stillNeedsTp
+){
+return;
+}
+
+/* Main-process attach may have partially applied — still fallback with fresh row. */
 await applyAutoStopsAfterEntry(
 symbol,
-position
+pos
 );
 }finally{
 setTimeout(
 ()=>{
 autoStopInflight.delete(
-sym
+inflightKey
 );
 },
 3000

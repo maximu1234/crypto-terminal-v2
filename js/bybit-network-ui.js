@@ -1,3 +1,11 @@
+/**
+ * Баннер сетевой ошибки публичного API активной биржи.
+ */
+import {
+getActiveExchangeDefinition,
+getActiveExchangeId
+} from "./market-api.js?v=2";
+
 let bannerEl = null;
 let messageEl = null;
 let uiReady = false;
@@ -34,7 +42,28 @@ retryBtn.addEventListener(
 "click",
 ()=>{
 
-resetBybitEndpoints();
+void import(
+"./bybit-fetch.js?v=17"
+).then(
+m=>{
+m.resetBybitEndpoints?.();
+}
+);
+
+if(
+getActiveExchangeId() ===
+"bingx"
+){
+
+void import(
+"./exchanges/bingx/ws.js?v=17"
+).then(
+m=>{
+m.resetBingxWs?.();
+}
+);
+
+}
 
 window.dispatchEvent(
 new CustomEvent(
@@ -80,11 +109,16 @@ lower.includes("не json")
 ? " На компьютере часто мешают блокировщик, «Защита» в Яндексе или антивирус; на телефоне при той же Wi‑Fi их обычно нет — попробуйте инкогнито или Safari/Chrome."
 : "";
 
+const exchangeName =
+getActiveExchangeDefinition().name;
+
 messageEl.textContent =
 detail &&
-!detail.includes("Bybit API")
-? `Данные Bybit не загрузились (${detail}). Проверьте сеть или нажмите «Повторить».${desktopHint}`
-: `Данные Bybit не загрузились (сеть, Wi‑Fi или блокировка). Нажмите «Повторить» или обновите страницу.${desktopHint}`;
+!detail.toLowerCase().includes(
+"api"
+)
+? `Данные ${exchangeName} не загрузились (${detail}). Проверьте сеть или нажмите «Повторить».${desktopHint}`
+: `Данные ${exchangeName} не загрузились (сеть, Wi‑Fi или блокировка). Нажмите «Повторить» или обновите страницу.${desktopHint}`;
 
 host.classList.remove("hidden");
 

@@ -3,16 +3,25 @@
  */
 import {
 getCachedPosition,
-syncTradePositionsCache
-} from "./trade-positions-cache.js?v=9";
+removeTradePositionFromCache,
+syncTradePositionsCache,
+upsertTradePositionInCache,
+markTradePositionRecentlyClosed,
+isTradePositionRecentlyClosed
+} from "./trade-positions-cache.js?v=32";
 
 import {
-markStopDismissed
-} from "./trade-auto-stops.js?v=3";
+markStopDismissed,
+clearDismissedStops
+} from "./trade-auto-stops.js?v=14";
 
 import {
 isExchangeTradingEnabled
-} from "./market-api.js?v=1";
+} from "./market-api.js?v=2";
+
+import {
+getTradeExchangePolicy
+} from "./trade/exchanges/index.js?v=12";
 
 import {
 formatTradePnl,
@@ -32,6 +41,20 @@ const LINE_OPACITY_SLTP =
 function tradingApi(){
 
 return window.cryptoTerminalDesktop?.trading;
+
+}
+
+function tradePositionIpcOptions(
+position
+){
+
+return {
+positionSide:
+position?.positionSide,
+side:
+position?.side,
+position
+};
 
 }
 
@@ -391,6 +414,53 @@ let switchVeilPosition =
 null;
 let switchLoadSeq =
 0;
+
+const stopCancelInflight =
+new Map();
+
+function getStopCancelButton(
+target
+){
+
+const action =
+target ===
+"sl"
+? "cancel-sl"
+: "cancel-tp";
+
+return badgesEl?.querySelector(
+`[data-action="${action}"]`
+) ||
+null;
+
+}
+
+function setStopCancelButtonDisabled(
+target,
+disabled
+){
+
+const btn =
+getStopCancelButton(
+target
+);
+
+if(
+!btn
+){
+return;
+}
+
+btn.disabled =
+!!disabled;
+btn.setAttribute(
+"aria-busy",
+disabled
+? "true"
+: "false"
+);
+
+}
 
 function getDisplayPosition(){
 
@@ -911,7 +981,10 @@ const result =
 await api.setPositionStop(
 position.symbol,
 kind,
-previewPrice
+previewPrice,
+tradePositionIpcOptions(
+position
+)
 );
 
 if(
@@ -940,9 +1013,63 @@ scheduleDraw();
 return;
 }
 
+clearDismissedStops(
+position.symbol,
+position
+);
+
+const patched =
+result?.position
+? {
+...position,
+...result.position,
+stopLoss:
+kind ===
+"sl"
+? previewPrice
+: (
+Number(
+result.position.stopLoss
+) ||
+position.stopLoss
+),
+takeProfit:
+kind ===
+"tp"
+? previewPrice
+: (
+Number(
+result.position.takeProfit
+) ||
+position.takeProfit
+)
+}
+: {
+...position
+};
+
+upsertTradePositionInCache(
+patched
+);
+
+if(
+result?.position
+){
+position =
+{
+...position,
+...patched
+};
+}
+
+if(
+!getTradeExchangePolicy().skipSyncPositionAfterStopAmend
+){
 await syncPosition(
 true
 );
+}
+
 pendingStopPrice =
 null;
 window.dispatchEvent(
@@ -1366,6 +1493,8 @@ return "";
 
 return [
 pos.symbol,
+pos.positionSide ||
+pos.side,
 pos.side,
 pos.avgPrice,
 Number(
@@ -1788,6 +1917,125 @@ spec.html;
 badgesEl.appendChild(
 el
 );
+
+if(
+spec.kind ===
+"sl"
+){
+wireBadgeCloseButton(
+el,
+"cancel-sl",
+()=>{
+void cancelStop(
+"sl"
+);
+}
+);
+}else if(
+spec.kind ===
+"tp"
+){
+wireBadgeCloseButton(
+el,
+"cancel-tp",
+()=>{
+void cancelStop(
+"tp"
+);
+}
+);
+}else if(
+spec.kind ===
+"entry"
+){
+wireBadgeCloseButton(
+el,
+"close",
+()=>{
+
+if(
+!position
+){
+return;
+}
+
+if(
+!confirm(
+`Закрыть ${position.ticker} по рынку?`
+)
+){
+return;
+}
+
+void (
+async()=>{
+
+const result =
+await tradingApi()?.closePosition?.(
+position.symbol,
+tradePositionIpcOptions(
+position
+)
+);
+
+if(
+result?.ok ===
+false
+){
+alert(
+result.message ||
+"Не удалось закрыть"
+);
+return;
+}
+
+const closedSymbol =
+position?.symbol;
+const closedOpts =
+tradePositionIpcOptions(
+position
+);
+position =
+null;
+pendingStopPrice =
+null;
+dragStop =
+null;
+detachStopDragListeners();
+invalidateBadgeLayoutCache();
+scheduleDraw(
+true
+);
+
+if(
+closedSymbol
+){
+removeTradePositionFromCache(
+closedSymbol,
+closedOpts
+);
+}
+
+/* Some exchanges lag after close — syncPosition would revive a ghost. */
+if(
+!getTradeExchangePolicy().skipSyncPositionAfterClose
+){
+await syncPosition(
+true
+);
+}
+window.dispatchEvent(
+new CustomEvent(
+"trade-open-positions-changed"
+)
+);
+
+}
+)();
+
+}
+);
+}
 
 elementsByKind.set(
 spec.kind,
@@ -2298,7 +2546,10 @@ async()=>{
 
 const result =
 await tradingApi()?.closePosition?.(
-position.symbol
+position.symbol,
+tradePositionIpcOptions(
+position
+)
 );
 
 if(
@@ -2312,12 +2563,44 @@ result.message ||
 return;
 }
 
+const closedSymbol =
+position?.symbol;
+const closedOpts =
+tradePositionIpcOptions(
+position
+);
+position =
+null;
+pendingStopPrice =
+null;
+dragStop =
+null;
+detachStopDragListeners();
+invalidateBadgeLayoutCache();
+scheduleDraw(
+true
+);
+
+if(
+closedSymbol
+){
+removeTradePositionFromCache(
+closedSymbol,
+closedOpts
+);
+}
+
+/* Some exchanges lag after close — syncPosition would revive a ghost. */
+if(
+!getTradeExchangePolicy().skipSyncPositionAfterClose
+){
 await syncPosition(
 true
 );
+}
 window.dispatchEvent(
 new CustomEvent(
-"trade-book-refresh"
+"trade-open-positions-changed"
 )
 );
 
@@ -2356,10 +2639,43 @@ async function cancelStop(
 target
 ){
 
+if(
+!position
+){
+return;
+}
+
+const sym =
+position.symbol;
+const inflightKey =
+`${sym}:${target}`;
+const existing =
+stopCancelInflight.get(
+inflightKey
+);
+
+if(
+existing
+){
+return existing;
+}
+
+const promise =
+(async()=>{
+
+setStopCancelButtonDisabled(
+target,
+true
+);
+
+try{
 const result =
 await tradingApi()?.cancelPositionStop?.(
-position.symbol,
-target
+sym,
+target,
+tradePositionIpcOptions(
+position
+)
 );
 
 if(
@@ -2370,26 +2686,145 @@ alert(
 result.message ||
 "Не удалось отменить"
 );
-return;
-}
 
 if(
-position
+!getTradeExchangePolicy().skipSyncPositionAfterStopCancel
 ){
-markStopDismissed(
-position.symbol,
-position,
-target
-);
-}
-
 await syncPosition(
 true
 );
+}
+
+return;
+}
+
+applyLocalStopCancel(
+sym,
+target
+);
+
+/* Some exchanges: do not syncPosition here — a false-empty getPosition
+ * after cancel clears the whole chart while the exchange position remains. */
+}finally{
+stopCancelInflight.delete(
+inflightKey
+);
+setStopCancelButtonDisabled(
+target,
+false
+);
+}
+
+})();
+
+stopCancelInflight.set(
+inflightKey,
+promise
+);
+return promise;
+
+}
+
+function applyLocalStopCancel(
+sym,
+target
+){
+
+if(
+!position
+){
+return;
+}
+
+const prevPosition =
+{
+...position
+};
+const nextPosition =
+{
+...position
+};
+
+if(
+target ===
+"sl"
+){
+nextPosition.stopLoss =
+0;
+delete nextPosition.slOrderId;
+}else if(
+target ===
+"tp"
+){
+nextPosition.takeProfit =
+0;
+delete nextPosition.tpOrderId;
+}
+
+position =
+nextPosition;
+markStopDismissed(
+sym,
+prevPosition,
+target
+);
+upsertTradePositionInCache(
+nextPosition
+);
+invalidateBadgeLayoutCache();
+scheduleDraw(
+true
+);
+
 window.dispatchEvent(
 new CustomEvent(
-"trade-book-refresh"
+"trade-position-updated",
+{
+detail:{
+symbol:
+sym,
+position:
+nextPosition
+}
+}
 )
+);
+window.dispatchEvent(
+new CustomEvent(
+"trade-open-positions-changed"
+)
+);
+
+}
+
+function wireBadgeCloseButton(
+el,
+action,
+handler
+){
+
+const btn =
+el.querySelector(
+`[data-action="${action}"]`
+);
+
+if(
+!btn ||
+btn.dataset.wired ===
+"1"
+){
+return;
+}
+
+btn.dataset.wired =
+"1";
+btn.addEventListener(
+"click",
+event=>{
+event.preventDefault();
+event.stopPropagation();
+handler();
+}
 );
 
 }
@@ -2590,11 +3025,31 @@ const target =
 normalizeOverlaySymbol(
 symbol
 );
+const policy =
+getTradeExchangePolicy();
+const symbolMatches =
+target &&
+(
+current ===
+target ||
+(
+typeof policy.keysMatchSymbol ===
+"function" &&
+(
+policy.keysMatchSymbol(
+target,
+current
+) ||
+policy.keysMatchSymbol(
+current,
+target
+)
+)
+)
+);
 
 if(
-!target ||
-current !==
-target
+!symbolMatches
 ){
 return;
 }
@@ -2604,6 +3059,11 @@ if(
 ){
 position =
 null;
+pendingStopPrice =
+null;
+dragStop =
+null;
+detachStopDragListeners();
 invalidateBadgeLayoutCache();
 scheduleDraw(
 true
@@ -2681,9 +3141,14 @@ if(
 !force
 ){
 
+const posHint =
+position;
 const cached =
 getCachedPosition(
-symbol
+symbol,
+tradePositionIpcOptions(
+posHint
+)
 );
 
 if(
@@ -2710,7 +3175,10 @@ return;
 
 const result =
 await api.getPosition(
-symbol
+symbol,
+tradePositionIpcOptions(
+position
+)
 );
 
 if(
@@ -2733,13 +3201,185 @@ return;
 if(
 result?.ok
 ){
-position =
+const next =
 result.position ||
 null;
+
+if(
+next &&
+getTradeExchangePolicy().skipSyncPositionAfterClose &&
+isTradePositionRecentlyClosed(
+symbol,
+tradePositionIpcOptions(
+next
+)
+)
+){
+const dropOpts =
+tradePositionIpcOptions(
+next
+);
+position =
+null;
+removeTradePositionFromCache(
+symbol,
+dropOpts
+);
+invalidateBadgeLayoutCache();
+scheduleDraw(
+true
+);
+return;
+}
+
+if(
+!next &&
+getTradeExchangePolicy().verifyEmptyPositionViaList
+){
+const prev =
+position ||
+getCachedPosition(
+symbol,
+tradePositionIpcOptions(
+position
+)
+);
+
+if(
+prev &&
+Number(
+prev.size
+) >
+0
+){
+const all =
+await api.getPositions?.({
+forceRefresh:
+true
+});
+
+if(
+all?.ok &&
+!all.stale &&
+!all.rateLimited &&
+Array.isArray(
+all.positions
+)
+){
+const hintOpts =
+tradePositionIpcOptions(
+prev
+);
+const policy =
+getTradeExchangePolicy();
+const hintKey =
+typeof policy.positionMapKey ===
+"function"
+? policy.positionMapKey({
+symbol,
+...hintOpts
+})
+: "";
+const found =
+all.positions.find(
+item=>{
+if(
+normalizeOverlaySymbol(
+item?.symbol
+) !==
+normalizeOverlaySymbol(
+symbol
+)
+){
+return false;
+}
+
+if(
+!hintKey ||
+typeof policy.positionMapKey !==
+"function"
+){
+return true;
+}
+
+return policy.positionMapKey(
+item
+) ===
+hintKey;
+}
+);
+
+if(
+!found
+){
+position =
+null;
+removeTradePositionFromCache(
+symbol
+);
+invalidateBadgeLayoutCache();
+scheduleDraw(
+true
+);
+return;
+}
+
+position =
+found;
+invalidateBadgeLayoutCache();
+scheduleDraw(
+true
+);
+return;
+}
+
+/* Never soft-keep prev on failed/rate-limited list — that revives
+ * a closed position as a 1–2s chart ghost. */
+position =
+null;
+removeTradePositionFromCache(
+symbol,
+tradePositionIpcOptions(
+prev
+)
+);
+invalidateBadgeLayoutCache();
+scheduleDraw(
+true
+);
+return;
+}
+
+position =
+null;
+removeTradePositionFromCache(
+symbol,
+tradePositionIpcOptions(
+prev
+)
+);
+}else{
+position =
+next;
+
+if(
+!position
+){
+removeTradePositionFromCache(
+symbol,
+tradePositionIpcOptions(
+next
+)
+);
+}
+}
 }else{
 position =
 getCachedPosition(
-symbol
+symbol,
+tradePositionIpcOptions(
+position
+)
 ) ||
 null;
 }
@@ -2781,23 +3421,91 @@ positions
 )
 ? positions
 : [];
-const row =
-list.find(
+const policy =
+getTradeExchangePolicy();
+const preferKey =
+position &&
+typeof policy.positionMapKey ===
+"function"
+? policy.positionMapKey(
+position
+)
+: "";
+const symbolMatches =
+list.filter(
 item=>
 normalizeOverlaySymbol(
 item?.symbol
 ) ===
 sym
 );
+let resolvedRow =
+null;
 
 if(
-row
+preferKey &&
+typeof policy.positionMapKey ===
+"function"
+){
+resolvedRow =
+symbolMatches.find(
+item=>
+policy.positionMapKey(
+item
+) ===
+preferKey
+) ||
+null;
+}else if(
+symbolMatches.length ===
+1
+){
+/* No side on overlay yet — only accept a unique symbol match. */
+resolvedRow =
+symbolMatches[
+0
+];
+}
+
+if(
+resolvedRow
+){
+if(
+isTradePositionRecentlyClosed(
+sym,
+tradePositionIpcOptions(
+resolvedRow
+)
+)
 ){
 position =
-row;
+null;
 }else{
 position =
+resolvedRow;
+}
+}else if(
+list.length ===
+0 ||
+!symbolMatches.length
+){
+/* Stream snapshot is authoritative — do not REST-verify (stale 5s cache ghost). */
+position =
 null;
+removeTradePositionFromCache(
+sym,
+tradePositionIpcOptions(
+position
+)
+);
+
+}else{
+/* Symbol missing from a non-empty snapshot → closed on exchange */
+position =
+null;
+removeTradePositionFromCache(
+sym
+);
 }
 
 invalidateBadgeLayoutCache();
@@ -3107,6 +3815,59 @@ applyPositionUpdate(
 event.detail?.position,
 event.detail?.symbol
 );
+
+},
+{
+signal
+}
+);
+
+window.addEventListener(
+"trade-open-positions-changed",
+()=>{
+
+if(
+!host ||
+chartSwitchFrozen
+){
+return;
+}
+
+const sym =
+normalizeOverlaySymbol(
+host?.getSymbol?.()
+);
+
+if(
+!sym ||
+!position
+){
+return;
+}
+
+const cached =
+getCachedPosition(
+sym,
+tradePositionIpcOptions(
+position
+)
+);
+
+if(
+!cached
+){
+position =
+null;
+pendingStopPrice =
+null;
+dragStop =
+null;
+detachStopDragListeners();
+invalidateBadgeLayoutCache();
+scheduleDraw(
+true
+);
+}
 
 },
 {

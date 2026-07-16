@@ -6,7 +6,7 @@ import {
 loadMarketHistory,
 loadMarketSymbols,
 buildMarketLists
-} from "./market-api.js?v=1";
+} from "./market-api.js?v=2";
 
 import {
 computePattern12Scene,
@@ -82,6 +82,109 @@ export const PATTERN_SCAN_SIDE_FILTERS =
 "short"
 ];
 
+export const PATTERN_SCAN_SEARCH_SIDE_LABELS =
+{
+both:
+"Long + Short",
+long:
+"Long",
+short:
+"Short"
+};
+
+/**
+ * UI / storage: both | long | short.
+ * Legacy alias: "all" → "both".
+ */
+export function normalizePatternScanSideFilter(
+value
+){
+
+const side =
+String(
+value ||
+"both"
+).toLowerCase();
+
+if(
+side ===
+"all"
+){
+return "both";
+}
+
+return PATTERN_SCAN_SIDE_FILTERS.includes(
+side
+)
+? side
+: "both";
+
+}
+
+export function matchesPatternScanSideFilter(
+side,
+filter =
+"both"
+){
+
+const normalized =
+normalizePatternScanSideFilter(
+filter
+);
+
+if(
+normalized ===
+"both"
+){
+return true;
+}
+
+return String(
+side ||
+""
+).toLowerCase() ===
+normalized;
+
+}
+
+export function filterPatternScanRowsBySide(
+rows,
+filter =
+"both"
+){
+
+const normalized =
+normalizePatternScanSideFilter(
+filter
+);
+
+if(
+normalized ===
+"both"
+){
+return Array.isArray(
+rows
+)
+? rows.slice()
+: [];
+}
+
+return (
+Array.isArray(
+rows
+)
+? rows
+: []
+).filter(
+row=>
+matchesPatternScanSideFilter(
+row?.side,
+normalized
+)
+);
+
+}
+
 const PATTERN_SETTINGS =
 defaultPattern12Settings();
 
@@ -111,16 +214,9 @@ sideFilter
 ){
 
 const mode =
-PATTERN_SCAN_SIDE_FILTERS.includes(
-String(
-sideFilter ||
-""
-)
-)
-? String(
+normalizePatternScanSideFilter(
 sideFilter
-)
-: "both";
+);
 
 return {
 ...PATTERN_SETTINGS,
@@ -145,15 +241,10 @@ if(
 return false;
 }
 
-if(
-sideFilter ===
-"both"
-){
-return true;
-}
-
-return row.side ===
-sideFilter;
+return matchesPatternScanSideFilter(
+row.side,
+sideFilter
+);
 
 }
 
@@ -237,16 +328,9 @@ return [];
 }
 
 const normalizedSideFilter =
-PATTERN_SCAN_SIDE_FILTERS.includes(
-String(
-sideFilter ||
-""
-)
-)
-? String(
+normalizePatternScanSideFilter(
 sideFilter
-)
-: "both";
+);
 
 const scene =
 computePattern12Scene(
@@ -417,11 +501,9 @@ options.lookbackBars
 )
 : PATTERN_SCAN_DEFAULT_LOOKBACK;
 const sideFilter =
-PATTERN_SCAN_SIDE_FILTERS.includes(
-String(options.sideFilter || "")
-)
-? String(options.sideFilter)
-: "both";
+normalizePatternScanSideFilter(
+options.sideFilter
+);
 
 onProgress?.(
 {

@@ -18,7 +18,7 @@ bybitPublicAdapter
 
 import {
 bingxPublicAdapter
-} from "./exchanges/bingx/public.js?v=1";
+} from "./exchanges/bingx/public.js?v=4";
 
 import {
 peekBybitSymbolsCache
@@ -193,7 +193,7 @@ try{
 
 const raw =
 localStorage.getItem(
-"bingx_swap_symbols_v1"
+"bingx_swap_symbols_v4"
 );
 
 if(
@@ -262,10 +262,15 @@ limit
 
 }
 
-/** Торговля desktop IPC пока только Bybit. */
+/** Торговля desktop IPC: Bybit и BingX. */
 export function isExchangeTradingEnabled(){
 
-return getActiveExchangeId() ===
-"bybit";
+const id =
+getActiveExchangeId();
+
+return id ===
+"bybit" ||
+id ===
+"bingx";
 
 }

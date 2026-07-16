@@ -4,11 +4,11 @@
 import {
 getScriptScanNextRunAt,
 SCRIPT_SCAN_BG_EVENT
-} from "./script-scan-background.js?v=8";
+} from "./script-scan-background.js?v=11";
 
 import {
 loadScriptPageState
-} from "./script-page-storage.js?v=9";
+} from "./script-page-storage.js?v=11";
 
 function formatCountdown(
 ms
@@ -63,52 +63,35 @@ if(
 return null;
 }
 
-const header =
-document.getElementById(
-"header"
+const nav =
+document.querySelector(
+".coins-header-desktop"
 );
+
+if(
+!nav
+){
+return null;
+}
 
 const existing =
 document.getElementById(
 "script-terminal-status"
 );
 
-let anchor =
-header?.querySelector(
-"#header-status-cell, .header-status-cell"
-);
-
-if(
-!anchor &&
-header
-){
-anchor =
-document.createElement(
-"div"
-);
-anchor.id =
-"header-status-cell";
-anchor.className =
-"header-status-cell";
-header.appendChild(
-anchor
-);
-}
-
 if(
 existing
 ){
-if(
-anchor &&
-existing.parentElement !==
-anchor
-){
-anchor.appendChild(
-existing
-);
-}
 return existing;
 }
+
+const anchor =
+nav.querySelector(
+".coins-layout-picker-wrap"
+) ||
+nav.querySelector(
+"#header-settings-wrap"
+);
 
 const el =
 document.createElement(
@@ -127,11 +110,14 @@ el.setAttribute(
 if(
 anchor
 ){
-anchor.appendChild(el);
-}else if(
-header
-){
-header.appendChild(el);
+nav.insertBefore(
+el,
+anchor
+);
+}else{
+nav.appendChild(
+el
+);
 }
 
 function render(){

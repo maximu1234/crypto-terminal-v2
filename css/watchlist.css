@@ -254,7 +254,7 @@ body.terminal-page .widget-draw-tools{
     z-index:300;
     pointer-events:auto;
     display:grid;
-    grid-template-columns:repeat(4, 26px);
+    grid-template-columns:repeat(4, 28px);
     gap:4px;
     padding:6px;
     background:#1e222d;
@@ -279,11 +279,25 @@ body.terminal-page .widget-draw-tools{
     padding:0;
 }
 
+/* Меню рисования: иконка ×2 (14→28), кнопка только под размер иконки */
+.widget-draw-tools-menu .draw-btn-sm{
+    width:28px;
+    height:28px;
+}
+
 .draw-btn-sm svg,
 .draw-btn-sm img,
 .draw-btn-sm .draw-tool-icon{
     width:14px;
     height:14px;
+}
+
+.widget-draw-tools-menu .draw-btn-sm svg,
+.widget-draw-tools-menu .draw-btn-sm img,
+.widget-draw-tools-menu .draw-btn-sm .draw-tool-icon,
+.widget-draw-tools-menu .draw-btn-sm .draw-tool-icon--xl{
+    width:28px;
+    height:28px;
 }
 
 .draw-btn-sm .draw-tool-icon--xl{
@@ -384,6 +398,44 @@ body.terminal-page .widget-draw-tools{
     height:100%;
     pointer-events:none;
     z-index:3;
+}
+
+.widget-chart-wrap .chart-price-hud{
+    position:absolute;
+    right:0;
+    z-index:4;
+    transform:translateY(-50%);
+    box-sizing:border-box;
+    padding:0 4px 0 10px;
+    border-radius:0;
+    font-family:-apple-system, BlinkMacSystemFont, "Trebuchet MS", Roboto, Ubuntu, sans-serif;
+    font-size:12px;
+    font-weight:400;
+    line-height:16px;
+    text-align:left;
+    font-variant-numeric:tabular-nums;
+    pointer-events:none;
+    color:#d1d5db;
+}
+
+.widget-chart-wrap .chart-price-hud.hidden{
+    display:none;
+}
+
+.widget-chart-wrap .chart-price-hud--up{
+    background:#16a34a;
+}
+
+.widget-chart-wrap .chart-price-hud--down{
+    background:#dc2626;
+}
+
+.widget-chart-wrap .chart-price-hud-cd{
+    display:block;
+    font-size:12px;
+    font-weight:400;
+    line-height:16px;
+    opacity:1;
 }
 
 .widget-chart-wrap .chart-price-hud{
@@ -736,6 +788,28 @@ body.tablet-chart .widget-chart-wrap{
     -webkit-user-select:none;
     user-select:none;
     -webkit-touch-callout:none;
+}
+
+body.tablet-chart .widget-chart-wrap.chart-draw-interaction,
+body.tablet-chart .widget-chart-wrap.chart-draw-interaction *{
+    -webkit-user-select:none;
+    user-select:none;
+    -webkit-touch-callout:none;
+}
+
+body.tablet-chart .widget-chart-wrap .draw-style-float,
+body.tablet-chart .widget-chart-wrap .draw-style-float *{
+    -webkit-user-select:none;
+    user-select:none;
+    -webkit-touch-callout:none;
+}
+
+body.tablet-chart.tablet-chart-draw-mode .widget-chart-wrap,
+body.tablet-chart.tablet-chart-draw-mode .widget-chart-wrap *{
+    -webkit-user-select:none !important;
+    user-select:none !important;
+    -webkit-touch-callout:none !important;
+    touch-action:none;
 }
 
 body.tablet-chart .widget-chart-wrap.chart-draw-interaction,
@@ -1386,6 +1460,7 @@ body.tablet-chart .widget-chart-wrap.chart-touch-locked .chart{
     cursor:pointer;
 }
 
+.rect-border-color-btn,
 .rect-border-color-btn,
 .rect-median-color-btn,
 .rect-fill-color-btn{

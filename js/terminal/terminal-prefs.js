@@ -1,7 +1,12 @@
 import {
 getAllCoinsMarketIds,
-getActiveCoinsMarkets
-} from "../market-api.js?v=1";
+getActiveCoinsMarkets,
+getActiveExchangeId
+} from "../market-api.js?v=2";
+
+import {
+EXCHANGE_IDS
+} from "../exchanges/registry.js?v=1";
 
 import {
 coinsState,
@@ -9,16 +14,19 @@ COINS_PREFS_KEY,
 COINS_SORT_MODES,
 COINS_TF_VALUES,
 isTerminalPage
-} from "./terminal-state.js?v=10";
+} from "./terminal-state.js?v=11";
 
 import {
 getCurrentSymbols,
 getFirstVisibleSymbol
-} from "./terminal-table.js?v=19";
+} from "./terminal-table.js?v=20";
 
 import {
 parseAlertDeepLinkExchange
 } from "../alert-deep-link-url.js?v=2";
+
+export const DEFAULT_CHART_SYMBOL =
+"BTCUSDT";
 
 export function defaultSortEntry(){
 
@@ -61,6 +69,23 @@ tf
 
 }
 
+export function defaultLastViewByExchange(){
+
+const lastViewByExchange =
+{};
+
+for(
+const ex of
+EXCHANGE_IDS
+){
+lastViewByExchange[ex] =
+defaultLastViewEntry();
+}
+
+return lastViewByExchange;
+
+}
+
 export function defaultCoinsPrefs(){
 
 const sortByMarket =
@@ -81,6 +106,8 @@ return {
 market:"all",
 sortByMarket,
 lastViewByMarket,
+lastViewByExchange:
+defaultLastViewByExchange(),
 invertChart:false,
 invertRsiChart:false,
 listRefreshMs:
@@ -343,6 +370,16 @@ parsed?.lastViewByMarket?.[m]
 
 }
 
+for(
+const ex of
+EXCHANGE_IDS
+){
+prefs.lastViewByExchange[ex] =
+normalizeLastViewEntry(
+parsed?.lastViewByExchange?.[ex]
+);
+}
+
 prefs.invertChart =
 !!parsed?.invertChart;
 
@@ -420,6 +457,16 @@ prefs?.lastViewByMarket?.[m]
 );
 }
 
+for(
+const ex of
+EXCHANGE_IDS
+){
+out.lastViewByExchange[ex] =
+normalizeLastViewEntry(
+prefs?.lastViewByExchange?.[ex]
+);
+}
+
 out.invertChart =
 !!prefs?.invertChart;
 
@@ -466,6 +513,21 @@ symbol:coinsState().currentSymbol,
 tf:coinsState().currentTF
 };
 
+const exchangeId =
+getActiveExchangeId();
+
+if(
+!prefs.lastViewByExchange
+){
+prefs.lastViewByExchange =
+defaultLastViewByExchange();
+}
+
+prefs.lastViewByExchange[exchangeId] = {
+symbol:coinsState().currentSymbol,
+tf:coinsState().currentTF
+};
+
 if(
 isTerminalPage
 ){
@@ -488,6 +550,144 @@ readCoinsPrefs();
 return normalizeLastViewEntry(
 prefs.lastViewByMarket?.[coinsState().currentDataset]
 );
+
+}
+
+export function readLastViewForExchange(
+exchangeId
+){
+
+const prefs =
+readCoinsPrefs();
+
+const id =
+String(
+exchangeId ||
+""
+).trim().toLowerCase();
+
+if(
+!EXCHANGE_IDS.includes(
+id
+)
+){
+return defaultLastViewEntry();
+}
+
+return normalizeLastViewEntry(
+prefs.lastViewByExchange?.[id]
+);
+
+}
+
+export function saveLastViewForExchange(
+exchangeId,
+symbol,
+tf
+){
+
+const id =
+String(
+exchangeId ||
+""
+).trim().toLowerCase();
+
+if(
+!EXCHANGE_IDS.includes(
+id
+)
+){
+return;
+}
+
+const prefs =
+readCoinsPrefs();
+
+if(
+!prefs.lastViewByExchange
+){
+prefs.lastViewByExchange =
+defaultLastViewByExchange();
+}
+
+prefs.lastViewByExchange[id] =
+normalizeLastViewEntry({
+symbol,
+tf
+});
+
+writeCoinsPrefs(
+prefs
+);
+
+}
+
+function pickSymbolFromLastView(
+last,
+symbols
+){
+
+if(
+last.symbol
+){
+
+if(
+symbols.length ===
+0 ||
+symbols.includes(
+last.symbol
+)
+){
+return last.symbol;
+}
+
+}
+
+if(
+symbols.includes(
+DEFAULT_CHART_SYMBOL
+)
+){
+return DEFAULT_CHART_SYMBOL;
+}
+
+return (
+getFirstVisibleSymbol() ||
+symbols[0] ||
+DEFAULT_CHART_SYMBOL
+);
+
+}
+
+export function resolveSymbolForExchange(
+exchangeId
+){
+
+const last =
+readLastViewForExchange(
+exchangeId
+);
+
+if(
+last.tf &&
+COINS_TF_VALUES.has(
+last.tf
+)
+){
+coinsState().currentTF =
+last.tf;
+}
+
+const symbols =
+getCurrentSymbols();
+
+coinsState().currentSymbol =
+pickSymbolFromLastView(
+last,
+symbols
+);
+
+return coinsState().currentSymbol;
 
 }
 
@@ -518,35 +718,53 @@ coinsState().currentSymbol = last.symbol;
 
 export function resolveInitialSymbolAndTf(){
 
-const last =
+const exchangeId =
+getActiveExchangeId();
+
+let last =
+readLastViewForExchange(
+exchangeId
+);
+
+if(
+!last.symbol
+){
+
+const marketLast =
 readLastViewFromPrefs();
 
 if(
-last.tf &&
-COINS_TF_VALUES.has(last.tf)
+marketLast.symbol
 ){
-coinsState().currentTF = last.tf;
+last = {
+symbol:
+marketLast.symbol,
+tf:
+last.tf ||
+marketLast.tf
+};
+}
+
+}
+
+if(
+last.tf &&
+COINS_TF_VALUES.has(
+last.tf
+)
+){
+coinsState().currentTF =
+last.tf;
 }
 
 const symbols =
 getCurrentSymbols();
 
-if(last.symbol){
-
-if(
-symbols.length === 0 ||
-symbols.includes(last.symbol)
-){
-coinsState().currentSymbol = last.symbol;
-return;
-}
-
-}
-
 coinsState().currentSymbol =
-getFirstVisibleSymbol() ||
-symbols[0] ||
-"BTCUSDT";
+pickSymbolFromLastView(
+last,
+symbols
+);
 
 }
 

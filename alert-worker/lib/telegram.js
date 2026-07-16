@@ -143,11 +143,15 @@ exchangeId
     );
   }
 
-  return `${getSitePublicUrl()}/terminal.html?${params}`;
+  /* open.html → desktop if running, else web terminal.html */
+  return `${getSitePublicUrl()}/open.html?${params}`;
 
 }
 
-function formatAlertTicker(symbol) {
+function formatAlertTicker(
+symbol,
+exchangeId
+){
 
   const raw =
     String(symbol || "").trim().toUpperCase();
@@ -164,7 +168,17 @@ function formatAlertTicker(symbol) {
     return raw;
   }
 
-  if (raw.endsWith("USDT")) {
+  const ex =
+    String(
+      exchangeId ||
+      "bybit"
+    ).trim().toLowerCase();
+
+  if (
+    ex ===
+    "bybit" &&
+    raw.endsWith("USDT")
+  ) {
     return `${raw}.P`;
   }
 
@@ -182,10 +196,37 @@ function formatPriceForTelegram(n) {
 
 }
 
+const EXCHANGE_LABELS = {
+  bybit: "Bybit",
+  bingx: "BingX"
+};
+
+export function exchangeLabelForTelegram(
+exchangeId
+){
+
+  const id =
+    String(
+      exchangeId ||
+      "bybit"
+    ).trim().toLowerCase();
+
+  return EXCHANGE_LABELS[id] ||
+    EXCHANGE_LABELS.bybit;
+
+}
+
 export function formatAlertMessage(alert) {
 
+  const exchangeId =
+    alert.exchange_id ||
+    alert.exchangeId ||
+    "bybit";
   const sym =
-    formatAlertTicker(alert.symbol);
+    formatAlertTicker(
+      alert.symbol,
+      exchangeId
+    );
   const tfRaw =
     String(alert.tf || "60");
   const tf =
@@ -194,12 +235,15 @@ export function formatAlertMessage(alert) {
     formatPriceForTelegram(
       Number(alert.price)
     );
+  const exchangeLabel =
+    exchangeLabelForTelegram(
+      exchangeId
+    );
   const chartUrl =
     buildCoinsChartUrl(
       alert.symbol,
       tfRaw,
-      alert.exchange_id ||
-      alert.exchangeId
+      exchangeId
     );
 
   const symHtml =
@@ -211,7 +255,7 @@ export function formatAlertMessage(alert) {
     text: (
       `${symHtml} - ${escapeHtml(tf)}\n` +
       "Цена пересекла уровень\n" +
-      escapeHtml(price)
+      `${escapeHtml(price)} (${escapeHtml(exchangeLabel)})`
     ),
     parse_mode: "HTML"
   };

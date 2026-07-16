@@ -2,12 +2,12 @@ import {
 coinsState,
 marketMap,
 coinElements
-} from "./terminal-state.js?v=10";
+} from "./terminal-state.js?v=11";
 
 import {
 isActiveRealtimeMarketDataset,
 isExchangeTradingEnabled
-} from "../market-api.js?v=1";
+} from "../market-api.js?v=2";
 
 import {
 connectKlineStream
@@ -34,7 +34,7 @@ emptyFavorites
 
 import {
 isTradePage
-} from "./terminal-state.js?v=10";
+} from "./terminal-state.js?v=11";
 
 /** Desktop /trade only — не тянем trade-open-positions в открытый web /coins. */
 let hasOpenPosition =
@@ -85,6 +85,20 @@ if(
 dataset === "new"
 ){
 return coinsState().newListings;
+}
+
+if(
+dataset ===
+"usdc"
+){
+return coinsState().usdcListings;
+}
+
+if(
+dataset ===
+"indices"
+){
+return coinsState().indicesListings;
 }
 
 if(

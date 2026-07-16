@@ -1,86 +1,177 @@
 import {
-toCanonicalSymbol,
-isUsdtMarginedSymbol
+toCanonicalSymbol
 } from "../symbol.js?v=1";
 
-const NEW_LISTING_WINDOW_MS =
+export const BINGX_NEW_LISTING_WINDOW_MS =
 30 *
 24 *
 60 *
 60 *
 1000;
 
-function isBingxContractTrading(
+/** @typedef {'crypto'|'stocks'|'indices'|'commodities'|'forex'} BingxMarketCategory */
+
+/**
+ * Категория контракта BingX swap (по symbol из /quote/contracts).
+ * Принимает и BTC-USDT, и BTCUSDT (канонический ключ терминала).
+ * USDC-контракты исключаются (null).
+ * @param {{ symbol?: string, status?: number|string }} row
+ * @returns {BingxMarketCategory|null}
+ */
+export function classifyBingxContract(
 row
 ){
+
+const sym =
+toCanonicalSymbol(
+row?.symbol ||
+""
+);
+
+if(
+!sym
+){
+return null;
+}
 
 const status =
 row?.status;
 
-return (
-status ===
-1 ||
-status ===
-"1"
-);
-
+if(
+status !=
+null &&
+status !==
+1 &&
+status !==
+"1" &&
+status !==
+"Trading"
+){
+return null;
 }
 
-function tradingContracts(
-rows
-){
-
 if(
-!Array.isArray(
-rows
+sym.endsWith(
+"USDC"
 )
 ){
-return [];
-}
-
-return rows.filter(
-row=>{
-
-if(
-!row ||
-!row.symbol
-){
-return false;
+return null;
 }
 
 if(
-!isBingxContractTrading(
-row
+sym.startsWith(
+"NCSK"
 )
 ){
-return false;
+return "stocks";
 }
 
-const quote =
-String(
-row.currency ||
-""
-).toUpperCase();
+if(
+sym.startsWith(
+"NCSI"
+) ||
+sym ===
+"SPXUSDT"
+){
+return "indices";
+}
 
 if(
-quote &&
-quote !==
+sym.startsWith(
+"NCCO"
+) ||
+sym ===
+"XAUTUSDT"
+){
+return "commodities";
+}
+
+if(
+sym.startsWith(
+"NCFX"
+)
+){
+return "forex";
+}
+
+if(
+sym.endsWith(
 "USDT"
+) &&
+sym.length >
+4
 ){
-return false;
+return "crypto";
 }
 
-const canonical =
+return null;
+
+}
+
+function contractLaunchMs(
+row
+){
+
+const t =
+Number(
+row?.launchTime ||
+row?.onboardDate ||
+row?.listingTime ||
+0
+);
+
+return Number.isFinite(
+t
+) &&
+t >
+0
+? t
+: 0;
+
+}
+
+function isRecentListing(
+row,
+cutoffMs
+){
+
+const t =
+contractLaunchMs(
+row
+);
+
+return t >
+0 &&
+t >=
+cutoffMs;
+}
+
+function symbolFromRow(
+row
+){
+
+const sym =
 toCanonicalSymbol(
-row.symbol
+row?.symbol ||
+""
 );
 
-return isUsdtMarginedSymbol(
-canonical
-);
+return sym ||
+null;
 
 }
-);
+
+function uniqueSorted(
+symbols
+){
+
+return [
+...new Set(
+symbols.filter(
+Boolean
+)
+)
+].sort();
 
 }
 
@@ -91,77 +182,125 @@ export function buildBingxMarketLists(
 contracts
 ){
 
-const items =
-tradingContracts(
-contracts
-);
+const empty = {
+all:[],
+crypto:[],
+new:[],
+innovation:[],
+usdc:[],
+stocks:[],
+indices:[],
+commodities:[],
+forex:[]
+};
 
-const all =
-items
-.map(
-row=>
-toCanonicalSymbol(
-row.symbol
-)
-)
-.filter(
-sym=>
-sym &&
-isUsdtMarginedSymbol(
-sym
-)
-);
+if(
+!Array.isArray(
+contracts
+) ||
+!contracts.length
+){
+return empty;
+}
 
 const cutoff =
 Date.now() -
-NEW_LISTING_WINDOW_MS;
+BINGX_NEW_LISTING_WINDOW_MS;
 
-const crypto =
-all.slice();
+const buckets = {
+crypto:[],
+stocks:[],
+indices:[],
+commodities:[],
+forex:[],
+new:[]
+};
 
-const newer =
-items
-.filter(
-row=>{
+for(
+const row of
+contracts
+){
 
-const t =
-Number(
-row.launchTime ||
-row.onboardDate ||
-row.listingTime ||
-0
+const category =
+classifyBingxContract(
+row
 );
 
-return t >
-cutoff;
+if(
+!category
+){
+continue;
+}
+
+const sym =
+symbolFromRow(
+row
+);
+
+if(
+!sym
+){
+continue;
+}
+
+buckets[
+category
+].push(
+sym
+);
+
+if(
+isRecentListing(
+row,
+cutoff
+)
+){
+buckets.new.push(
+sym
+);
+}
 
 }
-)
-.map(
-row=>
-toCanonicalSymbol(
-row.symbol
-)
-)
-.filter(
-sym=>
-sym &&
-isUsdtMarginedSymbol(
-sym
-)
+
+const all =
+uniqueSorted(
+[
+...buckets.crypto,
+...buckets.stocks,
+...buckets.indices,
+...buckets.commodities,
+...buckets.forex
+]
 );
 
 return {
 all,
-crypto,
+crypto:
+uniqueSorted(
+buckets.crypto
+),
 new:
-newer.length
-? newer
-: [],
+uniqueSorted(
+buckets.new
+),
 innovation:[],
-stocks:[],
-commodities:[],
-forex:[]
+usdc:[],
+stocks:
+uniqueSorted(
+buckets.stocks
+),
+indices:
+uniqueSorted(
+buckets.indices
+),
+commodities:
+uniqueSorted(
+buckets.commodities
+),
+forex:
+uniqueSorted(
+buckets.forex
+)
 };
 
 }
