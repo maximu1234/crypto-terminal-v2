@@ -143,18 +143,6 @@
       {
         "from": "../assets/bybit-pnl-diary-template-negative.png",
         "to": "assets/bybit-pnl-diary-template-negative.png"
-      },
-      {
-        "from": "../scripts/generate-bybit-pnl-diary-card.py",
-        "to": "scripts/generate-bybit-pnl-diary-card.py"
-      },
-      {
-        "from": "../assets/bybit-pnl-diary-template-positive.png",
-        "to": "assets/bybit-pnl-diary-template-positive.png"
-      },
-      {
-        "from": "../assets/bybit-pnl-diary-template-negative.png",
-        "to": "assets/bybit-pnl-diary-template-negative.png"
       }
     ],
     "publish": {
