@@ -104,7 +104,7 @@ Object.freeze({
 "trade-position-close-orders.js":
 1,
 "trade-market-entry.js":
-30,
+31,
 "trade-book-panel.js":
 58,
 "trade-pnl-share-modal.js":

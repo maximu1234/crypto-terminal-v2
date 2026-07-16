@@ -340,6 +340,35 @@ payload ||
 );
 }
 
+async function getSymbolExecutionHistory(
+payload
+){
+
+const adapter =
+getAdapter(
+payload?.exchangeId
+);
+const fn =
+adapter.getSymbolExecutionHistory;
+
+if(
+typeof fn !==
+"function"
+){
+return {
+ok:
+false,
+message:
+"История исполнений недоступна для этой биржи"
+};
+}
+
+return fn(
+payload ||
+{}
+);
+}
+
 async function getSymbolPositionSettings(
 payload
 ){
@@ -480,6 +509,7 @@ reconcileOrdersOnPositionClose,
 pingBybit,
 pingExchange,
 getClosedPnlHistory,
+getSymbolExecutionHistory,
 getTradeDiaryDetail,
 getSymbolPositionSettings,
 applySymbolPositionSettings,

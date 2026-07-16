@@ -23,7 +23,7 @@ initTradeLeverageSettings
 
 import {
 initTradeMarketEntry
-} from "./trade-market-entry.js?v=30";
+} from "./trade-market-entry.js?v=31";
 
 import {
 initTradeBookPanel

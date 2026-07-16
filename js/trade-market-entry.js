@@ -22,8 +22,8 @@ marketMap
 } from "./terminal/terminal-state.js?v=11";
 
 import {
-getActiveExchangeId
-} from "./market-api.js?v=2";
+getTradeExchangePolicy
+} from "./trade/exchanges/index.js?v=12";
 
 import {
 mountTradeChartMarkersToggle
@@ -245,8 +245,7 @@ const openOptions =
 {};
 
 if(
-getActiveExchangeId() ===
-"bingx"
+getTradeExchangePolicy().passAutoStopUsdOnOpen
 ){
 openOptions.autoSlUsd =
 settings.slEnabled &&
