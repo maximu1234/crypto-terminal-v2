@@ -10,6 +10,17 @@ function loadRouterWithStubs({
   bingx = {},
   normalizeExchangeId = (id) => (id === "bingx" ? "bingx" : "bybit")
 } = {}) {
+  require.cache[
+    require.resolve("../desktop/trading/bingx-private-ws.cjs")
+  ] = {
+    exports: { connectBingxPrivateWs: () => {} }
+  };
+  require.cache[
+    require.resolve("../desktop/trading/bybit-private-ws.cjs")
+  ] = {
+    exports: { connectBybitPrivateWs: () => {} }
+  };
+
   const originalLoad = Module._load;
   Module._load = function (request, parent, isMain) {
     if (request === "./exchange-credentials.cjs") {
@@ -25,12 +36,6 @@ function loadRouterWithStubs({
     }
     if (request === "./bingx-rest.cjs") {
       return bingx;
-    }
-    if (request === "./bingx-private-ws.cjs") {
-      return { connectBingxPrivateWs: () => {} };
-    }
-    if (request === "./bybit-private-ws.cjs") {
-      return { connectBybitPrivateWs: () => {} };
     }
     return originalLoad(request, parent, isMain);
   };
