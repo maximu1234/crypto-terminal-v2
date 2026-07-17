@@ -8,12 +8,12 @@ syncTradePositionsCache,
 upsertTradePositionInCache,
 markTradePositionRecentlyClosed,
 isTradePositionRecentlyClosed
-} from "./positions-cache.js?v=2";
+} from "./positions-cache.js?v=3";
 
 import {
 markStopDismissed,
 clearDismissedStops
-} from "./auto-stops.js?v=1";
+} from "./auto-stops.js?v=3";
 
 import {
 isExchangeTradingEnabled
@@ -21,7 +21,7 @@ isExchangeTradingEnabled
 
 import {
 getTradeConfig
-} from "./config.js?v=3";
+} from "./config.js?v=7";
 
 import {
 formatTradePnl,
@@ -1970,31 +1970,14 @@ return;
 void (
 async()=>{
 
-const result =
-await tradingApi()?.closePosition?.(
-position.symbol,
-tradePositionIpcOptions(
-position
-)
-);
-
-if(
-result?.ok ===
-false
-){
-alert(
-result.message ||
-"Не удалось закрыть"
-);
-return;
-}
-
 const closedSymbol =
 position?.symbol;
 const closedOpts =
 tradePositionIpcOptions(
 position
 );
+
+/* Instant hide — BingX REST close can take seconds. */
 position =
 null;
 pendingStopPrice =
@@ -2012,8 +1995,32 @@ closedSymbol
 ){
 removeTradePositionFromCache(
 closedSymbol,
+{
+...closedOpts,
+markRecentlyClosed:
+true
+}
+);
+}
+
+const result =
+await tradingApi()?.closePosition?.(
+closedSymbol,
 closedOpts
 );
+
+if(
+result?.ok ===
+false
+){
+alert(
+result.message ||
+"Не удалось закрыть"
+);
+await syncPosition(
+true
+);
+return;
 }
 
 /* Some exchanges lag after close — syncPosition would revive a ghost. */
@@ -2544,31 +2551,14 @@ return;
 void (
 async()=>{
 
-const result =
-await tradingApi()?.closePosition?.(
-position.symbol,
-tradePositionIpcOptions(
-position
-)
-);
-
-if(
-result?.ok ===
-false
-){
-alert(
-result.message ||
-"Не удалось закрыть"
-);
-return;
-}
-
 const closedSymbol =
 position?.symbol;
 const closedOpts =
 tradePositionIpcOptions(
 position
 );
+
+/* Instant hide — BingX REST close can take seconds. */
 position =
 null;
 pendingStopPrice =
@@ -2586,8 +2576,32 @@ closedSymbol
 ){
 removeTradePositionFromCache(
 closedSymbol,
+{
+...closedOpts,
+markRecentlyClosed:
+true
+}
+);
+}
+
+const result =
+await tradingApi()?.closePosition?.(
+closedSymbol,
 closedOpts
 );
+
+if(
+result?.ok ===
+false
+){
+alert(
+result.message ||
+"Не удалось закрыть"
+);
+await syncPosition(
+true
+);
+return;
 }
 
 /* Some exchanges lag after close — syncPosition would revive a ghost. */
@@ -3659,12 +3673,29 @@ Number(
 e.detail?.loadSeq
 ) ||
 0;
+const targetSym =
+normalizeOverlaySymbol(
+e.detail?.symbol
+) ||
+normalizeOverlaySymbol(
+host?.getSymbol?.()
+);
+/* Veil the *target* ticker from cache — not the previous symbol's lines. */
+const cached =
+targetSym
+? getCachedPosition(
+targetSym,
+tradePositionIpcOptions(
+position
+)
+)
+: null;
 chartSwitchFrozen =
 true;
 switchVeilPosition =
-position;
+cached;
 switchVeilVisible =
-!!position;
+!!cached;
 position =
 null;
 stopDragListeners?.();
@@ -3706,17 +3737,7 @@ switchLoadSeq
 return;
 }
 
-switchVeilVisible =
-false;
-switchVeilPosition =
-null;
-position =
-null;
-invalidateBadgeLayoutCache();
-scheduleDraw(
-true
-);
-host?.getDrawingTools?.()?.scheduleRedraw?.();
+/* Keep veil until candles-loaded + sync — blanking here caused ticker flash. */
 };
 
 const onCandlesLoaded =
@@ -3737,11 +3758,29 @@ host?.getSymbol?.()
 return;
 }
 
+const loadedSym =
+normalizeOverlaySymbol(
+e.detail?.symbol
+) ||
+normalizeOverlaySymbol(
+host?.getSymbol?.()
+);
+position =
+(
+loadedSym
+? getCachedPosition(
+loadedSym,
+tradePositionIpcOptions(
+switchVeilPosition
+)
+)
+: null
+) ||
+switchVeilPosition ||
+null;
 switchVeilVisible =
 false;
 switchVeilPosition =
-null;
-position =
 null;
 invalidateBadgeLayoutCache();
 scheduleDraw(

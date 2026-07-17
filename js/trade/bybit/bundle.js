@@ -50,3 +50,20 @@ export {
 export {
   getTradeConfig
 } from "./config.js?v=2";
+
+export {
+  diarySanitizeTrade,
+  diaryAcceptDayCache,
+  diaryLoadPeriod,
+  diaryCollectCachedTrades,
+  diaryAfterListPaint,
+  diaryBuildDetailRequest,
+  diaryInterpretDetailResult,
+  diaryApplyDetailToTrade,
+  diaryAfterDetailSuccess,
+  diaryFetchKlineBatch
+} from "./diary/index.js?v=2";
+
+export {
+  fetchTradeHistoryForSymbol
+} from "./history/index.js?v=2";

@@ -3,11 +3,12 @@
  */
 import {
 getTradeConfig
-} from "./config.js?v=3";
+} from "./config.js?v=7";
 
 import {
-getCachedPosition
-} from "./positions-cache.js?v=2";
+getCachedPosition,
+upsertTradePositionInCache
+} from "./positions-cache.js?v=3";
 
 const STORAGE_KEY =
 "trade_auto_stops_bingx_v1";
@@ -452,13 +453,17 @@ msg
 }
 
 function tradeStopIpcOptions(
-position
+position,
+extra =
+{}
 ){
 
 if(
 !position
 ){
-return {};
+return {
+...extra
+};
 }
 
 return {
@@ -466,7 +471,8 @@ positionSide:
 position.positionSide,
 side:
 position.side,
-position
+position,
+...extra
 };
 
 }
@@ -569,6 +575,9 @@ message:
 
 }
 
+const autoStopInflight =
+new Set();
+
 export async function applyAutoStopsAfterEntry(
 symbol,
 position
@@ -580,6 +589,26 @@ if(
 ){
 return;
 }
+
+const inflightKey =
+autoStopInflightKey(
+symbol,
+position
+);
+
+if(
+autoStopInflight.has(
+inflightKey
+)
+){
+return;
+}
+
+autoStopInflight.add(
+inflightKey
+);
+
+try{
 
 const settings =
 getAutoStopSettings();
@@ -636,6 +665,26 @@ let nextPosition =
 ...position
 };
 
+const paintOptimisticStops =
+()=>{
+upsertTradePositionInCache(
+symbol,
+nextPosition
+);
+window.dispatchEvent(
+new CustomEvent(
+"trade-position-updated",
+{
+detail:{
+symbol,
+position:
+nextPosition
+}
+}
+)
+);
+};
+
 if(
 settings.slEnabled &&
 settings.slUsd >
@@ -667,6 +716,15 @@ if(
 slPrice >
 0
 ){
+/* Show SL line immediately; REST confirm follows. */
+nextPosition =
+{
+...nextPosition,
+stopLoss:
+slPrice
+};
+paintOptimisticStops();
+
 const slResult =
 await setPositionStopWithRetry(
 api,
@@ -674,7 +732,11 @@ symbol,
 "sl",
 slPrice,
 tradeStopIpcOptions(
-nextPosition
+nextPosition,
+{
+freshAttach:
+true
+}
 )
 );
 
@@ -689,15 +751,28 @@ symbol,
 slResult.message ||
 "failed"
 );
+nextPosition =
+{
+...nextPosition,
+stopLoss:
+0
+};
+delete nextPosition.slOrderId;
+paintOptimisticStops();
 
 if(
 slResult?.rateLimited
 ){
 return;
 }
-}else{
-nextPosition.stopLoss =
-slPrice;
+}else if(
+slResult?.position
+){
+nextPosition =
+{
+...nextPosition,
+...slResult.position
+};
 }
 
 }
@@ -752,6 +827,14 @@ if(
 tpPrice >
 0
 ){
+nextPosition =
+{
+...nextPosition,
+takeProfit:
+tpPrice
+};
+paintOptimisticStops();
+
 const tpResult =
 await setPositionStopWithRetry(
 api,
@@ -759,7 +842,11 @@ symbol,
 "tp",
 tpPrice,
 tradeStopIpcOptions(
-nextPosition
+nextPosition,
+{
+freshAttach:
+true
+}
 )
 );
 
@@ -774,9 +861,22 @@ symbol,
 tpResult.message ||
 "failed"
 );
-}else{
-nextPosition.takeProfit =
-tpPrice;
+nextPosition =
+{
+...nextPosition,
+takeProfit:
+0
+};
+delete nextPosition.tpOrderId;
+paintOptimisticStops();
+}else if(
+tpResult?.position
+){
+nextPosition =
+{
+...nextPosition,
+...tpResult.position
+};
 }
 }
 }
@@ -832,10 +932,18 @@ nextPosition
 )
 );
 
+}finally{
+setTimeout(
+()=>{
+autoStopInflight.delete(
+inflightKey
+);
+},
+1500
+);
 }
 
-const autoStopInflight =
-new Set();
+}
 
 /**
  * Stop/limit fill и другие входы вне market-кнопок — выставить SL/TP из настроек.
@@ -938,6 +1046,7 @@ sym,
 position
 );
 
+/* Market-entry may already be placing stops — do not double-start. */
 if(
 autoStopInflight.has(
 inflightKey
@@ -946,14 +1055,9 @@ inflightKey
 return;
 }
 
-autoStopInflight.add(
-inflightKey
-);
-
 void (
 async()=>{
 
-try{
 const policy =
 getTradeConfig();
 
@@ -965,6 +1069,14 @@ policy.autoStopDelayMs
 );
 }
 );
+
+if(
+autoStopInflight.has(
+inflightKey
+)
+){
+return;
+}
 
 let pos =
 position;
@@ -1029,21 +1141,10 @@ if(
 return;
 }
 
-/* Main-process attach may have partially applied — still fallback with fresh row. */
 await applyAutoStopsAfterEntry(
 symbol,
 pos
 );
-}finally{
-setTimeout(
-()=>{
-autoStopInflight.delete(
-inflightKey
-);
-},
-3000
-);
-}
 
 }
 )();

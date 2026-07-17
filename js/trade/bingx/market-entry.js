@@ -6,7 +6,7 @@ getCachedPosition,
 listCachedPositionsForSymbol,
 removeTradePositionFromCache,
 upsertTradePositionInCache
-} from "./positions-cache.js?v=2";
+} from "./positions-cache.js?v=3";
 
 import {
 getActiveTradeVolumeUsdt
@@ -15,7 +15,7 @@ getActiveTradeVolumeUsdt
 import {
 applyAutoStopsAfterEntry,
 getAutoStopSettings
-} from "./auto-stops.js?v=1";
+} from "./auto-stops.js?v=3";
 
 import {
 marketMap
@@ -23,11 +23,11 @@ marketMap
 
 import {
 getTradeConfig
-} from "./config.js?v=3";
+} from "./config.js?v=7";
 
 import {
 mountTradeChartMarkersToggle
-} from "../../trade-chart-execution-markers.js?v=8";
+} from "../../trade-chart-execution-markers.js?v=9";
 
 const REFRESH_MS =
 1500;
@@ -322,14 +322,10 @@ const needsAutoStops =
 if(
 needsAutoStops
 ){
-setTimeout(
-()=>{
+/* Like Bybit: place immediately; maybeApply path has its own short delay. */
 void applyAutoStopsAfterEntry(
 symbol,
 result.position
-);
-},
-getTradeConfig().autoStopDelayMs
 );
 }
 }

@@ -5,7 +5,7 @@ import {
 maybeApplyAutoStopsForNewPosition,
 clearDismissedStops,
 isStopDismissed
-} from "./auto-stops.js?v=1";
+} from "./auto-stops.js?v=3";
 
 import {
 maybeReconcileOrdersOnPositionOpen
@@ -24,7 +24,7 @@ resetTradePositionSoundBaseline
 
 import {
 getTradeConfig
-} from "./config.js?v=3";
+} from "./config.js?v=7";
 
 const cacheBySymbol =
 new Map();
@@ -321,6 +321,53 @@ return next;
  * local dismiss so cancelled SL/TP do not reincarnate from lagging openOrders. */
 if(
 !getTradeConfig().mergePositionStopsFromPrev
+){
+let merged =
+{
+...next
+};
+
+if(
+isStopDismissed(
+next.symbol ||
+prev.symbol,
+prev,
+"sl"
+)
+){
+merged =
+{
+...merged,
+stopLoss:
+0
+};
+delete merged.slOrderId;
+}
+
+if(
+isStopDismissed(
+next.symbol ||
+prev.symbol,
+prev,
+"tp"
+)
+){
+merged =
+{
+...merged,
+takeProfit:
+0
+};
+delete merged.tpOrderId;
+}
+
+return merged;
+}
+
+/* Main marked this row after a fresh openOrders enrich — trust 0 as cancel. */
+if(
+next._stopsAuthoritative ===
+true
 ){
 let merged =
 {

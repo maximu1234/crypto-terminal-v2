@@ -17,7 +17,7 @@ normalizeSymbol
 
 import {
 fetchTradesForSymbol
-} from "./trade-markers-sandbox/trade-fetch.js?v=17";
+} from "./trade-markers-sandbox/trade-fetch.js?v=18";
 
 let showMarkers =
 false;

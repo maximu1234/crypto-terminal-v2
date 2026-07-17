@@ -55,9 +55,13 @@ row
 
 }
 
-async function fetchPositionListRaw(){
+async function fetchPositionListRaw(
+options
+){
 
-return streamModules.fetchPositionListRaw();
+return streamModules.fetchPositionListRaw(
+options
+);
 
 }
 
@@ -85,16 +89,17 @@ let seedInflight =
 null;
 let seedRetryTimer =
 null;
+let seedFollowUpNeeded =
+false;
 let bingxRestSeedDone =
 false;
 let emptySeedSoftSkipCount =
 0;
 
-const MAX_EMPTY_SEED_SOFT_SKIPS =
-4;
-
+/* Match renderer optimistic keep (~8s). Too short → empty REST clears the
+ * open, chart flickers off, then the next seed brings it back. */
 const OPTIMISTIC_PROTECT_MS =
-2000;
+8000;
 
 function hasFreshOptimisticPositions(){
 
@@ -183,6 +188,14 @@ null;
 /** Coalesce REST reconcile after WS events — keep UI instant via WS first. */
 const RECONCILE_DEBOUNCE_MS =
 350;
+
+/* BingX often omits a.P on Cross ACCOUNT_UPDATE and no longer sends 5s snapshots.
+ * Poll positions while the stream is live so exchange-side opens appear quickly. */
+const EXTERNAL_SYNC_POLL_MS =
+2500;
+
+let externalSyncTimer =
+null;
 
 /** After WS close, ignore stale REST rows that still show an open position. */
 const RECENTLY_CLOSED_MS =
@@ -1527,15 +1540,50 @@ waitMs
 
 }
 
-function scheduleImmediatePositionRefresh(){
+function stopExternalSyncPoll(){
 
-scheduleAccountReconcile(
-RECONCILE_DEBOUNCE_MS
+if(
+externalSyncTimer
+){
+clearInterval(
+externalSyncTimer
+);
+externalSyncTimer =
+null;
+}
+
+}
+
+function startExternalSyncPoll(){
+
+stopExternalSyncPoll();
+externalSyncTimer =
+setInterval(
+()=>{
+/* Skip if a seed is already running — follow-up flag covers mid-seed events. */
+if(
+seedInflight
+){
+seedFollowUpNeeded =
+true;
+return;
+}
+
+void seedFromRest();
+},
+EXTERNAL_SYNC_POLL_MS
 );
 
 }
 
-function patchStreamPositionStops(){
+function patchStreamPositionStops(
+options =
+{}
+){
+
+const allowClearStops =
+options.allowClearStops ===
+true;
 
 if(
 typeof streamModules.enrichPositionsWithStopOrders !==
@@ -1580,11 +1628,98 @@ const prev =
 positionsBySymbol.get(
 key
 );
+let next =
+{
+...pos
+};
+
+if(
+!allowClearStops &&
+prev
+){
+/* WS/position deltas often run without a fresh openOrders pull —
+ * never blank SL/TP lines just because this enrich pass saw none. */
+const nextSl =
+Number(
+next.stopLoss
+) ||
+0;
+const nextTp =
+Number(
+next.takeProfit
+) ||
+0;
+const prevSl =
+Number(
+prev.stopLoss
+) ||
+0;
+const prevTp =
+Number(
+prev.takeProfit
+) ||
+0;
+
+if(
+nextSl <=
+0 &&
+prevSl >
+0
+){
+next.stopLoss =
+prevSl;
+
+if(
+prev.slOrderId
+){
+next.slOrderId =
+prev.slOrderId;
+}
+
+}
+
+if(
+nextTp <=
+0 &&
+prevTp >
+0
+){
+next.takeProfit =
+prevTp;
+
+if(
+prev.tpOrderId
+){
+next.tpOrderId =
+prev.tpOrderId;
+}
+
+}
+
+}
 
 positionsBySymbol.set(
 key,
-pos
+next
 );
+
+if(
+allowClearStops
+){
+/* Renderer must trust explicit 0 after a fresh openOrders pull. */
+const marked =
+{
+...next,
+_stopsAuthoritative:
+true
+};
+positionsBySymbol.set(
+key,
+marked
+);
+next =
+marked;
+}
 
 if(
 !prev ||
@@ -1592,7 +1727,7 @@ JSON.stringify(
 prev
 ) !==
 JSON.stringify(
-pos
+next
 )
 ){
 changed =
@@ -1602,6 +1737,91 @@ true;
 }
 
 return changed;
+
+}
+
+/**
+ * REST position rows omit SL/TP — keep last known stops until openOrders enrich.
+ */
+function preserveStopsFromPrev(
+key,
+mapped
+){
+
+const prev =
+positionsBySymbol.get(
+key
+);
+
+if(
+!prev ||
+!mapped
+){
+return mapped;
+}
+
+const out =
+{
+...mapped
+};
+const nextSl =
+Number(
+out.stopLoss
+) ||
+0;
+const nextTp =
+Number(
+out.takeProfit
+) ||
+0;
+const prevSl =
+Number(
+prev.stopLoss
+) ||
+0;
+const prevTp =
+Number(
+prev.takeProfit
+) ||
+0;
+
+if(
+nextSl <=
+0 &&
+prevSl >
+0
+){
+out.stopLoss =
+prevSl;
+
+if(
+prev.slOrderId
+){
+out.slOrderId =
+prev.slOrderId;
+}
+
+}
+
+if(
+nextTp <=
+0 &&
+prevTp >
+0
+){
+out.takeProfit =
+prevTp;
+
+if(
+prev.tpOrderId
+){
+out.tpOrderId =
+prev.tpOrderId;
+}
+
+}
+
+return out;
 
 }
 
@@ -2157,7 +2377,11 @@ if(
 changed
 ){
 streamModules.invalidatePositionListCache?.();
-patchStreamPositionStops();
+/* Position delta only — do not clear SL/TP unless openOrders say so. */
+patchStreamPositionStops({
+allowClearStops:
+false
+});
 emitPositions();
 }
 
@@ -2315,8 +2539,12 @@ changed
 emitOrders();
 }
 
+/* Order book changed — cancelled SL/TP can clear; new stops can attach. */
 if(
-patchStreamPositionStops()
+patchStreamPositionStops({
+allowClearStops:
+true
+})
 ){
 emitPositions();
 }
@@ -2342,6 +2570,9 @@ async function seedFromRest(){
 if(
 seedInflight
 ){
+/* Another WS account/order event arrived mid-seed — run one more after. */
+seedFollowUpNeeded =
+true;
 return seedInflight;
 }
 
@@ -2366,8 +2597,9 @@ false;
 
 const posResult =
 await fetchPositionListRaw({
+/* Stream seed must see exchange-side opens/closes — never the 2s list cache. */
 forceRefresh:
-false
+true
 });
 
 if(
@@ -2375,9 +2607,12 @@ posResult?.rateLimited
 ){
 const backoffMs =
 Math.max(
-60000,
+1500,
+Math.min(
+8000,
 streamModules.getRateLimitBackoffMs?.() ||
-0
+2000
+)
 );
 scheduleSeedRetry(
 backoffMs
@@ -2507,10 +2742,11 @@ true;
 
 if(
 keptOptimistic >
-0 &&
-emptySeedSoftSkipCount <
-MAX_EMPTY_SEED_SOFT_SKIPS
+0
 ){
+/* Always soft-skip while a fresh open exists. Protect window alone
+ * ends the skip; do not force-clear via soft-skip cap (that caused
+ * ~1–2s chart flicker after market entry). */
 emptySeedSoftSkipCount +=
 1;
 softSkippedEmpty =
@@ -2558,13 +2794,18 @@ key,
 mapped
 ] of nextPositions
 ){
+/* Keep prior stops only until openOrders enrich (handles rate-limit path).
+ * enrichPositionsWithStopOrders starts from 0 — cancel on exchange clears. */
 positionsBySymbol.set(
 key,
+preserveStopsFromPrev(
+key,
 mapped
+)
 );
 }
 
-emitPositions();
+/* Do not emit bare REST rows (stops=0) — wait for openOrders enrich below. */
 bingxRestSeedDone =
 true;
 }
@@ -2572,17 +2813,30 @@ true;
 }
 
 const ordResult =
-await getOpenOrders();
+await getOpenOrders({
+forceRefresh:
+true
+});
 
 if(
 ordResult?.rateLimited
 ){
 const backoffMs =
 Math.max(
-60000,
+1500,
+Math.min(
+8000,
 streamModules.getRateLimitBackoffMs?.() ||
-0
+2000
+)
 );
+/* Still push positions we have (with preserved stops) before retrying. */
+if(
+!softSkippedEmpty
+){
+emitPositions();
+}
+
 scheduleSeedRetry(
 backoffMs
 );
@@ -2604,14 +2858,20 @@ resetRawOpenOrderRows(
 rawRows
 );
 
-if(
-patchStreamPositionStops()
-){
-emitPositions();
-}
-
+/* Fresh openOrders snapshot — authoritative for SL/TP presence/absence. */
+patchStreamPositionStops({
+allowClearStops:
+true
+});
 emitOrders();
 
+}
+
+/* One emit after positions + stops are consistent — avoids SL/TP blink. */
+if(
+!softSkippedEmpty
+){
+emitPositions();
 }
 
 if(
@@ -2637,6 +2897,16 @@ return await seedInflight;
 }finally{
 seedInflight =
 null;
+
+if(
+seedFollowUpNeeded
+){
+seedFollowUpNeeded =
+false;
+scheduleAccountReconcile(
+50
+);
+}
 }
 
 }
@@ -2717,6 +2987,7 @@ reconnectDelayMs
 function stopSocket(){
 
 clearReconnectTimer();
+stopExternalSyncPoll();
 
 if(
 socketCtl
@@ -2742,6 +3013,7 @@ null;
 
 function stopTradingStream(){
 
+stopExternalSyncPoll();
 stopSocket();
 
 if(
@@ -2898,6 +3170,7 @@ log.info(
 );
 /* One coalesced seed after WS is up — not before. */
 void seedFromRest();
+startExternalSyncPoll();
 
 },
 
@@ -2935,9 +3208,14 @@ false;
 return;
 }
 
-/* WS already painted UI; coalesce one REST confirm. */
+/* External open/close often arrives as balance-only ACCOUNT_UPDATE (no a.P).
+ * Invalidate caches and REST-confirm quickly — do not wait on stale 2s list. */
+streamModules.invalidatePositionListCache?.();
+streamModules.invalidateOpenOrderRowsCache?.();
 scheduleAccountReconcile(
-RECONCILE_DEBOUNCE_MS
+rows?.hasPositions
+? RECONCILE_DEBOUNCE_MS
+: 100
 );
 
 }else if(
@@ -2972,6 +3250,13 @@ if(
 !bingxRestSeedDone
 ){
 void seedFromRest();
+}
+
+if(
+!externalSyncTimer &&
+streamActiveExchangeId
+){
+startExternalSyncPoll();
 }
 },
 2500

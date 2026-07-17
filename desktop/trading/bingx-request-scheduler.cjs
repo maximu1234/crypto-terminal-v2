@@ -146,10 +146,16 @@ function createBingxRequestScheduler(options = {}) {
   }
 
   async function drain() {
-    while (inFlight < maxConcurrent && queue.length) {
-      const blockedMs = getRateLimitBackoffMs();
+    while (queue.length) {
       const head = queue[0];
       const isCritical = head.priority === PRIORITY.critical;
+      /* Critical trade must not wait behind diary/enrichment GETs. */
+      const slotLimit = isCritical ? maxConcurrent + 2 : maxConcurrent;
+      if (inFlight >= slotLimit) {
+        return;
+      }
+
+      const blockedMs = getRateLimitBackoffMs();
 
       if (blockedMs > 0 && !isCritical && !head.allowDuringRateLimit) {
         /* Soft-fail non-critical waiting work instead of busy-waiting. */
@@ -180,13 +186,16 @@ function createBingxRequestScheduler(options = {}) {
       }
 
       const now = nowFn();
-      if (nextTokenAtMs > now) {
+      /* Critical place/close/stop: do not wait on the shared token bucket. */
+      if (!isCritical && nextTokenAtMs > now) {
         scheduleDrain(nextTokenAtMs - now);
         return;
       }
 
       queue.shift();
-      nextTokenAtMs = now + Math.ceil(1000 / maxPerSecond);
+      if (!isCritical) {
+        nextTokenAtMs = now + Math.ceil(1000 / maxPerSecond);
+      }
       inFlight += 1;
       stats.started += 1;
       const pName = PRIORITY_NAME[next.priority] || "normal";

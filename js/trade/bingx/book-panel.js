@@ -11,11 +11,11 @@ getAllCachedPositions,
 isTradePositionRecentlyClosed,
 removeTradePositionFromCache,
 syncTradePositionsCache
-} from "./positions-cache.js?v=2";
+} from "./positions-cache.js?v=3";
 
 import {
 getTradeConfig
-} from "./config.js?v=3";
+} from "./config.js?v=7";
 
 import {
 applyPositionColumnLayout,
@@ -3059,6 +3059,21 @@ closingPosition =
 true;
 updateCloseAllBtnState();
 
+/* Instant book/chart clear while BingX REST runs. */
+removeTradePositionFromCache(
+symbol,
+{
+...options,
+markRecentlyClosed:
+true
+}
+);
+window.dispatchEvent(
+new CustomEvent(
+"trade-open-positions-changed"
+)
+);
+
 try{
 const result =
 await api.closePosition(
@@ -3075,13 +3090,11 @@ result.message ||
 "Не удалось закрыть",
 true
 );
+await refresh(
+true
+);
 return;
 }
-
-removeTradePositionFromCache(
-symbol,
-options
-);
 
 setStatus(
 "Позиция закрыта"
@@ -3100,6 +3113,9 @@ err
 setStatus(
 err?.message ||
 "Ошибка закрытия",
+true
+);
+await refresh(
 true
 );
 }finally{
@@ -3166,6 +3182,16 @@ if(
 continue;
 }
 
+/* Instant clear each row while closes run. */
+removeTradePositionFromCache(
+symbol,
+{
+...options,
+markRecentlyClosed:
+true
+}
+);
+
 try{
 const result =
 await api.closePosition(
@@ -3185,11 +3211,6 @@ errors.push(
 result.message
 );
 }
-}else{
-removeTradePositionFromCache(
-symbol,
-options
-);
 }
 }catch(
 err

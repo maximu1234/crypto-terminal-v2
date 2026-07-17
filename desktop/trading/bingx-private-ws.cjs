@@ -207,23 +207,46 @@ function connectBingxPrivateWs(handlers = {}) {
           return;
         }
 
-        const event = String(msg?.e || msg?.dataType || "");
+        /* BingX may wrap the event: { dataType, data: {...} } or data as JSON string. */
+        let eventMsg = msg;
+        if (msg?.data != null && !msg?.e && !msg?.a && !msg?.o) {
+          let inner = msg.data;
+          if (typeof inner === "string") {
+            try {
+              inner = JSON.parse(inner);
+            } catch {
+              inner = null;
+            }
+          }
+          if (inner && typeof inner === "object") {
+            eventMsg = inner;
+          }
+        }
 
-        if (event === "ACCOUNT_UPDATE") {
-          const mapped = mapAccountPositions(msg?.a?.P);
+        const event = String(
+          eventMsg?.e || eventMsg?.dataType || msg?.dataType || ""
+        );
+
+        if (event === "ACCOUNT_UPDATE" || event === "account") {
+          const positions =
+            eventMsg?.a?.P ||
+            eventMsg?.P ||
+            msg?.a?.P ||
+            [];
+          const mapped = mapAccountPositions(positions);
           if (mapped.length) {
             emitPositionDelta(mapped);
           }
           /* Cross margin often omits a.P — still signal for REST reconcile. */
           handlers.onTopic?.("account", {
             hasPositions: mapped.length > 0,
-            reason: msg?.a?.m || ""
+            reason: eventMsg?.a?.m || msg?.a?.m || ""
           });
           return;
         }
 
-        if (event === "ORDER_TRADE_UPDATE") {
-          const order = mapAccountOrder(msg?.o);
+        if (event === "ORDER_TRADE_UPDATE" || event === "order") {
+          const order = mapAccountOrder(eventMsg?.o || msg?.o);
           if (order) {
             handlers.onTopic?.("order", [order]);
           }

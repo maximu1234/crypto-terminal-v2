@@ -13,7 +13,7 @@ export {
   getTradePositionsCacheSyncError,
   syncTradePositionsCache,
   initTradePositionsCache
-} from "./positions-cache.js?v=2";
+} from "./positions-cache.js?v=3";
 
 export {
   stopTradeStreamBridge,
@@ -24,7 +24,7 @@ export {
 export {
   createTradeChartOverlay,
   initTradeChartOverlay
-} from "./chart-overlay.js?v=2";
+} from "./chart-overlay.js?v=6";
 
 export {
   getAutoStopSettings,
@@ -37,16 +37,33 @@ export {
   applyAutoStopsAfterEntry,
   maybeApplyAutoStopsForNewPosition,
   wireAutoStopSettings
-} from "./auto-stops.js?v=1";
+} from "./auto-stops.js?v=3";
 
 export {
   initTradeMarketEntry
-} from "./market-entry.js?v=1";
+} from "./market-entry.js?v=2";
 
 export {
   initTradeBookPanel
-} from "./book-panel.js?v=2";
+} from "./book-panel.js?v=3";
 
 export {
   getTradeConfig
-} from "./config.js?v=3";
+} from "./config.js?v=7";
+
+export {
+  diarySanitizeTrade,
+  diaryAcceptDayCache,
+  diaryLoadPeriod,
+  diaryCollectCachedTrades,
+  diaryAfterListPaint,
+  diaryBuildDetailRequest,
+  diaryInterpretDetailResult,
+  diaryApplyDetailToTrade,
+  diaryAfterDetailSuccess,
+  diaryFetchKlineBatch
+} from "./diary/index.js?v=4";
+
+export {
+  fetchTradeHistoryForSymbol
+} from "./history/index.js?v=1";

@@ -75,7 +75,8 @@ Renderer (/coins.html — desktop)
 тонкие renderer-facades `js/trade-positions-cache.js`,
 `js/trade-stream-bridge.js`, `js/trade-chart-overlay.js`,
 `js/trade-auto-stops.js`, `js/trade-market-entry.js`,
-`js/trade-book-panel.js`.
+`js/trade-book-panel.js`, `js/trade-diary-page.js`,
+`js/trade-diary-detail.js`, `js/trade-diary-chart.js`.
 
 При смене биржи старый renderer-модуль останавливается и страница
 перезагружается: DOM listeners, stream subscriptions и кэши одной биржи не
@@ -91,9 +92,36 @@ Renderer (/coins.html — desktop)
 
 **Amend (drag на графике):** цена триггера/лимитки меняется через `POST /openApi/swap/v1/trade/cancelReplace` (не `/amend` — тот меняет только quantity). При cancel ok / place fail — повторный place.
 
-**Дневник BingX:** list = income-first (`sparse` PnL, `listCloseTimeMs` стабильный ключ строки). Истина по стороне/open/close — `positionHistory`, иначе циклы из `allFillOrders.positionSide` (`matchBingxRoundTripByAnchor`: close / open / contains). Пустой side → «—», не Long. Fills только для таблицы. **Не** угадывать long/short по порядку Buy/Sell.
+**Дневник (renderer split):** host `js/trade-diary-*.js` содержит только
+DOM/period/status и делегирует `diaryLoadPeriod` активному bundle через
+`module-router`. Fetch, day-cache policy, detail и klines полностью находятся
+в `js/trade/bybit/diary/*` | `js/trade/bingx/diary/*`.
+Bybit — closed-PnL + executions (metka-69 контракт, без enrich/resolved).
+BingX — income + fills resolve; загруженные прошлые дни переиспользуются из
+day-cache, а сеть повторно проверяет только текущий день.
 
-**Терминал «История сделок» (BingX):** per-symbol = `positionHistory` либо `positionSide` fills → `executions` (schema 6). Политика fetch — флаги в `js/trade/bingx/config.js` (`fetchClosedPnlTradeDetails: false`), без `if (bingx)` в shared `trade-fetch.js`.
+**Дневник BingX:** единый резолвер для detail; list — income + **один allFillOrders-window на символ** до первой отрисовки (без N× per-trade resolve и без второго renderer-прохода).
+
+| Слой | Поведение |
+|------|-----------|
+| List | income identity/PnL → per-symbol fills → `side`/`durationMs` готовы до paint |
+| Detail | `resolveBingxClosedTrade` (PH → adaptive fills) |
+| Side | только `positionSide` / PH; **не** угадывать Long/Short по Buy→Sell |
+| List resolve / detail | `PRIORITY.normal`, `cancelable: false`; прошлые дни сохраняются в day-cache |
+| Miss | detail → `ok: false`; list → строка может остаться «—», но ответ всегда возвращается |
+
+**Терминал «История сделок» (renderer split):**
+`trade-chart-execution-markers.js` отвечает только за checkbox/cache/отрисовку,
+а `trade-markers-sandbox/trade-fetch.js` — тонкий facade через
+`trade/module-router.js`.
+
+| Биржа | Модуль | Алгоритм |
+|-------|--------|----------|
+| Bybit | `js/trade/bybit/history/*` | closed-PnL list + per-trade `getTradeDiaryDetail` (тот же 180d/`avgEntryPrice` matcher, что Дневник) |
+| BingX | `js/trade/bingx/history/*` | income + собственный fills enrich, `skipExecutions:true`, `enrich:true` |
+
+Bybit history не импортирует BingX history и наоборот. Исправления matching
+одной биржи не вносятся в shared facade или модуль другой биржи.
 
 ## Файлы
 

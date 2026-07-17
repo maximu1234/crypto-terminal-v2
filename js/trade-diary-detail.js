@@ -1,7 +1,7 @@
 import {
 destroyDiaryTradeChart,
 mountDiaryTradeChart
-} from "./trade-diary-chart.js?v=13";
+} from "./trade-diary-chart.js?v=14";
 
 import {
 executionSideLabel,
@@ -17,8 +17,13 @@ sideToneClass
 } from "./trade-diary-format.js?v=6";
 
 import {
-getActiveExchangeId
-} from "./market-api.js?v=2";
+getLoadedTradeExchangeModules,
+loadTradeExchangeModules
+} from "./trade/module-router.js?v=11";
+
+function diaryMod() {
+  return getLoadedTradeExchangeModules();
+}
 
 function tradingApi(){
 
@@ -56,7 +61,7 @@ executions
 if(
 !executions?.length
 ){
-return `<div class="trade-diary-detail-empty">Исполнения не найдены.</div>`;
+return `<div class="trade-diary-detail-empty">Исполнения не определены для этой сделки.</div>`;
 }
 
 const sorted =
@@ -253,113 +258,92 @@ if(
 api?.getTradeDiaryDetail
 ){
 
-const result =
-await api.getTradeDiaryDetail({
+await loadTradeExchangeModules();
+
+const request =
+typeof diaryMod()?.diaryBuildDetailRequest ===
+"function"
+? diaryMod().diaryBuildDetailRequest(
+trade
+)
+: {
 symbol:
 trade.symbol,
 openTimeMs:
 trade.openTimeMs,
 closeTimeMs:
 trade.closeTimeMs,
-/* Sparse list rows often cache a wrong Long — detail resolves side itself. */
 side:
-trade.sparse
-? ""
-: trade.side,
+trade.side,
 qty:
 trade.qty,
 orderId:
 trade.orderId,
-positionId:
-trade.positionId ||
-trade.orderId,
 avgEntryPrice:
-trade.sparse
-? 0
-: trade.avgEntryPrice,
+trade.avgEntryPrice,
 avgExitPrice:
-trade.sparse
-? 0
-: trade.avgExitPrice,
-sparse:
-!!trade.sparse ||
-Number(
-trade.openTimeMs
-) ===
-Number(
-trade.closeTimeMs
-),
-exchangeId:
-getActiveExchangeId()
-});
+trade.avgExitPrice
+};
+
+const result =
+await api.getTradeDiaryDetail(
+request
+);
+
+const interpreted =
+typeof diaryMod()?.diaryInterpretDetailResult ===
+"function"
+? diaryMod().diaryInterpretDetailResult(
+result
+)
+: (
+result?.ok ===
+false
+? {
+ok:
+false,
+failMessage:
+result?.message ||
+"Не удалось загрузить исполнения"
+}
+: {
+ok:
+true,
+detail:
+result?.ok
+? result
+: null
+}
+);
 
 if(
-result?.ok
+!interpreted?.ok
+){
+detailEl.innerHTML =
+`<div class="trade-diary-detail-error">${escapeHtml(
+interpreted?.failMessage ||
+result?.message ||
+"Не удалось загрузить исполнения"
+)}</div>`;
+return;
+}
+
+if(
+interpreted.detail
 ){
 detail =
-result;
+interpreted.detail;
+
 if(
-Number.isFinite(
-Number(
-detail.openTimeMs
-)
-) &&
-Number.isFinite(
-Number(
-detail.closeTimeMs
-)
-) &&
-Number(
-detail.closeTimeMs
-) >
-Number(
-detail.openTimeMs
-)
+typeof diaryMod()?.diaryApplyDetailToTrade ===
+"function"
 ){
-trade.openTimeMs =
-Number(
-detail.openTimeMs
+diaryMod().diaryApplyDetailToTrade(
+trade,
+detail
 );
-trade.closeTimeMs =
-Number(
-detail.closeTimeMs
-);
-trade.durationMs =
-Number.isFinite(
-Number(
-detail.durationMs
-)
-)
-? Number(
-detail.durationMs
-)
-: trade.closeTimeMs -
-trade.openTimeMs;
-trade.sparse =
-false;
 }
-/* Always apply resolved side — including "" to clear poisoned Long. */
-trade.side =
-detail.side ||
-"";
-if(
-Number(
-detail.avgEntryPrice
-) >
-0
-){
-trade.avgEntryPrice =
-detail.avgEntryPrice;
-}
-if(
-Number(
-detail.avgExitPrice
-) >
-0
-){
-trade.avgExitPrice =
-detail.avgExitPrice;
-}
+
 const rowDuration =
 detailEl
 .closest(
@@ -369,7 +353,11 @@ detailEl
 ".trade-diary-duration"
 );
 if(
-rowDuration
+rowDuration &&
+Number(
+trade.durationMs
+) >
+0
 ){
 rowDuration.textContent =
 formatDiaryDuration(
@@ -385,7 +373,13 @@ detailEl
 ".trade-diary-side"
 );
 if(
-rowSide
+rowSide &&
+(
+trade.side ===
+"long" ||
+trade.side ===
+"short"
+)
 ){
 rowSide.textContent =
 sideLabel(
@@ -396,15 +390,11 @@ rowSide.className =
 trade.side
 )}`;
 }
-}else{
-detailEl.innerHTML =
-`<div class="trade-diary-detail-error">${escapeHtml(
-result?.message ||
-"Не удалось загрузить исполнения"
-)}</div>`;
-return;
-}
 
+diaryMod()?.diaryAfterDetailSuccess?.(
+trade,
+detail
+);
 }
 
 detailEl.innerHTML =
@@ -434,6 +424,8 @@ chartHost.textContent =
 err?.message ||
 "Ошибка графика";
 }
+}
+
 }
 
 }

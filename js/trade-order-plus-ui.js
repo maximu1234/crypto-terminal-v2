@@ -23,7 +23,7 @@ getTelegramChatId
 
 import {
 getActiveTradeConfig
-} from "./trade/module-router.js?v=4";
+} from "./trade/module-router.js?v=11";
 
 function tradingApi(){
 

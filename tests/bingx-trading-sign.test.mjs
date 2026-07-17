@@ -23,6 +23,7 @@ const {
   mapBingxFillExecution,
   buildBingxRoundTripsFromPositionFills,
   matchBingxRoundTripByAnchor,
+  resolveBingxClosedTrade,
   mapApiError,
   isRateLimitError,
   selectPositionFromCandidates,
@@ -133,6 +134,68 @@ test("matchBingxRoundTripByAnchor finds short by close or open income time", () 
   assert.equal(byClose.closeTimeMs, closeMs);
   assert.equal(byOpen.openTimeMs, openMs);
   assert.equal(byOpen.closeTimeMs, closeMs);
+});
+
+test("mapBingxFillExecution reads positionSide aliases including ps", () => {
+  const ex = mapBingxFillExecution({
+    symbol: "BTC-USDT",
+    side: "SELL",
+    ps: "SHORT",
+    filledTm: "2026-06-30T06:59:37.000Z",
+    price: "59567.0",
+    volume: "0.0040"
+  });
+  assert.ok(ex);
+  assert.equal(ex.positionSide, "SHORT");
+  assert.equal(ex.side, "Sell");
+});
+
+test("BTCUSDT short cycle exposes two executions for diary detail", () => {
+  const openMs = Date.parse("2026-06-30T06:59:37.000Z");
+  const closeMs = Date.parse("2026-07-01T04:46:27.000Z");
+  const fills = [
+    mapBingxFillExecution({
+      symbol: "BTC-USDT",
+      side: "SELL",
+      positionSide: "SHORT",
+      filledTm: "2026-06-30T06:59:37.000Z",
+      price: "59567.0",
+      volume: "0.0040"
+    }),
+    mapBingxFillExecution({
+      symbol: "BTC-USDT",
+      side: "BUY",
+      positionSide: "SHORT",
+      filledTm: "2026-07-01T04:46:27.000Z",
+      price: "59429.6",
+      volume: "0.0040"
+    })
+  ];
+  const trade = matchBingxRoundTripByAnchor(
+    buildBingxRoundTripsFromPositionFills(fills),
+    closeMs
+  );
+  assert.ok(trade);
+  assert.equal(trade.side, "short");
+  assert.equal(trade.openTimeMs, openMs);
+  assert.equal(trade.closeTimeMs, closeMs);
+  assert.equal(trade.executions.length, 2);
+  assert.equal(trade.entries.length, 1);
+  assert.equal(trade.exits.length, 1);
+  assert.equal(trade.entries[0].side, "Sell");
+  assert.equal(trade.exits[0].side, "Buy");
+  assert.equal(trade.avgEntryPrice, 59567);
+  assert.equal(trade.avgExitPrice, 59429.6);
+});
+
+test("resolveBingxClosedTrade fails loudly when unresolved", async () => {
+  const result = await resolveBingxClosedTrade({
+    symbol: "BTCUSDT",
+    anchorTimeMs: Date.parse("2026-07-01T04:46:27.000Z")
+  });
+  assert.equal(result.ok, false);
+  assert.equal(result.resolved, false);
+  assert.ok(String(result.message || "").length > 0);
 });
 
 test("mapBingxPositionHistoryRow maps closed position", () => {

@@ -31,7 +31,7 @@ initTradeBookPanel
 
 import {
 loadTradeExchangeModules
-} from "./trade/module-router.js?v=4";
+} from "./trade/module-router.js?v=11";
 
 import {
 getActiveExchangeId
@@ -312,7 +312,7 @@ const {
 initTradeChartExecutionMarkers
 } =
 await import(
-"./trade-chart-execution-markers.js?v=8"
+"./trade-chart-execution-markers.js?v=9"
 );
 
 initTradeChartExecutionMarkers();

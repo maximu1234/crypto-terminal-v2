@@ -37,7 +37,12 @@ alwaysApply: true
 | Renderer | `js/trade/bybit/*` | `js/trade/bingx/*` | `js/trade/module-router.js` + тонкие `js/trade-*.js` facades |
 | Main | `bybit-rest.cjs`, `bybit-trading-stream.cjs` | `bingx-rest.cjs`, `bingx-trading-stream.cjs` | `trading-router.cjs`, `trading-stream.cjs` |
 
-Файлы `js/trade-positions-cache.js`, `trade-chart-overlay.js` и т.д. — **только facades** (прокси), без логики биржи.
+Файлы `js/trade-positions-cache.js`, `trade-chart-overlay.js`,
+`trade-diary-page.js`, `trade-diary-detail.js`, `trade-diary-chart.js` и т.д. —
+**только facades** (прокси), без логики биржи. Дневник: бизнес-логика только в
+`js/trade/bybit/diary/*` и `js/trade/bingx/diary/*`. Терминал «История
+сделок»: fetch/matching только в `js/trade/bybit/history/*` и
+`js/trade/bingx/history/*`; `trade-markers-sandbox/trade-fetch.js` — facade.
 
 ## Где живёт код каждой биржи
 
@@ -50,8 +55,10 @@ alwaysApply: true
 
 Общие renderer-файлы `trade-positions-cache.js`, `trade-chart-overlay.js`,
 `trade-stream-bridge.js`, `trade-auto-stops.js`, `trade-market-entry.js`,
-`trade-book-panel.js` — только тонкие facades. Биржевая логика живёт только в
-`js/trade/bybit/*` или `js/trade/bingx/*`.
+`trade-book-panel.js`, `trade-diary-page.js`, `trade-diary-detail.js`,
+`trade-diary-chart.js` — только тонкие facades. Биржевая логика живёт только в
+`js/trade/bybit/*` или `js/trade/bingx/*` (дневник: `…/diary/*`, история
+сделок: `…/history/*`).
 
 ## Как делать фичу / фикс
 

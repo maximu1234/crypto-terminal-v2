@@ -24,6 +24,14 @@ const RECV_WINDOW =
 const REQUEST_TIMEOUT_MS =
 12000;
 
+/** Max age of open fills relative to close for diary open/duration matching. */
+const EXEC_HISTORY_MAX_LOOKBACK_MS =
+180 *
+24 *
+60 *
+60 *
+1000;
+
 function apiBases(
 testnet
 ){
@@ -832,6 +840,140 @@ fill.execQty
 
 }
 
+function entryPriceMatchesAvg(
+vwap,
+avgEntry
+){
+
+if(
+!(
+avgEntry >
+0
+) ||
+!(
+vwap >
+0
+)
+){
+return true;
+}
+
+return Math.abs(
+vwap -
+avgEntry
+) /
+avgEntry <=
+0.002;
+
+}
+
+function pickOpenFillsByQtyAndEntry(
+candidatesNewestFirst,
+targetQty,
+avgEntryPrice
+){
+
+let fallback =
+null;
+
+for(
+let i =
+0;
+i <
+candidatesNewestFirst.length;
+i++
+){
+
+const first =
+candidatesNewestFirst[
+i
+];
+
+if(
+!(
+first.execQty >
+0
+)
+){
+continue;
+}
+
+let need =
+targetQty;
+const selected =
+[];
+
+for(
+let j =
+i;
+j <
+candidatesNewestFirst.length;
+j++
+){
+
+const ex =
+candidatesNewestFirst[
+j
+];
+
+if(
+!(
+ex.execQty >
+0
+)
+){
+continue;
+}
+
+selected.push(
+ex
+);
+need -=
+ex.execQty;
+
+if(
+need <=
+1e-8
+){
+
+const vwap =
+weightedAvgPrice(
+selected
+);
+const oldestFirst =
+[
+...selected
+].reverse();
+
+if(
+!fallback
+){
+fallback =
+oldestFirst;
+}
+
+if(
+entryPriceMatchesAvg(
+vwap,
+avgEntryPrice
+)
+){
+return oldestFirst;
+}
+
+break;
+
+}
+
+}
+
+}
+
+return fallback ||
+[];
+
+}
+
 function collectOpenFills(
 trade,
 pool,
@@ -855,25 +997,35 @@ const openMs =
 Number(
 trade.openTimeMs
 );
+const avgEntryPrice =
+Number(
+trade.avgEntryPrice
+) ||
+0;
 const exitKeys =
 new Set(
 exits.map(
 executionKey
 )
 );
-const lookbackMs =
-wide
-? 24 *
-60 *
-60 *
-1000
-: Math.max(
+const durationLookback =
+Math.max(
 closeMs -
 openMs +
 60000,
 5 *
 60 *
 1000
+);
+const lookbackMs =
+Math.max(
+wide
+? EXEC_HISTORY_MAX_LOOKBACK_MS
+: durationLookback,
+avgEntryPrice >
+0
+? EXEC_HISTORY_MAX_LOOKBACK_MS
+: durationLookback
 );
 const minTime =
 closeMs -
@@ -905,34 +1057,11 @@ b.execTimeMs -
 a.execTimeMs
 );
 
-let need =
-targetQty;
-const entries =
-[];
-
-for(
-const ex of
-candidates
-){
-
-if(
-need <=
-1e-8
-){
-break;
-}
-
-entries.push(
-ex
+return pickOpenFillsByQtyAndEntry(
+candidates,
+targetQty,
+avgEntryPrice
 );
-need -=
-ex.execQty;
-
-}
-
-entries.reverse();
-
-return entries;
 
 }
 
@@ -1108,6 +1237,12 @@ closedRow.qty
 ) ||
 0;
 
+const avgEntryPrice =
+Number(
+closedRow.avgEntryPrice
+) ||
+0;
+
 if(
 !closeMs ||
 !symbol ||
@@ -1128,24 +1263,21 @@ closeSide ===
 ? "Sell"
 : "Buy";
 
-const lookbackMs =
-90 *
-24 *
-60 *
-60 *
-1000;
-
-const symExecs =
+const candidates =
 executions
 .filter(
 ex=>
 ex.symbol ===
 symbol &&
+ex.side ===
+openSide &&
+ex.execQty >
+0 &&
 ex.execTimeMs <=
 closeMs &&
 ex.execTimeMs >=
 closeMs -
-lookbackMs
+EXEC_HISTORY_MAX_LOOKBACK_MS
 )
 .sort(
 (
@@ -1156,45 +1288,22 @@ b.execTimeMs -
 a.execTimeMs
 );
 
-let need =
-qty;
-let openMs =
-null;
-
-for(
-const ex of
-symExecs
-){
+const picked =
+pickOpenFillsByQtyAndEntry(
+candidates,
+qty,
+avgEntryPrice
+);
 
 if(
-ex.side !==
-openSide
+!picked.length
 ){
-continue;
+return null;
 }
 
-if(
-ex.execQty <=
+return picked[
 0
-){
-continue;
-}
-
-openMs =
-ex.execTimeMs;
-need -=
-ex.execQty;
-
-if(
-need <=
-1e-8
-){
-break;
-}
-
-}
-
-return openMs;
+].execTimeMs;
 
 }
 
@@ -1300,14 +1409,8 @@ ex.execTimeMs <=
 closeMs +
 120000 &&
 ex.execTimeMs >=
-Math.min(
-openMs,
-closeMs
-) -
-24 *
-60 *
-60 *
-1000
+closeMs -
+EXEC_HISTORY_MAX_LOOKBACK_MS
 )
 .sort(
 (
@@ -1443,10 +1546,7 @@ closeMs +
 2000 &&
 ex.execTimeMs >=
 closeMs -
-24 *
-60 *
-60 *
-1000
+EXEC_HISTORY_MAX_LOOKBACK_MS
 ),
 exits,
 targetQty,
@@ -1537,21 +1637,17 @@ message:
 }
 
 const execResult =
-await getExecutionHistory({
-startTime:
+await fetchExecutionHistoryRange(
 Math.max(
 0,
-openTimeMs -
-24 *
-60 *
-60 *
-1000
+closeTimeMs -
+EXEC_HISTORY_MAX_LOOKBACK_MS
 ),
-endTime:
 closeTimeMs +
 60 *
-1000
-});
+1000,
+symbol
+);
 
 if(
 !execResult.ok
@@ -1583,10 +1679,40 @@ execResult.executions ||
 []
 );
 
+const entryOpenMs =
+matched.entries?.length
+? Number(
+matched.entries[
+0
+].execTimeMs
+)
+: openTimeMs;
+const resolvedOpenMs =
+Number.isFinite(
+entryOpenMs
+) &&
+entryOpenMs >
+0 &&
+entryOpenMs <
+closeTimeMs
+? entryOpenMs
+: openTimeMs;
+
 return {
 ok:
 true,
-...matched
+...matched,
+openTimeMs:
+resolvedOpenMs,
+closeTimeMs,
+durationMs:
+Math.max(
+0,
+closeTimeMs -
+resolvedOpenMs
+),
+side:
+options.side
 };
 
 }
@@ -1772,13 +1898,6 @@ row.orderId ||
 
 const BYBIT_QUERY_MAX_MS =
 7 *
-24 *
-60 *
-60 *
-1000;
-
-const EXEC_HISTORY_MAX_LOOKBACK_MS =
-90 *
 24 *
 60 *
 60 *
@@ -2391,11 +2510,7 @@ symbolFilter
 : {};
 
 const execLookbackMs =
-30 *
-24 *
-60 *
-60 *
-1000;
+EXEC_HISTORY_MAX_LOOKBACK_MS;
 let execResult;
 
 if(
@@ -2414,7 +2529,9 @@ execLookbackMs
 endTime !=
 null
 ? endTime
-: Date.now()
+: Date.now(),
+symbolFilter ||
+null
 );
 
 }else{
@@ -5519,6 +5636,10 @@ pingExchange,
 getClosedPnlHistory,
 getTradeDiaryDetail,
 getSymbolExecutionHistory,
+inferOpenTimeMs,
+matchTradeExecutions,
+mapClosedPnlRow,
+EXEC_HISTORY_MAX_LOOKBACK_MS,
 mapPositionRow,
 mapOrderRow,
 getSymbolPositionSettings,

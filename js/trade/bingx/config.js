@@ -40,18 +40,22 @@ const BINGX_TRADE = {
   positionsSyncIntervalMs: 0,
   restPositionsForceRefresh: false,
   restOrdersForceRefresh: false,
-  autoStopDelayMs: 2500,
+  /* Post-fill lag is real; long delay + diary queue made SL/TP wait 5–10s. */
+  autoStopDelayMs: 200,
   setStopMaxAttempts: 4,
-  pauseBeforeTpMs: 400,
-  reconcileOnOpenDelayMs: 1200,
+  pauseBeforeTpMs: 150,
+  reconcileOnOpenDelayMs: 800,
   attachStopsInMainProcess: false,
   passAutoStopUsdOnOpen: true,
   skipSyncPositionAfterClose: true,
   skipSyncPositionAfterStopCancel: true,
   skipSyncPositionAfterStopAmend: true,
-  mergePositionStopsFromPrev: false,
+  /* Keep last SL/TP if a bare stream row omits them; authoritative clears
+   * come from main after fresh openOrders (stopLoss/takeProfit explicitly 0). */
+  mergePositionStopsFromPrev: true,
   recentlyClosedMs: 2500,
   verifyEmptyPositionViaList: true,
+  /* Empty stream after real close must clear; open lag uses optimistic protect. */
   streamMissClearsCache: true,
   softKeepCachedOnEmptyGetPosition: false,
   filterRecentlyClosedInBookRefresh: true,

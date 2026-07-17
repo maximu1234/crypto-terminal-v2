@@ -22,9 +22,10 @@ test("BingX stream exports snapshot and request seed", () => {
   assert.doesNotMatch(source, /TRIGGER_ORDERS_REFRESH_MS/);
   assert.match(
     source,
-    /forceRefresh:\s*\n\s*false/,
-    "seed should use cached REST path"
+    /forceRefresh:\s*\n\s*true/,
+    "seed must bypass stale REST cache for exchange-side opens/closes"
   );
+  assert.match(source, /EXTERNAL_SYNC_POLL_MS\s*=\s*\n2500/);
 });
 
 test("trading stream facade and IPC expose snapshot thinly", () => {

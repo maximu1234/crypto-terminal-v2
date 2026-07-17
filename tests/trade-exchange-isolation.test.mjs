@@ -14,10 +14,17 @@ function read(relativePath) {
 }
 
 function listJs(relativeDir) {
-  return fs
-    .readdirSync(path.join(ROOT, relativeDir))
-    .filter((name) => name.endsWith(".js"))
-    .map((name) => `${relativeDir}/${name}`);
+  const out = [];
+  const absoluteDir = path.join(ROOT, relativeDir);
+  for (const entry of fs.readdirSync(absoluteDir, { withFileTypes: true })) {
+    const relativePath = `${relativeDir}/${entry.name}`;
+    if (entry.isDirectory()) {
+      out.push(...listJs(relativePath));
+    } else if (entry.name.endsWith(".js")) {
+      out.push(relativePath);
+    }
+  }
+  return out;
 }
 
 test("renderer exchange modules do not import each other", () => {
@@ -123,13 +130,25 @@ test("BingX renderer stream bridge has no periodic REST poll", () => {
   assert.match(source, /getStreamSnapshot/);
 });
 
-test("BingX diary list is income-first without boot history fan-out", () => {
+test("BingX diary list resolves collapsed rows before returning", () => {
   const source = read("desktop/trading/bingx-rest.cjs");
   const fnStart = source.indexOf("async function getClosedPnlHistory");
   assert.ok(fnStart >= 0);
   const nextFn = source.indexOf("\nasync function ", fnStart + 1);
   const body = source.slice(fnStart, nextFn > fnStart ? nextFn : undefined);
-  assert.match(body, /income-first|REALIZED_PNL/);
+  assert.match(body, /REALIZED_PNL/);
+  assert.match(body, /await enrichClosedPnlTrades/);
+  assert.match(body, /income\+closed-resolver/);
+  assert.match(
+    body,
+    /diaryListReq|cancelable:\s*false/,
+    "diary list must not be cancelable background (dropped for critical trade)"
+  );
+  assert.match(
+    body,
+    /fetchBingxIncomeRows\(\{[\s\S]*cancelable:\s*false|\.\.\.diaryListReq/,
+    "income fetch for diary must pass cancelable:false"
+  );
   assert.doesNotMatch(
     body,
     /for \(let i = 0; i < symbols\.length/,
@@ -151,18 +170,126 @@ test("BingX diary list is income-first without boot history fan-out", () => {
   );
 });
 
-test("shared closed-PnL trade fetch uses trade config policy not exchange ifs", () => {
+test("BingX diary uses unified closed-trade resolver", () => {
+  const source = read("desktop/trading/bingx-rest.cjs");
+  assert.match(source, /async function resolveBingxClosedTrade/);
+  assert.match(source, /fetchBingxAllFillOrdersPaged|allFillOrders/);
+  assert.match(source, /DIARY_FILL_LOOKBACK_MS/);
+
+  const detailStart = source.indexOf("async function getTradeDiaryDetail");
+  assert.ok(detailStart >= 0);
+  const detailNext = source.indexOf("\nasync function ", detailStart + 1);
+  const detailBody = source.slice(
+    detailStart,
+    detailNext > detailStart ? detailNext : undefined
+  );
+  assert.match(detailBody, /resolveBingxClosedTrade/);
+  assert.match(detailBody, /resolved:\s*false/);
+  assert.doesNotMatch(
+    detailBody,
+    /ok:\s*true[\s\S]*executions:\s*\[\]/,
+    "detail must not soft-succeed with empty executions"
+  );
+
+  const enrichStart = source.indexOf("async function enrichClosedPnlTrades");
+  assert.ok(enrichStart >= 0);
+  const enrichNext = source.indexOf("\nasync function ", enrichStart + 1);
+  const enrichBody = source.slice(
+    enrichStart,
+    enrichNext > enrichStart ? enrichNext : undefined
+  );
+  assert.match(enrichBody, /PRIORITY\.normal/);
+  assert.match(enrichBody, /cancelable:\s*false/);
+  assert.match(enrichBody, /fetchBingxFillRowsPaged/);
+  assert.match(enrichBody, /MAX_LIST_SYMBOLS/);
+  assert.match(enrichBody, /rateLimited/);
+  assert.match(enrichBody, /pnlPct/);
+  assert.match(enrichBody, /executionFees/);
+  assert.doesNotMatch(
+    enrichBody,
+    /PRIORITY\.background/,
+    "diary enrich must not use cancelable background priority"
+  );
+  assert.doesNotMatch(
+    enrichBody,
+    /await resolveBingxClosedTrade/,
+    "list enrich must not N× resolveBingxClosedTrade (hangs diary load)"
+  );
+  assert.doesNotMatch(
+    enrichBody,
+    /fetchBingxAllFillRowsForRange/,
+    "list enrich must not dump account-wide fills without symbol"
+  );
+
+  const renderer = read("js/trade-diary-page.js");
+  assert.match(
+    renderer,
+    /diaryLoadPeriod/,
+    "period loading must come from active exchange diary module"
+  );
+  assert.match(
+    renderer,
+    /diaryAfterListPaint|maybeEnrichDiaryDurations/,
+    "list post-paint hook remains for BingX residual enrich"
+  );
+  assert.doesNotMatch(
+    renderer,
+    /getClosedPnl|readDiaryDayTrades|writeDiaryDayTrades|clearDiaryDayTrades/,
+    "shared diary host must not own exchange fetch/cache logic"
+  );
+  assert.doesNotMatch(
+    renderer,
+    /exchangeId\s*===\s*["']bingx["']/,
+    "shared diary host must not branch on bingx"
+  );
+  assert.doesNotMatch(
+    renderer,
+    /Загружаем сделки BingX/,
+    "loading status must not hardcode BingX when Bybit diary is active"
+  );
+
+  const bybitPolicy = read("js/trade/bybit/diary/policy.js");
+  assert.match(
+    bybitPolicy,
+    /hit\s*!==\s*null/,
+    "Bybit accepts any day-cache hit including empty []"
+  );
+  assert.doesNotMatch(
+    bybitPolicy,
+    /isCompleteDiaryListTrade/,
+    "Bybit must not require BingX completeness for day-cache"
+  );
+
+  const bingxPolicy = read("js/trade/bingx/diary/policy.js");
+  assert.match(
+    bingxPolicy,
+    /isCompleteDiaryListTrade/,
+    "BingX day-cache requires complete list rows"
+  );
+});
+
+test("shared trade-history fetch is a thin exchange-module facade", () => {
   const source = read("js/trade-markers-sandbox/trade-fetch.js");
-  assert.match(source, /getActiveTradeConfig/);
-  assert.match(source, /fetchClosedPnlTradeDetails/);
+  assert.match(source, /getLoadedTradeExchangeModules/);
+  assert.match(source, /fetchTradeHistoryForSymbol/);
   assert.doesNotMatch(
     source,
-    /getActiveExchangeId\(\)\s*===\s*["']bingx["']/
+    /skipExecutions|closedPnlForceRefresh|closedPnlEnrichOnFetch/
   );
   assert.doesNotMatch(
     source,
-    /getActiveExchangeId\(\)\s*!==\s*["']bingx["']/
+    /["']bingx["']|["']bybit["']/
   );
+
+  const bybit = read("js/trade/bybit/history/fetch.js");
+  assert.match(bybit, /getTradeDiaryDetail/);
+  assert.match(bybit, /skipExecutions:\s*true/);
+  assert.doesNotMatch(bybit, /trade\/bingx|exchangeId:\s*["']bingx["']/);
+
+  const bingx = read("js/trade/bingx/history/fetch.js");
+  assert.match(bingx, /skipExecutions:\s*true/);
+  assert.match(bingx, /enrich:\s*true/);
+  assert.doesNotMatch(bingx, /trade\/bybit|exchangeId:\s*["']bybit["']/);
 });
 
 test("diary chart markers use detail open/close and side", () => {

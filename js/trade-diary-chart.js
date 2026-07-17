@@ -11,10 +11,6 @@ effectiveChartScaleFontSize
 } from "./chart/chart-options.js?v=7";
 
 import {
-fetchBybit
-} from "./bybit-fetch.js?v=17";
-
-import {
 getActiveExchangeId
 } from "./market-api.js?v=2";
 
@@ -23,16 +19,9 @@ getExchangeDefinition
 } from "./exchanges/registry.js?v=1";
 
 import {
-toBingxSymbol
-} from "./exchanges/symbol.js?v=1";
-
-import {
-fetchBingx
-} from "./exchanges/bingx/fetch.js?v=3";
-
-import {
-tfToBingxInterval
-} from "./exchanges/bingx/intervals.js?v=1";
+getLoadedTradeExchangeModules,
+loadTradeExchangeModules
+} from "./trade/module-router.js?v=11";
 
 import {
 candleAlignSec,
@@ -131,193 +120,23 @@ tf,
 end
 ){
 
-const exchangeId =
-getActiveExchangeId() ||
-"bybit";
+await loadTradeExchangeModules();
+
+const fn =
+getLoadedTradeExchangeModules()?.diaryFetchKlineBatch;
 
 if(
-exchangeId ===
-"bingx"
+typeof fn !==
+"function"
 ){
-
-try{
-
-const params =
-new URLSearchParams({
-symbol:
-toBingxSymbol(
-symbol
-),
-interval:
-tfToBingxInterval(
-tf
-),
-limit:
-"1000"
-});
-
-if(
-Number.isFinite(
-end
-) &&
-end >
-0
-){
-params.set(
-"endTime",
-String(
-end
-)
-);
-}
-
-const json =
-await fetchBingx(
-`/openApi/swap/v2/quote/klines?${params}`
-);
-
-const rows =
-Array.isArray(
-json?.data
-)
-? json.data
-: [];
-
-return rows.map(
-row=>{
-
-const ts =
-Number(
-row.time ||
-row.openTime ||
-row.t ||
-0
-);
-
-return {
-timeMs:
-ts >
-1e12
-? ts
-: ts *
-1000,
-open:
-Number(
-row.open
-),
-high:
-Number(
-row.high
-),
-low:
-Number(
-row.low
-),
-close:
-Number(
-row.close
-),
-volume:
-Number(
-row.volume ||
-row.vol ||
-0
-) ||
-0
-};
-
-}
-).filter(
-row=>
-row.timeMs >
-0
-);
-
-}catch{
 return null;
 }
 
-}
-
-const path =
-`/v5/market/kline?category=linear&symbol=${encodeURIComponent(
-symbol
-)}&interval=${encodeURIComponent(
-tf
-)}&limit=1000&end=${end}`;
-
-try{
-
-const {
-json
-} =
-await fetchBybit(
-path,
-{
-sequential:
-true,
-retries:
-2,
-timeoutMs:
-10000
-}
+return fn(
+symbol,
+tf,
+end
 );
-
-if(
-json.retCode ===
-0 &&
-Array.isArray(
-json.result?.list
-)
-){
-return json.result.list.map(
-row=>({
-timeMs:
-Number(
-row[
-0
-]
-),
-open:
-Number(
-row[
-1
-]
-),
-high:
-Number(
-row[
-2
-]
-),
-low:
-Number(
-row[
-3
-]
-),
-close:
-Number(
-row[
-4
-]
-),
-volume:
-Number(
-row[
-5
-]
-) ||
-0
-})
-);
-}
-
-}catch{
-/* ignore */
-}
-
-return null;
 
 }
 
