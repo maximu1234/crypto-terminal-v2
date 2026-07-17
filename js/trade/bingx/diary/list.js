@@ -11,7 +11,7 @@ import {
   startOfDayMs,
   todayDiaryDayKey,
   writeDiaryDayTrades
-} from "../../../trade-diary-storage.js?v=3";
+} from "../../../trade-diary-storage.js?v=4";
 
 import {
   diaryDayKeyLocal

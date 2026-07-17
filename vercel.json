@@ -54,11 +54,6 @@
   ],
   "buildCommand": "node scripts/write-supabase-env.cjs",
   "outputDirectory": ".",
-  "functions": {
-    "api/coingecko.js": {
-      "includeFiles": "data/btc-dominance-cache.json"
-    }
-  },
   "headers": [
     {
       "source": "/terminal",

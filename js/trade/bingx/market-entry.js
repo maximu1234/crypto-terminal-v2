@@ -6,16 +6,18 @@ getCachedPosition,
 listCachedPositionsForSymbol,
 removeTradePositionFromCache,
 upsertTradePositionInCache
-} from "./positions-cache.js?v=3";
+} from "./positions-cache.js?v=5";
 
 import {
 getActiveTradeVolumeUsdt
-} from "../../trade-volume-presets.js?v=10";
+} from "./volume-presets.js?v=2";
 
 import {
 applyAutoStopsAfterEntry,
-getAutoStopSettings
-} from "./auto-stops.js?v=3";
+calcStopPriceFromUsd,
+getAutoStopSettings,
+markAutoStopsHandled
+} from "./auto-stops.js?v=8";
 
 import {
 marketMap
@@ -23,11 +25,11 @@ marketMap
 
 import {
 getTradeConfig
-} from "./config.js?v=7";
+} from "./config.js?v=10";
 
 import {
 mountTradeChartMarkersToggle
-} from "../../trade-chart-execution-markers.js?v=9";
+} from "./chart-execution-markers.js?v=2";
 
 const REFRESH_MS =
 1500;
@@ -242,7 +244,10 @@ try{
 const settings =
 getAutoStopSettings();
 const openOptions =
-{};
+{
+exchangeId:
+"bingx"
+};
 
 if(
 getTradeConfig().passAutoStopUsdOnOpen
@@ -259,6 +264,24 @@ settings.tpUsd >
 0
 ? settings.tpUsd
 : 0;
+}
+
+/* Main attaches SL/TP — block renderer maybeApply/double-place during open. */
+if(
+getTradeConfig().attachStopsInMainProcess &&
+(
+openOptions.autoSlUsd >
+0 ||
+openOptions.autoTpUsd >
+0
+)
+){
+markAutoStopsHandled(
+symbol,
+{
+symbol
+}
+);
 }
 
 const result =
@@ -302,6 +325,123 @@ result.position
 )
 );
 
+const mainOwns =
+getTradeConfig().attachStopsInMainProcess ===
+true;
+
+if(
+mainOwns &&
+(
+openOptions.autoSlUsd >
+0 ||
+openOptions.autoTpUsd >
+0
+)
+){
+markAutoStopsHandled(
+symbol,
+result.position
+);
+
+/* Paint expected SL/TP immediately — main attaches in background. */
+const side =
+result.position.side ===
+"Sell"
+? "Sell"
+: "Buy";
+const entry =
+Number(
+result.position.avgPrice
+) ||
+0;
+const size =
+Math.abs(
+Number(
+result.position.size
+) ||
+0
+);
+const painted =
+{
+...result.position
+};
+
+if(
+openOptions.autoSlUsd >
+0 &&
+entry >
+0 &&
+size >
+0
+){
+const slPrice =
+calcStopPriceFromUsd({
+side,
+entryPrice:
+entry,
+size,
+usd:
+openOptions.autoSlUsd,
+kind:
+"sl"
+});
+
+if(
+slPrice >
+0
+){
+painted.stopLoss =
+slPrice;
+}
+
+}
+
+if(
+openOptions.autoTpUsd >
+0 &&
+entry >
+0 &&
+size >
+0
+){
+const tpPrice =
+calcStopPriceFromUsd({
+side,
+entryPrice:
+entry,
+size,
+usd:
+openOptions.autoTpUsd,
+kind:
+"tp"
+});
+
+if(
+tpPrice >
+0
+){
+painted.takeProfit =
+tpPrice;
+}
+
+}
+
+upsertTradePositionInCache(
+painted
+);
+window.dispatchEvent(
+new CustomEvent(
+"trade-position-updated",
+{
+detail:{
+symbol,
+position:
+painted
+}
+}
+)
+);
+}else{
 const attached =
 result?.stopsAttached ||
 {};
@@ -311,7 +451,8 @@ attached.sl ||
 attached.tp
 ){
 markAutoStopsHandled(
-symbol
+symbol,
+result.position
 );
 }
 
@@ -322,11 +463,12 @@ const needsAutoStops =
 if(
 needsAutoStops
 ){
-/* Like Bybit: place immediately; maybeApply path has its own short delay. */
 void applyAutoStopsAfterEntry(
 symbol,
 result.position
 );
+}
+
 }
 }
 

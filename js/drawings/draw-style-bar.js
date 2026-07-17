@@ -49,7 +49,7 @@ isFibLineWidthMenuOpenForAnchor
 import {
 isPositionType,
 positionEntryPrice
-} from "./position.js?v=2";
+} from "./position.js?v=4";
 
 import {
 parseMoneyInput,
@@ -58,7 +58,7 @@ calcPositionVolumeUsd
 
 import {
 applyPositionVolumeFromDrawing
-} from "../trade-volume-presets.js?v=10";
+} from "../trade-volume-presets.js?v=11";
 
 import {
 touchShapeRevision

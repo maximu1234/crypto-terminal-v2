@@ -21,7 +21,7 @@ getExchangeDefinition
 import {
 getLoadedTradeExchangeModules,
 loadTradeExchangeModules
-} from "./trade/module-router.js?v=11";
+} from "./trade/module-router.js?v=13";
 
 import {
 candleAlignSec,

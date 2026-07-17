@@ -8,12 +8,12 @@ syncTradePositionsCache,
 upsertTradePositionInCache,
 markTradePositionRecentlyClosed,
 isTradePositionRecentlyClosed
-} from "./positions-cache.js?v=3";
+} from "./positions-cache.js?v=5";
 
 import {
 markStopDismissed,
 clearDismissedStops
-} from "./auto-stops.js?v=3";
+} from "./auto-stops.js?v=8";
 
 import {
 isExchangeTradingEnabled
@@ -21,7 +21,13 @@ isExchangeTradingEnabled
 
 import {
 getTradeConfig
-} from "./config.js?v=7";
+} from "./config.js?v=10";
+
+import {
+setPendingStopAmend,
+clearPendingStopAmend,
+stopPricesMatch
+} from "./stop-amend.js?v=1";
 
 import {
 formatTradePnl,
@@ -482,7 +488,109 @@ chartSwitchFrozen
 return null;
 }
 
-return position;
+return overlayPendingStopsOnPosition(
+position
+);
+
+}
+
+/**
+ * Keep dragged/requested SL/TP visible even when a raw stream row still
+ * carries the old trigger (place-then-cancel window).
+ */
+function overlayPendingStopsOnPosition(
+pos
+){
+
+if(
+!pos
+){
+return null;
+}
+
+let out =
+pos;
+
+if(
+dragStop &&
+Number.isFinite(
+dragStop.previewPrice
+) &&
+dragStop.previewPrice >
+0
+){
+out =
+{
+...out
+};
+
+if(
+dragStop.kind ===
+"sl"
+){
+out.stopLoss =
+dragStop.previewPrice;
+}else if(
+dragStop.kind ===
+"tp"
+){
+out.takeProfit =
+dragStop.previewPrice;
+}
+
+}
+
+if(
+pendingStopPrice &&
+Number.isFinite(
+pendingStopPrice.price
+) &&
+pendingStopPrice.price >
+0
+){
+if(
+out ===
+pos
+){
+out =
+{
+...out
+};
+}
+
+if(
+pendingStopPrice.kind ===
+"sl"
+){
+out.stopLoss =
+pendingStopPrice.price;
+
+if(
+pendingStopPrice.orderId
+){
+out.slOrderId =
+pendingStopPrice.orderId;
+}
+
+}else if(
+pendingStopPrice.kind ===
+"tp"
+){
+out.takeProfit =
+pendingStopPrice.price;
+
+if(
+pendingStopPrice.orderId
+){
+out.tpOrderId =
+pendingStopPrice.orderId;
+}
+
+}
+
+}
+
+return out;
 
 }
 
@@ -939,7 +1047,10 @@ pendingStopPrice =
 {
 kind,
 price:
-previewPrice
+previewPrice,
+lockedUntil:
+Date.now() +
+5000
 };
 
 if(
@@ -977,13 +1088,58 @@ scheduleDraw();
 return;
 }
 
+/* Prefer live cache ids — chart local state can lag after auto-stops / seed. */
+const cached =
+getCachedPosition(
+position.symbol,
+position
+);
+const stopPayload =
+{
+...position,
+...(
+cached ||
+{}
+),
+stopLoss:
+kind ===
+"sl"
+? previewPrice
+: (
+Number(
+cached?.stopLoss ??
+position.stopLoss
+) ||
+0
+),
+takeProfit:
+kind ===
+"tp"
+? previewPrice
+: (
+Number(
+cached?.takeProfit ??
+position.takeProfit
+) ||
+0
+),
+slOrderId:
+cached?.slOrderId ||
+position.slOrderId ||
+null,
+tpOrderId:
+cached?.tpOrderId ||
+position.tpOrderId ||
+null
+};
+
 const result =
 await api.setPositionStop(
-position.symbol,
+stopPayload.symbol,
 kind,
 previewPrice,
 tradePositionIpcOptions(
-position
+stopPayload
 )
 );
 
@@ -1017,6 +1173,39 @@ clearDismissedStops(
 position.symbol,
 position
 );
+
+const stopRevision =
+result?.stopRevision ||
+null;
+
+/* Always keep UI pending until the chart/cache actually shows the new
+ * price/id. Main "confirmed" is too early with place-then-cancel: openOrders
+ * can still briefly surface the old stop and snap the line back. */
+setPendingStopAmend({
+symbol:
+stopPayload.symbol,
+positionSide:
+stopPayload.positionSide,
+side:
+stopPayload.side,
+target:
+kind,
+price:
+previewPrice,
+newOrderId:
+stopRevision?.orderId ||
+(
+kind ===
+"sl"
+? result?.position?.slOrderId
+: result?.position?.tpOrderId
+) ||
+null,
+phase:
+"placed",
+key:
+stopRevision?.key
+});
 
 const patched =
 result?.position
@@ -1071,7 +1260,29 @@ true
 }
 
 pendingStopPrice =
-null;
+{
+kind,
+price:
+previewPrice,
+orderId:
+stopRevision?.orderId ||
+(
+kind ===
+"sl"
+? patched.slOrderId
+: patched.tpOrderId
+) ||
+null,
+at:
+Date.now(),
+lockedUntil:
+Date.now() +
+5000
+};
+
+/* Do not maybeClear here — patched local state already has the new id/price
+ * and would drop pending before raw stream finishes place-then-cancel. */
+
 window.dispatchEvent(
 new CustomEvent(
 "trade-book-refresh"
@@ -1491,25 +1702,35 @@ if(
 return "";
 }
 
+const display =
+overlayPendingStopsOnPosition(
+pos
+) ||
+pos;
+
 return [
-pos.symbol,
-pos.positionSide ||
-pos.side,
-pos.side,
-pos.avgPrice,
+display.symbol,
+display.positionSide ||
+display.side,
+display.side,
+display.avgPrice,
 Number(
-pos.stopLoss
+display.stopLoss
 ) ||
 0,
 Number(
-pos.takeProfit
+display.takeProfit
 ) ||
 0,
-pos.volumeUsdt,
-pos.leverage,
+display.volumeUsdt,
+display.leverage,
 dragStop
 ? `${dragStop.kind}-drag`
+: (
+pendingStopPrice
+? `${pendingStopPrice.kind}-pending`
 : ""
+)
 ].join(
 "|"
 );
@@ -3014,6 +3235,127 @@ symbol ||
 
 }
 
+function maybeClearPendingStopFromPosition(
+incoming
+){
+
+if(
+!pendingStopPrice ||
+!incoming
+){
+return;
+}
+
+/* Hard lock after drag/open paint — ignore stream/cache until it expires
+ * or the new order id is visible. Price-only match was clearing pending
+ * while a later raw stream row still had the old trigger. */
+const lockedUntil =
+Number(
+pendingStopPrice.lockedUntil
+) ||
+0;
+
+if(
+lockedUntil >
+Date.now()
+){
+const pendingId =
+String(
+pendingStopPrice.orderId ||
+""
+)
+.trim();
+const kind =
+pendingStopPrice.kind;
+const liveId =
+String(
+(
+kind ===
+"sl"
+? incoming.slOrderId
+: incoming.tpOrderId
+) ||
+""
+)
+.trim();
+
+if(
+!(
+pendingId &&
+liveId &&
+pendingId ===
+liveId
+)
+){
+return;
+}
+
+}
+
+const kind =
+pendingStopPrice.kind;
+const livePrice =
+Number(
+kind ===
+"sl"
+? incoming.stopLoss
+: incoming.takeProfit
+) ||
+0;
+const liveId =
+String(
+(
+kind ===
+"sl"
+? incoming.slOrderId
+: incoming.tpOrderId
+) ||
+""
+)
+.trim();
+const pendingId =
+String(
+pendingStopPrice.orderId ||
+""
+)
+.trim();
+
+const idMatch =
+pendingId &&
+liveId &&
+pendingId ===
+liveId;
+const priceMatch =
+stopPricesMatch(
+livePrice,
+pendingStopPrice.price
+);
+
+if(
+pendingId
+){
+if(
+!idMatch
+){
+return;
+}
+}else if(
+!priceMatch
+){
+return;
+}
+
+clearPendingStopAmend(
+incoming.symbol,
+incoming.positionSide,
+kind,
+incoming.side
+);
+pendingStopPrice =
+null;
+
+}
+
 function applyPositionUpdate(
 nextPos,
 symbol
@@ -3087,6 +3429,9 @@ return;
 
 position =
 nextPos;
+maybeClearPendingStopFromPosition(
+nextPos
+);
 invalidateBadgeLayoutCache();
 scheduleDraw(
 true
@@ -3543,8 +3888,18 @@ resolvedRow
 ){
 position =
 null;
+pendingStopPrice =
+null;
 }else{
+/* Raw main-stream rows can still carry the pre-cancel stop during
+ * place-then-cancel. Never let that snap the chart line back. */
+maybeClearPendingStopFromPosition(
+resolvedRow
+);
 position =
+overlayPendingStopsOnPosition(
+resolvedRow
+) ||
 resolvedRow;
 }
 }else if(
@@ -3673,29 +4028,12 @@ Number(
 e.detail?.loadSeq
 ) ||
 0;
-const targetSym =
-normalizeOverlaySymbol(
-e.detail?.symbol
-) ||
-normalizeOverlaySymbol(
-host?.getSymbol?.()
-);
-/* Veil the *target* ticker from cache — not the previous symbol's lines. */
-const cached =
-targetSym
-? getCachedPosition(
-targetSym,
-tradePositionIpcOptions(
-position
-)
-)
-: null;
 chartSwitchFrozen =
 true;
 switchVeilPosition =
-cached;
+position;
 switchVeilVisible =
-!!cached;
+!!position;
 position =
 null;
 stopDragListeners?.();
@@ -3737,7 +4075,17 @@ switchLoadSeq
 return;
 }
 
-/* Keep veil until candles-loaded + sync — blanking here caused ticker flash. */
+switchVeilVisible =
+false;
+switchVeilPosition =
+null;
+position =
+null;
+invalidateBadgeLayoutCache();
+scheduleDraw(
+true
+);
+host?.getDrawingTools?.()?.scheduleRedraw?.();
 };
 
 const onCandlesLoaded =
@@ -3758,29 +4106,11 @@ host?.getSymbol?.()
 return;
 }
 
-const loadedSym =
-normalizeOverlaySymbol(
-e.detail?.symbol
-) ||
-normalizeOverlaySymbol(
-host?.getSymbol?.()
-);
-position =
-(
-loadedSym
-? getCachedPosition(
-loadedSym,
-tradePositionIpcOptions(
-switchVeilPosition
-)
-)
-: null
-) ||
-switchVeilPosition ||
-null;
 switchVeilVisible =
 false;
 switchVeilPosition =
+null;
+position =
 null;
 invalidateBadgeLayoutCache();
 scheduleDraw(

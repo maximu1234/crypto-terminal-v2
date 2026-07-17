@@ -301,23 +301,6 @@ z-index:200;
 overflow:visible;
 }
 
-body.terminal-page .coins-btc-d-link{
-display:inline-flex;
-align-items:center;
-flex-shrink:0;
-color:#9ca3af;
-font-size:14px;
-font-weight:400;
-line-height:1;
-text-decoration:none;
--webkit-tap-highlight-color:transparent;
-}
-
-body.terminal-page .app-header-nav .coins-btc-d-link{
-margin-left:8px;
-flex-shrink:0;
-}
-
 body.terminal-page .script-terminal-status{
 flex-shrink:0;
 font-size:12px;
@@ -659,10 +642,6 @@ width:100%;
 body.terminal-page .app-header-nav .trade-exchange-wrap{
 margin-left:8px;
 flex-shrink:0;
-}
-
-body.terminal-page .coins-btc-d-link:hover{
-color:#e5e7eb;
 }
 
 body.terminal-page .coins-diary-link{

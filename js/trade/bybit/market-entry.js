@@ -10,7 +10,7 @@ upsertTradePositionInCache
 
 import {
 getActiveTradeVolumeUsdt
-} from "../../trade-volume-presets.js?v=10";
+} from "./volume-presets.js?v=2";
 
 import {
 applyAutoStopsAfterEntry,
@@ -27,7 +27,7 @@ getTradeConfig
 
 import {
 mountTradeChartMarkersToggle
-} from "../../trade-chart-execution-markers.js?v=9";
+} from "./chart-execution-markers.js?v=1";
 
 const REFRESH_MS =
 1500;
@@ -305,15 +305,6 @@ result.position
 const attached =
 result?.stopsAttached ||
 {};
-
-if(
-attached.sl ||
-attached.tp
-){
-markAutoStopsHandled(
-symbol
-);
-}
 
 const needsAutoStops =
 !attached.sl ||

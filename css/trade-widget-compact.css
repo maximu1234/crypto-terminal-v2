@@ -14,11 +14,17 @@ z-index:40;
 }
 
 body.watchlist-page.trade-page .trade-widget-volume-wrap .trade-volume-presets-btn{
-height:28px;
-padding:0 6px;
-gap:4px;
+height:22px;
+padding:0;
+gap:0;
 font-size:11px;
 border-radius:4px;
+}
+
+body.watchlist-page.trade-page .trade-widget-volume-wrap .trade-volume-presets-control{
+height:28px;
+padding:0 4px 0 6px;
+gap:4px;
 }
 
 body.watchlist-page.trade-page .trade-widget-volume-wrap .trade-volume-presets-grid{
@@ -28,8 +34,11 @@ background-size:4px 4px;
 }
 
 body.watchlist-page.trade-page .trade-widget-volume-wrap .trade-volume-presets-value{
-min-width:2ch;
+width:3.75ch;
+min-width:3.75ch;
+height:22px;
 font-size:11px;
+padding:0 2px;
 }
 
 body.watchlist-page.trade-page .trade-widget-volume-wrap .trade-volume-presets-dropdown{

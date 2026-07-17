@@ -1,11 +1,11 @@
 /**
- * Кэш открытых позиций Bybit — один getPositions вместо N× getPosition на виджеты.
+ * Кэш открытых позиций BingX — один getPositions вместо N× getPosition на виджеты.
  */
 import {
 maybeApplyAutoStopsForNewPosition,
 clearDismissedStops,
 isStopDismissed
-} from "./auto-stops.js?v=3";
+} from "./auto-stops.js?v=8";
 
 import {
 maybeReconcileOrdersOnPositionOpen
@@ -24,7 +24,11 @@ resetTradePositionSoundBaseline
 
 import {
 getTradeConfig
-} from "./config.js?v=7";
+} from "./config.js?v=10";
+
+import {
+gateCachedStopsWithPendingAmends
+} from "./stop-amend.js?v=1";
 
 const cacheBySymbol =
 new Map();
@@ -361,7 +365,10 @@ takeProfit:
 delete merged.tpOrderId;
 }
 
-return merged;
+return gateCachedStopsWithPendingAmends(
+prev,
+merged
+);
 }
 
 /* Main marked this row after a fresh openOrders enrich — trust 0 as cancel. */
@@ -408,7 +415,10 @@ takeProfit:
 delete merged.tpOrderId;
 }
 
-return merged;
+return gateCachedStopsWithPendingAmends(
+prev,
+merged
+);
 }
 
 let merged =
@@ -530,7 +540,10 @@ prev.tpOrderId;
 
 }
 
-return merged;
+return gateCachedStopsWithPendingAmends(
+prev,
+merged
+);
 
 }
 
@@ -869,18 +882,11 @@ if(
 options.establishBaseline
 ){
 
-if(
-!isTradePositionSoundBaselineReady()
-){
+/* Silent replace only — never diff/play here. A ready baseline with
+ * establishBaseline means "resync without treating rows as new opens". */
 establishTradePositionSoundBaseline(
 activeKeys
 );
-}else{
-applyTradePositionSoundDiff(
-activeKeys
-);
-}
-
 return;
 }
 

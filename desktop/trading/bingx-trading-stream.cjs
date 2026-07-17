@@ -15,6 +15,27 @@ require(
 "./trading-router.cjs"
 );
 
+const {
+mergePositionStopsWithRevisions,
+rebuildPositionsKeepingStops,
+applyStopAmendOverlay,
+isStopAmendConfirmedByPosition,
+shouldAcceptIncomingStop
+} =
+require(
+"./bingx-position-stops.cjs"
+);
+
+const {
+getStopAmendsForPosition,
+updateStopAmend,
+clearStopAmend,
+clearAllStopAmends
+} =
+require(
+"./bingx-stop-amend-state.cjs"
+);
+
 let streamModules =
 getStreamModules(
 getActiveExchange()
@@ -85,6 +106,8 @@ let reconnectTimer =
 null;
 let streamActiveExchangeId =
 null;
+let streamGeneration =
+0;
 let seedInflight =
 null;
 let seedRetryTimer =
@@ -1600,6 +1623,19 @@ const rawRows =
 [
 ...rawOpenOrderRowsById.values()
 ];
+
+/* Empty openOrders book is often a raced/failed read — never treat it as
+ * "all stops cancelled". Real last-stop cancel goes through WS terminal
+ * (clearStreamStopByOrderId) or an explicit cancel IPC. */
+const authoritativeClear =
+allowClearStops &&
+(
+rawRows.length >
+0 ||
+options.allowEmptyBookClear ===
+true
+);
+
 const enriched =
 streamModules.enrichPositionsWithStopOrders(
 positions,
@@ -1634,7 +1670,7 @@ let next =
 };
 
 if(
-!allowClearStops &&
+!authoritativeClear &&
 prev
 ){
 /* WS/position deltas often run without a fresh openOrders pull —
@@ -1698,15 +1734,21 @@ prev.tpOrderId;
 
 }
 
+next =
+gateStreamStopsWithAmends(
+prev,
+next
+);
+
 positionsBySymbol.set(
 key,
 next
 );
 
 if(
-allowClearStops
+authoritativeClear
 ){
-/* Renderer must trust explicit 0 after a fresh openOrders pull. */
+/* Renderer must trust explicit 0 after a fresh non-empty openOrders pull. */
 const marked =
 {
 ...next,
@@ -1719,6 +1761,22 @@ marked
 );
 next =
 marked;
+}else if(
+next &&
+next._stopsAuthoritative
+){
+/* Stale authoritative flag from a prior clear must not stick forever. */
+const cleaned =
+{
+...next
+};
+delete cleaned._stopsAuthoritative;
+positionsBySymbol.set(
+key,
+cleaned
+);
+next =
+cleaned;
 }
 
 if(
@@ -1742,86 +1800,259 @@ return changed;
 
 /**
  * REST position rows omit SL/TP — keep last known stops until openOrders enrich.
+ * Active amend revisions block stale non-zero OLD prices from overwriting.
+ * @param {string} key
+ * @param {object} mapped
+ * @param {object} [prevOverride] snapshot row (required after map.clear())
  */
 function preserveStopsFromPrev(
 key,
-mapped
+mapped,
+prevOverride
 ){
 
 const prev =
-positionsBySymbol.get(
+prevOverride !==
+undefined
+? prevOverride
+: positionsBySymbol.get(
 key
 );
 
-if(
-!prev ||
-!mapped
-){
-return mapped;
+const revisions =
+getStopAmendsForPosition(
+mapped ||
+prev ||
+{}
+);
+
+return mergePositionStopsWithRevisions(
+prev,
+mapped,
+revisions
+);
+
 }
 
-const out =
+/**
+ * While an SL/TP amend is in flight, reject conflicting stream prices and
+ * overlay the requested price. Confirm + clear when the new order is visible.
+ * @param {object|null|undefined} prev
+ * @param {object|null|undefined} next
+ * @returns {object|null|undefined}
+ */
+function gateStreamStopsWithAmends(
+prev,
+next
+){
+
+if(
+!next
+){
+return next;
+}
+
+const revisions =
+getStopAmendsForPosition(
+next
+);
+let out =
 {
-...mapped
+...next
 };
-const nextSl =
-Number(
-out.stopLoss
-) ||
-0;
-const nextTp =
-Number(
-out.takeProfit
-) ||
-0;
-const prevSl =
-Number(
-prev.stopLoss
-) ||
-0;
-const prevTp =
-Number(
-prev.takeProfit
-) ||
-0;
+
+for(
+const target of [
+"sl",
+"tp"
+]
+){
+
+const rev =
+revisions[target];
 
 if(
-nextSl <=
-0 &&
-prevSl >
-0
+!rev
 ){
-out.stopLoss =
-prevSl;
-
-if(
-prev.slOrderId
-){
-out.slOrderId =
-prev.slOrderId;
+continue;
 }
 
+const decision =
+shouldAcceptIncomingStop(
+target,
+prev,
+out,
+rev
+);
+
+if(
+!decision.accept
+){
+out =
+applyStopAmendOverlay(
+{
+...out,
+...(
+target ===
+"sl"
+? {
+stopLoss:
+Number(
+prev?.stopLoss
+) ||
+Number(
+rev.price
+) ||
+0,
+slOrderId:
+prev?.slOrderId ||
+out.slOrderId ||
+null
+}
+: {
+takeProfit:
+Number(
+prev?.takeProfit
+) ||
+Number(
+rev.price
+) ||
+0,
+tpOrderId:
+prev?.tpOrderId ||
+out.tpOrderId ||
+null
+}
+)
+},
+rev
+);
+continue;
 }
 
-if(
-nextTp <=
-0 &&
-prevTp >
-0
-){
-out.takeProfit =
-prevTp;
+out =
+applyStopAmendOverlay(
+out,
+rev
+);
 
 if(
-prev.tpOrderId
+decision.confirmed ||
+isStopAmendConfirmedByPosition(
+rev,
+out
+)
 ){
-out.tpOrderId =
-prev.tpOrderId;
+updateStopAmend(
+rev.key,
+{
+phase:
+"confirmed"
+}
+);
+clearStopAmend(
+rev.key
+);
 }
 
 }
 
 return out;
+
+}
+
+function clearStreamStopByOrderId(
+orderId
+){
+
+const id =
+String(
+orderId ||
+""
+).trim();
+
+if(
+!id
+){
+return false;
+}
+
+let changed =
+false;
+
+for(
+const [
+key,
+pos
+] of [
+...positionsBySymbol.entries()
+]
+){
+
+if(
+!pos
+){
+continue;
+}
+
+let next =
+null;
+
+if(
+String(
+pos.slOrderId ||
+""
+) ===
+id
+){
+next =
+{
+...pos,
+stopLoss:
+0,
+slOrderId:
+null,
+_stopsAuthoritative:
+true
+};
+}
+
+if(
+String(
+pos.tpOrderId ||
+""
+) ===
+id
+){
+next =
+{
+...(
+next ||
+pos
+),
+takeProfit:
+0,
+tpOrderId:
+null,
+_stopsAuthoritative:
+true
+};
+}
+
+if(
+next
+){
+positionsBySymbol.set(
+key,
+next
+);
+changed =
+true;
+}
+
+}
+
+return changed;
 
 }
 
@@ -1839,7 +2070,12 @@ row?.orderID ??
 if(
 !orderId
 ){
-return;
+return {
+tracked:
+false,
+removed:
+false
+};
 }
 
 const status =
@@ -1854,22 +2090,184 @@ isTerminalOrderStatus(
 status
 )
 ){
+const had =
 rawOpenOrderRowsById.delete(
 orderId
 );
-return;
+return {
+tracked:
+false,
+removed:
+had ||
+true,
+orderId
+};
+}
+
+const prev =
+rawOpenOrderRowsById.get(
+orderId
+);
+
+/* WS ORDER_TRADE_UPDATE sometimes omits type/stopPrice; keep prior REST
+ * fields so enrich still classifies SL/TP and lines do not blink. */
+let next =
+row;
+
+if(
+prev
+){
+
+const nextType =
+String(
+row?.type ??
+row?.orderType ??
+""
+).trim();
+const prevType =
+String(
+prev?.type ??
+prev?.orderType ??
+""
+).trim();
+const nextStop =
+Number(
+row?.stopPrice ??
+row?.triggerPrice ??
+0
+);
+const prevStop =
+Number(
+prev?.stopPrice ??
+prev?.triggerPrice ??
+0
+);
+const nextOt =
+String(
+row?.stopOrderType ??
+""
+).trim();
+const prevOt =
+String(
+prev?.stopOrderType ??
+""
+).trim();
+
+if(
+(
+!nextType &&
+prevType
+) ||
+(
+!(
+nextStop >
+0
+) &&
+prevStop >
+0
+) ||
+(
+!nextOt &&
+prevOt
+)
+){
+next =
+{
+...prev,
+...row,
+type:
+nextType ||
+prevType ||
+row?.type,
+orderType:
+nextType ||
+prevType ||
+row?.orderType,
+stopPrice:
+nextStop >
+0
+? nextStop
+: prev.stopPrice ??
+prev.triggerPrice,
+triggerPrice:
+nextStop >
+0
+? nextStop
+: prev.triggerPrice ??
+prev.stopPrice,
+stopOrderType:
+nextOt ||
+prevOt ||
+row?.stopOrderType
+};
+}
+
 }
 
 rawOpenOrderRowsById.set(
 orderId,
-row
+next
 );
+
+return {
+tracked:
+true,
+removed:
+false,
+orderId
+};
 
 }
 
 function resetRawOpenOrderRows(
 rows
 ){
+
+const preserved =
+new Map();
+
+/* Keep synthetic / prior STOP rows tied to open positions — BingX openOrders
+ * sometimes omits or mis-types them for a poll, which used to wipe SL/TP. */
+for(
+const pos of positionsBySymbol.values()
+){
+
+for(
+const id of [
+pos?.slOrderId,
+pos?.tpOrderId
+]
+){
+
+const key =
+String(
+id ||
+""
+).trim();
+
+if(
+!key
+){
+continue;
+}
+
+const prev =
+rawOpenOrderRowsById.get(
+key
+);
+
+if(
+prev
+){
+preserved.set(
+key,
+prev
+);
+}
+
+}
+
+}
 
 rawOpenOrderRowsById.clear();
 
@@ -1880,6 +2278,26 @@ const row of rows ||
 trackRawOpenOrderRow(
 row
 );
+}
+
+for(
+const [
+id,
+row
+] of preserved
+){
+
+if(
+!rawOpenOrderRowsById.has(
+id
+)
+){
+rawOpenOrderRowsById.set(
+id,
+row
+);
+}
+
 }
 
 }
@@ -1900,9 +2318,41 @@ RECONCILE_DEBOUNCE_MS
 
 }
 
+function isBingxStreamLive(
+gen
+){
+
+if(
+streamActiveExchangeId !==
+"bingx" ||
+getActiveExchange() !==
+"bingx"
+){
+return false;
+}
+
+if(
+gen !=
+null &&
+gen !==
+streamGeneration
+){
+return false;
+}
+
+return true;
+
+}
+
 function broadcast(
 payload
 ){
+
+if(
+!isBingxStreamLive()
+){
+return;
+}
 
 if(
 !targetWebContents ||
@@ -1914,7 +2364,11 @@ return;
 try{
 targetWebContents.send(
 "trading:stream",
-payload
+{
+...payload,
+exchangeId:
+"bingx"
+}
 );
 }catch(
 err
@@ -2093,14 +2547,180 @@ if(
 return;
 }
 
+const prev =
+positionsBySymbol.get(
+key
+);
+let merged =
+preserveStopsFromPrev(
+key,
+{
+...(
+prev ||
+{}
+),
+...position
+}
+);
+
+if(
+position?._stopAmendConfirmed ===
+true &&
+position?._stopAmendKey
+){
+clearStopAmend(
+position._stopAmendKey
+);
+}
+
+merged =
+gateStreamStopsWithAmends(
+prev,
+merged
+);
+
+/* Drop cancelled stop ids from the raw open-order map. */
+if(
+position?._stopsAuthoritative ===
+true
+){
+const slId =
+String(
+prev?.slOrderId ||
+""
+).trim();
+const tpId =
+String(
+prev?.tpOrderId ||
+""
+).trim();
+
+if(
+Number(
+position.stopLoss
+) <=
+0 &&
+slId
+){
+rawOpenOrderRowsById.delete(
+slId
+);
+}
+
+if(
+Number(
+position.takeProfit
+) <=
+0 &&
+tpId
+){
+rawOpenOrderRowsById.delete(
+tpId
+);
+}
+
+}
+
 positionsBySymbol.set(
 key,
-position
+merged
 );
 rawPositionBySymbol.set(
 key,
-position
+merged
 );
+
+/* Keep stop rows in the open-order map so seed enrich does not drop them
+ * before BingX openOrders catches up. */
+const sym =
+normalizeSymbol(
+merged.symbol
+);
+const slId =
+String(
+merged.slOrderId ||
+""
+).trim();
+const tpId =
+String(
+merged.tpOrderId ||
+""
+).trim();
+const sl =
+Number(
+merged.stopLoss
+) ||
+0;
+const tp =
+Number(
+merged.takeProfit
+) ||
+0;
+
+if(
+slId &&
+sl >
+0
+){
+trackRawOpenOrderRow({
+orderId:
+slId,
+symbol:
+sym,
+type:
+"STOP_MARKET",
+orderType:
+"STOP_MARKET",
+stopPrice:
+sl,
+triggerPrice:
+sl,
+positionSide:
+merged.positionSide,
+side:
+merged.side ===
+"Sell"
+? "Buy"
+: "Sell",
+status:
+"NEW",
+orderStatus:
+"NEW"
+});
+}
+
+if(
+tpId &&
+tp >
+0
+){
+trackRawOpenOrderRow({
+orderId:
+tpId,
+symbol:
+sym,
+type:
+"TAKE_PROFIT_MARKET",
+orderType:
+"TAKE_PROFIT_MARKET",
+stopPrice:
+tp,
+triggerPrice:
+tp,
+positionSide:
+merged.positionSide,
+side:
+merged.side ===
+"Sell"
+? "Buy"
+: "Sell",
+status:
+"NEW",
+orderStatus:
+"NEW"
+});
+}
+
 emitPositions();
 
 }
@@ -2355,7 +2975,10 @@ key
 
 positionsBySymbol.set(
 key,
+preserveStopsFromPrev(
+key,
 mapped
+)
 );
 
 if(
@@ -2364,7 +2987,9 @@ JSON.stringify(
 prev
 ) !==
 JSON.stringify(
-mapped
+positionsBySymbol.get(
+key
+)
 )
 ){
 changed =
@@ -2403,9 +3028,21 @@ const row of rows ||
 []
 ){
 
+const track =
 trackRawOpenOrderRow(
 row
 );
+
+if(
+track?.removed &&
+track.orderId &&
+clearStreamStopByOrderId(
+track.orderId
+)
+){
+changed =
+true;
+}
 
 const status =
 String(
@@ -2539,11 +3176,13 @@ changed
 emitOrders();
 }
 
-/* Order book changed — cancelled SL/TP can clear; new stops can attach. */
+/* Order book changed — cancelled SL/TP can clear; new stops can attach.
+ * Empty raw map after a partial WS delta is not a full openOrders snapshot —
+ * never authoritatively clear SL/TP here (seedFromRest does that). */
 if(
 patchStreamPositionStops({
 allowClearStops:
-true
+false
 })
 ){
 emitPositions();
@@ -2576,8 +3215,19 @@ true;
 return seedInflight;
 }
 
-seedInflight =
+const seedGen =
+streamGeneration;
+
+const seedPromise =
 (async()=>{
+
+if(
+!isBingxStreamLive(
+seedGen
+)
+){
+return;
+}
 
 if(
 !getStreamStatus().configured
@@ -2601,6 +3251,14 @@ await fetchPositionListRaw({
 forceRefresh:
 true
 });
+
+if(
+!isBingxStreamLive(
+seedGen
+)
+){
+return;
+}
 
 if(
 posResult?.rateLimited
@@ -2773,6 +3431,28 @@ if(
 emptySeedSoftSkipCount =
 0;
 
+/* Snapshot BEFORE clear — preserveStopsFromPrev reads the live map, so
+ * clear-then-preserve was a no-op and wiped SL/TP on every seed (flicker
+ * when allowClearStops re-enriched, permanent loss when it did not). */
+const prevByKey =
+new Map(
+positionsBySymbol
+);
+
+const kept =
+rebuildPositionsKeepingStops(
+prevByKey,
+nextPositions,
+(
+_key,
+mapped
+)=>
+getStopAmendsForPosition(
+mapped ||
+{}
+)
+);
+
 positionsBySymbol.clear();
 rawPositionBySymbol.clear();
 
@@ -2791,16 +3471,16 @@ row
 for(
 const [
 key,
-mapped
-] of nextPositions
+merged
+] of kept
 ){
-/* Keep prior stops only until openOrders enrich (handles rate-limit path).
- * enrichPositionsWithStopOrders starts from 0 — cancel on exchange clears. */
 positionsBySymbol.set(
 key,
-preserveStopsFromPrev(
-key,
-mapped
+gateStreamStopsWithAmends(
+prevByKey.get(
+key
+),
+merged
 )
 );
 }
@@ -2817,6 +3497,14 @@ await getOpenOrders({
 forceRefresh:
 true
 });
+
+if(
+!isBingxStreamLive(
+seedGen
+)
+){
+return;
+}
 
 if(
 ordResult?.rateLimited
@@ -2850,19 +3538,31 @@ resetOrders(
 ordResult.orders
 );
 
+/* Use the fetch result, not getCachedOpenOrderRows — ACCOUNT/ORDER WS
+ * invalidateOpenOrderRowsCache() can empty the shared cache between a
+ * successful openOrders response and this read, which briefly cleared
+ * SL/TP (allowClearStops) until the next seed. */
 const rawRows =
-streamModules.getCachedOpenOrderRows?.() ||
+Array.isArray(
+ordResult.rows
+)
+? ordResult.rows
+: streamModules.getCachedOpenOrderRows?.() ||
 [];
 
 resetRawOpenOrderRows(
 rawRows
 );
 
-/* Fresh openOrders snapshot — authoritative for SL/TP presence/absence. */
+/* INVARIANT: seed never authoritatively clears SL/TP.
+ * BingX position REST has no stops; openOrders is flaky. Clearing here
+ * caused flicker; clear-then-preserve without snapshot wiped stops after
+ * open. Cancels go through WS clearStreamStopByOrderId / cancel IPC. */
 patchStreamPositionStops({
 allowClearStops:
-true
+false
 });
+
 emitOrders();
 
 }
@@ -2892,20 +3592,34 @@ err.message
 
 })();
 
+seedInflight =
+seedPromise;
+
 try{
-return await seedInflight;
+return await seedPromise;
 }finally{
+if(
+seedInflight ===
+seedPromise
+){
 seedInflight =
 null;
+}
 
 if(
-seedFollowUpNeeded
+seedFollowUpNeeded &&
+isBingxStreamLive(
+seedGen
+)
 ){
 seedFollowUpNeeded =
 false;
 scheduleAccountReconcile(
 50
 );
+}else{
+seedFollowUpNeeded =
+false;
 }
 }
 
@@ -2937,6 +3651,11 @@ setTimeout(
 ()=>{
 seedRetryTimer =
 null;
+if(
+!isBingxStreamLive()
+){
+return;
+}
 void seedFromRest();
 },
 waitMs
@@ -3013,8 +3732,13 @@ null;
 
 function stopTradingStream(){
 
+streamGeneration +=
+1;
+seedFollowUpNeeded =
+false;
 stopExternalSyncPoll();
 stopSocket();
+clearAllStopAmends();
 
 if(
 reconcileTimer

@@ -6,25 +6,41 @@ flex:0 0 auto;
 z-index:120;
 }
 
+body.trade-page .trade-volume-presets-control{
+display:inline-flex;
+align-items:center;
+gap:6px;
+height:40px;
+padding:0 8px 0 10px;
+border-radius:6px;
+color:#d1d4dc;
+}
+
+body.trade-page .trade-volume-presets-control:hover,
+body.trade-page .trade-volume-presets-control:focus-within,
+body.trade-page .trade-volume-presets-control:has(.trade-volume-presets-btn[aria-expanded="true"]){
+background:rgba(255,255,255,.06);
+color:#f3f4f6;
+}
+
 body.trade-page .trade-volume-presets-btn{
 display:inline-flex;
 align-items:center;
-gap:8px;
-height:40px;
-padding:0 10px;
+justify-content:center;
+height:28px;
+padding:0;
 border:none;
-border-radius:6px;
+border-radius:4px;
 background:transparent;
-color:#d1d4dc;
+color:inherit;
 cursor:pointer;
-font:600 12px/1 system-ui,-apple-system,sans-serif;
 -webkit-tap-highlight-color:transparent;
 }
 
 body.trade-page .trade-volume-presets-btn:hover,
 body.trade-page .trade-volume-presets-btn[aria-expanded="true"]{
-background:rgba(255,255,255,.06);
-color:#f3f4f6;
+background:transparent;
+color:inherit;
 }
 
 body.trade-page .trade-volume-presets-grid{
@@ -38,10 +54,31 @@ opacity:.9;
 }
 
 body.trade-page .trade-volume-presets-value{
-min-width:1ch;
+box-sizing:border-box;
+width:4.75ch;
+min-width:4.75ch;
+height:28px;
+padding:0 4px;
+border:1px solid transparent;
+border-radius:4px;
+background:transparent;
+color:inherit;
 text-align:right;
+font:600 12px/1 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
 font-variant-numeric:tabular-nums;
-font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+-moz-appearance:textfield;
+appearance:textfield;
+}
+
+body.trade-page .trade-volume-presets-value:focus{
+outline:none;
+border-color:#6366f1;
+background:#13181e;
+color:#f3f4f6;
+}
+
+body.trade-page .trade-volume-presets-value:read-only{
+cursor:default;
 }
 
 body.trade-page .trade-volume-presets-dropdown{

@@ -20,12 +20,13 @@ alwaysApply: true
 
 ## Renderer (site UI)
 
-| Файл | Назначение |
-|------|------------|
-| `js/desktop/platform.js` | `isDesktopWin()`, `isDesktopMac()`, `loadDesktopWinPatch()` |
-| `js/desktop/win/*` | Win-only патчи; dynamic import за `isDesktopWin()` |
+Пока Win-патчей нет — папки `js/desktop/` нет. При первом Win-баге в UI:
 
-Общий `js/*.js` не раздувать `if (win32)` — вынести в `js/desktop/win/`.
+1. Создать `js/desktop/platform.js` (`isDesktopWin`, `loadDesktopWinPatch`) и `js/desktop/win/*`.
+2. Подключать патч только через `isDesktopWin()` / dynamic import.
+3. Общий `js/*.js` не раздувать `if (win32)`.
+
+Main-process Win: по-прежнему `desktop/platform/win32.cjs` (и `pnl-share-card-win.cjs`).
 
 ## Релизы
 

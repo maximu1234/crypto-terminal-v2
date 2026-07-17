@@ -3,12 +3,12 @@
  */
 import {
 getTradeConfig
-} from "./config.js?v=7";
+} from "./config.js?v=10";
 
 import {
 getCachedPosition,
 upsertTradePositionInCache
-} from "./positions-cache.js?v=3";
+} from "./positions-cache.js?v=5";
 
 const STORAGE_KEY =
 "trade_auto_stops_bingx_v1";
@@ -46,10 +46,23 @@ num *
 export function getAutoStopSettings(){
 
 try{
-const raw =
+let raw =
 localStorage.getItem(
 STORAGE_KEY
 );
+
+/* First launch on BingX after Bybit: reuse last known auto-stop prefs. */
+if(
+!raw
+){
+raw =
+localStorage.getItem(
+"trade_auto_stops_bybit_v1"
+) ||
+localStorage.getItem(
+"trade_auto_stops_v1"
+);
+}
 
 if(
 !raw
@@ -437,17 +450,29 @@ return false;
 if(
 result.rateLimited
 ){
-return false;
+return true;
 }
 
 const msg =
 String(
 result.message ||
 ""
-).trim();
+).trim().toLowerCase();
 
-return /нет открытой позиции/i.test(
+/* Position fill lag on BingX — English API + Russian UI copy. */
+return (
+/нет открытой позиции/.test(
 msg
+) ||
+/no open position/.test(
+msg
+) ||
+/position.*(not exist|does not exist|not found)/.test(
+msg
+) ||
+/not.*position/.test(
+msg
+)
 );
 
 }
@@ -472,6 +497,8 @@ position.positionSide,
 side:
 position.side,
 position,
+exchangeId:
+"bingx",
 ...extra
 };
 
@@ -504,6 +531,77 @@ symbol
 return normalizeAutoStopSymbol(
 symbol
 );
+
+}
+
+const autoStopsHandledUntil =
+new Map();
+
+/**
+ * Main already attached SL/TP on open — skip duplicate maybeApply for a bit.
+ * @param {string} symbol
+ * @param {{ positionSide?: string, side?: string }} [position]
+ */
+export function markAutoStopsHandled(
+symbol,
+position
+){
+
+const key =
+autoStopInflightKey(
+symbol,
+position ||
+{
+symbol
+}
+);
+
+if(
+!key
+){
+return;
+}
+
+autoStopsHandledUntil.set(
+key,
+Date.now() +
+30000
+);
+
+}
+
+function wasAutoStopsRecentlyHandled(
+symbol,
+position
+){
+
+const key =
+autoStopInflightKey(
+symbol,
+position ||
+{
+symbol
+}
+);
+const until =
+Number(
+autoStopsHandledUntil.get(
+key
+)
+) ||
+0;
+
+if(
+until <=
+Date.now()
+){
+autoStopsHandledUntil.delete(
+key
+);
+return false;
+}
+
+return true;
 
 }
 
@@ -610,6 +708,26 @@ inflightKey
 
 try{
 
+const delayMs =
+Number(
+getTradeConfig().autoStopDelayMs
+) ||
+0;
+
+if(
+delayMs >
+0
+){
+await new Promise(
+resolve=>{
+setTimeout(
+resolve,
+delayMs
+);
+}
+);
+}
+
 const settings =
 getAutoStopSettings();
 const api =
@@ -668,7 +786,6 @@ let nextPosition =
 const paintOptimisticStops =
 ()=>{
 upsertTradePositionInCache(
-symbol,
 nextPosition
 );
 window.dispatchEvent(
@@ -985,6 +1102,15 @@ size
 ) ||
 size <=
 0
+){
+return;
+}
+
+if(
+wasAutoStopsRecentlyHandled(
+symbol,
+position
+)
 ){
 return;
 }

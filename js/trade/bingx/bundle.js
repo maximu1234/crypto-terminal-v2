@@ -13,18 +13,23 @@ export {
   getTradePositionsCacheSyncError,
   syncTradePositionsCache,
   initTradePositionsCache
-} from "./positions-cache.js?v=3";
+} from "./positions-cache.js?v=5";
 
 export {
   stopTradeStreamBridge,
   startTradeStreamBridge,
   initTradeStreamBridge
-} from "./stream-bridge.js?v=2";
+} from "./stream-bridge.js?v=5";
 
 export {
   createTradeChartOverlay,
   initTradeChartOverlay
-} from "./chart-overlay.js?v=6";
+} from "./chart-overlay.js?v=12";
+
+export {
+  createTradeChartOrders,
+  initTradeChartOrders
+} from "./chart-orders.js?v=1";
 
 export {
   getAutoStopSettings,
@@ -36,20 +41,21 @@ export {
   calcStopPriceFromUsd,
   applyAutoStopsAfterEntry,
   maybeApplyAutoStopsForNewPosition,
+  markAutoStopsHandled,
   wireAutoStopSettings
-} from "./auto-stops.js?v=3";
+} from "./auto-stops.js?v=8";
 
 export {
   initTradeMarketEntry
-} from "./market-entry.js?v=2";
+} from "./market-entry.js?v=7";
 
 export {
   initTradeBookPanel
-} from "./book-panel.js?v=3";
+} from "./book-panel.js?v=4";
 
 export {
   getTradeConfig
-} from "./config.js?v=7";
+} from "./config.js?v=10";
 
 export {
   diarySanitizeTrade,
@@ -62,7 +68,62 @@ export {
   diaryApplyDetailToTrade,
   diaryAfterDetailSuccess,
   diaryFetchKlineBatch
-} from "./diary/index.js?v=4";
+} from "./diary/index.js?v=5";
+
+export {
+  bootTradeDiaryPage
+} from "./diary/page.js?v=1";
+
+export {
+  mountTradeDiaryPeriodPicker
+} from "./diary/period.js?v=1";
+
+export {
+  TRADE_VOLUME_SLOT_COUNT,
+  TRADE_VOLUME_POSITION_APPLY_SLOT_INDEX,
+  getDefaultVolumeSlots,
+  saveDefaultVolumePresets,
+  switchTradeVolumeSymbol,
+  getTradeVolumePresetsState,
+  getActiveTradeVolumeUsdt,
+  getVolumeStateForSymbol,
+  saveVolumeStateForSymbol,
+  applyPositionVolumeFromDrawing,
+  applyPositionVolumeToTradePreset,
+  focusActiveVolumePresetInput,
+  wireTradeVolumeDefaultsSettings,
+  initTradeVolumePresets
+} from "./volume-presets.js?v=2";
+
+export {
+  mountTradeLeverageControl,
+  initTradeLeverageSettings
+} from "./leverage-settings.js?v=1";
+
+export {
+  POSITION_COLUMN_WIDTHS,
+  ORDER_COLUMN_WIDTHS,
+  ALERT_COLUMN_WIDTHS,
+  readPositionColumnWidths,
+  applyPositionColumnLayout,
+  wirePositionColumnResize,
+  applyOrderColumnLayout,
+  wireOrderColumnResize,
+  applyAlertColumnLayout,
+  wireAlertColumnResize,
+  columnResizeHandle
+} from "./book-columns.js?v=1";
+
+export {
+  buildDiaryPayload,
+  openPnlShareModal,
+  openPnlShareDiaryModal
+} from "./pnl-share-modal.js?v=1";
+
+export {
+  mountTradeChartMarkersToggle,
+  initTradeChartExecutionMarkers
+} from "./chart-execution-markers.js?v=2";
 
 export {
   fetchTradeHistoryForSymbol

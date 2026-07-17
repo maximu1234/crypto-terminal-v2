@@ -7,7 +7,7 @@ import {
 
 import {
   fetchBingx
-} from "../../../exchanges/bingx/fetch.js?v=3";
+} from "../../../exchanges/bingx/fetch.js?v=4";
 
 import {
   tfToBingxInterval

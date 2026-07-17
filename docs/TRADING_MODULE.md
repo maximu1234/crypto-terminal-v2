@@ -74,9 +74,13 @@ Renderer (/coins.html — desktop)
 `trading-stream.cjs`, `register-ipc.cjs`, `js/trade/module-router.js` и
 тонкие renderer-facades `js/trade-positions-cache.js`,
 `js/trade-stream-bridge.js`, `js/trade-chart-overlay.js`,
+`js/trade-chart-orders.js`, `js/trade-volume-presets.js`,
+`js/trade-leverage-settings.js`, `js/trade-book-columns.js`,
+`js/trade-pnl-share-modal.js`, `js/trade-chart-execution-markers.js`,
+`js/trade-diary-page.js`, `js/trade-diary-period.js`,
 `js/trade-auto-stops.js`, `js/trade-market-entry.js`,
-`js/trade-book-panel.js`, `js/trade-diary-page.js`,
-`js/trade-diary-detail.js`, `js/trade-diary-chart.js`.
+`js/trade-book-panel.js`, `js/trade-diary-detail.js`,
+`js/trade-diary-chart.js`.
 
 При смене биржи старый renderer-модуль останавливается и страница
 перезагружается: DOM listeners, stream subscriptions и кэши одной биржи не
@@ -92,10 +96,12 @@ Renderer (/coins.html — desktop)
 
 **Amend (drag на графике):** цена триггера/лимитки меняется через `POST /openApi/swap/v1/trade/cancelReplace` (не `/amend` — тот меняет только quantity). При cancel ok / place fail — повторный place.
 
-**Дневник (renderer split):** host `js/trade-diary-*.js` содержит только
-DOM/period/status и делегирует `diaryLoadPeriod` активному bundle через
-`module-router`. Fetch, day-cache policy, detail и klines полностью находятся
-в `js/trade/bybit/diary/*` | `js/trade/bingx/diary/*`.
+**Дневник (renderer split):** `trade-diary-page.js` / `trade-diary-period.js` —
+тонкие facades. UI страницы и period picker живут в
+`js/trade/{bybit,bingx}/diary/page.js` и `period.js`. Fetch, day-cache policy,
+detail и klines — в `js/trade/{bybit,bingx}/diary/*`. Shared остаются только
+`trade-diary-time.js` (date math), `trade-diary-storage.js` (day-cache по
+`exchangeId`), format/nav/access и detail/chart hosts.
 Bybit — closed-PnL + executions (metka-69 контракт, без enrich/resolved).
 BingX — income + fills resolve; загруженные прошлые дни переиспользуются из
 day-cache, а сеть повторно проверяет только текущий день.
@@ -145,13 +151,22 @@ Bybit history не импортирует BingX history и наоборот. И�
 | `js/trade-desktop-boot.js` | Trade CSS + init (только desktop) |
 | `js/trade-exchange-settings.js` | Exchange dropdown + ping |
 | `js/trade-market-entry.js` | Thin facade → active exchange renderer |
-| `js/trade-volume-presets.js` | Объёмы USDT |
+| `js/trade-volume-presets.js` | Thin facade → active exchange volume presets |
+| `js/trade-leverage-settings.js` | Thin facade → active exchange leverage UI |
+| `js/trade-book-columns.js` | Thin facade → active exchange column widths |
+| `js/trade-pnl-share-modal.js` | Thin facade → active exchange PnL share |
+| `js/trade-chart-execution-markers.js` | Thin facade → active exchange history markers |
+| `js/trade-diary-page.js` | Thin facade → `bootTradeDiaryPage` |
+| `js/trade-diary-period.js` | Thin facade → period picker (+ shared date math) |
 | `js/trade-book-panel.js` | Thin facade → active exchange book |
 | `js/trade-chart-overlay.js` | Thin facade → active exchange overlay |
-| `js/trade-chart-orders.js` | Limit/stop линии |
+| `js/trade-chart-orders.js` | Thin facade → active exchange order lines |
+| `js/trade/bybit/chart-orders.js` | Bybit limit/stop линии, drag/amend/cancel |
+| `js/trade/bingx/chart-orders.js` | BingX limit/stop линии, drag/amend/cancel |
+| `js/trade/bybit/diary/page.js` | Bybit diary page UI |
+| `js/trade/bingx/diary/page.js` | BingX diary page UI |
 | `js/trade-order-plus-ui.js` | Меню «+» на шкале |
 | `js/trade-open-positions.js` | Пин символов с позицией |
-| `js/desktop-trade-nav.js` | Пункт «Торговля» в меню |
 | `script.html` | Скрипт — сканер 1-2 (только desktop) |
 | `js/script-page-boot.js` | Boot + редирект вне desktop |
 | `js/script-scan-background.js` | Фоновое авто-сканирование |

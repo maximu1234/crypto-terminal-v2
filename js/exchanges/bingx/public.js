@@ -1,6 +1,6 @@
 import {
 fetchBingx
-} from "./fetch.js?v=3";
+} from "./fetch.js?v=4";
 
 import {
 buildBingxMarketLists,
@@ -160,6 +160,8 @@ endTime
 );
 }
 
+try{
+
 const json =
 await fetchBingx(
 `/openApi/swap/v2/quote/klines?${params}`
@@ -173,6 +175,12 @@ json?.data
 : [];
 
 return rows;
+
+}catch{
+/* pause / invalid symbol — как Bybit: пустая партия, без throw */
+return [];
+
+}
 
 }
 
@@ -672,7 +680,7 @@ const {
 pingBingxPublic
 } =
 await import(
-"./fetch.js?v=3"
+"./fetch.js?v=4"
 );
 
 return pingBingxPublic();

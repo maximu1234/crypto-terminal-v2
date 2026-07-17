@@ -10,10 +10,24 @@ getDefaultDiaryPeriod,
 msFromDayKey,
 resolveDiaryPreset,
 startOfDayMs
-} from "./trade-diary-period.js?v=3";
+} from "./trade-diary-time.js?v=1";
 
-const PERIOD_STORAGE_KEY =
+const PERIOD_STORAGE_LEGACY_KEY =
 "trade_diary_period_v1";
+
+function periodStorageKey(
+exchangeId
+){
+
+const id =
+exchangeId ===
+"bingx"
+? "bingx"
+: "bybit";
+
+return `trade_diary_period_${id}_v1`;
+
+}
 
 const DAY_CACHE_STORAGE_KEY =
 "trade_diary_days_v2";
@@ -75,14 +89,32 @@ return keys;
 
 }
 
-export function loadSavedDiaryPeriod(){
+export function loadSavedDiaryPeriod(
+exchangeId
+){
 
-const parsed =
+const key =
+periodStorageKey(
+exchangeId
+);
+
+let parsed =
 safeParse(
 localStorage.getItem(
-PERIOD_STORAGE_KEY
+key
 )
 );
+
+if(
+!parsed
+){
+parsed =
+safeParse(
+localStorage.getItem(
+PERIOD_STORAGE_LEGACY_KEY
+)
+);
+}
 
 if(
 !parsed ||
@@ -166,7 +198,8 @@ endMs
 }
 
 export function saveDiaryPeriod(
-period
+period,
+exchangeId
 ){
 
 if(
@@ -211,7 +244,9 @@ period.endMs
 
 try{
 localStorage.setItem(
-PERIOD_STORAGE_KEY,
+periodStorageKey(
+exchangeId
+),
 JSON.stringify(
 payload
 )
@@ -222,9 +257,13 @@ payload
 
 }
 
-export function resolveInitialDiaryPeriod(){
+export function resolveInitialDiaryPeriod(
+exchangeId
+){
 
-return loadSavedDiaryPeriod() ||
+return loadSavedDiaryPeriod(
+exchangeId
+) ||
 getDefaultDiaryPeriod();
 
 }

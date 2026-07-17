@@ -7,7 +7,7 @@ createTradeChartOverlay
 
 import {
 createTradeChartOrders
-} from "./trade-chart-orders.js?v=30";
+} from "./trade-chart-orders.js?v=31";
 
 import {
 createTradePlusMenuHandler
@@ -20,7 +20,7 @@ focusActiveVolumePresetInput,
 getVolumeStateForSymbol,
 saveVolumeStateForSymbol,
 getActiveTradeVolumeUsdt
-} from "./trade-volume-presets.js?v=10";
+} from "./trade-volume-presets.js?v=11";
 
 import {
 marketMap
@@ -33,11 +33,11 @@ getAutoStopSettings
 
 import {
 getActiveTradeConfig
-} from "./trade/module-router.js?v=11";
+} from "./trade/module-router.js?v=13";
 
 import {
 mountTradeLeverageControl
-} from "./trade-leverage-settings.js?v=3";
+} from "./trade-leverage-settings.js?v=4";
 
 function tradingApi(){
 
@@ -223,10 +223,12 @@ wrap.className =
 
 wrap.innerHTML =
 `
-<button type="button" class="trade-volume-presets-btn" aria-expanded="false" aria-haspopup="true" title="Объём сделки USDT">
+<div class="trade-volume-presets-control">
+<button type="button" class="trade-volume-presets-btn" aria-expanded="false" aria-haspopup="true" title="Пресеты объёма USDT">
 <span class="trade-volume-presets-grid" aria-hidden="true"></span>
-<span class="trade-volume-presets-value" data-role="volume-label">${formatVolumeLabel(volumeState.slots[volumeState.activeIndex] ?? 0)}</span>
 </button>
+<input type="text" inputmode="decimal" class="trade-volume-presets-value" data-role="volume-label" autocomplete="off" spellcheck="false" aria-label="Активный объём USDT" title="Активный объём USDT" value="${formatVolumeLabel(volumeState.slots[volumeState.activeIndex] ?? 0)}"/>
+</div>
 <div class="trade-volume-presets-dropdown hidden">
 <div class="trade-volume-presets-panel" role="dialog" aria-label="Объём сделки USDT">
 ${buildVolumeRowsHtml(uid)}
@@ -262,13 +264,24 @@ volumeState
 
 function refreshLabel(){
 
-labelEl.textContent =
+const display =
 formatVolumeLabel(
 volumeState.slots[
 volumeState.activeIndex
 ] ??
 0
 );
+
+if(
+labelEl instanceof HTMLInputElement
+){
+labelEl.value =
+display;
+return;
+}
+
+labelEl.textContent =
+display;
 
 }
 
@@ -318,6 +331,52 @@ refreshLabel();
 }
 
 syncInputs();
+
+if(
+labelEl instanceof HTMLInputElement
+){
+labelEl.addEventListener(
+"click",
+event=>{
+event.stopPropagation();
+}
+);
+
+labelEl.addEventListener(
+"mousedown",
+event=>{
+event.stopPropagation();
+}
+);
+
+labelEl.addEventListener(
+"change",
+()=>{
+volumeState.slots[
+volumeState.activeIndex
+] =
+normalizeSlotValue(
+labelEl.value
+);
+persist();
+refreshLabel();
+syncInputs();
+}
+);
+
+labelEl.addEventListener(
+"keydown",
+event=>{
+if(
+event.key ===
+"Enter"
+){
+event.preventDefault();
+labelEl.blur();
+}
+}
+);
+}
 
 dropdown.querySelectorAll(
 "[data-volume-slot]"

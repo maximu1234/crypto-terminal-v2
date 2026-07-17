@@ -50,6 +50,8 @@ test("main-process exchange adapters do not import each other", () => {
 
   for (const file of [
     "desktop/trading/bingx-rest.cjs",
+    "desktop/trading/bingx-rest-diary.cjs",
+    "desktop/trading/bingx-rest-settings.cjs",
     "desktop/trading/bingx-private-ws.cjs",
     "desktop/trading/bingx-trading-stream.cjs"
   ]) {
@@ -131,7 +133,10 @@ test("BingX renderer stream bridge has no periodic REST poll", () => {
 });
 
 test("BingX diary list resolves collapsed rows before returning", () => {
-  const source = read("desktop/trading/bingx-rest.cjs");
+  const rest = read("desktop/trading/bingx-rest.cjs");
+  assert.match(rest, /bingx-rest-diary\.cjs/);
+  assert.match(rest, /bindBingxDiaryDeps/);
+  const source = read("desktop/trading/bingx-rest-diary.cjs");
   const fnStart = source.indexOf("async function getClosedPnlHistory");
   assert.ok(fnStart >= 0);
   const nextFn = source.indexOf("\nasync function ", fnStart + 1);
@@ -171,7 +176,7 @@ test("BingX diary list resolves collapsed rows before returning", () => {
 });
 
 test("BingX diary uses unified closed-trade resolver", () => {
-  const source = read("desktop/trading/bingx-rest.cjs");
+  const source = read("desktop/trading/bingx-rest-diary.cjs");
   assert.match(source, /async function resolveBingxClosedTrade/);
   assert.match(source, /fetchBingxAllFillOrdersPaged|allFillOrders/);
   assert.match(source, /DIARY_FILL_LOOKBACK_MS/);
@@ -221,31 +226,43 @@ test("BingX diary uses unified closed-trade resolver", () => {
     "list enrich must not dump account-wide fills without symbol"
   );
 
-  const renderer = read("js/trade-diary-page.js");
+  const facade = read("js/trade-diary-page.js");
   assert.match(
-    renderer,
-    /diaryLoadPeriod/,
-    "period loading must come from active exchange diary module"
+    facade,
+    /isDesktopTradeDiaryContext/,
+    "shared diary page must gate desktop before boot"
   );
   assert.match(
-    renderer,
-    /diaryAfterListPaint|maybeEnrichDiaryDurations/,
-    "list post-paint hook remains for BingX residual enrich"
+    facade,
+    /bootTradeDiaryPage/,
+    "shared diary page is a thin boot facade"
   );
   assert.doesNotMatch(
-    renderer,
+    facade,
     /getClosedPnl|readDiaryDayTrades|writeDiaryDayTrades|clearDiaryDayTrades/,
     "shared diary host must not own exchange fetch/cache logic"
   );
   assert.doesNotMatch(
-    renderer,
+    facade,
     /exchangeId\s*===\s*["']bingx["']/,
     "shared diary host must not branch on bingx"
   );
   assert.doesNotMatch(
-    renderer,
+    facade,
     /Загружаем сделки BingX/,
     "loading status must not hardcode BingX when Bybit diary is active"
+  );
+
+  const bingxPage = read("js/trade/bingx/diary/page.js");
+  assert.match(
+    bingxPage,
+    /diaryLoadPeriod/,
+    "period loading must come from BingX diary module"
+  );
+  assert.match(
+    bingxPage,
+    /diaryAfterListPaint|maybeEnrichDiaryDurations/,
+    "list post-paint hook remains for BingX residual enrich"
   );
 
   const bybitPolicy = read("js/trade/bybit/diary/policy.js");
@@ -290,6 +307,55 @@ test("shared trade-history fetch is a thin exchange-module facade", () => {
   assert.match(bingx, /skipExecutions:\s*true/);
   assert.match(bingx, /enrich:\s*true/);
   assert.doesNotMatch(bingx, /trade\/bybit|exchangeId:\s*["']bybit["']/);
+});
+
+test("BingX diary bind deps are complete", () => {
+  const diary = read("desktop/trading/bingx-rest-diary.cjs");
+  const rest = read("desktop/trading/bingx-rest.cjs");
+  const required = [
+    "signedRequest",
+    "stripSymbolSuffix",
+    "toBingxSymbol",
+    "toCanonicalSymbol",
+    "peekRateLimitBlock",
+    "extractBingxList"
+  ];
+  for (const name of required) {
+    assert.match(diary, new RegExp(`let ${name}\\s*=\\s*null`));
+    assert.match(
+      rest,
+      new RegExp(`bindBingxDiaryDeps\\(\\{[\\s\\S]*\\b${name}\\b`)
+    );
+  }
+  assert.match(diary, /\bpeekRateLimitBlock\s*\(/);
+  assert.match(diary, /\bextractBingxList\s*\(/);
+});
+
+test("Bybit and BingX bundles export facade-required APIs", () => {
+  const required = [
+    "bootTradeDiaryPage",
+    "mountTradeDiaryPeriodPicker",
+    "initTradeVolumePresets",
+    "getActiveTradeVolumeUsdt",
+    "mountTradeLeverageControl",
+    "initTradeLeverageSettings",
+    "createTradeChartOrders",
+    "mountTradeChartMarkersToggle",
+    "initTradeChartExecutionMarkers",
+    "openPnlShareModal",
+    "applyPositionColumnLayout",
+    "wirePositionColumnResize"
+  ];
+  for (const exchange of ["bybit", "bingx"]) {
+    const source = read(`js/trade/${exchange}/bundle.js`);
+    for (const name of required) {
+      assert.match(
+        source,
+        new RegExp(`\\b${name}\\b`),
+        `${exchange}/bundle.js must export ${name}`
+      );
+    }
+  }
 });
 
 test("diary chart markers use detail open/close and side", () => {

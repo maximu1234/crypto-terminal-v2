@@ -232,8 +232,6 @@ const name of
 "alerts/index.html",
 "system/index.html",
 "diary/index.html",
-"btc-d.html",
-"btc-dominance-test.html",
 "script.html"
 ]
 ){

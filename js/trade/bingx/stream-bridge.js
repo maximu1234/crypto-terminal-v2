@@ -5,11 +5,7 @@
 import {
 applyTradePositionsStream,
 syncTradePositionsCache
-} from "./positions-cache.js?v=3";
-
-import {
-isTradePositionSoundBaselineReady
-} from "../../trade-position-sounds.js?v=3";
+} from "./positions-cache.js?v=5";
 
 import {
 isExchangeTradingEnabled
@@ -37,10 +33,13 @@ function applySnapshot(snapshot) {
     ? snapshot.positions
     : [];
   const orders = Array.isArray(snapshot.orders) ? snapshot.orders : [];
+  const seedDone = !!snapshot.seedDone;
 
+  /* Silent baseline ONLY while seed is still incomplete.
+   * Using `!initial || !seedDone` made the first seedDone snapshot (often the
+   * soft-skip right after our open) absorb the new position without sound. */
   applyTradePositionsStream(positions, {
-    establishBaseline:
-      initialStreamSyncDone && !isTradePositionSoundBaselineReady()
+    establishBaseline: !initialStreamSyncDone && !seedDone
   });
 
   dispatch("trade-stream-positions", {
@@ -59,7 +58,9 @@ function applySnapshot(snapshot) {
     })
   );
 
-  initialStreamSyncDone = true;
+  if (seedDone) {
+    initialStreamSyncDone = true;
+  }
   return snapshot;
 }
 
@@ -93,14 +94,22 @@ function handleStreamPayload(payload) {
     return;
   }
 
+  if (
+    payload.exchangeId &&
+    payload.exchangeId !== "bingx"
+  ) {
+    return;
+  }
+
   if (payload.type === "positions") {
     const positions = Array.isArray(payload.positions)
       ? payload.positions
       : [];
 
+    /* Live pushes must use sound diff — silent establish here ate BingX opens
+     * into the baseline before seedDone flipped (no open sound). */
     applyTradePositionsStream(positions, {
-      establishBaseline:
-        initialStreamSyncDone && !isTradePositionSoundBaselineReady()
+      establishBaseline: false
     });
 
     dispatch("trade-stream-positions", {
@@ -108,7 +117,6 @@ function handleStreamPayload(payload) {
     });
 
     window.dispatchEvent(new CustomEvent("trade-open-positions-changed"));
-    initialStreamSyncDone = true;
     return;
   }
 
@@ -126,7 +134,6 @@ function handleStreamPayload(payload) {
         }
       })
     );
-    initialStreamSyncDone = true;
   }
 }
 

@@ -15,11 +15,11 @@ initTradeExchangeSettings
 
 import {
 initTradeVolumePresets
-} from "./trade-volume-presets.js?v=10";
+} from "./trade-volume-presets.js?v=11";
 
 import {
 initTradeLeverageSettings
-} from "./trade-leverage-settings.js?v=3";
+} from "./trade-leverage-settings.js?v=4";
 
 import {
 initTradeMarketEntry
@@ -31,7 +31,7 @@ initTradeBookPanel
 
 import {
 loadTradeExchangeModules
-} from "./trade/module-router.js?v=11";
+} from "./trade/module-router.js?v=13";
 
 import {
 getActiveExchangeId
@@ -303,7 +303,7 @@ const {
 initTradeChartOrders
 } =
 await import(
-"./trade-chart-orders.js?v=30"
+"./trade-chart-orders.js?v=31"
 );
 
 initTradeChartOrders();
@@ -312,7 +312,7 @@ const {
 initTradeChartExecutionMarkers
 } =
 await import(
-"./trade-chart-execution-markers.js?v=9"
+"./trade-chart-execution-markers.js?v=10"
 );
 
 initTradeChartExecutionMarkers();

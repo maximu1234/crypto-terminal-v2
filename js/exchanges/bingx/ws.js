@@ -3,7 +3,7 @@
  */
 import {
 getBingxWsUrl
-} from "./fetch.js?v=3";
+} from "./fetch.js?v=4";
 
 import {
 toBingxSymbol

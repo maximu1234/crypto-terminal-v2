@@ -23,6 +23,7 @@ getOpenOrders,
 getPosition,
 closePositionAtMarket,
 openPositionAtMarket,
+attachAutoStopsAfterOpen,
 cancelPositionStop,
 setPositionStop,
 placeTradeOrder,
@@ -413,10 +414,76 @@ payload
 )=>{
 
 try{
-return await cancelPositionStop(
+const result =
+await cancelPositionStop(
 payload ||
 {}
 );
+
+if(
+result?.ok !==
+false
+){
+const sym =
+payload?.symbol;
+const tgt =
+String(
+payload?.target ||
+""
+).toLowerCase();
+const pos =
+payload?.position ||
+result?.position;
+
+if(
+sym &&
+pos
+){
+const next =
+{
+...pos
+};
+
+if(
+tgt ===
+"sl" ||
+tgt ===
+"stopLoss" ||
+tgt ===
+"all" ||
+tgt ===
+"both"
+){
+next.stopLoss =
+0;
+delete next.slOrderId;
+}
+
+if(
+tgt ===
+"tp" ||
+tgt ===
+"takeProfit" ||
+tgt ===
+"all" ||
+tgt ===
+"both"
+){
+next.takeProfit =
+0;
+delete next.tpOrderId;
+}
+
+next._stopsAuthoritative =
+true;
+upsertStreamPosition(
+next
+);
+}
+
+}
+
+return result;
 }catch(
 err
 ){
@@ -443,10 +510,23 @@ payload
 )=>{
 
 try{
-return await setPositionStop(
+const result =
+await setPositionStop(
 payload ||
 {}
 );
+
+if(
+result?.ok !==
+false &&
+result?.position
+){
+upsertStreamPosition(
+result.position
+);
+}
+
+return result;
 }catch(
 err
 ){
@@ -717,9 +797,88 @@ result?.ok !==
 false &&
 result?.position
 ){
+/* Push position immediately so chart + open-sound are not blocked by
+ * slow exchange auto SL/TP placement (BingX returns attachPromise). */
 upsertStreamPosition(
 result.position
 );
+
+const attached =
+await attachAutoStopsAfterOpen({
+...(
+payload ||
+{}
+),
+position:
+result.position
+});
+
+if(
+attached?.attachPromise
+){
+result.stopsAttached =
+attached.stopsAttached ||
+{
+sl:
+false,
+tp:
+false,
+pending:
+true
+};
+void attached.attachPromise.then(
+(
+done
+)=>{
+
+if(
+!done?.position
+){
+return;
+}
+
+if(
+done.stopsAttached?.sl ||
+done.stopsAttached?.tp
+){
+upsertStreamPosition(
+done.position
+);
+}
+
+}
+).catch(
+(
+err
+)=>{
+log.warn(
+"trading:openPosition attachAutoStops:",
+err?.message ||
+err
+);
+}
+);
+}else if(
+attached?.position &&
+(
+attached.stopsAttached?.sl ||
+attached.stopsAttached?.tp
+)
+){
+result.position =
+attached.position;
+result.stopsAttached =
+attached.stopsAttached;
+upsertStreamPosition(
+attached.position
+);
+}else if(
+attached?.stopsAttached
+){
+result.stopsAttached =
+attached.stopsAttached;
+}
+
 }
 
 return result;

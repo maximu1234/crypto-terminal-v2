@@ -191,6 +191,39 @@ payload
 );
 }
 
+async function attachAutoStopsAfterOpen(
+payload
+){
+
+const adapter =
+getAdapter(
+payload?.exchangeId
+);
+
+if(
+typeof adapter.attachAutoStopsAfterOpen !==
+"function"
+){
+return {
+position:
+payload?.position ||
+null,
+stopsAttached:{
+sl:
+false,
+tp:
+false
+}
+};
+}
+
+return adapter.attachAutoStopsAfterOpen(
+payload?.position,
+payload ||
+{}
+);
+}
+
 async function cancelPositionStop(
 payload
 ){
@@ -528,6 +561,7 @@ getOpenOrders,
 getPosition,
 closePositionAtMarket,
 openPositionAtMarket,
+attachAutoStopsAfterOpen,
 cancelPositionStop,
 setPositionStop,
 placeTradeOrder,

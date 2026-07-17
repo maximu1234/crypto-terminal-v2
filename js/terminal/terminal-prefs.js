@@ -25,8 +25,14 @@ import {
 parseAlertDeepLinkExchange
 } from "../alert-deep-link-url.js?v=2";
 
-export const DEFAULT_CHART_SYMBOL =
-"BTCUSDT";
+import {
+DEFAULT_CHART_SYMBOL,
+pickSymbolFromLastView as pickSymbolFromLastViewPure
+} from "./exchange-last-symbol.js?v=1";
+
+export {
+DEFAULT_CHART_SYMBOL
+};
 
 export function defaultSortEntry(){
 
@@ -491,7 +497,9 @@ console.warn("coins prefs write:", err);
 
 }
 
-export function persistCoinsPrefs(){
+export function persistCoinsPrefs(
+opts = {}
+){
 
 const prefs =
 readCoinsPrefs();
@@ -513,6 +521,14 @@ symbol:coinsState().currentSymbol,
 tf:coinsState().currentTF
 };
 
+const persistExchangeView =
+opts.persistExchangeView !==
+false;
+
+if(
+persistExchangeView
+){
+
 const exchangeId =
 getActiveExchangeId();
 
@@ -527,6 +543,8 @@ prefs.lastViewByExchange[exchangeId] = {
 symbol:coinsState().currentSymbol,
 tf:coinsState().currentTF
 };
+
+}
 
 if(
 isTerminalPage
@@ -622,39 +640,15 @@ prefs
 
 }
 
-function pickSymbolFromLastView(
+export function pickSymbolFromLastView(
 last,
 symbols
 ){
 
-if(
-last.symbol
-){
-
-if(
-symbols.length ===
-0 ||
-symbols.includes(
-last.symbol
-)
-){
-return last.symbol;
-}
-
-}
-
-if(
-symbols.includes(
-DEFAULT_CHART_SYMBOL
-)
-){
-return DEFAULT_CHART_SYMBOL;
-}
-
-return (
-getFirstVisibleSymbol() ||
-symbols[0] ||
-DEFAULT_CHART_SYMBOL
+return pickSymbolFromLastViewPure(
+last,
+symbols,
+getFirstVisibleSymbol
 );
 
 }
@@ -721,31 +715,10 @@ export function resolveInitialSymbolAndTf(){
 const exchangeId =
 getActiveExchangeId();
 
-let last =
+const last =
 readLastViewForExchange(
 exchangeId
 );
-
-if(
-!last.symbol
-){
-
-const marketLast =
-readLastViewFromPrefs();
-
-if(
-marketLast.symbol
-){
-last = {
-symbol:
-marketLast.symbol,
-tf:
-last.tf ||
-marketLast.tf
-};
-}
-
-}
 
 if(
 last.tf &&

@@ -62,10 +62,6 @@ initDesktopAppUi
 } from "./desktop-app-ui.js?v=4";
 
 import {
-initDesktopTradeNav
-} from "./desktop-trade-nav.js?v=1";
-
-import {
 initSiteHeader,
 enforceSiteHeaderAfterBoot
 } from "./site-header.js?v=4";
@@ -81,7 +77,6 @@ resumeStatsBackgroundJob
 initSuppressNativeContextMenu();
 initFocusBlurAfterPick();
 initDesktopAppUi();
-initDesktopTradeNav();
 initSiteHeader();
 enforceSiteHeaderAfterBoot();
 
@@ -264,10 +259,7 @@ isCloudLoggedInEffective() &&
 !isAlertsPage() &&
 !isAutoDevicePullDisabled()
 ){
-scheduleDevicePull(
-()=>
-pullDeviceStateFromCloud()
-);
+void pullDeviceStateFromCloud();
 }
 */
 
@@ -280,14 +272,7 @@ new CustomEvent(
 }
 );
 
-/* BANDWIDTH-CUT: облако рисунков (Realtime + fast poll + push) */
-/*
-import("./drawings-cloud-sync.js?v=47").then(
-({ initDrawingsCloudSync })=>{
-initDrawingsCloudSync();
-}
-);
-*/
+/* BANDWIDTH-CUT: облако рисунков отключено */
 
 import("./favorites-cloud-sync.js?v=7").then(
 ({ initFavoritesCloudSync })=>{

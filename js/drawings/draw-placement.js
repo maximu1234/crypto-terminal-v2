@@ -15,7 +15,7 @@ ensureFibAnchorMinSpan
 
 import {
 isPositionType
-} from "./position.js?v=2";
+} from "./position.js?v=4";
 
 import {
 uid

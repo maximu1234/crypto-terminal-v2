@@ -154,7 +154,7 @@ saveLastViewForExchange,
 applyCoinsPrefs,
 applySortForCurrentMarket,
 readUrlParams
-} from "./terminal/terminal-prefs.js?v=17";
+} from "./terminal/terminal-prefs.js?v=19";
 
 import {
 getCurrentSymbols,
@@ -3655,7 +3655,7 @@ if(
 isTradePage
 ){
 void import(
-"./trade-volume-presets.js?v=10"
+"./trade-volume-presets.js?v=11"
 ).then(
 ({
 switchTradeVolumeSymbol
@@ -5394,6 +5394,29 @@ err
 }
 );
 
+if(
+!hasUrlSymbol
+){
+resolveSymbolForExchange(
+getActiveExchangeId()
+);
+}else if(
+currentSymbol &&
+!getCurrentSymbols().includes(
+currentSymbol
+)
+){
+hasUrlSymbol =
+false;
+resolveSymbolForExchange(
+getActiveExchangeId()
+);
+}
+
+setCoinsChartSymbol(
+currentSymbol || displaySymbol
+);
+
 await loadSymbol(
 currentSymbol || displaySymbol || "BTCUSDT"
 );
@@ -5406,7 +5429,13 @@ syncCoinsTabletListNav();
 
 function flushCoinsPrefs(){
 
-persistCoinsPrefs();
+/* Do not write lastViewByExchange here: on exchange switch the page reloads
+ * after activeExchangeId already flipped, while currentSymbol is still the
+ * previous exchange ticker — that would poison the destination exchange. */
+persistCoinsPrefs({
+persistExchangeView:
+false
+});
 
 }
 

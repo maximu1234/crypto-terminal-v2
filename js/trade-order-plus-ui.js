@@ -3,7 +3,7 @@
  */
 import {
 getActiveTradeVolumeUsdt
-} from "./trade-volume-presets.js?v=10";
+} from "./trade-volume-presets.js?v=11";
 
 import {
 formatPrice
@@ -23,7 +23,7 @@ getTelegramChatId
 
 import {
 getActiveTradeConfig
-} from "./trade/module-router.js?v=11";
+} from "./trade/module-router.js?v=13";
 
 function tradingApi(){
 

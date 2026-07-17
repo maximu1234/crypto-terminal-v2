@@ -11,11 +11,11 @@ getAllCachedPositions,
 isTradePositionRecentlyClosed,
 removeTradePositionFromCache,
 syncTradePositionsCache
-} from "./positions-cache.js?v=3";
+} from "./positions-cache.js?v=5";
 
 import {
 getTradeConfig
-} from "./config.js?v=7";
+} from "./config.js?v=10";
 
 import {
 applyPositionColumnLayout,
@@ -25,11 +25,11 @@ wirePositionColumnResize,
 wireOrderColumnResize,
 wireAlertColumnResize,
 columnResizeHandle
-} from "../../trade-book-columns.js?v=14";
+} from "./book-columns.js?v=1";
 
 import {
 openPnlShareModal
-} from "../../trade-pnl-share-modal.js?v=8";
+} from "./pnl-share-modal.js?v=1";
 
 import {
 formatAlertDate,

@@ -40,12 +40,12 @@ const BINGX_TRADE = {
   positionsSyncIntervalMs: 0,
   restPositionsForceRefresh: false,
   restOrdersForceRefresh: false,
-  /* Post-fill lag is real; long delay + diary queue made SL/TP wait 5–10s. */
-  autoStopDelayMs: 200,
-  setStopMaxAttempts: 4,
+  /* Post-fill: IPC upserts position first, then attachAutoStopsAfterOpen. */
+  autoStopDelayMs: 500,
+  setStopMaxAttempts: 5,
   pauseBeforeTpMs: 150,
   reconcileOnOpenDelayMs: 800,
-  attachStopsInMainProcess: false,
+  attachStopsInMainProcess: true,
   passAutoStopUsdOnOpen: true,
   skipSyncPositionAfterClose: true,
   skipSyncPositionAfterStopCancel: true,

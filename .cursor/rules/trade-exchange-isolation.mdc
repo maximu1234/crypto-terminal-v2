@@ -38,6 +38,10 @@ alwaysApply: true
 | Main | `bybit-rest.cjs`, `bybit-trading-stream.cjs` | `bingx-rest.cjs`, `bingx-trading-stream.cjs` | `trading-router.cjs`, `trading-stream.cjs` |
 
 Файлы `js/trade-positions-cache.js`, `trade-chart-overlay.js`,
+`trade-chart-orders.js`, `trade-volume-presets.js`,
+`trade-leverage-settings.js`, `trade-book-columns.js`,
+`trade-pnl-share-modal.js`, `trade-chart-execution-markers.js`,
+`trade-diary-page.js`, `trade-diary-period.js`,
 `trade-diary-page.js`, `trade-diary-detail.js`, `trade-diary-chart.js` и т.д. —
 **только facades** (прокси), без логики биржи. Дневник: бизнес-логика только в
 `js/trade/bybit/diary/*` и `js/trade/bingx/diary/*`. Терминал «История
@@ -54,6 +58,10 @@ alwaysApply: true
 | Renderer | `js/trade/bybit/**` | `js/trade/bingx/**` |
 
 Общие renderer-файлы `trade-positions-cache.js`, `trade-chart-overlay.js`,
+`trade-chart-orders.js`, `trade-volume-presets.js`,
+`trade-leverage-settings.js`, `trade-book-columns.js`,
+`trade-pnl-share-modal.js`, `trade-chart-execution-markers.js`,
+`trade-diary-page.js`, `trade-diary-period.js`,
 `trade-stream-bridge.js`, `trade-auto-stops.js`, `trade-market-entry.js`,
 `trade-book-panel.js`, `trade-diary-page.js`, `trade-diary-detail.js`,
 `trade-diary-chart.js` — только тонкие facades. Биржевая логика живёт только в

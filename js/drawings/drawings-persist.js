@@ -15,7 +15,7 @@ finalizeFibLevels
 import {
 isPositionType,
 positionEntryPrice
-} from "./position.js?v=2";
+} from "./position.js?v=4";
 
 import {
 ensureBrushShape

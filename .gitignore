@@ -2,6 +2,7 @@
 .vercel
 js/supabase-env.js
 .venv-icons/
+tmp-*.png
 desktop/node_modules/
 desktop/dist/
 desktop/site-bundle/

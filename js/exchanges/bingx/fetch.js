@@ -58,6 +58,38 @@ path
 
 }
 
+/** Контракт на паузе / невалидный symbol — ретраи бесполезны. */
+export function isBingxNonRetryableSymbolError(
+err
+){
+
+const msg =
+String(
+err?.message ||
+err ||
+""
+).toLowerCase();
+
+return (
+msg.includes(
+"pause currently"
+) ||
+msg.includes(
+"is pause"
+) ||
+msg.includes(
+"all validted symbols"
+) ||
+msg.includes(
+"all validated symbols"
+) ||
+msg.includes(
+"please verify it"
+)
+);
+
+}
+
 async function fetchJson(
 pathQuery,
 {
@@ -144,6 +176,14 @@ timer
 );
 lastErr =
 err;
+
+if(
+isBingxNonRetryableSymbolError(
+err
+)
+){
+break;
+}
 
 if(
 attempt <

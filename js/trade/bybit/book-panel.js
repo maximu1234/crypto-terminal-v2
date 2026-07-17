@@ -25,11 +25,11 @@ wirePositionColumnResize,
 wireOrderColumnResize,
 wireAlertColumnResize,
 columnResizeHandle
-} from "../../trade-book-columns.js?v=14";
+} from "./book-columns.js?v=1";
 
 import {
 openPnlShareModal
-} from "../../trade-pnl-share-modal.js?v=8";
+} from "./pnl-share-modal.js?v=1";
 
 import {
 formatAlertDate,

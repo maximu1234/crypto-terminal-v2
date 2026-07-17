@@ -9,7 +9,7 @@ import {
   dayKeyFromMs,
   readDiaryDayTrades,
   writeDiaryDayTrades
-} from "../../../trade-diary-storage.js?v=3";
+} from "../../../trade-diary-storage.js?v=4";
 
 export function diaryBuildDetailRequest(trade) {
   return {
