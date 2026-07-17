@@ -188,15 +188,42 @@ Number(
 trade?.closeTimeMs
 );
 const isLong =
-[
-"long",
-"buy"
-].includes(
 String(
 trade?.side ||
 ""
-).toLowerCase()
-);
+).toLowerCase() ===
+"long";
+const isShort =
+String(
+trade?.side ||
+""
+).toLowerCase() ===
+"short";
+
+if(
+!isLong &&
+!isShort
+){
+continue;
+}
+
+if(
+!Number.isFinite(
+openMs
+) ||
+!Number.isFinite(
+closeMs
+) ||
+openMs <=
+0 ||
+closeMs <=
+0 ||
+openMs ===
+closeMs ||
+trade?.sparse
+){
+continue;
+}
 
 if(
 Number.isFinite(

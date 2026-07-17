@@ -12,7 +12,7 @@ wireAutoStopSettings
 
 import {
 loadTradeExchangeModules
-} from "./trade/module-router.js?v=2";
+} from "./trade/module-router.js?v=4";
 
 import {
 getActiveExchangeId

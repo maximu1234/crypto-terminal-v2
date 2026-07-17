@@ -11,6 +11,15 @@ const {
   buildCanonical,
   signPayload
 } = require("./bingx-sign.cjs");
+const {
+  PRIORITY,
+  enqueueBingxRequest,
+  noteBingxRateLimit,
+  noteBingxSuccess,
+  getBingxRateLimitBackoffMs,
+  peekBingxRateLimitBlock,
+  getBingxSchedulerStats
+} = require("./bingx-request-scheduler.cjs");
 
 const EXCHANGE_ID = "bingx";
 const RECV_WINDOW = "5000";
@@ -30,7 +39,6 @@ let assetModeCacheAt = 0;
 let accountDefaultsCredKey = "";
 let accountDefaultsPromise = null;
 let accountDefaultsDoneKey = "";
-let rateLimitUntilMs = 0;
 
 /** Diary closed-PnL cache — avoids re-hitting BingX when revisiting Дневник. */
 const CLOSED_PNL_CACHE_MS = 5 * 60 * 1000;
@@ -103,24 +111,100 @@ function noteRateLimitFromResponse(data) {
   if (!isRateLimitError(data)) {
     return;
   }
-  rateLimitUntilMs = Math.max(rateLimitUntilMs, Date.now() + 60000);
+  noteBingxRateLimit();
 }
 
 function getRateLimitBackoffMs() {
-  return Math.max(0, rateLimitUntilMs - Date.now());
+  return getBingxRateLimitBackoffMs();
 }
 
 function peekRateLimitBlock() {
-  const ms = getRateLimitBackoffMs();
-  if (ms <= 0) {
+  return peekBingxRateLimitBlock();
+}
+
+function inferSignedPriority(method, path, options = {}) {
+  if (options.priority != null) {
+    return options.priority;
+  }
+  const m = String(method || "").toUpperCase();
+  const p = String(path || "");
+  if (m === "POST" || m === "DELETE") {
+    if (p.includes("/userDataStream")) {
+      return PRIORITY.realtime;
+    }
+    return PRIORITY.critical;
+  }
+  if (
+    p.includes("/user/income") ||
+    p.includes("/positionHistory") ||
+    p.includes("/fillHistory") ||
+    p.includes("/allFillOrders")
+  ) {
+    return PRIORITY.background;
+  }
+  if (
+    p.includes("/user/positions") ||
+    p.includes("/trade/openOrders")
+  ) {
+    return PRIORITY.realtime;
+  }
+  if (
+    p.includes("/user/balance") ||
+    p.includes("/trade/leverage") ||
+    p.includes("/trade/marginType") ||
+    p.includes("/positionSide/dual") ||
+    p.includes("/trade/assetMode")
+  ) {
+    return PRIORITY.normal;
+  }
+  if (p.includes("/userDataStream")) {
+    return PRIORITY.realtime;
+  }
+  return PRIORITY.normal;
+}
+
+function inferCoalesceKey(method, path, params = {}, options = {}) {
+  if (options.coalesceKey != null) {
+    return options.coalesceKey;
+  }
+  const m = String(method || "").toUpperCase();
+  if (m !== "GET") {
     return null;
   }
-  return {
-    ok: false,
-    message: "BingX rate limit — подождите",
-    rateLimited: true,
-    retryAfterMs: ms
-  };
+  const p = String(path || "");
+  const symbol = params?.symbol ? String(params.symbol) : "";
+  if (p.includes("/user/positions")) {
+    return "GET:positions";
+  }
+  if (p.includes("/trade/openOrders")) {
+    return symbol ? `GET:openOrders:${symbol}` : "GET:openOrders";
+  }
+  if (p.includes("/user/balance")) {
+    return "GET:balance";
+  }
+  if (p.includes("/user/income")) {
+    return `GET:income:${params.startTime || ""}:${params.endTime || ""}:${
+      params.incomeType || ""
+    }:${symbol}`;
+  }
+  if (p.includes("/positionHistory")) {
+    return `GET:positionHistory:${symbol}:${params.startTs || ""}:${
+      params.endTs || ""
+    }:${params.pageIndex || "1"}`;
+  }
+  if (p.includes("/trade/leverage")) {
+    return `GET:leverage:${symbol}`;
+  }
+  if (p.includes("/trade/marginType")) {
+    return `GET:marginType:${symbol}`;
+  }
+  if (p.includes("/positionSide/dual")) {
+    return "GET:hedgeMode";
+  }
+  if (p.includes("/trade/assetMode")) {
+    return "GET:assetMode";
+  }
+  return `GET:${p}:${symbol}`;
 }
 
 function mapApiError(data) {
@@ -237,44 +321,56 @@ function signedRequest(method, path, params = {}, options = {}) {
     });
   }
 
-  const all = {
-    ...params,
-    timestamp: Date.now(),
-    recvWindow: RECV_WINDOW
-  };
+  const priority = inferSignedPriority(method, path, options);
+  const coalesceKey = inferCoalesceKey(method, path, params, options);
+  const m = String(method || "").toUpperCase();
+  const cancelable =
+    options.cancelable === true ||
+    (m === "GET" && priority >= PRIORITY.background);
 
-  try {
-    validateParams(all);
-  } catch (err) {
-    return Promise.resolve({
-      ok: false,
-      message: err.message
-    });
-  }
+  return enqueueBingxRequest({
+    priority,
+    coalesceKey,
+    allowDuringRateLimit:
+      options.allowDuringRateLimit === true || priority === PRIORITY.critical,
+    cancelable,
+    run: async () => {
+      const all = {
+        ...params,
+        timestamp: Date.now(),
+        recvWindow: RECV_WINDOW
+      };
 
-  const signature = signPayload(creds.apiSecret, all);
-  const signed = `${buildCanonical(all)}&signature=${signature}`;
-  const headers = {
-    "X-BX-APIKEY": creds.apiKey,
-    "X-SOURCE-KEY": SOURCE_KEY
-  };
-  /* POST: body. GET/DELETE: query string (BingX does not read DELETE body). */
-  if (method === "POST") {
-    headers["Content-Type"] = "application/x-www-form-urlencoded";
-  }
+      try {
+        validateParams(all);
+      } catch (err) {
+        return {
+          ok: false,
+          message: err.message
+        };
+      }
 
-  return fetchSignedLoop(creds, method, path, signed, headers, options);
+      const signature = signPayload(creds.apiSecret, all);
+      const signed = `${buildCanonical(all)}&signature=${signature}`;
+      const headers = {
+        "X-BX-APIKEY": creds.apiKey,
+        "X-SOURCE-KEY": SOURCE_KEY
+      };
+      /* POST: body. GET/DELETE: query string (BingX does not read DELETE body). */
+      if (m === "POST") {
+        headers["Content-Type"] = "application/x-www-form-urlencoded";
+      }
+
+      return fetchSignedLoop(creds, m, path, signed, headers, {
+        ...options,
+        /* Scheduler already applied cooldown policy. */
+        allowDuringRateLimit: true
+      });
+    }
+  });
 }
 
 async function fetchSignedLoop(creds, method, path, signed, headers, options = {}) {
-  /* Soft-block GET and mutating calls during backoff to avoid 100410 storms. */
-  if (!options.allowDuringRateLimit) {
-    const blocked = peekRateLimitBlock();
-    if (blocked) {
-      return blocked;
-    }
-  }
-
   let lastNetworkError = null;
   let lastApiError = null;
   const useQuery = method === "GET" || method === "DELETE";
@@ -316,6 +412,7 @@ async function fetchSignedLoop(creds, method, path, signed, headers, options = {
         }
         continue;
       }
+      noteBingxSuccess();
       return { ok: true, data };
     } catch (err) {
       lastNetworkError = {
@@ -494,7 +591,7 @@ async function isHedgeMode() {
     "GET",
     "/openApi/swap/v1/positionSide/dual",
     {},
-    { allowDuringRateLimit: true }
+    { priority: PRIORITY.normal }
   );
   if (!result.ok) {
     return hedgeModeCache === true;
@@ -532,7 +629,7 @@ async function getAssetMode() {
     "GET",
     "/openApi/swap/v1/trade/assetMode",
     {},
-    { allowDuringRateLimit: true }
+    { priority: PRIORITY.normal }
   );
   if (!result.ok) {
     return assetModeCache || "singleAssetMode";
@@ -2351,10 +2448,17 @@ async function fetchBingxIncomeRows(options = {}) {
     params.symbol = toBingxSymbol(options.symbol);
   }
 
+  const reqOpts =
+    options.priority != null
+      ? {
+          priority: options.priority
+        }
+      : {};
   const result = await signedRequest(
     "GET",
     "/openApi/swap/v2/user/income",
-    params
+    params,
+    reqOpts
   );
   if (!result.ok) {
     return result;
@@ -2368,7 +2472,12 @@ async function fetchBingxIncomeRows(options = {}) {
 /** BingX positionHistory allows ≤3 months per request. */
 const POSITION_HISTORY_MAX_SPAN_MS = 90 * 24 * 60 * 60 * 1000;
 
-async function fetchBingxPositionHistoryPages(symbol, startTs, endTs) {
+async function fetchBingxPositionHistoryPages(
+  symbol,
+  startTs,
+  endTs,
+  options = {}
+) {
   const sym = toBingxSymbol(symbol);
   if (!sym) {
     return { ok: false, message: "Symbol required" };
@@ -2376,6 +2485,8 @@ async function fetchBingxPositionHistoryPages(symbol, startTs, endTs) {
   const rows = [];
   let windowStart = Math.floor(startTs);
   const rangeEnd = Math.floor(endTs);
+  const priority =
+    options.priority != null ? options.priority : PRIORITY.background;
 
   while (windowStart <= rangeEnd) {
     const windowEnd = Math.min(
@@ -2388,11 +2499,13 @@ async function fetchBingxPositionHistoryPages(symbol, startTs, endTs) {
         "/openApi/swap/v1/trade/positionHistory",
         {
           symbol: sym,
-          currency: "USDT",
           startTs: String(windowStart),
           endTs: String(windowEnd),
           pageIndex: String(page),
           pageSize: "100"
+        },
+        {
+          priority
         }
       );
       if (!result.ok) {
@@ -2412,7 +2525,6 @@ async function fetchBingxPositionHistoryPages(symbol, startTs, endTs) {
       break;
     }
     windowStart = windowEnd + 1;
-    await sleep(200);
   }
 
   return { ok: true, rows };
@@ -2522,8 +2634,22 @@ function mapBingxPositionHistoryRow(row) {
     row.positionSide || row.position_side || row.side || ""
   ).toUpperCase();
   /* Diary + chart markers expect long|short (Bybit closed-PnL shape). */
-  const side =
+  let side =
     sideRaw === "SHORT" || sideRaw === "SELL" ? "short" : "long";
+  /* One-way mode often reports BOTH — infer from entry/exit vs PnL. */
+  if (
+    (sideRaw === "BOTH" || !sideRaw) &&
+    avgEntryPrice > 0 &&
+    avgExitPrice > 0 &&
+    Number.isFinite(pnl)
+  ) {
+    const priceUp = avgExitPrice >= avgEntryPrice;
+    if (pnl >= 0) {
+      side = priceUp ? "long" : "short";
+    } else {
+      side = priceUp ? "short" : "long";
+    }
+  }
   const positionId = String(row.positionId || row.position_id || "");
 
   return {
@@ -2565,11 +2691,13 @@ function mapBingxIncomeToSparseTrade(row) {
     symbol,
     closeTimeMs,
     openTimeMs: closeTimeMs,
+    listCloseTimeMs: closeTimeMs,
     durationMs: 0,
     pnlUsd: pnl,
     pnlPct: 0,
     commissionUsd: 0,
-    side: "long",
+    /* Unknown until positionHistory enrich — do not default to long. */
+    side: "",
     qty: 0,
     avgEntryPrice: 0,
     avgExitPrice: 0,
@@ -2615,20 +2743,31 @@ function mapBingxFillExecution(row) {
   ) {
     return null;
   }
-  const sideRaw = String(
-    row.side || row.orderSide || row.positionSide || ""
-  ).toUpperCase();
+  const sideRaw = String(row.side || row.orderSide || "").toUpperCase();
+  if (
+    sideRaw !== "BUY" &&
+    sideRaw !== "SELL" &&
+    sideRaw !== "ASK" &&
+    sideRaw !== "BID"
+  ) {
+    return null;
+  }
   const side =
-    sideRaw === "SELL" ||
-    sideRaw === "ASK" ||
-    sideRaw === "SHORT"
-      ? "Sell"
-      : "Buy";
+    sideRaw === "SELL" || sideRaw === "ASK" ? "Sell" : "Buy";
+  const positionSideRaw = String(
+    row.positionSide || row.position_side || ""
+  ).toUpperCase();
+  const positionSide =
+    positionSideRaw === "LONG" || positionSideRaw === "SHORT"
+      ? positionSideRaw
+      : "";
   const execFee = Math.abs(Number(row.fee ?? row.commission) || 0);
   const execValue = execPrice * execQty;
   return {
+    symbol: toCanonicalSymbol(row.symbol),
     execTimeMs,
     side,
+    positionSide,
     execPrice,
     execQty,
     execFee,
@@ -2640,7 +2779,11 @@ function mapBingxFillExecution(row) {
 }
 
 function synthesizeBingxTradeExecutions(options = {}) {
-  const isLong = String(options.side || "").toLowerCase() !== "short";
+  const sideNorm = String(options.side || "").toLowerCase();
+  if (sideNorm !== "long" && sideNorm !== "short") {
+    return [];
+  }
+  const isLong = sideNorm === "long";
   const openMs = Number(options.openTimeMs);
   const closeMs = Number(options.closeTimeMs);
   const entry = Number(options.avgEntryPrice);
@@ -2681,6 +2824,9 @@ function synthesizeBingxTradeExecutions(options = {}) {
   return out;
 }
 
+/** BingX fillHistory / allFillOrders — keep windows ≤ ~30 days. */
+const FILL_HISTORY_MAX_SPAN_MS = 30 * 24 * 60 * 60 * 1000;
+
 /**
  * Fills only — never pass positionId as orderId (BingX rejects / returns empty).
  * allFillOrders max useful window ~30d; diary detail uses a tight trade window.
@@ -2689,9 +2835,16 @@ async function fetchBingxFillRows({
   symbol,
   startTs,
   endTs,
-  orderId
+  orderId,
+  priority
 }) {
   const bingxSym = toBingxSymbol(symbol);
+  const reqOpts =
+    priority != null
+      ? {
+          priority
+        }
+      : {};
   const baseParams = {
     startTs: String(Math.floor(startTs)),
     endTs: String(Math.floor(endTs))
@@ -2711,10 +2864,12 @@ async function fetchBingxFillRows({
         symbol: bingxSym,
         pageIndex: "1",
         pageSize: "100"
-      }
+      },
+      reqOpts
     );
     if (hist.ok) {
       const rows = extractBingxList(hist.data, [
+        "fill_history_orders",
         "fill_orders",
         "fillOrders",
         "list",
@@ -2740,7 +2895,8 @@ async function fetchBingxFillRows({
   const allFills = await signedRequest(
     "GET",
     "/openApi/swap/v2/trade/allFillOrders",
-    allParams
+    allParams,
+    reqOpts
   );
   if (!allFills.ok) {
     return allFills;
@@ -2756,6 +2912,46 @@ async function fetchBingxFillRows({
       "data"
     ])
   };
+}
+
+async function fetchBingxFillRowsPaged(
+  symbol,
+  startTs,
+  endTs,
+  options = {}
+) {
+  const sym = stripSymbolSuffix(symbol);
+  if (!sym) {
+    return { ok: false, message: "Symbol required" };
+  }
+  const rows = [];
+  let windowStart = Math.floor(startTs);
+  const rangeEnd = Math.floor(endTs);
+  const priority =
+    options.priority != null ? options.priority : PRIORITY.background;
+
+  while (windowStart <= rangeEnd) {
+    const windowEnd = Math.min(
+      rangeEnd,
+      windowStart + FILL_HISTORY_MAX_SPAN_MS
+    );
+    const chunk = await fetchBingxFillRows({
+      symbol: sym,
+      startTs: windowStart,
+      endTs: windowEnd,
+      priority
+    });
+    if (!chunk.ok) {
+      return chunk;
+    }
+    rows.push(...(chunk.rows || []));
+    if (windowEnd >= rangeEnd) {
+      break;
+    }
+    windowStart = windowEnd + 1;
+  }
+
+  return { ok: true, rows };
 }
 
 function vwapFromExecutions(rows) {
@@ -2775,15 +2971,166 @@ function vwapFromExecutions(rows) {
   return qty > 0 ? notional / qty : 0;
 }
 
+/**
+ * Build closed position cycles from fills using BingX positionSide.
+ * LONG: Buy opens/adds, Sell closes. SHORT: Sell opens/adds, Buy closes.
+ * The side is explicit exchange data — never inferred from chronology.
+ */
+function buildBingxRoundTripsFromPositionFills(fills) {
+  const sorted = (fills || [])
+    .filter(
+      (ex) =>
+        ex &&
+        (ex.positionSide === "LONG" || ex.positionSide === "SHORT") &&
+        Number(ex.execTimeMs) > 0 &&
+        Number(ex.execQty) > 0
+    )
+    .sort((a, b) => a.execTimeMs - b.execTimeMs);
+  const out = [];
+
+  for (const positionSide of ["LONG", "SHORT"]) {
+    const entrySide = positionSide === "LONG" ? "Buy" : "Sell";
+    const exitSide = positionSide === "LONG" ? "Sell" : "Buy";
+    let openQty = 0;
+    let entries = [];
+    let exits = [];
+
+    for (const ex of sorted) {
+      if (ex.positionSide !== positionSide) {
+        continue;
+      }
+      const qty = Math.abs(Number(ex.execQty) || 0);
+      if (!(qty > 0)) {
+        continue;
+      }
+      if (ex.side === entrySide) {
+        if (!(openQty > 1e-12)) {
+          entries = [];
+          exits = [];
+        }
+        entries.push(ex);
+        openQty += qty;
+        continue;
+      }
+      if (ex.side !== exitSide || !(openQty > 1e-12)) {
+        continue;
+      }
+
+      exits.push(ex);
+      openQty -= qty;
+      if (openQty > 1e-9) {
+        continue;
+      }
+
+      const openTimeMs = entries[0]?.execTimeMs;
+      const closeTimeMs = exits[exits.length - 1]?.execTimeMs;
+      if (closeTimeMs > openTimeMs) {
+        const entryQty = entries.reduce(
+          (sum, row) => sum + Number(row.execQty || 0),
+          0
+        );
+        out.push({
+          side: positionSide === "SHORT" ? "short" : "long",
+          positionSide,
+          openTimeMs,
+          closeTimeMs,
+          durationMs: closeTimeMs - openTimeMs,
+          avgEntryPrice: vwapFromExecutions(entries),
+          avgExitPrice: vwapFromExecutions(exits),
+          qty: entryQty,
+          entries: entries.slice(),
+          exits: exits.slice(),
+          executions: [...entries, ...exits].sort(
+            (a, b) => a.execTimeMs - b.execTimeMs
+          ),
+          sparse: false
+        });
+      }
+      openQty = 0;
+      entries = [];
+      exits = [];
+    }
+  }
+
+  return out.sort((a, b) => a.closeTimeMs - b.closeTimeMs);
+}
+
+function matchBingxRoundTripByAnchor(roundTrips, anchorTimeMs) {
+  const anchorMs = Number(anchorTimeMs);
+  if (!Number.isFinite(anchorMs)) {
+    return null;
+  }
+  const closeTolMs = 5 * 60 * 1000;
+  const openTolMs = 5 * 60 * 1000;
+  let best = null;
+  let bestScore = Infinity;
+  for (const trade of roundTrips || []) {
+    const openMs = Number(trade.openTimeMs);
+    const closeMs = Number(trade.closeTimeMs);
+    if (!(closeMs > openMs)) {
+      continue;
+    }
+    const closeDist = Math.abs(closeMs - anchorMs);
+    const openDist = Math.abs(openMs - anchorMs);
+    const contains = openMs <= anchorMs && anchorMs <= closeMs;
+    let score = Infinity;
+    if (closeDist <= closeTolMs) {
+      score = closeDist;
+    } else if (openDist <= openTolMs) {
+      /* Income time often equals open fill, not close. */
+      score = 1e12 + openDist;
+    } else if (contains) {
+      score = 2e12 + Math.min(closeDist, openDist);
+    }
+    if (score < bestScore) {
+      bestScore = score;
+      best = trade;
+    }
+  }
+  return best;
+}
+
+/** @deprecated alias — prefer matchBingxRoundTripByAnchor */
+function matchBingxRoundTripByClose(roundTrips, closeTimeMs) {
+  return matchBingxRoundTripByAnchor(roundTrips, closeTimeMs);
+}
+
+function executionsFromBingxClosedTrades(trades) {
+  const out = [];
+  for (const trade of trades || []) {
+    const openMs = Number(trade?.openTimeMs);
+    const closeMs = Number(trade?.closeTimeMs);
+    if (
+      !Number.isFinite(openMs) ||
+      !Number.isFinite(closeMs) ||
+      openMs <= 0 ||
+      closeMs <= 0 ||
+      openMs === closeMs
+    ) {
+      continue;
+    }
+    const side = String(trade?.side || "").toLowerCase();
+    if (side !== "long" && side !== "short") {
+      continue;
+    }
+    const isLong = side === "long";
+    out.push({
+      execTimeMs: openMs,
+      side: isLong ? "Buy" : "Sell"
+    });
+    out.push({
+      execTimeMs: closeMs,
+      side: isLong ? "Sell" : "Buy"
+    });
+  }
+  return out;
+}
+
 async function resolveBingxTradePrices(options = {}) {
   let avgEntryPrice = Number(options.avgEntryPrice) || 0;
   let avgExitPrice = Number(options.avgExitPrice) || 0;
   let qty = Math.abs(Number(options.qty) || 0);
   let side = options.side;
-
-  if (avgEntryPrice > 0 && avgExitPrice > 0) {
-    return { avgEntryPrice, avgExitPrice, qty, side };
-  }
 
   const symbol = stripSymbolSuffix(options.symbol);
   const openTimeMs = Number(options.openTimeMs);
@@ -2791,6 +3138,12 @@ async function resolveBingxTradePrices(options = {}) {
   const positionId = String(
     options.positionId || options.orderId || ""
   );
+  const sparse =
+    options.sparse === true ||
+    options.sparse === "true" ||
+    (Number.isFinite(openTimeMs) &&
+      Number.isFinite(closeTimeMs) &&
+      openTimeMs === closeTimeMs);
 
   if (
     !symbol ||
@@ -2801,32 +3154,33 @@ async function resolveBingxTradePrices(options = {}) {
 
   const hist = await fetchBingxPositionHistoryPages(
     symbol,
-    Math.max(0, (Number.isFinite(openTimeMs) ? openTimeMs : closeTimeMs) - 7 * 24 * 60 * 60 * 1000),
+    Math.max(
+      0,
+      (Number.isFinite(openTimeMs) && openTimeMs > 0 && openTimeMs < closeTimeMs
+        ? openTimeMs
+        : closeTimeMs) -
+        14 * 24 * 60 * 60 * 1000
+    ),
     closeTimeMs + 60 * 60 * 1000
   );
-  if (!hist.ok) {
-    return { avgEntryPrice, avgExitPrice, qty, side };
-  }
 
   const want = toCanonicalSymbol(symbol);
-  const mapped = (hist.rows || [])
+  const mapped = (hist.ok ? hist.rows || [] : [])
     .map(mapBingxPositionHistoryRow)
     .filter(Boolean)
     .filter((t) => t.symbol === want);
 
   let match =
-    positionId && !String(options.sparse || "")
+    positionId && !sparse
       ? mapped.find(
           (t) =>
             t.positionId === positionId || t.orderId === positionId
         )
       : null;
 
-  /* Sparse income rows: open===close and orderId is tranId — match close time only. */
+  /* Match by close/open/contain — income time may be open or close. */
   if (!match) {
-    match = mapped.find(
-      (t) => Math.abs(t.closeTimeMs - closeTimeMs) <= 60 * 1000
-    );
+    match = matchBingxRoundTripByAnchor(mapped, closeTimeMs);
   }
 
   if (!match && mapped.length === 1) {
@@ -2834,10 +3188,11 @@ async function resolveBingxTradePrices(options = {}) {
   }
 
   if (match) {
-    avgEntryPrice = avgEntryPrice || match.avgEntryPrice || 0;
-    avgExitPrice = avgExitPrice || match.avgExitPrice || 0;
-    qty = qty || match.qty || 0;
-    side = side || match.side;
+    avgEntryPrice = match.avgEntryPrice || avgEntryPrice || 0;
+    avgExitPrice = match.avgExitPrice || avgExitPrice || 0;
+    qty = match.qty || qty || 0;
+    /* positionHistory side is authoritative (short opens with Sell). */
+    side = match.side || side;
     return {
       avgEntryPrice,
       avgExitPrice,
@@ -2849,49 +3204,119 @@ async function resolveBingxTradePrices(options = {}) {
     };
   }
 
+  /*
+   * BingX returns an empty positionHistory for historical One-way trades.
+   * allFillOrders still carries explicit positionSide=LONG|SHORT, so build
+   * position cycles from that authoritative field.
+   */
+  /* Sparse income often stamps open time as close — look forward for exit. */
+  const lookForwardMs =
+    sparse ||
+    !(
+      Number.isFinite(openTimeMs) &&
+      openTimeMs > 0 &&
+      openTimeMs < closeTimeMs
+    )
+      ? 7 * 24 * 60 * 60 * 1000
+      : 15 * 60 * 1000;
+  const fillResult = await fetchBingxFillRowsPaged(
+    symbol,
+    Math.max(0, closeTimeMs - FILL_HISTORY_MAX_SPAN_MS),
+    closeTimeMs + lookForwardMs,
+    { priority: PRIORITY.normal }
+  );
+  if (fillResult.ok) {
+    const executions = (fillResult.rows || [])
+      .map(mapBingxFillExecution)
+      .filter(Boolean)
+      .filter((ex) => !ex.symbol || ex.symbol === want);
+    const fillTrade = matchBingxRoundTripByAnchor(
+      buildBingxRoundTripsFromPositionFills(executions),
+      closeTimeMs
+    );
+    if (fillTrade) {
+      return {
+        avgEntryPrice: fillTrade.avgEntryPrice || avgEntryPrice || 0,
+        avgExitPrice: fillTrade.avgExitPrice || avgExitPrice || 0,
+        qty: fillTrade.qty || qty || 0,
+        side: fillTrade.side,
+        openTimeMs: fillTrade.openTimeMs,
+        closeTimeMs: fillTrade.closeTimeMs,
+        entries: fillTrade.entries,
+        exits: fillTrade.exits,
+        executions: fillTrade.executions,
+        source: "position-side-fills"
+      };
+    }
+  }
+
   return { avgEntryPrice, avgExitPrice, qty, side };
 }
 
 async function getTradeDiaryDetail(options = {}) {
   const symbol = stripSymbolSuffix(options.symbol);
-  let openTimeMs = Number(options.openTimeMs);
-  let closeTimeMs = Number(options.closeTimeMs);
+  const anchorOpenMs = Number(options.openTimeMs);
+  const anchorCloseMs = Number(options.closeTimeMs);
 
   if (
     !symbol ||
-    !Number.isFinite(openTimeMs) ||
-    !Number.isFinite(closeTimeMs)
+    !Number.isFinite(anchorOpenMs) ||
+    !Number.isFinite(anchorCloseMs)
   ) {
     return { ok: false, message: "Некорректные параметры сделки" };
   }
 
-  const resolved = await resolveBingxTradePrices(options);
-  let avgEntryPrice = resolved.avgEntryPrice;
-  let avgExitPrice = resolved.avgExitPrice;
-  let qty = resolved.qty;
-  let side = resolved.side || options.side;
-  if (Number.isFinite(resolved.openTimeMs) && resolved.openTimeMs > 0) {
+  /*
+   * Truth model (matches BingX UI «История сделок»):
+   * positionHistory → side, openTime, closeTime, prices, qty, duration.
+   * fills → table rows only, loaded inside that open/close window.
+   * Do NOT infer side from Buy/Sell chronology (short opens with Sell).
+   */
+  const resolved = await resolveBingxTradePrices({
+    ...options,
+    sparse: options.sparse === true || options.sparse === "true"
+  });
+
+  let openTimeMs = anchorOpenMs;
+  let closeTimeMs = anchorCloseMs;
+  let side = String(resolved.side || options.side || "").toLowerCase();
+  let avgEntryPrice = Number(resolved.avgEntryPrice) || 0;
+  let avgExitPrice = Number(resolved.avgExitPrice) || 0;
+  let qty = Number(resolved.qty) || 0;
+  const positionId = resolved.positionId || options.positionId || "";
+
+  if (
+    Number.isFinite(resolved.openTimeMs) &&
+    Number.isFinite(resolved.closeTimeMs) &&
+    resolved.openTimeMs > 0 &&
+    resolved.closeTimeMs > resolved.openTimeMs
+  ) {
     openTimeMs = resolved.openTimeMs;
-  }
-  if (Number.isFinite(resolved.closeTimeMs) && resolved.closeTimeMs > 0) {
     closeTimeMs = resolved.closeTimeMs;
   }
 
-  /* Prefer a window that covers the position; sparse rows need wider lookback. */
-  const spanPadMs =
-    avgEntryPrice > 0
-      ? 5 * 60 * 1000
-      : 24 * 60 * 60 * 1000;
-  const startTs = Math.max(0, openTimeMs - spanPadMs);
-  const endTs = closeTimeMs + 5 * 60 * 1000;
-  const fillResult = await fetchBingxFillRows({
-    symbol,
-    startTs,
-    endTs
-  });
+  const isShort = side === "short";
+  const isLong = side === "long";
+  const sideKnown = isShort || isLong;
+  const openSideFinal = isShort ? "Sell" : "Buy";
+  const closeSideFinal = isShort ? "Buy" : "Sell";
 
-  let executions = [];
-  if (fillResult.ok) {
+  const fillPadMs = 15 * 60 * 1000;
+  const startTs = Math.max(0, Math.min(openTimeMs, closeTimeMs) - fillPadMs);
+  const endTs = Math.max(openTimeMs, closeTimeMs) + fillPadMs;
+  let fillResult = { ok: true, rows: [] };
+  let executions = Array.isArray(resolved.executions)
+    ? resolved.executions.slice()
+    : [];
+  if (!executions.length) {
+    fillResult = await fetchBingxFillRows({
+      symbol,
+      startTs,
+      endTs,
+      priority: PRIORITY.normal
+    });
+  }
+  if (fillResult.ok && !executions.length) {
     const want = toCanonicalSymbol(symbol);
     executions = (fillResult.rows || [])
       .filter((row) => {
@@ -2904,25 +3329,20 @@ async function getTradeDiaryDetail(options = {}) {
       .sort((a, b) => a.execTimeMs - b.execTimeMs);
   }
 
-  const isShort = String(side || "").toLowerCase() === "short";
-  let openSideFinal = isShort ? "Sell" : "Buy";
-  let closeSideFinal = isShort ? "Buy" : "Sell";
-
-  /* Infer side from fills when income sparse forced "long". */
-  if (executions.length && (!side || options.sparse || qty <= 0)) {
-    const buys = executions.filter((ex) => ex.side === "Buy");
-    const sells = executions.filter((ex) => ex.side === "Sell");
-    if (buys.length && sells.length) {
-      const firstBuy = buys[0].execTimeMs;
-      const firstSell = sells[0].execTimeMs;
-      side = firstBuy <= firstSell ? "long" : "short";
-      openSideFinal = side === "short" ? "Sell" : "Buy";
-      closeSideFinal = side === "short" ? "Buy" : "Sell";
+  let entries = Array.isArray(resolved.entries)
+    ? resolved.entries.slice()
+    : [];
+  let exits = Array.isArray(resolved.exits)
+    ? resolved.exits.slice()
+    : [];
+  if (sideKnown) {
+    if (!entries.length) {
+      entries = executions.filter((ex) => ex.side === openSideFinal);
+    }
+    if (!exits.length) {
+      exits = executions.filter((ex) => ex.side === closeSideFinal);
     }
   }
-
-  let entries = executions.filter((ex) => ex.side === openSideFinal);
-  let exits = executions.filter((ex) => ex.side === closeSideFinal);
 
   if (!avgEntryPrice && entries.length) {
     avgEntryPrice = vwapFromExecutions(entries);
@@ -2930,13 +3350,13 @@ async function getTradeDiaryDetail(options = {}) {
   if (!avgExitPrice && exits.length) {
     avgExitPrice = vwapFromExecutions(exits);
   }
-  if (!qty) {
+  if (!qty && sideKnown) {
     const entryQty = entries.reduce((s, ex) => s + ex.execQty, 0);
     const exitQty = exits.reduce((s, ex) => s + ex.execQty, 0);
     qty = Math.max(entryQty, exitQty);
   }
 
-  if (!executions.length) {
+  if (!executions.length && sideKnown) {
     executions = synthesizeBingxTradeExecutions({
       side,
       openTimeMs,
@@ -2944,50 +3364,40 @@ async function getTradeDiaryDetail(options = {}) {
       avgEntryPrice,
       avgExitPrice,
       qty,
-      positionId: resolved.positionId || options.positionId,
+      positionId,
       orderId: options.orderId
     });
-    entries = executions.filter((ex) => ex.side === openSideFinal);
-    exits = executions.filter((ex) => ex.side === closeSideFinal);
-  } else if (
-    (!entries.length || !exits.length) &&
-    (avgEntryPrice > 0 || avgExitPrice > 0)
-  ) {
-    const synth = synthesizeBingxTradeExecutions({
-      side,
-      openTimeMs,
-      closeTimeMs,
-      avgEntryPrice,
-      avgExitPrice,
-      qty,
-      positionId: resolved.positionId || options.positionId,
-      orderId: options.orderId
-    });
-    if (!entries.length) {
-      executions.push(...synth.filter((ex) => ex.side === openSideFinal));
-    }
-    if (!exits.length) {
-      executions.push(...synth.filter((ex) => ex.side === closeSideFinal));
-    }
-    executions.sort((a, b) => a.execTimeMs - b.execTimeMs);
     entries = executions.filter((ex) => ex.side === openSideFinal);
     exits = executions.filter((ex) => ex.side === closeSideFinal);
   }
 
-  const entryFromFills = vwapFromExecutions(entries);
-  const exitFromFills = vwapFromExecutions(exits);
+  /* Prefer exact fill timestamps inside the PH window; never invent a new day. */
+  let entryMs = openTimeMs;
+  let exitMs = closeTimeMs;
+  if (sideKnown && entries.length) {
+    entryMs = entries[0].execTimeMs;
+  }
+  if (sideKnown && exits.length) {
+    exitMs = exits[exits.length - 1].execTimeMs;
+  }
 
   return {
     ok: true,
     executions,
     entries,
     exits,
-    avgEntryPrice: entryFromFills || avgEntryPrice,
-    avgExitPrice: exitFromFills || avgExitPrice,
+    side: isShort ? "short" : isLong ? "long" : "",
+    openTimeMs: entryMs,
+    closeTimeMs: exitMs,
+    durationMs: Math.max(0, exitMs - entryMs),
+    avgEntryPrice: avgEntryPrice || 0,
+    avgExitPrice: avgExitPrice || 0,
+    positionId,
     fillsOk: !!fillResult.ok,
     fillsMessage: fillResult.ok ? null : fillResult.message || null
   };
 }
+
 
 function closedPnlCacheKey(startTime, endTime, symbol) {
   return `${Math.floor(startTime)}:${Math.floor(endTime)}:${symbol || "*"}`;
@@ -3041,9 +3451,14 @@ function serveClosedPnlCacheOrBlock(key, blocked) {
 }
 
 /**
- * BingX diary: income → unique symbols (cap 40) → per-symbol positionHistory.
- * Public API requires symbol; website all-pairs history is not available here.
- * Successful loads cached ~5 min to survive Terminal ↔ Diary navigation.
+ * BingX diary list: income-first (PnL $ usable immediately).
+ * No O(symbols)×positionHistory fan-out on boot — enrich lazily via
+ * getTradeDiaryDetail when the user expands a trade.
+ *
+ * Single-symbol requests (Terminal «История сделок»):
+ * positionHistory + income + one paged fillHistory window → real open/close
+ * and `executions` for chart markers (positionHistory alone is incomplete:
+ * ~1 month / hedge-only / missing openTime).
  */
 async function getClosedPnlHistory(options = {}) {
   const endTime = Number.isFinite(Number(options.endTime))
@@ -3068,174 +3483,270 @@ async function getClosedPnlHistory(options = {}) {
     }
     const cached = readClosedPnlCache(cacheKey);
     if (cached) {
-      return {
-        ...cached,
-        fromCache: true,
-        stale: false
-      };
+      /* Invalidate caches created before positionSide-aware fill cycles. */
+      if (
+        symbolFilter &&
+        cached.markerSchema !== 6
+      ) {
+        closedPnlCacheByKey.delete(cacheKey);
+      } else if (
+        symbolFilter &&
+        Array.isArray(cached.trades) &&
+        cached.trades.some(
+          (t) =>
+            t?.sparse ||
+            !Number.isFinite(Number(t?.openTimeMs)) ||
+            Number(t.openTimeMs) === Number(t.closeTimeMs)
+        )
+      ) {
+        closedPnlCacheByKey.delete(cacheKey);
+      } else {
+        return {
+          ...cached,
+          fromCache: true,
+          stale: false
+        };
+      }
     }
   } else {
     const blocked = peekRateLimitBlock();
     if (blocked) {
       return serveClosedPnlCacheOrBlock(cacheKey, blocked);
     }
+    if (symbolFilter) {
+      closedPnlCacheByKey.delete(cacheKey);
+    }
   }
 
-  let symbols = symbolFilter ? [symbolFilter] : [];
+  /*
+   * Terminal markers use explicit exchange position direction:
+   * positionHistory when available; otherwise allFillOrders.positionSide.
+   * Buy/Sell chronology never decides Long/Short.
+   */
+  if (symbolFilter) {
+    const want = toCanonicalSymbol(symbolFilter);
+    const hist = await fetchBingxPositionHistoryPages(
+      symbolFilter,
+      Math.max(0, startTime - 2 * 24 * 60 * 60 * 1000),
+      endTime + 60 * 60 * 1000
+    );
+    if (!hist.ok && hist.rateLimited) {
+      return serveClosedPnlCacheOrBlock(cacheKey, hist);
+    }
 
-  if (!symbols.length) {
-    const incomeResult = await fetchBingxIncomeRows({
-      startTime,
-      endTime,
-      incomeType: "REALIZED_PNL"
-    });
-    if (!incomeResult.ok) {
-      if (incomeResult.rateLimited) {
-        return serveClosedPnlCacheOrBlock(cacheKey, incomeResult);
+    let trades = (hist.ok ? hist.rows || [] : [])
+      .map(mapBingxPositionHistoryRow)
+      .filter(Boolean)
+      .filter((t) => t.symbol === want)
+      .filter(
+        (t) =>
+          t.openTimeMs > 0 &&
+          t.closeTimeMs > t.openTimeMs &&
+          t.closeTimeMs >= startTime &&
+          t.closeTimeMs <= endTime
+      )
+      .map((t) => ({ ...t, sparse: false }));
+    let source = "position-history-v6";
+    let partial = false;
+
+    if (!trades.length) {
+      const fills = await fetchBingxFillRowsPaged(
+        symbolFilter,
+        Math.max(0, endTime - FILL_HISTORY_MAX_SPAN_MS),
+        endTime + 15 * 60 * 1000,
+        { priority: PRIORITY.normal }
+      );
+      if (!fills.ok && fills.rateLimited) {
+        return serveClosedPnlCacheOrBlock(cacheKey, fills);
       }
-      return incomeResult;
-    }
-    const seen = new Set();
-    for (const row of incomeResult.rows || []) {
-      const sym = toCanonicalSymbol(row?.symbol);
-      if (sym) {
-        seen.add(sym);
+      if (fills.ok) {
+        trades = buildBingxRoundTripsFromPositionFills(
+          (fills.rows || [])
+            .map(mapBingxFillExecution)
+            .filter(Boolean)
+            .filter((ex) => !ex.symbol || ex.symbol === want)
+        ).filter(
+          (t) =>
+            t.closeTimeMs >= startTime &&
+            t.closeTimeMs <= endTime
+        );
+        source = "position-side-fills-v6";
+      } else {
+        partial = true;
       }
     }
-    symbols = [...seen].slice(0, 40);
+
+    trades.sort((a, b) => b.closeTimeMs - a.closeTimeMs);
+    const executions = executionsFromBingxClosedTrades(trades);
+
+    const result = {
+      ok: true,
+      trades,
+      executions,
+      sparse: false,
+      enriched: true,
+      partial,
+      historyFails: hist.ok ? 0 : 1,
+      historyAttempted: 1,
+      symbolsCapped: false,
+      source,
+      markerSchema: 6
+    };
+    writeClosedPnlCache(cacheKey, result);
+    return result;
+  }
+
+  const incomeResult = await fetchBingxIncomeRows({
+    startTime,
+    endTime,
+    incomeType: "REALIZED_PNL"
+  });
+  if (!incomeResult.ok) {
+    if (incomeResult.rateLimited) {
+      return serveClosedPnlCacheOrBlock(cacheKey, incomeResult);
+    }
+    return incomeResult;
   }
 
   const trades = [];
   const seenKeys = new Set();
-  let historyFails = 0;
-  const historyAttempted = symbols.length;
-
-  for (let i = 0; i < symbols.length; i++) {
-    if (i > 0) {
-      await sleep(250);
-    }
-    const hist = await fetchBingxPositionHistoryPages(
-      symbols[i],
-      startTime,
-      endTime
-    );
-    if (!hist.ok) {
-      if (hist.rateLimited) {
-        /* Stop early — remaining symbols would only extend the ban. */
-        if (trades.length) {
-          break;
-        }
-        return serveClosedPnlCacheOrBlock(cacheKey, hist);
-      }
-      historyFails++;
+  for (const row of incomeResult.rows || []) {
+    const trade = mapBingxIncomeToSparseTrade(row);
+    if (!trade) {
       continue;
     }
-    for (const row of hist.rows || []) {
-      const trade = mapBingxPositionHistoryRow(row);
-      if (!trade) {
-        continue;
-      }
-      if (trade.closeTimeMs < startTime || trade.closeTimeMs > endTime) {
-        continue;
-      }
-      const key = `${trade.symbol}:${trade.orderId || trade.closeTimeMs}:${trade.openTimeMs}`;
-      if (seenKeys.has(key)) {
-        continue;
-      }
-      seenKeys.add(key);
-      trades.push(trade);
-    }
-  }
-
-  if (!trades.length) {
-    const incomeResult = await fetchBingxIncomeRows({
-      startTime,
-      endTime,
-      incomeType: "REALIZED_PNL",
-      symbol: symbolFilter || undefined
-    });
-    if (incomeResult.ok) {
-      for (const row of incomeResult.rows || []) {
-        const trade = mapBingxIncomeToSparseTrade(row);
-        if (!trade) {
-          continue;
-        }
-        if (symbolFilter && trade.symbol !== toCanonicalSymbol(symbolFilter)) {
-          continue;
-        }
-        if (trade.closeTimeMs < startTime || trade.closeTimeMs > endTime) {
-          continue;
-        }
-        const key = `income:${trade.symbol}:${trade.orderId}`;
-        if (seenKeys.has(key)) {
-          continue;
-        }
-        seenKeys.add(key);
-        trades.push(trade);
-      }
-    } else if (incomeResult.rateLimited && !trades.length) {
-      return serveClosedPnlCacheOrBlock(cacheKey, incomeResult);
-    }
-  }
-
-  /* Try to upgrade sparse rows with positionHistory prices (close-time match). */
-  const sparseBySymbol = new Map();
-  for (const trade of trades) {
-    if (!trade.sparse && trade.avgEntryPrice > 0) {
+    if (trade.closeTimeMs < startTime || trade.closeTimeMs > endTime) {
       continue;
     }
-    if (!sparseBySymbol.has(trade.symbol)) {
-      sparseBySymbol.set(trade.symbol, []);
-    }
-    sparseBySymbol.get(trade.symbol).push(trade);
-  }
-
-  for (const [sym, sparseTrades] of sparseBySymbol) {
-    await sleep(300);
-    const hist = await fetchBingxPositionHistoryPages(sym, startTime, endTime);
-    if (!hist.ok) {
-      if (hist.rateLimited) {
-        break;
-      }
+    const key = `income:${trade.symbol}:${trade.orderId}`;
+    if (seenKeys.has(key)) {
       continue;
     }
-    const mapped = (hist.rows || [])
-      .map(mapBingxPositionHistoryRow)
-      .filter(Boolean);
-    for (const sparse of sparseTrades) {
-      const match = mapped.find(
-        (t) => Math.abs(t.closeTimeMs - sparse.closeTimeMs) <= 60 * 1000
-      );
-      if (!match) {
-        continue;
-      }
-      sparse.openTimeMs = match.openTimeMs;
-      sparse.closeTimeMs = match.closeTimeMs;
-      sparse.durationMs = match.durationMs;
-      sparse.avgEntryPrice = match.avgEntryPrice;
-      sparse.avgExitPrice = match.avgExitPrice;
-      sparse.qty = match.qty;
-      sparse.side = match.side;
-      sparse.commissionUsd = match.commissionUsd;
-      sparse.pnlPct = match.pnlPct;
-      sparse.leverage = match.leverage;
-      sparse.positionId = match.positionId;
-      sparse.orderId = match.orderId || sparse.orderId;
-      sparse.sparse = false;
-    }
+    seenKeys.add(key);
+    trades.push(trade);
   }
 
   trades.sort((a, b) => b.closeTimeMs - a.closeTimeMs);
   const result = {
     ok: true,
     trades,
-    partial: historyFails > 0,
-    historyFails,
-    historyAttempted,
-    symbolsCapped: !symbolFilter && historyAttempted >= 40
+    sparse: trades.some((t) => t.sparse),
+    enriched: false,
+    partial: false,
+    historyFails: 0,
+    historyAttempted: 0,
+    symbolsCapped: false,
+    source: "income"
   };
   writeClosedPnlCache(cacheKey, result);
   return result;
+}
+
+/**
+ * Background diary enrich. Prefer positionHistory; when BingX returns no
+ * rows, use explicit allFillOrders.positionSide cycles.
+ */
+async function enrichClosedPnlTrades(options = {}) {
+  const startTime = Number(options.startTime);
+  const endTime = Number(options.endTime);
+  const input = Array.isArray(options.trades) ? options.trades : [];
+  if (
+    !input.length ||
+    !Number.isFinite(startTime) ||
+    !Number.isFinite(endTime) ||
+    endTime < startTime
+  ) {
+    return {
+      ok: false,
+      message: "Некорректные параметры обогащения"
+    };
+  }
+
+  const need = input.filter(
+    (t) =>
+      t?.sparse ||
+      !String(t?.side || "").trim() ||
+      !Number.isFinite(Number(t?.openTimeMs)) ||
+      Number(t.openTimeMs) === Number(t.closeTimeMs) ||
+      !Number(t?.durationMs)
+  );
+  const symbols = [
+    ...new Set(
+      need
+        .map((t) => toCanonicalSymbol(t.symbol))
+        .filter(Boolean)
+    )
+  ].slice(0, 20);
+
+  const closedTradesBySymbol = new Map();
+  for (const symbol of symbols) {
+    const hist = await fetchBingxPositionHistoryPages(
+      symbol,
+      Math.max(0, startTime - 2 * 24 * 60 * 60 * 1000),
+      endTime + 60 * 60 * 1000
+    );
+    if (!hist.ok && hist.rateLimited) {
+      break;
+    }
+    let rows = (hist.ok ? hist.rows || [] : [])
+        .map(mapBingxPositionHistoryRow)
+        .filter(Boolean)
+        .filter((t) => t.symbol === symbol);
+
+    if (!rows.length) {
+      const fills = await fetchBingxFillRowsPaged(
+        symbol,
+        Math.max(0, startTime - FILL_HISTORY_MAX_SPAN_MS),
+        endTime + 15 * 60 * 1000,
+        { priority: PRIORITY.background }
+      );
+      if (!fills.ok && fills.rateLimited) {
+        break;
+      }
+      if (fills.ok) {
+        rows = buildBingxRoundTripsFromPositionFills(
+          (fills.rows || [])
+            .map(mapBingxFillExecution)
+            .filter(Boolean)
+            .filter((ex) => !ex.symbol || ex.symbol === symbol)
+        );
+      }
+    }
+    closedTradesBySymbol.set(symbol, rows);
+  }
+
+  const trades = input.map((trade) => {
+    const sym = toCanonicalSymbol(trade.symbol);
+    const rows = closedTradesBySymbol.get(sym);
+    if (!rows?.length) {
+      return trade;
+    }
+    const closeMs = Number(trade.closeTimeMs);
+    const match = matchBingxRoundTripByAnchor(rows, closeMs);
+    if (!match || !(match.closeTimeMs > match.openTimeMs)) {
+      return trade;
+    }
+    return {
+      ...trade,
+      listCloseTimeMs:
+        Number(trade.listCloseTimeMs) || Number(trade.closeTimeMs) || closeMs,
+      openTimeMs: match.openTimeMs,
+      closeTimeMs: match.closeTimeMs,
+      durationMs: match.durationMs,
+      side: match.side,
+      avgEntryPrice: match.avgEntryPrice || trade.avgEntryPrice || 0,
+      avgExitPrice: match.avgExitPrice || trade.avgExitPrice || 0,
+      qty: match.qty || trade.qty || 0,
+      positionId: match.positionId || trade.positionId || "",
+      pnlUsd: Number.isFinite(match.pnlUsd) ? match.pnlUsd : trade.pnlUsd,
+      sparse: false
+    };
+  });
+
+  return {
+    ok: true,
+    trades
+  };
 }
 
 async function getSymbolPositionSettings(symbol) {
@@ -3249,13 +3760,13 @@ async function getSymbolPositionSettings(symbol) {
     "GET",
     "/openApi/swap/v2/trade/leverage",
     { symbol: toBingxSymbol(sym) },
-    { allowDuringRateLimit: true }
+    { priority: PRIORITY.normal }
   );
   const marginResult = await signedRequest(
     "GET",
     "/openApi/swap/v2/trade/marginType",
     { symbol: toBingxSymbol(sym) },
-    { allowDuringRateLimit: true }
+    { priority: PRIORITY.normal }
   );
   const levData = levResult.data?.data ?? levResult.data ?? {};
   const marginData = marginResult.data?.data ?? marginResult.data ?? {};
@@ -3360,6 +3871,8 @@ module.exports = {
   mapApiError,
   getRateLimitBackoffMs,
   peekRateLimitBlock,
+  getBingxSchedulerStats,
+  PRIORITY,
   invalidatePositionListCache,
   signedRequest,
   rawPositionFromBingx,
@@ -3383,11 +3896,15 @@ module.exports = {
   pingBybit,
   pingExchange,
   getClosedPnlHistory,
+  enrichClosedPnlTrades,
   getTradeDiaryDetail,
   mapPositionRow,
   mapOrderRow,
   extractBingxList,
   getSymbolPositionSettings,
+  buildBingxRoundTripsFromPositionFills,
+  matchBingxRoundTripByAnchor,
+  executionsFromBingxClosedTrades,
   applySymbolPositionSettings,
   enrichPositionsWithStopOrders,
   invalidateOpenOrderRowsCache,

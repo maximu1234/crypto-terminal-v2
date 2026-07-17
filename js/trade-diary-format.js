@@ -47,6 +47,45 @@ false
 
 }
 
+/** Date + time — required for multi-day trades (short open ≠ close day). */
+export function formatDiaryDateTime(
+ms
+){
+
+const d =
+new Date(
+ms
+);
+
+if(
+Number.isNaN(
+d.getTime()
+)
+){
+return "—";
+}
+
+const day =
+`${d.getDate()} ${MONTHS_RU[d.getMonth()]}`;
+const time =
+d.toLocaleTimeString(
+"ru-RU",
+{
+hour:
+"2-digit",
+minute:
+"2-digit",
+second:
+"2-digit",
+hour12:
+false
+}
+);
+
+return `${day} ${time}`;
+
+}
+
 export function formatDiaryDayLabel(
 ms
 ){
@@ -215,7 +254,16 @@ ms
 if(
 !Number.isFinite(
 totalSec
+) ||
+!Number.isFinite(
+Number(
+ms
 )
+) ||
+Number(
+ms
+) <=
+0
 ){
 return "—";
 }
@@ -224,7 +272,7 @@ if(
 totalSec <
 1
 ){
-return "1с";
+return "—";
 }
 
 if(
@@ -334,7 +382,10 @@ side
 return side ===
 "long"
 ? "Long"
-: "Short";
+: side ===
+"short"
+? "Short"
+: "—";
 
 }
 
@@ -345,7 +396,10 @@ side
 return side ===
 "long"
 ? "trade-diary-pos"
-: "trade-diary-neg";
+: side ===
+"short"
+? "trade-diary-neg"
+: "trade-diary-muted";
 
 }
 

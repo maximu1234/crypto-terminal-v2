@@ -13,18 +13,18 @@ export {
   getTradePositionsCacheSyncError,
   syncTradePositionsCache,
   initTradePositionsCache
-} from "./positions-cache.js?v=1";
+} from "./positions-cache.js?v=2";
 
 export {
   stopTradeStreamBridge,
   startTradeStreamBridge,
   initTradeStreamBridge
-} from "./stream-bridge.js?v=1";
+} from "./stream-bridge.js?v=2";
 
 export {
   createTradeChartOverlay,
   initTradeChartOverlay
-} from "./chart-overlay.js?v=1";
+} from "./chart-overlay.js?v=2";
 
 export {
   getAutoStopSettings,
@@ -45,8 +45,8 @@ export {
 
 export {
   initTradeBookPanel
-} from "./book-panel.js?v=1";
+} from "./book-panel.js?v=2";
 
 export {
   getTradeConfig
-} from "./config.js?v=1";
+} from "./config.js?v=3";

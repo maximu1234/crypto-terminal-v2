@@ -21,6 +21,8 @@ const {
   pickUsdtBalance,
   mapBingxPositionHistoryRow,
   mapBingxFillExecution,
+  buildBingxRoundTripsFromPositionFills,
+  matchBingxRoundTripByAnchor,
   mapApiError,
   isRateLimitError,
   selectPositionFromCandidates,
@@ -67,6 +69,72 @@ test("mapBingxFillExecution parses ISO filledTime", () => {
   assert.ok(Number.isFinite(ex.execTimeMs) && ex.execTimeMs > 1e12);
 });
 
+test("positionSide fill cycles preserve a multi-day short", () => {
+  const fills = [
+    mapBingxFillExecution({
+      symbol: "BTC-USDT",
+      side: "SELL",
+      positionSide: "SHORT",
+      filledTm: "2026-06-30T06:59:37.000Z",
+      price: "59567.0",
+      volume: "0.0040"
+    }),
+    mapBingxFillExecution({
+      symbol: "BTC-USDT",
+      side: "BUY",
+      positionSide: "SHORT",
+      filledTm: "2026-07-01T04:46:27.000Z",
+      price: "59429.6",
+      volume: "0.0040"
+    })
+  ];
+  const trades = buildBingxRoundTripsFromPositionFills(fills);
+  assert.equal(trades.length, 1);
+  assert.equal(trades[0].side, "short");
+  assert.equal(trades[0].entries[0].side, "Sell");
+  assert.equal(trades[0].exits[0].side, "Buy");
+  assert.equal(trades[0].avgEntryPrice, 59567);
+  assert.equal(trades[0].avgExitPrice, 59429.6);
+  assert.equal(
+    trades[0].durationMs,
+    Date.parse("2026-07-01T04:46:27.000Z") -
+      Date.parse("2026-06-30T06:59:37.000Z")
+  );
+});
+
+test("matchBingxRoundTripByAnchor finds short by close or open income time", () => {
+  const openMs = Date.parse("2026-06-30T06:59:37.000Z");
+  const closeMs = Date.parse("2026-07-01T04:46:27.000Z");
+  const trips = buildBingxRoundTripsFromPositionFills([
+    mapBingxFillExecution({
+      symbol: "BTC-USDT",
+      side: "SELL",
+      positionSide: "SHORT",
+      filledTm: "2026-06-30T06:59:37.000Z",
+      price: "59567.0",
+      volume: "0.0040"
+    }),
+    mapBingxFillExecution({
+      symbol: "BTC-USDT",
+      side: "BUY",
+      positionSide: "SHORT",
+      filledTm: "2026-07-01T04:46:27.000Z",
+      price: "59429.6",
+      volume: "0.0040"
+    })
+  ]);
+  const byClose = matchBingxRoundTripByAnchor(trips, closeMs);
+  const byOpen = matchBingxRoundTripByAnchor(trips, openMs);
+  assert.ok(byClose);
+  assert.ok(byOpen);
+  assert.equal(byClose.side, "short");
+  assert.equal(byOpen.side, "short");
+  assert.equal(byClose.openTimeMs, openMs);
+  assert.equal(byClose.closeTimeMs, closeMs);
+  assert.equal(byOpen.openTimeMs, openMs);
+  assert.equal(byOpen.closeTimeMs, closeMs);
+});
+
 test("mapBingxPositionHistoryRow maps closed position", () => {
   const trade = mapBingxPositionHistoryRow({
     positionId: "1861675561156571136",
@@ -91,6 +159,24 @@ test("mapBingxPositionHistoryRow maps closed position", () => {
   assert.equal(trade.avgExitPrice, 129.48);
   assert.equal(trade.qty, 30);
   assert.ok(trade.commissionUsd > 0);
+});
+
+test("executionsFromBingxClosedTrades: short entry is Sell, exit is Buy", () => {
+  const openMs = Date.parse("2026-06-30T13:59:37+07:00");
+  const closeMs = Date.parse("2026-07-01T11:46:27+07:00");
+  const { executionsFromBingxClosedTrades } = require("../desktop/trading/bingx-rest.cjs");
+  const ex = executionsFromBingxClosedTrades([
+    {
+      openTimeMs: openMs,
+      closeTimeMs: closeMs,
+      side: "short"
+    }
+  ]);
+  assert.equal(ex.length, 2);
+  assert.equal(ex[0].side, "Sell");
+  assert.equal(ex[0].execTimeMs, openMs);
+  assert.equal(ex[1].side, "Buy");
+  assert.equal(ex[1].execTimeMs, closeMs);
 });
 
 test("pickUsdtBalance prefers equity over zero availableMargin", () => {

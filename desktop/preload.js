@@ -320,6 +320,14 @@ ipcRenderer.invoke(
 payload ||
 {}
 ),
+enrichClosedPnlTrades:(
+payload
+)=>
+ipcRenderer.invoke(
+"trading:enrichClosedPnlTrades",
+payload ||
+{}
+),
 getTradeDiaryDetail:(
 payload
 )=>
@@ -331,6 +339,14 @@ payload ||
 replayStream:()=>
 ipcRenderer.invoke(
 "trading:replayStream"
+),
+getStreamSnapshot:()=>
+ipcRenderer.invoke(
+"trading:getStreamSnapshot"
+),
+requestStreamSeed:()=>
+ipcRenderer.invoke(
+"trading:requestStreamSeed"
 ),
 generatePnlShareCard:(
 payload

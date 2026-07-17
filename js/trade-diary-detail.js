@@ -1,17 +1,20 @@
 import {
 destroyDiaryTradeChart,
 mountDiaryTradeChart
-} from "./trade-diary-chart.js?v=10";
+} from "./trade-diary-chart.js?v=13";
 
 import {
 executionSideLabel,
 executionSideTone,
+formatDiaryDuration,
 formatDiaryFeePct,
 formatDiaryPrice,
 formatDiaryQty,
-formatDiaryTime,
-formatDiaryUsd
-} from "./trade-diary-format.js?v=3";
+formatDiaryDateTime,
+formatDiaryUsd,
+sideLabel,
+sideToneClass
+} from "./trade-diary-format.js?v=6";
 
 import {
 getActiveExchangeId
@@ -56,12 +59,28 @@ if(
 return `<div class="trade-diary-detail-empty">Исполнения не найдены.</div>`;
 }
 
+const sorted =
+[
+...executions
+].sort(
+(
+a,
+b
+)=>
+Number(
+a?.execTimeMs
+) -
+Number(
+b?.execTimeMs
+)
+);
+
 const rows =
-executions.map(
+sorted.map(
 ex=>`
 <tr>
 <td class="trade-diary-exec-time">${escapeHtml(
-formatDiaryTime(
+formatDiaryDateTime(
 ex.execTimeMs
 )
 )}</td>
@@ -125,6 +144,12 @@ trade,
 detail
 ){
 
+const sideRaw =
+String(
+detail.side ||
+trade.side ||
+""
+).toLowerCase();
 const entryPrice =
 Number(
 detail.avgEntryPrice
@@ -139,21 +164,34 @@ detail.avgExitPrice
 0
 ? detail.avgExitPrice
 : trade.avgExitPrice;
+
+/* Side must be explicit long|short — never default empty → Long. */
 const isLong =
-trade.side ===
+sideRaw ===
 "long";
+const isShort =
+sideRaw ===
+"short";
 const entryTone =
-executionSideTone(
 isLong
-? "buy"
-: "sell"
-);
+? executionSideTone(
+"buy"
+)
+: isShort
+? executionSideTone(
+"sell"
+)
+: "trade-diary-muted";
 const exitTone =
-executionSideTone(
 isLong
-? "sell"
-: "buy"
-);
+? executionSideTone(
+"sell"
+)
+: isShort
+? executionSideTone(
+"buy"
+)
+: "trade-diary-muted";
 
 return `
 <div class="trade-diary-detail-split">
@@ -247,6 +285,89 @@ result?.ok
 ){
 detail =
 result;
+if(
+Number.isFinite(
+Number(
+detail.openTimeMs
+)
+) &&
+Number.isFinite(
+Number(
+detail.closeTimeMs
+)
+) &&
+Number(
+detail.closeTimeMs
+) >
+Number(
+detail.openTimeMs
+)
+){
+trade.openTimeMs =
+Number(
+detail.openTimeMs
+);
+trade.closeTimeMs =
+Number(
+detail.closeTimeMs
+);
+trade.durationMs =
+Number.isFinite(
+Number(
+detail.durationMs
+)
+)
+? Number(
+detail.durationMs
+)
+: trade.closeTimeMs -
+trade.openTimeMs;
+trade.sparse =
+false;
+}
+if(
+detail.side
+){
+trade.side =
+detail.side;
+}
+const rowDuration =
+detailEl
+.closest(
+"[data-trade-key]"
+)
+?.querySelector(
+".trade-diary-duration"
+);
+if(
+rowDuration
+){
+rowDuration.textContent =
+formatDiaryDuration(
+trade.durationMs
+);
+}
+const rowSide =
+detailEl
+.closest(
+"[data-trade-key]"
+)
+?.querySelector(
+".trade-diary-side"
+);
+if(
+rowSide &&
+trade.side
+){
+rowSide.textContent =
+sideLabel(
+trade.side
+);
+rowSide.className =
+`trade-diary-side ${sideToneClass(
+trade.side
+)}`;
+}
 }else{
 detailEl.innerHTML =
 `<div class="trade-diary-detail-error">${escapeHtml(

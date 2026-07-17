@@ -13,12 +13,12 @@ formatDiaryWeekRange,
 pnlToneClass,
 sideLabel,
 sideToneClass
-} from "./trade-diary-format.js?v=3";
+} from "./trade-diary-format.js?v=6";
 
 import {
 closeTradeDetail,
 openTradeDetail
-} from "./trade-diary-detail.js?v=6";
+} from "./trade-diary-detail.js?v=12";
 
 import {
 mountTradeDiaryPeriodPicker
@@ -97,8 +97,41 @@ function tradeKey(
 trade
 ){
 
-return `${trade.symbol}-${trade.closeTimeMs}-${trade.orderId ||
+/* Stable across enrich: keep income listCloseTimeMs, not rewritten close. */
+const closeMs =
+trade?.listCloseTimeMs ??
+trade?.closeTimeMs;
+
+return `${trade.symbol}-${closeMs}-${trade.orderId ||
 ""}`;
+
+}
+
+function tradeIdentityKey(
+trade
+){
+
+const sym =
+String(
+trade?.symbol ||
+""
+).toUpperCase();
+const oid =
+String(
+trade?.orderId ||
+""
+).trim();
+
+if(
+sym &&
+oid
+){
+return `id:${sym}:${oid}`;
+}
+
+return `t:${tradeKey(
+trade
+)}`;
 
 }
 
@@ -1124,7 +1157,9 @@ result.trades
 networkMeta =
 {
 source:
-result.source
+result.source,
+sparse:
+!!result.sparse
 };
 didTodayNetworkFetch =
 periodIncludesToday;
@@ -1622,6 +1657,240 @@ error
 
 }
 
+function patchDiaryTradeDurations(
+enrichedTrades
+){
+
+const byIdentity =
+new Map();
+
+for(
+const trade of enrichedTrades ||
+[]
+){
+byIdentity.set(
+tradeIdentityKey(
+trade
+),
+trade
+);
+byIdentity.set(
+tradeKey(
+trade
+),
+trade
+);
+}
+
+weekTrades =
+weekTrades.map(
+trade=>{
+
+const enriched =
+byIdentity.get(
+tradeIdentityKey(
+trade
+)
+) ||
+byIdentity.get(
+tradeKey(
+trade
+)
+);
+
+if(
+!enriched ||
+!(
+Number(
+enriched.durationMs
+) >
+0
+) ||
+Number(
+enriched.openTimeMs
+) ===
+Number(
+enriched.closeTimeMs
+)
+){
+return trade;
+}
+
+const listCloseTimeMs =
+Number(
+trade.listCloseTimeMs
+) ||
+Number(
+trade.closeTimeMs
+);
+
+return {
+...trade,
+listCloseTimeMs,
+openTimeMs:
+enriched.openTimeMs,
+closeTimeMs:
+enriched.closeTimeMs,
+durationMs:
+enriched.durationMs,
+side:
+enriched.side ||
+trade.side,
+avgEntryPrice:
+enriched.avgEntryPrice ||
+trade.avgEntryPrice,
+avgExitPrice:
+enriched.avgExitPrice ||
+trade.avgExitPrice,
+qty:
+enriched.qty ||
+trade.qty,
+sparse:
+false
+};
+
+}
+);
+
+if(
+!contentEl
+){
+return;
+}
+
+for(
+const trade of weekTrades
+){
+
+if(
+!(
+Number(
+trade.durationMs
+) >
+0
+)
+){
+continue;
+}
+
+const wrap =
+contentEl.querySelector(
+`[data-trade-key="${CSS.escape(
+tradeKey(
+trade
+)
+)}"]`
+);
+const durationEl =
+wrap?.querySelector(
+".trade-diary-duration"
+);
+
+if(
+durationEl
+){
+durationEl.textContent =
+formatDiaryDuration(
+trade.durationMs
+);
+}
+
+const sideEl =
+wrap?.querySelector(
+".trade-diary-side"
+);
+
+if(
+sideEl
+){
+sideEl.textContent =
+sideLabel(
+trade.side
+);
+sideEl.className =
+`trade-diary-side ${sideToneClass(
+trade.side
+)}`;
+}
+
+}
+
+}
+
+async function maybeEnrichDiaryDurations(
+trades,
+period
+){
+
+const api =
+tradingApi();
+
+if(
+!api?.enrichClosedPnlTrades ||
+!period ||
+!Array.isArray(
+trades
+) ||
+!trades.length
+){
+return;
+}
+
+const needsEnrich =
+trades.some(
+trade=>
+trade?.sparse ||
+!Number(
+trade?.durationMs
+) ||
+Number(
+trade.openTimeMs
+) ===
+Number(
+trade.closeTimeMs
+)
+);
+
+if(
+!needsEnrich
+){
+return;
+}
+
+try{
+
+const result =
+await api.enrichClosedPnlTrades(
+{
+trades,
+startTime:
+period.startMs,
+endTime:
+period.endMs,
+exchangeId:
+getActiveExchangeId()
+}
+);
+
+if(
+result?.ok &&
+Array.isArray(
+result.trades
+)
+){
+patchDiaryTradeDurations(
+result.trades
+);
+}
+
+}catch(
+_err
+){
+/* background enrich — ignore */
+}
+
+}
+
 function dedupeDiaryTrades(
 trades
 ){
@@ -1783,6 +2052,8 @@ result?.fromCache
 ? " · кэш"
 : result?.partialCache
 ? " · кэш + сегодня"
+: result?.sparse
+? " · income"
 : "";
 
 paintDiaryTrades(
@@ -1792,6 +2063,11 @@ trades.length
 : result?.fromCache
 ? "Нет сделок · кэш"
 : ""
+);
+
+void maybeEnrichDiaryDurations(
+trades,
+activePeriod
 );
 
 }catch(

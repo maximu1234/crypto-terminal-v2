@@ -36,7 +36,8 @@ function keysMatchSymbol(key, symbol) {
 
 const BINGX_TRADE = {
   id: "bingx",
-  positionsSyncIntervalMs: 6000,
+  /* Renderer uses main stream snapshot — no periodic REST poll. */
+  positionsSyncIntervalMs: 0,
   restPositionsForceRefresh: false,
   restOrdersForceRefresh: false,
   autoStopDelayMs: 2500,
@@ -57,6 +58,10 @@ const BINGX_TRADE = {
   emptyCredentialsHint: "Подключите BingX в шапке",
   rateLimitedMessage:
     "Превышен лимит запросов BingX. Подождите немного.",
+  /* Terminal markers: closed PnL already carries open/close + side. */
+  fetchClosedPnlTradeDetails: false,
+  closedPnlForceRefresh: true,
+  closedPnlEnrichOnFetch: true,
   positionMapKey,
   keysMatchSymbol
 };

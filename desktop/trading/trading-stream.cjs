@@ -54,12 +54,38 @@ function upsertStreamPosition(position) {
   return getStreamImpl().upsertStreamPosition(position);
 }
 
+function getTradingSnapshot() {
+  const impl = getStreamImpl();
+  if (typeof impl.getTradingSnapshot === "function") {
+    return impl.getTradingSnapshot();
+  }
+  return {
+    ok: false,
+    unsupported: true,
+    message: "Stream snapshot unsupported for active exchange"
+  };
+}
+
+function requestStreamSeed() {
+  const impl = getStreamImpl();
+  if (typeof impl.requestStreamSeed === "function") {
+    return impl.requestStreamSeed();
+  }
+  if (typeof impl.seedFromRest === "function") {
+    void impl.seedFromRest();
+    return { ok: true };
+  }
+  return { ok: false, unsupported: true };
+}
+
 module.exports = {
   setTradingStreamTarget,
   startTradingStream,
   stopTradingStream,
   seedFromRest,
   replayTradingStream,
+  getTradingSnapshot,
+  requestStreamSeed,
   removeStreamOrder,
   removeStreamPosition,
   upsertStreamPosition

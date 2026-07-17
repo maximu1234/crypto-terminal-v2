@@ -8,7 +8,7 @@ syncTradePositionsCache,
 upsertTradePositionInCache,
 markTradePositionRecentlyClosed,
 isTradePositionRecentlyClosed
-} from "./positions-cache.js?v=1";
+} from "./positions-cache.js?v=2";
 
 import {
 markStopDismissed,
@@ -21,7 +21,7 @@ isExchangeTradingEnabled
 
 import {
 getTradeConfig
-} from "./config.js?v=1";
+} from "./config.js?v=3";
 
 import {
 formatTradePnl,
@@ -3194,21 +3194,8 @@ true
 return;
 }
 
+const syncResult =
 await syncTradePositionsCache();
-
-if(
-!host
-){
-return;
-}
-
-const result =
-await api.getPosition(
-symbol,
-tradePositionIpcOptions(
-position
-)
-);
 
 if(
 !host
@@ -3226,6 +3213,24 @@ symbol
 ){
 return;
 }
+
+const nextFromCache =
+getCachedPosition(
+symbol,
+tradePositionIpcOptions(
+position
+)
+);
+const result =
+syncResult?.ok
+? {
+ok:
+true,
+position:
+nextFromCache ||
+null
+}
+: syncResult;
 
 if(
 result?.ok
@@ -3282,7 +3287,7 @@ prev.size
 0
 ){
 const all =
-await api.getPositions?.({
+await syncTradePositionsCache({
 forceRefresh:
 true
 });

@@ -137,77 +137,21 @@ emptySeedSoftSkipCount =
 
 }
 
-let triggerRefreshTimer =
-null;
+let wsConnected =
+false;
+let lastWsEventAt =
+0;
+let streamHealth =
+"idle";
 
-const TRIGGER_ORDERS_REFRESH_MS =
-250;
+function markWsEvent(){
 
-function scheduleTriggerOrdersRefresh(){
-
-if(
-triggerRefreshTimer
-){
-clearTimeout(
-triggerRefreshTimer
-);
-}
-
-triggerRefreshTimer =
-setTimeout(
-()=>{
-triggerRefreshTimer =
-null;
-
-void (
-async()=>{
-
-try{
-const ordResult =
-await streamModules.getOpenOrders?.({
-forceRefresh:
-true
-});
-
-if(
-!ordResult?.ok
-){
-return;
-}
-
-resetOrders(
-ordResult.orders
-);
-
-const rawRows =
-streamModules.getCachedOpenOrderRows?.() ||
-[];
-
-resetRawOpenOrderRows(
-rawRows
-);
-
-if(
-patchStreamPositionStops()
-){
-emitPositions();
-}
-
-emitOrders();
-}catch(
-err
-){
-log.warn(
-"bingx trigger orders refresh:",
-err.message
-);
-}
-
-})();
-
-},
-TRIGGER_ORDERS_REFRESH_MS
-);
+lastWsEventAt =
+Date.now();
+wsConnected =
+true;
+streamHealth =
+"live";
 
 }
 
@@ -236,15 +180,9 @@ null;
 let delayedReconcileTimer =
 null;
 
+/** Coalesce REST reconcile after WS events — keep UI instant via WS first. */
 const RECONCILE_DEBOUNCE_MS =
-100;
-
-const RECONCILE_DELAYED_MS =
-400;
-
-/** Coalesce REST reconcile right after WS fill (next tick). */
-const RECONCILE_IMMEDIATE_MS =
-0;
+350;
 
 /** After WS close, ignore stale REST rows that still show an open position. */
 const RECENTLY_CLOSED_MS =
@@ -1551,7 +1489,23 @@ typeRaw ===
 
 }
 
-function scheduleImmediatePositionRefresh(){
+function scheduleAccountReconcile(
+delayMs
+){
+
+const waitMs =
+Number.isFinite(
+Number(
+delayMs
+)
+)
+? Math.max(
+0,
+Number(
+delayMs
+)
+)
+: RECONCILE_DEBOUNCE_MS;
 
 if(
 reconcileTimer
@@ -1559,8 +1513,6 @@ reconcileTimer
 clearTimeout(
 reconcileTimer
 );
-reconcileTimer =
-null;
 }
 
 reconcileTimer =
@@ -1570,7 +1522,15 @@ reconcileTimer =
 null;
 void seedFromRest();
 },
-RECONCILE_IMMEDIATE_MS
+waitMs
+);
+
+}
+
+function scheduleImmediatePositionRefresh(){
+
+scheduleAccountReconcile(
+RECONCILE_DEBOUNCE_MS
 );
 
 }
@@ -1706,39 +1666,15 @@ row
 
 function schedulePositionReconcileDelayed(){
 
-if(
-delayedReconcileTimer
-){
-return;
-}
-
-delayedReconcileTimer =
-setTimeout(
-()=>{
-delayedReconcileTimer =
-null;
-void seedFromRest();
-},
-RECONCILE_DELAYED_MS
+scheduleAccountReconcile(
+RECONCILE_DEBOUNCE_MS
 );
 
 }
 
 function schedulePositionReconcile(){
 
-if(
-reconcileTimer
-){
-return;
-}
-
-reconcileTimer =
-setTimeout(
-()=>{
-reconcileTimer =
-null;
-void seedFromRest();
-},
+scheduleAccountReconcile(
 RECONCILE_DEBOUNCE_MS
 );
 
@@ -2389,18 +2325,9 @@ if(
 reconcile &&
 !closedFromWs
 ){
-schedulePositionReconcile();
-schedulePositionReconcileDelayed();
-}
-
-if(
-(
-rows ||
-[]
-).length
-){
-streamModules.invalidateOpenOrderRowsCache?.();
-scheduleTriggerOrdersRefresh();
+scheduleAccountReconcile(
+RECONCILE_DEBOUNCE_MS
+);
 }
 
 }
@@ -2440,7 +2367,7 @@ false;
 const posResult =
 await fetchPositionListRaw({
 forceRefresh:
-true
+false
 });
 
 if(
@@ -2683,7 +2610,7 @@ patchStreamPositionStops()
 emitPositions();
 }
 
-scheduleTriggerOrdersRefresh();
+emitOrders();
 
 }
 
@@ -2691,7 +2618,7 @@ if(
 softSkippedEmpty
 ){
 scheduleSeedRetry(
-250
+1200
 );
 }
 }catch(
@@ -2847,16 +2774,6 @@ seedRetryTimer =
 null;
 }
 
-if(
-triggerRefreshTimer
-){
-clearTimeout(
-triggerRefreshTimer
-);
-triggerRefreshTimer =
-null;
-}
-
 streamActiveExchangeId =
 null;
 seedInflight =
@@ -2878,6 +2795,58 @@ emitOrders();
 
 }
 
+function getTradingSnapshot(){
+
+const orders =
+[
+...ordersById.values()
+].sort(
+(
+a,
+b
+)=>
+(
+b.createdAt ||
+0
+) -
+(
+a.createdAt ||
+0
+)
+);
+
+return {
+ok:
+true,
+exchangeId:
+"bingx",
+seedDone:
+bingxRestSeedDone,
+wsConnected,
+streamHealth,
+lastWsEventAt,
+updatedAt:
+Date.now(),
+positions:[
+...positionsBySymbol.values()
+],
+orders
+};
+
+}
+
+function requestStreamSeed(){
+
+scheduleAccountReconcile(
+0
+);
+return {
+ok:
+true
+};
+
+}
+
 function startTradingStream(){
 
 refreshStreamModules();
@@ -2888,6 +2857,8 @@ if(
 stopSocket();
 streamActiveExchangeId =
 null;
+streamHealth =
+"idle";
 return;
 }
 
@@ -2905,8 +2876,10 @@ return;
 stopSocket();
 streamActiveExchangeId =
 exchangeId;
-
-void seedFromRest();
+streamHealth =
+"connecting";
+wsConnected =
+false;
 
 socketCtl =
 streamModules.connectPrivateWs({
@@ -2915,9 +2888,16 @@ onReady(){
 
 reconnectDelayMs =
 1000;
+wsConnected =
+true;
+streamHealth =
+"live";
+markWsEvent();
 log.info(
 "trading stream: subscribed position+order"
 );
+/* One coalesced seed after WS is up — not before. */
+void seedFromRest();
 
 },
 
@@ -2925,6 +2905,8 @@ onTopic(
 topic,
 rows
 ){
+
+markWsEvent();
 
 if(
 topic ===
@@ -2953,22 +2935,10 @@ false;
 return;
 }
 
-const info =
-rows &&
-typeof rows ===
-"object"
-? rows
-: {};
-
-if(
-!info.hasPositions ||
-info.reason ===
-"ORDER_TRADE_UPDATE"
-){
-scheduleImmediatePositionRefresh();
-}else{
-schedulePositionReconcile();
-}
+/* WS already painted UI; coalesce one REST confirm. */
+scheduleAccountReconcile(
+RECONCILE_DEBOUNCE_MS
+);
 
 }else if(
 topic ===
@@ -2984,12 +2954,28 @@ onDisconnect(){
 log.warn(
 "trading stream: disconnected, reconnecting…"
 );
+wsConnected =
+false;
+streamHealth =
+"reconnecting";
 stopSocket();
 scheduleReconnect();
 
 }
 
 });
+
+/* Fallback seed if WS never becomes ready quickly. */
+setTimeout(
+()=>{
+if(
+!bingxRestSeedDone
+){
+void seedFromRest();
+}
+},
+2500
+);
 
 }
 
@@ -3000,6 +2986,8 @@ startTradingStream,
 stopTradingStream,
 seedFromRest,
 replayTradingStream,
+getTradingSnapshot,
+requestStreamSeed,
 removeStreamOrder,
 removeStreamPosition,
 upsertStreamPosition

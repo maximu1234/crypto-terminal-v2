@@ -24,7 +24,7 @@ resetTradePositionSoundBaseline
 
 import {
 getTradeConfig
-} from "./config.js?v=1";
+} from "./config.js?v=3";
 
 const cacheBySymbol =
 new Map();
@@ -1497,7 +1497,8 @@ const api =
 window.cryptoTerminalDesktop?.trading;
 
 if(
-!api?.getPositions
+!api?.getPositions &&
+!api?.getStreamSnapshot
 ){
 return {
 ok:
@@ -1560,16 +1561,59 @@ true
 }
 
 try{
-const policy =
-getTradeConfig();
+/* Prefer main stream snapshot — no signed REST from renderer. */
+if(
+api.getStreamSnapshot
+){
+if(
+options.forceRefresh &&
+api.requestStreamSeed
+){
+await api.requestStreamSeed();
+}
+
+const snapshot =
+await api.getStreamSnapshot();
+
+if(
+!snapshot?.ok
+){
+lastPositionsSyncError =
+snapshot;
+return snapshot || {
+ok:
+false
+};
+}
+
+lastPositionsSyncError =
+null;
+
+applyPositionsList(
+snapshot.positions ||
+[],
+{
+establishBaseline:
+!isTradePositionSoundBaselineReady()
+}
+);
+
+return {
+ok:
+true,
+positions:
+snapshot.positions ||
+[],
+fromSnapshot:
+true,
+seedDone:
+!!snapshot.seedDone
+};
+}
+
 const result =
 await api.getPositions(
-policy.restPositionsForceRefresh
-? {
-forceRefresh:
-true
-}
-: {}
+{}
 );
 
 if(

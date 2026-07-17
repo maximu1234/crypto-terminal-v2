@@ -13,11 +13,11 @@ getActiveExchangeId
 import {
 buildMarkersForCandles,
 normalizeSymbol
-} from "./trade-markers-sandbox/marker-math.js?v=9";
+} from "./trade-markers-sandbox/marker-math.js?v=10";
 
 import {
 fetchTradesForSymbol
-} from "./trade-markers-sandbox/trade-fetch.js?v=12";
+} from "./trade-markers-sandbox/trade-fetch.js?v=17";
 
 let showMarkers =
 false;
@@ -297,7 +297,7 @@ label
 ){
 label.title =
 tradeData.message
-? `История сделок — ${tradeData.message}`
+? `История сделок — ${tradeData.message}; сделок ${tradeData.trades?.length || 0}, маркеров ${cachedMarkers.length}`
 : `История сделок — сделок ${tradeData.trades?.length || 0}, маркеров ${cachedMarkers.length}`;
 }
 

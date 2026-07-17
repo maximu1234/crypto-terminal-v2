@@ -328,6 +328,35 @@ payload ||
 );
 }
 
+async function enrichClosedPnlTrades(
+payload
+){
+
+const adapter =
+getAdapter(
+payload?.exchangeId
+);
+const fn =
+adapter.enrichClosedPnlTrades;
+
+if(
+typeof fn !==
+"function"
+){
+return {
+ok:
+false,
+message:
+"Обогащение сделок недоступно для этой биржи"
+};
+}
+
+return fn(
+payload ||
+{}
+);
+}
+
 async function getTradeDiaryDetail(
 payload
 ){
@@ -509,6 +538,7 @@ reconcileOrdersOnPositionClose,
 pingBybit,
 pingExchange,
 getClosedPnlHistory,
+enrichClosedPnlTrades,
 getSymbolExecutionHistory,
 getTradeDiaryDetail,
 getSymbolPositionSettings,

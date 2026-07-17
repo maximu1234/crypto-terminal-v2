@@ -20,7 +20,7 @@
 |-----------|--------|
 | Страница / boot | `script.html`, `js/script-page-boot.js`, `js/script-page.js`, `js/script-page-widgets.js`, `js/script-page-storage.js` |
 | Фоновый скан | `js/script-scan-background.js`, `js/pattern-12-scanner.js`, `js/pattern-scan-results.js` |
-| Nav / статус | `js/script-desktop-nav.js`, `js/script-terminal-status.js`, `js/site-boot.js` |
+| Nav / статус | `js/site-header-nav-desktop.js`, `js/script-terminal-status.js`, `js/site-boot.js` |
 
 **Аудит торгового модуля** → проверять Скрипт в том же проходе (desktop-gate, bundle, nav, фоновый таймер). См. `.cursor/rules/trading-module-script.mdc`.
 
@@ -87,11 +87,13 @@ Renderer (/coins.html — desktop)
 
 **Триггеры:** `TRIGGER_MARKET` с `quantity` + `stopPrice` + `price` + `workingType` (без `quoteOrderQty`). Cancel — DELETE с params в query.
 
-**Поток позиций:** private WS `ACCOUNT_UPDATE` / `ORDER_TRADE_UPDATE` (компактные поля `s/pa/ps`, `X/i/o`, `z/l`). Cross часто без `a.P` → immediate REST seed. WS delta не ждёт `seedDone`. Optimistic FILL из ORDER_TRADE (`z` cumulative / `l` last). Empty REST soft-skip только для fresh optimistic open (~2s); confirmed + empty REST снимает позицию сразу (close на бирже). Backup poll 1s.
+**Поток позиций:** private WS `ACCOUNT_UPDATE` / `ORDER_TRADE_UPDATE` → мгновенный main snapshot → renderer. REST только через `bingx-request-scheduler.cjs` (critical place/cancel, coalesced reconcile). WS delta не ждёт `seedDone`. Optimistic FILL из ORDER_TRADE. Renderer **не** делает periodic REST poll — `trading:getStreamSnapshot`. Empty REST soft-skip только для fresh optimistic open.
 
 **Amend (drag на графике):** цена триггера/лимитки меняется через `POST /openApi/swap/v1/trade/cancelReplace` (не `/amend` — тот меняет только quantity). При cancel ok / place fail — повторный place.
 
-**Отложено / частично:** trade diary (closed PnL) — BingX: `income` → до 40× `positionHistory` по символу (публичный API без all-pairs); кэш ~5 мин. PnL share cards пока Bybit-only.
+**Дневник BingX:** list = income-first (`sparse` PnL, `listCloseTimeMs` стабильный ключ строки). Истина по стороне/open/close — `positionHistory`, иначе циклы из `allFillOrders.positionSide` (`matchBingxRoundTripByAnchor`: close / open / contains). Пустой side → «—», не Long. Fills только для таблицы. **Не** угадывать long/short по порядку Buy/Sell.
+
+**Терминал «История сделок» (BingX):** per-symbol = `positionHistory` либо `positionSide` fills → `executions` (schema 6). Политика fetch — флаги в `js/trade/bingx/config.js` (`fetchClosedPnlTradeDetails: false`), без `if (bingx)` в shared `trade-fetch.js`.
 
 ## Файлы
 
@@ -104,6 +106,7 @@ Renderer (/coins.html — desktop)
 | `desktop/trading/bingx-trading-stream.cjs` | BingX private stream |
 | `desktop/trading/bybit-rest.cjs` | Bybit REST client |
 | `desktop/trading/bingx-rest.cjs` | BingX REST client |
+| `desktop/trading/bingx-request-scheduler.cjs` | BingX REST priority queue / cooldown |
 | `desktop/trading/register-ipc.cjs` | IPC handlers |
 | `js/trade/module-router.js` | Thin renderer bundle switch |
 | `js/trade/bybit/*` | Bybit renderer: cache/stream/overlay/entry/book/stops |

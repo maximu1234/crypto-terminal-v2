@@ -10,7 +10,7 @@ alwaysApply: true
 | | Web (Vercel) | Desktop (.app) |
 |---|--------------|----------------|
 | `/script.html` | редирект → `/screener.html` | ✅ |
-| Пункт меню «Скрипт» | скрыт (`script-desktop-nav.js`) | ✅ |
+| Пункт меню «Скрипт» | скрыт (web nav) | ✅ (`site-header-nav-desktop.js`) |
 | Фоновое авто-сканирование | нет (`isDesktopShell`) | ✅ |
 | Статус в шапке Терминала | нет | ✅ (`script-terminal-status.js`) |
 
@@ -19,7 +19,7 @@ alwaysApply: true
 Вместе с trade-слоем проверять:
 
 - **Маршрут / boot:** `script.html`, `js/script-page-boot.js` (gate `cryptoTerminalDesktop.isDesktop`), `js/page-routes.js` (`isScriptPage`)
-- **Навигация:** `js/script-desktop-nav.js`, `js/site-boot.js` (`initScriptDesktopNav`, `resumeScriptScanBackgroundJob`)
+- **Навигация:** `js/site-header-nav-desktop.js`, `js/site-boot.js` (`resumeScriptScanBackgroundJob`)
 - **Страница:** `js/script-page.js`, `js/script-page-widgets.js`, `js/script-page-storage.js`, `css/script-page.css`
 - **Сканер:** `js/script-scan-background.js`, `js/pattern-12-scanner.js`, `js/pattern-scan-results.js`
 - **Связь с Терминалом:** `js/script-terminal-status.js`

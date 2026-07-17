@@ -23,11 +23,11 @@ marketMap
 
 import {
 getTradeConfig
-} from "./config.js?v=1";
+} from "./config.js?v=2";
 
 import {
 mountTradeChartMarkersToggle
-} from "../../trade-chart-execution-markers.js?v=2";
+} from "../../trade-chart-execution-markers.js?v=8";
 
 const REFRESH_MS =
 1500;

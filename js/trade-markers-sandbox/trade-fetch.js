@@ -1,11 +1,12 @@
-/**
- * Песочница: быстрая загрузка сделок ETH + точные времена входа/выхода.
- */
 import {
 closedPnlTradesToExecutions,
 normalizeSymbol,
 SANDBOX_SYMBOL
-} from "./marker-math.js?v=9";
+} from "./marker-math.js?v=10";
+
+import {
+getActiveTradeConfig
+} from "../trade/module-router.js?v=4";
 
 import {
 getActiveExchangeId
@@ -52,9 +53,11 @@ want
 
 function shouldFetchTradeDetails(){
 
-/* BingX: N× allFillOrders storms rate-limit; positionHistory open/close is enough for markers. */
-return getActiveExchangeId() !==
-"bingx";
+const cfg =
+getActiveTradeConfig();
+
+return cfg?.fetchClosedPnlTradeDetails !==
+false;
 
 }
 
@@ -126,6 +129,8 @@ let pnlResult;
 
 const exchangeId =
 getActiveExchangeId();
+const cfg =
+getActiveTradeConfig();
 
 try{
 pnlResult =
@@ -138,6 +143,12 @@ endTime,
 skipExecutions:
 true,
 parallelChunks:
+true,
+forceRefresh:
+cfg?.closedPnlForceRefresh ===
+true,
+enrich:
+cfg?.closedPnlEnrichOnFetch ===
 true,
 exchangeId
 }
@@ -182,8 +193,145 @@ pnlResult.trades,
 want
 );
 
+const directExecutions =
+Array.isArray(
+pnlResult.executions
+)
+? pnlResult.executions.filter(
+ex=>
+Number.isFinite(
+Number(
+ex?.execTimeMs
+)
+) &&
+Number(
+ex.execTimeMs
+) >
+0
+)
+: [];
+
 if(
-!trades.length
+directExecutions.length
+){
+const fromTrades =
+closedPnlTradesToExecutions(
+trades.filter(
+trade=>{
+const openMs =
+Number(
+trade?.openTimeMs
+);
+const closeMs =
+Number(
+trade?.closeTimeMs
+);
+return (
+Number.isFinite(
+openMs
+) &&
+Number.isFinite(
+closeMs
+) &&
+openMs >
+0 &&
+closeMs >
+0 &&
+openMs !==
+closeMs &&
+!trade?.sparse
+);
+}
+),
+want
+);
+return {
+ok:
+true,
+trades:
+trades.filter(
+trade=>{
+const openMs =
+Number(
+trade?.openTimeMs
+);
+const closeMs =
+Number(
+trade?.closeTimeMs
+);
+return (
+Number.isFinite(
+openMs
+) &&
+Number.isFinite(
+closeMs
+) &&
+openMs >
+0 &&
+closeMs >
+0 &&
+openMs !==
+closeMs &&
+!trade?.sparse
+);
+}
+),
+executions:
+fromTrades.length
+? fromTrades
+: directExecutions,
+message:
+pnlResult.source
+? String(
+pnlResult.source
+)
+: ""
+};
+}
+
+const usableTrades =
+trades.filter(
+trade=>{
+
+const openMs =
+Number(
+trade?.openTimeMs
+);
+const closeMs =
+Number(
+trade?.closeTimeMs
+);
+
+if(
+trade?.sparse
+){
+return false;
+}
+
+if(
+!Number.isFinite(
+openMs
+) ||
+!Number.isFinite(
+closeMs
+) ||
+openMs <=
+0 ||
+closeMs <=
+0
+){
+return false;
+}
+
+/* Entry and exit must be distinct for two triangles. */
+return openMs !==
+closeMs;
+
+}
+);
+
+if(
+!usableTrades.length
 ){
 return {
 ok:
@@ -204,10 +352,11 @@ if(
 return {
 ok:
 true,
-trades,
+trades:
+usableTrades,
 executions:
 closedPnlTradesToExecutions(
-trades,
+usableTrades,
 want
 ),
 message:
@@ -219,7 +368,7 @@ shouldFetchTradeDetails()
 
 const details =
 await Promise.all(
-trades.map(
+usableTrades.map(
 trade=>
 api.getTradeDiaryDetail(
 {
@@ -254,12 +403,12 @@ for(
 let i =
 0;
 i <
-trades.length;
+usableTrades.length;
 i++
 ){
 
 const trade =
-trades[
+usableTrades[
 i
 ];
 const detail =
@@ -347,7 +496,8 @@ want
 return {
 ok:
 true,
-trades,
+trades:
+usableTrades,
 executions,
 message:
 ""

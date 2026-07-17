@@ -38,6 +38,9 @@ const BYBIT_TRADE = {
   restPositionsForceRefresh: false,
   restOrdersForceRefresh: false,
   emptyCredentialsHint: "Подключите Bybit в шапке",
+  fetchClosedPnlTradeDetails: true,
+  closedPnlForceRefresh: false,
+  closedPnlEnrichOnFetch: false,
   positionMapKey,
   keysMatchSymbol
 };

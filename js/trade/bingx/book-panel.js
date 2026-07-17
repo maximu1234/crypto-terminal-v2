@@ -11,11 +11,11 @@ getAllCachedPositions,
 isTradePositionRecentlyClosed,
 removeTradePositionFromCache,
 syncTradePositionsCache
-} from "./positions-cache.js?v=1";
+} from "./positions-cache.js?v=2";
 
 import {
 getTradeConfig
-} from "./config.js?v=1";
+} from "./config.js?v=3";
 
 import {
 applyPositionColumnLayout,
@@ -3322,31 +3322,41 @@ if(
 mode ===
 "orders"
 ){
-const result =
-await api.getOpenOrders();
+let orders =
+lastOrderRows;
 
 if(
-!result?.ok
+api.getStreamSnapshot
 ){
+const snapshot =
+await api.getStreamSnapshot();
 
 if(
-!lastOrderRows.length
+snapshot?.ok
+){
+orders =
+Array.isArray(
+snapshot.orders
+)
+? snapshot.orders
+: [];
+}else if(
+!orders.length
 ){
 renderOrders(
 []
 );
-}
-
 setStatus(
-result.message ||
+snapshot?.message ||
 "Ошибка загрузки ордеров",
 true
 );
 return;
 }
+}
 
 renderOrders(
-result.orders ||
+orders ||
 []
 );
 setStatus(
@@ -3355,11 +3365,11 @@ setStatus(
 return;
 }
 
-const result =
-await api.getPositions();
+const syncResult =
+await syncTradePositionsCache();
 
 if(
-!result?.ok
+!syncResult?.ok
 ){
 
 const cachedPositions =
@@ -3373,7 +3383,7 @@ cachedPositions
 );
 
 if(
-result?.rateLimited
+syncResult?.rateLimited
 ){
 setStatus(
 ""
@@ -3389,7 +3399,7 @@ renderPositions(
 }
 
 setStatus(
-result.message ||
+syncResult?.message ||
 "Ошибка загрузки позиций",
 true
 );
@@ -3397,8 +3407,8 @@ return;
 }
 
 let positions =
-result.positions ||
-[];
+syncResult.positions ||
+getAllCachedPositions();
 
 if(
 getTradeConfig().filterRecentlyClosedInBookRefresh

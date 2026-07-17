@@ -32,6 +32,7 @@ reconcileOrdersOnPositionOpen,
 reconcileOrdersOnPositionClose,
 pingBybit,
 getClosedPnlHistory,
+enrichClosedPnlTrades,
 getTradeDiaryDetail,
 getSymbolExecutionHistory,
 getSymbolPositionSettings,
@@ -47,6 +48,8 @@ startTradingStream,
 stopTradingStream,
 replayTradingStream,
 seedFromRest,
+getTradingSnapshot,
+requestStreamSeed,
 removeStreamOrder,
 removeStreamPosition,
 upsertStreamPosition
@@ -799,6 +802,36 @@ err.message
 );
 
 ipcMain.handle(
+"trading:enrichClosedPnlTrades",
+async(
+_event,
+payload
+)=>{
+
+try{
+return await enrichClosedPnlTrades(
+payload ||
+{}
+);
+}catch(
+err
+){
+log.warn(
+"trading:enrichClosedPnlTrades:",
+err.message
+);
+return {
+ok:
+false,
+message:
+err.message
+};
+}
+
+}
+);
+
+ipcMain.handle(
 "trading:getSymbolExecutions",
 async(
 _event,
@@ -933,6 +966,54 @@ err
 ){
 log.warn(
 "trading:replayStream:",
+err.message
+);
+return {
+ok:
+false,
+message:
+err.message
+};
+}
+
+}
+);
+
+ipcMain.handle(
+"trading:getStreamSnapshot",
+()=>{
+
+try{
+return getTradingSnapshot();
+}catch(
+err
+){
+log.warn(
+"trading:getStreamSnapshot:",
+err.message
+);
+return {
+ok:
+false,
+message:
+err.message
+};
+}
+
+}
+);
+
+ipcMain.handle(
+"trading:requestStreamSeed",
+()=>{
+
+try{
+return requestStreamSeed();
+}catch(
+err
+){
+log.warn(
+"trading:requestStreamSeed:",
 err.message
 );
 return {

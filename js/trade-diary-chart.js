@@ -37,7 +37,7 @@ tfToBingxInterval
 import {
 candleAlignSec,
 markerForExecutionSide
-} from "./trade-markers-sandbox/marker-math.js?v=9";
+} from "./trade-markers-sandbox/marker-math.js?v=10";
 
 export const DIARY_CHART_TFS =
 Object.freeze([
@@ -648,6 +648,55 @@ return shell;
 
 }
 
+function markerTimesFromDetail(
+detail,
+trade,
+fallbackOpenMs,
+fallbackCloseMs
+){
+
+const sideRaw =
+String(
+detail?.side ||
+trade?.side ||
+""
+).toLowerCase();
+const openMs =
+Number(
+detail?.openTimeMs
+) >
+0
+? Number(
+detail.openTimeMs
+)
+: fallbackOpenMs;
+const closeMs =
+Number(
+detail?.closeTimeMs
+) >
+0
+? Number(
+detail.closeTimeMs
+)
+: fallbackCloseMs;
+
+return {
+entryMs:
+openMs,
+exitMs:
+closeMs,
+isLong:
+sideRaw ===
+"long",
+sideKnown:
+sideRaw ===
+"long" ||
+sideRaw ===
+"short"
+};
+
+}
+
 async function renderDiaryChart(
 container,
 trade,
@@ -678,12 +727,62 @@ const symbol =
 linearSymbol(
 trade.symbol
 );
+const openMs =
+Number(
+detail?.openTimeMs
+) >
+0
+? Number(
+detail.openTimeMs
+)
+: trade.openTimeMs;
+const closeMs =
+Number(
+detail?.closeTimeMs
+) >
+0
+? Number(
+detail.closeTimeMs
+)
+: trade.closeTimeMs;
+
+/* Markers follow positionHistory open/close + side from detail. */
+const markerTimes =
+markerTimesFromDetail(
+detail,
+trade,
+openMs,
+closeMs
+);
+const entryMs =
+markerTimes.entryMs;
+const exitMs =
+markerTimes.exitMs;
+const isLong =
+markerTimes.isLong;
+const sideKnown =
+markerTimes.sideKnown;
+const entrySide =
+!sideKnown
+? ""
+: isLong
+? "Buy"
+: "Sell";
+const exitSide =
+!sideKnown
+? ""
+: isLong
+? "Sell"
+: "Buy";
+
 const candles =
 await loadCandlesAroundTrade(
 symbol,
 tf,
-trade.openTimeMs,
-trade.closeTimeMs
+entryMs ||
+openMs,
+exitMs ||
+closeMs
 );
 
 mount.replaceChildren();
@@ -823,53 +922,35 @@ series,
 referencePrice
 );
 
-const entryMs =
-detail?.entries?.[
-0
-]?.execTimeMs ||
-trade.openTimeMs;
-const exitMs =
-detail?.exits?.length
-? detail.exits[
-detail.exits.length -
-1
-].execTimeMs
-: trade.closeTimeMs;
-const isLong =
-trade.side ===
-"long";
-const entrySide =
-isLong
-? "Buy"
-: "Sell";
-const exitSide =
-isLong
-? "Sell"
-: "Buy";
-
 const markers =
 [];
 
 if(
-entryMs
+entryMs &&
+entrySide
 ){
 markers.push(
 markerForExecutionSide(
 entrySide,
+candleAlignSec(
 entryMs,
 tf
+)
 )
 );
 }
 
 if(
-exitMs
+exitMs &&
+exitSide
 ){
 markers.push(
 markerForExecutionSide(
 exitSide,
+candleAlignSec(
 exitMs,
 tf
+)
 )
 );
 }
