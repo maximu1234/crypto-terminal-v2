@@ -26,6 +26,12 @@ function loadRouterWithStubs({
     if (request === "./bingx-rest.cjs") {
       return bingx;
     }
+    if (request === "./bingx-private-ws.cjs") {
+      return { connectBingxPrivateWs: () => {} };
+    }
+    if (request === "./bybit-private-ws.cjs") {
+      return { connectBybitPrivateWs: () => {} };
+    }
     return originalLoad(request, parent, isMain);
   };
   try {
