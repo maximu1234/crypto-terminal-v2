@@ -3423,6 +3423,56 @@ async function getTradeDiaryDetail(options = {}) {
   };
 }
 
+function closedPnlCacheKey(startTime, endTime, symbol) {
+  return `${Math.floor(startTime)}:${Math.floor(endTime)}:${symbol || "*"}`;
+}
+
+function readClosedPnlCache(key) {
+  const hit = closedPnlCacheByKey.get(key);
+  if (!hit) {
+    return null;
+  }
+  if (Date.now() - hit.at > CLOSED_PNL_CACHE_MS) {
+    closedPnlCacheByKey.delete(key);
+    return null;
+  }
+  return {
+    ...hit.result,
+    trades: Array.isArray(hit.result.trades) ? [...hit.result.trades] : []
+  };
+}
+
+function writeClosedPnlCache(key, result) {
+  if (!result?.ok || !Array.isArray(result.trades)) {
+    return;
+  }
+  closedPnlCacheByKey.set(key, {
+    at: Date.now(),
+    result: {
+      ...result,
+      trades: [...result.trades]
+    }
+  });
+}
+
+function serveClosedPnlCacheOrBlock(key, blocked) {
+  const cached = readClosedPnlCache(key);
+  if (cached) {
+    return {
+      ...cached,
+      ok: true,
+      stale: true,
+      fromCache: true
+    };
+  }
+  return (
+    blocked || {
+      ok: false,
+      rateLimited: true,
+      message: "BingX rate limit — подождите"
+    }
+  );
+}
 
 /**
  * BingX diary list: income-first (PnL $ usable immediately).
