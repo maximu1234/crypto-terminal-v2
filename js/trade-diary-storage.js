@@ -16,7 +16,7 @@ const PERIOD_STORAGE_KEY =
 "trade_diary_period_v1";
 
 const DAY_CACHE_STORAGE_KEY =
-"trade_diary_days_v1";
+"trade_diary_days_v2";
 
 function safeParse(
 raw

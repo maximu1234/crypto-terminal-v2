@@ -3266,33 +3266,101 @@ async function getTradeDiaryDetail(options = {}) {
     return { ok: false, message: "Некорректные параметры сделки" };
   }
 
-  /*
-   * Truth model (matches BingX UI «История сделок»):
-   * positionHistory → side, openTime, closeTime, prices, qty, duration.
-   * fills → table rows only, loaded inside that open/close window.
-   * Do NOT infer side from Buy/Sell chronology (short opens with Sell).
-   */
-  const resolved = await resolveBingxTradePrices({
-    ...options,
-    sparse: options.sparse === true || options.sparse === "true"
-  });
+  const sparse =
+    options.sparse === true ||
+    options.sparse === "true" ||
+    anchorOpenMs === anchorCloseMs;
 
+  /*
+   * Never trust list/cache side when the row is still sparse — old caches
+   * poisoned Shorts as Long and that blocked correct fill-cycle matching.
+   */
+  const hintSide = sparse
+    ? ""
+    : String(options.side || "").toLowerCase();
+
+  const want = toCanonicalSymbol(symbol);
   let openTimeMs = anchorOpenMs;
   let closeTimeMs = anchorCloseMs;
-  let side = String(resolved.side || options.side || "").toLowerCase();
-  let avgEntryPrice = Number(resolved.avgEntryPrice) || 0;
-  let avgExitPrice = Number(resolved.avgExitPrice) || 0;
-  let qty = Number(resolved.qty) || 0;
-  const positionId = resolved.positionId || options.positionId || "";
+  let side = hintSide === "long" || hintSide === "short" ? hintSide : "";
+  let avgEntryPrice = Number(options.avgEntryPrice) || 0;
+  let avgExitPrice = Number(options.avgExitPrice) || 0;
+  let qty = Math.abs(Number(options.qty) || 0);
+  let positionId = options.positionId || "";
+  let entries = [];
+  let exits = [];
+  let executions = [];
+  let fillsOk = true;
+  let fillsMessage = null;
 
-  if (
-    Number.isFinite(resolved.openTimeMs) &&
-    Number.isFinite(resolved.closeTimeMs) &&
-    resolved.openTimeMs > 0 &&
-    resolved.closeTimeMs > resolved.openTimeMs
-  ) {
-    openTimeMs = resolved.openTimeMs;
-    closeTimeMs = resolved.closeTimeMs;
+  /* 1) positionHistory when available */
+  const hist = await fetchBingxPositionHistoryPages(
+    symbol,
+    Math.max(0, Math.min(anchorOpenMs, anchorCloseMs) - 14 * 24 * 60 * 60 * 1000),
+    Math.max(anchorOpenMs, anchorCloseMs) + 60 * 60 * 1000,
+    { priority: PRIORITY.normal }
+  );
+  if (hist.ok) {
+    const mapped = (hist.rows || [])
+      .map(mapBingxPositionHistoryRow)
+      .filter(Boolean)
+      .filter((t) => t.symbol === want);
+    const match = matchBingxRoundTripByAnchor(mapped, anchorCloseMs);
+    if (match && match.closeTimeMs > match.openTimeMs) {
+      openTimeMs = match.openTimeMs;
+      closeTimeMs = match.closeTimeMs;
+      side = match.side || side;
+      avgEntryPrice = match.avgEntryPrice || avgEntryPrice;
+      avgExitPrice = match.avgExitPrice || avgExitPrice;
+      qty = match.qty || qty;
+      positionId = match.positionId || positionId;
+    }
+  }
+
+  /* 2) Authoritative SHORT/LONG from allFillOrders.positionSide */
+  const lookBackMs = FILL_HISTORY_MAX_SPAN_MS;
+  const lookForwardMs =
+    sparse || !(closeTimeMs > openTimeMs)
+      ? 7 * 24 * 60 * 60 * 1000
+      : 15 * 60 * 1000;
+  const fillResult = await fetchBingxFillRowsPaged(
+    symbol,
+    Math.max(0, Math.min(anchorOpenMs, anchorCloseMs) - lookBackMs),
+    Math.max(anchorOpenMs, anchorCloseMs) + lookForwardMs,
+    { priority: PRIORITY.normal }
+  );
+  if (!fillResult.ok) {
+    fillsOk = false;
+    fillsMessage = fillResult.message || null;
+  } else {
+    const fillExecs = (fillResult.rows || [])
+      .map(mapBingxFillExecution)
+      .filter(Boolean)
+      .filter((ex) => !ex.symbol || ex.symbol === want)
+      .sort((a, b) => a.execTimeMs - b.execTimeMs);
+    const fillTrade = matchBingxRoundTripByAnchor(
+      buildBingxRoundTripsFromPositionFills(fillExecs),
+      anchorCloseMs
+    );
+    if (fillTrade && fillTrade.closeTimeMs > fillTrade.openTimeMs) {
+      openTimeMs = fillTrade.openTimeMs;
+      closeTimeMs = fillTrade.closeTimeMs;
+      side = fillTrade.side;
+      avgEntryPrice = fillTrade.avgEntryPrice || avgEntryPrice;
+      avgExitPrice = fillTrade.avgExitPrice || avgExitPrice;
+      qty = fillTrade.qty || qty;
+      entries = fillTrade.entries.slice();
+      exits = fillTrade.exits.slice();
+      executions = fillTrade.executions.slice();
+    } else if (closeTimeMs > openTimeMs) {
+      /* Keep fills inside the resolved open/close window for the table. */
+      const pad = 15 * 60 * 1000;
+      executions = fillExecs.filter(
+        (ex) =>
+          ex.execTimeMs >= openTimeMs - pad &&
+          ex.execTimeMs <= closeTimeMs + pad
+      );
+    }
   }
 
   const isShort = side === "short";
@@ -3301,40 +3369,6 @@ async function getTradeDiaryDetail(options = {}) {
   const openSideFinal = isShort ? "Sell" : "Buy";
   const closeSideFinal = isShort ? "Buy" : "Sell";
 
-  const fillPadMs = 15 * 60 * 1000;
-  const startTs = Math.max(0, Math.min(openTimeMs, closeTimeMs) - fillPadMs);
-  const endTs = Math.max(openTimeMs, closeTimeMs) + fillPadMs;
-  let fillResult = { ok: true, rows: [] };
-  let executions = Array.isArray(resolved.executions)
-    ? resolved.executions.slice()
-    : [];
-  if (!executions.length) {
-    fillResult = await fetchBingxFillRows({
-      symbol,
-      startTs,
-      endTs,
-      priority: PRIORITY.normal
-    });
-  }
-  if (fillResult.ok && !executions.length) {
-    const want = toCanonicalSymbol(symbol);
-    executions = (fillResult.rows || [])
-      .filter((row) => {
-        const rowSym = toCanonicalSymbol(row?.symbol);
-        return !rowSym || rowSym === want;
-      })
-      .map(mapBingxFillExecution)
-      .filter(Boolean)
-      .filter((ex) => ex.execTimeMs >= startTs && ex.execTimeMs <= endTs)
-      .sort((a, b) => a.execTimeMs - b.execTimeMs);
-  }
-
-  let entries = Array.isArray(resolved.entries)
-    ? resolved.entries.slice()
-    : [];
-  let exits = Array.isArray(resolved.exits)
-    ? resolved.exits.slice()
-    : [];
   if (sideKnown) {
     if (!entries.length) {
       entries = executions.filter((ex) => ex.side === openSideFinal);
@@ -3351,12 +3385,13 @@ async function getTradeDiaryDetail(options = {}) {
     avgExitPrice = vwapFromExecutions(exits);
   }
   if (!qty && sideKnown) {
-    const entryQty = entries.reduce((s, ex) => s + ex.execQty, 0);
-    const exitQty = exits.reduce((s, ex) => s + ex.execQty, 0);
-    qty = Math.max(entryQty, exitQty);
+    qty = Math.max(
+      entries.reduce((s, ex) => s + ex.execQty, 0),
+      exits.reduce((s, ex) => s + ex.execQty, 0)
+    );
   }
 
-  if (!executions.length && sideKnown) {
+  if (!executions.length && sideKnown && avgEntryPrice > 0 && avgExitPrice > 0) {
     executions = synthesizeBingxTradeExecutions({
       side,
       openTimeMs,
@@ -3371,84 +3406,23 @@ async function getTradeDiaryDetail(options = {}) {
     exits = executions.filter((ex) => ex.side === closeSideFinal);
   }
 
-  /* Prefer exact fill timestamps inside the PH window; never invent a new day. */
-  let entryMs = openTimeMs;
-  let exitMs = closeTimeMs;
-  if (sideKnown && entries.length) {
-    entryMs = entries[0].execTimeMs;
-  }
-  if (sideKnown && exits.length) {
-    exitMs = exits[exits.length - 1].execTimeMs;
-  }
-
   return {
     ok: true,
     executions,
     entries,
     exits,
     side: isShort ? "short" : isLong ? "long" : "",
-    openTimeMs: entryMs,
-    closeTimeMs: exitMs,
-    durationMs: Math.max(0, exitMs - entryMs),
+    openTimeMs,
+    closeTimeMs,
+    durationMs: Math.max(0, closeTimeMs - openTimeMs),
     avgEntryPrice: avgEntryPrice || 0,
     avgExitPrice: avgExitPrice || 0,
     positionId,
-    fillsOk: !!fillResult.ok,
-    fillsMessage: fillResult.ok ? null : fillResult.message || null
+    fillsOk,
+    fillsMessage
   };
 }
 
-
-function closedPnlCacheKey(startTime, endTime, symbol) {
-  return `${Math.floor(startTime)}:${Math.floor(endTime)}:${symbol || "*"}`;
-}
-
-function readClosedPnlCache(key) {
-  const hit = closedPnlCacheByKey.get(key);
-  if (!hit) {
-    return null;
-  }
-  if (Date.now() - hit.at > CLOSED_PNL_CACHE_MS) {
-    closedPnlCacheByKey.delete(key);
-    return null;
-  }
-  return {
-    ...hit.result,
-    trades: Array.isArray(hit.result.trades) ? [...hit.result.trades] : []
-  };
-}
-
-function writeClosedPnlCache(key, result) {
-  if (!result?.ok || !Array.isArray(result.trades)) {
-    return;
-  }
-  closedPnlCacheByKey.set(key, {
-    at: Date.now(),
-    result: {
-      ...result,
-      trades: [...result.trades]
-    }
-  });
-}
-
-function serveClosedPnlCacheOrBlock(key, blocked) {
-  const cached = readClosedPnlCache(key);
-  if (cached) {
-    return {
-      ...cached,
-      ok: true,
-      stale: true,
-      fromCache: true
-    };
-  }
-  return (
-    blocked || {
-      ok: false,
-      rateLimited: true,
-      message: "BingX rate limit — подождите"
-    }
-  );
-}
 
 /**
  * BingX diary list: income-first (PnL $ usable immediately).

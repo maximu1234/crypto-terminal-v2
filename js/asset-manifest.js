@@ -70,11 +70,11 @@ Object.freeze({
 "trade-diary-nav.js":
 11,
 "trade-diary-page.js":
-27,
+28,
 "trade-diary-period.js":
 3,
 "trade-diary-detail.js":
-12,
+13,
 "trade-diary-chart.js":
 13,
 "trade-positions-cache.js":

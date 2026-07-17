@@ -261,8 +261,11 @@ openTimeMs:
 trade.openTimeMs,
 closeTimeMs:
 trade.closeTimeMs,
+/* Sparse list rows often cache a wrong Long — detail resolves side itself. */
 side:
-trade.side,
+trade.sparse
+? ""
+: trade.side,
 qty:
 trade.qty,
 orderId:
@@ -271,11 +274,21 @@ positionId:
 trade.positionId ||
 trade.orderId,
 avgEntryPrice:
-trade.avgEntryPrice,
+trade.sparse
+? 0
+: trade.avgEntryPrice,
 avgExitPrice:
-trade.avgExitPrice,
+trade.sparse
+? 0
+: trade.avgExitPrice,
 sparse:
-!!trade.sparse,
+!!trade.sparse ||
+Number(
+trade.openTimeMs
+) ===
+Number(
+trade.closeTimeMs
+),
 exchangeId:
 getActiveExchangeId()
 });
@@ -325,11 +338,27 @@ trade.openTimeMs;
 trade.sparse =
 false;
 }
-if(
-detail.side
-){
+/* Always apply resolved side — including "" to clear poisoned Long. */
 trade.side =
-detail.side;
+detail.side ||
+"";
+if(
+Number(
+detail.avgEntryPrice
+) >
+0
+){
+trade.avgEntryPrice =
+detail.avgEntryPrice;
+}
+if(
+Number(
+detail.avgExitPrice
+) >
+0
+){
+trade.avgExitPrice =
+detail.avgExitPrice;
 }
 const rowDuration =
 detailEl
@@ -356,8 +385,7 @@ detailEl
 ".trade-diary-side"
 );
 if(
-rowSide &&
-trade.side
+rowSide
 ){
 rowSide.textContent =
 sideLabel(

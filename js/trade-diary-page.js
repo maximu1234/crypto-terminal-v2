@@ -18,7 +18,7 @@ sideToneClass
 import {
 closeTradeDetail,
 openTradeDetail
-} from "./trade-diary-detail.js?v=12";
+} from "./trade-diary-detail.js?v=13";
 
 import {
 mountTradeDiaryPeriodPicker
@@ -36,7 +36,7 @@ saveDiaryPeriod,
 startOfDayMs,
 todayDiaryDayKey,
 writeDiaryDayTrades
-} from "./trade-diary-storage.js?v=2";
+} from "./trade-diary-storage.js?v=3";
 
 import {
 EXCHANGE_CHANGED_EVENT,
@@ -132,6 +132,73 @@ return `id:${sym}:${oid}`;
 return `t:${tradeKey(
 trade
 )}`;
+
+}
+
+/** Drop poisoned Long/Short from incomplete income rows. */
+function sanitizeSparseDiaryTrade(
+trade
+){
+
+if(
+!trade
+){
+return trade;
+}
+
+const openMs =
+Number(
+trade.openTimeMs
+);
+const closeMs =
+Number(
+trade.closeTimeMs
+);
+const sparse =
+trade.sparse ===
+true ||
+!(
+closeMs >
+openMs
+) ||
+!Number(
+trade.durationMs
+);
+
+if(
+!sparse
+){
+return trade;
+}
+
+return {
+...trade,
+sparse:
+true,
+side:
+"",
+avgEntryPrice:
+0,
+avgExitPrice:
+0,
+durationMs:
+0,
+openTimeMs:
+Number.isFinite(
+closeMs
+)
+? closeMs
+: openMs,
+closeTimeMs:
+Number.isFinite(
+closeMs
+)
+? closeMs
+: openMs,
+listCloseTimeMs:
+trade.listCloseTimeMs ??
+closeMs
+};
 
 }
 
@@ -1625,7 +1692,10 @@ error = false
 ){
 
 weekTrades =
-trades;
+(trades ||
+[]).map(
+sanitizeSparseDiaryTrade
+);
 openTradeKey =
 null;
 collapsedDayKeys.clear();
