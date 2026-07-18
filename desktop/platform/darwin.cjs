@@ -135,24 +135,7 @@ app.on(
 ensureAppVisible(
 app
 );
-
-const mainWindow =
-ctx.getMainWindow?.();
-
-if(
-mainWindow &&
-!mainWindow.isDestroyed()
-){
 revealMainWindow();
-return;
-}
-
-if(
-BrowserWindow.getAllWindows().length ===
-0
-){
-createWindow();
-}
 
 }
 );
@@ -167,7 +150,10 @@ ctx
 const {
 app,
 getIsQuitting,
-dismissTrayPopup
+dismissTrayPopup,
+shouldEnterAgentOnClose,
+enterAgentMode,
+isAgentClosing
 } =
 ctx;
 
@@ -176,15 +162,26 @@ mainWindow.on(
 event=>{
 
 if(
-!getIsQuitting()
+getIsQuitting() ||
+isAgentClosing?.()
 ){
+return;
+}
+
 event.preventDefault();
 dismissTrayPopup?.();
+
+if(
+shouldEnterAgentOnClose?.()
+){
+enterAgentMode?.();
+return;
+}
+
 mainWindow.hide();
 ensureAppVisible(
 app
 );
-}
 
 }
 );

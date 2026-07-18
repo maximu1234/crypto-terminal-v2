@@ -84,6 +84,17 @@ ipcRenderer.invoke(
 "desktop:setMenuBarTrayVisible",
 visible
 ),
+getMenuBarAgentPrefs:()=>
+ipcRenderer.invoke(
+"desktop:getMenuBarAgentPrefs"
+),
+setLaunchAgentAtLogin:(
+enabled
+)=>
+ipcRenderer.invoke(
+"desktop:setLaunchAgentAtLogin",
+enabled
+),
 trading:{
 getStatus:(
 payload

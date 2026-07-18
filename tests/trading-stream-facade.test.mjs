@@ -29,7 +29,8 @@ function loadStreamFacade({ active = "bybit" } = {}) {
     replayTradingStream: () => calls.push("bybit-replay"),
     removeStreamOrder: () => calls.push("bybit-remove-order"),
     removeStreamPosition: () => calls.push("bybit-remove-pos"),
-    upsertStreamPosition: () => calls.push("bybit-upsert")
+    upsertStreamPosition: () => calls.push("bybit-upsert"),
+    getTradingSnapshot: () => ({ ok: true, exchangeId: "bybit", positions: [] })
   };
   const bingxStream = {
     setTradingStreamTarget: () => calls.push("bingx-target"),
@@ -88,11 +89,11 @@ test("trading-stream facade stops the other exchange before start", () => {
   assert.deepEqual(calls, ["bingx-stop", "bybit-start"]);
 });
 
-test("trading-stream snapshot unsupported on Bybit, delegated on BingX", () => {
+test("trading-stream snapshot delegated on Bybit and BingX", () => {
   const bybit = loadStreamFacade({ active: "bybit" });
   const snapBybit = bybit.facade.getTradingSnapshot();
-  assert.equal(snapBybit.ok, false);
-  assert.equal(snapBybit.unsupported, true);
+  assert.equal(snapBybit.ok, true);
+  assert.equal(snapBybit.exchangeId, "bybit");
 
   const seedBybit = bybit.facade.requestStreamSeed();
   assert.equal(seedBybit.ok, true);
@@ -108,8 +109,8 @@ test("trading-stream snapshot unsupported on Bybit, delegated on BingX", () => {
   assert.ok(bingx.calls.includes("bingx-request-seed"));
 });
 
-test("Bybit stream does not advertise BingX-only snapshot APIs", () => {
+test("Bybit stream exports snapshot without BingX-only poll constants", () => {
   const bybit = read("desktop/trading/bybit-trading-stream.cjs");
-  assert.doesNotMatch(bybit, /function getTradingSnapshot/);
+  assert.match(bybit, /function getTradingSnapshot/);
   assert.doesNotMatch(bybit, /EXTERNAL_SYNC_POLL_MS/);
 });

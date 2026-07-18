@@ -396,29 +396,10 @@ return max;
 
 }
 
-function renderRows(
-container,
-rows,
-tick,
-volumeRefMax
+function rowClassName(
+row
 ){
 
-const frag =
-document.createDocumentFragment();
-const refMax =
-resolveVolumeRefMax(
-rows,
-volumeRefMax
-);
-
-for(
-const row of
-rows
-){
-const el =
-document.createElement(
-"div"
-);
 const classes =
 [
 "scalping-dom-row",
@@ -497,20 +478,15 @@ classes.push(
 );
 }
 
-const barPct =
-volumeBarPct(
-row.size,
-refMax
-);
-
-el.className =
-classes.join(
+return classes.join(
 " "
 );
-el.dataset.price =
-String(
-row.price
-);
+
+}
+
+function rowSideBg(
+row
+){
 
 let sideBg =
 row.side ===
@@ -540,8 +516,16 @@ sideBg,
 );
 }
 
-const priceBg =
-row.positionFill ===
+return sideBg;
+
+}
+
+function rowPriceBg(
+row,
+sideBg
+){
+
+return row.positionFill ===
 "profit"
 ? (
 row.slTpHighlight
@@ -563,16 +547,82 @@ row.slTpHighlight
 )
 : sideBg;
 
+}
+
+function paintRowContent(
+el,
+row,
+tick,
+refMax
+){
+
+const barPct =
+volumeBarPct(
+row.size,
+refMax
+);
+const sideBg =
+rowSideBg(
+row
+);
+const priceBg =
+rowPriceBg(
+row,
+sideBg
+);
+const mark =
+row.slTpMark ||
+"";
+
+el.className =
+rowClassName(
+row
+);
+el.dataset.price =
+String(
+row.price
+);
+el.dataset.slTpMark =
+mark;
+
 if(
 sideBg
 ){
 el.style.background =
 sideBg;
+}else{
+el.style.background =
+"";
 }
 
+let sizeEl =
+el.querySelector(
+".scalping-dom-size"
+);
+let priceEl =
+el.querySelector(
+".scalping-dom-price"
+);
+let edgeEl =
+el.querySelector(
+".scalping-dom-sl-tp-edge"
+);
+
+if(
+!sizeEl ||
+!priceEl ||
+(
+mark &&
+!edgeEl
+) ||
+(
+!mark &&
+edgeEl
+)
+){
 el.innerHTML =
 slTpEdgeHtml(
-row.slTpMark
+mark
 ) +
 `<span class="scalping-dom-size"${sideBg ? ` style="background:${sideBg}"` : ""}>` +
 (
@@ -584,6 +634,182 @@ barPct >
 `<span class="scalping-dom-vol-text">${formatSize(row.size)}</span>` +
 `</span>` +
 `<span class="scalping-dom-price"${priceBg ? ` style="background:${priceBg}"` : ""}>${formatPrice(row.price, tick)}</span>`;
+return;
+}
+
+if(
+sideBg
+){
+sizeEl.style.background =
+sideBg;
+}else{
+sizeEl.style.background =
+"";
+}
+
+if(
+priceBg
+){
+priceEl.style.background =
+priceBg;
+}else{
+priceEl.style.background =
+"";
+}
+
+let barEl =
+sizeEl.querySelector(
+".scalping-dom-vol-bar"
+);
+const textEl =
+sizeEl.querySelector(
+".scalping-dom-vol-text"
+);
+
+if(
+barPct >
+0
+){
+if(
+!barEl
+){
+barEl =
+document.createElement(
+"span"
+);
+barEl.className =
+"scalping-dom-vol-bar";
+sizeEl.insertBefore(
+barEl,
+textEl
+);
+}
+barEl.style.width =
+`${barPct.toFixed(1)}%`;
+}else if(
+barEl
+){
+barEl.remove();
+}
+
+if(
+textEl
+){
+textEl.textContent =
+formatSize(
+row.size
+);
+}
+
+priceEl.textContent =
+formatPrice(
+row.price,
+tick
+);
+
+}
+
+function canPatchRows(
+container,
+rows
+){
+
+const kids =
+container.children;
+
+if(
+kids.length !==
+rows.length
+){
+return false;
+}
+
+for(
+let i =
+0;
+i <
+rows.length;
+i++
+){
+if(
+kids[
+i
+].dataset.price !==
+String(
+rows[
+i
+].price
+)
+){
+return false;
+}
+}
+
+return true;
+
+}
+
+function renderRows(
+container,
+rows,
+tick,
+volumeRefMax
+){
+
+const refMax =
+resolveVolumeRefMax(
+rows,
+volumeRefMax
+);
+
+if(
+canPatchRows(
+container,
+rows
+)
+){
+const kids =
+container.children;
+
+for(
+let i =
+0;
+i <
+rows.length;
+i++
+){
+paintRowContent(
+kids[
+i
+],
+rows[
+i
+],
+tick,
+refMax
+);
+}
+
+return;
+}
+
+const frag =
+document.createDocumentFragment();
+
+for(
+const row of
+rows
+){
+const el =
+document.createElement(
+"div"
+);
+paintRowContent(
+el,
+row,
+tick,
+refMax
+);
 frag.appendChild(
 el
 );

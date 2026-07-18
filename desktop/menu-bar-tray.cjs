@@ -20,6 +20,13 @@ const log =
 require(
 "electron-log"
 );
+const {
+startTrayFeed,
+stopTrayFeed
+} =
+require(
+"./menu-bar-tray-feed.cjs"
+);
 
 /** @type {import("electron").Tray | null} */
 let tray =
@@ -222,6 +229,31 @@ hideTrayPopup();
 app.quit();
 
 });
+
+}
+
+function isMenuBarTrayActive(){
+
+return (
+process.platform ===
+"darwin" &&
+!!tray
+);
+
+}
+
+function ensureTrayFeedRunning(){
+
+if(
+!isMenuBarTrayActive()
+){
+stopTrayFeed();
+return;
+}
+
+startTrayFeed(
+updateMenuBarTray
+);
 
 }
 
@@ -674,6 +706,8 @@ false,
 positions:[]
 });
 
+ensureTrayFeedRunning();
+
 }
 
 function updateMenuBarTray(
@@ -704,6 +738,7 @@ state ||
 
 function destroyMenuBarTray(){
 
+stopTrayFeed();
 stopPopupDismissHooks?.();
 hideMenuBarTray();
 revealMainWindow =
@@ -772,6 +807,7 @@ return;
 if(
 !visible
 ){
+stopTrayFeed();
 hideMenuBarTray();
 return;
 }
@@ -782,6 +818,8 @@ if(
 initMenuBarTray(
 revealMainWindow
 );
+}else{
+ensureTrayFeedRunning();
 }
 
 }
@@ -792,6 +830,7 @@ configureMenuBarTray,
 initMenuBarTray,
 updateMenuBarTray,
 setMenuBarTrayVisible,
+isMenuBarTrayActive,
 dismissTrayPopup,
 destroyMenuBarTray
 };

@@ -74,12 +74,24 @@ const {
 initMenuBarTray,
 updateMenuBarTray,
 setMenuBarTrayVisible,
+isMenuBarTrayActive,
 configureMenuBarTray,
 dismissTrayPopup,
 destroyMenuBarTray
 } =
 require(
 "./menu-bar-tray.cjs"
+);
+const trayPrefsStore =
+require(
+"./menu-bar-tray-prefs-store.cjs"
+);
+const {
+hasAgentArg,
+setDarwinLoginAgentEnabled
+} =
+require(
+"./platform/darwin-login-agent.cjs"
 );
 const platform =
 require(
@@ -251,6 +263,8 @@ let bundleLoadFallback =
 false;
 let isQuitting =
 false;
+let agentClosing =
+false;
 
 platform.applyCommonCommandLineSwitches(
 app
@@ -321,6 +335,30 @@ app
 
 }
 
+function showDockIcon(){
+
+if(
+process.platform ===
+"darwin" &&
+app.dock
+){
+app.dock.show();
+}
+
+}
+
+function hideDockIcon(){
+
+if(
+process.platform ===
+"darwin" &&
+app.dock
+){
+app.dock.hide();
+}
+
+}
+
 function revealMainWindow(){
 
 if(
@@ -329,6 +367,8 @@ mainWindow.isDestroyed()
 ){
 return;
 }
+
+showDockIcon();
 
 if(
 !mainWindow.isVisible()
@@ -347,6 +387,173 @@ mainWindow.maximize();
 }
 
 mainWindow.focus();
+
+}
+
+function openMultichart(){
+
+ensureAppVisible();
+showDockIcon();
+
+if(
+mainWindow &&
+!mainWindow.isDestroyed()
+){
+revealMainWindow();
+startPowerSaveBlocker();
+return;
+}
+
+createWindow();
+startPowerSaveBlocker();
+
+}
+
+function enterAgentMode(){
+
+if(
+process.platform !==
+"darwin"
+){
+return;
+}
+
+dismissTrayPopup();
+stopPowerBlockerForQuit();
+hideDockIcon();
+
+if(
+mainWindow &&
+!mainWindow.isDestroyed()
+){
+agentClosing =
+true;
+
+try{
+mainWindow.destroy();
+}finally{
+agentClosing =
+false;
+}
+
+}
+
+setTradingStreamTarget(
+null
+);
+startTradingStream();
+
+if(
+!isMenuBarTrayActive()
+){
+setMenuBarTrayVisible(
+true
+);
+}
+
+}
+
+function shouldEnterAgentOnClose(){
+
+return (
+process.platform ===
+"darwin" &&
+isMenuBarTrayActive()
+);
+
+}
+
+function shouldStartAsLoginAgent(){
+
+if(
+process.platform !==
+"darwin"
+){
+return false;
+}
+
+if(
+hasAgentArg(
+process.argv
+)
+){
+return true;
+}
+
+try{
+const login =
+app.getLoginItemSettings();
+
+if(
+login?.wasOpenedAsHidden
+){
+return true;
+}
+
+if(
+login?.wasOpenedAtLogin &&
+trayPrefsStore.readPrefs().launchAgentAtLogin
+){
+return true;
+}
+}catch{
+/* ignore */
+}
+
+return false;
+
+}
+
+function applyLaunchAgentPreference(
+enabled
+){
+
+if(
+process.platform !==
+"darwin"
+){
+return {
+ok:
+false,
+message:
+"darwin only"
+};
+}
+
+const prefs =
+trayPrefsStore.setLaunchAgentAtLogin(
+enabled
+);
+
+try{
+setDarwinLoginAgentEnabled(
+prefs.launchAgentAtLogin
+);
+}catch(
+err
+){
+log.warn(
+"launch agent:",
+err?.message ||
+err
+);
+return {
+ok:
+false,
+message:
+err?.message ||
+String(
+err
+),
+prefs
+};
+}
+
+return {
+ok:
+true,
+prefs
+};
 
 }
 
@@ -443,7 +650,8 @@ url
 pendingAuthCallbackUrl =
 url;
 },
-revealMainWindow
+revealMainWindow:
+openMultichart
 });
 
 const platformCtx = {
@@ -454,7 +662,8 @@ BrowserWindow,
 createWindow:()=>{
 createWindow();
 },
-revealMainWindow,
+revealMainWindow:
+openMultichart,
 deliverAuthCallbackUrl,
 isAuthCallbackUrl:(
 url
@@ -467,6 +676,9 @@ authProtocol:
 platform.AUTH_PROTOCOL,
 getMainWindow:()=>mainWindow,
 getIsQuitting:()=>isQuitting,
+isAgentClosing:()=>agentClosing,
+shouldEnterAgentOnClose,
+enterAgentMode,
 dismissTrayPopup
 };
 
@@ -849,7 +1061,6 @@ mainWindow.on(
 setTradingStreamTarget(
 null
 );
-stopTradingStream();
 mainWindow =
 null;
 }
@@ -1155,12 +1366,36 @@ visible
 )=>{
 
 try{
-setMenuBarTrayVisible(
+const prefs =
+trayPrefsStore.setTrayEnabled(
 !!visible
+);
+
+if(
+!prefs.trayEnabled
+){
+try{
+setDarwinLoginAgentEnabled(
+false
+);
+}catch(
+err
+){
+log.warn(
+"launch agent disable:",
+err?.message ||
+err
+);
+}
+}
+
+setMenuBarTrayVisible(
+prefs.trayEnabled
 );
 return {
 ok:
-true
+true,
+prefs
 };
 }catch(
 err
@@ -1174,6 +1409,80 @@ ok:
 false,
 message:
 err.message
+};
+}
+
+}
+);
+
+ipcMain.handle(
+"desktop:getMenuBarAgentPrefs",
+()=>{
+
+try{
+return {
+ok:
+true,
+prefs:
+trayPrefsStore.readPrefs()
+};
+}catch(
+err
+){
+return {
+ok:
+false,
+message:
+err?.message ||
+String(
+err
+),
+prefs:
+trayPrefsStore.readPrefs()
+};
+}
+
+}
+);
+
+ipcMain.handle(
+"desktop:setLaunchAgentAtLogin",
+(
+_event,
+enabled
+)=>{
+
+try{
+const result =
+applyLaunchAgentPreference(
+!!enabled
+);
+
+if(
+result.prefs?.trayEnabled
+){
+setMenuBarTrayVisible(
+true
+);
+}
+
+return result;
+}catch(
+err
+){
+log.warn(
+"desktop:setLaunchAgentAtLogin:",
+err?.message ||
+err
+);
+return {
+ok:
+false,
+message:
+err?.message ||
+String(
+err
+)
 };
 }
 
@@ -1194,7 +1503,8 @@ url,
 platform.AUTH_PROTOCOL
 ),
 deliverAuthCallbackUrl,
-revealMainWindow,
+revealMainWindow:
+openMultichart,
 authProtocol:
 platform.AUTH_PROTOCOL
 });
@@ -1223,7 +1533,14 @@ startupAuthUrl;
 app.whenReady().then(
 async()=>{
 
+const startAsAgent =
+shouldStartAsLoginAgent();
+
+if(
+!startAsAgent
+){
 ensureAppVisible();
+}
 
 platform.impl.registerAuthProtocol(
 platformCtx
@@ -1276,8 +1593,6 @@ err
 );
 }
 
-startPowerSaveBlocker();
-
 const ses =
 session.fromPartition(
 PARTITION
@@ -1288,7 +1603,8 @@ ses
 );
 
 if(
-!USE_BUNDLE
+!USE_BUNDLE &&
+!startAsAgent
 ){
 
 const warmTimeout =
@@ -1312,10 +1628,37 @@ warmTimeout
 
 registerIpc();
 buildMenu();
-createWindow();
 configureMenuBarTray(
-revealMainWindow
+openMultichart
 );
+
+const trayPrefs =
+trayPrefsStore.readPrefs();
+
+if(
+trayPrefs.trayEnabled ||
+startAsAgent
+){
+setMenuBarTrayVisible(
+true
+);
+}
+
+if(
+startAsAgent
+){
+log.info(
+"desktop boot: login agent (tray only)"
+);
+hideDockIcon();
+setTradingStreamTarget(
+null
+);
+startTradingStream();
+}else{
+createWindow();
+startPowerSaveBlocker();
+}
 
 platform.impl.registerActivateHandler(
 platformCtx
@@ -1333,6 +1676,7 @@ app.on(
 isQuitting =
 true;
 
+stopTradingStream();
 destroyMenuBarTray();
 
 if(

@@ -53,7 +53,9 @@ Object.freeze({
 "trade-desktop-boot.js":
 22,
 "desktop-menu-bar-tray.js":
-5,
+7,
+"desktop-menu-bar-tray-prefs.js":
+2,
 "trade-diary-access.js":
 3,
 "trade-diary-format.js":
@@ -323,11 +325,11 @@ Object.freeze({
 "scalping-dom/host.js":
 2,
 "scalping-dom/depth-feed.js":
-19,
+21,
 "scalping-dom/depth-store.js":
 8,
 "scalping-dom/ladder-ui.js":
-21,
+22,
 "scalping-dom/settings-ui.js":
 27,
 "scalping-dom/position-overlay.js":
@@ -347,7 +349,7 @@ Object.freeze({
 "screener-widget-zoom.js":
 12,
 "release-marker.js":
-33,
+34,
 "focus-blur-after-pick.js":
 3,
 "site-boot.js":
@@ -518,7 +520,7 @@ Object.freeze({
 "app-settings-window.js":
 12,
 "app-settings-system-panel.js":
-7,
+8,
 "app-settings-secret.js":
 7,
 "telegram-settings-panel.js":
@@ -616,7 +618,7 @@ Object.freeze({
 "trade-exchange-settings.css":
 16,
 "app-settings-window.css":
-5,
+6,
 "trade-volume-presets.css":
 7,
 "trade-leverage-settings.css":

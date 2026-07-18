@@ -1366,6 +1366,41 @@ emitOrders();
 
 }
 
+function getTradingSnapshot(){
+
+const orders =
+[
+...ordersById.values()
+].sort(
+(
+a,
+b
+)=>
+(
+b.createdAt ||
+0
+) -
+(
+a.createdAt ||
+0
+)
+);
+
+return {
+ok:
+true,
+exchangeId:
+"bybit",
+updatedAt:
+Date.now(),
+positions:[
+...positionsBySymbol.values()
+],
+orders
+};
+
+}
+
 function startTradingStream(){
 
 refreshStreamModules();
@@ -1460,6 +1495,7 @@ startTradingStream,
 stopTradingStream,
 seedFromRest,
 replayTradingStream,
+getTradingSnapshot,
 removeStreamOrder,
 removeStreamPosition,
 upsertStreamPosition

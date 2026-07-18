@@ -135,6 +135,13 @@ color:#9ca3af;
 margin-top:22px;
 }
 
+.app-settings-panel-hint{
+margin:8px 0 0;
+font-size:12px;
+line-height:1.4;
+color:#6b7280;
+}
+
 .app-settings-toggle-row{
 display:flex;
 align-items:center;

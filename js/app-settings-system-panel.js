@@ -2,14 +2,16 @@
  * Настройки → Системные.
  */
 import {
+isLaunchAgentAtLoginEnabled,
 isMenuBarTrayEnabled,
 isMenuBarTrayPlatform,
+setLaunchAgentAtLoginLocal,
 setMenuBarTrayEnabled
-} from "./desktop-menu-bar-tray-prefs.js?v=1";
+} from "./desktop-menu-bar-tray-prefs.js?v=2";
 
 import {
 applyDesktopMenuBarTrayPreference
-} from "./desktop-menu-bar-tray.js?v=5";
+} from "./desktop-menu-bar-tray.js?v=7";
 
 import {
 isScreenerPatternEnabled,
@@ -38,6 +40,56 @@ return;
 
 input.checked =
 isMenuBarTrayEnabled();
+
+}
+
+function syncLaunchAgentToggle(
+input
+){
+
+if(
+!input
+){
+return;
+}
+
+input.checked =
+isLaunchAgentAtLoginEnabled();
+input.disabled =
+!isMenuBarTrayEnabled();
+
+}
+
+async function hydrateLaunchAgentFromMain(
+input
+){
+
+const desktop =
+window.cryptoTerminalDesktop;
+
+if(
+!input ||
+typeof desktop?.getMenuBarAgentPrefs !==
+"function"
+){
+return;
+}
+
+try{
+const result =
+await desktop.getMenuBarAgentPrefs();
+const enabled =
+!!result?.prefs?.launchAgentAtLogin;
+
+setLaunchAgentAtLoginLocal(
+enabled
+);
+syncLaunchAgentToggle(
+input
+);
+}catch{
+/* ignore */
+}
 
 }
 
@@ -172,6 +224,11 @@ isMenuBarTrayPlatform()
 <input type="checkbox" class="app-settings-toggle-input" id="app-settings-menu-bar-tray" />
 <span class="app-settings-toggle-label">Показывать иконку в системном меню</span>
 </label>
+<label class="app-settings-toggle-row">
+<input type="checkbox" class="app-settings-toggle-input" id="app-settings-launch-agent-login" />
+<span class="app-settings-toggle-label">Запускать агент при входе в систему</span>
+</label>
+<p class="app-settings-panel-hint">Без окна Multichart — только иконка в меню с PnL. Окно открывается по клику.</p>
 `
 : "";
 
@@ -198,6 +255,10 @@ const trayInput =
 host.querySelector(
 "#app-settings-menu-bar-tray"
 );
+const launchAgentInput =
+host.querySelector(
+"#app-settings-launch-agent-login"
+);
 const patternInput =
 host.querySelector(
 "#app-settings-screener-pattern-12"
@@ -213,6 +274,12 @@ host.querySelector(
 
 syncTrayToggle(
 trayInput
+);
+syncLaunchAgentToggle(
+launchAgentInput
+);
+void hydrateLaunchAgentFromMain(
+launchAgentInput
 );
 syncPatternToggle(
 patternInput
@@ -234,7 +301,68 @@ const enabled =
 setMenuBarTrayEnabled(
 enabled
 );
+syncLaunchAgentToggle(
+launchAgentInput
+);
 void applyDesktopMenuBarTrayPreference();
+
+}
+);
+
+launchAgentInput?.addEventListener(
+"change",
+async()=>{
+
+const enabled =
+!!launchAgentInput?.checked;
+const desktop =
+window.cryptoTerminalDesktop;
+
+setLaunchAgentAtLoginLocal(
+enabled
+);
+
+if(
+enabled
+){
+syncTrayToggle(
+trayInput
+);
+void applyDesktopMenuBarTrayPreference();
+}
+
+if(
+typeof desktop?.setLaunchAgentAtLogin !==
+"function"
+){
+return;
+}
+
+try{
+const result =
+await desktop.setLaunchAgentAtLogin(
+enabled
+);
+
+if(
+result?.ok ===
+false
+){
+setLaunchAgentAtLoginLocal(
+false
+);
+syncLaunchAgentToggle(
+launchAgentInput
+);
+}
+}catch{
+setLaunchAgentAtLoginLocal(
+false
+);
+syncLaunchAgentToggle(
+launchAgentInput
+);
+}
 
 }
 );
@@ -283,6 +411,12 @@ return {
 refresh:()=>{
 syncTrayToggle(
 trayInput
+);
+syncLaunchAgentToggle(
+launchAgentInput
+);
+void hydrateLaunchAgentFromMain(
+launchAgentInput
 );
 syncPatternToggle(
 patternInput

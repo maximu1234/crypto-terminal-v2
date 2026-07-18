@@ -18,7 +18,7 @@ EXCHANGE_CHANGED_EVENT
 import {
 isMenuBarTrayEnabled,
 MENU_BAR_TRAY_PREF_EVENT
-} from "./desktop-menu-bar-tray-prefs.js?v=1";
+} from "./desktop-menu-bar-tray-prefs.js?v=2";
 
 const TOTAL_PNL_HIDDEN_KEY =
 "trade_book_total_pnl_hidden_v1";
@@ -484,14 +484,7 @@ enabled
 /* ignore */
 }
 
-if(
-!enabled
-){
-return;
-}
-
-traySyncTeardown =
-startDesktopMenuBarTraySync();
+/* Tray state is fed from main (menu-bar-tray-feed) — no renderer push. */
 
 }
 

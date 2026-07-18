@@ -56,6 +56,10 @@ getScalpingDomPriceScale
 const MAX_LEVELS =
 50;
 
+/** Cap ladder paint rate — WS can tick faster than the eye needs. */
+const RENDER_MIN_MS =
+80;
+
 function stickySpan(
 priceScale
 ){
@@ -142,8 +146,19 @@ let restInflight =
 false;
 let renderRaf =
 0;
+let renderTimer =
+0;
 let dirty =
 false;
+let lastEmitAt =
+0;
+let overlayCache =
+null;
+let overlayCacheAt =
+0;
+
+const OVERLAY_CACHE_MS =
+300;
 /** @type {{ high: number, low: number, tick: number } | null} */
 let stickyRange =
 null;
@@ -267,7 +282,21 @@ stickyRange.low
 ladder.recentered =
 recentered;
 
-const overlays =
+const now =
+performance.now();
+
+if(
+!overlayCache ||
+overlayCache.symbol !==
+symbol ||
+now -
+overlayCacheAt >=
+OVERLAY_CACHE_MS
+){
+overlayCache =
+{
+symbol,
+overlays:
 resolvePositionOverlays(
 symbol,
 {
@@ -278,56 +307,80 @@ ladder.bestBid,
 bestAsk:
 ladder.bestAsk
 }
-);
+),
+alerts:
+resolveAlertPrices(
+symbol
+),
+triggers:
+resolveTriggerLevels(
+symbol
+),
+slTp:
+resolveSlTpPrices(
+symbol
+)
+};
+overlayCacheAt =
+now;
+}
 
 const withPos =
 applyPositionOverlays(
 ladder,
-overlays
+overlayCache.overlays
 );
 
 const withAlerts =
 applyAlertUnderlines(
 withPos,
-resolveAlertPrices(
-symbol
-)
+overlayCache.alerts
 );
 
 const withTriggers =
 applyTriggerUnderlines(
 withAlerts,
-resolveTriggerLevels(
-symbol
-)
+overlayCache.triggers
 );
 
 handlers.onLadder?.(
 applySlTpHighlights(
 withTriggers,
-resolveSlTpPrices(
-symbol
-)
+overlayCache.slTp
 )
 );
 
 }
 
-function scheduleEmit(){
-
-dirty =
-true;
+function clearRenderSchedule(){
 
 if(
 renderRaf
 ){
-return;
+cancelAnimationFrame(
+renderRaf
+);
+renderRaf =
+0;
 }
 
+if(
+renderTimer
+){
+clearTimeout(
+renderTimer
+);
+renderTimer =
+0;
+}
+
+}
+
+function flushEmit(){
+
 renderRaf =
-requestAnimationFrame(
-()=>{
-renderRaf =
+0;
+renderTimer =
 0;
 
 if(
@@ -337,11 +390,90 @@ stopped
 return;
 }
 
+if(
+typeof document !==
+"undefined" &&
+document.hidden
+){
+return;
+}
+
 dirty =
 false;
+lastEmitAt =
+performance.now();
 emitLadder();
+
 }
+
+function scheduleEmit(){
+
+dirty =
+true;
+
+if(
+stopped
+){
+return;
+}
+
+if(
+typeof document !==
+"undefined" &&
+document.hidden
+){
+return;
+}
+
+if(
+renderRaf ||
+renderTimer
+){
+return;
+}
+
+const elapsed =
+performance.now() -
+lastEmitAt;
+const wait =
+Math.max(
+0,
+RENDER_MIN_MS -
+elapsed
 );
+
+if(
+wait <=
+0
+){
+renderRaf =
+requestAnimationFrame(
+flushEmit
+);
+return;
+}
+
+renderTimer =
+setTimeout(
+()=>{
+renderTimer =
+0;
+renderRaf =
+requestAnimationFrame(
+flushEmit
+);
+},
+wait
+);
+
+}
+
+function invalidateOverlayCache(){
+
+overlayCache =
+null;
+overlayCacheAt =
+0;
 
 }
 
@@ -686,6 +818,7 @@ symbol
 );
 book.clear();
 resetStickyRange();
+invalidateOverlayCache();
 handlers.onLadder?.(
 null
 );
@@ -766,6 +899,7 @@ stopped
 return;
 }
 
+invalidateOverlayCache();
 scheduleEmit();
 
 };
@@ -792,6 +926,21 @@ list
 ingestOpenOrders(
 list
 );
+}
+
+invalidateOverlayCache();
+scheduleEmit();
+
+};
+
+const onVisibility =
+()=>{
+
+if(
+stopped ||
+document.hidden
+){
+return;
 }
 
 scheduleEmit();
@@ -852,6 +1001,10 @@ window.addEventListener(
 "trade-stream-positions",
 onAlertsChanged
 );
+document.addEventListener(
+"visibilitychange",
+onVisibility
+);
 
 startWs();
 void hydrateOpenOrdersFromApi().then(
@@ -869,16 +1022,14 @@ stopRestFallback();
 stopResync();
 destroyWs();
 book.clear();
+overlayCache =
+null;
+clearRenderSchedule();
 
-if(
-renderRaf
-){
-cancelAnimationFrame(
-renderRaf
+document.removeEventListener(
+"visibilitychange",
+onVisibility
 );
-renderRaf =
-0;
-}
 
 window.removeEventListener(
 "coins-chart-symbol-changed",
