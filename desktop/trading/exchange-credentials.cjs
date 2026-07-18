@@ -16,11 +16,18 @@ require(
 "electron"
 );
 const {
-readPlainWithLegacyMigration,
-writePlain
+readSecretText,
+writeSecretText,
+isCredentialEncryptionAvailable
 } =
 require(
 "../user-store.cjs"
+);
+const {
+buildCredentialsStatus
+} =
+require(
+"./credentials-status.cjs"
 );
 
 const STORE_BY_EXCHANGE =
@@ -81,7 +88,7 @@ exchangeId
 ){
 
 const raw =
-readPlainWithLegacyMigration(
+readSecretText(
 storePath(
 exchangeId
 )
@@ -108,7 +115,7 @@ exchangeId,
 data
 ){
 
-writePlain(
+writeSecretText(
 storePath(
 exchangeId
 ),
@@ -248,33 +255,38 @@ throw new Error(
 
 }
 
+/**
+ * Status for IPC / UI. Full apiKey only when opts.revealApiKey
+ * (settings form). At rest: OS-encrypted off macOS when available;
+ * darwin uses plaintext JSON mode 0o600.
+ */
 function getStatus(
 exchangeId =
-"bybit"
+"bybit",
+opts =
+{}
 ){
 
-const creds =
-getCredentials(
-exchangeId
-);
-
-return {
-exchangeId:
+const id =
 normalizeExchangeId(
 exchangeId
-),
-configured:
-!!creds,
-testnet:
-!!creds?.testnet,
+);
+const creds =
+getCredentials(
+id
+);
+
+return buildCredentialsStatus(
+{
+exchangeId:
+id,
+creds,
+revealApiKey:
+!!opts?.revealApiKey,
 encryptionAvailable:
-true,
-apiKey:
-creds?.apiKey ||
-"",
-hasSecret:
-!!creds?.apiSecret
-};
+isCredentialEncryptionAvailable()
+}
+);
 
 }
 

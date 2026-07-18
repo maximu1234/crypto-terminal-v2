@@ -29,8 +29,12 @@ clearCredentials:()=>
 clearCredentials(
 "bybit"
 ),
-getStatus:()=>
+getStatus:(
+opts
+)=>
 getStatus(
-"bybit"
+"bybit",
+opts ||
+{}
 )
 };

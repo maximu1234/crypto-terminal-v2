@@ -48,6 +48,8 @@ getPlacementPointerXY,
 setPlacementPointerXY,
 getDrawMagnetKeyDown,
 setDrawMagnetKeyDown,
+enableMagnet =
+true,
 getLastCrosshairPlotXY,
 setLastCrosshairPlotXY,
 getDrawings,
@@ -780,9 +782,12 @@ return false;
 }
 
 return !!(
+enableMagnet &&
+(
 getDrawMagnetKeyDown() ||
 optEvent?.metaKey ===
 true
+)
 );
 
 }

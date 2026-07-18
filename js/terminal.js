@@ -2657,6 +2657,9 @@ storageKeySuffix:
 drawPriceAlerts:
 false,
 
+enableMagnet:
+false,
+
 getSymbol: ()=>
 currentSymbol,
 

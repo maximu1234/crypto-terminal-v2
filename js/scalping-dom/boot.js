@@ -32,7 +32,7 @@ SCALPING_DOM_PREF_EVENT
 
 import {
 mountScalpingDomHeaderToggle
-} from "./settings-ui.js?v=26";
+} from "./settings-ui.js?v=27";
 
 let mounted =
 false;

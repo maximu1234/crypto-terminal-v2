@@ -16,6 +16,10 @@ clearExchangeCredentials,
 getExchangeSecretForSave
 } from "./exchange-credentials.js?v=1";
 
+import {
+getLoadedTradeExchangeModules
+} from "./trade/module-router.js?v=14";
+
 function tradingApi(){
 
 return window.cryptoTerminalDesktop?.trading;
@@ -93,7 +97,16 @@ raw
 raw
 )
 ){
-return "Превышен лимит запросов BingX. Подождите немного — данные обновятся автоматически.";
+const rateMsg =
+getLoadedTradeExchangeModules()?.getTradeConfig?.()?.rateLimitedMessage;
+
+if(
+rateMsg
+){
+return rateMsg;
+}
+
+return `Превышен лимит запросов ${exchangeName}. Подождите немного — данные обновятся автоматически.`;
 }
 
 if(
@@ -1031,7 +1044,9 @@ usesDesktopKeys
 
 const info =
 await api.getStatus({
-exchangeId
+exchangeId,
+revealApiKey:
+true
 });
 
 if(
@@ -1171,7 +1186,9 @@ usesDesktopKeys
 
 const info =
 await api.getStatus({
-exchangeId
+exchangeId,
+revealApiKey:
+true
 });
 const keyUnchanged =
 !!info?.configured &&

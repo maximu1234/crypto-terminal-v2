@@ -46,8 +46,9 @@ export {
 } from "./auto-stops.js?v=1";
 
 export {
-  initTradeMarketEntry
-} from "./market-entry.js?v=3";
+  initTradeMarketEntry,
+  openWidgetMarketPosition
+} from "./market-entry.js?v=4";
 
 export {
   initTradeBookPanel
@@ -55,7 +56,7 @@ export {
 
 export {
   getTradeConfig
-} from "./config.js?v=2";
+} from "./config.js?v=3";
 
 export {
   diarySanitizeTrade,

@@ -131,7 +131,7 @@ return;
 
 const mod =
 await import(
-"./trade-widget-mount.js?v=15"
+"./trade-widget-mount.js?v=16"
 );
 
 mountTradeOnDashboardWidget =

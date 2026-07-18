@@ -27,23 +27,12 @@ marketMap
 } from "./terminal/terminal-state.js?v=11";
 
 import {
-applyAutoStopsAfterEntry,
-getAutoStopSettings
-} from "./trade-auto-stops.js?v=16";
-
-import {
-getActiveTradeConfig
+getLoadedTradeExchangeModules
 } from "./trade/module-router.js?v=14";
 
 import {
 mountTradeLeverageControl
 } from "./trade-leverage-settings.js?v=4";
-
-function tradingApi(){
-
-return window.cryptoTerminalDesktop?.trading;
-
-}
 
 function normalizeSymbol(
 symbol
@@ -751,18 +740,6 @@ side,
 btn
 ){
 
-const api =
-tradingApi();
-
-if(
-!api?.openPosition
-){
-window.alert(
-"Торговля доступна только в десктоп-приложении."
-);
-return;
-}
-
 const volumeUsdt =
 getVolumeUsdt();
 
@@ -790,121 +767,29 @@ if(
 return;
 }
 
-btn.disabled =
-true;
-
-try{
-const settings =
-getAutoStopSettings();
-const policy =
-getActiveTradeConfig() ||
-{};
-const openOptions =
-{};
+const openFn =
+getLoadedTradeExchangeModules()?.openWidgetMarketPosition;
 
 if(
-policy.passAutoStopUsdOnOpen
-){
-openOptions.autoSlUsd =
-settings.slEnabled &&
-settings.slUsd >
-0
-? settings.slUsd
-: 0;
-openOptions.autoTpUsd =
-settings.tpEnabled &&
-settings.tpUsd >
-0
-? settings.tpUsd
-: 0;
-}
-
-const result =
-await api.openPosition(
-symbol,
-side,
-volumeUsdt,
-openOptions
-);
-
-if(
-result?.ok ===
-false
+typeof openFn !==
+"function"
 ){
 window.alert(
-result.message ||
-"Не удалось открыть позицию"
+"Торговля доступна только в десктоп-приложении."
 );
 return;
 }
 
-if(
-result?.position
-){
-window.dispatchEvent(
-new CustomEvent(
-"trade-position-updated",
-{
-detail:
+btn.disabled =
+true;
+
+try{
+await openFn(
 {
 symbol,
-position:
-result.position
+side,
+volumeUsdt
 }
-}
-)
-);
-
-if(
-policy.passAutoStopUsdOnOpen
-){
-const missingSl =
-settings.slEnabled &&
-settings.slUsd >
-0 &&
-!(
-Number(
-result.position.stopLoss
-) >
-0
-);
-const missingTp =
-settings.tpEnabled &&
-settings.tpUsd >
-0 &&
-!(
-Number(
-result.position.takeProfit
-) >
-0
-);
-
-if(
-missingSl ||
-missingTp
-){
-void applyAutoStopsAfterEntry(
-symbol,
-result.position
-);
-}
-}else{
-void applyAutoStopsAfterEntry(
-symbol,
-result.position
-);
-}
-}
-
-window.dispatchEvent(
-new CustomEvent(
-"trade-book-refresh"
-)
-);
-window.dispatchEvent(
-new CustomEvent(
-"trade-open-positions-changed"
-)
 );
 }catch(
 err

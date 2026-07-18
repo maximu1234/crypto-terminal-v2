@@ -87,7 +87,7 @@ Object.freeze({
 "exchange-trading-gate.js":
 3,
 "trade-exchange-settings.js":
-18,
+20,
 "trade-volume-presets.js":
 11,
 "trade-leverage-settings.js":
@@ -97,7 +97,7 @@ Object.freeze({
 "trade-position-close-orders.js":
 1,
 "trade-market-entry.js":
-34,
+35,
 "trade-book-panel.js":
 60,
 "trade-pnl-share-modal.js":
@@ -115,7 +115,7 @@ Object.freeze({
 "trade-order-plus-ui.js":
 6,
 "trade-widget-mount.js":
-15,
+16,
 "trade-desktop-boot.js":
 22,
 "trade/module-router.js":
@@ -123,9 +123,9 @@ Object.freeze({
 "trade-trading-settings-panel.js":
 2,
 "trade/bybit/bundle.js":
-8,
+9,
 "trade/bybit/config.js":
-2,
+3,
 "trade/bybit/positions-cache.js":
 1,
 "trade/bybit/stream-bridge.js":
@@ -135,7 +135,7 @@ Object.freeze({
 "trade/bybit/auto-stops.js":
 1,
 "trade/bybit/market-entry.js":
-3,
+4,
 "trade/bybit/book-panel.js":
 2,
 "trade/bybit/position-open-orders.js":
@@ -171,7 +171,7 @@ Object.freeze({
 "trade/bybit/diary/period.js":
 1,
 "trade/bingx/bundle.js":
-22,
+23,
 "trade/bingx/config.js":
 10,
 "trade/bingx/positions-cache.js":
@@ -201,7 +201,7 @@ Object.freeze({
 "trade/bingx/auto-stops.js":
 8,
 "trade/bingx/market-entry.js":
-7,
+8,
 "trade/bingx/book-panel.js":
 4,
 "trade/bingx/position-open-orders.js":
@@ -225,7 +225,7 @@ Object.freeze({
 "chart-page.js":
 6,
 "terminal.js":
-387,
+389,
 "terminal-multi-chart.js":
 11,
 "terminal-screener-chart-pane.js":
@@ -329,7 +329,7 @@ Object.freeze({
 "scalping-dom/ladder-ui.js":
 21,
 "scalping-dom/settings-ui.js":
-26,
+27,
 "scalping-dom/position-overlay.js":
 5,
 "scalping-dom/alert-overlay.js":
@@ -345,9 +345,9 @@ Object.freeze({
 "screener-pattern-overlay.js":
 3,
 "screener-widget-zoom.js":
-11,
+12,
 "release-marker.js":
-32,
+33,
 "focus-blur-after-pick.js":
 3,
 "site-boot.js":
@@ -393,7 +393,7 @@ Object.freeze({
 "drawings.js":
 253,
 "drawings/init.js":
-165,
+168,
 "drawings/draw-prefs.js":
 1,
 "drawings/draw-edit-desktop.js":
@@ -417,7 +417,7 @@ Object.freeze({
 "drawings/draw-edit-interaction.js":
 12,
 "drawings/draw-placement.js":
-8,
+9,
 "drawings/chart-ruler.js":
 8,
 "drawings/draw-magnet.js":

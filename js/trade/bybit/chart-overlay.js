@@ -21,7 +21,7 @@ isExchangeTradingEnabled
 
 import {
 getTradeConfig
-} from "./config.js?v=2";
+} from "./config.js?v=3";
 
 import {
 formatTradePnl,

@@ -23,7 +23,7 @@ marketMap
 
 import {
 getTradeConfig
-} from "./config.js?v=2";
+} from "./config.js?v=3";
 
 import {
 mountTradeChartMarkersToggle
@@ -177,9 +177,18 @@ false;
 let closeBusy =
 false;
 
-async function submitMarketEntry(
+/**
+ * Shared open path for coins chart + terminal widget mount.
+ * @param {{ symbol: string, side: string, volumeUsdt: number, btn?: HTMLElement | null }} opts
+ */
+async function openMarketPositionCore(
+{
+symbol,
 side,
-btn
+volumeUsdt,
+btn =
+null
+}
 ){
 
 const api =
@@ -200,9 +209,6 @@ entryBusy
 return;
 }
 
-const volumeUsdt =
-getActiveTradeVolumeUsdt();
-
 if(
 !Number.isFinite(
 volumeUsdt
@@ -215,9 +221,6 @@ window.alert(
 );
 return;
 }
-
-const symbol =
-getCurrentSymbol();
 
 if(
 !symbol
@@ -349,6 +352,44 @@ false;
 }
 
 }
+
+}
+
+async function submitMarketEntry(
+side,
+btn
+){
+
+await openMarketPositionCore(
+{
+symbol:
+getCurrentSymbol(),
+side,
+volumeUsdt:
+getActiveTradeVolumeUsdt(),
+btn
+}
+);
+
+}
+
+export async function openWidgetMarketPosition(
+{
+symbol,
+side,
+volumeUsdt
+}
+){
+
+await openMarketPositionCore(
+{
+symbol,
+side,
+volumeUsdt,
+btn:
+null
+}
+);
 
 }
 

@@ -81,7 +81,11 @@ payload
 return getStatus(
 resolveExchangeId(
 payload
-)
+),
+{
+revealApiKey:
+!!payload?.revealApiKey
+}
 );
 
 }

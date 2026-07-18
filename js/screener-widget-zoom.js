@@ -256,6 +256,114 @@ inverted
 
 }
 
+function openZoomInTerminal(
+state
+){
+
+if(
+!state?.symbol ||
+state.disposed
+){
+return;
+}
+
+window.location.href =
+`terminal.html?symbol=${encodeURIComponent(state.symbol)}&tf=${encodeURIComponent(state.tf)}`;
+
+}
+
+function shouldIgnoreZoomHotkey(
+event
+){
+
+const target =
+event.target;
+
+if(
+!target
+){
+return false;
+}
+
+const tag =
+String(
+target.tagName ||
+""
+).toLowerCase();
+
+if(
+tag ===
+"input" ||
+tag ===
+"textarea" ||
+tag ===
+"select" ||
+target.isContentEditable
+){
+return true;
+}
+
+return false;
+
+}
+
+function onZoomHotkey(
+event
+){
+
+if(
+!zoomState ||
+zoomState.disposed
+){
+return;
+}
+
+if(
+event.defaultPrevented ||
+event.metaKey ||
+event.ctrlKey ||
+event.altKey ||
+shouldIgnoreZoomHotkey(
+event
+)
+){
+return;
+}
+
+if(
+event.code ===
+"ArrowRight" &&
+event.shiftKey
+){
+event.preventDefault();
+event.stopPropagation();
+openZoomInTerminal(
+zoomState
+);
+}
+
+}
+
+function bindZoomHotkeys(){
+
+document.addEventListener(
+"keydown",
+onZoomHotkey,
+true
+);
+
+}
+
+function unbindZoomHotkeys(){
+
+document.removeEventListener(
+"keydown",
+onZoomHotkey,
+true
+);
+
+}
+
 function closeWidgetZoom(){
 
 if(
@@ -263,6 +371,8 @@ if(
 ){
 return;
 }
+
+unbindZoomHotkeys();
 
 zoomState.disposed =
 true;
@@ -778,7 +888,7 @@ ${zoomMountOptions?.flagWrapHtml || ""}
 <div class="screener-widget-zoom-tf" role="group" aria-label="Таймфрейм">${buildTfButtonsHtml(tf)}</div>
 <div class="screener-header-right screener-widget-zoom-header-right">
 <span class="screener-widget-zoom-hint">ПКМ — закрыть</span>
-<button type="button" class="screener-open screener-widget-zoom-open" title="Открыть в Монетах">↗</button>
+<button type="button" class="screener-open screener-widget-zoom-open" title="Открыть в Терминале (Shift+→)">↗</button>
 </div>
 </div>
 <div class="screener-widget-zoom-body screener-widget-body">
@@ -912,6 +1022,8 @@ false
 zoomState =
 state;
 
+bindZoomHotkeys();
+
 setupZoomCrosshair(
 state
 );
@@ -937,8 +1049,9 @@ panel.querySelector(
 "click",
 event=>{
 event.stopPropagation();
-window.location.href =
-`terminal.html?symbol=${encodeURIComponent(symbol)}&tf=${encodeURIComponent(state.tf)}`;
+openZoomInTerminal(
+state
+);
 }
 );
 

@@ -179,9 +179,18 @@ false;
 let closeBusy =
 false;
 
-async function submitMarketEntry(
+/**
+ * Shared open path for coins chart + terminal widget mount (BingX stop policy).
+ * @param {{ symbol: string, side: string, volumeUsdt: number, btn?: HTMLElement | null }} opts
+ */
+async function openMarketPositionCore(
+{
+symbol,
 side,
-btn
+volumeUsdt,
+btn =
+null
+}
 ){
 
 const api =
@@ -202,9 +211,6 @@ entryBusy
 return;
 }
 
-const volumeUsdt =
-getActiveTradeVolumeUsdt();
-
 if(
 !Number.isFinite(
 volumeUsdt
@@ -217,9 +223,6 @@ window.alert(
 );
 return;
 }
-
-const symbol =
-getCurrentSymbol();
 
 if(
 !symbol
@@ -344,7 +347,7 @@ result.position
 );
 
 /* Paint expected SL/TP immediately — main attaches in background. */
-const side =
+const posSide =
 result.position.side ===
 "Sell"
 ? "Sell"
@@ -376,7 +379,8 @@ size >
 ){
 const slPrice =
 calcStopPriceFromUsd({
-side,
+side:
+posSide,
 entryPrice:
 entry,
 size,
@@ -406,7 +410,8 @@ size >
 ){
 const tpPrice =
 calcStopPriceFromUsd({
-side,
+side:
+posSide,
 entryPrice:
 entry,
 size,
@@ -496,6 +501,44 @@ false;
 }
 
 }
+
+}
+
+async function submitMarketEntry(
+side,
+btn
+){
+
+await openMarketPositionCore(
+{
+symbol:
+getCurrentSymbol(),
+side,
+volumeUsdt:
+getActiveTradeVolumeUsdt(),
+btn
+}
+);
+
+}
+
+export async function openWidgetMarketPosition(
+{
+symbol,
+side,
+volumeUsdt
+}
+){
+
+await openMarketPositionCore(
+{
+symbol,
+side,
+volumeUsdt,
+btn:
+null
+}
+);
 
 }
 

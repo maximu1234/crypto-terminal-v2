@@ -38,6 +38,8 @@ const BYBIT_TRADE = {
   restPositionsForceRefresh: false,
   restOrdersForceRefresh: false,
   emptyCredentialsHint: "Подключите Bybit в шапке",
+  rateLimitedMessage:
+    "Превышен лимит запросов Bybit. Подождите немного.",
   fetchClosedPnlTradeDetails: true,
   closedPnlForceRefresh: false,
   closedPnlEnrichOnFetch: false,

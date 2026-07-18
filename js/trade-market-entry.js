@@ -12,3 +12,7 @@ function mod() {
 export function initTradeMarketEntry(...args) {
   return mod()?.initTradeMarketEntry?.(...args) || null;
 }
+
+export function openWidgetMarketPosition(...args) {
+  return mod()?.openWidgetMarketPosition?.(...args);
+}

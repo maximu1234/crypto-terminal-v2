@@ -371,3 +371,93 @@ test("diary chart markers use detail open/close and side", () => {
   assert.match(source, /detail\?\.side|trade\?\.side/);
   assert.match(source, /detail\?\.openTimeMs/);
 });
+
+test("fat shared trade UI has no exchange policy branches", () => {
+  for (const file of [
+    "js/trade-exchange-settings.js",
+    "js/trade-diary-chart.js",
+    "js/trade-widget-mount.js"
+  ]) {
+    const source = read(file);
+    assert.doesNotMatch(
+      source,
+      /if\s*\(\s*(?:exchange|getActiveExchangeId\(\))\s*===\s*["'](?:bingx|bybit)["']/,
+      file
+    );
+    assert.doesNotMatch(
+      source,
+      /recentlyClosedMs|streamMissClearsCache|forceRefresh/,
+      file
+    );
+    assert.doesNotMatch(
+      source,
+      /from\s+["'][^"']*trade\/(?:bybit|bingx)\//,
+      file
+    );
+  }
+});
+
+test("scalping-dom stays isolated from exchange trade modules", () => {
+  for (const file of listJs("js/scalping-dom")) {
+    const source = read(file);
+    assert.doesNotMatch(
+      source,
+      /from\s+["'][^"']*trade\/(?:bybit|bingx)\//,
+      file
+    );
+    assert.doesNotMatch(
+      source,
+      /require\([^)]*(?:bybit|bingx)-(?:rest|trading-stream)/,
+      file
+    );
+  }
+
+  const positionOverlay = read("js/scalping-dom/position-overlay.js");
+  assert.match(
+    positionOverlay,
+    /trade-positions-cache\.js/,
+    "positions via thin facade only"
+  );
+});
+
+test("credentials status does not claim encryption or leak key by default", () => {
+  const source = read("desktop/trading/exchange-credentials.cjs");
+  assert.match(source, /revealApiKey/);
+  assert.match(source, /buildCredentialsStatus/);
+  assert.match(source, /isCredentialEncryptionAvailable/);
+
+  const router = read("desktop/trading/trading-router.cjs");
+  assert.match(router, /revealApiKey/);
+
+  const settings = read("js/trade-exchange-settings.js");
+  assert.match(settings, /revealApiKey:\s*\n?\s*true/);
+  assert.doesNotMatch(settings, /Превышен лимит запросов BingX/);
+
+  const statusHelper = read("desktop/trading/credentials-status.cjs");
+  assert.match(statusHelper, /apiKeyHint/);
+});
+
+test("widget mount opens via exchange market-entry module", () => {
+  const source = read("js/trade-widget-mount.js");
+  assert.match(source, /openWidgetMarketPosition/);
+  assert.doesNotMatch(source, /applyAutoStopsAfterEntry/);
+  assert.doesNotMatch(source, /\.openPosition\(/);
+
+  for (const exchange of ["bybit", "bingx"]) {
+    assert.match(
+      read(`js/trade/${exchange}/bundle.js`),
+      /openWidgetMarketPosition/,
+      `${exchange}/bundle.js must export openWidgetMarketPosition`
+    );
+  }
+});
+
+test("diary chart fetches klines only via exchange module", () => {
+  const source = read("js/trade-diary-chart.js");
+  assert.match(source, /diaryFetchKlineBatch/);
+  assert.match(source, /loadTradeExchangeModules|getLoadedTradeExchangeModules/);
+  assert.doesNotMatch(
+    source,
+    /from\s+["'][^"']*trade\/(?:bybit|bingx)\//
+  );
+});

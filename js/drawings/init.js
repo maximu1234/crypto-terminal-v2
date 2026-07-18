@@ -164,7 +164,7 @@ createDrawAlertsChart
 
 import {
 createDrawPlacement
-} from "./draw-placement.js?v=8";
+} from "./draw-placement.js?v=9";
 
 import {
 createBrushPlacement
@@ -212,6 +212,9 @@ onChartCrosshairSuppress = null,
 onChartCrosshairRelease = null,
 clearAllPeers = null,
 drawPriceAlerts = true,
+/** RSI pane uses synthetic OHLC — magnet wick snap would lie. */
+enableMagnet =
+true,
 sharedDrawUndo =
 null,
 deferKeyboardUndo =
@@ -1914,9 +1917,12 @@ optEvent = null
 ){
 
 const magnetActive =
+enableMagnet &&
+(
 drawMagnetKeyDown ||
 optEvent?.metaKey ===
-true;
+true
+);
 
 if(
 magnetActive
@@ -2704,6 +2710,7 @@ getDrawMagnetKeyDown:()=>drawMagnetKeyDown,
 setDrawMagnetKeyDown:v=>{
 drawMagnetKeyDown = v;
 },
+enableMagnet,
 getLastCrosshairPlotXY:()=>lastCrosshairPlotXY,
 setLastCrosshairPlotXY:v=>{
 lastCrosshairPlotXY = v;

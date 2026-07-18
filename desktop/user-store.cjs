@@ -1,7 +1,7 @@
 /**
- * userData persistence without macOS Keychain prompts.
- * Legacy Electron safeStorage blobs are migrated to plain UTF-8 on first read
- * (may prompt once for existing installs, then never again).
+ * userData persistence. Prefer OS encryption off macOS (no Keychain prompts);
+ * on darwin keep plaintext UTF-8 with mode 0o600. Legacy safeStorage blobs
+ * decrypt on read; re-encrypted on next save when encryption is available.
  */
 const fs =
 require(
@@ -49,6 +49,27 @@ return false;
 
 }
 
+/**
+ * macOS Keychain prompts made safeStorage painful — skip encrypt there.
+ * Windows/Linux: use OS encryption when Electron reports it available.
+ */
+function isCredentialEncryptionAvailable(){
+
+if(
+process.platform ===
+"darwin"
+){
+return false;
+}
+
+try{
+return !!safeStorage.isEncryptionAvailable();
+}catch{
+return false;
+}
+
+}
+
 function writePlain(
 filePath,
 text
@@ -79,7 +100,56 @@ mode:
 
 }
 
-function readPlainWithLegacyMigration(
+function writeSecretText(
+filePath,
+text
+){
+
+fs.mkdirSync(
+path.dirname(
+filePath
+),
+{
+recursive:
+true
+}
+);
+
+const payload =
+String(
+text
+);
+
+if(
+isCredentialEncryptionAvailable()
+){
+try{
+const encrypted =
+safeStorage.encryptString(
+payload
+);
+fs.writeFileSync(
+filePath,
+encrypted,
+{
+mode:
+0o600
+}
+);
+return;
+}catch{
+/* fall through to plaintext */
+}
+}
+
+writePlain(
+filePath,
+payload
+);
+
+}
+
+function readSecretText(
 filePath
 ){
 
@@ -112,10 +182,13 @@ return raw.toString(
 );
 }
 
-if(
-safeStorage.isEncryptionAvailable()
-){
 try{
+if(
+!safeStorage.isEncryptionAvailable()
+){
+return null;
+}
+
 const decrypted =
 safeStorage.decryptString(
 raw
@@ -126,15 +199,20 @@ typeof decrypted ===
 "string" &&
 decrypted.trim()
 ){
+/* Darwin / no-encrypt platforms: migrate blob → plain once. */
+if(
+!isCredentialEncryptionAvailable()
+){
 writePlain(
 filePath,
 decrypted
 );
+}
+
 return decrypted;
 }
 }catch{
 /* fall through */
-}
 }
 
 return null;
@@ -143,6 +221,10 @@ return null;
 
 module.exports =
 {
-readPlainWithLegacyMigration,
-writePlain
+isCredentialEncryptionAvailable,
+readPlainWithLegacyMigration:
+readSecretText,
+writePlain,
+writeSecretText,
+readSecretText
 };

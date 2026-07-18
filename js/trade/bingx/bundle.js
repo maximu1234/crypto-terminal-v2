@@ -46,8 +46,9 @@ export {
 } from "./auto-stops.js?v=8";
 
 export {
-  initTradeMarketEntry
-} from "./market-entry.js?v=7";
+  initTradeMarketEntry,
+  openWidgetMarketPosition
+} from "./market-entry.js?v=8";
 
 export {
   initTradeBookPanel

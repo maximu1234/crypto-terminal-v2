@@ -53,7 +53,7 @@ createTickerUiBatcher
 
 import {
 mountReleaseMarker
-} from "./release-marker.js?v=32";
+} from "./release-marker.js?v=33";
 
 import {
 saveScreenerState,
@@ -96,7 +96,7 @@ import {
 mountScreenerWidgetZoom,
 refreshZoomFavoriteUi,
 syncWidgetZoomInversion
-} from "./screener-widget-zoom.js?v=11";
+} from "./screener-widget-zoom.js?v=12";
 
 const gridEl =
 document.getElementById("screener-grid");

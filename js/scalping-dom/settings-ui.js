@@ -172,8 +172,8 @@ document.createElement(
 wrap.className =
 WRAP_CLASS;
 wrap.innerHTML =
-`<label class="scalping-dom-header-toggle" title="Стакан для скальпинга">` +
-`<input type="checkbox" class="scalping-dom-header-toggle-input" id="${INPUT_ID}" aria-label="Стакан для скальпинга" />` +
+`<label class="scalping-dom-header-toggle" title="Стакан">` +
+`<input type="checkbox" class="scalping-dom-header-toggle-input" id="${INPUT_ID}" aria-label="Стакан" />` +
 `</label>` +
 `<span class="scalping-dom-header-toggle-sep" aria-hidden="true"></span>`;
 

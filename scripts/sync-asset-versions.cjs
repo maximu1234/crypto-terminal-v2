@@ -259,6 +259,85 @@ return out;
 
 }
 
+/**
+ * Manifest key for an import path relative to a source file (js/… or css/…).
+ * Mirrors scripts/check-asset-manifest.cjs so relative ./ ../ imports sync too.
+ */
+function resolveImportKey(
+fromFile,
+importPath
+){
+
+const clean =
+importPath.split(
+"?"
+)[
+0
+];
+
+if(
+clean.startsWith(
+"/js/"
+)
+){
+return clean.slice(
+4
+);
+}
+
+if(
+clean.startsWith(
+"/css/"
+)
+){
+return clean.slice(
+5
+);
+}
+
+const abs =
+path.normalize(
+path.join(
+path.dirname(
+fromFile
+),
+clean
+)
+);
+
+const rel =
+path.relative(
+ROOT,
+abs
+).replace(
+/\\/g,
+"/"
+);
+
+if(
+rel.startsWith(
+"js/"
+)
+){
+return rel.slice(
+3
+);
+}
+
+if(
+rel.startsWith(
+"css/"
+)
+){
+return rel.slice(
+4
+);
+}
+
+return null;
+
+}
+
 function syncFile(
 filePath,
 assets
@@ -272,57 +351,85 @@ filePath,
 
 let changed =
 false;
+const versionRe =
+/([a-zA-Z0-9_./-]+\.(?:js|css))\?v=(\d+)/g;
+const matches =
+[
+...content.matchAll(
+versionRe
+)
+];
 
 for(
-const [
-name,
-ver
-] of
-Object.entries(
-assets
-).sort(
-(
-a,
-b
-)=>
-b[
-0
-].length -
-a[
-0
-].length
-)
+let i =
+matches.length -
+1;
+i >=
+0;
+i--
 ){
 
-const escaped =
-name.replace(
-/[.*+?^${}()|[\]\\]/g,
-"\\$&"
+const m =
+matches[
+i
+];
+const importPath =
+m[
+1
+];
+const found =
+parseInt(
+m[
+2
+],
+10
 );
-
-const re =
-new RegExp(
-`(?<![a-zA-Z0-9.-])${escaped}\\?v=\\d+`,
-"g"
-);
-
-const next =
-content.replace(
-re,
-`${name}?v=${ver}`
+const key =
+resolveImportKey(
+filePath,
+importPath
 );
 
 if(
-next !==
-content
+!key ||
+assets[
+key
+] ==
+null
 ){
+continue;
+}
 
+const want =
+assets[
+key
+];
+
+if(
+found ===
+want
+){
+continue;
+}
+
+const start =
+m.index;
+const end =
+start +
+m[
+0
+].length;
 content =
-next;
+content.slice(
+0,
+start
+) +
+`${importPath}?v=${want}` +
+content.slice(
+end
+);
 changed =
 true;
-
-}
 
 }
 
