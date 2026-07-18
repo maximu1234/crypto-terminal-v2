@@ -16,10 +16,18 @@ execFileSync
 require(
 "child_process"
 );
-const log =
-require(
+
+function getLog(){
+
+try{
+return require(
 "electron-log"
 );
+}catch{
+return console;
+}
+
+}
 
 const AGENT_FLAG =
 "--agent";
@@ -221,7 +229,7 @@ plistPath
 /* ignore */
 }
 
-log.info(
+getLog().info(
 "login agent: disabled"
 );
 return {
@@ -265,7 +273,7 @@ plistPath
 }catch(
 err
 ){
-log.warn(
+getLog().warn(
 "login agent bootstrap:",
 err?.message ||
 err
@@ -273,7 +281,7 @@ err
 throw err;
 }
 
-log.info(
+getLog().info(
 "login agent: enabled",
 programArgs.join(
 " "
