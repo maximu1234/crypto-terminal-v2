@@ -3,11 +3,11 @@
  */
 import {
 createTradeChartOverlay
-} from "./trade-chart-overlay.js?v=62";
+} from "./trade-chart-overlay.js?v=63";
 
 import {
 createTradeChartOrders
-} from "./trade-chart-orders.js?v=31";
+} from "./trade-chart-orders.js?v=32";
 
 import {
 createTradePlusMenuHandler
@@ -33,7 +33,7 @@ getAutoStopSettings
 
 import {
 getActiveTradeConfig
-} from "./trade/module-router.js?v=13";
+} from "./trade/module-router.js?v=14";
 
 import {
 mountTradeLeverageControl

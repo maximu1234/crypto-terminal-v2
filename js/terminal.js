@@ -108,7 +108,7 @@ mountDrawToolIcons
 
 import {
 initChartIndicators
-} from "./chart-indicators.js?v=37";
+} from "./chart-indicators.js?v=38";
 
 import {
 mountCoinsLayoutResize

@@ -9,7 +9,7 @@ import {
 import {
   getLoadedTradeExchangeModules,
   loadTradeExchangeModules
-} from "./trade/module-router.js?v=13";
+} from "./trade/module-router.js?v=14";
 
 if (!isDesktopTradeDiaryContext()) {
   location.replace("/screener.html");

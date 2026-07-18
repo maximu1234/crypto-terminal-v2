@@ -31,7 +31,7 @@ initTradeBookPanel
 
 import {
 loadTradeExchangeModules
-} from "./trade/module-router.js?v=13";
+} from "./trade/module-router.js?v=14";
 
 import {
 getActiveExchangeId
@@ -294,7 +294,7 @@ const {
 initTradeChartOverlay
 } =
 await import(
-"./trade-chart-overlay.js?v=62"
+"./trade-chart-overlay.js?v=63"
 );
 
 initTradeChartOverlay();
@@ -303,7 +303,7 @@ const {
 initTradeChartOrders
 } =
 await import(
-"./trade-chart-orders.js?v=31"
+"./trade-chart-orders.js?v=32"
 );
 
 initTradeChartOrders();

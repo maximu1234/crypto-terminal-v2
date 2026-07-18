@@ -590,7 +590,7 @@ return {
 id:
 HORIZONTAL_VOLUME_ID,
 label:
-"Стакан",
+"Плотности",
 enable,
 disable,
 isEnabled:()=>

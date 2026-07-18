@@ -160,7 +160,7 @@ createDrawStyleBar
 
 import {
 createDrawAlertsChart
-} from "./draw-alerts-chart.js?v=3";
+} from "./draw-alerts-chart.js?v=4";
 
 import {
 createDrawPlacement
@@ -180,7 +180,7 @@ createDrawChartInput
 
 import {
 createDrawPriceScale
-} from "./draw-price-scale.js?v=7";
+} from "./draw-price-scale.js?v=9";
 
 import {
 createDrawRedrawLoop
@@ -2404,7 +2404,9 @@ setManualPriceScaleDrag:v=>{
 manualPriceScaleDrag = v;
 },
 redraw:()=>
-redrawLoopCtl?.redraw?.()
+redrawLoopCtl?.redraw?.(),
+includeExternalScaleLabels:
+!!drawPriceAlerts
 });
 
 ({

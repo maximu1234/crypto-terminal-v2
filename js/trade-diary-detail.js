@@ -19,7 +19,7 @@ sideToneClass
 import {
 getLoadedTradeExchangeModules,
 loadTradeExchangeModules
-} from "./trade/module-router.js?v=13";
+} from "./trade/module-router.js?v=14";
 
 function diaryMod() {
   return getLoadedTradeExchangeModules();

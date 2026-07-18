@@ -23,6 +23,10 @@ isPositionType,
 positionScaleLabelColor
 } from "./position.js?v=4";
 
+import {
+collectChartScaleLabelEntries
+} from "../chart/scale-label-providers.js?v=1";
+
 export function createDrawPriceScale(
 deps
 ){
@@ -49,7 +53,9 @@ getPriceScaleDragActive,
 setPriceScaleDragActive,
 getManualPriceScaleDrag,
 setManualPriceScaleDrag,
-redraw
+redraw,
+includeExternalScaleLabels =
+true
 } =
 deps;
 
@@ -293,6 +299,19 @@ color
 
 }
 
+}
+
+for(
+const entry of
+(
+includeExternalScaleLabels
+? collectChartScaleLabelEntries()
+: []
+)
+){
+entries.push(
+entry
+);
 }
 
 if(!entries.length){

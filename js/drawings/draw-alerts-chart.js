@@ -13,6 +13,13 @@ import {
 isChartLayoutReady
 } from "../chart-layout-gate.js?v=2";
 
+import {
+registerChartScaleLabelProvider
+} from "../chart/scale-label-providers.js?v=1";
+
+let unregisterAlertScaleLabels =
+null;
+
 export function createDrawAlertsChart(
 deps
 ){
@@ -27,6 +34,90 @@ saveDrawings,
 scheduleRedraw
 } =
 deps;
+
+unregisterAlertScaleLabels?.();
+unregisterAlertScaleLabels =
+registerChartScaleLabelProvider(
+()=>{
+
+if(
+!isChartLayoutReady()
+){
+return [];
+}
+
+const sym =
+String(
+getSymbol() ||
+""
+).trim().toUpperCase();
+
+if(
+!sym
+){
+return [];
+}
+
+const out =
+[];
+
+for(
+const alert of
+getActiveAlerts()
+){
+if(
+String(
+alert.symbol
+).toUpperCase() !==
+sym
+){
+continue;
+}
+
+const level =
+alertPriceForDisplay(
+alert
+);
+
+if(
+!Number.isFinite(
+level
+)
+){
+continue;
+}
+
+const y =
+series.priceToCoordinate(
+level
+);
+
+if(
+y ==
+null ||
+!Number.isFinite(
+y
+)
+){
+continue;
+}
+
+out.push(
+{
+yIdeal:
+y,
+price:
+level,
+color:
+ALERT_LINE_COLOR
+}
+);
+}
+
+return out;
+
+}
+);
 
 function drawRegistryPriceAlerts(
 ctx,

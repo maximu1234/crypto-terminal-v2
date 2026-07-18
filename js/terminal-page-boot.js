@@ -278,6 +278,19 @@ await loadLightweightCharts();
 await loadChartEntryWithRetry();
 await initTradeDesktopAfterChart();
 
+void import(
+jsUrl(
+"scalping-dom/boot.js"
+)
+).then(
+m=>
+m.maybeMount()
+).catch(
+()=>{
+/* optional plugin */
+}
+);
+
 try{
 sessionStorage.removeItem(
 "coins_boot_retry_v1"

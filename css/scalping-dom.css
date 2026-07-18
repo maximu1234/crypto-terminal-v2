@@ -1,0 +1,320 @@
+/* Scalping DOM — isolated ladder column (desktop Terminal only). */
+
+body.scalping-dom-on .scalping-dom-root{
+flex:0 0 168px;
+width:168px;
+min-width:168px;
+max-width:168px;
+display:flex;
+flex-direction:column;
+min-height:0;
+overflow:hidden;
+border-left:1px solid rgba(255,255,255,0.06);
+background:#000;
+color:#fff;
+font-size:10px;
+line-height:1.15;
+user-select:none;
+}
+
+.scalping-dom-header{
+display:grid;
+grid-template-columns:minmax(0,1.7fr) minmax(0,0.85fr);
+align-items:stretch;
+gap:0;
+padding:4px 0;
+flex:0 0 auto;
+background:#000;
+}
+
+.scalping-dom-input{
+width:100%;
+min-width:0;
+box-sizing:border-box;
+margin:0;
+border:1px solid rgba(255,255,255,0.12);
+border-radius:3px;
+background:#1a1528;
+color:#fff;
+font:inherit;
+font-weight:600;
+font-variant-numeric:tabular-nums;
+line-height:1.2;
+padding:3px 5px;
+outline:none;
+}
+
+.scalping-dom-input--volume{
+margin:0 2px 0 4px;
+text-align:left;
+}
+
+.scalping-dom-input--scale{
+margin:0 4px 0 2px;
+text-align:right;
+appearance:none;
+-webkit-appearance:none;
+cursor:pointer;
+padding-right:18px;
+background-image:linear-gradient(45deg,transparent 50%,rgba(255,255,255,0.55) 50%),linear-gradient(135deg,rgba(255,255,255,0.55) 50%,transparent 50%);
+background-position:calc(100% - 9px) calc(50% - 1px),calc(100% - 5px) calc(50% - 1px);
+background-size:4px 4px,4px 4px;
+background-repeat:no-repeat;
+}
+
+.scalping-dom-input--scale option{
+background:#1a1528;
+color:#fff;
+}
+
+.scalping-dom-input:focus{
+border-color:rgba(255,255,255,0.28);
+}
+
+.scalping-dom-ladder{
+flex:1 1 auto;
+min-height:0;
+overflow:auto;
+display:flex;
+flex-direction:column;
+background:#000;
+scrollbar-width:none; /* Firefox */
+-ms-overflow-style:none; /* legacy Edge */
+}
+
+.scalping-dom-ladder::-webkit-scrollbar{
+width:0;
+height:0;
+display:none;
+}
+
+.scalping-dom-row{
+display:grid;
+grid-template-columns:minmax(0,1.7fr) minmax(0,0.85fr);
+align-items:stretch;
+gap:0;
+min-height:14px;
+font-variant-numeric:tabular-nums;
+color:#fff;
+background:transparent;
+position:relative;
+}
+
+.scalping-dom-size,
+.scalping-dom-price{
+display:flex;
+align-items:center;
+padding:0 5px;
+min-width:0;
+min-height:100%;
+box-sizing:border-box;
+}
+
+.scalping-dom-size{
+position:relative;
+justify-content:flex-start;
+opacity:0.95;
+overflow:hidden;
+}
+
+.scalping-dom-vol-bar{
+position:absolute;
+left:0;
+top:0;
+bottom:0;
+background:#8a6a1a;
+opacity:0.92;
+pointer-events:none;
+}
+
+.scalping-dom-vol-text{
+position:relative;
+z-index:1;
+}
+
+.scalping-dom-price{
+justify-content:flex-end;
+font-weight:400;
+padding-left:4px;
+padding-right:4px;
+}
+
+.scalping-dom-row--ask{
+background:#5c1d1a;
+}
+
+.scalping-dom-row--bid{
+background:#0d3d31;
+}
+
+.scalping-dom-row--ask .scalping-dom-size,
+.scalping-dom-row--ask .scalping-dom-price{
+background:#5c1d1a;
+}
+
+.scalping-dom-row--bid .scalping-dom-size,
+.scalping-dom-row--bid .scalping-dom-price{
+background:#0d3d31;
+}
+
+/* Best ask / best bid */
+.scalping-dom-row--ask.scalping-dom-row--touch{
+background:#5d0e07;
+}
+
+.scalping-dom-row--bid.scalping-dom-row--touch{
+background:#102f1e;
+}
+
+.scalping-dom-row--ask.scalping-dom-row--touch .scalping-dom-size,
+.scalping-dom-row--ask.scalping-dom-row--touch .scalping-dom-price{
+background:#5d0e07;
+}
+
+.scalping-dom-row--bid.scalping-dom-row--touch .scalping-dom-size,
+.scalping-dom-row--bid.scalping-dom-row--touch .scalping-dom-price{
+background:#102f1e;
+}
+
+.scalping-dom-row--hole,
+.scalping-dom-row--spread{
+background:transparent;
+}
+
+.scalping-dom-row--hole .scalping-dom-size,
+.scalping-dom-row--hole .scalping-dom-price,
+.scalping-dom-row--spread .scalping-dom-size,
+.scalping-dom-row--spread .scalping-dom-price{
+background:transparent;
+}
+
+/* Open position: price column from entry → current (поверх ask/bid) */
+.scalping-dom-row--pos-profit .scalping-dom-price{
+background:#357a20;
+}
+
+.scalping-dom-row--pos-loss .scalping-dom-price{
+background:#b61e0c;
+}
+
+.scalping-dom-row--major .scalping-dom-price{
+font-weight:700;
+}
+
+.scalping-dom-status{
+flex:0 0 auto;
+padding:4px 6px 6px;
+min-height:1.2em;
+color:#d4a05a;
+opacity:0.9;
+background:#000;
+}
+
+/* Header toggle (before layout picker icons) */
+body.terminal-page .scalping-dom-header-toggle-wrap{
+display:inline-flex;
+align-items:center;
+gap:8px;
+flex-shrink:0;
+margin-right:2px;
+}
+
+body.terminal-page .scalping-dom-header-toggle{
+display:inline-flex;
+align-items:center;
+justify-content:center;
+margin:0;
+padding:2px;
+cursor:pointer;
+}
+
+body.terminal-page .scalping-dom-header-toggle-input{
+width:14px;
+height:14px;
+margin:0;
+accent-color:#818cf8;
+cursor:pointer;
+}
+
+body.terminal-page .scalping-dom-header-toggle-sep{
+display:inline-block;
+width:1px;
+height:16px;
+background:rgba(255,255,255,0.18);
+flex-shrink:0;
+}
+
+/* Alert: dashed underline between this row and the next lower price (chart dash 8/6) */
+.scalping-dom-row--alert::after{
+content:"";
+position:absolute;
+left:0;
+right:0;
+bottom:0;
+height:1px;
+background:repeating-linear-gradient(
+to right,
+#facc15 0 8px,
+transparent 8px 14px
+);
+pointer-events:none;
+z-index:3;
+}
+
+/* Trigger orders: solid underline, chart order colors */
+.scalping-dom-row--trigger-long::before,
+.scalping-dom-row--trigger-short::before{
+content:"";
+position:absolute;
+left:0;
+right:0;
+bottom:0;
+height:2px;
+pointer-events:none;
+z-index:3;
+}
+
+.scalping-dom-row--trigger-long::before{
+background:#22c55e;
+}
+
+.scalping-dom-row--trigger-short::before{
+background:#ef4444;
+}
+
+/* If alert + trigger on same row — stack lines */
+.scalping-dom-row--alert.scalping-dom-row--trigger-long::before,
+.scalping-dom-row--alert.scalping-dom-row--trigger-short::before{
+bottom:3px;
+}
+
+/*
+ * SL/TP edge lines on highlighted rows (DOM span, not box-shadow —
+ * child cell backgrounds would cover inset shadows):
+ * SL short → top red; SL long → bottom red
+ * TP short → bottom green; TP long → top red
+ */
+.scalping-dom-sl-tp-edge{
+position:absolute;
+left:0;
+right:0;
+height:2px;
+pointer-events:none;
+z-index:5;
+}
+
+.scalping-dom-sl-tp-edge--top{
+top:0;
+}
+
+.scalping-dom-sl-tp-edge--bottom{
+bottom:0;
+}
+
+.scalping-dom-sl-tp-edge--red{
+background:#ef4444;
+}
+
+.scalping-dom-sl-tp-edge--green{
+background:#22c55e;
+}

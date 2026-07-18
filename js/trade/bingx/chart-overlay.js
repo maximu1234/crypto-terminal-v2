@@ -38,6 +38,10 @@ import {
 maskTradeDisplay
 } from "../../trade-pnl-privacy.js?v=1";
 
+import {
+registerChartScaleLabelProvider
+} from "../../chart/scale-label-providers.js?v=1";
+
 const BADGE_LEFT =
 12;
 
@@ -389,6 +393,8 @@ let rafId =
 let fetching =
 false;
 let afterDrawingsRedraw =
+null;
+let unregisterScaleLabels =
 null;
 let bindDrawingSyncTimer =
 0;
@@ -1836,6 +1842,8 @@ kind:
 "entry",
 y:
 entryY,
+price:
+entry,
 className:
 isLong
 ? "trade-pos-badge--long"
@@ -1891,6 +1899,8 @@ kind:
 "sl",
 y:
 slY,
+price:
+sl,
 className:
 "trade-pos-badge--sl",
 html:
@@ -1945,6 +1955,8 @@ kind:
 "tp",
 y:
 tpY,
+price:
+tp,
 className:
 "trade-pos-badge--tp",
 html:
@@ -2289,6 +2301,30 @@ return gapByKind;
 
 }
 
+function collectScaleLabelEntries(){
+
+return buildBadgeSpecs().filter(
+spec=>
+spec.line &&
+Number.isFinite(
+spec.price
+) &&
+spec.price >
+0
+).map(
+spec=>
+({
+yIdeal:
+spec.y,
+price:
+spec.price,
+color:
+spec.line.color
+})
+);
+
+}
+
 function paintOnDrawingsCtx(
 ctx,
 plotW
@@ -2387,6 +2423,10 @@ function destroy(){
 
 mountAbort?.abort();
 mountAbort =
+null;
+
+unregisterScaleLabels?.();
+unregisterScaleLabels =
 null;
 
 if(
@@ -4199,6 +4239,12 @@ bindChartSwitchSync(
 signal
 );
 ensureDrawingSync();
+
+unregisterScaleLabels?.();
+unregisterScaleLabels =
+registerChartScaleLabelProvider(
+collectScaleLabelEntries
+);
 
 const ro =
 new ResizeObserver(

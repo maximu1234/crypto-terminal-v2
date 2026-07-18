@@ -24,12 +24,12 @@ export {
 export {
   createTradeChartOverlay,
   initTradeChartOverlay
-} from "./chart-overlay.js?v=12";
+} from "./chart-overlay.js?v=13";
 
 export {
   createTradeChartOrders,
   initTradeChartOrders
-} from "./chart-orders.js?v=1";
+} from "./chart-orders.js?v=2";
 
 export {
   getAutoStopSettings,
