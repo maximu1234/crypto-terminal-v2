@@ -822,10 +822,9 @@ overlay.querySelector(
 if(
 dialog
 ){
-dialog.classList.toggle(
-"trade-pnl-share-dialog--diary",
-payload?.variant ===
-"diary"
+/* BingX position + diary share the same 1800×1478 card — always wide dialog. */
+dialog.classList.add(
+"trade-pnl-share-dialog--diary"
 );
 }
 

@@ -57,9 +57,35 @@ getAppRoot(),
 "generate-bybit-pnl-diary-card.py"
 );
 
+const SCRIPT_BINGX =
+path.join(
+getAppRoot(),
+"scripts",
+"generate-bingx-pnl-card.py"
+);
+
+function getActiveExchangeId(){
+
+try{
+return require(
+"./trading-router.cjs"
+).getActiveExchange();
+}catch{
+return "bybit";
+}
+
+}
+
 function getScriptPath(
 variant
 ){
+
+if(
+getActiveExchangeId() ===
+"bingx"
+){
+return SCRIPT_BINGX;
+}
 
 return variant ===
 "diary"
@@ -124,6 +150,19 @@ payload.marketPrice
 "-o",
 outPath
 ];
+
+if(
+getActiveExchangeId() ===
+"bingx"
+){
+args.push(
+"--variant",
+payload.variant ===
+"diary"
+? "diary"
+: "position"
+);
+}
 
 if(
 Number.isInteger(
@@ -237,7 +276,7 @@ code !==
 reject(
 new Error(
 stderr.trim() ||
-`generate-bybit-pnl-card.py exited ${code}`
+`pnl share card exited ${code}`
 )
 );
 return;

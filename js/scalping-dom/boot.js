@@ -23,7 +23,7 @@ createDepthFeed
 
 import {
 createLadderUi
-} from "./ladder-ui.js?v=22";
+} from "./ladder-ui.js?v=24";
 
 import {
 isScalpingDomEnabled,

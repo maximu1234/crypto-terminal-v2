@@ -74,7 +74,7 @@ export {
 
 export {
   bootTradeDiaryPage
-} from "./diary/page.js?v=1";
+} from "./diary/page.js?v=2";
 
 export {
   mountTradeDiaryPeriodPicker

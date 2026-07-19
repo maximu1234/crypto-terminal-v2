@@ -66,9 +66,41 @@ decimalsForTick(
 tick
 );
 
-return price.toFixed(
+let snapped =
+price;
+
+if(
+tick >
+0
+){
+snapped =
+Math.round(
+price /
+tick
+) *
+tick;
+}
+
+const fixed =
+snapped.toFixed(
 decimals
 );
+const parts =
+fixed.split(
+"."
+);
+const intPart =
+parts[
+0
+].replace(
+/\B(?=(\d{3})+(?!\d))/g,
+" "
+);
+
+return decimals >
+0
+? `${intPart}.${parts[1]}`
+: intPart;
 
 }
 
@@ -86,6 +118,7 @@ size <=
 return "";
 }
 
+/* Display size is USDT notional. */
 if(
 size >=
 1_000_000
@@ -107,16 +140,8 @@ return `${k >= 10 ? k.toFixed(0) : k.toFixed(1).replace(/\.0$/, "")}K`;
 }
 
 if(
-Number.isInteger(
-size
-) ||
-Math.abs(
-size -
-Math.round(
-size
-)
-) <
-1e-8
+size >=
+100
 ){
 return String(
 Math.round(
@@ -127,23 +152,21 @@ size
 
 if(
 size >=
-1
+10
 ){
-return size.toLocaleString(
-"en-US",
-{
-maximumFractionDigits:
-2
-}
+return size.toFixed(
+1
+).replace(
+/\.0$/,
+""
 );
 }
 
-return size.toLocaleString(
-"en-US",
-{
-maximumFractionDigits:
-4
-}
+return size.toFixed(
+2
+).replace(
+/\.?0+$/,
+""
 );
 
 }

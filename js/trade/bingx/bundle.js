@@ -73,7 +73,7 @@ export {
 
 export {
   bootTradeDiaryPage
-} from "./diary/page.js?v=1";
+} from "./diary/page.js?v=2";
 
 export {
   mountTradeDiaryPeriodPicker
@@ -119,7 +119,7 @@ export {
   buildDiaryPayload,
   openPnlShareModal,
   openPnlShareDiaryModal
-} from "./pnl-share-modal.js?v=1";
+} from "./pnl-share-modal.js?v=2";
 
 export {
   mountTradeChartMarkersToggle,

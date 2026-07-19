@@ -1,7 +1,7 @@
 {
   "name": "multichart-desktop",
   "productName": "Multichart",
-  "version": "1.0.72",
+  "version": "1.0.73",
   "description": "Multichart desktop shell for macOS (bundled site UI + auto-update)",
   "main": "main.js",
   "author": "Multichart",
@@ -46,6 +46,7 @@
       "preload.js",
       "menu-bar-tray.cjs",
       "menu-bar-tray-feed.cjs",
+      "menu-bar-tray-pnl.cjs",
       "menu-bar-tray-prefs-store.cjs",
       "tray-popup-preload.cjs",
       "tray-popup.html",
@@ -145,6 +146,26 @@
       {
         "from": "../assets/bybit-pnl-diary-template-negative.png",
         "to": "assets/bybit-pnl-diary-template-negative.png"
+      },
+      {
+        "from": "../scripts/generate-bingx-pnl-card.py",
+        "to": "scripts/generate-bingx-pnl-card.py"
+      },
+      {
+        "from": "../assets/bingx-pnl-template-positive.png",
+        "to": "assets/bingx-pnl-template-positive.png"
+      },
+      {
+        "from": "../assets/bingx-pnl-template-negative.png",
+        "to": "assets/bingx-pnl-template-negative.png"
+      },
+      {
+        "from": "../assets/bingx-pnl-diary-template-positive.png",
+        "to": "assets/bingx-pnl-diary-template-positive.png"
+      },
+      {
+        "from": "../assets/bingx-pnl-diary-template-negative.png",
+        "to": "assets/bingx-pnl-diary-template-negative.png"
       }
     ],
     "publish": {

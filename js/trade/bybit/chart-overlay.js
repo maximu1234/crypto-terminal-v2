@@ -30,7 +30,7 @@ formatTradeUsdt
 
 import {
 registerChartScaleLabelProvider
-} from "../../chart/scale-label-providers.js?v=1";
+} from "../../chart/scale-label-providers.js?v=2";
 
 import {
 maskTradeDisplay

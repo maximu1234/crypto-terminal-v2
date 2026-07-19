@@ -1,5 +1,8 @@
 /**
  * Main-process tray feed (macOS): positions/PnL/balance without renderer.
+ *
+ * PnL must match Terminal «Позиции»: mark-based unrealised (not stale stream
+ * exchange pnl). Prefer REST positions for fresh markPrice; fall back to stream.
  */
 const log =
 require(
@@ -19,6 +22,12 @@ getTradingSnapshot
 } =
 require(
 "./trading/trading-stream.cjs"
+);
+const {
+withResolvedPnl
+} =
+require(
+"./menu-bar-tray-pnl.cjs"
 );
 
 const POSITIONS_POLL_MS =
@@ -117,6 +126,23 @@ return exchangeId ===
 
 }
 
+function isOpenPosition(
+row
+){
+
+const size =
+Math.abs(
+Number(
+row?.size
+) ||
+0
+);
+
+return size >
+0;
+
+}
+
 function sumOpenPnl(
 rows
 ){
@@ -195,21 +221,58 @@ snap.positions
 )
 ){
 return snap.positions.filter(
-row=>{
-const size =
-Math.abs(
-Number(
-row?.size
-) ||
-0
-);
-return size >
-0;
-}
+isOpenPosition
 );
 }
 
 return null;
+
+}
+
+async function loadOpenPositions(
+exchangeId
+){
+
+try{
+const rest =
+await getPositions({
+exchangeId
+});
+
+if(
+rest?.ok &&
+Array.isArray(
+rest.positions
+)
+){
+return rest.positions.filter(
+isOpenPosition
+).map(
+withResolvedPnl
+);
+}
+}catch(
+err
+){
+log.warn(
+"tray-feed positions:",
+err?.message ||
+err
+);
+}
+
+const fromStream =
+readPositionsFromStreamOrEmpty();
+
+if(
+fromStream
+){
+return fromStream.map(
+withResolvedPnl
+);
+}
+
+return [];
 
 }
 
@@ -281,59 +344,12 @@ exchangeDisplayName(
 exchangeId
 );
 
-let positions =
-[];
-
-if(
+const positions =
 configured
-){
-const fromStream =
-readPositionsFromStreamOrEmpty();
-
-if(
-fromStream
-){
-positions =
-fromStream;
-}else{
-try{
-const rest =
-await getPositions({
+? await loadOpenPositions(
 exchangeId
-});
-
-if(
-rest?.ok &&
-Array.isArray(
-rest.positions
 )
-){
-positions =
-rest.positions.filter(
-row=>{
-const size =
-Math.abs(
-Number(
-row?.size
-) ||
-0
-);
-return size >
-0;
-}
-);
-}
-}catch(
-err
-){
-log.warn(
-"tray-feed positions:",
-err?.message ||
-err
-);
-}
-}
-}
+: [];
 
 const statusLabel =
 configured

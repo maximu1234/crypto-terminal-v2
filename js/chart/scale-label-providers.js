@@ -86,7 +86,10 @@ yIdeal,
 price,
 color:
 entry.color ||
-"rgba(30, 41, 59, 0.95)"
+"rgba(30, 41, 59, 0.95)",
+/* Stay on price line — collision layout was shifting plaques on zoom. */
+pinToPrice:
+true
 }
 );
 }

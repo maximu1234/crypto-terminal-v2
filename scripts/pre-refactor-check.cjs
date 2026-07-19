@@ -75,8 +75,8 @@ run(
 );
 
 run(
-"node --test tests/*.test.mjs",
-"Unit tests"
+"node scripts/test-ci-parity.cjs",
+"Unit tests (CI parity: no desktop/node_modules)"
 );
 
 console.log(

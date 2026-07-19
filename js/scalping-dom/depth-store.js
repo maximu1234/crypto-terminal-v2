@@ -136,8 +136,77 @@ d;
 
 }
 
-return tick ||
-0;
+return snapNiceTick(
+tick
+);
+
+}
+
+/**
+ * Snap inferred tick to 1/2/5 × 10^n (cScalp-style). Float noise like
+ * 0.0999999999 → 0.1 so BTC ladder stays readable.
+ */
+function snapNiceTick(
+raw
+){
+
+const cleaned =
+roundTick(
+raw
+);
+
+if(
+!(
+cleaned >
+0
+)
+){
+return 0;
+}
+
+const exp =
+Math.floor(
+Math.log10(
+cleaned
+)
+);
+const mag =
+10 **
+exp;
+const norm =
+cleaned /
+mag;
+
+let nice =
+1;
+
+if(
+norm <
+1.5
+){
+nice =
+1;
+}else if(
+norm <
+3.5
+){
+nice =
+2;
+}else if(
+norm <
+7.5
+){
+nice =
+5;
+}else{
+nice =
+10;
+}
+
+return roundTick(
+nice *
+mag
+);
 
 }
 
@@ -162,6 +231,40 @@ value.toPrecision(
 return Number(
 s
 );
+
+}
+
+function decimalsForTick(
+tick
+){
+
+if(
+!(
+tick >
+0
+)
+){
+return 6;
+}
+
+const s =
+tick.toFixed(
+12
+).replace(
+/\.?0+$/,
+""
+);
+const i =
+s.indexOf(
+"."
+);
+
+return i <
+0
+? 0
+: s.length -
+i -
+1;
 
 }
 
@@ -250,6 +353,60 @@ displayTick +
 ) *
 displayTick
 );
+
+}
+
+function levelUsdt(
+level
+){
+
+if(
+!level
+){
+return 0;
+}
+
+const fromNotional =
+Number(
+level.notional
+);
+
+if(
+Number.isFinite(
+fromNotional
+) &&
+fromNotional >
+0
+){
+return fromNotional;
+}
+
+const price =
+Number(
+level.price
+);
+const size =
+Number(
+level.size
+);
+
+if(
+Number.isFinite(
+price
+) &&
+Number.isFinite(
+size
+) &&
+price >
+0 &&
+size >
+0
+){
+return price *
+size;
+}
+
+return 0;
 
 }
 
@@ -571,9 +728,15 @@ step--
 ){
 
 const price =
-roundTick(
+Number(
+(
 step *
 tick
+).toFixed(
+decimalsForTick(
+tick
+)
+)
 );
 const key =
 String(
@@ -600,7 +763,9 @@ askLevel?.size >
 side =
 "ask";
 size =
-askLevel.size;
+levelUsdt(
+askLevel
+);
 }else if(
 bidLevel?.size >
 0
@@ -608,7 +773,9 @@ bidLevel?.size >
 side =
 "bid";
 size =
-bidLevel.size;
+levelUsdt(
+bidLevel
+);
 }
 
 const touch =
@@ -667,7 +834,9 @@ rows.push(
 price:
 level.price,
 size:
-level.size,
+levelUsdt(
+level
+),
 side:
 "ask",
 touch:
@@ -691,7 +860,9 @@ rows.push(
 price:
 level.price,
 size:
-level.size,
+levelUsdt(
+level
+),
 side:
 "bid",
 touch:

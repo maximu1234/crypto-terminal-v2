@@ -40,7 +40,16 @@ alwaysApply: false
 
 - `node scripts/sync-asset-versions.cjs` — импорты `?v=` согласованы с `js/asset-manifest.js`.
 - `npm run check:all` без ошибок (чтобы CI на GitHub не ругался).
-- При изменении ассетов — bundle sync выполнен.
+- При изменении ассетов — `npm run bundle:sync`, затем снова drift-check / `check:all`.
+- **CI-parity unit tests (обязательно перед пушем):** `check:all` уже гоняет
+  `npm run test:ci-parity` — unit-тесты **без** `desktop/node_modules`.
+  Иначе локально зелёный прогон (Electron/`electron-log` находятся в
+  `desktop/node_modules`), а на GitHub Actions падает Unit tests при первом
+  пуше. Типичные причины прошлых first-push fail:
+  - новый `tests/*.test.mjs` тянет `desktop/**` с top-level `require("electron")`
+    / `require("electron-log")` → lazy-require или stub;
+  - тест трогает DOM/`navigator` без `tests/helpers/stub-browser.mjs`;
+  - забыли `bundle:sync` после bump ассетов.
 
 ## 5. Новая метка (metka-N)
 

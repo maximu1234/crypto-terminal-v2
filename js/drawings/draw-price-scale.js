@@ -25,7 +25,7 @@ positionScaleLabelColor
 
 import {
 collectChartScaleLabelEntries
-} from "../chart/scale-label-providers.js?v=1";
+} from "../chart/scale-label-providers.js?v=2";
 
 export function createDrawPriceScale(
 deps
@@ -314,16 +314,55 @@ entry
 );
 }
 
-if(!entries.length){
+const yDrawByIndex =
+new Array(
+entries.length
+);
+
+const movableIdeal =
+[];
+const movableIndex =
+[];
+
+entries.forEach(
+(
+entry,
+i
+)=>{
+
+if(
+entry.pinToPrice &&
+Number.isFinite(
+entry.yIdeal
+)
+){
+yDrawByIndex[
+i
+] =
+entry.yIdeal;
 return;
 }
+
+movableIndex.push(
+i
+);
+movableIdeal.push(
+entry.yIdeal
+);
+
+}
+);
+
+if(
+movableIdeal.length
+){
 
 const hudBand =
 getCurrentPriceHudBand();
 
 const yDraws =
 layoutScaleLabelYs(
-entries.map(e=>e.yIdeal),
+movableIdeal,
 CHART_SCALE_LABEL_LINE_HEIGHT,
 chartSize().h,
 {
@@ -334,13 +373,37 @@ hudBand
 }
 );
 
-entries.forEach((entry, i)=>{
+movableIndex.forEach(
+(
+entryIndex,
+j
+)=>{
+yDrawByIndex[
+entryIndex
+] =
+yDraws[
+j
+];
+}
+);
+
+}
+
+entries.forEach(
+(
+entry,
+i
+)=>{
 
 const yDraw =
-yDraws[i];
+yDrawByIndex[
+i
+];
 
 if(
-!Number.isFinite(yDraw)
+!Number.isFinite(
+yDraw
+)
 ){
 return;
 }
@@ -352,7 +415,8 @@ entry.price,
 entry.color
 );
 
-});
+}
+);
 
 }
 

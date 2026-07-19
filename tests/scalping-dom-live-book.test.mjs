@@ -81,6 +81,31 @@ test("buildLadderFromBook fills continuous ask/bid rows around mid", () => {
   assert.ok(ladder.bestBid === 100 || ladder.bestBid < 101);
 });
 
+test("BTC float noise snaps tick to 0.1 and formats clean prices", () => {
+  const asks = [];
+  const bids = [];
+  for (let i = 0; i < 30; i++) {
+    const ask = 64713.9 + i * 0.1 + (i % 3 === 0 ? 1e-11 : -1e-12);
+    const bid = 64713.8 - i * 0.1 + (i % 2 === 0 ? -1e-11 : 1e-12);
+    asks.push({ price: ask, size: 1 });
+    bids.push({ price: bid, size: 1 });
+  }
+
+  const ladder = buildLadderFromBook(
+    { asks, bids },
+    { maxLevels: 20, priceScale: 1 }
+  );
+
+  assert.ok(ladder);
+  assert.equal(ladder.tick, 0.1);
+  for (const row of ladder.rows) {
+    const fixed = row.price.toFixed(1);
+    assert.equal(row.price, Number(fixed));
+    assert.match(fixed, /^\d+\.\d$/);
+  }
+});
+
+
 test("sticky range recenters when mid drifts past autocenter pct", () => {
   const range = makeStickyPriceRange(100, 1, 40);
   assert.ok(range);

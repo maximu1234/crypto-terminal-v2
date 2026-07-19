@@ -492,7 +492,6 @@ formatDiaryUsd(
 trade.pnlUsd
 )
 )}</span>
-${PNL_SHARE_CONTROL_HTML}
 </span>
 <span class="trade-diary-share-col">${PNL_SHARE_CONTROL_HTML}</span>
 <span class="trade-diary-num ${pnlToneClass(

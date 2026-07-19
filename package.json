@@ -9,6 +9,7 @@
     "bundle:sync": "npm run bundle:site --prefix desktop",
     "bundle:check": "node scripts/check-desktop-bundle.cjs",
     "test": "node --test tests/*.test.mjs",
+    "test:ci-parity": "node scripts/test-ci-parity.cjs",
     "check:all": "node scripts/pre-refactor-check.cjs"
   },
   "version": "1.0.71"

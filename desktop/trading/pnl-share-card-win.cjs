@@ -41,9 +41,32 @@ __dirname,
 
 }
 
+function getActiveExchangeId(){
+
+try{
+return require(
+"./trading-router.cjs"
+).getActiveExchange();
+}catch{
+return "bybit";
+}
+
+}
+
 function getScriptPath(
 variant
 ){
+
+if(
+getActiveExchangeId() ===
+"bingx"
+){
+return path.join(
+getAppRoot(),
+"scripts",
+"generate-bingx-pnl-card.py"
+);
+}
 
 const name =
 variant ===
@@ -68,11 +91,24 @@ const root =
 appRoot ||
 getAppRoot();
 
+const exchange =
+getActiveExchangeId();
+
 const prefix =
+exchange ===
+"bingx"
+? (
+variant ===
+"diary"
+? "bingx-pnl-diary-template"
+: "bingx-pnl-template"
+)
+: (
 variant ===
 "diary"
 ? "bybit-pnl-diary-template"
-: "bybit-pnl-template";
+: "bybit-pnl-template"
+);
 
 return {
 positive:
@@ -150,6 +186,19 @@ payload.marketPrice
 "-o",
 outPath
 ];
+
+if(
+getActiveExchangeId() ===
+"bingx"
+){
+args.push(
+"--variant",
+payload.variant ===
+"diary"
+? "diary"
+: "position"
+);
+}
 
 if(
 Number.isInteger(
@@ -496,9 +545,13 @@ appRoot
 );
 
 const bundledExe =
-getBundledGeneratorExe();
+getActiveExchangeId() ===
+"bingx"
+? ""
+: getBundledGeneratorExe();
 
 const run =
+bundledExe &&
 fs.existsSync(
 bundledExe
 )

@@ -16,6 +16,7 @@ test("registerChartScaleLabelProvider collects finite entries", () => {
   const entries = collectChartScaleLabelEntries();
   assert.equal(entries.length, 2);
   assert.equal(entries[0].price, 100);
+  assert.equal(entries[0].pinToPrice, true);
   assert.equal(entries[1].price, 102);
 
   unregister();

@@ -41,7 +41,7 @@ initTradeDiaryNav
 import {
 openPnlShareDiaryModal,
 PNL_SHARE_CONTROL_HTML
-} from "../pnl-share-modal.js?v=1";
+} from "../pnl-share-modal.js?v=2";
 
 import {
 getLoadedTradeExchangeModules,
@@ -492,7 +492,6 @@ formatDiaryUsd(
 trade.pnlUsd
 )
 )}</span>
-${PNL_SHARE_CONTROL_HTML}
 </span>
 <span class="trade-diary-share-col">${PNL_SHARE_CONTROL_HTML}</span>
 <span class="trade-diary-num ${pnlToneClass(

@@ -169,7 +169,7 @@ Object.freeze({
 "trade/bybit/pnl-share-modal.js":
 1,
 "trade/bybit/diary/page.js":
-1,
+2,
 "trade/bybit/diary/period.js":
 1,
 "trade/bingx/bundle.js":
@@ -189,7 +189,7 @@ Object.freeze({
 "trade/bingx/chart-execution-markers.js":
 2,
 "trade/bingx/pnl-share-modal.js":
-1,
+2,
 "trade/bingx/book-columns.js":
 1,
 "trade/bingx/leverage-settings.js":
@@ -199,7 +199,7 @@ Object.freeze({
 "trade/bingx/diary/period.js":
 1,
 "trade/bingx/diary/page.js":
-1,
+2,
 "trade/bingx/auto-stops.js":
 8,
 "trade/bingx/market-entry.js":
@@ -327,9 +327,9 @@ Object.freeze({
 "scalping-dom/depth-feed.js":
 21,
 "scalping-dom/depth-store.js":
-8,
+10,
 "scalping-dom/ladder-ui.js":
-22,
+24,
 "scalping-dom/settings-ui.js":
 27,
 "scalping-dom/position-overlay.js":
@@ -383,7 +383,7 @@ Object.freeze({
 "chart/chart-options.js":
 7,
 "chart/scale-label-providers.js":
-1,
+2,
 "chart/chart-dom-crosshair.js":
 15,
 "chart/chart-factory.js":
@@ -411,7 +411,7 @@ Object.freeze({
 "drawings/draw-alerts-chart.js":
 4,
 "drawings/draw-price-scale.js":
-9,
+10,
 "drawings/draw-redraw-loop.js":
 7,
 "drawings/draw-chart-input.js":

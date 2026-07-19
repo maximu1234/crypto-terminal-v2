@@ -15,7 +15,7 @@ buildLadderFromBook,
 makeStickyPriceRange,
 stickyHalfSpanForScale,
 stickyRangeNeedsRecenter
-} from "./depth-store.js?v=8";
+} from "./depth-store.js?v=10";
 
 import {
 applyPositionOverlays,

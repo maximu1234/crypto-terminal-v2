@@ -180,7 +180,7 @@ createDrawChartInput
 
 import {
 createDrawPriceScale
-} from "./draw-price-scale.js?v=9";
+} from "./draw-price-scale.js?v=10";
 
 import {
 createDrawRedrawLoop
