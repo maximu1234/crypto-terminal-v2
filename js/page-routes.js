@@ -174,6 +174,14 @@ return pathMatches(
 
 }
 
+export function isAlgoTradingPage(){
+
+return pathMatches(
+/\/algo-trading(\.html)?\/?$/i
+);
+
+}
+
 export function isSystemAdminPage(){
 
 return pathMatches(

@@ -68,7 +68,7 @@ enforceSiteHeaderAfterBoot
 
 import {
 resumeScriptScanBackgroundJob
-} from "./script-scan-background.js?v=11";
+} from "./script-scan-background.js?v=13";
 
 import {
 resumeStatsBackgroundJob

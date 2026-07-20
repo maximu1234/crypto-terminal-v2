@@ -11,6 +11,7 @@
 | Графики, алерты, синхронизация | ✅ | ✅ |
 | `/trade`, торговля, API keys | ❌ | ✅ |
 | `/script.html`, сканер паттерна 1-2 | ❌ (редирект) | ✅ |
+| `/algo-trading.html`, алготрейдинг (прототип) | ❌ (редирект) | ✅ |
 
 ## Скрипт (desktop, часть торгового модуля)
 
@@ -23,6 +24,15 @@
 | Nav / статус | `js/site-header-nav-desktop.js`, `js/script-terminal-status.js`, `js/site-boot.js` |
 
 **Аудит торгового модуля** → проверять Скрипт в том же проходе (desktop-gate, bundle, nav, фоновый таймер). См. `.cursor/rules/trading-module-script.mdc`.
+
+## АлгоТрейдинг (desktop, прототип)
+
+Облегчённый Терминал для отработки алготорговли (Bybit). Без торгового модуля, стакана, рисунков и меню индикаторов; всегда включены RSI и Pattern 1-2.
+
+| Компонент | Файлы |
+|-----------|--------|
+| Страница / boot | `algo-trading.html`, `js/algo-trading-page-boot.js`, `js/algo-trading.js`, `css/algo-trading.css` |
+| Nav / route | `js/site-header-nav-desktop.js`, `js/page-routes.js` (`isAlgoTradingPage`) |
 
 ## Функции (metka-29)
 
@@ -171,6 +181,9 @@ Bybit history не импортирует BingX history и наоборот. И�
 | `js/script-page-boot.js` | Boot + редирект вне desktop |
 | `js/script-scan-background.js` | Фоновое авто-сканирование |
 | `js/script-terminal-status.js` | Статус скана в шапке Терминала |
+| `algo-trading.html` | АлгоТрейдинг — прототип (только desktop) |
+| `js/algo-trading-page-boot.js` | Boot + редирект вне desktop |
+| `js/algo-trading.js` | График + RSI + Pattern 1-2 |
 
 ## IPC
 

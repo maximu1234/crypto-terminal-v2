@@ -25,6 +25,8 @@ const DEFAULTS =
 trayEnabled:
 true,
 launchAgentAtLogin:
+false,
+pnlHidden:
 false
 };
 
@@ -57,7 +59,9 @@ trayEnabled:
 parsed?.trayEnabled !==
 false,
 launchAgentAtLogin:
-!!parsed?.launchAgentAtLogin
+!!parsed?.launchAgentAtLogin,
+pnlHidden:
+!!parsed?.pnlHidden
 };
 }catch{
 return {
@@ -79,7 +83,12 @@ trayEnabled:
 next?.trayEnabled !==
 false,
 launchAgentAtLogin:
-!!next?.launchAgentAtLogin
+!!next?.launchAgentAtLogin,
+pnlHidden:
+!!(
+next?.pnlHidden ??
+current.pnlHidden
+)
 };
 
 if(
@@ -165,10 +174,28 @@ enabled
 
 }
 
+function setPnlHidden(
+hidden
+){
+
+const current =
+readPrefs();
+
+return writePrefs(
+{
+...current,
+pnlHidden:
+!!hidden
+}
+);
+
+}
+
 module.exports =
 {
 readPrefs,
 writePrefs,
 setTrayEnabled,
-setLaunchAgentAtLogin
+setLaunchAgentAtLogin,
+setPnlHidden
 };

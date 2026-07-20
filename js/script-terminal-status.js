@@ -4,11 +4,11 @@
 import {
 getScriptScanNextRunAt,
 SCRIPT_SCAN_BG_EVENT
-} from "./script-scan-background.js?v=11";
+} from "./script-scan-background.js?v=13";
 
 import {
 loadScriptPageState
-} from "./script-page-storage.js?v=11";
+} from "./script-page-storage.js?v=13";
 
 function formatCountdown(
 ms

@@ -10,6 +10,11 @@ label: "Скрипт",
 match: /^\/script(?:\.html)?\/?$/i
 },
 {
+href: "/algo-trading.html",
+label: "АлгоТрейдинг",
+match: /^\/algo-trading(?:\.html)?\/?$/i
+},
+{
 href: "/diary/",
 label: "Дневник",
 match: /^\/diary(?:\/|$)/i

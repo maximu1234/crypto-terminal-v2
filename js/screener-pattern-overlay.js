@@ -13,33 +13,6 @@ paintPattern12Scene
 const PATTERN_SETTINGS =
 defaultPattern12Settings();
 
-function patternSettingsForWidget(
-widget
-){
-
-const side =
-String(
-widget?.side ||
-""
-);
-
-if(
-side ===
-"long" ||
-side ===
-"short"
-){
-return {
-...PATTERN_SETTINGS,
-patternMode:
-side
-};
-}
-
-return PATTERN_SETTINGS;
-
-}
-
 export function mountScreenerPatternOverlay(
 widget
 ){
@@ -237,9 +210,7 @@ return;
 scene =
 computePattern12Scene(
 widget.candles,
-patternSettingsForWidget(
-widget
-)
+PATTERN_SETTINGS
 );
 redraw();
 

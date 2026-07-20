@@ -52,6 +52,47 @@ padding:6px 16px 4px;
 color:#9ca3af;
 }
 
+.section-title-row{
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:8px;
+padding:6px 12px 4px 16px;
+}
+
+.section-title-row .section-title{
+padding:0;
+}
+
+.tray-pnl-eye{
+appearance:none;
+flex:0 0 auto;
+width:22px;
+height:22px;
+padding:0;
+border:none;
+border-radius:4px;
+background:transparent;
+color:#9ca3af;
+cursor:pointer;
+display:inline-flex;
+align-items:center;
+justify-content:center;
+}
+
+.tray-pnl-eye:hover{
+color:#e5e7eb;
+background:rgba(255,255,255,.06);
+}
+
+.tray-pnl-eye[aria-pressed="true"] .tray-eye-svg--open{
+display:none;
+}
+
+.tray-pnl-eye[aria-pressed="false"] .tray-eye-svg--closed{
+display:none;
+}
+
 .sep{
 height:1px;
 margin:6px 0;

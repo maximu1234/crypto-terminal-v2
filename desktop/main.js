@@ -74,6 +74,7 @@ const {
 initMenuBarTray,
 updateMenuBarTray,
 setMenuBarTrayVisible,
+setMenuBarTrayPnlHidden,
 isMenuBarTrayActive,
 configureMenuBarTray,
 dismissTrayPopup,
@@ -85,6 +86,10 @@ require(
 const trayPrefsStore =
 require(
 "./menu-bar-tray-prefs-store.cjs"
+);
+const scriptFavoritesStore =
+require(
+"./script-favorites-store.cjs"
 );
 const {
 hasAgentArg,
@@ -1416,6 +1421,39 @@ err.message
 );
 
 ipcMain.handle(
+"desktop:setMenuBarTrayPnlHidden",
+(
+_event,
+hidden
+)=>{
+
+try{
+return setMenuBarTrayPnlHidden(
+!!hidden,
+{
+broadcast:
+false
+}
+);
+}catch(
+err
+){
+log.warn(
+"desktop:setMenuBarTrayPnlHidden:",
+err.message
+);
+return {
+ok:
+false,
+message:
+err.message
+};
+}
+
+}
+);
+
+ipcMain.handle(
 "desktop:getMenuBarAgentPrefs",
 ()=>{
 
@@ -1472,6 +1510,112 @@ err
 ){
 log.warn(
 "desktop:setLaunchAgentAtLogin:",
+err?.message ||
+err
+);
+return {
+ok:
+false,
+message:
+err?.message ||
+String(
+err
+)
+};
+}
+
+}
+);
+
+ipcMain.handle(
+"desktop:importScriptFavorites",
+async(
+_event,
+payload
+)=>{
+
+try{
+return await scriptFavoritesStore.importFromDialog(
+payload?.exchangeId,
+payload?.side
+);
+}catch(
+err
+){
+log.warn(
+"desktop:importScriptFavorites:",
+err?.message ||
+err
+);
+return {
+ok:
+false,
+message:
+err?.message ||
+String(
+err
+)
+};
+}
+
+}
+);
+
+ipcMain.handle(
+"desktop:loadScriptFavorites",
+(
+_event,
+payload
+)=>{
+
+try{
+return scriptFavoritesStore.readText(
+payload?.exchangeId,
+payload?.side
+);
+}catch(
+err
+){
+log.warn(
+"desktop:loadScriptFavorites:",
+err?.message ||
+err
+);
+return {
+ok:
+false,
+exists:
+false,
+text:
+"",
+message:
+err?.message ||
+String(
+err
+)
+};
+}
+
+}
+);
+
+ipcMain.handle(
+"desktop:clearScriptFavorites",
+(
+_event,
+payload
+)=>{
+
+try{
+return scriptFavoritesStore.clearText(
+payload?.exchangeId,
+payload?.side
+);
+}catch(
+err
+){
+log.warn(
+"desktop:clearScriptFavorites:",
 err?.message ||
 err
 );

@@ -16,7 +16,7 @@
 <script src="/js/site-css-ready.js?v=3"></script>
 <link rel="stylesheet" href="/css/common.css?v=50">
 <link rel="stylesheet" href="/css/screener.css?v=49">
-<link rel="stylesheet" href="/css/script-page.css?v=16">
+<link rel="stylesheet" href="/css/script-page.css?v=19">
 
 <script src="/vendor/lightweight-charts.standalone.production.js"></script>
 <link rel="modulepreload" href="/js/charts-lib-boot.js?v=3" crossorigin>
@@ -80,8 +80,7 @@ aria-expanded="false"
 
 <div id="script-toolbar" class="script-toolbar" aria-label="Настройки скрипта">
 
-<div class="script-toolbar-left">
-
+<div class="script-toolbar-row script-toolbar-row--tf">
 <div class="script-tf-filter" id="script-tf-filter" role="tablist" aria-label="Фильтр таймфрейма">
 <button type="button" class="script-tf-btn active" data-tf="all">Все</button>
 <button type="button" class="script-tf-btn" data-tf="1">1m</button>
@@ -92,6 +91,9 @@ aria-expanded="false"
 <button type="button" class="script-tf-btn" data-tf="D">D</button>
 <button type="button" class="script-tf-btn" data-tf="W">W</button>
 </div>
+</div>
+
+<div class="script-toolbar-row script-toolbar-row--settings">
 
 <label class="script-toolbar-field">
 <span>Глубина поиска</span>
@@ -134,6 +136,15 @@ aria-expanded="false"
 <option value="24h">24 часа</option>
 </select>
 </label>
+
+<label class="script-toolbar-check" title="Сканировать только монеты из загруженных файлов Long/Short">
+<input type="checkbox" id="script-favorites-only">
+<span>Искать в избранных</span>
+</label>
+
+<button type="button" class="script-auto-btn" id="script-favorites-file-long">Файл Long</button>
+<button type="button" class="script-auto-btn" id="script-favorites-file-short">Файл Short</button>
+<span id="script-favorites-status" class="script-favorites-status" aria-live="polite">Long: — · Short: —</span>
 
 <button type="button" class="script-auto-btn" id="script-auto-start">Запустить</button>
 <button type="button" class="script-auto-btn" id="script-auto-stop" disabled>Остановить</button>

@@ -84,6 +84,13 @@ ipcRenderer.send(
 "tray-popup:quit"
 );
 
+},
+togglePnlHidden(){
+
+ipcRenderer.send(
+"tray-popup:toggle-pnl-hidden"
+);
+
 }
 }
 );

@@ -11,7 +11,7 @@ setMenuBarTrayEnabled
 
 import {
 applyDesktopMenuBarTrayPreference
-} from "./desktop-menu-bar-tray.js?v=7";
+} from "./desktop-menu-bar-tray.js?v=8";
 
 import {
 isScreenerPatternEnabled,

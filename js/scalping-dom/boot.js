@@ -8,7 +8,7 @@ cssUrl
 
 import {
 isTerminalPageOnly
-} from "../page-routes.js?v=1";
+} from "../page-routes.js?v=2";
 
 import {
 ensureScalpingDomStylesheet,

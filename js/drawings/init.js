@@ -2149,6 +2149,215 @@ touchStorageSnap,
 storageKeySuffix
 }));
 
+/** Эфемерные фигуры (не в localStorage) — переживают reload poller'а. */
+const ephemeralDrawingsByFlag =
+new Map();
+
+/**
+ * Известные флаги оверлеев, которые никогда не пишем на диск.
+ * (АлгоТрейдинг: позиции входов паттерна.)
+ */
+const EPHEMERAL_DRAWING_FLAGS =
+[
+"algoPatternEntry"
+];
+
+function isEphemeralDrawingShape(
+shape
+){
+
+if(
+!shape ||
+typeof shape !==
+"object"
+){
+return false;
+}
+
+for(
+const flag of EPHEMERAL_DRAWING_FLAGS
+){
+
+if(
+shape[
+flag
+]
+){
+return true;
+}
+
+}
+
+for(
+const flag of ephemeralDrawingsByFlag.keys()
+){
+
+if(
+shape[
+flag
+]
+){
+return true;
+}
+
+}
+
+const id =
+String(
+shape.id ||
+""
+);
+
+return id.startsWith(
+"algo-entry-"
+);
+
+}
+
+const loadDrawingsFromStorage =
+loadDrawings;
+
+const saveDrawingsToStorage =
+saveDrawings;
+
+function reapplyEphemeralDrawings(){
+
+drawings =
+drawings.filter(
+shape=>
+!isEphemeralDrawingShape(
+shape
+)
+);
+
+for(
+const shapes of ephemeralDrawingsByFlag.values()
+){
+
+if(
+Array.isArray(
+shapes
+) &&
+shapes.length
+){
+drawings.push(
+...shapes
+);
+}
+
+}
+
+}
+
+loadDrawings =
+()=>{
+loadDrawingsFromStorage();
+
+const before =
+drawings.length;
+
+drawings =
+drawings.filter(
+shape=>
+!isEphemeralDrawingShape(
+shape
+)
+);
+
+if(
+drawings.length !==
+before
+){
+/* Зачистка старых утечек алго-позиций в localStorage. */
+saveDrawingsToStorage(
+{
+skipUndoRecord:
+true
+}
+);
+}
+
+reapplyEphemeralDrawings();
+};
+
+saveDrawings =
+opts=>{
+
+const full =
+drawings;
+
+drawings =
+full.filter(
+shape=>
+!isEphemeralDrawingShape(
+shape
+)
+);
+
+try{
+saveDrawingsToStorage(
+opts
+);
+}finally{
+drawings =
+full;
+reapplyEphemeralDrawings();
+}
+
+};
+
+function setEphemeralDrawings(
+flag,
+shapes
+){
+
+const key =
+String(
+flag ||
+""
+).trim();
+
+if(
+!key
+){
+return;
+}
+
+const list =
+Array.isArray(
+shapes
+)
+? shapes.filter(
+Boolean
+)
+: [];
+
+if(
+list.length
+){
+ephemeralDrawingsByFlag.set(
+key,
+list
+);
+}else{
+ephemeralDrawingsByFlag.delete(
+key
+);
+}
+
+reapplyEphemeralDrawings();
+scheduleRedraw();
+
+}
+
+function clearEphemeralDrawings(){
+
+ephemeralDrawingsByFlag.clear();
+reapplyEphemeralDrawings();
+scheduleRedraw();
+
+}
+
 function chartSize(){
 return {
 w: wrapEl.clientWidth,
@@ -4850,6 +5059,8 @@ baseDefaultStyle
 };
 
 },
+setEphemeralDrawings,
+clearEphemeralDrawings,
 syncStyleBar: ()=>{
 updateStyleBar();
 },
@@ -5162,6 +5373,7 @@ getSymbol();
 
 lastLoadedSymbol = next;
 
+clearEphemeralDrawings();
 resetDrawUndoHistory();
 
 scheduleChartAlertsPull();

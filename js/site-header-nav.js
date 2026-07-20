@@ -8,7 +8,7 @@ WEB_HEADER_NAV_ITEMS
 
 import {
 DESKTOP_HEADER_NAV_ITEMS
-} from "./site-header-nav-desktop.js?v=1";
+} from "./site-header-nav-desktop.js?v=2";
 
 function isDesktopRuntime(){
 

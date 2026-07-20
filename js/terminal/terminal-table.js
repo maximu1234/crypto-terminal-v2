@@ -65,6 +65,25 @@ next
 
 export function getCurrentSymbols(){
 
+if(
+typeof hooks.getCurrentSymbols ===
+"function"
+){
+const custom =
+hooks.getCurrentSymbols(
+coinsState().currentDataset
+);
+
+if(
+Array.isArray(
+custom
+)
+){
+return custom;
+}
+
+}
+
 const dataset =
 coinsState().currentDataset;
 

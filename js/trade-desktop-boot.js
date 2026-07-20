@@ -7,7 +7,7 @@ cssUrl
 
 import {
 isWatchlistPage
-} from "./page-routes.js?v=1";
+} from "./page-routes.js?v=2";
 
 import {
 initTradeExchangeSettings
@@ -226,7 +226,7 @@ const {
 initDesktopMenuBarTray
 } =
 await import(
-"./desktop-menu-bar-tray.js?v=7"
+"./desktop-menu-bar-tray.js?v=8"
 );
 
 initDesktopMenuBarTray();

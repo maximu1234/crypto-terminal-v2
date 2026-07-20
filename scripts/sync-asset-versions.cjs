@@ -232,7 +232,8 @@ const name of
 "alerts/index.html",
 "system/index.html",
 "diary/index.html",
-"script.html"
+"script.html",
+"algo-trading.html"
 ]
 ){
 

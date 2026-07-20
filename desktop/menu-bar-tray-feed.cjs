@@ -29,6 +29,10 @@ withResolvedPnl
 require(
 "./menu-bar-tray-pnl.cjs"
 );
+const trayPrefsStore =
+require(
+"./menu-bar-tray-prefs-store.cjs"
+);
 
 const POSITIONS_POLL_MS =
 1500;
@@ -183,7 +187,9 @@ return has
 }
 
 function mapPositions(
-rows
+rows,
+pnlHidden =
+false
 ){
 
 return (
@@ -201,7 +207,9 @@ row?.side,
 pnl:
 row?.pnl,
 pnlLabel:
-formatPnlLabel(
+pnlHidden
+? "***"
+: formatPnlLabel(
 row?.pnl
 )
 })
@@ -356,6 +364,9 @@ configured
 ? "Активно"
 : "Не подключено";
 
+const pnlHidden =
+!!trayPrefsStore.readPrefs().pnlHidden;
+
 publishTrayState(
 {
 totalPnl:
@@ -364,8 +375,7 @@ configured
 positions
 )
 : null,
-pnlHidden:
-false,
+pnlHidden,
 exchange,
 statusLabel,
 balanceLabel:
@@ -375,7 +385,8 @@ configured
 positions:
 configured
 ? mapPositions(
-positions
+positions,
+pnlHidden
 )
 : []
 }
@@ -466,5 +477,9 @@ BALANCE_POLL_MS
 module.exports =
 {
 startTrayFeed,
-stopTrayFeed
+stopTrayFeed,
+refreshTrayFeedNow:
+()=>{
+void pushTrayState();
+}
 };

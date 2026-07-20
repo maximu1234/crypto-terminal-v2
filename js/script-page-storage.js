@@ -9,7 +9,7 @@ savePatternScanResults
 import {
 PATTERN_SCAN_DEPTH_OPTIONS,
 normalizePatternScanSideFilter
-} from "./pattern-12-scanner.js?v=16";
+} from "./pattern-12-scanner.js?v=17";
 
 import {
 getActiveExchangeId
@@ -80,6 +80,16 @@ layout:
 9,
 page:
 1,
+favoritesOnly:
+false,
+favoritesLongCount:
+0,
+favoritesShortCount:
+0,
+favoritesLongFileName:
+"",
+favoritesShortFileName:
+"",
 auto:
 {
 active:
@@ -169,6 +179,40 @@ Number(
 raw.page
 ) ||
 DEFAULT_STATE.page
+),
+favoritesOnly:
+raw.favoritesOnly ===
+true,
+favoritesLongCount:
+Math.max(
+0,
+Number(
+raw.favoritesLongCount ??
+raw.favoritesCount
+) ||
+0
+),
+favoritesShortCount:
+Math.max(
+0,
+Number(
+raw.favoritesShortCount
+) ||
+0
+),
+favoritesLongFileName:
+String(
+raw.favoritesLongFileName ||
+(
+raw.favoritesFileName
+? raw.favoritesFileName
+: ""
+)
+),
+favoritesShortFileName:
+String(
+raw.favoritesShortFileName ||
+""
 ),
 auto:
 {
@@ -408,6 +452,35 @@ layout:
 state.layout,
 page:
 state.page,
+favoritesOnly:
+state.favoritesOnly ===
+true,
+favoritesLongCount:
+Math.max(
+0,
+Number(
+state.favoritesLongCount
+) ||
+0
+),
+favoritesShortCount:
+Math.max(
+0,
+Number(
+state.favoritesShortCount
+) ||
+0
+),
+favoritesLongFileName:
+String(
+state.favoritesLongFileName ||
+""
+),
+favoritesShortFileName:
+String(
+state.favoritesShortFileName ||
+""
+),
 auto:
 state.auto,
 lastVisitedAt:

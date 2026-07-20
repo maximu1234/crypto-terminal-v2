@@ -520,9 +520,33 @@ phase:
 
 let symbols =
 [];
+/** @type {{ long: string[], short: string[] }|null} */
+let favoritesBySide =
+null;
 
 try{
 
+if(
+options.favoritesBySide &&
+typeof options.favoritesBySide ===
+"object"
+){
+favoritesBySide =
+{
+long:
+Array.isArray(
+options.favoritesBySide.long
+)
+? options.favoritesBySide.long.slice()
+: [],
+short:
+Array.isArray(
+options.favoritesBySide.short
+)
+? options.favoritesBySide.short.slice()
+: []
+};
+}else{
 symbols =
 Array.isArray(
 options.symbols
@@ -530,6 +554,7 @@ options.symbols
 options.symbols.length
 ? options.symbols.slice()
 : await loadPatternScanSymbols();
+}
 
 }catch(
 err
@@ -541,6 +566,8 @@ err
 );
 symbols =
 [];
+favoritesBySide =
+null;
 
 }
 
@@ -557,6 +584,79 @@ try{
 const tasks =
 [];
 
+if(
+favoritesBySide
+){
+
+const longSet =
+new Set(
+favoritesBySide.long.map(
+s=>
+String(
+s ||
+""
+).trim().toUpperCase()
+).filter(
+Boolean
+)
+);
+const shortSet =
+new Set(
+favoritesBySide.short.map(
+s=>
+String(
+s ||
+""
+).trim().toUpperCase()
+).filter(
+Boolean
+)
+);
+const all =
+new Set(
+[
+...longSet,
+...shortSet
+]
+);
+
+for(
+const symbol of all
+){
+
+const inLong =
+longSet.has(
+symbol
+);
+const inShort =
+shortSet.has(
+symbol
+);
+const taskSide =
+inLong &&
+inShort
+? "both"
+: inLong
+? "long"
+: "short";
+
+for(
+const tf of tfs
+){
+tasks.push(
+{
+symbol,
+tf,
+sideFilter:
+taskSide
+}
+);
+}
+
+}
+
+}else{
+
 for(
 const symbol of symbols
 ){
@@ -570,6 +670,8 @@ symbol,
 tf
 }
 );
+}
+
 }
 
 }
@@ -651,6 +753,11 @@ symbol,
 tf
 } =
 task;
+const taskSideFilter =
+normalizePatternScanSideFilter(
+task.sideFilter ||
+sideFilter
+);
 
 try{
 
@@ -677,7 +784,7 @@ const hits =
 findPattern12HitsInLookback(
 candles,
 lookbackBars,
-sideFilter
+taskSideFilter
 );
 
 for(

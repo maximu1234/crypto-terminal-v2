@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="ru" class="terminal-page algo-trading-page">
+<head>
+
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin/>
+<link rel="dns-prefetch" href="https://api.bybit.com"/>
+<link rel="dns-prefetch" href="https://stream.bybit.com"/>
+
+<title>АлгоТрейдинг — Multichart</title>
+
+<link rel="icon" href="/icons/brand-logo.png" type="image/png">
+
+<link rel="stylesheet" href="/css/critical-shell.css?v=9">
+<script src="/js/site-css-ready.js?v=3"></script>
+<link rel="stylesheet" href="/css/common.css?v=50">
+<link rel="stylesheet" href="/css/terminal.css?v=166">
+<link rel="stylesheet" href="/css/terminal-layout.css?v=97">
+<link rel="stylesheet" href="/css/chart-indicators.css?v=21">
+<link rel="stylesheet" href="/css/algo-trading.css?v=35">
+
+<script src="/vendor/lightweight-charts.standalone.production.js"></script>
+<link rel="modulepreload" href="/js/charts-lib-boot.js?v=3" crossorigin>
+
+</head>
+
+<body class="terminal-page algo-trading-page">
+
+<div id="app">
+
+<div id="left">
+
+<header id="header" class="app-page-header">
+
+<a href="/screener.html" id="logo" aria-label="Multichart"><img src="/icons/brand-logo.png" alt="" width="32" height="32" class="site-logo-img" decoding="async"></a>
+
+<nav class="menu app-header-nav" id="app-header-nav">
+<a href="/screener.html">Скринер</a>
+<a href="/terminal.html">Терминал</a>
+<a href="/watchlist.html">Вотчлист</a>
+<a href="/alerts/">Алерты</a>
+<a href="/listings.html">Листинги</a>
+<a href="/trade-calculator.html">Калькулятор</a>
+<a href="/statistics.html">Статистика</a>
+<div class="header-settings-wrap" id="header-settings-wrap">
+<button type="button" class="header-settings-btn" id="header-settings-btn" title="Вход и синхронизация" aria-label="Настройки" aria-expanded="false" aria-haspopup="true">
+<svg class="header-settings-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.75"/><path fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+</button>
+<div class="header-settings-dropdown hidden" id="header-settings-dropdown" role="menu">
+<p class="header-settings-section-title">Аккаунт</p>
+<div id="cloud-settings-mount"></div>
+</div>
+</div>
+</nav>
+
+</header>
+
+<div id="topbar" class="coins-topbar">
+
+<div class="coins-symbol-head" id="algo-symbol-head">
+<div id="current-symbol">BTCUSDT.P</div>
+</div>
+
+<div class="coins-tf-desktop" id="algo-tf-bar" role="tablist" aria-label="Таймфрейм">
+<button type="button" class="tf-btn" data-tf="1">1m</button>
+<button type="button" class="tf-btn" data-tf="5">5m</button>
+<button type="button" class="tf-btn" data-tf="15">15m</button>
+<button type="button" class="tf-btn active" data-tf="60">1h</button>
+<button type="button" class="tf-btn" data-tf="240">4h</button>
+<button type="button" class="tf-btn" data-tf="D">D</button>
+<button type="button" class="tf-btn" data-tf="W">W</button>
+</div>
+
+<div id="chart-indicators-wrap" class="chart-indicators-wrap coins-draw-desktop"></div>
+
+</div>
+
+<div id="charts-stack">
+
+<div class="coins-chart-pane">
+
+<div id="draw-toolbar" class="draw-toolbar-vertical coins-draw-desktop"></div>
+
+<div id="charts-stack-panes" class="charts-stack-panes">
+
+<div id="chart-wrap">
+<div id="chart"></div>
+<div id="crosshair-price-label" class="crosshair-axis-label crosshair-price-label hidden" aria-hidden="true"></div>
+
+<div id="draw-style-bar" class="draw-style-float hidden">
+
+<button type="button" class="float-drag draw-style-drag" id="style-bar-drag" title="Перетащить панель" aria-label="Перетащить">
+<span class="drag-dots"></span>
+</button>
+
+<button type="button" class="float-template draw-template-btn" id="draw-template-btn" title="Шаблоны" aria-label="Шаблоны" aria-haspopup="menu" aria-expanded="false">
+<img class="draw-tool-icon" src="assets/draw-toolbar-icons/template.png" width="18" height="18" alt="" aria-hidden="true">
+</button>
+
+<button type="button" class="float-color-btn draw-color-btn" id="draw-color-btn" title="Цвет">
+<svg class="pencil-icon" viewBox="0 0 24 24" aria-hidden="true">
+<path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" d="M4 20l4-1 9-9-3-3-9 9-1 4zM14 6l3 3"/>
+</svg>
+<span class="color-stripe draw-color-stripe" id="draw-color-stripe"></span>
+</button>
+
+<button type="button" class="float-width-btn draw-width-btn" id="draw-width-btn" title="Толщина линии">
+<span class="width-line-preview draw-width-preview" id="draw-width-preview"></span>
+<span class="draw-width-label" id="draw-width-label">1px</span>
+</button>
+
+<label class="draw-position-risk hidden" id="draw-position-risk-wrap" title="Сумма риска при срабатывании стопа (как в Калькуляторе)">
+<span class="draw-position-risk-label">Стоп-лосс ($)</span>
+<input type="number" class="draw-position-risk-input" id="draw-position-risk-usd" min="0" step="any" placeholder="" inputmode="decimal"/>
+</label>
+
+<button type="button" class="float-settings draw-settings-btn" id="draw-settings-btn" title="Все настройки" aria-label="Настройки">
+<svg class="draw-settings-icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+<path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" d="M12 3.75 19.25 7.875v8.25L12 20.25 4.75 16.125v-8.25L12 3.75z"/>
+<circle cx="12" cy="12" r="2.35" fill="none" stroke="currentColor" stroke-width="1.5"/>
+</svg>
+</button>
+
+<button type="button" class="float-delete draw-delete-one-btn" id="draw-delete-one" title="Удалить объект" aria-label="Удалить">
+<img class="draw-tool-icon" data-icon="trash" alt="" aria-hidden="true" decoding="async">
+</button>
+
+</div>
+
+<div id="draw-color-popover" class="draw-popover draw-color-popover hidden"></div>
+
+<div id="draw-width-popover" class="draw-popover draw-width-popover hidden">
+<button type="button" class="width-option active" data-width="1">
+<span class="width-sample" style="height:1px"></span>
+<span>1px</span>
+</button>
+<button type="button" class="width-option" data-width="2">
+<span class="width-sample" style="height:2px"></span>
+<span>2px</span>
+</button>
+<button type="button" class="width-option" data-width="3">
+<span class="width-sample" style="height:3px"></span>
+<span>3px</span>
+</button>
+<button type="button" class="width-option" data-width="4">
+<span class="width-sample" style="height:4px"></span>
+<span>4px</span>
+</button>
+</div>
+
+<div id="draw-settings-popover" class="draw-popover draw-settings-popover draw-settings-popover--fib hidden">
+</div>
+
+<div id="draw-template-menu" class="draw-popover draw-template-menu hidden" role="menu" aria-label="Шаблоны"></div>
+
+</div>
+
+<div id="ao-wrap" class="indicator-pane-hidden">
+<div id="ao-hud" aria-hidden="false">
+<span class="ao-hud-title">AO</span><span id="ao-hud-value">—</span>
+</div>
+<div id="ao-chart"></div>
+</div>
+
+<div id="volume-wrap" class="indicator-pane-hidden">
+<div id="volume-hud" aria-hidden="false">
+<span class="volume-hud-title">Vol</span>
+</div>
+<div id="volume-chart"></div>
+</div>
+
+<div id="rsi-wrap">
+<div id="rsi-band"></div>
+<div id="rsi-hud" aria-hidden="false">
+<span class="rsi-hud-title">RSI <span id="rsi-hud-period">14</span></span><span class="rsi-hud-muted">close</span><span id="rsi-hud-value">—</span>
+</div>
+<div id="rsi-chart"></div>
+<div class="rsi-level-line hidden" data-rsi-level="70" aria-hidden="true"></div>
+<div class="rsi-level-line hidden" data-rsi-level="50" aria-hidden="true"></div>
+<div class="rsi-level-line hidden" data-rsi-level="30" aria-hidden="true"></div>
+<div id="crosshair-time-label" class="crosshair-axis-label crosshair-time-label hidden" aria-hidden="true"></div>
+</div>
+
+<div id="algo-stats-panel" class="algo-stats-panel" aria-label="Статистика АлгоТрейдинг">
+<div class="algo-stats-columns">
+<div class="algo-stats-chart-cols">
+<div class="algo-stats-col" data-algo-strategy="fixed-tp">
+<div class="algo-stats-col-setup">
+<div class="algo-stats-col-title">Стратегия 1. 1 Тейк-профит</div>
+<div class="algo-stats-row algo-stats-row--setting">
+<label class="algo-stats-label" for="algo-sl-pct-of-x">СЛ от X (pt3–pt4), %</label>
+<input
+type="number"
+id="algo-sl-pct-of-x"
+class="algo-stats-input"
+min="1"
+max="100"
+step="1"
+value="50"
+inputmode="decimal"
+title="Стоп-лосс как % высоты отрезка pt3–pt4 (50% = середина)"
+/>
+</div>
+<div class="algo-stats-row algo-stats-row--setting">
+<label class="algo-stats-label" for="algo-tp-rr">Тейк-профит: 1 к</label>
+<input
+type="number"
+id="algo-tp-rr"
+class="algo-stats-input"
+min="0.1"
+max="50"
+step="0.1"
+value="2"
+inputmode="decimal"
+title="Take-profit Risk/Reward: расстояние ТП = RR × |вход − СЛ|"
+/>
+</div>
+<div class="algo-stats-row">
+<span class="algo-stats-label">Паттерны Long</span>
+<span class="algo-stats-value algo-stats-value--long" id="algo-stat-long" data-algo-stat-long>—</span>
+</div>
+<div class="algo-stats-row">
+<span class="algo-stats-label">Паттерны Short</span>
+<span class="algo-stats-value algo-stats-value--short" id="algo-stat-short" data-algo-stat-short>—</span>
+</div>
+</div>
+<div class="algo-stats-col-stats">
+<div class="algo-stats-divider" aria-hidden="true"></div>
+<div class="algo-stats-row">
+<span class="algo-stats-label">Успешные в Лонг</span>
+<span class="algo-stats-value algo-stats-value--long algo-stats-value--pair">
+<span class="algo-stats-pair">
+<span id="algo-stat-long-wins" data-algo-stat-long-wins>—</span>
+<span class="algo-stats-muted">(<span id="algo-stat-long-winrate" data-algo-stat-long-winrate>—</span>)</span>
+</span>
+<span id="algo-stat-long-win-usd" data-algo-stat-long-win-usd>—</span>
+</span>
+</div>
+<div class="algo-stats-row">
+<span class="algo-stats-label">Неуспешные в Лонг</span>
+<span class="algo-stats-value algo-stats-value--short algo-stats-value--pair">
+<span class="algo-stats-pair">
+<span id="algo-stat-long-losses" data-algo-stat-long-losses>—</span>
+<span class="algo-stats-muted">(<span id="algo-stat-long-lossrate" data-algo-stat-long-lossrate>—</span>)</span>
+</span>
+<span id="algo-stat-long-loss-usd" data-algo-stat-long-loss-usd>—</span>
+</span>
+</div>
+<div class="algo-stats-row">
+<span class="algo-stats-label">В работе</span>
+<span class="algo-stats-value" id="algo-stat-long-open" data-algo-stat-long-open>—</span>
+</div>
+<div class="algo-stats-row">
+<span class="algo-stats-label">Успешные в Шорт</span>
+<span class="algo-stats-value algo-stats-value--long algo-stats-value--pair">
+<span class="algo-stats-pair">
+<span id="algo-stat-short-wins" data-algo-stat-short-wins>—</span>
+<span class="algo-stats-muted">(<span id="algo-stat-short-winrate" data-algo-stat-short-winrate>—</span>)</span>
+</span>
+<span id="algo-stat-short-win-usd" data-algo-stat-short-win-usd>—</span>
+</span>
+</div>
+<div class="algo-stats-row">
+<span class="algo-stats-label">Неуспешные в Шорт</span>
+<span class="algo-stats-value algo-stats-value--short algo-stats-value--pair">
+<span class="algo-stats-pair">
+<span id="algo-stat-short-losses" data-algo-stat-short-losses>—</span>
+<span class="algo-stats-muted">(<span id="algo-stat-short-lossrate" data-algo-stat-short-lossrate>—</span>)</span>
+</span>
+<span id="algo-stat-short-loss-usd" data-algo-stat-short-loss-usd>—</span>
+</span>
+</div>
+<div class="algo-stats-row">
+<span class="algo-stats-label">В работе</span>
+<span class="algo-stats-value" id="algo-stat-short-open" data-algo-stat-short-open>—</span>
+</div>
+<div class="algo-stats-divider" aria-hidden="true"></div>
+<div class="algo-stats-row">
+<span class="algo-stats-label">Суммарная прибыль ($)</span>
+<span class="algo-stats-value algo-stats-value--long" id="algo-stat-profit-usd" data-algo-stat-profit-usd>—</span>
+</div>
+<div class="algo-stats-row">
+<span class="algo-stats-label">Суммарный убыток ($)</span>
+<span class="algo-stats-value algo-stats-value--short" id="algo-stat-loss-usd" data-algo-stat-loss-usd>—</span>
+</div>
+<div class="algo-stats-row">
+<span class="algo-stats-label">Итого ($)</span>
+<span class="algo-stats-value" id="algo-stat-net-usd" data-algo-stat-net-usd>—</span>
+</div>
+</div>
+</div>
+<div class="algo-stats-col" data-algo-strategy="partial-tp">
+<div class="algo-stats-col-setup">
+<div class="algo-stats-col-title">Стратегия 2. ТП от волны 1офС</div>
+<div class="algo-stats-row algo-stats-row--setting">
+<label class="algo-stats-label" for="algo-tp1-x">ТП1 = pt4 + X ×</label>
+<input
+type="number"
+id="algo-tp1-x"
+class="algo-stats-input"
+min="0.01"
+step="0.01"
+value="1"
+inputmode="decimal"
+title="Тейк 1/3: pt4 ± X × множитель"
+/>
+</div>
+<div class="algo-stats-row algo-stats-row--setting">
+<label class="algo-stats-label" for="algo-tp2-x">ТП2 = pt4 + X ×</label>
+<input
+type="number"
+id="algo-tp2-x"
+class="algo-stats-input"
+min="0.01"
+step="0.01"
+value="1.25"
+inputmode="decimal"
+title="Тейк 1/3: pt4 ± X × множитель"
+/>
+</div>
+<div class="algo-stats-row algo-stats-row--setting">
+<label class="algo-stats-label" for="algo-tp3-x">ТП3 = pt4 + X ×</label>
+<input
+type="number"
+id="algo-tp3-x"
+class="algo-stats-input"
+min="0.01"
+step="0.01"
+value="1.44"
+inputmode="decimal"
+title="Закрытие остатка: pt4 ± X × множитель"
+/>
+</div>
+<div class="algo-stats-hint">СЛ и риск $ — как в Стратегии 1; X = |pt4−pt3|</div>
+</div>
+<div class="algo-stats-col-stats">
+<div class="algo-stats-divider" aria-hidden="true"></div>
+<div class="algo-stats-row">
+<span class="algo-stats-label">Успешные в Лонг</span>
+<span class="algo-stats-value algo-stats-value--long algo-stats-value--pair">
+<span class="algo-stats-pair">
+<span data-algo-stat-long-wins>—</span>
+<span class="algo-stats-muted">(<span data-algo-stat-long-winrate>—</span>)</span>
+</span>
+<span data-algo-stat-long-win-usd>—</span>
+</span>
+</div>
+<div class="algo-stats-row">
+<span class="algo-stats-label">Неуспешные в Лонг</span>
+<span class="algo-stats-value algo-stats-value--short algo-stats-value--pair">
+<span class="algo-stats-pair">
+<span data-algo-stat-long-losses>—</span>
+<span class="algo-stats-muted">(<span data-algo-stat-long-lossrate>—</span>)</span>
+</span>
+<span data-algo-stat-long-loss-usd>—</span>
+</span>
+</div>
+<div class="algo-stats-row">
+<span class="algo-stats-label">В работе</span>
+<span class="algo-stats-value" data-algo-stat-long-open>—</span>
+</div>
+<div class="algo-stats-row">
+<span class="algo-stats-label">Успешные в Шорт</span>
+<span class="algo-stats-value algo-stats-value--long algo-stats-value--pair">
+<span class="algo-stats-pair">
+<span data-algo-stat-short-wins>—</span>
+<span class="algo-stats-muted">(<span data-algo-stat-short-winrate>—</span>)</span>
+</span>
+<span data-algo-stat-short-win-usd>—</span>
+</span>
+</div>
+<div class="algo-stats-row">
+<span class="algo-stats-label">Неуспешные в Шорт</span>
+<span class="algo-stats-value algo-stats-value--short algo-stats-value--pair">
+<span class="algo-stats-pair">
+<span data-algo-stat-short-losses>—</span>
+<span class="algo-stats-muted">(<span data-algo-stat-short-lossrate>—</span>)</span>
+</span>
+<span data-algo-stat-short-loss-usd>—</span>
+</span>
+</div>
+<div class="algo-stats-row">
+<span class="algo-stats-label">В работе</span>
+<span class="algo-stats-value" data-algo-stat-short-open>—</span>
+</div>
+<div class="algo-stats-divider" aria-hidden="true"></div>
+<div class="algo-stats-row">
+<span class="algo-stats-label">Суммарная прибыль ($)</span>
+<span class="algo-stats-value algo-stats-value--long" data-algo-stat-profit-usd>—</span>
+</div>
+<div class="algo-stats-row">
+<span class="algo-stats-label">Суммарный убыток ($)</span>
+<span class="algo-stats-value algo-stats-value--short" data-algo-stat-loss-usd>—</span>
+</div>
+<div class="algo-stats-row">
+<span class="algo-stats-label">Итого ($)</span>
+<span class="algo-stats-value" data-algo-stat-net-usd>—</span>
+</div>
+</div>
+</div>
+<div class="algo-stats-col" data-algo-strategy="partial-tp-y">
+<div class="algo-stats-col-setup">
+<div class="algo-stats-col-title">Стратегия 3. ТП от волны А</div>
+<div class="algo-stats-row algo-stats-row--setting">
+<label class="algo-stats-label" for="algo-tp1-y">ТП1 = pt4 + Y ×</label>
+<input
+type="number"
+id="algo-tp1-y"
+class="algo-stats-input"
+min="0.01"
+step="0.01"
+value="1"
+inputmode="decimal"
+title="Тейк 1/3: pt4 ± Y × множитель (Y = |pt1−pt2|)"
+/>
+</div>
+<div class="algo-stats-row algo-stats-row--setting">
+<label class="algo-stats-label" for="algo-tp2-y">ТП2 = pt4 + Y ×</label>
+<input
+type="number"
+id="algo-tp2-y"
+class="algo-stats-input"
+min="0.01"
+step="0.01"
+value="1.25"
+inputmode="decimal"
+title="Тейк 1/3: pt4 ± Y × множитель"
+/>
+</div>
+<div class="algo-stats-row algo-stats-row--setting">
+<label class="algo-stats-label" for="algo-tp3-y">ТП3 = pt4 + Y ×</label>
+<input
+type="number"
+id="algo-tp3-y"
+class="algo-stats-input"
+min="0.01"
+step="0.01"
+value="1.44"
+inputmode="decimal"
+title="Закрытие остатка: pt4 ± Y × множитель"
+/>
+</div>
+<div class="algo-stats-hint">СЛ и риск $ — как в Стратегии 1; Y = |pt1−pt2|</div>
+</div>
+<div class="algo-stats-col-stats">
+<div class="algo-stats-divider" aria-hidden="true"></div>
+<div class="algo-stats-row">
+<span class="algo-stats-label">Успешные в Лонг</span>
+<span class="algo-stats-value algo-stats-value--long algo-stats-value--pair">
+<span class="algo-stats-pair">
+<span data-algo-stat-long-wins>—</span>
+<span class="algo-stats-muted">(<span data-algo-stat-long-winrate>—</span>)</span>
+</span>
+<span data-algo-stat-long-win-usd>—</span>
+</span>
+</div>
+<div class="algo-stats-row">
+<span class="algo-stats-label">Неуспешные в Лонг</span>
+<span class="algo-stats-value algo-stats-value--short algo-stats-value--pair">
+<span class="algo-stats-pair">
+<span data-algo-stat-long-losses>—</span>
+<span class="algo-stats-muted">(<span data-algo-stat-long-lossrate>—</span>)</span>
+</span>
+<span data-algo-stat-long-loss-usd>—</span>
+</span>
+</div>
+<div class="algo-stats-row">
+<span class="algo-stats-label">В работе</span>
+<span class="algo-stats-value" data-algo-stat-long-open>—</span>
+</div>
+<div class="algo-stats-row">
+<span class="algo-stats-label">Успешные в Шорт</span>
+<span class="algo-stats-value algo-stats-value--long algo-stats-value--pair">
+<span class="algo-stats-pair">
+<span data-algo-stat-short-wins>—</span>
+<span class="algo-stats-muted">(<span data-algo-stat-short-winrate>—</span>)</span>
+</span>
+<span data-algo-stat-short-win-usd>—</span>
+</span>
+</div>
+<div class="algo-stats-row">
+<span class="algo-stats-label">Неуспешные в Шорт</span>
+<span class="algo-stats-value algo-stats-value--short algo-stats-value--pair">
+<span class="algo-stats-pair">
+<span data-algo-stat-short-losses>—</span>
+<span class="algo-stats-muted">(<span data-algo-stat-short-lossrate>—</span>)</span>
+</span>
+<span data-algo-stat-short-loss-usd>—</span>
+</span>
+</div>
+<div class="algo-stats-row">
+<span class="algo-stats-label">В работе</span>
+<span class="algo-stats-value" data-algo-stat-short-open>—</span>
+</div>
+<div class="algo-stats-divider" aria-hidden="true"></div>
+<div class="algo-stats-row">
+<span class="algo-stats-label">Суммарная прибыль ($)</span>
+<span class="algo-stats-value algo-stats-value--long" data-algo-stat-profit-usd>—</span>
+</div>
+<div class="algo-stats-row">
+<span class="algo-stats-label">Суммарный убыток ($)</span>
+<span class="algo-stats-value algo-stats-value--short" data-algo-stat-loss-usd>—</span>
+</div>
+<div class="algo-stats-row">
+<span class="algo-stats-label">Итого ($)</span>
+<span class="algo-stats-value" data-algo-stat-net-usd>—</span>
+</div>
+</div>
+</div>
+
+</div>
+<div class="algo-stats-col" data-algo-strategy="global-setup">
+<div class="algo-stats-col-setup">
+<div class="algo-stats-row algo-stats-row--setting">
+<label class="algo-stats-label" for="algo-risk-usd">Стоп-лосс ($)</label>
+<input
+type="number"
+id="algo-risk-usd"
+class="algo-stats-input"
+min="0.01"
+step="0.01"
+value="1"
+inputmode="decimal"
+title="Риск на сделку в долларах при срабатывании СЛ"
+/>
+</div>
+<div class="algo-stats-row algo-stats-row--setting">
+<label class="algo-stats-label" for="algo-timeout-bars">Количество баров до отмены паттерна</label>
+<input
+type="number"
+id="algo-timeout-bars"
+class="algo-stats-input"
+min="1"
+max="10000"
+step="1"
+value="200"
+inputmode="numeric"
+title="Если вход не произошёл за N баров после pt4 — паттерн отменяется"
+/>
+</div>
+<div class="algo-stats-divider" aria-hidden="true"></div>
+<div class="algo-scan-strategy" role="radiogroup" aria-label="Стратегия скана">
+<label class="algo-scan-check">
+<input type="checkbox" id="algo-scan-st1" checked />
+<span>Ст1</span>
+</label>
+<label class="algo-scan-check">
+<input type="checkbox" id="algo-scan-st2" />
+<span>Ст2</span>
+</label>
+<label class="algo-scan-check">
+<input type="checkbox" id="algo-scan-st3" />
+<span>Ст3</span>
+</label>
+</div>
+<div class="algo-stats-divider" aria-hidden="true"></div>
+<div class="algo-scan-row">
+<span class="algo-scan-row-label">Найти тикеры Лонг более</span>
+<input
+type="number"
+id="algo-scan-long-min"
+class="algo-stats-input algo-scan-min-input"
+min="10"
+max="100"
+step="1"
+value="60"
+inputmode="numeric"
+/>
+<span class="algo-scan-row-suffix">% успеха</span>
+<button type="button" class="algo-scan-btn" id="algo-scan-long-find">Найти</button>
+<button type="button" class="algo-scan-btn" id="algo-scan-long-stop" disabled>Стоп</button>
+</div>
+<div class="algo-scan-row">
+<span class="algo-scan-row-label">Найти тикеры Шорт более</span>
+<input
+type="number"
+id="algo-scan-short-min"
+class="algo-stats-input algo-scan-min-input"
+min="10"
+max="100"
+step="1"
+value="60"
+inputmode="numeric"
+/>
+<span class="algo-scan-row-suffix">% успеха</span>
+<button type="button" class="algo-scan-btn" id="algo-scan-short-find">Найти</button>
+<button type="button" class="algo-scan-btn" id="algo-scan-short-stop" disabled>Стоп</button>
+</div>
+<div class="algo-scan-row">
+<span class="algo-scan-row-label">Найти Лонг и Шорт более</span>
+<input
+type="number"
+id="algo-scan-both-min"
+class="algo-stats-input algo-scan-min-input"
+min="10"
+max="100"
+step="1"
+value="60"
+inputmode="numeric"
+/>
+<span class="algo-scan-row-suffix">% успеха</span>
+<button type="button" class="algo-scan-btn" id="algo-scan-both-find">Найти</button>
+<button type="button" class="algo-scan-btn" id="algo-scan-both-stop" disabled>Стоп</button>
+</div>
+<div class="algo-stats-divider" aria-hidden="true"></div>
+<div class="algo-scan-results-title">Результаты поиска</div>
+<div class="algo-scan-row">
+<span class="algo-scan-row-label">Найдено <span id="algo-scan-long-found">0</span> тикеров в Лонг</span>
+<button type="button" class="algo-scan-btn" id="algo-scan-long-add" disabled>Добавить в список</button>
+</div>
+<div id="algo-scan-long-status" class="algo-scan-status" aria-live="polite"></div>
+<div class="algo-scan-row">
+<span class="algo-scan-row-label">Найдено <span id="algo-scan-short-found">0</span> тикеров в Шорт</span>
+<button type="button" class="algo-scan-btn" id="algo-scan-short-add" disabled>Добавить в список</button>
+</div>
+<div id="algo-scan-short-status" class="algo-scan-status" aria-live="polite"></div>
+<div class="algo-scan-row">
+<span class="algo-scan-row-label">Найдено <span id="algo-scan-both-found">0</span> тикеров Лонг+Шорт</span>
+<button type="button" class="algo-scan-btn" id="algo-scan-both-add" disabled>Добавить в список</button>
+</div>
+<div id="algo-scan-both-status" class="algo-scan-status" aria-live="polite"></div>
+</div>
+</div>
+
+</div>
+</div>
+
+<div id="linked-crosshair-vert" class="linked-crosshair-vert hidden" aria-hidden="true"></div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<div id="list">
+
+<div id="filter-wrap">
+
+<select id="market-filter">
+<option value="all">Все</option>
+<option value="algo-long-5m">Алго Лонг 5мин</option>
+<option value="algo-short-5m">Алго Шорт 5мин</option>
+<option value="algo-both-5m">Алго Лонг/Шорт 5мин</option>
+</select>
+
+<input
+id="coin-search"
+type="search"
+placeholder="Поиск монеты..."
+autocomplete="off"
+/>
+
+</div>
+
+<div id="coins-list-refresh" class="coins-list-refresh" role="group" aria-label="Coin list autorefresh">
+<span class="coins-list-refresh-label">Autorefresh</span>
+<div class="coins-list-refresh-options">
+<button type="button" class="coins-list-refresh-btn" data-refresh-ms="10000">10s</button>
+<button type="button" class="coins-list-refresh-btn" data-refresh-ms="60000">1m</button>
+<button type="button" class="coins-list-refresh-btn" data-refresh-ms="0">Never</button>
+</div>
+</div>
+
+<div id="table-header">
+
+<div class="sortable col-flag" data-sort="favorites">
+★
+</div>
+
+<div class="sortable col-symbol" data-sort="symbol">
+Symbol
+</div>
+
+<div class="sortable col-change" data-sort="24h">
+24h
+</div>
+
+<div class="sortable col-change" data-sort="1h">
+1h
+</div>
+
+</div>
+
+<div id="coins-body"></div>
+
+</div>
+
+</div>
+
+<script type="module" src="/js/algo-trading-page-boot.js?v=2"></script>
+
+</body>
+</html>

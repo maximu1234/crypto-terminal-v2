@@ -99,7 +99,7 @@ createSharedDrawUndoStack
 
 import {
 initWidgetDrawings
-} from "./chart-widget-host.js?v=15";
+} from "./chart-widget-host.js?v=16";
 
 import {
 mountDrawToolbar,
@@ -108,7 +108,7 @@ mountDrawToolIcons
 
 import {
 initChartIndicators
-} from "./chart-indicators.js?v=38";
+} from "./chart-indicators.js?v=39";
 
 import {
 mountCoinsLayoutResize
@@ -168,7 +168,7 @@ highlightActiveSymbol,
 getVisibleSymbolList,
 setCoinsTableHooks,
 syncCoinListFreezeFromFlagMenus
-} from "./terminal/terminal-table.js?v=20";
+} from "./terminal/terminal-table.js?v=21";
 
 import {
 createCoinsChartSwitchVeil
@@ -200,7 +200,7 @@ mountScriptTerminalStatus
 
 import {
 resumeScriptScanBackgroundJob
-} from "./script-scan-background.js?v=11";
+} from "./script-scan-background.js?v=13";
 
 let currentDataset = "all";
 let currentTF = "60";

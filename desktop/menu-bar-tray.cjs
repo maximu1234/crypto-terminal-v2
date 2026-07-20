@@ -22,10 +22,15 @@ require(
 );
 const {
 startTrayFeed,
-stopTrayFeed
+stopTrayFeed,
+refreshTrayFeedNow
 } =
 require(
 "./menu-bar-tray-feed.cjs"
+);
+const trayPrefsStore =
+require(
+"./menu-bar-tray-prefs-store.cjs"
 );
 
 /** @type {import("electron").Tray | null} */
@@ -227,6 +232,22 @@ ipcMain.on(
 
 hideTrayPopup();
 app.quit();
+
+});
+
+ipcMain.on(
+"tray-popup:toggle-pnl-hidden",
+()=>{
+
+const current =
+!!trayPrefsStore.readPrefs().pnlHidden;
+setMenuBarTrayPnlHidden(
+!current,
+{
+broadcast:
+true
+}
+);
 
 });
 
@@ -702,11 +723,137 @@ balanceLabel:
 totalPnl:
 null,
 pnlHidden:
-false,
+!!trayPrefsStore.readPrefs().pnlHidden,
 positions:[]
 });
 
 ensureTrayFeedRunning();
+
+}
+
+function broadcastPnlPrivacyToRenderers(
+hidden
+){
+
+for(
+const win of BrowserWindow.getAllWindows()
+){
+
+try{
+
+if(
+win.isDestroyed()
+){
+continue;
+}
+
+win.webContents.send(
+"desktop:pnl-privacy-changed",
+{
+hidden:
+!!hidden
+}
+);
+}catch{
+/* ignore */
+}
+
+}
+
+}
+
+function setMenuBarTrayPnlHidden(
+hidden,
+options =
+{}
+){
+
+const prefs =
+trayPrefsStore.setPnlHidden(
+!!hidden
+);
+const nextHidden =
+!!prefs.pnlHidden;
+
+const prev =
+lastTrayState &&
+typeof lastTrayState ===
+"object"
+? lastTrayState
+: {};
+const positions =
+Array.isArray(
+prev.positions
+)
+? prev.positions.map(
+row=>{
+
+const pnl =
+Number(
+row?.pnl
+);
+const pnlLabel =
+nextHidden
+? "***"
+: (
+Number.isFinite(
+pnl
+)
+? pnl.toLocaleString(
+"ru-RU",
+{
+maximumFractionDigits:
+2,
+signDisplay:
+"exceptZero"
+}
+)
+: (
+row?.pnlLabel ===
+"***"
+? "—"
+: (
+row?.pnlLabel ||
+"—"
+)
+)
+);
+
+return {
+...row,
+pnlLabel
+};
+
+}
+)
+: [];
+
+applyTrayState(
+{
+...prev,
+pnlHidden:
+nextHidden,
+positions
+}
+);
+
+refreshTrayFeedNow();
+
+if(
+options.broadcast !==
+false
+){
+broadcastPnlPrivacyToRenderers(
+nextHidden
+);
+}
+
+return {
+ok:
+true,
+pnlHidden:
+nextHidden
+};
 
 }
 
@@ -830,6 +977,7 @@ configureMenuBarTray,
 initMenuBarTray,
 updateMenuBarTray,
 setMenuBarTrayVisible,
+setMenuBarTrayPnlHidden,
 isMenuBarTrayActive,
 dismissTrayPopup,
 destroyMenuBarTray

@@ -40,7 +40,7 @@ subscribeKline
 
 import {
 mountWidgetDomCrosshair
-} from "./chart-widget-host.js?v=15";
+} from "./chart-widget-host.js?v=16";
 
 function mergeLiveCandle(
 candles,

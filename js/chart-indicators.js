@@ -21,7 +21,7 @@ createEmaShiftRibbonIndicator
 } from "./indicators/ema-shift-ribbon.js?v=6";
 import {
 createPattern12Indicator
-} from "./indicators/pattern-12.js?v=5";
+} from "./indicators/pattern-12.js?v=6";
 import {
 createIndicatorSettingsDialog
 } from "./indicators/indicator-settings-dialog.js?v=7";
@@ -35,15 +35,18 @@ import {
 isChartLayoutReady
 } from "./chart-layout-gate.js?v=2";
 
-const STORAGE_KEY =
+const DEFAULT_STORAGE_KEY =
 "chart_indicators_v1";
 
-function readPrefs(){
+function readPrefs(
+storageKey =
+DEFAULT_STORAGE_KEY
+){
 
 try{
 const raw =
 localStorage.getItem(
-STORAGE_KEY
+storageKey
 );
 
 if(
@@ -69,11 +72,13 @@ return {};
 }
 
 function writePrefs(
-prefs
+prefs,
+storageKey =
+DEFAULT_STORAGE_KEY
 ){
 
 localStorage.setItem(
-STORAGE_KEY,
+storageKey,
 JSON.stringify(
 prefs
 )
@@ -82,7 +87,9 @@ prefs
 }
 
 function createIndicatorSettingsStore(
-prefsRef
+prefsRef,
+storageKey =
+DEFAULT_STORAGE_KEY
 ){
 
 return {
@@ -127,7 +134,8 @@ prefsRef[
 ] =
 next;
 writePrefs(
-prefsRef
+prefsRef,
+storageKey
 );
 return next;
 
@@ -179,7 +187,9 @@ btn.setAttribute(
 export function initChartIndicators(
 {
 root,
-getHost
+getHost,
+storageKey =
+DEFAULT_STORAGE_KEY
 }
 ){
 
@@ -189,12 +199,19 @@ if(
 return null;
 }
 
+const prefsKey =
+storageKey ||
+DEFAULT_STORAGE_KEY;
+
 const prefs =
-readPrefs();
+readPrefs(
+prefsKey
+);
 
 const settingsStore =
 createIndicatorSettingsStore(
-prefs
+prefs,
+prefsKey
 );
 
 const indicators =
@@ -498,7 +515,8 @@ id
 ] =
 !!on;
 writePrefs(
-prefs
+prefs,
+prefsKey
 );
 
 updateLegend();

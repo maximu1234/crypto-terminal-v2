@@ -7,14 +7,20 @@ import {
 createPattern12Scanner,
 PATTERN_SCAN_ALL_TFS,
 filterPatternScanRowsBySide,
-normalizePatternScanSideFilter
-} from "./pattern-12-scanner.js?v=16";
+normalizePatternScanSideFilter,
+loadPatternScanSymbols
+} from "./pattern-12-scanner.js?v=17";
 
 import {
 loadScriptPageState,
 saveScriptPageState,
 periodMsById
-} from "./script-page-storage.js?v=11";
+} from "./script-page-storage.js?v=13";
+
+import {
+loadScriptFavoritesForScan,
+intersectFavoritesWithMarket
+} from "./script-favorites-list.js?v=2";
 
 import {
 EXCHANGE_CHANGED_EVENT,
@@ -100,6 +106,195 @@ createPattern12Scanner();
 }
 
 return scanner;
+
+}
+
+async function resolveScanSymbols(
+pageState,
+sideFilter
+){
+
+if(
+pageState?.favoritesOnly !==
+true
+){
+return {
+symbols:
+null,
+favoritesBySide:
+null
+};
+}
+
+const fav =
+await loadScriptFavoritesForScan(
+getActiveExchangeId(),
+sideFilter ||
+pageState.searchSide ||
+"both"
+);
+
+if(
+!fav.ok
+){
+throw new Error(
+fav.message ||
+"Не удалось прочитать избранные"
+);
+}
+
+if(
+!fav.exists
+){
+throw new Error(
+fav.message ||
+"Сначала добавьте файл избранных"
+);
+}
+
+const market =
+await loadPatternScanSymbols();
+
+if(
+fav.favoritesBySide
+){
+const long =
+intersectFavoritesWithMarket(
+fav.favoritesBySide.long,
+market
+);
+const short =
+intersectFavoritesWithMarket(
+fav.favoritesBySide.short,
+market
+);
+
+if(
+!long.length &&
+!short.length
+){
+throw new Error(
+"Ни одна монета из файлов не найдена на бирже"
+);
+}
+
+return {
+symbols:
+null,
+favoritesBySide:
+{
+long,
+short
+}
+};
+}
+
+const symbols =
+intersectFavoritesWithMarket(
+fav.symbols ||
+[],
+market
+);
+
+if(
+!symbols.length
+){
+throw new Error(
+"Ни одна монета из файла не найдена на бирже"
+);
+}
+
+return {
+symbols,
+favoritesBySide:
+null
+};
+
+}
+
+function favoritesReadyForScan(
+state,
+sideFilter
+){
+
+if(
+state?.favoritesOnly !==
+true
+){
+return true;
+}
+
+const mode =
+String(
+sideFilter ||
+state.searchSide ||
+"both"
+).trim().toLowerCase();
+const longCount =
+Math.max(
+0,
+Number(
+state.favoritesLongCount
+) ||
+0
+);
+const shortCount =
+Math.max(
+0,
+Number(
+state.favoritesShortCount
+) ||
+0
+);
+
+if(
+mode ===
+"long"
+){
+return longCount >
+0;
+}
+
+if(
+mode ===
+"short"
+){
+return shortCount >
+0;
+}
+
+return longCount >
+0 ||
+shortCount >
+0;
+
+}
+
+function favoritesMissingMessage(
+sideFilter
+){
+
+const mode =
+String(
+sideFilter ||
+"both"
+).trim().toLowerCase();
+
+if(
+mode ===
+"long"
+){
+return "Сначала добавьте файл Long";
+}
+
+if(
+mode ===
+"short"
+){
+return "Сначала добавьте файл Short";
+}
+
+return "Сначала добавьте файл Long или Short";
 
 }
 
@@ -584,6 +779,17 @@ job.tfs[
 
 try{
 
+const pageState =
+loadScriptPageState();
+const sideFilter =
+job.sideFilter ||
+"both";
+const resolved =
+await resolveScanSymbols(
+pageState,
+sideFilter
+);
+
 const rows =
 await scan.run(
 {
@@ -591,9 +797,7 @@ tfs:
 job.tfs,
 lookbackBars:
 job.lookbackBars,
-sideFilter:
-job.sideFilter ||
-"both",
+sideFilter,
 startIndex:
 Number(
 job.done
@@ -602,8 +806,20 @@ job.done
 seedRows:
 filterPatternScanRowsBySide(
 loadScriptPageState().rows,
-job.sideFilter ||
-"both"
+sideFilter
+),
+...(
+resolved.favoritesBySide
+? {
+favoritesBySide:
+resolved.favoritesBySide
+}
+: resolved.symbols
+? {
+symbols:
+resolved.symbols
+}
+: {}
 ),
 onHit(
 _hit,
@@ -1057,6 +1273,28 @@ return null;
 const tf =
 state.auto.tf;
 
+if(
+!favoritesReadyForScan(
+state,
+state.searchSide
+)
+){
+dispatchUpdate(
+{
+type:
+"error",
+mode:
+"auto",
+tf,
+message:
+favoritesMissingMessage(
+state.searchSide
+)
+}
+);
+return null;
+}
+
 beginScanJob(
 {
 mode:
@@ -1096,6 +1334,32 @@ stopActivePatternScan();
 
 const state =
 loadScriptPageState();
+const resolvedSide =
+sideFilter ??
+state.searchSide;
+
+if(
+!favoritesReadyForScan(
+state,
+resolvedSide
+)
+){
+dispatchUpdate(
+{
+type:
+"error",
+mode:
+"full",
+tf:
+null,
+message:
+favoritesMissingMessage(
+resolvedSide
+)
+}
+);
+return null;
+}
 
 beginScanJob(
 {
@@ -1107,8 +1371,7 @@ lookbackBars:
 lookbackBars ??
 state.searchDepth,
 sideFilter:
-sideFilter ??
-state.searchSide,
+resolvedSide,
 clearRows:
 true
 }

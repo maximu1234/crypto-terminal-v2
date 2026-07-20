@@ -16,21 +16,26 @@ stopActivePatternScan,
 startFullPatternScan,
 isScriptScanBackgroundRunning,
 SCRIPT_SCAN_BG_EVENT
-} from "./script-scan-background.js?v=11";
+} from "./script-scan-background.js?v=13";
 
 import {
 PATTERN_SCAN_TF_LABELS,
 PATTERN_SCAN_DEPTH_OPTIONS,
 normalizePatternScanSideFilter,
 matchesPatternScanSideFilter
-} from "./pattern-12-scanner.js?v=16";
+} from "./pattern-12-scanner.js?v=17";
 
 import {
 loadScriptPageState,
 saveScriptPageState,
 SCRIPT_AUTO_PERIODS,
 periodMsById
-} from "./script-page-storage.js?v=11";
+} from "./script-page-storage.js?v=13";
+
+import {
+parseTradingViewSymbolList,
+scriptFavoritesFileName
+} from "./script-favorites-list.js?v=2";
 
 import {
 COINS_TF_HOTKEYS,
@@ -97,6 +102,8 @@ scanMode =
 null;
 updateActionButtons();
 updateAutoStatus();
+applyFavoritesUi();
+void refreshFavoritesMetaFromDisk();
 refreshGrid();
 
 const name =
@@ -109,6 +116,397 @@ setFloatingScanStatus(
 `Биржа: ${name}`
 );
 }
+
+}
+
+function favoritesExchangeLabel(){
+
+const id =
+String(
+getActiveExchangeId() ||
+""
+).toLowerCase();
+
+return id ===
+"bingx"
+? "BingX"
+: "Bybit";
+
+}
+
+function formatFavoritesSideCount(
+count
+){
+
+const n =
+Math.max(
+0,
+Number(
+count
+) ||
+0
+);
+
+return n >
+0
+? String(
+n
+)
+: "—";
+
+}
+
+function updateFavoritesStatus(){
+
+if(
+!els.favoritesStatus
+){
+return;
+}
+
+const longCount =
+Math.max(
+0,
+Number(
+state.favoritesLongCount
+) ||
+0
+);
+const shortCount =
+Math.max(
+0,
+Number(
+state.favoritesShortCount
+) ||
+0
+);
+
+els.favoritesStatus.textContent =
+`${favoritesExchangeLabel()} Long: ${formatFavoritesSideCount(
+longCount
+)} · Short: ${formatFavoritesSideCount(
+shortCount
+)}`;
+els.favoritesStatus.title =
+[
+state.favoritesLongFileName,
+state.favoritesShortFileName
+].filter(
+Boolean
+).join(
+" · "
+);
+els.favoritesStatus.classList.toggle(
+"is-ready",
+longCount >
+0 ||
+shortCount >
+0
+);
+
+}
+
+function applyFavoritesUi(){
+
+if(
+els.favoritesOnly
+){
+els.favoritesOnly.checked =
+state.favoritesOnly ===
+true;
+}
+
+updateFavoritesStatus();
+
+}
+
+async function refreshFavoritesSideFromDisk(
+side
+){
+
+const api =
+window.cryptoTerminalDesktop;
+
+if(
+!api?.loadScriptFavorites
+){
+return;
+}
+
+const exchangeId =
+getActiveExchangeId();
+const result =
+await api.loadScriptFavorites(
+exchangeId,
+side
+);
+const countKey =
+side ===
+"short"
+? "favoritesShortCount"
+: "favoritesLongCount";
+const fileKey =
+side ===
+"short"
+? "favoritesShortFileName"
+: "favoritesLongFileName";
+
+if(
+!result?.ok ||
+!result.exists ||
+!String(
+result.text ||
+""
+).trim()
+){
+state[
+countKey
+] =
+0;
+state[
+fileKey
+] =
+"";
+return;
+}
+
+const parsed =
+parseTradingViewSymbolList(
+result.text,
+{
+exchangeId
+}
+);
+
+state[
+countKey
+] =
+parsed.symbols.length;
+state[
+fileKey
+] =
+result.fileName ||
+scriptFavoritesFileName(
+exchangeId,
+side
+);
+
+}
+
+async function refreshFavoritesMetaFromDisk(){
+
+const api =
+window.cryptoTerminalDesktop;
+
+if(
+!api?.loadScriptFavorites
+){
+return;
+}
+
+await refreshFavoritesSideFromDisk(
+"long"
+);
+await refreshFavoritesSideFromDisk(
+"short"
+);
+persist();
+updateFavoritesStatus();
+
+}
+
+async function importFavoritesFile(
+side
+){
+
+const api =
+window.cryptoTerminalDesktop;
+const sideNorm =
+side ===
+"short"
+? "short"
+: "long";
+const sideLabel =
+sideNorm ===
+"short"
+? "Short"
+: "Long";
+
+if(
+!api?.importScriptFavorites
+){
+setFloatingScanStatus(
+"Добавление файла только в desktop"
+);
+return;
+}
+
+const exchangeId =
+getActiveExchangeId();
+const result =
+await api.importScriptFavorites(
+exchangeId,
+sideNorm
+);
+
+if(
+result?.canceled
+){
+return;
+}
+
+if(
+!result?.ok
+){
+setFloatingScanStatus(
+result?.message ||
+`Не удалось загрузить файл ${sideLabel}`
+);
+return;
+}
+
+const parsed =
+parseTradingViewSymbolList(
+result.text,
+{
+exchangeId
+}
+);
+
+if(
+!parsed.symbols.length
+){
+setFloatingScanStatus(
+parsed.skippedForeign
+? "В файле нет монет текущей биржи"
+: "В файле нет подходящих монет"
+);
+return;
+}
+
+const fileName =
+result.fileName ||
+scriptFavoritesFileName(
+exchangeId,
+sideNorm
+);
+
+if(
+sideNorm ===
+"short"
+){
+state.favoritesShortCount =
+parsed.symbols.length;
+state.favoritesShortFileName =
+fileName;
+}else{
+state.favoritesLongCount =
+parsed.symbols.length;
+state.favoritesLongFileName =
+fileName;
+}
+
+persist();
+updateFavoritesStatus();
+
+let msg =
+`${sideLabel}: ${parsed.symbols.length} · ${fileName}`;
+
+if(
+parsed.skippedForeign
+){
+msg +=
+` · чужих: ${parsed.skippedForeign}`;
+}
+
+setFloatingScanStatus(
+msg
+);
+
+}
+
+function favoritesReadyForUi(
+sideFilter
+){
+
+if(
+!state.favoritesOnly
+){
+return true;
+}
+
+const mode =
+String(
+sideFilter ||
+state.searchSide ||
+"both"
+).trim().toLowerCase();
+const longCount =
+Math.max(
+0,
+Number(
+state.favoritesLongCount
+) ||
+0
+);
+const shortCount =
+Math.max(
+0,
+Number(
+state.favoritesShortCount
+) ||
+0
+);
+
+if(
+mode ===
+"long"
+){
+return longCount >
+0;
+}
+
+if(
+mode ===
+"short"
+){
+return shortCount >
+0;
+}
+
+return longCount >
+0 ||
+shortCount >
+0;
+
+}
+
+function favoritesMissingUiMessage(
+sideFilter
+){
+
+const mode =
+String(
+sideFilter ||
+state.searchSide ||
+"both"
+).trim().toLowerCase();
+
+if(
+mode ===
+"long"
+){
+return "Сначала добавьте файл Long";
+}
+
+if(
+mode ===
+"short"
+){
+return "Сначала добавьте файл Short";
+}
+
+return "Сначала добавьте файл Long или Short";
 
 }
 
@@ -328,6 +726,14 @@ els.autoPeriod
 state.auto.periodId =
 els.autoPeriod.value ||
 state.auto.periodId;
+}
+
+if(
+els.favoritesOnly
+){
+state.favoritesOnly =
+els.favoritesOnly.checked ===
+true;
 }
 
 persist();
@@ -614,6 +1020,20 @@ state.searchSide
 function startAuto(){
 
 syncSearchParamsFromUi();
+
+if(
+!favoritesReadyForUi(
+state.searchSide
+)
+){
+setFloatingScanStatus(
+favoritesMissingUiMessage(
+state.searchSide
+)
+);
+return;
+}
+
 state.auto.active =
 true;
 persist();
@@ -1142,6 +1562,22 @@ els.autoPeriod =
 document.getElementById(
 "script-auto-period"
 );
+els.favoritesOnly =
+document.getElementById(
+"script-favorites-only"
+);
+els.favoritesFileLong =
+document.getElementById(
+"script-favorites-file-long"
+);
+els.favoritesFileShort =
+document.getElementById(
+"script-favorites-file-short"
+);
+els.favoritesStatus =
+document.getElementById(
+"script-favorites-status"
+);
 els.autoStart =
 document.getElementById(
 "script-auto-start"
@@ -1400,6 +1836,34 @@ els.searchSide.value
 }
 );
 
+els.favoritesOnly?.addEventListener(
+"change",
+()=>{
+state.favoritesOnly =
+els.favoritesOnly.checked ===
+true;
+persist();
+}
+);
+
+els.favoritesFileLong?.addEventListener(
+"click",
+()=>{
+void importFavoritesFile(
+"long"
+);
+}
+);
+
+els.favoritesFileShort?.addEventListener(
+"click",
+()=>{
+void importFavoritesFile(
+"short"
+);
+}
+);
+
 }
 
 function restoreAfterBgScan(){
@@ -1518,6 +1982,9 @@ els.searchSide
 els.searchSide.value =
 state.searchSide;
 }
+
+applyFavoritesUi();
+void refreshFavoritesMetaFromDisk();
 
 updateActionButtons();
 updateAutoStatus();
