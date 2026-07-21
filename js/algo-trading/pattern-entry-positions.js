@@ -1,7 +1,7 @@
 /**
  * Позиции Long/Short в точках входа паттерна (АлгоТрейдинг).
- * СЛ = доля высоты X=|pt4−pt3| от входа (pt4) к pt3.
- * Эфемерный слой drawings (setEphemeralDrawings).
+ * Цены СЛ/ТП считаются в лог-шкале (как лог-фиба): отношения цен, не Δ$.
+ * СЛ = доля лог-высоты X от pt4 к pt3; ТП St1 = RR в лог-риске.
  */
 import {
 STROKE,
@@ -25,8 +25,172 @@ export const DEFAULT_RISK_USD =
 1;
 
 /**
- * СЛ на `slPctOfX`% высоты X между pt3 и pt4 (от pt4 к pt3).
- * 50% → середина отрезка; 100% → уровень pt3.
+ * Линейная интерполяция в лог-пространстве: t=0 → from, t=1 → to.
+ * @param {number} from
+ * @param {number} to
+ * @param {number} t01
+ * @returns {number|null}
+ */
+export function interpolateLogPrice(
+from,
+to,
+t01
+){
+
+const a =
+Number(
+from
+);
+const b =
+Number(
+to
+);
+const t =
+Math.min(
+1,
+Math.max(
+0,
+Number(
+t01
+)
+)
+);
+
+if(
+!(
+a >
+0
+) ||
+!(
+b >
+0
+) ||
+!Number.isFinite(
+t
+)
+){
+return null;
+}
+
+if(
+a ===
+b
+){
+return a;
+}
+
+return Math.exp(
+Math.log(
+a
+) *
+(
+1 -
+t
+) +
+Math.log(
+b
+) *
+t
+);
+
+}
+
+/**
+ * Расширение хода spanA→spanB на `mult` лог-высот от base (лог-фиба).
+ * long: base × (hi/lo)^mult; short: base ÷ (hi/lo)^mult.
+ * @param {"long"|"short"} side
+ * @param {number} base
+ * @param {number} spanA
+ * @param {number} spanB
+ * @param {number} mult
+ * @returns {number|null}
+ */
+export function computeLogExtensionPrice(
+side,
+base,
+spanA,
+spanB,
+mult
+){
+
+const baseN =
+Number(
+base
+);
+const a =
+Number(
+spanA
+);
+const b =
+Number(
+spanB
+);
+const m =
+Math.abs(
+Number(
+mult
+)
+);
+
+if(
+!(
+baseN >
+0
+) ||
+!(
+a >
+0
+) ||
+!(
+b >
+0
+) ||
+!Number.isFinite(
+m
+)
+){
+return null;
+}
+
+const lo =
+Math.min(
+a,
+b
+);
+const hi =
+Math.max(
+a,
+b
+);
+
+if(
+!(
+hi >
+lo
+)
+){
+return null;
+}
+
+const factor =
+Math.pow(
+hi /
+lo,
+m
+);
+
+return side ===
+"short"
+? baseN /
+factor
+: baseN *
+factor;
+
+}
+
+/**
+ * СЛ на `slPctOfX`% лог-высоты X между pt3 и pt4 (от pt4 к pt3).
+ * 50% → геометрическая середина; 100% → уровень pt3.
  *
  * @param {"long"|"short"} side
  * @param {number} pt3
@@ -42,62 +206,19 @@ slPctOfX =
 DEFAULT_SL_PCT_OF_X
 ){
 
-const p3 =
-Number(
-pt3
-);
-const p4 =
-Number(
-pt4
-);
+void side;
+
 const pct =
 clampSlPctOfX(
 slPctOfX
 );
 
-if(
-!Number.isFinite(
-p3
-) ||
-!Number.isFinite(
-p4
-)
-){
-return null;
-}
-
-const x =
-Math.abs(
-p4 -
-p3
-);
-
-if(
-!(
-x >
-0
-)
-){
-return null;
-}
-
-const offset =
-x *
-(
+return interpolateLogPrice(
+pt4,
+pt3,
 pct /
 100
 );
-
-if(
-side ===
-"short"
-){
-return p4 +
-offset;
-}
-
-return p4 -
-offset;
 
 }
 
@@ -137,7 +258,7 @@ n *
 }
 
 /**
- * ТП по RR: расстояние от входа = tpRr × |entry − SL|.
+ * ТП по RR в лог-шкале: |ln(entry)−ln(SL)| × tpRr от входа.
  * «1 к 2» → tpRr = 2.
  *
  * @param {"long"|"short"} side
@@ -168,45 +289,56 @@ tpRr
 );
 
 if(
-!Number.isFinite(
-entryN
+!(
+entryN >
+0
+) ||
+!(
+sl >
+0
 ) ||
 !Number.isFinite(
-sl
+rr
 )
 ){
 return null;
 }
 
-const risk =
-Math.abs(
-entryN -
+const lo =
+Math.min(
+entryN,
+sl
+);
+const hi =
+Math.max(
+entryN,
 sl
 );
 
 if(
 !(
-risk >
-0
+hi >
+lo
 )
 ){
 return null;
 }
 
-const reward =
-risk *
-rr;
+const riskRatio =
+hi /
+lo;
+const factor =
+Math.pow(
+riskRatio,
+rr
+);
 
-if(
-side ===
+return side ===
 "short"
-){
-return entryN -
-reward;
-}
-
-return entryN +
-reward;
+? entryN /
+factor
+: entryN *
+factor;
 
 }
 
@@ -297,7 +429,11 @@ n *
  *   tpRr?: number,
  *   riskUsd?: number,
  *   strategy?: "fixed-tp"|"partial-tp"|"partial-tp-y",
+ *   tp1X?: number,
+ *   tp2X?: number,
  *   tp3X?: number,
+ *   tp1Y?: number,
+ *   tp2Y?: number,
  *   tp3Y?: number
  * }} [opts]
  * @returns {object|null}
@@ -426,49 +562,86 @@ Number(
 event.pt4 ??
 entry
 );
-const span =
+const isY =
 strategy ===
-"partial-tp-y"
-? Math.abs(
-p2 -
-p1
-)
-: Math.abs(
-p4 -
-p3
-);
-const multRaw =
-strategy ===
-"partial-tp-y"
-? opts.tp3Y
-: opts.tp3X;
-const mult =
+"partial-tp-y";
+const pickMult =
+(
+raw,
+fallback
+)=>{
+const n =
 Number(
-multRaw
+raw
 );
-const safeMult =
-Number.isFinite(
-mult
-) &&
-mult >
-0
-? mult
-: 1.44;
 
-if(
-span >
+return Number.isFinite(
+n
+) &&
+n >
 0
-){
-const offset =
-span *
-safeMult;
-tpPrice =
+? n
+: fallback;
+};
+const m1 =
+pickMult(
+isY
+? opts.tp1Y
+: opts.tp1X,
+0.5
+);
+const m2 =
+pickMult(
+isY
+? opts.tp2Y
+: opts.tp2X,
+1
+);
+const m3 =
+pickMult(
+isY
+? opts.tp3Y
+: opts.tp3X,
+1.44
+);
+// Высота позиции = самый дальний тейк (max множитель)
+const farMult =
+Math.max(
+m1,
+m2,
+m3
+);
+const tpBase =
+isY
+? p2
+: entry;
+const spanA =
+isY
+? p1
+: p3;
+const spanB =
+isY
+? p2
+: p4;
+const logTp =
+computeLogExtensionPrice(
 type ===
 "short"
-? entry -
-offset
-: entry +
-offset;
+? "short"
+: "long",
+tpBase,
+spanA,
+spanB,
+farMult
+);
+
+if(
+Number.isFinite(
+logTp
+)
+){
+tpPrice =
+logTp;
 }
 }
 

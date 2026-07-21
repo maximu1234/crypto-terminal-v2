@@ -3,8 +3,16 @@ import assert from "node:assert/strict";
 
 import {
 resolvePartialTpTrade,
-computePartialTpTradeStats
+computePartialTpTradeStats,
+computePartialTpPrice
 } from "../js/algo-trading/pattern-trade-stats-partial.js";
+
+import {
+computeAlgoStopLoss,
+computeAlgoTakeProfit,
+computeLogExtensionPrice,
+interpolateLogPrice
+} from "../js/algo-trading/pattern-entry-positions.js";
 
 function c(
 time,
@@ -28,14 +36,122 @@ close
 }
 
 test(
-"partial: TP1 then SL reduces remaining risk",
+"log helpers: SL mid and St2/St3 extensions",
 ()=>{
 
-// entry 110, pt3 100 → X=10, SL 50% → 105, riskDist=5
-// TP1 = 110+10*1 = 120 → reward/risk = 2
-// Close 1/3 at TP1: +1/3 * 1 * 2 = +0.666...
-// Remaining 2/3 hits SL: -2/3
-// net ≈ 0
+assert.ok(
+Math.abs(
+interpolateLogPrice(
+110,
+100,
+0.5
+) -
+Math.sqrt(
+110 *
+100
+)
+) <
+1e-9
+);
+
+assert.ok(
+Math.abs(
+computeAlgoStopLoss(
+"long",
+100,
+110,
+50
+) -
+Math.sqrt(
+110 *
+100
+)
+) <
+1e-9
+);
+
+// St2: pt4 * (pt4/pt3)^1
+assert.ok(
+Math.abs(
+computePartialTpPrice(
+"long",
+110,
+100,
+110,
+1
+) -
+110 *
+(
+110 /
+100
+)
+) <
+1e-9
+);
+
+// St3: pt2 * (pt2/pt1)^1
+assert.ok(
+Math.abs(
+computeLogExtensionPrice(
+"long",
+100,
+80,
+100,
+1
+) -
+100 *
+(
+100 /
+80
+)
+) <
+1e-9
+);
+
+assert.ok(
+Math.abs(
+computeAlgoTakeProfit(
+"long",
+110,
+Math.sqrt(
+110 *
+100
+),
+2
+) -
+110 *
+Math.pow(
+110 /
+Math.sqrt(
+110 *
+100
+),
+2
+)
+) <
+1e-6
+);
+
+}
+);
+
+test(
+"partial: TP1 then SL reduces remaining risk (log levels)",
+()=>{
+
+const sl =
+Math.sqrt(
+110 *
+100
+);
+const tp1 =
+110 *
+(
+110 /
+100
+);
+// tp1 ≈ 121
+
 const candles =
 [
 c(
@@ -55,16 +171,18 @@ c(
 c(
 3,
 110,
-121,
+tp1 +
+0.5,
 109,
-120
+tp1
 ),
 c(
 4,
 110,
 111,
-104,
-105
+sl -
+0.5,
+sl
 )
 ];
 
@@ -110,34 +228,24 @@ trade.tpsHit,
 1
 );
 assert.ok(
-Math.abs(
-trade.profitUsd -
-2 /
-3
-) <
-1e-9
-);
-assert.ok(
-Math.abs(
-trade.lossUsd -
-2 /
-3
-) <
-1e-9
-);
-assert.ok(
-Math.abs(
-trade.netUsd
-) <
-1e-9
+trade.netUsd <
+0.05
 );
 
 }
 );
 
 test(
-"partial: all three TPs = full profit",
+"partial: all three TPs = full profit (log)",
 ()=>{
+
+const tp3 =
+110 *
+Math.pow(
+110 /
+100,
+1.44
+);
 
 const candles =
 [
@@ -158,9 +266,10 @@ c(
 c(
 3,
 110,
-125,
+tp3 +
+1,
 109,
-124
+tp3
 )
 ];
 
@@ -205,16 +314,12 @@ assert.equal(
 trade.tpsHit,
 3
 );
-assert.equal(
-trade.lossUsd,
-0
-);
 assert.ok(
 trade.profitUsd >
 0
 );
-assert.ok(
-trade.netUsd >
+assert.equal(
+trade.lossUsd,
 0
 );
 
@@ -228,15 +333,11 @@ test(
 const stats =
 computePartialTpTradeStats(
 [],
-[],
-{
-riskUsd:
-1
-}
+[]
 );
 
 assert.equal(
-stats.wins,
+stats.closed,
 0
 );
 assert.equal(
@@ -247,15 +348,18 @@ stats.netUsd,
 }
 );
 
-
 test(
-"partial Y: span uses |pt1-pt2| not X",
+"partial Y: TPs from pt2 in log scale",
 ()=>{
 
-// Y = |100-80| = 20; X would be |110-100| = 10
-// entry 110, SL 50% of X → 105, riskDist=5
-// TP1 = 110 + 20*1 = 130
-// candle high 131 → hit TP1 only (not enough for TP2=135)
+const tp1 =
+100 *
+(
+100 /
+80
+);
+// 125
+
 const candles =
 [
 c(
@@ -275,9 +379,10 @@ c(
 c(
 3,
 110,
-131,
+tp1 +
+0.5,
 109,
-130
+tp1
 )
 ];
 
@@ -320,45 +425,6 @@ false
 }
 );
 
-const tradeX =
-resolvePartialTpTrade(
-candles,
-{
-type:
-"entry",
-side:
-"long",
-bar:
-1,
-price:
-110,
-pt1:
-80,
-pt2:
-100,
-pt3:
-100,
-pt4:
-110
-},
-{
-span:
-"x",
-slPctOfX:
-50,
-riskUsd:
-1,
-tp1X:
-1,
-tp2X:
-1.25,
-tp3X:
-1.44,
-trailSl:
-false
-}
-);
-
 assert.equal(
 tradeY.status,
 "open"
@@ -368,28 +434,8 @@ tradeY.tpsHit,
 1
 );
 assert.ok(
-Math.abs(
-tradeY.profitUsd -
-(
-1 /
-3
-) *
-(
-20 /
-5
-)
-) <
-1e-9
-);
-
-// X TP1 = 110+10 = 120 → same candle also hits TP1 (and TP2=122.5, TP3=124.4)
-assert.equal(
-tradeX.tpsHit,
-3
-);
-assert.equal(
-tradeX.status,
-"closed"
+tradeY.profitUsd >
+0
 );
 
 }

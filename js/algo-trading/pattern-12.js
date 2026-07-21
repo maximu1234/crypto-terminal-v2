@@ -11,7 +11,7 @@ PATTERN_12_ID,
 computePattern12Scene,
 defaultPattern12Settings,
 normalizePattern12Settings
-} from "./pattern-12-math.js?v=4";
+} from "./pattern-12-math.js?v=5";
 
 import {
 paintPattern12Scene

@@ -7,7 +7,7 @@
 import {
 computePattern12Scene,
 defaultPattern12Settings
-} from "./pattern-12-math.js?v=4";
+} from "./pattern-12-math.js?v=5";
 
 export const ENTRY_TIMEOUT_BARS =
 300;

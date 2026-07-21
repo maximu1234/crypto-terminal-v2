@@ -5,6 +5,7 @@ import {
 buildAlgoEntryPositionShape,
 computeAlgoStopLoss,
 computeAlgoTakeProfit,
+interpolateLogPrice,
 ALGO_PATTERN_ENTRY_FLAG
 } from "../js/algo-trading/pattern-entry-positions.js";
 
@@ -29,35 +30,67 @@ close
 
 }
 
+function approx(
+actual,
+expected,
+eps =
+1e-9
+){
+
+assert.ok(
+Number.isFinite(
+actual
+),
+`expected finite, got ${actual}`
+);
+assert.ok(
+Math.abs(
+actual -
+expected
+) <=
+eps,
+`expected ~${expected}, got ${actual}`
+);
+
+}
+
 test(
-"computeAlgoStopLoss long 50% is midpoint",
+"computeAlgoStopLoss long 50% is log midpoint",
 ()=>{
 
-assert.equal(
+approx(
 computeAlgoStopLoss(
 "long",
 100,
 110,
 50
 ),
-105
+interpolateLogPrice(
+110,
+100,
+0.5
+)
 );
 
 }
 );
 
 test(
-"computeAlgoStopLoss short 50% is midpoint",
+"computeAlgoStopLoss short 50% is log midpoint",
 ()=>{
 
-assert.equal(
+approx(
 computeAlgoStopLoss(
 "short",
 110,
 100,
 50
 ),
-105
+interpolateLogPrice(
+100,
+110,
+0.5
+)
 );
 
 }
@@ -67,7 +100,7 @@ test(
 "computeAlgoStopLoss 100% lands on pt3",
 ()=>{
 
-assert.equal(
+approx(
 computeAlgoStopLoss(
 "long",
 100,
@@ -76,7 +109,7 @@ computeAlgoStopLoss(
 ),
 100
 );
-assert.equal(
+approx(
 computeAlgoStopLoss(
 "short",
 110,
@@ -90,41 +123,69 @@ computeAlgoStopLoss(
 );
 
 test(
-"computeAlgoTakeProfit long 1:2 doubles risk",
+"computeAlgoTakeProfit long 1:2 is log RR from entry/SL",
 ()=>{
 
-assert.equal(
+const entry =
+110;
+const sl =
+105;
+const rr =
+2;
+const expected =
+entry *
+Math.pow(
+entry /
+sl,
+rr
+);
+
+approx(
 computeAlgoTakeProfit(
 "long",
-110,
-105,
-2
+entry,
+sl,
+rr
 ),
-120
+expected
 );
 
 }
 );
 
 test(
-"computeAlgoTakeProfit short 1:2 doubles risk",
+"computeAlgoTakeProfit short 1:2 is log RR from entry/SL",
 ()=>{
 
-assert.equal(
+const entry =
+100;
+const sl =
+105;
+const rr =
+2;
+const expected =
+entry /
+Math.pow(
+sl /
+entry,
+rr
+);
+
+approx(
 computeAlgoTakeProfit(
 "short",
-100,
-105,
-2
+entry,
+sl,
+rr
 ),
-90
+expected
 );
 
 }
 );
 
 test(
-"buildAlgoEntryPositionShape uses SL from pt3-pt4 and TP from RR",
+"buildAlgoEntryPositionShape uses log SL and log RR TP",
 ()=>{
 
 const candles =
@@ -172,13 +233,27 @@ tpRr:
 }
 );
 
-assert.equal(
-shape.slPrice,
-105
+const sl =
+interpolateLogPrice(
+110,
+100,
+0.5
 );
-assert.equal(
+const tp =
+110 *
+Math.pow(
+110 /
+sl,
+2
+);
+
+approx(
+shape.slPrice,
+sl
+);
+approx(
 shape.tpPrice,
-120
+tp
 );
 assert.equal(
 shape.p1.price,

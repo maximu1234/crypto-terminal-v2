@@ -1,11 +1,16 @@
 /**
  * Меню индикаторов на АлгоТрейдинг — prefs изолированы.
- * Pattern 1-2 на графике — оригинальный индикатор (эталон).
- * Бот/аналитика считают по копии math в js/algo-trading/pattern-12-math.js.
+ * Pattern 1-2 на графике — копия (`./pattern-12.js` + math MAX_HIST=10000),
+ * чтобы отрисовка совпадала с аналитикой/ботом на полной истории.
+ * Оригинал `js/indicators/pattern-12*` не трогаем.
  */
 import {
 initChartIndicators
 } from "../chart-indicators.js?v=40";
+
+import {
+createPattern12Indicator
+} from "./pattern-12.js?v=2";
 
 import {
 ALGO_INDICATORS_STORAGE_KEY
@@ -31,7 +36,8 @@ initChartIndicators(
 {
 ...opts,
 storageKey:
-ALGO_INDICATORS_STORAGE_KEY
+ALGO_INDICATORS_STORAGE_KEY,
+createPattern12Indicator
 }
 );
 

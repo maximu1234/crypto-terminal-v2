@@ -345,6 +345,16 @@ n
 return 2;
 }
 
+return Math.min(
+50,
+Math.max(
+0.1,
+n
+)
+);
+
+}
+
 function clampPartialTp(
 raw,
 fallback
@@ -394,27 +404,168 @@ n
 
 }
 
-function computePartialTpPrice(
+function interpolateLogPrice(
+from,
+to,
+t01
+){
+
+const a =
+Number(
+from
+);
+const b =
+Number(
+to
+);
+const t =
+Math.min(
+1,
+Math.max(
+0,
+Number(
+t01
+)
+)
+);
+
+if(
+!(
+a >
+0
+) ||
+!(
+b >
+0
+) ||
+!Number.isFinite(
+t
+)
+){
+return NaN;
+}
+
+if(
+a ===
+b
+){
+return a;
+}
+
+return Math.exp(
+Math.log(
+a
+) *
+(
+1 -
+t
+) +
+Math.log(
+b
+) *
+t
+);
+
+}
+
+function computeLogExtensionPrice(
 side,
-entry,
-span,
+base,
+spanA,
+spanB,
 mult
 ){
 
-const offset =
+const baseN =
+Number(
+base
+);
+const a =
+Number(
+spanA
+);
+const b =
+Number(
+spanB
+);
+const m =
 Math.abs(
-span
-) *
-Math.abs(
+Number(
 mult
+)
+);
+
+if(
+!(
+baseN >
+0
+) ||
+!(
+a >
+0
+) ||
+!(
+b >
+0
+) ||
+!Number.isFinite(
+m
+)
+){
+return NaN;
+}
+
+const lo =
+Math.min(
+a,
+b
+);
+const hi =
+Math.max(
+a,
+b
+);
+
+if(
+!(
+hi >
+lo
+)
+){
+return NaN;
+}
+
+const factor =
+Math.pow(
+hi /
+lo,
+m
 );
 
 return side ===
 "short"
-? entry -
-offset
-: entry +
-offset;
+? baseN /
+factor
+: baseN *
+factor;
+
+}
+
+function computePartialTpPrice(
+side,
+basePrice,
+spanA,
+spanB,
+mult
+){
+
+return computeLogExtensionPrice(
+side,
+basePrice,
+spanA,
+spanB,
+mult
+);
 
 }
 
@@ -425,53 +576,15 @@ pt4,
 trailPct
 ){
 
-const x =
-Math.abs(
-Number(
-pt4
-) -
-Number(
-pt3
-)
-);
+void side;
 
-if(
-!(
-x >
-0
-)
-){
-return NaN;
-}
-
-const offset =
-x *
-(
+return interpolateLogPrice(
+pt4,
+pt3,
 clampTrailSlPct(
 trailPct
 ) /
 100
-);
-
-return side ===
-"short"
-? Number(
-pt4
-) +
-offset
-: Number(
-pt4
-) -
-offset;
-
-}
-
-return Math.min(
-50,
-Math.max(
-0.1,
-n
-)
 );
 
 }
@@ -483,56 +596,16 @@ pt4,
 slPct
 ){
 
-const p3 =
-Number(
-pt3
-);
-const p4 =
-Number(
-pt4
-);
+void side;
 
-if(
-!Number.isFinite(
-p3
-) ||
-!Number.isFinite(
-p4
-)
-){
-return NaN;
-}
-
-const x =
-Math.abs(
-p4 -
-p3
-);
-
-if(
-!(
-x >
-0
-)
-){
-return NaN;
-}
-
-const offset =
-x *
-(
+return interpolateLogPrice(
+pt4,
+pt3,
 clampSlPct(
 slPct
 ) /
 100
 );
-
-return side ===
-"short"
-? p4 +
-offset
-: p4 -
-offset;
 
 }
 
@@ -551,45 +624,57 @@ const sl =
 Number(
 slPrice
 );
-
-if(
-!Number.isFinite(
-entryN
-) ||
-!Number.isFinite(
-sl
-)
-){
-return NaN;
-}
-
-const risk =
-Math.abs(
-entryN -
-sl
+const rr =
+clampTpRr(
+tpRr
 );
 
 if(
 !(
-risk >
+entryN >
+0
+) ||
+!(
+sl >
 0
 )
 ){
 return NaN;
 }
 
-const reward =
-risk *
-clampTpRr(
-tpRr
+const lo =
+Math.min(
+entryN,
+sl
+);
+const hi =
+Math.max(
+entryN,
+sl
+);
+
+if(
+!(
+hi >
+lo
+)
+){
+return NaN;
+}
+
+const factor =
+Math.pow(
+hi /
+lo,
+rr
 );
 
 return side ===
 "short"
-? entryN -
-reward
-: entryN +
-reward;
+? entryN /
+factor
+: entryN *
+factor;
 
 }
 
@@ -1134,28 +1219,62 @@ exitProfile.kind ===
 "partial-x" ||
 exitProfile.kind ===
 "partial-y";
-const span =
+const spanA =
 exitProfile.kind ===
 "partial-y"
-? Math.abs(
-Number(
-setup.p2
-) -
-Number(
+? Number(
 setup.p1
 )
+: pt3;
+const spanB =
+exitProfile.kind ===
+"partial-y"
+? Number(
+setup.p2
 )
-: Math.abs(
-pt4 -
-pt3
-);
+: pt4;
+const tpBase =
+exitProfile.kind ===
+"partial-y"
+? Number(
+setup.p2
+)
+: pt4;
+
+if(
+isPartial &&
+(
+!Number.isFinite(
+tpBase
+) ||
+!(
+tpBase >
+0
+) ||
+!Number.isFinite(
+spanA
+) ||
+!Number.isFinite(
+spanB
+)
+)
+){
+return {
+ok:
+false,
+message:
+"TP base/span invalid"
+};
+}
+
 const tpPrices =
 isPartial
 ? [
 computePartialTpPrice(
 side,
-pt4,
-span,
+tpBase,
+spanA,
+spanB,
 clampPartialTp(
 exitProfile.tp1,
 1
@@ -1163,8 +1282,9 @@ exitProfile.tp1,
 ),
 computePartialTpPrice(
 side,
-pt4,
-span,
+tpBase,
+spanA,
+spanB,
 clampPartialTp(
 exitProfile.tp2,
 1.25
@@ -1172,8 +1292,9 @@ exitProfile.tp2,
 ),
 computePartialTpPrice(
 side,
-pt4,
-span,
+tpBase,
+spanA,
+spanB,
 clampPartialTp(
 exitProfile.tp3,
 1.44

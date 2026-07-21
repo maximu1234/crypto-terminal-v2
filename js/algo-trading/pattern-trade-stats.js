@@ -10,7 +10,7 @@ computeAlgoTakeProfit,
 DEFAULT_SL_PCT_OF_X,
 DEFAULT_TP_RR,
 DEFAULT_RISK_USD
-} from "./pattern-entry-positions.js?v=7";
+} from "./pattern-entry-positions.js?v=11";
 
 /**
  * @typedef {"win"|"loss"|"open"} TradeOutcome

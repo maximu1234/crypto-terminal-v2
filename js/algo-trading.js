@@ -37,7 +37,7 @@ refreshAlgoMarketListFromFlags
 
 import {
 mountAlgoTickerScanUi
-} from "./algo-trading/ticker-scan-ui.js?v=9";
+} from "./algo-trading/ticker-scan-ui.js?v=10";
 
 import {
 mountAlgoRuntimeUi
@@ -45,11 +45,11 @@ mountAlgoRuntimeUi
 
 import {
 mountAlgoBotStrategyUi
-} from "./algo-trading/bot-strategy-ui.js?v=24";
+} from "./algo-trading/bot-strategy-ui.js?v=27";
 
 import {
 syncBotStrategiesToMain
-} from "./algo-trading/bot-bridge.js?v=6";
+} from "./algo-trading/bot-bridge.js?v=8";
 
 import {
 mountAlgoTradeUi
@@ -65,11 +65,11 @@ mountAlgoTradingDrawings
 
 import {
 mountAlgoTradingIndicators
-} from "./algo-trading/indicators.js?v=4";
+} from "./algo-trading/indicators.js?v=5";
 
 import {
 mountAlgoPatternEntryOverlay
-} from "./algo-trading/pattern-entry-overlay.js?v=10";
+} from "./algo-trading/pattern-entry-overlay.js?v=11";
 
 import {
 refreshAlgoPatternAnalysis
@@ -82,7 +82,7 @@ clampRiskUsd,
 DEFAULT_SL_PCT_OF_X,
 DEFAULT_TP_RR,
 DEFAULT_RISK_USD
-} from "./algo-trading/pattern-entry-positions.js?v=7";
+} from "./algo-trading/pattern-entry-positions.js?v=11";
 
 import {
 clampPartialTpX,
@@ -92,7 +92,7 @@ DEFAULT_PARTIAL_TP1_X,
 DEFAULT_PARTIAL_TP2_X,
 DEFAULT_PARTIAL_TP3_X,
 DEFAULT_TRAIL_SL_PCT
-} from "./algo-trading/pattern-trade-stats-partial.js?v=8";
+} from "./algo-trading/pattern-trade-stats-partial.js?v=10";
 
 import {
 clampEntryTimeoutBars,
@@ -1491,8 +1491,16 @@ getTimeoutBars:()=>
 timeoutBars,
 getChartPositionsStrategy:()=>
 chartPositionsStrategy,
+getTp1X:()=>
+tp1X,
+getTp2X:()=>
+tp2X,
 getTp3X:()=>
 tp3X,
+getTp1Y:()=>
+tp1Y,
+getTp2Y:()=>
+tp2Y,
 getTp3Y:()=>
 tp3Y
 }

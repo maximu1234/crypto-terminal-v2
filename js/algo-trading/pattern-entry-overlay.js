@@ -11,11 +11,13 @@ DEFAULT_RISK_USD,
 DEFAULT_SL_PCT_OF_X,
 DEFAULT_TP_RR,
 syncAlgoEntryPositions
-} from "./pattern-entry-positions.js?v=7";
+} from "./pattern-entry-positions.js?v=11";
 
 import {
+DEFAULT_PARTIAL_TP1_X,
+DEFAULT_PARTIAL_TP2_X,
 DEFAULT_PARTIAL_TP3_X
-} from "./pattern-trade-stats-partial.js?v=8";
+} from "./pattern-trade-stats-partial.js?v=10";
 
 /**
  * @param {{
@@ -26,7 +28,11 @@ DEFAULT_PARTIAL_TP3_X
  *   getRiskUsd?: () => number,
  *   getTimeoutBars?: () => number,
  *   getChartPositionsStrategy?: () => "fixed-tp"|"partial-tp"|"partial-tp-y",
+ *   getTp1X?: () => number,
+ *   getTp2X?: () => number,
  *   getTp3X?: () => number,
+ *   getTp1Y?: () => number,
+ *   getTp2Y?: () => number,
  *   getTp3Y?: () => number
  * }} host
  */
@@ -43,6 +49,24 @@ function getTools(){
 
 return host?.getDrawingTools?.() ||
 null;
+}
+
+function pickTp(
+getter,
+fallback
+){
+
+const raw =
+getter?.();
+
+return Number.isFinite(
+raw
+) &&
+raw >
+0
+? raw
+: fallback;
+
 }
 
 function positionOpts(){
@@ -62,10 +86,6 @@ strategyRaw ===
 "partial-tp-y"
 ? strategyRaw
 : "fixed-tp";
-const tp3XRaw =
-host?.getTp3X?.();
-const tp3YRaw =
-host?.getTp3Y?.();
 
 return {
 strategy,
@@ -87,22 +107,36 @@ riskRaw
 )
 ? riskRaw
 : DEFAULT_RISK_USD,
+tp1X:
+pickTp(
+host?.getTp1X,
+DEFAULT_PARTIAL_TP1_X
+),
+tp2X:
+pickTp(
+host?.getTp2X,
+DEFAULT_PARTIAL_TP2_X
+),
 tp3X:
-Number.isFinite(
-tp3XRaw
-) &&
-tp3XRaw >
-0
-? tp3XRaw
-: DEFAULT_PARTIAL_TP3_X,
+pickTp(
+host?.getTp3X,
+DEFAULT_PARTIAL_TP3_X
+),
+tp1Y:
+pickTp(
+host?.getTp1Y,
+DEFAULT_PARTIAL_TP1_X
+),
+tp2Y:
+pickTp(
+host?.getTp2Y,
+DEFAULT_PARTIAL_TP2_X
+),
 tp3Y:
-Number.isFinite(
-tp3YRaw
-) &&
-tp3YRaw >
-0
-? tp3YRaw
-: DEFAULT_PARTIAL_TP3_X
+pickTp(
+host?.getTp3Y,
+DEFAULT_PARTIAL_TP3_X
+)
 };
 
 }

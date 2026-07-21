@@ -4,11 +4,13 @@
 import {
 loadBotStrategiesPrefs,
 saveBotStrategiesPrefs,
-normalizeBotSide,
+normalizeBotSides,
+primaryBotSide,
 normalizeBotTf,
 normalizeBotRefreshStatsMode,
-botSideListLabel
-} from "./bot-strategy-prefs.js?v=5";
+botSideListLabel,
+botSidesDirectionLabel
+} from "./bot-strategy-prefs.js?v=7";
 import {
 syncBotStrategiesToMain,
 syncAllTickerFlagsRootToMain,
@@ -19,7 +21,7 @@ disarmAlgoArmedSetup,
 subscribeAlgoBotStatus,
 maybeApplyTickerFlagsFromBotStatus,
 isAlgoBotDesktop
-} from "./bot-bridge.js?v=6";
+} from "./bot-bridge.js?v=8";
 
 const STATUS_POLL_MS =
 2500;
@@ -217,6 +219,10 @@ document.getElementById(
 const statusWatchlist =
 document.getElementById(
 "algo-bot-status-watchlist"
+);
+const statusDirection =
+document.getElementById(
+"algo-bot-status-direction"
 );
 const statusOpen =
 document.getElementById(
@@ -795,6 +801,7 @@ real.checked
 }
 sideHint.textContent =
 botSideListLabel(
+p.sides ||
 p.side,
 !!p.useFavorites
 );
@@ -809,8 +816,12 @@ if(
 input
 ){
 input.checked =
-p.side ===
-side;
+!!(
+p.sides ||
+{}
+)[
+side
+];
 }
 }
 
@@ -970,20 +981,51 @@ input?.addEventListener(
 "change",
 ()=>{
 if(
-input.checked &&
-!runningStrategyId()
+runningStrategyId()
 ){
+apply();
+return;
+}
+
+const cur =
+normalizeBotSides(
+getPrefs().sides,
+getPrefs().side
+);
+const next =
+{
+...cur,
+[
+side
+]:
+!!input.checked
+};
+
+if(
+!next.long &&
+!next.short &&
+!next.both
+){
+next[
+side
+] =
+true;
+input.checked =
+true;
+}
+
 persistPartial(
 strategyId,
 {
+sides:
+next,
 side:
-normalizeBotSide(
-side
+primaryBotSide(
+next
 )
 }
 );
 apply();
-}
 }
 );
 }
@@ -1339,6 +1381,17 @@ applyPartialStrategiesManualGate();
 function applyStatusPanel(
 status
 ){
+
+if(
+statusDirection
+){
+statusDirection.textContent =
+botSidesDirectionLabel(
+status?.sides ||
+status?.side,
+!!status?.useFavorites
+);
+}
 
 if(
 statusWatchlist
@@ -1940,28 +1993,38 @@ st1.tf
 
 function applySideUi(){
 
+const sides =
+normalizeBotSides(
+st1.sides,
+st1.side
+);
+
+st1.sides =
+sides;
+st1.side =
+primaryBotSide(
+sides
+);
+
 if(
 sideLong
 ){
 sideLong.checked =
-st1.side ===
-"long";
+!!sides.long;
 }
 
 if(
 sideShort
 ){
 sideShort.checked =
-st1.side ===
-"short";
+!!sides.short;
 }
 
 if(
 sideBoth
 ){
 sideBoth.checked =
-st1.side ===
-"both";
+!!sides.both;
 }
 
 if(
@@ -1969,7 +2032,7 @@ sideHint
 ){
 sideHint.textContent =
 botSideListLabel(
-st1.side,
+sides,
 !!st1.useFavorites
 );
 }
@@ -1980,6 +2043,52 @@ useFavoritesCheck
 useFavoritesCheck.checked =
 !!st1.useFavorites;
 }
+
+}
+
+function setSideFlag(
+side,
+enabled
+){
+
+const next =
+{
+...normalizeBotSides(
+st1.sides,
+st1.side
+),
+[
+side
+]:
+!!enabled
+};
+
+if(
+!next.long &&
+!next.short &&
+!next.both
+){
+next[
+side
+] =
+true;
+}
+
+st1.sides =
+next;
+st1.side =
+primaryBotSide(
+next
+);
+applySideUi();
+persistSt1(
+{
+sides:
+st1.sides,
+side:
+st1.side
+}
+);
 
 }
 
@@ -2069,24 +2178,6 @@ st1.refreshStatsMode ===
 applyTfUi();
 applySideUi();
 applyRunBtn();
-
-}
-
-function setSide(
-side
-){
-
-st1.side =
-normalizeBotSide(
-side
-);
-applySideUi();
-persistSt1(
-{
-side:
-st1.side
-}
-);
 
 }
 
@@ -2650,67 +2741,50 @@ st1.tf
 );
 }
 
-sideLong?.addEventListener(
-"change",
-()=>{
+function onSt1SideChange(
+side,
+input
+){
+
 if(
 st1.running
 ){
+applySideUi();
 return;
 }
 
-if(
-sideLong.checked
-){
-setSide(
-"long"
+setSideFlag(
+side,
+!!input?.checked
 );
-}else{
-sideLong.checked =
-true;
+
 }
+
+sideLong?.addEventListener(
+"change",
+()=>{
+onSt1SideChange(
+"long",
+sideLong
+);
 }
 );
 sideShort?.addEventListener(
 "change",
 ()=>{
-if(
-st1.running
-){
-return;
-}
-
-if(
-sideShort.checked
-){
-setSide(
-"short"
+onSt1SideChange(
+"short",
+sideShort
 );
-}else{
-sideShort.checked =
-true;
-}
 }
 );
 sideBoth?.addEventListener(
 "change",
 ()=>{
-if(
-st1.running
-){
-return;
-}
-
-if(
-sideBoth.checked
-){
-setSide(
-"both"
+onSt1SideChange(
+"both",
+sideBoth
 );
-}else{
-sideBoth.checked =
-true;
-}
 }
 );
 

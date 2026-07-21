@@ -17,6 +17,7 @@ export const ALGO_BOT_TF_OPTIONS =
 
 /**
  * @typedef {"long"|"short"|"both"} AlgoBotSide
+ * @typedef {{ long: boolean, short: boolean, both: boolean }} AlgoBotSides
  */
 
 /**
@@ -28,6 +29,7 @@ export const ALGO_BOT_TF_OPTIONS =
  *   riskUsd: number,
  *   tpRr: number,
  *   side: AlgoBotSide,
+ *   sides: AlgoBotSides,
  *   useFavorites: boolean,
  *   refreshHours: number,
  *   refreshMinutes: number,
@@ -71,6 +73,14 @@ tpRr:
 2,
 side:
 "long",
+sides:{
+long:
+true,
+short:
+false,
+both:
+false
+},
 useFavorites:
 false,
 refreshHours:
@@ -194,11 +204,137 @@ return "long";
 }
 
 /**
- * @param {AlgoBotSide} side
+ * @param {AlgoBotSides} sides
+ * @returns {AlgoBotSide}
+ */
+export function primaryBotSide(
+sides
+){
+
+if(
+sides?.long
+){
+return "long";
+}
+
+if(
+sides?.short
+){
+return "short";
+}
+
+if(
+sides?.both
+){
+return "both";
+}
+
+return "long";
+
+}
+
+/**
+ * @param {unknown} raw
+ * @param {unknown} [legacySide]
+ * @returns {AlgoBotSides}
+ */
+export function normalizeBotSides(
+raw,
+legacySide
+){
+
+if(
+raw &&
+typeof raw ===
+"object"
+){
+const sides =
+{
+long:
+!!raw.long,
+short:
+!!raw.short,
+both:
+!!raw.both
+};
+
+if(
+sides.long ||
+sides.short ||
+sides.both
+){
+return sides;
+}
+}
+
+const side =
+normalizeBotSide(
+legacySide
+);
+
+return {
+long:
+side ===
+"long",
+short:
+side ===
+"short",
+both:
+side ===
+"both"
+};
+
+}
+
+/**
+ * @param {AlgoBotSides} sides
+ * @returns {AlgoBotSide[]}
+ */
+export function enabledBotSides(
+sides
+){
+
+const out =
+[];
+
+if(
+sides?.long
+){
+out.push(
+"long"
+);
+}
+
+if(
+sides?.short
+){
+out.push(
+"short"
+);
+}
+
+if(
+sides?.both
+){
+out.push(
+"both"
+);
+}
+
+return out.length
+? out
+: [
+"long"
+];
+
+}
+
+/**
+ * @param {AlgoBotSide|AlgoBotSides} sideOrSides
  * @param {boolean} [useFavorites]
  */
 export function botSideListLabel(
-side,
+sideOrSides,
 useFavorites =
 false
 ){
@@ -209,21 +345,128 @@ useFavorites
 return "Список: Избранные";
 }
 
+const sides =
+sideOrSides &&
+typeof sideOrSides ===
+"object" &&
+(
+"long" in sideOrSides ||
+"short" in sideOrSides ||
+"both" in sideOrSides
+)
+? normalizeBotSides(
+sideOrSides
+)
+: normalizeBotSides(
+null,
+sideOrSides
+);
+const labels =
+[];
+
 if(
-side ===
-"short"
+sides.long
 ){
-return "Список: Алго Шорт";
+labels.push(
+"Алго Лонг"
+);
 }
 
 if(
-side ===
-"both"
+sides.short
 ){
-return "Список: Алго Лонг/Шорт";
+labels.push(
+"Алго Шорт"
+);
 }
 
+if(
+sides.both
+){
+labels.push(
+"Алго Лонг/Шорт"
+);
+}
+
+if(
+!labels.length
+){
 return "Список: Алго Лонг";
+}
+
+return labels.length ===
+1
+? `Список: ${labels[0]}`
+: `Списки: ${labels.join(
+" + "
+)}`;
+
+}
+
+/**
+ * Краткая подпись направления для окна Статус.
+ * @param {AlgoBotSide|AlgoBotSides} sideOrSides
+ * @param {boolean} [useFavorites]
+ */
+export function botSidesDirectionLabel(
+sideOrSides,
+useFavorites =
+false
+){
+
+const sides =
+sideOrSides &&
+typeof sideOrSides ===
+"object" &&
+(
+"long" in sideOrSides ||
+"short" in sideOrSides ||
+"both" in sideOrSides
+)
+? normalizeBotSides(
+sideOrSides
+)
+: normalizeBotSides(
+null,
+sideOrSides
+);
+const parts =
+[];
+
+if(
+sides.long
+){
+parts.push(
+"Лонг"
+);
+}
+
+if(
+sides.short
+){
+parts.push(
+"Шорт"
+);
+}
+
+if(
+sides.both
+){
+parts.push(
+"Лонг и Шорт"
+);
+}
+
+const dir =
+parts.length
+? parts.join(
+" + "
+)
+: "Лонг";
+
+return useFavorites
+? `${dir} · Избранные`
+: dir;
 
 }
 
@@ -322,9 +565,17 @@ src.tpRr,
 0.01,
 base.tpRr
 ),
-side:
-normalizeBotSide(
+sides:
+normalizeBotSides(
+src.sides,
 src.side
+),
+side:
+primaryBotSide(
+normalizeBotSides(
+src.sides,
+src.side
+)
 ),
 useFavorites:
 !!src.useFavorites,

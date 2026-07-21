@@ -5,7 +5,7 @@ import {
 scanAlgoTickersByWinRate,
 normalizeAlgoScanTf,
 ALGO_TICKER_SCAN_TF
-} from "./ticker-scanner.js?v=5";
+} from "./ticker-scanner.js?v=6";
 
 import {
 ALGO_FLAG_LONG_5M,
@@ -637,7 +637,7 @@ lane.min.value =
 String(
 clampMin(
 prefVal ??
-60
+50
 )
 );
 }

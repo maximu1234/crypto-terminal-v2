@@ -183,7 +183,7 @@ Math.max(
 Number(
 opts.minWinRate
 ) ||
-60
+50
 )
 );
 const statsMode =

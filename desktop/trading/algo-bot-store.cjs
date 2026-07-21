@@ -52,6 +52,14 @@ tpRr:
 2,
 side:
 "long",
+sides:{
+long:
+true,
+short:
+false,
+both:
+false
+},
 useFavorites:
 false,
 refreshHours:
@@ -266,6 +274,119 @@ return "long";
 
 }
 
+function primarySide(
+sides
+){
+
+if(
+sides?.long
+){
+return "long";
+}
+
+if(
+sides?.short
+){
+return "short";
+}
+
+if(
+sides?.both
+){
+return "both";
+}
+
+return "long";
+
+}
+
+function normalizeSides(
+raw,
+legacySide
+){
+
+if(
+raw &&
+typeof raw ===
+"object"
+){
+const sides =
+{
+long:
+!!raw.long,
+short:
+!!raw.short,
+both:
+!!raw.both
+};
+
+if(
+sides.long ||
+sides.short ||
+sides.both
+){
+return sides;
+}
+}
+
+const side =
+normalizeSide(
+legacySide
+);
+
+return {
+long:
+side ===
+"long",
+short:
+side ===
+"short",
+both:
+side ===
+"both"
+};
+
+}
+
+function enabledSides(
+sides
+){
+
+const out =
+[];
+
+if(
+sides?.long
+){
+out.push(
+"long"
+);
+}
+
+if(
+sides?.short
+){
+out.push(
+"short"
+);
+}
+
+if(
+sides?.both
+){
+out.push(
+"both"
+);
+}
+
+return out.length
+? out
+: [
+"long"
+];
+
+}
+
 function normalizeTf(
 raw
 ){
@@ -340,9 +461,17 @@ src.tpRr,
 100,
 DEFAULT_ST1.tpRr
 ),
-side:
-normalizeSide(
+sides:
+normalizeSides(
+src.sides,
 src.side
+),
+side:
+primarySide(
+normalizeSides(
+src.sides,
+src.side
+)
 ),
 useFavorites:
 !!src.useFavorites,
@@ -811,10 +940,16 @@ pending?.pendingEntries ||
 
 }
 
-function getWatchlistForSide(
+/**
+ * Watchlist + per-symbol allowed setup sides.
+ * Лонг → long из списка Лонг; Шорт → short из Шорт;
+ * Лонг и Шорт → оба из Both; Избранные → один список по галочкам сторон.
+ * @param {string} [exchangeId]
+ * @param {object} prefs
+ */
+function getWatchlistPlan(
 exchangeId,
-side,
-opts =
+prefs =
 {}
 ){
 
@@ -831,17 +966,201 @@ root[
 id
 ] ||
 emptyExchangeFlags();
-const flagId =
-opts?.useFavorites
-? FLAG_FAVORITES
-: sideToFlagId(
-side
+const sides =
+normalizeSides(
+prefs.sides,
+prefs.side
+);
+const useFavorites =
+!!prefs.useFavorites;
+/** @type {Record<string, Array<"long"|"short">>} */
+const symbolAllowedSides =
+{};
+
+function allow(
+symbol,
+setupSide
+){
+
+const sym =
+String(
+symbol ||
+""
+).trim().toUpperCase().replace(
+/\.P$/i,
+""
 );
 
-return flags[
-flagId
+if(
+!sym
+){
+return;
+}
+
+const cur =
+symbolAllowedSides[
+sym
 ] ||
 [];
+
+if(
+!cur.includes(
+setupSide
+)
+){
+symbolAllowedSides[
+sym
+] =
+[
+...cur,
+setupSide
+];
+}
+
+}
+
+if(
+useFavorites
+){
+const favs =
+flags[
+FLAG_FAVORITES
+] ||
+[];
+const allowLong =
+sides.long ||
+sides.both;
+const allowShort =
+sides.short ||
+sides.both;
+
+for(
+const symbol of favs
+){
+if(
+allowLong
+){
+allow(
+symbol,
+"long"
+);
+}
+
+if(
+allowShort
+){
+allow(
+symbol,
+"short"
+);
+}
+}
+}else{
+if(
+sides.long
+){
+for(
+const symbol of (
+flags[
+FLAG_LONG_5M
+] ||
+[]
+)
+){
+allow(
+symbol,
+"long"
+);
+}
+}
+
+if(
+sides.short
+){
+for(
+const symbol of (
+flags[
+FLAG_SHORT_5M
+] ||
+[]
+)
+){
+allow(
+symbol,
+"short"
+);
+}
+}
+
+if(
+sides.both
+){
+for(
+const symbol of (
+flags[
+FLAG_BOTH_5M
+] ||
+[]
+)
+){
+allow(
+symbol,
+"long"
+);
+allow(
+symbol,
+"short"
+);
+}
+}
+}
+
+const symbols =
+Object.keys(
+symbolAllowedSides
+).sort(
+(
+a,
+b
+)=>
+a.localeCompare(
+b
+)
+);
+
+return {
+symbols,
+symbolAllowedSides,
+sides,
+useFavorites,
+side:
+primarySide(
+sides
+)
+};
+
+}
+
+function getWatchlistForSide(
+exchangeId,
+side,
+opts =
+{}
+){
+
+return getWatchlistPlan(
+exchangeId,
+{
+side,
+sides:
+normalizeSides(
+null,
+side
+),
+useFavorites:
+!!opts?.useFavorites
+}
+).symbols;
 
 }
 
@@ -858,6 +1177,10 @@ writeTickerFlagsRoot,
 readPattern12Settings,
 writePattern12Settings,
 sideToFlagId,
+enabledSides,
+normalizeSides,
+primarySide,
+getWatchlistPlan,
 getWatchlistForSide,
 normalizeSt1,
 normalizeSt2,

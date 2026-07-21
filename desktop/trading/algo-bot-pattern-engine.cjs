@@ -442,6 +442,59 @@ setupSide;
 
 }
 
+/**
+ * @param {string} symbol
+ * @param {"long"|"short"} setupSide
+ */
+function setupSideAllowedForSymbol(
+symbol,
+setupSide
+){
+
+const side =
+setupSide ===
+"short"
+? "short"
+: "long";
+const map =
+engineConfig?.symbolAllowedSides;
+const sym =
+normalizeSymbol(
+symbol
+);
+
+if(
+map &&
+typeof map ===
+"object"
+){
+const allowed =
+map[
+sym
+] ||
+map[
+symbol
+];
+
+if(
+Array.isArray(
+allowed
+)
+){
+return allowed.includes(
+side
+);
+}
+}
+
+return sideAllowed(
+engineConfig?.side ||
+"long",
+side
+);
+
+}
+
 function pushSignal(
 entry
 ){
@@ -954,9 +1007,8 @@ return;
 }
 
 if(
-!sideAllowed(
-engineConfig?.side ||
-"long",
+!setupSideAllowedForSymbol(
+sym,
 setup.side
 )
 ){
@@ -2677,7 +2729,9 @@ void drainSeedQueue();
 }
 
 function syncWatchlist(
-symbols
+symbols,
+opts =
+{}
 ){
 
 if(
@@ -2685,6 +2739,46 @@ if(
 !klineHub
 ){
 return;
+}
+
+if(
+opts &&
+typeof opts ===
+"object"
+){
+if(
+opts.symbolAllowedSides &&
+typeof opts.symbolAllowedSides ===
+"object"
+){
+engineConfig.symbolAllowedSides =
+opts.symbolAllowedSides;
+}
+
+if(
+opts.sides &&
+typeof opts.sides ===
+"object"
+){
+engineConfig.sides =
+opts.sides;
+}
+
+if(
+opts.side !=
+null
+){
+engineConfig.side =
+opts.side;
+}
+
+if(
+opts.useFavorites !=
+null
+){
+engineConfig.useFavorites =
+!!opts.useFavorites;
+}
 }
 
 const list =
@@ -2783,6 +2877,39 @@ engineConfig =
 side:
 config?.side ||
 "long",
+sides:
+config?.sides &&
+typeof config.sides ===
+"object"
+? config.sides
+: {
+long:
+(
+config?.side ||
+"long"
+) ===
+"long",
+short:
+(
+config?.side ||
+"long"
+) ===
+"short",
+both:
+(
+config?.side ||
+"long"
+) ===
+"both"
+},
+useFavorites:
+!!config?.useFavorites,
+symbolAllowedSides:
+config?.symbolAllowedSides &&
+typeof config.symbolAllowedSides ===
+"object"
+? config.symbolAllowedSides
+: {},
 tf:
 config?.tf ||
 "5",
@@ -2921,7 +3048,17 @@ queueResyncAllSeeded();
 
 syncWatchlist(
 config?.symbols ||
-[]
+[],
+{
+symbolAllowedSides:
+engineConfig.symbolAllowedSides,
+sides:
+engineConfig.sides,
+useFavorites:
+engineConfig.useFavorites,
+side:
+engineConfig.side
+}
 );
 
 log.info(
@@ -3066,6 +3203,34 @@ null
 ){
 engineConfig.side =
 patch.side;
+}
+
+if(
+patch.sides !=
+null &&
+typeof patch.sides ===
+"object"
+){
+engineConfig.sides =
+patch.sides;
+}
+
+if(
+patch.symbolAllowedSides !=
+null &&
+typeof patch.symbolAllowedSides ===
+"object"
+){
+engineConfig.symbolAllowedSides =
+patch.symbolAllowedSides;
+}
+
+if(
+patch.useFavorites !=
+null
+){
+engineConfig.useFavorites =
+!!patch.useFavorites;
 }
 
 if(

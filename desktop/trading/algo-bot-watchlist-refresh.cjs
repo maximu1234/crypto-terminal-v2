@@ -102,6 +102,153 @@ ms,
 
 }
 
+function interpolateLogPrice(
+from,
+to,
+t01
+){
+
+const a =
+Number(
+from
+);
+const b =
+Number(
+to
+);
+const t =
+Math.min(
+1,
+Math.max(
+0,
+Number(
+t01
+)
+)
+);
+
+if(
+!(
+a >
+0
+) ||
+!(
+b >
+0
+) ||
+!Number.isFinite(
+t
+)
+){
+return NaN;
+}
+
+if(
+a ===
+b
+){
+return a;
+}
+
+return Math.exp(
+Math.log(
+a
+) *
+(
+1 -
+t
+) +
+Math.log(
+b
+) *
+t
+);
+
+}
+
+function computeLogExtensionPrice(
+side,
+base,
+spanA,
+spanB,
+mult
+){
+
+const baseN =
+Number(
+base
+);
+const a =
+Number(
+spanA
+);
+const b =
+Number(
+spanB
+);
+const m =
+Math.abs(
+Number(
+mult
+)
+);
+
+if(
+!(
+baseN >
+0
+) ||
+!(
+a >
+0
+) ||
+!(
+b >
+0
+) ||
+!Number.isFinite(
+m
+)
+){
+return NaN;
+}
+
+const lo =
+Math.min(
+a,
+b
+);
+const hi =
+Math.max(
+a,
+b
+);
+
+if(
+!(
+hi >
+lo
+)
+){
+return NaN;
+}
+
+const factor =
+Math.pow(
+hi /
+lo,
+m
+);
+
+return side ===
+"short"
+? baseN /
+factor
+: baseN *
+factor;
+
+}
+
 function computeStopLoss(
 side,
 pt3,
@@ -109,14 +256,8 @@ pt4,
 slPct
 ){
 
-const p3 =
-Number(
-pt3
-);
-const p4 =
-Number(
-pt4
-);
+void side;
+
 const pct =
 Math.min(
 100,
@@ -129,45 +270,12 @@ slPct
 )
 );
 
-if(
-!Number.isFinite(
-p3
-) ||
-!Number.isFinite(
-p4
-)
-){
-return NaN;
-}
-
-const x =
-Math.abs(
-p4 -
-p3
-);
-
-if(
-!(
-x >
-0
-)
-){
-return NaN;
-}
-
-const offset =
-x *
-(
+return interpolateLogPrice(
+pt4,
+pt3,
 pct /
 100
 );
-
-return side ===
-"short"
-? p4 +
-offset
-: p4 -
-offset;
 
 }
 
@@ -199,39 +307,51 @@ tpRr
 );
 
 if(
-!Number.isFinite(
-entryN
-) ||
-!Number.isFinite(
-sl
-)
-){
-return NaN;
-}
-
-const risk =
-Math.abs(
-entryN -
-sl
-);
-
-if(
 !(
-risk >
+entryN >
+0
+) ||
+!(
+sl >
 0
 )
 ){
 return NaN;
 }
 
+const lo =
+Math.min(
+entryN,
+sl
+);
+const hi =
+Math.max(
+entryN,
+sl
+);
+
+if(
+!(
+hi >
+lo
+)
+){
+return NaN;
+}
+
+const factor =
+Math.pow(
+hi /
+lo,
+rr
+);
+
 return side ===
 "short"
-? entryN -
-risk *
-rr
-: entryN +
-risk *
-rr;
+? entryN /
+factor
+: entryN *
+factor;
 
 }
 
@@ -360,21 +480,27 @@ Number(
 event?.pt4 ??
 entry
 );
-const span =
+const spanA =
 exitProfile?.kind ===
 "partial-y"
-? Math.abs(
-Number(
-event?.pt2
-) -
-Number(
+? Number(
 event?.pt1
 )
+: p3;
+const spanB =
+exitProfile?.kind ===
+"partial-y"
+? Number(
+event?.pt2
 )
-: Math.abs(
-p4 -
-p3
-);
+: p4;
+const tpBase =
+exitProfile?.kind ===
+"partial-y"
+? Number(
+event?.pt2
+)
+: entry;
 let sl =
 computeStopLoss(
 side,
@@ -386,6 +512,26 @@ const risk =
 Math.abs(
 entry -
 sl
+);
+const spanOk =
+Number.isFinite(
+spanA
+) &&
+Number.isFinite(
+spanB
+) &&
+Math.min(
+spanA,
+spanB
+) >
+0 &&
+Math.max(
+spanA,
+spanB
+) >
+Math.min(
+spanA,
+spanB
 );
 const tps =
 [
@@ -403,14 +549,13 @@ exitProfile?.tp3
 1.44
 ].map(
 mult=>
-side ===
-"short"
-? entry -
-span *
+computeLogExtensionPrice(
+side,
+tpBase,
+spanA,
+spanB,
 mult
-: entry +
-span *
-mult
+)
 );
 
 if(
@@ -421,9 +566,9 @@ entry
 risk >
 0
 ) ||
-!(
-span >
-0
+!spanOk ||
+!tps.every(
+Number.isFinite
 )
 ){
 return null;

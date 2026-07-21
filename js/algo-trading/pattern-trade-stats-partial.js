@@ -1,16 +1,18 @@
 /**
- * Стратегия 2/3: закрытие 3 равными частями.
- * span "x" → высота |pt4−pt3|; span "y" → |pt2−pt1|.
- * СЛ как в стратегии 1; опциональный трейлинг:
- * после ТП1 → СЛ на trailSlPct% от X к pt3; после ТП2 → безубыток (pt4).
+ * Стратегия 2/3: закрытие 3 равными частями (лог-шкала).
+ * span "x" (St2) → ход pt3↔pt4, ТП = logExt(pt4, pt3↔pt4, k)
+ * span "y" (St3) → ход pt1↔pt2, ТП = logExt(pt2, pt1↔pt2, k)
+ * СЛ / трейлинг — интерполяция в лог-пространстве по X.
  */
 import {
 clampRiskUsd,
 clampSlPctOfX,
 computeAlgoStopLoss,
+computeLogExtensionPrice,
+interpolateLogPrice,
 DEFAULT_RISK_USD,
 DEFAULT_SL_PCT_OF_X
-} from "./pattern-entry-positions.js?v=7";
+} from "./pattern-entry-positions.js?v=11";
 
 export const DEFAULT_PARTIAL_TP1_X =
 0.5;
@@ -124,7 +126,7 @@ undefined
 }
 
 /**
- * Трейлинг-СЛ после ТП1: N% высоты X от pt4 к pt3 (0% = pt4, 100% = pt3).
+ * Трейлинг-СЛ после ТП1: N% лог-высоты X от pt4 к pt3.
  * @param {"long"|"short"} side
  * @param {number} pt3
  * @param {number} pt4
@@ -138,89 +140,42 @@ pt4,
 trailPct
 ){
 
-const p3 =
-Number(
-pt3
-);
-const p4 =
-Number(
-pt4
-);
-const pct =
+void side;
+
+return interpolateLogPrice(
+pt4,
+pt3,
 clampTrailSlPct(
 trailPct
-);
-
-if(
-!Number.isFinite(
-p3
-) ||
-!Number.isFinite(
-p4
-)
-){
-return null;
-}
-
-const x =
-Math.abs(
-p4 -
-p3
-);
-
-if(
-!(
-x >
-0
-)
-){
-return null;
-}
-
-const offset =
-x *
-(
-pct /
+) /
 100
 );
-
-return side ===
-"short"
-? p4 +
-offset
-: p4 -
-offset;
 
 }
 
 /**
  * @param {"long"|"short"} side
- * @param {number} entry
- * @param {number} x
+ * @param {number} basePrice  St2: pt4; St3: pt2
+ * @param {number} spanA
+ * @param {number} spanB
  * @param {number} mult
- * @returns {number}
+ * @returns {number|null}
  */
 export function computePartialTpPrice(
 side,
-entry,
-x,
+basePrice,
+spanA,
+spanB,
 mult
 ){
 
-const offset =
-Math.abs(
-x
-) *
-Math.abs(
+return computeLogExtensionPrice(
+side,
+basePrice,
+spanA,
+spanB,
 mult
 );
-
-return side ===
-"short"
-? entry -
-offset
-: entry +
-offset;
 
 }
 
@@ -350,17 +305,45 @@ opts.span ===
 "y"
 ? "y"
 : "x";
-const span =
+const spanA =
 spanMode ===
 "y"
-? Math.abs(
-p2 -
-p1
+? p1
+: p3;
+const spanB =
+spanMode ===
+"y"
+? p2
+: p4;
+const spanLo =
+Math.min(
+Number(
+spanA
+),
+Number(
+spanB
 )
-: Math.abs(
-p4 -
-p3
 );
+const spanHi =
+Math.max(
+Number(
+spanA
+),
+Number(
+spanB
+)
+);
+const spanOk =
+Number.isFinite(
+spanLo
+) &&
+Number.isFinite(
+spanHi
+) &&
+spanHi >
+spanLo &&
+spanLo >
+0;
 const riskDist =
 Math.abs(
 entry -
@@ -371,10 +354,7 @@ if(
 !Number.isFinite(
 slPrice
 ) ||
-!(
-span >
-0
-) ||
+!spanOk ||
 !(
 riskDist >
 0
@@ -408,27 +388,59 @@ spanMode ===
 DEFAULT_PARTIAL_TP3_X
 );
 
+const tpBase =
+spanMode ===
+"y"
+? p2
+: entry;
+
+if(
+!Number.isFinite(
+tpBase
+) ||
+!(
+tpBase >
+0
+)
+){
+return null;
+}
+
 const tpLevels =
 [
 computePartialTpPrice(
 side,
-entry,
-span,
+tpBase,
+spanA,
+spanB,
 m1
 ),
 computePartialTpPrice(
 side,
-entry,
-span,
+tpBase,
+spanA,
+spanB,
 m2
 ),
 computePartialTpPrice(
 side,
-entry,
-span,
+tpBase,
+spanA,
+spanB,
 m3
 )
 ];
+
+if(
+!tpLevels.every(
+p=>
+Number.isFinite(
+p
+)
+)
+){
+return null;
+}
 
 let remaining =
 1;

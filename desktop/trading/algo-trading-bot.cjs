@@ -27,6 +27,8 @@ writeTickerFlagsRoot,
 readPattern12Settings,
 writePattern12Settings,
 getWatchlistForSide,
+getWatchlistPlan,
+enabledSides,
 normalizeSt1,
 normalizeSt2,
 normalizeSt3
@@ -73,7 +75,7 @@ strategies.st1;
 
 }
 
-function getStrategyWatchlist(
+function getStrategyWatchlistPlan(
 exchangeId =
 "bybit",
 strategyId =
@@ -85,14 +87,54 @@ getStrategyPrefs(
 strategyId
 );
 
-return getWatchlistForSide(
+return getWatchlistPlan(
 exchangeId,
-prefs.side,
+prefs
+);
+
+}
+
+function getStrategyWatchlist(
+exchangeId =
+"bybit",
+strategyId =
+"st1"
+){
+
+return getStrategyWatchlistPlan(
+exchangeId,
+strategyId
+).symbols;
+
+}
+
+function syncEngineWatchlist(
+strategyId =
+runningStrategyId ||
+"st1"
+){
+
+const plan =
+getStrategyWatchlistPlan(
+"bybit",
+strategyId
+);
+
+patternEngine.syncWatchlist(
+plan.symbols,
 {
+symbolAllowedSides:
+plan.symbolAllowedSides,
+sides:
+plan.sides,
 useFavorites:
-!!prefs.useFavorites
+plan.useFavorites,
+side:
+plan.side
 }
 );
+
+return plan;
 
 }
 
@@ -106,11 +148,22 @@ strategyId ===
 "st2" ||
 strategyId ===
 "st3";
+const plan =
+getWatchlistPlan(
+"bybit",
+prefs
+);
 
 return {
 strategyId,
 side:
-prefs.side,
+plan.side,
+sides:
+plan.sides,
+useFavorites:
+plan.useFavorites,
+symbolAllowedSides:
+plan.symbolAllowedSides,
 tf:
 prefs.tf,
 timeoutBars:
@@ -359,6 +412,10 @@ entriesPaused,
 lastWatchlistRefreshAt,
 side:
 active.side,
+sides:
+active.sides,
+useFavorites:
+!!active.useFavorites,
 tf:
 active.tf,
 exchangeId,
@@ -558,13 +615,8 @@ message =
 posResult.message;
 }
 
-const watchlist =
-getStrategyWatchlist(
-exchangeId,
+syncEngineWatchlist(
 runningStrategyId
-);
-patternEngine.syncWatchlist(
-watchlist
 );
 
 const balResult =
@@ -891,11 +943,8 @@ runningStrategyId &&
 result?.ok !==
 false
 ){
-patternEngine.syncWatchlist(
-getStrategyWatchlist(
-"bybit",
+syncEngineWatchlist(
 runningStrategyId
-)
 );
 }
 
@@ -957,11 +1006,8 @@ cur
 if(
 runningStrategyId
 ){
-patternEngine.syncWatchlist(
-getStrategyWatchlist(
-exchangeId,
+syncEngineWatchlist(
 runningStrategyId
-)
 );
 }
 
@@ -1054,7 +1100,24 @@ const prefs =
 getStrategyPrefs(
 runningStrategyId
 );
-const result =
+const sidesToRefresh =
+prefs.useFavorites
+? [
+prefs.side ||
+"long"
+]
+: enabledSides(
+prefs.sides
+);
+let result =
+null;
+let totalHits =
+0;
+
+for(
+const side of sidesToRefresh
+){
+result =
 await watchlistRefresh.refreshWatchlistByWinRate(
 {
 strategyId:
@@ -1064,8 +1127,7 @@ getEnginePrefs(
 prefs,
 runningStrategyId
 ).exitProfile,
-side:
-prefs.side,
+side,
 tf:
 prefs.tf,
 minWinRate:
@@ -1082,19 +1144,37 @@ readPattern12Settings()
 }
 );
 
+if(
+result?.ok
+){
+totalHits +=
+Number(
+result.hits
+) ||
+0;
+}else if(
+result?.busy
+){
+break;
+}else if(
+!result?.ok
+){
+break;
+}
+}
+
 lastWatchlistRefreshAt =
 Date.now();
 
 if(
 result?.ok
 ){
-patternEngine.syncWatchlist(
-result.symbols ||
-[]
+const plan =
+syncEngineWatchlist(
+runningStrategyId
 );
 statusMessage =
-`Список обновлён: ${result.hits ||
-0} тикеров (winrate > ${result.minWinRate}%)`;
+`Список обновлён: ${plan.symbols.length} тикеров (winrate > ${prefs.minWinRate}%, hits ${totalHits})`;
 }else if(
 !result?.busy
 ){

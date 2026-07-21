@@ -9,7 +9,7 @@ import {
 PATTERN_12_ID,
 defaultPattern12Settings,
 normalizePattern12Settings
-} from "./pattern-12-math.js?v=4";
+} from "./pattern-12-math.js?v=5";
 
 /**
  * @returns {ReturnType<typeof defaultPattern12Settings>}
