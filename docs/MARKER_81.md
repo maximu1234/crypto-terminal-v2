@@ -24,10 +24,9 @@
 ## Версии
 
 - Web marker: `v0.81`
-- Desktop app: `v1.0.76`
-- Mac tag: `desktop-v1.0.76`
-- Windows tag: `desktop-win-v1.0.76`
+- Desktop app: `v1.0.77`
+- Mac tag: `desktop-v1.0.77`
+- Windows tag: `desktop-win-v1.0.77`
 
-`v1.0.74` — боты, но edition-файл не попал в asar (crash при запуске).
-`v1.0.75` — dual f/m в именах артефактов.
-`v1.0.76` — edition в `desktop/trading/` (пакет через `trading/**`).
+`v1.0.74`–`76` — дыры в electron-builder `files` (edition / script-favorites).
+`v1.0.77` — pack `*.cjs`/`*.js`/`*.html` + check-packaged-requires в `check:all`.

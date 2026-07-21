@@ -70,6 +70,11 @@ run(
 );
 
 run(
+"node desktop/scripts/check-packaged-requires.cjs",
+"Desktop packaged requires"
+);
+
+run(
 "node scripts/check-site-nav.cjs",
 "Site nav"
 );
