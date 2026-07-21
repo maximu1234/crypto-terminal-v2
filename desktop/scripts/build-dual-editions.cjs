@@ -78,7 +78,7 @@ const EDITIONS =
 ];
 
 const EDITION_SOURCE_RE =
-/const ALGO_DESKTOP_EDITION =\n"[fm]";/;
+/const ALGO_DESKTOP_EDITION =\r?\n"[fm]";/;
 
 function ensureDir(
 dir
@@ -147,10 +147,16 @@ throw new Error(
 );
 }
 
+const nl =
+src.includes(
+"\r\n"
+)
+? "\r\n"
+: "\n";
 const next =
 src.replace(
 EDITION_SOURCE_RE,
-`const ALGO_DESKTOP_EDITION =\n"${edition}";`
+`const ALGO_DESKTOP_EDITION =${nl}"${edition}";`
 );
 
 fs.writeFileSync(
