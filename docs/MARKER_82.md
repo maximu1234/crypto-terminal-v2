@@ -18,6 +18,6 @@
 ## Версии
 
 - Web marker: `v0.82`
-- Desktop app: `v1.0.78`
-- Mac tag: `desktop-v1.0.78`
-- Windows tag: `desktop-win-v1.0.78`
+- Desktop app: `v1.0.79`
+- Mac tag: `desktop-v1.0.79`
+- Windows tag: `desktop-win-v1.0.79`

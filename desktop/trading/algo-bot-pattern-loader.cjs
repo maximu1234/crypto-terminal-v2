@@ -38,10 +38,71 @@ null;
 
 function repoJsRoot(){
 
-return path.join(
+const candidates =
+[];
+
+if(
+process.resourcesPath
+){
+candidates.push(
+path.join(
+process.resourcesPath,
+"app.asar.unpacked",
+"site-bundle",
+"js"
+)
+);
+candidates.push(
+path.join(
+process.resourcesPath,
+"app.asar",
+"site-bundle",
+"js"
+)
+);
+}
+
+/* Packaged / local desktop: site-bundle next to main. */
+candidates.push(
+path.join(
+__dirname,
+"../site-bundle/js"
+)
+);
+/* Dev from monorepo: desktop/trading → ../../js */
+candidates.push(
+path.join(
 __dirname,
 "../../js"
+)
 );
+
+for(
+const root of candidates
+){
+
+try{
+if(
+fs.existsSync(
+path.join(
+root,
+"algo-trading/pattern-entry-logic.js"
+)
+)
+){
+return root;
+}
+}catch{
+/* ignore */
+}
+
+}
+
+return candidates[
+candidates.length -
+1
+] ||
+"";
 
 }
 
@@ -122,7 +183,7 @@ srcPath
 )
 ){
 throw new Error(
-`Algo pattern source missing: ${rel}`
+`Algo pattern source missing: ${rel} (jsRoot=${srcRoot})`
 );
 }
 
