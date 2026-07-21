@@ -60,6 +60,7 @@ distDir,
 const editionFile =
 path.join(
 desktopRoot,
+"trading",
 "algo-trading-edition.cjs"
 );
 const version =
@@ -518,7 +519,7 @@ editionFile,
 originalEditionSource
 );
 console.log(
-"restored algo-trading-edition.cjs"
+"restored trading/algo-trading-edition.cjs"
 );
 }
 

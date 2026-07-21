@@ -7,7 +7,7 @@ require(
 );
 
 /**
- * Must match main `desktop/algo-trading-edition.cjs` (passed via additionalArguments).
+ * Must match main `desktop/trading/algo-trading-edition.cjs` (passed via additionalArguments).
  * Sandboxed preload cannot require local modules.
  * f = full (live + manual), m = manual-only
  */

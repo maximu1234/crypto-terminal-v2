@@ -34,7 +34,7 @@ isAlgoLiveTradingEnabled,
 getAlgoDesktopEdition
 } =
 require(
-"../algo-trading-edition.cjs"
+"./algo-trading-edition.cjs"
 );
 
 const PREFS_FILE =

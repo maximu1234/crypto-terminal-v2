@@ -116,7 +116,7 @@ const {
 getAlgoDesktopEdition
 } =
 require(
-"./algo-trading-edition.cjs"
+"./trading/algo-trading-edition.cjs"
 );
 
 registerAppScheme();

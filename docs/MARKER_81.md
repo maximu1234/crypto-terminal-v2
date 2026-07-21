@@ -16,16 +16,18 @@
 
 ### Редакции desktop f / m
 
-- `desktop/algo-trading-edition.cjs`: `f` = full, `m` = manual-only (друзья).
-- Буква в подписи `.app`: `v0.81 / v1.0.74f` (или `…m`).
+- `desktop/trading/algo-trading-edition.cjs`: `f` = full, `m` = manual-only (друзья).
+- Буква в подписи `.app`: `v0.81 / v1.0.76f` (или `…m`).
 - Preload получает букву через `additionalArguments` (sandbox-safe).
+- CI кладёт оба файла в один релиз (`…f…` и `…m…` в имени).
 
 ## Версии
 
 - Web marker: `v0.81`
-- Desktop app: `v1.0.75` (dual editions f/m in release assets)
-- Mac tag: `desktop-v1.0.75`
-- Windows tag: `desktop-win-v1.0.75`
+- Desktop app: `v1.0.76`
+- Mac tag: `desktop-v1.0.76`
+- Windows tag: `desktop-win-v1.0.76`
 
-`v1.0.74` — первая выкладка ботов; `v1.0.75` — в одном релизе два файла
-(`…f…` full и `…m…` manual-only).
+`v1.0.74` — боты, но edition-файл не попал в asar (crash при запуске).
+`v1.0.75` — dual f/m в именах артефактов.
+`v1.0.76` — edition в `desktop/trading/` (пакет через `trading/**`).

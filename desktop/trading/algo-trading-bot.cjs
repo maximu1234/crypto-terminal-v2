@@ -48,7 +48,7 @@ const {
 isAlgoLiveTradingEnabled
 } =
 require(
-"../algo-trading-edition.cjs"
+"./algo-trading-edition.cjs"
 );
 const orderExecutor =
 require(

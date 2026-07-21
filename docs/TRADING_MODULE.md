@@ -42,7 +42,7 @@
 | Renderer trade UI | `js/algo-trading/trade/*` (book panel, chart overlay/orders, cache) — **не** `js/trade/*` |
 | CSS trade UI | `css/algo-trading-book-panel.css`, `css/algo-trading-chart-overlay.css` |
 | IPC | `cryptoTerminalDesktop.algoTrading.*` (не `trading.*`) |
-| Редакция сборки | `desktop/algo-trading-edition.cjs`: `f` = full, `m` = manual-only; буква в подписи `vX.Y.Zf` / `vX.Y.Zm` и в именах релизов (`…74f…` / `…74m…`). CI: `build:mac:editions` / `build:win:editions` |
+| Редакция сборки | `desktop/trading/algo-trading-edition.cjs`: `f` = full, `m` = manual-only; буква в подписи `vX.Y.Zf` / `vX.Y.Zm` и в именах релизов (`…76f…` / `…76m…`). CI: `build:mac:editions` / `build:win:editions` |
 
 Фон: при флаге «Работать в фоне» runtime стартует в main при запуске `.app`,
 даже если страница Алго закрыта. Позиции/ордера на алго-ключах стримятся в UI
