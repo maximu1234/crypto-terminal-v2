@@ -1,6 +1,8 @@
 /**
  * КОПИЯ для модуля АлгоТрейдинг.
  * Оригинал: js/indicators/pattern-12-math.js — НЕ ПРАВИТЬ оригинал.
+ * MAX_HIST и детект сетапов должны совпадать с индикатором (эталон).
+ * setups[] — только алго-экспорт для бота/аналитики.
  * Паттерн 1-2, 1-2 — порт логики из Pine (RSI swing + точки 1–4).
  */
 import {
@@ -8,7 +10,7 @@ calculateRSI
 } from "../indicators.js?v=3";
 
 const MAX_HIST =
-10000;
+5000;
 const RSI_OVERBOUGHT =
 70;
 const RSI_OVERSOLD =

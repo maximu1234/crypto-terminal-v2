@@ -104,6 +104,206 @@ height
 
 }
 
+function formatUsd(
+value
+){
+
+const num =
+Number(
+value
+);
+
+if(
+!Number.isFinite(
+num
+)
+){
+return "—";
+}
+
+const abs =
+Math.abs(
+num
+).toLocaleString(
+"ru-RU",
+{
+maximumFractionDigits:
+2
+}
+);
+
+if(
+num >
+0
+){
+return `+${abs}`;
+}
+
+if(
+num <
+0
+){
+return `−${abs}`;
+}
+
+return abs;
+
+}
+
+function algoBotStatusLabel(
+algo
+){
+
+if(
+!algo
+){
+return "нет данных";
+}
+
+if(
+algo.running &&
+algo.entriesPaused
+){
+return "пауза входов";
+}
+
+if(
+algo.running
+){
+return "запущен";
+}
+
+return "остановлен";
+
+}
+
+function renderAlgoBotSection(
+algo
+){
+
+if(
+!algo
+){
+return `
+<div class="sep"></div>
+<div class="section-title">Алго бот</div>
+<div class="empty">— нет данных —</div>
+`;
+}
+
+const runningCss =
+algo.running
+? (
+algo.entriesPaused
+? "algo-state--pause"
+: "algo-state--on"
+)
+: "algo-state--off";
+
+const totalCss =
+pnlClass(
+algo.closedTotalUsd
+);
+
+const armed =
+Array.isArray(
+algo.armedSetups
+)
+? algo.armedSetups
+: [];
+const armedCount =
+Number(
+algo.armedCount
+) ||
+armed.length;
+
+let armedListHtml =
+"";
+
+if(
+armed.length
+){
+armedListHtml =
+armed.map(
+item=>{
+const symbol =
+escapeHtml(
+item?.symbol ||
+""
+);
+const side =
+item?.side ===
+"short"
+? "short"
+: "long";
+
+if(
+!symbol
+){
+return "";
+}
+
+return `<div class="algo-armed-row"><span class="pos-dot pos-dot--${side === "short" ? "short" : "long"}" aria-hidden="true"></span><span class="algo-armed-sym">${symbol}</span><span class="algo-armed-side">${side}</span></div>`;
+}
+).join(
+""
+);
+}
+
+const signal =
+escapeHtml(
+algo.lastSignal ||
+"—"
+);
+const message =
+escapeHtml(
+algo.message ||
+""
+);
+
+return `
+<div class="sep"></div>
+<div class="section-title">Алго бот · <span class="algo-state ${runningCss}">${escapeHtml(
+algoBotStatusLabel(
+algo
+)
+)}</span></div>
+<div class="algo-row"><span class="algo-label">Тикеров в списке</span><span class="algo-value">${escapeHtml(
+algo.watchlistCount ??
+"—"
+)}</span></div>
+<div class="algo-row"><span class="algo-label">Открыто сделок</span><span class="algo-value">${escapeHtml(
+algo.openCount ??
+"—"
+)}</span></div>
+<div class="algo-row"><span class="algo-label">Закрыто в плюс</span><span class="algo-value">${escapeHtml(
+algo.closedWin ??
+0
+)}</span></div>
+<div class="algo-row"><span class="algo-label">Закрыто в минус</span><span class="algo-value">${escapeHtml(
+algo.closedLoss ??
+0
+)}</span></div>
+<div class="algo-row"><span class="algo-label">Итого ($)</span><span class="algo-value ${totalCss}">${escapeHtml(
+formatUsd(
+algo.closedTotalUsd
+)
+)}</span></div>
+<div class="algo-row"><span class="algo-label">Armed сетапов</span><span class="algo-value">${escapeHtml(
+armedCount
+)}</span></div>
+${armedListHtml}
+<div class="algo-row"><span class="algo-label">Входов (сессия)</span><span class="algo-value">${escapeHtml(
+algo.entriesCount ??
+0
+)}</span></div>
+<div class="algo-row algo-row--signal"><span class="algo-label">Последний сигнал</span><span class="algo-value algo-signal">${signal ||
+"—"}</span></div>
+${message ? `<div class="algo-msg">${message}</div>` : ""}
+`;
+
+}
+
 function render(
 state
 ){
@@ -223,6 +423,11 @@ html +=
 }
 
 }
+
+html +=
+renderAlgoBotSection(
+state?.algoBot
+);
 
 html +=
 `

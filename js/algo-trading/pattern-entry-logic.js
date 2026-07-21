@@ -1,16 +1,16 @@
 /**
  * Точки входа / отмены паттерна 1-2 (АлгоТрейдинг).
  * Long: pt4 активен → вход = первое пересечение pt4 снизу вверх;
- * отмена = ниже pt3 до входа, либо окно > 200 баров.
+ * отмена = ниже pt3 до входа, либо окно > 300 баров.
  * Short — зеркально.
  */
 import {
 computePattern12Scene,
 defaultPattern12Settings
-} from "./pattern-12-math.js?v=3";
+} from "./pattern-12-math.js?v=4";
 
 export const ENTRY_TIMEOUT_BARS =
-200;
+300;
 
 /**
  * @param {unknown} raw

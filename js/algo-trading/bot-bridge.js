@@ -1,0 +1,309 @@
+/**
+ * Renderer bridge → main algo bot (start/stop/status + config mirror).
+ */
+import {
+loadBotStrategiesPrefs
+} from "./bot-strategy-prefs.js?v=5";
+import {
+readAlgoPattern12Settings
+} from "./pattern-12-settings.js?v=2";
+import {
+loadAlgoTickerFlags,
+ALGO_TICKER_FLAGS_KEY,
+applyAlgoTickerFlagsRoot
+} from "./ticker-flags.js?v=5";
+
+function desktopAlgoApi(){
+
+return window.cryptoTerminalDesktop?.algoTrading ||
+null;
+
+}
+
+export function isAlgoBotDesktop(){
+
+return !!desktopAlgoApi()?.getBotStatus;
+
+}
+
+export async function syncBotStrategiesToMain(){
+
+const api =
+desktopAlgoApi();
+
+if(
+!api?.syncBotStrategies
+){
+return {
+ok:
+false,
+message:
+"desktop only"
+};
+}
+
+const prefs =
+loadBotStrategiesPrefs();
+
+return api.syncBotStrategies(
+{
+...prefs,
+pattern12Settings:
+readAlgoPattern12Settings()
+}
+);
+
+}
+
+export async function syncTickerFlagsToMain(
+exchangeId
+){
+
+const api =
+desktopAlgoApi();
+
+if(
+!api?.syncTickerFlags
+){
+return {
+ok:
+false,
+message:
+"desktop only"
+};
+}
+
+const id =
+String(
+exchangeId ||
+"bybit"
+).trim().toLowerCase() ||
+"bybit";
+
+return api.syncTickerFlags(
+{
+exchangeId:
+id,
+flags:
+loadAlgoTickerFlags(
+id
+)
+}
+);
+
+}
+
+export async function syncAllTickerFlagsRootToMain(){
+
+const api =
+desktopAlgoApi();
+
+if(
+!api?.syncTickerFlags
+){
+return {
+ok:
+false,
+message:
+"desktop only"
+};
+}
+
+try{
+const raw =
+localStorage.getItem(
+ALGO_TICKER_FLAGS_KEY
+);
+const root =
+raw
+? JSON.parse(
+raw
+)
+: {};
+
+return api.syncTickerFlags(
+{
+root
+}
+);
+}catch(
+err
+){
+return {
+ok:
+false,
+message:
+err?.message ||
+String(
+err
+)
+};
+}
+
+}
+
+export async function startAlgoBot(
+strategyId =
+"st1"
+){
+
+const api =
+desktopAlgoApi();
+
+if(
+!api?.startBot
+){
+return {
+ok:
+false,
+message:
+"desktop only"
+};
+}
+
+await syncBotStrategiesToMain();
+await syncAllTickerFlagsRootToMain();
+
+return api.startBot(
+{
+strategyId
+}
+);
+
+}
+
+export async function stopAlgoBot(
+strategyId =
+"st1"
+){
+
+const api =
+desktopAlgoApi();
+
+if(
+!api?.stopBot
+){
+return {
+ok:
+false,
+message:
+"desktop only"
+};
+}
+
+return api.stopBot(
+{
+strategyId
+}
+);
+
+}
+
+export async function fetchAlgoBotStatus(){
+
+const api =
+desktopAlgoApi();
+
+if(
+!api?.getBotStatus
+){
+return {
+ok:
+false,
+message:
+"desktop only"
+};
+}
+
+return api.getBotStatus();
+
+}
+
+export async function disarmAlgoArmedSetup(
+payload
+){
+
+const api =
+desktopAlgoApi();
+
+if(
+!api?.disarmArmedSetup
+){
+return {
+ok:
+false,
+message:
+"desktop only"
+};
+}
+
+return api.disarmArmedSetup(
+payload ||
+{}
+);
+
+}
+
+/**
+ * Подтянуть флаги из main только после Phase D (или явного apply).
+ * Обычный status poll НЕ должен затирать localStorage.
+ */
+export function maybeApplyTickerFlagsFromBotStatus(
+status
+){
+
+if(
+!status
+){
+return false;
+}
+
+const shouldApply =
+status.applyTickerFlags ===
+true ||
+status.watchlistRefresh?.ok ===
+true;
+
+if(
+!shouldApply ||
+!status.tickerFlagsRoot
+){
+return false;
+}
+
+return applyAlgoTickerFlagsRoot(
+status.tickerFlagsRoot
+);
+
+}
+
+export function subscribeAlgoBotStatus(
+callback
+){
+
+const api =
+desktopAlgoApi();
+
+if(
+!api?.onBotStatus ||
+typeof callback !==
+"function"
+){
+return ()=>{};
+}
+
+return api.onBotStatus(
+payload=>{
+
+maybeApplyTickerFlagsFromBotStatus(
+payload
+);
+
+callback(
+payload
+);
+
+}
+);
+
+}

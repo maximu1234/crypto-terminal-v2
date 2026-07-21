@@ -19,7 +19,7 @@ isTerminalPage
 import {
 getCurrentSymbols,
 getFirstVisibleSymbol
-} from "./terminal-table.js?v=21";
+} from "./terminal-table.js?v=22";
 
 import {
 parseAlertDeepLinkExchange

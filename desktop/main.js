@@ -63,6 +63,16 @@ require(
 "./trading/register-ipc.cjs"
 );
 const {
+registerAlgoTradingIpc,
+bootAlgoTradingRuntimeIfEnabled,
+bootAlgoBotIfWasRunning,
+setAlgoTradingStreamTarget,
+stopAlgoTradingStream
+} =
+require(
+"./trading/algo-trading-ipc.cjs"
+);
+const {
 getAuthSession,
 saveAuthSession,
 clearAuthSession
@@ -101,6 +111,12 @@ require(
 const platform =
 require(
 "./platform/index.cjs"
+);
+const {
+getAlgoDesktopEdition
+} =
+require(
+"./algo-trading-edition.cjs"
 );
 
 registerAppScheme();
@@ -447,6 +463,18 @@ setTradingStreamTarget(
 null
 );
 startTradingStream();
+
+try{
+bootAlgoTradingRuntimeIfEnabled();
+}catch(
+err
+){
+log.warn(
+"algo-runtime agent:",
+err?.message ||
+err
+);
+}
 
 if(
 !isMenuBarTrayActive()
@@ -816,6 +844,9 @@ nodeIntegration:
 false,
 sandbox:
 true,
+additionalArguments:[
+`--algo-desktop-edition=${getAlgoDesktopEdition()}`
+],
 partition:
 PARTITION,
 spellcheck:
@@ -1050,6 +1081,9 @@ setTradingStreamTarget(
 mainWindow.webContents
 );
 startTradingStream();
+setAlgoTradingStreamTarget(
+mainWindow.webContents
+);
 }
 
 }
@@ -1064,6 +1098,9 @@ mainWindow.on(
 "closed",
 ()=>{
 setTradingStreamTarget(
+null
+);
+setAlgoTradingStreamTarget(
 null
 );
 mainWindow =
@@ -1771,6 +1808,15 @@ warmTimeout
 }
 
 registerIpc();
+registerAlgoTradingIpc(
+{
+getMainWebContents:()=>
+mainWindow &&
+!mainWindow.isDestroyed()
+? mainWindow.webContents
+: null
+}
+);
 buildMenu();
 configureMenuBarTray(
 openMultichart
@@ -1785,6 +1831,62 @@ startAsAgent
 ){
 setMenuBarTrayVisible(
 true
+);
+}
+
+try{
+bootAlgoTradingRuntimeIfEnabled();
+}catch(
+err
+){
+log.warn(
+"algo-runtime boot:",
+err?.message ||
+err
+);
+}
+
+try{
+void bootAlgoBotIfWasRunning().then(
+result=>{
+
+if(
+result &&
+!result.skipped &&
+result.ok ===
+false
+){
+log.warn(
+"algo bot resume:",
+result.message ||
+"failed"
+);
+}else if(
+result?.running ||
+result?.alreadyRunning
+){
+log.info(
+"algo bot resumed in background"
+);
+}
+
+}
+).catch(
+err=>{
+log.warn(
+"algo bot resume:",
+err?.message ||
+err
+);
+}
+);
+}catch(
+err
+){
+log.warn(
+"algo bot resume:",
+err?.message ||
+err
 );
 }
 
@@ -1821,6 +1923,7 @@ isQuitting =
 true;
 
 stopTradingStream();
+stopAlgoTradingStream();
 destroyMenuBarTray();
 
 if(

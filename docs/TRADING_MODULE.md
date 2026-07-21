@@ -25,14 +25,50 @@
 
 **Аудит торгового модуля** → проверять Скрипт в том же проходе (desktop-gate, bundle, nav, фоновый таймер). См. `.cursor/rules/trading-module-script.mdc`.
 
-## АлгоТрейдинг (desktop, прототип)
+## АлгоТрейдинг (desktop, изолированный плагин)
 
-Облегчённый Терминал для отработки алготорговли (Bybit). Без торгового модуля, стакана, рисунков и меню индикаторов; всегда включены RSI и Pattern 1-2.
+Облегчённый Терминал для алготорговли. Pattern 1-2 — **копии** в
+`js/algo-trading/` (оригинал индикатора не трогать).
 
 | Компонент | Файлы |
 |-----------|--------|
 | Страница / boot | `algo-trading.html`, `js/algo-trading-page-boot.js`, `js/algo-trading.js`, `css/algo-trading.css` |
 | Nav / route | `js/site-header-nav-desktop.js`, `js/page-routes.js` (`isAlgoTradingPage`) |
+| Ключи алго-профиля | `desktop/trading/algo-exchange-credentials.cjs` (отдельно от Терминала) |
+| Фон runtime (main) | `desktop/trading/algo-trading-runtime.cjs`, `algo-trading-ipc.cjs` |
+| Бот St1–St3 (main) | `algo-trading-bot.cjs`, `algo-bot-store.cjs`, `algo-bot-pattern-engine.cjs`, `algo-bot-order-executor.cjs`, `algo-bybit-kline-ws.cjs`, `algo-bot-watchlist-refresh.cjs` (Phase D) |
+| Bybit REST/WS (алго) | `algo-bybit-rest.cjs`, `algo-bybit-private-ws.cjs`, `algo-bybit-trading-stream.cjs` |
+| Renderer bot UI | `js/algo-trading/bot-strategy-ui.js`, `bot-bridge.js`, `bot-strategy-prefs.js` |
+| Renderer trade UI | `js/algo-trading/trade/*` (book panel, chart overlay/orders, cache) — **не** `js/trade/*` |
+| CSS trade UI | `css/algo-trading-book-panel.css`, `css/algo-trading-chart-overlay.css` |
+| IPC | `cryptoTerminalDesktop.algoTrading.*` (не `trading.*`) |
+| Редакция сборки | `desktop/algo-trading-edition.cjs`: `f` = full, `m` = manual-only; буква в подписи `vX.Y.Zf` / `vX.Y.Zm` (в preload через `additionalArguments`) |
+
+Фон: при флаге «Работать в фоне» runtime стартует в main при запуске `.app`,
+даже если страница Алго закрыта. Позиции/ордера на алго-ключах стримятся в UI
+АлгоТрейдинг.
+
+**Сборки f / m:** один код. В `m` live принудительно выключен (режим Manual,
+кнопка «Реальная» disabled, бот не ставит ордера на бирже).
+
+**Бот (topbar):** St1 — один ТП по RR; St2/St3 — три ТП (⅓) + трейлинг СЛ
+(после ТП1 → N%×X, после ТП2 → BE). Одновременно работает **одна** стратегия.
+Режим «Ручная торговля» — только St1 (алерты на вход), St2/St3 недоступны.
+Prefs бота (`algo_trading_bot_strategies_v1` / `algo-bot-strategies.json`) —
+**отдельно** от панели «Данные».
+
+**Панель «Данные» (низ):** исследовательская статистика (прямой/реальный
+подсчёт, partial/trail симуляция). Её поля **не** управляют ботом.
+
+**Списки тикеров:** общие `algoLong5m` / Short / Both / **Избранные**
+(`algoFavorites`, оранжевый флаг). Phase D обновляет список по winrate
+активной стратегии (St1 — RR; St2/St3 — partial+trail).
+
+Pattern на графике Алго и у бота — **копии** math
+(`js/algo-trading/pattern-12-*`), оригинал индикатора не трогаем.
+Бот живёт в main: закрытие окна при tray/agent не останавливает его;
+после рестарта `.app` / login-agent активная стратегия resumes, если была
+«Запущена» (pending TP/SL meta восстанавливается с диска).
 
 ## Функции (metka-29)
 

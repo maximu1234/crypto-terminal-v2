@@ -11,6 +11,18 @@ alwaysApply: true
 2. При новом desktop-релизе — `DESKTOP_APP_VERSION` в том же файле (например `1.0.19`).
 3. Обновить `docs/MARKER_N.md` и тег как обычно.
 
-**Формат подписи:** на сайте `v0.N`; в desktop .app `v0.N / vX.Y.Z` (сначала веб, потом приложение).
+**Формат подписи:** на сайте `v0.N`; в desktop .app `v0.N / vX.Y.Zf` или
+`v0.N / vX.Y.Zm` (буква редакции после версии приложения).
+
+**Редакции desktop (буква в `desktop/algo-trading-edition.cjs`):**
+
+| Буква | Смысл |
+|-------|--------|
+| `f` | full — живая + ручная торговля |
+| `m` | manual-only — друзьям: только ручная (алерты), live выключен |
+
+Перед упаковкой friends-сборки поставить `ALGO_DESKTOP_EDITION = "m"` в
+`desktop/algo-trading-edition.cjs`, собрать `.app`; для полной — `"f"`.
+Один код, разная буква (preload получает букву через `additionalArguments`).
 
 Подпись монтируется через `mountReleaseMarker()` в `screener.js` и `desktop-app-ui.js`; HTML — `[data-release-marker]` в `index.html`.

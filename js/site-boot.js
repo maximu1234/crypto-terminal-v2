@@ -92,7 +92,32 @@ resumeScriptScanBackgroundJob();
 
 }
 
+function bootAlgoBotAlertBridge(){
+
+if(
+!window.cryptoTerminalDesktop?.isDesktop
+){
+return;
+}
+
+void import(
+"./algo-trading/bot-alert-bridge.js?v=4"
+).then(
+m=>
+m.mountAlgoBotAlertBridge?.()
+).catch(
+err=>{
+console.warn(
+"[site-boot] algo bot alert bridge:",
+err
+);
+}
+);
+
+}
+
 bootScriptScanBackground();
+bootAlgoBotAlertBridge();
 
 if(
 typeof document !==
@@ -101,6 +126,14 @@ typeof document !==
 document.addEventListener(
 "DOMContentLoaded",
 bootScriptScanBackground,
+{
+once:
+true
+}
+);
+document.addEventListener(
+"DOMContentLoaded",
+bootAlgoBotAlertBridge,
 {
 once:
 true

@@ -1,5 +1,16 @@
 /* АлгоТрейдинг: поверх layout Терминала (классы terminal-page + algo-trading-page). */
 
+/* Без оранжевой системной обводки на полях ввода */
+body.algo-trading-page input:focus,
+body.algo-trading-page input:focus-visible,
+body.algo-trading-page textarea:focus,
+body.algo-trading-page textarea:focus-visible,
+body.algo-trading-page select:focus,
+body.algo-trading-page select:focus-visible{
+outline:none;
+box-shadow:none;
+}
+
 /* Pattern 1-2 overlay (как на Скринере/Скрипте) */
 body.algo-trading-page #chart{
 position:absolute;
@@ -14,11 +25,27 @@ pointer-events:none;
 z-index:2;
 }
 
-body.algo-trading-page #current-symbol{
-font-size:14px;
+body.algo-trading-page .coin.has-position .coin-symbol{
+color:#facc15;
+}
+
+/* Оранжевый флаг = алго-список «Избранные» (не путать с жёлтым pin позиции) */
+body.algo-trading-page .coin-flag-pick.flag--orange{
+background:#f97316;
+border-color:#f97316;
+}
+
+body.algo-trading-page .coin-flag-btn.flag--orange::before,
+body.algo-trading-page .flag--orange.favorite.coin-flag-btn::before{
+background:#f97316;
+border-color:#f97316;
+}
+
+body.algo-trading-page .trade-book-mode-label{
+font-size:12px;
 font-weight:600;
-color:#e5e7eb;
-letter-spacing:.02em;
+color:#d1d5db;
+padding:2px 0;
 }
 
 body.algo-trading-page .coins-tf-desktop{
@@ -110,6 +137,817 @@ body.algo-trading-page .algo-stats-col[data-algo-strategy="global-setup"]{
 width:420px;
 }
 
+body.algo-trading-page .algo-settings-wrap{
+position:relative;
+flex:0 0 auto;
+margin-left:8px;
+align-self:center;
+}
+
+body.algo-trading-page .algo-settings-btn{
+padding:4px 10px;
+border:1px solid #374151;
+border-radius:4px;
+background:#1f2937;
+color:#e5e7eb;
+font-size:12px;
+line-height:1.2;
+cursor:pointer;
+white-space:nowrap;
+}
+
+body.algo-trading-page .algo-settings-btn:hover,
+body.algo-trading-page .algo-settings-btn[aria-expanded="true"]{
+background:#374151;
+}
+
+body.algo-trading-page .algo-settings-btn:focus,
+body.algo-trading-page .algo-settings-btn:focus-visible{
+outline:none;
+}
+
+body.algo-trading-page .algo-settings-dropdown{
+position:absolute;
+top:calc(100% + 6px);
+right:0;
+z-index:40;
+width:340px;
+max-width:min(340px, calc(100vw - 24px));
+padding:12px;
+border:1px solid #374151;
+border-radius:8px;
+background:#111827;
+box-shadow:0 12px 28px rgba(0,0,0,.45);
+}
+
+body.algo-trading-page .algo-settings-dropdown.hidden{
+display:none;
+}
+
+body.algo-trading-page .algo-runtime-block{
+margin-bottom:0;
+}
+
+body.algo-trading-page .algo-trading-mode{
+display:flex;
+flex-wrap:wrap;
+gap:6px;
+margin:4px 0 2px;
+}
+
+body.algo-trading-page .algo-trading-mode-btn{
+padding:5px 10px;
+border:1px solid #374151;
+border-radius:4px;
+background:#111827;
+color:#9ca3af;
+font-size:12px;
+line-height:1.2;
+cursor:pointer;
+}
+
+body.algo-trading-page .algo-trading-mode-btn:hover:not(:disabled){
+color:#d1d5db;
+border-color:#4b5563;
+}
+
+body.algo-trading-page .algo-trading-mode-btn.active{
+color:#e5e7eb;
+border-color:#6b7280;
+background:#1f2937;
+}
+
+body.algo-trading-page .algo-trading-mode-btn:disabled{
+opacity:0.45;
+cursor:default;
+}
+
+body.algo-trading-page .algo-trading-mode-btn:focus,
+body.algo-trading-page .algo-trading-mode-btn:focus-visible{
+outline:none;
+}
+
+body.algo-trading-page .algo-runtime-keys-block.is-disabled{
+opacity:0.45;
+pointer-events:none;
+user-select:none;
+}
+
+body.algo-trading-page .algo-runtime-keys-block.is-disabled .algo-stats-input,
+body.algo-trading-page .algo-runtime-keys-block.is-disabled .algo-scan-btn{
+cursor:default;
+}
+
+body.algo-trading-page .algo-runtime-block .algo-stats-input{
+width:70%;
+max-width:70%;
+}
+
+body.algo-trading-page .algo-settings-dropdown .algo-stats-row--setting{
+gap:8px;
+}
+
+body.algo-trading-page .algo-stats-row--balance{
+margin-top:8px;
+}
+
+body.algo-trading-page .algo-stats-row--balance .algo-stats-value{
+font-variant-numeric:tabular-nums;
+color:#e5e7eb;
+}
+
+body.algo-trading-page .algo-settings-dropdown .algo-stats-label{
+flex:0 0 auto;
+}
+
+body.algo-trading-page .algo-bot-strategies{
+display:flex;
+flex-wrap:wrap;
+align-items:center;
+gap:8px;
+margin-left:10px;
+align-self:center;
+position:relative;
+z-index:35;
+}
+
+body.algo-trading-page .algo-bot-strategy{
+position:relative;
+display:inline-flex;
+align-items:center;
+gap:4px;
+}
+
+body.algo-trading-page .algo-bot-strategy.is-manual-unavailable{
+opacity:0.45;
+}
+
+body.algo-trading-page .algo-bot-strategy.is-manual-unavailable .algo-bot-strategy-toggle,
+body.algo-trading-page .algo-bot-strategy.is-manual-unavailable .algo-bot-run-btn{
+cursor:not-allowed;
+}
+
+body.algo-trading-page .algo-bot-strategy-toggle,
+body.algo-trading-page .algo-bot-run-btn{
+padding:4px 8px;
+border:1px solid #374151;
+border-radius:4px;
+background:#1f2937;
+color:#e5e7eb;
+font-size:12px;
+line-height:1.2;
+cursor:pointer;
+white-space:nowrap;
+}
+
+body.algo-trading-page .algo-bot-strategy-toggle:hover,
+body.algo-trading-page .algo-bot-strategy-toggle[aria-expanded="true"],
+body.algo-trading-page .algo-bot-run-btn:hover{
+background:#374151;
+}
+
+body.algo-trading-page .algo-bot-run-btn.is-running{
+border-color:#22c55e;
+background:linear-gradient(
+180deg,
+#166534 0%,
+#14532d 100%
+);
+color:#ecfdf5;
+box-shadow:
+inset 0 2px 4px rgba(
+0,
+0,
+0,
+0.35
+),
+0 0 0 2px rgba(
+34,
+197,
+94,
+0.35
+);
+font-weight:600;
+}
+
+body.algo-trading-page .algo-bot-run-btn.is-running:hover{
+background:linear-gradient(
+180deg,
+#15803d 0%,
+#166534 100%
+);
+}
+
+body.algo-trading-page .algo-bot-strategies.is-bot-running .algo-bot-run-btn.is-running{
+animation:algo-bot-run-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes algo-bot-run-pulse{
+0%,
+100%{
+box-shadow:
+inset 0 2px 4px rgba(
+0,
+0,
+0,
+0.35
+),
+0 0 0 2px rgba(
+34,
+197,
+94,
+0.35
+);
+}
+50%{
+box-shadow:
+inset 0 2px 4px rgba(
+0,
+0,
+0,
+0.35
+),
+0 0 0 3px rgba(
+74,
+222,
+128,
+0.55
+);
+}
+}
+
+body.algo-trading-page .algo-bot-run-btn[aria-pressed="true"]{
+transform:translateY(
+1px
+);
+}
+
+body.algo-trading-page .algo-bot-run-btn:disabled,
+body.algo-trading-page .algo-bot-strategy-toggle:disabled{
+opacity:.45;
+cursor:not-allowed;
+}
+
+body.algo-trading-page .algo-bot-strategy-toggle:focus,
+body.algo-trading-page .algo-bot-strategy-toggle:focus-visible,
+body.algo-trading-page .algo-bot-run-btn:focus,
+body.algo-trading-page .algo-bot-run-btn:focus-visible,
+body.algo-trading-page .algo-bot-tf-btn:focus,
+body.algo-trading-page .algo-bot-tf-btn:focus-visible{
+outline:none;
+}
+
+body.algo-trading-page .algo-bot-strategy-dropdown{
+position:absolute;
+top:calc(100% + 6px);
+left:0;
+z-index:45;
+width:360px;
+max-width:min(360px, calc(100vw - 24px));
+padding:12px;
+border:1px solid #374151;
+border-radius:8px;
+background:#111827;
+box-shadow:0 12px 28px rgba(0,0,0,.45);
+}
+
+body.algo-trading-page .algo-bot-strategy-dropdown.hidden{
+display:none;
+}
+
+body.algo-trading-page .algo-bot-field{
+display:flex;
+flex-direction:column;
+gap:4px;
+margin:0 0 10px;
+}
+
+body.algo-trading-page .algo-bot-field--row{
+flex-direction:row;
+flex-wrap:wrap;
+align-items:center;
+gap:6px 8px;
+}
+
+body.algo-trading-page .algo-bot-label{
+font-size:12px;
+color:#d1d5db;
+white-space:nowrap;
+}
+
+body.algo-trading-page .algo-bot-input{
+width:100%;
+max-width:140px;
+padding:4px 8px;
+border:1px solid #374151;
+border-radius:4px;
+background:#0b1220;
+color:#e5e7eb;
+font-size:12px;
+-moz-appearance:textfield;
+appearance:textfield;
+}
+
+body.algo-trading-page .algo-bot-input:focus,
+body.algo-trading-page .algo-bot-input:focus-visible{
+outline:none;
+border-color:#4b5563;
+box-shadow:none;
+}
+
+body.algo-trading-page .algo-bot-input::-webkit-outer-spin-button,
+body.algo-trading-page .algo-bot-input::-webkit-inner-spin-button{
+-webkit-appearance:none;
+margin:0;
+}
+
+body.algo-trading-page .algo-bot-input--sm{
+width:64px;
+max-width:64px;
+}
+
+body.algo-trading-page .algo-bot-unit{
+font-size:12px;
+color:#9ca3af;
+}
+
+body.algo-trading-page .algo-bot-tf{
+display:inline-flex;
+flex-wrap:wrap;
+gap:4px;
+}
+
+body.algo-trading-page .algo-bot-tf-btn{
+min-width:0;
+padding:3px 7px;
+border:1px solid transparent;
+border-radius:4px;
+background:transparent;
+color:#6b7280;
+font-size:12px;
+line-height:1.2;
+cursor:pointer;
+}
+
+body.algo-trading-page .algo-bot-tf-btn:hover{
+color:#9ca3af;
+border-color:#374151;
+}
+
+body.algo-trading-page .algo-bot-tf-btn.active{
+color:#d1d5db;
+border-color:#4b5563;
+background:#1f2937;
+}
+
+body.algo-trading-page .algo-bot-side{
+display:flex;
+flex-wrap:wrap;
+gap:10px 14px;
+}
+
+body.algo-trading-page .algo-bot-check{
+display:inline-flex;
+align-items:center;
+gap:6px;
+font-size:12px;
+color:#d1d5db;
+cursor:pointer;
+user-select:none;
+}
+
+body.algo-trading-page .algo-bot-check input{
+margin:0;
+}
+
+body.algo-trading-page .algo-bot-hint{
+margin:0 0 6px;
+font-size:11px;
+line-height:1.35;
+color:#6b7280;
+}
+
+body.algo-trading-page.is-algo-bot-running .algo-bot-strategy-toggle:not(
+.algo-bot-run-btn
+),
+body.algo-trading-page.is-algo-bot-running .algo-bot-strategy-toggle[aria-disabled="true"]{
+pointer-events:none;
+opacity:.45;
+cursor:not-allowed;
+}
+
+body.algo-trading-page.is-algo-bot-running .is-bot-settings-locked,
+body.algo-trading-page.is-algo-bot-running .is-bot-settings-locked *{
+cursor:not-allowed;
+}
+
+body.algo-trading-page.is-algo-bot-running .algo-bot-strategy-dropdown.is-bot-settings-locked,
+body.algo-trading-page.is-algo-bot-running #algo-settings-dropdown.is-bot-settings-locked{
+opacity:.5;
+filter:grayscale(
+0.2
+);
+}
+
+body.algo-trading-page.is-algo-bot-running .algo-bot-strategy-dropdown.is-bot-settings-locked input,
+body.algo-trading-page.is-algo-bot-running .algo-bot-strategy-dropdown.is-bot-settings-locked button,
+body.algo-trading-page.is-algo-bot-running .algo-bot-strategy-dropdown.is-bot-settings-locked label,
+body.algo-trading-page.is-algo-bot-running #algo-settings-dropdown.is-bot-settings-locked input,
+body.algo-trading-page.is-algo-bot-running #algo-settings-dropdown.is-bot-settings-locked button,
+body.algo-trading-page.is-algo-bot-running #algo-settings-dropdown.is-bot-settings-locked label{
+pointer-events:none;
+}
+
+body.algo-trading-page.is-algo-bot-running .algo-bot-strategy-dropdown input,
+body.algo-trading-page.is-algo-bot-running .algo-bot-strategy-dropdown button:not(.algo-bot-run-btn){
+pointer-events:none;
+opacity:.45;
+}
+body.algo-trading-page.is-algo-bot-running .algo-bot-status-wrap,
+body.algo-trading-page.is-algo-bot-running .algo-bot-status-wrap *{
+pointer-events:auto;
+opacity:1;
+cursor:auto;
+}
+
+body.algo-trading-page.is-algo-bot-running .algo-bot-status-armed-btn:disabled{
+cursor:default;
+opacity:.7;
+}
+
+body.algo-trading-page.is-algo-bot-running .algo-bot-status-armed-item,
+body.algo-trading-page.is-algo-bot-running .algo-bot-status-signal-item,
+body.algo-trading-page.is-algo-bot-running .algo-bot-status-armed-open,
+body.algo-trading-page.is-algo-bot-running .algo-bot-status-armed-disarm{
+cursor:pointer;
+}
+
+body.algo-trading-page.is-algo-bot-running .algo-bot-status-signal-btn:disabled{
+cursor:default;
+opacity:.7;
+}
+
+
+body.algo-trading-page .algo-bot-status-wrap{
+position:relative;
+display:inline-flex;
+align-items:center;
+margin-left:6px;
+align-self:center;
+z-index:200;
+}
+
+body.algo-trading-page .algo-bot-status-toggle{
+padding:4px 8px;
+border:1px solid #374151;
+border-radius:4px;
+background:#1f2937;
+color:#e5e7eb;
+font-size:12px;
+line-height:1.2;
+cursor:pointer;
+white-space:nowrap;
+}
+
+body.algo-trading-page .algo-bot-status-toggle:hover,
+body.algo-trading-page .algo-bot-status-toggle[aria-expanded="true"]{
+background:#374151;
+}
+
+body.algo-trading-page .algo-bot-status-dropdown{
+position:absolute;
+top:calc(100% + 4px);
+right:0;
+min-width:240px;
+padding:10px;
+border:1px solid #374151;
+border-radius:6px;
+background:#111827;
+box-shadow:0 8px 24px rgba(0,0,0,.35);
+overflow:visible;
+z-index:201;
+}
+
+body.algo-trading-page .algo-bot-status-dropdown.hidden{
+display:none;
+}
+
+body.algo-trading-page .algo-bot-status-row{
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:12px;
+margin-bottom:6px;
+font-size:12px;
+line-height:1.35;
+color:#d1d5db;
+}
+
+body.algo-trading-page .algo-bot-status-row--total{
+margin-top:4px;
+padding-top:6px;
+border-top:1px solid #374151;
+font-weight:600;
+}
+
+body.algo-trading-page .algo-bot-status-row--signal{
+position:relative;
+align-items:flex-start;
+overflow:visible;
+}
+
+body.algo-trading-page .algo-bot-status-signal-wrap{
+position:relative;
+display:inline-flex;
+align-items:flex-start;
+max-width:150px;
+}
+
+body.algo-trading-page .algo-bot-status-signal-btn{
+max-width:150px;
+padding:1px 6px;
+border:1px solid transparent;
+border-radius:4px;
+background:transparent;
+color:#e5e7eb;
+font-size:11px;
+font-weight:500;
+line-height:1.35;
+text-align:right;
+white-space:normal;
+word-break:break-word;
+cursor:pointer;
+}
+
+body.algo-trading-page .algo-bot-status-signal-btn:hover:not(:disabled),
+body.algo-trading-page .algo-bot-status-signal-btn[aria-expanded="true"]{
+border-color:#4b5563;
+background:#1f2937;
+}
+
+body.algo-trading-page .algo-bot-status-signal-btn:disabled{
+opacity:.7;
+cursor:default;
+}
+
+body.algo-trading-page .algo-bot-status-signal-btn.has-items::after{
+content:" ▸";
+font-size:10px;
+opacity:.8;
+}
+
+body.algo-trading-page .algo-bot-status-signal-list{
+position:absolute;
+top:0;
+left:calc(100% + 8px);
+width:min(340px, calc(100vw - 24px));
+max-height:280px;
+overflow:auto;
+padding:6px;
+border:1px solid #374151;
+border-radius:6px;
+background:#0f172a;
+box-shadow:0 8px 24px rgba(0,0,0,.4);
+z-index:202;
+}
+
+body.algo-trading-page .algo-bot-status-signal-list.is-flip-left{
+left:auto;
+right:calc(100% + 8px);
+}
+
+body.algo-trading-page .algo-bot-status-signal-list.hidden{
+display:none;
+}
+
+body.algo-trading-page .algo-bot-status-signal-item{
+display:flex;
+flex-direction:column;
+align-items:stretch;
+gap:2px;
+width:100%;
+padding:6px 8px;
+border:0;
+border-radius:4px;
+background:transparent;
+color:#e5e7eb;
+font-size:11px;
+line-height:1.35;
+text-align:left;
+cursor:pointer;
+}
+
+body.algo-trading-page .algo-bot-status-signal-item:hover{
+background:#1f2937;
+}
+
+body.algo-trading-page .algo-bot-status-signal-item-meta{
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:8px;
+color:#9ca3af;
+font-size:10px;
+font-variant-numeric:tabular-nums;
+}
+
+body.algo-trading-page .algo-bot-status-signal-item-side.is-long{
+color:#86efac;
+}
+
+body.algo-trading-page .algo-bot-status-signal-item-side.is-short{
+color:#fca5a5;
+}
+
+body.algo-trading-page .algo-bot-status-signal-item-text{
+color:#e5e7eb;
+word-break:break-word;
+}
+
+body.algo-trading-page .algo-bot-status-signal-empty{
+padding:6px 8px;
+color:#9ca3af;
+font-size:11px;
+}
+
+body.algo-trading-page .algo-bot-status-label{
+color:#9ca3af;
+}
+
+body.algo-trading-page .algo-bot-status-value{
+font-variant-numeric:tabular-nums;
+color:#e5e7eb;
+}
+
+body.algo-trading-page .algo-bot-status-value.is-pos{
+color:#86efac;
+}
+
+body.algo-trading-page .algo-bot-status-value.is-neg{
+color:#fca5a5;
+}
+
+body.algo-trading-page .algo-bot-status-row--armed{
+position:relative;
+overflow:visible;
+}
+
+body.algo-trading-page .algo-bot-status-armed-wrap{
+position:relative;
+display:inline-flex;
+align-items:center;
+}
+
+body.algo-trading-page .algo-bot-status-armed-btn{
+min-width:28px;
+padding:1px 8px;
+border:1px solid #4b5563;
+border-radius:4px;
+background:#1f2937;
+color:#e5e7eb;
+font-size:12px;
+font-variant-numeric:tabular-nums;
+line-height:1.3;
+cursor:pointer;
+}
+
+body.algo-trading-page .algo-bot-status-armed-btn:hover:not(:disabled),
+body.algo-trading-page .algo-bot-status-armed-btn[aria-expanded="true"]{
+background:#374151;
+border-color:#6b7280;
+}
+
+body.algo-trading-page .algo-bot-status-armed-btn:disabled{
+opacity:.7;
+cursor:default;
+}
+
+body.algo-trading-page .algo-bot-status-armed-btn.has-items::after{
+content:" ▸";
+font-size:10px;
+opacity:.8;
+}
+
+body.algo-trading-page .algo-bot-status-armed-list{
+position:absolute;
+top:0;
+left:calc(100% + 8px);
+min-width:148px;
+max-height:220px;
+overflow:auto;
+padding:6px;
+border:1px solid #374151;
+border-radius:6px;
+background:#0f172a;
+box-shadow:0 8px 24px rgba(0,0,0,.4);
+z-index:202;
+}
+
+body.algo-trading-page .algo-bot-status-armed-list.is-flip-left{
+left:auto;
+right:calc(100% + 8px);
+}
+
+body.algo-trading-page .algo-bot-status-armed-list.hidden{
+display:none;
+}
+
+body.algo-trading-page .algo-bot-status-armed-item{
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:6px;
+width:100%;
+padding:2px 2px 2px 4px;
+border:0;
+border-radius:4px;
+background:transparent;
+color:#e5e7eb;
+font-size:12px;
+line-height:1.3;
+text-align:left;
+}
+
+body.algo-trading-page .algo-bot-status-armed-item:hover{
+background:#1f2937;
+}
+
+body.algo-trading-page .algo-bot-status-armed-open{
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:10px;
+flex:1;
+min-width:0;
+padding:5px 6px;
+border:0;
+border-radius:4px;
+background:transparent;
+color:inherit;
+font:inherit;
+text-align:left;
+cursor:pointer;
+}
+
+body.algo-trading-page .algo-bot-status-armed-disarm{
+flex:0 0 auto;
+width:22px;
+height:22px;
+padding:0;
+border:0;
+border-radius:4px;
+background:transparent;
+color:#f87171;
+font-size:16px;
+line-height:1;
+cursor:pointer;
+}
+
+body.algo-trading-page .algo-bot-status-armed-disarm:hover{
+background:rgba(248,113,113,.15);
+color:#fecaca;
+}
+
+body.algo-trading-page .algo-bot-status-armed-disarm:disabled{
+opacity:.45;
+cursor:default;
+}
+
+body.algo-trading-page .algo-bot-status-armed-item-side{
+color:#9ca3af;
+font-size:11px;
+text-transform:lowercase;
+}
+
+body.algo-trading-page .algo-bot-status-armed-item-side.is-long{
+color:#86efac;
+}
+
+body.algo-trading-page .algo-bot-status-armed-item-side.is-short{
+color:#fca5a5;
+}
+
+body.algo-trading-page .algo-bot-status-armed-empty{
+padding:6px 8px;
+color:#9ca3af;
+font-size:11px;
+}
+
+body.algo-trading-page .algo-bot-status-message{
+margin:6px 0 0;
+font-size:11px;
+line-height:1.35;
+color:#fbbf24;
+}
+
+body.algo-trading-page .algo-bot-status-message.is-error{
+color:#fca5a5;
+}
+
+body.algo-trading-page .algo-bot-status-message.hidden{
+display:none;
+}
+
 body.algo-trading-page .algo-stats-value--pair{
 display:inline-flex;
 align-items:baseline;
@@ -131,11 +969,66 @@ flex:0 0 auto;
 margin-top:0;
 }
 
+body.algo-trading-page .algo-stats-mode{
+display:flex;
+gap:4px;
+margin:0 0 8px;
+}
+
+body.algo-trading-page .algo-stats-mode-btn{
+flex:1 1 0;
+padding:4px 6px;
+border:1px solid #374151;
+border-radius:4px;
+background:#111827;
+color:#9ca3af;
+font-size:11px;
+line-height:1.25;
+cursor:pointer;
+}
+
+body.algo-trading-page .algo-stats-mode-btn:hover{
+border-color:#4b5563;
+color:#e5e7eb;
+}
+
+body.algo-trading-page .algo-stats-mode-btn.active{
+border-color:#6b7280;
+background:#1f2937;
+color:#e5e7eb;
+}
+
+body.algo-trading-page .algo-stats-col-title-row{
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:8px;
+margin:0 0 6px;
+}
+
 body.algo-trading-page .algo-stats-col-title{
 margin:0 0 6px;
 font-size:12px;
 font-weight:600;
 color:#d1d5db;
+}
+
+body.algo-trading-page .algo-stats-col-title-row .algo-stats-col-title{
+margin:0;
+}
+
+body.algo-trading-page .algo-stats-chart-check{
+display:inline-flex;
+align-items:center;
+cursor:pointer;
+}
+
+body.algo-trading-page .algo-stats-chart-check input{
+width:14px;
+height:14px;
+margin:0;
+accent-color:#60a5fa;
+cursor:pointer;
 }
 
 body.algo-trading-page .algo-stats-row{
@@ -183,9 +1076,11 @@ body.algo-trading-page .algo-stats-input::-webkit-inner-spin-button{
 margin:0;
 }
 
-body.algo-trading-page .algo-stats-input:focus{
+body.algo-trading-page .algo-stats-input:focus,
+body.algo-trading-page .algo-stats-input:focus-visible{
 outline:none;
 border-color:#4b5563;
+box-shadow:none;
 }
 
 body.algo-trading-page .algo-stats-value{
@@ -224,12 +1119,79 @@ line-height:1.35;
 color:#6b7280;
 }
 
+body.algo-trading-page .algo-stats-panel-note{
+margin:0 0 8px;
+padding:0 2px;
+font-size:11px;
+line-height:1.35;
+color:#6b7280;
+}
+
+body.algo-trading-page .algo-stats-unit{
+flex:0 0 auto;
+margin-left:4px;
+font-size:12px;
+color:#9ca3af;
+}
+
+body.algo-trading-page .algo-stats-check{
+display:inline-flex;
+align-items:center;
+flex:0 0 auto;
+margin-left:8px;
+cursor:pointer;
+}
+
+body.algo-trading-page .algo-stats-check input{
+width:14px;
+height:14px;
+margin:0;
+accent-color:#60a5fa;
+cursor:pointer;
+}
+
 body.algo-trading-page .algo-scan-strategy{
 display:flex;
 flex-wrap:wrap;
 align-items:center;
 gap:12px;
 margin:2px 0 4px;
+}
+
+body.algo-trading-page .algo-scan-tf{
+display:inline-flex;
+flex-wrap:wrap;
+align-items:center;
+gap:4px;
+margin-left:4px;
+}
+
+body.algo-trading-page .algo-scan-tf-btn{
+min-width:0;
+padding:3px 7px;
+border:1px solid transparent;
+border-radius:4px;
+background:transparent;
+color:#6b7280;
+font-size:12px;
+line-height:1.2;
+cursor:pointer;
+}
+
+body.algo-trading-page .algo-scan-tf-btn:hover{
+color:#9ca3af;
+border-color:#374151;
+}
+
+body.algo-trading-page .algo-scan-tf-btn.active{
+color:#d1d5db;
+border-color:#4b5563;
+background:#1f2937;
+}
+
+body.algo-trading-page .algo-scan-tf-btn:focus,
+body.algo-trading-page .algo-scan-tf-btn:focus-visible{
+outline:none;
 }
 
 body.algo-trading-page .algo-scan-check{
@@ -268,9 +1230,22 @@ white-space:nowrap;
 }
 
 body.algo-trading-page .algo-scan-min-input{
-width:56px;
+width:34px;
 flex:0 0 auto;
 margin-left:0;
+}
+
+body.algo-trading-page .algo-scan-real-check{
+display:inline-flex;
+align-items:center;
+flex:0 0 auto;
+cursor:pointer;
+line-height:1;
+}
+
+body.algo-trading-page .algo-scan-real-check input{
+margin:0;
+cursor:pointer;
 }
 
 body.algo-trading-page .algo-scan-btn{
@@ -300,20 +1275,29 @@ outline:none;
 }
 
 body.algo-trading-page .algo-scan-results-title{
-margin:2px 0 4px;
+margin:2px 0 2px;
 font-size:12px;
 font-weight:600;
 color:#d1d5db;
 }
 
 body.algo-trading-page .algo-scan-status{
-min-height:16px;
+min-height:0;
 margin:0 0 4px;
 font-size:11px;
 line-height:1.35;
 color:#6b7280;
 }
 
+body.algo-trading-page .algo-scan-status:empty{
+display:none;
+margin:0;
+}
+
 body.algo-trading-page .algo-scan-status.is-scanning{
 color:#93c5fd;
+}
+
+body.algo-trading-page .algo-scan-results .algo-scan-row{
+margin:2px 0;
 }

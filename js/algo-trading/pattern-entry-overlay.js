@@ -3,7 +3,7 @@
  */
 import {
 detectPatternEntryEvents
-} from "./pattern-entry-logic.js?v=4";
+} from "./pattern-entry-logic.js?v=5";
 
 import {
 clearAlgoEntryPositions,
@@ -11,7 +11,11 @@ DEFAULT_RISK_USD,
 DEFAULT_SL_PCT_OF_X,
 DEFAULT_TP_RR,
 syncAlgoEntryPositions
-} from "./pattern-entry-positions.js?v=5";
+} from "./pattern-entry-positions.js?v=7";
+
+import {
+DEFAULT_PARTIAL_TP3_X
+} from "./pattern-trade-stats-partial.js?v=8";
 
 /**
  * @param {{
@@ -20,7 +24,10 @@ syncAlgoEntryPositions
  *   getSlPctOfX?: () => number,
  *   getTpRr?: () => number,
  *   getRiskUsd?: () => number,
- *   getTimeoutBars?: () => number
+ *   getTimeoutBars?: () => number,
+ *   getChartPositionsStrategy?: () => "fixed-tp"|"partial-tp"|"partial-tp-y",
+ *   getTp3X?: () => number,
+ *   getTp3Y?: () => number
  * }} host
  */
 export function mountAlgoPatternEntryOverlay(
@@ -46,8 +53,22 @@ const tpRaw =
 host?.getTpRr?.();
 const riskRaw =
 host?.getRiskUsd?.();
+const strategyRaw =
+host?.getChartPositionsStrategy?.();
+const strategy =
+strategyRaw ===
+"partial-tp" ||
+strategyRaw ===
+"partial-tp-y"
+? strategyRaw
+: "fixed-tp";
+const tp3XRaw =
+host?.getTp3X?.();
+const tp3YRaw =
+host?.getTp3Y?.();
 
 return {
+strategy,
 slPctOfX:
 Number.isFinite(
 slRaw
@@ -65,7 +86,23 @@ Number.isFinite(
 riskRaw
 )
 ? riskRaw
-: DEFAULT_RISK_USD
+: DEFAULT_RISK_USD,
+tp3X:
+Number.isFinite(
+tp3XRaw
+) &&
+tp3XRaw >
+0
+? tp3XRaw
+: DEFAULT_PARTIAL_TP3_X,
+tp3Y:
+Number.isFinite(
+tp3YRaw
+) &&
+tp3YRaw >
+0
+? tp3YRaw
+: DEFAULT_PARTIAL_TP3_X
 };
 
 }

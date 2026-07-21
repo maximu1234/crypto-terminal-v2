@@ -1,0 +1,3030 @@
+/**
+ * Topbar: блоки Стратегия 1–3 (настройки бота; St2/St3 — заглушки).
+ */
+import {
+loadBotStrategiesPrefs,
+saveBotStrategiesPrefs,
+normalizeBotSide,
+normalizeBotTf,
+normalizeBotRefreshStatsMode,
+botSideListLabel
+} from "./bot-strategy-prefs.js?v=5";
+import {
+syncBotStrategiesToMain,
+syncAllTickerFlagsRootToMain,
+startAlgoBot,
+stopAlgoBot,
+fetchAlgoBotStatus,
+disarmAlgoArmedSetup,
+subscribeAlgoBotStatus,
+maybeApplyTickerFlagsFromBotStatus,
+isAlgoBotDesktop
+} from "./bot-bridge.js?v=6";
+
+const STATUS_POLL_MS =
+2500;
+
+let activeBotStrategyUiDestroy =
+null;
+
+/**
+ * @param {number} value
+ */
+function formatUsd(
+value
+){
+
+const n =
+Number(
+value
+);
+
+if(
+!Number.isFinite(
+n
+)
+){
+return "—";
+}
+
+const sign =
+n >
+0
+? "+"
+: "";
+return `${sign}${n.toFixed(
+2
+)}`;
+
+}
+
+/**
+ * @returns {{ destroy: () => void }}
+ */
+export function mountAlgoBotStrategyUi(){
+
+if(
+typeof activeBotStrategyUiDestroy ===
+"function"
+){
+try{
+activeBotStrategyUiDestroy();
+}catch{
+/* ignore stale destroy */
+}
+activeBotStrategyUiDestroy =
+null;
+}
+
+const prefs =
+loadBotStrategiesPrefs();
+let st1 =
+{
+...prefs.st1
+};
+let st2 =
+{
+...prefs.st2
+};
+let st3 =
+{
+...prefs.st3
+};
+
+/** @type {"live"|"manual"} */
+let tradingMode =
+"live";
+
+const strategiesWrap =
+document.getElementById(
+"algo-bot-strategies"
+);
+const toggle =
+document.getElementById(
+"algo-bot-st1-toggle"
+);
+const dropdown =
+document.getElementById(
+"algo-bot-st1-dropdown"
+);
+const runBtn =
+document.getElementById(
+"algo-bot-st1-run"
+);
+const timeoutInput =
+document.getElementById(
+"algo-bot-st1-timeout"
+);
+const slPctInput =
+document.getElementById(
+"algo-bot-st1-sl-pct"
+);
+const slUsdInput =
+document.getElementById(
+"algo-bot-st1-sl-usd"
+);
+const tpRrInput =
+document.getElementById(
+"algo-bot-st1-tp-rr"
+);
+const sideLong =
+document.getElementById(
+"algo-bot-st1-side-long"
+);
+const sideShort =
+document.getElementById(
+"algo-bot-st1-side-short"
+);
+const sideBoth =
+document.getElementById(
+"algo-bot-st1-side-both"
+);
+const sideHint =
+document.getElementById(
+"algo-bot-st1-side-hint"
+);
+const useFavoritesCheck =
+document.getElementById(
+"algo-bot-st1-use-favorites"
+);
+const refreshH =
+document.getElementById(
+"algo-bot-st1-refresh-h"
+);
+const refreshM =
+document.getElementById(
+"algo-bot-st1-refresh-m"
+);
+const winrateInput =
+document.getElementById(
+"algo-bot-st1-winrate"
+);
+const refreshRealCheck =
+document.getElementById(
+"algo-bot-st1-refresh-real"
+);
+const refreshModeLabelSt1 =
+document.getElementById(
+"algo-bot-st1-refresh-mode-label"
+);
+const tfBar =
+document.getElementById(
+"algo-bot-st1-tf"
+);
+const tfBtns =
+[
+...(
+tfBar?.querySelectorAll(
+"[data-bot-tf]"
+) ||
+[]
+)
+];
+
+const st2Toggle =
+document.getElementById(
+"algo-bot-st2-toggle"
+);
+const st2Drop =
+document.getElementById(
+"algo-bot-st2-dropdown"
+);
+const st3Toggle =
+document.getElementById(
+"algo-bot-st3-toggle"
+);
+const st3Drop =
+document.getElementById(
+"algo-bot-st3-dropdown"
+);
+const st2RunBtn =
+document.getElementById(
+"algo-bot-st2-run"
+);
+const st3RunBtn =
+document.getElementById(
+"algo-bot-st3-run"
+);
+
+const statusToggle =
+document.getElementById(
+"algo-bot-status-toggle"
+);
+const statusDrop =
+document.getElementById(
+"algo-bot-status-dropdown"
+);
+const statusWatchlist =
+document.getElementById(
+"algo-bot-status-watchlist"
+);
+const statusOpen =
+document.getElementById(
+"algo-bot-status-open"
+);
+const statusWin =
+document.getElementById(
+"algo-bot-status-win"
+);
+const statusLoss =
+document.getElementById(
+"algo-bot-status-loss"
+);
+const statusTotal =
+document.getElementById(
+"algo-bot-status-total"
+);
+const statusArmed =
+document.getElementById(
+"algo-bot-status-armed"
+);
+const statusArmedList =
+document.getElementById(
+"algo-bot-status-armed-list"
+);
+const statusWouldEnter =
+document.getElementById(
+"algo-bot-status-would-enter"
+);
+const statusLastSignal =
+document.getElementById(
+"algo-bot-status-last-signal"
+);
+const statusSignalList =
+document.getElementById(
+"algo-bot-status-signal-list"
+);
+const statusMessage =
+document.getElementById(
+"algo-bot-status-message"
+);
+
+/** @type {HTMLElement[]} */
+const allDrops =
+[
+dropdown,
+st2Drop,
+st3Drop,
+statusDrop
+].filter(
+Boolean
+);
+
+/** @type {HTMLElement[]} */
+const lockWhenRunning =
+[
+toggle,
+st2Toggle,
+st3Toggle,
+timeoutInput,
+slPctInput,
+slUsdInput,
+tpRrInput,
+sideLong,
+sideShort,
+sideBoth,
+useFavoritesCheck,
+refreshH,
+refreshM,
+winrateInput,
+refreshRealCheck,
+...tfBtns
+].filter(
+Boolean
+);
+
+let statusPollTimer =
+null;
+let runInflight =
+false;
+let lastArmedFingerprint =
+"";
+let armedListWasOpen =
+false;
+let lastSignalFingerprint =
+"";
+let signalListWasOpen =
+false;
+
+function escapeHtml(
+value
+){
+
+return String(
+value ??
+""
+).replace(
+/&/g,
+"&amp;"
+).replace(
+/</g,
+"&lt;"
+).replace(
+/>/g,
+"&gt;"
+).replace(
+/"/g,
+"&quot;"
+);
+
+}
+
+function formatSignalTime(
+ts
+){
+
+const ms =
+Number(
+ts
+);
+
+if(
+!Number.isFinite(
+ms
+) ||
+ms <=
+0
+){
+return "";
+}
+
+try{
+return new Date(
+ms
+).toLocaleTimeString(
+"ru-RU",
+{
+hour:
+"2-digit",
+minute:
+"2-digit",
+second:
+"2-digit"
+}
+);
+}catch{
+return "";
+}
+
+}
+
+function closeArmedList(){
+
+if(
+statusArmedList
+){
+statusArmedList.classList.add(
+"hidden"
+);
+statusArmedList.classList.remove(
+"is-flip-left"
+);
+}
+
+statusArmed?.setAttribute(
+"aria-expanded",
+"false"
+);
+
+}
+
+function closeSignalList(){
+
+if(
+statusSignalList
+){
+statusSignalList.classList.add(
+"hidden"
+);
+statusSignalList.classList.remove(
+"is-flip-left"
+);
+}
+
+statusLastSignal?.setAttribute(
+"aria-expanded",
+"false"
+);
+
+}
+
+function closeAllDrops(
+except =
+null
+){
+
+for(
+const el of allDrops
+){
+
+if(
+el ===
+except
+){
+continue;
+}
+
+el.classList.add(
+"hidden"
+);
+
+}
+
+if(
+except !==
+statusDrop
+){
+closeArmedList();
+closeSignalList();
+}
+
+toggle?.setAttribute(
+"aria-expanded",
+dropdown &&
+!dropdown.classList.contains(
+"hidden"
+)
+? "true"
+: "false"
+);
+st2Toggle?.setAttribute(
+"aria-expanded",
+st2Drop &&
+!st2Drop.classList.contains(
+"hidden"
+)
+? "true"
+: "false"
+);
+st3Toggle?.setAttribute(
+"aria-expanded",
+st3Drop &&
+!st3Drop.classList.contains(
+"hidden"
+)
+? "true"
+: "false"
+);
+statusToggle?.setAttribute(
+"aria-expanded",
+statusDrop &&
+!statusDrop.classList.contains(
+"hidden"
+)
+? "true"
+: "false"
+);
+
+}
+
+function setDropOpen(
+drop,
+btn,
+open
+){
+
+if(
+!drop ||
+!btn
+){
+return;
+}
+
+if(
+open
+){
+closeAllDrops(
+drop
+);
+drop.classList.remove(
+"hidden"
+);
+}else{
+drop.classList.add(
+"hidden"
+);
+
+if(
+drop ===
+statusDrop
+){
+closeArmedList();
+}
+}
+
+btn.setAttribute(
+"aria-expanded",
+open
+? "true"
+: "false"
+);
+
+}
+
+function syncConfigToMain(){
+
+if(
+!isAlgoBotDesktop()
+){
+return;
+}
+
+void syncBotStrategiesToMain();
+void syncAllTickerFlagsRootToMain();
+
+}
+
+function persistSt1(
+patch =
+{}
+){
+
+st1 =
+{
+...st1,
+...patch
+};
+saveBotStrategiesPrefs(
+{
+st1
+}
+);
+syncConfigToMain();
+
+}
+
+function applyRunBtn(){
+
+if(
+!runBtn
+){
+return;
+}
+
+const running =
+!!st1.running;
+
+runBtn.dataset.running =
+running
+? "1"
+: "0";
+runBtn.setAttribute(
+"aria-pressed",
+running
+? "true"
+: "false"
+);
+runBtn.textContent =
+runInflight && !running
+? "Запуск…"
+: running
+? "Остановить"
+: "Запустить";
+runBtn.title =
+running
+? "Остановить бота"
+: "Запустить бота";
+runBtn.classList.toggle(
+"is-running",
+running
+);
+runBtn.disabled =
+runInflight;
+
+if(
+strategiesWrap
+){
+strategiesWrap.classList.toggle(
+"is-bot-running",
+runningStrategyId()
+);
+}
+
+}
+
+function persistPartial(
+strategyId,
+patch =
+{}
+){
+
+if(
+strategyId ===
+"st2"
+){
+st2 =
+{
+...st2,
+...patch
+};
+saveBotStrategiesPrefs(
+{
+st2
+}
+);
+}else{
+st3 =
+{
+...st3,
+...patch
+};
+saveBotStrategiesPrefs(
+{
+st3
+}
+);
+}
+syncConfigToMain();
+
+}
+
+function initPartialStrategy(
+strategyId
+){
+
+const isSt2 =
+strategyId ===
+"st2";
+const getPrefs =
+()=> isSt2
+? st2
+: st3;
+const drop =
+document.getElementById(
+`algo-bot-${strategyId}-dropdown`
+);
+const toggleBtn =
+document.getElementById(
+`algo-bot-${strategyId}-toggle`
+);
+const run =
+document.getElementById(
+`algo-bot-${strategyId}-run`
+);
+const el =
+name=>document.getElementById(
+`algo-bot-${strategyId}-${name}`
+);
+const inputs =
+{
+timeoutBars:
+el(
+"timeout"
+),
+slPct:
+el(
+"sl-pct"
+),
+riskUsd:
+el(
+"sl-usd"
+),
+tp1:
+el(
+"tp1"
+),
+tp2:
+el(
+"tp2"
+),
+tp3:
+el(
+"tp3"
+),
+trailSlPct:
+el(
+"trail-pct"
+),
+refreshHours:
+el(
+"refresh-h"
+),
+refreshMinutes:
+el(
+"refresh-m"
+),
+minWinRate:
+el(
+"winrate"
+)
+};
+const trail =
+el(
+"trail"
+);
+const favorites =
+el(
+"use-favorites"
+);
+const real =
+el(
+"refresh-real"
+);
+const refreshModeLabel =
+el(
+"refresh-mode-label"
+);
+const sideHint =
+el(
+"side-hint"
+);
+const sideButtons =
+[
+"long",
+"short",
+"both"
+].map(
+side=>[
+side,
+el(
+`side-${side}`
+)
+]
+);
+const tfButtons =
+[
+...(
+el(
+"tf"
+)?.querySelectorAll(
+"[data-bot-tf]"
+) ||
+[]
+)
+];
+
+function apply(){
+
+const p =
+getPrefs();
+
+for(
+const [
+key,
+input
+] of Object.entries(
+inputs
+)
+){
+if(
+input
+){
+input.value =
+String(
+p[
+key
+]
+);
+}
+}
+
+trail.checked =
+!!p.trailSl;
+favorites.checked =
+!!p.useFavorites;
+real.checked =
+p.refreshStatsMode ===
+"real";
+if(
+refreshModeLabel
+){
+refreshModeLabel.textContent =
+real.checked
+? "Реальный подсчет"
+: "Прямой подсчет";
+}
+sideHint.textContent =
+botSideListLabel(
+p.side,
+!!p.useFavorites
+);
+
+for(
+const [
+side,
+input
+] of sideButtons
+){
+if(
+input
+){
+input.checked =
+p.side ===
+side;
+}
+}
+
+for(
+const btn of tfButtons
+){
+btn.classList.toggle(
+"active",
+btn.dataset.botTf ===
+p.tf
+);
+}
+
+const running =
+!!p.running;
+run.dataset.running =
+running
+? "1"
+: "0";
+run.setAttribute(
+"aria-pressed",
+running
+? "true"
+: "false"
+);
+run.textContent =
+running
+? "Остановить"
+: "Запустить";
+run.classList.toggle(
+"is-running",
+running
+);
+run.disabled =
+isManualTradingMode() ||
+(
+runningStrategyId() &&
+!running
+);
+run.title =
+isManualTradingMode()
+? "В ручном режиме доступна только Стратегия 1"
+: running
+? "Остановить бота"
+: "Запустить бота";
+
+}
+
+toggleBtn?.addEventListener(
+"click",
+event=>{
+if(
+isManualTradingMode() ||
+runningStrategyId()
+){
+return;
+}
+event.preventDefault();
+setDropOpen(
+drop,
+toggleBtn,
+drop?.classList.contains(
+"hidden"
+) !==
+false
+);
+}
+);
+
+run?.addEventListener(
+"click",
+async event=>{
+event.preventDefault();
+
+if(
+isManualTradingMode()
+){
+applyStatusPanel(
+{
+ok:
+false,
+message:
+"В ручном режиме доступна только Стратегия 1"
+}
+);
+return;
+}
+
+const p =
+getPrefs();
+
+if(
+p.running
+){
+const result =
+await stopAlgoBot(
+strategyId
+);
+applyBotStatus(
+result
+);
+return;
+}
+
+const result =
+await startAlgoBot(
+strategyId
+);
+
+if(
+result?.ok ||
+result?.running
+){
+applyBotStatus(
+result
+);
+}else{
+applyStatusPanel(
+result
+);
+}
+}
+);
+
+for(
+const btn of tfButtons
+){
+btn.addEventListener(
+"click",
+()=>{
+if(
+runningStrategyId()
+){
+return;
+}
+persistPartial(
+strategyId,
+{
+tf:
+normalizeBotTf(
+btn.dataset.botTf
+)
+}
+);
+apply();
+}
+);
+}
+
+for(
+const [
+side,
+input
+] of sideButtons
+){
+input?.addEventListener(
+"change",
+()=>{
+if(
+input.checked &&
+!runningStrategyId()
+){
+persistPartial(
+strategyId,
+{
+side:
+normalizeBotSide(
+side
+)
+}
+);
+apply();
+}
+}
+);
+}
+
+for(
+const [
+key,
+input
+] of Object.entries(
+inputs
+)
+){
+input?.addEventListener(
+"change",
+()=>{
+if(
+runningStrategyId()
+){
+return;
+}
+const n =
+Number(
+input.value
+);
+if(
+!Number.isFinite(
+n
+)
+){
+apply();
+return;
+}
+persistPartial(
+strategyId,
+{
+[
+key
+]:
+key ===
+"timeoutBars" ||
+key ===
+"refreshHours" ||
+key ===
+"refreshMinutes" ||
+key ===
+"minWinRate"
+? Math.round(
+n
+)
+: n
+}
+);
+apply();
+}
+);
+}
+
+trail?.addEventListener(
+"change",
+()=>persistPartial(
+strategyId,
+{
+trailSl:
+!!trail.checked
+}
+)
+);
+favorites?.addEventListener(
+"change",
+()=>{
+persistPartial(
+strategyId,
+{
+useFavorites:
+!!favorites.checked
+}
+);
+apply();
+}
+);
+real?.addEventListener(
+"change",
+()=>{
+persistPartial(
+strategyId,
+{
+refreshStatsMode:
+normalizeBotRefreshStatsMode(
+real.checked
+? "real"
+: "direct"
+)
+}
+);
+if(
+refreshModeLabel
+){
+refreshModeLabel.textContent =
+real.checked
+? "Реальный подсчет"
+: "Прямой подсчет";
+}
+}
+);
+
+apply();
+return apply;
+
+}
+
+function runningStrategyId(){
+
+return st1.running ||
+st2.running ||
+st3.running;
+
+}
+
+function isManualTradingMode(){
+
+return tradingMode ===
+"manual";
+
+}
+
+function applyPartialStrategiesManualGate(){
+
+const manual =
+isManualTradingMode();
+const title =
+manual
+? "В ручном режиме доступна только Стратегия 1"
+: "";
+
+for(
+const id of [
+"st2",
+"st3"
+]
+){
+
+const wrap =
+document.querySelector(
+`[data-algo-bot-strategy="${id}"]`
+);
+const toggleBtn =
+document.getElementById(
+`algo-bot-${id}-toggle`
+);
+const run =
+document.getElementById(
+`algo-bot-${id}-run`
+);
+const drop =
+document.getElementById(
+`algo-bot-${id}-dropdown`
+);
+
+wrap?.classList.toggle(
+"is-manual-unavailable",
+manual
+);
+
+if(
+manual
+){
+drop?.classList.add(
+"hidden"
+);
+toggleBtn?.setAttribute(
+"aria-expanded",
+"false"
+);
+}
+
+if(
+toggleBtn
+){
+toggleBtn.disabled =
+manual ||
+runningStrategyId();
+toggleBtn.setAttribute(
+"aria-disabled",
+toggleBtn.disabled
+? "true"
+: "false"
+);
+toggleBtn.title =
+manual
+? title
+: (
+toggleBtn.getAttribute(
+"data-default-title"
+) ||
+`Стратегия ${id === "st2" ? "2" : "3"}`
+);
+}
+
+if(
+run
+){
+const prefsRunning =
+id ===
+"st2"
+? !!st2.running
+: !!st3.running;
+run.disabled =
+manual ||
+(
+runningStrategyId() &&
+!prefsRunning
+);
+run.title =
+manual
+? title
+: (
+prefsRunning
+? "Остановить бота"
+: "Запустить бота"
+);
+}
+
+}
+
+}
+
+/** @type {HTMLElement[]} */
+const lockRoots =
+[
+dropdown,
+document.getElementById(
+"algo-settings-dropdown"
+)
+].filter(
+Boolean
+);
+
+function applyLockUi(
+running
+){
+
+document.body.classList.toggle(
+"is-algo-bot-running",
+running
+);
+
+for(
+const el of [
+...lockWhenRunning,
+...document.querySelectorAll(
+"#algo-bot-st2-dropdown input, #algo-bot-st2-dropdown button, #algo-bot-st3-dropdown input, #algo-bot-st3-dropdown button"
+)
+]
+){
+
+if(
+el instanceof HTMLInputElement ||
+el instanceof HTMLButtonElement
+){
+el.disabled =
+running;
+}
+
+}
+
+if(
+toggle
+){
+toggle.disabled =
+running;
+toggle.setAttribute(
+"aria-disabled",
+running
+? "true"
+: "false"
+);
+}
+
+if(
+st2Toggle
+){
+st2Toggle.disabled =
+running ||
+isManualTradingMode();
+st2Toggle.setAttribute(
+"aria-disabled",
+st2Toggle.disabled
+? "true"
+: "false"
+);
+}
+
+if(
+st3Toggle
+){
+st3Toggle.disabled =
+running ||
+isManualTradingMode();
+st3Toggle.setAttribute(
+"aria-disabled",
+st3Toggle.disabled
+? "true"
+: "false"
+);
+}
+
+for(
+const root of lockRoots
+){
+
+root.classList.toggle(
+"is-bot-settings-locked",
+running
+);
+root.inert =
+running;
+
+}
+
+if(
+running
+){
+if(
+st2Drop
+){
+st2Drop.classList.add(
+"hidden"
+);
+}
+
+if(
+st3Drop
+){
+st3Drop.classList.add(
+"hidden"
+);
+}
+
+st2Toggle?.setAttribute(
+"aria-expanded",
+"false"
+);
+st3Toggle?.setAttribute(
+"aria-expanded",
+"false"
+);
+}
+
+applyPartialStrategiesManualGate();
+
+}
+
+function applyStatusPanel(
+status
+){
+
+if(
+statusWatchlist
+){
+statusWatchlist.textContent =
+String(
+status?.watchlistCount ??
+"—"
+);
+}
+
+if(
+statusOpen
+){
+statusOpen.textContent =
+String(
+status?.openCount ??
+"—"
+);
+}
+
+if(
+statusWin
+){
+statusWin.textContent =
+String(
+status?.closedWin ??
+0
+);
+}
+
+if(
+statusLoss
+){
+statusLoss.textContent =
+String(
+status?.closedLoss ??
+0
+);
+}
+
+if(
+statusTotal
+){
+const total =
+Number(
+status?.closedTotalUsd ??
+0
+);
+statusTotal.textContent =
+formatUsd(
+total
+);
+statusTotal.classList.toggle(
+"is-pos",
+total >
+0
+);
+statusTotal.classList.toggle(
+"is-neg",
+total <
+0
+);
+}
+
+if(
+statusArmed
+){
+const armedCount =
+Number(
+status?.armedCount ??
+0
+);
+const armedSetups =
+Array.isArray(
+status?.armedSetups
+)
+? status.armedSetups
+: [];
+const count =
+Number.isFinite(
+armedCount
+)
+? armedCount
+: armedSetups.length;
+
+statusArmed.textContent =
+String(
+count
+);
+statusArmed.disabled =
+count <
+1;
+statusArmed.classList.toggle(
+"has-items",
+count >
+0
+);
+
+if(
+statusArmedList
+){
+const fingerprint =
+armedSetups.map(
+item=>{
+const symbol =
+String(
+item?.symbol ||
+""
+).trim().toUpperCase();
+const side =
+item?.side ===
+"short"
+? "short"
+: "long";
+return symbol
+? `${symbol}:${side}`
+: "";
+}
+).filter(
+Boolean
+).join(
+"|"
+);
+
+const listOpen =
+!statusArmedList.classList.contains(
+"hidden"
+);
+
+if(
+count <
+1
+){
+if(
+lastArmedFingerprint !==
+""
+){
+statusArmedList.innerHTML =
+`<div class="algo-bot-status-armed-empty">Нет armed сетапов</div>`;
+lastArmedFingerprint =
+"";
+}
+closeArmedList();
+}else if(
+fingerprint !==
+lastArmedFingerprint
+){
+armedListWasOpen =
+listOpen;
+statusArmedList.innerHTML =
+armedSetups.map(
+item=>{
+const symbol =
+String(
+item?.symbol ||
+""
+).trim().toUpperCase();
+const side =
+item?.side ===
+"short"
+? "short"
+: "long";
+const b4 =
+Number(
+item?.b4
+);
+const p4 =
+Number(
+item?.p4
+);
+const itemFp =
+String(
+item?.fingerprint ||
+""
+).trim();
+
+if(
+!symbol
+){
+return "";
+}
+
+return `<div class="algo-bot-status-armed-item" role="menuitem" data-symbol="${escapeHtml(
+symbol
+)}" data-side="${side}" data-b4="${Number.isFinite(
+b4
+)
+? b4
+: ""}" data-p4="${Number.isFinite(
+p4
+)
+? p4
+: ""}" data-fingerprint="${escapeHtml(
+itemFp
+)}"><button type="button" class="algo-bot-status-armed-open" title="Открыть ${escapeHtml(
+symbol
+)}"><span>${escapeHtml(
+symbol
+)}</span><span class="algo-bot-status-armed-item-side is-${side}">${side}</span></button><button type="button" class="algo-bot-status-armed-disarm" title="Снять вооружение" aria-label="Снять вооружение ${escapeHtml(
+symbol
+)}">×</button></div>`;
+}
+).join(
+""
+);
+lastArmedFingerprint =
+fingerprint;
+
+if(
+armedListWasOpen
+){
+statusArmedList.classList.remove(
+"hidden"
+);
+statusArmed.setAttribute(
+"aria-expanded",
+"true"
+);
+}
+}
+}
+}
+
+if(
+statusWouldEnter
+){
+statusWouldEnter.textContent =
+String(
+status?.entriesCount ??
+status?.wouldEnterCount ??
+0
+);
+}
+
+if(
+statusLastSignal
+){
+const signals =
+Array.isArray(
+status?.signals
+)
+? status.signals
+: [];
+const lastText =
+String(
+status?.lastSignal ||
+signals[
+signals.length -
+1
+]?.text ||
+""
+).trim();
+const count =
+signals.length;
+
+statusLastSignal.textContent =
+lastText ||
+"—";
+statusLastSignal.disabled =
+count <
+1;
+statusLastSignal.classList.toggle(
+"has-items",
+count >
+0
+);
+
+if(
+statusSignalList
+){
+const fingerprint =
+signals.map(
+item=>{
+const ts =
+Number(
+item?.ts
+) ||
+0;
+const text =
+String(
+item?.text ||
+""
+).trim();
+return `${ts}:${text}`;
+}
+).join(
+"|"
+);
+const listOpen =
+!statusSignalList.classList.contains(
+"hidden"
+);
+
+if(
+count <
+1
+){
+if(
+lastSignalFingerprint !==
+""
+){
+statusSignalList.innerHTML =
+`<div class="algo-bot-status-signal-empty">Нет сигналов</div>`;
+lastSignalFingerprint =
+"";
+}
+closeSignalList();
+}else if(
+fingerprint !==
+lastSignalFingerprint
+){
+signalListWasOpen =
+listOpen;
+const newestFirst =
+signals.slice().reverse();
+statusSignalList.innerHTML =
+newestFirst.map(
+item=>{
+const symbol =
+String(
+item?.symbol ||
+""
+).trim().toUpperCase();
+const sideRaw =
+String(
+item?.side ||
+""
+).trim().toLowerCase();
+const side =
+sideRaw ===
+"short"
+? "short"
+: sideRaw ===
+"long"
+? "long"
+: "";
+const text =
+String(
+item?.text ||
+""
+).trim();
+const time =
+formatSignalTime(
+item?.ts
+);
+const metaSide =
+side
+? `<span class="algo-bot-status-signal-item-side is-${side}">${side}</span>`
+: `<span></span>`;
+const metaTime =
+time
+? `<span>${escapeHtml(
+time
+)}</span>`
+: "";
+
+if(
+!text
+){
+return "";
+}
+
+return `<button type="button" class="algo-bot-status-signal-item" role="menuitem" data-symbol="${escapeHtml(
+symbol
+)}" data-side="${side}"><span class="algo-bot-status-signal-item-meta">${metaSide}${metaTime}</span><span class="algo-bot-status-signal-item-text">${escapeHtml(
+text
+)}</span></button>`;
+}
+).join(
+""
+);
+lastSignalFingerprint =
+fingerprint;
+
+if(
+signalListWasOpen
+){
+statusSignalList.classList.remove(
+"hidden"
+);
+statusLastSignal.setAttribute(
+"aria-expanded",
+"true"
+);
+}
+}
+}
+}
+
+if(
+statusMessage
+){
+const msg =
+String(
+status?.message ||
+""
+).trim();
+const isError =
+status?.ok ===
+false &&
+!status?.running;
+
+if(
+msg
+){
+statusMessage.textContent =
+msg;
+statusMessage.classList.remove(
+"hidden"
+);
+statusMessage.classList.toggle(
+"is-error",
+isError
+);
+}else{
+statusMessage.textContent =
+"";
+statusMessage.classList.add(
+"hidden"
+);
+statusMessage.classList.remove(
+"is-error"
+);
+}
+
+}
+
+}
+
+function applyBotStatus(
+status
+){
+
+if(
+!status
+){
+return;
+}
+
+maybeApplyTickerFlagsFromBotStatus(
+status
+);
+
+if(
+status.tradingMode ===
+"manual" ||
+status.tradingMode ===
+"live"
+){
+tradingMode =
+status.tradingMode;
+}
+
+const statusWasOpen =
+!!statusDrop &&
+!statusDrop.classList.contains(
+"hidden"
+);
+const prevRunning =
+runningStrategyId();
+
+if(
+status.running !=
+null
+){
+st1.running =
+status.strategyId ===
+"st1" &&
+!!status.running;
+st2.running =
+status.strategyId ===
+"st2" &&
+!!status.running;
+st3.running =
+status.strategyId ===
+"st3" &&
+!!status.running;
+}
+
+applyRunBtn();
+applySt2?.();
+applySt3?.();
+applyPartialStrategiesManualGate();
+
+if(
+prevRunning !==
+runningStrategyId()
+){
+applyLockUi(
+runningStrategyId()
+);
+}
+
+if(
+statusWasOpen
+){
+statusDrop?.classList.remove(
+"hidden"
+);
+statusToggle?.setAttribute(
+"aria-expanded",
+"true"
+);
+}
+
+applyStatusPanel(
+status
+);
+
+if(
+prevRunning !==
+runningStrategyId()
+){
+saveBotStrategiesPrefs(
+{
+st1:{
+running:
+!!st1.running
+},
+st2:{
+running:
+!!st2.running
+},
+st3:{
+running:
+!!st3.running
+}
+}
+);
+}
+
+}
+
+async function refreshBotStatus(){
+
+const status =
+await fetchAlgoBotStatus();
+
+if(
+status &&
+(
+status.running !=
+null ||
+status.ok !==
+false
+)
+){
+applyBotStatus(
+status
+);
+}
+
+return status;
+
+}
+
+function startStatusPoll(){
+
+stopStatusPoll();
+statusPollTimer =
+window.setInterval(
+()=>{
+void refreshBotStatus();
+},
+STATUS_POLL_MS
+);
+}
+
+function stopStatusPoll(){
+
+if(
+statusPollTimer
+){
+window.clearInterval(
+statusPollTimer
+);
+statusPollTimer =
+null;
+}
+
+}
+
+function applyTfUi(){
+
+for(
+const btn of tfBtns
+){
+btn.classList.toggle(
+"active",
+btn.getAttribute(
+"data-bot-tf"
+) ===
+st1.tf
+);
+}
+
+}
+
+function applySideUi(){
+
+if(
+sideLong
+){
+sideLong.checked =
+st1.side ===
+"long";
+}
+
+if(
+sideShort
+){
+sideShort.checked =
+st1.side ===
+"short";
+}
+
+if(
+sideBoth
+){
+sideBoth.checked =
+st1.side ===
+"both";
+}
+
+if(
+sideHint
+){
+sideHint.textContent =
+botSideListLabel(
+st1.side,
+!!st1.useFavorites
+);
+}
+
+if(
+useFavoritesCheck
+){
+useFavoritesCheck.checked =
+!!st1.useFavorites;
+}
+
+}
+
+function applyFieldsFromPrefs(){
+
+if(
+timeoutInput
+){
+timeoutInput.value =
+String(
+st1.timeoutBars
+);
+}
+
+if(
+slPctInput
+){
+slPctInput.value =
+String(
+st1.slPct
+);
+}
+
+if(
+slUsdInput
+){
+slUsdInput.value =
+String(
+st1.riskUsd
+);
+}
+
+if(
+tpRrInput
+){
+tpRrInput.value =
+String(
+st1.tpRr
+);
+}
+
+if(
+refreshH
+){
+refreshH.value =
+String(
+st1.refreshHours
+);
+}
+
+if(
+refreshM
+){
+refreshM.value =
+String(
+st1.refreshMinutes
+);
+}
+
+if(
+winrateInput
+){
+winrateInput.value =
+String(
+st1.minWinRate
+);
+}
+
+if(
+refreshRealCheck
+){
+refreshRealCheck.checked =
+st1.refreshStatsMode ===
+"real";
+}
+
+if(
+refreshModeLabelSt1
+){
+refreshModeLabelSt1.textContent =
+st1.refreshStatsMode ===
+"real"
+? "Реальный подсчет"
+: "Прямой подсчет";
+}
+
+applyTfUi();
+applySideUi();
+applyRunBtn();
+
+}
+
+function setSide(
+side
+){
+
+st1.side =
+normalizeBotSide(
+side
+);
+applySideUi();
+persistSt1(
+{
+side:
+st1.side
+}
+);
+
+}
+
+function onFieldBlur(
+key,
+input,
+normalize
+){
+
+if(
+!input ||
+st1.running
+){
+return;
+}
+
+const next =
+normalize(
+input.value
+);
+input.value =
+String(
+next
+);
+persistSt1(
+{
+[
+key
+]:
+next
+}
+);
+
+}
+
+applyFieldsFromPrefs();
+const applySt2 =
+initPartialStrategy(
+"st2"
+);
+const applySt3 =
+initPartialStrategy(
+"st3"
+);
+applyPartialStrategiesManualGate();
+
+function onTradingModeChanged(
+event
+){
+
+const next =
+event?.detail?.tradingMode;
+
+if(
+next ===
+"manual" ||
+next ===
+"live"
+){
+tradingMode =
+next;
+applyPartialStrategiesManualGate();
+applySt2?.();
+applySt3?.();
+}
+
+}
+
+window.addEventListener(
+"algo-trading-mode-changed",
+onTradingModeChanged
+);
+
+syncConfigToMain();
+void refreshBotStatus();
+startStatusPoll();
+
+const unsubBotStatus =
+subscribeAlgoBotStatus(
+status=>{
+applyBotStatus(
+status
+);
+}
+);
+
+async function onTickerFlagsChanged(){
+
+if(
+!isAlgoBotDesktop()
+){
+return;
+}
+
+// Push local lists to main; never pull flags back from status poll.
+await syncAllTickerFlagsRootToMain();
+
+}
+
+window.addEventListener(
+"algo-bot-ticker-flags-changed",
+onTickerFlagsChanged
+);
+
+toggle?.addEventListener(
+"click",
+event=>{
+if(
+runningStrategyId()
+){
+return;
+}
+
+event.preventDefault();
+event.stopPropagation();
+const open =
+dropdown?.classList.contains(
+"hidden"
+) !==
+false;
+setDropOpen(
+dropdown,
+toggle,
+open
+);
+}
+);
+
+statusToggle?.addEventListener(
+"click",
+event=>{
+event.preventDefault();
+event.stopImmediatePropagation();
+event.stopPropagation();
+const open =
+statusDrop?.classList.contains(
+"hidden"
+) !==
+false;
+setDropOpen(
+statusDrop,
+statusToggle,
+open
+);
+},
+true
+);
+
+statusDrop?.addEventListener(
+"click",
+event=>{
+event.stopPropagation();
+}
+);
+
+statusArmed?.addEventListener(
+"click",
+event=>{
+event.preventDefault();
+event.stopPropagation();
+
+if(
+statusArmed.disabled
+){
+return;
+}
+
+const open =
+statusArmedList?.classList.contains(
+"hidden"
+) !==
+false;
+
+if(
+open
+){
+closeSignalList();
+statusArmedList?.classList.remove(
+"hidden",
+"is-flip-left"
+);
+statusArmed.setAttribute(
+"aria-expanded",
+"true"
+);
+
+requestAnimationFrame(
+()=>{
+if(
+!statusArmedList ||
+statusArmedList.classList.contains(
+"hidden"
+)
+){
+return;
+}
+
+const rect =
+statusArmedList.getBoundingClientRect();
+
+if(
+rect.right >
+window.innerWidth -
+8
+){
+statusArmedList.classList.add(
+"is-flip-left"
+);
+}
+}
+);
+}else{
+closeArmedList();
+}
+
+}
+);
+
+statusArmedList?.addEventListener(
+"click",
+async event=>{
+event.preventDefault();
+event.stopPropagation();
+
+const disarmBtn =
+event.target?.closest?.(
+".algo-bot-status-armed-disarm"
+);
+
+if(
+disarmBtn instanceof HTMLElement
+){
+const row =
+disarmBtn.closest(
+".algo-bot-status-armed-item"
+);
+
+if(
+!(
+row instanceof HTMLElement
+)
+){
+return;
+}
+
+const symbol =
+String(
+row.dataset.symbol ||
+""
+).trim().toUpperCase();
+const side =
+row.dataset.side ===
+"short"
+? "short"
+: "long";
+const fingerprint =
+String(
+row.dataset.fingerprint ||
+""
+).trim();
+const b4 =
+Number(
+row.dataset.b4
+);
+const p4 =
+Number(
+row.dataset.p4
+);
+
+if(
+!symbol
+){
+return;
+}
+
+disarmBtn.disabled =
+true;
+
+try{
+const result =
+await disarmAlgoArmedSetup(
+{
+symbol,
+side,
+fingerprint,
+b4:
+Number.isFinite(
+b4
+)
+? b4
+: undefined,
+p4:
+Number.isFinite(
+p4
+)
+? p4
+: undefined
+}
+);
+applyBotStatus(
+result
+);
+}finally{
+disarmBtn.disabled =
+false;
+}
+
+return;
+}
+
+const openBtn =
+event.target?.closest?.(
+".algo-bot-status-armed-open"
+) ||
+event.target?.closest?.(
+".algo-bot-status-armed-item"
+);
+
+if(
+!(
+openBtn instanceof HTMLElement
+)
+){
+return;
+}
+
+const row =
+openBtn.closest?.(
+".algo-bot-status-armed-item"
+) ||
+openBtn;
+const symbol =
+String(
+row.dataset?.symbol ||
+""
+).trim().toUpperCase();
+
+if(
+!symbol
+){
+return;
+}
+
+window.dispatchEvent(
+new CustomEvent(
+"algo-book-open-symbol",
+{
+detail:{
+symbol
+}
+}
+)
+);
+}
+);
+
+statusLastSignal?.addEventListener(
+"click",
+event=>{
+event.preventDefault();
+event.stopPropagation();
+
+if(
+statusLastSignal.disabled
+){
+return;
+}
+
+const open =
+statusSignalList?.classList.contains(
+"hidden"
+) !==
+false;
+
+if(
+open
+){
+closeArmedList();
+statusSignalList?.classList.remove(
+"hidden",
+"is-flip-left"
+);
+statusLastSignal.setAttribute(
+"aria-expanded",
+"true"
+);
+
+requestAnimationFrame(
+()=>{
+if(
+!statusSignalList ||
+statusSignalList.classList.contains(
+"hidden"
+)
+){
+return;
+}
+
+const rect =
+statusSignalList.getBoundingClientRect();
+
+if(
+rect.right >
+window.innerWidth -
+8
+){
+statusSignalList.classList.add(
+"is-flip-left"
+);
+}
+}
+);
+}else{
+closeSignalList();
+}
+
+}
+);
+
+statusSignalList?.addEventListener(
+"click",
+event=>{
+event.preventDefault();
+event.stopPropagation();
+
+const btn =
+event.target?.closest?.(
+".algo-bot-status-signal-item"
+);
+
+if(
+!(
+btn instanceof HTMLElement
+)
+){
+return;
+}
+
+const symbol =
+String(
+btn.dataset.symbol ||
+""
+).trim().toUpperCase();
+
+if(
+!symbol
+){
+return;
+}
+
+window.dispatchEvent(
+new CustomEvent(
+"algo-book-open-symbol",
+{
+detail:{
+symbol
+}
+}
+)
+);
+}
+);
+
+runBtn?.addEventListener(
+"click",
+async event=>{
+event.preventDefault();
+event.stopPropagation();
+
+if(
+runInflight
+){
+return;
+}
+
+runInflight =
+true;
+applyRunBtn();
+
+const wasRunning =
+!!st1.running;
+
+try{
+if(
+wasRunning
+){
+st1.running =
+false;
+applyRunBtn();
+applyLockUi(
+false
+);
+const result =
+await stopAlgoBot(
+"st1"
+);
+applyBotStatus(
+result
+);
+}else{
+const result =
+await startAlgoBot(
+"st1"
+);
+
+if(
+result?.ok ||
+result?.running
+){
+applyBotStatus(
+result
+);
+}else{
+applyBotStatus(
+{
+...result,
+running:
+false
+}
+);
+applyStatusPanel(
+result
+);
+}
+}
+}finally{
+runInflight =
+false;
+applyRunBtn();
+}
+
+}
+);
+
+for(
+const btn of tfBtns
+){
+btn.addEventListener(
+"click",
+()=>{
+if(
+st1.running
+){
+return;
+}
+
+st1.tf =
+normalizeBotTf(
+btn.getAttribute(
+"data-bot-tf"
+)
+);
+applyTfUi();
+persistSt1(
+{
+tf:
+st1.tf
+}
+);
+}
+);
+}
+
+sideLong?.addEventListener(
+"change",
+()=>{
+if(
+st1.running
+){
+return;
+}
+
+if(
+sideLong.checked
+){
+setSide(
+"long"
+);
+}else{
+sideLong.checked =
+true;
+}
+}
+);
+sideShort?.addEventListener(
+"change",
+()=>{
+if(
+st1.running
+){
+return;
+}
+
+if(
+sideShort.checked
+){
+setSide(
+"short"
+);
+}else{
+sideShort.checked =
+true;
+}
+}
+);
+sideBoth?.addEventListener(
+"change",
+()=>{
+if(
+st1.running
+){
+return;
+}
+
+if(
+sideBoth.checked
+){
+setSide(
+"both"
+);
+}else{
+sideBoth.checked =
+true;
+}
+}
+);
+
+useFavoritesCheck?.addEventListener(
+"change",
+()=>{
+if(
+st1.running
+){
+useFavoritesCheck.checked =
+!!st1.useFavorites;
+return;
+}
+
+st1.useFavorites =
+!!useFavoritesCheck.checked;
+applySideUi();
+persistSt1(
+{
+useFavorites:
+st1.useFavorites
+}
+);
+}
+);
+
+timeoutInput?.addEventListener(
+"change",
+()=>{
+onFieldBlur(
+"timeoutBars",
+timeoutInput,
+v=>
+Math.min(
+10000,
+Math.max(
+1,
+Math.round(
+Number(
+v
+) ||
+200
+)
+)
+)
+);
+}
+);
+slPctInput?.addEventListener(
+"change",
+()=>{
+onFieldBlur(
+"slPct",
+slPctInput,
+v=>{
+const n =
+Number(
+v
+);
+return Number.isFinite(
+n
+) &&
+n >=
+0.01
+? n
+: 50;
+}
+);
+}
+);
+slUsdInput?.addEventListener(
+"change",
+()=>{
+onFieldBlur(
+"riskUsd",
+slUsdInput,
+v=>{
+const n =
+Number(
+v
+);
+return Number.isFinite(
+n
+) &&
+n >=
+0.01
+? n
+: 1;
+}
+);
+}
+);
+tpRrInput?.addEventListener(
+"change",
+()=>{
+onFieldBlur(
+"tpRr",
+tpRrInput,
+v=>{
+const n =
+Number(
+v
+);
+return Number.isFinite(
+n
+) &&
+n >=
+0.01
+? n
+: 2;
+}
+);
+}
+);
+refreshH?.addEventListener(
+"change",
+()=>{
+onFieldBlur(
+"refreshHours",
+refreshH,
+v=>
+Math.min(
+168,
+Math.max(
+0,
+Math.round(
+Number(
+v
+) ||
+0
+)
+)
+)
+);
+}
+);
+refreshM?.addEventListener(
+"change",
+()=>{
+onFieldBlur(
+"refreshMinutes",
+refreshM,
+v=>
+Math.min(
+59,
+Math.max(
+0,
+Math.round(
+Number(
+v
+) ||
+0
+)
+)
+)
+);
+}
+);
+winrateInput?.addEventListener(
+"change",
+()=>{
+onFieldBlur(
+"minWinRate",
+winrateInput,
+v=>
+Math.min(
+100,
+Math.max(
+10,
+Math.round(
+Number(
+v
+) ||
+70
+)
+)
+)
+);
+}
+);
+refreshRealCheck?.addEventListener(
+"change",
+()=>{
+persistSt1(
+{
+refreshStatsMode:
+normalizeBotRefreshStatsMode(
+refreshRealCheck.checked
+? "real"
+: "direct"
+)
+}
+);
+if(
+refreshModeLabelSt1
+){
+refreshModeLabelSt1.textContent =
+refreshRealCheck.checked
+? "Реальный подсчет"
+: "Прямой подсчет";
+}
+}
+);
+
+function onDocClick(
+event
+){
+
+const target =
+event.target;
+
+if(
+!(
+target instanceof Node
+)
+){
+return;
+}
+
+const statusWrap =
+document.getElementById(
+"algo-bot-status-wrap"
+);
+
+if(
+strategiesWrap?.contains(
+target
+) ||
+statusWrap?.contains(
+target
+)
+){
+return;
+}
+
+closeAllDrops();
+
+}
+
+function onKeydown(
+event
+){
+
+if(
+event.key ===
+"Escape"
+){
+closeAllDrops();
+}
+
+}
+
+document.addEventListener(
+"click",
+onDocClick
+);
+document.addEventListener(
+"keydown",
+onKeydown
+);
+
+const api = {
+destroy(){
+stopStatusPoll();
+unsubBotStatus();
+window.removeEventListener(
+"algo-bot-ticker-flags-changed",
+onTickerFlagsChanged
+);
+window.removeEventListener(
+"algo-trading-mode-changed",
+onTradingModeChanged
+);
+document.removeEventListener(
+"click",
+onDocClick
+);
+document.removeEventListener(
+"keydown",
+onKeydown
+);
+document.body.classList.remove(
+"is-algo-bot-running"
+);
+for(
+const root of lockRoots
+){
+root.classList.remove(
+"is-bot-settings-locked"
+);
+root.inert =
+false;
+}
+strategiesWrap?.classList.remove(
+"is-bot-running"
+);
+closeAllDrops();
+}
+};
+
+activeBotStrategyUiDestroy =
+api.destroy;
+
+return {
+destroy(){
+api.destroy();
+if(
+activeBotStrategyUiDestroy ===
+api.destroy
+){
+activeBotStrategyUiDestroy =
+null;
+}
+}
+};
+
+}

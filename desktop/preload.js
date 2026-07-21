@@ -6,6 +6,42 @@ require(
 "electron"
 );
 
+/**
+ * Must match main `desktop/algo-trading-edition.cjs` (passed via additionalArguments).
+ * Sandboxed preload cannot require local modules.
+ * f = full (live + manual), m = manual-only
+ */
+function getAlgoDesktopEdition(){
+
+const fromArg =
+(
+process.argv.find(
+a=>
+typeof a ===
+"string" &&
+a.startsWith(
+"--algo-desktop-edition="
+)
+) ||
+""
+).slice(
+"--algo-desktop-edition=".length
+);
+
+return fromArg ===
+"m"
+? "m"
+: "f";
+
+}
+
+function isAlgoLiveTradingEnabled(){
+
+return getAlgoDesktopEdition() ===
+"f";
+
+}
+
 contextBridge.exposeInMainWorld(
 "cryptoTerminalDesktop",
 {
@@ -13,6 +49,10 @@ isDesktop:
 true,
 platform:
 process.platform,
+algoDesktopEdition:
+getAlgoDesktopEdition(),
+algoLiveTradingEnabled:
+isAlgoLiveTradingEnabled(),
 getVersion:()=>
 ipcRenderer.invoke(
 "app:getVersion"
@@ -84,6 +124,337 @@ ipcRenderer.invoke(
 "desktop:setMenuBarTrayVisible",
 visible
 ),
+algoTrading:{
+edition:
+getAlgoDesktopEdition(),
+liveTradingEnabled:
+isAlgoLiveTradingEnabled(),
+getStatus:(
+payload
+)=>
+ipcRenderer.invoke(
+"desktop:algoTradingGetKeysStatus",
+payload ||
+{}
+),
+getRuntimeStatus:()=>
+ipcRenderer.invoke(
+"desktop:algoTradingGetStatus"
+),
+setEnabled:(
+payload
+)=>
+ipcRenderer.invoke(
+"desktop:algoTradingSetEnabled",
+payload
+),
+getKeysStatus:(
+payload
+)=>
+ipcRenderer.invoke(
+"desktop:algoTradingGetKeysStatus",
+payload
+),
+saveKeys:(
+payload
+)=>
+ipcRenderer.invoke(
+"desktop:algoTradingSaveKeys",
+payload
+),
+clearKeys:(
+payload
+)=>
+ipcRenderer.invoke(
+"desktop:algoTradingClearKeys",
+payload
+),
+getPositions:()=>
+ipcRenderer.invoke(
+"desktop:algoTradingGetPositions"
+),
+getOpenOrders:(
+payload
+)=>
+ipcRenderer.invoke(
+"desktop:algoTradingGetOpenOrders",
+payload ||
+{}
+),
+getPosition:(
+symbol
+)=>
+ipcRenderer.invoke(
+"desktop:algoTradingGetPosition",
+{
+symbol
+}
+),
+closePosition:(
+symbol
+)=>
+ipcRenderer.invoke(
+"desktop:algoTradingClosePosition",
+{
+symbol
+}
+),
+setPositionStop:(
+symbol,
+target,
+price
+)=>
+ipcRenderer.invoke(
+"desktop:algoTradingSetPositionStop",
+{
+symbol,
+target,
+price
+}
+),
+cancelPositionStop:(
+symbol,
+target
+)=>
+ipcRenderer.invoke(
+"desktop:algoTradingCancelPositionStop",
+{
+symbol,
+target
+}
+),
+amendOrder:(
+payload
+)=>
+ipcRenderer.invoke(
+"desktop:algoTradingAmendOrder",
+payload ||
+{}
+),
+cancelOrder:(
+symbol,
+orderId
+)=>
+ipcRenderer.invoke(
+"desktop:algoTradingCancelOrder",
+{
+symbol,
+orderId
+}
+),
+getStreamSnapshot:()=>
+ipcRenderer.invoke(
+"desktop:algoTradingGetStreamSnapshot"
+),
+replayStream:()=>
+ipcRenderer.invoke(
+"desktop:algoTradingReplayStream"
+),
+requestStreamSeed:()=>
+ipcRenderer.invoke(
+"desktop:algoTradingRequestStreamSeed"
+),
+ensureStream:()=>
+ipcRenderer.invoke(
+"desktop:algoTradingEnsureStream"
+),
+syncBotStrategies:(
+payload
+)=>
+ipcRenderer.invoke(
+"desktop:algoTradingSyncBotStrategies",
+payload ||
+{}
+),
+syncTickerFlags:(
+payload
+)=>
+ipcRenderer.invoke(
+"desktop:algoTradingSyncTickerFlags",
+payload ||
+{}
+),
+getTickerFlagsRoot:()=>
+ipcRenderer.invoke(
+"desktop:algoTradingGetTickerFlagsRoot"
+),
+startBot:(
+payload
+)=>
+ipcRenderer.invoke(
+"desktop:algoTradingStartBot",
+payload ||
+{}
+),
+stopBot:(
+payload
+)=>
+ipcRenderer.invoke(
+"desktop:algoTradingStopBot",
+payload ||
+{}
+),
+getBotStatus:()=>
+ipcRenderer.invoke(
+"desktop:algoTradingGetBotStatus"
+),
+disarmArmedSetup:(
+payload
+)=>
+ipcRenderer.invoke(
+"desktop:algoTradingDisarmArmedSetup",
+payload ||
+{}
+),
+getWalletBalance:()=>
+ipcRenderer.invoke(
+"desktop:algoTradingGetWalletBalance"
+),
+setTradingMode:(
+payload
+)=>
+ipcRenderer.invoke(
+"desktop:algoTradingSetTradingMode",
+payload ||
+{}
+),
+onBotAlertRequest:(
+callback
+)=>{
+
+if(
+typeof callback !==
+"function"
+){
+return ()=>{};
+}
+
+const fn =
+(
+_event,
+payload
+)=>{
+try{
+callback(
+payload
+);
+}catch(
+err
+){
+console.warn(
+"algoTrading botAlertRequest listener:",
+err
+);
+}
+};
+
+ipcRenderer.on(
+"algoTrading:botAlertRequest",
+fn
+);
+
+return ()=>
+ipcRenderer.removeListener(
+"algoTrading:botAlertRequest",
+fn
+);
+
+},
+respondBotAlert:(
+payload
+)=>
+ipcRenderer.send(
+"desktop:algoTradingBotAlertResponse",
+payload ||
+{}
+),
+onBotStatus:(
+callback
+)=>{
+
+if(
+typeof callback !==
+"function"
+){
+return ()=>{};
+}
+
+const fn =
+(
+_event,
+payload
+)=>{
+try{
+callback(
+payload
+);
+}catch(
+err
+){
+console.warn(
+"algoTrading botStatus listener:",
+err
+);
+}
+};
+
+ipcRenderer.on(
+"algoTrading:botStatus",
+fn
+);
+
+return ()=>{
+ipcRenderer.removeListener(
+"algoTrading:botStatus",
+fn
+);
+};
+
+},
+onStream:(
+callback
+)=>{
+
+if(
+typeof callback !==
+"function"
+){
+return ()=>{};
+}
+
+const fn =
+(
+_event,
+payload
+)=>{
+try{
+callback(
+payload
+);
+}catch(
+err
+){
+console.warn(
+"algoTrading stream listener:",
+err
+);
+}
+};
+
+ipcRenderer.on(
+"algoTrading:stream",
+fn
+);
+
+return ()=>{
+ipcRenderer.removeListener(
+"algoTrading:stream",
+fn
+);
+};
+
+}
+},
 setMenuBarTrayPnlHidden:(
 hidden
 )=>

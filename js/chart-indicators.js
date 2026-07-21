@@ -189,7 +189,9 @@ export function initChartIndicators(
 root,
 getHost,
 storageKey =
-DEFAULT_STORAGE_KEY
+DEFAULT_STORAGE_KEY,
+createPattern12Indicator:
+createPattern12IndicatorOverride
 }
 ){
 
@@ -214,6 +216,12 @@ prefs,
 prefsKey
 );
 
+const pattern12Factory =
+typeof createPattern12IndicatorOverride ===
+"function"
+? createPattern12IndicatorOverride
+: createPattern12Indicator;
+
 const indicators =
 [
 createRsiPaneIndicator(
@@ -233,7 +241,7 @@ createEmaShiftRibbonIndicator(
 getHost,
 settingsStore
 ),
-createPattern12Indicator(
+pattern12Factory(
 getHost,
 settingsStore
 ),

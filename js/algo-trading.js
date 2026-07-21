@@ -1,6 +1,5 @@
 /**
- * АлгоТрейдинг — облегчённый Терминал: свечи + меню индикаторов + Pattern stats.
- * Без торговли и стакана.
+ * АлгоТрейдинг — график + pattern stats + изолированный trade UI на алго-ключах.
  */
 import {
 createCandlestickChart,
@@ -34,11 +33,27 @@ subscribeKline
 import {
 mountAlgoTradingCoinList,
 refreshAlgoMarketListFromFlags
-} from "./algo-trading-list.js?v=4";
+} from "./algo-trading-list.js?v=9";
 
 import {
 mountAlgoTickerScanUi
-} from "./algo-trading/ticker-scan-ui.js?v=4";
+} from "./algo-trading/ticker-scan-ui.js?v=9";
+
+import {
+mountAlgoRuntimeUi
+} from "./algo-trading/runtime-ui.js?v=10";
+
+import {
+mountAlgoBotStrategyUi
+} from "./algo-trading/bot-strategy-ui.js?v=24";
+
+import {
+syncBotStrategiesToMain
+} from "./algo-trading/bot-bridge.js?v=6";
+
+import {
+mountAlgoTradeUi
+} from "./algo-trading/trade/boot.js?v=3";
 
 import {
 coinsState
@@ -50,15 +65,15 @@ mountAlgoTradingDrawings
 
 import {
 mountAlgoTradingIndicators
-} from "./algo-trading/indicators.js?v=1";
+} from "./algo-trading/indicators.js?v=4";
 
 import {
 mountAlgoPatternEntryOverlay
-} from "./algo-trading/pattern-entry-overlay.js?v=9";
+} from "./algo-trading/pattern-entry-overlay.js?v=10";
 
 import {
 refreshAlgoPatternAnalysis
-} from "./algo-trading/pattern-analysis.js?v=8";
+} from "./algo-trading/pattern-analysis.js?v=14";
 
 import {
 clampSlPctOfX,
@@ -67,26 +82,34 @@ clampRiskUsd,
 DEFAULT_SL_PCT_OF_X,
 DEFAULT_TP_RR,
 DEFAULT_RISK_USD
-} from "./algo-trading/pattern-entry-positions.js?v=5";
+} from "./algo-trading/pattern-entry-positions.js?v=7";
 
 import {
 clampPartialTpX,
+clampTrailSlPct,
+normalizeTrailSlEnabled,
 DEFAULT_PARTIAL_TP1_X,
 DEFAULT_PARTIAL_TP2_X,
-DEFAULT_PARTIAL_TP3_X
-} from "./algo-trading/pattern-trade-stats-partial.js?v=5";
+DEFAULT_PARTIAL_TP3_X,
+DEFAULT_TRAIL_SL_PCT
+} from "./algo-trading/pattern-trade-stats-partial.js?v=8";
 
 import {
 clampEntryTimeoutBars,
 ENTRY_TIMEOUT_BARS
-} from "./algo-trading/pattern-entry-logic.js?v=4";
+} from "./algo-trading/pattern-entry-logic.js?v=5";
+
+import {
+normalizeAlgoStatsMode
+} from "./algo-trading/pattern-trade-stats.js?v=8";
 
 import {
 readAlgoPattern12Settings
-} from "./algo-trading/pattern-12-settings.js?v=1";
+} from "./algo-trading/pattern-12-settings.js?v=2";
 
 import {
-setChartLayoutReady
+setChartLayoutReady,
+isChartLayoutReady
 } from "./chart-layout-gate.js?v=2";
 
 const DEFAULT_SYMBOL =
@@ -196,6 +219,22 @@ clampPartialTpX(
 raw.tp3Y,
 DEFAULT_PARTIAL_TP3_X
 ),
+trailSlSt2:
+normalizeTrailSlEnabled(
+raw.trailSlSt2
+),
+trailSlPctSt2:
+clampTrailSlPct(
+raw.trailSlPctSt2
+),
+trailSlSt3:
+normalizeTrailSlEnabled(
+raw.trailSlSt3
+),
+trailSlPctSt3:
+clampTrailSlPct(
+raw.trailSlPctSt3
+),
 timeoutBars:
 clampEntryTimeoutBars(
 raw.timeoutBars
@@ -204,6 +243,10 @@ scanStrategy:
 raw.scanStrategy === "st2" || raw.scanStrategy === "st3"
 ? raw.scanStrategy
 : "st1",
+scanTf:
+normalizeAlgoScanTfPref(
+raw.scanTf
+),
 scanLongMinWinRate:
 clampScanMinWinRate(
 raw.scanLongMinWinRate
@@ -215,7 +258,26 @@ raw.scanShortMinWinRate
 scanBothMinWinRate:
 clampScanMinWinRate(
 raw.scanBothMinWinRate
-)
+),
+statsMode:
+normalizeAlgoStatsMode(
+raw.statsMode
+),
+statsModeSt2:
+normalizeAlgoStatsMode(
+raw.statsModeSt2
+),
+statsModeSt3:
+normalizeAlgoStatsMode(
+raw.statsModeSt3
+),
+chartPositionsStrategy:
+raw.chartPositionsStrategy ===
+"partial-tp" ||
+raw.chartPositionsStrategy ===
+"partial-tp-y"
+? raw.chartPositionsStrategy
+: "fixed-tp"
 };
 }catch{
 return {
@@ -241,16 +303,34 @@ tp2Y:
 DEFAULT_PARTIAL_TP2_X,
 tp3Y:
 DEFAULT_PARTIAL_TP3_X,
+trailSlSt2:
+true,
+trailSlPctSt2:
+DEFAULT_TRAIL_SL_PCT,
+trailSlSt3:
+true,
+trailSlPctSt3:
+DEFAULT_TRAIL_SL_PCT,
 timeoutBars:
 ENTRY_TIMEOUT_BARS,
 scanStrategy:
 "st1",
+scanTf:
+"1",
 scanLongMinWinRate:
-60,
+50,
 scanShortMinWinRate:
-60,
+50,
 scanBothMinWinRate:
-60
+50,
+statsMode:
+"direct",
+statsModeSt2:
+"direct",
+statsModeSt3:
+"direct",
+chartPositionsStrategy:
+"fixed-tp"
 };
 }
 
@@ -316,6 +396,22 @@ clampPartialTpX(
 prefs.tp3Y,
 DEFAULT_PARTIAL_TP3_X
 ),
+trailSlSt2:
+normalizeTrailSlEnabled(
+prefs.trailSlSt2
+),
+trailSlPctSt2:
+clampTrailSlPct(
+prefs.trailSlPctSt2
+),
+trailSlSt3:
+normalizeTrailSlEnabled(
+prefs.trailSlSt3
+),
+trailSlPctSt3:
+clampTrailSlPct(
+prefs.trailSlPctSt3
+),
 timeoutBars:
 clampEntryTimeoutBars(
 prefs.timeoutBars
@@ -324,6 +420,10 @@ scanStrategy:
 prefs.scanStrategy === "st2" || prefs.scanStrategy === "st3"
 ? prefs.scanStrategy
 : "st1",
+scanTf:
+normalizeAlgoScanTfPref(
+prefs.scanTf
+),
 scanLongMinWinRate:
 clampScanMinWinRate(
 prefs.scanLongMinWinRate
@@ -335,7 +435,26 @@ prefs.scanShortMinWinRate
 scanBothMinWinRate:
 clampScanMinWinRate(
 prefs.scanBothMinWinRate
-)
+),
+statsMode:
+normalizeAlgoStatsMode(
+prefs.statsMode
+),
+statsModeSt2:
+normalizeAlgoStatsMode(
+prefs.statsModeSt2
+),
+statsModeSt3:
+normalizeAlgoStatsMode(
+prefs.statsModeSt3
+),
+chartPositionsStrategy:
+prefs.chartPositionsStrategy ===
+"partial-tp" ||
+prefs.chartPositionsStrategy ===
+"partial-tp-y"
+? prefs.chartPositionsStrategy
+: "fixed-tp"
 }
 )
 );
@@ -359,7 +478,7 @@ if(
 n
 )
 ){
-return 60;
+return 50;
 }
 
 return Math.min(
@@ -371,6 +490,35 @@ n
 )
 )
 );
+
+}
+
+const SCAN_TF_OPTIONS =
+[
+"1",
+"5",
+"15",
+"60",
+"240",
+"D",
+"W"
+];
+
+function normalizeAlgoScanTfPref(
+raw
+){
+
+const tf =
+String(
+raw ||
+""
+).trim();
+
+return SCAN_TF_OPTIONS.includes(
+tf
+)
+? tf
+: "1";
 
 }
 
@@ -548,6 +696,22 @@ DEFAULT_PARTIAL_TP2_X;
 let tp3Y =
 readPrefs().tp3Y ||
 DEFAULT_PARTIAL_TP3_X;
+let trailSlSt2 =
+normalizeTrailSlEnabled(
+readPrefs().trailSlSt2
+);
+let trailSlPctSt2 =
+clampTrailSlPct(
+readPrefs().trailSlPctSt2
+);
+let trailSlSt3 =
+normalizeTrailSlEnabled(
+readPrefs().trailSlSt3
+);
+let trailSlPctSt3 =
+clampTrailSlPct(
+readPrefs().trailSlPctSt3
+);
 let timeoutBars =
 clampEntryTimeoutBars(
 readPrefs().timeoutBars
@@ -555,6 +719,10 @@ readPrefs().timeoutBars
 let scanStrategy =
 readPrefs().scanStrategy ||
 "st1";
+let scanTf =
+normalizeAlgoScanTfPref(
+readPrefs().scanTf
+);
 let scanLongMinWinRate =
 clampScanMinWinRate(
 readPrefs().scanLongMinWinRate
@@ -567,6 +735,25 @@ let scanBothMinWinRate =
 clampScanMinWinRate(
 readPrefs().scanBothMinWinRate
 );
+let statsMode =
+normalizeAlgoStatsMode(
+readPrefs().statsMode
+);
+let statsModeSt2 =
+normalizeAlgoStatsMode(
+readPrefs().statsModeSt2
+);
+let statsModeSt3 =
+normalizeAlgoStatsMode(
+readPrefs().statsModeSt3
+);
+let chartPositionsStrategy =
+readPrefs().chartPositionsStrategy ===
+"partial-tp" ||
+readPrefs().chartPositionsStrategy ===
+"partial-tp-y"
+? readPrefs().chartPositionsStrategy
+: "fixed-tp";
 let tickerScanUi =
 null;
 let candles =
@@ -590,6 +777,10 @@ null;
 let rsiPaneActive =
 true;
 let entryOverlay =
+null;
+let tradeUi =
+null;
+let botStrategyUi =
 null;
 let patternAnalysisTimer =
 0;
@@ -867,9 +1058,17 @@ tp3X,
 tp1Y,
 tp2Y,
 tp3Y,
+trailSlSt2,
+trailSlPctSt2,
+trailSlSt3,
+trailSlPctSt3,
 timeoutBars,
 patternSettings:
-readAlgoPattern12Settings()
+readAlgoPattern12Settings(),
+statsMode,
+statsModeSt2,
+statsModeSt3,
+chartPositionsStrategy
 }
 );
 },
@@ -913,8 +1112,18 @@ fitViewport();
 setChartLayoutReady(
 true
 );
-chartIndicators?.notifyLayoutSettled?.();
+}
+
+if(
+isChartLayoutReady()
+){
+chartIndicators?.flushIndicatorDataRefreshNow?.();
 chartIndicators?.notifyMainChartOverlaysSync?.();
+}
+
+if(
+candles.length
+){
 schedulePatternAnalysis();
 }
 
@@ -972,11 +1181,20 @@ tp3X,
 tp1Y,
 tp2Y,
 tp3Y,
+trailSlSt2,
+trailSlPctSt2,
+trailSlSt3,
+trailSlPctSt3,
 timeoutBars,
 scanStrategy,
+scanTf,
 scanLongMinWinRate,
 scanShortMinWinRate,
-scanBothMinWinRate
+scanBothMinWinRate,
+statsMode,
+statsModeSt2,
+statsModeSt3,
+chartPositionsStrategy
 }
 );
 drawingTools?.onSymbolChange?.({
@@ -1123,6 +1341,26 @@ link.clearLinked?.();
 };
 }
 
+const drawingsMount =
+mountAlgoTradingDrawings(
+{
+chart,
+series:
+candleSeries,
+getSymbol:()=>
+symbol,
+getTf:()=>
+tf,
+getCandles:()=>
+candles
+}
+);
+
+drawingTools =
+drawingsMount.tools;
+destroyDrawings =
+drawingsMount.destroy;
+
 chartIndicators =
 mountAlgoTradingIndicators(
 {
@@ -1160,6 +1398,7 @@ disposed
 return;
 }
 
+void syncBotStrategiesToMain();
 schedulePatternAnalysis();
 
 },
@@ -1232,26 +1471,6 @@ chartIndicators?.notifyLayoutChange?.();
 }
 );
 
-const drawingsMount =
-mountAlgoTradingDrawings(
-{
-chart,
-series:
-candleSeries,
-getSymbol:()=>
-symbol,
-getTf:()=>
-tf,
-getCandles:()=>
-candles
-}
-);
-
-drawingTools =
-drawingsMount.tools;
-destroyDrawings =
-drawingsMount.destroy;
-
 entryOverlay =
 mountAlgoPatternEntryOverlay(
 {
@@ -1269,10 +1488,81 @@ tpRr,
 getRiskUsd:()=>
 riskUsd,
 getTimeoutBars:()=>
-timeoutBars
+timeoutBars,
+getChartPositionsStrategy:()=>
+chartPositionsStrategy,
+getTp3X:()=>
+tp3X,
+getTp3Y:()=>
+tp3Y
 }
 );
 entryOverlay.bind();
+
+void mountAlgoTradeUi(
+{
+chart,
+series:
+candleSeries,
+wrapEl:
+chartWrapEl ||
+chartEl,
+chartEl,
+getSymbol:()=>
+symbol,
+getDrawingTools:()=>
+drawingTools
+}
+).then(
+api=>{
+tradeUi =
+api;
+
+if(
+candles.length
+){
+setChartLayoutReady(
+true
+);
+chartIndicators?.flushIndicatorDataRefreshNow?.();
+chartIndicators?.notifyMainChartOverlaysSync?.();
+schedulePatternAnalysis();
+drawingTools?.scheduleRedraw?.();
+}
+}
+).catch(
+err=>{
+console.warn(
+"[algo-trading] trade ui",
+err
+);
+}
+);
+
+window.addEventListener(
+"algo-book-open-symbol",
+event=>{
+
+const next =
+normalizeSymbol(
+event.detail?.symbol
+);
+
+if(
+!next ||
+next ===
+symbol
+){
+return;
+}
+
+void loadSymbol(
+next,
+tf
+);
+
+}
+);
 
 const slPctInput =
 document.getElementById(
@@ -1371,11 +1661,20 @@ tp3X,
 tp1Y,
 tp2Y,
 tp3Y,
+trailSlSt2,
+trailSlPctSt2,
+trailSlSt3,
+trailSlPctSt3,
 timeoutBars,
 scanStrategy,
+scanTf,
 scanLongMinWinRate,
 scanShortMinWinRate,
-scanBothMinWinRate
+scanBothMinWinRate,
+statsMode,
+statsModeSt2,
+statsModeSt3,
+chartPositionsStrategy
 }
 );
 refreshAlgoPatternAnalysis(
@@ -1391,11 +1690,263 @@ tp3X,
 tp1Y,
 tp2Y,
 tp3Y,
+trailSlSt2,
+trailSlPctSt2,
+trailSlSt3,
+trailSlPctSt3,
 timeoutBars,
 patternSettings:
-readAlgoPattern12Settings()
+readAlgoPattern12Settings(),
+statsMode,
+statsModeSt2,
+statsModeSt3,
+chartPositionsStrategy
 }
 );
+}
+
+const statsModeRoots =
+{
+"fixed-tp":
+document.querySelector(
+'[data-algo-strategy="fixed-tp"] .algo-stats-mode'
+),
+"partial-tp":
+document.querySelector(
+'[data-algo-strategy="partial-tp"] .algo-stats-mode'
+),
+"partial-tp-y":
+document.querySelector(
+'[data-algo-strategy="partial-tp-y"] .algo-stats-mode'
+)
+};
+
+function getStatsModeForStrategy(
+strategy
+){
+
+if(
+strategy ===
+"partial-tp"
+){
+return statsModeSt2;
+}
+
+if(
+strategy ===
+"partial-tp-y"
+){
+return statsModeSt3;
+}
+
+return statsMode;
+
+}
+
+function setStatsModeForStrategy(
+strategy,
+mode
+){
+
+const next =
+normalizeAlgoStatsMode(
+mode
+);
+
+if(
+strategy ===
+"partial-tp"
+){
+statsModeSt2 =
+next;
+}else if(
+strategy ===
+"partial-tp-y"
+){
+statsModeSt3 =
+next;
+}else{
+statsMode =
+next;
+}
+
+}
+
+function applyStatsModeButtons(){
+
+for(
+const [
+strategy,
+root
+] of Object.entries(
+statsModeRoots
+)
+){
+
+if(
+!root
+){
+continue;
+}
+
+const current =
+getStatsModeForStrategy(
+strategy
+);
+
+for(
+const btn of root.querySelectorAll(
+"[data-algo-stats-mode]"
+)
+){
+const mode =
+normalizeAlgoStatsMode(
+btn.getAttribute(
+"data-algo-stats-mode"
+)
+);
+const active =
+mode ===
+current;
+btn.classList.toggle(
+"active",
+active
+);
+btn.setAttribute(
+"aria-selected",
+active
+? "true"
+: "false"
+);
+}
+
+}
+
+}
+
+applyStatsModeButtons();
+
+for(
+const [
+strategy,
+root
+] of Object.entries(
+statsModeRoots
+)
+){
+
+root?.addEventListener(
+"click",
+event=>{
+const btn =
+event.target?.closest?.(
+"[data-algo-stats-mode]"
+);
+
+if(
+!(
+btn instanceof HTMLElement
+)
+){
+return;
+}
+
+const next =
+normalizeAlgoStatsMode(
+btn.getAttribute(
+"data-algo-stats-mode"
+)
+);
+
+if(
+next ===
+getStatsModeForStrategy(
+strategy
+)
+){
+return;
+}
+
+setStatsModeForStrategy(
+strategy,
+next
+);
+applyStatsModeButtons();
+persistAlgoSettings();
+
+}
+);
+
+}
+
+const chartPositionChecks =
+[
+...document.querySelectorAll(
+"[data-algo-chart-positions]"
+)
+];
+
+function applyChartPositionChecks(){
+
+for(
+const input of chartPositionChecks
+){
+const strategy =
+input.getAttribute(
+"data-algo-chart-positions"
+);
+input.checked =
+strategy ===
+chartPositionsStrategy;
+}
+
+}
+
+applyChartPositionChecks();
+
+for(
+const input of chartPositionChecks
+){
+
+input.addEventListener(
+"change",
+()=>{
+const strategy =
+input.getAttribute(
+"data-algo-chart-positions"
+);
+
+if(
+!input.checked
+){
+/* Keep one strategy always selected. */
+input.checked =
+true;
+return;
+}
+
+if(
+strategy !==
+"fixed-tp" &&
+strategy !==
+"partial-tp" &&
+strategy !==
+"partial-tp-y"
+){
+input.checked =
+false;
+return;
+}
+
+chartPositionsStrategy =
+strategy;
+applyChartPositionChecks();
+persistAlgoSettings();
+entryOverlay?.refreshPositions?.();
+
+}
+);
+
 }
 
 if(
@@ -1690,6 +2241,158 @@ next;
 DEFAULT_PARTIAL_TP3_X
 );
 
+function bindTrailSlPctInput(
+input,
+getValue,
+setValue
+){
+
+if(
+!input
+){
+return;
+}
+
+input.value =
+String(
+getValue()
+);
+
+const commit =
+()=>{
+const next =
+clampTrailSlPct(
+input.value
+);
+input.value =
+String(
+next
+);
+
+if(
+next ===
+getValue()
+){
+return;
+}
+
+setValue(
+next
+);
+persistAlgoSettings();
+};
+
+input.addEventListener(
+"change",
+commit
+);
+input.addEventListener(
+"keydown",
+event=>{
+
+if(
+event.key ===
+"Enter"
+){
+event.preventDefault();
+input.blur();
+}
+
+}
+);
+
+}
+
+function bindTrailSlCheck(
+input,
+getValue,
+setValue
+){
+
+if(
+!input
+){
+return;
+}
+
+input.checked =
+!!getValue();
+input.addEventListener(
+"change",
+()=>{
+const next =
+!!input.checked;
+
+if(
+next ===
+!!getValue()
+){
+return;
+}
+
+setValue(
+next
+);
+persistAlgoSettings();
+}
+);
+
+}
+
+const trailSlPctSt2Input =
+document.getElementById(
+"algo-trail-sl-pct-st2"
+);
+const trailSlSt2Check =
+document.getElementById(
+"algo-trail-sl-st2"
+);
+const trailSlPctSt3Input =
+document.getElementById(
+"algo-trail-sl-pct-st3"
+);
+const trailSlSt3Check =
+document.getElementById(
+"algo-trail-sl-st3"
+);
+
+bindTrailSlPctInput(
+trailSlPctSt2Input,
+()=>
+trailSlPctSt2,
+next=>{
+trailSlPctSt2 =
+next;
+}
+);
+bindTrailSlCheck(
+trailSlSt2Check,
+()=>
+trailSlSt2,
+next=>{
+trailSlSt2 =
+next;
+}
+);
+bindTrailSlPctInput(
+trailSlPctSt3Input,
+()=>
+trailSlPctSt3,
+next=>{
+trailSlPctSt3 =
+next;
+}
+);
+bindTrailSlCheck(
+trailSlSt3Check,
+()=>
+trailSlSt3,
+next=>{
+trailSlSt3 =
+next;
+}
+);
+
 
 
 tfBar?.addEventListener(
@@ -1748,6 +2451,12 @@ null;
 entryOverlay?.destroy?.();
 entryOverlay =
 null;
+tradeUi?.destroy?.();
+tradeUi =
+null;
+botStrategyUi?.destroy?.();
+botStrategyUi =
+null;
 destroyDrawings?.();
 chartIndicators?.destroy?.();
 chartIndicators =
@@ -1804,6 +2513,10 @@ tp3X,
 tp1Y,
 tp2Y,
 tp3Y,
+trailSlSt2,
+trailSlPctSt2,
+trailSlSt3,
+trailSlPctSt3,
 timeoutBars,
 patternSettings:
 readAlgoPattern12Settings()
@@ -1822,6 +2535,16 @@ patch.scanStrategy ===
 ){
 scanStrategy =
 patch.scanStrategy;
+}
+
+if(
+patch.scanTf !=
+null
+){
+scanTf =
+normalizeAlgoScanTfPref(
+patch.scanTf
+);
 }
 
 if(
@@ -1867,11 +2590,20 @@ tp3X,
 tp1Y,
 tp2Y,
 tp3Y,
+trailSlSt2,
+trailSlPctSt2,
+trailSlSt3,
+trailSlPctSt3,
 timeoutBars,
 scanStrategy,
+scanTf,
 scanLongMinWinRate,
 scanShortMinWinRate,
-scanBothMinWinRate
+scanBothMinWinRate,
+statsMode,
+statsModeSt2,
+statsModeSt3,
+chartPositionsStrategy
 }
 );
 },
@@ -1880,6 +2612,16 @@ refreshAlgoMarketListFromFlags();
 }
 }
 );
+
+mountAlgoRuntimeUi(
+{
+getExchangeId:()=>
+getActiveExchangeId()
+}
+);
+
+botStrategyUi =
+mountAlgoBotStrategyUi();
 
 void loadSymbol(
 symbol,

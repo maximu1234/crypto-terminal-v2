@@ -573,7 +573,9 @@ positionTrayPopup();
 win.show();
 win.focus();
 sendTrayPopupState(
+enrichTrayStateWithAlgoBot(
 lastTrayState
+)
 );
 positionTrayPopup();
 lockTrayPopupPosition();
@@ -618,13 +620,18 @@ return;
 }
 
 lastTrayState =
-state ||
-{};
+state &&
+typeof state ===
+"object"
+? {
+...state
+}
+: {};
 
 const title =
 formatTrayPnlTitle(
-state?.totalPnl,
-!!state?.pnlHidden
+lastTrayState?.totalPnl,
+!!lastTrayState?.pnlHidden
 );
 
 tray.setTitle(
@@ -637,9 +644,106 @@ popup &&
 popup.isVisible()
 ){
 sendTrayPopupState(
+enrichTrayStateWithAlgoBot(
 lastTrayState
+)
 );
 }
+
+}
+
+function enrichTrayStateWithAlgoBot(
+state
+){
+
+const base =
+state &&
+typeof state ===
+"object"
+? {
+...state
+}
+: {};
+
+try{
+const algoBot =
+require(
+"./trading/algo-trading-bot.cjs"
+);
+const snap =
+algoBot.getBotStatus?.() ||
+null;
+
+if(
+!snap ||
+typeof snap !==
+"object"
+){
+base.algoBot =
+null;
+return base;
+}
+
+base.algoBot =
+{
+running:
+!!snap.running,
+entriesPaused:
+!!snap.entriesPaused,
+watchlistCount:
+snap.watchlistCount ??
+0,
+openCount:
+snap.openCount ??
+0,
+closedWin:
+snap.closedWin ??
+0,
+closedLoss:
+snap.closedLoss ??
+0,
+closedTotalUsd:
+snap.closedTotalUsd ??
+0,
+armedCount:
+snap.armedCount ??
+0,
+armedSetups:
+Array.isArray(
+snap.armedSetups
+)
+? snap.armedSetups.slice(
+0,
+12
+)
+: [],
+entriesCount:
+snap.entriesCount ??
+snap.wouldEnterCount ??
+0,
+lastSignal:
+String(
+snap.lastSignal ||
+""
+).trim(),
+message:
+String(
+snap.message ||
+""
+).trim(),
+side:
+snap.side ||
+"long",
+tf:
+snap.tf ||
+"5"
+};
+}catch{
+base.algoBot =
+null;
+}
+
+return base;
 
 }
 

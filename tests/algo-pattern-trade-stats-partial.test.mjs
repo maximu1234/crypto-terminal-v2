@@ -95,7 +95,9 @@ tp1X:
 tp2X:
 1.25,
 tp3X:
-1.44
+1.44,
+trailSl:
+false
 }
 );
 
@@ -189,7 +191,9 @@ tp1X:
 tp2X:
 1.25,
 tp3X:
-1.44
+1.44,
+trailSl:
+false
 }
 );
 
@@ -310,7 +314,9 @@ tp1Y:
 tp2Y:
 1.25,
 tp3Y:
-1.44
+1.44,
+trailSl:
+false
 }
 );
 
@@ -347,7 +353,9 @@ tp1X:
 tp2X:
 1.25,
 tp3X:
-1.44
+1.44,
+trailSl:
+false
 }
 );
 

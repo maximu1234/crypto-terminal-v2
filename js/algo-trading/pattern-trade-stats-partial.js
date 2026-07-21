@@ -1,7 +1,8 @@
 /**
  * Стратегия 2/3: закрытие 3 равными частями.
  * span "x" → высота |pt4−pt3|; span "y" → |pt2−pt1|.
- * СЛ как в стратегии 1; после частичных тейков СЛ бьёт только остаток.
+ * СЛ как в стратегии 1; опциональный трейлинг:
+ * после ТП1 → СЛ на trailSlPct% от X к pt3; после ТП2 → безубыток (pt4).
  */
 import {
 clampRiskUsd,
@@ -9,16 +10,22 @@ clampSlPctOfX,
 computeAlgoStopLoss,
 DEFAULT_RISK_USD,
 DEFAULT_SL_PCT_OF_X
-} from "./pattern-entry-positions.js?v=5";
+} from "./pattern-entry-positions.js?v=7";
 
 export const DEFAULT_PARTIAL_TP1_X =
-1;
+0.5;
 
 export const DEFAULT_PARTIAL_TP2_X =
-1.25;
+1;
 
 export const DEFAULT_PARTIAL_TP3_X =
 1.44;
+
+export const DEFAULT_TRAIL_SL_PCT =
+25;
+
+export const DEFAULT_TRAIL_SL_ENABLED =
+true;
 
 const PART =
 1 /
@@ -62,6 +69,127 @@ n *
 1000
 )
 );
+
+}
+
+/**
+ * % от X между pt4 и pt3 для трейлинг-СЛ после ТП1 (0 = pt4, 100 = pt3).
+ * @param {unknown} raw
+ * @returns {number}
+ */
+export function clampTrailSlPct(
+raw
+){
+
+const n =
+Number(
+raw
+);
+
+if(
+!Number.isFinite(
+n
+)
+){
+return DEFAULT_TRAIL_SL_PCT;
+}
+
+return Math.min(
+100,
+Math.max(
+0,
+Math.round(
+n *
+10
+) /
+10
+)
+);
+
+}
+
+/**
+ * @param {unknown} raw
+ * @returns {boolean}
+ */
+export function normalizeTrailSlEnabled(
+raw
+){
+
+return raw ===
+undefined
+? DEFAULT_TRAIL_SL_ENABLED
+: !!raw;
+
+}
+
+/**
+ * Трейлинг-СЛ после ТП1: N% высоты X от pt4 к pt3 (0% = pt4, 100% = pt3).
+ * @param {"long"|"short"} side
+ * @param {number} pt3
+ * @param {number} pt4
+ * @param {number} trailPct
+ * @returns {number|null}
+ */
+export function computeTrailStopLoss(
+side,
+pt3,
+pt4,
+trailPct
+){
+
+const p3 =
+Number(
+pt3
+);
+const p4 =
+Number(
+pt4
+);
+const pct =
+clampTrailSlPct(
+trailPct
+);
+
+if(
+!Number.isFinite(
+p3
+) ||
+!Number.isFinite(
+p4
+)
+){
+return null;
+}
+
+const x =
+Math.abs(
+p4 -
+p3
+);
+
+if(
+!(
+x >
+0
+)
+){
+return null;
+}
+
+const offset =
+x *
+(
+pct /
+100
+);
+
+return side ===
+"short"
+? p4 +
+offset
+: p4 -
+offset;
 
 }
 
@@ -117,7 +245,9 @@ offset;
  *   tp3X?: number,
  *   tp1Y?: number,
  *   tp2Y?: number,
- *   tp3Y?: number
+ *   tp3Y?: number,
+ *   trailSl?: boolean,
+ *   trailSlPct?: number
  * }} [opts]
  * @returns {{
  *   status: "open"|"closed",
@@ -200,7 +330,15 @@ clampRiskUsd(
 opts.riskUsd ??
 DEFAULT_RISK_USD
 );
-const slPrice =
+const trailEnabled =
+normalizeTrailSlEnabled(
+opts.trailSl
+);
+const trailSlPct =
+clampTrailSlPct(
+opts.trailSlPct
+);
+let slPrice =
 computeAlgoStopLoss(
 side,
 p3,
@@ -363,6 +501,48 @@ frac
 nextTp +=
 1;
 
+if(
+trailEnabled
+){
+
+if(
+nextTp ===
+1
+){
+
+const trailed =
+computeTrailStopLoss(
+side,
+p3,
+p4,
+trailSlPct
+);
+
+if(
+Number.isFinite(
+trailed
+)
+){
+slPrice =
+trailed;
+}
+
+}else if(
+nextTp ===
+2
+){
+
+slPrice =
+Number.isFinite(
+p4
+)
+? p4
+: entry;
+
+}
+
+}
+
 }
 
 if(
@@ -372,6 +552,8 @@ EPS
 return {
 status:
 "closed",
+exitBar:
+i,
 tpsHit:
 nextTp,
 profitUsd,
@@ -389,15 +571,34 @@ candle,
 slPrice
 )
 ){
+
+const slDist =
+Math.abs(
+entry -
+slPrice
+);
+const lossFrac =
+riskDist >
+EPS
+? Math.min(
+1,
+slDist /
+riskDist
+)
+: 1;
+
 lossUsd +=
 remaining *
-riskUsd;
+riskUsd *
+lossFrac;
 remaining =
 0;
 
 return {
 status:
 "closed",
+exitBar:
+i,
 tpsHit:
 nextTp,
 profitUsd,
@@ -413,6 +614,8 @@ lossUsd
 return {
 status:
 "open",
+exitBar:
+null,
 tpsHit:
 nextTp,
 profitUsd,
@@ -421,6 +624,116 @@ netUsd:
 profitUsd -
 lossUsd
 };
+
+}
+
+/**
+ * @param {Array} candles
+ * @param {Array} events
+ * @param {{ slPctOfX?: number, tpRr?: number, statsMode?: "direct"|"real" }} [opts]
+ * @returns {Array}
+ */
+export function filterSequentialPartialEntryEvents(
+candles,
+events,
+opts =
+{}
+){
+
+const list =
+(
+Array.isArray(
+events
+)
+? events
+: []
+).filter(
+event=>
+event?.type ===
+"entry"
+).slice().sort(
+(
+a,
+b
+)=>
+Number(
+a.bar
+) -
+Number(
+b.bar
+) ||
+String(
+a.side
+).localeCompare(
+String(
+b.side
+)
+)
+);
+
+const kept =
+[];
+let busyUntil =
+-1;
+
+for(
+const event of list
+){
+
+const entryBar =
+Number(
+event.bar
+);
+
+if(
+Number.isFinite(
+entryBar
+) &&
+entryBar <=
+busyUntil
+){
+continue;
+}
+
+const trade =
+resolvePartialTpTrade(
+candles,
+event,
+opts
+);
+
+if(
+!trade
+){
+continue;
+}
+
+kept.push(
+event
+);
+
+if(
+trade.status ===
+"open"
+){
+busyUntil =
+Array.isArray(
+candles
+)
+? candles.length
+: Number.POSITIVE_INFINITY;
+}else if(
+Number.isFinite(
+trade.exitBar
+)
+){
+busyUntil =
+trade.exitBar;
+}
+
+}
+
+return kept;
 
 }
 
@@ -466,12 +779,26 @@ let longNetUsd =
 let shortNetUsd =
 0;
 
+const statsMode =
+opts.statsMode ===
+"real"
+? "real"
+: "direct";
 const list =
+statsMode ===
+"real"
+? filterSequentialPartialEntryEvents(
+candles,
+events,
+opts
+)
+: (
 Array.isArray(
 events
 )
 ? events
-: [];
+: []
+);
 
 for(
 const event of list

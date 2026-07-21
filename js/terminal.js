@@ -108,7 +108,7 @@ mountDrawToolIcons
 
 import {
 initChartIndicators
-} from "./chart-indicators.js?v=39";
+} from "./chart-indicators.js?v=40";
 
 import {
 mountCoinsLayoutResize
@@ -168,7 +168,7 @@ highlightActiveSymbol,
 getVisibleSymbolList,
 setCoinsTableHooks,
 syncCoinListFreezeFromFlagMenus
-} from "./terminal/terminal-table.js?v=21";
+} from "./terminal/terminal-table.js?v=22";
 
 import {
 createCoinsChartSwitchVeil

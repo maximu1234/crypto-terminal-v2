@@ -2,7 +2,11 @@
  * Версии релиза на Главной и в desktop .app.
  * При новой metka-N: METKA_NUMBER = N (веб → v0.N).
  * При новом desktop: DESKTOP_APP_VERSION (в .app → vX.Y.Z).
- * В desktop подпись: «v0.N / vX.Y.Z» (сначала веб, потом приложение).
+ * Редакция desktop (буква после версии приложения):
+ *   f = full (живая + ручная торговля)
+ *   m = manual-only (друзья)
+ * Источник буквы: desktop/algo-trading-edition.cjs → preload.
+ * Формат desktop: «v0.N / vX.Y.Zf» или «v0.N / vX.Y.Zm».
  */
 export const METKA_NUMBER =
 80;
@@ -13,6 +17,43 @@ export const DESKTOP_APP_VERSION =
 export const RELEASE_VERSION_LABEL =
 `v0.${METKA_NUMBER}`;
 
+/**
+ * @returns {"f"|"m"|""}
+ */
+export function getDesktopEditionLetter(){
+
+try{
+const desktop =
+typeof globalThis !==
+"undefined"
+? globalThis.window?.cryptoTerminalDesktop
+: null;
+
+if(
+!desktop?.isDesktop
+){
+return "";
+}
+
+const raw =
+desktop.algoDesktopEdition ||
+desktop.algoTrading?.edition;
+const letter =
+String(
+raw ||
+""
+).trim().toLowerCase();
+
+return letter ===
+"m"
+? "m"
+: "f";
+}catch{
+return "";
+}
+
+}
+
 export function getReleaseVersionLabel(){
 
 if(
@@ -20,7 +61,10 @@ typeof globalThis !==
 "undefined" &&
 globalThis.window?.cryptoTerminalDesktop?.isDesktop
 ){
-return `${RELEASE_VERSION_LABEL} / v${DESKTOP_APP_VERSION}`;
+const edition =
+getDesktopEditionLetter();
+
+return `${RELEASE_VERSION_LABEL} / v${DESKTOP_APP_VERSION}${edition}`;
 }
 
 return RELEASE_VERSION_LABEL;

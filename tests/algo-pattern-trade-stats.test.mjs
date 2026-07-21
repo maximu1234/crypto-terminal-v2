@@ -368,3 +368,120 @@ assert.equal(stats.netUsd, 4);
 
 }
 );
+
+test(
+"real stats mode skips nested entries while position open",
+()=>{
+
+const candles =
+[
+c(1, 100, 100, 100, 100),
+c(2, 110, 110, 109, 110),
+c(3, 110, 115, 109, 114),
+c(4, 110, 121, 109, 120),
+c(5, 90, 91, 89, 90),
+c(6, 90, 91, 79, 80)
+];
+
+const events =
+[
+{
+type:
+"entry",
+side:
+"long",
+bar:
+1,
+price:
+110,
+pt3:
+100,
+pt4:
+110
+},
+{
+type:
+"entry",
+side:
+"long",
+bar:
+2,
+price:
+110,
+pt3:
+100,
+pt4:
+110
+},
+{
+type:
+"entry",
+side:
+"short",
+bar:
+5,
+price:
+90,
+pt3:
+100,
+pt4:
+90
+}
+];
+
+const direct =
+computeAlgoTradeStats(
+candles,
+events,
+{
+slPctOfX:
+50,
+tpRr:
+2,
+riskUsd:
+1
+}
+);
+const real =
+computeAlgoTradeStats(
+candles,
+events,
+{
+slPctOfX:
+50,
+tpRr:
+2,
+riskUsd:
+1,
+statsMode:
+"real"
+}
+);
+
+assert.equal(
+direct.longWins,
+2
+);
+assert.equal(
+direct.shortWins,
+1
+);
+assert.equal(
+real.longWins,
+1
+);
+assert.equal(
+real.shortWins,
+1
+);
+assert.equal(
+real.wins,
+2
+);
+assert.ok(
+direct.closed >
+real.closed
+);
+
+}
+);

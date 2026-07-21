@@ -40,6 +40,8 @@ isTradePage
 let hasOpenPosition =
 ()=>
 false;
+let positionPinEnabled =
+isTradePage;
 
 if(
 isTradePage
@@ -50,6 +52,28 @@ await import(
 );
 hasOpenPosition =
 tradePositions.hasOpenPosition;
+}
+
+/**
+ * AlgoTrading (и др.) могут подключить свой checker без импорта Terminal trade.
+ * @param {(symbol: string) => boolean} fn
+ * @param {boolean} [enabled]
+ */
+export function setCoinOpenPositionChecker(
+fn,
+enabled =
+true
+){
+
+hasOpenPosition =
+typeof fn ===
+"function"
+? fn
+: ()=>
+false;
+positionPinEnabled =
+!!enabled;
+
 }
 
 const hooks = {};
@@ -823,8 +847,11 @@ coinsState().currentSymbol
 
 el.classList.toggle(
 "has-position",
-isTradePage &&
-isExchangeTradingEnabled() &&
+positionPinEnabled &&
+(
+!isTradePage ||
+isExchangeTradingEnabled()
+) &&
 hasOpenPosition(
 symbol
 )
@@ -873,7 +900,7 @@ return coinsState().sortAsc
 export function sortData(a,b){
 
 if(
-isTradePage
+positionPinEnabled
 ){
 const aPos =
 hasOpenPosition(

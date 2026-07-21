@@ -59,4 +59,20 @@ alwaysApply: true
 - менять поведение Терминала/Скрипта/торговли «под алго»;
 - импортировать алго-модули на публичные web-страницы без desktop-gate.
 
-Desktop-only: как Скрипт — вне `.app` страница редиректит на Скринер.
+## 3. Алго-профиль торговли (ключи + фон)
+
+Торговля алго — **отдельный профиль**, не ключи Терминала/Дневника.
+
+- Credentials: `desktop/trading/algo-exchange-credentials.cjs`
+  (`bybit-algo-api-credentials.json` / `bingx-algo-…`) — **не**
+  `exchange-credentials.cjs`.
+- Runtime (main): `desktop/trading/algo-trading-runtime.cjs` +
+  `algo-trading-ipc.cjs`; boot через `bootAlgoTradingRuntimeIfEnabled`.
+- REST/WS: `algo-bybit-rest.cjs`, `algo-bybit-private-ws.cjs`,
+  `algo-bybit-trading-stream.cjs` (канал `algoTrading:stream`).
+- Renderer: `js/algo-trading/runtime-*.js` и `js/algo-trading/trade/**` →
+  только `cryptoTerminalDesktop.algoTrading.*`.
+
+Запрещено подставлять алго-ключи в `trading-router` / `trading-stream`
+Терминала и наоборот. Запрещено импортировать `js/trade/bybit/**` /
+`js/trade-*.js` facades из алго-страницы.

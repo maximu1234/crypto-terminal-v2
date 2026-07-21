@@ -16,10 +16,10 @@ export const ALGO_PATTERN_ENTRY_FLAG =
 "algoPatternEntry";
 
 export const DEFAULT_SL_PCT_OF_X =
-50;
+99;
 
 export const DEFAULT_TP_RR =
-2;
+2.39;
 
 export const DEFAULT_RISK_USD =
 1;
@@ -286,11 +286,20 @@ n *
  *   bar: number,
  *   price: number,
  *   setupBar?: number,
+ *   pt1?: number,
+ *   pt2?: number,
  *   pt3?: number,
  *   pt4?: number
  * }} event
  * @param {Array<{ time: number }>} candles
- * @param {{ slPctOfX?: number, tpRr?: number, riskUsd?: number }} [opts]
+ * @param {{
+ *   slPctOfX?: number,
+ *   tpRr?: number,
+ *   riskUsd?: number,
+ *   strategy?: "fixed-tp"|"partial-tp"|"partial-tp-y",
+ *   tp3X?: number,
+ *   tp3Y?: number
+ * }} [opts]
  * @returns {object|null}
  */
 export function buildAlgoEntryPositionShape(
@@ -368,6 +377,21 @@ slFromPattern
 )
 ? slFromPattern
 : defaults.slPrice;
+
+let tpPrice =
+defaults.tpPrice;
+const strategy =
+opts.strategy ===
+"partial-tp" ||
+opts.strategy ===
+"partial-tp-y"
+? opts.strategy
+: "fixed-tp";
+
+if(
+strategy ===
+"fixed-tp"
+){
 const tpFromRr =
 computeAlgoTakeProfit(
 type,
@@ -375,12 +399,79 @@ entry,
 slPrice,
 tpRr
 );
-const tpPrice =
+
+if(
 Number.isFinite(
 tpFromRr
 )
-? tpFromRr
-: defaults.tpPrice;
+){
+tpPrice =
+tpFromRr;
+}
+}else{
+const p1 =
+Number(
+event.pt1
+);
+const p2 =
+Number(
+event.pt2
+);
+const p3 =
+Number(
+event.pt3
+);
+const p4 =
+Number(
+event.pt4 ??
+entry
+);
+const span =
+strategy ===
+"partial-tp-y"
+? Math.abs(
+p2 -
+p1
+)
+: Math.abs(
+p4 -
+p3
+);
+const multRaw =
+strategy ===
+"partial-tp-y"
+? opts.tp3Y
+: opts.tp3X;
+const mult =
+Number(
+multRaw
+);
+const safeMult =
+Number.isFinite(
+mult
+) &&
+mult >
+0
+? mult
+: 1.44;
+
+if(
+span >
+0
+){
+const offset =
+span *
+safeMult;
+tpPrice =
+type ===
+"short"
+? entry -
+offset
+: entry +
+offset;
+}
+}
+
 const p2Time =
 resolvePositionEndTime(
 candles,
@@ -390,7 +481,7 @@ candle.time
 
 return {
 id:
-`algo-entry-${type}-${Number(event.setupBar) || bar}-${bar}`,
+`algo-entry-${strategy}-${type}-${Number(event.setupBar) || bar}-${bar}`,
 createdAt:
 Date.now(),
 type,

@@ -10,18 +10,54 @@ getActiveExchangeId
 
 import {
 analyzeAlgoPatterns
-} from "./pattern-analysis.js?v=8";
+} from "./pattern-analysis.js?v=14";
+
+import {
+normalizeAlgoStatsMode
+} from "./pattern-trade-stats.js?v=8";
 
 import {
 readAlgoPattern12Settings
-} from "./pattern-12-settings.js?v=1";
+} from "./pattern-12-settings.js?v=2";
 
-/** Пока фиксированный ТФ; позже — активный график. */
+/** Дефолтный ТФ скана (если не передан opts.tf). */
 export const ALGO_TICKER_SCAN_TF =
 "5";
 
+export const ALGO_TICKER_SCAN_TF_OPTIONS =
+[
+"1",
+"5",
+"15",
+"60",
+"240",
+"D",
+"W"
+];
+
 export const ALGO_TICKER_SCAN_HISTORY_REQUESTS =
 10;
+
+/**
+ * @param {unknown} raw
+ */
+export function normalizeAlgoScanTf(
+raw
+){
+
+const tf =
+String(
+raw ||
+""
+).trim();
+
+return ALGO_TICKER_SCAN_TF_OPTIONS.includes(
+tf
+)
+? tf
+: ALGO_TICKER_SCAN_TF;
+
+}
 
 export const ALGO_TICKER_SCAN_CONCURRENCY =
 3;
@@ -111,7 +147,9 @@ ms
  * @param {AlgoScanStrategyId} opts.strategyId
  * @param {"long"|"short"|"both"} opts.side
  * @param {number} opts.minWinRate
+ * @param {string} [opts.tf]
  * @param {object} opts.tradeOpts
+ * @param {"direct"|"real"} [opts.statsMode] прямой (дефолт) или реальный подсчёт
  * @param {(done: number, total: number, hitCount: number) => void} [opts.onProgress]
  * @param {{ cancelled: boolean }} [opts.signal]
  */
@@ -133,6 +171,10 @@ opts.side ===
 "both"
 ? opts.side
 : "long";
+const tf =
+normalizeAlgoScanTf(
+opts.tf
+);
 const minWinRate =
 Math.min(
 100,
@@ -143,6 +185,10 @@ opts.minWinRate
 ) ||
 60
 )
+);
+const statsMode =
+normalizeAlgoStatsMode(
+opts.statsMode
 );
 const signal =
 opts.signal ||
@@ -158,7 +204,12 @@ opts.tradeOpts ||
 ),
 patternSettings:
 opts.tradeOpts?.patternSettings ||
-readAlgoPattern12Settings()
+readAlgoPattern12Settings(),
+statsMode,
+statsModeSt2:
+statsMode,
+statsModeSt3:
+statsMode
 };
 
 const instruments =
@@ -253,7 +304,7 @@ try{
 const candles =
 await loadMarketHistory(
 symbol,
-ALGO_TICKER_SCAN_TF,
+tf,
 ALGO_TICKER_SCAN_HISTORY_REQUESTS,
 {
 parallel:
@@ -385,8 +436,7 @@ true,
 side,
 strategyId,
 minWinRate,
-tf:
-ALGO_TICKER_SCAN_TF,
+tf,
 total,
 hits,
 symbols:

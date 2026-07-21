@@ -3,13 +3,13 @@
  */
 import {
 ALGO_INDICATORS_STORAGE_KEY
-} from "./indicators.js?v=1";
+} from "./indicators-storage.js?v=1";
 
 import {
 PATTERN_12_ID,
 defaultPattern12Settings,
 normalizePattern12Settings
-} from "./pattern-12-math.js?v=3";
+} from "./pattern-12-math.js?v=4";
 
 /**
  * @returns {ReturnType<typeof defaultPattern12Settings>}

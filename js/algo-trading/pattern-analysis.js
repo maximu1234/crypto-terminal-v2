@@ -4,11 +4,11 @@
 import {
 computePattern12Scene,
 defaultPattern12Settings
-} from "./pattern-12-math.js?v=3";
+} from "./pattern-12-math.js?v=4";
 
 import {
 detectPatternEntryEventsFromSetups
-} from "./pattern-entry-logic.js?v=4";
+} from "./pattern-entry-logic.js?v=5";
 
 import {
 countPattern12SetupsFromScene,
@@ -17,12 +17,15 @@ renderAlgoPatternCounts
 
 import {
 computeAlgoTradeStats,
-renderAlgoTradeStats
-} from "./pattern-trade-stats.js?v=7";
+renderAlgoTradeStats,
+filterSequentialEntryEvents,
+normalizeAlgoStatsMode
+} from "./pattern-trade-stats.js?v=8";
 
 import {
-computePartialTpTradeStats
-} from "./pattern-trade-stats-partial.js?v=5";
+computePartialTpTradeStats,
+filterSequentialPartialEntryEvents
+} from "./pattern-trade-stats-partial.js?v=8";
 
 /**
  * @param {Array} candles
@@ -72,7 +75,11 @@ tradeStats:
 computeAlgoTradeStats(
 candles,
 events,
-opts
+{
+...opts,
+statsMode:
+opts.statsMode
+}
 ),
 partialStats:
 computePartialTpTradeStats(
@@ -81,7 +88,14 @@ events,
 {
 ...opts,
 span:
-"x"
+"x",
+trailSl:
+opts.trailSlSt2,
+trailSlPct:
+opts.trailSlPctSt2,
+statsMode:
+opts.statsModeSt2 ??
+opts.statsMode
 }
 ),
 partialYStats:
@@ -91,7 +105,14 @@ events,
 {
 ...opts,
 span:
-"y"
+"y",
+trailSl:
+opts.trailSlSt3,
+trailSlPct:
+opts.trailSlPctSt3,
+statsMode:
+opts.statsModeSt3 ??
+opts.statsMode
 }
 )
 };
@@ -126,7 +147,14 @@ computePartialTpTradeStats(
 {
 ...opts,
 span:
-"x"
+"x",
+trailSl:
+opts.trailSlSt2,
+trailSlPct:
+opts.trailSlPctSt2,
+statsMode:
+opts.statsModeSt2 ??
+opts.statsMode
 }
 ),
 partialYStats:
@@ -136,7 +164,14 @@ computePartialTpTradeStats(
 {
 ...opts,
 span:
-"y"
+"y",
+trailSl:
+opts.trailSlSt3,
+trailSlPct:
+opts.trailSlPctSt3,
+statsMode:
+opts.statsModeSt3 ??
+opts.statsMode
 }
 )
 };
@@ -168,9 +203,20 @@ candles,
 opts
 );
 
+try{
 renderAlgoPatternCounts(
 counts
 );
+}catch(
+err
+){
+console.warn(
+"[algo-trading] pattern counts render:",
+err
+);
+}
+
+try{
 renderAlgoTradeStats(
 tradeStats,
 document.querySelector(
@@ -192,9 +238,83 @@ document.querySelector(
 ) ||
 document
 );
-entryOverlay?.setEvents?.(
-events
+}catch(
+err
+){
+console.warn(
+"[algo-trading] trade stats render:",
+err
 );
+}
+
+try{
+const chartStrategy =
+opts.chartPositionsStrategy ===
+"partial-tp" ||
+opts.chartPositionsStrategy ===
+"partial-tp-y"
+? opts.chartPositionsStrategy
+: "fixed-tp";
+const chartStatsMode =
+normalizeAlgoStatsMode(
+chartStrategy ===
+"fixed-tp"
+? opts.statsMode
+: chartStrategy ===
+"partial-tp"
+? opts.statsModeSt2
+: opts.statsModeSt3
+);
+let overlayEvents =
+events;
+
+if(
+chartStatsMode ===
+"real"
+){
+overlayEvents =
+chartStrategy ===
+"fixed-tp"
+? filterSequentialEntryEvents(
+candles,
+events,
+opts
+)
+: filterSequentialPartialEntryEvents(
+candles,
+events,
+{
+...opts,
+span:
+chartStrategy ===
+"partial-tp-y"
+? "y"
+: "x",
+trailSl:
+chartStrategy ===
+"partial-tp-y"
+? opts.trailSlSt3
+: opts.trailSlSt2,
+trailSlPct:
+chartStrategy ===
+"partial-tp-y"
+? opts.trailSlPctSt3
+: opts.trailSlPctSt2
+}
+);
+}
+
+entryOverlay?.setEvents?.(
+overlayEvents
+);
+}catch(
+err
+){
+console.warn(
+"[algo-trading] entry overlay:",
+err
+);
+}
 }catch(
 err
 ){

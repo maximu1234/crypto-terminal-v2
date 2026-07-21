@@ -1,12 +1,19 @@
 /**
- * Меню индикаторов на АлгоТрейдинг — как на Терминале, prefs изолированы.
+ * Меню индикаторов на АлгоТрейдинг — prefs изолированы.
+ * Pattern 1-2 на графике — оригинальный индикатор (эталон).
+ * Бот/аналитика считают по копии math в js/algo-trading/pattern-12-math.js.
  */
 import {
 initChartIndicators
-} from "../chart-indicators.js?v=39";
+} from "../chart-indicators.js?v=40";
 
-export const ALGO_INDICATORS_STORAGE_KEY =
-"algo_trading_chart_indicators_v1";
+import {
+ALGO_INDICATORS_STORAGE_KEY
+} from "./indicators-storage.js?v=1";
+
+export {
+ALGO_INDICATORS_STORAGE_KEY
+} from "./indicators-storage.js?v=1";
 
 /**
  * @param {Parameters<typeof initChartIndicators>[0]} opts

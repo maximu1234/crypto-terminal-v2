@@ -2,15 +2,17 @@
  * UI скана тикеров в 4-й колонке АлгоТрейдинг.
  */
 import {
-scanAlgoTickersByWinRate
-} from "./ticker-scanner.js?v=2";
+scanAlgoTickersByWinRate,
+normalizeAlgoScanTf,
+ALGO_TICKER_SCAN_TF
+} from "./ticker-scanner.js?v=5";
 
 import {
 ALGO_FLAG_LONG_5M,
 ALGO_FLAG_SHORT_5M,
 ALGO_FLAG_BOTH_5M,
 replaceAlgoTickerFlagList
-} from "./ticker-flags.js?v=2";
+} from "./ticker-flags.js?v=5";
 
 /**
  * @param {{
@@ -36,15 +38,33 @@ const st3 =
 document.getElementById(
 "algo-scan-st3"
 );
+const scanTfBar =
+document.getElementById(
+"algo-scan-tf"
+);
+const scanTfBtns =
+[
+...(
+scanTfBar?.querySelectorAll(
+"[data-scan-tf]"
+) ||
+[]
+)
+];
+const statusEl =
+document.getElementById(
+"algo-scan-status"
+);
 
 /** @type {Record<"long"|"short"|"both", {
  *   min: HTMLInputElement|null,
+ *   real: HTMLInputElement|null,
  *   find: HTMLButtonElement|null,
  *   stop: HTMLButtonElement|null,
  *   found: HTMLElement|null,
  *   add: HTMLButtonElement|null,
- *   status: HTMLElement|null,
  *   prefKey: string,
+ *   label: string,
  *   hits: string[],
  *   signal: { cancelled: boolean }|null
  * }>} */
@@ -54,6 +74,10 @@ long:{
 min:
 document.getElementById(
 "algo-scan-long-min"
+),
+real:
+document.getElementById(
+"algo-scan-long-real"
 ),
 find:
 document.getElementById(
@@ -71,12 +95,10 @@ add:
 document.getElementById(
 "algo-scan-long-add"
 ),
-status:
-document.getElementById(
-"algo-scan-long-status"
-),
 prefKey:
 "scanLongMinWinRate",
+label:
+"Лонг",
 hits:
 [],
 signal:
@@ -86,6 +108,10 @@ short:{
 min:
 document.getElementById(
 "algo-scan-short-min"
+),
+real:
+document.getElementById(
+"algo-scan-short-real"
 ),
 find:
 document.getElementById(
@@ -103,12 +129,10 @@ add:
 document.getElementById(
 "algo-scan-short-add"
 ),
-status:
-document.getElementById(
-"algo-scan-short-status"
-),
 prefKey:
 "scanShortMinWinRate",
+label:
+"Шорт",
 hits:
 [],
 signal:
@@ -118,6 +142,10 @@ both:{
 min:
 document.getElementById(
 "algo-scan-both-min"
+),
+real:
+document.getElementById(
+"algo-scan-both-real"
 ),
 find:
 document.getElementById(
@@ -135,12 +163,10 @@ add:
 document.getElementById(
 "algo-scan-both-add"
 ),
-status:
-document.getElementById(
-"algo-scan-both-status"
-),
 prefKey:
 "scanBothMinWinRate",
+label:
+"Лонг+Шорт",
 hits:
 [],
 signal:
@@ -150,6 +176,8 @@ null
 
 let strategyId =
 "st1";
+let scanTf =
+ALGO_TICKER_SCAN_TF;
 
 function clampMin(
 raw
@@ -165,7 +193,7 @@ if(
 n
 )
 ){
-return 60;
+return 50;
 }
 
 return Math.min(
@@ -225,6 +253,35 @@ strategyId
 
 }
 
+function setScanTf(
+raw
+){
+
+scanTf =
+normalizeAlgoScanTf(
+raw
+);
+
+for(
+const btn of scanTfBtns
+){
+btn.classList.toggle(
+"active",
+btn.getAttribute(
+"data-scan-tf"
+) ===
+scanTf
+);
+}
+
+host.persistPrefs?.(
+{
+scanTf
+}
+);
+
+}
+
 function syncFoundUi(
 side
 ){
@@ -266,21 +323,32 @@ scanning =
 false
 ){
 
-const lane =
-lanes[
-side
-];
-
 if(
-!lane?.status
+!statusEl
 ){
 return;
 }
 
-lane.status.textContent =
+const lane =
+lanes[
+side
+];
+const label =
+lane?.label ||
+"";
+const body =
 text ||
 "";
-lane.status.classList.toggle(
+
+statusEl.textContent =
+body
+? (
+label
+? `${label} · ${body}`
+: body
+)
+: "";
+statusEl.classList.toggle(
 "is-scanning",
 scanning
 );
@@ -378,7 +446,7 @@ true
 );
 setStatus(
 side,
-"скан…",
+`скан ${scanTf}…`,
 true
 );
 lane.hits =
@@ -388,12 +456,19 @@ side
 );
 
 try{
+const statsMode =
+lane.real?.checked
+? "real"
+: "direct";
 const result =
 await scanAlgoTickersByWinRate(
 {
 strategyId,
 side,
 minWinRate,
+tf:
+scanTf,
+statsMode,
 tradeOpts:
 host.getTradeOpts?.() ||
 {},
@@ -405,7 +480,7 @@ hitCount
 )=>{
 setStatus(
 side,
-`${done}/${total} · найдено ${hitCount}`,
+`${scanTf} · ${done}/${total} · найдено ${hitCount}`,
 true
 );
 }
@@ -430,7 +505,7 @@ side
 );
 setStatus(
 side,
-`готово · ${lane.hits.length}`
+`готово · ${lane.hits.length} · ${result.tf || scanTf}`
 );
 }catch(
 err
@@ -533,6 +608,10 @@ setStrategy(
 prefs.scanStrategy ||
 "st1"
 );
+setScanTf(
+prefs.scanTf ||
+ALGO_TICKER_SCAN_TF
+);
 
 for(
 const side of [
@@ -618,6 +697,21 @@ true;
 }
 }
 );
+
+for(
+const btn of scanTfBtns
+){
+btn.addEventListener(
+"click",
+()=>{
+setScanTf(
+btn.getAttribute(
+"data-scan-tf"
+)
+);
+}
+);
+}
 
 for(
 const side of [

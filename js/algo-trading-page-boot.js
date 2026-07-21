@@ -13,10 +13,6 @@ import {
 jsImport
 } from "./asset-manifest.js?v=2";
 
-import {
-mountAlgoTradingPage
-} from "./algo-trading.js?v=33";
-
 async function boot(){
 
 if(
@@ -34,6 +30,15 @@ await loadLightweightCharts();
 await import(
 jsImport(
 "site-boot.js"
+)
+);
+
+const {
+mountAlgoTradingPage
+} =
+await import(
+jsImport(
+"algo-trading.js"
 )
 );
 

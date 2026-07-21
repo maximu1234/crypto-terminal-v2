@@ -10,7 +10,7 @@ computeAlgoTakeProfit,
 DEFAULT_SL_PCT_OF_X,
 DEFAULT_TP_RR,
 DEFAULT_RISK_USD
-} from "./pattern-entry-positions.js?v=5";
+} from "./pattern-entry-positions.js?v=7";
 
 /**
  * @typedef {"win"|"loss"|"open"} TradeOutcome
@@ -55,9 +55,9 @@ DEFAULT_RISK_USD
  *   pt4?: number
  * }} event
  * @param {{ slPctOfX?: number, tpRr?: number }} [opts]
- * @returns {TradeOutcome|null}
+ * @returns {{ outcome: TradeOutcome, exitBar: number|null }|null}
  */
-export function resolveAlgoTradeOutcome(
+export function resolveAlgoTradeDetail(
 candles,
 event,
 opts =
@@ -178,33 +178,209 @@ hit ===
 "both"
 ){
 /* Один бар коснулся обоих — считаем стоп (консервативно). */
-return "loss";
+return {
+outcome:
+"loss",
+exitBar:
+i
+};
 }
 
 if(
 hit ===
 "tp"
 ){
-return "win";
+return {
+outcome:
+"win",
+exitBar:
+i
+};
 }
 
 if(
 hit ===
 "sl"
 ){
-return "loss";
+return {
+outcome:
+"loss",
+exitBar:
+i
+};
 }
 
 }
 
-return "open";
+return {
+outcome:
+"open",
+exitBar:
+null
+};
+
+}
+
+/**
+ * @param {Array} candles
+ * @param {{
+ *   type: string,
+ *   side: "long"|"short",
+ *   bar: number,
+ *   price: number,
+ *   pt3?: number,
+ *   pt4?: number
+ * }} event
+ * @param {{ slPctOfX?: number, tpRr?: number }} [opts]
+ * @returns {TradeOutcome|null}
+ */
+export function resolveAlgoTradeOutcome(
+candles,
+event,
+opts =
+{}
+){
+
+return resolveAlgoTradeDetail(
+candles,
+event,
+opts
+)?.outcome ??
+null;
+
+}
+
+/**
+ * @param {unknown} raw
+ * @returns {"direct"|"real"}
+ */
+export function normalizeAlgoStatsMode(
+raw
+){
+
+return raw ===
+"real"
+? "real"
+: "direct";
+
+}
+
+/**
+ * Оставляет только те entry, которые бот реально мог бы взять:
+ * пока позиция открыта (до СЛ/ТП), следующие входы пропускаются.
+ * @param {Array} candles
+ * @param {Array} events
+ * @param {{ slPctOfX?: number, tpRr?: number }} [opts]
+ * @returns {Array}
+ */
+export function filterSequentialEntryEvents(
+candles,
+events,
+opts =
+{}
+){
+
+const list =
+(
+Array.isArray(
+events
+)
+? events
+: []
+).filter(
+event=>
+event?.type ===
+"entry"
+).slice().sort(
+(
+a,
+b
+)=>
+Number(
+a.bar
+) -
+Number(
+b.bar
+) ||
+String(
+a.side
+).localeCompare(
+String(
+b.side
+)
+)
+);
+
+const kept =
+[];
+let busyUntil =
+-1;
+
+for(
+const event of list
+){
+
+const entryBar =
+Number(
+event.bar
+);
+
+if(
+Number.isFinite(
+entryBar
+) &&
+entryBar <=
+busyUntil
+){
+continue;
+}
+
+const detail =
+resolveAlgoTradeDetail(
+candles,
+event,
+opts
+);
+
+if(
+!detail
+){
+continue;
+}
+
+kept.push(
+event
+);
+
+if(
+detail.outcome ===
+"open"
+){
+busyUntil =
+Array.isArray(
+candles
+)
+? candles.length
+: Number.POSITIVE_INFINITY;
+}else if(
+Number.isFinite(
+detail.exitBar
+)
+){
+busyUntil =
+detail.exitBar;
+}
+
+}
+
+return kept;
 
 }
 
 /**
  * @param {Array} candles
  * @param {Array} events
- * @param {{ slPctOfX?: number, tpRr?: number }} [opts]
+ * @param {{ slPctOfX?: number, tpRr?: number, riskUsd?: number, statsMode?: "direct"|"real" }} [opts]
  * @returns {AlgoTradeStats}
  */
 export function computeAlgoTradeStats(
@@ -239,12 +415,25 @@ let longNetUsd =
 let shortNetUsd =
 0;
 
+const statsMode =
+normalizeAlgoStatsMode(
+opts.statsMode
+);
 const list =
+statsMode ===
+"real"
+? filterSequentialEntryEvents(
+candles,
+events,
+opts
+)
+: (
 Array.isArray(
 events
 )
 ? events
-: [];
+: []
+);
 const riskUsd =
 clampRiskUsd(
 opts.riskUsd ??
@@ -263,19 +452,21 @@ for(
 const event of list
 ){
 
-const outcome =
-resolveAlgoTradeOutcome(
+const detail =
+resolveAlgoTradeDetail(
 candles,
 event,
 opts
 );
 
 if(
-!outcome
+!detail
 ){
 continue;
 }
 
+const outcome =
+detail.outcome;
 const side =
 event.side ===
 "short"
@@ -385,22 +576,16 @@ longWins,
 longLosses,
 longOpen,
 longWinRate:
-longClosed >
-0
-? (
-longWins /
 longClosed
-) *
+? longWins /
+longClosed *
 100
 : null,
 longWinUsd,
 longLossRate:
-longClosed >
-0
-? (
-longLosses /
 longClosed
-) *
+? longLosses /
+longClosed *
 100
 : null,
 longLossUsd,
@@ -408,22 +593,16 @@ shortWins,
 shortLosses,
 shortOpen,
 shortWinRate:
-shortClosed >
-0
-? (
-shortWins /
 shortClosed
-) *
+? shortWins /
+shortClosed *
 100
 : null,
 shortWinUsd,
 shortLossRate:
-shortClosed >
-0
-? (
-shortLosses /
 shortClosed
-) *
+? shortLosses /
+shortClosed *
 100
 : null,
 shortLossUsd,
@@ -432,21 +611,15 @@ losses,
 open,
 closed,
 winRate:
-closed >
-0
-? (
-wins /
 closed
-) *
+? wins /
+closed *
 100
 : null,
 lossRate:
-closed >
-0
-? (
-losses /
 closed
-) *
+? losses /
+closed *
 100
 : null,
 profitUsd,
