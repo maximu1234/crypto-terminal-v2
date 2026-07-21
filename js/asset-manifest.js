@@ -269,7 +269,7 @@ Object.freeze({
 "script-favorites-list.js":
 2,
 "algo-trading.js":
-68,
+71,
 "algo-trading-page-boot.js":
 3,
 "algo-trading-list.js":
@@ -430,7 +430,7 @@ Object.freeze({
 "screener-widget-zoom.js":
 12,
 "release-marker.js":
-40,
+41,
 "focus-blur-after-pick.js":
 3,
 "site-boot.js":
@@ -693,7 +693,7 @@ Object.freeze({
 "script-page.css":
 19,
 "algo-trading.css":
-68,
+69,
 "algo-trading-book-panel.css":
 4,
 "algo-trading-chart-overlay.css":

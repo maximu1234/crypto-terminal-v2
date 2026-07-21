@@ -96,17 +96,83 @@ body.algo-trading-page .tf-btn:focus-visible{
 outline:none;
 }
 
+/* График + индикаторы: вертикаль курсора только здесь, не в панели Данные */
+body.algo-trading-page #charts-plot-panes,
+body.algo-trading-page.terminal-page #charts-plot-panes{
+display:flex;
+flex:1 1 auto;
+flex-direction:column;
+min-height:0;
+min-width:0;
+overflow:hidden;
+position:relative;
+}
+
+body.algo-trading-page .algo-stats-split-resize,
+body.algo-trading-page.terminal-page .algo-stats-split-resize{
+flex:0 0 10px;
+height:10px;
+touch-action:none;
+cursor:row-resize;
+-webkit-user-select:none;
+user-select:none;
+background:transparent;
+border:none;
+position:relative;
+z-index:2;
+}
+
+body.algo-trading-page .algo-stats-split-resize::after,
+body.algo-trading-page.terminal-page .algo-stats-split-resize::after{
+content:"";
+position:absolute;
+left:0;
+right:0;
+top:50%;
+height:2px;
+transform:translateY(-50%);
+background:#2a2e39;
+opacity:1;
+transition:background .12s ease;
+pointer-events:none;
+}
+
+body.algo-trading-page .algo-stats-split-resize:hover::after,
+body.algo-trading-page .algo-stats-split-resize:focus-visible::after,
+body.algo-trading-page.algo-stats-panel-dragging .algo-stats-split-resize::after,
+body.algo-trading-page.terminal-page .algo-stats-split-resize:hover::after,
+body.algo-trading-page.terminal-page .algo-stats-split-resize:focus-visible::after,
+body.algo-trading-page.terminal-page.algo-stats-panel-dragging .algo-stats-split-resize::after{
+background:#374151;
+}
+
+body.algo-trading-page.algo-stats-panel-dragging,
+body.algo-trading-page.algo-stats-panel-dragging *{
+cursor:row-resize !important;
+-webkit-user-select:none;
+user-select:none;
+}
+
 /* Панель статистики / данных под RSI */
 body.algo-trading-page #algo-stats-panel,
 body.algo-trading-page.terminal-page #algo-stats-panel{
-flex:0 0 auto;
-min-height:72px;
-max-height:420px;
+flex:0 0 var(--algo-stats-panel-h, auto);
+height:var(--algo-stats-panel-h, auto);
+min-height:0;
+max-height:var(--algo-stats-panel-max-h, 420px);
 overflow:auto;
-border-top:1px solid #1f2937;
+border-top:none;
 background:#0f1419;
 padding:8px 12px;
 box-sizing:border-box;
+}
+
+body.algo-trading-page #algo-stats-panel.is-collapsed,
+body.algo-trading-page.terminal-page #algo-stats-panel.is-collapsed{
+padding-top:0;
+padding-bottom:0;
+border-top-color:transparent;
+overflow:hidden;
 }
 
 body.algo-trading-page .algo-stats-columns{

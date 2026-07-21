@@ -522,6 +522,248 @@ tf
 
 }
 
+const ALGO_STATS_PANEL_CSS_MAX_H =
+420;
+
+/**
+ * Панель «Данные»: текущая высота = максимум; вниз можно сжать до 0.
+ * @param {() => void} [onLayout]
+ * @returns {() => void}
+ */
+function bindAlgoStatsPanelResize(
+onLayout
+){
+
+const panel =
+document.getElementById(
+"algo-stats-panel"
+);
+const handle =
+document.getElementById(
+"algo-stats-resize"
+);
+
+if(
+!panel ||
+!handle
+){
+return ()=>{};
+}
+
+let maxH =
+0;
+let currentH =
+0;
+let dragStartY =
+0;
+let dragStartH =
+0;
+let dragging =
+false;
+
+function notifyLayout(){
+
+onLayout?.();
+
+}
+
+function applyHeight(
+h
+){
+
+const next =
+Math.max(
+0,
+Math.min(
+maxH ||
+ALGO_STATS_PANEL_CSS_MAX_H,
+Math.round(
+h
+)
+)
+);
+
+currentH =
+next;
+panel.style.setProperty(
+"--algo-stats-panel-h",
+`${next}px`
+);
+panel.style.setProperty(
+"--algo-stats-panel-max-h",
+`${maxH || ALGO_STATS_PANEL_CSS_MAX_H}px`
+);
+panel.style.flex =
+`0 0 ${next}px`;
+panel.style.height =
+`${next}px`;
+panel.classList.toggle(
+"is-collapsed",
+next <=
+0
+);
+handle.setAttribute(
+"aria-valuenow",
+String(
+next
+)
+);
+handle.setAttribute(
+"aria-valuemax",
+String(
+maxH ||
+ALGO_STATS_PANEL_CSS_MAX_H
+)
+);
+
+}
+
+function captureMaxFromNatural(){
+
+panel.style.removeProperty(
+"--algo-stats-panel-h"
+);
+panel.style.removeProperty(
+"flex"
+);
+panel.style.removeProperty(
+"height"
+);
+panel.classList.remove(
+"is-collapsed"
+);
+
+const natural =
+Math.round(
+panel.getBoundingClientRect().height
+);
+
+maxH =
+Math.max(
+0,
+Math.min(
+ALGO_STATS_PANEL_CSS_MAX_H,
+natural ||
+ALGO_STATS_PANEL_CSS_MAX_H
+)
+);
+
+applyHeight(
+maxH
+);
+
+}
+
+function onPointerMove(
+event
+){
+
+if(
+!dragging
+){
+return;
+}
+
+applyHeight(
+dragStartH +
+(
+dragStartY -
+event.clientY
+)
+);
+notifyLayout();
+
+}
+
+function onPointerUp(){
+
+if(
+!dragging
+){
+return;
+}
+
+dragging =
+false;
+document.body.classList.remove(
+"algo-stats-panel-dragging"
+);
+window.removeEventListener(
+"pointermove",
+onPointerMove
+);
+window.removeEventListener(
+"pointerup",
+onPointerUp
+);
+notifyLayout();
+
+}
+
+function onPointerDown(
+event
+){
+
+if(
+event.button !=
+null &&
+event.button !==
+0
+){
+return;
+}
+
+event.preventDefault();
+dragging =
+true;
+dragStartY =
+event.clientY;
+dragStartH =
+currentH;
+document.body.classList.add(
+"algo-stats-panel-dragging"
+);
+window.addEventListener(
+"pointermove",
+onPointerMove
+);
+window.addEventListener(
+"pointerup",
+onPointerUp
+);
+
+}
+
+handle.setAttribute(
+"aria-valuemin",
+"0"
+);
+handle.addEventListener(
+"pointerdown",
+onPointerDown
+);
+
+requestAnimationFrame(
+()=>{
+requestAnimationFrame(
+()=>{
+captureMaxFromNatural();
+notifyLayout();
+}
+);
+}
+);
+
+return ()=>{
+handle.removeEventListener(
+"pointerdown",
+onPointerDown
+);
+onPointerUp();
+};
+
+}
+
 function mergeLiveCandle(
 candles,
 candle,
@@ -654,6 +896,13 @@ const chart =
 main.chart;
 const candleSeries =
 main.series;
+
+candleSeries.applyOptions(
+{
+lastValueVisible:
+true
+}
+);
 
 const rsi =
 createRSIChart(
@@ -895,6 +1144,109 @@ rsiWrapEl.querySelector(
 updateRsiLevelLinesLayout(
 rsiSeries,
 rsiWrapEl
+);
+
+}
+
+function resizeAlgoCharts(){
+
+if(
+!chart ||
+!chartWrapEl
+){
+return;
+}
+
+const w =
+Math.max(
+chartWrapEl.clientWidth,
+1
+);
+const chartH =
+Math.max(
+chartWrapEl.clientHeight,
+1
+);
+
+if(
+w <
+2 ||
+chartH <
+2
+){
+return;
+}
+
+chart.applyOptions(
+{
+width:
+w,
+height:
+chartH
+}
+);
+
+chartIndicators?.resizePanes?.(
+w
+);
+
+if(
+rsiChart &&
+rsiPaneActive &&
+rsiWrapEl
+){
+
+const rsiH =
+Math.max(
+rsiWrapEl.clientHeight,
+1
+);
+
+if(
+rsiH >=
+2
+){
+rsiChart.applyOptions(
+{
+width:
+w,
+height:
+rsiH
+}
+);
+}
+
+}
+
+layoutRsi();
+chartIndicators?.notifyLayoutChange?.();
+drawingTools?.resize?.();
+drawingTools?.scheduleRedraw?.();
+chartIndicators?.notifyMainChartOverlaysSync?.();
+entryOverlay?.refreshPositions?.();
+
+}
+
+let algoResizeRaf =
+0;
+
+function scheduleResizeAlgoCharts(){
+
+if(
+algoResizeRaf
+){
+cancelAnimationFrame(
+algoResizeRaf
+);
+}
+
+algoResizeRaf =
+requestAnimationFrame(
+()=>{
+algoResizeRaf =
+0;
+resizeAlgoCharts();
+}
 );
 
 }
@@ -1324,6 +1676,14 @@ linkedWrapEl:
 rsiWrapEl,
 linkedChartEl:
 rsiChartEl,
+crosshairTimeLabelEl:
+document.getElementById(
+"crosshair-time-label"
+),
+crosshairPriceLabelEl:
+document.getElementById(
+"crosshair-price-label"
+),
 onLinkedCrosshairRsiValue:
 setRsiHud,
 onLinkedCrosshairClear:
@@ -1463,7 +1823,7 @@ id ===
 "rsi"
 ){
 fitViewport();
-chartIndicators?.notifyLayoutChange?.();
+scheduleResizeAlgoCharts();
 }
 
 }
@@ -2429,17 +2789,60 @@ btn.dataset.tf
 window.addEventListener(
 "resize",
 ()=>{
-layoutRsi();
-chartIndicators?.notifyLayoutChange?.();
+scheduleResizeAlgoCharts();
 chartIndicators?.syncViewports?.();
 }
 );
+
+const disposeStatsResize =
+bindAlgoStatsPanelResize(
+()=>{
+scheduleResizeAlgoCharts();
+chartIndicators?.syncViewports?.();
+}
+);
+
+let chartResizeObserver =
+null;
+
+if(
+typeof ResizeObserver !==
+"undefined" &&
+chartWrapEl
+){
+
+chartResizeObserver =
+new ResizeObserver(
+()=>{
+scheduleResizeAlgoCharts();
+}
+);
+
+chartResizeObserver.observe(
+chartWrapEl
+);
+
+if(
+rsiWrapEl
+){
+chartResizeObserver.observe(
+rsiWrapEl
+);
+}
+
+}
+
+scheduleResizeAlgoCharts();
 
 window.addEventListener(
 "pagehide",
 ()=>{
 disposed =
 true;
+disposeStatsResize?.();
+chartResizeObserver?.disconnect?.();
+chartResizeObserver =
+null;
 tickerScanUi?.stopAll?.();
 tickerScanUi =
 null;

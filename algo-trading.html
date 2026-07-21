@@ -19,7 +19,7 @@
 <link rel="stylesheet" href="/css/terminal.css?v=166">
 <link rel="stylesheet" href="/css/terminal-layout.css?v=97">
 <link rel="stylesheet" href="/css/chart-indicators.css?v=21">
-<link rel="stylesheet" href="/css/algo-trading.css?v=68">
+<link rel="stylesheet" href="/css/algo-trading.css?v=69">
 <link rel="stylesheet" href="/css/algo-trading-book-panel.css?v=4">
 <link rel="stylesheet" href="/css/algo-trading-chart-overlay.css?v=2">
 
@@ -388,6 +388,8 @@ aria-label="История сигналов"
 
 <div id="charts-stack-panes" class="charts-stack-panes">
 
+<div id="charts-plot-panes" class="charts-plot-panes">
+
 <div id="chart-wrap">
 <div id="chart"></div>
 <div id="crosshair-price-label" class="crosshair-axis-label crosshair-price-label hidden" aria-hidden="true"></div>
@@ -485,6 +487,19 @@ aria-label="История сигналов"
 <div class="rsi-level-line hidden" data-rsi-level="30" aria-hidden="true"></div>
 <div id="crosshair-time-label" class="crosshair-axis-label crosshair-time-label hidden" aria-hidden="true"></div>
 </div>
+
+<div id="linked-crosshair-vert" class="linked-crosshair-vert hidden" aria-hidden="true"></div>
+
+</div>
+
+<div
+id="algo-stats-resize"
+class="algo-stats-split-resize"
+role="separator"
+aria-orientation="horizontal"
+aria-label="Высота панели Данные"
+tabindex="0"
+></div>
 
 <div id="algo-stats-panel" class="algo-stats-panel" aria-label="Статистика АлгоТрейдинг">
 <div class="algo-stats-columns">
@@ -1008,8 +1023,6 @@ inputmode="numeric"
 
 </div>
 </div>
-
-<div id="linked-crosshair-vert" class="linked-crosshair-vert hidden" aria-hidden="true"></div>
 
 </div>
 
