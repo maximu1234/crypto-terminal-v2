@@ -1,10 +1,14 @@
 /**
  * Algo bot order execution — market entry + SL/TP (Phase C).
  */
-const log =
-require(
+function getLog(){
+
+return require(
 "electron-log"
 );
+
+}
+
 const algoRest =
 require(
 "./algo-bybit-rest.cjs"
@@ -2611,7 +2615,7 @@ if(
 stopsResult?.ok ===
 false
 ){
-log.warn(
+getLog().warn(
 "algo bot stops attach:",
 sym,
 stopsResult.message

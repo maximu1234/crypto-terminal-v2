@@ -1,6 +1,72 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import executor from "../desktop/trading/algo-bot-order-executor.cjs";
+import { createRequire } from "node:module";
+import { Module } from "node:module";
+
+const require = createRequire(import.meta.url);
+
+function loadExecutorWithStubs(){
+  const originalLoad = Module._load;
+  Module._load = function(
+    request,
+    parent,
+    isMain
+  ){
+    if(
+      request === "electron"
+    ){
+      return {
+        app:{
+          getPath:()=>
+            "/tmp"
+        },
+        net:{
+          request:()=>{
+            throw new Error(
+              "net stub"
+            );
+          }
+        }
+      };
+    }
+    if(
+      request === "electron-log"
+    ){
+      return {
+        info:()=>{},
+        warn:()=>{},
+        error:()=>{},
+        debug:()=>{}
+      };
+    }
+    if(
+      request === "ws"
+    ){
+      return function WsStub(){};
+    }
+    return originalLoad(
+      request,
+      parent,
+      isMain
+    );
+  };
+  try{
+    delete require.cache[
+      require.resolve(
+        "../desktop/trading/algo-bot-order-executor.cjs"
+      )
+    ];
+    return require(
+      "../desktop/trading/algo-bot-order-executor.cjs"
+    );
+  }finally{
+    Module._load =
+      originalLoad;
+  }
+}
+
+const executor =
+loadExecutorWithStubs();
 
 test(
 "recognizes only AlgoTrading bot order links",
