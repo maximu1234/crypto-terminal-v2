@@ -1,10 +1,10 @@
 /**
- * Desktop algo edition letter (baked into each .app build).
+ * Desktop algo edition letter (baked into each .app / .exe build).
  * f = full (live + manual)
  * m = manual-only (friends build — live forced off)
  *
- * Change THIS value before packaging the friends build.
- * Main passes it into sandboxed preload via `--algo-desktop-edition=`.
+ * Dual CI build rewrites ALGO_DESKTOP_EDITION before each package.
+ * Do not read process.env here — Electron runtime has no build env.
  */
 const ALGO_DESKTOP_EDITION =
 "f";

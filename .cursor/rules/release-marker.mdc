@@ -21,8 +21,9 @@ alwaysApply: true
 | `f` | full — живая + ручная торговля |
 | `m` | manual-only — друзьям: только ручная (алерты), live выключен |
 
-Перед упаковкой friends-сборки поставить `ALGO_DESKTOP_EDITION = "m"` в
-`desktop/algo-trading-edition.cjs`, собрать `.app`; для полной — `"f"`.
-Один код, разная буква (preload получает букву через `additionalArguments`).
+Перед упаковкой friends-сборки вручную: `ALGO_DESKTOP_EDITION = "m"` в
+`desktop/algo-trading-edition.cjs`. В CI оба артефакта (`f` и `m`) собираются
+рядом через `npm run build:mac:editions` / `build:win:editions`
+(имена файлов с буквой после версии, например `Multichart-1.0.75f-arm64.dmg`).
 
 Подпись монтируется через `mountReleaseMarker()` в `screener.js` и `desktop-app-ui.js`; HTML — `[data-release-marker]` в `index.html`.

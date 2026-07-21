@@ -1,7 +1,7 @@
 {
   "name": "multichart-desktop",
   "productName": "Multichart",
-  "version": "1.0.74",
+  "version": "1.0.75",
   "description": "Multichart desktop shell for macOS (bundled site UI + auto-update)",
   "main": "main.js",
   "author": "Multichart",
@@ -18,8 +18,10 @@
     "prebuild:win:publish": "npm run bundle:site",
     "build:mac": "electron-builder --mac --publish never",
     "build:mac:publish": "electron-builder --mac --publish always",
+    "build:mac:editions": "node scripts/build-dual-editions.cjs mac",
     "build:win": "electron-builder --win --publish never",
-    "build:win:publish": "electron-builder --win --publish always"
+    "build:win:publish": "electron-builder --win --publish always",
+    "build:win:editions": "node scripts/build-dual-editions.cjs win"
   },
   "dependencies": {
     "electron-log": "^5.2.4",
@@ -44,6 +46,7 @@
     "files": [
       "main.js",
       "preload.js",
+      "algo-trading-edition.cjs",
       "menu-bar-tray.cjs",
       "menu-bar-tray-feed.cjs",
       "menu-bar-tray-pnl.cjs",

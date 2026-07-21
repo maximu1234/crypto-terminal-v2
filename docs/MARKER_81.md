@@ -23,6 +23,9 @@
 ## Версии
 
 - Web marker: `v0.81`
-- Desktop app: `v1.0.74`
-- Mac tag: `desktop-v1.0.74`
-- Windows tag: `desktop-win-v1.0.74`
+- Desktop app: `v1.0.75` (dual editions f/m in release assets)
+- Mac tag: `desktop-v1.0.75`
+- Windows tag: `desktop-win-v1.0.75`
+
+`v1.0.74` — первая выкладка ботов; `v1.0.75` — в одном релизе два файла
+(`…f…` full и `…m…` manual-only).

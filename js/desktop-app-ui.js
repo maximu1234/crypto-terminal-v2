@@ -7,7 +7,7 @@ isScreenerPage
 
 import {
 mountReleaseMarker
-} from "./release-marker.js?v=37";
+} from "./release-marker.js?v=38";
 
 export function initDesktopAppUi(){
 

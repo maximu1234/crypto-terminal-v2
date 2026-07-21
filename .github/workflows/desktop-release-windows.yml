@@ -93,16 +93,16 @@ jobs:
             -y
           test -f desktop/build/pnl-card-generator.exe
 
-      - name: Build Windows installer + portable
-        run: npm run build:win
+      - name: Build Windows editions f + m (.exe)
+        run: npm run build:win:editions
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: multichart-windows-${{ steps.release.outputs.version }}
           path: |
-            desktop/dist/*.exe
-            desktop/dist/*.yml
+            desktop/dist/editions/*.exe
+            desktop/dist/editions/*.yml
           if-no-files-found: error
 
       - name: Publish GitHub Release
@@ -117,7 +117,7 @@ jobs:
           TAG="${RELEASE_TAG}"
           VERSION="${RELEASE_VERSION}"
           REPO="${GITHUB_REPOSITORY}"
-          ASSETS=(desktop/dist/*.exe desktop/dist/*.yml)
+          ASSETS=(desktop/dist/editions/*.exe desktop/dist/editions/*.yml)
 
           for asset in "${ASSETS[@]}"; do
             if [ ! -e "$asset" ]; then
@@ -125,6 +125,9 @@ jobs:
               exit 1
             fi
           done
+
+          ls desktop/dist/editions/*"${VERSION}f"* >/dev/null
+          ls desktop/dist/editions/*"${VERSION}m"* >/dev/null
 
           publish() {
             if gh release view "$TAG" --repo "$REPO" >/dev/null 2>&1; then
@@ -134,18 +137,25 @@ jobs:
             fi
 
             echo "Creating release ${TAG}"
+            NOTES="$(printf '%s\n' \
+              "### Editions" \
+              "- **f** (full) — live + manual algo trading" \
+              "- **m** (manual) — friends build, alerts only" \
+              "" \
+              "Download the file with \`f\` or \`m\` after the version in the name.")"
+
             if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
               gh release create "$TAG" \
                 --repo "$REPO" \
                 --target "${GITHUB_SHA}" \
                 --title "Desktop Windows ${VERSION}" \
-                --generate-notes \
+                --notes "$NOTES" \
                 "${ASSETS[@]}"
             else
               gh release create "$TAG" \
                 --repo "$REPO" \
                 --title "Desktop Windows ${VERSION}" \
-                --generate-notes \
+                --notes "$NOTES" \
                 "${ASSETS[@]}"
             fi
           }

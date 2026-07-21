@@ -77,19 +77,19 @@ jobs:
       - name: Bundle site into desktop
         run: npm run bundle:site
 
-      - name: Build macOS .app + .dmg + auto-update zip
+      - name: Build macOS editions f + m (.dmg / .zip)
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: "false"
-        run: npm run build:mac
+        run: npm run build:mac:editions
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: multichart-macos-${{ steps.release.outputs.version }}
           path: |
-            desktop/dist/*.dmg
-            desktop/dist/*.zip
-            desktop/dist/latest-mac.yml
+            desktop/dist/editions/*.dmg
+            desktop/dist/editions/*.zip
+            desktop/dist/editions/latest-mac.yml
           if-no-files-found: error
 
       - name: Publish GitHub Release
@@ -104,7 +104,7 @@ jobs:
           TAG="${RELEASE_TAG}"
           VERSION="${RELEASE_VERSION}"
           REPO="${GITHUB_REPOSITORY}"
-          ASSETS=(desktop/dist/*.dmg desktop/dist/*.zip desktop/dist/latest-mac.yml)
+          ASSETS=(desktop/dist/editions/*.dmg desktop/dist/editions/*.zip desktop/dist/editions/latest-mac.yml)
 
           for asset in "${ASSETS[@]}"; do
             if [ ! -e "$asset" ]; then
@@ -112,6 +112,10 @@ jobs:
               exit 1
             fi
           done
+
+          # Expect both edition letters in filenames
+          ls desktop/dist/editions/*"${VERSION}f"* >/dev/null
+          ls desktop/dist/editions/*"${VERSION}m"* >/dev/null
 
           publish() {
             if gh release view "$TAG" --repo "$REPO" >/dev/null 2>&1; then
@@ -121,18 +125,25 @@ jobs:
             fi
 
             echo "Creating release ${TAG}"
+            NOTES="$(printf '%s\n' \
+              "### Editions" \
+              "- **f** (full) — live + manual algo trading" \
+              "- **m** (manual) — friends build, alerts only" \
+              "" \
+              "Download the file with \`f\` or \`m\` after the version in the name.")"
+
             if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
               gh release create "$TAG" \
                 --repo "$REPO" \
                 --target "${GITHUB_SHA}" \
                 --title "Desktop ${VERSION}" \
-                --generate-notes \
+                --notes "$NOTES" \
                 "${ASSETS[@]}"
             else
               gh release create "$TAG" \
                 --repo "$REPO" \
                 --title "Desktop ${VERSION}" \
-                --generate-notes \
+                --notes "$NOTES" \
                 "${ASSETS[@]}"
             fi
           }
