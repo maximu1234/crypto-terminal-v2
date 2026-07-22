@@ -3231,11 +3231,17 @@ config?.symbols ||
 
 async function stopPatternEngine(){
 
+/*
+ * Same thorough cleanup as start: in-memory pending maps can miss orphans
+ * (timeout place, Quit/agent restart). Manual → all source=algo-bot alerts;
+ * live → every open algo trigger on the exchange.
+ */
 if(
 isManualTradingMode()
 ){
-await alertBridge.cancelAllBotAlerts();
+await alertBridge.clearAllAlgoBotAlerts();
 }else{
+await orderExecutor.cancelAllOpenTriggerOrders();
 await orderExecutor.cancelAllBotTriggers();
 }
 
@@ -3419,8 +3425,9 @@ state.consumed.clear();
 if(
 isManualTradingMode()
 ){
-void alertBridge.cancelAllBotAlerts();
+void alertBridge.clearAllAlgoBotAlerts();
 }else{
+void orderExecutor.cancelAllOpenTriggerOrders();
 void orderExecutor.cancelAllBotTriggers();
 }
 orderExecutor.clearPendingEntries();
