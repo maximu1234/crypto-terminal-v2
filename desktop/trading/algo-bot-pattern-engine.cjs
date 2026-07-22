@@ -870,6 +870,12 @@ setup.side ===
 const end =
 candles.length;
 
+/*
+ * Entry is only AFTER the pt4 formation bar.
+ * Checking b4 itself is wrong: for short, p4 is typically the bar's
+ * micro low (long: high), so isEntryCross(b4-1, b4, p4) is almost
+ * always true and cancels every clean setup ("pt4 уже заколот").
+ */
 for(
 let i =
 b4 +
@@ -927,44 +933,6 @@ return true;
 }
 
 return false;
-
-}
-
-function invalidAtArm(
-candles,
-setup
-){
-
-const b4 =
-Number(
-setup.b4
-);
-
-if(
-b4 <
-1 ||
-b4 >=
-candles.length
-){
-return true;
-}
-
-return isEntryCross(
-setup.side ===
-"short"
-? "short"
-: "long",
-candles[
-b4 -
-1
-],
-candles[
-b4
-],
-Number(
-setup.p4
-)
-);
 
 }
 
@@ -1030,34 +998,6 @@ state,
 fp
 )
 ){
-return;
-}
-
-if(
-invalidAtArm(
-candles,
-setup
-)
-){
-pushSignal(
-{
-ts:
-Date.now(),
-symbol:
-sym,
-side:
-setup.side,
-price:
-Number(
-setup.p4
-),
-text:
-`${sym} ${setup.side}: pt4 уже заколот — сетап отменён`
-}
-);
-state.consumed.add(
-fp
-);
 return;
 }
 

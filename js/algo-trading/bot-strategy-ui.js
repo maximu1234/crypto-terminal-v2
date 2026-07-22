@@ -9,8 +9,9 @@ primaryBotSide,
 normalizeBotTf,
 normalizeBotRefreshStatsMode,
 botSideListLabel,
-botSidesDirectionLabel
-} from "./bot-strategy-prefs.js?v=7";
+botSidesDirectionLabel,
+botSettingsStatusLabel
+} from "./bot-strategy-prefs.js?v=8";
 import {
 syncBotStrategiesToMain,
 syncAllTickerFlagsRootToMain,
@@ -223,6 +224,10 @@ document.getElementById(
 const statusDirection =
 document.getElementById(
 "algo-bot-status-direction"
+);
+const statusSettings =
+document.getElementById(
+"algo-bot-status-settings"
 );
 const statusOpen =
 document.getElementById(
@@ -1390,6 +1395,30 @@ botSidesDirectionLabel(
 status?.sides ||
 status?.side,
 !!status?.useFavorites
+);
+}
+
+if(
+statusSettings
+){
+statusSettings.textContent =
+botSettingsStatusLabel(
+{
+slPct:
+status?.slPct,
+riskUsd:
+status?.riskUsd,
+tpRr:
+status?.tpRr,
+tp1:
+status?.tp1,
+tp2:
+status?.tp2,
+tp3:
+status?.tp3
+},
+status?.strategyId ||
+"st1"
 );
 }
 

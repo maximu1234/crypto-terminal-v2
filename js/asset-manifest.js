@@ -320,9 +320,9 @@ Object.freeze({
 "algo-trading/bot-alert-bridge.js":
 4,
 "algo-trading/bot-strategy-prefs.js":
-7,
+8,
 "algo-trading/bot-strategy-ui.js":
-27,
+28,
 "algo-trading/trade/format.js":
 2,
 "algo-trading/trade/positions-cache.js":
@@ -430,7 +430,7 @@ Object.freeze({
 "screener-widget-zoom.js":
 12,
 "release-marker.js":
-41,
+42,
 "focus-blur-after-pick.js":
 3,
 "site-boot.js":

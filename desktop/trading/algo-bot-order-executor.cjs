@@ -262,6 +262,58 @@ value
 
 }
 
+let orderLinkSeq =
+0;
+
+/**
+ * Bybit rejects reused orderLinkId even after cancel («OrderLinkedID is duplicate»).
+ * Fingerprint alone is stable across Quit/restart — always append a unique suffix.
+ * @param {string} seed
+ * @returns {string}
+ */
+function makeAlgoOrderLinkId(
+seed
+){
+
+orderLinkSeq =
+(
+orderLinkSeq +
+1
+) %
+1e6;
+const uniq =
+`${Date.now().toString(
+36
+)}${orderLinkSeq.toString(
+36
+)}`;
+const raw =
+String(
+seed ||
+"algo"
+).replace(
+/[^a-zA-Z0-9_-]/g,
+""
+) ||
+"algo";
+const maxSeed =
+Math.max(
+4,
+36 -
+uniq.length -
+1
+);
+
+return `${raw.slice(
+0,
+maxSeed
+)}_${uniq}`.slice(
+0,
+36
+);
+
+}
+
 function tpOrderLinkId(
 meta,
 symbol,
@@ -278,8 +330,21 @@ symbol ||
 ""
 ) ||
 "bot";
+/*
+ * Include placedAt so a later session after cancel does not reuse the
+ * same Bybit orderLinkId (duplicate rejection).
+ */
+const nonce =
+String(
+meta?.placedAt ||
+meta?.tpLinkNonce ||
+Date.now()
+).replace(
+/[^A-Za-z0-9_-]/g,
+""
+);
 
-return `algo-tp-${key}-${index}`.slice(
+return `algo-tp-${key}-${index}-${nonce}`.slice(
 0,
 36
 );
@@ -1157,17 +1222,10 @@ side ===
 ? "sell-stop"
 : "buy-stop";
 const orderLinkId =
+makeAlgoOrderLinkId(
 fingerprint
-? `a${fingerprint}`.replace(
-/[^a-zA-Z0-9_-]/g,
-""
-).slice(
-0,
-36
-)
-: `algo${Date.now()}`.slice(
-0,
-36
+? `a${fingerprint}`
+: `algo${Date.now()}`
 );
 
 const orderResult =

@@ -421,6 +421,16 @@ active.tf,
 exchangeId,
 riskUsd:
 active.riskUsd,
+slPct:
+active.slPct,
+tpRr:
+active.tpRr,
+tp1:
+active.tp1,
+tp2:
+active.tp2,
+tp3:
+active.tp3,
 armedCount:
 engine.armedCount,
 armedSetups:

@@ -471,6 +471,160 @@ return useFavorites
 }
 
 /**
+ * Краткая строка настроек для окна Статус.
+ * St1: «СЛ:50% (1$), ТП: 1к3»
+ * St2/St3: «СЛ:50% (1$), ТП: 1/1.25/1.44»
+ * @param {object|null|undefined} prefs
+ * @param {"st1"|"st2"|"st3"|string|null|undefined} strategyId
+ * @returns {string}
+ */
+export function botSettingsStatusLabel(
+prefs,
+strategyId =
+"st1"
+){
+
+if(
+!prefs
+){
+return "—";
+}
+
+const slPct =
+Math.round(
+Number(
+prefs.slPct
+)
+);
+const riskRaw =
+Number(
+prefs.riskUsd
+);
+const slOk =
+Number.isFinite(
+slPct
+);
+const riskOk =
+Number.isFinite(
+riskRaw
+) &&
+riskRaw >
+0;
+
+const riskLabel =
+riskOk
+?(
+Number.isInteger(
+riskRaw
+)
+? String(
+riskRaw
+)
+: String(
+Math.round(
+riskRaw *
+100
+) /
+100
+)
+)
+: "—";
+
+const slPart =
+slOk
+? `СЛ:${slPct}% (${riskLabel}$)`
+: `СЛ:— (${riskLabel}$)`;
+
+const id =
+strategyId ===
+"st2" ||
+strategyId ===
+"st3"
+? strategyId
+: "st1";
+
+if(
+id ===
+"st2" ||
+id ===
+"st3"
+){
+
+const fmt =
+v=>{
+const n =
+Number(
+v
+);
+
+if(
+!Number.isFinite(
+n
+)
+){
+return "—";
+}
+
+return Number.isInteger(
+n
+)
+? String(
+n
+)
+: String(
+Math.round(
+n *
+100
+) /
+100
+);
+};
+
+return `${slPart}, ТП: ${fmt(
+prefs.tp1
+)}/${fmt(
+prefs.tp2
+)}/${fmt(
+prefs.tp3
+)}`;
+
+}
+
+const rr =
+Number(
+prefs.tpRr
+);
+
+if(
+!Number.isFinite(
+rr
+) ||
+rr <=
+0
+){
+return `${slPart}, ТП: —`;
+}
+
+const rrLabel =
+Number.isInteger(
+rr
+)
+? String(
+rr
+)
+: String(
+Math.round(
+rr *
+100
+) /
+100
+);
+
+return `${slPart}, ТП: 1к${rrLabel}`;
+
+}
+
+/**
  * @param {AlgoBotSide} side
  */
 export function botSideToFlagId(
