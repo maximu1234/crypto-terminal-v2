@@ -13,6 +13,12 @@ AUTH_PROTOCOL
 require(
 "./shared.cjs"
 );
+const {
+setDarwinLoginAgentEnabled
+} =
+require(
+"./darwin-login-agent.cjs"
+);
 
 const id =
 "darwin";
@@ -194,6 +200,23 @@ return false;
 
 }
 
+function supportsTrayAgent(){
+
+return process.platform ===
+"darwin";
+
+}
+
+function setLoginAgentEnabled(
+enabled
+){
+
+return setDarwinLoginAgentEnabled(
+!!enabled
+);
+
+}
+
 module.exports = {
 id,
 applyPlatformCommandLineSwitches,
@@ -202,5 +225,7 @@ registerAuthProtocol,
 registerPlatformHandlers,
 registerActivateHandler,
 attachMainWindowCloseHandler,
-shouldQuitWhenAllWindowsClosed
+shouldQuitWhenAllWindowsClosed,
+supportsTrayAgent,
+setLoginAgentEnabled
 };

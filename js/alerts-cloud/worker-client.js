@@ -1079,7 +1079,7 @@ return false;
 }
 
 const { forgetAlertDeleted } =
-await import("../alerts.js?v=102");
+await import("../alerts.js?v=104");
 
 forgetAlertDeleted(
 sym,
@@ -2346,7 +2346,7 @@ null;
 
 if(cloudId){
 const { markAlertCloudId } =
-await import("../alerts.js?v=102");
+await import("../alerts.js?v=104");
 
 markAlertCloudId(
 symbol,

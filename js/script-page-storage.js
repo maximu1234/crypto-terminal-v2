@@ -181,8 +181,7 @@ raw.page
 DEFAULT_STATE.page
 ),
 favoritesOnly:
-raw.favoritesOnly ===
-true,
+false,
 favoritesLongCount:
 Math.max(
 0,
@@ -453,8 +452,7 @@ state.layout,
 page:
 state.page,
 favoritesOnly:
-state.favoritesOnly ===
-true,
+false,
 favoritesLongCount:
 Math.max(
 0,

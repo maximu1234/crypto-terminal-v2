@@ -20,7 +20,7 @@ POSITION_RR_LABEL_SAMPLE
 import {
 formatMoneyUsd,
 formatVolumeUsd
-} from "../position-sizing.js?v=1";
+} from "../position-sizing.js?v=2";
 
 import {
 positionEntryPrice,

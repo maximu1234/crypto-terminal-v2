@@ -28,6 +28,7 @@ export const ALGO_BOT_TF_OPTIONS =
  *   slPct: number,
  *   riskUsd: number,
  *   tpRr: number,
+ *   alertLeadPct: number,
  *   side: AlgoBotSide,
  *   sides: AlgoBotSides,
  *   useFavorites: boolean,
@@ -71,6 +72,8 @@ riskUsd:
 1,
 tpRr:
 2,
+alertLeadPct:
+5,
 side:
 "long",
 sides:{
@@ -718,6 +721,15 @@ clampFloat(
 src.tpRr,
 0.01,
 base.tpRr
+),
+alertLeadPct:
+Math.min(
+10,
+clampFloat(
+src.alertLeadPct,
+0,
+base.alertLeadPct
+)
 ),
 sides:
 normalizeBotSides(

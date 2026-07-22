@@ -15,7 +15,7 @@ jsImport
 
 import {
 mountScriptPage
-} from "./script-page.js?v=30";
+} from "./script-page.js?v=32";
 
 async function boot(){
 

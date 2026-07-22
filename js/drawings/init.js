@@ -5,7 +5,7 @@ formatDrawColor
 
 import {
 TRASH_ICON_SVG
-} from "../draw-ui-shared.js?v=31";
+} from "../draw-ui-shared.js?v=32";
 
 import {
 closeAllWidgetDrawToolsMenus

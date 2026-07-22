@@ -41,11 +41,11 @@ mountAlgoTickerScanUi
 
 import {
 mountAlgoRuntimeUi
-} from "./algo-trading/runtime-ui.js?v=10";
+} from "./algo-trading/runtime-ui.js?v=11";
 
 import {
 mountAlgoBotStrategyUi
-} from "./algo-trading/bot-strategy-ui.js?v=28";
+} from "./algo-trading/bot-strategy-ui.js?v=30";
 
 import {
 syncBotStrategiesToMain
@@ -112,6 +112,15 @@ setChartLayoutReady,
 isChartLayoutReady
 } from "./chart-layout-gate.js?v=2";
 
+import {
+invalidatePreservedVisibleLogicalRange
+} from "./chart-visible-range.js?v=3";
+
+import {
+COINS_TF_HOTKEYS,
+COINS_TF_VALUES
+} from "./terminal/terminal-state.js?v=11";
+
 const DEFAULT_SYMBOL =
 "BTCUSDT";
 const DEFAULT_TF =
@@ -122,6 +131,32 @@ const HISTORY_REQUESTS =
 
 const ALGO_PREFS_KEY =
 "algo_trading_page_prefs_v1";
+
+const ALGO_POSITION_DRAW_HOTKEYS =
+new Map(
+[
+[
+"KeyL",
+"long"
+],
+[
+"KeyS",
+"short"
+],
+[
+"KeyF",
+"fib"
+],
+[
+"KeyR",
+"trendline"
+],
+[
+"KeyC",
+"channel"
+]
+]
+);
 
 function normalizeSymbol(
 raw
@@ -1358,6 +1393,8 @@ function fitViewport(){
 const display =
 buildDisplayCandles();
 
+invalidatePreservedVisibleLogicalRange();
+
 applyCoinsChartViewport(
 chart,
 rsiChart,
@@ -1451,6 +1488,8 @@ refPrice
 
 const display =
 buildDisplayCandles();
+
+chartIndicators?.clearMainChartOverlays?.();
 
 candleSeries.setData(
 display
@@ -2786,6 +2825,122 @@ btn.dataset.tf
 }
 );
 
+function shouldIgnoreAlgoHotkey(
+event
+){
+
+if(
+event.defaultPrevented
+){
+return true;
+}
+
+if(
+event.metaKey ||
+event.ctrlKey ||
+event.altKey ||
+event.shiftKey
+){
+return true;
+}
+
+const target =
+event.target;
+const tag =
+target?.tagName?.toLowerCase?.();
+
+if(
+tag ===
+"input" ||
+tag ===
+"textarea" ||
+tag ===
+"select" ||
+target?.isContentEditable
+){
+return true;
+}
+
+return false;
+
+}
+
+function onAlgoTfHotkey(
+event
+){
+
+if(
+disposed ||
+shouldIgnoreAlgoHotkey(
+event
+)
+){
+return;
+}
+
+const nextTf =
+COINS_TF_HOTKEYS[
+event.key
+];
+
+if(
+!nextTf ||
+!COINS_TF_VALUES.has(
+nextTf
+)
+){
+return;
+}
+
+event.preventDefault();
+void loadSymbol(
+symbol,
+nextTf
+);
+
+}
+
+function onAlgoDrawHotkey(
+event
+){
+
+if(
+disposed ||
+shouldIgnoreAlgoHotkey(
+event
+)
+){
+return;
+}
+
+const tool =
+ALGO_POSITION_DRAW_HOTKEYS.get(
+event.code
+);
+
+if(
+!tool ||
+!drawingTools?.pickDrawTool
+){
+return;
+}
+
+event.preventDefault();
+drawingTools.pickDrawTool(
+tool
+);
+
+}
+
+window.addEventListener(
+"keydown",
+onAlgoTfHotkey
+);
+window.addEventListener(
+"keydown",
+onAlgoDrawHotkey
+);
+
 window.addEventListener(
 "resize",
 ()=>{
@@ -2839,6 +2994,14 @@ window.addEventListener(
 ()=>{
 disposed =
 true;
+window.removeEventListener(
+"keydown",
+onAlgoTfHotkey
+);
+window.removeEventListener(
+"keydown",
+onAlgoDrawHotkey
+);
 disposeStatsResize?.();
 chartResizeObserver?.disconnect?.();
 chartResizeObserver =

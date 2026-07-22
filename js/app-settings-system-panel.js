@@ -7,11 +7,11 @@ isMenuBarTrayEnabled,
 isMenuBarTrayPlatform,
 setLaunchAgentAtLoginLocal,
 setMenuBarTrayEnabled
-} from "./desktop-menu-bar-tray-prefs.js?v=2";
+} from "./desktop-menu-bar-tray-prefs.js?v=3";
 
 import {
 applyDesktopMenuBarTrayPreference
-} from "./desktop-menu-bar-tray.js?v=8";
+} from "./desktop-menu-bar-tray.js?v=9";
 
 import {
 isScreenerPatternEnabled,
@@ -218,7 +218,22 @@ host.dataset.systemMounted =
 
 const trayBlock =
 isMenuBarTrayPlatform()
+? (
+window.cryptoTerminalDesktop?.platform ===
+"win32"
 ? `
+<p class="app-settings-panel-lead">Поведение иконки Multichart в области уведомлений Windows.</p>
+<label class="app-settings-toggle-row">
+<input type="checkbox" class="app-settings-toggle-input" id="app-settings-menu-bar-tray" />
+<span class="app-settings-toggle-label">Показывать иконку в области уведомлений</span>
+</label>
+<label class="app-settings-toggle-row">
+<input type="checkbox" class="app-settings-toggle-input" id="app-settings-launch-agent-login" />
+<span class="app-settings-toggle-label">Запускать агент при входе в систему</span>
+</label>
+<p class="app-settings-panel-hint">Без окна Multichart — только иконка в трее с PnL. Окно открывается из меню иконки («Открыть Multichart»). Закрытие окна сворачивает в агент.</p>
+`
+: `
 <p class="app-settings-panel-lead">Поведение иконки Multichart в строке меню macOS.</p>
 <label class="app-settings-toggle-row">
 <input type="checkbox" class="app-settings-toggle-input" id="app-settings-menu-bar-tray" />
@@ -230,6 +245,7 @@ isMenuBarTrayPlatform()
 </label>
 <p class="app-settings-panel-hint">Без окна Multichart — только иконка в меню с PnL. Окно открывается по клику.</p>
 `
+)
 : "";
 
 host.innerHTML =

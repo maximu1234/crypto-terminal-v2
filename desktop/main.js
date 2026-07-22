@@ -102,11 +102,10 @@ require(
 "./script-favorites-store.cjs"
 );
 const {
-hasAgentArg,
-setDarwinLoginAgentEnabled
+hasAgentArg
 } =
 require(
-"./platform/darwin-login-agent.cjs"
+"./platform/agent-argv.cjs"
 );
 const platform =
 require(
@@ -433,8 +432,7 @@ startPowerSaveBlocker();
 function enterAgentMode(){
 
 if(
-process.platform !==
-"darwin"
+!platform.impl.supportsTrayAgent?.()
 ){
 return;
 }
@@ -489,8 +487,7 @@ true
 function shouldEnterAgentOnClose(){
 
 return (
-process.platform ===
-"darwin" &&
+!!platform.impl.supportsTrayAgent?.() &&
 isMenuBarTrayActive()
 );
 
@@ -499,8 +496,7 @@ isMenuBarTrayActive()
 function shouldStartAsLoginAgent(){
 
 if(
-process.platform !==
-"darwin"
+!platform.impl.supportsTrayAgent?.()
 ){
 return false;
 }
@@ -542,14 +538,13 @@ enabled
 ){
 
 if(
-process.platform !==
-"darwin"
+!platform.impl.supportsTrayAgent?.()
 ){
 return {
 ok:
 false,
 message:
-"darwin only"
+"tray agent unsupported"
 };
 }
 
@@ -559,7 +554,7 @@ enabled
 );
 
 try{
-setDarwinLoginAgentEnabled(
+platform.impl.setLoginAgentEnabled?.(
 prefs.launchAgentAtLogin
 );
 }catch(
@@ -1417,7 +1412,7 @@ if(
 !prefs.trayEnabled
 ){
 try{
-setDarwinLoginAgentEnabled(
+platform.impl.setLoginAgentEnabled?.(
 false
 );
 }catch(

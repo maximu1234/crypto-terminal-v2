@@ -1,11 +1,11 @@
 /**
- * Desktop macOS: menu-bar tray prefs + синхронизация скрытия PnL.
- * Позиции/PnL в трей кормит main (menu-bar-tray-feed).
+ * Desktop tray: menu bar (macOS) / notification area (Windows).
+ * Prefs + синхронизация скрытия PnL. Позиции/PnL кормит main (menu-bar-tray-feed).
  */
 import {
 isMenuBarTrayEnabled,
 MENU_BAR_TRAY_PREF_EVENT
-} from "./desktop-menu-bar-tray-prefs.js?v=2";
+} from "./desktop-menu-bar-tray-prefs.js?v=3";
 
 import {
 TOTAL_PNL_HIDDEN_KEY,
@@ -90,8 +90,12 @@ window.cryptoTerminalDesktop;
 
 if(
 !desktop?.isDesktop ||
+(
 desktop.platform !==
-"darwin"
+"darwin" &&
+desktop.platform !==
+"win32"
+)
 ){
 return ()=>{};
 }
@@ -186,8 +190,12 @@ window.cryptoTerminalDesktop;
 
 if(
 !desktop?.isDesktop ||
+(
 desktop.platform !==
-"darwin" ||
+"darwin" &&
+desktop.platform !==
+"win32"
+) ||
 typeof desktop.setMenuBarTrayVisible !==
 "function"
 ){

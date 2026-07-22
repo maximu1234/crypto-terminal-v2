@@ -17,11 +17,18 @@ loadAllAlerts,
 removeAlert,
 formatAlertDate,
 formatAlertTicker
-} from "../../alerts.js?v=102";
+} from "../../alerts.js?v=104";
 
 import {
-ALGO_BOT_ALERT_SOURCE
-} from "../bot-alert-bridge.js?v=4";
+isAlgoBotAlertRow,
+rememberBotAlertShapeId,
+retagKnownAlgoBotAlerts
+} from "../bot-alert-bridge.js?v=6";
+
+import {
+fetchAlgoBotStatus,
+subscribeAlgoBotStatus
+} from "../bot-bridge.js?v=8";
 
 const PANEL_HEIGHT_KEY =
 "algo_trade_book_panel_height_v1";
@@ -1353,8 +1360,9 @@ function loadBotAlerts(){
 
 return loadAllAlerts().filter(
 alert=>
-alert?.source ===
-ALGO_BOT_ALERT_SOURCE
+isAlgoBotAlertRow(
+alert
+)
 ).slice().sort(
 (
 a,
@@ -1674,8 +1682,38 @@ err?.message ||
 
 }
 
+function rememberArmedAlertShapeIds(
+status
+){
+
+const setups =
+Array.isArray(
+status?.armedSetups
+)
+? status.armedSetups
+: [];
+
+for(
+const row of setups
+){
+
+rememberBotAlertShapeId(
+row?.alertShapeId
+);
+
+}
+
+if(
+setups.length
+){
+retagKnownAlgoBotAlerts();
+}
+
+}
+
 function refreshAlerts(){
 
+retagKnownAlgoBotAlerts();
 renderAlerts(
 loadBotAlerts()
 );
@@ -1900,10 +1938,67 @@ window.addEventListener(
 onAlertsChanged
 );
 window.addEventListener(
+"alerts-changed",
+onAlertsChanged
+);
+window.addEventListener(
+"alerts-registry-pulled",
+onAlertsChanged
+);
+window.addEventListener(
 "algo-book-refresh",
 ()=>{
 void refresh();
 }
+);
+
+const unsubBotStatus =
+subscribeAlgoBotStatus(
+status=>{
+
+if(
+disposed
+){
+return;
+}
+
+rememberArmedAlertShapeIds(
+status
+);
+
+if(
+mode ===
+"alerts"
+){
+refreshAlerts();
+}
+
+}
+);
+
+void fetchAlgoBotStatus().then(
+status=>{
+
+if(
+disposed
+){
+return;
+}
+
+rememberArmedAlertShapeIds(
+status
+);
+
+if(
+mode ===
+"alerts"
+){
+refreshAlerts();
+}
+
+}
+).catch(
+()=>{}
 );
 
 void refresh();
@@ -1912,6 +2007,7 @@ return {
 destroy(){
 disposed =
 true;
+unsubBotStatus?.();
 window.removeEventListener(
 "algo-trade-stream-positions",
 onStreamPositions
@@ -1926,6 +2022,14 @@ onStreamOrders
 );
 window.removeEventListener(
 "price-alerts-changed",
+onAlertsChanged
+);
+window.removeEventListener(
+"alerts-changed",
+onAlertsChanged
+);
+window.removeEventListener(
+"alerts-registry-pulled",
 onAlertsChanged
 );
 panel.remove();

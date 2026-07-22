@@ -13,6 +13,12 @@ AUTH_PROTOCOL
 require(
 "./shared.cjs"
 );
+const {
+setWin32LoginAgentEnabled
+} =
+require(
+"./win32-login-agent.cjs"
+);
 
 const id =
 "win32";
@@ -102,16 +108,80 @@ function registerActivateHandler(
 }
 
 function attachMainWindowCloseHandler(
-/* mainWindow, ctx */
+mainWindow,
+ctx
 ){
 
-/* Стандартное закрытие → quit через window-all-closed. */
+const {
+getIsQuitting,
+dismissTrayPopup,
+shouldEnterAgentOnClose,
+enterAgentMode,
+isAgentClosing
+} =
+ctx;
+
+mainWindow.on(
+"close",
+event=>{
+
+if(
+getIsQuitting() ||
+isAgentClosing?.()
+){
+return;
+}
+
+if(
+!shouldEnterAgentOnClose?.()
+){
+/* Tray off: стандартный close → window-all-closed → quit. */
+return;
+}
+
+event.preventDefault();
+dismissTrayPopup?.();
+enterAgentMode?.();
+
+}
+);
+
+}
+
+function isTrayEnabledInPrefs(){
+
+try{
+return require(
+"../menu-bar-tray-prefs-store.cjs"
+).readPrefs().trayEnabled !==
+false;
+}catch{
+return false;
+}
 
 }
 
 function shouldQuitWhenAllWindowsClosed(){
 
-return true;
+/* С tray: agent держит процесс. Без tray: крестик = выход. */
+return !isTrayEnabledInPrefs();
+
+}
+
+function supportsTrayAgent(){
+
+return process.platform ===
+"win32";
+
+}
+
+function setLoginAgentEnabled(
+enabled
+){
+
+return setWin32LoginAgentEnabled(
+!!enabled
+);
 
 }
 
@@ -123,5 +193,7 @@ registerAuthProtocol,
 registerPlatformHandlers,
 registerActivateHandler,
 attachMainWindowCloseHandler,
-shouldQuitWhenAllWindowsClosed
+shouldQuitWhenAllWindowsClosed,
+supportsTrayAgent,
+setLoginAgentEnabled
 };

@@ -11,7 +11,7 @@ formatPrice
 
 import {
 createPriceAlert
-} from "./alerts.js?v=102";
+} from "./alerts.js?v=104";
 
 import {
 isCloudLoggedInEffective

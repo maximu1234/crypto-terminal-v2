@@ -1,5 +1,6 @@
 /**
- * Настройка видимости иконки tray (macOS menu bar) и автозапуска агента.
+ * Настройка видимости иконки tray (macOS menu bar / Windows notification area)
+ * и автозапуска агента.
  */
 export const MENU_BAR_TRAY_ENABLED_KEY =
 "desktop_menu_bar_tray_enabled_v1";
@@ -15,10 +16,17 @@ export const LAUNCH_AGENT_PREF_EVENT =
 
 export function isMenuBarTrayPlatform(){
 
+const platform =
+window.cryptoTerminalDesktop?.platform;
+
 return (
 !!window.cryptoTerminalDesktop?.isDesktop &&
-window.cryptoTerminalDesktop.platform ===
-"darwin"
+(
+platform ===
+"darwin" ||
+platform ===
+"win32"
+)
 );
 
 }

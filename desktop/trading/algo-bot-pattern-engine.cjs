@@ -173,6 +173,12 @@ p4
 )
 ? p4
 : null,
+alertShapeId:
+entry?.alertShapeId
+? String(
+entry.alertShapeId
+)
+: null,
 fingerprint:
 setupFingerprint(
 state.symbol,
@@ -1205,6 +1211,149 @@ engineConfig?.onActivity?.();
 
 }
 
+/**
+ * Log interpolate along X (pt4 → pt3), same scale as SL/%.
+ * @param {number} from
+ * @param {number} to
+ * @param {number} t01
+ * @returns {number}
+ */
+function interpolateLogPrice(
+from,
+to,
+t01
+){
+
+const a =
+Number(
+from
+);
+const b =
+Number(
+to
+);
+const t =
+Math.min(
+1,
+Math.max(
+0,
+Number(
+t01
+)
+)
+);
+
+if(
+!(
+a >
+0
+) ||
+!(
+b >
+0
+) ||
+!Number.isFinite(
+t
+)
+){
+return NaN;
+}
+
+if(
+a ===
+b
+){
+return a;
+}
+
+return Math.exp(
+Math.log(
+a
+) *
+(
+1 -
+t
+) +
+Math.log(
+b
+) *
+t
+);
+
+}
+
+/**
+ * Manual alert lead: N% of X (pt3↔pt4) from pt4 toward pt3.
+ * Long → slightly below pt4; short → slightly above. Not % of absolute price.
+ * @param {object} setup
+ * @param {number} leadPct
+ * @returns {number}
+ */
+function computeManualAlertPrice(
+setup,
+leadPct
+){
+
+const pt4 =
+Number(
+setup?.p4
+);
+const pt3 =
+Number(
+setup?.p3
+);
+const lead =
+Number.isFinite(
+leadPct
+) &&
+leadPct >=
+0
+? Math.min(
+10,
+leadPct
+)
+: 5;
+
+if(
+!(
+pt4 >
+0
+)
+){
+return NaN;
+}
+
+if(
+!(
+lead >
+0
+) ||
+!(
+pt3 >
+0
+)
+){
+return pt4;
+}
+
+const alertPrice =
+interpolateLogPrice(
+pt4,
+pt3,
+lead /
+100
+);
+
+return Number.isFinite(
+alertPrice
+) &&
+alertPrice >
+0
+? alertPrice
+: pt4;
+
+}
+
 async function placeAlertForArmed(
 sym,
 setup,
@@ -1212,23 +1361,51 @@ fp
 ){
 
 /*
- * Manual mode only marks the pt4 entry. Partial exits and trailing SL
- * remain a live-order feature; no synthetic trailing alerts are created.
+ * Manual mode: alert slightly before pt4 so the trader has time to react.
+ * Offset = alertLeadPct of X (pt3↔pt4), toward pt3 — same units as СЛ %.
  */
+const pt4 =
+Number(
+setup.p4
+);
+const leadPct =
+Number(
+engineConfig?.alertLeadPct
+);
+const lead =
+Number.isFinite(
+leadPct
+) &&
+leadPct >=
+0
+? Math.min(
+10,
+leadPct
+)
+: 5;
+const side =
+setup.side ===
+"short"
+? "short"
+: "long";
+const alertPrice =
+computeManualAlertPrice(
+setup,
+lead
+);
+
 const result =
 await alertBridge.placeBotAlert(
 {
 symbol:
 sym,
-side:
-setup.side ===
-"short"
-? "short"
-: "long",
+side,
 price:
-Number(
-setup.p4
-),
+Number.isFinite(
+alertPrice
+)
+? alertPrice
+: pt4,
 tf:
 engineConfig?.tf ||
 "5",
@@ -1256,7 +1433,20 @@ row
 ){
 row.alertShapeId =
 result.shapeId;
+row.alertPrice =
+Number.isFinite(
+alertPrice
+)
+? alertPrice
+: pt4;
 }
+
+const shown =
+Number.isFinite(
+alertPrice
+)
+? alertPrice
+: pt4;
 
 pushSignal(
 {
@@ -1267,15 +1457,14 @@ sym,
 side:
 setup.side,
 price:
-Number(
-setup.p4
-),
+shown,
 text:
-`${sym} ${setup.side}: ALERT @ ${Number(
-setup.p4
-).toFixed(
+`${sym} ${setup.side}: ALERT @ ${shown.toFixed(
 4
-)}`
+)} (pt4${lead >
+0
+? `−${lead}%X`
+: ""})`
 }
 );
 engineConfig?.onActivity?.();
@@ -2865,6 +3054,28 @@ tpRr:
 Number(
 config?.tpRr
 ),
+alertLeadPct:
+(()=>{
+const n =
+Number(
+config?.alertLeadPct
+);
+
+if(
+!Number.isFinite(
+n
+) ||
+n <
+0
+){
+return 5;
+}
+
+return Math.min(
+10,
+n
+);
+})(),
 strategyId:
 String(
 config?.strategyId ||

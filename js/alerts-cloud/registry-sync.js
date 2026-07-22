@@ -114,7 +114,7 @@ cloudId
 ){
 
 const { markAlertCloudSynced, markAlertCloudId } =
-await import("../alerts.js?v=102");
+await import("../alerts.js?v=104");
 
 const ok =
 await verifyAlertActiveInCloud(
@@ -368,7 +368,7 @@ null;
 
 if(cloudId){
 const { markAlertCloudId } =
-await import("../alerts.js?v=102");
+await import("../alerts.js?v=104");
 
 markAlertCloudId(
 symbol,
@@ -579,7 +579,7 @@ registrySyncTimer = null;
 }
 
 const { stripAlertFlagsNotInRegistry } =
-await import("../alerts.js?v=102");
+await import("../alerts.js?v=104");
 
 const ok =
 await clearAllAlertsFromCloud();
@@ -615,7 +615,7 @@ return 0;
 }
 
 const { getActiveAlerts } =
-await import("../alerts.js?v=102");
+await import("../alerts.js?v=104");
 
 const localKeys =
 new Set(
@@ -746,7 +746,7 @@ attempt++
 if(await pushAlertViaWorker(row)){
 
 const { markAlertCloudSynced } =
-await import("../alerts.js?v=102");
+await import("../alerts.js?v=104");
 
 /* Worker пишет service role — не ждём SELECT по JWT пользователя */
 markAlertCloudSynced(
@@ -777,7 +777,7 @@ ctx
 ){
 
 const { markAlertCloudSynced } =
-await import("../alerts.js?v=102");
+await import("../alerts.js?v=104");
 
 if(
 await markRowSyncedAfterVerify(
@@ -875,7 +875,7 @@ return 0;
 }
 
 const { getActiveAlerts, countAlertsOnChart } =
-await import("../alerts.js?v=102");
+await import("../alerts.js?v=104");
 
 const onChart =
 countAlertsOnChart();
@@ -981,7 +981,7 @@ return 0;
 }
 
 const { getActiveAlerts } =
-await import("../alerts.js?v=102");
+await import("../alerts.js?v=104");
 
 const list =
 getActiveAlerts();
@@ -1415,7 +1415,7 @@ normalizeAlertTf,
 isAlertDeleted,
 forgetAlertDeleted
 } =
-await import("../alerts.js?v=102");
+await import("../alerts.js?v=104");
 
 const cloudByKey =
 new Map();
@@ -1533,7 +1533,7 @@ tf: row.tf || "60"
 if(removedRows.length){
 
 const { applyRemoteAlertRemoved } =
-await import("../alerts.js?v=102");
+await import("../alerts.js?v=104");
 
 for(const row of removedRows){
 
@@ -1672,6 +1672,14 @@ localPriceNewer
 localTs,
 cloudTs ||
 Date.now()
+),
+...(
+prev?.source
+? {
+source:
+prev.source
+}
+: {}
 )
 });
 
@@ -1800,7 +1808,7 @@ const n =
 await reconcileLocalRegistryWithCloud();
 
 const { stripAlertFlagsNotInRegistry } =
-await import("../alerts.js?v=102");
+await import("../alerts.js?v=104");
 
 stripAlertFlagsNotInRegistry(
 isAlertsPage()
@@ -1884,7 +1892,7 @@ return 0;
 }
 
 const { stripAlertFlagsNotInRegistry } =
-await import("../alerts.js?v=102");
+await import("../alerts.js?v=104");
 
 stripAlertFlagsNotInRegistry(
 isAlertsPage()

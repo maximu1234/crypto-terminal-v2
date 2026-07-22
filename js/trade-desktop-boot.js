@@ -226,7 +226,7 @@ const {
 initDesktopMenuBarTray
 } =
 await import(
-"./desktop-menu-bar-tray.js?v=8"
+"./desktop-menu-bar-tray.js?v=9"
 );
 
 initDesktopMenuBarTray();

@@ -107,7 +107,7 @@ return `
 ${CURSOR_TOOL_ICON_SVG}
 </button>
 
-<button type="button" class="${btnClass}" data-draw-tool="trendline" title="Trendline">
+<button type="button" class="${btnClass}" data-draw-tool="trendline" title="Trendline (R)">
 ${TRENDLINE_ICON_SVG}
 </button>
 
@@ -119,7 +119,7 @@ ${ARROW_ICON_SVG}
 ${HRAY_ICON_SVG}
 </button>
 
-<button type="button" class="${btnClass}" data-draw-tool="channel" title="Parallel Channel">
+<button type="button" class="${btnClass}" data-draw-tool="channel" title="Parallel Channel (C)">
 ${CHANNEL_ICON_SVG}
 </button>
 

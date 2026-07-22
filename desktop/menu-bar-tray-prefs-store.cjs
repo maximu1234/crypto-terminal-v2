@@ -1,5 +1,5 @@
 /**
- * Main-process prefs for menu-bar tray / login agent (macOS).
+ * Main-process prefs for tray / login agent (macOS menu bar, Windows tray).
  * Renderer localStorage is mirrored here so agent boot works without a window.
  */
 const fs =

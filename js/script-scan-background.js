@@ -15,7 +15,7 @@ import {
 loadScriptPageState,
 saveScriptPageState,
 periodMsById
-} from "./script-page-storage.js?v=13";
+} from "./script-page-storage.js?v=14";
 
 import {
 loadScriptFavoritesForScan,
@@ -917,6 +917,11 @@ Date.now();
 saveScriptPageState(
 nextState
 );
+scheduleScriptScanRun(
+periodMsById(
+nextState.auto.periodId
+)
+);
 }
 
 dispatchUpdate(
@@ -975,6 +980,24 @@ err
 }
 );
 
+if(
+mode ===
+"auto"
+){
+const errState =
+loadScriptPageState();
+
+if(
+errState.auto.active
+){
+scheduleScriptScanRun(
+periodMsById(
+errState.auto.periodId
+)
+);
+}
+}
+
 }finally{
 
 clearScanJob();
@@ -985,26 +1008,6 @@ gen
 ){
 localRunnerActive =
 false;
-}
-
-if(
-mode ===
-"auto"
-){
-const nextState =
-loadScriptPageState();
-
-if(
-nextState.auto.active &&
-!isPatternScanJobActive() &&
-!getScanner().isRunning()
-){
-scheduleScriptScanRun(
-periodMsById(
-nextState.auto.periodId
-)
-);
-}
 }
 
 }
@@ -1480,10 +1483,9 @@ state.auto.active
 ){
 /* Reschedule against the new exchange's results/job bucket. */
 scheduleScriptScanRun(
-{
-immediate:
-false
-}
+periodMsById(
+state.auto.periodId
+)
 );
 }
 

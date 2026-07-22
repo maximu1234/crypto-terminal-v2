@@ -1368,7 +1368,9 @@ return list.length;
 export async function createPriceAlert(
 symbol,
 price,
-tf
+tf,
+opts =
+{}
 ){
 
 const { isCloudLoggedIn } =
@@ -1414,6 +1416,12 @@ return null;
 const shapeId =
 `pa_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
 
+const source =
+String(
+opts?.source ||
+""
+).trim();
+
 const row = {
 id: shapeId,
 shapeId,
@@ -1425,7 +1433,14 @@ tf
 exchangeId:
 getActiveExchangeId(),
 createdAt: Date.now(),
-cloudSynced: false
+cloudSynced: false,
+...(
+source
+? {
+source
+}
+: {}
+)
 };
 
 const list =
@@ -2460,7 +2475,15 @@ priceUpdatedAt:
 Date.parse(
 cloudRow?.updated_at
 ) ||
-Date.now()
+Date.now(),
+...(
+prev?.source
+? {
+source:
+prev.source
+}
+: {}
+)
 };
 
 let next;

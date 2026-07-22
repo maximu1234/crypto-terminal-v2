@@ -39,7 +39,7 @@ reconcileLocalRegistryWithCloud,
 pullRegistryFromCloud,
 pullRegistryFromCloudNow,
 scheduleRegistryCloudSync
-} from "./alerts-cloud/registry-sync.js?v=8";
+} from "./alerts-cloud/registry-sync.js?v=9";
 
 export {
 purgeAlertGarbageFromCloud

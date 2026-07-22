@@ -17,7 +17,7 @@ scheduleRegistryCloudSync
 
 import {
 stripAlertFlagsNotInRegistry
-} from "./alerts.js?v=102";
+} from "./alerts.js?v=104";
 
 import {
 isCloudLoggedIn,
@@ -68,7 +68,7 @@ enforceSiteHeaderAfterBoot
 
 import {
 resumeScriptScanBackgroundJob
-} from "./script-scan-background.js?v=13";
+} from "./script-scan-background.js?v=14";
 
 import {
 resumeStatsBackgroundJob
@@ -101,7 +101,7 @@ return;
 }
 
 void import(
-"./algo-trading/bot-alert-bridge.js?v=4"
+"./algo-trading/bot-alert-bridge.js?v=6"
 ).then(
 m=>
 m.mountAlgoBotAlertBridge?.()

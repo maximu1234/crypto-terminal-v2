@@ -178,6 +178,12 @@ aria-pressed="false"
 <label class="algo-bot-label" for="algo-bot-st1-tp-rr">ТП 1 к</label>
 <input type="number" id="algo-bot-st1-tp-rr" class="algo-bot-input algo-bot-input--sm" min="0.01" step="0.01" value="2" inputmode="decimal" />
 </div>
+<div class="algo-bot-field algo-bot-field--row" id="algo-bot-st1-alert-lead-row" hidden>
+<label class="algo-bot-label" for="algo-bot-st1-alert-lead" title="Опережение: % высоты X (pt3↔pt4) от pt4 к pt3. Лонг ниже pt4, шорт выше.">Алерт до pt4</label>
+<input type="number" id="algo-bot-st1-alert-lead" class="algo-bot-input algo-bot-input--sm" min="0" max="10" step="0.1" value="5" inputmode="decimal" />
+<span class="algo-bot-unit">% X</span>
+</div>
+<p class="algo-bot-hint" id="algo-bot-st1-alert-lead-hint" hidden>Ручная торговля: опережение в % высоты паттерна X (pt3↔pt4), как СЛ — не % цены. Лонг чуть ниже pt4, шорт чуть выше. 0 = точно в pt4.</p>
 <div class="algo-bot-field">
 <span class="algo-bot-label">Торговля</span>
 <div class="algo-bot-side" role="group" aria-label="Стороны торговли">
@@ -215,7 +221,7 @@ aria-pressed="false"
 <span class="algo-bot-unit">% успеха</span>
 <label class="algo-bot-check" title="Режим подсчёта для обновления списка">
 <input type="checkbox" id="algo-bot-st1-refresh-real" />
-<span id="algo-bot-st1-refresh-mode-label">Прямой подсчет</span>
+<span id="algo-bot-st1-refresh-mode-label">Реальный подсчет</span>
 </label>
 </div>
 <p class="algo-bot-hint">При периоде &gt; 0 скрипт периодически парсит все тикеры по ТФ/стороне/винрейту и обновляет соответствующий список Алго.</p>
@@ -250,7 +256,7 @@ aria-pressed="false"
 <div class="algo-bot-field algo-bot-field--row"><label class="algo-bot-label" for="algo-bot-st2-trail-pct">Трейлинг СЛ</label><input type="number" id="algo-bot-st2-trail-pct" class="algo-bot-input algo-bot-input--sm" min="0" max="100" step="0.1" value="15" /><span class="algo-bot-unit">%</span><label class="algo-bot-check"><input type="checkbox" id="algo-bot-st2-trail" checked /><span>вкл.</span></label></div>
 <div class="algo-bot-field"><span class="algo-bot-label">Торговля</span><div class="algo-bot-side" role="group" aria-label="Стороны торговли"><label class="algo-bot-check"><input type="checkbox" id="algo-bot-st2-side-long" checked /><span>Лонг</span></label><label class="algo-bot-check"><input type="checkbox" id="algo-bot-st2-side-short" /><span>Шорт</span></label><label class="algo-bot-check"><input type="checkbox" id="algo-bot-st2-side-both" /><span>Лонг и Шорт</span></label></div><p class="algo-bot-hint" id="algo-bot-st2-side-hint">Список: Алго Лонг</p><label class="algo-bot-check"><input type="checkbox" id="algo-bot-st2-use-favorites" /><span>Список Избранные</span></label></div>
 <div class="algo-bot-field"><span class="algo-bot-label">Обновлять список тикеров каждые</span><div class="algo-bot-field--row"><input type="number" id="algo-bot-st2-refresh-h" class="algo-bot-input algo-bot-input--sm" min="0" max="168" step="1" value="24" /><span class="algo-bot-unit">ч</span><input type="number" id="algo-bot-st2-refresh-m" class="algo-bot-input algo-bot-input--sm" min="0" max="59" step="1" value="0" /><span class="algo-bot-unit">мин</span></div></div>
-<div class="algo-bot-field algo-bot-field--row"><label class="algo-bot-label" for="algo-bot-st2-winrate">По критериям</label><input type="number" id="algo-bot-st2-winrate" class="algo-bot-input algo-bot-input--sm" min="10" max="100" step="1" value="70" /><span class="algo-bot-unit">% успеха</span><label class="algo-bot-check" title="Режим подсчёта для обновления списка"><input type="checkbox" id="algo-bot-st2-refresh-real" /><span id="algo-bot-st2-refresh-mode-label">Прямой подсчет</span></label></div>
+<div class="algo-bot-field algo-bot-field--row"><label class="algo-bot-label" for="algo-bot-st2-winrate">По критериям</label><input type="number" id="algo-bot-st2-winrate" class="algo-bot-input algo-bot-input--sm" min="10" max="100" step="1" value="70" /><span class="algo-bot-unit">% успеха</span><label class="algo-bot-check" title="Режим подсчёта для обновления списка"><input type="checkbox" id="algo-bot-st2-refresh-real" /><span id="algo-bot-st2-refresh-mode-label">Реальный подсчет</span></label></div>
 </div>
 </div>
 
@@ -282,7 +288,7 @@ aria-pressed="false"
 <div class="algo-bot-field algo-bot-field--row"><label class="algo-bot-label" for="algo-bot-st3-trail-pct">Трейлинг СЛ</label><input type="number" id="algo-bot-st3-trail-pct" class="algo-bot-input algo-bot-input--sm" min="0" max="100" step="0.1" value="15" /><span class="algo-bot-unit">%</span><label class="algo-bot-check"><input type="checkbox" id="algo-bot-st3-trail" checked /><span>вкл.</span></label></div>
 <div class="algo-bot-field"><span class="algo-bot-label">Торговля</span><div class="algo-bot-side" role="group" aria-label="Стороны торговли"><label class="algo-bot-check"><input type="checkbox" id="algo-bot-st3-side-long" checked /><span>Лонг</span></label><label class="algo-bot-check"><input type="checkbox" id="algo-bot-st3-side-short" /><span>Шорт</span></label><label class="algo-bot-check"><input type="checkbox" id="algo-bot-st3-side-both" /><span>Лонг и Шорт</span></label></div><p class="algo-bot-hint" id="algo-bot-st3-side-hint">Список: Алго Лонг</p><label class="algo-bot-check"><input type="checkbox" id="algo-bot-st3-use-favorites" /><span>Список Избранные</span></label></div>
 <div class="algo-bot-field"><span class="algo-bot-label">Обновлять список тикеров каждые</span><div class="algo-bot-field--row"><input type="number" id="algo-bot-st3-refresh-h" class="algo-bot-input algo-bot-input--sm" min="0" max="168" step="1" value="24" /><span class="algo-bot-unit">ч</span><input type="number" id="algo-bot-st3-refresh-m" class="algo-bot-input algo-bot-input--sm" min="0" max="59" step="1" value="0" /><span class="algo-bot-unit">мин</span></div></div>
-<div class="algo-bot-field algo-bot-field--row"><label class="algo-bot-label" for="algo-bot-st3-winrate">По критериям</label><input type="number" id="algo-bot-st3-winrate" class="algo-bot-input algo-bot-input--sm" min="10" max="100" step="1" value="70" /><span class="algo-bot-unit">% успеха</span><label class="algo-bot-check" title="Режим подсчёта для обновления списка"><input type="checkbox" id="algo-bot-st3-refresh-real" /><span id="algo-bot-st3-refresh-mode-label">Прямой подсчет</span></label></div>
+<div class="algo-bot-field algo-bot-field--row"><label class="algo-bot-label" for="algo-bot-st3-winrate">По критериям</label><input type="number" id="algo-bot-st3-winrate" class="algo-bot-input algo-bot-input--sm" min="10" max="100" step="1" value="70" /><span class="algo-bot-unit">% успеха</span><label class="algo-bot-check" title="Режим подсчёта для обновления списка"><input type="checkbox" id="algo-bot-st3-refresh-real" /><span id="algo-bot-st3-refresh-mode-label">Реальный подсчет</span></label></div>
 </div>
 </div>
 

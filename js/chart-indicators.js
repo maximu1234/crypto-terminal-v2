@@ -15,10 +15,10 @@ createVolumePaneIndicator
 } from "./indicators/volume-pane.js?v=11";
 import {
 createMovingAverageIndicator
-} from "./indicators/moving-average.js?v=14";
+} from "./indicators/moving-average.js?v=16";
 import {
 createEmaShiftRibbonIndicator
-} from "./indicators/ema-shift-ribbon.js?v=6";
+} from "./indicators/ema-shift-ribbon.js?v=8";
 import {
 createPattern12Indicator
 } from "./indicators/pattern-12.js?v=6";
@@ -719,6 +719,15 @@ scheduleIndicatorDataRefresh();
 
 }
 
+function clearMainChartOverlays(){
+
+indicators.forEach(
+ind=>
+ind.clearOverlayData?.()
+);
+
+}
+
 function notifyMainChartOverlaysSync(){
 
 if(
@@ -888,6 +897,7 @@ notifySymbolChange,
 notifyCandlesUpdate,
 notifyLayoutSettled,
 notifyMainChartOverlaysSync,
+clearMainChartOverlays,
 flushIndicatorDataRefreshNow,
 syncViewports,
 resizePanes,

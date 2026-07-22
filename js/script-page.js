@@ -16,7 +16,7 @@ stopActivePatternScan,
 startFullPatternScan,
 isScriptScanBackgroundRunning,
 SCRIPT_SCAN_BG_EVENT
-} from "./script-scan-background.js?v=13";
+} from "./script-scan-background.js?v=14";
 
 import {
 PATTERN_SCAN_TF_LABELS,
@@ -30,7 +30,7 @@ loadScriptPageState,
 saveScriptPageState,
 SCRIPT_AUTO_PERIODS,
 periodMsById
-} from "./script-page-storage.js?v=13";
+} from "./script-page-storage.js?v=14";
 
 import {
 parseTradingViewSymbolList,
@@ -98,6 +98,8 @@ function reloadForActiveExchange(){
 
 state =
 loadScriptPageState();
+state.favoritesOnly =
+false;
 scanMode =
 null;
 updateActionButtons();
@@ -208,14 +210,7 @@ shortCount >
 
 function applyFavoritesUi(){
 
-if(
-els.favoritesOnly
-){
-els.favoritesOnly.checked =
-state.favoritesOnly ===
-true;
-}
-
+/* Toolbar favorites/file UI removed — keep helpers for disk counts if needed. */
 updateFavoritesStatus();
 
 }
@@ -561,6 +556,25 @@ return true;
 
 function persist(){
 
+/*
+ * nextRunAt / lastScanAt пишет фон (scheduleScriptScanRun).
+ * UI-state часто устаревший (finished приходит до schedule) —
+ * не затираем таймер при layout/filter/visited persist.
+ */
+const stored =
+loadScriptPageState();
+
+state.auto.nextRunAt =
+Number(
+stored.auto?.nextRunAt
+) ||
+0;
+state.auto.lastScanAt =
+Number(
+stored.auto?.lastScanAt
+) ||
+0;
+
 saveScriptPageState(
 state
 );
@@ -728,13 +742,9 @@ els.autoPeriod.value ||
 state.auto.periodId;
 }
 
-if(
-els.favoritesOnly
-){
+/* UI «избранные / файлы» убран — всегда полный рынок. */
 state.favoritesOnly =
-els.favoritesOnly.checked ===
-true;
-}
+false;
 
 persist();
 
@@ -1075,6 +1085,8 @@ if(
 type ===
 "scheduled"
 ){
+state =
+loadScriptPageState();
 startAutoCountdown();
 updateAutoStatus();
 return;
@@ -1562,22 +1574,6 @@ els.autoPeriod =
 document.getElementById(
 "script-auto-period"
 );
-els.favoritesOnly =
-document.getElementById(
-"script-favorites-only"
-);
-els.favoritesFileLong =
-document.getElementById(
-"script-favorites-file-long"
-);
-els.favoritesFileShort =
-document.getElementById(
-"script-favorites-file-short"
-);
-els.favoritesStatus =
-document.getElementById(
-"script-favorites-status"
-);
 els.autoStart =
 document.getElementById(
 "script-auto-start"
@@ -1832,34 +1828,6 @@ els.searchSide?.addEventListener(
 ()=>{
 setSearchSide(
 els.searchSide.value
-);
-}
-);
-
-els.favoritesOnly?.addEventListener(
-"change",
-()=>{
-state.favoritesOnly =
-els.favoritesOnly.checked ===
-true;
-persist();
-}
-);
-
-els.favoritesFileLong?.addEventListener(
-"click",
-()=>{
-void importFavoritesFile(
-"long"
-);
-}
-);
-
-els.favoritesFileShort?.addEventListener(
-"click",
-()=>{
-void importFavoritesFile(
-"short"
 );
 }
 );

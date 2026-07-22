@@ -11,6 +11,10 @@ import {
 isChartLayoutReady
 } from "../chart-layout-gate.js?v=2";
 
+import {
+invalidatePreservedVisibleLogicalRange
+} from "../chart-visible-range.js?v=3";
+
 let layoutCtx =
 null;
 
@@ -315,6 +319,8 @@ if(
 ){
 return;
 }
+
+invalidatePreservedVisibleLogicalRange();
 
 const chartWrap =
 document.getElementById(

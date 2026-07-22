@@ -3,12 +3,17 @@
  */
 import {
 getScriptScanNextRunAt,
+isScriptScanBackgroundRunning,
 SCRIPT_SCAN_BG_EVENT
-} from "./script-scan-background.js?v=13";
+} from "./script-scan-background.js?v=14";
 
 import {
 loadScriptPageState
-} from "./script-page-storage.js?v=13";
+} from "./script-page-storage.js?v=14";
+
+import {
+isTerminalPage
+} from "./page-routes.js?v=2";
 
 function formatCountdown(
 ms
@@ -55,21 +60,78 @@ return `${s} сек`;
 
 }
 
-export function mountScriptTerminalStatus(){
+function findStatusHost(){
+
+const header =
+document.getElementById(
+"header"
+);
 
 if(
-!window.cryptoTerminalDesktop?.isDesktop
+!header
 ){
 return null;
 }
 
-const nav =
-document.querySelector(
-".coins-header-desktop"
+let statusCell =
+header.querySelector(
+".header-status-cell"
+) ||
+header.querySelector(
+"#header-status-cell"
 );
 
 if(
-!nav
+!statusCell
+){
+statusCell =
+document.createElement(
+"div"
+);
+statusCell.className =
+"header-status-cell";
+statusCell.id =
+"header-status-cell";
+
+const rightCell =
+header.querySelector(
+"#header-controls"
+);
+
+if(
+rightCell?.parentElement ===
+header
+){
+header.insertBefore(
+statusCell,
+rightCell
+);
+}else{
+header.appendChild(
+statusCell
+);
+}
+
+}
+
+return statusCell;
+
+}
+
+export function mountScriptTerminalStatus(){
+
+if(
+!window.cryptoTerminalDesktop?.isDesktop ||
+!isTerminalPage()
+){
+return null;
+}
+
+const host =
+findStatusHost();
+
+if(
+!host
 ){
 return null;
 }
@@ -82,16 +144,18 @@ document.getElementById(
 if(
 existing
 ){
-return existing;
+
+if(
+existing.parentElement !==
+host
+){
+host.appendChild(
+existing
+);
 }
 
-const anchor =
-nav.querySelector(
-".coins-layout-picker-wrap"
-) ||
-nav.querySelector(
-"#header-settings-wrap"
-);
+return existing;
+}
 
 const el =
 document.createElement(
@@ -107,18 +171,9 @@ el.setAttribute(
 "polite"
 );
 
-if(
-anchor
-){
-nav.insertBefore(
-el,
-anchor
-);
-}else{
-nav.appendChild(
+host.appendChild(
 el
 );
-}
 
 function render(){
 
@@ -136,13 +191,22 @@ el.classList.remove(
 return;
 }
 
+el.classList.add(
+"is-active"
+);
+
+if(
+isScriptScanBackgroundRunning()
+){
+el.textContent =
+"Скрипт: сканирование…";
+return;
+}
+
 const left =
 getScriptScanNextRunAt() -
 Date.now();
 
-el.classList.add(
-"is-active"
-);
 el.textContent =
 `Скрипт: активен · след. запуск через ${formatCountdown(left)}`;
 
@@ -150,7 +214,10 @@ el.textContent =
 
 render();
 
-const timerId =
+if(
+!el.__scriptStatusTimerId
+){
+el.__scriptStatusTimerId =
 setInterval(
 render,
 1000
@@ -160,9 +227,7 @@ window.addEventListener(
 SCRIPT_SCAN_BG_EVENT,
 render
 );
-
-el.__scriptStatusTimerId =
-timerId;
+}
 
 return el;
 

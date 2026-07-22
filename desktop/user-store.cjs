@@ -2,6 +2,9 @@
  * userData persistence. Prefer OS encryption off macOS (no Keychain prompts);
  * on darwin keep plaintext UTF-8 with mode 0o600. Legacy safeStorage blobs
  * decrypt on read; re-encrypted on next save when encryption is available.
+ *
+ * Windows/Linux: encrypt with safeStorage. On read, decrypt FIRST — encrypted
+ * blobs can look like UTF-8 without NUL bytes and must not be treated as plain.
  */
 const fs =
 require(
@@ -100,6 +103,37 @@ mode:
 
 }
 
+function tryDecryptSecret(
+raw
+){
+
+try{
+if(
+!safeStorage.isEncryptionAvailable()
+){
+return null;
+}
+
+const decrypted =
+safeStorage.decryptString(
+raw
+);
+
+if(
+typeof decrypted ===
+"string" &&
+decrypted.trim()
+){
+return decrypted;
+}
+}catch{
+/* not an encrypted blob / DPAPI failure */
+}
+
+return null;
+
+}
+
 function writeSecretText(
 filePath,
 text
@@ -172,6 +206,25 @@ if(
 return null;
 }
 
+/*
+ * When OS encryption is on (Windows/Linux), try decrypt first.
+ * Encrypted buffers often have no NUL and decode as non-empty UTF-8,
+ * so plaintext-first mis-reads them as garbage → keys look "missing".
+ */
+if(
+isCredentialEncryptionAvailable()
+){
+const decrypted =
+tryDecryptSecret(
+raw
+);
+
+if(
+decrypted
+){
+return decrypted;
+}
+
 if(
 looksLikePlainUtf8(
 raw
@@ -182,37 +235,33 @@ return raw.toString(
 );
 }
 
-try{
-if(
-!safeStorage.isEncryptionAvailable()
-){
 return null;
 }
 
-const decrypted =
-safeStorage.decryptString(
+/* Darwin / no-encrypt: plaintext, then migrate legacy safeStorage blobs. */
+if(
+looksLikePlainUtf8(
+raw
+)
+){
+return raw.toString(
+"utf8"
+);
+}
+
+const legacy =
+tryDecryptSecret(
 raw
 );
 
 if(
-typeof decrypted ===
-"string" &&
-decrypted.trim()
-){
-/* Darwin / no-encrypt platforms: migrate blob → plain once. */
-if(
-!isCredentialEncryptionAvailable()
+legacy
 ){
 writePlain(
 filePath,
-decrypted
+legacy
 );
-}
-
-return decrypted;
-}
-}catch{
-/* fall through */
+return legacy;
 }
 
 return null;

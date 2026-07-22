@@ -104,11 +104,11 @@ initWidgetDrawings
 import {
 mountDrawToolbar,
 mountDrawToolIcons
-} from "./draw-ui-shared.js?v=31";
+} from "./draw-ui-shared.js?v=32";
 
 import {
 initChartIndicators
-} from "./chart-indicators.js?v=40";
+} from "./chart-indicators.js?v=41";
 
 import {
 mountCoinsLayoutResize
@@ -182,7 +182,7 @@ settleCoinsChartViewport,
 resizeCharts,
 scheduleResizeCharts,
 applyDefaultZoom
-} from "./terminal/terminal-chart-layout.js?v=7";
+} from "./terminal/terminal-chart-layout.js?v=8";
 
 import {
 initTerminalMultiChart,
@@ -196,11 +196,11 @@ mountTerminalLayoutPicker
 
 import {
 mountScriptTerminalStatus
-} from "./script-terminal-status.js?v=5";
+} from "./script-terminal-status.js?v=6";
 
 import {
 resumeScriptScanBackgroundJob
-} from "./script-scan-background.js?v=13";
+} from "./script-scan-background.js?v=14";
 
 let currentDataset = "all";
 let currentTF = "60";
@@ -3737,6 +3737,8 @@ currentSymbol,
 loadSeq
 );
 
+chartIndicators?.clearMainChartOverlays?.();
+
 candleSeries.setData(
 buildChartDisplayCandles()
 );
@@ -4078,6 +4080,14 @@ new Map(
 [
 "KeyF",
 "fib"
+],
+[
+"KeyR",
+"trendline"
+],
+[
+"KeyC",
+"channel"
 ]
 ]
 );

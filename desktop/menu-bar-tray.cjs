@@ -1,5 +1,6 @@
 /**
- * macOS menu bar: иконка + суммарный PnL + кастомный popup (баланс, позиции).
+ * Tray: иконка + суммарный PnL + кастомный popup (баланс, позиции).
+ * macOS — menu bar; Windows — notification area.
  */
 const {
 Tray,
@@ -256,8 +257,12 @@ true
 function isMenuBarTrayActive(){
 
 return (
+(
 process.platform ===
-"darwin" &&
+"darwin" ||
+process.platform ===
+"win32"
+) &&
 !!tray
 );
 
@@ -634,8 +639,24 @@ lastTrayState?.totalPnl,
 !!lastTrayState?.pnlHidden
 );
 
+if(
+process.platform ===
+"darwin" &&
+typeof tray.setTitle ===
+"function"
+){
 tray.setTitle(
 title
+);
+}
+
+const tip =
+title
+? `Multichart ${title}`
+: "Multichart";
+
+tray.setToolTip(
+tip
 );
 
 if(
@@ -753,7 +774,9 @@ revealFn
 
 if(
 process.platform !==
-"darwin"
+"darwin" &&
+process.platform !==
+"win32"
 ){
 return;
 }
@@ -781,6 +804,12 @@ nativeImage.createFromPath(
 iconPath
 );
 
+const iconSize =
+process.platform ===
+"win32"
+? 16
+: 18;
+
 if(
 image.isEmpty()
 ){
@@ -794,9 +823,9 @@ nativeImage.createEmpty();
 image =
 image.resize({
 width:
-18,
+iconSize,
 height:
-18
+iconSize
 });
 }
 
@@ -967,7 +996,9 @@ state
 
 if(
 process.platform !==
-"darwin"
+"darwin" &&
+process.platform !==
+"win32"
 ){
 return;
 }
@@ -1034,7 +1065,9 @@ revealFn
 
 if(
 process.platform !==
-"darwin"
+"darwin" &&
+process.platform !==
+"win32"
 ){
 return;
 }
@@ -1050,7 +1083,9 @@ visible
 
 if(
 process.platform !==
-"darwin"
+"darwin" &&
+process.platform !==
+"win32"
 ){
 return;
 }

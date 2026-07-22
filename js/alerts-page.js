@@ -11,7 +11,7 @@ removeAlert,
 stripAlertFlagsNotInRegistry,
 removeAllAlerts,
 alertExchangeId
-} from "./alerts.js?v=102";
+} from "./alerts.js?v=104";
 
 import {
 buildAlertChartUrl

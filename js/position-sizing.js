@@ -70,10 +70,22 @@ amount == null ||
 return "—";
 }
 
-const rounded =
-Math.round(amount);
+/*
+ * SL/TP plaques: keep fractional risk/profit (0.5$, 2.3$).
+ * Whole dollars stay without trailing decimals.
+ */
+const text =
+amount.toLocaleString(
+"ru-RU",
+{
+minimumFractionDigits:
+0,
+maximumFractionDigits:
+2
+}
+);
 
-return `${rounded.toLocaleString("ru-RU")}$`;
+return `${text}$`;
 
 }
 

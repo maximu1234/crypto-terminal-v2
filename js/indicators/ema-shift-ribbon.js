@@ -10,6 +10,9 @@ import {
 isChartLayoutReady
 } from "../chart-layout-gate.js?v=2";
 import {
+runWithPreservedVisibleLogicalRange
+} from "../chart-visible-range.js?v=3";
+import {
 calculateShiftedEmaSeries
 } from "./htf-ema.js?v=1";
 import {
@@ -404,7 +407,9 @@ false,
 lastValueVisible:
 false,
 crosshairMarkerVisible:
-false
+false,
+autoscaleInfoProvider:
+()=>null
 }
 );
 
@@ -461,6 +466,8 @@ return;
 
 const host =
 getHost?.();
+const chart =
+host?.chart;
 const chartCandles =
 host?.getCandles?.() ||
 [];
@@ -482,6 +489,9 @@ const loadHistory =
 host?.loadIndicatorHistory;
 
 readSettings();
+
+const payloads =
+[];
 
 for(
 let i =
@@ -509,8 +519,11 @@ continue;
 if(
 !band.show
 ){
-series.setData(
-[]
+payloads.push(
+{
+series,
+points:[]
+}
 );
 continue;
 }
@@ -550,19 +563,43 @@ refreshSeq ||
 return;
 }
 
-const points =
+payloads.push(
+{
+series,
+points:
 calculateShiftedEmaSeries(
 chartCandles,
 sourceCandles,
 band.length,
 band.shift
-);
-
-series.setData(
-points
+)
+}
 );
 
 }
+
+if(
+seq !==
+refreshSeq ||
+!enabled
+){
+return;
+}
+
+runWithPreservedVisibleLogicalRange(
+chart,
+()=>{
+
+for(
+const item of payloads
+){
+item.series.setData(
+item.points
+);
+}
+
+}
+);
 
 }
 
@@ -622,6 +659,40 @@ removeSeries();
 
 }
 
+function clearSeriesData(){
+
+for(
+const series of seriesByIndex.values()
+){
+
+if(
+!series
+){
+continue;
+}
+
+series.setData(
+[]
+);
+
+}
+
+}
+
+function clearOverlayData(){
+
+if(
+!enabled ||
+!seriesByIndex.size
+){
+return;
+}
+
+/* No range preserve: symbol switch will fit viewport next. */
+clearSeriesData();
+
+}
+
 function onSymbolChange(){
 
 clearAllHtfCache();
@@ -632,6 +703,7 @@ if(
 return;
 }
 
+clearOverlayData();
 void refreshData();
 
 }
@@ -927,6 +999,7 @@ populateSettingsDialog,
 applySettings,
 enable,
 disable,
+clearOverlayData,
 isEnabled:()=>
 enabled,
 onSymbolChange,

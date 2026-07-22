@@ -11,7 +11,7 @@ normalizeBotRefreshStatsMode,
 botSideListLabel,
 botSidesDirectionLabel,
 botSettingsStatusLabel
-} from "./bot-strategy-prefs.js?v=8";
+} from "./bot-strategy-prefs.js?v=9";
 import {
 syncBotStrategiesToMain,
 syncAllTickerFlagsRootToMain,
@@ -130,6 +130,10 @@ const tpRrInput =
 document.getElementById(
 "algo-bot-st1-tp-rr"
 );
+const alertLeadInput =
+document.getElementById(
+"algo-bot-st1-alert-lead"
+);
 const sideLong =
 document.getElementById(
 "algo-bot-st1-side-long"
@@ -165,10 +169,6 @@ document.getElementById(
 const refreshRealCheck =
 document.getElementById(
 "algo-bot-st1-refresh-real"
-);
-const refreshModeLabelSt1 =
-document.getElementById(
-"algo-bot-st1-refresh-mode-label"
 );
 const tfBar =
 document.getElementById(
@@ -291,6 +291,7 @@ timeoutInput,
 slPctInput,
 slUsdInput,
 tpRrInput,
+alertLeadInput,
 sideLong,
 sideShort,
 sideBoth,
@@ -731,10 +732,6 @@ const real =
 el(
 "refresh-real"
 );
-const refreshModeLabel =
-el(
-"refresh-mode-label"
-);
 const sideHint =
 el(
 "side-hint"
@@ -796,14 +793,6 @@ favorites.checked =
 real.checked =
 p.refreshStatsMode ===
 "real";
-if(
-refreshModeLabel
-){
-refreshModeLabel.textContent =
-real.checked
-? "Реальный подсчет"
-: "Прямой подсчет";
-}
 sideHint.textContent =
 botSideListLabel(
 p.sides ||
@@ -1125,14 +1114,6 @@ real.checked
 )
 }
 );
-if(
-refreshModeLabel
-){
-refreshModeLabel.textContent =
-real.checked
-? "Реальный подсчет"
-: "Прямой подсчет";
-}
 }
 );
 
@@ -1153,6 +1134,30 @@ function isManualTradingMode(){
 
 return tradingMode ===
 "manual";
+
+}
+
+function applyAlertLeadVisibility(){
+
+const show =
+isManualTradingMode();
+const row =
+document.getElementById(
+"algo-bot-st1-alert-lead-row"
+);
+const hint =
+document.getElementById(
+"algo-bot-st1-alert-lead-hint"
+);
+
+row?.toggleAttribute(
+"hidden",
+!show
+);
+hint?.toggleAttribute(
+"hidden",
+!show
+);
 
 }
 
@@ -1873,6 +1878,8 @@ status.tradingMode ===
 ){
 tradingMode =
 status.tradingMode;
+applyPartialStrategiesManualGate();
+applyAlertLeadVisibility();
 }
 
 const statusWasOpen =
@@ -2160,6 +2167,16 @@ st1.tpRr
 }
 
 if(
+alertLeadInput
+){
+alertLeadInput.value =
+String(
+st1.alertLeadPct ??
+5
+);
+}
+
+if(
 refreshH
 ){
 refreshH.value =
@@ -2192,16 +2209,6 @@ refreshRealCheck
 refreshRealCheck.checked =
 st1.refreshStatsMode ===
 "real";
-}
-
-if(
-refreshModeLabelSt1
-){
-refreshModeLabelSt1.textContent =
-st1.refreshStatsMode ===
-"real"
-? "Реальный подсчет"
-: "Прямой подсчет";
 }
 
 applyTfUi();
@@ -2252,6 +2259,7 @@ initPartialStrategy(
 "st3"
 );
 applyPartialStrategiesManualGate();
+applyAlertLeadVisibility();
 
 function onTradingModeChanged(
 event
@@ -2269,6 +2277,7 @@ next ===
 tradingMode =
 next;
 applyPartialStrategiesManualGate();
+applyAlertLeadVisibility();
 applySt2?.();
 applySt3?.();
 }
@@ -2928,6 +2937,36 @@ n >=
 );
 }
 );
+alertLeadInput?.addEventListener(
+"change",
+()=>{
+onFieldBlur(
+"alertLeadPct",
+alertLeadInput,
+v=>{
+const n =
+Number(
+v
+);
+
+if(
+!Number.isFinite(
+n
+) ||
+n <
+0
+){
+return 5;
+}
+
+return Math.min(
+10,
+n
+);
+}
+);
+}
+);
 refreshH?.addEventListener(
 "change",
 ()=>{
@@ -3007,14 +3046,6 @@ refreshRealCheck.checked
 )
 }
 );
-if(
-refreshModeLabelSt1
-){
-refreshModeLabelSt1.textContent =
-refreshRealCheck.checked
-? "Реальный подсчет"
-: "Прямой подсчет";
-}
 }
 );
 

@@ -14,7 +14,7 @@ distToSegment
 
 import {
 calcPositionSizing
-} from "../position-sizing.js?v=1";
+} from "../position-sizing.js?v=2";
 
 export function isPositionType(type){
 

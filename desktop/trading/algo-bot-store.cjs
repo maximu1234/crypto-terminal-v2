@@ -50,6 +50,8 @@ riskUsd:
 1,
 tpRr:
 2,
+alertLeadPct:
+5,
 side:
 "long",
 sides:{
@@ -460,6 +462,13 @@ src.tpRr,
 0.01,
 100,
 DEFAULT_ST1.tpRr
+),
+alertLeadPct:
+clampFloat(
+src.alertLeadPct,
+0,
+10,
+DEFAULT_ST1.alertLeadPct
 ),
 sides:
 normalizeSides(

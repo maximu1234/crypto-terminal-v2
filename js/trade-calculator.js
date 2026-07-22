@@ -2,7 +2,7 @@ import {
 calcPositionVolumeUsd,
 formatVolumeUsd,
 parseMoneyInput
-} from "./position-sizing.js?v=1";
+} from "./position-sizing.js?v=2";
 
 const STORAGE_SL = "trade_calc_stop_loss_pct";
 const STORAGE_RISK = "trade_calc_risk_usd";

@@ -11,7 +11,11 @@ alwaysApply: true
 
 | Файл | Только |
 |------|--------|
-| `desktop/platform/darwin.cjs` | macOS: dock, `open-url`, hide-on-close, Metal |
+| `desktop/platform/darwin.cjs` | macOS: dock, `open-url`, hide-on-close, Metal, tray agent |
+| `desktop/platform/darwin-login-agent.cjs` | macOS LaunchAgent (`--agent`) |
+| `desktop/platform/win32.cjs` | Windows: close→agent, quit policy, protocol |
+| `desktop/platform/win32-login-agent.cjs` | Windows LoginItem (`--agent`) |
+| `desktop/platform/agent-argv.cjs` | Shared `--agent` flag |
 | `desktop/trading/pnl-share-card-win.cjs` | Windows: Python (`py`/`python`), пути шаблонов PnL |
 | `desktop/platform/shared.cjs` | Общее: auth URL parse, single-instance, CLI switches |
 | `desktop/main.js` | Оркестратор — **без** новых `if (win32)` / `if (darwin)` |

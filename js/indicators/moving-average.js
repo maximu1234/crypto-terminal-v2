@@ -8,7 +8,7 @@ alignMaPointsToDisplayCandles
 
 import {
 runWithPreservedVisibleLogicalRange
-} from "../chart-visible-range.js?v=1";
+} from "../chart-visible-range.js?v=3";
 
 import {
 isChartLayoutReady
@@ -914,7 +914,6 @@ requestAnimationFrame(
 requestAnimationFrame(
 ()=>{
 refreshData();
-getHost?.()?.settleChartViewport?.();
 }
 );
 }
@@ -936,13 +935,29 @@ hideSeries();
 
 }
 
+function clearOverlayData(){
+
+if(
+!seriesByIndex.size
+){
+return;
+}
+
+/* No range preserve: caller is about to setData + fit viewport. */
+hideSeries();
+
+}
+
 function onSymbolChange(){
 
 if(
-enabled
+!enabled
 ){
-void refreshData();
+return;
 }
+
+clearOverlayData();
+void refreshData();
 
 }
 
@@ -994,6 +1009,7 @@ applySettings,
 warmupChartSeries,
 enable,
 disable,
+clearOverlayData,
 isEnabled:()=>
 enabled,
 syncMainChartOverlay,

@@ -714,19 +714,30 @@ payload
 );
 
 if(
-res?.ok
+res?.ok &&
+res?.configured
 ){
 applySecretSavedUi(
 true
 );
-}else{
+await refresh();
+return;
+}
+
+if(
+res?.ok &&
+!res?.configured
+){
+setStatusText(
+"сохранено, но ключи не прочитались — перезапустите приложение"
+);
+return;
+}
+
 setStatusText(
 res?.message ||
 "ошибка сохранения"
 );
-}
-
-await refresh();
 }
 )();
 }

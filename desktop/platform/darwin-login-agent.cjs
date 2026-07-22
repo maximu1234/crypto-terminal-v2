@@ -16,6 +16,13 @@ execFileSync
 require(
 "child_process"
 );
+const {
+AGENT_FLAG,
+hasAgentArg
+} =
+require(
+"./agent-argv.cjs"
+);
 
 function getLog(){
 
@@ -29,26 +36,8 @@ return console;
 
 }
 
-const AGENT_FLAG =
-"--agent";
-
 const LABEL =
 "com.multichart.desktop.agent";
-
-function hasAgentArg(
-argv = process.argv
-){
-
-return (
-Array.isArray(
-argv
-) &&
-argv.includes(
-AGENT_FLAG
-)
-);
-
-}
 
 function agentPlistPath(
 homeDir

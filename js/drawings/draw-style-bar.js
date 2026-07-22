@@ -54,7 +54,7 @@ positionEntryPrice
 import {
 parseMoneyInput,
 calcPositionVolumeUsd
-} from "../position-sizing.js?v=1";
+} from "../position-sizing.js?v=2";
 
 import {
 applyPositionVolumeFromDrawing

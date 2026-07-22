@@ -174,6 +174,8 @@ riskUsd:
 prefs.riskUsd,
 tpRr:
 prefs.tpRr,
+alertLeadPct:
+prefs.alertLeadPct,
 exitProfile:
 isPartial
 ? {
