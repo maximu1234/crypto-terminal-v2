@@ -8,11 +8,78 @@ ALGO_TICKER_SCAN_TF
 } from "./ticker-scanner.js?v=6";
 
 import {
+scanAlgoTickersAllStrategyStats
+} from "./ticker-scan-all-stats.js?v=2";
+
+import {
 ALGO_FLAG_LONG_5M,
 ALGO_FLAG_SHORT_5M,
 ALGO_FLAG_BOTH_5M,
 replaceAlgoTickerFlagList
 } from "./ticker-flags.js?v=6";
+
+const GLOBAL_ST_LABELS =
+{
+st1:
+"Стратегия 1",
+st2:
+"Стратегия 2",
+st3:
+"Стратегия 3"
+};
+
+/**
+ * @param {number|null|undefined} value
+ * @param {{ signed?: boolean }} [opts]
+ */
+function formatUsdShort(
+value,
+opts =
+{}
+){
+
+const n =
+Number(
+value
+);
+
+if(
+!Number.isFinite(
+n
+)
+){
+return "—";
+}
+
+const abs =
+Math.abs(
+n
+);
+const body =
+abs >=
+100
+? abs.toFixed(
+0
+)
+: abs.toFixed(
+2
+);
+const signed =
+opts.signed !==
+false;
+const sign =
+n >
+0 &&
+signed
+? "+"
+: n <
+0
+? "−"
+: "";
+
+return `${sign}${body}$`;
+
+}
 
 /**
  * @param {{
@@ -55,6 +122,35 @@ const statusEl =
 document.getElementById(
 "algo-scan-status"
 );
+const globalRunBtn =
+document.getElementById(
+"algo-global-scan-run"
+);
+const globalStopBtn =
+document.getElementById(
+"algo-global-scan-stop"
+);
+const globalStatusEl =
+document.getElementById(
+"algo-global-scan-status"
+);
+const globalRealCheck =
+document.getElementById(
+"algo-global-scan-real"
+);
+const globalPopover =
+document.getElementById(
+"algo-global-scan-popover"
+);
+const globalStBtns =
+[
+...(
+document.querySelectorAll(
+"[data-global-st]"
+) ||
+[]
+)
+];
 
 /** @type {Record<"long"|"short"|"both", {
  *   min: HTMLInputElement|null,
@@ -178,6 +274,15 @@ let strategyId =
 "st1";
 let scanTf =
 ALGO_TICKER_SCAN_TF;
+/** @type {{ cancelled: boolean }|null} */
+let globalSignal =
+null;
+/** @type {Record<"st1"|"st2"|"st3", import("./ticker-scan-all-stats.js").AlgoGlobalStrategyAgg>|null} */
+let globalByStrategy =
+null;
+/** @type {"st1"|"st2"|"st3"|null} */
+let openGlobalSt =
+null;
 
 function clampMin(
 raw
@@ -384,6 +489,532 @@ lane.stop
 lane.stop.disabled =
 !running;
 }
+
+}
+
+function setGlobalStatus(
+text,
+scanning =
+false
+){
+
+if(
+!globalStatusEl
+){
+return;
+}
+
+globalStatusEl.textContent =
+text ||
+"";
+globalStatusEl.classList.toggle(
+"is-scanning",
+scanning
+);
+
+}
+
+function setGlobalRunning(
+running
+){
+
+if(
+globalRunBtn
+){
+globalRunBtn.disabled =
+running;
+}
+
+if(
+globalStopBtn
+){
+globalStopBtn.disabled =
+!running;
+}
+
+}
+
+function closeGlobalPopover(){
+
+openGlobalSt =
+null;
+
+if(
+globalPopover
+){
+globalPopover.classList.add(
+"hidden"
+);
+globalPopover.hidden =
+true;
+}
+
+for(
+const btn of globalStBtns
+){
+btn.classList.remove(
+"is-open"
+);
+}
+
+}
+
+/**
+ * @param {number|null|undefined} value
+ */
+function formatPctShort(
+value
+){
+
+if(
+!Number.isFinite(
+value
+)
+){
+return "—";
+}
+
+return `${Number(
+value
+).toFixed(
+1
+)}%`;
+
+}
+
+/**
+ * @param {number} wins
+ * @param {number} losses
+ */
+function sideRate(
+wins,
+losses,
+kind
+){
+
+const closed =
+wins +
+losses;
+
+if(
+closed <=
+0
+){
+return null;
+}
+
+const n =
+kind ===
+"loss"
+? losses
+: wins;
+
+return n /
+closed *
+100;
+
+}
+
+/**
+ * @param {"st1"|"st2"|"st3"} id
+ */
+function renderGlobalPopover(
+id
+){
+
+const stats =
+globalByStrategy?.[
+id
+];
+
+if(
+!globalPopover ||
+!stats
+){
+return;
+}
+
+const titleEl =
+globalPopover.querySelector(
+"[data-global-pop-title]"
+);
+
+if(
+titleEl
+){
+titleEl.textContent =
+GLOBAL_ST_LABELS[
+id
+] ||
+id;
+}
+
+const longWinRate =
+sideRate(
+stats.longWins,
+stats.longLosses,
+"win"
+);
+const longLossRate =
+sideRate(
+stats.longWins,
+stats.longLosses,
+"loss"
+);
+const shortWinRate =
+sideRate(
+stats.shortWins,
+stats.shortLosses,
+"win"
+);
+const shortLossRate =
+sideRate(
+stats.shortWins,
+stats.shortLosses,
+"loss"
+);
+
+const map =
+{
+longWins:
+String(
+stats.longWins
+),
+longWinRate:
+formatPctShort(
+longWinRate
+),
+longWinUsd:
+formatUsdShort(
+stats.longWinUsd,
+{
+signed:
+false
+}
+),
+longLosses:
+String(
+stats.longLosses
+),
+longLossRate:
+formatPctShort(
+longLossRate
+),
+longLossUsd:
+formatUsdShort(
+stats.longLossUsd,
+{
+signed:
+false
+}
+),
+shortWins:
+String(
+stats.shortWins
+),
+shortWinRate:
+formatPctShort(
+shortWinRate
+),
+shortWinUsd:
+formatUsdShort(
+stats.shortWinUsd,
+{
+signed:
+false
+}
+),
+shortLosses:
+String(
+stats.shortLosses
+),
+shortLossRate:
+formatPctShort(
+shortLossRate
+),
+shortLossUsd:
+formatUsdShort(
+stats.shortLossUsd,
+{
+signed:
+false
+}
+),
+longNetUsd:
+formatUsdShort(
+stats.longNetUsd
+),
+shortNetUsd:
+formatUsdShort(
+stats.shortNetUsd
+)
+};
+
+for(
+const [
+key,
+value
+] of Object.entries(
+map
+)
+){
+const el =
+globalPopover.querySelector(
+`[data-global-pop="${key}"]`
+);
+
+if(
+el
+){
+el.textContent =
+value;
+
+if(
+key ===
+"longNetUsd" ||
+key ===
+"shortNetUsd"
+){
+const n =
+Number(
+stats[
+key
+]
+);
+el.classList.toggle(
+"is-pos",
+n >
+0
+);
+el.classList.toggle(
+"is-neg",
+n <
+0
+);
+}
+}
+}
+
+}
+
+/**
+ * @param {"st1"|"st2"|"st3"} id
+ */
+function openGlobalDetail(
+id
+){
+
+if(
+!globalByStrategy?.[
+id
+]
+){
+return;
+}
+
+if(
+openGlobalSt ===
+id
+){
+closeGlobalPopover();
+return;
+}
+
+openGlobalSt =
+id;
+renderGlobalPopover(
+id
+);
+
+if(
+globalPopover
+){
+globalPopover.classList.remove(
+"hidden"
+);
+globalPopover.hidden =
+false;
+}
+
+for(
+const btn of globalStBtns
+){
+btn.classList.toggle(
+"is-open",
+btn.getAttribute(
+"data-global-st"
+) ===
+id
+);
+}
+
+}
+
+function syncGlobalStrategyButtons(){
+
+for(
+const btn of globalStBtns
+){
+const id =
+btn.getAttribute(
+"data-global-st"
+);
+const netEl =
+btn.querySelector(
+"[data-global-net]"
+);
+const stats =
+id &&
+globalByStrategy
+? globalByStrategy[
+id
+]
+: null;
+const ready =
+!!stats;
+btn.disabled =
+!ready;
+
+if(
+!netEl
+){
+continue;
+}
+
+if(
+!ready
+){
+netEl.textContent =
+"—";
+netEl.classList.remove(
+"is-pos",
+"is-neg"
+);
+continue;
+}
+
+const net =
+Number(
+stats.netUsd
+);
+netEl.textContent =
+formatUsdShort(
+net
+);
+netEl.classList.toggle(
+"is-pos",
+net >
+0
+);
+netEl.classList.toggle(
+"is-neg",
+net <
+0
+);
+}
+
+}
+
+async function runGlobalScan(){
+
+if(
+globalSignal
+){
+globalSignal.cancelled =
+true;
+}
+
+globalSignal =
+{
+cancelled:
+false
+};
+const signal =
+globalSignal;
+
+closeGlobalPopover();
+globalByStrategy =
+null;
+syncGlobalStrategyButtons();
+setGlobalRunning(
+true
+);
+setGlobalStatus(
+`скан ${scanTf}…`,
+true
+);
+
+try{
+const result =
+await scanAlgoTickersAllStrategyStats(
+{
+tf:
+scanTf,
+statsMode:
+globalRealCheck?.checked
+? "real"
+: "direct",
+tradeOpts:
+host.getTradeOpts?.() ||
+{},
+signal,
+onProgress:(
+done,
+total
+)=>{
+setGlobalStatus(
+`${scanTf} · ${done}/${total}`,
+true
+);
+}
+}
+);
+
+if(
+signal.cancelled
+){
+setGlobalStatus(
+"остановлено"
+);
+return;
+}
+
+globalByStrategy =
+result.byStrategy;
+syncGlobalStrategyButtons();
+setGlobalStatus(
+`готово · ${result.total} · ${result.tf || scanTf}`
+);
+}catch(
+err
+){
+console.warn(
+"[algo-trading] global scan ui",
+err
+);
+setGlobalStatus(
+"ошибка"
+);
+}finally{
+setGlobalRunning(
+false
+);
+}
+
+}
+
+function stopGlobalScan(){
+
+if(
+globalSignal
+){
+globalSignal.cancelled =
+true;
+}
+
+setGlobalStatus(
+"остановка…"
+);
 
 }
 
@@ -652,6 +1283,12 @@ false
 
 }
 
+syncGlobalStrategyButtons();
+setGlobalRunning(
+false
+);
+closeGlobalPopover();
+
 st1?.addEventListener(
 "change",
 ()=>{
@@ -753,6 +1390,91 @@ side
 
 }
 
+globalRunBtn?.addEventListener(
+"click",
+()=>{
+void runGlobalScan();
+}
+);
+globalStopBtn?.addEventListener(
+"click",
+()=>{
+stopGlobalScan();
+}
+);
+
+for(
+const btn of globalStBtns
+){
+btn.addEventListener(
+"click",
+()=>{
+const id =
+btn.getAttribute(
+"data-global-st"
+);
+
+if(
+id ===
+"st1" ||
+id ===
+"st2" ||
+id ===
+"st3"
+){
+openGlobalDetail(
+id
+);
+}
+}
+);
+}
+
+document.addEventListener(
+"pointerdown",
+ev=>{
+if(
+!openGlobalSt ||
+!globalPopover
+){
+return;
+}
+
+const target =
+ev.target;
+
+if(
+!(
+target instanceof Node
+)
+){
+return;
+}
+
+if(
+globalPopover.contains(
+target
+)
+){
+return;
+}
+
+for(
+const btn of globalStBtns
+){
+if(
+btn.contains(
+target
+)
+){
+return;
+}
+}
+
+closeGlobalPopover();
+}
+);
+
 return {
 stopAll(){
 stopScan(
@@ -764,6 +1486,7 @@ stopScan(
 stopScan(
 "both"
 );
+stopGlobalScan();
 }
 };
 

@@ -37,7 +37,7 @@ refreshAlgoMarketListFromFlags
 
 import {
 mountAlgoTickerScanUi
-} from "./algo-trading/ticker-scan-ui.js?v=10";
+} from "./algo-trading/ticker-scan-ui.js?v=13";
 
 import {
 mountAlgoRuntimeUi

@@ -269,7 +269,7 @@ Object.freeze({
 "script-favorites-list.js":
 2,
 "algo-trading.js":
-76,
+79,
 "algo-trading-page-boot.js":
 3,
 "algo-trading-list.js":
@@ -309,8 +309,10 @@ Object.freeze({
 6,
 "algo-trading/ticker-scanner.js":
 6,
+"algo-trading/ticker-scan-all-stats.js":
+2,
 "algo-trading/ticker-scan-ui.js":
-10,
+13,
 "algo-trading/runtime-bridge.js":
 6,
 "algo-trading/runtime-ui.js":
@@ -430,7 +432,7 @@ Object.freeze({
 "screener-widget-zoom.js":
 12,
 "release-marker.js":
-45,
+46,
 "focus-blur-after-pick.js":
 3,
 "site-boot.js":
@@ -693,7 +695,7 @@ Object.freeze({
 "script-page.css":
 19,
 "algo-trading.css":
-75,
+80,
 "algo-trading-book-panel.css":
 4,
 "algo-trading-chart-overlay.css":

@@ -19,7 +19,7 @@
 <link rel="stylesheet" href="/css/terminal.css?v=166">
 <link rel="stylesheet" href="/css/terminal-layout.css?v=97">
 <link rel="stylesheet" href="/css/chart-indicators.css?v=21">
-<link rel="stylesheet" href="/css/algo-trading.css?v=75">
+<link rel="stylesheet" href="/css/algo-trading.css?v=80">
 <link rel="stylesheet" href="/css/algo-trading-book-panel.css?v=4">
 <link rel="stylesheet" href="/css/algo-trading-chart-overlay.css?v=2">
 
@@ -1017,8 +1017,10 @@ inputmode="numeric"
 <button type="button" class="algo-scan-btn" id="algo-scan-both-stop" disabled>Стоп</button>
 </div>
 <div class="algo-stats-divider" aria-hidden="true"></div>
+<div class="algo-scan-results-header">
 <div class="algo-scan-results-title">Результаты поиска</div>
 <div id="algo-scan-status" class="algo-scan-status" aria-live="polite"></div>
+</div>
 <div class="algo-scan-results">
 <div class="algo-scan-row">
 <span class="algo-scan-row-label">Найдено <span id="algo-scan-long-found">0</span> тикеров в Лонг</span>
@@ -1031,6 +1033,85 @@ inputmode="numeric"
 <div class="algo-scan-row">
 <span class="algo-scan-row-label">Найдено <span id="algo-scan-both-found">0</span> тикеров Лонг+Шорт</span>
 <button type="button" class="algo-scan-btn" id="algo-scan-both-add" disabled>Добавить в список</button>
+</div>
+</div>
+<div class="algo-stats-divider" aria-hidden="true"></div>
+<div class="algo-global-scan">
+<div class="algo-scan-row algo-global-scan-run-row">
+<span class="algo-scan-row-label">Проверить на всех тикерах</span>
+<span id="algo-global-scan-status" class="algo-scan-status algo-global-scan-status" aria-live="polite"></span>
+<label class="algo-scan-real-check" title="Реальный подсчет">
+<input type="checkbox" id="algo-global-scan-real" />
+</label>
+<button type="button" class="algo-scan-btn" id="algo-global-scan-run">Запустить</button>
+<button type="button" class="algo-scan-btn" id="algo-global-scan-stop" disabled>Стоп</button>
+</div>
+<div class="algo-global-scan-strategies" role="group" aria-label="Глобальная статистика стратегий">
+<button type="button" class="algo-global-scan-st-btn" id="algo-global-scan-st1" data-global-st="st1" disabled>
+<span class="algo-global-scan-st-label">Ст1</span>
+<span class="algo-global-scan-st-net" data-global-net>—</span>
+</button>
+<button type="button" class="algo-global-scan-st-btn" id="algo-global-scan-st2" data-global-st="st2" disabled>
+<span class="algo-global-scan-st-label">Ст2</span>
+<span class="algo-global-scan-st-net" data-global-net>—</span>
+</button>
+<button type="button" class="algo-global-scan-st-btn" id="algo-global-scan-st3" data-global-st="st3" disabled>
+<span class="algo-global-scan-st-label">Ст3</span>
+<span class="algo-global-scan-st-net" data-global-net>—</span>
+</button>
+</div>
+<div id="algo-global-scan-popover" class="algo-global-scan-popover hidden" role="dialog" aria-modal="false" hidden>
+<div class="algo-global-scan-popover-title" data-global-pop-title>Стратегия</div>
+<div class="algo-global-scan-popover-row">
+<span>Успешных в Лонг</span>
+<span class="algo-stats-value algo-stats-value--long algo-stats-value--pair">
+<span class="algo-stats-pair">
+<span data-global-pop="longWins">—</span>
+<span class="algo-stats-muted">(<span data-global-pop="longWinRate">—</span>)</span>
+</span>
+<span data-global-pop="longWinUsd">—</span>
+</span>
+</div>
+<div class="algo-global-scan-popover-row">
+<span>Неуспешных в Лонг</span>
+<span class="algo-stats-value algo-stats-value--short algo-stats-value--pair">
+<span class="algo-stats-pair">
+<span data-global-pop="longLosses">—</span>
+<span class="algo-stats-muted">(<span data-global-pop="longLossRate">—</span>)</span>
+</span>
+<span data-global-pop="longLossUsd">—</span>
+</span>
+</div>
+<div class="algo-stats-divider" aria-hidden="true"></div>
+<div class="algo-global-scan-popover-row">
+<span>Успешных в Шорт</span>
+<span class="algo-stats-value algo-stats-value--long algo-stats-value--pair">
+<span class="algo-stats-pair">
+<span data-global-pop="shortWins">—</span>
+<span class="algo-stats-muted">(<span data-global-pop="shortWinRate">—</span>)</span>
+</span>
+<span data-global-pop="shortWinUsd">—</span>
+</span>
+</div>
+<div class="algo-global-scan-popover-row">
+<span>Неуспешных в Шорт</span>
+<span class="algo-stats-value algo-stats-value--short algo-stats-value--pair">
+<span class="algo-stats-pair">
+<span data-global-pop="shortLosses">—</span>
+<span class="algo-stats-muted">(<span data-global-pop="shortLossRate">—</span>)</span>
+</span>
+<span data-global-pop="shortLossUsd">—</span>
+</span>
+</div>
+<div class="algo-stats-divider" aria-hidden="true"></div>
+<div class="algo-global-scan-popover-row">
+<span>Суммарная прибыль в Лонг</span>
+<span data-global-pop="longNetUsd">—</span>
+</div>
+<div class="algo-global-scan-popover-row">
+<span>Суммарная прибыль в Шорт</span>
+<span data-global-pop="shortNetUsd">—</span>
+</div>
 </div>
 </div>
 </div>
