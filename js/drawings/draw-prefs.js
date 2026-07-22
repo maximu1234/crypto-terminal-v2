@@ -20,7 +20,7 @@ import {
 
 import {
   isPositionType
-} from "./position.js?v=4";
+} from "./position.js?v=5";
 
 /**
  * @returns {{

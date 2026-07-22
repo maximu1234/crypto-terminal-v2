@@ -19,7 +19,7 @@
 <link rel="stylesheet" href="/css/terminal.css?v=166">
 <link rel="stylesheet" href="/css/terminal-layout.css?v=97">
 <link rel="stylesheet" href="/css/chart-indicators.css?v=21">
-<link rel="stylesheet" href="/css/algo-trading.css?v=69">
+<link rel="stylesheet" href="/css/algo-trading.css?v=75">
 <link rel="stylesheet" href="/css/algo-trading-book-panel.css?v=4">
 <link rel="stylesheet" href="/css/algo-trading-chart-overlay.css?v=2">
 
@@ -516,25 +516,22 @@ tabindex="0"
 <div class="algo-stats-chart-cols">
 <div class="algo-stats-col" data-algo-strategy="fixed-tp">
 <div class="algo-stats-col-setup">
+<div class="algo-stats-chart-patterns" aria-label="Паттерны на графике">
+<div class="algo-stats-row">
+<span class="algo-stats-label">Паттерны Long</span>
+<span class="algo-stats-value algo-stats-value--long" id="algo-stat-long" data-algo-stat-long>—</span>
+</div>
+<div class="algo-stats-row">
+<span class="algo-stats-label">Паттерны Short</span>
+<span class="algo-stats-value algo-stats-value--short" id="algo-stat-short" data-algo-stat-short>—</span>
+</div>
+</div>
+<div class="algo-stats-divider" aria-hidden="true"></div>
 <div class="algo-stats-col-title-row">
 <div class="algo-stats-col-title">Стратегия 1. 1 Тейк-профит</div>
 <label class="algo-stats-chart-check" title="Показать позиции на графике">
 <input type="checkbox" data-algo-chart-positions="fixed-tp" checked />
 </label>
-</div>
-<div class="algo-stats-row algo-stats-row--setting">
-<label class="algo-stats-label" for="algo-sl-pct-of-x">СЛ от X (pt3–pt4), %</label>
-<input
-type="number"
-id="algo-sl-pct-of-x"
-class="algo-stats-input"
-min="1"
-max="100"
-step="1"
-value="99"
-inputmode="decimal"
-title="Стоп-лосс как % высоты отрезка pt3–pt4 (50% = середина)"
-/>
 </div>
 <div class="algo-stats-row algo-stats-row--setting">
 <label class="algo-stats-label" for="algo-tp-rr">Тейк-профит: 1 к</label>
@@ -549,14 +546,6 @@ value="2.39"
 inputmode="decimal"
 title="Take-profit Risk/Reward: расстояние ТП = RR × |вход − СЛ|"
 />
-</div>
-<div class="algo-stats-row">
-<span class="algo-stats-label">Паттерны Long</span>
-<span class="algo-stats-value algo-stats-value--long" id="algo-stat-long" data-algo-stat-long>—</span>
-</div>
-<div class="algo-stats-row">
-<span class="algo-stats-label">Паттерны Short</span>
-<span class="algo-stats-value algo-stats-value--short" id="algo-stat-short" data-algo-stat-short>—</span>
 </div>
 </div>
 <div class="algo-stats-col-stats">
@@ -902,7 +891,8 @@ title="После ТП1: СЛ = лог-интерполяция pt4→pt3 на N
 </div>
 <div class="algo-stats-col" data-algo-strategy="global-setup">
 <div class="algo-stats-col-setup">
-<div class="algo-stats-row algo-stats-row--setting">
+<div class="algo-stats-row algo-stats-row--setting algo-stats-row--sl-pair">
+<span class="algo-stats-sl-item">
 <label class="algo-stats-label" for="algo-risk-usd">Стоп-лосс ($)</label>
 <input
 type="number"
@@ -914,6 +904,21 @@ value="1"
 inputmode="decimal"
 title="Риск на сделку в долларах при срабатывании СЛ"
 />
+</span>
+<span class="algo-stats-sl-item algo-stats-sl-item--end">
+<label class="algo-stats-label" for="algo-sl-pct-of-x">СЛ от X, %</label>
+<input
+type="number"
+id="algo-sl-pct-of-x"
+class="algo-stats-input"
+min="1"
+max="100"
+step="1"
+value="99"
+inputmode="decimal"
+title="Стоп-лосс как % высоты отрезка pt3–pt4 (50% = середина)"
+/>
+</span>
 </div>
 <div class="algo-stats-row algo-stats-row--setting">
 <label class="algo-stats-label" for="algo-timeout-bars">Количество баров до отмены паттерна</label>

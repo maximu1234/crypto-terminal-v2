@@ -11,7 +11,7 @@ removeAlert,
 loadAllAlerts,
 saveAlerts,
 dispatchPriceAlertsChanged
-} from "../alerts.js?v=104";
+} from "../alerts.js?v=105";
 
 export const ALGO_BOT_ALERT_SOURCE =
 "algo-bot";

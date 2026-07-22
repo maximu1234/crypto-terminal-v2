@@ -40,6 +40,124 @@ export const ALGO_MARKET_BOTH_5M =
 export const ALGO_MARKET_FAVORITES =
 "algo-favorites";
 
+/** UI group id → storage flag id (algo coin-list flags only). */
+export const ALGO_LIST_FLAG_UI =
+[
+{
+ui:
+"algo-long",
+flagId:
+ALGO_FLAG_LONG_5M,
+title:
+"Алго Лонг"
+},
+{
+ui:
+"algo-short",
+flagId:
+ALGO_FLAG_SHORT_5M,
+title:
+"Алго Шорт"
+},
+{
+ui:
+"algo-both",
+flagId:
+ALGO_FLAG_BOTH_5M,
+title:
+"Алго Лонг/Шорт"
+},
+{
+ui:
+"orange",
+flagId:
+ALGO_FLAG_FAVORITES,
+title:
+"Избранные"
+}
+];
+
+/**
+ * Which algo-list flag to paint on a coin row.
+ * Prefer the list matching the current market filter, else Favorites → Both → Long → Short.
+ * @param {string} symbol
+ * @param {string} [dataset]
+ * @param {string} [exchangeId]
+ * @returns {{ ui: string, flagId: string, title: string }|null}
+ */
+export function resolveAlgoListFlagUi(
+symbol,
+dataset,
+exchangeId
+){
+
+const preferred =
+algoMarketDatasetToFlagId(
+dataset
+);
+
+if(
+preferred &&
+isSymbolInAlgoFlagList(
+preferred,
+symbol,
+exchangeId
+)
+){
+const hit =
+ALGO_LIST_FLAG_UI.find(
+row=>
+row.flagId ===
+preferred
+);
+
+if(
+hit
+){
+return hit;
+}
+}
+
+for(
+const row of ALGO_LIST_FLAG_UI
+){
+
+if(
+isSymbolInAlgoFlagList(
+row.flagId,
+symbol,
+exchangeId
+)
+){
+return row;
+}
+
+}
+
+return null;
+
+}
+
+/**
+ * @param {string} uiGroup
+ * @returns {string|null}
+ */
+export function algoListUiToFlagId(
+uiGroup
+){
+
+const hit =
+ALGO_LIST_FLAG_UI.find(
+row=>
+row.ui ===
+uiGroup
+);
+
+return hit?.flagId ||
+null;
+
+}
+
 const ALGO_FLAG_IDS =
 [
 ALGO_FLAG_LONG_5M,

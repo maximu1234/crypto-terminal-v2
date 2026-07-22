@@ -12,7 +12,7 @@ ALGO_FLAG_LONG_5M,
 ALGO_FLAG_SHORT_5M,
 ALGO_FLAG_BOTH_5M,
 replaceAlgoTickerFlagList
-} from "./ticker-flags.js?v=5";
+} from "./ticker-flags.js?v=6";
 
 /**
  * @param {{

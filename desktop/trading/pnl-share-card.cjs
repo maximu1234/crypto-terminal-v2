@@ -27,6 +27,68 @@ require(
 "electron"
 );
 
+function assertPnlTempPath(
+tempPath
+){
+
+const raw =
+String(
+tempPath ||
+""
+).trim();
+
+if(
+!raw
+){
+throw new Error(
+"invalid tempPath"
+);
+}
+
+const resolved =
+fs.realpathSync(
+path.resolve(
+raw
+)
+);
+const tmpRoot =
+fs.realpathSync(
+os.tmpdir()
+);
+const prefix =
+tmpRoot.endsWith(
+path.sep
+)
+? tmpRoot
+: tmpRoot +
+path.sep;
+
+if(
+!resolved.startsWith(
+prefix
+)
+){
+throw new Error(
+"tempPath outside tmp"
+);
+}
+
+if(
+!path.basename(
+resolved
+).startsWith(
+"crypto-terminal-pnl-"
+)
+){
+throw new Error(
+"tempPath not a pnl card"
+);
+}
+
+return resolved;
+
+}
+
 function getAppRoot(){
 
 if(
@@ -344,10 +406,25 @@ defaultName =
 "pnl-share.png"
 ){
 
-if(
-!tempPath ||
-!fs.existsSync(
+let safePath;
+
+try{
+safePath =
+assertPnlTempPath(
 tempPath
+);
+}catch{
+return {
+ok:
+false,
+error:
+"Временный файл не найден"
+};
+}
+
+if(
+!fs.existsSync(
+safePath
 )
 ){
 return {
@@ -407,13 +484,13 @@ true
 }
 
 await fs.promises.copyFile(
-tempPath,
+safePath,
 filePath
 );
 
 try{
 fs.unlinkSync(
-tempPath
+safePath
 );
 }catch{
 /* ignore */
@@ -422,9 +499,7 @@ tempPath
 return {
 ok:
 true,
-filePath,
-tempDiscarded:
-true
+filePath
 };
 
 }
@@ -442,14 +517,30 @@ true
 };
 }
 
+let safePath;
+
+try{
+safePath =
+assertPnlTempPath(
+tempPath
+);
+}catch{
+return {
+ok:
+false,
+error:
+"invalid tempPath"
+};
+}
+
 try{
 if(
 fs.existsSync(
-tempPath
+safePath
 )
 ){
 fs.unlinkSync(
-tempPath
+safePath
 );
 }
 return {

@@ -53,7 +53,7 @@ createTickerUiBatcher
 
 import {
 mountReleaseMarker
-} from "./release-marker.js?v=44";
+} from "./release-marker.js?v=45";
 
 import {
 saveScreenerState,
@@ -537,7 +537,7 @@ if(
 ){
 screenerPatternOverlayApi =
 await import(
-"./screener-pattern-overlay.js?v=4"
+"./screener-pattern-overlay.js?v=5"
 );
 }
 

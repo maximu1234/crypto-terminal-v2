@@ -17,7 +17,7 @@ loadAllAlerts,
 removeAlert,
 formatAlertDate,
 formatAlertTicker
-} from "../../alerts.js?v=104";
+} from "../../alerts.js?v=105";
 
 import {
 isAlgoBotAlertRow,

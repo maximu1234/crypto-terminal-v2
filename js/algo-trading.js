@@ -33,7 +33,7 @@ subscribeKline
 import {
 mountAlgoTradingCoinList,
 refreshAlgoMarketListFromFlags
-} from "./algo-trading-list.js?v=9";
+} from "./algo-trading-list.js?v=10";
 
 import {
 mountAlgoTickerScanUi

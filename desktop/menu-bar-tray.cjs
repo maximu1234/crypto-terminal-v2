@@ -190,7 +190,18 @@ nextHeight,
 false
 );
 
+/*
+ * Height changed: recompute anchor (Windows opens upward — bottom
+ * must stay near the tray icon).
+ */
+unlockTrayPopupPosition();
 positionTrayPopup();
+
+if(
+win.isVisible()
+){
+lockTrayPopupPosition();
+}
 
 });
 
@@ -422,20 +433,93 @@ const trayBounds =
 tray.getBounds();
 const popupBounds =
 popup.getBounds();
-const x =
+const width =
+Math.max(
+1,
+popupBounds.width ||
+POPUP_WIDTH
+);
+const height =
+Math.max(
+1,
+popupBounds.height ||
+120
+);
+
+let x =
 Math.round(
 trayBounds.x +
 trayBounds.width /
 2 -
-popupBounds.width /
+width /
 2
 );
-const y =
-Math.round(
+/*
+ * macOS menu bar is at the top → open below the icon.
+ * Windows notification area is usually at the bottom → open above.
+ */
+let y =
+process.platform ===
+"win32"
+? Math.round(
+trayBounds.y -
+height -
+4
+)
+: Math.round(
 trayBounds.y +
 trayBounds.height +
 4
 );
+
+try{
+const display =
+screen.getDisplayNearestPoint(
+{
+x:
+Math.round(
+trayBounds.x +
+trayBounds.width /
+2
+),
+y:
+Math.round(
+trayBounds.y +
+trayBounds.height /
+2
+)
+}
+);
+const work =
+display?.workArea;
+
+if(
+work
+){
+x =
+Math.min(
+Math.max(
+work.x,
+x
+),
+work.x +
+work.width -
+width
+);
+y =
+Math.min(
+Math.max(
+work.y,
+y
+),
+work.y +
+work.height -
+height
+);
+}
+}catch{
+/* ignore */
+}
 
 popup.setPosition(
 x,

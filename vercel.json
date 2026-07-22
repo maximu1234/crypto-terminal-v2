@@ -50,6 +50,21 @@
       "source": "/diary/",
       "destination": "/screener",
       "permanent": false
+    },
+    {
+      "source": "/algo-trading",
+      "destination": "/screener",
+      "permanent": false
+    },
+    {
+      "source": "/algo-trading.html",
+      "destination": "/screener.html",
+      "permanent": false
+    },
+    {
+      "source": "/algo-trading/",
+      "destination": "/screener",
+      "permanent": false
     }
   ],
   "buildCommand": "node scripts/write-supabase-env.cjs",

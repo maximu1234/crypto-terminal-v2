@@ -17,7 +17,7 @@ require(
 );
 const {
 readPlainWithLegacyMigration,
-writePlain
+writeSecretText
 } =
 require(
 "./user-store.cjs"
@@ -57,7 +57,7 @@ typeof raw !==
 return false;
 }
 
-writePlain(
+writeSecretText(
 storePath(),
 raw
 );

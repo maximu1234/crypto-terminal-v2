@@ -245,7 +245,7 @@ Object.freeze({
 "chart-indicators.js":
 41,
 "indicators/pattern-12.js":
-6,
+7,
 "indicators/pattern-12-math.js":
 4,
 "indicators/pattern-12-paint.js":
@@ -273,7 +273,7 @@ Object.freeze({
 "algo-trading-page-boot.js":
 3,
 "algo-trading-list.js":
-9,
+10,
 "algo-trading/coin-list-host.js":
 1,
 "algo-trading/pattern-12-math.js":
@@ -306,7 +306,7 @@ Object.freeze({
 "algo-trading/pattern-12-settings.js":
 2,
 "algo-trading/ticker-flags.js":
-5,
+6,
 "algo-trading/ticker-scanner.js":
 6,
 "algo-trading/ticker-scan-ui.js":
@@ -426,11 +426,11 @@ Object.freeze({
 "scalping-dom/depth-ws-bingx.js":
 3,
 "screener-pattern-overlay.js":
-4,
+5,
 "screener-widget-zoom.js":
 12,
 "release-marker.js":
-44,
+45,
 "focus-blur-after-pick.js":
 3,
 "site-boot.js":
@@ -516,7 +516,7 @@ Object.freeze({
 "drawings/fib-portals.js":
 3,
 "drawings/position.js":
-4,
+5,
 "drawings/position-draw.js":
 1,
 "drawings/utils.js":
@@ -617,7 +617,7 @@ Object.freeze({
 
 /* ── JS: alerts ── */
 "alerts.js":
-104,
+105,
 "alerts-cloud-sync.js":
 111,
 "alerts-cloud/garbage-purge.js":
@@ -627,9 +627,9 @@ Object.freeze({
 "alerts-cloud/telegram-id.js":
 2,
 "alerts-cloud/worker-client.js":
-5,
+6,
 "alerts-cloud/registry-sync.js":
-9,
+10,
 "alerts-cloud/polling-realtime.js":
 9,
 "alerts-page.js":
@@ -693,7 +693,7 @@ Object.freeze({
 "script-page.css":
 19,
 "algo-trading.css":
-69,
+75,
 "algo-trading-book-panel.css":
 4,
 "algo-trading-chart-overlay.css":

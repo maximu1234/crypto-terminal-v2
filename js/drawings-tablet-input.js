@@ -8,7 +8,7 @@ hideDomChartCrosshair
 
 import {
 isPositionType
-} from "./drawings/position.js?v=4";
+} from "./drawings/position.js?v=5";
 
 /**
  * Touch/pointer placement for iPad and coarse-touch viewports.

@@ -1079,7 +1079,7 @@ return false;
 }
 
 const { forgetAlertDeleted } =
-await import("../alerts.js?v=104");
+await import("../alerts.js?v=105");
 
 forgetAlertDeleted(
 sym,
@@ -2299,7 +2299,20 @@ body: JSON.stringify({
 symbol,
 shape_id: shapeId,
 price,
-tf: normalizeAlertTf(entry?.tf)
+tf: normalizeAlertTf(entry?.tf),
+...(
+String(
+entry?.source ||
+""
+).trim()
+? {
+source:
+String(
+entry.source
+).trim()
+}
+: {}
+)
 })
 },
 12000
@@ -2346,7 +2359,7 @@ null;
 
 if(cloudId){
 const { markAlertCloudId } =
-await import("../alerts.js?v=104");
+await import("../alerts.js?v=105");
 
 markAlertCloudId(
 symbol,

@@ -39,29 +39,19 @@ mountCoinsListRefreshControls
 } from "./terminal-list-refresh.js?v=1";
 
 import {
-loadFavoritesGroups,
-saveFavoritesGroups,
-setFavoriteGroup,
-getFavoriteGroup
-} from "./favorites.js?v=5";
-
-import {
-ALGO_FLAG_FAVORITES,
 ALGO_MARKET_LONG_5M,
 ALGO_MARKET_SHORT_5M,
 ALGO_MARKET_BOTH_5M,
 ALGO_MARKET_FAVORITES,
+ALGO_LIST_FLAG_UI,
 algoMarketDatasetToFlagId,
+algoListUiToFlagId,
+resolveAlgoListFlagUi,
 getAlgoTickerFlagList,
 isAlgoMarketDataset,
-isSymbolInAlgoFlagList,
 toggleAlgoTickerInFlagList,
 removeAlgoTickerFromFlagList
-} from "./algo-trading/ticker-flags.js?v=5";
-
-import {
-persistFavoritesToCloud
-} from "./cloud-sync.js?v=45";
+} from "./algo-trading/ticker-flags.js?v=6";
 
 import {
 mountQwertyKeyInput
@@ -70,7 +60,7 @@ mountQwertyKeyInput
 function renderList(){
 
 renderListCore();
-ensureAlgoFavoriteFlagPicks();
+ensureAlgoListFlagMenus();
 
 }
 
@@ -291,7 +281,7 @@ highlightActiveSymbol();
 
 }
 
-function ensureAlgoFavoriteFlagPicks(){
+function ensureAlgoListFlagMenus(){
 
 document.querySelectorAll(
 ".coin-flag-menu"
@@ -299,12 +289,20 @@ document.querySelectorAll(
 menu=>{
 
 if(
-menu.querySelector(
-'[data-flag-group="orange"]'
-)
+menu.dataset.algoListFlags ===
+"1"
 ){
 return;
 }
+
+menu.dataset.algoListFlags =
+"1";
+menu.innerHTML =
+"";
+
+for(
+const row of ALGO_LIST_FLAG_UI
+){
 
 const btn =
 document.createElement(
@@ -314,11 +312,11 @@ document.createElement(
 btn.type =
 "button";
 btn.className =
-"flag coin-flag-pick flag--orange";
+`flag coin-flag-pick flag--${row.ui}`;
 btn.dataset.flagGroup =
-"orange";
+row.ui;
 btn.title =
-"Избранные (алго)";
+row.title;
 btn.setAttribute(
 "role",
 "menuitem"
@@ -357,7 +355,7 @@ symbol
 ){
 applyCoinFavoriteGroupRef?.(
 symbol,
-"orange"
+row.ui
 );
 }
 
@@ -367,6 +365,8 @@ symbol,
 menu.appendChild(
 btn
 );
+
+}
 
 }
 );
@@ -409,9 +409,6 @@ refreshAlgoMarketListFromFlags();
 }
 );
 
-let favorites =
-loadFavoritesGroups();
-
 function closeAllCoinFlagMenus(
 exceptWrap =
 null
@@ -453,42 +450,36 @@ btn,
 symbol
 ){
 
-const inFavorites =
-isSymbolInAlgoFlagList(
-ALGO_FLAG_FAVORITES,
-symbol
-);
-const group =
-inFavorites
-? "orange"
-: getFavoriteGroup(
+const painted =
+resolveAlgoListFlagUi(
 symbol,
-favorites
+coinsState().currentDataset
 );
 
 btn.className =
 "flag coin-flag-btn screener-flag-btn";
 
 if(
-group
+painted
 ){
 btn.classList.add(
 "favorite",
-`flag--${group}`
+`flag--${painted.ui}`
 );
+btn.title =
+`Снять: ${painted.title}`;
+btn.setAttribute(
+"aria-pressed",
+"true"
+);
+return;
 }
 
 btn.title =
-inFavorites
-? "Снять из Избранных"
-: group
-? "Снять флаг"
-: "Выбрать флаг";
+"Флаг списка Алго";
 btn.setAttribute(
 "aria-pressed",
-group
-? "true"
-: "false"
+"false"
 );
 
 }
@@ -504,145 +495,71 @@ if(
 return;
 }
 
-if(
-group ===
-"orange"
-){
-
-const {
-added
-} =
-toggleAlgoTickerInFlagList(
-ALGO_FLAG_FAVORITES,
-symbol
+const dataset =
+coinsState().currentDataset;
+const preferredFlag =
+algoMarketDatasetToFlagId(
+dataset
 );
 
 if(
-added
-){
-
-const before =
-JSON.stringify(
-favorites
-);
-
-favorites =
-setFavoriteGroup(
-symbol,
-null,
-favorites
-);
-
-if(
-JSON.stringify(
-favorites
-) !==
-before
-){
-saveFavoritesGroups(
-favorites
-);
-void persistFavoritesToCloud(
-favorites
-);
-}
-
-}
-
-const row =
-coinElements.get(
-symbol
-);
-const btn =
-row?.querySelector(
-"[data-coin-flag-trigger]"
-);
-
-if(
-btn
-){
-updateCoinFlagButton(
-btn,
-symbol
-);
-}
-
-if(
-coinsState().currentDataset ===
-ALGO_MARKET_FAVORITES ||
-coinsState().flagSortActive
-){
-renderList();
-}
-
-return;
-
-}
-
-removeAlgoTickerFromFlagList(
-ALGO_FLAG_FAVORITES,
-symbol
-);
-
-const before =
-JSON.stringify(
-favorites
-);
-
-favorites =
-setFavoriteGroup(
-symbol,
 group ===
 "clear" ||
 group ===
 null
-? null
-: group,
-favorites
+){
+const painted =
+resolveAlgoListFlagUi(
+symbol,
+dataset
 );
+const removeId =
+painted?.flagId ||
+preferredFlag;
 
 if(
-JSON.stringify(
-favorites
-) ===
-before
+removeId
 ){
-
-const row =
-coinElements.get(
-symbol
-);
-const btn =
-row?.querySelector(
-"[data-coin-flag-trigger]"
-);
-
-if(
-btn
-){
-updateCoinFlagButton(
-btn,
+removeAlgoTickerFromFlagList(
+removeId,
 symbol
 );
 }
 
-if(
-coinsState().currentDataset ===
-ALGO_MARKET_FAVORITES
-){
-renderList();
-}
-
+paintAndMaybeRefreshList(
+symbol,
+removeId
+);
 return;
+}
+
+const flagId =
+algoListUiToFlagId(
+group
+);
+
+if(
+!flagId
+){
+return;
+}
+
+toggleAlgoTickerInFlagList(
+flagId,
+symbol
+);
+
+paintAndMaybeRefreshList(
+symbol,
+flagId
+);
 
 }
 
-saveFavoritesGroups(
-favorites
-);
-void persistFavoritesToCloud(
-favorites
-);
+function paintAndMaybeRefreshList(
+symbol,
+touchedFlagId
+){
 
 const row =
 coinElements.get(
@@ -662,12 +579,22 @@ symbol
 );
 }
 
+const dataset =
+coinsState().currentDataset;
+const datasetFlag =
+algoMarketDatasetToFlagId(
+dataset
+);
+
 if(
-coinsState().flagSortActive ||
-coinsState().currentDataset ===
-ALGO_MARKET_FAVORITES
+datasetFlag &&
+(
+!touchedFlagId ||
+touchedFlagId ===
+datasetFlag
+)
 ){
-renderList();
+refreshAlgoMarketListFromFlags();
 }
 
 }

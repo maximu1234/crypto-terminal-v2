@@ -11,7 +11,7 @@ import {
 loadAlgoTickerFlags,
 ALGO_TICKER_FLAGS_KEY,
 applyAlgoTickerFlagsRoot
-} from "./ticker-flags.js?v=5";
+} from "./ticker-flags.js?v=6";
 
 function desktopAlgoApi(){
 

@@ -132,7 +132,15 @@ getMainWebContents =
 opts.getMainWebContents;
 }
 
-ipcMain.handle(
+const {
+handleTrustedDesktopUi
+} =
+require(
+"./desktop-ui-gate.cjs"
+);
+
+handleTrustedDesktopUi(
+ipcMain,
 "desktop:algoTradingGetStatus",
 ()=>{
 
@@ -160,7 +168,9 @@ err
 }
 );
 
-ipcMain.handle(
+handleTrustedDesktopUi(
+ipcMain,
+
 "desktop:algoTradingSetEnabled",
 (
 _event,
@@ -223,7 +233,9 @@ err
 }
 );
 
-ipcMain.handle(
+handleTrustedDesktopUi(
+ipcMain,
+
 "desktop:algoTradingSetTradingMode",
 (
 _event,
@@ -281,7 +293,9 @@ err
 }
 );
 
-ipcMain.handle(
+handleTrustedDesktopUi(
+ipcMain,
+
 "desktop:algoTradingGetKeysStatus",
 (
 _event,
@@ -323,7 +337,9 @@ err
 }
 );
 
-ipcMain.handle(
+handleTrustedDesktopUi(
+ipcMain,
+
 "desktop:algoTradingSaveKeys",
 (
 _event,
@@ -394,7 +410,9 @@ err
 }
 );
 
-ipcMain.handle(
+handleTrustedDesktopUi(
+ipcMain,
+
 "desktop:algoTradingClearKeys",
 (
 _event,
@@ -443,7 +461,9 @@ err
 }
 );
 
-ipcMain.handle(
+handleTrustedDesktopUi(
+ipcMain,
+
 "desktop:algoTradingGetPositions",
 async()=>{
 
@@ -471,7 +491,9 @@ err
 }
 );
 
-ipcMain.handle(
+handleTrustedDesktopUi(
+ipcMain,
+
 "desktop:algoTradingGetOpenOrders",
 async(
 _event,
@@ -505,7 +527,9 @@ err
 }
 );
 
-ipcMain.handle(
+handleTrustedDesktopUi(
+ipcMain,
+
 "desktop:algoTradingGetPosition",
 async(
 _event,
@@ -533,7 +557,9 @@ err
 }
 );
 
-ipcMain.handle(
+handleTrustedDesktopUi(
+ipcMain,
+
 "desktop:algoTradingClosePosition",
 async(
 _event,
@@ -580,7 +606,9 @@ err
 }
 );
 
-ipcMain.handle(
+handleTrustedDesktopUi(
+ipcMain,
+
 "desktop:algoTradingSetPositionStop",
 async(
 _event,
@@ -628,7 +656,9 @@ err
 }
 );
 
-ipcMain.handle(
+handleTrustedDesktopUi(
+ipcMain,
+
 "desktop:algoTradingCancelPositionStop",
 async(
 _event,
@@ -670,7 +700,9 @@ err
 }
 );
 
-ipcMain.handle(
+handleTrustedDesktopUi(
+ipcMain,
+
 "desktop:algoTradingAmendOrder",
 async(
 _event,
@@ -704,7 +736,9 @@ err
 }
 );
 
-ipcMain.handle(
+handleTrustedDesktopUi(
+ipcMain,
+
 "desktop:algoTradingCancelOrder",
 async(
 _event,
@@ -746,7 +780,9 @@ err
 }
 );
 
-ipcMain.handle(
+handleTrustedDesktopUi(
+ipcMain,
+
 "desktop:algoTradingGetStreamSnapshot",
 ()=>{
 
@@ -769,7 +805,9 @@ err
 }
 );
 
-ipcMain.handle(
+handleTrustedDesktopUi(
+ipcMain,
+
 "desktop:algoTradingReplayStream",
 ()=>{
 
@@ -796,7 +834,9 @@ err
 }
 );
 
-ipcMain.handle(
+handleTrustedDesktopUi(
+ipcMain,
+
 "desktop:algoTradingRequestStreamSeed",
 ()=>{
 
@@ -824,7 +864,9 @@ err
 }
 );
 
-ipcMain.handle(
+handleTrustedDesktopUi(
+ipcMain,
+
 "desktop:algoTradingEnsureStream",
 ()=>{
 
@@ -847,7 +889,9 @@ err
 }
 );
 
-ipcMain.handle(
+handleTrustedDesktopUi(
+ipcMain,
+
 "desktop:algoTradingSyncBotStrategies",
 (
 _event,
@@ -881,7 +925,9 @@ err
 }
 );
 
-ipcMain.handle(
+handleTrustedDesktopUi(
+ipcMain,
+
 "desktop:algoTradingSyncTickerFlags",
 (
 _event,
@@ -915,7 +961,9 @@ err
 }
 );
 
-ipcMain.handle(
+handleTrustedDesktopUi(
+ipcMain,
+
 "desktop:algoTradingGetTickerFlagsRoot",
 ()=>{
 
@@ -943,7 +991,9 @@ err
 }
 );
 
-ipcMain.handle(
+handleTrustedDesktopUi(
+ipcMain,
+
 "desktop:algoTradingStartBot",
 async(
 _event,
@@ -1005,7 +1055,9 @@ err
 }
 );
 
-ipcMain.handle(
+handleTrustedDesktopUi(
+ipcMain,
+
 "desktop:algoTradingStopBot",
 async(
 _event,
@@ -1039,7 +1091,9 @@ err
 }
 );
 
-ipcMain.handle(
+handleTrustedDesktopUi(
+ipcMain,
+
 "desktop:algoTradingGetBotStatus",
 ()=>{
 
@@ -1067,7 +1121,9 @@ err
 }
 );
 
-ipcMain.handle(
+handleTrustedDesktopUi(
+ipcMain,
+
 "desktop:algoTradingDisarmArmedSetup",
 async(
 _event,
@@ -1101,7 +1157,9 @@ err
 }
 );
 
-ipcMain.handle(
+handleTrustedDesktopUi(
+ipcMain,
+
 "desktop:algoTradingGetWalletBalance",
 async()=>{
 

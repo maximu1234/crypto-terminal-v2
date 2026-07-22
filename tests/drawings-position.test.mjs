@@ -97,20 +97,39 @@ test("getPositionHandleScreens returns entry, TP and SL handles", () => {
   );
 });
 
-test("position metrics and sizing share one source of truth", () => {
+test("position metrics use log RR (same as fib/algo)", () => {
   const shape = {
     ...position(),
     riskUsd: 100
   };
 
-  assert.deepEqual(
-    positionMetrics(shape),
-    { tpPct: 20, slPct: 20, rr: "1.00" }
-  );
+  const metrics = positionMetrics(shape);
+  // entry 50, tp 60, sl 40 → |ln(60/50)|*100 / |ln(40/50)|*100
+  const tpPct = Math.abs(Math.log(60 / 50)) * 100;
+  const slPct = Math.abs(Math.log(40 / 50)) * 100;
+  assert.ok(Math.abs(metrics.tpPct - tpPct) < 1e-9);
+  assert.ok(Math.abs(metrics.slPct - slPct) < 1e-9);
+  assert.equal(metrics.rr, (tpPct / slPct).toFixed(2));
 
   const sizing = positionSizingFromShape(shape);
   assert.equal(sizing.riskUsd, 100);
   assert.ok(Number.isFinite(sizing.volume));
+  // volume still from linear stop % = 20
+  assert.equal(sizing.volume, Math.round((100 * 100) / 20));
+  assert.ok(Math.abs(sizing.rrNum - tpPct / slPct) < 1e-9);
+
+  // algo-style 1к2: entry 110, sl 105, tp = 110*(110/105)^2
+  const entry = 110;
+  const sl = 105;
+  const tp = entry * Math.pow(entry / sl, 2);
+  const logShape = {
+    type: "long",
+    p1: { time: 1, price: entry },
+    p2: { time: 2, price: entry },
+    tpPrice: tp,
+    slPrice: sl
+  };
+  assert.equal(positionMetrics(logShape).rr, "2.00");
 
   assert.deepEqual(
     positionMetrics({

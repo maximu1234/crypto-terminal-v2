@@ -13,7 +13,8 @@ distToSegment
 } from "./math.js?v=1";
 
 import {
-calcPositionSizing
+calcPositionVolumeUsd,
+formatRiskRewardLabel
 } from "../position-sizing.js?v=2";
 
 export function isPositionType(type){
@@ -25,6 +26,92 @@ return type === "long" || type === "short";
 export function positionEntryPrice(shape){
 
 return Number(shape.p1?.price);
+
+}
+
+/**
+ * Log move from entry as “%” (100 × |ln(price/entry)|).
+ * RR = tpLogPct / slLogPct matches fib/algo on a log chart.
+ * @param {number} entry
+ * @param {number} price
+ * @returns {number}
+ */
+export function positionLogPctFromEntry(
+entry,
+price
+){
+
+const e =
+Number(
+entry
+);
+const p =
+Number(
+price
+);
+
+if(
+!(
+e >
+0
+) ||
+!(
+p >
+0
+)
+){
+return NaN;
+}
+
+return Math.abs(
+Math.log(
+p /
+e
+)
+) *
+100;
+
+}
+
+/**
+ * Linear stop % of entry — for $ volume sizing only
+ * (risk $ ÷ stop distance).
+ * @param {number} entry
+ * @param {number} slPrice
+ * @returns {number}
+ */
+export function positionLinearSlPct(
+entry,
+slPrice
+){
+
+const e =
+Number(
+entry
+);
+const sl =
+Number(
+slPrice
+);
+
+if(
+!(
+e >
+0
+) ||
+!Number.isFinite(
+sl
+)
+){
+return NaN;
+}
+
+return Math.abs(
+sl -
+e
+) /
+e *
+100;
 
 }
 
@@ -192,24 +279,68 @@ export function positionMetrics(shape){
 const entry =
 positionEntryPrice(shape);
 
-if(!Number.isFinite(entry) || entry === 0){
+if(
+!Number.isFinite(
+entry
+) ||
+entry <=
+0
+){
 return {
-tpPct: 0,
-slPct: 0,
-rr: "—"
+tpPct:
+0,
+slPct:
+0,
+rr:
+"—"
 };
 }
 
 const tpPct =
-Math.abs(shape.tpPrice - entry) / entry * 100;
+positionLogPctFromEntry(
+entry,
+shape.tpPrice
+);
 const slPct =
-Math.abs(shape.slPrice - entry) / entry * 100;
+positionLogPctFromEntry(
+entry,
+shape.slPrice
+);
+
+if(
+!Number.isFinite(
+tpPct
+) ||
+!Number.isFinite(
+slPct
+)
+){
+return {
+tpPct:
+0,
+slPct:
+0,
+rr:
+"—"
+};
+}
+
 const rr =
-slPct > 0
-? (tpPct / slPct).toFixed(2)
+slPct >
+0
+? (
+tpPct /
+slPct
+).toFixed(
+2
+)
 : "—";
 
-return { tpPct, slPct, rr };
+return {
+tpPct,
+slPct,
+rr
+};
 
 }
 
@@ -217,12 +348,72 @@ export function positionSizingFromShape(shape){
 
 const metrics =
 positionMetrics(shape);
-
-return calcPositionSizing(
-shape.riskUsd,
-metrics.tpPct,
-metrics.slPct
+const entry =
+positionEntryPrice(shape);
+const risk =
+Number(
+shape.riskUsd
 );
+const linearSlPct =
+positionLinearSlPct(
+entry,
+shape.slPrice
+);
+
+if(
+!Number.isFinite(
+risk
+) ||
+risk <=
+0 ||
+!(
+linearSlPct >
+0
+) ||
+!(
+metrics.slPct >
+0
+)
+){
+return null;
+}
+
+const volume =
+calcPositionVolumeUsd(
+risk,
+linearSlPct
+);
+
+if(
+volume ==
+null
+){
+return null;
+}
+
+const rrNum =
+metrics.tpPct /
+metrics.slPct;
+
+return {
+riskUsd:
+risk,
+tpPct:
+metrics.tpPct,
+slPct:
+metrics.slPct,
+volume,
+profitUsd:
+Math.round(
+risk *
+rrNum
+),
+rrNum,
+rrLabel:
+formatRiskRewardLabel(
+rrNum
+)
+};
 
 }
 

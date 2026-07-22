@@ -44,6 +44,28 @@ color:#facc15;
 }
 
 /* Оранжевый флаг = алго-список «Избранные» (не путать с жёлтым pin позиции) */
+/* Флаги списков Алго (не red/green/gray/blue Терминала) */
+body.algo-trading-page .coin-flag-pick.flag--algo-long,
+body.algo-trading-page .coin-flag-btn.flag--algo-long::before,
+body.algo-trading-page .flag--algo-long.favorite.coin-flag-btn::before{
+background:#14b8a6;
+border-color:#14b8a6;
+}
+
+body.algo-trading-page .coin-flag-pick.flag--algo-short,
+body.algo-trading-page .coin-flag-btn.flag--algo-short::before,
+body.algo-trading-page .flag--algo-short.favorite.coin-flag-btn::before{
+background:#c084fc;
+border-color:#c084fc;
+}
+
+body.algo-trading-page .coin-flag-pick.flag--algo-both,
+body.algo-trading-page .coin-flag-btn.flag--algo-both::before,
+body.algo-trading-page .flag--algo-both.favorite.coin-flag-btn::before{
+background:#eab308;
+border-color:#eab308;
+}
+
 body.algo-trading-page .coin-flag-pick.flag--orange{
 background:#f97316;
 border-color:#f97316;
@@ -53,6 +75,14 @@ body.algo-trading-page .coin-flag-btn.flag--orange::before,
 body.algo-trading-page .flag--orange.favorite.coin-flag-btn::before{
 background:#f97316;
 border-color:#f97316;
+}
+
+/* На Алго не показываем основные флаги Терминала */
+body.algo-trading-page .coin-flag-pick.flag--red,
+body.algo-trading-page .coin-flag-pick.flag--green,
+body.algo-trading-page .coin-flag-pick.flag--gray,
+body.algo-trading-page .coin-flag-pick.flag--blue{
+display:none !important;
 }
 
 body.algo-trading-page .trade-book-mode-label{
@@ -161,10 +191,19 @@ height:var(--algo-stats-panel-h, auto);
 min-height:0;
 max-height:var(--algo-stats-panel-max-h, 420px);
 overflow:auto;
+scrollbar-width:none;
+-ms-overflow-style:none;
 border-top:none;
 background:#0f1419;
 padding:8px 12px;
 box-sizing:border-box;
+}
+
+body.algo-trading-page #algo-stats-panel::-webkit-scrollbar,
+body.algo-trading-page.terminal-page #algo-stats-panel::-webkit-scrollbar{
+width:0;
+height:0;
+display:none;
 }
 
 body.algo-trading-page #algo-stats-panel.is-collapsed,
@@ -178,21 +217,27 @@ overflow:hidden;
 body.algo-trading-page .algo-stats-columns{
 display:flex;
 align-items:flex-start;
-gap:24px;
-width:max-content;
-min-width:100%;
+gap:clamp(24px, 2.5vw, 48px);
+width:100%;
+min-width:0;
+box-sizing:border-box;
 }
 
 body.algo-trading-page .algo-stats-chart-cols{
 display:flex;
 align-items:stretch;
-gap:24px;
-flex:0 0 auto;
+gap:clamp(24px, 3vw, 56px);
+flex:1 1 auto;
+min-width:0;
 }
 
 body.algo-trading-page .algo-stats-chart-cols .algo-stats-col{
 display:flex;
 flex-direction:column;
+flex:1 1 0;
+width:auto;
+min-width:240px;
+max-width:none;
 }
 
 body.algo-trading-page .algo-stats-chart-cols .algo-stats-col-setup{
@@ -214,7 +259,9 @@ min-width:0;
 }
 
 body.algo-trading-page .algo-stats-col[data-algo-strategy="global-setup"]{
+flex:0 0 420px;
 width:420px;
+max-width:420px;
 }
 
 body.algo-trading-page .algo-settings-wrap{
@@ -1124,6 +1171,43 @@ color:#d1d5db;
 
 body.algo-trading-page .algo-stats-row--setting{
 margin-bottom:4px;
+}
+
+body.algo-trading-page .algo-stats-chart-patterns{
+margin:0 0 2px;
+padding:4px 8px;
+border-radius:4px;
+background:rgba(255,255,255,.035);
+}
+
+body.algo-trading-page .algo-stats-col-setup > .algo-stats-divider{
+margin:6px 0 8px;
+}
+
+body.algo-trading-page .algo-stats-row--sl-pair{
+justify-content:space-between;
+gap:8px;
+flex-wrap:nowrap;
+}
+
+body.algo-trading-page .algo-stats-sl-item{
+display:inline-flex;
+align-items:center;
+gap:8px;
+flex:0 0 auto;
+min-width:0;
+}
+
+body.algo-trading-page .algo-stats-sl-item--end{
+margin-left:auto;
+}
+
+body.algo-trading-page .algo-stats-row--sl-pair .algo-stats-label{
+flex:0 0 auto;
+}
+
+body.algo-trading-page .algo-stats-row--sl-pair .algo-stats-input{
+margin-left:0;
 }
 
 body.algo-trading-page .algo-stats-label{

@@ -2477,12 +2477,21 @@ cloudRow?.updated_at
 ) ||
 Date.now(),
 ...(
-prev?.source
+(()=>{
+const src =
+String(
+cloudRow?.source ||
+prev?.source ||
+""
+).trim();
+
+return src
 ? {
 source:
-prev.source
+src
 }
-: {}
+: {};
+})()
 )
 };
 

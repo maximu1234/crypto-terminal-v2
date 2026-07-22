@@ -610,7 +610,6 @@ settings
 );
 recompute();
 getHost?.()?.getDrawingTools?.()?.scheduleRedraw?.();
-notifySettingsChange();
 
 }
 
@@ -644,22 +643,9 @@ getHost?.()?.getDrawingTools?.()?.scheduleRedraw?.();
 populateSettingsDialog(
 root
 );
-notifySettingsChange();
 
 }
 );
-
-}
-
-function notifySettingsChange(){
-
-try{
-getHost?.()?.onIndicatorSettingsChange?.(
-PATTERN_12_ID
-);
-}catch{
-/* ignore */
-}
 
 }
 

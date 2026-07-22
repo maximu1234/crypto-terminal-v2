@@ -102,7 +102,7 @@ positionEntryPrice,
 positionXBounds as resolvePositionXBounds,
 positionBodyDist as resolvePositionBodyDist,
 getPositionHandleScreens as resolvePositionHandleScreens
-} from "./position.js?v=4";
+} from "./position.js?v=5";
 
 import {
 createDrawPrefs

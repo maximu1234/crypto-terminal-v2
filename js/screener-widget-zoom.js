@@ -42,7 +42,7 @@ if(
 ){
 zoomPatternOverlayApi =
 await import(
-"./screener-pattern-overlay.js?v=4"
+"./screener-pattern-overlay.js?v=5"
 );
 }
 

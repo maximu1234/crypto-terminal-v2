@@ -253,11 +253,14 @@ id ||
 ""
 ).trim();
 
-return value.startsWith(
+/* Only explicit algo bot prefixes (not every id starting with "a"). */
+return (
+value.startsWith(
 "algo"
 ) ||
-/^a[A-Za-z0-9_-]+$/.test(
-value
+value.startsWith(
+"algo-"
+)
 );
 
 }
@@ -1224,8 +1227,8 @@ side ===
 const orderLinkId =
 makeAlgoOrderLinkId(
 fingerprint
-? `a${fingerprint}`
-: `algo${Date.now()}`
+? `algo-${fingerprint}`
+: `algo-${Date.now()}`
 );
 
 const orderResult =

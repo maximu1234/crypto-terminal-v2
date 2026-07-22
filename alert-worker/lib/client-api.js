@@ -125,7 +125,17 @@ async function handleClientPushAlert(
           body.exchangeId ||
           "bybit"
         ).trim().toLowerCase(),
-      triggered_at: null
+      triggered_at: null,
+      ...(
+        String(
+          body.source ||
+          ""
+        ).trim()
+          ? {
+            source: String(body.source).trim()
+          }
+          : {}
+      )
     });
 
     invalidateTelegramAlertsReloadCache();

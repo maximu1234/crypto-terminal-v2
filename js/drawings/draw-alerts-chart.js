@@ -7,7 +7,7 @@ ALERT_LINE_COLOR,
 ALERT_LINE_DASH,
 alertPriceForDisplay,
 getActiveAlerts
-} from "../alerts.js?v=104";
+} from "../alerts.js?v=105";
 
 import {
 isChartLayoutReady

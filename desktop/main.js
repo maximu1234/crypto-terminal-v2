@@ -973,8 +973,29 @@ return;
 
 bundleLoadFallback =
 true;
+
+try{
+const {
+setTradingIpcLocked
+} =
+require(
+"./trading/desktop-ui-gate.cjs"
+);
+setTradingIpcLocked(
+true
+);
+}catch(
+err
+){
 log.warn(
-`Bundled UI fallback (${reason}) → remote Vercel`
+"fallback lock trading IPC:",
+err?.message ||
+err
+);
+}
+
+log.warn(
+`Bundled UI fallback (${reason}) → remote Vercel (trading/algo IPC locked)`
 );
 const remote =
 `${REMOTE_APP_URL.replace(
@@ -1234,6 +1255,43 @@ menu
 }
 
 function registerIpc(){
+
+try{
+const {
+configureDesktopUiGate,
+setTradingIpcLocked
+} =
+require(
+"./trading/desktop-ui-gate.cjs"
+);
+configureDesktopUiGate(
+{
+getLocalSiteOrigin:
+()=>
+localSiteOrigin,
+getUseBundle:
+()=>
+USE_BUNDLE
+}
+);
+
+if(
+process.env.DESKTOP_REMOTE_UI ===
+"1"
+){
+setTradingIpcLocked(
+true
+);
+}
+}catch(
+err
+){
+log.warn(
+"desktop-ui-gate configure:",
+err?.message ||
+err
+);
+}
 
 ipcMain.handle(
 "app:getVersion",

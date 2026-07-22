@@ -79,9 +79,15 @@ true
 );
 assert.equal(
 executor.isAlgoBotOrderLinkId(
-"aSetup_1-2"
+"algo-setup_1-2"
 ),
 true
+);
+assert.equal(
+executor.isAlgoBotOrderLinkId(
+"aSetup_1-2"
+),
+false
 );
 assert.equal(
 executor.isAlgoBotOrderLinkId(

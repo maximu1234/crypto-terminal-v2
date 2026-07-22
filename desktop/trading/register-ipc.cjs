@@ -67,10 +67,17 @@ discardPnlShareCard
 require(
 "./pnl-share-card.cjs"
 );
+const {
+handleTrustedDesktopUi
+} =
+require(
+"./desktop-ui-gate.cjs"
+);
 
 function registerTradingIpc(){
 
-ipcMain.handle(
+handleTrustedDesktopUi(
+ipcMain,
 "trading:setActiveExchange",
 (
 _event,
@@ -117,7 +124,9 @@ exchangeId
 }
 );
 
-ipcMain.handle(
+handleTrustedDesktopUi(
+ipcMain,
+
 "trading:getStatus",
 (
 _event,
@@ -130,14 +139,18 @@ payload ||
 }
 );
 
-ipcMain.handle(
+handleTrustedDesktopUi(
+ipcMain,
+
 "trading:getRateLimitBackoffMs",
 ()=>{
 return getRateLimitBackoffMs();
 }
 );
 
-ipcMain.handle(
+handleTrustedDesktopUi(
+ipcMain,
+
 "trading:saveKeys",
 (
 _event,
@@ -205,7 +218,9 @@ err.message
 }
 );
 
-ipcMain.handle(
+handleTrustedDesktopUi(
+ipcMain,
+
 "trading:clearKeys",
 (
 _event,
@@ -242,7 +257,9 @@ err.message
 }
 );
 
-ipcMain.handle(
+handleTrustedDesktopUi(
+ipcMain,
+
 "trading:getWalletBalance",
 async(
 _event,
@@ -272,7 +289,9 @@ err.message
 }
 );
 
-ipcMain.handle(
+handleTrustedDesktopUi(
+ipcMain,
+
 "trading:getPositions",
 async(
 _event,
@@ -302,7 +321,9 @@ err.message
 }
 );
 
-ipcMain.handle(
+handleTrustedDesktopUi(
+ipcMain,
+
 "trading:getOpenOrders",
 async(
 _event,
@@ -332,7 +353,9 @@ err.message
 }
 );
 
-ipcMain.handle(
+handleTrustedDesktopUi(
+ipcMain,
+
 "trading:closePosition",
 async(
 _event,
@@ -376,7 +399,9 @@ err.message
 }
 );
 
-ipcMain.handle(
+handleTrustedDesktopUi(
+ipcMain,
+
 "trading:getPosition",
 async(
 _event,
@@ -406,7 +431,9 @@ err.message
 }
 );
 
-ipcMain.handle(
+handleTrustedDesktopUi(
+ipcMain,
+
 "trading:cancelPositionStop",
 async(
 _event,
@@ -502,7 +529,9 @@ err.message
 }
 );
 
-ipcMain.handle(
+handleTrustedDesktopUi(
+ipcMain,
+
 "trading:setPositionStop",
 async(
 _event,
@@ -545,7 +574,9 @@ err.message
 }
 );
 
-ipcMain.handle(
+handleTrustedDesktopUi(
+ipcMain,
+
 "trading:placeOrder",
 async(
 _event,
@@ -575,7 +606,9 @@ err.message
 }
 );
 
-ipcMain.handle(
+handleTrustedDesktopUi(
+ipcMain,
+
 "trading:amendOrder",
 async(
 _event,
@@ -605,7 +638,9 @@ err.message
 }
 );
 
-ipcMain.handle(
+handleTrustedDesktopUi(
+ipcMain,
+
 "trading:cancelOrder",
 async(
 _event,
@@ -648,7 +683,9 @@ err.message
 }
 );
 
-ipcMain.handle(
+handleTrustedDesktopUi(
+ipcMain,
+
 "trading:reconcileOrdersOnPositionOpen",
 async(
 _event,
@@ -714,7 +751,9 @@ err.message
 }
 );
 
-ipcMain.handle(
+handleTrustedDesktopUi(
+ipcMain,
+
 "trading:reconcileOrdersOnPositionClose",
 async(
 _event,
@@ -778,7 +817,9 @@ err.message
 }
 );
 
-ipcMain.handle(
+handleTrustedDesktopUi(
+ipcMain,
+
 "trading:openPosition",
 async(
 _event,
@@ -900,7 +941,9 @@ err.message
 }
 );
 
-ipcMain.handle(
+handleTrustedDesktopUi(
+ipcMain,
+
 "trading:pingBybit",
 async(
 _event,
@@ -930,7 +973,9 @@ err.message
 }
 );
 
-ipcMain.handle(
+handleTrustedDesktopUi(
+ipcMain,
+
 "trading:getClosedPnl",
 async(
 _event,
@@ -960,7 +1005,9 @@ err.message
 }
 );
 
-ipcMain.handle(
+handleTrustedDesktopUi(
+ipcMain,
+
 "trading:enrichClosedPnlTrades",
 async(
 _event,
@@ -990,7 +1037,9 @@ err.message
 }
 );
 
-ipcMain.handle(
+handleTrustedDesktopUi(
+ipcMain,
+
 "trading:getSymbolExecutions",
 async(
 _event,
@@ -1020,7 +1069,9 @@ err.message
 }
 );
 
-ipcMain.handle(
+handleTrustedDesktopUi(
+ipcMain,
+
 "trading:getTradeDiaryDetail",
 async(
 _event,
@@ -1050,7 +1101,9 @@ err.message
 }
 );
 
-ipcMain.handle(
+handleTrustedDesktopUi(
+ipcMain,
+
 "trading:getSymbolPositionSettings",
 async(
 _event,
@@ -1080,7 +1133,9 @@ err.message
 }
 );
 
-ipcMain.handle(
+handleTrustedDesktopUi(
+ipcMain,
+
 "trading:applySymbolPositionSettings",
 async(
 _event,
@@ -1110,7 +1165,9 @@ err.message
 }
 );
 
-ipcMain.handle(
+handleTrustedDesktopUi(
+ipcMain,
+
 "trading:replayStream",
 ()=>{
 
@@ -1138,7 +1195,9 @@ err.message
 }
 );
 
-ipcMain.handle(
+handleTrustedDesktopUi(
+ipcMain,
+
 "trading:getStreamSnapshot",
 ()=>{
 
@@ -1162,7 +1221,9 @@ err.message
 }
 );
 
-ipcMain.handle(
+handleTrustedDesktopUi(
+ipcMain,
+
 "trading:requestStreamSeed",
 ()=>{
 
@@ -1186,7 +1247,9 @@ err.message
 }
 );
 
-ipcMain.handle(
+handleTrustedDesktopUi(
+ipcMain,
+
 "trading:generatePnlShareCard",
 async(
 _event,
@@ -1216,7 +1279,9 @@ err.message
 }
 );
 
-ipcMain.handle(
+handleTrustedDesktopUi(
+ipcMain,
+
 "trading:savePnlShareCard",
 async(
 _event,
@@ -1246,7 +1311,9 @@ err.message
 }
 );
 
-ipcMain.handle(
+handleTrustedDesktopUi(
+ipcMain,
+
 "trading:discardPnlShareCard",
 (
 _event,

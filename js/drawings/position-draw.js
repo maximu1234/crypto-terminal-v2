@@ -30,7 +30,7 @@ positionSizingFromShape,
 initialPositionTpSlPercent,
 clampPositionPrices as clampPositionPricesPure,
 formatPositionPrice
-} from "./position.js?v=4";
+} from "./position.js?v=5";
 
 /**
  * @param {{
