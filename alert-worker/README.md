@@ -24,7 +24,7 @@
 1. **New Project** → **Deploy from GitHub repo** → `crypto-terminal-v2`.
 2. Открой сервис → **Settings**:
    - **Root Directory**: `alert-worker`
-   - **Regions** (Scale): **EU West · Amsterdam** (`europe-west4-drams3a`) — иначе прокси `/bybit` для браузера часто **403** от Bybit. В репо то же задано в `railway.toml`; после push сделай **Redeploy**.
+   - **Regions** (Scale): **EU West · Amsterdam** (`ams`) — иначе прокси `/bybit` для браузера часто **403** от Bybit. В репо то же задано в `railway.toml` (`multiRegionConfig.ams`); после push сделай **Redeploy**.
 3. **Variables** — на **этом же сервисе** (не только в Project Shared), с **значениями** (нажмите глаз, проверьте что не пусто):
 
 | Variable | Пример |

@@ -4,6 +4,9 @@ dockerfilePath = "Dockerfile"
 
 [deploy]
 # Amsterdam — Bybit REST не режет CloudFront (в US часто 403).
-region = "europe-west4-drams3a"
+# Railway region id: ams (не europe-west4-drams3a — валидатор Config Error).
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 10
+
+[deploy.multiRegionConfig.ams]
+numReplicas = 1
