@@ -20,7 +20,7 @@ POSITION_RR_LABEL_SAMPLE
 import {
 formatMoneyUsd,
 formatVolumeUsd
-} from "../position-sizing.js?v=2";
+} from "../position-sizing.js?v=3";
 
 import {
 positionEntryPrice,
@@ -30,7 +30,7 @@ positionSizingFromShape,
 initialPositionTpSlPercent,
 clampPositionPrices as clampPositionPricesPure,
 formatPositionPrice
-} from "./position.js?v=5";
+} from "./position.js?v=6";
 
 /**
  * @param {{

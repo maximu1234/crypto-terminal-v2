@@ -261,7 +261,7 @@ Object.freeze({
 "script-page-storage.js":
 14,
 "script-page-widgets.js":
-5,
+6,
 "script-terminal-status.js":
 6,
 "script-scan-background.js":
@@ -269,7 +269,7 @@ Object.freeze({
 "script-favorites-list.js":
 2,
 "algo-trading.js":
-79,
+80,
 "algo-trading-page-boot.js":
 3,
 "algo-trading-list.js":
@@ -293,13 +293,13 @@ Object.freeze({
 "algo-trading/pattern-entry-logic.js":
 5,
 "algo-trading/pattern-entry-overlay.js":
-11,
+12,
 "algo-trading/pattern-entry-positions.js":
 11,
 "algo-trading/pattern-analysis.js":
-14,
+15,
 "algo-trading/pattern-trade-stats-partial.js":
-10,
+13,
 "algo-trading/pattern-trade-stats.js":
 8,
 
@@ -396,7 +396,7 @@ Object.freeze({
 "watchlist.js":
 96,
 "screener.js":
-92,
+93,
 "screener-widget-guard.js":
 1,
 "screener-pattern-prefs.js":
@@ -430,9 +430,9 @@ Object.freeze({
 "screener-pattern-overlay.js":
 5,
 "screener-widget-zoom.js":
-12,
+15,
 "release-marker.js":
-46,
+47,
 "focus-blur-after-pick.js":
 3,
 "site-boot.js":
@@ -518,9 +518,9 @@ Object.freeze({
 "drawings/fib-portals.js":
 3,
 "drawings/position.js":
-5,
+6,
 "drawings/position-draw.js":
-1,
+2,
 "drawings/utils.js":
 1,
 "drawings/arrow-rect.js":
@@ -655,7 +655,7 @@ Object.freeze({
 "site-css-ready.js":
 3,
 "position-sizing.js":
-2,
+3,
 "symbol-autocomplete.js":
 2,
 "listings.js":

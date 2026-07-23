@@ -12,7 +12,7 @@ fibLevelXSpan
 
 import {
 isPositionType
-} from "./position.js?v=5";
+} from "./position.js?v=6";
 
 import {
 drawFilledArrow,

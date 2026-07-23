@@ -17,7 +17,7 @@ import {
 DEFAULT_PARTIAL_TP1_X,
 DEFAULT_PARTIAL_TP2_X,
 DEFAULT_PARTIAL_TP3_X
-} from "./pattern-trade-stats-partial.js?v=10";
+} from "./pattern-trade-stats-partial.js?v=13";
 
 /**
  * @param {{

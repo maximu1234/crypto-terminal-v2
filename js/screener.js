@@ -53,7 +53,7 @@ createTickerUiBatcher
 
 import {
 mountReleaseMarker
-} from "./release-marker.js?v=46";
+} from "./release-marker.js?v=47";
 
 import {
 saveScreenerState,
@@ -96,7 +96,7 @@ import {
 mountScreenerWidgetZoom,
 refreshZoomFavoriteUi,
 syncWidgetZoomInversion
-} from "./screener-widget-zoom.js?v=12";
+} from "./screener-widget-zoom.js?v=15";
 
 const gridEl =
 document.getElementById("screener-grid");
@@ -3094,6 +3094,35 @@ widgetRoot
 ),
 getCurrentTF:()=>
 currentTF,
+getZoomWidgets:()=>
+activeWidgets.slice(),
+shiftZoomPage:
+async dir=>{
+const max =
+totalPages();
+const next =
+Math.max(
+1,
+Math.min(
+max,
+currentPage +
+dir
+)
+);
+
+if(
+next ===
+currentPage
+){
+return false;
+}
+
+currentPage =
+next;
+persistState();
+await renderPage();
+return true;
+},
 getInvertCharts:()=>
 invertCharts,
 wireFlagUi:

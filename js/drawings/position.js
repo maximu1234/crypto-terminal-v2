@@ -15,7 +15,7 @@ distToSegment
 import {
 calcPositionVolumeUsd,
 formatRiskRewardLabel
-} from "../position-sizing.js?v=2";
+} from "../position-sizing.js?v=3";
 
 export function isPositionType(type){
 
@@ -404,10 +404,8 @@ slPct:
 metrics.slPct,
 volume,
 profitUsd:
-Math.round(
 risk *
-rrNum
-),
+rrNum,
 rrNum,
 rrLabel:
 formatRiskRewardLabel(

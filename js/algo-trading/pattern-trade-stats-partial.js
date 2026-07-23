@@ -1,8 +1,9 @@
 /**
  * Стратегия 2/3: закрытие 3 равными частями (лог-шкала).
- * span "x" (St2) → ход pt3↔pt4, ТП = logExt(pt4, pt3↔pt4, k)
+ * span "x" (St2) → ход pt3↔pt4, ТП = logExt(entry, pt3↔pt4, k)
  * span "y" (St3) → ход pt1↔pt2, ТП = logExt(pt2, pt1↔pt2, k)
  * СЛ / трейлинг — интерполяция в лог-пространстве по X.
+ * $ PnL = доля × riskUsd × (|ln(exit/entry)| / |ln(sl0/entry)|) — как RR на чертеже позиции.
  */
 import {
 clampRiskUsd,
@@ -34,6 +35,48 @@ const PART =
 3;
 const EPS =
 1e-9;
+
+/**
+ * Лог-дистанция между ценами (для RR/$ как на чертеже позиции).
+ * @param {number} a
+ * @param {number} b
+ * @returns {number}
+ */
+function logPriceDist(
+a,
+b
+){
+
+const x =
+Number(
+a
+);
+const y =
+Number(
+b
+);
+
+if(
+!(
+x >
+0
+) ||
+!(
+y >
+0
+)
+){
+return NaN;
+}
+
+return Math.abs(
+Math.log(
+x /
+y
+)
+);
+
+}
 
 /**
  * @param {unknown} raw
@@ -345,8 +388,8 @@ spanLo &&
 spanLo >
 0;
 const riskDist =
-Math.abs(
-entry -
+logPriceDist(
+entry,
 slPrice
 );
 
@@ -490,10 +533,10 @@ nextTp <
 ? PART
 : remaining;
 const rewardDist =
-Math.abs(
+logPriceDist(
 tpLevels[
 nextTp
-] -
+],
 entry
 );
 
@@ -585,8 +628,8 @@ slPrice
 ){
 
 const slDist =
-Math.abs(
-entry -
+logPriceDist(
+entry,
 slPrice
 );
 const lossFrac =
@@ -829,27 +872,11 @@ if(
 continue;
 }
 
-profitUsd +=
-trade.profitUsd;
-lossUsd +=
-trade.lossUsd;
-
 const side =
 event.side ===
 "short"
 ? "short"
 : "long";
-
-if(
-side ===
-"short"
-){
-shortNetUsd +=
-trade.netUsd;
-}else{
-longNetUsd +=
-trade.netUsd;
-}
 
 if(
 trade.status ===
@@ -872,6 +899,8 @@ if(
 trade.netUsd >
 EPS
 ){
+profitUsd +=
+trade.netUsd;
 if(
 side ===
 "short"
@@ -880,16 +909,26 @@ shortWins +=
 1;
 shortWinUsd +=
 trade.netUsd;
+shortNetUsd +=
+trade.netUsd;
 }else{
 longWins +=
 1;
 longWinUsd +=
+trade.netUsd;
+longNetUsd +=
 trade.netUsd;
 }
 }else if(
 trade.netUsd <
 -EPS
 ){
+const lossAbs =
+Math.abs(
+trade.netUsd
+);
+lossUsd +=
+lossAbs;
 if(
 side ===
 "short"
@@ -897,18 +936,19 @@ side ===
 shortLosses +=
 1;
 shortLossUsd +=
-Math.abs(
-trade.netUsd
-);
+lossAbs;
+shortNetUsd +=
+trade.netUsd;
 }else{
 longLosses +=
 1;
 longLossUsd +=
-Math.abs(
-trade.netUsd
-);
+lossAbs;
+longNetUsd +=
+trade.netUsd;
 }
 }
+// |net| ≈ 0 (тейк + СЛ в ноль) — не в успех/убыток и не в суммы $
 
 }
 

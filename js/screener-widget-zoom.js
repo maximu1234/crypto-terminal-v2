@@ -123,6 +123,25 @@ const ZOOM_TF_VALUES =
 "W"
 ];
 
+/** Клавиши 1–7 → ТФ внутри zoom (как на Скринере / Скрипте). */
+const ZOOM_TF_HOTKEYS =
+Object.freeze({
+"1":
+"1",
+"2":
+"5",
+"3":
+"15",
+"4":
+"60",
+"5":
+"240",
+"6":
+"D",
+"7":
+"W"
+});
+
 let zoomState =
 null;
 
@@ -332,6 +351,12 @@ return;
 
 if(
 event.code ===
+"Space" ||
+event.code ===
+"ArrowRight"
+){
+if(
+event.code ===
 "ArrowRight" &&
 event.shiftKey
 ){
@@ -340,7 +365,246 @@ event.stopPropagation();
 openZoomInTerminal(
 zoomState
 );
+return;
 }
+
+if(
+event.shiftKey &&
+event.code ===
+"Space"
+){
+return;
+}
+
+event.preventDefault();
+event.stopPropagation();
+void navigateZoomWidget(
+1
+);
+return;
+}
+
+if(
+event.code ===
+"ArrowLeft"
+){
+event.preventDefault();
+event.stopPropagation();
+void navigateZoomWidget(
+-1
+);
+return;
+}
+
+if(
+event.shiftKey
+){
+return;
+}
+
+const tf =
+ZOOM_TF_HOTKEYS[
+event.key
+];
+
+if(
+tf &&
+ZOOM_TF_VALUES.includes(
+tf
+)
+){
+event.preventDefault();
+event.stopPropagation();
+void applyZoomTimeframe(
+zoomState,
+tf
+);
+}
+
+}
+
+/**
+ * Листать увеличенный график на соседний виджет (Пробел / Shift+Пробел).
+ * На краю страницы — следующая/предыдущая страница грида.
+ * @param {1|-1} dir
+ */
+async function navigateZoomWidget(
+dir
+){
+
+if(
+!zoomState ||
+zoomState.disposed
+){
+return;
+}
+
+const step =
+dir <
+0
+? -1
+: 1;
+const getWidgets =
+zoomMountOptions?.getZoomWidgets;
+const getCurrentTF =
+zoomMountOptions?.getCurrentTF;
+const shiftPage =
+zoomMountOptions?.shiftZoomPage;
+
+let widgets =
+typeof getWidgets ===
+"function"
+? (
+getWidgets() ||
+[]
+)
+: [];
+
+if(
+!widgets.length
+){
+return;
+}
+
+const currentSymbol =
+String(
+zoomState.symbol ||
+zoomState.widget?.symbol ||
+""
+);
+const currentTf =
+String(
+zoomState.tf ||
+zoomState.widget?.tf ||
+""
+);
+
+let idx =
+widgets.findIndex(
+w=>
+w ===
+zoomState.widget ||
+w?.root ===
+zoomState.widget?.root
+);
+
+if(
+idx <
+0 &&
+currentSymbol
+){
+idx =
+widgets.findIndex(
+w=>{
+if(
+String(
+w?.symbol ||
+""
+) !==
+currentSymbol
+){
+return false;
+}
+
+const wTf =
+String(
+w?.tf ||
+""
+);
+
+return !currentTf ||
+!wTf ||
+wTf ===
+currentTf;
+}
+);
+}
+
+let nextIdx =
+idx +
+step;
+
+if(
+nextIdx >=
+0 &&
+nextIdx <
+widgets.length
+){
+await openWidgetZoom(
+widgets[
+nextIdx
+],
+getCurrentTF
+);
+return;
+}
+
+if(
+typeof shiftPage ===
+"function"
+){
+const moved =
+await shiftPage(
+step
+);
+
+if(
+moved
+){
+widgets =
+getWidgets?.() ||
+[];
+
+if(
+!widgets.length
+){
+return;
+}
+
+const pick =
+step >
+0
+? widgets[
+0
+]
+: widgets[
+widgets.length -
+1
+];
+
+if(
+pick
+){
+await openWidgetZoom(
+pick,
+getCurrentTF
+);
+}
+
+return;
+}
+}
+
+if(
+widgets.length <
+2
+){
+return;
+}
+
+const wrapIdx =
+step >
+0
+? 0
+: widgets.length -
+1;
+
+await openWidgetZoom(
+widgets[
+wrapIdx
+],
+getCurrentTF
+);
 
 }
 
@@ -887,7 +1151,7 @@ ${zoomMountOptions?.flagWrapHtml || ""}
 </div>
 <div class="screener-widget-zoom-tf" role="group" aria-label="Таймфрейм">${buildTfButtonsHtml(tf)}</div>
 <div class="screener-header-right screener-widget-zoom-header-right">
-<span class="screener-widget-zoom-hint">ПКМ — закрыть</span>
+<span class="screener-widget-zoom-hint">← → / Пробел · ПКМ — закрыть</span>
 <button type="button" class="screener-open screener-widget-zoom-open" title="Открыть в Терминале (Shift+→)">↗</button>
 </div>
 </div>
@@ -1275,6 +1539,8 @@ export function mountScreenerWidgetZoom(
 {
 resolveWidget,
 getCurrentTF,
+getZoomWidgets,
+shiftZoomPage,
 getInvertCharts = ()=>false,
 isEnabled = ()=>true,
 isPatternOverlayEnabled,
@@ -1291,6 +1557,9 @@ wireFlagUi,
 updateFlagUi,
 flagWrapHtml,
 getInvertCharts,
+getCurrentTF,
+getZoomWidgets,
+shiftZoomPage,
 gridElId,
 isPatternOverlayEnabled
 };

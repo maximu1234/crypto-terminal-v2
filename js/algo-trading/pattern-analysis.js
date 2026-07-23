@@ -25,7 +25,7 @@ normalizeAlgoStatsMode
 import {
 computePartialTpTradeStats,
 filterSequentialPartialEntryEvents
-} from "./pattern-trade-stats-partial.js?v=10";
+} from "./pattern-trade-stats-partial.js?v=13";
 
 /**
  * @param {Array} candles

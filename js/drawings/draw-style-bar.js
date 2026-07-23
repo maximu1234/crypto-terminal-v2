@@ -49,12 +49,12 @@ isFibLineWidthMenuOpenForAnchor
 import {
 isPositionType,
 positionEntryPrice
-} from "./position.js?v=5";
+} from "./position.js?v=6";
 
 import {
 parseMoneyInput,
 calcPositionVolumeUsd
-} from "../position-sizing.js?v=2";
+} from "../position-sizing.js?v=3";
 
 import {
 applyPositionVolumeFromDrawing

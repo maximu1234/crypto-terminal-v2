@@ -70,16 +70,12 @@ amount == null ||
 return "—";
 }
 
-/*
- * SL/TP plaques: keep fractional risk/profit (0.5$, 2.3$).
- * Whole dollars stay without trailing decimals.
- */
 const text =
 amount.toLocaleString(
 "ru-RU",
 {
 minimumFractionDigits:
-0,
+2,
 maximumFractionDigits:
 2
 }
@@ -145,7 +141,7 @@ return null;
 const rrNum =
 tpPct / slPct;
 const profitUsd =
-Math.round(risk * rrNum);
+risk * rrNum;
 
 return {
 riskUsd: risk,

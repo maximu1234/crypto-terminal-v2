@@ -36,7 +36,7 @@ isScreenerWidgetCurrent as isWidgetCurrentGuard
 import {
 mountScreenerWidgetZoom,
 refreshZoomFavoriteUi
-} from "./screener-widget-zoom.js?v=12";
+} from "./screener-widget-zoom.js?v=15";
 
 import {
 getWidgetFlagHtml,
@@ -1644,6 +1644,46 @@ cachedRows[
 "15"
 )
 : cachedChartTfFilter,
+getZoomWidgets:()=>
+activeWidgets.slice(),
+shiftZoomPage:
+async dir=>{
+const total =
+totalPages(
+cachedRows.length
+);
+const next =
+Math.max(
+1,
+Math.min(
+total,
+currentPage +
+dir
+)
+);
+
+if(
+next ===
+currentPage
+){
+return false;
+}
+
+currentPage =
+next;
+onPersist?.(
+{
+layout,
+page:
+currentPage
+}
+);
+await renderPage(
+cachedRows,
+cachedChartTfFilter
+);
+return true;
+},
 isPatternOverlayEnabled:()=>
 true,
 wireFlagUi:

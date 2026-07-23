@@ -20,7 +20,7 @@ moveRectangleHandle
 import {
 isPositionType,
 positionEntryPrice
-} from "./position.js?v=5";
+} from "./position.js?v=6";
 
 import {
 ensureFibAnchorMinSpan

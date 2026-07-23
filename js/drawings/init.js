@@ -102,7 +102,7 @@ positionEntryPrice,
 positionXBounds as resolvePositionXBounds,
 positionBodyDist as resolvePositionBodyDist,
 getPositionHandleScreens as resolvePositionHandleScreens
-} from "./position.js?v=5";
+} from "./position.js?v=6";
 
 import {
 createDrawPrefs
@@ -110,7 +110,7 @@ createDrawPrefs
 
 import {
 createPositionDraw
-} from "./position-draw.js?v=1";
+} from "./position-draw.js?v=2";
 
 import {
 pickUi

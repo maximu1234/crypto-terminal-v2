@@ -69,11 +69,11 @@ mountAlgoTradingIndicators
 
 import {
 mountAlgoPatternEntryOverlay
-} from "./algo-trading/pattern-entry-overlay.js?v=11";
+} from "./algo-trading/pattern-entry-overlay.js?v=12";
 
 import {
 refreshAlgoPatternAnalysis
-} from "./algo-trading/pattern-analysis.js?v=14";
+} from "./algo-trading/pattern-analysis.js?v=15";
 
 import {
 clampSlPctOfX,
@@ -92,7 +92,7 @@ DEFAULT_PARTIAL_TP1_X,
 DEFAULT_PARTIAL_TP2_X,
 DEFAULT_PARTIAL_TP3_X,
 DEFAULT_TRAIL_SL_PCT
-} from "./algo-trading/pattern-trade-stats-partial.js?v=10";
+} from "./algo-trading/pattern-trade-stats-partial.js?v=13";
 
 import {
 clampEntryTimeoutBars,

@@ -440,3 +440,309 @@ tradeY.profitUsd >
 
 }
 );
+
+test(
+"partial stats: open and breakeven closed do not fill profit/loss totals",
+()=>{
+
+const entry =
+110;
+const pt3 =
+100;
+const pt4 =
+110;
+const sl =
+Math.sqrt(
+pt4 *
+pt3
+);
+const tp1 =
+entry *
+(
+pt4 /
+pt3
+);
+
+const event =
+{
+type:
+"entry",
+side:
+"long",
+bar:
+1,
+price:
+entry,
+pt3,
+pt4
+};
+
+const opts =
+{
+slPctOfX:
+50,
+riskUsd:
+1,
+tp1X:
+1,
+tp2X:
+1.25,
+tp3X:
+1.44,
+trailSl:
+false
+};
+
+const beCandles =
+[
+c(
+1,
+100,
+100,
+100,
+100
+),
+c(
+2,
+entry,
+entry,
+entry -
+0.1,
+entry
+),
+c(
+3,
+entry,
+tp1 +
+1,
+sl -
+0.5,
+sl
+)
+];
+
+const openCandles =
+[
+c(
+1,
+100,
+100,
+100,
+100
+),
+c(
+2,
+entry,
+entry,
+entry -
+0.1,
+entry
+),
+c(
+3,
+entry,
+tp1 +
+1,
+entry -
+0.1,
+tp1
+)
+];
+
+const beTrade =
+resolvePartialTpTrade(
+beCandles,
+event,
+opts
+);
+assert.equal(
+beTrade.status,
+"closed"
+);
+assert.ok(
+Math.abs(
+beTrade.netUsd
+) <
+1e-9
+);
+
+const beStats =
+computePartialTpTradeStats(
+beCandles,
+[
+event
+],
+opts
+);
+assert.equal(
+beStats.longWins,
+0
+);
+assert.equal(
+beStats.longLosses,
+0
+);
+assert.equal(
+beStats.profitUsd,
+0
+);
+assert.equal(
+beStats.lossUsd,
+0
+);
+assert.equal(
+beStats.netUsd,
+0
+);
+
+const openStats =
+computePartialTpTradeStats(
+openCandles,
+[
+event
+],
+opts
+);
+assert.equal(
+openStats.longOpen,
+1
+);
+assert.equal(
+openStats.longWins,
+0
+);
+assert.equal(
+openStats.profitUsd,
+0
+);
+assert.equal(
+openStats.lossUsd,
+0
+);
+
+}
+);
+
+test(
+"partial USD uses log RR vs initial SL (like position plaque)",
+()=>{
+
+const entry =
+110;
+const pt3 =
+100;
+const pt4 =
+110;
+const sl =
+Math.sqrt(
+pt4 *
+pt3
+);
+const tp =
+entry *
+(
+pt4 /
+pt3
+);
+const logRisk =
+Math.abs(
+Math.log(
+entry /
+sl
+)
+);
+const logReward =
+Math.abs(
+Math.log(
+tp /
+entry
+)
+);
+const expectedFull =
+1 *
+(
+logReward /
+logRisk
+);
+
+const candles =
+[
+c(
+1,
+100,
+100,
+100,
+100
+),
+c(
+2,
+entry,
+entry,
+entry -
+0.1,
+entry
+),
+c(
+3,
+entry,
+tp +
+1,
+entry -
+0.1,
+tp
+)
+];
+
+const trade =
+resolvePartialTpTrade(
+candles,
+{
+type:
+"entry",
+side:
+"long",
+bar:
+1,
+price:
+entry,
+pt3,
+pt4
+},
+{
+slPctOfX:
+50,
+riskUsd:
+1,
+tp1X:
+1,
+tp2X:
+1,
+tp3X:
+1,
+trailSl:
+false
+}
+);
+
+assert.equal(
+trade.status,
+"closed"
+);
+assert.equal(
+trade.tpsHit,
+3
+);
+assert.ok(
+Math.abs(
+trade.profitUsd -
+expectedFull
+) <
+1e-9
+);
+assert.equal(
+trade.lossUsd,
+0
+);
+
+}
+);
