@@ -143,7 +143,8 @@ redraw,
 saveToolDefaults,
 saveGlobalStyle,
 baseDefaultStyle,
-getDesktopEdit
+getDesktopEdit,
+deleteSelected
 };
 }
 
@@ -180,7 +181,10 @@ delegate.baseDefaultStyle ||
 baseDefaultStyle,
 getDesktopEdit:
 delegate.getDesktopEdit ||
-getDesktopEdit
+getDesktopEdit,
+deleteSelected:
+delegate.deleteSelected ||
+deleteSelected
 };
 
 }
@@ -4170,7 +4174,7 @@ deleteOneBtn?.addEventListener("click", e=>{
 
 e.stopPropagation();
 e.preventDefault();
-deleteSelected();
+styleCtx().deleteSelected?.();
 
 });
 

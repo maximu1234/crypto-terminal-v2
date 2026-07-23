@@ -14,11 +14,6 @@ applyDesktopMenuBarTrayPreference
 } from "./desktop-menu-bar-tray.js?v=9";
 
 import {
-isScreenerPatternEnabled,
-setScreenerPatternEnabled
-} from "./screener-pattern-prefs.js?v=1";
-
-import {
 ALERT_NOTIFY_MODE_LABELS,
 ALERT_NOTIFY_MODES,
 ALERT_TOAST_DURATION_OPTIONS_SEC,
@@ -90,21 +85,6 @@ input
 }catch{
 /* ignore */
 }
-
-}
-
-function syncPatternToggle(
-input
-){
-
-if(
-!input
-){
-return;
-}
-
-input.checked =
-isScreenerPatternEnabled();
 
 }
 
@@ -251,11 +231,6 @@ window.cryptoTerminalDesktop?.platform ===
 host.innerHTML =
 `
 ${trayBlock}
-<p class="app-settings-panel-lead app-settings-panel-lead--spaced">Скринер.</p>
-<label class="app-settings-toggle-row">
-<input type="checkbox" class="app-settings-toggle-input" id="app-settings-screener-pattern-12" />
-<span class="app-settings-toggle-label">Показывать Паттерн 1-2 1-2 в Скринере</span>
-</label>
 <p class="app-settings-panel-lead app-settings-panel-lead--spaced">Алерты.</p>
 <label class="app-settings-field-row" for="app-settings-alert-notify-mode">
 <span class="app-settings-field-label">Канал уведомлений</span>
@@ -275,10 +250,6 @@ const launchAgentInput =
 host.querySelector(
 "#app-settings-launch-agent-login"
 );
-const patternInput =
-host.querySelector(
-"#app-settings-screener-pattern-12"
-);
 const alertNotifyModeSelect =
 host.querySelector(
 "#app-settings-alert-notify-mode"
@@ -296,9 +267,6 @@ launchAgentInput
 );
 void hydrateLaunchAgentFromMain(
 launchAgentInput
-);
-syncPatternToggle(
-patternInput
 );
 syncAlertNotifyMode(
 alertNotifyModeSelect
@@ -383,17 +351,6 @@ launchAgentInput
 }
 );
 
-patternInput?.addEventListener(
-"change",
-()=>{
-
-setScreenerPatternEnabled(
-!!patternInput?.checked
-);
-
-}
-);
-
 alertNotifyModeSelect?.addEventListener(
 "change",
 ()=>{
@@ -433,9 +390,6 @@ launchAgentInput
 );
 void hydrateLaunchAgentFromMain(
 launchAgentInput
-);
-syncPatternToggle(
-patternInput
 );
 syncAlertNotifyMode(
 alertNotifyModeSelect

@@ -107,7 +107,7 @@ return `
 ${CURSOR_TOOL_ICON_SVG}
 </button>
 
-<button type="button" class="${btnClass}" data-draw-tool="trendline" title="Trendline (R)">
+<button type="button" class="${btnClass}" data-draw-tool="trendline" title="Trendline (J)">
 ${TRENDLINE_ICON_SVG}
 </button>
 
@@ -115,7 +115,7 @@ ${TRENDLINE_ICON_SVG}
 ${ARROW_ICON_SVG}
 </button>
 
-<button type="button" class="${btnClass}" data-draw-tool="hray" title="Horizontal Ray">
+<button type="button" class="${btnClass}" data-draw-tool="hray" title="Horizontal Ray (H)">
 ${HRAY_ICON_SVG}
 </button>
 
@@ -123,7 +123,7 @@ ${HRAY_ICON_SVG}
 ${CHANNEL_ICON_SVG}
 </button>
 
-<button type="button" class="${btnClass}" data-draw-tool="brush" title="Кисть">
+<button type="button" class="${btnClass}" data-draw-tool="brush" title="Кисть (B)">
 ${BRUSH_ICON_SVG}
 </button>
 
@@ -131,7 +131,7 @@ ${BRUSH_ICON_SVG}
 ${FIB_ICON_SVG}
 </button>
 
-<button type="button" class="${btnClass}" data-draw-tool="rectangle" title="Rectangle">
+<button type="button" class="${btnClass}" data-draw-tool="rectangle" title="Rectangle (R)">
 ${RECTANGLE_ICON_SVG}
 </button>
 

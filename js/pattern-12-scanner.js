@@ -1,6 +1,7 @@
 /**
- * Эксперимент: фоновый поиск паттерна 1-2 1-2 (дефолтные настройки).
- * Не трогает индикатор на графике — только читает pattern-12-math.
+ * Эксперимент: фоновый поиск паттерна 1-2 1-2.
+ * Настройки индикатора — снимок из Терминала (`chart_indicators_v1`),
+ * не prefs Скрипта. На график индикатор не пишет — только pattern-12-math.
  */
 import {
 loadMarketHistory,
@@ -9,9 +10,15 @@ buildMarketLists
 } from "./market-api.js?v=2";
 
 import {
+PATTERN_12_ID,
 computePattern12Scene,
-defaultPattern12Settings
+defaultPattern12Settings,
+normalizePattern12Settings
 } from "./indicators/pattern-12-math.js?v=4";
+
+/** Совпадает с DEFAULT_STORAGE_KEY в chart-indicators.js (Терминал / Монеты). */
+export const TERMINAL_INDICATORS_STORAGE_KEY =
+"chart_indicators_v1";
 
 export const PATTERN_SCAN_LOOKBACK_BARS =
 30;
@@ -188,6 +195,50 @@ normalized
 const PATTERN_SETTINGS =
 defaultPattern12Settings();
 
+/**
+ * Снимок настроек Pattern 1-2, как на Терминале (меню индикаторов).
+ * @returns {ReturnType<typeof defaultPattern12Settings>}
+ */
+export function readTerminalPattern12Settings(){
+
+try{
+const raw =
+localStorage.getItem(
+TERMINAL_INDICATORS_STORAGE_KEY
+);
+
+if(
+!raw
+){
+return defaultPattern12Settings();
+}
+
+const prefs =
+JSON.parse(
+raw
+);
+const stored =
+prefs &&
+typeof prefs ===
+"object"
+? prefs[
+`settings_${PATTERN_12_ID}`
+]
+: null;
+
+return normalizePattern12Settings(
+stored &&
+typeof stored ===
+"object"
+? stored
+: defaultPattern12Settings()
+);
+}catch{
+return defaultPattern12Settings();
+}
+
+}
+
 const SCAN_CONCURRENCY =
 3;
 
@@ -210,16 +261,23 @@ ms
 }
 
 function scanSettingsForSideFilter(
-sideFilter
+sideFilter,
+baseSettings =
+PATTERN_SETTINGS
 ){
 
 const mode =
 normalizePatternScanSideFilter(
 sideFilter
 );
+const base =
+normalizePattern12Settings(
+baseSettings ||
+PATTERN_SETTINGS
+);
 
 return {
-...PATTERN_SETTINGS,
+...base,
 patternMode:
 mode ===
 "both"
@@ -314,7 +372,9 @@ candles,
 lookbackBars =
 PATTERN_SCAN_LOOKBACK_BARS,
 sideFilter =
-"both"
+"both",
+patternSettings =
+null
 ){
 
 if(
@@ -336,7 +396,8 @@ const scene =
 computePattern12Scene(
 candles,
 scanSettingsForSideFilter(
-normalizedSideFilter
+normalizedSideFilter,
+patternSettings
 )
 );
 const minBar =
@@ -408,14 +469,17 @@ return hits;
 export function findLatestPattern12InLookback(
 candles,
 lookbackBars,
-sideFilter
+sideFilter,
+patternSettings =
+null
 ){
 
 const hits =
 findPattern12HitsInLookback(
 candles,
 lookbackBars,
-sideFilter
+sideFilter,
+patternSettings
 );
 
 if(
@@ -503,6 +567,14 @@ options.lookbackBars
 const sideFilter =
 normalizePatternScanSideFilter(
 options.sideFilter
+);
+const patternSettingsSnapshot =
+normalizePattern12Settings(
+options.patternSettings &&
+typeof options.patternSettings ===
+"object"
+? options.patternSettings
+: readTerminalPattern12Settings()
 );
 
 onProgress?.(
@@ -784,7 +856,8 @@ const hits =
 findPattern12HitsInLookback(
 candles,
 lookbackBars,
-taskSideFilter
+taskSideFilter,
+patternSettingsSnapshot
 );
 
 for(

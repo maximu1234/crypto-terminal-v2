@@ -23,7 +23,7 @@ PATTERN_SCAN_TF_LABELS,
 PATTERN_SCAN_DEPTH_OPTIONS,
 normalizePatternScanSideFilter,
 matchesPatternScanSideFilter
-} from "./pattern-12-scanner.js?v=17";
+} from "./pattern-12-scanner.js?v=18";
 
 import {
 loadScriptPageState,

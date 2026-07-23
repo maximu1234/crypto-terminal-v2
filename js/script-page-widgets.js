@@ -36,7 +36,7 @@ isScreenerWidgetCurrent as isWidgetCurrentGuard
 import {
 mountScreenerWidgetZoom,
 refreshZoomFavoriteUi
-} from "./screener-widget-zoom.js?v=15";
+} from "./screener-widget-zoom.js?v=16";
 
 import {
 getWidgetFlagHtml,
@@ -48,7 +48,7 @@ bindWidgetFlagGlobalListeners
 import {
 PATTERN_SCAN_TF_LABELS,
 PATTERN_SCAN_SIDE_LABELS
-} from "./pattern-12-scanner.js?v=17";
+} from "./pattern-12-scanner.js?v=18";
 
 let patternOverlayApi =
 null;

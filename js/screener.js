@@ -16,11 +16,6 @@ isScreenerWidgetCurrent as isScreenerWidgetCurrentGuard
 } from "./screener-widget-guard.js?v=1";
 
 import {
-isScreenerPatternEnabled,
-SCREENER_PATTERN_PREF_EVENT
-} from "./screener-pattern-prefs.js?v=1";
-
-import {
 createScreenerChart,
 createRSIChart,
 applyChartPriceFormat,
@@ -53,7 +48,7 @@ createTickerUiBatcher
 
 import {
 mountReleaseMarker
-} from "./release-marker.js?v=47";
+} from "./release-marker.js?v=48";
 
 import {
 saveScreenerState,
@@ -96,7 +91,7 @@ import {
 mountScreenerWidgetZoom,
 refreshZoomFavoriteUi,
 syncWidgetZoomInversion
-} from "./screener-widget-zoom.js?v=15";
+} from "./screener-widget-zoom.js?v=16";
 
 const gridEl =
 document.getElementById("screener-grid");
@@ -527,105 +522,6 @@ const tickerMap = new Map();
 let activeWidgets = [];
 let renderToken = 0;
 let highlightDismissListener = null;
-let screenerPatternOverlayApi =
-null;
-
-async function ensureScreenerPatternOverlayApi(){
-
-if(
-!screenerPatternOverlayApi
-){
-screenerPatternOverlayApi =
-await import(
-"./screener-pattern-overlay.js?v=5"
-);
-}
-
-return screenerPatternOverlayApi;
-
-}
-
-async function mountWidgetPattern(
-widget
-){
-
-if(
-!isScreenerPatternEnabled() ||
-!isScreenerWidgetCurrent(
-widget
-)
-){
-return;
-}
-
-const api =
-await ensureScreenerPatternOverlayApi();
-
-if(
-!isScreenerWidgetCurrent(
-widget
-)
-){
-return;
-}
-
-api.mountScreenerPatternOverlay(
-widget
-);
-
-}
-
-function destroyWidgetPattern(
-widget
-){
-
-widget?.patternOverlayDestroy?.();
-
-}
-
-function updateWidgetPatternData(
-widget
-){
-
-if(
-!isScreenerWidgetCurrent(
-widget
-) ||
-!isScreenerPatternEnabled()
-){
-return;
-}
-
-try{
-widget?.patternOverlayRecompute?.();
-}catch{
-/* chart disposed during page change */
-}
-
-}
-
-async function applyScreenerPatternPref(
-enabled
-){
-
-if(
-enabled
-){
-await Promise.all(
-activeWidgets.map(
-widget=>
-mountWidgetPattern(
-widget
-)
-)
-);
-}else{
-activeWidgets.forEach(
-destroyWidgetPattern
-);
-}
-
-}
 
 function persistState(){
 
@@ -1271,10 +1167,6 @@ w
 
 w.unsubKline?.();
 
-destroyWidgetPattern(
-w
-);
-
 try{
 w.unlinkTimeScales?.();
 }catch{
@@ -1580,9 +1472,6 @@ updateWidgetRsiData(
 widget
 );
 
-updateWidgetPatternData(
-widget
-);
 
 }else{
 
@@ -1602,9 +1491,6 @@ widget
 if(
 isNewBar
 ){
-updateWidgetPatternData(
-widget
-);
 }
 
 }
@@ -1718,9 +1604,6 @@ updateWidgetRsiData(
 widget
 );
 
-updateWidgetPatternData(
-widget
-);
 
 }catch{
 return;
@@ -2057,8 +1940,6 @@ widget
 
 }catch{
 return 0;
-}finally{
-widget.patternOverlayRedraw?.();
 }
 
 }
@@ -2287,19 +2168,6 @@ widget
 );
 }
 );
-
-if(
-isScreenerPatternEnabled()
-){
-await Promise.all(
-activeWidgets.map(
-widget=>
-mountWidgetPattern(
-widget
-)
-)
-);
-}
 
 const chartLoads =
 activeWidgets.map(w=>
@@ -3017,15 +2885,6 @@ EXCHANGE_CHANGED_EVENT,
 favorites =
 loadFavoritesGroups();
 void reloadScreenerMarketData();
-}
-);
-
-window.addEventListener(
-SCREENER_PATTERN_PREF_EVENT,
-e=>{
-void applyScreenerPatternPref(
-!!e.detail?.enabled
-);
 }
 );
 

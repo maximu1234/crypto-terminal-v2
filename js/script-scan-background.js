@@ -9,7 +9,7 @@ PATTERN_SCAN_ALL_TFS,
 filterPatternScanRowsBySide,
 normalizePatternScanSideFilter,
 loadPatternScanSymbols
-} from "./pattern-12-scanner.js?v=17";
+} from "./pattern-12-scanner.js?v=18";
 
 import {
 loadScriptPageState,

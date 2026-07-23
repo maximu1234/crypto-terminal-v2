@@ -227,7 +227,7 @@ Object.freeze({
 "chart-page.js":
 6,
 "terminal.js":
-391,
+392,
 "terminal-multi-chart.js":
 11,
 "terminal-screener-chart-pane.js":
@@ -251,7 +251,7 @@ Object.freeze({
 "indicators/pattern-12-paint.js":
 3,
 "pattern-12-scanner.js":
-17,
+18,
 "pattern-scan-results.js":
 1,
 "script-page.js":
@@ -269,7 +269,7 @@ Object.freeze({
 "script-favorites-list.js":
 2,
 "algo-trading.js":
-80,
+81,
 "algo-trading-page-boot.js":
 3,
 "algo-trading-list.js":
@@ -396,10 +396,8 @@ Object.freeze({
 "watchlist.js":
 96,
 "screener.js":
-93,
+94,
 "screener-widget-guard.js":
-1,
-"screener-pattern-prefs.js":
 1,
 "scalping-dom/prefs.js":
 4,
@@ -430,9 +428,9 @@ Object.freeze({
 "screener-pattern-overlay.js":
 5,
 "screener-widget-zoom.js":
-15,
+16,
 "release-marker.js":
-47,
+48,
 "focus-blur-after-pick.js":
 3,
 "site-boot.js":
@@ -478,7 +476,7 @@ Object.freeze({
 "drawings.js":
 255,
 "drawings/init.js":
-171,
+172,
 "drawings/draw-prefs.js":
 1,
 "drawings/draw-edit-desktop.js":
@@ -488,7 +486,7 @@ Object.freeze({
 "drawings/drawings-persist.js":
 9,
 "drawings/draw-style-bar.js":
-28,
+29,
 "drawings/draw-templates.js":
 8,
 "drawings/draw-alerts-chart.js":
@@ -542,7 +540,7 @@ Object.freeze({
 "draw-color-palette.js":
 6,
 "draw-ui-shared.js":
-32,
+33,
 "draw-toolbar-icon-data.js":
 29,
 "draw-tools-visible.js":
@@ -603,7 +601,7 @@ Object.freeze({
 "app-settings-window.js":
 12,
 "app-settings-system-panel.js":
-9,
+10,
 "app-settings-secret.js":
 7,
 "telegram-settings-panel.js":

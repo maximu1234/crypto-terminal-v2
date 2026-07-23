@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import "./helpers/stub-browser.mjs";
 
 const {
   normalizePatternScanSideFilter,
@@ -7,6 +8,8 @@ const {
   filterPatternScanRowsBySide,
   findPattern12HitsInLookback,
   findLatestPattern12InLookback,
+  readTerminalPattern12Settings,
+  TERMINAL_INDICATORS_STORAGE_KEY,
   PATTERN_SCAN_DEFAULT_LOOKBACK
 } = await import("../js/pattern-12-scanner.js");
 
@@ -46,4 +49,46 @@ test("findPattern12HitsInLookback returns [] for short series", () => {
 test("findLatestPattern12InLookback is null-safe", () => {
   assert.equal(findLatestPattern12InLookback(null, 20), null);
   assert.equal(findLatestPattern12InLookback([], 20), null);
+});
+
+test("readTerminalPattern12Settings snapshots chart_indicators_v1", () => {
+  const prev = globalThis.localStorage;
+  const store = new Map();
+  globalThis.localStorage = {
+    getItem: (k) => (store.has(k) ? store.get(k) : null),
+    setItem: (k, v) => {
+      store.set(k, String(v));
+    },
+    removeItem: (k) => {
+      store.delete(k);
+    }
+  };
+
+  try {
+    const fallback = readTerminalPattern12Settings();
+    assert.equal(fallback.lngRsiLength, 14);
+
+    store.set(
+      TERMINAL_INDICATORS_STORAGE_KEY,
+      JSON.stringify({
+        "settings_pattern-12": {
+          lngRsiLength: 21,
+          shtRsiLength: 9,
+          decLowsBeforePt1: 2
+        }
+      })
+    );
+
+    const snap = readTerminalPattern12Settings();
+    assert.equal(snap.lngRsiLength, 21);
+    assert.equal(snap.shtRsiLength, 9);
+    assert.equal(snap.decLowsBeforePt1, 2);
+    assert.equal(snap.lngMicRsiLength, 4);
+  } finally {
+    if (prev === undefined) {
+      delete globalThis.localStorage;
+    } else {
+      globalThis.localStorage = prev;
+    }
+  }
 });

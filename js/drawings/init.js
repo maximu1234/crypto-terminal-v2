@@ -5,7 +5,7 @@ formatDrawColor
 
 import {
 TRASH_ICON_SVG
-} from "../draw-ui-shared.js?v=32";
+} from "../draw-ui-shared.js?v=33";
 
 import {
 closeAllWidgetDrawToolsMenus
@@ -156,7 +156,7 @@ createDrawingsPersist
 
 import {
 createDrawStyleBar
-} from "./draw-style-bar.js?v=28";
+} from "./draw-style-bar.js?v=29";
 
 import {
 createDrawAlertsChart
@@ -3795,7 +3795,17 @@ tag !== "TEXTAREA" &&
 ){
 
 e.preventDefault();
+const delegatedDelete =
+getStyleDelegate?.()?.deleteSelected;
+
+if(
+typeof delegatedDelete ===
+"function"
+){
+delegatedDelete();
+}else{
 deleteSelected();
+}
 }
 
 }
@@ -5055,7 +5065,8 @@ saveDrawings,
 redraw,
 saveToolDefaults,
 saveGlobalStyle,
-baseDefaultStyle
+baseDefaultStyle,
+deleteSelected
 };
 
 },

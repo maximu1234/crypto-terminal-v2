@@ -27,11 +27,6 @@ import {
 subscribeKline
 } from "./market-ws.js?v=1";
 
-import {
-isScreenerPatternEnabled,
-SCREENER_PATTERN_PREF_EVENT
-} from "./screener-pattern-prefs.js?v=1";
-
 let zoomPatternOverlayApi =
 null;
 
@@ -53,8 +48,9 @@ return zoomPatternOverlayApi;
 function zoomPatternOverlayEnabled(){
 
 return (
-zoomMountOptions?.isPatternOverlayEnabled?.() ??
-isScreenerPatternEnabled()
+typeof zoomMountOptions?.isPatternOverlayEnabled ===
+"function" &&
+!!zoomMountOptions.isPatternOverlayEnabled()
 );
 
 }
@@ -167,40 +163,6 @@ state.patternOverlayRecompute?.();
 }
 
 }
-
-function applyZoomPatternPref(
-enabled
-){
-
-if(
-!zoomState ||
-zoomState.disposed
-){
-return;
-}
-
-if(
-enabled
-){
-void mountZoomPattern(
-zoomState
-);
-}else{
-destroyZoomPattern(
-zoomState
-);
-}
-
-}
-
-window.addEventListener(
-SCREENER_PATTERN_PREF_EVENT,
-e=>{
-applyZoomPatternPref(
-!!e.detail?.enabled
-);
-}
-);
 
 function applyZoomInversion(
 state,
