@@ -1,5 +1,6 @@
 /**
- * Main-process tray feed (macOS): positions/PnL/balance without renderer.
+ * Main-process tray feed (macOS menu bar / Windows tray): positions/PnL/balance
+ * without renderer.
  *
  * PnL must match Terminal «Позиции»: mark-based unrealised (not stale stream
  * exchange pnl). Prefer REST positions for fresh markPrice; fall back to stream.
@@ -431,7 +432,9 @@ publish
 
 if(
 process.platform !==
-"darwin"
+"darwin" &&
+process.platform !==
+"win32"
 ){
 return;
 }
