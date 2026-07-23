@@ -147,3 +147,31 @@ null
 );
 }
 );
+
+test(
+"St1 take-profit uses linear dollar RR (matches chart)",
+()=>{
+const longTp =
+executor.computeAlgoTakeProfit(
+"long",
+110,
+105,
+2
+);
+assert.equal(
+longTp,
+120
+);
+const shortTp =
+executor.computeAlgoTakeProfit(
+"short",
+110,
+115,
+2
+);
+assert.equal(
+shortTp,
+100
+);
+}
+);

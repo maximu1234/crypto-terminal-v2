@@ -190,6 +190,19 @@ cursor:default;
 color:#a3a6ad;
 }
 
+.chart-indicator-legend-count{
+font-weight:600;
+margin-left:0.15em;
+}
+
+.chart-indicator-legend-count--long{
+color:#84cc16;
+}
+
+.chart-indicator-legend-count--short{
+color:#f87171;
+}
+
 .chart-indicator-settings-backdrop{
 position:fixed;
 inset:0;

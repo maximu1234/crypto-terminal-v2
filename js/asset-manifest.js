@@ -243,9 +243,9 @@ Object.freeze({
 "chart-visible-range.js":
 3,
 "chart-indicators.js":
-41,
+42,
 "indicators/pattern-12.js":
-7,
+8,
 "indicators/pattern-12-math.js":
 4,
 "indicators/pattern-12-paint.js":
@@ -279,7 +279,7 @@ Object.freeze({
 "algo-trading/pattern-12-math.js":
 5,
 "algo-trading/pattern-12.js":
-2,
+3,
 "algo-trading/pattern-12-paint.js":
 1,
 "algo-trading/pattern-stats.js":
@@ -295,13 +295,13 @@ Object.freeze({
 "algo-trading/pattern-entry-overlay.js":
 12,
 "algo-trading/pattern-entry-positions.js":
-11,
+14,
 "algo-trading/pattern-analysis.js":
 15,
 "algo-trading/pattern-trade-stats-partial.js":
-13,
+14,
 "algo-trading/pattern-trade-stats.js":
-8,
+10,
 
 "algo-trading/pattern-12-settings.js":
 2,
@@ -322,9 +322,9 @@ Object.freeze({
 "algo-trading/bot-alert-bridge.js":
 6,
 "algo-trading/bot-strategy-prefs.js":
-9,
+11,
 "algo-trading/bot-strategy-ui.js":
-30,
+32,
 "algo-trading/trade/format.js":
 2,
 "algo-trading/trade/positions-cache.js":
@@ -430,7 +430,7 @@ Object.freeze({
 "screener-widget-zoom.js":
 16,
 "release-marker.js":
-48,
+49,
 "focus-blur-after-pick.js":
 3,
 "site-boot.js":
@@ -516,9 +516,9 @@ Object.freeze({
 "drawings/fib-portals.js":
 3,
 "drawings/position.js":
-6,
+9,
 "drawings/position-draw.js":
-2,
+3,
 "drawings/utils.js":
 1,
 "drawings/arrow-rect.js":
@@ -693,13 +693,13 @@ Object.freeze({
 "script-page.css":
 19,
 "algo-trading.css":
-80,
+81,
 "algo-trading-book-panel.css":
 4,
 "algo-trading-chart-overlay.css":
 2,
 "chart-indicators.css":
-21,
+22,
 "pattern-12-scanner.css":
 1,
 "trade-exchange-settings.css":

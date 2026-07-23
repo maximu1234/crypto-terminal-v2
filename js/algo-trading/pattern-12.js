@@ -1,6 +1,7 @@
 /**
  * КОПИЯ для модуля АлгоТрейдинг.
- * Оригинал: js/indicators/pattern-12.js — НЕ ПРАВИТЬ оригинал.
+ * Оригинал: js/indicators/pattern-12.js — НЕ ПРАВИТЬ оригинал
+ * (текущий оригинал заморожен; нужен код → только копия).
  * Паттерн 1-2, 1-2 — overlay на графике Алго (math = копия, как у бота).
  */
 import {
@@ -166,6 +167,62 @@ computePattern12Scene(
 candles,
 settings
 );
+
+}
+
+/**
+ * Счётчики завершённых паттернов (pt4) для легенды.
+ * @returns {{ long: number, short: number }}
+ */
+function countPatternSides(){
+
+const dots =
+Array.isArray(
+scene?.pt4Dots
+)
+? scene.pt4Dots
+: [];
+let long =
+0;
+let short =
+0;
+
+for(
+const dot of dots
+){
+
+if(
+dot?.side ===
+"long"
+){
+long +=
+1;
+}else if(
+dot?.side ===
+"short"
+){
+short +=
+1;
+}
+
+}
+
+return {
+long,
+short
+};
+
+}
+
+function getLegendLabel(){
+
+const {
+long,
+short
+} =
+countPatternSides();
+
+return `Паттерн 1-2 <span class="chart-indicator-legend-count chart-indicator-legend-count--long">${long}</span> <span class="chart-indicator-legend-count chart-indicator-legend-count--short">${short}</span>`;
 
 }
 
@@ -753,6 +810,7 @@ defaultEnabled:
 false,
 supportsSettingsDialog:
 true,
+getLegendLabel,
 populateSettingsDialog,
 enable,
 disable,

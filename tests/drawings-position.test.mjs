@@ -97,7 +97,7 @@ test("getPositionHandleScreens returns entry, TP and SL handles", () => {
   );
 });
 
-test("position metrics use log RR (same as fib/algo)", () => {
+test("position metrics use log RR; sizing $/% use linear exchange PnL", () => {
   const shape = {
     ...position(),
     riskUsd: 100
@@ -114,22 +114,44 @@ test("position metrics use log RR (same as fib/algo)", () => {
   const sizing = positionSizingFromShape(shape);
   assert.equal(sizing.riskUsd, 100);
   assert.ok(Number.isFinite(sizing.volume));
-  // volume still from linear stop % = 20
+  // volume from linear stop % = 20
   assert.equal(sizing.volume, Math.round((100 * 100) / 20));
-  assert.ok(Math.abs(sizing.rrNum - tpPct / slPct) < 1e-9);
+  // TP$ = volume × linear TP% / 100 = 500 × 20% = 100
+  assert.equal(sizing.profitUsd, sizing.volume * 0.2);
+  assert.equal(sizing.tpPct, 20);
+  assert.equal(sizing.slPct, 20);
+  assert.ok(Math.abs(sizing.rrNum - 1) < 1e-9);
 
-  // algo-style 1к2: entry 110, sl 105, tp = 110*(110/105)^2
+  // algo-style linear 1к2: entry 110, sl 105, tp = 110 + 2*(110-105)
   const entry = 110;
   const sl = 105;
-  const tp = entry * Math.pow(entry / sl, 2);
-  const logShape = {
+  const tp = entry + 2 * (entry - sl);
+  const linShape = {
     type: "long",
     p1: { time: 1, price: entry },
     p2: { time: 2, price: entry },
     tpPrice: tp,
-    slPrice: sl
+    slPrice: sl,
+    riskUsd: 10
   };
-  assert.equal(positionMetrics(logShape).rr, "2.00");
+  const linSizing = positionSizingFromShape(linShape);
+  assert.ok(Math.abs(linSizing.rrNum - 2) < 1e-9);
+  assert.ok(Math.abs(linSizing.profitUsd - 20) < 1e-9);
+
+  // St2/St3: ⅓ + ⅓ + ⅓ на трёх тейках (линейно), не 100% до дальнего TP
+  const partialShape = {
+    type: "long",
+    p1: { time: 1, price: 100 },
+    p2: { time: 2, price: 100 },
+    tpPrice: 115,
+    slPrice: 95,
+    riskUsd: 10,
+    partialExitPrices: [105, 110, 115]
+  };
+  const partSizing = positionSizingFromShape(partialShape);
+  // volume = 10 / 5% = 200; Σ ⅓×200×(5%+10%+15%) = 20
+  assert.ok(Math.abs(partSizing.profitUsd - 20) < 1e-9);
+  assert.ok(Math.abs(partSizing.rrNum - 2) < 1e-9);
 
   assert.deepEqual(
     positionMetrics({

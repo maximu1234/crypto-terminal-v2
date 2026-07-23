@@ -31,7 +31,9 @@ getWatchlistPlan,
 enabledSides,
 normalizeSt1,
 normalizeSt2,
-normalizeSt3
+normalizeSt3,
+listManualRefreshStrategyIds,
+sideToFlagId
 } =
 require(
 "./algo-bot-store.cjs"
@@ -1108,23 +1110,61 @@ pushStatus(
 buildStatusSnapshot()
 );
 
-const prefs =
+const shellPrefs =
 getStrategyPrefs(
-runningStrategyId
+tradingMode ===
+"manual"
+? "st1"
+: runningStrategyId
 );
+const strategyIds =
+tradingMode ===
+"manual"
+? listManualRefreshStrategyIds(
+shellPrefs.manualRefreshStrategies
+)
+: [
+runningStrategyId
+];
 const sidesToRefresh =
-prefs.useFavorites
+shellPrefs.useFavorites
 ? [
-prefs.side ||
+shellPrefs.side ||
 "long"
 ]
 : enabledSides(
-prefs.sides
+shellPrefs.sides
 );
+
+/** @type {Map<string, Map<string, number>>} */
+const mergedByFlag =
+new Map();
 let result =
 null;
 let totalHits =
 0;
+let lastRoot =
+null;
+let okAny =
+false;
+let busy =
+false;
+let failMessage =
+"";
+
+for(
+const strategyId of strategyIds
+){
+
+const stratPrefs =
+getStrategyPrefs(
+strategyId
+);
+const engine =
+getEnginePrefs(
+stratPrefs,
+strategyId
+);
 
 for(
 const side of sidesToRefresh
@@ -1132,46 +1172,176 @@ const side of sidesToRefresh
 result =
 await watchlistRefresh.refreshWatchlistByWinRate(
 {
-strategyId:
-runningStrategyId,
+strategyId,
 exitProfile:
-getEnginePrefs(
-prefs,
-runningStrategyId
-).exitProfile,
+engine.exitProfile,
 side,
 tf:
-prefs.tf,
+shellPrefs.tf,
 minWinRate:
-prefs.minWinRate,
+shellPrefs.minWinRate,
 timeoutBars:
-prefs.timeoutBars,
+shellPrefs.timeoutBars,
 slPct:
-prefs.slPct,
+shellPrefs.slPct,
 tpRr:
-prefs.tpRr ||
+shellPrefs.tpRr ||
+stratPrefs.tpRr ||
 2,
+refreshStatsMode:
+shellPrefs.refreshStatsMode,
 patternSettings:
-readPattern12Settings()
+readPattern12Settings(),
+skipWrite:
+true
 }
 );
 
 if(
-result?.ok
+result?.busy
 ){
+busy =
+true;
+break;
+}
+
+if(
+!result?.ok
+){
+failMessage =
+result?.message ||
+"refresh failed";
+break;
+}
+
+okAny =
+true;
+const flagId =
+result.flagId ||
+sideToFlagId(
+side
+);
+let bucket =
+mergedByFlag.get(
+flagId
+);
+
+if(
+!bucket
+){
+bucket =
+new Map();
+mergedByFlag.set(
+flagId,
+bucket
+);
+}
+
+const rows =
+Array.isArray(
+result.hitRows
+)
+? result.hitRows
+: (
+result.symbols ||
+[]
+).map(
+symbol=>
+({
+symbol,
+winRate:
+0
+})
+);
+
+for(
+const row of rows
+){
+const symbol =
+String(
+row?.symbol ||
+""
+).trim();
+
+if(
+!symbol
+){
+continue;
+}
+
+const wr =
+Number(
+row.winRate
+) ||
+0;
+const prev =
+bucket.get(
+symbol
+);
+
+if(
+prev ==
+null ||
+wr >
+prev
+){
+bucket.set(
+symbol,
+wr
+);
+}
+}
+
 totalHits +=
 Number(
 result.hits
 ) ||
 0;
-}else if(
-result?.busy
+}
+
+if(
+busy ||
+failMessage
 ){
 break;
-}else if(
-!result?.ok
+}
+}
+
+if(
+okAny &&
+!busy
 ){
-break;
+for(
+const [
+flagId,
+bucket
+] of mergedByFlag
+){
+const symbols =
+[
+...bucket.entries()
+].sort(
+(
+a,
+b
+)=>
+b[1] -
+a[1] ||
+a[0].localeCompare(
+b[0]
+)
+).map(
+([
+symbol
+])=>
+symbol
+);
+
+lastRoot =
+watchlistRefresh.writeWatchlistFlagSymbols(
+flagId,
+symbols
+);
 }
 }
 
@@ -1179,19 +1349,41 @@ lastWatchlistRefreshAt =
 Date.now();
 
 if(
-result?.ok
+okAny &&
+!busy &&
+!failMessage
 ){
 const plan =
 syncEngineWatchlist(
 runningStrategyId
 );
+const stratLabel =
+strategyIds.join(
+"+"
+);
 statusMessage =
-`Список обновлён: ${plan.symbols.length} тикеров (winrate > ${prefs.minWinRate}%, hits ${totalHits})`;
+`Список обновлён (${stratLabel}): ${plan.symbols.length} тикеров (winrate > ${shellPrefs.minWinRate}%, hits ${totalHits})`;
+result =
+{
+ok:
+true,
+root:
+lastRoot ||
+readTickerFlagsRoot(),
+hits:
+totalHits
+};
+}else if(
+busy
+){
+statusMessage =
+"Phase D: обновление уже выполняется";
 }else if(
 !result?.busy
 ){
 statusMessage =
-`Phase D ошибка: ${result?.message ||
+`Phase D ошибка: ${failMessage ||
+result?.message ||
 "refresh failed"}`;
 }
 
@@ -1201,11 +1393,17 @@ buildStatusSnapshot(
 watchlistRefresh:
 result,
 applyTickerFlags:
-!!result?.ok,
+!!(
+okAny &&
+!busy &&
+!failMessage
+),
 tickerFlagsRoot:
-result?.ok
+okAny &&
+!busy &&
+!failMessage
 ? (
-result.root ||
+lastRoot ||
 readTickerFlagsRoot()
 )
 : undefined
@@ -1213,7 +1411,7 @@ readTickerFlagsRoot()
 )
 );
 scheduleWatchlistRefresh(
-prefs
+shellPrefs
 );
 
 }

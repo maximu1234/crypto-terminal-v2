@@ -1,7 +1,7 @@
 /**
  * Позиции Long/Short в точках входа паттерна (АлгоТрейдинг).
- * Цены СЛ/ТП считаются в лог-шкале (как лог-фиба): отношения цен, не Δ$.
- * СЛ = доля лог-высоты X от pt4 к pt3; ТП St1 = RR в лог-риске.
+ * СЛ — в лог-шкале по X (pt3↔pt4).
+ * ТП St1 — линейный RR в $: «1 к 2» = риск$ × 2 прибыли.
  */
 import {
 STROKE,
@@ -10,7 +10,7 @@ POSITION_DEFAULT_WIDTH_BARS
 
 import {
 initialPositionTpSlPercent
-} from "../drawings/position.js?v=6";
+} from "../drawings/position.js?v=9";
 
 export const ALGO_PATTERN_ENTRY_FLAG =
 "algoPatternEntry";
@@ -258,8 +258,8 @@ n *
 }
 
 /**
- * ТП по RR в лог-шкале: |ln(entry)−ln(SL)| × tpRr от входа.
- * «1 к 2» → tpRr = 2.
+ * ТП по RR в $ (линейно): |TP−entry| = tpRr × |entry−SL|.
+ * «1 к 2» → при риске 1$ прибыль 2$ (как на бирже / плашке).
  *
  * @param {"long"|"short"} side
  * @param {number} entry
@@ -293,9 +293,8 @@ if(
 entryN >
 0
 ) ||
-!(
-sl >
-0
+!Number.isFinite(
+sl
 ) ||
 !Number.isFinite(
 rr
@@ -304,41 +303,31 @@ rr
 return null;
 }
 
-const lo =
-Math.min(
-entryN,
-sl
-);
-const hi =
-Math.max(
-entryN,
+const riskDist =
+Math.abs(
+entryN -
 sl
 );
 
 if(
 !(
-hi >
-lo
+riskDist >
+0
 )
 ){
 return null;
 }
 
-const riskRatio =
-hi /
-lo;
-const factor =
-Math.pow(
-riskRatio,
-rr
-);
+const move =
+riskDist *
+rr;
 
 return side ===
 "short"
-? entryN /
-factor
-: entryN *
-factor;
+? entryN -
+move
+: entryN +
+move;
 
 }
 
@@ -408,6 +397,96 @@ n *
 ) /
 100
 );
+}
+
+/**
+ * $ PnL как на бирже / плашке позиции при объёме под riskUsd на СЛ0:
+ * frac × riskUsd × |exit−entry| / |sl0−entry|.
+ *
+ * @param {number} entry
+ * @param {number} exitPrice
+ * @param {number} sl0
+ * @param {number} riskUsd
+ * @param {number} [frac]
+ * @returns {number}
+ */
+export function linearUsdFromRisk(
+entry,
+exitPrice,
+sl0,
+riskUsd,
+frac =
+1
+){
+
+const e =
+Number(
+entry
+);
+const x =
+Number(
+exitPrice
+);
+const sl =
+Number(
+sl0
+);
+const risk =
+Number(
+riskUsd
+);
+const f =
+Number(
+frac
+);
+
+if(
+!(
+e >
+0
+) ||
+!Number.isFinite(
+x
+) ||
+!Number.isFinite(
+sl
+) ||
+!Number.isFinite(
+risk
+) ||
+risk <=
+0 ||
+!Number.isFinite(
+f
+) ||
+f <=
+0
+){
+return NaN;
+}
+
+const riskDist =
+Math.abs(
+e -
+sl
+);
+
+if(
+!(
+riskDist >
+0
+)
+){
+return NaN;
+}
+
+return f *
+risk *
+Math.abs(
+x -
+e
+) /
+riskDist;
 
 }
 
@@ -516,6 +595,7 @@ slFromPattern
 
 let tpPrice =
 defaults.tpPrice;
+let partialExitPrices;
 const strategy =
 opts.strategy ===
 "partial-tp" ||
@@ -604,13 +684,6 @@ isY
 : opts.tp3X,
 1.44
 );
-// Высота позиции = самый дальний тейк (max множитель)
-const farMult =
-Math.max(
-m1,
-m2,
-m3
-);
 const tpBase =
 isY
 ? p2
@@ -623,25 +696,57 @@ const spanB =
 isY
 ? p2
 : p4;
-const logTp =
-computeLogExtensionPrice(
+const sideKey =
 type ===
 "short"
 ? "short"
-: "long",
+: "long";
+const levels =
+[
+m1,
+m2,
+m3
+].map(
+mult=>
+computeLogExtensionPrice(
+sideKey,
 tpBase,
 spanA,
 spanB,
-farMult
+mult
+)
+);
+const validLevels =
+levels.filter(
+p=>
+Number.isFinite(
+p
+)
 );
 
 if(
-Number.isFinite(
-logTp
-)
+validLevels.length
 ){
+const farTp =
+type ===
+"short"
+? Math.min(
+...validLevels
+)
+: Math.max(
+...validLevels
+);
+
 tpPrice =
-logTp;
+farTp;
+}
+
+if(
+validLevels.length ===
+3
+){
+partialExitPrices =
+validLevels;
 }
 }
 
@@ -652,7 +757,8 @@ bar,
 candle.time
 );
 
-return {
+const shape =
+{
 id:
 `algo-entry-${strategy}-${type}-${Number(event.setupBar) || bar}-${bar}`,
 createdAt:
@@ -682,6 +788,15 @@ ALGO_PATTERN_ENTRY_FLAG
 ]:
 true
 };
+
+if(
+partialExitPrices
+){
+shape.partialExitPrices =
+partialExitPrices;
+}
+
+return shape;
 
 }
 

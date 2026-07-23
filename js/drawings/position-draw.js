@@ -30,7 +30,7 @@ positionSizingFromShape,
 initialPositionTpSlPercent,
 clampPositionPrices as clampPositionPricesPure,
 formatPositionPrice
-} from "./position.js?v=6";
+} from "./position.js?v=9";
 
 /**
  * @param {{
@@ -922,6 +922,115 @@ ctx.restore();
 
 }
 
+/**
+ * Ст2/Ст3: горизонтальные уровни ТП1…ТПN внутри бокса позиции.
+ * Только если на shape есть partialExitPrices (алго), ручная позиция без изменений.
+ */
+function drawPartialTakeProfitTicks(
+ctx,
+shape,
+x1,
+x2,
+yEntry
+){
+
+const exits =
+Array.isArray(
+shape.partialExitPrices
+)
+? shape.partialExitPrices.map(
+Number
+).filter(
+p=>
+Number.isFinite(
+p
+) &&
+p >
+0
+)
+: [];
+
+if(
+exits.length <
+2
+){
+return;
+}
+
+ctx.save();
+ctx.strokeStyle =
+"rgba(134, 239, 172, 0.92)";
+ctx.fillStyle =
+"rgba(187, 247, 208, 0.95)";
+ctx.lineWidth =
+1;
+ctx.font =
+'600 9px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif';
+ctx.textAlign =
+"left";
+ctx.textBaseline =
+"middle";
+
+exits.forEach(
+(
+price,
+i
+)=>{
+
+const y =
+plotPriceToCoordinate(
+price
+);
+
+if(
+y ==
+null ||
+Math.abs(
+y -
+yEntry
+) <
+0.5
+){
+return;
+}
+
+ctx.setLineDash(
+[
+4,
+3
+]
+);
+ctx.beginPath();
+ctx.moveTo(
+x1,
+y
+);
+ctx.lineTo(
+x2,
+y
+);
+ctx.stroke();
+
+ctx.setLineDash(
+[]
+);
+ctx.fillText(
+String(
+i +
+1
+),
+x1 +
+3,
+y
+);
+
+}
+);
+
+ctx.restore();
+
+}
+
 function drawPosition(ctx, shape, showLabels){
 
 const box =
@@ -1000,6 +1109,14 @@ ctx.beginPath();
 ctx.moveTo(x1, yEntry);
 ctx.lineTo(x2, yEntry);
 ctx.stroke();
+
+drawPartialTakeProfitTicks(
+ctx,
+shape,
+x1,
+x2,
+yEntry
+);
 
 ctx.restore();
 

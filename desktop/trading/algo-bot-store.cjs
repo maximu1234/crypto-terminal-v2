@@ -71,7 +71,15 @@ refreshMinutes:
 minWinRate:
 70,
 refreshStatsMode:
-"direct"
+"direct",
+manualRefreshStrategies:{
+st1:
+true,
+st2:
+false,
+st3:
+false
+}
 };
 
 const DEFAULT_PARTIAL =
@@ -97,6 +105,100 @@ return raw ===
 "real"
 ? "real"
 : "direct";
+
+}
+
+/**
+ * Какая стратегия участвует в автоскане списка (только ручной режим).
+ * Ровно одна: Ст1 | Ст2 | Ст3.
+ * @param {unknown} raw
+ * @returns {{ st1: boolean, st2: boolean, st3: boolean }}
+ */
+function normalizeManualRefreshStrategies(
+raw
+){
+
+const src =
+raw &&
+typeof raw ===
+"object"
+? raw
+: {};
+const order =
+[
+"st1",
+"st2",
+"st3"
+];
+let chosen =
+null;
+
+for(
+const id of order
+){
+
+if(
+src[
+id
+]
+){
+chosen =
+id;
+break;
+}
+
+}
+
+if(
+!chosen
+){
+chosen =
+"st1";
+}
+
+return {
+st1:
+chosen ===
+"st1",
+st2:
+chosen ===
+"st2",
+st3:
+chosen ===
+"st3"
+};
+
+}
+
+/**
+ * @param {unknown} raw
+ * @returns {Array<"st1"|"st2"|"st3">}
+ */
+function listManualRefreshStrategyIds(
+raw
+){
+
+const flags =
+normalizeManualRefreshStrategies(
+raw
+);
+const ids =
+[
+"st1",
+"st2",
+"st3"
+].filter(
+id=>
+flags[
+id
+]
+);
+
+return ids.length
+? ids
+: [
+"st1"
+];
 
 }
 
@@ -508,6 +610,10 @@ DEFAULT_ST1.minWinRate
 refreshStatsMode:
 normalizeRefreshStatsMode(
 src.refreshStatsMode
+),
+manualRefreshStrategies:
+normalizeManualRefreshStrategies(
+src.manualRefreshStrategies
 )
 };
 
@@ -532,6 +638,7 @@ normalizeSt1(
 );
 
 delete common.tpRr;
+delete common.manualRefreshStrategies;
 
 return {
 ...common,
@@ -1194,6 +1301,8 @@ getWatchlistForSide,
 normalizeSt1,
 normalizeSt2,
 normalizeSt3,
+normalizeManualRefreshStrategies,
+listManualRefreshStrategyIds,
 readPendingBotOrders,
 writePendingBotOrders
 };

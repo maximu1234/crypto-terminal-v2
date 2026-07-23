@@ -21,7 +21,7 @@ createEmaShiftRibbonIndicator
 } from "./indicators/ema-shift-ribbon.js?v=8";
 import {
 createPattern12Indicator
-} from "./indicators/pattern-12.js?v=7";
+} from "./indicators/pattern-12.js?v=8";
 import {
 createIndicatorSettingsDialog
 } from "./indicators/indicator-settings-dialog.js?v=7";
@@ -642,6 +642,7 @@ indicators.forEach(
 ind=>
 ind.onSymbolChange?.()
 );
+updateLegend();
 
 return;
 
@@ -658,6 +659,7 @@ indicators.forEach(
 ind=>
 ind.onCandlesUpdate?.()
 );
+updateLegend();
 
 }
 

@@ -279,6 +279,9 @@ pct /
 
 }
 
+/**
+ * ТП Ст1 — линейный $ RR (как чарт / order-executor).
+ */
 function computeTakeProfit(
 side,
 entry,
@@ -311,47 +314,46 @@ if(
 entryN >
 0
 ) ||
+!Number.isFinite(
+sl
+) ||
+!Number.isFinite(
+rr
+)
+){
+return NaN;
+}
+
+const riskDist =
+Math.abs(
+entryN -
+sl
+);
+
+if(
 !(
-sl >
+riskDist >
 0
 )
 ){
 return NaN;
 }
 
-const lo =
-Math.min(
-entryN,
-sl
-);
-const hi =
-Math.max(
-entryN,
-sl
-);
-
-if(
-!(
-hi >
-lo
-)
-){
-return NaN;
-}
-
-const factor =
-Math.pow(
-hi /
-lo,
-rr
-);
-
-return side ===
+const move =
+riskDist *
+rr;
+const tp =
+side ===
 "short"
-? entryN /
-factor
-: entryN *
-factor;
+? entryN -
+move
+: entryN +
+move;
+
+return tp >
+0
+? tp
+: NaN;
 
 }
 
@@ -1497,6 +1499,30 @@ const flagId =
 sideToFlagId(
 side
 );
+
+if(
+opts.skipWrite
+){
+return {
+ok:
+true,
+side,
+tf,
+minWinRate,
+total:
+symbols.length,
+hits:
+hitSymbols.length,
+symbols:
+hitSymbols,
+hitRows:
+hits,
+flagId,
+root:
+null
+};
+}
+
 const root =
 readTickerFlagsRoot();
 const exchangeId =
@@ -1556,6 +1582,9 @@ hits:
 hitSymbols.length,
 symbols:
 hitSymbols,
+hitRows:
+hits,
+flagId,
 root
 };
 
@@ -1570,6 +1599,59 @@ module.exports =
 {
 refreshWatchlistByWinRate,
 refreshIntervalMs,
+writeWatchlistFlagSymbols,
 isWatchlistRefreshBusy:()=>
 refreshInflight
 };
+
+/**
+ * @param {string} flagId
+ * @param {string[]} symbols
+ * @returns {object}
+ */
+function writeWatchlistFlagSymbols(
+flagId,
+symbols
+){
+
+const root =
+readTickerFlagsRoot();
+const exchangeId =
+"bybit";
+const prev =
+root[
+exchangeId
+] ||
+{
+algoLong5m:
+[],
+algoShort5m:
+[],
+algoBoth5m:
+[],
+algoFavorites:
+[]
+};
+
+root[
+exchangeId
+] =
+{
+...prev,
+[
+flagId
+]:
+Array.isArray(
+symbols
+)
+? symbols
+: []
+};
+
+writeTickerFlagsRoot(
+root
+);
+
+return root;
+
+}

@@ -205,7 +205,7 @@ tpRr:
 );
 
 test(
-"dollar pnl: win=$risk*RR, loss=$risk",
+"dollar pnl: win=linear risk RR, loss=$risk",
 ()=>{
 
 const candles =
@@ -299,16 +299,23 @@ stats.losses,
 1
 );
 assert.equal(
-stats.profitUsd,
-2
-);
-assert.equal(
 stats.lossUsd,
 1
 );
-assert.equal(
-stats.netUsd,
+/* entry 110, log-mid SL, linear TP RR=2 → profit ≈ $2 */
+assert.ok(
+Math.abs(
+stats.profitUsd -
+2
+) <
+1e-6
+);
+assert.ok(
+Math.abs(
+stats.netUsd -
 1
+) <
+1e-6
 );
 
 }
@@ -360,11 +367,11 @@ riskUsd: 1
 assert.equal(stats.wins, 2);
 assert.equal(stats.longWins, 1);
 assert.equal(stats.shortWins, 1);
-assert.equal(stats.longWinUsd, 2);
-assert.equal(stats.shortWinUsd, 2);
-assert.equal(stats.longNetUsd, 2);
-assert.equal(stats.shortNetUsd, 2);
-assert.equal(stats.netUsd, 4);
+assert.ok(Math.abs(stats.longWinUsd - 2) < 1e-6);
+assert.ok(Math.abs(stats.shortWinUsd - 2) < 1e-6);
+assert.ok(Math.abs(stats.longNetUsd - 2) < 1e-6);
+assert.ok(Math.abs(stats.shortNetUsd - 2) < 1e-6);
+assert.ok(Math.abs(stats.netUsd - 4) < 1e-6);
 
 }
 );

@@ -18,8 +18,8 @@
 <link rel="stylesheet" href="/css/common.css?v=50">
 <link rel="stylesheet" href="/css/terminal.css?v=166">
 <link rel="stylesheet" href="/css/terminal-layout.css?v=97">
-<link rel="stylesheet" href="/css/chart-indicators.css?v=21">
-<link rel="stylesheet" href="/css/algo-trading.css?v=80">
+<link rel="stylesheet" href="/css/chart-indicators.css?v=22">
+<link rel="stylesheet" href="/css/algo-trading.css?v=81">
 <link rel="stylesheet" href="/css/algo-trading-book-panel.css?v=4">
 <link rel="stylesheet" href="/css/algo-trading-chart-overlay.css?v=2">
 
@@ -213,6 +213,18 @@ aria-pressed="false"
 <span class="algo-bot-unit">ч</span>
 <input type="number" id="algo-bot-st1-refresh-m" class="algo-bot-input algo-bot-input--sm" min="0" max="59" step="1" value="0" inputmode="numeric" />
 <span class="algo-bot-unit">мин</span>
+<label class="algo-bot-check algo-bot-manual-refresh-strat" id="algo-bot-st1-refresh-st1-wrap" hidden title="Скан по Стратегии 1">
+<input type="checkbox" id="algo-bot-st1-refresh-st1" checked />
+<span>Ст1</span>
+</label>
+<label class="algo-bot-check algo-bot-manual-refresh-strat" id="algo-bot-st1-refresh-st2-wrap" hidden title="Скан по Стратегии 2">
+<input type="checkbox" id="algo-bot-st1-refresh-st2" />
+<span>Ст2</span>
+</label>
+<label class="algo-bot-check algo-bot-manual-refresh-strat" id="algo-bot-st1-refresh-st3-wrap" hidden title="Скан по Стратегии 3">
+<input type="checkbox" id="algo-bot-st1-refresh-st3" />
+<span>Ст3</span>
+</label>
 </div>
 </div>
 <div class="algo-bot-field algo-bot-field--row">
@@ -224,7 +236,7 @@ aria-pressed="false"
 <span id="algo-bot-st1-refresh-mode-label">Реальный подсчет</span>
 </label>
 </div>
-<p class="algo-bot-hint">При периоде &gt; 0 скрипт периодически парсит все тикеры по ТФ/стороне/винрейту и обновляет соответствующий список Алго.</p>
+<p class="algo-bot-hint">При периоде &gt; 0 скрипт периодически парсит все тикеры по ТФ/стороне/винрейту и обновляет соответствующий список Алго. В ручном режиме чекбоксы Ст1 / Ст2 / Ст3 выбирают одну стратегию для скана (одновременно активен только один).</p>
 </div>
 </div>
 

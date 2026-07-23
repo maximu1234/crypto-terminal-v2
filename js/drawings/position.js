@@ -74,7 +74,48 @@ e
 }
 
 /**
- * Linear stop % of entry — for $ volume sizing only
+ * Linear |Δprice|/entry % — same basis as exchange PnL ($ = notional × frac).
+ * @param {number} entry
+ * @param {number} price
+ * @returns {number}
+ */
+export function positionLinearPctFromEntry(
+entry,
+price
+){
+
+const e =
+Number(
+entry
+);
+const p =
+Number(
+price
+);
+
+if(
+!(
+e >
+0
+) ||
+!Number.isFinite(
+p
+)
+){
+return NaN;
+}
+
+return Math.abs(
+p -
+e
+) /
+e *
+100;
+
+}
+
+/**
+ * Linear stop % of entry — for $ volume sizing
  * (risk $ ÷ stop distance).
  * @param {number} entry
  * @param {number} slPrice
@@ -85,33 +126,10 @@ entry,
 slPrice
 ){
 
-const e =
-Number(
-entry
-);
-const sl =
-Number(
+return positionLinearPctFromEntry(
+entry,
 slPrice
 );
-
-if(
-!(
-e >
-0
-) ||
-!Number.isFinite(
-sl
-)
-){
-return NaN;
-}
-
-return Math.abs(
-sl -
-e
-) /
-e *
-100;
 
 }
 
@@ -346,8 +364,6 @@ rr
 
 export function positionSizingFromShape(shape){
 
-const metrics =
-positionMetrics(shape);
 const entry =
 positionEntryPrice(shape);
 const risk =
@@ -355,9 +371,14 @@ Number(
 shape.riskUsd
 );
 const linearSlPct =
-positionLinearSlPct(
+positionLinearPctFromEntry(
 entry,
 shape.slPrice
+);
+const linearTpPct =
+positionLinearPctFromEntry(
+entry,
+shape.tpPrice
 );
 
 if(
@@ -371,7 +392,7 @@ linearSlPct >
 0
 ) ||
 !(
-metrics.slPct >
+linearTpPct >
 0
 )
 ){
@@ -391,21 +412,91 @@ null
 return null;
 }
 
-const rrNum =
-metrics.tpPct /
-metrics.slPct;
+/*
+ * $ и RR как на бирже: notional × линейная доля.
+ * Если shape.partialExitPrices (Ст2/Ст3) — сумма 1/N закрытий
+ * на каждом тейке (как в панели «Данные»), иначе полный выход на tpPrice.
+ */
+const partialExits =
+Array.isArray(
+shape.partialExitPrices
+)
+? shape.partialExitPrices.map(
+Number
+).filter(
+p=>
+Number.isFinite(
+p
+) &&
+p >
+0
+)
+: [];
+
+let profitUsd;
+let rrNum;
+let tpPct =
+linearTpPct;
+
+if(
+partialExits.length >
+0
+){
+const part =
+1 /
+partialExits.length;
+profitUsd =
+0;
+
+for(
+const exit of
+partialExits
+){
+const exitPct =
+positionLinearPctFromEntry(
+entry,
+exit
+);
+
+if(
+!(
+exitPct >
+0
+)
+){
+continue;
+}
+
+profitUsd +=
+volume *
+exitPct /
+100 *
+part;
+}
+
+rrNum =
+profitUsd /
+risk;
+tpPct =
+linearTpPct;
+}else{
+profitUsd =
+volume *
+linearTpPct /
+100;
+rrNum =
+linearTpPct /
+linearSlPct;
+}
 
 return {
 riskUsd:
 risk,
-tpPct:
-metrics.tpPct,
+tpPct,
 slPct:
-metrics.slPct,
+linearSlPct,
 volume,
-profitUsd:
-risk *
-rrNum,
+profitUsd,
 rrNum,
 rrLabel:
 formatRiskRewardLabel(

@@ -108,25 +108,26 @@ computeLogExtensionPrice(
 1e-9
 );
 
+const slMid =
+Math.sqrt(
+110 *
+100
+);
 assert.ok(
 Math.abs(
 computeAlgoTakeProfit(
 "long",
 110,
-Math.sqrt(
-110 *
-100
-),
+slMid,
 2
 ) -
-110 *
-Math.pow(
-110 /
-Math.sqrt(
-110 *
-100
-),
-2
+(
+110 +
+2 *
+(
+110 -
+slMid
+)
 )
 ) <
 1e-6
@@ -442,7 +443,7 @@ tradeY.profitUsd >
 );
 
 test(
-"partial stats: open and breakeven closed do not fill profit/loss totals",
+"partial stats: open and near-flat closed do not fill profit/loss totals",
 ()=>{
 
 const entry =
@@ -493,6 +494,7 @@ trailSl:
 false
 };
 
+/* TP1 then SL: log-RR давал net≈0; linear — ненулевой net, попадает в win/loss. */
 const beCandles =
 [
 c(
@@ -559,9 +561,29 @@ assert.equal(
 beTrade.status,
 "closed"
 );
+const expectedNet =
+(
+1 /
+3
+) *
+1 *
+Math.abs(
+tp1 -
+entry
+) /
+Math.abs(
+entry -
+sl
+) -
+(
+2 /
+3
+) *
+1;
 assert.ok(
 Math.abs(
-beTrade.netUsd
+beTrade.netUsd -
+expectedNet
 ) <
 1e-9
 );
@@ -575,24 +597,20 @@ event
 opts
 );
 assert.equal(
-beStats.longWins,
+beStats.longOpen,
 0
 );
-assert.equal(
-beStats.longLosses,
+assert.ok(
+beStats.profitUsd +
+beStats.lossUsd >
 0
 );
-assert.equal(
-beStats.profitUsd,
-0
-);
-assert.equal(
-beStats.lossUsd,
-0
-);
-assert.equal(
-beStats.netUsd,
-0
+assert.ok(
+Math.abs(
+beStats.netUsd -
+expectedNet
+) <
+1e-9
 );
 
 const openStats =
@@ -624,7 +642,7 @@ openStats.lossUsd,
 );
 
 test(
-"partial USD uses log RR vs initial SL (like position plaque)",
+"partial USD uses linear RR vs initial SL (like exchange plaque)",
 ()=>{
 
 const entry =
@@ -644,25 +662,15 @@ entry *
 pt4 /
 pt3
 );
-const logRisk =
-Math.abs(
-Math.log(
-entry /
-sl
-)
-);
-const logReward =
-Math.abs(
-Math.log(
-tp /
-entry
-)
-);
 const expectedFull =
 1 *
-(
-logReward /
-logRisk
+Math.abs(
+tp -
+entry
+) /
+Math.abs(
+entry -
+sl
 );
 
 const candles =

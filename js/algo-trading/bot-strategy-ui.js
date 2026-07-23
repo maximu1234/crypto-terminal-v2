@@ -8,10 +8,11 @@ normalizeBotSides,
 primaryBotSide,
 normalizeBotTf,
 normalizeBotRefreshStatsMode,
+normalizeManualRefreshStrategies,
 botSideListLabel,
 botSidesDirectionLabel,
 botSettingsStatusLabel
-} from "./bot-strategy-prefs.js?v=9";
+} from "./bot-strategy-prefs.js?v=11";
 import {
 syncBotStrategiesToMain,
 syncAllTickerFlagsRootToMain,
@@ -1161,6 +1162,28 @@ hint?.toggleAttribute(
 
 }
 
+function applyManualRefreshStrategiesVisibility(){
+
+const show =
+isManualTradingMode();
+
+for(
+const id of [
+"st1",
+"st2",
+"st3"
+]
+){
+document.getElementById(
+`algo-bot-st1-refresh-${id}-wrap`
+)?.toggleAttribute(
+"hidden",
+!show
+);
+}
+
+}
+
 function applyPartialStrategiesManualGate(){
 
 const manual =
@@ -1880,6 +1903,7 @@ tradingMode =
 status.tradingMode;
 applyPartialStrategiesManualGate();
 applyAlertLeadVisibility();
+applyManualRefreshStrategiesVisibility();
 }
 
 const statusWasOpen =
@@ -2211,6 +2235,33 @@ st1.refreshStatsMode ===
 "real";
 }
 
+const refreshStrats =
+normalizeManualRefreshStrategies(
+st1.manualRefreshStrategies
+);
+
+for(
+const id of [
+"st1",
+"st2",
+"st3"
+]
+){
+const input =
+document.getElementById(
+`algo-bot-st1-refresh-${id}`
+);
+
+if(
+input
+){
+input.checked =
+!!refreshStrats[
+id
+];
+}
+}
+
 applyTfUi();
 applySideUi();
 applyRunBtn();
@@ -2260,6 +2311,7 @@ initPartialStrategy(
 );
 applyPartialStrategiesManualGate();
 applyAlertLeadVisibility();
+applyManualRefreshStrategiesVisibility();
 
 function onTradingModeChanged(
 event
@@ -2278,6 +2330,7 @@ tradingMode =
 next;
 applyPartialStrategiesManualGate();
 applyAlertLeadVisibility();
+applyManualRefreshStrategiesVisibility();
 applySt2?.();
 applySt3?.();
 }
@@ -3048,6 +3101,123 @@ refreshRealCheck.checked
 );
 }
 );
+
+function persistManualRefreshStrategiesFromUi(
+event
+){
+
+const target =
+event?.target;
+const clickedId =
+[
+"st1",
+"st2",
+"st3"
+].find(
+id=>
+document.getElementById(
+`algo-bot-st1-refresh-${id}`
+) ===
+target
+);
+const next =
+{
+st1:
+false,
+st2:
+false,
+st3:
+false
+};
+
+if(
+clickedId &&
+target?.checked
+){
+next[
+clickedId
+] =
+true;
+}else{
+const current =
+normalizeManualRefreshStrategies(
+st1.manualRefreshStrategies
+);
+const keep =
+clickedId &&
+current[
+clickedId
+]
+? clickedId
+: (
+[
+"st1",
+"st2",
+"st3"
+].find(
+id=>
+current[
+id
+]
+) ||
+"st1"
+);
+
+next[
+keep
+] =
+true;
+}
+
+const flags =
+normalizeManualRefreshStrategies(
+next
+);
+
+for(
+const id of [
+"st1",
+"st2",
+"st3"
+]
+){
+const input =
+document.getElementById(
+`algo-bot-st1-refresh-${id}`
+);
+
+if(
+input
+){
+input.checked =
+!!flags[
+id
+];
+}
+}
+
+persistSt1(
+{
+manualRefreshStrategies:
+flags
+}
+);
+}
+
+for(
+const id of [
+"st1",
+"st2",
+"st3"
+]
+){
+document.getElementById(
+`algo-bot-st1-refresh-${id}`
+)?.addEventListener(
+"change",
+persistManualRefreshStrategiesFromUi
+);
+}
 
 function onDocClick(
 event

@@ -35,7 +35,8 @@ export const ALGO_BOT_TF_OPTIONS =
  *   refreshHours: number,
  *   refreshMinutes: number,
  *   minWinRate: number,
- *   refreshStatsMode: "direct"|"real"
+ *   refreshStatsMode: "direct"|"real",
+ *   manualRefreshStrategies: { st1: boolean, st2: boolean, st3: boolean }
  * }} AlgoBotStrategy1Prefs
  */
 
@@ -51,6 +52,103 @@ return raw ===
 "real"
 ? "real"
 : "direct";
+
+}
+
+/**
+ * Какая стратегия участвует в автоскане списка (только ручной режим).
+ * Ровно одна: Ст1 | Ст2 | Ст3.
+ * @param {unknown} raw
+ * @returns {{ st1: boolean, st2: boolean, st3: boolean }}
+ */
+export function normalizeManualRefreshStrategies(
+raw
+){
+
+const src =
+raw &&
+typeof raw ===
+"object"
+? raw
+: {};
+const order =
+[
+"st1",
+"st2",
+"st3"
+];
+let chosen =
+null;
+
+for(
+const id of order
+){
+
+if(
+src[
+id
+]
+){
+chosen =
+id;
+break;
+}
+
+}
+
+if(
+!chosen
+){
+chosen =
+"st1";
+}
+
+return {
+st1:
+chosen ===
+"st1",
+st2:
+chosen ===
+"st2",
+st3:
+chosen ===
+"st3"
+};
+
+}
+
+/**
+ * @param {unknown} raw
+ * @returns {Array<"st1"|"st2"|"st3">}
+ */
+export function listManualRefreshStrategyIds(
+raw
+){
+
+const flags =
+normalizeManualRefreshStrategies(
+raw
+);
+const ids =
+/** @type {Array<"st1"|"st2"|"st3">} */
+(
+[
+"st1",
+"st2",
+"st3"
+].filter(
+id=>
+flags[
+id
+]
+)
+);
+
+return ids.length
+? ids
+: [
+"st1"
+];
 
 }
 
@@ -93,7 +191,15 @@ refreshMinutes:
 minWinRate:
 70,
 refreshStatsMode:
-"direct"
+"direct",
+manualRefreshStrategies:{
+st1:
+true,
+st2:
+false,
+st3:
+false
+}
 };
 
 }
@@ -769,6 +875,10 @@ base.minWinRate
 refreshStatsMode:
 normalizeBotRefreshStatsMode(
 src.refreshStatsMode
+),
+manualRefreshStrategies:
+normalizeManualRefreshStrategies(
+src.manualRefreshStrategies
 )
 };
 
@@ -794,6 +904,7 @@ normalizeStrategy1Prefs(
 );
 
 delete common.tpRr;
+delete common.manualRefreshStrategies;
 
 return {
 ...common,

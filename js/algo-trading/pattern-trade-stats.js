@@ -7,10 +7,11 @@ clampTpRr,
 clampRiskUsd,
 computeAlgoStopLoss,
 computeAlgoTakeProfit,
+linearUsdFromRisk,
 DEFAULT_SL_PCT_OF_X,
 DEFAULT_TP_RR,
 DEFAULT_RISK_USD
-} from "./pattern-entry-positions.js?v=11";
+} from "./pattern-entry-positions.js?v=14";
 
 /**
  * @typedef {"win"|"loss"|"open"} TradeOutcome
@@ -444,9 +445,10 @@ clampTpRr(
 opts.tpRr ??
 DEFAULT_TP_RR
 );
-const winUsd =
-riskUsd *
-tpRr;
+let profitUsd =
+0;
+let lossUsd =
+0;
 
 for(
 const event of list
@@ -472,6 +474,28 @@ event.side ===
 "short"
 ? "short"
 : "long";
+const entry =
+Number(
+event.price
+);
+const slPrice =
+computeAlgoStopLoss(
+side,
+event.pt3,
+event.pt4 ??
+entry,
+clampSlPctOfX(
+opts.slPctOfX ??
+DEFAULT_SL_PCT_OF_X
+)
+);
+const tpPrice =
+computeAlgoTakeProfit(
+side,
+entry,
+slPrice,
+tpRr
+);
 let delta =
 0;
 
@@ -479,7 +503,25 @@ if(
 outcome ===
 "win"
 ){
+const winUsd =
+linearUsdFromRisk(
+entry,
+tpPrice,
+slPrice,
+riskUsd
+);
+
+if(
+!Number.isFinite(
+winUsd
+)
+){
+continue;
+}
+
 delta =
+winUsd;
+profitUsd +=
 winUsd;
 
 if(
@@ -502,6 +544,8 @@ outcome ===
 ){
 delta =
 -riskUsd;
+lossUsd +=
+riskUsd;
 
 if(
 side ===
@@ -564,12 +608,6 @@ longLosses;
 const shortClosed =
 shortWins +
 shortLosses;
-const profitUsd =
-wins *
-winUsd;
-const lossUsd =
-losses *
-riskUsd;
 
 return {
 longWins,

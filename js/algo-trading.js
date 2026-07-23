@@ -45,7 +45,7 @@ mountAlgoRuntimeUi
 
 import {
 mountAlgoBotStrategyUi
-} from "./algo-trading/bot-strategy-ui.js?v=30";
+} from "./algo-trading/bot-strategy-ui.js?v=32";
 
 import {
 syncBotStrategiesToMain
@@ -82,7 +82,7 @@ clampRiskUsd,
 DEFAULT_SL_PCT_OF_X,
 DEFAULT_TP_RR,
 DEFAULT_RISK_USD
-} from "./algo-trading/pattern-entry-positions.js?v=11";
+} from "./algo-trading/pattern-entry-positions.js?v=14";
 
 import {
 clampPartialTpX,
@@ -92,7 +92,7 @@ DEFAULT_PARTIAL_TP1_X,
 DEFAULT_PARTIAL_TP2_X,
 DEFAULT_PARTIAL_TP3_X,
 DEFAULT_TRAIL_SL_PCT
-} from "./algo-trading/pattern-trade-stats-partial.js?v=13";
+} from "./algo-trading/pattern-trade-stats-partial.js?v=14";
 
 import {
 clampEntryTimeoutBars,
@@ -101,7 +101,7 @@ ENTRY_TIMEOUT_BARS
 
 import {
 normalizeAlgoStatsMode
-} from "./algo-trading/pattern-trade-stats.js?v=8";
+} from "./algo-trading/pattern-trade-stats.js?v=10";
 
 import {
 readAlgoPattern12Settings

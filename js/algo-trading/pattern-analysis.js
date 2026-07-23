@@ -20,12 +20,12 @@ computeAlgoTradeStats,
 renderAlgoTradeStats,
 filterSequentialEntryEvents,
 normalizeAlgoStatsMode
-} from "./pattern-trade-stats.js?v=8";
+} from "./pattern-trade-stats.js?v=10";
 
 import {
 computePartialTpTradeStats,
 filterSequentialPartialEntryEvents
-} from "./pattern-trade-stats-partial.js?v=13";
+} from "./pattern-trade-stats-partial.js?v=14";
 
 /**
  * @param {Array} candles

@@ -14,7 +14,7 @@ analyzeAlgoPatterns
 
 import {
 normalizeAlgoStatsMode
-} from "./pattern-trade-stats.js?v=8";
+} from "./pattern-trade-stats.js?v=10";
 
 import {
 readAlgoPattern12Settings

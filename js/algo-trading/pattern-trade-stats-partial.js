@@ -1,9 +1,9 @@
 /**
- * Стратегия 2/3: закрытие 3 равными частями (лог-шкала).
+ * Стратегия 2/3: закрытие 3 равными частями (лог-шкала уровней).
  * span "x" (St2) → ход pt3↔pt4, ТП = logExt(entry, pt3↔pt4, k)
  * span "y" (St3) → ход pt1↔pt2, ТП = logExt(pt2, pt1↔pt2, k)
  * СЛ / трейлинг — интерполяция в лог-пространстве по X.
- * $ PnL = доля × riskUsd × (|ln(exit/entry)| / |ln(sl0/entry)|) — как RR на чертеже позиции.
+ * $ PnL — линейный, как биржа / плашка позиции (risk × |Δ|/|SL0|).
  */
 import {
 clampRiskUsd,
@@ -11,9 +11,10 @@ clampSlPctOfX,
 computeAlgoStopLoss,
 computeLogExtensionPrice,
 interpolateLogPrice,
+linearUsdFromRisk,
 DEFAULT_RISK_USD,
 DEFAULT_SL_PCT_OF_X
-} from "./pattern-entry-positions.js?v=11";
+} from "./pattern-entry-positions.js?v=14";
 
 export const DEFAULT_PARTIAL_TP1_X =
 0.5;
@@ -35,48 +36,6 @@ const PART =
 3;
 const EPS =
 1e-9;
-
-/**
- * Лог-дистанция между ценами (для RR/$ как на чертеже позиции).
- * @param {number} a
- * @param {number} b
- * @returns {number}
- */
-function logPriceDist(
-a,
-b
-){
-
-const x =
-Number(
-a
-);
-const y =
-Number(
-b
-);
-
-if(
-!(
-x >
-0
-) ||
-!(
-y >
-0
-)
-){
-return NaN;
-}
-
-return Math.abs(
-Math.log(
-x /
-y
-)
-);
-
-}
 
 /**
  * @param {unknown} raw
@@ -388,10 +347,12 @@ spanLo &&
 spanLo >
 0;
 const riskDist =
-logPriceDist(
-entry,
+Math.abs(
+entry -
 slPrice
 );
+const initialSl =
+slPrice;
 
 if(
 !Number.isFinite(
@@ -532,21 +493,25 @@ nextTp <
 2
 ? PART
 : remaining;
-const rewardDist =
-logPriceDist(
+const partUsd =
+linearUsdFromRisk(
+entry,
 tpLevels[
 nextTp
 ],
-entry
+initialSl,
+riskUsd,
+frac
 );
 
+if(
+Number.isFinite(
+partUsd
+)
+){
 profitUsd +=
-frac *
-riskUsd *
-(
-rewardDist /
-riskDist
-);
+partUsd;
+}
 remaining =
 Math.max(
 0,
@@ -627,25 +592,27 @@ slPrice
 )
 ){
 
-const slDist =
-logPriceDist(
+const partLoss =
+linearUsdFromRisk(
 entry,
-slPrice
+slPrice,
+initialSl,
+riskUsd,
+remaining
 );
-const lossFrac =
-riskDist >
-EPS
-? Math.min(
-1,
-slDist /
-riskDist
-)
-: 1;
 
+if(
+Number.isFinite(
+partLoss
+)
+){
+lossUsd +=
+partLoss;
+}else{
 lossUsd +=
 remaining *
-riskUsd *
-lossFrac;
+riskUsd;
+}
 remaining =
 0;
 

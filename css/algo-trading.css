@@ -633,6 +633,10 @@ flex-wrap:wrap;
 gap:10px 14px;
 }
 
+body.algo-trading-page .algo-bot-manual-refresh-strat{
+margin-left:6px;
+}
+
 body.algo-trading-page .algo-bot-check{
 display:inline-flex;
 align-items:center;

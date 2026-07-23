@@ -123,7 +123,7 @@ computeAlgoStopLoss(
 );
 
 test(
-"computeAlgoTakeProfit long 1:2 is log RR from entry/SL",
+"computeAlgoTakeProfit long 1:2 is linear $ RR from entry/SL",
 ()=>{
 
 const entry =
@@ -133,11 +133,11 @@ const sl =
 const rr =
 2;
 const expected =
-entry *
-Math.pow(
-entry /
-sl,
-rr
+entry +
+rr *
+(
+entry -
+sl
 );
 
 approx(
@@ -154,7 +154,7 @@ expected
 );
 
 test(
-"computeAlgoTakeProfit short 1:2 is log RR from entry/SL",
+"computeAlgoTakeProfit short 1:2 is linear $ RR from entry/SL",
 ()=>{
 
 const entry =
@@ -164,11 +164,11 @@ const sl =
 const rr =
 2;
 const expected =
-entry /
-Math.pow(
-sl /
-entry,
-rr
+entry -
+rr *
+(
+sl -
+entry
 );
 
 approx(
@@ -185,7 +185,7 @@ expected
 );
 
 test(
-"buildAlgoEntryPositionShape uses log SL and log RR TP",
+"buildAlgoEntryPositionShape uses log SL and linear $ RR TP",
 ()=>{
 
 const candles =
@@ -240,11 +240,11 @@ interpolateLogPrice(
 0.5
 );
 const tp =
-110 *
-Math.pow(
-110 /
-sl,
-2
+110 +
+2 *
+(
+110 -
+sl
 );
 
 approx(
@@ -292,6 +292,84 @@ c(
 ]
 ),
 null
+);
+
+}
+);
+
+test(
+"buildAlgoEntryPositionShape partial-tp stores three exit prices",
+()=>{
+
+const candles =
+Array.from(
+{
+length:
+20
+},
+(
+_,
+i
+)=>
+c(
+1_000 +
+i *
+60,
+100
+)
+);
+
+const shape =
+buildAlgoEntryPositionShape(
+{
+type:
+"entry",
+side:
+"long",
+bar:
+5,
+price:
+110,
+setupBar:
+3,
+pt1:
+90,
+pt2:
+100,
+pt3:
+100,
+pt4:
+110
+},
+candles,
+{
+strategy:
+"partial-tp",
+slPctOfX:
+50,
+tp1X:
+0.5,
+tp2X:
+1,
+tp3X:
+1.44
+}
+);
+
+assert.ok(
+Array.isArray(
+shape.partialExitPrices
+)
+);
+assert.equal(
+shape.partialExitPrices.length,
+3
+);
+assert.equal(
+shape.tpPrice,
+Math.max(
+...shape.partialExitPrices
+)
 );
 
 }

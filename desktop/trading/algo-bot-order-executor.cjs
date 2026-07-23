@@ -677,6 +677,10 @@ slPct
 
 }
 
+/**
+ * ТП Ст1 — линейный $ RR, как чарт/аналитика:
+ * «1 к 2» ⇒ |TP−entry| = 2 × |entry−SL|.
+ */
 function computeAlgoTakeProfit(
 side,
 entry,
@@ -702,47 +706,46 @@ if(
 entryN >
 0
 ) ||
+!Number.isFinite(
+sl
+) ||
+!Number.isFinite(
+rr
+)
+){
+return NaN;
+}
+
+const riskDist =
+Math.abs(
+entryN -
+sl
+);
+
+if(
 !(
-sl >
+riskDist >
 0
 )
 ){
 return NaN;
 }
 
-const lo =
-Math.min(
-entryN,
-sl
-);
-const hi =
-Math.max(
-entryN,
-sl
-);
-
-if(
-!(
-hi >
-lo
-)
-){
-return NaN;
-}
-
-const factor =
-Math.pow(
-hi /
-lo,
-rr
-);
-
-return side ===
+const move =
+riskDist *
+rr;
+const tp =
+side ===
 "short"
-? entryN /
-factor
-: entryN *
-factor;
+? entryN -
+move
+: entryN +
+move;
+
+return tp >
+0
+? tp
+: NaN;
 
 }
 
@@ -2897,6 +2900,7 @@ getPendingEntries,
 clearPendingEntries,
 removePendingEntry,
 calcVolumeFromRiskUsd,
+computeAlgoTakeProfit,
 splitQtyIntoThirds,
 isAlgoBotOrderLinkId,
 hydratePendingFromDisk,

@@ -21,7 +21,7 @@ isSeriesLogarithmic
 import {
 isPositionType,
 positionScaleLabelColor
-} from "./position.js?v=6";
+} from "./position.js?v=9";
 
 import {
 collectChartScaleLabelEntries

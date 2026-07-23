@@ -19,7 +19,7 @@ normalizeRectangleShape
 
 import {
 isPositionType
-} from "./position.js?v=6";
+} from "./position.js?v=9";
 
 export const DRAW_TEMPLATES_STORAGE_KEY =
 "draw_templates_v1";
