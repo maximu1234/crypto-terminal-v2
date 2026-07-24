@@ -7,7 +7,7 @@ cacheStorageKey,
 getStatsJobState,
 startStatsBackgroundRefresh,
 resumeStatsBackgroundJob
-} from "./statistics-background.js?v=5";
+} from "./statistics-background.js?v=7";
 
 import {
 getActiveExchangeDefinition,
@@ -298,6 +298,22 @@ function exchangeLabel(){
 
 return getActiveExchangeDefinition()?.name ||
 "биржа";
+
+}
+
+function syncExchangeLead(){
+
+const el =
+document.getElementById(
+"statistics-exchange-name"
+);
+
+if(
+el
+){
+el.textContent =
+exchangeLabel();
+}
 
 }
 
@@ -974,6 +990,7 @@ function init(){
 
 bindPeriodTabs();
 bindRefreshButton();
+syncExchangeLead();
 
 window.addEventListener(
 STATS_JOB_UPDATE_EVENT,
@@ -989,6 +1006,7 @@ syncUiFromJob();
 window.addEventListener(
 EXCHANGE_CHANGED_EVENT,
 ()=>{
+syncExchangeLead();
 syncUiFromJob();
 showPeriodFromCache(
 activePeriod

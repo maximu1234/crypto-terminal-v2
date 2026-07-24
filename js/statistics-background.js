@@ -8,11 +8,19 @@ fetchTickersInto
 
 import {
 getActiveExchangeId,
+getActiveExchangeDefinition,
 fetchMarketDailyCandles
 } from "./market-api.js?v=2";
 
 export const STATS_JOB_UPDATE_EVENT =
 "stats-job-update";
+
+function exchangeLabel(){
+
+return getActiveExchangeDefinition()?.name ||
+"биржа";
+
+}
 
 export const PERIOD_DAYS = {
 "1d":1,
@@ -1353,7 +1361,7 @@ symbolList.length *
 )
 ){
 throw new Error(
-`Bybit: не удалось загрузить данные (${failCount} из ${symbolList.length}). Подождите 2–3 минуты и попробуйте снова.`
+`${exchangeLabel()}: не удалось загрузить данные (${failCount} из ${symbolList.length}). Подождите 2–3 минуты и попробуйте снова.`
 );
 }
 
@@ -1451,7 +1459,7 @@ status:"error",
 finishedAt:Date.now(),
 error:
 err?.message ||
-"Не удалось загрузить данные Bybit"
+`Не удалось загрузить данные ${exchangeLabel()}`
 });
 
 }finally{

@@ -329,13 +329,22 @@ escapeHtml(
 state?.statusLabel ||
 "—"
 );
-const balanceLabel =
-escapeHtml(
-state?.balanceLabel ??
-"—"
-);
 const pnlHidden =
 !!state?.pnlHidden;
+const rawBalance =
+String(
+state?.balanceLabel ??
+"—"
+).trim() ||
+"—";
+const balanceLabel =
+escapeHtml(
+pnlHidden &&
+rawBalance !==
+"—"
+? "***"
+: rawBalance
+);
 const positions =
 Array.isArray(
 state?.positions

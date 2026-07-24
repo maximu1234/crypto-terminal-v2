@@ -93,7 +93,7 @@ Object.freeze({
 "exchange-trading-gate.js":
 3,
 "trade-exchange-settings.js":
-20,
+21,
 "trade-volume-presets.js":
 11,
 "trade-leverage-settings.js":
@@ -434,7 +434,7 @@ Object.freeze({
 "screener-widget-zoom.js":
 16,
 "release-marker.js":
-51,
+52,
 "focus-blur-after-pick.js":
 3,
 "site-boot.js":
@@ -665,9 +665,9 @@ Object.freeze({
 "listings.js":
 5,
 "statistics.js":
-11,
+12,
 "statistics-background.js":
-5,
+7,
 "trade-calculator.js":
 3,
 "system-admin-page.js":

@@ -72,7 +72,7 @@ resumeScriptScanBackgroundJob
 
 import {
 resumeStatsBackgroundJob
-} from "./statistics-background.js?v=5";
+} from "./statistics-background.js?v=7";
 
 initSuppressNativeContextMenu();
 initFocusBlurAfterPick();

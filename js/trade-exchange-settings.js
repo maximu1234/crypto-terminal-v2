@@ -20,6 +20,10 @@ import {
 getLoadedTradeExchangeModules
 } from "./trade/module-router.js?v=14";
 
+import {
+maskTradeDisplay
+} from "./trade-pnl-privacy.js?v=1";
+
 function tradingApi(){
 
 return window.cryptoTerminalDesktop?.trading;
@@ -652,6 +656,8 @@ const balanceEl =
 form.querySelector(
 '[data-role="balance"]'
 );
+let lastOkUsdtFormatted =
+null;
 const pingEl =
 form.querySelector(
 '[data-role="ping"]'
@@ -870,6 +876,8 @@ if(
 !visible ||
 !text
 ){
+lastOkUsdtFormatted =
+null;
 balanceEl.hidden =
 true;
 balanceEl.textContent =
@@ -881,6 +889,41 @@ balanceEl.hidden =
 false;
 balanceEl.textContent =
 text;
+
+}
+
+function setOkBalance(
+formatted
+){
+
+lastOkUsdtFormatted =
+formatted;
+balanceEl?.classList.remove(
+"is-error"
+);
+setBalance(
+`Баланс USDT: ${maskTradeDisplay(formatted)}`
+);
+
+}
+
+function refreshBalancePrivacy(){
+
+if(
+lastOkUsdtFormatted ==
+null ||
+!balanceEl ||
+balanceEl.hidden ||
+balanceEl.classList.contains(
+"is-error"
+)
+){
+return;
+}
+
+setBalance(
+`Баланс USDT: ${maskTradeDisplay(lastOkUsdtFormatted)}`
+);
 
 }
 
@@ -941,6 +984,8 @@ exchangeId
 if(
 !bal?.ok
 ){
+lastOkUsdtFormatted =
+null;
 setBalance(
 bal?.message
 ? `Баланс: ${formatTradingUserError(
@@ -957,9 +1002,6 @@ balanceEl?.classList.add(
 return;
 }
 
-balanceEl?.classList.remove(
-"is-error"
-);
 const num =
 Number(
 bal.usdt
@@ -979,12 +1021,14 @@ maximumFractionDigits:
 : String(
 bal.usdt
 );
-setBalance(
-`Баланс USDT: ${formatted}`
+setOkBalance(
+formatted
 );
 }catch(
 err
 ){
+lastOkUsdtFormatted =
+null;
 setBalance(
 `Баланс: ${err?.message || "ошибка"}`
 );
@@ -1506,6 +1550,11 @@ refreshBtn?.addEventListener(
 ()=>{
 void refreshBalance();
 }
+);
+
+window.addEventListener(
+"trade-total-pnl-visibility-changed",
+refreshBalancePrivacy
 );
 
 refreshPingBtn?.addEventListener(

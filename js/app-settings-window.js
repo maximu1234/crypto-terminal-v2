@@ -550,7 +550,7 @@ mountExchangeConnectionsPanel,
 updateTradeExchangeConnectionChrome
 } =
 await import(
-"./trade-exchange-settings.js?v=20"
+"./trade-exchange-settings.js?v=21"
 );
 
 const host =
