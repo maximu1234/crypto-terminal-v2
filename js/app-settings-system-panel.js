@@ -23,6 +23,42 @@ setAlertNotifyMode,
 setAlertToastDurationSec
 } from "./alert-ui-prefs.js?v=1";
 
+import {
+isScriptNavEnabled,
+isAlgoTradingNavEnabled,
+setScriptNavEnabled,
+setAlgoTradingNavEnabled
+} from "./desktop-feature-nav-prefs.js?v=1";
+
+import {
+renderHeaderNav
+} from "./site-header-nav.js?v=5";
+
+const APP_HEADER_NAV_ID =
+"app-header-nav";
+
+function isDesktopShell(){
+
+return !!window.cryptoTerminalDesktop?.isDesktop ||
+/Electron\//i.test(
+navigator.userAgent ||
+""
+);
+
+}
+
+function refreshAppHeaderNav(){
+
+document.querySelectorAll(
+`#${APP_HEADER_NAV_ID}, .app-header-nav`
+).forEach(
+nav=>
+renderHeaderNav(
+nav
+)
+);
+
+}
 function syncTrayToggle(
 input
 ){
@@ -228,9 +264,26 @@ window.cryptoTerminalDesktop?.platform ===
 )
 : "";
 
+const featureNavBlock =
+isDesktopShell()
+? `
+<p class="app-settings-panel-lead${trayBlock ? " app-settings-panel-lead--spaced" : ""}">Модули desktop.</p>
+<label class="app-settings-toggle-row">
+<input type="checkbox" class="app-settings-toggle-input" id="app-settings-enable-script-nav" />
+<span class="app-settings-toggle-label">Включить Скрипт</span>
+</label>
+<label class="app-settings-toggle-row">
+<input type="checkbox" class="app-settings-toggle-input" id="app-settings-enable-algo-nav" />
+<span class="app-settings-toggle-label">Включить АлгоТрейдинг</span>
+</label>
+<p class="app-settings-panel-hint">Пункты появляются в верхнем меню. По умолчанию выключены.</p>
+`
+: "";
+
 host.innerHTML =
 `
 ${trayBlock}
+${featureNavBlock}
 <p class="app-settings-panel-lead app-settings-panel-lead--spaced">Алерты.</p>
 <label class="app-settings-field-row" for="app-settings-alert-notify-mode">
 <span class="app-settings-field-label">Канал уведомлений</span>
@@ -250,6 +303,14 @@ const launchAgentInput =
 host.querySelector(
 "#app-settings-launch-agent-login"
 );
+const scriptNavInput =
+host.querySelector(
+"#app-settings-enable-script-nav"
+);
+const algoNavInput =
+host.querySelector(
+"#app-settings-enable-algo-nav"
+);
 const alertNotifyModeSelect =
 host.querySelector(
 "#app-settings-alert-notify-mode"
@@ -268,6 +329,21 @@ launchAgentInput
 void hydrateLaunchAgentFromMain(
 launchAgentInput
 );
+
+if(
+scriptNavInput
+){
+scriptNavInput.checked =
+isScriptNavEnabled();
+}
+
+if(
+algoNavInput
+){
+algoNavInput.checked =
+isAlgoTradingNavEnabled();
+}
+
 syncAlertNotifyMode(
 alertNotifyModeSelect
 );
@@ -289,6 +365,30 @@ syncLaunchAgentToggle(
 launchAgentInput
 );
 void applyDesktopMenuBarTrayPreference();
+
+}
+);
+
+scriptNavInput?.addEventListener(
+"change",
+()=>{
+
+setScriptNavEnabled(
+!!scriptNavInput.checked
+);
+refreshAppHeaderNav();
+
+}
+);
+
+algoNavInput?.addEventListener(
+"change",
+()=>{
+
+setAlgoTradingNavEnabled(
+!!algoNavInput.checked
+);
+refreshAppHeaderNav();
 
 }
 );
@@ -391,6 +491,21 @@ launchAgentInput
 void hydrateLaunchAgentFromMain(
 launchAgentInput
 );
+
+if(
+scriptNavInput
+){
+scriptNavInput.checked =
+isScriptNavEnabled();
+}
+
+if(
+algoNavInput
+){
+algoNavInput.checked =
+isAlgoTradingNavEnabled();
+}
+
 syncAlertNotifyMode(
 alertNotifyModeSelect
 );

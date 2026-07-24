@@ -157,6 +157,10 @@ readUrlParams
 } from "./terminal/terminal-prefs.js?v=19";
 
 import {
+mountDesktopOpenChartHandler
+} from "./desktop-open-chart.js?v=2";
+
+import {
 getCurrentSymbols,
 generateMarketData,
 scheduleResortPriceColumns,
@@ -5449,6 +5453,16 @@ currentSymbol || displaySymbol || "BTCUSDT"
 void drawingTools?.refreshDrawToolsAccessUi?.();
 
 syncCoinsTabletListNav();
+
+mountDesktopOpenChartHandler(
+{
+loadSymbol,
+setTimeframe:
+setCoinsTimeframe,
+getSymbol:()=>
+currentSymbol
+}
+);
 
 }
 

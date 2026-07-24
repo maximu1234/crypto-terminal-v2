@@ -10,6 +10,11 @@ import {
 DESKTOP_HEADER_NAV_ITEMS
 } from "./site-header-nav-desktop.js?v=2";
 
+import {
+isScriptNavEnabled,
+isAlgoTradingNavEnabled
+} from "./desktop-feature-nav-prefs.js?v=1";
+
 function isDesktopRuntime(){
 
 if(
@@ -29,12 +34,32 @@ navigator.userAgent ||
 function getNavItems(){
 
 if(
-isDesktopRuntime()
+!isDesktopRuntime()
 ){
-return DESKTOP_HEADER_NAV_ITEMS;
+return WEB_HEADER_NAV_ITEMS;
 }
 
-return WEB_HEADER_NAV_ITEMS;
+return DESKTOP_HEADER_NAV_ITEMS.filter(
+item=>{
+
+if(
+item.href ===
+"/script.html"
+){
+return isScriptNavEnabled();
+}
+
+if(
+item.href ===
+"/algo-trading.html"
+){
+return isAlgoTradingNavEnabled();
+}
+
+return true;
+
+}
+);
 
 }
 

@@ -29,7 +29,8 @@ p { margin: 0 0 0.75rem; }
 <script>
 (function () {
   var HANDOFF_PORT = 47392;
-  var TIMEOUT_MS = 450;
+  var HANDOFF_ATTEMPTS = 8;
+  var HANDOFF_GAP_MS = 400;
   var params = new URLSearchParams(window.location.search);
   var symbol = String(params.get("symbol") || "").trim();
   var tf = String(params.get("tf") || "60").trim() || "60";
@@ -45,9 +46,19 @@ p { margin: 0 0 0.75rem; }
 
   var msg = document.getElementById("msg");
   var hint = document.getElementById("hint");
+  var settled = false;
 
   function goWeb() {
+    if (settled) return;
+    settled = true;
     window.location.replace(webUrl);
+  }
+
+  function showOpenedInApp() {
+    if (settled) return;
+    settled = true;
+    msg.textContent = "Открыто в приложении Multichart";
+    hint.textContent = "Эту вкладку можно закрыть.";
   }
 
   if (!symbol) {
@@ -55,38 +66,71 @@ p { margin: 0 0 0.75rem; }
     return;
   }
 
-  var openUrl = new URL("http://127.0.0.1:" + HANDOFF_PORT + "/open");
-  openUrl.searchParams.set("symbol", symbol);
-  openUrl.searchParams.set("tf", tf);
+  var openParams = new URLSearchParams();
+  openParams.set("symbol", symbol);
+  openParams.set("tf", tf);
   if (exchange === "bybit" || exchange === "bingx") {
-    openUrl.searchParams.set("exchange", exchange);
+    openParams.set("exchange", exchange);
   }
 
-  var ctrl = typeof AbortController !== "undefined" ? new AbortController() : null;
-  var timer = setTimeout(function () {
-    if (ctrl) ctrl.abort();
-  }, TIMEOUT_MS);
+  var deepLink = "multichart://open?" + openParams.toString();
+  var handoffUrl = "http://127.0.0.1:" + HANDOFF_PORT + "/open?" + openParams.toString();
 
-  fetch(openUrl.toString(), {
-    method: "GET",
-    mode: "cors",
-    cache: "no-store",
-    signal: ctrl ? ctrl.signal : undefined
-  })
-    .then(function (res) {
-      clearTimeout(timer);
-      if (!res.ok) throw new Error("handoff " + res.status);
-      return res.json();
+  /* Схема multichart:// запускает/будит .app (даже если было закрыто). */
+  try {
+    window.location.href = deepLink;
+  } catch (e) {
+    /* ignore */
+  }
+
+  function tryHandoff(attempt) {
+    if (settled) return;
+
+    if (document.hidden) {
+      showOpenedInApp();
+      return;
+    }
+
+    var ctrl = typeof AbortController !== "undefined" ? new AbortController() : null;
+    var timer = setTimeout(function () {
+      if (ctrl) ctrl.abort();
+    }, 350);
+
+    fetch(handoffUrl, {
+      method: "GET",
+      mode: "cors",
+      cache: "no-store",
+      signal: ctrl ? ctrl.signal : undefined
     })
-    .then(function (body) {
-      if (!body || !body.ok) throw new Error("handoff rejected");
-      msg.textContent = "Открыто в приложении Multichart";
-      hint.textContent = "Эту вкладку можно закрыть.";
-    })
-    .catch(function () {
-      clearTimeout(timer);
-      goWeb();
-    });
+      .then(function (res) {
+        clearTimeout(timer);
+        if (!res.ok) throw new Error("handoff " + res.status);
+        return res.json();
+      })
+      .then(function (body) {
+        if (!body || !body.ok) throw new Error("handoff rejected");
+        showOpenedInApp();
+      })
+      .catch(function () {
+        clearTimeout(timer);
+        if (settled) return;
+        if (document.hidden) {
+          showOpenedInApp();
+          return;
+        }
+        if (attempt + 1 < HANDOFF_ATTEMPTS) {
+          setTimeout(function () {
+            tryHandoff(attempt + 1);
+          }, HANDOFF_GAP_MS);
+          return;
+        }
+        goWeb();
+      });
+  }
+
+  setTimeout(function () {
+    tryHandoff(0);
+  }, 250);
 })();
 </script>
 </body>

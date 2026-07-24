@@ -1351,7 +1351,7 @@ dashboard.className =
 dashboard.innerHTML = `
 <div class="terminal-empty-state">
 <p class="terminal-empty-title">Нет выбранных графиков</p>
-<p class="terminal-empty-hint">Отметьте монеты синим флагом на Главной или в Монетах (не более 9).</p>
+<p class="terminal-empty-hint">Отметьте монеты синим флагом в Скринере или в Терминале (не более 9).</p>
 </div>`;
 
 }

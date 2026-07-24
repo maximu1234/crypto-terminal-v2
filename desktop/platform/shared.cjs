@@ -54,6 +54,155 @@ return false;
 
 }
 
+/**
+ * multichart://open?symbol=BTCUSDT&tf=60&exchange=bybit
+ * @param {unknown} url
+ * @param {string} [authProtocol]
+ * @returns {boolean}
+ */
+function isChartOpenUrl(
+url,
+authProtocol = AUTH_PROTOCOL
+){
+
+if(
+typeof url !==
+"string" ||
+!url
+){
+return false;
+}
+
+try{
+const parsed =
+new URL(
+url
+);
+
+if(
+parsed.protocol !==
+`${authProtocol}:`
+){
+return false;
+}
+
+const host =
+String(
+parsed.hostname ||
+""
+).toLowerCase();
+const path =
+String(
+parsed.pathname ||
+""
+).replace(
+/\/+$/,
+""
+).toLowerCase();
+
+return host ===
+"open" ||
+path ===
+"/open" ||
+path.endsWith(
+"/open"
+);
+}catch{
+return false;
+}
+
+}
+
+/**
+ * @param {unknown} url
+ * @param {string} [authProtocol]
+ * @returns {{ symbol: string, tf: string, exchange?: string }|null}
+ */
+function parseChartOpenUrl(
+url,
+authProtocol = AUTH_PROTOCOL
+){
+
+if(
+!isChartOpenUrl(
+url,
+authProtocol
+)
+){
+return null;
+}
+
+try{
+const parsed =
+new URL(
+url
+);
+const symbol =
+String(
+parsed.searchParams.get(
+"symbol"
+) ||
+""
+).trim().toUpperCase().replace(
+/\.P$/i,
+""
+);
+const tf =
+String(
+parsed.searchParams.get(
+"tf"
+) ||
+"60"
+).trim() ||
+"60";
+const exchange =
+String(
+parsed.searchParams.get(
+"exchange"
+) ||
+""
+).trim().toLowerCase();
+
+if(
+!symbol ||
+!/^[A-Z0-9_-]{2,32}$/.test(
+symbol
+)
+){
+return null;
+}
+
+if(
+!/^[0-9A-Za-z]{1,8}$/.test(
+tf
+)
+){
+return null;
+}
+
+const out =
+{
+symbol,
+tf
+};
+
+if(
+exchange ===
+"bybit" ||
+exchange ===
+"bingx"
+){
+out.exchange =
+exchange;
+}
+
+return out;
+}catch{
+return null;
+}
+
+}
+
 function findAuthCallbackUrl(
 argv,
 authProtocol = AUTH_PROTOCOL
@@ -71,6 +220,32 @@ return (
 argv.find(
 arg=>
 isAuthCallbackUrl(
+arg,
+authProtocol
+)
+) ||
+null
+);
+
+}
+
+function findChartOpenUrl(
+argv,
+authProtocol = AUTH_PROTOCOL
+){
+
+if(
+!Array.isArray(
+argv
+)
+){
+return null;
+}
+
+return (
+argv.find(
+arg=>
+isChartOpenUrl(
 arg,
 authProtocol
 )
@@ -211,6 +386,7 @@ app,
 log,
 isAuthCallbackUrl: isAuthUrl,
 deliverAuthCallbackUrl,
+deliverChartOpenUrl,
 revealMainWindow,
 authProtocol = AUTH_PROTOCOL
 } =
@@ -232,6 +408,23 @@ app.on(
 _event,
 argv
 )=>{
+
+const chartUrl =
+findChartOpenUrl(
+argv,
+authProtocol
+);
+
+if(
+chartUrl &&
+typeof deliverChartOpenUrl ===
+"function" &&
+deliverChartOpenUrl(
+chartUrl
+)
+){
+return;
+}
 
 const url =
 findAuthCallbackUrl(
@@ -263,7 +456,10 @@ return true;
 module.exports = {
 AUTH_PROTOCOL,
 isAuthCallbackUrl,
+isChartOpenUrl,
+parseChartOpenUrl,
 findAuthCallbackUrl,
+findChartOpenUrl,
 applyCommonCommandLineSwitches,
 createDeliverAuthCallback,
 registerSingleInstance

@@ -95,6 +95,44 @@ fn
 );
 };
 },
+onOpenChart:(
+callback
+)=>{
+if(
+typeof callback !==
+"function"
+){
+return ()=>{};
+}
+const fn =
+(
+_event,
+payload
+)=>{
+try{
+callback(
+payload
+);
+}catch(
+err
+){
+console.warn(
+"desktop open-chart listener:",
+err
+);
+}
+};
+ipcRenderer.on(
+"desktop:open-chart",
+fn
+);
+return ()=>{
+ipcRenderer.removeListener(
+"desktop:open-chart",
+fn
+);
+};
+},
 loadAuthSession:()=>
 ipcRenderer.invoke(
 "desktop:loadAuthSession"

@@ -56,6 +56,10 @@ Object.freeze({
 9,
 "desktop-menu-bar-tray-prefs.js":
 3,
+"desktop-feature-nav-prefs.js":
+1,
+"desktop-open-chart.js":
+2,
 "trade-diary-access.js":
 3,
 "trade-diary-format.js":
@@ -227,7 +231,7 @@ Object.freeze({
 "chart-page.js":
 6,
 "terminal.js":
-392,
+393,
 "terminal-multi-chart.js":
 11,
 "terminal-screener-chart-pane.js":
@@ -394,7 +398,7 @@ Object.freeze({
 "telegram-bot-public.js":
 1,
 "watchlist.js":
-96,
+97,
 "screener.js":
 94,
 "screener-widget-guard.js":
@@ -430,7 +434,7 @@ Object.freeze({
 "screener-widget-zoom.js":
 16,
 "release-marker.js":
-49,
+50,
 "focus-blur-after-pick.js":
 3,
 "site-boot.js":
@@ -438,7 +442,7 @@ Object.freeze({
 "site-header.js":
 4,
 "site-header-nav.js":
-4,
+5,
 "site-header-nav-web.js":
 1,
 "site-header-nav-desktop.js":
@@ -601,7 +605,7 @@ Object.freeze({
 "app-settings-window.js":
 12,
 "app-settings-system-panel.js":
-10,
+11,
 "app-settings-secret.js":
 7,
 "telegram-settings-panel.js":

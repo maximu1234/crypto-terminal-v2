@@ -11,7 +11,7 @@ mountScriptTerminalStatus
 
 import {
 renderHeaderNav
-} from "./site-header-nav.js?v=4";
+} from "./site-header-nav.js?v=5";
 
 export const APP_HEADER_NAV_ID =
 "app-header-nav";

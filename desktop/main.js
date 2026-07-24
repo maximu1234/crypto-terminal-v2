@@ -260,6 +260,10 @@ const PARTITION =
 let pendingAuthCallbackUrl =
 null;
 
+/** @type {{ symbol: string, tf?: string, exchange?: string } | null} */
+let pendingDesktopOpenPayload =
+null;
+
 /** @type {string | null} */
 let pendingDesktopOpenUrl =
 null;
@@ -622,11 +626,18 @@ exchange
 );
 }
 
+params.set(
+"_o",
+String(
+Date.now()
+)
+);
+
 return `${getAppOrigin()}/terminal.html?${params}`;
 
 }
 
-function deliverDesktopAlertOpen(
+function normalizeDesktopOpenPayload(
 payload
 ){
 
@@ -634,34 +645,200 @@ const symbol =
 String(
 payload?.symbol ||
 ""
-).trim();
+).trim().toUpperCase().replace(
+/\.P$/i,
+""
+);
 
 if(
 !symbol
 ){
-return;
+return null;
 }
 
-const url =
-buildDesktopAlertOpenUrl(
-payload
-);
+const out =
+{
+symbol,
+tf:
+String(
+payload?.tf ||
+"60"
+).trim() ||
+"60"
+};
+
+const exchange =
+String(
+payload?.exchange ||
+""
+).trim().toLowerCase();
+
+if(
+exchange ===
+"bybit" ||
+exchange ===
+"bingx"
+){
+out.exchange =
+exchange;
+}
+
+return out;
+
+}
+
+function canNavigateDesktopUi(){
 
 if(
 !mainWindow ||
 mainWindow.isDestroyed()
 ){
-pendingDesktopOpenUrl =
-url;
+return false;
+}
+
+if(
+USE_BUNDLE &&
+!localSiteOrigin
+){
+return false;
+}
+
+return true;
+
+}
+
+function isMainWindowOnTerminal(){
+
+if(
+!mainWindow ||
+mainWindow.isDestroyed()
+){
+return false;
+}
+
+try{
+const current =
+String(
+mainWindow.webContents.getURL() ||
+""
+);
+const origin =
+getAppOrigin();
+
+if(
+!current.startsWith(
+origin
+)
+){
+return false;
+}
+
+return /\/(?:terminal|coins)(?:\.html)?(?:\?|$)/i.test(
+current
+);
+}catch{
+return false;
+}
+
+}
+
+function deliverDesktopAlertOpen(
+payload
+){
+
+const normalized =
+normalizeDesktopOpenPayload(
+payload
+);
+
+if(
+!normalized
+){
 return;
 }
 
+if(
+!canNavigateDesktopUi()
+){
+pendingDesktopOpenPayload =
+normalized;
 pendingDesktopOpenUrl =
 null;
-void mainWindow.loadURL(
-url
+return;
+}
+
+pendingDesktopOpenPayload =
+null;
+pendingDesktopOpenUrl =
+null;
+
+if(
+isMainWindowOnTerminal()
+){
+mainWindow.webContents.send(
+"desktop:open-chart",
+normalized
 );
 revealMainWindow();
+return;
+}
+
+void mainWindow.loadURL(
+buildDesktopAlertOpenUrl(
+normalized
+)
+);
+revealMainWindow();
+
+}
+
+function flushPendingDesktopOpen(){
+
+const payload =
+pendingDesktopOpenPayload;
+
+if(
+!payload ||
+!canNavigateDesktopUi()
+){
+return false;
+}
+
+pendingDesktopOpenPayload =
+null;
+pendingDesktopOpenUrl =
+null;
+deliverDesktopAlertOpen(
+payload
+);
+return true;
+
+}
+
+function deliverChartOpenUrl(
+url
+){
+
+const payload =
+platform.parseChartOpenUrl(
+url,
+platform.AUTH_PROTOCOL
+);
+
+if(
+!payload
+){
+return false;
+}
+
+log.info(
+"Chart open URL received:",
+url
+);
+deliverDesktopAlertOpen(
+payload
+);
+return true;
 
 }
 
@@ -693,6 +870,7 @@ createWindow();
 revealMainWindow:
 openMultichart,
 deliverAuthCallbackUrl,
+deliverChartOpenUrl,
 isAuthCallbackUrl:(
 url
 )=>
@@ -1034,6 +1212,12 @@ revealMainWindow();
 }
 
 if(
+pendingDesktopOpenPayload &&
+mainWindow &&
+!mainWindow.isDestroyed()
+){
+flushPendingDesktopOpen();
+}else if(
 pendingDesktopOpenUrl &&
 mainWindow &&
 !mainWindow.isDestroyed()
@@ -1737,6 +1921,7 @@ url,
 platform.AUTH_PROTOCOL
 ),
 deliverAuthCallbackUrl,
+deliverChartOpenUrl,
 revealMainWindow:
 openMultichart,
 authProtocol:
@@ -1750,6 +1935,31 @@ shouldContinue
 platform.impl.registerPlatformHandlers(
 platformCtx
 );
+
+const startupChartUrl =
+platform.findChartOpenUrl(
+process.argv,
+platform.AUTH_PROTOCOL
+);
+
+if(
+startupChartUrl
+){
+const payload =
+platform.parseChartOpenUrl(
+startupChartUrl,
+platform.AUTH_PROTOCOL
+);
+
+if(
+payload
+){
+pendingDesktopOpenPayload =
+normalizeDesktopOpenPayload(
+payload
+);
+}
+}
 
 const startupAuthUrl =
 platform.findAuthCallbackUrl(

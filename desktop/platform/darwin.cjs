@@ -114,6 +114,17 @@ event,
 url
 )=>{
 event.preventDefault();
+
+if(
+typeof ctx.deliverChartOpenUrl ===
+"function" &&
+ctx.deliverChartOpenUrl(
+url
+)
+){
+return;
+}
+
 deliverAuthCallbackUrl(
 url
 );
