@@ -94,7 +94,8 @@ chart,
 ctx.candles,
 ctx.tf,
 ctx.chartWidth,
-ctx.realCandleCount
+ctx.realCandleCount,
+ctx.visibleBarsCap
 );
 
 getHost?.()?.layoutRsiBand?.();

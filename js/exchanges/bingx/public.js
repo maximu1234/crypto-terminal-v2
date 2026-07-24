@@ -188,13 +188,25 @@ export async function loadBingxHistory(
 symbol,
 tf,
 requests =
-6
+6,
+options =
+{}
 ){
 
 let all =
 [];
 let end =
-Date.now();
+typeof options?.endMs ===
+"number" &&
+Number.isFinite(
+options.endMs
+) &&
+options.endMs >
+0
+? Math.floor(
+options.endMs
+)
+: Date.now();
 
 for(
 let i =
@@ -625,13 +637,15 @@ id:
 async loadHistory(
 symbol,
 tf,
-requests
+requests,
+options
 ){
 
 return loadBingxHistory(
 symbol,
 tf,
-requests
+requests,
+options
 );
 
 },

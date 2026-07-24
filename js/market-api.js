@@ -18,11 +18,11 @@ bybitPublicAdapter
 
 import {
 bingxPublicAdapter
-} from "./exchanges/bingx/public.js?v=5";
+} from "./exchanges/bingx/public.js?v=6";
 
 import {
 peekBybitSymbolsCache
-} from "./api.js?v=29";
+} from "./api.js?v=30";
 
 const ADAPTERS =
 {

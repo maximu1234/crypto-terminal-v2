@@ -2,7 +2,7 @@ import {
 loadBybitHistory,
 loadBybitSymbols,
 loadBybitOrderbook
-} from "../../api.js?v=29";
+} from "../../api.js?v=30";
 
 import {
 fetchBybitBulk

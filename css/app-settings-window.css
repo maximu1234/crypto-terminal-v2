@@ -196,6 +196,31 @@ color:#f3f4f6;
 font-size:13px;
 }
 
+.app-settings-field-select:focus,
+.app-settings-field-select:focus-visible,
+.app-settings-dialog :focus,
+.app-settings-dialog :focus-visible,
+.app-settings-nav-btn:focus,
+.app-settings-nav-btn:focus-visible,
+.app-settings-close:focus,
+.app-settings-close:focus-visible,
+.app-settings-toggle-input:focus,
+.app-settings-toggle-input:focus-visible{
+outline:none;
+box-shadow:none;
+}
+
+.app-settings-field-select[type="number"]{
+-moz-appearance:textfield;
+appearance:textfield;
+}
+
+.app-settings-field-select[type="number"]::-webkit-outer-spin-button,
+.app-settings-field-select[type="number"]::-webkit-inner-spin-button{
+-webkit-appearance:none;
+margin:0;
+}
+
 .app-settings-subtitle{
   margin:0 0 8px;
   font-size:14px;

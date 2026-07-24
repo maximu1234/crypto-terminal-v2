@@ -953,8 +953,7 @@ body.terminal-page #draw-toolbar.draw-toolbar-inline .draw-btn .draw-tool-icon--
 }
 
 .fib-level-row .fib-level-val:focus{
-  outline:1px solid #3b82f6;
-  outline-offset:0;
+  outline:none;
 }
 
 .fib-level-color-btn{

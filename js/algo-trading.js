@@ -12,9 +12,13 @@ updateRsiBandLayout,
 updateRsiLevelLinesLayout,
 applyRsiFixedPriceScale,
 appendFutureWhitespaceBars,
-computeChartFutureMarginBars,
-coinsTfVisibleBars
+computeChartFutureMarginBars
 } from "./chart-import.js?v=43";
+
+import {
+terminalVisibleBars,
+TERMINAL_VISIBLE_BARS
+} from "./terminal-chart-history-prefs.js?v=1";
 
 import {
 calculateRSI,
@@ -1390,8 +1394,7 @@ return [];
 return appendFutureWhitespaceBars(
 candles,
 computeChartFutureMarginBars(
-coinsTfVisibleBars(
-tf,
+terminalVisibleBars(
 candles.length
 )
 ),
@@ -1414,7 +1417,8 @@ display,
 tf,
 chartEl.clientWidth ||
 0,
-candles.length
+candles.length,
+TERMINAL_VISIBLE_BARS
 );
 
 }
@@ -1797,6 +1801,8 @@ getDisplayCandles:()=>
 buildDisplayCandles(),
 getTf:()=>
 tf,
+getVisibleBarsCap:()=>
+TERMINAL_VISIBLE_BARS,
 onIndicatorSettingsChange:(
 indicatorId
 )=>{

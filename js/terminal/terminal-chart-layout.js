@@ -3,9 +3,13 @@
  */
 import {
 appendFutureWhitespaceBars,
-computeChartFutureMarginBars,
-coinsTfVisibleBars
+computeChartFutureMarginBars
 } from "../chart-import.js?v=43";
+
+import {
+terminalVisibleBars,
+TERMINAL_VISIBLE_BARS
+} from "../terminal-chart-history-prefs.js?v=1";
 
 import {
 isChartLayoutReady
@@ -132,8 +136,7 @@ return [];
 return appendFutureWhitespaceBars(
 candles,
 computeChartFutureMarginBars(
-coinsTfVisibleBars(
-currentTF,
+terminalVisibleBars(
 candles.length
 )
 ),
@@ -347,6 +350,8 @@ currentTF,
 chartWidth,
 realCandleCount:
 candles.length,
+visibleBarsCap:
+TERMINAL_VISIBLE_BARS,
 applyCoinsChartViewport
 };
 
@@ -356,7 +361,8 @@ null,
 viewportCtx.candles,
 currentTF,
 chartWidth,
-candles.length
+candles.length,
+TERMINAL_VISIBLE_BARS
 );
 
 const chartIndicators =
@@ -388,7 +394,8 @@ rsiChart,
 viewportCtx.candles,
 currentTF,
 chartWidth,
-candles.length
+candles.length,
+TERMINAL_VISIBLE_BARS
 );
 
 layoutRsiBand?.();

@@ -531,8 +531,7 @@ background:#1a2028;
 }
 
 .alert-toast:focus-visible{
-outline:2px solid #fde047;
-outline-offset:2px;
+outline:none;
 }
 
 .alert-toast--out{
@@ -864,9 +863,7 @@ flex-shrink:0;
 
 .coin-flag-btn:focus-visible,
 .screener-flag-btn:focus-visible{
-outline:2px solid #60a5fa;
-outline-offset:2px;
-border-radius:2px;
+outline:none;
 }
 
 .coin-flag-menu,
@@ -1208,10 +1205,45 @@ padding:8px !important;
 justify-content:center !important;
 }
 
-/* Выпадашки: без залипающего focus ring после выбора (Electron/macOS). */
-select:focus,
-select:focus-visible{
+/* Выпадашки / инпуты / кнопки: без focus ring (Electron/macOS + браузеры). */
+:focus,
+:focus-visible{
 outline:none;
+}
+
+button:focus,
+button:focus-visible,
+input:focus,
+input:focus-visible,
+textarea:focus,
+textarea:focus-visible,
+select:focus,
+select:focus-visible,
+summary:focus,
+summary:focus-visible,
+a:focus,
+a:focus-visible,
+[role="button"]:focus,
+[role="button"]:focus-visible,
+[role="tab"]:focus,
+[role="tab"]:focus-visible,
+[role="menuitem"]:focus,
+[role="menuitem"]:focus-visible,
+[tabindex]:focus,
+[tabindex]:focus-visible{
+outline:none;
+box-shadow:none;
+}
+
+input[type="number"]{
+-moz-appearance:textfield;
+appearance:textfield;
+}
+
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button{
+-webkit-appearance:none;
+margin:0;
 }
 
 .chart-indicator-settings-select:focus,

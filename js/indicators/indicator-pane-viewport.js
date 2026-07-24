@@ -55,7 +55,8 @@ linkedChart,
 candles,
 tf,
 chartWidth,
-rawCandles.length
+rawCandles.length,
+host?.getVisibleBarsCap?.()
 );
 
 return true;

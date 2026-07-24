@@ -31,6 +31,13 @@ setAlgoTradingNavEnabled
 } from "./desktop-feature-nav-prefs.js?v=2";
 
 import {
+TERMINAL_HISTORY_DEPTH_MAX,
+TERMINAL_HISTORY_DEPTH_MIN,
+getTerminalHistoryDepth,
+setTerminalHistoryDepth
+} from "./terminal-chart-history-prefs.js?v=1";
+
+import {
 renderHeaderNav
 } from "./site-header-nav.js?v=6";
 
@@ -284,6 +291,12 @@ host.innerHTML =
 `
 ${trayBlock}
 ${featureNavBlock}
+<p class="app-settings-panel-lead app-settings-panel-lead--spaced">Терминал.</p>
+<label class="app-settings-field-row" for="app-settings-terminal-history-depth">
+<span class="app-settings-field-label">Глубина истории (свечей)</span>
+<input type="number" id="app-settings-terminal-history-depth" class="app-settings-field-select" min="${TERMINAL_HISTORY_DEPTH_MIN}" max="${TERMINAL_HISTORY_DEPTH_MAX}" step="1000" inputmode="numeric" aria-label="Глубина истории свечей на Терминале"/>
+</label>
+<p class="app-settings-panel-hint">Сначала грузится ${TERMINAL_HISTORY_DEPTH_MIN}. При сдвиге графика влево — догрузка до этого лимита (${TERMINAL_HISTORY_DEPTH_MIN}–${TERMINAL_HISTORY_DEPTH_MAX}).</p>
 <p class="app-settings-panel-lead app-settings-panel-lead--spaced">Алерты.</p>
 <label class="app-settings-field-row" for="app-settings-alert-notify-mode">
 <span class="app-settings-field-label">Канал уведомлений</span>
@@ -319,6 +332,10 @@ const alertToastDurationSelect =
 host.querySelector(
 "#app-settings-alert-toast-duration"
 );
+const historyDepthInput =
+host.querySelector(
+"#app-settings-terminal-history-depth"
+);
 
 syncTrayToggle(
 trayInput
@@ -342,6 +359,15 @@ algoNavInput
 ){
 algoNavInput.checked =
 isAlgoTradingNavEnabled();
+}
+
+if(
+historyDepthInput
+){
+historyDepthInput.value =
+String(
+getTerminalHistoryDepth()
+);
 }
 
 syncAlertNotifyMode(
@@ -389,6 +415,46 @@ setAlgoTradingNavEnabled(
 !!algoNavInput.checked
 );
 refreshAppHeaderNav();
+
+}
+);
+
+const commitHistoryDepth =
+()=>{
+
+if(
+!historyDepthInput
+){
+return;
+}
+
+const next =
+setTerminalHistoryDepth(
+historyDepthInput.value
+);
+historyDepthInput.value =
+String(
+next
+);
+
+};
+
+historyDepthInput?.addEventListener(
+"change",
+commitHistoryDepth
+);
+
+historyDepthInput?.addEventListener(
+"keydown",
+e=>{
+
+if(
+e.key ===
+"Enter"
+){
+e.preventDefault();
+historyDepthInput.blur();
+}
 
 }
 );

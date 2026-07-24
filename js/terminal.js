@@ -75,11 +75,20 @@ isUserCrosshairEvent,
 pulsePriceScaleAutoscale,
 computeChartFutureMarginBars,
 appendFutureWhitespaceBars,
-coinsTfVisibleBars,
 applyCoinsChartViewport,
 refreshCoinsChartBarSpacing,
 tfPeriodSec
 } from "./chart-import.js?v=43";
+
+import {
+terminalVisibleBars,
+TERMINAL_VISIBLE_BARS,
+TERMINAL_HISTORY_INITIAL_BARS,
+TERMINAL_HISTORY_DEPTH_EVENT,
+getTerminalHistoryDepth,
+terminalHistoryInitialRequests,
+TERMINAL_HISTORY_LAZY_BATCH_BARS
+} from "./terminal-chart-history-prefs.js?v=1";
 
 import {
 mountCoinsTabletController
@@ -186,7 +195,7 @@ settleCoinsChartViewport,
 resizeCharts,
 scheduleResizeCharts,
 applyDefaultZoom
-} from "./terminal/terminal-chart-layout.js?v=8";
+} from "./terminal/terminal-chart-layout.js?v=9";
 
 import {
 initTerminalMultiChart,
@@ -234,6 +243,12 @@ let displaySymbol =
 
 let candles = [];
 let symbolLoadSeq = 0;
+let historyExhausted =
+false;
+let historyLoadingOlder =
+false;
+let historyRangeUnsub =
+null;
 const viewportSettleRaf =
 { value: 0 };
 let chartSwitchVeil =
@@ -507,6 +522,297 @@ mainChart.chart;
 
 candleSeries =
 mainChart.series;
+
+function unbindTerminalHistoryLazyLoad(){
+
+historyRangeUnsub?.();
+historyRangeUnsub =
+null;
+
+}
+
+function bindTerminalHistoryLazyLoad(){
+
+unbindTerminalHistoryLazyLoad();
+
+if(
+!chart?.timeScale
+){
+return;
+}
+
+const onRange =
+range=>{
+
+if(
+!range ||
+historyLoadingOlder ||
+historyExhausted ||
+!candles.length
+){
+return;
+}
+
+if(
+candles.length >=
+getTerminalHistoryDepth()
+){
+return;
+}
+
+if(
+range.from >
+80
+){
+return;
+}
+
+void maybeLoadOlderTerminalHistory();
+
+};
+
+chart.timeScale().subscribeVisibleLogicalRangeChange(
+onRange
+);
+
+historyRangeUnsub =
+()=>{
+
+try{
+chart.timeScale().unsubscribeVisibleLogicalRangeChange(
+onRange
+);
+}catch{
+/* ignore */
+}
+
+};
+
+}
+
+async function maybeLoadOlderTerminalHistory(){
+
+if(
+historyLoadingOlder ||
+historyExhausted ||
+!candles.length ||
+!currentSymbol
+){
+return;
+}
+
+const depth =
+getTerminalHistoryDepth();
+
+if(
+candles.length >=
+depth
+){
+historyExhausted =
+true;
+return;
+}
+
+const remaining =
+depth -
+candles.length;
+const requests =
+Math.max(
+1,
+Math.min(
+2,
+Math.ceil(
+remaining /
+TERMINAL_HISTORY_LAZY_BATCH_BARS
+)
+)
+);
+const endMs =
+candles[0].time *
+1000 -
+1;
+const loadSeq =
+symbolLoadSeq;
+
+historyLoadingOlder =
+true;
+
+try{
+const older =
+await loadMarketHistory(
+currentSymbol,
+currentTF,
+requests,
+{
+parallel:
+true,
+batchGapMs:
+0,
+endMs
+}
+);
+
+if(
+loadSeq !==
+symbolLoadSeq
+){
+return;
+}
+
+if(
+!older?.length
+){
+historyExhausted =
+true;
+return;
+}
+
+const beforeLen =
+candles.length;
+const byTime =
+new Map();
+
+for(
+const row of older
+){
+
+if(
+row?.time !=
+null
+){
+byTime.set(
+row.time,
+row
+);
+}
+
+}
+
+for(
+const row of candles
+){
+
+if(
+row?.time !=
+null
+){
+byTime.set(
+row.time,
+row
+);
+}
+
+}
+
+let merged =
+Array.from(
+byTime.values()
+).sort(
+(
+a,
+b
+)=>
+a.time -
+b.time
+);
+
+if(
+merged.length >
+depth
+){
+merged =
+merged.slice(
+merged.length -
+depth
+);
+}
+
+const added =
+merged.length -
+beforeLen;
+
+if(
+added <=
+0
+){
+historyExhausted =
+true;
+return;
+}
+
+const range =
+chart?.timeScale?.().getVisibleLogicalRange?.();
+
+candles =
+merged;
+
+candleSeries?.setData(
+buildChartDisplayCandles()
+);
+
+rebuildRsiFromCandles();
+chartIndicators?.notifyCandlesUpdate?.();
+
+if(
+range &&
+chart
+){
+chart.timeScale().setVisibleLogicalRange(
+{
+from:
+range.from +
+added,
+to:
+range.to +
+added
+}
+);
+}
+
+drawingTools?.scheduleRedraw?.();
+rsiDrawingTools?.scheduleRedraw?.();
+
+if(
+older.length <
+requests *
+TERMINAL_HISTORY_LAZY_BATCH_BARS *
+0.5
+){
+historyExhausted =
+true;
+}
+
+}catch(
+err
+){
+console.warn(
+"terminal history lazy load:",
+err?.message ||
+err
+);
+}finally{
+historyLoadingOlder =
+false;
+}
+
+}
+
+bindTerminalHistoryLazyLoad();
+
+window.addEventListener(
+TERMINAL_HISTORY_DEPTH_EVENT,
+()=>{
+
+if(
+candles.length <
+getTerminalHistoryDepth()
+){
+historyExhausted =
+false;
+}
+
+}
+);
 
 const chartWrapEl =
 document.getElementById(
@@ -1631,8 +1937,7 @@ return;
 }
 
 const visibleBars =
-coinsTfVisibleBars(
-currentTF,
+terminalVisibleBars(
 candles.length
 );
 
@@ -1700,8 +2005,7 @@ return [];
 }
 
 const visibleBars =
-coinsTfVisibleBars(
-currentTF,
+terminalVisibleBars(
 candles.length
 );
 
@@ -2775,7 +3079,7 @@ tf
 loadMarketHistory(
 symbol,
 tf,
-5,
+terminalHistoryInitialRequests(),
 {
 parallel:
 true,
@@ -2783,6 +3087,8 @@ batchGapMs:
 0
 }
 ),
+getVisibleBarsCap:()=>
+TERMINAL_VISIBLE_BARS,
 getChartWrapWidth:()=>
 document.getElementById(
 "chart-wrap"
@@ -3630,6 +3936,10 @@ viewportSettleRaf.value =
 }
 
 const loadSeq = ++symbolLoadSeq;
+historyExhausted =
+false;
+historyLoadingOlder =
+false;
 
 disconnectKlineStream();
 chartSwitchVeil.startChartSwitchVeil();
@@ -3693,14 +4003,11 @@ nextCandles =
 await loadMarketHistory(
 symbol,
 currentTF,
-
-5,
-
+terminalHistoryInitialRequests(),
 {
 parallel:true,
 batchGapMs:0
 }
-
 );
 
 if(loadSeq !== symbolLoadSeq){
@@ -3708,6 +4015,10 @@ return;
 }
 
 candles = nextCandles;
+historyExhausted =
+nextCandles.length <
+TERMINAL_HISTORY_INITIAL_BARS *
+0.9;
 
 if(
 !candles.length &&

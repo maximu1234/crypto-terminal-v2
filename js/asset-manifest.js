@@ -35,7 +35,7 @@ Object.freeze({
 "exchanges/bybit/ping.js":
 1,
 "exchanges/bingx/public.js":
-5,
+6,
 "exchanges/bingx/fetch.js":
 4,
 "exchanges/bingx/markets.js":
@@ -231,7 +231,7 @@ Object.freeze({
 "chart-page.js":
 6,
 "terminal.js":
-394,
+395,
 "terminal-multi-chart.js":
 11,
 "terminal-screener-chart-pane.js":
@@ -239,7 +239,9 @@ Object.freeze({
 "terminal-layout-picker.js":
 11,
 "terminal/terminal-chart-layout.js":
-8,
+9,
+"terminal-chart-history-prefs.js":
+1,
 "terminal/terminal-chart-switch-veil.js":
 7,
 "chart-layout-gate.js":
@@ -273,7 +275,7 @@ Object.freeze({
 "script-favorites-list.js":
 2,
 "algo-trading.js":
-81,
+82,
 "algo-trading-page-boot.js":
 3,
 "algo-trading-list.js":
@@ -356,17 +358,17 @@ Object.freeze({
 "indicators/horizontal-volume.js":
 10,
 "indicators/rsi-pane.js":
-2,
+3,
 "indicators/volume-pane.js":
-11,
+12,
 "indicators/ao-math.js":
 1,
 "indicators/ao-pane.js":
-8,
+9,
 "indicators/indicator-pane-order.js":
 1,
 "indicators/indicator-pane-viewport.js":
-2,
+3,
 "indicators/moving-average.js":
 16,
 "indicators/ma-math.js":
@@ -434,7 +436,7 @@ Object.freeze({
 "screener-widget-zoom.js":
 16,
 "release-marker.js":
-53,
+54,
 "focus-blur-after-pick.js":
 3,
 "site-boot.js":
@@ -472,7 +474,7 @@ Object.freeze({
 "chart/chart-dom-crosshair.js":
 15,
 "chart/chart-factory.js":
-40,
+41,
 "chart-tablet-gestures.js":
 19,
 "terminal-tablet-controller.js":
@@ -564,7 +566,7 @@ Object.freeze({
 
 /* ── JS: market data ── */
 "api.js":
-29,
+30,
 "bybit-fetch.js":
 17,
 "bybit-listings.js":
@@ -605,7 +607,7 @@ Object.freeze({
 "app-settings-window.js":
 14,
 "app-settings-system-panel.js":
-12,
+13,
 "app-settings-hotkeys-panel.js":
 2,
 "app-settings-secret.js":
@@ -685,13 +687,13 @@ Object.freeze({
 
 /* ── CSS ── */
 "critical-shell.css":
-9,
+10,
 "common.css":
-51,
+52,
 "screener.css":
 49,
 "terminal.css":
-166,
+167,
 "watchlist.css":
 53,
 "terminal-layout.css":
@@ -711,9 +713,9 @@ Object.freeze({
 "trade-exchange-settings.css":
 16,
 "app-settings-window.css":
-7,
+8,
 "trade-volume-presets.css":
-7,
+8,
 "trade-leverage-settings.css":
 2,
 "trade-market-entry.css":

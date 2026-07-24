@@ -142,11 +142,23 @@ async function loadBybitHistoryImpl(
 symbol,
 tf,
 requests = 6,
-batchGapMs = 80
+batchGapMs = 80,
+endMs
 ){
 
 let all = [];
-let end = Date.now();
+let end =
+typeof endMs ===
+"number" &&
+Number.isFinite(
+endMs
+) &&
+endMs >
+0
+? Math.floor(
+endMs
+)
+: Date.now();
 let failedBatches = 0;
 
 for(let i = 0; i < requests; i++){
@@ -247,7 +259,11 @@ loadBybitHistoryImpl(
 symbol,
 tf,
 requests,
-gap
+gap,
+typeof options.endMs ===
+"number"
+? options.endMs
+: undefined
 );
 
 if(options.parallel){

@@ -26,7 +26,7 @@ isBottomIndicatorPane
 
 import {
 syncPaneViewportAfterData
-} from "./indicator-pane-viewport.js?v=2";
+} from "./indicator-pane-viewport.js?v=3";
 
 export const AO_PANE_ID =
 "ao";
@@ -53,8 +53,18 @@ if(
 return [];
 }
 
+const cap =
+getHost?.()?.getVisibleBarsCap?.();
 const visibleBars =
-coinsTfVisibleBars(
+typeof cap ===
+"number" &&
+cap >
+0
+? Math.min(
+cap,
+candles.length
+)
+: coinsTfVisibleBars(
 tf,
 candles.length
 );
@@ -543,7 +553,8 @@ chart,
 ctx.candles,
 ctx.tf,
 ctx.chartWidth,
-ctx.realCandleCount
+ctx.realCandleCount,
+ctx.visibleBarsCap
 );
 updateTimeScaleVisibility();
 

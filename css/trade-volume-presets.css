@@ -55,8 +55,9 @@ opacity:.9;
 
 body.trade-page .trade-volume-presets-value{
 box-sizing:border-box;
-width:4.75ch;
-min-width:4.75ch;
+/* Как поле объёма в выпадающем попапе (~84% от min-width 184px). */
+width:120px;
+min-width:120px;
 height:28px;
 padding:0 4px;
 border:1px solid transparent;

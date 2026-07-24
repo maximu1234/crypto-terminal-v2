@@ -606,7 +606,8 @@ linkedChart,
 candles,
 tf,
 chartWidthPx,
-realCandleCount
+realCandleCount,
+visibleBarsCap
 ){
 
 if(
@@ -641,7 +642,14 @@ realTotal
 
 const visibleBars =
 Math.min(
-coinsTfVisibleBars(
+(
+typeof visibleBarsCap ===
+"number" &&
+visibleBarsCap >
+0
+)
+? visibleBarsCap
+: coinsTfVisibleBars(
 tf,
 realTotal
 ),

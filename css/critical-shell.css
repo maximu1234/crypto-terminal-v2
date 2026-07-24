@@ -32,6 +32,11 @@ color:#e5e7eb;
 font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
 }
 
+:focus,
+:focus-visible{
+outline:none;
+}
+
 .hidden,
 .header-settings-dropdown.hidden,
 [hidden]{
