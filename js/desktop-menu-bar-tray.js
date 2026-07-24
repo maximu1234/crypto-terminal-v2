@@ -12,6 +12,10 @@ TOTAL_PNL_HIDDEN_KEY,
 isTradePnlHidden
 } from "./trade-pnl-privacy.js?v=1";
 
+import {
+syncFeatureNavPrefsToMain
+} from "./desktop-feature-nav-prefs.js?v=2";
+
 let traySyncTeardown =
 null;
 let applyingRemotePrivacy =
@@ -224,6 +228,7 @@ startDesktopMenuBarTrayPrivacySync();
 
 export function initDesktopMenuBarTray(){
 
+syncFeatureNavPrefsToMain();
 void applyDesktopMenuBarTrayPreference();
 
 const onPrefChanged =

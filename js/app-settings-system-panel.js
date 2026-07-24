@@ -11,7 +11,7 @@ setMenuBarTrayEnabled
 
 import {
 applyDesktopMenuBarTrayPreference
-} from "./desktop-menu-bar-tray.js?v=9";
+} from "./desktop-menu-bar-tray.js?v=10";
 
 import {
 ALERT_NOTIFY_MODE_LABELS,
@@ -28,11 +28,11 @@ isScriptNavEnabled,
 isAlgoTradingNavEnabled,
 setScriptNavEnabled,
 setAlgoTradingNavEnabled
-} from "./desktop-feature-nav-prefs.js?v=1";
+} from "./desktop-feature-nav-prefs.js?v=2";
 
 import {
 renderHeaderNav
-} from "./site-header-nav.js?v=5";
+} from "./site-header-nav.js?v=6";
 
 const APP_HEADER_NAV_ID =
 "app-header-nav";

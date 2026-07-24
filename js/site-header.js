@@ -7,11 +7,11 @@ ensureHeaderSettingsShell
 
 import {
 mountScriptTerminalStatus
-} from "./script-terminal-status.js?v=6";
+} from "./script-terminal-status.js?v=7";
 
 import {
 renderHeaderNav
-} from "./site-header-nav.js?v=5";
+} from "./site-header-nav.js?v=6";
 
 export const APP_HEADER_NAV_ID =
 "app-header-nav";

@@ -770,7 +770,26 @@ typeof state ===
 }
 : {};
 
+base.showAlgoBot =
+false;
+
 try{
+const featureNav =
+require(
+"./feature-nav-prefs-store.cjs"
+).readPrefs();
+
+if(
+!featureNav.algoTradingNavEnabled
+){
+base.algoBot =
+null;
+return base;
+}
+
+base.showAlgoBot =
+true;
+
 const algoBot =
 require(
 "./trading/algo-trading-bot.cjs"
@@ -849,6 +868,35 @@ null;
 }
 
 return base;
+
+}
+
+function setFeatureNavPrefs(
+patch
+){
+
+const featureNav =
+require(
+"./feature-nav-prefs-store.cjs"
+);
+const prefs =
+featureNav.writePrefs(
+patch
+);
+
+if(
+tray
+){
+applyTrayState(
+lastTrayState
+);
+}
+
+return {
+ok:
+true,
+prefs
+};
 
 }
 
@@ -1201,6 +1249,7 @@ initMenuBarTray,
 updateMenuBarTray,
 setMenuBarTrayVisible,
 setMenuBarTrayPnlHidden,
+setFeatureNavPrefs,
 isMenuBarTrayActive,
 dismissTrayPopup,
 destroyMenuBarTray

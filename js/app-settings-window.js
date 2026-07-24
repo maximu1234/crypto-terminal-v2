@@ -1,5 +1,5 @@
 /**
- * Окно «Настройки» — sidebar: Системные / Синхронизация / Подключения / Секретные.
+ * Окно «Настройки» — sidebar: Системные / Синхронизация / … / Горячие клавиши / Секретные.
  */
 import {
 cssUrl
@@ -46,6 +46,12 @@ label:
 "Торговля",
 desktopOnly:
 true
+},
+{
+id:
+"hotkeys",
+label:
+"Горячие клавиши"
 },
 {
 id:
@@ -431,7 +437,7 @@ const {
 mountSystemSettingsPanel
 } =
 await import(
-"./app-settings-system-panel.js?v=11"
+"./app-settings-system-panel.js?v=12"
 );
 
 systemCtl =
@@ -626,6 +632,25 @@ host
 
 await mountTradingSettingsPanel(
 host
+);
+return;
+
+}
+
+if(
+sectionId ===
+"hotkeys"
+){
+
+const {
+mountHotkeysSettingsPanel
+} =
+await import(
+"./app-settings-hotkeys-panel.js?v=2"
+);
+
+mountHotkeysSettingsPanel(
+panel
 );
 return;
 

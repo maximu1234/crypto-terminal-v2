@@ -85,6 +85,7 @@ initMenuBarTray,
 updateMenuBarTray,
 setMenuBarTrayVisible,
 setMenuBarTrayPnlHidden,
+setFeatureNavPrefs,
 isMenuBarTrayActive,
 configureMenuBarTray,
 dismissTrayPopup,
@@ -1714,6 +1715,39 @@ err
 ){
 log.warn(
 "desktop:setMenuBarTrayPnlHidden:",
+err.message
+);
+return {
+ok:
+false,
+message:
+err.message
+};
+}
+
+}
+);
+
+ipcMain.handle(
+"desktop:setFeatureNavPrefs",
+(
+_event,
+patch
+)=>{
+
+try{
+return setFeatureNavPrefs(
+patch &&
+typeof patch ===
+"object"
+? patch
+: {}
+);
+}catch(
+err
+){
+log.warn(
+"desktop:setFeatureNavPrefs:",
 err.message
 );
 return {

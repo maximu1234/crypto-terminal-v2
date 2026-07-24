@@ -500,6 +500,13 @@ ipcRenderer.invoke(
 "desktop:setMenuBarTrayPnlHidden",
 hidden
 ),
+setFeatureNavPrefs:(
+patch
+)=>
+ipcRenderer.invoke(
+"desktop:setFeatureNavPrefs",
+patch
+),
 onMenuBarTrayPnlPrivacyChanged:(
 callback
 )=>{

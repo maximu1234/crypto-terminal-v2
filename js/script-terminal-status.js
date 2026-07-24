@@ -1,5 +1,6 @@
 /**
  * Терминал (desktop): компактный статус авто-скана паттерна в шапке.
+ * Скрыт, если в Системных настройках выключен пункт «Скрипт».
  */
 import {
 getScriptScanNextRunAt,
@@ -14,6 +15,11 @@ loadScriptPageState
 import {
 isTerminalPage
 } from "./page-routes.js?v=2";
+
+import {
+FEATURE_NAV_PREF_EVENT,
+isScriptNavEnabled
+} from "./desktop-feature-nav-prefs.js?v=2";
 
 function formatCountdown(
 ms
@@ -118,12 +124,57 @@ return statusCell;
 
 }
 
+function unmountScriptTerminalStatus(){
+
+const existing =
+document.getElementById(
+"script-terminal-status"
+);
+
+if(
+!existing
+){
+return;
+}
+
+if(
+existing.__scriptStatusTimerId
+){
+clearInterval(
+existing.__scriptStatusTimerId
+);
+existing.__scriptStatusTimerId =
+null;
+}
+
+if(
+existing.__scriptStatusOnBg
+){
+window.removeEventListener(
+SCRIPT_SCAN_BG_EVENT,
+existing.__scriptStatusOnBg
+);
+existing.__scriptStatusOnBg =
+null;
+}
+
+existing.remove();
+
+}
+
 export function mountScriptTerminalStatus(){
 
 if(
 !window.cryptoTerminalDesktop?.isDesktop ||
 !isTerminalPage()
 ){
+return null;
+}
+
+if(
+!isScriptNavEnabled()
+){
+unmountScriptTerminalStatus();
 return null;
 }
 
@@ -223,6 +274,9 @@ render,
 1000
 );
 
+el.__scriptStatusOnBg =
+render;
+
 window.addEventListener(
 SCRIPT_SCAN_BG_EVENT,
 render
@@ -232,3 +286,28 @@ render
 return el;
 
 }
+
+let prefListenerBound =
+false;
+
+function ensureFeatureNavPrefListener(){
+
+if(
+prefListenerBound
+){
+return;
+}
+
+prefListenerBound =
+true;
+
+window.addEventListener(
+FEATURE_NAV_PREF_EVENT,
+()=>{
+mountScriptTerminalStatus();
+}
+);
+
+}
+
+ensureFeatureNavPrefListener();

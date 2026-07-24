@@ -64,7 +64,7 @@ initDesktopAppUi
 import {
 initSiteHeader,
 enforceSiteHeaderAfterBoot
-} from "./site-header.js?v=4";
+} from "./site-header.js?v=5";
 
 import {
 resumeScriptScanBackgroundJob

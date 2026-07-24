@@ -1,6 +1,7 @@
 /**
  * Видимость пунктов «Скрипт» и «АлгоТрейдинг» в верхнем меню (desktop).
  * По умолчанию оба выключены — первый запуск без этих пунктов.
+ * Main-process зеркало: desktop/feature-nav-prefs-store.cjs (tray).
  */
 export const SCRIPT_NAV_ENABLED_KEY =
 "desktop_script_nav_enabled_v1";
@@ -52,6 +53,33 @@ return false;
 
 }
 
+function pushPrefsToMain(){
+
+const desktop =
+window.cryptoTerminalDesktop;
+
+if(
+typeof desktop?.setFeatureNavPrefs !==
+"function"
+){
+return;
+}
+
+try{
+void desktop.setFeatureNavPrefs(
+{
+scriptNavEnabled:
+isScriptNavEnabled(),
+algoTradingNavEnabled:
+isAlgoTradingNavEnabled()
+}
+);
+}catch{
+/* ignore */
+}
+
+}
+
 function writeFlag(
 key,
 enabled,
@@ -68,6 +96,8 @@ enabled
 }catch{
 /* ignore */
 }
+
+pushPrefsToMain();
 
 window.dispatchEvent(
 new CustomEvent(
@@ -121,5 +151,18 @@ ALGO_TRADING_NAV_ENABLED_KEY,
 enabled,
 "algo-trading"
 );
+
+}
+
+/** Sync localStorage → main (tray gate) on desktop boot. */
+export function syncFeatureNavPrefsToMain(){
+
+if(
+!isDesktopShell()
+){
+return;
+}
+
+pushPrefsToMain();
 
 }

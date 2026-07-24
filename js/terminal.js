@@ -200,7 +200,7 @@ mountTerminalLayoutPicker
 
 import {
 mountScriptTerminalStatus
-} from "./script-terminal-status.js?v=6";
+} from "./script-terminal-status.js?v=7";
 
 import {
 resumeScriptScanBackgroundJob

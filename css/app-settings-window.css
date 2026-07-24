@@ -74,7 +74,7 @@
   display:flex;
   flex-direction:column;
   gap:2px;
-  width:168px;
+  width:176px;
   flex-shrink:0;
   padding:10px 8px;
   border-right:1px solid #1f2937;
@@ -286,6 +286,72 @@ color:#9ca3af;
 
 .app-settings-panel .cloud-telegram-wrap{
   max-width:100%;
+}
+
+/* Горячие клавиши — справочник */
+.app-hotkeys-section{
+  margin:0 0 14px;
+}
+
+.app-hotkeys-section:last-of-type{
+  margin-bottom:8px;
+}
+
+.app-hotkeys-title{
+  margin:0 0 6px;
+  font-size:12px;
+  font-weight:600;
+  letter-spacing:.02em;
+  text-transform:uppercase;
+  color:#9ca3af;
+}
+
+.app-hotkeys-list{
+  display:flex;
+  flex-direction:column;
+  gap:1px;
+  border:1px solid #1f2937;
+  border-radius:8px;
+  overflow:hidden;
+  background:#1f2937;
+}
+
+.app-hotkeys-row{
+  display:grid;
+  grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);
+  gap:10px 12px;
+  align-items:baseline;
+  padding:7px 10px;
+  background:#111827;
+  font-size:12px;
+  line-height:1.35;
+}
+
+.app-hotkeys-action{
+  color:#d1d5db;
+  min-width:0;
+}
+
+.app-hotkeys-keys{
+  color:#e5e7eb;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  font-size:11px;
+  letter-spacing:.01em;
+  text-align:right;
+  min-width:0;
+  word-break:break-word;
+}
+
+@media (max-width: 640px){
+  .app-hotkeys-row{
+    grid-template-columns:1fr;
+    gap:2px;
+  }
+
+  .app-hotkeys-keys{
+    text-align:left;
+    color:#9ca3af;
+  }
 }
 
 .app-settings-panel .cloud-telegram-title{

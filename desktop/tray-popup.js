@@ -424,10 +424,14 @@ html +=
 
 }
 
+if(
+state?.showAlgoBot
+){
 html +=
 renderAlgoBotSection(
 state?.algoBot
 );
+}
 
 html +=
 `
