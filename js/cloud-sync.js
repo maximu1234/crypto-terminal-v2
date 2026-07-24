@@ -2179,8 +2179,29 @@ error: ""
 
 async function recoverSessionFromAuthUrl(
 sb,
-rawUrl
+rawUrl,
+onProgress
 ){
+
+const report =
+msg=>{
+
+if(
+typeof onProgress ===
+"function"
+){
+
+try{
+onProgress(
+msg
+);
+}catch{
+/* ignore */
+}
+
+}
+
+};
 
 let search =
 "";
@@ -2239,6 +2260,10 @@ searchParams.get("code");
 
 if(code){
 
+report(
+"Обрабатываем ссылку…"
+);
+
 const { data, error } =
 await sb.auth.exchangeCodeForSession(code);
 
@@ -2285,6 +2310,10 @@ if(
 ){
 return null;
 }
+
+report(
+"Обрабатываем ссылку…"
+);
 
 async function trySetSession(){
 
@@ -2358,8 +2387,35 @@ return null;
 }
 
 export async function completeAuthFromCallbackUrl(
-rawUrl
+rawUrl,
+options =
+{}
 ){
+
+const onProgress =
+typeof options?.onProgress ===
+"function"
+? options.onProgress
+: null;
+
+const report =
+msg=>{
+
+if(
+!onProgress
+){
+return;
+}
+
+try{
+onProgress(
+msg
+);
+}catch{
+/* ignore */
+}
+
+};
 
 if(
 !rawUrl ||
@@ -2376,6 +2432,10 @@ message:
 
 const trimmed =
 rawUrl.trim();
+
+report(
+"Проверяем ссылку…"
+);
 
 if(
 !(await isSupabaseConfigured())
@@ -2418,7 +2478,8 @@ message:
 const recovered =
 await recoverSessionFromAuthUrl(
 sb,
-trimmed
+trimmed,
+onProgress
 );
 
 if(
@@ -2432,8 +2493,16 @@ message:
 };
 }
 
+report(
+"Сверяемся с базой данных…"
+);
+
 await applySession(
 recovered
+);
+
+report(
+"Вход выполнен"
 );
 
 return {

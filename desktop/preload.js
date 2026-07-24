@@ -42,6 +42,61 @@ return getAlgoDesktopEdition() ===
 
 }
 
+/**
+ * Auth callback may arrive before renderer binds onAuthCallback (terminal boot).
+ * Queue here so the URL is not dropped.
+ */
+let queuedAuthCallbackUrl =
+null;
+let authCallbackListener =
+null;
+
+ipcRenderer.on(
+"desktop:auth-callback",
+(
+_event,
+url
+)=>{
+
+if(
+typeof url !==
+"string" ||
+!url.trim()
+){
+return;
+}
+
+queuedAuthCallbackUrl =
+url.trim();
+
+if(
+typeof authCallbackListener ===
+"function"
+){
+
+const pending =
+queuedAuthCallbackUrl;
+queuedAuthCallbackUrl =
+null;
+
+try{
+authCallbackListener(
+pending
+);
+}catch(
+err
+){
+console.warn(
+"desktop auth listener:",
+err
+);
+}
+
+}
+
+}
+);
+
 contextBridge.exposeInMainWorld(
 "cryptoTerminalDesktop",
 {
@@ -60,20 +115,28 @@ ipcRenderer.invoke(
 onAuthCallback:(
 callback
 )=>{
+
 if(
 typeof callback !==
 "function"
 ){
 return ()=>{};
 }
-const fn =
-(
-_event,
-url
-)=>{
+
+authCallbackListener =
+callback;
+
+if(
+queuedAuthCallbackUrl
+){
+const pending =
+queuedAuthCallbackUrl;
+queuedAuthCallbackUrl =
+null;
+
 try{
 callback(
-url
+pending
 );
 }catch(
 err
@@ -83,17 +146,21 @@ console.warn(
 err
 );
 }
-};
-ipcRenderer.on(
-"desktop:auth-callback",
-fn
-);
+
+}
+
 return ()=>{
-ipcRenderer.removeListener(
-"desktop:auth-callback",
-fn
-);
+
+if(
+authCallbackListener ===
+callback
+){
+authCallbackListener =
+null;
+}
+
 };
+
 },
 onOpenChart:(
 callback

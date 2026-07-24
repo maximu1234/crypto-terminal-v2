@@ -236,6 +236,10 @@ color:#6b7280;
 line-height:1.3;
 }
 
+.cloud-auth-hint--progress{
+color:#fbbf24;
+}
+
 .cloud-auth-hint--error{
 color:#f87171;
 }

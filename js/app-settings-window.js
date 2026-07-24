@@ -11,7 +11,7 @@ isSystemAdminUser
 
 import {
 mountTelegramSettingsPanel
-} from "./telegram-settings-panel.js?v=1";
+} from "./telegram-settings-panel.js?v=2";
 
 import {
 mountFavoritesCloudSettingsPanel
@@ -244,7 +244,7 @@ const {
 closeCloudSettingsDropdown
 } =
 await import(
-"./auth-ui.js?v=40"
+"./auth-ui.js?v=45"
 );
 closeCloudSettingsDropdown();
 await openAppSettingsWindow();
@@ -484,7 +484,7 @@ const {
 mountCloudAuthPanelInSettings
 } =
 await import(
-"./auth-ui.js?v=40"
+"./auth-ui.js?v=45"
 );
 
 mountCloudAuthPanelInSettings(

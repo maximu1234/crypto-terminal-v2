@@ -434,7 +434,7 @@ Object.freeze({
 "screener-widget-zoom.js":
 16,
 "release-marker.js":
-52,
+53,
 "focus-blur-after-pick.js":
 3,
 "site-boot.js":
@@ -583,7 +583,7 @@ Object.freeze({
 
 /* ── JS: cloud / auth ── */
 "cloud-sync.js":
-45,
+46,
 "cloud-sync-throttle.js":
 3,
 "page-routes.js":
@@ -599,7 +599,7 @@ Object.freeze({
 "auth-storage.js":
 4,
 "auth-ui.js":
-40,
+45,
 "header-settings-shell.js":
 3,
 "app-settings-window.js":
@@ -611,7 +611,7 @@ Object.freeze({
 "app-settings-secret.js":
 7,
 "telegram-settings-panel.js":
-1,
+2,
 "favorites-settings-panel.js":
 1,
 "alert-auth-cache.js":
@@ -687,7 +687,7 @@ Object.freeze({
 "critical-shell.css":
 9,
 "common.css":
-50,
+51,
 "screener.css":
 49,
 "terminal.css":

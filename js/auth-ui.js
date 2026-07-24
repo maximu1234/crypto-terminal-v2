@@ -10,7 +10,7 @@ signOutCloud,
 recoverAuthSessionFromUrl,
 completeAuthFromCallbackUrl,
 hasAuthCallbackInUrl
-} from "./cloud-sync.js?v=45";
+} from "./cloud-sync.js?v=46";
 
 import {
 isSupabaseConfigured
@@ -46,6 +46,74 @@ return !!window.cryptoTerminalDesktop?.isDesktop;
 let desktopAuthBound =
 false;
 
+/** Подсказка во время обработки magic-link (не затирать refreshOne). */
+let authLinkProgress =
+null;
+
+function setAuthLinkProgress(
+text,
+isError =
+false
+){
+
+authLinkProgress =
+text
+? {
+text,
+isError:
+!!isError
+}
+: null;
+
+for(
+const el of document.querySelectorAll(
+".cloud-auth-hint"
+)
+){
+el.textContent =
+text ||
+"";
+el.classList.toggle(
+"cloud-auth-hint--error",
+!!isError
+);
+el.classList.toggle(
+"cloud-auth-hint--progress",
+!!text &&
+!isError
+);
+el.classList.toggle(
+"hidden",
+!text
+);
+}
+
+}
+
+function paintAuthLinkProgress(
+text
+){
+
+setAuthLinkProgress(
+text,
+false
+);
+
+return new Promise(
+resolve=>{
+requestAnimationFrame(
+()=>{
+requestAnimationFrame(
+()=>
+resolve()
+);
+}
+);
+}
+);
+
+}
+
 function bindDesktopAuthCallback(){
 
 const api =
@@ -68,9 +136,30 @@ void (
 async()=>{
 
 try{
+await openAppSettingsWindow(
+"sync"
+);
+}catch{
+/* ignore */
+}
+
+await paintAuthLinkProgress(
+"Ссылка получена"
+);
+
+try{
 const result =
 await completeAuthFromCallbackUrl(
-url
+url,
+{
+onProgress:
+msg=>{
+setAuthLinkProgress(
+msg,
+false
+);
+}
+}
 );
 
 if(
@@ -82,6 +171,10 @@ cloudSdkError =
 cloudSdkError =
 result.message ||
 "Не удалось войти по ссылке.";
+setAuthLinkProgress(
+cloudSdkError,
+true
+);
 }
 
 }catch(
@@ -90,6 +183,17 @@ err
 cloudSdkError =
 err?.message ||
 "Не удалось войти по ссылке.";
+setAuthLinkProgress(
+cloudSdkError,
+true
+);
+}
+
+if(
+!cloudSdkError
+){
+authLinkProgress =
+null;
 }
 
 refreshAuthUi();
@@ -817,12 +921,17 @@ wrap.querySelector(".cloud-auth-logged-in");
 const emailLabel =
 wrap.querySelector(".cloud-auth-email-label");
 
-function setHint(text, isError){
+function setHint(text, isError, isProgress = false){
 
 hintEl.textContent = text || "";
 hintEl.classList.toggle(
 "cloud-auth-hint--error",
 !!isError
+);
+hintEl.classList.toggle(
+"cloud-auth-hint--progress",
+!!isProgress &&
+!isError
 );
 hintEl.classList.toggle(
 "hidden",
@@ -866,10 +975,20 @@ desktopLinkWrap?.classList.add(
 emailLabel.textContent =
 getAuthUiEmail() || "Аккаунт";
 
+if(
+authLinkProgress
+){
 setHint(
-"Избранное и рисунки синхронизируются между устройствами.",
+authLinkProgress.text,
+authLinkProgress.isError,
+!authLinkProgress.isError
+);
+}else{
+setHint(
+"",
 false
 );
+}
 
 }else{
 
@@ -884,14 +1003,23 @@ emailInput.value =
 getAuthUiEmail() || "";
 }
 
-if(cloudSdkError){
+if(
+authLinkProgress
+){
+setHint(
+authLinkProgress.text,
+authLinkProgress.isError,
+!authLinkProgress.isError
+);
+}else if(cloudSdkError){
 setHint(cloudSdkError, true);
 }else if(
 hasAuthCallbackInUrl()
 ){
 setHint(
 "Завершаем вход по ссылке…",
-false
+false,
+true
 );
 }else{
 setHint("", false);
@@ -975,15 +1103,23 @@ return;
 
 pasteLinkBtn.disabled =
 true;
-setHint(
-"Входим по ссылке…",
-false
+await paintAuthLinkProgress(
+"Ссылка получена"
 );
 
 try{
 const result =
 await completeAuthFromCallbackUrl(
-raw
+raw,
+{
+onProgress:
+msg=>{
+setAuthLinkProgress(
+msg,
+false
+);
+}
+}
 );
 
 if(
@@ -991,16 +1127,16 @@ result.ok
 ){
 cloudSdkError =
 "";
-setHint(
-"Вход выполнен.",
-false
-);
+authLinkProgress =
+null;
 pasteLinkInput.value =
 "";
 }else{
-setHint(
+cloudSdkError =
 result.message ||
-"Не удалось войти по ссылке.",
+"Не удалось войти по ссылке.";
+setAuthLinkProgress(
+cloudSdkError,
 true
 );
 }
@@ -1008,9 +1144,11 @@ true
 }catch(
 err
 ){
-setHint(
+cloudSdkError =
 err?.message ||
-"Не удалось войти по ссылке.",
+"Не удалось войти по ссылке.";
+setAuthLinkProgress(
+cloudSdkError,
 true
 );
 }
@@ -1176,6 +1314,9 @@ function refreshAll(){
 panels.forEach(p=>{
 p.refreshOne();
 });
+
+/* Settings → Синхронизация монтируется лениво и не всегда в panels. */
+settingsCloudPanel?.refreshOne?.();
 
 window.dispatchEvent(
 new CustomEvent(

@@ -4,7 +4,7 @@ initAlertMonitor
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=40";
+} from "./auth-ui.js?v=45";
 
 import {
 isAlertsPage
@@ -25,7 +25,7 @@ isCloudLoggedInEffective,
 isCloudSyncEnabled,
 getCloudUserEmail,
 onCloudSyncChange
-} from "./cloud-sync.js?v=45";
+} from "./cloud-sync.js?v=46";
 
 import {
 isSupabaseConfigured

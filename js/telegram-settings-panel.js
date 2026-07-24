@@ -14,8 +14,9 @@ getTelegramBotUrl
 
 import {
 isCloudLoggedIn,
-getCloudUserEmail
-} from "./cloud-sync.js?v=45";
+getCloudUserEmail,
+onCloudSyncChange
+} from "./cloud-sync.js?v=46";
 
 function setStatus(
 el,
@@ -266,6 +267,12 @@ email &&
 tgInput?.dataset.loaded ===
 "1"
 ){
+applyTelegramUiMode(
+!!String(
+tgInput.value ||
+""
+).trim()
+);
 return;
 }
 
@@ -479,6 +486,12 @@ false
 );
 
 void refresh();
+
+onCloudSyncChange(
+()=>{
+void refresh();
+}
+);
 
 return {
 refresh
