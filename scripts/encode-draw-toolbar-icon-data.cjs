@@ -16,6 +16,7 @@ const NAMES = [
 "brush",
 "arrow",
 "hray",
+"hline",
 "fib",
 "channel",
 "rectangle",
@@ -24,12 +25,28 @@ const NAMES = [
 "trash"
 ];
 
+
+const EXPECTED_W = 50;
+const EXPECTED_H = 70;
+
+function pngSize(buf){
+const w = buf.readUInt32BE(16);
+const h = buf.readUInt32BE(20);
+return { w, h };
+}
+
 const entries = {};
 
 for(const name of NAMES){
 const file = path.join(ICON_DIR, `${name}.png`);
-const b64 = fs.readFileSync(file).toString("base64");
-entries[name] = `data:image/png;base64,${b64}`;
+const buf = fs.readFileSync(file);
+const { w, h } = pngSize(buf);
+if(w !== EXPECTED_W || h !== EXPECTED_H){
+throw new Error(
+`${name}.png is ${w}x${h}, expected ${EXPECTED_W}x${EXPECTED_H} (do not re-encode mismatched sources)`
+);
+}
+entries[name] = `data:image/png;base64,${buf.toString("base64")}`;
 }
 
 const lines = [

@@ -7,7 +7,7 @@ import {
   GLOBAL_STYLE_KEY,
   RECT_DEFAULT_COLOR,
   migrateRectangleToolDefaults
-} from "./constants.js?v=10";
+} from "./constants.js?v=11";
 
 import {
   normalizeRectangleShape
@@ -53,6 +53,7 @@ function loadToolDefaults(){
 "trendline",
 "brush",
 "hray",
+"hline",
 "fib",
 "channel",
 "arrow",

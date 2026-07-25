@@ -20,7 +20,7 @@
 /**
  * @typedef {Object} DrawingShapeBase
  * @property {string} id
- * @property {string} type trendline | fib | channel | hray | long | short
+ * @property {string} type trendline | fib | channel | hray | hline | long | short
  * @property {string} [color]
  * @property {number} [lineWidth]
  */

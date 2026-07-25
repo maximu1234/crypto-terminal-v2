@@ -5,7 +5,7 @@ formatDrawColor
 
 import {
 TRASH_ICON_SVG
-} from "../draw-ui-shared.js?v=33";
+} from "../draw-ui-shared.js?v=35";
 
 import {
 closeAllWidgetDrawToolsMenus
@@ -55,8 +55,10 @@ import {
 STROKE,
 HANDLE_FILL,
 HANDLE_STROKE,
-WIDTH_OPTIONS
-} from "./constants.js?v=10";
+WIDTH_OPTIONS,
+isHorizPriceTool,
+horizPriceLineX1
+} from "./constants.js?v=11";
 
 import {
 getRectangleHandleScreens,
@@ -106,7 +108,7 @@ getPositionHandleScreens as resolvePositionHandleScreens
 
 import {
 createDrawPrefs
-} from "./draw-prefs.js?v=1";
+} from "./draw-prefs.js?v=2";
 
 import {
 createPositionDraw
@@ -118,11 +120,11 @@ pickUi
 
 import {
 createDrawHitTester
-} from "./draw-hit.js?v=9";
+} from "./draw-hit.js?v=10";
 
 import {
 createDrawRenderer
-} from "./draw-render.js?v=13";
+} from "./draw-render.js?v=14";
 
 import {
 snapPlotToCandleWick
@@ -139,7 +141,7 @@ updateChartRulerLabelEl
 
 import {
 mountTabletDrawInput
-} from "../drawings-tablet-input.js?v=3";
+} from "../drawings-tablet-input.js?v=4";
 
 import {
 cloneDrawingsForUndo,
@@ -164,7 +166,7 @@ createDrawAlertsChart
 
 import {
 createDrawPlacement
-} from "./draw-placement.js?v=9";
+} from "./draw-placement.js?v=10";
 
 import {
 createBrushPlacement
@@ -172,7 +174,7 @@ createBrushPlacement
 
 import {
 createDrawEditInteraction
-} from "./draw-edit-interaction.js?v=12";
+} from "./draw-edit-interaction.js?v=13";
 
 import {
 createDrawChartInput
@@ -180,11 +182,11 @@ createDrawChartInput
 
 import {
 createDrawPriceScale
-} from "./draw-price-scale.js?v=10";
+} from "./draw-price-scale.js?v=11";
 
 import {
 createDrawRedrawLoop
-} from "./draw-redraw-loop.js?v=7";
+} from "./draw-redraw-loop.js?v=8";
 
 export function initDrawings({
 
@@ -2515,7 +2517,7 @@ return [
 
 }
 
-if(shape.type === "hray"){
+if(isHorizPriceTool(shape.type)){
 
 return [{
 id: "anchor",
@@ -3056,7 +3058,7 @@ toXY
 
 }
 
-if(d.type === "hray"){
+if(isHorizPriceTool(d.type)){
 
 const anchor = toXY({
 time: d.time,
@@ -3067,7 +3069,10 @@ if(anchor){
 dist = distToSegment(
 px,
 py,
-anchor.x,
+horizPriceLineX1(
+d.type,
+anchor.x
+),
 anchor.y,
 getPlotWidth(),
 anchor.y

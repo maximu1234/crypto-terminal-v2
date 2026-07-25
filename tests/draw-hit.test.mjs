@@ -301,6 +301,63 @@ shape
 ),
 false
 );
+/* Left of anchor — ray does not extend. */
+assert.equal(
+hit.hitTestHrayLine(
+50,
+200,
+shape
+),
+false
+);
+
+}
+);
+
+test(
+"hitTestHrayLine on horizontal line spans full width",
+()=>{
+
+const {
+deps
+} =
+mockHitDeps({});
+
+const hit =
+createDrawHitTester(
+deps
+);
+
+const shape = {
+type: "hline",
+time: 1,
+price: 100
+};
+
+assert.equal(
+hit.hitTestHrayLine(
+400,
+200,
+shape
+),
+true
+);
+assert.equal(
+hit.hitTestHrayLine(
+50,
+200,
+shape
+),
+true
+);
+assert.equal(
+hit.hitTestHrayLine(
+400,
+250,
+shape
+),
+false
+);
 
 }
 );

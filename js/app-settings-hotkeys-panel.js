@@ -119,8 +119,8 @@ row(
 "L · S · F"
 ),
 row(
-"Rectangle / Ray / Trend / Brush / Channel",
-"R · H · J · B · C"
+"Rectangle / H-Line / H-Ray / Trend / Brush / Channel",
+"R · H · J · A · B · C"
 ),
 row(
 "Курсор / отмена режима",
@@ -197,7 +197,7 @@ row(
 ),
 row(
 "Инструменты рисования",
-"L S F R H J B C"
+"L S F R H J A B C"
 )
 ].join(
 ""

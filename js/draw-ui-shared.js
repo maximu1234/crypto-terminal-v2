@@ -1,6 +1,6 @@
 import {
 getDrawToolIconSrc
-} from "./draw-toolbar-icon-data.js?v=29";
+} from "./draw-toolbar-icon-data.js?v=31";
 
 export function drawToolIconImg(
 name,
@@ -57,6 +57,7 @@ export const RECTANGLE_ICON_SVG = drawToolIconImg("rectangle");
 export const TRENDLINE_ICON_SVG = drawToolIconImg("trendline");
 export const BRUSH_ICON_SVG = drawToolIconImg("brush");
 export const HRAY_ICON_SVG = drawToolIconImg("hray");
+export const HLINE_ICON_SVG = drawToolIconImg("hline");
 export const FIB_ICON_SVG = drawToolIconImg("fib");
 export const CHANNEL_ICON_SVG = drawToolIconImg("channel");
 export const LONG_POSITION_ICON_SVG = drawToolIconImg("long", "draw-tool-icon draw-pos-icon draw-pos-icon--long");
@@ -107,16 +108,20 @@ return `
 ${CURSOR_TOOL_ICON_SVG}
 </button>
 
-<button type="button" class="${btnClass}" data-draw-tool="trendline" title="Trendline (J)">
+<button type="button" class="${btnClass}" data-draw-tool="trendline" title="Trendline (A)">
 ${TRENDLINE_ICON_SVG}
+</button>
+
+<button type="button" class="${btnClass}" data-draw-tool="hline" title="Горизонтальная линия (H)">
+${HLINE_ICON_SVG}
+</button>
+
+<button type="button" class="${btnClass}" data-draw-tool="hray" title="Horizontal Ray (J)">
+${HRAY_ICON_SVG}
 </button>
 
 <button type="button" class="${btnClass}" data-draw-tool="arrow" title="Arrow">
 ${ARROW_ICON_SVG}
-</button>
-
-<button type="button" class="${btnClass}" data-draw-tool="hray" title="Horizontal Ray (H)">
-${HRAY_ICON_SVG}
 </button>
 
 <button type="button" class="${btnClass}" data-draw-tool="channel" title="Parallel Channel (C)">

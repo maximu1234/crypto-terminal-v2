@@ -27,6 +27,10 @@ import {
 collectChartScaleLabelEntries
 } from "../chart/scale-label-providers.js?v=2";
 
+import {
+isHorizPriceTool
+} from "./constants.js?v=11";
+
 export function createDrawPriceScale(
 deps
 ){
@@ -227,7 +231,7 @@ const entries = [];
 
 getDrawings().forEach(shape=>{
 
-if(shape.type !== "hray"){
+if(!isHorizPriceTool(shape.type)){
 return;
 }
 
@@ -256,7 +260,9 @@ getDrawings().find(d=>d.id === getSelectedId());
 
 if(
 sel &&
-sel.type !== "hray"
+!isHorizPriceTool(
+sel.type
+)
 ){
 
 listHandles(sel).forEach(handle=>{

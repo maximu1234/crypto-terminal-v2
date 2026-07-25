@@ -197,6 +197,10 @@ async function attachAutoStopsAfterOpen(position, options = {}) {
   if (!position || (autoSl <= 0 && autoTp <= 0)) {
     return { position, stopsAttached: { sl: false, tp: false } };
   }
+  /* Market reduce of opposite position — keep existing stops, do not re-open. */
+  if (position._reduced) {
+    return { position, stopsAttached: { sl: false, tp: false } };
+  }
   if (options.sync === true) {
     return runAttachAutoStopsAfterOpen(position, options);
   }
@@ -1737,12 +1741,55 @@ async function openPositionAtMarket(symbol, side, volumeUsdt, options = {}) {
     return { ok: false, message: "Price unavailable" };
   }
 
-  const qtyStr = qtyFromVolumeUsdt(vol, refPrice, rules);
-  if (!qtyStr || Number(qtyStr) <= 0) {
+  const qtyStrRaw = qtyFromVolumeUsdt(vol, refPrice, rules);
+  if (!qtyStrRaw || Number(qtyStrRaw) <= 0) {
     return { ok: false, message: "Volume too small" };
   }
 
-  const sides = await resolveOpenSides(sideNorm);
+  /* Opposite open position → reduce/close only (cap qty; never flip). */
+  const oppositeHint = sideNorm === "Sell" ? "LONG" : "SHORT";
+  const livePosResult = await getPosition(sym, {
+    positionSide: oppositeHint
+  });
+  if (livePosResult?.ok === false) {
+    return livePosResult;
+  }
+
+  const livePos = livePosResult?.position || null;
+  const liveSize = Math.abs(
+    Number(livePos?.availableSize ?? livePos?.size) || 0
+  );
+  const isOpposite = liveSize > 0;
+
+  let qtyStr = qtyStrRaw;
+  let sides;
+  let reducedOpposite = false;
+
+  if (isOpposite) {
+    const closeSides = await resolveCloseSides(livePos);
+    if (!closeSides) {
+      return { ok: false, message: "Cannot resolve position side" };
+    }
+    const requested = Number(qtyStrRaw);
+    const decimals = decimalsFromStep(rules?.qtyStep);
+    const step = Number(rules?.qtyStep);
+    let capped = Math.min(requested, liveSize);
+    if (Number.isFinite(step) && step > 0) {
+      capped = Math.floor((capped + 1e-12) / step) * step;
+    }
+    if (!(capped > 0)) {
+      return { ok: false, message: "Volume too small" };
+    }
+    qtyStr =
+      capped >= liveSize - 1e-12
+        ? formatQtyValue(liveSize, decimals)
+        : formatQtyValue(capped, decimals);
+    sides = closeSides;
+    reducedOpposite = true;
+  } else {
+    sides = await resolveOpenSides(sideNorm);
+  }
+
   const body = {
     symbol: toBingxSymbol(sym),
     side: sides.side,
@@ -1750,6 +1797,9 @@ async function openPositionAtMarket(symbol, side, volumeUsdt, options = {}) {
     type: "MARKET",
     quantity: qtyStr
   };
+  if (sides.reduceOnly) {
+    body.reduceOnly = "true";
+  }
 
   /* Never attach stopLoss JSON — `{` breaks HMAC (100001). Place after fill. */
   const orderResult = await signedRequest(
@@ -1785,13 +1835,51 @@ async function openPositionAtMarket(symbol, side, volumeUsdt, options = {}) {
   rememberOpenOrderRowsCache([]);
   invalidatePositionListCache();
 
-  const isLong = sideNorm === "Buy";
   const qtyNum = Number(qtyStr);
   const avgFromOrder = Number(
     orderData.avgPrice ?? orderData.averagePrice ?? 0
   );
   const entry = avgFromOrder > 0 ? avgFromOrder : refPrice;
 
+  if (reducedOpposite) {
+    const remaining = Math.max(0, liveSize - qtyNum);
+    if (!(remaining > 1e-12)) {
+      /* Fully closed opposite — do not invent a new opposite leg. */
+      return {
+        ...orderResult,
+        ok: true,
+        position: null,
+        orderId,
+        reduced: true,
+        stopsAttached: { sl: false, tp: false }
+      };
+    }
+    const remainNum = Number(
+      formatQtyValue(remaining, decimalsFromStep(rules?.qtyStep))
+    );
+    return {
+      ...orderResult,
+      ok: true,
+      position: {
+        ...livePos,
+        size: remainNum,
+        availableSize: remainNum,
+        volumeUsdt:
+          remainNum *
+          (Number(livePos.markPrice || livePos.avgPrice || entry) || entry),
+        _optimistic: true,
+        _optimisticAt: Date.now(),
+        _optimisticOrderId: orderId,
+        _reduced: true
+      },
+      orderId,
+      reduced: true,
+      /* Keep existing stops; do not re-attach as a fresh open. */
+      stopsAttached: { sl: false, tp: false }
+    };
+  }
+
+  const isLong = sideNorm === "Buy";
   const position = {
     symbol: sym,
     ticker: displayTicker(sym),

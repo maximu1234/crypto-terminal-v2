@@ -23,6 +23,11 @@ import {
 drawBrushPath
 } from "./brush.js?v=2";
 
+import {
+isHorizPriceTool,
+horizPriceLineX1
+} from "./constants.js?v=11";
+
 /**
  * @param {object} deps
  * @returns {{ drawShape, drawFib, drawPlacementPreview, fibLevelXSpan }}
@@ -393,7 +398,7 @@ formatDrawColor
 
 }
 
-if(shape.type === "hray"){
+if(isHorizPriceTool(shape.type)){
 
 const anchor = toXY({
 time: shape.time,
@@ -403,7 +408,10 @@ price: shape.price
 if(anchor){
 drawLine(
 ctx,
-anchor.x,
+horizPriceLineX1(
+shape.type,
+anchor.x
+),
 anchor.y,
 w,
 anchor.y,
@@ -558,8 +566,9 @@ return 3;
 }
 
 if(
-type ===
-"hray" ||
+isHorizPriceTool(
+type
+) ||
 isPositionType(
 type
 )
@@ -1012,7 +1021,7 @@ if(placement.type === "rectangle" && previewPts.length >= 2){
 drawShape(ctx, previewShape, w, h);
 }
 
-if(placement.type === "hray" && previewPts.length >= 1){
+if(isHorizPriceTool(placement.type) && previewPts.length >= 1){
 drawShape(ctx, previewShape, w, h);
 }
 

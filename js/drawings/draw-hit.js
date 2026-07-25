@@ -21,8 +21,10 @@ import {
 FIB_HIT_X_PAD_PX,
 FIB_HIT_X_PAD_DESKTOP_PX,
 DRAW_BODY_HIT_THRESHOLD_TOUCH,
-DRAW_BODY_HIT_THRESHOLD_DESKTOP
-} from "./constants.js?v=10";
+DRAW_BODY_HIT_THRESHOLD_DESKTOP,
+isHorizPriceTool,
+horizPriceLineX1
+} from "./constants.js?v=11";
 
 import {
 isCoarseTouchViewport
@@ -63,7 +65,10 @@ return Infinity;
 return distToSegment(
 px,
 py,
-anchor.x,
+horizPriceLineX1(
+shape.type,
+anchor.x
+),
 anchor.y,
 getPlotWidth(),
 anchor.y
@@ -74,7 +79,9 @@ anchor.y
 function hitTestHrayLine(px, py, shape, threshold = 8){
 
 if(
-shape?.type !== "hray"
+!isHorizPriceTool(
+shape?.type
+)
 ){
 return false;
 }

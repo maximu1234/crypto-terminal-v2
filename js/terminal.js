@@ -113,7 +113,7 @@ initWidgetDrawings
 import {
 mountDrawToolbar,
 mountDrawToolIcons
-} from "./draw-ui-shared.js?v=33";
+} from "./draw-ui-shared.js?v=35";
 
 import {
 initChartIndicators
@@ -4402,10 +4402,14 @@ new Map(
 ],
 [
 "KeyH",
-"hray"
+"hline"
 ],
 [
 "KeyJ",
+"hray"
+],
+[
+"KeyA",
 "trendline"
 ],
 [

@@ -24,6 +24,31 @@ export const STROKE = "#3b82f6";
 export const HANDLE_FILL = "#000000";
 export const HANDLE_STROKE = "#ffffff";
 export const WIDTH_OPTIONS = [1, 2, 3, 4];
+
+/** Horizontal Ray / Horizontal Line — одна опорная точка (time, price). */
+export function isHorizPriceTool(
+type
+){
+
+return type ===
+"hray" ||
+type ===
+"hline";
+
+}
+
+/** X начала сегмента: луч — от якоря вправо; линия — через весь plot. */
+export function horizPriceLineX1(
+type,
+anchorX
+){
+
+return type ===
+"hline"
+? 0
+: anchorX;
+
+}
 export const USER_PREFS_KEY = "draw_user_prefs";
 export const GLOBAL_STYLE_KEY = "draw_style_global_v1";
 /** Смена — полный сброс draw_defaults_fib (v5: repair invisible fib after c088d9f) */

@@ -15,7 +15,7 @@ POSITION_DEFAULT_TP_ZONE_PX,
 POSITION_DEFAULT_SL_ZONE_PX,
 POSITION_DEFAULT_WIDTH_BARS,
 POSITION_RR_LABEL_SAMPLE
-} from "./constants.js?v=10";
+} from "./constants.js?v=11";
 
 import {
 formatMoneyUsd,

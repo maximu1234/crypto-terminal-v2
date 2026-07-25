@@ -15,6 +15,7 @@ NAMES = [
     "brush",
     "arrow",
     "hray",
+    "hline",
     "fib",
     "channel",
     "rectangle",

@@ -5,7 +5,7 @@ RECT_DEFAULT_FILL_COLOR,
 RECT_DEFAULT_FILL_OPACITY,
 createRectangleToolDefaults,
 FIB_TOOL_DEFAULTS_VERSION
-} from "./constants.js?v=10";
+} from "./constants.js?v=11";
 
 import {
 cloneDefaultFibRows,
@@ -29,6 +29,7 @@ Object.freeze([
 "trendline",
 "brush",
 "hray",
+"hline",
 "fib",
 "channel",
 "arrow",

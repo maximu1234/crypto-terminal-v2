@@ -157,10 +157,14 @@ new Map(
 ],
 [
 "KeyH",
-"hray"
+"hline"
 ],
 [
 "KeyJ",
+"hray"
+],
+[
+"KeyA",
 "trendline"
 ],
 [

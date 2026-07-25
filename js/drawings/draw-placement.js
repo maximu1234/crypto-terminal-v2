@@ -29,6 +29,10 @@ import {
 touchShapeRevision
 } from "../drawings-storage.js?v=7";
 
+import {
+isHorizPriceTool
+} from "./constants.js?v=11";
+
 export function createDrawPlacement(
 deps
 ){
@@ -1186,8 +1190,8 @@ medianLineStyle: rectStyle.medianLineStyle
 });
 }
 
-if(getPlacement().type === "hray" && pts.length >= 1){
-created = makeShape("hray", {
+if(isHorizPriceTool(getPlacement().type) && pts.length >= 1){
+created = makeShape(getPlacement().type, {
 time: pts[0].time,
 price: pts[0].price
 });

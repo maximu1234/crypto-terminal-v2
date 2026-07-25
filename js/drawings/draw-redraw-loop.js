@@ -14,6 +14,10 @@ import {
 isChartLayoutReady
 } from "../chart-layout-gate.js?v=2";
 
+import {
+isHorizPriceTool
+} from "./constants.js?v=11";
+
 export function createDrawRedrawLoop(
 deps
 ){
@@ -97,7 +101,7 @@ handle.y
 
 }
 
-if(shape.type === "hray"){
+if(isHorizPriceTool(shape.type)){
 
 const anchor = toXY({
 time: shape.time,
@@ -194,7 +198,7 @@ toXY(shape.p2)
 
 }
 
-if(shape.type === "hray"){
+if(isHorizPriceTool(shape.type)){
 
 return !!toXY({
 time: shape.time,

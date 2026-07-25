@@ -19,7 +19,7 @@ FIB_TOOL_DEFAULTS_VERSION,
 RECT_DEFAULT_FILL_COLOR,
 RECT_DEFAULT_FILL_OPACITY,
 RECT_TOOL_DEFAULTS_VERSION
-} from "./constants.js?v=10";
+} from "./constants.js?v=11";
 
 import {
 normalizeFibLineStyle,
@@ -73,7 +73,7 @@ listTemplatesForType,
 mergeStyleSnapshot,
 saveNamedTemplate,
 deleteTemplateAtIndex
-} from "./draw-templates.js?v=8";
+} from "./draw-templates.js?v=9";
 
 export function createDrawStyleBar(
 deps

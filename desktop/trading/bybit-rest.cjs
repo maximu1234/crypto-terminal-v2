@@ -5272,7 +5272,7 @@ message:
 };
 }
 
-const qtyStr =
+let qtyStr =
 qtyFromVolumeUsdt(
 vol,
 refPrice,
@@ -5294,9 +5294,129 @@ message:
 };
 }
 
-const orderResult =
-await privatePost(
-"/v5/order/create",
+/* Opposite open position → reduce only (cap qty; never flip). */
+let reduceOnly =
+false;
+let positionIdx =
+0;
+const livePosResult =
+await getPosition(
+sym
+);
+
+if(
+livePosResult?.ok ===
+false
+){
+return livePosResult;
+}
+
+const livePos =
+livePosResult?.position ||
+null;
+const liveSide =
+String(
+livePos?.side ||
+""
+).trim();
+const liveSize =
+Math.abs(
+Number(
+livePos?.size
+) ||
+0
+);
+const isOpposite =
+liveSize >
+0 &&
+(
+(
+sideNorm ===
+"Sell" &&
+liveSide ===
+"Buy"
+) ||
+(
+sideNorm ===
+"Buy" &&
+liveSide ===
+"Sell"
+)
+);
+
+if(
+isOpposite
+){
+const requested =
+Number(
+qtyStr
+);
+const decimals =
+decimalsFromStep(
+rules?.qtyStep
+);
+const step =
+Number(
+rules?.qtyStep
+);
+let capped =
+Math.min(
+requested,
+liveSize
+);
+
+if(
+Number.isFinite(
+step
+) &&
+step >
+0
+){
+capped =
+Math.floor(
+(
+capped +
+1e-12
+) /
+step
+) *
+step;
+}
+
+if(
+!(
+capped >
+0
+)
+){
+return {
+ok:
+false,
+message:
+"Volume too small"
+};
+}
+
+/* Full close: use exchange size string (same as closePositionAtMarket). */
+qtyStr =
+capped >=
+liveSize -
+1e-12
+? String(
+livePos.size
+)
+: formatQtyValue(
+capped,
+decimals
+);
+reduceOnly =
+true;
+positionIdx =
+livePos.positionIdx ??
+0;
+}
+
+const orderBody =
 {
 category:
 "linear",
@@ -5308,9 +5428,20 @@ orderType:
 "Market",
 qty:
 qtyStr,
-positionIdx:
-0
+positionIdx
+};
+
+if(
+reduceOnly
+){
+orderBody.reduceOnly =
+true;
 }
+
+const orderResult =
+await privatePost(
+"/v5/order/create",
+orderBody
 );
 
 if(
@@ -5361,7 +5492,9 @@ break;
 
 return {
 ...orderResult,
-position
+position,
+reduced:
+reduceOnly
 };
 
 }

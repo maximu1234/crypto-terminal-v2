@@ -5,7 +5,7 @@
 import {
 STROKE,
 createRectangleToolDefaults
-} from "./constants.js?v=10";
+} from "./constants.js?v=11";
 
 import {
 ensureFibLevelsVisible,

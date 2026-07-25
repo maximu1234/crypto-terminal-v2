@@ -10,6 +10,10 @@ import {
 isPositionType
 } from "./drawings/position.js?v=9";
 
+import {
+isHorizPriceTool
+} from "./drawings/constants.js?v=11";
+
 /**
  * Touch/pointer placement for iPad and coarse-touch viewports.
  * @param {object} ctx
@@ -260,7 +264,7 @@ return 3;
 }
 
 if(
-type === "hray" ||
+isHorizPriceTool(type) ||
 isPositionType(type)
 ){
 return 1;

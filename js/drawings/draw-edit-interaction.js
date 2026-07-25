@@ -9,8 +9,9 @@ isCoarseTouchViewport
 import {
 DRAW_HANDLE_HIT_THRESHOLD_DESKTOP,
 DRAW_HANDLE_HIT_THRESHOLD_DESKTOP_POSITION,
-DRAW_BODY_HIT_THRESHOLD_TOUCH
-} from "./constants.js?v=10";
+DRAW_BODY_HIT_THRESHOLD_TOUCH,
+isHorizPriceTool
+} from "./constants.js?v=11";
 
 import {
 getRectangleHandleScreens,
@@ -268,8 +269,9 @@ return shape.p2;
 }
 
 if(
-shape.type ===
-"hray" &&
+isHorizPriceTool(
+shape.type
+) &&
 handleId ===
 "anchor"
 ){
@@ -708,7 +710,7 @@ return;
 
 }
 
-if(shape.type === "hray" && handleId === "anchor"){
+if(isHorizPriceTool(shape.type) && handleId === "anchor"){
 
 shape.time = point.time;
 shape.price = point.price;
@@ -952,7 +954,7 @@ if(shape.type === "channel"){
 return [shape.p1, shape.p2, shape.p3];
 }
 
-if(shape.type === "hray"){
+if(isHorizPriceTool(shape.type)){
 return [{
 time: shape.time,
 price: shape.price
@@ -1168,7 +1170,7 @@ if(shape.type === "rectangle"){
 return hitTestRectangleBody(px, py, shape, bodyThreshold);
 }
 
-if(shape.type === "hray"){
+if(isHorizPriceTool(shape.type)){
 return hitTestHrayLine(px, py, shape, bodyThreshold);
 }
 
@@ -1245,7 +1247,7 @@ return true;
 
 }
 
-if(shape.type === "hray"){
+if(isHorizPriceTool(shape.type)){
 
 shape.time = pts[0].time;
 shape.price = pts[0].price;

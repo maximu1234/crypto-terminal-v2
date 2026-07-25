@@ -5,7 +5,7 @@ POSITION_SCALE_SL_BG,
 POSITION_SCALE_TP_BG,
 POSITION_DEFAULT_TP_PCT,
 POSITION_DEFAULT_SL_PCT
-} from "./constants.js?v=10";
+} from "./constants.js?v=11";
 
 import {
 distToRect,
