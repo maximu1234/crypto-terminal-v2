@@ -1352,15 +1352,6 @@ opts.stripFlags ||
 const list =
 loadAllAlerts();
 
-console.log(
-"[alerts] реестр:",
-list.length,
-"| без облака:",
-list.filter(
-a=>!a.cloudSynced
-).length
-);
-
 return list.length;
 
 }
@@ -1592,12 +1583,6 @@ shapeId
 m.scheduleRegistryCloudSync();
 return false;
 }
-
-console.log(
-"Alert: ✓ в Supabase",
-sym,
-shapeId
-);
 
 return true;
 
@@ -2299,12 +2284,6 @@ dispatchPriceAlertsChanged(
 sym
 );
 
-console.log(
-"[alerts] сработал (облако):",
-sym,
-sid
-);
-
 if(existing){
 void import("./alert-monitor.js?v=70").then(m=>{
 m.notifyAlertTriggered({
@@ -2577,12 +2556,6 @@ dispatchPriceAlertsChanged(
 sym
 );
 
-console.log(
-"[alerts] сработал:",
-sym,
-sid
-);
-
 void import("./alert-monitor.js?v=70").then(m=>{
 m.notifyAlertTriggered({
 symbol: sym,
@@ -2613,9 +2586,6 @@ err?.message || err
 }
 
 export function clearAllChartAlertFlags(){
-
-let any =
-false;
 
 for(
 const { symbol } of listDrawingStorageEntries()
@@ -2657,8 +2627,6 @@ exchangeDrawingsStorageKey(sym),
 JSON.stringify(next)
 );
 
-any = true;
-
 window.dispatchEvent(
 new CustomEvent(
 "drawings-updated",
@@ -2666,12 +2634,6 @@ new CustomEvent(
 )
 );
 
-}
-
-if(any){
-console.log(
-"[alerts] сняты флаги алертов на всех графиках"
-);
 }
 
 }

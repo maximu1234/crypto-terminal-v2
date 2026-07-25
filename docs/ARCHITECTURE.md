@@ -25,7 +25,6 @@ Desktop: `npm run bundle:sync` после правок web-статики; `npm 
 | Facade | Подмодули |
 |--------|-----------|
 | `alerts-cloud-sync.js` | ✅ barrel → `alerts-cloud/{debug,worker-client,telegram-id,registry-sync,polling-realtime}.js` |
-| `drawings-cloud-sync.js` | ✅ barrel → `drawings-cloud/{sync-lifecycle,worker-client,pull-reconcile}.js` |
 | `chart.js` | `chart/{chart-options,chart-dom-crosshair,chart-factory}.js` |
 | `terminal.js` | `terminal/{coins-state,coins-prefs,coins-table,coins-chart-*}.js`; entry alias `terminal-entry.js` |
 | `drawings.js` | `drawings/{init, persist, style-bar, placement, edit-interaction, chart-input, redraw-loop, price-scale, draw-hit, draw-render, …}.js` |

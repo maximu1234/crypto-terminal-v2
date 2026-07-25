@@ -4,7 +4,7 @@
  */
 import {
 fetchTickersInto
-} from "./tickers.js?v=23";
+} from "./tickers.js?v=26";
 
 import {
 getActiveExchangeId,
@@ -39,9 +39,21 @@ export const PERIOD_LABELS = {
 const MIN_KLINE_SAMPLES =
 3;
 
-/** Параллельных kline-запросов (Bybit linear, один path на монету). */
-const STATS_KLINE_CONCURRENCY =
+/** Параллельных kline-запросов (Bybit linear / BingX — ниже, иначе 100410). */
+const STATS_KLINE_CONCURRENCY_BYBIT =
 8;
+
+const STATS_KLINE_CONCURRENCY_BINGX =
+2;
+
+function statsKlineConcurrency(){
+
+return getActiveExchangeId() ===
+"bingx"
+? STATS_KLINE_CONCURRENCY_BINGX
+: STATS_KLINE_CONCURRENCY_BYBIT;
+
+}
 
 /** Пауза после retCode 10006 — общая для всех воркеров. */
 const STATS_RATE_LIMIT_BASE_MS =
@@ -1324,7 +1336,7 @@ symbolList.slice(
 startIndex
 ),
 processSymbol,
-STATS_KLINE_CONCURRENCY
+statsKlineConcurrency()
 );
 
 if(

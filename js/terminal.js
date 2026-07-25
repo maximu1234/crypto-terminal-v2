@@ -120,6 +120,10 @@ initChartIndicators
 } from "./chart-indicators.js?v=42";
 
 import {
+mountChartSnapshot
+} from "./chart-snapshot.js?v=2";
+
+import {
 mountCoinsLayoutResize
 } from "./terminal-layout-resize.js?v=7";
 
@@ -145,7 +149,7 @@ isTradePage
 
 import {
 stopTickerStream
-} from "./tickers.js?v=23";
+} from "./tickers.js?v=26";
 
 import {
 mountCoinsListRefreshControls,
@@ -3150,6 +3154,15 @@ chartIndicators?.notifyLayoutChange?.();
 })
 }
 );
+
+mountChartSnapshot({
+getSymbol:()=>
+currentSymbol,
+getTf:()=>
+currentTF,
+getExchangeName:()=>
+getActiveExchangeDefinition().name
+});
 
 registerCoinsChartLayoutContext({
 getCandles:()=>

@@ -125,7 +125,7 @@ export {
 export {
   mountTradeChartMarkersToggle,
   initTradeChartExecutionMarkers
-} from "./chart-execution-markers.js?v=1";
+} from "./chart-execution-markers.js?v=2";
 
 export {
   fetchTradeHistoryForSymbol

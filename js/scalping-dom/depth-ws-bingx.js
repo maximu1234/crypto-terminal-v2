@@ -4,7 +4,7 @@
  */
 import {
 getBingxWsUrl
-} from "../exchanges/bingx/fetch.js?v=4";
+} from "../exchanges/bingx/fetch.js?v=5";
 
 import {
 toBingxSymbol

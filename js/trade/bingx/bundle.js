@@ -48,7 +48,7 @@ export {
 export {
   initTradeMarketEntry,
   openWidgetMarketPosition
-} from "./market-entry.js?v=8";
+} from "./market-entry.js?v=9";
 
 export {
   initTradeBookPanel
@@ -124,7 +124,7 @@ export {
 export {
   mountTradeChartMarkersToggle,
   initTradeChartExecutionMarkers
-} from "./chart-execution-markers.js?v=2";
+} from "./chart-execution-markers.js?v=3";
 
 export {
   fetchTradeHistoryForSymbol

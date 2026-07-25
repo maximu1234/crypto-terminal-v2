@@ -51,9 +51,20 @@ border-right:1px solid rgba(0,0,0,.25);
 body.trade-page .trade-chart-markers-toggle{
 display:inline-flex;
 align-items:center;
+gap:6px;
 flex:0 0 auto;
 cursor:pointer;
 user-select:none;
+}
+
+body.trade-page .trade-chart-markers-searching{
+font:500 12px/1 system-ui,-apple-system,sans-serif;
+color:#eab308;
+white-space:nowrap;
+}
+
+body.trade-page .trade-chart-markers-searching[hidden]{
+display:none !important;
 }
 
 body.trade-page .trade-chart-markers-toggle input{

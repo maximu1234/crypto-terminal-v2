@@ -23,7 +23,6 @@ import {
 isCloudLoggedIn,
 isCloudLoggedInEffective,
 isCloudSyncEnabled,
-getCloudUserEmail,
 onCloudSyncChange
 } from "./cloud-sync.js?v=46";
 
@@ -72,7 +71,7 @@ resumeScriptScanBackgroundJob
 
 import {
 resumeStatsBackgroundJob
-} from "./statistics-background.js?v=7";
+} from "./statistics-background.js?v=8";
 
 initSuppressNativeContextMenu();
 initFocusBlurAfterPick();
@@ -285,17 +284,6 @@ initAlertsCloudSync();
 onCloudSyncChange(
 ()=>{
 
-/* BANDWIDTH-CUT: автозагрузка device state при логине */
-/*
-if(
-isCloudLoggedInEffective() &&
-!isAlertsPage() &&
-!isAutoDevicePullDisabled()
-){
-void pullDeviceStateFromCloud();
-}
-*/
-
 window.dispatchEvent(
 new CustomEvent(
 "draw-tools-access-changed"
@@ -304,8 +292,6 @@ new CustomEvent(
 
 }
 );
-
-/* BANDWIDTH-CUT: облако рисунков отключено */
 
 import("./favorites-cloud-sync.js?v=7").then(
 ({ initFavoritesCloudSync })=>{
@@ -327,34 +313,8 @@ stripAlertFlagsNotInRegistry();
 const configured =
 await isSupabaseConfigured();
 
-let workerUrl = "";
-
-try{
-const env =
-await import("./supabase-env.js?v=5");
-workerUrl =
-String(env.ALERT_WORKER_URL || "").trim();
-}catch{
-/* ignore */
-}
-
 const loggedIn =
 isCloudLoggedIn();
-const email =
-getCloudUserEmail();
-
-console.log(
-"[Multichart] Supabase:",
-configured
-? "ключи есть"
-: "НЕТ ключей — заполните js/supabase-env.js",
-"| Вход:",
-loggedIn
-? (email || "да")
-: "нет",
-"| Worker:",
-workerUrl || "нет URL"
-);
 
 if(
 configured &&
@@ -362,15 +322,6 @@ configured &&
 ){
 console.warn(
 "[Multichart] Чтобы алерты попадали в Supabase и Telegram: шестерёнка в шапке → email → ссылка из письма."
-);
-}
-
-if(
-configured &&
-loggedIn
-){
-console.info(
-"[Multichart] Develop → Empty Caches не удаляет рисунки в браузере. Полный сброс: страница Алерты → «Удалить»."
 );
 }
 

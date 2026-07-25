@@ -29,7 +29,7 @@ getTradeConfig
 
 import {
 mountTradeChartMarkersToggle
-} from "./chart-execution-markers.js?v=2";
+} from "./chart-execution-markers.js?v=3";
 
 const REFRESH_MS =
 1500;
@@ -475,6 +475,20 @@ result.position
 }
 
 }
+}else if(
+result?.reduced
+){
+removeTradePositionFromCache(
+symbol,
+{
+position:
+result.closedPosition,
+positionSide:
+result.closedPosition?.positionSide,
+side:
+result.closedPosition?.side
+}
+);
 }
 
 window.dispatchEvent(

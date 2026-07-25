@@ -63,6 +63,12 @@ require(
 "./trading/register-ipc.cjs"
 );
 const {
+registerChartSnapshotIpc
+} =
+require(
+"./chart-snapshot.cjs"
+);
+const {
 registerAlgoTradingIpc,
 bootAlgoTradingRuntimeIfEnabled,
 bootAlgoBotIfWasRunning,
@@ -1497,6 +1503,7 @@ platform.platform
 );
 
 registerTradingIpc();
+registerChartSnapshotIpc();
 
 ipcMain.handle(
 "desktop:loadAuthSession",

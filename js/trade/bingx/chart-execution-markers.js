@@ -29,10 +29,10 @@ let cachedTradeData =
 null;
 let tradesFetchPromise =
 null;
+let tradesFetchGen =
+0;
 let markersSeq =
 0;
-let toggleBusy =
-false;
 let checkboxEl =
 null;
 let wired =
@@ -75,6 +75,16 @@ candles
 }
 
 function applyMarkers(){
+
+const box =
+ensureCheckbox();
+
+if(
+box
+){
+showMarkers =
+!!box.checked;
+}
 
 const series =
 chartHost()?.series;
@@ -127,8 +137,29 @@ err
 
 }
 
+function setSearchingVisible(
+on
+){
+
+const el =
+document.getElementById(
+"trade-chart-markers-searching"
+);
+
+if(
+!el
+){
+return;
+}
+
+el.hidden =
+!on;
+
+}
+
 function clearTradeCache(){
 
+tradesFetchGen++;
 cachedTradeData =
 null;
 tradesFetchPromise =
@@ -167,6 +198,11 @@ tradesFetchPromise &&
 return tradesFetchPromise;
 }
 
+const gen =
+++tradesFetchGen;
+const keyNow =
+key;
+
 tradesFetchPromise =
 fetchTradesForSymbol(
 symbol,
@@ -174,10 +210,17 @@ chartStartSec
 ).then(
 result=>{
 
+if(
+gen !==
+tradesFetchGen
+){
+return result;
+}
+
 cachedTradeData =
 result;
 cachedTradeKey =
-key;
+keyNow;
 tradesFetchPromise =
 null;
 return result;
@@ -202,6 +245,16 @@ tf,
 candles
 } =
 chartContext();
+
+if(
+showMarkers
+){
+setSearchingVisible(
+true
+);
+}
+
+try{
 
 if(
 !symbol ||
@@ -244,6 +297,28 @@ seq !==
 markersSeq
 ){
 return null;
+}
+
+const boxLive =
+ensureCheckbox();
+
+if(
+boxLive &&
+!boxLive.checked
+){
+showMarkers =
+false;
+cachedMarkers =
+[];
+applyMarkers();
+return {
+markerCount:
+0,
+tradeCount:
+0,
+message:
+"выключено"
+};
 }
 
 if(
@@ -311,6 +386,19 @@ message:
 `сделок ${tradeData.trades?.length || 0}, маркеров ${cachedMarkers.length}`
 };
 
+}finally{
+
+if(
+seq ===
+markersSeq
+){
+setSearchingVisible(
+false
+);
+}
+
+}
+
 }
 
 export function mountTradeChartMarkersToggle(
@@ -345,7 +433,7 @@ label.setAttribute(
 "История сделок"
 );
 label.innerHTML =
-`<input type="checkbox" id="trade-chart-markers-show" aria-label="История сделок" />`;
+`<span id="trade-chart-markers-searching" class="trade-chart-markers-searching" hidden>Поиск...</span><input type="checkbox" id="trade-chart-markers-show" aria-label="История сделок" />`;
 
 const anchor =
 beforeEl ||
@@ -399,25 +487,25 @@ const box =
 ensureCheckbox();
 
 if(
-!box ||
-toggleBusy
+!box
 ){
 return;
 }
 
-toggleBusy =
-true;
 showMarkers =
 !!box.checked;
-
-try{
 
 if(
 !showMarkers
 ){
+markersSeq++;
+clearTradeCache();
 cachedMarkers =
 [];
 applyMarkers();
+setSearchingVisible(
+false
+);
 return;
 }
 
@@ -428,11 +516,6 @@ forceTrades:
 true
 }
 );
-
-}finally{
-toggleBusy =
-false;
-}
 
 }
 

@@ -215,6 +215,22 @@ clearAuthSession:()=>
 ipcRenderer.invoke(
 "desktop:clearAuthSession"
 ),
+chartSnapshotCopy:(
+payload
+)=>
+ipcRenderer.invoke(
+"desktop:chartSnapshotCopy",
+payload ||
+{}
+),
+chartSnapshotSave:(
+payload
+)=>
+ipcRenderer.invoke(
+"desktop:chartSnapshotSave",
+payload ||
+{}
+),
 updateMenuBarTray:(
 state
 )=>

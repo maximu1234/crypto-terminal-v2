@@ -1,6 +1,8 @@
 import {
-fetchBingx
-} from "./fetch.js?v=4";
+fetchBingx,
+isBingxNonRetryableSymbolError,
+isBingxRateLimitError
+} from "./fetch.js?v=5";
 
 import {
 buildBingxMarketLists,
@@ -164,7 +166,7 @@ try{
 
 const json =
 await fetchBingx(
-`/openApi/swap/v2/quote/klines?${params}`
+`/openApi/swap/v3/quote/klines?${params}`
 );
 
 const rows =
@@ -176,11 +178,162 @@ json?.data
 
 return rows;
 
-}catch{
+}catch(
+err
+){
+
+if(
+isBingxRateLimitError(
+err
+)
+){
+throw err;
+}
+
 /* pause / invalid symbol — как Bybit: пустая партия, без throw */
 return [];
 
 }
+
+}
+
+function normalizeBingxKlineRows(
+rows
+){
+
+if(
+!Array.isArray(
+rows
+) ||
+!rows.length
+){
+return [];
+}
+
+return rows
+.map(
+row=>{
+
+if(
+Array.isArray(
+row
+)
+){
+const ts =
+Number(
+row[
+0
+]
+);
+
+if(
+!ts
+){
+return null;
+}
+
+const sec =
+ts >
+1e12
+? Math.floor(
+ts /
+1000
+)
+: ts;
+
+return {
+time:
+sec,
+open:
+Number(
+row[
+1
+]
+),
+high:
+Number(
+row[
+2
+]
+),
+low:
+Number(
+row[
+3
+]
+),
+close:
+Number(
+row[
+4
+]
+),
+volume:
+Number(
+row[
+5
+]
+) ||
+0
+};
+}
+
+const ts =
+Number(
+row?.time ||
+row?.openTime ||
+row?.t ||
+0
+);
+
+if(
+!ts
+){
+return null;
+}
+
+const sec =
+ts >
+1e12
+? Math.floor(
+ts /
+1000
+)
+: ts;
+
+return {
+time:
+sec,
+open:
+Number(
+row.open
+),
+high:
+Number(
+row.high
+),
+low:
+Number(
+row.low
+),
+close:
+Number(
+row.close
+),
+volume:
+Number(
+row.volume ||
+row.vol ||
+0
+) ||
+0
+};
+
+}
+)
+.filter(
+Boolean
+);
 
 }
 
@@ -216,12 +369,70 @@ requests;
 i++
 ){
 
-const batch =
+let batch =
+null;
+
+for(
+let attempt =
+0;
+attempt <
+3;
+attempt++
+){
+
+try{
+batch =
 await fetchKlineBatch(
 symbol,
 tf,
 end
 );
+break;
+}catch(
+err
+){
+
+if(
+!isBingxRateLimitError(
+err
+) ||
+attempt >=
+2
+){
+throw err;
+}
+
+const unlock =
+Number(
+err?.bingxUnlockMs
+) ||
+0;
+const waitMs =
+unlock >
+Date.now()
+? Math.min(
+unlock -
+Date.now() +
+250,
+30_000
+)
+: 1500 *
+(
+attempt +
+1
+);
+
+await new Promise(
+resolve=>
+setTimeout(
+resolve,
+waitMs
+)
+);
+
+}
+
+}
 
 if(
 !batch?.length
@@ -241,6 +452,15 @@ Number(
 row.time ||
 row.openTime ||
 row.t ||
+(
+Array.isArray(
+row
+)
+? row[
+0
+]
+: 0
+) ||
 0
 )
 )
@@ -265,61 +485,14 @@ oldest -
 const unique =
 new Map();
 
-all.forEach(
-row=>{
-
-const ts =
-Number(
-row.time ||
-row.openTime ||
-row.t ||
-0
-);
-
-if(
-!ts
-){
-return;
-}
-
-const sec =
-ts >
-1e12
-? Math.floor(
-ts /
-1000
-)
-: ts;
+normalizeBingxKlineRows(
+all
+).forEach(
+candle=>{
 
 unique.set(
-sec,
-{
-time:
-sec,
-open:
-Number(
-row.open
-),
-high:
-Number(
-row.high
-),
-low:
-Number(
-row.low
-),
-close:
-Number(
-row.close
-),
-volume:
-Number(
-row.volume ||
-row.vol ||
-0
-) ||
-0
-}
+candle.time,
+candle
 );
 
 }
@@ -335,6 +508,165 @@ b
 a.time -
 b.time
 );
+
+}
+
+/**
+ * Дневные свечи для Статистики ({ time, open, close }).
+ * Без этого fetchMarketDailyCandles → null на каждом символе BingX.
+ */
+async function fetchBingxDailyCandles(
+symbol,
+limit =
+375
+){
+
+const bingxSym =
+toBingxSymbol(
+symbol
+);
+const capped =
+Math.min(
+Math.max(
+1,
+Number(
+limit
+) ||
+375
+),
+1440
+);
+const params =
+new URLSearchParams({
+symbol:
+bingxSym,
+interval:
+"1d",
+limit:
+String(
+capped
+)
+});
+
+for(
+let attempt =
+0;
+attempt <
+3;
+attempt++
+){
+
+try{
+
+const json =
+await fetchBingx(
+`/openApi/swap/v3/quote/klines?${params}`,
+{
+timeoutMs:
+12000,
+retries:
+0
+}
+);
+
+const rows =
+normalizeBingxKlineRows(
+Array.isArray(
+json?.data
+)
+? json.data
+: []
+);
+
+if(
+!rows.length
+){
+return null;
+}
+
+return rows.map(
+row=>({
+time:
+row.time,
+open:
+row.open,
+close:
+row.close
+})
+);
+
+}catch(
+err
+){
+
+if(
+isBingxNonRetryableSymbolError(
+err
+)
+){
+return null;
+}
+
+if(
+isBingxRateLimitError(
+err
+) &&
+attempt <
+2
+){
+const unlock =
+Number(
+err?.bingxUnlockMs
+) ||
+0;
+const waitMs =
+unlock >
+Date.now()
+? Math.min(
+unlock -
+Date.now() +
+250,
+30_000
+)
+: 1500 *
+(
+attempt +
+1
+);
+
+await new Promise(
+resolve=>
+setTimeout(
+resolve,
+waitMs
+)
+);
+continue;
+}
+
+if(
+attempt <
+2
+){
+await new Promise(
+resolve=>
+setTimeout(
+resolve,
+600 *
+(
+attempt +
+1
+)
+)
+);
+continue;
+}
+
+}
+
+}
+
+return null;
 
 }
 
@@ -694,10 +1026,22 @@ const {
 pingBingxPublic
 } =
 await import(
-"./fetch.js?v=4"
+"./fetch.js?v=5"
 );
 
 return pingBingxPublic();
+
+},
+
+async fetchDailyCandles(
+symbol,
+limit
+){
+
+return fetchBingxDailyCandles(
+symbol,
+limit
+);
 
 }
 

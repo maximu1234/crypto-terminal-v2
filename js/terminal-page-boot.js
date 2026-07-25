@@ -250,15 +250,6 @@ throw lastErr;
 
 async function boot(){
 
-console.info(
-"[coins boot]",
-COINS_CHART_BUILD,
-CHART_ENTRY,
-isDesktopTradeMode()
-? "+ trade"
-: ""
-);
-
 if(
 location.protocol ===
 "file:"

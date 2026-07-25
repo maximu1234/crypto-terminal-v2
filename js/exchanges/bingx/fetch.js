@@ -90,6 +90,129 @@ msg.includes(
 
 }
 
+/** Frequency / IP cooldown (часто code 100410 + unblocked after …). */
+export function isBingxRateLimitError(
+err
+){
+
+if(
+Number(
+err?.bingxCode
+) ===
+100410
+){
+return true;
+}
+
+const msg =
+String(
+err?.message ||
+err ||
+""
+).toLowerCase();
+
+return (
+msg.includes(
+"100410"
+) ||
+msg.includes(
+"frequency limit"
+) ||
+msg.includes(
+"disabled period"
+) ||
+msg.includes(
+"too many"
+) ||
+msg.includes(
+"too frequent"
+) ||
+msg.includes(
+"rate limit"
+) ||
+msg.includes(
+"requests are too frequent"
+)
+);
+
+}
+
+function parseBingxUnlockMs(
+msg
+){
+
+const m =
+String(
+msg ||
+""
+).match(
+/unblocked after\s+(\d{10,})/i
+);
+
+if(
+!m
+){
+return 0;
+}
+
+const n =
+Number(
+m[
+1
+]
+);
+
+return Number.isFinite(
+n
+) &&
+n >
+0
+? n
+: 0;
+
+}
+
+function bingxRateLimitWaitMs(
+err,
+attempt
+){
+
+const unlock =
+Number(
+err?.bingxUnlockMs
+) ||
+parseBingxUnlockMs(
+err?.message
+);
+const now =
+Date.now();
+
+if(
+unlock >
+now
+){
+return Math.min(
+Math.max(
+unlock -
+now +
+250,
+800
+),
+30_000
+);
+}
+
+return Math.min(
+1500 *
+(
+attempt +
+1
+),
+8_000
+);
+
+}
+
 async function fetchJson(
 pathQuery,
 {
@@ -153,16 +276,35 @@ throw new Error(
 const json =
 await res.json();
 
+const code =
+Number(
+json?.code
+);
+
 if(
-json?.code !==
-0 &&
-json?.code !==
-"0"
+code !==
+0
 ){
-throw new Error(
+const err =
+new Error(
 json?.msg ||
 `BingX code ${json?.code}`
 );
+
+err.bingxCode =
+code;
+
+if(
+code ===
+100410
+){
+err.bingxUnlockMs =
+parseBingxUnlockMs(
+json?.msg
+);
+}
+
+throw err;
 }
 
 return json;
@@ -183,6 +325,20 @@ err
 )
 ){
 break;
+}
+
+if(
+isBingxRateLimitError(
+err
+)
+){
+await sleep(
+bingxRateLimitWaitMs(
+err,
+attempt
+)
+);
+continue;
 }
 
 if(

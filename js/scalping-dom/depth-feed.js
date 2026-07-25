@@ -46,7 +46,7 @@ createBybitDepthWs
 
 import {
 createBingxDepthWs
-} from "./depth-ws-bingx.js?v=3";
+} from "./depth-ws-bingx.js?v=4";
 
 import {
 getScalpingDomAutocenterPct,

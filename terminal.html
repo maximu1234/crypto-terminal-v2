@@ -19,6 +19,7 @@
 <link rel="stylesheet" href="/css/terminal.css?v=167">
 <link rel="stylesheet" href="/css/terminal-layout.css?v=97">
 <link rel="stylesheet" href="/css/chart-indicators.css?v=22">
+<link rel="stylesheet" href="/css/chart-snapshot.css?v=2">
 <script>
 if(window.cryptoTerminalDesktop&&window.cryptoTerminalDesktop.isDesktop){
 document.documentElement.classList.add("trade-desktop");
@@ -90,6 +91,8 @@ document.documentElement.classList.add("trade-desktop");
 </div>
 
 <div id="chart-indicators-wrap" class="chart-indicators-wrap coins-draw-desktop"></div>
+<span class="coins-topbar-divider" id="chart-snapshot-divider" hidden></span>
+<div id="chart-snapshot-wrap" class="chart-snapshot-wrap coins-draw-desktop" hidden></div>
 
 <script>
 (function(){

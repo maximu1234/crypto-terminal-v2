@@ -16,7 +16,7 @@ connectKlineStream
 import {
 connectTickerStream,
 fetchTickersInto
-} from "../tickers.js?v=23";
+} from "../tickers.js?v=26";
 
 import {
 createTickerUiBatcher

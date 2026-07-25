@@ -35,9 +35,9 @@ Object.freeze({
 "exchanges/bybit/ping.js":
 1,
 "exchanges/bingx/public.js":
-6,
+8,
 "exchanges/bingx/fetch.js":
-4,
+5,
 "exchanges/bingx/markets.js":
 3,
 "exchanges/bingx/ws.js":
@@ -129,7 +129,7 @@ Object.freeze({
 "trade-trading-settings-panel.js":
 2,
 "trade/bybit/bundle.js":
-9,
+10,
 "trade/bybit/config.js":
 3,
 "trade/bybit/positions-cache.js":
@@ -163,7 +163,7 @@ Object.freeze({
 "trade/bybit/chart-orders.js":
 2,
 "trade/bybit/chart-execution-markers.js":
-1,
+2,
 "trade/bybit/volume-presets.js":
 2,
 "trade/bybit/leverage-settings.js":
@@ -177,7 +177,7 @@ Object.freeze({
 "trade/bybit/diary/period.js":
 1,
 "trade/bingx/bundle.js":
-23,
+24,
 "trade/bingx/config.js":
 10,
 "trade/bingx/positions-cache.js":
@@ -191,7 +191,7 @@ Object.freeze({
 "trade/bingx/chart-orders.js":
 2,
 "trade/bingx/chart-execution-markers.js":
-2,
+3,
 "trade/bingx/pnl-share-modal.js":
 2,
 "trade/bingx/book-columns.js":
@@ -207,7 +207,7 @@ Object.freeze({
 "trade/bingx/auto-stops.js":
 8,
 "trade/bingx/market-entry.js":
-8,
+9,
 "trade/bingx/book-panel.js":
 4,
 "trade/bingx/position-open-orders.js":
@@ -221,7 +221,7 @@ Object.freeze({
 "trade/bingx/diary/detail.js":
 1,
 "trade/bingx/diary/chart-klines.js":
-1,
+2,
 "trade/bingx/history/index.js":
 1,
 "trade/bingx/history/fetch.js":
@@ -231,7 +231,7 @@ Object.freeze({
 "chart-page.js":
 6,
 "terminal.js":
-396,
+398,
 "terminal-multi-chart.js":
 11,
 "terminal-screener-chart-pane.js":
@@ -250,6 +250,8 @@ Object.freeze({
 3,
 "chart-indicators.js":
 42,
+"chart-snapshot.js":
+2,
 "indicators/pattern-12.js":
 8,
 "indicators/pattern-12-math.js":
@@ -430,13 +432,13 @@ Object.freeze({
 "scalping-dom/depth-ws-bybit.js":
 3,
 "scalping-dom/depth-ws-bingx.js":
-3,
+4,
 "screener-pattern-overlay.js":
 5,
 "screener-widget-zoom.js":
 16,
 "release-marker.js":
-54,
+55,
 "focus-blur-after-pick.js":
 3,
 "site-boot.js":
@@ -581,7 +583,7 @@ Object.freeze({
 "ws.js":
 17,
 "tickers.js":
-23,
+26,
 
 /* ── JS: cloud / auth ── */
 "cloud-sync.js":
@@ -669,7 +671,7 @@ Object.freeze({
 "statistics.js":
 12,
 "statistics-background.js":
-7,
+8,
 "trade-calculator.js":
 3,
 "system-admin-page.js":
@@ -708,6 +710,8 @@ Object.freeze({
 2,
 "chart-indicators.css":
 22,
+"chart-snapshot.css":
+2,
 "pattern-12-scanner.css":
 1,
 "trade-exchange-settings.css":
@@ -719,7 +723,7 @@ Object.freeze({
 "trade-leverage-settings.css":
 2,
 "trade-market-entry.css":
-3,
+4,
 "trade-book-panel.css":
 49,
 "trade-pnl-share-modal.css":

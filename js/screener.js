@@ -40,7 +40,7 @@ subscribeKline
 import {
 connectTickerStream,
 fetchTickersInto
-} from "./tickers.js?v=23";
+} from "./tickers.js?v=26";
 
 import {
 createTickerUiBatcher
@@ -48,7 +48,7 @@ createTickerUiBatcher
 
 import {
 mountReleaseMarker
-} from "./release-marker.js?v=54";
+} from "./release-marker.js?v=55";
 
 import {
 saveScreenerState,

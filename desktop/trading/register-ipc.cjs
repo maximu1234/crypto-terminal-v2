@@ -920,6 +920,35 @@ result.stopsAttached =
 attached.stopsAttached;
 }
 
+}else if(
+result?.ok !==
+false &&
+result?.reduced &&
+(
+payload?.symbol ||
+result?.closedPosition?.symbol
+)
+){
+/* Full market reduce closed the opposite leg — clear stream ghost. */
+removeStreamPosition(
+payload?.symbol ||
+result.closedPosition.symbol,
+{
+...(
+payload ||
+{}
+),
+position:
+result.closedPosition ||
+payload?.position,
+positionSide:
+result.closedPosition?.positionSide ||
+payload?.positionSide,
+side:
+result.closedPosition?.side ||
+payload?.side
+}
+);
 }
 
 return result;

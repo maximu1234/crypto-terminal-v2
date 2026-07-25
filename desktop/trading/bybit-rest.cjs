@@ -4637,13 +4637,31 @@ pos.positionIdx ??
 }
 
 async function getPosition(
-symbol
+symbol,
+options =
+{}
 ){
 
 const sym =
 stripSymbolSuffix(
 symbol
 );
+const sideHint =
+String(
+options.side ||
+options.positionSide ||
+""
+).trim();
+const wantBuy =
+sideHint ===
+"Buy" ||
+sideHint.toUpperCase() ===
+"LONG";
+const wantSell =
+sideHint ===
+"Sell" ||
+sideHint.toUpperCase() ===
+"SHORT";
 
 const result =
 await privateGet(
@@ -4669,11 +4687,43 @@ Array.isArray(
 list
 )
 ? list.find(
-item=>
+item=>{
+
+if(
+!(
 Number(
 item?.size
 ) >
 0
+)
+){
+return false;
+}
+
+if(
+!wantBuy &&
+!wantSell
+){
+return true;
+}
+
+const itemSide =
+String(
+item?.side ||
+""
+).trim();
+
+if(
+wantBuy
+){
+return itemSide ===
+"Buy";
+}
+
+return itemSide ===
+"Sell";
+
+}
 )
 : null;
 
@@ -5299,9 +5349,20 @@ let reduceOnly =
 false;
 let positionIdx =
 0;
+let closedPosition =
+null;
+const oppositeSide =
+sideNorm ===
+"Sell"
+? "Buy"
+: "Sell";
 const livePosResult =
 await getPosition(
-sym
+sym,
+{
+side:
+oppositeSide
+}
 );
 
 if(
@@ -5329,24 +5390,14 @@ livePos?.size
 const isOpposite =
 liveSize >
 0 &&
-(
-(
-sideNorm ===
-"Sell" &&
 liveSide ===
-"Buy"
-) ||
-(
-sideNorm ===
-"Buy" &&
-liveSide ===
-"Sell"
-)
-);
+oppositeSide;
 
 if(
 isOpposite
 ){
+closedPosition =
+livePos;
 const requested =
 Number(
 qtyStr
@@ -5494,7 +5545,12 @@ return {
 ...orderResult,
 position,
 reduced:
-reduceOnly
+reduceOnly,
+closedPosition:
+reduceOnly &&
+!position
+? closedPosition
+: undefined
 };
 
 }

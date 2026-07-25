@@ -7,7 +7,7 @@ import {
 
 import {
   fetchBingx
-} from "../../../exchanges/bingx/fetch.js?v=4";
+} from "../../../exchanges/bingx/fetch.js?v=5";
 
 import {
   tfToBingxInterval
@@ -26,7 +26,7 @@ export async function diaryFetchKlineBatch(symbol, tf, end) {
     }
 
     const json = await fetchBingx(
-      `/openApi/swap/v2/quote/klines?${params}`
+      `/openApi/swap/v3/quote/klines?${params}`
     );
 
     const rows = Array.isArray(json?.data) ? json.data : [];

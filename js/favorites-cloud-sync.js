@@ -3,7 +3,6 @@
  */
 import {
 isCloudLoggedInEffective,
-onCloudSyncChange,
 notifyFavoritesListeners,
 isCloudApiUsable,
 isCloudAuthError,
@@ -56,9 +55,6 @@ let ready =
 false;
 
 let pushInFlight =
-null;
-
-let authPullTimer =
 null;
 
 function resolveFavoritesExchangeId(
@@ -1114,14 +1110,6 @@ cloud.updatedAt,
 exchangeId
 );
 
-console.log(
-"[favorites] с облака:",
-cloud.rows.length,
-"флагов (",
-exchangeId,
-")"
-);
-
 return favoritesToCloudList(
 cloudGroups
 );
@@ -1154,14 +1142,6 @@ exchangeId
 saveFavoritesCloudSyncedSignature(
 localGroups,
 exchangeId
-);
-
-console.log(
-"[favorites] в облако:",
-localList.length,
-"флагов (",
-exchangeId,
-")"
 );
 
 }else{
@@ -1538,33 +1518,6 @@ exchangeId
 
 }
 
-function scheduleAuthPull(){
-
-if(
-authPullTimer
-){
-clearTimeout(
-authPullTimer
-);
-}
-
-authPullTimer =
-setTimeout(
-()=>{
-
-authPullTimer =
-null;
-
-void pullFavoritesFromCloudNow().catch(
-()=>{}
-);
-
-},
-900
-);
-
-}
-
 export async function syncFavoritesCloudOnDemand(
 exchangeId
 ){
@@ -1596,64 +1549,5 @@ return;
 
 ready =
 true;
-
-/* BANDWIDTH-CUT: авто pull при входе / focus */
-/*
-onCloudSyncChange(
-()=>{
-
-if(
-!isCloudLoggedInEffective()
-){
-return;
-}
-
-scheduleAuthPull();
-
-}
-);
-
-const pullWhenVisible =
-()=>{
-
-if(
-!isCloudLoggedInEffective()
-){
-return;
-}
-
-if(
-document.visibilityState ===
-"hidden"
-){
-return;
-}
-
-void pullFavoritesFromCloudNow().catch(
-()=>{}
-);
-
-};
-
-document.addEventListener(
-"visibilitychange",
-pullWhenVisible
-);
-
-window.addEventListener(
-"focus",
-pullWhenVisible
-);
-
-if(
-isCloudLoggedInEffective()
-){
-scheduleAuthPull();
-}
-*/
-
-console.log(
-"[favorites] sync: manual only (BANDWIDTH-CUT)"
-);
 
 }

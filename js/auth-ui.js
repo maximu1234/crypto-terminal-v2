@@ -1428,9 +1428,7 @@ console.warn(
 "[Multichart] cloud init timeout — страница продолжит без ожидания"
 );
 }else{
-console.info(
-"[Multichart] синхронизация с облаком продолжается в фоне"
-);
+/* cloud sync continues in background */
 }
 
 resolve();

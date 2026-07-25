@@ -1133,11 +1133,6 @@ next
 
 }
 
-console.log(
-"[drawings] убраны дубликаты shape_id на других монетах:",
-removed.length
-);
-
 return removed;
 
 }

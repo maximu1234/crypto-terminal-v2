@@ -103,7 +103,7 @@ tf
 );
 
 const path =
-`/openApi/swap/v2/quote/klines?symbol=${encodeURIComponent(sym)}` +
+`/openApi/swap/v3/quote/klines?symbol=${encodeURIComponent(sym)}` +
 `&interval=${encodeURIComponent(interval)}` +
 `&limit=${Math.max(
 1,

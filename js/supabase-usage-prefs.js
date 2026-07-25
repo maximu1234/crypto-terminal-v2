@@ -28,8 +28,7 @@ slowBackgroundSync: false
 
 /**
  * BANDWIDTH-CUT: экономия Supabase Free (egress / Realtime).
- * Чтобы вернуть автосинхру — закомментируйте весь блок BANDWIDTH_CUT
- * и раскомментируйте помеченные BANDWIDTH-CUT участки в site-boot.js и cloud-sync.js.
+ * Чтобы вернуть автосинхру — закомментируйте весь блок BANDWIDTH_CUT.
  */
 const BANDWIDTH_CUT =
 Object.freeze({

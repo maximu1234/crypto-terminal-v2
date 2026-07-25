@@ -1849,6 +1849,7 @@ async function openPositionAtMarket(symbol, side, volumeUsdt, options = {}) {
         ...orderResult,
         ok: true,
         position: null,
+        closedPosition: livePos,
         orderId,
         reduced: true,
         stopsAttached: { sl: false, tp: false }

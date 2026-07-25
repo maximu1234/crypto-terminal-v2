@@ -12,8 +12,19 @@ import {
 toCanonicalSymbol
 } from "./exchanges/symbol.js?v=1";
 
+import {
+fetchBingx
+} from "./exchanges/bingx/fetch.js?v=5";
+
 const DEFAULT_POLL_INTERVAL_MS =
 3000;
+
+/** Swap ticker openTime/openPrice сейчас часто «минутные» — не 24h. */
+const BINGX_OPEN24_MIN_WINDOW_MS =
+12 *
+60 *
+60 *
+1000;
 
 let pollIntervalMs =
 DEFAULT_POLL_INTERVAL_MS;
@@ -127,15 +138,93 @@ ticker.turnover24h ||
 
 }
 
-export function resolveBingxChange24Percent(
+export function parseBingxPercentField(
+raw
+){
+
+if(
+raw ==
+null ||
+raw ===
+""
+){
+return NaN;
+}
+
+return Number(
+String(
+raw
+).replace(
+/%/g,
+""
+).trim()
+);
+
+}
+
+export function isBingxTickerOpen24Reliable(
 ticker
+){
+
+const openTime =
+Number(
+ticker?.openTime
+);
+const closeTime =
+Number(
+ticker?.closeTime
+) ||
+Date.now();
+
+if(
+!(
+openTime >
+0
+)
+){
+return false;
+}
+
+return (
+closeTime -
+openTime
+) >=
+BINGX_OPEN24_MIN_WINDOW_MS;
+
+}
+
+/**
+ * 24h % для BingX.
+ *
+ * Swap `/quote/ticker` по доке — 24h, но иногда open/openTime «минутные» (баг биржи).
+ * Пока окно ненадёжное — fallback на spot `/ticker/24hr` (тот же символ).
+ * Когда BingX починит swap — снова используем его, без новой правки кода.
+ */
+export function resolveBingxChange24Percent(
+ticker,
+spotChange24
 ){
 
 const last =
 Number(
-ticker.lastPrice ||
-ticker.last
+ticker?.lastPrice ||
+ticker?.last
 );
+
+if(
+isBingxTickerOpen24Reliable(
+ticker
+)
+){
+
+if(
+last >
+0 &&
+Number.isFinite(
+last
+)
+){
+
 const open =
 Number(
 ticker.openPrice
@@ -145,10 +234,8 @@ if(
 open >
 0 &&
 Number.isFinite(
-last
-) &&
-last >
-0
+open
+)
 ){
 
 return (
@@ -162,8 +249,10 @@ open
 
 }
 
+}
+
 const pct =
-Number(
+parseBingxPercentField(
 ticker.priceChangePercent ??
 ticker.change24h
 );
@@ -177,9 +266,7 @@ pct
 ) <=
 500
 ){
-
 return pct;
-
 }
 
 const change =
@@ -193,7 +280,9 @@ change
 ) &&
 Number.isFinite(
 last
-)
+) &&
+last >
+0
 ){
 
 const base =
@@ -215,12 +304,32 @@ base
 
 }
 
+}
+
+const spot =
+Number(
+spotChange24
+);
+
+if(
+Number.isFinite(
+spot
+) &&
+Math.abs(
+spot
+) <=
+500
+){
+return spot;
+}
+
 return 0;
 
 }
 
 function buildBingxTickerPayload(
-ticker
+ticker,
+spotChange24
 ){
 
 const sym =
@@ -229,7 +338,8 @@ ticker.symbol
 );
 const change24 =
 resolveBingxChange24Percent(
-ticker
+ticker,
+spotChange24
 );
 
 return {
@@ -272,6 +382,91 @@ ticker.volume ||
 )
 
 };
+
+}
+
+/**
+ * Один запрос на все spot-пары — корректный 24h % (как у Bybit price24hPcnt).
+ * @returns {Promise<Map<string, number>>} canonical symbol → percent
+ */
+export async function loadBingxSpotChange24Map(){
+
+try{
+
+const json =
+await fetchBingx(
+"/openApi/spot/v1/ticker/24hr",
+{
+timeoutMs:
+12000,
+retries:
+1
+}
+);
+
+const rows =
+Array.isArray(
+json?.data
+)
+? json.data
+: [];
+
+const map =
+new Map();
+
+for(
+const row of
+rows
+){
+
+if(
+!isBingxTickerOpen24Reliable(
+row
+)
+){
+continue;
+}
+
+const sym =
+toCanonicalSymbol(
+row.symbol
+);
+
+if(
+!sym
+){
+continue;
+}
+
+const pct =
+parseBingxPercentField(
+row.priceChangePercent
+);
+
+if(
+!Number.isFinite(
+pct
+) ||
+Math.abs(
+pct
+) >
+500
+){
+continue;
+}
+
+map.set(
+sym,
+pct
+);
+
+}
+
+return map;
+
+}catch{
+return new Map();
+}
 
 }
 
@@ -323,8 +518,16 @@ async function fetchBingxTickersInto(
 targetMap
 ){
 
-const map =
-await loadMarketTickers();
+const [
+map,
+spotPct
+] =
+await Promise.all(
+[
+loadMarketTickers(),
+loadBingxSpotChange24Map()
+]
+);
 
 if(
 !map
@@ -339,11 +542,16 @@ sym
 )=>{
 
 const payload =
-buildBingxTickerPayload({
+buildBingxTickerPayload(
+{
 ...ticker,
 symbol:
 sym
-});
+},
+spotPct.get(
+sym
+)
+);
 
 targetMap.set(
 payload.symbol,
@@ -474,8 +682,16 @@ getActiveExchangeId() ===
 "bingx"
 ){
 
-const map =
-await loadMarketTickers();
+const [
+map,
+spotPct
+] =
+await Promise.all(
+[
+loadMarketTickers(),
+loadBingxSpotChange24Map()
+]
+);
 
 if(
 !map
@@ -490,11 +706,16 @@ sym
 )=>{
 
 const payload =
-buildBingxTickerPayload({
+buildBingxTickerPayload(
+{
 ...ticker,
 symbol:
 sym
-});
+},
+spotPct.get(
+sym
+)
+);
 
 subscribers.forEach(
 fn=>

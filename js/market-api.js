@@ -18,7 +18,7 @@ bybitPublicAdapter
 
 import {
 bingxPublicAdapter
-} from "./exchanges/bingx/public.js?v=6";
+} from "./exchanges/bingx/public.js?v=8";
 
 import {
 peekBybitSymbolsCache

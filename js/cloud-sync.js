@@ -1786,9 +1786,6 @@ payload.new
 .subscribe(status=>{
 
 if(status === "SUBSCRIBED"){
-console.log(
-"[cloud] realtime: user_settings"
-);
 return;
 }
 
@@ -2906,80 +2903,6 @@ err?.message || err
 
 }
 
-function bindRemotePullTriggers(){
-
-const wake = ()=>{
-
-if(
-document.visibilityState ===
-"hidden"
-){
-return;
-}
-
-if(
-!isAlertsPage() &&
-(
-loggedIn ||
-isCloudLoggedInEffective()
-) &&
-!isAutoDevicePullDisabled()
-){
-void pullDeviceStateFromCloud();
-}
-
-if(
-!isAlertsPage()
-){
-refreshCloudConnection().catch(()=>{
-/* ignore */
-});
-}
-
-if(
-document.visibilityState ===
-"visible" &&
-!isAuthRefreshBlockedNow()
-){
-restoreAuthSessionFromBackup();
-void refreshAuthSessionSilent();
-}
-
-};
-
-document.addEventListener(
-"visibilitychange",
-wake
-);
-
-window.addEventListener(
-"pageshow",
-e=>{
-
-wake();
-
-if(
-e.persisted &&
-hasAuthCallbackInUrl()
-){
-void recoverAuthSessionFromUrl();
-}
-
-}
-);
-
-window.addEventListener(
-"focus",
-wake
-);
-
-window.addEventListener(
-"online",
-wake
-);
-
-}
-
 let pullDeviceInflight =
 null;
 
@@ -3142,11 +3065,6 @@ window.dispatchEvent(
 new CustomEvent(
 "draw-tools-access-changed"
 )
-);
-
-console.log(
-"[Multichart] загружено из облака: алерты —",
-alertRows
 );
 
 return {
@@ -3357,9 +3275,6 @@ session =
 
 await applySession(session);
 
-/* BANDWIDTH-CUT: автозагрузка при focus / visibilitychange */
-// bindRemotePullTriggers();
-
 if(
 hasAuthCallbackInUrl() &&
 !loggedIn
@@ -3367,9 +3282,7 @@ hasAuthCallbackInUrl() &&
 window.setTimeout(()=>{
 void recoverAuthSessionFromUrl().then(ok=>{
 if(ok){
-console.log(
-"[auth] вход восстановлен из ссылки"
-);
+/* session restored from magic link */
 }
 });
 }, 400);
