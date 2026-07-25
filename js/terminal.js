@@ -43,7 +43,7 @@ canSetBlueFlag
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=45";
+} from "./auth-ui.js?v=47";
 
 import {
 persistFavoritesToCloud,
@@ -121,7 +121,7 @@ initChartIndicators
 
 import {
 mountChartSnapshot
-} from "./chart-snapshot.js?v=2";
+} from "./chart-snapshot.js?v=6";
 
 import {
 mountCoinsLayoutResize

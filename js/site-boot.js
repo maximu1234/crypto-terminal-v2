@@ -4,7 +4,7 @@ initAlertMonitor
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=45";
+} from "./auth-ui.js?v=47";
 
 import {
 isAlertsPage

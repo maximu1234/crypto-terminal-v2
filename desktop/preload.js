@@ -231,6 +231,26 @@ ipcRenderer.invoke(
 payload ||
 {}
 ),
+chartSnapshotLogoGet:()=>
+ipcRenderer.invoke(
+"desktop:chartSnapshotLogoGet"
+),
+chartSnapshotLogoSetEnabled:(
+payload
+)=>
+ipcRenderer.invoke(
+"desktop:chartSnapshotLogoSetEnabled",
+payload ||
+{}
+),
+chartSnapshotLogoPick:()=>
+ipcRenderer.invoke(
+"desktop:chartSnapshotLogoPick"
+),
+chartSnapshotLogoDataUrl:()=>
+ipcRenderer.invoke(
+"desktop:chartSnapshotLogoDataUrl"
+),
 updateMenuBarTray:(
 state
 )=>

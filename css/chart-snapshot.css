@@ -18,6 +18,21 @@ user-select:none;
 white-space:nowrap;
 }
 
+.chart-snapshot-logo-overlay{
+position:absolute;
+z-index:41;
+box-sizing:border-box;
+margin:0;
+padding:0;
+border:none;
+width:auto;
+max-width:40%;
+object-fit:contain;
+pointer-events:none;
+user-select:none;
+-webkit-user-drag:none;
+}
+
 .chart-snapshot-wrap{
 position:relative;
 display:flex;

@@ -69,6 +69,12 @@ require(
 "./chart-snapshot.cjs"
 );
 const {
+registerChartSnapshotLogoIpc
+} =
+require(
+"./chart-snapshot-logo.cjs"
+);
+const {
 registerAlgoTradingIpc,
 bootAlgoTradingRuntimeIfEnabled,
 bootAlgoBotIfWasRunning,
@@ -1504,6 +1510,7 @@ platform.platform
 
 registerTradingIpc();
 registerChartSnapshotIpc();
+registerChartSnapshotLogoIpc();
 
 ipcMain.handle(
 "desktop:loadAuthSession",

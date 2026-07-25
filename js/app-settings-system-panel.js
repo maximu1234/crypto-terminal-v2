@@ -287,10 +287,27 @@ isDesktopShell()
 `
 : "";
 
+const snapshotLogoBlock =
+isDesktopShell()
+? `
+<p class="app-settings-panel-lead app-settings-panel-lead--spaced">Скриншот графика.</p>
+<label class="app-settings-toggle-row">
+<input type="checkbox" class="app-settings-toggle-input" id="app-settings-snapshot-logo-enabled" />
+<span class="app-settings-toggle-label">Ставить лого на скриншот</span>
+</label>
+<div class="app-settings-field-row">
+<span class="app-settings-field-label" id="app-settings-snapshot-logo-status">Логотип не загружен</span>
+<button type="button" class="app-settings-action-btn" id="app-settings-snapshot-logo-upload">Загрузить PNG/JPG</button>
+</div>
+<p class="app-settings-panel-hint">PNG или JPG — сохраняем локально как PNG (оригинал + ч/б). На скриншоте — полупрозрачный логотип.</p>
+`
+: "";
+
 host.innerHTML =
 `
 ${trayBlock}
 ${featureNavBlock}
+${snapshotLogoBlock}
 <p class="app-settings-panel-lead app-settings-panel-lead--spaced">Терминал.</p>
 <label class="app-settings-field-row" for="app-settings-terminal-history-depth">
 <span class="app-settings-field-label">Глубина истории (свечей)</span>
@@ -336,6 +353,65 @@ const historyDepthInput =
 host.querySelector(
 "#app-settings-terminal-history-depth"
 );
+const snapshotLogoEnabledInput =
+host.querySelector(
+"#app-settings-snapshot-logo-enabled"
+);
+const snapshotLogoUploadBtn =
+host.querySelector(
+"#app-settings-snapshot-logo-upload"
+);
+const snapshotLogoStatus =
+host.querySelector(
+"#app-settings-snapshot-logo-status"
+);
+
+function applySnapshotLogoStatus(
+status
+){
+
+if(
+snapshotLogoEnabledInput
+){
+snapshotLogoEnabledInput.checked =
+!!status?.enabled;
+}
+
+if(
+snapshotLogoStatus
+){
+snapshotLogoStatus.textContent =
+status?.hasLogo
+? "Логотип загружен"
+: "Логотип не загружен";
+}
+
+}
+
+async function hydrateSnapshotLogo(){
+
+const desktop =
+window.cryptoTerminalDesktop;
+
+if(
+!snapshotLogoEnabledInput ||
+typeof desktop?.chartSnapshotLogoGet !==
+"function"
+){
+return;
+}
+
+try{
+const status =
+await desktop.chartSnapshotLogoGet();
+applySnapshotLogoStatus(
+status
+);
+}catch{
+/* ignore */
+}
+
+}
 
 syncTrayToggle(
 trayInput
@@ -376,6 +452,7 @@ alertNotifyModeSelect
 syncAlertToastDuration(
 alertToastDurationSelect
 );
+void hydrateSnapshotLogo();
 
 trayInput?.addEventListener(
 "change",
@@ -415,6 +492,78 @@ setAlgoTradingNavEnabled(
 !!algoNavInput.checked
 );
 refreshAppHeaderNav();
+
+}
+);
+
+snapshotLogoEnabledInput?.addEventListener(
+"change",
+async()=>{
+
+const desktop =
+window.cryptoTerminalDesktop;
+
+if(
+typeof desktop?.chartSnapshotLogoSetEnabled !==
+"function"
+){
+return;
+}
+
+try{
+const status =
+await desktop.chartSnapshotLogoSetEnabled(
+{
+enabled:
+!!snapshotLogoEnabledInput.checked
+}
+);
+applySnapshotLogoStatus(
+status
+);
+}catch{
+/* ignore */
+}
+
+}
+);
+
+snapshotLogoUploadBtn?.addEventListener(
+"click",
+async()=>{
+
+const desktop =
+window.cryptoTerminalDesktop;
+
+if(
+typeof desktop?.chartSnapshotLogoPick !==
+"function"
+){
+return;
+}
+
+snapshotLogoUploadBtn.disabled =
+true;
+
+try{
+const status =
+await desktop.chartSnapshotLogoPick();
+
+if(
+status?.canceled
+){
+return;
+}
+
+applySnapshotLogoStatus(
+status
+);
+}catch{
+/* ignore */
+}finally{
+snapshotLogoUploadBtn.disabled =
+false;
+}
 
 }
 );
@@ -578,6 +727,7 @@ alertNotifyModeSelect
 syncAlertToastDuration(
 alertToastDurationSelect
 );
+void hydrateSnapshotLogo();
 }
 };
 

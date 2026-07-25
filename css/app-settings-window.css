@@ -221,6 +221,28 @@ appearance:textfield;
 margin:0;
 }
 
+.app-settings-action-btn{
+flex:0 0 auto;
+padding:6px 12px;
+border-radius:8px;
+border:1px solid #374151;
+background:#1f2937;
+color:#f3f4f6;
+font-size:13px;
+line-height:1.2;
+cursor:pointer;
+}
+
+.app-settings-action-btn:hover:not(:disabled){
+background:#273449;
+border-color:#4b5563;
+}
+
+.app-settings-action-btn:disabled{
+opacity:0.5;
+cursor:default;
+}
+
 .app-settings-subtitle{
   margin:0 0 8px;
   font-size:14px;

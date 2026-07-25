@@ -22,6 +22,20 @@ W:
 
 const TICKER_BADGE_CLASS =
 "chart-snapshot-ticker-badge";
+const LOGO_OVERLAY_CLASS =
+"chart-snapshot-logo-overlay";
+const LOGO_HEIGHT_DIVISOR =
+5;
+const LOGO_SIZE_SCALE =
+0.8;
+const LOGO_OPACITY =
+0.28;
+/** Отступ от левого края ≈ ширина лого (для квадратных). */
+const LOGO_OFFSET_LEFT_RATIO =
+0.9;
+/** Отступ сверху ≈ половина высоты лого. */
+const LOGO_OFFSET_TOP_RATIO =
+0.5;
 
 function isDesktopSnapshotApi(){
 
@@ -183,14 +197,42 @@ resolve()
 
 }
 
+function loadImageDataUrl(
+dataUrl
+){
+
+return new Promise(
+resolve=>{
+
+const img =
+new Image();
+
+img.onload =
+()=>
+resolve(
+img
+);
+img.onerror =
+()=>
+resolve(
+null
+);
+img.src =
+dataUrl;
+
+}
+);
+
+}
+
 /**
- * Плашка «Тикер - Биржа» только на время capturePage (левый верх, поверх легенды).
+ * Плашка тикера + опциональный полупрозрачный логотип только на время capturePage.
  * @template T
  * @param {{ getSymbol?: () => string, getExchangeName?: () => string }} opts
  * @param {() => Promise<T>} fn
  * @returns {Promise<T>}
  */
-async function withTickerBadge(
+async function withSnapshotOverlays(
 opts,
 fn
 ){
@@ -199,30 +241,34 @@ const panes =
 document.getElementById(
 "charts-stack-panes"
 );
-const text =
-buildTickerBadgeText(
-opts
-);
 
 if(
-!panes ||
-!text
+!panes
 ){
 return fn();
 }
 
 panes.querySelectorAll(
-`.${TICKER_BADGE_CLASS}`
+`.${TICKER_BADGE_CLASS}, .${LOGO_OVERLAY_CLASS}`
 ).forEach(
 el=>
 el.remove()
 );
 
-const badge =
+const text =
+buildTickerBadgeText(
+opts
+);
+let badge =
+null;
+
+if(
+text
+){
+badge =
 document.createElement(
 "div"
 );
-
 badge.className =
 TICKER_BADGE_CLASS;
 badge.textContent =
@@ -234,12 +280,89 @@ badge.setAttribute(
 panes.appendChild(
 badge
 );
+}
+
+let logoEl =
+null;
+const api =
+window.cryptoTerminalDesktop;
+
+try{
+if(
+typeof api?.chartSnapshotLogoGet ===
+"function" &&
+typeof api?.chartSnapshotLogoDataUrl ===
+"function"
+){
+const status =
+await api.chartSnapshotLogoGet();
+
+if(
+status?.enabled &&
+status?.hasLogo
+){
+const data =
+await api.chartSnapshotLogoDataUrl();
+
+if(
+data?.ok &&
+data.dataUrl
+){
+const img =
+await loadImageDataUrl(
+data.dataUrl
+);
+
+if(
+img
+){
+logoEl =
+img;
+logoEl.className =
+LOGO_OVERLAY_CLASS;
+logoEl.alt =
+"";
+logoEl.setAttribute(
+"aria-hidden",
+"true"
+);
+const logoH =
+Math.max(
+24,
+Math.round(
+panes.clientHeight /
+LOGO_HEIGHT_DIVISOR *
+LOGO_SIZE_SCALE
+)
+);
+
+logoEl.style.height =
+`${logoH}px`;
+logoEl.style.left =
+`${Math.round(logoH * LOGO_OFFSET_LEFT_RATIO)}px`;
+logoEl.style.top =
+`${Math.round(logoH * LOGO_OFFSET_TOP_RATIO)}px`;
+logoEl.style.opacity =
+String(
+LOGO_OPACITY
+);
+panes.appendChild(
+logoEl
+);
+}
+}
+}
+}
+}catch{
+/* ignore logo overlay errors */
+}
 
 try{
 await waitForPaint();
 return await fn();
 }finally{
-badge.remove();
+badge?.remove();
+logoEl?.remove();
 }
 
 }
@@ -329,7 +452,7 @@ true
 );
 
 try{
-await withTickerBadge(
+await withSnapshotOverlays(
 opts,
 async ()=>{
 
@@ -388,7 +511,7 @@ true
 );
 
 try{
-await withTickerBadge(
+await withSnapshotOverlays(
 opts,
 async ()=>{
 
