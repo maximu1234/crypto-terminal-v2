@@ -10,7 +10,7 @@ initChartIndicators
 
 import {
 createPattern12Indicator
-} from "./pattern-12.js?v=3";
+} from "./pattern-12.js?v=4";
 
 import {
 ALGO_INDICATORS_STORAGE_KEY

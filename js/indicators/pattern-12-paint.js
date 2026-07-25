@@ -4,6 +4,10 @@
 const LINE_PAT_COLOR =
 "rgba(250, 204, 21, 0.6)";
 
+/** Pixel offset: dot hangs near Long/Short text, not on the wick tip. */
+const PT4_DOT_Y_OFFSET =
+12;
+
 export function barTimeSpanMs(
 candles,
 barLen
@@ -730,6 +734,14 @@ null
 continue;
 }
 
+const yDot =
+dot.side ===
+"long"
+? y -
+PT4_DOT_Y_OFFSET
+: y +
+PT4_DOT_Y_OFFSET;
+
 ctx.fillStyle =
 dot.side ===
 "long"
@@ -738,7 +750,7 @@ dot.side ===
 ctx.beginPath();
 ctx.arc(
 x,
-y,
+yDot,
 4,
 0,
 Math.PI *

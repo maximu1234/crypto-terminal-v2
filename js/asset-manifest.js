@@ -255,7 +255,7 @@ Object.freeze({
 "indicators/pattern-12-math.js":
 4,
 "indicators/pattern-12-paint.js":
-3,
+5,
 "pattern-12-scanner.js":
 18,
 "pattern-scan-results.js":
@@ -285,9 +285,9 @@ Object.freeze({
 "algo-trading/pattern-12-math.js":
 5,
 "algo-trading/pattern-12.js":
-3,
+4,
 "algo-trading/pattern-12-paint.js":
-1,
+3,
 "algo-trading/pattern-stats.js":
 3,
 "algo-trading/drawings.js":
@@ -360,11 +360,11 @@ Object.freeze({
 "indicators/rsi-pane.js":
 3,
 "indicators/volume-pane.js":
-12,
+13,
 "indicators/ao-math.js":
 1,
 "indicators/ao-pane.js":
-9,
+10,
 "indicators/indicator-pane-order.js":
 1,
 "indicators/indicator-pane-viewport.js":
@@ -715,7 +715,7 @@ Object.freeze({
 "app-settings-window.css":
 8,
 "trade-volume-presets.css":
-8,
+9,
 "trade-leverage-settings.css":
 2,
 "trade-market-entry.css":

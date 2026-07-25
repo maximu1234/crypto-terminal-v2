@@ -33,7 +33,8 @@ const VOL_DOWN =
 
 function buildVolumeDisplayPoints(
 candles,
-tf
+tf,
+visibleBarsCap
 ){
 
 if(
@@ -43,7 +44,10 @@ return [];
 }
 
 const cap =
-getHost?.()?.getVisibleBarsCap?.();
+typeof visibleBarsCap ===
+"number"
+? visibleBarsCap
+: null;
 const visibleBars =
 typeof cap ===
 "number" &&
@@ -360,7 +364,8 @@ host?.getTf?.() ||
 const points =
 buildVolumeDisplayPoints(
 raw,
-tf
+tf,
+host?.getVisibleBarsCap?.()
 );
 
 series.setData(

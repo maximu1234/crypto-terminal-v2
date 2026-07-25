@@ -33,7 +33,8 @@ export const AO_PANE_ID =
 
 function buildAoDisplayPoints(
 candles,
-tf
+tf,
+visibleBarsCap
 ){
 
 if(
@@ -54,7 +55,10 @@ return [];
 }
 
 const cap =
-getHost?.()?.getVisibleBarsCap?.();
+typeof visibleBarsCap ===
+"number"
+? visibleBarsCap
+: null;
 const visibleBars =
 typeof cap ===
 "number" &&
@@ -406,7 +410,8 @@ host?.getTf?.() ||
 const points =
 buildAoDisplayPoints(
 raw,
-tf
+tf,
+host?.getVisibleBarsCap?.()
 );
 
 let prev =

@@ -8,7 +8,7 @@ defaultPattern12Settings
 
 import {
 paintPattern12Scene
-} from "./indicators/pattern-12-paint.js?v=3";
+} from "./indicators/pattern-12-paint.js?v=5";
 
 const PATTERN_SETTINGS =
 defaultPattern12Settings();
