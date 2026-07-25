@@ -404,7 +404,7 @@ Object.freeze({
 "watchlist.js":
 97,
 "screener.js":
-94,
+95,
 "screener-widget-guard.js":
 1,
 "scalping-dom/prefs.js":
@@ -438,11 +438,11 @@ Object.freeze({
 "screener-widget-zoom.js":
 16,
 "release-marker.js":
-55,
+56,
 "focus-blur-after-pick.js":
 3,
 "site-boot.js":
-106,
+107,
 "site-header.js":
 5,
 "site-header-nav.js":
@@ -452,7 +452,7 @@ Object.freeze({
 "site-header-nav-desktop.js":
 2,
 "desktop-app-ui.js":
-4,
+5,
 "suppress-native-context-menu.js":
 4,
 "charts-lib-boot.js":
