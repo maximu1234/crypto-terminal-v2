@@ -1695,7 +1695,7 @@ isFavoritesAutoCloudDisabled()
 return;
 }
 
-void import("./favorites-cloud-sync.js?v=7").then(
+void import("./favorites-cloud-sync.js?v=48").then(
 m=>{
 m.applyFavoritesFromRealtimeRow(
 row
@@ -1833,7 +1833,7 @@ settingsChannel = channel;
 export async function mergeFavoritesWithCloud(){
 
 const m =
-await import("./favorites-cloud-sync.js?v=7");
+await import("./favorites-cloud-sync.js?v=48");
 
 return m.reconcileLocalFavoritesWithCloud();
 
@@ -1843,7 +1843,7 @@ return m.reconcileLocalFavoritesWithCloud();
 export async function pullFavoritesIfCloudNewer(){
 
 const m =
-await import("./favorites-cloud-sync.js?v=7");
+await import("./favorites-cloud-sync.js?v=48");
 
 await m.pullFavoritesFromCloudNow();
 return favoritesToCloudList(
@@ -1867,7 +1867,7 @@ return collectAllLocalDrawings();
 async function syncFavoritesWithCloud(){
 
 const m =
-await import("./favorites-cloud-sync.js?v=7");
+await import("./favorites-cloud-sync.js?v=48");
 
 await m.reconcileLocalFavoritesWithCloud();
 
@@ -1901,7 +1901,7 @@ return;
 }
 
 const m =
-await import("./favorites-cloud-sync.js?v=7");
+await import("./favorites-cloud-sync.js?v=48");
 
 m.pushFavoritesAfterLocalEdit(
 favorites
@@ -2639,6 +2639,7 @@ raw
 
 /**
  * Algo Bot: paste Multichart session string → localStorage + desktop file + supabase client.
+ * On slow/blocked networks (servers) setSession may hang — tokens are applied locally first.
  * @param {string} input
  * @returns {Promise<{ ok: boolean, email?: string, message: string }>}
  */
@@ -2698,6 +2699,30 @@ message:
 };
 }
 
+/*
+  Apply JWT locally first so alerts work even if Auth API is slow/unreachable.
+  Then best-effort setSession (may refresh / validate over the network).
+*/
+lastAppliedSessionKey =
+"";
+
+try{
+await applySession(
+decoded.session
+);
+}catch(
+err
+){
+console.warn(
+"[auth] import applySession:",
+err?.message ||
+err
+);
+}
+
+let networkNote =
+"";
+
 try{
 
 const {
@@ -2712,40 +2737,40 @@ refresh_token:
 decoded.session.refresh_token ||
 ""
 }),
-8000,
+30000,
 "setSession import"
 );
 
 if(
 error
 ){
-return {
-ok:
-false,
-message:
+networkNote =
 error.message ||
-"Не удалось применить сессию."
-};
-}
-
+"сеть";
+console.warn(
+"[auth] setSession import:",
+networkNote
+);
+}else if(
+data?.session
+){
 lastAppliedSessionKey =
 "";
-
 await applySession(
-data?.session ||
-decoded.session
+data.session
 );
+}
 
 }catch(
 err
 ){
-return {
-ok:
-false,
-message:
+networkNote =
 err?.message ||
-"Не удалось применить сессию."
-};
+"таймаут сети";
+console.warn(
+"[auth] setSession import:",
+networkNote
+);
 }
 
 if(
@@ -2755,19 +2780,33 @@ return {
 ok:
 false,
 message:
-"Сессия сохранена, но вход не подтверждён. Попробуйте ещё раз."
+"Сессия сохранена, но вход не подтверждён. Проверьте строку и сеть до Supabase."
 };
+}
+
+const email =
+getCloudUserEmail() ||
+decoded.session.user?.email ||
+"";
+
+let message =
+`Вошли: ${email || "аккаунт"}`;
+
+if(
+networkNote &&
+/timeout|failed to fetch|network|сеть|таймаут/i.test(
+networkNote
+)
+){
+message +=
+" (сессия сохранена локально; облако ответило медленно или недоступно)";
 }
 
 return {
 ok:
 true,
-email:
-getCloudUserEmail() ||
-decoded.session.user?.email ||
-"",
-message:
-`Вошли: ${getCloudUserEmail() || decoded.session.user?.email || "аккаунт"}`
+email,
+message
 };
 
 }
@@ -3071,7 +3110,7 @@ return;
 try{
 
 const favoritesCloud =
-await import("./favorites-cloud-sync.js?v=7");
+await import("./favorites-cloud-sync.js?v=48");
 
 if(
 !isFavoritesAutoCloudDisabled() &&
@@ -3085,7 +3124,7 @@ if(
 !isAlertsCloudDisabled()
 ){
 const alertsCloud =
-await import("./alerts-cloud-sync.js?v=111");
+await import("./alerts-cloud-sync.js?v=48");
 
 await alertsCloud.hydrateAlertsAfterAuth({
 force: true
@@ -3188,7 +3227,7 @@ await ensureCloudLoginResolved(
 );
 
 const alertsCloud =
-await import("./alerts-cloud-sync.js?v=111");
+await import("./alerts-cloud-sync.js?v=48");
 const { stripAlertFlagsNotInRegistry } =
 await import("./alerts.js?v=105");
 

@@ -1,7 +1,7 @@
 import {
 isCloudLoggedInEffective,
 ensureCloudLoginResolved
-} from "../cloud-sync.js?v=47";
+} from "../cloud-sync.js?v=48";
 
 import {
 resolveAlertAuthFast,
@@ -1899,7 +1899,7 @@ return 0;
 
 try{
 const { ensureCloudLoginResolved } =
-await import("../cloud-sync.js?v=47");
+await import("../cloud-sync.js?v=48");
 
 await ensureCloudLoginResolved(
 8000

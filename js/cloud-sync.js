@@ -2639,6 +2639,7 @@ raw
 
 /**
  * Algo Bot: paste Multichart session string → localStorage + desktop file + supabase client.
+ * On slow/blocked networks (servers) setSession may hang — tokens are applied locally first.
  * @param {string} input
  * @returns {Promise<{ ok: boolean, email?: string, message: string }>}
  */
@@ -2698,6 +2699,30 @@ message:
 };
 }
 
+/*
+  Apply JWT locally first so alerts work even if Auth API is slow/unreachable.
+  Then best-effort setSession (may refresh / validate over the network).
+*/
+lastAppliedSessionKey =
+"";
+
+try{
+await applySession(
+decoded.session
+);
+}catch(
+err
+){
+console.warn(
+"[auth] import applySession:",
+err?.message ||
+err
+);
+}
+
+let networkNote =
+"";
+
 try{
 
 const {
@@ -2712,40 +2737,40 @@ refresh_token:
 decoded.session.refresh_token ||
 ""
 }),
-8000,
+30000,
 "setSession import"
 );
 
 if(
 error
 ){
-return {
-ok:
-false,
-message:
+networkNote =
 error.message ||
-"Не удалось применить сессию."
-};
-}
-
+"сеть";
+console.warn(
+"[auth] setSession import:",
+networkNote
+);
+}else if(
+data?.session
+){
 lastAppliedSessionKey =
 "";
-
 await applySession(
-data?.session ||
-decoded.session
+data.session
 );
+}
 
 }catch(
 err
 ){
-return {
-ok:
-false,
-message:
+networkNote =
 err?.message ||
-"Не удалось применить сессию."
-};
+"таймаут сети";
+console.warn(
+"[auth] setSession import:",
+networkNote
+);
 }
 
 if(
@@ -2755,19 +2780,33 @@ return {
 ok:
 false,
 message:
-"Сессия сохранена, но вход не подтверждён. Попробуйте ещё раз."
+"Сессия сохранена, но вход не подтверждён. Проверьте строку и сеть до Supabase."
 };
+}
+
+const email =
+getCloudUserEmail() ||
+decoded.session.user?.email ||
+"";
+
+let message =
+`Вошли: ${email || "аккаунт"}`;
+
+if(
+networkNote &&
+/timeout|failed to fetch|network|сеть|таймаут/i.test(
+networkNote
+)
+){
+message +=
+" (сессия сохранена локально; облако ответило медленно или недоступно)";
 }
 
 return {
 ok:
 true,
-email:
-getCloudUserEmail() ||
-decoded.session.user?.email ||
-"",
-message:
-`Вошли: ${getCloudUserEmail() || decoded.session.user?.email || "аккаунт"}`
+email,
+message
 };
 
 }

@@ -15,7 +15,7 @@ createPriceAlert
 
 import {
 isCloudLoggedInEffective
-} from "./cloud-sync.js?v=47";
+} from "./cloud-sync.js?v=48";
 
 import {
 getTelegramChatId
