@@ -26,7 +26,7 @@ isAlgoBotDesktop,
 fetchAlgoBotCloudLock,
 clearAlgoBotCloudLock,
 ensureAlgoBotCloudLock
-} from "./bot-bridge.js?v=9";
+} from "./bot-bridge.js?v=10";
 
 const STATUS_POLL_MS =
 2500;
@@ -1913,8 +1913,8 @@ statusLockValue
 ){
 statusLockValue.textContent =
 lock?.code ===
-"not_logged_in"
-? "нет входа"
+"no_keys"
+? "нет ключей"
 : "—";
 statusLockValue.classList.remove(
 "is-locked",
@@ -1927,9 +1927,11 @@ statusLockClearBtn
 ){
 statusLockClearBtn.disabled =
 lock?.code ===
-"not_logged_in" ||
+"no_keys" ||
 lock?.code ===
-"not_configured";
+"not_configured" ||
+lock?.code ===
+"desktop_only";
 }
 
 return;

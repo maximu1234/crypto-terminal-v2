@@ -3,6 +3,10 @@
  * Files: bybit-algo-api-credentials.json, bingx-algo-api-credentials.json
  * Never read/write exchange-credentials.cjs stores.
  */
+const crypto =
+require(
+"crypto"
+);
 const fs =
 require(
 "fs"
@@ -288,6 +292,71 @@ profile:
 
 }
 
+/**
+ * Cloud bot lock key: SHA-256 of "exchange:net:apiKey" (never exposes raw key).
+ * @returns {{ ok: true, lockKey: string, exchangeId: string } | { ok: false, code: string, message: string }}
+ */
+function getAlgoBotLockKey(
+exchangeId =
+"bybit"
+){
+
+const id =
+normalizeExchangeId(
+exchangeId
+);
+const creds =
+getAlgoCredentials(
+id
+);
+const apiKey =
+String(
+creds?.apiKey ||
+""
+).trim();
+
+if(
+!apiKey
+){
+return {
+ok:
+false,
+code:
+"no_keys",
+message:
+"Алго API-ключи не настроены"
+};
+}
+
+const net =
+creds?.testnet
+? "testnet"
+: "mainnet";
+const material =
+`${id}:${net}:${apiKey}`;
+const lockKey =
+crypto
+.createHash(
+"sha256"
+)
+.update(
+material,
+"utf8"
+)
+.digest(
+"hex"
+);
+
+return {
+ok:
+true,
+lockKey,
+exchangeId:
+id
+};
+
+}
+
 module.exports =
 {
 KNOWN_EXCHANGES,
@@ -295,5 +364,6 @@ normalizeExchangeId,
 getAlgoCredentials,
 saveAlgoCredentials,
 clearAlgoCredentials,
-getAlgoCredentialsStatus
+getAlgoCredentialsStatus,
+getAlgoBotLockKey
 };

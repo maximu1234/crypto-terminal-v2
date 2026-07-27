@@ -49,11 +49,11 @@ mountAlgoRuntimeUi
 
 import {
 mountAlgoBotStrategyUi
-} from "./algo-trading/bot-strategy-ui.js?v=33";
+} from "./algo-trading/bot-strategy-ui.js?v=34";
 
 import {
 syncBotStrategiesToMain
-} from "./algo-trading/bot-bridge.js?v=9";
+} from "./algo-trading/bot-bridge.js?v=10";
 
 import {
 mountAlgoTradeUi

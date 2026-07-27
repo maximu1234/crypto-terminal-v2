@@ -1,6 +1,7 @@
 /**
- * Облачная блокировка АлгоБота (Supabase): один активный запуск на аккаунт.
+ * Облачная блокировка АлгоБота (Supabase): один активный запуск на хеш алго API-ключа.
  * Метка ставится при «Запустить», снимается при «Остановить» или «Снять блокировку».
+ * Без логина Multichart — capability = знание SHA-256(exchange:net:apiKey).
  */
 import {
 getSupabase,
@@ -82,7 +83,16 @@ return `algo-${Date.now()}`;
 
 }
 
-async function getAuthedClient(){
+/**
+ * @returns {Promise<{
+ *   ok: boolean,
+ *   sb?: object,
+ *   lockKey?: string,
+ *   code?: string,
+ *   message?: string
+ * }>}
+ */
+async function getLockClient(){
 
 if(
 !(
@@ -96,6 +106,44 @@ code:
 "not_configured",
 message:
 "Supabase не настроен"
+};
+}
+
+const api =
+window.cryptoTerminalDesktop?.algoTrading;
+
+if(
+typeof api?.getBotLockKey !==
+"function"
+){
+return {
+ok:
+false,
+code:
+"desktop_only",
+message:
+"Облачная блокировка доступна только в desktop"
+};
+}
+
+const keyRes =
+await api.getBotLockKey(
+{}
+);
+
+if(
+!keyRes?.ok ||
+!keyRes.lockKey
+){
+return {
+ok:
+false,
+code:
+keyRes?.code ||
+"no_keys",
+message:
+keyRes?.message ||
+"Алго API-ключи не настроены"
 };
 }
 
@@ -115,47 +163,14 @@ message:
 };
 }
 
-const {
-data:{
-session
-},
-error
-} =
-await sb.auth.getSession();
-
-if(
-error
-){
-return {
-ok:
-false,
-code:
-"auth_error",
-message:
-error.message ||
-"Ошибка авторизации"
-};
-}
-
-if(
-!session?.user?.id
-){
-return {
-ok:
-false,
-code:
-"not_logged_in",
-message:
-"Войдите в аккаунт, чтобы запускать бота (облачная блокировка)"
-};
-}
-
 return {
 ok:
 true,
 sb,
-userId:
-session.user.id
+lockKey:
+String(
+keyRes.lockKey
+)
 };
 
 }
@@ -174,20 +189,20 @@ session.user.id
  */
 export async function fetchAlgoBotLock(){
 
-const auth =
-await getAuthedClient();
+const client =
+await getLockClient();
 
 if(
-!auth.ok
+!client.ok
 ){
-return auth;
+return client;
 }
 
 const {
 data,
 error
 } =
-await auth.sb
+await client.sb
 .from(
 TABLE
 )
@@ -195,8 +210,8 @@ TABLE
 "locked, instance_id, app_name, locked_at"
 )
 .eq(
-"user_id",
-auth.userId
+"lock_key",
+client.lockKey
 )
 .maybeSingle();
 
@@ -253,13 +268,13 @@ null
  */
 export async function acquireAlgoBotLock(){
 
-const auth =
-await getAuthedClient();
+const client =
+await getLockClient();
 
 if(
-!auth.ok
+!client.ok
 ){
-return auth;
+return client;
 }
 
 const current =
@@ -303,14 +318,14 @@ new Date().toISOString();
 const {
 error
 } =
-await auth.sb
+await client.sb
 .from(
 TABLE
 )
 .upsert(
 {
-user_id:
-auth.userId,
+lock_key:
+client.lockKey,
 locked:
 true,
 instance_id:
@@ -322,7 +337,7 @@ now
 },
 {
 onConflict:
-"user_id"
+"lock_key"
 }
 );
 
@@ -353,17 +368,19 @@ appName
  */
 export async function releaseAlgoBotLock(){
 
-const auth =
-await getAuthedClient();
+const client =
+await getLockClient();
 
 if(
-!auth.ok
+!client.ok
 ){
 if(
-auth.code ===
-"not_logged_in" ||
-auth.code ===
-"not_configured"
+client.code ===
+"no_keys" ||
+client.code ===
+"not_configured" ||
+client.code ===
+"desktop_only"
 ){
 return {
 ok:
@@ -373,7 +390,7 @@ true
 };
 }
 
-return auth;
+return client;
 }
 
 const ours =
@@ -383,7 +400,7 @@ const {
 data,
 error: readErr
 } =
-await auth.sb
+await client.sb
 .from(
 TABLE
 )
@@ -391,8 +408,8 @@ TABLE
 "locked, instance_id"
 )
 .eq(
-"user_id",
-auth.userId
+"lock_key",
+client.lockKey
 )
 .maybeSingle();
 
@@ -441,7 +458,7 @@ message:
 const {
 error
 } =
-await auth.sb
+await client.sb
 .from(
 TABLE
 )
@@ -458,8 +475,8 @@ null
 }
 )
 .eq(
-"user_id",
-auth.userId
+"lock_key",
+client.lockKey
 )
 .eq(
 "instance_id",
@@ -492,26 +509,26 @@ true
  */
 export async function clearAlgoBotLock(){
 
-const auth =
-await getAuthedClient();
+const client =
+await getLockClient();
 
 if(
-!auth.ok
+!client.ok
 ){
-return auth;
+return client;
 }
 
 const {
 error
 } =
-await auth.sb
+await client.sb
 .from(
 TABLE
 )
 .upsert(
 {
-user_id:
-auth.userId,
+lock_key:
+client.lockKey,
 locked:
 false,
 instance_id:
@@ -523,7 +540,7 @@ null
 },
 {
 onConflict:
-"user_id"
+"lock_key"
 }
 );
 

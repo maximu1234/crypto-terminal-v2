@@ -296,6 +296,14 @@ ipcRenderer.invoke(
 "desktop:algoTradingGetKeysStatus",
 payload
 ),
+getBotLockKey:(
+payload
+)=>
+ipcRenderer.invoke(
+"desktop:algoTradingGetBotLockKey",
+payload ||
+{}
+),
 saveKeys:(
 payload
 )=>

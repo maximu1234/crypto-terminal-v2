@@ -1,3 +1,4 @@
+-- SUPERSEDED by migration-algo-bot-lock-v2.sql (lock_key = SHA-256 of algo API key).
 -- Облачная блокировка АлгоБота: один запуск на аккаунт.
 -- Запускай в Supabase SQL Editor.
 

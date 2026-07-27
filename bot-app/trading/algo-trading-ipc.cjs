@@ -16,7 +16,8 @@ const {
 normalizeExchangeId,
 saveAlgoCredentials,
 clearAlgoCredentials,
-getAlgoCredentialsStatus
+getAlgoCredentialsStatus,
+getAlgoBotLockKey
 } =
 require(
 "./algo-exchange-credentials.cjs"
@@ -326,6 +327,44 @@ err
 return {
 ok:
 false,
+message:
+err?.message ||
+String(
+err
+)
+};
+}
+
+}
+);
+
+handleTrustedDesktopUi(
+ipcMain,
+
+"desktop:algoTradingGetBotLockKey",
+(
+_event,
+payload
+)=>{
+
+try{
+const exchangeId =
+normalizeExchangeId(
+payload?.exchangeId ||
+readPrefs().exchangeId
+);
+
+return getAlgoBotLockKey(
+exchangeId
+);
+}catch(
+err
+){
+return {
+ok:
+false,
+code:
+"error",
 message:
 err?.message ||
 String(
