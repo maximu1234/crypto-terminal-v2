@@ -2,6 +2,10 @@
  * Облачная блокировка АлгоБота (Supabase): один активный запуск на хеш алго API-ключа.
  * Метка ставится при «Запустить», снимается при «Остановить» или «Снять блокировку».
  * Без логина Multichart — capability = знание SHA-256(exchange:net:apiKey).
+ *
+ * Важно: отдельный anon-клиент без auth storage. Общий getSupabase() после
+ * вставки сессии Multichart может кидать AuthSessionMissingError на REST,
+ * хотя RLS для lock_key разрешает anon.
  */
 import {
 getSupabase,
@@ -13,6 +17,92 @@ const INSTANCE_KEY =
 
 const TABLE =
 "algo_bot_lock";
+
+const noopAuthStorage = {
+getItem(){
+return null;
+},
+setItem(){},
+removeItem(){}
+};
+
+let lockSb =
+null;
+let lockSbPromise =
+null;
+
+/**
+ * Anon-only Supabase client for algo_bot_lock (no JWT / no Multichart session).
+ * @returns {Promise<object|null>}
+ */
+async function getLockSupabase(){
+
+if(
+lockSb
+){
+return lockSb;
+}
+
+if(
+lockSbPromise
+){
+return lockSbPromise;
+}
+
+lockSbPromise = (async()=>{
+
+/*
+  Warm UMD createClient via shared helper (may also init auth client — fine).
+*/
+await getSupabase();
+
+const createClient =
+window.supabase?.createClient;
+
+if(
+typeof createClient !==
+"function"
+){
+return null;
+}
+
+const env =
+await import(
+"../supabase-env.js?v=5"
+);
+
+if(
+!env.SUPABASE_URL ||
+!env.SUPABASE_ANON_KEY
+){
+return null;
+}
+
+lockSb =
+createClient(
+env.SUPABASE_URL,
+env.SUPABASE_ANON_KEY,
+{
+auth: {
+persistSession:
+false,
+autoRefreshToken:
+false,
+detectSessionInUrl:
+false,
+storage:
+noopAuthStorage
+}
+}
+);
+
+return lockSb;
+
+})();
+
+return lockSbPromise;
+
+}
 
 function resolveAppName(){
 
@@ -148,7 +238,7 @@ keyRes?.message ||
 }
 
 const sb =
-await getSupabase();
+await getLockSupabase();
 
 if(
 !sb
@@ -197,6 +287,8 @@ if(
 ){
 return client;
 }
+
+try{
 
 const {
 data,
@@ -260,6 +352,23 @@ data?.locked_at ||
 null
 };
 
+}catch(
+err
+){
+return {
+ok:
+false,
+code:
+"query_error",
+message:
+err?.message ||
+String(
+err
+) ||
+"Не удалось прочитать блокировку"
+};
+}
+
 }
 
 /**
@@ -315,6 +424,8 @@ resolveAppName();
 const now =
 new Date().toISOString();
 
+try{
+
 const {
 error
 } =
@@ -351,6 +462,23 @@ code:
 "upsert_error",
 message:
 error.message ||
+"Не удалось поставить блокировку"
+};
+}
+
+}catch(
+err
+){
+return {
+ok:
+false,
+code:
+"upsert_error",
+message:
+err?.message ||
+String(
+err
+) ||
 "Не удалось поставить блокировку"
 };
 }

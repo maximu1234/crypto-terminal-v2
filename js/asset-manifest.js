@@ -334,7 +334,7 @@ Object.freeze({
 "algo-trading/bot-strategy-ui.js":
 38,
 "algo-trading/bot-cloud-lock.js":
-2,
+3,
 "algo-trading/trade/format.js":
 2,
 "algo-trading/trade/positions-cache.js":
