@@ -1,0 +1,149 @@
+/**
+ * Первый кадр до полных CSS (Яндекс.Браузер часто рисует HTML раньше таблиц стилей).
+ *
+ * Палитра фона:
+ * --app-bg       #16181f  основной фон сайта
+ * --app-chart-bg #141721  фон области графиков (LW, RSI, виджеты)
+ * --app-surface  #13181e  панели, шапки виджетов
+ * --app-input    #171b21  поля ввода, inset-блоки
+ */
+:root{
+--app-bg:#16181f;
+--app-chart-bg:#141721;
+--app-surface:#13181e;
+--app-input:#171b21;
+}
+
+html:not(.css-ready){
+visibility:hidden;
+}
+
+html.css-ready{
+visibility:visible;
+}
+
+html,
+body{
+margin:0;
+width:100%;
+height:100%;
+background:var(--app-bg);
+color:#e5e7eb;
+font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+}
+
+:focus,
+:focus-visible{
+outline:none;
+}
+
+.hidden,
+.header-settings-dropdown.hidden,
+[hidden]{
+display:none !important;
+}
+
+.menu,
+nav.menu{
+display:flex;
+flex-wrap:nowrap;
+align-items:center;
+gap:var(--site-header-nav-gap, 18px);
+}
+
+.menu a{
+color:#9ca3af;
+text-decoration:none;
+font-size:14px;
+}
+
+.menu a.active{
+color:#fff;
+}
+
+#header,
+.app-page-header{
+display:flex;
+flex-wrap:nowrap;
+align-items:center;
+gap:20px;
+padding:0 16px;
+height:var(--app-header-h, 56px);
+min-height:var(--app-header-h, 56px);
+background:var(--app-bg);
+border-bottom:1px solid #1f2937;
+overflow:visible;
+}
+
+#logo{
+display:inline-flex;
+align-items:center;
+flex-shrink:0;
+text-decoration:none;
+}
+
+#logo .site-logo-img{
+width:32px;
+height:32px;
+}
+
+#header-controls.screener-header-desktop{
+display:flex;
+flex-wrap:wrap;
+align-items:center;
+gap:12px;
+margin-left:auto;
+}
+#app-header-nav,
+#app-header-nav{
+display:flex;
+align-items:center;
+gap:var(--site-header-nav-gap, 18px);
+}
+
+body:has(#screener-grid){
+display:flex;
+flex-direction:column;
+overflow:hidden;
+}
+
+#screener-grid{
+flex:1;
+display:grid;
+gap:8px;
+padding:8px;
+box-sizing:border-box;
+min-height:0;
+overflow:hidden;
+}
+
+#screener-grid.grid-4{
+grid-template-columns:1fr 1fr;
+grid-template-rows:1fr 1fr;
+}
+
+#screener-grid.grid-6{
+grid-template-columns:repeat(3,1fr);
+grid-template-rows:1fr 1fr;
+}
+
+#screener-grid.grid-9{
+grid-template-columns:repeat(3,1fr);
+grid-template-rows:repeat(3,1fr);
+}
+
+.screener-widget{
+display:flex;
+flex-direction:column;
+background:var(--app-chart-bg);
+border:1px solid #1f2937;
+border-radius:10px;
+min-height:0;
+overflow:hidden;
+}
+
+body.terminal-page{
+display:block;
+overflow:hidden;
+}
+

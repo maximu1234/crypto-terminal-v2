@@ -1,0 +1,1125 @@
+/** @module drawings/fib-spec */
+import {
+DEFAULT_FIB_SPEC,
+STROKE,
+FIB_TOOL_DEFAULTS_VERSION,
+FIB_LINE_DASH,
+WIDTH_OPTIONS,
+FIB_MIN_ANCHOR_SPAN_PX,
+FIB_LABEL_X_PAD_PX,
+FIB_LABEL_RIGHT_RESERVE_PX
+} from "./constants.js?v=11";
+
+export {
+FIB_MIN_ANCHOR_SPAN_PX
+};
+
+const FIB_LINE_STYLE_OPTIONS = [
+{ value: "solid", label: "Line" },
+{ value: "dashed", label: "Dashed line" },
+{ value: "dotted", label: "Dotted line" }
+];
+
+export function normalizeFibLineStyle(raw){
+
+if(raw === "dashed" || raw === "dotted"){
+return raw;
+}
+
+return "solid";
+
+}
+
+export function fibLevelDash(lineStyle){
+
+return FIB_LINE_DASH[
+normalizeFibLineStyle(lineStyle)
+] || [];
+
+}
+
+export function fibLineStyleIconMarkup(style){
+
+const kind =
+normalizeFibLineStyle(style);
+
+let dashAttr = "";
+
+if(kind === "dashed"){
+dashAttr = ` stroke-dasharray="7 4"`;
+}
+
+if(kind === "dotted"){
+dashAttr = ` stroke-dasharray="2 3"`;
+}
+
+return `<svg class="fib-line-style-svg" width="28" height="12" viewBox="0 0 28 12" aria-hidden="true"><line x1="2" y1="6" x2="26" y2="6" stroke="currentColor" stroke-width="2" stroke-linecap="round"${dashAttr}/></svg>`;
+
+}
+
+export function fibLineStyleMenuMarkup(){
+
+return FIB_LINE_STYLE_OPTIONS.map(opt=>`
+<button type="button" class="fib-line-style-option" data-line-style="${opt.value}">
+${fibLineStyleIconMarkup(opt.value)}
+<span>${opt.label}</span>
+</button>
+`).join("");
+
+}
+
+export function setFibLineStyleButton(btn, style){
+
+if(!btn){
+return;
+}
+
+const next =
+normalizeFibLineStyle(style);
+
+btn.dataset.lineStyle = next;
+btn.innerHTML = fibLineStyleIconMarkup(next);
+
+}
+export function normalizeFibLevelWidth(raw){
+
+const n =
+Number(raw);
+
+if(
+!Number.isFinite(n) ||
+n < 1 ||
+n > 4
+){
+return null;
+}
+
+return Math.round(n);
+
+}
+
+export function fibLineWidthMenuMarkup(){
+
+return WIDTH_OPTIONS.map(w=>`
+<button type="button" class="fib-line-width-option" data-width="${w}">
+<span class="width-sample" style="height:${w}px"></span>
+<span>${w}px</span>
+</button>
+`).join("");
+
+}
+
+export function setFibLevelWidthButton(btn, width, fallback){
+
+if(!btn){
+return;
+}
+
+const picked =
+normalizeFibLevelWidth(width);
+
+if(picked){
+
+btn.dataset.customWidth = String(picked);
+btn.textContent = `${picked}px`;
+btn.classList.add("has-custom");
+return;
+
+}
+
+delete btn.dataset.customWidth;
+btn.textContent = `${normalizeFibLevelWidth(fallback) || 1}px`;
+btn.classList.remove("has-custom");
+
+}
+export function normalizeFibLevelColor(raw){
+
+if(
+typeof raw !==
+"string"
+){
+return null;
+}
+
+const s =
+raw.trim();
+
+if(
+/^#[0-9A-Fa-f]{6}$/i.test(s)
+){
+return s.toLowerCase();
+}
+
+if(
+/^rgba?\(\s*\d+\s*,\s*\d+\s*,\s*\d+(?:\s*,\s*[0-9.]+)?\s*\)$/i.test(
+s
+)
+){
+return s.replace(
+/\s+/g,
+""
+);
+}
+
+return null;
+
+}
+
+export function cloneDefaultFibRows(){
+
+return DEFAULT_FIB_SPEC.map(x=>{
+
+const row =
+{
+v:x.v,
+enabled:!!x.enabled,
+lineStyle: "solid",
+lineWidth: 1
+};
+
+const levelColor =
+normalizeFibLevelColor(x.color);
+
+if(levelColor){
+row.color = levelColor;
+}
+
+return row;
+
+});
+
+}
+
+export function buildDefaultFibToolStorage(){
+
+return {
+fibDefaultsVersion: FIB_TOOL_DEFAULTS_VERSION,
+color: STROKE,
+lineWidth: 1,
+fibLevels: cloneDefaultFibRows(),
+fibShowTrendLine: false
+};
+
+}
+
+/** Если все уровни выключены (legacy localStorage), вернуть дефолтные. */
+export function ensureFibLevelsVisible(
+raw
+){
+
+const rows =
+finalizeFibLevels(raw);
+
+if(
+rows.some(row=>row.enabled)
+){
+return rows;
+}
+
+return cloneDefaultFibRows();
+
+}
+
+export function migrateFibToolDefaults(
+saved
+){
+
+if(
+saved?.fibDefaultsVersion ===
+FIB_TOOL_DEFAULTS_VERSION &&
+Array.isArray(saved.fibLevels) &&
+saved.fibLevels.length ===
+DEFAULT_FIB_SPEC.length
+){
+return {
+...buildDefaultFibToolStorage(),
+color: saved.color || STROKE,
+lineWidth: saved.lineWidth ?? 1,
+fibLevels: ensureFibLevelsVisible(
+saved.fibLevels
+),
+fibShowTrendLine:
+typeof saved.fibShowTrendLine ===
+"boolean"
+? saved.fibShowTrendLine
+: false
+};
+
+}
+
+return buildDefaultFibToolStorage();
+
+}
+
+export function migrateFibFromNumberArray(arr){
+
+const next =
+cloneDefaultFibRows().map(r=>({
+...r,
+enabled:false
+}));
+
+const wanted =
+arr.filter(x=>
+typeof x === "number" &&
+Number.isFinite(x)
+);
+
+if(!wanted.length){
+return cloneDefaultFibRows();
+
+}
+
+wanted.forEach(n=>{
+
+next.forEach(r=>{
+
+if(
+Math.abs(n - r.v) <
+1e-6
+){
+
+r.enabled = true;
+
+}
+
+});
+
+});
+
+if(
+!next.some(r=>r.enabled)
+){
+
+DEFAULT_FIB_SPEC.forEach((d,i)=>{
+
+next[i].enabled = d.enabled;
+
+});
+
+}
+
+return next;
+
+}
+
+export function migrateFibFromObjectRows(rows){
+
+const next =
+cloneDefaultFibRows();
+
+rows.forEach((cell,i)=>{
+
+if(
+i >= next.length ||
+!cell ||
+typeof cell !== "object"
+){
+return;
+
+}
+
+if(
+typeof cell.v === "number" &&
+Number.isFinite(cell.v)
+){
+
+next[i].v = cell.v;
+
+}
+
+if(
+typeof cell.enabled ===
+"boolean"
+){
+
+next[i].enabled = cell.enabled;
+
+}
+
+if(
+typeof cell.fillBg ===
+"boolean"
+){
+
+next[i].fillBg = cell.fillBg;
+
+}
+
+const levelColor =
+normalizeFibLevelColor(cell.color);
+
+if(levelColor){
+next[i].color = levelColor;
+}
+
+if(cell.lineStyle){
+next[i].lineStyle =
+normalizeFibLineStyle(cell.lineStyle);
+}
+
+const levelWidth =
+normalizeFibLevelWidth(cell.lineWidth);
+
+if(levelWidth){
+next[i].lineWidth = levelWidth;
+}
+
+});
+
+return next;
+
+}
+
+export function isClassicFibLevelNumbers(
+arr
+){
+
+if(
+!Array.isArray(arr) ||
+!arr.length ||
+typeof arr[0] !== "number"
+){
+return false;
+}
+
+if(
+arr.length > 12
+){
+return false;
+}
+
+return arr.some(n=>
+Math.abs(n - 0.236) <
+1e-4 ||
+Math.abs(n - 0.786) <
+1e-4
+);
+
+}
+
+export function repairFibLevels(
+rows
+){
+
+const base =
+cloneDefaultFibRows();
+
+const normalized =
+Array.isArray(rows) &&
+rows.length === base.length
+? rows
+: normalizeFibLevelsShape(rows);
+
+return normalized.map((row,i)=>{
+
+const def =
+base[i];
+
+if(
+!def
+){
+return row;
+}
+
+const levelColor =
+normalizeFibLevelColor(row.color) ||
+normalizeFibLevelColor(def.color);
+
+const out = {
+v: Number.isFinite(row.v)
+? row.v
+: def.v,
+enabled: typeof row.enabled === "boolean"
+? row.enabled
+: def.enabled,
+fillBg: typeof row.fillBg === "boolean"
+? row.fillBg
+: false,
+lineStyle: normalizeFibLineStyle(
+row.lineStyle
+) ||
+def.lineStyle ||
+"solid"
+};
+
+if(levelColor){
+out.color = levelColor;
+}
+
+const levelWidth =
+normalizeFibLevelWidth(row.lineWidth) ||
+normalizeFibLevelWidth(def.lineWidth);
+
+if(levelWidth){
+out.lineWidth = levelWidth;
+}
+
+return out;
+
+});
+
+}
+
+/** Уровни/цвета по DEFAULT_FIB_SPEC; чинит legacy localStorage. */
+export function finalizeFibLevels(
+raw
+){
+
+if(
+!raw
+){
+return cloneDefaultFibRows();
+}
+
+if(
+isClassicFibLevelNumbers(raw)
+){
+return cloneDefaultFibRows();
+}
+
+return repairFibLevels(
+normalizeFibLevelsShape(raw)
+);
+
+}
+
+export function normalizeFibLevelsShape(raw){
+
+if(
+!raw ||
+!Array.isArray(raw) ||
+!raw.length
+){
+
+return cloneDefaultFibRows();
+
+}
+
+if(
+typeof raw[0] === "number"
+){
+
+return migrateFibFromNumberArray(raw);
+
+}
+
+if(
+typeof raw[0] === "object"
+){
+
+return migrateFibFromObjectRows(raw);
+
+}
+
+return cloneDefaultFibRows();
+
+}
+
+export function formatFibInputValue(v){
+
+if(!Number.isFinite(v)){
+return "0";
+}
+
+if(
+Number.isInteger(v)
+){
+
+return String(v);
+
+}
+
+const t =
+Number(
+v.toFixed(6)
+);
+
+if(
+Number.isInteger(t)
+){
+
+return String(t);
+
+}
+
+return String(t);
+
+}
+
+export function formatFibLabel(v){
+
+if(!Number.isFinite(v)){
+return "";
+}
+
+if(
+Number.isInteger(v)
+){
+
+return String(v);
+
+}
+
+const rounded =
+Math.round(v * 1e6) / 1e6;
+
+if(
+Number.isInteger(rounded)
+){
+
+return String(rounded);
+
+}
+
+let s =
+rounded.toFixed(6).replace(/0+$/, "");
+
+if(s.endsWith(".")){
+s = s.slice(0,-1);
+
+}
+
+return s;
+
+}
+
+export function parseFibRatioField(text){
+
+const s =
+String(text ?? "")
+.trim()
+.replace(
+/,/g,
+"."
+);
+
+if(!s){
+return null;
+}
+
+const n =
+Number(s);
+
+return Number.isFinite(n)
+? n
+: null;
+
+}
+
+export function fibPriceAtRatio(
+anchorA,
+anchorB,
+ratio,
+logarithmic
+){
+
+const p1 =
+Number(anchorA);
+const p2 =
+Number(anchorB);
+
+if(
+!Number.isFinite(p1) ||
+!Number.isFinite(p2) ||
+!Number.isFinite(ratio)
+){
+
+return NaN;
+
+}
+
+if(
+logarithmic &&
+p1 > 0 &&
+p2 > 0
+){
+
+return (
+p1 * Math.pow(
+p2 / p1,
+ratio
+)
+);
+
+}
+
+return (
+p1 + (p2 - p1) * ratio
+);
+
+}
+
+/**
+ * После drag handle: не оставлять fib с нулевым горизонтальным span
+ * (иначе уровни скрыты и объект «пропадает»).
+ * @returns {boolean} якорь был скорректирован
+ */
+export function ensureFibAnchorMinSpan(
+shape,
+movedHandleId,
+deps
+){
+
+if(
+shape?.type !==
+"fib" ||
+!shape.p1 ||
+!shape.p2
+){
+return false;
+}
+
+const {
+toXY,
+pointFromXY,
+minSpanPx = FIB_MIN_ANCHOR_SPAN_PX
+} =
+deps ||
+{};
+
+if(
+typeof toXY !==
+"function" ||
+typeof pointFromXY !==
+"function"
+){
+return false;
+}
+
+const movedId =
+movedHandleId ===
+"p1"
+? "p1"
+: "p2";
+const fixedId =
+movedId ===
+"p2"
+? "p1"
+: "p2";
+
+const fixedPt =
+shape[
+fixedId
+];
+const movedPt =
+shape[
+movedId
+];
+
+const a =
+toXY(
+fixedPt
+);
+const b =
+toXY(
+movedPt
+);
+
+if(
+!a ||
+!b
+){
+return false;
+}
+
+const dx =
+b.x -
+a.x;
+
+if(
+Math.abs(
+dx
+) >=
+minSpanPx
+){
+return false;
+}
+
+const dir =
+Math.abs(
+dx
+) <
+0.01
+? 1
+: (
+dx >
+0
+? 1
+: -1
+);
+
+const targetX =
+a.x +
+dir *
+minSpanPx;
+const next =
+pointFromXY(
+targetX,
+b.y
+);
+
+if(
+!next
+){
+
+const fallback =
+pointFromXY(
+a.x -
+dir *
+minSpanPx,
+b.y
+);
+
+if(
+!fallback
+){
+return false;
+}
+
+shape[
+movedId
+] = {
+time: fallback.time,
+price: movedPt.price
+};
+
+return true;
+
+}
+
+shape[
+movedId
+] = {
+time: next.time,
+price: movedPt.price
+};
+
+return true;
+
+}
+
+/**
+ * Горизонтальный span уровня fib между якорями.
+ * Узкий span (&lt; FIB_MIN_ANCHOR_SPAN_PX) расширяется вокруг середины — уровни не скрываем.
+ * @returns {{ x1: number, x2: number, labelX: number }}
+ */
+export function fibLevelXSpan(
+a,
+b,
+plotW
+){
+
+let x1 =
+Math.min(
+a.x,
+b.x
+);
+let x2 =
+Math.max(
+a.x,
+b.x
+);
+
+let span =
+x2 - x1;
+
+if(
+span <
+FIB_MIN_ANCHOR_SPAN_PX
+){
+
+const mid =
+(x1 + x2) /
+2;
+const half =
+FIB_MIN_ANCHOR_SPAN_PX /
+2;
+
+x1 =
+mid - half;
+x2 =
+mid + half;
+
+if(
+x1 <
+0
+){
+
+x2 -=
+x1;
+x1 =
+0;
+
+}
+
+if(
+x2 >
+plotW
+){
+
+const overflow =
+x2 - plotW;
+
+x1 -=
+overflow;
+x2 =
+plotW;
+
+}
+
+if(
+x1 <
+0
+){
+
+x1 =
+0;
+
+}
+
+if(
+x2 - x1 <
+FIB_MIN_ANCHOR_SPAN_PX &&
+plotW >=
+FIB_MIN_ANCHOR_SPAN_PX
+){
+
+x2 =
+Math.min(
+plotW,
+x1 +
+FIB_MIN_ANCHOR_SPAN_PX
+);
+x1 =
+Math.max(
+0,
+x2 -
+FIB_MIN_ANCHOR_SPAN_PX
+);
+
+}
+
+}
+
+return {
+x1,
+x2,
+labelX:
+Math.min(
+x2 + FIB_LABEL_X_PAD_PX,
+plotW - FIB_LABEL_RIGHT_RESERVE_PX
+)
+};
+
+}
+
+export function getFibRows(shape){
+
+const raw =
+shape.fibLevels ?? shape.levels;
+
+const rows =
+normalizeFibLevelsShape(raw);
+
+if(
+!Array.isArray(raw) ||
+typeof raw[0] !== "object"
+){
+return rows;
+}
+
+raw.forEach((cell,i)=>{
+
+if(
+i >= rows.length ||
+!cell ||
+typeof cell !== "object"
+){
+return;
+}
+
+const levelColor =
+normalizeFibLevelColor(cell.color);
+
+if(levelColor){
+rows[i].color = levelColor;
+}
+
+if(cell.lineStyle){
+rows[i].lineStyle =
+normalizeFibLineStyle(cell.lineStyle);
+}
+
+const levelWidth =
+normalizeFibLevelWidth(cell.lineWidth);
+
+if(levelWidth){
+rows[i].lineWidth = levelWidth;
+}
+
+if(
+typeof cell.v === "number" &&
+Number.isFinite(cell.v)
+){
+rows[i].v = cell.v;
+}
+
+if(
+typeof cell.enabled ===
+"boolean"
+){
+rows[i].enabled = cell.enabled;
+}
+
+if(
+typeof cell.fillBg ===
+"boolean"
+){
+rows[i].fillBg = cell.fillBg;
+}
+
+});
+
+return rows;
+
+}
+
+/**
+ * Пары уровней для фоновой заливки: от включённого fillBg до следующего enabled по v.
+ * @returns {{ from: object, to: object }[]}
+ */
+export function getFibFillPairs(
+rows
+){
+
+const enabled =
+(
+Array.isArray(
+rows
+)
+? rows
+: []
+).filter(
+row=>row?.enabled
+);
+
+const sorted =
+[
+...enabled
+].sort(
+(
+a,
+b
+)=>
+a.v -
+b.v
+);
+
+const pairs =
+[];
+
+for(
+let i =
+0;
+i <
+sorted.length;
+i++
+){
+
+const from =
+sorted[
+i
+];
+
+if(
+!from?.fillBg
+){
+continue;
+}
+
+const to =
+sorted[
+i +
+1
+];
+
+if(
+!to
+){
+continue;
+}
+
+pairs.push({
+from,
+to
+});
+
+}
+
+return pairs;
+
+}
+
+/** Строки для отрисовки: всегда с хотя бы одним включённым уровнем. */
+export function getFibDrawRows(
+shape
+){
+
+const fibLevels =
+ensureFibLevelsVisible(
+shape?.fibLevels ??
+shape?.levels
+);
+
+const rows =
+getFibRows({
+...shape,
+fibLevels
+});
+
+if(
+rows.some(row=>row.enabled)
+){
+return rows;
+}
+
+return cloneDefaultFibRows();
+
+}
+
+export function isSeriesLogarithmic(s){
+
+try{
+
+const ps =
+typeof s?.priceScale ===
+"function"
+? s.priceScale()
+: null;
+
+const opts =
+typeof ps?.options ===
+"function"
+? ps.options()
+: ps?.options;
+
+const mode =
+opts?.mode;
+
+if(mode === 1){
+return true;
+}
+
+if(mode === 0){
+return false;
+
+}
+
+}catch(_){
+}
+
+/* в chart.js дефолт — log */
+return true;
+
+}

@@ -1,0 +1,286 @@
+.trade-diary-page-head-actions{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+.trade-diary-period-trigger{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  border:1px solid #374151;
+  background:#1e222d;
+  color:#e5e7eb;
+  border-radius:8px;
+  padding:8px 12px;
+  font-size:13px;
+  cursor:pointer;
+  font-family:inherit;
+}
+
+.trade-diary-period-trigger:hover{
+  background:#2a2e39;
+}
+
+.trade-diary-period-trigger-icon{
+  width:14px;
+  height:14px;
+  opacity:0.85;
+  flex-shrink:0;
+}
+
+.trade-diary-period-overlay{
+  position:fixed;
+  inset:0;
+  z-index:1200;
+  display:flex;
+  align-items:flex-start;
+  justify-content:center;
+  padding:48px 16px 24px;
+  background:rgba(0,0,0,0.55);
+}
+
+.trade-diary-period-dialog{
+  width:min(760px,100%);
+  border:1px solid #2a3140;
+  border-radius:12px;
+  background:#151a21;
+  color:#e5e7eb;
+  box-shadow:0 24px 48px rgba(0,0,0,0.45);
+}
+
+.trade-diary-period-dialog-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:14px 16px 10px;
+  border-bottom:1px solid #1f2937;
+}
+
+.trade-diary-period-dialog-head h2{
+  margin:0;
+  font-size:16px;
+  font-weight:600;
+  color:#f3f4f6;
+}
+
+.trade-diary-period-close{
+  border:0;
+  background:transparent;
+  color:#9ca3af;
+  font-size:22px;
+  line-height:1;
+  cursor:pointer;
+  padding:0 4px;
+}
+
+.trade-diary-period-close:hover{
+  color:#f3f4f6;
+}
+
+.trade-diary-period-presets{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  padding:12px 16px;
+  border-bottom:1px solid #1f2937;
+}
+
+.trade-diary-period-preset{
+  border:1px solid #2a3140;
+  background:#1a1f28;
+  color:#cbd5e1;
+  border-radius:8px;
+  padding:6px 10px;
+  font-size:12px;
+  cursor:pointer;
+  font-family:inherit;
+}
+
+.trade-diary-period-preset:hover{
+  background:#232a36;
+}
+
+.trade-diary-period-preset.active{
+  background:#2d3a52;
+  border-color:#4b6ea8;
+  color:#f3f4f6;
+}
+
+.trade-diary-period-calendars{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  padding:12px 16px 8px;
+}
+
+.trade-diary-period-month-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  margin-bottom:8px;
+}
+
+.trade-diary-period-month-title{
+  font-size:13px;
+  font-weight:600;
+  color:#f3f4f6;
+  text-align:center;
+  flex:1;
+}
+
+.trade-diary-period-nav{
+  border:0;
+  background:transparent;
+  color:#9ca3af;
+  font-size:18px;
+  line-height:1;
+  cursor:pointer;
+  width:24px;
+  height:24px;
+  border-radius:6px;
+}
+
+.trade-diary-period-nav:hover{
+  background:#232a36;
+  color:#f3f4f6;
+}
+
+.trade-diary-period-weekdays,
+.trade-diary-period-week{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  gap:2px;
+}
+
+.trade-diary-period-weekdays{
+  margin-bottom:4px;
+  font-size:11px;
+  color:#6b7280;
+  text-align:center;
+}
+
+.trade-diary-period-weekdays .is-weekend{
+  color:#ef4444;
+}
+
+.trade-diary-period-day{
+  border:0;
+  background:transparent;
+  color:#e5e7eb;
+  font-size:12px;
+  line-height:1;
+  min-height:30px;
+  border-radius:6px;
+  cursor:pointer;
+  font-family:inherit;
+}
+
+.trade-diary-period-day.is-empty{
+  pointer-events:none;
+}
+
+.trade-diary-period-day.is-weekend{
+  color:#f87171;
+}
+
+.trade-diary-period-day:hover:not(.is-empty){
+  background:#232a36;
+}
+
+.trade-diary-period-day.is-in-range{
+  background:rgba(59,130,246,0.18);
+  border-radius:0;
+}
+
+.trade-diary-period-day.is-start{
+  background:#3b82f6;
+  color:#fff;
+  border-top-left-radius:6px;
+  border-bottom-left-radius:6px;
+}
+
+.trade-diary-period-day.is-end{
+  background:#3b82f6;
+  color:#fff;
+  border-top-right-radius:6px;
+  border-bottom-right-radius:6px;
+}
+
+.trade-diary-period-day.is-start.is-end{
+  border-radius:6px;
+}
+
+.trade-diary-period-inputs{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  padding:8px 16px 14px;
+}
+
+.trade-diary-period-input{
+  width:132px;
+  border:1px solid #374151;
+  background:#0f141a;
+  color:#f3f4f6;
+  border-radius:8px;
+  padding:8px 10px;
+  font-size:13px;
+  text-align:center;
+  font-family:inherit;
+}
+
+.trade-diary-period-input-sep{
+  color:#6b7280;
+}
+
+.trade-diary-period-actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:8px;
+  padding:0 16px 16px;
+}
+
+.trade-diary-period-btn-secondary,
+.trade-diary-period-btn-primary{
+  border-radius:8px;
+  padding:8px 14px;
+  font-size:13px;
+  cursor:pointer;
+  font-family:inherit;
+}
+
+.trade-diary-period-btn-secondary{
+  border:1px solid #374151;
+  background:#1e222d;
+  color:#e5e7eb;
+}
+
+.trade-diary-period-btn-secondary:hover{
+  background:#2a2e39;
+}
+
+.trade-diary-period-btn-primary{
+  border:1px solid #2563eb;
+  background:#3b82f6;
+  color:#fff;
+}
+
+.trade-diary-period-btn-primary:hover{
+  background:#2563eb;
+}
+
+@media (max-width:720px){
+
+.trade-diary-period-calendars{
+  grid-template-columns:1fr;
+}
+
+.trade-diary-period-overlay{
+  padding-top:24px;
+}
+
+}

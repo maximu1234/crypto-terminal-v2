@@ -1,0 +1,563 @@
+/**
+ * Volume — вертикальные объёмы на отдельной панели (высота как у RSI).
+ */
+import {
+createVolumeChart,
+syncLinkedChartTimescales,
+linkPairedChartTimeScales,
+appendFutureWhitespaceBars,
+computeChartFutureMarginBars,
+coinsTfVisibleBars
+} from "../chart-import.js?v=43";
+
+import {
+isChartLayoutReady
+} from "../chart-layout-gate.js?v=2";
+
+import {
+isBottomIndicatorPane
+} from "./indicator-pane-order.js?v=1";
+
+import {
+syncPaneViewportAfterData
+} from "./indicator-pane-viewport.js?v=3";
+
+export const VOLUME_PANE_ID =
+"volume";
+
+const VOL_UP =
+"rgba(38, 166, 154, 0.72)";
+
+const VOL_DOWN =
+"rgba(239, 68, 68, 0.72)";
+
+function buildVolumeDisplayPoints(
+candles,
+tf,
+visibleBarsCap
+){
+
+if(
+!candles?.length
+){
+return [];
+}
+
+const cap =
+typeof visibleBarsCap ===
+"number"
+? visibleBarsCap
+: null;
+const visibleBars =
+typeof cap ===
+"number" &&
+cap >
+0
+? Math.min(
+cap,
+candles.length
+)
+: coinsTfVisibleBars(
+tf,
+candles.length
+);
+
+const futureMargin =
+computeChartFutureMarginBars(
+visibleBars
+);
+
+return appendFutureWhitespaceBars(
+candles.map(
+bar=>({
+time:
+bar.time,
+volume:
+Number(
+bar.volume
+) ||
+0,
+open:
+bar.open,
+close:
+bar.close
+})
+),
+futureMargin,
+tf
+);
+
+}
+
+function volumeBarColor(
+bar
+){
+
+if(
+bar.volume ==
+null ||
+bar.volume <=
+0
+){
+return "rgba(120,123,134,0.35)";
+}
+
+return bar.close >=
+bar.open
+? VOL_UP
+: VOL_DOWN;
+
+}
+
+export function createVolumePaneIndicator(
+getHost
+){
+
+let enabled =
+false;
+let chart =
+null;
+let series =
+null;
+let unbindTimeSync =
+null;
+
+function wrapEl(){
+
+return document.getElementById(
+"volume-wrap"
+);
+
+}
+
+function chartEl(){
+
+return document.getElementById(
+"volume-chart"
+);
+
+}
+
+function updateTimeScaleVisibility(){
+
+if(
+!chart
+){
+return;
+}
+
+const showTimeScale =
+isBottomIndicatorPane(
+VOLUME_PANE_ID
+);
+
+chart.timeScale().applyOptions(
+{
+visible:
+showTimeScale,
+timeVisible:
+showTimeScale,
+ticksVisible:
+showTimeScale
+}
+);
+
+}
+
+function bindTimeSync(){
+
+unbindTimeSync?.();
+unbindTimeSync =
+null;
+
+const mainChart =
+getHost?.()?.chart;
+
+if(
+!mainChart ||
+!chart
+){
+return;
+}
+
+unbindTimeSync =
+linkPairedChartTimeScales(
+mainChart,
+chart,
+updateTimeScaleVisibility,
+{
+linkedDrivesMain:
+false,
+isLocked:()=>
+!isChartLayoutReady()
+}
+);
+
+syncLinkedChartTimescales(
+mainChart,
+chart
+);
+updateTimeScaleVisibility();
+
+}
+
+function ensureChart(){
+
+if(
+chart
+){
+return true;
+}
+
+const el =
+chartEl();
+
+if(
+!el
+){
+return false;
+}
+
+const created =
+createVolumeChart(
+el
+);
+
+chart =
+created.chart;
+series =
+created.series;
+return true;
+
+}
+
+function destroyChart(){
+
+unbindTimeSync?.();
+unbindTimeSync =
+null;
+
+if(
+chart
+){
+try{
+chart.remove();
+}catch{
+/* ignore */
+}
+}
+
+chart =
+null;
+series =
+null;
+
+}
+
+function applyVisibility(){
+
+wrapEl()?.classList.toggle(
+"indicator-pane-hidden",
+!enabled
+);
+
+}
+
+function ensurePaneChartSized(){
+
+if(
+!enabled ||
+!chart
+){
+return;
+}
+
+const host =
+getHost?.();
+
+const w =
+host?.getChartWrapWidth?.() ||
+0;
+
+if(
+w >
+0
+){
+onResize(
+w
+);
+}
+
+}
+
+function pulseVolumeAutoscale(){
+
+if(
+!chart
+){
+return;
+}
+
+try{
+const ps =
+chart.priceScale(
+"right"
+);
+
+ps.applyOptions({
+autoScale:
+false
+});
+
+ps.applyOptions({
+autoScale:
+true,
+scaleMargins:{
+top:
+0.08,
+bottom:
+0
+}
+});
+}catch{
+/* ignore */
+}
+
+}
+
+function syncVolumeAfterData(){
+
+syncPaneViewportAfterData(
+getHost,
+chart,
+{
+pulseAutoscale:
+pulseVolumeAutoscale,
+updateTimeScaleVisibility
+}
+);
+
+}
+
+function refreshData(){
+
+if(
+!enabled ||
+!series
+){
+return;
+}
+
+ensurePaneChartSized();
+
+const host =
+getHost?.();
+
+const raw =
+host?.getCandles?.() ||
+[];
+
+const tf =
+host?.getTf?.() ||
+"D";
+
+const points =
+buildVolumeDisplayPoints(
+raw,
+tf,
+host?.getVisibleBarsCap?.()
+);
+
+series.setData(
+points.map(
+bar=>({
+time:
+bar.time,
+value:
+bar.volume ||
+0,
+color:
+volumeBarColor(
+bar
+)
+})
+)
+);
+
+syncVolumeAfterData();
+
+}
+
+function enable(){
+
+if(
+enabled
+){
+return;
+}
+
+if(
+!ensureChart()
+){
+return;
+}
+
+enabled =
+true;
+applyVisibility();
+ensurePaneChartSized();
+refreshData();
+bindTimeSync();
+
+}
+
+function disable(){
+
+if(
+!enabled
+){
+return;
+}
+
+enabled =
+false;
+unbindTimeSync?.();
+unbindTimeSync =
+null;
+
+if(
+series
+){
+series.setData(
+[]
+);
+}
+
+applyVisibility();
+
+}
+
+function onSymbolChange(){
+
+if(
+!enabled
+){
+return;
+}
+
+refreshData();
+
+}
+
+function onCandlesUpdate(){
+
+refreshData();
+
+}
+
+function syncViewport(
+ctx
+){
+
+if(
+!enabled ||
+!chart ||
+!ctx?.mainChart
+){
+return;
+}
+
+ctx.applyCoinsChartViewport?.(
+ctx.mainChart,
+chart,
+ctx.candles,
+ctx.tf,
+ctx.chartWidth,
+ctx.realCandleCount,
+ctx.visibleBarsCap
+);
+updateTimeScaleVisibility();
+
+}
+
+function onLayoutChange(){
+
+updateTimeScaleVisibility();
+
+if(
+enabled &&
+chart
+){
+syncLinkedChartTimescales(
+getHost?.()?.chart,
+chart
+);
+}
+
+}
+
+function onResize(
+width
+){
+
+if(
+!enabled ||
+!chart
+){
+return;
+}
+
+const paneHeight =
+wrapEl()?.getBoundingClientRect().height ||
+0;
+
+if(
+paneHeight <
+2
+){
+return;
+}
+
+chart.applyOptions(
+{
+width,
+height:
+paneHeight
+}
+);
+
+pulseVolumeAutoscale();
+
+}
+
+return {
+id:
+VOLUME_PANE_ID,
+label:
+"Volume",
+legendLabel:
+"Vol",
+exemptFromLimit:
+false,
+defaultEnabled:
+false,
+enable,
+disable,
+isEnabled:()=>
+enabled,
+getChart:()=>
+enabled
+? chart
+: null,
+onSymbolChange,
+onCandlesUpdate,
+syncViewport,
+onLayoutChange,
+onResize,
+destroy:()=>{
+disable();
+destroyChart();
+}
+};
+
+}

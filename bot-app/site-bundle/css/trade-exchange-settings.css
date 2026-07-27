@@ -1,0 +1,558 @@
+/* /trade — dropdown «Bybit» (desktop .app only) */
+
+.trade-exchange-wrap{
+position:relative;
+z-index:131;
+}
+
+.trade-exchange-btn{
+gap:6px;
+padding:8px 10px;
+font:500 13px/1 system-ui,-apple-system,sans-serif;
+color:#9ca3af;
+}
+
+.trade-exchange-btn:hover,
+.trade-exchange-btn[aria-expanded="true"]{
+color:#e5e7eb;
+background:rgba(255,255,255,.04);
+}
+
+.trade-exchange-btn.is-connected{
+color:#86efac;
+}
+
+.trade-exchange-status-dot{
+width:7px;
+height:7px;
+border-radius:50%;
+background:#4b5563;
+flex-shrink:0;
+}
+
+.trade-exchange-btn.is-connected .trade-exchange-status-dot{
+background:#22c55e;
+}
+
+.trade-exchange-nav-btn.is-connected{
+color:#86efac;
+}
+
+.trade-exchange-nav-btn.is-connected:hover{
+color:#bbf7d0;
+}
+
+.trade-exchange-dropdown{
+min-width:300px;
+max-width:min(360px,calc(100vw - 24px));
+max-height:min(78dvh,calc(100dvh - 64px));
+overflow-x:hidden;
+overflow-y:auto;
+overscroll-behavior:contain;
+padding:10px 12px;
+scrollbar-gutter:stable;
+-webkit-overflow-scrolling:touch;
+}
+
+.trade-exchange-dropdown.trade-exchange-dropdown--portaled{
+position:fixed;
+z-index:10060;
+background:#171b21;
+border:1px solid #374151;
+border-radius:8px;
+box-shadow:0 8px 24px rgba(0,0,0,.45);
+}
+
+.trade-exchange-form{
+display:flex;
+flex-direction:column;
+gap:6px;
+}
+
+.trade-exchange-form .header-settings-section-title{
+margin:2px 0 4px;
+}
+
+.trade-exchange-form > .header-settings-section-title:first-child{
+margin-top:0;
+}
+
+.trade-exchange-hint{
+margin:0;
+font-size:12px;
+line-height:1.35;
+color:#6b7280;
+}
+
+.trade-exchange-connection-status{
+display:inline-flex;
+align-items:center;
+gap:6px;
+margin:0 0 6px;
+padding:4px 10px;
+border-radius:999px;
+border:1px solid #14532d;
+background:rgba(34,197,94,.12);
+font-size:12px;
+font-weight:500;
+line-height:1.3;
+color:#86efac;
+}
+
+.trade-exchange-connection-status[hidden]{
+display:none;
+}
+
+.trade-exchange-connection-dot{
+width:7px;
+height:7px;
+border-radius:50%;
+background:#22c55e;
+flex-shrink:0;
+}
+
+.trade-exchange-field{
+display:flex;
+flex-direction:column;
+gap:3px;
+font-size:12px;
+color:#9ca3af;
+}
+
+.trade-exchange-field input[type="text"],
+.trade-exchange-field input[type="password"]{
+box-sizing:border-box;
+width:100%;
+padding:8px 10px;
+border:1px solid #374151;
+border-radius:6px;
+background:#13181e;
+color:#e5e7eb;
+font:400 13px/1.3 ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+
+.trade-exchange-field input:focus{
+outline:none;
+border-color:#60a5fa;
+}
+
+.trade-exchange-check{
+display:flex;
+align-items:center;
+gap:8px;
+font-size:13px;
+color:#d1d5db;
+cursor:pointer;
+user-select:none;
+}
+
+.trade-exchange-check input{
+width:16px;
+height:16px;
+margin:0;
+accent-color:#3b82f6;
+}
+
+.trade-exchange-status-text{
+margin:0;
+min-height:0;
+font-size:12px;
+line-height:1.35;
+color:#9ca3af;
+}
+
+.trade-exchange-status-text:empty{
+display:none;
+}
+
+.trade-exchange-status-text.is-ok{
+color:#86efac;
+}
+
+.trade-exchange-status-text.is-error{
+color:#fca5a5;
+}
+
+.trade-exchange-balance{
+margin:0;
+font-size:13px;
+font-weight:500;
+color:#86efac;
+}
+
+.trade-exchange-balance.is-error{
+color:#fca5a5;
+font-weight:400;
+}
+
+.trade-exchange-field input:read-only{
+color:#9ca3af;
+cursor:default;
+}
+
+.trade-exchange-actions{
+display:flex;
+flex-wrap:wrap;
+gap:6px;
+margin-top:0;
+}
+
+.trade-exchange-actions button{
+appearance:none;
+border-radius:6px;
+padding:8px 12px;
+font:500 13px/1 system-ui,-apple-system,sans-serif;
+cursor:pointer;
+border:1px solid #374151;
+background:#1f2937;
+color:#e5e7eb;
+}
+
+.trade-exchange-actions button:hover{
+background:#374151;
+}
+
+.trade-exchange-actions button:disabled{
+opacity:.55;
+cursor:default;
+}
+
+.trade-exchange-save{
+border-color:#2563eb;
+background:#1d4ed8;
+}
+
+.trade-exchange-save:hover{
+background:#2563eb;
+}
+
+.trade-exchange-clear{
+color:#fca5a5;
+}
+
+.trade-exchange-refresh{
+color:#93c5fd;
+}
+
+.trade-exchange-divider{
+border:none;
+border-top:1px solid #374151;
+margin:4px 0 0;
+}
+
+.trade-exchange-ping{
+margin:0;
+font:500 11px/1.35 ui-monospace,SFMono-Regular,Menlo,monospace;
+color:#d1d5db;
+}
+
+.trade-exchange-ping [data-role="ping-main"]{
+display:block;
+}
+
+.trade-exchange-ping.is-good{
+color:#86efac;
+}
+
+.trade-exchange-ping.is-warn{
+color:#fde047;
+}
+
+.trade-exchange-ping.is-bad{
+color:#fca5a5;
+}
+
+.trade-exchange-ping-detail{
+margin:2px 0 0;
+font-size:11px;
+line-height:1.35;
+color:#6b7280;
+}
+
+.trade-exchange-ping-detail:empty,
+.trade-exchange-ping-detail[hidden]{
+display:none;
+}
+
+.trade-exchange-ping-row{
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:8px;
+flex-wrap:wrap;
+}
+
+.trade-exchange-ping-row .trade-exchange-ping{
+flex:1 1 auto;
+min-width:0;
+}
+
+.trade-exchange-ping-row .trade-exchange-refresh{
+appearance:none;
+flex:0 0 auto;
+padding:6px 10px;
+border:1px solid #374151;
+border-radius:6px;
+background:#1f2937;
+font:500 13px/1 system-ui,-apple-system,sans-serif;
+color:#93c5fd;
+cursor:pointer;
+}
+
+.trade-exchange-ping-row .trade-exchange-refresh:hover{
+background:#374151;
+}
+
+.trade-exchange-ping-row .trade-exchange-refresh:disabled{
+opacity:.55;
+cursor:default;
+}
+
+:is(.trade-exchange-dropdown,.app-settings-bybit-host,.app-settings-trading-host) .trade-volume-defaults-panel.trade-volume-presets-panel{
+display:grid;
+grid-template-columns:repeat(3,minmax(0,1fr));
+column-gap:8px;
+row-gap:4px;
+}
+
+:is(.trade-exchange-dropdown,.app-settings-bybit-host,.app-settings-trading-host) .trade-volume-defaults-row{
+display:flex;
+align-items:center;
+gap:5px;
+min-width:0;
+cursor:default;
+}
+
+.trade-volume-defaults-row{
+cursor:default;
+}
+
+.trade-volume-defaults-label{
+flex:0 0 12px;
+font-size:10px;
+font-weight:600;
+color:#6b7280;
+text-align:center;
+}
+
+:is(.trade-exchange-dropdown,.app-settings-bybit-host,.app-settings-trading-host) .trade-volume-presets-field{
+position:relative;
+flex:1 1 auto;
+min-width:0;
+}
+
+:is(.trade-exchange-dropdown,.app-settings-bybit-host,.app-settings-trading-host) .trade-volume-presets-field input[type="number"]{
+box-sizing:border-box;
+width:100%;
+padding:5px 20px 5px 6px;
+border:1px solid #374151;
+border-radius:5px;
+background:#13181e;
+color:#e5e7eb;
+font:500 11px/1.2 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+font-variant-numeric:tabular-nums;
+-moz-appearance:textfield;
+appearance:textfield;
+}
+
+:is(.trade-exchange-dropdown,.app-settings-bybit-host,.app-settings-trading-host) input[type="number"]::-webkit-outer-spin-button,
+:is(.trade-exchange-dropdown,.app-settings-bybit-host,.app-settings-trading-host) input[type="number"]::-webkit-inner-spin-button{
+-webkit-appearance:none;
+margin:0;
+}
+
+:is(.trade-exchange-dropdown,.app-settings-bybit-host,.app-settings-trading-host) .trade-volume-presets-field input[type="number"]:focus{
+outline:none;
+border-color:#6366f1;
+}
+
+:is(.trade-exchange-dropdown,.app-settings-bybit-host,.app-settings-trading-host) .trade-volume-presets-suffix{
+position:absolute;
+top:50%;
+right:7px;
+transform:translateY(-50%);
+font-size:11px;
+font-weight:600;
+color:#9ca3af;
+pointer-events:none;
+}
+
+.trade-auto-stops-panel{
+display:flex;
+flex-direction:column;
+gap:6px;
+margin-top:0;
+}
+
+.trade-auto-stops-row{
+display:grid;
+grid-template-columns:auto 1fr minmax(88px, 120px);
+align-items:center;
+gap:8px;
+font-size:12px;
+color:#d1d5db;
+cursor:pointer;
+}
+
+.trade-auto-stops-row input[type="checkbox"]{
+width:14px;
+height:14px;
+margin:0;
+accent-color:#818cf8;
+cursor:pointer;
+}
+
+.trade-auto-stops-label{
+white-space:nowrap;
+}
+
+.trade-exchange-confirm-overlay{
+position:fixed;
+inset:0;
+z-index:10070;
+display:flex;
+align-items:center;
+justify-content:center;
+padding:16px;
+background:rgba(0,0,0,.62);
+}
+
+.trade-exchange-confirm-dialog{
+width:min(100%,360px);
+padding:18px 18px 16px;
+border:1px solid #374151;
+border-radius:10px;
+background:#171717;
+box-shadow:0 18px 48px rgba(0,0,0,.45);
+}
+
+.trade-exchange-confirm-message{
+margin:0 0 16px;
+font-size:14px;
+line-height:1.45;
+color:#e5e7eb;
+}
+
+.trade-exchange-confirm-actions{
+display:flex;
+justify-content:flex-end;
+gap:8px;
+}
+
+.trade-exchange-confirm-cancel,
+.trade-exchange-confirm-yes{
+min-width:88px;
+padding:8px 12px;
+border-radius:8px;
+font:500 13px/1.2 system-ui,-apple-system,sans-serif;
+cursor:pointer;
+}
+
+.trade-exchange-confirm-cancel{
+border:1px solid #4b5563;
+background:#1f2937;
+color:#f3f4f6;
+}
+
+.trade-exchange-confirm-cancel:hover,
+.trade-exchange-confirm-cancel:focus-visible{
+border-color:#6b7280;
+background:#374151;
+outline:none;
+}
+
+.trade-exchange-confirm-yes{
+border:1px solid #7f1d1d;
+background:#991b1b;
+color:#fff;
+}
+
+.trade-exchange-confirm-yes:hover{
+background:#b91c1c;
+}
+
+.exchange-connections-heading{
+margin-top:0;
+}
+
+.exchange-switcher-row{
+display:flex;
+flex-wrap:wrap;
+gap:10px;
+margin:4px 0 14px;
+}
+
+.exchange-switcher-badge{
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:12px;
+min-width:148px;
+padding:10px 12px;
+border:1px solid #2a3140;
+border-radius:999px;
+background:#1b1f27;
+}
+
+.exchange-switcher-badge.is-active{
+border-color:#6d28d9;
+box-shadow:0 0 0 1px rgba(109,40,217,.35);
+}
+
+.exchange-switcher-name{
+font:600 13px/1.2 system-ui,-apple-system,sans-serif;
+color:#f3f4f6;
+}
+
+.exchange-switcher-toggle{
+position:relative;
+display:inline-flex;
+align-items:center;
+width:44px;
+height:24px;
+flex-shrink:0;
+cursor:pointer;
+}
+
+.exchange-switcher-toggle input{
+position:absolute;
+opacity:0;
+width:0;
+height:0;
+}
+
+.exchange-switcher-slider{
+position:absolute;
+inset:0;
+border-radius:999px;
+background:#374151;
+transition:background .15s ease;
+}
+
+.exchange-switcher-slider::after{
+content:"";
+position:absolute;
+top:3px;
+left:3px;
+width:18px;
+height:18px;
+border-radius:50%;
+background:#f9fafb;
+transition:transform .15s ease;
+}
+
+.exchange-switcher-toggle input:checked + .exchange-switcher-slider{
+background:#7c3aed;
+}
+
+.exchange-switcher-toggle input:checked + .exchange-switcher-slider::after{
+transform:translateX(20px);
+}
+
+.exchange-connection-form-host{
+margin-top:4px;
+}
+
+.trade-auto-stops-row .trade-volume-presets-field{
+width:100%;
+}

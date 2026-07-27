@@ -1,0 +1,96 @@
+/* Скриншот графика — кнопки в topbar Терминала (после Индикаторов) */
+
+.chart-snapshot-ticker-badge{
+position:absolute;
+top:8px;
+left:10px;
+z-index:40;
+box-sizing:border-box;
+padding:4px 8px;
+margin:0;
+border:none;
+border-radius:0;
+font:700 14px/16px system-ui,-apple-system,sans-serif;
+color:#fff;
+background:var(--app-chart-bg,#141721);
+pointer-events:none;
+user-select:none;
+white-space:nowrap;
+}
+
+.chart-snapshot-logo-overlay{
+position:absolute;
+z-index:41;
+box-sizing:border-box;
+margin:0;
+padding:0;
+border:none;
+width:auto;
+max-width:40%;
+object-fit:contain;
+pointer-events:none;
+user-select:none;
+-webkit-user-drag:none;
+}
+
+.chart-snapshot-wrap{
+position:relative;
+display:flex;
+align-items:center;
+flex:0 0 auto;
+height:100%;
+gap:0;
+padding:0 4px;
+}
+
+.chart-snapshot-btn{
+display:inline-flex;
+align-items:center;
+justify-content:center;
+box-sizing:border-box;
+width:34px;
+height:40px;
+margin:0;
+padding:0;
+border:none;
+border-radius:4px;
+background:transparent;
+color:#d1d4dc;
+cursor:pointer;
+-webkit-tap-highlight-color:transparent;
+}
+
+.chart-snapshot-btn:hover:not(:disabled){
+background:rgba(255,255,255,0.06);
+color:#f0f3fa;
+}
+
+.chart-snapshot-btn:disabled{
+opacity:0.45;
+cursor:default;
+}
+
+.chart-snapshot-btn-icon{
+width:18px;
+height:18px;
+display:block;
+flex-shrink:0;
+background-color:currentColor;
+}
+
+.chart-snapshot-btn-icon--copy{
+-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='9' y='9' width='13' height='13' rx='2'/%3E%3Cpath d='M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1'/%3E%3C/svg%3E") center / contain no-repeat;
+mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='9' y='9' width='13' height='13' rx='2'/%3E%3Cpath d='M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+.chart-snapshot-btn-icon--save{
+-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4'/%3E%3Cpolyline points='7 10 12 15 17 10'/%3E%3Cline x1='12' y1='15' x2='12' y2='3'/%3E%3C/svg%3E") center / contain no-repeat;
+mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4'/%3E%3Cpolyline points='7 10 12 15 17 10'/%3E%3Cline x1='12' y1='15' x2='12' y2='3'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+body.terminal-page.coins-multi-chart-on #chart-snapshot-wrap,
+body.terminal-page.coins-multi-chart-on #chart-snapshot-divider,
+body.terminal-page.coins-drawings-ui-off #chart-snapshot-wrap,
+body.terminal-page.coins-drawings-ui-off #chart-snapshot-divider{
+display:none !important;
+}

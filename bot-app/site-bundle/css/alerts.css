@@ -1,0 +1,489 @@
+html,
+body{
+margin:0;
+padding:0;
+min-height:100%;
+background:#16181f;
+color:#fff;
+font-family:Arial,sans-serif;
+}
+
+body{
+display:flex;
+flex-direction:column;
+}
+
+#alerts-page{
+flex:1;
+max-width:960px;
+width:100%;
+margin:0 auto;
+padding:24px 20px 48px;
+box-sizing:border-box;
+}
+
+#alerts-page h1{
+margin:0 0 24px;
+font-size:1.5rem;
+font-weight:600;
+color:#f3f4f6;
+}
+
+.alerts-telegram-section{
+margin-bottom:28px;
+padding:16px 18px;
+border:1px solid #1f2937;
+border-radius:8px;
+background:#171b21;
+}
+
+.alerts-telegram-note{
+margin:0 0 14px;
+font-size:0.9rem;
+line-height:1.45;
+color:#9ca3af;
+}
+
+.alerts-telegram-note a{
+color:#60a5fa;
+}
+
+.alerts-telegram-user-email{
+color:#e5e7eb;
+font-weight:600;
+}
+
+.alerts-inline-auth-mount .cloud-auth-wrap--inline{
+margin-top:4px;
+}
+
+.alerts-inline-auth-mount .cloud-auth-logged-out{
+display:flex;
+flex-wrap:wrap;
+gap:8px;
+align-items:center;
+}
+
+.alerts-inline-auth-mount .cloud-auth-email{
+flex:1 1 200px;
+min-width:0;
+}
+
+.alerts-telegram-pending{
+padding:12px 14px;
+border:1px solid #374151;
+border-radius:8px;
+background:rgba(
+55,
+65,
+81,
+0.35
+);
+}
+
+.alerts-telegram-pending-text{
+margin:0;
+font-size:0.9rem;
+line-height:1.45;
+color:#d1d5db;
+}
+
+.alerts-telegram-connected{
+display:flex;
+flex-wrap:wrap;
+align-items:center;
+gap:10px 16px;
+padding:12px 14px;
+border:1px solid #14532d;
+border-radius:8px;
+background:rgba(
+22,
+101,
+52,
+0.12
+);
+}
+
+.alerts-telegram-connected-text{
+margin:0;
+flex:1 1 240px;
+font-size:0.9rem;
+line-height:1.45;
+color:#bbf7d0;
+}
+
+.alerts-telegram-connected-actions{
+display:flex;
+flex-wrap:wrap;
+gap:12px 16px;
+flex:0 0 auto;
+}
+
+.alerts-telegram-edit,
+.alerts-telegram-disconnect{
+padding:0;
+border:none;
+background:none;
+font-size:0.85rem;
+cursor:pointer;
+text-decoration:underline;
+text-underline-offset:2px;
+}
+
+.alerts-telegram-edit{
+color:#93c5fd;
+}
+
+.alerts-telegram-edit:hover{
+color:#bfdbfe;
+}
+
+.alerts-telegram-disconnect{
+color:#fca5a5;
+}
+
+.alerts-telegram-disconnect:hover{
+color:#fecaca;
+}
+
+.alerts-telegram-login{
+margin:0;
+font-size:0.9rem;
+color:#d1d5db;
+}
+
+.alerts-telegram-form{
+display:flex;
+flex-wrap:wrap;
+align-items:center;
+gap:10px 12px;
+}
+
+.alerts-telegram-setup-fields{
+display:flex;
+flex-wrap:wrap;
+align-items:center;
+gap:10px 12px;
+flex:1 1 100%;
+}
+
+.alerts-telegram-setup-fields.hidden{
+display:none;
+}
+
+.alerts-telegram-label{
+font-size:0.85rem;
+color:#d1d5db;
+}
+
+.alerts-telegram-input{
+flex:1 1 180px;
+min-width:140px;
+padding:8px 10px;
+border:1px solid #374151;
+border-radius:6px;
+background:#16181f;
+color:#f9fafb;
+font-size:0.95rem;
+}
+
+.alerts-telegram-input.is-invalid{
+border-color:#f87171;
+box-shadow:0 0 0 1px #f87171;
+}
+
+.alerts-telegram-save{
+padding:8px 14px;
+border:none;
+border-radius:6px;
+background:#2563eb;
+color:#fff;
+font-size:0.9rem;
+cursor:pointer;
+}
+
+.alerts-telegram-save:hover{
+background:#1d4ed8;
+}
+
+.alerts-telegram-status{
+flex:1 1 100%;
+margin:0;
+min-height:1.2em;
+font-size:0.85rem;
+color:#86efac;
+}
+
+.alerts-telegram-status.is-error{
+color:#fca5a5;
+}
+
+.alerts-telegram-status.is-success{
+color:#86efac;
+}
+
+.alerts-telegram-help{
+flex:1 1 100%;
+margin:4px 0 0;
+font-size:0.82rem;
+color:#9ca3af;
+}
+
+.alerts-telegram-help summary{
+cursor:pointer;
+color:#d1d5db;
+}
+
+.alerts-telegram-help ol{
+margin:8px 0 0;
+padding-left:1.2rem;
+}
+
+.alerts-telegram-help code{
+font-size:0.8rem;
+color:#e5e7eb;
+}
+
+.alerts-telegram-help a,
+.alerts-telegram-help a:visited{
+color:#9ca3af;
+text-decoration:underline;
+text-underline-offset:2px;
+}
+
+.alerts-telegram-help a:hover{
+color:#e5e7eb;
+}
+
+.menu{
+position:relative;
+}
+
+/* header-settings — в common.css */
+
+.alerts-inline-settings-link{
+display:inline;
+padding:0;
+border:none;
+background:none;
+font:inherit;
+color:#60a5fa;
+text-decoration:underline;
+cursor:pointer;
+}
+
+.alerts-inline-settings-link:hover{
+color:#93c5fd;
+}
+
+.alerts-section{
+margin-bottom:32px;
+}
+
+.alerts-section--history{
+margin-bottom:0;
+}
+
+.alerts-section-title{
+margin:0 0 12px;
+font-size:1.1rem;
+font-weight:600;
+color:#e5e7eb;
+}
+
+.alerts-section-head{
+display:flex;
+flex-wrap:wrap;
+align-items:center;
+justify-content:space-between;
+gap:12px;
+margin-bottom:12px;
+}
+
+.alerts-section-head .alerts-section-title{
+margin:0;
+}
+
+.alerts-clear-history-btn{
+padding:8px 14px;
+border:1px solid #4b5563;
+border-radius:8px;
+background:#1f2937;
+color:#e5e7eb;
+font-size:13px;
+cursor:pointer;
+}
+
+.alerts-clear-history-btn:hover{
+border-color:#facc15;
+color:#facc15;
+}
+
+.alerts-hint{
+margin:0 0 20px;
+color:#9ca3af;
+font-size:14px;
+line-height:1.45;
+}
+
+.alerts-empty{
+padding:28px 20px;
+background:#1e222d;
+border:1px solid #2a2e39;
+border-radius:10px;
+color:#d1d5db;
+font-size:14px;
+line-height:1.5;
+}
+
+.alerts-table-wrap{
+overflow-x:auto;
+background:#1e222d;
+border:1px solid #2a2e39;
+border-radius:10px;
+}
+
+.alerts-table{
+width:100%;
+border-collapse:collapse;
+font-size:14px;
+}
+
+.alerts-table th,
+.alerts-table td{
+padding:12px 16px;
+text-align:left;
+border-bottom:1px solid #2a2e39;
+color:#e5e7eb;
+}
+
+.alerts-table th{
+font-weight:600;
+color:#9ca3af;
+font-size:12px;
+text-transform:uppercase;
+letter-spacing:0.04em;
+}
+
+.alerts-table tbody tr:last-child td{
+border-bottom:none;
+}
+
+.alerts-tf{
+white-space:nowrap;
+}
+
+.alerts-col-delete{
+width:180px;
+text-align:center;
+}
+
+.alerts-delete-all-wrap{
+display:inline-flex;
+align-items:center;
+justify-content:center;
+gap:6px;
+}
+
+.alerts-delete-all-text{
+color:#e5e7eb;
+font-size:12px;
+font-weight:600;
+text-transform:uppercase;
+letter-spacing:0.04em;
+}
+
+.alerts-delete-all-btn{
+appearance:none;
+flex:0 0 auto;
+width:24px;
+height:24px;
+padding:0;
+border:none;
+border-radius:4px;
+background:transparent;
+color:#ef4444;
+font-size:20px;
+line-height:1;
+cursor:pointer;
+}
+
+.alerts-delete-all-btn:hover{
+background:rgba(239,68,68,.15);
+color:#fca5a5;
+}
+
+.alerts-row-delete-btn{
+appearance:none;
+flex:0 0 auto;
+width:20px;
+height:20px;
+padding:0;
+border:none;
+border-radius:4px;
+background:transparent;
+color:#6b7280;
+font-size:16px;
+line-height:1;
+cursor:pointer;
+}
+
+.alerts-row-delete-btn:hover{
+background:rgba(239,68,68,.15);
+color:#fca5a5;
+}
+
+.alerts-symbol-link{
+color:#60a5fa;
+text-decoration:none;
+}
+
+.alerts-symbol-link:hover{
+text-decoration:underline;
+}
+
+.alerts-price{
+font-variant-numeric:tabular-nums;
+color:#facc15;
+}
+
+.alerts-clear-drawings{
+margin:28px 0 0;
+font-size:12px;
+color:#9ca3af;
+line-height:1.5;
+}
+
+.alerts-clear-drawings-link{
+position:relative;
+z-index:2;
+padding:2px 4px;
+margin:-2px -4px;
+border:none;
+background:none;
+font:inherit;
+font-size:inherit;
+color:#60a5fa;
+cursor:pointer;
+text-decoration:underline;
+pointer-events:auto;
+-webkit-tap-highlight-color:transparent;
+}
+
+.alerts-clear-drawings-link:disabled{
+opacity:0.6;
+cursor:wait;
+}
+
+.alerts-clear-drawings-link:hover{
+color:#93c5fd;
+}
+
+.alerts-clear-drawings-text{
+color:#6b7280;
+}
+
+.alerts-clear-drawings-status{
+margin-left:8px;
+color:#22c55e;
+}

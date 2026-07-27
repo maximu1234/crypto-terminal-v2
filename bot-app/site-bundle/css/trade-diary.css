@@ -1,0 +1,631 @@
+.trade-diary-html,
+.trade-diary-body{
+  background:#0b0e11;
+  color:#d1d4dc;
+}
+
+body.trade-diary-body .coins-diary-link{
+  display:inline-flex;
+  align-items:center;
+  flex-shrink:0;
+  color:#9ca3af;
+  font-size:14px;
+  font-weight:400;
+  line-height:1;
+  text-decoration:none;
+}
+
+body.trade-diary-body .coins-diary-link:hover{
+  color:#e5e7eb;
+}
+
+body.trade-diary-body .coins-diary-link.active{
+  color:#fff;
+}
+
+.trade-diary-shell{
+  --trade-diary-inner-width:960px;
+  box-sizing:border-box;
+  width:min(
+100%,
+calc(
+var(
+--trade-diary-inner-width
+) +
+32px
+)
+);
+  max-width:calc(
+var(
+--trade-diary-inner-width
+) +
+32px
+);
+  margin:0 auto;
+  padding:20px 16px 40px;
+}
+
+.trade-diary-page,
+.trade-diary-content,
+.trade-diary-week{
+  width:100%;
+}
+
+.trade-diary-gate{
+  padding:48px 12px;
+}
+
+.trade-diary-gate h1{
+  margin:0 0 12px;
+  font-size:22px;
+  font-weight:600;
+  color:#f3f4f6;
+}
+
+.trade-diary-gate p{
+  margin:0 0 8px;
+  color:#9ca3af;
+  line-height:1.5;
+}
+
+.trade-diary-email{
+  color:#e5e7eb;
+}
+
+.trade-diary-page-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:12px;
+  flex-wrap:wrap;
+}
+
+.trade-diary-page-head h1{
+  margin:0;
+  font-size:24px;
+  font-weight:600;
+  color:#f3f4f6;
+}
+
+.trade-diary-refresh{
+  border:1px solid #374151;
+  background:#1e222d;
+  color:#e5e7eb;
+  border-radius:8px;
+  padding:8px 14px;
+  font-size:13px;
+  cursor:pointer;
+}
+
+.trade-diary-refresh:hover{
+  background:#2a2e39;
+}
+
+.trade-diary-status{
+  min-height:20px;
+  margin:0 0 16px;
+  font-size:13px;
+  color:#9ca3af;
+}
+
+.trade-diary-status.is-error{
+  color:#f87171;
+}
+
+.trade-diary-status.is-loading{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  color:#eab308;
+  font-variant-numeric:tabular-nums;
+}
+
+.trade-diary-status.is-loading::before{
+  content:"";
+  width:12px;
+  height:12px;
+  flex:0 0 12px;
+  border:2px solid rgba(234,179,8,.28);
+  border-top-color:#eab308;
+  border-radius:50%;
+  animation:trade-diary-status-spin .8s linear infinite;
+}
+
+@keyframes trade-diary-status-spin{
+  to{
+    transform:rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion:reduce){
+  .trade-diary-status.is-loading::before{
+    animation:none;
+  }
+}
+
+.trade-diary-content{
+  display:flex;
+  flex-direction:column;
+  gap:18px;
+}
+
+.trade-diary-week{
+  border:1px solid #1f2937;
+  border-radius:10px;
+  overflow:hidden;
+  background:#11151a;
+}
+
+.trade-diary-grid{
+  display:grid;
+  width:100%;
+  max-width:var(
+--trade-diary-inner-width,
+916px
+);
+  grid-template-columns:96px minmax(148px,1fr) 28px 96px 88px 28px 72px 72px 92px;
+  column-gap:16px;
+  align-items:center;
+  padding:8px 18px;
+  box-sizing:border-box;
+}
+
+.trade-diary-week-head.trade-diary-grid,
+.trade-diary-colhead.trade-diary-grid{
+  padding:8px 18px;
+}
+
+.trade-diary-day-head.trade-diary-grid{
+  padding:6px 18px;
+}
+
+.trade-diary-row.trade-diary-grid{
+  padding:3px 18px;
+  line-height:1.2;
+  min-height:0;
+}
+
+.trade-diary-week-head{
+  background:#151a21;
+  border-bottom:1px solid #1f2937;
+  font-size:14px;
+  font-weight:600;
+}
+
+.trade-diary-week-range{
+  grid-column:1 / span 4;
+  color:#f3f4f6;
+}
+
+.trade-diary-week-pnl{
+  grid-column:5;
+  text-align:right;
+  font-variant-numeric:tabular-nums;
+}
+
+.trade-diary-week-com{
+  grid-column:8;
+  text-align:right;
+  font-variant-numeric:tabular-nums;
+}
+
+.trade-diary-colhead{
+  border-bottom:1px solid #1f2937;
+  font-size:12px;
+  font-weight:500;
+  color:#6b7280;
+  background:#10141a;
+}
+
+.trade-diary-colhead .trade-diary-num{
+  text-align:right;
+}
+
+.trade-diary-day{
+  border-top:1px solid #1f2937;
+}
+
+.trade-diary-day-head{
+  background:#1a2030;
+  border-top:1px solid #2a3548;
+  border-bottom:1px solid #252d3d;
+  font-size:12px;
+  font-weight:600;
+  color:#f3f4f6;
+  box-shadow:inset 3px 0 0 #4b5563;
+  width:100%;
+  border-left:0;
+  border-right:0;
+  cursor:pointer;
+  font-family:inherit;
+  text-align:left;
+}
+
+.trade-diary-day-head:hover{
+  background:#1e2536;
+}
+
+.trade-diary-day.is-collapsed .trade-diary-day-head{
+  border-bottom-color:#2a3548;
+}
+
+.trade-diary-day-trades{
+  display:grid;
+  grid-template-rows:1fr;
+  transition:grid-template-rows 0.22s ease;
+}
+
+.trade-diary-day.is-collapsed .trade-diary-day-trades{
+  grid-template-rows:0fr;
+}
+
+.trade-diary-day-trades-inner{
+  overflow:hidden;
+  min-height:0;
+}
+
+.trade-diary-day-label{
+  grid-column:1 / span 2;
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  font-size:13px;
+  color:#f9fafb;
+}
+
+.trade-diary-day-chevron{
+  width:12px;
+  height:12px;
+  flex-shrink:0;
+  color:#9ca3af;
+  transition:transform 0.22s ease;
+}
+
+.trade-diary-day.is-collapsed .trade-diary-day-chevron{
+  transform:rotate(-90deg);
+}
+
+.trade-diary-day-pnl{
+  grid-column:5;
+  text-align:right;
+  font-variant-numeric:tabular-nums;
+}
+
+.trade-diary-day-com{
+  grid-column:8;
+  text-align:right;
+  font-variant-numeric:tabular-nums;
+}
+
+.trade-diary-row{
+  font-size:13px;
+  border-top:1px solid #171b22;
+  width:100%;
+  border-left:0;
+  border-right:0;
+  border-bottom:0;
+  background:transparent;
+  color:inherit;
+  text-align:left;
+  cursor:pointer;
+  font-family:inherit;
+}
+
+.trade-diary-row:hover,
+.trade-diary-row.is-open{
+  background:rgba(255,255,255,0.03);
+}
+
+.trade-diary-time{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  color:#cbd5e1;
+  white-space:nowrap;
+}
+
+.trade-diary-time-icon{
+  width:12px;
+  height:12px;
+  opacity:0.75;
+  flex-shrink:0;
+}
+
+.trade-diary-symbol{
+  color:#f3f4f6;
+  font-weight:500;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.trade-diary-chart-link{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:24px;
+  height:24px;
+  border:none;
+  background:transparent;
+  color:#6b7280;
+  cursor:pointer;
+  font-size:12px;
+  padding:0;
+  border-radius:4px;
+  flex-shrink:0;
+  line-height:1;
+  transition:color 0.15s ease,background 0.15s ease;
+}
+
+.trade-diary-chart-link:hover{
+  color:#fff;
+  background:#1f2937;
+}
+
+.trade-diary-duration{
+  color:#9ca3af;
+  text-align:left;
+  white-space:nowrap;
+}
+
+.trade-diary-num{
+  text-align:right;
+  font-variant-numeric:tabular-nums;
+  white-space:nowrap;
+}
+
+.trade-diary-share-col{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-width:0;
+}
+
+body.trade-diary-body .trade-book-share{
+  appearance:none;
+  flex:0 0 auto;
+  width:16px;
+  height:16px;
+  padding:0;
+  border:none;
+  background:transparent;
+  cursor:pointer;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+}
+
+body.trade-diary-body .trade-book-share-icon{
+  display:block;
+  width:14px;
+  height:14px;
+  object-fit:contain;
+}
+
+body.trade-diary-body .trade-book-share-icon--on{
+  display:none;
+}
+
+body.trade-diary-body .trade-book-share:hover .trade-book-share-icon--off{
+  display:none;
+}
+
+body.trade-diary-body .trade-book-share:hover .trade-book-share-icon--on{
+  display:block;
+}
+
+.trade-diary-side{
+  text-align:right;
+  font-weight:500;
+  white-space:nowrap;
+  overflow:visible;
+}
+
+.trade-diary-pos{
+  color:#22c55e;
+}
+
+.trade-diary-neg{
+  color:#ef4444;
+}
+
+.trade-diary-muted{
+  color:#9ca3af;
+}
+
+.trade-diary-empty{
+  padding:28px 18px;
+  text-align:center;
+  color:#6b7280;
+  font-size:14px;
+}
+
+.trade-diary-detail{
+  border-top:1px solid #1f2937;
+  background:#0d1117;
+}
+
+.trade-diary-detail-loading,
+.trade-diary-detail-error,
+.trade-diary-detail-empty{
+  padding:24px 18px;
+  color:#9ca3af;
+  font-size:13px;
+}
+
+.trade-diary-detail-error{
+  color:#f87171;
+}
+
+.trade-diary-detail-split{
+  display:grid;
+  grid-template-columns:minmax(
+0,
+1.05fr
+) minmax(
+0,
+1fr
+);
+  width:100%;
+  min-height:320px;
+}
+
+.trade-diary-detail-chart{
+  display:flex;
+  flex-direction:column;
+  min-height:320px;
+  border-right:1px solid #1f2937;
+  background:#0b0e11;
+}
+
+.trade-diary-detail-chart-shell{
+  display:flex;
+  flex-direction:column;
+  flex:1;
+  min-height:320px;
+}
+
+.trade-diary-detail-chart-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:10px 14px 8px;
+  border-bottom:1px solid #171b22;
+}
+
+.trade-diary-detail-chart-meta{
+  font-size:12px;
+  color:#6b7280;
+  white-space:nowrap;
+}
+
+.trade-diary-tf-bar{
+  display:flex;
+  align-items:center;
+  gap:4px;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+}
+
+.trade-diary-tf-btn{
+  border:1px solid #2a3140;
+  background:#151a21;
+  color:#9ca3af;
+  border-radius:6px;
+  min-width:34px;
+  padding:4px 8px;
+  font-size:11px;
+  line-height:1.2;
+  cursor:pointer;
+  font-family:inherit;
+}
+
+.trade-diary-tf-btn:hover{
+  background:#1f2630;
+  color:#e5e7eb;
+}
+
+.trade-diary-tf-btn.active{
+  background:#2a3140;
+  border-color:#4b5563;
+  color:#f3f4f6;
+}
+
+.trade-diary-detail-chart-canvas{
+  flex:1;
+  min-height:260px;
+}
+
+.trade-diary-detail-side{
+  display:flex;
+  flex-direction:column;
+  min-width:0;
+}
+
+.trade-diary-detail-prices{
+  display:flex;
+  flex-wrap:wrap;
+  gap:12px;
+  padding:10px 16px;
+  border-bottom:1px solid #1f2937;
+  font-size:12px;
+  color:#e5e7eb;
+}
+
+.trade-diary-detail-table-wrap{
+  overflow:auto;
+  max-height:360px;
+}
+
+.trade-diary-exec-table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:12px;
+}
+
+.trade-diary-exec-table th,
+.trade-diary-exec-table td{
+  padding:5px 12px;
+  border-bottom:1px solid #171b22;
+  vertical-align:middle;
+}
+
+.trade-diary-exec-table th{
+  position:sticky;
+  top:0;
+  z-index:1;
+  background:#10141a;
+  color:#6b7280;
+  font-weight:500;
+  text-align:left;
+}
+
+.trade-diary-exec-table th.trade-diary-num,
+.trade-diary-exec-table td.trade-diary-num{
+  text-align:right;
+}
+
+.trade-diary-exec-time{
+  white-space:nowrap;
+  color:#e5e7eb;
+}
+
+@media (max-width:900px){
+
+.trade-diary-grid{
+  grid-template-columns:1fr;
+  row-gap:4px;
+}
+
+.trade-diary-week-range,
+.trade-diary-week-pnl,
+.trade-diary-week-com,
+.trade-diary-day-label,
+.trade-diary-day-pnl,
+.trade-diary-day-com,
+.trade-diary-share-col,
+.trade-diary-num,
+.trade-diary-side,
+.trade-diary-duration,
+.trade-diary-chart-link{
+  grid-column:auto;
+  text-align:left;
+}
+
+.trade-diary-colhead{
+  display:none;
+}
+
+.trade-diary-detail-split{
+  grid-template-columns:1fr;
+}
+
+.trade-diary-detail-chart{
+  border-right:0;
+  border-bottom:1px solid #1f2937;
+  min-height:260px;
+}
+
+}

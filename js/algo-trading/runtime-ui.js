@@ -13,7 +13,7 @@ setAlgoTradingMode
 import {
 fetchAlgoBotStatus,
 isAlgoBotDesktop
-} from "./bot-bridge.js?v=8";
+} from "./bot-bridge.js?v=9";
 
 const SECRET_SAVED_PLACEHOLDER =
 "••••••••••••••••";

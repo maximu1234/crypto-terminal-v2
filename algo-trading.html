@@ -19,7 +19,7 @@
 <link rel="stylesheet" href="/css/terminal.css?v=167">
 <link rel="stylesheet" href="/css/terminal-layout.css?v=97">
 <link rel="stylesheet" href="/css/chart-indicators.css?v=22">
-<link rel="stylesheet" href="/css/algo-trading.css?v=81">
+<link rel="stylesheet" href="/css/algo-trading.css?v=82">
 <link rel="stylesheet" href="/css/algo-trading-book-panel.css?v=4">
 <link rel="stylesheet" href="/css/algo-trading-chart-overlay.css?v=2">
 
@@ -397,6 +397,18 @@ aria-label="История сигналов"
 </div>
 </div>
 <p class="algo-bot-status-message hidden" id="algo-bot-status-message"></p>
+<div class="algo-bot-status-row algo-bot-status-row--lock">
+<span class="algo-bot-status-label">Блокировка</span>
+<span class="algo-bot-status-value" id="algo-bot-status-lock">—</span>
+</div>
+<button
+type="button"
+class="algo-bot-lock-clear-btn"
+id="algo-bot-lock-clear"
+title="Снять облачную метку, если бот упал без «Остановить»"
+>
+Снять блокировку
+</button>
 </div>
 </div>
 

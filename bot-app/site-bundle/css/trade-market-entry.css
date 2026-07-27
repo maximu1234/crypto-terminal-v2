@@ -1,0 +1,105 @@
+/* /trade — вход по рынку (Buy / Sell) */
+
+body.trade-page .trade-topbar-trade-actions{
+display:flex;
+align-items:center;
+gap:14px;
+flex:0 0 auto;
+margin-left:auto;
+}
+
+body.trade-page .trade-volume-presets-wrap{
+margin-left:0;
+}
+
+body.trade-page .trade-market-entry{
+display:inline-flex;
+align-items:stretch;
+flex:0 0 auto;
+border-radius:6px;
+overflow:hidden;
+box-shadow:0 1px 0 rgba(0,0,0,.35);
+}
+
+body.trade-page .trade-market-entry-btn{
+display:inline-flex;
+align-items:center;
+gap:6px;
+min-width:0;
+height:40px;
+padding:0 12px;
+border:none;
+cursor:pointer;
+font:600 13px/1 system-ui,-apple-system,sans-serif;
+font-variant-numeric:tabular-nums;
+white-space:nowrap;
+-webkit-tap-highlight-color:transparent;
+transition:filter .12s ease,opacity .12s ease;
+}
+
+body.trade-page .trade-market-entry-btn:disabled{
+opacity:.55;
+cursor:default;
+}
+
+body.trade-page .trade-market-entry-btn--buy{
+background:#14532d;
+color:#ecfdf5;
+border-right:1px solid rgba(0,0,0,.25);
+}
+
+body.trade-page .trade-chart-markers-toggle{
+display:inline-flex;
+align-items:center;
+gap:6px;
+flex:0 0 auto;
+cursor:pointer;
+user-select:none;
+}
+
+body.trade-page .trade-chart-markers-searching{
+font:500 12px/1 system-ui,-apple-system,sans-serif;
+color:#eab308;
+white-space:nowrap;
+}
+
+body.trade-page .trade-chart-markers-searching[hidden]{
+display:none !important;
+}
+
+body.trade-page .trade-chart-markers-toggle input{
+margin:0;
+accent-color:#22c55e;
+}
+
+body.trade-page .trade-market-entry-btn--buy:hover:not(:disabled){
+filter:brightness(1.08);
+}
+
+body.trade-page .trade-market-entry-btn--sell{
+background:#450a0a;
+color:#fef2f2;
+}
+
+body.trade-page .trade-market-entry-btn--sell:hover:not(:disabled){
+filter:brightness(1.08);
+}
+
+body.trade-page .trade-market-entry-arrow{
+font-size:12px;
+line-height:1;
+opacity:.9;
+}
+
+body.trade-page .trade-market-entry-price{
+min-width:4ch;
+text-align:right;
+}
+
+@media (max-width:640px){
+
+body.trade-page .trade-market-entry{
+display:none !important;
+}
+
+}

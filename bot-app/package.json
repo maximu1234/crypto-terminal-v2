@@ -1,0 +1,168 @@
+{
+  "name": "multichart-algo-bot",
+  "productName": "Multichart Algo Bot",
+  "version": "1.0.99",
+  "description": "Standalone Algo Bot desktop app",
+  "main": "main.js",
+  "author": "Multichart",
+  "private": true,
+  "scripts": {
+    "ensure:deps": "node scripts/ensure-deps.cjs",
+    "bundle": "npm run bundle:site",
+    "bundle:site": "node scripts/bundle-site.cjs",
+    "prestart": "npm run ensure:deps && npm run bundle:site",
+    "start": "DESKTOP_START_URL=/algo-trading.html?botLite=1 ./node_modules/.bin/electron .",
+    "start:dev": "DESKTOP_REMOTE_UI=1 CRYPTO_TERMINAL_URL=http://127.0.0.1:8080 DESKTOP_START_URL=/algo-trading.html?botLite=1 ./node_modules/.bin/electron .",
+    "build:mac": "npm run ensure:deps && npx electron-builder --mac --publish never",
+    "build:win": "npm run ensure:deps && npx electron-builder --win --publish never"
+  },
+  "dependencies": {
+    "electron-log": "^5.2.4",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "electron": "^33.4.11",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.multichart.algobot.desktop",
+    "productName": "Multichart Algo Bot",
+    "forceCodeSigning": false,
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "asar": true,
+    "asarUnpack": [
+      "site-bundle/**"
+    ],
+    "files": [
+      "*.js",
+      "*.cjs",
+      "*.html",
+      "platform/**",
+      "trading/**",
+      "site-bundle/**"
+    ],
+    "afterPack": "./after-pack.cjs",
+    "mac": {
+      "category": "public.app-category.finance",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "arm64"
+          ]
+        }
+      ],
+      "icon": "build/icon.png",
+      "identity": null,
+      "hardenedRuntime": false,
+      "gatekeeperAssess": false
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "extraResources": [
+        {
+          "from": "build/pnl-card-generator.exe",
+          "to": "tools/pnl-card-generator.exe"
+        }
+      ]
+    },
+    "dmg": {
+      "title": "Multichart Algo Bot ${version}"
+    },
+    "extraResources": [
+      {
+        "from": "build/menu-bar-tray.png",
+        "to": "menu-bar-tray.png"
+      },
+      {
+        "from": "build/side-dot-long.png",
+        "to": "side-dot-long.png"
+      },
+      {
+        "from": "build/side-dot-short.png",
+        "to": "side-dot-short.png"
+      },
+      {
+        "from": "../scripts/generate-bybit-pnl-card.py",
+        "to": "scripts/generate-bybit-pnl-card.py"
+      },
+      {
+        "from": "../assets/bybit-pnl-template-positive.png",
+        "to": "assets/bybit-pnl-template-positive.png"
+      },
+      {
+        "from": "../assets/bybit-pnl-template-negative.png",
+        "to": "assets/bybit-pnl-template-negative.png"
+      },
+      {
+        "from": "../scripts/generate-bybit-pnl-diary-card.py",
+        "to": "scripts/generate-bybit-pnl-diary-card.py"
+      },
+      {
+        "from": "../assets/bybit-pnl-diary-template-positive.png",
+        "to": "assets/bybit-pnl-diary-template-positive.png"
+      },
+      {
+        "from": "../assets/bybit-pnl-diary-template-negative.png",
+        "to": "assets/bybit-pnl-diary-template-negative.png"
+      },
+      {
+        "from": "../scripts/generate-bingx-pnl-card.py",
+        "to": "scripts/generate-bingx-pnl-card.py"
+      },
+      {
+        "from": "../assets/bingx-pnl-template-positive.png",
+        "to": "assets/bingx-pnl-template-positive.png"
+      },
+      {
+        "from": "../assets/bingx-pnl-template-negative.png",
+        "to": "assets/bingx-pnl-template-negative.png"
+      },
+      {
+        "from": "../assets/bingx-pnl-diary-template-positive.png",
+        "to": "assets/bingx-pnl-diary-template-positive.png"
+      },
+      {
+        "from": "../assets/bingx-pnl-diary-template-negative.png",
+        "to": "assets/bingx-pnl-diary-template-negative.png"
+      }
+    ],
+    "publish": {
+      "provider": "github",
+      "owner": "maximu1234",
+      "repo": "crypto-terminal-v2",
+      "releaseType": "release"
+    },
+    "protocols": [
+      {
+        "name": "Multichart Auth",
+        "schemes": [
+          "multichart"
+        ]
+      }
+    ],
+    "executableName": "MultichartAlgoBot"
+  }
+}
