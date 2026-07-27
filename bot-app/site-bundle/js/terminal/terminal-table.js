@@ -2,7 +2,7 @@ import {
 coinsState,
 marketMap,
 coinElements
-} from "./terminal-state.js?v=11";
+} from "./terminal-state.js?v=12";
 
 import {
 isActiveRealtimeMarketDataset,
@@ -34,7 +34,7 @@ emptyFavorites
 
 import {
 isTradePage
-} from "./terminal-state.js?v=11";
+} from "./terminal-state.js?v=12";
 
 /** Desktop /trade only — не тянем trade-open-positions в открытый web /coins. */
 let hasOpenPosition =
@@ -201,6 +201,8 @@ price:
 change24:
 0,
 change1h:
+0,
+volume24:
 0
 };
 }
@@ -222,7 +224,7 @@ item
 
 /*
   После обновления % рынка список должен перестраиваться, иначе
-  при сохранённой сортировке по 24h/1h все строки с нулём % после
+  при сохранённой сортировке по 24h/volume24 все строки с нулём после
   перезагрузки выглядят «несохранённой» сортировкой.
 */
 let resortPriceColsTimer =
@@ -266,7 +268,7 @@ export function scheduleResortPriceColumns(){
 
 if(
 coinsState().innerSortMode !== "24h" &&
-coinsState().innerSortMode !== "1h"
+coinsState().innerSortMode !== "volume24"
 ){
 return;
 }
@@ -321,6 +323,12 @@ payload.change24;
 item.change1h =
 payload.change1h;
 
+item.volume24 =
+Number(
+payload.volume24
+) ||
+0;
+
 });
 
 }catch(err){
@@ -372,10 +380,30 @@ tick.change24;
 item.change1h =
 tick.change1h;
 
+if(
+tick.volume24 !=
+null
+){
+item.volume24 =
+Number(
+tick.volume24
+) ||
+0;
+}
+
 updateCoinRow(
 item
 );
 scheduleTickerUiFlush();
+
+if(
+typeof hooks.onTickerTick ===
+"function"
+){
+hooks.onTickerTick(
+item
+);
+}
 
 }
 );
@@ -661,8 +689,8 @@ ${item.symbol}
 0.00%
 </div>
 
-<div class="coin-change1h col-change">
-0.00%
+<div class="coin-volume24 col-change">
+—
 </div>
 `;
 
@@ -779,6 +807,54 @@ return div;
 
 }
 
+export function formatCoinVolume24(
+value
+){
+
+const n =
+Number(
+value
+);
+
+if(
+!Number.isFinite(
+n
+) ||
+n <=
+0
+){
+return "—";
+}
+
+if(
+n >=
+1e9
+){
+return `${Number((n / 1e9).toFixed(2))}B`;
+}
+
+if(
+n >=
+1e6
+){
+return `${Number((n / 1e6).toFixed(2))}M`;
+}
+
+if(
+n >=
+1e3
+){
+return `${Number((n / 1e3).toFixed(2))}K`;
+}
+
+return String(
+Math.round(
+n
+)
+);
+
+}
+
 export function updateCoinRow(item, element=null){
 
 const div =
@@ -792,10 +868,11 @@ return;
 const change24El =
 div.querySelector(".coin-change24");
 
-const change1hEl =
+const volume24El =
+div.querySelector(".coin-volume24") ||
 div.querySelector(".coin-change1h");
 
-if(!change24El || !change1hEl){
+if(!change24El || !volume24El){
 return;
 }
 
@@ -811,23 +888,21 @@ change24El.classList.remove("coin-change-pos");
 
 }
 
-if(item.change1h >= 0){
-
-change1hEl.classList.add("coin-change-pos");
-change1hEl.classList.remove("coin-change-neg");
-
-}else{
-
-change1hEl.classList.add("coin-change-neg");
-change1hEl.classList.remove("coin-change-pos");
-
-}
+volume24El.classList.remove(
+"coin-change-pos",
+"coin-change-neg"
+);
+volume24El.classList.add(
+"coin-volume24"
+);
 
 change24El.innerText =
 `${item.change24.toFixed(2)}%`;
 
-change1hEl.innerText =
-`${item.change1h.toFixed(2)}%`;
+volume24El.innerText =
+formatCoinVolume24(
+item.volume24
+);
 
 }
 
@@ -884,10 +959,21 @@ b.symbol
 result =
 a.change24 - b.change24;
 
-}else if(coinsState().innerSortMode === "1h"){
+}else if(coinsState().innerSortMode === "volume24"){
 
 result =
-a.change1h - b.change1h;
+(
+Number(
+a.volume24
+) ||
+0
+) -
+(
+Number(
+b.volume24
+) ||
+0
+);
 
 }
 

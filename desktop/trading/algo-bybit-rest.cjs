@@ -5212,11 +5212,20 @@ last:
 Number(
 row.lastPrice
 ),
-turnover24h:
+turnover24h:(
+()=>{
+const n =
 Number(
-row.turnover24h ||
-0
+row.turnover24h
+);
+
+return Number.isFinite(
+n
 )
+? n
+: null;
+}
+)()
 };
 
 }

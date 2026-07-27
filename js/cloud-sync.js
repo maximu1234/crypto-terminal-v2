@@ -11,13 +11,21 @@ isSafariBrowser,
 isFatalAuthRefreshError,
 clearPersistedRefreshToken,
 markExplicitAuthSignOut,
+clearExplicitAuthSignOut,
 restoreAuthSessionFromBackup,
 restoreDesktopAuthSession,
+readAuthSessionRaw,
+persistAuthSessionRaw,
 isAuthRefreshBlocked,
 blockAuthRefreshUntil,
 clearAuthRefreshBlock,
 getAuthRefreshBlockedUntil
-} from "./auth-storage.js?v=4";
+} from "./auth-storage.js?v=5";
+
+import {
+encodeAuthSessionTransfer,
+decodeAuthSessionTransfer
+} from "./auth-session-transfer.js?v=1";
 
 import {
 loadFavoritesGroups,
@@ -2564,6 +2572,203 @@ throw error;
 }
 
 return redirectTo;
+
+}
+
+/**
+ * Multichart → clipboard string for Algo Bot paste.
+ * @returns {Promise<string>}
+ */
+export async function exportAuthSessionTransferString(){
+
+let raw =
+readAuthSessionRaw();
+
+if(
+!raw
+){
+const api =
+window.cryptoTerminalDesktop;
+
+try{
+const result =
+await api?.loadAuthSession?.();
+
+if(
+typeof result?.raw ===
+"string" &&
+result.raw.trim()
+){
+raw =
+result.raw.trim();
+}
+}catch{
+/* ignore */
+}
+}
+
+if(
+!raw
+){
+const session =
+readPersistedAuthSession();
+
+if(
+session?.access_token
+){
+raw =
+JSON.stringify(
+session
+);
+}
+}
+
+if(
+!raw
+){
+throw new Error(
+"Нет активной сессии. Войдите в аккаунт Multichart."
+);
+}
+
+return encodeAuthSessionTransfer(
+raw
+);
+
+}
+
+/**
+ * Algo Bot: paste Multichart session string → localStorage + desktop file + supabase client.
+ * @param {string} input
+ * @returns {Promise<{ ok: boolean, email?: string, message: string }>}
+ */
+export async function importAuthSessionTransferString(
+input
+){
+
+let decoded;
+
+try{
+decoded =
+decodeAuthSessionTransfer(
+input
+);
+}catch(
+err
+){
+return {
+ok:
+false,
+message:
+err?.message ||
+"Некорректная строка сессии."
+};
+}
+
+clearAuthRefreshBlock();
+authRefreshBlockedUntil =
+0;
+clearExplicitAuthSignOut();
+resumeCloudApi();
+
+if(
+!persistAuthSessionRaw(
+decoded.raw
+)
+){
+return {
+ok:
+false,
+message:
+"Не удалось сохранить сессию локально."
+};
+}
+
+const sb =
+await getSupabase();
+
+if(
+!sb
+){
+return {
+ok:
+false,
+message:
+"Облако недоступно: нет ключей Supabase."
+};
+}
+
+try{
+
+const {
+data,
+error
+} =
+await withTimeout(
+sb.auth.setSession({
+access_token:
+decoded.session.access_token,
+refresh_token:
+decoded.session.refresh_token ||
+""
+}),
+8000,
+"setSession import"
+);
+
+if(
+error
+){
+return {
+ok:
+false,
+message:
+error.message ||
+"Не удалось применить сессию."
+};
+}
+
+lastAppliedSessionKey =
+"";
+
+await applySession(
+data?.session ||
+decoded.session
+);
+
+}catch(
+err
+){
+return {
+ok:
+false,
+message:
+err?.message ||
+"Не удалось применить сессию."
+};
+}
+
+if(
+!isCloudLoggedIn()
+){
+return {
+ok:
+false,
+message:
+"Сессия сохранена, но вход не подтверждён. Попробуйте ещё раз."
+};
+}
+
+return {
+ok:
+true,
+email:
+getCloudUserEmail() ||
+decoded.session.user?.email ||
+"",
+message:
+`Вошли: ${getCloudUserEmail() || decoded.session.user?.email || "аккаунт"}`
+};
 
 }
 

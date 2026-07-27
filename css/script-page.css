@@ -139,6 +139,33 @@ background:#0f172a;
 color:#e5e7eb;
 }
 
+.script-toolbar-field--turnover{
+gap:4px;
+}
+
+.script-turnover-input{
+width:96px;
+max-width:96px;
+font-size:12px;
+padding:5px 8px;
+border:1px solid #374151;
+border-radius:6px;
+background:#0f172a;
+color:#e5e7eb;
+font-variant-numeric:tabular-nums;
+}
+
+.script-turnover-input:focus,
+.script-turnover-input:focus-visible{
+outline:none;
+border-color:#4b5563;
+}
+
+.script-turnover-unit{
+font-size:11px;
+color:#6b7280;
+}
+
 .script-toolbar-check{
 display:flex;
 align-items:center;

@@ -37,7 +37,7 @@ subscribeKline
 import {
 mountAlgoTradingCoinList,
 refreshAlgoMarketListFromFlags
-} from "./algo-trading-list.js?v=10";
+} from "./algo-trading-list.js?v=11";
 
 import {
 mountAlgoTickerScanUi
@@ -49,7 +49,7 @@ mountAlgoRuntimeUi
 
 import {
 mountAlgoBotStrategyUi
-} from "./algo-trading/bot-strategy-ui.js?v=37";
+} from "./algo-trading/bot-strategy-ui.js?v=38";
 
 import {
 syncBotStrategiesToMain
@@ -58,10 +58,6 @@ syncBotStrategiesToMain
 import {
 mountAlgoTradeUi
 } from "./algo-trading/trade/boot.js?v=3";
-
-import {
-coinsState
-} from "./terminal/terminal-state.js?v=11";
 
 import {
 mountAlgoTradingDrawings
@@ -122,8 +118,10 @@ invalidatePreservedVisibleLogicalRange
 
 import {
 COINS_TF_HOTKEYS,
-COINS_TF_VALUES
-} from "./terminal/terminal-state.js?v=11";
+COINS_TF_VALUES,
+coinsState,
+marketMap
+} from "./terminal/terminal-state.js?v=12";
 
 const DEFAULT_SYMBOL =
 "BTCUSDT";
@@ -1134,6 +1132,86 @@ symbol
 coinsState().currentSymbol =
 normalizeSymbol(
 symbol
+);
+
+syncAlgoChartTurnover24(
+symbol
+);
+
+}
+
+function formatTurnover24Label(
+value
+){
+
+const n =
+Number(
+value
+);
+
+if(
+!Number.isFinite(
+n
+) ||
+n <=
+0
+){
+return "";
+}
+
+let compact;
+
+if(
+n >=
+1e6
+){
+compact =
+`${Number((n / 1e6).toFixed(2))}M`;
+}else if(
+n >=
+1e3
+){
+compact =
+`${Number((n / 1e3).toFixed(2))}K`;
+}else{
+compact =
+String(
+Math.round(
+n
+)
+);
+}
+
+return `Объем 24ч: ${compact}`;
+
+}
+
+function syncAlgoChartTurnover24(
+nextSymbol =
+symbol
+){
+
+const el =
+document.getElementById(
+"coins-chart-turnover24"
+);
+
+if(
+!el
+){
+return;
+}
+
+const item =
+marketMap.get(
+normalizeSymbol(
+nextSymbol
+)
+);
+
+el.textContent =
+formatTurnover24Label(
+item?.volume24
 );
 
 }
@@ -3086,6 +3164,25 @@ next,
 tf
 );
 listApi?.highlight?.();
+},
+onTickerTick(
+item
+){
+if(
+!item ||
+normalizeSymbol(
+item.symbol
+) !==
+normalizeSymbol(
+symbol
+)
+){
+return;
+}
+
+syncAlgoChartTurnover24(
+item.symbol
+);
 }
 }
 ).then(

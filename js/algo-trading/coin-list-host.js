@@ -6,14 +6,14 @@
 export {
 coinsState,
 coinElements
-} from "../terminal/terminal-state.js?v=11";
+} from "../terminal/terminal-state.js?v=12";
 
 export {
 applyCoinsPrefs,
 persistCoinsPrefs,
 applySortForCurrentMarket,
 readCoinsPrefs
-} from "../terminal/terminal-prefs.js?v=19";
+} from "../terminal/terminal-prefs.js?v=20";
 
 export {
 generateMarketData,
@@ -27,4 +27,4 @@ syncCoinListFreezeFromFlagMenus,
 getCurrentSymbols,
 getVisibleSymbolList,
 setCoinOpenPositionChecker
-} from "../terminal/terminal-table.js?v=22";
+} from "../terminal/terminal-table.js?v=24";

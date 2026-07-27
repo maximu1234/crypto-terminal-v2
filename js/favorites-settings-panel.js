@@ -5,7 +5,7 @@ import {
 isCloudLoggedIn,
 getCloudUserEmail,
 onCloudSyncChange
-} from "./cloud-sync.js?v=46";
+} from "./cloud-sync.js?v=47";
 
 import {
 syncFavoritesCloudOnDemand

@@ -3,7 +3,7 @@
  */
 import {
 createScriptWidgetGrid
-} from "./script-page-widgets.js?v=6";
+} from "./script-page-widgets.js?v=7";
 
 import {
 getSharedPatternScanner,
@@ -30,7 +30,11 @@ loadScriptPageState,
 saveScriptPageState,
 SCRIPT_AUTO_PERIODS,
 periodMsById
-} from "./script-page-storage.js?v=14";
+} from "./script-page-storage.js?v=15";
+
+import {
+fetchTickersInto
+} from "./tickers.js?v=26";
 
 import {
 parseTradingViewSymbolList,
@@ -40,7 +44,7 @@ scriptFavoritesFileName
 import {
 COINS_TF_HOTKEYS,
 COINS_TF_VALUES
-} from "./terminal/terminal-state.js?v=11";
+} from "./terminal/terminal-state.js?v=12";
 
 import {
 EXCHANGE_CHANGED_EVENT,
@@ -71,6 +75,268 @@ let autoCountdownTimerId =
 null;
 let scanMode =
 null;
+const volumeBySymbol =
+new Map();
+let volumePollTimerId =
+null;
+
+function formatDotThousands(
+value
+){
+
+const n =
+Math.round(
+Number(
+value
+)
+);
+
+if(
+!Number.isFinite(
+n
+) ||
+n <
+0
+){
+return "0";
+}
+
+return String(
+n
+).replace(
+/\B(?=(\d{3})+(?!\d))/g,
+"."
+);
+
+}
+
+function parseDotThousands(
+raw,
+fallback =
+20_000_000
+){
+
+const digits =
+String(
+raw ??
+""
+).replace(
+/[^\d]/g,
+""
+);
+
+if(
+!digits
+){
+return fallback;
+}
+
+const n =
+Number(
+digits
+);
+
+return Number.isFinite(
+n
+)
+? n
+: fallback;
+
+}
+
+function canonicalScriptSymbol(
+symbol
+){
+
+return String(
+symbol ||
+""
+).trim().toUpperCase().replace(
+/\.P$/i,
+""
+);
+
+}
+
+function volumeForSymbol(
+symbol
+){
+
+const raw =
+String(
+symbol ||
+""
+).trim().toUpperCase();
+const bare =
+canonicalScriptSymbol(
+raw
+);
+
+if(
+volumeBySymbol.has(
+raw
+)
+){
+return volumeBySymbol.get(
+raw
+);
+}
+
+if(
+volumeBySymbol.has(
+bare
+)
+){
+return volumeBySymbol.get(
+bare
+);
+}
+
+if(
+volumeBySymbol.has(
+`${bare}.P`
+)
+){
+return volumeBySymbol.get(
+`${bare}.P`
+);
+}
+
+return null;
+
+}
+
+function filteredRowKey(
+row
+){
+
+return `${String(row?.symbol || "").toUpperCase()}|${String(row?.tf || "")}|${String(row?.side || "")}|${row?.pt4BarIndex ?? ""}`;
+
+}
+
+function filteredRowsSignature(
+rows =
+filteredRows()
+){
+
+return rows.map(
+filteredRowKey
+).join("\n");
+
+}
+
+async function refreshVolumeMap(
+{
+rerender =
+"if-changed"
+} =
+{}
+){
+
+const beforeSig =
+rerender ===
+"if-changed"
+? filteredRowsSignature()
+: "";
+
+try{
+const snap =
+new Map();
+
+await fetchTickersInto(
+snap
+);
+volumeBySymbol.clear();
+snap.forEach(
+(
+tick,
+symbol
+)=>{
+volumeBySymbol.set(
+String(
+symbol ||
+""
+).toUpperCase(),
+Number(
+tick.volume24
+) ||
+0
+);
+}
+);
+}catch{
+/* ignore */
+}
+
+if(
+rerender ===
+false
+){
+return;
+}
+
+if(
+rerender ===
+true
+){
+refreshGrid();
+return;
+}
+
+/* Poll: перерисовываем сетку только если объём отрезал/вернул сетапы. */
+if(
+beforeSig !==
+filteredRowsSignature()
+){
+refreshGrid();
+}
+
+}
+
+function startVolumePoll(){
+
+if(
+volumePollTimerId !=
+null
+){
+return;
+}
+
+void refreshVolumeMap(
+{
+rerender:
+true
+}
+);
+volumePollTimerId =
+setInterval(
+()=>{
+void refreshVolumeMap(
+{
+rerender:
+"if-changed"
+}
+);
+},
+15000
+);
+
+}
+
+function stopVolumePoll(){
+
+if(
+volumePollTimerId !=
+null
+){
+clearInterval(
+volumePollTimerId
+);
+volumePollTimerId =
+null;
+}
+
+}
 
 function scanStatusPrefix(
 mode =
@@ -106,7 +372,7 @@ updateActionButtons();
 updateAutoStatus();
 applyFavoritesUi();
 void refreshFavoritesMetaFromDisk();
-refreshGrid();
+void refreshVolumeMap();
 
 const name =
 activeExchangeLabel();
@@ -607,12 +873,49 @@ return chartTfFilter;
 
 function filteredRows(){
 
+const min =
+Number(
+state.minTurnover24hUsdt
+);
+
 return state.rows.filter(
-row=>
-matchesPatternScanSideFilter(
+row=>{
+
+if(
+!matchesPatternScanSideFilter(
 row?.side,
 state.searchSide
 )
+){
+return false;
+}
+
+if(
+!Number.isFinite(
+min
+) ||
+min <=
+0
+){
+return true;
+}
+
+const volume =
+volumeForSymbol(
+row?.symbol
+);
+
+if(
+volume ==
+null
+){
+return true;
+}
+
+return volume >=
+min;
+
+}
 );
 
 }
@@ -705,6 +1008,40 @@ normalized;
 persist();
 refreshGrid();
 updateActionButtons();
+
+}
+
+function setMinTurnover24hUsdt(
+raw
+){
+
+const next =
+parseDotThousands(
+raw,
+state.minTurnover24hUsdt ??
+20_000_000
+);
+
+state.minTurnover24hUsdt =
+next;
+
+if(
+els.minTurnover
+){
+els.minTurnover.value =
+formatDotThousands(
+next
+);
+}
+
+state.page =
+1;
+persist();
+widgetGrid?.restoreLayoutState(
+state.layout,
+1
+);
+refreshGrid();
 
 }
 
@@ -1566,6 +1903,10 @@ els.searchSide =
 document.getElementById(
 "script-side-filter"
 );
+els.minTurnover =
+document.getElementById(
+"script-min-turnover"
+);
 els.autoTf =
 document.getElementById(
 "script-auto-tf"
@@ -1722,6 +2063,7 @@ window.addEventListener(
 "pagehide",
 ()=>{
 markPageVisited();
+stopVolumePoll();
 widgetGrid?.destroy?.();
 }
 );
@@ -1828,6 +2170,35 @@ els.searchSide?.addEventListener(
 ()=>{
 setSearchSide(
 els.searchSide.value
+);
+}
+);
+
+els.minTurnover?.addEventListener(
+"change",
+()=>{
+setMinTurnover24hUsdt(
+els.minTurnover.value
+);
+}
+);
+
+els.minTurnover?.addEventListener(
+"blur",
+()=>{
+if(
+!els.minTurnover
+){
+return;
+}
+
+els.minTurnover.value =
+formatDotThousands(
+parseDotThousands(
+els.minTurnover.value,
+state.minTurnover24hUsdt ??
+20_000_000
+)
 );
 }
 );
@@ -1951,11 +2322,22 @@ els.searchSide.value =
 state.searchSide;
 }
 
+if(
+els.minTurnover
+){
+els.minTurnover.value =
+formatDotThousands(
+state.minTurnover24hUsdt ??
+20_000_000
+);
+}
+
 applyFavoritesUi();
 void refreshFavoritesMetaFromDisk();
 
 updateActionButtons();
 updateAutoStatus();
+startVolumePoll();
 
 if(
 state.auto.active

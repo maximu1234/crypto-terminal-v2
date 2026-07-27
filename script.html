@@ -14,9 +14,9 @@
 
 <link rel="stylesheet" href="/css/critical-shell.css?v=10">
 <script src="/js/site-css-ready.js?v=3"></script>
-<link rel="stylesheet" href="/css/common.css?v=52">
-<link rel="stylesheet" href="/css/screener.css?v=49">
-<link rel="stylesheet" href="/css/script-page.css?v=19">
+<link rel="stylesheet" href="/css/common.css?v=53">
+<link rel="stylesheet" href="/css/screener.css?v=50">
+<link rel="stylesheet" href="/css/script-page.css?v=20">
 
 <script src="/vendor/lightweight-charts.standalone.production.js"></script>
 <link rel="modulepreload" href="/js/charts-lib-boot.js?v=3" crossorigin>
@@ -112,6 +112,12 @@ aria-expanded="false"
 <option value="long">Long</option>
 <option value="short">Short</option>
 </select>
+</label>
+
+<label class="script-toolbar-field script-toolbar-field--turnover" title="Минимальный 24h оборот (USDT). Ниже — сетап не показывается.">
+<span>Объем за сутки от</span>
+<input type="text" id="script-min-turnover" class="script-turnover-input" inputmode="numeric" autocomplete="off" value="20.000.000" aria-label="Минимальный объём за сутки" />
+<span class="script-turnover-unit">USDT</span>
 </label>
 
 <label class="script-toolbar-field">

@@ -990,13 +990,17 @@ await algoRest.getTickerPrices(
 sym
 );
 const raw =
+prices?.turnover24h;
+const n =
 Number(
-prices?.turnover24h
+raw
 );
 
 if(
+raw ==
+null ||
 !Number.isFinite(
-raw
+n
 )
 ){
 return null;
@@ -1006,18 +1010,50 @@ turnoverCache.set(
 sym,
 {
 value:
-raw,
+n,
 at:
 now
 }
 );
 
-return raw;
+return n;
 }catch(
 _err
 ){
 return null;
 }
+
+}
+
+/**
+ * @param {number|null|undefined} value
+ * @returns {string}
+ */
+function formatTurnoverUsdt(
+value
+){
+
+const n =
+Number(
+value
+);
+
+if(
+!Number.isFinite(
+n
+)
+){
+return "н/д";
+}
+
+return String(
+Math.round(
+n
+)
+).replace(
+/\B(?=(\d{3})+(?!\d))/g,
+"."
+);
 
 }
 
@@ -1095,7 +1131,9 @@ side:
 price:
 0,
 text:
-`${sym}: Объем не ликвидный`
+`${sym}: Объем не ликвидный (${formatTurnoverUsdt(
+turnover
+)})`
 }
 );
 }

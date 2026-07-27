@@ -10,7 +10,7 @@ SCRIPT_SCAN_BG_EVENT
 
 import {
 loadScriptPageState
-} from "./script-page-storage.js?v=14";
+} from "./script-page-storage.js?v=15";
 
 import {
 isTerminalPage

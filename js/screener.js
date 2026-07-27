@@ -48,7 +48,7 @@ createTickerUiBatcher
 
 import {
 mountReleaseMarker
-} from "./release-marker.js?v=57";
+} from "./release-marker.js?v=58";
 
 import {
 saveScreenerState,
@@ -66,7 +66,7 @@ FAVORITES_BY_EXCHANGE_KEY
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=47";
+} from "./auth-ui.js?v=49";
 
 import {
 ensureSettled,
@@ -76,7 +76,7 @@ withTimeout
 import {
 persistFavoritesToCloud,
 onFavoritesRemoteUpdate
-} from "./cloud-sync.js?v=46";
+} from "./cloud-sync.js?v=47";
 
 import {
 attachSymbolAutocomplete,
@@ -1088,18 +1088,18 @@ return "—";
 }
 
 if(value >= 1e9){
-return `$${(value / 1e9).toFixed(1)} млрд`;
+return `${Number((value / 1e9).toFixed(2))}B`;
 }
 
 if(value >= 1e6){
-return `$${(value / 1e6).toFixed(1)} млн`;
+return `${Number((value / 1e6).toFixed(2))}M`;
 }
 
 if(value >= 1e3){
-return `$${(value / 1e3).toFixed(1)} тыс`;
+return `${Number((value / 1e3).toFixed(2))}K`;
 }
 
-return `$${value.toFixed(0)}`;
+return String(Math.round(value));
 
 }
 
@@ -1225,8 +1225,24 @@ return;
 }
 
 if(volEl){
-volEl.textContent =
-`Объём 24ч ${formatVolume(tick.volume24)}`;
+const valueEl =
+volEl.querySelector(
+".screener-volume-value"
+);
+const compact =
+formatVolume(
+tick.volume24
+);
+
+if(
+valueEl
+){
+valueEl.textContent =
+compact;
+}else{
+volEl.innerHTML =
+`Объём 24ч <span class="screener-volume-value">${compact}</span>`;
+}
 }
 
 if(chEl){
@@ -1699,7 +1715,7 @@ ${SCREENER_FLAG_WRAP_HTML}
 
 <span class="screener-change">—</span>
 
-<span class="screener-volume">Объём 24ч —</span>
+<span class="screener-volume">Объём 24ч <span class="screener-volume-value">—</span></span>
 
 </div>
 

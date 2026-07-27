@@ -15,7 +15,7 @@ import {
 loadScriptPageState,
 saveScriptPageState,
 periodMsById
-} from "./script-page-storage.js?v=14";
+} from "./script-page-storage.js?v=15";
 
 import {
 loadScriptFavoritesForScan,

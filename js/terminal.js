@@ -43,12 +43,12 @@ canSetBlueFlag
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=47";
+} from "./auth-ui.js?v=49";
 
 import {
 persistFavoritesToCloud,
 onFavoritesRemoteUpdate
-} from "./cloud-sync.js?v=46";
+} from "./cloud-sync.js?v=47";
 
 import {
 createCandlestickChart,
@@ -145,7 +145,7 @@ COINS_TF_HOTKEYS,
 COINS_MARKETS,
 isTerminalPage,
 isTradePage
-} from "./terminal/terminal-state.js?v=11";
+} from "./terminal/terminal-state.js?v=12";
 
 import {
 stopTickerStream
@@ -167,7 +167,7 @@ saveLastViewForExchange,
 applyCoinsPrefs,
 applySortForCurrentMarket,
 readUrlParams
-} from "./terminal/terminal-prefs.js?v=19";
+} from "./terminal/terminal-prefs.js?v=20";
 
 import {
 mountDesktopOpenChartHandler
@@ -185,7 +185,7 @@ highlightActiveSymbol,
 getVisibleSymbolList,
 setCoinsTableHooks,
 syncCoinListFreezeFromFlagMenus
-} from "./terminal/terminal-table.js?v=22";
+} from "./terminal/terminal-table.js?v=24";
 
 import {
 createCoinsChartSwitchVeil
@@ -3637,6 +3637,9 @@ applyUrlTimeframe();
 setCoinsChartSymbol(
 currentSymbol
 );
+syncCoinsChartTurnover24(
+currentSymbol
+);
 
 if(
 currentSymbol
@@ -3933,6 +3936,79 @@ el.classList.toggle(
 
 }
 
+function formatTurnover24Label(
+value
+){
+
+const n =
+Number(
+value
+);
+
+if(
+!Number.isFinite(
+n
+) ||
+n <=
+0
+){
+return "";
+}
+
+let compact;
+
+if(
+n >=
+1e6
+){
+compact =
+`${Number((n / 1e6).toFixed(2))}M`;
+}else if(
+n >=
+1e3
+){
+compact =
+`${Number((n / 1e3).toFixed(2))}K`;
+}else{
+compact =
+String(
+Math.round(
+n
+)
+);
+}
+
+return `Объем 24ч: ${compact}`;
+
+}
+
+function syncCoinsChartTurnover24(
+symbol =
+currentSymbol
+){
+
+const el =
+document.getElementById(
+"coins-chart-turnover24"
+);
+
+if(
+!el
+){
+return;
+}
+
+const item =
+marketMap.get(
+symbol
+);
+el.textContent =
+formatTurnover24Label(
+item?.volume24
+);
+
+}
+
 async function loadSymbol(symbol){
 
 if(
@@ -3980,6 +4056,9 @@ rsiChart?.clearCrosshairPosition();
 
 currentSymbol = symbol;
 setCoinsChartSymbol(symbol);
+syncCoinsChartTurnover24(
+symbol
+);
 
 if(
 isTradePage
@@ -5655,6 +5734,10 @@ err
 
 }
 
+syncCoinsChartTurnover24(
+currentSymbol
+);
+
 renderList();
 
 resizeCharts();
@@ -5934,6 +6017,21 @@ closeAllCoinFlagMenus,
 applyCoinFavoriteGroup,
 updateCoinFlagButton,
 rebuildRsiFromCandles,
+onTickerTick(
+item
+){
+if(
+!item ||
+item.symbol !==
+currentSymbol
+){
+return;
+}
+
+syncCoinsChartTurnover24(
+item.symbol
+);
+},
 applyChartLiveCandle(
 bar
 ){

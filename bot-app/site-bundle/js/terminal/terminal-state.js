@@ -119,7 +119,7 @@ new Set([
 "favorites",
 "symbol",
 "24h",
-"1h"
+"volume24"
 ]);
 
 export const COINS_TF_VALUES =

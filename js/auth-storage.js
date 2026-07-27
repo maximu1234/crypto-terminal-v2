@@ -238,6 +238,63 @@ EXPLICIT_SIGNOUT_KEY
 
 }
 
+/** Raw supabase session JSON from localStorage (or backup). */
+export function readAuthSessionRaw(){
+
+return (
+readRaw(
+SUPABASE_AUTH_STORAGE_KEY
+) ||
+readRaw(
+SUPABASE_AUTH_BACKUP_KEY
+) ||
+null
+);
+
+}
+
+/**
+ * Write session into localStorage + backup + desktop userData file.
+ * @param {string} raw
+ * @returns {boolean}
+ */
+export function persistAuthSessionRaw(
+raw
+){
+
+const value =
+String(
+raw ||
+""
+).trim();
+
+if(
+!value
+){
+return false;
+}
+
+clearExplicitAuthSignOut();
+
+if(
+!writeRaw(
+SUPABASE_AUTH_STORAGE_KEY,
+value
+)
+){
+return false;
+}
+
+mirrorAuthSessionBackup(
+value
+);
+syncDesktopAuthSession(
+value
+);
+return true;
+
+}
+
 function syncDesktopAuthSession(
 value
 ){

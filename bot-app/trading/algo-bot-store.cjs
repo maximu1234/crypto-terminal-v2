@@ -52,6 +52,8 @@ tpRr:
 2,
 alertLeadPct:
 5,
+minTurnover24hUsdt:
+20_000_000,
 side:
 "long",
 sides:{
@@ -571,6 +573,13 @@ src.alertLeadPct,
 0,
 10,
 DEFAULT_ST1.alertLeadPct
+),
+minTurnover24hUsdt:
+clampFloat(
+src.minTurnover24hUsdt,
+0,
+1_000_000_000_000,
+DEFAULT_ST1.minTurnover24hUsdt
 ),
 sides:
 normalizeSides(

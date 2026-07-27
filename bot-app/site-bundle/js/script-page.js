@@ -40,7 +40,7 @@ scriptFavoritesFileName
 import {
 COINS_TF_HOTKEYS,
 COINS_TF_VALUES
-} from "./terminal/terminal-state.js?v=11";
+} from "./terminal/terminal-state.js?v=12";
 
 import {
 EXCHANGE_CHANGED_EVENT,

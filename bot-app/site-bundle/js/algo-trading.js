@@ -49,7 +49,7 @@ mountAlgoRuntimeUi
 
 import {
 mountAlgoBotStrategyUi
-} from "./algo-trading/bot-strategy-ui.js?v=37";
+} from "./algo-trading/bot-strategy-ui.js?v=38";
 
 import {
 syncBotStrategiesToMain
@@ -61,7 +61,7 @@ mountAlgoTradeUi
 
 import {
 coinsState
-} from "./terminal/terminal-state.js?v=11";
+} from "./terminal/terminal-state.js?v=12";
 
 import {
 mountAlgoTradingDrawings
@@ -123,7 +123,7 @@ invalidatePreservedVisibleLogicalRange
 import {
 COINS_TF_HOTKEYS,
 COINS_TF_VALUES
-} from "./terminal/terminal-state.js?v=11";
+} from "./terminal/terminal-state.js?v=12";
 
 const DEFAULT_SYMBOL =
 "BTCUSDT";
@@ -1152,6 +1152,26 @@ left
 ){
 left.appendChild(
 grid
+);
+}
+
+const topbar =
+document.getElementById(
+"topbar"
+);
+const accountWrap =
+document.getElementById(
+"header-settings-wrap"
+);
+
+if(
+topbar &&
+accountWrap &&
+accountWrap.parentElement !==
+topbar
+){
+topbar.appendChild(
+accountWrap
 );
 }
 

@@ -14,12 +14,12 @@ COINS_PREFS_KEY,
 COINS_SORT_MODES,
 COINS_TF_VALUES,
 isTerminalPage
-} from "./terminal-state.js?v=11";
+} from "./terminal-state.js?v=12";
 
 import {
 getCurrentSymbols,
 getFirstVisibleSymbol
-} from "./terminal-table.js?v=22";
+} from "./terminal-table.js?v=24";
 
 import {
 parseAlertDeepLinkExchange
@@ -163,10 +163,27 @@ return defaultSortEntry();
 }
 
 let mode =
-typeof entry.mode === "string" &&
-COINS_SORT_MODES.has(entry.mode)
+typeof entry.mode ===
+"string"
 ? entry.mode
 : "symbol";
+
+if(
+mode ===
+"1h"
+){
+mode =
+"volume24";
+}
+
+if(
+!COINS_SORT_MODES.has(
+mode
+)
+){
+mode =
+"symbol";
+}
 
 const asc =
 typeof entry.asc === "boolean"

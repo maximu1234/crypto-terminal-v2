@@ -284,6 +284,30 @@ display:none !important;
 
 body.algo-trading-page.algo-bot-lite-layout #topbar{
 grid-row:1;
+align-items:center;
+}
+
+/* Account gear lives in #topbar (header is hidden in lite). */
+body.algo-trading-page.algo-bot-lite-layout #topbar > #header-settings-wrap{
+display:flex;
+align-items:center;
+margin-left:auto;
+flex:0 0 auto;
+order:99;
+position:relative;
+z-index:80;
+}
+
+body.algo-trading-page.algo-bot-lite-layout #topbar .header-settings-btn{
+width:34px;
+height:34px;
+}
+
+body.algo-trading-page.algo-bot-lite-layout #topbar #header-settings-dropdown{
+min-width:280px;
+max-width:min(360px, calc(100vw - 24px));
+right:0;
+left:auto;
 }
 
 body.algo-trading-page.algo-bot-lite-layout #algo-bot-main-grid{

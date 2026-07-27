@@ -9,8 +9,10 @@ signInWithEmailOtp,
 signOutCloud,
 recoverAuthSessionFromUrl,
 completeAuthFromCallbackUrl,
-hasAuthCallbackInUrl
-} from "./cloud-sync.js?v=46";
+hasAuthCallbackInUrl,
+exportAuthSessionTransferString,
+importAuthSessionTransferString
+} from "./cloud-sync.js?v=47";
 
 import {
 isSupabaseConfigured
@@ -40,6 +42,45 @@ let cloudSdkError = "";
 function isDesktopShell(){
 
 return !!window.cryptoTerminalDesktop?.isDesktop;
+
+}
+
+/** Standalone Algo Bot (lite) — paste session; Multichart — copy session. */
+function isAlgoBotShell(){
+
+if(
+document.body?.classList?.contains(
+"algo-bot-lite-layout"
+)
+){
+return true;
+}
+
+if(
+/\bbotLite=1\b/i.test(
+location.search ||
+""
+)
+){
+return true;
+}
+
+const desktop =
+window.cryptoTerminalDesktop;
+
+if(
+/algo-bot/i.test(
+String(
+desktop?.appId ||
+desktop?.productName ||
+""
+)
+)
+){
+return true;
+}
+
+return false;
 
 }
 
@@ -739,6 +780,31 @@ typeof e.stopImmediatePropagation ===
 e.stopImmediatePropagation();
 }
 
+/* Standalone Algo Bot: inline account / session paste (no Multichart settings window). */
+if(
+isAlgoBotShell()
+){
+const dropdown =
+document.getElementById(
+"header-settings-dropdown"
+);
+const open =
+dropdown &&
+!dropdown.classList.contains(
+"hidden"
+);
+
+if(
+open
+){
+closeSettingsDropdown();
+}else{
+openSettingsDropdown();
+}
+
+return;
+}
+
 closeSettingsDropdown();
 void openAppSettingsWindow(
 "sync"
@@ -894,6 +960,12 @@ wrap.innerHTML = `
 <div class="cloud-auth-logged-in hidden">
 <span class="cloud-auth-email-label"></span>
 <button type="button" class="cloud-auth-out">Выйти</button>
+<button type="button" class="cloud-auth-copy-session hidden">Скопировать сессию для Algo Bot</button>
+</div>
+<div class="cloud-auth-session-import hidden">
+<p class="cloud-auth-session-import-help">Вставьте сессию из Multichart (Настройки → Аккаунт → «Скопировать сессию для Algo Bot»). Не отправляйте строку в чаты — это полный доступ к аккаунту.</p>
+<textarea class="cloud-auth-session-paste" rows="3" placeholder="mcauth1.…" autocomplete="off" spellcheck="false"></textarea>
+<button type="button" class="cloud-auth-session-apply">Применить сессию</button>
 </div>
 <p class="cloud-auth-hint hidden"></p>
 `;
@@ -912,6 +984,14 @@ const pasteLinkBtn =
 wrap.querySelector(".cloud-auth-paste-submit");
 const outBtn =
 wrap.querySelector(".cloud-auth-out");
+const copySessionBtn =
+wrap.querySelector(".cloud-auth-copy-session");
+const sessionImportWrap =
+wrap.querySelector(".cloud-auth-session-import");
+const sessionPasteInput =
+wrap.querySelector(".cloud-auth-session-paste");
+const sessionApplyBtn =
+wrap.querySelector(".cloud-auth-session-apply");
 const hintEl =
 wrap.querySelector(".cloud-auth-hint");
 const loggedOut =
@@ -975,6 +1055,22 @@ desktopLinkWrap?.classList.add(
 emailLabel.textContent =
 getAuthUiEmail() || "Аккаунт";
 
+copySessionBtn?.classList.toggle(
+"hidden",
+!(
+isDesktopShell() &&
+!isAlgoBotShell()
+)
+);
+
+sessionImportWrap?.classList.toggle(
+"hidden",
+!(
+isDesktopShell() &&
+isAlgoBotShell()
+)
+);
+
 if(
 authLinkProgress
 ){
@@ -994,9 +1090,19 @@ false
 
 loggedIn.classList.add("hidden");
 loggedOut.classList.remove("hidden");
+copySessionBtn?.classList.add(
+"hidden"
+);
 desktopLinkWrap?.classList.toggle(
 "hidden",
 !isDesktopShell()
+);
+sessionImportWrap?.classList.toggle(
+"hidden",
+!(
+isDesktopShell() &&
+isAlgoBotShell()
+)
 );
 if(emailInput){
 emailInput.value =
@@ -1179,6 +1285,157 @@ return;
 
 e.preventDefault();
 void submitPastedAuthLink();
+
+}
+);
+
+copySessionBtn?.addEventListener(
+"click",
+async e=>{
+
+e.preventDefault();
+e.stopPropagation();
+
+copySessionBtn.disabled =
+true;
+setHint(
+"Копируем сессию…",
+false,
+true
+);
+
+try{
+
+const token =
+await exportAuthSessionTransferString();
+
+await navigator.clipboard.writeText(
+token
+);
+setHint(
+"Сессия скопирована. Вставьте её в Algo Bot (Настройки → Применить сессию). Не отправляйте строку в чаты.",
+false
+);
+
+}catch(
+err
+){
+setHint(
+err?.message ||
+"Не удалось скопировать сессию.",
+true
+);
+}
+
+copySessionBtn.disabled =
+false;
+
+}
+);
+
+sessionApplyBtn?.addEventListener(
+"click",
+async e=>{
+
+e.preventDefault();
+e.stopPropagation();
+
+const raw =
+sessionPasteInput?.value?.trim() ||
+"";
+
+if(
+!raw
+){
+setHint(
+"Вставьте строку сессии из Multichart.",
+true
+);
+return;
+}
+
+sessionApplyBtn.disabled =
+true;
+setHint(
+"Применяем сессию…",
+false,
+true
+);
+
+try{
+
+const result =
+await importAuthSessionTransferString(
+raw
+);
+
+if(
+!result.ok
+){
+setHint(
+result.message ||
+"Не удалось применить сессию.",
+true
+);
+sessionApplyBtn.disabled =
+false;
+return;
+}
+
+cloudSdkError =
+"";
+authLinkProgress =
+null;
+
+if(
+sessionPasteInput
+){
+sessionPasteInput.value =
+"";
+}
+
+let hint =
+result.message ||
+"Вошли.";
+
+try{
+const {
+getTelegramChatId
+} =
+await import(
+"./alerts-cloud/telegram-id.js?v=2"
+);
+const chatId =
+await getTelegramChatId();
+
+if(
+!chatId
+){
+hint +=
+" Telegram Chat ID не найден — сначала привяжите Telegram в Multichart.";
+}
+}catch{
+/* ignore telegram probe */
+}
+
+setHint(
+hint,
+false
+);
+refreshAuthUi();
+
+}catch(
+err
+){
+setHint(
+err?.message ||
+"Не удалось применить сессию.",
+true
+);
+}
+
+sessionApplyBtn.disabled =
+false;
 
 }
 );

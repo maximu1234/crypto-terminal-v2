@@ -1142,7 +1142,9 @@ input?.addEventListener(
 "change",
 ()=>{
 if(
-runningStrategyId()
+runningStrategyId() &&
+key !==
+"minTurnover24hUsdt"
 ){
 return;
 }
@@ -3304,8 +3306,7 @@ minTurnoverInput?.addEventListener(
 "change",
 ()=>{
 if(
-!minTurnoverInput ||
-st1.running
+!minTurnoverInput
 ){
 return;
 }
@@ -3331,8 +3332,7 @@ minTurnoverInput?.addEventListener(
 "blur",
 ()=>{
 if(
-!minTurnoverInput ||
-st1.running
+!minTurnoverInput
 ){
 return;
 }

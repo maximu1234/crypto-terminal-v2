@@ -632,7 +632,14 @@ dataset
 },
 closeAllCoinFlagMenus,
 applyCoinFavoriteGroup,
-updateCoinFlagButton
+updateCoinFlagButton,
+onTickerTick(
+item
+){
+api.onTickerTick?.(
+item
+);
+}
 }
 );
 

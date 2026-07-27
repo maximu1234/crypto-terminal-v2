@@ -30,6 +30,10 @@ subscribeKline
 } from "./market-ws.js?v=1";
 
 import {
+fetchTickersInto
+} from "./tickers.js?v=26";
+
+import {
 isScreenerWidgetCurrent as isWidgetCurrentGuard
 } from "./screener-widget-guard.js?v=1";
 
@@ -157,6 +161,49 @@ symbol ||
 ).replace(
 /\.P$/i,
 ""
+);
+
+}
+
+function formatVolume(
+value
+){
+
+if(
+!Number.isFinite(
+value
+) ||
+value <=
+0
+){
+return "—";
+}
+
+if(
+value >=
+1e9
+){
+return `${Number((value / 1e9).toFixed(2))}B`;
+}
+
+if(
+value >=
+1e6
+){
+return `${Number((value / 1e6).toFixed(2))}M`;
+}
+
+if(
+value >=
+1e3
+){
+return `${Number((value / 1e3).toFixed(2))}K`;
+}
+
+return String(
+Math.round(
+value
+)
 );
 
 }
@@ -504,6 +551,140 @@ let renderToken =
 0;
 let unmountZoom =
 null;
+const tickerMap =
+new Map();
+let tickerPollTimer =
+null;
+
+function updateWidgetMeta(
+symbol,
+root
+){
+
+const tick =
+tickerMap.get(
+symbol
+) ||
+tickerMap.get(
+displaySymbol(
+symbol
+)
+);
+
+const volEl =
+root?.querySelector(
+".screener-volume"
+);
+const chEl =
+root?.querySelector(
+".screener-change"
+);
+
+if(
+!tick
+){
+return;
+}
+
+if(
+volEl
+){
+const valueEl =
+volEl.querySelector(
+".screener-volume-value"
+);
+const compact =
+formatVolume(
+tick.volume24
+);
+
+if(
+valueEl
+){
+valueEl.textContent =
+compact;
+}else{
+volEl.innerHTML =
+`Объём 24ч <span class="screener-volume-value">${compact}</span>`;
+}
+}
+
+if(
+chEl
+){
+const ch =
+tick.change24 ??
+0;
+
+chEl.textContent =
+`${ch >= 0 ? "+" : ""}${ch.toFixed(2)}%`;
+chEl.className =
+`screener-change ${ch >= 0 ? "positive" : "negative"}`;
+}
+
+}
+
+function refreshWidgetTickerMeta(){
+
+activeWidgets.forEach(
+widget=>{
+updateWidgetMeta(
+widget.symbol,
+widget.root
+);
+}
+);
+
+}
+
+async function refreshTickersMeta(){
+
+try{
+await fetchTickersInto(
+tickerMap
+);
+}catch{
+/* ignore */
+}
+
+refreshWidgetTickerMeta();
+
+}
+
+function startTickerMetaPoll(){
+
+if(
+tickerPollTimer !=
+null
+){
+return;
+}
+
+void refreshTickersMeta();
+tickerPollTimer =
+setInterval(
+()=>{
+void refreshTickersMeta();
+},
+15000
+);
+
+}
+
+function stopTickerMetaPoll(){
+
+if(
+tickerPollTimer !=
+null
+){
+clearInterval(
+tickerPollTimer
+);
+tickerPollTimer =
+null;
+}
+
+}
 
 function pageSize(){
 
@@ -803,6 +984,10 @@ ${getWidgetFlagHtml()}
 <span class="script-widget-side ${sideClass}">${sideLabel}</span>
 </div>
 <div class="screener-header-right">
+<div class="screener-meta">
+<span class="screener-change">—</span>
+<span class="screener-volume">Объём 24ч <span class="screener-volume-value">—</span></span>
+</div>
 <button class="screener-open" type="button" title="Открыть в Терминале">↗</button>
 </div>
 </div>
@@ -1499,6 +1684,8 @@ fragment
 activeWidgets =
 nextWidgets;
 
+void refreshTickersMeta();
+
 await Promise.all(
 activeWidgets.map(
 widget=>
@@ -1717,16 +1904,19 @@ refreshAllWidgetFlags
 
 function destroy(){
 
+stopTickerMetaPoll();
 destroyWidgets();
 unmountZoom?.();
 unmountZoom =
 null;
 cachedRows =
 [];
+tickerMap.clear();
 
 }
 
 mountZoom();
+startTickerMetaPoll();
 
 return {
 renderPage,
