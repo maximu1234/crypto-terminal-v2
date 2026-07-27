@@ -48,6 +48,12 @@ const PATTERN_HISTORY_REQUESTS =
 const PATTERN_SCAN_MIN_BARS =
 PATTERN_HISTORY_REQUESTS *
 1000;
+const TURNOVER_CACHE_TTL_MS =
+60_000;
+const ILLIQUID_SIGNAL_COOLDOWN_MS =
+5 *
+60 *
+1000;
 
 /**
  * Session denylist: manually disarmed setups (and time-stable keys).
@@ -75,6 +81,14 @@ null;
 
 /** @type {Map<string, object>} */
 const symbolStates =
+new Map();
+
+/** @type {Map<string, { value: number, at: number }>} */
+const turnoverCache =
+new Map();
+
+/** @type {Map<string, number>} */
+const illiquidSignalAt =
 new Map();
 
 let engineConfig =
@@ -942,7 +956,155 @@ return false;
 
 }
 
-function tryArmSetup(
+/**
+ * @param {string} symbol
+ * @returns {Promise<number|null>}
+ */
+async function fetchTurnover24hUsdt(
+symbol
+){
+
+const sym =
+normalizeSymbol(
+symbol
+);
+const cached =
+turnoverCache.get(
+sym
+);
+const now =
+Date.now();
+
+if(
+cached &&
+now -
+cached.at <
+TURNOVER_CACHE_TTL_MS
+){
+return cached.value;
+}
+
+try{
+const prices =
+await algoRest.getTickerPrices(
+sym
+);
+const raw =
+Number(
+prices?.turnover24h
+);
+
+if(
+!Number.isFinite(
+raw
+)
+){
+return null;
+}
+
+turnoverCache.set(
+sym,
+{
+value:
+raw,
+at:
+now
+}
+);
+
+return raw;
+}catch(
+_err
+){
+return null;
+}
+
+}
+
+/**
+ * @param {string} symbol
+ * @returns {Promise<boolean>} true = ok to arm
+ */
+async function passesMinTurnoverGate(
+symbol
+){
+
+const min =
+Number(
+engineConfig?.minTurnover24hUsdt
+);
+
+if(
+!Number.isFinite(
+min
+) ||
+min <=
+0
+){
+return true;
+}
+
+const turnover =
+await fetchTurnover24hUsdt(
+symbol
+);
+
+if(
+turnover ==
+null
+){
+return true;
+}
+
+if(
+turnover >=
+min
+){
+return true;
+}
+
+const sym =
+normalizeSymbol(
+symbol
+);
+const now =
+Date.now();
+const last =
+illiquidSignalAt.get(
+sym
+) ||
+0;
+
+if(
+now -
+last >=
+ILLIQUID_SIGNAL_COOLDOWN_MS
+){
+illiquidSignalAt.set(
+sym,
+now
+);
+pushSignal(
+{
+ts:
+now,
+symbol:
+sym,
+side:
+"—",
+price:
+0,
+text:
+`${sym}: Объем не ликвидный`
+}
+);
+}
+
+return false;
+
+}
+
+async function tryArmSetup(
 symbol,
 setup,
 reason
@@ -1033,6 +1195,16 @@ text:
 state.consumed.add(
 fp
 );
+return;
+}
+
+if(
+!(
+await passesMinTurnoverGate(
+sym
+)
+)
+){
 return;
 }
 
@@ -2377,7 +2549,7 @@ continue;
 }
 }
 
-tryArmSetup(
+await tryArmSetup(
 symbol,
 setup,
 source
@@ -3095,6 +3267,25 @@ riskUsd:
 Number(
 config?.riskUsd
 ),
+minTurnover24hUsdt:
+(()=>{
+const n =
+Number(
+config?.minTurnover24hUsdt
+);
+
+if(
+!Number.isFinite(
+n
+) ||
+n <
+0
+){
+return 20_000_000;
+}
+
+return n;
+})(),
 patternSettings:
 config?.patternSettings ||
 null,
@@ -3115,6 +3306,8 @@ entriesCount =
 signalLog.length =
 0;
 symbolStates.clear();
+turnoverCache.clear();
+illiquidSignalAt.clear();
 seedQueue =
 [];
 seedInflight =
@@ -3264,6 +3457,8 @@ null;
 engineConfig =
 null;
 symbolStates.clear();
+turnoverCache.clear();
+illiquidSignalAt.clear();
 seedQueue =
 [];
 seedInflight =
@@ -3352,6 +3547,25 @@ engineConfig.riskUsd =
 Number(
 patch.riskUsd
 );
+}
+
+if(
+patch.minTurnover24hUsdt !=
+null
+){
+const n =
+Number(
+patch.minTurnover24hUsdt
+);
+
+engineConfig.minTurnover24hUsdt =
+Number.isFinite(
+n
+) &&
+n >=
+0
+? n
+: 20_000_000;
 }
 
 if(

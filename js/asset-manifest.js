@@ -330,9 +330,9 @@ Object.freeze({
 "algo-trading/bot-alert-bridge.js":
 6,
 "algo-trading/bot-strategy-prefs.js":
-11,
+12,
 "algo-trading/bot-strategy-ui.js":
-34,
+37,
 "algo-trading/bot-cloud-lock.js":
 2,
 "algo-trading/trade/format.js":
@@ -705,7 +705,7 @@ Object.freeze({
 "script-page.css":
 19,
 "algo-trading.css":
-82,
+84,
 "algo-trading-book-panel.css":
 4,
 "algo-trading-chart-overlay.css":

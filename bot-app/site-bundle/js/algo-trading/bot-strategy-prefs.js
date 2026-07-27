@@ -29,6 +29,7 @@ export const ALGO_BOT_TF_OPTIONS =
  *   riskUsd: number,
  *   tpRr: number,
  *   alertLeadPct: number,
+ *   minTurnover24hUsdt: number,
  *   side: AlgoBotSide,
  *   sides: AlgoBotSides,
  *   useFavorites: boolean,
@@ -172,6 +173,8 @@ tpRr:
 2,
 alertLeadPct:
 5,
+minTurnover24hUsdt:
+20_000_000,
 side:
 "long",
 sides:{
@@ -836,6 +839,12 @@ src.alertLeadPct,
 0,
 base.alertLeadPct
 )
+),
+minTurnover24hUsdt:
+clampFloat(
+src.minTurnover24hUsdt,
+0,
+base.minTurnover24hUsdt
 ),
 sides:
 normalizeBotSides(

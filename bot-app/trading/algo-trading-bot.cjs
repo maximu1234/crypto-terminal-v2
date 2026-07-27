@@ -178,6 +178,8 @@ tpRr:
 prefs.tpRr,
 alertLeadPct:
 prefs.alertLeadPct,
+minTurnover24hUsdt:
+prefs.minTurnover24hUsdt,
 exitProfile:
 isPartial
 ? {

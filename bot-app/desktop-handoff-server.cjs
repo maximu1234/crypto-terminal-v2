@@ -7,9 +7,9 @@ require(
 "http"
 );
 
-/** Must match open.html */
+/** Standalone Algo Bot — отдельный порт, не конфликтует с Multichart (47392). */
 const DESKTOP_HANDOFF_PORT =
-47392;
+47394;
 
 const DESKTOP_HANDOFF_HOST =
 "127.0.0.1";

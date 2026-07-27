@@ -49,7 +49,7 @@ mountAlgoRuntimeUi
 
 import {
 mountAlgoBotStrategyUi
-} from "./algo-trading/bot-strategy-ui.js?v=34";
+} from "./algo-trading/bot-strategy-ui.js?v=37";
 
 import {
 syncBotStrategiesToMain
@@ -900,24 +900,8 @@ return readPrefs().symbol;
 
 function isAlgoBotLiteMode(){
 
-const params =
-new URLSearchParams(
-location.search
-);
-
-if(
-params.get(
-"botLite"
-) ===
-"1"
-){
+/* Standalone Algo Bot app — always lite layout (no Multichart chart chrome). */
 return true;
-}
-
-return /\/algo-bot-lite\.html$/i.test(
-location.pathname ||
-""
-);
 
 }
 

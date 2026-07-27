@@ -295,7 +295,7 @@ return value.startsWith(
 }
 
 const PARTITION =
-"persist:multichart-desktop";
+"persist:multichart-algo-bot";
 
 /** @type {string | null} */
 let pendingAuthCallbackUrl =
@@ -1214,13 +1214,13 @@ err
 }
 
 log.warn(
-`Bundled UI fallback (${reason}) → remote Vercel (trading/algo IPC locked)`
+`Bundled UI fallback (${reason}) → remote algo-trading (trading/algo IPC locked)`
 );
 const remote =
 `${REMOTE_APP_URL.replace(
 /\/$/,
 ""
-)}/terminal.html`;
+)}/algo-trading.html?botLite=1`;
 void mainWindow.loadURL(
 remote
 );

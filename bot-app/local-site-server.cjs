@@ -35,7 +35,7 @@ require(
 );
 
 const DEFAULT_LOCAL_SITE_PORT =
-47391;
+47393;
 const BINGX_API_BASE =
 "https://open-api.bingx.com";
 const PORT_FILE =

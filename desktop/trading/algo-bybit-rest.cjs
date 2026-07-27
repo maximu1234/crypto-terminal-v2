@@ -5211,6 +5211,11 @@ row.lastPrice
 last:
 Number(
 row.lastPrice
+),
+turnover24h:
+Number(
+row.turnover24h ||
+0
 )
 };
 

@@ -12,7 +12,7 @@ normalizeManualRefreshStrategies,
 botSideListLabel,
 botSidesDirectionLabel,
 botSettingsStatusLabel
-} from "./bot-strategy-prefs.js?v=11";
+} from "./bot-strategy-prefs.js?v=12";
 import {
 syncBotStrategiesToMain,
 syncAllTickerFlagsRootToMain,
@@ -62,6 +62,81 @@ n >
 return `${sign}${n.toFixed(
 2
 )}`;
+
+}
+
+/**
+ * 20000000 → "20.000.000"
+ * @param {unknown} value
+ * @returns {string}
+ */
+function formatDotThousands(
+value
+){
+
+const n =
+Math.round(
+Number(
+value
+)
+);
+
+if(
+!Number.isFinite(
+n
+) ||
+n <
+0
+){
+return "0";
+}
+
+return String(
+n
+).replace(
+/\B(?=(\d{3})+(?!\d))/g,
+"."
+);
+
+}
+
+/**
+ * "20.000.000" / "20 000 000" / "20000000" → number
+ * @param {unknown} raw
+ * @param {number} [fallback]
+ * @returns {number}
+ */
+function parseDotThousands(
+raw,
+fallback =
+20_000_000
+){
+
+const digits =
+String(
+raw ??
+""
+).replace(
+/[^\d]/g,
+""
+);
+
+if(
+!digits
+){
+return fallback;
+}
+
+const n =
+Number(
+digits
+);
+
+return Number.isFinite(
+n
+)
+? n
+: fallback;
 
 }
 
@@ -133,6 +208,10 @@ document.getElementById(
 const tpRrInput =
 document.getElementById(
 "algo-bot-st1-tp-rr"
+);
+const minTurnoverInput =
+document.getElementById(
+"algo-bot-st1-min-turnover"
 );
 const alertLeadInput =
 document.getElementById(
@@ -303,6 +382,7 @@ timeoutInput,
 slPctInput,
 slUsdInput,
 tpRrInput,
+minTurnoverInput,
 alertLeadInput,
 sideLong,
 sideShort,
@@ -401,7 +481,7 @@ statusArmedList.classList.add(
 "hidden"
 );
 statusArmedList.classList.remove(
-"is-flip-left"
+"is-flip-right"
 );
 }
 
@@ -421,7 +501,7 @@ statusSignalList.classList.add(
 "hidden"
 );
 statusSignalList.classList.remove(
-"is-flip-left"
+"is-flip-right"
 );
 }
 
@@ -703,6 +783,10 @@ riskUsd:
 el(
 "sl-usd"
 ),
+minTurnover24hUsdt:
+el(
+"min-turnover"
+),
 tp1:
 el(
 "tp1"
@@ -790,7 +874,14 @@ if(
 input
 ){
 input.value =
-String(
+key ===
+"minTurnover24hUsdt"
+? formatDotThousands(
+p[
+key
+]
+)
+: String(
 p[
 key
 ]
@@ -1055,6 +1146,31 @@ runningStrategyId()
 ){
 return;
 }
+
+if(
+key ===
+"minTurnover24hUsdt"
+){
+const next =
+parseDotThousands(
+input.value,
+20_000_000
+);
+input.value =
+formatDotThousands(
+next
+);
+persistPartial(
+strategyId,
+{
+minTurnover24hUsdt:
+next
+}
+);
+apply();
+return;
+}
+
 const n =
 Number(
 input.value
@@ -2312,6 +2428,15 @@ st1.tpRr
 }
 
 if(
+minTurnoverInput
+){
+minTurnoverInput.value =
+formatDotThousands(
+st1.minTurnover24hUsdt
+);
+}
+
+if(
 alertLeadInput
 ){
 alertLeadInput.value =
@@ -2631,7 +2756,7 @@ open
 closeSignalList();
 statusArmedList?.classList.remove(
 "hidden",
-"is-flip-left"
+"is-flip-right"
 );
 statusArmed.setAttribute(
 "aria-expanded",
@@ -2652,13 +2777,13 @@ return;
 const rect =
 statusArmedList.getBoundingClientRect();
 
+/* Default opens left (away from #list); flip right only if clipped. */
 if(
-rect.right >
-window.innerWidth -
+rect.left <
 8
 ){
 statusArmedList.classList.add(
-"is-flip-left"
+"is-flip-right"
 );
 }
 }
@@ -2832,7 +2957,7 @@ open
 closeArmedList();
 statusSignalList?.classList.remove(
 "hidden",
-"is-flip-left"
+"is-flip-right"
 );
 statusLastSignal.setAttribute(
 "aria-expanded",
@@ -2854,12 +2979,11 @@ const rect =
 statusSignalList.getBoundingClientRect();
 
 if(
-rect.right >
-window.innerWidth -
+rect.left <
 8
 ){
 statusSignalList.classList.add(
-"is-flip-left"
+"is-flip-right"
 );
 }
 }
@@ -3173,6 +3297,53 @@ n >=
 ? n
 : 2;
 }
+);
+}
+);
+minTurnoverInput?.addEventListener(
+"change",
+()=>{
+if(
+!minTurnoverInput ||
+st1.running
+){
+return;
+}
+
+const next =
+parseDotThousands(
+minTurnoverInput.value,
+20_000_000
+);
+minTurnoverInput.value =
+formatDotThousands(
+next
+);
+persistSt1(
+{
+minTurnover24hUsdt:
+next
+}
+);
+}
+);
+minTurnoverInput?.addEventListener(
+"blur",
+()=>{
+if(
+!minTurnoverInput ||
+st1.running
+){
+return;
+}
+
+minTurnoverInput.value =
+formatDotThousands(
+parseDotThousands(
+minTurnoverInput.value,
+st1.minTurnover24hUsdt ??
+20_000_000
+)
 );
 }
 );
