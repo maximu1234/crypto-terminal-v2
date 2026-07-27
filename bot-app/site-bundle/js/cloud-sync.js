@@ -24,7 +24,8 @@ getAuthRefreshBlockedUntil
 
 import {
 encodeAuthSessionTransfer,
-decodeAuthSessionTransfer
+decodeAuthSessionTransfer,
+normalizeAuthSessionRaw
 } from "./auth-session-transfer.js?v=1";
 
 import {
@@ -1695,7 +1696,7 @@ isFavoritesAutoCloudDisabled()
 return;
 }
 
-void import("./favorites-cloud-sync.js?v=48").then(
+void import("./favorites-cloud-sync.js?v=49").then(
 m=>{
 m.applyFavoritesFromRealtimeRow(
 row
@@ -1833,7 +1834,7 @@ settingsChannel = channel;
 export async function mergeFavoritesWithCloud(){
 
 const m =
-await import("./favorites-cloud-sync.js?v=48");
+await import("./favorites-cloud-sync.js?v=49");
 
 return m.reconcileLocalFavoritesWithCloud();
 
@@ -1843,7 +1844,7 @@ return m.reconcileLocalFavoritesWithCloud();
 export async function pullFavoritesIfCloudNewer(){
 
 const m =
-await import("./favorites-cloud-sync.js?v=48");
+await import("./favorites-cloud-sync.js?v=49");
 
 await m.pullFavoritesFromCloudNow();
 return favoritesToCloudList(
@@ -1867,7 +1868,7 @@ return collectAllLocalDrawings();
 async function syncFavoritesWithCloud(){
 
 const m =
-await import("./favorites-cloud-sync.js?v=48");
+await import("./favorites-cloud-sync.js?v=49");
 
 await m.reconcileLocalFavoritesWithCloud();
 
@@ -1901,7 +1902,7 @@ return;
 }
 
 const m =
-await import("./favorites-cloud-sync.js?v=48");
+await import("./favorites-cloud-sync.js?v=49");
 
 m.pushFavoritesAfterLocalEdit(
 favorites
@@ -2638,6 +2639,68 @@ raw
 }
 
 /**
+ * Local login from a pasted Multichart JWT — no Auth network required.
+ * setSession may hang/fail on servers; alerts only need tokens in storage + cache.
+ */
+async function applyImportedAuthSessionLocally(
+session,
+sb = null
+){
+
+if(
+!session?.access_token ||
+!session?.user
+){
+return false;
+}
+
+configured =
+true;
+loggedIn =
+true;
+userEmail =
+session.user?.email ||
+userEmail ||
+"";
+lastAppliedSessionKey =
+session.user?.id
+? `${session.user.id}:${session.access_token}`
+: lastAppliedSessionKey;
+
+try{
+
+const {
+warmAlertAuthCache
+} =
+await import(
+"./alert-auth-cache.js?v=7"
+);
+
+warmAlertAuthCache(
+{
+sb,
+user:
+session.user
+},
+session
+);
+
+}catch(
+err
+){
+console.warn(
+"[auth] warmAlertAuthCache import:",
+err?.message ||
+err
+);
+}
+
+notifyAuth();
+return true;
+
+}
+
+/**
  * Algo Bot: paste Multichart session string → localStorage + desktop file + supabase client.
  * On slow/blocked networks (servers) setSession may hang — tokens are applied locally first.
  * @param {string} input
@@ -2700,25 +2763,13 @@ message:
 }
 
 /*
-  Apply JWT locally first so alerts work even if Auth API is slow/unreachable.
-  Then best-effort setSession (may refresh / validate over the network).
+  Valid pasted JWT is enough for login/alerts. Network setSession is best-effort only —
+  never clear local login when Auth API times out or is blocked on the server.
 */
-lastAppliedSessionKey =
-"";
-
-try{
-await applySession(
-decoded.session
+await applyImportedAuthSessionLocally(
+decoded.session,
+sb
 );
-}catch(
-err
-){
-console.warn(
-"[auth] import applySession:",
-err?.message ||
-err
-);
-}
 
 let networkNote =
 "";
@@ -2737,7 +2788,7 @@ refresh_token:
 decoded.session.refresh_token ||
 ""
 }),
-30000,
+8000,
 "setSession import"
 );
 
@@ -2752,12 +2803,22 @@ console.warn(
 networkNote
 );
 }else if(
-data?.session
+data?.session?.access_token
 ){
-lastAppliedSessionKey =
-"";
-await applySession(
+persistAuthSessionRaw(
+normalizeAuthSessionRaw(
 data.session
+)
+);
+await applyImportedAuthSessionLocally(
+{
+...decoded.session,
+...data.session,
+user:
+data.session.user ||
+decoded.session.user
+},
+sb
 );
 }
 
@@ -2773,19 +2834,31 @@ networkNote
 );
 }
 
+/*
+  setSession can race and wipe storage after a timeout — re-apply paste payload.
+*/
+persistAuthSessionRaw(
+decoded.raw
+);
+await applyImportedAuthSessionLocally(
+decoded.session,
+sb
+);
+
 if(
-!isCloudLoggedIn()
+!decoded.session?.user ||
+!decoded.session?.access_token
 ){
 return {
 ok:
 false,
 message:
-"Сессия сохранена, но вход не подтверждён. Проверьте строку и сеть до Supabase."
+"Сессия сохранена, но вход не подтверждён. Проверьте строку."
 };
 }
 
 const email =
-getCloudUserEmail() ||
+userEmail ||
 decoded.session.user?.email ||
 "";
 
@@ -3076,12 +3149,32 @@ const { warmAlertAuthCache } =
 await import("./alert-auth-cache.js?v=7");
 
 warmAlertAuthCache(
+{
 sb,
+user: session.user
+},
 session
 );
 }
 
 syncCloudLoginFromStorage();
+
+/*
+  Failed/timed-out setSession can clear storage briefly; keep the session we just applied.
+*/
+if(
+!loggedIn &&
+session?.user &&
+session?.access_token
+){
+loggedIn =
+true;
+userEmail =
+session.user?.email ||
+userEmail ||
+"";
+}
+
 notifyAuth();
 
 if(
@@ -3110,7 +3203,7 @@ return;
 try{
 
 const favoritesCloud =
-await import("./favorites-cloud-sync.js?v=48");
+await import("./favorites-cloud-sync.js?v=49");
 
 if(
 !isFavoritesAutoCloudDisabled() &&
@@ -3124,7 +3217,7 @@ if(
 !isAlertsCloudDisabled()
 ){
 const alertsCloud =
-await import("./alerts-cloud-sync.js?v=48");
+await import("./alerts-cloud-sync.js?v=49");
 
 await alertsCloud.hydrateAlertsAfterAuth({
 force: true
@@ -3227,7 +3320,7 @@ await ensureCloudLoginResolved(
 );
 
 const alertsCloud =
-await import("./alerts-cloud-sync.js?v=48");
+await import("./alerts-cloud-sync.js?v=49");
 const { stripAlertFlagsNotInRegistry } =
 await import("./alerts.js?v=105");
 

@@ -24,7 +24,7 @@ isCloudLoggedIn,
 isCloudLoggedInEffective,
 isCloudSyncEnabled,
 onCloudSyncChange
-} from "./cloud-sync.js?v=48";
+} from "./cloud-sync.js?v=49";
 
 import {
 isSupabaseConfigured

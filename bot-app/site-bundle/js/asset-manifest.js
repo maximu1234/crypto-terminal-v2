@@ -589,7 +589,7 @@ Object.freeze({
 
 /* ── JS: cloud / auth ── */
 "cloud-sync.js":
-48,
+49,
 "cloud-sync-throttle.js":
 3,
 "page-routes.js":
