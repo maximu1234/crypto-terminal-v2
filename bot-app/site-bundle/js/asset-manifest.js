@@ -607,7 +607,7 @@ Object.freeze({
 "auth-session-transfer.js":
 1,
 "auth-ui.js":
-49,
+50,
 "header-settings-shell.js":
 3,
 "app-settings-window.js":
@@ -707,7 +707,7 @@ Object.freeze({
 "script-page.css":
 20,
 "algo-trading.css":
-85,
+86,
 "algo-trading-book-panel.css":
 4,
 "algo-trading-chart-overlay.css":

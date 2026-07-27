@@ -418,6 +418,13 @@ isSettingsInlineMode(wrap)
 return false;
 }
 
+/* Algo Bot lite: gear lives in #topbar (fixed height + overflow) — always portal. */
+if(
+isAlgoBotShell()
+){
+return true;
+}
+
 let node =
 wrap.parentElement;
 
@@ -429,13 +436,26 @@ node !== document.body
 const style =
 getComputedStyle(node);
 
+const ox =
+style.overflowX;
+const oy =
+style.overflowY;
+const o =
+style.overflow;
+
 if(
-style.overflow === "hidden" ||
-style.overflowX === "hidden" ||
-style.overflowY === "hidden" ||
-style.overflow === "clip" ||
-style.overflowX === "clip" ||
-style.overflowY === "clip"
+o === "hidden" ||
+o === "clip" ||
+o === "auto" ||
+o === "scroll" ||
+ox === "hidden" ||
+ox === "clip" ||
+ox === "auto" ||
+ox === "scroll" ||
+oy === "hidden" ||
+oy === "clip" ||
+oy === "auto" ||
+oy === "scroll"
 ){
 return true;
 }

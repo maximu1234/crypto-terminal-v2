@@ -1672,6 +1672,7 @@ margin:6px 0;
 /* Account gear in #topbar when lite header is hidden. */
 body.algo-trading-page.algo-bot-lite-layout #topbar{
 align-items:center;
+overflow:visible !important;
 }
 
 body.algo-trading-page.algo-bot-lite-layout #topbar > #header-settings-wrap{
@@ -1682,6 +1683,7 @@ flex:0 0 auto;
 order:99;
 position:relative;
 z-index:80;
+overflow:visible;
 }
 
 body.algo-trading-page.algo-bot-lite-layout #topbar .header-settings-btn{
@@ -1689,10 +1691,13 @@ width:34px;
 height:34px;
 }
 
-body.algo-trading-page.algo-bot-lite-layout #topbar #header-settings-dropdown{
-min-width:280px;
-max-width:min(360px, calc(100vw - 24px));
-right:0;
-left:auto;
+body.algo-trading-page.algo-bot-lite-layout #header-settings-dropdown.header-settings-dropdown--portaled,
+body.algo-trading-page.algo-bot-lite-layout #header-settings-dropdown{
+min-width:300px;
+max-width:min(380px, calc(100vw - 24px));
+max-height:min(70vh, 520px);
+overflow-x:hidden;
+overflow-y:auto;
+box-sizing:border-box;
 }
 
