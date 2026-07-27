@@ -2,7 +2,7 @@
  * Версии релиза на Главной и в desktop .app.
  * При новой metka-N: METKA_NUMBER = N (веб → v0.N).
  * При новом desktop: DESKTOP_APP_VERSION (в .app → vX.Y.Z).
- * После 1.0.99 → 1.1.01 (не 1.0.100); 1.1.99 → 1.2.01 и т.д.
+ * После 1.0.99 → 1.1.1 (валидный semver; не 1.0.100 и не 1.1.01).
  * Редакция desktop (буква после версии приложения):
  *   f = full (живая + ручная торговля)
  *   m = manual-only (друзья)
@@ -13,7 +13,7 @@ export const METKA_NUMBER =
 102;
 
 export const DESKTOP_APP_VERSION =
-"1.1.01";
+"1.1.1";
 
 export const RELEASE_VERSION_LABEL =
 `v0.${METKA_NUMBER}`;

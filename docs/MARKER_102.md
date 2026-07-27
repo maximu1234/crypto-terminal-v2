@@ -21,13 +21,13 @@
 ### Desktop
 
 - Windows chart snapshot crop (`chart-snapshot-win.cjs`).
-- Desktop `1.1.01`: облачная блокировка по хешу алго-ключей (кросс-блокировка с Algo Bot).
+- Desktop `1.1.1`: облачная блокировка по хешу алго-ключей (кросс-блокировка с Algo Bot).
 
 ## Версии
 
 - Web marker: `v0.102`
-- Desktop app: `v1.1.01`
-- Mac tag: `desktop-v1.1.01`
-- Windows tag: `desktop-win-v1.1.01`
+- Desktop app: `v1.1.1`
+- Mac tag: `desktop-v1.1.1`
+- Windows tag: `desktop-win-v1.1.1`
 - Algo Bot Mac: `algo-bot-v1.0.100`
 - Algo Bot Windows: `algo-bot-win-v1.0.100`
