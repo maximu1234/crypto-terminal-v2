@@ -707,8 +707,76 @@ btn.setAttribute(
 "true"
 );
 
+const authHost =
+document.getElementById(
+"cloud-settings-mount"
+);
+
+/*
+  On slow boots (servers) gear can open before initAuthUi finishes —
+  mount/show the account panel on demand so we don't show only «Аккаунт».
+*/
+if(
+authHost &&
+!authHost.querySelector(
+".cloud-auth-wrap"
+)
+){
+const created =
+createAuthPanel(
+authHost,
+"panel"
+);
+
+if(
+created
+){
+created.refreshOne?.();
+}
+}
+
+authHost?.querySelector(
+".cloud-auth-wrap"
+)?.classList.remove(
+"hidden"
+);
+
 refreshSettingsAuthUi();
+
+if(
+isAlgoBotShell()
+){
+portalDropdownToBody(
+dropdown,
+wrap
+);
+dropdown.classList.add(
+"header-settings-dropdown--portaled"
+);
+dropdown.classList.remove(
+"header-settings-dropdown--inline"
+);
+
+const place =
+()=>{
+positionPortaledDropdown(
+btn,
+dropdown
+);
+};
+
+place();
+requestAnimationFrame(
+()=>{
+place();
+requestAnimationFrame(
+place
+);
+}
+);
+}else{
 scheduleSettingsDropdownPlacement();
+}
 
 }
 

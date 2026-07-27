@@ -309,10 +309,15 @@ body.algo-trading-page.algo-bot-lite-layout #header-settings-dropdown.header-set
 body.algo-trading-page.algo-bot-lite-layout #header-settings-dropdown{
 min-width:300px;
 max-width:min(380px, calc(100vw - 24px));
+min-height:240px;
 max-height:min(70vh, 520px);
 overflow-x:hidden;
 overflow-y:auto;
 box-sizing:border-box;
+}
+
+body.algo-trading-page.algo-bot-lite-layout #header-settings-dropdown .cloud-auth-wrap{
+display:flex !important;
 }
 
 body.algo-trading-page.algo-bot-lite-layout #algo-bot-main-grid{
