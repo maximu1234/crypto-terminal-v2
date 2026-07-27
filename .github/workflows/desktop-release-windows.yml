@@ -71,6 +71,10 @@ jobs:
           fi
           echo "Desktop version OK: ${VERSION}"
 
+      - name: Normalize desktop build semver for electron-builder
+        working-directory: .
+        run: node scripts/desktop-build-semver.cjs
+
       - name: Install dependencies
         run: |
           if [ -f package-lock.json ]; then npm ci; else npm install; fi
