@@ -4,7 +4,7 @@ initAlertMonitor
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=51";
+} from "./auth-ui.js?v=52";
 
 import {
 isAlertsPage
@@ -13,7 +13,7 @@ isAlertsPage
 import {
 initAlertsCloudSync,
 scheduleRegistryCloudSync
-} from "./alerts-cloud-sync.js?v=111";
+} from "./alerts-cloud-sync.js?v=50";
 
 import {
 stripAlertFlagsNotInRegistry
@@ -24,7 +24,7 @@ isCloudLoggedIn,
 isCloudLoggedInEffective,
 isCloudSyncEnabled,
 onCloudSyncChange
-} from "./cloud-sync.js?v=49";
+} from "./cloud-sync.js?v=50";
 
 import {
 isSupabaseConfigured
@@ -293,7 +293,7 @@ new CustomEvent(
 }
 );
 
-import("./favorites-cloud-sync.js?v=7").then(
+import("./favorites-cloud-sync.js?v=50").then(
 ({ initFavoritesCloudSync })=>{
 initFavoritesCloudSync();
 }

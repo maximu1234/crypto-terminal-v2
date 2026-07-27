@@ -66,7 +66,7 @@ FAVORITES_BY_EXCHANGE_KEY
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=51";
+} from "./auth-ui.js?v=52";
 
 import {
 ensureSettled,
@@ -76,7 +76,7 @@ withTimeout
 import {
 persistFavoritesToCloud,
 onFavoritesRemoteUpdate
-} from "./cloud-sync.js?v=49";
+} from "./cloud-sync.js?v=50";
 
 import {
 attachSymbolAutocomplete,

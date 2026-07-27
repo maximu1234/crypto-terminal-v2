@@ -13,7 +13,7 @@ withTimeout
 import {
 pauseRegistryCloudSync,
 scheduleRemoteRegistrySync
-} from "./alerts-cloud-sync.js?v=111";
+} from "./alerts-cloud-sync.js?v=50";
 
 import {
 drawingsStorageKey as exchangeDrawingsStorageKey,
@@ -143,7 +143,7 @@ return job;
 
 function queueAlertsCloud(fn){
 
-import("./alerts-cloud-sync.js?v=111")
+import("./alerts-cloud-sync.js?v=50")
 .then(m=>fn(m))
 .catch(err=>{
 console.warn("alerts cloud:", err);
@@ -1365,7 +1365,7 @@ opts =
 ){
 
 const { isCloudLoggedIn } =
-await import("./cloud-sync.js?v=49");
+await import("./cloud-sync.js?v=50");
 
 if(
 !isCloudLoggedIn()
@@ -1374,7 +1374,7 @@ return null;
 }
 
 const { getTelegramChatId } =
-await import("./alerts-cloud-sync.js?v=111");
+await import("./alerts-cloud-sync.js?v=50");
 
 if(
 await getTelegramChatId() == null
@@ -1462,12 +1462,12 @@ sym
 );
 
 const { ensureCloudReady } =
-await import("./auth-ui.js?v=51");
+await import("./auth-ui.js?v=52");
 
 await ensureCloudReady();
 
 const m =
-await import("./alerts-cloud-sync.js?v=111");
+await import("./alerts-cloud-sync.js?v=50");
 
 const pushed =
 await m.pushOneAlertRow(
@@ -1559,14 +1559,14 @@ list.push(row);
 saveAlerts(list);
 
 const { ensureCloudReady } =
-await import("./auth-ui.js?v=51");
+await import("./auth-ui.js?v=52");
 
 await ensureCloudReady();
 
 mergeRegistryFromChartDrawings();
 
 const m =
-await import("./alerts-cloud-sync.js?v=111");
+await import("./alerts-cloud-sync.js?v=50");
 
 const pushed =
 await m.pushOneAlertRow(
@@ -1704,7 +1704,7 @@ dispatchPriceAlertsChanged(
 sym
 );
 
-void import("./alerts-cloud-sync.js?v=111").then(async m=>{
+void import("./alerts-cloud-sync.js?v=50").then(async m=>{
 
 const ok =
 await m.flushAlertCloudPush(
@@ -2565,7 +2565,7 @@ tf: existing?.tf
 });
 });
 
-void import("./alerts-cloud-sync.js?v=111").then(m=>{
+void import("./alerts-cloud-sync.js?v=50").then(m=>{
 m.fireAlertCloudTrigger(
 sym,
 sid,
@@ -2658,7 +2658,7 @@ remaining
 );
 stripAlertFlagsNotInRegistry();
 
-void import("./alerts-cloud-sync.js?v=111").then(m=>{
+void import("./alerts-cloud-sync.js?v=50").then(m=>{
 m.runCloudOp(()=>
 m.removeAllAlertsEverywhere()
 ).then(ok=>{

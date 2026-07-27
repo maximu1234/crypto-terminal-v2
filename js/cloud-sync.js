@@ -2083,8 +2083,240 @@ return (
 (search ||
 "").includes(
 "code="
+) ||
+(search ||
+"").includes(
+"token_hash="
+) ||
+(
+(search ||
+"").includes(
+"token="
+) &&
+(search ||
+"").includes(
+"type="
+)
 )
 );
+
+}
+
+function parseEmailVerifyParams(
+rawUrl
+){
+
+try{
+
+const parsed =
+new URL(
+String(
+rawUrl ||
+""
+).trim()
+);
+const params =
+parsed.searchParams;
+const tokenHash =
+String(
+params.get(
+"token_hash"
+) ||
+""
+).trim();
+const token =
+String(
+params.get(
+"token"
+) ||
+""
+).trim();
+const type =
+String(
+params.get(
+"type"
+) ||
+"magiclink"
+).trim() ||
+"magiclink";
+const path =
+parsed.pathname ||
+"";
+const isVerifyPath =
+/\/auth\/v1\/verify\/?$/i.test(
+path
+) ||
+path.includes(
+"/auth/v1/verify"
+);
+
+if(
+tokenHash
+){
+return {
+token_hash:
+tokenHash,
+type
+};
+}
+
+/*
+  Classic magic-link from email: …/auth/v1/verify?token=…&type=magiclink
+  GoTrue token here is the token_hash for verifyOtp.
+*/
+if(
+(
+isVerifyPath ||
+parsed.hostname.includes(
+"supabase"
+)
+) &&
+token
+){
+return {
+token_hash:
+token,
+type
+};
+}
+
+}catch{
+/* ignore */
+}
+
+return null;
+
+}
+
+/**
+ * Exchange email magic-link verify URL (token= / token_hash=) for a session.
+ * Needed when the user copies the link from mail without opening a browser.
+ */
+async function recoverSessionFromEmailVerifyLink(
+sb,
+rawUrl,
+onProgress
+){
+
+const report =
+msg=>{
+
+if(
+typeof onProgress ===
+"function"
+){
+
+try{
+onProgress(
+msg
+);
+}catch{
+/* ignore */
+}
+
+}
+
+};
+
+const parsed =
+parseEmailVerifyParams(
+rawUrl
+);
+
+if(
+!sb ||
+!parsed?.token_hash
+){
+return null;
+}
+
+report(
+"Подтверждаем ссылку из письма…"
+);
+
+const typeCandidates =
+[
+parsed.type,
+parsed.type ===
+"magiclink"
+? "email"
+: "magiclink",
+"email"
+].filter(
+(
+value,
+index,
+arr
+)=>
+value &&
+arr.indexOf(
+value
+) ===
+index
+);
+
+let lastError =
+"";
+
+for(
+const type of typeCandidates
+){
+
+try{
+
+const {
+data,
+error
+} =
+await withTimeout(
+sb.auth.verifyOtp({
+token_hash:
+parsed.token_hash,
+type
+}),
+20000,
+"verifyOtp email link"
+);
+
+if(
+error
+){
+lastError =
+error.message ||
+String(
+error
+);
+continue;
+}
+
+if(
+data?.session
+){
+return data.session;
+}
+
+}catch(
+err
+){
+lastError =
+err?.message ||
+String(
+err
+);
+}
+
+}
+
+if(
+lastError
+){
+console.warn(
+"[auth] verifyOtp email link:",
+lastError
+);
+}
+
+return null;
 
 }
 
@@ -2454,19 +2686,6 @@ message:
 };
 }
 
-if(
-!hasAuthCallbackInUrl(
-trimmed
-)
-){
-return {
-ok:
-false,
-message:
-"В ссылке нет данных для входа. Скопируйте URL после перехода по письму (с code= или access_token)."
-};
-}
-
 const sb =
 await getSupabase();
 
@@ -2481,12 +2700,52 @@ message:
 };
 }
 
-const recovered =
+let recovered =
+null;
+
+if(
+parseEmailVerifyParams(
+trimmed
+)
+){
+recovered =
+await recoverSessionFromEmailVerifyLink(
+sb,
+trimmed,
+onProgress
+);
+}
+
+if(
+!recovered &&
+hasAuthCallbackInUrl(
+trimmed
+)
+){
+recovered =
 await recoverSessionFromAuthUrl(
 sb,
 trimmed,
 onProgress
 );
+}
+
+if(
+!recovered &&
+!hasAuthCallbackInUrl(
+trimmed
+) &&
+!parseEmailVerifyParams(
+trimmed
+)
+){
+return {
+ok:
+false,
+message:
+"В ссылке нет данных для входа. Вставьте ссылку из письма целиком или URL с code= / access_token=."
+};
+}
 
 if(
 !recovered

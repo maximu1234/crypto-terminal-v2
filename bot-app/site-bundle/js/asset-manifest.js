@@ -589,7 +589,7 @@ Object.freeze({
 
 /* ── JS: cloud / auth ── */
 "cloud-sync.js":
-49,
+50,
 "cloud-sync-throttle.js":
 3,
 "page-routes.js":
@@ -607,7 +607,7 @@ Object.freeze({
 "auth-session-transfer.js":
 1,
 "auth-ui.js":
-51,
+52,
 "header-settings-shell.js":
 3,
 "app-settings-window.js":

@@ -12,7 +12,7 @@ completeAuthFromCallbackUrl,
 hasAuthCallbackInUrl,
 exportAuthSessionTransferString,
 importAuthSessionTransferString
-} from "./cloud-sync.js?v=49";
+} from "./cloud-sync.js?v=50";
 
 import {
 isSupabaseConfigured
@@ -1041,8 +1041,8 @@ wrap.innerHTML = `
 <button type="button" class="cloud-auth-send">Войти</button>
 </div>
 <div class="cloud-auth-desktop-link hidden">
-<p class="cloud-auth-desktop-link-help">Если ссылка открылась в браузере — скопируйте адрес страницы и вставьте:</p>
-<input type="text" class="cloud-auth-paste-link" placeholder="https://… или multichart://…" autocomplete="off" spellcheck="false"/>
+<p class="cloud-auth-desktop-link-help">Вставьте ссылку из письма (Copy link) или адрес после перехода в браузере:</p>
+<input type="text" class="cloud-auth-paste-link" placeholder="https://…supabase…/verify?token=… или multichart://" autocomplete="off" spellcheck="false"/>
 <button type="button" class="cloud-auth-paste-submit">Войти по ссылке</button>
 </div>
 <div class="cloud-auth-logged-in hidden">

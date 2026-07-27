@@ -8,7 +8,7 @@ isCloudLoggedIn,
 isCloudLoggedInEffective,
 onCloudSyncChange,
 ensureCloudLoginResolved
-} from "../cloud-sync.js?v=49";
+} from "../cloud-sync.js?v=50";
 
 import {
 clearAlertAuthCache,
