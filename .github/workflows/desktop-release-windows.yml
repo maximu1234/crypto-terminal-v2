@@ -59,8 +59,17 @@ jobs:
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
           echo "Release target: ${TAG} (v${VERSION})"
 
-      - name: Sync desktop package version
-        run: npm version "${{ steps.release.outputs.version }}" --no-git-tag-version --allow-same-version
+      - name: Verify desktop package version
+        run: |
+          set -euo pipefail
+          PKG=$(node -p "require('./package.json').version")
+          MARKER=$(node --input-type=module -e "import { DESKTOP_APP_VERSION } from '../js/release-marker.js'; console.log(DESKTOP_APP_VERSION)")
+          VERSION="${{ steps.release.outputs.version }}"
+          if [ "$PKG" != "$VERSION" ] || [ "$MARKER" != "$VERSION" ]; then
+            echo "Version mismatch: tag=${VERSION}, package.json=${PKG}, release-marker=${MARKER}"
+            exit 1
+          fi
+          echo "Desktop version OK: ${VERSION}"
 
       - name: Install dependencies
         run: |
@@ -116,6 +125,7 @@ jobs:
           set -euo pipefail
           TAG="${RELEASE_TAG}"
           VERSION="${RELEASE_VERSION}"
+          PKG=$(node -p "require('./desktop/package.json').version")
           REPO="${GITHUB_REPOSITORY}"
           ASSETS=(desktop/dist/editions/*.exe desktop/dist/editions/*.yml)
 
@@ -126,8 +136,8 @@ jobs:
             fi
           done
 
-          ls desktop/dist/editions/*"${VERSION}f"* >/dev/null
-          ls desktop/dist/editions/*"${VERSION}m"* >/dev/null
+          ls desktop/dist/editions/*"${PKG}f"* >/dev/null
+          ls desktop/dist/editions/*"${PKG}m"* >/dev/null
 
           publish() {
             if gh release view "$TAG" --repo "$REPO" >/dev/null 2>&1; then
