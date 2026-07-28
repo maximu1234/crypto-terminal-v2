@@ -922,16 +922,56 @@ reconnectDelayMs *
 function disconnectSocket(){
 
 if(
-socket
+!socket
 ){
+return;
+}
+
+const s =
+socket;
+socket =
+null;
+
 try{
-socket.removeAllListeners();
-socket.close();
+/*
+  Closing while CONNECTING throws
+  "WebSocket was closed before the connection was established"
+  if error listeners were removed — swallow via noop + terminate.
+*/
+s.on(
+"error",
+()=>{
+/* ignore */
+}
+);
+s.removeAllListeners(
+"open"
+);
+s.removeAllListeners(
+"message"
+);
+s.removeAllListeners(
+"close"
+);
+
+if(
+s.readyState ===
+WebSocket.CONNECTING ||
+s.readyState ===
+WebSocket.CLOSING ||
+s.readyState ===
+WebSocket.CLOSED
+){
+s.terminate();
+}else{
+s.close();
+}
+}catch{
+try{
+s.terminate();
 }catch{
 /* ignore */
 }
-socket =
-null;
 }
 
 }
