@@ -709,7 +709,7 @@ Object.freeze({
 "script-page.css":
 20,
 "algo-trading.css":
-88,
+89,
 "algo-trading-book-panel.css":
 4,
 "algo-trading-chart-overlay.css":
