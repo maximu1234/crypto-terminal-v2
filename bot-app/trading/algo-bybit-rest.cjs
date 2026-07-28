@@ -22,11 +22,184 @@ function getCredentials(){
 return getAlgoCredentials("bybit");
 }
 
+/*
+ * 20s window: poor networks often exceed Bybit's default 5s between
+ * local sign timestamp and server receive (orders / poll otherwise fail).
+ */
 const RECV_WINDOW =
-"5000";
+"20000";
+
+const TIME_SYNC_MAX_AGE_MS =
+5 *
+60 *
+1000;
+
+/** @type {number} serverNow - localNow; applied to signed timestamps */
+let timeOffsetMs =
+0;
+let timeSyncedAt =
+0;
+/** @type {Promise<void>|null} */
+let timeSyncInflight =
+null;
 
 const REQUEST_TIMEOUT_MS =
 12000;
+
+function signedNowMs(){
+
+return Date.now() +
+timeOffsetMs;
+
+}
+
+function isTimestampRecvWindowError(
+data
+){
+
+if(
+!data
+){
+return false;
+}
+
+if(
+data.retCode ===
+10002
+){
+return true;
+}
+
+const msg =
+String(
+data.retMsg ||
+""
+).toLowerCase();
+
+return (
+msg.includes(
+"timestamp"
+) ||
+msg.includes(
+"recv_window"
+)
+);
+
+}
+
+async function syncBybitServerTime(
+testnet
+){
+
+const localBefore =
+Date.now();
+
+for(
+const base of apiBases(
+testnet
+)
+){
+
+try{
+const response =
+await fetchWithTimeout(
+`${base}/v5/market/time`,
+{
+method:
+"GET"
+}
+);
+const localAfter =
+Date.now();
+const data =
+parseBybitBody(
+await response.text()
+);
+const serverTime =
+Number(
+data?.result?.timeSecond
+) *
+1000 ||
+Number(
+data?.result?.timeNano
+) /
+1e6 ||
+Number(
+data?.time
+);
+
+if(
+data?.retCode ===
+0 &&
+Number.isFinite(
+serverTime
+) &&
+serverTime >
+0
+){
+const localMid =
+localBefore +
+Math.floor(
+(
+localAfter -
+localBefore
+) /
+2
+);
+
+timeOffsetMs =
+Math.round(
+serverTime -
+localMid
+);
+timeSyncedAt =
+Date.now();
+return;
+}
+
+}catch{
+/* try next base */
+}
+
+}
+
+}
+
+async function ensureBybitTimeSync(
+testnet,
+force =
+false
+){
+
+if(
+!force &&
+timeSyncedAt > 0 &&
+Date.now() -
+timeSyncedAt <
+TIME_SYNC_MAX_AGE_MS
+){
+return;
+}
+
+if(
+timeSyncInflight
+){
+return timeSyncInflight;
+}
+
+timeSyncInflight =
+syncBybitServerTime(
+testnet
+).finally(
+()=>{
+timeSyncInflight =
+null;
+}
+);
+
+return timeSyncInflight;
+
+}
 
 /** Max age of open fills relative to close for diary open/duration matching. */
 const EXEC_HISTORY_MAX_LOOKBACK_MS =
@@ -261,7 +434,9 @@ httpStatus
 
 async function privateGet(
 path,
-query
+query,
+isRetry =
+false
 ){
 
 const creds =
@@ -278,6 +453,11 @@ message:
 };
 }
 
+await ensureBybitTimeSync(
+creds.testnet,
+isRetry
+);
+
 const params =
 new URLSearchParams(
 query
@@ -286,7 +466,7 @@ const queryString =
 params.toString();
 const timestamp =
 String(
-Date.now()
+signedNowMs()
 );
 const signBase =
 `${timestamp}${creds.apiKey}${RECV_WINDOW}${queryString}`;
@@ -387,6 +567,19 @@ authHint(
 creds.testnet
 );
 continue;
+}
+
+if(
+!isRetry &&
+isTimestampRecvWindowError(
+data
+)
+){
+return privateGet(
+path,
+query,
+true
+);
 }
 
 return {
@@ -3365,6 +3558,8 @@ qtyStep:
 "0.001",
 minOrderQty:
 "0.001",
+tickSize:
+"0.0001",
 maxLeverage:
 "100",
 minLeverage:
@@ -3380,6 +3575,8 @@ result.data?.result?.list?.[
 ];
 const lot =
 row?.lotSizeFilter;
+const priceFilter =
+row?.priceFilter;
 
 if(
 lot
@@ -3395,11 +3592,19 @@ lot.qtyStep ||
 "0.001",
 maxOrderQty:
 lot.maxOrderQty,
+tickSize:
+priceFilter?.tickSize ||
+rules.tickSize,
 maxLeverage:
 rules.maxLeverage,
 minLeverage:
 rules.minLeverage
 };
+}else if(
+priceFilter?.tickSize
+){
+rules.tickSize =
+priceFilter.tickSize;
 }
 
 const lev =
@@ -4404,7 +4609,9 @@ orders
 
 async function privatePost(
 path,
-body
+body,
+isRetry =
+false
 ){
 
 const creds =
@@ -4421,6 +4628,11 @@ message:
 };
 }
 
+await ensureBybitTimeSync(
+creds.testnet,
+isRetry
+);
+
 const bodyStr =
 JSON.stringify(
 body ||
@@ -4428,7 +4640,7 @@ body ||
 );
 const timestamp =
 String(
-Date.now()
+signedNowMs()
 );
 const signBase =
 `${timestamp}${creds.apiKey}${RECV_WINDOW}${bodyStr}`;
@@ -4533,6 +4745,19 @@ authHint(
 creds.testnet
 );
 continue;
+}
+
+if(
+!isRetry &&
+isTimestampRecvWindowError(
+data
+)
+){
+return privatePost(
+path,
+body,
+true
+);
 }
 
 return {

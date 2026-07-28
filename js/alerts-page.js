@@ -44,7 +44,7 @@ TELEGRAM_BOT_USERNAME,
 getTelegramBotUrl
 } from "./telegram-bot-public.js?v=1";
 
-import { formatPrice } from "./chart-import.js?v=43";
+import { formatPrice } from "./chart-import.js?v=44";
 
 import {
 EXCHANGE_CHANGED_EVENT,

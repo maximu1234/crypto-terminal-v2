@@ -4,7 +4,7 @@
  */
 import {
 isCoarseTouchViewport
-} from "../chart-import.js?v=43";
+} from "../chart-import.js?v=44";
 
 import {
 DRAW_HANDLE_HIT_THRESHOLD_DESKTOP,

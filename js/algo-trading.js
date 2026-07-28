@@ -13,7 +13,7 @@ updateRsiLevelLinesLayout,
 applyRsiFixedPriceScale,
 appendFutureWhitespaceBars,
 computeChartFutureMarginBars
-} from "./chart-import.js?v=43";
+} from "./chart-import.js?v=44";
 
 import {
 terminalVisibleBars,

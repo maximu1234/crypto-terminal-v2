@@ -184,7 +184,9 @@ export async function diaryLoadPeriod(period, { forceRefresh = false } = {}) {
       startTime,
       endTime,
       forceRefresh,
-      exchangeId: EXCHANGE_ID
+      exchangeId: EXCHANGE_ID,
+      /* Keep diary list fast: heavy BingX resolver runs after first paint / on detail. */
+      skipEnrich: true
     });
     if (
       result &&

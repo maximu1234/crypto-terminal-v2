@@ -3,7 +3,7 @@
  */
 import {
 createScriptWidgetGrid
-} from "./script-page-widgets.js?v=7";
+} from "./script-page-widgets.js?v=10";
 
 import {
 getSharedPatternScanner,
@@ -22,8 +22,9 @@ import {
 PATTERN_SCAN_TF_LABELS,
 PATTERN_SCAN_DEPTH_OPTIONS,
 normalizePatternScanSideFilter,
-matchesPatternScanSideFilter
-} from "./pattern-12-scanner.js?v=18";
+matchesPatternScanSideFilter,
+isPatternScanHitFresh
+} from "./pattern-12-scanner.js?v=19";
 
 import {
 loadScriptPageState,
@@ -877,7 +878,13 @@ const min =
 Number(
 state.minTurnover24hUsdt
 );
+const lookback =
+state.searchDepth;
 
+/*
+  Только фильтр для отображения — без mutate state.rows
+  (иначе volume-poll постоянно меняет signature → refreshGrid).
+*/
 return state.rows.filter(
 row=>{
 
@@ -885,6 +892,15 @@ if(
 !matchesPatternScanSideFilter(
 row?.side,
 state.searchSide
+)
+){
+return false;
+}
+
+if(
+!isPatternScanHitFresh(
+row,
+lookback
 )
 ){
 return false;
@@ -2245,10 +2261,13 @@ paginationEl:
 els.pagination,
 statusEl:
 els.status,
+getLookbackBars(){
+return state.searchDepth;
+},
 onPersist(
 {
-layout,
-page
+  layout,
+  page
 }
 ){
 

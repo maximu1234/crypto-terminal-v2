@@ -12,7 +12,7 @@ linkPairedChartTimeScales,
 linkChartsCrosshair,
 mainChartCrosshairOptions,
 SCREENER_MAX_BARS
-} from "./chart-import.js?v=43";
+} from "./chart-import.js?v=44";
 
 import {
 loadMarketHistory
@@ -37,7 +37,7 @@ if(
 ){
 zoomPatternOverlayApi =
 await import(
-"./screener-pattern-overlay.js?v=5"
+"./screener-pattern-overlay.js?v=6"
 );
 }
 

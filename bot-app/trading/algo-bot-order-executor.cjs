@@ -39,6 +39,11 @@ new Map();
 const pendingTriggers =
 new Map();
 
+/** Opposite-mirror trigger (pt4 == parent pt3 ± 1 tick). At most one per symbol. */
+/** @type {Map<string, object>} */
+const pendingMirrorTriggers =
+new Map();
+
 function serializePendingMap(
 map
 ){
@@ -57,6 +62,10 @@ pendingTriggers:
 serializePendingMap(
 pendingTriggers
 ),
+pendingMirrorTriggers:
+serializePendingMap(
+pendingMirrorTriggers
+),
 pendingEntries:
 serializePendingMap(
 pendingEntries
@@ -72,6 +81,7 @@ const saved =
 readPendingBotOrders();
 
 pendingTriggers.clear();
+pendingMirrorTriggers.clear();
 pendingEntries.clear();
 
 for(
@@ -95,6 +105,33 @@ typeof meta ===
 "object"
 ){
 pendingTriggers.set(
+sym,
+meta
+);
+}
+}
+
+for(
+const [
+symbol,
+meta
+] of Object.entries(
+saved.pendingMirrorTriggers ||
+{}
+)
+){
+const sym =
+normalizeSymbol(
+symbol
+);
+
+if(
+sym &&
+meta &&
+typeof meta ===
+"object"
+){
+pendingMirrorTriggers.set(
 sym,
 meta
 );
@@ -131,6 +168,8 @@ meta
 return {
 pendingTriggers:
 pendingTriggers.size,
+pendingMirrorTriggers:
+pendingMirrorTriggers.size,
 pendingEntries:
 pendingEntries.size
 };
@@ -1135,16 +1174,53 @@ message:
 };
 }
 
-if(
-pendingTriggers.has(
+const oppositeMirror =
+payload?.oppositeMirror ===
+true;
+const existingPrimary =
+pendingTriggers.get(
 sym
-) ||
+);
+const existingMirror =
+pendingMirrorTriggers.get(
+sym
+);
+
+if(
 entryInflight.has(
 sym
 ) ||
 pendingEntries.has(
 sym
 )
+){
+return {
+ok:
+false,
+message:
+"trigger already pending"
+};
+}
+
+if(
+oppositeMirror
+){
+if(
+!existingPrimary ||
+existingMirror ||
+existingPrimary.side ===
+side
+){
+return {
+ok:
+false,
+message:
+"opposite mirror not allowed"
+};
+}
+}else if(
+existingPrimary ||
+existingMirror
 ){
 return {
 ok:
@@ -1167,6 +1243,18 @@ const pt4 =
 Number(
 setup.p4
 );
+const triggerPriceRaw =
+Number(
+payload?.triggerPrice
+);
+const orderPrice =
+Number.isFinite(
+triggerPriceRaw
+) &&
+triggerPriceRaw >
+0
+? triggerPriceRaw
+: pt4;
 const slPrice =
 computeAlgoStopLoss(
 side,
@@ -1241,7 +1329,7 @@ symbol:
 sym,
 kind,
 price:
-pt4,
+orderPrice,
 volumeUsdt,
 orderLinkId,
 markPrice:
@@ -1251,7 +1339,7 @@ markPrice
 markPrice >
 0
 ? markPrice
-: pt4
+: orderPrice
 }
 );
 
@@ -1393,8 +1481,7 @@ message:
 };
 }
 
-pendingTriggers.set(
-sym,
+const meta =
 {
 orderId,
 fingerprint,
@@ -1425,14 +1512,37 @@ riskUsd,
 setup,
 volumeUsdt,
 pt4,
+triggerPrice:
+orderPrice,
+oppositeMirror:
+!!oppositeMirror,
+mirrorParentFingerprint:
+String(
+payload?.mirrorParentFingerprint ||
+""
+),
 placedAt:
 Date.now(),
 stopsAttached:
 false,
 stopsManagedByUser:
 false
-}
+};
+
+if(
+oppositeMirror
+){
+pendingMirrorTriggers.set(
+sym,
+meta
 );
+}else{
+pendingTriggers.set(
+sym,
+meta
+);
+}
+
 persistPendingState();
 
 return {
@@ -1454,21 +1564,156 @@ sym
 
 }
 
+function findPendingMeta(
+sym,
+opts =
+{}
+){
+
+const fingerprint =
+String(
+opts.fingerprint ||
+""
+).trim();
+const primary =
+pendingTriggers.get(
+sym
+);
+const mirror =
+pendingMirrorTriggers.get(
+sym
+);
+
+if(
+fingerprint
+){
+if(
+primary &&
+String(
+primary.fingerprint ||
+""
+) ===
+fingerprint
+){
+return {
+meta:
+primary,
+slot:
+"primary"
+};
+}
+
+if(
+mirror &&
+String(
+mirror.fingerprint ||
+""
+) ===
+fingerprint
+){
+return {
+meta:
+mirror,
+slot:
+"mirror"
+};
+}
+
+return null;
+}
+
+if(
+opts.preferMirror
+){
+if(
+mirror
+){
+return {
+meta:
+mirror,
+slot:
+"mirror"
+};
+}
+
+if(
+primary
+){
+return {
+meta:
+primary,
+slot:
+"primary"
+};
+}
+
+return null;
+}
+
+if(
+primary
+){
+return {
+meta:
+primary,
+slot:
+"primary"
+};
+}
+
+if(
+mirror
+){
+return {
+meta:
+mirror,
+slot:
+"mirror"
+};
+}
+
+return null;
+
+}
+
+function deletePendingSlot(
+sym,
+slot
+){
+
+if(
+slot ===
+"mirror"
+){
+pendingMirrorTriggers.delete(
+sym
+);
+}else{
+pendingTriggers.delete(
+sym
+);
+}
+
+}
+
 async function cancelBotTrigger(
-symbol
+symbol,
+opts =
+{}
 ){
 
 const sym =
 normalizeSymbol(
 symbol
 );
-const meta =
-pendingTriggers.get(
-sym
+const found =
+findPendingMeta(
+sym,
+opts
 );
 
 if(
-!meta
+!found?.meta
 ){
 return {
 ok:
@@ -1478,6 +1723,8 @@ true
 };
 }
 
+const meta =
+found.meta;
 const result =
 await algoRest.cancelTradeOrder(
 sym,
@@ -1508,8 +1755,9 @@ msg.includes(
 "canceled"
 )
 ){
-pendingTriggers.delete(
-sym
+deletePendingSlot(
+sym,
+found.slot
 );
 persistPendingState();
 return {
@@ -1523,8 +1771,9 @@ true
 return result;
 }
 
-pendingTriggers.delete(
-sym
+deletePendingSlot(
+sym,
+found.slot
 );
 persistPendingState();
 
@@ -1537,23 +1786,128 @@ meta.orderId
 
 }
 
+async function cancelSiblingTriggers(
+symbol,
+keepFingerprint =
+""
+){
+
+const sym =
+normalizeSymbol(
+symbol
+);
+const keep =
+String(
+keepFingerprint ||
+""
+).trim();
+const results =
+[];
+
+for(
+const slot of [
+"primary",
+"mirror"
+]
+){
+const map =
+slot ===
+"mirror"
+? pendingMirrorTriggers
+: pendingTriggers;
+const meta =
+map.get(
+sym
+);
+
+if(
+!meta
+){
+continue;
+}
+
+if(
+keep &&
+String(
+meta.fingerprint ||
+""
+) ===
+keep
+){
+continue;
+}
+
+results.push(
+await cancelBotTrigger(
+sym,
+{
+fingerprint:
+meta.fingerprint,
+preferMirror:
+slot ===
+"mirror"
+}
+)
+);
+}
+
+return results;
+
+}
+
 async function cancelAllBotTriggers(){
 
 const symbols =
+new Set(
 [
-...pendingTriggers.keys()
-];
+...pendingTriggers.keys(),
+...pendingMirrorTriggers.keys()
+]
+);
 const results =
 [];
 
 for(
 const sym of symbols
 ){
+const primary =
+pendingTriggers.get(
+sym
+);
+const mirror =
+pendingMirrorTriggers.get(
+sym
+);
+
+if(
+primary
+){
 results.push(
 await cancelBotTrigger(
-sym
+sym,
+{
+fingerprint:
+primary.fingerprint
+}
 )
 );
+}
+
+if(
+mirror
+){
+results.push(
+await cancelBotTrigger(
+sym,
+{
+fingerprint:
+mirror.fingerprint,
+preferMirror:
+true
+}
+)
+);
+}
 }
 
 return results;
@@ -1698,13 +2052,73 @@ const sym =
 normalizeSymbol(
 symbol
 );
-const meta =
+const posSide =
+String(
+position?.side ||
+""
+).toLowerCase() ===
+"sell"
+? "short"
+: String(
+position?.side ||
+""
+).toLowerCase() ===
+"buy"
+? "long"
+: "";
+const primary =
 pendingTriggers.get(
 sym
-) ||
+);
+const mirror =
+pendingMirrorTriggers.get(
+sym
+);
+let meta =
+null;
+let metaSlot =
+"";
+
+if(
+posSide
+){
+if(
+primary &&
+primary.side ===
+posSide
+){
+meta =
+primary;
+metaSlot =
+"primary";
+}else if(
+mirror &&
+mirror.side ===
+posSide
+){
+meta =
+mirror;
+metaSlot =
+"mirror";
+}
+}
+
+if(
+!meta
+){
+meta =
+primary ||
+mirror ||
 pendingEntries.get(
 sym
 );
+metaSlot =
+primary
+? "primary"
+: mirror
+? "mirror"
+: "entry";
+}
 
 if(
 !meta
@@ -1716,6 +2130,12 @@ message:
 "no trigger meta"
 };
 }
+
+const filledFingerprint =
+String(
+meta.fingerprint ||
+""
+);
 
 const fillPrice =
 Number(
@@ -2001,9 +2421,27 @@ persistPendingState();
 }
 }
 
+if(
+metaSlot ===
+"mirror"
+){
+pendingMirrorTriggers.delete(
+sym
+);
+}else if(
+metaSlot ===
+"primary"
+){
 pendingTriggers.delete(
 sym
 );
+}
+
+await cancelSiblingTriggers(
+sym,
+filledFingerprint
+);
+
 pendingEntries.set(
 sym,
 {
@@ -2085,7 +2523,9 @@ stopsOk:
 stopsResult?.ok !==
 false,
 stopsMessage:
-stopsResult?.message
+stopsResult?.message,
+fingerprint:
+filledFingerprint
 };
 
 }
@@ -2146,13 +2586,16 @@ row?.orderId ||
 )
 );
 
-for(
-const [
-sym,
-meta
-] of [
-...pendingTriggers
+const pendingSyms =
+new Set(
+[
+...pendingTriggers.keys(),
+...pendingMirrorTriggers.keys()
 ]
+);
+
+for(
+const sym of pendingSyms
 ){
 
 const pos =
@@ -2594,7 +3037,25 @@ function hasPendingTrigger(
 symbol
 ){
 
+const sym =
+normalizeSymbol(
+symbol
+);
+
 return pendingTriggers.has(
+sym
+) ||
+pendingMirrorTriggers.has(
+sym
+);
+
+}
+
+function hasOppositeMirrorPending(
+symbol
+){
+
+return pendingMirrorTriggers.has(
 normalizeSymbol(
 symbol
 )
@@ -2606,12 +3067,51 @@ function getPendingTrigger(
 symbol
 ){
 
-return pendingTriggers.get(
+const sym =
 normalizeSymbol(
 symbol
-)
+);
+
+return pendingTriggers.get(
+sym
+) ||
+pendingMirrorTriggers.get(
+sym
 ) ||
 null;
+
+}
+
+function canPlaceOppositeMirrorTrigger(
+symbol,
+side
+){
+
+const sym =
+normalizeSymbol(
+symbol
+);
+const primary =
+pendingTriggers.get(
+sym
+);
+const mirror =
+pendingMirrorTriggers.get(
+sym
+);
+const want =
+side ===
+"short"
+? "short"
+: "long";
+
+return !!(
+primary &&
+!mirror &&
+primary.side &&
+primary.side !==
+want
+);
 
 }
 
@@ -2868,6 +3368,7 @@ function clearPendingEntries(){
 pendingEntries.clear();
 entryInflight.clear();
 pendingTriggers.clear();
+pendingMirrorTriggers.clear();
 persistPendingState();
 
 }
@@ -2889,11 +3390,14 @@ module.exports =
 {
 placeBotTriggerEntry,
 cancelBotTrigger,
+cancelSiblingTriggers,
 cancelAllBotTriggers,
 cancelAllOpenTriggerOrders,
 finalizeTriggerFill,
 reconcileTriggersAndStops,
 hasPendingTrigger,
+hasOppositeMirrorPending,
+canPlaceOppositeMirrorTrigger,
 getPendingTrigger,
 hasEntryInflight,
 getPendingEntries,

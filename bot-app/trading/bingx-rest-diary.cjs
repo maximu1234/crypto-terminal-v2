@@ -1310,6 +1310,7 @@ async function getClosedPnlHistory(options = {}) {
   const symbolFilter = stripSymbolSuffix(options.symbol);
   const cacheKey = closedPnlCacheKey(startTime, endTime, symbolFilter);
   const forceRefresh = options.forceRefresh === true;
+  const skipEnrich = options.skipEnrich === true;
 
   if (!forceRefresh) {
     const blocked = peekRateLimitBlock();
@@ -1470,6 +1471,22 @@ async function getClosedPnlHistory(options = {}) {
   }
 
   trades.sort((a, b) => b.closeTimeMs - a.closeTimeMs);
+
+  if (skipEnrich) {
+    return {
+      ok: true,
+      trades,
+      sparse: true,
+      enriched: false,
+      partial: false,
+      rateLimited: false,
+      historyFails: 0,
+      historyAttempted: 0,
+      symbolsCapped: false,
+      source: "income-fast"
+    };
+  }
+
   const enriched = trades.length
     ? await enrichClosedPnlTrades({
         trades,

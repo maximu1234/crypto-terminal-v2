@@ -26,7 +26,7 @@ updateRsiLevelLinesLayout,
 linkPairedChartTimeScales,
 SCREENER_VISIBLE_BARS,
 SCREENER_MAX_BARS
-} from "./chart-import.js?v=43";
+} from "./chart-import.js?v=44";
 
 import {
 calculateRSI,
@@ -91,7 +91,7 @@ import {
 mountScreenerWidgetZoom,
 refreshZoomFavoriteUi,
 syncWidgetZoomInversion
-} from "./screener-widget-zoom.js?v=16";
+} from "./screener-widget-zoom.js?v=17";
 
 const gridEl =
 document.getElementById("screener-grid");

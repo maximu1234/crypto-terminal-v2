@@ -951,7 +951,16 @@ candles.length;
 
 const visibleBars =
 Math.min(
-SCREENER_VISIBLE_BARS,
+Number(
+options.visibleBars
+) >
+0
+? Math.round(
+Number(
+options.visibleBars
+)
+)
+: SCREENER_VISIBLE_BARS,
 totalBars
 );
 

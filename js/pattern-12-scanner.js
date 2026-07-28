@@ -82,6 +82,123 @@ short:
 "Шорт"
 };
 
+const PATTERN_SCAN_TF_MS =
+{
+"1":
+60 *
+1000,
+"5":
+5 *
+60 *
+1000,
+"15":
+15 *
+60 *
+1000,
+"60":
+60 *
+60 *
+1000,
+"240":
+240 *
+60 *
+1000,
+D:
+24 *
+60 *
+60 *
+1000,
+W:
+7 *
+24 *
+60 *
+60 *
+1000
+};
+
+/**
+ * @param {string} tf
+ * @returns {number}
+ */
+export function patternScanTfMs(
+tf
+){
+
+return PATTERN_SCAN_TF_MS[
+String(
+tf ||
+""
+)
+] ||
+PATTERN_SCAN_TF_MS[
+"5"
+];
+
+}
+
+/**
+ * Hit ещё в окне глубины поиска (по времени бара PT4).
+ * @param {{ time?: number|null, tf?: string }|null} row
+ * @param {number} lookbackBars
+ * @param {number} [nowMs]
+ */
+export function isPatternScanHitFresh(
+row,
+lookbackBars =
+PATTERN_SCAN_DEFAULT_LOOKBACK,
+nowMs =
+Date.now()
+){
+
+const raw =
+Number(
+row?.time
+);
+
+if(
+!Number.isFinite(
+raw
+) ||
+raw <=
+0
+){
+return false;
+}
+
+const timeMs =
+raw <
+1e12
+? raw *
+1000
+: raw;
+const bars =
+Math.max(
+1,
+Number(
+lookbackBars
+) ||
+PATTERN_SCAN_DEFAULT_LOOKBACK
+);
+const tfMs =
+patternScanTfMs(
+row?.tf
+);
+
+/*
+  +1 бар запас на незакрытую свечу и лаг загрузки.
+*/
+return (
+nowMs -
+timeMs
+) <=
+(
+bars +
+1
+) *
+tfMs;
+
+}
+
 export const PATTERN_SCAN_SIDE_FILTERS =
 [
 "both",
@@ -859,6 +976,35 @@ lookbackBars,
 taskSideFilter,
 patternSettingsSnapshot
 );
+
+/*
+  Без этого seed/resume оставляет старый hit, если при
+  повторном проходе паттерна уже нет → виджет без маркеров.
+*/
+const clearSides =
+taskSideFilter ===
+"long" ||
+taskSideFilter ===
+"short"
+? [
+taskSideFilter
+]
+: [
+"long",
+"short"
+];
+
+for(
+const side of clearSides
+){
+results.delete(
+patternRowKey(
+symbol,
+tf,
+side
+)
+);
+}
 
 for(
 const hit of

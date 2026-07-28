@@ -12,7 +12,7 @@ updateRsiLevelLinesLayout,
 linkPairedChartTimeScales,
 SCREENER_MAX_BARS,
 SCREENER_VISIBLE_BARS
-} from "./chart-import.js?v=43";
+} from "./chart-import.js?v=44";
 
 import {
 loadMarketHistory,
@@ -40,7 +40,7 @@ isScreenerWidgetCurrent as isWidgetCurrentGuard
 import {
 mountScreenerWidgetZoom,
 refreshZoomFavoriteUi
-} from "./screener-widget-zoom.js?v=16";
+} from "./screener-widget-zoom.js?v=17";
 
 import {
 getWidgetFlagHtml,
@@ -52,10 +52,50 @@ bindWidgetFlagGlobalListeners
 import {
 PATTERN_SCAN_TF_LABELS,
 PATTERN_SCAN_SIDE_LABELS
-} from "./pattern-12-scanner.js?v=18";
+} from "./pattern-12-scanner.js?v=19";
 
 let patternOverlayApi =
 null;
+
+/** Script lookback → visible bars (set by createScriptWidgetGrid). */
+let resolvePatternVisibleBars =
+()=>
+SCREENER_VISIBLE_BARS;
+
+function patternVisibleBars(){
+
+try{
+
+const n =
+Number(
+resolvePatternVisibleBars()
+);
+
+if(
+Number.isFinite(
+n
+) &&
+n >
+0
+){
+return Math.min(
+SCREENER_VISIBLE_BARS,
+Math.max(
+80,
+Math.round(
+n
+)
+)
+);
+}
+
+}catch{
+/* ignore */
+}
+
+return SCREENER_VISIBLE_BARS;
+
+}
 
 async function ensurePatternOverlayApi(){
 
@@ -64,7 +104,7 @@ if(
 ){
 patternOverlayApi =
 await import(
-"./screener-pattern-overlay.js?v=5"
+"./screener-pattern-overlay.js?v=6"
 );
 }
 
@@ -510,7 +550,7 @@ const total =
 widget.candles.length;
 const visible =
 Math.min(
-SCREENER_VISIBLE_BARS,
+patternVisibleBars(),
 total
 );
 
@@ -537,7 +577,8 @@ export function createScriptWidgetGrid(
 gridEl,
 paginationEl,
 statusEl,
-onPersist
+onPersist,
+getLookbackBars
 }
 ){
 
@@ -555,6 +596,32 @@ const tickerMap =
 new Map();
 let tickerPollTimer =
 null;
+
+resolvePatternVisibleBars =
+()=>{
+
+const lookback =
+Math.max(
+1,
+Number(
+typeof getLookbackBars ===
+"function"
+? getLookbackBars()
+: 30
+) ||
+30
+);
+
+/*
+  Search depth is often 30 — 1500-bar screener zoom hides PT4 marks.
+*/
+return Math.max(
+80,
+lookback *
+3
+);
+
+};
 
 function updateWidgetMeta(
 symbol,
@@ -906,7 +973,11 @@ chart,
 widget.series,
 widget.candles,
 w,
-h
+h,
+{
+visibleBars:
+patternVisibleBars()
+}
 );
 
 }catch{

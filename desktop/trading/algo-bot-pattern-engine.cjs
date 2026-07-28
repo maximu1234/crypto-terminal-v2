@@ -445,6 +445,527 @@ key
 
 }
 
+function normalizeSetupSide(
+side
+){
+
+return side ===
+"short"
+? "short"
+: "long";
+
+}
+
+function findArmedSameSide(
+state,
+side
+){
+
+const want =
+normalizeSetupSide(
+side
+);
+
+for(
+const [
+fp,
+row
+] of state.armed
+){
+
+if(
+normalizeSetupSide(
+row?.setup?.side
+) ===
+want
+){
+return {
+fp,
+row
+};
+}
+
+}
+
+return null;
+
+}
+
+function findArmedOppositeSide(
+state,
+side
+){
+
+const want =
+normalizeSetupSide(
+side
+);
+const opposite =
+want ===
+"short"
+? "long"
+: "short";
+
+for(
+const [
+fp,
+row
+] of state.armed
+){
+
+if(
+normalizeSetupSide(
+row?.setup?.side
+) ===
+opposite
+){
+return {
+fp,
+row
+};
+}
+
+}
+
+return null;
+
+}
+
+/**
+ * Same chart pivot: identical price and candle time (pt3 parent == pt4 opposite).
+ */
+function isSamePatternPivot(
+candles,
+barA,
+priceA,
+barB,
+priceB
+){
+
+const pa =
+Number(
+priceA
+);
+const pb =
+Number(
+priceB
+);
+
+if(
+!(
+Number.isFinite(
+pa
+) &&
+Number.isFinite(
+pb
+)
+) ||
+pa !==
+pb
+){
+return false;
+}
+
+const ia =
+Number(
+barA
+);
+const ib =
+Number(
+barB
+);
+
+if(
+Array.isArray(
+candles
+) &&
+Number.isFinite(
+ia
+) &&
+Number.isFinite(
+ib
+) &&
+candles[
+ia
+] &&
+candles[
+ib
+]
+){
+const ta =
+Number(
+candles[
+ia
+].time
+);
+const tb =
+Number(
+candles[
+ib
+].time
+);
+
+if(
+Number.isFinite(
+ta
+) &&
+Number.isFinite(
+tb
+)
+){
+return ta ===
+tb;
+}
+
+}
+
+return (
+Number.isFinite(
+ia
+) &&
+ia ===
+ib
+);
+
+}
+
+/**
+ * Mirror parent: prefer parked parent still in box; else active opposite armed.
+ */
+function resolveOppositeMirrorParent(
+state,
+setupSide
+){
+
+const want =
+normalizeSetupSide(
+setupSide
+);
+const parentSide =
+want ===
+"short"
+? "long"
+: "short";
+
+if(
+state.parkedParent &&
+normalizeSetupSide(
+state.parkedParent.side ||
+state.parkedParent.setup?.side
+) ===
+parentSide &&
+isParkedParentStillValid(
+state,
+state.parkedParent
+)
+){
+return {
+setup:
+state.parkedParent.setup,
+fingerprint:
+state.parkedParent.fingerprint,
+side:
+parentSide,
+source:
+"parked"
+};
+}
+
+const armed =
+findArmedOppositeSide(
+state,
+want
+);
+
+if(
+armed &&
+isParkedParentStillValid(
+state,
+{
+setup:
+armed.row.setup,
+fingerprint:
+armed.fp,
+side:
+armed.row.setup?.side
+}
+)
+){
+return {
+setup:
+armed.row.setup,
+fingerprint:
+armed.fp,
+side:
+parentSide,
+source:
+"armed"
+};
+}
+
+return null;
+
+}
+
+function shiftMirrorTriggerPrice(
+side,
+price,
+tickSize
+){
+
+const p =
+Number(
+price
+);
+const tick =
+Number(
+tickSize
+);
+
+if(
+!(
+Number.isFinite(
+p
+) &&
+p >
+0
+) ||
+!(
+Number.isFinite(
+tick
+) &&
+tick >
+0
+)
+){
+return null;
+}
+
+const want =
+normalizeSetupSide(
+side
+);
+
+/*
+ * short: one tick below shared pivot; long: one tick above.
+ */
+const shifted =
+want ===
+"short"
+? p -
+tick
+: p +
+tick;
+
+if(
+!(
+shifted >
+0
+)
+){
+return null;
+}
+
+return shifted;
+
+}
+
+/**
+ * Parent still in box: pt4 not pierced, pt3 not pierced, within N bars after pt4.
+ */
+function isParkedParentStillValid(
+state,
+parent
+){
+
+if(
+!parent?.setup ||
+!patternEntry
+){
+return false;
+}
+
+const candles =
+state.candles;
+
+if(
+!Array.isArray(
+candles
+) ||
+candles.length <
+3
+){
+return false;
+}
+
+const timeoutBars =
+clampEntryTimeoutBars(
+engineConfig?.timeoutBars
+);
+
+if(
+alreadyCrossedAfterB4(
+candles,
+state.forming,
+parent.setup
+)
+){
+return false;
+}
+
+const event =
+patternEntry.resolvePatternSetupEvent(
+candles,
+parent.setup,
+{
+timeoutBars
+}
+);
+
+return event ==
+null;
+
+}
+
+async function tryRearmParkedParent(
+sym,
+reason =
+"rearm-parent"
+){
+
+const state =
+getState(
+sym
+);
+const parent =
+state.parkedParent;
+
+if(
+!parent?.setup
+){
+return false;
+}
+
+if(
+inPositionSymbols.has(
+sym
+)
+){
+return false;
+}
+
+if(
+!isParkedParentStillValid(
+state,
+parent
+)
+){
+state.parkedParent =
+null;
+
+if(
+parent.fingerprint
+){
+state.consumed.add(
+parent.fingerprint
+);
+}
+
+pushSignal(
+{
+ts:
+Date.now(),
+symbol:
+sym,
+side:
+normalizeSetupSide(
+parent.side ||
+parent.setup?.side
+),
+price:
+Number(
+parent.setup?.p4
+),
+text:
+`${sym}: родительский сетап больше не валиден — не вооружаем`
+}
+);
+engineConfig?.onActivity?.();
+return false;
+}
+
+if(
+parent.fingerprint
+){
+state.consumed.delete(
+parent.fingerprint
+);
+}
+
+state.parkedParent =
+null;
+
+pushSignal(
+{
+ts:
+Date.now(),
+symbol:
+sym,
+side:
+normalizeSetupSide(
+parent.setup.side
+),
+price:
+Number(
+parent.setup.p4
+),
+text:
+`${sym}: возврат родительского сетапа (${reason})`
+}
+);
+
+await tryArmSetup(
+sym,
+parent.setup,
+reason
+);
+
+const parentFp =
+setupFingerprint(
+sym,
+parent.setup,
+state.candles
+);
+
+if(
+!state.armed.has(
+parentFp
+)
+){
+
+if(
+isParkedParentStillValid(
+state,
+parent
+)
+){
+state.parkedParent =
+parent;
+}else if(
+parent.fingerprint
+){
+state.consumed.add(
+parent.fingerprint
+);
+}
+
+return false;
+}
+
+return true;
+
+}
+
 function sideAllowed(
 botSide,
 setupSide
@@ -633,6 +1154,13 @@ armed:
 new Map(),
 consumed:
 new Set(),
+/*
+  Nested setups: outer armed setup parked while a newer same-side
+  setup is armed inside its pt3–pt4 box. Re-armed after nested trade
+  closes / nested cancel, if still valid.
+*/
+parkedParent:
+null,
 seeded:
 false,
 needsResync:
@@ -1164,17 +1692,6 @@ return;
 }
 
 if(
-orderExecutor.hasPendingTrigger(
-sym
-) ||
-orderExecutor.hasEntryInflight?.(
-sym
-)
-){
-return;
-}
-
-if(
 engineConfig?.entriesPaused
 ){
 return;
@@ -1246,6 +1763,249 @@ sym
 return;
 }
 
+const existing =
+findArmedSameSide(
+state,
+setup.side
+);
+
+if(
+existing &&
+existing.fp ===
+fp
+){
+return;
+}
+
+/*
+  Opposite side: blocked while opposite parent is alive in box,
+  unless pt4 coincides with parent pt3 (same pivot) → opposite mirror.
+  Parent = parked (preferred) or active opposite armed.
+*/
+const mirrorParent =
+resolveOppositeMirrorParent(
+state,
+setup.side
+);
+const isOppositeMirror =
+!!(
+mirrorParent &&
+isSamePatternPivot(
+candles,
+mirrorParent.setup?.b3,
+mirrorParent.setup?.p3,
+setup.b4,
+setup.p4
+)
+);
+
+if(
+mirrorParent &&
+!isOppositeMirror
+){
+return;
+}
+
+/*
+  Live only — Rule 1: nested same-side replace while parent still in pt3–pt4 box.
+  Manual: no nesting — keep existing alert(s) and arm another independently.
+*/
+if(
+!isManualTradingMode()
+){
+
+if(
+existing &&
+existing.fp !==
+fp
+){
+
+const existingStillValid =
+isParkedParentStillValid(
+state,
+{
+setup:
+existing.row.setup,
+fingerprint:
+existing.fp,
+side:
+existing.row.setup?.side
+}
+);
+
+let replaced =
+false;
+
+if(
+!existingStillValid
+){
+replaced =
+await cancelArmedSetup(
+sym,
+existing.fp,
+normalizeSetupSide(
+existing.row.setup?.side
+),
+Number(
+existing.row.setup?.p4
+),
+`${sym} ${normalizeSetupSide(
+existing.row.setup?.side
+)}: снят (невалиден) перед новым сетапом`,
+{
+skipRearm:
+true
+}
+);
+}else if(
+!state.parkedParent
+){
+state.parkedParent =
+{
+setup:
+existing.row.setup,
+fingerprint:
+existing.fp,
+side:
+normalizeSetupSide(
+existing.row.setup?.side
+)
+};
+replaced =
+await cancelArmedSetup(
+sym,
+existing.fp,
+normalizeSetupSide(
+existing.row.setup?.side
+),
+Number(
+existing.row.setup?.p4
+),
+`${sym} ${normalizeSetupSide(
+existing.row.setup?.side
+)}: nested — снят ради нового сетапа`,
+{
+soft:
+true,
+skipRearm:
+true
+}
+);
+
+if(
+!replaced
+){
+state.parkedParent =
+null;
+}
+}else{
+replaced =
+await cancelArmedSetup(
+sym,
+existing.fp,
+normalizeSetupSide(
+existing.row.setup?.side
+),
+Number(
+existing.row.setup?.p4
+),
+`${sym} ${normalizeSetupSide(
+existing.row.setup?.side
+)}: nested — промежуточный снят ради нового`,
+{
+skipRearm:
+true
+}
+);
+}
+
+if(
+!replaced
+){
+return;
+}
+
+}else if(
+orderExecutor.hasEntryInflight?.(
+sym
+)
+){
+return;
+}else if(
+orderExecutor.hasPendingTrigger(
+sym
+) &&
+!(
+isOppositeMirror &&
+orderExecutor.canPlaceOppositeMirrorTrigger?.(
+sym,
+normalizeSetupSide(
+setup.side
+)
+)
+)
+){
+return;
+}
+
+if(
+orderExecutor.hasEntryInflight?.(
+sym
+)
+){
+return;
+}
+
+if(
+orderExecutor.hasPendingTrigger(
+sym
+) &&
+!(
+isOppositeMirror &&
+orderExecutor.canPlaceOppositeMirrorTrigger?.(
+sym,
+normalizeSetupSide(
+setup.side
+)
+)
+)
+){
+return;
+}
+
+}
+
+let mirrorTriggerPrice =
+null;
+
+if(
+isOppositeMirror
+){
+const rules =
+await algoRest.getInstrumentRules?.(
+sym
+);
+const tick =
+Number(
+rules?.tickSize
+);
+mirrorTriggerPrice =
+shiftMirrorTriggerPrice(
+setup.side,
+setup.p4,
+tick
+);
+
+if(
+!Number.isFinite(
+mirrorTriggerPrice
+)
+){
+return;
+}
+
+}
+
 state.armed.set(
 fp,
 {
@@ -1254,8 +2014,25 @@ armedAt:
 Date.now(),
 reason,
 orderId:
-null
+null,
+oppositeMirror:
+!!isOppositeMirror,
+mirrorParentFingerprint:
+isOppositeMirror
+? mirrorParent.fingerprint
+: null,
+triggerPrice:
+mirrorTriggerPrice
 }
+);
+
+const armPrice =
+Number.isFinite(
+mirrorTriggerPrice
+)
+? mirrorTriggerPrice
+: Number(
+setup.p4
 );
 
 pushSignal(
@@ -1267,11 +2044,17 @@ sym,
 side:
 setup.side,
 price:
-Number(
-setup.p4
-),
+armPrice,
 text:
-`${sym} ${setup.side}: armed pt4=${Number(
+isOppositeMirror
+? `${sym} ${setup.side}: armed MIRROR pt4=${Number(
+setup.p4
+).toFixed(
+4
+)} → trigger ${armPrice.toFixed(
+4
+)} (parent pt3)`
+: `${sym} ${setup.side}: armed pt4=${Number(
 setup.p4
 ).toFixed(
 4
@@ -1292,6 +2075,30 @@ sym,
 setup,
 fp
 ){
+
+const state0 =
+getState(
+sym
+);
+const armedRow =
+state0.armed.get(
+fp
+);
+const triggerPrice =
+Number(
+armedRow?.triggerPrice
+);
+const oppositeMirror =
+!!armedRow?.oppositeMirror &&
+orderExecutor.hasPendingTrigger?.(
+sym
+) &&
+orderExecutor.canPlaceOppositeMirrorTrigger?.(
+sym,
+normalizeSetupSide(
+setup.side
+)
+);
 
 if(
 isManualTradingMode()
@@ -1326,7 +2133,19 @@ engineConfig?.strategyId,
 riskUsd:
 engineConfig?.riskUsd,
 fingerprint:
-fp
+fp,
+triggerPrice:
+Number.isFinite(
+triggerPrice
+) &&
+triggerPrice >
+0
+? triggerPrice
+: undefined,
+oppositeMirror,
+mirrorParentFingerprint:
+armedRow?.mirrorParentFingerprint ||
+""
 }
 );
 
@@ -1350,6 +2169,17 @@ row.orderId =
 result.orderId;
 }
 
+const shown =
+Number.isFinite(
+triggerPrice
+) &&
+triggerPrice >
+0
+? triggerPrice
+: Number(
+setup.p4
+);
+
 pushSignal(
 {
 ts:
@@ -1359,15 +2189,13 @@ sym,
 side:
 setup.side,
 price:
-Number(
-setup.p4
-),
+shown,
 text:
-`${sym} ${setup.side}: TRIGGER @ ${Number(
-setup.p4
-).toFixed(
+`${sym} ${setup.side}: TRIGGER @ ${shown.toFixed(
 4
-)} vol≈${Number(
+)}${oppositeMirror
+? " (mirror)"
+: ""} vol≈${Number(
 result.volumeUsdt
 ).toFixed(
 2
@@ -1574,10 +2402,32 @@ fp
  * Manual mode: alert slightly before pt4 so the trader has time to react.
  * Offset = alertLeadPct of X (pt3↔pt4), toward pt3 — same units as СЛ %.
  */
-const pt4 =
+const stateAlert =
+getState(
+sym
+);
+const armedAlert =
+stateAlert.armed.get(
+fp
+);
+const pt4Raw =
 Number(
 setup.p4
 );
+const pt4 =
+Number.isFinite(
+Number(
+armedAlert?.triggerPrice
+)
+) &&
+Number(
+armedAlert.triggerPrice
+) >
+0
+? Number(
+armedAlert.triggerPrice
+)
+: pt4Raw;
 const leadPct =
 Number(
 engineConfig?.alertLeadPct
@@ -1600,7 +2450,11 @@ setup.side ===
 : "long";
 const alertPrice =
 computeManualAlertPrice(
-setup,
+{
+...setup,
+p4:
+pt4
+},
 lead
 );
 
@@ -1740,9 +2594,15 @@ sym,
 fp,
 side,
 price,
-text
+text,
+opts =
+{}
 ){
 
+const soft =
+!!opts.soft;
+const skipRearm =
+!!opts.skipRearm;
 const state =
 getState(
 sym
@@ -1770,7 +2630,11 @@ fp
 }else{
 cancelResult =
 await orderExecutor.cancelBotTrigger(
-sym
+sym,
+{
+fingerprint:
+fp
+}
 );
 }
 
@@ -1796,15 +2660,34 @@ cancelOk
 if(
 cancelOk
 ){
+if(
+!soft
+){
 state.consumed.add(
-fp
-);
-state.armed.delete(
 fp
 );
 }
 
+state.armed.delete(
+fp
+);
+
+if(
+!isManualTradingMode() &&
+!skipRearm &&
+state.parkedParent &&
+state.parkedParent.fingerprint !==
+fp
+){
+void tryRearmParkedParent(
+sym,
+"rearm-after-nested-cancel"
+);
+}
+}
+
 engineConfig?.onActivity?.();
+return cancelOk;
 
 }
 
@@ -2035,6 +2918,66 @@ true,
 
 }
 
+async function cancelOtherArmedOnEntry(
+sym,
+keepFp
+){
+
+const state =
+getState(
+sym
+);
+
+for(
+const [
+otherFp,
+row
+] of [
+...state.armed
+]
+){
+
+if(
+otherFp ===
+keepFp
+){
+continue;
+}
+
+await cancelArmedSetup(
+sym,
+otherFp,
+normalizeSetupSide(
+row?.setup?.side
+),
+Number(
+row?.triggerPrice ||
+row?.setup?.p4
+),
+`${sym} ${normalizeSetupSide(
+row?.setup?.side
+)}: снят — вход в другую сторону`,
+{
+skipRearm:
+true
+}
+);
+}
+
+state.parkedParent =
+null;
+
+if(
+!isManualTradingMode()
+){
+await orderExecutor.cancelSiblingTriggers?.(
+sym,
+keepFp
+);
+}
+
+}
+
 async function handleTriggerFill(
 sym,
 side,
@@ -2052,6 +2995,10 @@ fp
 );
 entriesCount +=
 1;
+await cancelOtherArmedOnEntry(
+sym,
+fp
+);
 state.consumed.add(
 fp
 );
@@ -2133,6 +3080,10 @@ done.tpPrice
 );
 }
 
+await cancelOtherArmedOnEntry(
+sym,
+fp
+);
 state.consumed.add(
 fp
 );
@@ -2195,8 +3146,20 @@ setup.p3
 );
 const p4 =
 Number(
+row.triggerPrice
+);
+const p4Pattern =
+Number(
 setup.p4
 );
+const entryLevel =
+Number.isFinite(
+p4
+) &&
+p4 >
+0
+? p4
+: p4Pattern;
 const b4 =
 Number(
 setup.b4
@@ -2274,14 +3237,14 @@ isEntryCross(
 side,
 prev,
 cur,
-p4
+entryLevel
 )
 ){
 await handleTriggerFill(
 sym,
 side,
 setup,
-p4,
+entryLevel,
 fp,
 state
 );
@@ -3188,7 +4151,7 @@ function setInPositionSymbols(
 symbols
 ){
 
-inPositionSymbols =
+const next =
 new Set(
 (
 Array.isArray(
@@ -3202,6 +4165,44 @@ normalizeSymbol
 Boolean
 )
 );
+
+const left =
+[];
+
+for(
+const sym of inPositionSymbols
+){
+
+if(
+!next.has(
+sym
+)
+){
+left.push(
+sym
+);
+}
+
+}
+
+inPositionSymbols =
+next;
+
+/*
+  Live only — Rule 2: after nested trade closes, re-arm parked parent if still valid.
+*/
+if(
+!isManualTradingMode()
+){
+for(
+const sym of left
+){
+void tryRearmParkedParent(
+sym,
+"rearm-after-nested-close"
+);
+}
+}
 
 }
 
@@ -3673,6 +4674,8 @@ const state of symbolStates.values()
 ){
 state.armed.clear();
 state.consumed.clear();
+state.parkedParent =
+null;
 }
 if(
 isManualTradingMode()

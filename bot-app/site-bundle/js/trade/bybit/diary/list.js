@@ -163,7 +163,9 @@ export async function diaryLoadPeriod(period, { forceRefresh = false } = {}) {
       startTime,
       endTime,
       forceRefresh,
-      exchangeId: EXCHANGE_ID
+      exchangeId: EXCHANGE_ID,
+      /* Keep diary list fast: heavy execution matching is loaded on row detail. */
+      skipExecutions: true
     });
   }
 

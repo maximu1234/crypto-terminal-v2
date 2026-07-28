@@ -9,7 +9,7 @@ savePatternScanResults
 import {
 PATTERN_SCAN_DEPTH_OPTIONS,
 normalizePatternScanSideFilter
-} from "./pattern-12-scanner.js?v=18";
+} from "./pattern-12-scanner.js?v=19";
 
 import {
 getActiveExchangeId
