@@ -93,6 +93,14 @@ require(
 "./auth-session.cjs"
 );
 const {
+startRemoteControl,
+stopRemoteControl,
+notifyAuthSessionChanged
+} =
+require(
+"./trading/algo-bot-remote-control.cjs"
+);
+const {
 initMenuBarTray,
 updateMenuBarTray,
 setMenuBarTrayVisible,
@@ -1596,6 +1604,17 @@ true
 saveAuthSession(
 raw
 );
+try{
+notifyAuthSessionChanged();
+}catch(
+err
+){
+log.warn(
+"algo bot remote auth:",
+err?.message ||
+err
+);
+}
 return {
 ok:
 true
@@ -1624,6 +1643,11 @@ ipcMain.handle(
 
 try{
 clearAuthSession();
+try{
+notifyAuthSessionChanged();
+}catch{
+/* ignore */
+}
 return {
 ok:
 true
@@ -2156,6 +2180,17 @@ mainWindow &&
 : null
 }
 );
+try{
+startRemoteControl();
+}catch(
+err
+){
+log.warn(
+"algo bot remote boot:",
+err?.message ||
+err
+);
+}
 buildMenu();
 configureMenuBarTray(
 openMultichart
@@ -2263,6 +2298,11 @@ true;
 
 stopTradingStream();
 stopAlgoTradingStream();
+try{
+stopRemoteControl();
+}catch{
+/* ignore */
+}
 destroyMenuBarTray();
 
 if(

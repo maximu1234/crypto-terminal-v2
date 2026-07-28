@@ -1,7 +1,12 @@
 /**
- * Облачная блокировка АлгоБота (Supabase): один активный запуск на хеш алго API-ключа.
- * Метка ставится при «Запустить», снимается при «Остановить» или «Снять блокировку».
- * Без логина Multichart — capability = знание SHA-256(exchange:net:apiKey).
+ * Облачная блокировка АлгоБота (Supabase): один активный запуск на аккаунт.
+ *
+ * lock_key = user:<supabaseUserId>
+ * Никогда не используем биржевые / алго API-ключи — обычный Multichart
+ * не должен знать про удалённый Algo Bot.
+ *
+ * Нет логина → skip (локальный бот работает без блокировки).
+ * Один аккаунт на Multichart и на серверном Algo Bot → взаимное исключение.
  *
  * Важно: отдельный anon-клиент без auth storage. Общий getSupabase() после
  * вставки сессии Multichart может кидать AuthSessionMissingError на REST,
@@ -11,6 +16,9 @@ import {
 getSupabase,
 isSupabaseConfigured
 } from "../supabase-client.js?v=7";
+import {
+readPersistedAuthSession
+} from "../alert-auth-cache.js?v=7";
 
 const INSTANCE_KEY =
 "algo_bot_lock_instance_id";
@@ -178,10 +186,57 @@ return `algo-${Date.now()}`;
  *   ok: boolean,
  *   sb?: object,
  *   lockKey?: string,
+ *   skipLock?: boolean,
  *   code?: string,
  *   message?: string
  * }>}
  */
+async function resolveCloudUserId(){
+
+try{
+const persisted =
+readPersistedAuthSession();
+const fromPersisted =
+String(
+persisted?.user?.id ||
+""
+).trim();
+
+if(
+fromPersisted
+){
+return fromPersisted;
+}
+}catch{
+/* ignore */
+}
+
+try{
+const sb =
+await getSupabase();
+const session =
+(
+await sb?.auth?.getSession?.()
+)?.data?.session;
+const id =
+String(
+session?.user?.id ||
+""
+).trim();
+
+if(
+id
+){
+return id;
+}
+}catch{
+/* ignore */
+}
+
+return "";
+
+}
+
 async function getLockClient(){
 
 if(
@@ -199,41 +254,21 @@ message:
 };
 }
 
-const api =
-window.cryptoTerminalDesktop?.algoTrading;
+const userId =
+await resolveCloudUserId();
 
 if(
-typeof api?.getBotLockKey !==
-"function"
+!userId
 ){
+/*
+  Нет логина — не мешаем локальному Multichart.
+  Удалённый бот без того же аккаунта всё равно не скоординировать.
+*/
 return {
 ok:
-false,
-code:
-"desktop_only",
-message:
-"Облачная блокировка доступна только в desktop"
-};
-}
-
-const keyRes =
-await api.getBotLockKey(
-{}
-);
-
-if(
-!keyRes?.ok ||
-!keyRes.lockKey
-){
-return {
-ok:
-false,
-code:
-keyRes?.code ||
-"no_keys",
-message:
-keyRes?.message ||
-"Алго API-ключи не настроены"
+true,
+skipLock:
+true
 };
 }
 
@@ -258,9 +293,7 @@ ok:
 true,
 sb,
 lockKey:
-String(
-keyRes.lockKey
-)
+`user:${userId}`
 };
 
 }
@@ -286,6 +319,27 @@ if(
 !client.ok
 ){
 return client;
+}
+
+if(
+client.skipLock
+){
+return {
+ok:
+true,
+locked:
+false,
+ownedByUs:
+false,
+skipped:
+true,
+instanceId:
+null,
+appName:
+null,
+lockedAt:
+null
+};
 }
 
 try{
@@ -384,6 +438,17 @@ if(
 !client.ok
 ){
 return client;
+}
+
+if(
+client.skipLock
+){
+return {
+ok:
+true,
+skipped:
+true
+};
 }
 
 const current =
@@ -504,8 +569,6 @@ if(
 ){
 if(
 client.code ===
-"no_keys" ||
-client.code ===
 "not_configured" ||
 client.code ===
 "desktop_only"
@@ -519,6 +582,17 @@ true
 }
 
 return client;
+}
+
+if(
+client.skipLock
+){
+return {
+ok:
+true,
+skipped:
+true
+};
 }
 
 const ours =
@@ -644,6 +718,19 @@ if(
 !client.ok
 ){
 return client;
+}
+
+if(
+client.skipLock
+){
+return {
+ok:
+true,
+skipped:
+true,
+message:
+"Облачная блокировка не используется"
+};
 }
 
 const {

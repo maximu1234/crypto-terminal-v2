@@ -1489,7 +1489,7 @@ return {
 ok:
 false,
 message:
-"API keys not configured"
+"Для реальной торговли нужны алго API-ключи"
 };
 }
 

@@ -33,9 +33,14 @@ import {
 import {
   setWorkerReloadRequestHandler
 } from "./lib/reload-request.js";
+import {
+  attachBotRemoteWs,
+  handleBotRemoteHttp,
+  getBotRemoteStats
+} from "./lib/bot-remote.js";
 
 const PORT = Number(process.env.PORT) || 8080;
-const WORKER_BUILD = "2026-07-13-bingx-alerts-v1";
+const WORKER_BUILD = "2026-07-29-bot-remote-v1";
 
 /** alert key -> row */
 let activeAlerts = new Map();
@@ -212,6 +217,10 @@ async function main() {
       return;
     }
 
+    if (await handleBotRemoteHttp(req, res)) {
+      return;
+    }
+
     const pathOnly =
       (req.url || "").split("?")[0];
 
@@ -232,6 +241,7 @@ async function main() {
         telegram: telegramConfigured(),
         config: st,
         diag,
+        botRemote: getBotRemoteStats(),
         ticker: marketHubs.getStats?.() || null,
         reload: {
           intervalMs: getReloadIntervalMs(),
@@ -326,6 +336,8 @@ async function main() {
     }
 
   });
+
+  attachBotRemoteWs(server);
 
   server.listen(PORT, () => {
     console.log(`alert-worker listening :${PORT}`);

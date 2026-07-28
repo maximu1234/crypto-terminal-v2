@@ -19,7 +19,7 @@
 <link rel="stylesheet" href="/css/terminal.css?v=169">
 <link rel="stylesheet" href="/css/terminal-layout.css?v=97">
 <link rel="stylesheet" href="/css/chart-indicators.css?v=22">
-<link rel="stylesheet" href="/css/algo-trading.css?v=87">
+<link rel="stylesheet" href="/css/algo-trading.css?v=88">
 <link rel="stylesheet" href="/css/algo-trading-book-panel.css?v=4">
 <link rel="stylesheet" href="/css/algo-trading-chart-overlay.css?v=2">
 
@@ -398,6 +398,22 @@ aria-label="История сигналов"
 </div>
 </div>
 <p class="algo-bot-status-message hidden" id="algo-bot-status-message"></p>
+<div class="algo-bot-status-remote" id="algo-bot-status-remote">
+<div class="algo-bot-status-remote-title">Удалённый бот</div>
+<div class="algo-bot-status-row">
+<span class="algo-bot-status-label">Связь</span>
+<span class="algo-bot-status-value" id="algo-bot-remote-link">—</span>
+</div>
+<div class="algo-bot-status-row">
+<span class="algo-bot-status-label">Хост</span>
+<span class="algo-bot-status-value" id="algo-bot-remote-host">—</span>
+</div>
+<div class="algo-bot-status-remote-actions">
+<button type="button" class="algo-bot-remote-btn" id="algo-bot-remote-start">Запустить</button>
+<button type="button" class="algo-bot-remote-btn" id="algo-bot-remote-stop">Остановить</button>
+</div>
+<p class="algo-bot-status-remote-message hidden" id="algo-bot-remote-message"></p>
+</div>
 <div class="algo-bot-status-row algo-bot-status-row--lock">
 <span class="algo-bot-status-label">Блокировка</span>
 <span class="algo-bot-status-value" id="algo-bot-status-lock">—</span>

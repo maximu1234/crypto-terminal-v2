@@ -257,6 +257,19 @@ async function claimAlertTrigger(
     );
 
   if (!result.ok) {
+    if (result.reason === "not_claimed") {
+      activeAlerts.delete(key);
+      lastPriceByAlert.delete(key);
+      lastCandleTimeByAlert.delete(key);
+      lastTickerPriceByAlert.delete(key);
+      console.log(
+        `trigger already handled (${channel})`,
+        alert.symbol,
+        alert.id
+      );
+      return false;
+    }
+
     console.warn(
       `trigger failed (${channel})`,
       alert.symbol,
