@@ -630,7 +630,8 @@ ib
 }
 
 /**
- * Mirror parent: prefer parked parent still in box; else active opposite armed.
+ * Opposite parent still alive in box (parked preferred, else armed opposite).
+ * Opposite mirror allowed only when new pt4 shares parent pt3 pivot.
  */
 function resolveOppositeMirrorParent(
 state,
@@ -748,6 +749,7 @@ side
 
 /*
  * short: one tick below shared pivot; long: one tick above.
+ * Entry trigger only — SL/TP stay on original pattern pt3/pt4.
  */
 const shifted =
 want ===
@@ -1781,6 +1783,7 @@ return;
   Opposite side: blocked while opposite parent is alive in box,
   unless pt4 coincides with parent pt3 (same pivot) → opposite mirror.
   Parent = parked (preferred) or active opposite armed.
+  Symmetry: long↔short. SL/TP from original pattern pt3/pt4; trigger ±1 tick.
 */
 const mirrorParent =
 resolveOppositeMirrorParent(
@@ -2414,26 +2417,33 @@ const pt4Raw =
 Number(
 setup.p4
 );
-const pt4 =
-Number.isFinite(
+const mirrorTrigger =
 Number(
 armedAlert?.triggerPrice
-)
+);
+const isMirror =
+!!armedAlert?.oppositeMirror &&
+Number.isFinite(
+mirrorTrigger
 ) &&
-Number(
-armedAlert.triggerPrice
-) >
-0
-? Number(
-armedAlert.triggerPrice
-)
+mirrorTrigger >
+0;
+/*
+ * Opposite mirror: alert exactly at ±1 tick trigger (do not apply lead
+ * toward pt3 — that would undo the tick gap vs parent cancel).
+ */
+const pt4 =
+isMirror
+? mirrorTrigger
 : pt4Raw;
 const leadPct =
 Number(
 engineConfig?.alertLeadPct
 );
 const lead =
-Number.isFinite(
+isMirror
+? 0
+: Number.isFinite(
 leadPct
 ) &&
 leadPct >=
@@ -2449,7 +2459,9 @@ setup.side ===
 ? "short"
 : "long";
 const alertPrice =
-computeManualAlertPrice(
+isMirror
+? mirrorTrigger
+: computeManualAlertPrice(
 {
 ...setup,
 p4:

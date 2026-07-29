@@ -12,10 +12,10 @@
 ### Algo Bot — opposite-mirror
 
 - Пока родительский сетап жив в box, opposite не вооружается.
-- Исключение: `pt4` opposite = та же точка, что `pt3` родителя (цена + время бара).
-- Триггер/алерт на 1 `tickSize` от уровня (short ниже, long выше).
-- Live: два pending на символ (основной + mirror); при входе sibling снимается.
-- Opposite без совпадения пивота запрещён и в live, и в manual.
+- Исключение: `pt4` opposite = `pt3` родителя (цена + время бара) → armed opposite («mirror»).
+- Триггер/алерт: ±1 `tickSize` от общего пивота (short ниже, long выше). **SL/TP** — от оригинальных `pt3/pt4` паттерна.
+- Симметрия long↔short; `symbolAllowedSides` (списки Алго-лонг/шорт) не обходится.
+- Live: два pending на символ (основной + mirror); fill снимает sibling; cancel parent по pt3 — mirror остаётся.
 - Same-side nested — без изменений (live replace / manual multi-alert).
 
 ### Bybit REST (algo)
