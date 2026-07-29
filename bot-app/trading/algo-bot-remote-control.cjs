@@ -272,6 +272,44 @@ return "";
 
 }
 
+function getCloudSessionContext(){
+
+try{
+const data =
+JSON.parse(
+String(
+getAuthSession() ||
+""
+)
+);
+const userId =
+String(
+data?.user?.id ||
+data?.session?.user?.id ||
+""
+).trim();
+const accessToken =
+String(
+data?.access_token ||
+data?.session?.access_token ||
+""
+).trim();
+
+return {
+userId,
+accessToken
+};
+}catch{
+return {
+userId:
+"",
+accessToken:
+""
+};
+}
+
+}
+
 function getInstanceId(){
 
 const file =
@@ -339,30 +377,12 @@ return id;
 
 async function acquireCloudLock(){
 
+const cloud =
+getCloudSessionContext();
 const lockKey =
-(()=>{
-try{
-const data =
-JSON.parse(
-String(
-getAuthSession() ||
-""
-)
-);
-const userId =
-String(
-data?.user?.id ||
-data?.session?.user?.id ||
-""
-).trim();
-
-return userId
-? `user:${userId}`
+cloud.userId
+? `user:${cloud.userId}`
 : "";
-}catch{
-return "";
-}
-})();
 
 if(
 !lockKey
@@ -373,6 +393,19 @@ ok:
 true,
 skipped:
 true
+};
+}
+
+if(
+!cloud.accessToken
+){
+return {
+ok:
+false,
+code:
+"no_access_token",
+message:
+"Нет access token для облачной блокировки"
 };
 }
 
@@ -411,7 +444,7 @@ headers: {
 apikey:
 env.supabaseAnonKey,
 Authorization:
-`Bearer ${env.supabaseAnonKey}`
+`Bearer ${cloud.accessToken}`
 }
 }
 );
@@ -478,7 +511,7 @@ headers: {
 apikey:
 env.supabaseAnonKey,
 Authorization:
-`Bearer ${env.supabaseAnonKey}`,
+`Bearer ${cloud.accessToken}`,
 "Content-Type":
 "application/json",
 Prefer:
@@ -546,30 +579,12 @@ true
 
 async function releaseCloudLock(){
 
+const cloud =
+getCloudSessionContext();
 const lockKey =
-(()=>{
-try{
-const data =
-JSON.parse(
-String(
-getAuthSession() ||
-""
-)
-);
-const userId =
-String(
-data?.user?.id ||
-data?.session?.user?.id ||
-""
-).trim();
-
-return userId
-? `user:${userId}`
+cloud.userId
+? `user:${cloud.userId}`
 : "";
-}catch{
-return "";
-}
-})();
 
 if(
 !lockKey
@@ -579,6 +594,19 @@ ok:
 true,
 skipped:
 true
+};
+}
+
+if(
+!cloud.accessToken
+){
+return {
+ok:
+false,
+code:
+"no_access_token",
+message:
+"Нет access token для облачной блокировки"
 };
 }
 
@@ -610,7 +638,7 @@ headers: {
 apikey:
 env.supabaseAnonKey,
 Authorization:
-`Bearer ${env.supabaseAnonKey}`
+`Bearer ${cloud.accessToken}`
 }
 }
 );
@@ -661,7 +689,7 @@ headers: {
 apikey:
 env.supabaseAnonKey,
 Authorization:
-`Bearer ${env.supabaseAnonKey}`,
+`Bearer ${cloud.accessToken}`,
 "Content-Type":
 "application/json",
 Prefer:
@@ -984,6 +1012,8 @@ if(
 return;
 }
 
+clearReconnectTimer();
+
 const env =
 loadBundledEnv();
 const token =
@@ -1222,6 +1252,7 @@ return;
 
 reconnectDelayMs =
 RECONNECT_MIN_MS;
+clearReconnectTimer();
 connect();
 
 }

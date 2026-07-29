@@ -95,6 +95,8 @@ let lastSilentRefreshMs =
 0;
 let authRefreshBlockedUntil =
 getAuthRefreshBlockedUntil();
+let refreshSessionInflight =
+null;
 let lastAuthWarnKey =
 "";
 let lastAuthWarnMs =
@@ -367,6 +369,35 @@ return !!String(
 session?.refresh_token ||
 ""
 ).trim();
+
+}
+
+async function refreshSessionSingleFlight(
+sb,
+reason
+){
+
+if(
+refreshSessionInflight
+){
+return refreshSessionInflight;
+}
+
+refreshSessionInflight =
+withTimeout(
+sb.auth.refreshSession(),
+authNetworkTimeoutMs(
+reason
+),
+reason
+).finally(
+()=>{
+refreshSessionInflight =
+null;
+}
+);
+
+return refreshSessionInflight;
 
 }
 
@@ -789,11 +820,8 @@ refresh
 ){
 try{
 const { data, error } =
-await withTimeout(
-sb.auth.refreshSession(),
-authNetworkTimeoutMs(
-"refreshSession restore"
-),
+await refreshSessionSingleFlight(
+sb,
 "refreshSession restore"
 );
 
@@ -952,11 +980,8 @@ return false;
 
 try{
 const { data, error } =
-await withTimeout(
-sb.auth.refreshSession(),
-authNetworkTimeoutMs(
-"refreshSession silent"
-),
+await refreshSessionSingleFlight(
+sb,
 "refreshSession silent"
 );
 

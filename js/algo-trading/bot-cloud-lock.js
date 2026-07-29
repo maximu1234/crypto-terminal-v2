@@ -8,9 +8,8 @@
  * Нет логина → skip (локальный бот работает без блокировки).
  * Один аккаунт на Multichart и на серверном Algo Bot → взаимное исключение.
  *
- * Важно: отдельный anon-клиент без auth storage. Общий getSupabase() после
- * вставки сессии Multichart может кидать AuthSessionMissingError на REST,
- * хотя RLS для lock_key разрешает anon.
+ * Важно: блокировка работает только с user JWT (authenticated), чтобы
+ * anon не мог писать lock_key произвольного пользователя.
  */
 import {
 getSupabase,
@@ -26,38 +25,52 @@ const INSTANCE_KEY =
 const TABLE =
 "algo_bot_lock";
 
-const noopAuthStorage = {
-getItem(){
-return null;
-},
-setItem(){},
-removeItem(){}
-};
-
-let lockSb =
-null;
-let lockSbPromise =
-null;
+const lockSbByToken =
+new Map();
+const lockSbPromiseByToken =
+new Map();
 
 /**
- * Anon-only Supabase client for algo_bot_lock (no JWT / no Multichart session).
+ * Dedicated Supabase client for algo_bot_lock with user JWT.
  * @returns {Promise<object|null>}
  */
-async function getLockSupabase(){
+async function getLockSupabase(
+accessToken
+){
+
+const token =
+String(
+accessToken ||
+""
+).trim();
 
 if(
-lockSb
+!token
 ){
-return lockSb;
+return null;
 }
 
 if(
-lockSbPromise
+lockSbByToken.has(
+token
+)
 ){
-return lockSbPromise;
+return lockSbByToken.get(
+token
+);
 }
 
-lockSbPromise = (async()=>{
+if(
+lockSbPromiseByToken.has(
+token
+)
+){
+return lockSbPromiseByToken.get(
+token
+);
+}
+
+const tokenPromise = (async()=>{
 
 /*
   Warm UMD createClient via shared helper (may also init auth client — fine).
@@ -86,29 +99,49 @@ if(
 return null;
 }
 
-lockSb =
+const sb =
 createClient(
 env.SUPABASE_URL,
 env.SUPABASE_ANON_KEY,
 {
+global: {
+headers: {
+Authorization:
+`Bearer ${token}`
+}
+},
 auth: {
 persistSession:
 false,
 autoRefreshToken:
 false,
 detectSessionInUrl:
-false,
-storage:
-noopAuthStorage
+false
 }
 }
 );
 
-return lockSb;
+lockSbByToken.set(
+token,
+sb
+);
+
+return sb;
 
 })();
 
-return lockSbPromise;
+lockSbPromiseByToken.set(
+token,
+tokenPromise
+);
+
+try{
+return await tokenPromise;
+}finally{
+lockSbPromiseByToken.delete(
+token
+);
+}
 
 }
 
@@ -191,7 +224,7 @@ return `algo-${Date.now()}`;
  *   message?: string
  * }>}
  */
-async function resolveCloudUserId(){
+async function resolveCloudAuthContext(){
 
 try{
 const persisted =
@@ -203,9 +236,17 @@ persisted?.user?.id ||
 ).trim();
 
 if(
-fromPersisted
+fromPersisted &&
+persisted?.access_token
 ){
-return fromPersisted;
+return {
+userId:
+fromPersisted,
+accessToken:
+String(
+persisted.access_token
+).trim()
+};
 }
 }catch{
 /* ignore */
@@ -225,15 +266,28 @@ session?.user?.id ||
 ).trim();
 
 if(
-id
+id &&
+session?.access_token
 ){
-return id;
+return {
+userId:
+id,
+accessToken:
+String(
+session.access_token
+).trim()
+};
 }
 }catch{
 /* ignore */
 }
 
-return "";
+return {
+userId:
+"",
+accessToken:
+""
+};
 
 }
 
@@ -254,8 +308,13 @@ message:
 };
 }
 
+const authCtx =
+await resolveCloudAuthContext();
 const userId =
-await resolveCloudUserId();
+String(
+authCtx?.userId ||
+""
+).trim();
 
 if(
 !userId
@@ -273,7 +332,9 @@ true
 }
 
 const sb =
-await getLockSupabase();
+await getLockSupabase(
+authCtx.accessToken
+);
 
 if(
 !sb

@@ -70,6 +70,11 @@ run(
 );
 
 run(
+"node scripts/check-bot-lite-bundle.cjs",
+"Algo Bot lite bundle"
+);
+
+run(
 "node desktop/scripts/check-packaged-requires.cjs",
 "Desktop packaged requires"
 );
