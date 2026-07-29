@@ -311,7 +311,7 @@ tradingMode ===
 "manual"
 ){
 keysHint.textContent =
-"Ручной режим: ключи биржи не нужны. Для алертов — вход Multichart и Telegram Chat ID. Доступна только Стратегия 1.";
+"Ручной режим: ключи биржи не нужны. Для алертов — код сессии из Multichart и Telegram Chat ID. Доступна только Стратегия 1.";
 }else{
 keysHint.textContent =
 "Ключи только для Алго — не те, что в Терминале.";

@@ -4,27 +4,31 @@ initAlertMonitor
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=52";
+} from "./auth-ui.js?v=54";
 
 import {
 isAlertsPage
 } from "./cloud-sync-throttle.js?v=3";
 
 import {
+isAlgoBotLiteShell
+} from "./page-routes.js?v=3";
+
+import {
 initAlertsCloudSync,
 scheduleRegistryCloudSync
-} from "./alerts-cloud-sync.js?v=111";
+} from "./alerts-cloud-sync.js?v=113";
 
 import {
 stripAlertFlagsNotInRegistry
-} from "./alerts.js?v=105";
+} from "./alerts.js?v=106";
 
 import {
 isCloudLoggedIn,
 isCloudLoggedInEffective,
 isCloudSyncEnabled,
 onCloudSyncChange
-} from "./cloud-sync.js?v=50";
+} from "./cloud-sync.js?v=51";
 
 import {
 isSupabaseConfigured
@@ -293,11 +297,18 @@ new CustomEvent(
 }
 );
 
+const algoBotLite =
+isAlgoBotLiteShell();
+
+if(
+!algoBotLite
+){
 import("./favorites-cloud-sync.js?v=7").then(
 ({ initFavoritesCloudSync })=>{
 initFavoritesCloudSync();
 }
 );
+}
 
 void ensureCloudReady()
 .then(async()=>{
@@ -318,7 +329,8 @@ isCloudLoggedIn();
 
 if(
 configured &&
-!loggedIn
+!loggedIn &&
+!algoBotLite
 ){
 console.warn(
 "[Multichart] Чтобы алерты попадали в Supabase и Telegram: шестерёнка в шапке → email → ссылка из письма."
@@ -328,7 +340,8 @@ console.warn(
 if(
 configured &&
 isCloudLoggedInEffective() &&
-!isAlertsPage()
+!isAlertsPage() &&
+!algoBotLite
 ){
 scheduleRegistryCloudSync();
 }

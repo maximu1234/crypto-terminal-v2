@@ -7,11 +7,13 @@ formatAlertTicker,
 formatTfLabel,
 getAlertsHistorySorted,
 getAlertsSorted,
+loadAllAlerts,
+loadAlertsHistory,
 removeAlert,
 stripAlertFlagsNotInRegistry,
 removeAllAlerts,
 alertExchangeId
-} from "./alerts.js?v=105";
+} from "./alerts.js?v=106";
 
 import {
 buildAlertChartUrl
@@ -19,8 +21,9 @@ buildAlertChartUrl
 
 import {
 getTelegramChatId,
-initAlertsCloudSync
-} from "./alerts-cloud-sync.js?v=111";
+initAlertsCloudSync,
+pullAlertHistoryFromCloud
+} from "./alerts-cloud-sync.js?v=113";
 
 import {
 readAlertTokenSync
@@ -33,11 +36,11 @@ onCloudSyncChange,
 getCloudUserEmail,
 pullDeviceStateFromCloud,
 ensureCloudLoginResolved
-} from "./cloud-sync.js?v=50";
+} from "./cloud-sync.js?v=51";
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=52";
+} from "./auth-ui.js?v=54";
 
 import {
 TELEGRAM_BOT_USERNAME,
@@ -48,7 +51,8 @@ import { formatPrice } from "./chart-import.js?v=44";
 
 import {
 EXCHANGE_CHANGED_EVENT,
-getActiveExchangeDefinition
+getActiveExchangeDefinition,
+getActiveExchangeId
 } from "./market-api.js?v=2";
 
 const tbody =
@@ -174,6 +178,7 @@ await ensureCloudLoginResolved(
 8000
 );
 await pullDeviceStateFromCloud();
+await pullAlertHistoryFromCloud();
 
 }
 )().finally(
@@ -502,6 +507,99 @@ null
 
 }
 
+let lastExcludeDiagKey =
+"";
+
+function logAlertsListExcludeDiag(){
+
+try{
+
+const ex =
+getActiveExchangeId();
+const activeAll =
+loadAllAlerts();
+const activeShown =
+getAlertsSorted();
+const histAll =
+loadAlertsHistory();
+const histShown =
+getAlertsHistorySorted();
+
+const key =
+`${ex}|${activeAll.length}|${activeShown.length}|${histAll.length}|${histShown.length}`;
+
+if(
+key ===
+lastExcludeDiagKey
+){
+return;
+}
+
+lastExcludeDiagKey =
+key;
+
+if(
+activeAll.length !==
+activeShown.length
+){
+const hidden =
+activeAll.filter(
+a=>
+alertExchangeId(
+a
+) !==
+ex
+);
+
+console.info(
+"[alerts] Active list: shown",
+activeShown.length,
+"/ all",
+activeAll.length,
+"| exchange=",
+ex,
+"| hidden by exchange:",
+hidden.map(
+a=>
+`${a.symbol}@${alertExchangeId(a)}`
+)
+);
+}
+
+if(
+histAll.length !==
+histShown.length
+){
+const hidden =
+histAll.filter(
+a=>
+alertExchangeId(
+a
+) !==
+ex
+);
+
+console.info(
+"[alerts] Executed list: shown",
+histShown.length,
+"/ all",
+histAll.length,
+"| exchange=",
+ex,
+"| hidden by exchange:",
+hidden.map(
+a=>
+`${a.symbol}@${alertExchangeId(a)}`
+)
+);
+}
+
+}catch{
+/* ignore */
+}
+
+}
+
 function renderActive(){
 
 const alerts =
@@ -636,6 +734,7 @@ ${formatAlertTicker(alert.symbol)}
 
 function render(){
 
+logAlertsListExcludeDiag();
 renderActive();
 renderHistory();
 updateClearDrawingsUi();

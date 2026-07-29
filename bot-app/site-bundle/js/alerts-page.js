@@ -20,7 +20,7 @@ buildAlertChartUrl
 import {
 getTelegramChatId,
 initAlertsCloudSync
-} from "./alerts-cloud-sync.js?v=50";
+} from "./alerts-cloud-sync.js?v=113";
 
 import {
 readAlertTokenSync
@@ -33,11 +33,11 @@ onCloudSyncChange,
 getCloudUserEmail,
 pullDeviceStateFromCloud,
 ensureCloudLoginResolved
-} from "./cloud-sync.js?v=50";
+} from "./cloud-sync.js?v=51";
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=52";
+} from "./auth-ui.js?v=54";
 
 import {
 TELEGRAM_BOT_USERNAME,

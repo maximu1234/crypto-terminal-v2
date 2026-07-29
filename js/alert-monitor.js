@@ -5,7 +5,7 @@ commitAlertTriggeredLocally,
 formatAlertTelegramText,
 getActiveAlerts,
 normalizeAlertTf
-} from "./alerts.js?v=105";
+} from "./alerts.js?v=106";
 
 import {
 subscribeKline

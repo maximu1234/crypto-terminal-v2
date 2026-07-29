@@ -1,7 +1,7 @@
 import {
 isCloudLoggedInEffective,
 ensureCloudLoginResolved
-} from "../cloud-sync.js?v=50";
+} from "../cloud-sync.js?v=51";
 
 import {
 resolveAlertAuthFast,
@@ -15,6 +15,10 @@ createPullCoalescer,
 isAlertsPage,
 isDrawingsUiPage
 } from "../cloud-sync-throttle.js?v=3";
+
+import {
+isAlgoBotLiteShell
+} from "../page-routes.js?v=3";
 
 import {
 IS_YANDEX,
@@ -70,8 +74,21 @@ errorBackoffMs: IS_YANDEX
 : 8000
 });
 
+/** Локальный алерт без cloudId: не выкидывать из реестра, пока ждём первый push. */
 const UNSYNCED_LOCAL_KEEP_MS =
-30000;
+5 * 60 * 1000;
+
+const HISTORY_PULL_MIN_MS =
+60000;
+
+const HISTORY_PULL_LIMIT =
+30;
+
+let lastAlertHistoryPullMs =
+0;
+
+let alertHistoryPullInflight =
+null;
 
 const purgeRetryInFlight =
 new Set();
@@ -114,7 +131,7 @@ cloudId
 ){
 
 const { markAlertCloudSynced, markAlertCloudId } =
-await import("../alerts.js?v=105");
+await import("../alerts.js?v=106");
 
 const ok =
 await verifyAlertActiveInCloud(
@@ -381,7 +398,7 @@ null;
 
 if(cloudId){
 const { markAlertCloudId } =
-await import("../alerts.js?v=105");
+await import("../alerts.js?v=106");
 
 markAlertCloudId(
 symbol,
@@ -605,7 +622,7 @@ registrySyncTimer = null;
 }
 
 const { stripAlertFlagsNotInRegistry } =
-await import("../alerts.js?v=105");
+await import("../alerts.js?v=106");
 
 const ok =
 await clearAllAlertsFromCloud();
@@ -641,7 +658,7 @@ return 0;
 }
 
 const { getActiveAlerts } =
-await import("../alerts.js?v=105");
+await import("../alerts.js?v=106");
 
 const localKeys =
 new Set(
@@ -741,7 +758,7 @@ return false;
 }
 
 const { ensureCloudReady } =
-await import("../auth-ui.js?v=52");
+await import("../auth-ui.js?v=54");
 
 await ensureCloudReady();
 
@@ -772,7 +789,7 @@ attempt++
 if(await pushAlertViaWorker(row)){
 
 const { markAlertCloudSynced } =
-await import("../alerts.js?v=105");
+await import("../alerts.js?v=106");
 
 /* Worker пишет service role — не ждём SELECT по JWT пользователя */
 markAlertCloudSynced(
@@ -803,7 +820,7 @@ ctx
 ){
 
 const { markAlertCloudSynced } =
-await import("../alerts.js?v=105");
+await import("../alerts.js?v=106");
 
 if(
 await markRowSyncedAfterVerify(
@@ -881,11 +898,8 @@ options
 
 /** Все локальные алерты без cloudSynced — повторить push (после возврата на вкладку и т.п.). */
 export async function pushUnsyncedAlerts(
-options = {}
+_options = {}
 ){
-
-const forceAll =
-options.forceAll === true;
 
 if(
 isAlertsCloudDisabled()
@@ -901,31 +915,15 @@ return 0;
 }
 
 const { getActiveAlerts, countAlertsOnChart } =
-await import("../alerts.js?v=105");
+await import("../alerts.js?v=106");
 
 const onChart =
 countAlertsOnChart();
 
 const pending =
-getActiveAlerts().filter(a=>{
-if(a.cloudSynced){
-return false;
-}
-
-if(forceAll){
-return true;
-}
-
-const localTs =
-Number(a.priceUpdatedAt) ||
-Number(a.createdAt) ||
-0;
-
-return (
-Date.now() - localTs <=
-UNSYNCED_LOCAL_KEEP_MS
+getActiveAlerts().filter(
+a=>!a.cloudSynced
 );
-});
 
 if(!pending.length){
 
@@ -933,7 +931,7 @@ if(onChart > 0){
 console.warn(
 "[alerts] на графике",
 onChart,
-", но несинхронизированные строки отсутствуют или устарели"
+", но несинхронизированные строки отсутствуют"
 );
 }
 
@@ -992,7 +990,7 @@ return ok;
 async function syncAllLocalAlertsToCloudImpl(){
 
 const { ensureCloudReady } =
-await import("../auth-ui.js?v=52");
+await import("../auth-ui.js?v=54");
 
 await ensureCloudReady();
 
@@ -1007,7 +1005,7 @@ return 0;
 }
 
 const { getActiveAlerts } =
-await import("../alerts.js?v=105");
+await import("../alerts.js?v=106");
 
 const list =
 getActiveAlerts();
@@ -1278,6 +1276,12 @@ isAlertsCloudDisabled()
 return 0;
 }
 
+if(
+isAlgoBotLiteShell()
+){
+return 0;
+}
+
 const snap =
 readAlertTokenSync();
 
@@ -1447,7 +1451,7 @@ normalizeAlertTf,
 isAlertDeleted,
 forgetAlertDeleted
 } =
-await import("../alerts.js?v=105");
+await import("../alerts.js?v=106");
 
 const cloudByKey =
 new Map();
@@ -1565,7 +1569,7 @@ tf: row.tf || "60"
 if(removedRows.length){
 
 const { applyRemoteAlertRemoved } =
-await import("../alerts.js?v=105");
+await import("../alerts.js?v=106");
 
 for(const row of removedRows){
 
@@ -1775,6 +1779,15 @@ UNSYNCED_LOCAL_KEEP_MS
 ){
 next.push(a);
 seen.add(key);
+}else{
+alertsDebugLog(
+"[alerts] reconcile: drop unsynced local",
+key,
+"ageMs=",
+Date.now() - localTs,
+"keepMs=",
+UNSYNCED_LOCAL_KEEP_MS
+);
 }
 }
 
@@ -1841,6 +1854,284 @@ return next.length;
 
 }
 
+async function fetchAlertHistoryEventsViaRest(
+auth
+){
+
+let env;
+
+try{
+env =
+await import("../supabase-env.js?v=5");
+}catch{
+return null;
+}
+
+const base =
+String(
+env.SUPABASE_URL || ""
+).replace(
+/\/$/,
+""
+);
+const anon =
+env.SUPABASE_ANON_KEY;
+const uid =
+auth?.userId ||
+auth?.user?.id;
+
+if(
+!base ||
+!anon ||
+!auth?.token ||
+!uid
+){
+return null;
+}
+
+const url =
+`${base}/rest/v1/price_alert_events?user_id=eq.${encodeURIComponent(uid)}` +
+`&select=id,symbol,shape_id,price,tf,triggered_at` +
+`&order=triggered_at.desc` +
+`&limit=${HISTORY_PULL_LIMIT}`;
+
+try{
+let token =
+auth.token;
+
+for(let attempt = 0; attempt < 2; attempt++){
+const res =
+await fetchWithTimeout(
+url,
+{
+method: "GET",
+headers: {
+apikey: anon,
+Authorization: `Bearer ${token}`,
+Accept: "application/json"
+}
+},
+15000,
+"price_alert_events fetch"
+);
+
+if(
+!res.ok
+){
+const errText =
+await res.text();
+
+if(
+attempt === 0 &&
+isJwtExpiredText(errText)
+){
+try{
+await ensureCloudLoginResolved(10000);
+}catch{
+/* ignore */
+}
+
+const refreshed =
+readAlertTokenSync()?.token ||
+readPersistedAuthSession()?.access_token ||
+null;
+
+if(
+refreshed &&
+refreshed !== token
+){
+token = refreshed;
+continue;
+}
+}
+
+console.warn(
+"[alerts] history backfill REST",
+res.status,
+errText.slice(
+0,
+160
+)
+);
+return null;
+}
+
+const rows =
+await res.json();
+
+return Array.isArray(
+rows
+)
+? rows
+: null;
+}
+
+return null;
+}catch(err){
+console.warn(
+"[alerts] history backfill:",
+err?.message || err
+);
+return null;
+}
+
+}
+
+/**
+ * Один SELECT price_alert_events → local history (без disarm Active).
+ * Только по запросу (страница Алерты / force); coalesce ≥60с.
+ */
+export async function pullAlertHistoryFromCloud(
+options = {}
+){
+
+if(
+isAlertsCloudDisabled()
+){
+return 0;
+}
+
+if(
+!isCloudLoggedInEffective()
+){
+return 0;
+}
+
+const force =
+options.force === true;
+const now =
+Date.now();
+
+if(
+!force &&
+now - lastAlertHistoryPullMs < HISTORY_PULL_MIN_MS
+){
+return 0;
+}
+
+if(
+alertHistoryPullInflight
+){
+return alertHistoryPullInflight;
+}
+
+alertHistoryPullInflight =
+(async()=>{
+
+const snap =
+readAlertTokenSync();
+
+let token =
+snap?.token ||
+null;
+let userId =
+snap?.user?.id ||
+null;
+
+if(
+!token ||
+!userId
+){
+const persisted =
+readPersistedAuthSession();
+
+if(
+persisted?.access_token &&
+persisted?.user?.id
+){
+token =
+persisted.access_token;
+userId =
+persisted.user.id;
+}
+}
+
+if(
+!token ||
+!userId
+){
+try{
+await ensureCloudLoginResolved(
+8000
+);
+}catch{
+/* ignore */
+}
+
+const again =
+readAlertTokenSync();
+token =
+again?.token ||
+token;
+userId =
+again?.user?.id ||
+userId;
+}
+
+if(
+!token ||
+!userId
+){
+return 0;
+}
+
+const rows =
+await fetchAlertHistoryEventsViaRest({
+token,
+userId
+});
+
+if(
+!Array.isArray(
+rows
+)
+){
+return 0;
+}
+
+const {
+mergeAlertHistoryFromCloudEvents
+} =
+await import("../alerts.js?v=106");
+
+const {
+getActiveExchangeId
+} =
+await import("../market-api.js?v=2");
+
+const added =
+mergeAlertHistoryFromCloudEvents(
+rows,
+{
+exchangeId:
+getActiveExchangeId()
+}
+);
+
+lastAlertHistoryPullMs =
+Date.now();
+
+alertsDebugLog(
+"[alerts] history backfill:",
+rows.length,
+"cloud rows,",
+added,
+"new local"
+);
+
+return added;
+
+})().finally(
+()=>{
+alertHistoryPullInflight =
+null;
+}
+);
+
+return alertHistoryPullInflight;
+
+}
+
 export async function pullRegistryFromCloud(){
 
 return runCloudOp(async()=>{
@@ -1849,7 +2140,7 @@ const n =
 await reconcileLocalRegistryWithCloud();
 
 const { stripAlertFlagsNotInRegistry } =
-await import("../alerts.js?v=105");
+await import("../alerts.js?v=106");
 
 stripAlertFlagsNotInRegistry(
 isAlertsPage()
@@ -1899,7 +2190,7 @@ return 0;
 
 try{
 const { ensureCloudLoginResolved } =
-await import("../cloud-sync.js?v=50");
+await import("../cloud-sync.js?v=51");
 
 await ensureCloudLoginResolved(
 8000
@@ -1933,7 +2224,7 @@ return 0;
 }
 
 const { stripAlertFlagsNotInRegistry } =
-await import("../alerts.js?v=105");
+await import("../alerts.js?v=106");
 
 stripAlertFlagsNotInRegistry(
 isAlertsPage()
@@ -1981,6 +2272,21 @@ if(
 !isCloudLoggedInEffective() ||
 isRegistryCloudSyncPaused()
 ){
+return;
+}
+
+/* Algo Bot: только push своих алертов в worker — без pull чужого реестра. */
+if(
+isAlgoBotLiteShell()
+){
+void pushUnsyncedAlerts().catch(
+err=>{
+console.warn(
+"alert registry push (bot):",
+err?.message || err
+);
+}
+);
 return;
 }
 

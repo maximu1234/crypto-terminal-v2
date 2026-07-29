@@ -324,7 +324,7 @@ Object.freeze({
 "algo-trading/runtime-bridge.js":
 6,
 "algo-trading/runtime-ui.js":
-11,
+12,
 "algo-trading/bot-bridge.js":
 11,
 "algo-trading/bot-alert-bridge.js":
@@ -442,11 +442,11 @@ Object.freeze({
 "screener-widget-zoom.js":
 17,
 "release-marker.js":
-59,
+60,
 "focus-blur-after-pick.js":
 3,
 "site-boot.js":
-107,
+108,
 "site-header.js":
 5,
 "site-header-nav.js":
@@ -591,11 +591,11 @@ Object.freeze({
 
 /* ── JS: cloud / auth ── */
 "cloud-sync.js":
-50,
+51,
 "cloud-sync-throttle.js":
 3,
 "page-routes.js":
-2,
+3,
 "ticker-update-batch.js":
 1,
 "types/chart-types.js":
@@ -609,7 +609,7 @@ Object.freeze({
 "auth-session-transfer.js":
 1,
 "auth-ui.js":
-52,
+54,
 "header-settings-shell.js":
 3,
 "app-settings-window.js":
@@ -633,9 +633,9 @@ Object.freeze({
 
 /* ── JS: alerts ── */
 "alerts.js":
-105,
+106,
 "alerts-cloud-sync.js":
-111,
+113,
 "alerts-cloud/garbage-purge.js":
 1,
 "alerts-cloud/debug.js":
@@ -645,11 +645,11 @@ Object.freeze({
 "alerts-cloud/worker-client.js":
 6,
 "alerts-cloud/registry-sync.js":
-10,
+12,
 "alerts-cloud/polling-realtime.js":
-9,
+11,
 "alerts-page.js":
-65,
+66,
 "alert-monitor.js":
 70,
 "alert-deep-link-exchange.js":
@@ -697,7 +697,7 @@ Object.freeze({
 "critical-shell.css":
 10,
 "common.css":
-53,
+54,
 "screener.css":
 50,
 "terminal.css":

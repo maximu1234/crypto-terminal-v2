@@ -182,6 +182,56 @@ return pathMatches(
 
 }
 
+/**
+ * Standalone Algo Bot (.app / botLite) — не полный Multichart cloud-клиент.
+ * JWT + push алертов / lock / remote — да; фоновый pull реестра / favorites — нет.
+ */
+export function isAlgoBotLiteShell(){
+
+if(
+typeof document !==
+"undefined" &&
+document.body?.classList?.contains(
+"algo-bot-lite-layout"
+)
+){
+return true;
+}
+
+if(
+typeof location !==
+"undefined" &&
+/\bbotLite=1\b/i.test(
+location.search ||
+""
+)
+){
+return true;
+}
+
+const desktop =
+typeof window !==
+"undefined"
+? window.cryptoTerminalDesktop
+: null;
+
+if(
+desktop &&
+/algo-bot/i.test(
+String(
+desktop.appId ||
+desktop.productName ||
+""
+)
+)
+){
+return true;
+}
+
+return false;
+
+}
+
 export function isSystemAdminPage(){
 
 return pathMatches(

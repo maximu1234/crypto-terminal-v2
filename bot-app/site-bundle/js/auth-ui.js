@@ -12,7 +12,7 @@ completeAuthFromCallbackUrl,
 hasAuthCallbackInUrl,
 exportAuthSessionTransferString,
 importAuthSessionTransferString
-} from "./cloud-sync.js?v=50";
+} from "./cloud-sync.js?v=51";
 
 import {
 isSupabaseConfigured
@@ -81,6 +81,44 @@ return true;
 }
 
 return false;
+
+}
+
+const ALGO_BOT_SYNC_OK_KEY =
+"algo_bot_multichart_sync_ok_v1";
+
+function readAlgoBotSyncOk(){
+
+try{
+return localStorage.getItem(
+ALGO_BOT_SYNC_OK_KEY
+) === "1";
+}catch{
+return false;
+}
+
+}
+
+function writeAlgoBotSyncOk(
+ok
+){
+
+try{
+if(
+ok
+){
+localStorage.setItem(
+ALGO_BOT_SYNC_OK_KEY,
+"1"
+);
+}else{
+localStorage.removeItem(
+ALGO_BOT_SYNC_OK_KEY
+);
+}
+}catch{
+/* ignore */
+}
 
 }
 
@@ -1051,9 +1089,10 @@ wrap.innerHTML = `
 <button type="button" class="cloud-auth-copy-session hidden">Скопировать сессию для Algo Bot</button>
 </div>
 <div class="cloud-auth-session-import hidden">
-<p class="cloud-auth-session-import-help">Вставьте сессию из Multichart (Настройки → Аккаунт → «Скопировать сессию для Algo Bot»). Не отправляйте строку в чаты — это полный доступ к аккаунту.</p>
+<p class="cloud-auth-session-import-help">Один шаг: в Multichart → Настройки → Аккаунт → «Скопировать сессию для Algo Bot», затем вставьте код сюда. Это полный вход (алерты, Telegram, удалённое управление). Не отправляйте строку в чаты.</p>
 <textarea class="cloud-auth-session-paste" rows="3" placeholder="mcauth1.…" autocomplete="off" spellcheck="false"></textarea>
 <button type="button" class="cloud-auth-session-apply">Применить сессию</button>
+<p class="cloud-auth-session-sync-ok hidden">Синхронизация с приложением успешна</p>
 </div>
 <p class="cloud-auth-hint hidden"></p>
 `;
@@ -1080,6 +1119,8 @@ const sessionPasteInput =
 wrap.querySelector(".cloud-auth-session-paste");
 const sessionApplyBtn =
 wrap.querySelector(".cloud-auth-session-apply");
+const sessionSyncOkEl =
+wrap.querySelector(".cloud-auth-session-sync-ok");
 const hintEl =
 wrap.querySelector(".cloud-auth-hint");
 const loggedOut =
@@ -1104,6 +1145,17 @@ hintEl.classList.toggle(
 hintEl.classList.toggle(
 "hidden",
 !text
+);
+
+}
+
+function paintSessionSyncOk(
+show
+){
+
+sessionSyncOkEl?.classList.toggle(
+"hidden",
+!show
 );
 
 }
@@ -1133,6 +1185,9 @@ return;
 
 wrap.classList.remove("hidden");
 
+const algoBot =
+isAlgoBotShell();
+
 if(isAuthUiLoggedIn()){
 
 loggedOut.classList.add("hidden");
@@ -1147,16 +1202,23 @@ copySessionBtn?.classList.toggle(
 "hidden",
 !(
 isDesktopShell() &&
-!isAlgoBotShell()
+!algoBot
 )
 );
 
+/* Algo Bot: session paste is the login; keep for refresh/re-link. */
 sessionImportWrap?.classList.toggle(
 "hidden",
 !(
 isDesktopShell() &&
-isAlgoBotShell()
+algoBot
 )
+);
+
+paintSessionSyncOk(
+algoBot &&
+isDesktopShell() &&
+readAlgoBotSyncOk()
 );
 
 if(
@@ -1177,24 +1239,45 @@ false
 }else{
 
 loggedIn.classList.add("hidden");
-loggedOut.classList.remove("hidden");
 copySessionBtn?.classList.add(
+"hidden"
+);
+
+if(
+algoBot
+){
+/* Session-only: no email OTP / magic-link in Algo Bot. */
+loggedOut.classList.add(
+"hidden"
+);
+desktopLinkWrap?.classList.add(
+"hidden"
+);
+sessionImportWrap?.classList.toggle(
+"hidden",
+!isDesktopShell()
+);
+paintSessionSyncOk(
+false
+);
+}else{
+loggedOut.classList.remove(
 "hidden"
 );
 desktopLinkWrap?.classList.toggle(
 "hidden",
 !isDesktopShell()
 );
-sessionImportWrap?.classList.toggle(
-"hidden",
-!(
-isDesktopShell() &&
-isAlgoBotShell()
-)
+sessionImportWrap?.classList.add(
+"hidden"
+);
+paintSessionSyncOk(
+false
 );
 if(emailInput){
 emailInput.value =
 getAuthUiEmail() || "";
+}
 }
 
 if(
@@ -1208,12 +1291,21 @@ authLinkProgress.isError,
 }else if(cloudSdkError){
 setHint(cloudSdkError, true);
 }else if(
+!algoBot &&
 hasAuthCallbackInUrl()
 ){
 setHint(
 "Завершаем вход по ссылке…",
 false,
 true
+);
+}else if(
+algoBot &&
+isDesktopShell()
+){
+setHint(
+"Вставьте код сессии из Multichart — этого достаточно.",
+false
 );
 }else{
 setHint("", false);
@@ -1482,9 +1574,10 @@ sessionPasteInput.value =
 "";
 }
 
-let hint =
-result.message ||
-"Вошли.";
+writeAlgoBotSyncOk(
+true
+);
+refreshAuthUi();
 
 try{
 const {
@@ -1499,18 +1592,14 @@ await getTelegramChatId();
 if(
 !chatId
 ){
-hint +=
-" Telegram Chat ID не найден — сначала привяжите Telegram в Multichart.";
+setHint(
+"Telegram Chat ID не найден — сначала привяжите Telegram в Multichart.",
+true
+);
 }
 }catch{
 /* ignore telegram probe */
 }
-
-setHint(
-hint,
-false
-);
-refreshAuthUi();
 
 }catch(
 err
@@ -1556,6 +1645,12 @@ outBtn.disabled = true;
 try{
 
 await signOutCloud();
+writeAlgoBotSyncOk(
+false
+);
+paintSessionSyncOk(
+false
+);
 
 }catch(err){
 console.warn(

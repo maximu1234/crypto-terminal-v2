@@ -8,7 +8,7 @@ isCloudLoggedIn,
 isCloudLoggedInEffective,
 onCloudSyncChange,
 ensureCloudLoginResolved
-} from "../cloud-sync.js?v=50";
+} from "../cloud-sync.js?v=51";
 
 import {
 clearAlertAuthCache,
@@ -47,12 +47,16 @@ pushUnsyncedAlerts,
 scheduleRegistryCloudSync,
 isRegistryCloudSyncPaused,
 syncAllLocalAlertsToCloud
-} from "./registry-sync.js?v=10";
+} from "./registry-sync.js?v=12";
 
 import {
 isAlertsCloudDisabled,
 syncAlertsCloudPauseToServer
 } from "../supabase-usage-prefs.js?v=5";
+
+import {
+isAlgoBotLiteShell
+} from "../page-routes.js?v=3";
 
 const IS_IOS_SAFARI =
 /iP(hone|ad|od)/i.test(
@@ -216,7 +220,7 @@ immediate: true
 async n=>{
 
 const { stripAlertFlagsNotInRegistry } =
-await import("../alerts.js?v=105");
+await import("../alerts.js?v=106");
 
 stripAlertFlagsNotInRegistry({
 emitDrawingsEvents: false
@@ -264,7 +268,7 @@ String(rawTriggered).trim().toLowerCase() !== "null";
 if(triggered){
 
 const { applyRemoteAlertFired } =
-await import("../alerts.js?v=105");
+await import("../alerts.js?v=106");
 
 applyRemoteAlertFired(oldRow);
 return;
@@ -288,7 +292,7 @@ sid
 ){
 
 const { applyRemoteAlertRemoved } =
-await import("../alerts.js?v=105");
+await import("../alerts.js?v=106");
 
 applyRemoteAlertRemoved(oldRow);
 
@@ -314,7 +318,7 @@ row?.deleted_at &&
 row.symbol &&
 row.shape_id
 ){
-void import("../alerts.js?v=105").then(
+void import("../alerts.js?v=106").then(
 ({ applyRemoteAlertRemoved })=>{
 applyRemoteAlertRemoved(row);
 }
@@ -336,7 +340,7 @@ row?.symbol &&
 row?.shape_id &&
 triggered
 ){
-void import("../alerts.js?v=105").then(
+void import("../alerts.js?v=106").then(
 ({ applyRemoteAlertFired })=>{
 applyRemoteAlertFired(row);
 }
@@ -352,7 +356,7 @@ row.symbol &&
 row.shape_id
 ){
 
-void import("../alerts.js?v=105").then(
+void import("../alerts.js?v=106").then(
 ({ applyRemoteAlertUpsert })=>{
 
 if(
@@ -398,7 +402,7 @@ if(
 return;
 }
 
-void import("../alerts.js?v=105").then(
+void import("../alerts.js?v=106").then(
 ({ applyRemoteAlertHistoryFromCloud })=>{
 applyRemoteAlertHistoryFromCloud(
 row
@@ -602,6 +606,7 @@ immediate: true
 export function startAlertsFastPoll(){
 
 if(
+isAlgoBotLiteShell() ||
 !isDrawingsUiPage() ||
 isAlertsPage()
 ){
@@ -944,7 +949,8 @@ userId
 ){
 
 if(
-isAlertsCloudDisabled()
+isAlertsCloudDisabled() ||
+isAlgoBotLiteShell()
 ){
 return;
 }
@@ -967,6 +973,16 @@ if(
 isAlertsCloudDisabled()
 ){
 return 0;
+}
+
+if(
+isAlgoBotLiteShell()
+){
+return pushUnsyncedAlerts(
+opts.force
+? { forceAll: true }
+: {}
+);
 }
 
 if(
@@ -1011,7 +1027,7 @@ if(
 !isAlertsPage()
 ){
 const { mergeRegistryFromChartDrawings } =
-await import("../alerts.js?v=105");
+await import("../alerts.js?v=106");
 
 mergeRegistryFromChartDrawings({
 stripFlags: stripOpts
@@ -1027,8 +1043,19 @@ await pullRegistryFromCloudNow({
 immediate: true
 });
 
+if(
+isAlertsPage()
+){
+const { pullAlertHistoryFromCloud } =
+await import("./registry-sync.js?v=12");
+
+await pullAlertHistoryFromCloud({
+force: !!opts.force
+});
+}
+
 const { stripAlertFlagsNotInRegistry } =
-await import("../alerts.js?v=105");
+await import("../alerts.js?v=106");
 
 stripAlertFlagsNotInRegistry(
 stripOpts
@@ -1070,6 +1097,43 @@ return;
 }
 
 alertsCloudSyncReady = true;
+
+/* Algo Bot: только push по событию; без hydrate/poll/realtime pull. */
+if(
+isAlgoBotLiteShell()
+){
+window.addEventListener(
+"alerts-changed",
+()=>{
+if(
+isAlertsCloudDisabled()
+){
+return;
+}
+
+void pushUnsyncedAlerts().catch(
+()=>{}
+);
+}
+);
+
+onCloudSyncChange(
+()=>{
+if(
+!isCloudLoggedInEffective()
+){
+clearAlertAuthCache();
+return;
+}
+
+void pushUnsyncedAlerts().catch(
+()=>{}
+);
+}
+);
+
+return;
+}
 
 window.addEventListener(
 "supabase-usage-prefs-changed",

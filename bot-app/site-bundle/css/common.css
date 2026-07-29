@@ -244,6 +244,19 @@ color:#fbbf24;
 color:#f87171;
 }
 
+.cloud-auth-session-sync-ok{
+margin:0;
+width:100%;
+font-size:12px;
+line-height:1.35;
+color:#4ade80;
+font-weight:500;
+}
+
+.cloud-auth-session-sync-ok.hidden{
+display:none;
+}
+
 .cloud-auth-desktop-link{
 display:flex;
 flex-direction:column;

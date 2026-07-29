@@ -6,15 +6,15 @@ finalizeAlertPriceDrag,
 setAlertDragLivePrice,
 clearAlertDragLivePrice,
 alertPriceForDisplay
-} from "./alerts.js?v=105";
+} from "./alerts.js?v=106";
 
 import {
 isCloudLoggedInEffective
-} from "./cloud-sync.js?v=50";
+} from "./cloud-sync.js?v=51";
 
 import {
 getTelegramChatId
-} from "./alerts-cloud-sync.js?v=111";
+} from "./alerts-cloud-sync.js?v=113";
 
 import {
 formatPrice,

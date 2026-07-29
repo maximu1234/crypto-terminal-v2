@@ -13,7 +13,7 @@ withTimeout
 import {
 pauseRegistryCloudSync,
 scheduleRemoteRegistrySync
-} from "./alerts-cloud-sync.js?v=111";
+} from "./alerts-cloud-sync.js?v=113";
 
 import {
 drawingsStorageKey as exchangeDrawingsStorageKey,
@@ -143,7 +143,7 @@ return job;
 
 function queueAlertsCloud(fn){
 
-import("./alerts-cloud-sync.js?v=111")
+import("./alerts-cloud-sync.js?v=113")
 .then(m=>fn(m))
 .catch(err=>{
 console.warn("alerts cloud:", err);
@@ -1365,7 +1365,7 @@ opts =
 ){
 
 const { isCloudLoggedIn } =
-await import("./cloud-sync.js?v=50");
+await import("./cloud-sync.js?v=51");
 
 if(
 !isCloudLoggedIn()
@@ -1374,7 +1374,7 @@ return null;
 }
 
 const { getTelegramChatId } =
-await import("./alerts-cloud-sync.js?v=111");
+await import("./alerts-cloud-sync.js?v=113");
 
 if(
 await getTelegramChatId() == null
@@ -1462,12 +1462,12 @@ sym
 );
 
 const { ensureCloudReady } =
-await import("./auth-ui.js?v=52");
+await import("./auth-ui.js?v=54");
 
 await ensureCloudReady();
 
 const m =
-await import("./alerts-cloud-sync.js?v=111");
+await import("./alerts-cloud-sync.js?v=113");
 
 const pushed =
 await m.pushOneAlertRow(
@@ -1559,14 +1559,14 @@ list.push(row);
 saveAlerts(list);
 
 const { ensureCloudReady } =
-await import("./auth-ui.js?v=52");
+await import("./auth-ui.js?v=54");
 
 await ensureCloudReady();
 
 mergeRegistryFromChartDrawings();
 
 const m =
-await import("./alerts-cloud-sync.js?v=111");
+await import("./alerts-cloud-sync.js?v=113");
 
 const pushed =
 await m.pushOneAlertRow(
@@ -1704,7 +1704,7 @@ dispatchPriceAlertsChanged(
 sym
 );
 
-void import("./alerts-cloud-sync.js?v=111").then(async m=>{
+void import("./alerts-cloud-sync.js?v=113").then(async m=>{
 
 const ok =
 await m.flushAlertCloudPush(
@@ -2052,9 +2052,9 @@ MAX_ALERT_HISTORY
 
 }
 
-/** Realtime INSERT в price_alert_events (worker после trigger). */
-export function applyRemoteAlertHistoryFromCloud(
-cloudRow
+function historyRowFromCloudEvent(
+cloudRow,
+hintExchangeId
 ){
 
 const sym =
@@ -2072,37 +2072,187 @@ const price =
 Number(
 cloudRow?.price
 );
+const triggeredAt =
+Date.parse(
+cloudRow?.triggered_at ||
+cloudRow?.triggeredAt
+) ||
+0;
 
 if(
 !sym ||
 !sid ||
 !Number.isFinite(
 price
-)
+) ||
+!Number.isFinite(
+triggeredAt
+) ||
+triggeredAt < 1
 ){
-return false;
+return null;
 }
 
-appendAlertToHistory({
+return normalizeHistoryRow({
 symbol: sym,
 shapeId: sid,
 price,
 tf: normalizeAlertTf(
 cloudRow?.tf
 ),
-triggeredAt:
+exchangeId:
+hintExchangeId ||
+cloudRow?.exchangeId ||
+cloudRow?.exchange_id ||
+undefined,
+triggeredAt,
+createdAt:
 Date.parse(
-cloudRow?.triggered_at
+cloudRow?.created_at ||
+cloudRow?.createdAt
 ) ||
-Date.now()
+triggeredAt
 });
+
+}
+
+/**
+ * Backfill истории с price_alert_events — только localStorage history,
+ * без disarm активных алертов.
+ */
+export function mergeAlertHistoryFromCloudEvents(
+cloudRows,
+opts = {}
+){
+
+if(
+!Array.isArray(
+cloudRows
+) ||
+!cloudRows.length
+){
+return 0;
+}
+
+const hintEx =
+opts.exchangeId
+? String(
+opts.exchangeId
+).trim().toLowerCase()
+: "";
+
+const list =
+loadAlertsHistory();
+
+const seen =
+new Set(
+list.map(
+h=>
+`${h.symbol}::${h.shapeId}::${h.triggeredAt}`
+)
+);
+
+let added =
+0;
+
+for(const cloudRow of cloudRows){
+
+const row =
+historyRowFromCloudEvent(
+cloudRow,
+hintEx || undefined
+);
+
+if(!row){
+continue;
+}
+
+const key =
+`${row.symbol}::${row.shapeId}::${row.triggeredAt}`;
+
+if(
+seen.has(
+key
+)
+){
+continue;
+}
+
+seen.add(
+key
+);
+list.unshift(
+row
+);
+added +=
+1;
+
+}
+
+if(
+added > 0
+){
+saveAlertsHistory(
+list.slice(
+0,
+MAX_ALERT_HISTORY
+)
+);
+}
+
+return added;
+
+}
+
+/** Realtime INSERT в price_alert_events (worker после trigger). */
+export function applyRemoteAlertHistoryFromCloud(
+cloudRow
+){
 
 const existing =
 loadAllAlerts().find(
-a=>
+a=>{
+const sym =
+String(
+cloudRow?.symbol ||
+""
+).trim().toUpperCase();
+const sid =
+String(
+cloudRow?.shape_id ||
+cloudRow?.shapeId ||
+""
+).trim();
+
+return (
 String(a.symbol).toUpperCase() === sym &&
 String(a.shapeId) === sid
 );
+}
+);
+
+const row =
+historyRowFromCloudEvent(
+cloudRow,
+existing
+? alertExchangeId(
+existing
+)
+: undefined
+);
+
+if(!row){
+return false;
+}
+
+appendAlertToHistory(
+row
+);
+
+const sym =
+row.symbol;
+const sid =
+row.shapeId;
 
 if(
 existing
@@ -2565,7 +2715,7 @@ tf: existing?.tf
 });
 });
 
-void import("./alerts-cloud-sync.js?v=111").then(m=>{
+void import("./alerts-cloud-sync.js?v=113").then(m=>{
 m.fireAlertCloudTrigger(
 sym,
 sid,
@@ -2658,7 +2808,7 @@ remaining
 );
 stripAlertFlagsNotInRegistry();
 
-void import("./alerts-cloud-sync.js?v=111").then(m=>{
+void import("./alerts-cloud-sync.js?v=113").then(m=>{
 m.runCloudOp(()=>
 m.removeAllAlertsEverywhere()
 ).then(ok=>{

@@ -15,11 +15,11 @@ createPriceAlert
 
 import {
 isCloudLoggedInEffective
-} from "./cloud-sync.js?v=50";
+} from "./cloud-sync.js?v=51";
 
 import {
 getTelegramChatId
-} from "./alerts-cloud-sync.js?v=50";
+} from "./alerts-cloud-sync.js?v=113";
 
 import {
 getActiveTradeConfig
