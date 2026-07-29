@@ -17,7 +17,7 @@ isAlgoBotLiteShell
 import {
 initAlertsCloudSync,
 scheduleRegistryCloudSync
-} from "./alerts-cloud-sync.js?v=52";
+} from "./alerts-cloud-sync.js?v=53";
 
 import {
 stripAlertFlagsNotInRegistry
@@ -28,7 +28,7 @@ isCloudLoggedIn,
 isCloudLoggedInEffective,
 isCloudSyncEnabled,
 onCloudSyncChange
-} from "./cloud-sync.js?v=52";
+} from "./cloud-sync.js?v=53";
 
 import {
 isSupabaseConfigured
@@ -303,7 +303,7 @@ isAlgoBotLiteShell();
 if(
 !algoBotLite
 ){
-import("./favorites-cloud-sync.js?v=52").then(
+import("./favorites-cloud-sync.js?v=53").then(
 ({ initFavoritesCloudSync })=>{
 initFavoritesCloudSync();
 }

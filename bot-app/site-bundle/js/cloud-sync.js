@@ -308,6 +308,13 @@ window.cryptoTerminalDesktop?.isDesktop
 
 function bindAuthSessionKeepalive(){
 
+/* Algo Bot: no Auth keepalive / silent refresh — local JWT only. */
+if(
+isAlgoBotLiteShell()
+){
+return;
+}
+
 if(
 !isAuthKeepaliveTarget()
 ){
@@ -736,6 +743,17 @@ if(
 return persisted;
 }
 
+/* Algo Bot: never hit Auth setSession/refresh on boot — use local JWT. */
+if(
+isAlgoBotLiteShell()
+){
+return isAccessTokenExpired(
+persisted
+)
+? null
+: persisted;
+}
+
 if(
 !isAccessTokenExpired(
 persisted
@@ -899,6 +917,12 @@ persisted
 }
 
 async function refreshAuthSessionSilent(){
+
+if(
+isAlgoBotLiteShell()
+){
+return false;
+}
 
 if(
 isAuthRefreshBlockedNow()
@@ -1490,6 +1514,12 @@ return data?.drawings_updated_at || null;
 
 async function getAuthedClient(){
 
+if(
+isAlgoBotLiteShell()
+){
+return null;
+}
+
 const sb =
 await getSupabase();
 
@@ -1733,7 +1763,7 @@ isFavoritesAutoCloudDisabled()
 return;
 }
 
-void import("./favorites-cloud-sync.js?v=52").then(
+void import("./favorites-cloud-sync.js?v=53").then(
 m=>{
 m.applyFavoritesFromRealtimeRow(
 row
@@ -1871,7 +1901,7 @@ settingsChannel = channel;
 export async function mergeFavoritesWithCloud(){
 
 const m =
-await import("./favorites-cloud-sync.js?v=52");
+await import("./favorites-cloud-sync.js?v=53");
 
 return m.reconcileLocalFavoritesWithCloud();
 
@@ -1881,7 +1911,7 @@ return m.reconcileLocalFavoritesWithCloud();
 export async function pullFavoritesIfCloudNewer(){
 
 const m =
-await import("./favorites-cloud-sync.js?v=52");
+await import("./favorites-cloud-sync.js?v=53");
 
 await m.pullFavoritesFromCloudNow();
 return favoritesToCloudList(
@@ -1905,7 +1935,7 @@ return collectAllLocalDrawings();
 async function syncFavoritesWithCloud(){
 
 const m =
-await import("./favorites-cloud-sync.js?v=52");
+await import("./favorites-cloud-sync.js?v=53");
 
 await m.reconcileLocalFavoritesWithCloud();
 
@@ -1939,7 +1969,7 @@ return;
 }
 
 const m =
-await import("./favorites-cloud-sync.js?v=52");
+await import("./favorites-cloud-sync.js?v=53");
 
 m.pushFavoritesAfterLocalEdit(
 favorites
@@ -3447,10 +3477,16 @@ stopCloudSyncHelpers();
 return;
 }
 
+const lite =
+isAlgoBotLiteShell();
+
 const sb =
-await getSupabase();
+lite
+? null
+: await getSupabase();
 
 if(
+!lite &&
 sb &&
 session?.access_token
 ){
@@ -3467,6 +3503,12 @@ refresh_token: session.refresh_token || ""
 }catch{
 /* ignore */
 }
+
+}
+
+if(
+session?.access_token
+){
 
 const { warmAlertAuthCache } =
 await import("./alert-auth-cache.js?v=7");
@@ -3533,7 +3575,7 @@ return;
 try{
 
 const favoritesCloud =
-await import("./favorites-cloud-sync.js?v=52");
+await import("./favorites-cloud-sync.js?v=53");
 
 if(
 !isFavoritesAutoCloudDisabled() &&
@@ -3547,7 +3589,7 @@ if(
 !isAlertsCloudDisabled()
 ){
 const alertsCloud =
-await import("./alerts-cloud-sync.js?v=52");
+await import("./alerts-cloud-sync.js?v=53");
 
 await alertsCloud.hydrateAlertsAfterAuth({
 force: true
@@ -3650,7 +3692,7 @@ await ensureCloudLoginResolved(
 );
 
 const alertsCloud =
-await import("./alerts-cloud-sync.js?v=52");
+await import("./alerts-cloud-sync.js?v=53");
 const { stripAlertFlagsNotInRegistry } =
 await import("./alerts.js?v=106");
 
@@ -3761,6 +3803,31 @@ if(!(await isSupabaseConfigured())){
 return null;
 }
 
+/* Algo Bot: never poll Auth getSession — local JWT only. */
+if(
+isAlgoBotLiteShell()
+){
+const cached =
+readPersistedAuthSession();
+
+if(
+cached?.access_token &&
+cached?.user &&
+!isAccessTokenExpired(
+cached
+)
+){
+return {
+sb:
+null,
+user:
+cached.user
+};
+}
+
+return null;
+}
+
 const sb =
 await getSupabase();
 
@@ -3841,6 +3908,30 @@ configured = true;
 await restoreDesktopAuthSession();
 bootstrapAuthFromLocalStorage();
 notifyAuth();
+
+/*
+  Algo Bot lite: Auth over the wire was the Jul 28–29 egress spike.
+  Login = local JWT from Multichart paste / persisted file only.
+  No getSession / setSession / onAuthStateChange / keepalive.
+*/
+if(
+isAlgoBotLiteShell()
+){
+const cached =
+readPersistedAuthSession();
+const session =
+cached?.access_token &&
+cached?.user &&
+!isAccessTokenExpired(
+cached
+)
+? cached
+: null;
+await applySession(
+session
+);
+return;
+}
 
 let sb;
 

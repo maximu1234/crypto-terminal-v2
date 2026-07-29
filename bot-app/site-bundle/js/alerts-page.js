@@ -20,7 +20,7 @@ buildAlertChartUrl
 import {
 getTelegramChatId,
 initAlertsCloudSync
-} from "./alerts-cloud-sync.js?v=52";
+} from "./alerts-cloud-sync.js?v=53";
 
 import {
 readAlertTokenSync
@@ -33,7 +33,7 @@ onCloudSyncChange,
 getCloudUserEmail,
 pullDeviceStateFromCloud,
 ensureCloudLoginResolved
-} from "./cloud-sync.js?v=52";
+} from "./cloud-sync.js?v=53";
 
 import {
 ensureCloudReady

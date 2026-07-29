@@ -1,7 +1,7 @@
 import {
 waitForCloudAuth,
 ensureCloudLoginResolved
-} from "../cloud-sync.js?v=52";
+} from "../cloud-sync.js?v=53";
 
 import {
 setAlertAuthCache,

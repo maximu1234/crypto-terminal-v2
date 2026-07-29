@@ -73,8 +73,50 @@ export function readJsonBody(req) {
 
 }
 
+/** @type {Map<string, { user: { id: string, email?: string }, expiresAt: number }>} */
+const verifyUserCache =
+  new Map();
+
+const VERIFY_USER_TTL_MS =
+  5 *
+  60 *
+  1000;
+
+const VERIFY_USER_CACHE_MAX =
+  64;
+
+function rememberVerifiedUser(
+  token,
+  user
+) {
+
+  if (
+    verifyUserCache.size >=
+    VERIFY_USER_CACHE_MAX
+  ) {
+    const first =
+      verifyUserCache.keys().next().value;
+
+    if (first) {
+      verifyUserCache.delete(first);
+    }
+  }
+
+  verifyUserCache.set(
+    token,
+    {
+      user,
+      expiresAt:
+        Date.now() +
+        VERIFY_USER_TTL_MS
+    }
+  );
+
+}
+
 /**
  * Проверка JWT без @supabase/supabase-js (на Node 20 без ws не падает).
+ * Кэш 5 мин — remote reconnect/status не бьют Auth на каждый запрос.
  */
 export async function verifyUserToken(token) {
 
@@ -85,6 +127,17 @@ export async function verifyUserToken(token) {
     !token
   ) {
     return null;
+  }
+
+  const cached =
+    verifyUserCache.get(token);
+
+  if (
+    cached &&
+    cached.expiresAt >
+      Date.now()
+  ) {
+    return cached.user;
   }
 
   const apikey =
@@ -111,6 +164,7 @@ export async function verifyUserToken(token) {
       );
 
     if (!res.ok) {
+      verifyUserCache.delete(token);
       return null;
     }
 
@@ -121,10 +175,17 @@ export async function verifyUserToken(token) {
       return null;
     }
 
-    return {
+    const user = {
       id: data.id,
       email: data.email
     };
+
+    rememberVerifiedUser(
+      token,
+      user
+    );
+
+    return user;
 
   }catch{
     return null;

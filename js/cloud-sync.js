@@ -308,6 +308,13 @@ window.cryptoTerminalDesktop?.isDesktop
 
 function bindAuthSessionKeepalive(){
 
+/* Algo Bot: no Auth keepalive / silent refresh — local JWT only. */
+if(
+isAlgoBotLiteShell()
+){
+return;
+}
+
 if(
 !isAuthKeepaliveTarget()
 ){
@@ -736,6 +743,17 @@ if(
 return persisted;
 }
 
+/* Algo Bot: never hit Auth setSession/refresh on boot — use local JWT. */
+if(
+isAlgoBotLiteShell()
+){
+return isAccessTokenExpired(
+persisted
+)
+? null
+: persisted;
+}
+
 if(
 !isAccessTokenExpired(
 persisted
@@ -899,6 +917,12 @@ persisted
 }
 
 async function refreshAuthSessionSilent(){
+
+if(
+isAlgoBotLiteShell()
+){
+return false;
+}
 
 if(
 isAuthRefreshBlockedNow()
@@ -1489,6 +1513,12 @@ return data?.drawings_updated_at || null;
 }
 
 async function getAuthedClient(){
+
+if(
+isAlgoBotLiteShell()
+){
+return null;
+}
 
 const sb =
 await getSupabase();
@@ -3447,10 +3477,16 @@ stopCloudSyncHelpers();
 return;
 }
 
+const lite =
+isAlgoBotLiteShell();
+
 const sb =
-await getSupabase();
+lite
+? null
+: await getSupabase();
 
 if(
+!lite &&
 sb &&
 session?.access_token
 ){
@@ -3467,6 +3503,12 @@ refresh_token: session.refresh_token || ""
 }catch{
 /* ignore */
 }
+
+}
+
+if(
+session?.access_token
+){
 
 const { warmAlertAuthCache } =
 await import("./alert-auth-cache.js?v=7");
@@ -3761,6 +3803,31 @@ if(!(await isSupabaseConfigured())){
 return null;
 }
 
+/* Algo Bot: never poll Auth getSession — local JWT only. */
+if(
+isAlgoBotLiteShell()
+){
+const cached =
+readPersistedAuthSession();
+
+if(
+cached?.access_token &&
+cached?.user &&
+!isAccessTokenExpired(
+cached
+)
+){
+return {
+sb:
+null,
+user:
+cached.user
+};
+}
+
+return null;
+}
+
 const sb =
 await getSupabase();
 
@@ -3841,6 +3908,30 @@ configured = true;
 await restoreDesktopAuthSession();
 bootstrapAuthFromLocalStorage();
 notifyAuth();
+
+/*
+  Algo Bot lite: Auth over the wire was the Jul 28–29 egress spike.
+  Login = local JWT from Multichart paste / persisted file only.
+  No getSession / setSession / onAuthStateChange / keepalive.
+*/
+if(
+isAlgoBotLiteShell()
+){
+const cached =
+readPersistedAuthSession();
+const session =
+cached?.access_token &&
+cached?.user &&
+!isAccessTokenExpired(
+cached
+)
+? cached
+: null;
+await applySession(
+session
+);
+return;
+}
 
 let sb;
 

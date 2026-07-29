@@ -4757,7 +4757,7 @@ chartAlertsPullTimer =
 0;
 
 void import(
-"../alerts-cloud-sync.js?v=52"
+"../alerts-cloud-sync.js?v=53"
 ).then(
 ({ pullRegistryFromCloudNow })=>
 pullRegistryFromCloudNow({

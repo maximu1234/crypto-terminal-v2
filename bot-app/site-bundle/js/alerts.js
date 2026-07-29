@@ -13,7 +13,7 @@ withTimeout
 import {
 pauseRegistryCloudSync,
 scheduleRemoteRegistrySync
-} from "./alerts-cloud-sync.js?v=52";
+} from "./alerts-cloud-sync.js?v=53";
 
 import {
 drawingsStorageKey as exchangeDrawingsStorageKey,
@@ -143,7 +143,7 @@ return job;
 
 function queueAlertsCloud(fn){
 
-import("./alerts-cloud-sync.js?v=52")
+import("./alerts-cloud-sync.js?v=53")
 .then(m=>fn(m))
 .catch(err=>{
 console.warn("alerts cloud:", err);
@@ -1365,7 +1365,7 @@ opts =
 ){
 
 const { isCloudLoggedIn } =
-await import("./cloud-sync.js?v=52");
+await import("./cloud-sync.js?v=53");
 
 if(
 !isCloudLoggedIn()
@@ -1374,7 +1374,7 @@ return null;
 }
 
 const { getTelegramChatId } =
-await import("./alerts-cloud-sync.js?v=52");
+await import("./alerts-cloud-sync.js?v=53");
 
 if(
 await getTelegramChatId() == null
@@ -1467,7 +1467,7 @@ await import("./auth-ui.js?v=55");
 await ensureCloudReady();
 
 const m =
-await import("./alerts-cloud-sync.js?v=52");
+await import("./alerts-cloud-sync.js?v=53");
 
 const pushed =
 await m.pushOneAlertRow(
@@ -1566,7 +1566,7 @@ await ensureCloudReady();
 mergeRegistryFromChartDrawings();
 
 const m =
-await import("./alerts-cloud-sync.js?v=52");
+await import("./alerts-cloud-sync.js?v=53");
 
 const pushed =
 await m.pushOneAlertRow(
@@ -1704,7 +1704,7 @@ dispatchPriceAlertsChanged(
 sym
 );
 
-void import("./alerts-cloud-sync.js?v=52").then(async m=>{
+void import("./alerts-cloud-sync.js?v=53").then(async m=>{
 
 const ok =
 await m.flushAlertCloudPush(
@@ -2565,7 +2565,7 @@ tf: existing?.tf
 });
 });
 
-void import("./alerts-cloud-sync.js?v=52").then(m=>{
+void import("./alerts-cloud-sync.js?v=53").then(m=>{
 m.fireAlertCloudTrigger(
 sym,
 sid,
@@ -2658,7 +2658,7 @@ remaining
 );
 stripAlertFlagsNotInRegistry();
 
-void import("./alerts-cloud-sync.js?v=52").then(m=>{
+void import("./alerts-cloud-sync.js?v=53").then(m=>{
 m.runCloudOp(()=>
 m.removeAllAlertsEverywhere()
 ).then(ok=>{
