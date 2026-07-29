@@ -1733,7 +1733,7 @@ isFavoritesAutoCloudDisabled()
 return;
 }
 
-void import("./favorites-cloud-sync.js?v=7").then(
+void import("./favorites-cloud-sync.js?v=52").then(
 m=>{
 m.applyFavoritesFromRealtimeRow(
 row
@@ -1871,7 +1871,7 @@ settingsChannel = channel;
 export async function mergeFavoritesWithCloud(){
 
 const m =
-await import("./favorites-cloud-sync.js?v=7");
+await import("./favorites-cloud-sync.js?v=52");
 
 return m.reconcileLocalFavoritesWithCloud();
 
@@ -1881,7 +1881,7 @@ return m.reconcileLocalFavoritesWithCloud();
 export async function pullFavoritesIfCloudNewer(){
 
 const m =
-await import("./favorites-cloud-sync.js?v=7");
+await import("./favorites-cloud-sync.js?v=52");
 
 await m.pullFavoritesFromCloudNow();
 return favoritesToCloudList(
@@ -1905,7 +1905,7 @@ return collectAllLocalDrawings();
 async function syncFavoritesWithCloud(){
 
 const m =
-await import("./favorites-cloud-sync.js?v=7");
+await import("./favorites-cloud-sync.js?v=52");
 
 await m.reconcileLocalFavoritesWithCloud();
 
@@ -1939,7 +1939,7 @@ return;
 }
 
 const m =
-await import("./favorites-cloud-sync.js?v=7");
+await import("./favorites-cloud-sync.js?v=52");
 
 m.pushFavoritesAfterLocalEdit(
 favorites
@@ -3045,10 +3045,30 @@ message:
 }
 
 const sb =
-await getSupabase();
+await (async()=>{
+try{
+return await withTimeout(
+getSupabase(),
+isAlgoBotLiteShell()
+? 4000
+: 12000,
+"getSupabase import"
+);
+}catch(
+err
+){
+console.warn(
+"[auth] getSupabase import:",
+err?.message ||
+err
+);
+return null;
+}
+})();
 
 if(
-!sb
+!sb &&
+!isAlgoBotLiteShell()
 ){
 return {
 ok:
@@ -3061,6 +3081,7 @@ message:
 /*
   Valid pasted JWT is enough for login/alerts. Network setSession is best-effort only —
   never clear local login when Auth API times out or is blocked on the server.
+  Algo Bot on VPS: skip Auth setSession — it can hang for minutes behind a stalled lock.
 */
 await applyImportedAuthSessionLocally(
 decoded.session,
@@ -3069,6 +3090,10 @@ sb
 
 let networkNote =
 "";
+
+if(
+!isAlgoBotLiteShell()
+){
 
 try{
 
@@ -3128,6 +3153,8 @@ console.warn(
 "[auth] setSession import:",
 networkNote
 );
+}
+
 }
 
 /*
@@ -3506,7 +3533,7 @@ return;
 try{
 
 const favoritesCloud =
-await import("./favorites-cloud-sync.js?v=7");
+await import("./favorites-cloud-sync.js?v=52");
 
 if(
 !isFavoritesAutoCloudDisabled() &&
@@ -3520,7 +3547,7 @@ if(
 !isAlertsCloudDisabled()
 ){
 const alertsCloud =
-await import("./alerts-cloud-sync.js?v=113");
+await import("./alerts-cloud-sync.js?v=52");
 
 await alertsCloud.hydrateAlertsAfterAuth({
 force: true
@@ -3623,7 +3650,7 @@ await ensureCloudLoginResolved(
 );
 
 const alertsCloud =
-await import("./alerts-cloud-sync.js?v=113");
+await import("./alerts-cloud-sync.js?v=52");
 const { stripAlertFlagsNotInRegistry } =
 await import("./alerts.js?v=106");
 

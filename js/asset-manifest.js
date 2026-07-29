@@ -442,7 +442,7 @@ Object.freeze({
 "screener-widget-zoom.js":
 17,
 "release-marker.js":
-60,
+61,
 "focus-blur-after-pick.js":
 3,
 "site-boot.js":
@@ -591,7 +591,7 @@ Object.freeze({
 
 /* ── JS: cloud / auth ── */
 "cloud-sync.js":
-51,
+52,
 "cloud-sync-throttle.js":
 3,
 "page-routes.js":
@@ -609,7 +609,7 @@ Object.freeze({
 "auth-session-transfer.js":
 1,
 "auth-ui.js":
-54,
+55,
 "header-settings-shell.js":
 3,
 "app-settings-window.js":

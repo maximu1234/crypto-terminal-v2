@@ -12,7 +12,7 @@ completeAuthFromCallbackUrl,
 hasAuthCallbackInUrl,
 exportAuthSessionTransferString,
 importAuthSessionTransferString
-} from "./cloud-sync.js?v=51";
+} from "./cloud-sync.js?v=52";
 
 import {
 isSupabaseConfigured
@@ -1557,8 +1557,6 @@ result.message ||
 "Не удалось применить сессию.",
 true
 );
-sessionApplyBtn.disabled =
-false;
 return;
 }
 
@@ -1578,7 +1576,14 @@ writeAlgoBotSyncOk(
 true
 );
 refreshAuthUi();
+setHint(
+result.message ||
+"Синхронизация с приложением успешна",
+false
+);
 
+/* Telegram probe — never block success UI (VPS can hang on REST). */
+void (async()=>{
 try{
 const {
 getTelegramChatId
@@ -1593,13 +1598,14 @@ if(
 !chatId
 ){
 setHint(
-"Telegram Chat ID не найден — сначала привяжите Telegram в Multichart.",
+"Сессия применена. Telegram Chat ID не найден — сначала привяжите Telegram в Multichart.",
 true
 );
 }
 }catch{
-/* ignore telegram probe */
+/* ignore */
 }
+})();
 
 }catch(
 err
@@ -1609,10 +1615,10 @@ err?.message ||
 "Не удалось применить сессию.",
 true
 );
-}
-
+}finally{
 sessionApplyBtn.disabled =
 false;
+}
 
 }
 );

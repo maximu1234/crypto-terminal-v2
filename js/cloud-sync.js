@@ -3045,10 +3045,30 @@ message:
 }
 
 const sb =
-await getSupabase();
+await (async()=>{
+try{
+return await withTimeout(
+getSupabase(),
+isAlgoBotLiteShell()
+? 4000
+: 12000,
+"getSupabase import"
+);
+}catch(
+err
+){
+console.warn(
+"[auth] getSupabase import:",
+err?.message ||
+err
+);
+return null;
+}
+})();
 
 if(
-!sb
+!sb &&
+!isAlgoBotLiteShell()
 ){
 return {
 ok:
@@ -3061,6 +3081,7 @@ message:
 /*
   Valid pasted JWT is enough for login/alerts. Network setSession is best-effort only —
   never clear local login when Auth API times out or is blocked on the server.
+  Algo Bot on VPS: skip Auth setSession — it can hang for minutes behind a stalled lock.
 */
 await applyImportedAuthSessionLocally(
 decoded.session,
@@ -3069,6 +3090,10 @@ sb
 
 let networkNote =
 "";
+
+if(
+!isAlgoBotLiteShell()
+){
 
 try{
 
@@ -3128,6 +3153,8 @@ console.warn(
 "[auth] setSession import:",
 networkNote
 );
+}
+
 }
 
 /*
