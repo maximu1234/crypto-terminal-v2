@@ -496,6 +496,28 @@ orderExecutor.removePendingEntry(
 sym
 );
 
+/* Position is gone: drop TP legs that never filled (stop-out, manual close). */
+try{
+const droppedLegs =
+await orderExecutor.cancelPartialTpLimits(
+sym
+);
+
+if(
+droppedLegs?.cancelled >
+0
+){
+log.info(
+`algo bot: cancelled ${droppedLegs.cancelled} leftover TP order(s) on ${sym}`
+);
+}
+}catch(err){
+log.warn(
+`algo bot: TP cleanup failed on ${sym}: ${err?.message ||
+err}`
+);
+}
+
 let pnl =
 NaN;
 

@@ -3180,6 +3180,16 @@ qty
 )
 ? qty
 : 0,
+leavesQty:
+Number.isFinite(
+Number(
+row?.leavesQty
+)
+)
+? Number(
+row?.leavesQty
+)
+: null,
 volumeUsdt,
 orderType,
 createdAt:

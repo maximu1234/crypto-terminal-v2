@@ -329,11 +329,21 @@ return scaled;
  * @param {Array<unknown>} [tpShares]
  * @returns {number[]|null}
  */
-function splitQtyByShares(
+/**
+ * Split qty across N weights on the instrument step grid.
+ * Every part but the last is floored; the last one absorbs the remainder so
+ * the sum always equals the position size (final TP closes everything left).
+ * @param {number} qty
+ * @param {{qtyStep?: number|string}|number|string} rules
+ * @param {number[]} weights
+ * @returns {number[]|null}
+ */
+function allocateQtyByWeights(
 qty,
 rules =
 {},
-tpShares
+weights =
+[]
 ){
 
 const total =
@@ -363,6 +373,23 @@ rules
 ).length
 )
 );
+const list =
+(
+Array.isArray(
+weights
+)
+? weights
+: []
+).map(
+Number
+).filter(
+value=>
+Number.isFinite(
+value
+) &&
+value >
+0
+);
 
 if(
 !Number.isFinite(
@@ -374,9 +401,191 @@ total <=
 step
 ) ||
 step <=
-0
+0 ||
+!list.length
 ){
 return null;
+}
+
+const weightSum =
+list.reduce(
+(
+acc,
+value
+)=>
+acc +
+value,
+0
+);
+const parts =
+[];
+let used =
+0;
+
+for(
+let i =
+0;
+i <
+list.length -
+1;
+i++
+){
+const part =
+Number(
+(
+Math.floor(
+(
+(
+total *
+list[
+i
+]
+) /
+weightSum
+) /
+step +
+1e-9
+) *
+step
+).toFixed(
+decimals
+)
+);
+parts.push(
+part
+);
+used +=
+part;
+}
+
+parts.push(
+Number(
+(
+Math.round(
+(
+total -
+used
+) /
+step
+) *
+step
+).toFixed(
+decimals
+)
+)
+);
+
+if(
+parts.some(
+part=>
+!(
+part >
+0
+)
+)
+){
+return null;
+}
+
+return parts;
+
+}
+
+/**
+ * How many TPs are already taken, measured by the closed quantity.
+ * Placed leg quantities are step-rounded, so they are matched first; shares are
+ * only a fallback for setups stored before the bot remembered the quantities.
+ * @param {number} initialQty
+ * @param {number} liveQty
+ * @param {number[]} [tpShares]
+ * @param {number[]} [tpQtys] Quantity of each reduce-only leg as placed
+ * @returns {number}
+ */
+function countTpsHitByClosedQty(
+initialQty,
+liveQty,
+tpShares,
+tpQtys
+){
+
+const total =
+Number(
+initialQty
+);
+const left =
+Number(
+liveQty
+);
+
+if(
+!Number.isFinite(
+total
+) ||
+total <=
+0 ||
+!Number.isFinite(
+left
+) ||
+left <
+0
+){
+return 0;
+}
+
+const legQtys =
+(
+Array.isArray(
+tpQtys
+)
+? tpQtys
+: []
+).map(
+Number
+);
+
+if(
+legQtys.length &&
+legQtys.every(
+qty=>
+Number.isFinite(
+qty
+) &&
+qty >
+0
+)
+){
+const closedQty =
+total -
+left;
+let legHits =
+0;
+let filled =
+0;
+
+for(
+let i =
+0;
+i <
+legQtys.length;
+i++
+){
+filled +=
+legQtys[
+i
+];
+
+if(
+closedQty >=
+filled *
+0.999
+){
+legHits =
+i +
+1;
+}
+}
+
+return legHits;
 }
 
 const shares =
@@ -391,18 +600,104 @@ tpShares?.[
 2
 ]
 );
-const partByShare =
-share=>
+const closedPct =
+(
+1 -
+left /
+total
+) *
+100;
+let hits =
+0;
+let cumulative =
+0;
+
+for(
+let i =
+0;
+i <
+shares.length;
+i++
+){
+cumulative +=
+shares[
+i
+];
+
+if(
+closedPct >=
+cumulative -
+2
+){
+hits =
+i +
+1;
+}
+}
+
+return hits;
+
+}
+
+/**
+ * Round a quantity down to the instrument step.
+ * @param {number} qty
+ * @param {{qtyStep?: number|string}|number|string} rules
+ * @returns {number}
+ */
+function floorQtyToStep(
+qty,
+rules =
+{}
+){
+
+const value =
 Number(
+qty
+);
+const step =
+Number(
+rules?.qtyStep ??
+rules
+);
+const decimals =
+Math.max(
+0,
+Math.min(
+12,
+(
+String(
+rules?.qtyStep ??
+rules
+).split(
+"."
+)[
+1
+] ||
+""
+).length
+)
+);
+
+if(
+!Number.isFinite(
+value
+) ||
+value <=
+0 ||
+!Number.isFinite(
+step
+) ||
+step <=
+0
+){
+return 0;
+}
+
+return Number(
 (
 Math.floor(
-(
-(
-total *
-share
-) /
-100
-) /
+value /
 step +
 1e-9
 ) *
@@ -411,52 +706,102 @@ step
 decimals
 )
 );
-const first =
-partByShare(
-shares[
-0
-]
-);
-const second =
-partByShare(
-shares[
-1
-]
-);
-const third =
-Number(
-(
-Math.round(
 
-(
-total -
-first -
-second
-) /
-step
-) *
-step
-).toFixed(
-decimals
+}
+
+/**
+ * Quantity still resting in an order (partial fills leave less than qty).
+ * @param {object} order
+ * @returns {number}
+ */
+function restingOrderQty(
+order
+){
+
+const leaves =
+Number(
+order?.leavesQty
+);
+
+return Number.isFinite(
+leaves
+) &&
+leaves >
+0
+? leaves
+: Math.abs(
+Number(
+order?.qty ||
+0
 )
 );
 
-if(
-first <=
-0 ||
-second <=
-0 ||
-third <=
-0
-){
-return null;
 }
 
-return [
-first,
-second,
-third
-];
+/**
+ * Bot-owned reduce-only limit order that closes a position (TP1/TP2 leg).
+ * @param {object} order
+ * @param {string} [closeSide] Buy for shorts, Sell for longs
+ * @returns {boolean}
+ */
+function isAlgoTpLimitOrder(
+order,
+closeSide =
+""
+){
+
+if(
+order?.orderKind !==
+"limit" ||
+order?.reduceOnly !==
+true ||
+!order?.orderId ||
+!order?.symbol ||
+!(
+Number(
+order?.price
+) >
+0
+) ||
+!isAlgoBotOrderLinkId(
+order?.orderLinkId
+)
+){
+return false;
+}
+
+return closeSide
+? String(
+order?.side ||
+""
+) ===
+closeSide
+: true;
+
+}
+
+function splitQtyByShares(
+qty,
+rules =
+{},
+tpShares
+){
+
+return allocateQtyByWeights(
+qty,
+rules,
+normalizeTpShares(
+tpShares?.[
+0
+],
+tpShares?.[
+1
+],
+tpShares?.[
+2
+]
+)
+);
 
 }
 
@@ -534,37 +879,117 @@ maxSeed
 
 }
 
+/**
+ * Deterministic short digest — fingerprints are far longer than the 36-char
+ * Bybit orderLinkId limit, so they cannot be embedded verbatim.
+ * @param {string} seed
+ * @returns {string}
+ */
+function shortDigest(
+seed
+){
+
+const text =
+String(
+seed ||
+""
+);
+let h1 =
+0x811c9dc5;
+let h2 =
+0x01000193;
+
+for(
+let i =
+0;
+i <
+text.length;
+i++
+){
+const code =
+text.charCodeAt(
+i
+);
+h1 =
+(
+(
+h1 ^
+code
+) *
+0x01000193
+) >>>
+0;
+h2 =
+(
+(
+h2 +
+code *
+(
+i +
+1
+)
+) *
+0x85ebca6b
+) >>>
+0;
+}
+
+return `${h1.toString(
+36
+)}${h2.toString(
+36
+)}`.slice(
+0,
+12
+);
+
+}
+
+/**
+ * Unique per-TP orderLinkId that survives the 36-char cap.
+ * Index and nonce must never be truncated: identical ids made Bybit reject
+ * TP2/TP3 as duplicates, leaving the position with TP1 only.
+ */
 function tpOrderLinkId(
 meta,
 symbol,
 index
 ){
 
-const key =
+const digest =
+shortDigest(
 String(
 meta?.fingerprint ||
 symbol ||
-""
-).replace(
-/[^A-Za-z0-9_-]/g,
-""
-) ||
-"bot";
+"bot"
+)
+);
 /*
  * Include placedAt so a later session after cancel does not reuse the
  * same Bybit orderLinkId (duplicate rejection).
  */
 const nonce =
-String(
+Number(
 meta?.placedAt ||
 meta?.tpLinkNonce ||
-Date.now()
-).replace(
-/[^A-Za-z0-9_-]/g,
-""
+0
+);
+const nonceKey =
+(
+Number.isFinite(
+nonce
+) &&
+nonce >
+0
+? Math.floor(
+nonce
+)
+: 0
+).toString(
+36
 );
 
-return `algo-tp-${key}-${index}-${nonce}`.slice(
+return `algo-tp${index}-${digest}-${nonceKey}`.slice(
 0,
 36
 );
@@ -1403,10 +1828,12 @@ result?.orderId ||
 
 }
 
+/**
+ * Position TP is used by every strategy: RR target for St1, the final level
+ * for partial exits. A missing SL or TP must be re-attached.
+ */
 function positionMissingStops(
-position,
-partial =
-false
+position
 ){
 
 const sl =
@@ -1425,15 +1852,88 @@ sl
 sl >
 0
 ) ||
-(
-!partial &&
 !(
 Number.isFinite(
 tp
 ) &&
 tp >
 0
+);
+
+}
+
+/**
+ * Position TP price for a stored setup: partial exits close the remainder at
+ * their last level, single-target setups use the RR take profit.
+ * @param {object} meta
+ * @param {number} pt4
+ * @param {number} slPrice
+ * @returns {number}
+ */
+function resolveMetaTpPrice(
+meta,
+pt4,
+slPrice
+){
+
+const stored =
+Number(
+meta?.tpPrice
+);
+
+if(
+Number.isFinite(
+stored
+) &&
+stored >
+0
+){
+return stored;
+}
+
+const isPartial =
+meta?.exitKind ===
+"partial-x" ||
+meta?.exitKind ===
+"partial-y";
+const prices =
+Array.isArray(
+meta?.tpPrices
 )
+? meta.tpPrices
+: [];
+
+if(
+isPartial &&
+prices.length
+){
+const last =
+Number(
+prices[
+prices.length -
+1
+]
+);
+
+if(
+Number.isFinite(
+last
+) &&
+last >
+0
+){
+return last;
+}
+}
+
+return computeAlgoTakeProfit(
+meta?.side ===
+"short"
+? "short"
+: "long",
+pt4,
+slPrice,
+meta?.tpRr
 );
 
 }
@@ -1785,9 +2285,13 @@ exitProfile.tp3,
 )
 ]
 : [];
+/* Partial exits close the remainder with a position TP at the last level. */
 const tpPrice =
 isPartial
-? NaN
+? tpPrices[
+tpPrices.length -
+1
+]
 : computeAlgoTakeProfit(
 side,
 pt4,
@@ -2269,6 +2773,315 @@ return results;
  * Cancel every conditional stop (Buy/Sell Stop) on the algo account.
  * Used on bot start so orphaned triggers after Quit do not linger.
  */
+/**
+ * Cancel one bot order, treating «already gone» answers as success.
+ * @returns {Promise<{ok: boolean, message?: string}>}
+ */
+async function cancelBotOrderSoft(
+symbol,
+orderId
+){
+
+const cancelResult =
+await algoRest.cancelTradeOrder(
+symbol,
+orderId
+);
+
+if(
+cancelResult?.ok !==
+false
+){
+return {
+ok:
+true
+};
+}
+
+const msg =
+String(
+cancelResult?.message ||
+""
+).toLowerCase();
+
+if(
+msg.includes(
+"not exist"
+) ||
+msg.includes(
+"not found"
+) ||
+msg.includes(
+"cancelled"
+) ||
+msg.includes(
+"canceled"
+)
+){
+return {
+ok:
+true
+};
+}
+
+return {
+ok:
+false,
+message:
+cancelResult?.message ||
+"cancel failed"
+};
+
+}
+
+/**
+ * Drop the reduce-only TP legs of one symbol — used once its position is gone,
+ * otherwise unfilled TP1/TP2 would linger on the exchange.
+ * @param {string} symbol
+ * @returns {Promise<{ok: boolean, cancelled: number, total: number, message?: string}>}
+ */
+async function cancelPartialTpLimits(
+symbol
+){
+
+const sym =
+normalizeSymbol(
+symbol
+);
+
+if(
+!sym
+){
+return {
+ok:
+false,
+cancelled:
+0,
+total:
+0,
+message:
+"symbol required"
+};
+}
+
+const result =
+await algoRest.getOpenOrders(
+{
+symbol:
+sym
+}
+);
+
+if(
+result?.ok ===
+false
+){
+return {
+ok:
+false,
+cancelled:
+0,
+total:
+0,
+message:
+result?.message ||
+"getOpenOrders failed"
+};
+}
+
+const legs =
+(
+result?.orders ||
+[]
+).filter(
+order=>
+isAlgoTpLimitOrder(
+order
+)
+);
+const errors =
+[];
+let cancelled =
+0;
+
+for(
+const order of legs
+){
+const dropped =
+await cancelBotOrderSoft(
+order.symbol,
+order.orderId
+);
+
+if(
+dropped.ok
+){
+cancelled +=
+1;
+continue;
+}
+
+errors.push(
+`${order.symbol}: ${dropped.message}`
+);
+}
+
+return {
+ok:
+errors.length ===
+0,
+cancelled,
+total:
+legs.length,
+message:
+errors.length
+? errors.slice(
+0,
+3
+).join(
+"; "
+)
+: undefined
+};
+
+}
+
+/**
+ * Reduce-only TP legs whose position no longer exists. Legs of a live position
+ * stay untouched — they are the active take profits.
+ * @returns {Promise<{ok: boolean, cancelled: number, total: number, message?: string}>}
+ */
+async function cancelOrphanTpLimits(){
+
+const [
+ordersResult,
+positionsResult
+] =
+await Promise.all(
+[
+algoRest.getOpenOrders(),
+algoRest.getPositions()
+]
+);
+
+if(
+ordersResult?.ok ===
+false
+){
+return {
+ok:
+false,
+cancelled:
+0,
+total:
+0,
+message:
+ordersResult?.message ||
+"getOpenOrders failed"
+};
+}
+
+if(
+positionsResult?.ok ===
+false
+){
+/* Without the position list we cannot tell active legs from orphans. */
+return {
+ok:
+false,
+cancelled:
+0,
+total:
+0,
+message:
+positionsResult?.message ||
+"getPositions failed"
+};
+}
+
+const openSymbols =
+new Set(
+(
+positionsResult?.positions ||
+[]
+).filter(
+position=>
+Math.abs(
+Number(
+position?.size ||
+0
+)
+) >
+0
+).map(
+position=>
+normalizeSymbol(
+position?.symbol
+)
+)
+);
+const orphans =
+(
+ordersResult?.orders ||
+[]
+).filter(
+order=>
+isAlgoTpLimitOrder(
+order
+) &&
+!openSymbols.has(
+normalizeSymbol(
+order?.symbol
+)
+)
+);
+const errors =
+[];
+let cancelled =
+0;
+
+for(
+const order of orphans
+){
+const dropped =
+await cancelBotOrderSoft(
+order.symbol,
+order.orderId
+);
+
+if(
+dropped.ok
+){
+cancelled +=
+1;
+continue;
+}
+
+errors.push(
+`${order.symbol}: ${dropped.message}`
+);
+}
+
+return {
+ok:
+errors.length ===
+0,
+cancelled,
+total:
+orphans.length,
+message:
+errors.length
+? errors.slice(
+0,
+3
+).join(
+"; "
+)
+: undefined
+};
+
+}
+
 async function cancelAllOpenTriggerOrders(){
 
 const result =
@@ -2313,49 +3126,17 @@ for(
 const order of stops
 ){
 
-const cancelResult =
-await algoRest.cancelTradeOrder(
+const dropped =
+await cancelBotOrderSoft(
 order.symbol,
 order.orderId
 );
 
 if(
-cancelResult?.ok ===
-false
+!dropped.ok
 ){
-const msg =
-String(
-cancelResult?.message ||
-""
-).toLowerCase();
-
-if(
-msg.includes(
-"not exist"
-) ||
-msg.includes(
-"not found"
-) ||
-msg.includes(
-"cancelled"
-) ||
-msg.includes(
-"canceled"
-)
-){
-cancelled +=
-1;
-pendingTriggers.delete(
-normalizeSymbol(
-order.symbol
-)
-);
-continue;
-}
-
 errors.push(
-`${order.symbol}: ${cancelResult?.message ||
-"cancel failed"}`
+`${order.symbol}: ${dropped.message}`
 );
 continue;
 }
@@ -2371,13 +3152,29 @@ order.symbol
 }
 
 persistPendingState();
+
+/* TP legs without a position are orphans too (bot start / stop cleanup). */
+const orphanLegs =
+await cancelOrphanTpLimits();
+
+if(
+orphanLegs.message
+){
+errors.push(
+orphanLegs.message
+);
+}
+
 return {
 ok:
 errors.length ===
 0,
-cancelled,
+cancelled:
+cancelled +
+orphanLegs.cancelled,
 total:
-stops.length,
+stops.length +
+orphanLegs.total,
 message:
 errors.length
 ? errors.slice(
@@ -2394,6 +3191,603 @@ errors.length
 /**
  * After trigger fill: attach SL/TP from pt3/pt4 plan (not fill slip).
  */
+/**
+ * Reduce-only limit legs of a partial exit (TP1/TP2).
+ * The final TP is a position-level take profit in Full mode, so it is not an
+ * order here — it closes whatever is left after these legs.
+ * Adopts legs already on the exchange and places the missing ones.
+ * @param {{symbol: string, meta: object, position?: object}} payload
+ * @returns {Promise<{ok: boolean, placed: number, missing: number[], message?: string, tpOrderIds: string[], entryQty: number}>}
+ */
+async function ensurePartialTpLimits(
+payload
+){
+
+const sym =
+normalizeSymbol(
+payload?.symbol
+);
+const meta =
+payload?.meta ||
+{};
+const prices =
+(
+Array.isArray(
+meta.tpPrices
+)
+? meta.tpPrices
+: []
+).map(
+Number
+);
+const tpOrderIds =
+Array.isArray(
+meta.tpOrderIds
+)
+? [
+...meta.tpOrderIds
+]
+: [];
+const tpQtys =
+Array.isArray(
+meta.tpQtys
+)
+? [
+...meta.tpQtys
+]
+: [];
+/* Last price is served by the position TP — only earlier legs are orders. */
+const legCount =
+Math.max(
+0,
+prices.length -
+1
+);
+
+if(
+!sym ||
+!legCount ||
+!prices.every(
+price=>
+Number.isFinite(
+price
+) &&
+price >
+0
+)
+){
+return {
+ok:
+false,
+placed:
+0,
+missing:
+[],
+message:
+"TP prices invalid",
+tpOrderIds,
+tpQtys,
+entryQty:
+0
+};
+}
+
+const closeSide =
+meta.side ===
+"short"
+? "Buy"
+: "Sell";
+const closeKind =
+meta.side ===
+"short"
+? "buy-limit"
+: "sell-limit";
+const livePosition =
+Number(
+payload?.position?.size
+)
+? payload.position
+: (
+await algoRest.getPosition(
+sym
+)
+)?.position;
+const liveQty =
+Math.abs(
+Number(
+livePosition?.size ||
+0
+)
+);
+
+if(
+!(
+liveQty >
+0
+)
+){
+return {
+ok:
+false,
+placed:
+0,
+missing:
+[],
+message:
+"position is closed",
+tpOrderIds,
+tpQtys,
+entryQty:
+0
+};
+}
+
+const openOrders =
+await algoRest.getOpenOrders(
+{
+symbol:
+sym
+}
+);
+
+if(
+openOrders?.ok ===
+false
+){
+return {
+ok:
+false,
+placed:
+0,
+missing:
+[],
+message:
+openOrders?.message ||
+"getOpenOrders failed",
+tpOrderIds,
+tpQtys,
+entryQty:
+liveQty
+};
+}
+
+const liveTpOrders =
+(
+openOrders?.orders ||
+[]
+).filter(
+order=>
+isAlgoTpLimitOrder(
+order,
+closeSide
+)
+);
+const byLinkId =
+new Map(
+liveTpOrders.map(
+order=>[
+String(
+order?.orderLinkId ||
+""
+),
+order
+]
+)
+);
+const byOrderId =
+new Map(
+liveTpOrders.map(
+order=>[
+String(
+order?.orderId ||
+""
+),
+order
+]
+)
+);
+const claimed =
+new Set();
+
+/* Adopt live orders: exact linkId, remembered id, then nearest price. */
+const adopted =
+prices.slice(
+0,
+legCount
+).map(
+(
+price,
+index
+)=>{
+const linkId =
+tpOrderLinkId(
+meta,
+sym,
+index
+);
+const byLink =
+byLinkId.get(
+linkId
+);
+
+if(
+byLink &&
+!claimed.has(
+String(
+byLink.orderId
+)
+)
+){
+claimed.add(
+String(
+byLink.orderId
+)
+);
+return byLink;
+}
+
+const remembered =
+byOrderId.get(
+String(
+tpOrderIds[
+index
+] ||
+""
+)
+);
+
+if(
+remembered &&
+!claimed.has(
+String(
+remembered.orderId
+)
+)
+){
+claimed.add(
+String(
+remembered.orderId
+)
+);
+return remembered;
+}
+
+let best =
+null;
+let bestDiff =
+Infinity;
+
+for(
+const order of liveTpOrders
+){
+
+if(
+claimed.has(
+String(
+order.orderId
+)
+)
+){
+continue;
+}
+
+const diff =
+Math.abs(
+Number(
+order.price
+) -
+price
+) /
+Math.max(
+price,
+1e-9
+);
+
+if(
+diff <
+bestDiff
+){
+bestDiff =
+diff;
+best =
+order;
+}
+}
+
+if(
+best &&
+bestDiff <=
+0.002
+){
+claimed.add(
+String(
+best.orderId
+)
+);
+return best;
+}
+
+return null;
+}
+);
+
+const tpsHit =
+Math.max(
+0,
+Math.min(
+prices.length,
+Number(
+meta.tpsHit
+) ||
+0
+)
+);
+const pending =
+[];
+let reserved =
+0;
+
+for(
+let i =
+0;
+i <
+legCount;
+i++
+){
+
+if(
+adopted[
+i
+]
+){
+tpOrderIds[
+i
+]=
+String(
+adopted[
+i
+].orderId ||
+""
+);
+tpQtys[
+i
+]=
+Number(
+tpQtys[
+i
+]
+) >
+0
+? Number(
+tpQtys[
+i
+]
+)
+: Math.abs(
+Number(
+adopted[
+i
+].qty ||
+0
+)
+);
+reserved +=
+restingOrderQty(
+adopted[
+i
+]
+);
+continue;
+}
+
+if(
+i <
+tpsHit
+){
+/* Already taken profit — nothing to restore. */
+continue;
+}
+
+pending.push(
+i
+);
+}
+
+if(
+!pending.length
+){
+return {
+ok:
+true,
+placed:
+0,
+missing:
+[],
+tpOrderIds,
+tpQtys,
+entryQty:
+liveQty
+};
+}
+
+const rules =
+await algoRest.getInstrumentRules(
+sym
+);
+const shares =
+normalizeTpShares(
+meta.shares?.[
+0
+],
+meta.shares?.[
+1
+],
+meta.shares?.[
+2
+]
+);
+const baseQty =
+Math.max(
+Number(
+meta.initialQty
+) ||
+0,
+liveQty
+);
+const qtyDecimals =
+String(
+rules?.qtyStep ||
+""
+).split(
+"."
+)[
+1
+]?.length ||
+0;
+const errors =
+[];
+const missing =
+[];
+let placedCount =
+0;
+let freeQty =
+Math.max(
+0,
+liveQty -
+reserved
+);
+
+for(
+const index of pending
+){
+const planned =
+floorQtyToStep(
+(
+baseQty *
+(
+shares[
+index
+] ||
+0
+)
+) /
+100,
+rules
+);
+const qty =
+Math.min(
+planned,
+floorQtyToStep(
+freeQty,
+rules
+)
+);
+
+if(
+!(
+qty >
+0
+) ||
+!(
+qty >=
+Number(
+rules?.minOrderQty ||
+0
+)
+)
+){
+missing.push(
+index
+);
+errors.push(
+`TP${index +
+1}: quantity below the exchange minimum`
+);
+continue;
+}
+
+const placed =
+await placeTriggerWithLeverageRetry(
+{
+symbol:
+sym,
+kind:
+closeKind,
+price:
+prices[
+index
+],
+qty:
+algoRest.formatQtyValue(
+qty,
+qtyDecimals
+),
+forceReduceOnly:
+true,
+orderLinkId:
+tpOrderLinkId(
+meta,
+sym,
+index
+)
+}
+);
+
+if(
+placed?.ok ===
+false
+){
+missing.push(
+index
+);
+errors.push(
+`TP${index +
+1}: ${placed?.message ||
+"error"}`
+);
+continue;
+}
+
+tpOrderIds[
+index
+]=
+extractOrderId(
+placed
+);
+tpQtys[
+index
+]=
+qty;
+freeQty =
+Math.max(
+0,
+freeQty -
+qty
+);
+placedCount +=
+1;
+}
+
+return {
+ok:
+!missing.length,
+placed:
+placedCount,
+missing,
+message:
+errors.length
+? errors.join(
+"; "
+)
+: undefined,
+tpOrderIds,
+tpQtys,
+entryQty:
+liveQty
+};
+
+}
+
 async function finalizeTriggerFill(
 symbol,
 position
@@ -2507,23 +3901,10 @@ meta.exitKind ===
 meta.exitKind ===
 "partial-y";
 const tpPrice =
-Number.isFinite(
-Number(
-meta.tpPrice
-)
-) &&
-Number(
-meta.tpPrice
-) >
-0
-? Number(
-meta.tpPrice
-)
-: computeAlgoTakeProfit(
-meta.side,
+resolveMetaTpPrice(
+meta,
 pt4,
-slPrice,
-meta.tpRr
+slPrice
 );
 
 if(
@@ -2535,11 +3916,8 @@ pt4 <=
 !Number.isFinite(
 slPrice
 ) ||
-(
-!isPartial &&
 !Number.isFinite(
 tpPrice
-)
 )
 ){
 return {
@@ -2550,14 +3928,9 @@ message:
 };
 }
 
+/* Partial exits get the same position TP — it closes the whole remainder. */
 const stopsResult =
-isPartial
-? await algoRest.setPositionStop(
-sym,
-"sl",
-slPrice
-)
-: await attachStops(
+await attachStops(
 sym,
 slPrice,
 tpPrice
@@ -2571,198 +3944,77 @@ meta.tpOrderIds
 ...meta.tpOrderIds
 ]
 : [];
+let tpsOk =
+true;
+let tpsMessage;
 
 if(
 isPartial &&
 stopsResult?.ok !==
 false
 ){
-const prices =
-Array.isArray(
-meta.tpPrices
-)
-? meta.tpPrices
-: [];
-const closeKind =
-meta.side ===
-"short"
-? "buy-limit"
-: "sell-limit";
-const livePosition =
-position?.size
-? position
-: (
-await algoRest.getPosition(
-sym
-)
-)?.position;
-const entryQty =
+meta.entryQty =
 Math.abs(
 Number(
-livePosition?.size ||
+position?.size ||
 meta.entryQty
 )
-);
-const rules =
-await algoRest.getInstrumentRules(
-sym
-);
-const parts =
-splitQtyByShares(
-entryQty,
-rules,
-meta.shares
-);
-
-if(
-!parts
-){
-return {
-ok:
-false,
-message:
-"Position quantity too small for three TPs"
-};
-}
-
-meta.entryQty =
-entryQty;
-meta.initialQty =
-entryQty;
-meta.tpOrderIds =
-tpOrderIds;
-pendingTriggers.set(
-sym,
-meta
-);
-persistPendingState();
-
-const openOrders =
-await algoRest.getOpenOrders(
-{
-symbol:
-sym
-}
-);
-const openTpByLinkId =
-new Map(
-(
-openOrders?.orders ||
-[]
-).map(
-order=>[
-String(
-order?.orderLinkId ||
-""
-),
-String(
-order?.orderId ||
-""
-)
-]
-)
-);
-
-for(
-let i =
+) ||
+Number(
+meta.entryQty
+) ||
 0;
-i <
-prices.length;
-i++
-){
-const linkId =
-tpOrderLinkId(
-meta,
-sym,
-i
-);
-
-if(
-tpOrderIds[
-i
-]
-){
-continue;
-}
-
-if(
-openTpByLinkId.has(
-linkId
-)
-){
-tpOrderIds[
-i
-]=
-openTpByLinkId.get(
-linkId
-);
+meta.initialQty =
+meta.entryQty;
 meta.tpOrderIds =
 tpOrderIds;
+pendingTriggers.set(
+sym,
+meta
+);
 persistPendingState();
-continue;
-}
 
-const placed =
-await placeTriggerWithLeverageRetry(
+const tpResult =
+await ensurePartialTpLimits(
 {
 symbol:
 sym,
-kind:
-closeKind,
-price:
-prices[
-i
-],
-qty:
-algoRest.formatQtyValue(
-parts[
-i
-],
-String(
-rules?.qtyStep ||
-""
-).split(
-"."
-)[
-1
-]?.length ||
-0
-),
-forceReduceOnly:
-true,
-orderLinkId:
-linkId
+meta,
+position
 }
 );
 
 if(
-placed?.ok ===
-false
+Array.isArray(
+tpResult.tpOrderIds
+)
 ){
-meta.tpOrderIds =
-tpOrderIds;
-pendingTriggers.set(
-sym,
-meta
+tpOrderIds.length =
+0;
+tpOrderIds.push(
+...tpResult.tpOrderIds
 );
-persistPendingState();
-return {
-ok:
-false,
-message:
-`TP${i +
-1} order failed: ${placed?.message ||
-"error"}`
-};
 }
 
-tpOrderIds[
-i
-]=
-extractOrderId(
-placed
+if(
+Array.isArray(
+tpResult.tpQtys
 )
-;
+){
+meta.tpQtys =
+tpResult.tpQtys;
+}
+
+if(
+tpResult.entryQty >
+0
+){
+meta.entryQty =
+tpResult.entryQty;
+meta.initialQty =
+tpResult.entryQty;
+}
+
 meta.tpOrderIds =
 tpOrderIds;
 pendingTriggers.set(
@@ -2770,7 +4022,15 @@ sym,
 meta
 );
 persistPendingState();
-}
+
+/*
+ * Missing TP legs are not fatal: the position already carries SL and the
+ * final position TP, so let reconcileTriggersAndStops place what is left.
+ */
+tpsOk =
+tpResult.ok;
+tpsMessage =
+tpResult.message;
 }
 
 if(
@@ -2887,9 +4147,13 @@ meta.tpPrices ||
 [],
 stopsOk:
 stopsResult?.ok !==
-false,
+false &&
+tpsOk,
 stopsMessage:
-stopsResult?.message,
+stopsResult?.message ||
+tpsMessage,
+tpsOk,
+tpsMessage,
 fingerprint:
 filledFingerprint
 };
@@ -3029,48 +4293,24 @@ Number(
 pos?.size
 )
 );
-const goneOrders =
-(
-meta.tpOrderIds ||
-[]
-).filter(
-id=>
-id &&
-!openOrderIds.has(
-String(
-id
-)
-)
-).length;
+/*
+ * Closed quantity is the only trustworthy fill signal: an order id that
+ * disappeared may have been cancelled outside the bot, and counting it as a
+ * take profit would block the restore below.
+ */
 const sizeHits =
-Number.isFinite(
-initialQty
-) &&
-initialQty >
-0
-? Math.max(
-0,
-Math.min(
-3,
-Math.floor(
-(
-1 -
-liveQty /
-initialQty
-) *
-3 +
-0.05
-)
-)
-)
-: 0;
+countTpsHitByClosedQty(
+initialQty,
+liveQty,
+meta.shares,
+meta.tpQtys
+);
 const tpsHit =
 Math.max(
 Number(
 meta.tpsHit
 ) ||
 0,
-goneOrders,
 sizeHits
 );
 
@@ -3119,9 +4359,119 @@ if(
 amend?.ok !==
 false
 ){
+/*
+ * Position snapshots of this cycle still carry the old SL, so remember it:
+ * otherwise our own trail looks like a manual edit and the bot stops
+ * managing the stops.
+ */
+meta.prevSlPrice =
+Number(
+meta.slPrice
+);
 meta.slPrice =
 nextSl;
 }
+}
+}
+
+meta.tpsHit =
+tpsHit;
+
+/*
+ * A TP leg that never made it to the exchange (or was cancelled outside the
+ * bot) would otherwise leave part of the position without a take profit.
+ * The last level is the position TP, so only earlier legs are orders.
+ */
+const expectedLegs =
+Math.max(
+0,
+(
+Array.isArray(
+meta.tpPrices
+)
+? meta.tpPrices
+: []
+).length -
+1
+);
+const liveTpIds =
+(
+meta.tpOrderIds ||
+[]
+).filter(
+(
+id,
+index
+)=>
+index >=
+tpsHit &&
+index <
+expectedLegs &&
+id &&
+openOrderIds.has(
+String(
+id
+)
+)
+).length;
+
+if(
+liveQty >
+0 &&
+expectedLegs >
+tpsHit &&
+liveTpIds <
+expectedLegs -
+tpsHit
+){
+const restored =
+await ensurePartialTpLimits(
+{
+symbol:
+sym,
+meta,
+position:
+pos
+}
+);
+
+if(
+Array.isArray(
+restored.tpOrderIds
+)
+){
+meta.tpOrderIds =
+restored.tpOrderIds;
+}
+
+if(
+Array.isArray(
+restored.tpQtys
+)
+){
+meta.tpQtys =
+restored.tpQtys;
+}
+
+if(
+restored.placed >
+0 ||
+restored.ok ===
+false
+){
+reports.push(
+{
+symbol:
+sym,
+action:
+"restore-tps",
+ok:
+restored.ok,
+message:
+restored.message ||
+`restored ${restored.placed} TP order(s)`
+}
+);
 }
 }
 
@@ -3137,11 +4487,7 @@ tpsHit
 if(
 meta &&
 !positionMissingStops(
-pos,
-meta?.exitKind ===
-"partial-x" ||
-meta?.exitKind ===
-"partial-y"
+pos
 )
 ){
 const liveSl =
@@ -3160,6 +4506,29 @@ const plannedTp =
 Number(
 meta.tpPrice
 );
+const prevSl =
+Number(
+meta.prevSlPrice
+);
+const matchesSl =
+target=>
+Number.isFinite(
+target
+) &&
+Number.isFinite(
+liveSl
+) &&
+Math.abs(
+liveSl -
+target
+) /
+Math.max(
+Math.abs(
+target
+),
+1e-9
+) <=
+0.0005;
 const moved =
 (
 Number.isFinite(
@@ -3168,17 +4537,12 @@ plannedSl
 Number.isFinite(
 liveSl
 ) &&
-Math.abs(
-liveSl -
+!matchesSl(
 plannedSl
-) /
-Math.max(
-Math.abs(
-plannedSl
-),
-1e-9
-) >
-0.0005
+) &&
+!matchesSl(
+prevSl
+)
 ) ||
 (
 Number.isFinite(
@@ -3206,6 +4570,13 @@ sym,
 ...meta,
 stopsAttached:
 true,
+/* Trail confirmed on the exchange — drop the tolerated old value. */
+prevSlPrice:
+matchesSl(
+plannedSl
+)
+? undefined
+: meta.prevSlPrice,
 stopsManagedByUser:
 !!(
 meta.stopsManagedByUser ||
@@ -3221,11 +4592,7 @@ continue;
 
 if(
 !positionMissingStops(
-pos,
-meta?.exitKind ===
-"partial-x" ||
-meta?.exitKind ===
-"partial-y"
+pos
 )
 ){
 continue;
@@ -3276,56 +4643,11 @@ Number(
 meta.slPrice
 );
 const tpPrice =
-Number.isFinite(
-Number(
-meta.tpPrice
-)
-) &&
-Number(
-meta.tpPrice
-) >
-0
-? Number(
-meta.tpPrice
-)
-: computeAlgoTakeProfit(
-meta.side ===
-"short"
-? "short"
-: "long",
+resolveMetaTpPrice(
+meta,
 pt4,
-slPrice,
-meta.tpRr
-);
-
-if(
-meta?.exitKind ===
-"partial-x" ||
-meta?.exitKind ===
-"partial-y"
-){
-const slResult =
-await algoRest.setPositionStop(
-sym,
-"sl",
 slPrice
 );
-reports.push(
-{
-symbol:
-sym,
-action:
-"attach-stops",
-ok:
-slResult?.ok !==
-false,
-message:
-slResult?.message,
-slPrice
-}
-);
-continue;
-}
 
 if(
 !Number.isFinite(
@@ -3397,6 +4719,69 @@ message:
 stopsResult?.message,
 slPrice,
 tpPrice
+}
+);
+
+}
+
+/*
+ * TP legs of a position that is already closed (stop-out, manual close, meta
+ * lost across restarts). Reuses the lists above — no extra REST calls.
+ */
+const liveSymbols =
+new Set(
+list.filter(
+pos=>
+Math.abs(
+Number(
+pos?.size ||
+0
+)
+) >
+0
+).map(
+pos=>
+normalizeSymbol(
+pos?.symbol
+)
+)
+);
+
+for(
+const order of openOrdersResult?.orders ||
+[]
+){
+
+if(
+!isAlgoTpLimitOrder(
+order
+) ||
+liveSymbols.has(
+normalizeSymbol(
+order?.symbol
+)
+)
+){
+continue;
+}
+
+const dropped =
+await cancelBotOrderSoft(
+order.symbol,
+order.orderId
+);
+reports.push(
+{
+symbol:
+normalizeSymbol(
+order.symbol
+),
+action:
+"cancel-orphan-tp",
+ok:
+dropped.ok,
+message:
+dropped.message
 }
 );
 
@@ -3780,6 +5165,14 @@ removePendingEntry,
 calcVolumeFromRiskUsd,
 computeAlgoTakeProfit,
 splitQtyByShares,
+allocateQtyByWeights,
+countTpsHitByClosedQty,
+ensurePartialTpLimits,
+cancelPartialTpLimits,
+cancelOrphanTpLimits,
+tpOrderLinkId,
+isAlgoTpLimitOrder,
+positionMissingStops,
 isAlgoBotOrderLinkId,
 hydratePendingFromDisk,
 persistPendingState
