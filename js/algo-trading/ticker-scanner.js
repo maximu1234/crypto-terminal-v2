@@ -10,7 +10,7 @@ getActiveExchangeId
 
 import {
 analyzeAlgoPatterns
-} from "./pattern-analysis.js?v=16";
+} from "./pattern-analysis.js?v=19";
 
 import {
 normalizeAlgoStatsMode

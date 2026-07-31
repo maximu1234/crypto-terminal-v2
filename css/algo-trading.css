@@ -1412,6 +1412,15 @@ width:48px;
 margin-left:0;
 }
 
+body.algo-trading-page .algo-stats-row--shares{
+gap:6px;
+}
+
+body.algo-trading-page .algo-stats-row--shares .algo-stats-input{
+width:46px;
+margin-left:0;
+}
+
 body.algo-trading-page .algo-stats-row--ema .algo-stats-input--shift{
 width:52px;
 }

@@ -176,10 +176,164 @@ pendingEntries.size
 
 }
 
-function splitQtyIntoThirds(
+/** Доли ТП в % от позиции; сумма всегда 100 (нет настройки → 25/25/50). */
+function normalizeTpShares(
+raw1,
+raw2,
+raw3
+){
+
+const defaults =
+[
+25,
+25,
+50
+];
+const clamp =
+(
+raw,
+fallback
+)=>{
+const n =
+Math.round(
+Number(
+raw
+)
+);
+
+return Number.isFinite(
+n
+)
+? Math.min(
+98,
+Math.max(
+1,
+n
+)
+)
+: fallback;
+};
+const shares =
+[
+raw1,
+raw2,
+raw3
+].map(
+(
+raw,
+i
+)=>
+clamp(
+raw,
+defaults[
+i
+]
+)
+);
+const sum =
+shares[
+0
+] +
+shares[
+1
+] +
+shares[
+2
+];
+
+if(
+sum ===
+100
+){
+return shares;
+}
+
+const scaled =
+shares.map(
+(
+value,
+i
+)=>
+clamp(
+(
+value *
+100
+) /
+sum,
+defaults[
+i
+]
+)
+);
+let residual =
+100 -
+(
+scaled[
+0
+] +
+scaled[
+1
+] +
+scaled[
+2
+]
+);
+
+for(
+const i of [
+2,
+1,
+0
+]
+){
+
+if(
+!residual
+){
+break;
+}
+
+const next =
+Math.min(
+98,
+Math.max(
+1,
+scaled[
+i
+] +
+residual
+)
+);
+
+residual -=
+next -
+scaled[
+i
+];
+scaled[
+i
+] =
+next;
+
+}
+
+return scaled;
+
+}
+
+/**
+ * Объём под три ТП по долям (%). Остаток отдаём третьему ТП, чтобы
+ * сумма частей точно равнялась позиции.
+ * @param {number} qty
+ * @param {{ qtyStep?: number|string }|number|string} rules
+ * @param {Array<unknown>} [tpShares]
+ * @returns {number[]|null}
+ */
+function splitQtyByShares(
 qty,
 rules =
-{}
+{},
+tpShares
 ){
 
 const total =
@@ -225,26 +379,50 @@ step <=
 return null;
 }
 
-const thirdSteps =
+const shares =
+normalizeTpShares(
+tpShares?.[
+0
+],
+tpShares?.[
+1
+],
+tpShares?.[
+2
+]
+);
+const partByShare =
+share=>
+Number(
+(
 Math.floor(
 (
-total /
-3
+(
+total *
+share
+) /
+100
 ) /
 step +
 1e-9
-);
-const first =
-Number(
-(
-thirdSteps *
+) *
 step
 ).toFixed(
 decimals
 )
 );
+const first =
+partByShare(
+shares[
+0
+]
+);
 const second =
-first;
+partByShare(
+shares[
+1
+]
+);
 const third =
 Number(
 (
@@ -488,10 +666,24 @@ n
 
 }
 
-function clampTrailSlPct(
-raw
+/** Трейлинг СЛ в X от pt4; старую настройку в % от X переводим: 15 → -0.15. */
+function clampTrailSlX1(
+rawX,
+legacyPct
 ){
 
+const raw =
+rawX ===
+undefined ||
+rawX ===
+null ||
+rawX ===
+""
+? -Number(
+legacyPct
+) /
+100
+: rawX;
 const n =
 Number(
 raw
@@ -501,13 +693,73 @@ return Number.isFinite(
 n
 )
 ? Math.min(
-100,
+1,
 Math.max(
-0,
+-1,
+Math.round(
+n *
+100
+) /
+100
+)
+)
+: -0.25;
+
+}
+
+/** Трейлинг СЛ после ТП2: не ниже трейлинга после ТП1 и не выше максимального ТП. */
+function clampTrailSlX2(
+raw,
+trailX1,
+tpMults
+){
+
+const tps =
+(Array.isArray(
+tpMults
+)
+? tpMults
+: []).map(
+Number
+).filter(
+n=>
+Number.isFinite(
 n
 )
+);
+const lo =
+Number(
+trailX1
+);
+const hi =
+Math.max(
+lo,
+tps.length
+? Math.max(
+...tps
 )
-: 15;
+: 1.44
+);
+const n =
+Number(
+raw
+);
+
+return Math.min(
+hi,
+Math.max(
+lo,
+Number.isFinite(
+n
+)
+? Math.round(
+n *
+100
+) /
+100
+: 0
+)
+);
 
 }
 
@@ -676,22 +928,101 @@ mult
 
 }
 
+/**
+ * Трейлинг-СЛ: X от pt4, где 1X = ход pt4↔pt3.
+ * Минус — в сторону pt3 (убыток), плюс — в профит.
+ * Значение приходит уже зажатым (ТП1 и ТП2 имеют разные границы).
+ */
 function computeTrailStopLoss(
 side,
 pt3,
 pt4,
-trailPct
+trailX
 ){
 
 void side;
 
-return interpolateLogPrice(
-pt4,
-pt3,
-clampTrailSlPct(
-trailPct
-) /
-100
+const base =
+Number(
+pt4
+);
+const target =
+Number(
+pt3
+);
+const x =
+Number(
+trailX
+);
+
+if(
+!(
+base >
+0
+) ||
+!(
+target >
+0
+) ||
+base ===
+target ||
+!Number.isFinite(
+x
+)
+){
+return null;
+}
+
+const price =
+base *
+Math.pow(
+target /
+base,
+-x
+);
+
+return Number.isFinite(
+price
+) &&
+price >
+0
+? price
+: null;
+
+}
+
+/** СЛ двигается только в защитную сторону — назад не откатываем. */
+function pickProtectiveStopLoss(
+side,
+current,
+next
+){
+
+if(
+!Number.isFinite(
+next
+)
+){
+return current;
+}
+
+if(
+!Number.isFinite(
+current
+)
+){
+return next;
+}
+
+return side ===
+"short"
+? Math.min(
+current,
+next
+)
+: Math.max(
+current,
+next
 );
 
 }
@@ -1499,9 +1830,29 @@ isPartial
 tpPrices,
 trailSl:
 !!exitProfile.trailSl,
-trailSlPct:
-clampTrailSlPct(
+trailSlX1:
+clampTrailSlX1(
+exitProfile.trailSlX1,
 exitProfile.trailSlPct
+),
+trailSlX2:
+clampTrailSlX2(
+exitProfile.trailSlX2,
+clampTrailSlX1(
+exitProfile.trailSlX1,
+exitProfile.trailSlPct
+),
+[
+exitProfile.tp1,
+exitProfile.tp2,
+exitProfile.tp3
+]
+),
+shares:
+normalizeTpShares(
+exitProfile.share1,
+exitProfile.share2,
+exitProfile.share3
 ),
 pt3,
 slPct:
@@ -2256,14 +2607,15 @@ const rules =
 await algoRest.getInstrumentRules(
 sym
 );
-const thirds =
-splitQtyIntoThirds(
+const parts =
+splitQtyByShares(
 entryQty,
-rules
+rules,
+meta.shares
 );
 
 if(
-!thirds
+!parts
 ){
 return {
 ok:
@@ -2363,7 +2715,7 @@ i
 ],
 qty:
 algoRest.formatQtyValue(
-thirds[
+parts[
 i
 ],
 String(
@@ -2466,8 +2818,22 @@ tpsHit:
 0,
 trailSl:
 !!meta.trailSl,
-trailSlPct:
-meta.trailSlPct,
+trailSlX1:
+meta.trailSlX1,
+trailSlX2:
+meta.trailSlX2,
+shares:
+normalizeTpShares(
+meta.shares?.[
+0
+],
+meta.shares?.[
+1
+],
+meta.shares?.[
+2
+]
+),
 pt3:
 meta.pt3,
 initialQty:
@@ -2717,21 +3083,29 @@ meta.tpsHit
 meta.trailSl
 ){
 const nextSl =
-tpsHit >=
-2
-? Number(
-meta.pt4
-)
-: computeTrailStopLoss(
+pickProtectiveStopLoss(
+meta.side,
+Number(
+meta.slPrice
+),
+computeTrailStopLoss(
 meta.side,
 meta.pt3,
 meta.pt4,
-meta.trailSlPct
+tpsHit >=
+2
+? meta.trailSlX2
+: meta.trailSlX1
+)
 );
 
 if(
 Number.isFinite(
 nextSl
+) &&
+nextSl !==
+Number(
+meta.slPrice
 )
 ){
 const amend =
@@ -3405,7 +3779,7 @@ clearPendingEntries,
 removePendingEntry,
 calcVolumeFromRiskUsd,
 computeAlgoTakeProfit,
-splitQtyIntoThirds,
+splitQtyByShares,
 isAlgoBotOrderLinkId,
 hydratePendingFromDisk,
 persistPendingState

@@ -49,11 +49,11 @@ mountAlgoRuntimeUi
 
 import {
 mountAlgoBotStrategyUi
-} from "./algo-trading/bot-strategy-ui.js?v=42";
+} from "./algo-trading/bot-strategy-ui.js?v=45";
 
 import {
 syncBotStrategiesToMain
-} from "./algo-trading/bot-bridge.js?v=10";
+} from "./algo-trading/bot-bridge.js?v=11";
 
 import {
 mountAlgoTradeUi
@@ -77,7 +77,7 @@ mountAlgoPatternEntryOverlay
 
 import {
 refreshAlgoPatternAnalysis
-} from "./algo-trading/pattern-analysis.js?v=15";
+} from "./algo-trading/pattern-analysis.js?v=19";
 
 import {
 clampSlPctOfX,
@@ -90,13 +90,19 @@ DEFAULT_RISK_USD
 
 import {
 clampPartialTpX,
-clampTrailSlPct,
+clampTrailSlX1,
+clampTrailSlX2,
+resolveTrailSlX1,
 normalizeTrailSlEnabled,
+normalizeTpShares,
+rebalanceTpShares,
 DEFAULT_PARTIAL_TP1_X,
 DEFAULT_PARTIAL_TP2_X,
 DEFAULT_PARTIAL_TP3_X,
-DEFAULT_TRAIL_SL_PCT
-} from "./algo-trading/pattern-trade-stats-partial.js?v=14";
+DEFAULT_TRAIL_SL_X1,
+DEFAULT_TRAIL_SL_X2,
+DEFAULT_TP_SHARES
+} from "./algo-trading/pattern-trade-stats-partial.js?v=17";
 
 import {
 clampEntryTimeoutBars,
@@ -221,6 +227,18 @@ ALGO_PREFS_KEY
 ) ||
 "{}"
 );
+const sharesX =
+normalizeTpShares(
+raw.share1X,
+raw.share2X,
+raw.share3X
+);
+const sharesY =
+normalizeTpShares(
+raw.share1Y,
+raw.share2Y,
+raw.share3Y
+);
 
 return {
 symbol:
@@ -278,17 +296,69 @@ trailSlSt2:
 normalizeTrailSlEnabled(
 raw.trailSlSt2
 ),
-trailSlPctSt2:
-clampTrailSlPct(
+trailSlX1St2:
+resolveTrailSlX1(
+raw.trailSlX1St2,
 raw.trailSlPctSt2
 ),
+trailSlX2St2:
+clampTrailSlX2(
+raw.trailSlX2St2,
+resolveTrailSlX1(
+raw.trailSlX1St2,
+raw.trailSlPctSt2
+),
+[
+raw.tp1X,
+raw.tp2X,
+raw.tp3X
+]
+),
+share1X:
+sharesX[
+0
+],
+share2X:
+sharesX[
+1
+],
+share3X:
+sharesX[
+2
+],
+share1Y:
+sharesY[
+0
+],
+share2Y:
+sharesY[
+1
+],
+share3Y:
+sharesY[
+2
+],
 trailSlSt3:
 normalizeTrailSlEnabled(
 raw.trailSlSt3
 ),
-trailSlPctSt3:
-clampTrailSlPct(
+trailSlX1St3:
+resolveTrailSlX1(
+raw.trailSlX1St3,
 raw.trailSlPctSt3
+),
+trailSlX2St3:
+clampTrailSlX2(
+raw.trailSlX2St3,
+resolveTrailSlX1(
+raw.trailSlX1St3,
+raw.trailSlPctSt3
+),
+[
+raw.tp1Y,
+raw.tp2Y,
+raw.tp3Y
+]
 ),
 timeoutBars:
 clampEntryTimeoutBars(
@@ -360,12 +430,40 @@ tp3Y:
 DEFAULT_PARTIAL_TP3_X,
 trailSlSt2:
 true,
-trailSlPctSt2:
-DEFAULT_TRAIL_SL_PCT,
+trailSlX1St2:
+DEFAULT_TRAIL_SL_X1,
+trailSlX2St2:
+DEFAULT_TRAIL_SL_X2,
+share1X:
+DEFAULT_TP_SHARES[
+0
+],
+share2X:
+DEFAULT_TP_SHARES[
+1
+],
+share3X:
+DEFAULT_TP_SHARES[
+2
+],
+share1Y:
+DEFAULT_TP_SHARES[
+0
+],
+share2Y:
+DEFAULT_TP_SHARES[
+1
+],
+share3Y:
+DEFAULT_TP_SHARES[
+2
+],
 trailSlSt3:
 true,
-trailSlPctSt3:
-DEFAULT_TRAIL_SL_PCT,
+trailSlX1St3:
+DEFAULT_TRAIL_SL_X1,
+trailSlX2St3:
+DEFAULT_TRAIL_SL_X2,
 timeoutBars:
 ENTRY_TIMEOUT_BARS,
 scanStrategy:
@@ -394,6 +492,19 @@ chartPositionsStrategy:
 function writePrefs(
 prefs
 ){
+
+const sharesX =
+normalizeTpShares(
+prefs.share1X,
+prefs.share2X,
+prefs.share3X
+);
+const sharesY =
+normalizeTpShares(
+prefs.share1Y,
+prefs.share2Y,
+prefs.share3Y
+);
 
 try{
 localStorage.setItem(
@@ -455,17 +566,61 @@ trailSlSt2:
 normalizeTrailSlEnabled(
 prefs.trailSlSt2
 ),
-trailSlPctSt2:
-clampTrailSlPct(
-prefs.trailSlPctSt2
+trailSlX1St2:
+clampTrailSlX1(
+prefs.trailSlX1St2
 ),
+trailSlX2St2:
+clampTrailSlX2(
+prefs.trailSlX2St2,
+prefs.trailSlX1St2,
+[
+prefs.tp1X,
+prefs.tp2X,
+prefs.tp3X
+]
+),
+share1X:
+sharesX[
+0
+],
+share2X:
+sharesX[
+1
+],
+share3X:
+sharesX[
+2
+],
+share1Y:
+sharesY[
+0
+],
+share2Y:
+sharesY[
+1
+],
+share3Y:
+sharesY[
+2
+],
 trailSlSt3:
 normalizeTrailSlEnabled(
 prefs.trailSlSt3
 ),
-trailSlPctSt3:
-clampTrailSlPct(
-prefs.trailSlPctSt3
+trailSlX1St3:
+clampTrailSlX1(
+prefs.trailSlX1St3
+),
+trailSlX2St3:
+clampTrailSlX2(
+prefs.trailSlX2St3,
+prefs.trailSlX1St3,
+[
+prefs.tp1Y,
+prefs.tp2Y,
+prefs.tp3Y
+]
 ),
 timeoutBars:
 clampEntryTimeoutBars(
@@ -1285,17 +1440,57 @@ let trailSlSt2 =
 normalizeTrailSlEnabled(
 readPrefs().trailSlSt2
 );
-let trailSlPctSt2 =
-clampTrailSlPct(
-readPrefs().trailSlPctSt2
+let trailSlX1St2 =
+clampTrailSlX1(
+readPrefs().trailSlX1St2
+);
+let trailSlX2St2 =
+clampTrailSlX2(
+readPrefs().trailSlX2St2,
+trailSlX1St2,
+[
+tp1X,
+tp2X,
+tp3X
+]
 );
 let trailSlSt3 =
 normalizeTrailSlEnabled(
 readPrefs().trailSlSt3
 );
-let trailSlPctSt3 =
-clampTrailSlPct(
-readPrefs().trailSlPctSt3
+let trailSlX1St3 =
+clampTrailSlX1(
+readPrefs().trailSlX1St3
+);
+let trailSlX2St3 =
+clampTrailSlX2(
+readPrefs().trailSlX2St3,
+trailSlX1St3,
+[
+tp1Y,
+tp2Y,
+tp3Y
+]
+);
+let [
+share1X,
+share2X,
+share3X
+] =
+normalizeTpShares(
+readPrefs().share1X,
+readPrefs().share2X,
+readPrefs().share3X
+);
+let [
+share1Y,
+share2Y,
+share3Y
+] =
+normalizeTpShares(
+readPrefs().share1Y,
+readPrefs().share2Y,
+readPrefs().share3Y
 );
 let timeoutBars =
 clampEntryTimeoutBars(
@@ -1749,9 +1944,17 @@ tp1Y,
 tp2Y,
 tp3Y,
 trailSlSt2,
-trailSlPctSt2,
+trailSlX1St2,
+trailSlX2St2,
 trailSlSt3,
-trailSlPctSt3,
+trailSlX1St3,
+trailSlX2St3,
+share1X,
+share2X,
+share3X,
+share1Y,
+share2Y,
+share3Y,
 timeoutBars,
 patternSettings:
 readAlgoPattern12Settings(),
@@ -1874,9 +2077,17 @@ tp1Y,
 tp2Y,
 tp3Y,
 trailSlSt2,
-trailSlPctSt2,
+trailSlX1St2,
+trailSlX2St2,
 trailSlSt3,
-trailSlPctSt3,
+trailSlX1St3,
+trailSlX2St3,
+share1X,
+share2X,
+share3X,
+share1Y,
+share2Y,
+share3Y,
 timeoutBars,
 scanStrategy,
 scanTf,
@@ -2396,9 +2607,17 @@ tp1Y,
 tp2Y,
 tp3Y,
 trailSlSt2,
-trailSlPctSt2,
+trailSlX1St2,
+trailSlX2St2,
 trailSlSt3,
-trailSlPctSt3,
+trailSlX1St3,
+trailSlX2St3,
+share1X,
+share2X,
+share3X,
+share1Y,
+share2Y,
+share3Y,
 timeoutBars,
 scanStrategy,
 scanTf,
@@ -2425,9 +2644,17 @@ tp1Y,
 tp2Y,
 tp3Y,
 trailSlSt2,
-trailSlPctSt2,
+trailSlX1St2,
+trailSlX2St2,
 trailSlSt3,
-trailSlPctSt3,
+trailSlX1St3,
+trailSlX2St3,
+share1X,
+share2X,
+share3X,
+share1Y,
+share2Y,
+share3Y,
 timeoutBars,
 patternSettings:
 readAlgoPattern12Settings(),
@@ -2975,10 +3202,11 @@ next;
 DEFAULT_PARTIAL_TP3_X
 );
 
-function bindTrailSlPctInput(
+function bindTrailSlXInput(
 input,
 getValue,
-setValue
+setValue,
+clamp
 ){
 
 if(
@@ -2995,7 +3223,7 @@ getValue()
 const commit =
 ()=>{
 const next =
-clampTrailSlPct(
+clamp(
 input.value
 );
 input.value =
@@ -3073,31 +3301,252 @@ persistAlgoSettings();
 
 }
 
-const trailSlPctSt2Input =
+const trailSlX1St2Input =
 document.getElementById(
-"algo-trail-sl-pct-st2"
+"algo-trail-sl-x1-st2"
+);
+const trailSlX2St2Input =
+document.getElementById(
+"algo-trail-sl-x2-st2"
 );
 const trailSlSt2Check =
 document.getElementById(
 "algo-trail-sl-st2"
 );
-const trailSlPctSt3Input =
+const trailSlX1St3Input =
 document.getElementById(
-"algo-trail-sl-pct-st3"
+"algo-trail-sl-x1-st3"
+);
+const trailSlX2St3Input =
+document.getElementById(
+"algo-trail-sl-x2-st3"
 );
 const trailSlSt3Check =
 document.getElementById(
 "algo-trail-sl-st3"
 );
 
-bindTrailSlPctInput(
-trailSlPctSt2Input,
-()=>
-trailSlPctSt2,
-next=>{
-trailSlPctSt2 =
-next;
+const clampTrailSlX2St2 =
+raw=>
+clampTrailSlX2(
+raw,
+trailSlX1St2,
+[
+tp1X,
+tp2X,
+tp3X
+]
+);
+const clampTrailSlX2St3 =
+raw=>
+clampTrailSlX2(
+raw,
+trailSlX1St3,
+[
+tp1Y,
+tp2Y,
+tp3Y
+]
+);
+
+/** Подъём трейлинга после ТП1 может поднять и нижнюю границу для ТП2. */
+function reclampTrailSlX2(
+input,
+clamp,
+getValue,
+setValue
+){
+
+const next =
+clamp(
+getValue()
+);
+
+if(
+input
+){
+input.value =
+String(
+next
+);
 }
+
+if(
+next !==
+getValue()
+){
+setValue(
+next
+);
+}
+
+}
+
+/**
+ * Доли ТП: правим одно поле — два других подгоняются до 100%.
+ * @param {"x"|"y"} span
+ * @param {()=>number[]} getShares
+ * @param {(shares: number[])=>void} setShares
+ */
+function bindTpShareInputs(
+span,
+getShares,
+setShares
+){
+
+const inputs =
+[
+1,
+2,
+3
+].map(
+n=>
+document.getElementById(
+`algo-share${n}-${span}`
+)
+);
+
+const render =
+()=>{
+const shares =
+getShares();
+
+inputs.forEach(
+(
+input,
+i
+)=>{
+if(
+input
+){
+input.value =
+String(
+shares[
+i
+]
+);
+}
+}
+);
+};
+
+render();
+
+inputs.forEach(
+(
+input,
+index
+)=>{
+
+if(
+!input
+){
+return;
+}
+
+const commit =
+()=>{
+const cur =
+getShares();
+const next =
+rebalanceTpShares(
+index ===
+0
+? input.value
+: cur[
+0
+],
+index ===
+1
+? input.value
+: cur[
+1
+],
+index ===
+2
+? input.value
+: cur[
+2
+],
+index
+);
+
+if(
+next.every(
+(
+value,
+i
+)=>
+value ===
+cur[
+i
+]
+)
+){
+render();
+return;
+}
+
+setShares(
+next
+);
+render();
+persistAlgoSettings();
+};
+
+input.addEventListener(
+"change",
+commit
+);
+input.addEventListener(
+"keydown",
+event=>{
+
+if(
+event.key ===
+"Enter"
+){
+event.preventDefault();
+input.blur();
+}
+
+}
+);
+
+}
+);
+
+}
+
+bindTrailSlXInput(
+trailSlX1St2Input,
+()=>
+trailSlX1St2,
+next=>{
+trailSlX1St2 =
+next;
+reclampTrailSlX2(
+trailSlX2St2Input,
+clampTrailSlX2St2,
+()=>
+trailSlX2St2,
+value=>{
+trailSlX2St2 =
+value;
+}
+);
+},
+clampTrailSlX1
+);
+bindTrailSlXInput(
+trailSlX2St2Input,
+()=>
+trailSlX2St2,
+next=>{
+trailSlX2St2 =
+next;
+},
+clampTrailSlX2St2
 );
 bindTrailSlCheck(
 trailSlSt2Check,
@@ -3108,13 +3557,78 @@ trailSlSt2 =
 next;
 }
 );
-bindTrailSlPctInput(
-trailSlPctSt3Input,
+bindTrailSlXInput(
+trailSlX1St3Input,
 ()=>
-trailSlPctSt3,
+trailSlX1St3,
 next=>{
-trailSlPctSt3 =
+trailSlX1St3 =
 next;
+reclampTrailSlX2(
+trailSlX2St3Input,
+clampTrailSlX2St3,
+()=>
+trailSlX2St3,
+value=>{
+trailSlX2St3 =
+value;
+}
+);
+},
+clampTrailSlX1
+);
+bindTrailSlXInput(
+trailSlX2St3Input,
+()=>
+trailSlX2St3,
+next=>{
+trailSlX2St3 =
+next;
+},
+clampTrailSlX2St3
+);
+bindTpShareInputs(
+"x",
+()=>[
+share1X,
+share2X,
+share3X
+],
+next=>{
+share1X =
+next[
+0
+];
+share2X =
+next[
+1
+];
+share3X =
+next[
+2
+];
+}
+);
+bindTpShareInputs(
+"y",
+()=>[
+share1Y,
+share2Y,
+share3Y
+],
+next=>{
+share1Y =
+next[
+0
+];
+share2Y =
+next[
+1
+];
+share3Y =
+next[
+2
+];
 }
 );
 bindTrailSlCheck(
@@ -3438,9 +3952,17 @@ tp1Y,
 tp2Y,
 tp3Y,
 trailSlSt2,
-trailSlPctSt2,
+trailSlX1St2,
+trailSlX2St2,
 trailSlSt3,
-trailSlPctSt3,
+trailSlX1St3,
+trailSlX2St3,
+share1X,
+share2X,
+share3X,
+share1Y,
+share2Y,
+share3Y,
 timeoutBars,
 patternSettings:
 readAlgoPattern12Settings()
@@ -3515,9 +4037,17 @@ tp1Y,
 tp2Y,
 tp3Y,
 trailSlSt2,
-trailSlPctSt2,
+trailSlX1St2,
+trailSlX2St2,
 trailSlSt3,
-trailSlPctSt3,
+trailSlX1St3,
+trailSlX2St3,
+share1X,
+share2X,
+share3X,
+share1Y,
+share2Y,
+share3Y,
 timeoutBars,
 scanStrategy,
 scanTf,

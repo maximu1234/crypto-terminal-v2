@@ -25,7 +25,7 @@ normalizeAlgoStatsMode
 import {
 computePartialTpTradeStats,
 filterSequentialPartialEntryEvents
-} from "./pattern-trade-stats-partial.js?v=14";
+} from "./pattern-trade-stats-partial.js?v=17";
 
 /**
  * @param {Array} candles
@@ -91,8 +91,16 @@ span:
 "x",
 trailSl:
 opts.trailSlSt2,
-trailSlPct:
-opts.trailSlPctSt2,
+trailSlX1:
+opts.trailSlX1St2,
+trailSlX2:
+opts.trailSlX2St2,
+share1:
+opts.share1X,
+share2:
+opts.share2X,
+share3:
+opts.share3X,
 statsMode:
 opts.statsModeSt2 ??
 opts.statsMode
@@ -108,8 +116,16 @@ span:
 "y",
 trailSl:
 opts.trailSlSt3,
-trailSlPct:
-opts.trailSlPctSt3,
+trailSlX1:
+opts.trailSlX1St3,
+trailSlX2:
+opts.trailSlX2St3,
+share1:
+opts.share1Y,
+share2:
+opts.share2Y,
+share3:
+opts.share3Y,
 statsMode:
 opts.statsModeSt3 ??
 opts.statsMode
@@ -150,8 +166,16 @@ span:
 "x",
 trailSl:
 opts.trailSlSt2,
-trailSlPct:
-opts.trailSlPctSt2,
+trailSlX1:
+opts.trailSlX1St2,
+trailSlX2:
+opts.trailSlX2St2,
+share1:
+opts.share1X,
+share2:
+opts.share2X,
+share3:
+opts.share3X,
 statsMode:
 opts.statsModeSt2 ??
 opts.statsMode
@@ -167,8 +191,16 @@ span:
 "y",
 trailSl:
 opts.trailSlSt3,
-trailSlPct:
-opts.trailSlPctSt3,
+trailSlX1:
+opts.trailSlX1St3,
+trailSlX2:
+opts.trailSlX2St3,
+share1:
+opts.share1Y,
+share2:
+opts.share2Y,
+share3:
+opts.share3Y,
 statsMode:
 opts.statsModeSt3 ??
 opts.statsMode
@@ -295,11 +327,31 @@ chartStrategy ===
 "partial-tp-y"
 ? opts.trailSlSt3
 : opts.trailSlSt2,
-trailSlPct:
+trailSlX1:
 chartStrategy ===
 "partial-tp-y"
-? opts.trailSlPctSt3
-: opts.trailSlPctSt2
+? opts.trailSlX1St3
+: opts.trailSlX1St2,
+trailSlX2:
+chartStrategy ===
+"partial-tp-y"
+? opts.trailSlX2St3
+: opts.trailSlX2St2,
+share1:
+chartStrategy ===
+"partial-tp-y"
+? opts.share1Y
+: opts.share1X,
+share2:
+chartStrategy ===
+"partial-tp-y"
+? opts.share2Y
+: opts.share2X,
+share3:
+chartStrategy ===
+"partial-tp-y"
+? opts.share3Y
+: opts.share3X
 }
 );
 }

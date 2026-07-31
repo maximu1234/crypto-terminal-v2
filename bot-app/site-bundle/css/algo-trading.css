@@ -1383,6 +1383,15 @@ body.algo-trading-page .algo-stats-row--setting{
 margin-bottom:4px;
 }
 
+body.algo-trading-page .algo-stats-row--shares{
+gap:6px;
+}
+
+body.algo-trading-page .algo-stats-row--shares .algo-stats-input{
+width:46px;
+margin-left:0;
+}
+
 body.algo-trading-page .algo-stats-chart-patterns{
 margin:0 0 2px;
 padding:4px 8px;

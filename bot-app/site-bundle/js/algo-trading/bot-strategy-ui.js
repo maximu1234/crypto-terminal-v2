@@ -12,7 +12,7 @@ normalizeManualRefreshStrategies,
 botSideListLabel,
 botSidesDirectionLabel,
 botSettingsStatusLabel
-} from "./bot-strategy-prefs.js?v=12";
+} from "./bot-strategy-prefs.js?v=15";
 import {
 syncBotStrategiesToMain,
 syncAllTickerFlagsRootToMain,
@@ -32,6 +32,9 @@ fetchRemoteBotStatus,
 sendRemoteBotCommand,
 isMultichartRemoteControlHost
 } from "./bot-remote-client.js?v=1";
+import {
+rebalanceTpShares
+} from "./pattern-trade-stats-partial.js?v=17";
 
 const STATUS_POLL_MS =
 2500;
@@ -849,9 +852,25 @@ tp3:
 el(
 "tp3"
 ),
-trailSlPct:
+trailSlX1:
 el(
-"trail-pct"
+"trail-x1"
+),
+trailSlX2:
+el(
+"trail-x2"
+),
+share1:
+el(
+"share1"
+),
+share2:
+el(
+"share2"
+),
+share3:
+el(
+"share3"
 ),
 refreshHours:
 el(
@@ -1220,6 +1239,59 @@ strategyId,
 {
 minTurnover24hUsdt:
 next
+}
+);
+apply();
+return;
+}
+
+const shareIndex =
+[
+"share1",
+"share2",
+"share3"
+].indexOf(
+key
+);
+
+if(
+shareIndex >=
+0
+){
+const p =
+getPrefs();
+const next =
+rebalanceTpShares(
+shareIndex ===
+0
+? input.value
+: p.share1,
+shareIndex ===
+1
+? input.value
+: p.share2,
+shareIndex ===
+2
+? input.value
+: p.share3,
+shareIndex
+);
+
+persistPartial(
+strategyId,
+{
+share1:
+next[
+0
+],
+share2:
+next[
+1
+],
+share3:
+next[
+2
+]
 }
 );
 apply();

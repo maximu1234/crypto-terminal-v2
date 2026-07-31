@@ -1,6 +1,10 @@
 /**
  * Prefs для бот-стратегий АлгоТрейдинг (отдельно от панели анализа под графиком).
  */
+import {
+normalizeTpShares
+} from "./pattern-trade-stats-partial.js?v=17";
+
 export const ALGO_BOT_STRATEGIES_KEY =
 "algo_trading_bot_strategies_v1";
 
@@ -219,8 +223,16 @@ tp3:
 1.44,
 trailSl:
 true,
-trailSlPct:
-15
+trailSlX1:
+-0.25,
+trailSlX2:
+0,
+share1:
+25,
+share2:
+25,
+share3:
+50
 };
 
 }
@@ -291,6 +303,131 @@ return fallback;
 }
 
 return n;
+
+}
+
+/**
+ * Трейлинг СЛ в X от pt4 (-1 = pt3, плюс = профит).
+ * Старую настройку в % от X переводим один раз: 15 → -0.15.
+ * @param {unknown} rawX
+ * @param {unknown} legacyPct
+ * @param {number} fallback
+ * @returns {number}
+ */
+function clampTrailSlX1Pref(
+rawX,
+legacyPct,
+fallback
+){
+
+const raw =
+rawX ===
+undefined ||
+rawX ===
+null ||
+rawX ===
+""
+? -Number(
+legacyPct
+) /
+100
+: rawX;
+const n =
+Number(
+raw
+);
+
+if(
+!Number.isFinite(
+n
+)
+){
+return fallback;
+}
+
+return Math.min(
+1,
+Math.max(
+-1,
+Math.round(
+n *
+100
+) /
+100
+)
+);
+
+}
+
+/**
+ * Трейлинг СЛ после ТП2: не ниже трейлинга после ТП1 и не выше максимального ТП.
+ * @param {unknown} raw
+ * @param {number} trailX1
+ * @param {Array<unknown>} tpMults
+ * @param {number} fallback
+ * @returns {number}
+ */
+function clampTrailSlX2Pref(
+raw,
+trailX1,
+tpMults,
+fallback
+){
+
+const tps =
+(Array.isArray(
+tpMults
+)
+? tpMults
+: []).map(
+Number
+).filter(
+n=>
+Number.isFinite(
+n
+)
+);
+const lo =
+Number(
+trailX1
+);
+const hi =
+Math.max(
+lo,
+tps.length
+? Math.max(
+...tps
+)
+: 1.44
+);
+const n =
+Number(
+raw
+);
+const value =
+Number.isFinite(
+n
+)
+? Math.round(
+n *
+100
+) /
+100
+: Math.max(
+lo,
+Number(
+fallback
+) ||
+0
+);
+
+return Math.min(
+hi,
+Math.max(
+lo,
+value
+)
+);
 
 }
 
@@ -911,6 +1048,12 @@ normalizeStrategy1Prefs(
 ...src
 }
 );
+const shares =
+normalizeTpShares(
+src.share1,
+src.share2,
+src.share3
+);
 
 delete common.tpRr;
 delete common.manualRefreshStrategies;
@@ -940,13 +1083,39 @@ src.trailSl ===
 undefined
 ? defaults.trailSl
 : !!src.trailSl,
-trailSlPct:
-clampInt(
+trailSlX1:
+clampTrailSlX1Pref(
+src.trailSlX1,
 src.trailSlPct,
-0,
-100,
-defaults.trailSlPct
-)
+defaults.trailSlX1
+),
+trailSlX2:
+clampTrailSlX2Pref(
+src.trailSlX2,
+clampTrailSlX1Pref(
+src.trailSlX1,
+src.trailSlPct,
+defaults.trailSlX1
+),
+[
+src.tp1,
+src.tp2,
+src.tp3
+],
+defaults.trailSlX2
+),
+share1:
+shares[
+0
+],
+share2:
+shares[
+1
+],
+share3:
+shares[
+2
+]
 };
 
 }

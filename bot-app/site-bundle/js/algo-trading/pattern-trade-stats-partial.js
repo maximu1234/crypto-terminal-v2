@@ -1,5 +1,5 @@
 /**
- * Стратегия 2/3: закрытие 3 равными частями (лог-шкала уровней).
+ * Стратегия 2/3: закрытие 3 частями по долям ТП (лог-шкала уровней).
  * span "x" (St2) → ход pt3↔pt4, ТП = logExt(entry, pt3↔pt4, k)
  * span "y" (St3) → ход pt1↔pt2, ТП = logExt(pt2, pt1↔pt2, k)
  * СЛ / трейлинг — интерполяция в лог-пространстве по X.
@@ -10,7 +10,6 @@ clampRiskUsd,
 clampSlPctOfX,
 computeAlgoStopLoss,
 computeLogExtensionPrice,
-interpolateLogPrice,
 linearUsdFromRisk,
 DEFAULT_RISK_USD,
 DEFAULT_SL_PCT_OF_X
@@ -25,17 +24,271 @@ export const DEFAULT_PARTIAL_TP2_X =
 export const DEFAULT_PARTIAL_TP3_X =
 1.44;
 
-export const DEFAULT_TRAIL_SL_PCT =
-25;
+export const DEFAULT_TRAIL_SL_X1 =
+-0.25;
+
+export const DEFAULT_TRAIL_SL_X2 =
+0;
+
+export const MIN_TRAIL_SL_X =
+-1;
+
+export const MAX_TRAIL_SL_X =
+1;
 
 export const DEFAULT_TRAIL_SL_ENABLED =
 true;
 
-const PART =
-1 /
-3;
+export const DEFAULT_TP_SHARES =
+[
+25,
+25,
+50
+];
+
+export const MIN_TP_SHARE =
+1;
+
+export const MAX_TP_SHARE =
+98;
+
+export const TP_SHARES_TOTAL =
+100;
+
 const EPS =
 1e-9;
+
+/**
+ * @param {unknown} raw
+ * @param {number} fallback
+ * @returns {number}
+ */
+function clampTpShare(
+raw,
+fallback
+){
+
+const n =
+Math.round(
+Number(
+raw
+)
+);
+
+return Number.isFinite(
+n
+)
+? Math.min(
+MAX_TP_SHARE,
+Math.max(
+MIN_TP_SHARE,
+n
+)
+)
+: fallback;
+
+}
+
+/**
+ * Добираем недостачу/излишек до 100% по порядку индексов, не выходя за границы.
+ * @param {number[]} shares
+ * @param {number[]} order
+ * @returns {number[]}
+ */
+function fillTpSharesResidual(
+shares,
+order
+){
+
+const out =
+[
+...shares
+];
+let residual =
+TP_SHARES_TOTAL -
+(
+out[
+0
+] +
+out[
+1
+] +
+out[
+2
+]
+);
+
+for(
+const i of order
+){
+
+if(
+!residual
+){
+break;
+}
+
+const next =
+Math.min(
+MAX_TP_SHARE,
+Math.max(
+MIN_TP_SHARE,
+out[
+i
+] +
+residual
+)
+);
+
+residual -=
+next -
+out[
+i
+];
+out[
+i
+] =
+next;
+
+}
+
+return out;
+
+}
+
+/**
+ * Доли ТП в % от позиции; сумма всегда 100. Пропорционально масштабируем
+ * то, что пришло из prefs (в т.ч. старые сохранения без долей).
+ * @param {unknown} raw1
+ * @param {unknown} raw2
+ * @param {unknown} raw3
+ * @returns {number[]}
+ */
+export function normalizeTpShares(
+raw1,
+raw2,
+raw3
+){
+
+const clamped =
+[
+raw1,
+raw2,
+raw3
+].map(
+(
+raw,
+i
+)=>
+clampTpShare(
+raw,
+DEFAULT_TP_SHARES[
+i
+]
+)
+);
+const sum =
+clamped[
+0
+] +
+clamped[
+1
+] +
+clamped[
+2
+];
+
+if(
+sum ===
+TP_SHARES_TOTAL
+){
+return clamped;
+}
+
+const scaled =
+clamped.map(
+(
+value,
+i
+)=>
+clampTpShare(
+(
+value *
+TP_SHARES_TOTAL
+) /
+sum,
+DEFAULT_TP_SHARES[
+i
+]
+)
+);
+
+return fillTpSharesResidual(
+scaled,
+[
+2,
+1,
+0
+]
+);
+
+}
+
+/**
+ * Пользователь изменил одну долю — её значение сохраняем, остальные
+ * подгоняем до 100% (сначала ТП3, затем ТП2, затем ТП1).
+ * @param {unknown} raw1
+ * @param {unknown} raw2
+ * @param {unknown} raw3
+ * @param {number} editedIndex
+ * @returns {number[]}
+ */
+export function rebalanceTpShares(
+raw1,
+raw2,
+raw3,
+editedIndex
+){
+
+const clamped =
+[
+raw1,
+raw2,
+raw3
+].map(
+(
+raw,
+i
+)=>
+clampTpShare(
+raw,
+DEFAULT_TP_SHARES[
+i
+]
+)
+);
+const order =
+[
+2,
+1,
+0
+].filter(
+i=>
+i !==
+editedIndex
+);
+
+return fillTpSharesResidual(
+fillTpSharesResidual(
+clamped,
+order
+),
+[
+editedIndex
+]
+);
+
+}
 
 /**
  * @param {unknown} raw
@@ -77,11 +330,11 @@ n *
 }
 
 /**
- * % от X между pt4 и pt3 для трейлинг-СЛ после ТП1 (0 = pt4, 100 = pt3).
+ * Трейлинг-СЛ в X от pt4: минус — в сторону pt3 (-1 = pt3), плюс — в профит.
  * @param {unknown} raw
  * @returns {number}
  */
-export function clampTrailSlPct(
+export function clampTrailSlX1(
 raw
 ){
 
@@ -95,19 +348,146 @@ if(
 n
 )
 ){
-return DEFAULT_TRAIL_SL_PCT;
+return DEFAULT_TRAIL_SL_X1;
 }
 
 return Math.min(
-100,
+MAX_TRAIL_SL_X,
 Math.max(
-0,
+MIN_TRAIL_SL_X,
 Math.round(
 n *
-10
+100
 ) /
-10
+100
 )
+);
+
+}
+
+/**
+ * Верхняя граница трейлинга после ТП2 — максимальный из трёх ТП.
+ * @param {Array<unknown>} tpMults
+ * @returns {number}
+ */
+export function maxTpMultiplier(
+tpMults
+){
+
+const list =
+(Array.isArray(
+tpMults
+)
+? tpMults
+: []).map(
+Number
+).filter(
+n=>
+Number.isFinite(
+n
+)
+);
+
+return list.length
+? Math.max(
+...list
+)
+: DEFAULT_PARTIAL_TP3_X;
+
+}
+
+/**
+ * Трейлинг-СЛ после ТП2: не ниже трейлинга после ТП1 и не выше максимального ТП.
+ * @param {unknown} raw
+ * @param {number} trailX1
+ * @param {Array<unknown>} tpMults
+ * @returns {number}
+ */
+export function clampTrailSlX2(
+raw,
+trailX1,
+tpMults
+){
+
+const lo =
+clampTrailSlX1(
+trailX1
+);
+const hi =
+Math.max(
+lo,
+maxTpMultiplier(
+tpMults
+)
+);
+const n =
+Number(
+raw
+);
+const value =
+Number.isFinite(
+n
+)
+? Math.round(
+n *
+100
+) /
+100
+: Math.max(
+lo,
+DEFAULT_TRAIL_SL_X2
+);
+
+return Math.min(
+hi,
+Math.max(
+lo,
+value
+)
+);
+
+}
+
+/**
+ * Миграция старой настройки «трейлинг СЛ, % от X» в X со знаком: 25 → -0.25.
+ * @param {unknown} rawX
+ * @param {unknown} legacyPct
+ * @returns {number}
+ */
+export function resolveTrailSlX1(
+rawX,
+legacyPct
+){
+
+if(
+rawX !==
+undefined &&
+rawX !==
+null &&
+rawX !==
+""
+){
+return clampTrailSlX1(
+rawX
+);
+}
+
+const pct =
+Number(
+legacyPct
+);
+
+if(
+!Number.isFinite(
+pct
+)
+){
+return DEFAULT_TRAIL_SL_X1;
+}
+
+return clampTrailSlX1(
+-pct /
+100
 );
 
 }
@@ -128,29 +508,112 @@ undefined
 }
 
 /**
- * Трейлинг-СЛ после ТП1: N% лог-высоты X от pt4 к pt3.
+ * Трейлинг-СЛ: X от pt4 в лог-шкале, где 1X = ход pt4↔pt3.
+ * Минус — в сторону pt3 (убыток), плюс — в сторону профита.
+ * Направление задаёт само отношение pt3/pt4, поэтому side не нужен.
+ * Значение приходит уже зажатым (ТП1 и ТП2 имеют разные границы).
  * @param {"long"|"short"} side
  * @param {number} pt3
  * @param {number} pt4
- * @param {number} trailPct
+ * @param {number} trailX
  * @returns {number|null}
  */
 export function computeTrailStopLoss(
 side,
 pt3,
 pt4,
-trailPct
+trailX
 ){
 
 void side;
 
-return interpolateLogPrice(
-pt4,
-pt3,
-clampTrailSlPct(
-trailPct
-) /
-100
+const base =
+Number(
+pt4
+);
+const target =
+Number(
+pt3
+);
+const x =
+Number(
+trailX
+);
+
+if(
+!(
+base >
+0
+) ||
+!(
+target >
+0
+) ||
+base ===
+target ||
+!Number.isFinite(
+x
+)
+){
+return null;
+}
+
+const price =
+base *
+Math.pow(
+target /
+base,
+-x
+);
+
+return Number.isFinite(
+price
+) &&
+price >
+0
+? price
+: null;
+
+}
+
+/**
+ * СЛ двигается только в защитную сторону — назад не откатываем.
+ * @param {"long"|"short"} side
+ * @param {number} current
+ * @param {number} next
+ * @returns {number}
+ */
+function pickProtectiveStopLoss(
+side,
+current,
+next
+){
+
+if(
+!Number.isFinite(
+next
+)
+){
+return current;
+}
+
+if(
+!Number.isFinite(
+current
+)
+){
+return next;
+}
+
+return side ===
+"short"
+? Math.min(
+current,
+next
+)
+: Math.max(
+current,
+next
 );
 
 }
@@ -204,7 +667,12 @@ mult
  *   tp2Y?: number,
  *   tp3Y?: number,
  *   trailSl?: boolean,
- *   trailSlPct?: number
+ *   trailSlX1?: number,
+ *   trailSlX2?: number,
+ *   trailSlPct?: number,
+ *   share1?: number,
+ *   share2?: number,
+ *   share3?: number
  * }} [opts]
  * @returns {{
  *   status: "open"|"closed",
@@ -291,8 +759,9 @@ const trailEnabled =
 normalizeTrailSlEnabled(
 opts.trailSl
 );
-const trailSlPct =
-clampTrailSlPct(
+const trailSlX1 =
+resolveTrailSlX1(
+opts.trailSlX1,
 opts.trailSlPct
 );
 let slPrice =
@@ -391,6 +860,22 @@ spanMode ===
 : opts.tp3X,
 DEFAULT_PARTIAL_TP3_X
 );
+const trailSlX2 =
+clampTrailSlX2(
+opts.trailSlX2,
+trailSlX1,
+[
+m1,
+m2,
+m3
+]
+);
+const shares =
+normalizeTpShares(
+opts.share1,
+opts.share2,
+opts.share3
+);
 
 const tpBase =
 spanMode ===
@@ -488,10 +973,17 @@ nextTp
 )
 ){
 
+/* Последний ТП забирает остаток — так доли не «теряются» на округлении. */
 const frac =
 nextTp <
 2
-? PART
+? Math.min(
+remaining,
+shares[
+nextTp
+] /
+TP_SHARES_TOTAL
+)
 : remaining;
 const partUsd =
 linearUsdFromRisk(
@@ -530,22 +1022,17 @@ nextTp ===
 1
 ){
 
-const trailed =
+slPrice =
+pickProtectiveStopLoss(
+side,
+slPrice,
 computeTrailStopLoss(
 side,
 p3,
 p4,
-trailSlPct
-);
-
-if(
-Number.isFinite(
-trailed
+trailSlX1
 )
-){
-slPrice =
-trailed;
-}
+);
 
 }else if(
 nextTp ===
@@ -553,11 +1040,16 @@ nextTp ===
 ){
 
 slPrice =
-Number.isFinite(
-p4
+pickProtectiveStopLoss(
+side,
+slPrice,
+computeTrailStopLoss(
+side,
+p3,
+p4,
+trailSlX2
 )
-? p4
-: entry;
+);
 
 }
 
@@ -592,7 +1084,7 @@ slPrice
 )
 ){
 
-const partLoss =
+const partUsd =
 linearUsdFromRisk(
 entry,
 slPrice,
@@ -600,18 +1092,31 @@ initialSl,
 riskUsd,
 remaining
 );
+/* Трейлинг с плюсовым X уводит стоп выше входа — это профит, не убыток. */
+const stopInProfit =
+side ===
+"short"
+? slPrice <
+entry
+: slPrice >
+entry;
 
 if(
-Number.isFinite(
-partLoss
+!Number.isFinite(
+partUsd
 )
 ){
 lossUsd +=
-partLoss;
-}else{
-lossUsd +=
 remaining *
 riskUsd;
+}else if(
+stopInProfit
+){
+profitUsd +=
+partUsd;
+}else{
+lossUsd +=
+partUsd;
 }
 remaining =
 0;

@@ -95,8 +95,16 @@ tp3:
 1.44,
 trailSl:
 true,
-trailSlPct:
-15
+trailSlX1:
+-0.25,
+trailSlX2:
+0,
+share1:
+25,
+share2:
+25,
+share3:
+50
 };
 
 function normalizeRefreshStatsMode(
@@ -354,6 +362,262 @@ min,
 n
 )
 );
+
+}
+
+/** Трейлинг СЛ в X от pt4; старую настройку в % от X переводим: 15 → -0.15. */
+function clampTrailSlX1(
+rawX,
+legacyPct,
+fallback
+){
+
+const raw =
+rawX ===
+undefined ||
+rawX ===
+null ||
+rawX ===
+""
+? -Number(
+legacyPct
+) /
+100
+: rawX;
+const n =
+Number(
+raw
+);
+
+if(
+!Number.isFinite(
+n
+)
+){
+return fallback;
+}
+
+return Math.min(
+1,
+Math.max(
+-1,
+Math.round(
+n *
+100
+) /
+100
+)
+);
+
+}
+
+/** Трейлинг СЛ после ТП2: не ниже трейлинга после ТП1 и не выше максимального ТП. */
+function clampTrailSlX2(
+raw,
+trailX1,
+tpMults,
+fallback
+){
+
+const tps =
+(Array.isArray(
+tpMults
+)
+? tpMults
+: []).map(
+Number
+).filter(
+n=>
+Number.isFinite(
+n
+)
+);
+const lo =
+Number(
+trailX1
+);
+const hi =
+Math.max(
+lo,
+tps.length
+? Math.max(
+...tps
+)
+: 1.44
+);
+const n =
+Number(
+raw
+);
+const value =
+Number.isFinite(
+n
+)
+? Math.round(
+n *
+100
+) /
+100
+: Math.max(
+lo,
+Number(
+fallback
+) ||
+0
+);
+
+return Math.min(
+hi,
+Math.max(
+lo,
+value
+)
+);
+
+}
+
+/** Доли ТП в % от позиции; сумма всегда 100 (старые prefs без долей → 25/25/50). */
+function normalizeTpShares(
+raw1,
+raw2,
+raw3
+){
+
+const defaults =
+[
+DEFAULT_PARTIAL.share1,
+DEFAULT_PARTIAL.share2,
+DEFAULT_PARTIAL.share3
+];
+const clamp =
+(
+raw,
+fallback
+)=>{
+const n =
+Math.round(
+Number(
+raw
+)
+);
+
+return Number.isFinite(
+n
+)
+? Math.min(
+98,
+Math.max(
+1,
+n
+)
+)
+: fallback;
+};
+const clamped =
+[
+raw1,
+raw2,
+raw3
+].map(
+(
+raw,
+i
+)=>
+clamp(
+raw,
+defaults[
+i
+]
+)
+);
+const sum =
+clamped[
+0
+] +
+clamped[
+1
+] +
+clamped[
+2
+];
+
+if(
+sum ===
+100
+){
+return clamped;
+}
+
+const scaled =
+clamped.map(
+(
+value,
+i
+)=>
+clamp(
+(
+value *
+100
+) /
+sum,
+defaults[
+i
+]
+)
+);
+let residual =
+100 -
+(
+scaled[
+0
+] +
+scaled[
+1
+] +
+scaled[
+2
+]
+);
+
+for(
+const i of [
+2,
+1,
+0
+]
+){
+
+if(
+!residual
+){
+break;
+}
+
+const next =
+Math.min(
+98,
+Math.max(
+1,
+scaled[
+i
+] +
+residual
+)
+);
+
+residual -=
+next -
+scaled[
+i
+];
+scaled[
+i
+] =
+next;
+
+}
+
+return scaled;
 
 }
 
@@ -645,6 +909,12 @@ normalizeSt1(
 ...src
 }
 );
+const shares =
+normalizeTpShares(
+src.share1,
+src.share2,
+src.share3
+);
 
 delete common.tpRr;
 delete common.manualRefreshStrategies;
@@ -677,13 +947,39 @@ src.trailSl ===
 undefined
 ? DEFAULT_PARTIAL.trailSl
 : !!src.trailSl,
-trailSlPct:
-clampInt(
+trailSlX1:
+clampTrailSlX1(
+src.trailSlX1,
 src.trailSlPct,
-0,
-100,
-DEFAULT_PARTIAL.trailSlPct
-)
+DEFAULT_PARTIAL.trailSlX1
+),
+trailSlX2:
+clampTrailSlX2(
+src.trailSlX2,
+clampTrailSlX1(
+src.trailSlX1,
+src.trailSlPct,
+DEFAULT_PARTIAL.trailSlX1
+),
+[
+src.tp1,
+src.tp2,
+src.tp3
+],
+DEFAULT_PARTIAL.trailSlX2
+),
+share1:
+shares[
+0
+],
+share2:
+shares[
+1
+],
+share3:
+shares[
+2
+]
 };
 
 }

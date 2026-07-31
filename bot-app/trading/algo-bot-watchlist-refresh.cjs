@@ -102,6 +102,240 @@ ms,
 
 }
 
+/** Трейлинг СЛ в X от pt4; старую настройку в % от X переводим: 15 → -0.15. */
+function resolveTrailSlX1(
+rawX,
+legacyPct
+){
+
+const raw =
+rawX ===
+undefined ||
+rawX ===
+null ||
+rawX ===
+""
+? -Number(
+legacyPct
+) /
+100
+: rawX;
+const n =
+Number(
+raw
+);
+
+return Number.isFinite(
+n
+)
+? Math.min(
+1,
+Math.max(
+-1,
+n
+)
+)
+: -0.25;
+
+}
+
+/** Трейлинг СЛ после ТП2: не ниже трейлинга после ТП1 и не выше максимального ТП. */
+function resolveTrailSlX2(
+raw,
+trailX1,
+tpMults
+){
+
+const tps =
+(Array.isArray(
+tpMults
+)
+? tpMults
+: []).map(
+Number
+).filter(
+n=>
+Number.isFinite(
+n
+)
+);
+const lo =
+Number(
+trailX1
+);
+const hi =
+Math.max(
+lo,
+tps.length
+? Math.max(
+...tps
+)
+: 1.44
+);
+const n =
+Number(
+raw
+);
+
+return Math.min(
+hi,
+Math.max(
+lo,
+Number.isFinite(
+n
+)
+? n
+: 0
+)
+);
+
+}
+
+/** Доли ТП в % от позиции; сумма всегда 100 (нет настройки → 25/25/50). */
+function normalizeTpShares(
+raw1,
+raw2,
+raw3
+){
+
+const defaults =
+[
+25,
+25,
+50
+];
+const clamp =
+(
+raw,
+fallback
+)=>{
+const n =
+Math.round(
+Number(
+raw
+)
+);
+
+return Number.isFinite(
+n
+)
+? Math.min(
+98,
+Math.max(
+1,
+n
+)
+)
+: fallback;
+};
+const shares =
+[
+raw1,
+raw2,
+raw3
+].map(
+(
+raw,
+i
+)=>
+clamp(
+raw,
+defaults[
+i
+]
+)
+);
+const sum =
+shares[
+0
+] +
+shares[
+1
+] +
+shares[
+2
+];
+
+if(
+sum ===
+100
+){
+return shares;
+}
+
+const scaled =
+shares.map(
+(
+value,
+i
+)=>
+clamp(
+(
+value *
+100
+) /
+sum,
+defaults[
+i
+]
+)
+);
+let residual =
+100 -
+(
+scaled[
+0
+] +
+scaled[
+1
+] +
+scaled[
+2
+]
+);
+
+for(
+const i of [
+2,
+1,
+0
+]
+){
+
+if(
+!residual
+){
+break;
+}
+
+const next =
+Math.min(
+98,
+Math.max(
+1,
+scaled[
+i
+] +
+residual
+)
+);
+
+residual -=
+next -
+scaled[
+i
+];
+scaled[
+i
+] =
+next;
+
+}
+
+return scaled;
+
+}
+
 function interpolateLogPrice(
 from,
 to,
@@ -576,6 +810,12 @@ Number.isFinite
 return null;
 }
 
+const shares =
+normalizeTpShares(
+exitProfile?.share1,
+exitProfile?.share2,
+exitProfile?.share3
+);
 let remaining =
 1;
 let nextTp =
@@ -620,8 +860,13 @@ nextTp
 const fraction =
 nextTp <
 2
-? 1 /
-3
+? Math.min(
+remaining,
+shares[
+nextTp
+] /
+100
+)
 : remaining;
 netUsd +=
 fraction *
@@ -643,36 +888,53 @@ exitProfile?.trailSl
 ){
 if(
 nextTp ===
-1
+1 ||
+nextTp ===
+2
 ){
+const trailX1 =
+resolveTrailSlX1(
+exitProfile?.trailSlX1,
+exitProfile?.trailSlPct
+);
 const trail =
 Math.abs(
 p4 -
 p3
 ) *
 (
-Math.max(
-0,
-Number(
-exitProfile?.trailSlPct
-) ||
-15
-) /
-100
+nextTp ===
+2
+? resolveTrailSlX2(
+exitProfile?.trailSlX2,
+trailX1,
+[
+exitProfile?.tp1,
+exitProfile?.tp2,
+exitProfile?.tp3
+]
+)
+: trailX1
 );
+const next =
+side ===
+"short"
+? p4 -
+trail
+: p4 +
+trail;
+
 sl =
 side ===
 "short"
-? p4 +
-trail
-: p4 -
-trail;
-}else if(
-nextTp ===
-2
-){
-sl =
-p4;
+? Math.min(
+sl,
+next
+)
+: Math.max(
+sl,
+next
+);
 }
 }
 }
@@ -705,13 +967,19 @@ sl;
 if(
 stopped
 ){
-netUsd -=
+/* Плюсовой трейлинг уводит стоп в профит — знак берём по стороне сделки. */
+const signed =
+side ===
+"short"
+? entry -
+sl
+: sl -
+entry;
+
+netUsd +=
 remaining *
 (
-Math.abs(
-entry -
-sl
-) /
+signed /
 risk
 );
 return {
@@ -1237,8 +1505,16 @@ tp3:
 strategy.tp3,
 trailSl:
 strategy.trailSl,
-trailSlPct:
-strategy.trailSlPct
+trailSlX1:
+strategy.trailSlX1,
+trailSlX2:
+strategy.trailSlX2,
+share1:
+strategy.share1,
+share2:
+strategy.share2,
+share3:
+strategy.share3
 }
 : null
 );

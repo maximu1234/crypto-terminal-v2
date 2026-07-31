@@ -196,8 +196,16 @@ tp3:
 prefs.tp3,
 trailSl:
 prefs.trailSl,
-trailSlPct:
-prefs.trailSlPct
+trailSlX1:
+prefs.trailSlX1,
+trailSlX2:
+prefs.trailSlX2,
+share1:
+prefs.share1,
+share2:
+prefs.share2,
+share3:
+prefs.share3
 }
 : {
 kind:

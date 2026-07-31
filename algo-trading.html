@@ -19,7 +19,7 @@
 <link rel="stylesheet" href="/css/terminal.css?v=169">
 <link rel="stylesheet" href="/css/terminal-layout.css?v=97">
 <link rel="stylesheet" href="/css/chart-indicators.css?v=22">
-<link rel="stylesheet" href="/css/algo-trading.css?v=91">
+<link rel="stylesheet" href="/css/algo-trading.css?v=92">
 <link rel="stylesheet" href="/css/algo-trading-book-panel.css?v=4">
 <link rel="stylesheet" href="/css/algo-trading-chart-overlay.css?v=2">
 
@@ -271,7 +271,8 @@ aria-pressed="false"
 <div class="algo-bot-field algo-bot-field--row"><label class="algo-bot-label" for="algo-bot-st2-sl-pct">СЛ (%)</label><input type="number" id="algo-bot-st2-sl-pct" class="algo-bot-input algo-bot-input--sm" min="0.01" step="0.01" value="50" /><label class="algo-bot-label" for="algo-bot-st2-sl-usd">СЛ ($)</label><input type="number" id="algo-bot-st2-sl-usd" class="algo-bot-input algo-bot-input--sm" min="0.01" step="0.01" value="1" /></div>
 <div class="algo-bot-field algo-bot-field--row"><label class="algo-bot-label" for="algo-bot-st2-min-turnover" title="Минимальный 24h оборот (USDT). Ниже — сетап не вооружается.">Объем за сутки от</label><input type="text" id="algo-bot-st2-min-turnover" class="algo-bot-input algo-bot-input--sm algo-bot-input--turnover" inputmode="numeric" autocomplete="off" value="20.000.000" /><span class="algo-bot-unit">USDT</span></div>
 <div class="algo-bot-field algo-bot-field--row"><label class="algo-bot-label" for="algo-bot-st2-tp1">ТП1</label><input type="number" id="algo-bot-st2-tp1" class="algo-bot-input algo-bot-input--sm" min="0.01" step="0.01" value="1" /><label class="algo-bot-label" for="algo-bot-st2-tp2">ТП2</label><input type="number" id="algo-bot-st2-tp2" class="algo-bot-input algo-bot-input--sm" min="0.01" step="0.01" value="1.25" /><label class="algo-bot-label" for="algo-bot-st2-tp3">ТП3</label><input type="number" id="algo-bot-st2-tp3" class="algo-bot-input algo-bot-input--sm" min="0.01" step="0.01" value="1.44" /></div>
-<div class="algo-bot-field algo-bot-field--row"><label class="algo-bot-label" for="algo-bot-st2-trail-pct">Трейлинг СЛ</label><input type="number" id="algo-bot-st2-trail-pct" class="algo-bot-input algo-bot-input--sm" min="0" max="100" step="0.1" value="15" /><span class="algo-bot-unit">%</span><label class="algo-bot-check"><input type="checkbox" id="algo-bot-st2-trail" checked /><span>вкл.</span></label></div>
+<div class="algo-bot-field algo-bot-field--row"><label class="algo-bot-label" for="algo-bot-st2-trail-x1" title="После ТП1: СЛ = r(X) от pt4. Минус — в сторону pt3, плюс — в профит">Трейлинг СЛ</label><input type="number" id="algo-bot-st2-trail-x1" class="algo-bot-input algo-bot-input--sm" min="-1" max="1" step="0.01" value="-0.25" /><label class="algo-bot-label" for="algo-bot-st2-trail-x2" title="После ТП2: СЛ = r(X) от pt4. Не ниже трейлинга после ТП1 и не выше максимального ТП. 0 = БУ (pt4)">ТП2</label><input type="number" id="algo-bot-st2-trail-x2" class="algo-bot-input algo-bot-input--sm" min="-1" max="50" step="0.01" value="0" /><label class="algo-bot-check"><input type="checkbox" id="algo-bot-st2-trail" checked /><span>вкл.</span></label></div>
+<div class="algo-bot-field algo-bot-field--row"><label class="algo-bot-label" for="algo-bot-st2-share1" title="Доля позиции, закрываемая на ТП1 (%). Сумма трёх долей = 100">Доли ТП (%)</label><input type="number" id="algo-bot-st2-share1" class="algo-bot-input algo-bot-input--sm" min="1" max="98" step="1" value="25" /><input type="number" id="algo-bot-st2-share2" class="algo-bot-input algo-bot-input--sm" min="1" max="98" step="1" value="25" title="Доля позиции на ТП2 (%)" /><input type="number" id="algo-bot-st2-share3" class="algo-bot-input algo-bot-input--sm" min="1" max="98" step="1" value="50" title="Доля позиции на ТП3 (%) — закрывает остаток" /></div>
 <div class="algo-bot-field"><span class="algo-bot-label">Торговля</span><div class="algo-bot-side" role="group" aria-label="Стороны торговли"><label class="algo-bot-check"><input type="checkbox" id="algo-bot-st2-side-long" checked /><span>Лонг</span></label><label class="algo-bot-check"><input type="checkbox" id="algo-bot-st2-side-short" /><span>Шорт</span></label><label class="algo-bot-check"><input type="checkbox" id="algo-bot-st2-side-both" /><span>Лонг и Шорт</span></label></div><p class="algo-bot-hint" id="algo-bot-st2-side-hint">Список: Алго Лонг</p><label class="algo-bot-check"><input type="checkbox" id="algo-bot-st2-use-favorites" /><span>Список Избранные</span></label></div>
 <div class="algo-bot-field"><span class="algo-bot-label">Обновлять список тикеров каждые</span><div class="algo-bot-field--row"><input type="number" id="algo-bot-st2-refresh-h" class="algo-bot-input algo-bot-input--sm" min="0" max="168" step="1" value="24" /><span class="algo-bot-unit">ч</span><input type="number" id="algo-bot-st2-refresh-m" class="algo-bot-input algo-bot-input--sm" min="0" max="59" step="1" value="0" /><span class="algo-bot-unit">мин</span></div></div>
 <div class="algo-bot-field algo-bot-field--row"><label class="algo-bot-label" for="algo-bot-st2-winrate">По критериям</label><input type="number" id="algo-bot-st2-winrate" class="algo-bot-input algo-bot-input--sm" min="10" max="100" step="1" value="70" /><span class="algo-bot-unit">% успеха</span><label class="algo-bot-check" title="Режим подсчёта для обновления списка"><input type="checkbox" id="algo-bot-st2-refresh-real" /><span id="algo-bot-st2-refresh-mode-label">Реальный подсчет</span></label></div>
@@ -304,7 +305,8 @@ aria-pressed="false"
 <div class="algo-bot-field algo-bot-field--row"><label class="algo-bot-label" for="algo-bot-st3-sl-pct">СЛ (%)</label><input type="number" id="algo-bot-st3-sl-pct" class="algo-bot-input algo-bot-input--sm" min="0.01" step="0.01" value="50" /><label class="algo-bot-label" for="algo-bot-st3-sl-usd">СЛ ($)</label><input type="number" id="algo-bot-st3-sl-usd" class="algo-bot-input algo-bot-input--sm" min="0.01" step="0.01" value="1" /></div>
 <div class="algo-bot-field algo-bot-field--row"><label class="algo-bot-label" for="algo-bot-st3-min-turnover" title="Минимальный 24h оборот (USDT). Ниже — сетап не вооружается.">Объем за сутки от</label><input type="text" id="algo-bot-st3-min-turnover" class="algo-bot-input algo-bot-input--sm algo-bot-input--turnover" inputmode="numeric" autocomplete="off" value="20.000.000" /><span class="algo-bot-unit">USDT</span></div>
 <div class="algo-bot-field algo-bot-field--row"><label class="algo-bot-label" for="algo-bot-st3-tp1">ТП1</label><input type="number" id="algo-bot-st3-tp1" class="algo-bot-input algo-bot-input--sm" min="0.01" step="0.01" value="1" /><label class="algo-bot-label" for="algo-bot-st3-tp2">ТП2</label><input type="number" id="algo-bot-st3-tp2" class="algo-bot-input algo-bot-input--sm" min="0.01" step="0.01" value="1.25" /><label class="algo-bot-label" for="algo-bot-st3-tp3">ТП3</label><input type="number" id="algo-bot-st3-tp3" class="algo-bot-input algo-bot-input--sm" min="0.01" step="0.01" value="1.44" /></div>
-<div class="algo-bot-field algo-bot-field--row"><label class="algo-bot-label" for="algo-bot-st3-trail-pct">Трейлинг СЛ</label><input type="number" id="algo-bot-st3-trail-pct" class="algo-bot-input algo-bot-input--sm" min="0" max="100" step="0.1" value="15" /><span class="algo-bot-unit">%</span><label class="algo-bot-check"><input type="checkbox" id="algo-bot-st3-trail" checked /><span>вкл.</span></label></div>
+<div class="algo-bot-field algo-bot-field--row"><label class="algo-bot-label" for="algo-bot-st3-trail-x1" title="После ТП1: СЛ = r(X) от pt4. Минус — в сторону pt3, плюс — в профит">Трейлинг СЛ</label><input type="number" id="algo-bot-st3-trail-x1" class="algo-bot-input algo-bot-input--sm" min="-1" max="1" step="0.01" value="-0.25" /><label class="algo-bot-label" for="algo-bot-st3-trail-x2" title="После ТП2: СЛ = r(X) от pt4. Не ниже трейлинга после ТП1 и не выше максимального ТП. 0 = БУ (pt4)">ТП2</label><input type="number" id="algo-bot-st3-trail-x2" class="algo-bot-input algo-bot-input--sm" min="-1" max="50" step="0.01" value="0" /><label class="algo-bot-check"><input type="checkbox" id="algo-bot-st3-trail" checked /><span>вкл.</span></label></div>
+<div class="algo-bot-field algo-bot-field--row"><label class="algo-bot-label" for="algo-bot-st3-share1" title="Доля позиции, закрываемая на ТП1 (%). Сумма трёх долей = 100">Доли ТП (%)</label><input type="number" id="algo-bot-st3-share1" class="algo-bot-input algo-bot-input--sm" min="1" max="98" step="1" value="25" /><input type="number" id="algo-bot-st3-share2" class="algo-bot-input algo-bot-input--sm" min="1" max="98" step="1" value="25" title="Доля позиции на ТП2 (%)" /><input type="number" id="algo-bot-st3-share3" class="algo-bot-input algo-bot-input--sm" min="1" max="98" step="1" value="50" title="Доля позиции на ТП3 (%) — закрывает остаток" /></div>
 <div class="algo-bot-field"><span class="algo-bot-label">Торговля</span><div class="algo-bot-side" role="group" aria-label="Стороны торговли"><label class="algo-bot-check"><input type="checkbox" id="algo-bot-st3-side-long" checked /><span>Лонг</span></label><label class="algo-bot-check"><input type="checkbox" id="algo-bot-st3-side-short" /><span>Шорт</span></label><label class="algo-bot-check"><input type="checkbox" id="algo-bot-st3-side-both" /><span>Лонг и Шорт</span></label></div><p class="algo-bot-hint" id="algo-bot-st3-side-hint">Список: Алго Лонг</p><label class="algo-bot-check"><input type="checkbox" id="algo-bot-st3-use-favorites" /><span>Список Избранные</span></label></div>
 <div class="algo-bot-field"><span class="algo-bot-label">Обновлять список тикеров каждые</span><div class="algo-bot-field--row"><input type="number" id="algo-bot-st3-refresh-h" class="algo-bot-input algo-bot-input--sm" min="0" max="168" step="1" value="24" /><span class="algo-bot-unit">ч</span><input type="number" id="algo-bot-st3-refresh-m" class="algo-bot-input algo-bot-input--sm" min="0" max="59" step="1" value="0" /><span class="algo-bot-unit">мин</span></div></div>
 <div class="algo-bot-field algo-bot-field--row"><label class="algo-bot-label" for="algo-bot-st3-winrate">По критериям</label><input type="number" id="algo-bot-st3-winrate" class="algo-bot-input algo-bot-input--sm" min="10" max="100" step="1" value="70" /><span class="algo-bot-unit">% успеха</span><label class="algo-bot-check" title="Режим подсчёта для обновления списка"><input type="checkbox" id="algo-bot-st3-refresh-real" /><span id="algo-bot-st3-refresh-mode-label">Реальный подсчет</span></label></div>
@@ -796,22 +798,69 @@ title="Лог-шкала: закрытие остатка от pt4 по r(X)"
 />
 </div>
 <div class="algo-stats-row algo-stats-row--setting">
-<label class="algo-stats-label" for="algo-trail-sl-pct-st2">Трейлинг СЛ</label>
+<label class="algo-stats-label" for="algo-trail-sl-x1-st2">Трейлинг СЛ</label>
 <input
 type="number"
-id="algo-trail-sl-pct-st2"
+id="algo-trail-sl-x1-st2"
 class="algo-stats-input"
-min="0"
-max="100"
-step="0.1"
-value="25"
+min="-1"
+max="1"
+step="0.01"
+value="-0.25"
 inputmode="decimal"
-title="После ТП1: СЛ = лог-интерполяция pt4→pt3 на N%. После ТП2: BE (pt4). Лог-шкала"
+title="После ТП1: СЛ = r(X) от pt4. Минус — в сторону pt3, плюс — в профит. Лог-шкала"
 />
-<span class="algo-stats-unit">%</span>
+<span class="algo-stats-unit">ТП2</span>
+<input
+type="number"
+id="algo-trail-sl-x2-st2"
+class="algo-stats-input"
+min="-1"
+max="50"
+step="0.01"
+value="0"
+inputmode="decimal"
+title="После ТП2: СЛ = r(X) от pt4. Не ниже трейлинга после ТП1 и не выше максимального ТП. 0 = БУ на pt4"
+/>
 <label class="algo-stats-check" title="Учитывать трейлинг СЛ в статистике">
 <input type="checkbox" id="algo-trail-sl-st2" checked />
 </label>
+</div>
+<div class="algo-stats-row algo-stats-row--setting algo-stats-row--shares">
+<span class="algo-stats-label">Доли ТП1/ТП2/ТП3, %</span>
+<input
+type="number"
+id="algo-share1-x"
+class="algo-stats-input"
+min="1"
+max="98"
+step="1"
+value="25"
+inputmode="numeric"
+title="Доля позиции на ТП1, %. Сумма трёх долей = 100"
+/>
+<input
+type="number"
+id="algo-share2-x"
+class="algo-stats-input"
+min="1"
+max="98"
+step="1"
+value="25"
+inputmode="numeric"
+title="Доля позиции на ТП2, %. Сумма трёх долей = 100"
+/>
+<input
+type="number"
+id="algo-share3-x"
+class="algo-stats-input"
+min="1"
+max="98"
+step="1"
+value="50"
+inputmode="numeric"
+title="Доля позиции на ТП3, % — закрывает остаток. Сумма трёх долей = 100"
+/>
 </div>
 </div>
 <div class="algo-stats-col-stats">
@@ -931,22 +980,69 @@ title="Лог-шкала: закрытие остатка от pt2 по r(Y)"
 />
 </div>
 <div class="algo-stats-row algo-stats-row--setting">
-<label class="algo-stats-label" for="algo-trail-sl-pct-st3">Трейлинг СЛ</label>
+<label class="algo-stats-label" for="algo-trail-sl-x1-st3">Трейлинг СЛ</label>
 <input
 type="number"
-id="algo-trail-sl-pct-st3"
+id="algo-trail-sl-x1-st3"
 class="algo-stats-input"
-min="0"
-max="100"
-step="0.1"
-value="25"
+min="-1"
+max="1"
+step="0.01"
+value="-0.25"
 inputmode="decimal"
-title="После ТП1: СЛ = лог-интерполяция pt4→pt3 на N%. После ТП2: BE (pt4). ТП от pt2 в лог-шкале"
+title="После ТП1: СЛ = r(X) от pt4. Минус — в сторону pt3, плюс — в профит. Лог-шкала"
 />
-<span class="algo-stats-unit">%</span>
+<span class="algo-stats-unit">ТП2</span>
+<input
+type="number"
+id="algo-trail-sl-x2-st3"
+class="algo-stats-input"
+min="-1"
+max="50"
+step="0.01"
+value="0"
+inputmode="decimal"
+title="После ТП2: СЛ = r(X) от pt4. Не ниже трейлинга после ТП1 и не выше максимального ТП. 0 = БУ на pt4"
+/>
 <label class="algo-stats-check" title="Учитывать трейлинг СЛ в статистике">
 <input type="checkbox" id="algo-trail-sl-st3" checked />
 </label>
+</div>
+<div class="algo-stats-row algo-stats-row--setting algo-stats-row--shares">
+<span class="algo-stats-label">Доли ТП1/ТП2/ТП3, %</span>
+<input
+type="number"
+id="algo-share1-y"
+class="algo-stats-input"
+min="1"
+max="98"
+step="1"
+value="25"
+inputmode="numeric"
+title="Доля позиции на ТП1, %. Сумма трёх долей = 100"
+/>
+<input
+type="number"
+id="algo-share2-y"
+class="algo-stats-input"
+min="1"
+max="98"
+step="1"
+value="25"
+inputmode="numeric"
+title="Доля позиции на ТП2, %. Сумма трёх долей = 100"
+/>
+<input
+type="number"
+id="algo-share3-y"
+class="algo-stats-input"
+min="1"
+max="98"
+step="1"
+value="50"
+inputmode="numeric"
+title="Доля позиции на ТП3, % — закрывает остаток. Сумма трёх долей = 100"
+/>
 </div>
 </div>
 <div class="algo-stats-col-stats">
