@@ -19,7 +19,7 @@
 <link rel="stylesheet" href="/css/terminal.css?v=169">
 <link rel="stylesheet" href="/css/terminal-layout.css?v=97">
 <link rel="stylesheet" href="/css/chart-indicators.css?v=22">
-<link rel="stylesheet" href="/css/algo-trading.css?v=89">
+<link rel="stylesheet" href="/css/algo-trading.css?v=91">
 <link rel="stylesheet" href="/css/algo-trading-book-panel.css?v=4">
 <link rel="stylesheet" href="/css/algo-trading-chart-overlay.css?v=2">
 
@@ -573,6 +573,89 @@ tabindex="0"
 <span class="algo-stats-label">Паттерны Short</span>
 <span class="algo-stats-value algo-stats-value--short" id="algo-stat-short" data-algo-stat-short>—</span>
 </div>
+</div>
+<div class="algo-stats-divider" aria-hidden="true"></div>
+<div class="algo-stats-row algo-stats-row--setting algo-stats-row--ema">
+<span class="algo-stats-label">EMA1</span>
+<input
+type="number"
+id="algo-ema-period-2"
+class="algo-stats-input"
+min="1"
+max="1000"
+step="1"
+value="50"
+inputmode="numeric"
+title="Период EMA1 — голубая линия"
+/>
+<input
+type="number"
+id="algo-ema-shift-2"
+class="algo-stats-input algo-stats-input--shift"
+min="-99"
+max="500"
+step="0.1"
+value="0"
+inputmode="decimal"
+title="Сдвиг EMA1, % — голубая линия"
+/>
+<select
+id="algo-ema-tf-2"
+class="algo-stats-select"
+title="ТФ EMA1 — голубая линия"
+>
+<option value="" selected>Текущий</option>
+<option value="1">1m</option>
+<option value="5">5m</option>
+<option value="15">15m</option>
+<option value="60">1h</option>
+<option value="240">4h</option>
+<option value="D">1D</option>
+</select>
+<label class="algo-stats-check" title="Включить EMA1 фильтр — голубая линия">
+<input type="checkbox" id="algo-ema-filter-2" />
+</label>
+</div>
+<div class="algo-stats-row algo-stats-row--setting algo-stats-row--ema">
+<span class="algo-stats-label">EMA2</span>
+<input
+type="number"
+id="algo-ema-period"
+class="algo-stats-input"
+min="1"
+max="1000"
+step="1"
+value="200"
+inputmode="numeric"
+title="Период EMA2 — жёлтая линия"
+/>
+<input
+type="number"
+id="algo-ema-shift"
+class="algo-stats-input algo-stats-input--shift"
+min="-99"
+max="500"
+step="0.1"
+value="0"
+inputmode="decimal"
+title="Сдвиг EMA2, % — жёлтая линия"
+/>
+<select
+id="algo-ema-tf"
+class="algo-stats-select"
+title="ТФ EMA2 — жёлтая линия"
+>
+<option value="" selected>Текущий</option>
+<option value="1">1m</option>
+<option value="5">5m</option>
+<option value="15">15m</option>
+<option value="60">1h</option>
+<option value="240">4h</option>
+<option value="D">1D</option>
+</select>
+<label class="algo-stats-check" title="Включить EMA2 фильтр — жёлтая линия">
+<input type="checkbox" id="algo-ema-filter" />
+</label>
 </div>
 <div class="algo-stats-divider" aria-hidden="true"></div>
 <div class="algo-stats-col-title-row">

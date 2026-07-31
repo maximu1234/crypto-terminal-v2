@@ -27,6 +27,10 @@ computePartialTpTradeStats,
 filterSequentialPartialEntryEvents
 } from "./pattern-trade-stats-partial.js?v=14";
 
+import {
+filterEntryEventsByEma
+} from "./pattern-ema-filter.js?v=3";
+
 /**
  * @param {Array} candles
  * @param {object} [opts]
@@ -56,6 +60,8 @@ opts.patternSettings ||
 defaultPattern12Settings()
 );
 const events =
+filterEntryEventsByEma(
+candles,
 detectPatternEntryEventsFromSetups(
 candles,
 scene?.setups,
@@ -63,6 +69,8 @@ scene?.setups,
 timeoutBars:
 opts.timeoutBars
 }
+),
+opts
 );
 
 return {

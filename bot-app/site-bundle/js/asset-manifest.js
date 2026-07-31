@@ -332,7 +332,7 @@ Object.freeze({
 "algo-trading/bot-strategy-prefs.js":
 12,
 "algo-trading/bot-strategy-ui.js":
-41,
+42,
 "algo-trading/bot-cloud-lock.js":
 5,
 "algo-trading/bot-remote-client.js":
@@ -442,7 +442,7 @@ Object.freeze({
 "screener-widget-zoom.js":
 16,
 "release-marker.js":
-63,
+64,
 "focus-blur-after-pick.js":
 3,
 "site-boot.js":

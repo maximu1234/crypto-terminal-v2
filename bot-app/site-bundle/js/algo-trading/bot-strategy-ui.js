@@ -165,17 +165,24 @@ null;
 
 const prefs =
 loadBotStrategiesPrefs();
+/* running приходит из статуса бота; сохранённый флаг может залипнуть после краша. */
 let st1 =
 {
-...prefs.st1
+...prefs.st1,
+running:
+false
 };
 let st2 =
 {
-...prefs.st2
+...prefs.st2,
+running:
+false
 };
 let st3 =
 {
-...prefs.st3
+...prefs.st3,
+running:
+false
 };
 
 /** @type {"live"|"manual"} */
@@ -914,7 +921,10 @@ inputs
 )
 ){
 if(
+input &&
+!isFieldBeingEdited(
 input
+)
 ){
 input.value =
 key ===
@@ -1124,7 +1134,7 @@ input?.addEventListener(
 "change",
 ()=>{
 if(
-runningStrategyId()
+getPrefs().running
 ){
 apply();
 return;
@@ -1185,7 +1195,7 @@ input?.addEventListener(
 "change",
 ()=>{
 if(
-runningStrategyId() &&
+getPrefs().running &&
 key !==
 "minTurnover24hUsdt"
 ){
@@ -1303,6 +1313,17 @@ function runningStrategyId(){
 return st1.running ||
 st2.running ||
 st3.running;
+
+}
+
+/** Поллинг статуса не должен перетирать поле, которое правит пользователь. */
+function isFieldBeingEdited(
+input
+){
+
+return !!input &&
+document.activeElement ===
+input;
 
 }
 

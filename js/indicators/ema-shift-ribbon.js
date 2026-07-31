@@ -4,7 +4,7 @@
 import {
 clearAllHtfCache,
 fetchHtfCandles
-} from "./htf-loader.js?v=2";
+} from "./htf-loader.js?v=3";
 
 import {
 isChartLayoutReady

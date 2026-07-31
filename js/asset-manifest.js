@@ -277,7 +277,7 @@ Object.freeze({
 "script-favorites-list.js":
 2,
 "algo-trading.js":
-87,
+90,
 "algo-trading-page-boot.js":
 3,
 "algo-trading-list.js":
@@ -300,12 +300,14 @@ Object.freeze({
 5,
 "algo-trading/pattern-entry-logic.js":
 5,
+"algo-trading/pattern-ema-filter.js":
+3,
 "algo-trading/pattern-entry-overlay.js":
 12,
 "algo-trading/pattern-entry-positions.js":
 14,
 "algo-trading/pattern-analysis.js":
-15,
+16,
 "algo-trading/pattern-trade-stats-partial.js":
 14,
 "algo-trading/pattern-trade-stats.js":
@@ -332,7 +334,7 @@ Object.freeze({
 "algo-trading/bot-strategy-prefs.js":
 12,
 "algo-trading/bot-strategy-ui.js":
-41,
+42,
 "algo-trading/bot-cloud-lock.js":
 5,
 "algo-trading/bot-remote-client.js":
@@ -384,7 +386,7 @@ Object.freeze({
 "indicators/indicator-color-picker-ui.js":
 1,
 "indicators/htf-loader.js":
-2,
+3,
 "indicators/htf-ema.js":
 1,
 "indicators/indicator-settings-dialog.js":
@@ -442,7 +444,7 @@ Object.freeze({
 "screener-widget-zoom.js":
 17,
 "release-marker.js":
-63,
+64,
 "focus-blur-after-pick.js":
 3,
 "site-boot.js":
@@ -709,7 +711,7 @@ Object.freeze({
 "script-page.css":
 20,
 "algo-trading.css":
-89,
+91,
 "algo-trading-book-panel.css":
 4,
 "algo-trading-chart-overlay.css":

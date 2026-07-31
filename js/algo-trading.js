@@ -49,7 +49,7 @@ mountAlgoRuntimeUi
 
 import {
 mountAlgoBotStrategyUi
-} from "./algo-trading/bot-strategy-ui.js?v=41";
+} from "./algo-trading/bot-strategy-ui.js?v=42";
 
 import {
 syncBotStrategiesToMain
@@ -73,7 +73,7 @@ mountAlgoPatternEntryOverlay
 
 import {
 refreshAlgoPatternAnalysis
-} from "./algo-trading/pattern-analysis.js?v=15";
+} from "./algo-trading/pattern-analysis.js?v=16";
 
 import {
 clampSlPctOfX,
@@ -100,6 +100,21 @@ ENTRY_TIMEOUT_BARS
 } from "./algo-trading/pattern-entry-logic.js?v=5";
 
 import {
+clampAlgoEmaPeriod,
+clampAlgoEmaShift,
+normalizeAlgoEmaFilterEnabled,
+normalizeAlgoEmaTf,
+buildAlgoEmaLinePoints,
+DEFAULT_ALGO_EMA_PERIOD,
+DEFAULT_ALGO_EMA_PERIOD_2,
+DEFAULT_ALGO_EMA_SHIFT
+} from "./algo-trading/pattern-ema-filter.js?v=3";
+
+import {
+alignMaPointsToDisplayCandles
+} from "./indicators/ma-math.js?v=2";
+
+import {
 normalizeAlgoStatsMode
 } from "./algo-trading/pattern-trade-stats.js?v=10";
 
@@ -113,7 +128,8 @@ isChartLayoutReady
 } from "./chart-layout-gate.js?v=2";
 
 import {
-invalidatePreservedVisibleLogicalRange
+invalidatePreservedVisibleLogicalRange,
+runWithPreservedVisibleLogicalRange
 } from "./chart-visible-range.js?v=3";
 
 import {
@@ -292,6 +308,39 @@ timeoutBars:
 clampEntryTimeoutBars(
 raw.timeoutBars
 ),
+emaFilter:
+normalizeAlgoEmaFilterEnabled(
+raw.emaFilter
+),
+emaPeriod:
+clampAlgoEmaPeriod(
+raw.emaPeriod
+),
+emaShift:
+clampAlgoEmaShift(
+raw.emaShift
+),
+emaTf:
+normalizeAlgoEmaTf(
+raw.emaTf
+),
+emaFilter2:
+normalizeAlgoEmaFilterEnabled(
+raw.emaFilter2
+),
+emaPeriod2:
+clampAlgoEmaPeriod(
+raw.emaPeriod2,
+DEFAULT_ALGO_EMA_PERIOD_2
+),
+emaShift2:
+clampAlgoEmaShift(
+raw.emaShift2
+),
+emaTf2:
+normalizeAlgoEmaTf(
+raw.emaTf2
+),
 scanStrategy:
 raw.scanStrategy === "st2" || raw.scanStrategy === "st3"
 ? raw.scanStrategy
@@ -366,6 +415,22 @@ trailSlPctSt3:
 DEFAULT_TRAIL_SL_PCT,
 timeoutBars:
 ENTRY_TIMEOUT_BARS,
+emaFilter:
+false,
+emaPeriod:
+DEFAULT_ALGO_EMA_PERIOD,
+emaShift:
+DEFAULT_ALGO_EMA_SHIFT,
+emaTf:
+"",
+emaFilter2:
+false,
+emaPeriod2:
+DEFAULT_ALGO_EMA_PERIOD_2,
+emaShift2:
+DEFAULT_ALGO_EMA_SHIFT,
+emaTf2:
+"",
 scanStrategy:
 "st1",
 scanTf:
@@ -468,6 +533,39 @@ prefs.trailSlPctSt3
 timeoutBars:
 clampEntryTimeoutBars(
 prefs.timeoutBars
+),
+emaFilter:
+normalizeAlgoEmaFilterEnabled(
+prefs.emaFilter
+),
+emaPeriod:
+clampAlgoEmaPeriod(
+prefs.emaPeriod
+),
+emaShift:
+clampAlgoEmaShift(
+prefs.emaShift
+),
+emaTf:
+normalizeAlgoEmaTf(
+prefs.emaTf
+),
+emaFilter2:
+normalizeAlgoEmaFilterEnabled(
+prefs.emaFilter2
+),
+emaPeriod2:
+clampAlgoEmaPeriod(
+prefs.emaPeriod2,
+DEFAULT_ALGO_EMA_PERIOD_2
+),
+emaShift2:
+clampAlgoEmaShift(
+prefs.emaShift2
+),
+emaTf2:
+normalizeAlgoEmaTf(
+prefs.emaTf2
 ),
 scanStrategy:
 prefs.scanStrategy === "st2" || prefs.scanStrategy === "st3"
@@ -1018,6 +1116,78 @@ let timeoutBars =
 clampEntryTimeoutBars(
 readPrefs().timeoutBars
 );
+let emaFilter =
+normalizeAlgoEmaFilterEnabled(
+readPrefs().emaFilter
+);
+let emaPeriod =
+clampAlgoEmaPeriod(
+readPrefs().emaPeriod
+);
+let emaShift =
+clampAlgoEmaShift(
+readPrefs().emaShift
+);
+let emaTf =
+normalizeAlgoEmaTf(
+readPrefs().emaTf
+);
+let emaFilter2 =
+normalizeAlgoEmaFilterEnabled(
+readPrefs().emaFilter2
+);
+let emaPeriod2 =
+clampAlgoEmaPeriod(
+readPrefs().emaPeriod2,
+DEFAULT_ALGO_EMA_PERIOD_2
+);
+let emaShift2 =
+clampAlgoEmaShift(
+readPrefs().emaShift2
+);
+let emaTf2 =
+normalizeAlgoEmaTf(
+readPrefs().emaTf2
+);
+const emaFilterLines =
+[
+{
+color:
+"#f0a63a",
+series:
+null,
+isEnabled:
+()=>
+emaFilter,
+getPeriod:
+()=>
+emaPeriod,
+getShift:
+()=>
+emaShift,
+getTf:
+()=>
+emaTf
+},
+{
+color:
+"#60a5fa",
+series:
+null,
+isEnabled:
+()=>
+emaFilter2,
+getPeriod:
+()=>
+emaPeriod2,
+getShift:
+()=>
+emaShift2,
+getTf:
+()=>
+emaTf2
+}
+];
 let scanStrategy =
 readPrefs().scanStrategy ||
 "st1";
@@ -1505,6 +1675,164 @@ TERMINAL_VISIBLE_BARS
 
 }
 
+function ensureEmaFilterSeries(
+line
+){
+
+if(
+line.series
+){
+return line.series;
+}
+
+try{
+line.series =
+chart.addLineSeries(
+{
+color:
+line.color,
+lineWidth:
+1,
+priceLineVisible:
+false,
+lastValueVisible:
+false,
+crosshairMarkerVisible:
+false,
+visible:
+false,
+autoscaleInfoProvider:
+()=>
+null
+}
+);
+}catch{
+line.series =
+null;
+}
+
+return line.series;
+
+}
+
+function hideEmaFilterLine(
+line
+){
+
+if(
+!line.series
+){
+return;
+}
+
+try{
+line.series.setData(
+[]
+);
+line.series.applyOptions(
+{
+visible:
+false
+}
+);
+}catch{
+/* ignore */
+}
+
+}
+
+function drawEmaFilterLine(
+line,
+display
+){
+
+if(
+!line.isEnabled()
+){
+hideEmaFilterLine(
+line
+);
+return;
+}
+
+const series =
+ensureEmaFilterSeries(
+line
+);
+
+if(
+!series
+){
+return;
+}
+
+const points =
+buildAlgoEmaLinePoints(
+candles,
+{
+period:
+line.getPeriod(),
+shift:
+line.getShift(),
+tf:
+line.getTf(),
+chartTf:
+tf
+}
+);
+
+if(
+!display.length ||
+!points.length
+){
+hideEmaFilterLine(
+line
+);
+return;
+}
+
+try{
+series.setData(
+alignMaPointsToDisplayCandles(
+points,
+display
+)
+);
+series.applyOptions(
+{
+visible:
+true
+}
+);
+}catch{
+/* ignore */
+}
+
+}
+
+function refreshEmaFilterLines(){
+
+const display =
+buildDisplayCandles();
+
+runWithPreservedVisibleLogicalRange(
+chart,
+()=>{
+
+for(
+const line of emaFilterLines
+){
+drawEmaFilterLine(
+line,
+display
+);
+}
+
+}
+);
+
+}
+
 function schedulePatternAnalysis(){
 
 const seq =
@@ -1550,6 +1878,16 @@ trailSlPctSt2,
 trailSlSt3,
 trailSlPctSt3,
 timeoutBars,
+emaFilter,
+emaPeriod,
+emaShift,
+emaTf,
+emaFilter2,
+emaPeriod2,
+emaShift2,
+emaTf2,
+chartTf:
+tf,
 patternSettings:
 readAlgoPattern12Settings(),
 statsMode,
@@ -1593,6 +1931,7 @@ candleSeries.setData(
 display
 );
 applyRsiData();
+refreshEmaFilterLines();
 
 if(
 fit
@@ -1675,6 +2014,16 @@ trailSlPctSt2,
 trailSlSt3,
 trailSlPctSt3,
 timeoutBars,
+emaFilter,
+emaPeriod,
+emaShift,
+emaTf,
+emaFilter2,
+emaPeriod2,
+emaShift2,
+emaTf2,
+chartTf:
+tf,
 scanStrategy,
 scanTf,
 scanLongMinWinRate,
@@ -2173,6 +2522,16 @@ trailSlPctSt2,
 trailSlSt3,
 trailSlPctSt3,
 timeoutBars,
+emaFilter,
+emaPeriod,
+emaShift,
+emaTf,
+emaFilter2,
+emaPeriod2,
+emaShift2,
+emaTf2,
+chartTf:
+tf,
 scanStrategy,
 scanTf,
 scanLongMinWinRate,
@@ -2202,6 +2561,16 @@ trailSlPctSt2,
 trailSlSt3,
 trailSlPctSt3,
 timeoutBars,
+emaFilter,
+emaPeriod,
+emaShift,
+emaTf,
+emaFilter2,
+emaPeriod2,
+emaShift2,
+emaTf2,
+chartTf:
+tf,
 patternSettings:
 readAlgoPattern12Settings(),
 statsMode,
@@ -2900,6 +3269,303 @@ next;
 }
 );
 
+function bindEmaFilterPair(
+{
+checkId,
+periodId,
+shiftId,
+tfId,
+fallbackPeriod,
+getEnabled,
+setEnabled,
+getPeriod,
+setPeriod,
+getShift,
+setShift,
+getTf,
+setTf
+}
+){
+
+const check =
+document.getElementById(
+checkId
+);
+const periodInput =
+document.getElementById(
+periodId
+);
+const shiftInput =
+document.getElementById(
+shiftId
+);
+const tfSelect =
+document.getElementById(
+tfId
+);
+
+if(
+check
+){
+check.checked =
+!!getEnabled();
+check.addEventListener(
+"change",
+()=>{
+const next =
+!!check.checked;
+
+if(
+next ===
+!!getEnabled()
+){
+return;
+}
+
+setEnabled(
+next
+);
+refreshEmaFilterLines();
+persistAlgoSettings();
+}
+);
+}
+
+if(
+periodInput
+){
+periodInput.value =
+String(
+getPeriod()
+);
+
+const commitPeriod =
+()=>{
+const next =
+clampAlgoEmaPeriod(
+periodInput.value,
+fallbackPeriod
+);
+periodInput.value =
+String(
+next
+);
+
+if(
+next ===
+getPeriod()
+){
+return;
+}
+
+setPeriod(
+next
+);
+refreshEmaFilterLines();
+persistAlgoSettings();
+};
+
+periodInput.addEventListener(
+"change",
+commitPeriod
+);
+periodInput.addEventListener(
+"keydown",
+event=>{
+
+if(
+event.key ===
+"Enter"
+){
+event.preventDefault();
+periodInput.blur();
+}
+
+}
+);
+}
+
+if(
+shiftInput
+){
+shiftInput.value =
+String(
+getShift()
+);
+
+const commitShift =
+()=>{
+const next =
+clampAlgoEmaShift(
+shiftInput.value
+);
+shiftInput.value =
+String(
+next
+);
+
+if(
+next ===
+getShift()
+){
+return;
+}
+
+setShift(
+next
+);
+refreshEmaFilterLines();
+persistAlgoSettings();
+};
+
+shiftInput.addEventListener(
+"change",
+commitShift
+);
+shiftInput.addEventListener(
+"keydown",
+event=>{
+
+if(
+event.key ===
+"Enter"
+){
+event.preventDefault();
+shiftInput.blur();
+}
+
+}
+);
+}
+
+if(
+tfSelect
+){
+tfSelect.value =
+normalizeAlgoEmaTf(
+getTf()
+);
+tfSelect.addEventListener(
+"change",
+()=>{
+const next =
+normalizeAlgoEmaTf(
+tfSelect.value
+);
+tfSelect.value =
+next;
+
+if(
+next ===
+getTf()
+){
+return;
+}
+
+setTf(
+next
+);
+refreshEmaFilterLines();
+persistAlgoSettings();
+}
+);
+}
+
+}
+
+bindEmaFilterPair(
+{
+checkId:
+"algo-ema-filter",
+periodId:
+"algo-ema-period",
+shiftId:
+"algo-ema-shift",
+tfId:
+"algo-ema-tf",
+fallbackPeriod:
+DEFAULT_ALGO_EMA_PERIOD,
+getEnabled:
+()=>
+emaFilter,
+setEnabled:
+next=>{
+emaFilter =
+next;
+},
+getPeriod:
+()=>
+emaPeriod,
+setPeriod:
+next=>{
+emaPeriod =
+next;
+},
+getShift:
+()=>
+emaShift,
+setShift:
+next=>{
+emaShift =
+next;
+},
+getTf:
+()=>
+emaTf,
+setTf:
+next=>{
+emaTf =
+next;
+}
+}
+);
+bindEmaFilterPair(
+{
+checkId:
+"algo-ema-filter-2",
+periodId:
+"algo-ema-period-2",
+shiftId:
+"algo-ema-shift-2",
+tfId:
+"algo-ema-tf-2",
+fallbackPeriod:
+DEFAULT_ALGO_EMA_PERIOD_2,
+getEnabled:
+()=>
+emaFilter2,
+setEnabled:
+next=>{
+emaFilter2 =
+next;
+},
+getPeriod:
+()=>
+emaPeriod2,
+setPeriod:
+next=>{
+emaPeriod2 =
+next;
+},
+getShift:
+()=>
+emaShift2,
+setShift:
+next=>{
+emaShift2 =
+next;
+},
+getTf:
+()=>
+emaTf2,
+setTf:
+next=>{
+emaTf2 =
+next;
+}
+}
+);
+
 
 
 tfBar?.addEventListener(
@@ -3211,6 +3877,16 @@ trailSlPctSt2,
 trailSlSt3,
 trailSlPctSt3,
 timeoutBars,
+emaFilter,
+emaPeriod,
+emaShift,
+emaTf,
+emaFilter2,
+emaPeriod2,
+emaShift2,
+emaTf2,
+chartTf:
+tf,
 patternSettings:
 readAlgoPattern12Settings()
 }),
