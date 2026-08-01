@@ -300,6 +300,8 @@ Object.freeze({
 5,
 "algo-trading/pattern-entry-logic.js":
 8,
+"algo-trading/pattern-ema-filter.js":
+3,
 "algo-trading/temp-pullback-before-arm.js":
 3,
 "algo-trading/pattern-entry-overlay.js":

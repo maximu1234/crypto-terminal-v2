@@ -26,12 +26,16 @@
 - Уточнение `getOpenOrders` с `symbol` в алго chart-orders; правки order-executor /
   Bybit REST под устойчивую постановку/сверку ТП.
 
+### Hotfix Algo Bot 1.0.122
+
+В `bot-app/site-bundle` не хватало `pattern-ema-filter.js` (импорт из `pattern-analysis.js`) — страница Алготрейдинг падала с 404 на Mac и Windows.
+
 ## Версии
 
 - Web marker: `v0.116`
 - Multichart desktop app: `v1.1.14`
 - Mac tag (Multichart): `desktop-v1.1.14`
 - Windows tag (Multichart): `desktop-win-v1.1.14`
-- Algo Bot desktop app: `v1.0.121`
-- Mac tag (Algo Bot): `algo-bot-v1.0.121`
-- Windows tag (Algo Bot): `algo-bot-win-v1.0.121`
+- Algo Bot desktop app: `v1.0.122`
+- Mac tag (Algo Bot): `algo-bot-v1.0.122`
+- Windows tag (Algo Bot): `algo-bot-win-v1.0.122`
