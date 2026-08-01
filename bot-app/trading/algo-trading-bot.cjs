@@ -170,6 +170,11 @@ tf:
 prefs.tf,
 timeoutBars:
 prefs.timeoutBars,
+/* TEMP_PULLBACK_BEFORE_ARM */
+pullbackBeforeArm:
+!!prefs.pullbackBeforeArm,
+pullbackBeforeArmPct:
+prefs.pullbackBeforeArmPct,
 slPct:
 prefs.slPct,
 riskUsd:
@@ -1214,6 +1219,10 @@ minWinRate:
 shellPrefs.minWinRate,
 timeoutBars:
 shellPrefs.timeoutBars,
+pullbackBeforeArm:
+!!shellPrefs.pullbackBeforeArm,
+pullbackBeforeArmPct:
+shellPrefs.pullbackBeforeArmPct,
 slPct:
 shellPrefs.slPct,
 tpRr:

@@ -1494,10 +1494,13 @@ const result =
 await api.getOpenOrders(
 force
 ? {
+symbol,
 forceRefresh:
 true
 }
-: undefined
+: {
+symbol
+}
 );
 
 if(

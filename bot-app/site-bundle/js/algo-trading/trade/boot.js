@@ -24,7 +24,7 @@ createTradeChartOverlay
 
 import {
 createTradeChartOrders
-} from "./chart-orders.js?v=2";
+} from "./chart-orders.js?v=3";
 
 /**
  * @param {{

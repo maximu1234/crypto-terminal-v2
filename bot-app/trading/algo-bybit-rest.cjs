@@ -4557,21 +4557,66 @@ canceledOrderIds,
 
 }
 
-async function getOpenOrders(){
+/**
+ * Open orders on the algo account.
+ * Without a symbol Bybit returns at most 50 rows per page — we page through
+ * nextPageCursor so TP1/TP2 legs are not silently dropped when many triggers
+ * sit on the watchlist. With a symbol the list is scoped to that contract.
+ * @param {{symbol?: string}} [payload]
+ */
+async function getOpenOrders(
+payload =
+{}
+){
 
-const result =
-await privateGet(
-"/v5/order/realtime",
+const sym =
+stripSymbolSuffix(
+payload?.symbol
+);
+const orders =
+[];
+let cursor =
+"";
+
+for(
+let page =
+0;
+page <
+20;
+page++
+){
+
+const query =
 {
 category:
 "linear",
-settleCoin:
-"USDT",
 openOnly:
 "0",
 limit:
 "50"
+};
+
+if(
+sym
+){
+query.symbol =
+sym;
+}else{
+query.settleCoin =
+"USDT";
 }
+
+if(
+cursor
+){
+query.cursor =
+cursor;
+}
+
+const result =
+await privateGet(
+"/v5/order/realtime",
+query
 );
 
 if(
@@ -4583,16 +4628,46 @@ return result;
 const list =
 result.data?.result?.list;
 
-const orders =
+if(
 Array.isArray(
 list
 )
-? list.map(
-mapOrderRow
-).filter(
-Boolean
-)
-: [];
+){
+for(
+const row of list
+){
+const mapped =
+mapOrderRow(
+row
+);
+
+if(
+mapped
+){
+orders.push(
+mapped
+);
+}
+}
+}
+
+const next =
+String(
+result.data?.result?.nextPageCursor ||
+""
+).trim();
+
+if(
+!next ||
+next ===
+cursor
+){
+break;
+}
+
+cursor =
+next;
+}
 
 orders.sort(
 (

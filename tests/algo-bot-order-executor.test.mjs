@@ -211,7 +211,30 @@ function makeRestStub(
       async ()=>({
         ok:
         true
-      })
+      }),
+    cancelPositionStop:
+      async (
+        symbol,
+        target
+      )=>{
+        cancelled.push(
+          `stop:${symbol}:${target}`
+        );
+        return {
+          ok:
+          true
+        };
+      },
+    closePositionAtMarket:
+      async symbol=>{
+        cancelled.push(
+          `market:${symbol}`
+        );
+        return {
+          ok:
+          true
+        };
+      }
   };
 }
 
@@ -297,7 +320,7 @@ ids
 );
 
 test(
-"places TP1/TP2 as reduce-only limits by their own shares",
+"places all three TPs as reduce-only limits by shares",
 async ()=>{
 const rest =
 makeRestStub();
@@ -320,9 +343,8 @@ true
 );
 assert.equal(
 result.placed,
-2
+3
 );
-/* Final level is the position TP, so it is never an order here. */
 assert.deepEqual(
 rest.placed.map(
 order=>
@@ -330,7 +352,8 @@ order.price
 ),
 [
   100,
-  110
+  110,
+  120
 ]
 );
 assert.deepEqual(
@@ -342,7 +365,8 @@ order.qty
 ),
 [
   0.2,
-  0.2
+  0.2,
+  0.6
 ]
 );
 assert.equal(
@@ -352,7 +376,7 @@ order=>
 order.orderLinkId
 )
 ).size,
-2
+3
 );
 rest.placed.forEach(
 order=>{
@@ -405,7 +429,8 @@ order=>
 order.price
 ),
 [
-  110
+  110,
+  120
 ]
 );
 assert.match(
@@ -471,7 +496,7 @@ true
 );
 assert.equal(
 result.placed,
-1
+2
 );
 assert.equal(
 result.tpOrderIds[
@@ -479,7 +504,7 @@ result.tpOrderIds[
 ],
 "live-1"
 );
-/* Only TP2 is restored, still at its own 25% share. */
+/* 0.8 left after live TP1: remainder split 25:50 → 0.2 and 0.6. */
 assert.deepEqual(
 rest.placed.map(
 order=>
@@ -488,7 +513,8 @@ order.qty
 )
 ),
 [
-  0.2
+  0.2,
+  0.6
 ]
 );
 assert.deepEqual(
@@ -497,7 +523,8 @@ order=>
 order.price
 ),
 [
-  110
+  110,
+  120
 ]
 );
 }
@@ -549,6 +576,13 @@ symbol:
 ]
 }
 );
+rest.getPosition =
+async ()=>({
+ok:
+true,
+position:
+null
+});
 const local =
 loadExecutorWithStubs(
 rest
@@ -808,14 +842,15 @@ const entry =
 local.getPendingEntries().get(
 "BTCUSDT"
 );
-/* TP1 counted as hit by closed quantity, so only TP2 is restored. */
+/* TP1 counted as hit by closed quantity, so TP2+TP3 are restored. */
 assert.deepEqual(
 rest.placed.map(
 order=>
 order.price
 ),
 [
-  110
+  110,
+  120
 ]
 );
 assert.equal(
@@ -828,7 +863,12 @@ entry.stopsManagedByUser,
 false
 );
 assert.deepEqual(
-rest.cancelled,
+rest.cancelled.filter(
+row=>
+!row.startsWith(
+"stop:"
+)
+).sort(),
 [
   "ETHUSDT:orphan-1"
 ]
@@ -854,7 +894,7 @@ row.startsWith(
 );
 
 test(
-"a partial position without a take profit counts as missing stops",
+"partial exits only require a position stop loss",
 ()=>{
 assert.equal(
 executor.positionMissingStops(
@@ -866,6 +906,18 @@ takeProfit:
 }
 ),
 true
+);
+assert.equal(
+executor.positionMissingStops(
+{
+stopLoss:
+90,
+takeProfit:
+0
+},
+true
+),
+false
 );
 assert.equal(
 executor.positionMissingStops(
@@ -914,6 +966,113 @@ qtyStep:
 ]
 ),
 null
+);
+/* TP1/TP2 may floor to 0 — TP3 still takes the whole step-snapped size. */
+assert.deepEqual(
+executor.allocateQtyByWeights(
+0.003,
+{
+qtyStep:
+"0.001"
+},
+[
+  25,
+  25,
+  50
+]
+),
+[
+  0,
+  0,
+  0.003
+]
+);
+const parts =
+executor.allocateQtyByWeights(
+1.2345,
+{
+qtyStep:
+"0.001"
+},
+[
+  10,
+  10,
+  80
+]
+);
+assert.deepEqual(
+parts,
+[
+  0.123,
+  0.123,
+  0.988
+]
+);
+assert.equal(
+Number(
+parts.reduce(
+(
+a,
+b
+)=>
+a +
+b,
+0
+).toFixed(
+3
+)
+),
+1.234
+);
+}
+);
+
+test(
+"dust below the instrument step is closed at market on the final TP",
+async ()=>{
+const rest =
+makeRestStub(
+{
+size:
+0.0005
+}
+);
+rest.getInstrumentRules =
+async ()=>({
+qtyStep:
+"0.001",
+minOrderQty:
+0.001
+});
+const local =
+loadExecutorWithStubs(
+rest
+);
+const result =
+await local.ensurePartialTpLimits(
+{
+symbol:
+"BTCUSDT",
+meta:
+partialMeta()
+}
+);
+assert.equal(
+result.ok,
+true
+);
+assert.equal(
+result.placed,
+0
+);
+assert.ok(
+rest.cancelled.includes(
+"market:BTCUSDT"
+)
+);
+assert.match(
+result.message,
+/dust/i
 );
 }
 );
@@ -1023,7 +1182,7 @@ qtyStep:
 0.005
 ]
 );
-assert.equal(
+assert.deepEqual(
 executor.splitQtyByShares(
 0.002,
 {
@@ -1031,7 +1190,11 @@ qtyStep:
 "0.001"
 }
 ),
-null
+[
+0,
+0,
+0.002
+]
 );
 }
 );

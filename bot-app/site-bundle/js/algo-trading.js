@@ -49,7 +49,7 @@ mountAlgoRuntimeUi
 
 import {
 mountAlgoBotStrategyUi
-} from "./algo-trading/bot-strategy-ui.js?v=45";
+} from "./algo-trading/bot-strategy-ui.js?v=46";
 
 import {
 syncBotStrategiesToMain
@@ -107,7 +107,14 @@ DEFAULT_TP_SHARES
 import {
 clampEntryTimeoutBars,
 ENTRY_TIMEOUT_BARS
-} from "./algo-trading/pattern-entry-logic.js?v=5";
+} from "./algo-trading/pattern-entry-logic.js?v=8";
+
+/* TEMP_PULLBACK_BEFORE_ARM — remove with temp-pullback-before-arm.js */
+import {
+clampPullbackBeforeArmPct,
+normalizePullbackBeforeArmEnabled,
+DEFAULT_PULLBACK_BEFORE_ARM_PCT
+} from "./algo-trading/temp-pullback-before-arm.js?v=3";
 
 import {
 normalizeAlgoStatsMode
@@ -364,6 +371,15 @@ timeoutBars:
 clampEntryTimeoutBars(
 raw.timeoutBars
 ),
+/* TEMP_PULLBACK_BEFORE_ARM */
+pullbackBeforeArm:
+normalizePullbackBeforeArmEnabled(
+raw.pullbackBeforeArm
+),
+pullbackBeforeArmPct:
+clampPullbackBeforeArmPct(
+raw.pullbackBeforeArmPct
+),
 scanStrategy:
 raw.scanStrategy === "st2" || raw.scanStrategy === "st3"
 ? raw.scanStrategy
@@ -466,6 +482,11 @@ trailSlX2St3:
 DEFAULT_TRAIL_SL_X2,
 timeoutBars:
 ENTRY_TIMEOUT_BARS,
+/* TEMP_PULLBACK_BEFORE_ARM */
+pullbackBeforeArm:
+false,
+pullbackBeforeArmPct:
+DEFAULT_PULLBACK_BEFORE_ARM_PCT,
 scanStrategy:
 "st1",
 scanTf:
@@ -625,6 +646,15 @@ prefs.tp3Y
 timeoutBars:
 clampEntryTimeoutBars(
 prefs.timeoutBars
+),
+/* TEMP_PULLBACK_BEFORE_ARM */
+pullbackBeforeArm:
+normalizePullbackBeforeArmEnabled(
+prefs.pullbackBeforeArm
+),
+pullbackBeforeArmPct:
+clampPullbackBeforeArmPct(
+prefs.pullbackBeforeArmPct
 ),
 scanStrategy:
 prefs.scanStrategy === "st2" || prefs.scanStrategy === "st3"
@@ -1496,6 +1526,15 @@ let timeoutBars =
 clampEntryTimeoutBars(
 readPrefs().timeoutBars
 );
+/* TEMP_PULLBACK_BEFORE_ARM */
+let pullbackBeforeArm =
+normalizePullbackBeforeArmEnabled(
+readPrefs().pullbackBeforeArm
+);
+let pullbackBeforeArmPct =
+clampPullbackBeforeArmPct(
+readPrefs().pullbackBeforeArmPct
+);
 let scanStrategy =
 readPrefs().scanStrategy ||
 "st1";
@@ -1956,6 +1995,9 @@ share1Y,
 share2Y,
 share3Y,
 timeoutBars,
+/* TEMP_PULLBACK_BEFORE_ARM */
+pullbackBeforeArm,
+pullbackBeforeArmPct,
 patternSettings:
 readAlgoPattern12Settings(),
 statsMode,
@@ -2089,6 +2131,9 @@ share1Y,
 share2Y,
 share3Y,
 timeoutBars,
+/* TEMP_PULLBACK_BEFORE_ARM */
+pullbackBeforeArm,
+pullbackBeforeArmPct,
 scanStrategy,
 scanTf,
 scanLongMinWinRate,
@@ -2426,6 +2471,11 @@ getRiskUsd:()=>
 riskUsd,
 getTimeoutBars:()=>
 timeoutBars,
+/* TEMP_PULLBACK_BEFORE_ARM */
+getPullbackBeforeArm:()=>
+pullbackBeforeArm,
+getPullbackBeforeArmPct:()=>
+pullbackBeforeArmPct,
 getChartPositionsStrategy:()=>
 chartPositionsStrategy,
 getTp1X:()=>
@@ -2577,6 +2627,83 @@ timeoutBarsInput.blur();
 );
 }
 
+/* TEMP_PULLBACK_BEFORE_ARM — remove with temp-pullback-before-arm.js */
+const pullbackBeforeArmInput =
+document.getElementById(
+"algo-pullback-before-arm"
+);
+const pullbackBeforeArmPctInput =
+document.getElementById(
+"algo-pullback-before-arm-pct"
+);
+
+if(
+pullbackBeforeArmPctInput
+){
+pullbackBeforeArmPctInput.value =
+String(
+pullbackBeforeArmPct
+);
+
+const commitPullbackPct =
+()=>{
+const next =
+clampPullbackBeforeArmPct(
+pullbackBeforeArmPctInput.value
+);
+pullbackBeforeArmPctInput.value =
+String(
+next
+);
+
+if(
+next ===
+pullbackBeforeArmPct
+){
+return;
+}
+
+pullbackBeforeArmPct =
+next;
+persistAlgoSettings();
+};
+
+pullbackBeforeArmPctInput.addEventListener(
+"change",
+commitPullbackPct
+);
+pullbackBeforeArmPctInput.addEventListener(
+"keydown",
+event=>{
+
+if(
+event.key ===
+"Enter"
+){
+event.preventDefault();
+pullbackBeforeArmPctInput.blur();
+}
+
+}
+);
+}
+
+if(
+pullbackBeforeArmInput
+){
+pullbackBeforeArmInput.checked =
+pullbackBeforeArm;
+
+pullbackBeforeArmInput.addEventListener(
+"change",
+()=>{
+pullbackBeforeArm =
+!!pullbackBeforeArmInput.checked;
+persistAlgoSettings();
+}
+);
+}
+
 const tp1XInput =
 document.getElementById(
 "algo-tp1-x"
@@ -2619,6 +2746,9 @@ share1Y,
 share2Y,
 share3Y,
 timeoutBars,
+/* TEMP_PULLBACK_BEFORE_ARM */
+pullbackBeforeArm,
+pullbackBeforeArmPct,
 scanStrategy,
 scanTf,
 scanLongMinWinRate,
@@ -2656,6 +2786,9 @@ share1Y,
 share2Y,
 share3Y,
 timeoutBars,
+/* TEMP_PULLBACK_BEFORE_ARM */
+pullbackBeforeArm,
+pullbackBeforeArmPct,
 patternSettings:
 readAlgoPattern12Settings(),
 statsMode,
@@ -3964,6 +4097,9 @@ share1Y,
 share2Y,
 share3Y,
 timeoutBars,
+/* TEMP_PULLBACK_BEFORE_ARM */
+pullbackBeforeArm,
+pullbackBeforeArmPct,
 patternSettings:
 readAlgoPattern12Settings()
 }),
@@ -4049,6 +4185,9 @@ share1Y,
 share2Y,
 share3Y,
 timeoutBars,
+/* TEMP_PULLBACK_BEFORE_ARM */
+pullbackBeforeArm,
+pullbackBeforeArmPct,
 scanStrategy,
 scanTf,
 scanLongMinWinRate,

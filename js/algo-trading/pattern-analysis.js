@@ -8,7 +8,7 @@ defaultPattern12Settings
 
 import {
 detectPatternEntryEventsFromSetups
-} from "./pattern-entry-logic.js?v=5";
+} from "./pattern-entry-logic.js?v=8";
 
 import {
 countPattern12SetupsFromScene,
@@ -67,7 +67,12 @@ candles,
 scene?.setups,
 {
 timeoutBars:
-opts.timeoutBars
+opts.timeoutBars,
+/* TEMP_PULLBACK_BEFORE_ARM */
+pullbackBeforeArm:
+opts.pullbackBeforeArm,
+pullbackBeforeArmPct:
+opts.pullbackBeforeArmPct
 }
 ),
 opts

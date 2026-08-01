@@ -42,6 +42,11 @@ running:
 false,
 timeoutBars:
 200,
+/* TEMP_PULLBACK_BEFORE_ARM */
+pullbackBeforeArm:
+false,
+pullbackBeforeArmPct:
+38.2,
 tf:
 "5",
 slPct:
@@ -806,6 +811,41 @@ src.timeoutBars,
 10000,
 DEFAULT_ST1.timeoutBars
 ),
+/* TEMP_PULLBACK_BEFORE_ARM */
+pullbackBeforeArm:
+src.pullbackBeforeArm ===
+true ||
+src.pullbackBeforeArm ===
+1 ||
+src.pullbackBeforeArm ===
+"1" ||
+src.pullbackBeforeArm ===
+"true",
+pullbackBeforeArmPct:
+(()=>{
+const n =
+Number(
+src.pullbackBeforeArmPct
+);
+if(
+!Number.isFinite(
+n
+)
+){
+return DEFAULT_ST1.pullbackBeforeArmPct;
+}
+return Math.min(
+100,
+Math.max(
+1,
+Math.round(
+n *
+10
+) /
+10
+)
+);
+})(),
 tf:
 normalizeTf(
 src.tf

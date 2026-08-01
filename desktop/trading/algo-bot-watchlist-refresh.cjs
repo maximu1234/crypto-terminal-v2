@@ -1456,21 +1456,6 @@ clampMinWinRate(
 opts.minWinRate ??
 st1.minWinRate
 );
-const timeoutBars =
-Number(
-opts.timeoutBars ??
-st1.timeoutBars
-);
-const slPct =
-Number(
-opts.slPct ??
-st1.slPct
-);
-const tpRr =
-Number(
-opts.tpRr ??
-st1.tpRr
-);
 const strategyId =
 String(
 opts.strategyId ||
@@ -1481,6 +1466,33 @@ strategies[
 strategyId
 ] ||
 st1;
+const timeoutBars =
+Number(
+opts.timeoutBars ??
+strategy.timeoutBars ??
+st1.timeoutBars
+);
+/* TEMP_PULLBACK_BEFORE_ARM */
+const pullbackBeforeArm =
+opts.pullbackBeforeArm !=
+null
+? !!opts.pullbackBeforeArm
+: !!strategy.pullbackBeforeArm;
+const pullbackBeforeArmPct =
+opts.pullbackBeforeArmPct ??
+strategy.pullbackBeforeArmPct;
+const slPct =
+Number(
+opts.slPct ??
+strategy.slPct ??
+st1.slPct
+);
+const tpRr =
+Number(
+opts.tpRr ??
+strategy.tpRr ??
+st1.tpRr
+);
 const exitProfile =
 opts.exitProfile &&
 typeof opts.exitProfile ===
@@ -1617,7 +1629,10 @@ patternEntry.detectPatternEntryEventsFromSetups(
 candles,
 scene?.setups,
 {
-timeoutBars
+timeoutBars,
+/* TEMP_PULLBACK_BEFORE_ARM */
+pullbackBeforeArm,
+pullbackBeforeArmPct
 }
 );
 

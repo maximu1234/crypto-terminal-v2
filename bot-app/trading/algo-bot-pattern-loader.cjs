@@ -28,6 +28,7 @@ require(
 const SOURCE_FILES =
 [
 "algo-trading/pattern-entry-logic.js",
+"algo-trading/temp-pullback-before-arm.js",
 "algo-trading/pattern-12-math.js",
 "indicators.js"
 ];

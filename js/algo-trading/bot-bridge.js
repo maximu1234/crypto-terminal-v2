@@ -3,7 +3,7 @@
  */
 import {
 loadBotStrategiesPrefs
-} from "./bot-strategy-prefs.js?v=15";
+} from "./bot-strategy-prefs.js?v=16";
 import {
 readAlgoPattern12Settings
 } from "./pattern-12-settings.js?v=2";

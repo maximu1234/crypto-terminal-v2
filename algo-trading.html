@@ -19,7 +19,7 @@
 <link rel="stylesheet" href="/css/terminal.css?v=169">
 <link rel="stylesheet" href="/css/terminal-layout.css?v=97">
 <link rel="stylesheet" href="/css/chart-indicators.css?v=22">
-<link rel="stylesheet" href="/css/algo-trading.css?v=92">
+<link rel="stylesheet" href="/css/algo-trading.css?v=93">
 <link rel="stylesheet" href="/css/algo-trading-book-panel.css?v=4">
 <link rel="stylesheet" href="/css/algo-trading-chart-overlay.css?v=2">
 
@@ -156,6 +156,13 @@ aria-pressed="false"
 <label class="algo-bot-label" for="algo-bot-st1-timeout">Количество баров до отмены паттерна</label>
 <input type="number" id="algo-bot-st1-timeout" class="algo-bot-input" min="1" max="10000" step="1" value="200" inputmode="numeric" />
 </div>
+<!-- TEMP_PULLBACK_BEFORE_ARM -->
+<div class="algo-bot-field algo-bot-field--row" data-temp-pullback-before-arm>
+<label class="algo-bot-label" for="algo-bot-st1-pullback-pct" title="Откат к pt3 на N% от X перед вооружением. Без отката закол pt4 отменяет сетап.">Откат перед arm</label>
+<input type="number" id="algo-bot-st1-pullback-pct" class="algo-bot-input algo-bot-input--sm" min="1" max="100" step="0.1" value="38.2" inputmode="decimal" title="% от X (pt4→pt3)" />
+<span class="algo-bot-unit">%</span>
+<label class="algo-bot-check" title="Ждать откат перед arm"><input type="checkbox" id="algo-bot-st1-pullback" /><span>вкл.</span></label>
+</div>
 <div class="algo-bot-field">
 <span class="algo-bot-label">Таймфрейм</span>
 <div class="algo-bot-tf" id="algo-bot-st1-tf" role="tablist" aria-label="Таймфрейм Стратегии 1">
@@ -267,6 +274,8 @@ aria-pressed="false"
 </button>
 <div class="algo-bot-strategy-dropdown hidden" id="algo-bot-st2-dropdown" role="dialog" aria-label="Настройки Стратегии 2">
 <div class="algo-bot-field"><label class="algo-bot-label" for="algo-bot-st2-timeout">Количество баров до отмены паттерна</label><input type="number" id="algo-bot-st2-timeout" class="algo-bot-input" min="1" max="10000" step="1" value="200" inputmode="numeric" /></div>
+<!-- TEMP_PULLBACK_BEFORE_ARM -->
+<div class="algo-bot-field algo-bot-field--row" data-temp-pullback-before-arm><label class="algo-bot-label" for="algo-bot-st2-pullback-pct" title="Откат к pt3 на N% от X перед вооружением. Без отката закол pt4 отменяет сетап.">Откат перед arm</label><input type="number" id="algo-bot-st2-pullback-pct" class="algo-bot-input algo-bot-input--sm" min="1" max="100" step="0.1" value="38.2" inputmode="decimal" /><span class="algo-bot-unit">%</span><label class="algo-bot-check" title="Ждать откат перед arm"><input type="checkbox" id="algo-bot-st2-pullback" /><span>вкл.</span></label></div>
 <div class="algo-bot-field"><span class="algo-bot-label">Таймфрейм</span><div class="algo-bot-tf" id="algo-bot-st2-tf" role="tablist" aria-label="Таймфрейм Стратегии 2"><button type="button" class="algo-bot-tf-btn" data-bot-tf="1">1m</button><button type="button" class="algo-bot-tf-btn active" data-bot-tf="5">5m</button><button type="button" class="algo-bot-tf-btn" data-bot-tf="15">15m</button><button type="button" class="algo-bot-tf-btn" data-bot-tf="60">1h</button><button type="button" class="algo-bot-tf-btn" data-bot-tf="240">4h</button><button type="button" class="algo-bot-tf-btn" data-bot-tf="D">D</button><button type="button" class="algo-bot-tf-btn" data-bot-tf="W">W</button></div></div>
 <div class="algo-bot-field algo-bot-field--row"><label class="algo-bot-label" for="algo-bot-st2-sl-pct">СЛ (%)</label><input type="number" id="algo-bot-st2-sl-pct" class="algo-bot-input algo-bot-input--sm" min="0.01" step="0.01" value="50" /><label class="algo-bot-label" for="algo-bot-st2-sl-usd">СЛ ($)</label><input type="number" id="algo-bot-st2-sl-usd" class="algo-bot-input algo-bot-input--sm" min="0.01" step="0.01" value="1" /></div>
 <div class="algo-bot-field algo-bot-field--row"><label class="algo-bot-label" for="algo-bot-st2-min-turnover" title="Минимальный 24h оборот (USDT). Ниже — сетап не вооружается.">Объем за сутки от</label><input type="text" id="algo-bot-st2-min-turnover" class="algo-bot-input algo-bot-input--sm algo-bot-input--turnover" inputmode="numeric" autocomplete="off" value="20.000.000" /><span class="algo-bot-unit">USDT</span></div>
@@ -301,6 +310,8 @@ aria-pressed="false"
 </button>
 <div class="algo-bot-strategy-dropdown hidden" id="algo-bot-st3-dropdown" role="dialog" aria-label="Настройки Стратегии 3">
 <div class="algo-bot-field"><label class="algo-bot-label" for="algo-bot-st3-timeout">Количество баров до отмены паттерна</label><input type="number" id="algo-bot-st3-timeout" class="algo-bot-input" min="1" max="10000" step="1" value="200" /></div>
+<!-- TEMP_PULLBACK_BEFORE_ARM -->
+<div class="algo-bot-field algo-bot-field--row" data-temp-pullback-before-arm><label class="algo-bot-label" for="algo-bot-st3-pullback-pct" title="Откат к pt3 на N% от X перед вооружением. Без отката закол pt4 отменяет сетап.">Откат перед arm</label><input type="number" id="algo-bot-st3-pullback-pct" class="algo-bot-input algo-bot-input--sm" min="1" max="100" step="0.1" value="38.2" inputmode="decimal" /><span class="algo-bot-unit">%</span><label class="algo-bot-check" title="Ждать откат перед arm"><input type="checkbox" id="algo-bot-st3-pullback" /><span>вкл.</span></label></div>
 <div class="algo-bot-field"><span class="algo-bot-label">Таймфрейм</span><div class="algo-bot-tf" id="algo-bot-st3-tf" role="tablist"><button type="button" class="algo-bot-tf-btn" data-bot-tf="1">1m</button><button type="button" class="algo-bot-tf-btn active" data-bot-tf="5">5m</button><button type="button" class="algo-bot-tf-btn" data-bot-tf="15">15m</button><button type="button" class="algo-bot-tf-btn" data-bot-tf="60">1h</button><button type="button" class="algo-bot-tf-btn" data-bot-tf="240">4h</button><button type="button" class="algo-bot-tf-btn" data-bot-tf="D">D</button><button type="button" class="algo-bot-tf-btn" data-bot-tf="W">W</button></div></div>
 <div class="algo-bot-field algo-bot-field--row"><label class="algo-bot-label" for="algo-bot-st3-sl-pct">СЛ (%)</label><input type="number" id="algo-bot-st3-sl-pct" class="algo-bot-input algo-bot-input--sm" min="0.01" step="0.01" value="50" /><label class="algo-bot-label" for="algo-bot-st3-sl-usd">СЛ ($)</label><input type="number" id="algo-bot-st3-sl-usd" class="algo-bot-input algo-bot-input--sm" min="0.01" step="0.01" value="1" /></div>
 <div class="algo-bot-field algo-bot-field--row"><label class="algo-bot-label" for="algo-bot-st3-min-turnover" title="Минимальный 24h оборот (USDT). Ниже — сетап не вооружается.">Объем за сутки от</label><input type="text" id="algo-bot-st3-min-turnover" class="algo-bot-input algo-bot-input--sm algo-bot-input--turnover" inputmode="numeric" autocomplete="off" value="20.000.000" /><span class="algo-bot-unit">USDT</span></div>
@@ -1160,6 +1171,25 @@ value="300"
 inputmode="numeric"
 title="Если вход не произошёл за N баров после pt4 — паттерн отменяется"
 />
+</div>
+<!-- TEMP_PULLBACK_BEFORE_ARM: temporary analytics rule — remove with temp-pullback-before-arm.js -->
+<div class="algo-stats-row algo-stats-row--setting algo-stats-row--pullback-arm" data-temp-pullback-before-arm>
+<label class="algo-stats-label" for="algo-pullback-before-arm-pct" title="Временно: откат к pt3 на N% от X перед вооружением входа">Откат перед arm</label>
+<input
+type="number"
+id="algo-pullback-before-arm-pct"
+class="algo-stats-input"
+min="1"
+max="100"
+step="0.1"
+value="38.2"
+inputmode="decimal"
+title="Временно: % от X (pt4→pt3). Лонг — ниже pt4, шорт — выше. Потом вход на pt4"
+/>
+<span class="algo-stats-unit">%</span>
+<label class="algo-stats-check" title="Временно: ждать откат перед вооружением входа">
+<input type="checkbox" id="algo-pullback-before-arm" />
+</label>
 </div>
 <div class="algo-stats-divider" aria-hidden="true"></div>
 <div class="algo-scan-strategy" role="radiogroup" aria-label="Стратегия скана">

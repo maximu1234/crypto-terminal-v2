@@ -12,7 +12,7 @@ normalizeManualRefreshStrategies,
 botSideListLabel,
 botSidesDirectionLabel,
 botSettingsStatusLabel
-} from "./bot-strategy-prefs.js?v=15";
+} from "./bot-strategy-prefs.js?v=16";
 import {
 syncBotStrategiesToMain,
 syncAllTickerFlagsRootToMain,
@@ -211,6 +211,15 @@ document.getElementById(
 const timeoutInput =
 document.getElementById(
 "algo-bot-st1-timeout"
+);
+/* TEMP_PULLBACK_BEFORE_ARM */
+const pullbackInput =
+document.getElementById(
+"algo-bot-st1-pullback"
+);
+const pullbackPctInput =
+document.getElementById(
+"algo-bot-st1-pullback-pct"
 );
 const slPctInput =
 document.getElementById(
@@ -428,6 +437,8 @@ toggle,
 st2Toggle,
 st3Toggle,
 timeoutInput,
+pullbackInput,
+pullbackPctInput,
 slPctInput,
 slUsdInput,
 tpRrInput,
@@ -828,6 +839,10 @@ timeoutBars:
 el(
 "timeout"
 ),
+pullbackBeforeArmPct:
+el(
+"pullback-pct"
+),
 slPct:
 el(
 "sl-pct"
@@ -888,6 +903,11 @@ el(
 const trail =
 el(
 "trail"
+);
+/* TEMP_PULLBACK_BEFORE_ARM */
+const pullback =
+el(
+"pullback"
 );
 const favorites =
 el(
@@ -963,6 +983,13 @@ key
 
 trail.checked =
 !!p.trailSl;
+/* TEMP_PULLBACK_BEFORE_ARM */
+if(
+pullback
+){
+pullback.checked =
+!!p.pullbackBeforeArm;
+}
 favorites.checked =
 !!p.useFavorites;
 real.checked =
@@ -1327,6 +1354,19 @@ key ===
 ? Math.round(
 n
 )
+: key ===
+"pullbackBeforeArmPct"
+? Math.min(
+100,
+Math.max(
+1,
+Math.round(
+n *
+10
+) /
+10
+)
+)
 : n
 }
 );
@@ -1344,6 +1384,20 @@ trailSl:
 !!trail.checked
 }
 )
+);
+/* TEMP_PULLBACK_BEFORE_ARM */
+pullback?.addEventListener(
+"change",
+()=>{
+persistPartial(
+strategyId,
+{
+pullbackBeforeArm:
+!!pullback.checked
+}
+);
+apply();
+}
 );
 favorites?.addEventListener(
 "change",
@@ -2687,6 +2741,24 @@ st1.timeoutBars
 );
 }
 
+/* TEMP_PULLBACK_BEFORE_ARM */
+if(
+pullbackPctInput
+){
+pullbackPctInput.value =
+String(
+st1.pullbackBeforeArmPct ??
+38.2
+);
+}
+
+if(
+pullbackInput
+){
+pullbackInput.checked =
+!!st1.pullbackBeforeArm;
+}
+
 if(
 slPctInput
 ){
@@ -3667,6 +3739,61 @@ v
 )
 )
 )
+);
+}
+);
+/* TEMP_PULLBACK_BEFORE_ARM */
+pullbackPctInput?.addEventListener(
+"change",
+()=>{
+onFieldBlur(
+"pullbackBeforeArmPct",
+pullbackPctInput,
+v=>{
+const n =
+Number(
+v
+);
+if(
+!Number.isFinite(
+n
+)
+){
+return 38.2;
+}
+return Math.min(
+100,
+Math.max(
+1,
+Math.round(
+n *
+10
+) /
+10
+)
+);
+}
+);
+}
+);
+pullbackInput?.addEventListener(
+"change",
+()=>{
+if(
+st1.running
+){
+pullbackInput.checked =
+!!st1.pullbackBeforeArm;
+return;
+}
+
+st1.pullbackBeforeArm =
+!!pullbackInput.checked;
+persistSt1(
+{
+pullbackBeforeArm:
+st1.pullbackBeforeArm
+}
 );
 }
 );

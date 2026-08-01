@@ -8,7 +8,7 @@ defaultPattern12Settings
 
 import {
 detectPatternEntryEventsFromSetups
-} from "./pattern-entry-logic.js?v=5";
+} from "./pattern-entry-logic.js?v=8";
 
 import {
 countPattern12SetupsFromScene,
@@ -26,6 +26,10 @@ import {
 computePartialTpTradeStats,
 filterSequentialPartialEntryEvents
 } from "./pattern-trade-stats-partial.js?v=17";
+
+import {
+filterEntryEventsByEma
+} from "./pattern-ema-filter.js?v=3";
 
 /**
  * @param {Array} candles
@@ -56,13 +60,22 @@ opts.patternSettings ||
 defaultPattern12Settings()
 );
 const events =
+filterEntryEventsByEma(
+candles,
 detectPatternEntryEventsFromSetups(
 candles,
 scene?.setups,
 {
 timeoutBars:
-opts.timeoutBars
+opts.timeoutBars,
+/* TEMP_PULLBACK_BEFORE_ARM */
+pullbackBeforeArm:
+opts.pullbackBeforeArm,
+pullbackBeforeArmPct:
+opts.pullbackBeforeArmPct
 }
+),
+opts
 );
 
 return {

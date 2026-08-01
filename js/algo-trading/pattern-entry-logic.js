@@ -3,11 +3,29 @@
  * Long: pt4 активен → вход = первое пересечение pt4 снизу вверх;
  * отмена = ниже pt3 до входа, либо окно > 300 баров.
  * Short — зеркально.
+ *
+ * TEMP: optional pullback-before-arm gate — see temp-pullback-before-arm.js
  */
 import {
 computePattern12Scene,
 defaultPattern12Settings
 } from "./pattern-12-math.js?v=5";
+import {
+TEMP_PULLBACK_BEFORE_ARM,
+clampPullbackBeforeArmPct,
+computePullbackArmLevel,
+candleTouchesPullbackLevel,
+candlePiercesPt4BeforeArm,
+normalizePullbackBeforeArmEnabled
+} from "./temp-pullback-before-arm.js?v=3";
+
+export {
+evaluatePullbackArmGate,
+isPullbackReadyToArm,
+clampPullbackBeforeArmPct,
+normalizePullbackBeforeArmEnabled,
+DEFAULT_PULLBACK_BEFORE_ARM_PCT
+} from "./temp-pullback-before-arm.js?v=3";
 
 export const ENTRY_TIMEOUT_BARS =
 300;
@@ -47,7 +65,7 @@ n
 /**
  * @typedef {"long"|"short"} PatternSide
  * @typedef {"entry"|"cancel"} EntryEventType
- * @typedef {"below_pt3"|"above_pt3"|"timeout"} CancelReason
+ * @typedef {"below_pt3"|"above_pt3"|"timeout"|"pt4_before_pullback"} CancelReason
  *
  * @typedef {{
  *   type: EntryEventType,
@@ -216,6 +234,28 @@ last,
 deadline
 );
 
+/* TEMP_PULLBACK_BEFORE_ARM — remove with temp-pullback-before-arm.js */
+const pullbackBeforeArm =
+TEMP_PULLBACK_BEFORE_ARM &&
+normalizePullbackBeforeArmEnabled(
+opts.pullbackBeforeArm
+);
+const pullbackLevel =
+pullbackBeforeArm
+? computePullbackArmLevel(
+p3,
+p4,
+clampPullbackBeforeArmPct(
+opts.pullbackBeforeArmPct
+)
+)
+: null;
+let armed =
+!pullbackBeforeArm ||
+!Number.isFinite(
+pullbackLevel
+);
+
 for(
 let i =
 b4 +
@@ -281,6 +321,41 @@ setup
 }
 
 if(
+!armed
+){
+if(
+candleTouchesPullbackLevel(
+side,
+cur,
+pullbackLevel
+)
+){
+armed =
+true;
+}
+}
+
+/* TEMP: pierce of pt4 before pullback spends the first cross — cancel. */
+if(
+!armed &&
+candlePiercesPt4BeforeArm(
+side,
+cur,
+p4
+)
+){
+return makeEvent(
+"cancel",
+side,
+i,
+p4,
+"pt4_before_pullback",
+setup
+);
+}
+
+if(
+armed &&
 isEntryCross(
 side,
 prev,

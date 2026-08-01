@@ -49,7 +49,7 @@ mountAlgoRuntimeUi
 
 import {
 mountAlgoBotStrategyUi
-} from "./algo-trading/bot-strategy-ui.js?v=45";
+} from "./algo-trading/bot-strategy-ui.js?v=46";
 
 import {
 syncBotStrategiesToMain
@@ -69,11 +69,11 @@ mountAlgoTradingIndicators
 
 import {
 mountAlgoPatternEntryOverlay
-} from "./algo-trading/pattern-entry-overlay.js?v=12";
+} from "./algo-trading/pattern-entry-overlay.js?v=14";
 
 import {
 refreshAlgoPatternAnalysis
-} from "./algo-trading/pattern-analysis.js?v=19";
+} from "./algo-trading/pattern-analysis.js?v=21";
 
 import {
 clampSlPctOfX,
@@ -103,7 +103,14 @@ DEFAULT_TP_SHARES
 import {
 clampEntryTimeoutBars,
 ENTRY_TIMEOUT_BARS
-} from "./algo-trading/pattern-entry-logic.js?v=5";
+} from "./algo-trading/pattern-entry-logic.js?v=8";
+
+/* TEMP_PULLBACK_BEFORE_ARM — remove with temp-pullback-before-arm.js */
+import {
+clampPullbackBeforeArmPct,
+normalizePullbackBeforeArmEnabled,
+DEFAULT_PULLBACK_BEFORE_ARM_PCT
+} from "./algo-trading/temp-pullback-before-arm.js?v=3";
 
 import {
 clampAlgoEmaPeriod,
@@ -378,6 +385,15 @@ timeoutBars:
 clampEntryTimeoutBars(
 raw.timeoutBars
 ),
+/* TEMP_PULLBACK_BEFORE_ARM */
+pullbackBeforeArm:
+normalizePullbackBeforeArmEnabled(
+raw.pullbackBeforeArm
+),
+pullbackBeforeArmPct:
+clampPullbackBeforeArmPct(
+raw.pullbackBeforeArmPct
+),
 emaFilter:
 normalizeAlgoEmaFilterEnabled(
 raw.emaFilter
@@ -513,6 +529,11 @@ trailSlX2St3:
 DEFAULT_TRAIL_SL_X2,
 timeoutBars:
 ENTRY_TIMEOUT_BARS,
+/* TEMP_PULLBACK_BEFORE_ARM */
+pullbackBeforeArm:
+false,
+pullbackBeforeArmPct:
+DEFAULT_PULLBACK_BEFORE_ARM_PCT,
 emaFilter:
 false,
 emaPeriod:
@@ -688,6 +709,15 @@ prefs.tp3Y
 timeoutBars:
 clampEntryTimeoutBars(
 prefs.timeoutBars
+),
+/* TEMP_PULLBACK_BEFORE_ARM */
+pullbackBeforeArm:
+normalizePullbackBeforeArmEnabled(
+prefs.pullbackBeforeArm
+),
+pullbackBeforeArmPct:
+clampPullbackBeforeArmPct(
+prefs.pullbackBeforeArmPct
 ),
 emaFilter:
 normalizeAlgoEmaFilterEnabled(
@@ -1310,6 +1340,15 @@ readPrefs().share3Y
 let timeoutBars =
 clampEntryTimeoutBars(
 readPrefs().timeoutBars
+);
+/* TEMP_PULLBACK_BEFORE_ARM */
+let pullbackBeforeArm =
+normalizePullbackBeforeArmEnabled(
+readPrefs().pullbackBeforeArm
+);
+let pullbackBeforeArmPct =
+clampPullbackBeforeArmPct(
+readPrefs().pullbackBeforeArmPct
 );
 let emaFilter =
 normalizeAlgoEmaFilterEnabled(
@@ -2081,6 +2120,9 @@ share1Y,
 share2Y,
 share3Y,
 timeoutBars,
+/* TEMP_PULLBACK_BEFORE_ARM */
+pullbackBeforeArm,
+pullbackBeforeArmPct,
 emaFilter,
 emaPeriod,
 emaShift,
@@ -2225,6 +2267,9 @@ share1Y,
 share2Y,
 share3Y,
 timeoutBars,
+/* TEMP_PULLBACK_BEFORE_ARM */
+pullbackBeforeArm,
+pullbackBeforeArmPct,
 emaFilter,
 emaPeriod,
 emaShift,
@@ -2548,6 +2593,11 @@ getRiskUsd:()=>
 riskUsd,
 getTimeoutBars:()=>
 timeoutBars,
+/* TEMP_PULLBACK_BEFORE_ARM */
+getPullbackBeforeArm:()=>
+pullbackBeforeArm,
+getPullbackBeforeArmPct:()=>
+pullbackBeforeArmPct,
 getChartPositionsStrategy:()=>
 chartPositionsStrategy,
 getTp1X:()=>
@@ -2699,6 +2749,83 @@ timeoutBarsInput.blur();
 );
 }
 
+/* TEMP_PULLBACK_BEFORE_ARM — remove with temp-pullback-before-arm.js */
+const pullbackBeforeArmInput =
+document.getElementById(
+"algo-pullback-before-arm"
+);
+const pullbackBeforeArmPctInput =
+document.getElementById(
+"algo-pullback-before-arm-pct"
+);
+
+if(
+pullbackBeforeArmPctInput
+){
+pullbackBeforeArmPctInput.value =
+String(
+pullbackBeforeArmPct
+);
+
+const commitPullbackPct =
+()=>{
+const next =
+clampPullbackBeforeArmPct(
+pullbackBeforeArmPctInput.value
+);
+pullbackBeforeArmPctInput.value =
+String(
+next
+);
+
+if(
+next ===
+pullbackBeforeArmPct
+){
+return;
+}
+
+pullbackBeforeArmPct =
+next;
+persistAlgoSettings();
+};
+
+pullbackBeforeArmPctInput.addEventListener(
+"change",
+commitPullbackPct
+);
+pullbackBeforeArmPctInput.addEventListener(
+"keydown",
+event=>{
+
+if(
+event.key ===
+"Enter"
+){
+event.preventDefault();
+pullbackBeforeArmPctInput.blur();
+}
+
+}
+);
+}
+
+if(
+pullbackBeforeArmInput
+){
+pullbackBeforeArmInput.checked =
+pullbackBeforeArm;
+
+pullbackBeforeArmInput.addEventListener(
+"change",
+()=>{
+pullbackBeforeArm =
+!!pullbackBeforeArmInput.checked;
+persistAlgoSettings();
+}
+);
+}
+
 const tp1XInput =
 document.getElementById(
 "algo-tp1-x"
@@ -2741,6 +2868,9 @@ share1Y,
 share2Y,
 share3Y,
 timeoutBars,
+/* TEMP_PULLBACK_BEFORE_ARM */
+pullbackBeforeArm,
+pullbackBeforeArmPct,
 emaFilter,
 emaPeriod,
 emaShift,
@@ -2788,6 +2918,9 @@ share1Y,
 share2Y,
 share3Y,
 timeoutBars,
+/* TEMP_PULLBACK_BEFORE_ARM */
+pullbackBeforeArm,
+pullbackBeforeArmPct,
 emaFilter,
 emaPeriod,
 emaShift,
@@ -4400,6 +4533,9 @@ share1Y,
 share2Y,
 share3Y,
 timeoutBars,
+/* TEMP_PULLBACK_BEFORE_ARM */
+pullbackBeforeArm,
+pullbackBeforeArmPct,
 emaFilter,
 emaPeriod,
 emaShift,
@@ -4495,6 +4631,9 @@ share1Y,
 share2Y,
 share3Y,
 timeoutBars,
+/* TEMP_PULLBACK_BEFORE_ARM */
+pullbackBeforeArm,
+pullbackBeforeArmPct,
 scanStrategy,
 scanTf,
 scanLongMinWinRate,

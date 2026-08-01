@@ -332,7 +332,9 @@ return scaled;
 /**
  * Split qty across N weights on the instrument step grid.
  * Every part but the last is floored; the last one absorbs the remainder so
- * the sum always equals the position size (final TP closes everything left).
+ * the sum always equals the step-snapped position size (final TP closes
+ * everything the exchange can still fill as a limit). Early parts may be 0
+ * when the share is below one step — the final leg then takes the whole size.
  * @param {number} qty
  * @param {{qtyStep?: number|string}|number|string} rules
  * @param {number[]} weights
@@ -346,10 +348,6 @@ weights =
 []
 ){
 
-const total =
-Number(
-qty
-);
 const step =
 Number(
 rules?.qtyStep ??
@@ -390,12 +388,16 @@ value
 value >
 0
 );
+const rawTotal =
+Number(
+qty
+);
 
 if(
 !Number.isFinite(
-total
+rawTotal
 ) ||
-total <=
+rawTotal <=
 0 ||
 !Number.isFinite(
 step
@@ -403,6 +405,30 @@ step
 step <=
 0 ||
 !list.length
+){
+return null;
+}
+
+/* Limits can only close whole steps — snap down, never above live size. */
+const total =
+Number(
+(
+Math.floor(
+rawTotal /
+step +
+1e-9
+) *
+step
+).toFixed(
+decimals
+)
+);
+
+if(
+!(
+total >
+0
+)
 ){
 return null;
 }
@@ -458,30 +484,23 @@ used +=
 part;
 }
 
-parts.push(
+const last =
 Number(
-(
-Math.round(
 (
 total -
 used
-) /
-step
-) *
-step
 ).toFixed(
 decimals
 )
-)
+);
+parts.push(
+last
 );
 
 if(
-parts.some(
-part=>
 !(
-part >
+last >
 0
-)
 )
 ){
 return null;
@@ -1829,11 +1848,14 @@ result?.orderId ||
 }
 
 /**
- * Position TP is used by every strategy: RR target for St1, the final level
- * for partial exits. A missing SL or TP must be re-attached.
+ * St1 needs SL + position TP. Partial exits need only SL on the position —
+ * TP1/TP2/TP3 are reduce-only limits (a Full position TP fights those limits
+ * on Bybit and the exchange cancels the intermediate RO orders).
  */
 function positionMissingStops(
-position
+position,
+partial =
+false
 ){
 
 const sl =
@@ -1852,13 +1874,68 @@ sl
 sl >
 0
 ) ||
+(
+!partial &&
 !(
 Number.isFinite(
 tp
 ) &&
 tp >
 0
+)
 );
+
+}
+
+/**
+ * SL for a partial exit, and strip any Full position TP so it cannot cancel
+ * the reduce-only TP legs.
+ */
+async function attachPartialPositionStops(
+symbol,
+slPrice
+){
+
+const slResult =
+await algoRest.setPositionStop(
+symbol,
+"sl",
+slPrice
+);
+
+if(
+slResult?.ok ===
+false
+){
+return slResult;
+}
+
+const live =
+await algoRest.getPosition(
+symbol
+);
+const liveTp =
+Number(
+live?.position?.takeProfit
+);
+
+if(
+Number.isFinite(
+liveTp
+) &&
+liveTp >
+0
+){
+await sleep(
+120
+);
+return algoRest.cancelPositionStop(
+symbol,
+"tp"
+);
+}
+
+return slResult;
 
 }
 
@@ -2864,6 +2941,50 @@ message:
 };
 }
 
+/* Never strip TP legs of a position that is still open. */
+const live =
+await algoRest.getPosition(
+sym
+);
+
+if(
+live?.ok ===
+false
+){
+return {
+ok:
+false,
+cancelled:
+0,
+total:
+0,
+message:
+live?.message ||
+"getPosition failed"
+};
+}
+
+if(
+Math.abs(
+Number(
+live?.position?.size ||
+0
+)
+) >
+0
+){
+return {
+ok:
+true,
+cancelled:
+0,
+total:
+0,
+message:
+"position still open — TP legs kept"
+};
+}
+
 const result =
 await algoRest.getOpenOrders(
 {
@@ -3025,15 +3146,22 @@ const orphans =
 ordersResult?.orders ||
 []
 ).filter(
-order=>
-isAlgoTpLimitOrder(
+order=>{
+const orderSym =
+normalizeSymbol(
+order?.symbol
+);
+
+return isAlgoTpLimitOrder(
 order
 ) &&
 !openSymbols.has(
-normalizeSymbol(
-order?.symbol
-)
-)
+orderSym
+) &&
+!pendingEntries.has(
+orderSym
+);
+}
 );
 const errors =
 [];
@@ -3189,15 +3317,13 @@ errors.length
 }
 
 /**
- * After trigger fill: attach SL/TP from pt3/pt4 plan (not fill slip).
- */
-/**
- * Reduce-only limit legs of a partial exit (TP1/TP2).
- * The final TP is a position-level take profit in Full mode, so it is not an
- * order here — it closes whatever is left after these legs.
+ * Reduce-only take profits for a partial exit (TP1/TP2/TP3).
+ * The last leg carries the whole remainder so the position always closes.
+ * A Full position TP must NOT sit alongside these legs — Bybit cancels the
+ * intermediate RO limits when the position TP covers the entire size.
  * Adopts legs already on the exchange and places the missing ones.
  * @param {{symbol: string, meta: object, position?: object}} payload
- * @returns {Promise<{ok: boolean, placed: number, missing: number[], message?: string, tpOrderIds: string[], entryQty: number}>}
+ * @returns {Promise<{ok: boolean, placed: number, missing: number[], message?: string, tpOrderIds: string[], tpQtys: number[], entryQty: number}>}
  */
 async function ensurePartialTpLimits(
 payload
@@ -3236,13 +3362,8 @@ meta.tpQtys
 ...meta.tpQtys
 ]
 : [];
-/* Last price is served by the position TP — only earlier legs are orders. */
 const legCount =
-Math.max(
-0,
-prices.length -
-1
-);
+prices.length;
 
 if(
 !sym ||
@@ -3322,6 +3443,28 @@ entryQty:
 };
 }
 
+/*
+ * Full position TP reserves the whole size and Bybit then cancels our RO
+ * legs as "excess" reduce-only. Strip it before (re)placing the limits.
+ */
+const liveTp =
+Number(
+livePosition?.takeProfit
+);
+
+if(
+Number.isFinite(
+liveTp
+) &&
+liveTp >
+0
+){
+await algoRest.cancelPositionStop(
+sym,
+"tp"
+);
+}
+
 const openOrders =
 await algoRest.getOpenOrders(
 {
@@ -3389,12 +3532,8 @@ order
 const claimed =
 new Set();
 
-/* Adopt live orders: exact linkId, remembered id, then nearest price. */
 const adopted =
-prices.slice(
-0,
-legCount
-).map(
+prices.map(
 (
 price,
 index
@@ -3584,7 +3723,6 @@ if(
 i <
 tpsHit
 ){
-/* Already taken profit — nothing to restore. */
 continue;
 }
 
@@ -3626,14 +3764,90 @@ meta.shares?.[
 2
 ]
 );
-const baseQty =
+const freeQty =
 Math.max(
-Number(
-meta.initialQty
-) ||
 0,
-liveQty
+liveQty -
+reserved
 );
+const parts =
+allocateQtyByWeights(
+freeQty,
+rules,
+pending.map(
+index=>
+shares[
+index
+] ||
+1
+)
+);
+
+if(
+!parts
+){
+/*
+ * Remainder is below one instrument step — a limit cannot close it.
+ * Market reduce-only wipes the dust so the trade does not hang on SL.
+ */
+if(
+pending.includes(
+legCount -
+1
+) &&
+freeQty >
+0
+){
+const wiped =
+await algoRest.closePositionAtMarket(
+sym
+);
+
+return {
+ok:
+wiped?.ok !==
+false,
+placed:
+0,
+missing:
+wiped?.ok ===
+false
+? pending
+: [],
+message:
+wiped?.ok ===
+false
+? (
+wiped?.message ||
+"dust close failed"
+)
+: `closed dust qty ${freeQty} at market`,
+tpOrderIds,
+tpQtys,
+entryQty:
+liveQty
+};
+}
+
+return {
+ok:
+false,
+placed:
+0,
+missing:
+pending,
+message:
+pending.length >
+1
+? "Position quantity too small for remaining TPs"
+: "Position quantity too small for the final TP",
+tpOrderIds,
+tpQtys,
+entryQty:
+liveQty
+};
+}
+
 const qtyDecimals =
 String(
 rules?.qtyStep ||
@@ -3644,58 +3858,82 @@ rules?.qtyStep ||
 1
 ]?.length ||
 0;
+const minQty =
+Number(
+rules?.minOrderQty ||
+0
+);
 const errors =
 [];
 const missing =
 [];
 let placedCount =
 0;
-let freeQty =
-Math.max(
-0,
-liveQty -
-reserved
-);
+let dustClosed =
+false;
 
 for(
-const index of pending
+let slot =
+0;
+slot <
+pending.length;
+slot++
 ){
-const planned =
-floorQtyToStep(
-(
-baseQty *
-(
-shares[
-index
-] ||
-0
-)
-) /
-100,
-rules
-);
+const index =
+pending[
+slot
+];
 const qty =
-Math.min(
-planned,
-floorQtyToStep(
-freeQty,
-rules
-)
-);
+parts[
+slot
+];
+const isFinal =
+index ===
+legCount -
+1;
 
 if(
 !(
 qty >
 0
-) ||
-!(
-qty >=
-Number(
-rules?.minOrderQty ||
-0
-)
 )
 ){
+/* Share floored to zero — final leg already absorbed that size. */
+continue;
+}
+
+if(
+qty <
+minQty
+){
+if(
+isFinal
+){
+const wiped =
+await algoRest.closePositionAtMarket(
+sym
+);
+
+if(
+wiped?.ok ===
+false
+){
+missing.push(
+index
+);
+errors.push(
+`TP${index +
+1}: ${wiped?.message ||
+"dust close failed"}`
+);
+continue;
+}
+
+dustClosed =
+true;
+continue;
+}
+
 missing.push(
 index
 );
@@ -3758,12 +3996,6 @@ tpQtys[
 index
 ]=
 qty;
-freeQty =
-Math.max(
-0,
-freeQty -
-qty
-);
 placedCount +=
 1;
 }
@@ -3779,7 +4011,11 @@ errors.length
 ? errors.join(
 "; "
 )
-: undefined,
+: (
+dustClosed
+? "final remainder closed at market (below min limit qty)"
+: undefined
+),
 tpOrderIds,
 tpQtys,
 entryQty:
@@ -3928,9 +4164,14 @@ message:
 };
 }
 
-/* Partial exits get the same position TP — it closes the whole remainder. */
+/* Partial: SL only on the position. Full TP would cancel the RO legs. */
 const stopsResult =
-await attachStops(
+isPartial
+? await attachPartialPositionStops(
+sym,
+slPrice
+)
+: await attachStops(
 sym,
 slPrice,
 tpPrice
@@ -4283,6 +4524,19 @@ meta?.exitKind ===
 meta?.exitKind ===
 "partial-y"
 ){
+/* Full position TP fights RO legs on Bybit — strip it whenever we see it. */
+if(
+Number(
+pos?.takeProfit
+) >
+0
+){
+await algoRest.cancelPositionStop(
+sym,
+"tp"
+);
+}
+
 const initialQty =
 Number(
 meta.initialQty
@@ -4383,17 +4637,13 @@ tpsHit;
  * The last level is the position TP, so only earlier legs are orders.
  */
 const expectedLegs =
-Math.max(
-0,
 (
 Array.isArray(
 meta.tpPrices
 )
 ? meta.tpPrices
 : []
-).length -
-1
-);
+).length;
 const liveTpIds =
 (
 meta.tpOrderIds ||
@@ -4484,10 +4734,17 @@ tpsHit
 );
 }
 
+const isPartialMeta =
+meta?.exitKind ===
+"partial-x" ||
+meta?.exitKind ===
+"partial-y";
+
 if(
 meta &&
 !positionMissingStops(
-pos
+pos,
+isPartialMeta
 )
 ){
 const liveSl =
@@ -4545,12 +4802,15 @@ prevSl
 )
 ) ||
 (
+!isPartialMeta &&
 Number.isFinite(
 plannedTp
 ) &&
 Number.isFinite(
 liveTp
 ) &&
+liveTp >
+0 &&
 Math.abs(
 liveTp -
 plannedTp
@@ -4592,7 +4852,8 @@ continue;
 
 if(
 !positionMissingStops(
-pos
+pos,
+isPartialMeta
 )
 ){
 continue;
@@ -4652,7 +4913,8 @@ slPrice
 if(
 !Number.isFinite(
 tpPrice
-)
+) &&
+!isPartialMeta
 ){
 reports.push(
 {
@@ -4670,7 +4932,12 @@ continue;
 }
 
 const stopsResult =
-await attachStops(
+isPartialMeta
+? await attachPartialPositionStops(
+sym,
+slPrice
+)
+: await attachStops(
 sym,
 slPrice,
 tpPrice
@@ -4727,6 +4994,8 @@ tpPrice
 /*
  * TP legs of a position that is already closed (stop-out, manual close, meta
  * lost across restarts). Reuses the lists above — no extra REST calls.
+ * Never touch legs for symbols that still have bot meta: an incomplete
+ * positions snapshot must not wipe active TPs.
  */
 const liveSymbols =
 new Set(
@@ -4752,14 +5021,20 @@ const order of openOrdersResult?.orders ||
 []
 ){
 
+const orderSym =
+normalizeSymbol(
+order?.symbol
+);
+
 if(
 !isAlgoTpLimitOrder(
 order
 ) ||
 liveSymbols.has(
-normalizeSymbol(
-order?.symbol
-)
+orderSym
+) ||
+pendingEntries.has(
+orderSym
 )
 ){
 continue;
@@ -4773,9 +5048,7 @@ order.orderId
 reports.push(
 {
 symbol:
-normalizeSymbol(
-order.symbol
-),
+orderSym,
 action:
 "cancel-orphan-tp",
 ok:

@@ -28,6 +28,8 @@ export const ALGO_BOT_TF_OPTIONS =
  * @typedef {{
  *   running: boolean,
  *   timeoutBars: number,
+ *   pullbackBeforeArm: boolean,
+ *   pullbackBeforeArmPct: number,
  *   tf: string,
  *   slPct: number,
  *   riskUsd: number,
@@ -167,6 +169,11 @@ running:
 false,
 timeoutBars:
 200,
+/* TEMP_PULLBACK_BEFORE_ARM */
+pullbackBeforeArm:
+false,
+pullbackBeforeArmPct:
+38.2,
 tf:
 "5",
 slPct:
@@ -946,6 +953,41 @@ src.timeoutBars,
 10000,
 base.timeoutBars
 ),
+/* TEMP_PULLBACK_BEFORE_ARM */
+pullbackBeforeArm:
+src.pullbackBeforeArm ===
+true ||
+src.pullbackBeforeArm ===
+1 ||
+src.pullbackBeforeArm ===
+"1" ||
+src.pullbackBeforeArm ===
+"true",
+pullbackBeforeArmPct:
+(()=>{
+const n =
+Number(
+src.pullbackBeforeArmPct
+);
+if(
+!Number.isFinite(
+n
+)
+){
+return base.pullbackBeforeArmPct;
+}
+return Math.min(
+100,
+Math.max(
+1,
+Math.round(
+n *
+10
+) /
+10
+)
+);
+})(),
 tf:
 normalizeBotTf(
 src.tf

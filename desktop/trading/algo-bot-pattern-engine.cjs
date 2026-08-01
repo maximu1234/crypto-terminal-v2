@@ -800,11 +800,6 @@ candles.length <
 return false;
 }
 
-const timeoutBars =
-clampEntryTimeoutBars(
-engineConfig?.timeoutBars
-);
-
 if(
 alreadyCrossedAfterB4(
 candles,
@@ -819,9 +814,7 @@ const event =
 patternEntry.resolvePatternSetupEvent(
 candles,
 parent.setup,
-{
-timeoutBars
-}
+getResolveOpts()
 );
 
 return event ==
@@ -1108,6 +1101,22 @@ return patternMath.defaultPattern12Settings();
 }
 
 return {};
+
+}
+
+function getResolveOpts(){
+
+return {
+timeoutBars:
+clampEntryTimeoutBars(
+engineConfig?.timeoutBars
+),
+/* TEMP_PULLBACK_BEFORE_ARM */
+pullbackBeforeArm:
+!!engineConfig?.pullbackBeforeArm,
+pullbackBeforeArmPct:
+engineConfig?.pullbackBeforeArmPct
+};
 
 }
 
@@ -1753,6 +1762,51 @@ state.consumed.add(
 fp
 );
 return;
+}
+
+/* TEMP_PULLBACK_BEFORE_ARM — wait pullback / cancel if pt4 pierced first */
+if(
+patternEntry?.evaluatePullbackArmGate
+){
+const gate =
+patternEntry.evaluatePullbackArmGate(
+candles,
+setup,
+getResolveOpts()
+);
+
+if(
+gate ===
+"wait"
+){
+return;
+}
+
+if(
+gate ===
+"cancel"
+){
+pushSignal(
+{
+ts:
+Date.now(),
+symbol:
+sym,
+side:
+setup.side,
+price:
+Number(
+setup.p4
+),
+text:
+`${sym} ${setup.side}: pt4 до отката — не вооружаем`
+}
+);
+state.consumed.add(
+fp
+);
+return;
+}
 }
 
 if(
@@ -3451,6 +3505,10 @@ const timeoutBars =
 clampEntryTimeoutBars(
 engineConfig?.timeoutBars
 );
+const resolveOpts =
+getResolveOpts();
+const pullbackOn =
+!!resolveOpts.pullbackBeforeArm;
 const lastIndex =
 candles.length -
 1;
@@ -3477,22 +3535,22 @@ continue;
 }
 
 /*
- * Brand-new pt4 on the latest closed bar: arm immediately.
+ * Brand-new pt4 on the latest closed bar: arm immediately (unless
+ * pullback-before-arm is on — then wait for pullback via tryArmSetup).
  * Older setups: arm only while still pending (no entry / cancel / timeout).
  * Pattern recognition often finalizes a setup a few bars AFTER b4,
  * so live scan must not require b4 === lastIndex.
  */
 if(
 b4 <
-lastIndex
+lastIndex ||
+pullbackOn
 ){
 const event =
 patternEntry.resolvePatternSetupEvent(
 candles,
 setup,
-{
-timeoutBars
-}
+resolveOpts
 );
 
 if(
@@ -3536,6 +3594,9 @@ event.type ===
 : event.reason ===
 "above_pt3"
 ? "отмена выше pt3"
+: event.reason ===
+"pt4_before_pullback"
+? "pt4 до отката"
 : "сетап уже закрыт";
 pushSignal(
 {
@@ -4269,6 +4330,34 @@ timeoutBars:
 clampEntryTimeoutBars(
 config?.timeoutBars
 ),
+/* TEMP_PULLBACK_BEFORE_ARM */
+pullbackBeforeArm:
+!!config?.pullbackBeforeArm,
+pullbackBeforeArmPct:
+(()=>{
+const n =
+Number(
+config?.pullbackBeforeArmPct
+);
+if(
+!Number.isFinite(
+n
+)
+){
+return 38.2;
+}
+return Math.min(
+100,
+Math.max(
+1,
+Math.round(
+n *
+10
+) /
+10
+)
+);
+})(),
 slPct:
 Number(
 config?.slPct
@@ -4550,6 +4639,43 @@ engineConfig.timeoutBars =
 clampEntryTimeoutBars(
 patch.timeoutBars
 );
+}
+
+/* TEMP_PULLBACK_BEFORE_ARM */
+if(
+patch.pullbackBeforeArm !=
+null
+){
+engineConfig.pullbackBeforeArm =
+!!patch.pullbackBeforeArm;
+}
+
+if(
+patch.pullbackBeforeArmPct !=
+null
+){
+const n =
+Number(
+patch.pullbackBeforeArmPct
+);
+if(
+Number.isFinite(
+n
+)
+){
+engineConfig.pullbackBeforeArmPct =
+Math.min(
+100,
+Math.max(
+1,
+Math.round(
+n *
+10
+) /
+10
+)
+);
+}
 }
 
 if(

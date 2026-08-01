@@ -3,7 +3,7 @@
  */
 import {
 detectPatternEntryEvents
-} from "./pattern-entry-logic.js?v=5";
+} from "./pattern-entry-logic.js?v=8";
 
 import {
 clearAlgoEntryPositions,
@@ -27,6 +27,8 @@ DEFAULT_PARTIAL_TP3_X
  *   getTpRr?: () => number,
  *   getRiskUsd?: () => number,
  *   getTimeoutBars?: () => number,
+ *   getPullbackBeforeArm?: () => boolean,
+ *   getPullbackBeforeArmPct?: () => number,
  *   getChartPositionsStrategy?: () => "fixed-tp"|"partial-tp"|"partial-tp-y",
  *   getTp1X?: () => number,
  *   getTp2X?: () => number,
@@ -152,7 +154,12 @@ Number.isFinite(
 timeoutRaw
 )
 ? timeoutRaw
-: undefined
+: undefined,
+/* TEMP_PULLBACK_BEFORE_ARM */
+pullbackBeforeArm:
+!!host?.getPullbackBeforeArm?.(),
+pullbackBeforeArmPct:
+host?.getPullbackBeforeArmPct?.()
 };
 
 }
