@@ -388,7 +388,7 @@ Object.freeze({
 "indicators/indicator-color-picker-ui.js":
 1,
 "indicators/htf-loader.js":
-2,
+3,
 "indicators/htf-ema.js":
 1,
 "indicators/indicator-settings-dialog.js":

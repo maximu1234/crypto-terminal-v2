@@ -127,6 +127,145 @@ volume
 
 }
 
+/**
+ * Агрегировать свечи графика в старший ТФ (без сетевой догрузки).
+ * Если tf пустой или не старше периода chartTf — возвращает исходный массив.
+ *
+ * @param {Array} chartCandles
+ * @param {string} tf
+ * @param {string} [chartTf]
+ * @returns {Array}
+ */
+export function aggregateCandlesToTf(
+chartCandles,
+tf,
+chartTf =
+""
+){
+
+const list =
+Array.isArray(
+chartCandles
+)
+? chartCandles
+: [];
+const target =
+String(
+tf ||
+""
+).trim();
+
+if(
+!list.length ||
+!target
+){
+return list;
+}
+
+const chart =
+String(
+chartTf ||
+""
+).trim();
+
+if(
+chart &&
+tfPeriodSec(
+target
+) <=
+tfPeriodSec(
+chart
+)
+){
+return list;
+}
+
+const buckets =
+new Map();
+
+for(
+const bar of list
+){
+
+const time =
+Number(
+bar?.time
+);
+
+if(
+!Number.isFinite(
+time
+)
+){
+continue;
+}
+
+const start =
+alignPeriodStart(
+time,
+target
+);
+const bucket =
+buckets.get(
+start
+);
+
+if(
+bucket
+){
+bucket.push(
+bar
+);
+}else{
+buckets.set(
+start,
+[
+bar
+]
+);
+}
+
+}
+
+const out =
+[];
+
+for(
+const [
+start,
+bars
+] of buckets
+){
+
+const agg =
+aggregateChartBars(
+bars,
+start
+);
+
+if(
+agg
+){
+out.push(
+agg
+);
+}
+
+}
+
+out.sort(
+(
+a,
+b
+)=>
+a.time -
+b.time
+);
+
+return out;
+
+}
+
 /** Добавить/обновить незакрытый HTF-бар по хвосту графика (live). */
 export function mergeChartTailIntoHtf(
 chartCandles,
