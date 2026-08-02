@@ -39,6 +39,10 @@ rebalanceTpShares
 const STATUS_POLL_MS =
 2500;
 
+/** Multichart → alert-worker remote status (Auth egress); keep rare. */
+const REMOTE_STATUS_POLL_MS =
+30000;
+
 let activeBotStrategyUiDestroy =
 null;
 
@@ -419,6 +423,8 @@ Boolean
 );
 
 let statusPollTimer =
+null;
+let remoteStatusPollTimer =
 null;
 let remotePollInflight =
 false;
@@ -2623,18 +2629,30 @@ statusPollTimer =
 window.setInterval(
 ()=>{
 void refreshBotStatus();
+},
+STATUS_POLL_MS
+);
+
 if(
-remoteControlEnabled &&
+remoteControlEnabled
+){
+remoteStatusPollTimer =
+window.setInterval(
+()=>{
+if(
 statusDrop &&
 !statusDrop.classList.contains(
 "hidden"
-)
+) &&
+remoteBlock &&
+!remoteBlock.hidden
 ){
 void refreshRemoteBotUi();
 }
 },
-STATUS_POLL_MS
+REMOTE_STATUS_POLL_MS
 );
+}
 }
 
 function stopStatusPoll(){
@@ -2646,6 +2664,16 @@ window.clearInterval(
 statusPollTimer
 );
 statusPollTimer =
+null;
+}
+
+if(
+remoteStatusPollTimer
+){
+window.clearInterval(
+remoteStatusPollTimer
+);
+remoteStatusPollTimer =
 null;
 }
 

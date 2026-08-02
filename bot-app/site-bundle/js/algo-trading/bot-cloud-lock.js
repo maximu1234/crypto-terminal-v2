@@ -252,36 +252,7 @@ persisted.access_token
 /* ignore */
 }
 
-try{
-const sb =
-await getSupabase();
-const session =
-(
-await sb?.auth?.getSession?.()
-)?.data?.session;
-const id =
-String(
-session?.user?.id ||
-""
-).trim();
-
-if(
-id &&
-session?.access_token
-){
-return {
-userId:
-id,
-accessToken:
-String(
-session.access_token
-).trim()
-};
-}
-}catch{
-/* ignore */
-}
-
+/* No Auth getSession fallback — local JWT only (Supabase egress). */
 return {
 userId:
 "",
