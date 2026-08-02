@@ -44,6 +44,25 @@
 | IPC | `cryptoTerminalDesktop.algoTrading.*` (не `trading.*`) |
 | Редакция сборки | `desktop/trading/algo-trading-edition.cjs`: `f` = full, `m` = manual-only; буква в подписи `vX.Y.Zf` / `vX.Y.Zm` и в именах релизов (`…76f…` / `…76m…`). CI: `build:mac:editions` / `build:win:editions` |
 
+**Cloud на странице Алго (Multichart):** `isAlgoReducedCloudClient()` =
+`isAlgoBotLiteShell() || isAlgoTradingPage()`. Без hydrate/poll/favorites /
+Auth keepalive / chart→`price_alerts`. JWT + push + cloud lock + remote Status —
+да. Live-бот на бирже, не на cloud alerts.
+
+**Standalone Algo Bot (`bot-app/`):** `site-bundle` **заморожен**
+(`bot-app/scripts/bundle-site.cjs` не тянет Multichart). Terminal `trading.*`
+IPC **не регистрируется**; preload отдаёт stub. Ключи — только
+`algo-exchange-credentials`. При фиксе движка бота синхронизировать вручную
+зеркала: `desktop/trading/algo-bot-*.cjs` ↔ `bot-app/trading/algo-bot-*.cjs`
+(и `algo-trading-bot.cjs` / store / executor).
+
+**Disk pending:** `pendingTriggers` + `pendingMirrorTriggers` + `pendingEntries`
+в `algo-bot-store` (Stop→Start / restart).
+
+**Связь с Терминалом (долг):** UI Алго импортирует `terminal-state` /
+`chart-indicators` / coin-list host — не бизнес-логика Терминала, но плагин
+не удаляется «одним rm» без этих зависимостей.
+
 Фон: при флаге «Работать в фоне» runtime стартует в main при запуске `.app`,
 даже если страница Алго закрыта. Позиции/ордера на алго-ключах стримятся в UI
 АлгоТрейдинг.

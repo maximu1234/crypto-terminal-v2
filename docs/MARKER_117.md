@@ -32,9 +32,17 @@
 ## Версии
 
 - Web marker: `v0.117`
-- Multichart desktop app: `v1.1.15`
-- Mac tag (Multichart): `desktop-v1.1.15`
-- Windows tag (Multichart): `desktop-win-v1.1.15`
-- Algo Bot desktop app: `v1.0.124`
-- Mac tag (Algo Bot): `algo-bot-v1.0.124`
-- Windows tag (Algo Bot): `algo-bot-win-v1.0.124`
+- Multichart desktop app: `v1.1.17`
+- Mac tag (Multichart): `desktop-v1.1.17`
+- Windows tag (Multichart): `desktop-win-v1.1.17`
+- Algo Bot desktop app: `v1.0.125`
+- Mac tag (Algo Bot): `algo-bot-v1.0.125`
+- Windows tag (Algo Bot): `algo-bot-win-v1.0.125`
+
+### Hotfix после metka-117 (в той же метке)
+
+| Версия | Суть |
+|--------|------|
+| Bot `1.0.125` | Stop→Start не сбрасывает `pendingEntries` / bot meta для SL/TP |
+| Multichart `1.1.16` | Auth egress: remote Status JWT cache 30m + poll 30s |
+| Multichart `1.1.17` | PostgREST cut: chart→alerts throttle, worker reload ~30m |

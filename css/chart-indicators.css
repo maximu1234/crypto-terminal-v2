@@ -247,7 +247,8 @@ pointer-events:auto;
 margin:0;
 }
 
-.chart-indicator-settings-dialog--pattern12{
+.chart-indicator-settings-dialog--pattern12,
+.chart-indicator-settings-dialog--pattern-gip{
 width:min(520px,calc(100vw - 32px));
 max-height:min(88vh,760px);
 }
@@ -263,12 +264,14 @@ background:#111827;
 cursor:pointer;
 }
 
-.chart-indicator-settings-dialog--pattern12 .chart-indicator-settings-body{
+.chart-indicator-settings-dialog--pattern12 .chart-indicator-settings-body,
+.chart-indicator-settings-dialog--pattern-gip .chart-indicator-settings-body{
 max-height:min(62vh,560px);
 overflow:auto;
 }
 
-.ind-pattern12-settings .chart-indicator-settings-section{
+.ind-pattern12-settings .chart-indicator-settings-section,
+.ind-pattern-gip-settings .chart-indicator-settings-section{
 margin-bottom:14px;
 }
 

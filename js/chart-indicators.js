@@ -23,6 +23,9 @@ import {
 createPattern12Indicator
 } from "./indicators/pattern-12.js?v=8";
 import {
+createPatternGipIndicator
+} from "./indicators/pattern-gip.js?v=2";
+import {
 createIndicatorSettingsDialog
 } from "./indicators/indicator-settings-dialog.js?v=7";
 import {
@@ -242,6 +245,10 @@ getHost,
 settingsStore
 ),
 pattern12Factory(
+getHost,
+settingsStore
+),
+createPatternGipIndicator(
 getHost,
 settingsStore
 ),

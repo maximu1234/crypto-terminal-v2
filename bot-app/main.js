@@ -54,20 +54,12 @@ require(
 "./chrome-user-agent.cjs"
 );
 const {
-registerTradingIpc,
-setTradingStreamTarget,
-startTradingStream,
-stopTradingStream
-} =
-require(
-"./trading/register-ipc.cjs"
-);
-const {
 registerChartSnapshotIpc
 } =
 require(
 "./chart-snapshot.cjs"
 );
+/* Terminal trading IPC/stream disabled in Algo Bot — see algo-trading-ipc.cjs */
 const {
 registerChartSnapshotLogoIpc
 } =
@@ -510,10 +502,7 @@ false;
 
 }
 
-setTradingStreamTarget(
-null
-);
-startTradingStream();
+/* Terminal trading stream disabled in Algo Bot — algo stream only */
 
 try{
 bootAlgoTradingRuntimeIfEnabled();
@@ -1326,10 +1315,7 @@ if(
 mainWindow &&
 !mainWindow.isDestroyed()
 ){
-setTradingStreamTarget(
-mainWindow.webContents
-);
-startTradingStream();
+/* Terminal trading stream disabled — algo only */
 setAlgoTradingStreamTarget(
 mainWindow.webContents
 );
@@ -1346,9 +1332,6 @@ platformCtx
 mainWindow.on(
 "closed",
 ()=>{
-setTradingStreamTarget(
-null
-);
 setAlgoTradingStreamTarget(
 null
 );
@@ -1544,7 +1527,8 @@ platform.platform
 })
 );
 
-registerTradingIpc();
+/* Terminal trading IPC: не регистрируем в Algo Bot — только algoTrading.* */
+/* registerTradingIpc(); */
 registerChartSnapshotIpc();
 registerChartSnapshotLogoIpc();
 
@@ -2271,10 +2255,7 @@ log.info(
 "desktop boot: login agent (tray only)"
 );
 hideDockIcon();
-setTradingStreamTarget(
-null
-);
-startTradingStream();
+/* Terminal trading stream disabled in Algo Bot */
 }else{
 createWindow();
 startPowerSaveBlocker();
@@ -2296,7 +2277,7 @@ app.on(
 isQuitting =
 true;
 
-stopTradingStream();
+/* Terminal trading stream disabled — stop algo stream only */
 stopAlgoTradingStream();
 try{
 stopRemoteControl();

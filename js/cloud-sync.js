@@ -80,8 +80,9 @@ scaleSupabasePollMs
 } from "./supabase-usage-prefs.js?v=5";
 
 import {
-isAlgoBotLiteShell
-} from "./page-routes.js?v=3";
+isAlgoBotLiteShell,
+isAlgoReducedCloudClient
+} from "./page-routes.js?v=4";
 
 const DRAWINGS_LOCAL_TS_KEY =
 "drawings_local_updated_at";
@@ -308,9 +309,9 @@ window.cryptoTerminalDesktop?.isDesktop
 
 function bindAuthSessionKeepalive(){
 
-/* Algo Bot: no Auth keepalive / silent refresh — local JWT only. */
+/* Algo Bot / Multichart Algo page: no Auth keepalive / silent refresh — local JWT only. */
 if(
-isAlgoBotLiteShell()
+isAlgoReducedCloudClient()
 ){
 return;
 }

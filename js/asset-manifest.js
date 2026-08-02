@@ -249,7 +249,7 @@ Object.freeze({
 "chart-visible-range.js":
 3,
 "chart-indicators.js":
-42,
+43,
 "chart-snapshot.js":
 6,
 "indicators/pattern-12.js":
@@ -258,6 +258,12 @@ Object.freeze({
 4,
 "indicators/pattern-12-paint.js":
 5,
+"indicators/pattern-gip.js":
+2,
+"indicators/pattern-gip-math.js":
+3,
+"indicators/pattern-gip-paint.js":
+1,
 "pattern-12-scanner.js":
 19,
 "pattern-scan-results.js":
@@ -470,11 +476,11 @@ Object.freeze({
 "screener-widget-zoom.js":
 17,
 "release-marker.js":
-71,
+72,
 "focus-blur-after-pick.js":
 3,
 "site-boot.js":
-108,
+109,
 "site-header.js":
 5,
 "site-header-nav.js":
@@ -516,7 +522,7 @@ Object.freeze({
 "drawings.js":
 255,
 "drawings/init.js":
-174,
+175,
 "drawings/draw-prefs.js":
 2,
 "drawings/draw-edit-desktop.js":
@@ -619,11 +625,11 @@ Object.freeze({
 
 /* ── JS: cloud / auth ── */
 "cloud-sync.js":
-53,
+54,
 "cloud-sync-throttle.js":
 3,
 "page-routes.js":
-3,
+4,
 "ticker-update-batch.js":
 1,
 "types/chart-types.js":
@@ -673,9 +679,9 @@ Object.freeze({
 "alerts-cloud/worker-client.js":
 6,
 "alerts-cloud/registry-sync.js":
-13,
+14,
 "alerts-cloud/polling-realtime.js":
-12,
+13,
 "alerts-page.js":
 66,
 "alert-monitor.js":
@@ -745,7 +751,7 @@ Object.freeze({
 "algo-trading-chart-overlay.css":
 2,
 "chart-indicators.css":
-22,
+23,
 "chart-snapshot.css":
 5,
 "pattern-12-scanner.css":

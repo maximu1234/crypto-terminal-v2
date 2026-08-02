@@ -188,6 +188,10 @@ import {
 createDrawRedrawLoop
 } from "./draw-redraw-loop.js?v=8";
 
+import {
+isAlgoReducedCloudClient
+} from "../page-routes.js?v=4";
+
 export function initDrawings({
 
 chart,
@@ -4747,6 +4751,13 @@ const CHART_ALERTS_PULL_MIN_MS =
 1000;
 
 const scheduleChartAlertsPull = ()=>{
+
+/* Multichart Algo / Bot lite: live на бирже — не тянуть price_alerts с графика. */
+if(
+isAlgoReducedCloudClient()
+){
+return;
+}
 
 if(
 Date.now() -

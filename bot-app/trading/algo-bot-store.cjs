@@ -1373,6 +1373,12 @@ typeof raw.pendingTriggers ===
 "object"
 ? raw.pendingTriggers
 : {},
+pendingMirrorTriggers:
+raw?.pendingMirrorTriggers &&
+typeof raw.pendingMirrorTriggers ===
+"object"
+? raw.pendingMirrorTriggers
+: {},
 pendingEntries:
 raw?.pendingEntries &&
 typeof raw.pendingEntries ===
@@ -1392,6 +1398,9 @@ PENDING_ORDERS_FILE,
 {
 pendingTriggers:
 pending?.pendingTriggers ||
+{},
+pendingMirrorTriggers:
+pending?.pendingMirrorTriggers ||
 {},
 pendingEntries:
 pending?.pendingEntries ||

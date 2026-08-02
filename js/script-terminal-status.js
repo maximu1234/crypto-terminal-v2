@@ -14,7 +14,7 @@ loadScriptPageState
 
 import {
 isTerminalPage
-} from "./page-routes.js?v=3";
+} from "./page-routes.js?v=4";
 
 import {
 FEATURE_NAV_PREF_EVENT,

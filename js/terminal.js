@@ -48,7 +48,7 @@ ensureCloudReady
 import {
 persistFavoritesToCloud,
 onFavoritesRemoteUpdate
-} from "./cloud-sync.js?v=53";
+} from "./cloud-sync.js?v=54";
 
 import {
 createCandlestickChart,
@@ -117,7 +117,7 @@ mountDrawToolIcons
 
 import {
 initChartIndicators
-} from "./chart-indicators.js?v=42";
+} from "./chart-indicators.js?v=43";
 
 import {
 mountChartSnapshot

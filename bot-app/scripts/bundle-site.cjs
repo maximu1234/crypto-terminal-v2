@@ -1,7 +1,12 @@
 #!/usr/bin/env node
 /**
- * Standalone bot app uses its own checked-in site-bundle.
- * We intentionally do not pull files from the main Multichart app.
+ * Standalone Algo Bot — frozen site-bundle.
+ *
+ * Intentionally does NOT copy from Multichart `js/` / `css/` / HTML.
+ * Engine fixes that must stay in sync: copy manually from desktop/trading/:
+ *   algo-bot-store.cjs, algo-bot-order-executor.cjs, algo-trading-bot.cjs,
+ *   algo-bot-pattern-engine.cjs (and related algo-*-rest/ws as needed).
+ * Terminal trading IPC is disabled in bot-app/main.js + preload stubs.
  */
 const fs =
 require("fs");
@@ -17,3 +22,6 @@ if(!fs.existsSync(OUT)){
 }
 
 console.log("bundle-site: standalone bundle kept", OUT);
+console.log(
+  "bundle-site: sync checklist — algo-bot-store / order-executor / algo-trading-bot from desktop/trading when engine changes"
+);
