@@ -1475,13 +1475,13 @@ message:
 };
 }
 
-if(
-!pendingHydrated
-){
+/*
+ * Always reload from disk on Start: Stop→Start must restore open-position
+ * meta. Clearing it (old resetEngineSession) left live trades unmanaged.
+ */
 orderExecutor.hydratePendingFromDisk();
 pendingHydrated =
 true;
-}
 
 resetSessionStats();
 

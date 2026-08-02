@@ -44,6 +44,11 @@ new Map();
 const pendingMirrorTriggers =
 new Map();
 
+/** Symbols already logged as missing-stops without meta — avoid Status spam. */
+/** @type {Set<string>} */
+const missingMetaReported =
+new Set();
+
 function serializePendingMap(
 map
 ){
@@ -5141,6 +5146,31 @@ continue;
 if(
 !meta?.slPrice
 ){
+/*
+ * St2/St3 keep TPs as reduce-only limits — position.takeProfit is often
+ * empty. Without bot meta, treat «SL already on the exchange» as protected
+ * and do not spam Status / hammer reconcile attach paths every poll.
+ */
+if(
+!positionMissingStops(
+pos,
+true
+)
+){
+continue;
+}
+
+if(
+missingMetaReported.has(
+sym
+)
+){
+continue;
+}
+
+missingMetaReported.add(
+sym
+);
 reports.push(
 {
 symbol:
@@ -5832,6 +5862,7 @@ pendingEntries.clear();
 entryInflight.clear();
 pendingTriggers.clear();
 pendingMirrorTriggers.clear();
+missingMetaReported.clear();
 persistPendingState();
 
 }

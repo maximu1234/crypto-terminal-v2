@@ -4934,6 +4934,10 @@ void alertBridge.clearAllAlgoBotAlerts();
 void orderExecutor.cancelAllOpenTriggerOrders();
 void orderExecutor.cancelAllBotTriggers();
 }
-orderExecutor.clearPendingEntries();
+/*
+ * Do NOT clearPendingEntries(): open-position meta (SL/TP prices, TP order
+ * ids, trail state) must survive Stop→Start. Wiping it left live positions
+ * as «no bot meta for SL/TP» every poll and hammered Bybit rate limits.
+ */
 }
 };
