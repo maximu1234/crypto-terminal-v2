@@ -22,7 +22,7 @@ bindAlertsGarbagePurge
 } from "./system-admin-alerts-purge.js?v=2";
 import {
 bindWorkerReloadMsSettings
-} from "./system-admin-worker-reload-ms.js?v=4";
+} from "./system-admin-worker-reload-ms.js?v=5";
 
 const rootEl =
 document.getElementById("system-admin-root");

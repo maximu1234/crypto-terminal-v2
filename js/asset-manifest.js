@@ -470,7 +470,7 @@ Object.freeze({
 "screener-widget-zoom.js":
 17,
 "release-marker.js":
-70,
+71,
 "focus-blur-after-pick.js":
 3,
 "site-boot.js":
@@ -516,7 +516,7 @@ Object.freeze({
 "drawings.js":
 255,
 "drawings/init.js":
-173,
+174,
 "drawings/draw-prefs.js":
 2,
 "drawings/draw-edit-desktop.js":
@@ -647,7 +647,7 @@ Object.freeze({
 "app-settings-hotkeys-panel.js":
 3,
 "app-settings-secret.js":
-7,
+8,
 "telegram-settings-panel.js":
 2,
 "favorites-settings-panel.js":
@@ -673,9 +673,9 @@ Object.freeze({
 "alerts-cloud/worker-client.js":
 6,
 "alerts-cloud/registry-sync.js":
-12,
+13,
 "alerts-cloud/polling-realtime.js":
-11,
+12,
 "alerts-page.js":
 66,
 "alert-monitor.js":
@@ -713,7 +713,7 @@ Object.freeze({
 "system-admin-alerts-purge.js":
 2,
 "system-admin-worker-reload-ms.js":
-4,
+5,
 "system-admin-access.js":
 3,
 "supabase-usage-prefs.js":

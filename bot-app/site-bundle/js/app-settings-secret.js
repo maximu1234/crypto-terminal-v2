@@ -95,7 +95,7 @@ host.innerHTML =
 <div class="system-admin-actions">
 <label class="system-admin-purge-confirm" for="system-worker-reload-seconds">
 <span class="system-admin-purge-confirm-label">Секунды (мин. 3, макс. 3600)</span>
-<input type="number" min="3" max="3600" step="1" value="1800" class="system-admin-purge-input" id="system-worker-reload-seconds" inputmode="numeric" autocomplete="off"/>
+<input type="number" min="60" max="3600" step="1" value="1800" class="system-admin-purge-input" id="system-worker-reload-seconds" inputmode="numeric" autocomplete="off"/>
 </label>
 <button type="button" class="system-admin-btn" id="system-worker-reload-save">Сохранить период</button>
 </div>

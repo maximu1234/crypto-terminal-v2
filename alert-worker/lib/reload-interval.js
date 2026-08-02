@@ -3,7 +3,7 @@ import {
   restUpsertSystemSetting
 } from "./supabase-rest.js";
 
-const MIN_RELOAD_MS = 3 * 1000;
+const MIN_RELOAD_MS = 60 * 1000;
 const MAX_RELOAD_MS = 60 * 60 * 1000;
 const SETTING_KEY = "alerts_worker_reload_ms";
 

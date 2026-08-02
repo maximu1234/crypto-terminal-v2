@@ -667,7 +667,7 @@ const {
 mountSecretSettingsPanel
 } =
 await import(
-"./app-settings-secret.js?v=7"
+"./app-settings-secret.js?v=8"
 );
 
 await mountSecretSettingsPanel(

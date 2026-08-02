@@ -49,7 +49,7 @@ ensureDomChartCrosshair,
 hideDomChartCrosshair,
 positionTabletProbeHorizInStack,
 fullCrosshairOptions
-} from "../chart-import.js?v=43";
+} from "../chart-import.js?v=44";
 
 import {
 STROKE,
@@ -4738,8 +4738,23 @@ onExchangeChanged
 
 let chartAlertsPullTimer =
 0;
+let lastChartAlertsPullMs =
+0;
+
+/** PostgREST: не тянуть price_alerts на каждый chart-candles-loaded. */
+const CHART_ALERTS_PULL_MIN_MS =
+90 *
+1000;
 
 const scheduleChartAlertsPull = ()=>{
+
+if(
+Date.now() -
+lastChartAlertsPullMs <
+CHART_ALERTS_PULL_MIN_MS
+){
+return;
+}
 
 if(
 chartAlertsPullTimer
@@ -4756,8 +4771,19 @@ window.setTimeout(
 chartAlertsPullTimer =
 0;
 
+if(
+Date.now() -
+lastChartAlertsPullMs <
+CHART_ALERTS_PULL_MIN_MS
+){
+return;
+}
+
+lastChartAlertsPullMs =
+Date.now();
+
 void import(
-"../alerts-cloud-sync.js?v=53"
+"../alerts-cloud-sync.js?v=113"
 ).then(
 ({ pullRegistryFromCloudNow })=>
 pullRegistryFromCloudNow({

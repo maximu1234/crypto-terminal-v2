@@ -40,7 +40,7 @@ import {
 } from "./lib/bot-remote.js";
 
 const PORT = Number(process.env.PORT) || 8080;
-const WORKER_BUILD = "2026-08-02-auth-egress-v2";
+const WORKER_BUILD = "2026-08-02-postgrest-cut-v3";
 
 /** alert key -> row */
 let activeAlerts = new Map();

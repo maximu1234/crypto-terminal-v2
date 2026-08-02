@@ -30,7 +30,7 @@ data
 
 const min =
 Number(data?.minSec) ||
-3;
+60;
 const max =
 Number(data?.maxSec) ||
 3600;

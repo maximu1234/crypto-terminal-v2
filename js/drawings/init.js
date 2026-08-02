@@ -4738,8 +4738,23 @@ onExchangeChanged
 
 let chartAlertsPullTimer =
 0;
+let lastChartAlertsPullMs =
+0;
+
+/** PostgREST: не тянуть price_alerts на каждый chart-candles-loaded. */
+const CHART_ALERTS_PULL_MIN_MS =
+90 *
+1000;
 
 const scheduleChartAlertsPull = ()=>{
+
+if(
+Date.now() -
+lastChartAlertsPullMs <
+CHART_ALERTS_PULL_MIN_MS
+){
+return;
+}
 
 if(
 chartAlertsPullTimer
@@ -4755,6 +4770,17 @@ window.setTimeout(
 
 chartAlertsPullTimer =
 0;
+
+if(
+Date.now() -
+lastChartAlertsPullMs <
+CHART_ALERTS_PULL_MIN_MS
+){
+return;
+}
+
+lastChartAlertsPullMs =
+Date.now();
 
 void import(
 "../alerts-cloud-sync.js?v=113"

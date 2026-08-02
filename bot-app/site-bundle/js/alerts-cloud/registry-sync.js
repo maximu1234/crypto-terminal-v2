@@ -2199,17 +2199,11 @@ await ensureCloudLoginResolved(
 /* ignore */
 }
 
-const immediate =
-opts.immediate ===
-true;
-
 let n = 0;
 
 try{
 n =
-immediate
-? await reconcileLocalRegistryWithCloud()
-: await coalesceRegistryPull(
+await coalesceRegistryPull(
 ()=>reconcileLocalRegistryWithCloud()
 );
 }catch(err){

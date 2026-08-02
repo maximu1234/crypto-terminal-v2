@@ -1038,10 +1038,6 @@ await pushUnsyncedAlerts();
 await pullRegistryFromCloudNow({
 immediate: true
 });
-await pushUnsyncedAlerts();
-await pullRegistryFromCloudNow({
-immediate: true
-});
 
 if(
 isAlertsPage()

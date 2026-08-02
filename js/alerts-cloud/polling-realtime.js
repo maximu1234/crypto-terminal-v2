@@ -47,7 +47,7 @@ pushUnsyncedAlerts,
 scheduleRegistryCloudSync,
 isRegistryCloudSyncPaused,
 syncAllLocalAlertsToCloud
-} from "./registry-sync.js?v=12";
+} from "./registry-sync.js?v=13";
 
 import {
 isAlertsCloudDisabled,
@@ -1038,16 +1038,12 @@ await pushUnsyncedAlerts();
 await pullRegistryFromCloudNow({
 immediate: true
 });
-await pushUnsyncedAlerts();
-await pullRegistryFromCloudNow({
-immediate: true
-});
 
 if(
 isAlertsPage()
 ){
 const { pullAlertHistoryFromCloud } =
-await import("./registry-sync.js?v=12");
+await import("./registry-sync.js?v=13");
 
 await pullAlertHistoryFromCloud({
 force: !!opts.force
