@@ -1636,6 +1636,145 @@ return volumeUsdt;
 
 }
 
+const BYBIT_MIN_ORDER_NOTIONAL_USDT =
+5;
+
+async function resolveMinOrderNotional(
+symbol
+){
+
+try{
+const rules =
+await algoRest.getInstrumentRules(
+symbol
+);
+const minNotional =
+Number(
+rules?.minNotionalValue
+);
+
+if(
+Number.isFinite(
+minNotional
+) &&
+minNotional >
+0
+){
+return minNotional;
+}
+}catch(
+_
+){
+}
+
+return BYBIT_MIN_ORDER_NOTIONAL_USDT;
+
+}
+
+/**
+ * Risk-sized volume must meet Bybit min notional (~$5).
+ * Do not inflate size — skip the order and report why.
+ * @param {number} volumeUsdt
+ * @param {number} minNotional
+ * @returns {{ok:boolean,volumeUsdt:number,minNotional:number,message?:string}}
+ */
+function checkMinOrderNotional(
+volumeUsdt,
+minNotional
+){
+
+const vol =
+Number(
+volumeUsdt
+);
+const min =
+Number(
+minNotional
+);
+const floor =
+Number.isFinite(
+min
+) &&
+min >
+0
+? min
+: BYBIT_MIN_ORDER_NOTIONAL_USDT;
+
+if(
+!Number.isFinite(
+vol
+) ||
+vol <=
+0
+){
+return {
+ok:
+false,
+volumeUsdt:
+vol,
+minNotional:
+floor,
+message:
+"Volume too small"
+};
+}
+
+if(
+vol +
+1e-9 <
+floor
+){
+return {
+ok:
+false,
+volumeUsdt:
+vol,
+minNotional:
+floor,
+message:
+`объём $${vol.toFixed(
+2
+)} < минимум Bybit $${Number(
+floor
+).toFixed(
+0
+)} — ордер не выставлен`
+};
+}
+
+return {
+ok:
+true,
+volumeUsdt:
+vol,
+minNotional:
+floor
+};
+
+}
+
+/**
+ * @param {string} symbol
+ * @param {number} volumeUsdt
+ * @returns {Promise<{ok:boolean,volumeUsdt:number,minNotional:number,message?:string}>}
+ */
+async function assertMinOrderNotional(
+symbol,
+volumeUsdt
+){
+
+const minNotional =
+await resolveMinOrderNotional(
+symbol
+);
+
+return checkMinOrderNotional(
+volumeUsdt,
+minNotional
+);
+
+}
+
 function isLeverageError(
 result
 ){
@@ -2189,7 +2328,7 @@ message:
 };
 }
 
-const volumeUsdt =
+let volumeUsdt =
 calcVolumeFromRiskUsd(
 pt4,
 slPrice,
@@ -2205,6 +2344,29 @@ false,
 message:
 "Volume too small"
 };
+}
+
+{
+const notionalCheck =
+await assertMinOrderNotional(
+sym,
+volumeUsdt
+);
+
+if(
+!notionalCheck.ok
+){
+return {
+ok:
+false,
+message:
+notionalCheck.message ||
+"Volume below Bybit minimum"
+};
+}
+
+volumeUsdt =
+notionalCheck.volumeUsdt;
 }
 
 const ticker =
@@ -4477,6 +4639,105 @@ sym
 if(
 !pos
 ){
+if(
+openOrdersResult?.ok ===
+false
+){
+continue;
+}
+
+const slots =
+[
+[
+"primary",
+pendingTriggers.get(
+sym
+)
+],
+[
+"mirror",
+pendingMirrorTriggers.get(
+sym
+)
+]
+];
+
+for(
+const [
+slot,
+meta
+] of slots
+){
+if(
+!meta?.orderId
+){
+continue;
+}
+
+const oid =
+String(
+meta.orderId
+);
+
+if(
+openOrderIds.has(
+oid
+)
+){
+if(
+meta.triggerMissingSince
+){
+delete meta.triggerMissingSince;
+persistPendingState();
+}
+continue;
+}
+
+const since =
+Number(
+meta.triggerMissingSince
+) ||
+0;
+
+if(
+!since
+){
+meta.triggerMissingSince =
+Date.now();
+persistPendingState();
+continue;
+}
+
+if(
+Date.now() -
+since <
+15000
+){
+continue;
+}
+
+deletePendingSlot(
+sym,
+slot
+);
+persistPendingState();
+reports.push(
+{
+symbol:
+sym,
+side:
+meta.side,
+fingerprint:
+meta.fingerprint,
+action:
+"trigger-gone",
+ok:
+false,
+message:
+"триггер Rejected/снят на Bybit (часто notional < $5 или нет маржи)"
+}
+);
+}
 continue;
 }
 
@@ -5083,6 +5344,153 @@ sym
 
 }
 
+/**
+ * Entry triggers waiting for fill only (not open positions with SL/TP).
+ * @returns {Array<{symbol:string,side:string,p4:number|null,fingerprint:string,oppositeMirror:boolean,orderId:string,triggerPrice:number|null}>}
+ */
+function listWaitingEntryTriggers(){
+
+const out =
+[];
+
+function pushRow(
+sym,
+meta,
+oppositeMirror
+){
+
+if(
+!meta ||
+typeof meta !==
+"object"
+){
+return;
+}
+
+const orderId =
+String(
+meta.orderId ||
+""
+).trim();
+
+if(
+!orderId
+){
+return;
+}
+
+/* Filled bots move to pendingEntries; ignore leftovers. */
+if(
+pendingEntries.has(
+sym
+)
+){
+return;
+}
+
+if(
+meta.stopsAttached ===
+true
+){
+return;
+}
+
+const side =
+meta.side ===
+"short"
+? "short"
+: "long";
+const triggerPrice =
+Number(
+meta.triggerPrice ||
+meta.pt4
+);
+
+out.push(
+{
+symbol:
+sym,
+side,
+p4:
+Number.isFinite(
+triggerPrice
+)
+? triggerPrice
+: null,
+triggerPrice:
+Number.isFinite(
+triggerPrice
+)
+? triggerPrice
+: null,
+b4:
+null,
+alertShapeId:
+null,
+fingerprint:
+String(
+meta.fingerprint ||
+""
+),
+oppositeMirror:
+!!oppositeMirror,
+orderId
+}
+);
+
+}
+
+for(
+const [
+sym,
+meta
+] of pendingTriggers
+){
+pushRow(
+sym,
+meta,
+false
+);
+}
+
+for(
+const [
+sym,
+meta
+] of pendingMirrorTriggers
+){
+pushRow(
+sym,
+meta,
+true
+);
+}
+
+out.sort(
+(
+a,
+b
+)=>
+String(
+a.symbol
+).localeCompare(
+String(
+b.symbol
+)
+) ||
+String(
+a.side
+).localeCompare(
+String(
+b.side
+)
+)
+);
+
+return out;
+
+}
+
 function hasOppositeMirrorPending(
 symbol
 ){
@@ -5238,7 +5646,7 @@ message:
 };
 }
 
-const volumeUsdt =
+let volumeUsdt =
 calcVolumeFromRiskUsd(
 pt4,
 slPrice,
@@ -5254,6 +5662,29 @@ false,
 message:
 "Volume too small"
 };
+}
+
+{
+const notionalCheck =
+await assertMinOrderNotional(
+sym,
+volumeUsdt
+);
+
+if(
+!notionalCheck.ok
+){
+return {
+ok:
+false,
+message:
+notionalCheck.message ||
+"Volume below Bybit minimum"
+};
+}
+
+volumeUsdt =
+notionalCheck.volumeUsdt;
 }
 
 const orderSide =
@@ -5428,6 +5859,7 @@ cancelAllOpenTriggerOrders,
 finalizeTriggerFill,
 reconcileTriggersAndStops,
 hasPendingTrigger,
+listWaitingEntryTriggers,
 hasOppositeMirrorPending,
 canPlaceOppositeMirrorTrigger,
 getPendingTrigger,
@@ -5436,6 +5868,9 @@ getPendingEntries,
 clearPendingEntries,
 removePendingEntry,
 calcVolumeFromRiskUsd,
+checkMinOrderNotional,
+assertMinOrderNotional,
+BYBIT_MIN_ORDER_NOTIONAL_USDT,
 computeAlgoTakeProfit,
 splitQtyByShares,
 allocateQtyByWeights,

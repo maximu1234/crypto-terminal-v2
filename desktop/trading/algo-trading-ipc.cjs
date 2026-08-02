@@ -1226,6 +1226,78 @@ err
 }
 );
 
+handleTrustedDesktopUi(
+ipcMain,
+
+"desktop:algoTradingGetClosedPnl",
+async(
+_event,
+payload
+)=>{
+
+try{
+return await algoRest.getClosedPnlHistory(
+payload ||
+{}
+);
+}catch(
+err
+){
+log.warn(
+"algoTradingGetClosedPnl:",
+err?.message ||
+err
+);
+return {
+ok:
+false,
+message:
+err?.message ||
+String(
+err
+)
+};
+}
+
+}
+);
+
+handleTrustedDesktopUi(
+ipcMain,
+
+"desktop:algoTradingGetTradeDiaryDetail",
+async(
+_event,
+payload
+)=>{
+
+try{
+return await algoRest.getTradeDiaryDetail(
+payload ||
+{}
+);
+}catch(
+err
+){
+log.warn(
+"algoTradingGetTradeDiaryDetail:",
+err?.message ||
+err
+);
+return {
+ok:
+false,
+message:
+err?.message ||
+String(
+err
+)
+};
+}
+
+}
+);
+
 }
 
 module.exports =

@@ -104,52 +104,6 @@ height
 
 }
 
-function formatUsd(
-value
-){
-
-const num =
-Number(
-value
-);
-
-if(
-!Number.isFinite(
-num
-)
-){
-return "—";
-}
-
-const abs =
-Math.abs(
-num
-).toLocaleString(
-"ru-RU",
-{
-maximumFractionDigits:
-2
-}
-);
-
-if(
-num >
-0
-){
-return `+${abs}`;
-}
-
-if(
-num <
-0
-){
-return `−${abs}`;
-}
-
-return abs;
-
-}
-
 function algoBotStatusLabel(
 algo
 ){
@@ -199,11 +153,6 @@ algo.entriesPaused
 : "algo-state--on"
 )
 : "algo-state--off";
-
-const totalCss =
-pnlClass(
-algo.closedTotalUsd
-);
 
 const armed =
 Array.isArray(
@@ -275,19 +224,6 @@ algo.watchlistCount ??
 <div class="algo-row"><span class="algo-label">Открыто сделок</span><span class="algo-value">${escapeHtml(
 algo.openCount ??
 "—"
-)}</span></div>
-<div class="algo-row"><span class="algo-label">Закрыто в плюс</span><span class="algo-value">${escapeHtml(
-algo.closedWin ??
-0
-)}</span></div>
-<div class="algo-row"><span class="algo-label">Закрыто в минус</span><span class="algo-value">${escapeHtml(
-algo.closedLoss ??
-0
-)}</span></div>
-<div class="algo-row"><span class="algo-label">Итого ($)</span><span class="algo-value ${totalCss}">${escapeHtml(
-formatUsd(
-algo.closedTotalUsd
-)
 )}</span></div>
 <div class="algo-row"><span class="algo-label">Armed сетапов</span><span class="algo-value">${escapeHtml(
 armedCount

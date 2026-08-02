@@ -11,8 +11,8 @@ normalizeBotRefreshStatsMode,
 normalizeManualRefreshStrategies,
 botSideListLabel,
 botSidesDirectionLabel,
-botSettingsStatusLabel
-} from "./bot-strategy-prefs.js?v=16";
+formatBotStrategySettingsRows
+} from "./bot-strategy-prefs.js?v=17";
 import {
 syncBotStrategiesToMain,
 syncAllTickerFlagsRootToMain,
@@ -41,37 +41,6 @@ const STATUS_POLL_MS =
 
 let activeBotStrategyUiDestroy =
 null;
-
-/**
- * @param {number} value
- */
-function formatUsd(
-value
-){
-
-const n =
-Number(
-value
-);
-
-if(
-!Number.isFinite(
-n
-)
-){
-return "—";
-}
-
-const sign =
-n >
-0
-? "+"
-: "";
-return `${sign}${n.toFixed(
-2
-)}`;
-
-}
 
 /**
  * 20000000 → "20.000.000"
@@ -336,21 +305,13 @@ const statusSettings =
 document.getElementById(
 "algo-bot-status-settings"
 );
+const statusSettingsList =
+document.getElementById(
+"algo-bot-status-settings-list"
+);
 const statusOpen =
 document.getElementById(
 "algo-bot-status-open"
-);
-const statusWin =
-document.getElementById(
-"algo-bot-status-win"
-);
-const statusLoss =
-document.getElementById(
-"algo-bot-status-loss"
-);
-const statusTotal =
-document.getElementById(
-"algo-bot-status-total"
 );
 const statusArmed =
 document.getElementById(
@@ -536,6 +497,26 @@ return "";
 
 }
 
+function closeSettingsList(){
+
+if(
+statusSettingsList
+){
+statusSettingsList.classList.add(
+"hidden"
+);
+statusSettingsList.classList.remove(
+"is-flip-right"
+);
+}
+
+statusSettings?.setAttribute(
+"aria-expanded",
+"false"
+);
+
+}
+
 function closeArmedList(){
 
 if(
@@ -602,6 +583,7 @@ if(
 except !==
 statusDrop
 ){
+closeSettingsList();
 closeArmedList();
 closeSignalList();
 }
@@ -676,7 +658,9 @@ if(
 drop ===
 statusDrop
 ){
+closeSettingsList();
 closeArmedList();
+closeSignalList();
 }
 }
 
@@ -1751,9 +1735,29 @@ status?.side,
 if(
 statusSettings
 ){
-statusSettings.textContent =
-botSettingsStatusLabel(
-{
+const strategyId =
+status?.strategyId ===
+"st2" ||
+status?.strategyId ===
+"st3"
+? status.strategyId
+: status?.running
+? "st1"
+: "";
+const prefs =
+status?.strategyPrefs &&
+typeof status.strategyPrefs ===
+"object"
+? status.strategyPrefs
+: {
+timeoutBars:
+status?.timeoutBars,
+pullbackBeforeArm:
+status?.pullbackBeforeArm,
+pullbackBeforeArmPct:
+status?.pullbackBeforeArmPct,
+tf:
+status?.tf,
 slPct:
 status?.slPct,
 riskUsd:
@@ -1765,11 +1769,89 @@ status?.tp1,
 tp2:
 status?.tp2,
 tp3:
-status?.tp3
-},
-status?.strategyId ||
-"st1"
+status?.tp3,
+alertLeadPct:
+status?.alertLeadPct,
+minTurnover24hUsdt:
+status?.minTurnover24hUsdt,
+trailSl:
+status?.trailSl,
+trailSlX1:
+status?.trailSlX1,
+trailSlX2:
+status?.trailSlX2,
+share1:
+status?.share1,
+share2:
+status?.share2,
+share3:
+status?.share3,
+side:
+status?.side,
+sides:
+status?.sides,
+useFavorites:
+status?.useFavorites,
+refreshHours:
+status?.refreshHours,
+refreshMinutes:
+status?.refreshMinutes,
+minWinRate:
+status?.minWinRate,
+refreshStatsMode:
+status?.refreshStatsMode,
+manualRefreshStrategies:
+status?.manualRefreshStrategies
+};
+const rows =
+strategyId
+? formatBotStrategySettingsRows(
+prefs,
+strategyId,
+{
+tradingMode:
+status?.tradingMode
+}
+)
+: [];
+
+statusSettings.textContent =
+strategyId
+? (
+strategyId ===
+"st2"
+? "Стратегия 2"
+: strategyId ===
+"st3"
+? "Стратегия 3"
+: "Стратегия 1"
+)
+: "—";
+statusSettings.disabled =
+!rows.length;
+statusSettings.classList.toggle(
+"has-items",
+rows.length >
+0
 );
+
+if(
+statusSettingsList
+){
+statusSettingsList.innerHTML =
+rows.length
+? rows.map(
+row=>
+`<div class="algo-bot-status-settings-item"><span class="algo-bot-status-settings-item-label">${escapeHtml(
+row.label
+)}</span><span class="algo-bot-status-settings-item-value">${escapeHtml(
+row.value
+)}</span></div>`
+).join(
+""
+)
+: `<div class="algo-bot-status-settings-empty">Бот не запущен</div>`;
+}
 }
 
 if(
@@ -1789,50 +1871,6 @@ statusOpen.textContent =
 String(
 status?.openCount ??
 "—"
-);
-}
-
-if(
-statusWin
-){
-statusWin.textContent =
-String(
-status?.closedWin ??
-0
-);
-}
-
-if(
-statusLoss
-){
-statusLoss.textContent =
-String(
-status?.closedLoss ??
-0
-);
-}
-
-if(
-statusTotal
-){
-const total =
-Number(
-status?.closedTotalUsd ??
-0
-);
-statusTotal.textContent =
-formatUsd(
-total
-);
-statusTotal.classList.toggle(
-"is-pos",
-total >
-0
-);
-statusTotal.classList.toggle(
-"is-neg",
-total <
-0
 );
 }
 
@@ -3240,6 +3278,69 @@ event.stopPropagation();
 }
 );
 
+statusSettings?.addEventListener(
+"click",
+event=>{
+event.preventDefault();
+event.stopPropagation();
+
+if(
+statusSettings.disabled
+){
+return;
+}
+
+const open =
+statusSettingsList?.classList.contains(
+"hidden"
+) !==
+false;
+
+if(
+open
+){
+closeArmedList();
+closeSignalList();
+statusSettingsList?.classList.remove(
+"hidden",
+"is-flip-right"
+);
+statusSettings.setAttribute(
+"aria-expanded",
+"true"
+);
+
+requestAnimationFrame(
+()=>{
+if(
+!statusSettingsList ||
+statusSettingsList.classList.contains(
+"hidden"
+)
+){
+return;
+}
+
+const rect =
+statusSettingsList.getBoundingClientRect();
+
+if(
+rect.left <
+8
+){
+statusSettingsList.classList.add(
+"is-flip-right"
+);
+}
+}
+);
+}else{
+closeSettingsList();
+}
+
+}
+);
+
 statusArmed?.addEventListener(
 "click",
 event=>{
@@ -3261,6 +3362,7 @@ false;
 if(
 open
 ){
+closeSettingsList();
 closeSignalList();
 statusArmedList?.classList.remove(
 "hidden",
@@ -3462,6 +3564,7 @@ false;
 if(
 open
 ){
+closeSettingsList();
 closeArmedList();
 statusSignalList?.classList.remove(
 "hidden",

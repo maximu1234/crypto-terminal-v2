@@ -136,18 +136,53 @@ signals:
 
 function getEngineStatus(){
 
+const waiting =
+typeof orderExecutor.listWaitingEntryTriggers ===
+"function"
+? orderExecutor.listWaitingEntryTriggers()
+: [];
+
 const armedSetups =
 [];
+const seenSymbols =
+new Set();
 
 for(
-const state of symbolStates.values()
+const row of waiting
 ){
 
+const sym =
+String(
+row?.symbol ||
+""
+).toUpperCase();
+
 if(
-!state.armed?.size
+!sym
 ){
 continue;
 }
+
+seenSymbols.add(
+sym
+);
+
+const state =
+symbolStates.get(
+sym
+);
+let alertShapeId =
+row.alertShapeId
+? String(
+row.alertShapeId
+)
+: null;
+let b4 =
+row.b4;
+
+if(
+state?.armed?.size
+){
 
 for(
 const entry of state.armed.values()
@@ -161,54 +196,66 @@ setup.side ===
 "short"
 ? "short"
 : "long";
-const p4 =
-Number(
-setup.p4
+
+if(
+side !==
+row.side
+){
+continue;
+}
+
+if(
+!alertShapeId &&
+entry?.alertShapeId
+){
+alertShapeId =
+String(
+entry.alertShapeId
 );
+}
+
+if(
+b4 ==
+null &&
+Number.isFinite(
+Number(
+setup.b4
+)
+)
+){
+b4 =
+Number(
+setup.b4
+);
+}
+
+break;
+
+}
+
+}
 
 armedSetups.push(
 {
 symbol:
-state.symbol,
-side,
+sym,
+side:
+row.side,
 b4:
-Number.isFinite(
-Number(
-setup.b4
-)
-)
-? Number(
-setup.b4
-)
-: null,
+b4 ==
+null
+? null
+: b4,
 p4:
-Number.isFinite(
-p4
-)
-? p4
-: null,
-alertShapeId:
-entry?.alertShapeId
-? String(
-entry.alertShapeId
-)
-: null,
+row.p4,
+alertShapeId,
 fingerprint:
-setupFingerprint(
-state.symbol,
-{
-side,
-b4:
-setup.b4,
-p4:
-setup.p4
-},
-state.candles
-)
+row.fingerprint ||
+"",
+oppositeMirror:
+!!row.oppositeMirror
 }
 );
-
-}
 
 }
 
@@ -241,7 +288,7 @@ signalLog.length -
 
 return {
 armedCount:
-armedSetups.length,
+seenSymbols.size,
 armedSetups,
 entriesCount,
 lastSignal:
@@ -3445,6 +3492,70 @@ price:
 text:
 `${report.symbol}: нет SL/TP — ${report.message ||
 "ошибка"}`
+}
+);
+}else if(
+report?.action ===
+"trigger-gone"
+){
+const sym =
+normalizeSymbol(
+report.symbol
+);
+const state =
+getState(
+sym
+);
+const fp =
+String(
+report.fingerprint ||
+""
+);
+
+if(
+fp &&
+state.armed.has(
+fp
+)
+){
+state.armed.delete(
+fp
+);
+state.consumed.add(
+fp
+);
+}else{
+for(
+const armedFp of [
+...state.armed.keys()
+]
+){
+state.armed.delete(
+armedFp
+);
+state.consumed.add(
+armedFp
+);
+}
+
+}
+
+pushSignal(
+{
+ts:
+Date.now(),
+symbol:
+sym,
+side:
+report.side ||
+"—",
+price:
+0,
+text:
+`${sym}${report.side
+? ` ${report.side}`
+: ""}: ${report.message ||
+"триггер Rejected/снят на Bybit"}`
 }
 );
 }

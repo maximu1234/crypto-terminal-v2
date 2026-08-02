@@ -880,6 +880,386 @@ return `${slPart}, ТП: 1к${rrLabel}`;
 
 }
 
+const BOT_TF_STATUS_LABELS =
+Object.freeze({
+"1":
+"1m",
+"5":
+"5m",
+"15":
+"15m",
+"60":
+"1h",
+"240":
+"4h",
+D:
+"D",
+W:
+"W"
+});
+
+function formatStatusNumber(
+value,
+digits =
+2
+){
+
+const n =
+Number(
+value
+);
+
+if(
+!Number.isFinite(
+n
+)
+){
+return "—";
+}
+
+if(
+Number.isInteger(
+n
+)
+){
+return String(
+n
+);
+}
+
+return String(
+Number(
+n.toFixed(
+digits
+)
+)
+);
+
+}
+
+function formatStatusTurnover(
+value
+){
+
+const n =
+Number(
+value
+);
+
+if(
+!Number.isFinite(
+n
+) ||
+n <
+0
+){
+return "—";
+}
+
+return Math.round(
+n
+).toLocaleString(
+"ru-RU"
+).replace(
+/\u00a0/g,
+"."
+);
+
+}
+
+/**
+ * Полный текстовый снимок настроек стратегии для окна Статус (только чтение).
+ * @param {object|null|undefined} prefs
+ * @param {"st1"|"st2"|"st3"|string|null|undefined} strategyId
+ * @param {{ tradingMode?: string }|null|undefined} [extra]
+ * @returns {{ label: string, value: string }[]}
+ */
+export function formatBotStrategySettingsRows(
+prefs,
+strategyId =
+"st1",
+extra =
+null
+){
+
+const id =
+strategyId ===
+"st2" ||
+strategyId ===
+"st3"
+? strategyId
+: "st1";
+const p =
+prefs &&
+typeof prefs ===
+"object"
+? prefs
+: {};
+const sides =
+normalizeBotSides(
+p.sides,
+p.side
+);
+const mode =
+String(
+extra?.tradingMode ||
+""
+).toLowerCase() ===
+"manual"
+? "Ручная торговля"
+: "Реальная торговля";
+const tf =
+BOT_TF_STATUS_LABELS[
+normalizeBotTf(
+p.tf
+)
+] ||
+String(
+p.tf ||
+"—"
+);
+const stratLabel =
+id ===
+"st2"
+? "Стратегия 2"
+: id ===
+"st3"
+? "Стратегия 3"
+: "Стратегия 1";
+const pullbackOn =
+p.pullbackBeforeArm ===
+true ||
+p.pullbackBeforeArm ===
+1 ||
+p.pullbackBeforeArm ===
+"1" ||
+p.pullbackBeforeArm ===
+"true";
+const rows =
+[
+{
+label:
+"Стратегия",
+value:
+stratLabel
+},
+{
+label:
+"Режим",
+value:
+mode
+},
+{
+label:
+"Количество баров до отмены паттерна",
+value:
+formatStatusNumber(
+p.timeoutBars,
+0
+)
+},
+{
+label:
+"Откат перед arm",
+value:
+pullbackOn
+? `вкл. · ${formatStatusNumber(
+p.pullbackBeforeArmPct
+)}%`
+: "выкл."
+},
+{
+label:
+"Таймфрейм",
+value:
+tf
+},
+{
+label:
+"СЛ (%)",
+value:
+formatStatusNumber(
+p.slPct
+)
+},
+{
+label:
+"СЛ ($)",
+value:
+formatStatusNumber(
+p.riskUsd
+)
+}
+];
+
+if(
+id ===
+"st1"
+){
+rows.push(
+{
+label:
+"ТП 1 к",
+value:
+formatStatusNumber(
+p.tpRr
+)
+}
+);
+}else{
+rows.push(
+{
+label:
+"ТП1 / ТП2 / ТП3",
+value:
+`${formatStatusNumber(
+p.tp1
+)} / ${formatStatusNumber(
+p.tp2
+)} / ${formatStatusNumber(
+p.tp3
+)}`
+},
+{
+label:
+"Трейлинг СЛ",
+value:
+p.trailSl
+? `вкл. · после ТП1: ${formatStatusNumber(
+p.trailSlX1
+)} · после ТП2: ${formatStatusNumber(
+p.trailSlX2
+)}`
+: "выкл."
+},
+{
+label:
+"Доли ТП (%)",
+value:
+`${formatStatusNumber(
+p.share1,
+0
+)} / ${formatStatusNumber(
+p.share2,
+0
+)} / ${formatStatusNumber(
+p.share3,
+0
+)}`
+}
+);
+}
+
+rows.push(
+{
+label:
+"Объем за сутки от",
+value:
+`${formatStatusTurnover(
+p.minTurnover24hUsdt
+)} USDT`
+},
+{
+label:
+"Алерт до pt4",
+value:
+`${formatStatusNumber(
+p.alertLeadPct
+)}% X`
+},
+{
+label:
+"Торговля",
+value:
+botSidesDirectionLabel(
+sides,
+!!p.useFavorites
+)
+},
+{
+label:
+"Список",
+value:
+p.useFavorites
+? "Избранные"
+: botSideListLabel(
+sides
+)
+},
+{
+label:
+"Обновлять список тикеров каждые",
+value:
+`${formatStatusNumber(
+p.refreshHours,
+0
+)} ч ${formatStatusNumber(
+p.refreshMinutes,
+0
+)} мин`
+},
+{
+label:
+"По критериям",
+value:
+`${formatStatusNumber(
+p.minWinRate,
+0
+)}% успеха`
+},
+{
+label:
+"Режим подсчёта",
+value:
+normalizeBotRefreshStatsMode(
+p.refreshStatsMode
+) ===
+"real"
+? "Реальный подсчет"
+: "По критериям"
+}
+);
+
+if(
+id ===
+"st1"
+){
+const manual =
+normalizeManualRefreshStrategies(
+p.manualRefreshStrategies
+);
+const picked =
+[
+manual.st1
+? "Ст1"
+: null,
+manual.st2
+? "Ст2"
+: null,
+manual.st3
+? "Ст3"
+: null
+].filter(
+Boolean
+);
+rows.push(
+{
+label:
+"Скан стратегий (ручной)",
+value:
+picked.length
+? picked.join(
+", "
+)
+: "—"
+}
+);
+}
+
+return rows;
+
+}
+
 /**
  * @param {AlgoBotSide} side
  */

@@ -820,15 +820,6 @@ snap.watchlistCount ??
 openCount:
 snap.openCount ??
 0,
-closedWin:
-snap.closedWin ??
-0,
-closedLoss:
-snap.closedLoss ??
-0,
-closedTotalUsd:
-snap.closedTotalUsd ??
-0,
 armedCount:
 snap.armedCount ??
 0,

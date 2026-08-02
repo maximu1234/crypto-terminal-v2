@@ -238,17 +238,6 @@ let sessionId =
 let sessionStartedAt =
 0;
 
-/** @type {{ closedWin: number, closedLoss: number, closedTotalUsd: number }} */
-let sessionStats =
-{
-closedWin:
-0,
-closedLoss:
-0,
-closedTotalUsd:
-0
-};
-
 let statusMessage =
 "";
 /** @type {Record<string, unknown> | null} */
@@ -417,12 +406,6 @@ watchlistCount:
 watchlist.length,
 openCount:
 0,
-closedWin:
-sessionStats.closedWin,
-closedLoss:
-sessionStats.closedLoss,
-closedTotalUsd:
-sessionStats.closedTotalUsd,
 message:
 statusMessage,
 tradingMode:
@@ -450,6 +433,40 @@ tp2:
 active.tp2,
 tp3:
 active.tp3,
+timeoutBars:
+active.timeoutBars,
+pullbackBeforeArm:
+!!active.pullbackBeforeArm,
+pullbackBeforeArmPct:
+active.pullbackBeforeArmPct,
+alertLeadPct:
+active.alertLeadPct,
+minTurnover24hUsdt:
+active.minTurnover24hUsdt,
+trailSl:
+!!active.trailSl,
+trailSlX1:
+active.trailSlX1,
+trailSlX2:
+active.trailSlX2,
+share1:
+active.share1,
+share2:
+active.share2,
+share3:
+active.share3,
+refreshHours:
+active.refreshHours,
+refreshMinutes:
+active.refreshMinutes,
+minWinRate:
+active.minWinRate,
+refreshStatsMode:
+active.refreshStatsMode,
+manualRefreshStrategies:
+active.manualRefreshStrategies,
+strategyPrefs:
+active,
 armedCount:
 engine.armedCount,
 armedSetups:
@@ -522,89 +539,6 @@ log.warn(
 err}`
 );
 }
-
-let pnl =
-NaN;
-
-try{
-const hist =
-await algoRest.getClosedPnlHistory(
-{
-symbol:
-sym,
-startTime:
-Math.max(
-0,
-(
-meta.openedAt ||
-sessionStartedAt
-) -
-120000
-),
-skipExecutions:
-true
-}
-);
-
-if(
-hist?.ok &&
-Array.isArray(
-hist.trades
-) &&
-hist.trades.length
-){
-const trade =
-hist.trades[
-0
-];
-pnl =
-Number(
-trade?.closedPnl ??
-trade?.realisedPnl ??
-trade?.pnl
-);
-}
-}catch(
-err
-){
-log.warn(
-"algo bot closed pnl:",
-sym,
-err?.message ||
-err
-);
-}
-
-if(
-!Number.isFinite(
-pnl
-)
-){
-pnl =
--meta.riskUsd;
-}
-
-if(
-pnl >=
-0
-){
-sessionStats.closedWin +=
-1;
-}else{
-sessionStats.closedLoss +=
-1;
-}
-
-sessionStats.closedTotalUsd +=
-pnl;
-
-statusMessage =
-`${sym} закрыта ${pnl >=
-0
-? "+"
-: ""}${pnl.toFixed(
-2
-)} USDT`;
 
 }
 
@@ -1068,15 +1002,6 @@ return result;
 
 function resetSessionStats(){
 
-sessionStats =
-{
-closedWin:
-0,
-closedLoss:
-0,
-closedTotalUsd:
-0
-};
 sessionId +=
 1;
 sessionStartedAt =

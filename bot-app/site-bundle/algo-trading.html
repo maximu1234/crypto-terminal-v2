@@ -19,8 +19,8 @@
 <link rel="stylesheet" href="/css/terminal.css?v=169">
 <link rel="stylesheet" href="/css/terminal-layout.css?v=97">
 <link rel="stylesheet" href="/css/chart-indicators.css?v=22">
-<link rel="stylesheet" href="/css/algo-trading.css?v=93">
-<link rel="stylesheet" href="/css/algo-trading-book-panel.css?v=4">
+<link rel="stylesheet" href="/css/algo-trading.css?v=94">
+<link rel="stylesheet" href="/css/algo-trading-book-panel.css?v=5">
 <link rel="stylesheet" href="/css/algo-trading-chart-overlay.css?v=2">
 
 <script src="/vendor/lightweight-charts.standalone.production.js"></script>
@@ -28,7 +28,7 @@
 
 </head>
 
-<body class="terminal-page algo-trading-page algo-bot-lite-layout">
+<body class="terminal-page algo-trading-page">
 
 <div id="app">
 
@@ -36,10 +36,16 @@
 
 <header id="header" class="app-page-header">
 
-<a href="/algo-trading.html" id="logo" aria-label="Multichart Algo Bot"><img src="/icons/brand-logo.png" alt="" width="32" height="32" class="site-logo-img" decoding="async"></a>
+<a href="/screener.html" id="logo" aria-label="Multichart"><img src="/icons/brand-logo.png" alt="" width="32" height="32" class="site-logo-img" decoding="async"></a>
 
 <nav class="menu app-header-nav" id="app-header-nav">
-<a href="/algo-trading.html">АлгоБот</a>
+<a href="/screener.html">Скринер</a>
+<a href="/terminal.html">Терминал</a>
+<a href="/watchlist.html">Вотчлист</a>
+<a href="/alerts/">Алерты</a>
+<a href="/listings.html">Листинги</a>
+<a href="/trade-calculator.html">Калькулятор</a>
+<a href="/statistics.html">Статистика</a>
 <div class="header-settings-wrap" id="header-settings-wrap">
 <button type="button" class="header-settings-btn" id="header-settings-btn" title="Вход и синхронизация" aria-label="Настройки" aria-expanded="false" aria-haspopup="true">
 <svg class="header-settings-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.75"/><path fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
@@ -336,9 +342,28 @@ aria-controls="algo-bot-status-dropdown"
 <span class="algo-bot-status-label">Направление</span>
 <span class="algo-bot-status-value" id="algo-bot-status-direction">—</span>
 </div>
-<div class="algo-bot-status-row">
+<div class="algo-bot-status-row algo-bot-status-row--settings">
 <span class="algo-bot-status-label">Настройки</span>
-<span class="algo-bot-status-value" id="algo-bot-status-settings">—</span>
+<div class="algo-bot-status-settings-wrap" id="algo-bot-status-settings-wrap">
+<button
+type="button"
+class="algo-bot-status-settings-btn"
+id="algo-bot-status-settings"
+aria-expanded="false"
+aria-haspopup="true"
+aria-controls="algo-bot-status-settings-list"
+title="Показать настройки стратегии"
+disabled
+>
+—
+</button>
+<div
+class="algo-bot-status-settings-list hidden"
+id="algo-bot-status-settings-list"
+role="dialog"
+aria-label="Настройки стратегии"
+></div>
+</div>
 </div>
 <div class="algo-bot-status-row">
 <span class="algo-bot-status-label">Тикеров в списке</span>
@@ -347,18 +372,6 @@ aria-controls="algo-bot-status-dropdown"
 <div class="algo-bot-status-row">
 <span class="algo-bot-status-label">Открыто сделок</span>
 <span class="algo-bot-status-value" id="algo-bot-status-open">—</span>
-</div>
-<div class="algo-bot-status-row">
-<span class="algo-bot-status-label">Закрыто в плюс</span>
-<span class="algo-bot-status-value" id="algo-bot-status-win">—</span>
-</div>
-<div class="algo-bot-status-row">
-<span class="algo-bot-status-label">Закрыто в минус</span>
-<span class="algo-bot-status-value" id="algo-bot-status-loss">—</span>
-</div>
-<div class="algo-bot-status-row">
-<span class="algo-bot-status-label">Итого ($)</span>
-<span class="algo-bot-status-value" id="algo-bot-status-total">—</span>
 </div>
 <div class="algo-bot-status-row algo-bot-status-row--armed">
 <span class="algo-bot-status-label">Armed сетапов</span>
@@ -456,6 +469,7 @@ title="Снять облачную метку, если бот упал без �
 
 <div id="chart-wrap">
 <div id="chart"></div>
+<div id="coins-chart-turnover24" class="coins-chart-turnover24" aria-live="polite"></div>
 <div id="crosshair-price-label" class="crosshair-axis-label crosshair-price-label hidden" aria-hidden="true"></div>
 
 <div id="draw-style-bar" class="draw-style-float hidden">
@@ -579,6 +593,89 @@ tabindex="0"
 <span class="algo-stats-label">Паттерны Short</span>
 <span class="algo-stats-value algo-stats-value--short" id="algo-stat-short" data-algo-stat-short>—</span>
 </div>
+</div>
+<div class="algo-stats-divider" aria-hidden="true"></div>
+<div class="algo-stats-row algo-stats-row--setting algo-stats-row--ema">
+<span class="algo-stats-label">EMA1</span>
+<input
+type="number"
+id="algo-ema-period-2"
+class="algo-stats-input"
+min="1"
+max="1000"
+step="1"
+value="50"
+inputmode="numeric"
+title="Период EMA1 — голубая линия"
+/>
+<input
+type="number"
+id="algo-ema-shift-2"
+class="algo-stats-input algo-stats-input--shift"
+min="-99"
+max="500"
+step="0.1"
+value="0"
+inputmode="decimal"
+title="Сдвиг EMA1, % — голубая линия"
+/>
+<select
+id="algo-ema-tf-2"
+class="algo-stats-select"
+title="ТФ EMA1 — голубая линия"
+>
+<option value="" selected>Текущий</option>
+<option value="1">1m</option>
+<option value="5">5m</option>
+<option value="15">15m</option>
+<option value="60">1h</option>
+<option value="240">4h</option>
+<option value="D">1D</option>
+</select>
+<label class="algo-stats-check" title="Включить EMA1 фильтр — голубая линия">
+<input type="checkbox" id="algo-ema-filter-2" />
+</label>
+</div>
+<div class="algo-stats-row algo-stats-row--setting algo-stats-row--ema">
+<span class="algo-stats-label">EMA2</span>
+<input
+type="number"
+id="algo-ema-period"
+class="algo-stats-input"
+min="1"
+max="1000"
+step="1"
+value="200"
+inputmode="numeric"
+title="Период EMA2 — жёлтая линия"
+/>
+<input
+type="number"
+id="algo-ema-shift"
+class="algo-stats-input algo-stats-input--shift"
+min="-99"
+max="500"
+step="0.1"
+value="0"
+inputmode="decimal"
+title="Сдвиг EMA2, % — жёлтая линия"
+/>
+<select
+id="algo-ema-tf"
+class="algo-stats-select"
+title="ТФ EMA2 — жёлтая линия"
+>
+<option value="" selected>Текущий</option>
+<option value="1">1m</option>
+<option value="5">5m</option>
+<option value="15">15m</option>
+<option value="60">1h</option>
+<option value="240">4h</option>
+<option value="D">1D</option>
+</select>
+<label class="algo-stats-check" title="Включить EMA2 фильтр — жёлтая линия">
+<input type="checkbox" id="algo-ema-filter" />
+</label>
 </div>
 <div class="algo-stats-divider" aria-hidden="true"></div>
 <div class="algo-stats-col-title-row">

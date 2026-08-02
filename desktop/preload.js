@@ -459,6 +459,22 @@ getWalletBalance:()=>
 ipcRenderer.invoke(
 "desktop:algoTradingGetWalletBalance"
 ),
+getClosedPnl:(
+payload
+)=>
+ipcRenderer.invoke(
+"desktop:algoTradingGetClosedPnl",
+payload ||
+{}
+),
+getTradeDiaryDetail:(
+payload
+)=>
+ipcRenderer.invoke(
+"desktop:algoTradingGetTradeDiaryDetail",
+payload ||
+{}
+),
 setTradingMode:(
 payload
 )=>

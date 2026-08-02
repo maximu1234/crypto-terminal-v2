@@ -400,6 +400,7 @@ panel.innerHTML =
 ${EYE_OPEN_SVG}
 ${EYE_CLOSED_SVG}
 </button>
+<button type="button" class="trade-book-diary-btn" data-role="positions-diary-btn" title="Дневник" aria-label="Дневник сделок">Д</button>
 </span>
 <span class="col-pnl-wrap">
 <span class="col-pnl" data-role="positions-total-pnl"></span>
@@ -450,6 +451,10 @@ panel.querySelector(
 const positionsTotalEyeBtn =
 panel.querySelector(
 '[data-role="positions-total-eye"]'
+);
+const positionsDiaryBtn =
+panel.querySelector(
+'[data-role="positions-diary-btn"]'
 );
 const statusEl =
 panel.querySelector(
@@ -631,8 +636,11 @@ row?.label ||
 
 function hidePositionsTotal(){
 
+/* Keep eye + diary always reachable on Positions tab. */
 if(
-positionsTotalEl
+positionsTotalEl &&
+mode !==
+"positions"
 ){
 positionsTotalEl.hidden =
 true;
@@ -733,6 +741,13 @@ tableHead.innerHTML =
 <span class="col-entry">Вход</span>
 <span class="col-liq">Liq</span>
 `;
+
+if(
+positionsTotalEl
+){
+positionsTotalEl.hidden =
+false;
+}
 
 }
 
@@ -932,6 +947,31 @@ updateEyeUi();
 }
 );
 
+positionsDiaryBtn?.addEventListener(
+"click",
+()=>{
+void import(
+"../diary/modal.js?v=4"
+).then(
+(mod)=>{
+if(
+typeof mod.openAlgoDiaryModal ===
+"function"
+){
+void mod.openAlgoDiaryModal();
+}
+}
+).catch(
+(err)=>{
+console.warn(
+"algo diary modal:",
+err
+);
+}
+);
+}
+);
+
 updateEyeUi();
 
 function updateTotal(
@@ -963,38 +1003,47 @@ if(
 positionsTotalEl
 ){
 positionsTotalEl.hidden =
-rows.length ===
-0;
+mode !==
+"positions";
 }
 
 if(
 positionsTotalPnlEl
 ){
 const text =
-formatTradePnl(
+rows.length
+? formatTradePnl(
 sum
-);
+)
+: "—";
 positionsTotalPnlEl.dataset.raw =
 text;
 positionsTotalPnlEl.textContent =
-totalPnlHidden
+totalPnlHidden &&
+rows.length
 ? "••••"
 : text;
 positionsTotalPnlEl.classList.toggle(
 "is-pos",
 !totalPnlHidden &&
+rows.length >
+0 &&
 sum >
 0
 );
 positionsTotalPnlEl.classList.toggle(
 "is-neg",
 !totalPnlHidden &&
+rows.length >
+0 &&
 sum <
 0
 );
 positionsTotalPnlEl.classList.toggle(
 "is-masked",
-totalPnlHidden
+totalPnlHidden &&
+rows.length >
+0
 );
 }
 

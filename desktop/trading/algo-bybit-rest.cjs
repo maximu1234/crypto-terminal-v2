@@ -3279,8 +3279,28 @@ p <=
 return null;
 }
 
+const minNotional =
+Number(
+rules?.minNotionalValue
+);
+let targetVol =
+vol;
+
+if(
+Number.isFinite(
+minNotional
+) &&
+minNotional >
+0 &&
+targetVol <
+minNotional
+){
+targetVol =
+minNotional;
+}
+
 const raw =
-vol /
+targetVol /
 p;
 const step =
 Number(
@@ -3390,7 +3410,7 @@ p;
 const diff =
 Math.abs(
 notional -
-vol
+targetVol
 );
 
 if(
@@ -3568,6 +3588,8 @@ qtyStep:
 "0.001",
 minOrderQty:
 "0.001",
+minNotionalValue:
+"5",
 tickSize:
 "0.0001",
 maxLeverage:
@@ -3600,6 +3622,9 @@ minOrderQty:
 lot.minOrderQty ||
 lot.qtyStep ||
 "0.001",
+minNotionalValue:
+lot.minNotionalValue ||
+"5",
 maxOrderQty:
 lot.maxOrderQty,
 tickSize:
@@ -6611,6 +6636,7 @@ mapPositionRow,
 mapOrderRow,
 getInstrumentRules,
 formatQtyValue,
+qtyFromVolumeUsdt,
 getSymbolPositionSettings,
 applySymbolPositionSettings
 };
