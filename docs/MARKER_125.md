@@ -16,9 +16,16 @@
 ## Версии
 
 - Web marker: `v0.125`
-- Multichart desktop app: `v1.1.24`
+- Multichart desktop app: `v1.1.25` (hotfix Mac)
+- Multichart desktop app (prior): `v1.1.24`
 - Algo Bot desktop app: `v1.0.134`
-- Mac tag (Multichart): `desktop-v1.1.24`
+- Mac tag (Multichart): `desktop-v1.1.25`
 - Windows tag (Multichart): `desktop-win-v1.1.24`
 - Mac tag (Algo Bot): `algo-bot-v1.0.134`
 - Windows tag (Algo Bot): `algo-bot-win-v1.0.134`
+
+### Hotfix Multichart Mac `1.1.25`
+
+- LAN «Отдать сессию» / POST: не ставить `Content-Length` вручную (Electron
+  `net::ERR_INVALID_ARGUMENT`); нормализация `IP:порт` в поле хоста.
+- Тег: `desktop-v1.1.25` (только Mac Multichart).

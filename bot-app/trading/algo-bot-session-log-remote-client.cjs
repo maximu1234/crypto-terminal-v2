@@ -6,7 +6,8 @@ function normalizeHost(
 host
 ){
 
-return String(
+let h =
+String(
 host ||
 ""
 ).trim().replace(
@@ -16,6 +17,116 @@ host ||
 /\/.*$/,
 ""
 );
+
+/* "1.2.3.4:17865" pasted into host → strip port (port field is separate). */
+if(
+h.includes(
+":"
+) &&
+!h.startsWith(
+"["
+)
+){
+const m =
+h.match(
+/^([^:]+):(\d{2,5})$/
+);
+
+if(
+m
+){
+h =
+m[1];
+}
+}
+
+return h;
+
+}
+
+/**
+ * @returns {{ host: string, port: number }|null}
+ */
+function resolveHostPort(
+host,
+port
+){
+
+let h =
+String(
+host ||
+""
+).trim().replace(
+/^https?:\/\//i,
+""
+).replace(
+/\/.*$/,
+""
+);
+let p =
+Math.floor(
+Number(
+port
+)
+) ||
+0;
+
+if(
+h.includes(
+":"
+) &&
+!h.startsWith(
+"["
+)
+){
+const m =
+h.match(
+/^([^:]+):(\d{2,5})$/
+);
+
+if(
+m
+){
+h =
+m[1];
+
+if(
+!p
+){
+p =
+Math.floor(
+Number(
+m[2]
+)
+);
+}
+}
+}
+
+h =
+normalizeHost(
+h
+);
+p =
+p ||
+17865;
+
+if(
+!h ||
+p <
+1 ||
+p >
+65535
+){
+return null;
+}
+
+return {
+host:
+h,
+port:
+p
+};
 
 }
 
@@ -28,17 +139,18 @@ path: pathname
 }
 ){
 
-const h =
-normalizeHost(
-host
-);
-const p =
-Math.floor(
-Number(
+const resolved =
+resolveHostPort(
+host,
 port
-)
-) ||
-17865;
+);
+
+if(
+!resolved
+){
+return "";
+}
+
 const pathPart =
 String(
 pathname ||
@@ -59,7 +171,7 @@ token
 )}`
 : "";
 
-return `http://${h}:${p}${pathPart}${q}`;
+return `http://${resolved.host}:${resolved.port}${pathPart}${q}`;
 
 }
 
@@ -429,6 +541,20 @@ timeoutMs =
 30000
 ){
 
+if(
+!String(
+url ||
+""
+).trim()
+){
+return {
+ok:
+false,
+message:
+"Некорректный IP/порт канала"
+};
+}
+
 const net =
 getNet();
 
@@ -611,20 +737,14 @@ request.setHeader(
 "Content-Type",
 "application/json; charset=utf-8"
 );
-request.setHeader(
-"Content-Length",
-String(
-Buffer.byteLength(
-payload,
-"utf8"
-)
-)
-);
-request.write(
+/*
+  Do not set Content-Length manually — Electron net.request often throws
+  net::ERR_INVALID_ARGUMENT when the header disagrees with the body.
+*/
+request.end(
 payload,
 "utf8"
 );
-request.end();
 }catch(
 err
 ){
