@@ -10,11 +10,11 @@ SCRIPT_SCAN_BG_EVENT
 
 import {
 loadScriptPageState
-} from "./script-page-storage.js?v=14";
+} from "./script-page-storage.js?v=15";
 
 import {
 isTerminalPage
-} from "./page-routes.js?v=3";
+} from "./page-routes.js?v=5";
 
 import {
 FEATURE_NAV_PREF_EVENT,

@@ -81,7 +81,7 @@ scaleSupabasePollMs
 
 import {
 isAlgoBotLiteShell
-} from "./page-routes.js?v=4";
+} from "./page-routes.js?v=5";
 
 const DRAWINGS_LOCAL_TS_KEY =
 "drawings_local_updated_at";

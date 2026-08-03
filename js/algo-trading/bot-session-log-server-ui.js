@@ -4,7 +4,7 @@
  */
 import {
 isAlgoBotLiteShell
-} from "../page-routes.js?v=4";
+} from "../page-routes.js?v=5";
 
 function desktopApi(){
 

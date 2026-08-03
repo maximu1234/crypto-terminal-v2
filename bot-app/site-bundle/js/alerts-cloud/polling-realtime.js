@@ -8,7 +8,7 @@ isCloudLoggedIn,
 isCloudLoggedInEffective,
 onCloudSyncChange,
 ensureCloudLoginResolved
-} from "../cloud-sync.js?v=53";
+} from "../cloud-sync.js?v=55";
 
 import {
 clearAlertAuthCache,
@@ -47,7 +47,7 @@ pushUnsyncedAlerts,
 scheduleRegistryCloudSync,
 isRegistryCloudSyncPaused,
 syncAllLocalAlertsToCloud
-} from "./registry-sync.js?v=12";
+} from "./registry-sync.js?v=14";
 
 import {
 isAlertsCloudDisabled,
@@ -55,8 +55,8 @@ syncAlertsCloudPauseToServer
 } from "../supabase-usage-prefs.js?v=5";
 
 import {
-isAlgoBotLiteShell
-} from "../page-routes.js?v=3";
+isAlgoReducedCloudClient
+} from "../page-routes.js?v=5";
 
 const IS_IOS_SAFARI =
 /iP(hone|ad|od)/i.test(
@@ -606,7 +606,7 @@ immediate: true
 export function startAlertsFastPoll(){
 
 if(
-isAlgoBotLiteShell() ||
+isAlgoReducedCloudClient() ||
 !isDrawingsUiPage() ||
 isAlertsPage()
 ){
@@ -950,7 +950,7 @@ userId
 
 if(
 isAlertsCloudDisabled() ||
-isAlgoBotLiteShell()
+isAlgoReducedCloudClient()
 ){
 return;
 }
@@ -976,7 +976,7 @@ return 0;
 }
 
 if(
-isAlgoBotLiteShell()
+isAlgoReducedCloudClient()
 ){
 return pushUnsyncedAlerts(
 opts.force
@@ -1043,7 +1043,7 @@ if(
 isAlertsPage()
 ){
 const { pullAlertHistoryFromCloud } =
-await import("./registry-sync.js?v=12");
+await import("./registry-sync.js?v=14");
 
 await pullAlertHistoryFromCloud({
 force: !!opts.force
@@ -1094,9 +1094,9 @@ return;
 
 alertsCloudSyncReady = true;
 
-/* Algo Bot: только push по событию; без hydrate/poll/realtime pull. */
+/* Algo Bot / Multichart Algo page: только push по событию; без hydrate/poll/realtime pull. */
 if(
-isAlgoBotLiteShell()
+isAlgoReducedCloudClient()
 ){
 window.addEventListener(
 "alerts-changed",

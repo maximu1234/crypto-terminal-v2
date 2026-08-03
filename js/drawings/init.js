@@ -190,7 +190,7 @@ createDrawRedrawLoop
 
 import {
 isAlgoReducedCloudClient
-} from "../page-routes.js?v=4";
+} from "../page-routes.js?v=5";
 
 export function initDrawings({
 

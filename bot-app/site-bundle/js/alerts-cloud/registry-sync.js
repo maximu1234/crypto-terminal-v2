@@ -1,7 +1,7 @@
 import {
 isCloudLoggedInEffective,
 ensureCloudLoginResolved
-} from "../cloud-sync.js?v=53";
+} from "../cloud-sync.js?v=55";
 
 import {
 resolveAlertAuthFast,
@@ -17,8 +17,8 @@ isDrawingsUiPage
 } from "../cloud-sync-throttle.js?v=3";
 
 import {
-isAlgoBotLiteShell
-} from "../page-routes.js?v=3";
+isAlgoReducedCloudClient
+} from "../page-routes.js?v=5";
 
 import {
 IS_YANDEX,
@@ -1277,7 +1277,7 @@ return 0;
 }
 
 if(
-isAlgoBotLiteShell()
+isAlgoReducedCloudClient()
 ){
 return 0;
 }
@@ -2190,7 +2190,7 @@ return 0;
 
 try{
 const { ensureCloudLoginResolved } =
-await import("../cloud-sync.js?v=53");
+await import("../cloud-sync.js?v=55");
 
 await ensureCloudLoginResolved(
 8000
@@ -2269,9 +2269,9 @@ isRegistryCloudSyncPaused()
 return;
 }
 
-/* Algo Bot: только push своих алертов в worker — без pull чужого реестра. */
+/* Algo Bot / Multichart Algo: только push своих алертов — без pull чужого реестра. */
 if(
-isAlgoBotLiteShell()
+isAlgoReducedCloudClient()
 ){
 void pushUnsyncedAlerts().catch(
 err=>{

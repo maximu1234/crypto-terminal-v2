@@ -26,7 +26,7 @@ updateRsiLevelLinesLayout,
 linkPairedChartTimeScales,
 SCREENER_VISIBLE_BARS,
 SCREENER_MAX_BARS
-} from "./chart-import.js?v=43";
+} from "./chart-import.js?v=44";
 
 import {
 calculateRSI,
@@ -48,7 +48,7 @@ createTickerUiBatcher
 
 import {
 mountReleaseMarker
-} from "./release-marker.js?v=74";
+} from "./release-marker.js?v=75";
 
 import {
 saveScreenerState,
@@ -76,7 +76,7 @@ withTimeout
 import {
 persistFavoritesToCloud,
 onFavoritesRemoteUpdate
-} from "./cloud-sync.js?v=53";
+} from "./cloud-sync.js?v=55";
 
 import {
 attachSymbolAutocomplete,
@@ -91,7 +91,7 @@ import {
 mountScreenerWidgetZoom,
 refreshZoomFavoriteUi,
 syncWidgetZoomInversion
-} from "./screener-widget-zoom.js?v=16";
+} from "./screener-widget-zoom.js?v=17";
 
 const gridEl =
 document.getElementById("screener-grid");

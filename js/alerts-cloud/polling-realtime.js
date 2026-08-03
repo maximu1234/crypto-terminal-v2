@@ -56,7 +56,7 @@ syncAlertsCloudPauseToServer
 
 import {
 isAlgoReducedCloudClient
-} from "../page-routes.js?v=4";
+} from "../page-routes.js?v=5";
 
 const IS_IOS_SAFARI =
 /iP(hone|ad|od)/i.test(

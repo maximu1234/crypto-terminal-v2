@@ -232,6 +232,20 @@ return false;
 
 }
 
+/**
+ * Урезанный cloud-клиент: Algo Bot lite ИЛИ страница Алго в Multichart.
+ * JWT / push / lock / remote — да; hydrate/poll/favorites/keepalive — нет.
+ * (live-бот на бирже, не на cloud price_alerts)
+ */
+export function isAlgoReducedCloudClient(){
+
+return (
+isAlgoBotLiteShell() ||
+isAlgoTradingPage()
+);
+
+}
+
 export function isSystemAdminPage(){
 
 return pathMatches(
