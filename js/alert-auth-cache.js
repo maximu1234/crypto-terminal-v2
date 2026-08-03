@@ -7,7 +7,7 @@ import {
 SUPABASE_AUTH_STORAGE_KEY,
 SUPABASE_AUTH_BACKUP_KEY,
 restoreAuthSessionFromBackup
-} from "./auth-storage.js?v=6";
+} from "./auth-storage.js?v=7";
 
 let cache = null;
 

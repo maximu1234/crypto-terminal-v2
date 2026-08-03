@@ -9,6 +9,7 @@ authNetworkTimeoutMs,
 isExplicitAuthSignOut,
 isSafariBrowser,
 isFatalAuthRefreshError,
+isRateLimitedAuthRefreshError,
 clearPersistedRefreshToken,
 markExplicitAuthSignOut,
 clearExplicitAuthSignOut,
@@ -20,7 +21,7 @@ isAuthRefreshBlocked,
 blockAuthRefreshUntil,
 clearAuthRefreshBlock,
 getAuthRefreshBlockedUntil
-} from "./auth-storage.js?v=6";
+} from "./auth-storage.js?v=7";
 
 import {
 encodeAuthSessionTransfer,
@@ -109,6 +110,348 @@ let lastAuthWarnMs =
 const SILENT_REFRESH_MIN_MS =
 45000;
 
+const AUTH_PROBLEM_KEY =
+"ct_cloud_auth_problem_v1";
+
+let cloudAuthProblem =
+null;
+
+let authRateLimitStrikes =
+0;
+
+let algoBotLiteAuthWatchBound =
+false;
+
+let cloudAuthProblemBannerBound =
+false;
+
+function readStoredAuthProblem(){
+
+try{
+
+const raw =
+sessionStorage.getItem(
+AUTH_PROBLEM_KEY
+);
+
+if(
+!raw
+){
+return null;
+}
+
+const data =
+JSON.parse(
+raw
+);
+
+if(
+!data?.message
+){
+return null;
+}
+
+return {
+code:
+String(
+data.code ||
+"auth"
+),
+message:
+String(
+data.message
+),
+at:
+Number(
+data.at
+) ||
+Date.now()
+};
+
+}catch{
+return null;
+}
+
+}
+
+cloudAuthProblem =
+readStoredAuthProblem();
+
+function writeStoredAuthProblem(
+problem
+){
+
+try{
+
+if(
+!problem?.message
+){
+sessionStorage.removeItem(
+AUTH_PROBLEM_KEY
+);
+return;
+}
+
+sessionStorage.setItem(
+AUTH_PROBLEM_KEY,
+JSON.stringify(
+{
+code:
+problem.code ||
+"auth",
+message:
+problem.message,
+at:
+problem.at ||
+Date.now()
+}
+)
+);
+
+}catch{
+/* ignore */
+}
+
+}
+
+function publishCloudAuthProblem(
+code,
+message
+){
+
+const next =
+message
+? {
+code:
+String(
+code ||
+"auth"
+),
+message:
+String(
+message
+),
+at:
+Date.now()
+}
+: null;
+
+cloudAuthProblem =
+next;
+writeStoredAuthProblem(
+next
+);
+
+try{
+window.dispatchEvent(
+new CustomEvent(
+"cloud-auth-problem",
+{
+detail:
+next
+}
+)
+);
+}catch{
+/* ignore */
+}
+
+notifyAuth();
+
+}
+
+export function getCloudAuthProblem(){
+
+return cloudAuthProblem;
+
+}
+
+export function clearCloudAuthProblem(){
+
+if(
+!cloudAuthProblem
+){
+return;
+}
+
+publishCloudAuthProblem(
+"",
+""
+);
+
+}
+
+function paintCloudAuthProblemBanner(){
+
+const el =
+document.getElementById(
+"cloud-auth-problem-banner"
+);
+
+if(
+!el
+){
+return;
+}
+
+const problem =
+getCloudAuthProblem();
+
+if(
+!problem?.message
+){
+el.classList.add(
+"hidden"
+);
+el.textContent =
+"";
+return;
+}
+
+el.classList.remove(
+"hidden"
+);
+el.textContent =
+problem.message;
+
+}
+
+export function mountCloudAuthProblemBanner(){
+
+if(
+typeof document ===
+"undefined"
+){
+return;
+}
+
+let el =
+document.getElementById(
+"cloud-auth-problem-banner"
+);
+
+if(
+!el
+){
+
+el =
+document.createElement(
+"div"
+);
+el.id =
+"cloud-auth-problem-banner";
+el.className =
+"cloud-auth-problem-banner hidden";
+el.setAttribute(
+"role",
+"alert"
+);
+
+const header =
+document.querySelector(
+"#header.app-page-header"
+) ||
+document.getElementById(
+"header"
+);
+
+if(
+header?.parentNode
+){
+header.parentNode.insertBefore(
+el,
+header.nextSibling
+);
+}else{
+document.body.prepend(
+el
+);
+}
+
+}
+
+paintCloudAuthProblemBanner();
+
+if(
+!cloudAuthProblemBannerBound
+){
+cloudAuthProblemBannerBound =
+true;
+window.addEventListener(
+"cloud-auth-problem",
+()=>{
+paintCloudAuthProblemBanner();
+}
+);
+onCloudSyncChange(
+()=>{
+paintCloudAuthProblemBanner();
+}
+);
+}
+
+}
+
+function bindAlgoBotLiteAuthWatch(){
+
+if(
+!isAlgoBotLiteShell() ||
+algoBotLiteAuthWatchBound
+){
+return;
+}
+
+algoBotLiteAuthWatchBound =
+true;
+
+const tick =
+()=>{
+
+const snap =
+readPersistedAuthSession();
+
+if(
+!snap?.user?.id
+){
+publishCloudAuthProblem(
+"missing",
+"Нет облачной сессии — в шестерёнке вставьте сессию (или «Отдать сессию» с Multichart). Auth не обновляется сам."
+);
+return;
+}
+
+if(
+isAccessTokenExpired(
+snap
+)
+){
+publishCloudAuthProblem(
+"expired",
+"Облачная сессия истекла — «Отдать сессию» с Multichart. Бот не долбит Supabase Auth сам."
+);
+return;
+}
+
+if(
+cloudAuthProblem?.code ===
+"missing" ||
+cloudAuthProblem?.code ===
+"expired"
+){
+clearCloudAuthProblem();
+}
+
+};
+
+tick();
+window.setInterval(
+tick,
+60 *
+1000
+);
+
+}
+
 function warnAuthOnce(
 key,
 msg
@@ -147,10 +490,49 @@ options =
 const fatal =
 options.fatal ===
 true;
+const rateLimited =
+options.rateLimited ===
+true;
+
+if(
+rateLimited
+){
+authRateLimitStrikes +=
+1;
+}else if(
+fatal
+){
+authRateLimitStrikes =
+0;
+}
+
 const softMs =
+rateLimited
+? Math.min(
 2 *
 60 *
-1000;
+60 *
+1000,
+30 *
+60 *
+1000 *
+Math.max(
+1,
+Math.pow(
+2,
+authRateLimitStrikes -
+1
+)
+)
+)
+: (
+Number(
+options.ms
+) ||
+2 *
+60 *
+1000
+);
 
 authRefreshBlockedUntil =
 blockAuthRefreshUntil(
@@ -174,21 +556,94 @@ persisted
 )
 );
 
+let message =
+"";
+
+if(
+fatal
+){
+message =
+`Auth refresh сломан (${reason}) — войдите снова / «Отдать сессию». Повторы остановлены.`;
+}else if(
+rateLimited
+){
+message =
+`Supabase Auth rate limit (429) — повторы остановлены ~${Math.round(softMs / 60000)} мин. Потом «Отдать сессию» или перезапуск бота.`;
+}else if(
+!accessStillOk
+){
+message =
+`Auth refresh не удался (${reason}) — повторы временно остановлены.`;
+}
+
+if(
+message
+){
+publishCloudAuthProblem(
+fatal
+? "fatal"
+: rateLimited
+? "rate_limit"
+: "soft",
+message
+);
+warnAuthOnce(
+"auth-degraded",
+`[auth] ${message}`
+);
+}
+
 if(
 !isCloudAuthTokenUsable()
 ){
 syncCloudLoginFromStorage();
+}
+
+}
+
+function classifyAndBlockAuthRefreshFailure(
+reason,
+error
+){
 
 if(
-!accessStillOk
+isRateLimitedAuthRefreshError(
+error
+)
 ){
-warnAuthOnce(
-"auth-degraded",
-`[auth] ${reason} — войдите снова через шестерёнку`
+blockAuthRefreshRetries(
+reason,
+{
+rateLimited:
+true
+}
 );
+return "rate_limit";
 }
 
+if(
+isFatalAuthRefreshError(
+error
+)
+){
+blockAuthRefreshRetries(
+reason,
+{
+fatal:
+true
 }
+);
+return "fatal";
+}
+
+blockAuthRefreshRetries(
+reason,
+{
+fatal:
+false
+}
+);
+return "soft";
 
 }
 
@@ -648,7 +1103,14 @@ userEmail ||
 notifyAuth();
 }
 
+/* Bot lite: never Auth refresh. Blocked: don't keep hammering. */
+if(
+!isAlgoBotLiteShell() &&
+!isAuthRefreshBlockedNow()
+){
 void refreshAuthSessionSilent();
+}
+
 return false;
 
 }
@@ -848,72 +1310,27 @@ authNetworkTimeoutMs(
 if(
 error
 ){
-
-if(
-isFatalAuthRefreshError(
-error
-)
-){
-blockAuthRefreshRetries(
+classifyAndBlockAuthRefreshFailure(
 "restore setSession",
-{
-fatal:
-true
-}
+error
 );
 return null;
-}
-
-warnAuthOnce(
-"auth-degraded",
-`[auth] restore setSession: ${error.message}`
-);
 }else if(
 data?.session
 ){
+authRateLimitStrikes =
+0;
+clearCloudAuthProblem();
 return data.session;
 }
 }catch(
 err
 ){
-
-if(
-isFatalAuthRefreshError(
-err
-)
-){
-blockAuthRefreshRetries(
+classifyAndBlockAuthRefreshFailure(
 "restore setSession",
-{
-fatal:
-true
-}
+err
 );
 return null;
-}
-
-if(
-/timeouts?/i.test(
-String(
-err?.message ||
-err
-)
-)
-){
-blockAuthRefreshRetries(
-"restore setSession",
-{
-fatal:
-false
-}
-);
-return null;
-}
-
-warnAuthOnce(
-"auth-degraded",
-`[auth] restore setSession: ${err?.message || err}`
-);
 
 }
 
@@ -934,70 +1351,23 @@ sb,
 if(
 error
 ){
-
-if(
-isFatalAuthRefreshError(
-error
-)
-){
-blockAuthRefreshRetries(
+classifyAndBlockAuthRefreshFailure(
 "refreshSession",
-{
-fatal:
-true
-}
+error
 );
 return null;
 }
 
-warnAuthOnce(
-"auth-degraded",
-`[auth] refreshSession: ${error.message}`
-);
-return null;
-}
-
+authRateLimitStrikes =
+0;
+clearCloudAuthProblem();
 return data?.session ?? null;
 }catch(
 err
 ){
-
-if(
-isFatalAuthRefreshError(
-err
-)
-){
-blockAuthRefreshRetries(
+classifyAndBlockAuthRefreshFailure(
 "refreshSession",
-{
-fatal:
-true
-}
-);
-return null;
-}
-
-if(
-/timeouts?/i.test(
-String(
-err?.message ||
 err
-)
-)
-){
-blockAuthRefreshRetries(
-"refreshSession",
-{
-fatal:
-false
-}
-);
-return null;
-}
-
-warnAuthOnce(
-"auth-degraded",
-`[auth] refreshSession: ${err?.message || err}`
 );
 return null;
 
@@ -1129,25 +1499,9 @@ sb,
 if(
 error
 ){
-
-if(
-isFatalAuthRefreshError(
-error
-)
-){
-blockAuthRefreshRetries(
+classifyAndBlockAuthRefreshFailure(
 "silent refresh",
-{
-fatal:
-true
-}
-);
-return false;
-}
-
-warnAuthOnce(
-"auth-degraded",
-`[auth] silent refresh: ${error.message}`
+error
 );
 return false;
 }
@@ -1161,51 +1515,17 @@ return false;
 await applySession(
 data.session
 );
+authRateLimitStrikes =
+0;
+clearCloudAuthProblem();
 syncCloudLoginFromStorage();
 return true;
 }catch(
 err
 ){
-
-const msg =
-String(
-err?.message ||
-err
-);
-
-if(
-isFatalAuthRefreshError(
-err
-)
-){
-blockAuthRefreshRetries(
+classifyAndBlockAuthRefreshFailure(
 "silent refresh",
-{
-fatal:
-true
-}
-);
-return false;
-}
-
-if(
-/timeouts?/i.test(
-msg
-)
-){
-blockAuthRefreshRetries(
-"silent refresh",
-{
-fatal:
-false
-}
-);
-return false;
-}
-
-warnAuthOnce(
-"auth-degraded",
-`[auth] silent refresh: ${msg}`
+err
 );
 return false;
 
@@ -3191,6 +3511,9 @@ err?.message ||
 clearAuthRefreshBlock();
 authRefreshBlockedUntil =
 0;
+authRateLimitStrikes =
+0;
+clearCloudAuthProblem();
 clearExplicitAuthSignOut();
 resumeCloudApi();
 
@@ -4063,6 +4386,8 @@ cached
 await applySession(
 session
 );
+mountCloudAuthProblemBanner();
+bindAlgoBotLiteAuthWatch();
 return;
 }
 
@@ -4226,5 +4551,6 @@ notifyAuth();
 );
 
 bindAuthSessionKeepalive();
+mountCloudAuthProblemBanner();
 
 }

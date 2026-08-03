@@ -749,11 +749,142 @@ err
 
 }
 
+/**
+ * Cloud JWT on disk (no Auth refresh from main). Surfaces expiry so Multichart
+ * can show a banner without watching the bot DevTools.
+ */
+function resolveAuthHealth(){
+
+let raw =
+"";
+
+try{
+raw =
+String(
+getAuthSession() ||
+""
+).trim();
+}catch{
+raw =
+"";
+}
+
+if(
+!raw
+){
+return {
+ok:
+false,
+code:
+"missing",
+message:
+"Нет облачной сессии на боте — «Отдать сессию» с Multichart"
+};
+}
+
+try{
+
+const data =
+JSON.parse(
+raw
+);
+const session =
+data?.access_token
+? data
+: (
+data?.currentSession ||
+data?.session ||
+null
+);
+
+if(
+!session?.access_token
+){
+return {
+ok:
+false,
+code:
+"invalid",
+message:
+"Сессия на боте повреждена — «Отдать сессию» с Multichart"
+};
+}
+
+const exp =
+Number(
+session.expires_at
+) ||
+0;
+const now =
+Date.now();
+
+if(
+exp >
+0 &&
+exp *
+1000 <
+now -
+5000
+){
+return {
+ok:
+false,
+code:
+"expired",
+message:
+"Сессия на боте истекла — «Отдать сессию» с Multichart (Auth сам не обновляется)"
+};
+}
+
+if(
+exp >
+0 &&
+exp *
+1000 <
+now +
+15 *
+60 *
+1000
+){
+return {
+ok:
+true,
+code:
+"expiring",
+message:
+"Сессия на боте скоро истечёт — обновите через «Отдать сессию»"
+};
+}
+
+return {
+ok:
+true,
+code:
+"ok",
+message:
+""
+};
+
+}catch{
+return {
+ok:
+false,
+code:
+"invalid",
+message:
+"Сессия на боте повреждена — «Отдать сессию» с Multichart"
+};
+}
+
+}
+
 function buildStatusPayload(){
 
 const st =
 algoBot.getBotStatus?.() ||
 {};
+const authHealth =
+resolveAuthHealth();
 
 return {
 type:
@@ -768,7 +899,8 @@ app.getName?.() ||
 instanceId:
 getInstanceId(),
 at:
-new Date().toISOString()
+new Date().toISOString(),
+authHealth
 };
 
 }
@@ -1299,6 +1431,9 @@ payload.instanceId ||
 null,
 lastSeenAt:
 payload.at ||
+null,
+authHealth:
+payload.authHealth ||
 null,
 via:
 "lan"

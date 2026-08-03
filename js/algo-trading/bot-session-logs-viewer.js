@@ -14,7 +14,7 @@ formatBotStrategySettingsRows
 const STORAGE_KEY =
 "algo_remote_session_logs_v1";
 const CHANNEL_UI_VER =
-"4";
+"7";
 
 function desktopApi(){
 
@@ -152,13 +152,14 @@ root.innerHTML =
 <button type="button" class="algo-remote-session-logs-close" id="algo-remote-session-logs-close" aria-label="Закрыть">×</button>
 </div>
 </header>
+<section class="algo-remote-session-logs-top">
+<div class="algo-remote-session-logs-top-left">
 <section class="algo-remote-session-logs-conn">
 <label>IP / хост<input type="text" id="algo-remote-logs-host" placeholder="203.0.113.10" autocomplete="off" spellcheck="false" /></label>
 <label>Порт<input type="number" id="algo-remote-logs-port" min="1024" max="65535" value="17865" /></label>
 <label class="algo-remote-session-logs-token">Токен<input type="password" id="algo-remote-logs-token" autocomplete="off" spellcheck="false" /></label>
 </section>
 <section class="algo-remote-session-logs-channel" aria-label="Управление по каналу">
-<div class="algo-remote-session-logs-channel-main">
 <div class="algo-remote-session-logs-channel-status">
 <div class="algo-remote-session-logs-channel-row">
 <span class="algo-remote-session-logs-channel-label">Связь</span>
@@ -168,6 +169,10 @@ root.innerHTML =
 <span class="algo-remote-session-logs-channel-label">Хост</span>
 <span class="algo-remote-session-logs-channel-value" id="algo-remote-logs-remote-host">—</span>
 </div>
+<div class="algo-remote-session-logs-channel-row">
+<span class="algo-remote-session-logs-channel-label">Сессия</span>
+<span class="algo-remote-session-logs-channel-value" id="algo-remote-logs-auth-health">—</span>
+</div>
 </div>
 <div class="algo-remote-session-logs-channel-actions">
 <button type="button" class="algo-bot-remote-btn" id="algo-remote-logs-start">Запустить</button>
@@ -176,6 +181,7 @@ root.innerHTML =
 <button type="button" class="algo-bot-remote-btn algo-bot-remote-btn--push" id="algo-remote-logs-auth" title="Передать вход Multichart на бот (вместо mcauth1…)">Отдать сессию</button>
 <button type="button" class="algo-bot-remote-btn" id="algo-remote-logs-refresh">Обновить логи</button>
 </div>
+</section>
 </div>
 <aside class="algo-remote-session-logs-strategy" aria-label="Настройки стратегии бота">
 <div class="algo-remote-session-logs-strategy-title" id="algo-remote-logs-strategy-title">Стратегия бота</div>
@@ -521,6 +527,10 @@ const remoteHostEl =
 root.querySelector(
 "#algo-remote-logs-remote-host"
 );
+const authHealthEl =
+root.querySelector(
+"#algo-remote-logs-auth-health"
+);
 const startBtn =
 root.querySelector(
 "#algo-remote-logs-start"
@@ -564,6 +574,12 @@ root.classList.remove(
 "hidden"
 );
 
+requestAnimationFrame(
+()=>{
+syncStrategyBoxHeight();
+}
+);
+
 let channelCmdInflight =
 false;
 
@@ -580,6 +596,38 @@ token:
 tokenEl?.value ||
 ""
 };
+
+}
+
+function syncStrategyBoxHeight(){
+
+const left =
+root.querySelector(
+".algo-remote-session-logs-top-left"
+);
+const strategy =
+root.querySelector(
+".algo-remote-session-logs-strategy"
+);
+
+if(
+!left ||
+!strategy
+){
+return;
+}
+
+const h =
+Math.round(
+left.getBoundingClientRect().height
+);
+
+if(
+h > 0
+){
+strategy.style.maxHeight =
+`${h}px`;
+}
 
 }
 
@@ -641,6 +689,83 @@ st.app ||
 "—"
 )
 : "—";
+}
+
+if(
+authHealthEl
+){
+const health =
+st?.authHealth;
+authHealthEl.classList.remove(
+"is-online",
+"is-error",
+"is-warn"
+);
+
+if(
+!st?.ok ||
+!st.online
+){
+authHealthEl.textContent =
+"—";
+}else if(
+!health
+){
+authHealthEl.textContent =
+"н/д";
+}else if(
+health.ok &&
+health.code ===
+"ok"
+){
+authHealthEl.textContent =
+"ок";
+authHealthEl.classList.add(
+"is-online"
+);
+setMessage(
+"",
+false
+);
+}else if(
+health.ok &&
+health.code ===
+"expiring"
+){
+authHealthEl.textContent =
+"скоро истечёт";
+authHealthEl.classList.add(
+"is-warn"
+);
+if(
+health.message
+){
+setMessage(
+health.message,
+true
+);
+}
+}else{
+authHealthEl.textContent =
+health.code ===
+"expired"
+? "истекла"
+: health.code ===
+"missing"
+? "нет"
+: "ошибка";
+authHealthEl.classList.add(
+"is-error"
+);
+if(
+health.message
+){
+setMessage(
+health.message,
+true
+);
+}
+}
 }
 
 if(
@@ -752,6 +877,8 @@ row.value
 }
 }
 }
+
+syncStrategyBoxHeight();
 
 }
 

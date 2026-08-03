@@ -1365,7 +1365,7 @@ opts =
 ){
 
 const { isCloudLoggedIn } =
-await import("./cloud-sync.js?v=55");
+await import("./cloud-sync.js?v=56");
 
 if(
 !isCloudLoggedIn()
@@ -1462,7 +1462,7 @@ sym
 );
 
 const { ensureCloudReady } =
-await import("./auth-ui.js?v=56");
+await import("./auth-ui.js?v=58");
 
 await ensureCloudReady();
 
@@ -1559,7 +1559,7 @@ list.push(row);
 saveAlerts(list);
 
 const { ensureCloudReady } =
-await import("./auth-ui.js?v=56");
+await import("./auth-ui.js?v=58");
 
 await ensureCloudReady();
 

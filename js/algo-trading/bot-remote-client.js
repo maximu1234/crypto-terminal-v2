@@ -13,7 +13,7 @@ readPersistedAuthSession
 } from "../alert-auth-cache.js?v=7";
 import {
 exportAuthSessionTransferString
-} from "../cloud-sync.js?v=55";
+} from "../cloud-sync.js?v=56";
 
 const LAN_CONN_KEY =
 "algo_remote_session_logs_v1";

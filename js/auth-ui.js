@@ -5,6 +5,7 @@ isCloudLoggedIn,
 isCloudLoggedInEffective,
 getCloudUserEmail,
 onCloudSyncChange,
+getCloudAuthProblem,
 signInWithEmailOtp,
 signOutCloud,
 recoverAuthSessionFromUrl,
@@ -12,7 +13,7 @@ completeAuthFromCallbackUrl,
 hasAuthCallbackInUrl,
 exportAuthSessionTransferString,
 importAuthSessionTransferString
-} from "./cloud-sync.js?v=55";
+} from "./cloud-sync.js?v=56";
 
 import {
 isSupabaseConfigured
@@ -87,15 +88,14 @@ return false;
 const ALGO_BOT_SYNC_OK_KEY =
 "algo_bot_multichart_sync_ok_v1";
 
+/** Only for this page session — never sticky across relaunch. */
+let algoBotSyncOkUntil =
+0;
+
 function readAlgoBotSyncOk(){
 
-try{
-return localStorage.getItem(
-ALGO_BOT_SYNC_OK_KEY
-) === "1";
-}catch{
-return false;
-}
+return Date.now() <
+algoBotSyncOkUntil;
 
 }
 
@@ -104,21 +104,19 @@ ok
 ){
 
 try{
-if(
-ok
-){
-localStorage.setItem(
-ALGO_BOT_SYNC_OK_KEY,
-"1"
-);
-}else{
 localStorage.removeItem(
 ALGO_BOT_SYNC_OK_KEY
 );
-}
 }catch{
 /* ignore */
 }
+
+algoBotSyncOkUntil =
+ok
+? Date.now() +
+12 *
+1000
+: 0;
 
 }
 
@@ -1244,10 +1242,22 @@ authLinkProgress.isError,
 !authLinkProgress.isError
 );
 }else{
+const authProblem =
+getCloudAuthProblem();
+
+if(
+authProblem?.message
+){
+setHint(
+authProblem.message,
+true
+);
+}else{
 setHint(
 "",
 false
 );
+}
 }
 
 }else{
@@ -1317,12 +1327,36 @@ true
 algoBot &&
 isDesktopShell()
 ){
+const authProblem =
+getCloudAuthProblem();
+
+if(
+authProblem?.message
+){
+setHint(
+authProblem.message,
+true
+);
+}else{
 setHint(
 "Вставьте код сессии из Multichart — этого достаточно.",
 false
 );
+}
+}else{
+const authProblem =
+getCloudAuthProblem();
+
+if(
+authProblem?.message
+){
+setHint(
+authProblem.message,
+true
+);
 }else{
 setHint("", false);
+}
 }
 
 }
@@ -1594,6 +1628,18 @@ setHint(
 result.message ||
 "Синхронизация с приложением успешна",
 false
+);
+window.setTimeout(
+()=>{
+writeAlgoBotSyncOk(
+false
+);
+paintSessionSyncOk(
+false
+);
+},
+12 *
+1000
 );
 
 /* Telegram probe — never block success UI (VPS can hang on REST). */

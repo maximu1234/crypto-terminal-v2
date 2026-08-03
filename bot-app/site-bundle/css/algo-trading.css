@@ -1998,6 +1998,23 @@ font-size: 12px;
 body.algo-trading-page .algo-session-log-server-row input{
 width: 100%;
 min-width: 0;
+box-sizing: border-box;
+background: #171b21;
+border: 1px solid #374151;
+color: #e5e7eb;
+border-radius: 6px;
+padding: 6px 8px;
+font-size: 12px;
+font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+outline: none;
+-webkit-appearance: none;
+appearance: none;
+}
+body.algo-trading-page .algo-session-log-server-row input:focus{
+border-color: #2563eb;
+}
+body.algo-trading-page .algo-session-log-server-row input[type="number"]{
+font-variant-numeric: tabular-nums;
 }
 body.algo-trading-page .algo-session-log-server-actions{
 display: flex;
@@ -2148,31 +2165,175 @@ border: 1px solid rgba(148, 163, 184, 0.25);
 border-radius: 6px;
 color: #e2e8f0;
 }
-body.algo-trading-page .algo-remote-session-logs-conn{
+body.algo-trading-page .algo-remote-session-logs-top{
 display: grid;
-grid-template-columns: 1.2fr 0.45fr 1.1fr auto auto;
-gap: 8px;
-align-items: end;
-padding: 10px 14px;
+grid-template-columns: minmax(300px, max-content) minmax(260px, 1fr);
+gap: 8px 14px;
+align-items: start;
+padding: 8px 14px;
 border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+}
+body.algo-trading-page .algo-remote-session-logs-top-left{
+display: flex;
+flex-direction: column;
+gap: 8px;
+min-width: 0;
+}
+body.algo-trading-page .algo-remote-session-logs-strategy{
+box-sizing: border-box;
+min-width: 0;
+max-height: 92px;
+overflow-x: hidden;
+overflow-y: auto;
+padding: 6px 10px;
+border: 1px solid rgba(148, 163, 184, 0.28);
+border-radius: 8px;
+background: rgba(15, 23, 42, 0.55);
+}
+body.algo-trading-page .algo-remote-session-logs-conn{
+display: flex;
+flex-wrap: wrap;
+align-items: end;
+gap: 8px 10px;
+padding: 0;
+border-bottom: 0;
 }
 body.algo-trading-page .algo-remote-session-logs-conn label{
 display: flex;
 flex-direction: column;
-gap: 4px;
+gap: 3px;
 font-size: 11px;
 color: #94a3b8;
+min-width: 0;
+}
+body.algo-trading-page .algo-remote-session-logs-conn label:nth-child(1){
+width: 148px;
+flex: 0 0 148px;
+}
+body.algo-trading-page .algo-remote-session-logs-conn label:nth-child(2){
+width: 72px;
+flex: 0 0 72px;
+}
+body.algo-trading-page .algo-remote-session-logs-conn .algo-remote-session-logs-token{
+width: 168px;
+flex: 0 0 168px;
 }
 body.algo-trading-page .algo-remote-session-logs-conn input{
-height: 30px;
+width: 100%;
+box-sizing: border-box;
+height: 28px;
 border-radius: 6px;
 border: 1px solid rgba(148, 163, 184, 0.35);
 background: #111827;
 color: #e5e7eb;
 padding: 0 8px;
+font-size: 12px;
 }
-body.algo-trading-page .algo-remote-session-logs-conn .algo-bot-remote-btn--push{
+body.algo-trading-page .algo-remote-session-logs-channel{
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+gap: 8px;
+padding: 0;
+border-bottom: 0;
+}
+body.algo-trading-page .algo-remote-session-logs-channel-status{
+display: flex;
+flex-wrap: wrap;
+align-items: center;
+gap: 4px 14px;
+flex: 0 1 auto;
+min-width: 0;
+}
+body.algo-trading-page .algo-remote-session-logs-channel-row{
+display: inline-flex;
+align-items: baseline;
+gap: 6px;
+font-size: 12px;
 white-space: nowrap;
+}
+body.algo-trading-page .algo-remote-session-logs-channel-label{
+color: #94a3b8;
+}
+body.algo-trading-page .algo-remote-session-logs-channel-label::after{
+content: ":";
+}
+body.algo-trading-page .algo-remote-session-logs-channel-value{
+color: #e5e7eb;
+font-weight: 600;
+}
+body.algo-trading-page .algo-remote-session-logs-channel-value.is-online{
+color: #86efac;
+}
+body.algo-trading-page .algo-remote-session-logs-channel-value.is-running{
+color: #4ade80;
+}
+body.algo-trading-page .algo-remote-session-logs-channel-value.is-error{
+color: #f87171;
+}
+body.algo-trading-page .algo-remote-session-logs-channel-value.is-warn{
+color: #fbbf24;
+}
+body.algo-trading-page .algo-remote-session-logs-channel-actions{
+display: flex;
+flex-wrap: wrap;
+align-items: center;
+gap: 6px;
+flex: 0 1 auto;
+}
+body.algo-trading-page .algo-remote-session-logs-channel-actions .algo-bot-remote-btn{
+flex: 0 0 auto;
+width: auto;
+min-width: 0;
+padding: 5px 10px;
+font-size: 11px;
+line-height: 1.25;
+}
+body.algo-trading-page .algo-remote-session-logs-strategy-title{
+margin: 0 0 4px;
+font-size: 11px;
+font-weight: 700;
+color: #cbd5e1;
+letter-spacing: 0.02em;
+}
+body.algo-trading-page .algo-remote-session-logs-strategy-list{
+display: grid;
+grid-template-columns: 1fr 1fr;
+gap: 3px 14px;
+}
+body.algo-trading-page .algo-remote-session-logs-strategy-item{
+display: flex;
+justify-content: space-between;
+gap: 8px;
+font-size: 11px;
+line-height: 1.35;
+min-width: 0;
+}
+body.algo-trading-page .algo-remote-session-logs-strategy-item-label{
+color: #94a3b8;
+flex: 1 1 auto;
+min-width: 0;
+}
+body.algo-trading-page .algo-remote-session-logs-strategy-item-value{
+color: #e5e7eb;
+font-weight: 600;
+text-align: right;
+flex: 0 1 auto;
+max-width: 58%;
+word-break: break-word;
+}
+body.algo-trading-page .algo-remote-session-logs-strategy-empty{
+font-size: 11px;
+color: #64748b;
+grid-column: 1 / -1;
+}
+@media (max-width: 900px){
+body.algo-trading-page .algo-remote-session-logs-top{
+grid-template-columns: 1fr;
+}
+body.algo-trading-page .algo-remote-session-logs-strategy-list{
+grid-template-columns: 1fr;
+}
 }
 body.algo-trading-page .algo-remote-session-logs-hint,
 body.algo-trading-page .algo-remote-session-logs-message{
@@ -2188,7 +2349,7 @@ body.algo-trading-page .algo-remote-session-logs-body{
 flex: 1;
 min-height: 0;
 display: grid;
-grid-template-columns: minmax(220px, 30%) 1fr;
+grid-template-columns: minmax(140px, 20%) 1fr;
 }
 body.algo-trading-page .algo-remote-session-logs-list-wrap{
 border-right: 1px solid rgba(148, 163, 184, 0.2);
@@ -2289,8 +2450,10 @@ font-style: italic;
 background: rgba(15, 23, 42, 0.55);
 }
 @media (max-width: 900px){
-body.algo-trading-page .algo-remote-session-logs-conn{
-grid-template-columns: 1fr 1fr;
+body.algo-trading-page .algo-remote-session-logs-conn label:nth-child(1),
+body.algo-trading-page .algo-remote-session-logs-conn .algo-remote-session-logs-token{
+width: min(100%, 200px);
+flex: 1 1 140px;
 }
 body.algo-trading-page .algo-remote-session-logs-body{
 grid-template-columns: 1fr;

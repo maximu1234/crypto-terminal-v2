@@ -51,15 +51,34 @@ test("cloud-sync refreshes near expiry and keeps Multichart keepalive", () => {
   assert.ok(src.includes('"visibilitychange"'));
 });
 
-test("desktop auth restore heals primary without refresh_token", () => {
+test("auth refresh treats 429 as rate-limit not fatal strip", () => {
   const src = fs.readFileSync(
     path.join(root, "js/auth-storage.js"),
     "utf8"
   );
-  const start = src.indexOf(
-    "export async function restoreDesktopAuthSession("
+  assert.ok(src.includes("isRateLimitedAuthRefreshError"));
+  const fatalStart = src.indexOf(
+    "export function isFatalAuthRefreshError("
   );
-  const body = src.slice(start, start + 1600);
-  assert.ok(body.includes("hasRefresh"));
-  assert.ok(body.includes("primaryRaw"));
+  const fatalBody = src.slice(fatalStart, fatalStart + 900);
+  assert.ok(
+    fatalBody.includes("isRateLimitedAuthRefreshError"),
+    "fatal must exclude rate-limit"
+  );
+});
+
+test("cloud-sync circuit-breaks auth refresh and surfaces problem UI", () => {
+  const src = fs.readFileSync(
+    path.join(root, "js/cloud-sync.js"),
+    "utf8"
+  );
+  assert.ok(src.includes("classifyAndBlockAuthRefreshFailure"));
+  assert.ok(src.includes("mountCloudAuthProblemBanner"));
+  assert.ok(src.includes("bindAlgoBotLiteAuthWatch"));
+  assert.ok(src.includes("rateLimited"));
+  assert.ok(src.includes("cloud-auth-problem-banner"));
+  const sync = src.indexOf("function syncCloudLoginFromStorage(");
+  const syncBody = src.slice(sync, sync + 1200);
+  assert.ok(syncBody.includes("isAlgoBotLiteShell()"));
+  assert.ok(syncBody.includes("isAuthRefreshBlockedNow()"));
 });

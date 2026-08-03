@@ -244,6 +244,20 @@ color:#fbbf24;
 color:#f87171;
 }
 
+.cloud-auth-problem-banner{
+margin:0;
+padding:8px 14px;
+font-size:12px;
+line-height:1.35;
+color:#fecaca;
+background:#7f1d1d;
+border-bottom:1px solid #991b1b;
+}
+
+.cloud-auth-problem-banner.hidden{
+display:none;
+}
+
 .cloud-auth-session-sync-ok{
 margin:0;
 width:100%;

@@ -466,6 +466,56 @@ return false;
 
 }
 
+/** 429 / rate limit — не долбить Auth, мягкий backoff без стирания refresh. */
+export function isRateLimitedAuthRefreshError(
+error
+){
+
+if(
+!error
+){
+return false;
+}
+
+const status =
+Number(
+error?.status ||
+error?.statusCode ||
+0
+);
+
+if(
+status ===
+429
+){
+return true;
+}
+
+const msg =
+String(
+error?.message ||
+error?.name ||
+error ||
+""
+).toLowerCase();
+
+return (
+/rate.?limit/.test(
+msg
+) ||
+/too many requests/.test(
+msg
+) ||
+/over_request_rate/.test(
+msg
+) ||
+/request rate limit/.test(
+msg
+)
+);
+
+}
+
 /** 400/401 от Supabase refresh — повторять бессмысленно, только спам в консоль. */
 export function isFatalAuthRefreshError(
 error
@@ -473,6 +523,14 @@ error
 
 if(
 !error
+){
+return false;
+}
+
+if(
+isRateLimitedAuthRefreshError(
+error
+)
 ){
 return false;
 }
@@ -508,7 +566,7 @@ return (
 /invalid refresh/.test(
 msg
 ) ||
-/refresh token/.test(
+/refresh token not found/.test(
 msg
 ) ||
 /invalid_grant/.test(

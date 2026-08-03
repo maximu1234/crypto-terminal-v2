@@ -49,7 +49,7 @@ mountAlgoRuntimeUi
 
 import {
 mountAlgoBotStrategyUi
-} from "./algo-trading/bot-strategy-ui.js?v=55";
+} from "./algo-trading/bot-strategy-ui.js?v=56";
 
 import {
 mountSessionLogServerSettings

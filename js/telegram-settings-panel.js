@@ -16,7 +16,7 @@ import {
 isCloudLoggedIn,
 getCloudUserEmail,
 onCloudSyncChange
-} from "./cloud-sync.js?v=55";
+} from "./cloud-sync.js?v=56";
 
 function setStatus(
 el,
