@@ -49,7 +49,11 @@ mountAlgoRuntimeUi
 
 import {
 mountAlgoBotStrategyUi
-} from "./algo-trading/bot-strategy-ui.js?v=48";
+} from "./algo-trading/bot-strategy-ui.js?v=50";
+
+import {
+mountSessionLogServerSettings
+} from "./algo-trading/bot-session-log-server-ui.js?v=2";
 
 import {
 syncBotStrategiesToMain
@@ -4657,6 +4661,12 @@ mountAlgoRuntimeUi(
 getExchangeId:()=>
 getActiveExchangeId()
 }
+);
+
+mountSessionLogServerSettings(
+document.getElementById(
+"algo-session-log-server-mount"
+)
 );
 
 botStrategyUi =

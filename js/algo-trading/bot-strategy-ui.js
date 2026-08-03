@@ -33,6 +33,9 @@ sendRemoteBotCommand,
 isMultichartRemoteControlHost
 } from "./bot-remote-client.js?v=1";
 import {
+mountRemoteSessionLogsEntry
+} from "./bot-session-logs-viewer.js?v=2";
+import {
 rebalanceTpShares
 } from "./pattern-trade-stats-partial.js?v=17";
 
@@ -4363,6 +4366,18 @@ strategiesWrap?.classList.remove(
 closeAllDrops();
 }
 };
+
+mountRemoteSessionLogsEntry(
+{
+closeStatusDropdown:()=>{
+setDropOpen(
+statusDrop,
+statusToggle,
+false
+);
+}
+}
+);
 
 activeBotStrategyUiDestroy =
 api.destroy;

@@ -2147,6 +2147,12 @@ true
 
 try{
 bootAlgoTradingRuntimeIfEnabled();
+try{
+require("./trading/algo-bot-session-log-server.cjs").bootFromPrefs();
+}catch(err){
+try{ require("electron-log").warn("session-log-server boot:", err?.message || err); }catch(_){ }
+}
+
 }catch(
 err
 ){

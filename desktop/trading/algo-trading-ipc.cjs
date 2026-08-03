@@ -1298,6 +1298,165 @@ err
 }
 );
 
+
+handleTrustedDesktopUi(
+ipcMain,
+"desktop:algoTradingSessionLogServerGet",
+()=>{
+
+try{
+const sessionLogServer =
+require(
+"./algo-bot-session-log-server.cjs"
+);
+
+return sessionLogServer.getPrefsForUi();
+}catch(
+err
+){
+log.warn(
+"algoTradingSessionLogServerGet:",
+err?.message ||
+err
+);
+return {
+ok:
+false,
+message:
+err?.message ||
+String(
+err
+)
+};
+}
+
+}
+);
+
+handleTrustedDesktopUi(
+ipcMain,
+"desktop:algoTradingSessionLogServerSet",
+async (
+_event,
+payload
+)=>{
+
+try{
+const sessionLogServer =
+require(
+"./algo-bot-session-log-server.cjs"
+);
+
+return await sessionLogServer.applyPrefs(
+payload ||
+{}
+);
+}catch(
+err
+){
+log.warn(
+"algoTradingSessionLogServerSet:",
+err?.message ||
+err
+);
+return {
+ok:
+false,
+message:
+err?.message ||
+String(
+err
+)
+};
+}
+
+}
+);
+
+handleTrustedDesktopUi(
+ipcMain,
+"desktop:algoTradingSessionLogRemoteList",
+async (
+_event,
+payload
+)=>{
+
+try{
+const {
+listRemoteSessionLogs
+} =
+require(
+"./algo-bot-session-log-remote-client.cjs"
+);
+
+return await listRemoteSessionLogs(
+payload ||
+{}
+);
+}catch(
+err
+){
+log.warn(
+"algoTradingSessionLogRemoteList:",
+err?.message ||
+err
+);
+return {
+ok:
+false,
+message:
+err?.message ||
+String(
+err
+)
+};
+}
+
+}
+);
+
+handleTrustedDesktopUi(
+ipcMain,
+"desktop:algoTradingSessionLogRemoteGet",
+async (
+_event,
+payload
+)=>{
+
+try{
+const {
+fetchRemoteSessionLog
+} =
+require(
+"./algo-bot-session-log-remote-client.cjs"
+);
+
+return await fetchRemoteSessionLog(
+payload ||
+{}
+);
+}catch(
+err
+){
+log.warn(
+"algoTradingSessionLogRemoteGet:",
+err?.message ||
+err
+);
+return {
+ok:
+false,
+message:
+err?.message ||
+String(
+err
+)
+};
+}
+
+}
+);
+
 }
 
 module.exports =

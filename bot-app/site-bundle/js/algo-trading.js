@@ -13,7 +13,7 @@ updateRsiLevelLinesLayout,
 applyRsiFixedPriceScale,
 appendFutureWhitespaceBars,
 computeChartFutureMarginBars
-} from "./chart-import.js?v=43";
+} from "./chart-import.js?v=44";
 
 import {
 terminalVisibleBars,
@@ -37,7 +37,7 @@ subscribeKline
 import {
 mountAlgoTradingCoinList,
 refreshAlgoMarketListFromFlags
-} from "./algo-trading-list.js?v=10";
+} from "./algo-trading-list.js?v=11";
 
 import {
 mountAlgoTickerScanUi
@@ -49,7 +49,11 @@ mountAlgoRuntimeUi
 
 import {
 mountAlgoBotStrategyUi
-} from "./algo-trading/bot-strategy-ui.js?v=48";
+} from "./algo-trading/bot-strategy-ui.js?v=50";
+
+import {
+mountSessionLogServerSettings
+} from "./algo-trading/bot-session-log-server-ui.js?v=2";
 
 import {
 syncBotStrategiesToMain
@@ -57,11 +61,7 @@ syncBotStrategiesToMain
 
 import {
 mountAlgoTradeUi
-} from "./algo-trading/trade/boot.js?v=3";
-
-import {
-coinsState
-} from "./terminal/terminal-state.js?v=12";
+} from "./algo-trading/trade/boot.js?v=4";
 
 import {
 mountAlgoTradingDrawings
@@ -73,11 +73,11 @@ mountAlgoTradingIndicators
 
 import {
 mountAlgoPatternEntryOverlay
-} from "./algo-trading/pattern-entry-overlay.js?v=12";
+} from "./algo-trading/pattern-entry-overlay.js?v=14";
 
 import {
 refreshAlgoPatternAnalysis
-} from "./algo-trading/pattern-analysis.js?v=19";
+} from "./algo-trading/pattern-analysis.js?v=21";
 
 import {
 clampSlPctOfX,
@@ -117,6 +117,21 @@ DEFAULT_PULLBACK_BEFORE_ARM_PCT
 } from "./algo-trading/temp-pullback-before-arm.js?v=3";
 
 import {
+clampAlgoEmaPeriod,
+clampAlgoEmaShift,
+normalizeAlgoEmaFilterEnabled,
+normalizeAlgoEmaTf,
+buildAlgoEmaLinePoints,
+DEFAULT_ALGO_EMA_PERIOD,
+DEFAULT_ALGO_EMA_PERIOD_2,
+DEFAULT_ALGO_EMA_SHIFT
+} from "./algo-trading/pattern-ema-filter.js?v=3";
+
+import {
+alignMaPointsToDisplayCandles
+} from "./indicators/ma-math.js?v=2";
+
+import {
 normalizeAlgoStatsMode
 } from "./algo-trading/pattern-trade-stats.js?v=10";
 
@@ -130,12 +145,15 @@ isChartLayoutReady
 } from "./chart-layout-gate.js?v=2";
 
 import {
-invalidatePreservedVisibleLogicalRange
+invalidatePreservedVisibleLogicalRange,
+runWithPreservedVisibleLogicalRange
 } from "./chart-visible-range.js?v=3";
 
 import {
 COINS_TF_HOTKEYS,
-COINS_TF_VALUES
+COINS_TF_VALUES,
+coinsState,
+marketMap
 } from "./terminal/terminal-state.js?v=12";
 
 const DEFAULT_SYMBOL =
@@ -380,6 +398,39 @@ pullbackBeforeArmPct:
 clampPullbackBeforeArmPct(
 raw.pullbackBeforeArmPct
 ),
+emaFilter:
+normalizeAlgoEmaFilterEnabled(
+raw.emaFilter
+),
+emaPeriod:
+clampAlgoEmaPeriod(
+raw.emaPeriod
+),
+emaShift:
+clampAlgoEmaShift(
+raw.emaShift
+),
+emaTf:
+normalizeAlgoEmaTf(
+raw.emaTf
+),
+emaFilter2:
+normalizeAlgoEmaFilterEnabled(
+raw.emaFilter2
+),
+emaPeriod2:
+clampAlgoEmaPeriod(
+raw.emaPeriod2,
+DEFAULT_ALGO_EMA_PERIOD_2
+),
+emaShift2:
+clampAlgoEmaShift(
+raw.emaShift2
+),
+emaTf2:
+normalizeAlgoEmaTf(
+raw.emaTf2
+),
 scanStrategy:
 raw.scanStrategy === "st2" || raw.scanStrategy === "st3"
 ? raw.scanStrategy
@@ -487,6 +538,22 @@ pullbackBeforeArm:
 false,
 pullbackBeforeArmPct:
 DEFAULT_PULLBACK_BEFORE_ARM_PCT,
+emaFilter:
+false,
+emaPeriod:
+DEFAULT_ALGO_EMA_PERIOD,
+emaShift:
+DEFAULT_ALGO_EMA_SHIFT,
+emaTf:
+"",
+emaFilter2:
+false,
+emaPeriod2:
+DEFAULT_ALGO_EMA_PERIOD_2,
+emaShift2:
+DEFAULT_ALGO_EMA_SHIFT,
+emaTf2:
+"",
 scanStrategy:
 "st1",
 scanTf:
@@ -655,6 +722,39 @@ prefs.pullbackBeforeArm
 pullbackBeforeArmPct:
 clampPullbackBeforeArmPct(
 prefs.pullbackBeforeArmPct
+),
+emaFilter:
+normalizeAlgoEmaFilterEnabled(
+prefs.emaFilter
+),
+emaPeriod:
+clampAlgoEmaPeriod(
+prefs.emaPeriod
+),
+emaShift:
+clampAlgoEmaShift(
+prefs.emaShift
+),
+emaTf:
+normalizeAlgoEmaTf(
+prefs.emaTf
+),
+emaFilter2:
+normalizeAlgoEmaFilterEnabled(
+prefs.emaFilter2
+),
+emaPeriod2:
+clampAlgoEmaPeriod(
+prefs.emaPeriod2,
+DEFAULT_ALGO_EMA_PERIOD_2
+),
+emaShift2:
+clampAlgoEmaShift(
+prefs.emaShift2
+),
+emaTf2:
+normalizeAlgoEmaTf(
+prefs.emaTf2
 ),
 scanStrategy:
 prefs.scanStrategy === "st2" || prefs.scanStrategy === "st3"
@@ -1083,285 +1183,6 @@ return readPrefs().symbol;
 
 }
 
-function isAlgoBotLiteMode(){
-
-/* Standalone Algo Bot app — always lite layout (no Multichart chart chrome). */
-return true;
-
-}
-
-function mountAlgoBotLiteLayout(){
-
-if(
-!isAlgoBotLiteMode()
-){
-return;
-}
-
-const left =
-document.getElementById(
-"left"
-);
-const indicatorsRoot =
-document.getElementById(
-"chart-indicators-wrap"
-);
-const statsPanel =
-document.getElementById(
-"algo-stats-panel"
-);
-const statsResize =
-document.getElementById(
-"algo-stats-resize"
-);
-const globalSetupCol =
-document.querySelector(
-'.algo-stats-col[data-algo-strategy="global-setup"]'
-);
-const st1Col =
-document.querySelector(
-'.algo-stats-col[data-algo-strategy="fixed-tp"]'
-);
-const st2Col =
-document.querySelector(
-'.algo-stats-col[data-algo-strategy="partial-tp"]'
-);
-const st3Col =
-document.querySelector(
-'.algo-stats-col[data-algo-strategy="partial-tp-y"]'
-);
-
-if(
-!left ||
-!indicatorsRoot ||
-!statsPanel ||
-!globalSetupCol ||
-!st1Col ||
-!st2Col ||
-!st3Col
-){
-return;
-}
-
-document.body.classList.add(
-"algo-bot-lite-layout"
-);
-
-if(
-statsResize
-){
-statsResize.hidden =
-true;
-}
-
-statsPanel.hidden =
-true;
-
-let grid =
-document.getElementById(
-"algo-bot-main-grid"
-);
-
-if(
-!grid
-){
-grid =
-document.createElement(
-"div"
-);
-grid.id =
-"algo-bot-main-grid";
-grid.className =
-"algo-bot-main-grid";
-}
-
-let topRow =
-grid.querySelector(
-".algo-bot-grid-top"
-);
-
-if(
-!topRow
-){
-topRow =
-document.createElement(
-"div"
-);
-topRow.className =
-"algo-bot-grid-top";
-}
-
-let bottomRow =
-grid.querySelector(
-".algo-bot-grid-bottom"
-);
-
-if(
-!bottomRow
-){
-bottomRow =
-document.createElement(
-"div"
-);
-bottomRow.className =
-"algo-bot-grid-bottom";
-}
-
-function ensureCell(
-row,
-selector,
-className,
-ariaLabel
-){
-
-let cell =
-row.querySelector(
-selector
-);
-
-if(
-!cell
-){
-cell =
-document.createElement(
-"section"
-);
-cell.className =
-className;
-cell.setAttribute(
-"aria-label",
-ariaLabel
-);
-row.appendChild(
-cell
-);
-}
-
-return cell;
-
-}
-
-const patternCell =
-ensureCell(
-topRow,
-".algo-bot-grid-pattern",
-"algo-bot-grid-cell algo-bot-grid-pattern",
-"Паттерн 1-2"
-);
-const globalCell =
-ensureCell(
-topRow,
-".algo-bot-grid-global",
-"algo-bot-grid-cell algo-bot-grid-global",
-"Глобальные настройки"
-);
-const st1Cell =
-ensureCell(
-bottomRow,
-".algo-bot-grid-st1",
-"algo-bot-grid-cell algo-bot-grid-st1",
-"Стратегия 1"
-);
-const st2Cell =
-ensureCell(
-bottomRow,
-".algo-bot-grid-st2",
-"algo-bot-grid-cell algo-bot-grid-st2",
-"Стратегия 2"
-);
-const st3Cell =
-ensureCell(
-bottomRow,
-".algo-bot-grid-st3",
-"algo-bot-grid-cell algo-bot-grid-st3",
-"Стратегия 3"
-);
-
-let patternSettingsPane =
-document.getElementById(
-"algo-bot-lite-pattern-settings"
-);
-
-if(
-!patternSettingsPane
-){
-patternSettingsPane =
-document.createElement(
-"section"
-);
-patternSettingsPane.id =
-"algo-bot-lite-pattern-settings";
-patternSettingsPane.className =
-"algo-bot-lite-pattern-settings";
-patternSettingsPane.setAttribute(
-"aria-label",
-"Настройки Паттерн 1-2"
-);
-}
-
-indicatorsRoot.classList.add(
-"algo-bot-lite-indicators",
-"algo-bot-lite-pattern-only"
-);
-patternCell.appendChild(
-indicatorsRoot
-);
-patternCell.appendChild(
-patternSettingsPane
-);
-
-globalSetupCol.classList.add(
-"algo-bot-lite-global-col"
-);
-globalCell.appendChild(
-globalSetupCol
-);
-st1Cell.appendChild(
-st1Col
-);
-st2Cell.appendChild(
-st2Col
-);
-st3Cell.appendChild(
-st3Col
-);
-
-grid.append(
-topRow,
-bottomRow
-);
-
-if(
-grid.parentElement !==
-left
-){
-left.appendChild(
-grid
-);
-}
-
-const topbar =
-document.getElementById(
-"topbar"
-);
-const accountWrap =
-document.getElementById(
-"header-settings-wrap"
-);
-
-if(
-topbar &&
-accountWrap &&
-accountWrap.parentElement !==
-topbar
-){
-topbar.appendChild(
-accountWrap
-);
-}
-
-}
-
 export function mountAlgoTradingPage(){
 
 const chartEl =
@@ -1406,8 +1227,6 @@ console.error(
 );
 return;
 }
-
-mountAlgoBotLiteLayout();
 
 const main =
 createCandlestickChart(
@@ -1535,6 +1354,78 @@ let pullbackBeforeArmPct =
 clampPullbackBeforeArmPct(
 readPrefs().pullbackBeforeArmPct
 );
+let emaFilter =
+normalizeAlgoEmaFilterEnabled(
+readPrefs().emaFilter
+);
+let emaPeriod =
+clampAlgoEmaPeriod(
+readPrefs().emaPeriod
+);
+let emaShift =
+clampAlgoEmaShift(
+readPrefs().emaShift
+);
+let emaTf =
+normalizeAlgoEmaTf(
+readPrefs().emaTf
+);
+let emaFilter2 =
+normalizeAlgoEmaFilterEnabled(
+readPrefs().emaFilter2
+);
+let emaPeriod2 =
+clampAlgoEmaPeriod(
+readPrefs().emaPeriod2,
+DEFAULT_ALGO_EMA_PERIOD_2
+);
+let emaShift2 =
+clampAlgoEmaShift(
+readPrefs().emaShift2
+);
+let emaTf2 =
+normalizeAlgoEmaTf(
+readPrefs().emaTf2
+);
+const emaFilterLines =
+[
+{
+color:
+"#f0a63a",
+series:
+null,
+isEnabled:
+()=>
+emaFilter,
+getPeriod:
+()=>
+emaPeriod,
+getShift:
+()=>
+emaShift,
+getTf:
+()=>
+emaTf
+},
+{
+color:
+"#60a5fa",
+series:
+null,
+isEnabled:
+()=>
+emaFilter2,
+getPeriod:
+()=>
+emaPeriod2,
+getShift:
+()=>
+emaShift2,
+getTf:
+()=>
+emaTf2
+}
+];
 let scanStrategy =
 readPrefs().scanStrategy ||
 "st1";
@@ -1649,6 +1540,86 @@ symbol
 coinsState().currentSymbol =
 normalizeSymbol(
 symbol
+);
+
+syncAlgoChartTurnover24(
+symbol
+);
+
+}
+
+function formatTurnover24Label(
+value
+){
+
+const n =
+Number(
+value
+);
+
+if(
+!Number.isFinite(
+n
+) ||
+n <=
+0
+){
+return "";
+}
+
+let compact;
+
+if(
+n >=
+1e6
+){
+compact =
+`${Number((n / 1e6).toFixed(2))}M`;
+}else if(
+n >=
+1e3
+){
+compact =
+`${Number((n / 1e3).toFixed(2))}K`;
+}else{
+compact =
+String(
+Math.round(
+n
+)
+);
+}
+
+return `Объем 24ч: ${compact}`;
+
+}
+
+function syncAlgoChartTurnover24(
+nextSymbol =
+symbol
+){
+
+const el =
+document.getElementById(
+"coins-chart-turnover24"
+);
+
+if(
+!el
+){
+return;
+}
+
+const item =
+marketMap.get(
+normalizeSymbol(
+nextSymbol
+)
+);
+
+el.textContent =
+formatTurnover24Label(
+item?.volume24
 );
 
 }
@@ -1942,6 +1913,164 @@ TERMINAL_VISIBLE_BARS
 
 }
 
+function ensureEmaFilterSeries(
+line
+){
+
+if(
+line.series
+){
+return line.series;
+}
+
+try{
+line.series =
+chart.addLineSeries(
+{
+color:
+line.color,
+lineWidth:
+1,
+priceLineVisible:
+false,
+lastValueVisible:
+false,
+crosshairMarkerVisible:
+false,
+visible:
+false,
+autoscaleInfoProvider:
+()=>
+null
+}
+);
+}catch{
+line.series =
+null;
+}
+
+return line.series;
+
+}
+
+function hideEmaFilterLine(
+line
+){
+
+if(
+!line.series
+){
+return;
+}
+
+try{
+line.series.setData(
+[]
+);
+line.series.applyOptions(
+{
+visible:
+false
+}
+);
+}catch{
+/* ignore */
+}
+
+}
+
+function drawEmaFilterLine(
+line,
+display
+){
+
+if(
+!line.isEnabled()
+){
+hideEmaFilterLine(
+line
+);
+return;
+}
+
+const series =
+ensureEmaFilterSeries(
+line
+);
+
+if(
+!series
+){
+return;
+}
+
+const points =
+buildAlgoEmaLinePoints(
+candles,
+{
+period:
+line.getPeriod(),
+shift:
+line.getShift(),
+tf:
+line.getTf(),
+chartTf:
+tf
+}
+);
+
+if(
+!display.length ||
+!points.length
+){
+hideEmaFilterLine(
+line
+);
+return;
+}
+
+try{
+series.setData(
+alignMaPointsToDisplayCandles(
+points,
+display
+)
+);
+series.applyOptions(
+{
+visible:
+true
+}
+);
+}catch{
+/* ignore */
+}
+
+}
+
+function refreshEmaFilterLines(){
+
+const display =
+buildDisplayCandles();
+
+runWithPreservedVisibleLogicalRange(
+chart,
+()=>{
+
+for(
+const line of emaFilterLines
+){
+drawEmaFilterLine(
+line,
+display
+);
+}
+
+}
+);
+
+}
+
 function schedulePatternAnalysis(){
 
 const seq =
@@ -1998,6 +2127,16 @@ timeoutBars,
 /* TEMP_PULLBACK_BEFORE_ARM */
 pullbackBeforeArm,
 pullbackBeforeArmPct,
+emaFilter,
+emaPeriod,
+emaShift,
+emaTf,
+emaFilter2,
+emaPeriod2,
+emaShift2,
+emaTf2,
+chartTf:
+tf,
 patternSettings:
 readAlgoPattern12Settings(),
 statsMode,
@@ -2041,6 +2180,7 @@ candleSeries.setData(
 display
 );
 applyRsiData();
+refreshEmaFilterLines();
 
 if(
 fit
@@ -2134,6 +2274,16 @@ timeoutBars,
 /* TEMP_PULLBACK_BEFORE_ARM */
 pullbackBeforeArm,
 pullbackBeforeArmPct,
+emaFilter,
+emaPeriod,
+emaShift,
+emaTf,
+emaFilter2,
+emaPeriod2,
+emaShift2,
+emaTf2,
+chartTf:
+tf,
 scanStrategy,
 scanTf,
 scanLongMinWinRate,
@@ -2428,30 +2578,6 @@ scheduleResizeAlgoCharts();
 })
 }
 );
-
-if(
-isAlgoBotLiteMode()
-){
-const indicatorsRoot =
-document.getElementById(
-"chart-indicators-wrap"
-);
-const patternSettingsPane =
-document.getElementById(
-"algo-bot-lite-pattern-settings"
-);
-indicatorsRoot?.classList.add(
-"algo-bot-lite-pattern-only"
-);
-chartIndicators?.setIndicatorEnabled?.(
-"pattern-12",
-true
-);
-chartIndicators?.renderIndicatorSettingsInline?.(
-"pattern-12",
-patternSettingsPane
-);
-}
 
 entryOverlay =
 mountAlgoPatternEntryOverlay(
@@ -2749,6 +2875,16 @@ timeoutBars,
 /* TEMP_PULLBACK_BEFORE_ARM */
 pullbackBeforeArm,
 pullbackBeforeArmPct,
+emaFilter,
+emaPeriod,
+emaShift,
+emaTf,
+emaFilter2,
+emaPeriod2,
+emaShift2,
+emaTf2,
+chartTf:
+tf,
 scanStrategy,
 scanTf,
 scanLongMinWinRate,
@@ -2789,6 +2925,16 @@ timeoutBars,
 /* TEMP_PULLBACK_BEFORE_ARM */
 pullbackBeforeArm,
 pullbackBeforeArmPct,
+emaFilter,
+emaPeriod,
+emaShift,
+emaTf,
+emaFilter2,
+emaPeriod2,
+emaShift2,
+emaTf2,
+chartTf:
+tf,
 patternSettings:
 readAlgoPattern12Settings(),
 statsMode,
@@ -3515,6 +3661,85 @@ next
 
 }
 
+bindTrailSlXInput(
+trailSlX1St2Input,
+()=>
+trailSlX1St2,
+next=>{
+trailSlX1St2 =
+next;
+reclampTrailSlX2(
+trailSlX2St2Input,
+clampTrailSlX2St2,
+()=>
+trailSlX2St2,
+value=>{
+trailSlX2St2 =
+value;
+}
+);
+},
+clampTrailSlX1
+);
+bindTrailSlXInput(
+trailSlX2St2Input,
+()=>
+trailSlX2St2,
+next=>{
+trailSlX2St2 =
+next;
+},
+clampTrailSlX2St2
+);
+bindTrailSlCheck(
+trailSlSt2Check,
+()=>
+trailSlSt2,
+next=>{
+trailSlSt2 =
+next;
+}
+);
+bindTrailSlXInput(
+trailSlX1St3Input,
+()=>
+trailSlX1St3,
+next=>{
+trailSlX1St3 =
+next;
+reclampTrailSlX2(
+trailSlX2St3Input,
+clampTrailSlX2St3,
+()=>
+trailSlX2St3,
+value=>{
+trailSlX2St3 =
+value;
+}
+);
+},
+clampTrailSlX1
+);
+bindTrailSlXInput(
+trailSlX2St3Input,
+()=>
+trailSlX2St3,
+next=>{
+trailSlX2St3 =
+next;
+},
+clampTrailSlX2St3
+);
+bindTrailSlCheck(
+trailSlSt3Check,
+()=>
+trailSlSt3,
+next=>{
+trailSlSt3 =
+next;
+}
+);
+
 /**
  * Доли ТП: правим одно поле — два других подгоняются до 100%.
  * @param {"x"|"y"} span
@@ -3651,75 +3876,6 @@ input.blur();
 
 }
 
-bindTrailSlXInput(
-trailSlX1St2Input,
-()=>
-trailSlX1St2,
-next=>{
-trailSlX1St2 =
-next;
-reclampTrailSlX2(
-trailSlX2St2Input,
-clampTrailSlX2St2,
-()=>
-trailSlX2St2,
-value=>{
-trailSlX2St2 =
-value;
-}
-);
-},
-clampTrailSlX1
-);
-bindTrailSlXInput(
-trailSlX2St2Input,
-()=>
-trailSlX2St2,
-next=>{
-trailSlX2St2 =
-next;
-},
-clampTrailSlX2St2
-);
-bindTrailSlCheck(
-trailSlSt2Check,
-()=>
-trailSlSt2,
-next=>{
-trailSlSt2 =
-next;
-}
-);
-bindTrailSlXInput(
-trailSlX1St3Input,
-()=>
-trailSlX1St3,
-next=>{
-trailSlX1St3 =
-next;
-reclampTrailSlX2(
-trailSlX2St3Input,
-clampTrailSlX2St3,
-()=>
-trailSlX2St3,
-value=>{
-trailSlX2St3 =
-value;
-}
-);
-},
-clampTrailSlX1
-);
-bindTrailSlXInput(
-trailSlX2St3Input,
-()=>
-trailSlX2St3,
-next=>{
-trailSlX2St3 =
-next;
-},
-clampTrailSlX2St3
-);
 bindTpShareInputs(
 "x",
 ()=>[
@@ -3764,13 +3920,301 @@ next[
 ];
 }
 );
-bindTrailSlCheck(
-trailSlSt3Check,
-()=>
-trailSlSt3,
-next=>{
-trailSlSt3 =
+
+function bindEmaFilterPair(
+{
+checkId,
+periodId,
+shiftId,
+tfId,
+fallbackPeriod,
+getEnabled,
+setEnabled,
+getPeriod,
+setPeriod,
+getShift,
+setShift,
+getTf,
+setTf
+}
+){
+
+const check =
+document.getElementById(
+checkId
+);
+const periodInput =
+document.getElementById(
+periodId
+);
+const shiftInput =
+document.getElementById(
+shiftId
+);
+const tfSelect =
+document.getElementById(
+tfId
+);
+
+if(
+check
+){
+check.checked =
+!!getEnabled();
+check.addEventListener(
+"change",
+()=>{
+const next =
+!!check.checked;
+
+if(
+next ===
+!!getEnabled()
+){
+return;
+}
+
+setEnabled(
+next
+);
+refreshEmaFilterLines();
+persistAlgoSettings();
+}
+);
+}
+
+if(
+periodInput
+){
+periodInput.value =
+String(
+getPeriod()
+);
+
+const commitPeriod =
+()=>{
+const next =
+clampAlgoEmaPeriod(
+periodInput.value,
+fallbackPeriod
+);
+periodInput.value =
+String(
+next
+);
+
+if(
+next ===
+getPeriod()
+){
+return;
+}
+
+setPeriod(
+next
+);
+refreshEmaFilterLines();
+persistAlgoSettings();
+};
+
+periodInput.addEventListener(
+"change",
+commitPeriod
+);
+periodInput.addEventListener(
+"keydown",
+event=>{
+
+if(
+event.key ===
+"Enter"
+){
+event.preventDefault();
+periodInput.blur();
+}
+
+}
+);
+}
+
+if(
+shiftInput
+){
+shiftInput.value =
+String(
+getShift()
+);
+
+const commitShift =
+()=>{
+const next =
+clampAlgoEmaShift(
+shiftInput.value
+);
+shiftInput.value =
+String(
+next
+);
+
+if(
+next ===
+getShift()
+){
+return;
+}
+
+setShift(
+next
+);
+refreshEmaFilterLines();
+persistAlgoSettings();
+};
+
+shiftInput.addEventListener(
+"change",
+commitShift
+);
+shiftInput.addEventListener(
+"keydown",
+event=>{
+
+if(
+event.key ===
+"Enter"
+){
+event.preventDefault();
+shiftInput.blur();
+}
+
+}
+);
+}
+
+if(
+tfSelect
+){
+tfSelect.value =
+normalizeAlgoEmaTf(
+getTf()
+);
+tfSelect.addEventListener(
+"change",
+()=>{
+const next =
+normalizeAlgoEmaTf(
+tfSelect.value
+);
+tfSelect.value =
 next;
+
+if(
+next ===
+getTf()
+){
+return;
+}
+
+setTf(
+next
+);
+refreshEmaFilterLines();
+persistAlgoSettings();
+}
+);
+}
+
+}
+
+bindEmaFilterPair(
+{
+checkId:
+"algo-ema-filter",
+periodId:
+"algo-ema-period",
+shiftId:
+"algo-ema-shift",
+tfId:
+"algo-ema-tf",
+fallbackPeriod:
+DEFAULT_ALGO_EMA_PERIOD,
+getEnabled:
+()=>
+emaFilter,
+setEnabled:
+next=>{
+emaFilter =
+next;
+},
+getPeriod:
+()=>
+emaPeriod,
+setPeriod:
+next=>{
+emaPeriod =
+next;
+},
+getShift:
+()=>
+emaShift,
+setShift:
+next=>{
+emaShift =
+next;
+},
+getTf:
+()=>
+emaTf,
+setTf:
+next=>{
+emaTf =
+next;
+}
+}
+);
+bindEmaFilterPair(
+{
+checkId:
+"algo-ema-filter-2",
+periodId:
+"algo-ema-period-2",
+shiftId:
+"algo-ema-shift-2",
+tfId:
+"algo-ema-tf-2",
+fallbackPeriod:
+DEFAULT_ALGO_EMA_PERIOD_2,
+getEnabled:
+()=>
+emaFilter2,
+setEnabled:
+next=>{
+emaFilter2 =
+next;
+},
+getPeriod:
+()=>
+emaPeriod2,
+setPeriod:
+next=>{
+emaPeriod2 =
+next;
+},
+getShift:
+()=>
+emaShift2,
+setShift:
+next=>{
+emaShift2 =
+next;
+},
+getTf:
+()=>
+emaTf2,
+setTf:
+next=>{
+emaTf2 =
+next;
+}
 }
 );
 
@@ -3924,30 +4368,7 @@ chartIndicators?.syncViewports?.();
 );
 
 const disposeStatsResize =
-isAlgoBotLiteMode()
-? ()=>{
-const panel =
-document.getElementById(
-"algo-stats-panel"
-);
-panel?.classList.remove(
-"is-collapsed"
-);
-if(
-panel
-){
-panel.style.removeProperty(
-"--algo-stats-panel-h"
-);
-panel.style.removeProperty(
-"flex"
-);
-panel.style.removeProperty(
-"height"
-);
-}
-}
-: bindAlgoStatsPanelResize(
+bindAlgoStatsPanelResize(
 ()=>{
 scheduleResizeAlgoCharts();
 chartIndicators?.syncViewports?.();
@@ -4061,6 +4482,25 @@ next,
 tf
 );
 listApi?.highlight?.();
+},
+onTickerTick(
+item
+){
+if(
+!item ||
+normalizeSymbol(
+item.symbol
+) !==
+normalizeSymbol(
+symbol
+)
+){
+return;
+}
+
+syncAlgoChartTurnover24(
+item.symbol
+);
 }
 }
 ).then(
@@ -4100,6 +4540,16 @@ timeoutBars,
 /* TEMP_PULLBACK_BEFORE_ARM */
 pullbackBeforeArm,
 pullbackBeforeArmPct,
+emaFilter,
+emaPeriod,
+emaShift,
+emaTf,
+emaFilter2,
+emaPeriod2,
+emaShift2,
+emaTf2,
+chartTf:
+tf,
 patternSettings:
 readAlgoPattern12Settings()
 }),
@@ -4211,6 +4661,12 @@ mountAlgoRuntimeUi(
 getExchangeId:()=>
 getActiveExchangeId()
 }
+);
+
+mountSessionLogServerSettings(
+document.getElementById(
+"algo-session-log-server-mount"
+)
 );
 
 botStrategyUi =

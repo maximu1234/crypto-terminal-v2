@@ -20,7 +20,7 @@ isAuthRefreshBlocked,
 blockAuthRefreshUntil,
 clearAuthRefreshBlock,
 getAuthRefreshBlockedUntil
-} from "./auth-storage.js?v=5";
+} from "./auth-storage.js?v=6";
 
 import {
 encodeAuthSessionTransfer,
@@ -81,7 +81,7 @@ scaleSupabasePollMs
 
 import {
 isAlgoBotLiteShell
-} from "./page-routes.js?v=3";
+} from "./page-routes.js?v=4";
 
 const DRAWINGS_LOCAL_TS_KEY =
 "drawings_local_updated_at";
@@ -139,11 +139,29 @@ msg
 }
 
 function blockAuthRefreshRetries(
-reason
+reason,
+options =
+{}
 ){
 
+const fatal =
+options.fatal ===
+true;
+const softMs =
+2 *
+60 *
+1000;
+
 authRefreshBlockedUntil =
-blockAuthRefreshUntil();
+blockAuthRefreshUntil(
+fatal
+? undefined
+: softMs,
+{
+clearRefreshToken:
+fatal
+}
+);
 
 const persisted =
 readPersistedAuthSession();
@@ -308,7 +326,7 @@ window.cryptoTerminalDesktop?.isDesktop
 
 function bindAuthSessionKeepalive(){
 
-/* Algo Bot: no Auth keepalive / silent refresh — local JWT only. */
+/* Standalone Algo Bot lite only — Multichart (incl. Algo page) keeps session alive. */
 if(
 isAlgoBotLiteShell()
 ){
@@ -349,6 +367,29 @@ void refreshAuthSessionSilent();
 KEEPALIVE_MS
 );
 
+window.addEventListener(
+"visibilitychange",
+()=>{
+
+if(
+document.visibilityState !==
+"visible"
+){
+return;
+}
+
+if(
+!isCloudLoggedInEffective()
+){
+void tryCloudAuthRecovery();
+return;
+}
+
+void refreshAuthSessionSilent();
+
+}
+);
+
 }
 
 function isAccessTokenExpired(
@@ -369,6 +410,37 @@ exp *
 Date.now() -
 5000
 );
+
+}
+
+/** Refresh before hard expiry so keepalive (45m) keeps Multichart logged in. */
+function isAccessTokenNearExpiry(
+session,
+skewMs =
+12 *
+60 *
+1000
+){
+
+const exp =
+Number(
+session?.expires_at
+) ||
+0;
+
+if(
+!(
+exp >
+0
+)
+){
+return true;
+}
+
+return exp *
+1000 <
+Date.now() +
+skewMs;
 
 }
 
@@ -783,7 +855,11 @@ error
 )
 ){
 blockAuthRefreshRetries(
-"restore setSession"
+"restore setSession",
+{
+fatal:
+true
+}
 );
 return null;
 }
@@ -807,7 +883,11 @@ err
 )
 ){
 blockAuthRefreshRetries(
-"restore setSession"
+"restore setSession",
+{
+fatal:
+true
+}
 );
 return null;
 }
@@ -821,7 +901,11 @@ err
 )
 ){
 blockAuthRefreshRetries(
-"restore setSession"
+"restore setSession",
+{
+fatal:
+false
+}
 );
 return null;
 }
@@ -857,7 +941,11 @@ error
 )
 ){
 blockAuthRefreshRetries(
-"refreshSession"
+"refreshSession",
+{
+fatal:
+true
+}
 );
 return null;
 }
@@ -880,7 +968,11 @@ err
 )
 ){
 blockAuthRefreshRetries(
-"refreshSession"
+"refreshSession",
+{
+fatal:
+true
+}
 );
 return null;
 }
@@ -894,7 +986,11 @@ err
 )
 ){
 blockAuthRefreshRetries(
-"refreshSession"
+"refreshSession",
+{
+fatal:
+false
+}
 );
 return null;
 }
@@ -930,6 +1026,23 @@ isAuthRefreshBlockedNow()
 return false;
 }
 
+try{
+const snap =
+readPersistedAuthSession();
+
+if(
+snap?.user?.id &&
+!String(
+snap.refresh_token ||
+""
+).trim()
+){
+await restoreDesktopAuthSession();
+}
+}catch{
+/* ignore heal errors */
+}
+
 const now =
 Date.now();
 
@@ -963,7 +1076,7 @@ return false;
 
 if(
 persistedLogin?.access_token &&
-!isAccessTokenExpired(
+!isAccessTokenNearExpiry(
 persistedLogin
 )
 ){
@@ -987,7 +1100,7 @@ readPersistedAuthSession();
 
 if(
 persisted?.access_token &&
-!isAccessTokenExpired(
+!isAccessTokenNearExpiry(
 persisted
 )
 ){
@@ -1023,7 +1136,11 @@ error
 )
 ){
 blockAuthRefreshRetries(
-"silent refresh"
+"silent refresh",
+{
+fatal:
+true
+}
 );
 return false;
 }
@@ -1059,13 +1176,29 @@ err
 if(
 isFatalAuthRefreshError(
 err
-) ||
+)
+){
+blockAuthRefreshRetries(
+"silent refresh",
+{
+fatal:
+true
+}
+);
+return false;
+}
+
+if(
 /timeouts?/i.test(
 msg
 )
 ){
 blockAuthRefreshRetries(
-"silent refresh"
+"silent refresh",
+{
+fatal:
+false
+}
 );
 return false;
 }
@@ -1763,7 +1896,7 @@ isFavoritesAutoCloudDisabled()
 return;
 }
 
-void import("./favorites-cloud-sync.js?v=53").then(
+void import("./favorites-cloud-sync.js?v=7").then(
 m=>{
 m.applyFavoritesFromRealtimeRow(
 row
@@ -1901,7 +2034,7 @@ settingsChannel = channel;
 export async function mergeFavoritesWithCloud(){
 
 const m =
-await import("./favorites-cloud-sync.js?v=53");
+await import("./favorites-cloud-sync.js?v=7");
 
 return m.reconcileLocalFavoritesWithCloud();
 
@@ -1911,7 +2044,7 @@ return m.reconcileLocalFavoritesWithCloud();
 export async function pullFavoritesIfCloudNewer(){
 
 const m =
-await import("./favorites-cloud-sync.js?v=53");
+await import("./favorites-cloud-sync.js?v=7");
 
 await m.pullFavoritesFromCloudNow();
 return favoritesToCloudList(
@@ -1935,7 +2068,7 @@ return collectAllLocalDrawings();
 async function syncFavoritesWithCloud(){
 
 const m =
-await import("./favorites-cloud-sync.js?v=53");
+await import("./favorites-cloud-sync.js?v=7");
 
 await m.reconcileLocalFavoritesWithCloud();
 
@@ -1969,7 +2102,7 @@ return;
 }
 
 const m =
-await import("./favorites-cloud-sync.js?v=53");
+await import("./favorites-cloud-sync.js?v=7");
 
 m.pushFavoritesAfterLocalEdit(
 favorites
@@ -3575,7 +3708,7 @@ return;
 try{
 
 const favoritesCloud =
-await import("./favorites-cloud-sync.js?v=53");
+await import("./favorites-cloud-sync.js?v=7");
 
 if(
 !isFavoritesAutoCloudDisabled() &&
@@ -3589,7 +3722,7 @@ if(
 !isAlertsCloudDisabled()
 ){
 const alertsCloud =
-await import("./alerts-cloud-sync.js?v=53");
+await import("./alerts-cloud-sync.js?v=113");
 
 await alertsCloud.hydrateAlertsAfterAuth({
 force: true
@@ -3692,7 +3825,7 @@ await ensureCloudLoginResolved(
 );
 
 const alertsCloud =
-await import("./alerts-cloud-sync.js?v=53");
+await import("./alerts-cloud-sync.js?v=113");
 const { stripAlertFlagsNotInRegistry } =
 await import("./alerts.js?v=106");
 

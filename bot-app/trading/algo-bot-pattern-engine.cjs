@@ -32,6 +32,10 @@ const alertBridge =
 require(
 "./algo-bot-alert-bridge.cjs"
 );
+const sessionLog =
+require(
+"./algo-bot-session-log.cjs"
+);
 const {
 getAlgoTradingMode
 } =
@@ -1091,6 +1095,14 @@ signalLog.length >
 MAX_LOG
 ){
 signalLog.shift();
+}
+
+try{
+sessionLog.appendSignal(
+entry
+);
+}catch{
+/* session file is best-effort */
 }
 
 }

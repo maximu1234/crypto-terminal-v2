@@ -467,6 +467,34 @@ ipcRenderer.invoke(
 payload ||
 {}
 ),
+sessionLogServerGet:()=>
+ipcRenderer.invoke(
+"desktop:algoTradingSessionLogServerGet"
+),
+sessionLogServerSet:(
+payload
+)=>
+ipcRenderer.invoke(
+"desktop:algoTradingSessionLogServerSet",
+payload ||
+{}
+),
+sessionLogRemoteList:(
+payload
+)=>
+ipcRenderer.invoke(
+"desktop:algoTradingSessionLogRemoteList",
+payload ||
+{}
+),
+sessionLogRemoteGet:(
+payload
+)=>
+ipcRenderer.invoke(
+"desktop:algoTradingSessionLogRemoteGet",
+payload ||
+{}
+),
 onBotAlertRequest:(
 callback
 )=>{

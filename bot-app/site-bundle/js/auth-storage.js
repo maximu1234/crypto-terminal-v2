@@ -37,12 +37,19 @@ return false;
 
 }
 
-/** Блокировать refresh (после 400/таймаута) до повторного входа или истечения окна. */
+/** Блокировать refresh до истечения окна.
+ * clearRefreshToken: только при фатальном invalid_grant / 400 — иначе таймаут
+ * сети навсегда убивал сессию (разлогин 1–2 раза/день).
+ * @param {number} [msFromNow]
+ * @param {{ clearRefreshToken?: boolean }} [options]
+ */
 export function blockAuthRefreshUntil(
 msFromNow =
 30 *
 60 *
-1000
+1000,
+options =
+{}
 ){
 
 const until =
@@ -60,7 +67,12 @@ until
 /* ignore */
 }
 
+if(
+options.clearRefreshToken ===
+true
+){
 clearPersistedRefreshToken();
+}
 
 return until;
 
@@ -351,7 +363,9 @@ void api.clearAuthSession().catch(
 
 }
 
-/** Desktop: восстановить сессию из userData, если origin/localStorage пуст. */
+/** Desktop: восстановить сессию из userData, если origin/localStorage пуст
+ * или primary без refresh_token (таймаут раньше стирал refresh, а файл ещё жив).
+ */
 export async function restoreDesktopAuthSession(){
 
 if(
@@ -370,12 +384,33 @@ if(
 return false;
 }
 
-if(
+const primaryRaw =
 readRaw(
 SUPABASE_AUTH_STORAGE_KEY
-)
+);
+
+if(
+primaryRaw
+){
+try{
+const primary =
+JSON.parse(
+primaryRaw
+);
+const hasRefresh =
+!!String(
+primary?.refresh_token ||
+""
+).trim();
+
+if(
+hasRefresh
 ){
 return false;
+}
+}catch{
+/* heal broken primary below */
+}
 }
 
 try{
@@ -393,18 +428,37 @@ typeof raw !==
 return false;
 }
 
-if(
-!writeRaw(
-SUPABASE_AUTH_STORAGE_KEY,
+let desktopSession =
+null;
+
+try{
+desktopSession =
+JSON.parse(
 raw
-)
+);
+}catch{
+return false;
+}
+
+if(
+!desktopSession?.user?.id ||
+!String(
+desktopSession.refresh_token ||
+""
+).trim()
 ){
 return false;
 }
 
-mirrorAuthSessionBackup(
+writeRaw(
+SUPABASE_AUTH_STORAGE_KEY,
 raw
 );
+writeRaw(
+SUPABASE_AUTH_BACKUP_KEY,
+raw
+);
+
 return true;
 }catch{
 return false;

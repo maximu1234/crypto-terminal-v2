@@ -58,6 +58,10 @@ const orderExecutor =
 require(
 "./algo-bot-order-executor.cjs"
 );
+const sessionLog =
+require(
+"./algo-bot-session-log.cjs"
+);
 const watchlistRefresh =
 require(
 "./algo-bot-watchlist-refresh.cjs"
@@ -738,6 +742,17 @@ async function stopBotInternal(
 message =
 ""
 ){
+
+sessionLog.appendNote(
+message
+? `Стоп: ${message}`
+: "Стоп"
+);
+sessionLog.endSession(
+{
+message
+}
+);
 
 runningStrategyId =
 null;
@@ -1515,6 +1530,21 @@ try{
 statusMessage =
 "Запуск…";
 
+sessionLog.beginSession(
+{
+sessionId,
+strategyId,
+startedAt:
+sessionStartedAt,
+tradingMode,
+watchlistCount:
+watchlist.length
+}
+);
+sessionLog.appendNote(
+`Запуск ${strategyId} (mode=${tradingMode}, watchlist=${watchlist.length})`
+);
+
 await patternEngine.startPatternEngine(
 {
 ...getEnginePrefs(
@@ -1542,6 +1572,9 @@ runningStrategyId =
 strategyId;
 statusMessage =
 "Запущен";
+sessionLog.appendNote(
+"Запущен"
+);
 for(
 const id of [
 "st1",
@@ -1567,6 +1600,15 @@ statusMessage =
 String(
 err?.message ||
 err
+);
+sessionLog.appendNote(
+`Ошибка запуска: ${statusMessage}`
+);
+sessionLog.endSession(
+{
+message:
+statusMessage
+}
 );
 for(
 const id of [
