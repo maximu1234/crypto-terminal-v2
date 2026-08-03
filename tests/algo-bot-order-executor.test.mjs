@@ -1,9 +1,16 @@
 import assert from "node:assert/strict";
+import fs from "node:fs";
+import path from "node:path";
 import test from "node:test";
 import { createRequire } from "node:module";
 import { Module } from "node:module";
+import { fileURLToPath } from "node:url";
 
 const require = createRequire(import.meta.url);
+const root = path.join(
+  path.dirname(fileURLToPath(import.meta.url)),
+  ".."
+);
 
 function loadExecutorWithStubs(
   restStub =
@@ -967,7 +974,7 @@ qtyStep:
 ),
 null
 );
-/* TP1/TP2 may floor to 0 — TP3 still takes the whole step-snapped size. */
+/* Enough steps for all legs: redistribute so early TPs are not collapsed to 0. */
 assert.deepEqual(
 executor.allocateQtyByWeights(
 0.003,
@@ -982,9 +989,29 @@ qtyStep:
 ]
 ),
 [
+  0.001,
+  0.001,
+  0.001
+]
+);
+/* Only two steps — keep last non-zero, fund earliest early leg. */
+assert.deepEqual(
+executor.allocateQtyByWeights(
+0.002,
+{
+qtyStep:
+"0.001"
+},
+[
+  25,
+  25,
+  50
+]
+),
+[
+  0.001,
   0,
-  0,
-  0.003
+  0.001
 ]
 );
 const parts =
@@ -1191,9 +1218,9 @@ qtyStep:
 }
 ),
 [
+0.001,
 0,
-0,
-0.002
+0.001
 ]
 );
 }
@@ -1277,6 +1304,20 @@ shares,
 ),
 0
 );
+/* Zero early legs must not discard tpQtys — skip empties, count real fills. */
+assert.equal(
+executor.countTpsHitByClosedQty(
+0.003,
+0.002,
+shares,
+[
+  0.001,
+  0,
+  0.002
+]
+),
+1
+);
 /* 10/10/80: first two TPs close only a fifth of the position. */
 assert.equal(
 executor.countTpsHitByClosedQty(
@@ -1318,5 +1359,53 @@ assert.equal(
 shortTp,
 100
 );
+}
+);
+
+test(
+"executor keeps open size, tpQtys and retries failed trail SL",
+()=>{
+for(
+const rel of [
+"desktop/trading/algo-bot-order-executor.cjs",
+"bot-app/trading/algo-bot-order-executor.cjs"
+]
+){
+const src =
+fs.readFileSync(
+path.join(
+root,
+rel
+),
+"utf8"
+);
+assert.ok(
+src.includes(
+"Do not advance tpsHit on amend failure"
+),
+`${rel}: trail must retry after failed SL amend`
+);
+assert.ok(
+src.includes(
+"Never shrink"
+),
+`${rel}: must not shrink initialQty to live size`
+);
+assert.ok(
+src.includes(
+"Steal whole steps from the last leg"
+),
+`${rel}: allocateQty must redistribute collapsed early TPs`
+);
+assert.ok(
+/\btpQtys:\s*\nArray\.isArray\(\s*\nmeta\.tpQtys/.test(
+src
+) ||
+src.includes(
+"...meta.tpQtys"
+),
+`${rel}: pendingEntries must persist tpQtys`
+);
+}
 }
 );

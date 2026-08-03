@@ -502,9 +502,80 @@ parts.push(
 last
 );
 
+/*
+ * Coarse qtyStep often floors early legs to 0 (e.g. 0.003 @ 0.001,
+ * 25/25/50 → [0,0,0.003]). Steal whole steps from the last leg onto earlier
+ * zero legs so multi-TP stays multi-TP whenever size allows.
+ */
+for(
+let i =
+0;
+i <
+parts.length -
+1;
+i++
+){
+if(
+parts[
+i
+] >
+0
+){
+continue;
+}
+
+const lastQty =
+Number(
+parts[
+parts.length -
+1
+]
+) ||
+0;
+
+if(
+lastQty <
+step *
+2 -
+1e-12
+){
+break;
+}
+
+parts[
+i
+] =
+Number(
+step.toFixed(
+decimals
+)
+);
+parts[
+parts.length -
+1
+] =
+Number(
+(
+lastQty -
+step
+).toFixed(
+decimals
+)
+);
+}
+
+const finalLast =
+Number(
+parts[
+parts.length -
+1
+]
+) ||
+0;
+
 if(
 !(
-last >
+finalLast >
 0
 )
 ){
@@ -569,7 +640,7 @@ Number
 
 if(
 legQtys.length &&
-legQtys.every(
+legQtys.some(
 qty=>
 Number.isFinite(
 qty
@@ -593,10 +664,25 @@ i <
 legQtys.length;
 i++
 ){
-filled +=
+const legQty =
 legQtys[
 i
 ];
+
+if(
+!(
+Number.isFinite(
+legQty
+) &&
+legQty >
+0
+)
+){
+continue;
+}
+
+filled +=
+legQty;
 
 if(
 closedQty >=
@@ -4419,8 +4505,31 @@ tpResult.entryQty >
 ){
 meta.entryQty =
 tpResult.entryQty;
+/*
+ * entryQty from ensurePartialTpLimits is the *live* size. Never shrink
+ * initialQty to it — otherwise an early TP fill during placement makes
+ * countTpsHitByClosedQty stuck at 0 and trail never moves.
+ */
+const remembered =
+Number(
+meta.initialQty
+);
+
+if(
+!(
+remembered >
+0
+)
+){
 meta.initialQty =
 tpResult.entryQty;
+}else if(
+tpResult.entryQty >
+remembered
+){
+meta.initialQty =
+tpResult.entryQty;
+}
 }
 
 meta.tpOrderIds =
@@ -4482,6 +4591,14 @@ tpPrices:
 meta.tpPrices ||
 [],
 tpOrderIds,
+tpQtys:
+Array.isArray(
+meta.tpQtys
+)
+? [
+...meta.tpQtys
+]
+: [],
 tpsHit:
 0,
 trailSl:
@@ -4506,6 +4623,7 @@ pt3:
 meta.pt3,
 initialQty:
 Number(
+meta.initialQty ||
 meta.entryQty ||
 position?.size
 ) ||
@@ -4834,6 +4952,9 @@ meta.tpsHit
 sizeHits
 );
 
+let trailOk =
+true;
+
 if(
 tpsHit >
 (Number(
@@ -4890,12 +5011,23 @@ meta.slPrice
 );
 meta.slPrice =
 nextSl;
+}else{
+/*
+ * Do not advance tpsHit on amend failure — otherwise trail is skipped forever
+ * (~1/3 of fills when Bybit rejects a transient SL move).
+ */
+trailOk =
+false;
 }
 }
 }
 
+if(
+trailOk
+){
 meta.tpsHit =
 tpsHit;
+}
 
 /*
  * A TP leg that never made it to the exchange (or was cancelled outside the
