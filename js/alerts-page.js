@@ -36,7 +36,7 @@ onCloudSyncChange,
 getCloudUserEmail,
 pullDeviceStateFromCloud,
 ensureCloudLoginResolved
-} from "./cloud-sync.js?v=56";
+} from "./cloud-sync.js?v=57";
 
 import {
 ensureCloudReady

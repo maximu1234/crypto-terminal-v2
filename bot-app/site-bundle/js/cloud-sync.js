@@ -1,7 +1,7 @@
 import {
 getSupabase,
 isSupabaseConfigured
-} from "./supabase-client.js?v=7";
+} from "./supabase-client.js?v=8";
 
 import {
 SUPABASE_AUTH_STORAGE_KEY,
@@ -21,7 +21,7 @@ isAuthRefreshBlocked,
 blockAuthRefreshUntil,
 clearAuthRefreshBlock,
 getAuthRefreshBlockedUntil
-} from "./auth-storage.js?v=7";
+} from "./auth-storage.js?v=8";
 
 import {
 encodeAuthSessionTransfer,
@@ -318,6 +318,20 @@ problem.message;
 
 export function mountCloudAuthProblemBanner(){
 
+/* Red strip is Algo Bot only — Multichart users without remote bot must not see it. */
+if(
+!isAlgoBotLiteShell()
+){
+try{
+document.getElementById(
+"cloud-auth-problem-banner"
+)?.remove();
+}catch{
+/* ignore */
+}
+return;
+}
+
 if(
 typeof document ===
 "undefined"
@@ -415,7 +429,7 @@ if(
 ){
 publishCloudAuthProblem(
 "missing",
-"Нет облачной сессии — в шестерёнке вставьте сессию (или «Отдать сессию» с Multichart). Auth не обновляется сам."
+"Нет облачной сессии — в шестерёнке вставьте сессию или «Отдать сессию» с Multichart."
 );
 return;
 }
@@ -427,7 +441,7 @@ snap
 ){
 publishCloudAuthProblem(
 "expired",
-"Облачная сессия истекла — «Отдать сессию» с Multichart. Бот не долбит Supabase Auth сам."
+"Облачная сессия истекла — «Отдать сессию» с Multichart."
 );
 return;
 }
@@ -793,6 +807,17 @@ if(
 ){
 return;
 }
+
+window.addEventListener(
+"cloud-auth-refresh-http",
+()=>{
+authRefreshBlockedUntil =
+Math.max(
+authRefreshBlockedUntil,
+getAuthRefreshBlockedUntil()
+);
+}
+);
 
 const KEEPALIVE_MS =
 45 *
@@ -4551,6 +4576,5 @@ notifyAuth();
 );
 
 bindAuthSessionKeepalive();
-mountCloudAuthProblemBanner();
 
 }

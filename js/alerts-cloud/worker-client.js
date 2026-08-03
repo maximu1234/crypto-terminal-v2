@@ -1,11 +1,11 @@
 import {
 SUPABASE_AUTH_STORAGE_KEY
-} from "../supabase-client.js?v=7";
+} from "../supabase-client.js?v=8";
 
 import {
 waitForCloudAuth,
 ensureCloudLoginResolved
-} from "../cloud-sync.js?v=56";
+} from "../cloud-sync.js?v=57";
 
 import {
 getCachedAlertAuth,

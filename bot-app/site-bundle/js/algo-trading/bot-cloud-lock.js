@@ -12,9 +12,9 @@
  * anon не мог писать lock_key произвольного пользователя.
  */
 import {
-getSupabase,
+ensureSupabaseSdk,
 isSupabaseConfigured
-} from "../supabase-client.js?v=7";
+} from "../supabase-client.js?v=8";
 import {
 readPersistedAuthSession
 } from "../alert-auth-cache.js?v=7";
@@ -73,9 +73,10 @@ token
 const tokenPromise = (async()=>{
 
 /*
-  Warm UMD createClient via shared helper (may also init auth client — fine).
+  Load UMD only — never warm the storage-backed Auth client on Algo Bot
+  (getSupabase() is null there; GoTrue getSession would refresh JWT).
 */
-await getSupabase();
+await ensureSupabaseSdk();
 
 const createClient =
 window.supabase?.createClient;

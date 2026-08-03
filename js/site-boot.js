@@ -28,11 +28,11 @@ isCloudLoggedIn,
 isCloudLoggedInEffective,
 isCloudSyncEnabled,
 onCloudSyncChange
-} from "./cloud-sync.js?v=56";
+} from "./cloud-sync.js?v=57";
 
 import {
 isSupabaseConfigured
-} from "./supabase-client.js?v=7";
+} from "./supabase-client.js?v=8";
 
 import {
 initExchangeContext

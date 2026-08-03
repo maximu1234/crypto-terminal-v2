@@ -78,6 +78,58 @@ return until;
 
 }
 
+/**
+ * Called from supabase fetch wrapper when /auth/v1/token fails —
+ * opens the same backoff window GoTrue storage cloak uses.
+ * @param {number} status
+ */
+export function noteAuthRefreshHttpStatus(
+status
+){
+
+const code =
+Number(
+status
+) ||
+0;
+
+if(
+code ===
+429
+){
+blockAuthRefreshUntil(
+30 *
+60 *
+1000,
+{
+clearRefreshToken:
+false
+}
+);
+return;
+}
+
+if(
+code ===
+400 ||
+code ===
+401 ||
+code ===
+403
+){
+blockAuthRefreshUntil(
+30 *
+60 *
+1000,
+{
+clearRefreshToken:
+true
+}
+);
+}
+
+}
+
 export function getAuthRefreshBlockedUntil(){
 
 try{
@@ -632,6 +684,81 @@ return raw;
 
 }
 
+/**
+ * In-memory view for GoTrue while refresh is blocked — never written back.
+ * Prevents __loadSession from POSTing refresh_token (429/400 loops).
+ */
+export function cloakAuthSessionRawForRefreshBlock(
+raw
+){
+
+if(
+!raw
+){
+return raw;
+}
+
+try{
+
+const data =
+JSON.parse(
+raw
+);
+const session =
+data?.access_token
+? data
+: data?.currentSession ||
+data?.session ||
+null;
+
+if(
+!session ||
+typeof session !==
+"object"
+){
+return stripRefreshTokenFromAuthRaw(
+raw
+);
+}
+
+session.refresh_token =
+"";
+
+if(
+data?.refresh_token
+){
+data.refresh_token =
+"";
+}
+
+session.expires_at =
+Math.floor(
+Date.now() /
+1000
+) +
+2 *
+60 *
+60;
+
+if(
+data?.expires_at
+){
+data.expires_at =
+session.expires_at;
+}
+
+return JSON.stringify(
+data
+);
+
+}catch{
+return stripRefreshTokenFromAuthRaw(
+raw
+);
+}
+
+}
+
 /** Убрать refresh_token из primary/backup — прекращает цикл 400 в консоли. */
 export function clearPersistedRefreshToken(){
 
@@ -703,8 +830,14 @@ key ===
 SUPABASE_AUTH_STORAGE_KEY &&
 isAuthRefreshBlocked()
 ){
+/*
+  GoTrue __loadSession always POSTs refresh when JWT is within 90s of
+  expiry — even with autoRefreshToken:false. While we are in a backoff
+  window, feed a cloaked copy (no refresh_token, expires_at pushed out)
+  so getSession/onAuthStateChange cannot hammer /auth/v1/token.
+*/
 value =
-stripRefreshTokenFromAuthRaw(
+cloakAuthSessionRawForRefreshBlock(
 value
 );
 }

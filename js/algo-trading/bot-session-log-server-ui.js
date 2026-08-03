@@ -7,7 +7,7 @@ isAlgoBotLiteShell
 } from "../page-routes.js?v=5";
 import {
 importAuthSessionTransferString
-} from "../cloud-sync.js?v=56";
+} from "../cloud-sync.js?v=57";
 
 if(
 typeof window !==

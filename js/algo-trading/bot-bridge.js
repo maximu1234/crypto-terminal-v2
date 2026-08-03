@@ -18,7 +18,7 @@ releaseAlgoBotLock,
 clearAlgoBotLock,
 fetchAlgoBotLock,
 ensureAlgoBotLockHeld
-} from "./bot-cloud-lock.js?v=6";
+} from "./bot-cloud-lock.js?v=7";
 
 function desktopAlgoApi(){
 

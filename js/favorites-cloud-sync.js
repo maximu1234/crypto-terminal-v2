@@ -8,7 +8,7 @@ isCloudApiUsable,
 isCloudAuthError,
 reportCloudAuthFailure,
 tryCloudAuthRecovery
-} from "./cloud-sync.js?v=56";
+} from "./cloud-sync.js?v=57";
 
 import {
 isFavoritesCloudDisabled,

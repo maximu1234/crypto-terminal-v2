@@ -1,7 +1,13 @@
 import {
 createAuthStorage,
-SUPABASE_AUTH_STORAGE_KEY
-} from "./auth-storage.js?v=7";
+SUPABASE_AUTH_STORAGE_KEY,
+isAuthRefreshBlocked,
+noteAuthRefreshHttpStatus
+} from "./auth-storage.js?v=8";
+
+import {
+isAlgoBotLiteShell
+} from "./page-routes.js?v=5";
 
 export {
 SUPABASE_AUTH_STORAGE_KEY
@@ -67,7 +73,7 @@ el.addEventListener(
 if(window.supabase?.createClient){
 resolve(window.supabase.createClient);
 }else{
-reject(new Error("Supabase UMD loaded without createClient"));
+reject(new Error("Supabase SDK loaded without createClient"));
 }
 },
 { once: true }
@@ -135,6 +141,13 @@ return createClientPromise;
 
 }
 
+/** Load UMD only (no auth client). For Algo Bot lock client etc. */
+export async function ensureSupabaseSdk(){
+
+return loadCreateClient();
+
+}
+
 async function loadEnv(){
 
 if(envPromise){
@@ -164,7 +177,151 @@ env.SUPABASE_ANON_KEY
 
 }
 
+function isAuthTokenRefreshUrl(
+input
+){
+
+const url =
+String(
+input?.url ||
+input ||
+""
+);
+
+return (
+/\/auth\/v1\/token/i.test(
+url
+) &&
+(/grant_type=refresh_token/i.test(
+url
+) ||
+/type=refresh_token/i.test(
+url
+) ||
+/refresh_token/i.test(
+String(
+typeof input ===
+"object" &&
+input?.body
+? input.body
+: ""
+)
+))
+);
+
+}
+
+function authAwareFetch(
+input,
+init
+){
+
+const baseFetch =
+typeof fetch ===
+"function"
+? fetch.bind(
+globalThis
+)
+: null;
+
+if(
+!baseFetch
+){
+return Promise.reject(
+new Error(
+"fetch unavailable"
+)
+);
+}
+
+if(
+isAuthTokenRefreshUrl(
+input
+) &&
+isAuthRefreshBlocked()
+){
+return Promise.resolve(
+new Response(
+JSON.stringify({
+error:
+"refresh_blocked",
+message:
+"Auth refresh blocked locally"
+}),
+{
+status:
+401,
+headers: {
+"Content-Type":
+"application/json"
+}
+}
+)
+);
+}
+
+return baseFetch(
+input,
+init
+).then(
+(res)=>{
+
+if(
+isAuthTokenRefreshUrl(
+input
+) &&
+(
+res.status ===
+429 ||
+res.status ===
+400 ||
+res.status ===
+401 ||
+res.status ===
+403
+)
+){
+noteAuthRefreshHttpStatus(
+res.status
+);
+
+try{
+window.dispatchEvent(
+new CustomEvent(
+"cloud-auth-refresh-http",
+{
+detail: {
+status:
+res.status
+}
+}
+)
+);
+}catch{
+/* ignore */
+}
+
+}
+
+return res;
+
+}
+);
+
+}
+
 export async function getSupabase(){
+
+/*
+  Algo Bot lite: never create a storage-backed Auth client.
+  GoTrue getSession() refreshes near-expiry JWTs even with
+  autoRefreshToken:false — that was the 429 storm on the VPS.
+*/
+if(
+isAlgoBotLiteShell()
+){
+return null;
+}
 
 const env =
 await loadEnv();
@@ -192,6 +349,10 @@ createClient(
 env.SUPABASE_URL,
 env.SUPABASE_ANON_KEY,
 {
+global: {
+fetch:
+authAwareFetch
+},
 auth:{
 persistSession:true,
 autoRefreshToken:false,

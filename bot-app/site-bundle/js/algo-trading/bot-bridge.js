@@ -3,7 +3,7 @@
  */
 import {
 loadBotStrategiesPrefs
-} from "./bot-strategy-prefs.js?v=16";
+} from "./bot-strategy-prefs.js?v=17";
 import {
 readAlgoPattern12Settings
 } from "./pattern-12-settings.js?v=2";
@@ -18,7 +18,7 @@ releaseAlgoBotLock,
 clearAlgoBotLock,
 fetchAlgoBotLock,
 ensureAlgoBotLockHeld
-} from "./bot-cloud-lock.js?v=6";
+} from "./bot-cloud-lock.js?v=7";
 
 function desktopAlgoApi(){
 

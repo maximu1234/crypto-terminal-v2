@@ -82,3 +82,34 @@ test("cloud-sync circuit-breaks auth refresh and surfaces problem UI", () => {
   assert.ok(syncBody.includes("isAlgoBotLiteShell()"));
   assert.ok(syncBody.includes("isAuthRefreshBlockedNow()"));
 });
+
+test("auth storage cloaks session while refresh blocked", () => {
+  const src = fs.readFileSync(
+    path.join(root, "js/auth-storage.js"),
+    "utf8"
+  );
+  assert.ok(src.includes("cloakAuthSessionRawForRefreshBlock"));
+  assert.ok(src.includes("noteAuthRefreshHttpStatus"));
+});
+
+test("supabase-client skips Auth client on Algo Bot lite", () => {
+  const src = fs.readFileSync(
+    path.join(root, "js/supabase-client.js"),
+    "utf8"
+  );
+  assert.ok(src.includes("isAlgoBotLiteShell"));
+  assert.ok(src.includes("ensureSupabaseSdk"));
+  assert.ok(src.includes("authAwareFetch"));
+  assert.ok(src.includes("noteAuthRefreshHttpStatus"));
+});
+
+test("cloud-auth problem banner is Algo Bot lite only", () => {
+  const src = fs.readFileSync(
+    path.join(root, "js/cloud-sync.js"),
+    "utf8"
+  );
+  const start = src.indexOf("export function mountCloudAuthProblemBanner(");
+  const body = src.slice(start, start + 700);
+  assert.ok(body.includes("isAlgoBotLiteShell"));
+  assert.ok(!src.includes("Бот не долбит Supabase Auth сам"));
+});
