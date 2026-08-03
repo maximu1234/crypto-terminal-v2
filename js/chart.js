@@ -88,10 +88,8 @@ applyCoinsChartViewport,
 refreshCoinsChartBarSpacing
 } from "./chart/chart-factory.js?v=42";
 
-
-export {
-mountTabletChartGestures
-} from "./chart-tablet-gestures.js?v=19";
+/* Tablet gestures: import ./chart-tablet-gestures.js only from tablet paths
+   (tablet-widget-chart / terminal-tablet-controller) — never re-export here. */
 
 import {
 effectiveChartPriceScaleWidth,

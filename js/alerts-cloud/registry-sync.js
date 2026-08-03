@@ -1,7 +1,7 @@
 import {
 isCloudLoggedInEffective,
 ensureCloudLoginResolved
-} from "../cloud-sync.js?v=57";
+} from "../cloud-sync.js?v=60";
 
 import {
 resolveAlertAuthFast,
@@ -2097,7 +2097,7 @@ await import("../alerts.js?v=106");
 const {
 getActiveExchangeId
 } =
-await import("../market-api.js?v=2");
+await import("../market-api.js?v=5");
 
 const added =
 mergeAlertHistoryFromCloudEvents(
@@ -2190,7 +2190,7 @@ return 0;
 
 try{
 const { ensureCloudLoginResolved } =
-await import("../cloud-sync.js?v=57");
+await import("../cloud-sync.js?v=60");
 
 await ensureCloudLoginResolved(
 8000

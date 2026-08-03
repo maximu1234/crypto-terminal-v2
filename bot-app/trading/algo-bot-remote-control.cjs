@@ -934,7 +934,9 @@ err
 }
 
 async function handleCommand(
-action
+action,
+opts =
+{}
 ){
 
 if(
@@ -972,11 +974,26 @@ sendStatus();
 return lock;
 }
 
+const strategyId =
+[
+"st1",
+"st2",
+"st3"
+].includes(
+String(
+opts.strategyId ||
+""
+).trim().toLowerCase()
+)
+? String(
+opts.strategyId
+).trim().toLowerCase()
+: "st1";
+
 const result =
 await algoBot.startBot(
 {
-strategyId:
-"st1"
+strategyId
 }
 );
 
@@ -1247,7 +1264,11 @@ action ===
 "stop"
 ){
 void handleCommand(
-action
+action,
+{
+strategyId:
+msg.strategyId
+}
 ).catch(
 err=>{
 log.warn(

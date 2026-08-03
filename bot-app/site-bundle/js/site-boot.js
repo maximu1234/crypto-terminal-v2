@@ -17,7 +17,7 @@ isAlgoReducedCloudClient
 import {
 initAlertsCloudSync,
 scheduleRegistryCloudSync
-} from "./alerts-cloud-sync.js?v=113";
+} from "./alerts-cloud-sync.js?v=60";
 
 import {
 stripAlertFlagsNotInRegistry
@@ -28,11 +28,11 @@ isCloudLoggedIn,
 isCloudLoggedInEffective,
 isCloudSyncEnabled,
 onCloudSyncChange
-} from "./cloud-sync.js?v=55";
+} from "./cloud-sync.js?v=60";
 
 import {
 isSupabaseConfigured
-} from "./supabase-client.js?v=7";
+} from "./supabase-client.js?v=9";
 
 import {
 initExchangeContext
@@ -303,7 +303,7 @@ isAlgoReducedCloudClient();
 if(
 !algoCloudLite
 ){
-import("./favorites-cloud-sync.js?v=7").then(
+import("./favorites-cloud-sync.js?v=60").then(
 ({ initFavoritesCloudSync })=>{
 initFavoritesCloudSync();
 }

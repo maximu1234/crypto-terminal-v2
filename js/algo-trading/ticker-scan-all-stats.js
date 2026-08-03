@@ -6,11 +6,11 @@ loadMarketHistory,
 loadMarketSymbols,
 buildMarketLists,
 getActiveExchangeId
-} from "../market-api.js?v=2";
+} from "../market-api.js?v=5";
 
 import {
 analyzeAlgoPatterns
-} from "./pattern-analysis.js?v=21";
+} from "./pattern-analysis.js?v=23";
 
 import {
 normalizeAlgoStatsMode

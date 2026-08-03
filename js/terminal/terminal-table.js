@@ -7,7 +7,7 @@ coinElements
 import {
 isActiveRealtimeMarketDataset,
 isExchangeTradingEnabled
-} from "../market-api.js?v=2";
+} from "../market-api.js?v=5";
 
 import {
 connectKlineStream
@@ -77,6 +77,30 @@ positionPinEnabled =
 }
 
 const hooks = {};
+
+/** Virtual window for #coins-body (large markets). */
+const COIN_ROW_HEIGHT_PX =
+28;
+const COIN_ROW_OVERSCAN =
+14;
+
+/** @type {Array<object>} */
+let virtualCoinData =
+[];
+
+let virtualScrollBound =
+false;
+
+/** @type {Element|null} */
+let virtualScrollRoot =
+null;
+
+/** @type {(() => void)|null} */
+let virtualScrollHandler =
+null;
+
+let virtualPaintRaf =
+0;
 
 export function setCoinsTableHooks(next){
 
@@ -236,6 +260,13 @@ false;
 let coinListRenderPending =
 false;
 
+let coinListVirtualPaintPending =
+false;
+
+/** @type {ResizeObserver|null} */
+let coinListResizeObserver =
+null;
+
 export function syncCoinListFreezeFromFlagMenus(){
 
 const anyOpen =
@@ -259,7 +290,24 @@ coinListRenderPending
 ){
 coinListRenderPending =
 false;
+coinListVirtualPaintPending =
+false;
 renderListImpl();
+return;
+}
+
+if(
+coinListVirtualPaintPending
+){
+coinListVirtualPaintPending =
+false;
+const list =
+document.getElementById(
+"coins-body"
+);
+paintCoinListWindow(
+list
+);
 }
 
 }
@@ -602,6 +650,269 @@ n >=
 
 }
 
+function resolveCoinListScrollRoot(
+list
+){
+
+return list?.closest?.(
+".coins-table-scroll"
+) ||
+list;
+
+}
+
+function ensureCoinListVirtualScroll(
+list
+){
+
+if(
+!list
+){
+return;
+}
+
+const scrollRoot =
+resolveCoinListScrollRoot(
+list
+);
+
+if(
+virtualScrollBound &&
+virtualScrollRoot ===
+scrollRoot
+){
+return;
+}
+
+if(
+virtualScrollRoot &&
+virtualScrollHandler
+){
+virtualScrollRoot.removeEventListener(
+"scroll",
+virtualScrollHandler
+);
+}
+
+virtualScrollBound =
+true;
+virtualScrollRoot =
+scrollRoot;
+
+virtualScrollHandler =
+()=>{
+if(
+virtualPaintRaf
+){
+return;
+}
+
+virtualPaintRaf =
+requestAnimationFrame(
+()=>{
+virtualPaintRaf =
+0;
+paintCoinListWindow(
+list
+);
+}
+);
+};
+
+scrollRoot.addEventListener(
+"scroll",
+virtualScrollHandler,
+{
+passive:
+true
+}
+);
+
+if(
+typeof ResizeObserver !==
+"undefined"
+){
+coinListResizeObserver?.disconnect?.();
+coinListResizeObserver =
+new ResizeObserver(
+()=>{
+if(
+virtualPaintRaf
+){
+return;
+}
+
+virtualPaintRaf =
+requestAnimationFrame(
+()=>{
+virtualPaintRaf =
+0;
+paintCoinListWindow(
+list
+);
+}
+);
+}
+);
+coinListResizeObserver.observe(
+scrollRoot
+);
+}
+
+}
+
+function paintCoinListWindow(
+list
+){
+
+if(
+!list
+){
+return;
+}
+
+if(
+coinListRenderFrozen
+){
+coinListVirtualPaintPending =
+true;
+return;
+}
+
+coinListVirtualPaintPending =
+false;
+
+const scrollRoot =
+resolveCoinListScrollRoot(
+list
+);
+const data =
+virtualCoinData;
+const total =
+data.length;
+const scrollTop =
+scrollRoot.scrollTop;
+const viewH =
+Math.max(
+scrollRoot.clientHeight ||
+0,
+240
+);
+const start =
+Math.max(
+0,
+Math.floor(
+scrollTop /
+COIN_ROW_HEIGHT_PX
+) -
+COIN_ROW_OVERSCAN
+);
+const end =
+Math.min(
+total,
+Math.ceil(
+(
+scrollTop +
+viewH
+) /
+COIN_ROW_HEIGHT_PX
+) +
+COIN_ROW_OVERSCAN
+);
+
+const prevScroll =
+scrollTop;
+
+list.innerHTML =
+"";
+coinElements.clear();
+
+const topPad =
+document.createElement(
+"div"
+);
+
+topPad.setAttribute(
+"aria-hidden",
+"true"
+);
+topPad.style.height =
+`${start * COIN_ROW_HEIGHT_PX}px`;
+topPad.style.flex =
+"0 0 auto";
+list.appendChild(
+topPad
+);
+
+for(
+let i =
+start;
+i <
+end;
+i++
+){
+
+const item =
+data[
+i
+];
+
+if(
+!item
+){
+continue;
+}
+
+const div =
+createCoinRow(
+item
+);
+
+div.style.boxSizing =
+"border-box";
+div.style.minHeight =
+`${COIN_ROW_HEIGHT_PX}px`;
+
+coinElements.set(
+item.symbol,
+div
+);
+list.appendChild(
+div
+);
+
+}
+
+const bottomPad =
+document.createElement(
+"div"
+);
+
+bottomPad.setAttribute(
+"aria-hidden",
+"true"
+);
+bottomPad.style.height =
+`${Math.max(
+0,
+(
+total -
+end
+) *
+COIN_ROW_HEIGHT_PX
+)}px`;
+bottomPad.style.flex =
+"0 0 auto";
+list.appendChild(
+bottomPad
+);
+
+scrollRoot.scrollTop =
+prevScroll;
+highlightActiveSymbol();
+
+}
+
 function renderListImpl(){
 
 const list =
@@ -615,34 +926,25 @@ if(
 return;
 }
 
-list.innerHTML = "";
-
-coinElements.clear();
-
 const data =
 getFilteredMarketData();
 
-data.sort(sortData);
+data.sort(
+sortData
+);
 
 updateCoinsSymbolHeaderCount(
 data.length
 );
 
-data.forEach(item=>{
-
-const div =
-createCoinRow(item);
-
-coinElements.set(
-item.symbol,
-div
+virtualCoinData =
+data;
+ensureCoinListVirtualScroll(
+list
 );
-
-list.appendChild(div);
-
-});
-
-highlightActiveSymbol();
+paintCoinListWindow(
+list
+);
 
 }
 

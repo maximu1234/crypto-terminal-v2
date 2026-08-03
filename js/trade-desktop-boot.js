@@ -35,7 +35,7 @@ loadTradeExchangeModules
 
 import {
 getActiveExchangeId
-} from "./market-api.js?v=2";
+} from "./market-api.js?v=5";
 
 const TRADE_CSS =
 [
@@ -220,7 +220,7 @@ await import(
 
 initTradePositionsLive();
 
-initTradeBookPanel();
+/* Book panel after first chart paint — see initTradeDesktopAfterChart */
 
 const {
 initDesktopMenuBarTray
@@ -290,6 +290,40 @@ new CustomEvent(
 return;
 }
 
+/* Wait for deferred drawings/indicators host before overlay/orders mount. */
+await new Promise(
+resolve=>{
+
+if(
+window.__tradeChartHost
+){
+resolve();
+return;
+}
+
+const t =
+window.setTimeout(
+resolve,
+8000
+);
+
+window.addEventListener(
+"trade-chart-host-ready",
+()=>{
+window.clearTimeout(
+t
+);
+resolve();
+},
+{
+once:
+true
+}
+);
+
+}
+);
+
 const {
 initTradeChartOverlay
 } =
@@ -316,6 +350,8 @@ await import(
 );
 
 initTradeChartExecutionMarkers();
+
+initTradeBookPanel();
 
 window.__tradeAppReady =
 true;

@@ -18,7 +18,7 @@ import {
 loadMarketHistory,
 getActiveExchangeId,
 getExchangeDefinition
-} from "./market-api.js?v=2";
+} from "./market-api.js?v=5";
 
 import {
 calculateRSI,
@@ -38,9 +38,8 @@ isScreenerWidgetCurrent as isWidgetCurrentGuard
 } from "./screener-widget-guard.js?v=1";
 
 import {
-mountScreenerWidgetZoom,
-refreshZoomFavoriteUi
-} from "./screener-widget-zoom.js?v=17";
+mapWithConcurrency
+} from "./load-concurrency.js?v=2";
 
 import {
 getWidgetFlagHtml,
@@ -48,6 +47,40 @@ wireWidgetFlagUi,
 updateWidgetFlagUi,
 bindWidgetFlagGlobalListeners
 } from "./widget-favorite-flag.js?v=6";
+
+const SCRIPT_MAX_CONCURRENT_CHART_LOADS =
+4;
+
+let refreshZoomFavoriteUi =
+()=>{};
+/** @type {null | typeof import("./screener-widget-zoom.js").mountScreenerWidgetZoom} */
+let mountScreenerWidgetZoom =
+null;
+let scriptZoomModulePromise =
+null;
+
+async function ensureScriptZoomModule(){
+
+if(
+!scriptZoomModulePromise
+){
+scriptZoomModulePromise =
+import(
+"./screener-widget-zoom.js?v=17"
+).then(
+mod=>{
+refreshZoomFavoriteUi =
+mod.refreshZoomFavoriteUi;
+mountScreenerWidgetZoom =
+mod.mountScreenerWidgetZoom;
+return mod;
+}
+);
+}
+
+return scriptZoomModulePromise;
+
+}
 
 import {
 PATTERN_SCAN_TF_LABELS,
@@ -592,6 +625,8 @@ let renderToken =
 0;
 let unmountZoom =
 null;
+let zoomMountStarted =
+false;
 const tickerMap =
 new Map();
 let tickerPollTimer =
@@ -1471,6 +1506,12 @@ runZoom,
 1200
 );
 
+void mountWidgetPattern(
+widget,
+renderTokenRef,
+activeWidgetsRef
+);
+
 }catch(
 err
 ){
@@ -1757,28 +1798,24 @@ nextWidgets;
 
 void refreshTickersMeta();
 
-await Promise.all(
+const chartLoads =
+mapWithConcurrency(
 activeWidgets.map(
 widget=>
-mountWidgetPattern(
-widget,
-renderToken,
-activeWidgets
-)
-)
-);
-
-await Promise.all(
-activeWidgets.map(
-widget=>
+()=>
 loadWidgetChart(
 widget,
 renderToken,
 activeWidgets
 )
-)
+),
+SCRIPT_MAX_CONCURRENT_CHART_LOADS
 );
 
+void Promise.all(
+chartLoads
+).then(
+()=>{
 if(
 loadId ===
 renderToken
@@ -1788,6 +1825,8 @@ setStatus(
 false
 );
 }
+}
+);
 
 }
 
@@ -1875,7 +1914,21 @@ widget.symbol
 function mountZoom(){
 
 if(
-unmountZoom
+unmountZoom ||
+zoomMountStarted
+){
+return;
+}
+
+zoomMountStarted =
+true;
+
+void ensureScriptZoomModule().then(
+()=>{
+if(
+unmountZoom ||
+typeof mountScreenerWidgetZoom !==
+"function"
 ){
 return;
 }
@@ -1966,6 +2019,8 @@ flagWrapHtml:
 getWidgetFlagHtml()
 }
 );
+}
+);
 
 }
 
@@ -1980,6 +2035,8 @@ destroyWidgets();
 unmountZoom?.();
 unmountZoom =
 null;
+zoomMountStarted =
+false;
 cachedRows =
 [];
 tickerMap.clear();

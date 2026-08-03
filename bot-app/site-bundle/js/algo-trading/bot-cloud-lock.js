@@ -14,7 +14,7 @@
 import {
 ensureSupabaseSdk,
 isSupabaseConfigured
-} from "../supabase-client.js?v=8";
+} from "../supabase-client.js?v=9";
 import {
 readPersistedAuthSession
 } from "../alert-auth-cache.js?v=7";

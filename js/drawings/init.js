@@ -22,7 +22,7 @@ recordDrawingTombstone
 
 import {
 EXCHANGE_CHANGED_EVENT
-} from "../market-api.js?v=2";
+} from "../market-api.js?v=5";
 
 import {
 registerDrawingsStoragePoller,
@@ -162,7 +162,7 @@ createDrawStyleBar
 
 import {
 createDrawAlertsChart
-} from "./draw-alerts-chart.js?v=4";
+} from "./draw-alerts-chart.js?v=5";
 
 import {
 createDrawPlacement
@@ -182,7 +182,7 @@ createDrawChartInput
 
 import {
 createDrawPriceScale
-} from "./draw-price-scale.js?v=11";
+} from "./draw-price-scale.js?v=12";
 
 import {
 createDrawRedrawLoop
@@ -2728,6 +2728,7 @@ drawPriceAlerts
 
 alertsChart =
 createDrawAlertsChart({
+chart,
 getSymbol,
 getTf,
 getDrawings:()=>drawings,
@@ -5490,6 +5491,9 @@ teardownFinePointerClicks?.();
 teardownPlacementPreview?.();
 teardownTabletNativeSelectionBlock?.();
 teardownBrushPlacement?.();
+alertsChart?.destroy?.();
+alertsChart =
+null;
 
 window.removeEventListener("keydown", onKeyDown, true);
 window.removeEventListener("keyup", onKeyUp, true);

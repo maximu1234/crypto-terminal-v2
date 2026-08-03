@@ -9,10 +9,13 @@ isChartLayoutReady
 } from "../chart-layout-gate.js?v=2";
 import {
 PATTERN_12_ID,
-computePattern12Scene,
 defaultPattern12Settings,
 normalizePattern12Settings
 } from "./pattern-12-math.js?v=5";
+
+import {
+getOrComputeAlgoPattern12Scene
+} from "./pattern-12-scene-cache.js?v=2";
 
 import {
 paintPattern12Scene
@@ -163,7 +166,7 @@ return;
 }
 
 scene =
-computePattern12Scene(
+getOrComputeAlgoPattern12Scene(
 candles,
 settings
 );

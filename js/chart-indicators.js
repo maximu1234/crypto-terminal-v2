@@ -1,33 +1,7 @@
 /**
  * Индикаторы на странице Монеты — меню, лимит, легенда на графике.
+ * Indicator factories load via dynamic import() inside initChartIndicators.
  */
-import {
-createAoPaneIndicator
-} from "./indicators/ao-pane.js?v=10";
-import {
-createHorizontalVolumeIndicator
-} from "./indicators/horizontal-volume.js?v=10";
-import {
-createRsiPaneIndicator
-} from "./indicators/rsi-pane.js?v=3";
-import {
-createVolumePaneIndicator
-} from "./indicators/volume-pane.js?v=13";
-import {
-createMovingAverageIndicator
-} from "./indicators/moving-average.js?v=16";
-import {
-createEmaShiftRibbonIndicator
-} from "./indicators/ema-shift-ribbon.js?v=8";
-import {
-createPattern12Indicator
-} from "./indicators/pattern-12.js?v=8";
-import {
-createPatternGipIndicator
-} from "./indicators/pattern-gip.js?v=2";
-import {
-createIndicatorSettingsDialog
-} from "./indicators/indicator-settings-dialog.js?v=7";
 import {
 MAX_ACTIVE_INDICATORS,
 canEnableIndicator,
@@ -187,7 +161,7 @@ btn.setAttribute(
 
 }
 
-export function initChartIndicators(
+export async function initChartIndicators(
 {
 root,
 getHost,
@@ -219,11 +193,75 @@ prefs,
 prefsKey
 );
 
-const pattern12Factory =
+const [
+{
+createRsiPaneIndicator
+},
+{
+createVolumePaneIndicator
+},
+{
+createAoPaneIndicator
+},
+{
+createMovingAverageIndicator
+},
+{
+createEmaShiftRibbonIndicator
+},
+pattern12Mod,
+{
+createPatternGipIndicator
+},
+{
+createHorizontalVolumeIndicator
+},
+{
+createIndicatorSettingsDialog
+}
+] =
+await Promise.all(
+[
+import(
+"./indicators/rsi-pane.js?v=3"
+),
+import(
+"./indicators/volume-pane.js?v=13"
+),
+import(
+"./indicators/ao-pane.js?v=10"
+),
+import(
+"./indicators/moving-average.js?v=16"
+),
+import(
+"./indicators/ema-shift-ribbon.js?v=8"
+),
 typeof createPattern12IndicatorOverride ===
 "function"
-? createPattern12IndicatorOverride
-: createPattern12Indicator;
+? Promise.resolve(
+{
+createPattern12Indicator:
+createPattern12IndicatorOverride
+}
+)
+: import(
+"./indicators/pattern-12.js?v=8"
+),
+import(
+"./indicators/pattern-gip.js?v=2"
+),
+import(
+"./indicators/horizontal-volume.js?v=10"
+),
+import(
+"./indicators/indicator-settings-dialog.js?v=7"
+)
+]
+);
+
+const pattern12Factory =
+pattern12Mod.createPattern12Indicator;
 
 const indicators =
 [

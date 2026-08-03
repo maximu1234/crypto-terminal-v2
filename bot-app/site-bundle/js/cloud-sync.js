@@ -1,7 +1,8 @@
 import {
 getSupabase,
-isSupabaseConfigured
-} from "./supabase-client.js?v=8";
+isSupabaseConfigured,
+refreshSessionDirect
+} from "./supabase-client.js?v=9";
 
 import {
 SUPABASE_AUTH_STORAGE_KEY,
@@ -102,6 +103,8 @@ let authRefreshBlockedUntil =
 getAuthRefreshBlockedUntil();
 let refreshSessionInflight =
 null;
+let algoBotLiteRefreshInflight =
+null;
 let lastAuthWarnKey =
 "";
 let lastAuthWarnMs =
@@ -109,6 +112,16 @@ let lastAuthWarnMs =
 
 const SILENT_REFRESH_MIN_MS =
 45000;
+
+/** Algo Bot lite: check JWT often enough for overnight, refresh only near expiry. */
+const ALGO_BOT_LITE_AUTH_WATCH_MS =
+2 *
+60 *
+1000;
+const ALGO_BOT_LITE_REFRESH_SKEW_MS =
+20 *
+60 *
+1000;
 
 const AUTH_PROBLEM_KEY =
 "ct_cloud_auth_problem_v1";
@@ -406,6 +419,187 @@ paintCloudAuthProblemBanner();
 
 }
 
+/**
+ * Algo Bot lite only: one controlled POST /auth/v1/token (no getSession client).
+ * Single-flight; missing expires_at refreshes once (not every near-expiry tick forever).
+ * @param {{ force?: boolean }} [opts]
+ * @returns {Promise<boolean>}
+ */
+async function refreshAlgoBotLiteSessionIfNeeded(
+opts =
+{}
+){
+
+if(
+!isAlgoBotLiteShell()
+){
+return false;
+}
+
+if(
+algoBotLiteRefreshInflight
+){
+return algoBotLiteRefreshInflight;
+}
+
+if(
+isAuthRefreshBlockedNow()
+){
+return false;
+}
+
+const force =
+opts.force ===
+true;
+const now =
+Date.now();
+
+if(
+!force &&
+now -
+lastSilentRefreshMs <
+SILENT_REFRESH_MIN_MS
+){
+return false;
+}
+
+const persisted =
+readPersistedAuthSession();
+
+if(
+!persisted?.user?.id
+){
+return false;
+}
+
+const refresh =
+String(
+persisted.refresh_token ||
+""
+).trim();
+
+if(
+!refresh
+){
+return false;
+}
+
+const exp =
+Number(
+persisted.expires_at
+) ||
+0;
+const near =
+exp >
+0 &&
+isAccessTokenNearExpiry(
+persisted,
+ALGO_BOT_LITE_REFRESH_SKEW_MS
+);
+const missingExp =
+!!String(
+persisted.access_token ||
+""
+).trim() &&
+exp <=
+0;
+const needsRefresh =
+isAccessTokenExpired(
+persisted
+) ||
+near ||
+missingExp;
+
+if(
+!needsRefresh
+){
+return false;
+}
+
+lastSilentRefreshMs =
+now;
+
+algoBotLiteRefreshInflight =
+(
+async ()=>{
+
+try{
+const {
+data,
+error
+} =
+await withTimeout(
+refreshSessionDirect(
+refresh
+),
+authNetworkTimeoutMs(
+"algo lite refresh"
+),
+"algo lite refresh"
+);
+
+if(
+error ||
+!data?.session?.access_token
+){
+classifyAndBlockAuthRefreshFailure(
+"algo lite refresh",
+error ||
+new Error(
+"empty session"
+)
+);
+return false;
+}
+
+const session =
+{
+...persisted,
+...data.session,
+refresh_token:
+data.session.refresh_token ||
+refresh,
+user:
+data.session.user ||
+persisted.user
+};
+
+persistAuthSessionRaw(
+normalizeAuthSessionRaw(
+session
+)
+);
+await applySession(
+session
+);
+authRateLimitStrikes =
+0;
+clearCloudAuthProblem();
+syncCloudLoginFromStorage();
+notifyAuth();
+return true;
+}catch(
+err
+){
+classifyAndBlockAuthRefreshFailure(
+"algo lite refresh",
+err
+);
+return false;
+}
+
+}
+)().finally(
+()=>{
+algoBotLiteRefreshInflight =
+null;
+}
+);
+
+return algoBotLiteRefreshInflight;
+
+}
+
 function bindAlgoBotLiteAuthWatch(){
 
 if(
@@ -421,6 +615,9 @@ true;
 const tick =
 ()=>{
 
+void (
+async ()=>{
+
 const snap =
 readPersistedAuthSession();
 
@@ -434,14 +631,80 @@ publishCloudAuthProblem(
 return;
 }
 
-if(
+const refresh =
+String(
+snap.refresh_token ||
+""
+).trim();
+const exp =
+Number(
+snap.expires_at
+) ||
+0;
+const expired =
 isAccessTokenExpired(
 snap
+);
+const near =
+exp >
+0 &&
+isAccessTokenNearExpiry(
+snap,
+ALGO_BOT_LITE_REFRESH_SKEW_MS
+);
+const missingExp =
+!!String(
+snap.access_token ||
+""
+).trim() &&
+exp <=
+0;
+
+if(
+(
+expired ||
+near ||
+missingExp
+) &&
+refresh &&
+!isAuthRefreshBlockedNow()
+){
+const ok =
+await refreshAlgoBotLiteSessionIfNeeded(
+{
+force:
+true
+}
+);
+
+if(
+ok
+){
+return;
+}
+}
+
+const after =
+readPersistedAuthSession();
+
+if(
+!after?.user?.id
+){
+publishCloudAuthProblem(
+"missing",
+"Нет облачной сессии — в шестерёнке вставьте сессию или «Отдать сессию» с Multichart."
+);
+return;
+}
+
+if(
+isAccessTokenExpired(
+after
 )
 ){
 publishCloudAuthProblem(
 "expired",
-"Облачная сессия истекла — «Отдать сессию» с Multichart."
+"Облачная сессия истекла — бот не смог обновить JWT. «Отдать сессию» с Multichart или вставьте сессию в шестерёнке."
 );
 return;
 }
@@ -455,13 +718,15 @@ cloudAuthProblem?.code ===
 clearCloudAuthProblem();
 }
 
+}
+)();
+
 };
 
 tick();
 window.setInterval(
 tick,
-60 *
-1000
+ALGO_BOT_LITE_AUTH_WATCH_MS
 );
 
 }
@@ -3381,10 +3646,164 @@ return redirectTo;
 }
 
 /**
- * Multichart → clipboard string for Algo Bot paste.
+ * Multichart: refresh JWT before LAN/paste transfer so Algo Bot lite
+ * (no Auth refresh) receives a still-valid access_token.
+ * @returns {Promise<void>}
+ */
+async function ensureFreshAuthSessionForTransfer(){
+
+if(
+isAlgoBotLiteShell()
+){
+return;
+}
+
+if(
+isAuthRefreshBlockedNow()
+){
+throw new Error(
+"Auth на Multichart временно заблокирован (rate limit). Подождите несколько минут или войдите снова, затем «Отдать сессию»."
+);
+}
+
+const persisted =
+readPersistedAuthSession();
+
+if(
+!persisted?.access_token
+){
+return;
+}
+
+const transferSkewMs =
+30 *
+60 *
+1000;
+
+if(
+!isAccessTokenExpired(
+persisted
+) &&
+!isAccessTokenNearExpiry(
+persisted,
+transferSkewMs
+)
+){
+return;
+}
+
+const refresh =
+String(
+persisted.refresh_token ||
+""
+).trim();
+
+if(
+!refresh
+){
+if(
+isAccessTokenExpired(
+persisted
+)
+){
+throw new Error(
+"Сессия Multichart истекла и нет refresh — войдите в аккаунт снова, затем «Отдать сессию»."
+);
+}
+
+return;
+}
+
+const sb =
+await getSupabase();
+
+if(
+!sb
+){
+if(
+isAccessTokenExpired(
+persisted
+)
+){
+throw new Error(
+"Не удалось обновить сессию (нет Supabase). Войдите снова."
+);
+}
+
+return;
+}
+
+try{
+const {
+data,
+error
+} =
+await refreshSessionSingleFlight(
+sb,
+"refreshSession transfer"
+);
+
+if(
+error
+){
+classifyAndBlockAuthRefreshFailure(
+"transfer refresh",
+error
+);
+throw new Error(
+error.message ||
+"Не удалось обновить сессию перед отправкой на бот. Войдите снова."
+);
+}
+
+if(
+!data?.session?.access_token
+){
+throw new Error(
+"Не удалось обновить сессию перед отправкой на бот. Войдите снова."
+);
+}
+
+await applySession(
+data.session
+);
+authRateLimitStrikes =
+0;
+clearCloudAuthProblem();
+}catch(
+err
+){
+if(
+/Auth на Multichart|Сессия Multichart|Не удалось обновить/i.test(
+String(
+err?.message ||
+""
+)
+)
+){
+throw err;
+}
+
+classifyAndBlockAuthRefreshFailure(
+"transfer refresh",
+err
+);
+throw new Error(
+err?.message ||
+"Не удалось обновить сессию перед отправкой на бот. Войдите снова."
+);
+}
+
+}
+
+/**
+ * Multichart → clipboard / LAN string for Algo Bot.
+ * Refreshes access_token first — bot lite cannot refresh Auth itself.
  * @returns {Promise<string>}
  */
 export async function exportAuthSessionTransferString(){
+
+await ensureFreshAuthSessionForTransfer();
 
 let raw =
 readAuthSessionRaw();
@@ -3433,6 +3852,37 @@ if(
 ){
 throw new Error(
 "Нет активной сессии. Войдите в аккаунт Multichart."
+);
+}
+
+const checkSession =
+readPersistedAuthSession() ||
+(()=>{
+try{
+const data =
+JSON.parse(
+raw
+);
+
+return data?.access_token
+? data
+: (
+data?.currentSession ||
+data?.session ||
+null
+);
+}catch{
+return null;
+}
+})();
+
+if(
+isAccessTokenExpired(
+checkSession
+)
+){
+throw new Error(
+"Сессия Multichart истекла — войдите снова, затем «Отдать сессию»."
 );
 }
 
@@ -3690,6 +4140,25 @@ message:
 "Сессия сохранена, но вход не подтверждён. Проверьте строку."
 };
 }
+
+if(
+isAccessTokenExpired(
+decoded.session
+)
+){
+publishCloudAuthProblem(
+"expired",
+"Облачная сессия истекла — «Отдать сессию» с Multichart."
+);
+return {
+ok:
+false,
+message:
+"Сессия уже истекла (access_token). В Multichart войдите снова / обновите сессию, затем снова «Отдать сессию»."
+};
+}
+
+clearCloudAuthProblem();
 
 const email =
 userEmail ||
@@ -4391,16 +4860,16 @@ bootstrapAuthFromLocalStorage();
 notifyAuth();
 
 /*
-  Algo Bot lite: Auth over the wire was the Jul 28–29 egress spike.
-  Login = local JWT from Multichart paste / persisted file only.
-  No getSession / setSession / onAuthStateChange / keepalive.
+  Algo Bot lite: no storage Auth client / getSession (that caused 429 storms).
+  Login = Multichart paste / LAN session. Controlled near-expiry refresh via
+  refreshSessionDirect + circuit-breaker (not GoTrue auto-refresh).
 */
 if(
 isAlgoBotLiteShell()
 ){
 const cached =
 readPersistedAuthSession();
-const session =
+let session =
 cached?.access_token &&
 cached?.user &&
 !isAccessTokenExpired(
@@ -4408,6 +4877,46 @@ cached
 )
 ? cached
 : null;
+
+if(
+(
+!session ||
+(
+Number(
+cached?.expires_at
+) >
+0
+? isAccessTokenNearExpiry(
+cached,
+ALGO_BOT_LITE_REFRESH_SKEW_MS
+)
+: !!String(
+cached?.access_token ||
+""
+).trim()
+)
+) &&
+String(
+cached?.refresh_token ||
+""
+).trim()
+){
+const refreshed =
+await refreshAlgoBotLiteSessionIfNeeded(
+{
+force:
+true
+}
+);
+
+if(
+refreshed
+){
+session =
+readPersistedAuthSession();
+}
+}
+
 await applySession(
 session
 );

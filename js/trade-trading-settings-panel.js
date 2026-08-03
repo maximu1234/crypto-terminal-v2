@@ -16,7 +16,7 @@ loadTradeExchangeModules
 
 import {
 getActiveExchangeId
-} from "./market-api.js?v=2";
+} from "./market-api.js?v=5";
 
 const TRADE_VOLUME_DEFAULT_INPUT_COUNT =
 Math.max(

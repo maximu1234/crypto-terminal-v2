@@ -597,7 +597,9 @@ via:
 }
 
 async function handleLanBotCommand(
-action
+action,
+opts =
+{}
 ){
 
 const remote =
@@ -607,7 +609,8 @@ if(
 remote?.handleCommand
 ){
 return remote.handleCommand(
-action
+action,
+opts
 );
 }
 
@@ -620,6 +623,21 @@ String(
 action ||
 ""
 ).trim().toLowerCase();
+const strategyId =
+[
+"st1",
+"st2",
+"st3"
+].includes(
+String(
+opts.strategyId ||
+""
+).trim().toLowerCase()
+)
+? String(
+opts.strategyId
+).trim().toLowerCase()
+: "st1";
 
 if(
 act ===
@@ -627,8 +645,7 @@ act ===
 ){
 return algoBot.startBot(
 {
-strategyId:
-"st1"
+strategyId
 }
 );
 }
@@ -772,6 +789,28 @@ false,
 message:
 err?.message ||
 "Некорректная сессия"
+};
+}
+
+const exp =
+Number(
+decoded?.session?.expires_at
+) ||
+0;
+
+if(
+exp >
+0 &&
+exp *
+1000 <
+Date.now() -
+5000
+){
+return {
+ok:
+false,
+message:
+"Сессия Multichart уже истекла. Войдите снова в Multichart (чтобы обновился access_token), затем снова «Отдать сессию»."
 };
 }
 
@@ -1057,9 +1096,28 @@ message:
 return;
 }
 
+const strategyId =
+[
+"st1",
+"st2",
+"st3"
+].includes(
+String(
+body.strategyId ||
+""
+).trim().toLowerCase()
+)
+? String(
+body.strategyId
+).trim().toLowerCase()
+: "st1";
+
 const result =
 await handleLanBotCommand(
-action
+action,
+{
+strategyId
+}
 );
 const ok =
 !!(

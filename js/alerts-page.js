@@ -36,7 +36,7 @@ onCloudSyncChange,
 getCloudUserEmail,
 pullDeviceStateFromCloud,
 ensureCloudLoginResolved
-} from "./cloud-sync.js?v=57";
+} from "./cloud-sync.js?v=60";
 
 import {
 ensureCloudReady
@@ -47,13 +47,13 @@ TELEGRAM_BOT_USERNAME,
 getTelegramBotUrl
 } from "./telegram-bot-public.js?v=1";
 
-import { formatPrice } from "./chart-import.js?v=44";
+import { formatPrice } from "./format-price.js?v=2";
 
 import {
 EXCHANGE_CHANGED_EVENT,
 getActiveExchangeDefinition,
 getActiveExchangeId
-} from "./market-api.js?v=2";
+} from "./market-api.js?v=5";
 
 const tbody =
 document.getElementById("alerts-tbody");

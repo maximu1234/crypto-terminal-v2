@@ -15,16 +15,14 @@ isChartLayoutReady
 
 import {
 registerChartScaleLabelProvider
-} from "../chart/scale-label-providers.js?v=2";
-
-let unregisterAlertScaleLabels =
-null;
+} from "../chart/scale-label-providers.js?v=3";
 
 export function createDrawAlertsChart(
 deps
 ){
 
 const {
+chart,
 getSymbol,
 getDrawings,
 setDrawings,
@@ -35,8 +33,7 @@ scheduleRedraw
 } =
 deps;
 
-unregisterAlertScaleLabels?.();
-unregisterAlertScaleLabels =
+const unregisterAlertScaleLabels =
 registerChartScaleLabelProvider(
 ()=>{
 
@@ -116,7 +113,8 @@ ALERT_LINE_COLOR
 
 return out;
 
-}
+},
+chart
 );
 
 function drawRegistryPriceAlerts(
@@ -229,7 +227,10 @@ scheduleRedraw();
 
 return {
 drawRegistryPriceAlerts,
-stripOrphanAlertDrawings
+stripOrphanAlertDrawings,
+destroy(){
+unregisterAlertScaleLabels?.();
+}
 };
 
 }

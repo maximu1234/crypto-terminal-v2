@@ -23,6 +23,12 @@ Object.freeze({
 "asset-manifest.js":
 2,
 "market-api.js":
+5,
+"format-price.js":
+2,
+"load-concurrency.js":
+2,
+"perf-marks.js":
 2,
 "exchanges/context.js":
 1,
@@ -47,7 +53,7 @@ Object.freeze({
 "terminal-page-boot.js":
 24,
 "terminal-entry.js":
-1,
+2,
 "terminal-list-refresh.js":
 1,
 "trade-desktop-boot.js":
@@ -137,7 +143,7 @@ Object.freeze({
 "trade/bybit/stream-bridge.js":
 1,
 "trade/bybit/chart-overlay.js":
-2,
+3,
 "trade/bybit/auto-stops.js":
 1,
 "trade/bybit/market-entry.js":
@@ -161,7 +167,7 @@ Object.freeze({
 "trade/bybit/history/fetch.js":
 2,
 "trade/bybit/chart-orders.js":
-2,
+3,
 "trade/bybit/chart-execution-markers.js":
 2,
 "trade/bybit/volume-presets.js":
@@ -185,11 +191,11 @@ Object.freeze({
 "trade/bingx/stream-bridge.js":
 5,
 "trade/bingx/chart-overlay.js":
-13,
+14,
 "trade/bingx/stop-amend.js":
 1,
 "trade/bingx/chart-orders.js":
-2,
+3,
 "trade/bingx/chart-execution-markers.js":
 3,
 "trade/bingx/pnl-share-modal.js":
@@ -231,7 +237,7 @@ Object.freeze({
 "chart-page.js":
 6,
 "terminal.js":
-402,
+403,
 "terminal-multi-chart.js":
 11,
 "terminal-screener-chart-pane.js":
@@ -249,7 +255,7 @@ Object.freeze({
 "chart-visible-range.js":
 3,
 "chart-indicators.js":
-43,
+44,
 "chart-snapshot.js":
 6,
 "indicators/pattern-12.js":
@@ -275,7 +281,7 @@ Object.freeze({
 "script-page-storage.js":
 15,
 "script-page-widgets.js":
-10,
+12,
 "script-terminal-status.js":
 7,
 "script-scan-background.js":
@@ -283,9 +289,9 @@ Object.freeze({
 "script-favorites-list.js":
 2,
 "algo-trading.js":
-102,
+109,
 "algo-trading-page-boot.js":
-3,
+4,
 "algo-trading-list.js":
 11,
 "algo-trading/coin-list-host.js":
@@ -293,7 +299,7 @@ Object.freeze({
 "algo-trading/pattern-12-math.js":
 5,
 "algo-trading/pattern-12.js":
-4,
+5,
 "algo-trading/pattern-12-paint.js":
 3,
 "algo-trading/pattern-stats.js":
@@ -303,7 +309,7 @@ Object.freeze({
 "algo-trading/indicators-storage.js":
 1,
 "algo-trading/indicators.js":
-5,
+7,
 "algo-trading/pattern-entry-logic.js":
 8,
 "algo-trading/temp-pullback-before-arm.js":
@@ -314,8 +320,10 @@ Object.freeze({
 14,
 "algo-trading/pattern-entry-positions.js":
 14,
+"algo-trading/pattern-12-scene-cache.js":
+2,
 "algo-trading/pattern-analysis.js":
-21,
+23,
 "algo-trading/pattern-trade-stats-partial.js":
 17,
 "algo-trading/pattern-trade-stats.js":
@@ -342,15 +350,15 @@ Object.freeze({
 "algo-trading/bot-strategy-prefs.js":
 17,
 "algo-trading/bot-strategy-ui.js":
-56,
+58,
 "algo-trading/bot-session-log-server-ui.js":
 7,
 "algo-trading/bot-session-logs-viewer.js":
-14,
+16,
 "algo-trading/bot-cloud-lock.js":
 7,
 "algo-trading/bot-remote-client.js":
-5,
+7,
 "algo-trading/trade/format.js":
 2,
 "algo-trading/trade/positions-cache.js":
@@ -370,9 +378,9 @@ Object.freeze({
 "algo-trading/trade/trading-gate.js":
 2,
 "algo-trading/trade/chart-overlay.js":
-3,
+4,
 "algo-trading/trade/chart-orders.js":
-3,
+4,
 "algo-trading/trade/boot.js":
 4,
 "algo-trading/diary/format.js":
@@ -440,13 +448,13 @@ Object.freeze({
 "terminal/terminal-prefs.js":
 20,
 "terminal/terminal-table.js":
-24,
+27,
 "telegram-bot-public.js":
 1,
 "watchlist.js":
 97,
 "screener.js":
-97,
+99,
 "screener-widget-guard.js":
 1,
 "scalping-dom/prefs.js":
@@ -480,7 +488,7 @@ Object.freeze({
 "screener-widget-zoom.js":
 17,
 "release-marker.js":
-80,
+81,
 "focus-blur-after-pick.js":
 3,
 "site-boot.js":
@@ -502,7 +510,7 @@ Object.freeze({
 "chart-import.js":
 44,
 "chart-widget-host.js":
-16,
+17,
 "tablet-gesture-policy.js":
 2,
 "tablet-widget-chart.js":
@@ -510,11 +518,11 @@ Object.freeze({
 
 /* ── JS: chart / drawings ── */
 "chart.js":
-153,
+154,
 "chart/chart-options.js":
 7,
 "chart/scale-label-providers.js":
-2,
+3,
 "chart/chart-dom-crosshair.js":
 15,
 "chart/chart-factory.js":
@@ -526,7 +534,7 @@ Object.freeze({
 "drawings.js":
 255,
 "drawings/init.js":
-175,
+176,
 "drawings/draw-prefs.js":
 2,
 "drawings/draw-edit-desktop.js":
@@ -540,9 +548,9 @@ Object.freeze({
 "drawings/draw-templates.js":
 9,
 "drawings/draw-alerts-chart.js":
-4,
+5,
 "drawings/draw-price-scale.js":
-11,
+12,
 "drawings/draw-redraw-loop.js":
 8,
 "drawings/draw-chart-input.js":
@@ -629,7 +637,7 @@ Object.freeze({
 
 /* ── JS: cloud / auth ── */
 "cloud-sync.js":
-57,
+60,
 "cloud-sync-throttle.js":
 3,
 "page-routes.js":
@@ -639,7 +647,7 @@ Object.freeze({
 "types/chart-types.js":
 1,
 "supabase-client.js":
-8,
+9,
 "supabase-env.js":
 5,
 "auth-storage.js":
@@ -687,7 +695,7 @@ Object.freeze({
 "alerts-cloud/polling-realtime.js":
 13,
 "alerts-page.js":
-66,
+67,
 "alert-monitor.js":
 70,
 "alert-deep-link-exchange.js":
@@ -747,7 +755,7 @@ Object.freeze({
 "script-page.css":
 20,
 "algo-trading.css":
-110,
+111,
 "algo-trading-book-panel.css":
 5,
 "algo-trading-diary-modal.css":

@@ -12,7 +12,7 @@ loadMarketHistory,
 getActiveExchangeId,
 getActiveExchangeDefinition,
 EXCHANGE_CHANGED_EVENT
-} from "./market-api.js?v=2";
+} from "./market-api.js?v=5";
 
 import {
 clearBybitNetworkIssue
@@ -44,7 +44,7 @@ alignRsiWithCandleTimes
 import {
 createDashboardChartWidget,
 mountDashboardChartInteractions
-} from "./chart-widget-host.js?v=16";
+} from "./chart-widget-host.js?v=17";
 
 import {
 mountWidgetTabletChart

@@ -948,7 +948,7 @@ via:
 }
 
 /**
- * @param {{ host: string, port?: string|number, token: string, action: "start"|"stop" }} payload
+ * @param {{ host: string, port?: string|number, token: string, action: "start"|"stop", strategyId?: string }} payload
  */
 async function sendRemoteBotLanCommand(
 payload =
@@ -991,11 +991,35 @@ path:
 }
 );
 
+const strategyId =
+[
+"st1",
+"st2",
+"st3"
+].includes(
+String(
+payload.strategyId ||
+""
+).trim().toLowerCase()
+)
+? String(
+payload.strategyId
+).trim().toLowerCase()
+: "st1";
+
 const res =
 await fetchJsonPost(
 url,
 {
-action
+action,
+...(
+action ===
+"start"
+? {
+strategyId
+}
+: {}
+)
 },
 60000
 );

@@ -2281,6 +2281,28 @@ align-items: center;
 gap: 6px;
 flex: 0 1 auto;
 }
+body.algo-trading-page .algo-remote-session-logs-channel-strategy{
+display: flex;
+flex-wrap: wrap;
+align-items: center;
+gap: 10px;
+}
+body.algo-trading-page .algo-remote-session-logs-strategy-check{
+display: inline-flex;
+align-items: center;
+gap: 5px;
+font-size: 12px;
+color: #d1d5db;
+cursor: pointer;
+user-select: none;
+}
+body.algo-trading-page .algo-remote-session-logs-strategy-check input{
+margin: 0;
+width: 14px;
+height: 14px;
+accent-color: #60a5fa;
+cursor: pointer;
+}
 body.algo-trading-page .algo-remote-session-logs-channel-actions .algo-bot-remote-btn{
 flex: 0 0 auto;
 width: auto;

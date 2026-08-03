@@ -7,7 +7,7 @@ chartScaleFont,
 CHART_SCALE_LABEL_PAD_LEFT,
 CHART_SCALE_LABEL_LINE_HEIGHT,
 scaleLabelTextColorForBackground
-} from "../chart-import.js?v=43";
+} from "../chart-import.js?v=44";
 
 import {
 layoutScaleLabelYs,
@@ -25,7 +25,7 @@ positionScaleLabelColor
 
 import {
 collectChartScaleLabelEntries
-} from "../chart/scale-label-providers.js?v=2";
+} from "../chart/scale-label-providers.js?v=3";
 
 import {
 isHorizPriceTool
@@ -311,7 +311,9 @@ for(
 const entry of
 (
 includeExternalScaleLabels
-? collectChartScaleLabelEntries()
+? collectChartScaleLabelEntries(
+chart
+)
 : []
 )
 ){

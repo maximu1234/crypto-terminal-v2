@@ -4,7 +4,7 @@
 import {
 getActiveExchangeDefinition,
 getActiveExchangeId
-} from "./market-api.js?v=2";
+} from "./market-api.js?v=5";
 
 let bannerEl = null;
 let messageEl = null;

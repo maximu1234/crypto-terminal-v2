@@ -310,6 +310,232 @@ return res;
 
 }
 
+/**
+ * Direct GoTrue refresh without creating a storage-backed Auth client.
+ * Used by Algo Bot lite (getSupabase() is null there on purpose).
+ * Goes through authAwareFetch so 429/400 trip the same circuit-breaker/cloak.
+ *
+ * @param {string} refreshToken
+ * @returns {Promise<{ data: { session: object|null }, error: Error|null }>}
+ */
+export async function refreshSessionDirect(
+refreshToken
+){
+
+const env =
+await loadEnv();
+
+if(
+!env.SUPABASE_URL ||
+!env.SUPABASE_ANON_KEY
+){
+return {
+data: {
+session:
+null
+},
+error:
+new Error(
+"Supabase env missing"
+)
+};
+}
+
+const rt =
+String(
+refreshToken ||
+""
+).trim();
+
+if(
+!rt
+){
+return {
+data: {
+session:
+null
+},
+error:
+new Error(
+"no refresh_token"
+)
+};
+}
+
+if(
+isAuthRefreshBlocked()
+){
+return {
+data: {
+session:
+null
+},
+error:
+new Error(
+"refresh_blocked"
+)
+};
+}
+
+const base =
+String(
+env.SUPABASE_URL
+).replace(
+/\/$/,
+""
+);
+const url =
+`${base}/auth/v1/token?grant_type=refresh_token`;
+
+try{
+const res =
+await authAwareFetch(
+url,
+{
+method:
+"POST",
+headers: {
+apikey:
+env.SUPABASE_ANON_KEY,
+Authorization:
+`Bearer ${env.SUPABASE_ANON_KEY}`,
+"Content-Type":
+"application/json",
+Accept:
+"application/json"
+},
+body:
+JSON.stringify(
+{
+refresh_token:
+rt
+}
+)
+}
+);
+
+const json =
+await res.json().catch(
+()=>
+({})
+);
+
+if(
+!res.ok
+){
+const err =
+new Error(
+json?.msg ||
+json?.error_description ||
+json?.error ||
+`http_${res.status}`
+);
+
+err.status =
+res.status;
+err.code =
+json?.error ||
+`http_${res.status}`;
+
+return {
+data: {
+session:
+null
+},
+error:
+err
+};
+}
+
+const expiresIn =
+Number(
+json?.expires_in
+) ||
+0;
+const expiresAt =
+Number(
+json?.expires_at
+) ||
+(
+expiresIn >
+0
+? Math.floor(
+Date.now() /
+1000
+) +
+expiresIn
+: 0
+);
+
+const session =
+json?.access_token
+? {
+access_token:
+json.access_token,
+refresh_token:
+json.refresh_token ||
+rt,
+expires_in:
+expiresIn ||
+undefined,
+expires_at:
+expiresAt ||
+undefined,
+token_type:
+json.token_type ||
+"bearer",
+user:
+json.user ||
+null
+}
+: (
+json?.session ||
+null
+);
+
+if(
+!session?.access_token
+){
+return {
+data: {
+session:
+null
+},
+error:
+new Error(
+"empty session"
+)
+};
+}
+
+return {
+data: {
+session
+},
+error:
+null
+};
+}catch(
+err
+){
+return {
+data: {
+session:
+null
+},
+error:
+err instanceof Error
+? err
+: new Error(
+String(
+err
+)
+)
+};
+}
+
+}
+
 export async function getSupabase(){
 
 /*

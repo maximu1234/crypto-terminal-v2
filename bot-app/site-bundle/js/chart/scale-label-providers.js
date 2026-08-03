@@ -1,18 +1,61 @@
 /**
  * Extra right-scale price plaques (trade levels, alerts, …).
+ * Providers are scoped to a chart instance so multi-widget pages
+ * (Watchlist) do not paint every chart's levels on every scale.
  * Providers return { yIdeal, price, color }[]; no exchange logic here.
  */
 
+/** @type {WeakMap<object, Set<() => { yIdeal: number, price: number, color: string }[]>>} */
+const providersByScope =
+new WeakMap();
+
 /** @type {Set<() => { yIdeal: number, price: number, color: string }[]>} */
-const providers =
+const globalProviders =
 new Set();
 
 /**
+ * @param {object|null|undefined} scope
+ * @returns {Set<() => { yIdeal: number, price: number, color: string }[]>}
+ */
+function bucketFor(
+scope
+){
+
+if(
+scope ==
+null
+){
+return globalProviders;
+}
+
+let set =
+providersByScope.get(
+scope
+);
+
+if(
+!set
+){
+set =
+new Set();
+providersByScope.set(
+scope,
+set
+);
+}
+
+return set;
+
+}
+
+/**
  * @param {() => { yIdeal: number, price: number, color: string }[]} fn
+ * @param {object|null|undefined} [scope] chart (or other host key); omit only for tests
  * @returns {() => void} unregister
  */
 export function registerChartScaleLabelProvider(
-fn
+fn,
+scope
 ){
 
 if(
@@ -22,26 +65,52 @@ typeof fn !==
 return ()=>{};
 }
 
-providers.add(
+const bucket =
+bucketFor(
+scope
+);
+
+bucket.add(
 fn
 );
 
 return ()=>{
-providers.delete(
+bucket.delete(
 fn
 );
 };
 
 }
 
-export function collectChartScaleLabelEntries(){
+/**
+ * @param {object|null|undefined} [scope] same key used at register
+ * @returns {{ yIdeal: number, price: number, color: string, pinToPrice: true }[]}
+ */
+export function collectChartScaleLabelEntries(
+scope
+){
+
+const bucket =
+scope ==
+null
+? globalProviders
+: providersByScope.get(
+scope
+);
 
 const out =
 [];
 
+if(
+!bucket ||
+!bucket.size
+){
+return out;
+}
+
 for(
 const fn of
-providers
+bucket
 ){
 
 try{

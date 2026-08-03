@@ -6,7 +6,7 @@ isMultichartRemoteControlHost,
 pushAuthSessionToRemoteBot,
 fetchLanBotStatus,
 sendLanBotCommand
-} from "./bot-remote-client.js?v=5";
+} from "./bot-remote-client.js?v=7";
 import {
 formatBotStrategySettingsRows
 } from "./bot-strategy-prefs.js?v=17";
@@ -14,7 +14,37 @@ formatBotStrategySettingsRows
 const STORAGE_KEY =
 "algo_remote_session_logs_v1";
 const CHANNEL_UI_VER =
-"7";
+"8";
+const STRATEGY_IDS =
+[
+"st1",
+"st2",
+"st3"
+];
+
+/**
+ * @param {unknown} value
+ * @returns {"st1"|"st2"|"st3"}
+ */
+function normalizeLanStrategyId(
+value
+){
+
+const id =
+String(
+value ||
+""
+).trim().toLowerCase();
+
+return STRATEGY_IDS.includes(
+id
+)
+? /** @type {"st1"|"st2"|"st3"} */ (
+id
+)
+: "st1";
+
+}
 
 function desktopApi(){
 
@@ -49,7 +79,11 @@ token:
 String(
 raw.token ||
 ""
-).trim()
+).trim(),
+strategyId:
+normalizeLanStrategyId(
+raw.strategyId
+)
 };
 }catch{
 return {
@@ -58,7 +92,9 @@ host:
 port:
 "17865",
 token:
-""
+"",
+strategyId:
+"st1"
 };
 }
 
@@ -86,7 +122,11 @@ token:
 String(
 conn.token ||
 ""
-).trim()
+).trim(),
+strategyId:
+normalizeLanStrategyId(
+conn.strategyId
+)
 }
 )
 );
@@ -174,6 +214,20 @@ root.innerHTML =
 <span class="algo-remote-session-logs-channel-value" id="algo-remote-logs-auth-health">—</span>
 </div>
 </div>
+<div class="algo-remote-session-logs-channel-strategy" role="radiogroup" aria-label="Стратегия запуска на боте">
+<label class="algo-remote-session-logs-strategy-check" title="Запустить Стратегию 1 с текущими настройками бота">
+<input type="checkbox" id="algo-remote-logs-st1" checked />
+<span>Ст1</span>
+</label>
+<label class="algo-remote-session-logs-strategy-check" title="Запустить Стратегию 2 с текущими настройками бота">
+<input type="checkbox" id="algo-remote-logs-st2" />
+<span>Ст2</span>
+</label>
+<label class="algo-remote-session-logs-strategy-check" title="Запустить Стратегию 3 с текущими настройками бота">
+<input type="checkbox" id="algo-remote-logs-st3" />
+<span>Ст3</span>
+</label>
+</div>
 <div class="algo-remote-session-logs-channel-actions">
 <button type="button" class="algo-bot-remote-btn" id="algo-remote-logs-start">Запустить</button>
 <button type="button" class="algo-bot-remote-btn" id="algo-remote-logs-stop">Остановить</button>
@@ -206,7 +260,7 @@ root.innerHTML =
 <div class="algo-remote-session-logs-help-body">
 <section class="algo-remote-session-logs-help-lang" lang="ru">
 <h4>Русский</h4>
-<p>Окно <strong>LAN</strong> — весь прямой канал: Старт/Стоп, списки, сессия, логи. Без worker и без лишнего трафика в Supabase (кроме cloud lock при старте на самом боте).</p>
+<p>Окно <strong>LAN</strong> — весь прямой канал: Старт/Стоп (Ст1/Ст2/Ст3), списки, сессия, логи. Без worker и без лишнего трафика в Supabase (кроме cloud lock при старте на самом боте).</p>
 <p><strong>Таймаут</strong> почти всегда значит: до порта на сервере пакеты не доходят (firewall / Security Group / бот не слушает). Неверный токен обычно даёт ошибку сразу, а не таймаут.</p>
 <p><strong>Токен доступа к порту</strong> — не сессия <code>mcauth1…</code>. На боте: шестерёнка → «Логи → Терминал» → «Новый токен» или включить доступ и «Сохранить».</p>
 <ol>
@@ -221,7 +275,7 @@ root.innerHTML =
 </section>
 <section class="algo-remote-session-logs-help-lang" lang="en">
 <h4>English</h4>
-<p>The <strong>LAN</strong> window is the full direct channel: Start/Stop, lists, auth session, logs — no alert-worker. Supabase is only used for the bot’s own cloud lock on start.</p>
+<p>The <strong>LAN</strong> window is the full direct channel: Start/Stop (St1/St2/St3), lists, auth session, logs — no alert-worker. Supabase is only used for the bot’s own cloud lock on start.</p>
 <p>A <strong>timeout</strong> almost always means packets never reach the port (Windows firewall / cloud Security Group / bot not listening).</p>
 <p>The <strong>port token</strong> is not the Multichart session string <code>mcauth1…</code>. On the bot: gear → “Logs → Terminal” → “New token”.</p>
 <ol>
@@ -539,6 +593,18 @@ const stopBtn =
 root.querySelector(
 "#algo-remote-logs-stop"
 );
+const st1El =
+root.querySelector(
+"#algo-remote-logs-st1"
+);
+const st2El =
+root.querySelector(
+"#algo-remote-logs-st2"
+);
+const st3El =
+root.querySelector(
+"#algo-remote-logs-st3"
+);
 const strategyTitleEl =
 root.querySelector(
 "#algo-remote-logs-strategy-title"
@@ -570,6 +636,45 @@ tokenEl.value =
 conn.token;
 }
 
+function applyStrategyChecks(
+strategyId
+){
+
+const id =
+normalizeLanStrategyId(
+strategyId
+);
+
+if(
+st1El
+){
+st1El.checked =
+id ===
+"st1";
+}
+
+if(
+st2El
+){
+st2El.checked =
+id ===
+"st2";
+}
+
+if(
+st3El
+){
+st3El.checked =
+id ===
+"st3";
+}
+
+}
+
+applyStrategyChecks(
+conn.strategyId
+);
+
 root.classList.remove(
 "hidden"
 );
@@ -583,6 +688,24 @@ syncStrategyBoxHeight();
 let channelCmdInflight =
 false;
 
+function selectedStrategyId(){
+
+if(
+st2El?.checked
+){
+return "st2";
+}
+
+if(
+st3El?.checked
+){
+return "st3";
+}
+
+return "st1";
+
+}
+
 function currentConn(){
 
 return {
@@ -594,7 +717,9 @@ portEl?.value ||
 "17865",
 token:
 tokenEl?.value ||
-""
+"",
+strategyId:
+selectedStrategyId()
 };
 
 }
@@ -954,10 +1079,21 @@ stopBtn.disabled =
 true;
 }
 
+const startStrategyId =
+selectedStrategyId();
+const startStrategyLabel =
+startStrategyId ===
+"st2"
+? "Ст2"
+: startStrategyId ===
+"st3"
+? "Ст3"
+: "Ст1";
+
 setMessage(
 action ===
 "start"
-? "Запуск по каналу…"
+? `Запуск ${startStrategyLabel} по каналу…`
 : "Остановка по каналу…"
 );
 
@@ -982,7 +1118,7 @@ true
 setMessage(
 action ===
 "start"
-? "Команда запуска отправлена"
+? `Команда запуска ${startStrategyLabel} отправлена`
 : "Команда остановки отправлена"
 );
 }
@@ -1089,7 +1225,7 @@ return;
 }
 
 setMessage(
-"Отправка сессии…"
+"Обновление и отправка сессии…"
 );
 
 const res =
@@ -1388,6 +1524,70 @@ event.preventDefault();
 void runLanCommand(
 "stop"
 );
+}
+);
+
+/**
+ * @param {"st1"|"st2"|"st3"} id
+ */
+function onStrategyCheck(
+id
+){
+
+applyStrategyChecks(
+id
+);
+writeConn(
+currentConn()
+);
+
+}
+
+st1El?.addEventListener(
+"change",
+()=>{
+if(
+st1El.checked
+){
+onStrategyCheck(
+"st1"
+);
+}else{
+st1El.checked =
+true;
+}
+}
+);
+
+st2El?.addEventListener(
+"change",
+()=>{
+if(
+st2El.checked
+){
+onStrategyCheck(
+"st2"
+);
+}else{
+st2El.checked =
+true;
+}
+}
+);
+
+st3El?.addEventListener(
+"change",
+()=>{
+if(
+st3El.checked
+){
+onStrategyCheck(
+"st3"
+);
+}else{
+st3El.checked =
+true;
+}
 }
 );
 

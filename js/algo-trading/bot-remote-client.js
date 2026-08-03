@@ -13,13 +13,13 @@ readPersistedAuthSession
 } from "../alert-auth-cache.js?v=7";
 import {
 exportAuthSessionTransferString
-} from "../cloud-sync.js?v=57";
+} from "../cloud-sync.js?v=60";
 
 const LAN_CONN_KEY =
 "algo_remote_session_logs_v1";
 
 /**
- * @returns {{ host: string, port: string, token: string }|null}
+ * @returns {{ host: string, port: string, token: string, strategyId: "st1"|"st2"|"st3" }|null}
  */
 export function readLanRemoteConn(){
 
@@ -46,6 +46,23 @@ String(
 raw.port ||
 "17865"
 ).trim();
+const strategyRaw =
+String(
+raw.strategyId ||
+""
+).trim().toLowerCase();
+const strategyId =
+[
+"st1",
+"st2",
+"st3"
+].includes(
+strategyRaw
+)
+? /** @type {"st1"|"st2"|"st3"} */ (
+strategyRaw
+)
+: "st1";
 
 if(
 !host ||
@@ -57,7 +74,8 @@ return null;
 return {
 host,
 port,
-token
+token,
+strategyId
 };
 }catch{
 return null;
@@ -239,7 +257,7 @@ via:
 
 /**
  * @param {"start"|"stop"} action
- * @param {{ host: string, port: string, token: string }|null} [conn]
+ * @param {{ host: string, port: string, token: string, strategyId?: string }|null} [conn]
  */
 export async function sendLanBotCommand(
 action,
@@ -303,12 +321,36 @@ via:
 };
 }
 
+const strategyId =
+[
+"st1",
+"st2",
+"st3"
+].includes(
+String(
+c.strategyId ||
+""
+).trim().toLowerCase()
+)
+? String(
+c.strategyId
+).trim().toLowerCase()
+: "st1";
+
 const res =
 await api.sessionLogRemoteBotCommand(
 {
 ...c,
 action:
-act
+act,
+...(
+act ===
+"start"
+? {
+strategyId
+}
+: {}
+)
 }
 );
 

@@ -17,7 +17,7 @@ clearDismissedStops
 
 import {
 isExchangeTradingEnabled
-} from "../../market-api.js?v=2";
+} from "../../market-api.js?v=5";
 
 import {
 getTradeConfig
@@ -30,7 +30,7 @@ formatTradeUsdt
 
 import {
 registerChartScaleLabelProvider
-} from "../../chart/scale-label-providers.js?v=2";
+} from "../../chart/scale-label-providers.js?v=3";
 
 import {
 maskTradeDisplay
@@ -3840,7 +3840,8 @@ ensureDrawingSync();
 unregisterScaleLabels?.();
 unregisterScaleLabels =
 registerChartScaleLabelProvider(
-collectScaleLabelEntries
+collectScaleLabelEntries,
+host?.chart
 );
 
 const ro =

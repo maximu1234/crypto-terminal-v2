@@ -20,11 +20,11 @@ initAlgoTradeBookPanel
 
 import {
 createTradeChartOverlay
-} from "./chart-overlay.js?v=3";
+} from "./chart-overlay.js?v=4";
 
 import {
 createTradeChartOrders
-} from "./chart-orders.js?v=3";
+} from "./chart-orders.js?v=4";
 
 /**
  * @param {{

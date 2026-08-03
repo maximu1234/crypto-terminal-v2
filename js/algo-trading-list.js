@@ -7,7 +7,7 @@ buildMarketLists,
 getActiveExchangeId,
 EXCHANGE_CHANGED_EVENT,
 isActiveRealtimeMarketDataset
-} from "./market-api.js?v=2";
+} from "./market-api.js?v=5";
 
 import {
 coinsState,

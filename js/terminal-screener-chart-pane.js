@@ -32,7 +32,7 @@ alignRsiWithCandleTimes
 
 import {
 loadMarketHistory
-} from "./market-api.js?v=2";
+} from "./market-api.js?v=5";
 
 import {
 subscribeKline
@@ -40,7 +40,7 @@ subscribeKline
 
 import {
 mountWidgetDomCrosshair
-} from "./chart-widget-host.js?v=16";
+} from "./chart-widget-host.js?v=17";
 
 function mergeLiveCandle(
 candles,

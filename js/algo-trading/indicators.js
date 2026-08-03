@@ -6,11 +6,11 @@
  */
 import {
 initChartIndicators
-} from "../chart-indicators.js?v=43";
+} from "../chart-indicators.js?v=44";
 
 import {
 createPattern12Indicator
-} from "./pattern-12.js?v=4";
+} from "./pattern-12.js?v=5";
 
 import {
 ALGO_INDICATORS_STORAGE_KEY
@@ -22,9 +22,9 @@ ALGO_INDICATORS_STORAGE_KEY
 
 /**
  * @param {Parameters<typeof initChartIndicators>[0]} opts
- * @returns {ReturnType<typeof initChartIndicators>}
+ * @returns {Promise<Awaited<ReturnType<typeof initChartIndicators>>>}
  */
-export function mountAlgoTradingIndicators(
+export async function mountAlgoTradingIndicators(
 opts
 ){
 
@@ -32,7 +32,7 @@ const root =
 opts?.root;
 
 const api =
-initChartIndicators(
+await initChartIndicators(
 {
 ...opts,
 storageKey:
@@ -45,10 +45,9 @@ ensureIndicatorEnabled(
 root,
 "rsi"
 );
-ensureIndicatorEnabled(
-root,
-"pattern-12"
-);
+
+/* Pattern-12: enable after first candles (algo-trading.js) so cold start
+   is not blocked by scene compute before history arrives. */
 
 return api;
 

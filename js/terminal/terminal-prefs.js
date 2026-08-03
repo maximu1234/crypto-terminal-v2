@@ -2,7 +2,7 @@ import {
 getAllCoinsMarketIds,
 getActiveCoinsMarkets,
 getActiveExchangeId
-} from "../market-api.js?v=2";
+} from "../market-api.js?v=5";
 
 import {
 EXCHANGE_IDS
@@ -19,7 +19,7 @@ isTerminalPage
 import {
 getCurrentSymbols,
 getFirstVisibleSymbol
-} from "./terminal-table.js?v=24";
+} from "./terminal-table.js?v=27";
 
 import {
 parseAlertDeepLinkExchange

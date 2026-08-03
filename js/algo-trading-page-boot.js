@@ -42,7 +42,7 @@ jsImport(
 )
 );
 
-mountAlgoTradingPage();
+await mountAlgoTradingPage();
 
 }
 

@@ -32,6 +32,10 @@ bingx:
 bingxPublicAdapter
 };
 
+/** @type {Map<string, Promise<unknown>>} */
+const historyInflight =
+new Map();
+
 export function getPublicMarketAdapter(
 exchangeId
 ){
@@ -87,12 +91,79 @@ requests =
 options = {}
 ){
 
-return getActivePublicMarketAdapter().loadHistory(
+const exchangeId =
+getActiveExchangeId() ||
+"bybit";
+const key =
+[
+exchangeId,
+String(
+symbol ||
+""
+).toUpperCase(),
+String(
+tf ||
+""
+),
+String(
+requests ||
+6
+),
+options.parallel
+? "p"
+: "s",
+String(
+options.batchGapMs ??
+""
+),
+String(
+options.endMs ??
+""
+)
+].join(
+"|"
+);
+
+const existing =
+historyInflight.get(
+key
+);
+
+if(
+existing
+){
+return existing;
+}
+
+const pending =
+Promise.resolve(
+getActivePublicMarketAdapter().loadHistory(
 symbol,
 tf,
 requests,
 options
+)
+).finally(
+()=>{
+if(
+historyInflight.get(
+key
+) ===
+pending
+){
+historyInflight.delete(
+key
 );
+}
+}
+);
+
+historyInflight.set(
+key,
+pending
+);
+
+return pending;
 
 }
 

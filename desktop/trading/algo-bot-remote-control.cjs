@@ -46,7 +46,9 @@ via:
 }
 
 async function handleCommand(
-action
+action,
+opts =
+{}
 ){
 
 const act =
@@ -54,6 +56,21 @@ String(
 action ||
 ""
 ).trim().toLowerCase();
+const strategyId =
+[
+"st1",
+"st2",
+"st3"
+].includes(
+String(
+opts.strategyId ||
+""
+).trim().toLowerCase()
+)
+? String(
+opts.strategyId
+).trim().toLowerCase()
+: "st1";
 
 if(
 act ===
@@ -61,8 +78,7 @@ act ===
 ){
 return algoBot.startBot(
 {
-strategyId:
-"st1"
+strategyId
 }
 );
 }

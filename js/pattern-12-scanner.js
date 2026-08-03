@@ -7,7 +7,7 @@ import {
 loadMarketHistory,
 loadMarketSymbols,
 buildMarketLists
-} from "./market-api.js?v=2";
+} from "./market-api.js?v=5";
 
 import {
 PATTERN_12_ID,

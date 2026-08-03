@@ -76,7 +76,7 @@ withTimeout
 import {
 persistFavoritesToCloud,
 onFavoritesRemoteUpdate
-} from "./cloud-sync.js?v=55";
+} from "./cloud-sync.js?v=60";
 
 import {
 attachSymbolAutocomplete,

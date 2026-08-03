@@ -25,7 +25,7 @@ positionScaleLabelColor
 
 import {
 collectChartScaleLabelEntries
-} from "../chart/scale-label-providers.js?v=2";
+} from "../chart/scale-label-providers.js?v=3";
 
 import {
 isHorizPriceTool
@@ -311,7 +311,9 @@ for(
 const entry of
 (
 includeExternalScaleLabels
-? collectChartScaleLabelEntries()
+? collectChartScaleLabelEntries(
+chart
+)
 : []
 )
 ){

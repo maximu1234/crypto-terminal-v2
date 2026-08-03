@@ -3,7 +3,7 @@
  */
 import {
 createScriptWidgetGrid
-} from "./script-page-widgets.js?v=10";
+} from "./script-page-widgets.js?v=12";
 
 import {
 getSharedPatternScanner,
@@ -51,7 +51,7 @@ import {
 EXCHANGE_CHANGED_EVENT,
 getActiveExchangeId,
 getExchangeDefinition
-} from "./market-api.js?v=2";
+} from "./market-api.js?v=5";
 
 const SCRIPT_LAYOUT_HOTKEYS =
 Object.freeze({

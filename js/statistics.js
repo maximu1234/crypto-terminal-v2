@@ -12,7 +12,7 @@ resumeStatsBackgroundJob
 import {
 getActiveExchangeDefinition,
 EXCHANGE_CHANGED_EVENT
-} from "./market-api.js?v=2";
+} from "./market-api.js?v=5";
 
 const statusEl =
 document.getElementById(

@@ -376,7 +376,7 @@ syncHit
 
   try{
     const { getSupabase } =
-    await import("./supabase-client.js?v=8");
+    await import("./supabase-client.js?v=9");
 
     const sb =
     await Promise.race([

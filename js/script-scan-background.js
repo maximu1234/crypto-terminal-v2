@@ -25,7 +25,7 @@ intersectFavoritesWithMarket
 import {
 EXCHANGE_CHANGED_EVENT,
 getActiveExchangeId
-} from "./market-api.js?v=2";
+} from "./market-api.js?v=5";
 
 export const SCRIPT_SCAN_BG_EVENT =
 "script-scan-bg-update";

@@ -2,9 +2,12 @@
  * Один проход pattern-12 math → счётчики + события входа + статистика сделок.
  */
 import {
-computePattern12Scene,
 defaultPattern12Settings
 } from "./pattern-12-math.js?v=5";
+
+import {
+getOrComputeAlgoPattern12Scene
+} from "./pattern-12-scene-cache.js?v=2";
 
 import {
 detectPatternEntryEventsFromSetups
@@ -54,7 +57,7 @@ opts
 }
 
 const scene =
-computePattern12Scene(
+getOrComputeAlgoPattern12Scene(
 candles,
 opts.patternSettings ||
 defaultPattern12Settings()
@@ -224,6 +227,45 @@ opts.statsMode
 }
 
 /**
+ * Clear «Данные» panel + entry markers (pending full history / error).
+ * @param {{ setEvents?: (events: Array) => void }|null} [entryOverlay]
+ */
+export function clearAlgoPatternAnalysisUi(
+entryOverlay =
+null
+){
+
+renderAlgoPatternCounts(
+null
+);
+renderAlgoTradeStats(
+null,
+document.querySelector(
+'[data-algo-strategy="fixed-tp"]'
+) ||
+document
+);
+renderAlgoTradeStats(
+null,
+document.querySelector(
+'[data-algo-strategy="partial-tp"]'
+) ||
+document
+);
+renderAlgoTradeStats(
+null,
+document.querySelector(
+'[data-algo-strategy="partial-tp-y"]'
+) ||
+document
+);
+entryOverlay?.setEvents?.(
+[]
+);
+
+}
+
+/**
  * @param {Array} candles
  * @param {{ setEvents?: (events: Array) => void }|null} entryOverlay
  * @param {object} [opts]
@@ -387,32 +429,8 @@ console.warn(
 "[algo-trading] pattern analysis:",
 err
 );
-renderAlgoPatternCounts(
-null
-);
-renderAlgoTradeStats(
-null,
-document.querySelector(
-'[data-algo-strategy="fixed-tp"]'
-) ||
-document
-);
-renderAlgoTradeStats(
-null,
-document.querySelector(
-'[data-algo-strategy="partial-tp"]'
-) ||
-document
-);
-renderAlgoTradeStats(
-null,
-document.querySelector(
-'[data-algo-strategy="partial-tp-y"]'
-) ||
-document
-);
-entryOverlay?.setEvents?.(
-[]
+clearAlgoPatternAnalysisUi(
+entryOverlay
 );
 }
 

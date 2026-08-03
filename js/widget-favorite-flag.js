@@ -13,11 +13,11 @@ FAVORITES_BY_EXCHANGE_KEY
 import {
 persistFavoritesToCloud,
 onFavoritesRemoteUpdate
-} from "./cloud-sync.js?v=57";
+} from "./cloud-sync.js?v=60";
 
 import {
 EXCHANGE_CHANGED_EVENT
-} from "./market-api.js?v=2";
+} from "./market-api.js?v=5";
 
 let favorites =
 loadFavoritesGroups();

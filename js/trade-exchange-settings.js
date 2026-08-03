@@ -7,7 +7,7 @@ EXCHANGE_DEFINITIONS,
 getActiveExchangeId,
 setActiveExchangeId,
 pingActiveExchangePublic
-} from "./market-api.js?v=2";
+} from "./market-api.js?v=5";
 
 import {
 readExchangeCredentials,

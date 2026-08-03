@@ -31,11 +31,11 @@ import {
 fetchRemoteBotStatus,
 sendRemoteBotCommand,
 isMultichartRemoteControlHost
-} from "./bot-remote-client.js?v=5";
+} from "./bot-remote-client.js?v=7";
 import {
 mountRemoteSessionLogsEntry,
 mountRemoteWatchlistsPushEntry
-} from "./bot-session-logs-viewer.js?v=14";
+} from "./bot-session-logs-viewer.js?v=16";
 import {
 rebalanceTpShares
 } from "./pattern-trade-stats-partial.js?v=17";

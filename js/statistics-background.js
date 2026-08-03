@@ -10,7 +10,7 @@ import {
 getActiveExchangeId,
 getActiveExchangeDefinition,
 fetchMarketDailyCandles
-} from "./market-api.js?v=2";
+} from "./market-api.js?v=5";
 
 export const STATS_JOB_UPDATE_EVENT =
 "stats-job-update";

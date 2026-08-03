@@ -28,15 +28,15 @@ isCloudLoggedIn,
 isCloudLoggedInEffective,
 isCloudSyncEnabled,
 onCloudSyncChange
-} from "./cloud-sync.js?v=57";
+} from "./cloud-sync.js?v=60";
 
 import {
 isSupabaseConfigured
-} from "./supabase-client.js?v=8";
+} from "./supabase-client.js?v=9";
 
 import {
 initExchangeContext
-} from "./market-api.js?v=2";
+} from "./market-api.js?v=5";
 
 import {
 initBybitNetworkUi

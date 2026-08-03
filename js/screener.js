@@ -9,7 +9,7 @@ peekMarketSymbolsCache,
 getActiveExchangeDefinition,
 getActiveExchangeId,
 EXCHANGE_CHANGED_EVENT
-} from "./market-api.js?v=2";
+} from "./market-api.js?v=5";
 
 import {
 isScreenerWidgetCurrent as isScreenerWidgetCurrentGuard
@@ -48,7 +48,7 @@ createTickerUiBatcher
 
 import {
 mountReleaseMarker
-} from "./release-marker.js?v=80";
+} from "./release-marker.js?v=81";
 
 import {
 saveScreenerState,
@@ -76,7 +76,7 @@ withTimeout
 import {
 persistFavoritesToCloud,
 onFavoritesRemoteUpdate
-} from "./cloud-sync.js?v=57";
+} from "./cloud-sync.js?v=60";
 
 import {
 attachSymbolAutocomplete,
@@ -88,10 +88,56 @@ mountQwertyKeyInput
 } from "./qwerty-key-input.js?v=1";
 
 import {
-mountScreenerWidgetZoom,
-refreshZoomFavoriteUi,
-syncWidgetZoomInversion
-} from "./screener-widget-zoom.js?v=17";
+mapWithConcurrency
+} from "./load-concurrency.js?v=2";
+
+import {
+perfMark,
+perfMeasure
+} from "./perf-marks.js?v=2";
+
+const SCREENER_MAX_CONCURRENT_CHART_LOADS =
+4;
+
+let refreshZoomFavoriteUi =
+()=>{};
+let syncWidgetZoomInversion =
+()=>{};
+let screenerZoomMountPromise =
+null;
+
+/**
+ * Lazy-load zoom module on first need (init / contextmenu).
+ * @param {Parameters<typeof import("./screener-widget-zoom.js").mountScreenerWidgetZoom>[0]} opts
+ */
+async function mountScreenerWidgetZoomLazy(
+opts
+){
+
+if(
+!screenerZoomMountPromise
+){
+screenerZoomMountPromise =
+import(
+"./screener-widget-zoom.js?v=17"
+).then(
+mod=>{
+refreshZoomFavoriteUi =
+mod.refreshZoomFavoriteUi;
+syncWidgetZoomInversion =
+mod.syncWidgetZoomInversion;
+return mod.mountScreenerWidgetZoom(
+opts
+);
+}
+);
+}else{
+await screenerZoomMountPromise;
+}
+
+return screenerZoomMountPromise;
+
+}
 
 const gridEl =
 document.getElementById("screener-grid");
@@ -2186,19 +2232,37 @@ widget
 );
 
 const chartLoads =
-activeWidgets.map(w=>
+mapWithConcurrency(
+activeWidgets.map(
+w=>
+()=>
 ensureSettled(
-loadWidgetChart(w),
+loadWidgetChart(
+w
+),
 28000,
 `chart ${w.symbol}`
 )
+),
+SCREENER_MAX_CONCURRENT_CHART_LOADS
 );
 
-await Promise.all(chartLoads);
-
-if(loadId === renderToken){
-setStatus("", false);
+/* Status stays until the full concurrent grid settles. */
+void Promise.all(
+chartLoads
+).then(
+()=>{
+if(
+loadId ===
+renderToken
+){
+setStatus(
+"",
+false
+);
 }
+}
+);
 
 }
 
@@ -2949,6 +3013,10 @@ e.detail?.symbols
 
 async function init(){
 
+perfMark(
+"screener-init-start"
+);
+
 const { waitForSiteCssReady } =
 await import(
 "./site-css-gate.js?v=1"
@@ -2958,7 +3026,7 @@ await waitForSiteCssReady();
 
 mountReleaseMarker();
 
-void mountScreenerWidgetZoom(
+void mountScreenerWidgetZoomLazy(
 {
 resolveWidget:
 widgetRoot=>
@@ -3113,6 +3181,15 @@ true
 );
 
 }
+
+perfMark(
+"screener-init-ready"
+);
+perfMeasure(
+"screener-init",
+"screener-init-start",
+"screener-init-ready"
+);
 
 const urlSymbol =
 new URLSearchParams(
