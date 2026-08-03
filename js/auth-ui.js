@@ -34,7 +34,7 @@ openAppSettingsWindow
 
 import {
 ensureHeaderSettingsShell
-} from "./header-settings-shell.js?v=3";
+} from "./header-settings-shell.js?v=4";
 
 let cloudEnvConfigured = false;
 let cloudSdkError = "";
@@ -784,6 +784,20 @@ refreshSettingsAuthUi();
 if(
 isAlgoBotShell()
 ){
+void import(
+"./algo-trading/bot-session-log-server-ui.js?v=3"
+).then(
+mod=>{
+mod.mountSessionLogServerSettings(
+document.getElementById(
+"algo-session-log-server-mount"
+)
+);
+}
+).catch(
+()=>{}
+);
+
 portalDropdownToBody(
 dropdown,
 wrap

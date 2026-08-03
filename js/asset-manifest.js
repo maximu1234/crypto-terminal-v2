@@ -283,7 +283,7 @@ Object.freeze({
 "script-favorites-list.js":
 2,
 "algo-trading.js":
-100,
+101,
 "algo-trading-page-boot.js":
 3,
 "algo-trading-list.js":
@@ -344,7 +344,7 @@ Object.freeze({
 "algo-trading/bot-strategy-ui.js":
 50,
 "algo-trading/bot-session-log-server-ui.js":
-2,
+3,
 "algo-trading/bot-session-logs-viewer.js":
 2,
 "algo-trading/bot-cloud-lock.js":
@@ -488,7 +488,7 @@ Object.freeze({
 "site-header.js":
 5,
 "site-header-nav.js":
-6,
+7,
 "site-header-nav-web.js":
 1,
 "site-header-nav-desktop.js":
@@ -647,9 +647,9 @@ Object.freeze({
 "auth-session-transfer.js":
 1,
 "auth-ui.js":
-55,
+56,
 "header-settings-shell.js":
-3,
+4,
 "app-settings-window.js":
 16,
 "app-settings-system-panel.js":

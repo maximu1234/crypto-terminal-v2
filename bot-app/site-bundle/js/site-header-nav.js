@@ -1,6 +1,6 @@
 import {
 headerSettingsShellHtml
-} from "./header-settings-shell.js?v=3";
+} from "./header-settings-shell.js?v=4";
 
 import {
 WEB_HEADER_NAV_ITEMS
@@ -77,10 +77,9 @@ path
 
 }
 
-export function buildHeaderNavHtml(){
+export function buildHeaderNavLinksHtml(){
 
-const linksHtml =
-getNavItems()
+return getNavItems()
 .map(
 item=>{
 const activeClass =
@@ -90,10 +89,16 @@ isActiveItem(item)
 return `<a href="${item.href}"${activeClass}>${item.label}</a>`;
 }
 )
-.join("");
+.join(
+""
+);
+
+}
+
+export function buildHeaderNavHtml(){
 
 return (
-linksHtml +
+buildHeaderNavLinksHtml() +
 headerSettingsShellHtml()
 );
 
@@ -109,15 +114,56 @@ if(
 return false;
 }
 
-const nextHtml =
-buildHeaderNavHtml();
+const linksHtml =
+buildHeaderNavLinksHtml();
+const existingWrap =
+nav.querySelector(
+"#header-settings-wrap"
+);
+
+/*
+  Preserve #header-settings-wrap (account panel + Algo Bot «Логи → Терминал»).
+  Full innerHTML replace used to wipe session-log mount after site-boot re-renders.
+*/
+if(
+existingWrap
+){
+const currentLinks =
+[
+...nav.querySelectorAll(
+":scope > a"
+)
+].map(
+a=>
+a.outerHTML
+).join(
+""
+);
 
 if(
-nav.innerHTML !==
-nextHtml
+currentLinks !==
+linksHtml
 ){
+for(
+const a of
+[
+...nav.querySelectorAll(
+":scope > a"
+)
+]
+){
+a.remove();
+}
+
+existingWrap.insertAdjacentHTML(
+"beforebegin",
+linksHtml
+);
+}
+}else{
 nav.innerHTML =
-nextHtml;
+linksHtml +
+headerSettingsShellHtml();
 }
 
 nav.dataset.navReady =

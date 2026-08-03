@@ -14,8 +14,56 @@ ${HEADER_SETTINGS_GEAR_SVG}
 <div class="header-settings-dropdown hidden" id="header-settings-dropdown" role="menu">
 <p class="header-settings-section-title">Аккаунт</p>
 <div id="cloud-settings-mount"></div>
+<div id="algo-session-log-server-mount" class="algo-session-log-server-mount" hidden></div>
 </div>
 </div>`;
+
+}
+
+/**
+ * Algo Bot: prefs for LAN session-log HTTP (under gear).
+ * Keep after renderHeaderNav / portal — create if shell was rebuilt without it.
+ * @returns {HTMLElement | null}
+ */
+export function ensureAlgoSessionLogServerMount(){
+
+let mount =
+document.getElementById(
+"algo-session-log-server-mount"
+);
+
+if(
+mount
+){
+return mount;
+}
+
+const dropdown =
+document.getElementById(
+"header-settings-dropdown"
+);
+
+if(
+!dropdown
+){
+return null;
+}
+
+mount =
+document.createElement(
+"div"
+);
+mount.id =
+"algo-session-log-server-mount";
+mount.className =
+"algo-session-log-server-mount";
+mount.hidden =
+true;
+dropdown.appendChild(
+mount
+);
+
+return mount;
 
 }
 

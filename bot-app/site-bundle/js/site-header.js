@@ -3,7 +3,7 @@
  */
 import {
 ensureHeaderSettingsShell
-} from "./header-settings-shell.js?v=3";
+} from "./header-settings-shell.js?v=4";
 
 import {
 mountScriptTerminalStatus
@@ -11,7 +11,7 @@ mountScriptTerminalStatus
 
 import {
 renderHeaderNav
-} from "./site-header-nav.js?v=6";
+} from "./site-header-nav.js?v=7";
 
 export const APP_HEADER_NAV_ID =
 "app-header-nav";

@@ -39,24 +39,62 @@ el.classList.toggle(
 }
 
 /**
- * @param {HTMLElement} mount
+ * @param {HTMLElement | null} [mount]
  */
 export function mountSessionLogServerSettings(
 mount
 ){
 
 if(
-!mount ||
 !isAlgoBotLiteShell()
 ){
+const el =
+mount ||
+document.getElementById(
+"algo-session-log-server-mount"
+);
+
 if(
-mount
+el
 ){
-mount.hidden =
+el.hidden =
 true;
 }
 
 return;
+}
+
+let host =
+mount ||
+document.getElementById(
+"algo-session-log-server-mount"
+);
+
+if(
+!host
+){
+const dropdown =
+document.getElementById(
+"header-settings-dropdown"
+);
+
+if(
+!dropdown
+){
+return;
+}
+
+host =
+document.createElement(
+"div"
+);
+host.id =
+"algo-session-log-server-mount";
+host.className =
+"algo-session-log-server-mount";
+dropdown.appendChild(
+host
+);
 }
 
 const api =
@@ -66,14 +104,84 @@ if(
 !api?.sessionLogServerGet ||
 !api?.sessionLogServerSet
 ){
-mount.hidden =
+host.hidden =
 true;
 return;
 }
 
-mount.hidden =
+/* Already wired — keep form (header re-render / gear re-open). */
+if(
+host.querySelector(
+"#algo-session-log-server-enabled"
+)
+){
+host.hidden =
 false;
-mount.innerHTML =
+void api.sessionLogServerGet().then(
+st=>{
+const enabledEl =
+host.querySelector(
+"#algo-session-log-server-enabled"
+);
+const portEl =
+host.querySelector(
+"#algo-session-log-server-port"
+);
+const tokenEl =
+host.querySelector(
+"#algo-session-log-server-token"
+);
+const statusEl =
+host.querySelector(
+"#algo-session-log-server-status"
+);
+
+if(
+enabledEl
+){
+enabledEl.checked =
+!!st?.enabled;
+}
+
+if(
+portEl
+){
+portEl.value =
+String(
+st?.port ||
+17865
+);
+}
+
+if(
+tokenEl
+){
+tokenEl.value =
+String(
+st?.token ||
+""
+);
+}
+
+const listen =
+st?.listening
+? `слушает ${st.bindHost || "0.0.0.0"}:${st.port}`
+: st?.enabled
+? "включён, но не слушает"
+: "выключен";
+
+setStatus(
+statusEl,
+`${listen}. Папка: ${st?.dir || "—"}`
+);
+}
+);
+return;
+}
+
+host.hidden =
+false;
+host.innerHTML =
 `
 <p class="header-settings-section-title">Логи → Терминал</p>
 <p class="algo-session-log-server-lead">Прямой доступ к файлам сессий (без Supabase и worker). В Multichart: Статус → «Посмотреть логи удалённого бота».</p>
@@ -97,27 +205,27 @@ mount.innerHTML =
 `;
 
 const enabledEl =
-mount.querySelector(
+host.querySelector(
 "#algo-session-log-server-enabled"
 );
 const portEl =
-mount.querySelector(
+host.querySelector(
 "#algo-session-log-server-port"
 );
 const tokenEl =
-mount.querySelector(
+host.querySelector(
 "#algo-session-log-server-token"
 );
 const statusEl =
-mount.querySelector(
+host.querySelector(
 "#algo-session-log-server-status"
 );
 const saveBtn =
-mount.querySelector(
+host.querySelector(
 "#algo-session-log-server-save"
 );
 const regenBtn =
-mount.querySelector(
+host.querySelector(
 "#algo-session-log-server-regen"
 );
 
