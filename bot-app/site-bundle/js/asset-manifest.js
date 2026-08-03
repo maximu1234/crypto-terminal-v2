@@ -747,7 +747,7 @@ Object.freeze({
 "script-page.css":
 20,
 "algo-trading.css":
-99,
+98,
 "algo-trading-book-panel.css":
 5,
 "algo-trading-diary-modal.css":
