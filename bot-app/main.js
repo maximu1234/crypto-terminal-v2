@@ -1040,7 +1040,7 @@ minHeight:
 show:
 true,
 title:
-"Multichart",
+"Multichart Algo Bot",
 backgroundColor:
 "#131722",
 webPreferences:{
@@ -1383,7 +1383,7 @@ const template =
 [
 {
 label:
-"Multichart",
+"Multichart Algo Bot",
 submenu:[
 { role:
 "reload"
