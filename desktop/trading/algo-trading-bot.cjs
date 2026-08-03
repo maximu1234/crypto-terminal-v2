@@ -1063,6 +1063,15 @@ runningStrategyId ||
 )
 );
 
+if(
+!(
+delay >
+0
+)
+){
+return;
+}
+
 refreshTimer =
 setTimeout(
 ()=>{

@@ -93,6 +93,14 @@ minutes
 60 *
 1000;
 
+/* 0 ч 0 мин = Phase D выкл. Иначе минимум 5 минут. */
+if(
+ms <=
+0
+){
+return 0;
+}
+
 return Math.max(
 ms,
 5 *

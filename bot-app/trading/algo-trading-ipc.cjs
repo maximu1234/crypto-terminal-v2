@@ -1385,6 +1385,174 @@ err
 }
 );
 
+handleTrustedDesktopUi(
+ipcMain,
+"desktop:algoTradingSessionLogRemotePushWatchlists",
+async (
+_event,
+payload
+)=>{
+
+try{
+const {
+pushRemoteWatchlists
+} =
+require(
+"./algo-bot-session-log-remote-client.cjs"
+);
+
+return await pushRemoteWatchlists(
+payload ||
+{}
+);
+}catch(
+err
+){
+log.warn(
+"algoTradingSessionLogRemotePushWatchlists:",
+err?.message ||
+err
+);
+return {
+ok:
+false,
+message:
+err?.message ||
+String(
+err
+)
+};
+}
+
+}
+);
+
+handleTrustedDesktopUi(
+ipcMain,
+"desktop:algoTradingSessionLogRemoteBotStatus",
+async (
+_event,
+payload
+)=>{
+
+try{
+const {
+fetchRemoteBotLanStatus
+} =
+require(
+"./algo-bot-session-log-remote-client.cjs"
+);
+
+return await fetchRemoteBotLanStatus(
+payload ||
+{}
+);
+}catch(
+err
+){
+log.warn(
+"algoTradingSessionLogRemoteBotStatus:",
+err?.message ||
+err
+);
+return {
+ok:
+false,
+message:
+err?.message ||
+String(
+err
+)
+};
+}
+
+}
+);
+
+handleTrustedDesktopUi(
+ipcMain,
+"desktop:algoTradingSessionLogRemoteBotCommand",
+async (
+_event,
+payload
+)=>{
+
+try{
+const {
+sendRemoteBotLanCommand
+} =
+require(
+"./algo-bot-session-log-remote-client.cjs"
+);
+
+return await sendRemoteBotLanCommand(
+payload ||
+{}
+);
+}catch(
+err
+){
+log.warn(
+"algoTradingSessionLogRemoteBotCommand:",
+err?.message ||
+err
+);
+return {
+ok:
+false,
+message:
+err?.message ||
+String(
+err
+)
+};
+}
+
+}
+);
+
+handleTrustedDesktopUi(
+ipcMain,
+"desktop:algoTradingSessionLogRemoteAuthPush",
+async (
+_event,
+payload
+)=>{
+
+try{
+const {
+pushRemoteAuthSession
+} =
+require(
+"./algo-bot-session-log-remote-client.cjs"
+);
+
+return await pushRemoteAuthSession(
+payload ||
+{}
+);
+}catch(
+err
+){
+log.warn(
+"algoTradingSessionLogRemoteAuthPush:",
+err?.message ||
+err
+);
+return {
+ok:
+false,
+message:
+err?.message ||
+String(
+err
+)
+};
+}
+
+}
+);
+
 }
 
 module.exports =

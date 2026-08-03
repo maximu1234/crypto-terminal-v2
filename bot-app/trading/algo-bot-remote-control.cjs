@@ -1273,11 +1273,47 @@ buildStatusPayload()
 
 }
 
+/**
+ * LAN / HTTP status (session-log server). Same fields Multichart expects.
+ */
+function getLanBotStatus(){
+
+const payload =
+buildStatusPayload();
+
+return {
+ok:
+true,
+online:
+true,
+running:
+!!payload.running,
+host:
+payload.host ||
+null,
+app:
+payload.app ||
+null,
+instanceId:
+payload.instanceId ||
+null,
+lastSeenAt:
+payload.at ||
+null,
+via:
+"lan"
+};
+
+}
+
 module.exports =
 {
 startRemoteControl,
 stopRemoteControl,
 notifyAuthSessionChanged,
 getRemoteControlStatus,
-sendStatus
+sendStatus,
+handleCommand,
+getLanBotStatus,
+buildStatusPayload
 };

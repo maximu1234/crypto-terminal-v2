@@ -785,7 +785,7 @@ if(
 isAlgoBotShell()
 ){
 void import(
-"./algo-trading/bot-session-log-server-ui.js?v=3"
+"./algo-trading/bot-session-log-server-ui.js?v=7"
 ).then(
 mod=>{
 mod.mountSessionLogServerSettings(

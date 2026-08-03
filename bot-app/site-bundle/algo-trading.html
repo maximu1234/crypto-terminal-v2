@@ -19,7 +19,7 @@
 <link rel="stylesheet" href="/css/terminal.css?v=169">
 <link rel="stylesheet" href="/css/terminal-layout.css?v=97">
 <link rel="stylesheet" href="/css/chart-indicators.css?v=23">
-<link rel="stylesheet" href="/css/algo-trading.css?v=98">
+<link rel="stylesheet" href="/css/algo-trading.css?v=106">
 <link rel="stylesheet" href="/css/algo-trading-book-panel.css?v=5">
 <link rel="stylesheet" href="/css/algo-trading-chart-overlay.css?v=2">
 
@@ -234,6 +234,7 @@ aria-pressed="false"
 </label>
 </div>
 </div>
+<p class="algo-bot-hint">0 ч 0 мин = автообновление списка выкл (Phase D).</p>
 <div class="algo-bot-field algo-bot-field--row">
 <label class="algo-bot-label" for="algo-bot-st1-winrate">По критериям</label>
 <input type="number" id="algo-bot-st1-winrate" class="algo-bot-input algo-bot-input--sm" min="10" max="100" step="1" value="70" inputmode="numeric" />
@@ -279,6 +280,7 @@ aria-pressed="false"
 <div class="algo-bot-field algo-bot-field--row"><label class="algo-bot-label" for="algo-bot-st2-share1" title="Доля позиции, закрываемая на ТП1 (%). Сумма трёх долей = 100">Доли ТП (%)</label><input type="number" id="algo-bot-st2-share1" class="algo-bot-input algo-bot-input--sm" min="1" max="98" step="1" value="25" /><input type="number" id="algo-bot-st2-share2" class="algo-bot-input algo-bot-input--sm" min="1" max="98" step="1" value="25" title="Доля позиции на ТП2 (%)" /><input type="number" id="algo-bot-st2-share3" class="algo-bot-input algo-bot-input--sm" min="1" max="98" step="1" value="50" title="Доля позиции на ТП3 (%) — закрывает остаток" /></div>
 <div class="algo-bot-field"><span class="algo-bot-label">Торговля</span><div class="algo-bot-side" role="group" aria-label="Стороны торговли"><label class="algo-bot-check"><input type="checkbox" id="algo-bot-st2-side-long" checked /><span>Лонг</span></label><label class="algo-bot-check"><input type="checkbox" id="algo-bot-st2-side-short" /><span>Шорт</span></label><label class="algo-bot-check"><input type="checkbox" id="algo-bot-st2-side-both" /><span>Лонг и Шорт</span></label></div><p class="algo-bot-hint" id="algo-bot-st2-side-hint">Список: Алго Лонг</p><label class="algo-bot-check"><input type="checkbox" id="algo-bot-st2-use-favorites" /><span>Список Избранные</span></label></div>
 <div class="algo-bot-field"><span class="algo-bot-label">Обновлять список тикеров каждые</span><div class="algo-bot-field--row"><input type="number" id="algo-bot-st2-refresh-h" class="algo-bot-input algo-bot-input--sm" min="0" max="168" step="1" value="24" /><span class="algo-bot-unit">ч</span><input type="number" id="algo-bot-st2-refresh-m" class="algo-bot-input algo-bot-input--sm" min="0" max="59" step="1" value="0" /><span class="algo-bot-unit">мин</span></div></div>
+<p class="algo-bot-hint">0 ч 0 мин = автообновление списка выкл (Phase D).</p>
 <div class="algo-bot-field algo-bot-field--row"><label class="algo-bot-label" for="algo-bot-st2-winrate">По критериям</label><input type="number" id="algo-bot-st2-winrate" class="algo-bot-input algo-bot-input--sm" min="10" max="100" step="1" value="70" /><span class="algo-bot-unit">% успеха</span><label class="algo-bot-check" title="Режим подсчёта для обновления списка"><input type="checkbox" id="algo-bot-st2-refresh-real" /><span id="algo-bot-st2-refresh-mode-label">Реальный подсчет</span></label></div>
 </div>
 </div>
@@ -315,6 +317,7 @@ aria-pressed="false"
 <div class="algo-bot-field algo-bot-field--row"><label class="algo-bot-label" for="algo-bot-st3-share1" title="Доля позиции, закрываемая на ТП1 (%). Сумма трёх долей = 100">Доли ТП (%)</label><input type="number" id="algo-bot-st3-share1" class="algo-bot-input algo-bot-input--sm" min="1" max="98" step="1" value="25" /><input type="number" id="algo-bot-st3-share2" class="algo-bot-input algo-bot-input--sm" min="1" max="98" step="1" value="25" title="Доля позиции на ТП2 (%)" /><input type="number" id="algo-bot-st3-share3" class="algo-bot-input algo-bot-input--sm" min="1" max="98" step="1" value="50" title="Доля позиции на ТП3 (%) — закрывает остаток" /></div>
 <div class="algo-bot-field"><span class="algo-bot-label">Торговля</span><div class="algo-bot-side" role="group" aria-label="Стороны торговли"><label class="algo-bot-check"><input type="checkbox" id="algo-bot-st3-side-long" checked /><span>Лонг</span></label><label class="algo-bot-check"><input type="checkbox" id="algo-bot-st3-side-short" /><span>Шорт</span></label><label class="algo-bot-check"><input type="checkbox" id="algo-bot-st3-side-both" /><span>Лонг и Шорт</span></label></div><p class="algo-bot-hint" id="algo-bot-st3-side-hint">Список: Алго Лонг</p><label class="algo-bot-check"><input type="checkbox" id="algo-bot-st3-use-favorites" /><span>Список Избранные</span></label></div>
 <div class="algo-bot-field"><span class="algo-bot-label">Обновлять список тикеров каждые</span><div class="algo-bot-field--row"><input type="number" id="algo-bot-st3-refresh-h" class="algo-bot-input algo-bot-input--sm" min="0" max="168" step="1" value="24" /><span class="algo-bot-unit">ч</span><input type="number" id="algo-bot-st3-refresh-m" class="algo-bot-input algo-bot-input--sm" min="0" max="59" step="1" value="0" /><span class="algo-bot-unit">мин</span></div></div>
+<p class="algo-bot-hint">0 ч 0 мин = автообновление списка выкл (Phase D).</p>
 <div class="algo-bot-field algo-bot-field--row"><label class="algo-bot-label" for="algo-bot-st3-winrate">По критериям</label><input type="number" id="algo-bot-st3-winrate" class="algo-bot-input algo-bot-input--sm" min="10" max="100" step="1" value="70" /><span class="algo-bot-unit">% успеха</span><label class="algo-bot-check" title="Режим подсчёта для обновления списка"><input type="checkbox" id="algo-bot-st3-refresh-real" /><span id="algo-bot-st3-refresh-mode-label">Реальный подсчет</span></label></div>
 </div>
 </div>
@@ -432,7 +435,6 @@ aria-label="История сигналов"
 <div class="algo-bot-status-remote-actions">
 <button type="button" class="algo-bot-remote-btn" id="algo-bot-remote-start">Запустить</button>
 <button type="button" class="algo-bot-remote-btn" id="algo-bot-remote-stop">Остановить</button>
-<button type="button" class="algo-bot-remote-btn" id="algo-bot-remote-logs">Посмотреть логи удалённого бота</button>
 </div>
 <p class="algo-bot-status-remote-message hidden" id="algo-bot-remote-message"></p>
 </div>
@@ -450,6 +452,16 @@ title="Снять облачную метку, если бот упал без �
 </button>
 </div>
 </div>
+
+<button
+type="button"
+class="algo-bot-log-btn"
+id="algo-bot-remote-logs"
+title="Прямой канал с Algo Bot: старт/стоп, списки, сессия, логи"
+hidden
+>
+LAN
+</button>
 
 </div>
 

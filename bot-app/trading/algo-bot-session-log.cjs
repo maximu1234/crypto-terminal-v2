@@ -15,6 +15,14 @@ require(
 const SESSIONS_SUBDIR =
 "algo-bot-sessions";
 
+/** Keep session .log files for 3 days (by mtime). */
+const SESSION_LOG_RETENTION_MS =
+3 *
+24 *
+60 *
+60 *
+1000;
+
 /** @type {string | null} */
 let logsDirOverride =
 null;
@@ -169,6 +177,122 @@ return dir;
 
 }
 
+/**
+ * Delete session .log files older than SESSION_LOG_RETENTION_MS.
+ * Never removes the active session file.
+ * @returns {{ ok: boolean, removed: number, kept: number }}
+ */
+function pruneOldSessionFiles(){
+
+try{
+const dir =
+ensureSessionsDir();
+const cutoff =
+Date.now() -
+SESSION_LOG_RETENTION_MS;
+let removed =
+0;
+let kept =
+0;
+
+for(
+const name of fs.readdirSync(
+dir
+)
+){
+
+if(
+!isSafeSessionFileName(
+name
+)
+){
+continue;
+}
+
+const full =
+path.join(
+dir,
+name
+);
+
+if(
+activeFilePath &&
+path.resolve(
+full
+) ===
+path.resolve(
+activeFilePath
+)
+){
+kept +=
+1;
+continue;
+}
+
+let st;
+
+try{
+st =
+fs.statSync(
+full
+);
+}catch{
+continue;
+}
+
+if(
+!st.isFile()
+){
+continue;
+}
+
+const ageRef =
+Number(
+st.mtimeMs
+) ||
+0;
+
+if(
+ageRef > 0 &&
+ageRef <
+cutoff
+){
+try{
+fs.unlinkSync(
+full
+);
+removed +=
+1;
+}catch{
+kept +=
+1;
+}
+}else{
+kept +=
+1;
+}
+
+}
+
+return {
+ok:
+true,
+removed,
+kept
+};
+}catch{
+return {
+ok:
+false,
+removed:
+0,
+kept:
+0
+};
+}
+
+}
+
 function safeAppend(
 line
 ){
@@ -243,6 +367,7 @@ const fileName =
 `${stamp}_s${sessionId}_${strategyId}.log`;
 
 try{
+pruneOldSessionFiles();
 const dir =
 ensureSessionsDir();
 const filePath =
@@ -525,6 +650,7 @@ base
 function listSessionFiles(){
 
 try{
+pruneOldSessionFiles();
 const dir =
 ensureSessionsDir();
 const files =
@@ -659,6 +785,7 @@ err
 module.exports =
 {
 SESSIONS_SUBDIR,
+SESSION_LOG_RETENTION_MS,
 beginSession,
 endSession,
 appendSignal,
@@ -668,6 +795,7 @@ getSessionsDir,
 listSessionFiles,
 readSessionFile,
 isSafeSessionFileName,
+pruneOldSessionFiles,
 setSessionsDirForTests,
 formatFileStamp,
 formatLineTime

@@ -38,6 +38,8 @@ const PREFS_FILE =
 "algo-bot-session-log-server.json";
 const DEFAULT_PORT =
 17865;
+const AUTH_BODY_MAX =
+65536;
 
 /** @type {import('http').Server | null} */
 let server =
@@ -192,6 +194,19 @@ return crypto.randomBytes(
 
 }
 
+function corsHeaders(){
+
+return {
+"Access-Control-Allow-Origin":
+"*",
+"Access-Control-Allow-Headers":
+"Authorization, Content-Type",
+"Access-Control-Allow-Methods":
+"GET, POST, OPTIONS"
+};
+
+}
+
 function sendJson(
 res,
 status,
@@ -212,12 +227,7 @@ status,
 Buffer.byteLength(
 text
 ),
-"Access-Control-Allow-Origin":
-"*",
-"Access-Control-Allow-Headers":
-"Authorization, Content-Type",
-"Access-Control-Allow-Methods":
-"GET, OPTIONS"
+...corsHeaders()
 }
 );
 res.end(
@@ -249,12 +259,7 @@ contentType,
 Buffer.byteLength(
 body
 ),
-"Access-Control-Allow-Origin":
-"*",
-"Access-Control-Allow-Headers":
-"Authorization, Content-Type",
-"Access-Control-Allow-Methods":
-"GET, OPTIONS"
+...corsHeaders()
 }
 );
 res.end(
@@ -293,10 +298,611 @@ url.searchParams.get(
 
 }
 
+/**
+ * @param {import('http').IncomingMessage} req
+ * @param {number} [limit]
+ * @returns {Promise<object>}
+ */
+function readJsonBody(
+req,
+limit =
+2_000_000
+){
+
+return new Promise(
+(
+resolve,
+reject
+)=>{
+const chunks =
+[];
+let size =
+0;
+
+req.on(
+"data",
+(
+chunk
+)=>{
+size +=
+chunk.length;
+
+if(
+size >
+limit
+){
+reject(
+new Error(
+"Body too large"
+)
+);
+req.destroy();
+return;
+}
+
+chunks.push(
+chunk
+);
+}
+);
+
+req.on(
+"end",
+()=>{
+try{
+const raw =
+Buffer.concat(
+chunks
+).toString(
+"utf8"
+).trim();
+
+resolve(
+raw
+? JSON.parse(
+raw
+)
+: {}
+);
+}catch(
+err
+){
+reject(
+err
+);
+}
+}
+);
+
+req.on(
+"error",
+reject
+);
+}
+);
+
+}
+
+function summarizeWatchlistRoot(
+root
+){
+
+let long =
+0;
+let short =
+0;
+let both =
+0;
+let favorites =
+0;
+
+for(
+const flags of Object.values(
+root &&
+typeof root ===
+"object"
+? root
+: {}
+)
+){
+
+if(
+!flags ||
+typeof flags !==
+"object"
+){
+continue;
+}
+
+long +=
+Array.isArray(
+flags.algoLong5m
+)
+? flags.algoLong5m.length
+: 0;
+short +=
+Array.isArray(
+flags.algoShort5m
+)
+? flags.algoShort5m.length
+: 0;
+both +=
+Array.isArray(
+flags.algoBoth5m
+)
+? flags.algoBoth5m.length
+: 0;
+favorites +=
+Array.isArray(
+flags.algoFavorites
+)
+? flags.algoFavorites.length
+: 0;
+
+}
+
+return {
+long,
+short,
+both,
+favorites
+};
+
+}
+
+/**
+ * Apply Multichart-pushed algo lists into bot ticker flags.
+ * @param {object} body
+ */
+function applyRemoteWatchlists(
+body =
+{}
+){
+
+const algoBot =
+require(
+"./algo-trading-bot.cjs"
+);
+
+let result;
+
+if(
+body.root &&
+typeof body.root ===
+"object"
+){
+result =
+algoBot.syncTickerFlags(
+{
+root:
+body.root
+}
+);
+}else if(
+body.flags &&
+typeof body.flags ===
+"object"
+){
+result =
+algoBot.syncTickerFlags(
+{
+exchangeId:
+body.exchangeId ||
+"bybit",
+flags:
+body.flags
+}
+);
+}else{
+return {
+ok:
+false,
+message:
+"Expected JSON body with root or flags"
+};
+}
+
+if(
+result?.ok ===
+false
+){
+return result;
+}
+
+const root =
+algoBot.getTickerFlagsRoot?.()?.root ||
+{};
+const counts =
+summarizeWatchlistRoot(
+root
+);
+
+try{
+sessionLog.appendNote(
+`Remote watchlists applied: long=${counts.long} short=${counts.short} both=${counts.both} favorites=${counts.favorites}`
+);
+}catch{
+/* ignore — session file may be idle */
+}
+
+return {
+ok:
+true,
+counts,
+message:
+`Списки применены: Long ${counts.long}, Short ${counts.short}, Both ${counts.both}, Избр. ${counts.favorites}`
+};
+
+}
+
+function isAlgoBotHostApp(){
+
+try{
+return /algo\s*bot/i.test(
+String(
+app.getName?.() ||
+""
+)
+);
+}catch{
+return false;
+}
+
+}
+
+function tryRequireRemoteControl(){
+
+try{
+return require(
+"./algo-bot-remote-control.cjs"
+);
+}catch{
+return null;
+}
+
+}
+
+function buildFallbackLanStatus(){
+
+const algoBot =
+require(
+"./algo-trading-bot.cjs"
+);
+const st =
+algoBot.getBotStatus?.() ||
+{};
+
+return {
+ok:
+true,
+online:
+true,
+running:
+!!st.running,
+host:
+require(
+"os"
+).hostname(),
+app:
+app.getName?.() ||
+"Multichart",
+instanceId:
+null,
+lastSeenAt:
+new Date().toISOString(),
+via:
+"lan"
+};
+
+}
+
+async function handleLanBotCommand(
+action
+){
+
+const remote =
+tryRequireRemoteControl();
+
+if(
+remote?.handleCommand
+){
+return remote.handleCommand(
+action
+);
+}
+
+const algoBot =
+require(
+"./algo-trading-bot.cjs"
+);
+const act =
+String(
+action ||
+""
+).trim().toLowerCase();
+
+if(
+act ===
+"start"
+){
+return algoBot.startBot(
+{
+strategyId:
+"st1"
+}
+);
+}
+
+if(
+act ===
+"stop"
+){
+const st =
+algoBot.getBotStatus?.() ||
+{};
+
+return algoBot.stopBot(
+{
+strategyId:
+st.strategyId ||
+"st1"
+}
+);
+}
+
+return {
+ok:
+false,
+error:
+"bad_action",
+message:
+"action must be start or stop"
+};
+
+}
+
+function getLanBotStatusPayload(){
+
+const remote =
+tryRequireRemoteControl();
+const base =
+remote?.getLanBotStatus
+? remote.getLanBotStatus()
+: buildFallbackLanStatus();
+
+try{
+const algoBot =
+require(
+"./algo-trading-bot.cjs"
+);
+const st =
+algoBot.getBotStatus?.() ||
+{};
+const prefs =
+st.strategyPrefs &&
+typeof st.strategyPrefs ===
+"object"
+? st.strategyPrefs
+: null;
+
+return {
+...base,
+running:
+base.running ===
+true ||
+!!st.running,
+strategyId:
+st.strategyId ||
+null,
+tradingMode:
+st.tradingMode ||
+null,
+watchlistCount:
+Number.isFinite(
+Number(
+st.watchlistCount
+)
+)
+? Number(
+st.watchlistCount
+)
+: null,
+strategyPrefs:
+prefs
+};
+}catch{
+return base;
+}
+
+}
+
+/**
+ * Apply Multichart auth transfer string on Algo Bot only.
+ * @param {object} body
+ */
+async function applyRemoteAuthSession(
+body =
+{}
+){
+
+if(
+!isAlgoBotHostApp()
+){
+return {
+ok:
+false,
+message:
+"Приём сессии только на Algo Bot"
+};
+}
+
+const transfer =
+String(
+body.transfer ||
+body.session ||
+""
+).trim();
+
+if(
+!transfer
+){
+return {
+ok:
+false,
+message:
+"Нужен transfer (mcauth1…)"
+};
+}
+
+let decoded;
+
+try{
+decoded =
+require(
+"./algo-bot-auth-transfer.cjs"
+).decodeAuthSessionTransfer(
+transfer
+);
+}catch(
+err
+){
+return {
+ok:
+false,
+message:
+err?.message ||
+"Некорректная сессия"
+};
+}
+
+try{
+const {
+saveAuthSession
+} =
+require(
+"../auth-session.cjs"
+);
+
+saveAuthSession(
+decoded.raw
+);
+}catch(
+err
+){
+return {
+ok:
+false,
+message:
+err?.message ||
+"Не удалось сохранить сессию"
+};
+}
+
+try{
+const remote =
+tryRequireRemoteControl();
+
+remote?.notifyAuthSessionChanged?.();
+}catch{
+/* ignore */
+}
+
+let uiResult =
+null;
+const {
+BrowserWindow
+} =
+require(
+"electron"
+);
+const win =
+BrowserWindow.getAllWindows().find(
+(
+w
+)=>
+w &&
+!w.isDestroyed()
+) ||
+null;
+
+if(
+win?.webContents
+){
+try{
+uiResult =
+await win.webContents.executeJavaScript(
+`((transfer) => {
+const fn = window.__importAuthSessionTransferString;
+if (typeof fn !== "function") {
+return Promise.resolve({ ok: false, message: "UI ещё не готов — перезапустите окно бота" });
+}
+return Promise.resolve(fn(transfer));
+})(${JSON.stringify(
+transfer
+)})`,
+true
+);
+}catch(
+err
+){
+uiResult =
+{
+ok:
+false,
+message:
+err?.message ||
+String(
+err
+)
+};
+}
+}
+
+const email =
+String(
+decoded.session?.user?.email ||
+uiResult?.email ||
+""
+).trim();
+
+if(
+uiResult &&
+uiResult.ok ===
+false &&
+uiResult.message
+){
+return {
+ok:
+true,
+email:
+email ||
+undefined,
+message:
+`Сессия сохранена в файл; UI: ${uiResult.message}`
+};
+}
+
+return {
+ok:
+true,
+email:
+email ||
+undefined,
+message:
+email
+? `Сессия применена (${email})`
+: "Сессия применена"
+};
+
+}
+
 function handleRequest(
 req,
 res
 ){
+
+void (
+async ()=>{
 
 try{
 if(
@@ -305,33 +911,9 @@ req.method ===
 ){
 res.writeHead(
 204,
-{
-"Access-Control-Allow-Origin":
-"*",
-"Access-Control-Allow-Headers":
-"Authorization, Content-Type",
-"Access-Control-Allow-Methods":
-"GET, OPTIONS"
-}
+corsHeaders()
 );
 res.end();
-return;
-}
-
-if(
-req.method !==
-"GET"
-){
-sendJson(
-res,
-405,
-{
-ok:
-false,
-message:
-"GET only"
-}
-);
 return;
 }
 
@@ -373,9 +955,224 @@ url.pathname.replace(
 "/";
 
 if(
+req.method ===
+"POST" &&
+pathname ===
+"/watchlists"
+){
+let body;
+
+try{
+body =
+await readJsonBody(
+req
+);
+}catch(
+err
+){
+sendJson(
+res,
+400,
+{
+ok:
+false,
+message:
+err?.message ||
+"Invalid JSON body"
+}
+);
+return;
+}
+
+const applied =
+applyRemoteWatchlists(
+body
+);
+
+sendJson(
+res,
+applied.ok
+? 200
+: 400,
+applied
+);
+return;
+}
+
+if(
+req.method ===
+"POST" &&
+pathname ===
+"/bot/command"
+){
+let body;
+
+try{
+body =
+await readJsonBody(
+req,
+65536
+);
+}catch(
+err
+){
+sendJson(
+res,
+400,
+{
+ok:
+false,
+message:
+err?.message ||
+"Invalid JSON body"
+}
+);
+return;
+}
+
+const action =
+String(
+body.action ||
+""
+).trim().toLowerCase();
+
+if(
+action !==
+"start" &&
+action !==
+"stop"
+){
+sendJson(
+res,
+400,
+{
+ok:
+false,
+error:
+"bad_action",
+message:
+"action must be start or stop"
+}
+);
+return;
+}
+
+const result =
+await handleLanBotCommand(
+action
+);
+const ok =
+!!(
+result?.ok ||
+result?.running ||
+result?.alreadyRunning ||
+(
+action ===
+"stop" &&
+result?.ok !==
+false &&
+!result?.running
+)
+);
+
+sendJson(
+res,
+ok
+? 200
+: (
+result?.code ===
+"locked_elsewhere"
+? 409
+: 400
+),
+{
+ok,
+delivered:
+true,
+via:
+"lan",
+...(
+result &&
+typeof result ===
+"object"
+? result
+: {}
+)
+}
+);
+return;
+}
+
+if(
+req.method ===
+"POST" &&
+pathname ===
+"/auth/session"
+){
+let body;
+
+try{
+body =
+await readJsonBody(
+req,
+AUTH_BODY_MAX
+);
+}catch(
+err
+){
+sendJson(
+res,
+400,
+{
+ok:
+false,
+message:
+err?.message ||
+"Invalid JSON body"
+}
+);
+return;
+}
+
+const applied =
+await applyRemoteAuthSession(
+body
+);
+
+sendJson(
+res,
+applied.ok
+? 200
+: 400,
+applied
+);
+return;
+}
+
+if(
+req.method !==
+"GET"
+){
+sendJson(
+res,
+405,
+{
+ok:
+false,
+message:
+"GET /health|/sessions|/bot/status or POST /watchlists|/bot/command|/auth/session"
+}
+);
+return;
+}
+
+if(
 pathname ===
 "/health"
 ){
+const st =
+getLanBotStatusPayload();
+
 sendJson(
 res,
 200,
@@ -385,8 +1182,25 @@ true,
 service:
 "algo-bot-session-logs",
 dir:
-sessionLog.getSessionsDir()
+sessionLog.getSessionsDir(),
+running:
+!!st.running,
+host:
+st.host ||
+null
 }
+);
+return;
+}
+
+if(
+pathname ===
+"/bot/status"
+){
+sendJson(
+res,
+200,
+getLanBotStatusPayload()
 );
 return;
 }
@@ -488,6 +1302,9 @@ err
 }
 );
 }
+
+}
+)();
 
 }
 

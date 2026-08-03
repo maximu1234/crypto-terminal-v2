@@ -342,11 +342,11 @@ Object.freeze({
 "algo-trading/bot-strategy-prefs.js":
 17,
 "algo-trading/bot-strategy-ui.js":
-50,
+51,
 "algo-trading/bot-session-log-server-ui.js":
-3,
+7,
 "algo-trading/bot-session-logs-viewer.js":
-2,
+6,
 "algo-trading/bot-cloud-lock.js":
 6,
 "algo-trading/bot-remote-client.js":
@@ -747,7 +747,7 @@ Object.freeze({
 "script-page.css":
 20,
 "algo-trading.css":
-98,
+102,
 "algo-trading-book-panel.css":
 5,
 "algo-trading-diary-modal.css":

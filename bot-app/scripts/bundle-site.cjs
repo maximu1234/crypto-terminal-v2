@@ -4,7 +4,7 @@
  *
  * Intentionally does NOT copy from Multichart `js/` / `css/` / HTML.
  * Engine fixes that must stay in sync: copy manually from desktop/trading/:
- *   algo-bot-store.cjs, algo-bot-order-executor.cjs, algo-bot-session-log.cjs, algo-bot-session-log-server.cjs, algo-bot-session-log-remote-client.cjs, algo-trading-bot.cjs,
+ *   algo-bot-store.cjs, algo-bot-order-executor.cjs, algo-bot-session-log.cjs, algo-bot-session-log-server.cjs, algo-bot-session-log-remote-client.cjs, algo-bot-auth-transfer.cjs, algo-trading-bot.cjs,
  *   algo-bot-pattern-engine.cjs (and related algo-*-rest/ws as needed).
  * Terminal trading IPC is disabled in bot-app/main.js + preload stubs.
  */

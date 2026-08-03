@@ -31,10 +31,11 @@ import {
 fetchRemoteBotStatus,
 sendRemoteBotCommand,
 isMultichartRemoteControlHost
-} from "./bot-remote-client.js?v=1";
+} from "./bot-remote-client.js?v=5";
 import {
-mountRemoteSessionLogsEntry
-} from "./bot-session-logs-viewer.js?v=2";
+mountRemoteSessionLogsEntry,
+mountRemoteWatchlistsPushEntry
+} from "./bot-session-logs-viewer.js?v=10";
 import {
 rebalanceTpShares
 } from "./pattern-trade-stats-partial.js?v=17";
@@ -42,7 +43,7 @@ rebalanceTpShares
 const STATUS_POLL_MS =
 2500;
 
-/** Multichart → alert-worker remote status (Auth egress); keep rare. */
+/** Multichart → alert-worker remote status (облако; LAN-канал — в окне LAN). */
 const REMOTE_STATUS_POLL_MS =
 30000;
 
@@ -4368,6 +4369,18 @@ closeAllDrops();
 };
 
 mountRemoteSessionLogsEntry(
+{
+closeStatusDropdown:()=>{
+setDropOpen(
+statusDrop,
+statusToggle,
+false
+);
+}
+}
+);
+
+mountRemoteWatchlistsPushEntry(
 {
 closeStatusDropdown:()=>{
 setDropOpen(

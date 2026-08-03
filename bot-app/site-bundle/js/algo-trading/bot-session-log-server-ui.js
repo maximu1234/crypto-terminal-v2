@@ -1,10 +1,22 @@
 /**
  * Bot lite: session-log HTTP server prefs under header gear.
- * Direct LAN access for Multichart — no Supabase / alert-worker.
+ * Direct LAN access for Multichart — logs, watchlists, auth, start/stop.
  */
 import {
 isAlgoBotLiteShell
 } from "../page-routes.js?v=5";
+import {
+importAuthSessionTransferString
+} from "../cloud-sync.js?v=55";
+
+if(
+typeof window !==
+"undefined" &&
+isAlgoBotLiteShell()
+){
+window.__importAuthSessionTransferString =
+importAuthSessionTransferString;
+}
 
 function desktopApi(){
 
@@ -184,7 +196,7 @@ false;
 host.innerHTML =
 `
 <p class="header-settings-section-title">Логи → Терминал</p>
-<p class="algo-session-log-server-lead">Прямой доступ к файлам сессий (без Supabase и worker). В Multichart: Статус → «Посмотреть логи удалённого бота».</p>
+<p class="algo-session-log-server-lead">Прямой канал для окна <strong>LAN</strong> в Multichart: Старт/Стоп, списки, сессия, логи (без worker). IP и токен — в Multichart → LAN.</p>
 <label class="algo-session-log-server-check">
 <input type="checkbox" id="algo-session-log-server-enabled" />
 <span>Включить HTTP-доступ к логам</span>

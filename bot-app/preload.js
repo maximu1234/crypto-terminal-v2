@@ -495,6 +495,38 @@ ipcRenderer.invoke(
 payload ||
 {}
 ),
+sessionLogRemotePushWatchlists:(
+payload
+)=>
+ipcRenderer.invoke(
+"desktop:algoTradingSessionLogRemotePushWatchlists",
+payload ||
+{}
+),
+sessionLogRemoteBotStatus:(
+payload
+)=>
+ipcRenderer.invoke(
+"desktop:algoTradingSessionLogRemoteBotStatus",
+payload ||
+{}
+),
+sessionLogRemoteBotCommand:(
+payload
+)=>
+ipcRenderer.invoke(
+"desktop:algoTradingSessionLogRemoteBotCommand",
+payload ||
+{}
+),
+sessionLogRemoteAuthPush:(
+payload
+)=>
+ipcRenderer.invoke(
+"desktop:algoTradingSessionLogRemoteAuthPush",
+payload ||
+{}
+),
 onBotAlertRequest:(
 callback
 )=>{

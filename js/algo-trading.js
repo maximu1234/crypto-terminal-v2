@@ -49,11 +49,11 @@ mountAlgoRuntimeUi
 
 import {
 mountAlgoBotStrategyUi
-} from "./algo-trading/bot-strategy-ui.js?v=50";
+} from "./algo-trading/bot-strategy-ui.js?v=55";
 
 import {
 mountSessionLogServerSettings
-} from "./algo-trading/bot-session-log-server-ui.js?v=3";
+} from "./algo-trading/bot-session-log-server-ui.js?v=7";
 
 import {
 syncBotStrategiesToMain
@@ -864,9 +864,63 @@ tf
 
 const ALGO_STATS_PANEL_CSS_MAX_H =
 420;
+const ALGO_STATS_PANEL_H_KEY =
+"algo_stats_panel_height_v1";
+
+function readAlgoStatsPanelHeight(){
+
+try{
+const n =
+Number(
+localStorage.getItem(
+ALGO_STATS_PANEL_H_KEY
+)
+);
+
+if(
+Number.isFinite(
+n
+) &&
+n >=
+0
+){
+return Math.round(
+n
+);
+}
+}catch{
+/* ignore */
+}
+
+return null;
+
+}
+
+function writeAlgoStatsPanelHeight(
+h
+){
+
+try{
+localStorage.setItem(
+ALGO_STATS_PANEL_H_KEY,
+String(
+Math.max(
+0,
+Math.round(
+h
+)
+)
+)
+);
+}catch{
+/* ignore */
+}
+
+}
 
 /**
  * Панель «Данные»: текущая высота = максимум; вниз можно сжать до 0.
+ * Высота запоминается в localStorage между заходами на страницу.
  * @param {() => void} [onLayout]
  * @returns {() => void}
  */
@@ -988,8 +1042,17 @@ ALGO_STATS_PANEL_CSS_MAX_H
 )
 );
 
+const saved =
+readAlgoStatsPanelHeight();
+
 applyHeight(
-maxH
+saved ==
+null
+? maxH
+: Math.min(
+maxH,
+saved
+)
 );
 
 }
@@ -1035,6 +1098,9 @@ onPointerMove
 window.removeEventListener(
 "pointerup",
 onPointerUp
+);
+writeAlgoStatsPanelHeight(
+currentH
 );
 notifyLayout();
 
