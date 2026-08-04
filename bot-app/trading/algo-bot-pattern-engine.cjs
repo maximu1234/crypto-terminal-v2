@@ -1170,6 +1170,10 @@ timeoutBars:
 clampEntryTimeoutBars(
 engineConfig?.timeoutBars
 ),
+maxPt1Pt4Bars:
+clampMaxPt1Pt4Bars(
+engineConfig?.maxPt1Pt4Bars
+),
 /* TEMP_PULLBACK_BEFORE_ARM */
 pullbackBeforeArm:
 !!engineConfig?.pullbackBeforeArm,
@@ -1198,6 +1202,51 @@ n <
 1
 ){
 return 200;
+}
+
+return Math.min(
+10000,
+n
+);
+
+}
+
+function clampMaxPt1Pt4Bars(
+raw
+){
+
+if(
+raw ==
+null
+){
+return null;
+}
+
+if(
+typeof raw ===
+"string" &&
+!String(
+raw
+).trim()
+){
+return null;
+}
+
+const n =
+Math.round(
+Number(
+raw
+)
+);
+
+if(
+!Number.isFinite(
+n
+) ||
+n <
+1
+){
+return null;
 }
 
 return Math.min(
@@ -4453,6 +4502,10 @@ timeoutBars:
 clampEntryTimeoutBars(
 config?.timeoutBars
 ),
+maxPt1Pt4Bars:
+clampMaxPt1Pt4Bars(
+config?.maxPt1Pt4Bars
+),
 /* TEMP_PULLBACK_BEFORE_ARM */
 pullbackBeforeArm:
 !!config?.pullbackBeforeArm,
@@ -4761,6 +4814,18 @@ null
 engineConfig.timeoutBars =
 clampEntryTimeoutBars(
 patch.timeoutBars
+);
+}
+
+if(
+Object.prototype.hasOwnProperty.call(
+patch,
+"maxPt1Pt4Bars"
+)
+){
+engineConfig.maxPt1Pt4Bars =
+clampMaxPt1Pt4Bars(
+patch.maxPt1Pt4Bars
 );
 }
 

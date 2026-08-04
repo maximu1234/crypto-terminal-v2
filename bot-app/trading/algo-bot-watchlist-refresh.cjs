@@ -1418,6 +1418,7 @@ ms
  *   tf?: string,
  *   minWinRate?: number,
  *   timeoutBars?: number,
+ *   maxPt1Pt4Bars?: number,
  *   slPct?: number,
  *   tpRr?: number,
  *   refreshStatsMode?: "direct"|"real",
@@ -1480,6 +1481,14 @@ opts.timeoutBars ??
 strategy.timeoutBars ??
 st1.timeoutBars
 );
+const maxPt1Pt4Bars =
+opts.maxPt1Pt4Bars !==
+undefined
+? opts.maxPt1Pt4Bars
+: strategy.maxPt1Pt4Bars !==
+undefined
+? strategy.maxPt1Pt4Bars
+: st1.maxPt1Pt4Bars;
 /* TEMP_PULLBACK_BEFORE_ARM */
 const pullbackBeforeArm =
 opts.pullbackBeforeArm !=
@@ -1638,6 +1647,7 @@ candles,
 scene?.setups,
 {
 timeoutBars,
+maxPt1Pt4Bars,
 /* TEMP_PULLBACK_BEFORE_ARM */
 pullbackBeforeArm,
 pullbackBeforeArmPct

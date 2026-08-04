@@ -2,19 +2,16 @@
  * Глобальный скан всех тикеров: агрегаты по трём стратегиям.
  */
 import {
-loadMarketHistory,
-loadMarketSymbols,
-buildMarketLists,
-getActiveExchangeId
+loadMarketHistory
 } from "../market-api.js?v=5";
 
 import {
 analyzeAlgoPatterns
-} from "./pattern-analysis.js?v=23";
+} from "./pattern-analysis.js?v=25";
 
 import {
 normalizeAlgoStatsMode
-} from "./pattern-trade-stats.js?v=10";
+} from "./pattern-trade-stats.js?v=12";
 
 import {
 readAlgoPattern12Settings
@@ -26,7 +23,11 @@ pickStrategyStats,
 ALGO_TICKER_SCAN_HISTORY_REQUESTS,
 ALGO_TICKER_SCAN_CONCURRENCY,
 ALGO_TICKER_SCAN_DELAY_MS
-} from "./ticker-scanner.js?v=6";
+} from "./ticker-scanner.js?v=7";
+
+import {
+resolveAlgoScanSymbols
+} from "./scan-universe.js?v=2";
 
 /**
  * @typedef {{
@@ -42,7 +43,12 @@ ALGO_TICKER_SCAN_DELAY_MS
  *   shortNetUsd: number,
  *   netUsd: number,
  *   profitUsd: number,
- *   lossUsd: number
+ *   lossUsd: number,
+ *   open: number,
+ *   bes: number,
+ *   sumR: number,
+ *   wins: number,
+ *   losses: number
  * }} AlgoGlobalStrategyAgg
  */
 
@@ -77,6 +83,16 @@ netUsd:
 profitUsd:
 0,
 lossUsd:
+0,
+open:
+0,
+bes:
+0,
+sumR:
+0,
+wins:
+0,
+losses:
 0
 };
 
@@ -163,6 +179,31 @@ Number(
 stats.lossUsd
 ) ||
 0;
+acc.open +=
+Number(
+stats.open
+) ||
+0;
+acc.bes +=
+Number(
+stats.bes
+) ||
+0;
+acc.sumR +=
+Number(
+stats.sumR
+) ||
+0;
+acc.wins +=
+Number(
+stats.wins
+) ||
+0;
+acc.losses +=
+Number(
+stats.losses
+) ||
+0;
 
 }
 
@@ -183,6 +224,7 @@ ms
 /**
  * @param {object} opts
  * @param {string} [opts.tf]
+ * @param {"all"|"top100"} [opts.universe]
  * @param {object} opts.tradeOpts
  * @param {"direct"|"real"} [opts.statsMode]
  * @param {(done: number, total: number) => void} [opts.onProgress]
@@ -222,19 +264,16 @@ statsModeSt3:
 statsMode
 };
 
-const instruments =
-await loadMarketSymbols();
-const lists =
-buildMarketLists(
-instruments,
-getActiveExchangeId()
+const {
+universe,
+symbols
+} =
+await resolveAlgoScanSymbols(
+{
+universe:
+opts.universe
+}
 );
-const symbols =
-(
-lists.all ||
-lists.crypto ||
-[]
-).slice();
 
 /** @type {{ st1: AlgoGlobalStrategyAgg, st2: AlgoGlobalStrategyAgg, st3: AlgoGlobalStrategyAgg }} */
 const byStrategy =
@@ -372,6 +411,7 @@ cancelled:
 signal.cancelled ===
 true,
 tf,
+universe,
 total,
 done,
 byStrategy

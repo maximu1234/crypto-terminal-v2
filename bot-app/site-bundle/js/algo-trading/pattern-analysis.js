@@ -2,13 +2,16 @@
  * Один проход pattern-12 math → счётчики + события входа + статистика сделок.
  */
 import {
-computePattern12Scene,
 defaultPattern12Settings
-} from "./pattern-12-math.js?v=5";
+} from "./pattern-12-math.js?v=6";
+
+import {
+getOrComputeAlgoPattern12Scene
+} from "./pattern-12-scene-cache.js?v=2";
 
 import {
 detectPatternEntryEventsFromSetups
-} from "./pattern-entry-logic.js?v=8";
+} from "./pattern-entry-logic.js?v=10";
 
 import {
 countPattern12SetupsFromScene,
@@ -20,12 +23,12 @@ computeAlgoTradeStats,
 renderAlgoTradeStats,
 filterSequentialEntryEvents,
 normalizeAlgoStatsMode
-} from "./pattern-trade-stats.js?v=10";
+} from "./pattern-trade-stats.js?v=12";
 
 import {
 computePartialTpTradeStats,
 filterSequentialPartialEntryEvents
-} from "./pattern-trade-stats-partial.js?v=17";
+} from "./pattern-trade-stats-partial.js?v=19";
 
 import {
 filterEntryEventsByEma
@@ -54,7 +57,7 @@ opts
 }
 
 const scene =
-computePattern12Scene(
+getOrComputeAlgoPattern12Scene(
 candles,
 opts.patternSettings ||
 defaultPattern12Settings()
@@ -68,6 +71,8 @@ scene?.setups,
 {
 timeoutBars:
 opts.timeoutBars,
+maxPt1Pt4Bars:
+opts.maxPt1Pt4Bars,
 /* TEMP_PULLBACK_BEFORE_ARM */
 pullbackBeforeArm:
 opts.pullbackBeforeArm,
@@ -220,6 +225,45 @@ opts.statsMode
 }
 )
 };
+
+}
+
+/**
+ * Clear «Данные» panel + entry markers (pending full history / error).
+ * @param {{ setEvents?: (events: Array) => void }|null} [entryOverlay]
+ */
+export function clearAlgoPatternAnalysisUi(
+entryOverlay =
+null
+){
+
+renderAlgoPatternCounts(
+null
+);
+renderAlgoTradeStats(
+null,
+document.querySelector(
+'[data-algo-strategy="fixed-tp"]'
+) ||
+document
+);
+renderAlgoTradeStats(
+null,
+document.querySelector(
+'[data-algo-strategy="partial-tp"]'
+) ||
+document
+);
+renderAlgoTradeStats(
+null,
+document.querySelector(
+'[data-algo-strategy="partial-tp-y"]'
+) ||
+document
+);
+entryOverlay?.setEvents?.(
+[]
+);
 
 }
 
@@ -387,32 +431,8 @@ console.warn(
 "[algo-trading] pattern analysis:",
 err
 );
-renderAlgoPatternCounts(
-null
-);
-renderAlgoTradeStats(
-null,
-document.querySelector(
-'[data-algo-strategy="fixed-tp"]'
-) ||
-document
-);
-renderAlgoTradeStats(
-null,
-document.querySelector(
-'[data-algo-strategy="partial-tp"]'
-) ||
-document
-);
-renderAlgoTradeStats(
-null,
-document.querySelector(
-'[data-algo-strategy="partial-tp-y"]'
-) ||
-document
-);
-entryOverlay?.setEvents?.(
-[]
+clearAlgoPatternAnalysisUi(
+entryOverlay
 );
 }
 

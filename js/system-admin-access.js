@@ -1,7 +1,7 @@
 import {
 isCloudLoggedInEffective,
 getEffectiveCloudUserEmail
-} from "./cloud-sync.js?v=63";
+} from "./cloud-sync.js?v=64";
 
 function normalizeEmail(raw){
 

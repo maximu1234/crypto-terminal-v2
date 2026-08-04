@@ -5,81 +5,19 @@ import {
 scanAlgoTickersByWinRate,
 normalizeAlgoScanTf,
 ALGO_TICKER_SCAN_TF
-} from "./ticker-scanner.js?v=6";
-
-import {
-scanAlgoTickersAllStrategyStats
-} from "./ticker-scan-all-stats.js?v=2";
+} from "./ticker-scanner.js?v=7";
 
 import {
 ALGO_FLAG_LONG_5M,
 ALGO_FLAG_SHORT_5M,
 ALGO_FLAG_BOTH_5M,
+ALGO_FLAG_FAVORITES,
 replaceAlgoTickerFlagList
 } from "./ticker-flags.js?v=6";
 
-const GLOBAL_ST_LABELS =
-{
-st1:
-"Стратегия 1",
-st2:
-"Стратегия 2",
-st3:
-"Стратегия 3"
-};
-
-/**
- * @param {number|null|undefined} value
- * @param {{ signed?: boolean }} [opts]
- */
-function formatUsdShort(
-value,
-opts =
-{}
-){
-
-const n =
-Number(
-value
-);
-
-if(
-!Number.isFinite(
-n
-)
-){
-return "—";
-}
-
-const abs =
-Math.abs(
-n
-);
-const body =
-abs >=
-100
-? abs.toFixed(
-0
-)
-: abs.toFixed(
-2
-);
-const signed =
-opts.signed !==
-false;
-const sign =
-n >
-0 &&
-signed
-? "+"
-: n <
-0
-? "−"
-: "";
-
-return `${sign}${body}$`;
-
-}
+import {
+mountAlgoStrategyUniverseUi
+} from "./strategy-universe-ui.js?v=3";
 
 /**
  * @param {{
@@ -122,37 +60,8 @@ const statusEl =
 document.getElementById(
 "algo-scan-status"
 );
-const globalRunBtn =
-document.getElementById(
-"algo-global-scan-run"
-);
-const globalStopBtn =
-document.getElementById(
-"algo-global-scan-stop"
-);
-const globalStatusEl =
-document.getElementById(
-"algo-global-scan-status"
-);
-const globalRealCheck =
-document.getElementById(
-"algo-global-scan-real"
-);
-const globalPopover =
-document.getElementById(
-"algo-global-scan-popover"
-);
-const globalStBtns =
-[
-...(
-document.querySelectorAll(
-"[data-global-st]"
-) ||
-[]
-)
-];
 
-/** @type {Record<"long"|"short"|"both", {
+/** @type {Record<"long"|"short"|"both"|"top100", {
  *   min: HTMLInputElement|null,
  *   real: HTMLInputElement|null,
  *   find: HTMLButtonElement|null,
@@ -161,6 +70,9 @@ document.querySelectorAll(
  *   add: HTMLButtonElement|null,
  *   prefKey: string,
  *   label: string,
+ *   scanSide?: "long"|"short"|"both",
+ *   universe?: "all"|"top100",
+ *   flagId?: string,
  *   hits: string[],
  *   signal: { cancelled: boolean }|null
  * }>} */
@@ -267,6 +179,46 @@ hits:
 [],
 signal:
 null
+},
+top100:{
+min:
+document.getElementById(
+"algo-scan-top100-min"
+),
+real:
+document.getElementById(
+"algo-scan-top100-real"
+),
+find:
+document.getElementById(
+"algo-scan-top100-find"
+),
+stop:
+document.getElementById(
+"algo-scan-top100-stop"
+),
+found:
+document.getElementById(
+"algo-scan-top100-found"
+),
+add:
+document.getElementById(
+"algo-scan-top100-add"
+),
+prefKey:
+"scanTop100MinWinRate",
+label:
+"Топ-100",
+scanSide:
+"both",
+universe:
+"top100",
+flagId:
+ALGO_FLAG_FAVORITES,
+hits:
+[],
+signal:
+null
 }
 };
 
@@ -274,16 +226,6 @@ let strategyId =
 "st1";
 let scanTf =
 ALGO_TICKER_SCAN_TF;
-/** @type {{ cancelled: boolean }|null} */
-let globalSignal =
-null;
-/** @type {Record<"st1"|"st2"|"st3", import("./ticker-scan-all-stats.js").AlgoGlobalStrategyAgg>|null} */
-let globalByStrategy =
-null;
-/** @type {"st1"|"st2"|"st3"|null} */
-let openGlobalSt =
-null;
-
 function clampMin(
 raw
 ){
@@ -492,527 +434,30 @@ lane.stop.disabled =
 
 }
 
-function setGlobalStatus(
-text,
-scanning =
-false
+function stopScan(
+side
 ){
 
-if(
-!globalStatusEl
-){
-return;
-}
-
-globalStatusEl.textContent =
-text ||
-"";
-globalStatusEl.classList.toggle(
-"is-scanning",
-scanning
-);
-
-}
-
-function setGlobalRunning(
-running
-){
-
-if(
-globalRunBtn
-){
-globalRunBtn.disabled =
-running;
-}
-
-if(
-globalStopBtn
-){
-globalStopBtn.disabled =
-!running;
-}
-
-}
-
-function closeGlobalPopover(){
-
-openGlobalSt =
-null;
-
-if(
-globalPopover
-){
-globalPopover.classList.add(
-"hidden"
-);
-globalPopover.hidden =
-true;
-}
-
-for(
-const btn of globalStBtns
-){
-btn.classList.remove(
-"is-open"
-);
-}
-
-}
-
-/**
- * @param {number|null|undefined} value
- */
-function formatPctShort(
-value
-){
-
-if(
-!Number.isFinite(
-value
-)
-){
-return "—";
-}
-
-return `${Number(
-value
-).toFixed(
-1
-)}%`;
-
-}
-
-/**
- * @param {number} wins
- * @param {number} losses
- */
-function sideRate(
-wins,
-losses,
-kind
-){
-
-const closed =
-wins +
-losses;
-
-if(
-closed <=
-0
-){
-return null;
-}
-
-const n =
-kind ===
-"loss"
-? losses
-: wins;
-
-return n /
-closed *
-100;
-
-}
-
-/**
- * @param {"st1"|"st2"|"st3"} id
- */
-function renderGlobalPopover(
-id
-){
-
-const stats =
-globalByStrategy?.[
-id
+const lane =
+lanes[
+side
 ];
 
 if(
-!globalPopover ||
-!stats
-){
-return;
-}
-
-const titleEl =
-globalPopover.querySelector(
-"[data-global-pop-title]"
-);
-
-if(
-titleEl
-){
-titleEl.textContent =
-GLOBAL_ST_LABELS[
-id
-] ||
-id;
-}
-
-const longWinRate =
-sideRate(
-stats.longWins,
-stats.longLosses,
-"win"
-);
-const longLossRate =
-sideRate(
-stats.longWins,
-stats.longLosses,
-"loss"
-);
-const shortWinRate =
-sideRate(
-stats.shortWins,
-stats.shortLosses,
-"win"
-);
-const shortLossRate =
-sideRate(
-stats.shortWins,
-stats.shortLosses,
-"loss"
-);
-
-const map =
-{
-longWins:
-String(
-stats.longWins
-),
-longWinRate:
-formatPctShort(
-longWinRate
-),
-longWinUsd:
-formatUsdShort(
-stats.longWinUsd,
-{
-signed:
-false
-}
-),
-longLosses:
-String(
-stats.longLosses
-),
-longLossRate:
-formatPctShort(
-longLossRate
-),
-longLossUsd:
-formatUsdShort(
-stats.longLossUsd,
-{
-signed:
-false
-}
-),
-shortWins:
-String(
-stats.shortWins
-),
-shortWinRate:
-formatPctShort(
-shortWinRate
-),
-shortWinUsd:
-formatUsdShort(
-stats.shortWinUsd,
-{
-signed:
-false
-}
-),
-shortLosses:
-String(
-stats.shortLosses
-),
-shortLossRate:
-formatPctShort(
-shortLossRate
-),
-shortLossUsd:
-formatUsdShort(
-stats.shortLossUsd,
-{
-signed:
-false
-}
-),
-longNetUsd:
-formatUsdShort(
-stats.longNetUsd
-),
-shortNetUsd:
-formatUsdShort(
-stats.shortNetUsd
-)
-};
-
-for(
-const [
-key,
-value
-] of Object.entries(
-map
-)
-){
-const el =
-globalPopover.querySelector(
-`[data-global-pop="${key}"]`
-);
-
-if(
-el
-){
-el.textContent =
-value;
-
-if(
-key ===
-"longNetUsd" ||
-key ===
-"shortNetUsd"
-){
-const n =
-Number(
-stats[
-key
-]
-);
-el.classList.toggle(
-"is-pos",
-n >
-0
-);
-el.classList.toggle(
-"is-neg",
-n <
-0
-);
-}
-}
-}
-
-}
-
-/**
- * @param {"st1"|"st2"|"st3"} id
- */
-function openGlobalDetail(
-id
-){
-
-if(
-!globalByStrategy?.[
-id
-]
+!lane
 ){
 return;
 }
 
 if(
-openGlobalSt ===
-id
+lane.signal
 ){
-closeGlobalPopover();
-return;
-}
-
-openGlobalSt =
-id;
-renderGlobalPopover(
-id
-);
-
-if(
-globalPopover
-){
-globalPopover.classList.remove(
-"hidden"
-);
-globalPopover.hidden =
-false;
-}
-
-for(
-const btn of globalStBtns
-){
-btn.classList.toggle(
-"is-open",
-btn.getAttribute(
-"data-global-st"
-) ===
-id
-);
-}
-
-}
-
-function syncGlobalStrategyButtons(){
-
-for(
-const btn of globalStBtns
-){
-const id =
-btn.getAttribute(
-"data-global-st"
-);
-const netEl =
-btn.querySelector(
-"[data-global-net]"
-);
-const stats =
-id &&
-globalByStrategy
-? globalByStrategy[
-id
-]
-: null;
-const ready =
-!!stats;
-btn.disabled =
-!ready;
-
-if(
-!netEl
-){
-continue;
-}
-
-if(
-!ready
-){
-netEl.textContent =
-"—";
-netEl.classList.remove(
-"is-pos",
-"is-neg"
-);
-continue;
-}
-
-const net =
-Number(
-stats.netUsd
-);
-netEl.textContent =
-formatUsdShort(
-net
-);
-netEl.classList.toggle(
-"is-pos",
-net >
-0
-);
-netEl.classList.toggle(
-"is-neg",
-net <
-0
-);
-}
-
-}
-
-async function runGlobalScan(){
-
-if(
-globalSignal
-){
-globalSignal.cancelled =
+lane.signal.cancelled =
 true;
 }
 
-globalSignal =
-{
-cancelled:
-false
-};
-const signal =
-globalSignal;
-
-closeGlobalPopover();
-globalByStrategy =
-null;
-syncGlobalStrategyButtons();
-setGlobalRunning(
-true
-);
-setGlobalStatus(
-`скан ${scanTf}…`,
-true
-);
-
-try{
-const result =
-await scanAlgoTickersAllStrategyStats(
-{
-tf:
-scanTf,
-statsMode:
-globalRealCheck?.checked
-? "real"
-: "direct",
-tradeOpts:
-host.getTradeOpts?.() ||
-{},
-signal,
-onProgress:(
-done,
-total
-)=>{
-setGlobalStatus(
-`${scanTf} · ${done}/${total}`,
-true
-);
-}
-}
-);
-
-if(
-signal.cancelled
-){
-setGlobalStatus(
-"остановлено"
-);
-return;
-}
-
-globalByStrategy =
-result.byStrategy;
-syncGlobalStrategyButtons();
-setGlobalStatus(
-`готово · ${result.total} · ${result.tf || scanTf}`
-);
-}catch(
-err
-){
-console.warn(
-"[algo-trading] global scan ui",
-err
-);
-setGlobalStatus(
-"ошибка"
-);
-}finally{
-setGlobalRunning(
-false
-);
-}
-
-}
-
-function stopGlobalScan(){
-
-if(
-globalSignal
-){
-globalSignal.cancelled =
-true;
-}
-
-setGlobalStatus(
+setStatus(
+side,
 "остановка…"
 );
 
@@ -1070,6 +515,17 @@ false
 };
 const signal =
 lane.signal;
+const scanSide =
+lane.scanSide ||
+side;
+const universe =
+lane.universe ||
+"all";
+const universeLabel =
+universe ===
+"top100"
+? "топ-100"
+: "все";
 
 setRunning(
 side,
@@ -1077,7 +533,7 @@ true
 );
 setStatus(
 side,
-`скан ${scanTf}…`,
+`скан ${universeLabel} · ${scanTf}…`,
 true
 );
 lane.hits =
@@ -1095,7 +551,9 @@ const result =
 await scanAlgoTickersByWinRate(
 {
 strategyId,
-side,
+side:
+scanSide,
+universe,
 minWinRate,
 tf:
 scanTf,
@@ -1111,7 +569,7 @@ hitCount
 )=>{
 setStatus(
 side,
-`${scanTf} · ${done}/${total} · найдено ${hitCount}`,
+`${universeLabel} · ${scanTf} · ${done}/${total} · найдено ${hitCount}`,
 true
 );
 }
@@ -1158,35 +616,6 @@ false
 
 }
 
-function stopScan(
-side
-){
-
-const lane =
-lanes[
-side
-];
-
-if(
-!lane
-){
-return;
-}
-
-if(
-lane.signal
-){
-lane.signal.cancelled =
-true;
-}
-
-setStatus(
-side,
-"остановка…"
-);
-
-}
-
 function addToList(
 side
 ){
@@ -1206,6 +635,13 @@ const symbols =
 lane.hits;
 
 if(
+lane.flagId
+){
+replaceAlgoTickerFlagList(
+lane.flagId,
+symbols
+);
+}else if(
 side ===
 "both"
 ){
@@ -1226,7 +662,10 @@ symbols
 host.onListsChanged?.();
 setStatus(
 side,
-`в списке: ${symbols.length}`
+side ===
+"top100"
+? `в Избранные: ${symbols.length}`
+: `в списке: ${symbols.length}`
 );
 
 }
@@ -1248,7 +687,8 @@ for(
 const side of [
 "long",
 "short",
-"both"
+"both",
+"top100"
 ]
 ){
 
@@ -1282,12 +722,6 @@ false
 );
 
 }
-
-syncGlobalStrategyButtons();
-setGlobalRunning(
-false
-);
-closeGlobalPopover();
 
 st1?.addEventListener(
 "change",
@@ -1354,7 +788,8 @@ for(
 const side of [
 "long",
 "short",
-"both"
+"both",
+"top100"
 ]
 ){
 
@@ -1390,88 +825,15 @@ side
 
 }
 
-globalRunBtn?.addEventListener(
-"click",
-()=>{
-void runGlobalScan();
-}
-);
-globalStopBtn?.addEventListener(
-"click",
-()=>{
-stopGlobalScan();
-}
-);
-
-for(
-const btn of globalStBtns
-){
-btn.addEventListener(
-"click",
-()=>{
-const id =
-btn.getAttribute(
-"data-global-st"
-);
-
-if(
-id ===
-"st1" ||
-id ===
-"st2" ||
-id ===
-"st3"
-){
-openGlobalDetail(
-id
-);
-}
-}
-);
-}
-
-document.addEventListener(
-"pointerdown",
-ev=>{
-if(
-!openGlobalSt ||
-!globalPopover
-){
-return;
-}
-
-const target =
-ev.target;
-
-if(
-!(
-target instanceof Node
-)
-){
-return;
-}
-
-if(
-globalPopover.contains(
-target
-)
-){
-return;
-}
-
-for(
-const btn of globalStBtns
-){
-if(
-btn.contains(
-target
-)
-){
-return;
-}
-}
-
-closeGlobalPopover();
+const universeUi =
+mountAlgoStrategyUniverseUi(
+{
+getTradeOpts:
+host.getTradeOpts,
+getStrategyStatsMode:
+host.getStrategyStatsMode,
+getScanTf:()=>
+scanTf
 }
 );
 
@@ -1486,7 +848,10 @@ stopScan(
 stopScan(
 "both"
 );
-stopGlobalScan();
+stopScan(
+"top100"
+);
+universeUi.stopAll();
 }
 };
 

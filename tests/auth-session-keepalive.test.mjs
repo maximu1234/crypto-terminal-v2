@@ -113,10 +113,21 @@ test("cloud-sync circuit-breaks auth refresh and surfaces problem UI", () => {
   assert.ok(src.includes("rateLimited"));
   assert.ok(src.includes("cloud-auth-problem-banner"));
   assert.ok(src.includes("isLocalAuthRefreshBlockError"));
+  assert.ok(src.includes("maybeAutoPushSessionToLanBot"));
+  assert.ok(
+    src.includes("Intentionally no refreshSessionDirect") ||
+      src.includes("Bot does NOT refresh JWT"),
+    "Algo Bot must not rotate shared refresh_token"
+  );
   const classify = src.indexOf(
     "function classifyAndBlockAuthRefreshFailure("
   );
-  const classifyBody = src.slice(classify, classify + 1800);
+  const classifyBody = src.slice(classify, classify + 2200);
+  assert.ok(
+    classifyBody.includes("neverWipe") ||
+      classifyBody.includes("allowFatalClear"),
+    "silent refresh must not fatal-wipe Multichart"
+  );
   assert.ok(
     classifyBody.includes("hasPersistedRefreshToken"),
     "fatal path must race-guard against rotated refresh"
@@ -125,6 +136,20 @@ test("cloud-sync circuit-breaks auth refresh and surfaces problem UI", () => {
   const syncBody = src.slice(sync, sync + 1200);
   assert.ok(syncBody.includes("isAlgoBotLiteShell()"));
   assert.ok(syncBody.includes("isAuthRefreshBlockedNow()"));
+});
+
+test("algo bot lite does not POST shared refresh_token", () => {
+  const src = fs.readFileSync(
+    path.join(root, "js/cloud-sync.js"),
+    "utf8"
+  );
+  const start = src.indexOf(
+    "async function refreshAlgoBotLiteSessionIfNeeded("
+  );
+  assert.ok(start >= 0);
+  const body = src.slice(start, start + 700);
+  assert.ok(body.includes("return false"));
+  assert.ok(!body.includes("refreshSessionDirect("));
 });
 
 test("auth storage cloaks session while refresh blocked", () => {

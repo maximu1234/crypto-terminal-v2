@@ -42,6 +42,8 @@ running:
 false,
 timeoutBars:
 200,
+maxPt1Pt4Bars:
+1000,
 /* TEMP_PULLBACK_BEFORE_ARM */
 pullbackBeforeArm:
 false,
@@ -811,6 +813,54 @@ src.timeoutBars,
 10000,
 DEFAULT_ST1.timeoutBars
 ),
+maxPt1Pt4Bars:
+Object.prototype.hasOwnProperty.call(
+src,
+"maxPt1Pt4Bars"
+)
+? (
+()=>{
+const raw =
+src.maxPt1Pt4Bars;
+
+if(
+raw ==
+null ||
+(
+typeof raw ===
+"string" &&
+!String(
+raw
+).trim()
+)
+){
+return null;
+}
+
+const n =
+Math.round(
+Number(
+raw
+)
+);
+
+if(
+!Number.isFinite(
+n
+) ||
+n <
+1
+){
+return null;
+}
+
+return Math.min(
+10000,
+n
+);
+}
+)()
+: DEFAULT_ST1.maxPt1Pt4Bars,
 /* TEMP_PULLBACK_BEFORE_ARM */
 pullbackBeforeArm:
 src.pullbackBeforeArm ===

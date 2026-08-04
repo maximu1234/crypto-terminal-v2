@@ -3,7 +3,7 @@
  */
 import {
 normalizeTpShares
-} from "./pattern-trade-stats-partial.js?v=17";
+} from "./pattern-trade-stats-partial.js?v=19";
 
 export const ALGO_BOT_STRATEGIES_KEY =
 "algo_trading_bot_strategies_v1";
@@ -28,6 +28,7 @@ export const ALGO_BOT_TF_OPTIONS =
  * @typedef {{
  *   running: boolean,
  *   timeoutBars: number,
+ *   maxPt1Pt4Bars: number|null,
  *   pullbackBeforeArm: boolean,
  *   pullbackBeforeArmPct: number,
  *   tf: string,
@@ -169,6 +170,8 @@ running:
 false,
 timeoutBars:
 200,
+maxPt1Pt4Bars:
+1000,
 /* TEMP_PULLBACK_BEFORE_ARM */
 pullbackBeforeArm:
 false,
@@ -1060,6 +1063,18 @@ p.timeoutBars,
 },
 {
 label:
+"Баров между pt1 и pt4 не более",
+value:
+p.maxPt1Pt4Bars ==
+null
+? "без лимита"
+: formatStatusNumber(
+p.maxPt1Pt4Bars,
+0
+)
+},
+{
+label:
 "Откат перед arm",
 value:
 pullbackOn
@@ -1333,6 +1348,54 @@ src.timeoutBars,
 10000,
 base.timeoutBars
 ),
+maxPt1Pt4Bars:
+Object.prototype.hasOwnProperty.call(
+src,
+"maxPt1Pt4Bars"
+)
+? (
+()=>{
+const raw =
+src.maxPt1Pt4Bars;
+
+if(
+raw ==
+null ||
+(
+typeof raw ===
+"string" &&
+!String(
+raw
+).trim()
+)
+){
+return null;
+}
+
+const n =
+Math.round(
+Number(
+raw
+)
+);
+
+if(
+!Number.isFinite(
+n
+) ||
+n <
+1
+){
+return null;
+}
+
+return Math.min(
+10000,
+n
+);
+}
+)()
+: base.maxPt1Pt4Bars,
 /* TEMP_PULLBACK_BEFORE_ARM */
 pullbackBeforeArm:
 src.pullbackBeforeArm ===

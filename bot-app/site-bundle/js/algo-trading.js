@@ -28,7 +28,7 @@ alignRsiWithCandleTimes
 import {
 loadMarketHistory,
 getActiveExchangeId
-} from "./market-api.js?v=2";
+} from "./market-api.js?v=5";
 
 import {
 subscribeKline
@@ -37,11 +37,11 @@ subscribeKline
 import {
 mountAlgoTradingCoinList,
 refreshAlgoMarketListFromFlags
-} from "./algo-trading-list.js?v=11";
+} from "./algo-trading-list.js?v=12";
 
 import {
 mountAlgoTickerScanUi
-} from "./algo-trading/ticker-scan-ui.js?v=13";
+} from "./algo-trading/ticker-scan-ui.js?v=16";
 
 import {
 mountAlgoRuntimeUi
@@ -49,11 +49,11 @@ mountAlgoRuntimeUi
 
 import {
 mountAlgoBotStrategyUi
-} from "./algo-trading/bot-strategy-ui.js?v=51";
+} from "./algo-trading/bot-strategy-ui.js?v=62";
 
 import {
 mountSessionLogServerSettings
-} from "./algo-trading/bot-session-log-server-ui.js?v=8";
+} from "./algo-trading/bot-session-log-server-ui.js?v=9";
 
 import {
 syncBotStrategiesToMain
@@ -69,15 +69,20 @@ mountAlgoTradingDrawings
 
 import {
 mountAlgoTradingIndicators
-} from "./algo-trading/indicators.js?v=5";
+} from "./algo-trading/indicators.js?v=7";
 
 import {
 mountAlgoPatternEntryOverlay
-} from "./algo-trading/pattern-entry-overlay.js?v=14";
+} from "./algo-trading/pattern-entry-overlay.js?v=16";
 
 import {
+clearAlgoPatternAnalysisUi,
 refreshAlgoPatternAnalysis
-} from "./algo-trading/pattern-analysis.js?v=21";
+} from "./algo-trading/pattern-analysis.js?v=25";
+
+import {
+invalidateAlgoPattern12SceneCache
+} from "./algo-trading/pattern-12-scene-cache.js?v=2";
 
 import {
 clampSlPctOfX,
@@ -102,12 +107,15 @@ DEFAULT_PARTIAL_TP3_X,
 DEFAULT_TRAIL_SL_X1,
 DEFAULT_TRAIL_SL_X2,
 DEFAULT_TP_SHARES
-} from "./algo-trading/pattern-trade-stats-partial.js?v=17";
+} from "./algo-trading/pattern-trade-stats-partial.js?v=19";
 
 import {
 clampEntryTimeoutBars,
-ENTRY_TIMEOUT_BARS
-} from "./algo-trading/pattern-entry-logic.js?v=8";
+clampMaxPt1Pt4Bars,
+resolveMaxPt1Pt4BarsFromPrefs,
+ENTRY_TIMEOUT_BARS,
+ENTRY_MAX_PT1_PT4_BARS
+} from "./algo-trading/pattern-entry-logic.js?v=10";
 
 /* TEMP_PULLBACK_BEFORE_ARM — remove with temp-pullback-before-arm.js */
 import {
@@ -128,12 +136,18 @@ DEFAULT_ALGO_EMA_SHIFT
 } from "./algo-trading/pattern-ema-filter.js?v=3";
 
 import {
+normalizeAlgoTpEmaTrail,
+clampAlgoTpEmaLength,
+DEFAULT_ALGO_TP_EMA_LENGTH
+} from "./algo-trading/pattern-tp-ema.js?v=1";
+
+import {
 alignMaPointsToDisplayCandles
 } from "./indicators/ma-math.js?v=2";
 
 import {
 normalizeAlgoStatsMode
-} from "./algo-trading/pattern-trade-stats.js?v=10";
+} from "./algo-trading/pattern-trade-stats.js?v=12";
 
 import {
 readAlgoPattern12Settings
@@ -160,9 +174,14 @@ const DEFAULT_SYMBOL =
 "BTCUSDT";
 const DEFAULT_TF =
 "60";
-/** 10×1000 свечей Bybit — глубже история для статистики паттернов (только АлгоТрейдинг). */
+/** Fast first paint: 5×1000 bars. Full depth for stats: 10×1000 (auto-deepen). */
+const HISTORY_FAST_REQUESTS =
+5;
 const HISTORY_REQUESTS =
 10;
+/** Throttle live-tick pattern stats so overlays can paint. */
+const PATTERN_ANALYSIS_LIVE_MS =
+1500;
 
 const ALGO_PREFS_KEY =
 "algo_trading_page_prefs_v1";
@@ -389,6 +408,10 @@ timeoutBars:
 clampEntryTimeoutBars(
 raw.timeoutBars
 ),
+maxPt1Pt4Bars:
+resolveMaxPt1Pt4BarsFromPrefs(
+raw
+),
 /* TEMP_PULLBACK_BEFORE_ARM */
 pullbackBeforeArm:
 normalizePullbackBeforeArmEnabled(
@@ -431,6 +454,14 @@ emaTf2:
 normalizeAlgoEmaTf(
 raw.emaTf2
 ),
+tpEmaTrail:
+normalizeAlgoTpEmaTrail(
+raw.tpEmaTrail
+),
+tpEmaLength:
+clampAlgoTpEmaLength(
+raw.tpEmaLength
+),
 scanStrategy:
 raw.scanStrategy === "st2" || raw.scanStrategy === "st3"
 ? raw.scanStrategy
@@ -450,6 +481,10 @@ raw.scanShortMinWinRate
 scanBothMinWinRate:
 clampScanMinWinRate(
 raw.scanBothMinWinRate
+),
+scanTop100MinWinRate:
+clampScanMinWinRate(
+raw.scanTop100MinWinRate
 ),
 statsMode:
 normalizeAlgoStatsMode(
@@ -533,6 +568,8 @@ trailSlX2St3:
 DEFAULT_TRAIL_SL_X2,
 timeoutBars:
 ENTRY_TIMEOUT_BARS,
+maxPt1Pt4Bars:
+ENTRY_MAX_PT1_PT4_BARS,
 /* TEMP_PULLBACK_BEFORE_ARM */
 pullbackBeforeArm:
 false,
@@ -554,6 +591,10 @@ emaShift2:
 DEFAULT_ALGO_EMA_SHIFT,
 emaTf2:
 "",
+tpEmaTrail:
+false,
+tpEmaLength:
+DEFAULT_ALGO_TP_EMA_LENGTH,
 scanStrategy:
 "st1",
 scanTf:
@@ -563,6 +604,8 @@ scanLongMinWinRate:
 scanShortMinWinRate:
 50,
 scanBothMinWinRate:
+50,
+scanTop100MinWinRate:
 50,
 statsMode:
 "direct",
@@ -714,6 +757,10 @@ timeoutBars:
 clampEntryTimeoutBars(
 prefs.timeoutBars
 ),
+maxPt1Pt4Bars:
+clampMaxPt1Pt4Bars(
+prefs.maxPt1Pt4Bars
+),
 /* TEMP_PULLBACK_BEFORE_ARM */
 pullbackBeforeArm:
 normalizePullbackBeforeArmEnabled(
@@ -756,6 +803,14 @@ emaTf2:
 normalizeAlgoEmaTf(
 prefs.emaTf2
 ),
+tpEmaTrail:
+normalizeAlgoTpEmaTrail(
+prefs.tpEmaTrail
+),
+tpEmaLength:
+clampAlgoTpEmaLength(
+prefs.tpEmaLength
+),
 scanStrategy:
 prefs.scanStrategy === "st2" || prefs.scanStrategy === "st3"
 ? prefs.scanStrategy
@@ -775,6 +830,10 @@ prefs.scanShortMinWinRate
 scanBothMinWinRate:
 clampScanMinWinRate(
 prefs.scanBothMinWinRate
+),
+scanTop100MinWinRate:
+clampScanMinWinRate(
+prefs.scanTop100MinWinRate
 ),
 statsMode:
 normalizeAlgoStatsMode(
@@ -864,14 +923,70 @@ tf
 
 const ALGO_STATS_PANEL_CSS_MAX_H =
 420;
+const ALGO_STATS_PANEL_H_KEY =
+"algo_stats_panel_height_v1";
+
+function readAlgoStatsPanelHeight(){
+
+try{
+const n =
+Number(
+localStorage.getItem(
+ALGO_STATS_PANEL_H_KEY
+)
+);
+
+if(
+Number.isFinite(
+n
+) &&
+n >=
+0
+){
+return Math.round(
+n
+);
+}
+}catch{
+/* ignore */
+}
+
+return null;
+
+}
+
+function writeAlgoStatsPanelHeight(
+h
+){
+
+try{
+localStorage.setItem(
+ALGO_STATS_PANEL_H_KEY,
+String(
+Math.max(
+0,
+Math.round(
+h
+)
+)
+)
+);
+}catch{
+/* ignore */
+}
+
+}
 
 /**
  * Панель «Данные»: текущая высота = максимум; вниз можно сжать до 0.
+ * Высота запоминается в localStorage между заходами на страницу.
  * @param {() => void} [onLayout]
+ * @param {(collapsed: boolean, wasCollapsed: boolean) => void} [onCollapsedChange]
  * @returns {() => void}
  */
 function bindAlgoStatsPanelResize(
-onLayout
+onLayout,
+onCollapsedChange
 ){
 
 const panel =
@@ -937,11 +1052,24 @@ panel.style.flex =
 `0 0 ${next}px`;
 panel.style.height =
 `${next}px`;
+
+const wasCollapsed =
+panel.classList.contains(
+"is-collapsed"
+);
+const collapsed =
+next <=
+0;
+
 panel.classList.toggle(
 "is-collapsed",
-next <=
-0
+collapsed
 );
+onCollapsedChange?.(
+collapsed,
+wasCollapsed
+);
+
 handle.setAttribute(
 "aria-valuenow",
 String(
@@ -988,8 +1116,17 @@ ALGO_STATS_PANEL_CSS_MAX_H
 )
 );
 
+const saved =
+readAlgoStatsPanelHeight();
+
 applyHeight(
-maxH
+saved ==
+null
+? maxH
+: Math.min(
+maxH,
+saved
+)
 );
 
 }
@@ -1035,6 +1172,9 @@ onPointerMove
 window.removeEventListener(
 "pointerup",
 onPointerUp
+);
+writeAlgoStatsPanelHeight(
+currentH
 );
 notifyLayout();
 
@@ -1185,8 +1325,47 @@ return readPrefs().symbol;
 
 function isAlgoBotLiteMode(){
 
-/* Standalone Algo Bot app — always lite layout (no Multichart chart chrome). */
+if(
+typeof document !==
+"undefined" &&
+document.body?.classList?.contains(
+"algo-bot-lite-layout"
+)
+){
 return true;
+}
+
+if(
+typeof location !==
+"undefined" &&
+/\bbotLite=1\b/i.test(
+location.search ||
+""
+)
+){
+return true;
+}
+
+const desktop =
+typeof window !==
+"undefined"
+? window.cryptoTerminalDesktop
+: null;
+
+if(
+desktop &&
+/algo-bot/i.test(
+String(
+desktop.appId ||
+desktop.productName ||
+""
+)
+)
+){
+return true;
+}
+
+return false;
 
 }
 
@@ -1462,7 +1641,7 @@ accountWrap
 
 }
 
-export function mountAlgoTradingPage(){
+export async function mountAlgoTradingPage(){
 
 const chartEl =
 document.getElementById(
@@ -1626,6 +1805,10 @@ let timeoutBars =
 clampEntryTimeoutBars(
 readPrefs().timeoutBars
 );
+let maxPt1Pt4Bars =
+clampMaxPt1Pt4Bars(
+readPrefs().maxPt1Pt4Bars
+);
 /* TEMP_PULLBACK_BEFORE_ARM */
 let pullbackBeforeArm =
 normalizePullbackBeforeArmEnabled(
@@ -1668,6 +1851,19 @@ let emaTf2 =
 normalizeAlgoEmaTf(
 readPrefs().emaTf2
 );
+let tpEmaTrail =
+normalizeAlgoTpEmaTrail(
+readPrefs().tpEmaTrail
+);
+let tpEmaLength =
+clampAlgoTpEmaLength(
+readPrefs().tpEmaLength
+);
+/* Entry EMA shift filters UI removed — keep off. */
+emaFilter =
+false;
+emaFilter2 =
+false;
 const emaFilterLines =
 [
 {
@@ -1677,7 +1873,7 @@ series:
 null,
 isEnabled:
 ()=>
-emaFilter,
+false,
 getPeriod:
 ()=>
 emaPeriod,
@@ -1695,7 +1891,7 @@ series:
 null,
 isEnabled:
 ()=>
-emaFilter2,
+false,
 getPeriod:
 ()=>
 emaPeriod2,
@@ -1725,6 +1921,10 @@ readPrefs().scanShortMinWinRate
 let scanBothMinWinRate =
 clampScanMinWinRate(
 readPrefs().scanBothMinWinRate
+);
+let scanTop100MinWinRate =
+clampScanMinWinRate(
+readPrefs().scanTop100MinWinRate
 );
 let statsMode =
 normalizeAlgoStatsMode(
@@ -1777,6 +1977,139 @@ let patternAnalysisTimer =
 0;
 let patternAnalysisSeq =
 0;
+let lastPatternAnalysisAt =
+0;
+let algoStatsPanelCollapsed =
+false;
+let algoPattern12EnabledOnce =
+false;
+let historyDeepenToken =
+0;
+/** Bottom «Данные» only after full HISTORY_REQUESTS deepen (or deepen fail). */
+let historyStatsReady =
+false;
+
+function isAlgoStatsAnalysisPaused(){
+
+return algoStatsPanelCollapsed;
+
+}
+
+function markAlgoHistoryStatsPending(){
+
+historyStatsReady =
+false;
+patternAnalysisSeq++;
+
+if(
+patternAnalysisTimer
+){
+clearTimeout(
+patternAnalysisTimer
+);
+patternAnalysisTimer =
+0;
+}
+
+clearAlgoPatternAnalysisUi(
+entryOverlay
+);
+
+}
+
+function markAlgoHistoryStatsReadyAndAnalyze(){
+
+historyStatsReady =
+true;
+schedulePatternAnalysis(
+{
+force:
+true
+}
+);
+
+}
+
+function dispatchAlgoChartCandlesLoaded(
+loadId
+){
+
+try{
+window.dispatchEvent(
+new CustomEvent(
+"chart-candles-loaded",
+{
+detail:{
+symbol:
+String(
+symbol ||
+""
+).replace(
+/\.P$/i,
+""
+).trim().toUpperCase(),
+loadSeq:
+Number(
+loadId
+) ||
+0
+}
+}
+)
+);
+}catch{
+/* ignore */
+}
+
+}
+
+function ensureAlgoPattern12Enabled(){
+
+if(
+algoPattern12EnabledOnce ||
+disposed
+){
+return;
+}
+
+algoPattern12EnabledOnce =
+true;
+
+if(
+isAlgoBotLiteMode()
+){
+return;
+}
+
+const root =
+document.getElementById(
+"chart-indicators-wrap"
+);
+const input =
+root?.querySelector?.(
+'input[data-indicator-id="pattern-12"]'
+);
+
+if(
+!input ||
+input.checked
+){
+return;
+}
+
+input.checked =
+true;
+input.dispatchEvent(
+new Event(
+"change",
+{
+bubbles:
+true
+}
+)
+);
+
+}
 
 function setRsiPaneActive(
 active
@@ -2352,7 +2685,33 @@ display
 
 }
 
-function schedulePatternAnalysis(){
+function schedulePatternAnalysis(
+{
+force =
+false
+} =
+{}
+){
+
+if(
+!historyStatsReady
+){
+return;
+}
+
+if(
+!force &&
+isAlgoStatsAnalysisPaused()
+){
+return;
+}
+
+if(
+force &&
+isAlgoStatsAnalysisPaused()
+){
+return;
+}
 
 const seq =
 ++patternAnalysisSeq;
@@ -2365,6 +2724,18 @@ patternAnalysisTimer
 );
 }
 
+const delay =
+force
+? 0
+: Math.max(
+0,
+PATTERN_ANALYSIS_LIVE_MS -
+(
+Date.now() -
+lastPatternAnalysisAt
+)
+);
+
 patternAnalysisTimer =
 setTimeout(
 ()=>{
@@ -2374,10 +2745,14 @@ patternAnalysisTimer =
 if(
 disposed ||
 seq !==
-patternAnalysisSeq
+patternAnalysisSeq ||
+isAlgoStatsAnalysisPaused()
 ){
 return;
 }
+
+lastPatternAnalysisAt =
+Date.now();
 
 refreshAlgoPatternAnalysis(
 candles,
@@ -2405,6 +2780,7 @@ share1Y,
 share2Y,
 share3Y,
 timeoutBars,
+maxPt1Pt4Bars,
 /* TEMP_PULLBACK_BEFORE_ARM */
 pullbackBeforeArm,
 pullbackBeforeArmPct,
@@ -2412,10 +2788,13 @@ emaFilter,
 emaPeriod,
 emaShift,
 emaTf,
-emaFilter2,
+emaFilter2:
+false,
 emaPeriod2,
 emaShift2,
 emaTf2,
+tpEmaTrail,
+tpEmaLength,
 chartTf:
 tf,
 patternSettings:
@@ -2482,7 +2861,12 @@ chartIndicators?.notifyMainChartOverlaysSync?.();
 if(
 candles.length
 ){
-schedulePatternAnalysis();
+schedulePatternAnalysis(
+{
+force:
+!!fit
+}
+);
 }
 
 drawingTools?.scheduleRedraw?.();
@@ -2552,6 +2936,7 @@ share1Y,
 share2Y,
 share3Y,
 timeoutBars,
+maxPt1Pt4Bars,
 /* TEMP_PULLBACK_BEFORE_ARM */
 pullbackBeforeArm,
 pullbackBeforeArmPct,
@@ -2559,10 +2944,13 @@ emaFilter,
 emaPeriod,
 emaShift,
 emaTf,
-emaFilter2,
+emaFilter2:
+false,
 emaPeriod2,
 emaShift2,
 emaTf2,
+tpEmaTrail,
+tpEmaLength,
 chartTf:
 tf,
 scanStrategy,
@@ -2570,6 +2958,7 @@ scanTf,
 scanLongMinWinRate,
 scanShortMinWinRate,
 scanBothMinWinRate,
+scanTop100MinWinRate,
 statsMode,
 statsModeSt2,
 statsModeSt3,
@@ -2581,13 +2970,21 @@ skipRedraw:
 true
 });
 chartIndicators?.notifySymbolChange?.();
+invalidateAlgoPattern12SceneCache();
+algoPattern12EnabledOnce =
+false;
+
+historyDeepenToken++;
+const deepenId =
+historyDeepenToken;
+markAlgoHistoryStatsPending();
 
 try{
-const rows =
+const rowsFast =
 await loadMarketHistory(
 symbol,
 tf,
-HISTORY_REQUESTS,
+HISTORY_FAST_REQUESTS,
 {
 parallel:
 true
@@ -2604,9 +3001,9 @@ return;
 
 candles =
 Array.isArray(
-rows
+rowsFast
 )
-? rows.slice()
+? rowsFast.slice()
 : [];
 
 applyCandleData(
@@ -2614,6 +3011,10 @@ applyCandleData(
 fit:
 true
 }
+);
+ensureAlgoPattern12Enabled();
+dispatchAlgoChartCandlesLoaded(
+seq
 );
 
 unsubKline =
@@ -2646,6 +3047,13 @@ applyCandleData();
 );
 
 listApi?.highlight?.();
+
+void deepenAlgoHistory(
+seq,
+deepenId,
+symbol,
+tf
+);
 }catch(
 err
 ){
@@ -2669,6 +3077,182 @@ fit:
 true
 }
 );
+dispatchAlgoChartCandlesLoaded(
+seq
+);
+markAlgoHistoryStatsReadyAndAnalyze();
+}
+}
+
+}
+
+/**
+ * Background deepen: fetch only older bars beyond HISTORY_FAST_REQUESTS.
+ * Does not refit viewport; user zoom stays.
+ * Does not re-dispatch chart-candles-loaded (keeps position/order lines stable).
+ */
+async function deepenAlgoHistory(
+seq,
+deepenId,
+sym,
+histTf
+){
+
+const stillCurrent =
+()=>
+!disposed &&
+seq ===
+loadSeq &&
+deepenId ===
+historyDeepenToken;
+
+const extraRequests =
+Math.max(
+0,
+HISTORY_REQUESTS -
+HISTORY_FAST_REQUESTS
+);
+
+try{
+if(
+extraRequests >
+0 &&
+candles.length
+){
+const oldest =
+candles[0];
+const endMs =
+Number(
+oldest?.time
+) >
+0
+? Number(
+oldest.time
+) *
+1000 -
+1
+: 0;
+
+const older =
+endMs >
+0
+? await loadMarketHistory(
+sym,
+histTf,
+extraRequests,
+{
+parallel:
+true,
+endMs
+}
+)
+: [];
+
+if(
+!stillCurrent()
+){
+return;
+}
+
+if(
+Array.isArray(
+older
+) &&
+older.length
+){
+const byTime =
+new Map();
+
+for(
+const row of older
+){
+
+if(
+row?.time !=
+null
+){
+byTime.set(
+row.time,
+row
+);
+}
+
+}
+
+for(
+const row of candles
+){
+
+if(
+row?.time !=
+null
+){
+byTime.set(
+row.time,
+row
+);
+}
+
+}
+
+const liveTail =
+candles[
+candles.length -
+1
+] ||
+null;
+
+candles =
+Array.from(
+byTime.values()
+).sort(
+(
+a,
+b
+)=>
+a.time -
+b.time
+);
+
+if(
+liveTail
+){
+mergeLiveCandle(
+candles,
+liveTail,
+0
+);
+}
+
+invalidateAlgoPattern12SceneCache();
+applyCandleData(
+{
+fit:
+false
+}
+);
+}
+}else if(
+!stillCurrent()
+){
+return;
+}
+
+markAlgoHistoryStatsReadyAndAnalyze();
+
+}catch(
+err
+){
+console.warn(
+"[algo-trading] history deepen:",
+err?.message ||
+err
+);
+
+if(
+stillCurrent()
+){
+markAlgoHistoryStatsReadyAndAnalyze();
 }
 }
 
@@ -2749,7 +3333,7 @@ destroyDrawings =
 drawingsMount.destroy;
 
 chartIndicators =
-mountAlgoTradingIndicators(
+await mountAlgoTradingIndicators(
 {
 root:
 document.getElementById(
@@ -2788,7 +3372,12 @@ return;
 }
 
 void syncBotStrategiesToMain();
-schedulePatternAnalysis();
+schedulePatternAnalysis(
+{
+force:
+true
+}
+);
 
 },
 loadIndicatorHistory:(
@@ -2902,6 +3491,8 @@ getRiskUsd:()=>
 riskUsd,
 getTimeoutBars:()=>
 timeoutBars,
+getMaxPt1Pt4Bars:()=>
+maxPt1Pt4Bars,
 /* TEMP_PULLBACK_BEFORE_ARM */
 getPullbackBeforeArm:()=>
 pullbackBeforeArm,
@@ -2952,8 +3543,16 @@ true
 );
 chartIndicators?.flushIndicatorDataRefreshNow?.();
 chartIndicators?.notifyMainChartOverlaysSync?.();
-schedulePatternAnalysis();
+schedulePatternAnalysis(
+{
+force:
+true
+}
+);
 drawingTools?.scheduleRedraw?.();
+dispatchAlgoChartCandlesLoaded(
+loadSeq
+);
 }
 }
 ).catch(
@@ -3057,6 +3656,70 @@ timeoutBarsInput.blur();
 }
 );
 }
+
+const maxPt1Pt4BarsInput =
+document.getElementById(
+"algo-max-pt1-pt4-bars"
+);
+
+if(
+maxPt1Pt4BarsInput
+){
+maxPt1Pt4BarsInput.value =
+maxPt1Pt4Bars ==
+null
+? ""
+: String(
+maxPt1Pt4Bars
+);
+
+const commitMaxPt1Pt4Bars =
+()=>{
+const next =
+clampMaxPt1Pt4Bars(
+maxPt1Pt4BarsInput.value
+);
+maxPt1Pt4BarsInput.value =
+next ==
+null
+? ""
+: String(
+next
+);
+
+if(
+next ===
+maxPt1Pt4Bars
+){
+return;
+}
+
+maxPt1Pt4Bars =
+next;
+persistAlgoSettings();
+};
+
+maxPt1Pt4BarsInput.addEventListener(
+"change",
+commitMaxPt1Pt4Bars
+);
+maxPt1Pt4BarsInput.addEventListener(
+"keydown",
+event=>{
+
+if(
+event.key ===
+"Enter"
+){
+event.preventDefault();
+maxPt1Pt4BarsInput.blur();
+}
+
+}
+);
+}
+
+
 
 /* TEMP_PULLBACK_BEFORE_ARM — remove with temp-pullback-before-arm.js */
 const pullbackBeforeArmInput =
@@ -3177,6 +3840,7 @@ share1Y,
 share2Y,
 share3Y,
 timeoutBars,
+maxPt1Pt4Bars,
 /* TEMP_PULLBACK_BEFORE_ARM */
 pullbackBeforeArm,
 pullbackBeforeArmPct,
@@ -3184,10 +3848,13 @@ emaFilter,
 emaPeriod,
 emaShift,
 emaTf,
-emaFilter2,
+emaFilter2:
+false,
 emaPeriod2,
 emaShift2,
 emaTf2,
+tpEmaTrail,
+tpEmaLength,
 chartTf:
 tf,
 scanStrategy,
@@ -3195,6 +3862,7 @@ scanTf,
 scanLongMinWinRate,
 scanShortMinWinRate,
 scanBothMinWinRate,
+scanTop100MinWinRate,
 statsMode,
 statsModeSt2,
 statsModeSt3,
@@ -3227,6 +3895,7 @@ share1Y,
 share2Y,
 share3Y,
 timeoutBars,
+maxPt1Pt4Bars,
 /* TEMP_PULLBACK_BEFORE_ARM */
 pullbackBeforeArm,
 pullbackBeforeArmPct,
@@ -3234,10 +3903,13 @@ emaFilter,
 emaPeriod,
 emaShift,
 emaTf,
-emaFilter2,
+emaFilter2:
+false,
 emaPeriod2,
 emaShift2,
 emaTf2,
+tpEmaTrail,
+tpEmaLength,
 chartTf:
 tf,
 patternSettings:
@@ -4430,98 +5102,56 @@ persistAlgoSettings();
 
 }
 
-bindEmaFilterPair(
-{
-checkId:
-"algo-ema-filter",
-periodId:
-"algo-ema-period",
-shiftId:
-"algo-ema-shift",
-tfId:
-"algo-ema-tf",
-fallbackPeriod:
-DEFAULT_ALGO_EMA_PERIOD,
-getEnabled:
-()=>
-emaFilter,
-setEnabled:
-next=>{
-emaFilter =
-next;
-},
-getPeriod:
-()=>
-emaPeriod,
-setPeriod:
-next=>{
-emaPeriod =
-next;
-},
-getShift:
-()=>
-emaShift,
-setShift:
-next=>{
-emaShift =
-next;
-},
-getTf:
-()=>
-emaTf,
-setTf:
-next=>{
-emaTf =
-next;
-}
+(function bindTpEmaTrail(){
+
+const check =
+document.getElementById(
+"algo-tp-ema"
+);
+const lenInput =
+document.getElementById(
+"algo-tp-ema-len"
+);
+
+if(
+check
+){
+check.checked =
+tpEmaTrail;
+check.addEventListener(
+"change",
+()=>{
+tpEmaTrail =
+!!check.checked;
+persistAlgoSettings();
 }
 );
-bindEmaFilterPair(
-{
-checkId:
-"algo-ema-filter-2",
-periodId:
-"algo-ema-period-2",
-shiftId:
-"algo-ema-shift-2",
-tfId:
-"algo-ema-tf-2",
-fallbackPeriod:
-DEFAULT_ALGO_EMA_PERIOD_2,
-getEnabled:
-()=>
-emaFilter2,
-setEnabled:
-next=>{
-emaFilter2 =
-next;
-},
-getPeriod:
-()=>
-emaPeriod2,
-setPeriod:
-next=>{
-emaPeriod2 =
-next;
-},
-getShift:
-()=>
-emaShift2,
-setShift:
-next=>{
-emaShift2 =
-next;
-},
-getTf:
-()=>
-emaTf2,
-setTf:
-next=>{
-emaTf2 =
-next;
 }
+
+if(
+lenInput
+){
+lenInput.value =
+String(
+tpEmaLength
+);
+lenInput.addEventListener(
+"change",
+()=>{
+tpEmaLength =
+clampAlgoTpEmaLength(
+lenInput.value
+);
+lenInput.value =
+String(
+tpEmaLength
+);
+persistAlgoSettings();
 }
 );
+}
+
+})();
 
 
 
@@ -4700,6 +5330,25 @@ panel.style.removeProperty(
 ()=>{
 scheduleResizeAlgoCharts();
 chartIndicators?.syncViewports?.();
+},
+(
+collapsed,
+wasCollapsed
+)=>{
+algoStatsPanelCollapsed =
+collapsed;
+
+if(
+wasCollapsed &&
+!collapsed
+){
+schedulePatternAnalysis(
+{
+force:
+true
+}
+);
+}
 }
 );
 
@@ -4789,56 +5438,6 @@ unlinkTime?.();
 setActiveTfButton();
 setSymbolLabel();
 
-void mountAlgoTradingCoinList(
-{
-getSymbol:()=>
-symbol,
-setSymbolLabel(
-next
-){
-symbol =
-normalizeSymbol(
-next
-);
-setSymbolLabel();
-},
-async loadSymbol(
-next
-){
-await loadSymbol(
-next,
-tf
-);
-listApi?.highlight?.();
-},
-onTickerTick(
-item
-){
-if(
-!item ||
-normalizeSymbol(
-item.symbol
-) !==
-normalizeSymbol(
-symbol
-)
-){
-return;
-}
-
-syncAlgoChartTurnover24(
-item.symbol
-);
-}
-}
-).then(
-api=>{
-listApi =
-api;
-listApi?.highlight?.();
-}
-);
-
 tickerScanUi =
 mountAlgoTickerScanUi(
 {
@@ -4865,6 +5464,7 @@ share1Y,
 share2Y,
 share3Y,
 timeoutBars,
+maxPt1Pt4Bars,
 /* TEMP_PULLBACK_BEFORE_ARM */
 pullbackBeforeArm,
 pullbackBeforeArmPct,
@@ -4872,15 +5472,39 @@ emaFilter,
 emaPeriod,
 emaShift,
 emaTf,
-emaFilter2,
+emaFilter2:
+false,
 emaPeriod2,
 emaShift2,
 emaTf2,
+tpEmaTrail,
+tpEmaLength,
 chartTf:
 tf,
 patternSettings:
 readAlgoPattern12Settings()
 }),
+getStrategyStatsMode:(
+id
+)=>{
+if(
+id ===
+"st2"
+){
+return statsModeSt2;
+}
+
+if(
+id ===
+"st3"
+){
+return statsModeSt3;
+}
+
+return statsMode;
+},
+getScanTf:()=>
+scanTf,
 readPrefs,
 persistPrefs(
 patch
@@ -4937,6 +5561,16 @@ patch.scanBothMinWinRate
 );
 }
 
+if(
+patch.scanTop100MinWinRate !=
+null
+){
+scanTop100MinWinRate =
+clampScanMinWinRate(
+patch.scanTop100MinWinRate
+);
+}
+
 writePrefs(
 {
 symbol,
@@ -4963,6 +5597,7 @@ share1Y,
 share2Y,
 share3Y,
 timeoutBars,
+maxPt1Pt4Bars,
 /* TEMP_PULLBACK_BEFORE_ARM */
 pullbackBeforeArm,
 pullbackBeforeArmPct,
@@ -4971,6 +5606,7 @@ scanTf,
 scanLongMinWinRate,
 scanShortMinWinRate,
 scanBothMinWinRate,
+scanTop100MinWinRate,
 statsMode,
 statsModeSt2,
 statsModeSt3,
@@ -5000,9 +5636,81 @@ document.getElementById(
 botStrategyUi =
 mountAlgoBotStrategyUi();
 
-void loadSymbol(
+void (
+async ()=>{
+
+await loadSymbol(
 symbol,
 tf
 );
+
+if(
+disposed
+){
+return;
+}
+
+listApi?.destroy?.();
+listApi =
+null;
+
+try{
+listApi =
+await mountAlgoTradingCoinList(
+{
+getSymbol:()=>
+symbol,
+setSymbolLabel(
+next
+){
+symbol =
+normalizeSymbol(
+next
+);
+setSymbolLabel();
+},
+async loadSymbol(
+next
+){
+await loadSymbol(
+next,
+tf
+);
+listApi?.highlight?.();
+},
+onTickerTick(
+item
+){
+if(
+!item ||
+normalizeSymbol(
+item.symbol
+) !==
+normalizeSymbol(
+symbol
+)
+){
+return;
+}
+
+syncAlgoChartTurnover24(
+item.symbol
+);
+}
+}
+);
+listApi?.highlight?.();
+}catch(
+err
+){
+console.warn(
+"[algo-trading] coin list:",
+err?.message ||
+err
+);
+}
+
+}
+)();
 
 }

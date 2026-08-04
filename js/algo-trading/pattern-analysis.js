@@ -3,7 +3,7 @@
  */
 import {
 defaultPattern12Settings
-} from "./pattern-12-math.js?v=5";
+} from "./pattern-12-math.js?v=6";
 
 import {
 getOrComputeAlgoPattern12Scene
@@ -11,7 +11,7 @@ getOrComputeAlgoPattern12Scene
 
 import {
 detectPatternEntryEventsFromSetups
-} from "./pattern-entry-logic.js?v=8";
+} from "./pattern-entry-logic.js?v=10";
 
 import {
 countPattern12SetupsFromScene,
@@ -23,12 +23,12 @@ computeAlgoTradeStats,
 renderAlgoTradeStats,
 filterSequentialEntryEvents,
 normalizeAlgoStatsMode
-} from "./pattern-trade-stats.js?v=10";
+} from "./pattern-trade-stats.js?v=12";
 
 import {
 computePartialTpTradeStats,
 filterSequentialPartialEntryEvents
-} from "./pattern-trade-stats-partial.js?v=17";
+} from "./pattern-trade-stats-partial.js?v=19";
 
 import {
 filterEntryEventsByEma
@@ -71,6 +71,8 @@ scene?.setups,
 {
 timeoutBars:
 opts.timeoutBars,
+maxPt1Pt4Bars:
+opts.maxPt1Pt4Bars,
 /* TEMP_PULLBACK_BEFORE_ARM */
 pullbackBeforeArm:
 opts.pullbackBeforeArm,

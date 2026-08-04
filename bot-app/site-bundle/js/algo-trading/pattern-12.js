@@ -1,7 +1,7 @@
 /**
  * КОПИЯ для модуля АлгоТрейдинг.
  * Оригинал: js/indicators/pattern-12.js — НЕ ПРАВИТЬ оригинал
- * (текущий оригинал заморожен; нужен код → только копия).
+ * (заморожен после компактных настроек + RSI 70/30; нужен код → только копия).
  * Паттерн 1-2, 1-2 — overlay на графике Алго (math = копия, как у бота).
  */
 import {
@@ -9,10 +9,13 @@ isChartLayoutReady
 } from "../chart-layout-gate.js?v=2";
 import {
 PATTERN_12_ID,
-computePattern12Scene,
 defaultPattern12Settings,
 normalizePattern12Settings
-} from "./pattern-12-math.js?v=5";
+} from "./pattern-12-math.js?v=6";
+
+import {
+getOrComputeAlgoPattern12Scene
+} from "./pattern-12-scene-cache.js?v=2";
 
 import {
 paintPattern12Scene
@@ -46,11 +49,18 @@ next
 
 function settingsSection(
 title,
-body
+body,
+sectionClass =
+""
 ){
 
+const extra =
+sectionClass
+? ` ${sectionClass}`
+: "";
+
 return `
-<section class="chart-indicator-settings-section">
+<section class="chart-indicator-settings-section${extra}">
 <h3 class="chart-indicator-settings-section-title">${title}</h3>
 ${body}
 </section>
@@ -93,9 +103,11 @@ hint =
 ){
 
 return `
+<div class="chart-indicator-settings-field-wrap">
 <div class="chart-indicator-settings-field">
 <span class="chart-indicator-settings-field-label">${label}</span>
 <input type="number" class="chart-indicator-settings-input" data-key="${key}" min="${min}" max="${max}" step="1" value="${value}" inputmode="numeric"/>
+</div>
 ${hint ? `<p class="chart-indicator-settings-hint">${hint}</p>` : ""}
 </div>
 `;
@@ -163,7 +175,7 @@ return;
 }
 
 scene =
-computePattern12Scene(
+getOrComputeAlgoPattern12Scene(
 candles,
 settings
 );
@@ -392,8 +404,10 @@ root.innerHTML =
 `
 <div class="ind-pattern12-settings">
 ${settingsSection(
-"Настройки паттерна",
+"Общие",
 `
+<div class="ind-pattern12-settings-sides ind-pattern12-settings-sides--display">
+<section class="ind-pattern12-settings-side">
 ${fieldSelect(
 "Показать паттерн",
 "patternMode",
@@ -403,22 +417,6 @@ settings.patternMode,
 { value: "long", label: "Лонг" },
 { value: "short", label: "Шорт" }
 ]
-)}
-${fieldNumber(
-"Количество нисходящих точек перед точкой 1 (Лонг)",
-"decLowsBeforePt1",
-settings.decLowsBeforePt1,
-0,
-5,
-"N+1 макро-лоев: строго понижающийся ряд, точка 1 = самый нижний."
-)}
-${fieldNumber(
-"Количество восходящих точек перед точкой 1 (Шорт)",
-"ascHighsBeforePt1",
-settings.ascHighsBeforePt1,
-0,
-5,
-"N макро-хаев перед pt1: preN < … < pre1 < pt1. 0 = любой макро-хай."
 )}
 ${fieldSelect(
 "Волна A состоит из",
@@ -430,29 +428,48 @@ settings.waveAMode,
 { value: "both", label: "оба" }
 ]
 )}
+</section>
+<section class="ind-pattern12-settings-side">
+<p class="ind-pattern12-settings-subhead">RSI</p>
+${fieldNumber(
+"Перекупленность",
+"rsiOverbought",
+settings.rsiOverbought,
+1,
+99
+)}
+${fieldNumber(
+"Перепроданность",
+"rsiOversold",
+settings.rsiOversold,
+1,
+99
+)}
+</section>
+</div>
+`
+)}
+<div class="ind-pattern12-settings-sides">
+<section class="ind-pattern12-settings-side">
+<h3 class="chart-indicator-settings-section-title">Лонг</h3>
+${fieldNumber(
+"Точек перед т.1",
+"decLowsBeforePt1",
+settings.decLowsBeforePt1,
+0,
+5,
+"N+1 макро-лоев: строго понижающийся ряд, т.1 = самый нижний."
+)}
 ${fieldSelect(
-"Волна 1 оф С состоит из (Лонг)",
+"Волна 1 оф С",
 "lngWaveCMode",
 settings.lngWaveCMode,
 [
-{ value: "1", label: "1 микро-свинг" },
-{ value: "2", label: "2 микро-свинга" }
+{ value: "1", label: "1 микро" },
+{ value: "2", label: "2 микро" }
 ]
 )}
-${fieldSelect(
-"Волна 1 оф С состоит из (Шорт)",
-"shtWaveCMode",
-settings.shtWaveCMode,
-[
-{ value: "1", label: "1 микро-свинг" },
-{ value: "2", label: "2 микро-свинга" }
-]
-)}
-`
-)}
-${settingsSection(
-"Лонг: волна А",
-`
+<p class="ind-pattern12-settings-subhead">Волна А</p>
 ${fieldNumber(
 "Свинг амплитуда",
 "lngRsiLength",
@@ -461,20 +478,16 @@ settings.lngRsiLength,
 999
 )}
 ${fieldCheck(
-"Показать маркеры макро-свинга",
+"Маркеры макро",
 "lngShowFractals",
 settings.lngShowFractals
 )}
 ${fieldCheck(
-"Показать линии макро-свинга",
+"Линии макро",
 "lngShowRsiSwingLines",
 settings.lngShowRsiSwingLines
 )}
-`
-)}
-${settingsSection(
-"Лонг: волна 1 оф С",
-`
+<p class="ind-pattern12-settings-subhead">Волна 1 оф С</p>
 ${fieldNumber(
 "Свинг амплитуда",
 "lngMicRsiLength",
@@ -483,20 +496,36 @@ settings.lngMicRsiLength,
 999
 )}
 ${fieldCheck(
-"Показать маркеры микро-свинга",
+"Маркеры микро",
 "lngShowMicFractals",
 settings.lngShowMicFractals
 )}
 ${fieldCheck(
-"Показать линии микро-свинга",
+"Линии микро",
 "lngShowMicRsiSwingLines",
 settings.lngShowMicRsiSwingLines
 )}
-`
+</section>
+<section class="ind-pattern12-settings-side">
+<h3 class="chart-indicator-settings-section-title">Шорт</h3>
+${fieldNumber(
+"Точек перед т.1",
+"ascHighsBeforePt1",
+settings.ascHighsBeforePt1,
+0,
+5,
+"N макро-хаев перед pt1. 0 = любой макро-хай."
 )}
-${settingsSection(
-"Шорт: волна А",
-`
+${fieldSelect(
+"Волна 1 оф С",
+"shtWaveCMode",
+settings.shtWaveCMode,
+[
+{ value: "1", label: "1 микро" },
+{ value: "2", label: "2 микро" }
+]
+)}
+<p class="ind-pattern12-settings-subhead">Волна А</p>
 ${fieldNumber(
 "Свинг амплитуда",
 "shtRsiLength",
@@ -505,20 +534,16 @@ settings.shtRsiLength,
 999
 )}
 ${fieldCheck(
-"Показать маркеры макро-свинга",
+"Маркеры макро",
 "shtShowFractals",
 settings.shtShowFractals
 )}
 ${fieldCheck(
-"Показать линии макро-свинга",
+"Линии макро",
 "shtShowRsiSwingLines",
 settings.shtShowRsiSwingLines
 )}
-`
-)}
-${settingsSection(
-"Шорт: волна 1 оф С",
-`
+<p class="ind-pattern12-settings-subhead">Волна 1 оф С</p>
 ${fieldNumber(
 "Свинг амплитуда",
 "shtMicRsiLength",
@@ -527,74 +552,84 @@ settings.shtMicRsiLength,
 999
 )}
 ${fieldCheck(
-"Показать маркеры микро-свинга",
+"Маркеры микро",
 "shtShowMicFractals",
 settings.shtShowMicFractals
 )}
 ${fieldCheck(
-"Показать линии микро-свинга",
+"Линии микро",
 "shtShowMicRsiSwingLines",
 settings.shtShowMicRsiSwingLines
 )}
-`
-)}
+</section>
+</div>
 ${settingsSection(
-"Отображение на графике",
+"Отображение",
 `
+<div class="ind-pattern12-settings-checks">
 ${fieldCheck(
-"Плашки «Точка 1»",
+"Плашка т.1",
 "showPt1Badges",
 settings.showPt1Badges
 )}
 ${fieldCheck(
-"Плашки «Точка 2»",
+"Плашка т.2",
 "showPt2Badges",
 settings.showPt2Badges
 )}
 ${fieldCheck(
-"Плашки «Точка 3»",
+"Плашка т.3",
 "showPt3Badges",
 settings.showPt3Badges
-)}
-${fieldCheck(
-"Зелёный кружок (точка 4, Лонг)",
-"showLngPt4Dot",
-settings.showLngPt4Dot
-)}
-${fieldCheck(
-"Линия и текст Long (точка 4)",
-"showLngPt4Mark",
-settings.showLngPt4Mark
-)}
-${fieldNumber(
-"Длина линии pt4 Лонг (бары)",
-"lngPt4LineBars",
-settings.lngPt4LineBars,
-4,
-100
-)}
-${fieldCheck(
-"Красный кружок (точка 4, Шорт)",
-"showShtPt4Dot",
-settings.showShtPt4Dot
-)}
-${fieldCheck(
-"Линия и текст Short (точка 4)",
-"showShtPt4Mark",
-settings.showShtPt4Mark
-)}
-${fieldNumber(
-"Длина линии pt4 Шорт (бары)",
-"shtPt4LineBars",
-settings.shtPt4LineBars,
-4,
-100
 )}
 ${fieldCheck(
 "Линии 1-3 и 2-4",
 "showPatternLines",
 settings.showPatternLines
 )}
+</div>
+<div class="ind-pattern12-settings-sides ind-pattern12-settings-sides--display">
+<section class="ind-pattern12-settings-side">
+<p class="ind-pattern12-settings-subhead">Точка 4 · Лонг</p>
+${fieldCheck(
+"Зелёный кружок",
+"showLngPt4Dot",
+settings.showLngPt4Dot
+)}
+${fieldCheck(
+"Линия и текст Long",
+"showLngPt4Mark",
+settings.showLngPt4Mark
+)}
+${fieldNumber(
+"Длина линии (бары)",
+"lngPt4LineBars",
+settings.lngPt4LineBars,
+4,
+100
+)}
+</section>
+<section class="ind-pattern12-settings-side">
+<p class="ind-pattern12-settings-subhead">Точка 4 · Шорт</p>
+${fieldCheck(
+"Красный кружок",
+"showShtPt4Dot",
+settings.showShtPt4Dot
+)}
+${fieldCheck(
+"Линия и текст Short",
+"showShtPt4Mark",
+settings.showShtPt4Mark
+)}
+${fieldNumber(
+"Длина линии (бары)",
+"shtPt4LineBars",
+settings.shtPt4LineBars,
+4,
+100
+)}
+</section>
+</div>
 `
 )}
 <div class="chart-indicator-settings-reset-row">

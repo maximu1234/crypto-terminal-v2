@@ -13,6 +13,13 @@ DEFAULT_TP_RR,
 DEFAULT_RISK_USD
 } from "./pattern-entry-positions.js?v=14";
 
+import {
+normalizeAlgoTpEmaTrail,
+computeAlgoCloseEmaSeries,
+isAlgoTpEmaFavorable,
+isAlgoTpEmaAgainst
+} from "./pattern-tp-ema.js?v=1";
+
 /**
  * @typedef {"win"|"loss"|"open"} TradeOutcome
  *
@@ -41,7 +48,10 @@ DEFAULT_RISK_USD
  *   lossUsd: number,
  *   netUsd: number,
  *   longNetUsd: number,
- *   shortNetUsd: number
+ *   shortNetUsd: number,
+ *   bes: number,
+ *   sumR: number,
+ *   expectancyR: number|null
  * }} AlgoTradeStats
  */
 
@@ -95,6 +105,17 @@ clampTpRr(
 opts.tpRr ??
 DEFAULT_TP_RR
 );
+const useEmaTrail =
+normalizeAlgoTpEmaTrail(
+opts.tpEmaTrail
+);
+const ema =
+useEmaTrail
+? computeAlgoCloseEmaSeries(
+candles,
+opts.tpEmaLength
+)
+: null;
 
 if(
 !Array.isArray(
@@ -141,6 +162,9 @@ tpPrice
 return null;
 }
 
+let emaTrail =
+false;
+
 for(
 let i =
 entryBar;
@@ -158,6 +182,73 @@ if(
 !candle
 ){
 continue;
+}
+
+const close =
+Number(
+candle.close
+);
+const emaVal =
+ema
+? ema[
+i
+]
+: NaN;
+
+if(
+emaTrail
+){
+
+const slHit =
+side ===
+"long"
+? Number.isFinite(
+candle.low
+) &&
+candle.low <=
+slPrice
+: Number.isFinite(
+candle.high
+) &&
+candle.high >=
+slPrice;
+
+if(
+slHit
+){
+return {
+outcome:
+"loss",
+exitBar:
+i,
+exitPrice:
+slPrice,
+exitReason:
+"sl"
+};
+}
+
+if(
+isAlgoTpEmaAgainst(
+side,
+close,
+emaVal
+)
+){
+return {
+outcome:
+"win",
+exitBar:
+i,
+exitPrice:
+close,
+exitReason:
+"ema"
+};
+}
+
+continue;
+
 }
 
 const hit =
@@ -183,7 +274,11 @@ return {
 outcome:
 "loss",
 exitBar:
-i
+i,
+exitPrice:
+slPrice,
+exitReason:
+"sl"
 };
 }
 
@@ -191,12 +286,31 @@ if(
 hit ===
 "tp"
 ){
+
+if(
+useEmaTrail &&
+isAlgoTpEmaFavorable(
+side,
+close,
+emaVal
+)
+){
+emaTrail =
+true;
+continue;
+}
+
 return {
 outcome:
 "win",
 exitBar:
-i
+i,
+exitPrice:
+tpPrice,
+exitReason:
+"tp"
 };
+
 }
 
 if(
@@ -207,7 +321,11 @@ return {
 outcome:
 "loss",
 exitBar:
-i
+i,
+exitPrice:
+slPrice,
+exitReason:
+"sl"
 };
 }
 
@@ -217,7 +335,13 @@ return {
 outcome:
 "open",
 exitBar:
-null
+null,
+exitPrice:
+null,
+exitReason:
+emaTrail
+? "ema-open"
+: "open"
 };
 
 }
@@ -415,6 +539,10 @@ let longNetUsd =
 0;
 let shortNetUsd =
 0;
+let bes =
+0;
+let sumR =
+0;
 
 const statsMode =
 normalizeAlgoStatsMode(
@@ -503,10 +631,16 @@ if(
 outcome ===
 "win"
 ){
+const exitPx =
+Number.isFinite(
+detail.exitPrice
+)
+? detail.exitPrice
+: tpPrice;
 const winUsd =
 linearUsdFromRisk(
 entry,
-tpPrice,
+exitPx,
 slPrice,
 riskUsd
 );
@@ -523,6 +657,12 @@ delta =
 winUsd;
 profitUsd +=
 winUsd;
+sumR +=
+riskUsd >
+0
+? winUsd /
+riskUsd
+: 0;
 
 if(
 side ===
@@ -546,6 +686,8 @@ delta =
 -riskUsd;
 lossUsd +=
 riskUsd;
+sumR +=
+-1;
 
 if(
 side ===
@@ -666,7 +808,22 @@ netUsd:
 profitUsd -
 lossUsd,
 longNetUsd,
-shortNetUsd
+shortNetUsd,
+bes,
+sumR,
+expectancyR:
+(
+wins +
+losses +
+bes
+)
+? sumR /
+(
+wins +
+losses +
+bes
+)
+: null
 };
 
 }

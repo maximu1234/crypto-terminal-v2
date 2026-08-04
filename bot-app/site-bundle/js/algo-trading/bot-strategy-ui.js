@@ -12,7 +12,10 @@ normalizeManualRefreshStrategies,
 botSideListLabel,
 botSidesDirectionLabel,
 formatBotStrategySettingsRows
-} from "./bot-strategy-prefs.js?v=17";
+} from "./bot-strategy-prefs.js?v=20";
+import {
+clampMaxPt1Pt4Bars
+} from "./pattern-entry-logic.js?v=10";
 import {
 syncBotStrategiesToMain,
 syncAllTickerFlagsRootToMain,
@@ -31,18 +34,19 @@ import {
 fetchRemoteBotStatus,
 sendRemoteBotCommand,
 isMultichartRemoteControlHost
-} from "./bot-remote-client.js?v=1";
+} from "./bot-remote-client.js?v=7";
 import {
-mountRemoteSessionLogsEntry
-} from "./bot-session-logs-viewer.js?v=6";
+mountRemoteSessionLogsEntry,
+mountRemoteWatchlistsPushEntry
+} from "./bot-session-logs-viewer.js?v=19";
 import {
 rebalanceTpShares
-} from "./pattern-trade-stats-partial.js?v=17";
+} from "./pattern-trade-stats-partial.js?v=19";
 
 const STATUS_POLL_MS =
 2500;
 
-/** Multichart → alert-worker remote status (Auth egress); keep rare. */
+/** Multichart → alert-worker remote status (облако; LAN-канал — в окне LAN). */
 const REMOTE_STATUS_POLL_MS =
 30000;
 
@@ -187,6 +191,10 @@ document.getElementById(
 const timeoutInput =
 document.getElementById(
 "algo-bot-st1-timeout"
+);
+const maxPt1Pt4BarsInput =
+document.getElementById(
+"algo-bot-st1-max-pt1-pt4-bars"
 );
 /* TEMP_PULLBACK_BEFORE_ARM */
 const pullbackInput =
@@ -832,6 +840,10 @@ timeoutBars:
 el(
 "timeout"
 ),
+maxPt1Pt4Bars:
+el(
+"max-pt1-pt4-bars"
+),
 pullbackBeforeArmPct:
 el(
 "pullback-pct"
@@ -965,6 +977,16 @@ key ===
 p[
 key
 ]
+)
+: key ===
+"maxPt1Pt4Bars"
+? (
+p.maxPt1Pt4Bars ==
+null
+? ""
+: String(
+p.maxPt1Pt4Bars
+)
 )
 : String(
 p[
@@ -1258,6 +1280,32 @@ persistPartial(
 strategyId,
 {
 minTurnover24hUsdt:
+next
+}
+);
+apply();
+return;
+}
+
+if(
+key ===
+"maxPt1Pt4Bars"
+){
+const next =
+clampMaxPt1Pt4Bars(
+input.value
+);
+input.value =
+next ==
+null
+? ""
+: String(
+next
+);
+persistPartial(
+strategyId,
+{
+maxPt1Pt4Bars:
 next
 }
 );
@@ -1761,6 +1809,8 @@ typeof status.strategyPrefs ===
 : {
 timeoutBars:
 status?.timeoutBars,
+maxPt1Pt4Bars:
+status?.maxPt1Pt4Bars,
 pullbackBeforeArm:
 status?.pullbackBeforeArm,
 pullbackBeforeArmPct:
@@ -2810,6 +2860,18 @@ st1.timeoutBars
 );
 }
 
+if(
+maxPt1Pt4BarsInput
+){
+maxPt1Pt4BarsInput.value =
+st1.maxPt1Pt4Bars ==
+null
+? ""
+: String(
+st1.maxPt1Pt4Bars
+);
+}
+
 /* TEMP_PULLBACK_BEFORE_ARM */
 if(
 pullbackPctInput
@@ -2960,7 +3022,10 @@ normalize(
 input.value
 );
 input.value =
-String(
+next ==
+null
+? ""
+: String(
 next
 );
 persistSt1(
@@ -3876,6 +3941,19 @@ v
 );
 }
 );
+maxPt1Pt4BarsInput?.addEventListener(
+"change",
+()=>{
+onFieldBlur(
+"maxPt1Pt4Bars",
+maxPt1Pt4BarsInput,
+v=>
+clampMaxPt1Pt4Bars(
+v
+)
+);
+}
+);
 /* TEMP_PULLBACK_BEFORE_ARM */
 pullbackPctInput?.addEventListener(
 "change",
@@ -4368,6 +4446,18 @@ closeAllDrops();
 };
 
 mountRemoteSessionLogsEntry(
+{
+closeStatusDropdown:()=>{
+setDropOpen(
+statusDrop,
+statusToggle,
+false
+);
+}
+}
+);
+
+mountRemoteWatchlistsPushEntry(
 {
 closeStatusDropdown:()=>{
 setDropOpen(

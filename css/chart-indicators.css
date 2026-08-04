@@ -247,7 +247,11 @@ pointer-events:auto;
 margin:0;
 }
 
-.chart-indicator-settings-dialog--pattern12,
+.chart-indicator-settings-dialog--pattern12{
+width:min(560px,calc(100vw - 24px));
+max-height:min(92vh,700px);
+}
+
 .chart-indicator-settings-dialog--pattern-gip{
 width:min(520px,calc(100vw - 32px));
 max-height:min(88vh,760px);
@@ -264,13 +268,151 @@ background:#111827;
 cursor:pointer;
 }
 
-.chart-indicator-settings-dialog--pattern12 .chart-indicator-settings-body,
+.chart-indicator-settings-dialog--pattern12 .chart-indicator-settings-body{
+max-height:min(78vh,620px);
+overflow:auto;
+padding:8px 12px 6px;
+}
+
 .chart-indicator-settings-dialog--pattern-gip .chart-indicator-settings-body{
 max-height:min(62vh,560px);
 overflow:auto;
 }
 
-.ind-pattern12-settings .chart-indicator-settings-section,
+/* Pattern 1-2: Общие → Лонг|Шорт → Отображение (симметрия Long/Short) */
+.ind-pattern12-settings{
+display:flex;
+flex-direction:column;
+gap:8px;
+}
+
+.ind-pattern12-settings .chart-indicator-settings-section{
+margin:0;
+padding:0 0 8px;
+border-bottom:1px solid rgba(255,255,255,0.08);
+}
+
+.ind-pattern12-settings .chart-indicator-settings-section:last-of-type{
+border-bottom:none;
+padding-bottom:0;
+}
+
+.ind-pattern12-settings .chart-indicator-settings-section-title{
+margin:0 0 6px;
+font:600 12px/1.25 system-ui,-apple-system,sans-serif;
+color:#e5e7eb;
+}
+
+.ind-pattern12-settings-sides{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:0 14px;
+padding:0 0 8px;
+border-bottom:1px solid rgba(255,255,255,0.08);
+}
+
+.ind-pattern12-settings-sides--display{
+padding:0;
+border-bottom:none;
+}
+
+.ind-pattern12-settings-side{
+min-width:0;
+padding:0 0 0 0;
+}
+
+.ind-pattern12-settings-side + .ind-pattern12-settings-side{
+border-left:1px solid rgba(255,255,255,0.08);
+padding-left:14px;
+}
+
+.ind-pattern12-settings-subhead{
+margin:8px 0 4px;
+font:600 11px/1.25 system-ui,-apple-system,sans-serif;
+color:#9ca3af;
+}
+
+.ind-pattern12-settings-side > .ind-pattern12-settings-subhead:first-child{
+margin-top:0;
+}
+
+.ind-pattern12-settings .chart-indicator-settings-field-wrap{
+margin:0 0 5px;
+}
+
+.ind-pattern12-settings .chart-indicator-settings-field{
+display:grid;
+grid-template-columns:minmax(0,1fr) auto;
+align-items:center;
+gap:8px;
+margin:0 0 5px;
+min-height:28px;
+}
+
+.ind-pattern12-settings .chart-indicator-settings-field-wrap > .chart-indicator-settings-field{
+margin:0;
+}
+
+.ind-pattern12-settings .chart-indicator-settings-field-label{
+font:500 11px/1.3 system-ui,-apple-system,sans-serif;
+color:#c4c9d4;
+}
+
+.ind-pattern12-settings .chart-indicator-settings-input,
+.ind-pattern12-settings .chart-indicator-settings-select{
+width:92px;
+padding:4px 7px;
+font:500 12px/1.2 system-ui,-apple-system,sans-serif;
+border-radius:5px;
+}
+
+.ind-pattern12-settings .chart-indicator-settings-check{
+display:flex;
+align-items:center;
+gap:7px;
+margin:0 0 4px;
+font:500 11px/1.3 system-ui,-apple-system,sans-serif;
+color:#e5e7eb;
+}
+
+.ind-pattern12-settings .chart-indicator-settings-check input{
+width:14px;
+height:14px;
+flex:0 0 auto;
+}
+
+.ind-pattern12-settings .chart-indicator-settings-hint{
+margin:2px 0 0;
+font:400 10px/1.35 system-ui,-apple-system,sans-serif;
+color:#787b86;
+}
+
+.ind-pattern12-settings-checks{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:2px 12px;
+margin:0 0 8px;
+}
+
+.ind-pattern12-settings .chart-indicator-settings-reset-row{
+margin:2px 0 0;
+padding:8px 0 0;
+}
+
+@media (max-width:520px){
+.ind-pattern12-settings-sides,
+.ind-pattern12-settings-checks{
+grid-template-columns:1fr;
+}
+.ind-pattern12-settings-side + .ind-pattern12-settings-side{
+border-left:none;
+padding-left:0;
+padding-top:8px;
+border-top:1px solid rgba(255,255,255,0.08);
+margin-top:4px;
+}
+}
+
 .ind-pattern-gip-settings .chart-indicator-settings-section{
 margin-bottom:14px;
 }

@@ -9,7 +9,7 @@
 import {
 computePattern12Scene,
 defaultPattern12Settings
-} from "./pattern-12-math.js?v=5";
+} from "./pattern-12-math.js?v=6";
 import {
 TEMP_PULLBACK_BEFORE_ARM,
 clampPullbackBeforeArmPct,
@@ -29,6 +29,10 @@ DEFAULT_PULLBACK_BEFORE_ARM_PCT
 
 export const ENTRY_TIMEOUT_BARS =
 300;
+
+/** Макс. расстояние pt1→pt4 (баров); больше — сетап слишком старый. */
+export const ENTRY_MAX_PT1_PT4_BARS =
+1000;
 
 /**
  * @param {unknown} raw
@@ -58,6 +62,88 @@ return ENTRY_TIMEOUT_BARS;
 return Math.min(
 10000,
 n
+);
+
+}
+
+/**
+ * @param {unknown} raw
+ * @returns {number|null} лимит баров, или null = без ограничения
+ */
+export function clampMaxPt1Pt4Bars(
+raw
+){
+
+if(
+raw ==
+null
+){
+return null;
+}
+
+if(
+typeof raw ===
+"string" &&
+!String(
+raw
+).trim()
+){
+return null;
+}
+
+const n =
+Math.round(
+Number(
+raw
+)
+);
+
+if(
+!Number.isFinite(
+n
+) ||
+n <
+1
+){
+return null;
+}
+
+return Math.min(
+10000,
+n
+);
+
+}
+
+/**
+ * Prefs: отсутствующий ключ → default; явный null/пусто → без лимита.
+ * @param {object} raw
+ * @param {string} key
+ * @param {number} whenMissing
+ * @returns {number|null}
+ */
+export function resolveMaxPt1Pt4BarsFromPrefs(
+raw,
+key =
+"maxPt1Pt4Bars",
+whenMissing =
+ENTRY_MAX_PT1_PT4_BARS
+){
+
+if(
+!raw ||
+typeof raw !==
+"object" ||
+!Object.prototype.hasOwnProperty.call(
+raw,
+key
+)
+){
+return whenMissing;
+}
+
+return clampMaxPt1Pt4Bars(
+raw[key]
 );
 
 }
@@ -166,11 +252,13 @@ return events;
  * @param {Array} candles
  * @param {{
  *   side: PatternSide,
+ *   b1?: number,
  *   b3?: number,
  *   p3: number,
  *   b4: number,
  *   p4: number
  * }} setup
+ * @param {{ timeoutBars?: unknown, maxPt1Pt4Bars?: unknown, pullbackBeforeArm?: unknown, pullbackBeforeArmPct?: unknown }} [opts]
  * @returns {PatternEntryEvent|null}
  */
 export function resolvePatternSetupEvent(
@@ -185,6 +273,10 @@ setup?.side ===
 "short"
 ? "short"
 : "long";
+const b1 =
+Number(
+setup.b1
+);
 const b4 =
 Number(
 setup.b4
@@ -214,6 +306,25 @@ b4 >=
 candles.length -
 1
 ){
+return null;
+}
+
+const maxPt1Pt4Bars =
+clampMaxPt1Pt4Bars(
+opts.maxPt1Pt4Bars
+);
+
+if(
+maxPt1Pt4Bars !=
+null &&
+Number.isFinite(
+b1
+) &&
+b4 -
+b1 >
+maxPt1Pt4Bars
+){
+/* Сетап слишком растянут по времени — не валиден. */
 return null;
 }
 

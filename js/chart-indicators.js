@@ -246,7 +246,7 @@ createPattern12IndicatorOverride
 }
 )
 : import(
-"./indicators/pattern-12.js?v=8"
+"./indicators/pattern-12.js?v=12"
 ),
 import(
 "./indicators/pattern-gip.js?v=2"

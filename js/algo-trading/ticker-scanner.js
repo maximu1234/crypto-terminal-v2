@@ -2,23 +2,25 @@
  * Скан всех тикеров по винрейту выбранной стратегии (АлгоТрейдинг).
  */
 import {
-loadMarketHistory,
-loadMarketSymbols,
-buildMarketLists,
-getActiveExchangeId
+loadMarketHistory
 } from "../market-api.js?v=5";
 
 import {
 analyzeAlgoPatterns
-} from "./pattern-analysis.js?v=23";
+} from "./pattern-analysis.js?v=25";
 
 import {
 normalizeAlgoStatsMode
-} from "./pattern-trade-stats.js?v=10";
+} from "./pattern-trade-stats.js?v=12";
 
 import {
 readAlgoPattern12Settings
 } from "./pattern-12-settings.js?v=2";
+
+import {
+resolveAlgoScanSymbols,
+normalizeAlgoScanUniverse
+} from "./scan-universe.js?v=2";
 
 /** Дефолтный ТФ скана (если не передан opts.tf). */
 export const ALGO_TICKER_SCAN_TF =
@@ -148,6 +150,7 @@ ms
  * @param {"long"|"short"|"both"} opts.side
  * @param {number} opts.minWinRate
  * @param {string} [opts.tf]
+ * @param {"all"|"top100"} [opts.universe]
  * @param {object} opts.tradeOpts
  * @param {"direct"|"real"} [opts.statsMode] прямой (дефолт) или реальный подсчёт
  * @param {(done: number, total: number, hitCount: number) => void} [opts.onProgress]
@@ -174,6 +177,10 @@ opts.side ===
 const tf =
 normalizeAlgoScanTf(
 opts.tf
+);
+const universe =
+normalizeAlgoScanUniverse(
+opts.universe
 );
 const minWinRate =
 Math.min(
@@ -212,19 +219,14 @@ statsModeSt3:
 statsMode
 };
 
-const instruments =
-await loadMarketSymbols();
-const lists =
-buildMarketLists(
-instruments,
-getActiveExchangeId()
+const {
+symbols
+} =
+await resolveAlgoScanSymbols(
+{
+universe
+}
 );
-const symbols =
-(
-lists.all ||
-lists.crypto ||
-[]
-).slice();
 
 const hits =
 [];
@@ -434,6 +436,7 @@ cancelled:
 signal.cancelled ===
 true,
 side,
+universe,
 strategyId,
 minWinRate,
 tf,

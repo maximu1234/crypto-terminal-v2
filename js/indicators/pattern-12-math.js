@@ -30,6 +30,10 @@ lngWaveCMode:
 "2",
 shtWaveCMode:
 "2",
+rsiOverbought:
+70,
+rsiOversold:
+30,
 lngRsiLength:
 14,
 lngShowFractals:
@@ -90,7 +94,8 @@ raw?.patternMode ||
 ""
 );
 
-return {
+const next =
+{
 ...base,
 ...raw,
 patternMode:
@@ -144,6 +149,20 @@ raw?.shtWaveCMode
 )
 ? raw.shtWaveCMode
 : base.shtWaveCMode,
+rsiOverbought:
+clampInt(
+raw?.rsiOverbought,
+1,
+99,
+base.rsiOverbought
+),
+rsiOversold:
+clampInt(
+raw?.rsiOversold,
+1,
+99,
+base.rsiOversold
+),
 lngRsiLength:
 clampInt(
 raw?.lngRsiLength,
@@ -223,6 +242,20 @@ false,
 showPatternLines:
 !!raw?.showPatternLines
 };
+
+if(
+next.rsiOversold >=
+next.rsiOverbought
+){
+next.rsiOversold =
+Math.max(
+1,
+next.rsiOverbought -
+1
+);
+}
+
+return next;
 
 }
 
@@ -373,6 +406,31 @@ const extras =
 fractals: [],
 swingLines: []
 };
+const overbought =
+Number(
+debug?.overbought
+);
+
+const oversold =
+Number(
+debug?.oversold
+);
+const rsiOb =
+Number.isFinite(
+overbought
+) &&
+overbought >
+0
+? overbought
+: RSI_OVERBOUGHT;
+const rsiOs =
+Number.isFinite(
+oversold
+) &&
+oversold >
+0
+? oversold
+: RSI_OVERSOLD;
 
 if(
 candles.length <
@@ -440,10 +498,10 @@ continue;
 
 const isOB =
 rsiVal >=
-RSI_OVERBOUGHT;
+rsiOb;
 const isOS =
 rsiVal <=
-RSI_OVERSOLD;
+rsiOs;
 let up =
 false;
 let down =
@@ -633,6 +691,31 @@ const extras =
 fractals: [],
 swingLines: []
 };
+const overbought =
+Number(
+debug?.overbought
+);
+
+const oversold =
+Number(
+debug?.oversold
+);
+const rsiOb =
+Number.isFinite(
+overbought
+) &&
+overbought >
+0
+? overbought
+: RSI_OVERBOUGHT;
+const rsiOs =
+Number.isFinite(
+oversold
+) &&
+oversold >
+0
+? oversold
+: RSI_OVERSOLD;
 
 if(
 candles.length <
@@ -739,10 +822,10 @@ continue;
 
 const isOB =
 rsiVal >=
-RSI_OVERBOUGHT;
+rsiOb;
 const isOS =
 rsiVal <=
-RSI_OVERSOLD;
+rsiOs;
 let up =
 false;
 let down =
@@ -2923,7 +3006,11 @@ fractalUpColor:
 fractalDownColor:
 "#22d3ee",
 swingLineColor:
-"#22d3ee"
+"#22d3ee",
+overbought:
+settings.rsiOverbought,
+oversold:
+settings.rsiOversold
 }
 );
 const lngMic =
@@ -2940,7 +3027,11 @@ fractalUpColor:
 fractalDownColor:
 "#f44336",
 swingLineColor:
-"rgba(0,150,136,0.6)"
+"rgba(0,150,136,0.6)",
+overbought:
+settings.rsiOverbought,
+oversold:
+settings.rsiOversold
 }
 );
 
@@ -3097,7 +3188,11 @@ fractalUpColor:
 fractalDownColor:
 "#e040fb",
 swingLineColor:
-"#e040fb"
+"#e040fb",
+overbought:
+settings.rsiOverbought,
+oversold:
+settings.rsiOversold
 }
 );
 const shtMic =
@@ -3114,7 +3209,11 @@ fractalUpColor:
 fractalDownColor:
 "#f44336",
 swingLineColor:
-"rgba(0,150,136,0.6)"
+"rgba(0,150,136,0.6)",
+overbought:
+settings.rsiOverbought,
+oversold:
+settings.rsiOversold
 }
 );
 

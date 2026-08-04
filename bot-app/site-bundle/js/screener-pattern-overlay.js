@@ -4,7 +4,7 @@
 import {
 computePattern12Scene,
 defaultPattern12Settings
-} from "./indicators/pattern-12-math.js?v=4";
+} from "./indicators/pattern-12-math.js?v=5";
 
 import {
 paintPattern12Scene

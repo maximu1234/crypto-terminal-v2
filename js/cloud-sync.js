@@ -1,7 +1,6 @@
 import {
 getSupabase,
-isSupabaseConfigured,
-refreshSessionDirect
+isSupabaseConfigured
 } from "./supabase-client.js?v=9";
 
 import {
@@ -104,8 +103,6 @@ let authRefreshBlockedUntil =
 getAuthRefreshBlockedUntil();
 let refreshSessionInflight =
 null;
-let algoBotLiteRefreshInflight =
-null;
 let lastAuthWarnKey =
 "";
 let lastAuthWarnMs =
@@ -114,7 +111,7 @@ let lastAuthWarnMs =
 const SILENT_REFRESH_MIN_MS =
 45000;
 
-/** Algo Bot lite: check JWT often enough for overnight, refresh only near expiry. */
+/** Algo Bot lite: watch JWT expiry (no Auth refresh — Multichart owns rotation). */
 const ALGO_BOT_LITE_AUTH_WATCH_MS =
 2 *
 60 *
@@ -421,8 +418,11 @@ paintCloudAuthProblemBanner();
 }
 
 /**
- * Algo Bot lite only: one controlled POST /auth/v1/token (no getSession client).
- * Single-flight; missing expires_at refreshes once (not every near-expiry tick forever).
+ * Algo Bot lite: JWT refresh is owned by Multichart only.
+ * Both apps share one Supabase refresh_token («Отдать сессию»). Whoever
+ * refreshes first rotates it; the other gets invalid_grant and looks
+ * "logged out". Bot consumes access_token until Multichart pushes again.
+ *
  * @param {{ force?: boolean }} [opts]
  * @returns {Promise<boolean>}
  */
@@ -431,173 +431,16 @@ opts =
 {}
 ){
 
+void opts;
+
 if(
 !isAlgoBotLiteShell()
 ){
 return false;
 }
 
-if(
-algoBotLiteRefreshInflight
-){
-return algoBotLiteRefreshInflight;
-}
-
-if(
-isAuthRefreshBlockedNow()
-){
+/* Intentionally no refreshSessionDirect — see comment above. */
 return false;
-}
-
-const force =
-opts.force ===
-true;
-const now =
-Date.now();
-
-if(
-!force &&
-now -
-lastSilentRefreshMs <
-SILENT_REFRESH_MIN_MS
-){
-return false;
-}
-
-const persisted =
-readPersistedAuthSession();
-
-if(
-!persisted?.user?.id
-){
-return false;
-}
-
-const refresh =
-String(
-persisted.refresh_token ||
-""
-).trim();
-
-if(
-!refresh
-){
-return false;
-}
-
-const exp =
-Number(
-persisted.expires_at
-) ||
-0;
-const near =
-exp >
-0 &&
-isAccessTokenNearExpiry(
-persisted,
-ALGO_BOT_LITE_REFRESH_SKEW_MS
-);
-const missingExp =
-!!String(
-persisted.access_token ||
-""
-).trim() &&
-exp <=
-0;
-const needsRefresh =
-isAccessTokenExpired(
-persisted
-) ||
-near ||
-missingExp;
-
-if(
-!needsRefresh
-){
-return false;
-}
-
-lastSilentRefreshMs =
-now;
-
-algoBotLiteRefreshInflight =
-(
-async ()=>{
-
-try{
-const {
-data,
-error
-} =
-await withTimeout(
-refreshSessionDirect(
-refresh
-),
-authNetworkTimeoutMs(
-"algo lite refresh"
-),
-"algo lite refresh"
-);
-
-if(
-error ||
-!data?.session?.access_token
-){
-classifyAndBlockAuthRefreshFailure(
-"algo lite refresh",
-error ||
-new Error(
-"empty session"
-)
-);
-return false;
-}
-
-const session =
-{
-...persisted,
-...data.session,
-refresh_token:
-data.session.refresh_token ||
-refresh,
-user:
-data.session.user ||
-persisted.user
-};
-
-persistAuthSessionRaw(
-normalizeAuthSessionRaw(
-session
-)
-);
-await applySession(
-session
-);
-authRateLimitStrikes =
-0;
-clearCloudAuthProblem();
-syncCloudLoginFromStorage();
-notifyAuth();
-return true;
-}catch(
-err
-){
-classifyAndBlockAuthRefreshFailure(
-"algo lite refresh",
-err
-);
-return false;
-}
-
-}
-)().finally(
-()=>{
-algoBotLiteRefreshInflight =
-null;
-}
-);
-
-return algoBotLiteRefreshInflight;
 
 }
 
@@ -673,59 +516,6 @@ publishCloudAuthProblem(
 return;
 }
 
-const refresh =
-String(
-snap.refresh_token ||
-""
-).trim();
-const exp =
-Number(
-snap.expires_at
-) ||
-0;
-const expired =
-isAccessTokenExpired(
-snap
-);
-const near =
-exp >
-0 &&
-isAccessTokenNearExpiry(
-snap,
-ALGO_BOT_LITE_REFRESH_SKEW_MS
-);
-const missingExp =
-!!String(
-snap.access_token ||
-""
-).trim() &&
-exp <=
-0;
-
-if(
-(
-expired ||
-near ||
-missingExp
-) &&
-refresh &&
-!isAuthRefreshBlockedNow()
-){
-const ok =
-await refreshAlgoBotLiteSessionIfNeeded(
-{
-force:
-true
-}
-);
-
-if(
-ok
-){
-return;
-}
-}
-
 const after =
 readPersistedAuthSession();
 
@@ -746,7 +536,20 @@ after
 ){
 publishCloudAuthProblem(
 "expired",
-"Облачная сессия истекла — бот не смог обновить JWT. «Отдать сессию» с Multichart или вставьте сессию в шестерёнке."
+"Облачная сессия истекла — «Отдать сессию» с Multichart (бот сам JWT не обновляет, чтобы не выбить Multichart)."
+);
+return;
+}
+
+if(
+isAccessTokenNearExpiry(
+after,
+ALGO_BOT_LITE_REFRESH_SKEW_MS
+)
+){
+publishCloudAuthProblem(
+"near_expiry",
+"Облачная сессия скоро истечёт — нажмите «Отдать сессию» в Multichart (окно LAN)."
 );
 return;
 }
@@ -755,7 +558,9 @@ if(
 cloudAuthProblem?.code ===
 "missing" ||
 cloudAuthProblem?.code ===
-"expired"
+"expired" ||
+cloudAuthProblem?.code ===
+"near_expiry"
 ){
 clearCloudAuthProblem();
 }
@@ -928,7 +733,9 @@ syncCloudLoginFromStorage();
 
 function classifyAndBlockAuthRefreshFailure(
 reason,
-error
+error,
+options =
+{}
 ){
 
 if(
@@ -976,19 +783,37 @@ error
 ){
 
 /*
-  Refresh-token rotation race: another call already wrote a new
-  refresh_token + access. Wiping would log the user out for a ghost 400.
+  Refresh-token rotation race (incl. remote Algo Bot sharing the same
+  refresh_token): another device already rotated. Wiping Multichart would
+  log the user out while access_token may still be fine.
 */
 const persisted =
 readPersistedAuthSession();
+const reasonKey =
+String(
+reason ||
+""
+).toLowerCase();
+const neverWipe =
+options.allowFatalClear ===
+false ||
+reasonKey.includes(
+"silent"
+) ||
+reasonKey.includes(
+"lite"
+);
 
 if(
+neverWipe ||
+(
 hasPersistedRefreshToken(
 persisted
 ) &&
 persisted?.access_token &&
 !isAccessTokenExpired(
 persisted
+)
 )
 ){
 blockAuthRefreshRetries(
@@ -997,6 +822,7 @@ reason,
 fatal:
 false,
 ms:
+5 *
 60 *
 1000
 }
@@ -1888,9 +1714,20 @@ sb,
 if(
 error
 ){
+try{
+restoreAuthSessionFromBackup();
+await restoreDesktopAuthSession();
+}catch{
+/* heal best-effort */
+}
+
 classifyAndBlockAuthRefreshFailure(
 "silent refresh",
-error
+error,
+{
+allowFatalClear:
+false
+}
 );
 return false;
 }
@@ -1908,16 +1745,98 @@ authRateLimitStrikes =
 0;
 clearCloudAuthProblem();
 syncCloudLoginFromStorage();
+void maybeAutoPushSessionToLanBot();
 return true;
 }catch(
 err
 ){
+try{
+restoreAuthSessionFromBackup();
+await restoreDesktopAuthSession();
+}catch{
+/* heal best-effort */
+}
+
 classifyAndBlockAuthRefreshFailure(
 "silent refresh",
-err
+err,
+{
+allowFatalClear:
+false
+}
 );
 return false;
 
+}
+
+}
+
+/**
+ * After Multichart rotates JWT, push fresh session to LAN Algo Bot so the
+ * bot does not need its own Auth refresh (shared refresh_token).
+ */
+async function maybeAutoPushSessionToLanBot(){
+
+if(
+isAlgoBotLiteShell()
+){
+return;
+}
+
+if(
+typeof window ===
+"undefined" ||
+!window.cryptoTerminalDesktop?.isDesktop
+){
+return;
+}
+
+try{
+const {
+pushAuthSessionToRemoteBot,
+readLanRemoteConn,
+isMultichartRemoteControlHost
+} =
+await import(
+"./algo-trading/bot-remote-client.js?v=7"
+);
+
+if(
+!isMultichartRemoteControlHost()
+){
+return;
+}
+
+const lan =
+readLanRemoteConn();
+
+if(
+!lan?.host ||
+!lan?.token
+){
+return;
+}
+
+const res =
+await pushAuthSessionToRemoteBot(
+lan
+);
+
+if(
+res?.ok
+){
+warnAuthOnce(
+"lan-session-auto",
+"[auth] Session auto-pushed to LAN Algo Bot after refresh"
+);
+}
+}catch(
+err
+){
+warnAuthOnce(
+"lan-session-auto-fail",
+`[auth] LAN session auto-push skipped: ${err?.message || err}`
+);
 }
 
 }
@@ -5007,15 +4926,15 @@ notifyAuth();
 
 /*
   Algo Bot lite: no storage Auth client / getSession (that caused 429 storms).
-  Login = Multichart paste / LAN session. Controlled near-expiry refresh via
-  refreshSessionDirect + circuit-breaker (not GoTrue auto-refresh).
+  Login = Multichart paste / LAN session. Bot does NOT refresh JWT — Multichart
+  owns refresh_token rotation (shared token); silent Multichart refresh auto-pushes LAN.
 */
 if(
 isAlgoBotLiteShell()
 ){
 const cached =
 readPersistedAuthSession();
-let session =
+const session =
 cached?.access_token &&
 cached?.user &&
 !isAccessTokenExpired(
@@ -5023,45 +4942,6 @@ cached
 )
 ? cached
 : null;
-
-if(
-(
-!session ||
-(
-Number(
-cached?.expires_at
-) >
-0
-? isAccessTokenNearExpiry(
-cached,
-ALGO_BOT_LITE_REFRESH_SKEW_MS
-)
-: !!String(
-cached?.access_token ||
-""
-).trim()
-)
-) &&
-String(
-cached?.refresh_token ||
-""
-).trim()
-){
-const refreshed =
-await refreshAlgoBotLiteSessionIfNeeded(
-{
-force:
-true
-}
-);
-
-if(
-refreshed
-){
-session =
-readPersistedAuthSession();
-}
-}
 
 await applySession(
 session

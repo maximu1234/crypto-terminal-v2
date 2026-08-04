@@ -3,7 +3,7 @@
  */
 import {
 detectPatternEntryEvents
-} from "./pattern-entry-logic.js?v=8";
+} from "./pattern-entry-logic.js?v=10";
 
 import {
 clearAlgoEntryPositions,
@@ -17,7 +17,7 @@ import {
 DEFAULT_PARTIAL_TP1_X,
 DEFAULT_PARTIAL_TP2_X,
 DEFAULT_PARTIAL_TP3_X
-} from "./pattern-trade-stats-partial.js?v=17";
+} from "./pattern-trade-stats-partial.js?v=18";
 
 /**
  * @param {{
@@ -155,6 +155,32 @@ timeoutRaw
 )
 ? timeoutRaw
 : undefined,
+maxPt1Pt4Bars:
+(()=>{
+const raw =
+host?.getMaxPt1Pt4Bars?.();
+
+if(
+raw ==
+null
+){
+return raw ===
+null
+? null
+: undefined;
+}
+
+const n =
+Number(
+raw
+);
+
+return Number.isFinite(
+n
+)
+? n
+: undefined;
+})(),
 /* TEMP_PULLBACK_BEFORE_ARM */
 pullbackBeforeArm:
 !!host?.getPullbackBeforeArm?.(),

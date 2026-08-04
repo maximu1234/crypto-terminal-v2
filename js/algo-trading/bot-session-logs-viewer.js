@@ -9,7 +9,7 @@ sendLanBotCommand
 } from "./bot-remote-client.js?v=7";
 import {
 formatBotStrategySettingsRows
-} from "./bot-strategy-prefs.js?v=17";
+} from "./bot-strategy-prefs.js?v=20";
 import {
 syncAllTickerFlagsRootToMain
 } from "./bot-bridge.js?v=11";
@@ -20,7 +20,7 @@ ALGO_TICKER_FLAGS_KEY
 const STORAGE_KEY =
 "algo_remote_session_logs_v1";
 const CHANNEL_UI_VER =
-"9";
+"10";
 const STRATEGY_IDS =
 [
 "st1",
@@ -256,7 +256,21 @@ root.innerHTML =
 <aside class="algo-remote-session-logs-list-wrap">
 <div class="algo-remote-session-logs-list" id="algo-remote-logs-list"></div>
 </aside>
+<div class="algo-remote-session-logs-main">
+<div class="algo-remote-session-logs-filter">
+<label class="algo-remote-session-logs-filter-label" for="algo-remote-logs-symbol-filter">Тикер</label>
+<input
+type="search"
+id="algo-remote-logs-symbol-filter"
+class="algo-remote-session-logs-filter-input"
+placeholder="BTCUSDT…"
+autocomplete="off"
+spellcheck="false"
+/>
+<span class="algo-remote-session-logs-filter-count" id="algo-remote-logs-filter-count" hidden></span>
+</div>
 <div class="algo-remote-session-logs-view" id="algo-remote-logs-view" aria-live="polite"></div>
+</div>
 </div>
 <div class="algo-remote-session-logs-help-panel hidden" id="algo-remote-session-logs-help-panel" role="dialog" aria-label="Помощь: канал с ботом">
 <header class="algo-remote-session-logs-help-header">
@@ -413,12 +427,20 @@ value ??
 /**
  * Split status-log lines on " | " into table columns.
  * @param {string} text
- * @returns {string} HTML
+ * @param {string} [symbolFilter]
+ * @returns {{ html: string, shown: number, total: number }}
  */
 function renderLogTableHtml(
-text
+text,
+symbolFilter =
+""
 ){
 
+const query =
+String(
+symbolFilter ||
+""
+).trim().toUpperCase();
 const lines =
 String(
 text ||
@@ -431,6 +453,10 @@ text ||
 );
 const rows =
 [];
+let total =
+0;
+let shown =
+0;
 
 for(
 const line of
@@ -446,10 +472,56 @@ if(
 continue;
 }
 
-if(
+const isMeta =
 raw.startsWith(
 "#"
+);
+const parts =
+raw.split(
+" | "
+);
+const isData =
+!isMeta &&
+parts.length >=
+4;
+const symbol =
+isData
+? String(
+parts[1] ||
+""
+).trim()
+: "";
+
+total +=
+1;
+
+if(
+query
+){
+
+const hay =
+(
+isData
+? symbol
+: raw
+).toUpperCase();
+
+if(
+!hay.includes(
+query
 )
+){
+continue;
+}
+
+}
+
+shown +=
+1;
+
+if(
+isMeta ||
+!isData
 ){
 rows.push(
 `<tr class="algo-remote-session-logs-row algo-remote-session-logs-row--meta"><td colspan="4">${escapeHtml(
@@ -459,15 +531,6 @@ raw
 continue;
 }
 
-const parts =
-raw.split(
-" | "
-);
-
-if(
-parts.length >=
-4
-){
 const side =
 String(
 parts[2] ||
@@ -499,26 +562,37 @@ parts.slice(
 )
 )}</td></tr>`
 );
-continue;
-}
-
-rows.push(
-`<tr class="algo-remote-session-logs-row algo-remote-session-logs-row--meta"><td colspan="4">${escapeHtml(
-raw
-)}</td></tr>`
-);
 
 }
 
 if(
 !rows.length
 ){
-return `<div class="algo-remote-session-logs-empty">Пустой лог</div>`;
+const empty =
+query
+? `Нет строк с тикером «${escapeHtml(
+query
+)}»`
+: "Пустой лог";
+
+return {
+html:
+`<div class="algo-remote-session-logs-empty">${empty}</div>`,
+shown:
+0,
+total
+};
+
 }
 
-return `<table class="algo-remote-session-logs-table"><thead><tr><th class="algo-remote-session-logs-col-time">Время</th><th class="algo-remote-session-logs-col-symbol">Тикер</th><th class="algo-remote-session-logs-col-side">Сторона</th><th class="algo-remote-session-logs-col-text">Сообщение</th></tr></thead><tbody>${rows.join(
+return {
+html:
+`<table class="algo-remote-session-logs-table"><thead><tr><th class="algo-remote-session-logs-col-time">Время</th><th class="algo-remote-session-logs-col-symbol">Тикер</th><th class="algo-remote-session-logs-col-side">Сторона</th><th class="algo-remote-session-logs-col-text">Сообщение</th></tr></thead><tbody>${rows.join(
 ""
-)}</tbody></table>`;
+)}</tbody></table>`,
+shown,
+total
+};
 
 }
 
@@ -619,6 +693,61 @@ const strategyListEl =
 root.querySelector(
 "#algo-remote-logs-strategy-list"
 );
+const filterEl =
+root.querySelector(
+"#algo-remote-logs-symbol-filter"
+);
+const filterCountEl =
+root.querySelector(
+"#algo-remote-logs-filter-count"
+);
+/** @type {string} */
+let currentLogText =
+"";
+
+/**
+ * Paint log table using current text + ticker filter.
+ */
+function paintLogView(){
+
+const filter =
+filterEl?.value ||
+"";
+const result =
+renderLogTableHtml(
+currentLogText,
+filter
+);
+
+if(
+viewEl
+){
+viewEl.innerHTML =
+result.html;
+}
+
+if(
+filterCountEl
+){
+
+if(
+filter.trim() &&
+currentLogText
+){
+filterCountEl.hidden =
+false;
+filterCountEl.textContent =
+`${result.shown} / ${result.total}`;
+}else{
+filterCountEl.hidden =
+true;
+filterCountEl.textContent =
+"";
+}
+
+}
+
+}
 
 if(
 hostEl
@@ -1409,15 +1538,10 @@ true
 return;
 }
 
-if(
-viewEl
-){
-viewEl.innerHTML =
-renderLogTableHtml(
+currentLogText =
 res.text ||
-""
-);
-}
+"";
+paintLogView();
 
 setMessage(
 name
@@ -1513,6 +1637,13 @@ event=>{
 event.preventDefault();
 void refreshLanStatus();
 void refreshList();
+}
+);
+
+filterEl?.addEventListener(
+"input",
+()=>{
+paintLogView();
 }
 );
 

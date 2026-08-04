@@ -174,6 +174,8 @@ tf:
 prefs.tf,
 timeoutBars:
 prefs.timeoutBars,
+maxPt1Pt4Bars:
+prefs.maxPt1Pt4Bars,
 /* TEMP_PULLBACK_BEFORE_ARM */
 pullbackBeforeArm:
 !!prefs.pullbackBeforeArm,
@@ -439,6 +441,8 @@ tp3:
 active.tp3,
 timeoutBars:
 active.timeoutBars,
+maxPt1Pt4Bars:
+active.maxPt1Pt4Bars,
 pullbackBeforeArm:
 !!active.pullbackBeforeArm,
 pullbackBeforeArmPct:
@@ -1168,6 +1172,8 @@ minWinRate:
 shellPrefs.minWinRate,
 timeoutBars:
 shellPrefs.timeoutBars,
+maxPt1Pt4Bars:
+shellPrefs.maxPt1Pt4Bars,
 pullbackBeforeArm:
 !!shellPrefs.pullbackBeforeArm,
 pullbackBeforeArmPct:

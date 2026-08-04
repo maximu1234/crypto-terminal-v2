@@ -41,7 +41,7 @@ refreshAlgoMarketListFromFlags
 
 import {
 mountAlgoTickerScanUi
-} from "./algo-trading/ticker-scan-ui.js?v=13";
+} from "./algo-trading/ticker-scan-ui.js?v=16";
 
 import {
 mountAlgoRuntimeUi
@@ -49,7 +49,7 @@ mountAlgoRuntimeUi
 
 import {
 mountAlgoBotStrategyUi
-} from "./algo-trading/bot-strategy-ui.js?v=60";
+} from "./algo-trading/bot-strategy-ui.js?v=62";
 
 import {
 mountSessionLogServerSettings
@@ -73,12 +73,12 @@ mountAlgoTradingIndicators
 
 import {
 mountAlgoPatternEntryOverlay
-} from "./algo-trading/pattern-entry-overlay.js?v=14";
+} from "./algo-trading/pattern-entry-overlay.js?v=16";
 
 import {
 clearAlgoPatternAnalysisUi,
 refreshAlgoPatternAnalysis
-} from "./algo-trading/pattern-analysis.js?v=23";
+} from "./algo-trading/pattern-analysis.js?v=25";
 
 import {
 invalidateAlgoPattern12SceneCache
@@ -107,12 +107,15 @@ DEFAULT_PARTIAL_TP3_X,
 DEFAULT_TRAIL_SL_X1,
 DEFAULT_TRAIL_SL_X2,
 DEFAULT_TP_SHARES
-} from "./algo-trading/pattern-trade-stats-partial.js?v=17";
+} from "./algo-trading/pattern-trade-stats-partial.js?v=19";
 
 import {
 clampEntryTimeoutBars,
-ENTRY_TIMEOUT_BARS
-} from "./algo-trading/pattern-entry-logic.js?v=8";
+clampMaxPt1Pt4Bars,
+resolveMaxPt1Pt4BarsFromPrefs,
+ENTRY_TIMEOUT_BARS,
+ENTRY_MAX_PT1_PT4_BARS
+} from "./algo-trading/pattern-entry-logic.js?v=10";
 
 /* TEMP_PULLBACK_BEFORE_ARM — remove with temp-pullback-before-arm.js */
 import {
@@ -133,12 +136,18 @@ DEFAULT_ALGO_EMA_SHIFT
 } from "./algo-trading/pattern-ema-filter.js?v=3";
 
 import {
+normalizeAlgoTpEmaTrail,
+clampAlgoTpEmaLength,
+DEFAULT_ALGO_TP_EMA_LENGTH
+} from "./algo-trading/pattern-tp-ema.js?v=1";
+
+import {
 alignMaPointsToDisplayCandles
 } from "./indicators/ma-math.js?v=2";
 
 import {
 normalizeAlgoStatsMode
-} from "./algo-trading/pattern-trade-stats.js?v=10";
+} from "./algo-trading/pattern-trade-stats.js?v=12";
 
 import {
 readAlgoPattern12Settings
@@ -399,6 +408,10 @@ timeoutBars:
 clampEntryTimeoutBars(
 raw.timeoutBars
 ),
+maxPt1Pt4Bars:
+resolveMaxPt1Pt4BarsFromPrefs(
+raw
+),
 /* TEMP_PULLBACK_BEFORE_ARM */
 pullbackBeforeArm:
 normalizePullbackBeforeArmEnabled(
@@ -441,6 +454,14 @@ emaTf2:
 normalizeAlgoEmaTf(
 raw.emaTf2
 ),
+tpEmaTrail:
+normalizeAlgoTpEmaTrail(
+raw.tpEmaTrail
+),
+tpEmaLength:
+clampAlgoTpEmaLength(
+raw.tpEmaLength
+),
 scanStrategy:
 raw.scanStrategy === "st2" || raw.scanStrategy === "st3"
 ? raw.scanStrategy
@@ -460,6 +481,10 @@ raw.scanShortMinWinRate
 scanBothMinWinRate:
 clampScanMinWinRate(
 raw.scanBothMinWinRate
+),
+scanTop100MinWinRate:
+clampScanMinWinRate(
+raw.scanTop100MinWinRate
 ),
 statsMode:
 normalizeAlgoStatsMode(
@@ -543,6 +568,8 @@ trailSlX2St3:
 DEFAULT_TRAIL_SL_X2,
 timeoutBars:
 ENTRY_TIMEOUT_BARS,
+maxPt1Pt4Bars:
+ENTRY_MAX_PT1_PT4_BARS,
 /* TEMP_PULLBACK_BEFORE_ARM */
 pullbackBeforeArm:
 false,
@@ -564,6 +591,10 @@ emaShift2:
 DEFAULT_ALGO_EMA_SHIFT,
 emaTf2:
 "",
+tpEmaTrail:
+false,
+tpEmaLength:
+DEFAULT_ALGO_TP_EMA_LENGTH,
 scanStrategy:
 "st1",
 scanTf:
@@ -573,6 +604,8 @@ scanLongMinWinRate:
 scanShortMinWinRate:
 50,
 scanBothMinWinRate:
+50,
+scanTop100MinWinRate:
 50,
 statsMode:
 "direct",
@@ -724,6 +757,10 @@ timeoutBars:
 clampEntryTimeoutBars(
 prefs.timeoutBars
 ),
+maxPt1Pt4Bars:
+clampMaxPt1Pt4Bars(
+prefs.maxPt1Pt4Bars
+),
 /* TEMP_PULLBACK_BEFORE_ARM */
 pullbackBeforeArm:
 normalizePullbackBeforeArmEnabled(
@@ -766,6 +803,14 @@ emaTf2:
 normalizeAlgoEmaTf(
 prefs.emaTf2
 ),
+tpEmaTrail:
+normalizeAlgoTpEmaTrail(
+prefs.tpEmaTrail
+),
+tpEmaLength:
+clampAlgoTpEmaLength(
+prefs.tpEmaLength
+),
 scanStrategy:
 prefs.scanStrategy === "st2" || prefs.scanStrategy === "st3"
 ? prefs.scanStrategy
@@ -785,6 +830,10 @@ prefs.scanShortMinWinRate
 scanBothMinWinRate:
 clampScanMinWinRate(
 prefs.scanBothMinWinRate
+),
+scanTop100MinWinRate:
+clampScanMinWinRate(
+prefs.scanTop100MinWinRate
 ),
 statsMode:
 normalizeAlgoStatsMode(
@@ -1756,6 +1805,10 @@ let timeoutBars =
 clampEntryTimeoutBars(
 readPrefs().timeoutBars
 );
+let maxPt1Pt4Bars =
+clampMaxPt1Pt4Bars(
+readPrefs().maxPt1Pt4Bars
+);
 /* TEMP_PULLBACK_BEFORE_ARM */
 let pullbackBeforeArm =
 normalizePullbackBeforeArmEnabled(
@@ -1798,6 +1851,19 @@ let emaTf2 =
 normalizeAlgoEmaTf(
 readPrefs().emaTf2
 );
+let tpEmaTrail =
+normalizeAlgoTpEmaTrail(
+readPrefs().tpEmaTrail
+);
+let tpEmaLength =
+clampAlgoTpEmaLength(
+readPrefs().tpEmaLength
+);
+/* Entry EMA shift filters UI removed — keep off. */
+emaFilter =
+false;
+emaFilter2 =
+false;
 const emaFilterLines =
 [
 {
@@ -1807,7 +1873,7 @@ series:
 null,
 isEnabled:
 ()=>
-emaFilter,
+false,
 getPeriod:
 ()=>
 emaPeriod,
@@ -1825,7 +1891,7 @@ series:
 null,
 isEnabled:
 ()=>
-emaFilter2,
+false,
 getPeriod:
 ()=>
 emaPeriod2,
@@ -1855,6 +1921,10 @@ readPrefs().scanShortMinWinRate
 let scanBothMinWinRate =
 clampScanMinWinRate(
 readPrefs().scanBothMinWinRate
+);
+let scanTop100MinWinRate =
+clampScanMinWinRate(
+readPrefs().scanTop100MinWinRate
 );
 let statsMode =
 normalizeAlgoStatsMode(
@@ -2710,6 +2780,7 @@ share1Y,
 share2Y,
 share3Y,
 timeoutBars,
+maxPt1Pt4Bars,
 /* TEMP_PULLBACK_BEFORE_ARM */
 pullbackBeforeArm,
 pullbackBeforeArmPct,
@@ -2717,10 +2788,13 @@ emaFilter,
 emaPeriod,
 emaShift,
 emaTf,
-emaFilter2,
+emaFilter2:
+false,
 emaPeriod2,
 emaShift2,
 emaTf2,
+tpEmaTrail,
+tpEmaLength,
 chartTf:
 tf,
 patternSettings:
@@ -2862,6 +2936,7 @@ share1Y,
 share2Y,
 share3Y,
 timeoutBars,
+maxPt1Pt4Bars,
 /* TEMP_PULLBACK_BEFORE_ARM */
 pullbackBeforeArm,
 pullbackBeforeArmPct,
@@ -2869,10 +2944,13 @@ emaFilter,
 emaPeriod,
 emaShift,
 emaTf,
-emaFilter2,
+emaFilter2:
+false,
 emaPeriod2,
 emaShift2,
 emaTf2,
+tpEmaTrail,
+tpEmaLength,
 chartTf:
 tf,
 scanStrategy,
@@ -2880,6 +2958,7 @@ scanTf,
 scanLongMinWinRate,
 scanShortMinWinRate,
 scanBothMinWinRate,
+scanTop100MinWinRate,
 statsMode,
 statsModeSt2,
 statsModeSt3,
@@ -3412,6 +3491,8 @@ getRiskUsd:()=>
 riskUsd,
 getTimeoutBars:()=>
 timeoutBars,
+getMaxPt1Pt4Bars:()=>
+maxPt1Pt4Bars,
 /* TEMP_PULLBACK_BEFORE_ARM */
 getPullbackBeforeArm:()=>
 pullbackBeforeArm,
@@ -3576,6 +3657,70 @@ timeoutBarsInput.blur();
 );
 }
 
+const maxPt1Pt4BarsInput =
+document.getElementById(
+"algo-max-pt1-pt4-bars"
+);
+
+if(
+maxPt1Pt4BarsInput
+){
+maxPt1Pt4BarsInput.value =
+maxPt1Pt4Bars ==
+null
+? ""
+: String(
+maxPt1Pt4Bars
+);
+
+const commitMaxPt1Pt4Bars =
+()=>{
+const next =
+clampMaxPt1Pt4Bars(
+maxPt1Pt4BarsInput.value
+);
+maxPt1Pt4BarsInput.value =
+next ==
+null
+? ""
+: String(
+next
+);
+
+if(
+next ===
+maxPt1Pt4Bars
+){
+return;
+}
+
+maxPt1Pt4Bars =
+next;
+persistAlgoSettings();
+};
+
+maxPt1Pt4BarsInput.addEventListener(
+"change",
+commitMaxPt1Pt4Bars
+);
+maxPt1Pt4BarsInput.addEventListener(
+"keydown",
+event=>{
+
+if(
+event.key ===
+"Enter"
+){
+event.preventDefault();
+maxPt1Pt4BarsInput.blur();
+}
+
+}
+);
+}
+
+
+
 /* TEMP_PULLBACK_BEFORE_ARM — remove with temp-pullback-before-arm.js */
 const pullbackBeforeArmInput =
 document.getElementById(
@@ -3695,6 +3840,7 @@ share1Y,
 share2Y,
 share3Y,
 timeoutBars,
+maxPt1Pt4Bars,
 /* TEMP_PULLBACK_BEFORE_ARM */
 pullbackBeforeArm,
 pullbackBeforeArmPct,
@@ -3702,10 +3848,13 @@ emaFilter,
 emaPeriod,
 emaShift,
 emaTf,
-emaFilter2,
+emaFilter2:
+false,
 emaPeriod2,
 emaShift2,
 emaTf2,
+tpEmaTrail,
+tpEmaLength,
 chartTf:
 tf,
 scanStrategy,
@@ -3713,6 +3862,7 @@ scanTf,
 scanLongMinWinRate,
 scanShortMinWinRate,
 scanBothMinWinRate,
+scanTop100MinWinRate,
 statsMode,
 statsModeSt2,
 statsModeSt3,
@@ -3745,6 +3895,7 @@ share1Y,
 share2Y,
 share3Y,
 timeoutBars,
+maxPt1Pt4Bars,
 /* TEMP_PULLBACK_BEFORE_ARM */
 pullbackBeforeArm,
 pullbackBeforeArmPct,
@@ -3752,10 +3903,13 @@ emaFilter,
 emaPeriod,
 emaShift,
 emaTf,
-emaFilter2,
+emaFilter2:
+false,
 emaPeriod2,
 emaShift2,
 emaTf2,
+tpEmaTrail,
+tpEmaLength,
 chartTf:
 tf,
 patternSettings:
@@ -4948,98 +5102,56 @@ persistAlgoSettings();
 
 }
 
-bindEmaFilterPair(
-{
-checkId:
-"algo-ema-filter",
-periodId:
-"algo-ema-period",
-shiftId:
-"algo-ema-shift",
-tfId:
-"algo-ema-tf",
-fallbackPeriod:
-DEFAULT_ALGO_EMA_PERIOD,
-getEnabled:
-()=>
-emaFilter,
-setEnabled:
-next=>{
-emaFilter =
-next;
-},
-getPeriod:
-()=>
-emaPeriod,
-setPeriod:
-next=>{
-emaPeriod =
-next;
-},
-getShift:
-()=>
-emaShift,
-setShift:
-next=>{
-emaShift =
-next;
-},
-getTf:
-()=>
-emaTf,
-setTf:
-next=>{
-emaTf =
-next;
-}
+(function bindTpEmaTrail(){
+
+const check =
+document.getElementById(
+"algo-tp-ema"
+);
+const lenInput =
+document.getElementById(
+"algo-tp-ema-len"
+);
+
+if(
+check
+){
+check.checked =
+tpEmaTrail;
+check.addEventListener(
+"change",
+()=>{
+tpEmaTrail =
+!!check.checked;
+persistAlgoSettings();
 }
 );
-bindEmaFilterPair(
-{
-checkId:
-"algo-ema-filter-2",
-periodId:
-"algo-ema-period-2",
-shiftId:
-"algo-ema-shift-2",
-tfId:
-"algo-ema-tf-2",
-fallbackPeriod:
-DEFAULT_ALGO_EMA_PERIOD_2,
-getEnabled:
-()=>
-emaFilter2,
-setEnabled:
-next=>{
-emaFilter2 =
-next;
-},
-getPeriod:
-()=>
-emaPeriod2,
-setPeriod:
-next=>{
-emaPeriod2 =
-next;
-},
-getShift:
-()=>
-emaShift2,
-setShift:
-next=>{
-emaShift2 =
-next;
-},
-getTf:
-()=>
-emaTf2,
-setTf:
-next=>{
-emaTf2 =
-next;
 }
+
+if(
+lenInput
+){
+lenInput.value =
+String(
+tpEmaLength
+);
+lenInput.addEventListener(
+"change",
+()=>{
+tpEmaLength =
+clampAlgoTpEmaLength(
+lenInput.value
+);
+lenInput.value =
+String(
+tpEmaLength
+);
+persistAlgoSettings();
 }
 );
+}
+
+})();
 
 
 
@@ -5352,6 +5464,7 @@ share1Y,
 share2Y,
 share3Y,
 timeoutBars,
+maxPt1Pt4Bars,
 /* TEMP_PULLBACK_BEFORE_ARM */
 pullbackBeforeArm,
 pullbackBeforeArmPct,
@@ -5359,15 +5472,39 @@ emaFilter,
 emaPeriod,
 emaShift,
 emaTf,
-emaFilter2,
+emaFilter2:
+false,
 emaPeriod2,
 emaShift2,
 emaTf2,
+tpEmaTrail,
+tpEmaLength,
 chartTf:
 tf,
 patternSettings:
 readAlgoPattern12Settings()
 }),
+getStrategyStatsMode:(
+id
+)=>{
+if(
+id ===
+"st2"
+){
+return statsModeSt2;
+}
+
+if(
+id ===
+"st3"
+){
+return statsModeSt3;
+}
+
+return statsMode;
+},
+getScanTf:()=>
+scanTf,
 readPrefs,
 persistPrefs(
 patch
@@ -5424,6 +5561,16 @@ patch.scanBothMinWinRate
 );
 }
 
+if(
+patch.scanTop100MinWinRate !=
+null
+){
+scanTop100MinWinRate =
+clampScanMinWinRate(
+patch.scanTop100MinWinRate
+);
+}
+
 writePrefs(
 {
 symbol,
@@ -5450,6 +5597,7 @@ share1Y,
 share2Y,
 share3Y,
 timeoutBars,
+maxPt1Pt4Bars,
 /* TEMP_PULLBACK_BEFORE_ARM */
 pullbackBeforeArm,
 pullbackBeforeArmPct,
@@ -5458,6 +5606,7 @@ scanTf,
 scanLongMinWinRate,
 scanShortMinWinRate,
 scanBothMinWinRate,
+scanTop100MinWinRate,
 statsMode,
 statsModeSt2,
 statsModeSt3,
