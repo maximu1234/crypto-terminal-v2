@@ -362,7 +362,7 @@ Object.freeze({
 "algo-trading/bot-session-log-server-ui.js":
 9,
 "algo-trading/bot-session-logs-viewer.js":
-19,
+20,
 "algo-trading/bot-cloud-lock.js":
 9,
 "algo-trading/bot-remote-client.js":
@@ -496,7 +496,7 @@ Object.freeze({
 "screener-widget-zoom.js":
 17,
 "release-marker.js":
-83,
+84,
 "focus-blur-after-pick.js":
 3,
 "site-boot.js":
@@ -645,7 +645,7 @@ Object.freeze({
 
 /* ── JS: cloud / auth ── */
 "cloud-sync.js":
-64,
+65,
 "cloud-sync-throttle.js":
 3,
 "page-routes.js":

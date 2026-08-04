@@ -10,7 +10,7 @@ alertPriceForDisplay
 
 import {
 isCloudLoggedInEffective
-} from "./cloud-sync.js?v=64";
+} from "./cloud-sync.js?v=65";
 
 import {
 getTelegramChatId

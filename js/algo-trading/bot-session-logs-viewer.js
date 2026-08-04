@@ -3,7 +3,6 @@
  */
 import {
 isMultichartRemoteControlHost,
-pushAuthSessionToRemoteBot,
 fetchLanBotStatus,
 sendLanBotCommand
 } from "./bot-remote-client.js?v=7";
@@ -20,7 +19,7 @@ ALGO_TICKER_FLAGS_KEY
 const STORAGE_KEY =
 "algo_remote_session_logs_v1";
 const CHANNEL_UI_VER =
-"10";
+"11";
 const STRATEGY_IDS =
 [
 "st1",
@@ -215,10 +214,6 @@ root.innerHTML =
 <span class="algo-remote-session-logs-channel-label">Хост</span>
 <span class="algo-remote-session-logs-channel-value" id="algo-remote-logs-remote-host">—</span>
 </div>
-<div class="algo-remote-session-logs-channel-row">
-<span class="algo-remote-session-logs-channel-label">Сессия</span>
-<span class="algo-remote-session-logs-channel-value" id="algo-remote-logs-auth-health">—</span>
-</div>
 </div>
 <div class="algo-remote-session-logs-channel-strategy" role="radiogroup" aria-label="Стратегия запуска на боте">
 <label class="algo-remote-session-logs-strategy-check" title="Запустить Стратегию 1 с текущими настройками бота">
@@ -238,7 +233,6 @@ root.innerHTML =
 <button type="button" class="algo-bot-remote-btn" id="algo-remote-logs-start">Запустить</button>
 <button type="button" class="algo-bot-remote-btn" id="algo-remote-logs-stop">Остановить</button>
 <button type="button" class="algo-bot-remote-btn algo-bot-remote-btn--push" id="algo-remote-logs-push" title="Отправить текущие Алго Лонг/Шорт/Both/Избранные на бот">Отдать списки</button>
-<button type="button" class="algo-bot-remote-btn algo-bot-remote-btn--push" id="algo-remote-logs-auth" title="Передать вход Multichart на бот (вместо mcauth1…)">Отдать сессию</button>
 <button type="button" class="algo-bot-remote-btn" id="algo-remote-logs-refresh">Обновить логи</button>
 </div>
 </section>
@@ -250,7 +244,7 @@ root.innerHTML =
 </div>
 </aside>
 </section>
-<p class="algo-remote-session-logs-hint">Прямой канал Multichart ↔ Algo Bot (без Supabase и worker). На боте: шестерёнка → «Логи → Терминал». В «Статус» остаётся только облачный удалённый бот и блокировка.</p>
+<p class="algo-remote-session-logs-hint">Прямой канал Multichart ↔ Algo Bot (без Supabase и worker). На боте: шестерёнка → «Логи → Терминал».</p>
 <p class="algo-remote-session-logs-message" id="algo-remote-logs-message" hidden></p>
 <div class="algo-remote-session-logs-body">
 <aside class="algo-remote-session-logs-list-wrap">
@@ -1366,57 +1360,6 @@ res.message ||
 
 }
 
-async function pushAuthSession(){
-
-const next =
-currentConn();
-
-writeConn(
-next
-);
-
-if(
-!next.host ||
-!next.token
-){
-setMessage(
-"Укажите IP и токен",
-true
-);
-return;
-}
-
-setMessage(
-"Обновление и отправка сессии…"
-);
-
-const res =
-await pushAuthSessionToRemoteBot(
-next
-);
-
-if(
-!res?.ok
-){
-setMessage(
-res?.message ||
-"Не удалось отправить сессию",
-true
-);
-return;
-}
-
-setMessage(
-res.message ||
-(
-res.email
-? `Сессия отправлена (${res.email})`
-: "Сессия отправлена на бот"
-)
-);
-
-}
-
 async function refreshList(){
 
 const next =
@@ -1654,16 +1597,6 @@ root.querySelector(
 event=>{
 event.preventDefault();
 void pushWatchlists();
-}
-);
-
-root.querySelector(
-"#algo-remote-logs-auth"
-)?.addEventListener(
-"click",
-event=>{
-event.preventDefault();
-void pushAuthSession();
 }
 );
 

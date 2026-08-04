@@ -45,7 +45,7 @@ mountAlgoTickerScanUi
 
 import {
 mountAlgoRuntimeUi
-} from "./algo-trading/runtime-ui.js?v=12";
+} from "./algo-trading/runtime-ui.js?v=13";
 
 import {
 mountAlgoBotStrategyUi

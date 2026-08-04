@@ -9,7 +9,7 @@ import {
 applyPersistedAuthSessionNow,
 clearCloudAuthProblem,
 importAuthSessionTransferString
-} from "../cloud-sync.js?v=64";
+} from "../cloud-sync.js?v=65";
 import {
 forceRestoreDesktopAuthSession
 } from "../auth-storage.js?v=10";

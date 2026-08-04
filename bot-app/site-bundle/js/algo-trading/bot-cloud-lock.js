@@ -483,6 +483,21 @@ err
  */
 export async function acquireAlgoBotLock(){
 
+/*
+  Temporary: cloud "another bot running" lock disabled on Algo Bot.
+  Rely on careful single-bot use until session/auth model is redesigned.
+*/
+if(
+isAlgoBotLiteShell()
+){
+return {
+ok:
+true,
+skipped:
+true
+};
+}
+
 const client =
 await getLockClient();
 

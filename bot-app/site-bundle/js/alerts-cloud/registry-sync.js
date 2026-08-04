@@ -1,7 +1,7 @@
 import {
 isCloudLoggedInEffective,
 ensureCloudLoginResolved
-} from "../cloud-sync.js?v=64";
+} from "../cloud-sync.js?v=65";
 
 import {
 resolveAlertAuthFast,
@@ -758,7 +758,7 @@ return false;
 }
 
 const { ensureCloudReady } =
-await import("../auth-ui.js?v=55");
+await import("../auth-ui.js?v=59");
 
 await ensureCloudReady();
 
@@ -990,7 +990,7 @@ return ok;
 async function syncAllLocalAlertsToCloudImpl(){
 
 const { ensureCloudReady } =
-await import("../auth-ui.js?v=55");
+await import("../auth-ui.js?v=59");
 
 await ensureCloudReady();
 
@@ -2190,7 +2190,7 @@ return 0;
 
 try{
 const { ensureCloudLoginResolved } =
-await import("../cloud-sync.js?v=64");
+await import("../cloud-sync.js?v=65");
 
 await ensureCloudLoginResolved(
 8000

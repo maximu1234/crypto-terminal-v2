@@ -43,12 +43,12 @@ canSetBlueFlag
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=55";
+} from "./auth-ui.js?v=59";
 
 import {
 persistFavoritesToCloud,
 onFavoritesRemoteUpdate
-} from "./cloud-sync.js?v=64";
+} from "./cloud-sync.js?v=65";
 
 import {
 createCandlestickChart,

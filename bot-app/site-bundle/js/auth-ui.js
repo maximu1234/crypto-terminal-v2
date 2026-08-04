@@ -13,7 +13,7 @@ completeAuthFromCallbackUrl,
 hasAuthCallbackInUrl,
 exportAuthSessionTransferString,
 importAuthSessionTransferString
-} from "./cloud-sync.js?v=64";
+} from "./cloud-sync.js?v=65";
 
 import {
 isSupabaseConfigured
@@ -1199,6 +1199,35 @@ wrap.classList.remove("hidden");
 
 const algoBot =
 isAlgoBotShell();
+
+/* Temporary: Algo Bot login / session paste disabled. */
+if(
+algoBot
+){
+loggedIn.classList.add(
+"hidden"
+);
+loggedOut.classList.add(
+"hidden"
+);
+desktopLinkWrap?.classList.add(
+"hidden"
+);
+copySessionBtn?.classList.add(
+"hidden"
+);
+sessionImportWrap?.classList.add(
+"hidden"
+);
+paintSessionSyncOk(
+false
+);
+setHint(
+"Вход временно отключён. Торговля и LAN работают без облачной сессии.",
+false
+);
+return;
+}
 
 if(isAuthUiLoggedIn()){
 

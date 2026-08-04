@@ -85,10 +85,13 @@ if(
 return "manual";
 }
 
-return raw ===
-"manual"
-? "manual"
-: "live";
+/*
+  Temporary: remote Algo Bot — live only. Manual trading UI is inactive;
+  ignore stored/requested "manual" until we re-enable it.
+*/
+void raw;
+
+return "live";
 
 }
 

@@ -4794,7 +4794,7 @@ lastChartAlertsPullMs =
 Date.now();
 
 void import(
-"../alerts-cloud-sync.js?v=64"
+"../alerts-cloud-sync.js?v=65"
 ).then(
 ({ pullRegistryFromCloudNow })=>
 pullRegistryFromCloudNow({

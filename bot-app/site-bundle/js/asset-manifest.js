@@ -350,7 +350,7 @@ Object.freeze({
 "algo-trading/runtime-bridge.js":
 6,
 "algo-trading/runtime-ui.js":
-12,
+13,
 "algo-trading/bot-bridge.js":
 11,
 "algo-trading/bot-alert-bridge.js":
@@ -364,7 +364,7 @@ Object.freeze({
 "algo-trading/bot-session-logs-viewer.js":
 19,
 "algo-trading/bot-cloud-lock.js":
-9,
+10,
 "algo-trading/bot-remote-client.js":
 7,
 "algo-trading/trade/format.js":
@@ -496,7 +496,7 @@ Object.freeze({
 "screener-widget-zoom.js":
 17,
 "release-marker.js":
-83,
+84,
 "focus-blur-after-pick.js":
 3,
 "site-boot.js":
@@ -645,7 +645,7 @@ Object.freeze({
 
 /* ── JS: cloud / auth ── */
 "cloud-sync.js":
-64,
+65,
 "cloud-sync-throttle.js":
 3,
 "page-routes.js":
@@ -663,7 +663,7 @@ Object.freeze({
 "auth-session-transfer.js":
 1,
 "auth-ui.js":
-58,
+59,
 "header-settings-shell.js":
 4,
 "app-settings-window.js":

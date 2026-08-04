@@ -89,9 +89,9 @@ title="Настройки Алго"
 <div class="algo-stats-col-title">Алго-профиль (отдельно от Терминала)</div>
 <div class="algo-trading-mode" id="algo-trading-mode" role="tablist" aria-label="Режим торговли">
 <button type="button" class="algo-trading-mode-btn active" data-algo-trading-mode="live" role="tab" aria-selected="true">Реальная торговля</button>
-<button type="button" class="algo-trading-mode-btn" data-algo-trading-mode="manual" role="tab" aria-selected="false">Ручная торговля</button>
+<button type="button" class="algo-trading-mode-btn" data-algo-trading-mode="manual" role="tab" aria-selected="false" disabled aria-disabled="true" title="Временно отключено на удалённом боте">Ручная торговля</button>
 </div>
-<p id="algo-trading-mode-hint" class="algo-stats-hint">Реальная: бот ставит триггеры на бирже (нужны ключи), Стратегии 1–3. Ручная: алерты на вход, только Стратегия 1.</p>
+<p id="algo-trading-mode-hint" class="algo-stats-hint">Реальная торговля: бот ставит триггеры на бирже (нужны ключи), Стратегии 1–3. Ручная торговля временно отключена.</p>
 <div id="algo-runtime-keys-block" class="algo-runtime-keys-block">
 <p id="algo-runtime-keys-hint" class="algo-stats-hint">Ключи только для Алго — не те, что в Терминале.</p>
 <div class="algo-stats-row algo-stats-row--setting">
@@ -455,7 +455,7 @@ aria-label="История сигналов"
 </div>
 <p class="algo-bot-status-remote-message hidden" id="algo-bot-remote-message"></p>
 </div>
-<div class="algo-bot-status-row algo-bot-status-row--lock">
+<div class="algo-bot-status-row algo-bot-status-row--lock" hidden>
 <span class="algo-bot-status-label">Блокировка</span>
 <span class="algo-bot-status-value" id="algo-bot-status-lock">—</span>
 </div>
@@ -464,6 +464,7 @@ type="button"
 class="algo-bot-lock-clear-btn"
 id="algo-bot-lock-clear"
 title="Снять облачную метку, если бот упал без «Остановить»"
+hidden
 >
 Снять блокировку
 </button>
