@@ -344,9 +344,9 @@ Object.freeze({
 "algo-trading/ticker-scan-all-stats.js":
 5,
 "algo-trading/strategy-universe-scan.js":
-2,
-"algo-trading/strategy-universe-ui.js":
 3,
+"algo-trading/strategy-universe-ui.js":
+4,
 "algo-trading/ticker-scan-ui.js":
 16,
 "algo-trading/runtime-bridge.js":
@@ -498,7 +498,7 @@ Object.freeze({
 "screener-widget-zoom.js":
 21,
 "release-marker.js":
-84,
+85,
 "focus-blur-after-pick.js":
 3,
 "site-boot.js":

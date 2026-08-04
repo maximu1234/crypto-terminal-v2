@@ -994,7 +994,7 @@ qtyStep:
   0.001
 ]
 );
-/* Only two steps — keep last non-zero, fund earliest early leg. */
+/* Only two steps — not enough for three TPs → full size on TP1. */
 assert.deepEqual(
 executor.allocateQtyByWeights(
 0.002,
@@ -1009,9 +1009,29 @@ qtyStep:
 ]
 ),
 [
+  0.002,
+  0,
+  0
+]
+);
+/* Single step — full size on TP1 (not TP3). */
+assert.deepEqual(
+executor.allocateQtyByWeights(
+0.001,
+{
+qtyStep:
+"0.001"
+},
+[
+  25,
+  25,
+  50
+]
+),
+[
   0.001,
   0,
-  0.001
+  0
 ]
 );
 const parts =
@@ -1100,6 +1120,93 @@ rest.cancelled.includes(
 assert.match(
 result.message,
 /dust/i
+);
+}
+);
+
+test(
+"partial TPs collapse to full-size TP1 when split legs miss min notional",
+async ()=>{
+/*
+ * Entry ~$8.5 clears Bybit's $5 floor, but 25/25/50 legs are ~$2/$2/$4 —
+ * none can be placed. Expect one reduce-only limit for the full size at TP1.
+ */
+const size =
+230;
+const rest =
+makeRestStub(
+{
+size
+}
+);
+rest.getInstrumentRules =
+async ()=>({
+qtyStep:
+"1",
+minOrderQty:
+1,
+minNotionalValue:
+5
+});
+const local =
+loadExecutorWithStubs(
+rest
+);
+const meta =
+{
+...partialMeta(),
+tpPrices:[
+0.0378,
+0.0388,
+0.0396
+],
+shares:[
+25,
+25,
+50
+]
+};
+const result =
+await local.ensurePartialTpLimits(
+{
+symbol:
+"AXLUSDT",
+meta,
+position:{
+size,
+side:
+"Buy"
+}
+}
+);
+assert.equal(
+result.ok,
+true
+);
+assert.equal(
+result.placed,
+1
+);
+assert.equal(
+rest.placed.length,
+1
+);
+assert.equal(
+Number(
+rest.placed[0].price
+),
+0.0378
+);
+assert.equal(
+Number(
+rest.placed[0].qty
+),
+230
+);
+assert.match(
+result.message ||
+"",
+/single TP1/i
 );
 }
 );
@@ -1218,9 +1325,9 @@ qtyStep:
 }
 ),
 [
-0.001,
+0.002,
 0,
-0.001
+0
 ]
 );
 }
@@ -1363,6 +1470,129 @@ shortTp,
 );
 
 test(
+"trail SL retries while exchange stop still lags meta tpsHit",
+async ()=>{
+const setStops =
+[];
+const rest =
+makeRestStub(
+{
+size:
+0.8
+}
+);
+rest.setPositionStop =
+async (
+symbol,
+target,
+price
+)=>{
+setStops.push(
+`${symbol}:${target}:${price}`
+);
+return {
+ok:
+true
+};
+};
+rest.getInstrumentRules =
+async ()=>({
+qtyStep:
+"0.1",
+minOrderQty:
+0.1,
+minNotionalValue:
+1
+});
+const local =
+loadExecutorWithStubs(
+rest,
+{
+pendingEntries:
+{
+BTCUSDT:
+{
+...partialMeta(),
+pt3:
+95,
+pt4:
+100,
+slPrice:
+97.47,
+prevSlPrice:
+95,
+initialQty:
+1,
+entryQty:
+0.8,
+tpsHit:
+1,
+trailSl:
+true,
+trailSlX1:
+-0.25,
+trailSlX2:
+0,
+exitKind:
+"partial-x",
+tpOrderIds:[
+"tp1-done",
+"id-2",
+"id-3"
+],
+tpQtys:[
+0.2,
+0.2,
+0.6
+]
+}
+}
+}
+);
+local.hydratePendingFromDisk();
+
+await local.reconcileTriggersAndStops(
+[
+{
+symbol:
+"BTCUSDT",
+size:
+0.8,
+stopLoss:
+95,
+takeProfit:
+0
+}
+]
+);
+
+assert.ok(
+setStops.some(
+row=>
+row.startsWith(
+"BTCUSDT:sl:"
+)
+),
+"must amend SL again when live stop is still pre-trail"
+);
+const entry =
+local.getPendingEntries().get(
+"BTCUSDT"
+);
+assert.equal(
+entry.tpsHit,
+1
+);
+assert.notEqual(
+Number(
+entry.slPrice
+),
+95
+);
+}
+);
+
+test(
 "executor keeps open size, tpQtys and retries failed trail SL",
 ()=>{
 for(
@@ -1381,9 +1611,9 @@ rel
 );
 assert.ok(
 src.includes(
-"Do not advance tpsHit on amend failure"
+"Trail after TP1/TP2 must retry every poll"
 ),
-`${rel}: trail must retry after failed SL amend`
+`${rel}: trail must retry until exchange SL matches`
 );
 assert.ok(
 src.includes(

@@ -564,6 +564,36 @@ decimals
 );
 }
 
+const funded =
+parts.filter(
+part=>
+part >
+0
+).length;
+
+/*
+ * Not enough size for every TP leg (coarse step / tiny position).
+ * Put the whole position on the first level (TP1) so at least one
+ * reduce-only close is placed instead of collapsing onto TP3 only.
+ */
+if(
+funded <
+list.length
+){
+return [
+total,
+...Array.from(
+{
+length:
+list.length -
+1
+},
+()=>
+0
+)
+];
+}
+
 const finalLast =
 Number(
 parts[
@@ -583,6 +613,88 @@ return null;
 }
 
 return parts;
+
+}
+
+/**
+ * Reduce-only TP leg must clear instrument min qty and min notional.
+ * @param {number} qty
+ * @param {number} price
+ * @param {{ minOrderQty?: number|string, minNotionalValue?: number|string }|null|undefined} rules
+ * @returns {boolean}
+ */
+function tpLimitQtyMeetsRules(
+qty,
+price,
+rules =
+{}
+){
+
+const q =
+Number(
+qty
+);
+const minQty =
+Number(
+rules?.minOrderQty ||
+0
+);
+const minNotional =
+Number(
+rules?.minNotionalValue ||
+0
+);
+
+if(
+!Number.isFinite(
+q
+) ||
+!(
+q >
+0
+)
+){
+return false;
+}
+
+if(
+Number.isFinite(
+minQty
+) &&
+minQty >
+0 &&
+q +
+1e-12 <
+minQty
+){
+return false;
+}
+
+const p =
+Number(
+price
+);
+
+if(
+Number.isFinite(
+minNotional
+) &&
+minNotional >
+0 &&
+Number.isFinite(
+p
+) &&
+p >
+0 &&
+q *
+p +
+1e-9 <
+minNotional
+){
+return false;
+}
+
+return true;
 
 }
 
@@ -4023,7 +4135,7 @@ Math.max(
 liveQty -
 reserved
 );
-const parts =
+let parts =
 allocateQtyByWeights(
 freeQty,
 rules,
@@ -4035,6 +4147,77 @@ index
 1
 )
 );
+let collapsedToSingleTp =
+false;
+
+/*
+ * Entry notional can clear Bybit's ~$5 floor while 25/25/50 legs each
+ * fall under it — then every RO TP is rejected and only SL remains.
+ * If the split cannot place every pending leg, put the full free size
+ * on the earliest remaining TP (TP1 when still open).
+ */
+if(
+parts &&
+pending.length >
+1
+){
+const legsOk =
+pending.every(
+(
+index,
+slot
+)=>
+tpLimitQtyMeetsRules(
+parts[
+slot
+],
+prices[
+index
+],
+rules
+)
+);
+
+if(
+!legsOk
+){
+const focusIndex =
+pending[
+0
+];
+const singleParts =
+allocateQtyByWeights(
+freeQty,
+rules,
+[
+1
+]
+);
+
+if(
+singleParts &&
+tpLimitQtyMeetsRules(
+singleParts[
+0
+],
+prices[
+focusIndex
+],
+rules
+)
+){
+pending.length =
+0;
+pending.push(
+focusIndex
+);
+parts =
+singleParts;
+collapsedToSingleTp =
+true;
+}
+}
+}
 
 if(
 !parts
@@ -4124,6 +4307,28 @@ let placedCount =
 0;
 let dustClosed =
 false;
+let lastPositiveSlot =
+-1;
+
+for(
+let slot =
+parts.length -
+1;
+slot >=
+0;
+slot--
+){
+if(
+parts[
+slot
+] >
+0
+){
+lastPositiveSlot =
+slot;
+break;
+}
+}
 
 for(
 let slot =
@@ -4140,10 +4345,9 @@ const qty =
 parts[
 slot
 ];
-const isFinal =
-index ===
-legCount -
-1;
+const isLastViable =
+slot ===
+lastPositiveSlot;
 
 if(
 !(
@@ -4151,7 +4355,7 @@ qty >
 0
 )
 ){
-/* Share floored to zero — final leg already absorbed that size. */
+/* Share floored to zero — surviving leg already absorbed that size. */
 continue;
 }
 
@@ -4160,7 +4364,7 @@ qty <
 minQty
 ){
 if(
-isFinal
+isLastViable
 ){
 const wiped =
 await algoRest.closePositionAtMarket(
@@ -4267,7 +4471,12 @@ errors.length
 : (
 dustClosed
 ? "final remainder closed at market (below min limit qty)"
+: (
+collapsedToSingleTp
+? `single TP${pending[0] +
+1} full size (too small to split)`
 : undefined
+)
 ),
 tpOrderIds,
 tpQtys,
@@ -4952,23 +5161,21 @@ meta.tpsHit
 sizeHits
 );
 
-let trailOk =
-true;
-
+/*
+ * Trail after TP1/TP2 must retry every poll until the exchange SL matches.
+ * Gating only on tpsHit rising skipped forever when:
+ * — Bybit rejected a transient amend,
+ * — meta.slPrice advanced but the snapshot/exchange still had the old SL,
+ * — pendingEntries overwrote tpsHit while trail never landed.
+ */
 if(
-tpsHit >
-(Number(
-meta.tpsHit
-) ||
-0) &&
-meta.trailSl
+meta.trailSl &&
+tpsHit >=
+1 &&
+liveQty >
+0
 ){
-const nextSl =
-pickProtectiveStopLoss(
-meta.side,
-Number(
-meta.slPrice
-),
+const desiredSl =
 computeTrailStopLoss(
 meta.side,
 meta.pt3,
@@ -4977,17 +5184,57 @@ tpsHit >=
 2
 ? meta.trailSlX2
 : meta.trailSlX1
-)
 );
-
-if(
+const liveSl =
+Number(
+pos?.stopLoss
+);
+const currentSl =
+Number.isFinite(
+liveSl
+) &&
+liveSl >
+0
+? liveSl
+: Number(
+meta.slPrice
+);
+const nextSl =
+pickProtectiveStopLoss(
+meta.side,
+currentSl,
+desiredSl
+);
+const needsTrail =
 Number.isFinite(
 nextSl
 ) &&
-nextSl !==
-Number(
-meta.slPrice
-)
+Number.isFinite(
+desiredSl
+) &&
+(
+!Number.isFinite(
+currentSl
+) ||
+!(
+currentSl >
+0
+) ||
+Math.abs(
+currentSl -
+nextSl
+) /
+Math.max(
+Math.abs(
+nextSl
+),
+1e-9
+) >
+0.0005
+);
+
+if(
+needsTrail
 ){
 const amend =
 await algoRest.setPositionStop(
@@ -5006,28 +5253,56 @@ false
  * managing the stops.
  */
 meta.prevSlPrice =
-Number(
+Number.isFinite(
+currentSl
+) &&
+currentSl >
+0
+? currentSl
+: Number(
 meta.slPrice
 );
 meta.slPrice =
 nextSl;
+reports.push(
+{
+symbol:
+sym,
+action:
+"trail-sl",
+ok:
+true,
+tpsHit,
+slPrice:
+nextSl,
+message:
+tpsHit >=
+2
+? "trail SL after TP2"
+: "trail SL after TP1"
+}
+);
 }else{
-/*
- * Do not advance tpsHit on amend failure — otherwise trail is skipped forever
- * (~1/3 of fills when Bybit rejects a transient SL move).
- */
-trailOk =
-false;
+reports.push(
+{
+symbol:
+sym,
+action:
+"trail-sl",
+ok:
+false,
+tpsHit,
+message:
+amend?.message ||
+"trail SL amend failed"
+}
+);
 }
 }
 }
 
-if(
-trailOk
-){
 meta.tpsHit =
 tpsHit;
-}
 
 /*
  * A TP leg that never made it to the exchange (or was cancelled outside the
@@ -6037,6 +6312,7 @@ BYBIT_MIN_ORDER_NOTIONAL_USDT,
 computeAlgoTakeProfit,
 splitQtyByShares,
 allocateQtyByWeights,
+tpLimitQtyMeetsRules,
 countTpsHitByClosedQty,
 ensurePartialTpLimits,
 cancelPartialTpLimits,

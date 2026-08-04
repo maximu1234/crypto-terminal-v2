@@ -144,6 +144,8 @@ universe
 
 const agg =
 createEmptyAlgoGlobalAgg();
+agg.historySpanSec =
+0;
 /** @type {object[]} */
 const rows =
 new Array(
@@ -154,6 +156,8 @@ items.length;
 let done =
 0;
 let cursor =
+0;
+let historySpanSec =
 0;
 
 async function worker(){
@@ -216,6 +220,43 @@ error:
 "bars=0"
 };
 }else{
+const t0 =
+Number(
+candles[0]?.time
+);
+const t1 =
+Number(
+candles[
+candles.length -
+1
+]?.time
+);
+
+if(
+Number.isFinite(
+t0
+) &&
+Number.isFinite(
+t1
+) &&
+t1 >
+t0
+){
+const span =
+t1 -
+t0;
+
+if(
+span >
+historySpanSec
+){
+historySpanSec =
+span;
+agg.historySpanSec =
+historySpanSec;
+}
+}
+
 const analysis =
 analyzeAlgoPatterns(
 candles,
@@ -431,6 +472,9 @@ await Promise.all(
 workers
 );
 
+agg.historySpanSec =
+historySpanSec;
+
 return {
 ok:
 !signal.cancelled,
@@ -442,6 +486,7 @@ universe,
 strategyId,
 total,
 done,
+historySpanSec,
 agg,
 rows:
 rows

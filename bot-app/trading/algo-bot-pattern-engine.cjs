@@ -3761,6 +3761,35 @@ report.tpPrice
 );
 }else if(
 report?.action ===
+"trail-sl"
+){
+pushSignal(
+{
+ts:
+Date.now(),
+symbol:
+report.symbol,
+side:
+"—",
+price:
+Number(
+report.slPrice
+) ||
+0,
+text:
+report.ok
+? `${report.symbol}: ${report.message ||
+"trail SL"} → ${Number(
+report.slPrice
+).toFixed(
+4
+)}`
+: `${report.symbol}: trail SL FAIL — ${report.message ||
+"error"}`
+}
+);
+}else if(
+report?.action ===
 "attach-stops" &&
 report?.ok
 ){

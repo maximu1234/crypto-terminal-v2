@@ -4,7 +4,7 @@
 import {
 scanAlgoStrategyUniverse,
 normalizeAlgoScanStrategyId
-} from "./strategy-universe-scan.js?v=2";
+} from "./strategy-universe-scan.js?v=3";
 
 import {
 normalizeAlgoScanTf,
@@ -512,6 +512,26 @@ closedR
 ? sumR /
 closedR
 : null;
+const historySpanSec =
+Number(
+agg.historySpanSec
+);
+const spanDays =
+Number.isFinite(
+historySpanSec
+) &&
+historySpanSec >
+0
+? historySpanSec /
+86400
+: null;
+const tradesPerDay =
+spanDays &&
+closedR >
+0
+? closedR /
+spanDays
+: null;
 
 const map =
 {
@@ -610,7 +630,15 @@ digits:
 closedR:
 String(
 closedR
+),
+tradesPerDay:
+Number.isFinite(
+tradesPerDay
 )
+? tradesPerDay.toFixed(
+1
+)
+: "—"
 };
 
 for(
