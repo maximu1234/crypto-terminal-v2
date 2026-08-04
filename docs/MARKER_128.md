@@ -23,3 +23,8 @@
 - Windows tag (Multichart): `desktop-win-v1.1.28`
 - Mac tag (Algo Bot): `algo-bot-v1.0.137`
 - Windows tag (Algo Bot): `algo-bot-win-v1.0.137`
+
+## Hotfix Algo Bot 1.0.138
+
+- Добавлен отсутствующий `pattern-12-scene-cache.js` в `bot-app/site-bundle` (404 ломал boot).
+- Mac/Win tags: `algo-bot-v1.0.138` / `algo-bot-win-v1.0.138`.
