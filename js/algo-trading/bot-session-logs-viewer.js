@@ -5,13 +5,14 @@ import {
 isMultichartRemoteControlHost,
 fetchLanBotStatus,
 sendLanBotCommand
-} from "./bot-remote-client.js?v=7";
+} from "./bot-remote-client.js?v=8";
 import {
-formatBotStrategySettingsRows
-} from "./bot-strategy-prefs.js?v=20";
+formatBotStrategySettingsRows,
+loadBotStrategiesPrefs
+} from "./bot-strategy-prefs.js?v=22";
 import {
 syncAllTickerFlagsRootToMain
-} from "./bot-bridge.js?v=11";
+} from "./bot-bridge.js?v=12";
 import {
 ALGO_TICKER_FLAGS_KEY
 } from "./ticker-flags.js?v=6";
@@ -1218,6 +1219,20 @@ startStrategyId ===
 "st3"
 ? "Ст3"
 : "Ст1";
+const strategies =
+loadBotStrategiesPrefs();
+const strategyPrefs =
+strategies?.[
+startStrategyId
+] &&
+typeof strategies[
+startStrategyId
+] ===
+"object"
+? strategies[
+startStrategyId
+]
+: null;
 
 setMessage(
 action ===
@@ -1229,7 +1244,20 @@ action ===
 const result =
 await sendLanBotCommand(
 action,
-next
+{
+...next,
+strategyId:
+startStrategyId,
+...(
+action ===
+"start" &&
+strategyPrefs
+? {
+strategyPrefs
+}
+: {}
+)
+}
 );
 
 channelCmdInflight =
@@ -1790,5 +1818,565 @@ btn
 btn.hidden =
 true;
 }
+
+}
+
+
+const LOCAL_UI_VER =
+"1";
+
+/** @type {{ root: HTMLElement, refreshList: () => Promise<void> } | null} */
+let localLogsUi =
+null;
+
+/**
+ * Full-window viewer for Multichart local bot session logs
+ * (~/Library/Logs/Multichart/algo-bot-sessions/).
+ * @param {{ closeStatusDropdown?: () => void }} [opts]
+ */
+export function openLocalSessionLogsViewer(
+opts =
+{}
+){
+
+const api =
+desktopApi();
+
+if(
+!api?.sessionLogLocalList ||
+!api?.sessionLogLocalGet
+){
+return;
+}
+
+opts.closeStatusDropdown?.();
+
+if(
+localLogsUi &&
+localLogsUi.root.getAttribute(
+"data-local-ui"
+) ===
+LOCAL_UI_VER
+){
+localLogsUi.root.classList.remove(
+"hidden"
+);
+void localLogsUi.refreshList();
+return;
+}
+
+if(
+localLogsUi?.root
+){
+localLogsUi.root.remove();
+localLogsUi =
+null;
+}
+
+const root =
+document.createElement(
+"div"
+);
+root.id =
+"algo-local-session-logs-modal";
+root.className =
+"algo-remote-session-logs-modal";
+root.setAttribute(
+"data-local-ui",
+LOCAL_UI_VER
+);
+root.setAttribute(
+"role",
+"dialog"
+);
+root.setAttribute(
+"aria-modal",
+"true"
+);
+root.setAttribute(
+"aria-label",
+"Логи бота (локально)"
+);
+root.innerHTML =
+`
+<div class="algo-remote-session-logs-panel">
+<header class="algo-remote-session-logs-header">
+<h2 class="algo-remote-session-logs-title">Логи бота</h2>
+<div class="algo-remote-session-logs-header-actions">
+<button type="button" class="algo-bot-remote-btn" id="algo-local-logs-refresh">Обновить</button>
+<button type="button" class="algo-bot-remote-btn" id="algo-local-logs-open-dir" title="Открыть папку с .log в Finder / Проводнике">Папка</button>
+<button type="button" class="algo-remote-session-logs-close" id="algo-local-logs-close" aria-label="Закрыть">×</button>
+</div>
+</header>
+<p class="algo-remote-session-logs-hint">Файлы сессий Multichart: каждый Старт стратегии → новый .log (полный текст, не урезанный Status).</p>
+<p class="algo-remote-session-logs-message" id="algo-local-logs-message" hidden></p>
+<div class="algo-remote-session-logs-body">
+<aside class="algo-remote-session-logs-list-wrap">
+<div class="algo-remote-session-logs-list" id="algo-local-logs-list"></div>
+</aside>
+<div class="algo-remote-session-logs-main">
+<div class="algo-remote-session-logs-filter">
+<label class="algo-remote-session-logs-filter-label" for="algo-local-logs-symbol-filter">Тикер</label>
+<input
+type="search"
+id="algo-local-logs-symbol-filter"
+class="algo-remote-session-logs-filter-input"
+placeholder="BTCUSDT…"
+autocomplete="off"
+spellcheck="false"
+/>
+<span class="algo-remote-session-logs-filter-count" id="algo-local-logs-filter-count" hidden></span>
+</div>
+<div class="algo-remote-session-logs-view" id="algo-local-logs-view" aria-live="polite"></div>
+</div>
+</div>
+</div>
+`;
+document.body.appendChild(
+root
+);
+
+const listEl =
+root.querySelector(
+"#algo-local-logs-list"
+);
+const viewEl =
+root.querySelector(
+"#algo-local-logs-view"
+);
+const msgEl =
+root.querySelector(
+"#algo-local-logs-message"
+);
+const filterEl =
+root.querySelector(
+"#algo-local-logs-symbol-filter"
+);
+const filterCountEl =
+root.querySelector(
+"#algo-local-logs-filter-count"
+);
+
+/** @type {string} */
+let activeName =
+"";
+/** @type {string} */
+let activeText =
+"";
+
+function setMessage(
+text,
+isError =
+false
+){
+
+if(
+!msgEl
+){
+return;
+}
+
+const t =
+String(
+text ||
+""
+).trim();
+
+if(
+!t
+){
+msgEl.hidden =
+true;
+msgEl.textContent =
+"";
+msgEl.classList.remove(
+"is-error"
+);
+return;
+}
+
+msgEl.hidden =
+false;
+msgEl.textContent =
+t;
+msgEl.classList.toggle(
+"is-error",
+!!isError
+);
+
+}
+
+function applyFilter(){
+
+const rendered =
+renderLogTableHtml(
+activeText,
+filterEl?.value ||
+""
+);
+
+if(
+viewEl
+){
+viewEl.innerHTML =
+rendered.html;
+}
+
+if(
+filterCountEl
+){
+const q =
+String(
+filterEl?.value ||
+""
+).trim();
+
+if(
+q &&
+rendered.total >
+0
+){
+filterCountEl.hidden =
+false;
+filterCountEl.textContent =
+`${rendered.shown} / ${rendered.total}`;
+}else{
+filterCountEl.hidden =
+true;
+filterCountEl.textContent =
+"";
+}
+
+}
+
+}
+
+function close(){
+
+root.classList.add(
+"hidden"
+);
+
+}
+
+async function openFile(
+name
+){
+
+const fileName =
+String(
+name ||
+""
+).trim();
+
+if(
+!fileName
+){
+return;
+}
+
+setMessage(
+`Загрузка ${fileName}…`
+);
+
+const res =
+await api.sessionLogLocalGet(
+{
+name:
+fileName
+}
+);
+
+if(
+!res?.ok
+){
+setMessage(
+res?.message ||
+"Не удалось прочитать лог",
+true
+);
+return;
+}
+
+activeName =
+fileName;
+activeText =
+String(
+res.text ||
+""
+);
+applyFilter();
+setMessage(
+fileName
+);
+
+listEl?.querySelectorAll(
+".algo-remote-session-logs-item"
+).forEach(
+(
+el
+)=>{
+el.classList.toggle(
+"is-active",
+el.getAttribute(
+"data-name"
+) ===
+fileName
+);
+}
+);
+
+}
+
+async function refreshList(){
+
+setMessage(
+"Загрузка списка…"
+);
+
+const res =
+await api.sessionLogLocalList();
+
+if(
+!res?.ok
+){
+setMessage(
+res?.message ||
+"Не удалось получить список",
+true
+);
+if(
+listEl
+){
+listEl.innerHTML =
+`<div class="algo-remote-session-logs-empty">Ошибка</div>`;
+}
+return;
+}
+
+const files =
+Array.isArray(
+res.files
+)
+? res.files
+: [];
+const dir =
+res.dir
+? String(
+res.dir
+)
+: "";
+
+setMessage(
+files.length
+? `Сессий: ${files.length}${dir
+? ` · ${dir}`
+: ""}`
+: dir
+? `Файлов пока нет · ${dir}`
+: "Файлов пока нет"
+);
+
+if(
+!listEl
+){
+return;
+}
+
+listEl.innerHTML =
+files.map(
+(
+file
+)=>
+`<button type="button" class="algo-remote-session-logs-item${file.name ===
+activeName
+? " is-active"
+: ""}" data-name="${String(
+file.name ||
+""
+).replace(
+/"/g,
+"&quot;"
+)}"><span class="algo-remote-session-logs-item-name">${String(
+file.name ||
+""
+)}</span><span class="algo-remote-session-logs-item-meta">${formatTime(
+file.mtimeMs
+)} · ${formatSize(
+file.size
+)}</span></button>`
+).join(
+""
+) ||
+`<div class="algo-remote-session-logs-empty">Нет логов</div>`;
+
+if(
+activeName &&
+files.some(
+(
+f
+)=>
+f.name ===
+activeName
+)
+){
+await openFile(
+activeName
+);
+}else if(
+files[0]?.name
+){
+await openFile(
+files[0].name
+);
+}else{
+activeName =
+"";
+activeText =
+"";
+applyFilter();
+}
+
+}
+
+root.querySelector(
+"#algo-local-logs-close"
+)?.addEventListener(
+"click",
+close
+);
+root.querySelector(
+"#algo-local-logs-refresh"
+)?.addEventListener(
+"click",
+()=>{
+void refreshList();
+}
+);
+root.querySelector(
+"#algo-local-logs-open-dir"
+)?.addEventListener(
+"click",
+async ()=>{
+if(
+!api.sessionLogLocalOpenDir
+){
+setMessage(
+"Открытие папки недоступно",
+true
+);
+return;
+}
+
+const res =
+await api.sessionLogLocalOpenDir();
+
+if(
+!res?.ok
+){
+setMessage(
+res?.message ||
+"Не удалось открыть папку",
+true
+);
+}
+
+}
+);
+filterEl?.addEventListener(
+"input",
+()=>{
+applyFilter();
+}
+);
+listEl?.addEventListener(
+"click",
+event=>{
+const btn =
+event.target?.closest?.(
+"[data-name]"
+);
+
+if(
+!btn
+){
+return;
+}
+
+void openFile(
+btn.getAttribute(
+"data-name"
+) ||
+""
+);
+}
+);
+root.addEventListener(
+"click",
+event=>{
+if(
+event.target ===
+root
+){
+close();
+}
+}
+);
+
+localLogsUi =
+{
+root,
+refreshList
+};
+
+void refreshList();
+
+}
+
+/**
+ * @param {{ closeStatusDropdown?: () => void }} [opts]
+ */
+export function mountLocalSessionLogsEntry(
+opts =
+{}
+){
+
+const btn =
+document.getElementById(
+"algo-bot-local-logs"
+);
+
+if(
+!btn
+){
+return;
+}
+
+const api =
+desktopApi();
+
+if(
+!api?.sessionLogLocalList ||
+!api?.sessionLogLocalGet
+){
+btn.hidden =
+true;
+return;
+}
+
+btn.hidden =
+false;
+btn.title =
+"Полные логи сессий бота (файлы на диске)";
+btn.addEventListener(
+"click",
+event=>{
+event.preventDefault();
+event.stopPropagation();
+openLocalSessionLogsViewer(
+opts
+);
+}
+);
 
 }

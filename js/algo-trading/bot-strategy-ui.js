@@ -12,10 +12,10 @@ normalizeManualRefreshStrategies,
 botSideListLabel,
 botSidesDirectionLabel,
 formatBotStrategySettingsRows
-} from "./bot-strategy-prefs.js?v=20";
+} from "./bot-strategy-prefs.js?v=22";
 import {
 clampMaxPt1Pt4Bars
-} from "./pattern-entry-logic.js?v=10";
+} from "./pattern-entry-logic.js?v=12";
 import {
 syncBotStrategiesToMain,
 syncAllTickerFlagsRootToMain,
@@ -29,16 +29,17 @@ isAlgoBotDesktop,
 fetchAlgoBotCloudLock,
 clearAlgoBotCloudLock,
 ensureAlgoBotCloudLock
-} from "./bot-bridge.js?v=11";
+} from "./bot-bridge.js?v=12";
 import {
 fetchRemoteBotStatus,
 sendRemoteBotCommand,
 isMultichartRemoteControlHost
-} from "./bot-remote-client.js?v=7";
+} from "./bot-remote-client.js?v=8";
 import {
 mountRemoteSessionLogsEntry,
-mountRemoteWatchlistsPushEntry
-} from "./bot-session-logs-viewer.js?v=20";
+mountRemoteWatchlistsPushEntry,
+mountLocalSessionLogsEntry
+} from "./bot-session-logs-viewer.js?v=22";
 import {
 rebalanceTpShares
 } from "./pattern-trade-stats-partial.js?v=19";
@@ -2300,6 +2301,11 @@ statusMessage.classList.remove(
 
 async function refreshCloudLockUi(){
 
+const lockRow =
+statusLockValue?.closest(
+".algo-bot-status-row--lock"
+);
+
 if(
 !statusLockValue &&
 !statusLockClearBtn
@@ -2307,8 +2313,42 @@ if(
 return;
 }
 
+/* Temporary: cloud lock UI hidden (metka-129+). */
+if(
+lockRow
+){
+lockRow.hidden =
+true;
+}
+
+if(
+statusLockClearBtn
+){
+statusLockClearBtn.hidden =
+true;
+statusLockClearBtn.disabled =
+true;
+}
+
 const lock =
 await fetchAlgoBotCloudLock();
+
+if(
+lock?.skipped
+){
+if(
+statusLockValue
+){
+statusLockValue.textContent =
+"—";
+statusLockValue.classList.remove(
+"is-locked",
+"is-ours"
+);
+}
+
+return;
+}
 
 if(
 !lock?.ok
@@ -2333,30 +2373,6 @@ statusLockClearBtn
 statusLockClearBtn.disabled =
 lock?.code ===
 "not_configured";
-}
-
-return;
-}
-
-if(
-lock.skipped
-){
-if(
-statusLockValue
-){
-statusLockValue.textContent =
-"локально";
-statusLockValue.classList.remove(
-"is-locked",
-"is-ours"
-);
-}
-
-if(
-statusLockClearBtn
-){
-statusLockClearBtn.disabled =
-true;
 }
 
 return;
@@ -4444,6 +4460,18 @@ strategiesWrap?.classList.remove(
 closeAllDrops();
 }
 };
+
+mountLocalSessionLogsEntry(
+{
+closeStatusDropdown:()=>{
+setDropOpen(
+statusDrop,
+statusToggle,
+false
+);
+}
+}
+);
 
 mountRemoteSessionLogsEntry(
 {

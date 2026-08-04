@@ -386,8 +386,9 @@ tf
 }
 
 /**
- * Листать увеличенный график на соседний виджет (Пробел / Shift+Пробел).
- * На краю страницы — следующая/предыдущая страница грида.
+ * Листать увеличенный график на соседний виджет (Пробел / ← →).
+ * С override-списком (лог Live) — строго по кругу по индексу.
+ * Иначе — соседний виджет грида; на краю — смена страницы.
  * @param {1|-1} dir
  */
 async function navigateZoomWidget(
@@ -406,15 +407,27 @@ dir <
 0
 ? -1
 : 1;
+const widgetsOverride =
+zoomMountOptions?._zoomWidgetsOverride;
 const getWidgets =
 zoomMountOptions?.getZoomWidgets;
 const getCurrentTF =
 zoomMountOptions?.getCurrentTF;
+const hasOverride =
+Array.isArray(
+widgetsOverride
+) &&
+widgetsOverride.length >
+0;
 const shiftPage =
-zoomMountOptions?.shiftZoomPage;
+hasOverride
+? null
+: zoomMountOptions?.shiftZoomPage;
 
-let widgets =
-typeof getWidgets ===
+const widgets =
+hasOverride
+? widgetsOverride
+: typeof getWidgets ===
 "function"
 ? (
 getWidgets() ||
@@ -429,10 +442,9 @@ return;
 }
 
 const currentSymbol =
-String(
+normalizeZoomSymbol(
 zoomState.symbol ||
-zoomState.widget?.symbol ||
-""
+zoomState.widget?.symbol
 );
 const currentTf =
 String(
@@ -442,13 +454,32 @@ zoomState.widget?.tf ||
 );
 
 let idx =
+Number.isInteger(
+zoomState.navIndex
+) &&
+zoomState.navIndex >=
+0 &&
+zoomState.navIndex <
+widgets.length
+? zoomState.navIndex
+: -1;
+
+if(
+idx <
+0
+){
+idx =
 widgets.findIndex(
 w=>
 w ===
 zoomState.widget ||
-w?.root ===
+(
+w?.root &&
+w.root ===
 zoomState.widget?.root
+)
 );
+}
 
 if(
 idx <
@@ -458,11 +489,13 @@ currentSymbol
 idx =
 widgets.findIndex(
 w=>{
+const wSym =
+normalizeZoomSymbol(
+w?.symbol
+);
+
 if(
-String(
-w?.symbol ||
-""
-) !==
+wSym !==
 currentSymbol
 ){
 return false;
@@ -482,6 +515,58 @@ currentTf;
 );
 }
 
+if(
+idx <
+0 &&
+currentSymbol
+){
+idx =
+widgets.findIndex(
+w=>
+normalizeZoomSymbol(
+w?.symbol
+) ===
+currentSymbol
+);
+}
+
+if(
+hasOverride
+){
+if(
+idx <
+0
+){
+idx =
+0;
+}
+
+const nextIdx =
+(
+idx +
+step +
+widgets.length
+) %
+widgets.length;
+
+await openWidgetZoom(
+widgets[
+nextIdx
+],
+()=>
+widgets[
+nextIdx
+]?.tf ||
+getCurrentTF?.() ||
+"15",
+{
+navIndex:
+nextIdx
+}
+);
+return;
+}
+
 let nextIdx =
 idx +
 step;
@@ -496,7 +581,11 @@ await openWidgetZoom(
 widgets[
 nextIdx
 ],
-getCurrentTF
+getCurrentTF,
+{
+navIndex:
+nextIdx
+}
 );
 return;
 }
@@ -513,25 +602,30 @@ step
 if(
 moved
 ){
-widgets =
-getWidgets?.() ||
-[];
+const pageWidgets =
+typeof getWidgets ===
+"function"
+? (
+getWidgets() ||
+[]
+)
+: [];
 
 if(
-!widgets.length
+!pageWidgets.length
 ){
 return;
 }
 
-const pick =
+const pickIdx =
 step >
 0
-? widgets[
-0
-]
-: widgets[
-widgets.length -
-1
+? 0
+: pageWidgets.length -
+1;
+const pick =
+pageWidgets[
+pickIdx
 ];
 
 if(
@@ -539,7 +633,11 @@ pick
 ){
 await openWidgetZoom(
 pick,
-getCurrentTF
+getCurrentTF,
+{
+navIndex:
+pickIdx
+}
 );
 }
 
@@ -549,7 +647,9 @@ return;
 
 if(
 widgets.length <
-2
+2 ||
+idx <
+0
 ){
 return;
 }
@@ -565,7 +665,25 @@ await openWidgetZoom(
 widgets[
 wrapIdx
 ],
-getCurrentTF
+getCurrentTF,
+{
+navIndex:
+wrapIdx
+}
+);
+
+}
+
+function normalizeZoomSymbol(
+raw
+){
+
+return String(
+raw ||
+""
+).trim().toUpperCase().replace(
+/\.P$/i,
+""
 );
 
 }
@@ -590,7 +708,10 @@ true
 
 }
 
-function closeWidgetZoom(){
+function closeWidgetZoom(
+opts =
+{}
+){
 
 if(
 !zoomState
@@ -602,6 +723,20 @@ unbindZoomHotkeys();
 
 zoomState.disposed =
 true;
+
+/*
+ * Keep zoomWidgets override across Space/←/→ navigation.
+ * Clearing here broke Live-log zoom: after the first step override
+ * fell back to the Script grid widgets.
+ */
+if(
+zoomMountOptions &&
+opts.keepWidgetsOverride !==
+true
+){
+zoomMountOptions._zoomWidgetsOverride =
+null;
+}
 
 destroyZoomPattern(
 zoomState
@@ -1072,10 +1207,17 @@ state.chartEl.classList.remove(
 
 async function openWidgetZoom(
 widget,
-getCurrentTF
+getCurrentTF,
+opts =
+{}
 ){
 
-closeWidgetZoom();
+closeWidgetZoom(
+{
+keepWidgetsOverride:
+true
+}
+);
 
 const symbol =
 widget?.symbol;
@@ -1090,6 +1232,70 @@ const tf =
 widget?.tf ||
 getCurrentTF?.() ||
 "15";
+
+const override =
+zoomMountOptions?._zoomWidgetsOverride;
+let navIndex =
+Number.isInteger(
+opts.navIndex
+)
+? opts.navIndex
+: -1;
+
+if(
+navIndex <
+0 &&
+Array.isArray(
+override
+)
+){
+navIndex =
+override.findIndex(
+w=>
+w ===
+widget
+);
+
+if(
+navIndex <
+0
+){
+const sym =
+normalizeZoomSymbol(
+symbol
+);
+const tfKey =
+String(
+tf ||
+""
+);
+navIndex =
+override.findIndex(
+w=>{
+if(
+normalizeZoomSymbol(
+w?.symbol
+) !==
+sym
+){
+return false;
+}
+
+const wTf =
+String(
+w?.tf ||
+""
+);
+
+return !tfKey ||
+!wTf ||
+wTf ===
+tfKey;
+}
+);
+}
+
+}
 
 const backdrop =
 document.createElement(
@@ -1242,7 +1448,12 @@ null,
 disposeCrosshair:
 null,
 disposed:
-false
+false,
+navIndex:
+navIndex >=
+0
+? navIndex
+: null
 };
 
 zoomState =
@@ -1605,5 +1816,126 @@ true
 );
 closeWidgetZoom();
 };
+
+}
+
+/**
+ * Open zoom from outside grid contextmenu (e.g. Script Live log).
+ * @param {{ symbol: string, tf?: string, root?: Element|null }} widget
+ * @param {{ getCurrentTF?: () => string, zoomWidgets?: object[] }} [opts]
+ */
+export async function openScreenerWidgetZoom(
+widget,
+opts =
+{}
+){
+
+if(
+!zoomMountOptions
+){
+console.warn(
+"[screener-zoom] mountScreenerWidgetZoom() first"
+);
+return;
+}
+
+if(
+Array.isArray(
+opts.zoomWidgets
+)
+){
+zoomMountOptions._zoomWidgetsOverride =
+opts.zoomWidgets;
+}else{
+zoomMountOptions._zoomWidgetsOverride =
+null;
+}
+
+const list =
+zoomMountOptions._zoomWidgetsOverride;
+const sym =
+normalizeZoomSymbol(
+widget?.symbol
+);
+const tfKey =
+String(
+widget?.tf ||
+""
+);
+let navIndex =
+-1;
+let resolved =
+widget;
+
+if(
+Array.isArray(
+list
+) &&
+sym
+){
+navIndex =
+list.findIndex(
+w=>{
+if(
+normalizeZoomSymbol(
+w?.symbol
+) !==
+sym
+){
+return false;
+}
+
+const wTf =
+String(
+w?.tf ||
+""
+);
+
+return !tfKey ||
+!wTf ||
+wTf ===
+tfKey;
+}
+);
+
+if(
+navIndex <
+0
+){
+navIndex =
+list.findIndex(
+w=>
+normalizeZoomSymbol(
+w?.symbol
+) ===
+sym
+);
+}
+
+if(
+navIndex >=
+0
+){
+resolved =
+list[
+navIndex
+];
+}
+
+}
+
+await openWidgetZoom(
+resolved,
+opts.getCurrentTF ||
+zoomMountOptions.getCurrentTF ||
+(()=>
+resolved?.tf ||
+widget?.tf ||
+"15"
+),
+{
+navIndex
+}
+);
 
 }

@@ -825,7 +825,17 @@ opts.strategyId
 const result =
 await algoBot.startBot(
 {
-strategyId
+strategyId,
+...(
+opts.strategyPrefs &&
+typeof opts.strategyPrefs ===
+"object"
+? {
+strategyPrefs:
+opts.strategyPrefs
+}
+: {}
+)
 }
 );
 

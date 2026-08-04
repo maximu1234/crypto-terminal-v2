@@ -43,7 +43,7 @@ false,
 timeoutBars:
 200,
 maxPt1Pt4Bars:
-1000,
+null,
 /* TEMP_PULLBACK_BEFORE_ARM */
 pullbackBeforeArm:
 false,

@@ -13,3 +13,9 @@ export function mountRemoteSessionLogsEntry(){
 
 export function mountRemoteWatchlistsPushEntry(){
 }
+
+export function openLocalSessionLogsViewer(){
+}
+
+export function mountLocalSessionLogsEntry(){
+}

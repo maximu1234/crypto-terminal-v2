@@ -119,7 +119,7 @@ if(
 ){
 screenerZoomMountPromise =
 import(
-"./screener-widget-zoom.js?v=17"
+"./screener-widget-zoom.js?v=21"
 ).then(
 mod=>{
 refreshZoomFavoriteUi =

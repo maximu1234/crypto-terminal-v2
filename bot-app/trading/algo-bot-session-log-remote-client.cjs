@@ -1016,7 +1016,17 @@ action,
 action ===
 "start"
 ? {
-strategyId
+strategyId,
+...(
+payload.strategyPrefs &&
+typeof payload.strategyPrefs ===
+"object"
+? {
+strategyPrefs:
+payload.strategyPrefs
+}
+: {}
+)
 }
 : {}
 )

@@ -211,11 +211,16 @@ mountTerminalLayoutPicker
 
 import {
 mountScriptTerminalStatus
-} from "./script-terminal-status.js?v=7";
+} from "./script-terminal-status.js?v=8";
 
 import {
 resumeScriptScanBackgroundJob
 } from "./script-scan-background.js?v=14";
+
+import {
+resumeScreenerLive,
+isScreenerLiveJobActive
+} from "./script-screener-live.js?v=8";
 
 let currentDataset = "all";
 let currentTF = "60";
@@ -5832,7 +5837,13 @@ mountTerminalLayoutPicker
 });
 
 mountScriptTerminalStatus();
+resumeScreenerLive();
+
+if(
+!isScreenerLiveJobActive()
+){
 resumeScriptScanBackgroundJob();
+}
 
 favorites =
 loadFavoritesGroups();

@@ -2655,6 +2655,9 @@ cursor: pointer;
 body.algo-trading-page .algo-remote-session-logs-item:hover{
 background: rgba(148, 163, 184, 0.12);
 }
+body.algo-trading-page .algo-remote-session-logs-item.is-active{
+background: rgba(96, 165, 250, 0.16);
+}
 body.algo-trading-page .algo-remote-session-logs-item-name{
 font-size: 12px;
 word-break: break-all;

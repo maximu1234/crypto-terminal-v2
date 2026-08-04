@@ -257,7 +257,7 @@ via:
 
 /**
  * @param {"start"|"stop"} action
- * @param {{ host: string, port: string, token: string, strategyId?: string }|null} [conn]
+ * @param {{ host: string, port: string, token: string, strategyId?: string, strategyPrefs?: object }|null} [conn]
  */
 export async function sendLanBotCommand(
 action,
@@ -347,7 +347,17 @@ act,
 act ===
 "start"
 ? {
-strategyId
+strategyId,
+...(
+c.strategyPrefs &&
+typeof c.strategyPrefs ===
+"object"
+? {
+strategyPrefs:
+c.strategyPrefs
+}
+: {}
+)
 }
 : {}
 )

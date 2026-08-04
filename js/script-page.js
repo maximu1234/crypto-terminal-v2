@@ -3,7 +3,7 @@
  */
 import {
 createScriptWidgetGrid
-} from "./script-page-widgets.js?v=12";
+} from "./script-page-widgets.js?v=16";
 
 import {
 getSharedPatternScanner,
@@ -43,9 +43,14 @@ scriptFavoritesFileName
 } from "./script-favorites-list.js?v=2";
 
 import {
-COINS_TF_HOTKEYS,
-COINS_TF_VALUES
-} from "./terminal/terminal-state.js?v=12";
+startScreenerLive,
+stopScreenerLive,
+isScreenerLiveJobActive,
+getScreenerLiveStatus,
+getScreenerLiveLog,
+clearScreenerLiveLog,
+SCRIPT_SCREENER_LIVE_EVENT
+} from "./script-screener-live.js?v=8";
 
 import {
 EXCHANGE_CHANGED_EVENT,
@@ -363,6 +368,12 @@ getActiveExchangeId() ||
 
 function reloadForActiveExchange(){
 
+if(
+isScreenerLiveJobActive()
+){
+stopScreenerLive();
+}
+
 state =
 loadScriptPageState();
 state.favoritesOnly =
@@ -371,6 +382,7 @@ scanMode =
 null;
 updateActionButtons();
 updateAutoStatus();
+syncLiveToggleUi();
 applyFavoritesUi();
 void refreshFavoritesMetaFromDisk();
 void refreshVolumeMap();
@@ -940,7 +952,7 @@ function refreshGrid(){
 
 void widgetGrid?.renderPage(
 filteredRows(),
-state.filterTf
+"all"
 );
 
 }
@@ -957,33 +969,18 @@ updateActionButtons();
 
 }
 
-function setFilterTf(
-tf
-){
+/**
+ * Screener Live writes to log only — hide stale scan widgets while Live runs.
+ */
+function clearWidgetsForScreenerLive(){
 
-state.filterTf =
-tf;
+state.rows =
+[];
 state.page =
 1;
 persist();
-widgetGrid?.restoreLayoutState(
-state.layout,
-1
-);
-
-els.tfFilter?.querySelectorAll(
-".script-tf-btn"
-).forEach(
-btn=>{
-btn.classList.toggle(
-"active",
-btn.dataset.tf ===
-tf
-);
-}
-);
-
 refreshGrid();
+updateActionButtons();
 
 }
 
@@ -1226,6 +1223,8 @@ loading
 
 function updateActionButtons(){
 
+const liveOn =
+isScreenerLiveJobActive();
 const running =
 isScriptScanBackgroundRunning();
 
@@ -1233,6 +1232,7 @@ if(
 els.autoStart
 ){
 els.autoStart.disabled =
+liveOn ||
 running ||
 state.auto.active;
 }
@@ -1241,7 +1241,469 @@ if(
 els.autoStop
 ){
 els.autoStop.disabled =
+liveOn ||
 !state.auto.active;
+}
+
+applyLegacyScanLock(
+liveOn
+);
+syncLiveToggleUi();
+
+}
+
+function applyLegacyScanLock(
+locked
+){
+
+const toolbar =
+document.getElementById(
+"script-toolbar"
+);
+
+toolbar?.classList.toggle(
+"script-toolbar--live-lock",
+!!locked
+);
+
+const fields =
+[
+els.searchDepth,
+els.searchSide,
+els.minTurnover,
+els.autoTf,
+els.autoPeriod
+];
+
+for(
+const el of fields
+){
+if(
+el
+){
+el.disabled =
+!!locked;
+}
+}
+
+}
+
+function syncLiveToggleUi(){
+
+const liveOn =
+isScreenerLiveJobActive();
+
+if(
+els.liveToggle
+){
+els.liveToggle.textContent =
+liveOn
+? "Остановить"
+: "Запустить";
+els.liveToggle.classList.toggle(
+"is-active",
+liveOn
+);
+els.liveToggle.setAttribute(
+"aria-pressed",
+liveOn
+? "true"
+: "false"
+);
+}
+
+updateLiveStatus();
+ensureLiveStatusTicker(
+liveOn
+);
+
+}
+
+let liveStatusTickerId =
+null;
+
+function ensureLiveStatusTicker(
+on
+){
+
+if(
+on
+){
+if(
+liveStatusTickerId ==
+null
+){
+liveStatusTickerId =
+setInterval(
+()=>{
+updateLiveStatus();
+},
+1_000
+);
+}
+return;
+}
+
+if(
+liveStatusTickerId !=
+null
+){
+clearInterval(
+liveStatusTickerId
+);
+liveStatusTickerId =
+null;
+}
+
+}
+
+function updateLiveStatus(){
+
+if(
+!els.liveStatus
+){
+return;
+}
+
+const snap =
+getScreenerLiveStatus();
+const jobOn =
+isScreenerLiveJobActive();
+
+if(
+!jobOn
+){
+els.liveStatus.hidden =
+true;
+els.liveStatus.textContent =
+"Live выключен";
+return;
+}
+
+els.liveStatus.hidden =
+false;
+const p =
+snap.progress;
+const tfLabel =
+PATTERN_SCAN_TF_LABELS[
+snap.criteria?.tf
+] ||
+snap.criteria?.tf ||
+"";
+
+if(
+!snap.active
+){
+if(
+p?.total >
+0
+){
+els.liveStatus.textContent =
+`Live · ${tfLabel} · ${p.done}/${p.total} · фон…`;
+return;
+}
+
+els.liveStatus.textContent =
+tfLabel
+? `Live · ${tfLabel} · возобновление…`
+: "Live · возобновление…";
+return;
+}
+
+if(
+!p
+){
+els.liveStatus.textContent =
+`Live · ${tfLabel}`;
+return;
+}
+
+if(
+p.phase ===
+"wait_candle"
+){
+const left =
+Math.max(
+0,
+(
+Number(
+p.nextScanAt
+) ||
+0
+) -
+Date.now()
+);
+const sec =
+Math.ceil(
+left /
+1000
+);
+const mm =
+Math.floor(
+sec /
+60
+);
+const ss =
+sec %
+60;
+const eta =
+mm >
+0
+? `${mm}:${String(ss).padStart(2, "0")}`
+: `${ss}с`;
+els.liveStatus.textContent =
+`Live · ${tfLabel} · след. свеча через ${eta}`;
+return;
+}
+
+if(
+p.phase ===
+"pause"
+){
+els.liveStatus.textContent =
+`Live · ${tfLabel} · ожидание свечи`;
+return;
+}
+
+if(
+p.phase ===
+"empty"
+){
+els.liveStatus.textContent =
+`Live · ${tfLabel} · нет тикеров по объёму`;
+return;
+}
+
+if(
+p.total >
+0
+){
+els.liveStatus.textContent =
+`Live · ${tfLabel} · ${p.done}/${p.total}`;
+return;
+}
+
+els.liveStatus.textContent =
+`Live · ${tfLabel} · сканирую…`;
+
+}
+
+function formatLiveLogTime(
+ms
+){
+
+const d =
+new Date(
+Number(
+ms
+) ||
+0
+);
+
+if(
+Number.isNaN(
+d.getTime()
+)
+){
+return "—";
+}
+
+return d.toLocaleString(
+"ru-RU",
+{
+hour:
+"2-digit",
+minute:
+"2-digit",
+second:
+"2-digit",
+day:
+"2-digit",
+month:
+"2-digit"
+}
+);
+
+}
+
+function paintLiveLogTable(){
+
+const tbody =
+els.liveLogTbody;
+
+if(
+!tbody
+){
+return;
+}
+
+const rows =
+getScreenerLiveLog();
+
+if(
+!rows.length
+){
+tbody.innerHTML =
+`<tr class="script-live-log-empty"><td colspan="3">Пока пусто</td></tr>`;
+return;
+}
+
+tbody.innerHTML =
+rows.map(
+entry=>{
+const tf =
+String(
+entry.tf ||
+""
+);
+const tfLabel =
+PATTERN_SCAN_TF_LABELS[
+tf
+] ||
+tf ||
+"—";
+const symbol =
+String(
+entry.symbol ||
+""
+).replace(
+/\.P$/i,
+""
+);
+const exchangeId =
+encodeURIComponent(
+getActiveExchangeId() ||
+""
+);
+const href =
+`/terminal.html?symbol=${encodeURIComponent(symbol)}&tf=${encodeURIComponent(tf)}${exchangeId ? `&exchange=${exchangeId}` : ""}`;
+
+return `<tr><td>${formatLiveLogTime(entry.foundAt)}</td><td><a class="script-live-log-symbol" href="${href}" title="ЛКМ — Терминал · ПКМ — зум с Паттерн 1-2">${symbol}</a></td><td>${tfLabel}</td></tr>`;
+}
+).join(
+""
+);
+
+}
+
+function openLiveLogModal(){
+
+paintLiveLogTable();
+
+if(
+els.liveLogModal
+){
+els.liveLogModal.classList.remove(
+"hidden"
+);
+els.liveLogModal.hidden =
+false;
+}
+
+}
+
+function closeLiveLogModal(){
+
+if(
+els.liveLogModal
+){
+els.liveLogModal.classList.add(
+"hidden"
+);
+els.liveLogModal.hidden =
+true;
+}
+
+}
+
+async function toggleScreenerLive(){
+
+if(
+isScreenerLiveJobActive()
+){
+stopScreenerLive();
+
+if(
+state.auto.active
+){
+state.auto.active =
+false;
+persist();
+}
+
+updateActionButtons();
+updateAutoStatus();
+setFloatingScanStatus(
+"Скринер Live остановлен"
+);
+return;
+}
+
+syncSearchParamsFromUi();
+
+if(
+state.auto.active
+){
+stopAuto();
+}
+
+const res =
+await startScreenerLive(
+{
+tf:
+state.auto.tf,
+lookbackBars:
+state.searchDepth,
+sideFilter:
+state.searchSide,
+minTurnover24hUsdt:
+state.minTurnover24hUsdt
+}
+);
+
+if(
+res?.ok ===
+false
+){
+setFloatingScanStatus(
+res.message ||
+"Не удалось запустить Live"
+);
+updateActionButtons();
+return;
+}
+
+clearWidgetsForScreenerLive();
+updateActionButtons();
+setFloatingScanStatus(
+"Скринер Live запущен"
+);
+
+}
+
+function handleScreenerLiveEvent(
+event
+){
+
+const type =
+event?.detail?.type;
+
+updateActionButtons();
+
+if(
+type ===
+"hit" ||
+type ===
+"log-cleared"
+){
+if(
+els.liveLogModal &&
+!els.liveLogModal.classList.contains(
+"hidden"
+)
+){
+paintLiveLogTable();
+}
 }
 
 }
@@ -1350,6 +1812,15 @@ updateAutoStatus,
 
 async function runFullScan(){
 
+if(
+isScreenerLiveJobActive()
+){
+setFloatingScanStatus(
+"Остановите Скринер Live"
+);
+return;
+}
+
 syncSearchParamsFromUi();
 
 setScanStatus(
@@ -1381,6 +1852,15 @@ state.searchSide
 }
 
 function startAuto(){
+
+if(
+isScreenerLiveJobActive()
+){
+setFloatingScanStatus(
+"Остановите Скринер Live"
+);
+return;
+}
 
 syncSearchParamsFromUi();
 
@@ -1686,6 +2166,14 @@ function shouldIgnoreScriptKeyNav(
 event
 ){
 
+if(
+document.querySelector(
+".screener-widget-zoom-backdrop"
+)
+){
+return true;
+}
+
 const target =
 event.target;
 
@@ -1787,25 +2275,6 @@ layoutNext
 );
 }
 
-return;
-
-}
-
-const tf =
-COINS_TF_HOTKEYS[
-event.key
-];
-
-if(
-tf &&
-COINS_TF_VALUES.has(
-tf
-)
-){
-event.preventDefault();
-setFilterTf(
-tf
-);
 }
 
 }
@@ -1907,10 +2376,6 @@ filteredRows().length
 
 function bindEls(){
 
-els.tfFilter =
-document.getElementById(
-"script-tf-filter"
-);
 els.searchDepth =
 document.getElementById(
 "script-search-depth"
@@ -1947,6 +2412,34 @@ els.scanProgress =
 document.getElementById(
 "script-scan-progress"
 );
+els.liveToggle =
+document.getElementById(
+"script-live-toggle"
+);
+els.liveLogBtn =
+document.getElementById(
+"script-live-log-btn"
+);
+els.liveStatus =
+document.getElementById(
+"script-live-status"
+);
+els.liveLogModal =
+document.getElementById(
+"script-live-log-modal"
+);
+els.liveLogTbody =
+document.getElementById(
+"script-live-log-tbody"
+);
+els.liveLogClose =
+document.getElementById(
+"script-live-log-close"
+);
+els.liveLogClear =
+document.getElementById(
+"script-live-log-clear"
+);
 els.grid =
 document.getElementById(
 "script-grid"
@@ -1975,7 +2468,7 @@ document.getElementById(
 }
 
 const SCRIPT_TOOLBAR_NO_FOCUS_SELECTOR =
-".script-tf-btn, .script-auto-btn";
+".script-auto-btn, .script-live-toggle, .script-live-log-close";
 
 function bindScriptToolbarNoFocus(
 toolbarEl
@@ -2090,31 +2583,14 @@ handleBackgroundScanEvent
 );
 
 window.addEventListener(
+SCRIPT_SCREENER_LIVE_EVENT,
+handleScreenerLiveEvent
+);
+
+window.addEventListener(
 EXCHANGE_CHANGED_EVENT,
 ()=>{
 reloadForActiveExchange();
-}
-);
-
-els.tfFilter?.addEventListener(
-"click",
-event=>{
-
-const btn =
-event.target?.closest?.(
-".script-tf-btn"
-);
-
-if(
-!btn?.dataset?.tf
-){
-return;
-}
-
-setFilterTf(
-btn.dataset.tf
-);
-
 }
 );
 
@@ -2126,6 +2602,127 @@ startAuto
 els.autoStop?.addEventListener(
 "click",
 stopAuto
+);
+
+els.liveToggle?.addEventListener(
+"click",
+()=>{
+void toggleScreenerLive();
+}
+);
+
+els.liveLogBtn?.addEventListener(
+"click",
+()=>{
+openLiveLogModal();
+}
+);
+
+els.liveLogClose?.addEventListener(
+"click",
+()=>{
+closeLiveLogModal();
+}
+);
+
+els.liveLogClear?.addEventListener(
+"click",
+()=>{
+clearScreenerLiveLog();
+paintLiveLogTable();
+}
+);
+
+els.liveLogModal?.addEventListener(
+"contextmenu",
+event=>{
+const link =
+event.target?.closest?.(
+".script-live-log-symbol"
+);
+
+if(
+!link ||
+!els.liveLogModal?.contains(
+link
+)
+){
+return;
+}
+
+event.preventDefault();
+event.stopPropagation();
+
+const href =
+link.getAttribute(
+"href"
+) ||
+"";
+let symbol =
+"";
+let tf =
+"15";
+
+try{
+const url =
+new URL(
+href,
+window.location.origin
+);
+symbol =
+url.searchParams.get(
+"symbol"
+) ||
+"";
+tf =
+url.searchParams.get(
+"tf"
+) ||
+"15";
+}catch{
+symbol =
+link.textContent?.trim() ||
+"";
+}
+
+if(
+!symbol
+){
+return;
+}
+
+const zoomWidgets =
+getScreenerLiveLog().map(
+row=>({
+symbol:
+row.symbol,
+tf:
+row.tf
+})
+);
+
+void widgetGrid?.openLiveLogZoom?.(
+{
+symbol,
+tf
+},
+{
+zoomWidgets
+}
+);
+}
+);
+
+els.liveLogModal?.addEventListener(
+"click",
+event=>{
+if(
+event.target ===
+els.liveLogModal
+){
+closeLiveLogModal();
+}
+}
 );
 
 els.autoTf?.addEventListener(
@@ -2307,9 +2904,8 @@ bindLayoutPicker();
 bindScriptHotkeys();
 bindScriptPageNavHotkeys();
 
-setFilterTf(
-state.filterTf
-);
+state.filterTf =
+"all";
 
 if(
 els.autoTf
@@ -2356,6 +2952,7 @@ void refreshFavoritesMetaFromDisk();
 
 updateActionButtons();
 updateAutoStatus();
+syncLiveToggleUi();
 startVolumePoll();
 
 if(
@@ -2366,6 +2963,13 @@ startAutoCountdown();
 
 restoreAfterBgScan();
 syncScanJobUi();
+
+if(
+isScreenerLiveJobActive()
+){
+clearWidgetsForScreenerLive();
+}else{
 refreshGrid();
+}
 
 }

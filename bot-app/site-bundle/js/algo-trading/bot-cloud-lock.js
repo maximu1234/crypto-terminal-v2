@@ -28,6 +28,14 @@ const INSTANCE_KEY =
 const TABLE =
 "algo_bot_lock";
 
+/*
+ * Temporary (metka-129+): disable cloud "another bot running" lock for
+ * Multichart and Algo Bot until auth/session model is redesigned.
+ * Operator must not start two bots on the same account.
+ */
+const CLOUD_LOCK_TEMP_DISABLED =
+true;
+
 const lockSbByToken =
 new Map();
 const lockSbPromiseByToken =
@@ -364,6 +372,27 @@ lockKey:
  */
 export async function fetchAlgoBotLock(){
 
+if(
+CLOUD_LOCK_TEMP_DISABLED
+){
+return {
+ok:
+true,
+locked:
+false,
+ownedByUs:
+false,
+skipped:
+true,
+instanceId:
+null,
+appName:
+null,
+lockedAt:
+null
+};
+}
+
 const client =
 await getLockClient();
 
@@ -483,12 +512,8 @@ err
  */
 export async function acquireAlgoBotLock(){
 
-/*
-  Temporary: cloud "another bot running" lock disabled on Algo Bot.
-  Rely on careful single-bot use until session/auth model is redesigned.
-*/
 if(
-isAlgoBotLiteShell()
+CLOUD_LOCK_TEMP_DISABLED
 ){
 return {
 ok:
@@ -643,6 +668,17 @@ appName
  */
 export async function releaseAlgoBotLock(){
 
+if(
+CLOUD_LOCK_TEMP_DISABLED
+){
+return {
+ok:
+true,
+skipped:
+true
+};
+}
+
 const client =
 await getLockClient();
 
@@ -792,6 +828,19 @@ true
  * Принудительно снять метку («Снять блокировку»).
  */
 export async function clearAlgoBotLock(){
+
+if(
+CLOUD_LOCK_TEMP_DISABLED
+){
+return {
+ok:
+true,
+skipped:
+true,
+message:
+"Облачная блокировка временно отключена"
+};
+}
 
 const client =
 await getLockClient();

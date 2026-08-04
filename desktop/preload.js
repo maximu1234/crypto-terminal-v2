@@ -543,6 +543,22 @@ ipcRenderer.invoke(
 payload ||
 {}
 ),
+sessionLogLocalList:()=>
+ipcRenderer.invoke(
+"desktop:algoTradingSessionLogLocalList"
+),
+sessionLogLocalGet:(
+payload
+)=>
+ipcRenderer.invoke(
+"desktop:algoTradingSessionLogLocalGet",
+payload ||
+{}
+),
+sessionLogLocalOpenDir:()=>
+ipcRenderer.invoke(
+"desktop:algoTradingSessionLogLocalOpenDir"
+),
 onBotAlertRequest:(
 callback
 )=>{

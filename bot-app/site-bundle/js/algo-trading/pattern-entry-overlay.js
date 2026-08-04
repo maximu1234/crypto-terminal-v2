@@ -3,7 +3,7 @@
  */
 import {
 detectPatternEntryEvents
-} from "./pattern-entry-logic.js?v=10";
+} from "./pattern-entry-logic.js?v=11";
 
 import {
 clearAlgoEntryPositions,

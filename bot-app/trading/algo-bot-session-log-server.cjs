@@ -657,7 +657,17 @@ act ===
 ){
 return algoBot.startBot(
 {
-strategyId
+strategyId,
+...(
+opts.strategyPrefs &&
+typeof opts.strategyPrefs ===
+"object"
+? {
+strategyPrefs:
+opts.strategyPrefs
+}
+: {}
+)
 }
 );
 }
@@ -1179,7 +1189,19 @@ const result =
 await handleLanBotCommand(
 action,
 {
-strategyId
+strategyId,
+...(
+action ===
+"start" &&
+body.strategyPrefs &&
+typeof body.strategyPrefs ===
+"object"
+? {
+strategyPrefs:
+body.strategyPrefs
+}
+: {}
+)
 }
 );
 const ok =

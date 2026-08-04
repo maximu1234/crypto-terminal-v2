@@ -16,7 +16,7 @@
 <script src="/js/site-css-ready.js?v=3"></script>
 <link rel="stylesheet" href="/css/common.css?v=55">
 <link rel="stylesheet" href="/css/screener.css?v=50">
-<link rel="stylesheet" href="/css/script-page.css?v=20">
+<link rel="stylesheet" href="/css/script-page.css?v=23">
 
 <script src="/vendor/lightweight-charts.standalone.production.js"></script>
 <link rel="modulepreload" href="/js/charts-lib-boot.js?v=3" crossorigin>
@@ -80,19 +80,6 @@ aria-expanded="false"
 
 <div id="script-toolbar" class="script-toolbar" aria-label="Настройки скрипта">
 
-<div class="script-toolbar-row script-toolbar-row--tf">
-<div class="script-tf-filter" id="script-tf-filter" role="tablist" aria-label="Фильтр таймфрейма">
-<button type="button" class="script-tf-btn active" data-tf="all">Все</button>
-<button type="button" class="script-tf-btn" data-tf="1">1m</button>
-<button type="button" class="script-tf-btn" data-tf="5">5m</button>
-<button type="button" class="script-tf-btn" data-tf="15">15m</button>
-<button type="button" class="script-tf-btn" data-tf="60">1h</button>
-<button type="button" class="script-tf-btn" data-tf="240">4h</button>
-<button type="button" class="script-tf-btn" data-tf="D">D</button>
-<button type="button" class="script-tf-btn" data-tf="W">W</button>
-</div>
-</div>
-
 <div class="script-toolbar-row script-toolbar-row--settings">
 
 <label class="script-toolbar-field">
@@ -146,9 +133,18 @@ aria-expanded="false"
 <button type="button" class="script-auto-btn" id="script-auto-start">Запустить</button>
 <button type="button" class="script-auto-btn" id="script-auto-stop" disabled>Остановить</button>
 
+<span class="script-toolbar-sep" aria-hidden="true"></span>
+
+<label class="script-toolbar-field script-live-label">
+<span>Скринер live</span>
+</label>
+<button type="button" class="script-auto-btn script-live-toggle" id="script-live-toggle">Запустить</button>
+<button type="button" class="script-auto-btn" id="script-live-log-btn">Лог</button>
+
 <div class="script-toolbar-status">
 <div id="script-scan-progress" class="script-scan-progress hidden" aria-live="polite"></div>
 <div class="script-auto-status" id="script-auto-status">Авто-сканирование выключено</div>
+<div class="script-live-status" id="script-live-status" hidden>Live выключен</div>
 </div>
 
 </div>
@@ -160,6 +156,32 @@ aria-expanded="false"
 <footer id="pagination" aria-label="Страницы"></footer>
 
 <div id="script-status" class="hidden">Загрузка…</div>
+
+<div id="script-live-log-modal" class="script-live-log-modal hidden" role="dialog" aria-modal="true" aria-labelledby="script-live-log-title" hidden>
+<div class="script-live-log-dialog">
+<header class="script-live-log-header">
+<h2 id="script-live-log-title" class="script-live-log-title">Лог Скринер Live</h2>
+<div class="script-live-log-header-actions">
+<button type="button" class="script-auto-btn" id="script-live-log-clear">Очистить</button>
+<button type="button" class="script-live-log-close" id="script-live-log-close" aria-label="Закрыть">×</button>
+</div>
+</header>
+<div class="script-live-log-body">
+<table class="script-live-log-table">
+<thead>
+<tr>
+<th>Время</th>
+<th>Тикер</th>
+<th>ТФ</th>
+</tr>
+</thead>
+<tbody id="script-live-log-tbody">
+<tr class="script-live-log-empty"><td colspan="3">Пока пусто</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
 
 <script type="module" src="/js/script-page-boot.js?v=16"></script>
 

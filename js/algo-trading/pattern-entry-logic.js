@@ -30,9 +30,9 @@ DEFAULT_PULLBACK_BEFORE_ARM_PCT
 export const ENTRY_TIMEOUT_BARS =
 300;
 
-/** Макс. расстояние pt1→pt4 (баров); больше — сетап слишком старый. */
+/** Макс. расстояние pt1→pt4 (баров); null/пусто в prefs = без ограничения. */
 export const ENTRY_MAX_PT1_PT4_BARS =
-1000;
+null;
 
 /**
  * @param {unknown} raw
@@ -324,8 +324,15 @@ b4 -
 b1 >
 maxPt1Pt4Bars
 ){
-/* Сетап слишком растянут по времени — не валиден. */
-return null;
+/* Сетап слишком растянут — cancel, не null (null → bot tryArm ложно «пропущен вход»). */
+return makeEvent(
+"cancel",
+side,
+b4,
+p4,
+"max_pt1_pt4",
+setup
+);
 }
 
 const last =

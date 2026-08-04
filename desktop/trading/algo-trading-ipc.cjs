@@ -1628,6 +1628,157 @@ err
 }
 );
 
+handleTrustedDesktopUi(
+ipcMain,
+"desktop:algoTradingSessionLogLocalList",
+()=>{
+
+try{
+const sessionLog =
+require(
+"./algo-bot-session-log.cjs"
+);
+
+return sessionLog.listSessionFiles();
+}catch(
+err
+){
+log.warn(
+"algoTradingSessionLogLocalList:",
+err?.message ||
+err
+);
+return {
+ok:
+false,
+message:
+err?.message ||
+String(
+err
+)
+};
+}
+
+}
+);
+
+handleTrustedDesktopUi(
+ipcMain,
+"desktop:algoTradingSessionLogLocalGet",
+(
+_event,
+payload
+)=>{
+
+try{
+const sessionLog =
+require(
+"./algo-bot-session-log.cjs"
+);
+const name =
+String(
+payload?.name ||
+""
+).trim();
+
+return sessionLog.readSessionFile(
+name
+);
+}catch(
+err
+){
+log.warn(
+"algoTradingSessionLogLocalGet:",
+err?.message ||
+err
+);
+return {
+ok:
+false,
+message:
+err?.message ||
+String(
+err
+)
+};
+}
+
+}
+);
+
+handleTrustedDesktopUi(
+ipcMain,
+"desktop:algoTradingSessionLogLocalOpenDir",
+async ()=>{
+
+try{
+const {
+shell
+} =
+require(
+"electron"
+);
+const sessionLog =
+require(
+"./algo-bot-session-log.cjs"
+);
+const dir =
+sessionLog.getSessionsDir();
+
+require(
+"fs"
+).mkdirSync(
+dir,
+{
+recursive:
+true
+}
+);
+
+const errMsg =
+await shell.openPath(
+dir
+);
+
+if(
+errMsg
+){
+return {
+ok:
+false,
+dir,
+message:
+errMsg
+};
+}
+
+return {
+ok:
+true,
+dir
+};
+}catch(
+err
+){
+log.warn(
+"algoTradingSessionLogLocalOpenDir:",
+err?.message ||
+err
+);
+return {
+ok:
+false,
+message:
+err?.message ||
+String(
+err
+)
+};
+}
+
+}
+);
+
 }
 
 module.exports =

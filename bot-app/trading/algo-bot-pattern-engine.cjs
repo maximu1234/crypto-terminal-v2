@@ -46,7 +46,7 @@ require(
 const HISTORY_TAIL =
 120;
 const MAX_LOG =
-50;
+500;
 const PATTERN_HISTORY_REQUESTS =
 5;
 const PATTERN_SCAN_MIN_BARS =
@@ -1604,6 +1604,183 @@ return false;
 }
 
 /**
+ * Resolve pt4 bar time for timeout. Indices shift after history trim /
+ * 5000-bar cap, so b4+timeoutBars vs barIndex never fires near the tip.
+ * @param {object} row
+ * @param {object} setup
+ * @param {Array} candles
+ * @param {string} [fp]
+ * @returns {number|null}
+ */
+function resolveArmedB4Time(
+row,
+setup,
+candles,
+fp
+){
+
+const stored =
+Number(
+row?.b4Time
+);
+
+if(
+Number.isFinite(
+stored
+) &&
+stored >
+0
+){
+return stored;
+}
+
+const fromFp =
+String(
+fp ||
+""
+).match(
+/:t(\d+(?:\.\d+)?):/
+);
+const fpTime =
+fromFp
+? Number(
+fromFp[
+1
+]
+)
+: NaN;
+
+if(
+Number.isFinite(
+fpTime
+) &&
+fpTime >
+0
+){
+return fpTime;
+}
+
+const b4 =
+Number(
+setup?.b4
+);
+
+if(
+Array.isArray(
+candles
+) &&
+Number.isFinite(
+b4
+) &&
+b4 >=
+0 &&
+candles[
+b4
+]
+){
+const t =
+Number(
+candles[
+b4
+].time
+);
+
+if(
+Number.isFinite(
+t
+) &&
+t >
+0
+){
+return t;
+}
+
+}
+
+return null;
+
+}
+
+/**
+ * Closed (+ optional forming) bars strictly after pt4 time.
+ * @param {Array} candles
+ * @param {{ time?: number }|null|undefined} forming
+ * @param {number} b4Time
+ * @returns {number}
+ */
+function countBarsAfterB4Time(
+candles,
+forming,
+b4Time
+){
+
+const t4 =
+Number(
+b4Time
+);
+
+if(
+!(
+Number.isFinite(
+t4
+) &&
+t4 >
+0
+)
+){
+return 0;
+}
+
+let n =
+0;
+
+if(
+Array.isArray(
+candles
+)
+){
+for(
+const bar of candles
+){
+const t =
+Number(
+bar?.time
+);
+
+if(
+Number.isFinite(
+t
+) &&
+t >
+t4
+){
+n++;
+}
+
+}
+
+}
+
+const ft =
+Number(
+forming?.time
+);
+
+if(
+Number.isFinite(
+ft
+) &&
+ft >
+t4
+){
+n++;
+}
+
+return n;
+
+}
+
+/**
  * @param {string} symbol
  * @returns {Promise<number|null>}
  */
@@ -1843,7 +2020,17 @@ fp
 return;
 }
 
+/*
+ * With pullback-before-arm, "missed entry" is owned by the pullback gate /
+ * pattern resolve (pt4 до отката / вход уже был). alreadyCrossed
+ * here falsely cancels setups that resolve skipped (e.g. maxPt1Pt4Bars
+ * early-null) and disagrees with pullback semantics.
+ */
+const pullbackArmOn =
+!!getResolveOpts().pullbackBeforeArm;
+
 if(
+!pullbackArmOn &&
 alreadyCrossedAfterB4(
 candles,
 state.forming,
@@ -2171,12 +2358,41 @@ return;
 
 }
 
+const b4Idx =
+Number(
+setup.b4
+);
+const b4Time =
+Array.isArray(
+candles
+) &&
+Number.isFinite(
+b4Idx
+) &&
+candles[
+b4Idx
+]
+? Number(
+candles[
+b4Idx
+].time
+)
+: null;
+
 state.armed.set(
 fp,
 {
 setup,
 armedAt:
 Date.now(),
+b4Time:
+Number.isFinite(
+b4Time
+) &&
+b4Time >
+0
+? b4Time
+: null,
 reason,
 orderId:
 null,
@@ -3342,13 +3558,45 @@ const timeoutBars =
 clampEntryTimeoutBars(
 engineConfig?.timeoutBars
 );
-const deadline =
-b4 +
-timeoutBars;
+const stateCandles =
+state.candles;
+const b4Time =
+resolveArmedB4Time(
+row,
+setup,
+stateCandles,
+fp
+);
+const formingForTimeout =
+state.forming &&
+cur &&
+Number(
+cur.time
+) ===
+Number(
+state.forming.time
+)
+? state.forming
+: null;
+const barsAfterB4 =
+Number.isFinite(
+b4Time
+)
+? countBarsAfterB4Time(
+stateCandles,
+formingForTimeout,
+b4Time
+)
+: Number.isFinite(
+b4
+)
+? barIndex -
+b4
+: 0;
 
 if(
-barIndex >
-deadline
+barsAfterB4 >
+timeoutBars
 ){
 await cancelArmedSetup(
 sym,
@@ -3769,6 +4017,9 @@ event.type ===
 : event.reason ===
 "pt4_before_pullback"
 ? "pt4 до отката"
+: event.reason ===
+"max_pt1_pt4"
+? "pt1→pt4 слишком длинный"
 : "сетап уже закрыт";
 pushSignal(
 {

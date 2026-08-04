@@ -1517,6 +1517,54 @@ resetSessionStats();
 
 const strategies =
 readBotStrategies();
+
+/*
+ * Multichart/LAN may send strategyPrefs so remote bot uses the same
+ * pullback / maxPt1Pt4 / risk settings the operator just edited.
+ */
+if(
+payload?.strategyPrefs &&
+typeof payload.strategyPrefs ===
+"object"
+){
+const patch =
+payload.strategyPrefs;
+const cur =
+strategies[
+strategyId
+] ||
+{};
+
+strategies[
+strategyId
+] =
+strategyId ===
+"st2"
+? normalizeSt2(
+{
+...cur,
+...patch
+}
+)
+: strategyId ===
+"st3"
+? normalizeSt3(
+{
+...cur,
+...patch
+}
+)
+: normalizeSt1(
+{
+...cur,
+...patch
+}
+);
+writeBotStrategies(
+strategies
+);
+}
+
 const prefs =
 getStrategyPrefs(
 strategyId

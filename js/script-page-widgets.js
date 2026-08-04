@@ -56,7 +56,13 @@ let refreshZoomFavoriteUi =
 /** @type {null | typeof import("./screener-widget-zoom.js").mountScreenerWidgetZoom} */
 let mountScreenerWidgetZoom =
 null;
+/** @type {null | typeof import("./screener-widget-zoom.js").openScreenerWidgetZoom} */
+let openScreenerWidgetZoom =
+null;
 let scriptZoomModulePromise =
+null;
+/** @type {Promise<void>|null} */
+let scriptZoomMountPromise =
 null;
 
 async function ensureScriptZoomModule(){
@@ -66,13 +72,15 @@ if(
 ){
 scriptZoomModulePromise =
 import(
-"./screener-widget-zoom.js?v=17"
+"./screener-widget-zoom.js?v=21"
 ).then(
 mod=>{
 refreshZoomFavoriteUi =
 mod.refreshZoomFavoriteUi;
 mountScreenerWidgetZoom =
 mod.mountScreenerWidgetZoom;
+openScreenerWidgetZoom =
+mod.openScreenerWidgetZoom;
 return mod;
 }
 );
@@ -1035,9 +1043,9 @@ layout
 );
 const tfLabel =
 PATTERN_SCAN_TF_LABELS[
-chartTf
+row.tf
 ] ||
-chartTf;
+row.tf;
 const sideLabel =
 PATTERN_SCAN_SIDE_LABELS[
 row.side
@@ -1689,18 +1697,11 @@ let cachedChartTfFilter =
 "all";
 
 function resolveWidgetChartTf(
-chartTfFilter,
+_chartTfFilter,
 row
 ){
 
-if(
-chartTfFilter ===
-"all"
-){
 return row.tf;
-}
-
-return chartTfFilter;
 
 }
 
@@ -1914,16 +1915,22 @@ widget.symbol
 function mountZoom(){
 
 if(
-unmountZoom ||
-zoomMountStarted
+unmountZoom
 ){
-return;
+return Promise.resolve();
+}
+
+if(
+scriptZoomMountPromise
+){
+return scriptZoomMountPromise;
 }
 
 zoomMountStarted =
 true;
 
-void ensureScriptZoomModule().then(
+scriptZoomMountPromise =
+ensureScriptZoomModule().then(
 ()=>{
 if(
 unmountZoom ||
@@ -2022,6 +2029,8 @@ getWidgetFlagHtml()
 }
 );
 
+return scriptZoomMountPromise;
+
 }
 
 bindWidgetFlagGlobalListeners(
@@ -2037,6 +2046,8 @@ unmountZoom =
 null;
 zoomMountStarted =
 false;
+scriptZoomMountPromise =
+null;
 cachedRows =
 [];
 tickerMap.clear();
@@ -2046,9 +2057,99 @@ tickerMap.clear();
 mountZoom();
 startTickerMetaPoll();
 
+/**
+ * Зум из лога Screener Live (ПКМ по тикеру) — тот же overlay, что на Скринере.
+ * @param {{ symbol: string, tf?: string }} entry
+ * @param {{ zoomWidgets?: Array<{ symbol: string, tf?: string }> }} [opts]
+ */
+async function openLiveLogZoom(
+entry,
+opts =
+{}
+){
+
+const symbol =
+String(
+entry?.symbol ||
+""
+).trim().toUpperCase().replace(
+/\.P$/i,
+""
+);
+
+if(
+!symbol
+){
+return;
+}
+
+const tf =
+String(
+entry?.tf ||
+"15"
+);
+
+mountZoom();
+await ensureScriptZoomModule();
+await mountZoom();
+
+if(
+typeof openScreenerWidgetZoom !==
+"function"
+){
+return;
+}
+
+const zoomWidgets =
+Array.isArray(
+opts.zoomWidgets
+) &&
+opts.zoomWidgets.length
+? opts.zoomWidgets.map(
+row=>({
+symbol:
+String(
+row.symbol ||
+""
+).trim().toUpperCase().replace(
+/\.P$/i,
+""
+),
+tf:
+String(
+row.tf ||
+tf
+)
+})
+).filter(
+w=>
+w.symbol
+)
+: [
+{
+symbol,
+tf
+}
+];
+
+await openScreenerWidgetZoom(
+{
+symbol,
+tf
+},
+{
+getCurrentTF:()=>
+tf,
+zoomWidgets
+}
+);
+
+}
+
 return {
 renderPage,
 destroy,
+openLiveLogZoom,
 setLayout,
 restoreLayoutState,
 getLayout:()=>

@@ -74,6 +74,11 @@ resumeScriptScanBackgroundJob
 } from "./script-scan-background.js?v=14";
 
 import {
+resumeScreenerLive,
+isScreenerLiveJobActive
+} from "./script-screener-live.js?v=8";
+
+import {
 resumeStatsBackgroundJob
 } from "./statistics-background.js?v=8";
 
@@ -88,7 +93,15 @@ void resumeStatsBackgroundJob();
 function bootScriptScanBackground(){
 
 if(
-window.cryptoTerminalDesktop?.isDesktop
+!window.cryptoTerminalDesktop?.isDesktop
+){
+return;
+}
+
+resumeScreenerLive();
+
+if(
+!isScreenerLiveJobActive()
 ){
 resumeScriptScanBackgroundJob();
 }
