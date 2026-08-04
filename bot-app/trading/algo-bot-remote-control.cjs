@@ -375,6 +375,25 @@ return id;
 
 }
 
+/**
+ * Cloud lock held by a previous Algo Bot process (stale instance_id / renderer vs main).
+ * Safe to reclaim on LAN remote Start — Multichart commanding THIS bot is the point.
+ * Still refuse when Multichart (non-bot) holds the lock.
+ * @param {unknown} appName
+ */
+function isStandaloneAlgoBotLockApp(
+appName
+){
+
+return /algo\s*bot/i.test(
+String(
+appName ||
+""
+)
+);
+
+}
+
 async function acquireCloudLock(){
 
 const cloud =
@@ -465,7 +484,10 @@ String(
 row.instance_id ||
 ""
 ) !==
-instanceId
+instanceId &&
+!isStandaloneAlgoBotLockApp(
+row.app_name
+)
 ){
 const where =
 row.app_name

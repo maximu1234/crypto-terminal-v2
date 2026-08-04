@@ -518,6 +518,18 @@ root
 );
 
 try{
+algoBot.notifyTickerFlagsToUi?.(
+{
+root,
+message:
+`Списки с Multichart: Long ${counts.long}, Short ${counts.short}, Both ${counts.both}, Избр. ${counts.favorites}`
+}
+);
+}catch{
+/* UI notify is best-effort — file/engine already updated */
+}
+
+try{
 sessionLog.appendNote(
 `Remote watchlists applied: long=${counts.long} short=${counts.short} both=${counts.both} favorites=${counts.favorites}`
 );
@@ -871,11 +883,20 @@ try{
 uiResult =
 await win.webContents.executeJavaScript(
 `((transfer) => {
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+return (async () => {
+for (let i = 0; i < 40; i++) {
 const fn = window.__importAuthSessionTransferString;
-if (typeof fn !== "function") {
-return Promise.resolve({ ok: false, message: "UI ещё не готов — перезапустите окно бота" });
-}
+if (typeof fn === "function") {
 return Promise.resolve(fn(transfer));
+}
+await sleep(250);
+}
+return {
+ok: false,
+message: "UI ещё не готов — перезапустите окно бота"
+};
+})();
 })(${JSON.stringify(
 transfer
 )})`,
@@ -894,6 +915,48 @@ String(
 err
 )
 };
+}
+}
+
+/*
+  File already has the session. If UI import failed / timed out, force
+  localStorage heal from userData so the red banner clears.
+*/
+if(
+(
+!uiResult ||
+uiResult.ok ===
+false
+) &&
+win?.webContents
+){
+try{
+const healed =
+await win.webContents.executeJavaScript(
+`(async () => {
+const fn = window.__reloadAuthFromDesktopFile;
+if (typeof fn !== "function") {
+return { ok: false, message: "reload helper missing" };
+}
+return Promise.resolve(fn());
+})()`,
+true
+);
+
+if(
+healed?.ok
+){
+uiResult =
+{
+ok:
+true,
+message:
+healed.message ||
+"Сессия подтянута из файла"
+};
+}
+}catch{
+/* ignore heal errors */
 }
 }
 

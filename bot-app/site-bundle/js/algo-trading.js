@@ -53,7 +53,7 @@ mountAlgoBotStrategyUi
 
 import {
 mountSessionLogServerSettings
-} from "./algo-trading/bot-session-log-server-ui.js?v=7";
+} from "./algo-trading/bot-session-log-server-ui.js?v=8";
 
 import {
 syncBotStrategiesToMain

@@ -344,11 +344,11 @@ Object.freeze({
 "algo-trading/bot-strategy-ui.js":
 56,
 "algo-trading/bot-session-log-server-ui.js":
-7,
+8,
 "algo-trading/bot-session-logs-viewer.js":
 14,
 "algo-trading/bot-cloud-lock.js":
-7,
+8,
 "algo-trading/bot-remote-client.js":
 5,
 "algo-trading/trade/format.js":
@@ -480,7 +480,7 @@ Object.freeze({
 "screener-widget-zoom.js":
 17,
 "release-marker.js":
-80,
+82,
 "focus-blur-after-pick.js":
 3,
 "site-boot.js":
@@ -629,7 +629,7 @@ Object.freeze({
 
 /* ── JS: cloud / auth ── */
 "cloud-sync.js":
-57,
+63,
 "cloud-sync-throttle.js":
 3,
 "page-routes.js":
@@ -639,11 +639,11 @@ Object.freeze({
 "types/chart-types.js":
 1,
 "supabase-client.js":
-8,
+9,
 "supabase-env.js":
 5,
 "auth-storage.js":
-8,
+10,
 "auth-session-transfer.js":
 1,
 "auth-ui.js":

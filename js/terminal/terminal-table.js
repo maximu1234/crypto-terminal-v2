@@ -909,7 +909,7 @@ bottomPad
 
 scrollRoot.scrollTop =
 prevScroll;
-highlightActiveSymbol();
+applyCoinRowStates();
 
 }
 
@@ -1239,9 +1239,185 @@ symbol
 
 }
 
+/**
+ * Keep active ticker in the visible scroll window (TradingView-like).
+ * Works with virtual list + `.coins-table-scroll` (Trade/Algo) and plain #coins-body.
+ */
+let ensuringActiveCoinVisible =
+false;
+
+export function ensureActiveCoinVisible(){
+
+if(
+ensuringActiveCoinVisible
+){
+return;
+}
+
+const list =
+document.getElementById(
+"coins-body"
+);
+
+if(
+!list
+){
+return;
+}
+
+const symbol =
+String(
+coinsState().currentSymbol ||
+""
+).trim().toUpperCase();
+
+if(
+!symbol
+){
+applyCoinRowStates();
+return;
+}
+
+const data =
+virtualCoinData;
+
+if(
+!Array.isArray(
+data
+) ||
+!data.length
+){
+applyCoinRowStates();
+return;
+}
+
+const index =
+data.findIndex(
+item=>
+String(
+item?.symbol ||
+""
+).trim().toUpperCase() ===
+symbol
+);
+
+if(
+index <
+0
+){
+applyCoinRowStates();
+return;
+}
+
+ensuringActiveCoinVisible =
+true;
+
+try{
+const scrollRoot =
+resolveCoinListScrollRoot(
+list
+);
+const rowH =
+COIN_ROW_HEIGHT_PX;
+let headerH =
+0;
+
+if(
+scrollRoot !==
+list
+){
+const header =
+scrollRoot.querySelector(
+"#table-header"
+);
+headerH =
+header?.offsetHeight ||
+0;
+}
+
+const viewH =
+Math.max(
+scrollRoot.clientHeight ||
+0,
+rowH *
+3
+);
+/*
+  Sticky header occupies the top of the viewport inside scrollRoot.
+  Keep one row of margin so the active coin is never clipped.
+*/
+const margin =
+rowH;
+const rowTop =
+headerH +
+index *
+rowH;
+const rowBottom =
+rowTop +
+rowH;
+const viewTop =
+scrollRoot.scrollTop +
+headerH +
+margin;
+const viewBottom =
+scrollRoot.scrollTop +
+viewH -
+margin;
+
+let nextScroll =
+scrollRoot.scrollTop;
+
+if(
+rowTop <
+viewTop
+){
+nextScroll =
+rowTop -
+headerH -
+margin;
+}else if(
+rowBottom >
+viewBottom
+){
+nextScroll =
+rowBottom -
+viewH +
+margin;
+}
+
+nextScroll =
+Math.max(
+0,
+Math.round(
+nextScroll
+)
+);
+
+if(
+Math.abs(
+nextScroll -
+scrollRoot.scrollTop
+) >=
+1
+){
+scrollRoot.scrollTop =
+nextScroll;
+}
+
+paintCoinListWindow(
+list
+);
+applyCoinRowStates();
+}finally{
+ensuringActiveCoinVisible =
+false;
+}
+
+}
+
 export function highlightActiveSymbol(){
 
-applyCoinRowStates();
+ensureActiveCoinVisible();
 
 }
 

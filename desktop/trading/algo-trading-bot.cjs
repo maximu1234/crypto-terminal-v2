@@ -1927,12 +1927,119 @@ readTickerFlagsRoot()
 
 }
 
+/**
+ * After LAN /watchlists (or any main-only write), push flags into renderer
+ * localStorage via applyTickerFlags on the botStatus channel.
+ */
+function notifyTickerFlagsToUi(
+extra =
+{}
+){
+
+const root =
+extra.root &&
+typeof extra.root ===
+"object"
+? extra.root
+: readTickerFlagsRoot();
+const snapshot =
+buildStatusSnapshot(
+{
+applyTickerFlags:
+true,
+tickerFlagsRoot:
+root,
+...(
+typeof extra.message ===
+"string"
+? {
+message:
+extra.message
+}
+: {}
+)
+}
+);
+
+lastStatusSnapshot =
+snapshot;
+
+let sent =
+0;
+
+try{
+const {
+BrowserWindow
+} =
+require(
+"electron"
+);
+
+for(
+const win of BrowserWindow.getAllWindows()
+){
+
+const wc =
+win?.webContents;
+
+if(
+!wc ||
+wc.isDestroyed?.()
+){
+continue;
+}
+
+try{
+wc.send(
+"algoTrading:botStatus",
+snapshot
+);
+sent +=
+1;
+}catch(
+err
+){
+log.warn(
+"algo bot ticker-flags UI notify:",
+err?.message ||
+err
+);
+}
+
+}
+}catch(
+err
+){
+log.warn(
+"algo bot ticker-flags UI broadcast:",
+err?.message ||
+err
+);
+}
+
+if(
+!sent
+){
+pushStatus(
+snapshot
+);
+}
+
+return {
+ok:
+true,
+sent
+};
+
+}
+
 module.exports =
 {
 setBotStatusTarget,
 syncBotStrategies,
 syncTickerFlags,
 getTickerFlagsRoot,
+notifyTickerFlagsToUi,
 startBot,
 stopBot,
 getBotStatus,

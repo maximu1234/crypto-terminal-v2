@@ -18,6 +18,9 @@ isSupabaseConfigured
 import {
 readPersistedAuthSession
 } from "../alert-auth-cache.js?v=7";
+import {
+isAlgoBotLiteShell
+} from "../page-routes.js?v=5";
 
 const INSTANCE_KEY =
 "algo_bot_lock_instance_id";
@@ -173,6 +176,22 @@ return "Multichart Algo Bot";
 }
 
 return "Multichart";
+
+}
+
+/**
+ * @param {unknown} appName
+ */
+function isStandaloneAlgoBotLockApp(
+appName
+){
+
+return /algo\s*bot/i.test(
+String(
+appName ||
+""
+)
+);
 
 }
 
@@ -500,6 +519,20 @@ if(
 current.locked &&
 !current.ownedByUs
 ){
+/*
+  On Algo Bot lite: reclaim stale lock from a previous Bot instance
+  (new install / different instance_id). Still refuse Multichart's lock.
+  Multichart page must not steal a live remote Bot lock.
+*/
+const reclaimOwnBot =
+isAlgoBotLiteShell() &&
+isStandaloneAlgoBotLockApp(
+current.appName
+);
+
+if(
+!reclaimOwnBot
+){
 const where =
 current.appName
 ? ` (${current.appName})`
@@ -515,6 +548,7 @@ current.appName,
 message:
 `Бот уже работает в другом приложении${where}`
 };
+}
 }
 
 const appName =

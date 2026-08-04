@@ -27,7 +27,7 @@ syncCoinListFreezeFromFlagMenus,
 getCurrentSymbols,
 getVisibleSymbolList,
 setCoinOpenPositionChecker
-} from "./algo-trading/coin-list-host.js?v=1";
+} from "./algo-trading/coin-list-host.js?v=2";
 
 import {
 hasOpenPosition,
@@ -969,6 +969,9 @@ return;
 api.setSymbolLabel?.(
 next
 );
+coinsState().currentSymbol =
+next;
+highlightActiveSymbol();
 await api.loadSymbol?.(
 next
 );

@@ -48,7 +48,7 @@ ensureCloudReady
 import {
 persistFavoritesToCloud,
 onFavoritesRemoteUpdate
-} from "./cloud-sync.js?v=60";
+} from "./cloud-sync.js?v=63";
 
 import {
 createCandlestickChart,
@@ -179,10 +179,11 @@ startTickerStream,
 startRealtime,
 renderList,
 highlightActiveSymbol,
+ensureActiveCoinVisible,
 getVisibleSymbolList,
 setCoinsTableHooks,
 syncCoinListFreezeFromFlagMenus
-} from "./terminal/terminal-table.js?v=27";
+} from "./terminal/terminal-table.js?v=29";
 
 import {
 createCoinsChartSwitchVeil
@@ -4093,6 +4094,7 @@ rsiChart?.clearCrosshairPosition();
 
 currentSymbol = symbol;
 setCoinsChartSymbol(symbol);
+highlightActiveSymbol();
 syncCoinsChartTurnover24(
 symbol
 );
@@ -4741,17 +4743,7 @@ e.target.blur();
 
 function scrollActiveCoinIntoView(){
 
-const el =
-coinElements.get(currentSymbol);
-
-if(!el){
-return;
-}
-
-el.scrollIntoView({
-block:"nearest",
-behavior:"smooth"
-});
+ensureActiveCoinVisible();
 
 }
 
@@ -5261,9 +5253,12 @@ next === currentSymbol
 return;
 }
 
+currentSymbol =
+next;
 setCoinsChartSymbol(
 next
 );
+highlightActiveSymbol();
 await loadSymbol(
 next
 );

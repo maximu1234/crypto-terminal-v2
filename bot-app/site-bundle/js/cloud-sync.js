@@ -10,6 +10,7 @@ authNetworkTimeoutMs,
 isExplicitAuthSignOut,
 isSafariBrowser,
 isFatalAuthRefreshError,
+isLocalAuthRefreshBlockError,
 isRateLimitedAuthRefreshError,
 clearPersistedRefreshToken,
 markExplicitAuthSignOut,
@@ -22,7 +23,7 @@ isAuthRefreshBlocked,
 blockAuthRefreshUntil,
 clearAuthRefreshBlock,
 getAuthRefreshBlockedUntil
-} from "./auth-storage.js?v=8";
+} from "./auth-storage.js?v=10";
 
 import {
 encodeAuthSessionTransfer,
@@ -618,8 +619,49 @@ const tick =
 void (
 async ()=>{
 
-const snap =
+let snap =
 readPersistedAuthSession();
+
+if(
+!snap?.user?.id
+){
+try{
+await restoreDesktopAuthSession();
+}catch{
+/* ignore */
+}
+
+snap =
+readPersistedAuthSession();
+}
+
+if(
+!snap?.user?.id &&
+typeof window !==
+"undefined" &&
+window.cryptoTerminalDesktop?.loadAuthSession
+){
+try{
+const {
+forceRestoreDesktopAuthSession
+} =
+await import(
+"./auth-storage.js?v=10"
+);
+const forced =
+await forceRestoreDesktopAuthSession();
+
+if(
+forced
+){
+await applyPersistedAuthSessionNow();
+snap =
+readPersistedAuthSession();
+}
+}catch{
+/* ignore */
+}
+}
 
 if(
 !snap?.user?.id
@@ -842,12 +884,16 @@ if(
 fatal
 ){
 message =
-`Auth refresh сломан (${reason}) — войдите снова / «Отдать сессию». Повторы остановлены.`;
+isAlgoBotLiteShell()
+? `Auth refresh сломан (${reason}) — войдите снова / «Отдать сессию». Повторы остановлены.`
+: `Auth refresh сломан (${reason}) — войдите снова. Повторы остановлены.`;
 }else if(
 rateLimited
 ){
 message =
-`Supabase Auth rate limit (429) — повторы остановлены ~${Math.round(softMs / 60000)} мин. Потом «Отдать сессию» или перезапуск бота.`;
+isAlgoBotLiteShell()
+? `Supabase Auth rate limit (429) — повторы остановлены ~${Math.round(softMs / 60000)} мин. Потом «Отдать сессию» или перезапуск бота.`
+: `Supabase Auth rate limit (429) — повторы остановлены ~${Math.round(softMs / 60000)} мин. Сессия сохранена.`;
 }else if(
 !accessStillOk
 ){
@@ -901,10 +947,63 @@ return "rate_limit";
 }
 
 if(
+isLocalAuthRefreshBlockError(
+error
+)
+){
+/* Soft block already active — do not escalate to fatal wipe. */
+blockAuthRefreshRetries(
+reason,
+{
+fatal:
+false,
+ms:
+Math.max(
+60 *
+1000,
+authRefreshBlockedUntil -
+Date.now()
+)
+}
+);
+return "blocked";
+}
+
+if(
 isFatalAuthRefreshError(
 error
 )
 ){
+
+/*
+  Refresh-token rotation race: another call already wrote a new
+  refresh_token + access. Wiping would log the user out for a ghost 400.
+*/
+const persisted =
+readPersistedAuthSession();
+
+if(
+hasPersistedRefreshToken(
+persisted
+) &&
+persisted?.access_token &&
+!isAccessTokenExpired(
+persisted
+)
+){
+blockAuthRefreshRetries(
+reason,
+{
+fatal:
+false,
+ms:
+60 *
+1000
+}
+);
+return "soft";
+}
+
 blockAuthRefreshRetries(
 reason,
 {
@@ -2506,7 +2605,7 @@ isFavoritesAutoCloudDisabled()
 return;
 }
 
-void import("./favorites-cloud-sync.js?v=7").then(
+void import("./favorites-cloud-sync.js?v=63").then(
 m=>{
 m.applyFavoritesFromRealtimeRow(
 row
@@ -2644,7 +2743,7 @@ settingsChannel = channel;
 export async function mergeFavoritesWithCloud(){
 
 const m =
-await import("./favorites-cloud-sync.js?v=7");
+await import("./favorites-cloud-sync.js?v=63");
 
 return m.reconcileLocalFavoritesWithCloud();
 
@@ -2654,7 +2753,7 @@ return m.reconcileLocalFavoritesWithCloud();
 export async function pullFavoritesIfCloudNewer(){
 
 const m =
-await import("./favorites-cloud-sync.js?v=7");
+await import("./favorites-cloud-sync.js?v=63");
 
 await m.pullFavoritesFromCloudNow();
 return favoritesToCloudList(
@@ -2678,7 +2777,7 @@ return collectAllLocalDrawings();
 async function syncFavoritesWithCloud(){
 
 const m =
-await import("./favorites-cloud-sync.js?v=7");
+await import("./favorites-cloud-sync.js?v=63");
 
 await m.reconcileLocalFavoritesWithCloud();
 
@@ -2712,7 +2811,7 @@ return;
 }
 
 const m =
-await import("./favorites-cloud-sync.js?v=7");
+await import("./favorites-cloud-sync.js?v=63");
 
 m.pushFavoritesAfterLocalEdit(
 favorites
@@ -3648,6 +3747,8 @@ return redirectTo;
 /**
  * Multichart: refresh JWT before LAN/paste transfer so Algo Bot lite
  * (no Auth refresh) receives a still-valid access_token.
+ * If Auth refresh is circuit-broken, still allow transfer of a non-expired
+ * access_token (do not block «Отдать сессию» on rate-limit alone).
  * @returns {Promise<void>}
  */
 async function ensureFreshAuthSessionForTransfer(){
@@ -3656,14 +3757,6 @@ if(
 isAlgoBotLiteShell()
 ){
 return;
-}
-
-if(
-isAuthRefreshBlockedNow()
-){
-throw new Error(
-"Auth на Multichart временно заблокирован (rate limit). Подождите несколько минут или войдите снова, затем «Отдать сессию»."
-);
 }
 
 const persisted =
@@ -3679,17 +3772,36 @@ const transferSkewMs =
 30 *
 60 *
 1000;
-
-if(
-!isAccessTokenExpired(
+const expired =
+isAccessTokenExpired(
 persisted
-) &&
-!isAccessTokenNearExpiry(
+);
+const near =
+isAccessTokenNearExpiry(
 persisted,
 transferSkewMs
-)
+);
+
+if(
+!expired &&
+!near
 ){
 return;
+}
+
+if(
+isAuthRefreshBlockedNow()
+){
+if(
+!expired
+){
+/* Live access_token still usable — push it; skip Auth refresh. */
+return;
+}
+
+throw new Error(
+"Auth на Multichart временно заблокирован (rate limit). Подождите несколько минут или войдите снова, затем «Отдать сессию»."
+);
 }
 
 const refresh =
@@ -3702,9 +3814,7 @@ if(
 !refresh
 ){
 if(
-isAccessTokenExpired(
-persisted
-)
+expired
 ){
 throw new Error(
 "Сессия Multichart истекла и нет refresh — войдите в аккаунт снова, затем «Отдать сессию»."
@@ -3721,9 +3831,7 @@ if(
 !sb
 ){
 if(
-isAccessTokenExpired(
-persisted
-)
+expired
 ){
 throw new Error(
 "Не удалось обновить сессию (нет Supabase). Войдите снова."
@@ -3950,6 +4058,44 @@ err
 }
 
 notifyAuth();
+return true;
+
+}
+
+/**
+ * Algo Bot: after LAN file heal — apply localStorage session into UI state.
+ * @returns {Promise<boolean>}
+ */
+export async function applyPersistedAuthSessionNow(){
+
+const session =
+readPersistedAuthSession();
+
+if(
+!session?.user?.id ||
+!session?.access_token
+){
+return false;
+}
+
+await applyImportedAuthSessionLocally(
+session,
+null
+);
+
+if(
+isAccessTokenExpired(
+session
+)
+){
+publishCloudAuthProblem(
+"expired",
+"Облачная сессия истекла — «Отдать сессию» с Multichart."
+);
+return false;
+}
+
+clearCloudAuthProblem();
 return true;
 
 }
@@ -4525,7 +4671,7 @@ return;
 try{
 
 const favoritesCloud =
-await import("./favorites-cloud-sync.js?v=7");
+await import("./favorites-cloud-sync.js?v=63");
 
 if(
 !isFavoritesAutoCloudDisabled() &&
@@ -4539,7 +4685,7 @@ if(
 !isAlertsCloudDisabled()
 ){
 const alertsCloud =
-await import("./alerts-cloud-sync.js?v=113");
+await import("./alerts-cloud-sync.js?v=63");
 
 await alertsCloud.hydrateAlertsAfterAuth({
 force: true
@@ -4642,7 +4788,7 @@ await ensureCloudLoginResolved(
 );
 
 const alertsCloud =
-await import("./alerts-cloud-sync.js?v=113");
+await import("./alerts-cloud-sync.js?v=63");
 const { stripAlertFlagsNotInRegistry } =
 await import("./alerts.js?v=106");
 

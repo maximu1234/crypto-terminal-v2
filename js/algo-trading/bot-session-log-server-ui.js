@@ -6,8 +6,13 @@ import {
 isAlgoBotLiteShell
 } from "../page-routes.js?v=5";
 import {
+applyPersistedAuthSessionNow,
+clearCloudAuthProblem,
 importAuthSessionTransferString
-} from "../cloud-sync.js?v=60";
+} from "../cloud-sync.js?v=63";
+import {
+forceRestoreDesktopAuthSession
+} from "../auth-storage.js?v=10";
 
 if(
 typeof window !==
@@ -16,6 +21,56 @@ isAlgoBotLiteShell()
 ){
 window.__importAuthSessionTransferString =
 importAuthSessionTransferString;
+
+window.__reloadAuthFromDesktopFile =
+async ()=>{
+
+const ok =
+await forceRestoreDesktopAuthSession();
+
+if(
+!ok
+){
+return {
+ok:
+false,
+message:
+"Файл сессии пуст или повреждён"
+};
+}
+
+try{
+const applied =
+await applyPersistedAuthSessionNow();
+
+if(
+applied
+){
+clearCloudAuthProblem();
+}
+
+return {
+ok:
+!!applied,
+message:
+applied
+? "Сессия подтянута из файла приложения"
+: "Сессия в файле истекла — снова «Отдать сессию»"
+};
+}catch(
+err
+){
+return {
+ok:
+true,
+message:
+err?.message ||
+"Сессия в localStorage — обновите окно бота"
+};
+}
+
+};
+
 }
 
 function desktopApi(){

@@ -37,7 +37,7 @@ subscribeKline
 import {
 mountAlgoTradingCoinList,
 refreshAlgoMarketListFromFlags
-} from "./algo-trading-list.js?v=11";
+} from "./algo-trading-list.js?v=12";
 
 import {
 mountAlgoTickerScanUi
@@ -49,11 +49,11 @@ mountAlgoRuntimeUi
 
 import {
 mountAlgoBotStrategyUi
-} from "./algo-trading/bot-strategy-ui.js?v=58";
+} from "./algo-trading/bot-strategy-ui.js?v=60";
 
 import {
 mountSessionLogServerSettings
-} from "./algo-trading/bot-session-log-server-ui.js?v=7";
+} from "./algo-trading/bot-session-log-server-ui.js?v=9";
 
 import {
 syncBotStrategiesToMain

@@ -81,6 +81,10 @@ return until;
 /**
  * Called from supabase fetch wrapper when /auth/v1/token fails —
  * opens the same backoff window GoTrue storage cloak uses.
+ * Never strips refresh_token here: a soft-blocked fake 401, a refresh-token
+ * rotation race, or a transient 400 must not wipe a still-valid session.
+ * Fatal clear is only via blockAuthRefreshUntil({ clearRefreshToken: true })
+ * after message-based classification in cloud-sync.
  * @param {number} status
  */
 export function noteAuthRefreshHttpStatus(
@@ -95,21 +99,7 @@ status
 
 if(
 code ===
-429
-){
-blockAuthRefreshUntil(
-30 *
-60 *
-1000,
-{
-clearRefreshToken:
-false
-}
-);
-return;
-}
-
-if(
+429 ||
 code ===
 400 ||
 code ===
@@ -123,7 +113,7 @@ blockAuthRefreshUntil(
 1000,
 {
 clearRefreshToken:
-true
+false
 }
 );
 }
@@ -416,7 +406,7 @@ void api.clearAuthSession().catch(
 }
 
 /** Desktop: восстановить сессию из userData, если origin/localStorage пуст
- * или primary без refresh_token (таймаут раньше стирал refresh, а файл ещё жив).
+ * или primary без user/refresh (LAN push писал файл, а UI остался без входа).
  */
 export async function restoreDesktopAuthSession(){
 
@@ -454,9 +444,12 @@ const hasRefresh =
 primary?.refresh_token ||
 ""
 ).trim();
+const hasUser =
+!!primary?.user?.id;
 
 if(
-hasRefresh
+hasRefresh &&
+hasUser
 ){
 return false;
 }
@@ -496,6 +489,80 @@ if(
 !desktopSession?.user?.id ||
 !String(
 desktopSession.refresh_token ||
+""
+).trim()
+){
+return false;
+}
+
+writeRaw(
+SUPABASE_AUTH_STORAGE_KEY,
+raw
+);
+writeRaw(
+SUPABASE_AUTH_BACKUP_KEY,
+raw
+);
+
+return true;
+}catch{
+return false;
+}
+
+}
+
+/**
+ * Algo Bot LAN: always overwrite localStorage from userData file.
+ * @returns {Promise<boolean>}
+ */
+export async function forceRestoreDesktopAuthSession(){
+
+if(
+typeof window ===
+"undefined"
+){
+return false;
+}
+
+const api =
+window.cryptoTerminalDesktop;
+
+if(
+!api?.loadAuthSession
+){
+return false;
+}
+
+try{
+const result =
+await api.loadAuthSession();
+const raw =
+result?.raw;
+
+if(
+typeof raw !==
+"string" ||
+!raw.trim()
+){
+return false;
+}
+
+let desktopSession =
+null;
+
+try{
+desktopSession =
+JSON.parse(
+raw
+);
+}catch{
+return false;
+}
+
+if(
+!desktopSession?.user?.id ||
+!String(
+desktopSession.access_token ||
 ""
 ).trim()
 ){
@@ -568,7 +635,45 @@ msg
 
 }
 
-/** 400/401 от Supabase refresh — повторять бессмысленно, только спам в консоль. */
+/** Local circuit-breaker / cloak — not a dead Supabase session. */
+export function isLocalAuthRefreshBlockError(
+error
+){
+
+if(
+!error
+){
+return false;
+}
+
+const msg =
+String(
+error?.message ||
+error?.error ||
+error?.name ||
+error ||
+""
+).toLowerCase();
+
+return (
+/refresh_blocked/.test(
+msg
+) ||
+/blocked locally/.test(
+msg
+) ||
+/auth refresh blocked/.test(
+msg
+)
+);
+
+}
+
+/**
+ * True invalid_grant / revoked refresh — message-based only.
+ * Bare HTTP 400/401/403 is NOT enough: our authAwareFetch returns a fake 401
+ * while soft-blocked, and a rotated-token race also yields 400.
+ */
 export function isFatalAuthRefreshError(
 error
 ){
@@ -587,28 +692,19 @@ error
 return false;
 }
 
-const status =
-Number(
-error?.status ||
-error?.statusCode ||
-error?.code ||
-0
-);
-
 if(
-status ===
-400 ||
-status ===
-401 ||
-status ===
-403
+isLocalAuthRefreshBlockError(
+error
+)
 ){
-return true;
+return false;
 }
 
 const msg =
 String(
 error?.message ||
+error?.error_description ||
+error?.error ||
 error?.name ||
 error ||
 ""
@@ -619,6 +715,9 @@ return (
 msg
 ) ||
 /refresh token not found/.test(
+msg
+) ||
+/refresh_token_not_found/.test(
 msg
 ) ||
 /invalid_grant/.test(

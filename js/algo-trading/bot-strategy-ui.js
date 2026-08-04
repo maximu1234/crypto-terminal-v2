@@ -35,7 +35,7 @@ isMultichartRemoteControlHost
 import {
 mountRemoteSessionLogsEntry,
 mountRemoteWatchlistsPushEntry
-} from "./bot-session-logs-viewer.js?v=16";
+} from "./bot-session-logs-viewer.js?v=18";
 import {
 rebalanceTpShares
 } from "./pattern-trade-stats-partial.js?v=17";

@@ -237,7 +237,7 @@ Object.freeze({
 "chart-page.js":
 6,
 "terminal.js":
-403,
+404,
 "terminal-multi-chart.js":
 11,
 "terminal-screener-chart-pane.js":
@@ -293,9 +293,9 @@ Object.freeze({
 "algo-trading-page-boot.js":
 4,
 "algo-trading-list.js":
-11,
+12,
 "algo-trading/coin-list-host.js":
-1,
+2,
 "algo-trading/pattern-12-math.js":
 5,
 "algo-trading/pattern-12.js":
@@ -350,13 +350,13 @@ Object.freeze({
 "algo-trading/bot-strategy-prefs.js":
 17,
 "algo-trading/bot-strategy-ui.js":
-58,
+60,
 "algo-trading/bot-session-log-server-ui.js":
-7,
+9,
 "algo-trading/bot-session-logs-viewer.js":
-16,
+18,
 "algo-trading/bot-cloud-lock.js":
-7,
+9,
 "algo-trading/bot-remote-client.js":
 7,
 "algo-trading/trade/format.js":
@@ -448,7 +448,7 @@ Object.freeze({
 "terminal/terminal-prefs.js":
 20,
 "terminal/terminal-table.js":
-27,
+29,
 "telegram-bot-public.js":
 1,
 "watchlist.js":
@@ -488,7 +488,7 @@ Object.freeze({
 "screener-widget-zoom.js":
 17,
 "release-marker.js":
-81,
+82,
 "focus-blur-after-pick.js":
 3,
 "site-boot.js":
@@ -637,7 +637,7 @@ Object.freeze({
 
 /* ── JS: cloud / auth ── */
 "cloud-sync.js":
-60,
+63,
 "cloud-sync-throttle.js":
 3,
 "page-routes.js":
@@ -651,7 +651,7 @@ Object.freeze({
 "supabase-env.js":
 5,
 "auth-storage.js":
-8,
+10,
 "auth-session-transfer.js":
 1,
 "auth-ui.js":

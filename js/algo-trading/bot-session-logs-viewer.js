@@ -10,11 +10,17 @@ sendLanBotCommand
 import {
 formatBotStrategySettingsRows
 } from "./bot-strategy-prefs.js?v=17";
+import {
+syncAllTickerFlagsRootToMain
+} from "./bot-bridge.js?v=11";
+import {
+ALGO_TICKER_FLAGS_KEY
+} from "./ticker-flags.js?v=6";
 
 const STORAGE_KEY =
 "algo_remote_session_logs_v1";
 const CHANNEL_UI_VER =
-"8";
+"9";
 const STRATEGY_IDS =
 [
 "st1",
@@ -1162,15 +1168,43 @@ setMessage(
 "Отправка списков…"
 );
 
-const flagsRes =
-await api.getTickerFlagsRoot();
+// UI lists live in localStorage; main file can lag — sync then push LS root.
+await syncAllTickerFlagsRootToMain();
+
+let root =
+{};
+
+try{
+const raw =
+localStorage.getItem(
+ALGO_TICKER_FLAGS_KEY
+);
+const parsed =
+raw
+? JSON.parse(
+raw
+)
+: {};
 
 if(
-!flagsRes?.ok ||
-!flagsRes.root
+parsed &&
+typeof parsed ===
+"object"
+){
+root =
+parsed;
+}
+}catch{
+root =
+{};
+}
+
+if(
+!root ||
+typeof root !==
+"object"
 ){
 setMessage(
-flagsRes?.message ||
 "Не удалось прочитать локальные списки",
 true
 );
@@ -1181,8 +1215,7 @@ const res =
 await api.sessionLogRemotePushWatchlists(
 {
 ...next,
-root:
-flagsRes.root
+root
 }
 );
 
