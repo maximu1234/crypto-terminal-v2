@@ -63,4 +63,28 @@ if (!js.includes("function isAlgoBotLiteMode(")) {
   fail("bot-app/site-bundle/js/algo-trading.js missing isAlgoBotLiteMode");
 }
 
+const logsViewerPath = path.join(
+  ROOT,
+  "bot-app/site-bundle/js/algo-trading/bot-session-logs-viewer.js"
+);
+const logsViewer = read(logsViewerPath);
+if (/from\s+["'].*bot-remote-client/.test(logsViewer) || /import\s*\{[^}]*fetchLanBotStatus/.test(logsViewer)) {
+  fail(
+    "bot-session-logs-viewer.js looks like Multichart LAN viewer — restore Algo Bot stub (boot would fail)"
+  );
+}
+if (!logsViewer.includes("Algo Bot stub")) {
+  fail(
+    "bot-app/site-bundle/js/algo-trading/bot-session-logs-viewer.js missing Algo Bot stub marker"
+  );
+}
+
+const sceneCachePath = path.join(
+  ROOT,
+  "bot-app/site-bundle/js/algo-trading/pattern-12-scene-cache.js"
+);
+if (!fs.existsSync(sceneCachePath)) {
+  fail("missing bot-app/site-bundle/js/algo-trading/pattern-12-scene-cache.js");
+}
+
 console.log("✓ bot-lite bundle check OK");

@@ -28,3 +28,8 @@
 
 - Добавлен отсутствующий `pattern-12-scene-cache.js` в `bot-app/site-bundle` (404 ломал boot).
 - Mac/Win tags: `algo-bot-v1.0.138` / `algo-bot-win-v1.0.138`.
+
+## Hotfix Algo Bot 1.0.139
+
+- Stub `bot-session-logs-viewer.js` on Algo Bot (Multichart LAN module broke boot: missing `fetchLanBotStatus`).
+- Guard in `check-bot-lite-bundle.cjs`.
