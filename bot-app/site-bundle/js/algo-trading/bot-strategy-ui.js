@@ -12,10 +12,10 @@ normalizeManualRefreshStrategies,
 botSideListLabel,
 botSidesDirectionLabel,
 formatBotStrategySettingsRows
-} from "./bot-strategy-prefs.js?v=20";
+} from "./bot-strategy-prefs.js?v=22";
 import {
 clampMaxPt1Pt4Bars
-} from "./pattern-entry-logic.js?v=11";
+} from "./pattern-entry-logic.js?v=12";
 import {
 syncBotStrategiesToMain,
 syncAllTickerFlagsRootToMain,
@@ -29,16 +29,17 @@ isAlgoBotDesktop,
 fetchAlgoBotCloudLock,
 clearAlgoBotCloudLock,
 ensureAlgoBotCloudLock
-} from "./bot-bridge.js?v=12";
+} from "./bot-bridge.js?v=13";
 import {
 fetchRemoteBotStatus,
 sendRemoteBotCommand,
 isMultichartRemoteControlHost
-} from "./bot-remote-client.js?v=7";
+} from "./bot-remote-client.js?v=8";
 import {
 mountRemoteSessionLogsEntry,
-mountRemoteWatchlistsPushEntry
-} from "./bot-session-logs-viewer.js?v=20";
+mountRemoteWatchlistsPushEntry,
+mountLocalSessionLogsEntry
+} from "./bot-session-logs-viewer.js?v=22";
 import {
 rebalanceTpShares
 } from "./pattern-trade-stats-partial.js?v=19";
@@ -1138,6 +1139,34 @@ void refreshCloudLockUi();
 return;
 }
 
+/* Commit open inputs before Start — empty maxPt1Pt4 must become null on disk. */
+const maxPt1Input =
+inputs.maxPt1Pt4Bars;
+
+if(
+maxPt1Input &&
+!maxPt1Input.disabled
+){
+const next =
+clampMaxPt1Pt4Bars(
+maxPt1Input.value
+);
+maxPt1Input.value =
+next ==
+null
+? ""
+: String(
+next
+);
+persistPartial(
+strategyId,
+{
+maxPt1Pt4Bars:
+next
+}
+);
+}
+
 const result =
 await startAlgoBot(
 strategyId
@@ -1265,30 +1294,6 @@ return;
 
 if(
 key ===
-"minTurnover24hUsdt"
-){
-const next =
-parseDotThousands(
-input.value,
-20_000_000
-);
-input.value =
-formatDotThousands(
-next
-);
-persistPartial(
-strategyId,
-{
-minTurnover24hUsdt:
-next
-}
-);
-apply();
-return;
-}
-
-if(
-key ===
 "maxPt1Pt4Bars"
 ){
 const next =
@@ -1306,6 +1311,30 @@ persistPartial(
 strategyId,
 {
 maxPt1Pt4Bars:
+next
+}
+);
+apply();
+return;
+}
+
+if(
+key ===
+"minTurnover24hUsdt"
+){
+const next =
+parseDotThousands(
+input.value,
+20_000_000
+);
+input.value =
+formatDotThousands(
+next
+);
+persistPartial(
+strategyId,
+{
+minTurnover24hUsdt:
 next
 }
 );
@@ -1414,6 +1443,42 @@ n *
 apply();
 }
 );
+
+if(
+key ===
+"maxPt1Pt4Bars"
+){
+input?.addEventListener(
+"blur",
+()=>{
+if(
+getPrefs().running
+){
+return;
+}
+
+const next =
+clampMaxPt1Pt4Bars(
+input.value
+);
+input.value =
+next ==
+null
+? ""
+: String(
+next
+);
+persistPartial(
+strategyId,
+{
+maxPt1Pt4Bars:
+next
+}
+);
+apply();
+}
+);
+}
 }
 
 trail?.addEventListener(
@@ -3969,6 +4034,19 @@ v
 );
 }
 );
+maxPt1Pt4BarsInput?.addEventListener(
+"blur",
+()=>{
+onFieldBlur(
+"maxPt1Pt4Bars",
+maxPt1Pt4BarsInput,
+v=>
+clampMaxPt1Pt4Bars(
+v
+)
+);
+}
+);
 /* TEMP_PULLBACK_BEFORE_ARM */
 pullbackPctInput?.addEventListener(
 "change",
@@ -4459,6 +4537,18 @@ strategiesWrap?.classList.remove(
 closeAllDrops();
 }
 };
+
+mountLocalSessionLogsEntry(
+{
+closeStatusDropdown:()=>{
+setDropOpen(
+statusDrop,
+statusToggle,
+false
+);
+}
+}
+);
 
 mountRemoteSessionLogsEntry(
 {

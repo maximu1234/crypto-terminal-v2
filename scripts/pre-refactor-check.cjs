@@ -45,7 +45,7 @@ console.log(
 );
 
 execSync(
-`find . -name '*.js' -not -path './node_modules/*' -not -path './vendor/*' | while read f; do node --check "$f" || exit 1; done`,
+`find . -name '*.js' -not -path './node_modules/*' -not -path './desktop/node_modules/*' -not -path './bot-app/node_modules/*' -not -path './vendor/*' | while read f; do node --check "$f" || exit 1; done`,
 {
 cwd: ROOT,
 stdio: "inherit",

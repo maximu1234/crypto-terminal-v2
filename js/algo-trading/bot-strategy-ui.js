@@ -29,7 +29,7 @@ isAlgoBotDesktop,
 fetchAlgoBotCloudLock,
 clearAlgoBotCloudLock,
 ensureAlgoBotCloudLock
-} from "./bot-bridge.js?v=12";
+} from "./bot-bridge.js?v=13";
 import {
 fetchRemoteBotStatus,
 sendRemoteBotCommand,
@@ -1139,6 +1139,34 @@ void refreshCloudLockUi();
 return;
 }
 
+/* Commit open inputs before Start — empty maxPt1Pt4 must become null on disk. */
+const maxPt1Input =
+inputs.maxPt1Pt4Bars;
+
+if(
+maxPt1Input &&
+!maxPt1Input.disabled
+){
+const next =
+clampMaxPt1Pt4Bars(
+maxPt1Input.value
+);
+maxPt1Input.value =
+next ==
+null
+? ""
+: String(
+next
+);
+persistPartial(
+strategyId,
+{
+maxPt1Pt4Bars:
+next
+}
+);
+}
+
 const result =
 await startAlgoBot(
 strategyId
@@ -1266,30 +1294,6 @@ return;
 
 if(
 key ===
-"minTurnover24hUsdt"
-){
-const next =
-parseDotThousands(
-input.value,
-20_000_000
-);
-input.value =
-formatDotThousands(
-next
-);
-persistPartial(
-strategyId,
-{
-minTurnover24hUsdt:
-next
-}
-);
-apply();
-return;
-}
-
-if(
-key ===
 "maxPt1Pt4Bars"
 ){
 const next =
@@ -1307,6 +1311,30 @@ persistPartial(
 strategyId,
 {
 maxPt1Pt4Bars:
+next
+}
+);
+apply();
+return;
+}
+
+if(
+key ===
+"minTurnover24hUsdt"
+){
+const next =
+parseDotThousands(
+input.value,
+20_000_000
+);
+input.value =
+formatDotThousands(
+next
+);
+persistPartial(
+strategyId,
+{
+minTurnover24hUsdt:
 next
 }
 );
@@ -1415,6 +1443,42 @@ n *
 apply();
 }
 );
+
+if(
+key ===
+"maxPt1Pt4Bars"
+){
+input?.addEventListener(
+"blur",
+()=>{
+if(
+getPrefs().running
+){
+return;
+}
+
+const next =
+clampMaxPt1Pt4Bars(
+input.value
+);
+input.value =
+next ==
+null
+? ""
+: String(
+next
+);
+persistPartial(
+strategyId,
+{
+maxPt1Pt4Bars:
+next
+}
+);
+apply();
+}
+);
+}
 }
 
 trail?.addEventListener(
@@ -3959,6 +4023,19 @@ v
 );
 maxPt1Pt4BarsInput?.addEventListener(
 "change",
+()=>{
+onFieldBlur(
+"maxPt1Pt4Bars",
+maxPt1Pt4BarsInput,
+v=>
+clampMaxPt1Pt4Bars(
+v
+)
+);
+}
+);
+maxPt1Pt4BarsInput?.addEventListener(
+"blur",
 ()=>{
 onFieldBlur(
 "maxPt1Pt4Bars",

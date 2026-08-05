@@ -28,7 +28,8 @@ export const PATTERN_SCAN_DEPTH_OPTIONS =
 10,
 30,
 50,
-100
+100,
+300
 ];
 
 export const PATTERN_SCAN_DEFAULT_LOOKBACK =

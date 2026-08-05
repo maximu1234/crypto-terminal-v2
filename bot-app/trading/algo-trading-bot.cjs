@@ -819,37 +819,34 @@ payload
 
 const cur =
 readBotStrategies();
+/*
+ * Renderer prefs are the source of truth. Merging {...disk, ...payload} kept
+ * stale disk fields when a key was intentionally set to null (e.g. empty
+ * maxPt1Pt4Bars = unlimited) if an older payload omitted the key — and even
+ * with a full payload, prefer normalize(payload) so null clears disk 999.
+ */
 const next =
 {
 st1:
 normalizeSt1(
-{
-...cur.st1,
-...(
-payload?.st1 ||
-{}
-)
-}
+payload?.st1 !=
+null
+? payload.st1
+: cur.st1
 ),
 st2:
 normalizeSt2(
-{
-...cur.st2,
-...(
-payload?.st2 ||
-{}
-)
-}
+payload?.st2 !=
+null
+? payload.st2
+: cur.st2
 ),
 st3:
 normalizeSt3(
-{
-...cur.st3,
-...(
-payload?.st3 ||
-{}
-)
-}
+payload?.st3 !=
+null
+? payload.st3
+: cur.st3
 )
 };
 

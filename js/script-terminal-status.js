@@ -1,6 +1,5 @@
 /**
- * Терминал (desktop): компактный статус сканов страницы Скрипт в шапке.
- * Учитывает и авто-скан, и Скринер Live.
+ * Терминал (desktop): компактный статус авто-скана страницы Скрипт в шапке.
  * Скрыт, если в Системных настройках выключен пункт «Скрипт».
  */
 import {
@@ -8,12 +7,6 @@ getScriptScanNextRunAt,
 isScriptScanBackgroundRunning,
 SCRIPT_SCAN_BG_EVENT
 } from "./script-scan-background.js?v=14";
-
-import {
-isScreenerLiveJobActive,
-getScreenerLiveStatus,
-SCRIPT_SCREENER_LIVE_EVENT
-} from "./script-screener-live.js?v=8";
 
 import {
 loadScriptPageState
@@ -161,10 +154,6 @@ window.removeEventListener(
 SCRIPT_SCAN_BG_EVENT,
 existing.__scriptStatusOnBg
 );
-window.removeEventListener(
-SCRIPT_SCREENER_LIVE_EVENT,
-existing.__scriptStatusOnBg
-);
 existing.__scriptStatusOnBg =
 null;
 }
@@ -239,59 +228,6 @@ el
 
 function render(){
 
-if(
-isScreenerLiveJobActive()
-){
-el.classList.add(
-"is-active"
-);
-
-const snap =
-getScreenerLiveStatus();
-const p =
-snap.progress;
-
-if(
-p?.phase ===
-"wait_candle"
-){
-const left =
-Math.max(
-0,
-(
-Number(
-p.nextScanAt
-) ||
-0
-) -
-Date.now()
-);
-
-el.textContent =
-`Скрипт: Live · след. свеча через ${formatCountdown(left)}`;
-return;
-}
-
-if(
-p?.total >
-0 &&
-(
-p.phase ===
-"scanning" ||
-p.phase ===
-"symbols"
-)
-){
-el.textContent =
-`Скрипт: Live · ${p.done}/${p.total}`;
-return;
-}
-
-el.textContent =
-"Скрипт: Live активен";
-return;
-}
-
 const state =
 loadScriptPageState();
 
@@ -343,10 +279,6 @@ render;
 
 window.addEventListener(
 SCRIPT_SCAN_BG_EVENT,
-render
-);
-window.addEventListener(
-SCRIPT_SCREENER_LIVE_EVENT,
 render
 );
 }

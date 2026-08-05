@@ -4,7 +4,7 @@ initAlertMonitor
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=59";
+} from "./auth-ui.js?v=58";
 
 import {
 isAlertsPage
@@ -17,7 +17,7 @@ isAlgoReducedCloudClient
 import {
 initAlertsCloudSync,
 scheduleRegistryCloudSync
-} from "./alerts-cloud-sync.js?v=65";
+} from "./alerts-cloud-sync.js?v=113";
 
 import {
 stripAlertFlagsNotInRegistry
@@ -36,7 +36,7 @@ isSupabaseConfigured
 
 import {
 initExchangeContext
-} from "./market-api.js?v=2";
+} from "./market-api.js?v=5";
 
 import {
 initBybitNetworkUi
@@ -88,10 +88,12 @@ void resumeStatsBackgroundJob();
 function bootScriptScanBackground(){
 
 if(
-window.cryptoTerminalDesktop?.isDesktop
+!window.cryptoTerminalDesktop?.isDesktop
 ){
-resumeScriptScanBackgroundJob();
+return;
 }
+
+resumeScriptScanBackgroundJob();
 
 }
 
@@ -303,7 +305,7 @@ isAlgoReducedCloudClient();
 if(
 !algoCloudLite
 ){
-import("./favorites-cloud-sync.js?v=65").then(
+import("./favorites-cloud-sync.js?v=7").then(
 ({ initFavoritesCloudSync })=>{
 initFavoritesCloudSync();
 }

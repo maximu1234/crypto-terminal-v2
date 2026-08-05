@@ -1,21 +1,35 @@
 /**
- * Скринер: overlay паттерна 1-2 1-2 на виджете (дефолтные настройки, без UI).
+ * Скринер / Скрипт: overlay паттерна 1-2 1-2 на виджете.
+ * Настройки — снимок из Терминала (`chart_indicators_v1`), как у pattern-12-scanner,
+ * иначе сканер находит hit, а canvas рисует «пусто» на дефолтах.
  */
 import {
 computePattern12Scene,
-defaultPattern12Settings
+defaultPattern12Settings,
+normalizePattern12Settings
 } from "./indicators/pattern-12-math.js?v=5";
 
 import {
 paintPattern12Scene
 } from "./indicators/pattern-12-paint.js?v=5";
 
-const PATTERN_SETTINGS =
-defaultPattern12Settings();
+import {
+readTerminalPattern12Settings
+} from "./pattern-12-scanner.js?v=20";
 
 function patternSettingsForWidget(
 widget
 ){
+
+const base =
+widget?.patternSettings &&
+typeof widget.patternSettings ===
+"object"
+? normalizePattern12Settings(
+widget.patternSettings
+)
+: readTerminalPattern12Settings() ||
+defaultPattern12Settings();
 
 const side =
 String(
@@ -30,13 +44,13 @@ side ===
 "short"
 ){
 return {
-...PATTERN_SETTINGS,
+...base,
 patternMode:
 side
 };
 }
 
-return PATTERN_SETTINGS;
+return base;
 
 }
 

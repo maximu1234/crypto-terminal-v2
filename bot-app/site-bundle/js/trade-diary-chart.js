@@ -11,8 +11,12 @@ effectiveChartScaleFontSize
 } from "./chart/chart-options.js?v=7";
 
 import {
+withChartLocalTime
+} from "./chart/chart-local-time.js?v=1";
+
+import {
 getActiveExchangeId
-} from "./market-api.js?v=2";
+} from "./market-api.js?v=5";
 
 import {
 getExchangeDefinition
@@ -636,6 +640,7 @@ candles[
 const chart =
 LightweightCharts.createChart(
 mount,
+withChartLocalTime(
 {
 layout:{
 background:{
@@ -716,6 +721,7 @@ pinch:
 true
 }
 }
+)
 );
 
 const series =

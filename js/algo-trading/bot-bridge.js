@@ -190,10 +190,24 @@ lock
 await syncBotStrategiesToMain();
 await syncAllTickerFlagsRootToMain();
 
+const prefs =
+loadBotStrategiesPrefs();
+const id =
+strategyId ===
+"st2" ||
+strategyId ===
+"st3"
+? strategyId
+: "st1";
+
 const result =
 await api.startBot(
 {
-strategyId
+strategyId,
+strategyPrefs:
+prefs[
+id
+]
 }
 );
 

@@ -13,7 +13,7 @@ setAlgoTradingMode
 import {
 fetchAlgoBotStatus,
 isAlgoBotDesktop
-} from "./bot-bridge.js?v=11";
+} from "./bot-bridge.js?v=13";
 
 const SECRET_SAVED_PLACEHOLDER =
 "••••••••••••••••";
@@ -245,12 +245,6 @@ if(
 ){
 tradingMode =
 "manual";
-}else if(
-isAlgoBotDesktop()
-){
-/* Temporary: remote bot — live only. */
-tradingMode =
-"live";
 }
 
 for(
@@ -286,20 +280,6 @@ btn.disabled =
 true;
 btn.title =
 "В этой сборке (m) доступна только ручная торговля";
-btn.setAttribute(
-"aria-disabled",
-"true"
-);
-}else if(
-mode ===
-"manual" &&
-liveEnabled &&
-isAlgoBotDesktop()
-){
-btn.disabled =
-true;
-btn.title =
-"Временно отключено на удалённом боте";
 btn.setAttribute(
 "aria-disabled",
 "true"
@@ -346,13 +326,6 @@ if(
 ){
 modeHint.textContent =
 "Сборка m (manual): Реальная торговля отключена. Только алерты, Стратегия 1.";
-}else if(
-isAlgoBotDesktop()
-){
-modeHint.textContent =
-botRunning
-? "Смена режима недоступна, пока бот запущен."
-: "Реальная торговля: триггеры на бирже (нужны ключи), Стратегии 1–3. Ручная временно отключена.";
 }else{
 modeHint.textContent =
 botRunning
@@ -437,10 +410,7 @@ false;
 }
 
 tradingMode =
-isAlgoBotDesktop() &&
-isLiveTradingEditionEnabled()
-? "live"
-: status?.tradingMode ===
+status?.tradingMode ===
 "manual"
 ? "manual"
 : "live";
@@ -824,18 +794,6 @@ btn.getAttribute(
 "manual"
 ? "manual"
 : "live";
-
-if(
-next ===
-"manual" &&
-isAlgoBotDesktop() &&
-isLiveTradingEditionEnabled()
-){
-setStatusText(
-"Ручная торговля временно отключена"
-);
-return;
-}
 
 if(
 next ===

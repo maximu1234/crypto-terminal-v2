@@ -30,6 +30,14 @@ const PING_MS =
 20000;
 const SUBSCRIBE_CHUNK =
 10;
+/*
+ * Cafe/VPN half-open sockets often stay OPEN and answer ping/pong while
+ * kline frames stop. Watch last *kline* (not pong) and force reconnect.
+ */
+const SILENCE_MS =
+90_000;
+const SILENCE_CHECK_MS =
+15_000;
 
 function normalizeSymbol(
 symbol
@@ -184,6 +192,11 @@ false;
 /** @type {(() => void)|null} */
 let onReconnect =
 null;
+/** Last inbound kline frame (ms). Pong alone must not reset this. */
+let lastKlineAt =
+0;
+let silenceTimer =
+null;
 const wanted =
 new Set();
 const listeners =
@@ -199,6 +212,125 @@ pingTimer
 );
 pingTimer =
 null;
+}
+
+}
+
+function clearSilenceWatch(){
+
+if(
+silenceTimer
+){
+clearInterval(
+silenceTimer
+);
+silenceTimer =
+null;
+}
+
+}
+
+function noteKline(){
+
+lastKlineAt =
+Date.now();
+
+}
+
+function forceReconnect(
+reason
+){
+
+if(
+intentionalClose ||
+!socket
+){
+return;
+}
+
+log.warn(
+"algo bybit kline ws force reconnect:",
+reason,
+{
+topics:
+wanted.size,
+silentMs:
+lastKlineAt
+? Date.now() -
+lastKlineAt
+: null
+}
+);
+
+try{
+socket.terminate();
+}catch(
+err
+){
+log.warn(
+"algo bybit kline terminate:",
+err?.message ||
+err
+);
+}
+
+}
+
+function startSilenceWatch(){
+
+clearSilenceWatch();
+silenceTimer =
+setInterval(
+()=>{
+
+if(
+intentionalClose ||
+!wanted.size
+){
+return;
+}
+
+if(
+!socket ||
+socket.readyState !==
+getWs().OPEN
+){
+return;
+}
+
+if(
+!lastKlineAt
+){
+return;
+}
+
+const silentMs =
+Date.now() -
+lastKlineAt;
+
+if(
+silentMs <
+SILENCE_MS
+){
+return;
+}
+
+forceReconnect(
+`silence ${Math.round(
+silentMs /
+1000
+)}s`
+);
+
+},
+SILENCE_CHECK_MS
+);
+
+if(
+typeof silenceTimer.unref ===
+"function"
+){
+silenceTimer.unref();
 }
 
 }
@@ -277,22 +409,38 @@ err
 
 }
 
-function subscribeOnWire(){
+function subscribeTopics(
+topicList
+){
 
 if(
 !socket ||
 socket.readyState !==
-getWs().OPEN ||
-!wanted.size
+getWs().OPEN
+){
+return;
+}
+
+const list =
+(
+Array.isArray(
+topicList
+)
+? topicList
+: []
+).filter(
+Boolean
+);
+
+if(
+!list.length
 ){
 return;
 }
 
 const chunks =
 chunkArgs(
-[
-...wanted
-],
+list,
 SUBSCRIBE_CHUNK
 );
 
@@ -309,6 +457,22 @@ args
 )
 );
 }
+
+}
+
+function subscribeOnWire(){
+
+if(
+!wanted.size
+){
+return;
+}
+
+subscribeTopics(
+[
+...wanted
+]
+);
 
 }
 
@@ -346,7 +510,10 @@ socket.on(
 log.info(
 "algo bybit kline ws connected"
 );
+lastKlineAt =
+Date.now();
 startPing();
+startSilenceWatch();
 subscribeOnWire();
 
 if(
@@ -406,12 +573,27 @@ if(
 msg.op ===
 "pong" ||
 msg.ret_msg ===
-"pong" ||
+"pong"
+){
+return;
+}
+
+if(
 msg.op ===
 "subscribe" ||
 msg.op ===
 "unsubscribe"
 ){
+if(
+msg.success ===
+false
+){
+log.warn(
+"algo bybit kline subscribe fail:",
+msg.ret_msg ||
+msg
+);
+}
 return;
 }
 
@@ -457,6 +639,7 @@ if(
 return;
 }
 
+noteKline();
 emit(
 symbol,
 tf,
@@ -472,6 +655,7 @@ socket.on(
 "close",
 ()=>{
 clearPing();
+clearSilenceWatch();
 socket =
 null;
 
@@ -575,8 +759,23 @@ topic
 );
 intentionalClose =
 false;
+const wasOpen =
+!!(
+socket &&
+socket.readyState ===
+getWs().OPEN
+);
 connect();
-subscribeOnWire();
+
+if(
+wasOpen
+){
+subscribeTopics(
+[
+topic
+]
+);
+}
 
 },
 
@@ -633,8 +832,30 @@ tf
 
 }
 
+const added =
+[];
+
 for(
-const topic of wanted
+const topic of next
+){
+if(
+!wanted.has(
+topic
+)
+){
+added.push(
+topic
+);
+}
+wanted.add(
+topic
+);
+}
+
+for(
+const topic of [
+...wanted
+]
 ){
 if(
 !next.has(
@@ -647,27 +868,34 @@ topic
 }
 }
 
-for(
-const topic of next
-){
-wanted.add(
-topic
-);
-}
-
 if(
 wanted.size
 ){
 intentionalClose =
 false;
+const wasOpen =
+!!(
+socket &&
+socket.readyState ===
+getWs().OPEN
+);
 connect();
-subscribeOnWire();
+
+if(
+wasOpen &&
+added.length
+){
+subscribeTopics(
+added
+);
+}
 }else if(
 socket
 ){
 intentionalClose =
 true;
 clearPing();
+clearSilenceWatch();
 
 if(
 reconnectTimer
@@ -692,7 +920,10 @@ intentionalClose =
 true;
 everConnected =
 false;
+lastKlineAt =
+0;
 clearPing();
+clearSilenceWatch();
 
 if(
 reconnectTimer

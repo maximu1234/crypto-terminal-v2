@@ -93,7 +93,7 @@ return scriptZoomModulePromise;
 import {
 PATTERN_SCAN_TF_LABELS,
 PATTERN_SCAN_SIDE_LABELS
-} from "./pattern-12-scanner.js?v=19";
+} from "./pattern-12-scanner.js?v=20";
 
 let patternOverlayApi =
 null;
@@ -2057,99 +2057,9 @@ tickerMap.clear();
 mountZoom();
 startTickerMetaPoll();
 
-/**
- * Зум из лога Screener Live (ПКМ по тикеру) — тот же overlay, что на Скринере.
- * @param {{ symbol: string, tf?: string }} entry
- * @param {{ zoomWidgets?: Array<{ symbol: string, tf?: string }> }} [opts]
- */
-async function openLiveLogZoom(
-entry,
-opts =
-{}
-){
-
-const symbol =
-String(
-entry?.symbol ||
-""
-).trim().toUpperCase().replace(
-/\.P$/i,
-""
-);
-
-if(
-!symbol
-){
-return;
-}
-
-const tf =
-String(
-entry?.tf ||
-"15"
-);
-
-mountZoom();
-await ensureScriptZoomModule();
-await mountZoom();
-
-if(
-typeof openScreenerWidgetZoom !==
-"function"
-){
-return;
-}
-
-const zoomWidgets =
-Array.isArray(
-opts.zoomWidgets
-) &&
-opts.zoomWidgets.length
-? opts.zoomWidgets.map(
-row=>({
-symbol:
-String(
-row.symbol ||
-""
-).trim().toUpperCase().replace(
-/\.P$/i,
-""
-),
-tf:
-String(
-row.tf ||
-tf
-)
-})
-).filter(
-w=>
-w.symbol
-)
-: [
-{
-symbol,
-tf
-}
-];
-
-await openScreenerWidgetZoom(
-{
-symbol,
-tf
-},
-{
-getCurrentTF:()=>
-tf,
-zoomWidgets
-}
-);
-
-}
-
 return {
 renderPage,
 destroy,
-openLiveLogZoom,
 setLayout,
 restoreLayoutState,
 getLayout:()=>

@@ -3,7 +3,7 @@
  */
 import {
 createScriptWidgetGrid
-} from "./script-page-widgets.js?v=6";
+} from "./script-page-widgets.js?v=17";
 
 import {
 getSharedPatternScanner,
@@ -22,15 +22,20 @@ import {
 PATTERN_SCAN_TF_LABELS,
 PATTERN_SCAN_DEPTH_OPTIONS,
 normalizePatternScanSideFilter,
-matchesPatternScanSideFilter
-} from "./pattern-12-scanner.js?v=18";
+matchesPatternScanSideFilter,
+isPatternScanHitFresh
+} from "./pattern-12-scanner.js?v=20";
 
 import {
 loadScriptPageState,
 saveScriptPageState,
 SCRIPT_AUTO_PERIODS,
 periodMsById
-} from "./script-page-storage.js?v=14";
+} from "./script-page-storage.js?v=15";
+
+import {
+fetchTickersInto
+} from "./tickers.js?v=26";
 
 import {
 parseTradingViewSymbolList,
@@ -38,15 +43,10 @@ scriptFavoritesFileName
 } from "./script-favorites-list.js?v=2";
 
 import {
-COINS_TF_HOTKEYS,
-COINS_TF_VALUES
-} from "./terminal/terminal-state.js?v=12";
-
-import {
 EXCHANGE_CHANGED_EVENT,
 getActiveExchangeId,
 getExchangeDefinition
-} from "./market-api.js?v=2";
+} from "./market-api.js?v=5";
 
 const SCRIPT_LAYOUT_HOTKEYS =
 Object.freeze({
@@ -71,6 +71,268 @@ let autoCountdownTimerId =
 null;
 let scanMode =
 null;
+const volumeBySymbol =
+new Map();
+let volumePollTimerId =
+null;
+
+function formatDotThousands(
+value
+){
+
+const n =
+Math.round(
+Number(
+value
+)
+);
+
+if(
+!Number.isFinite(
+n
+) ||
+n <
+0
+){
+return "0";
+}
+
+return String(
+n
+).replace(
+/\B(?=(\d{3})+(?!\d))/g,
+"."
+);
+
+}
+
+function parseDotThousands(
+raw,
+fallback =
+20_000_000
+){
+
+const digits =
+String(
+raw ??
+""
+).replace(
+/[^\d]/g,
+""
+);
+
+if(
+!digits
+){
+return fallback;
+}
+
+const n =
+Number(
+digits
+);
+
+return Number.isFinite(
+n
+)
+? n
+: fallback;
+
+}
+
+function canonicalScriptSymbol(
+symbol
+){
+
+return String(
+symbol ||
+""
+).trim().toUpperCase().replace(
+/\.P$/i,
+""
+);
+
+}
+
+function volumeForSymbol(
+symbol
+){
+
+const raw =
+String(
+symbol ||
+""
+).trim().toUpperCase();
+const bare =
+canonicalScriptSymbol(
+raw
+);
+
+if(
+volumeBySymbol.has(
+raw
+)
+){
+return volumeBySymbol.get(
+raw
+);
+}
+
+if(
+volumeBySymbol.has(
+bare
+)
+){
+return volumeBySymbol.get(
+bare
+);
+}
+
+if(
+volumeBySymbol.has(
+`${bare}.P`
+)
+){
+return volumeBySymbol.get(
+`${bare}.P`
+);
+}
+
+return null;
+
+}
+
+function filteredRowKey(
+row
+){
+
+return `${String(row?.symbol || "").toUpperCase()}|${String(row?.tf || "")}|${String(row?.side || "")}|${row?.pt4BarIndex ?? ""}`;
+
+}
+
+function filteredRowsSignature(
+rows =
+filteredRows()
+){
+
+return rows.map(
+filteredRowKey
+).join("\n");
+
+}
+
+async function refreshVolumeMap(
+{
+rerender =
+"if-changed"
+} =
+{}
+){
+
+const beforeSig =
+rerender ===
+"if-changed"
+? filteredRowsSignature()
+: "";
+
+try{
+const snap =
+new Map();
+
+await fetchTickersInto(
+snap
+);
+volumeBySymbol.clear();
+snap.forEach(
+(
+tick,
+symbol
+)=>{
+volumeBySymbol.set(
+String(
+symbol ||
+""
+).toUpperCase(),
+Number(
+tick.volume24
+) ||
+0
+);
+}
+);
+}catch{
+/* ignore */
+}
+
+if(
+rerender ===
+false
+){
+return;
+}
+
+if(
+rerender ===
+true
+){
+refreshGrid();
+return;
+}
+
+/* Poll: перерисовываем сетку только если объём отрезал/вернул сетапы. */
+if(
+beforeSig !==
+filteredRowsSignature()
+){
+refreshGrid();
+}
+
+}
+
+function startVolumePoll(){
+
+if(
+volumePollTimerId !=
+null
+){
+return;
+}
+
+void refreshVolumeMap(
+{
+rerender:
+true
+}
+);
+volumePollTimerId =
+setInterval(
+()=>{
+void refreshVolumeMap(
+{
+rerender:
+"if-changed"
+}
+);
+},
+15000
+);
+
+}
+
+function stopVolumePoll(){
+
+if(
+volumePollTimerId !=
+null
+){
+clearInterval(
+volumePollTimerId
+);
+volumePollTimerId =
+null;
+}
+
+}
 
 function scanStatusPrefix(
 mode =
@@ -106,7 +368,7 @@ updateActionButtons();
 updateAutoStatus();
 applyFavoritesUi();
 void refreshFavoritesMetaFromDisk();
-refreshGrid();
+void refreshVolumeMap();
 
 const name =
 activeExchangeLabel();
@@ -607,12 +869,64 @@ return chartTfFilter;
 
 function filteredRows(){
 
+const min =
+Number(
+state.minTurnover24hUsdt
+);
+const lookback =
+state.searchDepth;
+
+/*
+  Только фильтр для отображения — без mutate state.rows
+  (иначе volume-poll постоянно меняет signature → refreshGrid).
+*/
 return state.rows.filter(
-row=>
-matchesPatternScanSideFilter(
+row=>{
+
+if(
+!matchesPatternScanSideFilter(
 row?.side,
 state.searchSide
 )
+){
+return false;
+}
+
+if(
+!isPatternScanHitFresh(
+row,
+lookback
+)
+){
+return false;
+}
+
+if(
+!Number.isFinite(
+min
+) ||
+min <=
+0
+){
+return true;
+}
+
+const volume =
+volumeForSymbol(
+row?.symbol
+);
+
+if(
+volume ==
+null
+){
+return true;
+}
+
+return volume >=
+min;
+
+}
 );
 
 }
@@ -621,7 +935,7 @@ function refreshGrid(){
 
 void widgetGrid?.renderPage(
 filteredRows(),
-state.filterTf
+"all"
 );
 
 }
@@ -635,36 +949,6 @@ rows.slice();
 persist();
 refreshGrid();
 updateActionButtons();
-
-}
-
-function setFilterTf(
-tf
-){
-
-state.filterTf =
-tf;
-state.page =
-1;
-persist();
-widgetGrid?.restoreLayoutState(
-state.layout,
-1
-);
-
-els.tfFilter?.querySelectorAll(
-".script-tf-btn"
-).forEach(
-btn=>{
-btn.classList.toggle(
-"active",
-btn.dataset.tf ===
-tf
-);
-}
-);
-
-refreshGrid();
 
 }
 
@@ -705,6 +989,40 @@ normalized;
 persist();
 refreshGrid();
 updateActionButtons();
+
+}
+
+function setMinTurnover24hUsdt(
+raw
+){
+
+const next =
+parseDotThousands(
+raw,
+state.minTurnover24hUsdt ??
+20_000_000
+);
+
+state.minTurnover24hUsdt =
+next;
+
+if(
+els.minTurnover
+){
+els.minTurnover.value =
+formatDotThousands(
+next
+);
+}
+
+state.page =
+1;
+persist();
+widgetGrid?.restoreLayoutState(
+state.layout,
+1
+);
+refreshGrid();
 
 }
 
@@ -1333,6 +1651,14 @@ function shouldIgnoreScriptKeyNav(
 event
 ){
 
+if(
+document.querySelector(
+".screener-widget-zoom-backdrop"
+)
+){
+return true;
+}
+
 const target =
 event.target;
 
@@ -1434,25 +1760,6 @@ layoutNext
 );
 }
 
-return;
-
-}
-
-const tf =
-COINS_TF_HOTKEYS[
-event.key
-];
-
-if(
-tf &&
-COINS_TF_VALUES.has(
-tf
-)
-){
-event.preventDefault();
-setFilterTf(
-tf
-);
 }
 
 }
@@ -1554,10 +1861,6 @@ filteredRows().length
 
 function bindEls(){
 
-els.tfFilter =
-document.getElementById(
-"script-tf-filter"
-);
 els.searchDepth =
 document.getElementById(
 "script-search-depth"
@@ -1565,6 +1868,10 @@ document.getElementById(
 els.searchSide =
 document.getElementById(
 "script-side-filter"
+);
+els.minTurnover =
+document.getElementById(
+"script-min-turnover"
 );
 els.autoTf =
 document.getElementById(
@@ -1618,7 +1925,7 @@ document.getElementById(
 }
 
 const SCRIPT_TOOLBAR_NO_FOCUS_SELECTOR =
-".script-tf-btn, .script-auto-btn";
+".script-auto-btn";
 
 function bindScriptToolbarNoFocus(
 toolbarEl
@@ -1722,6 +2029,7 @@ window.addEventListener(
 "pagehide",
 ()=>{
 markPageVisited();
+stopVolumePoll();
 widgetGrid?.destroy?.();
 }
 );
@@ -1731,32 +2039,11 @@ SCRIPT_SCAN_BG_EVENT,
 handleBackgroundScanEvent
 );
 
+
 window.addEventListener(
 EXCHANGE_CHANGED_EVENT,
 ()=>{
 reloadForActiveExchange();
-}
-);
-
-els.tfFilter?.addEventListener(
-"click",
-event=>{
-
-const btn =
-event.target?.closest?.(
-".script-tf-btn"
-);
-
-if(
-!btn?.dataset?.tf
-){
-return;
-}
-
-setFilterTf(
-btn.dataset.tf
-);
-
 }
 );
 
@@ -1832,6 +2119,35 @@ els.searchSide.value
 }
 );
 
+els.minTurnover?.addEventListener(
+"change",
+()=>{
+setMinTurnover24hUsdt(
+els.minTurnover.value
+);
+}
+);
+
+els.minTurnover?.addEventListener(
+"blur",
+()=>{
+if(
+!els.minTurnover
+){
+return;
+}
+
+els.minTurnover.value =
+formatDotThousands(
+parseDotThousands(
+els.minTurnover.value,
+state.minTurnover24hUsdt ??
+20_000_000
+)
+);
+}
+);
+
 }
 
 function restoreAfterBgScan(){
@@ -1874,10 +2190,13 @@ paginationEl:
 els.pagination,
 statusEl:
 els.status,
+getLookbackBars(){
+return state.searchDepth;
+},
 onPersist(
 {
-layout,
-page
+  layout,
+  page
 }
 ){
 
@@ -1917,9 +2236,8 @@ bindLayoutPicker();
 bindScriptHotkeys();
 bindScriptPageNavHotkeys();
 
-setFilterTf(
-state.filterTf
-);
+state.filterTf =
+"all";
 
 if(
 els.autoTf
@@ -1951,11 +2269,22 @@ els.searchSide.value =
 state.searchSide;
 }
 
+if(
+els.minTurnover
+){
+els.minTurnover.value =
+formatDotThousands(
+state.minTurnover24hUsdt ??
+20_000_000
+);
+}
+
 applyFavoritesUi();
 void refreshFavoritesMetaFromDisk();
 
 updateActionButtons();
 updateAutoStatus();
+startVolumePoll();
 
 if(
 state.auto.active
@@ -1965,6 +2294,7 @@ startAutoCountdown();
 
 restoreAfterBgScan();
 syncScanJobUi();
+
 refreshGrid();
 
 }

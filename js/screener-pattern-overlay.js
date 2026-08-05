@@ -15,7 +15,7 @@ paintPattern12Scene
 
 import {
 readTerminalPattern12Settings
-} from "./pattern-12-scanner.js?v=19";
+} from "./pattern-12-scanner.js?v=20";
 
 function patternSettingsForWidget(
 widget

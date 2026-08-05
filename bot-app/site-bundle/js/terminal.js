@@ -16,7 +16,7 @@ getActiveExchangeMarkets,
 getActiveExchangeId,
 getActiveExchangeDefinition,
 EXCHANGE_CHANGED_EVENT
-} from "./market-api.js?v=2";
+} from "./market-api.js?v=5";
 
 import {
 clearBybitNetworkIssue
@@ -43,7 +43,7 @@ canSetBlueFlag
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=59";
+} from "./auth-ui.js?v=58";
 
 import {
 persistFavoritesToCloud,
@@ -78,7 +78,7 @@ appendFutureWhitespaceBars,
 applyCoinsChartViewport,
 refreshCoinsChartBarSpacing,
 tfPeriodSec
-} from "./chart-import.js?v=43";
+} from "./chart-import.js?v=44";
 
 import {
 terminalVisibleBars,
@@ -107,21 +107,18 @@ createSharedDrawUndoStack
 } from "./drawings/draw-undo.js?v=2";
 
 import {
-initWidgetDrawings
-} from "./chart-widget-host.js?v=16";
-
-import {
 mountDrawToolbar,
 mountDrawToolIcons
 } from "./draw-ui-shared.js?v=35";
 
 import {
-initChartIndicators
-} from "./chart-indicators.js?v=42";
-
-import {
 mountChartSnapshot
 } from "./chart-snapshot.js?v=6";
+
+import {
+perfMark,
+perfMeasure
+} from "./perf-marks.js?v=2";
 
 import {
 mountCoinsLayoutResize
@@ -182,10 +179,11 @@ startTickerStream,
 startRealtime,
 renderList,
 highlightActiveSymbol,
+ensureActiveCoinVisible,
 getVisibleSymbolList,
 setCoinsTableHooks,
 syncCoinListFreezeFromFlagMenus
-} from "./terminal/terminal-table.js?v=24";
+} from "./terminal/terminal-table.js?v=29";
 
 import {
 createCoinsChartSwitchVeil
@@ -213,7 +211,7 @@ mountTerminalLayoutPicker
 
 import {
 mountScriptTerminalStatus
-} from "./script-terminal-status.js?v=7";
+} from "./script-terminal-status.js?v=9";
 
 import {
 resumeScriptScanBackgroundJob
@@ -2281,6 +2279,12 @@ mountDrawToolIcons(
 document
 );
 
+}catch(err){
+
+console.error("Draw toolbar mount failed:", err);
+
+}
+
 let mainSetDrawTool =
 null;
 let rsiSetDrawTool =
@@ -2540,139 +2544,6 @@ true
 
 }
 
-drawingTools =
-initWidgetDrawings({
-
-chart,
-series: candleSeries,
-wrapEl: document.getElementById("chart-wrap"),
-uiRoot: document.getElementById("chart-wrap"),
-toolsRoot: document.getElementById("charts-stack"),
-clearAllPeers:
-drawClearAllPeers,
-getSymbol: ()=> currentSymbol,
-getTf: ()=> currentTF,
-getCandles: ()=> candles,
-isActive: ()=>
-activeDrawPane ===
-"chart",
-getStyleDelegate: ()=>
-rsiStyleBarDelegateIfNeeded(),
-abortTabletChartGesture:()=>{
-cancelTabletPanGesture?.();
-},
-onChartCrosshairSuppress:()=>{
-chartCrosshairLink?.setSuppressed?.(
-true
-);
-},
-onChartCrosshairRelease:()=>{
-chartCrosshairLink?.setSuppressed?.(
-false
-);
-},
-onChartCrosshairAt(
-clientX,
-clientY
-){
-
-if(
-!isTabletChartViewport()
-){
-return;
-}
-
-positionTabletProbeCrosshair({
-chart,
-series: candleSeries,
-chartEl,
-chartWrapEl: document.getElementById(
-"chart-wrap"
-),
-chartsStackEl: document.getElementById(
-"charts-stack"
-),
-linkedVertEl: document.getElementById(
-"linked-crosshair-vert"
-),
-horizLineEl: document.getElementById(
-"tablet-probe-crosshair-h"
-),
-timeLabelEl: document.getElementById(
-"crosshair-time-label"
-),
-priceLabelEl: document.getElementById(
-"crosshair-price-label"
-),
-clientX,
-clientY,
-onTime: updateRsiHudFromCrosshairTime
-});
-
-},
-onChartCrosshairClear(){
-
-if(
-!isTabletChartViewport()
-){
-return;
-}
-
-hideTabletProbeCrosshair({
-linkedVertEl: document.getElementById(
-"linked-crosshair-vert"
-),
-horizLineEl: document.getElementById(
-"tablet-probe-crosshair-h"
-),
-timeLabelEl: document.getElementById(
-"crosshair-time-label"
-),
-priceLabelEl: document.getElementById(
-"crosshair-price-label"
-),
-chartWrapEl: document.getElementById(
-"chart-wrap"
-),
-onClear(){
-
-const last =
-rsiPointsCache[
-rsiPointsCache.length -
-1
-];
-
-setRsiHudValue(
-last?.value ??
-null
-);
-
-}
-});
-
-try{
-chart.clearCrosshairPosition();
-}catch{
-/* ignore */
-}
-
-}
-
-,
-sharedDrawUndo,
-deferKeyboardUndo:
-true,
-clearPeerSelections: ()=>{
-rsiDrawingTools?.clearDrawingSelection?.();
-drawingTools?.syncStyleBar?.();
-}
-
-});
-
-const chartWrapEl =
-document.getElementById(
-"chart-wrap"
-);
 const rsiWrapEl =
 document.getElementById(
 "rsi-wrap"
@@ -2927,6 +2798,157 @@ point.value
 
 }
 
+async function mountTerminalDrawChrome(){
+
+perfMark(
+"terminal-draw-chrome-start"
+);
+
+try{
+
+const {
+initWidgetDrawings
+} =
+await import(
+"./chart-widget-host.js?v=17"
+);
+const {
+initChartIndicators
+} =
+await import(
+"./chart-indicators.js?v=44"
+);
+
+drawingTools =
+initWidgetDrawings({
+
+chart,
+series: candleSeries,
+wrapEl: document.getElementById("chart-wrap"),
+uiRoot: document.getElementById("chart-wrap"),
+toolsRoot: document.getElementById("charts-stack"),
+clearAllPeers:
+drawClearAllPeers,
+getSymbol: ()=> currentSymbol,
+getTf: ()=> currentTF,
+getCandles: ()=> candles,
+isActive: ()=>
+activeDrawPane ===
+"chart",
+getStyleDelegate: ()=>
+rsiStyleBarDelegateIfNeeded(),
+abortTabletChartGesture:()=>{
+cancelTabletPanGesture?.();
+},
+onChartCrosshairSuppress:()=>{
+chartCrosshairLink?.setSuppressed?.(
+true
+);
+},
+onChartCrosshairRelease:()=>{
+chartCrosshairLink?.setSuppressed?.(
+false
+);
+},
+onChartCrosshairAt(
+clientX,
+clientY
+){
+
+if(
+!isTabletChartViewport()
+){
+return;
+}
+
+positionTabletProbeCrosshair({
+chart,
+series: candleSeries,
+chartEl,
+chartWrapEl: document.getElementById(
+"chart-wrap"
+),
+chartsStackEl: document.getElementById(
+"charts-stack"
+),
+linkedVertEl: document.getElementById(
+"linked-crosshair-vert"
+),
+horizLineEl: document.getElementById(
+"tablet-probe-crosshair-h"
+),
+timeLabelEl: document.getElementById(
+"crosshair-time-label"
+),
+priceLabelEl: document.getElementById(
+"crosshair-price-label"
+),
+clientX,
+clientY,
+onTime: updateRsiHudFromCrosshairTime
+});
+
+},
+onChartCrosshairClear(){
+
+if(
+!isTabletChartViewport()
+){
+return;
+}
+
+hideTabletProbeCrosshair({
+linkedVertEl: document.getElementById(
+"linked-crosshair-vert"
+),
+horizLineEl: document.getElementById(
+"tablet-probe-crosshair-h"
+),
+timeLabelEl: document.getElementById(
+"crosshair-time-label"
+),
+priceLabelEl: document.getElementById(
+"crosshair-price-label"
+),
+chartWrapEl: document.getElementById(
+"chart-wrap"
+),
+onClear(){
+
+const last =
+rsiPointsCache[
+rsiPointsCache.length -
+1
+];
+
+setRsiHudValue(
+last?.value ??
+null
+);
+
+}
+});
+
+try{
+chart.clearCrosshairPosition();
+}catch{
+/* ignore */
+}
+
+}
+
+,
+sharedDrawUndo,
+deferKeyboardUndo:
+true,
+clearPeerSelections: ()=>{
+rsiDrawingTools?.clearDrawingSelection?.();
+drawingTools?.syncStyleBar?.();
+}
+
+});
+
+
 rsiDrawingTools =
 initWidgetDrawings({
 
@@ -3052,7 +3074,7 @@ console.warn(
 }
 
 chartIndicators =
-initChartIndicators(
+await initChartIndicators(
 {
 root:
 document.getElementById(
@@ -3155,41 +3177,6 @@ chartIndicators?.notifyLayoutChange?.();
 }
 );
 
-mountChartSnapshot({
-getSymbol:()=>
-currentSymbol,
-getTf:()=>
-currentTF,
-getExchangeName:()=>
-getActiveExchangeDefinition().name
-});
-
-registerCoinsChartLayoutContext({
-getCandles:()=>
-candles,
-chart,
-chartEl,
-getTf:()=>
-currentTF,
-getChartIndicators:()=>
-chartIndicators,
-getRsiChart:()=>
-rsiChart,
-rsiPaneActive:()=>
-rsiPaneActive,
-layoutRsiBand,
-applyCoinsChartViewport,
-refreshCoinsChartBarSpacing,
-getDrawingTools:()=>
-drawingTools,
-getLinkedDrawingTools:()=>
-rsiDrawingTools
-? [
-rsiDrawingTools
-]
-: [],
-viewportSettleRaf
-});
 
 if(
 isTradePage &&
@@ -3230,11 +3217,7 @@ new CustomEvent(
 
 }
 
-}catch(err){
 
-console.error("Drawings UI mount failed:", err);
-
-}
 
 if(
 drawingTools ||
@@ -3410,6 +3393,61 @@ err
 );
 
 }
+
+}catch(err){
+
+console.error("Drawings UI mount failed:", err);
+
+}finally{
+
+perfMark(
+"terminal-draw-chrome-end"
+);
+perfMeasure(
+"terminal-draw-chrome",
+"terminal-draw-chrome-start",
+"terminal-draw-chrome-end"
+);
+
+}
+
+}
+
+mountChartSnapshot({
+getSymbol:()=>
+currentSymbol,
+getTf:()=>
+currentTF,
+getExchangeName:()=>
+getActiveExchangeDefinition().name
+});
+
+registerCoinsChartLayoutContext({
+getCandles:()=>
+candles,
+chart,
+chartEl,
+getTf:()=>
+currentTF,
+getChartIndicators:()=>
+chartIndicators,
+getRsiChart:()=>
+rsiChart,
+rsiPaneActive:()=>
+rsiPaneActive,
+layoutRsiBand,
+applyCoinsChartViewport,
+refreshCoinsChartBarSpacing,
+getDrawingTools:()=>
+drawingTools,
+getLinkedDrawingTools:()=>
+rsiDrawingTools
+? [
+rsiDrawingTools
+]
+: [],
+viewportSettleRaf
+});
 
 if(
 isTabletChartViewport()
@@ -4056,6 +4094,7 @@ rsiChart?.clearCrosshairPosition();
 
 currentSymbol = symbol;
 setCoinsChartSymbol(symbol);
+highlightActiveSymbol();
 syncCoinsChartTurnover24(
 symbol
 );
@@ -4704,17 +4743,7 @@ e.target.blur();
 
 function scrollActiveCoinIntoView(){
 
-const el =
-coinElements.get(currentSymbol);
-
-if(!el){
-return;
-}
-
-el.scrollIntoView({
-block:"nearest",
-behavior:"smooth"
-});
+ensureActiveCoinVisible();
 
 }
 
@@ -5224,9 +5253,12 @@ next === currentSymbol
 return;
 }
 
+currentSymbol =
+next;
 setCoinsChartSymbol(
 next
 );
+highlightActiveSymbol();
 await loadSymbol(
 next
 );
@@ -5750,6 +5782,9 @@ startTickerStream();
 
 async function init(){
 
+const chromeP =
+mountTerminalDrawChrome();
+
 void ensureCloudReady().then(()=>{
 void drawingTools?.refreshDrawToolsAccessUi?.();
 });
@@ -5860,6 +5895,26 @@ currentSymbol || displaySymbol
 await loadSymbol(
 currentSymbol || displaySymbol || "BTCUSDT"
 );
+
+await chromeP;
+
+if(
+candles.length
+){
+drawingTools?.onSymbolChange?.({
+skipRedraw:
+true
+});
+rsiDrawingTools?.onSymbolChange?.({
+skipRedraw:
+true
+});
+chartIndicators?.notifySymbolChange?.();
+chartIndicators?.flushIndicatorDataRefreshNow?.();
+chartIndicators?.notifyMainChartOverlaysSync?.();
+drawingTools?.scheduleRedraw?.();
+rsiDrawingTools?.scheduleRedraw?.();
+}
 
 void drawingTools?.refreshDrawToolsAccessUi?.();
 

@@ -37,6 +37,12 @@ require(
 "./algo-bot-session-log.cjs"
 );
 const {
+createBarCloseSweep
+} =
+require(
+"./algo-bot-bar-close-sweep.cjs"
+);
+const {
 getAlgoTradingMode
 } =
 require(
@@ -65,6 +71,13 @@ const ILLIQUID_SIGNAL_COOLDOWN_MS =
  * @type {Set<string>}
  */
 const sessionIgnoredFingerprints =
+new Set();
+/**
+ * One session-log line per setup decision (fp + code), so «wait» / skips
+ * are visible without flooding every 5m scan.
+ * @type {Set<string>}
+ */
+const sessionDecisionLogs =
 new Set();
 const SEED_CONCURRENCY =
 6;
@@ -120,6 +133,10 @@ let resyncQueue =
 
 let resyncInflight =
 0;
+
+/** @type {ReturnType<createBarCloseSweep>|null} */
+let barCloseSweep =
+null;
 
 function emptyEngineStatus(){
 
@@ -1107,6 +1124,111 @@ entry
 
 }
 
+/**
+ * @param {string} fp
+ * @param {string} code
+ * @param {{ ts?: number, symbol: string, side: string, price: number, text: string }} entry
+ * @returns {boolean} true if a new line was written
+ */
+function pushSetupDecisionOnce(
+fp,
+code,
+entry
+){
+
+const key =
+`${String(
+fp ||
+""
+).trim()}::${String(
+code ||
+""
+).trim()}`;
+
+if(
+!String(
+fp ||
+""
+).trim()
+){
+pushSignal(
+entry
+);
+return true;
+}
+
+if(
+sessionDecisionLogs.has(
+key
+)
+){
+return false;
+}
+
+sessionDecisionLogs.add(
+key
+);
+pushSignal(
+entry
+);
+return true;
+
+}
+
+/**
+ * @param {object[]} candles
+ * @param {object} setup
+ * @param {string} fp
+ * @param {string} code
+ * @param {{ ts?: number, symbol: string, side: string, price: number, text: string }} entry
+ * @returns {boolean}
+ */
+function pushAliveSetupDecisionOnce(
+candles,
+setup,
+fp,
+code,
+entry
+){
+
+if(
+!isSetupWithinEntryTimeout(
+candles,
+setup
+)
+){
+return false;
+}
+
+return pushSetupDecisionOnce(
+fp,
+code,
+entry
+);
+
+}
+
+function pullbackPctLabel(){
+
+const n =
+Number(
+getResolveOpts().pullbackBeforeArmPct
+);
+
+if(
+Number.isFinite(
+n
+)
+){
+return String(
+n
+);
+}
+
+return "38.2";
+
+}
+
 function trimCandles(
 candles,
 maxLen
@@ -1207,6 +1329,53 @@ return 200;
 return Math.min(
 10000,
 n
+);
+
+}
+
+/**
+ * Live entry window from pt4: within strategy «баров до отмены».
+ * Older setups are consumed/skipped without session-log noise.
+ * @param {object[]} candles
+ * @param {{ b4?: unknown }} setup
+ * @param {unknown} [timeoutBars]
+ * @returns {boolean}
+ */
+function isSetupWithinEntryTimeout(
+candles,
+setup,
+timeoutBars
+){
+
+const b4 =
+Number(
+setup?.b4
+);
+const lastIndex =
+Array.isArray(
+candles
+)
+? candles.length -
+1
+: -1;
+
+if(
+!Number.isFinite(
+b4
+) ||
+b4 <
+0 ||
+lastIndex <
+b4
+){
+return false;
+}
+
+return lastIndex -
+b4 <=
+clampEntryTimeoutBars(
+timeoutBars ??
+engineConfig?.timeoutBars
 );
 
 }
@@ -1978,18 +2147,74 @@ symbol
 );
 const sym =
 state.symbol;
+const src =
+reason
+? ` (${reason})`
+: "";
 
 if(
 inPositionSymbols.has(
 sym
 )
 ){
+const fp =
+setupFingerprint(
+sym,
+setup,
+state.candles
+);
+pushAliveSetupDecisionOnce(
+state.candles,
+setup,
+fp,
+"in_position",
+{
+ts:
+Date.now(),
+symbol:
+sym,
+side:
+setup.side,
+price:
+Number(
+setup.p4
+),
+text:
+`${sym} ${setup.side}: пропуск — уже в позиции${src}`
+}
+);
 return;
 }
 
 if(
 engineConfig?.entriesPaused
 ){
+const fp =
+setupFingerprint(
+sym,
+setup,
+state.candles
+);
+pushAliveSetupDecisionOnce(
+state.candles,
+setup,
+fp,
+"entries_paused",
+{
+ts:
+Date.now(),
+symbol:
+sym,
+side:
+setup.side,
+price:
+Number(
+setup.p4
+),
+text:
+`${sym} ${setup.side}: пропуск — входы на паузе${src}`
+}
+);
 return;
 }
 
@@ -1999,6 +2224,32 @@ sym,
 setup.side
 )
 ){
+const fp =
+setupFingerprint(
+sym,
+setup,
+state.candles
+);
+pushAliveSetupDecisionOnce(
+state.candles,
+setup,
+fp,
+"side_blocked",
+{
+ts:
+Date.now(),
+symbol:
+sym,
+side:
+setup.side,
+price:
+Number(
+setup.p4
+),
+text:
+`${sym} ${setup.side}: пропуск — сторона не разрешена${src}`
+}
+);
 return;
 }
 
@@ -2012,11 +2263,53 @@ candles
 );
 
 if(
-isFingerprintBlocked(
-state,
+state.armed.has(
 fp
 )
 ){
+return;
+}
+
+if(
+sessionIgnoredFingerprints.has(
+fp
+) ||
+state.consumed.has(
+fp
+)
+){
+pushAliveSetupDecisionOnce(
+candles,
+setup,
+fp,
+"already_done",
+{
+ts:
+Date.now(),
+symbol:
+sym,
+side:
+setup.side,
+price:
+Number(
+setup.p4
+),
+text:
+`${sym} ${setup.side}: пропуск — сетап уже обработан ранее${src}`
+}
+);
+return;
+}
+
+if(
+!isSetupWithinEntryTimeout(
+candles,
+setup
+)
+){
+state.consumed.add(
+fp
+);
 return;
 }
 
@@ -2037,6 +2330,12 @@ state.forming,
 setup
 )
 ){
+if(
+isSetupWithinEntryTimeout(
+candles,
+setup
+)
+){
 pushSignal(
 {
 ts:
@@ -2050,9 +2349,10 @@ Number(
 setup.p4
 ),
 text:
-`${sym} ${setup.side}: пропущен вход до arm — сетап отменён`
+`${sym} ${setup.side}: пропущен вход до arm — сетап отменён${src}`
 }
 );
+}
 state.consumed.add(
 fp
 );
@@ -2074,12 +2374,38 @@ if(
 gate ===
 "wait"
 ){
+pushAliveSetupDecisionOnce(
+candles,
+setup,
+fp,
+"pullback_wait",
+{
+ts:
+Date.now(),
+symbol:
+sym,
+side:
+setup.side,
+price:
+Number(
+setup.p4
+),
+text:
+`${sym} ${setup.side}: ждём откат ${pullbackPctLabel()}% — не вооружаем${src}`
+}
+);
 return;
 }
 
 if(
 gate ===
 "cancel"
+){
+if(
+isSetupWithinEntryTimeout(
+candles,
+setup
+)
 ){
 pushSignal(
 {
@@ -2094,9 +2420,10 @@ Number(
 setup.p4
 ),
 text:
-`${sym} ${setup.side}: pt4 до отката — не вооружаем`
+`${sym} ${setup.side}: pt4 до отката — не вооружаем${src}`
 }
 );
+}
 state.consumed.add(
 fp
 );
@@ -2155,6 +2482,26 @@ if(
 mirrorParent &&
 !isOppositeMirror
 ){
+pushAliveSetupDecisionOnce(
+candles,
+setup,
+fp,
+"opposite_block",
+{
+ts:
+Date.now(),
+symbol:
+sym,
+side:
+setup.side,
+price:
+Number(
+setup.p4
+),
+text:
+`${sym} ${setup.side}: пропуск — активен противоположный сетап${src}`
+}
+);
 return;
 }
 
@@ -2274,6 +2621,26 @@ true
 if(
 !replaced
 ){
+pushAliveSetupDecisionOnce(
+candles,
+setup,
+fp,
+"replace_fail",
+{
+ts:
+Date.now(),
+symbol:
+sym,
+side:
+setup.side,
+price:
+Number(
+setup.p4
+),
+text:
+`${sym} ${setup.side}: пропуск — не удалось снять текущий armed${src}`
+}
+);
 return;
 }
 
@@ -2282,6 +2649,26 @@ orderExecutor.hasEntryInflight?.(
 sym
 )
 ){
+pushAliveSetupDecisionOnce(
+candles,
+setup,
+fp,
+"entry_inflight",
+{
+ts:
+Date.now(),
+symbol:
+sym,
+side:
+setup.side,
+price:
+Number(
+setup.p4
+),
+text:
+`${sym} ${setup.side}: пропуск — вход уже в процессе${src}`
+}
+);
 return;
 }else if(
 orderExecutor.hasPendingTrigger(
@@ -2297,6 +2684,26 @@ setup.side
 )
 )
 ){
+pushAliveSetupDecisionOnce(
+candles,
+setup,
+fp,
+"pending_trigger",
+{
+ts:
+Date.now(),
+symbol:
+sym,
+side:
+setup.side,
+price:
+Number(
+setup.p4
+),
+text:
+`${sym} ${setup.side}: пропуск — на символе уже есть триггер${src}`
+}
+);
 return;
 }
 
@@ -2305,6 +2712,26 @@ orderExecutor.hasEntryInflight?.(
 sym
 )
 ){
+pushAliveSetupDecisionOnce(
+candles,
+setup,
+fp,
+"entry_inflight",
+{
+ts:
+Date.now(),
+symbol:
+sym,
+side:
+setup.side,
+price:
+Number(
+setup.p4
+),
+text:
+`${sym} ${setup.side}: пропуск — вход уже в процессе${src}`
+}
+);
 return;
 }
 
@@ -2322,6 +2749,26 @@ setup.side
 )
 )
 ){
+pushAliveSetupDecisionOnce(
+candles,
+setup,
+fp,
+"pending_trigger",
+{
+ts:
+Date.now(),
+symbol:
+sym,
+side:
+setup.side,
+price:
+Number(
+setup.p4
+),
+text:
+`${sym} ${setup.side}: пропуск — на символе уже есть триггер${src}`
+}
+);
 return;
 }
 
@@ -2353,6 +2800,26 @@ if(
 mirrorTriggerPrice
 )
 ){
+pushAliveSetupDecisionOnce(
+candles,
+setup,
+fp,
+"mirror_price",
+{
+ts:
+Date.now(),
+symbol:
+sym,
+side:
+setup.side,
+price:
+Number(
+setup.p4
+),
+text:
+`${sym} ${setup.side}: пропуск — нет tickSize для mirror-триггера${src}`
+}
+);
 return;
 }
 
@@ -4005,13 +4472,6 @@ resolveOpts
 if(
 event
 ){
-const recent =
-lastIndex -
-b4 <=
-Math.min(
-50,
-timeoutBars
-);
 const fp =
 setupFingerprint(
 symbol,
@@ -4022,14 +4482,9 @@ const state =
 getState(
 symbol
 );
-
-if(
-recent &&
-!isFingerprintBlocked(
-state,
-fp
-)
-){
+const barsAfterPt4 =
+lastIndex -
+b4;
 const reason =
 event.type ===
 "entry"
@@ -4048,8 +4503,57 @@ event.type ===
 ? "pt4 до отката"
 : event.reason ===
 "max_pt1_pt4"
-? "pt1→pt4 слишком длинный"
+? (
+()=>{
+const limit =
+clampMaxPt1Pt4Bars(
+engineConfig?.maxPt1Pt4Bars
+);
+const b1 =
+Number(
+setup.b1
+);
+const b4n =
+Number(
+setup.b4
+);
+const span =
+Number.isFinite(
+b1
+) &&
+Number.isFinite(
+b4n
+)
+? b4n -
+b1
+: null;
+
+if(
+limit !=
+null &&
+span !=
+null
+){
+return `pt1→pt4 слишком длинный (${span}>${limit})`;
+}
+
+return "pt1→pt4 слишком длинный";
+}
+)()
 : "сетап уже закрыт";
+const alive =
+barsAfterPt4 <=
+timeoutBars;
+
+if(
+!isFingerprintBlocked(
+state,
+fp
+)
+){
+if(
+alive
+){
 pushSignal(
 {
 ts:
@@ -4063,9 +4567,10 @@ Number(
 setup.p4
 ),
 text:
-`${state.symbol} ${setup.side}: ${reason} — не вооружаем`
+`${state.symbol} ${setup.side}: ${reason} — не вооружаем (${source})`
 }
 );
+}
 state.consumed.add(
 fp
 );
@@ -4111,11 +4616,31 @@ if(
 result.candles
 )
 ){
+const msg =
+result?.message ||
+"empty";
 log.warn(
 "algo bot seed kline:",
 symbol,
-result?.message ||
-"empty"
+msg
+);
+pushSignal(
+{
+ts:
+Date.now(),
+symbol:
+normalizeSymbol(
+symbol
+),
+side:
+"—",
+price:
+0,
+text:
+`${normalizeSymbol(
+symbol
+)}: seed kline FAIL — ${msg}`
+}
 );
 return;
 }
@@ -4915,6 +5440,8 @@ resyncInflight =
 
 sessionIgnoredFingerprints.clear();
 
+sessionDecisionLogs.clear();
+
 if(
 isManualTradingMode()
 ){
@@ -4982,9 +5509,52 @@ onKline
 );
 klineHub.setOnReconnect?.(
 ()=>{
+sessionLog.appendNote(
+"kline WS: переподключение → resync свечей"
+);
 queueResyncAllSeeded();
 }
 );
+
+barCloseSweep =
+createBarCloseSweep(
+{
+getEngineConfig:
+()=>
+engineConfig,
+getSymbolStates:
+()=>
+symbolStates,
+getState,
+tfStepSeconds,
+normalizeTf,
+getMaxHistory,
+trimCandles,
+armAllPendingSetups,
+processArmedOnBar,
+fetchKlineHistory:
+(
+symbol,
+tf,
+limit
+)=>
+algoRest.fetchKlineHistory(
+symbol,
+tf,
+limit
+),
+appendNote:
+(
+text
+)=>
+sessionLog.appendNote(
+text
+),
+concurrency:
+SEED_CONCURRENCY
+}
+);
+barCloseSweep.schedule();
 
 syncWatchlist(
 config?.symbols ||
@@ -5050,11 +5620,21 @@ klineHub =
 null;
 }
 
+if(
+barCloseSweep
+){
+barCloseSweep.clear();
+barCloseSweep =
+null;
+}
+
 engineConfig =
 null;
 symbolStates.clear();
 turnoverCache.clear();
 illiquidSignalAt.clear();
+sessionIgnoredFingerprints.clear();
+sessionDecisionLogs.clear();
 seedQueue =
 [];
 seedInflight =
@@ -5283,6 +5863,7 @@ state.consumed.clear();
 state.parkedParent =
 null;
 }
+sessionDecisionLogs.clear();
 if(
 isManualTradingMode()
 ){

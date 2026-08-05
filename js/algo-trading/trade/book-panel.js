@@ -28,7 +28,7 @@ retagKnownAlgoBotAlerts
 import {
 fetchAlgoBotStatus,
 subscribeAlgoBotStatus
-} from "../bot-bridge.js?v=12";
+} from "../bot-bridge.js?v=13";
 
 const PANEL_HEIGHT_KEY =
 "algo_trade_book_panel_height_v1";

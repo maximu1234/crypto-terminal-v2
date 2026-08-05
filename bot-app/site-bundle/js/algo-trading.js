@@ -45,11 +45,11 @@ mountAlgoTickerScanUi
 
 import {
 mountAlgoRuntimeUi
-} from "./algo-trading/runtime-ui.js?v=13";
+} from "./algo-trading/runtime-ui.js?v=12";
 
 import {
 mountAlgoBotStrategyUi
-} from "./algo-trading/bot-strategy-ui.js?v=63";
+} from "./algo-trading/bot-strategy-ui.js?v=64";
 
 import {
 mountSessionLogServerSettings
@@ -57,7 +57,7 @@ mountSessionLogServerSettings
 
 import {
 syncBotStrategiesToMain
-} from "./algo-trading/bot-bridge.js?v=12";
+} from "./algo-trading/bot-bridge.js?v=13";
 
 import {
 mountAlgoTradeUi
@@ -115,7 +115,7 @@ clampMaxPt1Pt4Bars,
 resolveMaxPt1Pt4BarsFromPrefs,
 ENTRY_TIMEOUT_BARS,
 ENTRY_MAX_PT1_PT4_BARS
-} from "./algo-trading/pattern-entry-logic.js?v=11";
+} from "./algo-trading/pattern-entry-logic.js?v=12";
 
 /* TEMP_PULLBACK_BEFORE_ARM — remove with temp-pullback-before-arm.js */
 import {

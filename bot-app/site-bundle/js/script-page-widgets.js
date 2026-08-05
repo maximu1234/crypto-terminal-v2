@@ -12,13 +12,13 @@ updateRsiLevelLinesLayout,
 linkPairedChartTimeScales,
 SCREENER_MAX_BARS,
 SCREENER_VISIBLE_BARS
-} from "./chart-import.js?v=43";
+} from "./chart-import.js?v=44";
 
 import {
 loadMarketHistory,
 getActiveExchangeId,
 getExchangeDefinition
-} from "./market-api.js?v=2";
+} from "./market-api.js?v=5";
 
 import {
 calculateRSI,
@@ -30,13 +30,16 @@ subscribeKline
 } from "./market-ws.js?v=1";
 
 import {
+fetchTickersInto
+} from "./tickers.js?v=26";
+
+import {
 isScreenerWidgetCurrent as isWidgetCurrentGuard
 } from "./screener-widget-guard.js?v=1";
 
 import {
-mountScreenerWidgetZoom,
-refreshZoomFavoriteUi
-} from "./screener-widget-zoom.js?v=16";
+mapWithConcurrency
+} from "./load-concurrency.js?v=2";
 
 import {
 getWidgetFlagHtml,
@@ -45,13 +48,95 @@ updateWidgetFlagUi,
 bindWidgetFlagGlobalListeners
 } from "./widget-favorite-flag.js?v=6";
 
+const SCRIPT_MAX_CONCURRENT_CHART_LOADS =
+4;
+
+let refreshZoomFavoriteUi =
+()=>{};
+/** @type {null | typeof import("./screener-widget-zoom.js").mountScreenerWidgetZoom} */
+let mountScreenerWidgetZoom =
+null;
+/** @type {null | typeof import("./screener-widget-zoom.js").openScreenerWidgetZoom} */
+let openScreenerWidgetZoom =
+null;
+let scriptZoomModulePromise =
+null;
+/** @type {Promise<void>|null} */
+let scriptZoomMountPromise =
+null;
+
+async function ensureScriptZoomModule(){
+
+if(
+!scriptZoomModulePromise
+){
+scriptZoomModulePromise =
+import(
+"./screener-widget-zoom.js?v=21"
+).then(
+mod=>{
+refreshZoomFavoriteUi =
+mod.refreshZoomFavoriteUi;
+mountScreenerWidgetZoom =
+mod.mountScreenerWidgetZoom;
+openScreenerWidgetZoom =
+mod.openScreenerWidgetZoom;
+return mod;
+}
+);
+}
+
+return scriptZoomModulePromise;
+
+}
+
 import {
 PATTERN_SCAN_TF_LABELS,
 PATTERN_SCAN_SIDE_LABELS
-} from "./pattern-12-scanner.js?v=18";
+} from "./pattern-12-scanner.js?v=20";
 
 let patternOverlayApi =
 null;
+
+/** Script lookback → visible bars (set by createScriptWidgetGrid). */
+let resolvePatternVisibleBars =
+()=>
+SCREENER_VISIBLE_BARS;
+
+function patternVisibleBars(){
+
+try{
+
+const n =
+Number(
+resolvePatternVisibleBars()
+);
+
+if(
+Number.isFinite(
+n
+) &&
+n >
+0
+){
+return Math.min(
+SCREENER_VISIBLE_BARS,
+Math.max(
+80,
+Math.round(
+n
+)
+)
+);
+}
+
+}catch{
+/* ignore */
+}
+
+return SCREENER_VISIBLE_BARS;
+
+}
 
 async function ensurePatternOverlayApi(){
 
@@ -60,7 +145,7 @@ if(
 ){
 patternOverlayApi =
 await import(
-"./screener-pattern-overlay.js?v=5"
+"./screener-pattern-overlay.js?v=6"
 );
 }
 
@@ -157,6 +242,49 @@ symbol ||
 ).replace(
 /\.P$/i,
 ""
+);
+
+}
+
+function formatVolume(
+value
+){
+
+if(
+!Number.isFinite(
+value
+) ||
+value <=
+0
+){
+return "—";
+}
+
+if(
+value >=
+1e9
+){
+return `${Number((value / 1e9).toFixed(2))}B`;
+}
+
+if(
+value >=
+1e6
+){
+return `${Number((value / 1e6).toFixed(2))}M`;
+}
+
+if(
+value >=
+1e3
+){
+return `${Number((value / 1e3).toFixed(2))}K`;
+}
+
+return String(
+Math.round(
+value
+)
 );
 
 }
@@ -463,7 +591,7 @@ const total =
 widget.candles.length;
 const visible =
 Math.min(
-SCREENER_VISIBLE_BARS,
+patternVisibleBars(),
 total
 );
 
@@ -490,7 +618,8 @@ export function createScriptWidgetGrid(
 gridEl,
 paginationEl,
 statusEl,
-onPersist
+onPersist,
+getLookbackBars
 }
 ){
 
@@ -504,6 +633,168 @@ let renderToken =
 0;
 let unmountZoom =
 null;
+let zoomMountStarted =
+false;
+const tickerMap =
+new Map();
+let tickerPollTimer =
+null;
+
+resolvePatternVisibleBars =
+()=>{
+
+const lookback =
+Math.max(
+1,
+Number(
+typeof getLookbackBars ===
+"function"
+? getLookbackBars()
+: 30
+) ||
+30
+);
+
+/*
+  Search depth is often 30 — 1500-bar screener zoom hides PT4 marks.
+*/
+return Math.max(
+80,
+lookback *
+3
+);
+
+};
+
+function updateWidgetMeta(
+symbol,
+root
+){
+
+const tick =
+tickerMap.get(
+symbol
+) ||
+tickerMap.get(
+displaySymbol(
+symbol
+)
+);
+
+const volEl =
+root?.querySelector(
+".screener-volume"
+);
+const chEl =
+root?.querySelector(
+".screener-change"
+);
+
+if(
+!tick
+){
+return;
+}
+
+if(
+volEl
+){
+const valueEl =
+volEl.querySelector(
+".screener-volume-value"
+);
+const compact =
+formatVolume(
+tick.volume24
+);
+
+if(
+valueEl
+){
+valueEl.textContent =
+compact;
+}else{
+volEl.innerHTML =
+`Объём 24ч <span class="screener-volume-value">${compact}</span>`;
+}
+}
+
+if(
+chEl
+){
+const ch =
+tick.change24 ??
+0;
+
+chEl.textContent =
+`${ch >= 0 ? "+" : ""}${ch.toFixed(2)}%`;
+chEl.className =
+`screener-change ${ch >= 0 ? "positive" : "negative"}`;
+}
+
+}
+
+function refreshWidgetTickerMeta(){
+
+activeWidgets.forEach(
+widget=>{
+updateWidgetMeta(
+widget.symbol,
+widget.root
+);
+}
+);
+
+}
+
+async function refreshTickersMeta(){
+
+try{
+await fetchTickersInto(
+tickerMap
+);
+}catch{
+/* ignore */
+}
+
+refreshWidgetTickerMeta();
+
+}
+
+function startTickerMetaPoll(){
+
+if(
+tickerPollTimer !=
+null
+){
+return;
+}
+
+void refreshTickersMeta();
+tickerPollTimer =
+setInterval(
+()=>{
+void refreshTickersMeta();
+},
+15000
+);
+
+}
+
+function stopTickerMetaPoll(){
+
+if(
+tickerPollTimer !=
+null
+){
+clearInterval(
+tickerPollTimer
+);
+tickerPollTimer =
+null;
+}
+
+}
 
 function pageSize(){
 
@@ -725,7 +1016,11 @@ chart,
 widget.series,
 widget.candles,
 w,
-h
+h,
+{
+visibleBars:
+patternVisibleBars()
+}
 );
 
 }catch{
@@ -748,9 +1043,9 @@ layout
 );
 const tfLabel =
 PATTERN_SCAN_TF_LABELS[
-chartTf
+row.tf
 ] ||
-chartTf;
+row.tf;
 const sideLabel =
 PATTERN_SCAN_SIDE_LABELS[
 row.side
@@ -803,6 +1098,10 @@ ${getWidgetFlagHtml()}
 <span class="script-widget-side ${sideClass}">${sideLabel}</span>
 </div>
 <div class="screener-header-right">
+<div class="screener-meta">
+<span class="screener-change">—</span>
+<span class="screener-volume">Объём 24ч <span class="screener-volume-value">—</span></span>
+</div>
 <button class="screener-open" type="button" title="Открыть в Терминале">↗</button>
 </div>
 </div>
@@ -1215,6 +1514,12 @@ runZoom,
 1200
 );
 
+void mountWidgetPattern(
+widget,
+renderTokenRef,
+activeWidgetsRef
+);
+
 }catch(
 err
 ){
@@ -1392,18 +1697,11 @@ let cachedChartTfFilter =
 "all";
 
 function resolveWidgetChartTf(
-chartTfFilter,
+_chartTfFilter,
 row
 ){
 
-if(
-chartTfFilter ===
-"all"
-){
 return row.tf;
-}
-
-return chartTfFilter;
 
 }
 
@@ -1499,28 +1797,26 @@ fragment
 activeWidgets =
 nextWidgets;
 
-await Promise.all(
-activeWidgets.map(
-widget=>
-mountWidgetPattern(
-widget,
-renderToken,
-activeWidgets
-)
-)
-);
+void refreshTickersMeta();
 
-await Promise.all(
+const chartLoads =
+mapWithConcurrency(
 activeWidgets.map(
 widget=>
+()=>
 loadWidgetChart(
 widget,
 renderToken,
 activeWidgets
 )
-)
+),
+SCRIPT_MAX_CONCURRENT_CHART_LOADS
 );
 
+void Promise.all(
+chartLoads
+).then(
+()=>{
 if(
 loadId ===
 renderToken
@@ -1530,6 +1826,8 @@ setStatus(
 false
 );
 }
+}
+);
 
 }
 
@@ -1618,6 +1916,26 @@ function mountZoom(){
 
 if(
 unmountZoom
+){
+return Promise.resolve();
+}
+
+if(
+scriptZoomMountPromise
+){
+return scriptZoomMountPromise;
+}
+
+zoomMountStarted =
+true;
+
+scriptZoomMountPromise =
+ensureScriptZoomModule().then(
+()=>{
+if(
+unmountZoom ||
+typeof mountScreenerWidgetZoom !==
+"function"
 ){
 return;
 }
@@ -1708,6 +2026,10 @@ flagWrapHtml:
 getWidgetFlagHtml()
 }
 );
+}
+);
+
+return scriptZoomMountPromise;
 
 }
 
@@ -1717,16 +2039,23 @@ refreshAllWidgetFlags
 
 function destroy(){
 
+stopTickerMetaPoll();
 destroyWidgets();
 unmountZoom?.();
 unmountZoom =
 null;
+zoomMountStarted =
+false;
+scriptZoomMountPromise =
+null;
 cachedRows =
 [];
+tickerMap.clear();
 
 }
 
 mountZoom();
+startTickerMetaPoll();
 
 return {
 renderPage,

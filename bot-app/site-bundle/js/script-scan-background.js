@@ -9,13 +9,13 @@ PATTERN_SCAN_ALL_TFS,
 filterPatternScanRowsBySide,
 normalizePatternScanSideFilter,
 loadPatternScanSymbols
-} from "./pattern-12-scanner.js?v=18";
+} from "./pattern-12-scanner.js?v=20";
 
 import {
 loadScriptPageState,
 saveScriptPageState,
 periodMsById
-} from "./script-page-storage.js?v=14";
+} from "./script-page-storage.js?v=15";
 
 import {
 loadScriptFavoritesForScan,
@@ -25,7 +25,7 @@ intersectFavoritesWithMarket
 import {
 EXCHANGE_CHANGED_EVENT,
 getActiveExchangeId
-} from "./market-api.js?v=2";
+} from "./market-api.js?v=5";
 
 export const SCRIPT_SCAN_BG_EVENT =
 "script-scan-bg-update";

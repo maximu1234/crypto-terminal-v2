@@ -12,7 +12,7 @@ loadBotStrategiesPrefs
 } from "./bot-strategy-prefs.js?v=22";
 import {
 syncAllTickerFlagsRootToMain
-} from "./bot-bridge.js?v=12";
+} from "./bot-bridge.js?v=13";
 import {
 ALGO_TICKER_FLAGS_KEY
 } from "./ticker-flags.js?v=6";

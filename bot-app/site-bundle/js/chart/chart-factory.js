@@ -16,6 +16,10 @@ getChartLayoutBgColor
 } from "./chart-options.js?v=7";
 
 import {
+withChartLocalTime
+} from "./chart-local-time.js?v=1";
+
+import {
 ensureDomChartCrosshair,
 updateCrosshairAxisLabels,
 clearCrosshairAxisLabels,
@@ -185,6 +189,7 @@ getChartLayoutBgColor();
 const chart =
 LightweightCharts.createChart(
 container,
+withChartLocalTime(
 {
 
 layout:{
@@ -245,7 +250,9 @@ mouseWheel:true,
 pinch:true
 }
 
-});
+}
+)
+);
 
 chart.applyOptions({
 crosshair:mainChartCrosshairOptions()
@@ -288,6 +295,7 @@ Math.max(container.clientHeight, 80);
 const chart =
 LightweightCharts.createChart(
 container,
+withChartLocalTime(
 {
 
 width,
@@ -340,7 +348,9 @@ mouseWheel:true,
 pinch:true
 }
 
-});
+}
+)
+);
 
 const series =
 chart.addCandlestickSeries({
@@ -951,7 +961,16 @@ candles.length;
 
 const visibleBars =
 Math.min(
-SCREENER_VISIBLE_BARS,
+Number(
+options.visibleBars
+) >
+0
+? Math.round(
+Number(
+options.visibleBars
+)
+)
+: SCREENER_VISIBLE_BARS,
 totalBars
 );
 
@@ -1118,6 +1137,7 @@ LightweightCharts.PriceScaleMode !== undefined
 const chart =
 LightweightCharts.createChart(
 container,
+withChartLocalTime(
 {
 
 layout:{
@@ -1183,7 +1203,9 @@ price:false
 }
 }
 
-});
+}
+)
+);
 
 chart.applyOptions({
 crosshair:hiddenCrosshairOptions()
@@ -1249,6 +1271,7 @@ container
 const chart =
 LightweightCharts.createChart(
 container,
+withChartLocalTime(
 {
 
 layout:{
@@ -1311,6 +1334,7 @@ price:false
 }
 
 }
+)
 );
 
 chart.applyOptions({
