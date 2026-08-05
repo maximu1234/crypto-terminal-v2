@@ -17,7 +17,7 @@ replaceAlgoTickerFlagList
 
 import {
 mountAlgoStrategyUniverseUi
-} from "./strategy-universe-ui.js?v=4";
+} from "./strategy-universe-ui.js?v=5";
 
 /**
  * @param {{

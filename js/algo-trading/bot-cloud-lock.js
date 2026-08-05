@@ -29,8 +29,7 @@ const TABLE =
 "algo_bot_lock";
 
 /*
- * Temporary (metka-129+): disable cloud "another bot running" lock for
- * Multichart and Algo Bot until auth/session model is redesigned.
+ * Cloud "another bot running" lock — disabled with cloud remote sync.
  * Operator must not start two bots on the same account.
  */
 const CLOUD_LOCK_TEMP_DISABLED =

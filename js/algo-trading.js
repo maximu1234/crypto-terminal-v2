@@ -41,7 +41,7 @@ refreshAlgoMarketListFromFlags
 
 import {
 mountAlgoTickerScanUi
-} from "./algo-trading/ticker-scan-ui.js?v=16";
+} from "./algo-trading/ticker-scan-ui.js?v=17";
 
 import {
 mountAlgoRuntimeUi
@@ -49,7 +49,7 @@ mountAlgoRuntimeUi
 
 import {
 mountAlgoBotStrategyUi
-} from "./algo-trading/bot-strategy-ui.js?v=64";
+} from "./algo-trading/bot-strategy-ui.js?v=66";
 
 import {
 mountSessionLogServerSettings

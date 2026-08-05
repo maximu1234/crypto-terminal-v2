@@ -1076,68 +1076,15 @@ payload =
 {}
 ){
 
-const transfer =
-String(
-payload.transfer ||
-""
-).trim();
+void payload;
 
-if(
-!transfer
-){
 return {
 ok:
 false,
 message:
-"Нет строки сессии"
-};
-}
-
-const url =
-buildUrl(
-{
-host:
-payload.host,
-port:
-payload.port,
-token:
-payload.token,
-path:
-"/auth/session"
-}
-);
-
-const res =
-await fetchJsonPost(
-url,
-{
-transfer
-},
-30000
-);
-
-if(
-!res.ok
-){
-return {
-ok:
-false,
-message:
-res.message ||
-res.json?.message ||
-"Не удалось отправить сессию"
-};
-}
-
-return {
-ok:
-true,
-email:
-res.json?.email ||
-null,
-message:
-res.json?.message ||
-"Сессия отправлена"
+"Передача сессии на бот отключена",
+skipped:
+true
 };
 
 }

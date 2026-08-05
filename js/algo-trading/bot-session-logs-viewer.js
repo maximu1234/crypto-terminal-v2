@@ -5,7 +5,7 @@ import {
 isMultichartRemoteControlHost,
 fetchLanBotStatus,
 sendLanBotCommand
-} from "./bot-remote-client.js?v=8";
+} from "./bot-remote-client.js?v=10";
 import {
 formatBotStrategySettingsRows,
 loadBotStrategiesPrefs
@@ -275,7 +275,7 @@ spellcheck="false"
 <div class="algo-remote-session-logs-help-body">
 <section class="algo-remote-session-logs-help-lang" lang="ru">
 <h4>Русский</h4>
-<p>Окно <strong>LAN</strong> — весь прямой канал: Старт/Стоп (Ст1/Ст2/Ст3), списки, сессия, логи. Без worker и без лишнего трафика в Supabase (кроме cloud lock при старте на самом боте).</p>
+<p>Окно <strong>LAN</strong> — прямой канал: Старт/Стоп (Ст1/Ст2/Ст3), списки, логи. Без worker и без трафика в Supabase Auth.</p>
 <p><strong>Таймаут</strong> почти всегда значит: до порта на сервере пакеты не доходят (firewall / Security Group / бот не слушает). Неверный токен обычно даёт ошибку сразу, а не таймаут.</p>
 <p><strong>Токен доступа к порту</strong> — не сессия <code>mcauth1…</code>. На боте: шестерёнка → «Логи → Терминал» → «Новый токен» или включить доступ и «Сохранить».</p>
 <ol>
@@ -290,7 +290,7 @@ spellcheck="false"
 </section>
 <section class="algo-remote-session-logs-help-lang" lang="en">
 <h4>English</h4>
-<p>The <strong>LAN</strong> window is the full direct channel: Start/Stop (St1/St2/St3), lists, auth session, logs — no alert-worker. Supabase is only used for the bot’s own cloud lock on start.</p>
+<p>The <strong>LAN</strong> window is the direct channel: Start/Stop (St1/St2/St3), lists, logs — no alert-worker and no Supabase Auth traffic.</p>
 <p>A <strong>timeout</strong> almost always means packets never reach the port (Windows firewall / cloud Security Group / bot not listening).</p>
 <p>The <strong>port token</strong> is not the Multichart session string <code>mcauth1…</code>. On the bot: gear → “Logs → Terminal” → “New token”.</p>
 <ol>
@@ -1787,7 +1787,7 @@ return;
 btn.hidden =
 false;
 btn.title =
-"Прямой канал с Algo Bot: старт/стоп, списки, сессия, логи";
+"Прямой канал с Algo Bot: старт/стоп, списки, логи";
 btn.addEventListener(
 "click",
 event=>{

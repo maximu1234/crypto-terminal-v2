@@ -1777,6 +1777,9 @@ return false;
  *
  * Temporary: disabled — Algo Bot login / session share is off.
  */
+/**
+ * Bot cloud session auto-push — disabled (LAN auth session not used).
+ */
 async function maybeAutoPushSessionToLanBot(){
 
 return;

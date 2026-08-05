@@ -1700,72 +1700,11 @@ return false;
 }
 
 /**
- * After Multichart rotates JWT, push fresh session to LAN Algo Bot so the
- * bot does not need its own Auth refresh (shared refresh_token).
+ * Bot cloud session auto-push — disabled (LAN auth session not used).
  */
 async function maybeAutoPushSessionToLanBot(){
 
-if(
-isAlgoBotLiteShell()
-){
 return;
-}
-
-if(
-typeof window ===
-"undefined" ||
-!window.cryptoTerminalDesktop?.isDesktop
-){
-return;
-}
-
-try{
-const {
-pushAuthSessionToRemoteBot,
-readLanRemoteConn,
-isMultichartRemoteControlHost
-} =
-await import(
-"./algo-trading/bot-remote-client.js?v=7"
-);
-
-if(
-!isMultichartRemoteControlHost()
-){
-return;
-}
-
-const lan =
-readLanRemoteConn();
-
-if(
-!lan?.host ||
-!lan?.token
-){
-return;
-}
-
-const res =
-await pushAuthSessionToRemoteBot(
-lan
-);
-
-if(
-res?.ok
-){
-warnAuthOnce(
-"lan-session-auto",
-"[auth] Session auto-pushed to LAN Algo Bot after refresh"
-);
-}
-}catch(
-err
-){
-warnAuthOnce(
-"lan-session-auto-fail",
-`[auth] LAN session auto-push skipped: ${err?.message || err}`
-);
-}
 
 }
 

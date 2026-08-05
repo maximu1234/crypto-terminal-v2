@@ -31,15 +31,13 @@ clearAlgoBotCloudLock,
 ensureAlgoBotCloudLock
 } from "./bot-bridge.js?v=13";
 import {
-fetchRemoteBotStatus,
-sendRemoteBotCommand,
 isMultichartRemoteControlHost
-} from "./bot-remote-client.js?v=8";
+} from "./bot-remote-client.js?v=10";
 import {
 mountRemoteSessionLogsEntry,
 mountRemoteWatchlistsPushEntry,
 mountLocalSessionLogsEntry
-} from "./bot-session-logs-viewer.js?v=22";
+} from "./bot-session-logs-viewer.js?v=24";
 import {
 rebalanceTpShares
 } from "./pattern-trade-stats-partial.js?v=19";
@@ -47,9 +45,6 @@ rebalanceTpShares
 const STATUS_POLL_MS =
 2500;
 
-/** Multichart → alert-worker remote status (облако; LAN-канал — в окне LAN). */
-const REMOTE_STATUS_POLL_MS =
-30000;
 
 let activeBotStrategyUiDestroy =
 null;
@@ -361,41 +356,6 @@ const statusLockClearBtn =
 document.getElementById(
 "algo-bot-lock-clear"
 );
-const remoteBlock =
-document.getElementById(
-"algo-bot-status-remote"
-);
-const remoteLink =
-document.getElementById(
-"algo-bot-remote-link"
-);
-const remoteHost =
-document.getElementById(
-"algo-bot-remote-host"
-);
-const remoteStartBtn =
-document.getElementById(
-"algo-bot-remote-start"
-);
-const remoteStopBtn =
-document.getElementById(
-"algo-bot-remote-stop"
-);
-const remoteMessage =
-document.getElementById(
-"algo-bot-remote-message"
-);
-const remoteControlEnabled =
-isMultichartRemoteControlHost();
-
-if(
-remoteBlock &&
-!remoteControlEnabled
-){
-remoteBlock.hidden =
-true;
-}
-
 /** @type {HTMLElement[]} */
 const allDrops =
 [
@@ -436,12 +396,6 @@ Boolean
 
 let statusPollTimer =
 null;
-let remoteStatusPollTimer =
-null;
-let remotePollInflight =
-false;
-let remoteCmdInflight =
-false;
 let runInflight =
 false;
 let lastArmedFingerprint =
@@ -2490,126 +2444,6 @@ false;
 
 }
 
-async function refreshRemoteBotUi(){
-
-if(
-!remoteControlEnabled ||
-!remoteBlock ||
-remoteBlock.hidden ||
-remotePollInflight
-){
-return;
-}
-
-remotePollInflight =
-true;
-
-try{
-const st =
-await fetchRemoteBotStatus();
-
-if(
-remoteLink
-){
-if(
-!st.ok
-){
-/* Нет удалённого бота / входа — норма для Multichart-only */
-remoteLink.textContent =
-"не используется";
-remoteLink.classList.remove(
-"is-online",
-"is-running"
-);
-}else if(
-!st.online
-){
-remoteLink.textContent =
-"не подключён";
-remoteLink.classList.remove(
-"is-online",
-"is-running"
-);
-}else if(
-st.running
-){
-remoteLink.textContent =
-"онлайн · запущен";
-remoteLink.classList.add(
-"is-online",
-"is-running"
-);
-}else{
-remoteLink.textContent =
-"онлайн · стоп";
-remoteLink.classList.add(
-"is-online"
-);
-remoteLink.classList.remove(
-"is-running"
-);
-}
-}
-
-if(
-remoteHost
-){
-remoteHost.textContent =
-st.ok &&
-st.online
-? (
-st.host ||
-st.app ||
-"—"
-)
-: "—";
-}
-
-if(
-remoteStartBtn
-){
-remoteStartBtn.disabled =
-remoteCmdInflight ||
-!(
-st.ok &&
-st.online
-) ||
-!!st.running;
-}
-
-if(
-remoteStopBtn
-){
-remoteStopBtn.disabled =
-remoteCmdInflight ||
-!(
-st.ok &&
-st.online
-) ||
-!st.running;
-}
-
-if(
-remoteMessage &&
-!remoteCmdInflight &&
-!remoteMessage.dataset.sticky
-){
-remoteMessage.textContent =
-"";
-remoteMessage.classList.add(
-"hidden"
-);
-remoteMessage.classList.remove(
-"is-error"
-);
-}
-}finally{
-remotePollInflight =
-false;
-}
-
-}
-
 function applyBotStatus(
 status
 ){
@@ -2766,26 +2600,6 @@ void refreshBotStatus();
 STATUS_POLL_MS
 );
 
-if(
-remoteControlEnabled
-){
-remoteStatusPollTimer =
-window.setInterval(
-()=>{
-if(
-statusDrop &&
-!statusDrop.classList.contains(
-"hidden"
-) &&
-remoteBlock &&
-!remoteBlock.hidden
-){
-void refreshRemoteBotUi();
-}
-},
-REMOTE_STATUS_POLL_MS
-);
-}
 }
 
 function stopStatusPoll(){
@@ -2797,16 +2611,6 @@ window.clearInterval(
 statusPollTimer
 );
 statusPollTimer =
-null;
-}
-
-if(
-remoteStatusPollTimer
-){
-window.clearInterval(
-remoteStatusPollTimer
-);
-remoteStatusPollTimer =
 null;
 }
 
@@ -3249,159 +3053,12 @@ if(
 open
 ){
 void refreshCloudLockUi();
-void refreshRemoteBotUi();
 }
 },
 true
 );
 
-remoteStartBtn?.addEventListener(
-"click",
-async event=>{
-event.preventDefault();
-event.stopPropagation();
 
-if(
-!remoteControlEnabled ||
-remoteCmdInflight ||
-remoteStartBtn.disabled
-){
-return;
-}
-
-remoteCmdInflight =
-true;
-remoteStartBtn.disabled =
-true;
-remoteStopBtn &&
-(
-remoteStopBtn.disabled =
-true
-);
-
-if(
-remoteMessage
-){
-remoteMessage.textContent =
-"Отправка команды…";
-remoteMessage.classList.remove(
-"hidden"
-);
-remoteMessage.dataset.sticky =
-"1";
-}
-
-const result =
-await sendRemoteBotCommand(
-"start"
-);
-
-if(
-remoteMessage
-){
-remoteMessage.textContent =
-result.ok
-? "Команда start отправлена"
-: (
-result.message ||
-"Не удалось отправить start"
-);
-remoteMessage.classList.toggle(
-"is-error",
-!result.ok
-);
-window.setTimeout(
-()=>{
-if(
-remoteMessage
-){
-delete remoteMessage.dataset.sticky;
-}
-},
-4000
-);
-}
-
-remoteCmdInflight =
-false;
-await refreshRemoteBotUi();
-await refreshCloudLockUi();
-}
-);
-
-remoteStopBtn?.addEventListener(
-"click",
-async event=>{
-event.preventDefault();
-event.stopPropagation();
-
-if(
-!remoteControlEnabled ||
-remoteCmdInflight ||
-remoteStopBtn.disabled
-){
-return;
-}
-
-remoteCmdInflight =
-true;
-remoteStopBtn.disabled =
-true;
-remoteStartBtn &&
-(
-remoteStartBtn.disabled =
-true
-);
-
-if(
-remoteMessage
-){
-remoteMessage.textContent =
-"Отправка команды…";
-remoteMessage.classList.remove(
-"hidden"
-);
-remoteMessage.dataset.sticky =
-"1";
-}
-
-const result =
-await sendRemoteBotCommand(
-"stop"
-);
-
-if(
-remoteMessage
-){
-remoteMessage.textContent =
-result.ok
-? "Команда stop отправлена"
-: (
-result.message ||
-"Не удалось отправить stop"
-);
-remoteMessage.classList.toggle(
-"is-error",
-!result.ok
-);
-window.setTimeout(
-()=>{
-if(
-remoteMessage
-){
-delete remoteMessage.dataset.sticky;
-}
-},
-4000
-);
-}
-
-remoteCmdInflight =
-false;
-await refreshRemoteBotUi();
-await refreshCloudLockUi();
-}
-);
 
 statusLockClearBtn?.addEventListener(
 "click",

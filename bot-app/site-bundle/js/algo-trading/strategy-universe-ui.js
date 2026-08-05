@@ -229,6 +229,122 @@ let pendingStrategy =
 let pendingUniverse =
 "top100";
 
+/**
+ * Last successful backtest per strategy × universe (in-memory until app restart).
+ * @type {Map<string, {
+ *   agg: object,
+ *   rows: object[],
+ *   done: number,
+ *   total: number,
+ *   tf: string,
+ *   statsMode: string,
+ *   finishedAt: number
+ * }>}
+ */
+const lastResultsBySlot =
+new Map();
+
+/**
+ * @param {"st1"|"st2"|"st3"|string} strategyId
+ * @param {"all"|"top100"|string} universe
+ * @returns {string}
+ */
+function slotKey(
+strategyId,
+universe
+){
+
+const st =
+normalizeAlgoScanStrategyId(
+strategyId
+);
+const uni =
+universe ===
+"all"
+? "all"
+: "top100";
+
+return `${st}:${uni}`;
+
+}
+
+/**
+ * @param {string} key
+ * @returns {{
+ *   agg: object,
+ *   rows: object[],
+ *   done: number,
+ *   total: number,
+ *   tf: string,
+ *   statsMode: string,
+ *   finishedAt: number
+ * }|null}
+ */
+function loadSlot(
+key
+){
+
+return lastResultsBySlot.get(
+key
+) ||
+null;
+
+}
+
+/**
+ * @param {string} key
+ * @param {{
+ *   agg: object,
+ *   rows: object[],
+ *   done: number,
+ *   total: number,
+ *   tf: string,
+ *   statsMode: string
+ * }} payload
+ */
+function saveSlot(
+key,
+payload
+){
+
+lastResultsBySlot.set(
+key,
+{
+agg:
+payload.agg,
+rows:
+Array.isArray(
+payload.rows
+)
+? payload.rows
+: [],
+done:
+Number(
+payload.done
+) ||
+0,
+total:
+Number(
+payload.total
+) ||
+0,
+tf:
+String(
+payload.tf ||
+""
+),
+statsMode:
+String(
+payload.statsMode ||
+""
+),
+finishedAt:
+Date.now()
+}
+);
+
+}
+
 function setOpen(
 open
 ){
@@ -851,6 +967,13 @@ pendingStrategy
 ) ||
 "direct"
 );
+const cached =
+loadSlot(
+slotKey(
+pendingStrategy,
+pendingUniverse
+)
+);
 
 if(
 titleEl
@@ -859,6 +982,51 @@ titleEl.textContent =
 `Бэктест · ${ST_LABELS[pendingStrategy]} · ${pendingUniverse === "top100" ? "Топ-100" : "Все тикеры"}`;
 }
 
+if(
+cached
+){
+if(
+noteEl
+){
+noteEl.textContent =
+buildNote(
+pendingStrategy,
+pendingUniverse,
+cached.tf ||
+tf,
+cached.statsMode ||
+statsMode
+) +
+". Последний результат — нажмите «Запустить» для обновления.";
+}
+
+renderAgg(
+cached.agg ||
+{}
+);
+renderTable(
+cached.rows ||
+[]
+);
+
+if(
+progressWrap
+){
+progressWrap.hidden =
+false;
+}
+
+setProgress(
+cached.done,
+cached.total ||
+(
+pendingUniverse ===
+"top100"
+? 100
+: 0
+)
+);
+}else{
 if(
 noteEl
 ){
@@ -908,6 +1076,8 @@ pendingUniverse ===
 ? 100
 : 0
 );
+}
+
 setOpen(
 true
 );
@@ -1083,6 +1253,24 @@ result.rows
 setProgress(
 result.done,
 result.total
+);
+saveSlot(
+slotKey(
+strategyId,
+universe
+),
+{
+agg:
+result.agg,
+rows:
+result.rows,
+done:
+result.done,
+total:
+result.total,
+tf,
+statsMode
+}
 );
 setStatus(
 strategyId,
