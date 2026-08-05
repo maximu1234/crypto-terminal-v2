@@ -113,7 +113,7 @@ mountDrawToolIcons
 
 import {
 mountChartSnapshot
-} from "./chart-snapshot.js?v=6";
+} from "./chart-snapshot.js?v=7";
 
 import {
 perfMark,

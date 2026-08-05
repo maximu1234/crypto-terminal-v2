@@ -257,7 +257,7 @@ Object.freeze({
 "chart-indicators.js":
 44,
 "chart-snapshot.js":
-6,
+7,
 "indicators/pattern-12.js":
 12,
 "indicators/pattern-12-math.js":
@@ -496,7 +496,7 @@ Object.freeze({
 "screener-widget-zoom.js":
 21,
 "release-marker.js":
-87,
+88,
 "focus-blur-after-pick.js":
 3,
 "site-boot.js":

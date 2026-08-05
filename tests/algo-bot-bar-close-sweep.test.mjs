@@ -117,9 +117,9 @@ test("bar close sweep scans seeded symbols and notes progress", async () => {
   cfg = null;
 
   assert.equal(armed, 2);
-  assert.equal(fetched, 1);
+  assert.equal(fetched, 2);
   assert.match(notes[0], /прогон close tf=5 · старт · 2 тикеров/);
-  assert.match(notes[1], /готово · сканировано 2\/2 · REST догрузка 1/);
+  assert.match(notes[1], /готово · сканировано 2\/2 · REST догрузка 2/);
 });
 
 test("bar close sweep notes pending seed when not all seeded", async () => {

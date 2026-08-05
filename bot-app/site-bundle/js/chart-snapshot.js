@@ -158,6 +158,19 @@ opts.getSymbol() ||
 ""
 ).trim()
 : "";
+const tfRaw =
+typeof opts.getTf ===
+"function"
+? String(
+opts.getTf() ||
+""
+).trim()
+: "";
+const tf =
+TF_FILE_LABELS[
+tfRaw
+] ||
+tfRaw;
 const exchange =
 typeof opts.getExchangeName ===
 "function"
@@ -167,16 +180,18 @@ opts.getExchangeName() ||
 ).trim()
 : "";
 
-if(
-sym &&
+const parts =
+[
+sym,
+tf,
 exchange
-){
-return `${sym} - ${exchange}`;
-}
+].filter(
+Boolean
+);
 
-return sym ||
-exchange ||
-"";
+return parts.join(
+" - "
+);
 
 }
 
@@ -228,7 +243,7 @@ dataUrl;
 /**
  * Плашка тикера + опциональный полупрозрачный логотип только на время capturePage.
  * @template T
- * @param {{ getSymbol?: () => string, getExchangeName?: () => string }} opts
+ * @param {{ getSymbol?: () => string, getTf?: () => string, getExchangeName?: () => string }} opts
  * @param {() => Promise<T>} fn
  * @returns {Promise<T>}
  */

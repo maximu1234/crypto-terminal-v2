@@ -1,7 +1,7 @@
 /**
  * Guaranteed TF bar-close scan for algo bot.
- * WS klines are best-effort; this REST (+ in-memory) sweep runs every closed bar
- * so the engine always "прогоняет" the watchlist on the strategy timeframe.
+ * WS klines are best-effort; every closed bar we ALWAYS REST-fetch klines
+ * then arm/process so mid-bar seed / stale OHLC cannot skip a setup.
  */
 const log = require("electron-log");
 
@@ -73,48 +73,49 @@ function createBarCloseSweep(deps) {
   }
 
   async function catchUpSymbol(symbol, expectCloseSec) {
+    void expectCloseSec;
     const engineConfig = deps.getEngineConfig();
     const state = deps.getState(symbol);
     if (!engineConfig || !state?.seeded) {
       return { fetched: false };
     }
 
-    const last = state.candles[state.candles.length - 1];
-    const fresh = !!(last && Number(last.time) >= expectCloseSec);
-
-    if (!fresh) {
-      const result = await deps.fetchKlineHistory(
+    /*
+      Always REST on bar close — never trust in-memory/WS OHLC alone.
+      Mid-bar seed leaves a forming candle with time==expectCloseSec but
+      incomplete high/low/close; the old "fresh" skip missed setups.
+    */
+    const result = await deps.fetchKlineHistory(
+      symbol,
+      engineConfig.tf,
+      CATCHUP_BARS
+    );
+    if (!result?.ok || !Array.isArray(result.candles) || !result.candles.length) {
+      log.warn(
+        "algo bot bar close kline:",
         symbol,
-        engineConfig.tf,
-        CATCHUP_BARS
+        result?.message || "empty"
       );
-      if (!result?.ok || !Array.isArray(result.candles) || !result.candles.length) {
-        log.warn(
-          "algo bot bar close kline:",
-          symbol,
-          result?.message || "empty"
-        );
-        return { fetched: true, ok: false };
-      }
-
-      const byTime = new Map(state.candles.map((c) => [c.time, c]));
-      for (const bar of result.candles) {
-        byTime.set(bar.time, {
-          time: bar.time,
-          open: bar.open,
-          high: bar.high,
-          low: bar.low,
-          close: bar.close
-        });
-      }
-
-      state.candles = deps.trimCandles(
-        [...byTime.values()].sort((a, b) => a.time - b.time),
-        deps.getMaxHistory(engineConfig.timeoutBars)
-      );
-      state.forming = null;
-      state.needsResync = false;
+      return { fetched: true, ok: false };
     }
+
+    const byTime = new Map(state.candles.map((c) => [c.time, c]));
+    for (const bar of result.candles) {
+      byTime.set(bar.time, {
+        time: bar.time,
+        open: bar.open,
+        high: bar.high,
+        low: bar.low,
+        close: bar.close
+      });
+    }
+
+    state.candles = deps.trimCandles(
+      [...byTime.values()].sort((a, b) => a.time - b.time),
+      deps.getMaxHistory(engineConfig.timeoutBars)
+    );
+    state.forming = null;
+    state.needsResync = false;
 
     await deps.armAllPendingSetups(symbol, "live");
 
@@ -125,7 +126,7 @@ function createBarCloseSweep(deps) {
       await deps.processArmedOnBar(symbol, prev, cur, closedIndex);
     }
 
-    return { fetched: !fresh, ok: true };
+    return { fetched: true, ok: true };
   }
 
   async function run() {
