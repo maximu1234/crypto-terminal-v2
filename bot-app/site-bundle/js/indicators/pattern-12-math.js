@@ -1,5 +1,7 @@
 /**
  * Паттерн 1-2, 1-2 — порт логики из Pine (RSI swing + точки 1–4).
+ * После валидной точки 4 цепочка 1-2-3-4 фиксируется (append-only): более
+ * низкий/высокий swing после b4 — новый сетап, а не перепись старой тройки.
  */
 import {
 calculateRSI
@@ -21,39 +23,39 @@ return {
 patternMode:
 "both",
 decLowsBeforePt1:
-1,
+0,
 ascHighsBeforePt1:
-1,
+0,
 waveAMode:
 "both",
 lngWaveCMode:
-"2",
+"1",
 shtWaveCMode:
-"2",
+"1",
 rsiOverbought:
 70,
 rsiOversold:
 30,
 lngRsiLength:
-14,
+17,
 lngShowFractals:
 false,
 lngShowRsiSwingLines:
 false,
 lngMicRsiLength:
-4,
+1,
 lngShowMicFractals:
 false,
 lngShowMicRsiSwingLines:
 false,
 shtRsiLength:
-14,
+17,
 shtShowFractals:
 false,
 shtShowRsiSwingLines:
 false,
 shtMicRsiLength:
-4,
+1,
 shtShowMicFractals:
 false,
 shtShowMicRsiSwingLines:
@@ -2672,6 +2674,734 @@ pr4
 
 }
 
+/**
+ * Deepest long pt3 candidate with minBar < b3 < b4 while box 1-2 intact.
+ * Used so a completed 1-2-3-4 is not revised by a later lower swing after b4.
+ */
+function lngDeepestDownBeforeBar(
+log,
+candles,
+i2,
+b2,
+pr1,
+pr2,
+minBar,
+b4
+){
+
+let i3 =
+-1;
+let b3 =
+null;
+let pr3 =
+null;
+let bestP3 =
+null;
+const sz =
+log.types.length;
+const lastBar =
+candles.length -
+1;
+
+if(
+i2 <
+0 ||
+b2 ==
+null ||
+pr1 ==
+null ||
+pr2 ==
+null ||
+pr2 <=
+pr1 ||
+b4 ==
+null ||
+!(
+b4 >
+minBar
+)
+){
+return {
+i3,
+b3,
+pr3
+};
+}
+
+for(
+let k =
+i2 +
+1;
+k <
+sz;
+k++
+){
+
+const confirmK =
+log.confirmBars[
+k
+];
+
+if(
+!barInHistory(
+b2,
+lastBar
+) ||
+!barInHistory(
+confirmK,
+lastBar
+)
+){
+break;
+}
+
+if(
+!lngBoxIntact(
+candles,
+b2,
+confirmK,
+pr1,
+pr2
+)
+){
+break;
+}
+
+if(
+log.types[
+k
+] !==
+-1
+){
+continue;
+}
+
+const bk =
+log.bars[
+k
+];
+const pk =
+log.prices[
+k
+];
+
+if(
+bk <=
+minBar ||
+bk >=
+b4
+){
+continue;
+}
+
+if(
+pk <=
+pr1 ||
+pk >=
+pr2
+){
+continue;
+}
+
+if(
+bestP3 ==
+null ||
+pk <
+bestP3
+){
+bestP3 =
+pk;
+i3 =
+k;
+b3 =
+bk;
+pr3 =
+pk;
+}
+
+}
+
+return {
+i3,
+b3,
+pr3
+};
+
+}
+
+/**
+ * Highest short pt3 candidate with minBar < b3 < b4 while box 1-2 intact.
+ */
+function shtHighestUpBeforeBar(
+log,
+candles,
+i2,
+b2,
+pr1,
+pr2,
+minBar,
+b4
+){
+
+let i3 =
+-1;
+let b3 =
+null;
+let pr3 =
+null;
+let bestP3 =
+null;
+const sz =
+log.types.length;
+const lastBar =
+candles.length -
+1;
+
+if(
+i2 <
+0 ||
+b2 ==
+null ||
+pr1 ==
+null ||
+pr2 ==
+null ||
+pr1 <=
+pr2 ||
+b4 ==
+null ||
+!(
+b4 >
+minBar
+)
+){
+return {
+i3,
+b3,
+pr3
+};
+}
+
+for(
+let k =
+i2 +
+1;
+k <
+sz;
+k++
+){
+
+const confirmK =
+log.confirmBars[
+k
+];
+
+if(
+!barInHistory(
+b2,
+lastBar
+) ||
+!barInHistory(
+confirmK,
+lastBar
+)
+){
+break;
+}
+
+if(
+!shtBoxIntact(
+candles,
+b2,
+confirmK,
+pr1,
+pr2
+)
+){
+break;
+}
+
+if(
+log.types[
+k
+] !==
+1
+){
+continue;
+}
+
+const bk =
+log.bars[
+k
+];
+const pk =
+log.prices[
+k
+];
+
+if(
+bk <=
+minBar ||
+bk >=
+b4
+){
+continue;
+}
+
+if(
+pk >=
+pr1 ||
+pk <=
+pr2
+){
+continue;
+}
+
+if(
+bestP3 ==
+null ||
+pk >
+bestP3
+){
+bestP3 =
+pk;
+i3 =
+k;
+b3 =
+bk;
+pr3 =
+pk;
+}
+
+}
+
+return {
+i3,
+b3,
+pr3
+};
+
+}
+
+/**
+ * Sequential long setups under fixed 1-2: commit each 3-4, then allow a new
+ * pt3 only after previous b4 (append-only; later lower swing ≠ rewrite).
+ */
+function lngScanChainsAfterPt12(
+senLog,
+micLog,
+candles,
+i2,
+b2,
+pr1,
+pr2,
+nthMicUp
+){
+
+const out =
+[];
+const lastBar =
+candles.length -
+1;
+const sz =
+senLog.types.length;
+let minBar =
+b2;
+
+for(
+let guard =
+0;
+guard <
+64;
+guard++
+){
+
+let committed =
+null;
+
+for(
+let k =
+i2 +
+1;
+k <
+sz;
+k++
+){
+
+const confirmK =
+senLog.confirmBars[
+k
+];
+
+if(
+!barInHistory(
+b2,
+lastBar
+) ||
+!barInHistory(
+confirmK,
+lastBar
+)
+){
+break;
+}
+
+if(
+!lngBoxIntact(
+candles,
+b2,
+confirmK,
+pr1,
+pr2
+)
+){
+break;
+}
+
+if(
+senLog.types[
+k
+] !==
+-1
+){
+continue;
+}
+
+const bk =
+senLog.bars[
+k
+];
+const pk =
+senLog.prices[
+k
+];
+
+if(
+bk <=
+minBar
+){
+continue;
+}
+
+if(
+pk <=
+pr1 ||
+pk >=
+pr2
+){
+continue;
+}
+
+const pt4 =
+lngPt4AfterPt3(
+micLog,
+candles,
+bk,
+pr1,
+pr2,
+pk,
+nthMicUp
+);
+
+if(
+pt4.i4 <
+0 ||
+pt4.b4 ==
+null ||
+pt4.pr4 ==
+null ||
+!barInHistory(
+pt4.b4,
+lastBar
+)
+){
+continue;
+}
+
+const deepest =
+lngDeepestDownBeforeBar(
+senLog,
+candles,
+i2,
+b2,
+pr1,
+pr2,
+minBar,
+pt4.b4
+);
+
+if(
+deepest.b3 ==
+null ||
+deepest.pr3 ==
+null ||
+deepest.b3 !==
+bk ||
+deepest.pr3 !==
+pk
+){
+continue;
+}
+
+committed =
+{
+b3:
+bk,
+p3:
+pk,
+b4:
+pt4.b4,
+p4:
+pt4.pr4
+};
+break;
+
+}
+
+if(
+!committed ||
+!(
+committed.b4 >
+minBar
+)
+){
+break;
+}
+
+out.push(
+committed
+);
+minBar =
+committed.b4;
+
+}
+
+return out;
+
+}
+
+/**
+ * Sequential short setups under fixed 1-2 (mirror of long append-only rule).
+ */
+function shtScanChainsAfterPt12(
+senLog,
+micLog,
+candles,
+i2,
+b2,
+pr1,
+pr2,
+nthMicDn
+){
+
+const out =
+[];
+const lastBar =
+candles.length -
+1;
+const sz =
+senLog.types.length;
+let minBar =
+b2;
+
+for(
+let guard =
+0;
+guard <
+64;
+guard++
+){
+
+let committed =
+null;
+
+for(
+let k =
+i2 +
+1;
+k <
+sz;
+k++
+){
+
+const confirmK =
+senLog.confirmBars[
+k
+];
+
+if(
+!barInHistory(
+b2,
+lastBar
+) ||
+!barInHistory(
+confirmK,
+lastBar
+)
+){
+break;
+}
+
+if(
+!shtBoxIntact(
+candles,
+b2,
+confirmK,
+pr1,
+pr2
+)
+){
+break;
+}
+
+if(
+senLog.types[
+k
+] !==
+1
+){
+continue;
+}
+
+const bk =
+senLog.bars[
+k
+];
+const pk =
+senLog.prices[
+k
+];
+
+if(
+bk <=
+minBar
+){
+continue;
+}
+
+if(
+pk >=
+pr1 ||
+pk <=
+pr2
+){
+continue;
+}
+
+const pt4 =
+shtPt4AfterPt3(
+micLog,
+candles,
+bk,
+pr1,
+pr2,
+pk,
+nthMicDn
+);
+
+if(
+pt4.i4 <
+0 ||
+pt4.b4 ==
+null ||
+pt4.pr4 ==
+null ||
+!barInHistory(
+pt4.b4,
+lastBar
+)
+){
+continue;
+}
+
+const highest =
+shtHighestUpBeforeBar(
+senLog,
+candles,
+i2,
+b2,
+pr1,
+pr2,
+minBar,
+pt4.b4
+);
+
+if(
+highest.b3 ==
+null ||
+highest.pr3 ==
+null ||
+highest.b3 !==
+bk ||
+highest.pr3 !==
+pk
+){
+continue;
+}
+
+committed =
+{
+b3:
+bk,
+p3:
+pk,
+b4:
+pt4.b4,
+p4:
+pt4.pr4
+};
+break;
+
+}
+
+if(
+!committed ||
+!(
+committed.b4 >
+minBar
+)
+){
+break;
+}
+
+out.push(
+committed
+);
+minBar =
+committed.b4;
+
+}
+
+return out;
+
+}
+
+/** Exported for unit tests (append-only 3-4 under fixed 1-2). */
+export function scanLngChainsAfterPt12ForTest(
+senLog,
+micLog,
+candles,
+i2,
+b2,
+pr1,
+pr2,
+nthMicUp =
+1
+){
+
+return lngScanChainsAfterPt12(
+senLog,
+micLog,
+candles,
+i2,
+b2,
+pr1,
+pr2,
+nthMicUp
+);
+
+}
+
 function scanCompletePatterns(
 side,
 candles,
@@ -2774,81 +3504,37 @@ lastBar
 continue;
 }
 
-const pt3 =
+const seq =
 side ===
 "long"
-? lngPt3AfterPt12(
+? lngScanChainsAfterPt12(
 senLog,
-candles,
-pt2.i2,
-pt2.b2,
-pr1,
-pt2.pr2
-)
-: shtPt3AfterPt12(
-senLog,
-candles,
-pt2.i2,
-pt2.b2,
-pr1,
-pt2.pr2
-);
-
-if(
-pt3.i3 <
-0 ||
-pt3.b3 ==
-null ||
-pt3.pr3 ==
-null ||
-!barInHistory(
-pt3.b3,
-lastBar
-)
-){
-continue;
-}
-
-const pt4 =
-side ===
-"long"
-? lngPt4AfterPt3(
 micLog,
 candles,
-pt3.b3,
+pt2.i2,
+pt2.b2,
 pr1,
 pt2.pr2,
-pt3.pr3,
 lngWaveCMicNth(
 settings.lngWaveCMode
 )
 )
-: shtPt4AfterPt3(
+: shtScanChainsAfterPt12(
+senLog,
 micLog,
 candles,
-pt3.b3,
+pt2.i2,
+pt2.b2,
 pr1,
 pt2.pr2,
-pt3.pr3,
 shtWaveCMicNth(
 settings.shtWaveCMode
 )
 );
 
-if(
-pt4.i4 <
-0 ||
-pt4.b4 ==
-null ||
-pt4.pr4 ==
-null ||
-!barInHistory(
-pt4.b4,
-lastBar
-)
+for(
+const leg of seq
 ){
-continue;
-}
 
 if(
 chains.some(
@@ -2858,9 +3544,9 @@ b1 &&
 c.b2 ===
 pt2.b2 &&
 c.b3 ===
-pt3.b3 &&
+leg.b3 &&
 c.b4 ===
-pt4.b4
+leg.b4
 )
 ){
 continue;
@@ -2876,15 +3562,17 @@ pt2.b2,
 p2:
 pt2.pr2,
 b3:
-pt3.b3,
+leg.b3,
 p3:
-pt3.pr3,
+leg.p3,
 b4:
-pt4.b4,
+leg.b4,
 p4:
-pt4.pr4
+leg.p4
 }
 );
+
+}
 
 }
 

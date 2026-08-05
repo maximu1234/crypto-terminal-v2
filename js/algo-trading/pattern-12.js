@@ -11,7 +11,7 @@ import {
 PATTERN_12_ID,
 defaultPattern12Settings,
 normalizePattern12Settings
-} from "./pattern-12-math.js?v=6";
+} from "./pattern-12-math.js?v=8";
 
 import {
 getOrComputeAlgoPattern12Scene

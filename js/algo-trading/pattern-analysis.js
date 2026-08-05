@@ -3,7 +3,7 @@
  */
 import {
 defaultPattern12Settings
-} from "./pattern-12-math.js?v=6";
+} from "./pattern-12-math.js?v=8";
 
 import {
 getOrComputeAlgoPattern12Scene

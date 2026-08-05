@@ -261,7 +261,7 @@ Object.freeze({
 "indicators/pattern-12.js":
 12,
 "indicators/pattern-12-math.js":
-5,
+7,
 "indicators/pattern-12-paint.js":
 5,
 "indicators/pattern-gip.js":
@@ -297,7 +297,7 @@ Object.freeze({
 "algo-trading/coin-list-host.js":
 2,
 "algo-trading/pattern-12-math.js":
-6,
+8,
 "algo-trading/pattern-12.js":
 8,
 "algo-trading/pattern-12-paint.js":

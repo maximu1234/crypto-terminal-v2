@@ -6,7 +6,7 @@ import {
 computePattern12Scene,
 defaultPattern12Settings,
 normalizePattern12Settings
-} from "./pattern-12-math.js?v=6";
+} from "./pattern-12-math.js?v=8";
 
 /** @type {{ key: string, scene: object|null }} */
 let cache = {

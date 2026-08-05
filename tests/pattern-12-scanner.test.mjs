@@ -66,7 +66,7 @@ test("readTerminalPattern12Settings snapshots chart_indicators_v1", () => {
 
   try {
     const fallback = readTerminalPattern12Settings();
-    assert.equal(fallback.lngRsiLength, 14);
+    assert.equal(fallback.lngRsiLength, 17);
 
     store.set(
       TERMINAL_INDICATORS_STORAGE_KEY,
@@ -83,7 +83,7 @@ test("readTerminalPattern12Settings snapshots chart_indicators_v1", () => {
     assert.equal(snap.lngRsiLength, 21);
     assert.equal(snap.shtRsiLength, 9);
     assert.equal(snap.decLowsBeforePt1, 2);
-    assert.equal(snap.lngMicRsiLength, 4);
+    assert.equal(snap.lngMicRsiLength, 1);
   } finally {
     if (prev === undefined) {
       delete globalThis.localStorage;

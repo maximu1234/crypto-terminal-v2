@@ -3,7 +3,7 @@
  */
 import {
 defaultPattern12Settings
-} from "./pattern-12-math.js?v=6";
+} from "./pattern-12-math.js?v=8";
 
 import {
 getOrComputeAlgoPattern12Scene
@@ -11,7 +11,7 @@ getOrComputeAlgoPattern12Scene
 
 import {
 detectPatternEntryEventsFromSetups
-} from "./pattern-entry-logic.js?v=11";
+} from "./pattern-entry-logic.js?v=12";
 
 import {
 countPattern12SetupsFromScene,
