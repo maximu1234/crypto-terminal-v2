@@ -34,7 +34,7 @@ createRSIChart,
 updateRsiBandLayout,
 updateRsiLevelLinesLayout,
 linkPairedChartTimeScales
-} from "./chart-import.js?v=44";
+} from "./chart-import.js?v=46";
 
 import {
 calculateRSI,
@@ -61,7 +61,7 @@ initWidgetDrawToolsDropdown,
 wireWidgetDrawToolMenu,
 closeAllWidgetDrawToolsMenus,
 resetWidgetDrawToolsMenus
-} from "./watchlist-draw-ui.js?v=16";
+} from "./watchlist-draw-ui.js?v=17";
 
 import {
 ensureDrawToolsVisible

@@ -17,7 +17,7 @@ applyAutoStopsAfterEntry,
 calcStopPriceFromUsd,
 getAutoStopSettings,
 markAutoStopsHandled
-} from "./auto-stops.js?v=8";
+} from "./auto-stops.js?v=9";
 
 import {
 marketMap

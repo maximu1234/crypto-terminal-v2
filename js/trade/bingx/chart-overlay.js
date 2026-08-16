@@ -13,7 +13,7 @@ isTradePositionRecentlyClosed
 import {
 markStopDismissed,
 clearDismissedStops
-} from "./auto-stops.js?v=8";
+} from "./auto-stops.js?v=9";
 
 import {
 isExchangeTradingEnabled

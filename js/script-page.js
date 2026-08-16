@@ -24,7 +24,7 @@ PATTERN_SCAN_DEPTH_OPTIONS,
 normalizePatternScanSideFilter,
 matchesPatternScanSideFilter,
 isPatternScanHitFresh
-} from "./pattern-12-scanner.js?v=20";
+} from "./pattern-12-scanner.js?v=23";
 
 import {
 loadScriptPageState,

@@ -7,11 +7,11 @@ ensureDomChartCrosshair,
 positionDomChartCrosshair,
 hideDomChartCrosshair,
 mountChartPriceHud
-} from "./chart-import.js?v=44";
+} from "./chart-import.js?v=46";
 
 import {
 initDrawings
-} from "./drawings.js?v=255";
+} from "./drawings.js?v=257";
 
 import {
 mountPriceAlertUi

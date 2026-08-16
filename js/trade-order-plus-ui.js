@@ -7,7 +7,7 @@ getActiveTradeVolumeUsdt
 
 import {
 formatPrice
-} from "./chart-import.js?v=44";
+} from "./chart-import.js?v=46";
 
 import {
 createPriceAlert
@@ -15,7 +15,7 @@ createPriceAlert
 
 import {
 isCloudLoggedInEffective
-} from "./cloud-sync.js?v=65";
+} from "./cloud-sync.js?v=66";
 
 import {
 getTelegramChatId

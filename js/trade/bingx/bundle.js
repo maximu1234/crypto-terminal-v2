@@ -43,7 +43,7 @@ export {
   maybeApplyAutoStopsForNewPosition,
   markAutoStopsHandled,
   wireAutoStopSettings
-} from "./auto-stops.js?v=8";
+} from "./auto-stops.js?v=9";
 
 export {
   initTradeMarketEntry,

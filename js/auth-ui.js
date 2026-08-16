@@ -13,7 +13,7 @@ completeAuthFromCallbackUrl,
 hasAuthCallbackInUrl,
 exportAuthSessionTransferString,
 importAuthSessionTransferString
-} from "./cloud-sync.js?v=65";
+} from "./cloud-sync.js?v=66";
 
 import {
 isSupabaseConfigured
@@ -783,7 +783,7 @@ if(
 isAlgoBotShell()
 ){
 void import(
-"./algo-trading/bot-session-log-server-ui.js?v=9"
+"./algo-trading/bot-session-log-server-ui.js?v=10"
 ).then(
 mod=>{
 mod.mountSessionLogServerSettings(

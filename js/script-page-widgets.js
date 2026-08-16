@@ -12,7 +12,7 @@ updateRsiLevelLinesLayout,
 linkPairedChartTimeScales,
 SCREENER_MAX_BARS,
 SCREENER_VISIBLE_BARS
-} from "./chart-import.js?v=44";
+} from "./chart-import.js?v=46";
 
 import {
 loadMarketHistory,
@@ -72,7 +72,7 @@ if(
 ){
 scriptZoomModulePromise =
 import(
-"./screener-widget-zoom.js?v=21"
+"./screener-widget-zoom.js?v=22"
 ).then(
 mod=>{
 refreshZoomFavoriteUi =
@@ -93,7 +93,7 @@ return scriptZoomModulePromise;
 import {
 PATTERN_SCAN_TF_LABELS,
 PATTERN_SCAN_SIDE_LABELS
-} from "./pattern-12-scanner.js?v=20";
+} from "./pattern-12-scanner.js?v=23";
 
 let patternOverlayApi =
 null;
@@ -145,7 +145,7 @@ if(
 ){
 patternOverlayApi =
 await import(
-"./screener-pattern-overlay.js?v=6"
+"./screener-pattern-overlay.js?v=7"
 );
 }
 

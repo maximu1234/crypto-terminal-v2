@@ -7,15 +7,15 @@ import {
 computePattern12Scene,
 defaultPattern12Settings,
 normalizePattern12Settings
-} from "./indicators/pattern-12-math.js?v=7";
+} from "./indicators/pattern-12-math.js?v=13";
 
 import {
 paintPattern12Scene
-} from "./indicators/pattern-12-paint.js?v=5";
+} from "./indicators/pattern-12-paint.js?v=8";
 
 import {
 readTerminalPattern12Settings
-} from "./pattern-12-scanner.js?v=20";
+} from "./pattern-12-scanner.js?v=23";
 
 function patternSettingsForWidget(
 widget

@@ -8,7 +8,7 @@ linkPairedChartTimeScales,
 appendFutureWhitespaceBars,
 computeChartFutureMarginBars,
 coinsTfVisibleBars
-} from "../chart-import.js?v=44";
+} from "../chart-import.js?v=46";
 
 import {
 isChartLayoutReady
@@ -16,7 +16,7 @@ isChartLayoutReady
 
 import {
 isBottomIndicatorPane
-} from "./indicator-pane-order.js?v=1";
+} from "./indicator-pane-order.js?v=2";
 
 import {
 syncPaneViewportAfterData

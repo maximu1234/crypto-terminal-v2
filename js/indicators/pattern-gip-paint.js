@@ -3,7 +3,7 @@
  */
 import {
 barToX
-} from "./pattern-12-paint.js?v=5";
+} from "./pattern-12-paint.js?v=8";
 
 function withAlpha(
 hex,

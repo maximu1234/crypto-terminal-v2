@@ -8,7 +8,7 @@ initWidgetDrawings
 import {
 mountDrawToolbar,
 mountDrawToolIcons
-} from "../draw-ui-shared.js?v=35";
+} from "../draw-ui-shared.js?v=36";
 
 /**
  * @param {{

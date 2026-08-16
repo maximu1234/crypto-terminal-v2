@@ -6,11 +6,11 @@
  */
 import {
 initChartIndicators
-} from "../chart-indicators.js?v=44";
+} from "../chart-indicators.js?v=53";
 
 import {
 createPattern12Indicator
-} from "./pattern-12.js?v=8";
+} from "./pattern-12.js?v=15";
 
 import {
 ALGO_INDICATORS_STORAGE_KEY
