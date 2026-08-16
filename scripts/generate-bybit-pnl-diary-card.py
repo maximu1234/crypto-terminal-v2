@@ -2,7 +2,7 @@
 """
 Generate Bybit-style PnL share cards for closed trades (Дневник).
 
-Landscape templates @ design ref 1323×960 (actual PNG may differ — scaled).
+Landscape templates @ design ref 1323×720 (footer cropped; Y from top unchanged).
 """
 from __future__ import annotations
 
@@ -17,9 +17,9 @@ ROOT = Path(__file__).resolve().parents[1]
 TEMPLATE_POS = ROOT / "assets/bybit-pnl-diary-template-positive.png"
 TEMPLATE_NEG = ROOT / "assets/bybit-pnl-diary-template-negative.png"
 
-REF_W, REF_H = 1323, 960
+REF_W, REF_H = 1323, 720
 
-# Calibrated from assets/positive example.png @ 1323×960.
+# Calibrated from assets/positive example.png (Y from top; footer cropped).
 LAYOUT = {
     "ticker_font": 60.5,
     "ticker_tracking": -4,

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Compose Bybit PnL card on empty template by transplanting text layers
-from the filled reference (exact Bybit typography). 960×1323.
+from the filled reference (exact Bybit typography). 960×1080.
 """
 from pathlib import Path
 

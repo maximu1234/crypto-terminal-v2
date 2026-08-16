@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Generate Bybit-style PnL share cards on empty templates (960×1323).
+Generate Bybit-style PnL share cards on empty templates (960×1080).
 
 Rules:
   - ROI >= 0  → green grid template (profit)
@@ -10,7 +10,7 @@ Rules:
   - Badge X   → ticker_text_right + BADGE_GAP (fixed offset from reference)
   - ROI color → green if positive, red if negative
 
-Layout calibrated against assets/Share (1).png @ 960×1323.
+Layout calibrated against assets/Share (1).png (Y from top; footer cropped).
 """
 from __future__ import annotations
 
@@ -26,9 +26,9 @@ TEMPLATE_POS = ROOT / "assets/bybit-pnl-template-positive.png"
 TEMPLATE_NEG = ROOT / "assets/bybit-pnl-template-negative.png"
 REFERENCE = ROOT / "assets/Share (1).png"
 
-REF_W, REF_H = 960, 1323
+REF_W, REF_H = 960, 1080
 
-# Anchors from Share (1).png @ 960×1323 — bottom-left corner of text bbox
+# Anchors from Share (1).png — bottom-left of text bbox (Y unchanged after footer crop)
 LAYOUT = {
     "ticker_font": 60.5,
     "ticker_tracking": -4,  # Photoshop tracking, 1/1000 em
