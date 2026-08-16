@@ -3,7 +3,7 @@
  */
 import {
 createScriptWidgetGrid
-} from "./script-page-widgets.js?v=17";
+} from "./script-page-widgets.js?v=19";
 
 import {
 getSharedPatternScanner,
@@ -16,7 +16,7 @@ stopActivePatternScan,
 startFullPatternScan,
 isScriptScanBackgroundRunning,
 SCRIPT_SCAN_BG_EVENT
-} from "./script-scan-background.js?v=14";
+} from "./script-scan-background.js?v=15";
 
 import {
 PATTERN_SCAN_TF_LABELS,
@@ -24,7 +24,7 @@ PATTERN_SCAN_DEPTH_OPTIONS,
 normalizePatternScanSideFilter,
 matchesPatternScanSideFilter,
 isPatternScanHitFresh
-} from "./pattern-12-scanner.js?v=23";
+} from "./pattern-12-scanner.js?v=24";
 
 import {
 loadScriptPageState,
@@ -35,7 +35,7 @@ periodMsById
 
 import {
 fetchTickersInto
-} from "./tickers.js?v=26";
+} from "./tickers.js?v=27";
 
 import {
 parseTradingViewSymbolList,
@@ -46,7 +46,7 @@ import {
 EXCHANGE_CHANGED_EVENT,
 getActiveExchangeId,
 getExchangeDefinition
-} from "./market-api.js?v=5";
+} from "./market-api.js?v=6";
 
 const SCRIPT_LAYOUT_HOTKEYS =
 Object.freeze({

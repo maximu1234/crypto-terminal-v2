@@ -35,7 +35,7 @@ filterSequentialPartialEntryEvents
 
 import {
 filterEntryEventsBySupertrend
-} from "./pattern-supertrend-filter.js?v=3";
+} from "./pattern-supertrend-filter.js?v=4";
 
 /**
  * @param {Array} candles

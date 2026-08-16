@@ -11,7 +11,7 @@ return;
 }
 
 void import(
-"./optimize-universe-background.js?v=2"
+"./optimize-universe-background.js?v=4"
 ).then(
 m=>
 m.resumeAlgoOptimizeUniverseJob?.()

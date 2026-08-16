@@ -39,7 +39,8 @@ ensureAlgoBotCloudLock
 import {
 stageBotTickerBookFromPublished,
 loadStagedBotTickerBook,
-loadBotTickerBook
+loadBotTickerBook,
+persistBotTickerBookToMain
 } from "./bot-ticker-book.js?v=4";
 import {
 isMultichartRemoteControlHost
@@ -4385,6 +4386,11 @@ formatBookStatus(
 result.book
 );
 }
+
+void persistBotTickerBookToMain(
+id,
+result.book
+);
 
 }
 );

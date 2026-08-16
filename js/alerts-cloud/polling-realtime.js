@@ -47,7 +47,7 @@ pushUnsyncedAlerts,
 scheduleRegistryCloudSync,
 isRegistryCloudSyncPaused,
 syncAllLocalAlertsToCloud
-} from "./registry-sync.js?v=14";
+} from "./registry-sync.js?v=15";
 
 import {
 isAlertsCloudDisabled,
@@ -1043,7 +1043,7 @@ if(
 isAlertsPage()
 ){
 const { pullAlertHistoryFromCloud } =
-await import("./registry-sync.js?v=14");
+await import("./registry-sync.js?v=15");
 
 await pullAlertHistoryFromCloud({
 force: !!opts.force

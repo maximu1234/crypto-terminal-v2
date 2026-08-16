@@ -9,7 +9,7 @@ PATTERN_SCAN_ALL_TFS,
 filterPatternScanRowsBySide,
 normalizePatternScanSideFilter,
 loadPatternScanSymbols
-} from "./pattern-12-scanner.js?v=23";
+} from "./pattern-12-scanner.js?v=24";
 
 import {
 loadScriptPageState,
@@ -25,7 +25,7 @@ intersectFavoritesWithMarket
 import {
 EXCHANGE_CHANGED_EVENT,
 getActiveExchangeId
-} from "./market-api.js?v=5";
+} from "./market-api.js?v=6";
 
 export const SCRIPT_SCAN_BG_EVENT =
 "script-scan-bg-update";

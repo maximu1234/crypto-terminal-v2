@@ -11,7 +11,7 @@ loadLightweightCharts
 
 import {
 jsImport
-} from "./asset-manifest.js?v=2";
+} from "./asset-manifest.js?v=5";
 
 async function boot(){
 

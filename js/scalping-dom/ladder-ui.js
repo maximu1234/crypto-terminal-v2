@@ -12,6 +12,21 @@ setScalpingDomVolumeInput
 const ROW_H =
 14;
 
+function wheelRowDelta(event, rowH, pageH){
+  let pixels = Number(event?.deltaY) || 0;
+  if(!pixels){
+    return 0;
+  }
+  const mode = event.deltaMode | 0;
+  if(mode === 1){
+    pixels *= rowH;
+  }else if(mode === 2){
+    pixels *= Math.max(rowH, pageH || rowH * 20);
+  }
+  const rows = Math.max(1, Math.round(Math.abs(pixels) / rowH));
+  return pixels > 0 ? -rows : rows;
+}
+
 function decimalsForTick(tick){
   if(!(tick > 0)){
     return 6;
@@ -301,19 +316,26 @@ export function createLadderUi(root, options = {}){
     "wheel",
     (event) => {
       event.preventDefault();
-      const step = event.deltaY > 0 ? -1 : 1;
+      const step = wheelRowDelta(
+        event,
+        ROW_H,
+        canvas?.clientHeight || 0
+      );
+      if(!step){
+        return;
+      }
       viewOffset += step;
       emitView();
     },
     { passive: false }
   );
 
-  canvas?.addEventListener("pointerenter", () => {
+  root.addEventListener("pointerenter", () => {
     hover = true;
     emitView();
   });
 
-  canvas?.addEventListener("pointerleave", () => {
+  root.addEventListener("pointerleave", () => {
     hover = false;
     emitView();
   });

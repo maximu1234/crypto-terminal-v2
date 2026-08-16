@@ -16,15 +16,15 @@ getActiveExchangeMarkets,
 getActiveExchangeId,
 getActiveExchangeDefinition,
 EXCHANGE_CHANGED_EVENT
-} from "./market-api.js?v=5";
+} from "./market-api.js?v=6";
 
 import {
 clearBybitNetworkIssue
-} from "./bybit-network-ui.js?v=3";
+} from "./bybit-network-ui.js?v=4";
 
 import {
 resolveUrlExchangeDeepLink
-} from "./alert-deep-link-exchange.js?v=1";
+} from "./alert-deep-link-exchange.js?v=2";
 
 import {
 calculateRSI,
@@ -82,7 +82,7 @@ appendFutureWhitespaceBars,
 applyCoinsChartViewport,
 refreshCoinsChartBarSpacing,
 tfPeriodSec
-} from "./chart-import.js?v=46";
+} from "./chart-import.js?v=48";
 
 import {
 terminalVisibleBars,
@@ -96,7 +96,7 @@ TERMINAL_HISTORY_LAZY_BATCH_BARS
 
 import {
 mountCoinsTabletController
-} from "./terminal-tablet-controller.js?v=6";
+} from "./terminal-tablet-controller.js?v=7";
 
 import {
 disconnectKlineStream
@@ -104,7 +104,7 @@ disconnectKlineStream
 
 import {
 syncBackgroundAlertStreams
-} from "./alert-monitor.js?v=70";
+} from "./alert-monitor.js?v=71";
 
 import {
 createSharedDrawUndoStack
@@ -150,7 +150,7 @@ isTradePage
 
 import {
 stopTickerStream
-} from "./tickers.js?v=26";
+} from "./tickers.js?v=27";
 
 import {
 mountCoinsListRefreshControls,
@@ -168,11 +168,11 @@ saveLastViewForExchange,
 applyCoinsPrefs,
 applySortForCurrentMarket,
 readUrlParams
-} from "./terminal/terminal-prefs.js?v=20";
+} from "./terminal/terminal-prefs.js?v=21";
 
 import {
 mountDesktopOpenChartHandler
-} from "./desktop-open-chart.js?v=2";
+} from "./desktop-open-chart.js?v=3";
 
 import {
 getCurrentSymbols,
@@ -187,7 +187,7 @@ ensureActiveCoinVisible,
 getVisibleSymbolList,
 setCoinsTableHooks,
 syncCoinListFreezeFromFlagMenus
-} from "./terminal/terminal-table.js?v=29";
+} from "./terminal/terminal-table.js?v=30";
 
 import {
 createCoinsChartSwitchVeil
@@ -201,7 +201,7 @@ settleCoinsChartViewport,
 resizeCharts,
 scheduleResizeCharts,
 applyDefaultZoom
-} from "./terminal/terminal-chart-layout.js?v=9";
+} from "./terminal/terminal-chart-layout.js?v=10";
 
 import {
 initTerminalMultiChart,
@@ -219,7 +219,7 @@ mountScriptTerminalStatus
 
 import {
 resumeScriptScanBackgroundJob
-} from "./script-scan-background.js?v=14";
+} from "./script-scan-background.js?v=15";
 
 let currentDataset = "all";
 let currentTF = "60";
@@ -2893,13 +2893,13 @@ const {
 initWidgetDrawings
 } =
 await import(
-"./chart-widget-host.js?v=17"
+"./chart-widget-host.js?v=18"
 );
 const {
 initChartIndicators
 } =
 await import(
-"./chart-indicators.js?v=53"
+"./chart-indicators.js?v=54"
 );
 
 drawingTools =
@@ -3423,7 +3423,7 @@ const {
 createTradePlusMenuHandler
 } =
 await import(
-"./trade-order-plus-ui.js?v=6"
+"./trade-order-plus-ui.js?v=7"
 );
 
 tradePlusHandler =
@@ -3454,7 +3454,7 @@ const {
 mountPriceAlertUi
 } =
 await import(
-"./price-alert-ui.js?v=45"
+"./price-alert-ui.js?v=46"
 );
 
 let disposeAlertUi =
@@ -4269,7 +4269,7 @@ currentDataset
 )
 ){
 
-void import("./bybit-network-ui.js?v=3").then(m=>{
+void import("./bybit-network-ui.js?v=4").then(m=>{
 m.showBybitNetworkIssue(
 new Error(
 `История свечей ${getActiveExchangeDefinition().name} пуста`

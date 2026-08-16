@@ -63,6 +63,16 @@ test("tick-book delta is O(1) and resyncs on sequence gap", () => {
   assert.equal(book.isReady(), false);
 });
 
+function fillBookAround(book, midBid, levels = 80){
+  const bids = [];
+  const asks = [];
+  for(let i = 0; i < levels; i++){
+    asks.push([String(midBid + 1 + i), "1"]);
+    bids.push([String(midBid - i), "1"]);
+  }
+  book.applySnapshot({ bids, asks });
+}
+
 test("visible slice paints only the requested row count", () => {
   const book = createLiveBook();
   book.setNativeTick(1);
@@ -86,6 +96,64 @@ test("visible slice paints only the requested row count", () => {
   assert.equal(slice.tick, 1);
   assert.ok(slice.bestAsk >= 101);
   assert.ok(slice.bestBid <= 100);
+});
+
+test("hover freezes the ladder camera while the spread walks off-screen", () => {
+  const book = createLiveBook();
+  book.setNativeTick(1);
+  fillBookAround(book, 100);
+
+  const first = buildVisibleSliceFromTickBook(book, {
+    priceScale: 1,
+    viewRows: 20,
+    viewOffset: 0,
+    hover: true,
+    autocenterPct: 85
+  });
+  const topPrice = first.rows[0].price;
+  assert.equal(first.recentered, true);
+
+  fillBookAround(book, 70);
+  const hovered = buildVisibleSliceFromTickBook(book, {
+    priceScale: 1,
+    sticky: first.sticky,
+    viewRows: 20,
+    viewOffset: 0,
+    hover: true,
+    autocenterPct: 85
+  });
+  assert.equal(hovered.recentered, false);
+  assert.equal(hovered.rows[0].price, topPrice);
+  assert.ok(hovered.mid <= 71);
+  assert.ok(hovered.rows[hovered.rows.length - 1].price > hovered.mid);
+});
+
+test("leaving the ladder recenters when the spread is off-screen", () => {
+  const book = createLiveBook();
+  book.setNativeTick(1);
+  fillBookAround(book, 100);
+
+  const first = buildVisibleSliceFromTickBook(book, {
+    priceScale: 1,
+    viewRows: 20,
+    viewOffset: 0,
+    hover: true,
+    autocenterPct: 85
+  });
+
+  fillBookAround(book, 70);
+  const left = buildVisibleSliceFromTickBook(book, {
+    priceScale: 1,
+    sticky: first.sticky,
+    viewRows: 20,
+    viewOffset: 0,
+    hover: false,
+    autocenterPct: 85
+  });
+  assert.equal(left.recentered, true);
+  assert.equal(left.viewOffset, 0);
+  const midRow = left.rows[Math.floor(left.rows.length / 2)];
+  assert.ok(Math.abs(midRow.price - left.mid) <= 1);
 });
 
 test("live-book applies snapshot and deletes zero-size levels", () => {

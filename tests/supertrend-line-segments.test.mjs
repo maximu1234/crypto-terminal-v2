@@ -1,10 +1,15 @@
 import assert from "node:assert/strict";
+import fs from "node:fs";
 import test from "node:test";
 
 import {
 buildSupertrendChartLineData,
 splitSupertrendValuedSegments
 } from "../js/indicators/supertrend-math.js";
+
+import {
+paintSupertrendSegments
+} from "../js/indicators/supertrend-paint.js";
 
 /** Рост → обвал → рост: несколько смен тренда Supertrend. */
 function candlesWithFlips(){
@@ -111,4 +116,70 @@ test("Supertrend flip yields separate segments, not one polyline per color", () 
     const times = segment.map((p) => p.time);
     assert.equal(hasTimeGap(times), false, "a painted segment must be contiguous");
   }
+});
+
+test("Supertrend chart indicator paints on drawings canvas, not LineSeries", () => {
+  const source = fs.readFileSync(
+    new URL("../js/indicators/supertrend.js", import.meta.url),
+    "utf8"
+  );
+  assert.doesNotMatch(source, /addLineSeries/);
+  assert.match(source, /addAfterRedrawListener/);
+  assert.match(source, /paintSupertrendSegments/);
+});
+
+test("algo Supertrend filter overlay does not add LineSeries", () => {
+  const overlay = fs.readFileSync(
+    new URL("../js/algo-trading/supertrend-filter-overlay.js", import.meta.url),
+    "utf8"
+  );
+  const page = fs.readFileSync(
+    new URL("../js/algo-trading.js", import.meta.url),
+    "utf8"
+  );
+  assert.doesNotMatch(overlay, /addLineSeries/);
+  assert.doesNotMatch(page, /addLineSeries/);
+  assert.match(page, /createAlgoSupertrendFilterOverlay/);
+});
+
+test("paintSupertrendSegments strokes each valued segment", () => {
+  const moves = [];
+  const lines = [];
+  const ctx = {
+    save(){},
+    restore(){},
+    beginPath(){},
+    stroke(){ lines.push("stroke"); },
+    fill(){},
+    arc(){},
+    moveTo(x, y){ moves.push([x, y]); },
+    lineTo(x, y){ moves.push([x, y]); }
+  };
+  paintSupertrendSegments(ctx, {
+    chart: {
+      timeScale: () => ({
+        timeToCoordinate: (t) => t * 10
+      })
+    },
+    series: {
+      priceToCoordinate: (v) => v
+    },
+    upSegments: [
+      [
+        { time: 1, value: 10 },
+        { time: 2, value: 11 }
+      ]
+    ],
+    downSegments: [
+      [
+        { time: 4, value: 9 },
+        { time: 5, value: 8 }
+      ]
+    ],
+    upColor: "#22c55e",
+    downColor: "#ef4444",
+    lineWidth: 2
+  });
+  assert.equal(lines.length, 2);
+  assert.equal(moves.length, 4);
 });

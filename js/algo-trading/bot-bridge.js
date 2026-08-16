@@ -21,7 +21,7 @@ ensureAlgoBotLockHeld
 } from "./bot-cloud-lock.js?v=11";
 import {
 freezeBotTickerBookSnapshot
-} from "./bot-ticker-book.js?v=4";
+} from "./bot-ticker-book.js?v=6";
 
 function desktopAlgoApi(){
 

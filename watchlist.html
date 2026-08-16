@@ -15,10 +15,10 @@
 <script src="/js/site-css-ready.js?v=3"></script>
 <link rel="stylesheet" href="/css/common.css?v=55">
 <link rel="stylesheet" href="/css/watchlist.css?v=56">
-<link rel="stylesheet" href="/css/screener.css?v=51">
+<link rel="stylesheet" href="/css/screener.css?v=52">
 <link rel="stylesheet" href="/css/watchlist-page.css?v=3">
 
-<script src="/vendor/lightweight-charts.standalone.production.js"></script>
+<link rel="preload" href="/vendor/lightweight-charts.standalone.production.js" as="script">
 
 </head>
 
@@ -104,7 +104,7 @@ const { loadLightweightCharts } =
 await import("/js/charts-lib-boot.js?v=3");
 
 await loadLightweightCharts();
-await import("./js/watchlist.js?v=97");
+await import("./js/watchlist.js?v=98");
 
 if(
 tradeBoot?.isWatchlistTradeMode()
@@ -118,7 +118,7 @@ mode:
 }
 
 await import("./js/watchlist-page.js?v=4");
-import("/js/site-boot.js?v=113").catch(err=>{
+import("/js/site-boot.js?v=116").catch(err=>{
 console.warn("site-boot:", err);
 });
 

@@ -24,6 +24,8 @@ readBotStrategies,
 writeBotStrategies,
 readTickerFlagsRoot,
 writeTickerFlagsRoot,
+readTickerBook,
+writeTickerBook,
 readPattern12Settings,
 writePattern12Settings,
 getWatchlistForSide,
@@ -1839,7 +1841,9 @@ sessionTickerBook =
 payload.tickerBookSnapshot;
 }else{
 sessionTickerBook =
-null;
+readTickerBook(
+strategyId
+);
 }
 
 const bookCount =
@@ -2434,11 +2438,31 @@ sent
 
 }
 
+function syncTickerBook(
+payload
+){
+
+const strategyId =
+payload?.strategyId;
+const book =
+payload?.book;
+const exchangeId =
+payload?.exchangeId;
+
+return writeTickerBook(
+strategyId,
+book,
+exchangeId
+);
+
+}
+
 module.exports =
 {
 setBotStatusTarget,
 syncBotStrategies,
 syncTickerFlags,
+syncTickerBook,
 getTickerFlagsRoot,
 notifyTickerFlagsToUi,
 startBot,

@@ -31,7 +31,7 @@ import {
 initAppSettingsWindow,
 refreshAppSettingsAdminNav,
 openAppSettingsWindow
-} from "./app-settings-window.js?v=16";
+} from "./app-settings-window.js?v=17";
 
 import {
 ensureHeaderSettingsShell

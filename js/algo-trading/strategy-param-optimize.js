@@ -37,7 +37,7 @@ filterEntryEventsBySupertrend,
 clampAlgoSupertrendAtr,
 clampAlgoSupertrendFactor,
 normalizeAlgoSupertrendTf
-} from "./pattern-supertrend-filter.js?v=3";
+} from "./pattern-supertrend-filter.js?v=4";
 
 import {
 clampPullbackBeforeArmPct,
@@ -432,6 +432,7 @@ export async function optimizeAlgoStrategyParams(opts = {}){
   const pullbacks = pullbackGrid();
   const supertrends = supertrendGrid();
   const slPcts = slPctGrid();
+  const supertrendSeriesCache = new Map();
 
   /** @type {object[]} */
   let innerCombos = [];
@@ -513,7 +514,8 @@ export async function optimizeAlgoStrategyParams(opts = {}){
           supertrendShortFilter: st.on,
           supertrendShortAtr: st.atr,
           supertrendShortFactor: st.factor,
-          supertrendShortTf: st.tf
+          supertrendShortTf: st.tf,
+          seriesCache: supertrendSeriesCache
         }
       );
 

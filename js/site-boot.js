@@ -1,6 +1,6 @@
 import {
 initAlertMonitor
-} from "./alert-monitor.js?v=70";
+} from "./alert-monitor.js?v=71";
 
 import {
 ensureCloudReady
@@ -36,11 +36,11 @@ isSupabaseConfigured
 
 import {
 initExchangeContext
-} from "./market-api.js?v=5";
+} from "./market-api.js?v=6";
 
 import {
 initBybitNetworkUi
-} from "./bybit-network-ui.js?v=3";
+} from "./bybit-network-ui.js?v=4";
 
 import {
 resetBybitEndpoints,
@@ -62,20 +62,12 @@ initFocusBlurAfterPick
 
 import {
 initDesktopAppUi
-} from "./desktop-app-ui.js?v=5";
+} from "./desktop-app-ui.js?v=6";
 
 import {
 initSiteHeader,
 enforceSiteHeaderAfterBoot
 } from "./site-header.js?v=5";
-
-import {
-resumeScriptScanBackgroundJob
-} from "./script-scan-background.js?v=14";
-
-import {
-resumeStatsBackgroundJob
-} from "./statistics-background.js?v=8";
 
 initSuppressNativeContextMenu();
 initFocusBlurAfterPick();
@@ -83,7 +75,23 @@ initDesktopAppUi();
 initSiteHeader();
 enforceSiteHeaderAfterBoot();
 
-void resumeStatsBackgroundJob();
+function resumeStatsBackground(){
+
+void import(
+"./statistics-background.js?v=9"
+).then(
+m=>
+m.resumeStatsBackgroundJob?.()
+).catch(
+err=>{
+console.warn(
+"[site-boot] stats background:",
+err
+);
+}
+);
+
+}
 
 function bootScriptScanBackground(){
 
@@ -93,7 +101,19 @@ if(
 return;
 }
 
-resumeScriptScanBackgroundJob();
+void import(
+"./script-scan-background.js?v=15"
+).then(
+m=>
+m.resumeScriptScanBackgroundJob?.()
+).catch(
+err=>{
+console.warn(
+"[site-boot] script scan background:",
+err
+);
+}
+);
 
 }
 
@@ -106,7 +126,7 @@ return;
 }
 
 void import(
-"./algo-trading/desktop-site-boot.js?v=1"
+"./algo-trading/desktop-site-boot.js?v=2"
 ).then(
 m=>
 m.bootAlgoDesktopBackgroundJobs?.()
@@ -123,6 +143,7 @@ err
 
 bootScriptScanBackground();
 bootAlgoDesktopBackgroundJobs();
+resumeStatsBackground();
 
 if(
 typeof document !==

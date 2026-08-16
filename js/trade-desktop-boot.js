@@ -3,7 +3,7 @@
  */
 import {
 cssUrl
-} from "./asset-manifest.js?v=2";
+} from "./asset-manifest.js?v=5";
 
 import {
 isWatchlistPage
@@ -11,7 +11,7 @@ isWatchlistPage
 
 import {
 initTradeExchangeSettings
-} from "./trade-exchange-settings.js?v=21";
+} from "./trade-exchange-settings.js?v=22";
 
 import {
 initTradeVolumePresets
@@ -31,11 +31,11 @@ initTradeBookPanel
 
 import {
 loadTradeExchangeModules
-} from "./trade/module-router.js?v=14";
+} from "./trade/module-router.js?v=15";
 
 import {
 getActiveExchangeId
-} from "./market-api.js?v=5";
+} from "./market-api.js?v=6";
 
 const TRADE_CSS =
 [
@@ -177,7 +177,7 @@ const {
 initExchangeTradingGate
 } =
 await import(
-"./exchange-trading-gate.js?v=3"
+"./exchange-trading-gate.js?v=4"
 );
 
 await initExchangeTradingGate();
@@ -197,7 +197,7 @@ const {
 initExchangeTradingGate
 } =
 await import(
-"./exchange-trading-gate.js?v=3"
+"./exchange-trading-gate.js?v=4"
 );
 
 await initExchangeTradingGate();
@@ -244,7 +244,7 @@ const {
 initTradeOpenPositions
 } =
 await import(
-"./trade-open-positions.js?v=3"
+"./trade-open-positions.js?v=4"
 );
 
 initTradeOpenPositions();

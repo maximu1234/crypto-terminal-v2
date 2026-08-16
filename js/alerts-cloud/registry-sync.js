@@ -2097,7 +2097,7 @@ await import("../alerts.js?v=106");
 const {
 getActiveExchangeId
 } =
-await import("../market-api.js?v=5");
+await import("../market-api.js?v=6");
 
 const added =
 mergeAlertHistoryFromCloudEvents(

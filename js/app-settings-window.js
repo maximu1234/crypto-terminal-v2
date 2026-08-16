@@ -3,7 +3,7 @@
  */
 import {
 cssUrl
-} from "./asset-manifest.js?v=2";
+} from "./asset-manifest.js?v=5";
 
 import {
 isSystemAdminUser
@@ -550,7 +550,7 @@ mountExchangeConnectionsPanel,
 updateTradeExchangeConnectionChrome
 } =
 await import(
-"./trade-exchange-settings.js?v=21"
+"./trade-exchange-settings.js?v=22"
 );
 
 const host =
@@ -617,7 +617,7 @@ const {
 mountTradingSettingsPanel
 } =
 await import(
-"./trade-trading-settings-panel.js?v=2"
+"./trade-trading-settings-panel.js?v=3"
 );
 
 const host =

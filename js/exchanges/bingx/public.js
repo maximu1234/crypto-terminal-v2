@@ -18,6 +18,11 @@ import {
 tfToBingxInterval
 } from "./intervals.js?v=1";
 
+import {
+klineHistoryPageEnds,
+shouldFetchKlinePagesInParallel
+} from "../../kline-history-pages.js?v=2";
+
 const SYMBOLS_CACHE_PREFIX =
 "bingx_swap_symbols_v4";
 
@@ -337,36 +342,10 @@ Boolean
 
 }
 
-export async function loadBingxHistory(
+async function fetchBingxKlineBatchWithRetry(
 symbol,
 tf,
-requests =
-6,
-options =
-{}
-){
-
-let all =
-[];
-let end =
-typeof options?.endMs ===
-"number" &&
-Number.isFinite(
-options.endMs
-) &&
-options.endMs >
-0
-? Math.floor(
-options.endMs
-)
-: Date.now();
-
-for(
-let i =
-0;
-i <
-requests;
-i++
+end
 ){
 
 let batch =
@@ -434,6 +413,105 @@ waitMs
 
 }
 
+return batch;
+
+}
+
+export async function loadBingxHistory(
+symbol,
+tf,
+requests =
+6,
+options =
+{}
+){
+
+let all =
+[];
+let end =
+typeof options?.endMs ===
+"number" &&
+Number.isFinite(
+options.endMs
+) &&
+options.endMs >
+0
+? Math.floor(
+options.endMs
+)
+: Date.now();
+
+const gapForPages =
+options.parallel === true ||
+options.batchGapMs === 0
+? 0
+: 1;
+const pageEnds =
+shouldFetchKlinePagesInParallel(
+requests,
+gapForPages
+)
+? klineHistoryPageEnds(
+end,
+tf,
+requests
+)
+: [];
+
+if(
+pageEnds.length >
+1
+){
+
+const batches =
+await Promise.all(
+pageEnds.map(
+async pageEnd=>{
+
+try{
+return await fetchBingxKlineBatchWithRetry(
+symbol,
+tf,
+pageEnd
+);
+}catch{
+return null;
+}
+
+}
+)
+);
+
+for(
+const batch of
+batches
+){
+if(
+batch?.length
+){
+all.push(
+...batch
+);
+}
+}
+
+}else{
+
+for(
+let i =
+0;
+i <
+requests;
+i++
+){
+
+const batch =
+await fetchBingxKlineBatchWithRetry(
+symbol,
+tf,
+end
+);
+
 if(
 !batch?.length
 ){
@@ -479,6 +557,8 @@ break;
 end =
 oldest -
 1;
+
+}
 
 }
 

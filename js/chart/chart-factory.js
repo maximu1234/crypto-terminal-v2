@@ -2041,18 +2041,6 @@ oversold
 ? oversold
 : 30;
 
-const rsiData =
-rsiSeries.data?.() ??
-[];
-
-if(
-!rsiData.length
-){
-bandEl.style.height =
-"0";
-return;
-}
-
 const y70 =
 rsiSeries.priceToCoordinate?.(
 hi
@@ -2175,30 +2163,10 @@ if(
 return;
 }
 
-const rsiData =
-rsiSeries.data?.() ??
-[];
-
 const lineEls =
 wrapEl.querySelectorAll(
 ".rsi-level-line[data-rsi-level]"
 );
-
-if(
-!rsiData.length
-){
-
-lineEls.forEach(
-lineEl=>{
-lineEl.classList.add(
-"hidden"
-);
-}
-);
-
-return;
-
-}
 
 lineEls.forEach(
 lineEl=>{
@@ -3767,7 +3735,8 @@ export function mountChartPriceHud({
 chart,
 series,
 wrapEl,
-getTf
+getTf,
+getLastCandle
 }){
 
 if(
@@ -3803,11 +3772,24 @@ function update(){
 
 try{
 
+let last =
+null;
+
+if(
+typeof getLastCandle ===
+"function"
+){
+last =
+getLastCandle();
+}else{
 const data =
 series.data();
-
-const last =
-data?.[data.length - 1];
+last =
+data?.[
+data.length -
+1
+];
+}
 
 if(
 !last ||

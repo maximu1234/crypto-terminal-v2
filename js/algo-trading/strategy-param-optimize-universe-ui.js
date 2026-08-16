@@ -4,7 +4,7 @@
 import {
 normalizeAlgoOptimizeStrategyId,
 algoOptimizeStrategyLabel
-} from "./strategy-param-optimize.js?v=7";
+} from "./strategy-param-optimize.js?v=8";
 
 import {
 ALGO_OPTIMIZE_UNIVERSE_BG_EVENT,
@@ -14,12 +14,12 @@ isAlgoOptimizeUniverseJobRunning,
 getAlgoOptimizeUniverseJobStrategy,
 readAlgoOptimizeUniverseJob,
 resumeAlgoOptimizeUniverseJob
-} from "./optimize-universe-background.js?v=2";
+} from "./optimize-universe-background.js?v=4";
 
 import {
 normalizeAlgoScanTf,
 ALGO_TICKER_SCAN_TF
-} from "./ticker-scanner.js?v=9";
+} from "./ticker-scanner.js?v=10";
 
 import {
 normalizeAlgoStatsMode
@@ -36,8 +36,13 @@ pattern12SettingsCacheKey
 
 import {
 publishBotTickerBookFromOptimizeRows,
-loadBotTickerBook
-} from "./bot-ticker-book.js?v=4";
+loadBotTickerBook,
+persistBotTickerBookToMain
+} from "./bot-ticker-book.js?v=6";
+
+import {
+writeTickerStrategyOverlays
+} from "./ticker-strategy-overlays.js?v=1";
 
 import {
 botStrategyToFlagId,
@@ -147,6 +152,7 @@ export function mountAlgoStrategyParamOptimizeUniverseUi(host){
   const progressLabel = document.getElementById("algo-optimize-universe-progress-label");
   const runBtn = document.getElementById("algo-optimize-universe-run");
   const applyBotBtn = document.getElementById("algo-optimize-universe-apply-bot");
+  const applyAllBtn = document.getElementById("algo-optimize-universe-apply-all");
   const stopBtn = document.getElementById("algo-optimize-universe-stop");
   const pickAll = document.getElementById("algo-optimize-universe-pick-all");
   const tableHead = document.querySelector("#algo-optimize-universe-table thead");
@@ -289,6 +295,9 @@ export function mountAlgoStrategyParamOptimizeUniverseUi(host){
     }
     if(applyBotBtn){
       applyBotBtn.disabled = isEditLocked();
+    }
+    if(applyAllBtn){
+      applyAllBtn.disabled = isEditLocked();
     }
   }
 
@@ -562,6 +571,43 @@ export function mountAlgoStrategyParamOptimizeUniverseUi(host){
     renderSummary(rows);
   }
 
+  function applyToAllTickers(){
+    const cached = loadCached(pendingStrategy);
+    const allRows = withDefaultInclude(cached?.rows || []);
+    const rows = allRows.filter(rowIncluded);
+    const entries = rows
+      .filter(row => row?.patch && typeof row.patch === "object")
+      .map(row => ({
+        symbol: row.symbol,
+        patch: row.patch
+      }));
+    if(!entries.length){
+      if(noteEl){
+        const anyRows = allRows.some(row => row && !row.skipped);
+        noteEl.textContent = anyRows
+          ? "Нет отмеченных тикеров. Включите чекбоксы и снова «Применить ко всем»."
+          : "Нет строк с параметрами. Запустите подбор ещё раз.";
+      }
+      return;
+    }
+    let written = 0;
+    if(typeof host.applyOptimizedPatchesToTickers === "function"){
+      written = Number(host.applyOptimizedPatchesToTickers(pendingStrategy, entries)) || 0;
+    }else{
+      written = writeTickerStrategyOverlays(pendingStrategy, entries);
+    }
+    if(!written){
+      if(noteEl){
+        noteEl.textContent = "Не удалось записать параметры в Данные.";
+      }
+      return;
+    }
+    if(noteEl){
+      noteEl.textContent =
+        `В Данные записано ${written} тикеров ${algoOptimizeStrategyLabel(pendingStrategy)}. При переключении тикера панель покажет эти параметры.`;
+    }
+  }
+
   function applyToBot(){
     const cached = loadCached(pendingStrategy);
     const allRows = withDefaultInclude(cached?.rows || []);
@@ -588,6 +634,7 @@ export function mountAlgoStrategyParamOptimizeUniverseUi(host){
     host.onListsChanged?.();
 
     renderSummary(allRows);
+    void persistBotTickerBookToMain(pendingStrategy, result.book);
     if(noteEl){
       const base = noteEl.textContent || "";
       noteEl.textContent =
@@ -717,6 +764,10 @@ export function mountAlgoStrategyParamOptimizeUniverseUi(host){
 
   applyBotBtn?.addEventListener("click", () => {
     applyToBot();
+  });
+
+  applyAllBtn?.addEventListener("click", () => {
+    applyToAllTickers();
   });
 
   stopBtn?.addEventListener("click", () => {

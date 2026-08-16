@@ -36,7 +36,8 @@ pattern12SettingsCacheKey
 
 import {
 publishBotTickerBookFromOptimizeRows,
-loadBotTickerBook
+loadBotTickerBook,
+persistBotTickerBookToMain
 } from "./bot-ticker-book.js?v=4";
 
 import {
@@ -588,6 +589,7 @@ export function mountAlgoStrategyParamOptimizeUniverseUi(host){
     host.onListsChanged?.();
 
     renderSummary(allRows);
+    void persistBotTickerBookToMain(pendingStrategy, result.book);
     if(noteEl){
       const base = noteEl.textContent || "";
       noteEl.textContent =

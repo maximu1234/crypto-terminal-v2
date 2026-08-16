@@ -11,11 +11,11 @@ loadLightweightCharts
 
 import {
 jsImport
-} from "./asset-manifest.js?v=2";
+} from "./asset-manifest.js?v=5";
 
 import {
 mountScriptPage
-} from "./script-page.js?v=49";
+} from "./script-page.js?v=50";
 
 async function boot(){
 

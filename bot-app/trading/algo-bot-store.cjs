@@ -21,6 +21,8 @@ const STRATEGIES_FILE =
 "algo-bot-strategies.json";
 const TICKER_FLAGS_FILE =
 "algo-ticker-flags.json";
+const TICKER_BOOKS_FILE =
+"algo-bot-ticker-books.json";
 const PATTERN12_SETTINGS_FILE =
 "algo-pattern12-settings.json";
 const PENDING_ORDERS_FILE =
@@ -1646,6 +1648,303 @@ false
 
 }
 
+function normalizeBookStrategyId(
+raw
+){
+
+const id =
+String(
+raw ||
+""
+).toLowerCase();
+
+return id ===
+"st2" ||
+id ===
+"st3"
+? id
+: "st1";
+
+}
+
+function normalizeTickerBook(
+book
+){
+
+if(
+!book ||
+typeof book !==
+"object" ||
+Array.isArray(
+book
+)
+){
+return null;
+}
+
+const tickers =
+book.tickers;
+
+if(
+!tickers ||
+typeof tickers !==
+"object" ||
+Array.isArray(
+tickers
+)
+){
+return null;
+}
+
+const keys =
+Object.keys(
+tickers
+).filter(
+key=>{
+const row =
+tickers[
+key
+];
+
+return row &&
+typeof row ===
+"object";
+}
+);
+
+if(
+!keys.length
+){
+return null;
+}
+
+const tf =
+String(
+book.tf ||
+""
+).trim();
+
+if(
+!tf
+){
+return null;
+}
+
+return {
+...book,
+strategyId:
+normalizeBookStrategyId(
+book.strategyId
+),
+tf,
+tickerCount:
+Number(
+book.tickerCount
+) ||
+keys.length,
+tickers
+};
+
+}
+
+function readTickerBooksRoot(){
+
+const parsed =
+readJsonFile(
+TICKER_BOOKS_FILE,
+{}
+);
+
+return parsed &&
+typeof parsed ===
+"object" &&
+!Array.isArray(
+parsed
+)
+? parsed
+: {};
+
+}
+
+function writeTickerBooksRoot(
+root
+){
+
+return writeJsonFile(
+TICKER_BOOKS_FILE,
+root &&
+typeof root ===
+"object" &&
+!Array.isArray(
+root
+)
+? root
+: {}
+);
+
+}
+
+function readTickerBook(
+strategyId,
+exchangeId
+){
+
+const id =
+normalizeBookStrategyId(
+strategyId
+);
+const root =
+readTickerBooksRoot();
+const wantedEx =
+String(
+exchangeId ||
+""
+).trim().toLowerCase();
+
+if(
+wantedEx
+){
+const byEx =
+root[
+wantedEx
+] &&
+typeof root[
+wantedEx
+] ===
+"object"
+? root[
+wantedEx
+]
+: {};
+
+return normalizeTickerBook(
+byEx[
+id
+]
+);
+}
+
+for(
+const byEx of Object.values(
+root
+)
+){
+if(
+!byEx ||
+typeof byEx !==
+"object"
+){
+continue;
+}
+
+const book =
+normalizeTickerBook(
+byEx[
+id
+]
+);
+
+if(
+book
+){
+return book;
+}
+
+}
+
+return null;
+
+}
+
+function writeTickerBook(
+strategyId,
+book,
+exchangeId
+){
+
+const normalized =
+normalizeTickerBook(
+book
+);
+
+if(
+!normalized
+){
+return {
+ok:
+false,
+message:
+"Нет книги параметров"
+};
+}
+
+const id =
+normalizeBookStrategyId(
+strategyId ||
+normalized.strategyId
+);
+const ex =
+String(
+exchangeId ||
+normalized.exchange ||
+"bybit"
+).trim().toLowerCase() ||
+"bybit";
+
+normalized.strategyId =
+id;
+normalized.exchange =
+ex;
+
+const root =
+readTickerBooksRoot();
+const byEx =
+root[
+ex
+] &&
+typeof root[
+ex
+] ===
+"object"
+? {
+...root[
+ex
+]
+}
+: {};
+
+byEx[
+id
+] =
+normalized;
+root[
+ex
+] =
+byEx;
+
+const written =
+writeTickerBooksRoot(
+root
+);
+
+if(
+written?.ok ===
+false
+){
+return written;
+}
+
+return {
+ok:
+true,
+book:
+normalized,
+tickerCount:
+normalized.tickerCount
+};
+
+}
+
 module.exports =
 {
 FLAG_LONG_5M,
@@ -1656,6 +1955,8 @@ readBotStrategies,
 writeBotStrategies,
 readTickerFlagsRoot,
 writeTickerFlagsRoot,
+readTickerBook,
+writeTickerBook,
 readPattern12Settings,
 writePattern12Settings,
 sideToFlagId,

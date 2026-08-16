@@ -12,15 +12,19 @@ loadBotStrategiesPrefs
 } from "./bot-strategy-prefs.js?v=28";
 import {
 syncAllTickerFlagsRootToMain
-} from "./bot-bridge.js?v=16";
+} from "./bot-bridge.js?v=17";
 import {
 ALGO_TICKER_FLAGS_KEY
 } from "./ticker-flags.js?v=8";
+import {
+loadStagedBotTickerBook,
+loadBotTickerBook
+} from "./bot-ticker-book.js?v=6";
 
 const STORAGE_KEY =
 "algo_remote_session_logs_v1";
 const CHANNEL_UI_VER =
-"11";
+"12";
 const STRATEGY_IDS =
 [
 "st1",
@@ -233,7 +237,7 @@ root.innerHTML =
 <div class="algo-remote-session-logs-channel-actions">
 <button type="button" class="algo-bot-remote-btn" id="algo-remote-logs-start">Запустить</button>
 <button type="button" class="algo-bot-remote-btn" id="algo-remote-logs-stop">Остановить</button>
-<button type="button" class="algo-bot-remote-btn algo-bot-remote-btn--push" id="algo-remote-logs-push" title="Отправить текущие списки Стратегия 1/2/3 на бот">Отдать списки</button>
+<button type="button" class="algo-bot-remote-btn algo-bot-remote-btn--push" id="algo-remote-logs-push" title="Отправить списки и книгу выбранной стратегии на бот">Отдать списки и книгу</button>
 <button type="button" class="algo-bot-remote-btn" id="algo-remote-logs-refresh">Обновить логи</button>
 </div>
 </section>
@@ -275,7 +279,8 @@ spellcheck="false"
 <div class="algo-remote-session-logs-help-body">
 <section class="algo-remote-session-logs-help-lang" lang="ru">
 <h4>Русский</h4>
-<p>Окно <strong>LAN</strong> — прямой канал: Старт/Стоп (Ст1/Ст2/Ст3), списки, логи. Без worker и без трафика в Supabase Auth.</p>
+<p>Окно <strong>LAN</strong> — прямой канал: Старт/Стоп (Ст1/Ст2/Ст3), списки, книга параметров, логи. Без worker и без трафика в Supabase Auth.</p>
+<p><strong>Книга:</strong> «Подобрать для всех» → «Применить к боту» на этом компьютере, затем «Отдать списки и книгу». На удалённом боте можно парсить так же локально.</p>
 <p><strong>Таймаут</strong> почти всегда значит: до порта на сервере пакеты не доходят (firewall / Security Group / бот не слушает). Неверный токен обычно даёт ошибку сразу, а не таймаут.</p>
 <p><strong>Токен доступа к порту</strong> — не сессия <code>mcauth1…</code>. На боте: шестерёнка → «Логи → Терминал» → «Новый токен» или включить доступ и «Сохранить».</p>
 <ol>
@@ -290,7 +295,7 @@ spellcheck="false"
 </section>
 <section class="algo-remote-session-logs-help-lang" lang="en">
 <h4>English</h4>
-<p>The <strong>LAN</strong> window is the direct channel: Start/Stop (St1/St2/St3), lists, logs — no alert-worker and no Supabase Auth traffic.</p>
+<p>The <strong>LAN</strong> window is the direct channel: Start/Stop (St1/St2/St3), lists, ticker book, logs — no alert-worker and no Supabase Auth traffic.</p>
 <p>A <strong>timeout</strong> almost always means packets never reach the port (Windows firewall / cloud Security Group / bot not listening).</p>
 <p>The <strong>port token</strong> is not the Multichart session string <code>mcauth1…</code>. On the bot: gear → “Logs → Terminal” → “New token”.</p>
 <ol>
@@ -1384,6 +1389,76 @@ return;
 setMessage(
 res.message ||
 "Списки отправлены на бот"
+);
+
+const strategyId =
+selectedStrategyId();
+const strategyLabel =
+strategyId ===
+"st2"
+? "Ст2"
+: strategyId ===
+"st3"
+? "Ст3"
+: "Ст1";
+const book =
+loadStagedBotTickerBook(
+strategyId
+) ||
+loadBotTickerBook(
+strategyId
+);
+
+if(
+!book?.tickers ||
+typeof book.tickers !==
+"object" ||
+!Object.keys(
+book.tickers
+).length
+){
+setMessage(
+`${res.message || "Списки отправлены"}. Нет книги ${strategyLabel} — сначала «Подобрать для всех» → «Применить к боту».`
+);
+return;
+}
+
+if(
+!api.sessionLogRemotePushTickerBook
+){
+setMessage(
+`${res.message || "Списки отправлены"}. Этот Multichart не умеет отдавать книгу — обновите приложение.`
+);
+return;
+}
+
+setMessage(
+`Отправка книги ${strategyLabel}…`
+);
+
+const bookRes =
+await api.sessionLogRemotePushTickerBook(
+{
+...next,
+strategyId,
+book
+}
+);
+
+if(
+!bookRes?.ok
+){
+setMessage(
+bookRes?.message ||
+`Списки отправлены, книгу ${strategyLabel} передать не удалось`,
+true
+);
+return;
+}
+
+setMessage(
+bookRes.message ||
+`Списки и книга ${strategyLabel} отправлены на бот`
 );
 
 }

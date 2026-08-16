@@ -22,7 +22,7 @@ recordDrawingTombstone
 
 import {
 EXCHANGE_CHANGED_EVENT
-} from "../market-api.js?v=5";
+} from "../market-api.js?v=6";
 
 import {
 registerDrawingsStoragePoller,
@@ -49,7 +49,7 @@ ensureDomChartCrosshair,
 hideDomChartCrosshair,
 positionTabletProbeHorizInStack,
 fullCrosshairOptions
-} from "../chart-import.js?v=46";
+} from "../chart-import.js?v=48";
 
 import {
 STROKE,
@@ -141,7 +141,7 @@ updateChartRulerLabelEl
 
 import {
 mountTabletDrawInput
-} from "../drawings-tablet-input.js?v=5";
+} from "../drawings-tablet-input.js?v=6";
 
 import {
 cloneDrawingsForUndo,
@@ -150,7 +150,7 @@ createDrawUndoStack
 
 import {
 createDrawDesktopSelection
-} from "./draw-edit-desktop.js?v=10";
+} from "./draw-edit-desktop.js?v=11";
 
 import {
 createDrawingsPersist
@@ -158,7 +158,7 @@ createDrawingsPersist
 
 import {
 createDrawStyleBar
-} from "./draw-style-bar.js?v=30";
+} from "./draw-style-bar.js?v=31";
 
 import {
 createDrawAlertsChart
@@ -166,7 +166,7 @@ createDrawAlertsChart
 
 import {
 createDrawPlacement
-} from "./draw-placement.js?v=11";
+} from "./draw-placement.js?v=12";
 
 import {
 createDrawTextEditor,
@@ -180,15 +180,15 @@ createBrushPlacement
 
 import {
 createDrawEditInteraction
-} from "./draw-edit-interaction.js?v=14";
+} from "./draw-edit-interaction.js?v=15";
 
 import {
 createDrawChartInput
-} from "./draw-chart-input.js?v=1";
+} from "./draw-chart-input.js?v=2";
 
 import {
 createDrawPriceScale
-} from "./draw-price-scale.js?v=12";
+} from "./draw-price-scale.js?v=13";
 
 import {
 createDrawRedrawLoop

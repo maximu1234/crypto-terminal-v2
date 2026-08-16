@@ -12,11 +12,11 @@ wireAutoStopSettings
 
 import {
 loadTradeExchangeModules
-} from "./trade/module-router.js?v=14";
+} from "./trade/module-router.js?v=15";
 
 import {
 getActiveExchangeId
-} from "./market-api.js?v=5";
+} from "./market-api.js?v=6";
 
 const TRADE_VOLUME_DEFAULT_INPUT_COUNT =
 Math.max(

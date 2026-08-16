@@ -3,7 +3,7 @@
  */
 import {
 loadMarketHistory
-} from "../market-api.js?v=5";
+} from "../market-api.js?v=6";
 
 import {
 readAlgoPattern12Settings
@@ -17,18 +17,18 @@ import {
 normalizeAlgoScanTf,
 ALGO_TICKER_SCAN_HISTORY_REQUESTS,
 ALGO_TICKER_SCAN_DELAY_MS
-} from "./ticker-scanner.js?v=9";
+} from "./ticker-scanner.js?v=10";
 
 import {
 resolveAlgoScanUniverseItems
-} from "./scan-universe.js?v=2";
+} from "./scan-universe.js?v=3";
 
 import {
 optimizeAlgoStrategyParams,
 normalizeAlgoOptimizeStrategyId,
 formatAlgoOptimizeParamsBrief,
 comboToApplyPatch
-} from "./strategy-param-optimize.js?v=7";
+} from "./strategy-param-optimize.js?v=8";
 
 /** Тяжёлый CPU-перебор — держим низкую параллельность. */
 export const ALGO_OPTIMIZE_UNIVERSE_CONCURRENCY = 1;
@@ -158,7 +158,7 @@ export async function scanAlgoStrategyParamOptimizeUniverse(opts = {}){
             },
             statsMode,
             signal,
-            yieldEvery: 120
+            yieldEvery: 0
           });
 
           if(signal.cancelled){

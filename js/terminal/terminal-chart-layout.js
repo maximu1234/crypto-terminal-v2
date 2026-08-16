@@ -4,7 +4,7 @@
 import {
 appendFutureWhitespaceBars,
 computeChartFutureMarginBars
-} from "../chart-import.js?v=46";
+} from "../chart-import.js?v=48";
 
 import {
 terminalVisibleBars,

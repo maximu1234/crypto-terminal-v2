@@ -6,7 +6,7 @@ import {
 getActiveExchangeId,
 isExchangeTradingEnabled,
 EXCHANGE_CHANGED_EVENT
-} from "./market-api.js?v=5";
+} from "./market-api.js?v=6";
 
 import {
 clearTradePositionsCache
@@ -20,7 +20,7 @@ startTradeStreamBridge
 import {
 loadTradeExchangeModules,
 resetTradeExchangeModules
-} from "./trade/module-router.js?v=14";
+} from "./trade/module-router.js?v=15";
 
 const BODY_CLASS =
 "exchange-trading-inactive";

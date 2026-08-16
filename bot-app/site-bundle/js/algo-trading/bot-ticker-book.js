@@ -375,6 +375,45 @@ export function stageBotTickerBookFromPublished(strategyId){
 }
 
 /**
+ * Persist published/staged book to main so LAN start and remote parse share it.
+ * @param {string} strategyId
+ * @param {object|null|undefined} book
+ * @returns {Promise<{ ok: boolean, skipped?: boolean, message?: string }>}
+ */
+export async function persistBotTickerBookToMain(strategyId, book){
+  const api = globalThis.window?.cryptoTerminalDesktop?.algoTrading;
+  if(typeof api?.setTickerBook !== "function"){
+    return {
+      ok: true,
+      skipped: true
+    };
+  }
+  if(!book || typeof book !== "object" || !book.tickers){
+    return {
+      ok: false,
+      message: "Нет книги параметров"
+    };
+  }
+  try{
+    const res = await api.setTickerBook({
+      strategyId,
+      book,
+      exchangeId: book.exchange
+    });
+    return res && typeof res === "object"
+      ? res
+      : {
+        ok: true
+      };
+  }catch(err){
+    return {
+      ok: false,
+      message: String(err?.message || err || "Не удалось записать книгу")
+    };
+  }
+}
+
+/**
  * @param {object|null|undefined} snapshot
  * @param {string} symbol
  * @returns {object|null}

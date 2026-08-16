@@ -542,6 +542,81 @@ message:
 
 }
 
+function applyRemoteTickerBook(
+body
+){
+
+const algoBot =
+require(
+"./algo-trading-bot.cjs"
+);
+const strategyId =
+String(
+body?.strategyId ||
+body?.book?.strategyId ||
+"st1"
+).trim().toLowerCase();
+const result =
+algoBot.syncTickerBook(
+{
+strategyId,
+book:
+body?.book,
+exchangeId:
+body?.exchangeId ||
+body?.book?.exchange
+}
+);
+
+if(
+result?.ok ===
+false
+){
+return result;
+}
+
+const count =
+Number(
+result?.tickerCount
+) ||
+Object.keys(
+result?.book?.tickers ||
+{}
+).length;
+const label =
+strategyId ===
+"st2"
+? "Ст2"
+: strategyId ===
+"st3"
+? "Ст3"
+: "Ст1";
+
+try{
+sessionLog.appendNote(
+`Remote ticker book applied: ${label} tickers=${count} tf=${result?.book?.tf || ""}`
+);
+}catch{
+/* ignore */
+}
+
+return {
+ok:
+true,
+strategyId:
+result?.book?.strategyId ||
+strategyId,
+tickerCount:
+count,
+tf:
+result?.book?.tf ||
+"",
+message:
+`Книга ${label} записана (${count} тикеров). Запустите стратегию, чтобы торговать по ней.`
+};
+
+}
+
 function isAlgoBotHostApp(){
 
 try{
@@ -1110,6 +1185,51 @@ if(
 req.method ===
 "POST" &&
 pathname ===
+"/ticker-book"
+){
+let body;
+
+try{
+body =
+await readJsonBody(
+req
+);
+}catch(
+err
+){
+sendJson(
+res,
+400,
+{
+ok:
+false,
+message:
+err?.message ||
+"Invalid JSON body"
+}
+);
+return;
+}
+
+const appliedBook =
+applyRemoteTickerBook(
+body
+);
+
+sendJson(
+res,
+appliedBook.ok
+? 200
+: 400,
+appliedBook
+);
+return;
+}
+
+if(
+req.method ===
+"POST" &&
+pathname ===
 "/bot/command"
 ){
 let body;
@@ -1298,7 +1418,7 @@ res,
 ok:
 false,
 message:
-"GET /health|/sessions|/bot/status or POST /watchlists|/bot/command|/auth/session"
+"GET /health|/sessions|/bot/status or POST /watchlists|/ticker-book|/bot/command|/auth/session"
 }
 );
 return;

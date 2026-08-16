@@ -49,13 +49,46 @@ export function displayTickFor(nativeTick, priceScale){
   return roundTick(nativeTick * scale);
 }
 
+function clampViewRows(viewRows){
+  return Math.max(8, Math.min(HARD_MAX_ROWS, Math.round(Number(viewRows) || 40)));
+}
+
+function attachViewCenter(sticky, viewCenterIdx){
+  if(!sticky){
+    return null;
+  }
+  sticky.viewCenterIdx = viewCenterIdx | 0;
+  return sticky;
+}
+
 /**
- * @param {{ high: number, low: number, tick: number } | null} sticky
+ * How far the spread is from the visible center, as % of half the viewport.
+ * 0 = middle of the ladder; 100 = top or bottom edge; >100 = off-screen.
+ */
+export function spreadOffsetPctInView(
+midIdx,
+viewCenterIdx,
+viewOffset,
+viewRows
+){
+  const half = Math.max(1, Math.floor(clampViewRows(viewRows) / 2));
+  const viewMidIdx = (viewCenterIdx | 0) + (viewOffset | 0);
+  return (Math.abs((midIdx | 0) - viewMidIdx) / half) * 100;
+}
+
+/**
+ * Sticky camera: prices stay put while the spread walks. Recenter the view
+ * only when the pointer is not over the ladder and the spread is near/past
+ * the visible edge (autocenterPct, default 85).
+ *
+ * @param {{ high: number, low: number, tick: number, viewCenterIdx?: number } | null} sticky
  * @param {number} mid
  * @param {number} displayTick
  * @param {number} priceScale
  * @param {number} autocenterPct
  * @param {boolean} hover
+ * @param {number} viewRows
+ * @param {number} viewOffset
  * @returns {{ sticky: ReturnType<typeof makeStickyPriceRange>, recentered: boolean, resetView: boolean }}
  */
 export function stepStickyRange(
@@ -64,41 +97,76 @@ mid,
 displayTick,
 priceScale,
 autocenterPct,
-hover
+hover,
+viewRows,
+viewOffset
 ){
-  const half = stickyHalfSpanForScale(priceScale);
-  if(!sticky || sticky.tick !== displayTick){
+  const halfSpan = stickyHalfSpanForScale(priceScale);
+  const midIdx = Math.round(mid / displayTick);
+  const threshold = Number(autocenterPct);
+  const pct = Number.isFinite(threshold) ? threshold : 85;
+
+  if(!sticky || sticky.tick !== displayTick || !(displayTick > 0) || !(mid > 0)){
     return {
-      sticky: makeStickyPriceRange(mid, displayTick, half),
+      sticky: attachViewCenter(
+        makeStickyPriceRange(mid, displayTick, halfSpan),
+        midIdx
+      ),
       recentered: true,
       resetView: true
     };
   }
-  if(!hover && stickyRangeNeedsRecenter(sticky, mid, autocenterPct)){
+
+  const center = Number.isFinite(sticky.viewCenterIdx)
+    ? (sticky.viewCenterIdx | 0)
+    : midIdx;
+  const offsetPct = spreadOffsetPctInView(
+    midIdx,
+    center,
+    viewOffset,
+    viewRows
+  );
+
+  if(!hover && offsetPct > pct){
     return {
-      sticky: makeStickyPriceRange(mid, displayTick, half),
+      sticky: attachViewCenter(
+        makeStickyPriceRange(mid, displayTick, halfSpan),
+        midIdx
+      ),
       recentered: true,
       resetView: true
     };
   }
+
+  if(stickyRangeNeedsRecenter(sticky, mid, pct)){
+    const next = makeStickyPriceRange(mid, displayTick, halfSpan);
+    return {
+      sticky: attachViewCenter(next, center),
+      recentered: false,
+      resetView: false
+    };
+  }
+
   return {
-    sticky,
+    sticky: attachViewCenter(sticky, center),
     recentered: false,
     resetView: false
   };
 }
 
 /**
- * Display-tick indices to paint (high → low).
+ * Display-tick indices to paint (high → low), anchored to the frozen camera.
  */
 export function visibleDisplayIndexRange(
 sticky,
-mid,
 viewRows,
 viewOffset
 ){
   const tick = sticky?.tick || 0;
-  const rows = Math.max(8, Math.min(HARD_MAX_ROWS, Math.round(Number(viewRows) || 40)));
+  const rows = clampViewRows(viewRows);
+  const centerIdx = Number.isFinite(sticky?.viewCenterIdx)
+    ? (sticky.viewCenterIdx | 0)
+    : 0;
   if(!(tick > 0) || !sticky){
     return {
       startIdx: 0,
@@ -107,23 +175,9 @@ viewOffset
       rows: 0
     };
   }
-  const highIdx = Math.round(sticky.high / tick);
-  const lowIdx = Math.round(sticky.low / tick);
-  const midIdx = Math.round(mid / tick);
   const half = Math.floor(rows / 2);
-  let start = midIdx + (viewOffset | 0) + half;
-  let end = start - rows + 1;
-  if(start > highIdx){
-    start = highIdx;
-    end = start - rows + 1;
-  }
-  if(end < lowIdx){
-    end = lowIdx;
-    start = Math.min(highIdx, end + rows - 1);
-  }
-  if(start < end){
-    start = end;
-  }
+  const start = centerIdx + (viewOffset | 0) + half;
+  const end = start - rows + 1;
   return {
     startIdx: start,
     endIdx: end,
@@ -164,13 +218,14 @@ options =
     displayTick,
     priceScale,
     options.autocenterPct,
-    options.hover === true
+    options.hover === true,
+    options.viewRows,
+    options.viewOffset | 0
   );
   const sticky = stepped.sticky;
   const viewOffset = stepped.resetView ? 0 : (options.viewOffset | 0);
   const view = visibleDisplayIndexRange(
     sticky,
-    mid,
     options.viewRows,
     viewOffset
   );

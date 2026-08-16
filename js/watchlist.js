@@ -12,11 +12,11 @@ loadMarketHistory,
 getActiveExchangeId,
 getActiveExchangeDefinition,
 EXCHANGE_CHANGED_EVENT
-} from "./market-api.js?v=5";
+} from "./market-api.js?v=6";
 
 import {
 clearBybitNetworkIssue
-} from "./bybit-network-ui.js?v=3";
+} from "./bybit-network-ui.js?v=4";
 
 import {
 buildAlertChartUrl
@@ -34,7 +34,7 @@ createRSIChart,
 updateRsiBandLayout,
 updateRsiLevelLinesLayout,
 linkPairedChartTimeScales
-} from "./chart-import.js?v=46";
+} from "./chart-import.js?v=48";
 
 import {
 calculateRSI,
@@ -44,11 +44,11 @@ alignRsiWithCandleTimes
 import {
 createDashboardChartWidget,
 mountDashboardChartInteractions
-} from "./chart-widget-host.js?v=17";
+} from "./chart-widget-host.js?v=18";
 
 import {
 mountWidgetTabletChart
-} from "./tablet-widget-chart.js?v=2";
+} from "./tablet-widget-chart.js?v=3";
 
 import {
 subscribeKline
@@ -69,7 +69,7 @@ ensureDrawToolsVisible
 
 import {
 preloadTradingSymbols
-} from "./symbol-autocomplete.js?v=2";
+} from "./symbol-autocomplete.js?v=3";
 
 import {
 loadLightweightCharts
@@ -84,7 +84,7 @@ getWidgetFlagHtml,
 wireWidgetFlagUi,
 updateWidgetFlagUi,
 bindWidgetFlagGlobalListeners
-} from "./widget-favorite-flag.js?v=6";
+} from "./widget-favorite-flag.js?v=7";
 
 const dashboard =
 document.getElementById("dashboard");
@@ -1051,7 +1051,7 @@ widget.classList.add(
 "widget-chart-empty"
 );
 
-void import("./bybit-network-ui.js?v=3").then(
+void import("./bybit-network-ui.js?v=4").then(
 m=>{
 m.showBybitNetworkIssue(
 new Error(

@@ -57,3 +57,30 @@ test("disabled Supertrend criteria preserve entries", () => {
     events
   );
 });
+
+test("identical long/short Supertrend params fill seriesCache once", () => {
+  const candles = risingCandles(80);
+  const events = [
+    { type: "entry", side: "long", bar: 79, price: candles[79].close },
+    { type: "entry", side: "short", bar: 79, price: candles[79].close }
+  ];
+  const cache = new Map();
+  const opts = {
+    chartTf: "1",
+    supertrendLongFilter: true,
+    supertrendLongAtr: 10,
+    supertrendLongFactor: 3,
+    supertrendLongTf: "",
+    supertrendShortFilter: true,
+    supertrendShortAtr: 10,
+    supertrendShortFactor: 3,
+    supertrendShortTf: "",
+    seriesCache: cache
+  };
+
+  const first = filterEntryEventsBySupertrend(candles, events, opts);
+  assert.equal(cache.size, 1);
+  const second = filterEntryEventsBySupertrend(candles, events, opts);
+  assert.equal(cache.size, 1);
+  assert.deepEqual(first, second);
+});

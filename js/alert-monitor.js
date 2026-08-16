@@ -13,7 +13,7 @@ subscribeKline
 
 import {
 EXCHANGE_CHANGED_EVENT
-} from "./market-api.js?v=5";
+} from "./market-api.js?v=6";
 
 import {
 getAlertNotifyMode,
@@ -23,7 +23,7 @@ getAlertToastDurationMs
 import {
 buildAlertChartUrl,
 gateAlertExchangeNavigation
-} from "./alert-deep-link-exchange.js?v=1";
+} from "./alert-deep-link-exchange.js?v=2";
 
 /* Базовая цена отдельно для каждого алерта (symbol + shapeId) */
 const lastPriceByAlert =

@@ -1003,6 +1003,42 @@ err
 handleTrustedDesktopUi(
 ipcMain,
 
+"desktop:algoTradingSyncTickerBook",
+(
+_event,
+payload
+)=>{
+
+try{
+return algoBot.syncTickerBook(
+payload ||
+{}
+);
+}catch(
+err
+){
+log.warn(
+"algoTradingSyncTickerBook:",
+err?.message ||
+err
+);
+return {
+ok:
+false,
+message:
+err?.message ||
+String(
+err
+)
+};
+}
+
+}
+);
+
+handleTrustedDesktopUi(
+ipcMain,
+
 "desktop:algoTradingGetTickerFlagsRoot",
 ()=>{
 
@@ -1482,6 +1518,48 @@ err
 ){
 log.warn(
 "algoTradingSessionLogRemotePushWatchlists:",
+err?.message ||
+err
+);
+return {
+ok:
+false,
+message:
+err?.message ||
+String(
+err
+)
+};
+}
+
+}
+);
+
+handleTrustedDesktopUi(
+ipcMain,
+"desktop:algoTradingSessionLogRemotePushTickerBook",
+async (
+_event,
+payload
+)=>{
+
+try{
+const {
+pushRemoteTickerBook
+} =
+require(
+"./algo-bot-session-log-remote-client.cjs"
+);
+
+return await pushRemoteTickerBook(
+payload ||
+{}
+);
+}catch(
+err
+){
+log.warn(
+"algoTradingSessionLogRemotePushTickerBook:",
 err?.message ||
 err
 );

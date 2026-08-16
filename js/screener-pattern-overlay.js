@@ -15,7 +15,7 @@ paintPattern12Scene
 
 import {
 readTerminalPattern12Settings
-} from "./pattern-12-scanner.js?v=23";
+} from "./pattern-12-scanner.js?v=24";
 
 function patternSettingsForWidget(
 widget
@@ -179,21 +179,33 @@ return;
 const dpr =
 window.devicePixelRatio ||
 1;
+const bufW =
+Math.round(
+w *
+dpr
+);
+const bufH =
+Math.round(
+h *
+dpr
+);
 
+if(
+canvas.width !==
+bufW ||
+canvas.height !==
+bufH
+){
 canvas.style.width =
 `${w}px`;
 canvas.style.height =
 `${h}px`;
 canvas.width =
-Math.round(
-w *
-dpr
-);
+bufW;
 canvas.height =
-Math.round(
-h *
-dpr
-);
+bufH;
+}
+
 ctx.setTransform(
 dpr,
 0,

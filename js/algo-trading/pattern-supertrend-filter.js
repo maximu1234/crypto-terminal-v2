@@ -85,6 +85,87 @@ tf
 }
 
 /**
+ * @param {unknown} atr
+ * @param {unknown} factor
+ * @param {unknown} tf
+ * @param {unknown} chartTf
+ * @returns {string}
+ */
+export function algoSupertrendSeriesCacheKey(
+atr,
+factor,
+tf,
+chartTf
+){
+
+return `${clampSupertrendAtrLength(atr)}|${clampSupertrendFactor(factor)}|${normalizeAlgoSupertrendTf(tf)}|${String(chartTf || "").trim()}`;
+
+}
+
+/**
+ * @param {Array} candles
+ * @param {{ atrLength?: unknown, factor?: unknown, tf?: unknown, chartTf?: unknown }} opts
+ * @param {Map<string, ReturnType<typeof buildAlgoSupertrendByBar>>|null|undefined} cache
+ */
+export function getAlgoSupertrendSeriesCached(
+candles,
+opts =
+{},
+cache
+){
+
+const chartTf =
+String(
+opts.chartTf ||
+""
+).trim();
+const key =
+algoSupertrendSeriesCacheKey(
+opts.atrLength,
+opts.factor,
+opts.tf,
+chartTf
+);
+
+if(
+cache instanceof Map &&
+cache.has(
+key
+)
+){
+return cache.get(
+key
+);
+}
+
+const series =
+buildAlgoSupertrendByBar(
+candles,
+{
+atrLength:
+opts.atrLength,
+factor:
+opts.factor,
+tf:
+opts.tf,
+chartTf
+}
+);
+
+if(
+cache instanceof Map
+){
+cache.set(
+key,
+series
+);
+}
+
+return series;
+
+}
+
+/**
  * @param {Array} chartCandles
  * @param {string} bandTf
  * @param {string} [chartTf]
@@ -427,10 +508,42 @@ String(
 opts.chartTf ||
 ""
 ).trim();
-
-const longSeries =
+const cache =
+opts.seriesCache instanceof Map
+? opts.seriesCache
+: null;
+const longKey =
 longOn
-? buildAlgoSupertrendByBar(
+? algoSupertrendSeriesCacheKey(
+opts.supertrendLongAtr,
+opts.supertrendLongFactor,
+opts.supertrendLongTf,
+chartTf
+)
+: "";
+const shortKey =
+shortOn
+? algoSupertrendSeriesCacheKey(
+opts.supertrendShortAtr,
+opts.supertrendShortFactor,
+opts.supertrendShortTf,
+chartTf
+)
+: "";
+
+let longSeries =
+null;
+let shortSeries =
+null;
+
+if(
+longOn &&
+shortOn &&
+longKey ===
+shortKey
+){
+longSeries =
+getAlgoSupertrendSeriesCached(
 candles,
 {
 atrLength:
@@ -440,13 +553,36 @@ opts.supertrendLongFactor,
 tf:
 opts.supertrendLongTf,
 chartTf
+},
+cache
+);
+shortSeries =
+longSeries;
+}else{
+if(
+longOn
+){
+longSeries =
+getAlgoSupertrendSeriesCached(
+candles,
+{
+atrLength:
+opts.supertrendLongAtr,
+factor:
+opts.supertrendLongFactor,
+tf:
+opts.supertrendLongTf,
+chartTf
+},
+cache
+);
 }
-)
-: null;
 
-const shortSeries =
+if(
 shortOn
-? buildAlgoSupertrendByBar(
+){
+shortSeries =
+getAlgoSupertrendSeriesCached(
 candles,
 {
 atrLength:
@@ -456,9 +592,11 @@ opts.supertrendShortFactor,
 tf:
 opts.supertrendShortTf,
 chartTf
+},
+cache
+);
 }
-)
-: null;
+}
 
 return list.filter(
 event=>{

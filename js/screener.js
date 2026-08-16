@@ -1,6 +1,6 @@
 import {
 symbolListSignature
-} from "./api.js?v=30";
+} from "./api.js?v=32";
 
 import {
 loadMarketHistory,
@@ -9,7 +9,7 @@ peekMarketSymbolsCache,
 getActiveExchangeDefinition,
 getActiveExchangeId,
 EXCHANGE_CHANGED_EVENT
-} from "./market-api.js?v=5";
+} from "./market-api.js?v=6";
 
 import {
 isScreenerWidgetCurrent as isScreenerWidgetCurrentGuard
@@ -26,7 +26,7 @@ updateRsiLevelLinesLayout,
 linkPairedChartTimeScales,
 SCREENER_VISIBLE_BARS,
 SCREENER_MAX_BARS
-} from "./chart-import.js?v=46";
+} from "./chart-import.js?v=48";
 
 import {
 calculateRSI,
@@ -40,7 +40,7 @@ subscribeKline
 import {
 connectTickerStream,
 fetchTickersInto
-} from "./tickers.js?v=26";
+} from "./tickers.js?v=27";
 
 import {
 createTickerUiBatcher
@@ -48,7 +48,7 @@ createTickerUiBatcher
 
 import {
 mountReleaseMarker
-} from "./release-marker.js?v=89";
+} from "./release-marker.js?v=90";
 
 import {
 saveScreenerState,
@@ -81,7 +81,7 @@ onFavoritesRemoteUpdate
 import {
 attachSymbolAutocomplete,
 preloadTradingSymbols
-} from "./symbol-autocomplete.js?v=2";
+} from "./symbol-autocomplete.js?v=3";
 
 import {
 mountQwertyKeyInput
@@ -119,7 +119,7 @@ if(
 ){
 screenerZoomMountPromise =
 import(
-"./screener-widget-zoom.js?v=22"
+"./screener-widget-zoom.js?v=25"
 ).then(
 mod=>{
 refreshZoomFavoriteUi =
@@ -2971,7 +2971,7 @@ setStatus(
 true
 );
 
-void import("./bybit-network-ui.js?v=3").then(m=>{
+void import("./bybit-network-ui.js?v=4").then(m=>{
 m.showBybitNetworkIssue(err);
 });
 
@@ -3145,7 +3145,7 @@ err
 screenerMarketLoadFailed = true;
 allSymbols = [];
 
-void import("./bybit-network-ui.js?v=3").then(m=>{
+void import("./bybit-network-ui.js?v=4").then(m=>{
 m.showBybitNetworkIssue(err);
 });
 

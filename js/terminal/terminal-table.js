@@ -7,7 +7,7 @@ coinElements
 import {
 isActiveRealtimeMarketDataset,
 isExchangeTradingEnabled
-} from "../market-api.js?v=5";
+} from "../market-api.js?v=6";
 
 import {
 connectKlineStream
@@ -16,7 +16,7 @@ connectKlineStream
 import {
 connectTickerStream,
 fetchTickersInto
-} from "../tickers.js?v=26";
+} from "../tickers.js?v=27";
 
 import {
 createTickerUiBatcher
@@ -24,7 +24,7 @@ createTickerUiBatcher
 
 import {
 processAlertCandle
-} from "../alert-monitor.js?v=70";
+} from "../alert-monitor.js?v=71";
 
 import {
 getFavoriteGroup,
@@ -48,7 +48,7 @@ isTradePage
 ){
 const tradePositions =
 await import(
-"../trade-open-positions.js?v=3"
+"../trade-open-positions.js?v=4"
 );
 hasOpenPosition =
 tradePositions.hasOpenPosition;

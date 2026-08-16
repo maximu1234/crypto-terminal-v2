@@ -666,8 +666,7 @@ z-index:10050;
 display:flex;
 align-items:center;
 justify-content:center;
-background:rgba(8,8,14,0.72);
-backdrop-filter:blur(2px);
+background:rgba(8,8,14,0.82);
 }
 
 .screener-widget-zoom-panel{
@@ -682,6 +681,8 @@ border-radius:12px;
 background:#0b0b12;
 box-shadow:0 24px 80px rgba(0,0,0,0.55);
 overflow:hidden;
+contain:layout style paint;
+isolation:isolate;
 }
 
 .screener-widget-zoom-header{
@@ -869,6 +870,13 @@ position:relative;
 font-size:11px;
 color:#9ca3af;
 white-space:nowrap;
+}
+
+body.screener-widget-zoom-open #screener-grid,
+body.screener-widget-zoom-open #script-grid{
+visibility:hidden;
+content-visibility:hidden;
+pointer-events:none;
 }
 
 .screener-widget-zoom-chart .tv-lightweight-charts{

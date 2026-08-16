@@ -14,15 +14,15 @@ formatExchangeDisplayLabel
 
 import {
 bybitPublicAdapter
-} from "./exchanges/bybit/public.js?v=1";
+} from "./exchanges/bybit/public.js?v=2";
 
 import {
 bingxPublicAdapter
-} from "./exchanges/bingx/public.js?v=8";
+} from "./exchanges/bingx/public.js?v=10";
 
 import {
 peekBybitSymbolsCache
-} from "./api.js?v=30";
+} from "./api.js?v=32";
 
 const ADAPTERS =
 {

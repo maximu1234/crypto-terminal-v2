@@ -11,7 +11,7 @@ createTradeChartOrders
 
 import {
 createTradePlusMenuHandler
-} from "./trade-order-plus-ui.js?v=6";
+} from "./trade-order-plus-ui.js?v=7";
 
 import {
 TRADE_VOLUME_SLOT_COUNT,
@@ -28,7 +28,7 @@ marketMap
 
 import {
 getLoadedTradeExchangeModules
-} from "./trade/module-router.js?v=14";
+} from "./trade/module-router.js?v=15";
 
 import {
 mountTradeLeverageControl

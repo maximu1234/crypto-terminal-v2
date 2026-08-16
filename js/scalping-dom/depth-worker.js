@@ -8,7 +8,7 @@ createTickBook
 
 import {
 buildVisibleSliceFromTickBook
-} from "./ladder-slice.js?v=1";
+} from "./ladder-slice.js?v=2";
 
 import {
 createBybitDepthWs,

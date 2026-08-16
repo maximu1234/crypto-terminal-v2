@@ -878,6 +878,93 @@ res.json?.message ||
 
 }
 
+async function pushRemoteTickerBook(
+payload =
+{}
+){
+
+const url =
+buildUrl(
+{
+host:
+payload.host,
+port:
+payload.port,
+token:
+payload.token,
+path:
+"/ticker-book"
+}
+);
+
+const book =
+payload.book &&
+typeof payload.book ===
+"object"
+? payload.book
+: null;
+
+if(
+!book ||
+!book.tickers ||
+typeof book.tickers !==
+"object"
+){
+return {
+ok:
+false,
+message:
+"Нет книги параметров для отправки. Сначала «Применить к боту»."
+};
+}
+
+const res =
+await fetchJsonPost(
+url,
+{
+strategyId:
+payload.strategyId ||
+book.strategyId ||
+"st1",
+exchangeId:
+payload.exchangeId ||
+book.exchange ||
+"bybit",
+book
+},
+120000,
+payload.token
+);
+
+if(
+!res.ok
+){
+return {
+ok:
+false,
+message:
+res.message ||
+res.json?.message ||
+"Не удалось отправить книгу"
+};
+}
+
+return {
+ok:
+true,
+tickerCount:
+res.json?.tickerCount ||
+null,
+tf:
+res.json?.tf ||
+"",
+message:
+res.json?.message ||
+"Книга отправлена"
+};
+
+}
+
 /**
  * @param {{ host: string, port?: string|number, token: string }} payload
  */
@@ -1124,6 +1211,7 @@ module.exports =
 listRemoteSessionLogs,
 fetchRemoteSessionLog,
 pushRemoteWatchlists,
+pushRemoteTickerBook,
 fetchRemoteBotLanStatus,
 sendRemoteBotLanCommand,
 pushRemoteAuthSession,

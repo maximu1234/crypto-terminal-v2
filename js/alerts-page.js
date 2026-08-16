@@ -17,7 +17,7 @@ alertExchangeId
 
 import {
 buildAlertChartUrl
-} from "./alert-deep-link-exchange.js?v=1";
+} from "./alert-deep-link-exchange.js?v=2";
 
 import {
 getTelegramChatId,
@@ -53,7 +53,7 @@ import {
 EXCHANGE_CHANGED_EVENT,
 getActiveExchangeDefinition,
 getActiveExchangeId
-} from "./market-api.js?v=5";
+} from "./market-api.js?v=6";
 
 const tbody =
 document.getElementById("alerts-tbody");

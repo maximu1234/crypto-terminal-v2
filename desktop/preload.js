@@ -423,6 +423,14 @@ ipcRenderer.invoke(
 payload ||
 {}
 ),
+setTickerBook:(
+payload
+)=>
+ipcRenderer.invoke(
+"desktop:algoTradingSyncTickerBook",
+payload ||
+{}
+),
 getTickerFlagsRoot:()=>
 ipcRenderer.invoke(
 "desktop:algoTradingGetTickerFlagsRoot"
@@ -516,6 +524,14 @@ payload
 )=>
 ipcRenderer.invoke(
 "desktop:algoTradingSessionLogRemotePushWatchlists",
+payload ||
+{}
+),
+sessionLogRemotePushTickerBook:(
+payload
+)=>
+ipcRenderer.invoke(
+"desktop:algoTradingSessionLogRemotePushTickerBook",
 payload ||
 {}
 ),

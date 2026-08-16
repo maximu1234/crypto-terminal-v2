@@ -1,7 +1,7 @@
 /**
  * Supertrend overlay — ATR Length + Factor + TF (как TradingView / EMA Shift Ribbon).
- * Зелёная (up) и красная (down) — отдельные серии на каждый непрерывный кусок
- * (LWC не рвёт одну LineSeries на whitespace).
+ * Зелёная (up) и красная (down) рисуются на canvas оверлея (не N LineSeries:
+ * LWC не рвёт линию на whitespace, а серия-на-сегмент вешает график).
  */
 import {
 buildSupertrendChartLineData,
@@ -13,12 +13,12 @@ splitSupertrendValuedSegments
 } from "./supertrend-math.js?v=3";
 
 import {
-fetchHtfCandles
-} from "./htf-loader.js?v=3";
+paintSupertrendSegments
+} from "./supertrend-paint.js?v=1";
 
 import {
-runWithPreservedVisibleLogicalRange
-} from "../chart-visible-range.js?v=3";
+fetchHtfCandles
+} from "./htf-loader.js?v=3";
 
 import {
 isChartLayoutReady
@@ -260,12 +260,14 @@ let enabled =
 false;
 let settings =
 defaultSettings();
-/** @type {object[]} */
-let upPool =
+/** @type {Array<Array<{time:number, value:number}>>} */
+let upSegments =
 [];
-/** @type {object[]} */
-let downPool =
+/** @type {Array<Array<{time:number, value:number}>>} */
+let downSegments =
 [];
+let afterRedraw =
+null;
 let refreshSeq =
 0;
 
@@ -316,234 +318,95 @@ null;
 
 }
 
-function lineSeriesOptions(
-color
-){
+function bindRedraw(){
 
-return {
-color,
-lineWidth:
-settings.lineWidth,
-priceLineVisible:
-false,
-lastValueVisible:
-false,
-crosshairMarkerVisible:
-false,
-visible:
-enabled,
-autoscaleInfoProvider:
-()=>
-null
-};
-
-}
-
-function ensureSegmentSeries(
-pool,
-color
-){
-
-const chart =
-getChart();
+const dt =
+getHost?.()?.getDrawingTools?.();
 
 if(
-!chart
+!dt?.addAfterRedrawListener
 ){
-return null;
+return false;
 }
 
-try{
-const series =
-chart.addLineSeries(
-lineSeriesOptions(
-color
-)
-);
-pool.push(
-series
-);
-return series;
-}catch{
-return null;
-}
-
-}
-
-function paintSegmentPool(
-pool,
-color,
-points
+if(
+afterRedraw
 ){
-
-const segments =
-splitSupertrendValuedSegments(
-points
+dt.removeAfterRedrawListener?.(
+afterRedraw
 );
+}
 
-while(
-pool.length <
-segments.length
+afterRedraw =
+paintOverlay;
+dt.addAfterRedrawListener(
+afterRedraw
+);
+return true;
+
+}
+
+function unbindRedraw(){
+
+const dt =
+getHost?.()?.getDrawingTools?.();
+
+if(
+afterRedraw &&
+dt?.removeAfterRedrawListener
+){
+dt.removeAfterRedrawListener(
+afterRedraw
+);
+}
+
+afterRedraw =
+null;
+
+}
+
+function paintOverlay(
+ctx
 ){
 
 if(
-!ensureSegmentSeries(
-pool,
-color
-)
+!enabled ||
+!ctx
 ){
-break;
+return;
 }
 
-}
+const host =
+getHost?.() ||
+{};
 
-for(
-let i =
-0;
-i <
-pool.length;
-i++
-){
-
-const series =
-pool[
-i
-];
-
-if(
-!series
-){
-continue;
-}
-
-try{
-
-if(
-i <
-segments.length
-){
-series.setData(
-segments[
-i
-]
-);
-series.applyOptions(
+paintSupertrendSegments(
+ctx,
 {
-color,
-lineWidth:
-settings.lineWidth,
-visible:
-enabled
-}
-);
-}else{
-series.setData(
-[]
-);
-series.applyOptions(
-{
-visible:
-false
-}
-);
-}
-
-}catch{
-/* ignore */
-}
-
-}
-
-}
-
-function removeSeries(){
-
-const chart =
-getChart();
-const pools =
-[
-upPool,
-downPool
-];
-
-for(
-const pool of pools
-){
-
-for(
-const series of pool
-){
-
-if(
-chart &&
-series
-){
-try{
-chart.removeSeries(
-series
-);
-}catch{
-/* ignore */
-}
-}
-
-}
-
-pool.length =
-0;
-
-}
-
-}
-
-function applySeriesStyle(){
-
-const upColor =
+chart:
+host.chart,
+series:
+host.series,
+upSegments,
+downSegments,
+upColor:
 previewColorHex(
 settings.upColor
-);
-const downColor =
+),
+downColor:
 previewColorHex(
 settings.downColor
+),
+lineWidth:
+settings.lineWidth
+}
 );
 
-for(
-const series of upPool
-){
-try{
-series.applyOptions(
-{
-color:
-upColor,
-lineWidth:
-settings.lineWidth,
-visible:
-enabled
-}
-);
-}catch{
-/* ignore */
-}
 }
 
-for(
-const series of downPool
-){
-try{
-series.applyOptions(
-{
-color:
-downColor,
-lineWidth:
-settings.lineWidth,
-visible:
-enabled
-}
-);
-}catch{
-/* ignore */
-}
-}
+function requestOverlayRedraw(){
+
+getHost?.()?.getDrawingTools?.()?.scheduleRedraw?.();
 
 }
 
@@ -585,7 +448,11 @@ const loadHistory =
 host.loadIndicatorHistory;
 
 readSettings();
-applySeriesStyle();
+if(
+!afterRedraw
+){
+bindRedraw();
+}
 
 let sourceCandles =
 chartCandles;
@@ -627,25 +494,15 @@ settings.atrLength,
 settings.factor
 );
 
-runWithPreservedVisibleLogicalRange(
-getChart(),
-()=>{
-paintSegmentPool(
-upPool,
-previewColorHex(
-settings.upColor
-),
+upSegments =
+splitSupertrendValuedSegments(
 lines.up
 );
-paintSegmentPool(
-downPool,
-previewColorHex(
-settings.downColor
-),
+downSegments =
+splitSupertrendValuedSegments(
 lines.down
 );
-}
-);
+requestOverlayRedraw();
 
 }
 
@@ -833,7 +690,7 @@ false;
 return;
 }
 
-applySeriesStyle();
+bindRedraw();
 void refreshData();
 
 }
@@ -848,35 +705,22 @@ return;
 
 enabled =
 false;
-removeSeries();
+upSegments =
+[];
+downSegments =
+[];
+unbindRedraw();
+requestOverlayRedraw();
 
 }
 
 function clearOverlayData(){
 
-for(
-const series of upPool
-){
-try{
-series.setData(
-[]
-);
-}catch{
-/* ignore */
-}
-}
-
-for(
-const series of downPool
-){
-try{
-series.setData(
-[]
-);
-}catch{
-/* ignore */
-}
-}
+upSegments =
+[];
+downSegments =
+[];
+requestOverlayRedraw();
 
 }
 
@@ -909,7 +753,29 @@ function destroy(){
 enabled =
 false;
 closeIndicatorColorPicker();
-removeSeries();
+upSegments =
+[];
+downSegments =
+[];
+unbindRedraw();
+
+}
+
+function syncMainChartOverlay(){
+
+if(
+!enabled
+){
+return;
+}
+
+if(
+!afterRedraw
+){
+bindRedraw();
+}
+
+requestOverlayRedraw();
 
 }
 
@@ -941,6 +807,7 @@ isEnabled:()=>
 enabled,
 onSymbolChange,
 onCandlesUpdate,
+syncMainChartOverlay,
 onSettingsDialogClose:()=>{
 closeIndicatorColorPicker();
 },

@@ -35,12 +35,13 @@ isAlgoBotDesktop,
 fetchAlgoBotCloudLock,
 clearAlgoBotCloudLock,
 ensureAlgoBotCloudLock
-} from "./bot-bridge.js?v=16";
+} from "./bot-bridge.js?v=17";
 import {
 stageBotTickerBookFromPublished,
 loadStagedBotTickerBook,
-loadBotTickerBook
-} from "./bot-ticker-book.js?v=4";
+loadBotTickerBook,
+persistBotTickerBookToMain
+} from "./bot-ticker-book.js?v=6";
 import {
 isMultichartRemoteControlHost
 } from "./bot-remote-client.js?v=10";
@@ -48,7 +49,7 @@ import {
 mountRemoteSessionLogsEntry,
 mountRemoteWatchlistsPushEntry,
 mountLocalSessionLogsEntry
-} from "./bot-session-logs-viewer.js?v=26";
+} from "./bot-session-logs-viewer.js?v=27";
 import {
 rebalanceTpShares
 } from "./pattern-trade-stats-partial.js?v=21";
@@ -4385,6 +4386,11 @@ formatBookStatus(
 result.book
 );
 }
+
+void persistBotTickerBookToMain(
+id,
+result.book
+);
 
 }
 );

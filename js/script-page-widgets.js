@@ -12,13 +12,13 @@ updateRsiLevelLinesLayout,
 linkPairedChartTimeScales,
 SCREENER_MAX_BARS,
 SCREENER_VISIBLE_BARS
-} from "./chart-import.js?v=46";
+} from "./chart-import.js?v=48";
 
 import {
 loadMarketHistory,
 getActiveExchangeId,
 getExchangeDefinition
-} from "./market-api.js?v=5";
+} from "./market-api.js?v=6";
 
 import {
 calculateRSI,
@@ -31,7 +31,7 @@ subscribeKline
 
 import {
 fetchTickersInto
-} from "./tickers.js?v=26";
+} from "./tickers.js?v=27";
 
 import {
 isScreenerWidgetCurrent as isWidgetCurrentGuard
@@ -46,7 +46,7 @@ getWidgetFlagHtml,
 wireWidgetFlagUi,
 updateWidgetFlagUi,
 bindWidgetFlagGlobalListeners
-} from "./widget-favorite-flag.js?v=6";
+} from "./widget-favorite-flag.js?v=7";
 
 const SCRIPT_MAX_CONCURRENT_CHART_LOADS =
 4;
@@ -72,7 +72,7 @@ if(
 ){
 scriptZoomModulePromise =
 import(
-"./screener-widget-zoom.js?v=22"
+"./screener-widget-zoom.js?v=25"
 ).then(
 mod=>{
 refreshZoomFavoriteUi =
@@ -93,7 +93,7 @@ return scriptZoomModulePromise;
 import {
 PATTERN_SCAN_TF_LABELS,
 PATTERN_SCAN_SIDE_LABELS
-} from "./pattern-12-scanner.js?v=23";
+} from "./pattern-12-scanner.js?v=24";
 
 let patternOverlayApi =
 null;
@@ -145,7 +145,7 @@ if(
 ){
 patternOverlayApi =
 await import(
-"./screener-pattern-overlay.js?v=7"
+"./screener-pattern-overlay.js?v=8"
 );
 }
 

@@ -13,11 +13,11 @@ linkChartsCrosshair,
 mainChartCrosshairOptions,
 mountChartPriceHud,
 SCREENER_MAX_BARS
-} from "./chart-import.js?v=46";
+} from "./chart-import.js?v=48";
 
 import {
 loadMarketHistory
-} from "./market-api.js?v=5";
+} from "./market-api.js?v=6";
 
 import {
 calculateRSI,
@@ -38,7 +38,7 @@ if(
 ){
 zoomPatternOverlayApi =
 await import(
-"./screener-pattern-overlay.js?v=7"
+"./screener-pattern-overlay.js?v=8"
 );
 }
 
@@ -309,6 +309,16 @@ shouldIgnoreZoomHotkey(
 event
 )
 ){
+return;
+}
+
+if(
+event.code ===
+"Escape"
+){
+event.preventDefault();
+event.stopPropagation();
+closeWidgetZoom();
 return;
 }
 
@@ -709,10 +719,30 @@ true
 
 }
 
+function setScreenerGridFrozen(
+frozen
+){
+
+document.body.classList.toggle(
+"screener-widget-zoom-open",
+!!frozen
+);
+
+}
+
 function closeWidgetZoom(
 opts =
 {}
 ){
+
+if(
+opts.keepWidgetsOverride !==
+true
+){
+setScreenerGridFrozen(
+false
+);
+}
 
 if(
 !zoomState
@@ -764,6 +794,12 @@ zoomState.disposeCrosshair?.();
 zoomState.resizeObserver?.disconnect?.();
 
 try{
+zoomState.unbindUserPan?.();
+}catch{
+/* ignore */
+}
+
+try{
 zoomState.rsiChart?.remove?.();
 zoomState.chart?.remove?.();
 }catch{
@@ -800,7 +836,13 @@ wrapEl:
 state.chartEl,
 getTf:
 ()=>
-state.tf
+state.tf,
+getLastCandle:
+()=>
+state.candles[
+state.candles.length -
+1
+]
 });
 
 }
@@ -927,6 +969,66 @@ SCREENER_MAX_BARS
 
 }
 
+function bindZoomUserPan(
+state
+){
+
+const el =
+state?.chartEl;
+
+if(
+!el
+){
+return;
+}
+
+const mark =
+()=>{
+state.userAdjustedZoom =
+true;
+};
+
+el.addEventListener(
+"wheel",
+mark,
+{
+passive:
+true
+}
+);
+el.addEventListener(
+"mousedown",
+mark
+);
+el.addEventListener(
+"touchstart",
+mark,
+{
+passive:
+true
+}
+);
+
+state.unbindUserPan =
+()=>{
+el.removeEventListener(
+"wheel",
+mark
+);
+el.removeEventListener(
+"mousedown",
+mark
+);
+el.removeEventListener(
+"touchstart",
+mark
+);
+state.unbindUserPan =
+null;
+};
+
+}
+
 function syncZoomChartSize(
 state
 ){
@@ -956,6 +1058,19 @@ h <
 return;
 }
 
+const sizeChanged =
+state.layoutW !==
+w ||
+state.layoutH !==
+h;
+state.layoutW =
+w;
+state.layoutH =
+h;
+
+if(
+sizeChanged
+){
 state.chart.applyOptions(
 {
 width:
@@ -964,6 +1079,7 @@ height:
 h
 }
 );
+}
 
 let scaleW =
 56;
@@ -1020,6 +1136,20 @@ if(
 return;
 }
 
+if(
+state.userAdjustedZoom
+){
+state.patternOverlayRedraw?.();
+return;
+}
+
+if(
+!sizeChanged &&
+state.fittedOnce
+){
+return;
+}
+
 applyScreenerZoom(
 state.chart,
 state.series,
@@ -1027,6 +1157,8 @@ state.candles,
 w,
 h
 );
+state.fittedOnce =
+true;
 
 applyZoomInversion(
 state,
@@ -1110,6 +1242,10 @@ return;
 
 state.tf =
 tf;
+state.userAdjustedZoom =
+false;
+state.fittedOnce =
+false;
 syncZoomTfUi(
 state.panel,
 tf
@@ -1369,7 +1505,7 @@ ${zoomMountOptions?.flagWrapHtml || ""}
 </div>
 <div class="screener-widget-zoom-tf" role="group" aria-label="Таймфрейм">${buildTfButtonsHtml(tf)}</div>
 <div class="screener-header-right screener-widget-zoom-header-right">
-<span class="screener-widget-zoom-hint">← → / Пробел · ПКМ — закрыть</span>
+<span class="screener-widget-zoom-hint">← → / Пробел · Esc / ПКМ — закрыть</span>
 <button type="button" class="screener-open screener-widget-zoom-open" title="Открыть в Терминале (Shift+→)">↗</button>
 </div>
 </div>
@@ -1388,6 +1524,9 @@ ${zoomMountOptions?.flagWrapHtml || ""}
 
 backdrop.appendChild(
 panel
+);
+setScreenerGridFrozen(
+true
 );
 document.body.appendChild(
 backdrop
@@ -1463,15 +1602,6 @@ false
 }
 );
 
-linkPairedChartTimeScales(
-chart,
-rsiPair.chart,
-()=>
-layoutZoomRsi(
-state
-)
-);
-
 const state =
 {
 widget,
@@ -1499,6 +1629,16 @@ disposeCrosshair:
 null,
 priceHudCtrl:
 null,
+unbindUserPan:
+null,
+userAdjustedZoom:
+false,
+fittedOnce:
+false,
+layoutW:
+0,
+layoutH:
+0,
 disposed:
 false,
 navIndex:
@@ -1511,6 +1651,34 @@ navIndex >=
 zoomState =
 state;
 
+let rsiLayoutRaf =
+0;
+linkPairedChartTimeScales(
+chart,
+rsiPair.chart,
+()=>{
+if(
+rsiLayoutRaf
+){
+return;
+}
+rsiLayoutRaf =
+requestAnimationFrame(
+()=>{
+rsiLayoutRaf =
+0;
+if(
+!state.disposed
+){
+layoutZoomRsi(
+state
+);
+}
+}
+);
+}
+);
+
 bindZoomHotkeys();
 
 setupZoomCrosshair(
@@ -1518,6 +1686,10 @@ state
 );
 
 startZoomPriceHud(
+state
+);
+
+bindZoomUserPan(
 state
 );
 

@@ -3,11 +3,11 @@
  */
 import {
 jsUrl
-} from "../asset-manifest.js?v=2";
+} from "../asset-manifest.js?v=5";
 
 import {
 loadMarketOrderbook
-} from "../market-api.js?v=5";
+} from "../market-api.js?v=6";
 
 import {
 EXCHANGE_CHANGED_EVENT,
