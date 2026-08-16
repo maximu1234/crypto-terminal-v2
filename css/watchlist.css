@@ -1016,6 +1016,7 @@ body.tablet-chart .widget-chart-wrap.chart-touch-locked .chart{
 
 .float-color-btn,
 .float-width-btn,
+.float-text-size-btn,
 .float-template,
 .float-settings,
 .float-delete,
@@ -1140,6 +1141,83 @@ body.tablet-chart .widget-chart-wrap.chart-touch-locked .chart{
     display:inline-flex;
     align-items:center;
     gap:8px;
+}
+
+.float-text-size-btn{
+    min-width:36px;
+    height:32px;
+    padding:0 8px;
+    font-size:14px;
+    font-family:Arial,sans-serif;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+}
+
+.draw-color-btn--text{
+    flex-direction:column;
+}
+
+.draw-color-btn--text .pencil-icon{
+    display:none;
+}
+
+.draw-color-btn--text::before{
+    content:"T";
+    font-family:Arial,sans-serif;
+    font-size:15px;
+    font-weight:700;
+    color:#e5e7eb;
+    line-height:1;
+    margin-bottom:6px;
+}
+
+.draw-text-editor{
+    position:absolute;
+    z-index:40;
+    margin:0;
+    padding:3px 4px;
+    border:1px solid #3b82f6;
+    background:rgba(15,18,25,0.92);
+    font-family:Arial,sans-serif;
+    line-height:1.2;
+    outline:none;
+    resize:none;
+    overflow:hidden;
+    min-width:48px;
+    min-height:24px;
+    white-space:pre;
+    overflow-wrap:normal;
+    word-break:normal;
+    pointer-events:auto;
+    box-sizing:border-box;
+}
+
+.draw-text-size-popover{
+    padding:4px;
+    min-width:64px;
+    display:flex;
+    flex-direction:column;
+}
+
+.text-size-option{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    width:100%;
+    padding:6px 10px;
+    border:none;
+    background:transparent;
+    color:#e5e7eb;
+    font-size:13px;
+    font-family:Arial,sans-serif;
+    cursor:pointer;
+    border-radius:4px;
+}
+
+.text-size-option:hover,
+.text-size-option.active{
+    background:#2a2e39;
 }
 
 .float-settings,

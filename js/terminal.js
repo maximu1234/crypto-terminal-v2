@@ -28,9 +28,13 @@ resolveUrlExchangeDeepLink
 
 import {
 calculateRSI,
-alignRsiWithCandleTimes,
-RSI_PERIOD
+alignRsiWithCandleTimes
 } from "./indicators.js?v=3";
+
+import {
+defaultRsiPaneSettings,
+normalizeRsiPaneSettings
+} from "./indicators/rsi-pane.js?v=5";
 
 import {
 loadFavoritesGroups,
@@ -48,7 +52,7 @@ ensureCloudReady
 import {
 persistFavoritesToCloud,
 onFavoritesRemoteUpdate
-} from "./cloud-sync.js?v=65";
+} from "./cloud-sync.js?v=66";
 
 import {
 createCandlestickChart,
@@ -78,7 +82,7 @@ appendFutureWhitespaceBars,
 applyCoinsChartViewport,
 refreshCoinsChartBarSpacing,
 tfPeriodSec
-} from "./chart-import.js?v=44";
+} from "./chart-import.js?v=46";
 
 import {
 terminalVisibleBars,
@@ -109,7 +113,7 @@ createSharedDrawUndoStack
 import {
 mountDrawToolbar,
 mountDrawToolIcons
-} from "./draw-ui-shared.js?v=35";
+} from "./draw-ui-shared.js?v=36";
 
 import {
 mountChartSnapshot
@@ -122,7 +126,7 @@ perfMeasure
 
 import {
 mountCoinsLayoutResize
-} from "./terminal-layout-resize.js?v=7";
+} from "./terminal-layout-resize.js?v=8";
 
 import {
 mountQwertyKeyInput
@@ -1818,16 +1822,87 @@ document.getElementById(
 "rsi-hud-period"
 );
 
+let rsiPaneSettings =
+normalizeRsiPaneSettings(
+defaultRsiPaneSettings()
+);
+
+function syncRsiHudPeriod(){
+
 if(
 rsiHudPeriodEl
 ){
-
 rsiHudPeriodEl.textContent =
 String(
-RSI_PERIOD
+rsiPaneSettings.period
 );
+}
 
 }
+
+function syncRsiLevelDom(){
+
+const wrap =
+document.getElementById(
+"rsi-wrap"
+);
+
+if(
+!wrap
+){
+return;
+}
+
+const ob =
+wrap.querySelector(
+'[data-rsi-role="ob"]'
+);
+const os =
+wrap.querySelector(
+'[data-rsi-role="os"]'
+);
+
+if(
+ob
+){
+ob.setAttribute(
+"data-rsi-level",
+String(
+rsiPaneSettings.overbought
+)
+);
+}
+
+if(
+os
+){
+os.setAttribute(
+"data-rsi-level",
+String(
+rsiPaneSettings.oversold
+)
+);
+}
+
+}
+
+function onRsiSettingsChange(
+next
+){
+
+rsiPaneSettings =
+normalizeRsiPaneSettings(
+next ||
+rsiPaneSettings
+);
+syncRsiHudPeriod();
+syncRsiLevelDom();
+rebuildRsiFromCandles();
+
+}
+
+syncRsiHudPeriod();
+syncRsiLevelDom();
 
 function rsiCrosshairUnix(t){
 
@@ -2063,13 +2138,15 @@ return;
 
 const raw =
 calculateRSI(
-candles
+candles,
+rsiPaneSettings.period
 );
 
 rsiPointsCache =
 alignRsiWithCandleTimes(
 candles,
-raw
+raw,
+rsiPaneSettings.period
 );
 
 rsiSeries.setData(
@@ -2109,7 +2186,13 @@ updateRsiBandLayout(
 rsiSeries,
 document.getElementById(
 "rsi-band"
-)
+),
+{
+overbought:
+rsiPaneSettings.overbought,
+oversold:
+rsiPaneSettings.oversold
+}
 );
 
 updateRsiLevelLinesLayout(
@@ -2816,7 +2899,7 @@ const {
 initChartIndicators
 } =
 await import(
-"./chart-indicators.js?v=44"
+"./chart-indicators.js?v=53"
 );
 
 drawingTools =
@@ -3145,6 +3228,7 @@ setRsiPaneActive,
 isRsiPaneVisible:()=>
 rsiPaneActive,
 layoutRsiBand,
+onRsiSettingsChange,
 settleChartViewport:
 settleCoinsChartViewport,
 onIndicatorToggle(
@@ -3157,6 +3241,8 @@ id ===
 "volume" ||
 id ===
 "ao" ||
+id ===
+"macd" ||
 id ===
 "rsi"
 ){
@@ -3177,6 +3263,31 @@ chartIndicators?.notifyLayoutChange?.();
 }
 );
 
+document.getElementById(
+"rsi-hud"
+)?.addEventListener(
+"dblclick",
+event=>{
+event.preventDefault();
+event.stopPropagation();
+chartIndicators?.openSettings?.(
+"rsi"
+);
+}
+);
+
+document.getElementById(
+"macd-hud"
+)?.addEventListener(
+"dblclick",
+event=>{
+event.preventDefault();
+event.stopPropagation();
+chartIndicators?.openSettings?.(
+"macd"
+);
+}
+);
 
 if(
 isTradePage &&

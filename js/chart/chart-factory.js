@@ -1407,6 +1407,11 @@ document
 .setProperty("--chart-scale-width", px);
 
 document
+.getElementById("macd-wrap")
+?.style
+.setProperty("--chart-scale-width", px);
+
+document
 .getElementById("rsi-wrap")
 ?.style
 .setProperty(
@@ -2004,7 +2009,8 @@ chart?.clearCrosshairPosition?.();
 
 export function updateRsiBandLayout(
 rsiSeries,
-bandEl
+bandEl,
+levels
 ){
 
 if(
@@ -2013,6 +2019,27 @@ if(
 ){
 return;
 }
+
+const overbought =
+Number(
+levels?.overbought
+);
+const oversold =
+Number(
+levels?.oversold
+);
+const hi =
+Number.isFinite(
+overbought
+)
+? overbought
+: 70;
+const lo =
+Number.isFinite(
+oversold
+)
+? oversold
+: 30;
 
 const rsiData =
 rsiSeries.data?.() ??
@@ -2028,12 +2055,12 @@ return;
 
 const y70 =
 rsiSeries.priceToCoordinate?.(
-70
+hi
 );
 
 const y30 =
 rsiSeries.priceToCoordinate?.(
-30
+lo
 );
 
 if(

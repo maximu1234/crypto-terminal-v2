@@ -26,7 +26,8 @@ border-right:var(--trade-block-separator);
 
 body.terminal-page.trade-page #rsi-wrap,
 body.terminal-page.trade-page #volume-wrap,
-body.terminal-page.trade-page #ao-wrap{
+body.terminal-page.trade-page #ao-wrap,
+body.terminal-page.trade-page #macd-wrap{
 border-top:var(--trade-block-separator);
 }
 
@@ -127,7 +128,8 @@ border-right:var(--trade-block-separator);
 
 body.trade-page #rsi-wrap,
 body.trade-page #volume-wrap,
-body.trade-page #ao-wrap{
+body.trade-page #ao-wrap,
+body.trade-page #macd-wrap{
 border-top:var(--trade-block-separator);
 }
 

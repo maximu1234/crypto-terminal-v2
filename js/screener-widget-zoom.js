@@ -11,8 +11,9 @@ updateRsiLevelLinesLayout,
 linkPairedChartTimeScales,
 linkChartsCrosshair,
 mainChartCrosshairOptions,
+mountChartPriceHud,
 SCREENER_MAX_BARS
-} from "./chart-import.js?v=44";
+} from "./chart-import.js?v=46";
 
 import {
 loadMarketHistory
@@ -37,7 +38,7 @@ if(
 ){
 zoomPatternOverlayApi =
 await import(
-"./screener-pattern-overlay.js?v=6"
+"./screener-pattern-overlay.js?v=7"
 );
 }
 
@@ -743,6 +744,12 @@ zoomState
 );
 
 try{
+zoomState.priceHudCtrl?.stop?.();
+}catch{
+/* ignore */
+}
+
+try{
 zoomState.unsubKline?.();
 }catch{
 /* ignore */
@@ -766,6 +773,43 @@ zoomState.chart?.remove?.();
 zoomState.backdrop?.remove?.();
 zoomState =
 null;
+
+}
+
+function startZoomPriceHud(
+state
+){
+
+state.priceHudCtrl?.stop?.();
+
+if(
+!state?.chart ||
+!state?.series ||
+!state?.chartEl
+){
+return;
+}
+
+state.priceHudCtrl =
+mountChartPriceHud({
+chart:
+state.chart,
+series:
+state.series,
+wrapEl:
+state.chartEl,
+getTf:
+()=>
+state.tf
+});
+
+}
+
+function refreshZoomPriceHud(
+state
+){
+
+state?.priceHudCtrl?.refresh?.();
 
 }
 
@@ -1107,6 +1151,9 @@ state
 syncZoomChartSize(
 state
 );
+refreshZoomPriceHud(
+state
+);
 }
 
 state.unsubKline?.();
@@ -1190,6 +1237,9 @@ state.candles[
 state.candles.length -
 1
 ]?.close
+);
+refreshZoomPriceHud(
+state
 );
 
 }
@@ -1447,6 +1497,8 @@ resizeObserver:
 null,
 disposeCrosshair:
 null,
+priceHudCtrl:
+null,
 disposed:
 false,
 navIndex:
@@ -1462,6 +1514,10 @@ state;
 bindZoomHotkeys();
 
 setupZoomCrosshair(
+state
+);
+
+startZoomPriceHud(
 state
 );
 
@@ -1609,6 +1665,9 @@ runSize();
 void mountZoomPattern(
 state
 );
+refreshZoomPriceHud(
+state
+);
 }
 
 state.unsubKline =
@@ -1691,6 +1750,9 @@ state.candles[
 state.candles.length -
 1
 ]?.close
+);
+refreshZoomPriceHud(
+state
 );
 
 }

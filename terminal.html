@@ -16,9 +16,9 @@
 <link rel="stylesheet" href="/css/critical-shell.css?v=10">
 <script src="/js/site-css-ready.js?v=3"></script>
 <link rel="stylesheet" href="/css/common.css?v=55">
-<link rel="stylesheet" href="/css/terminal.css?v=169">
-<link rel="stylesheet" href="/css/terminal-layout.css?v=97">
-<link rel="stylesheet" href="/css/chart-indicators.css?v=26">
+<link rel="stylesheet" href="/css/terminal.css?v=174">
+<link rel="stylesheet" href="/css/terminal-layout.css?v=99">
+<link rel="stylesheet" href="/css/chart-indicators.css?v=28">
 <link rel="stylesheet" href="/css/chart-snapshot.css?v=5">
 <script>
 if(window.cryptoTerminalDesktop&&window.cryptoTerminalDesktop.isDesktop){
@@ -180,6 +180,10 @@ tabTitle(saved);
 <span class="draw-width-label" id="draw-width-label">1px</span>
 </button>
 
+<button type="button" class="float-text-size-btn draw-text-size-btn hidden" id="draw-text-size-btn" title="Размер текста" aria-label="Размер текста">
+<span class="draw-text-size-label" id="draw-text-size-label">20</span>
+</button>
+
 <label class="draw-position-risk hidden" id="draw-position-risk-wrap" title="Сумма риска при срабатывании стопа (как в Калькуляторе)">
 <span class="draw-position-risk-label">Стоп-лосс ($)</span>
 <input type="number" class="draw-position-risk-input" id="draw-position-risk-usd" min="0" step="any" placeholder="" inputmode="decimal"/>
@@ -219,6 +223,8 @@ tabTitle(saved);
 </button>
 </div>
 
+<div id="draw-text-size-popover" class="draw-popover draw-text-size-popover hidden" aria-label="Размер текста"></div>
+
 <div id="draw-settings-popover" class="draw-popover draw-settings-popover draw-settings-popover--fib hidden">
 </div>
 
@@ -233,22 +239,29 @@ tabTitle(saved);
 <div id="ao-chart"></div>
 </div>
 
-<div id="volume-wrap" class="indicator-pane-hidden">
-<div id="volume-hud" aria-hidden="false">
-<span class="volume-hud-title">Vol</span>
+<div id="macd-wrap" class="indicator-pane-hidden">
+<div id="macd-hud" aria-hidden="false" title="Двойной щелчок — настройки">
+<span class="macd-hud-title" id="macd-hud-title">MACD 12 26 9</span>
+<span class="macd-hud-macd" id="macd-hud-macd">—</span>
+<span class="macd-hud-signal" id="macd-hud-signal">—</span>
+<span class="macd-hud-hist" id="macd-hud-hist">—</span>
 </div>
+<div id="macd-chart"></div>
+</div>
+
+<div id="volume-wrap" class="indicator-pane-hidden">
 <div id="volume-chart"></div>
 </div>
 
 <div id="rsi-wrap">
 <div id="rsi-band"></div>
-<div id="rsi-hud" aria-hidden="false">
+<div id="rsi-hud" aria-hidden="false" title="Двойной щелчок — настройки" style="cursor:pointer">
 <span class="rsi-hud-title">RSI <span id="rsi-hud-period">14</span></span><span class="rsi-hud-muted">close</span><span id="rsi-hud-value">—</span>
 </div>
 <div id="rsi-chart"></div>
-<div class="rsi-level-line hidden" data-rsi-level="70" aria-hidden="true"></div>
-<div class="rsi-level-line hidden" data-rsi-level="50" aria-hidden="true"></div>
-<div class="rsi-level-line hidden" data-rsi-level="30" aria-hidden="true"></div>
+<div class="rsi-level-line hidden" data-rsi-role="ob" data-rsi-level="70" aria-hidden="true"></div>
+<div class="rsi-level-line hidden" data-rsi-role="mid" data-rsi-level="50" aria-hidden="true"></div>
+<div class="rsi-level-line hidden" data-rsi-role="os" data-rsi-level="30" aria-hidden="true"></div>
 <div id="rsi-scale-touch-strip" class="rsi-scale-touch-strip" aria-hidden="true"></div>
 <div id="crosshair-time-label" class="crosshair-axis-label crosshair-time-label hidden" aria-hidden="true"></div>
 </div>

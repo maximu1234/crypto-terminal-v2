@@ -66,6 +66,17 @@ innerHeight
 
 }
 
+export function defaultMacdHeightPx(
+innerHeight =
+COINS_LAYOUT_DEFAULT_INNER_HEIGHT
+){
+
+return defaultRsiHeightPx(
+innerHeight
+);
+
+}
+
 /**
  * Дефолтная высота индикаторной панели (Volume, AO): как RSI;
  * сжатие до 50%, растяжение до 200%.
@@ -194,6 +205,33 @@ maxH
 
 }
 
+export function computeMacdHeightLimits(
+{
+innerHeight =
+COINS_LAYOUT_DEFAULT_INNER_HEIGHT
+} = {}
+){
+
+const {
+defaultH,
+minH,
+maxH
+} =
+computeIndicatorPaneHeightLimits(
+innerHeight
+);
+
+return {
+defaultMacdH:
+defaultH,
+minMacdH:
+minH,
+maxMacdH:
+maxH
+};
+
+}
+
 export function clampCoinsVolumeHeight(
 volumeHeight,
 limits
@@ -254,6 +292,36 @@ h
 
 }
 
+export function clampCoinsMacdHeight(
+macdHeight,
+limits
+){
+
+const h =
+Number(
+macdHeight
+);
+
+if(
+!Number.isFinite(
+h
+)
+){
+return limits.defaultMacdH;
+}
+
+return Math.round(
+Math.min(
+limits.maxMacdH,
+Math.max(
+limits.minMacdH,
+h
+)
+)
+);
+
+}
+
 export function computeCoinsLayoutLimits(
 {
 appWidth,
@@ -261,7 +329,8 @@ chartsStackHeight,
 innerHeight =
 COINS_LAYOUT_DEFAULT_INNER_HEIGHT,
 volumeOccupiedHeight = 0,
-aoOccupiedHeight = 0
+aoOccupiedHeight = 0,
+macdOccupiedHeight = 0
 } = {}
 ){
 
@@ -316,12 +385,22 @@ aoOccupiedHeight
 0
 );
 
+const macdH =
+Math.max(
+0,
+Number(
+macdOccupiedHeight
+) ||
+0
+);
+
 const stackForChartRsi =
 Math.max(
 0,
 stackH -
 volumeH -
-aoH
+aoH -
+macdH
 );
 
 const defaultChartH =

@@ -15,7 +15,7 @@
 <link rel="stylesheet" href="/css/critical-shell.css?v=10">
 <script src="/js/site-css-ready.js?v=3"></script>
 <link rel="stylesheet" href="/css/common.css?v=55">
-<link rel="stylesheet" href="/css/screener.css?v=50">
+<link rel="stylesheet" href="/css/screener.css?v=51">
 
 <script src="/vendor/lightweight-charts.standalone.production.js"></script>
 
@@ -101,6 +101,7 @@ aria-expanded="false"
 </button>
 <div class="screener-header-pick-menu hidden" id="screener-desktop-sort-menu" role="listbox" aria-label="Сортировка">
 <button type="button" class="screener-header-pick-item active" data-sort="change24">24ч %</button>
+<button type="button" class="screener-header-pick-item" data-sort="volume24">Объём 24ч</button>
 <button type="button" class="screener-header-pick-item" data-sort="symbol">А–Я</button>
 </div>
 </div>
@@ -171,8 +172,8 @@ const { loadLightweightCharts } =
 await import("/js/charts-lib-boot.js?v=3");
 
 await loadLightweightCharts();
-await import("/js/screener.js?v=99");
-await import("/js/site-boot.js?v=111");
+await import("/js/screener.js?v=100");
+await import("/js/site-boot.js?v=113");
 
 }catch(err){
 

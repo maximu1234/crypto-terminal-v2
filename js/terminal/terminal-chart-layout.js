@@ -4,7 +4,7 @@
 import {
 appendFutureWhitespaceBars,
 computeChartFutureMarginBars
-} from "../chart-import.js?v=44";
+} from "../chart-import.js?v=46";
 
 import {
 terminalVisibleBars,
@@ -157,6 +157,9 @@ document.getElementById(
 ),
 document.getElementById(
 "ao-wrap"
+),
+document.getElementById(
+"macd-wrap"
 )
 ];
 

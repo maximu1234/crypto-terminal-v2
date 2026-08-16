@@ -26,7 +26,7 @@ updateRsiLevelLinesLayout,
 linkPairedChartTimeScales,
 SCREENER_VISIBLE_BARS,
 SCREENER_MAX_BARS
-} from "./chart-import.js?v=44";
+} from "./chart-import.js?v=46";
 
 import {
 calculateRSI,
@@ -76,7 +76,7 @@ withTimeout
 import {
 persistFavoritesToCloud,
 onFavoritesRemoteUpdate
-} from "./cloud-sync.js?v=65";
+} from "./cloud-sync.js?v=66";
 
 import {
 attachSymbolAutocomplete,
@@ -119,7 +119,7 @@ if(
 ){
 screenerZoomMountPromise =
 import(
-"./screener-widget-zoom.js?v=21"
+"./screener-widget-zoom.js?v=22"
 ).then(
 mod=>{
 refreshZoomFavoriteUi =
@@ -150,8 +150,26 @@ document.getElementById("screener-status");
 
 const SORT_LABELS = {
 change24: "24ч %",
+volume24: "Объём 24ч",
 symbol: "А–Я"
 };
+
+function normalizeSortMode(
+value
+){
+
+if(
+value ===
+"symbol" ||
+value ===
+"volume24"
+){
+return value;
+}
+
+return "change24";
+
+}
 
 const LAYOUT_LABELS = {
 4: "4",
@@ -551,7 +569,9 @@ let layout =
 Number(saved.layout) || 9;
 
 let sortMode =
-saved.sort === "symbol" ? "symbol" : "change24";
+normalizeSortMode(
+saved.sort
+);
 
 let currentTF =
 saved.tf || "15";
@@ -804,12 +824,18 @@ list.sort((a, b)=>a.localeCompare(b));
 
 }else{
 
+const field =
+sortMode ===
+"volume24"
+? "volume24"
+: "change24";
+
 list.sort((a, b)=>{
 
 const ca =
-tickerMap.get(a)?.change24;
+tickerMap.get(a)?.[field];
 const cb =
-tickerMap.get(b)?.change24;
+tickerMap.get(b)?.[field];
 const ha =
 Number.isFinite(ca);
 const hb =
@@ -2281,7 +2307,10 @@ renderPage();
 
 function setSort(next){
 
-sortMode = next;
+sortMode =
+normalizeSortMode(
+next
+);
 
 currentPage = 1;
 

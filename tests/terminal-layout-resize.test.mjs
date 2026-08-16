@@ -12,14 +12,17 @@ computeCoinsLayoutLimits,
 computeIndicatorPaneHeightLimits,
 computeVolumeHeightLimits,
 computeAoHeightLimits,
+computeMacdHeightLimits,
 clampCoinsListWidth,
 clampCoinsRsiHeight,
 clampCoinsVolumeHeight,
 clampCoinsAoHeight,
+clampCoinsMacdHeight,
 coinsMainChartWidthPx,
 defaultRsiHeightPx,
 defaultVolumeHeightPx,
-defaultAoHeightPx
+defaultAoHeightPx,
+defaultMacdHeightPx
 } from "../js/terminal-layout-math.js";
 
 test(
@@ -65,6 +68,15 @@ defaultRsiHeightPx(
 
 assert.equal(
 defaultAoHeightPx(
+800
+),
+defaultRsiHeightPx(
+800
+)
+);
+
+assert.equal(
+defaultMacdHeightPx(
 800
 ),
 defaultRsiHeightPx(
@@ -253,6 +265,36 @@ limits.minAoH,
 
 assert.equal(
 limits.maxAoH,
+282
+);
+
+}
+);
+
+test(
+"computeMacdHeightLimits: 50%–200% of default",
+()=>{
+
+const limits =
+computeMacdHeightLimits(
+{
+innerHeight:
+800
+}
+);
+
+assert.equal(
+limits.defaultMacdH,
+141
+);
+
+assert.equal(
+limits.minMacdH,
+71
+);
+
+assert.equal(
+limits.maxMacdH,
 282
 );
 
