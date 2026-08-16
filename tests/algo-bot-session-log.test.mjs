@@ -100,7 +100,7 @@ test("remote session log client builds direct http urls without query token", ()
       token: "abc",
       path: "/sessions"
     }),
-    "http://203.0.113.10:17865/sessions?token=abc"
+    "http://203.0.113.10:17865/sessions"
   );
 });
 
