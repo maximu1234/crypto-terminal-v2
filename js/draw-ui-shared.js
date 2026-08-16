@@ -1,6 +1,6 @@
 import {
 getDrawToolIconSrc
-} from "./draw-toolbar-icon-data.js?v=31";
+} from "./draw-toolbar-icon-data.js?v=35";
 
 export function drawToolIconImg(
 name,
@@ -59,6 +59,7 @@ export const BRUSH_ICON_SVG = drawToolIconImg("brush");
 export const HRAY_ICON_SVG = drawToolIconImg("hray");
 export const HLINE_ICON_SVG = drawToolIconImg("hline");
 export const FIB_ICON_SVG = drawToolIconImg("fib");
+export const TEXT_ICON_SVG = drawToolIconImg("text");
 export const CHANNEL_ICON_SVG = drawToolIconImg("channel");
 export const LONG_POSITION_ICON_SVG = drawToolIconImg("long", "draw-tool-icon draw-pos-icon draw-pos-icon--long");
 export const SHORT_POSITION_ICON_SVG = drawToolIconImg("short", "draw-tool-icon draw-pos-icon draw-pos-icon--short");
@@ -134,6 +135,10 @@ ${BRUSH_ICON_SVG}
 
 <button type="button" class="${btnClass}" data-draw-tool="fib" title="Fib Retracement (F)">
 ${FIB_ICON_SVG}
+</button>
+
+<button type="button" class="${btnClass}" data-draw-tool="text" title="Текст">
+${TEXT_ICON_SVG}
 </button>
 
 <button type="button" class="${btnClass}" data-draw-tool="rectangle" title="Rectangle (R)">

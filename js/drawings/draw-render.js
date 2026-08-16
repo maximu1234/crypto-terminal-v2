@@ -28,6 +28,12 @@ isHorizPriceTool,
 horizPriceLineX1
 } from "./constants.js?v=11";
 
+import {
+isTextTool,
+drawTextShape,
+TEXT_DEFAULT_CONTENT
+} from "./text.js?v=3";
+
 /**
  * @param {object} deps
  * @returns {{ drawShape, drawFib, drawPlacementPreview, fibLevelXSpan }}
@@ -51,6 +57,8 @@ getPlacement,
 getPreviewPoint,
 getPreviewXY,
 getSelectedId,
+getEditingTextId = ()=>
+null,
 parseDrawColor,
 formatDrawColor
 } = deps;
@@ -423,6 +431,25 @@ dash
 
 }
 
+if(isTextTool(shape.type)){
+
+drawTextShape(
+ctx,
+shape,
+toXY,
+{
+selected:
+shape.id ===
+getSelectedId(),
+hideGlyph:
+shape.id &&
+shape.id ===
+getEditingTextId()
+}
+);
+
+}
+
 if(shape.type === "fib"){
 drawFib(ctx, shape, color, width, w);
 }
@@ -570,6 +597,9 @@ isHorizPriceTool(
 type
 ) ||
 isPositionType(
+type
+) ||
+isTextTool(
 type
 )
 ){
@@ -1006,7 +1036,13 @@ p1: previewPts[0],
 p2: previewPts[1],
 p3: previewPts[2],
 time: previewPts[0]?.time,
-price: previewPts[0]?.price
+price: previewPts[0]?.price,
+text:
+placement.type ===
+"text"
+? TEXT_DEFAULT_CONTENT
+: undefined,
+fontSize: style.fontSize
 };
 
 if(placement.type === "trendline" && previewPts.length >= 2){
@@ -1022,6 +1058,10 @@ drawShape(ctx, previewShape, w, h);
 }
 
 if(isHorizPriceTool(placement.type) && previewPts.length >= 1){
+drawShape(ctx, previewShape, w, h);
+}
+
+if(isTextTool(placement.type) && previewPts.length >= 1){
 drawShape(ctx, previewShape, w, h);
 }
 

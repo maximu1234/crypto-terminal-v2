@@ -4,7 +4,7 @@
  */
 import {
 isCoarseTouchViewport
-} from "../chart-import.js?v=44";
+} from "../chart-import.js?v=46";
 
 import {
 DRAW_HANDLE_HIT_THRESHOLD_DESKTOP,
@@ -37,6 +37,11 @@ applyBrushScreenMove,
 brushChartPointsForMove,
 brushBodyDist
 } from "./brush.js?v=2";
+
+import {
+isTextTool,
+hitTestTextBody
+} from "./text.js?v=3";
 
 export function createDrawEditInteraction(
 deps
@@ -270,6 +275,19 @@ return shape.p2;
 
 if(
 isHorizPriceTool(
+shape.type
+) &&
+handleId ===
+"anchor"
+){
+return {
+time: shape.time,
+price: shape.price
+};
+}
+
+if(
+isTextTool(
 shape.type
 ) &&
 handleId ===
@@ -717,6 +735,14 @@ shape.price = point.price;
 
 }
 
+if(isTextTool(shape.type) && handleId === "anchor"){
+
+shape.time = point.time;
+shape.price = point.price;
+shape.p1 = point;
+
+}
+
 if(shape.type === "channel"){
 
 if(handleId === "p1"){
@@ -961,6 +987,13 @@ price: shape.price
 }];
 }
 
+if(isTextTool(shape.type)){
+return [{
+time: shape.time,
+price: shape.price
+}];
+}
+
 if(isPositionType(shape.type)){
 
 return [
@@ -1174,6 +1207,10 @@ if(isHorizPriceTool(shape.type)){
 return hitTestHrayLine(px, py, shape, bodyThreshold);
 }
 
+if(isTextTool(shape.type)){
+return hitTestTextBody(px, py, shape, toXY);
+}
+
 if(isPositionType(shape.type)){
 return positionBodyDist(px, py, shape) <= bodyThreshold;
 }
@@ -1251,6 +1288,15 @@ if(isHorizPriceTool(shape.type)){
 
 shape.time = pts[0].time;
 shape.price = pts[0].price;
+return true;
+
+}
+
+if(isTextTool(shape.type)){
+
+shape.time = pts[0].time;
+shape.price = pts[0].price;
+shape.p1 = pts[0];
 return true;
 
 }

@@ -22,6 +22,12 @@ import {
   isPositionType
 } from "./position.js?v=9";
 
+import {
+  migrateTextToolDefaults,
+  TEXT_DEFAULT_COLOR,
+  TEXT_DEFAULT_SIZE
+} from "./text.js?v=3";
+
 /**
  * @returns {{
  *   loadToolDefaults: () => void,
@@ -58,6 +64,7 @@ function loadToolDefaults(){
 "channel",
 "arrow",
 "rectangle",
+"text",
 "long",
 "short"
 ].forEach(
@@ -130,6 +137,30 @@ migrated;
 localStorage.setItem(
 defaultsStorageKey(
 "rectangle"
+),
+JSON.stringify(
+migrated
+)
+);
+
+}
+
+if(
+name ===
+"text"
+){
+
+const migrated =
+migrateTextToolDefaults(
+toolDefaults.text
+);
+
+toolDefaults.text =
+migrated;
+
+localStorage.setItem(
+defaultsStorageKey(
+"text"
 ),
 JSON.stringify(
 migrated
@@ -371,6 +402,27 @@ normalizeRectangleShape(
 out,
 rectSaved
 );
+
+}
+
+if(
+type ===
+"text"
+){
+
+const textSaved =
+migrateTextToolDefaults(
+toolDefaults.text ||
+saved ||
+null
+);
+
+out.color =
+textSaved.color ||
+TEXT_DEFAULT_COLOR;
+out.fontSize =
+textSaved.fontSize ||
+TEXT_DEFAULT_SIZE;
 
 }
 

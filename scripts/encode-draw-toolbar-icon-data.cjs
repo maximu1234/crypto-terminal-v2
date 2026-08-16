@@ -18,6 +18,7 @@ const NAMES = [
 "hray",
 "hline",
 "fib",
+"text",
 "channel",
 "rectangle",
 "long",

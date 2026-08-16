@@ -21,6 +21,13 @@ import {
 isPositionType
 } from "./position.js?v=9";
 
+import {
+isTextTool,
+TEXT_DEFAULT_COLOR,
+TEXT_DEFAULT_SIZE,
+clampTextFontSize
+} from "./text.js?v=3";
+
 export const DRAW_TEMPLATES_STORAGE_KEY =
 "draw_templates_v1";
 
@@ -33,7 +40,8 @@ Object.freeze([
 "fib",
 "channel",
 "arrow",
-"rectangle"
+"rectangle",
+"text"
 ]);
 
 const STANDARD_FIB_TEMPLATE_NAME =
@@ -537,13 +545,26 @@ STROKE
 
 if(
 type !==
-"arrow"
+"arrow" &&
+type !==
+"text"
 ){
 out.lineWidth =
 Number(
 shape?.lineWidth
 ) ||
 1;
+}
+
+if(
+isTextTool(
+type
+)
+){
+out.fontSize =
+clampTextFontSize(
+shape?.fontSize
+);
 }
 
 if(
@@ -779,6 +800,18 @@ type ===
 delete out.lineWidth;
 }
 
+if(
+isTextTool(
+type
+)
+){
+out.color =
+TEXT_DEFAULT_COLOR;
+out.fontSize =
+TEXT_DEFAULT_SIZE;
+delete out.lineWidth;
+}
+
 return mergeStyleSnapshot(
 out,
 type
@@ -807,13 +840,29 @@ STROKE;
 
 if(
 type !==
-"arrow"
+"arrow" &&
+type !==
+"text"
 ){
 shape.lineWidth =
 Number(
 snapshot.lineWidth
 ) ||
 1;
+}
+
+if(
+isTextTool(
+type
+)
+){
+shape.fontSize =
+clampTextFontSize(
+snapshot.fontSize
+);
+shape.color =
+snapshot.color ||
+TEXT_DEFAULT_COLOR;
 }
 
 if(

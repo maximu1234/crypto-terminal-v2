@@ -114,6 +114,10 @@ drawAnchorCircle(ctx, anchor.x, anchor.y);
 
 }
 
+if(shape.type === "text"){
+return;
+}
+
 if(shape.type === "channel"){
 
 const geom =
@@ -199,6 +203,15 @@ toXY(shape.p2)
 }
 
 if(isHorizPriceTool(shape.type)){
+
+return !!toXY({
+time: shape.time,
+price: shape.price
+});
+
+}
+
+if(shape.type === "text"){
 
 return !!toXY({
 time: shape.time,

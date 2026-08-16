@@ -26,6 +26,10 @@ normalizeRectangleShape
 } from "./arrow-rect.js?v=2";
 
 import {
+normalizeTextShape
+} from "./text.js?v=3";
+
+import {
 drawingsStorageKey
 } from "../drawings-exchange-key.js?v=1";
 
@@ -215,6 +219,17 @@ shape.type ===
 ){
 
 ensureBrushShape(
+shape
+);
+
+}
+
+if(
+shape.type ===
+"text"
+){
+
+normalizeTextShape(
 shape
 );
 

@@ -5,7 +5,7 @@
 import {
 hideDomChartCrosshair,
 positionTabletProbeHorizInStack
-} from "../chart-import.js?v=44";
+} from "../chart-import.js?v=46";
 
 import {
 ensureFibLevelsVisible,
@@ -32,6 +32,11 @@ touchShapeRevision
 import {
 isHorizPriceTool
 } from "./constants.js?v=11";
+
+import {
+isTextTool,
+TEXT_DEFAULT_CONTENT
+} from "./text.js?v=3";
 
 export function createDrawPlacement(
 deps
@@ -97,7 +102,8 @@ syncChartRulerEndFromPlot,
 getChartRulerStart,
 showStandardChartCrosshair,
 hideStandardChartCrosshair,
-syncChartTouchPan
+syncChartTouchPan,
+onTextPlaced
 } =
 deps;
 
@@ -1197,6 +1203,20 @@ price: pts[0].price
 });
 }
 
+if(isTextTool(getPlacement().type) && pts.length >= 1){
+const textStyle =
+baseDefaultStyle("text");
+created = makeShape("text", {
+time: pts[0].time,
+price: pts[0].price,
+p1: pts[0],
+text: TEXT_DEFAULT_CONTENT,
+fontSize: textStyle.fontSize,
+fontFamily: "Arial",
+color: textStyle.color
+});
+}
+
 if(getPlacement().type === "fib" && pts.length >= 2){
 created = makeShape("fib", { p1: pts[0], p2: pts[1] });
 ensureFibAnchorMinSpan(
@@ -1294,6 +1314,16 @@ setTool("cursor");
 updateStyleBar();
 syncChartTouchPan?.();
 redraw();
+
+if(
+created &&
+created.type ===
+"text"
+){
+onTextPlaced?.(
+created
+);
+}
 
 }
 

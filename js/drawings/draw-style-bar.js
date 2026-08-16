@@ -10,7 +10,7 @@ formatDrawColor
 
 import {
 isCoarseTouchViewport
-} from "../chart-import.js?v=44";
+} from "../chart-import.js?v=46";
 
 import {
 STROKE,
@@ -52,6 +52,13 @@ positionEntryPrice
 } from "./position.js?v=9";
 
 import {
+isTextTool,
+TEXT_SIZE_OPTIONS,
+clampTextFontSize,
+TEXT_DEFAULT_SIZE
+} from "./text.js?v=3";
+
+import {
 parseMoneyInput,
 calcPositionVolumeUsd
 } from "../position-sizing.js?v=3";
@@ -73,7 +80,7 @@ listTemplatesForType,
 mergeStyleSnapshot,
 saveNamedTemplate,
 deleteTemplateAtIndex
-} from "./draw-templates.js?v=9";
+} from "./draw-templates.js?v=10";
 
 export function createDrawStyleBar(
 deps
@@ -98,6 +105,9 @@ widthBtn,
 widthLabel,
 widthPreview,
 widthPopover,
+textSizeBtn,
+textSizeLabel,
+textSizePopover,
 settingsPopover,
 settingsBtn,
 deleteOneBtn,
@@ -2217,6 +2227,12 @@ color: activeColor ||
 STROKE,
 lineWidth: Number(
 widthActive?.dataset.width || 1
+),
+fontSize:
+clampTextFontSize(
+textSizePopover?.querySelector(".text-size-option.active")?.dataset.size ||
+textSizeLabel?.textContent ||
+TEXT_DEFAULT_SIZE
 )
 };
 
@@ -2304,6 +2320,34 @@ widthLabel.textContent = `${lineWidth}px`;
 
 if(widthPreview){
 widthPreview.style.height = `${lineWidth}px`;
+}
+
+}
+
+function setActiveTextSize(
+fontSize
+){
+
+const size =
+clampTextFontSize(
+fontSize
+);
+
+textSizePopover?.querySelectorAll(".text-size-option").forEach(btn=>{
+btn.classList.toggle(
+"active",
+Number(btn.dataset.size) ===
+size
+);
+});
+
+if(
+textSizeLabel
+){
+textSizeLabel.textContent =
+String(
+size
+);
 }
 
 }
@@ -2715,6 +2759,43 @@ type !== "fib" &&
 type !== "rectangle"
 );
 
+const isTextToolbar =
+isTextTool(
+type
+);
+
+styleBar?.classList.toggle(
+"draw-style-float--text",
+isTextToolbar
+);
+
+colorBtn?.classList.toggle(
+"draw-color-btn--text",
+isTextToolbar
+);
+
+if(
+colorBtn
+){
+colorBtn.title =
+isTextToolbar
+? "Цвет текста"
+: "Цвет";
+}
+
+textSizeBtn?.classList.toggle(
+"hidden",
+!isTextToolbar
+);
+
+if(
+isTextToolbar
+){
+setActiveTextSize(
+style.fontSize
+);
+}
+
 const isPosToolbar =
 isPositionType(type);
 
@@ -2747,7 +2828,8 @@ type ===
 widthBtn?.classList.toggle(
 "hidden",
 isPosToolbar ||
-isArrowTool
+isArrowTool ||
+isTextToolbar
 );
 
 positionRiskWrap?.classList.toggle(
@@ -3034,6 +3116,18 @@ panel.fillOpacity;
 
 }
 
+}else if(
+isTextTool(
+target.type
+)
+){
+
+target.color = style.color;
+target.fontSize =
+clampTextFontSize(
+style.fontSize
+);
+
 }else{
 
 target.color = style.color;
@@ -3055,6 +3149,18 @@ const defaultsPayload =
 color: style.color,
 lineWidth: style.lineWidth
 };
+
+if(
+isTextTool(
+type
+)
+){
+defaultsPayload.fontSize =
+clampTextFontSize(
+style.fontSize
+);
+delete defaultsPayload.lineWidth;
+}
 
 if(style.fibLevels){
 
@@ -3975,6 +4081,7 @@ commitFibPanelToShape();
 
 colorPopover?.classList.add("hidden");
 widthPopover?.classList.add("hidden");
+textSizePopover?.classList.add("hidden");
 settingsPopover?.classList.add("hidden");
 closeAllFibLineStyleMenus();
 closeAllFibLineWidthMenus();
@@ -4067,6 +4174,84 @@ if(open){
 positionPopover(widthPopover, 40);
 widthPopover?.classList.remove("hidden");
 }
+
+});
+
+function ensureTextSizeOptions(){
+
+if(
+!textSizePopover ||
+textSizePopover.querySelector(
+".text-size-option"
+)
+){
+return;
+}
+
+TEXT_SIZE_OPTIONS.forEach(
+size=>{
+
+const btn =
+document.createElement(
+"button"
+);
+
+btn.type =
+"button";
+btn.className =
+"text-size-option";
+btn.dataset.size =
+String(
+size
+);
+btn.textContent =
+String(
+size
+);
+textSizePopover.appendChild(
+btn
+);
+
+}
+);
+
+}
+
+ensureTextSizeOptions();
+
+textSizeBtn?.addEventListener("click", e=>{
+
+e.stopPropagation();
+
+const open =
+textSizePopover?.classList.contains("hidden");
+
+closePopovers();
+
+if(
+open &&
+textSizePopover
+){
+positionPopover(textSizePopover, 40);
+textSizePopover.classList.remove("hidden");
+}
+
+});
+
+textSizePopover?.querySelectorAll(".text-size-option").forEach(btn=>{
+
+btn.addEventListener("click", e=>{
+
+e.stopPropagation();
+setActiveTextSize(
+Number(
+btn.dataset.size
+)
+);
+applyStyleFromUI("fontSize");
+textSizePopover.classList.add("hidden");
+
+});
 
 });
 

@@ -5,11 +5,11 @@ formatDrawColor
 
 import {
 TRASH_ICON_SVG
-} from "../draw-ui-shared.js?v=35";
+} from "../draw-ui-shared.js?v=36";
 
 import {
 closeAllWidgetDrawToolsMenus
-} from "../watchlist-draw-ui.js?v=16";
+} from "../watchlist-draw-ui.js?v=17";
 
 import {
 ensureDrawToolsVisible
@@ -49,7 +49,7 @@ ensureDomChartCrosshair,
 hideDomChartCrosshair,
 positionTabletProbeHorizInStack,
 fullCrosshairOptions
-} from "../chart-import.js?v=44";
+} from "../chart-import.js?v=46";
 
 import {
 STROKE,
@@ -108,7 +108,7 @@ getPositionHandleScreens as resolvePositionHandleScreens
 
 import {
 createDrawPrefs
-} from "./draw-prefs.js?v=2";
+} from "./draw-prefs.js?v=3";
 
 import {
 createPositionDraw
@@ -120,11 +120,11 @@ pickUi
 
 import {
 createDrawHitTester
-} from "./draw-hit.js?v=10";
+} from "./draw-hit.js?v=11";
 
 import {
 createDrawRenderer
-} from "./draw-render.js?v=14";
+} from "./draw-render.js?v=15";
 
 import {
 snapPlotToCandleWick
@@ -141,7 +141,7 @@ updateChartRulerLabelEl
 
 import {
 mountTabletDrawInput
-} from "../drawings-tablet-input.js?v=4";
+} from "../drawings-tablet-input.js?v=5";
 
 import {
 cloneDrawingsForUndo,
@@ -150,15 +150,15 @@ createDrawUndoStack
 
 import {
 createDrawDesktopSelection
-} from "./draw-edit-desktop.js?v=9";
+} from "./draw-edit-desktop.js?v=10";
 
 import {
 createDrawingsPersist
-} from "./drawings-persist.js?v=9";
+} from "./drawings-persist.js?v=10";
 
 import {
 createDrawStyleBar
-} from "./draw-style-bar.js?v=29";
+} from "./draw-style-bar.js?v=30";
 
 import {
 createDrawAlertsChart
@@ -166,7 +166,13 @@ createDrawAlertsChart
 
 import {
 createDrawPlacement
-} from "./draw-placement.js?v=10";
+} from "./draw-placement.js?v=11";
+
+import {
+createDrawTextEditor,
+isTextTool,
+hitTestTextBody
+} from "./text.js?v=3";
 
 import {
 createBrushPlacement
@@ -174,7 +180,7 @@ createBrushPlacement
 
 import {
 createDrawEditInteraction
-} from "./draw-edit-interaction.js?v=13";
+} from "./draw-edit-interaction.js?v=14";
 
 import {
 createDrawChartInput
@@ -186,7 +192,7 @@ createDrawPriceScale
 
 import {
 createDrawRedrawLoop
-} from "./draw-redraw-loop.js?v=8";
+} from "./draw-redraw-loop.js?v=9";
 
 import {
 isAlgoReducedCloudClient
@@ -288,6 +294,15 @@ pickUi(uiRoot, "draw-width-preview", ".draw-width-preview");
 const widthPopover =
 pickUi(uiRoot, "draw-width-popover", ".draw-width-popover");
 
+const textSizeBtn =
+pickUi(uiRoot, "draw-text-size-btn", ".draw-text-size-btn");
+
+const textSizeLabel =
+pickUi(uiRoot, "draw-text-size-label", ".draw-text-size-label");
+
+const textSizePopover =
+pickUi(uiRoot, "draw-text-size-popover", ".draw-text-size-popover");
+
 const settingsPopover =
 pickUi(uiRoot, "draw-settings-popover", ".draw-settings-popover");
 
@@ -321,6 +336,8 @@ let lastLoadedSymbol = null;
 const drawUndo =
 createDrawUndoStack();
 let selectedId = null;
+let textEditor =
+null;
 /** @type {ReturnType<typeof createDrawDesktopSelection> | null} */
 let desktopEdit =
 null;
@@ -2530,6 +2547,15 @@ point: { time: shape.time, price: shape.price }
 
 }
 
+if(isTextTool(shape.type)){
+
+return [{
+id: "anchor",
+point: { time: shape.time, price: shape.price }
+}];
+
+}
+
 if(shape.type === "channel"){
 
 const p4 =
@@ -2717,6 +2743,9 @@ getPlacement:()=>placement,
 getPreviewPoint:()=>previewPoint,
 getPreviewXY:()=>previewXY,
 getSelectedId:()=>selectedId,
+getEditingTextId:()=>
+textEditor?.editingId?.() ||
+null,
 parseDrawColor,
 formatDrawColor
 });
@@ -2978,7 +3007,25 @@ syncChartRulerEndFromPlot,
 getChartRulerStart:()=>chartRulerStart,
 showStandardChartCrosshair,
 hideStandardChartCrosshair,
-syncChartTouchPan
+syncChartTouchPan,
+onTextPlaced(
+shape
+){
+
+desktopEdit?.pinDrawingSelection?.(
+shape?.id
+);
+updateStyleBar();
+
+requestAnimationFrame(
+()=>{
+textEditor?.begin?.(
+shape
+);
+}
+);
+
+}
 });
 
 ({
@@ -3100,6 +3147,20 @@ dist = channelBodyDist(px, py, d);
 if(d.type === "brush"){
 
 dist = brushBodyDist(px, py, d);
+
+}
+
+if(isTextTool(d.type)){
+
+dist =
+hitTestTextBody(
+px,
+py,
+d,
+toXY
+)
+? 0
+: Infinity;
 
 }
 
@@ -3284,6 +3345,10 @@ if(!selectedId){
 return;
 }
 
+textEditor?.close?.(
+false
+);
+
 const removed =
 drawings.find(d=>d.id === selectedId);
 
@@ -3310,6 +3375,87 @@ updateStyleBar();
 redraw();
 
 }
+
+textEditor =
+createDrawTextEditor({
+wrapEl,
+toXY,
+getDrawings:()=>
+drawings,
+saveDrawings,
+redraw,
+touchShapeRevision,
+onEmptyDelete(
+id
+){
+selectedId =
+id;
+deleteSelected();
+}
+});
+
+function onTextDblClick(
+e
+){
+
+if(
+!alive ||
+!isActive()
+){
+return;
+}
+
+if(
+textEditor?.isEditing?.()
+){
+return;
+}
+
+const pt =
+pointerFromEvent(
+e
+);
+
+if(
+!pt
+){
+return;
+}
+
+const id =
+hitTest(
+pt.x,
+pt.y
+);
+const shape =
+drawings.find(
+d=>
+d.id ===
+id
+);
+
+if(
+!isTextTool(
+shape?.type
+)
+){
+return;
+}
+
+e.preventDefault();
+selectedId =
+id;
+updateStyleBar();
+textEditor.begin(
+shape
+);
+
+}
+
+wrapEl.addEventListener(
+"dblclick",
+onTextDblClick
+);
 
 function clearAllDrawingsOnChart(){
 
@@ -4044,6 +4190,9 @@ widthBtn,
 widthLabel,
 widthPreview,
 widthPopover,
+textSizeBtn,
+textSizeLabel,
+textSizePopover,
 settingsPopover,
 settingsBtn,
 deleteOneBtn,
@@ -4115,6 +4264,7 @@ null,
 styleBar,
 colorPopover,
 widthPopover,
+textSizePopover,
 settingsPopover,
 positionRiskWrap,
 fibPortalHitTest,
@@ -5475,6 +5625,13 @@ true
 }
 
 alive = false;
+textEditor?.destroy?.();
+textEditor =
+null;
+wrapEl.removeEventListener(
+"dblclick",
+onTextDblClick
+);
 resetDrawUndoHistory();
 selectedId = null;
 hideDomChartCrosshair(

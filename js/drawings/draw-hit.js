@@ -30,6 +30,10 @@ import {
 isCoarseTouchViewport
 } from "../chart/chart-options.js?v=7";
 
+import {
+hitTestTextBody
+} from "./text.js?v=3";
+
 /**
  * @param {object} deps
  * @returns {object} hit-test helpers
@@ -460,6 +464,7 @@ channelBodyDist,
 hitTestChannelBody,
 rectangleBodyDist,
 hitTestRectangleBody,
+hitTestTextBody,
 drawBodyHitThreshold(){
 return isCoarseTouchViewport()
 ? DRAW_BODY_HIT_THRESHOLD_TOUCH

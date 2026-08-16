@@ -186,19 +186,19 @@ color:#fff;
 }
 
 body.terminal-page #draw-toolbar.draw-toolbar-vertical .draw-btn img,
-body.terminal-page #draw-toolbar.draw-toolbar-vertical .draw-tool-icon{
+body.terminal-page #draw-toolbar.draw-toolbar-vertical .draw-btn svg,
+body.terminal-page #draw-toolbar.draw-toolbar-vertical .draw-tool-icon,
+body.terminal-page #draw-toolbar.draw-toolbar-vertical .draw-pos-icon,
+body.terminal-page #draw-toolbar.draw-toolbar-vertical .draw-btn .draw-tool-icon--xl{
 display:block;
 width:25px;
 height:35px;
+max-width:25px;
+max-height:35px;
 object-fit:contain;
 object-position:center;
 image-rendering:auto;
 flex-shrink:0;
-}
-
-body.terminal-page #draw-toolbar.draw-toolbar-vertical .draw-btn .draw-tool-icon--xl{
-width:25px;
-height:35px;
 }
 
 body.terminal-page #draw-toolbar.draw-toolbar-vertical .draw-tool-clear-all:hover,
@@ -357,7 +357,8 @@ display:none !important;
 }
 
 body.terminal-page.coins-multi-chart-on #volume-wrap,
-body.terminal-page.coins-multi-chart-on #ao-wrap{
+body.terminal-page.coins-multi-chart-on #ao-wrap,
+body.terminal-page.coins-multi-chart-on #macd-wrap{
 display:none !important;
 }
 
@@ -667,7 +668,8 @@ color:#fff;
 
 body.terminal-page #rsi-wrap,
 body.terminal-page #volume-wrap,
-body.terminal-page #ao-wrap{
+body.terminal-page #ao-wrap,
+body.terminal-page #macd-wrap{
 border-top:var(--coins-block-separator);
 }
 
@@ -695,6 +697,14 @@ position:relative;
 body.terminal-page #ao-wrap{
 flex:0 0 var(--coins-ao-h, clamp(102px,17.6dvh,160px));
 height:var(--coins-ao-h, clamp(102px,17.6dvh,160px));
+min-height:102px;
+max-height:none;
+position:relative;
+}
+
+body.terminal-page #macd-wrap{
+flex:0 0 var(--coins-macd-h, clamp(102px,17.6dvh,160px));
+height:var(--coins-macd-h, clamp(102px,17.6dvh,160px));
 min-height:102px;
 max-height:none;
 position:relative;

@@ -4,7 +4,7 @@ isTabletChartViewport,
 hasAnyFinePointer,
 positionDomChartCrosshair,
 hideDomChartCrosshair
-} from "./chart-import.js?v=44";
+} from "./chart-import.js?v=46";
 
 import {
 isPositionType
@@ -265,7 +265,9 @@ return 3;
 
 if(
 isHorizPriceTool(type) ||
-isPositionType(type)
+isPositionType(type) ||
+type ===
+"text"
 ){
 return 1;
 }
