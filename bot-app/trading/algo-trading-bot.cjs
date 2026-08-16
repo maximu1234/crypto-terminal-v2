@@ -33,7 +33,7 @@ normalizeSt1,
 normalizeSt2,
 normalizeSt3,
 listManualRefreshStrategyIds,
-sideToFlagId
+strategyIdToFlagId
 } =
 require(
 "./algo-bot-store.cjs"
@@ -95,7 +95,10 @@ strategyId
 
 return getWatchlistPlan(
 exchangeId,
-prefs
+{
+...prefs,
+strategyId
+}
 );
 
 }
@@ -114,6 +117,218 @@ strategyId
 
 }
 
+function normalizeSessionBookSymbol(
+symbol
+){
+
+return String(
+symbol ||
+""
+).replace(
+/\.P$/i,
+""
+).trim().toUpperCase();
+
+}
+
+function countSessionTickerBook(
+book
+){
+
+const tickers =
+book?.tickers;
+
+if(
+!tickers ||
+typeof tickers !==
+"object"
+){
+return 0;
+}
+
+return Object.keys(
+tickers
+).filter(
+key=>{
+const row =
+tickers[
+key
+];
+
+return row &&
+typeof row ===
+"object";
+}
+).length;
+
+}
+
+/**
+ * Runtime currently has one kline stream TF per bot session.
+ * The source of truth is every ticker row in the frozen book; strategy prefs
+ * and book-level metadata are not execution fallbacks.
+ * @param {object|null} book
+ * @returns {{ ok: boolean, tf?: string, message?: string }}
+ */
+function resolveSessionTickerBookTf(
+book
+){
+
+const rows =
+Object.values(
+book?.tickers ||
+{}
+).filter(
+row=>
+row &&
+typeof row ===
+"object"
+);
+
+if(
+Number(
+book?.version
+) <
+2 ||
+rows.some(
+row=>
+!Object.prototype.hasOwnProperty.call(
+row,
+"supertrendLongFilter"
+) ||
+!Object.prototype.hasOwnProperty.call(
+row,
+"supertrendLongAtr"
+) ||
+!Object.prototype.hasOwnProperty.call(
+row,
+"supertrendLongFactor"
+) ||
+!Object.prototype.hasOwnProperty.call(
+row,
+"supertrendLongTf"
+) ||
+!Object.prototype.hasOwnProperty.call(
+row,
+"supertrendShortFilter"
+) ||
+!Object.prototype.hasOwnProperty.call(
+row,
+"supertrendShortAtr"
+) ||
+!Object.prototype.hasOwnProperty.call(
+row,
+"supertrendShortFactor"
+) ||
+!Object.prototype.hasOwnProperty.call(
+row,
+"supertrendShortTf"
+)
+)
+){
+return {
+ok:
+false,
+message:
+"Книга устарела: заново «Применить к боту» и «Загрузить книгу»"
+};
+}
+
+const tfs =
+new Set(
+rows.map(
+row=>
+String(
+row.tf ||
+""
+).trim()
+).filter(
+Boolean
+)
+);
+
+if(
+!rows.length ||
+tfs.size !==
+1 ||
+rows.some(
+row=>
+!String(
+row.tf ||
+""
+).trim()
+)
+){
+return {
+ok:
+false,
+message:
+"В книге у каждого тикера должен быть один общий таймфрейм"
+};
+}
+
+return {
+ok:
+true,
+tf:
+[
+...tfs
+][
+0
+]
+};
+
+}
+
+/**
+ * Бот торгует только тикеры из книги параметров.
+ * @param {string[]} symbols
+ * @param {object|null} book
+ * @returns {string[]}
+ */
+function filterSymbolsByTickerBook(
+symbols,
+book
+){
+
+const tickers =
+book?.tickers;
+
+if(
+!tickers ||
+typeof tickers !==
+"object"
+){
+return [];
+}
+
+const list =
+Array.isArray(
+symbols
+)
+? symbols
+: [];
+
+return list.filter(
+symbol=>{
+const sym =
+normalizeSessionBookSymbol(
+symbol
+);
+
+return !!sym &&
+tickers[
+sym
+] &&
+typeof tickers[
+sym
+] ===
+"object";
+}
+);
+
+}
+
 function syncEngineWatchlist(
 strategyId =
 runningStrategyId ||
@@ -125,9 +340,14 @@ getStrategyWatchlistPlan(
 "bybit",
 strategyId
 );
+const symbols =
+filterSymbolsByTickerBook(
+plan.symbols,
+sessionTickerBook
+);
 
 patternEngine.syncWatchlist(
-plan.symbols,
+symbols,
 {
 symbolAllowedSides:
 plan.symbolAllowedSides,
@@ -140,7 +360,10 @@ plan.side
 }
 );
 
-return plan;
+return {
+...plan,
+symbols
+};
 
 }
 
@@ -157,7 +380,10 @@ strategyId ===
 const plan =
 getWatchlistPlan(
 "bybit",
-prefs
+{
+...prefs,
+strategyId
+}
 );
 
 return {
@@ -171,7 +397,7 @@ plan.useFavorites,
 symbolAllowedSides:
 plan.symbolAllowedSides,
 tf:
-prefs.tf,
+null,
 timeoutBars:
 prefs.timeoutBars,
 maxPt1Pt4Bars:
@@ -237,6 +463,10 @@ null;
 
 /** @type {"st1"|"st2"|"st3"|null} */
 let runningStrategyId =
+null;
+
+/** Замороженная книга per-ticker params на текущую сессию (не черновик парсинга). */
+let sessionTickerBook =
 null;
 
 let sessionId =
@@ -425,7 +655,10 @@ active.sides,
 useFavorites:
 !!active.useFavorites,
 tf:
-active.tf,
+String(
+sessionTickerBook?.tf ||
+""
+),
 exchangeId,
 riskUsd:
 active.riskUsd,
@@ -475,6 +708,32 @@ manualRefreshStrategies:
 active.manualRefreshStrategies,
 strategyPrefs:
 active,
+tickerBook:
+sessionTickerBook
+? {
+strategyId:
+sessionTickerBook.strategyId ||
+null,
+tickerCount:
+Number(
+sessionTickerBook.tickerCount
+) ||
+Object.keys(
+sessionTickerBook.tickers ||
+{}
+).length,
+publishedAt:
+Number(
+sessionTickerBook.publishedAt
+) ||
+0,
+tf:
+String(
+sessionTickerBook.tf ||
+""
+)
+}
+: null,
 armedCount:
 engine.armedCount,
 armedSetups:
@@ -759,6 +1018,8 @@ message
 );
 
 runningStrategyId =
+null;
+sessionTickerBook =
 null;
 statusMessage =
 message;
@@ -1164,7 +1425,7 @@ exitProfile:
 engine.exitProfile,
 side,
 tf:
-shellPrefs.tf,
+sessionTickerBook?.tf,
 minWinRate:
 shellPrefs.minWinRate,
 timeoutBars:
@@ -1210,9 +1471,8 @@ break;
 okAny =
 true;
 const flagId =
-result.flagId ||
-sideToFlagId(
-side
+strategyIdToFlagId(
+strategyId
 );
 let bucket =
 mergedByFlag.get(
@@ -1567,11 +1827,86 @@ getStrategyPrefs(
 strategyId
 );
 
-const watchlist =
+if(
+payload?.tickerBookSnapshot &&
+typeof payload.tickerBookSnapshot ===
+"object" &&
+payload.tickerBookSnapshot.tickers &&
+typeof payload.tickerBookSnapshot.tickers ===
+"object"
+){
+sessionTickerBook =
+payload.tickerBookSnapshot;
+}else{
+sessionTickerBook =
+null;
+}
+
+const bookCount =
+countSessionTickerBook(
+sessionTickerBook
+);
+
+if(
+bookCount <
+1
+){
+sessionTickerBook =
+null;
+
+return {
+ok:
+false,
+message:
+"Нет книги параметров для бота. Сначала «Подобрать для всех» → «Применить к боту», затем запустите бота."
+};
+}
+
+const bookTfResult =
+resolveSessionTickerBookTf(
+sessionTickerBook
+);
+
+if(
+!bookTfResult.ok
+){
+sessionTickerBook =
+null;
+
+return {
+ok:
+false,
+message:
+bookTfResult.message
+};
+}
+
+const sessionTf =
+bookTfResult.tf;
+sessionTickerBook.tf =
+sessionTf;
+
+const watchlistRaw =
 getStrategyWatchlist(
 "bybit",
 strategyId
 );
+const watchlist =
+filterSymbolsByTickerBook(
+watchlistRaw,
+sessionTickerBook
+);
+
+if(
+!watchlistRaw.length
+){
+return {
+ok:
+false,
+message:
+"Список тикеров пуст — заполните список Стратегии через «Подобрать для всех» → «Применить к боту»"
+};
+}
 
 if(
 !watchlist.length
@@ -1580,9 +1915,7 @@ return {
 ok:
 false,
 message:
-prefs.useFavorites
-? "Список Избранные пуст — отметьте монеты оранжевым флагом"
-: "Список тикеров пуст — добавьте монеты в Алго-список"
+`В книге бота ${bookCount} тикеров, но ни одного нет в текущем списке/избранном. Совместите список с книгой или заново «Применить к боту».`
 };
 }
 
@@ -1602,7 +1935,17 @@ watchlist.length
 }
 );
 sessionLog.appendNote(
-`Запуск ${strategyId} (mode=${tradingMode}, watchlist=${watchlist.length})`
+`Запуск ${strategyId} (mode=${tradingMode}, watchlist=${watchlist.length}, tickerBook=${
+sessionTickerBook
+? Number(
+sessionTickerBook.tickerCount
+) ||
+Object.keys(
+sessionTickerBook.tickers ||
+{}
+).length
+: 0
+})`
 );
 
 await patternEngine.startPatternEngine(
@@ -1611,11 +1954,16 @@ await patternEngine.startPatternEngine(
 prefs,
 strategyId
 ),
+tf:
+sessionTf,
 tradingMode,
 patternSettings:
 readPattern12Settings(),
 symbols:
 watchlist,
+tickerBook:
+sessionTickerBook?.tickers ||
+null,
 onActivity:()=>{
 void refreshLiveCounts().then(
 snapshot=>{
@@ -1655,6 +2003,8 @@ strategies
 err
 ){
 runningStrategyId =
+null;
+sessionTickerBook =
 null;
 statusMessage =
 String(

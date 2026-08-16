@@ -5,7 +5,7 @@
 import {
 alertPriceForDisplay,
 getActiveAlerts
-} from "../alerts.js?v=105";
+} from "../alerts.js?v=106";
 
 function normalizeSymbol(
 raw
@@ -168,22 +168,21 @@ break;
 
 }
 
-return {
-...ladder,
-rows:
-rows.map(
-(
-row,
+for(
+let i =
+0;
+i <
+rows.length;
+i++
+){
+rows[
 i
-)=>
-({
-...row,
-alertUnderline:
+].alertUnderline =
 underlineAt.has(
 i
-)
-})
-)
-};
+);
+}
+
+return ladder;
 
 }

@@ -74,7 +74,7 @@ false
 useFavorites:
 false,
 refreshHours:
-24,
+0,
 refreshMinutes:
 0,
 minWinRate:
@@ -948,21 +948,11 @@ src.side
 )
 ),
 useFavorites:
-!!src.useFavorites,
+false,
 refreshHours:
-clampInt(
-src.refreshHours,
 0,
-168,
-DEFAULT_ST1.refreshHours
-),
 refreshMinutes:
-clampInt(
-src.refreshMinutes,
 0,
-59,
-DEFAULT_ST1.refreshMinutes
-),
 minWinRate:
 clampInt(
 src.minWinRate,
@@ -1368,6 +1358,38 @@ return FLAG_LONG_5M;
 
 }
 
+/**
+ * Списки тикеров = Стратегия 1/2/3 (storage ids legacy *5m).
+ * @param {string} strategyId
+ */
+function strategyIdToFlagId(
+strategyId
+){
+
+const id =
+String(
+strategyId ||
+"st1"
+).trim().toLowerCase();
+
+if(
+id ===
+"st2"
+){
+return FLAG_SHORT_5M;
+}
+
+if(
+id ===
+"st3"
+){
+return FLAG_BOTH_5M;
+}
+
+return FLAG_LONG_5M;
+
+}
+
 function readPattern12Settings(){
 
 const raw =
@@ -1462,8 +1484,7 @@ pending?.pendingEntries ||
 
 /**
  * Watchlist + per-symbol allowed setup sides.
- * Лонг → long из списка Лонг; Шорт → short из Шорт;
- * Лонг и Шорт → оба из Both; Избранные → один список по галочкам сторон.
+ * Список = стратегия (st1/st2/st3); стороны задают long/short внутри списка.
  * @param {string} [exchangeId]
  * @param {object} prefs
  */
@@ -1491,8 +1512,6 @@ normalizeSides(
 prefs.sides,
 prefs.side
 );
-const useFavorites =
-!!prefs.useFavorites;
 /** @type {Record<string, Array<"long"|"short">>} */
 const symbolAllowedSides =
 {};
@@ -1539,14 +1558,10 @@ setupSide
 
 }
 
-if(
-useFavorites
-){
-const favs =
-flags[
-FLAG_FAVORITES
-] ||
-[];
+const flagId =
+strategyIdToFlagId(
+prefs.strategyId
+);
 const allowLong =
 sides.long ||
 sides.both;
@@ -1555,7 +1570,12 @@ sides.short ||
 sides.both;
 
 for(
-const symbol of favs
+const symbol of (
+flags[
+flagId
+] ||
+[]
+)
 ){
 if(
 allowLong
@@ -1573,65 +1593,6 @@ allow(
 symbol,
 "short"
 );
-}
-}
-}else{
-if(
-sides.long
-){
-for(
-const symbol of (
-flags[
-FLAG_LONG_5M
-] ||
-[]
-)
-){
-allow(
-symbol,
-"long"
-);
-}
-}
-
-if(
-sides.short
-){
-for(
-const symbol of (
-flags[
-FLAG_SHORT_5M
-] ||
-[]
-)
-){
-allow(
-symbol,
-"short"
-);
-}
-}
-
-if(
-sides.both
-){
-for(
-const symbol of (
-flags[
-FLAG_BOTH_5M
-] ||
-[]
-)
-){
-allow(
-symbol,
-"long"
-);
-allow(
-symbol,
-"short"
-);
-}
 }
 }
 
@@ -1652,7 +1613,8 @@ return {
 symbols,
 symbolAllowedSides,
 sides,
-useFavorites,
+useFavorites:
+false,
 side:
 primarySide(
 sides
@@ -1678,7 +1640,7 @@ null,
 side
 ),
 useFavorites:
-!!opts?.useFavorites
+false
 }
 ).symbols;
 
@@ -1697,6 +1659,7 @@ writeTickerFlagsRoot,
 readPattern12Settings,
 writePattern12Settings,
 sideToFlagId,
+strategyIdToFlagId,
 enabledSides,
 normalizeSides,
 primarySide,

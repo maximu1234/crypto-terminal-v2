@@ -16,15 +16,15 @@ stopAlgoTradeStreamBridge
 
 import {
 initAlgoTradeBookPanel
-} from "./book-panel.js?v=9";
+} from "./book-panel.js?v=10";
 
 import {
 createTradeChartOverlay
-} from "./chart-overlay.js?v=3";
+} from "./chart-overlay.js?v=4";
 
 import {
 createTradeChartOrders
-} from "./chart-orders.js?v=3";
+} from "./chart-orders.js?v=4";
 
 /**
  * @param {{

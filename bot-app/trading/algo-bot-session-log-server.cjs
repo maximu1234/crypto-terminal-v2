@@ -1,7 +1,7 @@
 /**
  * Direct LAN/HTTP access to session status logs (no Supabase / alert-worker).
  * Prefs: userData/algo-bot-session-log-server.json
- * Default port 17865. Auth: Bearer / ?token=
+ * Default port 17865. Auth: Bearer token (header only).
  */
 const http =
 require(
@@ -55,7 +55,7 @@ DEFAULT_PORT,
 token:
 "",
 bindHost:
-"0.0.0.0"
+"127.0.0.1"
 };
 
 function prefsPath(){
@@ -88,9 +88,9 @@ raw.token ||
 const bindHost =
 String(
 raw.bindHost ||
-"0.0.0.0"
+"127.0.0.1"
 ).trim() ||
-"0.0.0.0";
+"127.0.0.1";
 
 return {
 enabled:
@@ -289,12 +289,7 @@ return auth.slice(
 ).trim();
 }
 
-return String(
-url.searchParams.get(
-"token"
-) ||
-""
-).trim();
+return "";
 
 }
 

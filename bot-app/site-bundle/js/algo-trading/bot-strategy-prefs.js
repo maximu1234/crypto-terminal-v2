@@ -3,7 +3,7 @@
  */
 import {
 normalizeTpShares
-} from "./pattern-trade-stats-partial.js?v=19";
+} from "./pattern-trade-stats-partial.js?v=21";
 
 export const ALGO_BOT_STRATEGIES_KEY =
 "algo_trading_bot_strategies_v1";
@@ -190,19 +190,19 @@ alertLeadPct:
 minTurnover24hUsdt:
 20_000_000,
 side:
-"long",
+"both",
 sides:{
 long:
-true,
+false,
 short:
 false,
 both:
-false
+true
 },
 useFavorites:
 false,
 refreshHours:
-24,
+0,
 refreshMinutes:
 0,
 minWinRate:
@@ -589,76 +589,52 @@ return out.length
 }
 
 /**
- * @param {AlgoBotSide|AlgoBotSides} sideOrSides
+ * Подпись списка стратегии для бота (не long/short — списки = Ст1/2/3).
+ * @param {"st1"|"st2"|"st3"|string} strategyId
  * @param {boolean} [useFavorites]
  */
-export function botSideListLabel(
-sideOrSides,
-useFavorites =
+export function botStrategyListLabel(
+strategyId,
+_useFavorites =
 false
 ){
 
-if(
-useFavorites
-){
-return "Список: Избранные";
-}
-
-const sides =
-sideOrSides &&
-typeof sideOrSides ===
-"object" &&
-(
-"long" in sideOrSides ||
-"short" in sideOrSides ||
-"both" in sideOrSides
-)
-? normalizeBotSides(
-sideOrSides
-)
-: normalizeBotSides(
-null,
-sideOrSides
-);
-const labels =
-[];
+const id =
+String(
+strategyId ||
+"st1"
+).trim().toLowerCase();
 
 if(
-sides.long
+id ===
+"st2"
 ){
-labels.push(
-"Алго Лонг"
-);
+return "Список: Стратегия 2";
 }
 
 if(
-sides.short
+id ===
+"st3"
 ){
-labels.push(
-"Алго Шорт"
-);
+return "Список: Стратегия 3";
 }
 
-if(
-sides.both
-){
-labels.push(
-"Алго Лонг/Шорт"
-);
+return "Список: Стратегия 1";
+
 }
 
-if(
-!labels.length
+/**
+ * @param {AlgoBotSide|AlgoBotSides} sideOrSides
+ * @param {boolean} [useFavorites]
+ * @deprecated списки больше не по стороне — см. botStrategyListLabel
+ */
+export function botSideListLabel(
+sideOrSides,
+_useFavorites =
+false
 ){
-return "Список: Алго Лонг";
-}
 
-return labels.length ===
-1
-? `Список: ${labels[0]}`
-: `Списки: ${labels.join(
-" + "
-)}`;
+return "Список: Стратегия 1";
 
 }
 
@@ -723,9 +699,7 @@ parts.length
 )
 : "Лонг";
 
-return useFavorites
-? `${dir} · Избранные`
-: dir;
+return dir;
 
 }
 
@@ -974,7 +948,7 @@ n
  * Полный текстовый снимок настроек стратегии для окна Статус (только чтение).
  * @param {object|null|undefined} prefs
  * @param {"st1"|"st2"|"st3"|string|null|undefined} strategyId
- * @param {{ tradingMode?: string }|null|undefined} [extra]
+ * @param {{ tradingMode?: string, tickerBookTf?: string }|null|undefined} [extra]
  * @returns {{ label: string, value: string }[]}
  */
 export function formatBotStrategySettingsRows(
@@ -1011,16 +985,18 @@ extra?.tradingMode ||
 "manual"
 ? "Ручная торговля"
 : "Реальная торговля";
-const tf =
-BOT_TF_STATUS_LABELS[
-normalizeBotTf(
-p.tf
-)
-] ||
+const bookTf =
 String(
-p.tf ||
-"—"
-);
+extra?.tickerBookTf ||
+""
+).trim();
+const tf =
+bookTf
+? BOT_TF_STATUS_LABELS[
+bookTf
+] ||
+bookTf
+: "—";
 const stratLabel =
 id ===
 "st2"
@@ -1085,7 +1061,7 @@ p.pullbackBeforeArmPct
 },
 {
 label:
-"Таймфрейм",
+"Таймфрейм (книга)",
 value:
 tf
 },
@@ -1187,89 +1163,22 @@ label:
 "Торговля",
 value:
 botSidesDirectionLabel(
-sides,
-!!p.useFavorites
+sides
 )
 },
 {
 label:
 "Список",
 value:
-p.useFavorites
-? "Избранные"
-: botSideListLabel(
-sides
-)
-},
-{
-label:
-"Обновлять список тикеров каждые",
-value:
-`${formatStatusNumber(
-p.refreshHours,
-0
-)} ч ${formatStatusNumber(
-p.refreshMinutes,
-0
-)} мин`
-},
-{
-label:
-"По критериям",
-value:
-`${formatStatusNumber(
-p.minWinRate,
-0
-)}% успеха`
-},
-{
-label:
-"Режим подсчёта",
-value:
-normalizeBotRefreshStatsMode(
-p.refreshStatsMode
-) ===
-"real"
-? "Реальный подсчет"
-: "По критериям"
-}
-);
-
-if(
 id ===
-"st1"
-){
-const manual =
-normalizeManualRefreshStrategies(
-p.manualRefreshStrategies
-);
-const picked =
-[
-manual.st1
-? "Ст1"
-: null,
-manual.st2
-? "Ст2"
-: null,
-manual.st3
-? "Ст3"
-: null
-].filter(
-Boolean
-);
-rows.push(
-{
-label:
-"Скан стратегий (ручной)",
-value:
-picked.length
-? picked.join(
-", "
-)
-: "—"
+"st2"
+? "Стратегия 2"
+: id ===
+"st3"
+? "Стратегия 3"
+: "Стратегия 1"
 }
 );
-}
 
 return rows;
 
@@ -1277,6 +1186,7 @@ return rows;
 
 /**
  * @param {AlgoBotSide} side
+ * @deprecated списки по стратегии — botStrategyToFlagId / strategyIdToFlagId
  */
 export function botSideToFlagId(
 side
@@ -1292,6 +1202,37 @@ return "algoShort5m";
 if(
 side ===
 "both"
+){
+return "algoBoth5m";
+}
+
+return "algoLong5m";
+
+}
+
+/**
+ * @param {"st1"|"st2"|"st3"|string} strategyId
+ */
+export function botStrategyToFlagId(
+strategyId
+){
+
+const id =
+String(
+strategyId ||
+"st1"
+).trim().toLowerCase();
+
+if(
+id ===
+"st2"
+){
+return "algoShort5m";
+}
+
+if(
+id ===
+"st3"
 ){
 return "algoBoth5m";
 }
@@ -1481,21 +1422,11 @@ src.side
 )
 ),
 useFavorites:
-!!src.useFavorites,
+false,
 refreshHours:
-clampInt(
-src.refreshHours,
 0,
-168,
-base.refreshHours
-),
 refreshMinutes:
-clampInt(
-src.refreshMinutes,
 0,
-59,
-base.refreshMinutes
-),
 minWinRate:
 clampInt(
 src.minWinRate,
@@ -1627,6 +1558,28 @@ defaultStrategy3Prefs()
 
 }
 
+/**
+ * Какая стратегия отмечена для запуска бота (ровно одна).
+ * @param {unknown} raw
+ * @returns {"st1"|"st2"|"st3"}
+ */
+export function normalizeLaunchStrategyId(
+raw
+){
+
+if(
+raw ===
+"st2" ||
+raw ===
+"st3"
+){
+return raw;
+}
+
+return "st1";
+
+}
+
 export function loadBotStrategiesPrefs(){
 
 try{
@@ -1644,7 +1597,9 @@ defaultStrategy1Prefs(),
 st2:
 defaultStrategy2Prefs(),
 st3:
-defaultStrategy3Prefs()
+defaultStrategy3Prefs(),
+launchStrategyId:
+"st1"
 };
 }
 
@@ -1665,6 +1620,10 @@ parsed?.st2
 st3:
 normalizeStrategy3Prefs(
 parsed?.st3
+),
+launchStrategyId:
+normalizeLaunchStrategyId(
+parsed?.launchStrategyId
 )
 };
 }catch{
@@ -1674,14 +1633,16 @@ defaultStrategy1Prefs(),
 st2:
 defaultStrategy2Prefs(),
 st3:
-defaultStrategy3Prefs()
+defaultStrategy3Prefs(),
+launchStrategyId:
+"st1"
 };
 }
 
 }
 
 /**
- * @param {{ st1?: Partial<AlgoBotStrategy1Prefs>, st2?: object, st3?: object }} patch
+ * @param {{ st1?: Partial<AlgoBotStrategy1Prefs>, st2?: object, st3?: object, launchStrategyId?: "st1"|"st2"|"st3" }} patch
  */
 export function saveBotStrategiesPrefs(
 patch
@@ -1720,6 +1681,13 @@ patch.st3 ||
 {}
 )
 }
+),
+launchStrategyId:
+normalizeLaunchStrategyId(
+patch.launchStrategyId !==
+undefined
+? patch.launchStrategyId
+: cur.launchStrategyId
 )
 };
 

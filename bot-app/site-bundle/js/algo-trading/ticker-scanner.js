@@ -7,15 +7,15 @@ loadMarketHistory
 
 import {
 analyzeAlgoPatterns
-} from "./pattern-analysis.js?v=25";
+} from "./pattern-analysis.js?v=36";
 
 import {
 normalizeAlgoStatsMode
-} from "./pattern-trade-stats.js?v=12";
+} from "./pattern-trade-stats.js?v=14";
 
 import {
 readAlgoPattern12Settings
-} from "./pattern-12-settings.js?v=2";
+} from "./pattern-12-settings.js?v=3";
 
 import {
 resolveAlgoScanSymbols,
@@ -37,6 +37,10 @@ export const ALGO_TICKER_SCAN_TF_OPTIONS =
 "W"
 ];
 
+/**
+ * Глубина истории Алго: 10×~1000 ≈ 10 000 свечей.
+ * Одна константа для графика, «Подобрать параметры», «Подобрать для всех» и сканов.
+ */
 export const ALGO_TICKER_SCAN_HISTORY_REQUESTS =
 10;
 

@@ -15,13 +15,6 @@ DEFAULT_RISK_USD,
 DEFAULT_SL_PCT_OF_X
 } from "./pattern-entry-positions.js?v=14";
 
-import {
-normalizeAlgoTpEmaTrail,
-computeAlgoCloseEmaSeries,
-isAlgoTpEmaFavorable,
-isAlgoTpEmaAgainst
-} from "./pattern-tp-ema.js?v=1";
-
 export const DEFAULT_PARTIAL_TP1_X =
 0.5;
 
@@ -946,19 +939,6 @@ let profitUsd =
 0;
 let lossUsd =
 0;
-const useEmaTrail =
-normalizeAlgoTpEmaTrail(
-opts.tpEmaTrail
-);
-const ema =
-useEmaTrail
-? computeAlgoCloseEmaSeries(
-candles,
-opts.tpEmaLength
-)
-: null;
-let emaTrail =
-false;
 
 for(
 let i =
@@ -979,133 +959,6 @@ if(
 continue;
 }
 
-const close =
-Number(
-candle.close
-);
-const emaVal =
-ema
-? ema[
-i
-]
-: NaN;
-
-if(
-emaTrail
-){
-
-if(
-slReached(
-side,
-candle,
-slPrice
-)
-){
-
-const partUsd =
-linearUsdFromRisk(
-entry,
-slPrice,
-initialSl,
-riskUsd,
-remaining
-);
-const stopInProfit =
-side ===
-"short"
-? slPrice <
-entry
-: slPrice >
-entry;
-
-if(
-!Number.isFinite(
-partUsd
-)
-){
-lossUsd +=
-remaining *
-riskUsd;
-}else if(
-stopInProfit
-){
-profitUsd +=
-partUsd;
-}else{
-lossUsd +=
-partUsd;
-}
-remaining =
-0;
-
-return {
-status:
-"closed",
-exitBar:
-i,
-tpsHit:
-nextTp,
-profitUsd,
-lossUsd,
-netUsd:
-profitUsd -
-lossUsd,
-exitReason:
-"sl"
-};
-
-}
-
-if(
-isAlgoTpEmaAgainst(
-side,
-close,
-emaVal
-)
-){
-
-const partUsd =
-linearUsdFromRisk(
-entry,
-close,
-initialSl,
-riskUsd,
-remaining
-);
-
-if(
-Number.isFinite(
-partUsd
-)
-){
-profitUsd +=
-partUsd;
-}
-remaining =
-0;
-
-return {
-status:
-"closed",
-exitBar:
-i,
-tpsHit:
-nextTp,
-profitUsd,
-lossUsd,
-netUsd:
-profitUsd -
-lossUsd,
-exitReason:
-"ema"
-};
-
-}
-
-continue;
-
-}
-
 while(
 nextTp <
 3 &&
@@ -1119,24 +972,6 @@ nextTp
 ]
 )
 ){
-
-/* TP3 + TP→EMA: держим остаток, если close по тренду от EMA. */
-if(
-nextTp ===
-2 &&
-useEmaTrail &&
-isAlgoTpEmaFavorable(
-side,
-close,
-emaVal
-)
-){
-nextTp =
-3;
-emaTrail =
-true;
-break;
-}
 
 /* Последний ТП забирает остаток — так доли не «теряются» на округлении. */
 const frac =
@@ -1220,12 +1055,6 @@ trailSlX2
 
 }
 
-}
-
-if(
-emaTrail
-){
-continue;
 }
 
 if(
@@ -1327,9 +1156,7 @@ netUsd:
 profitUsd -
 lossUsd,
 exitReason:
-emaTrail
-? "ema-open"
-: "open"
+"open"
 };
 
 }
@@ -1489,6 +1316,12 @@ let bes =
 0;
 let sumR =
 0;
+let equityUsd =
+0;
+let equityPeakUsd =
+0;
+let maxDrawdownUsd =
+0;
 
 const riskUsd =
 clampRiskUsd(
@@ -1631,6 +1464,30 @@ bes +=
 1;
 }
 
+equityUsd +=
+Number.isFinite(
+trade.netUsd
+)
+? trade.netUsd
+: 0;
+if(
+equityUsd >
+equityPeakUsd
+){
+equityPeakUsd =
+equityUsd;
+}
+const dd =
+equityPeakUsd -
+equityUsd;
+if(
+dd >
+maxDrawdownUsd
+){
+maxDrawdownUsd =
+dd;
+}
+
 }
 
 const wins =
@@ -1743,7 +1600,8 @@ wins +
 losses +
 bes
 )
-: null
+: null,
+maxDrawdownUsd
 };
 
 }

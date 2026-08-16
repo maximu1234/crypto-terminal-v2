@@ -3,15 +3,18 @@
  */
 import {
 defaultPattern12Settings
-} from "./pattern-12-math.js?v=8";
+} from "./pattern-12-math.js?v=14";
 
 import {
-getOrComputeAlgoPattern12Scene
-} from "./pattern-12-scene-cache.js?v=2";
+getOrComputeAlgoPattern12Scene,
+setAlgoPattern12PaintEntryFilter,
+clearAlgoPattern12PaintEntryFilter
+} from "./pattern-12-scene-cache.js?v=9";
 
 import {
-detectPatternEntryEventsFromSetups
-} from "./pattern-entry-logic.js?v=12";
+detectPatternEntryEventsFromSetups,
+resolvePatternSetupEvent
+} from "./pattern-entry-logic.js?v=13";
 
 import {
 countPattern12SetupsFromScene,
@@ -23,16 +26,16 @@ computeAlgoTradeStats,
 renderAlgoTradeStats,
 filterSequentialEntryEvents,
 normalizeAlgoStatsMode
-} from "./pattern-trade-stats.js?v=12";
+} from "./pattern-trade-stats.js?v=14";
 
 import {
 computePartialTpTradeStats,
 filterSequentialPartialEntryEvents
-} from "./pattern-trade-stats-partial.js?v=19";
+} from "./pattern-trade-stats-partial.js?v=21";
 
 import {
-filterEntryEventsByEma
-} from "./pattern-ema-filter.js?v=3";
+filterEntryEventsBySupertrend
+} from "./pattern-supertrend-filter.js?v=3";
 
 /**
  * @param {Array} candles
@@ -60,27 +63,48 @@ const scene =
 getOrComputeAlgoPattern12Scene(
 candles,
 opts.patternSettings ||
-defaultPattern12Settings()
+defaultPattern12Settings(),
+opts.symbol ||
+opts.chartSymbol ||
+""
 );
-const events =
-filterEntryEventsByEma(
+const setups =
+scene?.setups;
+const gateSt1 =
+resolveStrategyGate(
+opts,
+"st1"
+);
+const gateSt2 =
+resolveStrategyGate(
+opts,
+"st2"
+);
+const gateSt3 =
+resolveStrategyGate(
+opts,
+"st3"
+);
+const packSt1 =
+entryPackForGate(
 candles,
-detectPatternEntryEventsFromSetups(
+setups,
+opts,
+gateSt1
+);
+const packSt2 =
+entryPackForGate(
 candles,
-scene?.setups,
-{
-timeoutBars:
-opts.timeoutBars,
-maxPt1Pt4Bars:
-opts.maxPt1Pt4Bars,
-/* TEMP_PULLBACK_BEFORE_ARM */
-pullbackBeforeArm:
-opts.pullbackBeforeArm,
-pullbackBeforeArmPct:
-opts.pullbackBeforeArmPct
-}
-),
-opts
+setups,
+opts,
+gateSt2
+);
+const packSt3 =
+entryPackForGate(
+candles,
+setups,
+opts,
+gateSt3
 );
 
 return {
@@ -88,13 +112,43 @@ counts:
 countPattern12SetupsFromScene(
 scene
 ),
-events,
+events:
+packSt1.events,
+pendingSetups:
+packSt1.pendingSetups,
+rawEvents:
+packSt1.rawEvents,
+eventsByStrategy:{
+st1:
+packSt1.events,
+st2:
+packSt2.events,
+st3:
+packSt3.events
+},
+rawEventsByStrategy:{
+st1:
+packSt1.rawEvents,
+st2:
+packSt2.rawEvents,
+st3:
+packSt3.rawEvents
+},
+pendingByStrategy:{
+st1:
+packSt1.pendingSetups,
+st2:
+packSt2.pendingSetups,
+st3:
+packSt3.pendingSetups
+},
 tradeStats:
 computeAlgoTradeStats(
 candles,
-events,
+packSt1.events,
 {
 ...opts,
+...gateSt1,
 statsMode:
 opts.statsMode
 }
@@ -102,9 +156,10 @@ opts.statsMode
 partialStats:
 computePartialTpTradeStats(
 candles,
-events,
+packSt2.events,
 {
 ...opts,
+...gateSt2,
 span:
 "x",
 trailSl:
@@ -127,9 +182,10 @@ opts.statsMode
 partialYStats:
 computePartialTpTradeStats(
 candles,
-events,
+packSt3.events,
 {
 ...opts,
+...gateSt3,
 span:
 "y",
 trailSl:
@@ -168,6 +224,34 @@ total:
 },
 events:
 [],
+pendingSetups:
+[],
+rawEvents:
+[],
+eventsByStrategy:{
+st1:
+[],
+st2:
+[],
+st3:
+[]
+},
+rawEventsByStrategy:{
+st1:
+[],
+st2:
+[],
+st3:
+[]
+},
+pendingByStrategy:{
+st1:
+[],
+st2:
+[],
+st3:
+[]
+},
 tradeStats:
 computeAlgoTradeStats(
 [],
@@ -229,6 +313,197 @@ opts.statsMode
 }
 
 /**
+ * @param {object} [opts]
+ * @param {"st1"|"st2"|"st3"} id
+ * @returns {object}
+ */
+function resolveStrategyGate(
+opts =
+{},
+id =
+"st1"
+){
+
+const nested =
+opts?.gates &&
+typeof opts.gates ===
+"object"
+? opts.gates[
+id
+]
+: null;
+const src =
+nested &&
+typeof nested ===
+"object"
+? {
+...opts,
+...nested
+}
+: opts;
+
+return {
+slPctOfX:
+src.slPctOfX,
+pullbackBeforeArm:
+src.pullbackBeforeArm,
+pullbackBeforeArmPct:
+src.pullbackBeforeArmPct,
+supertrendLongFilter:
+src.supertrendLongFilter,
+supertrendLongAtr:
+src.supertrendLongAtr,
+supertrendLongFactor:
+src.supertrendLongFactor,
+supertrendLongTf:
+src.supertrendLongTf,
+supertrendShortFilter:
+src.supertrendShortFilter,
+supertrendShortAtr:
+src.supertrendShortAtr,
+supertrendShortFactor:
+src.supertrendShortFactor,
+supertrendShortTf:
+src.supertrendShortTf
+};
+
+}
+
+/**
+ * @param {object} [opts]
+ * @returns {"st1"|"st2"|"st3"}
+ */
+function chartStrategyIdFromOpts(
+opts =
+{}
+){
+
+if(
+opts.chartPositionsStrategy ===
+"partial-tp"
+){
+return "st2";
+}
+
+if(
+opts.chartPositionsStrategy ===
+"partial-tp-y"
+){
+return "st3";
+}
+
+return "st1";
+
+}
+
+/**
+ * @param {Array} candles
+ * @param {Array|null|undefined} setups
+ * @param {object} opts
+ * @param {object} gate
+ */
+function entryPackForGate(
+candles,
+setups,
+opts,
+gate
+){
+
+const detectOpts =
+{
+timeoutBars:
+opts.timeoutBars,
+maxPt1Pt4Bars:
+opts.maxPt1Pt4Bars,
+/* TEMP_PULLBACK_BEFORE_ARM */
+pullbackBeforeArm:
+gate.pullbackBeforeArm,
+pullbackBeforeArmPct:
+gate.pullbackBeforeArmPct
+};
+
+const rawEvents =
+detectPatternEntryEventsFromSetups(
+candles,
+setups,
+detectOpts
+);
+
+return {
+events:
+filterEntryEventsBySupertrend(
+candles,
+rawEvents,
+{
+...opts,
+...gate
+}
+),
+rawEvents,
+pendingSetups:
+listPendingPatternSetups(
+candles,
+setups,
+detectOpts
+)
+};
+
+}
+
+/**
+ * Сетапы без entry/cancel на текущей истории — ещё «в работе» на графике.
+ * @param {Array} candles
+ * @param {Array|null|undefined} setups
+ * @param {object} [detectOpts]
+ * @returns {Array}
+ */
+function listPendingPatternSetups(
+candles,
+setups,
+detectOpts =
+{}
+){
+
+const list =
+Array.isArray(
+setups
+)
+? setups
+: [];
+const pending =
+[];
+
+for(
+const setup of list
+){
+
+if(
+resolvePatternSetupEvent(
+candles,
+setup,
+detectOpts
+) ==
+null
+){
+pending.push(
+setup
+);
+}
+
+}
+
+return pending;
+
+}
+
+/** @type {Array|null} */
+let lastCachedEntryEvents =
+null;
+/** @type {{ st1: Array, st2: Array, st3: Array }|null} */
+let lastCachedEventsByStrategy =
+null;
+
+/**
  * Clear «Данные» panel + entry markers (pending full history / error).
  * @param {{ setEvents?: (events: Array) => void }|null} [entryOverlay]
  */
@@ -236,6 +511,11 @@ export function clearAlgoPatternAnalysisUi(
 entryOverlay =
 null
 ){
+
+lastCachedEntryEvents =
+null;
+lastCachedEventsByStrategy =
+null;
 
 renderAlgoPatternCounts(
 null
@@ -264,37 +544,120 @@ document
 entryOverlay?.setEvents?.(
 []
 );
+clearAlgoPattern12PaintEntryFilter();
 
 }
 
 /**
+ * Apply counts/stats/overlay from already-built analysis parts.
  * @param {Array} candles
  * @param {{ setEvents?: (events: Array) => void }|null} entryOverlay
- * @param {object} [opts]
+ * @param {object} opts
+ * @param {{
+ *   counts?: object,
+ *   events: Array,
+ *   pendingSetups?: Array,
+ *   rawEvents?: Array,
+ *   eventsByStrategy?: { st1?: Array, st2?: Array, st3?: Array },
+ *   rawEventsByStrategy?: { st1?: Array, st2?: Array, st3?: Array },
+ *   pendingByStrategy?: { st1?: Array, st2?: Array, st3?: Array },
+ *   tradeStats: object,
+ *   partialStats: object,
+ *   partialYStats: object
+ * }} parts
  */
-export function refreshAlgoPatternAnalysis(
+function applyAlgoPatternAnalysisUi(
 candles,
 entryOverlay,
-opts =
-{}
+opts,
+parts
 ){
 
-try{
-const {
-counts,
-events,
-tradeStats,
-partialStats,
-partialYStats
-} =
-analyzeAlgoPatterns(
-candles,
+const chartId =
+chartStrategyIdFromOpts(
 opts
 );
+const events =
+Array.isArray(
+parts.eventsByStrategy?.[
+chartId
+]
+)
+? parts.eventsByStrategy[
+chartId
+]
+: Array.isArray(
+parts.events
+)
+? parts.events
+: [];
+const pendingSetups =
+Array.isArray(
+parts.pendingByStrategy?.[
+chartId
+]
+)
+? parts.pendingByStrategy[
+chartId
+]
+: Array.isArray(
+parts.pendingSetups
+)
+? parts.pendingSetups
+: [];
+const rawEvents =
+Array.isArray(
+parts.rawEventsByStrategy?.[
+chartId
+]
+)
+? parts.rawEventsByStrategy[
+chartId
+]
+: Array.isArray(
+parts.rawEvents
+)
+? parts.rawEvents
+: events;
 
+lastCachedEntryEvents =
+events;
+lastCachedEventsByStrategy =
+{
+st1:
+Array.isArray(
+parts.eventsByStrategy?.st1
+)
+? parts.eventsByStrategy.st1
+: events,
+st2:
+Array.isArray(
+parts.eventsByStrategy?.st2
+)
+? parts.eventsByStrategy.st2
+: events,
+st3:
+Array.isArray(
+parts.eventsByStrategy?.st3
+)
+? parts.eventsByStrategy.st3
+: events
+};
+
+setAlgoPattern12PaintEntryFilter(
+events,
+{
+rawEvents,
+pendingSetups
+}
+);
+
+if(
+parts.counts
+){
 try{
 renderAlgoPatternCounts(
-counts
+parts.counts
 );
 }catch(
 err
@@ -304,24 +667,25 @@ console.warn(
 err
 );
 }
+}
 
 try{
 renderAlgoTradeStats(
-tradeStats,
+parts.tradeStats,
 document.querySelector(
 '[data-algo-strategy="fixed-tp"]'
 ) ||
 document
 );
 renderAlgoTradeStats(
-partialStats,
+parts.partialStats,
 document.querySelector(
 '[data-algo-strategy="partial-tp"]'
 ) ||
 document
 );
 renderAlgoTradeStats(
-partialYStats,
+parts.partialYStats,
 document.querySelector(
 '[data-algo-strategy="partial-tp-y"]'
 ) ||
@@ -356,6 +720,14 @@ chartStrategy ===
 );
 let overlayEvents =
 events;
+const overlayOpts =
+{
+...opts,
+...resolveStrategyGate(
+opts,
+chartId
+)
+};
 
 if(
 chartStatsMode ===
@@ -367,13 +739,13 @@ chartStrategy ===
 ? filterSequentialEntryEvents(
 candles,
 events,
-opts
+overlayOpts
 )
 : filterSequentialPartialEntryEvents(
 candles,
 events,
 {
-...opts,
+...overlayOpts,
 span:
 chartStrategy ===
 "partial-tp-y"
@@ -424,6 +796,34 @@ console.warn(
 err
 );
 }
+
+}
+
+/**
+ * @param {Array} candles
+ * @param {{ setEvents?: (events: Array) => void }|null} entryOverlay
+ * @param {object} [opts]
+ */
+export function refreshAlgoPatternAnalysis(
+candles,
+entryOverlay,
+opts =
+{}
+){
+
+try{
+const parts =
+analyzeAlgoPatterns(
+candles,
+opts
+);
+
+applyAlgoPatternAnalysisUi(
+candles,
+entryOverlay,
+opts,
+parts
+);
 }catch(
 err
 ){
@@ -434,6 +834,155 @@ err
 clearAlgoPatternAnalysisUi(
 entryOverlay
 );
+}
+
+}
+
+/**
+ * Live-тик внутри открытой свечи: без scene/detect/фильтров —
+ * только пересчёт PnL/«В работе» по кэшированным входам (проколы SL/ТП).
+ * Полный анализ — на закрытии бара.
+ * @param {Array} candles
+ * @param {{ setEvents?: (events: Array) => void, refreshPositions?: () => void }|null} entryOverlay
+ * @param {object} [opts]
+ * @returns {boolean}
+ */
+export function refreshAlgoPatternAnalysisLive(
+candles,
+entryOverlay,
+opts =
+{}
+){
+
+if(
+!Array.isArray(
+lastCachedEntryEvents
+)
+){
+entryOverlay?.refreshPositions?.();
+return false;
+}
+
+try{
+const by =
+lastCachedEventsByStrategy ||
+{
+st1:
+lastCachedEntryEvents,
+st2:
+lastCachedEntryEvents,
+st3:
+lastCachedEntryEvents
+};
+const gateSt1 =
+resolveStrategyGate(
+opts,
+"st1"
+);
+const gateSt2 =
+resolveStrategyGate(
+opts,
+"st2"
+);
+const gateSt3 =
+resolveStrategyGate(
+opts,
+"st3"
+);
+
+renderAlgoTradeStats(
+computeAlgoTradeStats(
+candles,
+by.st1 ||
+lastCachedEntryEvents,
+{
+...opts,
+...gateSt1,
+statsMode:
+opts.statsMode
+}
+),
+document.querySelector(
+'[data-algo-strategy="fixed-tp"]'
+) ||
+document
+);
+renderAlgoTradeStats(
+computePartialTpTradeStats(
+candles,
+by.st2 ||
+lastCachedEntryEvents,
+{
+...opts,
+...gateSt2,
+span:
+"x",
+trailSl:
+opts.trailSlSt2,
+trailSlX1:
+opts.trailSlX1St2,
+trailSlX2:
+opts.trailSlX2St2,
+share1:
+opts.share1X,
+share2:
+opts.share2X,
+share3:
+opts.share3X,
+statsMode:
+opts.statsModeSt2 ??
+opts.statsMode
+}
+),
+document.querySelector(
+'[data-algo-strategy="partial-tp"]'
+) ||
+document
+);
+renderAlgoTradeStats(
+computePartialTpTradeStats(
+candles,
+by.st3 ||
+lastCachedEntryEvents,
+{
+...opts,
+...gateSt3,
+span:
+"y",
+trailSl:
+opts.trailSlSt3,
+trailSlX1:
+opts.trailSlX1St3,
+trailSlX2:
+opts.trailSlX2St3,
+share1:
+opts.share1Y,
+share2:
+opts.share2Y,
+share3:
+opts.share3Y,
+statsMode:
+opts.statsModeSt3 ??
+opts.statsMode
+}
+),
+document.querySelector(
+'[data-algo-strategy="partial-tp-y"]'
+) ||
+document
+);
+
+entryOverlay?.refreshPositions?.();
+return true;
+}catch(
+err
+){
+console.warn(
+"[algo-trading] pattern analysis live:",
+err
+);
+entryOverlay?.refreshPositions?.();
+return false;
 }
 
 }

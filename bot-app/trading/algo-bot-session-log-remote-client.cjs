@@ -162,16 +162,8 @@ pathname ||
 pathname
 )
 : `/${pathname}`;
-const q =
-token
-? `?token=${encodeURIComponent(
-String(
-token
-)
-)}`
-: "";
 
-return `http://${resolved.host}:${resolved.port}${pathPart}${q}`;
+return `http://${resolved.host}:${resolved.port}${pathPart}`;
 
 }
 
@@ -191,7 +183,9 @@ return require(
 async function fetchText(
 url,
 timeoutMs =
-15000
+15000,
+token =
+""
 ){
 
 const net =
@@ -229,6 +223,20 @@ method:
 url
 }
 );
+const auth =
+String(
+token ||
+""
+).trim();
+
+if(
+auth
+){
+request.setHeader(
+"Authorization",
+`Bearer ${auth}`
+);
+}
 const chunks =
 [];
 const timer =
@@ -422,7 +430,9 @@ path:
 );
 const res =
 await fetchText(
-url
+url,
+15000,
+payload.token
 );
 
 if(
@@ -508,7 +518,8 @@ name
 const res =
 await fetchText(
 url,
-30000
+30000,
+payload.token
 );
 
 if(
@@ -538,7 +549,9 @@ async function fetchJsonPost(
 url,
 body,
 timeoutMs =
-30000
+30000,
+token =
+""
 ){
 
 if(
@@ -590,6 +603,20 @@ method:
 url
 }
 );
+const auth =
+String(
+token ||
+""
+).trim();
+
+if(
+auth
+){
+request.setHeader(
+"Authorization",
+`Bearer ${auth}`
+);
+}
 const chunks =
 [];
 const timer =
@@ -821,7 +848,8 @@ const res =
 await fetchJsonPost(
 url,
 body,
-30000
+30000,
+payload.token
 );
 
 if(
@@ -875,7 +903,8 @@ path:
 const res =
 await fetchText(
 url,
-12000
+12000,
+payload.token
 );
 
 if(
@@ -1031,7 +1060,8 @@ payload.strategyPrefs
 : {}
 )
 },
-60000
+60000,
+payload.token
 );
 
 if(

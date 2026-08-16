@@ -3,7 +3,7 @@
  */
 import {
 detectPatternEntryEvents
-} from "./pattern-entry-logic.js?v=11";
+} from "./pattern-entry-logic.js?v=13";
 
 import {
 clearAlgoEntryPositions,
@@ -17,7 +17,7 @@ import {
 DEFAULT_PARTIAL_TP1_X,
 DEFAULT_PARTIAL_TP2_X,
 DEFAULT_PARTIAL_TP3_X
-} from "./pattern-trade-stats-partial.js?v=18";
+} from "./pattern-trade-stats-partial.js?v=21";
 
 /**
  * @param {{

@@ -551,6 +551,158 @@ ctx.fill();
 }
 
 for(
+const mark of scene.confirmMarks ||
+[]
+){
+
+const xExt =
+barToX(
+ts,
+mark.extremeBar,
+candles
+);
+const xConf =
+barToX(
+ts,
+mark.confirmBar,
+candles
+);
+const y =
+series.priceToCoordinate(
+mark.price
+);
+
+if(
+xConf ==
+null ||
+y ==
+null
+){
+continue;
+}
+
+ctx.strokeStyle =
+mark.color ||
+"#fbbf24";
+ctx.fillStyle =
+mark.color ||
+"#fbbf24";
+ctx.lineWidth =
+1;
+
+if(
+xExt !=
+null &&
+xExt !==
+xConf
+){
+ctx.setLineDash(
+[
+3,
+3
+]
+);
+ctx.beginPath();
+ctx.moveTo(
+xExt,
+y
+);
+ctx.lineTo(
+xConf,
+y
+);
+ctx.stroke();
+ctx.setLineDash(
+[]
+);
+}
+
+const s =
+8;
+ctx.lineWidth =
+2;
+ctx.beginPath();
+ctx.moveTo(
+xConf,
+y -
+s
+);
+ctx.lineTo(
+xConf +
+s,
+y
+);
+ctx.lineTo(
+xConf,
+y +
+s
+);
+ctx.lineTo(
+xConf -
+s,
+y
+);
+ctx.closePath();
+ctx.globalAlpha =
+0.35;
+ctx.fill();
+ctx.globalAlpha =
+1;
+ctx.stroke();
+ctx.beginPath();
+ctx.moveTo(
+xConf -
+s +
+2,
+y -
+s +
+2
+);
+ctx.lineTo(
+xConf +
+s -
+2,
+y +
+s -
+2
+);
+ctx.moveTo(
+xConf +
+s -
+2,
+y -
+s +
+2
+);
+ctx.lineTo(
+xConf -
+s +
+2,
+y +
+s -
+2
+);
+ctx.stroke();
+ctx.font =
+"bold 11px sans-serif";
+ctx.textAlign =
+"center";
+ctx.textBaseline =
+"bottom";
+ctx.fillStyle =
+mark.color ||
+"#fbbf24";
+ctx.fillText(
+"C",
+xConf,
+y -
+s -
+2
+);
+
+}
+
+for(
 const line of scene.patternLines
 ){
 

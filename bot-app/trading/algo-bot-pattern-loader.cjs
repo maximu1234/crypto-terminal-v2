@@ -30,10 +30,13 @@ const SOURCE_FILES =
 "algo-trading/pattern-entry-logic.js",
 "algo-trading/temp-pullback-before-arm.js",
 "algo-trading/pattern-12-math.js",
+"algo-trading/pattern-supertrend-filter.js",
+"indicators/htf-loader.js",
+"indicators/supertrend-math.js",
 "indicators.js"
 ];
 
-/** @type {{ patternEntry: object, patternMath: object } | null} */
+/** @type {{ patternEntry: object, patternMath: object, supertrendFilter: object } | null} */
 let cached =
 null;
 
@@ -262,11 +265,22 @@ destRoot,
 )
 ).href
 );
+const supertrendFilter =
+await import(
+pathToFileURL(
+path.join(
+destRoot,
+"algo-trading/pattern-supertrend-filter.mjs"
+)
+).href
+);
 
 if(
 typeof patternEntry?.resolvePatternSetupEvent !==
 "function" ||
 typeof patternMath?.computePattern12Scene !==
+"function" ||
+typeof supertrendFilter?.filterEntryEventsBySupertrend !==
 "function"
 ){
 throw new Error(
@@ -277,7 +291,8 @@ throw new Error(
 cached =
 {
 patternEntry,
-patternMath
+patternMath,
+supertrendFilter
 };
 
 return cached;

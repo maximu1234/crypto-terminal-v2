@@ -1,14 +1,13 @@
 /**
  * Bybit public orderbook WS (plugin-local).
- * Topic: orderbook.1000.{SYMBOL} — same depth class as densities indicator.
+ * Topic: orderbook.200.{SYMBOL} — display depth; densities keep their own 1000.
+ * URL comes from the host (main thread) so this module can run in a Worker.
  */
-import {
-getBybitWsUrl,
-rotateBybitWsEndpoint
-} from "../bybit-fetch.js?v=17";
+export const BYBIT_DOM_DEPTH =
+200;
 
 const DEPTH =
-1000;
+BYBIT_DOM_DEPTH;
 
 const RECONNECT_MS =
 2000;
@@ -27,7 +26,9 @@ return `orderbook.${DEPTH}.${symbol}`;
  *   onDelta: (data: object) => void,
  *   onStatus?: (text: string) => void,
  *   onOpen?: () => void,
- *   onClose?: () => void
+ *   onClose?: () => void,
+ *   getWsUrl?: () => string,
+ *   onRotateEndpoint?: () => void
  * }} handlers
  */
 export function createBybitDepthWs(
@@ -157,6 +158,25 @@ return;
 
 if(
 msg?.op ===
+"ping"
+){
+try{
+socket?.send(
+JSON.stringify(
+{
+op:
+"pong"
+}
+)
+);
+}catch{
+/* ignore */
+}
+return;
+}
+
+if(
+msg?.op ===
 "pong" ||
 msg?.success ===
 true
@@ -237,7 +257,20 @@ socket =
 null;
 
 const url =
-getBybitWsUrl();
+String(
+handlers.getWsUrl?.() ||
+""
+).trim();
+
+if(
+!url
+){
+handlers.onStatus?.(
+"WS Bybit: нет URL"
+);
+scheduleReconnect();
+return;
+}
 
 let ws;
 
@@ -311,7 +344,7 @@ if(
 shortFails >=
 2
 ){
-rotateBybitWsEndpoint();
+handlers.onRotateEndpoint?.();
 shortFails =
 0;
 }

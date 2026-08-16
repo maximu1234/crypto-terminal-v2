@@ -19,11 +19,11 @@ unmountScalpingDomHost
 
 import {
 createDepthFeed
-} from "./depth-feed.js?v=21";
+} from "./depth-feed.js?v=23";
 
 import {
 createLadderUi
-} from "./ladder-ui.js?v=24";
+} from "./ladder-ui.js?v=25";
 
 import {
 isScalpingDomEnabled,
@@ -109,6 +109,13 @@ root,
 {
 onSettingsChange:()=>{
 feed?.rebuild?.();
+},
+onViewChange:(
+view
+)=>{
+feed?.setView?.(
+view
+);
 }
 }
 );

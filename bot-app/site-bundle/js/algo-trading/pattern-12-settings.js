@@ -9,7 +9,7 @@ import {
 PATTERN_12_ID,
 defaultPattern12Settings,
 normalizePattern12Settings
-} from "./pattern-12-math.js?v=8";
+} from "./pattern-12-math.js?v=14";
 
 /**
  * @returns {ReturnType<typeof defaultPattern12Settings>}
@@ -76,10 +76,19 @@ s.ascHighsBeforePt1,
 s.waveAMode,
 s.lngWaveCMode,
 s.shtWaveCMode,
+s.rsiOverbought,
+s.rsiOversold,
 s.lngRsiLength,
 s.lngMicRsiLength,
 s.shtRsiLength,
-s.shtMicRsiLength
+s.shtMicRsiLength,
+s.requirePt3ConfirmBeforePt4
+? 1
+: 0,
+s.tempFastPt4
+? 1
+: 0,
+s.tempFastPt4Bars
 ].join(
 ":"
 );

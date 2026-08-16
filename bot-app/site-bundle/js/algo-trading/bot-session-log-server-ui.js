@@ -9,7 +9,7 @@ import {
 applyPersistedAuthSessionNow,
 clearCloudAuthProblem,
 importAuthSessionTransferString
-} from "../cloud-sync.js?v=65";
+} from "../cloud-sync.js?v=66";
 import {
 forceRestoreDesktopAuthSession
 } from "../auth-storage.js?v=10";
@@ -232,7 +232,7 @@ st?.token ||
 
 const listen =
 st?.listening
-? `слушает ${st.bindHost || "0.0.0.0"}:${st.port}`
+? `слушает ${st.bindHost || "127.0.0.1"}:${st.port}`
 : st?.enabled
 ? "включён, но не слушает"
 : "выключен";
@@ -342,7 +342,7 @@ st.token ||
 
 const listen =
 st.listening
-? `слушает ${st.bindHost || "0.0.0.0"}:${st.port}`
+? `слушает ${st.bindHost || "127.0.0.1"}:${st.port}`
 : st.enabled
 ? "включён, но не слушает"
 : "выключен";

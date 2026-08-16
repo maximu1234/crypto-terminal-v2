@@ -22,9 +22,10 @@ startTickerStream,
 startRealtime,
 renderList,
 highlightActiveSymbol,
+ensureActiveCoinVisible,
 setCoinsTableHooks,
 syncCoinListFreezeFromFlagMenus,
 getCurrentSymbols,
 getVisibleSymbolList,
 setCoinOpenPositionChecker
-} from "../terminal/terminal-table.js?v=24";
+} from "../terminal/terminal-table.js?v=29";

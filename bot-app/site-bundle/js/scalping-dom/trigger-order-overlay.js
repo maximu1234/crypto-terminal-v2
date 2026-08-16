@@ -251,24 +251,23 @@ break;
 
 }
 
-return {
-...ladder,
-rows:
-rows.map(
-(
-row,
+for(
+let i =
+0;
+i <
+rows.length;
+i++
+){
+rows[
 i
-)=>
-({
-...row,
-triggerUnderline:
+].triggerUnderline =
 underlineAt.get(
 i
 ) ||
-null
-})
-)
-};
+null;
+}
+
+return ladder;
 
 }
 

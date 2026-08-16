@@ -49,7 +49,7 @@ ui:
 flagId:
 ALGO_FLAG_LONG_5M,
 title:
-"Алго Лонг"
+"Стратегия 1"
 },
 {
 ui:
@@ -57,7 +57,7 @@ ui:
 flagId:
 ALGO_FLAG_SHORT_5M,
 title:
-"Алго Шорт"
+"Стратегия 2"
 },
 {
 ui:
@@ -65,21 +65,47 @@ ui:
 flagId:
 ALGO_FLAG_BOTH_5M,
 title:
-"Алго Лонг/Шорт"
-},
-{
-ui:
-"orange",
-flagId:
-ALGO_FLAG_FAVORITES,
-title:
-"Избранные"
+"Стратегия 3"
 }
 ];
 
 /**
+ * Список тикеров бота по стратегии (storage ids legacy *5m).
+ * st1 → algoLong5m, st2 → algoShort5m, st3 → algoBoth5m.
+ * @param {string} strategyId
+ * @returns {string}
+ */
+export function botStrategyToFlagId(
+strategyId
+){
+
+const id =
+String(
+strategyId ||
+"st1"
+).trim().toLowerCase();
+
+if(
+id ===
+"st2"
+){
+return ALGO_FLAG_SHORT_5M;
+}
+
+if(
+id ===
+"st3"
+){
+return ALGO_FLAG_BOTH_5M;
+}
+
+return ALGO_FLAG_LONG_5M;
+
+}
+
+/**
  * Which algo-list flag to paint on a coin row.
- * Prefer the list matching the current market filter, else Favorites → Both → Long → Short.
+ * Prefer the list matching the current market filter, else Strategy 3 → 1 → 2.
  * @param {string} symbol
  * @param {string} [dataset]
  * @param {string} [exchangeId]
