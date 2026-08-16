@@ -309,9 +309,12 @@ tick >
 : 1e-12;
 
 const rows =
-ladder.rows.map(
-row=>{
+ladder.rows;
 
+for(
+const row of
+rows
+){
 let tone =
 null;
 
@@ -344,24 +347,13 @@ overlay.tone;
 
 }
 
-return tone
-? {
-...row,
-positionFill:
-tone
-}
-: {
-...row,
-positionFill:
-null
-};
+row.positionFill =
+tone;
 
 }
-);
 
 return {
 ...ladder,
-rows,
 hasOpenPosition:
 true
 };
@@ -588,31 +580,28 @@ break;
 
 }
 
-return {
-...ladder,
-rows:
-rows.map(
-(
-row,
-i
-)=>{
-
+for(
+let i =
+0;
+i <
+rows.length;
+i++
+){
 const mark =
 markAt.get(
 i
 ) ||
 null;
-
-return {
-...row,
-slTpHighlight:
-!!mark,
-slTpMark:
-mark
-};
-
+rows[
+i
+].slTpHighlight =
+!!mark;
+rows[
+i
+].slTpMark =
+mark;
 }
-)
-};
+
+return ladder;
 
 }

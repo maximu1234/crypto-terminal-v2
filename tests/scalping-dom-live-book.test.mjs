@@ -2,10 +2,15 @@ import "./helpers/stub-browser.mjs";
 
 import test from "node:test";
 import assert from "node:assert/strict";
+import fs from "node:fs";
 
 import {
 createLiveBook
 } from "../js/scalping-dom/live-book.js";
+
+import {
+buildVisibleSliceFromTickBook
+} from "../js/scalping-dom/ladder-slice.js";
 
 import {
 buildLadderFromBook,
@@ -24,6 +29,64 @@ applyTriggerUnderlines
 import {
 applySlTpHighlights
 } from "../js/scalping-dom/position-overlay.js";
+
+test("tick-book delta is O(1) and resyncs on sequence gap", () => {
+  const book = createLiveBook();
+  book.setNativeTick(1);
+  book.applySnapshot({
+    u: 10,
+    bids: [["100", "2"]],
+    asks: [["101", "3"]]
+  });
+  assert.equal(book.bestBid(), 100);
+  assert.equal(book.bestAsk(), 101);
+
+  assert.equal(
+    book.applyDelta({
+      u: 11,
+      pu: 10,
+      bids: [["100", "5"]],
+      asks: [["101", "1"]]
+    }),
+    "ok"
+  );
+  assert.equal(book.toBook().bids[0].size, 5);
+
+  assert.equal(
+    book.applyDelta({
+      u: 99,
+      pu: 50,
+      bids: [["99", "1"]]
+    }),
+    "resync"
+  );
+  assert.equal(book.isReady(), false);
+});
+
+test("visible slice paints only the requested row count", () => {
+  const book = createLiveBook();
+  book.setNativeTick(1);
+  const bids = [];
+  const asks = [];
+  for(let i = 0; i < 80; i++){
+    asks.push([String(101 + i), "1"]);
+    bids.push([String(100 - i), "1"]);
+  }
+  book.applySnapshot({ bids, asks });
+
+  const slice = buildVisibleSliceFromTickBook(book, {
+    priceScale: 1,
+    viewRows: 24,
+    viewOffset: 0,
+    autocenterPct: 85
+  });
+
+  assert.ok(slice.rows.length <= 24);
+  assert.ok(slice.rows.length >= 8);
+  assert.equal(slice.tick, 1);
+  assert.ok(slice.bestAsk >= 101);
+  assert.ok(slice.bestBid <= 100);
+});
 
 test("live-book applies snapshot and deletes zero-size levels", () => {
   const book = createLiveBook();
@@ -186,4 +249,15 @@ test("SL/TP highlights mark nearest ladder rows by side", () => {
     next.rows.find((row) => row.price === 100)?.slTpMark,
     "sl-long"
   );
+});
+
+test("depth-feed does not poll REST on an interval", () => {
+  const source = fs.readFileSync(
+    new URL("../js/scalping-dom/depth-feed.js", import.meta.url),
+    "utf8"
+  );
+  assert.doesNotMatch(source, /setInterval/);
+  assert.doesNotMatch(source, /REST_RESYNC_MS|20000/);
+  assert.match(source, /1800/);
+  assert.match(source, /needResync/);
 });

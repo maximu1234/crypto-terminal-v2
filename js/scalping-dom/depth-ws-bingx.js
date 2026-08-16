@@ -3,12 +3,11 @@
  * dataType: {SYMBOL}@depth100 on swap-market (gzip + Ping/Pong).
  */
 import {
-getBingxWsUrl
-} from "../exchanges/bingx/fetch.js?v=5";
-
-import {
 toBingxSymbol
 } from "../exchanges/symbol.js?v=1";
+
+const DEFAULT_BINGX_WS_URL =
+"wss://open-api-swap.bingx.com/swap-market";
 
 const DEPTH =
 100;
@@ -154,7 +153,8 @@ asks
  *   onBook: (data: { bids?: unknown, asks?: unknown }) => void,
  *   onStatus?: (text: string) => void,
  *   onOpen?: () => void,
- *   onClose?: () => void
+ *   onClose?: () => void,
+ *   getWsUrl?: () => string
  * }} handlers
  */
 export function createBingxDepthWs(
@@ -352,7 +352,11 @@ let ws;
 try{
 ws =
 new WebSocket(
-getBingxWsUrl()
+String(
+handlers.getWsUrl?.() ||
+DEFAULT_BINGX_WS_URL
+).trim() ||
+DEFAULT_BINGX_WS_URL
 );
 }catch{
 handlers.onStatus?.(
