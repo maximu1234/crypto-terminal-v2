@@ -204,10 +204,16 @@ createVolumePaneIndicator
 createAoPaneIndicator
 },
 {
+createMacdPaneIndicator
+},
+{
 createMovingAverageIndicator
 },
 {
 createEmaShiftRibbonIndicator
+},
+{
+createSupertrendIndicator
 },
 pattern12Mod,
 {
@@ -223,19 +229,25 @@ createIndicatorSettingsDialog
 await Promise.all(
 [
 import(
-"./indicators/rsi-pane.js?v=3"
+"./indicators/rsi-pane.js?v=5"
 ),
 import(
-"./indicators/volume-pane.js?v=13"
+"./indicators/volume-pane.js?v=15"
 ),
 import(
-"./indicators/ao-pane.js?v=10"
+"./indicators/ao-pane.js?v=12"
+),
+import(
+"./indicators/macd-pane.js?v=1"
 ),
 import(
 "./indicators/moving-average.js?v=16"
 ),
 import(
 "./indicators/ema-shift-ribbon.js?v=8"
+),
+import(
+"./indicators/supertrend.js?v=3"
 ),
 typeof createPattern12IndicatorOverride ===
 "function"
@@ -246,7 +258,7 @@ createPattern12IndicatorOverride
 }
 )
 : import(
-"./indicators/pattern-12.js?v=12"
+"./indicators/pattern-12.js?v=17"
 ),
 import(
 "./indicators/pattern-gip.js?v=2"
@@ -266,7 +278,8 @@ pattern12Mod.createPattern12Indicator;
 const indicators =
 [
 createRsiPaneIndicator(
-getHost
+getHost,
+settingsStore
 ),
 createVolumePaneIndicator(
 getHost
@@ -274,11 +287,19 @@ getHost
 createAoPaneIndicator(
 getHost
 ),
+createMacdPaneIndicator(
+getHost,
+settingsStore
+),
 createMovingAverageIndicator(
 getHost,
 settingsStore
 ),
 createEmaShiftRibbonIndicator(
+getHost,
+settingsStore
+),
+createSupertrendIndicator(
 getHost,
 settingsStore
 ),
@@ -949,6 +970,8 @@ flushIndicatorDataRefreshNow,
 syncViewports,
 resizePanes,
 getLinkedPaneCharts,
+openSettings:
+openIndicatorSettings,
 destroy:()=>{
 settingsDialog.destroy();
 document.removeEventListener(

@@ -1,15 +1,155 @@
 /**
  * RSI — панель под графиком; не учитывается в лимите индикаторов.
+ * Настройки: период, перекупленность / перепроданность (как TV RSI).
  */
 export const RSI_PANE_ID =
 "rsi";
 
+export function defaultRsiPaneSettings(){
+
+return {
+period:
+14,
+overbought:
+70,
+oversold:
+30
+};
+
+}
+
+function clampInt(
+value,
+min,
+max,
+fallback
+){
+
+const n =
+Math.round(
+Number(
+value
+)
+);
+
+if(
+!Number.isFinite(
+n
+)
+){
+return fallback;
+}
+
+return Math.min(
+max,
+Math.max(
+min,
+n
+)
+);
+
+}
+
+export function normalizeRsiPaneSettings(
+raw
+){
+
+const base =
+defaultRsiPaneSettings();
+const next =
+{
+period:
+clampInt(
+raw?.period,
+2,
+999,
+base.period
+),
+overbought:
+clampInt(
+raw?.overbought,
+1,
+99,
+base.overbought
+),
+oversold:
+clampInt(
+raw?.oversold,
+1,
+99,
+base.oversold
+)
+};
+
+if(
+next.oversold >=
+next.overbought
+){
+next.oversold =
+Math.max(
+1,
+next.overbought -
+1
+);
+}
+
+return next;
+
+}
+
 export function createRsiPaneIndicator(
-getHost
+getHost,
+settingsStore
 ){
 
 let enabled =
 false;
+let settings =
+defaultRsiPaneSettings();
+
+function readSettings(){
+
+settings =
+normalizeRsiPaneSettings(
+settingsStore?.read?.(
+RSI_PANE_ID,
+defaultRsiPaneSettings()
+) ||
+defaultRsiPaneSettings()
+);
+
+}
+
+function persistSettings(
+patch
+){
+
+settings =
+normalizeRsiPaneSettings(
+settingsStore?.write?.(
+RSI_PANE_ID,
+patch
+) ||
+patch
+);
+
+}
+
+function notifyHost(){
+
+getHost?.()?.onRsiSettingsChange?.(
+{
+...settings
+}
+);
+
+}
+
+function getLegendText(){
+
+return `RSI ${settings.period} close`;
+
+}
 
 function wrapEl(){
 
@@ -43,9 +183,11 @@ enabled
 return;
 }
 
+readSettings();
 enabled =
 true;
 applyVisibility();
+notifyHost();
 
 }
 
@@ -60,6 +202,19 @@ return;
 enabled =
 false;
 applyVisibility();
+
+}
+
+function applySettings(
+stored
+){
+
+settings =
+normalizeRsiPaneSettings(
+stored ||
+settings
+);
+notifyHost();
 
 }
 
@@ -139,6 +294,107 @@ getHost?.()?.layoutRsiBand?.();
 
 }
 
+function populateSettingsDialog(
+root
+){
+
+readSettings();
+
+root.innerHTML =
+`
+<div class="ind-rsi-settings">
+<label class="chart-indicator-settings-field">
+<span class="chart-indicator-settings-field-label">Длина</span>
+<input type="number" class="chart-indicator-settings-input" min="2" max="999" step="1" data-key="period" value="${settings.period}" inputmode="numeric"/>
+</label>
+<label class="chart-indicator-settings-field">
+<span class="chart-indicator-settings-field-label">Перекупленность</span>
+<input type="number" class="chart-indicator-settings-input" min="1" max="99" step="1" data-key="overbought" value="${settings.overbought}" inputmode="numeric"/>
+</label>
+<label class="chart-indicator-settings-field">
+<span class="chart-indicator-settings-field-label">Перепроданность</span>
+<input type="number" class="chart-indicator-settings-input" min="1" max="99" step="1" data-key="oversold" value="${settings.oversold}" inputmode="numeric"/>
+</label>
+</div>
+<div class="chart-indicator-settings-reset-row">
+<button type="button" class="chart-indicator-settings-reset">Сбросить в дефолт</button>
+</div>
+`;
+
+function commit(){
+
+const next =
+{
+...settings
+};
+
+root.querySelectorAll(
+"[data-key]"
+).forEach(
+el=>{
+
+const key =
+el.dataset.key;
+const n =
+Number(
+el.value
+);
+
+if(
+Number.isFinite(
+n
+)
+){
+next[
+key
+] =
+n;
+}
+
+}
+);
+
+persistSettings(
+next
+);
+applySettings(
+settings
+);
+
+}
+
+root.querySelectorAll(
+"input"
+).forEach(
+el=>{
+el.addEventListener(
+"change",
+commit
+);
+}
+);
+
+root.querySelector(
+".chart-indicator-settings-reset"
+)?.addEventListener(
+"click",
+()=>{
+
+persistSettings(
+defaultRsiPaneSettings()
+);
+applySettings(
+settings
+);
+populateSettingsDialog(
+root
+);
+
+}
+);
+
+}
+
 return {
 id:
 RSI_PANE_ID,
@@ -146,10 +402,24 @@ label:
 "RSI",
 legendLabel:
 "RSI 14 close",
+settingsDialogTitle:
+"RSI",
+settingsDialogClass:
+"chart-indicator-settings-dialog--compact",
 exemptFromLimit:
 true,
 defaultEnabled:
 true,
+supportsSettingsDialog:
+true,
+getLegendLabel:
+getLegendText,
+getSettings:()=>
+({
+...settings
+}),
+populateSettingsDialog,
+applySettings,
 enable,
 disable,
 isEnabled:()=>

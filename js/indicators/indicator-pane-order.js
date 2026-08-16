@@ -3,6 +3,7 @@ export const INDICATOR_PANE_STACK_BOTTOM_FIRST =
 [
 "rsi",
 "ao",
+"macd",
 "volume"
 ];
 
