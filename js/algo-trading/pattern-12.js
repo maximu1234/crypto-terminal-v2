@@ -11,15 +11,16 @@ import {
 PATTERN_12_ID,
 defaultPattern12Settings,
 normalizePattern12Settings
-} from "./pattern-12-math.js?v=8";
+} from "./pattern-12-math.js?v=14";
 
 import {
-getOrComputeAlgoPattern12Scene
-} from "./pattern-12-scene-cache.js?v=2";
+getOrComputeAlgoPattern12Scene,
+applyAlgoPattern12PaintEntryFilter
+} from "./pattern-12-scene-cache.js?v=9";
 
 import {
 paintPattern12Scene
-} from "./pattern-12-paint.js?v=3";
+} from "./pattern-12-paint.js?v=5";
 
 function readSettings(
 store
@@ -129,6 +130,35 @@ return `
 
 }
 
+function fieldCheckWithNumber(
+label,
+checkKey,
+checked,
+numKey,
+numValue,
+min,
+max,
+hint =
+""
+){
+
+const title =
+hint
+? ` title="${hint}"`
+: "";
+
+return `
+<div class="ind-pattern12-settings-check-num">
+<label class="chart-indicator-settings-check">
+<input type="checkbox" data-key="${checkKey}" ${checked ? "checked" : ""}/>
+<span>${label}</span>
+</label>
+<input type="number" class="chart-indicator-settings-input" data-key="${numKey}" min="${min}" max="${max}" step="1" value="${numValue}" inputmode="numeric"${title}/>
+</div>
+`;
+
+}
+
 export function createPattern12Indicator(
 getHost,
 settingsStore
@@ -150,6 +180,15 @@ null;
 function getCandles(){
 
 return getHost?.()?.getCandles?.() || [];
+
+}
+
+function getSymbolScope(){
+
+return String(
+getHost?.()?.getSymbol?.() ||
+""
+).trim();
 
 }
 
@@ -177,7 +216,8 @@ return;
 scene =
 getOrComputeAlgoPattern12Scene(
 candles,
-settings
+settings,
+getSymbolScope()
 );
 
 }
@@ -194,13 +234,27 @@ scene?.pt4Dots
 )
 ? scene.pt4Dots
 : [];
+const filtered =
+applyAlgoPattern12PaintEntryFilter(
+{
+...scene,
+pt4Dots:
+dots
+}
+);
+const paintDots =
+Array.isArray(
+filtered?.pt4Dots
+)
+? filtered.pt4Dots
+: dots;
 let long =
 0;
 let short =
 0;
 
 for(
-const dot of dots
+const dot of paintDots
 ){
 
 if(
@@ -385,7 +439,10 @@ plotH,
 chart,
 series,
 candles,
+scene:
+applyAlgoPattern12PaintEntryFilter(
 scene
+)
 }
 );
 
@@ -586,6 +643,26 @@ ${fieldCheck(
 "Линии 1-3 и 2-4",
 "showPatternLines",
 settings.showPatternLines
+)}
+${fieldCheck(
+"pt4 после confirm pt3",
+"requirePt3ConfirmBeforePt4",
+settings.requirePt3ConfirmBeforePt4
+)}
+${fieldCheck(
+"Confirm макро (временно)",
+"showMacroConfirmMarks",
+settings.showMacroConfirmMarks
+)}
+${fieldCheckWithNumber(
+"pt4 без ожидания RSI (врем.)",
+"tempFastPt4",
+settings.tempFastPt4,
+"tempFastPt4Bars",
+settings.tempFastPt4Bars,
+1,
+5,
+"Только при включённой галочке: сколько закрытых баров подряд не обновляют экстремум."
 )}
 </div>
 <div class="ind-pattern12-settings-sides ind-pattern12-settings-sides--display">

@@ -1,7 +1,8 @@
 /**
  * Эксперимент: фоновый поиск паттерна 1-2 1-2.
  * Настройки индикатора — снимок из Терминала (`chart_indicators_v1`),
- * не prefs Скрипта. На график индикатор не пишет — только pattern-12-math.
+ * не prefs Скрипта и не Алго. В снимок входят и tempFastPt4 / tempFastPt4Bars.
+ * На график индикатор не пишет — только pattern-12-math.
  */
 import {
 loadMarketHistory,
@@ -14,7 +15,7 @@ PATTERN_12_ID,
 computePattern12Scene,
 defaultPattern12Settings,
 normalizePattern12Settings
-} from "./indicators/pattern-12-math.js?v=7";
+} from "./indicators/pattern-12-math.js?v=13";
 
 /** Совпадает с DEFAULT_STORAGE_KEY в chart-indicators.js (Терминал / Монеты). */
 export const TERMINAL_INDICATORS_STORAGE_KEY =
@@ -434,8 +435,12 @@ return `${symbol}:${tf}:${side}`;
 
 }
 
-function pickLatestDot(
-dots,
+/**
+ * Источник — scene.setups, а не pt4Dots: кружок точки 4 можно выключить
+ * в настройках Терминала, и тогда скан переставал находить живые паттерны.
+ */
+function pickLatestSetup(
+setups,
 minBar,
 candlesLength,
 side
@@ -445,16 +450,28 @@ let best =
 null;
 
 for(
-const dot of
-dots
+const setup of
+Array.isArray(
+setups
+)
+? setups
+: []
 ){
 
+const bar =
+Number(
+setup?.b4
+);
+
 if(
-dot.side !==
+setup?.side !==
 side ||
-dot.bar <
+!Number.isFinite(
+bar
+) ||
+bar <
 minBar ||
-dot.bar >=
+bar >=
 candlesLength
 ){
 continue;
@@ -462,15 +479,13 @@ continue;
 
 if(
 !best ||
-dot.bar >
+bar >
 best.bar
 ){
 best =
 {
-bar:
-dot.bar,
-side:
-dot.side
+bar,
+side
 };
 }
 
@@ -555,8 +570,8 @@ normalizedSideFilter ===
 "both"
 ){
 pushHit(
-pickLatestDot(
-scene.pt4Dots,
+pickLatestSetup(
+scene.setups,
 minBar,
 candles.length,
 "long"
@@ -571,8 +586,8 @@ normalizedSideFilter ===
 "both"
 ){
 pushHit(
-pickLatestDot(
-scene.pt4Dots,
+pickLatestSetup(
+scene.setups,
 minBar,
 candles.length,
 "short"

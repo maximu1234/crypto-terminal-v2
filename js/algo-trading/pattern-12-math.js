@@ -84,7 +84,18 @@ true,
 shtPt4LineBars:
 100,
 showPatternLines:
-false
+false,
+/* TEMP: свеча confirm макро-свинга (убрать после отладки). */
+showMacroConfirmMarks:
+true,
+/* Только сетапы, где pt4 строго после confirm pt3 (ближе к realtime). */
+requirePt3ConfirmBeforePt4:
+false,
+/* TEMP_FAST_PT4 (эксперимент): pt4 без ожидания противоположной зоны RSI. */
+tempFastPt4:
+false,
+tempFastPt4Bars:
+2
 };
 
 }
@@ -247,7 +258,21 @@ showShtPt4Mark:
 raw?.showShtPt4Mark !==
 false,
 showPatternLines:
-!!raw?.showPatternLines
+!!raw?.showPatternLines,
+showMacroConfirmMarks:
+raw?.showMacroConfirmMarks !==
+false,
+requirePt3ConfirmBeforePt4:
+!!raw?.requirePt3ConfirmBeforePt4,
+tempFastPt4:
+!!raw?.tempFastPt4,
+tempFastPt4Bars:
+clampInt(
+raw?.tempFastPt4Bars,
+1,
+5,
+base.tempFastPt4Bars
+)
 };
 
 if(
@@ -479,6 +504,89 @@ null;
 let prevSwingPrice =
 null;
 
+/* TEMP_FAST_PT4: 0 = ждать противоположную зону RSI (оригинальное поведение). */
+const fastConfirmBars =
+Math.max(
+0,
+Math.round(
+Number(
+debug?.fastConfirmBars
+)
+) ||
+0
+);
+let fastUpBar =
+null;
+let fastDownBar =
+null;
+let upStale =
+0;
+let downStale =
+0;
+
+function emitSwing(
+eventBar,
+eventPrice,
+isUp,
+confirmBar
+){
+
+if(
+debug?.showSwingLines &&
+prevSwingBar !=
+null
+){
+extras.swingLines.push(
+{
+barA:
+prevSwingBar,
+priceA:
+prevSwingPrice,
+barB:
+eventBar,
+priceB:
+eventPrice,
+color:
+debug.swingLineColor
+}
+);
+}
+
+prevSwingBar =
+eventBar;
+prevSwingPrice =
+eventPrice;
+
+if(
+debug?.showFractals
+){
+extras.fractals.push(
+{
+bar:
+eventBar,
+up:
+isUp,
+color:
+isUp
+? debug.fractalUpColor
+: debug.fractalDownColor
+}
+);
+}
+
+pushSwing(
+log,
+eventBar,
+confirmBar,
+isUp
+? 1
+: -1,
+eventPrice,
+cap
+);
+
+}
+
 for(
 let barIndex =
 1;
@@ -613,58 +721,98 @@ up ||
 down
 ){
 
+/* Свинг уже отдан раньше по fast-подтверждению — не дублируем. */
+const alreadyEmitted =
+up
+? eventBar ===
+fastUpBar
+: eventBar ===
+fastDownBar;
+
 if(
-debug?.showSwingLines &&
-prevSwingBar !=
-null
+!alreadyEmitted
 ){
-extras.swingLines.push(
-{
-barA:
-prevSwingBar,
-priceA:
-prevSwingPrice,
-barB:
+emitSwing(
 eventBar,
-priceB:
 eventPrice,
-color:
-debug.swingLineColor
-}
-);
-}
-
-prevSwingBar =
-eventBar;
-prevSwingPrice =
-eventPrice;
-
-if(
-debug?.showFractals
-){
-extras.fractals.push(
-{
-bar:
-eventBar,
 up,
-color:
-up
-? debug.fractalUpColor
-: debug.fractalDownColor
-}
+barIndex
 );
 }
 
-pushSwing(
-log,
-eventBar,
-barIndex,
-up
-? 1
-: -1,
-eventPrice,
-cap
+}
+
+/*
+  TEMP_FAST_PT4: экстремум считается подтверждённым, как только
+  fastConfirmBars закрытых баров подряд его не обновили — без ожидания
+  ухода RSI в противоположную зону.
+*/
+if(
+fastConfirmBars >
+0
+){
+
+if(
+laststate ===
+1
+){
+
+downStale =
+0;
+upStale =
+bar.high >=
+hh
+? 0
+: upStale +
+1;
+
+if(
+upStale >=
+fastConfirmBars &&
+hhBar !==
+fastUpBar
+){
+emitSwing(
+hhBar,
+hh,
+true,
+barIndex
 );
+fastUpBar =
+hhBar;
+}
+
+}else if(
+laststate ===
+2
+){
+
+upStale =
+0;
+downStale =
+bar.low <=
+ll
+? 0
+: downStale +
+1;
+
+if(
+downStale >=
+fastConfirmBars &&
+llBar !==
+fastDownBar
+){
+emitSwing(
+llBar,
+ll,
+false,
+barIndex
+);
+fastDownBar =
+llBar;
+}
+
+}
 
 }
 
@@ -1857,6 +2005,8 @@ let b4 =
 null;
 let pr4 =
 null;
+let b4Confirm =
+null;
 let foundFirst =
 false;
 let prFirstUp =
@@ -1883,7 +2033,8 @@ nthMicUp <
 return {
 i4,
 b4,
-pr4
+pr4,
+b4Confirm
 };
 }
 
@@ -1979,6 +2130,10 @@ b4 =
 bk;
 pr4 =
 pk;
+b4Confirm =
+micLog.confirmBars[
+k
+];
 break;
 }
 
@@ -2001,6 +2156,10 @@ b4 =
 bk;
 pr4 =
 pk;
+b4Confirm =
+micLog.confirmBars[
+k
+];
 }
 
 break;
@@ -2012,7 +2171,8 @@ break;
 return {
 i4,
 b4,
-pr4
+pr4,
+b4Confirm
 };
 
 }
@@ -2519,6 +2679,8 @@ let b4 =
 null;
 let pr4 =
 null;
+let b4Confirm =
+null;
 let foundFirst =
 false;
 let prFirstDn =
@@ -2545,7 +2707,8 @@ nthMicDn <
 return {
 i4,
 b4,
-pr4
+pr4,
+b4Confirm
 };
 }
 
@@ -2641,6 +2804,10 @@ b4 =
 bk;
 pr4 =
 pk;
+b4Confirm =
+micLog.confirmBars[
+k
+];
 break;
 }
 
@@ -2663,6 +2830,10 @@ b4 =
 bk;
 pr4 =
 pk;
+b4Confirm =
+micLog.confirmBars[
+k
+];
 }
 
 break;
@@ -2674,7 +2845,8 @@ break;
 return {
 i4,
 b4,
-pr4
+pr4,
+b4Confirm
 };
 
 }
@@ -3154,10 +3326,14 @@ b3:
 bk,
 p3:
 pk,
+b3Confirm:
+confirmK,
 b4:
 pt4.b4,
 p4:
-pt4.pr4
+pt4.pr4,
+b4Confirm:
+pt4.b4Confirm
 };
 break;
 
@@ -3350,10 +3526,14 @@ b3:
 bk,
 p3:
 pk,
+b3Confirm:
+confirmK,
 b4:
 pt4.b4,
 p4:
-pt4.pr4
+pt4.pr4,
+b4Confirm:
+pt4.b4Confirm
 };
 break;
 
@@ -3378,6 +3558,21 @@ committed.b4;
 }
 
 return out;
+
+}
+
+/** Exported for unit tests (TEMP_FAST_PT4: момент подтверждения свинга). */
+export function buildRsiSwingLogForTest(
+candles,
+rsiLength,
+debug
+){
+
+return buildRsiSwingLog(
+candles,
+rsiLength,
+debug
+);
 
 }
 
@@ -3570,10 +3765,14 @@ b3:
 leg.b3,
 p3:
 leg.p3,
+b3Confirm:
+leg.b3Confirm,
 b4:
 leg.b4,
 p4:
-leg.p4
+leg.p4,
+b4Confirm:
+leg.b4Confirm
 }
 );
 
@@ -3632,6 +3831,71 @@ color
 }
 
 /**
+ * TEMP: маркеры свечи confirm макро-свинга (extreme → confirm).
+ * @param {object} scene
+ * @param {{ bars: number[], confirmBars: number[], types: number[], prices: number[] }} log
+ * @param {string} color
+ */
+function appendMacroConfirmMarks(
+scene,
+log,
+color
+){
+
+const n =
+log.types.length;
+
+for(
+let i =
+0;
+i <
+n;
+i++
+){
+
+const extremeBar =
+log.bars[
+i
+];
+const confirmBar =
+log.confirmBars[
+i
+];
+const price =
+log.prices[
+i
+];
+
+if(
+extremeBar ==
+null ||
+confirmBar ==
+null ||
+price ==
+null
+){
+continue;
+}
+
+scene.confirmMarks.push(
+{
+extremeBar,
+confirmBar,
+price,
+up:
+log.types[
+i
+] ===
+1,
+color
+}
+);
+
+}
+
+}
+
+/**
  * @returns {{
  *   badges: Array,
  *   patternLines: Array,
@@ -3639,9 +3903,284 @@ color
  *   pt4Marks: Array,
  *   fractals: Array,
  *   swingLines: Array,
- *   setups: Array
+ *   setups: Array,
+ *   confirmMarks: Array
  * }}
  */
+
+/**
+ * Оставить сетапы, где экстремум pt4 строго после confirm pt3 (b4 > b3Confirm).
+ * Не путать с моментом, когда pt4 стала известна — это b4Confirm.
+ * @param {object} scene
+ * @returns {object}
+ */
+function applyRequirePt3ConfirmBeforePt4Filter(
+scene
+){
+
+const setups =
+Array.isArray(
+scene?.setups
+)
+? scene.setups.filter(
+setup=>{
+
+const b4 =
+Number(
+setup?.b4
+);
+const confirm =
+Number(
+setup?.b3Confirm
+);
+
+return Number.isFinite(
+b4
+) &&
+Number.isFinite(
+confirm
+) &&
+b4 >
+confirm;
+
+}
+)
+: [];
+
+const keepSetup =
+new Set(
+setups.map(
+setup=>
+[
+setup.side ===
+"short"
+? "s"
+: "l",
+Number(
+setup.b4
+),
+Number(
+setup.p4
+)
+].join(
+"|"
+)
+)
+);
+
+const keepPoints =
+new Set();
+
+for(
+const setup of setups
+){
+
+for(
+const [bar, price] of [
+[
+setup.b1,
+setup.p1
+],
+[
+setup.b2,
+setup.p2
+],
+[
+setup.b3,
+setup.p3
+],
+[
+setup.b4,
+setup.p4
+]
+]
+){
+
+const n =
+Number(
+price
+);
+keepPoints.add(
+[
+Number(
+bar
+),
+Number.isFinite(
+n
+)
+? n.toPrecision(
+10
+)
+: ""
+].join(
+"|"
+)
+);
+
+}
+
+}
+
+const hadPatternLines =
+Array.isArray(
+scene.patternLines
+) &&
+scene.patternLines.length >
+0;
+const patternLines =
+[];
+
+if(
+hadPatternLines
+){
+
+for(
+const setup of setups
+){
+
+patternLines.push(
+{
+barA:
+setup.b1,
+priceA:
+setup.p1,
+barB:
+setup.b3,
+priceB:
+setup.p3
+},
+{
+barA:
+setup.b2,
+priceA:
+setup.p2,
+barB:
+setup.b4,
+priceB:
+setup.p4
+}
+);
+
+}
+
+}
+
+function setupKey(
+side,
+bar,
+price
+){
+
+const n =
+Number(
+price
+);
+
+return [
+side ===
+"short"
+? "s"
+: "l",
+Number(
+bar
+),
+Number.isFinite(
+n
+)
+? n
+: ""
+].join(
+"|"
+);
+
+}
+
+function pointKey(
+bar,
+price
+){
+
+const n =
+Number(
+price
+);
+
+return [
+Number(
+bar
+),
+Number.isFinite(
+n
+)
+? n.toPrecision(
+10
+)
+: ""
+].join(
+"|"
+);
+
+}
+
+return {
+...scene,
+setups,
+patternLines:
+hadPatternLines
+? patternLines
+: Array.isArray(
+scene.patternLines
+)
+? []
+: scene.patternLines,
+pt4Dots:
+Array.isArray(
+scene.pt4Dots
+)
+? scene.pt4Dots.filter(
+dot=>
+keepSetup.has(
+setupKey(
+dot.side,
+dot.bar,
+dot.price
+)
+)
+)
+: [],
+pt4Marks:
+Array.isArray(
+scene.pt4Marks
+)
+? scene.pt4Marks.filter(
+mark=>
+keepSetup.has(
+setupKey(
+mark.side,
+mark.bar,
+mark.price
+)
+)
+)
+: [],
+badges:
+Array.isArray(
+scene.badges
+)
+? scene.badges.filter(
+badge=>
+keepPoints.has(
+pointKey(
+badge.bar,
+badge.price
+)
+)
+)
+: []
+};
+
+}
+
 export function computePattern12Scene(
 candles,
 rawSettings
@@ -3659,7 +4198,8 @@ pt4Dots: [],
 pt4Marks: [],
 fractals: [],
 swingLines: [],
-setups: []
+setups: [],
+confirmMarks: []
 };
 
 if(
@@ -3726,7 +4266,11 @@ swingLineColor:
 overbought:
 settings.rsiOverbought,
 oversold:
-settings.rsiOversold
+settings.rsiOversold,
+fastConfirmBars:
+settings.tempFastPt4
+? settings.tempFastPt4Bars
+: 0
 }
 );
 
@@ -3738,6 +4282,16 @@ scene.swingLines.push(
 ...lngSen.extras.swingLines,
 ...lngMic.extras.swingLines
 );
+
+if(
+settings.showMacroConfirmMarks
+){
+appendMacroConfirmMarks(
+scene,
+lngSen.log,
+"#fbbf24"
+);
+}
 
 const chains =
 scanCompletePatterns(
@@ -3916,7 +4470,11 @@ swingLineColor:
 overbought:
 settings.rsiOverbought,
 oversold:
-settings.rsiOversold
+settings.rsiOversold,
+fastConfirmBars:
+settings.tempFastPt4
+? settings.tempFastPt4Bars
+: 0
 }
 );
 
@@ -3928,6 +4486,16 @@ scene.swingLines.push(
 ...shtSen.extras.swingLines,
 ...shtMic.extras.swingLines
 );
+
+if(
+settings.showMacroConfirmMarks
+){
+appendMacroConfirmMarks(
+scene,
+shtSen.log,
+"#f472b6"
+);
+}
 
 const chains =
 scanCompletePatterns(
@@ -4063,6 +4631,15 @@ scene.badges.push(
 
 }
 
+if(
+settings.requirePt3ConfirmBeforePt4
+){
+return applyRequirePt3ConfirmBeforePt4Filter(
+scene
+);
+}
+
 return scene;
 
 }
+

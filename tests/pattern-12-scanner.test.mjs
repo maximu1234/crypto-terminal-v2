@@ -51,6 +51,29 @@ test("findLatestPattern12InLookback is null-safe", () => {
   assert.equal(findLatestPattern12InLookback([], 20), null);
 });
 
+test("Script scan source: original scene exposes setups independent of pt4 dots", async () => {
+  const { computePattern12Scene, defaultPattern12Settings } = await import(
+    "../js/indicators/pattern-12-math.js"
+  );
+
+  const candles = Array.from({ length: 40 }, (_, i) => ({
+    time: i + 1,
+    open: 100,
+    high: 101,
+    low: 99,
+    close: 100
+  }));
+
+  const scene = computePattern12Scene(candles, {
+    ...defaultPattern12Settings(),
+    showLngPt4Dot: false,
+    showShtPt4Dot: false
+  });
+
+  assert.ok(Array.isArray(scene.setups));
+  assert.deepEqual(scene.pt4Dots, []);
+});
+
 test("readTerminalPattern12Settings snapshots chart_indicators_v1", () => {
   const prev = globalThis.localStorage;
   const store = new Map();
@@ -84,6 +107,22 @@ test("readTerminalPattern12Settings snapshots chart_indicators_v1", () => {
     assert.equal(snap.shtRsiLength, 9);
     assert.equal(snap.decLowsBeforePt1, 2);
     assert.equal(snap.lngMicRsiLength, 1);
+    assert.equal(snap.tempFastPt4, false);
+    assert.equal(snap.tempFastPt4Bars, 2);
+
+    store.set(
+      TERMINAL_INDICATORS_STORAGE_KEY,
+      JSON.stringify({
+        "settings_pattern-12": {
+          tempFastPt4: true,
+          tempFastPt4Bars: 3
+        }
+      })
+    );
+
+    const fastSnap = readTerminalPattern12Settings();
+    assert.equal(fastSnap.tempFastPt4, true);
+    assert.equal(fastSnap.tempFastPt4Bars, 3);
   } finally {
     if (prev === undefined) {
       delete globalThis.localStorage;
@@ -91,4 +130,55 @@ test("readTerminalPattern12Settings snapshots chart_indicators_v1", () => {
       globalThis.localStorage = prev;
     }
   }
+});
+
+function volatilePatternCandles() {
+  const rows = [];
+  let random = 1;
+  let price = 100;
+  for (let i = 0; i < 800; i++) {
+    random = (1664525 * random + 1013904223) >>> 0;
+    const open = price;
+    const move =
+      (random / 4294967296 - 0.5) * 3 + Math.sin(i / 17) * 0.25 + Math.sin(i / 53) * 0.15;
+    price = Math.max(5, price + move);
+    rows.push({
+      time: i + 1,
+      open,
+      high: Math.max(open, price) + 0.4,
+      low: Math.min(open, price) - 0.4,
+      close: price
+    });
+  }
+  return rows;
+}
+
+test("Script parse: tempFastPt4 changes hits in default lookback", async () => {
+  const { defaultPattern12Settings } = await import("../js/indicators/pattern-12-math.js");
+  const candles = volatilePatternCandles();
+  const base = {
+    ...defaultPattern12Settings(),
+    lngRsiLength: 6,
+    shtRsiLength: 6,
+    lngMicRsiLength: 3,
+    shtMicRsiLength: 3,
+    decLowsBeforePt1: 0,
+    ascHighsBeforePt1: 0,
+    waveAMode: "both",
+    tempFastPt4Bars: 1
+  };
+
+  const slow = findPattern12HitsInLookback(candles, PATTERN_SCAN_DEFAULT_LOOKBACK, "both", {
+    ...base,
+    tempFastPt4: false
+  });
+  const fast = findPattern12HitsInLookback(candles, PATTERN_SCAN_DEFAULT_LOOKBACK, "both", {
+    ...base,
+    tempFastPt4: true
+  });
+
+  assert.deepEqual(slow, []);
+  assert.equal(fast.length, 1);
+  assert.equal(fast[0].side, "short");
+  assert.equal(fast[0].bar, 793);
 });

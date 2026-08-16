@@ -75,6 +75,27 @@ confirmBars:
 
 }
 
+/**
+ * Геометрия цепочки заморожена во всех копиях; confirm-поля (b3Confirm /
+ * b4Confirm) — метаданные, они есть не в каждой копии и здесь не сравниваются.
+ */
+function chainGeometry(
+chain
+){
+
+return {
+b3:
+chain.b3,
+p3:
+chain.p3,
+b4:
+chain.b4,
+p4:
+chain.p4
+};
+
+}
+
 function runFreezeCases(
 scanLngChainsAfterPt12ForTest,
 label
@@ -148,9 +169,11 @@ chains.length,
 2
 );
 assert.deepEqual(
+chainGeometry(
 chains[
 0
-],
+]
+),
 {
 b3:
 20,
@@ -163,9 +186,11 @@ p4:
 }
 );
 assert.deepEqual(
+chainGeometry(
 chains[
 1
-],
+]
+),
 {
 b3:
 35,
@@ -239,9 +264,11 @@ chains.length,
 1
 );
 assert.deepEqual(
+chainGeometry(
 chains[
 0
-],
+]
+),
 {
 b3:
 28,
