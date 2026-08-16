@@ -3,15 +3,15 @@
  */
 import {
 loadBotStrategiesPrefs
-} from "./bot-strategy-prefs.js?v=22";
+} from "./bot-strategy-prefs.js?v=28";
 import {
 readAlgoPattern12Settings
-} from "./pattern-12-settings.js?v=2";
+} from "./pattern-12-settings.js?v=3";
 import {
 loadAlgoTickerFlags,
 ALGO_TICKER_FLAGS_KEY,
 applyAlgoTickerFlagsRoot
-} from "./ticker-flags.js?v=6";
+} from "./ticker-flags.js?v=8";
 import {
 acquireAlgoBotLock,
 releaseAlgoBotLock,
@@ -19,6 +19,9 @@ clearAlgoBotLock,
 fetchAlgoBotLock,
 ensureAlgoBotLockHeld
 } from "./bot-cloud-lock.js?v=11";
+import {
+freezeBotTickerBookSnapshot
+} from "./bot-ticker-book.js?v=4";
 
 function desktopAlgoApi(){
 
@@ -200,6 +203,32 @@ strategyId ===
 ? strategyId
 : "st1";
 
+const tickerBookSnapshot =
+freezeBotTickerBookSnapshot(
+id
+);
+const bookTickers =
+tickerBookSnapshot?.tickers &&
+typeof tickerBookSnapshot.tickers ===
+"object"
+? Object.keys(
+tickerBookSnapshot.tickers
+)
+: [];
+
+if(
+!bookTickers.length
+){
+await releaseAlgoBotLock();
+
+return {
+ok:
+false,
+message:
+"Нет загруженной книги параметров. Сначала «Применить к боту», затем в настройках бота — «Загрузить книгу параметров»."
+};
+}
+
 const result =
 await api.startBot(
 {
@@ -207,7 +236,8 @@ strategyId,
 strategyPrefs:
 prefs[
 id
-]
+],
+tickerBookSnapshot
 }
 );
 

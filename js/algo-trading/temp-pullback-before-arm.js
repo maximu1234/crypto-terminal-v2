@@ -1,9 +1,8 @@
 /**
- * TEMPORARY — pullback-before-arm filter for Algo «Данные» + bot strategies.
+ * Pullback-before-arm filter for Algo «Данные» + bot strategies.
  *
- * Easy removal: delete this file, drop imports/opts/UI wired with
- * `TEMP_PULLBACK_BEFORE_ARM` / `temp-pullback-before-arm`, and revert
- * the arm gate in pattern-entry-logic.js + bot engine/prefs/UI.
+ * Product feature (formerly TEMP_). Keep the grep marker in comments when
+ * wiring so the gate stays easy to find.
  *
  * Rule (long; short mirrored): after pt4 is found, do not arm until price
  * pulls back toward pt3 by N% of X (log span pt4→pt3). Entry remains the
@@ -14,7 +13,7 @@
  * pattern-loader ESM cache.
  */
 
-/** Marker for grepping temporary wiring. */
+/** On by default; grep TEMP_PULLBACK_BEFORE_ARM for all wiring. */
 export const TEMP_PULLBACK_BEFORE_ARM =
 true;
 

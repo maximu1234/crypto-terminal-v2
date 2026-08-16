@@ -28,7 +28,7 @@ isCloudLoggedIn,
 isCloudLoggedInEffective,
 isCloudSyncEnabled,
 onCloudSyncChange
-} from "./cloud-sync.js?v=65";
+} from "./cloud-sync.js?v=66";
 
 import {
 isSupabaseConfigured
@@ -97,7 +97,7 @@ resumeScriptScanBackgroundJob();
 
 }
 
-function bootAlgoBotAlertBridge(){
+function bootAlgoDesktopBackgroundJobs(){
 
 if(
 !window.cryptoTerminalDesktop?.isDesktop
@@ -106,14 +106,14 @@ return;
 }
 
 void import(
-"./algo-trading/bot-alert-bridge.js?v=6"
+"./algo-trading/desktop-site-boot.js?v=1"
 ).then(
 m=>
-m.mountAlgoBotAlertBridge?.()
+m.bootAlgoDesktopBackgroundJobs?.()
 ).catch(
 err=>{
 console.warn(
-"[site-boot] algo bot alert bridge:",
+"[site-boot] algo desktop background:",
 err
 );
 }
@@ -122,7 +122,7 @@ err
 }
 
 bootScriptScanBackground();
-bootAlgoBotAlertBridge();
+bootAlgoDesktopBackgroundJobs();
 
 if(
 typeof document !==
@@ -138,7 +138,7 @@ true
 );
 document.addEventListener(
 "DOMContentLoaded",
-bootAlgoBotAlertBridge,
+bootAlgoDesktopBackgroundJobs,
 {
 once:
 true

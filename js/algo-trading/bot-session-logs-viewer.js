@@ -9,13 +9,13 @@ sendLanBotCommand
 import {
 formatBotStrategySettingsRows,
 loadBotStrategiesPrefs
-} from "./bot-strategy-prefs.js?v=22";
+} from "./bot-strategy-prefs.js?v=28";
 import {
 syncAllTickerFlagsRootToMain
-} from "./bot-bridge.js?v=13";
+} from "./bot-bridge.js?v=16";
 import {
 ALGO_TICKER_FLAGS_KEY
-} from "./ticker-flags.js?v=6";
+} from "./ticker-flags.js?v=8";
 
 const STORAGE_KEY =
 "algo_remote_session_logs_v1";
@@ -233,7 +233,7 @@ root.innerHTML =
 <div class="algo-remote-session-logs-channel-actions">
 <button type="button" class="algo-bot-remote-btn" id="algo-remote-logs-start">Запустить</button>
 <button type="button" class="algo-bot-remote-btn" id="algo-remote-logs-stop">Остановить</button>
-<button type="button" class="algo-bot-remote-btn algo-bot-remote-btn--push" id="algo-remote-logs-push" title="Отправить текущие Алго Лонг/Шорт/Both/Избранные на бот">Отдать списки</button>
+<button type="button" class="algo-bot-remote-btn algo-bot-remote-btn--push" id="algo-remote-logs-push" title="Отправить текущие списки Стратегия 1/2/3 на бот">Отдать списки</button>
 <button type="button" class="algo-bot-remote-btn" id="algo-remote-logs-refresh">Обновить логи</button>
 </div>
 </section>

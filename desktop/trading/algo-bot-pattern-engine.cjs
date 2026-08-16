@@ -88,6 +88,9 @@ null;
 /** @type {import('../../js/algo-trading/pattern-12-math.js')|null} */
 let patternMath =
 null;
+/** @type {import('../../js/algo-trading/pattern-supertrend-filter.js')|null} */
+let supertrendFilter =
+null;
 
 /** @type {ReturnType<createAlgoBybitKlineHub>|null} */
 let klineHub =
@@ -325,11 +328,13 @@ async function ensurePatternModules(){
 
 if(
 patternEntry &&
-patternMath
+patternMath &&
+supertrendFilter
 ){
 return {
 patternEntry,
-patternMath
+patternMath,
+supertrendFilter
 };
 }
 
@@ -339,10 +344,13 @@ patternEntry =
 loaded.patternEntry;
 patternMath =
 loaded.patternMath;
+supertrendFilter =
+loaded.supertrendFilter;
 
 return {
 patternEntry,
-patternMath
+patternMath,
+supertrendFilter
 };
 
 }
@@ -878,11 +886,22 @@ parent.setup
 return false;
 }
 
+const resolveOpts =
+getResolveOpts(
+state.symbol
+);
+
+if(
+!resolveOpts
+){
+return false;
+}
+
 const event =
 patternEntry.resolvePatternSetupEvent(
 candles,
 parent.setup,
-getResolveOpts()
+resolveOpts
 );
 
 return event ==
@@ -1212,7 +1231,7 @@ function pullbackPctLabel(){
 
 const n =
 Number(
-getResolveOpts().pullbackBeforeArmPct
+engineConfig?.pullbackBeforeArmPct
 );
 
 if(
@@ -1285,7 +1304,349 @@ return {};
 
 }
 
-function getResolveOpts(){
+function normalizeBookSymbol(
+symbol
+){
+
+return String(
+symbol ||
+""
+).replace(
+/\.P$/i,
+""
+).trim().toUpperCase();
+
+}
+
+function getTickerBookOverlay(
+symbol
+){
+
+const book =
+engineConfig?.tickerBook;
+
+if(
+!book ||
+typeof book !==
+"object"
+){
+return null;
+}
+
+const sym =
+normalizeBookSymbol(
+symbol
+);
+
+if(
+!sym
+){
+return null;
+}
+
+const row =
+book[
+sym
+];
+
+return row &&
+typeof row ===
+"object"
+? row
+: null;
+
+}
+
+function buildExitProfileForOverlay(
+overlay
+){
+
+const base =
+engineConfig?.exitProfile;
+const strategyId =
+String(
+engineConfig?.strategyId ||
+"st1"
+);
+
+if(
+!overlay
+){
+return base;
+}
+
+if(
+strategyId ===
+"st1" ||
+base?.kind ===
+"rr"
+){
+const tpRr =
+Number(
+overlay.tpRr
+);
+
+return {
+kind:
+"rr",
+tpRr:
+Number.isFinite(
+tpRr
+)
+? tpRr
+: base?.tpRr
+};
+}
+
+return {
+kind:
+base?.kind ||
+(
+strategyId ===
+"st2"
+? "partial-x"
+: "partial-y"
+),
+tp1:
+Number.isFinite(
+Number(
+overlay.tp1
+)
+)
+? Number(
+overlay.tp1
+)
+: base?.tp1,
+tp2:
+Number.isFinite(
+Number(
+overlay.tp2
+)
+)
+? Number(
+overlay.tp2
+)
+: base?.tp2,
+tp3:
+Number.isFinite(
+Number(
+overlay.tp3
+)
+)
+? Number(
+overlay.tp3
+)
+: base?.tp3,
+trailSl:
+overlay.trailSl !=
+null
+? !!overlay.trailSl
+: !!base?.trailSl,
+trailSlX1:
+Number.isFinite(
+Number(
+overlay.trailSlX1
+)
+)
+? Number(
+overlay.trailSlX1
+)
+: base?.trailSlX1,
+trailSlX2:
+Number.isFinite(
+Number(
+overlay.trailSlX2
+)
+)
+? Number(
+overlay.trailSlX2
+)
+: base?.trailSlX2,
+share1:
+Number.isFinite(
+Number(
+overlay.share1
+)
+)
+? Number(
+overlay.share1
+)
+: base?.share1,
+share2:
+Number.isFinite(
+Number(
+overlay.share2
+)
+)
+? Number(
+overlay.share2
+)
+: base?.share2,
+share3:
+Number.isFinite(
+Number(
+overlay.share3
+)
+)
+? Number(
+overlay.share3
+)
+: base?.share3
+};
+
+}
+
+/**
+ * Только overlay из книги. Без записи в книге — null (базовые prefs запрещены).
+ * @param {string} [symbol]
+ * @returns {object|null}
+ */
+function getTradePrefsForSymbol(
+symbol
+){
+
+const overlay =
+symbol
+? getTickerBookOverlay(
+symbol
+)
+: null;
+
+if(
+!overlay
+){
+return null;
+}
+
+const pullbackBeforeArm =
+overlay.pullbackBeforeArm !=
+null
+? !!overlay.pullbackBeforeArm
+: false;
+
+const pullbackBeforeArmPct =
+Number.isFinite(
+Number(
+overlay.pullbackBeforeArmPct
+)
+)
+? Number(
+overlay.pullbackBeforeArmPct
+)
+: 38.2;
+
+const slPct =
+Number.isFinite(
+Number(
+overlay.slPct
+)
+)
+? Number(
+overlay.slPct
+)
+: null;
+
+const tpRr =
+Number.isFinite(
+Number(
+overlay.tpRr
+)
+)
+? Number(
+overlay.tpRr
+)
+: null;
+
+if(
+!Number.isFinite(
+slPct
+)
+){
+return null;
+}
+
+const strategyId =
+String(
+engineConfig?.strategyId ||
+"st1"
+);
+
+if(
+strategyId ===
+"st1" &&
+!Number.isFinite(
+tpRr
+)
+){
+return null;
+}
+
+return {
+slPct,
+tpRr,
+tf:
+String(
+overlay.tf ||
+""
+).trim(),
+supertrendLongFilter:
+!!overlay.supertrendLongFilter,
+supertrendLongAtr:
+Number(
+overlay.supertrendLongAtr
+),
+supertrendLongFactor:
+Number(
+overlay.supertrendLongFactor
+),
+supertrendLongTf:
+String(
+overlay.supertrendLongTf ||
+""
+).trim(),
+supertrendShortFilter:
+!!overlay.supertrendShortFilter,
+supertrendShortAtr:
+Number(
+overlay.supertrendShortAtr
+),
+supertrendShortFactor:
+Number(
+overlay.supertrendShortFactor
+),
+supertrendShortTf:
+String(
+overlay.supertrendShortTf ||
+""
+).trim(),
+exitProfile:
+buildExitProfileForOverlay(
+overlay
+),
+pullbackBeforeArm,
+pullbackBeforeArmPct,
+riskUsd:
+engineConfig?.riskUsd,
+strategyId:
+engineConfig?.strategyId
+};
+
+}
+
+function getResolveOpts(
+symbol
+){
+
+const trade =
+getTradePrefsForSymbol(
+symbol
+);
+
+if(
+!trade
+){
+return null;
+}
 
 return {
 timeoutBars:
@@ -1298,10 +1659,164 @@ engineConfig?.maxPt1Pt4Bars
 ),
 /* TEMP_PULLBACK_BEFORE_ARM */
 pullbackBeforeArm:
-!!engineConfig?.pullbackBeforeArm,
+!!trade.pullbackBeforeArm,
 pullbackBeforeArmPct:
-engineConfig?.pullbackBeforeArmPct
+trade.pullbackBeforeArmPct
 };
+
+}
+
+function candlesWithCurrentBar(
+candles,
+current
+){
+
+const list =
+Array.isArray(
+candles
+)
+? candles.slice()
+: [];
+
+if(
+!current
+){
+return list;
+}
+
+const currentTime =
+Number(
+current.time
+);
+const lastTime =
+Number(
+list[
+list.length -
+1
+]?.time
+);
+
+if(
+Number.isFinite(
+currentTime
+) &&
+currentTime ===
+lastTime
+){
+list[
+list.length -
+1
+] =
+current;
+}else{
+list.push(
+current
+);
+}
+
+return list;
+
+}
+
+/**
+ * Supertrend execution policy comes only from the per-ticker book row.
+ * @param {string} symbol
+ * @param {object} setup
+ * @param {Array} candles
+ * @param {object|null} [current]
+ * @returns {boolean}
+ */
+function passesSupertrendEntryGate(
+symbol,
+setup,
+candles,
+current =
+null
+){
+
+const trade =
+getTradePrefsForSymbol(
+symbol
+);
+const side =
+setup?.side ===
+"short"
+? "short"
+: "long";
+const enabled =
+side ===
+"short"
+? trade?.supertrendShortFilter
+: trade?.supertrendLongFilter;
+
+if(
+!trade ||
+!enabled
+){
+return !!trade;
+}
+
+if(
+!supertrendFilter?.filterEntryEventsBySupertrend
+){
+return false;
+}
+
+const list =
+candlesWithCurrentBar(
+candles,
+current
+);
+const bar =
+list.length -
+1;
+
+if(
+bar <
+0
+){
+return false;
+}
+
+const filtered =
+supertrendFilter.filterEntryEventsBySupertrend(
+list,
+[
+{
+type:
+"entry",
+side,
+bar,
+price:
+Number(
+setup?.p4
+)
+}
+],
+{
+chartTf:
+trade.tf,
+supertrendLongFilter:
+trade.supertrendLongFilter,
+supertrendLongAtr:
+trade.supertrendLongAtr,
+supertrendLongFactor:
+trade.supertrendLongFactor,
+supertrendLongTf:
+trade.supertrendLongTf,
+supertrendShortFilter:
+trade.supertrendShortFilter,
+supertrendShortAtr:
+trade.supertrendShortAtr,
+supertrendShortFactor:
+trade.supertrendShortFactor,
+supertrendShortTf:
+trade.supertrendShortTf
+}
+);
+
+return filtered.length ===
+1;
 
 }
 
@@ -2319,8 +2834,19 @@ return;
  * here falsely cancels setups that resolve skipped (e.g. maxPt1Pt4Bars
  * early-null) and disagrees with pullback semantics.
  */
+const resolveOptsArm =
+getResolveOpts(
+sym
+);
+
+if(
+!resolveOptsArm
+){
+return;
+}
+
 const pullbackArmOn =
-!!getResolveOpts().pullbackBeforeArm;
+!!resolveOptsArm.pullbackBeforeArm;
 
 if(
 !pullbackArmOn &&
@@ -2367,7 +2893,7 @@ const gate =
 patternEntry.evaluatePullbackArmGate(
 candles,
 setup,
-getResolveOpts()
+resolveOptsArm
 );
 
 if(
@@ -2429,6 +2955,36 @@ fp
 );
 return;
 }
+}
+
+if(
+!passesSupertrendEntryGate(
+sym,
+setup,
+candles
+)
+){
+pushAliveSetupDecisionOnce(
+candles,
+setup,
+fp,
+"supertrend_wait",
+{
+ts:
+Date.now(),
+symbol:
+sym,
+side:
+setup.side,
+price:
+Number(
+setup.p4
+),
+text:
+`${sym} ${setup.side}: Supertrend не подтверждает вход — ждём${src}`
+}
+);
+return;
 }
 
 if(
@@ -2959,6 +3515,17 @@ fp
 return;
 }
 
+const tradePrefs =
+getTradePrefsForSymbol(
+sym
+);
+
+if(
+!tradePrefs
+){
+return;
+}
+
 const result =
 await orderExecutor.placeBotTriggerEntry(
 {
@@ -2971,11 +3538,11 @@ setup.side ===
 : "long",
 setup,
 slPct:
-engineConfig?.slPct,
+tradePrefs.slPct,
 tpRr:
-engineConfig?.tpRr,
+tradePrefs.tpRr,
 exitProfile:
-engineConfig?.exitProfile,
+tradePrefs.exitProfile,
 strategyId:
 engineConfig?.strategyId,
 riskUsd:
@@ -4120,6 +4687,32 @@ continue;
 }
 
 if(
+!passesSupertrendEntryGate(
+sym,
+setup,
+stateCandles,
+cur
+)
+){
+await cancelArmedSetup(
+sym,
+fp,
+side,
+entryLevel,
+`${sym} ${side}: Supertrend больше не подтверждает вход — ${
+isManualTradingMode()
+? "алерт снят"
+: "триггер снят"
+}`,
+{
+soft:
+true
+}
+);
+continue;
+}
+
+if(
 prev &&
 cur &&
 isEntryCross(
@@ -4422,7 +5015,16 @@ clampEntryTimeoutBars(
 engineConfig?.timeoutBars
 );
 const resolveOpts =
-getResolveOpts();
+getResolveOpts(
+symbol
+);
+
+if(
+!resolveOpts
+){
+return;
+}
+
 const pullbackOn =
 !!resolveOpts.pullbackBeforeArm;
 const lastIndex =
@@ -5262,6 +5864,43 @@ config
 
 await stopPatternEngine();
 
+if(
+!config?.tickerBook ||
+typeof config.tickerBook !==
+"object" ||
+!Object.keys(
+config.tickerBook
+).length
+){
+throw new Error(
+"Нет книги параметров тикеров — бот не запущен"
+);
+}
+
+const sessionTf =
+String(
+config?.tf ||
+""
+).trim();
+
+if(
+!sessionTf ||
+Object.values(
+config.tickerBook
+).some(
+row=>
+String(
+row?.tf ||
+""
+).trim() !==
+sessionTf
+)
+){
+throw new Error(
+"Таймфрейм исполнения должен одинаково храниться в каждой строке книги"
+);
+}
+
 engineConfig =
 {
 side:
@@ -5301,8 +5940,7 @@ typeof config.symbolAllowedSides ===
 ? config.symbolAllowedSides
 : {},
 tf:
-config?.tf ||
-"5",
+sessionTf,
 timeoutBars:
 clampEntryTimeoutBars(
 config?.timeoutBars
@@ -5417,6 +6055,12 @@ config?.tradingMode ===
 : "live",
 entriesPaused:
 false,
+tickerBook:
+config?.tickerBook &&
+typeof config.tickerBook ===
+"object"
+? config.tickerBook
+: null,
 onActivity:
 config?.onActivity ||
 null
@@ -5752,6 +6396,20 @@ null
 ){
 engineConfig.exitProfile =
 patch.exitProfile;
+}
+
+if(
+Object.prototype.hasOwnProperty.call(
+patch,
+"tickerBook"
+)
+){
+engineConfig.tickerBook =
+patch.tickerBook &&
+typeof patch.tickerBook ===
+"object"
+? patch.tickerBook
+: null;
 }
 
 if(

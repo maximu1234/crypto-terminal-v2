@@ -9,7 +9,7 @@
 import {
 computePattern12Scene,
 defaultPattern12Settings
-} from "./pattern-12-math.js?v=8";
+} from "./pattern-12-math.js?v=14";
 import {
 TEMP_PULLBACK_BEFORE_ARM,
 clampPullbackBeforeArmPct,
@@ -17,7 +17,7 @@ computePullbackArmLevel,
 candleTouchesPullbackLevel,
 candlePiercesPt4BeforeArm,
 normalizePullbackBeforeArmEnabled
-} from "./temp-pullback-before-arm.js?v=3";
+} from "./temp-pullback-before-arm.js?v=4";
 
 export {
 evaluatePullbackArmGate,
@@ -25,7 +25,7 @@ isPullbackReadyToArm,
 clampPullbackBeforeArmPct,
 normalizePullbackBeforeArmEnabled,
 DEFAULT_PULLBACK_BEFORE_ARM_PCT
-} from "./temp-pullback-before-arm.js?v=3";
+} from "./temp-pullback-before-arm.js?v=4";
 
 export const ENTRY_TIMEOUT_BARS =
 300;
@@ -33,6 +33,75 @@ export const ENTRY_TIMEOUT_BARS =
 /** Макс. расстояние pt1→pt4 (баров); null/пусто в prefs = без ограничения. */
 export const ENTRY_MAX_PT1_PT4_BARS =
 null;
+
+/**
+ * Первая свеча, на которой известны и confirm pt3, и confirm pt4.
+ * До неё entry/cancel по сетапу ещё не определены (lookahead).
+ * @param {{ b3Confirm?: unknown, b4?: unknown, b4Confirm?: unknown }} setup
+ * @returns {number}
+ */
+export function resolvePatternSetupKnownBar(
+setup
+){
+
+const b4 =
+Number(
+setup?.b4
+);
+const b3Confirm =
+Number(
+setup?.b3Confirm
+);
+const b4Confirm =
+Number(
+setup?.b4Confirm
+);
+const parts =
+[];
+
+if(
+Number.isFinite(
+b3Confirm
+)
+){
+parts.push(
+b3Confirm
+);
+}
+
+if(
+Number.isFinite(
+b4Confirm
+)
+){
+parts.push(
+b4Confirm
+);
+}else if(
+Number.isFinite(
+b4
+)
+){
+parts.push(
+b4
+);
+}
+
+if(
+!parts.length
+){
+return Number.isFinite(
+b4
+)
+? b4
+: -1;
+}
+
+return Math.max(
+...parts
+);
+
+}
 
 /**
  * @param {unknown} raw
@@ -301,10 +370,25 @@ p4
 p3
 ) ||
 b4 <
-0 ||
-b4 >=
-candles.length -
-1
+0
+){
+return null;
+}
+
+const setupKnownBar =
+resolvePatternSetupKnownBar(
+setup
+);
+const scanStart =
+Math.max(
+b4,
+setupKnownBar
+) +
+1;
+
+if(
+scanStart >=
+candles.length
 ){
 return null;
 }
@@ -376,8 +460,7 @@ pullbackLevel
 
 for(
 let i =
-b4 +
-1;
+scanStart;
 i <=
 scanEnd;
 i++

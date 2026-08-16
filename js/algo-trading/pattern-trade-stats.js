@@ -13,13 +13,6 @@ DEFAULT_TP_RR,
 DEFAULT_RISK_USD
 } from "./pattern-entry-positions.js?v=14";
 
-import {
-normalizeAlgoTpEmaTrail,
-computeAlgoCloseEmaSeries,
-isAlgoTpEmaFavorable,
-isAlgoTpEmaAgainst
-} from "./pattern-tp-ema.js?v=1";
-
 /**
  * @typedef {"win"|"loss"|"open"} TradeOutcome
  *
@@ -51,7 +44,8 @@ isAlgoTpEmaAgainst
  *   shortNetUsd: number,
  *   bes: number,
  *   sumR: number,
- *   expectancyR: number|null
+ *   expectancyR: number|null,
+ *   maxDrawdownUsd: number
  * }} AlgoTradeStats
  */
 
@@ -105,17 +99,6 @@ clampTpRr(
 opts.tpRr ??
 DEFAULT_TP_RR
 );
-const useEmaTrail =
-normalizeAlgoTpEmaTrail(
-opts.tpEmaTrail
-);
-const ema =
-useEmaTrail
-? computeAlgoCloseEmaSeries(
-candles,
-opts.tpEmaLength
-)
-: null;
 
 if(
 !Array.isArray(
@@ -162,9 +145,6 @@ tpPrice
 return null;
 }
 
-let emaTrail =
-false;
-
 for(
 let i =
 entryBar;
@@ -182,73 +162,6 @@ if(
 !candle
 ){
 continue;
-}
-
-const close =
-Number(
-candle.close
-);
-const emaVal =
-ema
-? ema[
-i
-]
-: NaN;
-
-if(
-emaTrail
-){
-
-const slHit =
-side ===
-"long"
-? Number.isFinite(
-candle.low
-) &&
-candle.low <=
-slPrice
-: Number.isFinite(
-candle.high
-) &&
-candle.high >=
-slPrice;
-
-if(
-slHit
-){
-return {
-outcome:
-"loss",
-exitBar:
-i,
-exitPrice:
-slPrice,
-exitReason:
-"sl"
-};
-}
-
-if(
-isAlgoTpEmaAgainst(
-side,
-close,
-emaVal
-)
-){
-return {
-outcome:
-"win",
-exitBar:
-i,
-exitPrice:
-close,
-exitReason:
-"ema"
-};
-}
-
-continue;
-
 }
 
 const hit =
@@ -286,19 +199,6 @@ if(
 hit ===
 "tp"
 ){
-
-if(
-useEmaTrail &&
-isAlgoTpEmaFavorable(
-side,
-close,
-emaVal
-)
-){
-emaTrail =
-true;
-continue;
-}
 
 return {
 outcome:
@@ -339,9 +239,7 @@ null,
 exitPrice:
 null,
 exitReason:
-emaTrail
-? "ema-open"
-: "open"
+"open"
 };
 
 }
@@ -543,6 +441,12 @@ let bes =
 0;
 let sumR =
 0;
+let equityUsd =
+0;
+let equityPeakUsd =
+0;
+let maxDrawdownUsd =
+0;
 
 const statsMode =
 normalizeAlgoStatsMode(
@@ -730,6 +634,33 @@ longNetUsd +=
 delta;
 }
 
+if(
+outcome ===
+"win" ||
+outcome ===
+"loss"
+){
+equityUsd +=
+delta;
+if(
+equityUsd >
+equityPeakUsd
+){
+equityPeakUsd =
+equityUsd;
+}
+const dd =
+equityPeakUsd -
+equityUsd;
+if(
+dd >
+maxDrawdownUsd
+){
+maxDrawdownUsd =
+dd;
+}
+}
+
 }
 
 const wins =
@@ -823,7 +754,8 @@ wins +
 losses +
 bes
 )
-: null
+: null,
+maxDrawdownUsd
 };
 
 }

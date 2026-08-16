@@ -4,16 +4,21 @@
 import {
 scanAlgoStrategyUniverse,
 normalizeAlgoScanStrategyId
-} from "./strategy-universe-scan.js?v=3";
+} from "./strategy-universe-scan.js?v=5";
 
 import {
 normalizeAlgoScanTf,
 ALGO_TICKER_SCAN_TF
-} from "./ticker-scanner.js?v=7";
+} from "./ticker-scanner.js?v=9";
 
 import {
 normalizeAlgoStatsMode
-} from "./pattern-trade-stats.js?v=12";
+} from "./pattern-trade-stats.js?v=14";
+
+import {
+loadUniverseScanResult,
+saveUniverseScanResult
+} from "./modal-results-storage.js?v=5";
 
 const ST_LABELS =
 {
@@ -230,7 +235,8 @@ let pendingUniverse =
 "top100";
 
 /**
- * Last successful backtest per strategy × universe (in-memory until app restart).
+ * Last successful backtest per strategy × universe.
+ * Hydrated from disk; kept in memory for the session.
  * @type {Map<string, {
  *   agg: object,
  *   rows: object[],
@@ -284,10 +290,33 @@ function loadSlot(
 key
 ){
 
-return lastResultsBySlot.get(
+const mem =
+lastResultsBySlot.get(
 key
-) ||
-null;
+);
+
+if(
+mem
+){
+return mem;
+}
+
+const disk =
+loadUniverseScanResult(
+key
+);
+
+if(
+disk
+){
+lastResultsBySlot.set(
+key,
+disk
+);
+return disk;
+}
+
+return null;
 
 }
 
@@ -307,8 +336,7 @@ key,
 payload
 ){
 
-lastResultsBySlot.set(
-key,
+const next =
 {
 agg:
 payload.agg,
@@ -340,7 +368,15 @@ payload.statsMode ||
 ),
 finishedAt:
 Date.now()
-}
+};
+
+lastResultsBySlot.set(
+key,
+next
+);
+saveUniverseScanResult(
+key,
+next
 );
 
 }
@@ -1188,7 +1224,9 @@ universe,
 tf,
 statsMode,
 tradeOpts:
-host.getTradeOpts?.() ||
+host.getTradeOpts?.(
+strategyId
+) ||
 {},
 signal:
 localSignal,

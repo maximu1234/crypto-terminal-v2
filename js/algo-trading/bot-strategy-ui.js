@@ -1,5 +1,5 @@
 /**
- * Topbar: блоки Стратегия 1–3 (настройки бота; St2/St3 — заглушки).
+ * Topbar: Боты / Запустить; настройки стратегий — в модалке бота.
  */
 import {
 loadBotStrategiesPrefs,
@@ -9,13 +9,19 @@ primaryBotSide,
 normalizeBotTf,
 normalizeBotRefreshStatsMode,
 normalizeManualRefreshStrategies,
-botSideListLabel,
+normalizeLaunchStrategyId,
+botStrategyListLabel,
 botSidesDirectionLabel,
 formatBotStrategySettingsRows
-} from "./bot-strategy-prefs.js?v=22";
+} from "./bot-strategy-prefs.js?v=28";
+import {
+ALGO_ANALYSIS_BOT_PATTERN_12,
+getActiveAnalysisBotId,
+setActiveAnalysisBotId
+} from "./active-analysis-bot.js?v=1";
 import {
 clampMaxPt1Pt4Bars
-} from "./pattern-entry-logic.js?v=12";
+} from "./pattern-entry-logic.js?v=13";
 import {
 syncBotStrategiesToMain,
 syncAllTickerFlagsRootToMain,
@@ -29,7 +35,12 @@ isAlgoBotDesktop,
 fetchAlgoBotCloudLock,
 clearAlgoBotCloudLock,
 ensureAlgoBotCloudLock
-} from "./bot-bridge.js?v=13";
+} from "./bot-bridge.js?v=16";
+import {
+stageBotTickerBookFromPublished,
+loadStagedBotTickerBook,
+loadBotTickerBook
+} from "./bot-ticker-book.js?v=4";
 import {
 isMultichartRemoteControlHost
 } from "./bot-remote-client.js?v=10";
@@ -37,10 +48,10 @@ import {
 mountRemoteSessionLogsEntry,
 mountRemoteWatchlistsPushEntry,
 mountLocalSessionLogsEntry
-} from "./bot-session-logs-viewer.js?v=24";
+} from "./bot-session-logs-viewer.js?v=26";
 import {
 rebalanceTpShares
-} from "./pattern-trade-stats-partial.js?v=19";
+} from "./pattern-trade-stats-partial.js?v=21";
 
 const STATUS_POLL_MS =
 2500;
@@ -172,9 +183,21 @@ const strategiesWrap =
 document.getElementById(
 "algo-bot-strategies"
 );
-const toggle =
+const botsBtn =
 document.getElementById(
-"algo-bot-st1-toggle"
+"algo-bots-btn"
+);
+const botsDrop =
+document.getElementById(
+"algo-bots-dropdown"
+);
+const botsItemPattern12 =
+document.getElementById(
+"algo-bots-item-pattern12"
+);
+const botSettingsModal =
+document.getElementById(
+"algo-bot-settings-modal"
 );
 const dropdown =
 document.getElementById(
@@ -182,7 +205,23 @@ document.getElementById(
 );
 const runBtn =
 document.getElementById(
-"algo-bot-st1-run"
+"algo-bot-run"
+);
+const st1Enabled =
+document.getElementById(
+"algo-bot-st1-enabled"
+);
+const st2Enabled =
+document.getElementById(
+"algo-bot-st2-enabled"
+);
+const st3Enabled =
+document.getElementById(
+"algo-bot-st3-enabled"
+);
+let launchStrategyId =
+normalizeLaunchStrategyId(
+prefs.launchStrategyId
 );
 const timeoutInput =
 document.getElementById(
@@ -271,29 +310,13 @@ tfBar?.querySelectorAll(
 )
 ];
 
-const st2Toggle =
-document.getElementById(
-"algo-bot-st2-toggle"
-);
 const st2Drop =
 document.getElementById(
 "algo-bot-st2-dropdown"
 );
-const st3Toggle =
-document.getElementById(
-"algo-bot-st3-toggle"
-);
 const st3Drop =
 document.getElementById(
 "algo-bot-st3-dropdown"
-);
-const st2RunBtn =
-document.getElementById(
-"algo-bot-st2-run"
-);
-const st3RunBtn =
-document.getElementById(
-"algo-bot-st3-run"
 );
 
 const statusToggle =
@@ -359,9 +382,7 @@ document.getElementById(
 /** @type {HTMLElement[]} */
 const allDrops =
 [
-dropdown,
-st2Drop,
-st3Drop,
+botsDrop,
 statusDrop
 ].filter(
 Boolean
@@ -370,9 +391,9 @@ Boolean
 /** @type {HTMLElement[]} */
 const lockWhenRunning =
 [
-toggle,
-st2Toggle,
-st3Toggle,
+st1Enabled,
+st2Enabled,
+st3Enabled,
 timeoutInput,
 pullbackInput,
 pullbackPctInput,
@@ -560,28 +581,10 @@ closeArmedList();
 closeSignalList();
 }
 
-toggle?.setAttribute(
+botsBtn?.setAttribute(
 "aria-expanded",
-dropdown &&
-!dropdown.classList.contains(
-"hidden"
-)
-? "true"
-: "false"
-);
-st2Toggle?.setAttribute(
-"aria-expanded",
-st2Drop &&
-!st2Drop.classList.contains(
-"hidden"
-)
-? "true"
-: "false"
-);
-st3Toggle?.setAttribute(
-"aria-expanded",
-st3Drop &&
-!st3Drop.classList.contains(
+botsDrop &&
+!botsDrop.classList.contains(
 "hidden"
 )
 ? "true"
@@ -677,6 +680,56 @@ syncConfigToMain();
 
 }
 
+function applyLaunchEnabledUi(){
+
+const id =
+normalizeLaunchStrategyId(
+launchStrategyId
+);
+
+if(
+st1Enabled
+){
+st1Enabled.checked =
+id ===
+"st1";
+}
+
+if(
+st2Enabled
+){
+st2Enabled.checked =
+id ===
+"st2";
+}
+
+if(
+st3Enabled
+){
+st3Enabled.checked =
+id ===
+"st3";
+}
+
+}
+
+function setLaunchStrategyId(
+nextId
+){
+
+launchStrategyId =
+normalizeLaunchStrategyId(
+nextId
+);
+applyLaunchEnabledUi();
+saveBotStrategiesPrefs(
+{
+launchStrategyId
+}
+);
+
+}
+
 function applyRunBtn(){
 
 if(
@@ -685,8 +738,10 @@ if(
 return;
 }
 
+const runningId =
+runningStrategyId();
 const running =
-!!st1.running;
+!!runningId;
 
 runBtn.dataset.running =
 running
@@ -707,7 +762,7 @@ runInflight && !running
 runBtn.title =
 running
 ? "Остановить бота"
-: "Запустить бота";
+: "Запустить бота с отмеченной стратегией";
 runBtn.classList.toggle(
 "is-running",
 running
@@ -720,9 +775,62 @@ strategiesWrap
 ){
 strategiesWrap.classList.toggle(
 "is-bot-running",
-runningStrategyId()
+running
 );
 }
+
+}
+
+function applyActiveAnalysisBotMenuUi(){
+
+const activeId =
+getActiveAnalysisBotId();
+
+botsItemPattern12?.classList.toggle(
+"is-active-analysis-bot",
+activeId ===
+ALGO_ANALYSIS_BOT_PATTERN_12
+);
+botsItemPattern12?.setAttribute(
+"aria-current",
+activeId ===
+ALGO_ANALYSIS_BOT_PATTERN_12
+? "true"
+: "false"
+);
+
+}
+
+function openBotSettingsModal(){
+
+if(
+!botSettingsModal
+){
+return;
+}
+
+closeAllDrops();
+botSettingsModal.hidden =
+false;
+botSettingsModal.classList.remove(
+"hidden"
+);
+
+}
+
+function closeBotSettingsModal(){
+
+if(
+!botSettingsModal
+){
+return;
+}
+
+botSettingsModal.classList.add(
+"hidden"
+);
+botSettingsModal.hidden =
+true;
 
 }
 
@@ -776,14 +884,6 @@ const getPrefs =
 const drop =
 document.getElementById(
 `algo-bot-${strategyId}-dropdown`
-);
-const toggleBtn =
-document.getElementById(
-`algo-bot-${strategyId}-toggle`
-);
-const run =
-document.getElementById(
-`algo-bot-${strategyId}-run`
 );
 const el =
 name=>document.getElementById(
@@ -951,8 +1051,12 @@ key
 }
 }
 
+if(
+trail
+){
 trail.checked =
 !!p.trailSl;
+}
 /* TEMP_PULLBACK_BEFORE_ARM */
 if(
 pullback
@@ -960,17 +1064,28 @@ pullback
 pullback.checked =
 !!p.pullbackBeforeArm;
 }
+if(
+favorites
+){
 favorites.checked =
 !!p.useFavorites;
+}
+if(
+real
+){
 real.checked =
 p.refreshStatsMode ===
 "real";
+}
+if(
+sideHint
+){
 sideHint.textContent =
-botSideListLabel(
-p.sides ||
-p.side,
+botStrategyListLabel(
+strategyId,
 !!p.useFavorites
 );
+}
 
 for(
 const [
@@ -1001,147 +1116,7 @@ p.tf
 );
 }
 
-const running =
-!!p.running;
-run.dataset.running =
-running
-? "1"
-: "0";
-run.setAttribute(
-"aria-pressed",
-running
-? "true"
-: "false"
-);
-run.textContent =
-running
-? "Остановить"
-: "Запустить";
-run.classList.toggle(
-"is-running",
-running
-);
-run.disabled =
-isManualTradingMode() ||
-(
-runningStrategyId() &&
-!running
-);
-run.title =
-isManualTradingMode()
-? "В ручном режиме доступна только Стратегия 1"
-: running
-? "Остановить бота"
-: "Запустить бота";
-
 }
-
-toggleBtn?.addEventListener(
-"click",
-event=>{
-if(
-isManualTradingMode() ||
-runningStrategyId()
-){
-return;
-}
-event.preventDefault();
-setDropOpen(
-drop,
-toggleBtn,
-drop?.classList.contains(
-"hidden"
-) !==
-false
-);
-}
-);
-
-run?.addEventListener(
-"click",
-async event=>{
-event.preventDefault();
-
-if(
-isManualTradingMode()
-){
-applyStatusPanel(
-{
-ok:
-false,
-message:
-"В ручном режиме доступна только Стратегия 1"
-}
-);
-return;
-}
-
-const p =
-getPrefs();
-
-if(
-p.running
-){
-const result =
-await stopAlgoBot(
-strategyId
-);
-applyBotStatus(
-result
-);
-void refreshCloudLockUi();
-return;
-}
-
-/* Commit open inputs before Start — empty maxPt1Pt4 must become null on disk. */
-const maxPt1Input =
-inputs.maxPt1Pt4Bars;
-
-if(
-maxPt1Input &&
-!maxPt1Input.disabled
-){
-const next =
-clampMaxPt1Pt4Bars(
-maxPt1Input.value
-);
-maxPt1Input.value =
-next ==
-null
-? ""
-: String(
-next
-);
-persistPartial(
-strategyId,
-{
-maxPt1Pt4Bars:
-next
-}
-);
-}
-
-const result =
-await startAlgoBot(
-strategyId
-);
-
-if(
-result?.ok ||
-result?.running
-){
-applyBotStatus(
-result
-);
-}else{
-applyStatusPanel(
-result
-);
-}
-
-void refreshCloudLockUi();
-}
-);
 
 for(
 const btn of tfButtons
@@ -1496,9 +1471,25 @@ return apply;
 
 function runningStrategyId(){
 
-return st1.running ||
-st2.running ||
-st3.running;
+if(
+st1.running
+){
+return "st1";
+}
+
+if(
+st2.running
+){
+return "st2";
+}
+
+if(
+st3.running
+){
+return "st3";
+}
+
+return null;
 
 }
 
@@ -1586,17 +1577,9 @@ const wrap =
 document.querySelector(
 `[data-algo-bot-strategy="${id}"]`
 );
-const toggleBtn =
+const enabled =
 document.getElementById(
-`algo-bot-${id}-toggle`
-);
-const run =
-document.getElementById(
-`algo-bot-${id}-run`
-);
-const drop =
-document.getElementById(
-`algo-bot-${id}-dropdown`
+`algo-bot-${id}-enabled`
 );
 
 wrap?.classList.toggle(
@@ -1605,64 +1588,33 @@ manual
 );
 
 if(
-manual
+enabled
 ){
-drop?.classList.add(
-"hidden"
-);
-toggleBtn?.setAttribute(
-"aria-expanded",
-"false"
-);
-}
-
-if(
-toggleBtn
-){
-toggleBtn.disabled =
+enabled.disabled =
 manual ||
-runningStrategyId();
-toggleBtn.setAttribute(
-"aria-disabled",
-toggleBtn.disabled
-? "true"
-: "false"
-);
-toggleBtn.title =
+!!runningStrategyId();
+enabled.title =
 manual
 ? title
 : (
-toggleBtn.getAttribute(
-"data-default-title"
-) ||
-`Стратегия ${id === "st2" ? "2" : "3"}`
+`Выбрать Стратегию ${id === "st2" ? "2" : "3"} для запуска`
 );
 }
 
+}
+
 if(
-run
-){
-const prefsRunning =
-id ===
-"st2"
-? !!st2.running
-: !!st3.running;
-run.disabled =
-manual ||
+manual &&
 (
-runningStrategyId() &&
-!prefsRunning
+launchStrategyId ===
+"st2" ||
+launchStrategyId ===
+"st3"
+)
+){
+setLaunchStrategyId(
+"st1"
 );
-run.title =
-manual
-? title
-: (
-prefsRunning
-? "Остановить бота"
-: "Запустить бота"
-);
-}
-
 }
 
 }
@@ -1671,6 +1623,8 @@ prefsRunning
 const lockRoots =
 [
 dropdown,
+st2Drop,
+st3Drop,
 document.getElementById(
 "algo-settings-dropdown"
 )
@@ -1706,47 +1660,6 @@ running;
 
 }
 
-if(
-toggle
-){
-toggle.disabled =
-running;
-toggle.setAttribute(
-"aria-disabled",
-running
-? "true"
-: "false"
-);
-}
-
-if(
-st2Toggle
-){
-st2Toggle.disabled =
-running ||
-isManualTradingMode();
-st2Toggle.setAttribute(
-"aria-disabled",
-st2Toggle.disabled
-? "true"
-: "false"
-);
-}
-
-if(
-st3Toggle
-){
-st3Toggle.disabled =
-running ||
-isManualTradingMode();
-st3Toggle.setAttribute(
-"aria-disabled",
-st3Toggle.disabled
-? "true"
-: "false"
-);
-}
-
 for(
 const root of lockRoots
 ){
@@ -1761,32 +1674,26 @@ running;
 }
 
 if(
-running
+st1Enabled
 ){
-if(
-st2Drop
-){
-st2Drop.classList.add(
-"hidden"
-);
+st1Enabled.disabled =
+running;
 }
 
 if(
-st3Drop
+st2Enabled
 ){
-st3Drop.classList.add(
-"hidden"
-);
+st2Enabled.disabled =
+running ||
+isManualTradingMode();
 }
 
-st2Toggle?.setAttribute(
-"aria-expanded",
-"false"
-);
-st3Toggle?.setAttribute(
-"aria-expanded",
-"false"
-);
+if(
+st3Enabled
+){
+st3Enabled.disabled =
+running ||
+isManualTradingMode();
 }
 
 applyPartialStrategiesManualGate();
@@ -1888,7 +1795,10 @@ prefs,
 strategyId,
 {
 tradingMode:
-status?.tradingMode
+status?.tradingMode,
+tickerBookTf:
+status?.tickerBook?.tf ||
+status?.tf
 }
 )
 : [];
@@ -2672,8 +2582,8 @@ if(
 sideHint
 ){
 sideHint.textContent =
-botSideListLabel(
-sides,
+botStrategyListLabel(
+"st1",
 !!st1.useFavorites
 );
 }
@@ -3009,29 +2919,131 @@ window.addEventListener(
 onTickerFlagsChanged
 );
 
-toggle?.addEventListener(
+botsBtn?.addEventListener(
 "click",
 event=>{
-if(
-runningStrategyId()
-){
-return;
-}
-
 event.preventDefault();
 event.stopPropagation();
 const open =
-dropdown?.classList.contains(
+botsDrop?.classList.contains(
 "hidden"
 ) !==
 false;
 setDropOpen(
-dropdown,
-toggle,
+botsDrop,
+botsBtn,
 open
 );
 }
 );
+
+botsItemPattern12?.addEventListener(
+"click",
+event=>{
+event.preventDefault();
+event.stopPropagation();
+closeAllDrops();
+setActiveAnalysisBotId(
+ALGO_ANALYSIS_BOT_PATTERN_12
+);
+applyActiveAnalysisBotMenuUi();
+openBotSettingsModal();
+}
+);
+
+botSettingsModal?.addEventListener(
+"click",
+event=>{
+const t =
+event.target;
+
+if(
+!(
+t instanceof Element
+)
+){
+return;
+}
+
+if(
+t.closest(
+'[data-close="algo-bot-settings-modal"]'
+)
+){
+event.preventDefault();
+closeBotSettingsModal();
+}
+}
+);
+
+for(
+const [
+id,
+input
+] of [
+[
+"st1",
+st1Enabled
+],
+[
+"st2",
+st2Enabled
+],
+[
+"st3",
+st3Enabled
+]
+]
+){
+input?.addEventListener(
+"change",
+()=>{
+if(
+runningStrategyId()
+){
+applyLaunchEnabledUi();
+return;
+}
+
+if(
+isManualTradingMode() &&
+id !==
+"st1"
+){
+applyLaunchEnabledUi();
+return;
+}
+
+if(
+input.checked
+){
+setLaunchStrategyId(
+id
+);
+}else if(
+launchStrategyId ===
+id
+){
+/* хотя бы одна стратегия должна быть выбрана */
+setLaunchStrategyId(
+"st1"
+);
+}else{
+applyLaunchEnabledUi();
+}
+}
+);
+}
+
+applyLaunchEnabledUi();
+setActiveAnalysisBotId(
+getActiveAnalysisBotId(),
+{
+silent:
+true
+}
+);
+applyActiveAnalysisBotMenuUi();
 
 statusToggle?.addEventListener(
 "click",
@@ -3499,31 +3511,105 @@ runInflight =
 true;
 applyRunBtn();
 
-const wasRunning =
-!!st1.running;
+const activeId =
+runningStrategyId();
 
 try{
 if(
-wasRunning
+activeId
+){
+if(
+activeId ===
+"st1"
 ){
 st1.running =
 false;
+}else if(
+activeId ===
+"st2"
+){
+st2.running =
+false;
+}else{
+st3.running =
+false;
+}
 applyRunBtn();
 applyLockUi(
 false
 );
 const result =
 await stopAlgoBot(
-"st1"
+activeId
 );
 applyBotStatus(
 result
 );
 void refreshCloudLockUi();
 }else{
+const startId =
+normalizeLaunchStrategyId(
+launchStrategyId
+);
+
+if(
+isManualTradingMode() &&
+startId !==
+"st1"
+){
+applyStatusPanel(
+{
+ok:
+false,
+message:
+"В ручном режиме доступна только Стратегия 1",
+running:
+false
+}
+);
+return;
+}
+
+/* Commit open maxPt1Pt4 before Start for partial strategies. */
+if(
+startId ===
+"st2" ||
+startId ===
+"st3"
+){
+const maxPt1Input =
+document.getElementById(
+`algo-bot-${startId}-max-pt1-pt4-bars`
+);
+
+if(
+maxPt1Input &&
+!maxPt1Input.disabled
+){
+const next =
+clampMaxPt1Pt4Bars(
+maxPt1Input.value
+);
+maxPt1Input.value =
+next ==
+null
+? ""
+: String(
+next
+);
+persistPartial(
+startId,
+{
+maxPt1Pt4Bars:
+next
+}
+);
+}
+}
+
 const result =
 await startAlgoBot(
-"st1"
+startId
 );
 
 if(
@@ -4125,6 +4211,9 @@ target
 ) ||
 statusWrap?.contains(
 target
+) ||
+botSettingsModal?.contains(
+target
 )
 ){
 return;
@@ -4143,6 +4232,7 @@ event.key ===
 "Escape"
 ){
 closeAllDrops();
+closeBotSettingsModal();
 }
 
 }
@@ -4154,6 +4244,165 @@ onDocClick
 document.addEventListener(
 "keydown",
 onKeydown
+);
+
+function formatBookStatus(
+book
+){
+
+if(
+!book?.tickers ||
+!Object.keys(
+book.tickers
+).length
+){
+return "Книга не загружена";
+}
+
+const n =
+Number(
+book.tickerCount
+) ||
+Object.keys(
+book.tickers
+).length;
+const tf =
+String(
+book.tf ||
+""
+);
+const tfPart =
+tf
+? `, ТФ ${tf}`
+: "";
+
+return `Книга загружена (${n} тикеров${tfPart})`;
+
+}
+
+function refreshBookStatusUi(
+strategyId
+){
+
+const id =
+strategyId ===
+"st2" ||
+strategyId ===
+"st3"
+? strategyId
+: "st1";
+const el =
+document.getElementById(
+`algo-bot-${id}-book-status`
+);
+
+if(
+!el
+){
+return;
+}
+
+const staged =
+loadStagedBotTickerBook(
+id
+);
+const published =
+loadBotTickerBook(
+id
+);
+
+if(
+staged
+){
+el.textContent =
+formatBookStatus(
+staged
+);
+}else if(
+published?.tickerCount
+){
+el.textContent =
+`Книга готова к загрузке (${published.tickerCount} тикеров) — нажмите кнопку`;
+}else{
+el.textContent =
+"Книга не загружена";
+}
+
+}
+
+function wireLoadBookButton(
+strategyId
+){
+
+const id =
+strategyId ===
+"st2" ||
+strategyId ===
+"st3"
+? strategyId
+: "st1";
+const btn =
+document.getElementById(
+`algo-bot-${id}-load-book`
+);
+const statusEl =
+document.getElementById(
+`algo-bot-${id}-book-status`
+);
+
+if(
+!btn
+){
+return;
+}
+
+btn.addEventListener(
+"click",
+()=>{
+const result =
+stageBotTickerBookFromPublished(
+id
+);
+
+if(
+!result.ok
+){
+if(
+statusEl
+){
+statusEl.textContent =
+result.message ||
+"Книга не загружена";
+}
+return;
+}
+
+if(
+statusEl
+){
+statusEl.textContent =
+formatBookStatus(
+result.book
+);
+}
+
+}
+);
+
+refreshBookStatusUi(
+id
+);
+
+}
+
+wireLoadBookButton(
+"st1"
+);
+wireLoadBookButton(
+"st2"
+);
+wireLoadBookButton(
+"st3"
 );
 
 const api = {
@@ -4192,6 +4441,7 @@ strategiesWrap?.classList.remove(
 "is-bot-running"
 );
 closeAllDrops();
+closeBotSettingsModal();
 }
 };
 

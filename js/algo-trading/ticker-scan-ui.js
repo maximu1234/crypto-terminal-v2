@@ -5,7 +5,7 @@ import {
 scanAlgoTickersByWinRate,
 normalizeAlgoScanTf,
 ALGO_TICKER_SCAN_TF
-} from "./ticker-scanner.js?v=7";
+} from "./ticker-scanner.js?v=9";
 
 import {
 ALGO_FLAG_LONG_5M,
@@ -13,11 +13,15 @@ ALGO_FLAG_SHORT_5M,
 ALGO_FLAG_BOTH_5M,
 ALGO_FLAG_FAVORITES,
 replaceAlgoTickerFlagList
-} from "./ticker-flags.js?v=6";
+} from "./ticker-flags.js?v=8";
 
 import {
 mountAlgoStrategyUniverseUi
-} from "./strategy-universe-ui.js?v=5";
+} from "./strategy-universe-ui.js?v=8";
+
+import {
+mountAlgoStrategyParamOptimizeUniverseUi
+} from "./strategy-param-optimize-universe-ui.js?v=16";
 
 /**
  * @param {{
@@ -559,7 +563,9 @@ tf:
 scanTf,
 statsMode,
 tradeOpts:
-host.getTradeOpts?.() ||
+host.getTradeOpts?.(
+strategyId
+) ||
 {},
 signal,
 onProgress:(
@@ -837,6 +843,18 @@ scanTf
 }
 );
 
+const optimizeUniverseUi =
+mountAlgoStrategyParamOptimizeUniverseUi(
+{
+getTradeOpts:
+host.getTradeOpts,
+getStrategyStatsMode:
+host.getStrategyStatsMode,
+getScanTf:()=>
+scanTf
+}
+);
+
 return {
 stopAll(){
 stopScan(
@@ -852,6 +870,7 @@ stopScan(
 "top100"
 );
 universeUi.stopAll();
+optimizeUniverseUi.stopAll();
 }
 };
 

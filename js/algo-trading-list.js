@@ -42,7 +42,6 @@ import {
 ALGO_MARKET_LONG_5M,
 ALGO_MARKET_SHORT_5M,
 ALGO_MARKET_BOTH_5M,
-ALGO_MARKET_FAVORITES,
 ALGO_LIST_FLAG_UI,
 algoMarketDatasetToFlagId,
 algoListUiToFlagId,
@@ -51,7 +50,7 @@ getAlgoTickerFlagList,
 isAlgoMarketDataset,
 toggleAlgoTickerInFlagList,
 removeAlgoTickerFromFlagList
-} from "./algo-trading/ticker-flags.js?v=6";
+} from "./algo-trading/ticker-flags.js?v=8";
 
 import {
 mountQwertyKeyInput
@@ -156,25 +155,19 @@ label:
 id:
 ALGO_MARKET_LONG_5M,
 label:
-"Алго Лонг"
+"Стратегия 1"
 },
 {
 id:
 ALGO_MARKET_SHORT_5M,
 label:
-"Алго Шорт"
+"Стратегия 2"
 },
 {
 id:
 ALGO_MARKET_BOTH_5M,
 label:
-"Алго Лонг/Шорт"
-},
-{
-id:
-ALGO_MARKET_FAVORITES,
-label:
-"Избранные"
+"Стратегия 3"
 }
 ];
 
