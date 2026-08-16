@@ -790,10 +790,25 @@ return base;
 base.showAlgoBot =
 true;
 
-const algoBot =
+let algoBot;
+
+try{
+algoBot =
 require(
 "./trading/algo-trading-bot.cjs"
 );
+}catch(
+err
+){
+log.warn(
+"menu-bar-tray algo bot optional:",
+err?.message ||
+err
+);
+base.algoBot =
+null;
+return base;
+}
 const snap =
 algoBot.getBotStatus?.() ||
 null;

@@ -70,7 +70,9 @@ new Set([
 ".venv-icons",
 ".venv",
 "venv",
-"dist"
+"dist",
+"bot-app",
+"site-bundle"
 ]);
 
 function walk(

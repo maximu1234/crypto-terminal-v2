@@ -376,7 +376,13 @@ test("fat shared trade UI has no exchange policy branches", () => {
   for (const file of [
     "js/trade-exchange-settings.js",
     "js/trade-diary-chart.js",
-    "js/trade-widget-mount.js"
+    "js/trade-widget-mount.js",
+    "js/trade-order-plus-ui.js",
+    "js/trade-diary-time.js",
+    "js/trade-diary-storage.js",
+    "js/trade-diary-detail.js",
+    "js/trade-diary-format.js",
+    "js/trade-open-positions.js"
   ]) {
     const source = read(file);
     assert.doesNotMatch(
@@ -460,4 +466,10 @@ test("diary chart fetches klines only via exchange module", () => {
     source,
     /from\s+["'][^"']*trade\/(?:bybit|bingx)\//
   );
+});
+
+test("BingX auto-stops do not read Bybit localStorage keys", () => {
+  const source = read("js/trade/bingx/auto-stops.js");
+  assert.doesNotMatch(source, /trade_auto_stops_bybit/);
+  assert.match(source, /trade_auto_stops_bingx_v1/);
 });

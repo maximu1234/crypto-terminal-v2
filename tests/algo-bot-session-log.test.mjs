@@ -76,22 +76,32 @@ test("session status log: one file per session with signals", () => {
   }
 });
 
-test("remote session log client builds direct http urls", () => {
-  for (const rel of [
-    "desktop/trading/algo-bot-session-log-remote-client.cjs",
-    "bot-app/trading/algo-bot-session-log-remote-client.cjs"
-  ]) {
-    const client = require(path.join(root, rel));
-    assert.equal(
-      client.buildUrl({
-        host: "https://203.0.113.10/extra",
-        port: 17865,
-        token: "abc",
-        path: "/sessions"
-      }),
-      "http://203.0.113.10:17865/sessions?token=abc"
-    );
-  }
+test("remote session log client builds direct http urls without query token", () => {
+  const desktop = require(
+    path.join(root, "desktop/trading/algo-bot-session-log-remote-client.cjs")
+  );
+  assert.equal(
+    desktop.buildUrl({
+      host: "https://203.0.113.10/extra",
+      port: 17865,
+      token: "abc",
+      path: "/sessions"
+    }),
+    "http://203.0.113.10:17865/sessions"
+  );
+
+  const botApp = require(
+    path.join(root, "bot-app/trading/algo-bot-session-log-remote-client.cjs")
+  );
+  assert.equal(
+    botApp.buildUrl({
+      host: "https://203.0.113.10/extra",
+      port: 17865,
+      token: "abc",
+      path: "/sessions"
+    }),
+    "http://203.0.113.10:17865/sessions?token=abc"
+  );
 });
 
 test("session log server and viewer modules are wired", () => {

@@ -52,6 +52,11 @@
       "permanent": false
     },
     {
+      "source": "/diary/index.html",
+      "destination": "/screener.html",
+      "permanent": false
+    },
+    {
       "source": "/algo-trading",
       "destination": "/screener",
       "permanent": false

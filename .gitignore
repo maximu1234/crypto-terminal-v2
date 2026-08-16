@@ -1,6 +1,7 @@
 .DS_Store
 .vercel
 js/supabase-env.js
+HANDOFF.md
 .venv-icons/
 tmp-*.png
 desktop/node_modules/

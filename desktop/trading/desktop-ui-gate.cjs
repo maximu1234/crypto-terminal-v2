@@ -150,12 +150,6 @@ message:
 };
 }
 
-const useBundle =
-typeof getUseBundle ===
-"function"
-? !!getUseBundle()
-: true;
-
 const url =
 String(
 event?.sender?.getURL?.() ||
@@ -163,7 +157,6 @@ event?.sender?.getURL?.() ||
 );
 
 if(
-useBundle &&
 !isTrustedDesktopUiUrl(
 url
 )

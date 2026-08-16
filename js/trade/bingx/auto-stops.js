@@ -51,14 +51,11 @@ localStorage.getItem(
 STORAGE_KEY
 );
 
-/* First launch on BingX after Bybit: reuse last known auto-stop prefs. */
+/* First launch: generic pre-split key only — never read Bybit prefs. */
 if(
 !raw
 ){
 raw =
-localStorage.getItem(
-"trade_auto_stops_bybit_v1"
-) ||
 localStorage.getItem(
 "trade_auto_stops_v1"
 );

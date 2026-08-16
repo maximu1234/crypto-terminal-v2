@@ -1796,7 +1796,7 @@ let realtimeReconnectTimer = null;
 let drawingsPushTimer = null;
 let pendingDrawingsCloudPush = false;
 
-const SYNC_POLL_MS = 5000;
+const SYNC_POLL_MS = 30000;
 const DRAWINGS_PUSH_DEBOUNCE_MS = 250;
 
 const flushAuthListeners =

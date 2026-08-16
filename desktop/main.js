@@ -74,15 +74,81 @@ registerChartSnapshotLogoIpc
 require(
 "./chart-snapshot-logo.cjs"
 );
+
+function loadAlgoTradingIpc(){
+
+try{
+return require(
+"./trading/algo-trading-ipc.cjs"
+);
+}catch(
+err
+){
+log.warn(
+"algo-trading-ipc optional:",
+err?.message ||
+err
+);
+return {};
+}
+
+}
+
+const algoTradingIpc =
+loadAlgoTradingIpc();
+
+function algoIpcFn(
+name,
+asyncFn =
+false
+){
+
+const fn =
+algoTradingIpc[
+name
+];
+
+if(
+typeof fn ===
+"function"
+){
+return fn.bind(
+algoTradingIpc
+);
+}
+
+return asyncFn
+? async()=>{}
+: ()=>{};
+
+}
+
+const registerAlgoTradingIpc =
+algoIpcFn(
+"registerAlgoTradingIpc"
+);
+const bootAlgoTradingRuntimeIfEnabled =
+algoIpcFn(
+"bootAlgoTradingRuntimeIfEnabled"
+);
+const bootAlgoBotIfWasRunning =
+algoIpcFn(
+"bootAlgoBotIfWasRunning",
+true
+);
+const setAlgoTradingStreamTarget =
+algoIpcFn(
+"setAlgoTradingStreamTarget"
+);
+const stopAlgoTradingStream =
+algoIpcFn(
+"stopAlgoTradingStream"
+);
 const {
-registerAlgoTradingIpc,
-bootAlgoTradingRuntimeIfEnabled,
-bootAlgoBotIfWasRunning,
-setAlgoTradingStreamTarget,
-stopAlgoTradingStream
+handleTrustedDesktopUi
 } =
 require(
-"./trading/algo-trading-ipc.cjs"
+"./trading/desktop-ui-gate.cjs"
 );
 const {
 getAuthSession,
@@ -1512,7 +1578,8 @@ registerTradingIpc();
 registerChartSnapshotIpc();
 registerChartSnapshotLogoIpc();
 
-ipcMain.handle(
+handleTrustedDesktopUi(
+ipcMain,
 "desktop:loadAuthSession",
 ()=>{
 
@@ -1545,7 +1612,8 @@ null
 }
 );
 
-ipcMain.handle(
+handleTrustedDesktopUi(
+ipcMain,
 "desktop:saveAuthSession",
 (
 _event,
@@ -1590,7 +1658,8 @@ err.message
 }
 );
 
-ipcMain.handle(
+handleTrustedDesktopUi(
+ipcMain,
 "desktop:clearAuthSession",
 ()=>{
 
