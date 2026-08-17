@@ -2899,7 +2899,7 @@ const {
 initChartIndicators
 } =
 await import(
-"./chart-indicators.js?v=54"
+"./chart-indicators.js?v=55"
 );
 
 drawingTools =

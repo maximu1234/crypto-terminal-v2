@@ -468,6 +468,36 @@ getHost?.()?.getDrawingTools?.()?.scheduleRedraw?.();
 
 }
 
+function renderIndicatorSettingsInline(
+id,
+container
+){
+
+const ind =
+byId.get(
+id
+);
+
+if(
+!container ||
+!ind?.populateSettingsDialog
+){
+return false;
+}
+
+container.innerHTML =
+"";
+ind.populateSettingsDialog(
+container,
+{
+close:()=>{}
+}
+);
+
+return true;
+
+}
+
 legendEl.addEventListener(
 "dblclick",
 event=>{
@@ -972,6 +1002,9 @@ resizePanes,
 getLinkedPaneCharts,
 openSettings:
 openIndicatorSettings,
+openIndicatorSettings,
+setIndicatorEnabled,
+renderIndicatorSettingsInline,
 destroy:()=>{
 settingsDialog.destroy();
 document.removeEventListener(

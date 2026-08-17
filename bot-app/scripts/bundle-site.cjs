@@ -24,6 +24,15 @@ if(!fs.existsSync(OUT)){
 }
 
 console.log("bundle-site: standalone bundle kept", OUT);
+try {
+  require("child_process").execFileSync(
+    process.execPath,
+    [path.join(__dirname, "..", "..", "scripts", "sync-bot-lite-js-graph.cjs")],
+    { cwd: path.join(__dirname, "..", ".."), stdio: "inherit" }
+  );
+} catch (err) {
+  process.exit(err.status || 1);
+}
 console.log(
   "bundle-site: sync checklist — algo-bot-store / order-executor / session-log / algo-trading-bot from desktop/trading when engine changes"
 );

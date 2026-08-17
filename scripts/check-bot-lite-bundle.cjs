@@ -100,6 +100,15 @@ if (!logsViewer.includes("Algo Bot stub")) {
   );
 }
 
+const botChartIndicators = read(
+  path.join(ROOT, "bot-app/site-bundle/js/chart-indicators.js")
+);
+if (!botChartIndicators.includes("function renderIndicatorSettingsInline(")) {
+  fail(
+    "bot chart-indicators.js missing renderIndicatorSettingsInline (lite Pattern 1-2 settings pane)"
+  );
+}
+
 const sceneCachePath = path.join(
   ROOT,
   "bot-app/site-bundle/js/algo-trading/pattern-12-scene-cache.js"
@@ -200,6 +209,15 @@ function checkBootGraphNamedExports() {
     path.join(jsDir, "algo-trading-page-boot.js"),
     path.join(jsDir, "algo-trading.js")
   ];
+  const htmlPath = path.join(ROOT, "bot-app/site-bundle/algo-trading.html");
+  if (fs.existsSync(htmlPath)) {
+    const html = fs.readFileSync(htmlPath, "utf8");
+    const htmlJs = /(?:src|href)="\/js\/([^"?]+)(?:\?v=\d+)?"/g;
+    let hm;
+    while ((hm = htmlJs.exec(html))) {
+      bootFiles.push(path.join(jsDir, hm[1]));
+    }
+  }
   const queue = [...bootFiles];
   const seen = new Set();
   const missing = [];

@@ -257,7 +257,7 @@ Object.freeze({
 "chart-visible-range.js":
 3,
 "chart-indicators.js":
-54,
+55,
 "chart-snapshot.js":
 7,
 "indicators/pattern-12.js":

@@ -27,13 +27,15 @@
   после ухода со страницы; LAN-книга гидратируется в окно бота; колонки
   Данные в lite прокручиваются. Hotfix `1.0.152`: в lite-бандл добавлены
   `supertrend.js`, `macd-pane.js`, `pattern-gip.js` (404 при boot);
-  проверка бандла теперь ходит по dynamic `import()`.
+  проверка бандла теперь ходит по dynamic `import()`. Hotfix `1.0.153`:
+  в `chart-indicators.js` возвращены `renderIndicatorSettingsInline` /
+  `setIndicatorEnabled` — настройки Паттерн 1-2 в левой верхней ячейке lite.
 
 ## Версии
 
 - Web marker: `v0.137`
 - Multichart desktop app: `v1.1.38`
-- Algo Bot desktop app: `v1.0.152`
+- Algo Bot desktop app: `v1.0.153`
 - Mac tag (Multichart): `desktop-v1.1.38`
 - Windows tag (Multichart): `desktop-win-v1.1.38`
-- Windows tag (Algo Bot): `algo-bot-win-v1.0.152`
+- Windows tag (Algo Bot): `algo-bot-win-v1.0.153`
