@@ -234,6 +234,10 @@ function checkBootGraphNamedExports() {
     while ((m = sideRe.exec(src))) {
       queue.push(resolveSpec(filePath, m[1]));
     }
+    const dynRe = /import\s*\(\s*["'](\.[^"']+)["']\s*\)/g;
+    while ((m = dynRe.exec(src))) {
+      queue.push(resolveSpec(filePath, m[1]));
+    }
   }
 
   if (missing.length) {
