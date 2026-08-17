@@ -58,6 +58,18 @@ if (html.includes('id="algo-bot-st1-run"')) {
 if (!html.includes('id="algo-bot-settings-modal"')) {
   fail("bot HTML missing algo-bot-settings-modal");
 }
+if (!html.includes("algo-stats-supertrend-filter")) {
+  fail("bot HTML missing Supertrend Data panel — copy #algo-stats-panel from Multichart");
+}
+if (!html.includes("Подобрать для всех") || !html.includes("data-algo-optimize-universe")) {
+  fail("bot HTML missing «Подобрать для всех» — copy optimize-universe buttons from Multichart");
+}
+if (!html.includes('id="algo-optimize-universe-modal"') || !html.includes('id="algo-optimize-modal"')) {
+  fail("bot HTML missing optimize modals — copy from Multichart");
+}
+if (html.includes('id="algo-tp-ema"')) {
+  fail("bot HTML still has old TP→EMA Data panel");
+}
 
 const js = read(jsPath);
 if (!js.includes("function mountAlgoBotLiteLayout(")) {

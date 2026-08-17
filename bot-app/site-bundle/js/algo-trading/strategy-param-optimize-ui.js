@@ -6,7 +6,7 @@ optimizeAlgoStrategyParams,
 normalizeAlgoOptimizeStrategyId,
 algoOptimizeStrategyLabel,
 comboToApplyPatch
-} from "./strategy-param-optimize.js?v=7";
+} from "./strategy-param-optimize.js?v=8";
 
 import {
 normalizeAlgoStatsMode
@@ -14,7 +14,7 @@ normalizeAlgoStatsMode
 
 import {
 ALGO_SUPERTREND_TF_OPTIONS
-} from "./pattern-supertrend-filter.js?v=3";
+} from "./pattern-supertrend-filter.js?v=4";
 
 const TF_LABELS = new Map(
   ALGO_SUPERTREND_TF_OPTIONS.map(opt => [opt.value, opt.label])

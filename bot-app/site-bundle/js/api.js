@@ -7,6 +7,11 @@ import {
 fetchTwelveTimeSeries
 } from "./twelvedata-fetch.js?v=1";
 
+import {
+klineHistoryPageEnds,
+shouldFetchKlinePagesInParallel
+} from "./kline-history-pages.js?v=2";
+
 /* =========================================================
    BYBIT HISTORY
 ========================================================= */
@@ -101,7 +106,8 @@ async function fetchBybitKlineBatch(
 symbol,
 tf,
 end,
-retries = 3
+retries = 3,
+fetchOpts = {}
 ){
 
 const path =
@@ -113,7 +119,7 @@ const { json } =
 await fetchBybit(
 path,
 {
-...(isLocalDevHost()
+...(fetchOpts.sequential === false || isLocalDevHost()
 ? {}
 : {
 sequential: true
@@ -159,6 +165,41 @@ endMs >
 endMs
 )
 : Date.now();
+
+const pageEnds =
+shouldFetchKlinePagesInParallel(
+requests,
+batchGapMs
+)
+? klineHistoryPageEnds(end, tf, requests)
+: [];
+
+if(pageEnds.length > 1){
+
+const batches =
+await Promise.all(
+pageEnds.map(
+pageEnd=>
+fetchBybitKlineBatch(
+symbol,
+tf,
+pageEnd,
+3,
+{
+sequential: false
+}
+)
+)
+);
+
+for(const batch of batches){
+if(batch?.length){
+all.push(...batch);
+}
+}
+
+}else{
+
 let failedBatches = 0;
 
 for(let i = 0; i < requests; i++){
@@ -210,6 +251,8 @@ batchGapMs >
 await sleep(
 batchGapMs
 );
+}
+
 }
 
 }

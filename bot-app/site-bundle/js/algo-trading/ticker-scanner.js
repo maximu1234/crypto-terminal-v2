@@ -3,11 +3,11 @@
  */
 import {
 loadMarketHistory
-} from "../market-api.js?v=5";
+} from "../market-api.js?v=6";
 
 import {
 analyzeAlgoPatterns
-} from "./pattern-analysis.js?v=36";
+} from "./pattern-analysis.js?v=37";
 
 import {
 normalizeAlgoStatsMode
@@ -20,7 +20,7 @@ readAlgoPattern12Settings
 import {
 resolveAlgoScanSymbols,
 normalizeAlgoScanUniverse
-} from "./scan-universe.js?v=2";
+} from "./scan-universe.js?v=3";
 
 /** Дефолтный ТФ скана (если не передан opts.tf). */
 export const ALGO_TICKER_SCAN_TF =
