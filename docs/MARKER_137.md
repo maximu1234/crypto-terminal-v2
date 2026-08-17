@@ -17,13 +17,15 @@
 - **Загрузка страниц:** `site-boot` не тянет script-scan/statistics
   синхронно; LWC через preload; script-scan только desktop.
 - **Algo Bot:** зеркало store/IPC/`POST /ticker-book`; lite HTML/CSS/stub
-  логов сохранены.
+  логов сохранены. Hotfix `1.0.148`: в lite-бандл возвращены
+  `pattern-ema-filter.js` и `pattern-tp-ema.js` (без них страница бота
+  не грузилась).
 
 ## Версии
 
 - Web marker: `v0.137`
 - Multichart desktop app: `v1.1.37`
-- Algo Bot desktop app: `v1.0.147`
+- Algo Bot desktop app: `v1.0.148`
 - Mac tag (Multichart): `desktop-v1.1.37`
 - Windows tag (Multichart): `desktop-win-v1.1.37`
-- Windows tag (Algo Bot): `algo-bot-win-v1.0.147`
+- Windows tag (Algo Bot): `algo-bot-win-v1.0.148`

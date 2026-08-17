@@ -87,4 +87,14 @@ if (!fs.existsSync(sceneCachePath)) {
   fail("missing bot-app/site-bundle/js/algo-trading/pattern-12-scene-cache.js");
 }
 
+const jsDir = path.join(ROOT, "bot-app/site-bundle/js");
+const importRe = /from\s+["'](\.[^"'?]+)(?:\?v=\d+)?["']/g;
+let importMatch;
+while ((importMatch = importRe.exec(js))) {
+  const target = path.normalize(path.join(jsDir, importMatch[1]));
+  if (!fs.existsSync(target)) {
+    fail(`algo-trading.js imports missing ${importMatch[1]}`);
+  }
+}
+
 console.log("✓ bot-lite bundle check OK");
