@@ -12,14 +12,14 @@ loadBotStrategiesPrefs
 } from "./bot-strategy-prefs.js?v=28";
 import {
 syncAllTickerFlagsRootToMain
-} from "./bot-bridge.js?v=17";
+} from "./bot-bridge.js?v=18";
 import {
 ALGO_TICKER_FLAGS_KEY
 } from "./ticker-flags.js?v=8";
 import {
 loadStagedBotTickerBook,
 loadBotTickerBook
-} from "./bot-ticker-book.js?v=6";
+} from "./bot-ticker-book.js?v=7";
 
 const STORAGE_KEY =
 "algo_remote_session_logs_v1";
@@ -1409,12 +1409,50 @@ loadBotTickerBook(
 strategyId
 );
 
+let pushBook =
+book;
+
 if(
-!book?.tickers ||
-typeof book.tickers !==
+!(
+pushBook?.tickers &&
+typeof pushBook.tickers ===
+"object" &&
+Object.keys(
+pushBook.tickers
+).length
+) &&
+typeof api.getTickerBook ===
+"function"
+){
+try{
+const fromMain =
+await api.getTickerBook(
+{
+strategyId
+}
+);
+if(
+fromMain?.book?.tickers &&
+typeof fromMain.book.tickers ===
+"object" &&
+Object.keys(
+fromMain.book.tickers
+).length
+){
+pushBook =
+fromMain.book;
+}
+}catch{
+/* keep empty — message below */
+}
+}
+
+if(
+!pushBook?.tickers ||
+typeof pushBook.tickers !==
 "object" ||
 !Object.keys(
-book.tickers
+pushBook.tickers
 ).length
 ){
 setMessage(
@@ -1441,7 +1479,8 @@ await api.sessionLogRemotePushTickerBook(
 {
 ...next,
 strategyId,
-book
+book:
+pushBook
 }
 );
 

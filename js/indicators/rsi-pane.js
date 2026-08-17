@@ -193,12 +193,6 @@ notifyHost();
 
 function disable(){
 
-if(
-!enabled
-){
-return;
-}
-
 enabled =
 false;
 applyVisibility();

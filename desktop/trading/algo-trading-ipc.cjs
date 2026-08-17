@@ -1069,6 +1069,44 @@ err
 handleTrustedDesktopUi(
 ipcMain,
 
+"desktop:algoTradingGetTickerBook",
+(
+_event,
+payload
+)=>{
+
+try{
+return algoBot.getTickerBook(
+payload ||
+{}
+);
+}catch(
+err
+){
+log.warn(
+"algoTradingGetTickerBook:",
+err?.message ||
+err
+);
+return {
+ok:
+false,
+book:
+null,
+message:
+err?.message ||
+String(
+err
+)
+};
+}
+
+}
+);
+
+handleTrustedDesktopUi(
+ipcMain,
+
 "desktop:algoTradingStartBot",
 async(
 _event,

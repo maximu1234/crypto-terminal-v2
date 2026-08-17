@@ -34,7 +34,7 @@ alignRsiWithCandleTimes
 import {
 defaultRsiPaneSettings,
 normalizeRsiPaneSettings
-} from "./indicators/rsi-pane.js?v=5";
+} from "./indicators/rsi-pane.js?v=6";
 
 import {
 loadFavoritesGroups,

@@ -2332,39 +2332,31 @@ readTickerFlagsRoot()
 
 }
 
-/**
- * After LAN /watchlists (or any main-only write), push flags into renderer
- * localStorage via applyTickerFlags on the botStatus channel.
- */
-function notifyTickerFlagsToUi(
-extra =
+function getTickerBook(
+payload =
 {}
 ){
 
-const root =
-extra.root &&
-typeof extra.root ===
-"object"
-? extra.root
-: readTickerFlagsRoot();
-const snapshot =
-buildStatusSnapshot(
-{
-applyTickerFlags:
-true,
-tickerFlagsRoot:
-root,
-...(
-typeof extra.message ===
-"string"
-? {
-message:
-extra.message
-}
-: {}
-)
-}
+const book =
+readTickerBook(
+payload.strategyId,
+payload.exchangeId
 );
+
+return {
+ok:
+true,
+book:
+book ||
+null
+};
+
+}
+
+function broadcastBotStatus(
+snapshot,
+logLabel
+){
 
 lastStatusSnapshot =
 snapshot;
@@ -2405,7 +2397,7 @@ sent +=
 err
 ){
 log.warn(
-"algo bot ticker-flags UI notify:",
+logLabel,
 err?.message ||
 err
 );
@@ -2416,7 +2408,7 @@ err
 err
 ){
 log.warn(
-"algo bot ticker-flags UI broadcast:",
+logLabel,
 err?.message ||
 err
 );
@@ -2438,6 +2430,102 @@ sent
 
 }
 
+/**
+ * After LAN /watchlists (or any main-only write), push flags into renderer
+ * localStorage via applyTickerFlags on the botStatus channel.
+ */
+function notifyTickerFlagsToUi(
+extra =
+{}
+){
+
+const root =
+extra.root &&
+typeof extra.root ===
+"object"
+? extra.root
+: readTickerFlagsRoot();
+const snapshot =
+buildStatusSnapshot(
+{
+applyTickerFlags:
+true,
+tickerFlagsRoot:
+root,
+...(
+typeof extra.message ===
+"string"
+? {
+message:
+extra.message
+}
+: {}
+)
+}
+);
+
+return broadcastBotStatus(
+snapshot,
+"algo bot ticker-flags UI notify:"
+);
+
+}
+
+/**
+ * After LAN POST /ticker-book, push published book into renderer localStorage.
+ */
+function notifyTickerBookToUi(
+extra =
+{}
+){
+
+const book =
+extra.book &&
+typeof extra.book ===
+"object"
+? extra.book
+: readTickerBook(
+extra.strategyId,
+extra.exchangeId
+);
+
+if(
+!book
+){
+return {
+ok:
+false,
+sent:
+0
+};
+}
+
+const snapshot =
+buildStatusSnapshot(
+{
+applyTickerBook:
+true,
+publishedTickerBook:
+book,
+...(
+typeof extra.message ===
+"string"
+? {
+message:
+extra.message
+}
+: {}
+)
+}
+);
+
+return broadcastBotStatus(
+snapshot,
+"algo bot ticker-book UI notify:"
+);
+
+}
+
 function syncTickerBook(
 payload
 ){
@@ -2449,11 +2537,41 @@ payload?.book;
 const exchangeId =
 payload?.exchangeId;
 
-return writeTickerBook(
+const result =
+writeTickerBook(
 strategyId,
 book,
 exchangeId
 );
+
+if(
+result?.ok !==
+false &&
+result?.book
+){
+try{
+notifyTickerBookToUi(
+{
+book:
+result.book,
+strategyId:
+result.book.strategyId,
+exchangeId:
+result.book.exchange
+}
+);
+}catch(
+err
+){
+log.warn(
+"algo bot ticker-book UI notify:",
+err?.message ||
+err
+);
+}
+}
+
+return result;
 
 }
 
@@ -2464,7 +2582,9 @@ syncBotStrategies,
 syncTickerFlags,
 syncTickerBook,
 getTickerFlagsRoot,
+getTickerBook,
 notifyTickerFlagsToUi,
+notifyTickerBookToUi,
 startBot,
 stopBot,
 getBotStatus,

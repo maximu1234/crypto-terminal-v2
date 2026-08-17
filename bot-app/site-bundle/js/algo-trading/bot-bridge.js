@@ -20,8 +20,12 @@ fetchAlgoBotLock,
 ensureAlgoBotLockHeld
 } from "./bot-cloud-lock.js?v=11";
 import {
-freezeBotTickerBookSnapshot
-} from "./bot-ticker-book.js?v=6";
+freezeBotTickerBookSnapshot,
+hydrateBotTickerBookFromMain,
+loadBotTickerBook,
+loadStagedBotTickerBook,
+writePublishedBotTickerBook
+} from "./bot-ticker-book.js?v=7";
 
 function desktopAlgoApi(){
 
@@ -203,10 +207,39 @@ strategyId ===
 ? strategyId
 : "st1";
 
-const tickerBookSnapshot =
+let tickerBookSnapshot =
 freezeBotTickerBookSnapshot(
 id
+) ||
+loadStagedBotTickerBook(
+id
 );
+
+if(
+!(
+tickerBookSnapshot?.tickers &&
+typeof tickerBookSnapshot.tickers ===
+"object" &&
+Object.keys(
+tickerBookSnapshot.tickers
+).length
+)
+){
+await hydrateBotTickerBookFromMain(
+id
+);
+tickerBookSnapshot =
+freezeBotTickerBookSnapshot(
+id
+) ||
+loadStagedBotTickerBook(
+id
+) ||
+loadBotTickerBook(
+id
+);
+}
+
 const bookTickers =
 tickerBookSnapshot?.tickers &&
 typeof tickerBookSnapshot.tickers ===
@@ -225,7 +258,7 @@ return {
 ok:
 false,
 message:
-"Нет загруженной книги параметров. Сначала «Применить к боту», затем в настройках бота — «Загрузить книгу параметров»."
+"Нет загруженной книги параметров. Сначала «Подобрать для всех» → «Применить к боту», затем «Отдать списки и книгу» или «Загрузить книгу параметров»."
 };
 }
 
@@ -389,6 +422,41 @@ status.tickerFlagsRoot
 
 }
 
+export function maybeApplyTickerBookFromBotStatus(
+status
+){
+
+if(
+status?.applyTickerBook !==
+true ||
+!status.publishedTickerBook
+){
+return false;
+}
+
+const written =
+writePublishedBotTickerBook(
+status.publishedTickerBook
+);
+
+if(
+written.ok
+){
+try{
+window.dispatchEvent(
+new CustomEvent(
+"algo-bot-ticker-book-changed"
+)
+);
+}catch{
+/* ignore */
+}
+}
+
+return written.ok;
+
+}
+
 export function subscribeAlgoBotStatus(
 callback
 ){
@@ -408,6 +476,9 @@ return api.onBotStatus(
 payload=>{
 
 maybeApplyTickerFlagsFromBotStatus(
+payload
+);
+maybeApplyTickerBookFromBotStatus(
 payload
 );
 

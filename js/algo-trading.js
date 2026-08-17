@@ -32,7 +32,7 @@ alignRsiWithCandleTimes
 import {
 defaultRsiPaneSettings,
 normalizeRsiPaneSettings
-} from "./indicators/rsi-pane.js?v=5";
+} from "./indicators/rsi-pane.js?v=6";
 
 import {
 loadMarketHistory,
@@ -69,7 +69,7 @@ mountAlgoRuntimeUi
 
 import {
 mountAlgoBotStrategyUi
-} from "./algo-trading/bot-strategy-ui.js?v=74";
+} from "./algo-trading/bot-strategy-ui.js?v=75";
 
 import {
 ALGO_ANALYSIS_BOT_CHANGE_EVENT,
@@ -85,7 +85,7 @@ mountSessionLogServerSettings
 
 import {
 syncBotStrategiesToMain
-} from "./algo-trading/bot-bridge.js?v=17";
+} from "./algo-trading/bot-bridge.js?v=18";
 
 import {
 mountAlgoTradeUi

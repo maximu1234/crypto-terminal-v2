@@ -38,7 +38,7 @@ import {
 publishBotTickerBookFromOptimizeRows,
 loadBotTickerBook,
 persistBotTickerBookToMain
-} from "./bot-ticker-book.js?v=6";
+} from "./bot-ticker-book.js?v=7";
 
 import {
 writeTickerStrategyOverlays

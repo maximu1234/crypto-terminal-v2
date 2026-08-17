@@ -431,6 +431,14 @@ ipcRenderer.invoke(
 payload ||
 {}
 ),
+getTickerBook:(
+payload
+)=>
+ipcRenderer.invoke(
+"desktop:algoTradingGetTickerBook",
+payload ||
+{}
+),
 getTickerFlagsRoot:()=>
 ipcRenderer.invoke(
 "desktop:algoTradingGetTickerFlagsRoot"

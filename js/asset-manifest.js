@@ -352,7 +352,7 @@ Object.freeze({
 "algo-trading/optimize-universe-background.js":
 4,
 "algo-trading/bot-ticker-book.js":
-6,
+7,
 "algo-trading/ticker-strategy-overlays.js":
 1,
 "algo-trading/strategy-param-optimize.js":
@@ -370,7 +370,7 @@ Object.freeze({
 "algo-trading/runtime-ui.js":
 13,
 "algo-trading/bot-bridge.js":
-17,
+18,
 "algo-trading/bot-alert-bridge.js":
 6,
 "algo-trading/desktop-site-boot.js":
@@ -380,11 +380,11 @@ Object.freeze({
 "algo-trading/active-analysis-bot.js":
 1,
 "algo-trading/bot-strategy-ui.js":
-74,
+75,
 "algo-trading/bot-session-log-server-ui.js":
 10,
 "algo-trading/bot-session-logs-viewer.js":
-27,
+28,
 "algo-trading/bot-cloud-lock.js":
 11,
 "algo-trading/bot-remote-client.js":
@@ -440,7 +440,7 @@ Object.freeze({
 "indicators/horizontal-volume.js":
 11,
 "indicators/rsi-pane.js":
-5,
+6,
 "indicators/volume-pane.js":
 16,
 "indicators/ao-math.js":

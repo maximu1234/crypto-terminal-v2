@@ -31,17 +31,19 @@ fetchAlgoBotStatus,
 disarmAlgoArmedSetup,
 subscribeAlgoBotStatus,
 maybeApplyTickerFlagsFromBotStatus,
+maybeApplyTickerBookFromBotStatus,
 isAlgoBotDesktop,
 fetchAlgoBotCloudLock,
 clearAlgoBotCloudLock,
 ensureAlgoBotCloudLock
-} from "./bot-bridge.js?v=17";
+} from "./bot-bridge.js?v=18";
 import {
 stageBotTickerBookFromPublished,
+hydrateBotTickerBookFromMain,
 loadStagedBotTickerBook,
 loadBotTickerBook,
 persistBotTickerBookToMain
-} from "./bot-ticker-book.js?v=6";
+} from "./bot-ticker-book.js?v=7";
 import {
 isMultichartRemoteControlHost
 } from "./bot-remote-client.js?v=10";
@@ -49,7 +51,7 @@ import {
 mountRemoteSessionLogsEntry,
 mountRemoteWatchlistsPushEntry,
 mountLocalSessionLogsEntry
-} from "./bot-session-logs-viewer.js?v=27";
+} from "./bot-session-logs-viewer.js?v=28";
 import {
 rebalanceTpShares
 } from "./pattern-trade-stats-partial.js?v=21";
@@ -2368,6 +2370,9 @@ return;
 maybeApplyTickerFlagsFromBotStatus(
 status
 );
+maybeApplyTickerBookFromBotStatus(
+status
+);
 
 if(
 status.tradingMode ===
@@ -4359,9 +4364,9 @@ return;
 
 btn.addEventListener(
 "click",
-()=>{
+async ()=>{
 const result =
-stageBotTickerBookFromPublished(
+await stageBotTickerBookFromPublished(
 id
 );
 
@@ -4399,6 +4404,15 @@ refreshBookStatusUi(
 id
 );
 
+void hydrateBotTickerBookFromMain(
+id
+).then(
+()=>
+refreshBookStatusUi(
+id
+)
+);
+
 }
 
 wireLoadBookButton(
@@ -4409,6 +4423,21 @@ wireLoadBookButton(
 );
 wireLoadBookButton(
 "st3"
+);
+
+window.addEventListener(
+"algo-bot-ticker-book-changed",
+()=>{
+refreshBookStatusUi(
+"st1"
+);
+refreshBookStatusUi(
+"st2"
+);
+refreshBookStatusUi(
+"st3"
+);
+}
 );
 
 const api = {

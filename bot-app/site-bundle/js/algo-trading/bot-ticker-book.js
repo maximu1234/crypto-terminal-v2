@@ -171,24 +171,116 @@ export function optimizePatchToBotOverlay(strategyId, patch){
 export function loadBotTickerBook(strategyId){
   const id = normalizeAlgoOptimizeStrategyId(strategyId);
   const root = readRoot();
-  const byEx = root[exchangeScope()];
-  const book = byEx && typeof byEx === "object" ? byEx[id] : null;
+  const scopedEx = exchangeScope();
+  const byEx = root[scopedEx];
+  let book = byEx && typeof byEx === "object" ? byEx[id] : null;
   if(!book || typeof book !== "object"){
+    for(const other of Object.values(root)){
+      if(!other || typeof other !== "object"){
+        continue;
+      }
+      const candidate = other[id];
+      if(candidate && typeof candidate === "object" && candidate.tickers){
+        book = candidate;
+        break;
+      }
+    }
+  }
+  if(!book || typeof book !== "object"){
+    return null;
+  }
+  const tickers =
+    book.tickers && typeof book.tickers === "object" && !Array.isArray(book.tickers)
+      ? book.tickers
+      : {};
+  const tickerCount = Number(book.tickerCount) || Object.keys(tickers).length;
+  if(!tickerCount){
     return null;
   }
   return {
     strategyId: id,
-    exchange: exchangeScope(),
+    exchange: String(book.exchange || scopedEx),
     tf: String(book.tf || ""),
     statsMode: String(book.statsMode || ""),
     version: Number(book.version) || 1,
     publishedAt: Number(book.publishedAt) || 0,
-    tickerCount: Number(book.tickerCount) || 0,
-    tickers:
-      book.tickers && typeof book.tickers === "object" && !Array.isArray(book.tickers)
-        ? book.tickers
-        : {}
+    tickerCount,
+    tickers
   };
+}
+
+/**
+ * @param {object|null|undefined} book
+ * @returns {{ ok: boolean, book?: object }}
+ */
+export function writePublishedBotTickerBook(book){
+  if(!book || typeof book !== "object" || !book.tickers || typeof book.tickers !== "object"){
+    return { ok: false };
+  }
+  const tickers = Array.isArray(book.tickers) ? {} : book.tickers;
+  const tickerCount = Number(book.tickerCount) || Object.keys(tickers).length;
+  if(!tickerCount){
+    return { ok: false };
+  }
+  const id = normalizeAlgoOptimizeStrategyId(book.strategyId);
+  const ex = String(book.exchange || exchangeScope()).trim().toLowerCase() || exchangeScope();
+  const stored = {
+    ...book,
+    strategyId: id,
+    exchange: ex,
+    tickerCount,
+    tickers
+  };
+  const root = readRoot();
+  const byEx = root[ex] && typeof root[ex] === "object" ? { ...root[ex] } : {};
+  byEx[id] = stored;
+  root[ex] = byEx;
+  writeRoot(root);
+  return { ok: true, book: stored };
+}
+
+function bookHasTickers(book){
+  return !!(
+    book?.tickers &&
+    typeof book.tickers === "object" &&
+    Object.keys(book.tickers).length
+  );
+}
+
+/**
+ * Pull published book from main (LAN write / persist) into renderer localStorage.
+ * @param {string} strategyId
+ * @returns {Promise<object|null>}
+ */
+export async function hydrateBotTickerBookFromMain(strategyId){
+  const existing = loadBotTickerBook(strategyId);
+  if(bookHasTickers(existing)){
+    return existing;
+  }
+  const api = globalThis.window?.cryptoTerminalDesktop?.algoTrading;
+  if(typeof api?.getTickerBook !== "function"){
+    return existing;
+  }
+  const id = normalizeAlgoOptimizeStrategyId(strategyId);
+  try{
+    let res = await api.getTickerBook({
+      strategyId: id,
+      exchangeId: exchangeScope()
+    });
+    let book = res?.book;
+    if(!bookHasTickers(book)){
+      res = await api.getTickerBook({ strategyId: id });
+      book = res?.book;
+    }
+    if(!bookHasTickers(book)){
+      return existing;
+    }
+    writePublishedBotTickerBook(book);
+    return loadBotTickerBook(id);
+  }catch(err){
+    console.warn("[algo-trading] hydrate ticker book from main", err);
+    return existing;
+  }
 }
 
 /**
@@ -332,7 +424,8 @@ export function loadStagedBotTickerBook(strategyId){
  * @param {string} strategyId
  * @returns {{ ok: boolean, book?: object, message?: string }}
  */
-export function stageBotTickerBookFromPublished(strategyId){
+export async function stageBotTickerBookFromPublished(strategyId){
+  await hydrateBotTickerBookFromMain(strategyId);
   const book = loadBotTickerBook(strategyId);
   const count = book?.tickerCount || Object.keys(book?.tickers || {}).length;
   if(!book || !count){
