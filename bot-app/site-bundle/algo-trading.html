@@ -19,7 +19,7 @@
 <link rel="stylesheet" href="/css/terminal.css?v=169">
 <link rel="stylesheet" href="/css/terminal-layout.css?v=97">
 <link rel="stylesheet" href="/css/chart-indicators.css?v=26">
-<link rel="stylesheet" href="/css/algo-trading.css?v=116">
+<link rel="stylesheet" href="/css/algo-trading.css?v=117">
 <link rel="stylesheet" href="/css/algo-trading-book-panel.css?v=5">
 <link rel="stylesheet" href="/css/algo-trading-chart-overlay.css?v=2">
 
@@ -124,219 +124,43 @@ title="Настройки Алго"
 </div>
 </div>
 
-<div class="algo-bot-strategies" id="algo-bot-strategies" aria-label="Стратегии бота">
+<div class="algo-bot-strategies" id="algo-bot-strategies" aria-label="Боты">
 
-<div class="algo-bot-strategy" data-algo-bot-strategy="st1">
+<div class="algo-bots-menu-wrap" id="algo-bots-menu-wrap">
 <button
 type="button"
-class="algo-bot-strategy-toggle"
-id="algo-bot-st1-toggle"
+class="algo-bots-btn"
+id="algo-bots-btn"
 aria-expanded="false"
 aria-haspopup="true"
-aria-controls="algo-bot-st1-dropdown"
+aria-controls="algo-bots-dropdown"
+title="Выбор бота"
 >
-Стратегия 1
+Боты
 </button>
+<div class="algo-bots-dropdown hidden" id="algo-bots-dropdown" role="menu" aria-label="Список ботов">
 <button
 type="button"
-class="algo-bot-run-btn"
-id="algo-bot-st1-run"
-data-running="0"
-aria-pressed="false"
+class="algo-bots-item"
+id="algo-bots-item-pattern12"
+data-algo-bot-id="pattern-12"
+role="menuitem"
 >
-Запустить
+Паттерн 1-2 1-2
 </button>
-<div class="algo-bot-strategy-dropdown hidden" id="algo-bot-st1-dropdown" role="dialog" aria-label="Настройки Стратегии 1">
-<div class="algo-bot-field">
-<label class="algo-bot-label" for="algo-bot-st1-timeout">Количество баров до отмены паттерна</label>
-<input type="number" id="algo-bot-st1-timeout" class="algo-bot-input" min="1" max="10000" step="1" value="200" inputmode="numeric" />
-</div>
-<div class="algo-bot-field">
-<label class="algo-bot-label" for="algo-bot-st1-max-pt1-pt4-bars">Количество баров между pt1 и pt4 не более</label>
-<input
-type="number"
-id="algo-bot-st1-max-pt1-pt4-bars"
-class="algo-bot-input"
-min="1"
-max="10000"
-step="1"
-inputmode="numeric"
-placeholder="без лимита"
-title="Пусто — без лимита. Если задано N и между pt1 и pt4 больше N баров — сетап невалиден"
-/>
-</div>
-<!-- TEMP_PULLBACK_BEFORE_ARM -->
-<div class="algo-bot-field algo-bot-field--row" data-temp-pullback-before-arm>
-<label class="algo-bot-label" for="algo-bot-st1-pullback-pct" title="Откат к pt3 на N% от X перед вооружением. Без отката закол pt4 отменяет сетап.">Откат перед arm</label>
-<input type="number" id="algo-bot-st1-pullback-pct" class="algo-bot-input algo-bot-input--sm" min="1" max="100" step="0.1" value="38.2" inputmode="decimal" title="% от X (pt4→pt3)" />
-<span class="algo-bot-unit">%</span>
-<label class="algo-bot-check" title="Ждать откат перед arm"><input type="checkbox" id="algo-bot-st1-pullback" /><span>вкл.</span></label>
-</div>
-<div class="algo-bot-field">
-<span class="algo-bot-label">Таймфрейм</span>
-<div class="algo-bot-tf" id="algo-bot-st1-tf" role="tablist" aria-label="Таймфрейм Стратегии 1">
-<button type="button" class="algo-bot-tf-btn" data-bot-tf="1">1m</button>
-<button type="button" class="algo-bot-tf-btn active" data-bot-tf="5">5m</button>
-<button type="button" class="algo-bot-tf-btn" data-bot-tf="15">15m</button>
-<button type="button" class="algo-bot-tf-btn" data-bot-tf="60">1h</button>
-<button type="button" class="algo-bot-tf-btn" data-bot-tf="240">4h</button>
-<button type="button" class="algo-bot-tf-btn" data-bot-tf="D">D</button>
-<button type="button" class="algo-bot-tf-btn" data-bot-tf="W">W</button>
-</div>
-</div>
-<div class="algo-bot-field algo-bot-field--row">
-<label class="algo-bot-label" for="algo-bot-st1-sl-pct">СЛ (%)</label>
-<input type="number" id="algo-bot-st1-sl-pct" class="algo-bot-input algo-bot-input--sm" min="0.01" step="0.01" value="50" inputmode="decimal" />
-<label class="algo-bot-label" for="algo-bot-st1-sl-usd">СЛ ($)</label>
-<input type="number" id="algo-bot-st1-sl-usd" class="algo-bot-input algo-bot-input--sm" min="0.01" step="0.01" value="1" inputmode="decimal" />
-</div>
-<div class="algo-bot-field algo-bot-field--row">
-<label class="algo-bot-label" for="algo-bot-st1-tp-rr">ТП 1 к</label>
-<input type="number" id="algo-bot-st1-tp-rr" class="algo-bot-input algo-bot-input--sm" min="0.01" step="0.01" value="2" inputmode="decimal" />
-</div>
-<div class="algo-bot-field algo-bot-field--row">
-<label class="algo-bot-label" for="algo-bot-st1-min-turnover" title="Минимальный 24h оборот (USDT). Ниже — сетап не вооружается.">Объем за сутки от</label>
-<input type="text" id="algo-bot-st1-min-turnover" class="algo-bot-input algo-bot-input--sm algo-bot-input--turnover" inputmode="numeric" autocomplete="off" value="20.000.000" />
-<span class="algo-bot-unit">USDT</span>
-</div>
-<div class="algo-bot-field algo-bot-field--row" id="algo-bot-st1-alert-lead-row" hidden>
-<label class="algo-bot-label" for="algo-bot-st1-alert-lead" title="Опережение: % высоты X (pt3↔pt4) от pt4 к pt3. Лонг ниже pt4, шорт выше.">Алерт до pt4</label>
-<input type="number" id="algo-bot-st1-alert-lead" class="algo-bot-input algo-bot-input--sm" min="0" max="10" step="0.1" value="5" inputmode="decimal" />
-<span class="algo-bot-unit">% X</span>
-</div>
-<p class="algo-bot-hint" id="algo-bot-st1-alert-lead-hint" hidden>Ручная торговля: опережение в % высоты паттерна X (pt3↔pt4), как СЛ — не % цены. Лонг чуть ниже pt4, шорт чуть выше. 0 = точно в pt4.</p>
-<div class="algo-bot-field">
-<span class="algo-bot-label">Торговля</span>
-<div class="algo-bot-side" role="group" aria-label="Стороны торговли">
-<label class="algo-bot-check">
-<input type="checkbox" id="algo-bot-st1-side-long" checked />
-<span>Лонг</span>
-</label>
-<label class="algo-bot-check">
-<input type="checkbox" id="algo-bot-st1-side-short" />
-<span>Шорт</span>
-</label>
-<label class="algo-bot-check">
-<input type="checkbox" id="algo-bot-st1-side-both" />
-<span>Лонг и Шорт</span>
-</label>
-</div>
-<p class="algo-bot-hint" id="algo-bot-st1-side-hint">Список: Алго Лонг</p>
-<label class="algo-bot-check" title="Список Избранные">
-<input type="checkbox" id="algo-bot-st1-use-favorites" />
-<span>Список Избранные</span>
-</label>
-</div>
-<div class="algo-bot-field">
-<span class="algo-bot-label">Обновлять список тикеров каждые</span>
-<div class="algo-bot-field--row">
-<input type="number" id="algo-bot-st1-refresh-h" class="algo-bot-input algo-bot-input--sm" min="0" max="168" step="1" value="24" inputmode="numeric" />
-<span class="algo-bot-unit">ч</span>
-<input type="number" id="algo-bot-st1-refresh-m" class="algo-bot-input algo-bot-input--sm" min="0" max="59" step="1" value="0" inputmode="numeric" />
-<span class="algo-bot-unit">мин</span>
-<label class="algo-bot-check algo-bot-manual-refresh-strat" id="algo-bot-st1-refresh-st1-wrap" hidden title="Скан по Стратегии 1">
-<input type="checkbox" id="algo-bot-st1-refresh-st1" checked />
-<span>Ст1</span>
-</label>
-<label class="algo-bot-check algo-bot-manual-refresh-strat" id="algo-bot-st1-refresh-st2-wrap" hidden title="Скан по Стратегии 2">
-<input type="checkbox" id="algo-bot-st1-refresh-st2" />
-<span>Ст2</span>
-</label>
-<label class="algo-bot-check algo-bot-manual-refresh-strat" id="algo-bot-st1-refresh-st3-wrap" hidden title="Скан по Стратегии 3">
-<input type="checkbox" id="algo-bot-st1-refresh-st3" />
-<span>Ст3</span>
-</label>
-</div>
-</div>
-<p class="algo-bot-hint">0 ч 0 мин = автообновление списка выкл (Phase D).</p>
-<div class="algo-bot-field algo-bot-field--row">
-<label class="algo-bot-label" for="algo-bot-st1-winrate">По критериям</label>
-<input type="number" id="algo-bot-st1-winrate" class="algo-bot-input algo-bot-input--sm" min="10" max="100" step="1" value="70" inputmode="numeric" />
-<span class="algo-bot-unit">% успеха</span>
-<label class="algo-bot-check" title="Режим подсчёта для обновления списка">
-<input type="checkbox" id="algo-bot-st1-refresh-real" />
-<span id="algo-bot-st1-refresh-mode-label">Реальный подсчет</span>
-</label>
-</div>
-<p class="algo-bot-hint">При периоде &gt; 0 скрипт периодически парсит все тикеры по ТФ/стороне/винрейту и обновляет соответствующий список Алго. В ручном режиме чекбоксы Ст1 / Ст2 / Ст3 выбирают одну стратегию для скана (одновременно активен только один).</p>
 </div>
 </div>
 
-<div class="algo-bot-strategy" data-algo-bot-strategy="st2">
-<button
-type="button"
-class="algo-bot-strategy-toggle"
-id="algo-bot-st2-toggle"
-aria-expanded="false"
-aria-haspopup="true"
-aria-controls="algo-bot-st2-dropdown"
->
-Стратегия 2
-</button>
 <button
 type="button"
 class="algo-bot-run-btn"
-id="algo-bot-st2-run"
+id="algo-bot-run"
 data-running="0"
 aria-pressed="false"
+title="Запустить бота с отмеченной стратегией"
 >
 Запустить
 </button>
-<div class="algo-bot-strategy-dropdown hidden" id="algo-bot-st2-dropdown" role="dialog" aria-label="Настройки Стратегии 2">
-<div class="algo-bot-field"><label class="algo-bot-label" for="algo-bot-st2-timeout">Количество баров до отмены паттерна</label><input type="number" id="algo-bot-st2-timeout" class="algo-bot-input" min="1" max="10000" step="1" value="200" inputmode="numeric" /></div>
-<div class="algo-bot-field"><label class="algo-bot-label" for="algo-bot-st2-max-pt1-pt4-bars">Количество баров между pt1 и pt4 не более</label><input type="number" id="algo-bot-st2-max-pt1-pt4-bars" class="algo-bot-input" min="1" max="10000" step="1" inputmode="numeric" placeholder="без лимита" title="Пусто — без лимита. Если задано N и между pt1 и pt4 больше N баров — сетап невалиден" /></div>
-<!-- TEMP_PULLBACK_BEFORE_ARM -->
-<div class="algo-bot-field algo-bot-field--row" data-temp-pullback-before-arm><label class="algo-bot-label" for="algo-bot-st2-pullback-pct" title="Откат к pt3 на N% от X перед вооружением. Без отката закол pt4 отменяет сетап.">Откат перед arm</label><input type="number" id="algo-bot-st2-pullback-pct" class="algo-bot-input algo-bot-input--sm" min="1" max="100" step="0.1" value="38.2" inputmode="decimal" /><span class="algo-bot-unit">%</span><label class="algo-bot-check" title="Ждать откат перед arm"><input type="checkbox" id="algo-bot-st2-pullback" /><span>вкл.</span></label></div>
-<div class="algo-bot-field"><span class="algo-bot-label">Таймфрейм</span><div class="algo-bot-tf" id="algo-bot-st2-tf" role="tablist" aria-label="Таймфрейм Стратегии 2"><button type="button" class="algo-bot-tf-btn" data-bot-tf="1">1m</button><button type="button" class="algo-bot-tf-btn active" data-bot-tf="5">5m</button><button type="button" class="algo-bot-tf-btn" data-bot-tf="15">15m</button><button type="button" class="algo-bot-tf-btn" data-bot-tf="60">1h</button><button type="button" class="algo-bot-tf-btn" data-bot-tf="240">4h</button><button type="button" class="algo-bot-tf-btn" data-bot-tf="D">D</button><button type="button" class="algo-bot-tf-btn" data-bot-tf="W">W</button></div></div>
-<div class="algo-bot-field algo-bot-field--row"><label class="algo-bot-label" for="algo-bot-st2-sl-pct">СЛ (%)</label><input type="number" id="algo-bot-st2-sl-pct" class="algo-bot-input algo-bot-input--sm" min="0.01" step="0.01" value="50" /><label class="algo-bot-label" for="algo-bot-st2-sl-usd">СЛ ($)</label><input type="number" id="algo-bot-st2-sl-usd" class="algo-bot-input algo-bot-input--sm" min="0.01" step="0.01" value="1" /></div>
-<div class="algo-bot-field algo-bot-field--row"><label class="algo-bot-label" for="algo-bot-st2-min-turnover" title="Минимальный 24h оборот (USDT). Ниже — сетап не вооружается.">Объем за сутки от</label><input type="text" id="algo-bot-st2-min-turnover" class="algo-bot-input algo-bot-input--sm algo-bot-input--turnover" inputmode="numeric" autocomplete="off" value="20.000.000" /><span class="algo-bot-unit">USDT</span></div>
-<div class="algo-bot-field algo-bot-field--row"><label class="algo-bot-label" for="algo-bot-st2-tp1">ТП1</label><input type="number" id="algo-bot-st2-tp1" class="algo-bot-input algo-bot-input--sm" min="0.01" step="0.01" value="1" /><label class="algo-bot-label" for="algo-bot-st2-tp2">ТП2</label><input type="number" id="algo-bot-st2-tp2" class="algo-bot-input algo-bot-input--sm" min="0.01" step="0.01" value="1.25" /><label class="algo-bot-label" for="algo-bot-st2-tp3">ТП3</label><input type="number" id="algo-bot-st2-tp3" class="algo-bot-input algo-bot-input--sm" min="0.01" step="0.01" value="1.44" /></div>
-<div class="algo-bot-field algo-bot-field--row"><label class="algo-bot-label" for="algo-bot-st2-trail-x1" title="После ТП1: СЛ = r(X) от pt4. Минус — в сторону pt3, плюс — в профит">Трейлинг СЛ</label><input type="number" id="algo-bot-st2-trail-x1" class="algo-bot-input algo-bot-input--sm" min="-1" max="1" step="0.01" value="-0.25" /><label class="algo-bot-label" for="algo-bot-st2-trail-x2" title="После ТП2: СЛ = r(X) от pt4. Не ниже трейлинга после ТП1 и не выше максимального ТП. 0 = БУ (pt4)">ТП2</label><input type="number" id="algo-bot-st2-trail-x2" class="algo-bot-input algo-bot-input--sm" min="-1" max="50" step="0.01" value="0" /><label class="algo-bot-check"><input type="checkbox" id="algo-bot-st2-trail" checked /><span>вкл.</span></label></div>
-<div class="algo-bot-field algo-bot-field--row"><label class="algo-bot-label" for="algo-bot-st2-share1" title="Доля позиции, закрываемая на ТП1 (%). Сумма трёх долей = 100">Доли ТП (%)</label><input type="number" id="algo-bot-st2-share1" class="algo-bot-input algo-bot-input--sm" min="1" max="98" step="1" value="25" /><input type="number" id="algo-bot-st2-share2" class="algo-bot-input algo-bot-input--sm" min="1" max="98" step="1" value="25" title="Доля позиции на ТП2 (%)" /><input type="number" id="algo-bot-st2-share3" class="algo-bot-input algo-bot-input--sm" min="1" max="98" step="1" value="50" title="Доля позиции на ТП3 (%) — закрывает остаток" /></div>
-<div class="algo-bot-field"><span class="algo-bot-label">Торговля</span><div class="algo-bot-side" role="group" aria-label="Стороны торговли"><label class="algo-bot-check"><input type="checkbox" id="algo-bot-st2-side-long" checked /><span>Лонг</span></label><label class="algo-bot-check"><input type="checkbox" id="algo-bot-st2-side-short" /><span>Шорт</span></label><label class="algo-bot-check"><input type="checkbox" id="algo-bot-st2-side-both" /><span>Лонг и Шорт</span></label></div><p class="algo-bot-hint" id="algo-bot-st2-side-hint">Список: Алго Лонг</p><label class="algo-bot-check"><input type="checkbox" id="algo-bot-st2-use-favorites" /><span>Список Избранные</span></label></div>
-<div class="algo-bot-field"><span class="algo-bot-label">Обновлять список тикеров каждые</span><div class="algo-bot-field--row"><input type="number" id="algo-bot-st2-refresh-h" class="algo-bot-input algo-bot-input--sm" min="0" max="168" step="1" value="24" /><span class="algo-bot-unit">ч</span><input type="number" id="algo-bot-st2-refresh-m" class="algo-bot-input algo-bot-input--sm" min="0" max="59" step="1" value="0" /><span class="algo-bot-unit">мин</span></div></div>
-<p class="algo-bot-hint">0 ч 0 мин = автообновление списка выкл (Phase D).</p>
-<div class="algo-bot-field algo-bot-field--row"><label class="algo-bot-label" for="algo-bot-st2-winrate">По критериям</label><input type="number" id="algo-bot-st2-winrate" class="algo-bot-input algo-bot-input--sm" min="10" max="100" step="1" value="70" /><span class="algo-bot-unit">% успеха</span><label class="algo-bot-check" title="Режим подсчёта для обновления списка"><input type="checkbox" id="algo-bot-st2-refresh-real" /><span id="algo-bot-st2-refresh-mode-label">Реальный подсчет</span></label></div>
-</div>
-</div>
-
-<div class="algo-bot-strategy" data-algo-bot-strategy="st3">
-<button
-type="button"
-class="algo-bot-strategy-toggle"
-id="algo-bot-st3-toggle"
-aria-expanded="false"
-aria-haspopup="true"
-aria-controls="algo-bot-st3-dropdown"
->
-Стратегия 3
-</button>
-<button
-type="button"
-class="algo-bot-run-btn"
-id="algo-bot-st3-run"
-data-running="0"
-aria-pressed="false"
->
-Запустить
-</button>
-<div class="algo-bot-strategy-dropdown hidden" id="algo-bot-st3-dropdown" role="dialog" aria-label="Настройки Стратегии 3">
-<div class="algo-bot-field"><label class="algo-bot-label" for="algo-bot-st3-timeout">Количество баров до отмены паттерна</label><input type="number" id="algo-bot-st3-timeout" class="algo-bot-input" min="1" max="10000" step="1" value="200" /></div>
-<div class="algo-bot-field"><label class="algo-bot-label" for="algo-bot-st3-max-pt1-pt4-bars">Количество баров между pt1 и pt4 не более</label><input type="number" id="algo-bot-st3-max-pt1-pt4-bars" class="algo-bot-input" min="1" max="10000" step="1" inputmode="numeric" placeholder="без лимита" title="Пусто — без лимита. Если задано N и между pt1 и pt4 больше N баров — сетап невалиден" /></div>
-<!-- TEMP_PULLBACK_BEFORE_ARM -->
-<div class="algo-bot-field algo-bot-field--row" data-temp-pullback-before-arm><label class="algo-bot-label" for="algo-bot-st3-pullback-pct" title="Откат к pt3 на N% от X перед вооружением. Без отката закол pt4 отменяет сетап.">Откат перед arm</label><input type="number" id="algo-bot-st3-pullback-pct" class="algo-bot-input algo-bot-input--sm" min="1" max="100" step="0.1" value="38.2" inputmode="decimal" /><span class="algo-bot-unit">%</span><label class="algo-bot-check" title="Ждать откат перед arm"><input type="checkbox" id="algo-bot-st3-pullback" /><span>вкл.</span></label></div>
-<div class="algo-bot-field"><span class="algo-bot-label">Таймфрейм</span><div class="algo-bot-tf" id="algo-bot-st3-tf" role="tablist"><button type="button" class="algo-bot-tf-btn" data-bot-tf="1">1m</button><button type="button" class="algo-bot-tf-btn active" data-bot-tf="5">5m</button><button type="button" class="algo-bot-tf-btn" data-bot-tf="15">15m</button><button type="button" class="algo-bot-tf-btn" data-bot-tf="60">1h</button><button type="button" class="algo-bot-tf-btn" data-bot-tf="240">4h</button><button type="button" class="algo-bot-tf-btn" data-bot-tf="D">D</button><button type="button" class="algo-bot-tf-btn" data-bot-tf="W">W</button></div></div>
-<div class="algo-bot-field algo-bot-field--row"><label class="algo-bot-label" for="algo-bot-st3-sl-pct">СЛ (%)</label><input type="number" id="algo-bot-st3-sl-pct" class="algo-bot-input algo-bot-input--sm" min="0.01" step="0.01" value="50" /><label class="algo-bot-label" for="algo-bot-st3-sl-usd">СЛ ($)</label><input type="number" id="algo-bot-st3-sl-usd" class="algo-bot-input algo-bot-input--sm" min="0.01" step="0.01" value="1" /></div>
-<div class="algo-bot-field algo-bot-field--row"><label class="algo-bot-label" for="algo-bot-st3-min-turnover" title="Минимальный 24h оборот (USDT). Ниже — сетап не вооружается.">Объем за сутки от</label><input type="text" id="algo-bot-st3-min-turnover" class="algo-bot-input algo-bot-input--sm algo-bot-input--turnover" inputmode="numeric" autocomplete="off" value="20.000.000" /><span class="algo-bot-unit">USDT</span></div>
-<div class="algo-bot-field algo-bot-field--row"><label class="algo-bot-label" for="algo-bot-st3-tp1">ТП1</label><input type="number" id="algo-bot-st3-tp1" class="algo-bot-input algo-bot-input--sm" min="0.01" step="0.01" value="1" /><label class="algo-bot-label" for="algo-bot-st3-tp2">ТП2</label><input type="number" id="algo-bot-st3-tp2" class="algo-bot-input algo-bot-input--sm" min="0.01" step="0.01" value="1.25" /><label class="algo-bot-label" for="algo-bot-st3-tp3">ТП3</label><input type="number" id="algo-bot-st3-tp3" class="algo-bot-input algo-bot-input--sm" min="0.01" step="0.01" value="1.44" /></div>
-<div class="algo-bot-field algo-bot-field--row"><label class="algo-bot-label" for="algo-bot-st3-trail-x1" title="После ТП1: СЛ = r(X) от pt4. Минус — в сторону pt3, плюс — в профит">Трейлинг СЛ</label><input type="number" id="algo-bot-st3-trail-x1" class="algo-bot-input algo-bot-input--sm" min="-1" max="1" step="0.01" value="-0.25" /><label class="algo-bot-label" for="algo-bot-st3-trail-x2" title="После ТП2: СЛ = r(X) от pt4. Не ниже трейлинга после ТП1 и не выше максимального ТП. 0 = БУ (pt4)">ТП2</label><input type="number" id="algo-bot-st3-trail-x2" class="algo-bot-input algo-bot-input--sm" min="-1" max="50" step="0.01" value="0" /><label class="algo-bot-check"><input type="checkbox" id="algo-bot-st3-trail" checked /><span>вкл.</span></label></div>
-<div class="algo-bot-field algo-bot-field--row"><label class="algo-bot-label" for="algo-bot-st3-share1" title="Доля позиции, закрываемая на ТП1 (%). Сумма трёх долей = 100">Доли ТП (%)</label><input type="number" id="algo-bot-st3-share1" class="algo-bot-input algo-bot-input--sm" min="1" max="98" step="1" value="25" /><input type="number" id="algo-bot-st3-share2" class="algo-bot-input algo-bot-input--sm" min="1" max="98" step="1" value="25" title="Доля позиции на ТП2 (%)" /><input type="number" id="algo-bot-st3-share3" class="algo-bot-input algo-bot-input--sm" min="1" max="98" step="1" value="50" title="Доля позиции на ТП3 (%) — закрывает остаток" /></div>
-<div class="algo-bot-field"><span class="algo-bot-label">Торговля</span><div class="algo-bot-side" role="group" aria-label="Стороны торговли"><label class="algo-bot-check"><input type="checkbox" id="algo-bot-st3-side-long" checked /><span>Лонг</span></label><label class="algo-bot-check"><input type="checkbox" id="algo-bot-st3-side-short" /><span>Шорт</span></label><label class="algo-bot-check"><input type="checkbox" id="algo-bot-st3-side-both" /><span>Лонг и Шорт</span></label></div><p class="algo-bot-hint" id="algo-bot-st3-side-hint">Список: Алго Лонг</p><label class="algo-bot-check"><input type="checkbox" id="algo-bot-st3-use-favorites" /><span>Список Избранные</span></label></div>
-<div class="algo-bot-field"><span class="algo-bot-label">Обновлять список тикеров каждые</span><div class="algo-bot-field--row"><input type="number" id="algo-bot-st3-refresh-h" class="algo-bot-input algo-bot-input--sm" min="0" max="168" step="1" value="24" /><span class="algo-bot-unit">ч</span><input type="number" id="algo-bot-st3-refresh-m" class="algo-bot-input algo-bot-input--sm" min="0" max="59" step="1" value="0" /><span class="algo-bot-unit">мин</span></div></div>
-<p class="algo-bot-hint">0 ч 0 мин = автообновление списка выкл (Phase D).</p>
-<div class="algo-bot-field algo-bot-field--row"><label class="algo-bot-label" for="algo-bot-st3-winrate">По критериям</label><input type="number" id="algo-bot-st3-winrate" class="algo-bot-input algo-bot-input--sm" min="10" max="100" step="1" value="70" /><span class="algo-bot-unit">% успеха</span><label class="algo-bot-check" title="Режим подсчёта для обновления списка"><input type="checkbox" id="algo-bot-st3-refresh-real" /><span id="algo-bot-st3-refresh-mode-label">Реальный подсчет</span></label></div>
-</div>
-</div>
 
 </div>
 
@@ -1430,6 +1254,167 @@ Vol
 </div>
 
 </div>
+
+<div id="algo-bot-settings-modal" class="algo-bot-settings-modal hidden" hidden>
+<div class="algo-bot-settings-modal-backdrop" data-close="algo-bot-settings-modal"></div>
+<div class="algo-bot-settings-modal-card" role="dialog" aria-modal="true" aria-labelledby="algo-bot-settings-modal-title">
+<div class="algo-bot-settings-modal-head">
+<h2 id="algo-bot-settings-modal-title">Паттерн 1-2 1-2</h2>
+<button type="button" class="algo-bot-settings-modal-close" data-close="algo-bot-settings-modal" aria-label="Закрыть">×</button>
+</div>
+<p class="algo-bot-settings-modal-note">Отметьте стратегию чекбоксом и закройте окно. Затем нажмите «Запустить» в верхней панели.</p>
+<div class="algo-bot-settings-modal-body">
+<section class="algo-bot-strategy" data-algo-bot-strategy="st1">
+<label class="algo-bot-strategy-enable">
+<input type="checkbox" id="algo-bot-st1-enabled" checked />
+<span>Стратегия 1</span>
+</label>
+<div class="algo-bot-strategy-panel" id="algo-bot-st1-dropdown" role="region" aria-label="Настройки Стратегия 1">
+<div class="algo-bot-field algo-bot-field--row">
+<button type="button" class="algo-scan-btn" id="algo-bot-st1-load-book">Загрузить книгу параметров</button>
+<span class="algo-bot-hint" id="algo-bot-st1-book-status">Книга не загружена</span>
+</div>
+<div class="algo-bot-field">
+<label class="algo-bot-label" for="algo-bot-st1-timeout">Количество баров до отмены паттерна</label>
+<input type="number" id="algo-bot-st1-timeout" class="algo-bot-input" min="1" max="10000" step="1" value="200" inputmode="numeric" />
+</div>
+<div class="algo-bot-field">
+<label class="algo-bot-label" for="algo-bot-st1-max-pt1-pt4-bars">Количество баров между pt1 и pt4 не более</label>
+<input type="number" id="algo-bot-st1-max-pt1-pt4-bars" class="algo-bot-input" min="1" max="10000" step="1" inputmode="numeric" placeholder="без лимита" title="Пусто — без лимита. Если задано N и между pt1 и pt4 больше N баров — сетап невалиден" />
+</div>
+<div class="algo-bot-field algo-bot-field--row">
+<label class="algo-bot-label" for="algo-bot-st1-sl-usd">СЛ ($)</label>
+<input type="number" id="algo-bot-st1-sl-usd" class="algo-bot-input algo-bot-input--sm" min="0.01" step="0.01" value="1" inputmode="decimal" />
+</div>
+<div class="algo-bot-field algo-bot-field--row">
+<label class="algo-bot-label" for="algo-bot-st1-min-turnover" title="Минимальный 24h оборот (USDT). Ниже — сетап не вооружается.">Объем за сутки от</label>
+<input type="text" id="algo-bot-st1-min-turnover" class="algo-bot-input algo-bot-input--sm algo-bot-input--turnover" inputmode="numeric" autocomplete="off" value="20.000.000" />
+<span class="algo-bot-unit">USDT</span>
+</div>
+<div class="algo-bot-field algo-bot-field--row" id="algo-bot-st1-alert-lead-row" hidden>
+<label class="algo-bot-label" for="algo-bot-st1-alert-lead" title="Опережение: % высоты X (pt3↔pt4) от pt4 к pt3. Лонг ниже pt4, шорт выше.">Алерт до pt4</label>
+<input type="number" id="algo-bot-st1-alert-lead" class="algo-bot-input algo-bot-input--sm" min="0" max="10" step="0.1" value="5" inputmode="decimal" />
+<span class="algo-bot-unit">% X</span>
+</div>
+<p class="algo-bot-hint" id="algo-bot-st1-alert-lead-hint" hidden>Ручная торговля: опережение в % высоты паттерна X (pt3↔pt4), как СЛ — не % цены. Лонг чуть ниже pt4, шорт чуть выше. 0 = точно в pt4.</p>
+<div class="algo-bot-field">
+<span class="algo-bot-label">Торговля</span>
+<div class="algo-bot-side" role="group" aria-label="Стороны торговли">
+<label class="algo-bot-check">
+<input type="checkbox" id="algo-bot-st1-side-long" />
+<span>Лонг</span>
+</label>
+<label class="algo-bot-check">
+<input type="checkbox" id="algo-bot-st1-side-short" />
+<span>Шорт</span>
+</label>
+<label class="algo-bot-check">
+<input type="checkbox" id="algo-bot-st1-side-both" checked />
+<span>Лонг и Шорт</span>
+</label>
+</div>
+<p class="algo-bot-hint" id="algo-bot-st1-side-hint">Список: Стратегия 1</p>
+</div>
+</div>
+</section>
+<section class="algo-bot-strategy" data-algo-bot-strategy="st2">
+<label class="algo-bot-strategy-enable">
+<input type="checkbox" id="algo-bot-st2-enabled" />
+<span>Стратегия 2</span>
+</label>
+<div class="algo-bot-strategy-panel" id="algo-bot-st2-dropdown" role="region" aria-label="Настройки Стратегия 2">
+<div class="algo-bot-field algo-bot-field--row">
+<button type="button" class="algo-scan-btn" id="algo-bot-st2-load-book">Загрузить книгу параметров</button>
+<span class="algo-bot-hint" id="algo-bot-st2-book-status">Книга не загружена</span>
+</div>
+<div class="algo-bot-field">
+<label class="algo-bot-label" for="algo-bot-st2-timeout">Количество баров до отмены паттерна</label>
+<input type="number" id="algo-bot-st2-timeout" class="algo-bot-input" min="1" max="10000" step="1" value="200" inputmode="numeric" />
+</div>
+<div class="algo-bot-field">
+<label class="algo-bot-label" for="algo-bot-st2-max-pt1-pt4-bars">Количество баров между pt1 и pt4 не более</label>
+<input type="number" id="algo-bot-st2-max-pt1-pt4-bars" class="algo-bot-input" min="1" max="10000" step="1" inputmode="numeric" placeholder="без лимита" title="Пусто — без лимита. Если задано N и между pt1 и pt4 больше N баров — сетап невалиден" />
+</div>
+<div class="algo-bot-field algo-bot-field--row">
+<label class="algo-bot-label" for="algo-bot-st2-sl-usd">СЛ ($)</label>
+<input type="number" id="algo-bot-st2-sl-usd" class="algo-bot-input algo-bot-input--sm" min="0.01" step="0.01" value="1" inputmode="decimal" />
+</div>
+<div class="algo-bot-field algo-bot-field--row">
+<label class="algo-bot-label" for="algo-bot-st2-min-turnover" title="Минимальный 24h оборот (USDT). Ниже — сетап не вооружается.">Объем за сутки от</label>
+<input type="text" id="algo-bot-st2-min-turnover" class="algo-bot-input algo-bot-input--sm algo-bot-input--turnover" inputmode="numeric" autocomplete="off" value="20.000.000" />
+<span class="algo-bot-unit">USDT</span>
+</div>
+<div class="algo-bot-field">
+<span class="algo-bot-label">Торговля</span>
+<div class="algo-bot-side" role="group" aria-label="Стороны торговли">
+<label class="algo-bot-check">
+<input type="checkbox" id="algo-bot-st2-side-long" />
+<span>Лонг</span>
+</label>
+<label class="algo-bot-check">
+<input type="checkbox" id="algo-bot-st2-side-short" />
+<span>Шорт</span>
+</label>
+<label class="algo-bot-check">
+<input type="checkbox" id="algo-bot-st2-side-both" checked />
+<span>Лонг и Шорт</span>
+</label>
+</div>
+<p class="algo-bot-hint" id="algo-bot-st2-side-hint">Список: Стратегия 2</p>
+</div>
+</div>
+</section>
+<section class="algo-bot-strategy" data-algo-bot-strategy="st3">
+<label class="algo-bot-strategy-enable">
+<input type="checkbox" id="algo-bot-st3-enabled" />
+<span>Стратегия 3</span>
+</label>
+<div class="algo-bot-strategy-panel" id="algo-bot-st3-dropdown" role="region" aria-label="Настройки Стратегия 3">
+<div class="algo-bot-field algo-bot-field--row">
+<button type="button" class="algo-scan-btn" id="algo-bot-st3-load-book">Загрузить книгу параметров</button>
+<span class="algo-bot-hint" id="algo-bot-st3-book-status">Книга не загружена</span>
+</div>
+<div class="algo-bot-field">
+<label class="algo-bot-label" for="algo-bot-st3-timeout">Количество баров до отмены паттерна</label>
+<input type="number" id="algo-bot-st3-timeout" class="algo-bot-input" min="1" max="10000" step="1" value="200" inputmode="numeric" />
+</div>
+<div class="algo-bot-field">
+<label class="algo-bot-label" for="algo-bot-st3-max-pt1-pt4-bars">Количество баров между pt1 и pt4 не более</label>
+<input type="number" id="algo-bot-st3-max-pt1-pt4-bars" class="algo-bot-input" min="1" max="10000" step="1" inputmode="numeric" placeholder="без лимита" title="Пусто — без лимита. Если задано N и между pt1 и pt4 больше N баров — сетап невалиден" />
+</div>
+<div class="algo-bot-field algo-bot-field--row">
+<label class="algo-bot-label" for="algo-bot-st3-sl-usd">СЛ ($)</label>
+<input type="number" id="algo-bot-st3-sl-usd" class="algo-bot-input algo-bot-input--sm" min="0.01" step="0.01" value="1" inputmode="decimal" />
+</div>
+<div class="algo-bot-field algo-bot-field--row">
+<label class="algo-bot-label" for="algo-bot-st3-min-turnover" title="Минимальный 24h оборот (USDT). Ниже — сетап не вооружается.">Объем за сутки от</label>
+<input type="text" id="algo-bot-st3-min-turnover" class="algo-bot-input algo-bot-input--sm algo-bot-input--turnover" inputmode="numeric" autocomplete="off" value="20.000.000" />
+<span class="algo-bot-unit">USDT</span>
+</div>
+<div class="algo-bot-field">
+<span class="algo-bot-label">Торговля</span>
+<div class="algo-bot-side" role="group" aria-label="Стороны торговли">
+<label class="algo-bot-check">
+<input type="checkbox" id="algo-bot-st3-side-long" />
+<span>Лонг</span>
+</label>
+<label class="algo-bot-check">
+<input type="checkbox" id="algo-bot-st3-side-short" />
+<span>Шорт</span>
+</label>
+<label class="algo-bot-check">
+<input type="checkbox" id="algo-bot-st3-side-both" checked />
+<span>Лонг и Шорт</span>
+</label>
+</div>
+<p class="algo-bot-hint" id="algo-bot-st3-side-hint">Список: Стратегия 3</p>
+</div>
+</div>
+</section>
+</div>
+</div>
+</div>
+
 
 <script type="module" src="/js/algo-trading-page-boot.js?v=4"></script>
 

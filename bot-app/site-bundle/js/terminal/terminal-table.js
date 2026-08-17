@@ -937,9 +937,49 @@ symbol
 
 }
 
-export function highlightActiveSymbol(){
+export function ensureActiveCoinVisible(){
 
 applyCoinRowStates();
+
+const symbol =
+String(
+coinsState().currentSymbol ||
+""
+).trim().toUpperCase();
+
+if(
+!symbol
+){
+return;
+}
+
+const row =
+coinElements.get(
+symbol
+);
+
+if(
+!row
+){
+return;
+}
+
+try{
+row.scrollIntoView({
+block:
+"nearest",
+inline:
+"nearest"
+});
+}catch{
+/* ignore */
+}
+
+}
+
+export function highlightActiveSymbol(){
+
+ensureActiveCoinVisible();
 
 }
 

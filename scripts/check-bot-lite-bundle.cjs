@@ -49,6 +49,15 @@ if (/href="\/screener\.html">Скринер</.test(html)) {
     "bot HTML has full Multichart nav (Скринер…) — restore Algo Bot lite nav"
   );
 }
+if (!html.includes('id="algo-bots-btn"') || !html.includes('id="algo-bot-run"')) {
+  fail("bot HTML missing new topbar (Боты / Запустить) — copy from Multichart");
+}
+if (html.includes('id="algo-bot-st1-run"')) {
+  fail("bot HTML still has old per-strategy Запустить buttons");
+}
+if (!html.includes('id="algo-bot-settings-modal"')) {
+  fail("bot HTML missing algo-bot-settings-modal");
+}
 
 const js = read(jsPath);
 if (!js.includes("function mountAlgoBotLiteLayout(")) {
@@ -96,5 +105,130 @@ while ((importMatch = importRe.exec(js))) {
     fail(`algo-trading.js imports missing ${importMatch[1]}`);
   }
 }
+
+function namedFromRe() {
+  return /(?:import|export)\s*\{([^}]+)\}\s*from\s*["'](\.[^"']+)["']/g;
+}
+
+function starFromRe() {
+  return /export\s*\*\s*from\s*["'](\.[^"']+)["']/g;
+}
+
+function localExportRe() {
+  return /export\s+(?:async\s+)?(?:function|const|let|var|class)\s+(\w+)/g;
+}
+
+function stripQuery(spec) {
+  return spec.replace(/\?v=\d+$/, "");
+}
+
+function resolveSpec(fromFile, spec) {
+  return path.normalize(path.join(path.dirname(fromFile), stripQuery(spec)));
+}
+
+function parseExportList(inner) {
+  return inner
+    .split(",")
+    .map((part) => part.replace(/\/\/.*$/, "").trim())
+    .filter(Boolean)
+    .map((part) => {
+      const bits = part.split(/\s+as\s+/);
+      return {
+        source: bits[0].trim(),
+        exported: (bits[1] || bits[0]).trim()
+      };
+    });
+}
+
+const exportCache = new Map();
+
+function collectModuleExports(filePath, stack = []) {
+  const cached = exportCache.get(filePath);
+  if (cached) return cached;
+  if (stack.includes(filePath)) return new Set();
+  if (!fs.existsSync(filePath)) return new Set();
+
+  const src = fs.readFileSync(filePath, "utf8");
+  const names = new Set();
+  exportCache.set(filePath, names);
+  const nextStack = stack.concat(filePath);
+
+  let m;
+  const localRe = localExportRe();
+  while ((m = localRe.exec(src))) names.add(m[1]);
+
+  const namedRe = namedFromRe();
+  while ((m = namedRe.exec(src))) {
+    if (!m[0].trim().startsWith("export")) continue;
+    const target = resolveSpec(filePath, m[2]);
+    const targetExports = collectModuleExports(target, nextStack);
+    for (const item of parseExportList(m[1])) {
+      if (targetExports.has(item.source)) names.add(item.exported);
+    }
+  }
+
+  const starRe = starFromRe();
+  while ((m = starRe.exec(src))) {
+    const target = resolveSpec(filePath, m[1]);
+    for (const name of collectModuleExports(target, nextStack)) {
+      names.add(name);
+    }
+  }
+
+  const localExportBlock = /export\s*\{([^}]+)\}\s*;/g;
+  while ((m = localExportBlock.exec(src))) {
+    for (const item of parseExportList(m[1])) names.add(item.exported);
+  }
+
+  return names;
+}
+
+function checkBootGraphNamedExports() {
+  const bootFiles = [
+    path.join(jsDir, "algo-trading-page-boot.js"),
+    path.join(jsDir, "algo-trading.js")
+  ];
+  const queue = [...bootFiles];
+  const seen = new Set();
+  const missing = [];
+
+  while (queue.length) {
+    const filePath = queue.pop();
+    if (seen.has(filePath)) continue;
+    seen.add(filePath);
+    if (!fs.existsSync(filePath)) {
+      missing.push(`missing ${path.relative(jsDir, filePath)}`);
+      continue;
+    }
+    const src = fs.readFileSync(filePath, "utf8");
+    let m;
+    const namedRe = namedFromRe();
+    while ((m = namedRe.exec(src))) {
+      const target = resolveSpec(filePath, m[2]);
+      queue.push(target);
+      const exp = collectModuleExports(target);
+      const rel = path.relative(jsDir, filePath);
+      for (const item of parseExportList(m[1])) {
+        if (!exp.has(item.source)) {
+          missing.push(`${rel} needs ${item.source} from ${stripQuery(m[2])}`);
+        }
+      }
+    }
+    const starRe = starFromRe();
+    while ((m = starRe.exec(src))) {
+      queue.push(resolveSpec(filePath, m[1]));
+    }
+    const sideRe = /(?:import|export)\s+[^'"\n]*from\s+["'](\.[^"']+)["']/g;
+    while ((m = sideRe.exec(src))) {
+      queue.push(resolveSpec(filePath, m[1]));
+    }
+  }
+
+  if (missing.length) {
+    fail(`boot graph export mismatch:\n${missing.join("\n")}`);
+  }
+}
+
+checkBootGraphNamedExports();
 
 console.log("✓ bot-lite bundle check OK");

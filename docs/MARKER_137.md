@@ -18,14 +18,15 @@
   синхронно; LWC через preload; script-scan только desktop.
 - **Algo Bot:** зеркало store/IPC/`POST /ticker-book`; lite HTML/CSS/stub
   логов сохранены. Hotfix `1.0.148`: в lite-бандл возвращены
-  `pattern-ema-filter.js` и `pattern-tp-ema.js` (без них страница бота
-  не грузилась).
+  `pattern-ema-filter.js` и `pattern-tp-ema.js`. Hotfix `1.0.149`: экспорт
+  `ensureActiveCoinVisible` в lite `terminal-table.js`; верхнее меню как в
+  Multichart (Боты / Запустить / модалка стратегий).
 
 ## Версии
 
 - Web marker: `v0.137`
 - Multichart desktop app: `v1.1.37`
-- Algo Bot desktop app: `v1.0.148`
+- Algo Bot desktop app: `v1.0.149`
 - Mac tag (Multichart): `desktop-v1.1.37`
 - Windows tag (Multichart): `desktop-win-v1.1.37`
-- Windows tag (Algo Bot): `algo-bot-win-v1.0.148`
+- Windows tag (Algo Bot): `algo-bot-win-v1.0.149`
