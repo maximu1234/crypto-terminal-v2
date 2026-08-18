@@ -11,7 +11,10 @@ isAlertsPage
 } from "./cloud-sync-throttle.js?v=3";
 
 import {
-isAlgoReducedCloudClient
+isAlgoReducedCloudClient,
+isAlgoBotLiteShell,
+isAlgoTradingPage,
+isScriptPage
 } from "./page-routes.js?v=5";
 
 import {
@@ -161,10 +164,10 @@ function stopScriptScanBackgroundFromBoot(){
 if(
 !window.cryptoTerminalDesktop?.isDesktop
 ){
-return;
+return Promise.resolve();
 }
 
-void import(
+return import(
 "./script-scan-background.js?v=16"
 ).then(
 m=>
@@ -189,7 +192,7 @@ return;
 }
 
 void import(
-"./algo-trading/desktop-site-boot.js?v=3"
+"./algo-trading/desktop-site-boot.js?v=4"
 ).then(
 m=>
 m.bootAlgoDesktopBackgroundJobs?.()
@@ -209,11 +212,11 @@ function stopAlgoDesktopBackgroundJobsFromBoot(){
 if(
 !window.cryptoTerminalDesktop?.isDesktop
 ){
-return;
+return Promise.resolve();
 }
 
-void import(
-"./algo-trading/desktop-site-boot.js?v=3"
+return import(
+"./algo-trading/desktop-site-boot.js?v=4"
 ).then(
 m=>
 m.stopAlgoDesktopBackgroundJobs?.()
@@ -225,6 +228,34 @@ err
 );
 }
 );
+
+}
+
+function leaveHiddenFeaturePage(
+feature
+){
+
+if(
+feature ===
+"script" &&
+isScriptPage()
+){
+location.replace(
+"/screener.html"
+);
+return;
+}
+
+if(
+feature ===
+"algo-trading" &&
+isAlgoTradingPage() &&
+!isAlgoBotLiteShell()
+){
+location.replace(
+"/screener.html"
+);
+}
 
 }
 
@@ -246,7 +277,14 @@ enabled
 ){
 bootScriptScanBackground();
 }else{
-stopScriptScanBackgroundFromBoot();
+void Promise.resolve(
+stopScriptScanBackgroundFromBoot()
+).finally(
+()=>
+leaveHiddenFeaturePage(
+feature
+)
+);
 }
 return;
 }
@@ -260,7 +298,14 @@ enabled
 ){
 bootAlgoDesktopBackgroundJobs();
 }else{
-stopAlgoDesktopBackgroundJobsFromBoot();
+void Promise.resolve(
+stopAlgoDesktopBackgroundJobsFromBoot()
+).finally(
+()=>
+leaveHiddenFeaturePage(
+feature
+)
+);
 }
 }
 

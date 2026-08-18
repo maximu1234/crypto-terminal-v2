@@ -36,7 +36,7 @@ isAlgoBotDesktop,
 fetchAlgoBotCloudLock,
 clearAlgoBotCloudLock,
 ensureAlgoBotCloudLock
-} from "./bot-bridge.js?v=18";
+} from "./bot-bridge.js?v=19";
 import {
 stageBotTickerBookFromPublished,
 hydrateBotTickerBookFromMain,

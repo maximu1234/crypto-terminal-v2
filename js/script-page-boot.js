@@ -17,10 +17,23 @@ import {
 mountScriptPage
 } from "./script-page.js?v=50";
 
+import {
+isScriptNavEnabled
+} from "./desktop-feature-nav-prefs.js?v=3";
+
 async function boot(){
 
 if(
 !window.cryptoTerminalDesktop?.isDesktop
+){
+location.replace(
+"/screener.html"
+);
+return;
+}
+
+if(
+!isScriptNavEnabled()
 ){
 location.replace(
 "/screener.html"

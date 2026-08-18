@@ -85,7 +85,7 @@ mountSessionLogServerSettings
 
 import {
 syncBotStrategiesToMain
-} from "./algo-trading/bot-bridge.js?v=18";
+} from "./algo-trading/bot-bridge.js?v=19";
 
 import {
 mountAlgoTradeUi

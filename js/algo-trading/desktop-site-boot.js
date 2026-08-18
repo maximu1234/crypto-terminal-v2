@@ -7,6 +7,10 @@ import {
 shouldRunAlgoBackgroundJobs
 } from "../desktop-feature-nav-prefs.js?v=3";
 
+import {
+isAlgoBotLiteShell
+} from "../page-routes.js?v=5";
+
 export function bootAlgoDesktopBackgroundJobs(){
 
 if(
@@ -47,7 +51,9 @@ err
 
 export function stopAlgoDesktopBackgroundJobs(){
 
-void import(
+const tasks =
+[
+import(
 "./optimize-universe-background.js?v=5"
 ).then(
 m=>
@@ -59,9 +65,8 @@ console.warn(
 err
 );
 }
-);
-
-void import(
+),
+import(
 "./bot-alert-bridge.js?v=7"
 ).then(
 m=>
@@ -73,6 +78,31 @@ console.warn(
 err
 );
 }
+)
+];
+
+if(
+!isAlgoBotLiteShell()
+){
+tasks.push(
+import(
+"./bot-bridge.js?v=19"
+).then(
+m=>
+m.stopAlgoBotIfRunning?.()
+).catch(
+err=>{
+console.warn(
+"[algo desktop-site-boot] stop bot if running:",
+err
+);
+}
+)
+);
+}
+
+return Promise.all(
+tasks
 );
 
 }

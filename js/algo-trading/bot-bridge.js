@@ -27,6 +27,10 @@ loadStagedBotTickerBook,
 writePublishedBotTickerBook
 } from "./bot-ticker-book.js?v=7";
 
+import {
+isAlgoBotWorking
+} from "../desktop-feature-nav-shutdown.js?v=1";
+
 function desktopAlgoApi(){
 
 return window.cryptoTerminalDesktop?.algoTrading ||
@@ -323,6 +327,39 @@ await releaseAlgoBotLock();
 }
 
 return result;
+
+}
+
+export async function stopAlgoBotIfRunning(){
+
+const status =
+await fetchAlgoBotStatus();
+
+if(
+!isAlgoBotWorking(
+status
+)
+){
+return {
+ok:
+true,
+stopped:
+false
+};
+}
+
+const result =
+await stopAlgoBot(
+status.strategyId ||
+"st1"
+);
+
+return {
+...result,
+stopped:
+result?.ok !==
+false
+};
 
 }
 

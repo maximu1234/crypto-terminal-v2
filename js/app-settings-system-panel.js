@@ -290,7 +290,7 @@ isDesktopShell()
 <input type="checkbox" class="app-settings-toggle-input" id="app-settings-enable-algo-nav" />
 <span class="app-settings-toggle-label">Включить АлгоТрейдинг</span>
 </label>
-<p class="app-settings-panel-hint">Пункты появляются в верхнем меню. Выключенный модуль не крутит фоновые задачи. По умолчанию выключены.</p>
+<p class="app-settings-panel-hint">Пункты в верхнем меню. Выключенный модуль не крутит фон. Если Скрипт сейчас сканирует или бот Алго запущен (live / ручной) — выключение останавливает эту работу. По умолчанию выключены.</p>
 `
 : "";
 

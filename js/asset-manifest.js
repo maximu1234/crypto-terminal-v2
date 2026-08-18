@@ -66,6 +66,8 @@ Object.freeze({
 3,
 "desktop-feature-nav-prefs.js":
 3,
+"desktop-feature-nav-shutdown.js":
+1,
 "desktop-open-chart.js":
 3,
 "trade-diary-access.js":
@@ -279,7 +281,7 @@ Object.freeze({
 "script-page.js":
 50,
 "script-page-boot.js":
-17,
+18,
 "script-page-storage.js":
 15,
 "script-page-widgets.js":
@@ -293,7 +295,7 @@ Object.freeze({
 "algo-trading.js":
 165,
 "algo-trading-page-boot.js":
-8,
+9,
 "algo-trading-list.js":
 15,
 "algo-trading/coin-list-host.js":
@@ -370,11 +372,11 @@ Object.freeze({
 "algo-trading/runtime-ui.js":
 13,
 "algo-trading/bot-bridge.js":
-18,
+19,
 "algo-trading/bot-alert-bridge.js":
 7,
 "algo-trading/desktop-site-boot.js":
-3,
+4,
 "algo-trading/bot-strategy-prefs.js":
 28,
 "algo-trading/active-analysis-bot.js":
@@ -540,7 +542,7 @@ Object.freeze({
 "focus-blur-after-pick.js":
 3,
 "site-boot.js":
-118,
+119,
 "site-header.js":
 5,
 "site-header-nav.js":
@@ -719,7 +721,7 @@ Object.freeze({
 "app-settings-window.js":
 17,
 "app-settings-system-panel.js":
-17,
+18,
 "app-settings-hotkeys-panel.js":
 3,
 "app-settings-secret.js":

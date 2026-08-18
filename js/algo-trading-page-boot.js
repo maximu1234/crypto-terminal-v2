@@ -13,10 +13,28 @@ import {
 jsImport
 } from "./asset-manifest.js?v=5";
 
+import {
+isAlgoBotLiteShell
+} from "./page-routes.js?v=5";
+
+import {
+isAlgoTradingNavEnabled
+} from "./desktop-feature-nav-prefs.js?v=3";
+
 async function boot(){
 
 if(
 !window.cryptoTerminalDesktop?.isDesktop
+){
+location.replace(
+"/screener.html"
+);
+return;
+}
+
+if(
+!isAlgoBotLiteShell() &&
+!isAlgoTradingNavEnabled()
 ){
 location.replace(
 "/screener.html"
