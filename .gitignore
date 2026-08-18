@@ -1,6 +1,10 @@
 .DS_Store
 .vercel
+.env
+.env.local
 js/supabase-env.js
+bot-app/site-bundle/js/supabase-env.js
+*-api-credentials.json
 HANDOFF.md
 .venv-icons/
 tmp-*.png

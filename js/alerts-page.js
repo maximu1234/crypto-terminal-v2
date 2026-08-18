@@ -55,6 +55,32 @@ getActiveExchangeDefinition,
 getActiveExchangeId
 } from "./market-api.js?v=6";
 
+function escapeHtml(
+raw
+){
+
+return String(
+raw ??
+""
+).replace(
+/&/g,
+"&amp;"
+).replace(
+/</g,
+"&lt;"
+).replace(
+/>/g,
+"&gt;"
+).replace(
+/"/g,
+"&quot;"
+).replace(
+/'/g,
+"&#39;"
+);
+
+}
+
 const tbody =
 document.getElementById("alerts-tbody");
 
@@ -635,26 +661,26 @@ tableWrap.classList.remove("hidden");
 tbody.innerHTML =
 alerts.map(alert=>`
 
-<tr data-shape-id="${alert.shapeId}">
+<tr data-shape-id="${escapeHtml(alert.shapeId)}">
 
-<td>${formatAlertDate(alert.createdAt)}</td>
+<td>${escapeHtml(formatAlertDate(alert.createdAt))}</td>
 
 <td>
-<a class="alerts-symbol-link" href="${buildAlertChartUrl({
+<a class="alerts-symbol-link" href="${escapeHtml(buildAlertChartUrl({
 symbol: alert.symbol,
 tf: alert.tf || "60",
 exchangeId: alertExchangeId(alert)
-})}">
-${formatAlertTicker(alert.symbol)}
+}))}">
+${escapeHtml(formatAlertTicker(alert.symbol))}
 </a>
 </td>
 
-<td class="alerts-tf">${formatTfLabel(alert.tf)}</td>
+<td class="alerts-tf">${escapeHtml(formatTfLabel(alert.tf))}</td>
 
-<td class="alerts-price">${formatPrice(alert.price)}</td>
+<td class="alerts-price">${escapeHtml(formatPrice(alert.price))}</td>
 
 <td class="alerts-col-delete">
-<button type="button" class="alerts-row-delete-btn" data-shape-id="${alert.shapeId}" data-symbol="${alert.symbol}" title="Удалить алерт" aria-label="Удалить алерт">×</button>
+<button type="button" class="alerts-row-delete-btn" data-shape-id="${escapeHtml(alert.shapeId)}" data-symbol="${escapeHtml(alert.symbol)}" title="Удалить алерт" aria-label="Удалить алерт">×</button>
 </td>
 
 </tr>
@@ -708,23 +734,23 @@ history.map(alert=>`
 
 <tr>
 
-<td>${formatAlertDate(alert.triggeredAt)}</td>
+<td>${escapeHtml(formatAlertDate(alert.triggeredAt))}</td>
 
-<td>${formatAlertDate(alert.createdAt)}</td>
+<td>${escapeHtml(formatAlertDate(alert.createdAt))}</td>
 
 <td>
-<a class="alerts-symbol-link" href="${buildAlertChartUrl({
+<a class="alerts-symbol-link" href="${escapeHtml(buildAlertChartUrl({
 symbol: alert.symbol,
 tf: alert.tf || "60",
 exchangeId: alertExchangeId(alert)
-})}">
-${formatAlertTicker(alert.symbol)}
+}))}">
+${escapeHtml(formatAlertTicker(alert.symbol))}
 </a>
 </td>
 
-<td class="alerts-tf">${formatTfLabel(alert.tf)}</td>
+<td class="alerts-tf">${escapeHtml(formatTfLabel(alert.tf))}</td>
 
-<td class="alerts-price">${formatPrice(alert.price)}</td>
+<td class="alerts-price">${escapeHtml(formatPrice(alert.price))}</td>
 
 </tr>
 

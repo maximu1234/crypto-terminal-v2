@@ -14,6 +14,44 @@ Accept:
 "Multichart/1.0"
 };
 
+function isPublicBingxPath(
+raw
+){
+
+if(
+typeof raw !==
+"string" ||
+raw.includes(
+".."
+) ||
+raw.includes(
+"\\"
+)
+){
+return false;
+}
+
+const pathname =
+raw.split(
+"?"
+)[
+0
+];
+
+return pathname.startsWith(
+"/openApi/swap/v2/quote/"
+) ||
+pathname.startsWith(
+"/openApi/swap/v3/quote/"
+) ||
+pathname ===
+"/openApi/swap/v2/server/time" ||
+pathname.startsWith(
+"/openApi/spot/v1/ticker/"
+);
+
+}
+
 module.exports = async function handler(
 req,
 res
@@ -26,8 +64,8 @@ typeof req.query?.path ===
 : "";
 
 if(
-!path.startsWith(
-"/openApi/"
+!isPublicBingxPath(
+path
 )
 ){
 res.statusCode =

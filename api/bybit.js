@@ -25,6 +25,38 @@ __dirname,
 )
 );
 
+function isPublicBybitMarketPath(
+raw
+){
+
+if(
+typeof raw !==
+"string" ||
+raw.includes(
+".."
+) ||
+raw.includes(
+"\\"
+)
+){
+return false;
+}
+
+const pathname =
+raw.split(
+"?"
+)[
+0
+];
+
+return pathname ===
+"/v5/market" ||
+pathname.startsWith(
+"/v5/market/"
+);
+
+}
+
 module.exports = async function handler(
 req,
 res
@@ -36,7 +68,9 @@ typeof req.query?.path === "string"
 : "";
 
 if(
-!path.startsWith("/v5/")
+!isPublicBybitMarketPath(
+path
+)
 ){
 res.statusCode = 400;
 res.setHeader(
