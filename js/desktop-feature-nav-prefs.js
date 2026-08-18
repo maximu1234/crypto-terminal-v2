@@ -15,10 +15,14 @@ export const FEATURE_NAV_PREF_EVENT =
 
 function isDesktopShell(){
 
-return !!window.cryptoTerminalDesktop?.isDesktop ||
+return !!globalThis.window?.cryptoTerminalDesktop?.isDesktop ||
+(
+typeof navigator !==
+"undefined" &&
 /Electron\//i.test(
 navigator.userAgent ||
 ""
+)
 );
 
 }

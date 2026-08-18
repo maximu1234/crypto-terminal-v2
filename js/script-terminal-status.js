@@ -19,7 +19,7 @@ isTerminalPage
 import {
 FEATURE_NAV_PREF_EVENT,
 isScriptNavEnabled
-} from "./desktop-feature-nav-prefs.js?v=3";
+} from "./desktop-feature-nav-prefs.js?v=4";
 
 function formatCountdown(
 ms

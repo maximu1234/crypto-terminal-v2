@@ -65,7 +65,7 @@ Object.freeze({
 "desktop-menu-bar-tray-prefs.js":
 3,
 "desktop-feature-nav-prefs.js":
-3,
+4,
 "desktop-feature-nav-shutdown.js":
 1,
 "desktop-open-chart.js":

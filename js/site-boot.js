@@ -76,7 +76,7 @@ import {
 FEATURE_NAV_PREF_EVENT,
 shouldRunAlgoBackgroundJobs,
 shouldRunScriptBackgroundJobs
-} from "./desktop-feature-nav-prefs.js?v=3";
+} from "./desktop-feature-nav-prefs.js?v=4";
 
 initSuppressNativeContextMenu();
 initFocusBlurAfterPick();

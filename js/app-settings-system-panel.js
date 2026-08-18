@@ -28,7 +28,7 @@ isScriptNavEnabled,
 isAlgoTradingNavEnabled,
 setScriptNavEnabled,
 setAlgoTradingNavEnabled
-} from "./desktop-feature-nav-prefs.js?v=3";
+} from "./desktop-feature-nav-prefs.js?v=4";
 
 import {
 TERMINAL_HISTORY_DEPTH_MAX,

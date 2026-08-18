@@ -15,7 +15,7 @@ dispatchPriceAlertsChanged
 
 import {
 shouldRunAlgoBackgroundJobs
-} from "../desktop-feature-nav-prefs.js?v=3";
+} from "../desktop-feature-nav-prefs.js?v=4";
 
 export const ALGO_BOT_ALERT_SOURCE =
 "algo-bot";

@@ -29,7 +29,7 @@ getActiveExchangeId
 
 import {
 shouldRunScriptBackgroundJobs
-} from "./desktop-feature-nav-prefs.js?v=3";
+} from "./desktop-feature-nav-prefs.js?v=4";
 
 export const SCRIPT_SCAN_BG_EVENT =
 "script-scan-bg-update";

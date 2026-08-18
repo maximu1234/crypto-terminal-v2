@@ -1,6 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
+import "./helpers/stub-browser.mjs";
+
 import {
 ALGO_TRADING_NAV_ENABLED_KEY,
 SCRIPT_NAV_ENABLED_KEY,

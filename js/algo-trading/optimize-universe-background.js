@@ -19,7 +19,7 @@ EXCHANGE_CHANGED_EVENT
 
 import {
 shouldRunAlgoBackgroundJobs
-} from "../desktop-feature-nav-prefs.js?v=3";
+} from "../desktop-feature-nav-prefs.js?v=4";
 
 export const ALGO_OPTIMIZE_UNIVERSE_BG_EVENT =
 "algo-optimize-universe-bg-update";

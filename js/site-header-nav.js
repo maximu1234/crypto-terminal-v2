@@ -13,7 +13,7 @@ DESKTOP_HEADER_NAV_ITEMS
 import {
 isScriptNavEnabled,
 isAlgoTradingNavEnabled
-} from "./desktop-feature-nav-prefs.js?v=3";
+} from "./desktop-feature-nav-prefs.js?v=4";
 
 function isDesktopRuntime(){
 

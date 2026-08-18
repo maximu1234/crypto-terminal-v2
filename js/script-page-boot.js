@@ -19,7 +19,7 @@ mountScriptPage
 
 import {
 isScriptNavEnabled
-} from "./desktop-feature-nav-prefs.js?v=3";
+} from "./desktop-feature-nav-prefs.js?v=4";
 
 async function boot(){
 
