@@ -514,7 +514,9 @@ Object.freeze({
 "watchlist.js":
 98,
 "screener.js":
-104,
+106,
+"ipad-web-viewport.js":
+2,
 "screener-widget-guard.js":
 1,
 "screener-widget-oscillator.js":
@@ -554,9 +556,9 @@ Object.freeze({
 "screener-pattern-overlay.js":
 8,
 "screener-widget-zoom.js":
-26,
+27,
 "release-marker.js":
-91,
+92,
 "focus-blur-after-pick.js":
 3,
 "site-boot.js":
@@ -827,7 +829,7 @@ Object.freeze({
 "common.css":
 55,
 "screener.css":
-53,
+55,
 "terminal.css":
 175,
 "watchlist.css":

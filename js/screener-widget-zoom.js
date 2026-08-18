@@ -12,8 +12,14 @@ linkPairedChartTimeScales,
 linkChartsCrosshair,
 mainChartCrosshairOptions,
 mountChartPriceHud,
+applyTabletMainChartScroll,
+applyTabletRsiChartOptions,
 SCREENER_MAX_BARS
 } from "./chart-import.js?v=48";
+
+import {
+isIpadWebViewport
+} from "./ipad-web-viewport.js?v=2";
 
 import {
 loadMarketHistory
@@ -826,6 +832,12 @@ zoomState.unbindUserPan?.();
 }
 
 try{
+zoomState.disposeTabletPan?.();
+}catch{
+/* ignore */
+}
+
+try{
 zoomState.rsiChart?.remove?.();
 zoomState.chart?.remove?.();
 }catch{
@@ -1085,6 +1097,74 @@ mark
 state.unbindUserPan =
 null;
 };
+
+}
+
+async function bindZoomTabletPan(
+state
+){
+
+if(
+!isIpadWebViewport() ||
+!state?.chart ||
+!state?.chartEl
+){
+return;
+}
+
+applyTabletMainChartScroll(
+state.chart
+);
+
+if(
+state.rsiChart
+){
+applyTabletRsiChartOptions(
+state.rsiChart
+);
+}
+
+try{
+
+const {
+mountWidgetTabletChart
+} =
+await import(
+"./tablet-widget-chart.js?v=3"
+);
+
+if(
+state.disposed
+){
+return;
+}
+
+const ctrl =
+await mountWidgetTabletChart(
+{
+chart:
+state.chart,
+series:
+state.series,
+chartEl:
+state.chartEl,
+chartWrap:
+state.chartEl,
+getDrawingTools:
+()=>null
+}
+);
+
+state.disposeTabletPan =
+()=>{
+ctrl?.dispose?.();
+state.disposeTabletPan =
+null;
+};
+
+}catch{
+/* ignore */
+}
 
 }
 
@@ -1728,6 +1808,8 @@ priceHudCtrl:
 null,
 unbindUserPan:
 null,
+disposeTabletPan:
+null,
 userAdjustedZoom:
 false,
 fittedOnce:
@@ -1790,6 +1872,10 @@ bindZoomUserPan(
 state
 );
 
+void bindZoomTabletPan(
+state
+);
+
 applyZoomInversion(
 state,
 zoomMountOptions?.getInvertCharts?.() === true
@@ -1816,6 +1902,57 @@ state
 );
 }
 );
+
+if(
+isIpadWebViewport()
+){
+
+const hint =
+panel.querySelector(
+".screener-widget-zoom-hint"
+);
+
+if(
+hint
+){
+hint.hidden =
+true;
+}
+
+const closeBtn =
+document.createElement(
+"button"
+);
+
+closeBtn.type =
+"button";
+closeBtn.className =
+"screener-widget-zoom-close";
+closeBtn.title =
+"Закрыть";
+closeBtn.setAttribute(
+"aria-label",
+"Закрыть"
+);
+closeBtn.textContent =
+"×";
+
+panel.querySelector(
+".screener-widget-zoom-header-right"
+)?.prepend(
+closeBtn
+);
+
+closeBtn.addEventListener(
+"click",
+event=>{
+event.preventDefault();
+event.stopPropagation();
+closeWidgetZoom();
+}
+);
+
+}
 
 panel.querySelectorAll(
 ".screener-widget-zoom-tf-btn"
@@ -2044,6 +2181,22 @@ closeWidgetZoom();
 },
 true
 );
+
+if(
+isIpadWebViewport()
+){
+backdrop.addEventListener(
+"click",
+event=>{
+if(
+event.target ===
+backdrop
+){
+closeWidgetZoom();
+}
+}
+);
+}
 
 }
 

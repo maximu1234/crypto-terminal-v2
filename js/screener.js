@@ -29,6 +29,10 @@ SCREENER_MAX_BARS
 } from "./chart-import.js?v=48";
 
 import {
+isIpadWebViewport
+} from "./ipad-web-viewport.js?v=2";
+
+import {
 calculateRSI,
 alignRsiWithCandleTimes
 } from "./indicators.js?v=3";
@@ -48,7 +52,7 @@ createTickerUiBatcher
 
 import {
 mountReleaseMarker
-} from "./release-marker.js?v=91";
+} from "./release-marker.js?v=92";
 
 import {
 saveScreenerState,
@@ -111,29 +115,38 @@ let refreshZoomFavoriteUi =
 ()=>{};
 let syncWidgetZoomInversion =
 ()=>{};
+let openScreenerWidgetZoomApi =
+null;
 let screenerZoomMountPromise =
+null;
+let screenerZoomMountOpts =
 null;
 
 /**
- * Lazy-load zoom module on first need (init / contextmenu).
+ * Lazy-load zoom module on first need (init / contextmenu / iPad expand).
  * @param {Parameters<typeof import("./screener-widget-zoom.js").mountScreenerWidgetZoom>[0]} opts
  */
 async function mountScreenerWidgetZoomLazy(
 opts
 ){
 
+screenerZoomMountOpts =
+opts;
+
 if(
 !screenerZoomMountPromise
 ){
 screenerZoomMountPromise =
 import(
-"./screener-widget-zoom.js?v=26"
+"./screener-widget-zoom.js?v=27"
 ).then(
 mod=>{
 refreshZoomFavoriteUi =
 mod.refreshZoomFavoriteUi;
 syncWidgetZoomInversion =
 mod.syncWidgetZoomInversion;
+openScreenerWidgetZoomApi =
+mod.openScreenerWidgetZoom;
 return mod.mountScreenerWidgetZoom(
 opts
 );
@@ -144,6 +157,26 @@ await screenerZoomMountPromise;
 }
 
 return screenerZoomMountPromise;
+
+}
+
+async function openScreenerZoomFromWidget(
+widget
+){
+
+if(
+!widget
+){
+return;
+}
+
+await mountScreenerWidgetZoomLazy(
+screenerZoomMountOpts
+);
+
+await openScreenerWidgetZoomApi?.(
+widget
+);
 
 }
 
@@ -1884,6 +1917,40 @@ root,
 symbol
 );
 
+if(
+isIpadWebViewport()
+){
+
+root.classList.add(
+"screener-widget--ipad-web"
+);
+
+const expandBtn =
+document.createElement(
+"button"
+);
+
+expandBtn.type =
+"button";
+expandBtn.className =
+"screener-widget-expand";
+expandBtn.title =
+"Увеличить график";
+expandBtn.setAttribute(
+"aria-label",
+"Увеличить график"
+);
+expandBtn.textContent =
+"увеличить";
+
+root.querySelector(
+".screener-header-left"
+)?.after(
+expandBtn
+);
+
+}
+
 root.querySelector(".screener-open").onclick = e=>{
 openTerminal(symbol, e);
 };
@@ -2155,6 +2222,19 @@ widget.syncChartSize = syncChartSize;
 requestAnimationFrame(syncChartSize);
 
 updateWidgetMeta(symbol, root);
+
+root.querySelector(
+".screener-widget-expand"
+)?.addEventListener(
+"click",
+event=>{
+event.preventDefault();
+event.stopPropagation();
+void openScreenerZoomFromWidget(
+widget
+);
+}
+);
 
 return widget;
 

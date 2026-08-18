@@ -397,6 +397,54 @@ color:#fff;
 background:#1f2937;
 }
 
+.screener-widget--ipad-web .screener-widget-header{
+height:36px;
+gap:8px;
+}
+
+.screener-widget--ipad-web .screener-header-right{
+margin-left:0;
+}
+
+.screener-widget-expand,
+.screener-widget-zoom-close{
+border:none;
+background:transparent;
+color:#fff;
+cursor:pointer;
+flex-shrink:0;
+line-height:1;
+padding:0 8px;
+border-radius:4px;
+display:inline-flex;
+align-items:center;
+justify-content:center;
+}
+
+.screener-widget-expand{
+flex:1 1 auto;
+min-width:72px;
+min-height:32px;
+font-size:11px;
+font-weight:600;
+letter-spacing:.03em;
+color:#9ca3af;
+background:#1a222c;
+}
+
+.screener-widget-expand:hover,
+.screener-widget-zoom-close:hover{
+background:#1f2937;
+}
+
+.screener-widget-zoom-close{
+min-width:36px;
+min-height:28px;
+font-size:22px;
+font-weight:400;
+color:#e5e7eb;
+}
+
 .screener-chart{
 flex:1;
 min-height:0;
@@ -817,6 +865,20 @@ flex:1 1 74%;
 max-height:74%;
 min-height:0;
 position:relative;
+}
+
+.screener-widget-zoom-body .screener-chart .tablet-probe-touch-layer{
+position:absolute;
+inset:0;
+right:var(--chart-scale-width, 56px);
+bottom:0;
+z-index:10;
+touch-action:none;
+pointer-events:auto;
+-webkit-user-select:none;
+user-select:none;
+-webkit-touch-callout:none;
+-webkit-tap-highlight-color:transparent;
 }
 
 .screener-widget-zoom-body .screener-chart .chart-price-hud{
