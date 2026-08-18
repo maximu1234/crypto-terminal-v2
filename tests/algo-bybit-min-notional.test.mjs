@@ -40,7 +40,7 @@ const {
 })();
 
 test(
-  "qtyFromVolumeUsdt bumps qty to meet Bybit minNotionalValue",
+  "qtyFromVolumeUsdt does not inflate qty to meet Bybit min notional",
   () => {
     const qty = qtyFromVolumeUsdt(1.6, 0.05338, {
       qtyStep: "1",
@@ -48,12 +48,7 @@ test(
       minNotionalValue: "5"
     });
 
-    assert.ok(qty);
-    const n = Number(qty);
-    assert.ok(
-      n * 0.05338 >= 5 - 1e-9,
-      `notional ${n * 0.05338} should be >= 5 (qty=${n})`
-    );
+    assert.equal(qty, null);
   }
 );
 

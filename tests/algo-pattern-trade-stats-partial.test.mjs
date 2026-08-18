@@ -19,7 +19,9 @@ import {
 computeAlgoStopLoss,
 computeAlgoTakeProfit,
 computeLogExtensionPrice,
-interpolateLogPrice
+computeStopFillPrice,
+interpolateLogPrice,
+linearUsdFromFill
 } from "../js/algo-trading/pattern-entry-positions.js";
 
 function c(
@@ -570,19 +572,33 @@ beTrade.status,
 "closed"
 );
 /* Доли по умолчанию: ТП1 закрывает 25%, СЛ ловит остальные 75%. */
+const fill =
+computeStopFillPrice(
+"long",
+entry,
+beCandles[
+1
+]
+);
 const expectedNet =
-0.25 *
-1 *
-Math.abs(
-tp1 -
-entry
-) /
-Math.abs(
-entry -
-sl
-) -
-0.75 *
-1;
+linearUsdFromFill(
+"long",
+entry,
+fill,
+tp1,
+sl,
+1,
+0.25
+) +
+linearUsdFromFill(
+"long",
+entry,
+fill,
+sl,
+sl,
+1,
+0.75
+);
 assert.ok(
 Math.abs(
 beTrade.netUsd -
@@ -665,16 +681,6 @@ entry *
 pt4 /
 pt3
 );
-const expectedFull =
-1 *
-Math.abs(
-tp -
-entry
-) /
-Math.abs(
-entry -
-sl
-);
 
 const candles =
 [
@@ -703,6 +709,23 @@ entry -
 tp
 )
 ];
+const fill =
+computeStopFillPrice(
+"long",
+entry,
+candles[
+1
+]
+);
+const expectedFull =
+linearUsdFromFill(
+"long",
+entry,
+fill,
+tp,
+sl,
+1
+);
 
 const trade =
 resolvePartialTpTrade(
@@ -1395,15 +1418,6 @@ tp3X:
 trailSl:
 false
 };
-const rr =
-Math.abs(
-tp1 -
-entry
-) /
-Math.abs(
-entry -
-sl
-);
 
 const small =
 resolvePartialTpTrade(
@@ -1434,13 +1448,61 @@ share3:
 }
 );
 
+const fill =
+computeStopFillPrice(
+"long",
+entry,
+candles[
+1
+]
+);
+const tpPartSmall =
+linearUsdFromFill(
+"long",
+entry,
+fill,
+tp1,
+sl,
+1,
+0.25
+);
+const slPartSmall =
+linearUsdFromFill(
+"long",
+entry,
+fill,
+sl,
+sl,
+1,
+0.75
+);
+const tpPartBig =
+linearUsdFromFill(
+"long",
+entry,
+fill,
+tp1,
+sl,
+1,
+0.6
+);
+const slPartBig =
+linearUsdFromFill(
+"long",
+entry,
+fill,
+sl,
+sl,
+1,
+0.4
+);
+
 assert.ok(
 Math.abs(
 small.netUsd -
 (
-0.25 *
-rr -
-0.75
+tpPartSmall +
+slPartSmall
 )
 ) <
 1e-9
@@ -1449,9 +1511,8 @@ assert.ok(
 Math.abs(
 big.netUsd -
 (
-0.6 *
-rr -
-0.4
+tpPartBig +
+slPartBig
 )
 ) <
 1e-9

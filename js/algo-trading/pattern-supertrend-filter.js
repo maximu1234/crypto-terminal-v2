@@ -630,7 +630,12 @@ Number(
 event.price
 );
 const side =
-event.side ===
+event.setupSide ===
+"short" ||
+event.setupSide ===
+"long"
+? event.setupSide
+: event.side ===
 "short"
 ? "short"
 : "long";

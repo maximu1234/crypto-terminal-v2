@@ -101,17 +101,17 @@ mountAlgoTradingIndicators
 
 import {
 mountAlgoPatternEntryOverlay
-} from "./algo-trading/pattern-entry-overlay.js?v=16";
+} from "./algo-trading/pattern-entry-overlay.js?v=17";
 
 import {
 clearAlgoPatternAnalysisUi,
 refreshAlgoPatternAnalysis
-} from "./algo-trading/pattern-analysis.js?v=37";
+} from "./algo-trading/pattern-analysis.js?v=38";
 
 import {
 invalidateAlgoPattern12SceneCache,
 clearAlgoPattern12PaintEntryFilter
-} from "./algo-trading/pattern-12-scene-cache.js?v=9";
+} from "./algo-trading/pattern-12-scene-cache.js?v=10";
 
 import {
 clampSlPctOfX,
@@ -120,7 +120,7 @@ clampRiskUsd,
 DEFAULT_SL_PCT_OF_X,
 DEFAULT_TP_RR,
 DEFAULT_RISK_USD
-} from "./algo-trading/pattern-entry-positions.js?v=14";
+} from "./algo-trading/pattern-entry-positions.js?v=16";
 
 import {
 clampPartialTpX,
@@ -136,7 +136,7 @@ DEFAULT_PARTIAL_TP3_X,
 DEFAULT_TRAIL_SL_X1,
 DEFAULT_TRAIL_SL_X2,
 DEFAULT_TP_SHARES
-} from "./algo-trading/pattern-trade-stats-partial.js?v=21";
+} from "./algo-trading/pattern-trade-stats-partial.js?v=22";
 
 import {
 clampEntryTimeoutBars,
@@ -144,7 +144,7 @@ clampMaxPt1Pt4Bars,
 resolveMaxPt1Pt4BarsFromPrefs,
 ENTRY_TIMEOUT_BARS,
 ENTRY_MAX_PT1_PT4_BARS
-} from "./algo-trading/pattern-entry-logic.js?v=13";
+} from "./algo-trading/pattern-entry-logic.js?v=14";
 
 /* TEMP_PULLBACK_BEFORE_ARM — remove with temp-pullback-before-arm.js */
 import {
@@ -160,7 +160,7 @@ clampAlgoSupertrendAtr,
 clampAlgoSupertrendFactor,
 DEFAULT_ALGO_SUPERTREND_ATR,
 DEFAULT_ALGO_SUPERTREND_FACTOR
-} from "./algo-trading/pattern-supertrend-filter.js?v=4";
+} from "./algo-trading/pattern-supertrend-filter.js?v=5";
 
 import {
 createAlgoSupertrendFilterOverlay
@@ -168,11 +168,11 @@ createAlgoSupertrendFilterOverlay
 
 import {
 normalizeAlgoStatsMode
-} from "./algo-trading/pattern-trade-stats.js?v=14";
+} from "./algo-trading/pattern-trade-stats.js?v=15";
 
 import {
 readAlgoPattern12Settings
-} from "./algo-trading/pattern-12-settings.js?v=3";
+} from "./algo-trading/pattern-12-settings.js?v=5";
 
 import {
 setChartLayoutReady,
@@ -3337,15 +3337,10 @@ isAlgoStatsAnalysisPaused()
 return;
 }
 
-if(
-force &&
-isAlgoStatsAnalysisPaused()
-){
-return;
-}
-
 const seq =
 ++patternAnalysisSeq;
+const runForced =
+!!force;
 
 if(
 patternAnalysisTimer
@@ -3356,7 +3351,7 @@ patternAnalysisTimer
 }
 
 const delay =
-force
+runForced
 ? 0
 : Math.max(
 0,
@@ -3376,7 +3371,13 @@ patternAnalysisTimer =
 if(
 disposed ||
 seq !==
-patternAnalysisSeq ||
+patternAnalysisSeq
+){
+return;
+}
+
+if(
+!runForced &&
 isAlgoStatsAnalysisPaused()
 ){
 return;
@@ -4037,12 +4038,20 @@ return;
 }
 
 void syncBotStrategiesToMain();
-schedulePatternAnalysis(
-{
-force:
-true
+
+if(
+!historyStatsReady ||
+!candles.length
+){
+return;
 }
+
+refreshAlgoPatternAnalysis(
+candles,
+entryOverlay,
+buildPatternAnalysisOpts()
 );
+drawingTools?.scheduleRedraw?.();
 
 },
 loadIndicatorHistory:(
@@ -4192,6 +4201,8 @@ getDrawingTools:()=>
 drawingTools,
 getSlPctOfX:()=>
 chartGate().slPctOfX,
+getReverseLogic:()=>
+!!readAlgoPattern12Settings().reverseLogic,
 getTpRr:()=>
 tpRr,
 getRiskUsd:()=>
@@ -4347,23 +4358,9 @@ next;
 persistAlgoSettings();
 };
 
-timeoutBarsInput.addEventListener(
-"change",
+bindAlgoNumericField(
+timeoutBarsInput,
 commitTimeoutBars
-);
-timeoutBarsInput.addEventListener(
-"keydown",
-event=>{
-
-if(
-event.key ===
-"Enter"
-){
-event.preventDefault();
-timeoutBarsInput.blur();
-}
-
-}
 );
 }
 
@@ -4409,11 +4406,34 @@ next;
 persistAlgoSettings();
 };
 
-maxPt1Pt4BarsInput.addEventListener(
-"change",
+bindAlgoNumericField(
+maxPt1Pt4BarsInput,
 commitMaxPt1Pt4Bars
 );
-maxPt1Pt4BarsInput.addEventListener(
+}
+
+
+
+function bindAlgoNumericField(
+el,
+commit
+){
+
+if(
+!el
+){
+return;
+}
+
+el.addEventListener(
+"input",
+commit
+);
+el.addEventListener(
+"change",
+commit
+);
+el.addEventListener(
 "keydown",
 event=>{
 
@@ -4422,23 +4442,28 @@ event.key ===
 "Enter"
 ){
 event.preventDefault();
-maxPt1Pt4BarsInput.blur();
+el.blur();
 }
 
 }
 );
+
 }
-
-
 
 function bindStrategyGateUi(
 id
 ){
 
-const g =
-algoGate(
+function gate(){
+
+return algoGate(
 id
 );
+
+}
+
+const g =
+gate();
 const slEl =
 document.getElementById(
 `algo-sl-pct-of-x-${id}`
@@ -4461,6 +4486,8 @@ g.slPctOfX
 );
 const commit =
 ()=>{
+const live =
+gate();
 const next =
 clampSlPctOfX(
 slEl.value
@@ -4471,29 +4498,17 @@ next
 );
 if(
 next ===
-g.slPctOfX
+live.slPctOfX
 ){
 return;
 }
-g.slPctOfX =
+live.slPctOfX =
 next;
 persistAlgoSettings();
 };
-slEl.addEventListener(
-"change",
+bindAlgoNumericField(
+slEl,
 commit
-);
-slEl.addEventListener(
-"keydown",
-event=>{
-if(
-event.key ===
-"Enter"
-){
-event.preventDefault();
-slEl.blur();
-}
-}
 );
 }
 
@@ -4506,6 +4521,8 @@ g.pullbackBeforeArmPct
 );
 const commit =
 ()=>{
+const live =
+gate();
 const next =
 clampPullbackBeforeArmPct(
 pbPctEl.value
@@ -4516,29 +4533,17 @@ next
 );
 if(
 next ===
-g.pullbackBeforeArmPct
+live.pullbackBeforeArmPct
 ){
 return;
 }
-g.pullbackBeforeArmPct =
+live.pullbackBeforeArmPct =
 next;
 persistAlgoSettings();
 };
-pbPctEl.addEventListener(
-"change",
+bindAlgoNumericField(
+pbPctEl,
 commit
-);
-pbPctEl.addEventListener(
-"keydown",
-event=>{
-if(
-event.key ===
-"Enter"
-){
-event.preventDefault();
-pbPctEl.blur();
-}
-}
 );
 }
 
@@ -4550,7 +4555,7 @@ g.pullbackBeforeArm;
 pbEl.addEventListener(
 "change",
 ()=>{
-g.pullbackBeforeArm =
+gate().pullbackBeforeArm =
 !!pbEl.checked;
 persistAlgoSettings();
 }
@@ -4613,7 +4618,7 @@ filterKey
 filterEl.addEventListener(
 "change",
 ()=>{
-g[
+gate()[
 filterKey
 ] =
 !!filterEl.checked;
@@ -4635,6 +4640,8 @@ atrKey
 atrEl.addEventListener(
 "change",
 ()=>{
+const live =
+gate();
 const next =
 clampAlgoSupertrendAtr(
 atrEl.value
@@ -4643,7 +4650,7 @@ atrEl.value =
 String(
 next
 );
-g[
+live[
 atrKey
 ] =
 next;
@@ -4665,6 +4672,8 @@ factorKey
 factorEl.addEventListener(
 "change",
 ()=>{
+const live =
+gate();
 const next =
 clampAlgoSupertrendFactor(
 factorEl.value
@@ -4673,7 +4682,7 @@ factorEl.value =
 String(
 next
 );
-g[
+live[
 factorKey
 ] =
 next;
@@ -4693,13 +4702,15 @@ tfKey
 tfEl.addEventListener(
 "change",
 ()=>{
+const live =
+gate();
 const next =
 normalizeAlgoSupertrendTf(
 tfEl.value
 );
 tfEl.value =
 next;
-g[
+live[
 tfKey
 ] =
 next;
@@ -5404,28 +5415,60 @@ share3Y
 
 }
 
+function assignAlgoStrategyGate(
+id,
+next
+){
+
+const cur =
+strategyGates[
+id
+];
+
+if(
+cur &&
+typeof cur ===
+"object"
+){
+Object.assign(
+cur,
+next
+);
+return;
+}
+
+strategyGates[
+id
+] =
+next;
+
+}
+
 function restoreStrategyMemoryFromPrefs(){
 
 const prefs =
 readPrefs();
-strategyGates =
-{
-st1:
+assignAlgoStrategyGate(
+"st1",
 readAlgoStrategyGate(
 prefs,
 "st1"
-),
-st2:
+)
+);
+assignAlgoStrategyGate(
+"st2",
 readAlgoStrategyGate(
 prefs,
 "st2"
-),
-st3:
+)
+);
+assignAlgoStrategyGate(
+"st3",
 readAlgoStrategyGate(
 prefs,
 "st3"
 )
-};
+);
 tpRr =
 clampTpRr(
 prefs.tpRr
@@ -5746,6 +5789,8 @@ key
 writePrefs(
 snapshot
 );
+entryOverlay?.refreshPositions?.();
+drawingTools?.scheduleRedraw?.();
 refreshAlgoPatternAnalysis(
 candles,
 entryOverlay,
@@ -6031,23 +6076,9 @@ next;
 persistAlgoSettings();
 };
 
-tpRrInput.addEventListener(
-"change",
+bindAlgoNumericField(
+tpRrInput,
 commitTpRr
-);
-tpRrInput.addEventListener(
-"keydown",
-event=>{
-
-if(
-event.key ===
-"Enter"
-){
-event.preventDefault();
-tpRrInput.blur();
-}
-
-}
 );
 }
 
@@ -6082,23 +6113,9 @@ next;
 persistAlgoSettings();
 };
 
-riskUsdInput.addEventListener(
-"change",
+bindAlgoNumericField(
+riskUsdInput,
 commitRiskUsd
-);
-riskUsdInput.addEventListener(
-"keydown",
-event=>{
-
-if(
-event.key ===
-"Enter"
-){
-event.preventDefault();
-riskUsdInput.blur();
-}
-
-}
 );
 }
 
@@ -6145,25 +6162,10 @@ next
 persistAlgoSettings();
 };
 
-input.addEventListener(
-"change",
+bindAlgoNumericField(
+input,
 commit
 );
-input.addEventListener(
-"keydown",
-event=>{
-
-if(
-event.key ===
-"Enter"
-){
-event.preventDefault();
-input.blur();
-}
-
-}
-);
-
 }
 
 bindPartialTpInput(
@@ -6283,25 +6285,10 @@ next
 persistAlgoSettings();
 };
 
-input.addEventListener(
-"change",
+bindAlgoNumericField(
+input,
 commit
 );
-input.addEventListener(
-"keydown",
-event=>{
-
-if(
-event.key ===
-"Enter"
-){
-event.preventDefault();
-input.blur();
-}
-
-}
-);
-
 }
 
 function bindTrailSlCheck(
@@ -6612,25 +6599,10 @@ render();
 persistAlgoSettings();
 };
 
-input.addEventListener(
-"change",
+bindAlgoNumericField(
+input,
 commit
 );
-input.addEventListener(
-"keydown",
-event=>{
-
-if(
-event.key ===
-"Enter"
-){
-event.preventDefault();
-input.blur();
-}
-
-}
-);
-
 }
 );
 

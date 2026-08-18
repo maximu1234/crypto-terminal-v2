@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 
 import {
 resolvePatternSetupEvent,
+detectPatternEntryEventsFromSetups,
 ENTRY_TIMEOUT_BARS
 } from "../js/algo-trading/pattern-entry-logic.js";
 
@@ -131,6 +132,113 @@ event?.price,
 );
 assert.equal(
 event?.side,
+"long"
+);
+
+}
+);
+
+test(
+"reverse logic flips trade side, keeps the same entry bar",
+()=>{
+
+const b4 =
+5;
+const setup =
+{
+side:
+"long",
+b4,
+p4:
+107,
+p3:
+95,
+b3:
+3
+};
+const rows =
+[
+...padBefore(
+b4
+),
+c(
+6,
+100,
+110,
+99,
+105
+),
+c(
+7,
+104,
+106,
+101,
+102
+),
+c(
+8,
+102,
+108,
+100,
+101
+),
+c(
+9,
+101,
+112,
+100,
+111
+)
+];
+const off =
+detectPatternEntryEventsFromSetups(
+rows,
+[
+setup
+]
+);
+const on =
+detectPatternEntryEventsFromSetups(
+rows,
+[
+setup
+],
+{
+reverseLogic:
+true
+}
+);
+
+assert.equal(
+off[0]?.type,
+"entry"
+);
+assert.equal(
+on[0]?.type,
+"entry"
+);
+assert.equal(
+on[0]?.bar,
+off[0]?.bar
+);
+assert.equal(
+on[0]?.price,
+off[0]?.price
+);
+assert.equal(
+on[0]?.setupBar,
+off[0]?.setupBar
+);
+assert.equal(
+off[0]?.side,
+"long"
+);
+assert.equal(
+on[0]?.side,
+"short"
+);
+assert.equal(
+on[0]?.setupSide,
 "long"
 );
 

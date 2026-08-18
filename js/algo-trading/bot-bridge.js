@@ -6,7 +6,7 @@ loadBotStrategiesPrefs
 } from "./bot-strategy-prefs.js?v=28";
 import {
 readAlgoPattern12Settings
-} from "./pattern-12-settings.js?v=3";
+} from "./pattern-12-settings.js?v=5";
 import {
 loadAlgoTickerFlags,
 ALGO_TICKER_FLAGS_KEY,

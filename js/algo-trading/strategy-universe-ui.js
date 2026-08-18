@@ -13,7 +13,7 @@ ALGO_TICKER_SCAN_TF
 
 import {
 normalizeAlgoStatsMode
-} from "./pattern-trade-stats.js?v=14";
+} from "./pattern-trade-stats.js?v=15";
 
 import {
 loadUniverseScanResult,

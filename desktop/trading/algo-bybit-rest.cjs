@@ -3283,24 +3283,8 @@ const minNotional =
 Number(
 rules?.minNotionalValue
 );
-let targetVol =
-vol;
-
-if(
-Number.isFinite(
-minNotional
-) &&
-minNotional >
-0 &&
-targetVol <
-minNotional
-){
-targetVol =
-minNotional;
-}
-
 const raw =
-targetVol /
+vol /
 p;
 const step =
 Number(
@@ -3330,67 +3314,33 @@ const decimals =
 decimalsFromStep(
 rules.qtyStep
 );
-const stepsFloor =
+const maxQtyByVol =
+vol /
+p;
+const floorQty =
 Math.floor(
-raw /
+(
+maxQtyByVol +
+1e-12
+) /
 step
-);
-const stepsCeil =
-Math.ceil(
-raw /
-step
-);
-const candidates =
-[];
-
-if(
-stepsFloor >
-0
-){
-candidates.push(
-stepsFloor *
-step
-);
-}
-
-if(
-stepsCeil >
-0
-){
-candidates.push(
-stepsCeil *
-step
-);
-}
-
-if(
-min >
-0
-){
-candidates.push(
-min
-);
-}
-
-let bestQty =
-0;
-let bestDiff =
-Infinity;
-
-for(
-const qty of candidates
-){
-if(
-qty <
-min
-){
-continue;
-}
-
+) *
+step;
 const maxQty =
 Number(
 rules?.maxOrderQty
 );
+
+if(
+!(
+floorQty >
+0
+) ||
+floorQty <
+min
+){
+return null;
+}
 
 if(
 Number.isFinite(
@@ -3398,42 +3348,28 @@ maxQty
 ) &&
 maxQty >
 0 &&
-qty >
+floorQty >
 maxQty
 ){
-continue;
-}
-
-const notional =
-qty *
-p;
-const diff =
-Math.abs(
-notional -
-targetVol
-);
-
-if(
-diff <
-bestDiff
-){
-bestDiff =
-diff;
-bestQty =
-qty;
-}
-
+return null;
 }
 
 if(
-bestQty <=
-0
+Number.isFinite(
+minNotional
+) &&
+minNotional >
+0 &&
+floorQty *
+p +
+1e-9 <
+minNotional
 ){
 return null;
 }
 
 return formatQtyValue(
-bestQty,
+floorQty,
 decimals
 );
 }

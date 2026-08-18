@@ -4,7 +4,7 @@
 import {
 normalizeAlgoOptimizeStrategyId,
 algoOptimizeStrategyLabel
-} from "./strategy-param-optimize.js?v=8";
+} from "./strategy-param-optimize.js?v=9";
 
 import {
 ALGO_OPTIMIZE_UNIVERSE_BG_EVENT,
@@ -23,7 +23,7 @@ ALGO_TICKER_SCAN_TF
 
 import {
 normalizeAlgoStatsMode
-} from "./pattern-trade-stats.js?v=14";
+} from "./pattern-trade-stats.js?v=15";
 
 import {
 loadOptimizeUniverseResult,
@@ -32,7 +32,7 @@ saveOptimizeUniverseResult
 
 import {
 pattern12SettingsCacheKey
-} from "./pattern-12-settings.js?v=3";
+} from "./pattern-12-settings.js?v=5";
 
 import {
 publishBotTickerBookFromOptimizeRows,

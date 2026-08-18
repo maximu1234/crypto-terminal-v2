@@ -10,7 +10,7 @@ saveOptimizeUniverseResult
 
 import {
 pattern12SettingsCacheKey
-} from "./pattern-12-settings.js?v=3";
+} from "./pattern-12-settings.js?v=5";
 
 import {
 getActiveExchangeId,

@@ -21,7 +21,7 @@ setActiveAnalysisBotId
 } from "./active-analysis-bot.js?v=1";
 import {
 clampMaxPt1Pt4Bars
-} from "./pattern-entry-logic.js?v=13";
+} from "./pattern-entry-logic.js?v=14";
 import {
 syncBotStrategiesToMain,
 syncAllTickerFlagsRootToMain,
@@ -54,7 +54,7 @@ mountLocalSessionLogsEntry
 } from "./bot-session-logs-viewer.js?v=28";
 import {
 rebalanceTpShares
-} from "./pattern-trade-stats-partial.js?v=21";
+} from "./pattern-trade-stats-partial.js?v=22";
 
 const STATUS_POLL_MS =
 2500;

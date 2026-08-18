@@ -123,6 +123,45 @@ computeAlgoStopLoss(
 );
 
 test(
+"computeAlgoStopLoss reverse side mirrors pt3 around pt4",
+()=>{
+
+const pt3 =
+100;
+const pt4 =
+110;
+const mirrored =
+pt4 *
+pt4 /
+pt3;
+
+approx(
+computeAlgoStopLoss(
+"short",
+pt3,
+pt4,
+50
+),
+interpolateLogPrice(
+pt4,
+mirrored,
+0.5
+)
+);
+approx(
+computeAlgoStopLoss(
+"short",
+pt3,
+pt4,
+100
+),
+mirrored
+);
+
+}
+);
+
+test(
 "computeAlgoTakeProfit long 1:2 is linear $ RR from entry/SL",
 ()=>{
 

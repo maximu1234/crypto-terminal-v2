@@ -7,11 +7,11 @@ loadMarketHistory
 
 import {
 readAlgoPattern12Settings
-} from "./pattern-12-settings.js?v=3";
+} from "./pattern-12-settings.js?v=5";
 
 import {
 normalizeAlgoStatsMode
-} from "./pattern-trade-stats.js?v=14";
+} from "./pattern-trade-stats.js?v=15";
 
 import {
 normalizeAlgoScanTf,
@@ -28,7 +28,7 @@ optimizeAlgoStrategyParams,
 normalizeAlgoOptimizeStrategyId,
 formatAlgoOptimizeParamsBrief,
 comboToApplyPatch
-} from "./strategy-param-optimize.js?v=8";
+} from "./strategy-param-optimize.js?v=9";
 
 /** Тяжёлый CPU-перебор — держим низкую параллельность. */
 export const ALGO_OPTIMIZE_UNIVERSE_CONCURRENCY = 1;

@@ -53,8 +53,9 @@ const HISTORY_TAIL =
 120;
 const MAX_LOG =
 500;
+/* Same depth as the Algo chart / scans: ALGO_TICKER_SCAN_HISTORY_REQUESTS = 10. */
 const PATTERN_HISTORY_REQUESTS =
-5;
+10;
 const PATTERN_SCAN_MIN_BARS =
 PATTERN_HISTORY_REQUESTS *
 1000;
@@ -5292,10 +5293,10 @@ return;
 }
 
 const result =
-await algoRest.fetchKlineHistory(
+await algoRest.fetchKlineHistoryDeep(
 symbol,
 engineConfig.tf,
-1000
+PATTERN_HISTORY_REQUESTS
 );
 
 if(

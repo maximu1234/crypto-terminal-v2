@@ -3,17 +3,18 @@
  * span "x" (St2) → ход pt3↔pt4, ТП = logExt(entry, pt3↔pt4, k)
  * span "y" (St3) → ход pt1↔pt2, ТП = logExt(pt2, pt1↔pt2, k)
  * СЛ / трейлинг — интерполяция в лог-пространстве по X.
- * $ PnL — линейный, как биржа / плашка позиции (risk × |Δ|/|SL0|).
+ * $ PnL — от fill (стоп-проскальзывание) минус тейкер 0.08% вход+выход.
  */
 import {
 clampRiskUsd,
 clampSlPctOfX,
 computeAlgoStopLoss,
 computeLogExtensionPrice,
-linearUsdFromRisk,
+computeStopFillPrice,
+linearUsdFromFill,
 DEFAULT_RISK_USD,
 DEFAULT_SL_PCT_OF_X
-} from "./pattern-entry-positions.js?v=14";
+} from "./pattern-entry-positions.js?v=16";
 
 export const DEFAULT_PARTIAL_TP1_X =
 0.5;
@@ -822,6 +823,14 @@ slPrice
 );
 const initialSl =
 slPrice;
+const fillPrice =
+computeStopFillPrice(
+side,
+entry,
+candles[
+entryBar
+]
+);
 
 if(
 !Number.isFinite(
@@ -986,8 +995,10 @@ TP_SHARES_TOTAL
 )
 : remaining;
 const partUsd =
-linearUsdFromRisk(
+linearUsdFromFill(
+side,
 entry,
+fillPrice,
 tpLevels[
 nextTp
 ],
@@ -1001,8 +1012,16 @@ Number.isFinite(
 partUsd
 )
 ){
+if(
+partUsd >=
+0
+){
 profitUsd +=
 partUsd;
+}else{
+lossUsd +=
+-partUsd;
+}
 }
 remaining =
 Math.max(
@@ -1087,22 +1106,16 @@ slPrice
 ){
 
 const partUsd =
-linearUsdFromRisk(
+linearUsdFromFill(
+side,
 entry,
+fillPrice,
 slPrice,
 initialSl,
 riskUsd,
 remaining
 );
 /* Трейлинг с плюсовым X уводит стоп выше входа — это профит, не убыток. */
-const stopInProfit =
-side ===
-"short"
-? slPrice <
-entry
-: slPrice >
-entry;
-
 if(
 !Number.isFinite(
 partUsd
@@ -1112,13 +1125,14 @@ lossUsd +=
 remaining *
 riskUsd;
 }else if(
-stopInProfit
+partUsd >=
+0
 ){
 profitUsd +=
 partUsd;
 }else{
 lossUsd +=
-partUsd;
+-partUsd;
 }
 remaining =
 0;

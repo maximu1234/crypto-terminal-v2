@@ -3,7 +3,7 @@
  */
 import {
 buildAlgoSupertrendLineData
-} from "./pattern-supertrend-filter.js?v=4";
+} from "./pattern-supertrend-filter.js?v=5";
 
 import {
 splitSupertrendValuedSegments

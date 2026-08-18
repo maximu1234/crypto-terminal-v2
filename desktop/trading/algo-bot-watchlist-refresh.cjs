@@ -1650,7 +1650,9 @@ timeoutBars,
 maxPt1Pt4Bars,
 /* TEMP_PULLBACK_BEFORE_ARM */
 pullbackBeforeArm,
-pullbackBeforeArmPct
+pullbackBeforeArmPct,
+reverseLogic:
+!!patternSettings?.reverseLogic
 }
 );
 

@@ -6,6 +6,13 @@ computeAlgoTradeStats,
 resolveAlgoTradeOutcome
 } from "../js/algo-trading/pattern-trade-stats.js";
 
+import {
+computeAlgoStopLoss,
+computeAlgoTakeProfit,
+computeStopFillPrice,
+linearUsdFromFill
+} from "../js/algo-trading/pattern-entry-positions.js";
+
 function c(
 time,
 o,
@@ -205,7 +212,7 @@ tpRr:
 );
 
 test(
-"dollar pnl: win=linear risk RR, loss=$risk",
+"dollar pnl: win/loss use fill slip + 0.08% taker, qty from p4",
 ()=>{
 
 const candles =
@@ -247,10 +254,7 @@ c(
 )
 ];
 
-const stats =
-computeAlgoTradeStats(
-candles,
-[
+const eventWin =
 {
 type:
 "entry",
@@ -264,7 +268,8 @@ pt3:
 100,
 pt4:
 110
-},
+};
+const eventLoss =
 {
 type:
 "entry",
@@ -278,8 +283,8 @@ pt3:
 100,
 pt4:
 110
-}
-],
+};
+const opts =
 {
 slPctOfX:
 50,
@@ -287,7 +292,64 @@ tpRr:
 2,
 riskUsd:
 1
-}
+};
+const sl =
+computeAlgoStopLoss(
+"long",
+100,
+110,
+50
+);
+const tp =
+computeAlgoTakeProfit(
+"long",
+110,
+sl,
+2
+);
+const fillWin =
+computeStopFillPrice(
+"long",
+110,
+candles[
+1
+]
+);
+const fillLoss =
+computeStopFillPrice(
+"long",
+110,
+candles[
+3
+]
+);
+const expectedWin =
+linearUsdFromFill(
+"long",
+110,
+fillWin,
+tp,
+sl,
+1
+);
+const expectedLoss =
+linearUsdFromFill(
+"long",
+110,
+fillLoss,
+sl,
+sl,
+1
+);
+
+const stats =
+computeAlgoTradeStats(
+candles,
+[
+eventWin,
+eventLoss
+],
+opts
 );
 
 assert.equal(
@@ -298,24 +360,37 @@ assert.equal(
 stats.losses,
 1
 );
-assert.equal(
-stats.lossUsd,
+assert.ok(
+expectedWin <
+2
+);
+assert.ok(
+-expectedLoss >
 1
 );
-/* entry 110, log-mid SL, linear TP RR=2 → profit ≈ $2 */
 assert.ok(
 Math.abs(
 stats.profitUsd -
-2
+expectedWin
 ) <
-1e-6
+1e-9
+);
+assert.ok(
+Math.abs(
+stats.lossUsd +
+expectedLoss
+) <
+1e-9
 );
 assert.ok(
 Math.abs(
 stats.netUsd -
-1
+(
+expectedWin +
+expectedLoss
+)
 ) <
-1e-6
+1e-9
 );
 
 }
@@ -367,11 +442,19 @@ riskUsd: 1
 assert.equal(stats.wins, 2);
 assert.equal(stats.longWins, 1);
 assert.equal(stats.shortWins, 1);
-assert.ok(Math.abs(stats.longWinUsd - 2) < 1e-6);
-assert.ok(Math.abs(stats.shortWinUsd - 2) < 1e-6);
-assert.ok(Math.abs(stats.longNetUsd - 2) < 1e-6);
-assert.ok(Math.abs(stats.shortNetUsd - 2) < 1e-6);
-assert.ok(Math.abs(stats.netUsd - 4) < 1e-6);
+const longSl = computeAlgoStopLoss("long", 100, 110, 50);
+const longTp = computeAlgoTakeProfit("long", 110, longSl, 2);
+const longFill = computeStopFillPrice("long", 110, candles[1]);
+const longNet = linearUsdFromFill("long", 110, longFill, longTp, longSl, 1);
+const shortSl = computeAlgoStopLoss("short", 100, 90, 50);
+const shortTp = computeAlgoTakeProfit("short", 90, shortSl, 2);
+const shortFill = computeStopFillPrice("short", 90, candles[4]);
+const shortNet = linearUsdFromFill("short", 90, shortFill, shortTp, shortSl, 1);
+assert.ok(Math.abs(stats.longWinUsd - longNet) < 1e-9);
+assert.ok(Math.abs(stats.shortWinUsd - shortNet) < 1e-9);
+assert.ok(Math.abs(stats.longNetUsd - longNet) < 1e-9);
+assert.ok(Math.abs(stats.shortNetUsd - shortNet) < 1e-9);
+assert.ok(Math.abs(stats.netUsd - (longNet + shortNet)) < 1e-9);
 
 }
 );
