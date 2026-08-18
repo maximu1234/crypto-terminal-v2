@@ -219,7 +219,7 @@ mountScriptTerminalStatus
 
 import {
 resumeScriptScanBackgroundJob
-} from "./script-scan-background.js?v=15";
+} from "./script-scan-background.js?v=16";
 
 let currentDataset = "all";
 let currentTF = "60";

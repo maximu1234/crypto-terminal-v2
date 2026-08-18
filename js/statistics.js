@@ -7,7 +7,7 @@ cacheStorageKey,
 getStatsJobState,
 startStatsBackgroundRefresh,
 resumeStatsBackgroundJob
-} from "./statistics-background.js?v=9";
+} from "./statistics-background.js?v=10";
 
 import {
 getActiveExchangeDefinition,

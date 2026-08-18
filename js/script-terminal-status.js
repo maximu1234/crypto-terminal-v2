@@ -6,7 +6,7 @@ import {
 getScriptScanNextRunAt,
 isScriptScanBackgroundRunning,
 SCRIPT_SCAN_BG_EVENT
-} from "./script-scan-background.js?v=15";
+} from "./script-scan-background.js?v=16";
 
 import {
 loadScriptPageState
@@ -19,7 +19,7 @@ isTerminalPage
 import {
 FEATURE_NAV_PREF_EVENT,
 isScriptNavEnabled
-} from "./desktop-feature-nav-prefs.js?v=2";
+} from "./desktop-feature-nav-prefs.js?v=3";
 
 function formatCountdown(
 ms

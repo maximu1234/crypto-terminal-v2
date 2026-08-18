@@ -65,7 +65,7 @@ Object.freeze({
 "desktop-menu-bar-tray-prefs.js":
 3,
 "desktop-feature-nav-prefs.js":
-2,
+3,
 "desktop-open-chart.js":
 3,
 "trade-diary-access.js":
@@ -287,7 +287,7 @@ Object.freeze({
 "script-terminal-status.js":
 9,
 "script-scan-background.js":
-15,
+16,
 "script-favorites-list.js":
 2,
 "algo-trading.js":
@@ -350,7 +350,7 @@ Object.freeze({
 "algo-trading/modal-results-storage.js":
 5,
 "algo-trading/optimize-universe-background.js":
-4,
+5,
 "algo-trading/bot-ticker-book.js":
 7,
 "algo-trading/ticker-strategy-overlays.js":
@@ -372,9 +372,9 @@ Object.freeze({
 "algo-trading/bot-bridge.js":
 18,
 "algo-trading/bot-alert-bridge.js":
-6,
+7,
 "algo-trading/desktop-site-boot.js":
-2,
+3,
 "algo-trading/bot-strategy-prefs.js":
 28,
 "algo-trading/active-analysis-bot.js":
@@ -538,7 +538,7 @@ Object.freeze({
 "focus-blur-after-pick.js":
 3,
 "site-boot.js":
-116,
+118,
 "site-header.js":
 5,
 "site-header-nav.js":
@@ -711,7 +711,7 @@ Object.freeze({
 "app-settings-window.js":
 17,
 "app-settings-system-panel.js":
-15,
+16,
 "app-settings-hotkeys-panel.js":
 3,
 "app-settings-secret.js":
@@ -773,7 +773,7 @@ Object.freeze({
 "statistics.js":
 13,
 "statistics-background.js":
-9,
+10,
 "trade-calculator.js":
 3,
 "system-admin-page.js":

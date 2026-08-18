@@ -14,7 +14,7 @@ isAlgoOptimizeUniverseJobRunning,
 getAlgoOptimizeUniverseJobStrategy,
 readAlgoOptimizeUniverseJob,
 resumeAlgoOptimizeUniverseJob
-} from "./optimize-universe-background.js?v=4";
+} from "./optimize-universe-background.js?v=5";
 
 import {
 normalizeAlgoScanTf,

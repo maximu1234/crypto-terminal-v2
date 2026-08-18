@@ -27,6 +27,10 @@ EXCHANGE_CHANGED_EVENT,
 getActiveExchangeId
 } from "./market-api.js?v=6";
 
+import {
+shouldRunScriptBackgroundJobs
+} from "./desktop-feature-nav-prefs.js?v=3";
+
 export const SCRIPT_SCAN_BG_EVENT =
 "script-scan-bg-update";
 
@@ -1180,7 +1184,7 @@ true
 ){
 
 if(
-!isDesktopShell()
+!shouldRunScriptBackgroundJobs()
 ){
 return;
 }
@@ -1241,7 +1245,7 @@ nextRunAt
 export function runBackgroundAutoScan(){
 
 if(
-!isDesktopShell()
+!shouldRunScriptBackgroundJobs()
 ){
 return null;
 }
@@ -1511,7 +1515,7 @@ onExchangeChanged
 export function resumeScriptScanBackgroundJob(){
 
 if(
-!isDesktopShell()
+!shouldRunScriptBackgroundJobs()
 ){
 return;
 }

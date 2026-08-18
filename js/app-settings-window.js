@@ -437,7 +437,7 @@ const {
 mountSystemSettingsPanel
 } =
 await import(
-"./app-settings-system-panel.js?v=15"
+"./app-settings-system-panel.js?v=16"
 );
 
 systemCtl =

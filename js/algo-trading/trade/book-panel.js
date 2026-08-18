@@ -23,7 +23,7 @@ import {
 isAlgoBotAlertRow,
 rememberBotAlertShapeId,
 retagKnownAlgoBotAlerts
-} from "../bot-alert-bridge.js?v=6";
+} from "../bot-alert-bridge.js?v=7";
 
 import {
 fetchAlgoBotStatus,

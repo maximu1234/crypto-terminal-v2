@@ -69,16 +69,55 @@ initSiteHeader,
 enforceSiteHeaderAfterBoot
 } from "./site-header.js?v=5";
 
+import {
+FEATURE_NAV_PREF_EVENT,
+shouldRunAlgoBackgroundJobs,
+shouldRunScriptBackgroundJobs
+} from "./desktop-feature-nav-prefs.js?v=3";
+
 initSuppressNativeContextMenu();
 initFocusBlurAfterPick();
 initDesktopAppUi();
 initSiteHeader();
 enforceSiteHeaderAfterBoot();
 
+function isStatsBackgroundJobRunning(){
+
+try{
+const raw =
+localStorage.getItem(
+"stats_bg_job_v3"
+);
+
+if(
+!raw
+){
+return false;
+}
+
+const parsed =
+JSON.parse(
+raw
+);
+
+return parsed?.status ===
+"running";
+}catch{
+return false;
+}
+
+}
+
 function resumeStatsBackground(){
 
+if(
+!isStatsBackgroundJobRunning()
+){
+return;
+}
+
 void import(
-"./statistics-background.js?v=9"
+"./statistics-background.js?v=10"
 ).then(
 m=>
 m.resumeStatsBackgroundJob?.()
@@ -96,13 +135,13 @@ err
 function bootScriptScanBackground(){
 
 if(
-!window.cryptoTerminalDesktop?.isDesktop
+!shouldRunScriptBackgroundJobs()
 ){
 return;
 }
 
 void import(
-"./script-scan-background.js?v=15"
+"./script-scan-background.js?v=16"
 ).then(
 m=>
 m.resumeScriptScanBackgroundJob?.()
@@ -117,7 +156,7 @@ err
 
 }
 
-function bootAlgoDesktopBackgroundJobs(){
+function stopScriptScanBackgroundFromBoot(){
 
 if(
 !window.cryptoTerminalDesktop?.isDesktop
@@ -126,7 +165,31 @@ return;
 }
 
 void import(
-"./algo-trading/desktop-site-boot.js?v=2"
+"./script-scan-background.js?v=16"
+).then(
+m=>
+m.stopScriptScanBackground?.()
+).catch(
+err=>{
+console.warn(
+"[site-boot] stop script scan background:",
+err
+);
+}
+);
+
+}
+
+function bootAlgoDesktopBackgroundJobs(){
+
+if(
+!shouldRunAlgoBackgroundJobs()
+){
+return;
+}
+
+void import(
+"./algo-trading/desktop-site-boot.js?v=3"
 ).then(
 m=>
 m.bootAlgoDesktopBackgroundJobs?.()
@@ -141,9 +204,81 @@ err
 
 }
 
+function stopAlgoDesktopBackgroundJobsFromBoot(){
+
+if(
+!window.cryptoTerminalDesktop?.isDesktop
+){
+return;
+}
+
+void import(
+"./algo-trading/desktop-site-boot.js?v=3"
+).then(
+m=>
+m.stopAlgoDesktopBackgroundJobs?.()
+).catch(
+err=>{
+console.warn(
+"[site-boot] stop algo desktop background:",
+err
+);
+}
+);
+
+}
+
+function onFeatureNavPrefChanged(
+event
+){
+
+const feature =
+event?.detail?.feature;
+const enabled =
+!!event?.detail?.enabled;
+
+if(
+feature ===
+"script"
+){
+if(
+enabled
+){
+bootScriptScanBackground();
+}else{
+stopScriptScanBackgroundFromBoot();
+}
+return;
+}
+
+if(
+feature ===
+"algo-trading"
+){
+if(
+enabled
+){
+bootAlgoDesktopBackgroundJobs();
+}else{
+stopAlgoDesktopBackgroundJobsFromBoot();
+}
+}
+
+}
+
 bootScriptScanBackground();
 bootAlgoDesktopBackgroundJobs();
 resumeStatsBackground();
+
+if(
+typeof window !==
+"undefined"
+){
+window.addEventListener(
+FEATURE_NAV_PREF_EVENT,
+onFeatureNavPrefChanged
+);
+}
 
 if(
 typeof document !==

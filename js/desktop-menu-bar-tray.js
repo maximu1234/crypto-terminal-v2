@@ -14,7 +14,7 @@ isTradePnlHidden
 
 import {
 syncFeatureNavPrefsToMain
-} from "./desktop-feature-nav-prefs.js?v=2";
+} from "./desktop-feature-nav-prefs.js?v=3";
 
 let traySyncTeardown =
 null;

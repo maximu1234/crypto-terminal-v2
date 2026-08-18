@@ -1,6 +1,7 @@
 /**
- * Видимость пунктов «Скрипт» и «АлгоТрейдинг» в верхнем меню (desktop).
- * По умолчанию оба выключены — первый запуск без этих пунктов.
+ * Видимость пунктов «Скрипт» и «АлгоТрейдинг» в верхнем меню (desktop)
+ * и гейт их фоновых задач (сканер Скрипта / алго-джобы).
+ * По умолчанию оба выключены — первый запуск без пунктов и без фона.
  * Main-process зеркало: desktop/feature-nav-prefs-store.cjs (tray).
  */
 export const SCRIPT_NAV_ENABLED_KEY =
@@ -127,6 +128,18 @@ export function isAlgoTradingNavEnabled(){
 return readFlag(
 ALGO_TRADING_NAV_ENABLED_KEY
 );
+
+}
+
+export function shouldRunScriptBackgroundJobs(){
+
+return isScriptNavEnabled();
+
+}
+
+export function shouldRunAlgoBackgroundJobs(){
+
+return isAlgoTradingNavEnabled();
 
 }
 

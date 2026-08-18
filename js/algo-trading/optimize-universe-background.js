@@ -17,6 +17,10 @@ getActiveExchangeId,
 EXCHANGE_CHANGED_EVENT
 } from "../exchanges/context.js?v=1";
 
+import {
+shouldRunAlgoBackgroundJobs
+} from "../desktop-feature-nav-prefs.js?v=3";
+
 export const ALGO_OPTIMIZE_UNIVERSE_BG_EVENT =
 "algo-optimize-universe-bg-update";
 
@@ -813,7 +817,8 @@ stopAlgoOptimizeUniverseJob();
 export function resumeAlgoOptimizeUniverseJob(){
 
 if(
-!isDesktopShell()
+!isDesktopShell() ||
+!shouldRunAlgoBackgroundJobs()
 ){
 return;
 }

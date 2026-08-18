@@ -28,7 +28,7 @@ isScriptNavEnabled,
 isAlgoTradingNavEnabled,
 setScriptNavEnabled,
 setAlgoTradingNavEnabled
-} from "./desktop-feature-nav-prefs.js?v=2";
+} from "./desktop-feature-nav-prefs.js?v=3";
 
 import {
 TERMINAL_HISTORY_DEPTH_MAX,
@@ -283,7 +283,7 @@ isDesktopShell()
 <input type="checkbox" class="app-settings-toggle-input" id="app-settings-enable-algo-nav" />
 <span class="app-settings-toggle-label">Включить АлгоТрейдинг</span>
 </label>
-<p class="app-settings-panel-hint">Пункты появляются в верхнем меню. По умолчанию выключены.</p>
+<p class="app-settings-panel-hint">Пункты появляются в верхнем меню. Выключенный модуль не крутит фоновые задачи. По умолчанию выключены.</p>
 `
 : "";
 
