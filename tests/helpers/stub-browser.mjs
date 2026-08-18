@@ -18,3 +18,13 @@ if (
 ) {
   globalThis.window = globalThis;
 }
+
+if (
+  typeof globalThis.window.location === "undefined"
+) {
+  globalThis.window.location = {
+    pathname: "/",
+    search: "",
+    href: "http://localhost/"
+  };
+}

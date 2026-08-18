@@ -166,7 +166,7 @@ createDrawingsPersist
 
 import {
 createDrawStyleBar
-} from "./draw-style-bar.js?v=32";
+} from "./draw-style-bar.js?v=34";
 
 import {
 createDrawAlertsChart

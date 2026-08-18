@@ -4,8 +4,7 @@
  */
 import {
 mountTvColorPicker,
-parseDrawColor,
-formatDrawColor
+parseDrawColor
 } from "../draw-color-palette.js?v=6";
 
 import {
@@ -14,36 +13,21 @@ isCoarseTouchViewport
 
 import {
 STROKE,
-DEFAULT_FIB_SPEC,
 FIB_TOOL_DEFAULTS_VERSION,
-RECT_DEFAULT_FILL_COLOR,
 RECT_DEFAULT_FILL_OPACITY,
 RECT_TOOL_DEFAULTS_VERSION
 } from "./constants.js?v=11";
 
 import {
-normalizeFibLineStyle,
-normalizeFibLevelColor,
-normalizeFibLevelWidth,
-cloneDefaultFibRows,
 migrateFibToolDefaults,
 ensureFibLevelsVisible,
-normalizeFibLevelsShape,
-formatFibInputValue,
-parseFibRatioField,
-getFibRows,
-setFibLineStyleButton,
-setFibLevelWidthButton
+getFibRows
 } from "./fib-spec.js?v=13";
 
 import {
 setFibPanelCommitHook,
 closeAllFibLineStyleMenus,
-openFibLineStyleMenu,
-closeAllFibLineWidthMenus,
-openFibLineWidthMenu,
-isFibLineStyleMenuOpenForAnchor,
-isFibLineWidthMenuOpenForAnchor
+closeAllFibLineWidthMenus
 } from "./fib-portals.js?v=3";
 
 import {
@@ -96,6 +80,23 @@ readFvpSettingsPanel,
 bindFvpSettingsPanel,
 closeFvpColorMenu
 } from "./fixed-volume-profile-settings.js?v=3";
+
+import {
+rectSettingsHtml,
+fillRectSettingsPanel as fillRectSettingsPanelDom,
+readRectSettingsPanel,
+bindRectSettingsPanel
+} from "./draw-rect-settings.js?v=1";
+
+import {
+fibSettingsHtml,
+mountFibLevelRows,
+fillFibSettingsPanel as fillFibSettingsPanelDom,
+readFibSettingsPanel,
+bindFibSettingsPanel,
+setFibLevelColorButton,
+mergeFibLevelsAfterGlobalChange
+} from "./draw-fib-settings.js?v=1";
 
 export function createDrawStyleBar(
 deps
@@ -617,265 +618,26 @@ settingsPopover.classList.remove(
 );
 
 settingsPopover.innerHTML =
-`
-<div class="rect-settings">
-<label class="rect-settings-row">
-<span class="rect-settings-label">Border</span>
-<button type="button" class="rect-border-color-btn" title="Цвет линии" aria-label="Цвет линии"></button>
-<button type="button" class="rect-border-style-btn" title="Тип линии" aria-label="Тип линии"></button>
-</label>
-<label class="rect-settings-row rect-settings-row--check">
-<input type="checkbox" class="rect-show-median" />
-<span class="rect-settings-label">Middle line</span>
-<button type="button" class="rect-median-style-btn" title="Тип срединной линии" aria-label="Тип срединной линии"></button>
-<button type="button" class="rect-median-width-btn" title="Толщина срединной линии" aria-label="Толщина">1px</button>
-<button type="button" class="rect-median-color-btn" title="Цвет срединной линии" aria-label="Цвет срединной линии"></button>
-</label>
-<label class="rect-settings-row rect-settings-row--check">
-<input type="checkbox" class="rect-show-fill" checked />
-<span class="rect-settings-label">Background</span>
-<button type="button" class="rect-fill-color-btn" title="Цвет заливки" aria-label="Цвет заливки"></button>
-</label>
-</div>
-`;
+rectSettingsHtml();
 
-const borderStyleBtn =
-settingsPopover.querySelector(
-".rect-border-style-btn"
-);
-const borderColorBtn =
-settingsPopover.querySelector(
-".rect-border-color-btn"
-);
-const medianStyleBtn =
-settingsPopover.querySelector(
-".rect-median-style-btn"
-);
-const medianWidthBtn =
-settingsPopover.querySelector(
-".rect-median-width-btn"
-);
-const medianColorBtn =
-settingsPopover.querySelector(
-".rect-median-color-btn"
-);
-const fillColorBtn =
-settingsPopover.querySelector(
-".rect-fill-color-btn"
-);
-
-if(
-borderStyleBtn
-){
-setFibLineStyleButton(
-borderStyleBtn,
-"solid"
-);
-}
-
-if(
-medianStyleBtn
-){
-setFibLineStyleButton(
-medianStyleBtn,
-"dashed"
-);
-}
-
-if(
-medianWidthBtn
-){
-setFibLevelWidthButton(
-medianWidthBtn,
-null,
-1
-);
-}
-
-settingsPopover.addEventListener(
-"mousedown",
-e=>{
-
-if(
-!getAlive()
-){
-return;
-}
-
-const styleBtn =
-e.target.closest(
-".rect-border-style-btn, .rect-median-style-btn"
-);
-
-if(
-styleBtn
-){
-
-e.preventDefault();
-e.stopPropagation();
-
-const wasOpen =
-isFibLineStyleMenuOpenForAnchor(
-styleBtn
-);
-
-closeAllFibLineStyleMenus();
-
-if(
-!wasOpen
-){
-openFibLineStyleMenu(
-styleBtn
-);
-}
-
-return;
-
-}
-
-const widthBtn =
-e.target.closest(
-".rect-median-width-btn"
-);
-
-if(
-widthBtn
-){
-
-e.preventDefault();
-e.stopPropagation();
-
-const shape =
-getRectEditShape();
-const fallback =
-shape?.medianLineWidth ||
-1;
-const wasWidthOpen =
-isFibLineWidthMenuOpenForAnchor(
-widthBtn
-);
-
-closeAllFibLineWidthMenus();
-closeAllFibLineStyleMenus();
-
-if(
-!wasWidthOpen
-){
-openFibLineWidthMenu(
-widthBtn,
+bindRectSettingsPanel(
+settingsPopover,
+{
+getAlive,
+canApply: canApplyRectPanel,
+onApply: applyRectSettingsFromPanel,
+getRectEditShape,
+openColorMenu:(
+btn,
 fallback
-);
-}
-
-return;
-
-}
-
-const colorBtn =
-e.target.closest(
-".rect-border-color-btn, .rect-median-color-btn, .rect-fill-color-btn"
-);
-
-if(
-colorBtn
-){
-
-e.preventDefault();
-e.stopPropagation();
-
-const shape =
-getRectEditShape();
-const isFill =
-colorBtn.classList.contains(
-"rect-fill-color-btn"
-);
-const isBorder =
-colorBtn.classList.contains(
-"rect-border-color-btn"
-);
-const fallback =
-isFill
-? (
-shape?.fillColor ||
-shape?.color ||
-STROKE
-)
-: isBorder
-? (
-shape?.color ||
-STROKE
-)
-: (
-shape?.medianColor ||
-shape?.color ||
-STROKE
-);
-
+)=>{
 closeFibColorMenu();
 openRectColorMenu(
-colorBtn,
+btn,
 fallback
 );
-
-}
-
 },
-{
-capture:true,
 signal
-}
-);
-
-settingsPopover.addEventListener(
-"change",
-e=>{
-
-if(
-!canApplyRectPanel()
-){
-return;
-}
-
-if(
-e.target.matches(
-".rect-show-median, .rect-show-fill"
-)
-){
-applyRectSettingsFromPanel();
-}
-
-},
-{
-signal
-}
-);
-
-[
-borderStyleBtn,
-borderColorBtn,
-medianStyleBtn,
-medianWidthBtn,
-medianColorBtn,
-fillColorBtn
-].forEach(
-btn=>{
-
-if(
-!btn
-){
-return;
-}
-
-btn.addEventListener(
-"click",
-e=>{
-e.stopPropagation();
-},
-{
-signal
-}
-);
-
 }
 );
 
@@ -897,137 +659,10 @@ rectPanelSyncing = true;
 
 try{
 
-const borderStyleBtn =
-settingsPopover.querySelector(
-".rect-border-style-btn"
+fillRectSettingsPanelDom(
+settingsPopover,
+shape
 );
-const borderColorBtn =
-settingsPopover.querySelector(
-".rect-border-color-btn"
-);
-const medianStyleBtn =
-settingsPopover.querySelector(
-".rect-median-style-btn"
-);
-const medianWidthBtn =
-settingsPopover.querySelector(
-".rect-median-width-btn"
-);
-const medianColorBtn =
-settingsPopover.querySelector(
-".rect-median-color-btn"
-);
-const fillColorBtn =
-settingsPopover.querySelector(
-".rect-fill-color-btn"
-);
-const showMedian =
-settingsPopover.querySelector(
-".rect-show-median"
-);
-const showFill =
-settingsPopover.querySelector(
-".rect-show-fill"
-);
-
-if(
-borderStyleBtn
-){
-setFibLineStyleButton(
-borderStyleBtn,
-shape?.lineStyle ||
-"solid"
-);
-}
-
-if(
-borderColorBtn
-){
-borderColorBtn.style.setProperty(
-"--rect-swatch",
-shape?.color ||
-STROKE
-);
-}
-
-if(
-medianStyleBtn
-){
-setFibLineStyleButton(
-medianStyleBtn,
-shape?.medianLineStyle ||
-"dashed"
-);
-}
-
-if(
-medianWidthBtn
-){
-setFibLevelWidthButton(
-medianWidthBtn,
-null,
-shape?.medianLineWidth ||
-1
-);
-}
-
-const medianColor =
-shape?.medianColor ||
-shape?.color ||
-STROKE;
-const fillColor =
-shape?.fillColor ||
-shape?.color ||
-RECT_DEFAULT_FILL_COLOR;
-const fillOpacity =
-Number.isFinite(
-Number(
-shape?.fillOpacity
-)
-)
-? Number(
-shape.fillOpacity
-)
-: RECT_DEFAULT_FILL_OPACITY;
-
-if(
-medianColorBtn
-){
-medianColorBtn.style.setProperty(
-"--rect-swatch",
-medianColor
-);
-}
-
-if(
-fillColorBtn
-){
-fillColorBtn.style.setProperty(
-"--rect-swatch",
-formatDrawColor(
-fillColor,
-Math.round(
-fillOpacity *
-100
-)
-)
-);
-}
-
-if(
-showMedian
-){
-showMedian.checked =
-!!shape?.showMedian;
-}
-
-if(
-showFill
-){
-showFill.checked =
-shape?.showFill !==
-false;
-}
 
 }finally{
 rectPanelSyncing = false;
@@ -1035,127 +670,11 @@ rectPanelSyncing = false;
 
 }
 
-function parseRectFillSwatch(
-raw
-){
-
-const parsed =
-parseDrawColor(
-raw
-);
-
-if(
-!parsed
-){
-return {
-fillColor:
-raw ||
-RECT_DEFAULT_FILL_COLOR,
-fillOpacity:
-RECT_DEFAULT_FILL_OPACITY
-};
-}
-
-return {
-fillColor:
-parsed.hex,
-fillOpacity:
-Math.max(
-0,
-Math.min(
-1,
-parsed.opacity /
-100
-)
-)
-};
-
-}
-
 function readRectPanelFromDOM(){
 
-if(
-!settingsPopover
-){
-return {};
-}
-
-const borderStyleBtn =
-settingsPopover.querySelector(
-".rect-border-style-btn"
+return readRectSettingsPanel(
+settingsPopover
 );
-const borderColorBtn =
-settingsPopover.querySelector(
-".rect-border-color-btn"
-);
-const medianStyleBtn =
-settingsPopover.querySelector(
-".rect-median-style-btn"
-);
-const medianWidthBtn =
-settingsPopover.querySelector(
-".rect-median-width-btn"
-);
-const medianColorBtn =
-settingsPopover.querySelector(
-".rect-median-color-btn"
-);
-const fillColorBtn =
-settingsPopover.querySelector(
-".rect-fill-color-btn"
-);
-
-const fillSwatch =
-fillColorBtn?.style.getPropertyValue(
-"--rect-swatch"
-)?.trim() ||
-RECT_DEFAULT_FILL_COLOR;
-const fill =
-parseRectFillSwatch(
-fillSwatch
-);
-
-return {
-color:
-borderColorBtn?.style.getPropertyValue(
-"--rect-swatch"
-)?.trim() ||
-STROKE,
-lineStyle:
-normalizeFibLineStyle(
-borderStyleBtn?.dataset.lineStyle
-) ||
-"solid",
-showMedian:
-!!settingsPopover.querySelector(
-".rect-show-median"
-)?.checked,
-showFill:
-!!settingsPopover.querySelector(
-".rect-show-fill"
-)?.checked,
-medianLineStyle:
-normalizeFibLineStyle(
-medianStyleBtn?.dataset.lineStyle
-) ||
-"dashed",
-medianLineWidth:
-normalizeFibLevelWidth(
-Number(
-medianWidthBtn?.dataset.lineWidth
-)
-) ||
-1,
-medianColor:
-medianColorBtn?.style.getPropertyValue(
-"--rect-swatch"
-)?.trim() ||
-STROKE,
-fillColor:
-fill.fillColor,
-fillOpacity:
-fill.fillOpacity
-};
 
 }
 
@@ -1427,261 +946,33 @@ settingsPopover.classList.remove(
 );
 
 settingsPopover.innerHTML =
-`
-<div class="fib-settings">
-<label class="fib-trend-label">
-<input type="checkbox" id="fib-show-trend-line" />
-<span>Линия тренда</span>
-</label>
-<div class="fib-levels-global">
-<span class="fib-levels-global-label">Levels line</span>
-<button type="button" class="fib-global-line-style-btn" data-line-style="solid" title="Тип линии" aria-label="Тип линии"></button>
-<button type="button" class="fib-global-line-width-btn" title="Толщина линии" aria-label="Толщина линии">1px</button>
-</div>
-<div class="fib-levels-grid" id="fib-level-rows-root"></div>
-</div>
-`;
+fibSettingsHtml();
 
-const globalStyleBtn =
-settingsPopover.querySelector(
-".fib-global-line-style-btn"
+mountFibLevelRows(
+settingsPopover
 );
 
-const globalWidthBtn =
-settingsPopover.querySelector(
-".fib-global-line-width-btn"
-);
-
-if(
-globalStyleBtn
-){
-setFibLineStyleButton(
-globalStyleBtn,
-"solid"
-);
-}
-
-if(
-globalWidthBtn
-){
-setFibLevelWidthButton(
-globalWidthBtn,
-null,
-1
-);
-}
-
-const root =
-settingsPopover.querySelector("#fib-level-rows-root");
-
-DEFAULT_FIB_SPEC.forEach((spec,i)=>{
-
-const row =
-document.createElement("div");
-
-row.className = "fib-level-row";
-row.dataset.fibIndex =
-String(i);
-
-row.innerHTML =
-`
-<input type="checkbox" class="fib-level-on"/>
-<input type="text" class="fib-level-val" autocomplete="off" spellcheck="false"/>
-<button type="button" class="fib-level-color-btn" title="Цвет уровня" aria-label="Цвет уровня"></button>
-<label class="fib-level-bg-label" title="Включить фон">
-<input type="checkbox" class="fib-level-bg" aria-label="Включить фон"/>
-</label>
-`;
-
-const on =
-row.querySelector(".fib-level-on");
-const val =
-row.querySelector(".fib-level-val");
-const colorBtn =
-row.querySelector(".fib-level-color-btn");
-
-if(on){
-on.checked = !!spec.enabled;
-}
-
-if(val){
-val.value =
-formatFibInputValue(spec.v);
-}
-
-setFibLevelColorButton(
-colorBtn,
-normalizeFibLevelColor(spec.color),
-STROKE
-);
-
-root.appendChild(row);
-
-});
-
-settingsPopover.addEventListener("mousedown", e=>{
-
-if(!getAlive()){
-return;
-}
-
-const colorBtn =
-e.target.closest(".fib-level-color-btn");
-
-if(colorBtn){
-
-e.preventDefault();
-e.stopPropagation();
-
-const shape =
-getFibEditShape();
-
-const fallback =
-shape?.color || STROKE;
-
+bindFibSettingsPanel(
+settingsPopover,
+{
+getAlive,
+canApply: canApplyFibPanel,
+getFibEditShape,
+openColorMenu:(
+btn,
+fallback
+)=>{
 closeFibColorMenu();
 openFibColorMenu(
-colorBtn,
+btn,
 fallback
 );
-
-return;
-
-}
-
-const styleBtn =
-e.target.closest(
-".fib-global-line-style-btn"
-);
-
-if(styleBtn){
-
-e.preventDefault();
-e.stopPropagation();
-
-const wasOpen =
-isFibLineStyleMenuOpenForAnchor(
-styleBtn
-);
-
-closeAllFibLineStyleMenus();
-
-if(!wasOpen){
-openFibLineStyleMenu(
-styleBtn
-);
-}
-
-return;
-
-}
-
-const widthBtn =
-e.target.closest(
-".fib-global-line-width-btn"
-);
-
-if(widthBtn){
-
-e.preventDefault();
-e.stopPropagation();
-
-const shape =
-getFibEditShape();
-
-const fallback =
-shape?.lineWidth || 1;
-
-const wasWidthOpen =
-isFibLineWidthMenuOpenForAnchor(
-widthBtn
-);
-
-closeAllFibLineWidthMenus();
-closeAllFibLineStyleMenus();
-
-if(!wasWidthOpen){
-openFibLineWidthMenu(
-widthBtn,
-fallback
-);
-}
-
-return;
-
-}
-
 },
-{
-capture:true,
+scheduleImmediate: scheduleFibApplyImmediate,
+scheduleDebounced: scheduleFibApplyDebounced,
 signal
 }
 );
-
-settingsPopover.addEventListener("change", e=>{
-
-if(!canApplyFibPanel()){
-return;
-}
-
-if(
-e.target?.id === "fib-show-trend-line" ||
-e.target?.classList.contains("fib-level-on") ||
-e.target?.classList.contains("fib-level-bg")
-){
-scheduleFibApplyImmediate();
-}
-
-},
-{
-signal
-}
-);
-
-settingsPopover.addEventListener("input", e=>{
-
-if(!canApplyFibPanel()){
-return;
-}
-
-if(
-e.target?.classList.contains("fib-level-val")
-){
-scheduleFibApplyDebounced();
-}
-
-},
-{
-signal
-}
-);
-
-if(!settingsPopover.dataset.fibLineMenuBound){
-
-settingsPopover.dataset.fibLineMenuBound = "1";
-
-document.addEventListener("mousedown", e=>{
-
-if(
-e.target.closest(
-".fib-global-line-style-btn, .fib-line-style-menu--portal, .fib-global-line-width-btn, .fib-line-width-menu--portal"
-)
-){
-return;
-}
-
-closeAllFibLineStyleMenus();
-closeAllFibLineWidthMenus();
-
-});
-
-window.addEventListener("scroll", closeAllFibLineStyleMenus, true);
-window.addEventListener("scroll", closeAllFibLineWidthMenus, true);
-
-window.addEventListener("resize", closeAllFibLineStyleMenus);
-window.addEventListener("resize", closeAllFibLineWidthMenus);
-
-}
 
 }
 
@@ -1791,27 +1082,6 @@ commitFibPanelToShape();
 
 }
 
-function setFibLevelColorButton(btn, color, fallback){
-
-if(!btn){
-return;
-}
-
-const picked =
-normalizeFibLevelColor(color);
-
-if(picked){
-btn.dataset.customColor = picked;
-btn.style.background = picked;
-btn.classList.add("has-custom");
-return;
-}
-
-delete btn.dataset.customColor;
-btn.style.background = fallback || STROKE;
-btn.classList.remove("has-custom");
-
-}
 
 function closeFibColorMenu(){
 
@@ -2059,194 +1329,13 @@ function readFibPanelFromDOM(){
 
 ensureFibSettingsPanel();
 
-const template =
-cloneDefaultFibRows();
-
-const trendEl =
-settingsPopover.querySelector("#fib-show-trend-line");
-
-const fibShowTrendLine =
-trendEl
-? !!trendEl.checked
-: false;
-
-const globalStyleBtn =
-settingsPopover.querySelector(
-".fib-global-line-style-btn"
+return readFibSettingsPanel(
+settingsPopover
 );
 
-const globalWidthBtn =
-settingsPopover.querySelector(
-".fib-global-line-width-btn"
-);
-
-const globalLineStyle =
-normalizeFibLineStyle(
-globalStyleBtn?.dataset.lineStyle
-);
-
-const globalLineWidth =
-normalizeFibLevelWidth(
-globalWidthBtn?.dataset.customWidth
-) ||
-normalizeFibLevelWidth(
-globalWidthBtn?.textContent
-) ||
-1;
-
-settingsPopover.querySelectorAll(".fib-level-row").forEach((row,i)=>{
-
-if(
-i >= template.length
-){
-return;
 }
 
-const valInp =
-row.querySelector(".fib-level-val");
-const chk =
-row.querySelector(".fib-level-on");
-const bgChk =
-row.querySelector(".fib-level-bg");
-const colorBtn =
-row.querySelector(".fib-level-color-btn");
 
-const parsed =
-parseFibRatioField(
-valInp?.value
-);
-
-template[i].v =
-parsed != null
-? parsed
-: DEFAULT_FIB_SPEC[i].v;
-
-template[i].enabled =
-!!chk?.checked;
-
-template[i].fillBg =
-!!bgChk?.checked;
-
-template[i].lineStyle =
-globalLineStyle;
-
-template[i].lineWidth =
-globalLineWidth;
-
-const levelColor =
-normalizeFibLevelColor(
-colorBtn?.dataset.customColor
-);
-
-if(levelColor){
-template[i].color = levelColor;
-}else{
-
-const defColor =
-normalizeFibLevelColor(
-DEFAULT_FIB_SPEC[i]?.color
-);
-
-if(defColor){
-template[i].color = defColor;
-}else{
-delete template[i].color;
-}
-
-}
-
-});
-
-return {
-fibLevels:template,
-fibShowTrendLine,
-lineWidth: globalLineWidth,
-lineStyle: globalLineStyle
-};
-
-}
-
-function mergeFibLevelsAfterGlobalChange(
-shape,
-panel,
-{
-clearColors = false,
-clearWidths = false
-}
-){
-
-let levels =
-panel
-? JSON.parse(
-JSON.stringify(panel.fibLevels)
-)
-: JSON.parse(
-JSON.stringify(
-normalizeFibLevelsShape(shape.fibLevels)
-)
-);
-
-levels =
-normalizeFibLevelsShape(levels);
-
-levels.forEach(row=>{
-
-if(clearColors){
-delete row.color;
-}
-
-if(clearWidths){
-delete row.lineWidth;
-}
-
-});
-
-if(panel){
-
-panel.fibLevels.forEach((pr,i)=>{
-
-if(
-i >= levels.length
-){
-return;
-}
-
-levels[i].enabled = !!pr.enabled;
-levels[i].fillBg = !!pr.fillBg;
-levels[i].v = pr.v;
-levels[i].lineStyle =
-normalizeFibLineStyle(pr.lineStyle);
-
-const levelColor =
-normalizeFibLevelColor(pr.color);
-
-if(
-levelColor &&
-!clearColors
-){
-levels[i].color = levelColor;
-}
-
-const levelWidth =
-normalizeFibLevelWidth(pr.lineWidth);
-
-if(
-levelWidth &&
-!clearWidths
-){
-levels[i].lineWidth = levelWidth;
-}
-
-});
-
-shape.fibShowTrendLine =
-panel.fibShowTrendLine;
-
-}
-
-shape.fibLevels = levels;
-
-}
 
 function applyFibGlobalColorFromToolbar(shape, color){
 
@@ -2319,112 +1408,13 @@ fibPanelSyncing = true;
 
 try{
 
-const rows =
-Array.isArray(fibLevels) &&
-fibLevels.length === DEFAULT_FIB_SPEC.length
-? fibLevels.map((row,i)=>{
-const def =
-DEFAULT_FIB_SPEC[i];
-const levelColor =
-normalizeFibLevelColor(row.color) ||
-normalizeFibLevelColor(def?.color);
-return {
-v: Number.isFinite(row.v) ? row.v : def?.v ?? 0,
-enabled: !!row.enabled,
-fillBg: !!row.fillBg,
-lineStyle: normalizeFibLineStyle(row.lineStyle) || "solid",
-lineWidth: normalizeFibLevelWidth(row.lineWidth) || 1,
-...(levelColor ? { color: levelColor } : {})
-};
-})
-: cloneDefaultFibRows();
-
-const baseColor =
-fallbackColor || STROKE;
-
-const baseWidth =
-normalizeFibLevelWidth(fallbackWidth) || 1;
-
-const baseLineStyle =
-rows.find(
-row=>row.enabled
-)?.lineStyle ||
-rows[
-0
-]?.lineStyle ||
-"solid";
-
-const trendEl =
-settingsPopover.querySelector("#fib-show-trend-line");
-
-if(trendEl){
-
-trendEl.checked =
-!!fibShowTrendLine;
-
-}
-
-const globalStyleBtn =
-settingsPopover.querySelector(
-".fib-global-line-style-btn"
+fillFibSettingsPanelDom(
+settingsPopover,
+fibLevels,
+fibShowTrendLine,
+fallbackColor,
+fallbackWidth
 );
-
-const globalWidthBtn =
-settingsPopover.querySelector(
-".fib-global-line-width-btn"
-);
-
-setFibLineStyleButton(
-globalStyleBtn,
-baseLineStyle
-);
-
-setFibLevelWidthButton(
-globalWidthBtn,
-baseWidth,
-baseWidth
-);
-
-rows.forEach((row,i)=>{
-
-const wrap =
-settingsPopover.querySelector(
-`.fib-level-row[data-fib-index="${i}"]`
-);
-
-if(!wrap){
-return;
-}
-
-const on =
-wrap.querySelector(".fib-level-on");
-const bg =
-wrap.querySelector(".fib-level-bg");
-const val =
-wrap.querySelector(".fib-level-val");
-const colorBtn =
-wrap.querySelector(".fib-level-color-btn");
-
-if(on){
-on.checked = !!row.enabled;
-}
-
-if(bg){
-bg.checked = !!row.fillBg;
-}
-
-if(val){
-val.value =
-formatFibInputValue(row.v);
-}
-
-setFibLevelColorButton(
-colorBtn,
-row.color,
-baseColor
-);
-
-});
 
 }finally{
 fibPanelSyncing = false;
