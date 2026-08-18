@@ -11,6 +11,11 @@ getRectangleHandleScreens
 } from "./arrow-rect.js?v=2";
 
 import {
+getFvpHandleScreens,
+isFvpType
+} from "./fixed-volume-profile.js?v=3";
+
+import {
 isChartLayoutReady
 } from "../chart-layout-gate.js?v=2";
 
@@ -44,7 +49,9 @@ drawBrushPlacementPreview,
 drawChartRulerOverlay,
 drawRegistryPriceAlerts,
 drawPriceScaleLabels,
-onAfterRedraw
+onAfterRedraw,
+getCandles = ()=>
+[]
 } =
 deps;
 
@@ -98,6 +105,32 @@ handle.y
 
 }
 );
+
+}
+
+if(
+isFvpType(
+shape.type
+)
+){
+
+getFvpHandleScreens(
+shape,
+toXY,
+getCandles()
+).forEach(
+handle=>{
+
+drawAnchorCircle(
+ctx,
+handle.x,
+handle.y
+);
+
+}
+);
+
+return;
 
 }
 

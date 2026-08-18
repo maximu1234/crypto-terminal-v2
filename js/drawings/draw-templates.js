@@ -18,6 +18,13 @@ normalizeRectangleShape
 } from "./arrow-rect.js?v=2";
 
 import {
+isFvpType,
+extractFvpStyleSnapshot,
+copyFvpStyleToShape,
+createFvpToolDefaults
+} from "./fixed-volume-profile.js?v=3";
+
+import {
 isPositionType
 } from "./position.js?v=9";
 
@@ -41,6 +48,7 @@ Object.freeze([
 "channel",
 "arrow",
 "rectangle",
+"fvp",
 "text"
 ]);
 
@@ -653,6 +661,21 @@ out.medianLineStyle;
 
 }
 
+if(
+isFvpType(
+type
+)
+){
+
+Object.assign(
+out,
+extractFvpStyleSnapshot(
+shape
+)
+);
+
+}
+
 return out;
 
 }
@@ -700,6 +723,18 @@ out,
 style
 );
 
+}
+
+if(
+isFvpType(
+type
+)
+){
+Object.assign(
+out,
+createFvpToolDefaults(),
+style
+);
 }
 
 return out;
@@ -789,6 +824,19 @@ rectDefaults.color;
 normalizeRectangleShape(
 out,
 rectDefaults
+);
+
+}
+
+if(
+isFvpType(
+type
+)
+){
+
+Object.assign(
+out,
+createFvpToolDefaults()
 );
 
 }
@@ -924,6 +972,17 @@ normalizeRectangleShape(
 shape
 );
 
+}
+
+if(
+isFvpType(
+type
+)
+){
+copyFvpStyleToShape(
+shape,
+snapshot
+);
 }
 
 }

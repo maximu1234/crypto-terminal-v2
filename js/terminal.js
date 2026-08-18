@@ -113,7 +113,7 @@ createSharedDrawUndoStack
 import {
 mountDrawToolbar,
 mountDrawToolIcons
-} from "./draw-ui-shared.js?v=36";
+} from "./draw-ui-shared.js?v=37";
 
 import {
 mountChartSnapshot

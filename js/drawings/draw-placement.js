@@ -38,6 +38,11 @@ isTextTool,
 TEXT_DEFAULT_CONTENT
 } from "./text.js?v=3";
 
+import {
+isFvpType,
+copyFvpStyleToShape
+} from "./fixed-volume-profile.js?v=3";
+
 export function createDrawPlacement(
 deps
 ){
@@ -1194,6 +1199,30 @@ medianColor: rectStyle.medianColor,
 medianLineWidth: rectStyle.medianLineWidth,
 medianLineStyle: rectStyle.medianLineStyle
 });
+}
+
+if(
+isFvpType(
+getPlacement().type
+) &&
+pts.length >=
+2
+){
+
+const fvpStyle =
+baseDefaultStyle(
+"fvp"
+);
+
+created = makeShape("fvp", {
+p1: pts[0],
+p2: pts[1]
+});
+copyFvpStyleToShape(
+created,
+fvpStyle
+);
+
 }
 
 if(isHorizPriceTool(getPlacement().type) && pts.length >= 1){

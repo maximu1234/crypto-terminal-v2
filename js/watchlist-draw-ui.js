@@ -3,7 +3,7 @@ DRAW_TOOLS_PALETTE_ICON_SVG,
 TRASH_ICON_SVG,
 SETTINGS_ICON_SVG,
 getDrawToolbarButtonsHtml
-} from "./draw-ui-shared.js?v=36";
+} from "./draw-ui-shared.js?v=37";
 
 const widgetDrawMenuClosers =
 new Set();

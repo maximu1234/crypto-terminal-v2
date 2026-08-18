@@ -8,7 +8,8 @@ const path = require("path");
 
 const ICONS = [
 "arrow",
-"rectangle"
+"rectangle",
+"fixed-volume-profile"
 ];
 
 const ICON_DIR = path.join(

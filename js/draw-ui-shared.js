@@ -1,6 +1,6 @@
 import {
 getDrawToolIconSrc
-} from "./draw-toolbar-icon-data.js?v=35";
+} from "./draw-toolbar-icon-data.js?v=36";
 
 export function drawToolIconImg(
 name,
@@ -63,6 +63,7 @@ export const TEXT_ICON_SVG = drawToolIconImg("text");
 export const CHANNEL_ICON_SVG = drawToolIconImg("channel");
 export const LONG_POSITION_ICON_SVG = drawToolIconImg("long", "draw-tool-icon draw-pos-icon draw-pos-icon--long");
 export const SHORT_POSITION_ICON_SVG = drawToolIconImg("short", "draw-tool-icon draw-pos-icon draw-pos-icon--short");
+export const FVP_ICON_SVG = drawToolIconImg("fixed-volume-profile");
 export const TRASH_ICON_SVG = drawToolIconImg("trash");
 export const SETTINGS_ICON_SVG = `
 <svg class="draw-settings-icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
@@ -146,6 +147,10 @@ ${RECTANGLE_ICON_SVG}
 </button>
 
 ${getPositionDrawToolbarButtonsHtml(opts)}
+
+<button type="button" class="${btnClass}" data-draw-tool="fvp" title="Fixed Volume Profile">
+${FVP_ICON_SVG}
+</button>
 
 <button type="button" class="${btnClass} draw-tool-clear-all" title="Удалить все объекты на графике (Shift+Backspace)">
 ${TOOLBAR_CLEAR_TRASH_ICON_SVG}

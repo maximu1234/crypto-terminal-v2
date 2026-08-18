@@ -5,7 +5,7 @@ formatDrawColor
 
 import {
 TRASH_ICON_SVG
-} from "../draw-ui-shared.js?v=36";
+} from "../draw-ui-shared.js?v=37";
 
 import {
 closeAllWidgetDrawToolsMenus
@@ -21,7 +21,8 @@ recordDrawingTombstone
 } from "../drawings-storage.js?v=7";
 
 import {
-EXCHANGE_CHANGED_EVENT
+EXCHANGE_CHANGED_EVENT,
+loadMarketHistory
 } from "../market-api.js?v=6";
 
 import {
@@ -66,6 +67,13 @@ moveRectangleHandle
 } from "./arrow-rect.js?v=2";
 
 import {
+bindFvpDataSource,
+clearFvpLtfCache,
+isFvpType,
+fvpBodyDist
+} from "./fixed-volume-profile.js?v=3";
+
+import {
 distToSegment
 } from "./math.js?v=1";
 
@@ -108,7 +116,7 @@ getPositionHandleScreens as resolvePositionHandleScreens
 
 import {
 createDrawPrefs
-} from "./draw-prefs.js?v=3";
+} from "./draw-prefs.js?v=4";
 
 import {
 createPositionDraw
@@ -120,11 +128,11 @@ pickUi
 
 import {
 createDrawHitTester
-} from "./draw-hit.js?v=11";
+} from "./draw-hit.js?v=12";
 
 import {
 createDrawRenderer
-} from "./draw-render.js?v=15";
+} from "./draw-render.js?v=16";
 
 import {
 snapPlotToCandleWick
@@ -154,11 +162,11 @@ createDrawDesktopSelection
 
 import {
 createDrawingsPersist
-} from "./drawings-persist.js?v=10";
+} from "./drawings-persist.js?v=11";
 
 import {
 createDrawStyleBar
-} from "./draw-style-bar.js?v=31";
+} from "./draw-style-bar.js?v=32";
 
 import {
 createDrawAlertsChart
@@ -166,7 +174,7 @@ createDrawAlertsChart
 
 import {
 createDrawPlacement
-} from "./draw-placement.js?v=12";
+} from "./draw-placement.js?v=13";
 
 import {
 createDrawTextEditor,
@@ -180,7 +188,7 @@ createBrushPlacement
 
 import {
 createDrawEditInteraction
-} from "./draw-edit-interaction.js?v=15";
+} from "./draw-edit-interaction.js?v=17";
 
 import {
 createDrawChartInput
@@ -192,7 +200,7 @@ createDrawPriceScale
 
 import {
 createDrawRedrawLoop
-} from "./draw-redraw-loop.js?v=9";
+} from "./draw-redraw-loop.js?v=10";
 
 import {
 isAlgoReducedCloudClient
@@ -2538,6 +2546,14 @@ return [
 
 }
 
+if(
+isFvpType(
+shape.type
+)
+){
+return [];
+}
+
 if(isHorizPriceTool(shape.type)){
 
 return [{
@@ -2712,13 +2728,17 @@ channelBodyDist,
 hitTestChannelBody,
 rectangleBodyDist,
 hitTestRectangleBody,
+hitTestFvpBody,
 drawBodyHitThreshold
 } =
 createDrawHitTester({
 toXY,
 getPlotWidth,
 series,
-pointFromXY
+pointFromXY,
+getCandles:()=>
+getCandles?.() ||
+[]
 });
 
 const {
@@ -2747,7 +2767,10 @@ getEditingTextId:()=>
 textEditor?.editingId?.() ||
 null,
 parseDrawColor,
-formatDrawColor
+formatDrawColor,
+getCandles:()=>
+getCandles?.() ||
+[]
 });
 
 
@@ -2898,7 +2921,10 @@ drawBrushPlacementPreview,
 drawChartRulerOverlay,
 drawRegistryPriceAlerts,
 drawPriceScaleLabels,
-onAfterRedraw:notifyAfterRedraw
+onAfterRedraw:notifyAfterRedraw,
+getCandles:()=>
+getCandles?.() ||
+[]
 });
 
 let redrawCore;
@@ -2913,6 +2939,17 @@ shapeCoordsReady,
 cancelPendingRedraws
 } =
 redrawLoopCtl);
+
+bindFvpDataSource({
+getSymbol,
+getTf,
+getCandles:()=>
+getCandles?.() ||
+[],
+loadHistory: loadMarketHistory,
+scheduleRedraw:()=>
+scheduleRedraw?.()
+});
 
 redraw =
 function(){
@@ -3106,6 +3143,23 @@ px,
 py,
 d,
 toXY
+);
+
+}
+
+if(
+isFvpType(
+d.type
+)
+){
+
+dist = fvpBodyDist(
+px,
+py,
+d,
+toXY,
+getCandles?.() ||
+[]
 );
 
 }
@@ -4365,9 +4419,13 @@ hitTestTrendlineBody,
 hitTestFibBody,
 hitTestChannelBody,
 hitTestRectangleBody,
+hitTestFvpBody,
 hitTestHrayLine,
 channelP4Point,
-drawBodyHitThreshold
+drawBodyHitThreshold,
+getCandles:()=>
+getCandles?.() ||
+[]
 });
 
 ({
@@ -4871,6 +4929,8 @@ onVisibilityHidden();
 };
 
 const onExchangeChanged = ()=>{
+
+clearFvpLtfCache();
 
 if(
 !alive
@@ -5567,6 +5627,8 @@ options = {}
 
 const next =
 getSymbol();
+
+clearFvpLtfCache();
 
 /*
   Не пишем текущий массив drawings в ключ старой монеты: пока грузятся свечи,

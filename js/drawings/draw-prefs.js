@@ -14,6 +14,11 @@ import {
 } from "./arrow-rect.js?v=2";
 
 import {
+  migrateFvpToolDefaults,
+  isFvpType
+} from "./fixed-volume-profile.js?v=3";
+
+import {
   migrateFibToolDefaults,
   ensureFibLevelsVisible
 } from "./fib-spec.js?v=13";
@@ -64,6 +69,7 @@ function loadToolDefaults(){
 "channel",
 "arrow",
 "rectangle",
+"fvp",
 "text",
 "long",
 "short"
@@ -137,6 +143,30 @@ migrated;
 localStorage.setItem(
 defaultsStorageKey(
 "rectangle"
+),
+JSON.stringify(
+migrated
+)
+);
+
+}
+
+if(
+name ===
+"fvp"
+){
+
+const migrated =
+migrateFvpToolDefaults(
+toolDefaults.fvp
+);
+
+toolDefaults.fvp =
+migrated;
+
+localStorage.setItem(
+defaultsStorageKey(
+"fvp"
 ),
 JSON.stringify(
 migrated
@@ -401,6 +431,26 @@ rectSaved.lineWidth ??
 normalizeRectangleShape(
 out,
 rectSaved
+);
+
+}
+
+if(
+isFvpType(
+type
+)
+){
+
+const fvpSaved =
+migrateFvpToolDefaults(
+toolDefaults.fvp ||
+saved ||
+null
+);
+
+Object.assign(
+out,
+fvpSaved
 );
 
 }

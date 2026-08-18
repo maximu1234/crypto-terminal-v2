@@ -20,6 +20,15 @@ drawRectangleShape
 } from "./arrow-rect.js?v=2";
 
 import {
+drawFvpShape
+} from "./fixed-volume-profile-draw.js?v=2";
+
+import {
+isFvpType,
+copyFvpStyleToShape
+} from "./fixed-volume-profile.js?v=3";
+
+import {
 drawBrushPath
 } from "./brush.js?v=2";
 
@@ -60,7 +69,9 @@ getSelectedId,
 getEditingTextId = ()=>
 null,
 parseDrawColor,
-formatDrawColor
+formatDrawColor,
+getCandles = ()=>
+[]
 } = deps;
 
 function drawLine(ctx, x1, y1, x2, y2, color, width, dash){
@@ -401,6 +412,23 @@ toXY,
 shapeStyle,
 parseDrawColor,
 formatDrawColor
+}
+);
+
+}
+
+if(
+isFvpType(
+shape.type
+)
+){
+
+drawFvpShape(
+ctx,
+shape,
+{
+toXY,
+candles: getCandles()
 }
 );
 
@@ -951,6 +979,57 @@ if(
 pts.length ===
 1 &&
 previewXYPoint &&
+isFvpType(
+placement.type
+)
+){
+
+const a =
+toXY(
+pts[
+0
+]
+);
+
+if(
+a
+){
+
+const previewShape =
+{
+type: "fvp",
+p1: pts[0],
+p2:
+pointFromXY(
+previewXYPoint.x,
+previewXYPoint.y
+) ||
+pts[0]
+};
+
+copyFvpStyleToShape(
+previewShape,
+style
+);
+drawFvpShape(
+ctx,
+previewShape,
+{
+toXY,
+candles: getCandles()
+}
+);
+
+}
+
+return;
+
+}
+
+if(
+pts.length ===
+1 &&
+previewXYPoint &&
 placement.type ===
 "fib"
 ){
@@ -1054,6 +1133,20 @@ drawShape(ctx, previewShape, w, h);
 }
 
 if(placement.type === "rectangle" && previewPts.length >= 2){
+drawShape(ctx, previewShape, w, h);
+}
+
+if(
+isFvpType(
+placement.type
+) &&
+previewPts.length >=
+2
+){
+copyFvpStyleToShape(
+previewShape,
+style
+);
 drawShape(ctx, previewShape, w, h);
 }
 

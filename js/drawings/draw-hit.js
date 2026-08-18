@@ -11,6 +11,11 @@ rectangleBodyDist
 } from "./arrow-rect.js?v=2";
 
 import {
+fvpBodyDist,
+isFvpType
+} from "./fixed-volume-profile.js?v=3";
+
+import {
 fibPriceAtRatio,
 getFibRows,
 isSeriesLogarithmic,
@@ -44,7 +49,9 @@ const {
 toXY,
 getPlotWidth,
 series,
-pointFromXY
+pointFromXY,
+getCandles = ()=>
+[]
 } = deps;
 
 function fibHitXPadPx(){
@@ -448,6 +455,29 @@ threshold
 
 }
 
+function hitTestFvpBody(
+px,
+py,
+shape,
+threshold = 8
+){
+
+return (
+isFvpType(
+shape?.type
+) &&
+fvpBodyDist(
+px,
+py,
+shape,
+toXY,
+getCandles()
+) <=
+threshold
+);
+
+}
+
 return {
 hrayLineDist,
 hitTestHrayLine,
@@ -464,6 +494,8 @@ channelBodyDist,
 hitTestChannelBody,
 rectangleBodyDist,
 hitTestRectangleBody,
+fvpBodyDist,
+hitTestFvpBody,
 hitTestTextBody,
 drawBodyHitThreshold(){
 return isCoarseTouchViewport()

@@ -23,6 +23,7 @@ const NAMES = [
 "rectangle",
 "long",
 "short",
+"fixed-volume-profile",
 "trash"
 ];
 
@@ -54,9 +55,15 @@ const lines = [
 "export const DRAW_TOOL_ICON_DATA = {"
 ];
 
+function jsKey(name){
+return /^[A-Za-z_$][\w$]*$/.test(name)
+? name
+: JSON.stringify(name);
+}
+
 for(const name of NAMES){
 lines.push(
-`  ${name}: "${entries[name]}",`
+`  ${jsKey(name)}: "${entries[name]}",`
 );
 }
 

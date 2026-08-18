@@ -19,6 +19,12 @@ moveRectangleHandle
 } from "./arrow-rect.js?v=2";
 
 import {
+getFvpHandleScreens,
+moveFvpHandle,
+isFvpType
+} from "./fixed-volume-profile.js?v=3";
+
+import {
 isPositionType,
 positionEntryPrice
 } from "./position.js?v=9";
@@ -90,9 +96,12 @@ hitTestTrendlineBody,
 hitTestFibBody,
 hitTestChannelBody,
 hitTestRectangleBody,
+hitTestFvpBody,
 hitTestHrayLine,
 channelP4Point,
-drawBodyHitThreshold: drawBodyHitThresholdDep
+drawBodyHitThreshold: drawBodyHitThresholdDep,
+getCandles = ()=>
+[]
 } =
 deps;
 
@@ -204,6 +213,39 @@ return null;
 
 }
 
+if(
+isFvpType(
+shape.type
+)
+){
+
+for(
+const handle of
+getFvpHandleScreens(
+shape,
+toXY,
+getCandles()
+)
+){
+
+if(
+Math.hypot(
+px - handle.x,
+py - handle.y
+) <=
+handleHitThreshold(
+shape
+)
+){
+return handle.id;
+}
+
+}
+
+return null;
+
+}
+
 for(const handle of listHandles(shape)){
 
 const xy =
@@ -255,6 +297,28 @@ return shape.p2;
 if(
 shape.type ===
 "rectangle"
+){
+
+if(
+handleId ===
+"p1"
+){
+return shape.p1;
+}
+
+if(
+handleId ===
+"p2"
+){
+return shape.p2;
+}
+
+}
+
+if(
+isFvpType(
+shape.type
+)
 ){
 
 if(
@@ -728,6 +792,21 @@ return;
 
 }
 
+if(
+isFvpType(
+shape.type
+)
+){
+
+moveFvpHandle(
+shape,
+handleId,
+point
+);
+return;
+
+}
+
 if(isHorizPriceTool(shape.type) && handleId === "anchor"){
 
 shape.time = point.time;
@@ -976,6 +1055,8 @@ shape.type ===
 return [shape.p1, shape.p2];
 }
 
+/* FVP: TV Fixed Range VP — body selects, only handles move. */
+
 if(shape.type === "channel"){
 return [shape.p1, shape.p2, shape.p3];
 }
@@ -1201,6 +1282,14 @@ return hitTestChannelBody(px, py, shape, bodyThreshold);
 
 if(shape.type === "rectangle"){
 return hitTestRectangleBody(px, py, shape, bodyThreshold);
+}
+
+if(
+isFvpType(
+shape.type
+)
+){
+return hitTestFvpBody(px, py, shape, bodyThreshold);
 }
 
 if(isHorizPriceTool(shape.type)){

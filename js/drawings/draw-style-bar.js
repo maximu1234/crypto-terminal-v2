@@ -80,7 +80,22 @@ listTemplatesForType,
 mergeStyleSnapshot,
 saveNamedTemplate,
 deleteTemplateAtIndex
-} from "./draw-templates.js?v=10";
+} from "./draw-templates.js?v=11";
+
+import {
+isFvpType,
+copyFvpStyleToShape,
+createFvpToolDefaults,
+FVP_TOOL_DEFAULTS_VERSION
+} from "./fixed-volume-profile.js?v=3";
+
+import {
+fvpSettingsHtml,
+fillFvpSettingsPanel,
+readFvpSettingsPanel,
+bindFvpSettingsPanel,
+closeFvpColorMenu
+} from "./fixed-volume-profile-settings.js?v=3";
 
 export function createDrawStyleBar(
 deps
@@ -234,6 +249,9 @@ let fibColorMenuAnchor = null;
 let rectPanelBuilt = false;
 let rectPanelSyncing = false;
 let rectSettingsShapeId = null;
+let fvpPanelBuilt = false;
+let fvpPanelSyncing = false;
+let fvpSettingsShapeId = null;
 let settingsPanelAbort = null;
 let activeColor = STROKE;
 let chromePortal = null;
@@ -415,6 +433,24 @@ return getTool() ===
 
 }
 
+function isFvpContext(){
+
+const sel =
+getSelected();
+
+if(
+isFvpType(
+sel?.type
+)
+){
+return true;
+}
+
+return getTool() ===
+"fvp";
+
+}
+
 function resetSettingsPanelListeners(){
 
 settingsPanelAbort?.abort();
@@ -439,6 +475,9 @@ return !!settingsPopover.querySelector(
 kind ===
 "fib"
 ? ".fib-settings"
+: kind ===
+"fvp"
+? ".fvp-settings"
 : ".rect-settings"
 );
 
@@ -467,6 +506,53 @@ settingsPopover.querySelector(
 ".rect-settings"
 )
 );
+
+}
+
+function isFvpSettingsOpen(){
+
+return !!(
+settingsPopover &&
+!settingsPopover.classList.contains("hidden") &&
+fvpPanelBuilt &&
+settingsPopover.querySelector(
+".fvp-settings"
+)
+);
+
+}
+
+function getFvpEditShape(){
+
+if(
+fvpSettingsShapeId
+){
+
+const pinned =
+getDrawings().find(
+item=>
+item.id ===
+fvpSettingsShapeId
+);
+
+if(
+isFvpType(
+pinned?.type
+)
+){
+return pinned;
+}
+
+}
+
+const sel =
+getSelected();
+
+return isFvpType(
+sel?.type
+)
+? sel
+: null;
 
 }
 
@@ -521,9 +607,14 @@ return;
 
 rectPanelBuilt = true;
 fibPanelBuilt = false;
+fvpPanelBuilt = false;
 
 const signal =
 resetSettingsPanelListeners();
+
+settingsPopover.classList.remove(
+"draw-settings-popover--fvp"
+);
 
 settingsPopover.innerHTML =
 `
@@ -1137,6 +1228,119 @@ shape?.lineWidth ||
 
 }
 
+function canApplyFvpPanel(){
+
+return (
+getAlive() &&
+isFvpSettingsOpen() &&
+!fvpPanelSyncing
+);
+
+}
+
+function ensureFvpSettingsPanel(){
+
+if(
+!settingsPopover
+){
+return;
+}
+
+if(
+fvpPanelBuilt &&
+settingsPopoverHasPanel(
+"fvp"
+)
+){
+return;
+}
+
+fvpPanelBuilt = true;
+fibPanelBuilt = false;
+rectPanelBuilt = false;
+
+resetSettingsPanelListeners();
+settingsPopover.classList.add(
+"draw-settings-popover--fvp"
+);
+settingsPopover.innerHTML =
+fvpSettingsHtml();
+
+bindFvpSettingsPanel(
+settingsPopover,
+{
+canApply: canApplyFvpPanel,
+onApply: applyFvpSettingsFromPanel
+}
+);
+
+}
+
+function fillFvpSettingsFromContext(){
+
+ensureFvpSettingsPanel();
+fvpPanelSyncing = true;
+
+try{
+
+fillFvpSettingsPanel(
+settingsPopover,
+getFvpEditShape() ||
+baseDefaultStyle(
+"fvp"
+)
+);
+
+}finally{
+fvpPanelSyncing = false;
+}
+
+}
+
+function applyFvpSettingsFromPanel(){
+
+if(
+!canApplyFvpPanel()
+){
+return;
+}
+
+const shape =
+getFvpEditShape();
+const panel =
+readFvpSettingsPanel(
+settingsPopover
+);
+
+if(
+shape
+){
+
+copyFvpStyleToShape(
+shape,
+panel
+);
+touchShapeRevisionFn(
+shape
+);
+saveDrawings();
+redraw();
+
+}
+
+saveToolDefaults(
+"fvp",
+{
+...createFvpToolDefaults(),
+...getToolDefaults().fvp,
+...panel,
+fvpDefaultsVersion:
+FVP_TOOL_DEFAULTS_VERSION
+}
+);
+
+}
+
 function canApplyFibPanel(){
 
 return (
@@ -1213,9 +1417,14 @@ return;
 
 fibPanelBuilt = true;
 rectPanelBuilt = false;
+fvpPanelBuilt = false;
 
 const signal =
 resetSettingsPanelListeners();
+
+settingsPopover.classList.remove(
+"draw-settings-popover--fvp"
+);
 
 settingsPopover.innerHTML =
 `
@@ -1561,6 +1770,13 @@ if(
 isRectSettingsOpen()
 ){
 applyRectSettingsFromPanel();
+return;
+}
+
+if(
+isFvpSettingsOpen()
+){
+applyFvpSettingsFromPanel();
 return;
 }
 
@@ -2756,7 +2972,8 @@ setActiveWidth(style.lineWidth);
 settingsBtn?.classList.toggle(
 "hidden",
 type !== "fib" &&
-type !== "rectangle"
+type !== "rectangle" &&
+type !== "fvp"
 );
 
 const isTextToolbar =
@@ -2808,6 +3025,12 @@ styleBar?.classList.toggle(
 isPosToolbar
 );
 
+styleBar?.classList.toggle(
+"draw-style-float--fvp",
+type ===
+"fvp"
+);
+
 templateBtn?.classList.toggle(
 "hidden",
 isPosToolbar ||
@@ -2822,14 +3045,18 @@ isPosToolbar ||
 type ===
 "rectangle" ||
 type ===
-"fib"
+"fib" ||
+type ===
+"fvp"
 );
 
 widthBtn?.classList.toggle(
 "hidden",
 isPosToolbar ||
 isArrowTool ||
-isTextToolbar
+isTextToolbar ||
+type ===
+"fvp"
 );
 
 positionRiskWrap?.classList.toggle(
@@ -3192,6 +3419,28 @@ readRectPanelFromDOM()
 
 if(
 type ===
+"fvp"
+){
+
+Object.assign(
+defaultsPayload,
+isFvpSettingsOpen()
+? readFvpSettingsPanel(
+settingsPopover
+)
+: extractStyleSnapshot(
+{
+type: "fvp",
+...style
+},
+"fvp"
+)
+);
+
+}
+
+if(
+type ===
 "arrow"
 ){
 
@@ -3266,6 +3515,27 @@ isRectSettingsOpen()
 Object.assign(
 snapshot,
 readRectPanelFromDOM()
+);
+
+snapshot =
+mergeStyleSnapshot(
+snapshot,
+type
+);
+
+}
+
+if(
+type ===
+"fvp" &&
+isFvpSettingsOpen()
+){
+
+Object.assign(
+snapshot,
+readFvpSettingsPanel(
+settingsPopover
+)
 );
 
 snapshot =
@@ -4072,11 +4342,19 @@ opts = {}
 
 const fibSettingsWasOpen =
 isFibSettingsOpen();
+const fvpSettingsWasOpen =
+isFvpSettingsOpen();
 
 if(
 fibSettingsWasOpen
 ){
 commitFibPanelToShape();
+}
+
+if(
+fvpSettingsWasOpen
+){
+applyFvpSettingsFromPanel();
 }
 
 colorPopover?.classList.add("hidden");
@@ -4086,6 +4364,7 @@ settingsPopover?.classList.add("hidden");
 closeAllFibLineStyleMenus();
 closeAllFibLineWidthMenus();
 closeFibColorMenu();
+closeFvpColorMenu();
 
 if(
 !opts.keepTemplateMenu
@@ -4276,10 +4555,13 @@ const fibCtx =
 isFibContext();
 const rectCtx =
 isRectContext();
+const fvpCtx =
+isFvpContext();
 
 if(
 !fibCtx &&
-!rectCtx
+!rectCtx &&
+!fvpCtx
 ){
 return;
 }
@@ -4292,6 +4574,15 @@ closePopovers();
 if(open){
 
 if(
+fvpCtx
+){
+
+fvpSettingsShapeId =
+getSelected()?.id ||
+null;
+fillFvpSettingsFromContext();
+
+}else if(
 rectCtx
 ){
 
