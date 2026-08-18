@@ -72,7 +72,7 @@ if(
 ){
 scriptZoomModulePromise =
 import(
-"./screener-widget-zoom.js?v=27"
+"./screener-widget-zoom.js?v=28"
 ).then(
 mod=>{
 refreshZoomFavoriteUi =

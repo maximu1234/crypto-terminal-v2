@@ -556,9 +556,9 @@ Object.freeze({
 "screener-pattern-overlay.js":
 8,
 "screener-widget-zoom.js":
-27,
+28,
 "release-marker.js":
-92,
+93,
 "focus-blur-after-pick.js":
 3,
 "site-boot.js":
@@ -829,7 +829,7 @@ Object.freeze({
 "common.css":
 55,
 "screener.css":
-55,
+56,
 "terminal.css":
 175,
 "watchlist.css":

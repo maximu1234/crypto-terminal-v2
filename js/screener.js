@@ -52,7 +52,7 @@ createTickerUiBatcher
 
 import {
 mountReleaseMarker
-} from "./release-marker.js?v=92";
+} from "./release-marker.js?v=93";
 
 import {
 saveScreenerState,
@@ -138,7 +138,7 @@ if(
 ){
 screenerZoomMountPromise =
 import(
-"./screener-widget-zoom.js?v=27"
+"./screener-widget-zoom.js?v=28"
 ).then(
 mod=>{
 refreshZoomFavoriteUi =

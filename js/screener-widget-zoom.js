@@ -1952,6 +1952,69 @@ closeWidgetZoom();
 }
 );
 
+const prevBtn =
+document.createElement(
+"button"
+);
+
+prevBtn.type =
+"button";
+prevBtn.className =
+"screener-widget-zoom-nav screener-widget-zoom-nav--prev";
+prevBtn.title =
+"Предыдущий график";
+prevBtn.setAttribute(
+"aria-label",
+"Предыдущий график"
+);
+prevBtn.textContent =
+"‹";
+
+const nextBtn =
+document.createElement(
+"button"
+);
+
+nextBtn.type =
+"button";
+nextBtn.className =
+"screener-widget-zoom-nav screener-widget-zoom-nav--next";
+nextBtn.title =
+"Следующий график";
+nextBtn.setAttribute(
+"aria-label",
+"Следующий график"
+);
+nextBtn.textContent =
+"›";
+
+prevBtn.addEventListener(
+"click",
+event=>{
+event.preventDefault();
+event.stopPropagation();
+void navigateZoomWidget(
+-1
+);
+}
+);
+
+nextBtn.addEventListener(
+"click",
+event=>{
+event.preventDefault();
+event.stopPropagation();
+void navigateZoomWidget(
+1
+);
+}
+);
+
+backdrop.append(
+prevBtn,
+nextBtn
+);
+
 }
 
 panel.querySelectorAll(
@@ -2189,11 +2252,20 @@ backdrop.addEventListener(
 "click",
 event=>{
 if(
-event.target ===
-backdrop
+event.target.closest(
+".screener-widget-zoom-panel"
+) ||
+event.target.closest(
+".screener-widget-zoom-nav"
+) ||
+event.target.closest(
+".screener-widget-zoom-close"
+)
 ){
-closeWidgetZoom();
+return;
 }
+
+closeWidgetZoom();
 }
 );
 }
