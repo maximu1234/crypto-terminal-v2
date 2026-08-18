@@ -28,6 +28,13 @@ import {
 subscribeKline
 } from "./market-ws.js?v=1";
 
+import {
+SCREENER_WIDGET_OSCILLATOR_CHANGED,
+SCREENER_WIDGET_OSCILLATOR_MACD,
+createScreenerMacdChart,
+setScreenerMacdData
+} from "./screener-widget-oscillator.js?v=1";
+
 let zoomPatternOverlayApi =
 null;
 
@@ -43,6 +50,22 @@ await import(
 }
 
 return zoomPatternOverlayApi;
+
+}
+
+function zoomOscillatorKind(){
+
+if(
+typeof zoomMountOptions?.getOscillatorKind ===
+"function"
+){
+return zoomMountOptions.getOscillatorKind() ===
+SCREENER_WIDGET_OSCILLATOR_MACD
+? SCREENER_WIDGET_OSCILLATOR_MACD
+: "rsi";
+}
+
+return "rsi";
 
 }
 
@@ -144,6 +167,9 @@ null;
 
 let zoomMountOptions =
 null;
+
+let oscillatorChangeBound =
+false;
 
 function updateZoomPatternData(
 state
@@ -860,6 +886,8 @@ state
 ){
 
 if(
+state?.oscKind ===
+SCREENER_WIDGET_OSCILLATOR_MACD ||
 !state?.rsiSeries ||
 !state?.rsiWrapEl
 ){
@@ -885,8 +913,39 @@ state
 ){
 
 if(
-!state?.rsiSeries ||
 !state.candles?.length
+){
+return;
+}
+
+if(
+state.oscKind ===
+SCREENER_WIDGET_OSCILLATOR_MACD
+){
+
+if(
+!state.macdHistSeries
+){
+return;
+}
+
+setScreenerMacdData(
+{
+histSeries:
+state.macdHistSeries,
+macdSeries:
+state.rsiSeries,
+signalSeries:
+state.macdSignalSeries
+},
+state.candles
+);
+return;
+
+}
+
+if(
+!state?.rsiSeries
 ){
 return;
 }
@@ -1332,6 +1391,14 @@ candle;
 state.series.update(
 candle
 );
+if(
+state.oscKind ===
+SCREENER_WIDGET_OSCILLATOR_MACD
+){
+updateZoomRsiData(
+state
+);
+}
 }else{
 state.candles.push(
 candle
@@ -1418,6 +1485,11 @@ const tf =
 widget?.tf ||
 getCurrentTF?.() ||
 "15";
+const oscKind =
+zoomOscillatorKind();
+const showMacd =
+oscKind ===
+SCREENER_WIDGET_OSCILLATOR_MACD;
 
 const override =
 zoomMountOptions?._zoomWidgetsOverride;
@@ -1512,13 +1584,17 @@ ${zoomMountOptions?.flagWrapHtml || ""}
 <div class="screener-widget-zoom-body screener-widget-body">
 <div class="linked-crosshair-vert hidden" aria-hidden="true"></div>
 <div class="screener-chart screener-widget-zoom-main-chart"></div>
-<div class="screener-rsi-wrap">
+${showMacd
+? `<div class="screener-rsi-wrap">
+<div class="screener-rsi-chart"></div>
+</div>`
+: `<div class="screener-rsi-wrap">
 <div class="screener-rsi-band"></div>
 <div class="rsi-level-line hidden" data-rsi-level="70" aria-hidden="true"></div>
 <div class="rsi-level-line hidden" data-rsi-level="50" aria-hidden="true"></div>
 <div class="rsi-level-line hidden" data-rsi-level="30" aria-hidden="true"></div>
 <div class="screener-rsi-chart"></div>
-</div>
+</div>`}
 </div>
 `;
 
@@ -1557,10 +1633,24 @@ createScreenerChart(
 chartEl
 );
 
+const macdPair =
+showMacd
+? createScreenerMacdChart(
+rsiChartEl
+)
+: null;
 const rsiPair =
-createRSIChart(
+showMacd
+? null
+: createRSIChart(
 rsiChartEl
 );
+const oscChart =
+macdPair?.chart ||
+rsiPair.chart;
+const oscPrimarySeries =
+macdPair?.macdSeries ||
+rsiPair.series;
 
 chart.applyOptions(
 {
@@ -1579,7 +1669,7 @@ true
 }
 );
 
-rsiPair.chart.applyOptions(
+oscChart.applyOptions(
 {
 timeScale:{
 visible:
@@ -1609,15 +1699,22 @@ backdrop,
 panel,
 symbol,
 tf,
+oscKind,
 chart,
 series,
 chartEl,
 rsiChart:
-rsiPair.chart,
+oscChart,
 rsiSeries:
-rsiPair.series,
+oscPrimarySeries,
 rsiWrapEl,
 rsiChartEl,
+macdHistSeries:
+macdPair?.histSeries ||
+null,
+macdSignalSeries:
+macdPair?.signalSeries ||
+null,
 linkedCrosshairVertEl,
 candles:
 [],
@@ -1655,7 +1752,7 @@ let rsiLayoutRaf =
 0;
 linkPairedChartTimeScales(
 chart,
-rsiPair.chart,
+oscChart,
 ()=>{
 if(
 rsiLayoutRaf
@@ -1881,6 +1978,14 @@ candle;
 series.update(
 candle
 );
+if(
+state.oscKind ===
+SCREENER_WIDGET_OSCILLATOR_MACD
+){
+updateZoomRsiData(
+state
+);
+}
 }else{
 state.candles.push(
 candle
@@ -1949,6 +2054,7 @@ getCurrentTF,
 getZoomWidgets,
 shiftZoomPage,
 getInvertCharts = ()=>false,
+getOscillatorKind,
 isEnabled = ()=>true,
 isPatternOverlayEnabled,
 gridElId = "screener-grid",
@@ -1964,6 +2070,7 @@ wireFlagUi,
 updateFlagUi,
 flagWrapHtml,
 getInvertCharts,
+getOscillatorKind,
 getCurrentTF,
 getZoomWidgets,
 shiftZoomPage,
@@ -2041,6 +2148,26 @@ document.addEventListener(
 onContextMenu,
 true
 );
+
+if(
+!oscillatorChangeBound
+){
+oscillatorChangeBound =
+true;
+window.addEventListener(
+SCREENER_WIDGET_OSCILLATOR_CHANGED,
+()=>{
+if(
+!zoomState ||
+zoomState.oscKind ===
+zoomOscillatorKind()
+){
+return;
+}
+closeWidgetZoom();
+}
+);
+}
 
 return ()=>{
 document.removeEventListener(

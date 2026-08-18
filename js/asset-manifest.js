@@ -494,8 +494,10 @@ Object.freeze({
 "watchlist.js":
 98,
 "screener.js":
-103,
+104,
 "screener-widget-guard.js":
+1,
+"screener-widget-oscillator.js":
 1,
 "scalping-dom/prefs.js":
 4,
@@ -532,7 +534,7 @@ Object.freeze({
 "screener-pattern-overlay.js":
 8,
 "screener-widget-zoom.js":
-25,
+26,
 "release-marker.js":
 90,
 "focus-blur-after-pick.js":
@@ -717,7 +719,7 @@ Object.freeze({
 "app-settings-window.js":
 17,
 "app-settings-system-panel.js":
-16,
+17,
 "app-settings-hotkeys-panel.js":
 3,
 "app-settings-secret.js":
@@ -801,7 +803,7 @@ Object.freeze({
 "common.css":
 55,
 "screener.css":
-52,
+53,
 "terminal.css":
 175,
 "watchlist.css":

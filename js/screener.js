@@ -96,6 +96,14 @@ perfMark,
 perfMeasure
 } from "./perf-marks.js?v=2";
 
+import {
+SCREENER_WIDGET_OSCILLATOR_CHANGED,
+SCREENER_WIDGET_OSCILLATOR_MACD,
+createScreenerMacdChart,
+getScreenerWidgetOscillator,
+setScreenerMacdData
+} from "./screener-widget-oscillator.js?v=1";
+
 const SCREENER_MAX_CONCURRENT_CHART_LOADS =
 4;
 
@@ -119,7 +127,7 @@ if(
 ){
 screenerZoomMountPromise =
 import(
-"./screener-widget-zoom.js?v=25"
+"./screener-widget-zoom.js?v=26"
 ).then(
 mod=>{
 refreshZoomFavoriteUi =
@@ -701,7 +709,7 @@ return layout;
 
 }
 
-function screenerWidgetShowsRsi(){
+function screenerWidgetShowsOscillator(){
 
 return (
 layout ===
@@ -709,6 +717,12 @@ layout ===
 layout ===
 6
 );
+
+}
+
+function screenerWidgetOscillatorKind(){
+
+return getScreenerWidgetOscillator();
 
 }
 
@@ -729,6 +743,8 @@ widget
 ){
 
 if(
+widget?.oscKind ===
+SCREENER_WIDGET_OSCILLATOR_MACD ||
 !widget?.rsiSeries ||
 !widget?.rsiWrapEl
 ){
@@ -757,8 +773,44 @@ if(
 !isScreenerWidgetCurrent(
 widget
 ) ||
-!widget?.rsiSeries ||
 !widget.candles?.length
+){
+return;
+}
+
+if(
+widget.oscKind ===
+SCREENER_WIDGET_OSCILLATOR_MACD
+){
+
+if(
+!widget.macdHistSeries
+){
+return;
+}
+
+try{
+setScreenerMacdData(
+{
+histSeries:
+widget.macdHistSeries,
+macdSeries:
+widget.rsiSeries,
+signalSeries:
+widget.macdSignalSeries
+},
+widget.candles
+);
+}catch{
+/* chart disposed during page change */
+}
+
+return;
+
+}
+
+if(
+!widget?.rsiSeries
 ){
 return;
 }
@@ -791,13 +843,27 @@ widget
 }
 
 function buildWidgetBodyHtml(
-showRsi
+showOscillator,
+oscKind
 ){
 
 if(
-!showRsi
+!showOscillator
 ){
 return `<div class="screener-chart"></div>`;
+}
+
+if(
+oscKind ===
+SCREENER_WIDGET_OSCILLATOR_MACD
+){
+return `
+<div class="screener-widget-body">
+<div class="screener-chart"></div>
+<div class="screener-rsi-wrap">
+<div class="screener-rsi-chart"></div>
+</div>
+</div>`;
 }
 
 return `
@@ -1569,7 +1635,11 @@ candle
 
 if(
 widget.rsiSeries &&
-isNewBar
+(
+isNewBar ||
+widget.oscKind ===
+SCREENER_WIDGET_OSCILLATOR_MACD
+)
 ){
 updateWidgetRsiData(
 widget
@@ -1757,14 +1827,22 @@ chartEl.classList.remove("loading");
 
 function createWidget(symbol, loadId){
 
-const showRsi =
-screenerWidgetShowsRsi();
+const showOscillator =
+screenerWidgetShowsOscillator();
+const oscKind =
+screenerWidgetOscillatorKind();
+const showMacd =
+showOscillator &&
+oscKind ===
+SCREENER_WIDGET_OSCILLATOR_MACD;
 
 const root =
 document.createElement("article");
 
 root.className =
-showRsi
+showMacd
+? "screener-widget has-macd"
+: showOscillator
 ? "screener-widget has-rsi"
 : "screener-widget";
 root.dataset.symbol = symbol;
@@ -1797,7 +1875,7 @@ ${SCREENER_FLAG_WRAP_HTML}
 
 </div>
 
-${buildWidgetBodyHtml(showRsi)}
+${buildWidgetBodyHtml(showOscillator, oscKind)}
 
 `;
 
@@ -1832,14 +1910,20 @@ unlinkTimeScales:
 null,
 candles: [],
 userAdjustedZoom:false,
+oscKind:
+showOscillator
+? oscKind
+: null,
 rsiChart:null,
 rsiSeries:null,
 rsiChartEl:null,
-rsiWrapEl:null
+rsiWrapEl:null,
+macdHistSeries:null,
+macdSignalSeries:null
 };
 
 if(
-showRsi
+showOscillator
 ){
 
 const rsiWrapEl =
@@ -1852,19 +1936,42 @@ root.querySelector(
 ".screener-rsi-chart"
 );
 
+widget.rsiWrapEl =
+rsiWrapEl;
+widget.rsiChartEl =
+rsiChartEl;
+
+if(
+showMacd
+){
+
+const macdPair =
+createScreenerMacdChart(
+rsiChartEl
+);
+
+widget.rsiChart =
+macdPair.chart;
+widget.rsiSeries =
+macdPair.macdSeries;
+widget.macdHistSeries =
+macdPair.histSeries;
+widget.macdSignalSeries =
+macdPair.signalSeries;
+
+}else{
+
 const rsiPair =
 createRSIChart(
 rsiChartEl
 );
 
-widget.rsiWrapEl =
-rsiWrapEl;
-widget.rsiChartEl =
-rsiChartEl;
 widget.rsiChart =
 rsiPair.chart;
 widget.rsiSeries =
 rsiPair.series;
+
+}
 
 chart.applyOptions({
 timeScale:{
@@ -3097,12 +3204,21 @@ return true;
 },
 getInvertCharts:()=>
 invertCharts,
+getOscillatorKind:
+screenerWidgetOscillatorKind,
 wireFlagUi:
 wireScreenerFlagWrap,
 updateFlagUi:
 updateWidgetFavoriteUi,
 flagWrapHtml:
 SCREENER_FLAG_WRAP_HTML
+}
+);
+
+window.addEventListener(
+SCREENER_WIDGET_OSCILLATOR_CHANGED,
+()=>{
+void renderPage();
 }
 );
 
