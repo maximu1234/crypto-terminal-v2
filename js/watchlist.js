@@ -93,7 +93,7 @@ let activeWidgetIndex = 0;
 
 const widgets = [];
 
-/** Как на Главной: 2×1000 свечей — хватает для zoom; меньше запросов к proxy. */
+/** Догрузка второй страницы после первого кадра (zoom). */
 const DASHBOARD_HISTORY_BATCHES =
 2;
 
@@ -1023,7 +1023,7 @@ const data =
 await loadMarketHistory(
 symbol,
 tf,
-DASHBOARD_HISTORY_BATCHES,
+1,
 {
 parallel: true,
 batchGapMs: DASHBOARD_BATCH_GAP_MS
@@ -1167,6 +1167,46 @@ symNorm
 );
 
 entry.tradeWidget?.overlay?.drawNow?.();
+
+void loadMarketHistory(
+symbol,
+tf,
+DASHBOARD_HISTORY_BATCHES,
+{
+parallel: true,
+batchGapMs: DASHBOARD_BATCH_GAP_MS
+}
+).then(
+more=>{
+
+if(
+seq !== loadSeq.id ||
+!more?.length ||
+more.length <=
+candles.length
+){
+return;
+}
+
+candles =
+more;
+entry.setCandles(
+more
+);
+series.setData(
+more
+);
+updateTerminalWidgetRsiData(
+entry
+);
+applyDashboardZoom(
+chart,
+candles,
+tf
+);
+
+}
+);
 
 const last =
 candles[candles.length - 1];

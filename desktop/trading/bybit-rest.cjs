@@ -11,6 +11,34 @@ net
 require(
 "electron"
 );
+const https =
+require(
+"https"
+);
+const {
+URL
+} =
+require(
+"url"
+);
+const {
+getRendererProxySession
+} =
+require(
+"../app-session.cjs"
+);
+const {
+getRelayHttpsAgent
+} =
+require(
+"../app-proxy-socks-relay.cjs"
+);
+const {
+shouldProxyBybitRestUrl
+} =
+require(
+"../app-proxy-config.cjs"
+);
 const {
 getCredentials
 } =
@@ -19,7 +47,7 @@ require(
 );
 
 const RECV_WINDOW =
-"5000";
+"20000";
 
 const REQUEST_TIMEOUT_MS =
 12000;
@@ -138,6 +166,117 @@ return parts.join(
 
 }
 
+async function fetchViaRelayAgent(
+url,
+options,
+agent
+){
+
+const parsed =
+new URL(
+url
+);
+const requestOptions =
+{
+protocol:
+"https:",
+hostname:
+parsed.hostname,
+port:
+parsed.port ||
+443,
+path:
+parsed.pathname +
+parsed.search,
+method:
+(
+options &&
+options.method
+) ||
+"GET",
+headers:
+(
+options &&
+options.headers
+) ||
+{},
+agent,
+signal:
+options &&
+options.signal
+};
+
+return new Promise(
+(
+resolve,
+reject
+)=>{
+
+const req =
+https.request(
+requestOptions,
+res=>{
+
+const chunks =
+[];
+
+res.on(
+"data",
+chunk=>
+chunks.push(
+chunk
+)
+);
+
+res.on(
+"end",
+()=>{
+
+resolve(
+new Response(
+Buffer.concat(
+chunks
+),
+{
+status:
+res.statusCode ||
+0,
+statusText:
+res.statusMessage ||
+"",
+headers:
+res.headers
+}
+)
+);
+
+}
+);
+
+}
+);
+
+req.on(
+"error",
+reject
+);
+
+if(
+options &&
+options.body
+){
+req.write(
+options.body
+);
+}
+
+req.end();
+
+}
+);
+
+}
+
 async function fetchWithTimeout(
 url,
 options
@@ -153,13 +292,37 @@ controller.abort();
 REQUEST_TIMEOUT_MS
 );
 
-try{
-return await net.fetch(
-url,
+const requestOptions =
 {
 ...options,
 signal:
 controller.signal
+};
+
+try{
+const agent =
+shouldProxyBybitRestUrl(
+url
+)
+? getRelayHttpsAgent()
+: undefined;
+
+if(
+agent
+){
+return await fetchViaRelayAgent(
+url,
+requestOptions,
+agent
+);
+}
+
+return await net.fetch(
+url,
+{
+...requestOptions,
+session:
+getRendererProxySession()
 }
 );
 }catch(

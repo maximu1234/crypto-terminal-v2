@@ -221,6 +221,41 @@ appearance:textfield;
 margin:0;
 }
 
+.app-settings-field-select--wide{
+min-width:0;
+max-width:min(100%, 320px);
+width:100%;
+}
+
+.app-settings-stack-field{
+display:flex;
+flex-direction:column;
+align-items:stretch;
+gap:4px;
+margin:0 0 10px;
+}
+
+.app-settings-stack-label{
+font-size:12px;
+line-height:1.35;
+color:#9ca3af;
+}
+
+.app-settings-proxy-actions{
+display:flex;
+flex-wrap:wrap;
+gap:8px;
+margin:12px 0 0;
+}
+
+#app-settings-proxy-status[data-kind="ok"]{
+color:#86efac;
+}
+
+#app-settings-proxy-status[data-kind="err"]{
+color:#fca5a5;
+}
+
 .app-settings-action-btn{
 flex:0 0 auto;
 padding:6px 12px;

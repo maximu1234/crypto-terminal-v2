@@ -22,7 +22,7 @@ bingxPublicAdapter
 
 import {
 peekBybitSymbolsCache
-} from "./api.js?v=32";
+} from "./api.js?v=33";
 
 const ADAPTERS =
 {

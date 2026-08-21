@@ -5,6 +5,7 @@
  */
 const zlib = require("zlib");
 const { net } = require("electron");
+const { getRendererProxySession } = require("../app-session.cjs");
 const { getCredentials } = require("./exchange-credentials.cjs");
 const {
   validateParams,
@@ -383,6 +384,7 @@ async function fetchWithTimeout(url, options) {
   try {
     return await net.fetch(url, {
       ...options,
+      session: getRendererProxySession(),
       signal: controller.signal
     });
   } catch (err) {

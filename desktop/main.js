@@ -74,6 +74,20 @@ registerChartSnapshotLogoIpc
 require(
 "./chart-snapshot-logo.cjs"
 );
+const {
+applyDesktopProxy,
+registerAppProxyIpc,
+registerAppProxyLogin
+} =
+require(
+"./app-proxy.cjs"
+);
+const {
+APP_SESSION_PARTITION
+} =
+require(
+"./app-session.cjs"
+);
 
 function loadAlgoTradingIpc(){
 
@@ -198,6 +212,9 @@ require(
 );
 
 registerAppScheme();
+registerAppProxyLogin(
+app
+);
 
 log.info(
 "desktop platform:",
@@ -333,7 +350,7 @@ return value.startsWith(
 }
 
 const PARTITION =
-"persist:multichart-desktop";
+APP_SESSION_PARTITION;
 
 /** @type {string | null} */
 let pendingAuthCallbackUrl =
@@ -1577,6 +1594,26 @@ platform.platform
 registerTradingIpc();
 registerChartSnapshotIpc();
 registerChartSnapshotLogoIpc();
+registerAppProxyIpc({
+ipcMain,
+handleTrustedDesktopUi,
+getSessions:()=>
+[
+session.fromPartition(
+PARTITION
+)
+],
+reloadMainWindow:()=>{
+
+if(
+mainWindow &&
+!mainWindow.isDestroyed()
+){
+mainWindow.webContents.reload();
+}
+
+}
+});
 
 handleTrustedDesktopUi(
 ipcMain,
@@ -2162,6 +2199,22 @@ PARTITION
 tuneDesktopSession(
 ses
 );
+
+try{
+await applyDesktopProxy({
+sessions:[
+ses
+]
+});
+}catch(
+err
+){
+log.warn(
+"app-proxy boot:",
+err?.message ||
+err
+);
+}
 
 if(
 !USE_BUNDLE &&

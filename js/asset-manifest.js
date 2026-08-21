@@ -147,7 +147,7 @@ Object.freeze({
 "trade/bybit/stream-bridge.js":
 2,
 "trade/bybit/chart-overlay.js":
-4,
+5,
 "trade/bybit/auto-stops.js":
 1,
 "trade/bybit/market-entry.js":
@@ -512,7 +512,7 @@ Object.freeze({
 "telegram-bot-public.js":
 1,
 "watchlist.js":
-98,
+99,
 "screener.js":
 106,
 "ipad-web-viewport.js":
@@ -558,7 +558,7 @@ Object.freeze({
 "screener-widget-zoom.js":
 28,
 "release-marker.js":
-93,
+94,
 "focus-blur-after-pick.js":
 3,
 "site-boot.js":
@@ -702,7 +702,7 @@ Object.freeze({
 
 /* ── JS: market data ── */
 "api.js":
-32,
+33,
 "bybit-fetch.js":
 17,
 "bybit-listings.js":
@@ -743,7 +743,9 @@ Object.freeze({
 "header-settings-shell.js":
 4,
 "app-settings-window.js":
-17,
+18,
+"app-settings-proxy-panel.js":
+4,
 "app-settings-system-panel.js":
 18,
 "app-settings-hotkeys-panel.js":
@@ -855,7 +857,7 @@ Object.freeze({
 "trade-exchange-settings.css":
 16,
 "app-settings-window.css":
-9,
+10,
 "trade-volume-presets.css":
 9,
 "trade-leverage-settings.css":

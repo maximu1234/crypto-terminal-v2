@@ -3152,17 +3152,6 @@ true
 return;
 }
 
-if(
-fetching &&
-!force
-){
-return;
-}
-
-fetching =
-true;
-
-try{
 const symbol =
 host?.getSymbol?.();
 
@@ -3177,39 +3166,87 @@ true
 return;
 }
 
-if(
-!force
-){
-
-const posHint =
-position;
-const cached =
+const cachedNow =
 getCachedPosition(
 symbol,
 tradePositionIpcOptions(
-posHint
+position
 )
 );
 
 if(
-cached
+cachedNow &&
+Number(
+cachedNow.size
+) >
+0
 ){
 position =
-cached;
+cachedNow;
 invalidateBadgeLayoutCache();
 scheduleDraw(
 true
 );
+
+if(
+fetching
+){
 return;
 }
 
 }
 
+if(
+fetching &&
+!force
+){
+return;
+}
+
+fetching =
+true;
+
+try{
 await syncTradePositionsCache();
 
 if(
 !host
 ){
+return;
+}
+
+if(
+normalizeOverlaySymbol(
+host?.getSymbol?.()
+) !==
+normalizeOverlaySymbol(
+symbol
+)
+){
+return;
+}
+
+const cachedAfter =
+getCachedPosition(
+symbol,
+tradePositionIpcOptions(
+position
+)
+);
+
+if(
+cachedAfter &&
+Number(
+cachedAfter.size
+) >
+0
+){
+position =
+cachedAfter;
+invalidateBadgeLayoutCache();
+scheduleDraw(
+true
+);
 return;
 }
 
@@ -3716,7 +3753,15 @@ switchVeilVisible =
 false;
 switchVeilPosition =
 null;
+chartSwitchFrozen =
+false;
 position =
+getCachedPosition(
+host?.getSymbol?.(),
+tradePositionIpcOptions(
+position
+)
+) ||
 null;
 invalidateBadgeLayoutCache();
 scheduleDraw(
@@ -3747,13 +3792,8 @@ switchVeilVisible =
 false;
 switchVeilPosition =
 null;
-position =
-null;
-invalidateBadgeLayoutCache();
-scheduleDraw(
-true
-);
-host?.getDrawingTools?.()?.scheduleRedraw?.();
+chartSwitchFrozen =
+false;
 
 try{
 await syncPosition(

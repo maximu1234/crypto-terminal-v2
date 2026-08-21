@@ -12,6 +12,12 @@ getCredentials
 require(
 "./credentials.cjs"
 );
+const {
+getRelayHttpsAgent
+} =
+require(
+"../app-proxy-socks-relay.cjs"
+);
 
 let WsConstructor =
 null;
@@ -237,9 +243,18 @@ const url =
 wsUrl(
 creds.testnet
 );
+const agent =
+getRelayHttpsAgent();
 
 socket =
-new Ws(
+agent
+? new Ws(
+url,
+{
+agent
+}
+)
+: new Ws(
 url
 );
 
@@ -253,7 +268,7 @@ ws
 
 const expires =
 Date.now() +
-10000;
+60000;
 
 const signature =
 signPayload(

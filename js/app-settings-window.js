@@ -41,6 +41,14 @@ true
 },
 {
 id:
+"proxy",
+label:
+"Прокси",
+desktopOnly:
+true
+},
+{
+id:
 "trading",
 label:
 "Торговля",
@@ -579,6 +587,33 @@ return;
 
 if(
 sectionId ===
+"proxy"
+){
+
+if(
+!window.cryptoTerminalDesktop?.isDesktop
+){
+panel.innerHTML =
+`<p class="app-settings-bybit-guest">Прокси доступен в desktop-приложении Multichart.</p>`;
+return;
+}
+
+const {
+mountProxySettingsPanel
+} =
+await import(
+"./app-settings-proxy-panel.js?v=4"
+);
+
+mountProxySettingsPanel(
+panel
+);
+return;
+
+}
+
+if(
+sectionId ===
 "trading"
 ){
 
@@ -791,7 +826,9 @@ if(
 resolved ===
 "connections" ||
 resolved ===
-"trading"
+"trading" ||
+resolved ===
+"proxy"
 ) &&
 !showConnectionsSettings()
 ){
@@ -864,6 +901,18 @@ if(
 tradingBtn
 ){
 tradingBtn.hidden =
+!showConnectionsSettings();
+}
+
+const proxyBtn =
+overlayEl?.querySelector(
+'.app-settings-nav-btn[data-section="proxy"]'
+);
+
+if(
+proxyBtn
+){
+proxyBtn.hidden =
 !showConnectionsSettings();
 }
 

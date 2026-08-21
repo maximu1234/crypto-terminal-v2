@@ -773,6 +773,18 @@ getMenuBarAgentPrefs:()=>
 ipcRenderer.invoke(
 "desktop:getMenuBarAgentPrefs"
 ),
+getAppProxy:()=>
+ipcRenderer.invoke(
+"desktop:getAppProxy"
+),
+saveAppProxy:(
+payload
+)=>
+ipcRenderer.invoke(
+"desktop:saveAppProxy",
+payload ||
+{}
+),
 setLaunchAgentAtLogin:(
 enabled
 )=>
