@@ -1,35 +1,153 @@
 /**
- * Скринер / Скрипт: overlay паттерна 1-2 1-2 на виджете.
+ * Скринер / Скрипт: overlay паттерна на виджете.
  * Настройки — снимок из Терминала (`chart_indicators_v1`), как у pattern-12-scanner,
  * иначе сканер находит hit, а canvas рисует «пусто» на дефолтах.
+ * Скрипт может парсить 1-2 EARLY T3 — тогда `widget.scanIndicatorId`.
+ * Early T3 math грузится только если виджет на EARLY T3 (не на публичном скринере).
  */
 import {
-computePattern12Scene,
-defaultPattern12Settings,
-normalizePattern12Settings
+computePattern12Scene as computePattern12OriginalScene,
+defaultPattern12Settings as defaultPattern12OriginalSettings,
+normalizePattern12Settings as normalizePattern12OriginalSettings
 } from "./indicators/pattern-12-math.js?v=13";
 
 import {
 paintPattern12Scene
 } from "./indicators/pattern-12-paint.js?v=8";
 
-import {
-readTerminalPattern12Settings
-} from "./pattern-12-scanner.js?v=24";
+const SCRIPT_SCAN_INDICATOR_EARLY_T3 =
+"pattern-12-early-t3";
+const TERMINAL_INDICATORS_STORAGE_KEY =
+"chart_indicators_v1";
+
+/** @type {Promise<object> | null} */
+let earlyT3MathPromise =
+null;
+
+function normalizeScriptScanIndicatorId(
+raw
+){
+
+return String(
+raw ||
+""
+) ===
+SCRIPT_SCAN_INDICATOR_EARLY_T3
+? SCRIPT_SCAN_INDICATOR_EARLY_T3
+: "pattern-12";
+
+}
+
+function loadEarlyT3Math(){
+
+if(
+!earlyT3MathPromise
+){
+earlyT3MathPromise =
+import(
+"./indicators/pattern-12-early-t3-math.js?v=1"
+);
+}
+
+return earlyT3MathPromise;
+
+}
+
+async function overlayEngine(
+widget
+){
+
+if(
+normalizeScriptScanIndicatorId(
+widget?.scanIndicatorId
+) ===
+SCRIPT_SCAN_INDICATOR_EARLY_T3
+){
+const m =
+await loadEarlyT3Math();
+
+return {
+id:
+SCRIPT_SCAN_INDICATOR_EARLY_T3,
+compute:
+m.computePattern12Scene,
+normalize:
+m.normalizePattern12Settings,
+defaultSettings:
+m.defaultPattern12Settings
+};
+}
+
+return {
+id:
+"pattern-12",
+compute:
+computePattern12OriginalScene,
+normalize:
+normalizePattern12OriginalSettings,
+defaultSettings:
+defaultPattern12OriginalSettings
+};
+
+}
+
+function readTerminalOverlaySettings(
+engine
+){
+
+try{
+const raw =
+localStorage.getItem(
+TERMINAL_INDICATORS_STORAGE_KEY
+);
+
+if(
+!raw
+){
+return engine.defaultSettings();
+}
+
+const prefs =
+JSON.parse(
+raw
+);
+const stored =
+prefs &&
+typeof prefs ===
+"object"
+? prefs[
+`settings_${engine.id}`
+]
+: null;
+
+return engine.normalize(
+stored &&
+typeof stored ===
+"object"
+? stored
+: engine.defaultSettings()
+);
+}catch{
+return engine.defaultSettings();
+}
+
+}
 
 function patternSettingsForWidget(
-widget
+widget,
+engine
 ){
 
 const base =
 widget?.patternSettings &&
 typeof widget.patternSettings ===
 "object"
-? normalizePattern12Settings(
+? engine.normalize(
 widget.patternSettings
 )
-: readTerminalPattern12Settings() ||
-defaultPattern12Settings();
+: readTerminalOverlaySettings(
+engine
+);
 
 const side =
 String(
@@ -250,6 +368,12 @@ scene
 
 function recompute(){
 
+void recomputeAsync();
+
+}
+
+async function recomputeAsync(){
+
 if(
 widget.disposed ||
 !widget.candles?.length
@@ -260,11 +384,23 @@ redraw();
 return;
 }
 
+const engine =
+await overlayEngine(
+widget
+);
+
+if(
+widget.disposed
+){
+return;
+}
+
 scene =
-computePattern12Scene(
+engine.compute(
 widget.candles,
 patternSettingsForWidget(
-widget
+widget,
+engine
 )
 );
 redraw();

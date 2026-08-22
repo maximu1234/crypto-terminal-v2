@@ -15,10 +15,19 @@ botSidesDirectionLabel,
 formatBotStrategySettingsRows
 } from "./bot-strategy-prefs.js?v=28";
 import {
+loadEarlyT3BotPrefs,
+saveEarlyT3BotPrefs
+} from "./early-t3-bot-prefs.js?v=1";
+import {
+ALGO_ANALYSIS_BOT_NONE,
 ALGO_ANALYSIS_BOT_PATTERN_12,
+ALGO_ANALYSIS_BOT_EARLY_T3,
+ALGO_ANALYSIS_BOT_CHANGE_EVENT,
 getActiveAnalysisBotId,
+isActiveAnalysisBot,
+isAnyAnalysisBotActive,
 setActiveAnalysisBotId
-} from "./active-analysis-bot.js?v=1";
+} from "./active-analysis-bot.js?v=3";
 import {
 clampMaxPt1Pt4Bars
 } from "./pattern-entry-logic.js?v=14";
@@ -27,6 +36,7 @@ syncBotStrategiesToMain,
 syncAllTickerFlagsRootToMain,
 startAlgoBot,
 stopAlgoBot,
+stopAlgoBotIfRunning,
 fetchAlgoBotStatus,
 disarmAlgoArmedSetup,
 subscribeAlgoBotStatus,
@@ -36,7 +46,7 @@ isAlgoBotDesktop,
 fetchAlgoBotCloudLock,
 clearAlgoBotCloudLock,
 ensureAlgoBotCloudLock
-} from "./bot-bridge.js?v=19";
+} from "./bot-bridge.js?v=20";
 import {
 stageBotTickerBookFromPublished,
 hydrateBotTickerBookFromMain,
@@ -51,7 +61,7 @@ import {
 mountRemoteSessionLogsEntry,
 mountRemoteWatchlistsPushEntry,
 mountLocalSessionLogsEntry
-} from "./bot-session-logs-viewer.js?v=28";
+} from "./bot-session-logs-viewer.js?v=29";
 import {
 rebalanceTpShares
 } from "./pattern-trade-stats-partial.js?v=22";
@@ -198,6 +208,38 @@ const botsItemPattern12 =
 document.getElementById(
 "algo-bots-item-pattern12"
 );
+const botsItemPattern12Enabled =
+document.getElementById(
+"algo-bots-item-pattern12-enabled"
+);
+const botsItemEarlyT3 =
+document.getElementById(
+"algo-bots-item-early-t3"
+);
+const botsItemEarlyT3Enabled =
+document.getElementById(
+"algo-bots-item-early-t3-enabled"
+);
+const earlyT3SettingsModal =
+document.getElementById(
+"algo-bot-early-t3-settings-modal"
+);
+const earlyT3TfInput =
+document.getElementById(
+"algo-bot-early-t3-tf"
+);
+const earlyT3AlertLeadInput =
+document.getElementById(
+"algo-bot-early-t3-alert-lead"
+);
+const earlyT3MinTurnoverInput =
+document.getElementById(
+"algo-bot-early-t3-min-turnover"
+);
+let earlyT3Prefs =
+loadEarlyT3BotPrefs();
+let earlyT3Running =
+false;
 const botSettingsModal =
 document.getElementById(
 "algo-bot-settings-modal"
@@ -771,7 +813,11 @@ runBtn.classList.toggle(
 running
 );
 runBtn.disabled =
-runInflight;
+runInflight ||
+(
+!isAnyAnalysisBotActive() &&
+!running
+);
 
 if(
 strategiesWrap
@@ -786,20 +832,79 @@ running
 
 function applyActiveAnalysisBotMenuUi(){
 
-const activeId =
-getActiveAnalysisBotId();
+const pattern12On =
+isActiveAnalysisBot(
+ALGO_ANALYSIS_BOT_PATTERN_12
+);
+const earlyT3On =
+isActiveAnalysisBot(
+ALGO_ANALYSIS_BOT_EARLY_T3
+);
+
+if(
+botsItemPattern12Enabled
+){
+botsItemPattern12Enabled.checked =
+pattern12On;
+}
+
+if(
+botsItemEarlyT3Enabled
+){
+botsItemEarlyT3Enabled.checked =
+earlyT3On;
+}
 
 botsItemPattern12?.classList.toggle(
 "is-active-analysis-bot",
-activeId ===
-ALGO_ANALYSIS_BOT_PATTERN_12
+pattern12On
 );
 botsItemPattern12?.setAttribute(
 "aria-current",
-activeId ===
-ALGO_ANALYSIS_BOT_PATTERN_12
+pattern12On
 ? "true"
 : "false"
+);
+
+botsItemEarlyT3?.classList.toggle(
+"is-active-analysis-bot",
+earlyT3On
+);
+botsItemEarlyT3?.setAttribute(
+"aria-current",
+earlyT3On
+? "true"
+: "false"
+);
+
+}
+
+function onPattern12ModuleDisabled(){
+
+void stopAlgoBotIfRunning().then(
+result=>{
+if(
+result
+){
+applyBotStatus(
+result
+);
+}
+applyRunBtn();
+}
+).catch(
+()=>{
+applyRunBtn();
+}
+);
+
+void import(
+"./optimize-universe-background.js?v=5"
+).then(
+m=>
+m.stopAlgoOptimizeUniverseJob?.()
+).catch(
+()=>{}
 );
 
 }
@@ -834,6 +939,94 @@ botSettingsModal.classList.add(
 );
 botSettingsModal.hidden =
 true;
+
+}
+
+function openEarlyT3SettingsModal(){
+
+if(
+!earlyT3SettingsModal
+){
+return;
+}
+
+closeAllDrops();
+closeBotSettingsModal();
+applyEarlyT3SettingsUi();
+earlyT3SettingsModal.hidden =
+false;
+earlyT3SettingsModal.classList.remove(
+"hidden"
+);
+
+}
+
+function closeEarlyT3SettingsModal(){
+
+if(
+!earlyT3SettingsModal
+){
+return;
+}
+
+earlyT3SettingsModal.classList.add(
+"hidden"
+);
+earlyT3SettingsModal.hidden =
+true;
+
+}
+
+function applyEarlyT3SettingsUi(){
+
+earlyT3Prefs =
+loadEarlyT3BotPrefs();
+
+if(
+earlyT3TfInput
+){
+earlyT3TfInput.value =
+normalizeBotTf(
+earlyT3Prefs.tf
+);
+}
+
+if(
+earlyT3AlertLeadInput &&
+!isFieldBeingEdited(
+earlyT3AlertLeadInput
+)
+){
+earlyT3AlertLeadInput.value =
+String(
+earlyT3Prefs.alertLeadPct
+);
+}
+
+if(
+earlyT3MinTurnoverInput &&
+!isFieldBeingEdited(
+earlyT3MinTurnoverInput
+)
+){
+earlyT3MinTurnoverInput.value =
+formatDotThousands(
+earlyT3Prefs.minTurnover24hUsdt
+);
+}
+
+}
+
+function persistEarlyT3Prefs(
+patch =
+{}
+){
+
+earlyT3Prefs =
+saveEarlyT3BotPrefs(
+patch
+);
+applyEarlyT3SettingsUi();
 
 }
 
@@ -1473,6 +1666,12 @@ return apply;
 }
 
 function runningStrategyId(){
+
+if(
+earlyT3Running
+){
+return "early-t3";
+}
 
 if(
 st1.running
@@ -2399,6 +2598,10 @@ if(
 status.running !=
 null
 ){
+earlyT3Running =
+status.strategyId ===
+"early-t3" &&
+!!status.running;
 st1.running =
 status.strategyId ===
 "st1" &&
@@ -2943,16 +3146,84 @@ open
 }
 );
 
+botsItemPattern12Enabled?.addEventListener(
+"click",
+event=>{
+event.stopPropagation();
+}
+);
+
+botsItemPattern12Enabled?.addEventListener(
+"change",
+event=>{
+event.stopPropagation();
+if(
+botsItemPattern12Enabled.checked
+){
+setActiveAnalysisBotId(
+ALGO_ANALYSIS_BOT_PATTERN_12
+);
+}else if(
+isActiveAnalysisBot(
+ALGO_ANALYSIS_BOT_PATTERN_12
+)
+){
+setActiveAnalysisBotId(
+ALGO_ANALYSIS_BOT_NONE
+);
+}
+applyActiveAnalysisBotMenuUi();
+applyRunBtn();
+}
+);
+
+botsItemEarlyT3Enabled?.addEventListener(
+"click",
+event=>{
+event.stopPropagation();
+}
+);
+
+botsItemEarlyT3Enabled?.addEventListener(
+"change",
+event=>{
+event.stopPropagation();
+if(
+botsItemEarlyT3Enabled.checked
+){
+setActiveAnalysisBotId(
+ALGO_ANALYSIS_BOT_EARLY_T3
+);
+}else if(
+isActiveAnalysisBot(
+ALGO_ANALYSIS_BOT_EARLY_T3
+)
+){
+setActiveAnalysisBotId(
+ALGO_ANALYSIS_BOT_NONE
+);
+}
+applyActiveAnalysisBotMenuUi();
+applyRunBtn();
+}
+);
+
+botsItemEarlyT3?.addEventListener(
+"click",
+event=>{
+event.preventDefault();
+event.stopPropagation();
+closeAllDrops();
+openEarlyT3SettingsModal();
+}
+);
+
 botsItemPattern12?.addEventListener(
 "click",
 event=>{
 event.preventDefault();
 event.stopPropagation();
 closeAllDrops();
-setActiveAnalysisBotId(
-ALGO_ANALYSIS_BOT_PATTERN_12
-);
-applyActiveAnalysisBotMenuUi();
 openBotSettingsModal();
 }
 );
@@ -2978,6 +3249,31 @@ t.closest(
 ){
 event.preventDefault();
 closeBotSettingsModal();
+}
+}
+);
+
+earlyT3SettingsModal?.addEventListener(
+"click",
+event=>{
+const t =
+event.target;
+
+if(
+!(
+t instanceof Element
+)
+){
+return;
+}
+
+if(
+t.closest(
+'[data-close="algo-bot-early-t3-settings-modal"]'
+)
+){
+event.preventDefault();
+closeEarlyT3SettingsModal();
 }
 }
 );
@@ -3050,6 +3346,78 @@ true
 }
 );
 applyActiveAnalysisBotMenuUi();
+applyEarlyT3SettingsUi();
+applyRunBtn();
+
+if(
+!isActiveAnalysisBot(
+ALGO_ANALYSIS_BOT_PATTERN_12
+)
+){
+void import(
+"./optimize-universe-background.js?v=5"
+).then(
+m=>
+m.stopAlgoOptimizeUniverseJob?.()
+).catch(
+()=>{}
+);
+
+if(
+!isActiveAnalysisBot(
+ALGO_ANALYSIS_BOT_EARLY_T3
+)
+){
+onPattern12ModuleDisabled();
+}
+}
+
+function onAnalysisBotChanged(
+event
+){
+
+applyActiveAnalysisBotMenuUi();
+applyRunBtn();
+const next =
+event.detail?.botId;
+const prev =
+event.detail?.prevBotId;
+
+if(
+prev ===
+ALGO_ANALYSIS_BOT_PATTERN_12 &&
+next !==
+ALGO_ANALYSIS_BOT_PATTERN_12
+){
+onPattern12ModuleDisabled();
+}else if(
+prev !==
+next
+){
+void stopAlgoBotIfRunning().then(
+result=>{
+if(
+result
+){
+applyBotStatus(
+result
+);
+}
+applyRunBtn();
+}
+).catch(
+()=>{
+applyRunBtn();
+}
+);
+}
+
+}
+
+window.addEventListener(
+ALGO_ANALYSIS_BOT_CHANGE_EVENT,
+onAnalysisBotChanged
+);
 
 statusToggle?.addEventListener(
 "click",
@@ -3513,6 +3881,13 @@ runInflight
 return;
 }
 
+if(
+!runningStrategyId() &&
+!isAnyAnalysisBotActive()
+){
+return;
+}
+
 runInflight =
 true;
 applyRunBtn();
@@ -3536,8 +3911,17 @@ activeId ===
 ){
 st2.running =
 false;
-}else{
+}else if(
+activeId ===
+"st3"
+){
 st3.running =
+false;
+}else if(
+activeId ===
+"early-t3"
+){
+earlyT3Running =
 false;
 }
 applyRunBtn();
@@ -3551,6 +3935,33 @@ activeId
 applyBotStatus(
 result
 );
+void refreshCloudLockUi();
+}else if(
+isActiveAnalysisBot(
+ALGO_ANALYSIS_BOT_EARLY_T3
+)
+){
+const result =
+await startAlgoBot(
+"early-t3"
+);
+
+if(
+result?.ok ||
+result?.running
+){
+applyBotStatus(
+result
+);
+}else{
+applyBotStatus(
+{
+...result,
+running:
+false
+}
+);
+}
 void refreshCloudLockUi();
 }else{
 const startId =
@@ -3989,6 +4400,106 @@ return Math.min(
 n
 );
 }
+);
+}
+);
+earlyT3TfInput?.addEventListener(
+"change",
+()=>{
+if(
+!earlyT3TfInput
+){
+return;
+}
+
+persistEarlyT3Prefs(
+{
+tf:
+normalizeBotTf(
+earlyT3TfInput.value
+)
+}
+);
+}
+);
+earlyT3AlertLeadInput?.addEventListener(
+"change",
+()=>{
+if(
+!earlyT3AlertLeadInput
+){
+return;
+}
+
+const n =
+Number(
+earlyT3AlertLeadInput.value
+);
+const next =
+!Number.isFinite(
+n
+) ||
+n <
+0
+? 5
+: Math.min(
+10,
+n
+);
+earlyT3AlertLeadInput.value =
+String(
+next
+);
+persistEarlyT3Prefs(
+{
+alertLeadPct:
+next
+}
+);
+}
+);
+earlyT3MinTurnoverInput?.addEventListener(
+"change",
+()=>{
+if(
+!earlyT3MinTurnoverInput
+){
+return;
+}
+
+const next =
+parseDotThousands(
+earlyT3MinTurnoverInput.value,
+100_000
+);
+earlyT3MinTurnoverInput.value =
+formatDotThousands(
+next
+);
+persistEarlyT3Prefs(
+{
+minTurnover24hUsdt:
+next
+}
+);
+}
+);
+earlyT3MinTurnoverInput?.addEventListener(
+"blur",
+()=>{
+if(
+!earlyT3MinTurnoverInput
+){
+return;
+}
+
+earlyT3MinTurnoverInput.value =
+formatDotThousands(
+parseDotThousands(
+earlyT3MinTurnoverInput.value,
+earlyT3Prefs.minTurnover24hUsdt ??
+100_000
+)
 );
 }
 );
@@ -4447,6 +4958,10 @@ unsubBotStatus();
 window.removeEventListener(
 "algo-bot-ticker-flags-changed",
 onTickerFlagsChanged
+);
+window.removeEventListener(
+ALGO_ANALYSIS_BOT_CHANGE_EVENT,
+onAnalysisBotChanged
 );
 window.removeEventListener(
 "algo-trading-mode-changed",

@@ -187,7 +187,7 @@ ensureActiveCoinVisible,
 getVisibleSymbolList,
 setCoinsTableHooks,
 syncCoinListFreezeFromFlagMenus
-} from "./terminal/terminal-table.js?v=30";
+} from "./terminal/terminal-table.js?v=31";
 
 import {
 createCoinsChartSwitchVeil
@@ -215,11 +215,11 @@ mountTerminalLayoutPicker
 
 import {
 mountScriptTerminalStatus
-} from "./script-terminal-status.js?v=9";
+} from "./script-terminal-status.js?v=10";
 
 import {
-resumeScriptScanBackgroundJob
-} from "./script-scan-background.js?v=16";
+shouldRunScriptBackgroundJobs
+} from "./desktop-feature-nav-prefs.js?v=4";
 
 let currentDataset = "all";
 let currentTF = "60";
@@ -2899,7 +2899,13 @@ const {
 initChartIndicators
 } =
 await import(
-"./chart-indicators.js?v=55"
+"./chart-indicators.js?v=56"
+);
+const {
+createPattern12EarlyT3Indicator
+} =
+await import(
+"./indicators/pattern-12-early-t3.js?v=1"
 );
 
 drawingTools =
@@ -3260,6 +3266,10 @@ chartIndicators?.notifyLayoutChange?.();
 
 }
 })
+,
+extraIndicators: [
+createPattern12EarlyT3Indicator
+]
 }
 );
 
@@ -5943,7 +5953,24 @@ mountTerminalLayoutPicker
 });
 
 mountScriptTerminalStatus();
-resumeScriptScanBackgroundJob();
+
+if(
+shouldRunScriptBackgroundJobs()
+){
+void import(
+"./script-scan-background.js?v=17"
+).then(
+m=>
+m.resumeScriptScanBackgroundJob?.()
+).catch(
+err=>{
+console.warn(
+"[terminal] script scan background:",
+err
+);
+}
+);
+}
 
 favorites =
 loadFavoritesGroups();

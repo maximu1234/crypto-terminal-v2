@@ -410,9 +410,14 @@ function bootAlgoTradingRuntimeIfEnabled(){
 
 const prefs =
 readPrefs();
+const featureNav =
+require(
+"../feature-nav-prefs-store.cjs"
+).readPrefs();
 
 if(
-!prefs.enabled
+!prefs.enabled ||
+!featureNav.algoTradingNavEnabled
 ){
 runtimeState =
 "stopped";

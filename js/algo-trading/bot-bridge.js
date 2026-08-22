@@ -8,6 +8,12 @@ import {
 readAlgoPattern12Settings
 } from "./pattern-12-settings.js?v=5";
 import {
+readAlgoPattern12EarlyT3Settings
+} from "./pattern-12-early-t3-settings.js?v=1";
+import {
+loadEarlyT3BotPrefs
+} from "./early-t3-bot-prefs.js?v=1";
+import {
 loadAlgoTickerFlags,
 ALGO_TICKER_FLAGS_KEY,
 applyAlgoTickerFlagsRoot
@@ -200,6 +206,38 @@ lock
 
 await syncBotStrategiesToMain();
 await syncAllTickerFlagsRootToMain();
+
+if(
+String(
+strategyId ||
+""
+).trim().toLowerCase() ===
+"early-t3"
+){
+const result =
+await api.startBot(
+{
+strategyId:
+"early-t3",
+earlyT3Prefs:
+loadEarlyT3BotPrefs(),
+patternSettings:
+readAlgoPattern12EarlyT3Settings()
+}
+);
+
+if(
+!(
+result?.ok ||
+result?.running ||
+result?.alreadyRunning
+)
+){
+await releaseAlgoBotLock();
+}
+
+return result;
+}
 
 const prefs =
 loadBotStrategiesPrefs();

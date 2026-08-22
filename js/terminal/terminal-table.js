@@ -37,6 +37,29 @@ isTradePage
 } from "./terminal-state.js?v=12";
 
 /** Desktop /trade only — не тянем trade-open-positions в открытый web /coins. */
+function escapeHtml(
+value
+){
+
+return String(
+value ??
+""
+).replace(
+/&/g,
+"&amp;"
+).replace(
+/</g,
+"&lt;"
+).replace(
+/>/g,
+"&gt;"
+).replace(
+/"/g,
+"&quot;"
+);
+
+}
+
 let hasOpenPosition =
 ()=>
 false;
@@ -970,7 +993,7 @@ showFlags
 <div class="col-flag">
 
 <div class="coin-flag-wrap">
-<button type="button" class="flag coin-flag-btn" data-coin-flag-trigger data-symbol="${item.symbol}" title="Выбрать флаг" aria-haspopup="true" aria-expanded="false" aria-pressed="false"></button>
+<button type="button" class="flag coin-flag-btn" data-coin-flag-trigger data-symbol="${escapeHtml(item.symbol)}" title="Выбрать флаг" aria-haspopup="true" aria-expanded="false" aria-pressed="false"></button>
 <div class="coin-flag-menu hidden" role="menu">
 <button type="button" class="flag coin-flag-pick flag--red" data-flag-group="red" title="Красный" role="menuitem"></button>
 <button type="button" class="flag coin-flag-pick flag--green" data-flag-group="green" title="Зелёный" role="menuitem"></button>
@@ -984,8 +1007,8 @@ showFlags
 
 div.innerHTML = `
 ${flagCol}
-<div class="coin-symbol" title="${item.indexTitle || item.symbol}">
-${item.symbol}
+<div class="coin-symbol" title="${escapeHtml(item.indexTitle || item.symbol)}">
+${escapeHtml(item.symbol)}
 </div>
 <div class="coin-change24 col-change">
 0.00%

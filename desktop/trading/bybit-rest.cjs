@@ -28,7 +28,8 @@ require(
 "../app-session.cjs"
 );
 const {
-getRelayHttpsAgent
+getRelayHttpsAgent,
+raceRelayTlsHosts
 } =
 require(
 "../app-proxy-socks-relay.cjs"
@@ -51,6 +52,14 @@ const RECV_WINDOW =
 
 const REQUEST_TIMEOUT_MS =
 12000;
+const PROXY_FAILOVER_TIMEOUT_MS =
+2500;
+
+/** Last signed-REST host that answered through SOCKS (mainnet). */
+let lastGoodApiBase =
+"";
+let lastGoodApiBaseTestnet =
+"";
 
 /** Max age of open fills relative to close for diary open/duration matching. */
 const EXEC_HISTORY_MAX_LOOKBACK_MS =
@@ -76,6 +85,178 @@ return [
 "https://api.bybit.com",
 "https://api.bytick.com"
 ];
+
+}
+
+function orderedApiBases(
+testnet
+){
+
+const bases =
+apiBases(
+testnet
+);
+
+if(
+testnet
+){
+const lastGood =
+lastGoodApiBaseTestnet;
+
+if(
+lastGood &&
+bases.includes(
+lastGood
+)
+){
+return [
+lastGood,
+...bases.filter(
+base=>
+base !==
+lastGood
+)
+];
+}
+
+return bases;
+}
+
+const proxyOn =
+!!getRelayHttpsAgent();
+const ordered =
+proxyOn
+? [
+"https://api.bytick.com",
+"https://api.bybit.com"
+]
+: [
+...bases
+];
+const lastGood =
+lastGoodApiBase;
+
+if(
+lastGood &&
+ordered.includes(
+lastGood
+)
+){
+return [
+lastGood,
+...ordered.filter(
+base=>
+base !==
+lastGood
+)
+];
+}
+
+return ordered;
+
+}
+
+function rememberGoodApiBase(
+testnet,
+base
+){
+
+const value =
+String(
+base ||
+""
+);
+
+if(
+testnet
+){
+lastGoodApiBaseTestnet =
+value;
+return;
+}
+
+lastGoodApiBase =
+value;
+
+}
+
+function timeoutMsForApiHost(
+url,
+base,
+isLastBase
+){
+
+if(
+isLastBase ||
+!shouldProxyBybitRestUrl(
+url
+)
+){
+return REQUEST_TIMEOUT_MS;
+}
+
+if(
+base &&
+(
+base ===
+lastGoodApiBase ||
+base ===
+lastGoodApiBaseTestnet
+)
+){
+return REQUEST_TIMEOUT_MS;
+}
+
+return PROXY_FAILOVER_TIMEOUT_MS;
+
+}
+
+let proxyHostPick =
+null;
+
+async function ensureProxyApiBase(
+testnet
+){
+
+if(
+testnet ||
+!getRelayHttpsAgent() ||
+lastGoodApiBase
+){
+return;
+}
+
+if(
+proxyHostPick
+){
+await proxyHostPick;
+return;
+}
+
+proxyHostPick =
+raceRelayTlsHosts(
+[
+"api.bytick.com",
+"api.bybit.com"
+],
+4000
+).then(
+host=>{
+rememberGoodApiBase(
+false,
+`https://${host}`
+);
+}
+).catch(
+()=>{}
+).finally(
+()=>{
+proxyHostPick =
+null;
+}
+);
+
+await proxyHostPick;
 
 }
 
@@ -261,6 +442,36 @@ req.on(
 reject
 );
 
+const abortSignal =
+options &&
+options.signal;
+
+if(
+abortSignal
+){
+
+const onAbort =
+()=>{
+req.destroy();
+};
+
+if(
+abortSignal.aborted
+){
+onAbort();
+}else{
+abortSignal.addEventListener(
+"abort",
+onAbort,
+{
+once:
+true
+}
+);
+}
+
+}
+
 if(
 options &&
 options.body
@@ -282,6 +493,26 @@ url,
 options
 ){
 
+const timeoutMsRaw =
+Number(
+options?.timeoutMs
+);
+const timeoutMs =
+Number.isFinite(
+timeoutMsRaw
+) &&
+timeoutMsRaw >
+0
+? timeoutMsRaw
+: REQUEST_TIMEOUT_MS;
+const {
+timeoutMs:
+_ignoredTimeoutMs,
+...fetchOptions
+} =
+options ||
+{};
+
 const controller =
 new AbortController();
 const timer =
@@ -289,12 +520,12 @@ setTimeout(
 ()=>{
 controller.abort();
 },
-REQUEST_TIMEOUT_MS
+timeoutMs
 );
 
 const requestOptions =
 {
-...options,
+...fetchOptions,
 signal:
 controller.signal
 };
@@ -437,6 +668,10 @@ message:
 };
 }
 
+await ensureProxyApiBase(
+creds.testnet
+);
+
 const params =
 new URLSearchParams(
 query
@@ -470,14 +705,22 @@ let lastNetworkError =
 null;
 let lastAuthError =
 null;
+const getBases =
+orderedApiBases(
+creds.testnet
+);
 
 for(
-const base of apiBases(
-creds.testnet
-)
+const base of getBases
 ){
 const url =
 `${base}${path}?${queryString}`;
+const isLastBase =
+base ===
+getBases[
+getBases.length -
+1
+];
 
 try{
 const response =
@@ -486,7 +729,13 @@ url,
 {
 method:
 "GET",
-headers
+headers,
+timeoutMs:
+timeoutMsForApiHost(
+url,
+base,
+isLastBase
+)
 }
 );
 
@@ -496,6 +745,15 @@ const data =
 parseBybitBody(
 rawText
 );
+
+if(
+data
+){
+rememberGoodApiBase(
+creds.testnet,
+base
+);
+}
 
 if(
 !data
@@ -576,6 +834,19 @@ err
 ){
 lastNetworkError =
 err;
+
+if(
+base ===
+lastGoodApiBase ||
+base ===
+lastGoodApiBaseTestnet
+){
+rememberGoodApiBase(
+creds.testnet,
+""
+);
+}
+
 }
 
 }
@@ -4548,6 +4819,10 @@ message:
 };
 }
 
+await ensureProxyApiBase(
+creds.testnet
+);
+
 const bodyStr =
 JSON.stringify(
 body ||
@@ -4582,14 +4857,22 @@ let lastNetworkError =
 null;
 let lastAuthError =
 null;
+const postBases =
+orderedApiBases(
+creds.testnet
+);
 
 for(
-const base of apiBases(
-creds.testnet
-)
+const base of postBases
 ){
 const url =
 `${base}${path}`;
+const isLastBase =
+base ===
+postBases[
+postBases.length -
+1
+];
 
 try{
 const response =
@@ -4600,7 +4883,13 @@ method:
 "POST",
 headers,
 body:
-bodyStr
+bodyStr,
+timeoutMs:
+timeoutMsForApiHost(
+url,
+base,
+isLastBase
+)
 }
 );
 
@@ -4610,6 +4899,15 @@ const data =
 parseBybitBody(
 rawText
 );
+
+if(
+data
+){
+rememberGoodApiBase(
+creds.testnet,
+base
+);
+}
 
 if(
 !data
@@ -4690,6 +4988,19 @@ err
 ){
 lastNetworkError =
 err;
+
+if(
+base ===
+lastGoodApiBase ||
+base ===
+lastGoodApiBaseTestnet
+){
+rememberGoodApiBase(
+creds.testnet,
+""
+);
+}
+
 }
 
 }

@@ -16,7 +16,7 @@
 <script src="/js/site-css-ready.js?v=3"></script>
 <link rel="stylesheet" href="/css/common.css?v=55">
 <link rel="stylesheet" href="/css/screener.css?v=56">
-<link rel="stylesheet" href="/css/script-page.css?v=24">
+<link rel="stylesheet" href="/css/script-page.css?v=25">
 
 <link rel="preload" href="/vendor/lightweight-charts.standalone.production.js" as="script">
 <link rel="modulepreload" href="/js/charts-lib-boot.js?v=3" crossorigin>
@@ -81,6 +81,14 @@ aria-expanded="false"
 <div id="script-toolbar" class="script-toolbar" aria-label="Настройки скрипта">
 
 <div class="script-toolbar-row script-toolbar-row--settings">
+
+<label class="script-toolbar-field script-toolbar-field--indicator">
+<span>Индикатор</span>
+<select id="script-scan-indicator" aria-label="Индикатор сканирования">
+<option value="pattern-12" selected>Паттерн 1-2</option>
+<option value="pattern-12-early-t3">1-2 EARLY T3</option>
+</select>
+</label>
 
 <label class="script-toolbar-field">
 <span>Глубина поиска</span>
@@ -149,7 +157,7 @@ aria-expanded="false"
 
 <div id="script-status" class="hidden">Загрузка…</div>
 
-<script type="module" src="/js/script-page-boot.js?v=18"></script>
+<script type="module" src="/js/script-page-boot.js?v=19"></script>
 
 </body>
 </html>

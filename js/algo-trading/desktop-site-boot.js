@@ -11,6 +11,12 @@ import {
 isAlgoBotLiteShell
 } from "../page-routes.js?v=5";
 
+import {
+ALGO_ANALYSIS_BOT_PATTERN_12,
+isActiveAnalysisBot,
+isAnyAnalysisBotActive
+} from "./active-analysis-bot.js?v=3";
+
 export function bootAlgoDesktopBackgroundJobs(){
 
 if(
@@ -19,6 +25,18 @@ if(
 return;
 }
 
+if(
+!isAnyAnalysisBotActive()
+){
+void stopAlgoDesktopBackgroundJobs();
+return;
+}
+
+if(
+isActiveAnalysisBot(
+ALGO_ANALYSIS_BOT_PATTERN_12
+)
+){
 void import(
 "./optimize-universe-background.js?v=5"
 ).then(
@@ -32,6 +50,7 @@ err
 );
 }
 );
+}
 
 void import(
 "./bot-alert-bridge.js?v=7"
@@ -86,7 +105,7 @@ if(
 ){
 tasks.push(
 import(
-"./bot-bridge.js?v=19"
+"./bot-bridge.js?v=20"
 ).then(
 m=>
 m.stopAlgoBotIfRunning?.()

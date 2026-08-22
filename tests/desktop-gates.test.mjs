@@ -31,9 +31,48 @@ test("algo session-log server defaults to loopback and header auth", () => {
   const source = read("desktop/trading/algo-bot-session-log-server.cjs");
   assert.match(source, /bindHost:\s*\n"127\.0\.0\.1"/);
   assert.doesNotMatch(source, /searchParams\.get\(\s*\n"token"/);
+  assert.doesNotMatch(source, /Access-Control-Allow-Origin":\s*\n"\*"/);
   const client = read("desktop/trading/algo-bot-session-log-remote-client.cjs");
   assert.doesNotMatch(client, /\?token=/);
   assert.match(client, /Authorization/);
+});
+
+test("chart snapshot IPC is gated and defaultName is basename-only", () => {
+  const source = read("desktop/chart-snapshot.cjs");
+  assert.match(source, /handleTrustedDesktopUi/);
+  assert.match(source, /function safeSnapshotFileName/);
+  assert.match(source, /path\.basename/);
+  assert.doesNotMatch(source, /ipcMain\.handle\(\s*\n\s*"desktop:chartSnapshot/);
+});
+
+test("site-protocol resolveBundleFile requires a path separator after root", () => {
+  const source = read("desktop/site-protocol.cjs");
+  assert.match(source, /rootWithSep/);
+  assert.match(source, /normalized\.startsWith\(\s*\nrootWithSep/);
+});
+
+test("feature-nav off stops algo runtime resume", () => {
+  const runtime = read("desktop/trading/algo-trading-runtime.cjs");
+  assert.match(runtime, /feature-nav-prefs-store/);
+  assert.match(runtime, /algoTradingNavEnabled/);
+  const bot = read("desktop/trading/algo-trading-bot.cjs");
+  assert.match(bot, /algo nav disabled/);
+  const main = read("desktop/main.js");
+  assert.match(main, /stopAlgoModulesForFeatureNavOff/);
+  assert.match(main, /handleTrustedDesktopUi\(\s*\n\s*ipcMain,\s*\n\s*"desktop:setFeatureNavPrefs"/);
+});
+
+test("screener overlay does not statically import Early T3 math", () => {
+  const source = read("js/screener-pattern-overlay.js");
+  assert.doesNotMatch(source, /from\s+"\.\/indicators\/pattern-12-early-t3-math/);
+  assert.doesNotMatch(source, /pattern-12-scanner\.js/);
+  assert.match(source, /import\(\s*\n"\.\/indicators\/pattern-12-early-t3-math\.js/);
+});
+
+test("public proxy settings omit the proxy password", () => {
+  const source = read("desktop/app-proxy.cjs");
+  assert.match(source, /hasPassword:/);
+  assert.match(source, /password:\s*\n""/);
 });
 
 test("Vercel redirects diary index HTML to screener", () => {

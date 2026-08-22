@@ -89,6 +89,93 @@ return resolved;
 
 }
 
+const PNL_LAST_SAVE_DIR_FILE =
+"pnl-share-last-save-dir.json";
+
+function pnlLastSaveDirStorePath(){
+
+return path.join(
+app.getPath(
+"userData"
+),
+PNL_LAST_SAVE_DIR_FILE
+);
+
+}
+
+function readPnlLastSaveDir(){
+
+try{
+const parsed =
+JSON.parse(
+fs.readFileSync(
+pnlLastSaveDirStorePath(),
+"utf8"
+)
+);
+const dir =
+String(
+parsed?.dir ||
+""
+).trim();
+
+if(
+dir &&
+fs.existsSync(
+dir
+) &&
+fs.statSync(
+dir
+).isDirectory()
+){
+return dir;
+}
+}catch{
+/* fallback */
+}
+
+return app.getPath(
+"downloads"
+);
+
+}
+
+function writePnlLastSaveDir(
+filePath
+){
+
+const dir =
+path.dirname(
+String(
+filePath ||
+""
+)
+);
+
+if(
+!dir ||
+!fs.existsSync(
+dir
+)
+){
+return;
+}
+
+try{
+fs.writeFileSync(
+pnlLastSaveDirStorePath(),
+JSON.stringify(
+{
+dir
+}
+)
+);
+}catch{
+/* ignore */
+}
+
+}
+
 function getAppRoot(){
 
 if(
@@ -440,6 +527,15 @@ require(
 "electron"
 ).BrowserWindow.getFocusedWindow();
 
+const safeName =
+path.basename(
+String(
+defaultName ||
+"pnl-share.png"
+)
+) ||
+"pnl-share.png";
+
 const {
 canceled,
 filePath
@@ -452,10 +548,8 @@ title:
 "Сохранить бейдж Поделиться PnL",
 defaultPath:
 path.join(
-app.getPath(
-"downloads"
-),
-defaultName
+readPnlLastSaveDir(),
+safeName
 ),
 filters:
 [
@@ -485,6 +579,10 @@ true
 
 await fs.promises.copyFile(
 safePath,
+filePath
+);
+
+writePnlLastSaveDir(
 filePath
 );
 

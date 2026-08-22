@@ -72,7 +72,7 @@ if(
 ){
 scriptZoomModulePromise =
 import(
-"./screener-widget-zoom.js?v=28"
+"./screener-widget-zoom.js?v=29"
 ).then(
 mod=>{
 refreshZoomFavoriteUi =
@@ -93,7 +93,7 @@ return scriptZoomModulePromise;
 import {
 PATTERN_SCAN_TF_LABELS,
 PATTERN_SCAN_SIDE_LABELS
-} from "./pattern-12-scanner.js?v=24";
+} from "./pattern-12-scanner.js?v=25";
 
 let patternOverlayApi =
 null;
@@ -145,7 +145,7 @@ if(
 ){
 patternOverlayApi =
 await import(
-"./screener-pattern-overlay.js?v=8"
+"./screener-pattern-overlay.js?v=10"
 );
 }
 
@@ -242,6 +242,29 @@ symbol ||
 ).replace(
 /\.P$/i,
 ""
+);
+
+}
+
+function escapeHtml(
+value
+){
+
+return String(
+value ??
+""
+).replace(
+/&/g,
+"&amp;"
+).replace(
+/</g,
+"&lt;"
+).replace(
+/>/g,
+"&gt;"
+).replace(
+/"/g,
+"&quot;"
 );
 
 }
@@ -619,7 +642,8 @@ gridEl,
 paginationEl,
 statusEl,
 onPersist,
-getLookbackBars
+getLookbackBars,
+getScanIndicatorId
 }
 ){
 
@@ -1093,7 +1117,7 @@ root.innerHTML =
 <div class="screener-widget-header">
 <div class="screener-header-left">
 ${getWidgetFlagHtml()}
-<div class="screener-symbol">${displaySymbol(row.symbol)}</div>
+<div class="screener-symbol">${escapeHtml(displaySymbol(row.symbol))}</div>
 <span class="script-widget-meta">${metaParts.join(" · ")}</span>
 <span class="script-widget-side ${sideClass}">${sideLabel}</span>
 </div>
@@ -1159,6 +1183,11 @@ scanTf:
 row.tf,
 side:
 row.side,
+scanIndicatorId:
+typeof getScanIndicatorId ===
+"function"
+? getScanIndicatorId()
+: "pattern-12",
 root,
 chart,
 series,

@@ -150,6 +150,11 @@ algoIpcFn(
 "bootAlgoBotIfWasRunning",
 true
 );
+const stopAlgoModulesForFeatureNavOff =
+algoIpcFn(
+"stopAlgoModulesForFeatureNavOff",
+true
+);
 const setAlgoTradingStreamTarget =
 algoIpcFn(
 "setAlgoTradingStreamTarget"
@@ -1592,7 +1597,9 @@ platform.platform
 );
 
 registerTradingIpc();
-registerChartSnapshotIpc();
+registerChartSnapshotIpc({
+handleTrustedDesktopUi
+});
 registerChartSnapshotLogoIpc();
 registerAppProxyIpc({
 ipcMain,
@@ -1848,7 +1855,8 @@ err.message
 }
 );
 
-ipcMain.handle(
+handleTrustedDesktopUi(
+ipcMain,
 "desktop:setFeatureNavPrefs",
 (
 _event,
@@ -1856,13 +1864,37 @@ patch
 )=>{
 
 try{
-return setFeatureNavPrefs(
+const featureNav =
+require(
+"./feature-nav-prefs-store.cjs"
+);
+const prev =
+featureNav.readPrefs();
+const result =
+setFeatureNavPrefs(
 patch &&
 typeof patch ===
 "object"
 ? patch
 : {}
 );
+const next =
+result?.prefs ||
+featureNav.readPrefs();
+
+if(
+prev.algoTradingNavEnabled &&
+!next.algoTradingNavEnabled
+){
+void stopAlgoModulesForFeatureNavOff();
+}else if(
+!prev.algoTradingNavEnabled &&
+next.algoTradingNavEnabled
+){
+bootAlgoTradingRuntimeIfEnabled();
+}
+
+return result;
 }catch(
 err
 ){

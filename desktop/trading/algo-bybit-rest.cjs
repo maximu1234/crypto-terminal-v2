@@ -5501,6 +5501,81 @@ n
 
 }
 
+async function listLinearTickerTurnovers(){
+
+const result =
+await publicMarketGet(
+"/v5/market/tickers",
+{
+category:
+"linear"
+}
+);
+
+if(
+!result.ok
+){
+return result;
+}
+
+const list =
+result.data?.result?.list;
+const tickers =
+[];
+
+if(
+Array.isArray(
+list
+)
+){
+
+for(
+const row of list
+){
+
+const symbol =
+String(
+row?.symbol ||
+""
+).trim().toUpperCase();
+
+if(
+!symbol.endsWith(
+"USDT"
+)
+){
+continue;
+}
+
+const n =
+Number(
+row.turnover24h
+);
+
+tickers.push(
+{
+symbol,
+turnover24h:
+Number.isFinite(
+n
+)
+? n
+: 0
+}
+);
+
+}
+
+}
+
+return {
+ok:
+true,
+tickers
+};
+
+}
+
 async function openPositionAtMarket(
 symbol,
 side,
@@ -6557,6 +6632,7 @@ placeTradeOrder,
 cancelTradeOrder,
 amendTradeOrder,
 getTickerPrices,
+listLinearTickerTurnovers,
 reconcileOrdersOnPositionOpen,
 reconcileOrdersOnPositionClose,
 pingBybit,

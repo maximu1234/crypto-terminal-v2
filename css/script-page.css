@@ -104,6 +104,10 @@ background:#0f172a;
 color:#e5e7eb;
 }
 
+.script-toolbar-field--indicator select{
+min-width:11.5rem;
+}
+
 .script-toolbar-field--turnover{
 gap:4px;
 }

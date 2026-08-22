@@ -30,6 +30,11 @@ import {
 applySlTpHighlights
 } from "../js/scalping-dom/position-overlay.js";
 
+import {
+applyHorizDrawingUnderlines,
+resolveHorizDrawingLevels
+} from "../js/scalping-dom/drawing-overlay.js";
+
 test("tick-book delta is O(1) and resyncs on sequence gap", () => {
   const book = createLiveBook();
   book.setNativeTick(1);
@@ -328,4 +333,101 @@ test("depth-feed does not poll REST on an interval", () => {
   assert.doesNotMatch(source, /REST_RESYNC_MS|20000/);
   assert.match(source, /1800/);
   assert.match(source, /needResync/);
+  assert.match(source, /drawing-overlay/);
+  assert.match(source, /drawings-updated/);
 });
+
+test("hline and hray underlines keep drawing color on the row above price", () => {
+  const ladder = {
+    rows: [
+      { price: 102, side: "ask", size: 1 },
+      { price: 101, side: "ask", size: 1 },
+      { price: 100, side: "bid", size: 1 },
+      { price: 99, side: "bid", size: 1 }
+    ]
+  };
+
+  const next = applyHorizDrawingUnderlines(ladder, [
+    { price: 100.5, color: "#ff00aa", width: 3, kind: "hline" },
+    { price: 101.2, color: "#00ffcc", width: 1, kind: "hray" }
+  ]);
+
+  assert.deepEqual(
+    next.rows.find((row) => row.price === 101)?.drawingLines,
+    [{ color: "#ff00aa", width: 3, kind: "hline" }]
+  );
+  assert.deepEqual(
+    next.rows.find((row) => row.price === 102)?.drawingLines,
+    [{ color: "#00ffcc", width: 1, kind: "hray" }]
+  );
+});
+
+test("resolveHorizDrawingLevels reads hline/hray from drawings storage", () => {
+  const store = new Map();
+  const prev = globalThis.localStorage;
+  globalThis.localStorage = {
+    getItem: (k) => (store.has(k) ? store.get(k) : null),
+    setItem: (k, v) => {
+      store.set(k, String(v));
+    },
+    removeItem: (k) => {
+      store.delete(k);
+    },
+    get length() {
+      return store.size;
+    },
+    key(i) {
+      return [...store.keys()][i] ?? null;
+    }
+  };
+
+  try {
+    store.set(
+      "drawings_bybit_BTCUSDT",
+      JSON.stringify([
+        {
+          id: "h1",
+          type: "hline",
+          price: 100.4,
+          color: "#aabbcc",
+          lineWidth: 2
+        },
+        {
+          id: "r1",
+          type: "hray",
+          price: 101.6,
+          color: "#112233",
+          lineWidth: 1
+        },
+        {
+          id: "skip-alert",
+          type: "hray",
+          price: 99,
+          color: "#ffff00",
+          isAlert: true
+        },
+        {
+          id: "skip-trend",
+          type: "trendline",
+          p1: { price: 50 },
+          color: "#ffffff"
+        }
+      ])
+    );
+
+    const levels = resolveHorizDrawingLevels("BTCUSDT.P");
+    assert.equal(levels.length, 2);
+    assert.equal(levels[0].kind, "hline");
+    assert.equal(levels[0].color, "#aabbcc");
+    assert.equal(levels[0].price, 100.4);
+    assert.equal(levels[1].kind, "hray");
+    assert.equal(levels[1].color, "#112233");
+  } finally {
+    if (prev === undefined) {
+      delete globalThis.localStorage;
+    } else {
+      globalThis.localStorage = prev;
+    }
+  }
+});
+

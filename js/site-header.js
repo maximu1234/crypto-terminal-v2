@@ -7,7 +7,7 @@ ensureHeaderSettingsShell
 
 import {
 mountScriptTerminalStatus
-} from "./script-terminal-status.js?v=9";
+} from "./script-terminal-status.js?v=10";
 
 import {
 renderHeaderNav

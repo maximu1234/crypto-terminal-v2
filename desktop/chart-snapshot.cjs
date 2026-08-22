@@ -172,9 +172,60 @@ image
 
 }
 
-function registerChartSnapshotIpc(){
+function safeSnapshotFileName(
+raw
+){
 
-ipcMain.handle(
+let name =
+path.basename(
+String(
+raw ||
+""
+).trim() ||
+"chart.png"
+);
+
+if(
+!name ||
+name ===
+"." ||
+name ===
+".."
+){
+name =
+"chart.png";
+}
+
+if(
+!/\.png$/i.test(
+name
+)
+){
+name =
+`${name}.png`;
+}
+
+return name;
+
+}
+
+function registerChartSnapshotIpc(
+opts =
+{}
+){
+
+const handleTrustedDesktopUi =
+opts.handleTrustedDesktopUi;
+
+if(
+typeof handleTrustedDesktopUi !==
+"function"
+){
+return;
+}
+
+handleTrustedDesktopUi(
+ipcMain,
 "desktop:chartSnapshotCopy",
 async (
 event,
@@ -229,7 +280,8 @@ err
 }
 );
 
-ipcMain.handle(
+handleTrustedDesktopUi(
+ipcMain,
 "desktop:chartSnapshotSave",
 async (
 event,
@@ -260,11 +312,9 @@ event.sender
 );
 
 const defaultName =
-typeof payload?.defaultName ===
-"string" &&
-payload.defaultName.trim()
-? payload.defaultName.trim()
-: "chart.png";
+safeSnapshotFileName(
+payload?.defaultName
+);
 
 const {
 canceled,
@@ -345,5 +395,6 @@ err
 
 module.exports =
 {
-registerChartSnapshotIpc
+registerChartSnapshotIpc,
+safeSnapshotFileName
 };

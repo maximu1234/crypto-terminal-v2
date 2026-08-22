@@ -168,7 +168,9 @@ getHost,
 storageKey =
 DEFAULT_STORAGE_KEY,
 createPattern12Indicator:
-createPattern12IndicatorOverride
+createPattern12IndicatorOverride,
+extraIndicators =
+[]
 }
 ){
 
@@ -307,6 +309,23 @@ pattern12Factory(
 getHost,
 settingsStore
 ),
+...((
+Array.isArray(
+extraIndicators
+)
+? extraIndicators
+: []
+).filter(
+create=>
+typeof create ===
+"function"
+).map(
+create=>
+create(
+getHost,
+settingsStore
+)
+)),
 createPatternGipIndicator(
 getHost,
 settingsStore

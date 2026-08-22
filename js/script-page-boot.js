@@ -15,7 +15,7 @@ jsImport
 
 import {
 mountScriptPage
-} from "./script-page.js?v=50";
+} from "./script-page.js?v=51";
 
 import {
 isScriptNavEnabled

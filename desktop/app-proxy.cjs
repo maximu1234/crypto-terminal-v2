@@ -105,9 +105,30 @@ function saveProxySettings(
 raw
 ){
 
+const incoming =
+raw &&
+typeof raw ===
+"object"
+? raw
+: {};
+const current =
+loadProxySettings();
+const keepPassword =
+!String(
+incoming.password ||
+""
+).trim() &&
+!!current.password;
+
 const settings =
 normalizeProxySettings(
-raw
+{
+...incoming,
+password:
+keepPassword
+? current.password
+: incoming.password
+}
 );
 
 writeSecretText(
@@ -296,7 +317,9 @@ cfg.port ||
 username:
 cfg.username,
 password:
-cfg.password,
+"",
+hasPassword:
+!!cfg.password,
 ready:
 isProxyConfigReady(
 cfg

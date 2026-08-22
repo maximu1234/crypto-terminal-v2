@@ -558,7 +558,7 @@ mountExchangeConnectionsPanel,
 updateTradeExchangeConnectionChrome
 } =
 await import(
-"./trade-exchange-settings.js?v=22"
+"./trade-exchange-settings.js?v=23"
 );
 
 const host =
@@ -602,7 +602,7 @@ const {
 mountProxySettingsPanel
 } =
 await import(
-"./app-settings-proxy-panel.js?v=4"
+"./app-settings-proxy-panel.js?v=5"
 );
 
 mountProxySettingsPanel(

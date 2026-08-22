@@ -997,6 +997,228 @@ throw err;
 
 }
 
+function getRelayListenPort(){
+
+const addr =
+relayServer &&
+relayServer.address &&
+relayServer.address();
+
+return addr &&
+addr.port;
+
+}
+
+function tlsHandshakeThroughRelay(
+host,
+timeoutMs
+){
+
+const relayPort =
+getRelayListenPort();
+
+if(
+!relayPort
+){
+return Promise.reject(
+new Error(
+"socks relay не запущен"
+)
+);
+}
+
+return new Promise(
+(
+resolve,
+reject
+)=>{
+
+let plain =
+null;
+let tlsSocket =
+null;
+let settled =
+false;
+const timer =
+setTimeout(
+()=>{
+finish(
+new Error(
+"таймаут TLS"
+)
+);
+},
+timeoutMs
+);
+
+function finish(
+err,
+okHost
+){
+
+if(
+settled
+){
+return;
+}
+
+settled =
+true;
+clearTimeout(
+timer
+);
+closeSocket(
+tlsSocket
+);
+closeSocket(
+plain
+);
+
+if(
+err
+){
+reject(
+err
+);
+return;
+}
+
+resolve(
+okHost
+);
+
+}
+
+void openNoAuthSocksTunnel(
+{
+relayHost:
+"127.0.0.1",
+relayPort,
+destHost:
+host,
+destPort:
+443
+}
+).then(
+socket=>{
+plain =
+socket;
+tlsSocket =
+tls.connect(
+{
+socket:
+plain,
+servername:
+host
+}
+);
+tlsSocket.once(
+"secureConnect",
+()=>{
+finish(
+null,
+host
+);
+}
+);
+tlsSocket.once(
+"error",
+finish
+);
+}
+).catch(
+finish
+);
+
+}
+);
+
+}
+
+async function raceRelayTlsHosts(
+hosts,
+timeoutMs =
+4000
+){
+
+const list =
+(
+Array.isArray(
+hosts
+)
+? hosts
+: []
+).filter(
+Boolean
+);
+
+if(
+!list.length
+){
+throw new Error(
+"no hosts"
+);
+}
+
+return await new Promise(
+(
+resolve,
+reject
+)=>{
+
+let left =
+list.length;
+let won =
+false;
+
+for(
+const host of list
+){
+void tlsHandshakeThroughRelay(
+host,
+timeoutMs
+).then(
+okHost=>{
+
+if(
+won
+){
+return;
+}
+
+won =
+true;
+resolve(
+okHost
+);
+
+}
+).catch(
+()=>{
+left -=
+1;
+
+if(
+!won &&
+left <=
+0
+){
+reject(
+new Error(
+"TLS через SOCKS недоступен"
+)
+);
+}
+
+}
+);
+}
+
+}
+);
+
+}
+
 function getRelayHttpsAgent(){
 
 const addr =
@@ -1025,6 +1247,12 @@ relayHttpsAgent =
 new https.Agent({
 keepAlive:
 true,
+keepAliveMsecs:
+15000,
+maxSockets:
+4,
+maxFreeSockets:
+2,
 createConnection(
 options,
 callback
@@ -1130,6 +1358,7 @@ module.exports =
 encodeUserPass,
 getRelayHttpsAgent,
 needsSocksAuthRelay,
+raceRelayTlsHosts,
 startSocksAuthRelay,
 stopSocksAuthRelay
 };

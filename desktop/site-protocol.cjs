@@ -264,10 +264,19 @@ const rootNorm =
 path.normalize(
 bundleRoot
 );
+const rootWithSep =
+rootNorm.endsWith(
+path.sep
+)
+? rootNorm
+: rootNorm +
+path.sep;
 
 if(
+normalized !==
+rootNorm &&
 !normalized.startsWith(
-rootNorm
+rootWithSep
 )
 ){
 return null;

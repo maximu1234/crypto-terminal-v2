@@ -44,7 +44,7 @@ subscribeKline
 import {
 mountAlgoTradingCoinList,
 refreshAlgoMarketListFromFlags
-} from "./algo-trading-list.js?v=15";
+} from "./algo-trading-list.js?v=17";
 
 import {
 mountAlgoTickerScanUi
@@ -67,7 +67,7 @@ mountAlgoRuntimeUi
 
 import {
 mountAlgoBotStrategyUi
-} from "./algo-trading/bot-strategy-ui.js?v=75";
+} from "./algo-trading/bot-strategy-ui.js?v=77";
 
 import {
 ALGO_ANALYSIS_BOT_CHANGE_EVENT,
@@ -75,7 +75,7 @@ ALGO_ANALYSIS_BOT_PATTERN_12,
 getActiveAnalysisBotId,
 isActiveAnalysisBot,
 setActiveAnalysisBotId
-} from "./algo-trading/active-analysis-bot.js?v=1";
+} from "./algo-trading/active-analysis-bot.js?v=3";
 
 import {
 mountSessionLogServerSettings
@@ -83,7 +83,7 @@ mountSessionLogServerSettings
 
 import {
 syncBotStrategiesToMain
-} from "./algo-trading/bot-bridge.js?v=19";
+} from "./algo-trading/bot-bridge.js?v=20";
 
 import {
 mountAlgoTradeUi
@@ -95,7 +95,7 @@ mountAlgoTradingDrawings
 
 import {
 mountAlgoTradingIndicators
-} from "./algo-trading/indicators.js?v=12";
+} from "./algo-trading/indicators.js?v=14";
 
 import {
 mountAlgoPatternEntryOverlay
@@ -694,22 +694,26 @@ botId ===
 ALGO_ANALYSIS_BOT_PATTERN_12;
 
 if(
-chartIndicators?.setIndicatorEnabled &&
-!isAlgoBotLiteMode()
-){
-chartIndicators.setIndicatorEnabled(
-"pattern-12",
-pattern12
-);
-}
-
-if(
 !pattern12
 ){
+patternAnalysisSeq++;
+if(
+patternAnalysisTimer
+){
+clearTimeout(
+patternAnalysisTimer
+);
+patternAnalysisTimer =
+0;
+}
+tickerScanUi?.stopAll?.();
 entryOverlay?.setEvents?.(
 []
 );
 entryOverlay?.refreshPositions?.();
+algoPattern12EnabledOnce =
+false;
+refreshSupertrendFilterLines();
 return;
 }
 
@@ -720,6 +724,7 @@ historyStatsReady &&
 algoPattern12EnabledOnce =
 false;
 ensureAlgoPattern12Enabled();
+refreshSupertrendFilterLines();
 schedulePatternAnalysis(
 {
 force:
@@ -1911,7 +1916,10 @@ tf,
 getGate:()=>
 chartGate(),
 getLinesVisible:()=>
-mem.supertrendLinesVisible
+!!mem.supertrendLinesVisible &&
+isActiveAnalysisBot(
+ALGO_ANALYSIS_BOT_PATTERN_12
+)
 }
 );
 supertrendFilterOverlay.bind();

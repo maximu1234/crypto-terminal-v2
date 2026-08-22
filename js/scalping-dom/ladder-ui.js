@@ -241,6 +241,22 @@ function paintLadder(canvas, ladder){
       const ty = row.alertUnderline ? y + ROW_H - 5 : y + ROW_H - 2;
       ctx.fillRect(0, ty, cssW, 2);
     }
+    const drawingLines = Array.isArray(row.drawingLines) ? row.drawingLines : [];
+    if(drawingLines.length){
+      let offset = 1;
+      if(row.alertUnderline){
+        offset += 2;
+      }
+      if(row.triggerUnderline === "long" || row.triggerUnderline === "short"){
+        offset += 3;
+      }
+      for(let d = 0; d < drawingLines.length; d++){
+        const line = drawingLines[d];
+        ctx.fillStyle = String(line.color || "#3b82f6");
+        ctx.fillRect(0, y + ROW_H - offset - 2, cssW, 2);
+        offset += 3;
+      }
+    }
     if(row.alertUnderline){
       drawDashedLine(ctx, y + ROW_H - 1, cssW, "#facc15");
     }

@@ -2,6 +2,9 @@
  * Настройки → Прокси (только desktop .app).
  */
 
+const PROXY_PASSWORD_PLACEHOLDER =
+"••••••••";
+
 function isDesktopShell(){
 
 return !!window.cryptoTerminalDesktop?.isDesktop;
@@ -53,7 +56,10 @@ username:
 userInput?.value ||
 "",
 password:
-passInput?.value ||
+passInput?.value ===
+PROXY_PASSWORD_PLACEHOLDER
+? ""
+: passInput?.value ||
 ""
 };
 
@@ -137,8 +143,9 @@ if(
 passInput
 ){
 passInput.value =
-settings?.password ||
-"";
+settings?.hasPassword
+? PROXY_PASSWORD_PLACEHOLDER
+: "";
 }
 
 }

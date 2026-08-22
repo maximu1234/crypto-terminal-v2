@@ -43,6 +43,11 @@ resolveTriggerLevels
 } from "./trigger-order-overlay.js?v=2";
 
 import {
+applyHorizDrawingUnderlines,
+resolveHorizDrawingLevels
+} from "./drawing-overlay.js?v=2";
+
+import {
 getScalpingDomAutocenterPct,
 getScalpingDomPriceScale
 } from "./prefs.js?v=4";
@@ -169,14 +174,16 @@ export function createDepthFeed(handlers){
         }),
         alerts: resolveAlertPrices(symbol),
         triggers: resolveTriggerLevels(symbol),
-        slTp: resolveSlTpPrices(symbol)
+        slTp: resolveSlTpPrices(symbol),
+        drawings: resolveHorizDrawingLevels(symbol)
       };
       overlayCacheAt = now;
     }
     const withPos = applyPositionOverlays(ladder, overlayCache.overlays);
     const withAlerts = applyAlertUnderlines(withPos, overlayCache.alerts);
     const withTriggers = applyTriggerUnderlines(withAlerts, overlayCache.triggers);
-    return applySlTpHighlights(withTriggers, overlayCache.slTp);
+    const withDrawings = applyHorizDrawingUnderlines(withTriggers, overlayCache.drawings);
+    return applySlTpHighlights(withDrawings, overlayCache.slTp);
   }
 
   function onWorkerMessage(event){
@@ -412,6 +419,7 @@ export function createDepthFeed(handlers){
     window.addEventListener("trade-orders-refresh", onOrdersChanged);
     window.addEventListener("trade-book-refresh", onOrdersChanged);
     window.addEventListener("trade-stream-positions", onAlertsChanged);
+    window.addEventListener("drawings-updated", onAlertsChanged);
     startWorkerForSymbol(symbol);
     void hydrateOpenOrdersFromApi();
   }
@@ -430,6 +438,7 @@ export function createDepthFeed(handlers){
     window.removeEventListener("trade-orders-refresh", onOrdersChanged);
     window.removeEventListener("trade-book-refresh", onOrdersChanged);
     window.removeEventListener("trade-stream-positions", onAlertsChanged);
+    window.removeEventListener("drawings-updated", onAlertsChanged);
   }
 
   return {

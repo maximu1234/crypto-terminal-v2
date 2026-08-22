@@ -1,0 +1,1602 @@
+//@version=6
+indicator("Паттерн 1-2, 1-2 — EARLY T3 13/14", shorttitle="1-2 EARLY T3", format=format.price, precision=0, overlay=true, max_lines_count=500, max_labels_count=500, max_bars_back=5000)
+
+// ── Настройки паттерна ──
+grpPat = "Настройки паттерна"
+patternMode = input.string("Лонг и Шорт", "Показать паттерн", options=["Лонг", "Шорт", "Лонг и Шорт"], group=grpPat)
+showLongPatterns = patternMode == "Лонг" or patternMode == "Лонг и Шорт"
+showShortPatterns = patternMode == "Шорт" or patternMode == "Лонг и Шорт"
+
+decLowsBeforePt1 = input.int(1, "Количество нисходящих точек перед точкой 1 (Лонг)", minval=0, maxval=5, group=grpPat, tooltip="N+1 макро-лоев: строго понижающийся ряд, точка 1 = самый нижний.")
+ascHighsBeforePt1 = input.int(1, "Количество восходящих точек перед точкой 1 (Шорт)", minval=0, maxval=5, group=grpPat, tooltip="N макро-хаев перед pt1: preN < … < pre1 < pt1. 0 = любой макро-хай.")
+waveAMode = input.string("оба", "Волна A состоит из", options=["1 свинг", "2 свинг", "оба"], group=grpPat, tooltip="1 свинг / 2 свинг / оба сценария для выбранных направлений.")
+lngWaveCMode = input.string("1 микро-свинг", "Волна 1 оф С состоит из (Лонг)", options=["1 микро-свинг", "2 микро-свинга"], group=grpPat, tooltip="1 микро-свинг: pt4 = 1-й микро-▲ после pt3. 2 микро-свинга: pt4 = 1-й микро-▲ выше первого (более низкие ▲ между ними пропускаются).")
+shtWaveCMode = input.string("1 микро-свинг", "Волна 1 оф С состоит из (Шорт)", options=["1 микро-свинг", "2 микро-свинга"], group=grpPat, tooltip="1 микро-свинг: pt4 = 1-й микро-▼ после pt3. 2 микро-свинга: pt4 = 1-й микро-▼ ниже первого (более высокие ▼ между ними пропускаются).")
+
+grpLngSen = "Лонг: волна А"
+lngRsiLength = input.int(14, "RSI период", minval=1, group=grpLngSen, tooltip="Длина RSI макро-свинга (точки 1 и 2).")
+lngRsiOverbought = input.int(70, "RSI перекупленность", minval=1, maxval=100, group=grpLngSen)
+lngRsiOversold = input.int(30, "RSI перепроданность", minval=0, maxval=99, group=grpLngSen)
+lngShowFractals = input.bool(false, "Показать маркеры макро-свинга", group=grpLngSen)
+lngShowRsiSwingLines = input.bool(false, "Показать линии макро-свинга", group=grpLngSen)
+
+grpLngMic = "Лонг: волна 1 оф С"
+lngMicRsiLength = input.int(7, "RSI период", minval=1, group=grpLngMic, tooltip="Длина RSI микро-свинга (точка 4).")
+lngMicRsiOverbought = input.int(70, "RSI перекупленность", minval=1, maxval=100, group=grpLngMic)
+lngMicRsiOversold = input.int(30, "RSI перепроданность", minval=0, maxval=99, group=grpLngMic)
+lngShowMicFractals = input.bool(false, "Показать маркеры микро-свинга", group=grpLngMic)
+lngShowMicRsiSwingLines = input.bool(false, "Показать линии микро-свинга", group=grpLngMic)
+
+grpShtSen = "Шорт: волна А"
+shtRsiLength = input.int(14, "RSI период", minval=1, group=grpShtSen, tooltip="Длина RSI макро-свинга (точки 1 и 2).")
+shtRsiOverbought = input.int(70, "RSI перекупленность", minval=1, maxval=100, group=grpShtSen)
+shtRsiOversold = input.int(30, "RSI перепроданность", minval=0, maxval=99, group=grpShtSen)
+shtShowFractals = input.bool(false, "Показать маркеры макро-свинга", group=grpShtSen)
+shtShowRsiSwingLines = input.bool(false, "Показать линии макро-свинга", group=grpShtSen)
+
+grpShtMic = "Шорт: волна 1 оф С"
+shtMicRsiLength = input.int(7, "RSI период", minval=1, group=grpShtMic, tooltip="Длина RSI микро-свинга (точка 4).")
+shtMicRsiOverbought = input.int(70, "RSI перекупленность", minval=1, maxval=100, group=grpShtMic)
+shtMicRsiOversold = input.int(30, "RSI перепроданность", minval=0, maxval=99, group=grpShtMic)
+shtShowMicFractals = input.bool(false, "Показать маркеры микро-свинга", group=grpShtMic)
+shtShowMicRsiSwingLines = input.bool(false, "Показать линии микро-свинга", group=grpShtMic)
+
+grpT3 = "Точка 3: early RSI"
+earlyT3RsiLen = input.int(5, "RSI период", minval=1, group=grpT3, tooltip="Ранний RSI только для точки 3. Точки 1, 2 и 4 не затрагиваются.")
+earlyT3OB = input.int(52, "RSI перекупленность", minval=1, maxval=100, group=grpT3)
+earlyT3OS = input.int(48, "RSI перепроданность", minval=0, maxval=99, group=grpT3)
+
+grpVis = "Отображение на графике"
+showPt1Badges = input.bool(false, "Плашки «Точка 1»", group=grpVis)
+showPt2Badges = input.bool(false, "Плашки «Точка 2»", group=grpVis)
+showPt3Badges = input.bool(false, "Плашки «Точка 3»", group=grpVis)
+showLngPt4Dot = input.bool(true, "Зелёный кружок (точка 4, Лонг)", group=grpVis)
+showLngPt4Mark = input.bool(true, "Линия и текст Long (точка 4)", group=grpVis, tooltip="Горизонталь от хая pt4 и надпись Long. Выкл. — скрывает и линию, и текст.")
+lngPt4LineBars = input.int(100, "Длина линии pt4 Лонг (бары)", minval=4, maxval=100, group=grpVis)
+showShtPt4Dot = input.bool(true, "Красный кружок (точка 4, Шорт)", group=grpVis)
+showShtPt4Mark = input.bool(true, "Линия и текст Short (точка 4)", group=grpVis, tooltip="Горизонталь от лоя pt4 и надпись Short. Выкл. — скрывает и линию, и текст.")
+shtPt4LineBars = input.int(100, "Длина линии pt4 Шорт (бары)", minval=4, maxval=100, group=grpVis)
+showPatternLines = input.bool(false, "Линии 1-3 и 2-4", group=grpVis)
+linePatColor = color.yellow
+linePatWidth = 1
+linePatTransp = 40
+
+// Коробка [pt1, pt2]: каждый бар fromBar+1..toBar — low не ниже pt1, high не выше pt2
+lngBoxIntactStrict(int fromBar, int toBar, float p1, float p2) =>
+    bool intact = true
+    int maxHist = 5000
+    if toBar <= fromBar or na(p1) or na(p2)
+        intact := false
+    else
+        for b = fromBar + 1 to toBar
+            int off = bar_index - b
+            if off < 0 or off > maxHist
+                intact := false
+                break
+            if low[off] < p1 or high[off] > p2
+                intact := false
+                break
+    intact
+
+// Ни одна свеча fromBar+1..toBar не ниже p1 (низ коробки)
+lngBottomIntactBetween(int fromBar, int toBar, float p1) =>
+    bool intact = true
+    int maxHist = 5000
+    if toBar <= fromBar or na(p1)
+        intact := false
+    else
+        for b = fromBar + 1 to toBar
+            int off = bar_index - b
+            if off < 0 or off > maxHist
+                intact := false
+                break
+            if low[off] < p1
+                intact := false
+                break
+    intact
+// Коробка [pt2, pt1]: каждый бар fromBar+1..toBar — high не выше pt1, low не ниже pt2
+shtBoxIntactStrict(int fromBar, int toBar, float p1, float p2) =>
+    bool intact = true
+    int maxHist = 5000
+    if toBar <= fromBar or na(p1) or na(p2)
+        intact := false
+    else
+        for b = fromBar + 1 to toBar
+            int off = bar_index - b
+            if off < 0 or off > maxHist
+                intact := false
+                break
+            if high[off] > p1 or low[off] < p2
+                intact := false
+                break
+    intact
+
+// Ни одна свеча fromBar+1..toBar не выше p1 (верх коробки)
+shtTopIntactBetween(int fromBar, int toBar, float p1) =>
+    bool intact = true
+    int maxHist = 5000
+    if toBar <= fromBar or na(p1)
+        intact := false
+    else
+        for b = fromBar + 1 to toBar
+            int off = bar_index - b
+            if off < 0 or off > maxHist
+                intact := false
+                break
+            if high[off] > p1
+                intact := false
+                break
+    intact
+
+// Время экстремума по bar_index (для плашек — xloc.bar_time, без лимита RE10026)
+swingBarTime(int extremeBar) =>
+    int t = na
+    if not na(extremeBar) and extremeBar >= 0
+        int off = bar_index - extremeBar
+        if off >= 0 and off <= 5000
+            t := time[off]
+    t
+
+barInHistory(int b) =>
+    not na(b) and b >= 0 and bar_index - b >= 0 and bar_index - b <= 5000
+
+calloutTimeSpan(int barLen) =>
+    int(math.max(1, barLen) * math.max(1, time - time[1]))
+
+newPatternLine(int barA, float priceA, int barB, float priceB) =>
+    line ln = na
+    int tA = swingBarTime(barA)
+    int tB = swingBarTime(barB)
+    if not na(tA) and not na(tB) and not na(priceA) and not na(priceB)
+        ln := line.new(tA, priceA, tB, priceB, xloc=xloc.bar_time, extend=extend.none, color=color.new(linePatColor, linePatTransp), width=linePatWidth)
+    ln
+
+// Очередь плашек: на одном баре и стороне — одна метка, текст через перенос строки
+queuePointBadge(array<int> qTimes, array<float> qPrices, array<string> qTexts, array<bool> qAboves, array<color> qColors, int bar, float price, string txt, bool above, color bg) =>
+    int t = swingBarTime(bar)
+    if not na(t) and not na(price)
+        int found = -1
+        int n = array.size(qTimes)
+        if n > 0
+            for i = 0 to n - 1
+                if array.get(qTimes, i) == t and array.get(qAboves, i) == above
+                    found := i
+                    break
+        if found >= 0
+            string cur = array.get(qTexts, found)
+            if not str.contains(cur, txt)
+                array.set(qTexts, found, cur + "\n" + txt)
+        else
+            array.push(qTimes, t)
+            array.push(qPrices, price)
+            array.push(qTexts, txt)
+            array.push(qAboves, above)
+            array.push(qColors, bg)
+
+renderQueuedBadges(array<int> qTimes, array<float> qPrices, array<string> qTexts, array<bool> qAboves, array<color> qColors, array<label> outLabels) =>
+    int n = array.size(qTimes)
+    if n > 0
+        for i = 0 to n - 1
+            int t = array.get(qTimes, i)
+            float price = array.get(qPrices, i)
+            string txt = array.get(qTexts, i)
+            bool above = array.get(qAboves, i)
+            color bg = array.get(qColors, i)
+            float pad = price * 0.008
+            label lb = na
+            if above
+                lb := label.new(t, price - pad, txt, xloc=xloc.bar_time, yloc=yloc.price, style=label.style_label_up, color=color.new(bg, 5), textcolor=color.white, size=size.normal)
+            else
+                lb := label.new(t, price + pad, txt, xloc=xloc.bar_time, yloc=yloc.price, style=label.style_label_down, color=color.new(bg, 5), textcolor=color.white, size=size.normal)
+            if not na(lb)
+                array.push(outLabels, lb)
+var array<int>   lngSenBars = array.new_int()
+var array<int>   lngSenConfirmBars = array.new_int()
+var array<int>   lngSenTypes = array.new_int()
+var array<float> lngSenPrices = array.new_float()
+var array<int>   lngMicBars = array.new_int()
+var array<int>   lngMicConfirmBars = array.new_int()
+var array<int>   lngMicTypes = array.new_int()
+var array<float> lngMicPrices = array.new_float()
+
+var array<int>   shtSenBars = array.new_int()
+var array<int>   shtSenConfirmBars = array.new_int()
+var array<int>   shtSenTypes = array.new_int()
+var array<float> shtSenPrices = array.new_float()
+var array<int>   shtMicBars = array.new_int()
+var array<int>   shtMicConfirmBars = array.new_int()
+var array<int>   shtMicTypes = array.new_int()
+var array<float> shtMicPrices = array.new_float()
+var float shtLastHigh1 = na
+var float shtLastHigh2 = na
+var float shtLastHigh3 = na
+var float shtLastHigh4 = na
+var float shtLastHigh5 = na
+var array<float> shtSenPreHigh1 = array.new_float()
+var array<float> shtSenPreHigh2 = array.new_float()
+var array<float> shtSenPreHigh3 = array.new_float()
+var array<float> shtSenPreHigh4 = array.new_float()
+var array<float> shtSenPreHigh5 = array.new_float()
+
+senHistCap() =>
+    math.min(5000, bar_index + 1)
+
+micHistCap() =>
+    math.min(5000, bar_index + 1)
+
+waveASlotCount() =>
+    waveAMode == "оба" ? 2 : 1
+
+waveANthForSlot(int slot) =>
+    waveAMode == "оба" ? slot + 1 : waveAMode == "2 свинг" ? 2 : 1
+
+lngSenIdxSafe(int idx) =>
+    idx >= 0 and idx < array.size(lngSenTypes)
+
+shtSenIdxSafe(int idx) =>
+    idx >= 0 and idx < array.size(shtSenTypes)
+
+barListed(array<int> bars, int b) =>
+    bool found = false
+    int n = array.size(bars)
+    if n > 0
+        for i = 0 to n - 1
+            if array.get(bars, i) == b
+                found := true
+                break
+    found
+
+shtPushSenPreHighNA() =>
+    array.push(shtSenPreHigh1, na)
+    array.push(shtSenPreHigh2, na)
+    array.push(shtSenPreHigh3, na)
+    array.push(shtSenPreHigh4, na)
+    array.push(shtSenPreHigh5, na)
+
+shtShiftSenPreHigh() =>
+    array.shift(shtSenPreHigh1)
+    array.shift(shtSenPreHigh2)
+    array.shift(shtSenPreHigh3)
+    array.shift(shtSenPreHigh4)
+    array.shift(shtSenPreHigh5)
+
+var int lngLaststate = 0
+var float lngHh = low
+var float lngLl = high
+var int lngHhBar = bar_index
+var int lngLlBar = bar_index
+var int lngPrevSwingBar = na
+var float lngPrevSwingPrice = na
+var array<label> lngSenMarkLabels = array.new_label()
+var array<line> lngSenSwingLines = array.new_line()
+var int lngMicLaststate = 0
+var float lngMicHh = low
+var float lngMicLl = high
+var int lngMicHhBar = bar_index
+var int lngMicLlBar = bar_index
+var int lngMicPrevSwingBar = na
+var float lngMicPrevSwingPrice = na
+var array<label> lngMicMarkLabels = array.new_label()
+var array<line> lngMicSwingLines = array.new_line()
+
+var int shtLaststate = 0
+var float shtHh = low
+var float shtLl = high
+var int shtHhBar = bar_index
+var int shtLlBar = bar_index
+var int shtPrevSwingBar = na
+var float shtPrevSwingPrice = na
+var array<label> shtSenMarkLabels = array.new_label()
+var array<line> shtSenSwingLines = array.new_line()
+var int shtMicLaststate = 0
+var float shtMicHh = low
+var float shtMicLl = high
+var int shtMicHhBar = bar_index
+var int shtMicLlBar = bar_index
+var int shtMicPrevSwingBar = na
+var float shtMicPrevSwingPrice = na
+var array<label> shtMicMarkLabels = array.new_label()
+var array<line> shtMicSwingLines = array.new_line()
+
+bool lngSenUp = false
+bool lngSenDown = false
+int lngSenEventBar = na
+float lngSenEventPrice = na
+bool lngMicUp = false
+bool lngMicDown = false
+int lngMicEventBar = na
+float lngMicEventPrice = na
+bool shtSenUp = false
+bool shtSenDown = false
+int shtSenEventBar = na
+float shtSenEventPrice = na
+bool shtMicUp = false
+bool shtMicDown = false
+int shtMicEventBar = na
+float shtMicEventPrice = na
+
+
+// ─────────────────────────────────────────────────────────────────────────────
+// EARLY T3 LIVE STREAM — tuned ORIGINAL trigger
+// RSI 5, thresholds 52/48 + one-bar extreme correction.
+// This stream is used ONLY as the T3 source.
+// T1/T2, micro T4 logic and all pattern geometry stay original.
+// ─────────────────────────────────────────────────────────────────────────────
+float earlyT3Rsi = ta.rsi(close, earlyT3RsiLen)
+
+// Long-side early macro stream.
+var int lngEarlyState = 0
+var float lngEarlyHh = high
+var float lngEarlyLl = low
+var int lngEarlyHhBar = bar_index
+var int lngEarlyLlBar = bar_index
+var array<int> lngEarlyBars = array.new_int()
+var array<int> lngEarlyConfBars = array.new_int()
+var array<int> lngEarlyTypes = array.new_int()
+var array<float> lngEarlyPrices = array.new_float()
+
+// Short-side early macro stream.
+var int shtEarlyState = 0
+var float shtEarlyHh = high
+var float shtEarlyLl = low
+var int shtEarlyHhBar = bar_index
+var int shtEarlyLlBar = bar_index
+var array<int> shtEarlyBars = array.new_int()
+var array<int> shtEarlyConfBars = array.new_int()
+var array<int> shtEarlyTypes = array.new_int()
+var array<float> shtEarlyPrices = array.new_float()
+
+earlyPush(array<int> bs, array<int> cs, array<int> ts, array<float> ps, int b, int c, int t, float p) =>
+    array.push(bs,b)
+    array.push(cs,c)
+    array.push(ts,t)
+    array.push(ps,p)
+    int cap = 1500
+    if array.size(bs) > cap
+        array.shift(bs)
+        array.shift(cs)
+        array.shift(ts)
+        array.shift(ps)
+
+bool earlyOB = earlyT3Rsi >= earlyT3OB
+bool earlyOS = earlyT3Rsi <= earlyT3OS
+
+// LONG tuned state machine.
+if showLongPatterns
+    if lngEarlyState == 2 and earlyOB
+        int rawB = lngEarlyLlBar
+        float rawP = lngEarlyLl
+        int corrB = rawB
+        float corrP = rawP
+        int rawOff = bar_index - rawB
+        // V1 correction: if the chronological next bar already exists by CONF
+        // and makes a lower low, move T3 exactly +1 bar.
+        if rawOff >= 1
+            float nextP = low[rawOff - 1]
+            if nextP < rawP
+                corrB := rawB + 1
+                corrP := nextP
+        earlyPush(lngEarlyBars,lngEarlyConfBars,lngEarlyTypes,lngEarlyPrices,corrB,bar_index,-1,corrP)
+        lngEarlyHh := high
+        lngEarlyHhBar := bar_index
+
+    if lngEarlyState == 1 and earlyOS
+        earlyPush(lngEarlyBars,lngEarlyConfBars,lngEarlyTypes,lngEarlyPrices,lngEarlyHhBar,bar_index,1,lngEarlyHh)
+        lngEarlyLl := low
+        lngEarlyLlBar := bar_index
+
+    if earlyOB
+        if high >= lngEarlyHh
+            lngEarlyHh := high
+            lngEarlyHhBar := bar_index
+        lngEarlyState := 1
+
+    if earlyOS
+        if low <= lngEarlyLl
+            lngEarlyLl := low
+            lngEarlyLlBar := bar_index
+        lngEarlyState := 2
+
+    if lngEarlyState == 1 and high >= lngEarlyHh
+        lngEarlyHh := high
+        lngEarlyHhBar := bar_index
+
+    if lngEarlyState == 2 and low <= lngEarlyLl
+        lngEarlyLl := low
+        lngEarlyLlBar := bar_index
+
+// SHORT tuned state machine.
+if showShortPatterns
+    if shtEarlyState == 2 and earlyOB
+        earlyPush(shtEarlyBars,shtEarlyConfBars,shtEarlyTypes,shtEarlyPrices,shtEarlyLlBar,bar_index,-1,shtEarlyLl)
+        shtEarlyHh := high
+        shtEarlyHhBar := bar_index
+
+    if shtEarlyState == 1 and earlyOS
+        int rawB = shtEarlyHhBar
+        float rawP = shtEarlyHh
+        int corrB = rawB
+        float corrP = rawP
+        int rawOff = bar_index - rawB
+        // V1 correction: if the chronological next bar already exists by CONF
+        // and makes a higher high, move T3 exactly +1 bar.
+        if rawOff >= 1
+            float nextP = high[rawOff - 1]
+            if nextP > rawP
+                corrB := rawB + 1
+                corrP := nextP
+        earlyPush(shtEarlyBars,shtEarlyConfBars,shtEarlyTypes,shtEarlyPrices,corrB,bar_index,1,corrP)
+        shtEarlyLl := low
+        shtEarlyLlBar := bar_index
+
+    if earlyOB
+        if high >= shtEarlyHh
+            shtEarlyHh := high
+            shtEarlyHhBar := bar_index
+        shtEarlyState := 1
+
+    if earlyOS
+        if low <= shtEarlyLl
+            shtEarlyLl := low
+            shtEarlyLlBar := bar_index
+        shtEarlyState := 2
+
+    if shtEarlyState == 1 and high >= shtEarlyHh
+        shtEarlyHh := high
+        shtEarlyHhBar := bar_index
+
+    if shtEarlyState == 2 and low <= shtEarlyLl
+        shtEarlyLl := low
+        shtEarlyLlBar := bar_index
+
+
+// ── RSI Swing Лонг ──
+if showLongPatterns
+    lngSenUp := false
+    lngSenDown := false
+    lngSenEventBar := na
+    lngSenEventPrice := na
+    float lngRsiValue = ta.rsi(close, lngRsiLength)
+    bool lngIsOverbought = lngRsiValue >= lngRsiOverbought
+    bool lngIsOversold = lngRsiValue <= lngRsiOversold
+
+    if lngLaststate == 2 and lngIsOverbought
+        lngSenDown := true
+        lngSenEventBar := lngLlBar
+        lngSenEventPrice := lngLl
+        lngHh := high
+        lngHhBar := bar_index
+
+    if lngLaststate == 1 and lngIsOversold
+        lngSenUp := true
+        lngSenEventBar := lngHhBar
+        lngSenEventPrice := lngHh
+        lngLl := low
+        lngLlBar := bar_index
+
+    if lngIsOverbought
+        if high >= lngHh
+            lngHh := high
+            lngHhBar := bar_index
+        lngLaststate := 1
+
+    if lngIsOversold
+        if low <= lngLl
+            lngLl := low
+            lngLlBar := bar_index
+        lngLaststate := 2
+
+    if lngLaststate == 1 and high >= lngHh
+        lngHh := high
+        lngHhBar := bar_index
+
+    if lngLaststate == 2 and low <= lngLl
+        lngLl := low
+        lngLlBar := bar_index
+    int lngSenMarkMax = 400
+    int lngSenSwingLineMax = 180
+    if lngSenUp or lngSenDown
+        if lngShowRsiSwingLines and not na(lngPrevSwingBar)
+            line ln = line.new(lngPrevSwingBar, lngPrevSwingPrice, lngSenEventBar, lngSenEventPrice, xloc=xloc.bar_index, extend=extend.none, color=color.aqua, width=1)
+            array.push(lngSenSwingLines, ln)
+            if array.size(lngSenSwingLines) > lngSenSwingLineMax
+                line.delete(array.shift(lngSenSwingLines))
+        lngPrevSwingBar := lngSenEventBar
+        lngPrevSwingPrice := lngSenEventPrice
+
+    if lngShowFractals and lngSenUp
+        array.push(lngSenMarkLabels, label.new(lngSenEventBar, na, "", xloc=xloc.bar_index, yloc=yloc.abovebar, style=label.style_triangleup, color=color.lime, size=size.normal))
+        if array.size(lngSenMarkLabels) > lngSenMarkMax
+            label.delete(array.shift(lngSenMarkLabels))
+
+    if lngShowFractals and lngSenDown
+        array.push(lngSenMarkLabels, label.new(lngSenEventBar, na, "", xloc=xloc.bar_index, yloc=yloc.belowbar, style=label.style_triangledown, color=color.aqua, size=size.normal))
+        if array.size(lngSenMarkLabels) > lngSenMarkMax
+            label.delete(array.shift(lngSenMarkLabels))
+    float lngMicRsiValue = ta.rsi(close, lngMicRsiLength)
+    bool lngMicIsOverbought = lngMicRsiValue >= lngMicRsiOverbought
+    bool lngMicIsOversold = lngMicRsiValue <= lngMicRsiOversold
+    lngMicUp := false
+    lngMicDown := false
+    lngMicEventBar := na
+    lngMicEventPrice := na
+    if lngMicLaststate == 2 and lngMicIsOverbought
+        lngMicDown := true
+        lngMicEventBar := lngMicLlBar
+        lngMicEventPrice := lngMicLl
+        lngMicHh := high
+        lngMicHhBar := bar_index
+
+    if lngMicLaststate == 1 and lngMicIsOversold
+        lngMicUp := true
+        lngMicEventBar := lngMicHhBar
+        lngMicEventPrice := lngMicHh
+        lngMicLl := low
+        lngMicLlBar := bar_index
+
+    if lngMicIsOverbought
+        if high >= lngMicHh
+            lngMicHh := high
+            lngMicHhBar := bar_index
+        lngMicLaststate := 1
+
+    if lngMicIsOversold
+        if low <= lngMicLl
+            lngMicLl := low
+            lngMicLlBar := bar_index
+        lngMicLaststate := 2
+
+    if lngMicLaststate == 1 and high >= lngMicHh
+        lngMicHh := high
+        lngMicHhBar := bar_index
+
+    if lngMicLaststate == 2 and low <= lngMicLl
+        lngMicLl := low
+        lngMicLlBar := bar_index
+    int lngMicMarkMax = 400
+    int lngMicSwingLineMax = 60
+    if lngMicUp or lngMicDown
+        if lngShowMicRsiSwingLines and not na(lngMicPrevSwingBar)
+            line micLn = line.new(lngMicPrevSwingBar, lngMicPrevSwingPrice, lngMicEventBar, lngMicEventPrice, xloc=xloc.bar_index, extend=extend.none, color=color.new(#009688, 40), width=1)
+            array.push(lngMicSwingLines, micLn)
+            if array.size(lngMicSwingLines) > lngMicSwingLineMax
+                line.delete(array.shift(lngMicSwingLines))
+        lngMicPrevSwingBar := lngMicEventBar
+        lngMicPrevSwingPrice := lngMicEventPrice
+
+    if lngShowMicFractals and lngMicUp
+        array.push(lngMicMarkLabels, label.new(lngMicEventBar, na, "", xloc=xloc.bar_index, yloc=yloc.abovebar, style=label.style_triangleup, color=#009688, size=size.tiny))
+        if array.size(lngMicMarkLabels) > lngMicMarkMax
+            label.delete(array.shift(lngMicMarkLabels))
+
+    if lngShowMicFractals and lngMicDown
+        array.push(lngMicMarkLabels, label.new(lngMicEventBar, na, "", xloc=xloc.bar_index, yloc=yloc.belowbar, style=label.style_triangledown, color=#F44336, size=size.tiny))
+        if array.size(lngMicMarkLabels) > lngMicMarkMax
+            label.delete(array.shift(lngMicMarkLabels))
+
+    if lngSenUp
+        array.push(lngSenBars, lngSenEventBar)
+        array.push(lngSenConfirmBars, bar_index)
+        array.push(lngSenTypes, 1)
+        array.push(lngSenPrices, lngSenEventPrice)
+        if array.size(lngSenBars) > senHistCap()
+            array.shift(lngSenBars)
+            array.shift(lngSenConfirmBars)
+            array.shift(lngSenTypes)
+            array.shift(lngSenPrices)
+    else if lngSenDown
+        array.push(lngSenBars, lngSenEventBar)
+        array.push(lngSenConfirmBars, bar_index)
+        array.push(lngSenTypes, -1)
+        array.push(lngSenPrices, lngSenEventPrice)
+        if array.size(lngSenBars) > senHistCap()
+            array.shift(lngSenBars)
+            array.shift(lngSenConfirmBars)
+            array.shift(lngSenTypes)
+            array.shift(lngSenPrices)
+    if lngMicUp
+        array.push(lngMicBars, lngMicEventBar)
+        array.push(lngMicConfirmBars, bar_index)
+        array.push(lngMicTypes, 1)
+        array.push(lngMicPrices, lngMicEventPrice)
+        if array.size(lngMicBars) > micHistCap()
+            array.shift(lngMicBars)
+            array.shift(lngMicConfirmBars)
+            array.shift(lngMicTypes)
+            array.shift(lngMicPrices)
+    else if lngMicDown
+        array.push(lngMicBars, lngMicEventBar)
+        array.push(lngMicConfirmBars, bar_index)
+        array.push(lngMicTypes, -1)
+        array.push(lngMicPrices, lngMicEventPrice)
+        if array.size(lngMicBars) > micHistCap()
+            array.shift(lngMicBars)
+            array.shift(lngMicConfirmBars)
+            array.shift(lngMicTypes)
+            array.shift(lngMicPrices)
+// ── RSI Swing Шорт ──
+if showShortPatterns
+    shtSenUp := false
+    shtSenDown := false
+    shtSenEventBar := na
+    shtSenEventPrice := na
+    float shtRsiValue = ta.rsi(close, shtRsiLength)
+    bool shtIsOverbought = shtRsiValue >= shtRsiOverbought
+    bool shtIsOversold = shtRsiValue <= shtRsiOversold
+
+    if shtLaststate == 2 and shtIsOverbought
+        shtSenDown := true
+        shtSenEventBar := shtLlBar
+        shtSenEventPrice := shtLl
+        shtHh := high
+        shtHhBar := bar_index
+
+    if shtLaststate == 1 and shtIsOversold
+        shtSenUp := true
+        shtSenEventBar := shtHhBar
+        shtSenEventPrice := shtHh
+        shtLl := low
+        shtLlBar := bar_index
+
+    if shtIsOverbought
+        if high >= shtHh
+            shtHh := high
+            shtHhBar := bar_index
+        shtLaststate := 1
+
+    if shtIsOversold
+        if low <= shtLl
+            shtLl := low
+            shtLlBar := bar_index
+        shtLaststate := 2
+
+    if shtLaststate == 1 and high >= shtHh
+        shtHh := high
+        shtHhBar := bar_index
+
+    if shtLaststate == 2 and low <= shtLl
+        shtLl := low
+        shtLlBar := bar_index
+    int shtSenMarkMax = 400
+    int shtSenSwingLineMax = 180
+    if shtSenUp or shtSenDown
+        if shtShowRsiSwingLines and not na(shtPrevSwingBar)
+            line ln = line.new(shtPrevSwingBar, shtPrevSwingPrice, shtSenEventBar, shtSenEventPrice, xloc=xloc.bar_index, extend=extend.none, color=#E040FB, width=1)
+            array.push(shtSenSwingLines, ln)
+            if array.size(shtSenSwingLines) > shtSenSwingLineMax
+                line.delete(array.shift(shtSenSwingLines))
+        shtPrevSwingBar := shtSenEventBar
+        shtPrevSwingPrice := shtSenEventPrice
+
+    if shtShowFractals and shtSenUp
+        array.push(shtSenMarkLabels, label.new(shtSenEventBar, na, "", xloc=xloc.bar_index, yloc=yloc.abovebar, style=label.style_triangleup, color=color.orange, size=size.normal))
+        if array.size(shtSenMarkLabels) > shtSenMarkMax
+            label.delete(array.shift(shtSenMarkLabels))
+
+    if shtShowFractals and shtSenDown
+        array.push(shtSenMarkLabels, label.new(shtSenEventBar, na, "", xloc=xloc.bar_index, yloc=yloc.belowbar, style=label.style_triangledown, color=#E040FB, size=size.normal))
+        if array.size(shtSenMarkLabels) > shtSenMarkMax
+            label.delete(array.shift(shtSenMarkLabels))
+    float shtMicRsiValue = ta.rsi(close, shtMicRsiLength)
+    bool shtMicIsOverbought = shtMicRsiValue >= shtMicRsiOverbought
+    bool shtMicIsOversold = shtMicRsiValue <= shtMicRsiOversold
+    shtMicUp := false
+    shtMicDown := false
+    shtMicEventBar := na
+    shtMicEventPrice := na
+    if shtMicLaststate == 2 and shtMicIsOverbought
+        shtMicDown := true
+        shtMicEventBar := shtMicLlBar
+        shtMicEventPrice := shtMicLl
+        shtMicHh := high
+        shtMicHhBar := bar_index
+
+    if shtMicLaststate == 1 and shtMicIsOversold
+        shtMicUp := true
+        shtMicEventBar := shtMicHhBar
+        shtMicEventPrice := shtMicHh
+        shtMicLl := low
+        shtMicLlBar := bar_index
+
+    if shtMicIsOverbought
+        if high >= shtMicHh
+            shtMicHh := high
+            shtMicHhBar := bar_index
+        shtMicLaststate := 1
+
+    if shtMicIsOversold
+        if low <= shtMicLl
+            shtMicLl := low
+            shtMicLlBar := bar_index
+        shtMicLaststate := 2
+
+    if shtMicLaststate == 1 and high >= shtMicHh
+        shtMicHh := high
+        shtMicHhBar := bar_index
+
+    if shtMicLaststate == 2 and low <= shtMicLl
+        shtMicLl := low
+        shtMicLlBar := bar_index
+    int shtMicMarkMax = 400
+    int shtMicSwingLineMax = 60
+    if shtMicUp or shtMicDown
+        if shtShowMicRsiSwingLines and not na(shtMicPrevSwingBar)
+            line micLn = line.new(shtMicPrevSwingBar, shtMicPrevSwingPrice, shtMicEventBar, shtMicEventPrice, xloc=xloc.bar_index, extend=extend.none, color=color.new(#009688, 40), width=1)
+            array.push(shtMicSwingLines, micLn)
+            if array.size(shtMicSwingLines) > shtMicSwingLineMax
+                line.delete(array.shift(shtMicSwingLines))
+        shtMicPrevSwingBar := shtMicEventBar
+        shtMicPrevSwingPrice := shtMicEventPrice
+
+    if shtShowMicFractals and shtMicUp
+        array.push(shtMicMarkLabels, label.new(shtMicEventBar, na, "", xloc=xloc.bar_index, yloc=yloc.abovebar, style=label.style_triangleup, color=#009688, size=size.tiny))
+        if array.size(shtMicMarkLabels) > shtMicMarkMax
+            label.delete(array.shift(shtMicMarkLabels))
+
+    if shtShowMicFractals and shtMicDown
+        array.push(shtMicMarkLabels, label.new(shtMicEventBar, na, "", xloc=xloc.bar_index, yloc=yloc.belowbar, style=label.style_triangledown, color=#F44336, size=size.tiny))
+        if array.size(shtMicMarkLabels) > shtMicMarkMax
+            label.delete(array.shift(shtMicMarkLabels))
+
+    if shtSenUp
+        array.push(shtSenPreHigh1, shtLastHigh1)
+        array.push(shtSenPreHigh2, shtLastHigh2)
+        array.push(shtSenPreHigh3, shtLastHigh3)
+        array.push(shtSenPreHigh4, shtLastHigh4)
+        array.push(shtSenPreHigh5, shtLastHigh5)
+        shtLastHigh5 := shtLastHigh4
+        shtLastHigh4 := shtLastHigh3
+        shtLastHigh3 := shtLastHigh2
+        shtLastHigh2 := shtLastHigh1
+        shtLastHigh1 := shtSenEventPrice
+        array.push(shtSenBars, shtSenEventBar)
+        array.push(shtSenConfirmBars, bar_index)
+        array.push(shtSenTypes, 1)
+        array.push(shtSenPrices, shtSenEventPrice)
+        if array.size(shtSenBars) > senHistCap()
+            array.shift(shtSenBars)
+            array.shift(shtSenConfirmBars)
+            array.shift(shtSenTypes)
+            array.shift(shtSenPrices)
+            shtShiftSenPreHigh()
+    else if shtSenDown
+        shtPushSenPreHighNA()
+        array.push(shtSenBars, shtSenEventBar)
+        array.push(shtSenConfirmBars, bar_index)
+        array.push(shtSenTypes, -1)
+        array.push(shtSenPrices, shtSenEventPrice)
+        if array.size(shtSenBars) > senHistCap()
+            array.shift(shtSenBars)
+            array.shift(shtSenConfirmBars)
+            array.shift(shtSenTypes)
+            array.shift(shtSenPrices)
+            shtShiftSenPreHigh()
+    if shtMicUp
+        array.push(shtMicBars, shtMicEventBar)
+        array.push(shtMicConfirmBars, bar_index)
+        array.push(shtMicTypes, 1)
+        array.push(shtMicPrices, shtMicEventPrice)
+        if array.size(shtMicBars) > micHistCap()
+            array.shift(shtMicBars)
+            array.shift(shtMicConfirmBars)
+            array.shift(shtMicTypes)
+            array.shift(shtMicPrices)
+    else if shtMicDown
+        array.push(shtMicBars, shtMicEventBar)
+        array.push(shtMicConfirmBars, bar_index)
+        array.push(shtMicTypes, -1)
+        array.push(shtMicPrices, shtMicEventPrice)
+        if array.size(shtMicBars) > micHistCap()
+            array.shift(shtMicBars)
+            array.shift(shtMicConfirmBars)
+            array.shift(shtMicTypes)
+            array.shift(shtMicPrices)
+// ── Логика паттерна Лонг ──
+lngWaveCMicNth() =>
+    lngWaveCMode == "2 микро-свинга" ? 2 : 1
+
+lngPt1WindowSize() =>
+    decLowsBeforePt1 <= 0 ? 1 : decLowsBeforePt1 + 1
+
+lngCollectDownSenIdxs() =>
+    array<int> idxs = array.new_int()
+    int sz = array.size(lngSenTypes)
+    if sz > 0
+        for i = 0 to sz - 1
+            if array.get(lngSenTypes, i) == -1
+                array.push(idxs, i)
+    idxs
+lngLowWindowDescending(int downStart, array<int> downIdxs) =>
+    int need = lngPt1WindowSize()
+    int n = array.size(downIdxs)
+    bool ok = downStart + need <= n
+    if ok and need > 1
+        for k = 0 to need - 2
+            if downStart + k + 1 >= n
+                ok := false
+                break
+            int iA = array.get(downIdxs, downStart + k)
+            int iB = array.get(downIdxs, downStart + k + 1)
+            if not lngSenIdxSafe(iA) or not lngSenIdxSafe(iB)
+                ok := false
+                break
+            if array.get(lngSenPrices, iA) <= array.get(lngSenPrices, iB)
+                ok := false
+                break
+    ok
+
+lngPt1FromDownWindow(int downStart, array<int> downIdxs) =>
+    int need = lngPt1WindowSize()
+    int n = array.size(downIdxs)
+    int i1 = -1
+    int b1 = na
+    float pr1 = na
+    if downStart >= 0 and downStart + need <= n
+        int idx = downStart + need - 1
+        i1 := array.get(downIdxs, idx)
+        int sz = array.size(lngSenTypes)
+        if i1 < 0 or i1 >= sz
+            i1 := -1
+        else
+            b1 := array.get(lngSenBars, i1)
+            pr1 := array.get(lngSenPrices, i1)
+    [i1, b1, pr1]
+// Все кандидаты точки 1 + их индекс в логе свингов
+lngScanAllPt1Candidates() =>
+    array<int> outBars = array.new_int()
+    array<float> outPrices = array.new_float()
+    array<int> outIdxs = array.new_int()
+    array<int> downIdxs = lngCollectDownSenIdxs()
+    int nDown = array.size(downIdxs)
+    int need = lngPt1WindowSize()
+    if nDown >= need
+        int dEnd = nDown - need
+        for downStart = 0 to dEnd
+            if not lngLowWindowDescending(downStart, downIdxs)
+                continue
+            [i1, b1, pr1] = lngPt1FromDownWindow(downStart, downIdxs)
+            if i1 < 0 or na(b1) or na(pr1)
+                continue
+            if not barInHistory(b1)
+                continue
+            if not barListed(outBars, b1)
+                array.push(outBars, b1)
+                array.push(outPrices, pr1)
+                array.push(outIdxs, i1)
+    [outBars, outPrices, outIdxs]
+
+// Точка 2 = N-й макро-▲ после pt1; для N=2 — не ниже 1-го ▲ и без пробоя pt1 между ▲1 и ▲2
+lngPt2AfterPt1(int i1, int nthUp, float pr1) =>
+    int i2 = -1
+    int b2 = na
+    float pr2 = na
+    int hits = 0
+    float prFirstUp = na
+    int bFirstUp = na
+    int sz = array.size(lngSenTypes)
+    if i1 >= 0 and i1 < sz - 1 and nthUp >= 1 and not na(pr1)
+        for k = i1 + 1 to sz - 1
+            if not lngSenIdxSafe(k)
+                break
+            if array.get(lngSenTypes, k) == 1
+                hits += 1
+                float pk = array.get(lngSenPrices, k)
+                int bk = array.get(lngSenBars, k)
+                if hits == 1
+                    prFirstUp := pk
+                    bFirstUp := bk
+                if hits == nthUp
+                    bool ok = nthUp == 1
+                    if nthUp == 2 and not na(prFirstUp) and not na(bFirstUp) and pk >= prFirstUp
+                        ok := lngBottomIntactBetween(bFirstUp, bk, pr1)
+                    if ok
+                        i2 := k
+                        b2 := bk
+                        pr2 := pk
+                    break
+    [i2, b2, pr2]
+
+// Для каждой точки 1 — её точка 2 (если есть)
+lngScanAllPt2AfterPt1() =>
+    array<int> outB2 = array.new_int()
+    array<float> outP2 = array.new_float()
+    [b1s, pr1s, i1s] = lngScanAllPt1Candidates()
+    int n = array.size(b1s)
+    if n > 0
+        for i = 0 to n - 1
+            float pr1 = array.get(pr1s, i)
+            int i1 = array.get(i1s, i)
+            for slot = 0 to waveASlotCount() - 1
+                [i2, b2, pr2] = lngPt2AfterPt1(i1, waveANthForSlot(slot), pr1)
+                if i2 >= 0 and not na(b2) and not na(pr2) and barInHistory(b2)
+                    if not barListed(outB2, b2)
+                        array.push(outB2, b2)
+                        array.push(outP2, pr2)
+    [outB2, outP2]
+
+// Точка 3 = самый нижний макро-▼ после pt2, цена строго между pt1 и pt2;
+// коробка [pt1..pt2] цела на участке от pt2 до confirm-бара pt3
+lngPt3AfterPt1Pt2(int i2, int b2, float pr1, float pr2) =>
+    int i3 = -1
+    int b3 = na
+    float pr3 = na
+    float bestP3 = na
+    int sz = array.size(lngEarlyTypes)
+    if i2 >= 0 and not na(b2) and not na(pr1) and not na(pr2) and pr2 > pr1 and sz > 0
+        for k = 0 to sz - 1
+            if array.get(lngEarlyTypes, k) != -1
+                continue
+            int bk = array.get(lngEarlyBars, k)
+            int confirmK = array.get(lngEarlyConfBars, k)
+            float pk = array.get(lngEarlyPrices, k)
+            if bk <= b2
+                continue
+            if not barInHistory(b2) or not barInHistory(confirmK)
+                continue
+            if not lngBoxIntactStrict(b2, confirmK, pr1, pr2)
+                continue
+            if pk <= pr1 or pk >= pr2
+                continue
+            if na(bestP3) or pk < bestP3
+                bestP3 := pk
+                i3 := k
+                b3 := bk
+                pr3 := pk
+    [i3, b3, pr3]
+
+lngScanAllPt3AfterPt12() =>
+    array<int> outB3 = array.new_int()
+    array<float> outP3 = array.new_float()
+    [b1s, pr1s, i1s] = lngScanAllPt1Candidates()
+    int n = array.size(b1s)
+    if n > 0
+        for i = 0 to n - 1
+            float pr1 = array.get(pr1s, i)
+            int i1 = array.get(i1s, i)
+            for slot = 0 to waveASlotCount() - 1
+                [i2, b2, pr2] = lngPt2AfterPt1(i1, waveANthForSlot(slot), pr1)
+                if i2 < 0 or na(b2) or na(pr2)
+                    continue
+                [i3, b3, pr3] = lngPt3AfterPt1Pt2(i2, b2, pr1, pr2)
+                if i3 >= 0 and not na(b3) and not na(pr3) and barInHistory(b3)
+                    if not barListed(outB3, b3)
+                        array.push(outB3, b3)
+                        array.push(outP3, pr3)
+    [outB3, outP3]
+
+// Точка 4: цена в [pt1..pt2], не ниже pt3
+lngPt4PriceValid(float pk, float pr1, float pr2, float pr3) =>
+    pk >= pr1 and pk >= pr3 and pk <= pr2
+
+// Точка 4 = микро-▲ после pt3; 1 свинг — первый ▲; 2 свинга — первый ▲ выше первого (промежуточные ниже пропускаем)
+lngPt4AfterPt3(int b3, float pr1, float pr2, float pr3, int nthMicUp) =>
+    int i4 = -1
+    int b4 = na
+    float pr4 = na
+    float prFirstUp = na
+    int bFirstUp = na
+    bool foundFirst = false
+    int sz = array.size(lngMicTypes)
+    if not na(b3) and not na(pr1) and not na(pr2) and not na(pr3) and pr2 > pr1 and nthMicUp >= 1
+        for k = 0 to sz - 1
+            int bk = array.get(lngMicBars, k)
+            if bk <= b3
+                continue
+            if not barInHistory(b3) or not barInHistory(bk)
+                break
+            if array.get(lngMicTypes, k) != 1
+                continue
+            float pk = array.get(lngMicPrices, k)
+            if not lngPt4PriceValid(pk, pr1, pr2, pr3)
+                continue
+            if not lngBoxIntactStrict(b3, bk, pr1, pr2)
+                break
+            if not foundFirst
+                foundFirst := true
+                prFirstUp := pk
+                bFirstUp := bk
+                if nthMicUp == 1
+                    i4 := k
+                    b4 := bk
+                    pr4 := pk
+                    break
+            else if pk > prFirstUp
+                if lngBottomIntactBetween(bFirstUp, bk, pr3)
+                    i4 := k
+                    b4 := bk
+                    pr4 := pk
+                break
+    [i4, b4, pr4]
+
+lngScanAllPt4AfterPt123() =>
+    array<int> outB4 = array.new_int()
+    array<float> outP4 = array.new_float()
+    [b1s, pr1s, i1s] = lngScanAllPt1Candidates()
+    int n = array.size(b1s)
+    if n > 0
+        for i = 0 to n - 1
+            float pr1 = array.get(pr1s, i)
+            int i1 = array.get(i1s, i)
+            for slot = 0 to waveASlotCount() - 1
+                [i2, b2, pr2] = lngPt2AfterPt1(i1, waveANthForSlot(slot), pr1)
+                if i2 < 0 or na(b2) or na(pr2)
+                    continue
+                [i3, b3, pr3] = lngPt3AfterPt1Pt2(i2, b2, pr1, pr2)
+                if i3 < 0 or na(b3) or na(pr3)
+                    continue
+                [i4, b4, pr4] = lngPt4AfterPt3(b3, pr1, pr2, pr3, lngWaveCMicNth())
+                if i4 >= 0 and not na(b4) and not na(pr4) and barInHistory(b4)
+                    if not barListed(outB4, b4)
+                        array.push(outB4, b4)
+                        array.push(outP4, pr4)
+    [outB4, outP4]
+
+lngPatternChainListed(array<int> cB1, array<int> cB2, array<int> cB3, array<int> cB4, int b1, int b2, int b3, int b4) =>
+    bool found = false
+    int n = array.size(cB4)
+    if n > 0
+        for j = 0 to n - 1
+            if array.get(cB1, j) == b1 and array.get(cB2, j) == b2 and array.get(cB3, j) == b3 and array.get(cB4, j) == b4
+                found := true
+                break
+    found
+
+// Полный паттерн = все четыре точки найдены для одной цепочки 1→2→3→4
+lngScanAllCompletePatterns() =>
+    array<int> cB1 = array.new_int()
+    array<float> cP1 = array.new_float()
+    array<int> cB2 = array.new_int()
+    array<float> cP2 = array.new_float()
+    array<int> cB3 = array.new_int()
+    array<float> cP3 = array.new_float()
+    array<int> cB4 = array.new_int()
+    array<float> cP4 = array.new_float()
+    [b1s, pr1s, i1s] = lngScanAllPt1Candidates()
+    int n = array.size(b1s)
+    if n > 0
+        for i = 0 to n - 1
+            int b1 = array.get(b1s, i)
+            float pr1 = array.get(pr1s, i)
+            int i1 = array.get(i1s, i)
+            for slot = 0 to waveASlotCount() - 1
+                [i2, b2, pr2] = lngPt2AfterPt1(i1, waveANthForSlot(slot), pr1)
+                if i2 < 0 or na(b2) or na(pr2) or not barInHistory(b2)
+                    continue
+                [i3, b3, pr3] = lngPt3AfterPt1Pt2(i2, b2, pr1, pr2)
+                if i3 < 0 or na(b3) or na(pr3) or not barInHistory(b3)
+                    continue
+                [i4, b4, pr4] = lngPt4AfterPt3(b3, pr1, pr2, pr3, lngWaveCMicNth())
+                if i4 < 0 or na(b4) or na(pr4) or not barInHistory(b4)
+                    continue
+                if lngPatternChainListed(cB1, cB2, cB3, cB4, b1, b2, b3, b4)
+                    continue
+                array.push(cB1, b1)
+                array.push(cP1, pr1)
+                array.push(cB2, b2)
+                array.push(cP2, pr2)
+                array.push(cB3, b3)
+                array.push(cP3, pr3)
+                array.push(cB4, b4)
+                array.push(cP4, pr4)
+    [cB1, cP1, cB2, cP2, cB3, cP3, cB4, cP4]
+// ── Логика паттерна Шорт ──
+shtWaveCMicNth() =>
+    shtWaveCMode == "2 микро-свинга" ? 2 : 1
+// N непосредственно предшествующих макро-хаев: preN < … < pre1 < pt1
+shtHasAscHighsBeforePt1(int logIdx, float pt1Price) =>
+    if ascHighsBeforePt1 <= 0
+        true
+    else if not shtSenIdxSafe(logIdx) or na(pt1Price)
+        false
+    else
+        float pre1 = array.get(shtSenPreHigh1, logIdx)
+        float pre2 = array.get(shtSenPreHigh2, logIdx)
+        float pre3 = array.get(shtSenPreHigh3, logIdx)
+        float pre4 = array.get(shtSenPreHigh4, logIdx)
+        float pre5 = array.get(shtSenPreHigh5, logIdx)
+        bool ok = not na(pre1) and pre1 < pt1Price
+        if ascHighsBeforePt1 >= 2
+            ok := ok and not na(pre2) and pre2 < pre1
+        if ascHighsBeforePt1 >= 3
+            ok := ok and not na(pre3) and pre3 < pre2
+        if ascHighsBeforePt1 >= 4
+            ok := ok and not na(pre4) and pre4 < pre3
+        if ascHighsBeforePt1 >= 5
+            ok := ok and not na(pre5) and pre5 < pre4
+        ok
+shtScanAllPt1Candidates() =>
+    array<int> outBars = array.new_int()
+    array<float> outPrices = array.new_float()
+    array<int> outIdxs = array.new_int()
+    int sz = array.size(shtSenTypes)
+    if sz > 0
+        for i = 0 to sz - 1
+            if array.get(shtSenTypes, i) != 1
+                continue
+            int b1 = array.get(shtSenBars, i)
+            float pr1 = array.get(shtSenPrices, i)
+            if na(b1) or na(pr1) or not barInHistory(b1)
+                continue
+            if not shtHasAscHighsBeforePt1(i, pr1)
+                continue
+            if not barListed(outBars, b1)
+                array.push(outBars, b1)
+                array.push(outPrices, pr1)
+                array.push(outIdxs, i)
+    [outBars, outPrices, outIdxs]
+
+// Точка 2 = N-й макро-▼ после pt1; для N=2 — не выше 1-го ▼ и без пробоя pt1 между ▼1 и ▼2
+shtPt2AfterPt1(int i1, int nthDn, float pr1) =>
+    int i2 = -1
+    int b2 = na
+    float pr2 = na
+    int hits = 0
+    float prFirstDn = na
+    int bFirstDn = na
+    int sz = array.size(shtSenTypes)
+    if i1 >= 0 and i1 < sz - 1 and nthDn >= 1 and not na(pr1)
+        for k = i1 + 1 to sz - 1
+            if not shtSenIdxSafe(k)
+                break
+            if array.get(shtSenTypes, k) == -1
+                hits += 1
+                float pk = array.get(shtSenPrices, k)
+                int bk = array.get(shtSenBars, k)
+                if hits == 1
+                    prFirstDn := pk
+                    bFirstDn := bk
+                if hits == nthDn
+                    bool ok = nthDn == 1
+                    if nthDn == 2 and not na(prFirstDn) and not na(bFirstDn) and pk <= prFirstDn
+                        ok := shtTopIntactBetween(bFirstDn, bk, pr1)
+                    if ok
+                        i2 := k
+                        b2 := bk
+                        pr2 := pk
+                    break
+    [i2, b2, pr2]
+
+shtScanAllPt2AfterPt1() =>
+    array<int> outB2 = array.new_int()
+    array<float> outP2 = array.new_float()
+    [b1s, pr1s, i1s] = shtScanAllPt1Candidates()
+    int n = array.size(b1s)
+    if n > 0
+        for i = 0 to n - 1
+            float pr1 = array.get(pr1s, i)
+            int i1 = array.get(i1s, i)
+            for slot = 0 to waveASlotCount() - 1
+                [i2, b2, pr2] = shtPt2AfterPt1(i1, waveANthForSlot(slot), pr1)
+                if i2 >= 0 and not na(b2) and not na(pr2) and barInHistory(b2)
+                    if not barListed(outB2, b2)
+                        array.push(outB2, b2)
+                        array.push(outP2, pr2)
+    [outB2, outP2]
+
+// Точка 3 = самый верхний макро-▲ после pt2, цена строго между pt2 и pt1;
+// коробка [pt2..pt1] цела на участке от pt2 до confirm-бара pt3
+shtPt3AfterPt1Pt2(int i2, int b2, float pr1, float pr2) =>
+    int i3 = -1
+    int b3 = na
+    float pr3 = na
+    float bestP3 = na
+    int sz = array.size(shtEarlyTypes)
+    if i2 >= 0 and not na(b2) and not na(pr1) and not na(pr2) and pr1 > pr2 and sz > 0
+        for k = 0 to sz - 1
+            if array.get(shtEarlyTypes, k) != 1
+                continue
+            int bk = array.get(shtEarlyBars, k)
+            int confirmK = array.get(shtEarlyConfBars, k)
+            float pk = array.get(shtEarlyPrices, k)
+            if bk <= b2
+                continue
+            if not barInHistory(b2) or not barInHistory(confirmK)
+                continue
+            if not shtBoxIntactStrict(b2, confirmK, pr1, pr2)
+                continue
+            if pk >= pr1 or pk <= pr2
+                continue
+            if na(bestP3) or pk > bestP3
+                bestP3 := pk
+                i3 := k
+                b3 := bk
+                pr3 := pk
+    [i3, b3, pr3]
+
+shtScanAllPt3AfterPt12() =>
+    array<int> outB3 = array.new_int()
+    array<float> outP3 = array.new_float()
+    [b1s, pr1s, i1s] = shtScanAllPt1Candidates()
+    int n = array.size(b1s)
+    if n > 0
+        for i = 0 to n - 1
+            float pr1 = array.get(pr1s, i)
+            int i1 = array.get(i1s, i)
+            for slot = 0 to waveASlotCount() - 1
+                [i2, b2, pr2] = shtPt2AfterPt1(i1, waveANthForSlot(slot), pr1)
+                if i2 < 0 or na(b2) or na(pr2)
+                    continue
+                [i3, b3, pr3] = shtPt3AfterPt1Pt2(i2, b2, pr1, pr2)
+                if i3 >= 0 and not na(b3) and not na(pr3) and barInHistory(b3)
+                    if not barListed(outB3, b3)
+                        array.push(outB3, b3)
+                        array.push(outP3, pr3)
+    [outB3, outP3]
+
+shtPt4PriceValid(float pk, float pr1, float pr2, float pr3) =>
+    pk <= pr1 and pk <= pr3 and pk >= pr2
+
+// Точка 4 = микро-▼ после pt3; 1 свинг — первый ▼; 2 свинга — первый ▼ ниже первого (промежуточные выше пропускаем)
+shtPt4AfterPt3(int b3, float pr1, float pr2, float pr3, int nthMicDn) =>
+    int i4 = -1
+    int b4 = na
+    float pr4 = na
+    float prFirstDn = na
+    int bFirstDn = na
+    bool foundFirst = false
+    int sz = array.size(shtMicTypes)
+    if not na(b3) and not na(pr1) and not na(pr2) and not na(pr3) and pr1 > pr2 and nthMicDn >= 1
+        for k = 0 to sz - 1
+            int bk = array.get(shtMicBars, k)
+            if bk <= b3
+                continue
+            if not barInHistory(b3) or not barInHistory(bk)
+                break
+            if array.get(shtMicTypes, k) != -1
+                continue
+            float pk = array.get(shtMicPrices, k)
+            if not shtPt4PriceValid(pk, pr1, pr2, pr3)
+                continue
+            if not shtBoxIntactStrict(b3, bk, pr1, pr2)
+                break
+            if not foundFirst
+                foundFirst := true
+                prFirstDn := pk
+                bFirstDn := bk
+                if nthMicDn == 1
+                    i4 := k
+                    b4 := bk
+                    pr4 := pk
+                    break
+            else if pk < prFirstDn
+                if shtTopIntactBetween(bFirstDn, bk, pr3)
+                    i4 := k
+                    b4 := bk
+                    pr4 := pk
+                break
+    [i4, b4, pr4]
+
+shtScanAllPt4AfterPt123() =>
+    array<int> outB4 = array.new_int()
+    array<float> outP4 = array.new_float()
+    [b1s, pr1s, i1s] = shtScanAllPt1Candidates()
+    int n = array.size(b1s)
+    if n > 0
+        for i = 0 to n - 1
+            float pr1 = array.get(pr1s, i)
+            int i1 = array.get(i1s, i)
+            for slot = 0 to waveASlotCount() - 1
+                [i2, b2, pr2] = shtPt2AfterPt1(i1, waveANthForSlot(slot), pr1)
+                if i2 < 0 or na(b2) or na(pr2)
+                    continue
+                [i3, b3, pr3] = shtPt3AfterPt1Pt2(i2, b2, pr1, pr2)
+                if i3 < 0 or na(b3) or na(pr3)
+                    continue
+                [i4, b4, pr4] = shtPt4AfterPt3(b3, pr1, pr2, pr3, shtWaveCMicNth())
+                if i4 >= 0 and not na(b4) and not na(pr4) and barInHistory(b4)
+                    if not barListed(outB4, b4)
+                        array.push(outB4, b4)
+                        array.push(outP4, pr4)
+    [outB4, outP4]
+
+shtPatternChainListed(array<int> cB1, array<int> cB2, array<int> cB3, array<int> cB4, int b1, int b2, int b3, int b4) =>
+    bool found = false
+    int n = array.size(cB4)
+    if n > 0
+        for j = 0 to n - 1
+            if array.get(cB1, j) == b1 and array.get(cB2, j) == b2 and array.get(cB3, j) == b3 and array.get(cB4, j) == b4
+                found := true
+                break
+    found
+
+shtScanAllCompletePatterns() =>
+    array<int> cB1 = array.new_int()
+    array<float> cP1 = array.new_float()
+    array<int> cB2 = array.new_int()
+    array<float> cP2 = array.new_float()
+    array<int> cB3 = array.new_int()
+    array<float> cP3 = array.new_float()
+    array<int> cB4 = array.new_int()
+    array<float> cP4 = array.new_float()
+    [b1s, pr1s, i1s] = shtScanAllPt1Candidates()
+    int n = array.size(b1s)
+    if n > 0
+        for i = 0 to n - 1
+            int b1 = array.get(b1s, i)
+            float pr1 = array.get(pr1s, i)
+            int i1 = array.get(i1s, i)
+            for slot = 0 to waveASlotCount() - 1
+                [i2, b2, pr2] = shtPt2AfterPt1(i1, waveANthForSlot(slot), pr1)
+                if i2 < 0 or na(b2) or na(pr2) or not barInHistory(b2)
+                    continue
+                [i3, b3, pr3] = shtPt3AfterPt1Pt2(i2, b2, pr1, pr2)
+                if i3 < 0 or na(b3) or na(pr3) or not barInHistory(b3)
+                    continue
+                [i4, b4, pr4] = shtPt4AfterPt3(b3, pr1, pr2, pr3, shtWaveCMicNth())
+                if i4 < 0 or na(b4) or na(pr4) or not barInHistory(b4)
+                    continue
+                if shtPatternChainListed(cB1, cB2, cB3, cB4, b1, b2, b3, b4)
+                    continue
+                array.push(cB1, b1)
+                array.push(cP1, pr1)
+                array.push(cB2, b2)
+                array.push(cP2, pr2)
+                array.push(cB3, b3)
+                array.push(cP3, pr3)
+                array.push(cB4, b4)
+                array.push(cP4, pr4)
+    [cB1, cP1, cB2, cP2, cB3, cP3, cB4, cP4]
+// ── Графика Лонг ──
+var array<label> lngPtBadgeLabels = array.new_label()
+var array<label> lngPt4DotLabels = array.new_label()
+var array<line> lngPt4HighLines = array.new_line()
+var array<label> lngPt4CalloutLabels = array.new_label()
+var array<line> lngPatLines13 = array.new_line()
+var array<line> lngPatLines24 = array.new_line()
+lngClearPtBadges() =>
+    int n = array.size(lngPtBadgeLabels)
+    if n > 0
+        for i = 0 to n - 1
+            label.delete(array.get(lngPtBadgeLabels, i))
+    array.clear(lngPtBadgeLabels)
+
+lngClearPt4Dots() =>
+    int n = array.size(lngPt4DotLabels)
+    if n > 0
+        for i = 0 to n - 1
+            label.delete(array.get(lngPt4DotLabels, i))
+    array.clear(lngPt4DotLabels)
+
+lngNewPt4Dot(int bar, float price) =>
+    label lb = na
+    int t = swingBarTime(bar)
+    if not na(t) and not na(price)
+        float pad = price * 0.006
+        lb := label.new(t, price + pad, "●", xloc=xloc.bar_time, yloc=yloc.price, style=label.style_none, textcolor=color.lime, size=size.small, color=color.new(color.white, 100))
+    lb
+
+lngNewPt4HighLine(int bar, float price) =>
+    line ln = na
+    int t0 = swingBarTime(bar)
+    if not na(t0) and not na(price)
+        int t1 = t0 + calloutTimeSpan(lngPt4LineBars)
+        ln := line.new(t0, price, t1, price, xloc=xloc.bar_time, extend=extend.none, color=color.lime, width=1, style=line.style_solid)
+    ln
+
+lngNewPt4LongLabel(int bar, float price) =>
+    label lb = na
+    int t0 = swingBarTime(bar)
+    if not na(t0) and not na(price)
+        int span = calloutTimeSpan(lngPt4LineBars)
+        int tMid = t0 + int(math.round(float(span) / 2.0))
+        lb := label.new(tMid, price, "Long", xloc=xloc.bar_time, yloc=yloc.price, style=label.style_label_down, textcolor=color.lime, size=size.normal, color=color.new(color.white, 100), textalign=text.align_center)
+    lb
+
+lngClearPt4HighLines() =>
+    int nLn = array.size(lngPt4HighLines)
+    if nLn > 0
+        for i = 0 to nLn - 1
+            line.delete(array.get(lngPt4HighLines, i))
+    array.clear(lngPt4HighLines)
+
+lngClearPt4CalloutLabels() =>
+    int nLb = array.size(lngPt4CalloutLabels)
+    if nLb > 0
+        for i = 0 to nLb - 1
+            label.delete(array.get(lngPt4CalloutLabels, i))
+    array.clear(lngPt4CalloutLabels)
+
+lngPushPt4Graphics(int bar, float price) =>
+    if showLngPt4Dot
+        label dot = lngNewPt4Dot(bar, price)
+        if not na(dot)
+            array.push(lngPt4DotLabels, dot)
+    if showLngPt4Mark
+        line highLn = lngNewPt4HighLine(bar, price)
+        if not na(highLn)
+            array.push(lngPt4HighLines, highLn)
+        label longLb = lngNewPt4LongLabel(bar, price)
+        if not na(longLb)
+            array.push(lngPt4CalloutLabels, longLb)
+
+lngDrawPt4Dots() =>
+    lngClearPt4Dots()
+    lngClearPt4HighLines()
+    lngClearPt4CalloutLabels()
+    if showLngPt4Dot or showLngPt4Mark
+        [_b1, _p1, _b2, _p2, _b3, _p3, b4s, p4s] = lngScanAllCompletePatterns()
+        int n4 = array.size(b4s)
+        if n4 > 0
+            for i = 0 to n4 - 1
+                lngPushPt4Graphics(array.get(b4s, i), array.get(p4s, i))
+
+lngClearPatternLines() =>
+    int n13 = array.size(lngPatLines13)
+    if n13 > 0
+        for i = 0 to n13 - 1
+            line.delete(array.get(lngPatLines13, i))
+    array.clear(lngPatLines13)
+    int n24 = array.size(lngPatLines24)
+    if n24 > 0
+        for i = 0 to n24 - 1
+            line.delete(array.get(lngPatLines24, i))
+    array.clear(lngPatLines24)
+
+lngDrawPatternLines() =>
+    lngClearPatternLines()
+    if showPatternLines
+        [b1s, pr1s, b2s, pr2s, b3s, pr3s, b4s, p4s] = lngScanAllCompletePatterns()
+        int n = array.size(b1s)
+        if n > 0
+            for i = 0 to n - 1
+                line ln13 = newPatternLine(array.get(b1s, i), array.get(pr1s, i), array.get(b3s, i), array.get(pr3s, i))
+                line ln24 = newPatternLine(array.get(b2s, i), array.get(pr2s, i), array.get(b4s, i), array.get(p4s, i))
+                if not na(ln13)
+                    array.push(lngPatLines13, ln13)
+                if not na(ln24)
+                    array.push(lngPatLines24, ln24)
+lngDrawPointBadges() =>
+    lngClearPtBadges()
+    array<int> qTimes = array.new_int()
+    array<float> qPrices = array.new_float()
+    array<string> qTexts = array.new_string()
+    array<bool> qAboves = array.new_bool()
+    array<color> qColors = array.new_color()
+    [b1s, pr1s, b2s, pr2s, b3s, pr3s, _b4, _p4] = lngScanAllCompletePatterns()
+    int n = array.size(b1s)
+    if n > 0
+        for i = 0 to n - 1
+            if showPt1Badges
+                queuePointBadge(qTimes, qPrices, qTexts, qAboves, qColors, array.get(b1s, i), array.get(pr1s, i), "Точка 1", true, color.orange)
+            if showPt2Badges
+                queuePointBadge(qTimes, qPrices, qTexts, qAboves, qColors, array.get(b2s, i), array.get(pr2s, i), "Точка 2", false, #1565C0)
+            if showPt3Badges
+                queuePointBadge(qTimes, qPrices, qTexts, qAboves, qColors, array.get(b3s, i), array.get(pr3s, i), "Точка 3", true, #7B1FA2)
+    renderQueuedBadges(qTimes, qPrices, qTexts, qAboves, qColors, lngPtBadgeLabels)
+// ── Графика Шорт ──
+var array<label> shtPtBadgeLabels = array.new_label()
+var array<label> shtPt4DotLabels = array.new_label()
+var array<line> shtPt4LowLines = array.new_line()
+var array<label> shtPt4CalloutLabels = array.new_label()
+var array<line> shtPatLines13 = array.new_line()
+var array<line> shtPatLines24 = array.new_line()
+shtClearPtBadges() =>
+    int n = array.size(shtPtBadgeLabels)
+    if n > 0
+        for i = 0 to n - 1
+            label.delete(array.get(shtPtBadgeLabels, i))
+    array.clear(shtPtBadgeLabels)
+
+shtClearPt4Dots() =>
+    int n = array.size(shtPt4DotLabels)
+    if n > 0
+        for i = 0 to n - 1
+            label.delete(array.get(shtPt4DotLabels, i))
+    array.clear(shtPt4DotLabels)
+
+shtNewPt4Dot(int bar, float price) =>
+    label lb = na
+    int t = swingBarTime(bar)
+    if not na(t) and not na(price)
+        float pad = price * 0.006
+        lb := label.new(t, price - pad, "●", xloc=xloc.bar_time, yloc=yloc.price, style=label.style_none, textcolor=color.red, size=size.small, color=color.new(color.white, 100))
+    lb
+
+shtNewPt4LowLine(int bar, float price) =>
+    line ln = na
+    int t0 = swingBarTime(bar)
+    if not na(t0) and not na(price)
+        int t1 = t0 + calloutTimeSpan(shtPt4LineBars)
+        ln := line.new(t0, price, t1, price, xloc=xloc.bar_time, extend=extend.none, color=color.red, width=1, style=line.style_solid)
+    ln
+
+shtNewPt4ShortLabel(int bar, float price) =>
+    label lb = na
+    int t0 = swingBarTime(bar)
+    if not na(t0) and not na(price)
+        int span = calloutTimeSpan(shtPt4LineBars)
+        int tMid = t0 + int(math.round(float(span) / 2.0))
+        lb := label.new(tMid, price, "Short\n", xloc=xloc.bar_time, yloc=yloc.price, style=label.style_label_up, textcolor=color.red, size=size.normal, color=color.new(color.white, 100), textalign=text.align_center)
+    lb
+
+shtClearPt4LowLines() =>
+    int nLn = array.size(shtPt4LowLines)
+    if nLn > 0
+        for i = 0 to nLn - 1
+            line.delete(array.get(shtPt4LowLines, i))
+    array.clear(shtPt4LowLines)
+
+shtClearPt4CalloutLabels() =>
+    int nLb = array.size(shtPt4CalloutLabels)
+    if nLb > 0
+        for i = 0 to nLb - 1
+            label.delete(array.get(shtPt4CalloutLabels, i))
+    array.clear(shtPt4CalloutLabels)
+
+shtPushPt4Graphics(int bar, float price) =>
+    if showShtPt4Dot
+        label dot = shtNewPt4Dot(bar, price)
+        if not na(dot)
+            array.push(shtPt4DotLabels, dot)
+    if showShtPt4Mark
+        line lowLn = shtNewPt4LowLine(bar, price)
+        if not na(lowLn)
+            array.push(shtPt4LowLines, lowLn)
+        label shortLb = shtNewPt4ShortLabel(bar, price)
+        if not na(shortLb)
+            array.push(shtPt4CalloutLabels, shortLb)
+
+shtDrawPt4Dots() =>
+    shtClearPt4Dots()
+    shtClearPt4LowLines()
+    shtClearPt4CalloutLabels()
+    if showShtPt4Dot or showShtPt4Mark
+        [_b1, _p1, _b2, _p2, _b3, _p3, b4s, p4s] = shtScanAllCompletePatterns()
+        int n4 = array.size(b4s)
+        if n4 > 0
+            for i = 0 to n4 - 1
+                shtPushPt4Graphics(array.get(b4s, i), array.get(p4s, i))
+
+shtClearPatternLines() =>
+    int n13 = array.size(shtPatLines13)
+    if n13 > 0
+        for i = 0 to n13 - 1
+            line.delete(array.get(shtPatLines13, i))
+    array.clear(shtPatLines13)
+    int n24 = array.size(shtPatLines24)
+    if n24 > 0
+        for i = 0 to n24 - 1
+            line.delete(array.get(shtPatLines24, i))
+    array.clear(shtPatLines24)
+
+shtDrawPatternLines() =>
+    shtClearPatternLines()
+    if showPatternLines
+        [b1s, pr1s, b2s, pr2s, b3s, pr3s, b4s, p4s] = shtScanAllCompletePatterns()
+        int n = array.size(b1s)
+        if n > 0
+            for i = 0 to n - 1
+                line ln13 = newPatternLine(array.get(b1s, i), array.get(pr1s, i), array.get(b3s, i), array.get(pr3s, i))
+                line ln24 = newPatternLine(array.get(b2s, i), array.get(pr2s, i), array.get(b4s, i), array.get(p4s, i))
+                if not na(ln13)
+                    array.push(shtPatLines13, ln13)
+                if not na(ln24)
+                    array.push(shtPatLines24, ln24)
+shtDrawPointBadges() =>
+    shtClearPtBadges()
+    array<int> qTimes = array.new_int()
+    array<float> qPrices = array.new_float()
+    array<string> qTexts = array.new_string()
+    array<bool> qAboves = array.new_bool()
+    array<color> qColors = array.new_color()
+    [b1s, pr1s, b2s, pr2s, b3s, pr3s, _b4, _p4] = shtScanAllCompletePatterns()
+    int n = array.size(b1s)
+    if n > 0
+        for i = 0 to n - 1
+            if showPt1Badges
+                queuePointBadge(qTimes, qPrices, qTexts, qAboves, qColors, array.get(b1s, i), array.get(pr1s, i), "Точка 1", false, color.orange)
+            if showPt2Badges
+                queuePointBadge(qTimes, qPrices, qTexts, qAboves, qColors, array.get(b2s, i), array.get(pr2s, i), "Точка 2", true, #1565C0)
+            if showPt3Badges
+                queuePointBadge(qTimes, qPrices, qTexts, qAboves, qColors, array.get(b3s, i), array.get(pr3s, i), "Точка 3", false, #7B1FA2)
+    renderQueuedBadges(qTimes, qPrices, qTexts, qAboves, qColors, shtPtBadgeLabels)
+
+if barstate.islast
+    if showLongPatterns
+        lngDrawPointBadges()
+        lngDrawPatternLines()
+        lngDrawPt4Dots()
+    if showShortPatterns
+        shtDrawPointBadges()
+        shtDrawPatternLines()
+        shtDrawPt4Dots()

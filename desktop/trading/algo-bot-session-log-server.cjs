@@ -194,11 +194,68 @@ return crypto.randomBytes(
 
 }
 
+/** @type {string} */
+let requestOrigin =
+"";
+
 function corsHeaders(){
 
+const origin =
+String(
+requestOrigin ||
+""
+).trim();
+const loopback =
+prefs.bindHost ===
+"127.0.0.1" ||
+prefs.bindHost ===
+"localhost";
+
+if(
+loopback
+){
+if(
+origin &&
+/^https?:\/\/(127\.0\.0\.1|localhost|\[::1\])(:\d+)?$/i.test(
+origin
+)
+){
 return {
 "Access-Control-Allow-Origin":
-"*",
+origin,
+"Access-Control-Allow-Headers":
+"Authorization, Content-Type",
+"Access-Control-Allow-Methods":
+"GET, POST, OPTIONS",
+Vary:
+"Origin"
+};
+}
+
+return {
+"Access-Control-Allow-Headers":
+"Authorization, Content-Type",
+"Access-Control-Allow-Methods":
+"GET, POST, OPTIONS"
+};
+}
+
+if(
+origin
+){
+return {
+"Access-Control-Allow-Origin":
+origin,
+"Access-Control-Allow-Headers":
+"Authorization, Content-Type",
+"Access-Control-Allow-Methods":
+"GET, POST, OPTIONS",
+Vary:
+"Origin"
+};
+}
+
+return {
 "Access-Control-Allow-Headers":
 "Authorization, Content-Type",
 "Access-Control-Allow-Methods":
@@ -1083,6 +1140,12 @@ req,
 res
 ){
 
+requestOrigin =
+String(
+req?.headers?.origin ||
+""
+).trim();
+
 void (
 async ()=>{
 
@@ -1717,6 +1780,15 @@ next;
 log.info(
 `session-log-server listening ${host}:${port}`
 );
+
+if(
+host ===
+"0.0.0.0"
+){
+log.warn(
+"session-log-server bound to 0.0.0.0 — LAN start/stop and auth inject are reachable on the network"
+);
+}
 resolve(
 {
 ok:

@@ -14,7 +14,7 @@ readExchangeCredentials,
 writeExchangeCredentials,
 clearExchangeCredentials,
 getExchangeSecretForSave
-} from "./exchange-credentials.js?v=1";
+} from "./exchange-credentials.js?v=2";
 
 import {
 getLoadedTradeExchangeModules

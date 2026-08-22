@@ -18,8 +18,8 @@
 <link rel="stylesheet" href="/css/common.css?v=55">
 <link rel="stylesheet" href="/css/terminal.css?v=175">
 <link rel="stylesheet" href="/css/terminal-layout.css?v=99">
-<link rel="stylesheet" href="/css/chart-indicators.css?v=28">
-<link rel="stylesheet" href="/css/algo-trading.css?v=129">
+<link rel="stylesheet" href="/css/chart-indicators.css?v=29">
+<link rel="stylesheet" href="/css/algo-trading.css?v=132">
 <link rel="stylesheet" href="/css/algo-trading-book-panel.css?v=6">
 <link rel="stylesheet" href="/css/algo-trading-chart-overlay.css?v=2">
 <link rel="stylesheet" href="/css/trade-diary.css?v=21">
@@ -31,7 +31,7 @@
 
 </head>
 
-<body class="terminal-page algo-trading-page">
+<body class="terminal-page algo-trading-page" data-algo-analysis-bot="none">
 
 <div id="app">
 
@@ -148,6 +148,14 @@ title="Выбор бота"
 Боты
 </button>
 <div class="algo-bots-dropdown hidden" id="algo-bots-dropdown" role="menu" aria-label="Список ботов">
+<div class="algo-bots-item-row" role="none">
+<input
+type="checkbox"
+class="algo-bots-item-enabled"
+id="algo-bots-item-pattern12-enabled"
+data-algo-bot-id="pattern-12"
+aria-label="Включить Паттерн 1-2 1-2"
+/>
 <button
 type="button"
 class="algo-bots-item"
@@ -157,6 +165,25 @@ role="menuitem"
 >
 Паттерн 1-2 1-2
 </button>
+</div>
+<div class="algo-bots-item-row" role="none">
+<input
+type="checkbox"
+class="algo-bots-item-enabled"
+id="algo-bots-item-early-t3-enabled"
+data-algo-bot-id="pattern-12-early-t3"
+aria-label="Включить 1-2 Early T3"
+/>
+<button
+type="button"
+class="algo-bots-item"
+id="algo-bots-item-early-t3"
+data-algo-bot-id="pattern-12-early-t3"
+role="menuitem"
+>
+1-2 Early T3
+</button>
+</div>
 </div>
 </div>
 
@@ -1279,6 +1306,42 @@ placeholder="без лимита"
 </div>
 </div>
 </section>
+</div>
+</div>
+</div>
+
+<div id="algo-bot-early-t3-settings-modal" class="algo-bot-settings-modal hidden" hidden>
+<div class="algo-bot-settings-modal-backdrop" data-close="algo-bot-early-t3-settings-modal"></div>
+<div class="algo-bot-settings-modal-card" role="dialog" aria-modal="true" aria-labelledby="algo-bot-early-t3-settings-modal-title">
+<div class="algo-bot-settings-modal-head">
+<h2 id="algo-bot-early-t3-settings-modal-title">1-2 Early T3</h2>
+<button type="button" class="algo-bot-settings-modal-close" data-close="algo-bot-early-t3-settings-modal" aria-label="Закрыть">×</button>
+</div>
+<p class="algo-bot-settings-modal-note">Только ручная торговля: алерты, без ордеров. Снимок настроек индикатора 1-2 EARLY T3 берётся в момент запуска. Затем нажмите «Запустить».</p>
+<div class="algo-bot-settings-modal-body">
+<div class="algo-bot-field">
+<label class="algo-bot-label" for="algo-bot-early-t3-tf">Таймфрейм</label>
+<select id="algo-bot-early-t3-tf" class="algo-bot-input" aria-label="Таймфрейм бота 1-2 Early T3">
+<option value="1">1m</option>
+<option value="5" selected>5m</option>
+<option value="15">15m</option>
+<option value="60">1h</option>
+<option value="240">4h</option>
+<option value="D">1D</option>
+<option value="W">W</option>
+</select>
+</div>
+<div class="algo-bot-field algo-bot-field--row">
+<label class="algo-bot-label" for="algo-bot-early-t3-alert-lead" title="Опережение: % высоты X (pt3↔pt4) от pt4 к pt3. Лонг ниже pt4, шорт выше.">Алерт до pt4</label>
+<input type="number" id="algo-bot-early-t3-alert-lead" class="algo-bot-input algo-bot-input--sm" min="0" max="10" step="0.1" value="5" inputmode="decimal" />
+<span class="algo-bot-unit">% X</span>
+</div>
+<p class="algo-bot-hint">Опережение в % высоты паттерна X (pt3↔pt4), как СЛ — не % цены. Лонг чуть ниже pt4, шорт чуть выше. 0 = точно в pt4.</p>
+<div class="algo-bot-field algo-bot-field--row">
+<label class="algo-bot-label" for="algo-bot-early-t3-min-turnover" title="Минимальный 24h оборот (USDT). Ниже — тикер не сканируется.">Объем за сутки от</label>
+<input type="text" id="algo-bot-early-t3-min-turnover" class="algo-bot-input algo-bot-input--sm algo-bot-input--turnover" inputmode="numeric" autocomplete="off" value="100.000" />
+<span class="algo-bot-unit">USDT</span>
+</div>
 </div>
 </div>
 </div>

@@ -44,6 +44,10 @@ const patternEngine =
 require(
 "./algo-bot-pattern-engine.cjs"
 );
+const earlyT3Engine =
+require(
+"./algo-bot-early-t3-engine.cjs"
+);
 const {
 getAlgoTradingMode
 } =
@@ -470,6 +474,9 @@ null;
 /** Замороженная книга per-ticker params на текущую сессию (не черновик парсинга). */
 let sessionTickerBook =
 null;
+/** @type {{ tf: string, alertLeadPct: number, minTurnover24hUsdt: number } | null} */
+let sessionEarlyT3Prefs =
+null;
 
 let sessionId =
 0;
@@ -610,6 +617,73 @@ function buildStatusSnapshot(
 extra =
 {}
 ){
+
+if(
+runningStrategyId ===
+"early-t3"
+){
+const engine =
+earlyT3Engine.getEarlyT3EngineStatus();
+const prefs =
+sessionEarlyT3Prefs ||
+{};
+
+return {
+ok:
+true,
+running:
+true,
+strategyId:
+"early-t3",
+sessionId,
+sessionStartedAt,
+watchlistCount:
+engine.watchlistCount,
+openCount:
+0,
+message:
+statusMessage,
+tradingMode:
+"manual",
+entriesPaused:
+false,
+tf:
+engine.tf ||
+prefs.tf ||
+"",
+exchangeId:
+"bybit",
+alertLeadPct:
+engine.alertLeadPct ??
+prefs.alertLeadPct,
+minTurnover24hUsdt:
+engine.minTurnover24hUsdt ??
+prefs.minTurnover24hUsdt,
+side:
+"both",
+sides:{
+long:
+false,
+short:
+false,
+both:
+true
+},
+armedCount:
+engine.armedCount,
+armedSetups:
+[],
+entriesCount:
+0,
+wouldEnterCount:
+0,
+lastSignal:
+engine.lastSignal,
+signals:
+engine.signals,
+...extra
+};
+}
 
 const strategies =
 readBotStrategies();
@@ -1023,6 +1097,8 @@ runningStrategyId =
 null;
 sessionTickerBook =
 null;
+sessionEarlyT3Prefs =
+null;
 statusMessage =
 message;
 entriesPaused =
@@ -1043,6 +1119,7 @@ strategies
 
 stopPoll();
 stopWatchlistRefresh();
+await earlyT3Engine.stopEarlyT3Engine();
 await patternEngine.stopPatternEngine();
 
 const snapshot =
@@ -1287,6 +1364,8 @@ sessionStartedAt =
 Date.now();
 statusMessage =
 "";
+sessionEarlyT3Prefs =
+null;
 patternEngine.resetEngineSession();
 
 }
@@ -1671,6 +1750,187 @@ shellPrefs
 
 }
 
+async function startEarlyT3BotImpl(
+payload =
+{}
+){
+
+if(
+runningStrategyId
+){
+return {
+ok:
+true,
+alreadyRunning:
+true,
+message:
+`Уже запущена ${runningStrategyId}; сначала остановите её`,
+...buildStatusSnapshot()
+};
+}
+
+resetSessionStats();
+
+const prefs =
+payload?.earlyT3Prefs &&
+typeof payload.earlyT3Prefs ===
+"object"
+? payload.earlyT3Prefs
+: {};
+const tf =
+String(
+prefs.tf ||
+"5"
+).trim() ||
+"5";
+const alertLeadPct =
+Number(
+prefs.alertLeadPct
+);
+const minTurnover24hUsdt =
+Number(
+prefs.minTurnover24hUsdt
+);
+
+sessionEarlyT3Prefs =
+{
+tf,
+alertLeadPct:
+Number.isFinite(
+alertLeadPct
+) &&
+alertLeadPct >=
+0
+? Math.min(
+10,
+alertLeadPct
+)
+: 5,
+minTurnover24hUsdt:
+Number.isFinite(
+minTurnover24hUsdt
+) &&
+minTurnover24hUsdt >=
+0
+? minTurnover24hUsdt
+: 100000
+};
+
+try{
+statusMessage =
+"Запуск Early T3…";
+
+sessionLog.beginSession(
+{
+sessionId,
+strategyId:
+"early-t3",
+startedAt:
+sessionStartedAt,
+tradingMode:
+"manual",
+watchlistCount:
+0
+}
+);
+sessionLog.appendNote(
+`Запуск early-t3 (alerts only, tf=${sessionEarlyT3Prefs.tf}, turnover>=${sessionEarlyT3Prefs.minTurnover24hUsdt})`
+);
+
+await earlyT3Engine.startEarlyT3Engine(
+{
+tf:
+sessionEarlyT3Prefs.tf,
+alertLeadPct:
+sessionEarlyT3Prefs.alertLeadPct,
+minTurnover24hUsdt:
+sessionEarlyT3Prefs.minTurnover24hUsdt,
+patternSettings:
+payload?.patternSettings &&
+typeof payload.patternSettings ===
+"object"
+? payload.patternSettings
+: null,
+onActivity:()=>{
+pushStatus(
+buildStatusSnapshot()
+);
+}
+}
+);
+
+runningStrategyId =
+"early-t3";
+statusMessage =
+"Запущен";
+sessionLog.appendNote(
+"Запущен"
+);
+
+const strategies =
+readBotStrategies();
+
+for(
+const id of [
+"st1",
+"st2",
+"st3"
+]
+){
+strategies[
+id
+].running =
+false;
+}
+writeBotStrategies(
+strategies
+);
+}catch(
+err
+){
+runningStrategyId =
+null;
+sessionEarlyT3Prefs =
+null;
+statusMessage =
+String(
+err?.message ||
+err
+);
+try{
+await earlyT3Engine.stopEarlyT3Engine();
+}catch{
+/* ignore */
+}
+sessionLog.appendNote(
+`Ошибка запуска: ${statusMessage}`
+);
+sessionLog.endSession(
+{
+message:
+statusMessage
+}
+);
+
+return {
+ok:
+false,
+message:
+statusMessage,
+...buildStatusSnapshot()
+};
+}
+
+const snapshot =
+buildStatusSnapshot();
+pushStatus(
+snapshot
+);
+
+return snapshot;
+
+}
+
 async function startBotImpl(
 payload =
 {}
@@ -1681,6 +1941,15 @@ String(
 payload?.strategyId ||
 "st1"
 ).trim().toLowerCase();
+
+if(
+strategyId ===
+"early-t3"
+){
+return startEarlyT3BotImpl(
+payload
+);
+}
 
 if(
 ![
@@ -2268,6 +2537,24 @@ await patternEngine.stopPatternEngine();
  * Bot lives in main — window is not required (tray/agent mode).
  */
 async function bootAlgoBotIfWasRunning(){
+
+const featureNav =
+require(
+"../feature-nav-prefs-store.cjs"
+).readPrefs();
+
+if(
+!featureNav.algoTradingNavEnabled
+){
+return {
+ok:
+true,
+skipped:
+true,
+message:
+"algo nav disabled"
+};
+}
 
 const strategies =
 readBotStrategies();

@@ -8,14 +8,15 @@ createPattern12Scanner,
 PATTERN_SCAN_ALL_TFS,
 filterPatternScanRowsBySide,
 normalizePatternScanSideFilter,
+normalizeScriptScanIndicatorId,
 loadPatternScanSymbols
-} from "./pattern-12-scanner.js?v=24";
+} from "./pattern-12-scanner.js?v=25";
 
 import {
 loadScriptPageState,
 saveScriptPageState,
 periodMsById
-} from "./script-page-storage.js?v=15";
+} from "./script-page-storage.js?v=16";
 
 import {
 loadScriptFavoritesForScan,
@@ -667,6 +668,8 @@ false
 }
 ){
 
+const pageState =
+loadScriptPageState();
 const gen =
 Date.now();
 
@@ -690,6 +693,10 @@ lookbackBars,
 sideFilter:
 normalizePatternScanSideFilter(
 sideFilter
+),
+scanIndicatorId:
+normalizeScriptScanIndicatorId(
+pageState.scanIndicatorId
 ),
 done:
 0,
@@ -802,6 +809,11 @@ job.tfs,
 lookbackBars:
 job.lookbackBars,
 sideFilter,
+indicatorId:
+normalizeScriptScanIndicatorId(
+job.scanIndicatorId ||
+pageState.scanIndicatorId
+),
 startIndex:
 Number(
 job.done

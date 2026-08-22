@@ -26,6 +26,7 @@ const {
 getAlgoRuntimeStatus,
 setAlgoTradingRuntimeEnabled,
 bootAlgoTradingRuntimeIfEnabled,
+stopAlgoTradingRuntime,
 readPrefs,
 setAlgoTradingMode,
 getAlgoTradingMode
@@ -1897,6 +1898,59 @@ err
 
 }
 
+function stopAlgoModulesForFeatureNavOff(){
+
+try{
+stopAlgoTradingStream();
+}catch(
+err
+){
+log.warn(
+"stopAlgoModulesForFeatureNavOff stream:",
+err?.message ||
+err
+);
+}
+
+try{
+stopAlgoTradingRuntime(
+"алго выключен в Системе"
+);
+}catch(
+err
+){
+log.warn(
+"stopAlgoModulesForFeatureNavOff runtime:",
+err?.message ||
+err
+);
+}
+
+return Promise.resolve(
+algoBot.stopBot(
+{}
+)
+).catch(
+err=>{
+log.warn(
+"stopAlgoModulesForFeatureNavOff bot:",
+err?.message ||
+err
+);
+return {
+ok:
+false,
+message:
+err?.message ||
+String(
+err
+)
+};
+}
+);
+
+}
+
 module.exports =
 {
 registerAlgoTradingIpc,
@@ -1905,5 +1959,6 @@ bootAlgoBotIfWasRunning:()=>
 algoBot.bootAlgoBotIfWasRunning(),
 ensureAlgoStream,
 setAlgoTradingStreamTarget,
-stopAlgoTradingStream
+stopAlgoTradingStream,
+stopAlgoModulesForFeatureNavOff
 };

@@ -11,7 +11,7 @@ isWatchlistPage
 
 import {
 initTradeExchangeSettings
-} from "./trade-exchange-settings.js?v=22";
+} from "./trade-exchange-settings.js?v=23";
 
 import {
 initTradeVolumePresets

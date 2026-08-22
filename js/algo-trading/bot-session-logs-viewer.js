@@ -12,7 +12,7 @@ loadBotStrategiesPrefs
 } from "./bot-strategy-prefs.js?v=28";
 import {
 syncAllTickerFlagsRootToMain
-} from "./bot-bridge.js?v=19";
+} from "./bot-bridge.js?v=20";
 import {
 ALGO_TICKER_FLAGS_KEY
 } from "./ticker-flags.js?v=8";
@@ -23,6 +23,8 @@ loadBotTickerBook
 
 const STORAGE_KEY =
 "algo_remote_session_logs_v1";
+const TOKEN_SESSION_KEY =
+"algo_remote_session_logs_token_v1";
 const CHANNEL_UI_VER =
 "12";
 const STRATEGY_IDS =
@@ -63,6 +65,50 @@ null;
 
 }
 
+function readSessionToken(){
+
+try{
+return String(
+sessionStorage.getItem(
+TOKEN_SESSION_KEY
+) ||
+""
+).trim();
+}catch{
+return "";
+}
+
+}
+
+function writeSessionToken(
+token
+){
+
+try{
+const value =
+String(
+token ||
+""
+).trim();
+
+if(
+value
+){
+sessionStorage.setItem(
+TOKEN_SESSION_KEY,
+value
+);
+}else{
+sessionStorage.removeItem(
+TOKEN_SESSION_KEY
+);
+}
+}catch{
+/* ignore */
+}
+
+}
+
 function readConn(){
 
 try{
@@ -73,6 +119,34 @@ STORAGE_KEY
 ) ||
 "{}"
 );
+let token =
+readSessionToken();
+
+if(
+!token &&
+raw.token
+){
+token =
+String(
+raw.token ||
+""
+).trim();
+writeSessionToken(
+token
+);
+}
+
+if(
+raw.token
+){
+delete raw.token;
+localStorage.setItem(
+STORAGE_KEY,
+JSON.stringify(
+raw
+)
+);
+}
 
 return {
 host:
@@ -85,11 +159,7 @@ String(
 raw.port ||
 "17865"
 ).trim(),
-token:
-String(
-raw.token ||
-""
-).trim(),
+token,
 strategyId:
 normalizeLanStrategyId(
 raw.strategyId
@@ -102,7 +172,7 @@ host:
 port:
 "17865",
 token:
-"",
+readSessionToken(),
 strategyId:
 "st1"
 };
@@ -128,17 +198,15 @@ String(
 conn.port ||
 "17865"
 ).trim(),
-token:
-String(
-conn.token ||
-""
-).trim(),
 strategyId:
 normalizeLanStrategyId(
 conn.strategyId
 )
 }
 )
+);
+writeSessionToken(
+conn.token
 );
 
 }

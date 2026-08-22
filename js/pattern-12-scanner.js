@@ -12,14 +12,80 @@ buildMarketLists
 
 import {
 PATTERN_12_ID,
-computePattern12Scene,
-defaultPattern12Settings,
-normalizePattern12Settings
+computePattern12Scene as computePattern12OriginalScene,
+defaultPattern12Settings as defaultPattern12OriginalSettings,
+normalizePattern12Settings as normalizePattern12OriginalSettings
 } from "./indicators/pattern-12-math.js?v=13";
+
+import {
+PATTERN_12_EARLY_T3_ID,
+computePattern12Scene as computePattern12EarlyT3Scene,
+defaultPattern12Settings as defaultPattern12EarlyT3Settings,
+normalizePattern12Settings as normalizePattern12EarlyT3Settings
+} from "./indicators/pattern-12-early-t3-math.js?v=1";
 
 /** Совпадает с DEFAULT_STORAGE_KEY в chart-indicators.js (Терминал / Монеты). */
 export const TERMINAL_INDICATORS_STORAGE_KEY =
 "chart_indicators_v1";
+
+export const SCRIPT_SCAN_INDICATOR_PATTERN12 =
+PATTERN_12_ID;
+
+export const SCRIPT_SCAN_INDICATOR_EARLY_T3 =
+PATTERN_12_EARLY_T3_ID;
+
+/**
+ * @param {unknown} raw
+ * @returns {typeof PATTERN_12_ID | typeof PATTERN_12_EARLY_T3_ID}
+ */
+export function normalizeScriptScanIndicatorId(
+raw
+){
+
+return String(
+raw ||
+""
+) ===
+PATTERN_12_EARLY_T3_ID
+? PATTERN_12_EARLY_T3_ID
+: PATTERN_12_ID;
+
+}
+
+function scanEngine(
+indicatorId
+){
+
+if(
+normalizeScriptScanIndicatorId(
+indicatorId
+) ===
+PATTERN_12_EARLY_T3_ID
+){
+return {
+id:
+PATTERN_12_EARLY_T3_ID,
+compute:
+computePattern12EarlyT3Scene,
+normalize:
+normalizePattern12EarlyT3Settings,
+defaultSettings:
+defaultPattern12EarlyT3Settings
+};
+}
+
+return {
+id:
+PATTERN_12_ID,
+compute:
+computePattern12OriginalScene,
+normalize:
+normalizePattern12OriginalSettings,
+defaultSettings:
+defaultPattern12OriginalSettings
+};
+
+}
 
 export const PATTERN_SCAN_LOOKBACK_BARS =
 30;
@@ -311,14 +377,31 @@ normalized
 
 }
 
-const PATTERN_SETTINGS =
-defaultPattern12Settings();
-
 /**
  * Снимок настроек Pattern 1-2, как на Терминале (меню индикаторов).
- * @returns {ReturnType<typeof defaultPattern12Settings>}
+ * @returns {ReturnType<typeof defaultPattern12OriginalSettings>}
  */
 export function readTerminalPattern12Settings(){
+
+return readTerminalScanIndicatorSettings(
+PATTERN_12_ID
+);
+
+}
+
+/**
+ * Настройки выбранного индикатора скана — снимок Терминала
+ * (`settings_pattern-12` или `settings_pattern-12-early-t3`).
+ * @param {unknown} [indicatorId]
+ */
+export function readTerminalScanIndicatorSettings(
+indicatorId
+){
+
+const engine =
+scanEngine(
+indicatorId
+);
 
 try{
 const raw =
@@ -329,7 +412,7 @@ TERMINAL_INDICATORS_STORAGE_KEY
 if(
 !raw
 ){
-return defaultPattern12Settings();
+return engine.defaultSettings();
 }
 
 const prefs =
@@ -341,19 +424,19 @@ prefs &&
 typeof prefs ===
 "object"
 ? prefs[
-`settings_${PATTERN_12_ID}`
+`settings_${engine.id}`
 ]
 : null;
 
-return normalizePattern12Settings(
+return engine.normalize(
 stored &&
 typeof stored ===
 "object"
 ? stored
-: defaultPattern12Settings()
+: engine.defaultSettings()
 );
 }catch{
-return defaultPattern12Settings();
+return engine.defaultSettings();
 }
 
 }
@@ -381,18 +464,23 @@ ms
 
 function scanSettingsForSideFilter(
 sideFilter,
-baseSettings =
-PATTERN_SETTINGS
+baseSettings,
+engine
 ){
 
 const mode =
 normalizePatternScanSideFilter(
 sideFilter
 );
+const activeEngine =
+engine ||
+scanEngine(
+PATTERN_12_ID
+);
 const base =
-normalizePattern12Settings(
+activeEngine.normalize(
 baseSettings ||
-PATTERN_SETTINGS
+activeEngine.defaultSettings()
 );
 
 return {
@@ -507,7 +595,9 @@ PATTERN_SCAN_LOOKBACK_BARS,
 sideFilter =
 "both",
 patternSettings =
-null
+null,
+indicatorId =
+PATTERN_12_ID
 ){
 
 if(
@@ -520,17 +610,22 @@ candles.length <
 return [];
 }
 
+const engine =
+scanEngine(
+indicatorId
+);
 const normalizedSideFilter =
 normalizePatternScanSideFilter(
 sideFilter
 );
 
 const scene =
-computePattern12Scene(
+engine.compute(
 candles,
 scanSettingsForSideFilter(
 normalizedSideFilter,
-patternSettings
+patternSettings,
+engine
 )
 );
 const minBar =
@@ -604,7 +699,9 @@ candles,
 lookbackBars,
 sideFilter,
 patternSettings =
-null
+null,
+indicatorId =
+PATTERN_12_ID
 ){
 
 const hits =
@@ -612,7 +709,8 @@ findPattern12HitsInLookback(
 candles,
 lookbackBars,
 sideFilter,
-patternSettings
+patternSettings,
+indicatorId
 );
 
 if(
@@ -701,13 +799,23 @@ const sideFilter =
 normalizePatternScanSideFilter(
 options.sideFilter
 );
+const indicatorId =
+normalizeScriptScanIndicatorId(
+options.indicatorId
+);
+const engine =
+scanEngine(
+indicatorId
+);
 const patternSettingsSnapshot =
-normalizePattern12Settings(
+engine.normalize(
 options.patternSettings &&
 typeof options.patternSettings ===
 "object"
 ? options.patternSettings
-: readTerminalPattern12Settings()
+: readTerminalScanIndicatorSettings(
+indicatorId
+)
 );
 
 onProgress?.(
@@ -990,7 +1098,8 @@ findPattern12HitsInLookback(
 candles,
 lookbackBars,
 taskSideFilter,
-patternSettingsSnapshot
+patternSettingsSnapshot,
+indicatorId
 );
 
 /*

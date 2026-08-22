@@ -52,7 +52,7 @@ createTickerUiBatcher
 
 import {
 mountReleaseMarker
-} from "./release-marker.js?v=94";
+} from "./release-marker.js?v=95";
 
 import {
 saveScreenerState,
@@ -138,7 +138,7 @@ if(
 ){
 screenerZoomMountPromise =
 import(
-"./screener-widget-zoom.js?v=28"
+"./screener-widget-zoom.js?v=29"
 ).then(
 mod=>{
 refreshZoomFavoriteUi =
@@ -194,6 +194,29 @@ change24: "24ч %",
 volume24: "Объём 24ч",
 symbol: "А–Я"
 };
+
+function escapeHtml(
+value
+){
+
+return String(
+value ??
+""
+).replace(
+/&/g,
+"&amp;"
+).replace(
+/</g,
+"&lt;"
+).replace(
+/>/g,
+"&gt;"
+).replace(
+/"/g,
+"&quot;"
+);
+
+}
 
 function normalizeSortMode(
 value
@@ -1888,7 +1911,7 @@ root.innerHTML = `
 
 ${SCREENER_FLAG_WRAP_HTML}
 
-<div class="screener-symbol">${symbol}</div>
+<div class="screener-symbol">${escapeHtml(symbol)}</div>
 
 </div>
 

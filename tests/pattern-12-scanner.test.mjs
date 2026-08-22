@@ -9,6 +9,10 @@ const {
   findPattern12HitsInLookback,
   findLatestPattern12InLookback,
   readTerminalPattern12Settings,
+  readTerminalScanIndicatorSettings,
+  normalizeScriptScanIndicatorId,
+  SCRIPT_SCAN_INDICATOR_EARLY_T3,
+  SCRIPT_SCAN_INDICATOR_PATTERN12,
   TERMINAL_INDICATORS_STORAGE_KEY,
   PATTERN_SCAN_DEFAULT_LOOKBACK
 } = await import("../js/pattern-12-scanner.js");
@@ -181,4 +185,58 @@ test("Script parse: tempFastPt4 changes hits in default lookback", async () => {
   assert.equal(fast.length, 1);
   assert.equal(fast[0].side, "short");
   assert.equal(fast[0].bar, 793);
+});
+
+test("normalizeScriptScanIndicatorId defaults to Pattern 1-2", () => {
+  assert.equal(normalizeScriptScanIndicatorId(), SCRIPT_SCAN_INDICATOR_PATTERN12);
+  assert.equal(normalizeScriptScanIndicatorId("nope"), SCRIPT_SCAN_INDICATOR_PATTERN12);
+  assert.equal(
+    normalizeScriptScanIndicatorId(SCRIPT_SCAN_INDICATOR_EARLY_T3),
+    SCRIPT_SCAN_INDICATOR_EARLY_T3
+  );
+});
+
+test("readTerminalScanIndicatorSettings reads EARLY T3 snapshot separately", () => {
+  const prev = globalThis.localStorage;
+  const store = new Map();
+  globalThis.localStorage = {
+    getItem: (k) => (store.has(k) ? store.get(k) : null),
+    setItem: (k, v) => {
+      store.set(k, String(v));
+    },
+    removeItem: (k) => {
+      store.delete(k);
+    }
+  };
+
+  try {
+    store.set(
+      TERMINAL_INDICATORS_STORAGE_KEY,
+      JSON.stringify({
+        "settings_pattern-12": {
+          lngRsiLength: 21
+        },
+        "settings_pattern-12-early-t3": {
+          lngRsiLength: 14,
+          onePt34Per12: true,
+          earlyT3RsiLen: 5
+        }
+      })
+    );
+
+    const original = readTerminalScanIndicatorSettings(SCRIPT_SCAN_INDICATOR_PATTERN12);
+    const early = readTerminalScanIndicatorSettings(SCRIPT_SCAN_INDICATOR_EARLY_T3);
+
+    assert.equal(original.lngRsiLength, 21);
+    assert.equal(early.lngRsiLength, 14);
+    assert.equal(early.onePt34Per12, true);
+    assert.equal(early.earlyT3RsiLen, 5);
+    assert.notEqual(original.onePt34Per12, true);
+  } finally {
+    if (prev === undefined) {
+      delete globalThis.localStorage;
+    } else {
+      globalThis.localStorage = prev;
+    }
+  }
 });

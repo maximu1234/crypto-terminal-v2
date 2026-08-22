@@ -3,7 +3,7 @@
  */
 import {
 createScriptWidgetGrid
-} from "./script-page-widgets.js?v=19";
+} from "./script-page-widgets.js?v=21";
 
 import {
 getSharedPatternScanner,
@@ -16,22 +16,23 @@ stopActivePatternScan,
 startFullPatternScan,
 isScriptScanBackgroundRunning,
 SCRIPT_SCAN_BG_EVENT
-} from "./script-scan-background.js?v=16";
+} from "./script-scan-background.js?v=17";
 
 import {
 PATTERN_SCAN_TF_LABELS,
 PATTERN_SCAN_DEPTH_OPTIONS,
 normalizePatternScanSideFilter,
 matchesPatternScanSideFilter,
-isPatternScanHitFresh
-} from "./pattern-12-scanner.js?v=24";
+isPatternScanHitFresh,
+normalizeScriptScanIndicatorId
+} from "./pattern-12-scanner.js?v=25";
 
 import {
 loadScriptPageState,
 saveScriptPageState,
 SCRIPT_AUTO_PERIODS,
 periodMsById
-} from "./script-page-storage.js?v=15";
+} from "./script-page-storage.js?v=16";
 
 import {
 fetchTickersInto
@@ -992,6 +993,19 @@ updateActionButtons();
 
 }
 
+function setScanIndicator(
+raw
+){
+
+state.scanIndicatorId =
+normalizeScriptScanIndicatorId(
+raw
+);
+persist();
+refreshGrid();
+
+}
+
 function setMinTurnover24hUsdt(
 raw
 ){
@@ -1865,6 +1879,10 @@ els.searchDepth =
 document.getElementById(
 "script-search-depth"
 );
+els.scanIndicator =
+document.getElementById(
+"script-scan-indicator"
+);
 els.searchSide =
 document.getElementById(
 "script-side-filter"
@@ -2119,6 +2137,15 @@ els.searchSide.value
 }
 );
 
+els.scanIndicator?.addEventListener(
+"change",
+()=>{
+setScanIndicator(
+els.scanIndicator.value
+);
+}
+);
+
 els.minTurnover?.addEventListener(
 "change",
 ()=>{
@@ -2192,6 +2219,11 @@ statusEl:
 els.status,
 getLookbackBars(){
 return state.searchDepth;
+},
+getScanIndicatorId(){
+return normalizeScriptScanIndicatorId(
+state.scanIndicatorId
+);
 },
 onPersist(
 {
@@ -2267,6 +2299,15 @@ els.searchSide
 ){
 els.searchSide.value =
 state.searchSide;
+}
+
+if(
+els.scanIndicator
+){
+els.scanIndicator.value =
+normalizeScriptScanIndicatorId(
+state.scanIndicatorId
+);
 }
 
 if(

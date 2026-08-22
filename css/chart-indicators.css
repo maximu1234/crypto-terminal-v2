@@ -279,6 +279,15 @@ max-height:min(62vh,560px);
 overflow:auto;
 }
 
+.chart-indicator-settings-dialog--pattern12-early-t3{
+width:min(420px,calc(100vw - 24px));
+max-height:min(92vh,820px);
+}
+
+.chart-indicator-settings-dialog--pattern12-early-t3 .chart-indicator-settings-body{
+overflow:auto;
+}
+
 /* Pattern 1-2: Общие → Лонг|Шорт → Отображение (симметрия Long/Short) */
 .ind-pattern12-settings{
 display:flex;

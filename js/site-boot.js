@@ -144,7 +144,7 @@ return;
 }
 
 void import(
-"./script-scan-background.js?v=16"
+"./script-scan-background.js?v=17"
 ).then(
 m=>
 m.resumeScriptScanBackgroundJob?.()
@@ -168,7 +168,7 @@ return Promise.resolve();
 }
 
 return import(
-"./script-scan-background.js?v=16"
+"./script-scan-background.js?v=17"
 ).then(
 m=>
 m.stopScriptScanBackground?.()
@@ -192,7 +192,7 @@ return;
 }
 
 void import(
-"./algo-trading/desktop-site-boot.js?v=4"
+"./algo-trading/desktop-site-boot.js?v=7"
 ).then(
 m=>
 m.bootAlgoDesktopBackgroundJobs?.()
@@ -216,7 +216,7 @@ return Promise.resolve();
 }
 
 return import(
-"./algo-trading/desktop-site-boot.js?v=4"
+"./algo-trading/desktop-site-boot.js?v=7"
 ).then(
 m=>
 m.stopAlgoDesktopBackgroundJobs?.()

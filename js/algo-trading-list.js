@@ -53,6 +53,12 @@ removeAlgoTickerFromFlagList
 } from "./algo-trading/ticker-flags.js?v=8";
 
 import {
+ALGO_ANALYSIS_BOT_CHANGE_EVENT,
+ALGO_ANALYSIS_BOT_PATTERN_12,
+isActiveAnalysisBot
+} from "./algo-trading/active-analysis-bot.js?v=3";
+
+import {
 mountQwertyKeyInput
 } from "./qwerty-key-input.js?v=1";
 
@@ -144,6 +150,21 @@ market
 
 function algoMarketFilterOptions(){
 
+if(
+!isActiveAnalysisBot(
+ALGO_ANALYSIS_BOT_PATTERN_12
+)
+){
+return [
+{
+id:
+"all",
+label:
+"Все"
+}
+];
+}
+
 return [
 {
 id:
@@ -230,6 +251,14 @@ coinsState().currentDataset =
 
 }
 
+function onAnalysisBotMarketFilter(){
+
+syncMarketFilterOptions();
+generateMarketData();
+renderList();
+
+}
+
 function resolveAlgoMarketSymbols(
 dataset
 ){
@@ -276,10 +305,29 @@ highlightActiveSymbol();
 
 function ensureAlgoListFlagMenus(){
 
+const pattern12On =
+isActiveAnalysisBot(
+ALGO_ANALYSIS_BOT_PATTERN_12
+);
+
 document.querySelectorAll(
 ".coin-flag-menu"
 ).forEach(
 menu=>{
+
+if(
+!pattern12On
+){
+if(
+menu.dataset.algoListFlags ===
+"1"
+){
+menu.innerHTML =
+"";
+delete menu.dataset.algoListFlags;
+}
+return;
+}
 
 if(
 menu.dataset.algoListFlags ===
@@ -400,6 +448,11 @@ window.addEventListener(
 ()=>{
 refreshAlgoMarketListFromFlags();
 }
+);
+
+window.addEventListener(
+ALGO_ANALYSIS_BOT_CHANGE_EVENT,
+onAnalysisBotMarketFilter
 );
 
 function closeAllCoinFlagMenus(
@@ -1056,6 +1109,10 @@ destroy(){
 document.removeEventListener(
 "keydown",
 onListKeyDown
+);
+window.removeEventListener(
+ALGO_ANALYSIS_BOT_CHANGE_EVENT,
+onAnalysisBotMarketFilter
 );
 
 }

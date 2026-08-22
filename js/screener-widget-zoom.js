@@ -51,7 +51,7 @@ if(
 ){
 zoomPatternOverlayApi =
 await import(
-"./screener-pattern-overlay.js?v=8"
+"./screener-pattern-overlay.js?v=10"
 );
 }
 
@@ -1779,6 +1779,10 @@ backdrop,
 panel,
 symbol,
 tf,
+side:
+widget?.side,
+scanIndicatorId:
+widget?.scanIndicatorId,
 oscKind,
 chart,
 series,
