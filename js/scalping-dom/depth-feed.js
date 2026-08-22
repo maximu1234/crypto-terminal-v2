@@ -91,6 +91,8 @@ function decodeFrame(data){
       size: sizes[i],
       side: sideBits > 0 ? "ask" : sideBits < 0 ? "bid" : "hole",
       touch: (flags[i] & 1) !== 0,
+      touchAsk: (flags[i] & 4) !== 0,
+      touchBid: (flags[i] & 8) !== 0,
       major: (flags[i] & 2) !== 0
     });
   }
@@ -159,31 +161,35 @@ export function createDepthFeed(handlers){
     if(!ladder){
       return null;
     }
-    const now = performance.now();
-    if(
-      !overlayCache ||
-      overlayCache.symbol !== symbol ||
-      now - overlayCacheAt >= OVERLAY_CACHE_MS
-    ){
-      overlayCache = {
-        symbol,
-        overlays: resolvePositionOverlays(symbol, {
-          mid: ladder.mid,
-          bestBid: ladder.bestBid,
-          bestAsk: ladder.bestAsk
-        }),
-        alerts: resolveAlertPrices(symbol),
-        triggers: resolveTriggerLevels(symbol),
-        slTp: resolveSlTpPrices(symbol),
-        drawings: resolveHorizDrawingLevels(symbol)
-      };
-      overlayCacheAt = now;
+    try{
+      const now = performance.now();
+      if(
+        !overlayCache ||
+        overlayCache.symbol !== symbol ||
+        now - overlayCacheAt >= OVERLAY_CACHE_MS
+      ){
+        overlayCache = {
+          symbol,
+          overlays: resolvePositionOverlays(symbol, {
+            mid: ladder.mid,
+            bestBid: ladder.bestBid,
+            bestAsk: ladder.bestAsk
+          }),
+          alerts: resolveAlertPrices(symbol),
+          triggers: resolveTriggerLevels(symbol),
+          slTp: resolveSlTpPrices(symbol),
+          drawings: resolveHorizDrawingLevels(symbol)
+        };
+        overlayCacheAt = now;
+      }
+      const withPos = applyPositionOverlays(ladder, overlayCache.overlays);
+      const withAlerts = applyAlertUnderlines(withPos, overlayCache.alerts);
+      const withTriggers = applyTriggerUnderlines(withAlerts, overlayCache.triggers);
+      const withDrawings = applyHorizDrawingUnderlines(withTriggers, overlayCache.drawings);
+      return applySlTpHighlights(withDrawings, overlayCache.slTp);
+    }catch{
+      return ladder;
     }
-    const withPos = applyPositionOverlays(ladder, overlayCache.overlays);
-    const withAlerts = applyAlertUnderlines(withPos, overlayCache.alerts);
-    const withTriggers = applyTriggerUnderlines(withAlerts, overlayCache.triggers);
-    const withDrawings = applyHorizDrawingUnderlines(withTriggers, overlayCache.drawings);
-    return applySlTpHighlights(withDrawings, overlayCache.slTp);
   }
 
   function onWorkerMessage(event){

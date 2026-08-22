@@ -195,15 +195,26 @@ function paintLadder(canvas, ladder){
     if(y >= cssH){
       break;
     }
-    const sideBg = rowSideBg(row);
+    const touchAsk = row.touchAsk === true || (row.touch && row.side === "ask" && row.touchBid !== true);
+    const touchBid = row.touchBid === true || (row.touch && row.side === "bid" && row.touchAsk !== true);
+    const splitTouch = touchAsk && touchBid;
+    const sideBg = splitTouch ? "" : rowSideBg({ ...row, touch: touchAsk || touchBid });
     const priceBg = rowPriceBg(row, sideBg);
-    if(sideBg){
-      ctx.fillStyle = sideBg;
-      ctx.fillRect(0, y, sizeW, ROW_H);
-    }
-    if(priceBg){
-      ctx.fillStyle = priceBg;
-      ctx.fillRect(sizeW, y, cssW - sizeW, ROW_H);
+    if(splitTouch && !row.positionFill){
+      const midY = y + ROW_H / 2;
+      ctx.fillStyle = "#5d0e07";
+      ctx.fillRect(0, y, cssW, midY - y);
+      ctx.fillStyle = "#102f1e";
+      ctx.fillRect(0, midY, cssW, y + ROW_H - midY);
+    }else{
+      if(sideBg){
+        ctx.fillStyle = sideBg;
+        ctx.fillRect(0, y, sizeW, ROW_H);
+      }
+      if(priceBg){
+        ctx.fillStyle = priceBg;
+        ctx.fillRect(sizeW, y, cssW - sizeW, ROW_H);
+      }
     }
     const barPct = volumeBarPct(row.size, refMax);
     if(barPct > 0){

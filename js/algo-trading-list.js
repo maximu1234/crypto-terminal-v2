@@ -253,8 +253,24 @@ coinsState().currentDataset =
 
 function onAnalysisBotMarketFilter(){
 
+const prevDataset =
+coinsState().currentDataset;
 syncMarketFilterOptions();
+
+if(
+coinsState().currentDataset !==
+prevDataset
+){
 generateMarketData();
+void primeTickerSnapshots().then(
+()=>{
+renderList();
+highlightActiveSymbol();
+}
+);
+return;
+}
+
 renderList();
 
 }

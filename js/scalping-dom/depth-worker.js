@@ -4,11 +4,11 @@
  */
 import {
 createTickBook
-} from "./tick-book.js?v=1";
+} from "./tick-book.js?v=2";
 
 import {
 buildVisibleSliceFromTickBook
-} from "./ladder-slice.js?v=2";
+} from "./ladder-slice.js?v=4";
 
 import {
 createBybitDepthWs,
@@ -83,7 +83,10 @@ function postFrame(slice){
     prices[i] = row.price;
     sizes[i] = row.size;
     sides[i] = row.side === "ask" ? 1 : row.side === "bid" ? -1 : 0;
-    flags[i] = (row.touch ? 1 : 0) | (row.major ? 2 : 0);
+    flags[i] = (row.touch ? 1 : 0)
+      | (row.major ? 2 : 0)
+      | (row.touchAsk ? 4 : 0)
+      | (row.touchBid ? 8 : 0);
   }
   postMessage(
     {

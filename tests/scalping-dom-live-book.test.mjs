@@ -431,3 +431,85 @@ test("resolveHorizDrawingLevels reads hline/hray from drawings storage", () => {
   }
 });
 
+test("empty visible window recenters onto the book even while hovered", () => {
+  const book = createLiveBook();
+  book.setNativeTick(1);
+  fillBookAround(book, 100, 40);
+
+  const slice = buildVisibleSliceFromTickBook(book, {
+    priceScale: 1,
+    viewRows: 20,
+    viewOffset: 400,
+    hover: true,
+    autocenterPct: 85
+  });
+
+  assert.equal(slice.recentered, true);
+  assert.equal(slice.viewOffset, 0);
+  assert.ok(slice.rows.some((row) => row.size > 0 && row.side !== "hole"));
+  const midRow = slice.rows[Math.floor(slice.rows.length / 2)];
+  assert.ok(Math.abs(midRow.price - slice.mid) <= 1);
+});
+
+test("best bid and ask stay touched when the ladder scale compresses", () => {
+  const book = createLiveBook();
+  book.setNativeTick(1);
+  book.applySnapshot({
+    bids: [
+      ["101", "2"],
+      ["100", "1"],
+      ["99", "1"]
+    ],
+    asks: [
+      ["102", "3"],
+      ["103", "1"],
+      ["104", "1"]
+    ]
+  });
+
+  const slice = buildVisibleSliceFromTickBook(book, {
+    priceScale: 2,
+    viewRows: 24,
+    viewOffset: 0,
+    autocenterPct: 85
+  });
+
+  const bidRow = slice.rows.find((row) => row.touchBid);
+  const askRow = slice.rows.find((row) => row.touchAsk);
+  assert.ok(bidRow, "compressed bid touch");
+  assert.ok(askRow, "compressed ask touch");
+  assert.equal(bidRow.price, 100);
+  assert.equal(askRow.price, 102);
+
+  const native = buildVisibleSliceFromTickBook(book, {
+    priceScale: 1,
+    viewRows: 24,
+    viewOffset: 0,
+    autocenterPct: 85
+  });
+  assert.ok(native.rows.some((row) => row.price === 101 && row.touchBid));
+  assert.ok(native.rows.some((row) => row.price === 102 && row.touchAsk));
+});
+
+test("clear() drops native tick so the next snapshot can infer a new one", () => {
+  const book = createLiveBook();
+  book.setNativeTick(0.1);
+  book.applySnapshot({
+    bids: [["100", "1"]],
+    asks: [["101", "1"]]
+  });
+  assert.equal(book.getNativeTick(), 0.1);
+
+  book.clear();
+  assert.equal(book.getNativeTick(), 0);
+  assert.equal(book.isReady(), false);
+
+  book.applySnapshot({
+    bids: [["0.2036568", "2"]],
+    asks: [["0.2036570", "3"]]
+  });
+  assert.ok(book.getNativeTick() > 0);
+  assert.ok(book.getNativeTick() <= 1e-6);
+  assert.equal(book.bestBid(), 0.2036568);
+});
+

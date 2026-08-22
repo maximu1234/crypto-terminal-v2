@@ -148,6 +148,7 @@ export function createTickBook(){
     ready = false;
     bestBidIdx = null;
     bestAskIdx = null;
+    nativeTick = 0;
   }
 
   function setNativeTick(tick){

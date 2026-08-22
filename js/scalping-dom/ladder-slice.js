@@ -53,6 +53,20 @@ function clampViewRows(viewRows){
   return Math.max(8, Math.min(HARD_MAX_ROWS, Math.round(Number(viewRows) || 40)));
 }
 
+function displayStepForNativeIdx(
+nativeIdx,
+scale
+){
+  if(
+    nativeIdx == null ||
+    !Number.isFinite(nativeIdx) ||
+    !(scale > 0)
+  ){
+    return null;
+  }
+  return Math.floor(nativeIdx / scale);
+}
+
 function attachViewCenter(sticky, viewCenterIdx){
   if(!sticky){
     return null;
@@ -186,6 +200,67 @@ viewOffset
   };
 }
 
+function collectVisibleRows(
+book,
+view,
+displayTick,
+scale,
+dec,
+bestAsk,
+bestBid
+){
+  const rows = [];
+  let maxSize = 0;
+  const askStep =
+    displayStepForNativeIdx(
+      book.bestAskIdx?.(),
+      scale
+    );
+  const bidStep =
+    displayStepForNativeIdx(
+      book.bestBidIdx?.(),
+      scale
+    );
+  if(view.rows > 0 && displayTick > 0){
+    for(let step = view.startIdx; step >= view.endIdx; step--){
+      const price = Number((step * displayTick).toFixed(dec));
+      const askSize = book.notionalAtDisplay("ask", step, scale);
+      const bidSize = book.notionalAtDisplay("bid", step, scale);
+      const touchAsk = askStep != null && step === askStep;
+      const touchBid = bidStep != null && step === bidStep;
+      let side = "hole";
+      let size = 0;
+      if(askSize > 0){
+        side = "ask";
+        size = askSize;
+      }else if(bidSize > 0){
+        side = "bid";
+        size = bidSize;
+      }else if(touchAsk && !touchBid){
+        side = "ask";
+      }else if(touchBid && !touchAsk){
+        side = "bid";
+      }
+      if(size > maxSize){
+        maxSize = size;
+      }
+      rows.push({
+        price,
+        size,
+        side,
+        touch: touchAsk || touchBid,
+        touchAsk,
+        touchBid,
+        major: isMajorPrice(price, displayTick)
+      });
+    }
+  }
+  return {
+    rows,
+    maxSize
+  };
+}
+
 /**
  * @param {ReturnType<import("./tick-book.js").createTickBook>} book
  * @param {{
@@ -212,7 +287,7 @@ options =
       ? (bestAsk + bestBid) / 2
       : bestAsk || bestBid || 0;
 
-  const stepped = stepStickyRange(
+  let stepped = stepStickyRange(
     options.sticky || null,
     mid,
     displayTick,
@@ -222,51 +297,63 @@ options =
     options.viewRows,
     options.viewOffset | 0
   );
-  const sticky = stepped.sticky;
-  const viewOffset = stepped.resetView ? 0 : (options.viewOffset | 0);
-  const view = visibleDisplayIndexRange(
+  let sticky = stepped.sticky;
+  let viewOffset = stepped.resetView ? 0 : (options.viewOffset | 0);
+  let view = visibleDisplayIndexRange(
     sticky,
     options.viewRows,
     viewOffset
   );
 
-  const rows = [];
-  let maxSize = 0;
   const scale = Math.max(1, Math.round(priceScale));
   const dec = decimalsForTick(displayTick);
+  let built = collectVisibleRows(
+    book,
+    view,
+    displayTick,
+    scale,
+    dec,
+    bestAsk,
+    bestBid
+  );
 
-  if(view.rows > 0 && displayTick > 0){
-    for(let step = view.startIdx; step >= view.endIdx; step--){
-      const price = Number((step * displayTick).toFixed(dec));
-      const askSize = book.notionalAtDisplay("ask", step, scale);
-      const bidSize = book.notionalAtDisplay("bid", step, scale);
-      let side = "hole";
-      let size = 0;
-      if(askSize > 0){
-        side = "ask";
-        size = askSize;
-      }else if(bidSize > 0){
-        side = "bid";
-        size = bidSize;
-      }
-      if(size > maxSize){
-        maxSize = size;
-      }
-      const touch =
-        size > 0 &&
-        (
-          (bestAsk > 0 && Math.abs(price - bestAsk) < displayTick * 0.5) ||
-          (bestBid > 0 && Math.abs(price - bestBid) < displayTick * 0.5)
-        );
-      rows.push({
-        price,
-        size,
-        side,
-        touch,
-        major: isMajorPrice(price, displayTick)
-      });
-    }
+  /* Empty window (hover freeze / leftover offset) — snap back to the book. */
+  if(
+    built.maxSize <= 0 &&
+    mid > 0 &&
+    displayTick > 0 &&
+    (bestAsk > 0 || bestBid > 0)
+  ){
+    stepped = stepStickyRange(
+      null,
+      mid,
+      displayTick,
+      priceScale,
+      options.autocenterPct,
+      false,
+      options.viewRows,
+      0
+    );
+    sticky = stepped.sticky;
+    viewOffset = 0;
+    view = visibleDisplayIndexRange(
+      sticky,
+      options.viewRows,
+      0
+    );
+    built = collectVisibleRows(
+      book,
+      view,
+      displayTick,
+      scale,
+      dec,
+      bestAsk,
+      bestBid
+    );
   }
+
+  const rows = built.rows;
+  const maxSize = built.maxSize;
 
   return {
     rows,

@@ -15,7 +15,9 @@ computeChartFutureMarginBars
 
 import {
 terminalVisibleBars,
-TERMINAL_VISIBLE_BARS
+terminalHistoryInitialRequests,
+TERMINAL_VISIBLE_BARS,
+TERMINAL_HISTORY_LAZY_BATCH_BARS
 } from "./terminal-chart-history-prefs.js?v=1";
 
 import {
@@ -44,7 +46,7 @@ subscribeKline
 import {
 mountAlgoTradingCoinList,
 refreshAlgoMarketListFromFlags
-} from "./algo-trading-list.js?v=17";
+} from "./algo-trading-list.js?v=18";
 
 import {
 mountAlgoTickerScanUi
@@ -74,6 +76,7 @@ ALGO_ANALYSIS_BOT_CHANGE_EVENT,
 ALGO_ANALYSIS_BOT_PATTERN_12,
 getActiveAnalysisBotId,
 isActiveAnalysisBot,
+isAnyAnalysisBotActive,
 setActiveAnalysisBotId
 } from "./algo-trading/active-analysis-bot.js?v=3";
 
@@ -232,7 +235,7 @@ isAlgoBotLiteMode,
 mountAlgoBotLiteLayout
 } from "./algo-trading/lite-layout.js?v=1";
 
-/** Алго: ~10 000 свечей (10×1000), как сканы и «Подобрать для всех». */
+/** Глубина ботов / сканов / «Подобрать»: ~10 000. График сначала ~5000, затем догрузка. */
 const HISTORY_REQUESTS =
 ALGO_TICKER_SCAN_HISTORY_REQUESTS;
 /** Throttle pattern analysis when force:false (редко). */
@@ -723,12 +726,27 @@ historyStatsReady &&
 ){
 algoPattern12EnabledOnce =
 false;
+requestAnimationFrame(
+()=>{
+
+if(
+disposed ||
+!isActiveAnalysisBot(
+ALGO_ANALYSIS_BOT_PATTERN_12
+)
+){
+return;
+}
+
 ensureAlgoPattern12Enabled();
 refreshSupertrendFilterLines();
 schedulePatternAnalysis(
 {
 force:
 true
+}
+);
+
 }
 );
 }
@@ -1525,6 +1543,170 @@ null;
 
 }
 
+function mergeOlderAlgoCandles(
+older
+){
+
+const byTime =
+new Map();
+
+for(
+const row of older ||
+[]
+){
+
+if(
+row?.time !=
+null
+){
+byTime.set(
+row.time,
+row
+);
+}
+
+}
+
+for(
+const row of candles
+){
+
+if(
+row?.time !=
+null
+){
+byTime.set(
+row.time,
+row
+);
+}
+
+}
+
+return Array.from(
+byTime.values()
+).sort(
+(
+a,
+b
+)=>
+a.time -
+b.time
+);
+
+}
+
+async function deepenAlgoHistoryIfNeeded(
+seq
+){
+
+if(
+!isAnyAnalysisBotActive() ||
+!candles.length
+){
+return;
+}
+
+const havePages =
+Math.max(
+1,
+Math.ceil(
+candles.length /
+TERMINAL_HISTORY_LAZY_BATCH_BARS
+)
+);
+const extra =
+HISTORY_REQUESTS -
+havePages;
+
+if(
+extra <=
+0
+){
+return;
+}
+
+try{
+const older =
+await loadMarketHistory(
+symbol,
+tf,
+extra,
+{
+parallel:
+true,
+batchGapMs:
+0,
+endMs:
+candles[0].time *
+1000 -
+1
+}
+);
+
+if(
+disposed ||
+seq !==
+loadSeq ||
+!older?.length
+){
+return;
+}
+
+const beforeLen =
+candles.length;
+const range =
+chart?.timeScale?.().getVisibleLogicalRange?.();
+candles =
+mergeOlderAlgoCandles(
+older
+);
+const added =
+candles.length -
+beforeLen;
+
+if(
+added <=
+0
+){
+return;
+}
+
+applyCandleData(
+{
+light:
+true,
+skipAnalysis:
+true
+}
+);
+chartIndicators?.notifyCandlesUpdate?.();
+chartIndicators?.notifyMainChartOverlaysSync?.();
+
+if(
+range &&
+chart?.timeScale?.().setVisibleLogicalRange
+){
+chart.timeScale().setVisibleLogicalRange(
+{
+from:
+range.from +
+added,
+to:
+range.to +
+added
+}
+);
+}
+
+drawingTools?.scheduleRedraw?.();
+markAlgoHistoryStatsReadyAndAnalyze();
+}catch{
+/* first paint already on screen */
+}
+
+}
+
 async function loadSymbol(
 nextSymbol,
 nextTf
@@ -1564,7 +1746,12 @@ false
 stopKline();
 setSymbolLabel();
 setActiveTfButton();
-hydrateTickerStrategyUi();
+hydrateTickerStrategyUi(
+{
+refreshFilters:
+false
+}
+);
 persistAlgoSettings(
 {
 writeOverlays:
@@ -1592,7 +1779,7 @@ const rows =
 await loadMarketHistory(
 symbol,
 tf,
-HISTORY_REQUESTS,
+terminalHistoryInitialRequests(),
 {
 parallel:
 true,
@@ -1626,6 +1813,9 @@ true,
 skipAnalysis:
 true
 }
+);
+void deepenAlgoHistoryIfNeeded(
+seq
 );
 
 unsubKline =
@@ -2700,7 +2890,10 @@ mem
 
 }
 
-function hydrateTickerStrategyUi(){
+function hydrateTickerStrategyUi(
+opts =
+{}
+){
 
 restoreStrategyMemoryFromPrefs();
 
@@ -2725,7 +2918,13 @@ overlay
 }
 
 syncStrategyDomFromMemory();
+
+if(
+opts.refreshFilters !==
+false
+){
 refreshEntryFilterLines();
+}
 
 }
 
