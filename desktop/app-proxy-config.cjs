@@ -5,7 +5,7 @@
 "use strict";
 
 const PROXY_BYPASS_RULES =
-"<-loopback>,localhost,127.0.0.1,::1,<local>,api.bybit.com,api.bytick.com,api-testnet.bybit.com";
+"<-loopback>,localhost,127.0.0.1,::1,<local>";
 
 function normalizeProxyType(
 raw

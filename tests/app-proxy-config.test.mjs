@@ -5,6 +5,7 @@ import {
 buildProxyRules,
 isProxyConfigReady,
 normalizeProxySettings,
+PROXY_BYPASS_RULES,
 shouldProxyBybitRestUrl
 } from "../desktop/app-proxy-config.cjs";
 import {
@@ -191,5 +192,9 @@ test("Bybit REST from main (tickers + signed) goes through SOCKS; public WS stay
   assert.equal(
     shouldProxyBybitRestUrl("https://stream.bybit.com/v5/public/linear"),
     false
+  );
+  assert.doesNotMatch(
+    PROXY_BYPASS_RULES,
+    /api\.bybit\.com/
   );
 });

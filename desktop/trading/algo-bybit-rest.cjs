@@ -11,6 +11,34 @@ net
 require(
 "electron"
 );
+const https =
+require(
+"https"
+);
+const {
+URL
+} =
+require(
+"url"
+);
+const {
+getRendererProxySession
+} =
+require(
+"../app-session.cjs"
+);
+const {
+getRelayHttpsAgent
+} =
+require(
+"../app-proxy-socks-relay.cjs"
+);
+const {
+shouldProxyBybitRestUrl
+} =
+require(
+"../app-proxy-config.cjs"
+);
 const {
 getAlgoCredentials
 } =
@@ -315,6 +343,144 @@ return parts.join(
 
 }
 
+async function fetchViaRelayAgent(
+url,
+options,
+agent
+){
+
+const parsed =
+new URL(
+url
+);
+const requestOptions =
+{
+protocol:
+"https:",
+hostname:
+parsed.hostname,
+port:
+parsed.port ||
+443,
+path:
+parsed.pathname +
+parsed.search,
+method:
+(
+options &&
+options.method
+) ||
+"GET",
+headers:
+(
+options &&
+options.headers
+) ||
+{},
+agent
+};
+
+return new Promise(
+(
+resolve,
+reject
+)=>{
+
+const req =
+https.request(
+requestOptions,
+res=>{
+
+const chunks =
+[];
+
+res.on(
+"data",
+chunk=>
+chunks.push(
+chunk
+)
+);
+
+res.on(
+"end",
+()=>{
+
+resolve(
+new Response(
+Buffer.concat(
+chunks
+),
+{
+status:
+res.statusCode ||
+0,
+statusText:
+res.statusMessage ||
+"",
+headers:
+res.headers
+}
+)
+);
+
+}
+);
+
+}
+);
+
+req.on(
+"error",
+reject
+);
+
+const abortSignal =
+options &&
+options.signal;
+
+if(
+abortSignal
+){
+
+const onAbort =
+()=>{
+req.destroy();
+};
+
+if(
+abortSignal.aborted
+){
+onAbort();
+}else{
+abortSignal.addEventListener(
+"abort",
+onAbort,
+{
+once:
+true
+}
+);
+}
+
+}
+
+if(
+options &&
+options.body
+){
+req.write(
+options.body
+);
+}
+
+req.end();
+
+}
+);
+
+}
+
 async function fetchWithTimeout(
 url,
 options
@@ -331,12 +497,35 @@ REQUEST_TIMEOUT_MS
 );
 
 try{
-return await net.fetch(
+const agent =
+shouldProxyBybitRestUrl(
+url
+)
+? getRelayHttpsAgent()
+: undefined;
+
+if(
+agent
+){
+return await fetchViaRelayAgent(
 url,
 {
 ...options,
 signal:
 controller.signal
+},
+agent
+);
+}
+
+return await net.fetch(
+url,
+{
+...options,
+signal:
+controller.signal,
+session:
+getRendererProxySession()
 }
 );
 }catch(

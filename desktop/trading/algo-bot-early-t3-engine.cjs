@@ -85,6 +85,8 @@ let seedTotal =
 0;
 let seedDone =
 0;
+let seedFailNotes =
+0;
 
 function emptyStatus(){
 
@@ -865,6 +867,17 @@ symbol,
 result?.message ||
 "empty"
 );
+
+if(
+seedFailNotes <
+3
+){
+seedFailNotes++;
+sessionLog.appendNote(
+`Early T3 seed fail ${symbol}: ${result?.message || "empty"}`
+);
+}
+
 return;
 }
 
@@ -1136,9 +1149,14 @@ seedTotal =
 symbols.length;
 seedDone =
 0;
+seedFailNotes =
+0;
 
 sessionLog.appendNote(
 `Early T3: ${symbols.length} тикеров, ТФ ${tf}, оборот от ${min}`
+);
+sessionLog.appendNote(
+`Early T3 seed 0/${seedTotal}`
 );
 
 klineHub.syncTopics(
@@ -1192,6 +1210,8 @@ seedInflight =
 seedTotal =
 0;
 seedDone =
+0;
+seedFailNotes =
 0;
 
 }

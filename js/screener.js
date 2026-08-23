@@ -52,7 +52,7 @@ createTickerUiBatcher
 
 import {
 mountReleaseMarker
-} from "./release-marker.js?v=98";
+} from "./release-marker.js?v=99";
 
 import {
 saveScreenerState,
