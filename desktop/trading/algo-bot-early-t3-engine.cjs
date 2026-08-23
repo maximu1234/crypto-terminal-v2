@@ -44,7 +44,11 @@ const HISTORY_REQUESTS =
 const MAX_CANDLES =
 4000;
 const SEED_CONCURRENCY =
-6;
+2;
+const SEED_WATCH_MS =
+15000;
+const SEED_SYMBOL_TIMEOUT_MS =
+45000;
 const FRESH_PT4_BARS_SEED =
 2;
 const FRESH_PT4_BARS_LIVE =
@@ -87,6 +91,9 @@ let seedDone =
 0;
 let seedFailNotes =
 0;
+/** @type {ReturnType<setInterval>|null} */
+let seedWatchTimer =
+null;
 
 function emptyStatus(){
 
@@ -106,6 +113,80 @@ lastSignal:
 signals:
 []
 };
+
+}
+
+function stopSeedWatch(){
+
+if(
+seedWatchTimer
+){
+clearInterval(
+seedWatchTimer
+);
+seedWatchTimer =
+null;
+}
+
+}
+
+function startSeedWatch(){
+
+stopSeedWatch();
+seedWatchTimer =
+setInterval(
+()=>{
+
+if(
+!engineConfig ||
+seedDone >=
+seedTotal &&
+!seedInflight &&
+!seedQueue.length
+){
+stopSeedWatch();
+return;
+}
+
+sessionLog.appendNote(
+`Early T3 seed ${seedDone}/${seedTotal}, inflight ${seedInflight}`
+);
+engineConfig?.onActivity?.();
+
+},
+SEED_WATCH_MS
+);
+
+}
+
+function rejectAfter(
+ms,
+message
+){
+
+return new Promise(
+(
+_resolve,
+reject
+)=>{
+
+setTimeout(
+()=>{
+const err =
+new Error(
+message
+);
+err.code =
+"timeout";
+reject(
+err
+);
+},
+ms
+);
+
+}
+);
 
 }
 
@@ -919,8 +1000,16 @@ const symbol =
 seedQueue.shift();
 seedInflight++;
 
-void seedSymbol(
+void Promise.race(
+[
+seedSymbol(
 symbol
+),
+rejectAfter(
+SEED_SYMBOL_TIMEOUT_MS,
+`seed timeout ${symbol}`
+)
+]
 ).catch(
 err=>{
 log.warn(
@@ -929,6 +1018,16 @@ symbol,
 err?.message ||
 err
 );
+
+if(
+seedFailNotes <
+3
+){
+seedFailNotes++;
+sessionLog.appendNote(
+`Early T3 seed fail ${symbol}: ${err?.message || err}`
+);
+}
 }
 ).finally(
 ()=>{
@@ -946,6 +1045,13 @@ sessionLog.appendNote(
 `Early T3 seed ${seedDone}/${seedTotal}`
 );
 engineConfig?.onActivity?.();
+}
+
+if(
+seedDone ===
+seedTotal
+){
+stopSeedWatch();
 }
 
 void drainSeedQueue();
@@ -1159,10 +1265,7 @@ sessionLog.appendNote(
 `Early T3 seed 0/${seedTotal}`
 );
 
-klineHub.syncTopics(
-symbols,
-tf
-);
+startSeedWatch();
 void drainSeedQueue();
 
 log.info(
@@ -1180,6 +1283,7 @@ min
 
 async function stopEarlyT3Engine(){
 
+stopSeedWatch();
 await alertBridge.clearAllAlgoBotAlerts();
 
 if(

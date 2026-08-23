@@ -1273,6 +1273,17 @@ options.port
 443;
 let settled =
 false;
+const hangTimer =
+setTimeout(
+()=>{
+done(
+new Error(
+"таймаут SOCKS TLS"
+)
+);
+},
+CONNECT_TIMEOUT_MS
+);
 
 function done(
 err,
@@ -1287,6 +1298,9 @@ return;
 
 settled =
 true;
+clearTimeout(
+hangTimer
+);
 callback(
 err,
 socket

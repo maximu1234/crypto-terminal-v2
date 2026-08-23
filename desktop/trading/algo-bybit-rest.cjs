@@ -386,6 +386,38 @@ resolve,
 reject
 )=>{
 
+let settled =
+false;
+
+function finish(
+err,
+value
+){
+
+if(
+settled
+){
+return;
+}
+
+settled =
+true;
+
+if(
+err
+){
+reject(
+err
+);
+return;
+}
+
+resolve(
+value
+);
+
+}
+
 const req =
 https.request(
 requestOptions,
@@ -406,7 +438,8 @@ res.on(
 "end",
 ()=>{
 
-resolve(
+finish(
+null,
 new Response(
 Buffer.concat(
 chunks
@@ -427,12 +460,33 @@ res.headers
 }
 );
 
+res.on(
+"error",
+finish
+);
+
 }
 );
 
 req.on(
 "error",
-reject
+finish
+);
+
+req.setTimeout(
+REQUEST_TIMEOUT_MS,
+()=>{
+req.destroy();
+const timeoutErr =
+new Error(
+"timeout"
+);
+timeoutErr.code =
+"timeout";
+finish(
+timeoutErr
+);
+}
 );
 
 const abortSignal =
@@ -446,6 +500,17 @@ abortSignal
 const onAbort =
 ()=>{
 req.destroy();
+const timeoutErr =
+new Error(
+"timeout"
+);
+timeoutErr.code =
+"timeout";
+timeoutErr.name =
+"AbortError";
+finish(
+timeoutErr
+);
 };
 
 if(
