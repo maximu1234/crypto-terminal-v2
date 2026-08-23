@@ -28,6 +28,10 @@ const alertBridge =
 require(
 "./algo-bot-alert-bridge.cjs"
 );
+const sessionLog =
+require(
+"./algo-bot-session-log.cjs"
+);
 const {
 setupBrokenTowardPt3
 } =
