@@ -184,7 +184,7 @@ async function fetchTelegramAlertsFull(){
 
   try{
     alerts = await restGet(
-      `price_alerts?select=id,user_id,symbol,shape_id,price,tf,exchange_id,created_at&${filter}`
+      `price_alerts?select=id,user_id,symbol,shape_id,price,tf,exchange_id,source,created_at&${filter}`
     );
   }catch(err){
   if(
@@ -201,7 +201,7 @@ async function fetchTelegramAlertsFull(){
 
     try{
       alerts = await restGet(
-        `price_alerts?select=id,user_id,symbol,shape_id,price,tf,exchange_id,created_at&${filter}`
+        `price_alerts?select=id,user_id,symbol,shape_id,price,tf,exchange_id,source,created_at&${filter}`
       );
     }catch(retryErr){
       console.warn(
@@ -253,6 +253,21 @@ async function fetchTelegramAlertsFull(){
     const chatId = chatByUser.get(row.user_id);
 
     if (chatId == null) {
+      continue;
+    }
+
+    const source =
+      String(
+        row.source ||
+        ""
+      ).trim().toLowerCase();
+
+    if (
+      source ===
+      "rsi" ||
+      source ===
+      "macd"
+    ) {
       continue;
     }
 

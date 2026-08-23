@@ -218,6 +218,96 @@ return raw;
 
 }
 
+export const ALERT_SOURCE_RSI =
+"rsi";
+
+export const ALERT_SOURCE_MACD =
+"macd";
+
+export function isRsiAlert(
+alert
+){
+
+return String(
+alert?.source ||
+""
+).trim().toLowerCase() ===
+ALERT_SOURCE_RSI;
+
+}
+
+export function isMacdAlert(
+alert
+){
+
+return String(
+alert?.source ||
+""
+).trim().toLowerCase() ===
+ALERT_SOURCE_MACD;
+
+}
+
+export function isOscillatorAlert(
+alert
+){
+
+return isRsiAlert(
+alert
+) ||
+isMacdAlert(
+alert
+);
+
+}
+
+export function formatRsiAlertLevel(
+value
+){
+
+const n =
+Number(
+value
+);
+
+if(
+!Number.isFinite(
+n
+)
+){
+return "—";
+}
+
+return n.toFixed(
+2
+);
+
+}
+
+export function formatAlertCrossHeadline(
+alert
+){
+
+if(
+isRsiAlert(
+alert
+)
+){
+return "Цена пересекла RSI";
+}
+
+if(
+isMacdAlert(
+alert
+)
+){
+return "Цена пересекла MACD";
+}
+
+return "Цена пересекла уровень";
+
+}
+
 /** Цена в Telegram / тосте — ровно 4 знака после точки. */
 export function formatAlertTelegramPrice(
 price
@@ -247,15 +337,26 @@ const tf =
 formatTfLabel(
 alert?.tf
 );
-const price =
-formatAlertTelegramPrice(
+const indicator =
+isRsiAlert(
+alert
+) ||
+isMacdAlert(
+alert
+);
+const level =
+indicator
+? formatRsiAlertLevel(
+alert?.price
+)
+: formatAlertTelegramPrice(
 alert?.price
 );
 
 return (
 `${sym} - ${tf}\n` +
-"Цена пересекла уровень\n" +
-price
+`${formatAlertCrossHeadline(alert)}\n` +
+level
 );
 
 }
@@ -1735,7 +1836,7 @@ pauseRegistryCloudSync(
 );
 });
 
-void import("./alert-monitor.js?v=71").then(m=>{
+void import("./alert-monitor.js?v=73").then(m=>{
 m.armAlertQuietAfterDrag(
 sym,
 sid
@@ -2435,7 +2536,7 @@ sym
 );
 
 if(existing){
-void import("./alert-monitor.js?v=71").then(m=>{
+void import("./alert-monitor.js?v=73").then(m=>{
 m.notifyAlertTriggered({
 symbol: sym,
 shapeId: sid,
@@ -2706,12 +2807,13 @@ dispatchPriceAlertsChanged(
 sym
 );
 
-void import("./alert-monitor.js?v=71").then(m=>{
+void import("./alert-monitor.js?v=73").then(m=>{
 m.notifyAlertTriggered({
 symbol: sym,
 shapeId: sid,
 price: existing?.price,
-tf: existing?.tf
+tf: existing?.tf,
+source: existing?.source
 });
 });
 
@@ -2723,6 +2825,7 @@ cloudId,
 {
 price: existing?.price,
 tf: existing?.tf,
+source: existing?.source,
 authToken: tokenSnap
 }
 ).catch(err=>{

@@ -11,7 +11,7 @@ calculateMacd,
 macdHistColor,
 MACD_LINE_COLOR,
 MACD_SIGNAL_COLOR
-} from "./indicators/macd-math.js?v=1";
+} from "./indicators/macd-math.js?v=3";
 
 export const SCREENER_WIDGET_OSCILLATOR_KEY =
 "multichart_screener_widget_oscillator_v1";

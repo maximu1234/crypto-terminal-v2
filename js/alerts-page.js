@@ -7,13 +7,16 @@ formatAlertTicker,
 formatTfLabel,
 getAlertsHistorySorted,
 getAlertsSorted,
+isRsiAlert,
+isMacdAlert,
+formatRsiAlertLevel,
 loadAllAlerts,
 loadAlertsHistory,
 removeAlert,
 stripAlertFlagsNotInRegistry,
 removeAllAlerts,
 alertExchangeId
-} from "./alerts.js?v=106";
+} from "./alerts.js?v=109";
 
 import {
 buildAlertChartUrl
@@ -77,6 +80,32 @@ raw ??
 ).replace(
 /'/g,
 "&#39;"
+);
+
+}
+
+function formatAlertLevelCell(
+alert
+){
+
+if(
+isRsiAlert(
+alert
+)
+){
+return `RSI ${formatRsiAlertLevel(alert.price)}`;
+}
+
+if(
+isMacdAlert(
+alert
+)
+){
+return `MACD ${formatRsiAlertLevel(alert.price)}`;
+}
+
+return formatPrice(
+alert.price
 );
 
 }
@@ -677,7 +706,7 @@ ${escapeHtml(formatAlertTicker(alert.symbol))}
 
 <td class="alerts-tf">${escapeHtml(formatTfLabel(alert.tf))}</td>
 
-<td class="alerts-price">${escapeHtml(formatPrice(alert.price))}</td>
+<td class="alerts-price">${escapeHtml(formatAlertLevelCell(alert))}</td>
 
 <td class="alerts-col-delete">
 <button type="button" class="alerts-row-delete-btn" data-shape-id="${escapeHtml(alert.shapeId)}" data-symbol="${escapeHtml(alert.symbol)}" title="Удалить алерт" aria-label="Удалить алерт">×</button>
@@ -750,7 +779,7 @@ ${escapeHtml(formatAlertTicker(alert.symbol))}
 
 <td class="alerts-tf">${escapeHtml(formatTfLabel(alert.tf))}</td>
 
-<td class="alerts-price">${escapeHtml(formatPrice(alert.price))}</td>
+<td class="alerts-price">${escapeHtml(formatAlertLevelCell(alert))}</td>
 
 </tr>
 

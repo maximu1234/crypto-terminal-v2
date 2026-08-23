@@ -101,7 +101,9 @@ export async function executeAlertTrigger(
         price: claimed.price,
         tf: claimed.tf,
         exchange_id:
-        claimed.exchange_id
+        claimed.exchange_id,
+        source:
+        claimed.source
       });
 
     telegram = await sendTelegramMessage(
@@ -192,7 +194,9 @@ export async function notifyTelegramOnly(
       tf: alert?.tf,
       exchange_id:
       alert?.exchange_id ||
-      alert?.exchangeId
+      alert?.exchangeId,
+      source:
+      alert?.source
     });
 
   const telegram =

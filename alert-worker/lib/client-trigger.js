@@ -30,7 +30,11 @@ function triggerBodyForNotify(body) {
     symbol: sym,
     shape_id: sid,
     price,
-    tf: body.tf
+    tf: body.tf,
+    source: body.source,
+    exchange_id:
+      body.exchange_id ||
+      body.exchangeId
   };
 
 }

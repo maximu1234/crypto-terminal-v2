@@ -170,7 +170,7 @@ createDrawStyleBar
 
 import {
 createDrawAlertsChart
-} from "./draw-alerts-chart.js?v=5";
+} from "./draw-alerts-chart.js?v=7";
 
 import {
 createDrawPlacement
@@ -232,6 +232,8 @@ onChartCrosshairSuppress = null,
 onChartCrosshairRelease = null,
 clearAllPeers = null,
 drawPriceAlerts = true,
+alertSource =
+"",
 /** RSI pane uses synthetic OHLC — magnet wick snap would lie. */
 enableMagnet =
 true,
@@ -2791,7 +2793,39 @@ getDragState:()=>dragState,
 series,
 drawLine,
 saveDrawings,
-scheduleRedraw
+scheduleRedraw,
+matchAlert(
+alert
+){
+
+const src =
+String(
+alert?.source ||
+""
+).trim().toLowerCase();
+
+if(
+alertSource ===
+"rsi"
+){
+return src ===
+"rsi";
+}
+
+if(
+alertSource ===
+"macd"
+){
+return src ===
+"macd";
+}
+
+return src !==
+"rsi" &&
+src !==
+"macd";
+
+}
 });
 
 ({

@@ -17,7 +17,7 @@ isAlertRowInCloud,
 deleteAlertViaWorker,
 pushAlertViaWorker,
 hintWorkerReloadAlerts
-} from "./alerts-cloud/worker-client.js?v=6";
+} from "./alerts-cloud/worker-client.js?v=7";
 
 export {
 readCachedTelegramChatId,

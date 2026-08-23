@@ -151,7 +151,7 @@ Object.freeze({
 "trade/bybit/auto-stops.js":
 1,
 "trade/bybit/market-entry.js":
-4,
+5,
 "trade/bybit/book-panel.js":
 2,
 "trade/bybit/position-open-orders.js":
@@ -241,7 +241,7 @@ Object.freeze({
 "chart-page.js":
 7,
 "terminal.js":
-411,
+416,
 "terminal-multi-chart.js":
 11,
 "terminal-screener-chart-pane.js":
@@ -259,7 +259,7 @@ Object.freeze({
 "chart-visible-range.js":
 3,
 "chart-indicators.js":
-56,
+59,
 "chart-snapshot.js":
 7,
 "indicators/pattern-12.js":
@@ -299,7 +299,7 @@ Object.freeze({
 "script-favorites-list.js":
 2,
 "algo-trading.js":
-179,
+181,
 "algo-trading-page-boot.js":
 9,
 "algo-trading-list.js":
@@ -476,7 +476,7 @@ Object.freeze({
 "indicators/horizontal-volume.js":
 11,
 "indicators/rsi-pane.js":
-6,
+8,
 "indicators/volume-pane.js":
 16,
 "indicators/ao-math.js":
@@ -484,15 +484,15 @@ Object.freeze({
 "indicators/ao-pane.js":
 13,
 "indicators/macd-math.js":
-1,
+3,
 "indicators/macd-pane.js":
-2,
+6,
 "indicators/indicator-pane-order.js":
 2,
 "indicators/indicator-pane-viewport.js":
 4,
 "indicators/moving-average.js":
-16,
+18,
 "indicators/ma-math.js":
 2,
 "indicators/ema-shift-ribbon.js":
@@ -507,6 +507,8 @@ Object.freeze({
 1,
 "indicators/htf-loader.js":
 3,
+"indicators/htf-project.js":
+2,
 "indicators/htf-ema.js":
 1,
 "indicators/indicator-settings-dialog.js":
@@ -598,7 +600,7 @@ Object.freeze({
 "chart-import.js":
 48,
 "chart-widget-host.js":
-18,
+20,
 "tablet-gesture-policy.js":
 2,
 "tablet-widget-chart.js":
@@ -622,9 +624,9 @@ Object.freeze({
 "terminal-tablet-controller.js":
 7,
 "drawings.js":
-258,
+260,
 "drawings/init.js":
-180,
+182,
 "drawings/draw-prefs.js":
 4,
 "drawings/draw-edit-desktop.js":
@@ -638,7 +640,7 @@ Object.freeze({
 "drawings/draw-templates.js":
 11,
 "drawings/draw-alerts-chart.js":
-5,
+7,
 "drawings/draw-price-scale.js":
 13,
 "drawings/draw-redraw-loop.js":
@@ -708,7 +710,7 @@ Object.freeze({
 "watchlist-draw-ui.js":
 17,
 "price-alert-ui.js":
-46,
+48,
 "indicators.js":
 3,
 "storage.js":
@@ -783,7 +785,7 @@ Object.freeze({
 
 /* ── JS: alerts ── */
 "alerts.js":
-106,
+109,
 "alerts-cloud-sync.js":
 113,
 "alerts-cloud/garbage-purge.js":
@@ -793,15 +795,15 @@ Object.freeze({
 "alerts-cloud/telegram-id.js":
 2,
 "alerts-cloud/worker-client.js":
-6,
+7,
 "alerts-cloud/registry-sync.js":
 15,
 "alerts-cloud/polling-realtime.js":
 13,
 "alerts-page.js":
-69,
-"alert-monitor.js":
 71,
+"alert-monitor.js":
+73,
 "alert-deep-link-exchange.js":
 2,
 "alert-deep-link-url.js":

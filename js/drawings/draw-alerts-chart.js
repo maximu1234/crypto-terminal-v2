@@ -6,8 +6,9 @@ import {
 ALERT_LINE_COLOR,
 ALERT_LINE_DASH,
 alertPriceForDisplay,
-getActiveAlerts
-} from "../alerts.js?v=106";
+getActiveAlerts,
+isOscillatorAlert
+} from "../alerts.js?v=109";
 
 import {
 isChartLayoutReady
@@ -29,9 +30,30 @@ setDrawings,
 series,
 drawLine,
 saveDrawings,
-scheduleRedraw
+scheduleRedraw,
+matchAlert =
+null
 } =
 deps;
+
+function includeAlert(
+alert
+){
+
+if(
+typeof matchAlert ===
+"function"
+){
+return !!matchAlert(
+alert
+);
+}
+
+return !isOscillatorAlert(
+alert
+);
+
+}
 
 const unregisterAlertScaleLabels =
 registerChartScaleLabelProvider(
@@ -62,6 +84,14 @@ for(
 const alert of
 getActiveAlerts()
 ){
+if(
+!includeAlert(
+alert
+)
+){
+continue;
+}
+
 if(
 String(
 alert.symbol
@@ -144,6 +174,14 @@ return;
 for(
 const alert of getActiveAlerts()
 ){
+
+if(
+!includeAlert(
+alert
+)
+){
+continue;
+}
 
 if(
 String(

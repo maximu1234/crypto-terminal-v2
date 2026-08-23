@@ -231,7 +231,7 @@ createIndicatorSettingsDialog
 await Promise.all(
 [
 import(
-"./indicators/rsi-pane.js?v=6"
+"./indicators/rsi-pane.js?v=8"
 ),
 import(
 "./indicators/volume-pane.js?v=16"
@@ -240,10 +240,10 @@ import(
 "./indicators/ao-pane.js?v=13"
 ),
 import(
-"./indicators/macd-pane.js?v=2"
+"./indicators/macd-pane.js?v=6"
 ),
 import(
-"./indicators/moving-average.js?v=16"
+"./indicators/moving-average.js?v=18"
 ),
 import(
 "./indicators/ema-shift-ribbon.js?v=8"
@@ -1019,6 +1019,16 @@ flushIndicatorDataRefreshNow,
 syncViewports,
 resizePanes,
 getLinkedPaneCharts,
+getIndicator(
+id
+){
+
+return byId.get(
+id
+) ||
+null;
+
+},
 openSettings:
 openIndicatorSettings,
 openIndicatorSettings,

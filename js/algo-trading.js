@@ -25,14 +25,13 @@ ALGO_TICKER_SCAN_HISTORY_REQUESTS
 } from "./algo-trading/ticker-scanner.js?v=10";
 
 import {
-calculateRSI,
-alignRsiWithCandleTimes
-} from "./indicators.js?v=3";
-
-import {
 defaultRsiPaneSettings,
 normalizeRsiPaneSettings
-} from "./indicators/rsi-pane.js?v=6";
+} from "./indicators/rsi-pane.js?v=8";
+
+import {
+buildChartRsiPoints
+} from "./indicators/htf-project.js?v=2";
 
 import {
 loadMarketHistory,
@@ -352,6 +351,10 @@ let rsiPaneSettings =
 normalizeRsiPaneSettings(
 defaultRsiPaneSettings()
 );
+let lastRsiHudValue =
+null;
+let rsiRebuildSeq =
+0;
 
 function syncRsiHudPeriod(){
 
@@ -1011,6 +1014,16 @@ resizeAlgoCharts();
 
 function lastRsiValue(){
 
+if(
+lastRsiHudValue !=
+null &&
+Number.isFinite(
+lastRsiHudValue
+)
+){
+return lastRsiHudValue;
+}
+
 return lastRsiValueFromCandles(
 candles,
 rsiPaneSettings.period
@@ -1049,6 +1062,8 @@ if(
 rsiSeries.setData(
 []
 );
+lastRsiHudValue =
+null;
 setRsiHud(
 null
 );
@@ -1060,15 +1075,50 @@ chartIndicators?.notifyCandlesUpdate?.();
 return;
 }
 
+const seq =
+++rsiRebuildSeq;
+const chartCandles =
+candles;
+
+void (
+async()=>{
+
 const points =
-alignRsiWithCandleTimes(
-candles,
-calculateRSI(
-candles,
-rsiPaneSettings.period
-),
-rsiPaneSettings.period
+await buildChartRsiPoints(
+{
+chartCandles,
+period:
+rsiPaneSettings.period,
+tf:
+rsiPaneSettings.tf,
+chartTf:
+tf,
+symbol,
+loadHistory:(
+histSymbol,
+histTf
+)=>
+loadMarketHistory(
+histSymbol,
+histTf,
+HISTORY_REQUESTS,
+{
+parallel:
+true,
+batchGapMs:
+0
+}
+)
+}
 );
+
+if(
+seq !==
+rsiRebuildSeq ||
+!rsiPaneActive
+){
+return;
+}
 
 rsiSeries.setData(
 points
@@ -1084,8 +1134,11 @@ points[
 points.length -
 1
 ];
+lastRsiHudValue =
+last?.value ??
+null;
 setRsiHud(
-last?.value
+lastRsiHudValue
 );
 
 if(
@@ -1093,6 +1146,9 @@ notifyIndicators
 ){
 chartIndicators?.notifyCandlesUpdate?.();
 }
+
+}
+)();
 
 }
 

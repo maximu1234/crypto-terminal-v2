@@ -92,3 +92,57 @@ test("buildCoinsChartUrl sets exchange query", () => {
     /exchange=bingx/
   );
 });
+
+test("formatAlertMessage RSI uses indicator copy", () => {
+  const msg =
+    formatAlertMessage({
+      symbol:
+      "BTCUSDT.P",
+      price:
+      70,
+      tf:
+      "60",
+      exchange_id:
+      "bybit",
+      source:
+      "rsi"
+    });
+
+  assert.match(
+    msg.text,
+    /Цена пересекла RSI/
+  );
+  assert.match(
+    msg.text,
+    /70\.00 \(Bybit\)/
+  );
+  assert.doesNotMatch(
+    msg.text,
+    /Цена пересекла уровень/
+  );
+});
+
+test("formatAlertMessage MACD uses indicator copy", () => {
+  const msg =
+    formatAlertMessage({
+      symbol:
+      "ETHUSDT.P",
+      price:
+      0.42,
+      tf:
+      "1",
+      exchange_id:
+      "bybit",
+      source:
+      "macd"
+    });
+
+  assert.match(
+    msg.text,
+    /Цена пересекла MACD/
+  );
+  assert.match(
+    msg.text,
+    /0\.42 \(Bybit\)/
+  );
+});

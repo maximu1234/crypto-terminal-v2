@@ -27,14 +27,13 @@ resolveUrlExchangeDeepLink
 } from "./alert-deep-link-exchange.js?v=2";
 
 import {
-calculateRSI,
-alignRsiWithCandleTimes
-} from "./indicators.js?v=3";
-
-import {
 defaultRsiPaneSettings,
 normalizeRsiPaneSettings
-} from "./indicators/rsi-pane.js?v=6";
+} from "./indicators/rsi-pane.js?v=8";
+
+import {
+buildChartRsiPoints
+} from "./indicators/htf-project.js?v=2";
 
 import {
 loadFavoritesGroups,
@@ -48,6 +47,12 @@ canSetBlueFlag
 import {
 ensureCloudReady
 } from "./auth-ui.js?v=58";
+
+import {
+getActiveAlerts,
+isMacdAlert,
+isRsiAlert
+} from "./alerts.js?v=109";
 
 import {
 persistFavoritesToCloud,
@@ -103,8 +108,10 @@ disconnectKlineStream
 } from "./market-ws.js?v=1";
 
 import {
-syncBackgroundAlertStreams
-} from "./alert-monitor.js?v=71";
+syncBackgroundAlertStreams,
+onMacdSeriesUpdate,
+onRsiSeriesUpdate
+} from "./alert-monitor.js?v=73";
 
 import {
 createSharedDrawUndoStack
@@ -232,8 +239,59 @@ let drawingTools =
 null;
 let rsiDrawingTools =
 null;
+let macdDrawingTools =
+null;
+let disposeMacdAlertUi =
+null;
 let activeDrawPane =
 "chart";
+
+function allCoinsDrawTools(){
+
+return [
+drawingTools,
+rsiDrawingTools,
+macdDrawingTools
+].filter(
+Boolean
+);
+
+}
+
+function scheduleCoinsDrawRedraw(){
+
+for(
+const tools of
+allCoinsDrawTools()
+){
+tools.scheduleRedraw?.();
+}
+
+}
+
+function coinsDrawOnSymbolChange(
+opts
+){
+
+for(
+const tools of
+allCoinsDrawTools()
+){
+tools.onSymbolChange?.(
+opts
+);
+}
+
+}
+
+function coinsDrawHasActiveInteraction(){
+
+return allCoinsDrawTools().some(
+tools=>
+tools.hasActiveDrawInteraction?.()
+);
+
+}
 const sharedDrawUndo =
 createSharedDrawUndoStack();
 let terminalSharedDrawUndoMounted =
@@ -775,8 +833,7 @@ added
 );
 }
 
-drawingTools?.scheduleRedraw?.();
-rsiDrawingTools?.scheduleRedraw?.();
+scheduleCoinsDrawRedraw();
 
 if(
 older.length <
@@ -1727,6 +1784,7 @@ candleSeries
 priceScaleTouchHooks.onReset?.();
 drawingTools?.endPriceScaleDragRedraw?.();
 rsiDrawingTools?.endPriceScaleDragRedraw?.();
+macdDrawingTools?.endPriceScaleDragRedraw?.();
 window.__tradeChartOverlay?.onPriceScaleDragEnd?.();
 
 }
@@ -2127,27 +2185,215 @@ null
 
 }
 
-function rebuildRsiFromCandles(){
+let rsiRebuildSeq =
+0;
+
+function loadRsiHtfHistory(
+symbol,
+tf
+){
+
+return loadMarketHistory(
+symbol,
+tf,
+terminalHistoryInitialRequests(),
+{
+parallel:
+true,
+batchGapMs:
+0
+}
+);
+
+}
+
+function symbolHasMacdAlerts(){
+
+const sym =
+String(
+currentSymbol ||
+""
+).toUpperCase();
+
+return getActiveAlerts().some(
+alert=>
+isMacdAlert(
+alert
+) &&
+String(
+alert.symbol ||
+""
+).toUpperCase() ===
+sym
+);
+
+}
+
+function publishMacdAlertValue(){
+
+const rows =
+chartIndicators?.getIndicator?.(
+"macd"
+)?.getMacdDrawCandles?.() ||
+[];
+
+let last =
+null;
+
+for(
+const row of
+Array.isArray(
+rows
+)
+? rows
+: []
+){
 
 if(
-!rsiPaneActive
+Number.isFinite(
+row?.close
+)
+){
+last =
+row.close;
+}
+
+}
+
+if(
+!Number.isFinite(
+last
+)
+){
+return;
+}
+
+onMacdSeriesUpdate(
+{
+symbol:
+currentSymbol,
+value:
+last
+}
+);
+
+}
+
+function symbolHasRsiAlerts(){
+
+const sym =
+String(
+currentSymbol ||
+""
+).toUpperCase();
+
+return getActiveAlerts().some(
+alert=>
+isRsiAlert(
+alert
+) &&
+String(
+alert.symbol ||
+""
+).toUpperCase() ===
+sym
+);
+
+}
+
+function publishRsiAlertValue(
+points
+){
+
+let last =
+null;
+
+for(
+const point of
+Array.isArray(
+points
+)
+? points
+: []
+){
+
+if(
+Number.isFinite(
+point?.value
+)
+){
+last =
+point.value;
+}
+
+}
+
+if(
+!Number.isFinite(
+last
+)
+){
+return;
+}
+
+onRsiSeriesUpdate(
+{
+symbol:
+currentSymbol,
+value:
+last
+}
+);
+
+}
+
+async function rebuildRsiFromCandles(){
+
+const watchRsiAlerts =
+symbolHasRsiAlerts();
+
+if(
+!rsiPaneActive &&
+!watchRsiAlerts
 ){
 chartIndicators?.notifyCandlesUpdate?.();
 return;
 }
 
-const raw =
-calculateRSI(
-candles,
-rsiPaneSettings.period
+const seq =
+++rsiRebuildSeq;
+const chartCandles =
+candles;
+const points =
+await buildChartRsiPoints(
+{
+chartCandles,
+period:
+rsiPaneSettings.period,
+tf:
+rsiPaneSettings.tf,
+chartTf:
+currentTF,
+symbol:
+currentSymbol,
+loadHistory:
+loadRsiHtfHistory
+}
 );
 
+if(
+seq !==
+rsiRebuildSeq
+){
+return;
+}
+
+if(
+rsiPaneActive
+){
+
 rsiPointsCache =
-alignRsiWithCandleTimes(
-candles,
-raw,
-rsiPaneSettings.period
-);
+points;
 
 rsiSeries.setData(
 buildRsiDisplayPoints()
@@ -2171,12 +2417,16 @@ rsiPointsCache.length -
 setRsiHudValue(
 last?.value ??
 null
-
 );
 
-chartIndicators?.notifyCandlesUpdate?.();
-
 rsiDrawingTools?.scheduleRedraw?.();
+
+}
+
+chartIndicators?.notifyCandlesUpdate?.();
+publishRsiAlertValue(
+points
+);
 
 }
 
@@ -2372,45 +2622,80 @@ let mainSetDrawTool =
 null;
 let rsiSetDrawTool =
 null;
+let macdSetDrawTool =
+null;
 const drawClearAllPeers =
 {
 call:
 null
 };
 
-function rsiStyleBarDelegateIfNeeded(){
+function overlayStyleBarDelegateIfNeeded(){
 
 if(
-!rsiDrawingTools ||
 !drawingTools
 ){
 return null;
 }
 
+const overlays =
+[
+{
+pane:
+"rsi",
+tools:
+rsiDrawingTools
+},
+{
+pane:
+"macd",
+tools:
+macdDrawingTools
+}
+];
+const ordered =
+[
+...overlays.filter(
+item=>
+item.pane ===
+activeDrawPane
+),
+...overlays.filter(
+item=>
+item.pane !==
+activeDrawPane
+)
+];
+
+for(
+const item of
+ordered
+){
+
 const delegate =
-rsiDrawingTools.getStyleBarDelegate?.();
+item.tools?.getStyleBarDelegate?.();
 
 if(
 !delegate
 ){
-return null;
+continue;
 }
 
-const rsiTool =
+const overlayTool =
 delegate.getTool?.() ??
 "cursor";
-const rsiSelId =
+const overlaySelId =
 delegate.getSelectedId?.() ??
 null;
-const rsiNeedsBar =
-rsiTool !==
+const overlayNeedsBar =
+overlayTool !==
 "cursor" ||
-!!rsiSelId;
+!!overlaySelId;
 
 if(
-!rsiNeedsBar
+!overlayNeedsBar
 ){
-return null;
+continue;
 }
 
 const mainTool =
@@ -2427,6 +2712,10 @@ return null;
 }
 
 return delegate;
+
+}
+
+return null;
 
 }
 
@@ -2494,22 +2783,32 @@ return;
 const mainTool =
 drawingTools.getTool?.() ??
 "cursor";
-const rsiTool =
-rsiDrawingTools?.getTool?.() ??
-"cursor";
+const overlayTools =
+[
+rsiDrawingTools,
+macdDrawingTools
+].filter(
+Boolean
+);
 
 if(
 mainTool !==
 "cursor" ||
-rsiTool !==
+overlayTools.some(
+tools=>
+(
+tools.getTool?.() ??
 "cursor"
+) !==
+"cursor"
+)
 ){
 return;
 }
 
 if(
 drawingTools.hasActiveDrawInteraction?.() ||
-rsiDrawingTools?.hasActiveDrawInteraction?.()
+coinsDrawHasActiveInteraction()
 ){
 return;
 }
@@ -2522,15 +2821,39 @@ const rsiWrap =
 document.getElementById(
 "rsi-wrap"
 );
+const macdWrap =
+document.getElementById(
+"macd-wrap"
+);
 const target =
 e.target;
-const onChart =
-chartWrap?.contains(
+const panes =
+[
+{
+el:
+chartWrap,
+tools:
+drawingTools
+},
+{
+el:
+rsiWrap,
+tools:
+rsiDrawingTools
+},
+{
+el:
+macdWrap,
+tools:
+macdDrawingTools
+}
+];
+const onPane =
+panes.some(
+pane=>
+pane.el?.contains(
 target
-);
-const onRsi =
-rsiWrap?.contains(
-target
+)
 );
 const onIndicators =
 indicatorsWrap?.contains(
@@ -2538,77 +2861,86 @@ target
 );
 
 if(
-!onChart &&
-!onRsi &&
+!onPane &&
 !onIndicators
 ){
 return;
 }
 
-const mainSel =
-drawingTools.getStyleBarDelegate?.()?.getSelectedId?.();
-const rsiSel =
-rsiDrawingTools?.getStyleBarDelegate?.()?.getSelectedId?.();
+const anySelected =
+panes.some(
+pane=>
+pane.tools?.getStyleBarDelegate?.()?.getSelectedId?.()
+);
 
 if(
-!mainSel &&
-!rsiSel
+!anySelected
 ){
 return;
 }
 
-let hitMain =
-null;
-let hitRsi =
-null;
+const hits =
+panes.map(
+pane=>{
 
 if(
-onChart
+!pane.el?.contains(
+target
+)
 ){
-hitMain =
-drawingTools.hitTestAtClient?.(
+return null;
+}
+
+return pane.tools?.hitTestAtClient?.(
 e.clientX,
 e.clientY
-);
+) ||
+null;
+
 }
+);
+const hitCount =
+hits.filter(
+Boolean
+).length;
 
 if(
-onRsi
+hitCount ===
+1
 ){
-hitRsi =
-rsiDrawingTools?.hitTestAtClient?.(
-e.clientX,
-e.clientY
-);
-}
+
+panes.forEach(
+(
+pane,
+index
+)=>{
 
 if(
-hitMain &&
-!hitRsi
+!hits[
+index
+]
 ){
-rsiDrawingTools?.clearDrawingSelection?.();
+pane.tools?.clearDrawingSelection?.();
+}
+
+}
+);
 drawingTools.syncStyleBar?.();
 return;
+
 }
 
 if(
-hitRsi &&
-!hitMain
-){
-drawingTools.clearDrawingSelection?.();
-drawingTools.syncStyleBar?.();
-return;
-}
-
-if(
-hitMain ||
-hitRsi
+hitCount >
+0
 ){
 return;
 }
 
-drawingTools.clearDrawingSelection?.();
-rsiDrawingTools?.clearDrawingSelection?.();
+panes.forEach(
+pane=>
+pane.tools?.clearDrawingSelection?.()
+);
 drawingTools.syncStyleBar?.();
 
 }
@@ -2631,22 +2963,77 @@ const rsiWrapEl =
 document.getElementById(
 "rsi-wrap"
 );
+const macdWrapEl =
+document.getElementById(
+"macd-wrap"
+);
+
+function isVisibleDrawWrap(
+el
+){
+
+if(
+!el ||
+el.classList.contains(
+"indicator-pane-hidden"
+)
+){
+return false;
+}
+
+const rect =
+el.getBoundingClientRect?.();
+
+return !!(
+rect &&
+rect.height >=
+2
+);
+
+}
 
 function resolveCoinsDrawPaneFromPointer(
 clientY
 ){
 
-const rsiRect =
-rsiWrapEl?.getBoundingClientRect?.();
+if(
+isVisibleDrawWrap(
+macdWrapEl
+)
+){
+
+const macdRect =
+macdWrapEl.getBoundingClientRect();
 
 if(
-rsiRect &&
+clientY >=
+macdRect.top &&
+clientY <=
+macdRect.bottom
+){
+return "macd";
+}
+
+}
+
+if(
+isVisibleDrawWrap(
+rsiWrapEl
+)
+){
+
+const rsiRect =
+rsiWrapEl.getBoundingClientRect();
+
+if(
 clientY >=
 rsiRect.top &&
 clientY <=
 rsiRect.bottom
 ){
 return "rsi";
+}
+
 }
 
 const chartRect =
@@ -2712,7 +3099,7 @@ return;
 
 if(
 drawingTools?.hasActiveDrawInteraction?.() ||
-rsiDrawingTools?.hasActiveDrawInteraction?.()
+coinsDrawHasActiveInteraction()
 ){
 return;
 }
@@ -2732,14 +3119,41 @@ true
 
 }
 
+function drawToolsForPane(
+pane
+){
+
+if(
+pane ===
+"rsi"
+){
+return rsiDrawingTools;
+}
+
+if(
+pane ===
+"macd"
+){
+return macdDrawingTools;
+}
+
+return drawingTools;
+
+}
+
 function setActiveDrawPane(
 pane
 ){
 
 const next =
 pane ===
-"rsi"
-? "rsi"
+"rsi" ||
+(
+pane ===
+"macd" &&
+macdDrawingTools
+)
+? pane
 : "chart";
 
 if(
@@ -2750,10 +3164,9 @@ return;
 }
 
 const prevTools =
-activeDrawPane ===
-"rsi"
-? rsiDrawingTools
-: drawingTools;
+drawToolsForPane(
+activeDrawPane
+);
 
 const prevTool =
 prevTools?.getTool?.() ??
@@ -2786,12 +3199,22 @@ mainSetDrawTool(
 rsiSetDrawTool(
 "cursor"
 );
+macdSetDrawTool?.(
+"cursor"
+);
 
 if(
 next ===
 "rsi"
 ){
 rsiSetDrawTool(
+prevTool
+);
+}else if(
+next ===
+"macd"
+){
+macdSetDrawTool?.(
 prevTool
 );
 }else{
@@ -2848,6 +3271,15 @@ setActiveDrawPane(
 true
 );
 
+macdWrapEl?.addEventListener(
+"pointerenter",
+()=>
+setActiveDrawPane(
+"macd"
+),
+true
+);
+
 function getRsiCandlesForDraw(){
 
 if(
@@ -2893,13 +3325,13 @@ const {
 initWidgetDrawings
 } =
 await import(
-"./chart-widget-host.js?v=18"
+"./chart-widget-host.js?v=20"
 );
 const {
 initChartIndicators
 } =
 await import(
-"./chart-indicators.js?v=56"
+"./chart-indicators.js?v=59"
 );
 const {
 createPattern12EarlyT3Indicator
@@ -2907,6 +3339,230 @@ createPattern12EarlyT3Indicator
 await import(
 "./indicators/pattern-12-early-t3.js?v=1"
 );
+
+function teardownMacdDrawingTools(){
+
+if(
+activeDrawPane ===
+"macd"
+){
+activeDrawPane =
+"chart";
+}
+
+disposeMacdAlertUi?.();
+disposeMacdAlertUi =
+null;
+macdDrawingTools?.destroy?.();
+macdDrawingTools =
+null;
+macdSetDrawTool =
+null;
+
+}
+
+function mountMacdDrawingTools(){
+
+if(
+macdDrawingTools
+){
+return;
+}
+
+const ind =
+chartIndicators?.getIndicator?.(
+"macd"
+);
+const macdChart =
+ind?.getChart?.();
+const macdSeries =
+ind?.getMacdSeries?.();
+
+if(
+!ind?.isEnabled?.() ||
+!macdChart ||
+!macdSeries ||
+!macdWrapEl
+){
+return;
+}
+
+macdDrawingTools =
+initWidgetDrawings({
+
+chart:
+macdChart,
+
+timeChart:
+chart,
+
+series:
+macdSeries,
+
+wrapEl:
+macdWrapEl,
+
+uiRoot:
+null,
+
+toolsRoot:
+document.getElementById(
+"charts-stack"
+),
+
+bindToolbar:
+false,
+
+styleBar:
+false,
+
+mountStyleBar:
+false,
+
+sharedStyleBarSync: ()=>{
+drawingTools?.syncStyleBar?.();
+},
+
+storageKeySuffix:
+"_macd",
+
+drawPriceAlerts:
+true,
+
+alertSource:
+"macd",
+
+enableMagnet:
+false,
+
+getSymbol: ()=>
+currentSymbol,
+
+getTf: ()=>
+currentTF,
+
+getCandles:()=>
+ind.getMacdDrawCandles?.() ||
+[],
+
+isActive: ()=>
+activeDrawPane ===
+"macd",
+
+barPosKey:
+"draw_bar_pos_macd",
+
+abortTabletChartGesture:()=>{
+cancelTabletPanGesture?.();
+},
+
+sharedDrawUndo,
+deferKeyboardUndo:
+true,
+clearPeerSelections: ()=>{
+drawingTools?.clearDrawingSelection?.();
+rsiDrawingTools?.clearDrawingSelection?.();
+drawingTools?.syncStyleBar?.();
+}
+
+});
+
+if(
+!macdDrawingTools
+){
+return;
+}
+
+macdSetDrawTool =
+macdDrawingTools.setTool.bind(
+macdDrawingTools
+);
+macdSetDrawTool(
+drawingTools?.getTool?.() ??
+"cursor"
+);
+
+void import(
+"./price-alert-ui.js?v=48"
+).then(
+({
+mountPriceAlertUi
+})=>{
+
+if(
+!macdDrawingTools
+){
+return;
+}
+
+disposeMacdAlertUi?.();
+disposeMacdAlertUi =
+mountPriceAlertUi(
+{
+chart:
+macdChart,
+series:
+macdSeries,
+wrapEl:
+macdWrapEl,
+getSymbol:()=>
+currentSymbol,
+getTf:()=>
+currentTF,
+getDrawingTools:()=>
+macdDrawingTools,
+alertSource:
+"macd",
+scheduleRedraw:()=>{
+return (
+macdDrawingTools?.scheduleDragRedraw?.() ||
+macdDrawingTools?.scheduleRedraw?.()
+);
+},
+onCrosshairSuppress:()=>{
+chartCrosshairLink?.setSuppressed?.(
+true
+);
+},
+onCrosshairRelease:()=>{
+chartCrosshairLink?.setSuppressed?.(
+false
+);
+}
+}
+);
+
+}
+).catch(
+err=>{
+console.warn(
+"macd price alert ui:",
+err
+);
+}
+);
+
+}
+
+function syncMacdDrawingTools(){
+
+const ind =
+chartIndicators?.getIndicator?.(
+"macd"
+);
+
+if(
+ind?.isEnabled?.() &&
+ind.getChart?.() &&
+ind.getMacdSeries?.()
+){
+mountMacdDrawingTools();
+return;
+}
+
+teardownMacdDrawingTools();
+
+}
 
 drawingTools =
 initWidgetDrawings({
@@ -2925,7 +3581,7 @@ isActive: ()=>
 activeDrawPane ===
 "chart",
 getStyleDelegate: ()=>
-rsiStyleBarDelegateIfNeeded(),
+overlayStyleBarDelegateIfNeeded(),
 abortTabletChartGesture:()=>{
 cancelTabletPanGesture?.();
 },
@@ -3032,6 +3688,7 @@ deferKeyboardUndo:
 true,
 clearPeerSelections: ()=>{
 rsiDrawingTools?.clearDrawingSelection?.();
+macdDrawingTools?.clearDrawingSelection?.();
 drawingTools?.syncStyleBar?.();
 }
 
@@ -3078,7 +3735,10 @@ storageKeySuffix:
 "_rsi",
 
 drawPriceAlerts:
-false,
+true,
+
+alertSource:
+"rsi",
 
 enableMagnet:
 false,
@@ -3109,6 +3769,7 @@ deferKeyboardUndo:
 true,
 clearPeerSelections: ()=>{
 drawingTools?.clearDrawingSelection?.();
+macdDrawingTools?.clearDrawingSelection?.();
 drawingTools?.syncStyleBar?.();
 }
 
@@ -3143,11 +3804,15 @@ next
 rsiSetTool(
 next
 );
+macdSetDrawTool?.(
+next
+);
 };
 
 drawClearAllPeers.call =
 ()=>{
 rsiDrawingTools?.clearAllDrawings?.();
+macdDrawingTools?.clearAllDrawings?.();
 };
 
 mountSharedDrawSelectionDismiss();
@@ -3202,6 +3867,21 @@ batchGapMs:
 0
 }
 ),
+onIndicatorDataReady(
+id
+){
+
+if(
+id ===
+"macd"
+){
+macdDrawingTools?.scheduleRedraw?.();
+publishMacdAlertValue();
+}
+
+},
+shouldWatchMacdAlerts:()=>
+symbolHasMacdAlerts(),
 getVisibleBarsCap:()=>
 TERMINAL_VISIBLE_BARS,
 getChartWrapWidth:()=>
@@ -3264,6 +3944,13 @@ chartIndicators?.notifyLayoutChange?.();
 
 }
 
+if(
+id ===
+"macd"
+){
+syncMacdDrawingTools();
+}
+
 }
 })
 ,
@@ -3272,6 +3959,8 @@ createPattern12EarlyT3Indicator
 ]
 }
 );
+
+syncMacdDrawingTools();
 
 document.getElementById(
 "rsi-hud"
@@ -3464,7 +4153,7 @@ const {
 mountPriceAlertUi
 } =
 await import(
-"./price-alert-ui.js?v=46"
+"./price-alert-ui.js?v=48"
 );
 
 let disposeAlertUi =
@@ -3512,6 +4201,57 @@ err
 );
 }
 );
+
+if(
+rsiDrawingTools &&
+rsiChart &&
+rsiSeries &&
+rsiWrapEl
+){
+
+const {
+mountPriceAlertUi: mountRsiPriceAlertUi
+} =
+await import(
+"./price-alert-ui.js?v=48"
+);
+
+mountRsiPriceAlertUi(
+{
+chart:
+rsiChart,
+series:
+rsiSeries,
+wrapEl:
+rsiWrapEl,
+getSymbol:()=>
+currentSymbol,
+getTf:()=>
+currentTF,
+getDrawingTools:()=>
+rsiDrawingTools,
+alertSource:
+"rsi",
+scheduleRedraw:()=>{
+return (
+rsiDrawingTools?.scheduleDragRedraw?.() ||
+rsiDrawingTools?.scheduleRedraw?.()
+);
+},
+onCrosshairSuppress:()=>{
+chartCrosshairLink?.setSuppressed?.(
+true
+);
+},
+onCrosshairRelease:()=>{
+chartCrosshairLink?.setSuppressed?.(
+false
+);
+}
+}
+);
+
+}
 
 }
 
@@ -3562,11 +4302,12 @@ refreshCoinsChartBarSpacing,
 getDrawingTools:()=>
 drawingTools,
 getLinkedDrawingTools:()=>
-rsiDrawingTools
-? [
-rsiDrawingTools
-]
-: [],
+[
+rsiDrawingTools,
+macdDrawingTools
+].filter(
+Boolean
+),
 viewportSettleRaf
 });
 
@@ -4329,11 +5070,7 @@ false
 
 chartIndicators?.notifyMainChartOverlaysSync?.();
 
-drawingTools?.onSymbolChange?.({
-skipRedraw:
-true
-});
-rsiDrawingTools?.onSymbolChange?.({
+coinsDrawOnSymbolChange({
 skipRedraw:
 true
 });
@@ -4358,8 +5095,7 @@ chartIndicators?.flushIndicatorDataRefreshNow?.();
 settleCoinsChartViewport();
 chartIndicators?.notifyLayoutSettled?.();
 
-drawingTools?.scheduleRedraw?.();
-rsiDrawingTools?.scheduleRedraw?.();
+scheduleCoinsDrawRedraw();
 
 dispatchChartCandlesLoaded(
 currentSymbol,
@@ -4437,6 +5173,13 @@ if(volumeWrapEl){
 chartResizeObserver.observe(volumeWrapEl);
 }
 
+const macdWrapForResize =
+document.getElementById("macd-wrap");
+
+if(macdWrapForResize){
+chartResizeObserver.observe(macdWrapForResize);
+}
+
 }
 
 if(
@@ -4470,12 +5213,8 @@ return;
 }
 
 const drawToolPeers =
-()=>[
-drawingTools,
-rsiDrawingTools
-].filter(
-Boolean
-);
+()=>
+allCoinsDrawTools();
 
 const holdPeers =
 ()=>{
@@ -4511,7 +5250,8 @@ return;
 
 if(
 drawingTools?.blocksTabletChartPan?.() ||
-rsiDrawingTools?.blocksTabletChartPan?.()
+rsiDrawingTools?.blocksTabletChartPan?.() ||
+macdDrawingTools?.blocksTabletChartPan?.()
 ){
 return;
 }
@@ -4577,8 +5317,7 @@ rsiChartEl,
 ()=>{
 applyDefaultZoom();
 layoutRsiBand();
-drawingTools?.scheduleRedraw?.();
-rsiDrawingTools?.scheduleRedraw?.();
+scheduleCoinsDrawRedraw();
 }
 );
 
@@ -6039,19 +6778,14 @@ await chromeP;
 if(
 candles.length
 ){
-drawingTools?.onSymbolChange?.({
-skipRedraw:
-true
-});
-rsiDrawingTools?.onSymbolChange?.({
+coinsDrawOnSymbolChange({
 skipRedraw:
 true
 });
 chartIndicators?.notifySymbolChange?.();
 chartIndicators?.flushIndicatorDataRefreshNow?.();
 chartIndicators?.notifyMainChartOverlaysSync?.();
-drawingTools?.scheduleRedraw?.();
-rsiDrawingTools?.scheduleRedraw?.();
+scheduleCoinsDrawRedraw();
 }
 
 void drawingTools?.refreshDrawToolsAccessUi?.();

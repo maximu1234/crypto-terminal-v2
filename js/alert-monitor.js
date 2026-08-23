@@ -4,15 +4,19 @@ alertExchangeId,
 commitAlertTriggeredLocally,
 formatAlertTelegramText,
 getActiveAlerts,
+isMacdAlert,
+isOscillatorAlert,
+isRsiAlert,
 normalizeAlertTf
-} from "./alerts.js?v=106";
+} from "./alerts.js?v=109";
 
 import {
 subscribeKline
 } from "./market-ws.js?v=1";
 
 import {
-EXCHANGE_CHANGED_EVENT
+EXCHANGE_CHANGED_EVENT,
+getActiveExchangeId
 } from "./market-api.js?v=6";
 
 import {
@@ -27,6 +31,12 @@ gateAlertExchangeNavigation
 
 /* Базовая цена отдельно для каждого алерта (symbol + shapeId) */
 const lastPriceByAlert =
+new Map();
+
+const lastRsiByAlert =
+new Map();
+
+const lastMacdByAlert =
 new Map();
 
 /** Время свечи, на которой зафиксирован baseline (для same-bar wick guard). */
@@ -183,6 +193,14 @@ candle?.time
 for(
 const alert of getActiveAlerts()
 ){
+
+if(
+isOscillatorAlert(
+alert
+)
+){
+continue;
+}
 
 if(
 String(
@@ -486,11 +504,17 @@ a.shapeId
 );
 
 for(const key of [
-...lastPriceByAlert.keys()
+...new Set([
+...lastPriceByAlert.keys(),
+...lastRsiByAlert.keys(),
+...lastMacdByAlert.keys()
+])
 ]){
 
 if(!activeKeys.has(key)){
 lastPriceByAlert.delete(key);
+lastRsiByAlert.delete(key);
+lastMacdByAlert.delete(key);
 lastCandleTimeByAlert.delete(key);
 recentlyTriggered.delete(key);
 }
@@ -916,6 +940,201 @@ Notification.requestPermission().catch(()=>{});
 
 }
 
+/**
+ * RSI / MACD pane series (включая HTF, как на графике). Не использует last price.
+ */
+function onOscillatorSeriesUpdate({
+symbol,
+value,
+match,
+lastByAlert
+} = {}){
+
+const v =
+Number(
+value
+);
+
+if(
+!Number.isFinite(
+v
+)
+){
+return;
+}
+
+const sym =
+String(
+symbol ||
+""
+).trim().toUpperCase();
+
+if(
+!sym
+){
+return;
+}
+
+const ex =
+getActiveExchangeId();
+
+for(
+const alert of
+getActiveAlerts()
+){
+
+if(
+!match?.(
+alert
+)
+){
+continue;
+}
+
+if(
+String(
+alert.symbol ||
+""
+).toUpperCase() !==
+sym
+){
+continue;
+}
+
+if(
+alertExchangeId(
+alert
+) !==
+ex
+){
+continue;
+}
+
+const key =
+alertEntryKey(
+alert.symbol,
+alert.shapeId
+);
+
+if(
+dragPausedAlerts.has(
+key
+)
+){
+continue;
+}
+
+if(
+(
+postDragQuietUntil.get(
+key
+) ||
+0
+) >
+Date.now()
+){
+continue;
+}
+
+const level =
+Number(
+alert.price
+);
+
+const prev =
+lastByAlert.get(
+key
+);
+
+lastByAlert.set(
+key,
+v
+);
+
+if(
+prev ===
+undefined
+){
+continue;
+}
+
+if(
+!didCrossLine(
+prev,
+v,
+level
+)
+){
+continue;
+}
+
+const lastFire =
+recentlyTriggered.get(
+key
+);
+
+if(
+lastFire &&
+Date.now() -
+lastFire <
+TRIGGER_COOLDOWN_MS
+){
+continue;
+}
+
+recentlyTriggered.set(
+key,
+Date.now()
+);
+lastByAlert.delete(
+key
+);
+
+commitAlertTriggeredLocally(
+alert.symbol,
+alert.shapeId
+);
+
+}
+
+}
+
+export function onRsiSeriesUpdate({
+symbol,
+value
+} = {}){
+
+onOscillatorSeriesUpdate(
+{
+symbol,
+value,
+match:
+isRsiAlert,
+lastByAlert:
+lastRsiByAlert
+}
+);
+
+}
+
+export function onMacdSeriesUpdate({
+symbol,
+value
+} = {}){
+
+onOscillatorSeriesUpdate(
+{
+symbol,
+value,
+match:
+isMacdAlert,
+lastByAlert:
+lastMacdByAlert
+}
+);
+
+}
+
 function evaluateAlerts(
 symbol,
 candle,
@@ -937,6 +1156,14 @@ const tfNorm =
 String(chartTf || "60");
 
 for(const alert of active){
+
+if(
+isOscillatorAlert(
+alert
+)
+){
+continue;
+}
 
 if(String(alert.tf || "60") !== tfNorm){
 continue;
@@ -1107,6 +1334,14 @@ for(
 const alert of getActiveAlerts()
 ){
 
+if(
+isOscillatorAlert(
+alert
+)
+){
+continue;
+}
+
 const sym =
 String(
 alert.symbol ||
@@ -1237,6 +1472,14 @@ const needed =
 new Set();
 
 for(const alert of getActiveAlerts()){
+
+if(
+isOscillatorAlert(
+alert
+)
+){
+continue;
+}
 
 if(
 String(alert.symbol || "").toUpperCase() !== sym

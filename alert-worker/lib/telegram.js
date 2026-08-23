@@ -196,6 +196,46 @@ function formatPriceForTelegram(n) {
 
 }
 
+function formatIndicatorLevelForTelegram(
+n
+){
+
+  if (!Number.isFinite(n)) {
+    return "—";
+  }
+
+  return n.toFixed(2);
+
+}
+
+function alertCrossHeadline(
+source
+){
+
+  const src =
+    String(
+      source ||
+      ""
+    ).trim().toLowerCase();
+
+  if (
+    src ===
+    "rsi"
+  ) {
+    return "Цена пересекла RSI";
+  }
+
+  if (
+    src ===
+    "macd"
+  ) {
+    return "Цена пересекла MACD";
+  }
+
+  return "Цена пересекла уровень";
+
+}
+
 const EXCHANGE_LABELS = {
   bybit: "Bybit",
   bingx: "BingX"
@@ -231,10 +271,27 @@ export function formatAlertMessage(alert) {
     String(alert.tf || "60");
   const tf =
     TF_LABELS[tfRaw] || tfRaw;
+  const source =
+    alert.source ||
+    alert.kind ||
+    "";
+  const isIndicator =
+    String(
+      source
+    ).trim().toLowerCase() ===
+    "rsi" ||
+    String(
+      source
+    ).trim().toLowerCase() ===
+    "macd";
   const price =
-    formatPriceForTelegram(
-      Number(alert.price)
-    );
+    isIndicator
+      ? formatIndicatorLevelForTelegram(
+        Number(alert.price)
+      )
+      : formatPriceForTelegram(
+        Number(alert.price)
+      );
   const exchangeLabel =
     exchangeLabelForTelegram(
       exchangeId
@@ -254,7 +311,7 @@ export function formatAlertMessage(alert) {
   return {
     text: (
       `${symHtml} - ${escapeHtml(tf)}\n` +
-      "Цена пересекла уровень\n" +
+      `${escapeHtml(alertCrossHeadline(source))}\n` +
       `${escapeHtml(price)} (${escapeHtml(exchangeLabel)})`
     ),
     parse_mode: "HTML"
