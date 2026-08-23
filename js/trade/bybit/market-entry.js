@@ -177,6 +177,115 @@ false;
 let closeBusy =
 false;
 
+function collectOpenPositionHints(
+symbol,
+side
+){
+
+const tick =
+marketMap.get(
+symbol
+) ||
+{};
+const hints =
+{
+ask:
+Number(
+tick.ask
+) ||
+0,
+bid:
+Number(
+tick.bid
+) ||
+0,
+last:
+Number(
+tick.price
+) ||
+0,
+noOppositePosition:
+true
+};
+const oppositeSide =
+side ===
+"Sell"
+? "Buy"
+: "Sell";
+const rows =
+listCachedPositionsForSymbol(
+symbol
+);
+let opposite =
+rows.find(
+row=>{
+const rowSide =
+String(
+row?.side ||
+""
+).trim();
+const size =
+Math.abs(
+Number(
+row?.size
+) ||
+0
+);
+
+return size >
+0 &&
+rowSide ===
+oppositeSide;
+}
+);
+
+if(
+!opposite
+){
+opposite =
+getCachedPosition(
+symbol,
+{
+side:
+oppositeSide
+}
+);
+}
+
+const size =
+Math.abs(
+Number(
+opposite?.size
+) ||
+0
+);
+
+if(
+opposite &&
+size >
+0
+){
+hints.noOppositePosition =
+false;
+hints.oppositePosition =
+{
+side:
+String(
+opposite.side ||
+oppositeSide
+),
+size:
+opposite.size,
+positionIdx:
+opposite.positionIdx ??
+0
+};
+}
+
+return hints;
+
+}
+
 /**
  * Shared open path for coins chart + terminal widget mount.
  * @param {{ symbol: string, side: string, volumeUsdt: number, btn?: HTMLElement | null }} opts
@@ -263,6 +372,14 @@ settings.tpUsd >
 ? settings.tpUsd
 : 0;
 }
+
+Object.assign(
+openOptions,
+collectOpenPositionHints(
+symbol,
+side
+)
+);
 
 const result =
 await api.openPosition(

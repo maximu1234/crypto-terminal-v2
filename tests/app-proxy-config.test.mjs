@@ -179,10 +179,10 @@ test("local SOCKS relay logs into remote SOCKS5 with user/pass", async () => {
   await new Promise((resolve) => remote.server.close(resolve));
 });
 
-test("Bybit REST split: klines stay direct, positions go through SOCKS", () => {
+test("Bybit REST from main (tickers + signed) goes through SOCKS; public WS stays direct", () => {
   assert.equal(
-    shouldProxyBybitRestUrl("https://api.bybit.com/v5/market/kline?symbol=BTCUSDT"),
-    false
+    shouldProxyBybitRestUrl("https://api.bybit.com/v5/market/tickers?symbol=BTCUSDT"),
+    true
   );
   assert.equal(
     shouldProxyBybitRestUrl("https://api.bybit.com/v5/position/list"),

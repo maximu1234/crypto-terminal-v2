@@ -48,7 +48,7 @@ export {
 export {
   initTradeMarketEntry,
   openWidgetMarketPosition
-} from "./market-entry.js?v=4";
+} from "./market-entry.js?v=5";
 
 export {
   initTradeBookPanel

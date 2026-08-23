@@ -24,6 +24,8 @@ let relayServer =
 null;
 let relayHttpsAgent =
 null;
+let relayAgentCreatedHandler =
+null;
 
 function closeSocket(
 socket
@@ -1248,11 +1250,13 @@ new https.Agent({
 keepAlive:
 true,
 keepAliveMsecs:
-15000,
+10000,
 maxSockets:
-4,
+8,
 maxFreeSockets:
-2,
+4,
+scheduling:
+"lifo",
 createConnection(
 options,
 callback
@@ -1314,6 +1318,18 @@ false
 tlsSocket.once(
 "secureConnect",
 ()=>{
+try{
+tlsSocket.setKeepAlive(
+true,
+10000
+);
+tlsSocket.setNoDelay(
+true
+);
+}catch{
+/* ignore */
+}
+
 done(
 null,
 tlsSocket
@@ -1333,7 +1349,34 @@ done
 }
 });
 
+if(
+typeof relayAgentCreatedHandler ===
+"function"
+){
+queueMicrotask(
+()=>{
+try{
+relayAgentCreatedHandler();
+}catch{
+/* ignore */
+}
+}
+);
+}
+
 return relayHttpsAgent;
+
+}
+
+function setRelayAgentCreatedHandler(
+fn
+){
+
+relayAgentCreatedHandler =
+typeof fn ===
+"function"
+? fn
+: null;
 
 }
 
@@ -1359,6 +1402,7 @@ encodeUserPass,
 getRelayHttpsAgent,
 needsSocksAuthRelay,
 raceRelayTlsHosts,
+setRelayAgentCreatedHandler,
 startSocksAuthRelay,
 stopSocksAuthRelay
 };

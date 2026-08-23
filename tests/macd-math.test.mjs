@@ -221,7 +221,9 @@ source:
 oscillatorMa:
 "ema",
 signalMa:
-"ema"
+"ema",
+tf:
+""
 }
 );
 

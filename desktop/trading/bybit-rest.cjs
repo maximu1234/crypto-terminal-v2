@@ -29,7 +29,7 @@ require(
 );
 const {
 getRelayHttpsAgent,
-raceRelayTlsHosts
+setRelayAgentCreatedHandler
 } =
 require(
 "../app-proxy-socks-relay.cjs"
@@ -53,7 +53,9 @@ const RECV_WINDOW =
 const REQUEST_TIMEOUT_MS =
 12000;
 const PROXY_FAILOVER_TIMEOUT_MS =
-2500;
+800;
+const PROXY_KEEPALIVE_MS =
+12000;
 
 /** Last signed-REST host that answered through SOCKS (mainnet). */
 let lastGoodApiBase =
@@ -211,54 +213,158 @@ return PROXY_FAILOVER_TIMEOUT_MS;
 
 }
 
-let proxyHostPick =
+let proxyWarmInflight =
+null;
+let proxyKeepaliveTimer =
 null;
 
-async function ensureProxyApiBase(
+function scheduleProxyKeepalive(){
+
+if(
+proxyKeepaliveTimer ||
+!getRelayHttpsAgent()
+){
+return;
+}
+
+proxyKeepaliveTimer =
+setInterval(
+()=>{
+
+if(
+!getRelayHttpsAgent()
+){
+clearInterval(
+proxyKeepaliveTimer
+);
+proxyKeepaliveTimer =
+null;
+lastGoodApiBase =
+"";
+return;
+}
+
+void warmProxyApiSockets();
+
+},
+PROXY_KEEPALIVE_MS
+);
+
+if(
+typeof proxyKeepaliveTimer.unref ===
+"function"
+){
+proxyKeepaliveTimer.unref();
+}
+
+}
+
+async function warmProxyApiSockets(){
+
+if(
+!getRelayHttpsAgent()
+){
+return;
+}
+
+if(
+proxyWarmInflight
+){
+return proxyWarmInflight;
+}
+
+proxyWarmInflight =
+(
+async()=>{
+
+const bases =
+orderedApiBases(
+false
+);
+
+for(
+const base of bases
+){
+const url =
+`${base}/v5/market/time`;
+const isLastBase =
+base ===
+bases[
+bases.length -
+1
+];
+
+try{
+const response =
+await fetchWithTimeout(
+url,
+{
+method:
+"GET",
+timeoutMs:
+timeoutMsForApiHost(
+url,
+base,
+isLastBase
+)
+}
+);
+const data =
+parseBybitBody(
+await response.text()
+);
+
+if(
+data?.retCode ===
+0
+){
+rememberGoodApiBase(
+false,
+base
+);
+return;
+}
+}catch{
+/* next host */
+}
+
+}
+
+}
+)().finally(
+()=>{
+proxyWarmInflight =
+null;
+}
+);
+
+return proxyWarmInflight;
+
+}
+
+function ensureProxyApiBase(
 testnet
 ){
 
 if(
 testnet ||
-!getRelayHttpsAgent() ||
-lastGoodApiBase
+!getRelayHttpsAgent()
 ){
-return;
+return Promise.resolve();
 }
 
-if(
-proxyHostPick
-){
-await proxyHostPick;
-return;
+scheduleProxyKeepalive();
+void warmProxyApiSockets();
+return Promise.resolve();
+
 }
 
-proxyHostPick =
-raceRelayTlsHosts(
-[
-"api.bytick.com",
-"api.bybit.com"
-],
-4000
-).then(
-host=>{
-rememberGoodApiBase(
-false,
-`https://${host}`
-);
-}
-).catch(
-()=>{}
-).finally(
+setRelayAgentCreatedHandler(
 ()=>{
-proxyHostPick =
-null;
+scheduleProxyKeepalive();
+void warmProxyApiSockets();
 }
 );
-
-await proxyHostPick;
-
-}
 
 function signPayload(
 secret,
@@ -3703,19 +3809,36 @@ queryString
 ? `${path}?${queryString}`
 : path;
 
-for(
-const base of apiBases(
+const bases =
+orderedApiBases(
 testnet
-)
+);
+
+for(
+const base of bases
 ){
+const url =
+`${base}${urlPath}`;
+const isLastBase =
+base ===
+bases[
+bases.length -
+1
+];
 
 try{
 const response =
 await fetchWithTimeout(
-`${base}${urlPath}`,
+url,
 {
 method:
-"GET"
+"GET",
+timeoutMs:
+timeoutMsForApiHost(
+url,
+base,
+isLastBase
+)
 }
 );
 
@@ -3730,6 +3853,10 @@ if(
 data?.retCode ===
 0
 ){
+rememberGoodApiBase(
+testnet,
+base
+);
 return {
 ok:
 true,
@@ -5704,11 +5831,161 @@ row.lastPrice
 
 }
 
+function refPriceFromOpenOptions(
+options,
+sideNorm
+){
+
+const ask =
+Number(
+options?.ask
+);
+const bid =
+Number(
+options?.bid
+);
+const last =
+Number(
+options?.last ||
+options?.refPrice ||
+options?.price
+);
+
+if(
+sideNorm ===
+"Buy" &&
+Number.isFinite(
+ask
+) &&
+ask >
+0
+){
+return ask;
+}
+
+if(
+sideNorm ===
+"Sell" &&
+Number.isFinite(
+bid
+) &&
+bid >
+0
+){
+return bid;
+}
+
+if(
+Number.isFinite(
+last
+) &&
+last >
+0
+){
+return last;
+}
+
+return NaN;
+
+}
+
+function oppositePositionFromOpenOptions(
+options,
+oppositeSide
+){
+
+if(
+options?.noOppositePosition ===
+true
+){
+return {
+skip:
+true,
+position:
+null
+};
+}
+
+const row =
+options?.oppositePosition;
+
+if(
+!row ||
+typeof row !==
+"object"
+){
+return {
+skip:
+false,
+position:
+null
+};
+}
+
+const size =
+Math.abs(
+Number(
+row.size
+) ||
+0
+);
+
+if(
+!(
+size >
+0
+)
+){
+return {
+skip:
+true,
+position:
+null
+};
+}
+
+const side =
+String(
+row.side ||
+oppositeSide
+).trim();
+
+if(
+side &&
+side !==
+oppositeSide
+){
+return {
+skip:
+false,
+position:
+null
+};
+}
+
+return {
+skip:
+true,
+position:{
+side:
+oppositeSide,
+size:
+String(
+row.size
+),
+positionIdx:
+row.positionIdx ??
+0
+}
+};
+
+}
+
 async function openPositionAtMarket(
 symbol,
 side,
 volumeUsdt,
-_options =
+options =
 {}
 ){
 
@@ -5755,22 +6032,72 @@ message:
 };
 }
 
+const hintedPrice =
+refPriceFromOpenOptions(
+options,
+sideNorm
+);
+const oppositeSide =
+sideNorm ===
+"Sell"
+? "Buy"
+: "Sell";
+const oppositeHint =
+oppositePositionFromOpenOptions(
+options,
+oppositeSide
+);
+const tickerPromise =
+Number.isFinite(
+hintedPrice
+) &&
+hintedPrice >
+0
+? Promise.resolve(
+null
+)
+: getTickerPrices(
+sym
+);
+const positionPromise =
+oppositeHint.skip
+? Promise.resolve(
+{
+ok:
+true,
+position:
+oppositeHint.position
+}
+)
+: getPosition(
+sym,
+{
+side:
+oppositeSide
+}
+);
 const [
 ticker,
-rules
+rules,
+livePosResult
 ] =
 await Promise.all(
 [
-getTickerPrices(
-sym
-),
+tickerPromise,
 getInstrumentRules(
 sym
-)
+),
+positionPromise
 ]
 );
 const refPrice =
-sideNorm ===
+Number.isFinite(
+hintedPrice
+) &&
+hintedPrice >
+0
+? hintedPrice
+: sideNorm ===
 "Buy"
 ? (
 ticker?.ask ||
@@ -5825,19 +6152,6 @@ let positionIdx =
 0;
 let closedPosition =
 null;
-const oppositeSide =
-sideNorm ===
-"Sell"
-? "Buy"
-: "Sell";
-const livePosResult =
-await getPosition(
-sym,
-{
-side:
-oppositeSide
-}
-);
 
 if(
 livePosResult?.ok ===

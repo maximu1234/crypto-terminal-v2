@@ -420,15 +420,7 @@ url ||
 ""
 );
 
-if(
-!/https:\/\/(?:api\.bybit\.com|api\.bytick\.com|api-testnet\.bybit\.com)\b/i.test(
-value
-)
-){
-return false;
-}
-
-return !/\/v5\/market\//.test(
+return /https:\/\/(?:api\.bybit\.com|api\.bytick\.com|api-testnet\.bybit\.com)\b/i.test(
 value
 );
 
