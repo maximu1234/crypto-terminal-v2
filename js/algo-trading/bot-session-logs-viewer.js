@@ -9,13 +9,13 @@ sendLanBotCommand
 import {
 formatBotStrategySettingsRows,
 loadBotStrategiesPrefs
-} from "./bot-strategy-prefs.js?v=28";
+} from "./bot-strategy-prefs.js?v=30";
 import {
 syncAllTickerFlagsRootToMain
-} from "./bot-bridge.js?v=20";
+} from "./bot-bridge.js?v=22";
 import {
 ALGO_TICKER_FLAGS_KEY
-} from "./ticker-flags.js?v=8";
+} from "./ticker-flags.js?v=9";
 import {
 loadStagedBotTickerBook,
 loadBotTickerBook

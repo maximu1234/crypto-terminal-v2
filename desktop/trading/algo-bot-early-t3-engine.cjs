@@ -33,22 +33,28 @@ require(
 "./algo-bot-session-log.cjs"
 );
 const {
-setupBrokenTowardPt3
+setupBoxT3T4Broken
 } =
 require(
 "./algo-bot-early-t3-rules.cjs"
 );
 
+const ALERT_LEAD_PCT_MAX =
+25;
+const ALERT_LEAD_PCT_DEFAULT =
+5;
 const HISTORY_REQUESTS =
-3;
+1;
+const SEED_KLINE_TIMEOUT_MS =
+5000;
 const MAX_CANDLES =
 4000;
 const SEED_CONCURRENCY =
-2;
+6;
 const SEED_WATCH_MS =
 15000;
 const SEED_SYMBOL_TIMEOUT_MS =
-45000;
+20000;
 const FRESH_PT4_BARS_SEED =
 2;
 const FRESH_PT4_BARS_LIVE =
@@ -106,6 +112,10 @@ tf:
 "",
 alertLeadPct:
 5,
+actionMode:
+"alert",
+listAllLive:
+false,
 minTurnover24hUsdt:
 100000,
 lastSignal:
@@ -395,10 +405,10 @@ leadPct
 leadPct >=
 0
 ? Math.min(
-10,
+ALERT_LEAD_PCT_MAX,
 leadPct
 )
-: 5;
+: ALERT_LEAD_PCT_DEFAULT;
 
 if(
 !(
@@ -572,6 +582,113 @@ return promotedClosed
 
 }
 
+function isListActionMode(){
+
+return engineConfig?.actionMode ===
+"list";
+
+}
+
+function listAllLiveEnabled(){
+
+return isListActionMode() &&
+!!engineConfig?.listAllLive;
+
+}
+
+function setupLifeBars(){
+
+const n =
+Math.floor(
+Number(
+engineConfig?.setupLifeBars
+)
+);
+
+if(
+!Number.isFinite(
+n
+) ||
+n <
+1
+){
+return 300;
+}
+
+return Math.min(
+5000,
+n
+);
+
+}
+
+function scanFreshnessBars(
+live
+){
+
+if(
+listAllLiveEnabled()
+){
+return setupLifeBars();
+}
+
+return live
+? FRESH_PT4_BARS_LIVE
+: FRESH_PT4_BARS_SEED;
+
+}
+
+function symbolHasArmedSetup(
+symbol
+){
+
+const sym =
+normalizeSymbol(
+symbol
+);
+
+for(
+const row of armedAlerts.values()
+){
+
+if(
+row.symbol ===
+sym
+){
+return true;
+}
+
+}
+
+return false;
+
+}
+
+function notifyListFlag(
+symbol,
+add
+){
+
+const fn =
+add
+? engineConfig?.onListAdd
+: engineConfig?.onListRemove;
+
+if(
+typeof fn ===
+"function"
+){
+try{
+fn(
+symbol
+);
+}catch{
+/* ignore */
+}
+}
+
+}
+
 async function cancelArmedAlert(
 fp,
 text
@@ -585,6 +702,47 @@ fp
 if(
 !row
 ){
+return;
+}
+
+if(
+row.list ||
+isListActionMode()
+){
+armedAlerts.delete(
+fp
+);
+ignoredFingerprints.add(
+fp
+);
+
+if(
+!symbolHasArmedSetup(
+row.symbol
+)
+){
+notifyListFlag(
+row.symbol,
+false
+);
+}
+
+pushSignal(
+{
+ts:
+Date.now(),
+symbol:
+row.symbol,
+side:
+row.side,
+price:
+row.p3,
+text:
+text ||
+`${row.symbol} ${row.side}: LIST − (коробка t3–t4 сломана)`
+}
+);
+engineConfig?.onActivity?.();
 return;
 }
 
@@ -623,10 +781,69 @@ price:
 row.p3,
 text:
 text ||
-`${row.symbol} ${row.side}: отмена (коробка t3–t4 → t3) — алерт снят`
+`${row.symbol} ${row.side}: отмена (коробка t3–t4 сломана) — алерт снят`
 }
 );
 engineConfig?.onActivity?.();
+}
+
+}
+
+async function expireStaleArmed(
+symbol,
+lastIndex
+){
+
+if(
+!listAllLiveEnabled()
+){
+return;
+}
+
+const life =
+setupLifeBars();
+const sym =
+normalizeSymbol(
+symbol
+);
+
+for(
+const [
+fp,
+row
+] of [
+...armedAlerts
+]
+){
+
+if(
+row.symbol !==
+sym
+){
+continue;
+}
+
+const b4 =
+Number(
+row.b4
+);
+
+if(
+Number.isFinite(
+b4
+) &&
+lastIndex -
+b4 <=
+life
+){
+continue;
+}
+
+await cancelArmedAlert(
+fp,
+`${row.symbol} ${row.side}: отмена (время жизни ${life} св.) — ${row.list ? "флаг снят" : "алерт снят"}`
+);
+
 }
 
 }
@@ -663,25 +880,42 @@ sym
 continue;
 }
 
+const breakKind =
+setupBoxT3T4Broken(
+row,
+candle
+);
+
 if(
-!setupBrokenTowardPt3(
-row.side,
-candle,
-row.p3
-)
+!breakKind
 ){
 continue;
 }
 
 const why =
+breakKind ===
+"t4"
+? (
+row.side ===
+"short"
+? "ниже pt4"
+: "выше pt4"
+)
+: (
 row.side ===
 "short"
 ? "выше pt3"
-: "ниже pt3";
+: "ниже pt3"
+);
+const kind =
+row.list ||
+isListActionMode()
+? "флаг снят"
+: "алерт снят";
 
 await cancelArmedAlert(
 fp,
-`${row.symbol} ${row.side}: отмена (${why}) — алерт снят`
+`${row.symbol} ${row.side}: отмена (${why}) — ${kind}`
 );
 
 }
@@ -702,6 +936,76 @@ armedAlerts.has(
 fp
 )
 ){
+return;
+}
+
+if(
+isListActionMode()
+){
+const side =
+setup.side ===
+"short"
+? "short"
+: "long";
+const pt4 =
+Number(
+setup.p4
+);
+const p3 =
+Number(
+setup.p3
+);
+
+if(
+!(
+p3 >
+0
+) ||
+!(
+pt4 >
+0
+)
+){
+return;
+}
+
+armedAlerts.set(
+fp,
+{
+symbol:
+sym,
+side,
+p3,
+p4:
+pt4,
+b4:
+Number(
+setup.b4
+),
+shapeId:
+"",
+list:
+true
+}
+);
+notifyListFlag(
+sym,
+true
+);
+pushSignal(
+{
+ts:
+Date.now(),
+symbol:
+sym,
+side,
+price:
+pt4,
+text:
+`${sym} ${side}: LIST + (сетап)`
+}
+);
+engineConfig?.onActivity?.();
 return;
 }
 
@@ -774,6 +1078,10 @@ side,
 p3,
 p4:
 pt4,
+b4:
+Number(
+setup.b4
+),
 shapeId:
 String(
 result.shapeId ||
@@ -846,7 +1154,10 @@ const lastIndex =
 candles.length -
 1;
 const minBar =
-Math.max(
+freshBars ==
+null
+? 0
+: Math.max(
 0,
 lastIndex -
 freshBars
@@ -869,6 +1180,51 @@ b4 <
 minBar ||
 b4 >
 lastIndex
+){
+continue;
+}
+
+let boxBroken =
+false;
+
+for(
+let i =
+b4 +
+1;
+i <
+candles.length;
+i++
+){
+
+if(
+setupBoxT3T4Broken(
+setup,
+candles[
+i
+]
+)
+){
+boxBroken =
+true;
+break;
+}
+
+}
+
+if(
+!boxBroken &&
+state.forming &&
+setupBoxT3T4Broken(
+setup,
+state.forming
+)
+){
+boxBroken =
+true;
+}
+
+if(
+boxBroken
 ){
 continue;
 }
@@ -919,6 +1275,11 @@ break;
 
 }
 
+await expireStaleArmed(
+state.symbol,
+lastIndex
+);
+
 }
 
 async function seedSymbol(
@@ -933,7 +1294,9 @@ const result =
 await algoRest.fetchKlineHistoryDeep(
 symbol,
 engineConfig?.tf,
-HISTORY_REQUESTS
+HISTORY_REQUESTS,
+0,
+SEED_KLINE_TIMEOUT_MS
 );
 
 if(
@@ -973,7 +1336,9 @@ null;
 
 await scanSymbol(
 symbol,
-FRESH_PT4_BARS_SEED
+scanFreshnessBars(
+false
+)
 );
 
 if(
@@ -1127,7 +1492,9 @@ kind ===
 ){
 void scanSymbol(
 symbol,
-FRESH_PT4_BARS_LIVE
+scanFreshnessBars(
+true
+)
 ).catch(
 err=>{
 log.warn(
@@ -1183,15 +1550,53 @@ lead
 lead >=
 0
 ? Math.min(
-10,
+ALERT_LEAD_PCT_MAX,
 lead
 )
-: 5,
+: ALERT_LEAD_PCT_DEFAULT,
 minTurnover24hUsdt:
 min,
 patternSettings:
 config?.patternSettings ||
 null,
+actionMode:
+String(
+config?.actionMode ||
+""
+).toLowerCase() ===
+"list"
+? "list"
+: "alert",
+listAllLive:
+String(
+config?.actionMode ||
+""
+).toLowerCase() ===
+"list" &&
+!!config?.listAllLive,
+setupLifeBars:
+Math.min(
+5000,
+Math.max(
+1,
+Math.floor(
+Number(
+config?.setupLifeBars
+) ||
+300
+)
+)
+),
+onListAdd:
+typeof config?.onListAdd ===
+"function"
+? config.onListAdd
+: null,
+onListRemove:
+typeof config?.onListRemove ===
+"function"
+? config.onListRemove
+: null,
 onActivity:
 typeof config?.onActivity ===
 "function"
@@ -1262,7 +1667,7 @@ sessionLog.appendNote(
 `Early T3: ${symbols.length} тикеров, ТФ ${tf}, оборот от ${min}`
 );
 sessionLog.appendNote(
-`Early T3 seed 0/${seedTotal}`
+`Early T3 seed 0/${seedTotal} (1×1000, ×${SEED_CONCURRENCY})`
 );
 
 startSeedWatch();
@@ -1282,6 +1687,26 @@ min
 }
 
 async function stopEarlyT3Engine(){
+
+const cfg =
+engineConfig;
+const listed =
+new Set();
+
+if(
+cfg?.actionMode ===
+"list"
+){
+
+for(
+const row of armedAlerts.values()
+){
+listed.add(
+row.symbol
+);
+}
+
+}
 
 stopSeedWatch();
 await alertBridge.clearAllAlgoBotAlerts();
@@ -1318,6 +1743,27 @@ seedDone =
 seedFailNotes =
 0;
 
+if(
+cfg?.actionMode ===
+"list" &&
+typeof cfg.onListRemove ===
+"function"
+){
+
+for(
+const sym of listed
+){
+try{
+cfg.onListRemove(
+sym
+);
+}catch{
+/* ignore */
+}
+}
+
+}
+
 }
 
 function getEarlyT3EngineStatus(){
@@ -1337,6 +1783,10 @@ tf:
 engineConfig.tf,
 alertLeadPct:
 engineConfig.alertLeadPct,
+actionMode:
+engineConfig.actionMode,
+listAllLive:
+!!engineConfig.listAllLive,
 minTurnover24hUsdt:
 engineConfig.minTurnover24hUsdt,
 lastSignal:

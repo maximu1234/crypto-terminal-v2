@@ -959,6 +959,92 @@ extra =
 null
 ){
 
+const p =
+prefs &&
+typeof prefs ===
+"object"
+? prefs
+: {};
+
+if(
+strategyId ===
+"early-t3"
+){
+const listMode =
+String(
+p.actionMode ||
+""
+).toLowerCase() ===
+"list";
+const tfRaw =
+String(
+p.tf ||
+extra?.tickerBookTf ||
+""
+).trim();
+const rows =
+[
+{
+label:
+"Стратегия",
+value:
+"1-2 Early T3"
+},
+{
+label:
+"Режим",
+value:
+listMode
+? "Список"
+: "Алерт"
+},
+{
+label:
+"Таймфрейм",
+value:
+BOT_TF_STATUS_LABELS[
+tfRaw
+] ||
+tfRaw ||
+"—"
+}
+];
+
+if(
+!listMode
+){
+rows.push(
+{
+label:
+"Алерт до pt4",
+value:
+`${formatStatusNumber(
+p.alertLeadPct
+)}% X`
+}
+);
+}
+
+rows.push(
+{
+label:
+"Объем за сутки от",
+value:
+`${formatStatusTurnover(
+p.minTurnover24hUsdt
+)} USDT`
+},
+{
+label:
+"Список",
+value:
+"1-2 Early T3"
+}
+);
+
+return rows;
+}
+
 const id =
 strategyId ===
 "st2" ||
@@ -966,12 +1052,6 @@ strategyId ===
 "st3"
 ? strategyId
 : "st1";
-const p =
-prefs &&
-typeof prefs ===
-"object"
-? prefs
-: {};
 const sides =
 normalizeBotSides(
 p.sides,
@@ -1396,7 +1476,7 @@ base.tpRr
 ),
 alertLeadPct:
 Math.min(
-10,
+25,
 clampFloat(
 src.alertLeadPct,
 0,

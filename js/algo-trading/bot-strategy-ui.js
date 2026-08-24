@@ -13,11 +13,11 @@ normalizeLaunchStrategyId,
 botStrategyListLabel,
 botSidesDirectionLabel,
 formatBotStrategySettingsRows
-} from "./bot-strategy-prefs.js?v=28";
+} from "./bot-strategy-prefs.js?v=30";
 import {
 loadEarlyT3BotPrefs,
 saveEarlyT3BotPrefs
-} from "./early-t3-bot-prefs.js?v=1";
+} from "./early-t3-bot-prefs.js?v=5";
 import {
 ALGO_ANALYSIS_BOT_NONE,
 ALGO_ANALYSIS_BOT_PATTERN_12,
@@ -46,7 +46,7 @@ isAlgoBotDesktop,
 fetchAlgoBotCloudLock,
 clearAlgoBotCloudLock,
 ensureAlgoBotCloudLock
-} from "./bot-bridge.js?v=20";
+} from "./bot-bridge.js?v=22";
 import {
 stageBotTickerBookFromPublished,
 hydrateBotTickerBookFromMain,
@@ -231,6 +231,42 @@ document.getElementById(
 const earlyT3AlertLeadInput =
 document.getElementById(
 "algo-bot-early-t3-alert-lead"
+);
+const earlyT3ModeAlertInput =
+document.getElementById(
+"algo-bot-early-t3-mode-alert"
+);
+const earlyT3ModeListInput =
+document.getElementById(
+"algo-bot-early-t3-mode-list"
+);
+const earlyT3AlertLeadRow =
+document.getElementById(
+"algo-bot-early-t3-alert-lead-row"
+);
+const earlyT3AlertLeadHint =
+document.getElementById(
+"algo-bot-early-t3-alert-lead-hint"
+);
+const earlyT3ListHint =
+document.getElementById(
+"algo-bot-early-t3-list-hint"
+);
+const earlyT3ListAllLiveInput =
+document.getElementById(
+"algo-bot-early-t3-list-all-live"
+);
+const earlyT3ListAllLiveRow =
+document.getElementById(
+"algo-bot-early-t3-list-all-live-row"
+);
+const earlyT3SetupLifeInput =
+document.getElementById(
+"algo-bot-early-t3-setup-life"
+);
+const earlyT3SetupLifeRow =
+document.getElementById(
+"algo-bot-early-t3-setup-life-row"
 );
 const earlyT3MinTurnoverInput =
 document.getElementById(
@@ -1015,6 +1051,79 @@ earlyT3Prefs.minTurnover24hUsdt
 );
 }
 
+if(
+earlyT3SetupLifeInput &&
+!isFieldBeingEdited(
+earlyT3SetupLifeInput
+)
+){
+earlyT3SetupLifeInput.value =
+String(
+earlyT3Prefs.setupLifeBars
+);
+}
+
+applyEarlyT3ActionModeUi();
+
+}
+
+function applyEarlyT3ActionModeUi(){
+
+const listMode =
+earlyT3Prefs.actionMode ===
+"list";
+
+if(
+earlyT3ModeAlertInput
+){
+earlyT3ModeAlertInput.checked =
+!listMode;
+}
+
+if(
+earlyT3ModeListInput
+){
+earlyT3ModeListInput.checked =
+listMode;
+}
+
+earlyT3AlertLeadRow?.toggleAttribute(
+"hidden",
+listMode
+);
+earlyT3AlertLeadHint?.toggleAttribute(
+"hidden",
+listMode
+);
+earlyT3ListHint?.toggleAttribute(
+"hidden",
+!listMode
+);
+earlyT3ListAllLiveRow?.toggleAttribute(
+"hidden",
+!listMode
+);
+
+if(
+earlyT3ListAllLiveInput
+){
+earlyT3ListAllLiveInput.checked =
+!!earlyT3Prefs.listAllLive;
+}
+
+earlyT3SetupLifeRow?.toggleAttribute(
+"hidden",
+!listMode ||
+!earlyT3Prefs.listAllLive
+);
+
+if(
+earlyT3AlertLeadInput
+){
+earlyT3AlertLeadInput.disabled =
+listMode;
+}
+
 }
 
 function persistEarlyT3Prefs(
@@ -1027,6 +1136,114 @@ saveEarlyT3BotPrefs(
 patch
 );
 applyEarlyT3SettingsUi();
+
+}
+
+function clampAlertLeadPct(
+raw
+){
+
+const n =
+Number(
+raw
+);
+
+if(
+!Number.isFinite(
+n
+) ||
+n <
+0
+){
+return 5;
+}
+
+return Math.min(
+25,
+n
+);
+
+}
+
+function persistAlertLeadPct(
+raw
+){
+
+const next =
+clampAlertLeadPct(
+raw
+);
+
+persistSt1(
+{
+alertLeadPct:
+next
+}
+);
+persistEarlyT3Prefs(
+{
+alertLeadPct:
+next
+}
+);
+
+if(
+alertLeadInput
+){
+alertLeadInput.value =
+String(
+next
+);
+}
+
+return next;
+
+}
+
+function commitAlertLeadFromUi(){
+
+const focused =
+document.activeElement;
+const st1Visible =
+isManualTradingMode() &&
+!!alertLeadInput &&
+!document.getElementById(
+"algo-bot-st1-alert-lead-row"
+)?.hidden;
+
+let raw;
+
+if(
+focused ===
+alertLeadInput
+){
+raw =
+alertLeadInput.value;
+}else if(
+focused ===
+earlyT3AlertLeadInput
+){
+raw =
+earlyT3AlertLeadInput.value;
+}else if(
+st1Visible
+){
+raw =
+alertLeadInput.value;
+}else if(
+earlyT3AlertLeadInput
+){
+raw =
+earlyT3AlertLeadInput.value;
+}else{
+raw =
+st1.alertLeadPct ??
+earlyT3Prefs.alertLeadPct;
+}
+
+return persistAlertLeadPct(
+raw
+);
 
 }
 
@@ -1926,6 +2143,9 @@ status?.strategyId ===
 status?.strategyId ===
 "st3"
 ? status.strategyId
+: status?.strategyId ===
+"early-t3"
+? "early-t3"
 : status?.running
 ? "st1"
 : "";
@@ -1959,6 +2179,8 @@ tp3:
 status?.tp3,
 alertLeadPct:
 status?.alertLeadPct,
+actionMode:
+status?.actionMode,
 minTurnover24hUsdt:
 status?.minTurnover24hUsdt,
 trailSl:
@@ -2014,6 +2236,9 @@ strategyId ===
 : strategyId ===
 "st3"
 ? "Стратегия 3"
+: strategyId ===
+"early-t3"
+? "1-2 Early T3"
 : "Стратегия 1"
 )
 : "—";
@@ -3941,6 +4166,7 @@ isActiveAnalysisBot(
 ALGO_ANALYSIS_BOT_EARLY_T3
 )
 ){
+commitAlertLeadFromUi();
 const result =
 await startAlgoBot(
 "early-t3"
@@ -4023,6 +4249,8 @@ next
 );
 }
 }
+
+commitAlertLeadFromUi();
 
 const result =
 await startAlgoBot(
@@ -4376,30 +4604,14 @@ st1.minTurnover24hUsdt ??
 alertLeadInput?.addEventListener(
 "change",
 ()=>{
-onFieldBlur(
-"alertLeadPct",
-alertLeadInput,
-v=>{
-const n =
-Number(
-v
-);
-
 if(
-!Number.isFinite(
-n
-) ||
-n <
-0
+!alertLeadInput
 ){
-return 5;
+return;
 }
 
-return Math.min(
-10,
-n
-);
-}
+persistAlertLeadPct(
+alertLeadInput.value
 );
 }
 );
@@ -4422,6 +4634,66 @@ earlyT3TfInput.value
 );
 }
 );
+earlyT3ModeAlertInput?.addEventListener(
+"change",
+()=>{
+persistEarlyT3Prefs(
+{
+actionMode:
+earlyT3ModeAlertInput.checked
+? "alert"
+: "list"
+}
+);
+}
+);
+earlyT3ModeListInput?.addEventListener(
+"change",
+()=>{
+persistEarlyT3Prefs(
+{
+actionMode:
+earlyT3ModeListInput.checked
+? "list"
+: "alert"
+}
+);
+}
+);
+earlyT3ListAllLiveInput?.addEventListener(
+"change",
+()=>{
+persistEarlyT3Prefs(
+{
+listAllLive:
+!!earlyT3ListAllLiveInput.checked
+}
+);
+}
+);
+earlyT3SetupLifeInput?.addEventListener(
+"change",
+()=>{
+if(
+!earlyT3SetupLifeInput
+){
+return;
+}
+
+const n =
+Math.floor(
+Number(
+earlyT3SetupLifeInput.value
+)
+);
+persistEarlyT3Prefs(
+{
+setupLifeBars:
+n
+}
+);
+}
+);
 earlyT3AlertLeadInput?.addEventListener(
 "change",
 ()=>{
@@ -4435,26 +4707,8 @@ const n =
 Number(
 earlyT3AlertLeadInput.value
 );
-const next =
-!Number.isFinite(
+persistAlertLeadPct(
 n
-) ||
-n <
-0
-? 5
-: Math.min(
-10,
-n
-);
-earlyT3AlertLeadInput.value =
-String(
-next
-);
-persistEarlyT3Prefs(
-{
-alertLeadPct:
-next
-}
 );
 }
 );

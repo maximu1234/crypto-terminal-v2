@@ -857,6 +857,7 @@ indicators.forEach(
 ind=>
 ind.syncMainChartOverlay?.()
 );
+updateLegend();
 
 }
 

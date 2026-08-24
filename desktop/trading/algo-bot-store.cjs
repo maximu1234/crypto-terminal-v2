@@ -37,6 +37,8 @@ const FLAG_BOTH_5M =
 "algoBoth5m";
 const FLAG_FAVORITES =
 "algoFavorites";
+const FLAG_EARLY_T3 =
+"algoEarlyT3";
 
 const DEFAULT_ST1 =
 {
@@ -927,7 +929,7 @@ alertLeadPct:
 clampFloat(
 src.alertLeadPct,
 0,
-10,
+25,
 DEFAULT_ST1.alertLeadPct
 ),
 minTurnover24hUsdt:
@@ -1152,6 +1154,10 @@ FLAG_BOTH_5M
 [
 FLAG_FAVORITES
 ]:
+[],
+[
+FLAG_EARLY_T3
+]:
 []
 };
 
@@ -1199,6 +1205,14 @@ FLAG_FAVORITES
 normalizeSymbols(
 src[
 FLAG_FAVORITES
+]
+),
+[
+FLAG_EARLY_T3
+]:
+normalizeSymbols(
+src[
+FLAG_EARLY_T3
 ]
 )
 };
@@ -1945,16 +1959,364 @@ normalized.tickerCount
 
 }
 
+function mutateTickerFlagSymbol(
+flagId,
+symbol,
+add,
+exchangeId
+){
+
+const allowed =
+{
+[
+FLAG_LONG_5M
+]:
+true,
+[
+FLAG_SHORT_5M
+]:
+true,
+[
+FLAG_BOTH_5M
+]:
+true,
+[
+FLAG_FAVORITES
+]:
+true,
+[
+FLAG_EARLY_T3
+]:
+true
+};
+
+if(
+!allowed[
+flagId
+]
+){
+return {
+ok:
+false,
+changed:
+false
+};
+}
+
+const ex =
+String(
+exchangeId ||
+"bybit"
+).trim().toLowerCase() ||
+"bybit";
+const root =
+readTickerFlagsRoot();
+const flags =
+normalizeExchangeFlags(
+root[
+ex
+]
+);
+const list =
+flags[
+flagId
+] ||
+[];
+const seen =
+new Set();
+const out =
+[];
+
+for(
+const raw of list
+){
+
+const item =
+String(
+raw ||
+""
+).trim().toUpperCase().replace(
+/\.P$/i,
+""
+);
+
+if(
+!item ||
+seen.has(
+item
+)
+){
+continue;
+}
+
+seen.add(
+item
+);
+out.push(
+item
+);
+
+}
+
+const sym =
+String(
+symbol ||
+""
+).trim().toUpperCase().replace(
+/\.P$/i,
+""
+);
+
+if(
+!sym
+){
+return {
+ok:
+true,
+changed:
+false,
+root
+};
+}
+
+const has =
+seen.has(
+sym
+);
+
+if(
+add
+){
+
+if(
+has
+){
+return {
+ok:
+true,
+changed:
+false,
+root
+};
+}
+
+out.push(
+sym
+);
+
+}else if(
+!has
+){
+return {
+ok:
+true,
+changed:
+false,
+root
+};
+}else{
+flags[
+flagId
+] =
+out.filter(
+item=>
+item !==
+sym
+);
+root[
+ex
+] =
+flags;
+
+const written =
+writeTickerFlagsRoot(
+root
+);
+
+return {
+ok:
+written?.ok !==
+false,
+changed:
+true,
+root
+};
+
+}
+
+flags[
+flagId
+] =
+out;
+root[
+ex
+] =
+flags;
+
+const written =
+writeTickerFlagsRoot(
+root
+);
+
+return {
+ok:
+written?.ok !==
+false,
+changed:
+true,
+root
+};
+
+}
+
+function clearTickerFlagList(
+flagId,
+exchangeId
+){
+
+const allowed =
+{
+[
+FLAG_LONG_5M
+]:
+true,
+[
+FLAG_SHORT_5M
+]:
+true,
+[
+FLAG_BOTH_5M
+]:
+true,
+[
+FLAG_FAVORITES
+]:
+true,
+[
+FLAG_EARLY_T3
+]:
+true
+};
+
+if(
+!allowed[
+flagId
+]
+){
+return {
+ok:
+false,
+changed:
+false
+};
+}
+
+const root =
+readTickerFlagsRoot();
+let changed =
+false;
+const onlyEx =
+exchangeId ==
+null ||
+exchangeId ===
+""
+? null
+: String(
+exchangeId
+).trim().toLowerCase() ||
+"bybit";
+const ids =
+onlyEx
+? [
+onlyEx
+]
+: [
+...new Set(
+[
+...Object.keys(
+root
+),
+"bybit"
+]
+)
+];
+
+for(
+const ex of ids
+){
+
+const flags =
+normalizeExchangeFlags(
+root[
+ex
+]
+);
+
+if(
+!(
+flags[
+flagId
+] ||
+[]
+).length
+){
+continue;
+}
+
+flags[
+flagId
+] =
+[];
+root[
+ex
+] =
+flags;
+changed =
+true;
+
+}
+
+if(
+!changed
+){
+return {
+ok:
+true,
+changed:
+false,
+root
+};
+}
+
+const written =
+writeTickerFlagsRoot(
+root
+);
+
+return {
+ok:
+written?.ok !==
+false,
+changed:
+true,
+root
+};
+
+}
+
 module.exports =
 {
 FLAG_LONG_5M,
 FLAG_SHORT_5M,
 FLAG_BOTH_5M,
 FLAG_FAVORITES,
+FLAG_EARLY_T3,
 readBotStrategies,
 writeBotStrategies,
 readTickerFlagsRoot,
 writeTickerFlagsRoot,
+mutateTickerFlagSymbol,
+clearTickerFlagList,
 readTickerBook,
 writeTickerBook,
 readPattern12Settings,

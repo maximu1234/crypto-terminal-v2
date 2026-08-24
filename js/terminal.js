@@ -121,6 +121,9 @@ import {
 mountDrawToolbar,
 mountDrawToolIcons
 } from "./draw-ui-shared.js?v=37";
+import {
+mountTerminalChecklist
+} from "./terminal/terminal-checklist.js?v=1";
 
 import {
 mountChartSnapshot
@@ -175,7 +178,7 @@ saveLastViewForExchange,
 applyCoinsPrefs,
 applySortForCurrentMarket,
 readUrlParams
-} from "./terminal/terminal-prefs.js?v=21";
+} from "./terminal/terminal-prefs.js?v=22";
 
 import {
 mountDesktopOpenChartHandler
@@ -193,8 +196,10 @@ highlightActiveSymbol,
 ensureActiveCoinVisible,
 getVisibleSymbolList,
 setCoinsTableHooks,
-syncCoinListFreezeFromFlagMenus
-} from "./terminal/terminal-table.js?v=31";
+syncCoinListFreezeFromFlagMenus,
+getExtraCoinMarkets,
+isExtraCoinMarket
+} from "./terminal/terminal-table.js?v=32";
 
 import {
 createCoinsChartSwitchVeil
@@ -225,8 +230,14 @@ mountScriptTerminalStatus
 } from "./script-terminal-status.js?v=10";
 
 import {
-shouldRunScriptBackgroundJobs
+shouldRunScriptBackgroundJobs,
+isAlgoTradingNavEnabled,
+FEATURE_NAV_PREF_EVENT
 } from "./desktop-feature-nav-prefs.js?v=4";
+
+/** @type {typeof import("./algo-trading/terminal-early-t3-list.js")|null} */
+let terminalAlgoEarlyT3ListMod =
+null;
 
 let currentDataset = "all";
 let currentTF = "60";
@@ -2611,6 +2622,7 @@ document.getElementById("draw-toolbar")
 mountDrawToolIcons(
 document
 );
+mountTerminalChecklist();
 
 }catch(err){
 
@@ -3331,13 +3343,13 @@ const {
 initChartIndicators
 } =
 await import(
-"./chart-indicators.js?v=59"
+"./chart-indicators.js?v=60"
 );
 const {
 createPattern12EarlyT3Indicator
 } =
 await import(
-"./indicators/pattern-12-early-t3.js?v=1"
+"./indicators/pattern-12-early-t3.js?v=2"
 );
 
 function teardownMacdDrawingTools(){
@@ -4439,9 +4451,30 @@ lists.forex;
 
 }
 
+function isSelectableCoinsMarket(
+id
+){
+
+return getActiveCoinsMarkets().includes(
+id
+) ||
+isExtraCoinMarket(
+id
+);
+
+}
+
 function coinsMarketHasSymbols(
 market
 ){
+
+if(
+isExtraCoinMarket(
+market
+)
+){
+return true;
+}
 
 const map = {
 all:coinsState().allListings,
@@ -4468,7 +4501,7 @@ nextMarket
 ){
 
 if(
-!getActiveCoinsMarkets().includes(
+!isSelectableCoinsMarket(
 nextMarket
 )
 ){
@@ -6406,7 +6439,10 @@ return;
 }
 
 const markets =
-getActiveExchangeMarkets();
+[
+...getActiveExchangeMarkets(),
+...getExtraCoinMarkets()
+];
 const prev =
 marketFilter.value;
 
@@ -6496,7 +6532,7 @@ coinsState().forexListings =
 [];
 
 if(
-!getActiveCoinsMarkets().includes(
+!isSelectableCoinsMarket(
 currentDataset
 )
 ){
@@ -6547,6 +6583,55 @@ e=>{
 void handleExchangeChanged(
 e
 );
+}
+);
+
+window.addEventListener(
+FEATURE_NAV_PREF_EVENT,
+e=>{
+if(
+e?.detail?.feature &&
+e.detail.feature !==
+"algo-trading"
+){
+return;
+}
+void (async ()=>{
+const viewingExtra =
+isExtraCoinMarket(
+currentDataset
+);
+await syncTerminalAlgoEarlyT3List();
+const marketFilter =
+document.getElementById(
+"market-filter"
+);
+if(
+marketFilter
+){
+marketFilter.value =
+currentDataset;
+}
+if(
+viewingExtra &&
+!isExtraCoinMarket(
+currentDataset
+)
+){
+await switchCoinsMarket(
+"all"
+);
+}else if(
+isExtraCoinMarket(
+currentDataset
+)
+){
+generateMarketData();
+await primeTickerSnapshots();
+renderList();
+highlightActiveSymbol();
+}
+})();
 }
 );
 
@@ -6640,7 +6725,50 @@ startTickerStream();
 
 }
 
+async function syncTerminalAlgoEarlyT3List(){
+
+if(
+!isAlgoTradingNavEnabled()
+){
+terminalAlgoEarlyT3ListMod?.unmountTerminalAlgoEarlyT3List?.();
+if(
+!isSelectableCoinsMarket(
+currentDataset
+)
+){
+currentDataset =
+"all";
+}
+syncCoinsMarketFilterOptions();
+return;
+}
+
+try{
+if(
+!terminalAlgoEarlyT3ListMod
+){
+terminalAlgoEarlyT3ListMod =
+await import(
+"./algo-trading/terminal-early-t3-list.js?v=2"
+);
+}
+terminalAlgoEarlyT3ListMod.mountTerminalAlgoEarlyT3List();
+}catch(
+err
+){
+console.warn(
+"[terminal] algo early t3 list:",
+err
+);
+}
+
+syncCoinsMarketFilterOptions();
+
+}
+
 async function init(){
+
+await syncTerminalAlgoEarlyT3List();
 
 const chromeP =
 mountTerminalDrawChrome();

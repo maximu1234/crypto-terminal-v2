@@ -18,8 +18,9 @@ isTerminalPage
 
 import {
 getCurrentSymbols,
-getFirstVisibleSymbol
-} from "./terminal-table.js?v=31";
+getFirstVisibleSymbol,
+getExtraCoinMarkets
+} from "./terminal-table.js?v=32";
 
 import {
 parseAlertDeepLinkExchange
@@ -33,6 +34,46 @@ pickSymbolFromLastView as pickSymbolFromLastViewPure
 export {
 DEFAULT_CHART_SYMBOL
 };
+
+function isAllowedCoinsMarketId(
+id
+){
+
+const key =
+String(
+id ||
+""
+).trim();
+
+if(
+!key
+){
+return false;
+}
+
+if(
+getActiveCoinsMarkets().includes(
+key
+)
+){
+return true;
+}
+
+if(
+getExtraCoinMarkets().some(
+m=>
+m.id ===
+key
+)
+){
+return true;
+}
+
+return !getAllCoinsMarketIds().includes(
+key
+);
+
+}
 
 export function defaultSortEntry(){
 
@@ -373,7 +414,9 @@ const parsed =
 JSON.parse(raw);
 
 prefs.market =
-getActiveCoinsMarkets().includes(parsed?.market)
+isAllowedCoinsMarketId(
+parsed?.market
+)
 ? parsed.market
 : "all";
 
@@ -461,7 +504,9 @@ const out =
 defaultCoinsPrefs();
 
 out.market =
-getActiveCoinsMarkets().includes(prefs?.market)
+isAllowedCoinsMarketId(
+prefs?.market
+)
 ? prefs.market
 : "all";
 

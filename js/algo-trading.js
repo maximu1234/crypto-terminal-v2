@@ -45,7 +45,7 @@ subscribeKline
 import {
 mountAlgoTradingCoinList,
 refreshAlgoMarketListFromFlags
-} from "./algo-trading-list.js?v=18";
+} from "./algo-trading-list.js?v=19";
 
 import {
 mountAlgoTickerScanUi
@@ -68,7 +68,7 @@ mountAlgoRuntimeUi
 
 import {
 mountAlgoBotStrategyUi
-} from "./algo-trading/bot-strategy-ui.js?v=77";
+} from "./algo-trading/bot-strategy-ui.js?v=82";
 
 import {
 ALGO_ANALYSIS_BOT_CHANGE_EVENT,
@@ -85,7 +85,7 @@ mountSessionLogServerSettings
 
 import {
 syncBotStrategiesToMain
-} from "./algo-trading/bot-bridge.js?v=20";
+} from "./algo-trading/bot-bridge.js?v=22";
 
 import {
 mountAlgoTradeUi

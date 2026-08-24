@@ -1850,6 +1850,8 @@ algoShort5m:
 algoBoth5m:
 [],
 algoFavorites:
+[],
+algoEarlyT3:
 []
 };
 
@@ -1941,6 +1943,8 @@ algoShort5m:
 algoBoth5m:
 [],
 algoFavorites:
+[],
+algoEarlyT3:
 []
 };
 

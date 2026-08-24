@@ -79,3 +79,33 @@ hits.push(`${rel} ↔ ${re}`);
 
 assert.deepEqual(hits, []);
 });
+
+test("Terminal Early T3 list does not import bot-bridge or strategy prefs", () => {
+const list = fs.readFileSync(
+path.join(root, "js/algo-trading/terminal-early-t3-list.js"),
+"utf8"
+);
+const flags = fs.readFileSync(
+path.join(root, "js/algo-trading/bot-status-flags.js"),
+"utf8"
+);
+const terminal = fs.readFileSync(
+path.join(root, "js/terminal.js"),
+"utf8"
+);
+
+assert.doesNotMatch(list, /bot-bridge\.js/);
+assert.doesNotMatch(list, /bot-strategy-prefs/);
+assert.doesNotMatch(list, /pattern-12-settings/);
+assert.doesNotMatch(list, /early-t3-bot-prefs/);
+assert.match(list, /bot-status-flags\.js/);
+
+assert.doesNotMatch(flags, /bot-strategy-prefs/);
+assert.doesNotMatch(flags, /pattern-12-settings/);
+assert.doesNotMatch(flags, /early-t3-bot-prefs/);
+assert.doesNotMatch(flags, /bot-ticker-book/);
+assert.doesNotMatch(flags, /bot-cloud-lock/);
+
+assert.doesNotMatch(terminal, /from\s+["']\.\/algo-trading\/bot-bridge/);
+assert.match(terminal, /algo-trading\/terminal-early-t3-list\.js/);
+});

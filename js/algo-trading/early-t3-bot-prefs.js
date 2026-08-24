@@ -1,10 +1,10 @@
 /**
- * Prefs бота 1-2 Early T3 (алерты). Не смешивать с Паттерн 1-2 / st1–st3.
+ * Prefs бота 1-2 Early T3. Не смешивать с Паттерн 1-2 / st1–st3.
  */
 import {
 ALGO_BOT_TF_OPTIONS,
 normalizeBotTf
-} from "./bot-strategy-prefs.js?v=28";
+} from "./bot-strategy-prefs.js?v=30";
 
 export const EARLY_T3_BOT_PREFS_KEY =
 "algo_trading_early_t3_bot_v1";
@@ -12,11 +12,32 @@ export const EARLY_T3_BOT_PREFS_KEY =
 export const EARLY_T3_BOT_DEFAULT_MIN_TURNOVER =
 100_000;
 
+export const EARLY_T3_BOT_DEFAULT_SETUP_LIFE_BARS =
+300;
+
 export const EARLY_T3_BOT_TF_OPTIONS =
 ALGO_BOT_TF_OPTIONS;
 
 /**
- * @returns {{ tf: string, alertLeadPct: number, minTurnover24hUsdt: number }}
+ * @param {unknown} raw
+ * @returns {"alert"|"list"}
+ */
+export function normalizeEarlyT3ActionMode(
+raw
+){
+
+return String(
+raw ||
+""
+).trim().toLowerCase() ===
+"list"
+? "list"
+: "alert";
+
+}
+
+/**
+ * @returns {{ tf: string, alertLeadPct: number, minTurnover24hUsdt: number, actionMode: "alert"|"list", listAllLive: boolean, setupLifeBars: number }}
  */
 export function defaultEarlyT3BotPrefs(){
 
@@ -26,7 +47,13 @@ tf:
 alertLeadPct:
 5,
 minTurnover24hUsdt:
-EARLY_T3_BOT_DEFAULT_MIN_TURNOVER
+EARLY_T3_BOT_DEFAULT_MIN_TURNOVER,
+actionMode:
+"alert",
+listAllLive:
+false,
+setupLifeBars:
+EARLY_T3_BOT_DEFAULT_SETUP_LIFE_BARS
 };
 
 }
@@ -51,7 +78,7 @@ return 5;
 }
 
 return Math.min(
-10,
+25,
 n
 );
 
@@ -77,6 +104,34 @@ return EARLY_T3_BOT_DEFAULT_MIN_TURNOVER;
 }
 
 return n;
+
+}
+
+function clampSetupLifeBars(
+raw
+){
+
+const n =
+Math.floor(
+Number(
+raw
+)
+);
+
+if(
+!Number.isFinite(
+n
+) ||
+n <
+1
+){
+return EARLY_T3_BOT_DEFAULT_SETUP_LIFE_BARS;
+}
+
+return Math.min(
+5000,
+n
+);
 
 }
 
@@ -109,6 +164,19 @@ src.alertLeadPct
 minTurnover24hUsdt:
 clampMinTurnover(
 src.minTurnover24hUsdt
+),
+actionMode:
+normalizeEarlyT3ActionMode(
+src.actionMode ??
+base.actionMode
+),
+listAllLive:
+src.listAllLive ===
+true,
+setupLifeBars:
+clampSetupLifeBars(
+src.setupLifeBars ??
+base.setupLifeBars
 )
 };
 

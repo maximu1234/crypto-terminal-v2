@@ -17,9 +17,9 @@
 <script src="/js/site-css-ready.js?v=3"></script>
 <link rel="stylesheet" href="/css/common.css?v=55">
 <link rel="stylesheet" href="/css/terminal.css?v=175">
-<link rel="stylesheet" href="/css/terminal-layout.css?v=99">
+<link rel="stylesheet" href="/css/terminal-layout.css?v=102">
 <link rel="stylesheet" href="/css/chart-indicators.css?v=29">
-<link rel="stylesheet" href="/css/algo-trading.css?v=132">
+<link rel="stylesheet" href="/css/algo-trading.css?v=133">
 <link rel="stylesheet" href="/css/algo-trading-book-panel.css?v=6">
 <link rel="stylesheet" href="/css/algo-trading-chart-overlay.css?v=2">
 <link rel="stylesheet" href="/css/trade-diary.css?v=21">
@@ -1188,7 +1188,7 @@ placeholder="без лимита"
 </div>
 <div class="algo-bot-field algo-bot-field--row" id="algo-bot-st1-alert-lead-row" hidden>
 <label class="algo-bot-label" for="algo-bot-st1-alert-lead" title="Опережение: % высоты X (pt3↔pt4) от pt4 к pt3. Лонг ниже pt4, шорт выше.">Алерт до pt4</label>
-<input type="number" id="algo-bot-st1-alert-lead" class="algo-bot-input algo-bot-input--sm" min="0" max="10" step="0.1" value="5" inputmode="decimal" />
+<input type="number" id="algo-bot-st1-alert-lead" class="algo-bot-input algo-bot-input--sm" min="0" max="25" step="0.1" value="5" inputmode="decimal" />
 <span class="algo-bot-unit">% X</span>
 </div>
 <p class="algo-bot-hint" id="algo-bot-st1-alert-lead-hint" hidden>Ручная торговля: опережение в % высоты паттерна X (pt3↔pt4), как СЛ — не % цены. Лонг чуть ниже pt4, шорт чуть выше. 0 = точно в pt4.</p>
@@ -1317,7 +1317,7 @@ placeholder="без лимита"
 <h2 id="algo-bot-early-t3-settings-modal-title">1-2 Early T3</h2>
 <button type="button" class="algo-bot-settings-modal-close" data-close="algo-bot-early-t3-settings-modal" aria-label="Закрыть">×</button>
 </div>
-<p class="algo-bot-settings-modal-note">Только ручная торговля: алерты, без ордеров. Снимок настроек индикатора 1-2 EARLY T3 берётся в момент запуска. Затем нажмите «Запустить».</p>
+<p class="algo-bot-settings-modal-note">Только ручная торговля: алерты или список тикеров, без ордеров. Снимок настроек индикатора 1-2 EARLY T3 берётся в момент запуска. Затем нажмите «Запустить».</p>
 <div class="algo-bot-settings-modal-body">
 <div class="algo-bot-field">
 <label class="algo-bot-label" for="algo-bot-early-t3-tf">Таймфрейм</label>
@@ -1331,12 +1331,38 @@ placeholder="без лимита"
 <option value="W">W</option>
 </select>
 </div>
-<div class="algo-bot-field algo-bot-field--row">
+<div class="algo-bot-field">
+<span class="algo-bot-label">Действие</span>
+<div class="algo-bot-side" role="group" aria-label="Действие бота 1-2 Early T3">
+<label class="algo-bot-check">
+<input type="checkbox" id="algo-bot-early-t3-mode-alert" checked />
+<span>Алерт до pt4</span>
+</label>
+<label class="algo-bot-check">
+<input type="checkbox" id="algo-bot-early-t3-mode-list" />
+<span>Добавить в список</span>
+</label>
+</div>
+</div>
+<div class="algo-bot-field algo-bot-field--row" id="algo-bot-early-t3-alert-lead-row">
 <label class="algo-bot-label" for="algo-bot-early-t3-alert-lead" title="Опережение: % высоты X (pt3↔pt4) от pt4 к pt3. Лонг ниже pt4, шорт выше.">Алерт до pt4</label>
-<input type="number" id="algo-bot-early-t3-alert-lead" class="algo-bot-input algo-bot-input--sm" min="0" max="10" step="0.1" value="5" inputmode="decimal" />
+<input type="number" id="algo-bot-early-t3-alert-lead" class="algo-bot-input algo-bot-input--sm" min="0" max="25" step="0.1" value="5" inputmode="decimal" />
 <span class="algo-bot-unit">% X</span>
 </div>
-<p class="algo-bot-hint">Опережение в % высоты паттерна X (pt3↔pt4), как СЛ — не % цены. Лонг чуть ниже pt4, шорт чуть выше. 0 = точно в pt4.</p>
+<p class="algo-bot-hint" id="algo-bot-early-t3-alert-lead-hint">Опережение в % высоты паттерна X (pt3↔pt4), как СЛ — не % цены. Лонг чуть ниже pt4, шорт чуть выше. 0 = точно в pt4.</p>
+<p class="algo-bot-hint" id="algo-bot-early-t3-list-hint" hidden>Тикер попадает в список «1-2 Early T3» справа, без алерта. Флаг снимается, когда коробка t3–t4 ломается в любую сторону (t3 или t4).</p>
+<div class="algo-bot-field" id="algo-bot-early-t3-list-all-live-row" hidden>
+<label class="algo-bot-check">
+<input type="checkbox" id="algo-bot-early-t3-list-all-live" />
+<span>Все живые сетапы</span>
+</label>
+<p class="algo-bot-hint">Выкл — только свежий t4 (2–3 свечи). Вкл — сетапы с целой коробкой t3–t4 не старше времени жизни.</p>
+<div class="algo-bot-field algo-bot-field--row" id="algo-bot-early-t3-setup-life-row">
+<label class="algo-bot-label" for="algo-bot-early-t3-setup-life" title="Сколько свечей после t4 сетап ещё считается живым в режиме «все живые».">Время жизни сетапа</label>
+<input type="number" id="algo-bot-early-t3-setup-life" class="algo-bot-input algo-bot-input--sm" min="1" max="5000" step="1" value="300" inputmode="numeric" />
+<span class="algo-bot-unit">свечей</span>
+</div>
+</div>
 <div class="algo-bot-field algo-bot-field--row">
 <label class="algo-bot-label" for="algo-bot-early-t3-min-turnover" title="Минимальный 24h оборот (USDT). Ниже — тикер не сканируется.">Объем за сутки от</label>
 <input type="text" id="algo-bot-early-t3-min-turnover" class="algo-bot-input algo-bot-input--sm algo-bot-input--turnover" inputmode="numeric" autocomplete="off" value="100.000" />

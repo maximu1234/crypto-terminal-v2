@@ -24,6 +24,9 @@ readBotStrategies,
 writeBotStrategies,
 readTickerFlagsRoot,
 writeTickerFlagsRoot,
+mutateTickerFlagSymbol,
+clearTickerFlagList,
+FLAG_EARLY_T3,
 readTickerBook,
 writeTickerBook,
 readPattern12Settings,
@@ -656,6 +659,15 @@ exchangeId:
 alertLeadPct:
 engine.alertLeadPct ??
 prefs.alertLeadPct,
+actionMode:
+engine.actionMode ||
+prefs.actionMode ||
+"alert",
+listAllLive:
+!!(
+engine.listAllLive ??
+prefs.listAllLive
+),
 minTurnover24hUsdt:
 engine.minTurnover24hUsdt ??
 prefs.minTurnover24hUsdt,
@@ -1082,6 +1094,10 @@ message =
 ""
 ){
 
+const wasEarlyT3 =
+runningStrategyId ===
+"early-t3";
+
 sessionLog.appendNote(
 message
 ? `Стоп: ${message}`
@@ -1121,6 +1137,12 @@ stopPoll();
 stopWatchlistRefresh();
 await earlyT3Engine.stopEarlyT3Engine();
 await patternEngine.stopPatternEngine();
+
+if(
+wasEarlyT3
+){
+clearEarlyT3SessionFlags();
+}
 
 const snapshot =
 buildStatusSnapshot();
@@ -1312,6 +1334,8 @@ algoShort5m:
 algoBoth5m:
 [],
 algoFavorites:
+[],
+algoEarlyT3:
 []
 };
 const patch =
@@ -1336,7 +1360,10 @@ patch.algoBoth5m ??
 prev.algoBoth5m,
 algoFavorites:
 patch.algoFavorites ??
-prev.algoFavorites
+prev.algoFavorites,
+algoEarlyT3:
+patch.algoEarlyT3 ??
+prev.algoEarlyT3
 };
 
 const result =
@@ -1802,7 +1829,7 @@ alertLeadPct
 alertLeadPct >=
 0
 ? Math.min(
-10,
+25,
 alertLeadPct
 )
 : 5,
@@ -1813,7 +1840,35 @@ minTurnover24hUsdt
 minTurnover24hUsdt >=
 0
 ? minTurnover24hUsdt
-: 100000
+: 100000,
+actionMode:
+String(
+prefs.actionMode ||
+""
+).toLowerCase() ===
+"list"
+? "list"
+: "alert",
+listAllLive:
+String(
+prefs.actionMode ||
+""
+).toLowerCase() ===
+"list" &&
+!!prefs.listAllLive,
+setupLifeBars:
+Math.min(
+5000,
+Math.max(
+1,
+Math.floor(
+Number(
+prefs.setupLifeBars
+) ||
+300
+)
+)
+)
 };
 
 try{
@@ -1834,8 +1889,16 @@ watchlistCount:
 }
 );
 sessionLog.appendNote(
-`Запуск early-t3 (alerts only, tf=${sessionEarlyT3Prefs.tf}, turnover>=${sessionEarlyT3Prefs.minTurnover24hUsdt})`
+`Запуск early-t3 (${sessionEarlyT3Prefs.actionMode === "list" ? (sessionEarlyT3Prefs.listAllLive ? `list, все живые ≤${sessionEarlyT3Prefs.setupLifeBars}св` : "list, свежий t4") : "alerts"}, tf=${sessionEarlyT3Prefs.tf}, turnover>=${sessionEarlyT3Prefs.minTurnover24hUsdt})`
 );
+
+if(
+clearEarlyT3SessionFlags().changed
+){
+sessionLog.appendNote(
+"Список Early T3 предыдущей сессии очищен"
+);
+}
 
 await earlyT3Engine.startEarlyT3Engine(
 {
@@ -1845,6 +1908,28 @@ alertLeadPct:
 sessionEarlyT3Prefs.alertLeadPct,
 minTurnover24hUsdt:
 sessionEarlyT3Prefs.minTurnover24hUsdt,
+actionMode:
+sessionEarlyT3Prefs.actionMode,
+listAllLive:
+sessionEarlyT3Prefs.listAllLive,
+setupLifeBars:
+sessionEarlyT3Prefs.setupLifeBars,
+onListAdd:(
+symbol
+)=>{
+mutateEarlyT3ListFlag(
+symbol,
+true
+);
+},
+onListRemove:(
+symbol
+)=>{
+mutateEarlyT3ListFlag(
+symbol,
+false
+);
+},
 patternSettings:
 payload?.patternSettings &&
 typeof payload.patternSettings ===
@@ -1902,6 +1987,7 @@ await earlyT3Engine.stopEarlyT3Engine();
 }catch{
 /* ignore */
 }
+clearEarlyT3SessionFlags();
 sessionLog.appendNote(
 `Ошибка запуска: ${statusMessage}`
 );
@@ -2714,6 +2800,53 @@ ok:
 true,
 sent
 };
+
+}
+
+function clearEarlyT3SessionFlags(){
+
+const result =
+clearTickerFlagList(
+FLAG_EARLY_T3
+);
+
+notifyTickerFlagsToUi(
+{
+root:
+result.root ||
+readTickerFlagsRoot()
+}
+);
+
+return result;
+
+}
+
+function mutateEarlyT3ListFlag(
+symbol,
+add
+){
+
+const result =
+mutateTickerFlagSymbol(
+FLAG_EARLY_T3,
+symbol,
+!!add,
+"bybit"
+);
+
+if(
+result?.changed
+){
+notifyTickerFlagsToUi(
+{
+root:
+result.root
+}
+);
+}
+
+return result;
 
 }
 

@@ -178,6 +178,11 @@ null;
 return;
 }
 
+settings =
+readSettings(
+settingsStore
+);
+
 const candles =
 getCandles();
 
@@ -199,13 +204,23 @@ getSymbolScope()
 }
 
 /**
- * Счётчики завершённых паттернов (pt4) для легенды.
+ * Счётчики сетапов для легенды (не только нарисованные pt4-точки:
+ * точки можно выключить, Long/Short-метки при этом остаются).
  * @returns {{ long: number, short: number }}
  */
 function countPatternSides(){
 
-const paintDots =
+const rows =
 Array.isArray(
+scene?.setups
+)
+? scene.setups
+: Array.isArray(
+scene?.pt4Marks
+) &&
+scene.pt4Marks.length
+? scene.pt4Marks
+: Array.isArray(
 scene?.pt4Dots
 )
 ? scene.pt4Dots
@@ -216,17 +231,17 @@ let short =
 0;
 
 for(
-const dot of paintDots
+const row of rows
 ){
 
 if(
-dot?.side ===
+row?.side ===
 "long"
 ){
 long +=
 1;
 }else if(
-dot?.side ===
+row?.side ===
 "short"
 ){
 short +=
@@ -855,6 +870,7 @@ return;
 
 enabled =
 true;
+settings =
 readSettings(
 settingsStore
 );

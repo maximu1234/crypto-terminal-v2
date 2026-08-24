@@ -66,6 +66,13 @@ background:#eab308;
 border-color:#eab308;
 }
 
+body.algo-trading-page .coin-flag-pick.flag--algo-early-t3,
+body.algo-trading-page .coin-flag-btn.flag--algo-early-t3::before,
+body.algo-trading-page .flag--algo-early-t3.favorite.coin-flag-btn::before{
+background:#38bdf8;
+border-color:#38bdf8;
+}
+
 body.algo-trading-page .coin-flag-pick.flag--orange{
 background:#f97316;
 border-color:#f97316;

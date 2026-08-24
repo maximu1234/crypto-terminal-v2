@@ -473,8 +473,19 @@ req.on(
 finish
 );
 
+const relayTimeoutMs =
+Number(
+options &&
+options.timeoutMs
+) >
+0
+? Number(
+options.timeoutMs
+)
+: REQUEST_TIMEOUT_MS;
+
 req.setTimeout(
-REQUEST_TIMEOUT_MS,
+relayTimeoutMs,
 ()=>{
 req.destroy();
 const timeoutErr =
@@ -551,6 +562,23 @@ url,
 options
 ){
 
+const timeoutMs =
+Number(
+options &&
+options.timeoutMs
+) >
+0
+? Number(
+options.timeoutMs
+)
+: REQUEST_TIMEOUT_MS;
+const fetchOptions =
+{
+...options
+};
+
+delete fetchOptions.timeoutMs;
+
 const controller =
 new AbortController();
 const timer =
@@ -558,7 +586,7 @@ setTimeout(
 ()=>{
 controller.abort();
 },
-REQUEST_TIMEOUT_MS
+timeoutMs
 );
 
 try{
@@ -575,9 +603,10 @@ agent
 return await fetchViaRelayAgent(
 url,
 {
-...options,
+...fetchOptions,
 signal:
-controller.signal
+controller.signal,
+timeoutMs
 },
 agent
 );
@@ -586,7 +615,7 @@ agent
 return await net.fetch(
 url,
 {
-...options,
+...fetchOptions,
 signal:
 controller.signal,
 session:
@@ -3672,7 +3701,8 @@ return raw.toFixed(
 
 async function publicMarketGet(
 path,
-query
+query,
+timeoutMs
 ){
 
 const creds =
@@ -3690,6 +3720,23 @@ const urlPath =
 queryString
 ? `${path}?${queryString}`
 : path;
+const requestOpts =
+{
+method:
+"GET"
+};
+
+if(
+Number(
+timeoutMs
+) >
+0
+){
+requestOpts.timeoutMs =
+Number(
+timeoutMs
+);
+}
 
 for(
 const base of apiBases(
@@ -3701,10 +3748,7 @@ try{
 const response =
 await fetchWithTimeout(
 `${base}${urlPath}`,
-{
-method:
-"GET"
-}
+requestOpts
 );
 
 const rawText =
@@ -6453,7 +6497,8 @@ tf,
 requests =
 5,
 batchGapMs =
-80
+80,
+timeoutMs
 ){
 
 const sym =
@@ -6543,7 +6588,8 @@ end:
 String(
 end
 )
-}
+},
+timeoutMs
 );
 
 if(

@@ -42,6 +42,7 @@ import {
 ALGO_MARKET_LONG_5M,
 ALGO_MARKET_SHORT_5M,
 ALGO_MARKET_BOTH_5M,
+ALGO_MARKET_EARLY_T3,
 ALGO_LIST_FLAG_UI,
 algoMarketDatasetToFlagId,
 algoListUiToFlagId,
@@ -50,11 +51,12 @@ getAlgoTickerFlagList,
 isAlgoMarketDataset,
 toggleAlgoTickerInFlagList,
 removeAlgoTickerFromFlagList
-} from "./algo-trading/ticker-flags.js?v=8";
+} from "./algo-trading/ticker-flags.js?v=9";
 
 import {
 ALGO_ANALYSIS_BOT_CHANGE_EVENT,
 ALGO_ANALYSIS_BOT_PATTERN_12,
+ALGO_ANALYSIS_BOT_EARLY_T3,
 isActiveAnalysisBot
 } from "./algo-trading/active-analysis-bot.js?v=3";
 
@@ -150,10 +152,18 @@ market
 
 function algoMarketFilterOptions(){
 
-if(
-!isActiveAnalysisBot(
+const pattern12On =
+isActiveAnalysisBot(
 ALGO_ANALYSIS_BOT_PATTERN_12
-)
+);
+const earlyT3On =
+isActiveAnalysisBot(
+ALGO_ANALYSIS_BOT_EARLY_T3
+);
+
+if(
+!pattern12On &&
+!earlyT3On
 ){
 return [
 {
@@ -165,13 +175,20 @@ label:
 ];
 }
 
-return [
+const options =
+[
 {
 id:
 "all",
 label:
 "Все"
-},
+}
+];
+
+if(
+pattern12On
+){
+options.push(
 {
 id:
 ALGO_MARKET_LONG_5M,
@@ -190,7 +207,23 @@ ALGO_MARKET_BOTH_5M,
 label:
 "Стратегия 3"
 }
-];
+);
+}
+
+if(
+earlyT3On
+){
+options.push(
+{
+id:
+ALGO_MARKET_EARLY_T3,
+label:
+"1-2 Early T3"
+}
+);
+}
+
+return options;
 
 }
 
@@ -325,6 +358,31 @@ const pattern12On =
 isActiveAnalysisBot(
 ALGO_ANALYSIS_BOT_PATTERN_12
 );
+const earlyT3On =
+isActiveAnalysisBot(
+ALGO_ANALYSIS_BOT_EARLY_T3
+);
+const rows =
+ALGO_LIST_FLAG_UI.filter(
+row=>
+(
+pattern12On &&
+row.ui !==
+"algo-early-t3"
+) ||
+(
+earlyT3On &&
+row.ui ===
+"algo-early-t3"
+)
+);
+const signature =
+rows.map(
+row=>
+row.ui
+).join(
+","
+);
 
 document.querySelectorAll(
 ".coin-flag-menu"
@@ -332,11 +390,10 @@ document.querySelectorAll(
 menu=>{
 
 if(
-!pattern12On
+!signature
 ){
 if(
-menu.dataset.algoListFlags ===
-"1"
+menu.dataset.algoListFlags
 ){
 menu.innerHTML =
 "";
@@ -347,18 +404,18 @@ return;
 
 if(
 menu.dataset.algoListFlags ===
-"1"
+signature
 ){
 return;
 }
 
 menu.dataset.algoListFlags =
-"1";
+signature;
 menu.innerHTML =
 "";
 
 for(
-const row of ALGO_LIST_FLAG_UI
+const row of rows
 ){
 
 const btn =

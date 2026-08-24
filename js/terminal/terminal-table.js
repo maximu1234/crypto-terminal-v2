@@ -134,6 +134,73 @@ next
 
 }
 
+/** @type {{ id: string, label: string }[]} */
+let extraCoinMarkets =
+[];
+
+/**
+ * Extra coin-list markets (plugin datasets). Not exchange registry ids.
+ * @param {{ id?: string, label?: string }[]|null|undefined} markets
+ */
+export function setExtraCoinMarkets(
+markets
+){
+
+extraCoinMarkets =
+Array.isArray(
+markets
+)
+? markets.filter(
+m=>
+m &&
+String(
+m.id ||
+""
+).trim()
+).map(
+m=>({
+id:
+String(
+m.id
+).trim(),
+label:
+String(
+m.label ||
+m.id
+).trim() ||
+String(
+m.id
+).trim()
+})
+)
+: [];
+
+}
+
+export function getExtraCoinMarkets(){
+
+return extraCoinMarkets.slice();
+
+}
+
+export function isExtraCoinMarket(
+id
+){
+
+const key =
+String(
+id ||
+""
+).trim();
+
+return extraCoinMarkets.some(
+m=>
+m.id ===
+key
+);
+
+}
+
 export function getCurrentSymbols(){
 
 if(

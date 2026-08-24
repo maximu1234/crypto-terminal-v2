@@ -28,6 +28,10 @@ export const ALGO_FLAG_BOTH_5M =
 export const ALGO_FLAG_FAVORITES =
 "algoFavorites";
 
+/** Early T3 bot output list (cyan flag). */
+export const ALGO_FLAG_EARLY_T3 =
+"algoEarlyT3";
+
 export const ALGO_MARKET_LONG_5M =
 "algo-long-5m";
 
@@ -39,6 +43,9 @@ export const ALGO_MARKET_BOTH_5M =
 
 export const ALGO_MARKET_FAVORITES =
 "algo-favorites";
+
+export const ALGO_MARKET_EARLY_T3 =
+"algo-early-t3";
 
 /** UI group id → storage flag id (algo coin-list flags only). */
 export const ALGO_LIST_FLAG_UI =
@@ -66,6 +73,14 @@ flagId:
 ALGO_FLAG_BOTH_5M,
 title:
 "Стратегия 3"
+},
+{
+ui:
+"algo-early-t3",
+flagId:
+ALGO_FLAG_EARLY_T3,
+title:
+"1-2 Early T3"
 }
 ];
 
@@ -189,7 +204,8 @@ const ALGO_FLAG_IDS =
 ALGO_FLAG_LONG_5M,
 ALGO_FLAG_SHORT_5M,
 ALGO_FLAG_BOTH_5M,
-ALGO_FLAG_FAVORITES
+ALGO_FLAG_FAVORITES,
+ALGO_FLAG_EARLY_T3
 ];
 
 function emptyExchangeFlags(){
@@ -209,6 +225,10 @@ ALGO_FLAG_BOTH_5M
 [],
 [
 ALGO_FLAG_FAVORITES
+]:
+[],
+[
+ALGO_FLAG_EARLY_T3
 ]:
 []
 };
@@ -630,6 +650,13 @@ ALGO_MARKET_FAVORITES
 return ALGO_FLAG_FAVORITES;
 }
 
+if(
+dataset ===
+ALGO_MARKET_EARLY_T3
+){
+return ALGO_FLAG_EARLY_T3;
+}
+
 return null;
 
 }
@@ -645,7 +672,9 @@ ALGO_MARKET_SHORT_5M ||
 dataset ===
 ALGO_MARKET_BOTH_5M ||
 dataset ===
-ALGO_MARKET_FAVORITES;
+ALGO_MARKET_FAVORITES ||
+dataset ===
+ALGO_MARKET_EARLY_T3;
 
 }
 

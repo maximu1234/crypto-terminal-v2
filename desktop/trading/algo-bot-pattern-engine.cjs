@@ -49,6 +49,10 @@ require(
 "./algo-trading-runtime.cjs"
 );
 
+const ALERT_LEAD_PCT_MAX =
+25;
+const ALERT_LEAD_PCT_DEFAULT =
+5;
 const HISTORY_TAIL =
 120;
 const MAX_LOG =
@@ -3763,10 +3767,10 @@ leadPct
 leadPct >=
 0
 ? Math.min(
-10,
+ALERT_LEAD_PCT_MAX,
 leadPct
 )
-: 5;
+: ALERT_LEAD_PCT_DEFAULT;
 
 if(
 !(
@@ -3862,10 +3866,10 @@ leadPct
 leadPct >=
 0
 ? Math.min(
-10,
+ALERT_LEAD_PCT_MAX,
 leadPct
 )
-: 5;
+: ALERT_LEAD_PCT_DEFAULT;
 const side =
 setup.side ===
 "short"
@@ -6000,11 +6004,11 @@ n
 n <
 0
 ){
-return 5;
+return ALERT_LEAD_PCT_DEFAULT;
 }
 
 return Math.min(
-10,
+ALERT_LEAD_PCT_MAX,
 n
 );
 })(),
