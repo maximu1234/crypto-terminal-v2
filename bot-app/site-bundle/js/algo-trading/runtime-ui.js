@@ -186,6 +186,87 @@ open
 : "false"
 );
 
+if(
+open
+){
+placeSettingsDropdown();
+}else{
+settingsDrop.style.left =
+"";
+settingsDrop.style.right =
+"";
+}
+
+}
+
+function placeSettingsDropdown(){
+
+if(
+!settingsDrop ||
+!settingsBtn
+){
+return;
+}
+
+settingsDrop.style.left =
+"";
+settingsDrop.style.right =
+"";
+const wrap =
+settingsBtn.closest(
+".algo-settings-wrap"
+);
+
+if(
+!wrap
+){
+return;
+}
+
+const pad =
+8;
+const wrapRect =
+wrap.getBoundingClientRect();
+const dropRect =
+settingsDrop.getBoundingClientRect();
+
+if(
+dropRect.left >=
+pad &&
+dropRect.right <=
+window.innerWidth -
+pad
+){
+return;
+}
+
+const width =
+dropRect.width ||
+340;
+const maxLeft =
+window.innerWidth -
+pad -
+width;
+const left =
+Math.max(
+pad,
+Math.min(
+dropRect.left <
+pad
+? pad
+: wrapRect.right -
+width,
+maxLeft
+)
+);
+settingsDrop.style.right =
+"auto";
+settingsDrop.style.left =
+`${Math.round(
+left -
+wrapRect.left
+)}px`;
+
 }
 
 function setStatusText(
@@ -553,6 +634,22 @@ if(
 open
 ){
 void refresh();
+}
+
+}
+);
+
+window.addEventListener(
+"resize",
+()=>{
+
+if(
+settingsDrop &&
+!settingsDrop.classList.contains(
+"hidden"
+)
+){
+placeSettingsDropdown();
 }
 
 }

@@ -428,7 +428,7 @@ Object.freeze({
 "algo-trading/runtime-bridge.js":
 6,
 "algo-trading/runtime-ui.js":
-13,
+14,
 "algo-trading/bot-bridge.js":
 25,
 "algo-trading/bot-alert-bridge.js":
@@ -887,7 +887,7 @@ Object.freeze({
 "script-page.css":
 25,
 "algo-trading.css":
-151,
+152,
 "algo-trading-book-panel.css":
 6,
 "algo-trading-diary-modal.css":
