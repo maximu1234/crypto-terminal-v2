@@ -83,7 +83,7 @@ setActiveAnalysisBotId
 
 import {
 mountSessionLogServerSettings
-} from "./algo-trading/bot-session-log-server-ui.js?v=10";
+} from "./algo-trading/bot-session-log-server-ui.js?v=11";
 
 import {
 syncBotStrategiesToMain

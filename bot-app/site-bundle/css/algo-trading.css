@@ -2909,6 +2909,8 @@ margin:6px 0;
 /* Account gear in #topbar when lite header is hidden. */
 body.algo-trading-page.algo-bot-lite-layout #topbar{
 align-items:center;
+height:auto;
+min-height:46px;
 overflow:visible !important;
 }
 
@@ -2919,7 +2921,7 @@ margin-left:auto;
 flex:0 0 auto;
 order:99;
 position:relative;
-z-index:80;
+z-index:200;
 overflow:visible;
 pointer-events:auto;
 }
@@ -3531,6 +3533,8 @@ body.algo-trading-page.algo-bot-lite-layout #topbar{
 flex:0 0 auto;
 grid-row:auto;
 align-items:center;
+height:auto;
+min-height:46px;
 overflow:visible !important;
 }
 
@@ -3542,7 +3546,7 @@ margin-left:auto;
 flex:0 0 auto;
 order:99;
 position:relative;
-z-index:80;
+z-index:200;
 overflow:visible;
 pointer-events:auto;
 }
@@ -3589,7 +3593,7 @@ display:flex;
 flex-direction:column;
 min-height:0;
 min-width:0;
-overflow-x:hidden;
+overflow-x:auto;
 overflow-y:auto;
 background:#0f1419;
 border:1px solid #1f2937;
@@ -3615,24 +3619,58 @@ line-height:1.45;
 color:#9ca3af;
 }
 
-body.algo-trading-page.algo-bot-lite-layout .algo-bot-grid-cell .algo-stats-col{
+/* RSI/stats were a horizontal strip (width:max-content). width:100% on
+   every column made labels sit in a huge empty flex gap and clipped values. */
+body.algo-trading-page.algo-bot-lite-layout .algo-bot-grid-cell .algo-stats-columns{
+display:flex;
+flex-wrap:wrap;
+align-items:flex-start;
 width:100%;
 min-width:0;
-max-width:none;
-flex:0 0 auto;
+max-width:100%;
+gap:16px 28px;
+}
+
+body.algo-trading-page.algo-bot-lite-layout .algo-bot-grid-cell .algo-stats-chart-cols{
+display:flex;
+flex-wrap:wrap;
+align-items:flex-start;
+width:100%;
+min-width:0;
+max-width:100%;
+flex:1 1 auto;
+gap:16px 28px;
+}
+
+body.algo-trading-page.algo-bot-lite-layout .algo-bot-grid-cell .algo-stats-col,
+body.algo-trading-page.algo-bot-lite-layout .algo-bot-grid-cell .algo-stats-chart-cols .algo-stats-col{
+flex:1 1 260px;
+width:auto;
+min-width:min(260px,100%);
+max-width:420px;
 min-height:auto;
 height:auto;
 overflow:visible;
 }
 
-body.algo-trading-page.algo-bot-lite-layout .algo-bot-grid-cell .algo-stats-chart-cols,
-body.algo-trading-page.algo-bot-lite-layout .algo-bot-grid-cell .algo-stats-chart-cols .algo-stats-col{
-width:100%;
+body.algo-trading-page.algo-bot-lite-layout .algo-bot-grid-cell .algo-stats-label{
+flex:1 1 auto;
 min-width:0;
 max-width:none;
-flex:0 0 auto;
-height:auto;
+color:#9ca3af;
 overflow:visible;
+white-space:normal;
+}
+
+body.algo-trading-page.algo-bot-lite-layout .algo-bot-grid-cell .algo-stats-value{
+flex:0 0 auto;
+min-width:3.5em;
+color:#e5e7eb;
+overflow:visible;
+}
+
+body.algo-trading-page.algo-bot-lite-layout .algo-stats-columns[data-algo-analysis-bot="rsi-touch-flip"] .algo-stats-label{
+min-width:0;
 }
 
 body.algo-trading-page.algo-bot-lite-layout .algo-bot-grid-cell .algo-stats-col-setup{

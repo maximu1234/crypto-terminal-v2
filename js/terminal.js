@@ -46,7 +46,7 @@ canSetBlueFlag
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=60";
+} from "./auth-ui.js?v=61";
 
 import {
 getActiveAlerts,
@@ -57,7 +57,7 @@ isRsiAlert
 import {
 persistFavoritesToCloud,
 onFavoritesRemoteUpdate
-} from "./cloud-sync.js?v=67";
+} from "./cloud-sync.js?v=68";
 
 import {
 createCandlestickChart,

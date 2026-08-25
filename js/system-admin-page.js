@@ -1,11 +1,11 @@
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=60";
+} from "./auth-ui.js?v=61";
 
 import {
 ensureCloudLoginResolved,
 getEffectiveCloudUserEmail
-} from "./cloud-sync.js?v=67";
+} from "./cloud-sync.js?v=68";
 
 import {
 isSystemAdminUser,

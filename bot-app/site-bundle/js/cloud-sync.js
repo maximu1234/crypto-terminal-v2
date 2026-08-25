@@ -22,7 +22,7 @@ isAuthRefreshBlocked,
 blockAuthRefreshUntil,
 clearAuthRefreshBlock,
 getAuthRefreshBlockedUntil
-} from "./auth-storage.js?v=10";
+} from "./auth-storage.js?v=11";
 
 import {
 encodeAuthSessionTransfer,
@@ -466,7 +466,10 @@ let snap =
 readPersistedAuthSession();
 
 if(
-!snap?.user?.id
+!snap?.user?.id ||
+isAccessTokenExpired(
+snap
+)
 ){
 try{
 await restoreDesktopAuthSession();
@@ -479,7 +482,12 @@ readPersistedAuthSession();
 }
 
 if(
-!snap?.user?.id &&
+(
+!snap?.user?.id ||
+isAccessTokenExpired(
+snap
+)
+) &&
 typeof window !==
 "undefined" &&
 window.cryptoTerminalDesktop?.loadAuthSession
@@ -489,7 +497,7 @@ const {
 forceRestoreDesktopAuthSession
 } =
 await import(
-"./auth-storage.js?v=10"
+"./auth-storage.js?v=11"
 );
 const forced =
 await forceRestoreDesktopAuthSession();

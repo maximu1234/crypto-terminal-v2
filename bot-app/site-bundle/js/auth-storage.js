@@ -446,10 +446,23 @@ primary?.refresh_token ||
 ).trim();
 const hasUser =
 !!primary?.user?.id;
+const exp =
+Number(
+primary?.expires_at ||
+0
+);
+const accessExpired =
+exp >
+0 &&
+exp *
+1000 <
+Date.now() -
+5000;
 
 if(
 hasRefresh &&
-hasUser
+hasUser &&
+!accessExpired
 ){
 return false;
 }

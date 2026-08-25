@@ -5,7 +5,8 @@ import {
 isMultichartRemoteControlHost,
 fetchLanBotStatus,
 sendLanBotCommand,
-normalizeLanBotStrategyId
+normalizeLanBotStrategyId,
+pushAuthSessionToRemoteBot
 } from "./bot-remote-client.js?v=12";
 import {
 formatBotStrategySettingsRows,
@@ -33,7 +34,7 @@ const STORAGE_KEY =
 const TOKEN_SESSION_KEY =
 "algo_remote_session_logs_token_v1";
 const CHANNEL_UI_VER =
-"13";
+"14";
 
 function normalizeLanStrategyId(
 value
@@ -274,6 +275,10 @@ root.innerHTML =
 <span class="algo-remote-session-logs-channel-label">Хост</span>
 <span class="algo-remote-session-logs-channel-value" id="algo-remote-logs-remote-host">—</span>
 </div>
+<div class="algo-remote-session-logs-channel-row">
+<span class="algo-remote-session-logs-channel-label">Сессия</span>
+<span class="algo-remote-session-logs-channel-value" id="algo-remote-logs-auth-health">—</span>
+</div>
 </div>
 <div class="algo-remote-session-logs-channel-strategy" role="radiogroup" aria-label="Стратегия запуска на боте">
 <label class="algo-remote-session-logs-strategy-check" title="Запустить Стратегию 1 с текущими настройками бота">
@@ -301,6 +306,7 @@ root.innerHTML =
 <button type="button" class="algo-bot-remote-btn" id="algo-remote-logs-start">Запустить</button>
 <button type="button" class="algo-bot-remote-btn" id="algo-remote-logs-stop">Остановить</button>
 <button type="button" class="algo-bot-remote-btn algo-bot-remote-btn--push" id="algo-remote-logs-push" title="Отправить списки и книгу выбранной стратегии на бот">Отдать списки и книгу</button>
+<button type="button" class="algo-bot-remote-btn algo-bot-remote-btn--push" id="algo-remote-logs-push-session" title="Отправить JWT Multichart на бот (бот сам сессию не обновляет)">Отдать сессию</button>
 <button type="button" class="algo-bot-remote-btn" id="algo-remote-logs-refresh">Обновить логи</button>
 </div>
 </section>
@@ -342,7 +348,7 @@ spellcheck="false"
 <div class="algo-remote-session-logs-help-body">
 <section class="algo-remote-session-logs-help-lang" lang="ru">
 <h4>Русский</h4>
-<p>Окно <strong>LAN</strong> — прямой канал: Старт/Стоп (Ст1/Ст2/Ст3, Early T3, RSI Flip), списки, книга параметров, логи. Без worker и без трафика в Supabase Auth.</p>
+<p>Окно <strong>LAN</strong> — прямой канал: Старт/Стоп (Ст1/Ст2/Ст3, Early T3, RSI Flip), списки, книга параметров, логи, «Отдать сессию». Без worker и без трафика в Supabase Auth.</p>
 <p><strong>Книга:</strong> «Подобрать для всех» → «Применить к боту» на этом компьютере, затем «Отдать списки и книгу». На удалённом боте можно парсить так же локально.</p>
 <p><strong>Таймаут</strong> почти всегда значит: до порта на сервере пакеты не доходят (firewall / Security Group / бот не слушает). Неверный токен обычно даёт ошибку сразу, а не таймаут.</p>
 <p><strong>Токен доступа к порту</strong> — не сессия <code>mcauth1…</code>. На боте: шестерёнка → «Логи → Терминал» → «Новый токен» или включить доступ и «Сохранить».</p>
@@ -1645,6 +1651,59 @@ bookRes.message ||
 
 }
 
+async function pushAuthSession(){
+
+const next =
+currentConn();
+
+writeConn(
+next
+);
+
+if(
+!next.host ||
+!next.token
+){
+setMessage(
+"Укажите IP и токен",
+true
+);
+return;
+}
+
+setMessage(
+"Отправка сессии…"
+);
+
+const res =
+await pushAuthSessionToRemoteBot(
+next
+);
+
+if(
+!res?.ok
+){
+setMessage(
+res?.message ||
+"Не удалось отдать сессию",
+true
+);
+await refreshLanStatus();
+return;
+}
+
+setMessage(
+res.message ||
+(
+res.email
+? `Сессия отдана (${res.email})`
+: "Сессия отдана — проверьте баннер на боте"
+)
+);
+await refreshLanStatus();
+
+}
+
 async function refreshList(){
 
 const next =
@@ -1882,6 +1941,16 @@ root.querySelector(
 event=>{
 event.preventDefault();
 void pushWatchlists();
+}
+);
+
+root.querySelector(
+"#algo-remote-logs-push-session"
+)?.addEventListener(
+"click",
+event=>{
+event.preventDefault();
+void pushAuthSession();
 }
 );
 

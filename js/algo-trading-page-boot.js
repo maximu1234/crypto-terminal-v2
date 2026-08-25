@@ -6,10 +6,6 @@ waitForSiteCssReady
 } from "./site-css-gate.js?v=1";
 
 import {
-loadLightweightCharts
-} from "./charts-lib-boot.js?v=3";
-
-import {
 jsImport
 } from "./asset-manifest.js?v=6";
 
@@ -47,6 +43,14 @@ await waitForSiteCssReady();
 if(
 !isAlgoBotLiteShell()
 ){
+const {
+loadLightweightCharts
+} =
+await import(
+jsImport(
+"charts-lib-boot.js"
+)
+);
 await loadLightweightCharts();
 }
 

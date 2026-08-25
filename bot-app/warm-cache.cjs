@@ -536,7 +536,7 @@ url
 }
 
 push(
-`${origin}/vendor/lightweight-charts.standalone.production.js`
+`${origin}/algo-trading.html?botLite=1`
 );
 
 if(

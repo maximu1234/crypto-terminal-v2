@@ -124,6 +124,18 @@ function syncHtml() {
     /<header id="header" class="app-page-header">[\s\S]*?<\/header>/,
     LITE_HEADER
   );
+  html = html.replace(
+    /\n?<link rel="preconnect" href="https:\/\/cdn\.jsdelivr\.net"[^>]*>\n?/g,
+    "\n"
+  );
+  html = html.replace(
+    /\n?<link rel="preload" href="\/vendor\/lightweight-charts[^>]*>\n?/g,
+    "\n"
+  );
+  html = html.replace(
+    /\n?<link rel="modulepreload" href="\/js\/charts-lib-boot\.js[^>]*>\n?/g,
+    "\n"
+  );
   if (!html.includes("algo-bot-lite-layout")) {
     throw new Error("lite body class missing after HTML transform");
   }

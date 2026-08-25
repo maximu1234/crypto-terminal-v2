@@ -17,7 +17,8 @@ const REQUIRED_CSS_SELECTORS = [
   "body.algo-trading-page.algo-bot-lite-layout #algo-stats-panel",
   "body.algo-trading-page.algo-bot-lite-layout .algo-bot-lite-pattern-settings",
   "body.algo-trading-page.algo-bot-lite-layout #algo-tf-bar",
-  "body.algo-trading-page.algo-bot-lite-layout #cloud-auth-problem-banner"
+  "body.algo-trading-page.algo-bot-lite-layout #cloud-auth-problem-banner",
+  "body.algo-trading-page.algo-bot-lite-layout .algo-bot-grid-cell .algo-stats-label"
 ];
 
 function fail(message) {
@@ -49,6 +50,9 @@ if (/href="\/screener\.html">Скринер</.test(html)) {
   fail(
     "bot HTML has full Multichart nav (Скринер…) — restore Algo Bot lite nav"
   );
+}
+if (html.includes("lightweight-charts.standalone")) {
+  fail("bot HTML still preloads Lightweight Charts — lite has no chart");
 }
 if (!html.includes('id="algo-bots-btn"') || !html.includes('id="algo-bot-run"')) {
   fail("bot HTML missing new topbar (Боты / Запустить) — copy from Multichart");

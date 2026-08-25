@@ -126,6 +126,23 @@ test("session log server and viewer modules are wired", () => {
       "algo-bot-remote-logs"
     )
   );
+  assert.ok(
+    fs.readFileSync(
+      path.join(root, "js/algo-trading/bot-session-logs-viewer.js"),
+      "utf8"
+    ).includes("Отдать сессию")
+  );
+  assert.ok(
+    fs.readFileSync(
+      path.join(root, "desktop/trading/algo-bot-session-log-server.cjs"),
+      "utf8"
+    ).includes("__importAuthSessionTransferString")
+  );
+  assert.ok(
+    fs.readFileSync(path.join(root, "js/auth-ui.js"), "utf8").includes(
+      "body > #header-settings-dropdown"
+    )
+  );
 });
 
 test("pattern engine pushSignal writes through session log module", () => {

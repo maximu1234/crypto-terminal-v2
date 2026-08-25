@@ -72,7 +72,7 @@ import {
 mountRemoteSessionLogsEntry,
 mountRemoteWatchlistsPushEntry,
 mountLocalSessionLogsEntry
-} from "./bot-session-logs-viewer.js?v=30";
+} from "./bot-session-logs-viewer.js?v=31";
 import {
 rebalanceTpShares
 } from "./pattern-trade-stats-partial.js?v=22";

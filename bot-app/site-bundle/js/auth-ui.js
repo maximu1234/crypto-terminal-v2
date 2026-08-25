@@ -13,7 +13,7 @@ completeAuthFromCallbackUrl,
 hasAuthCallbackInUrl,
 exportAuthSessionTransferString,
 importAuthSessionTransferString
-} from "./cloud-sync.js?v=67";
+} from "./cloud-sync.js?v=68";
 
 import {
 isSupabaseConfigured
@@ -496,6 +496,12 @@ wrap?.querySelector(
 const dropdown =
 wrap?.querySelector(
 "#header-settings-dropdown"
+) ||
+document.querySelector(
+"body > #header-settings-dropdown"
+) ||
+document.getElementById(
+"header-settings-dropdown"
 );
 
 return {
@@ -834,6 +840,12 @@ btn.setAttribute(
 const authHost =
 wrap.querySelector(
 "#cloud-settings-mount"
+) ||
+dropdown.querySelector(
+"#cloud-settings-mount"
+) ||
+document.getElementById(
+"cloud-settings-mount"
 );
 
 /*
@@ -871,12 +883,18 @@ if(
 isAlgoBotShell()
 ){
 void import(
-"./algo-trading/bot-session-log-server-ui.js?v=10"
+"./algo-trading/bot-session-log-server-ui.js?v=11"
 ).then(
 mod=>{
 mod.mountSessionLogServerSettings(
+dropdown.querySelector(
+"#algo-session-log-server-mount"
+) ||
 wrap.querySelector(
 "#algo-session-log-server-mount"
+) ||
+document.getElementById(
+"algo-session-log-server-mount"
 )
 );
 }
@@ -1015,14 +1033,20 @@ if(
 isAlgoBotShell()
 ){
 
+const drop =
+dropdown ||
+document.getElementById(
+"header-settings-dropdown"
+);
+
 if(
-!dropdown
+!drop
 ){
 return;
 }
 
 if(
-dropdown.classList.contains(
+drop.classList.contains(
 "hidden"
 )
 ){

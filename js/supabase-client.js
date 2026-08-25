@@ -3,7 +3,7 @@ createAuthStorage,
 SUPABASE_AUTH_STORAGE_KEY,
 isAuthRefreshBlocked,
 noteAuthRefreshHttpStatus
-} from "./auth-storage.js?v=10";
+} from "./auth-storage.js?v=11";
 
 import {
 isAlgoBotLiteShell

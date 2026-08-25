@@ -1038,14 +1038,26 @@ BrowserWindow
 require(
 "electron"
 );
-const win =
-BrowserWindow.getAllWindows().find(
+const wins =
+BrowserWindow.getAllWindows().filter(
 (
 w
 )=>
 w &&
-!w.isDestroyed()
+!w.isDestroyed() &&
+w.webContents &&
+!w.webContents.isDestroyed()
+);
+const win =
+wins.find(
+(
+w
+)=>
+w.isVisible()
 ) ||
+wins[
+0
+] ||
 null;
 
 if(
@@ -1057,16 +1069,29 @@ await win.webContents.executeJavaScript(
 `((transfer) => {
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 return (async () => {
+const tryApply = async () => {
+if (typeof window.__importAuthSessionTransferString === "function") {
+return window.__importAuthSessionTransferString(transfer);
+}
+try {
+const mod = await import("/js/cloud-sync.js?v=68");
+if (typeof mod.importAuthSessionTransferString === "function") {
+window.__importAuthSessionTransferString = mod.importAuthSessionTransferString;
+return mod.importAuthSessionTransferString(transfer);
+}
+} catch (_) {}
+return null;
+};
 for (let i = 0; i < 40; i++) {
-const fn = window.__importAuthSessionTransferString;
-if (typeof fn === "function") {
-return Promise.resolve(fn(transfer));
+const res = await tryApply();
+if (res) {
+return res;
 }
 await sleep(250);
 }
 return {
 ok: false,
-message: "UI ещё не готов — перезапустите окно бота"
+message: "UI ещё не готов — перезагрузите окно бота"
 };
 })();
 })(${JSON.stringify(
@@ -1147,6 +1172,8 @@ uiResult.message
 ){
 return {
 ok:
+false,
+saved:
 true,
 email:
 email ||
