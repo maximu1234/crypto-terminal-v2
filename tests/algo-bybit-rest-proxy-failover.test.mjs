@@ -9,7 +9,8 @@ const require = createRequire(import.meta.url);
 
 const {
   orderedApiBases,
-  timeoutMsForApiHost
+  timeoutMsForApiHost,
+  selectBybitFetchTransport
 } = (() => {
   const Module = require("module");
   const originalLoad = Module._load;
@@ -48,6 +49,12 @@ test("without proxy, mainnet still prefers api.bybit.com", () => {
     "https://api.bybit.com",
     "https://api.bytick.com"
   ]);
+});
+
+test("direct Bybit REST skips Chromium session when SOCKS is off", () => {
+  assert.equal(selectBybitFetchTransport(false, false), "direct");
+  assert.equal(selectBybitFetchTransport(true, false), "relay");
+  assert.equal(selectBybitFetchTransport(false, true), "session");
 });
 
 test("with SOCKS relay, mainnet tries api.bytick.com first", () => {

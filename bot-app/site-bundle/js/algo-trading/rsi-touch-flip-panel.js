@@ -29,14 +29,14 @@ getAlgoTradingWalletBalance
 } from "./runtime-bridge.js?v=6";
 import {
 runRsiTouchFlip
-} from "./rsi-touch-flip-engine.js?v=3";
+} from "./rsi-touch-flip-engine.js?v=4";
 import {
 resolveRsiTouchFlipChartRsi,
 rsiTouchFlipChartDays
 } from "./rsi-touch-flip-mtf.js?v=3";
 import {
 mountRsiTouchFlipOverlay
-} from "./rsi-touch-flip-overlay.js?v=1";
+} from "./rsi-touch-flip-overlay.js?v=2";
 import {
 mountRsiTouchFlipFit
 } from "./rsi-touch-flip-fit-panel.js?v=6";

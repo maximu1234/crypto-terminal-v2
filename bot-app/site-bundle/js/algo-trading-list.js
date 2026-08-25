@@ -922,25 +922,49 @@ RSI_TOUCH_FLIP_LIST_MARKET;
 syncMarketFilterOptions();
 mountCoinsListRefreshControls();
 
-async function loadAlgoInstrumentList(
-options
-){
+window.addEventListener(
+"algo-trade-book-panel-ready",
+()=>{
+generateMarketData();
+renderList();
+highlightActiveSymbol();
+}
+);
 
-if(
-isAlgoBotLiteMode()
-){
+async function loadSymbolsViaIpc(){
 
 const api =
 window.cryptoTerminalDesktop?.algoTrading;
 
 if(
-typeof api?.listLinearUsdtSymbols ===
+typeof api?.listLinearUsdtSymbols !==
 "function"
 ){
+return null;
+}
 
 try{
 const result =
-await api.listLinearUsdtSymbols();
+await Promise.race(
+[
+api.listLinearUsdtSymbols(),
+new Promise(
+(
+_,
+reject
+)=>
+setTimeout(
+()=>
+reject(
+new Error(
+"symbols ipc timeout"
+)
+),
+15000
+)
+)
+]
+);
 
 if(
 result?.ok &&
@@ -967,6 +991,199 @@ err
 );
 }
 
+return null;
+
+}
+
+function isUsdtLinearInstrument(
+row
+){
+
+const sym =
+String(
+row?.symbol ||
+""
+).trim();
+const quote =
+String(
+row?.quoteCoin ||
+""
+).toUpperCase();
+const settle =
+String(
+row?.settleCoin ||
+""
+).toUpperCase();
+const contractType =
+String(
+row?.contractType ||
+""
+);
+
+if(
+!sym ||
+quote !==
+"USDT" ||
+(
+settle &&
+settle !==
+"USDT"
+)
+){
+return false;
+}
+
+if(
+contractType &&
+contractType !==
+"LinearPerpetual"
+){
+return false;
+}
+
+return true;
+
+}
+
+async function loadSymbolsViaLocalBybitProxy(){
+
+const symbols =
+[];
+let cursor =
+"";
+
+for(
+let page =
+0;
+page <
+8;
+page++
+){
+
+const params =
+new URLSearchParams(
+{
+category:
+"linear",
+limit:
+"1000",
+status:
+"Trading"
+}
+);
+
+if(
+cursor
+){
+params.set(
+"cursor",
+cursor
+);
+}
+
+const res =
+await fetch(
+`/api/bybit?path=${encodeURIComponent(
+`/v5/market/instruments-info?${params}`
+)}`,
+{
+cache:
+"no-store"
+}
+);
+const json =
+await res.json();
+
+if(
+json?.retCode !==
+0 ||
+!Array.isArray(
+json?.result?.list
+)
+){
+throw new Error(
+json?.retMsg ||
+json?.message ||
+`HTTP ${res.status}`
+);
+}
+
+for(
+const row of json.result.list
+){
+
+if(
+isUsdtLinearInstrument(
+row
+)
+){
+symbols.push(
+String(
+row.symbol
+).trim()
+);
+}
+
+}
+
+const next =
+json.result.nextPageCursor;
+
+if(
+!next ||
+next ===
+cursor
+){
+break;
+}
+
+cursor =
+next;
+
+}
+
+return [
+...new Set(
+symbols
+)
+].sort();
+
+}
+
+async function loadAlgoInstrumentList(
+options
+){
+
+if(
+isAlgoBotLiteMode()
+){
+
+const ipcSymbols =
+await loadSymbolsViaIpc();
+
+if(
+ipcSymbols?.length
+){
+return ipcSymbols;
+}
+
+try{
+const localSymbols =
+await loadSymbolsViaLocalBybitProxy();
+
+if(
+localSymbols.length
+){
+return localSymbols;
+}
+}catch(
+err
+){
+console.warn(
+"[algo-trading] symbols local proxy:",
+err?.message ||
+err
+);
 }
 
 }
@@ -1053,6 +1270,14 @@ startRealtime();
 }
 
 startTickerStream();
+
+if(
+!coinsState().marketData.length
+){
+console.warn(
+"[algo-trading] coin list empty after symbol load"
+);
+}
 
 }
 

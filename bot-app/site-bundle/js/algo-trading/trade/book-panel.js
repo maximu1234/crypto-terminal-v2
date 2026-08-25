@@ -344,6 +344,11 @@ list
 wrapCoinsTableScroll(
 coinsListPane
 );
+window.dispatchEvent(
+new CustomEvent(
+"algo-trade-book-panel-ready"
+)
+);
 
 const splitResize =
 document.createElement(

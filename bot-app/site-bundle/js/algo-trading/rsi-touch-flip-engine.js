@@ -745,7 +745,10 @@ openTrades =
 pushMark(
 index,
 "close",
-"SELL ALL"
+side ===
+"long"
+? "SELL ALL"
+: "BUY ALL"
 );
 
 return side;
@@ -977,7 +980,7 @@ osCloseShort
 closeAll(
 i,
 price,
-"SELL ALL @ OS"
+"BUY ALL @ OS"
 );
 }
 

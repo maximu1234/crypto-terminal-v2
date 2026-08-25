@@ -1,5 +1,5 @@
 /**
- * Метки RSI Touch Flip на графике Алго (касания OS/OB, входы, SELL ALL).
+ * Метки RSI Touch Flip на графике Алго (касания OS/OB, входы, BUY ALL / SELL ALL).
  */
 
 const COLOR_OS =

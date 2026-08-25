@@ -43,7 +43,12 @@ return;
 }
 
 await waitForSiteCssReady();
+
+if(
+!isAlgoBotLiteShell()
+){
 await loadLightweightCharts();
+}
 
 await import(
 jsImport(

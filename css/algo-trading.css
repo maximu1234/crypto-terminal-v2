@@ -3645,6 +3645,10 @@ body.algo-trading-page.algo-bot-lite-layout [data-role="positions-diary-btn"]{
 display:none !important;
 }
 
+body.algo-trading-page.algo-bot-lite-layout .coins-table-scroll{
+min-height:160px;
+}
+
 body.algo-trading-page.algo-bot-lite-layout #charts-stack{
 display:none !important;
 }

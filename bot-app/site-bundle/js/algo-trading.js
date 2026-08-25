@@ -46,7 +46,7 @@ subscribeKline
 import {
 mountAlgoTradingCoinList,
 refreshAlgoMarketListFromFlags
-} from "./algo-trading-list.js?v=24";
+} from "./algo-trading-list.js?v=25";
 
 import {
 mountAlgoTickerScanUi
@@ -425,7 +425,9 @@ null;
 if(
 isAlgoBotLiteMode()
 ){
-void mountAlgoTradingCoinList(
+try{
+listApi =
+await mountAlgoTradingCoinList(
 {
 getSymbol:()=>
 symbol,
@@ -448,21 +450,17 @@ tf
 listApi?.highlight?.();
 }
 }
-).then(
-api=>{
-listApi =
-api;
+);
 listApi?.highlight?.();
-}
-).catch(
-err=>{
+}catch(
+err
+){
 console.warn(
 "[algo-trading] coin list:",
 err?.message ||
 err
 );
 }
-);
 }
 
 let chart =

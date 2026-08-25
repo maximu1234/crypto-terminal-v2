@@ -106,6 +106,9 @@ test("RSI Touch Flip OS opens long, OB closes and opens short", () => {
   assert.ok(kinds.includes("long"));
   assert.ok(kinds.includes("short"));
   assert.ok(kinds.includes("close"));
+  const texts = result.marks.map((m) => m.text);
+  assert.ok(texts.includes("SELL ALL"));
+  assert.equal(result.closedTrades[0].comment, "SELL ALL @ OB");
 });
 
 test("RSI Touch Flip stacks then flips the whole stack", () => {
@@ -130,6 +133,29 @@ test("RSI Touch Flip stacks then flips the whole stack", () => {
   );
   assert.equal(result.openTrades.length, 1);
   assert.equal(result.openTrades[0].tag, "S1");
+});
+
+test("RSI Touch Flip OS cover of shorts is BUY ALL", () => {
+  const candles = candlesAt(100, 4);
+  const rsiValues = rsiSeries([40, 80, 40, 25]);
+  const result = runRsiTouchFlip(
+    candles,
+    {
+      rsiLen: 14,
+      osLevel: 30,
+      obLevel: 70,
+      commissionPct: 0,
+      budget: 90
+    },
+    { rsiValues }
+  );
+  assert.equal(result.closedTrades[0].side, "short");
+  assert.equal(result.closedTrades[0].comment, "BUY ALL @ OS");
+  const closeMark = result.marks.find(
+    (m) => m.kind === "close"
+  );
+  assert.equal(closeMark?.text, "BUY ALL");
+  assert.equal(result.openTrades[0].side, "long");
 });
 
 test("RSI Touch Flip SHORT only does not open longs", () => {
@@ -196,13 +222,24 @@ test("Wilder RSI is 100 on a strictly rising series after warmup", () => {
   assert.equal(rsi[19], 100);
 });
 
-test("markers merge SELL ALL and entry on the same bar", () => {
+test("markers merge BUY ALL with long entry below the bar", () => {
   const markers = marksToSeriesMarkers([
-    { time: 100, kind: "close", text: "SELL ALL" },
+    { time: 100, kind: "close", text: "BUY ALL" },
     { time: 100, kind: "long", text: "L1" },
     { time: 100, kind: "os", text: "OS" }
   ]);
   assert.equal(markers.length, 1);
-  assert.equal(markers[0].text, "SELL ALL L1");
+  assert.equal(markers[0].text, "BUY ALL L1");
   assert.equal(markers[0].position, "belowBar");
+});
+
+test("markers merge SELL ALL with short entry above the bar", () => {
+  const markers = marksToSeriesMarkers([
+    { time: 200, kind: "close", text: "SELL ALL" },
+    { time: 200, kind: "short", text: "S1" },
+    { time: 200, kind: "ob", text: "OB" }
+  ]);
+  assert.equal(markers.length, 1);
+  assert.equal(markers[0].text, "SELL ALL S1");
+  assert.equal(markers[0].position, "aboveBar");
 });

@@ -3,7 +3,7 @@
  */
 import {
   runRsiTouchFlip
-} from "./rsi-touch-flip-engine.js?v=3";
+} from "./rsi-touch-flip-engine.js?v=4";
 import {
   normalizeRsiTouchFlipPrefs
 } from "./rsi-touch-flip-prefs.js?v=2";

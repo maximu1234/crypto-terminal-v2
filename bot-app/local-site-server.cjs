@@ -26,6 +26,10 @@ net
 require(
 "electron"
 );
+const https =
+require(
+"https"
+);
 const {
 resolveBundleFile,
 getMime
@@ -38,6 +42,11 @@ const DEFAULT_LOCAL_SITE_PORT =
 47393;
 const BINGX_API_BASE =
 "https://open-api.bingx.com";
+const BYBIT_API_BASES =
+[
+"https://api.bybit.com",
+"https://api.bytick.com"
+];
 const PORT_FILE =
 "local-site-port.json";
 
@@ -229,6 +238,226 @@ buf
 
 }
 
+function isPublicBybitMarketPath(
+raw
+){
+
+if(
+typeof raw !==
+"string" ||
+raw.includes(
+".."
+) ||
+raw.includes(
+"\\"
+)
+){
+return false;
+}
+
+const pathname =
+raw.split(
+"?"
+)[
+0
+];
+
+return pathname ===
+"/v5/market" ||
+pathname.startsWith(
+"/v5/market/"
+);
+
+}
+
+function httpsGetBuffer(
+url,
+timeoutMs =
+12000
+){
+
+return new Promise(
+(
+resolve,
+reject
+)=>{
+
+const req =
+https.get(
+url,
+{
+headers:{
+Accept:
+"application/json",
+"User-Agent":
+"Multichart-AlgoBot/1.0"
+}
+},
+res=>{
+
+const chunks =
+[];
+
+res.on(
+"data",
+chunk=>
+chunks.push(
+chunk
+)
+);
+res.on(
+"end",
+()=>{
+resolve(
+{
+status:
+res.statusCode ||
+0,
+headers:
+res.headers,
+body:
+Buffer.concat(
+chunks
+)
+}
+);
+}
+);
+res.on(
+"error",
+reject
+);
+
+}
+);
+
+req.setTimeout(
+timeoutMs,
+()=>{
+req.destroy();
+reject(
+new Error(
+"timeout"
+)
+);
+}
+);
+req.on(
+"error",
+reject
+);
+
+}
+);
+
+}
+
+async function serveBybitProxy(
+reqUrl,
+res
+){
+
+const apiPath =
+reqUrl.searchParams.get(
+"path"
+) ||
+"";
+
+if(
+!isPublicBybitMarketPath(
+apiPath
+)
+){
+res.writeHead(
+400,
+{
+"Content-Type":
+"application/json; charset=utf-8",
+"Access-Control-Allow-Origin":
+"*"
+}
+);
+res.end(
+JSON.stringify({
+retCode:
+-1,
+retMsg:
+"invalid path"
+})
+);
+return;
+}
+
+const pathQuery =
+apiPath.startsWith(
+"/"
+)
+? apiPath
+: `/${apiPath}`;
+let lastErr =
+"Bybit proxy failed";
+
+for(
+const base of BYBIT_API_BASES
+){
+
+try{
+const upstream =
+await httpsGetBuffer(
+`${base}${pathQuery}`
+);
+
+res.writeHead(
+upstream.status ||
+200,
+{
+"Content-Type":
+upstream.headers[
+"content-type"
+] ||
+"application/json",
+"Access-Control-Allow-Origin":
+"*",
+"Cache-Control":
+"no-cache"
+}
+);
+res.end(
+upstream.body
+);
+return;
+}catch(
+err
+){
+lastErr =
+err?.message ||
+String(
+err
+);
+}
+
+}
+
+res.writeHead(
+502,
+{
+"Content-Type":
+"application/json; charset=utf-8",
+"Access-Control-Allow-Origin":
+"*"
+}
+);
+res.end(
+JSON.stringify({
+retCode:
+-1,
+retMsg:
+lastErr
+})
+);
+
+}
+
 function createRequestHandler({
 bundleRoot,
 remoteApiOrigin
@@ -255,6 +484,17 @@ reqUrl.pathname ===
 "/api/bingx"
 ){
 await serveBingxProxy(
+reqUrl,
+res
+);
+return;
+}
+
+if(
+reqUrl.pathname ===
+"/api/bybit"
+){
+await serveBybitProxy(
 reqUrl,
 res
 );

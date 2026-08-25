@@ -895,6 +895,83 @@ req.end();
 
 }
 
+function isConfiguredSessionProxy(){
+
+try{
+const fs =
+require(
+"fs"
+);
+const path =
+require(
+"path"
+);
+const {
+app
+} =
+require(
+"electron"
+);
+const {
+normalizeProxySettings,
+isProxyConfigReady
+} =
+require(
+"../app-proxy-config.cjs"
+);
+const file =
+path.join(
+app.getPath(
+"userData"
+),
+"app-proxy-settings.json"
+);
+
+if(
+!fs.existsSync(
+file
+)
+){
+return false;
+}
+
+return isProxyConfigReady(
+normalizeProxySettings(
+JSON.parse(
+fs.readFileSync(
+file,
+"utf8"
+)
+)
+)
+);
+}catch{
+return false;
+}
+
+}
+
+function selectBybitFetchTransport(
+hasRelayAgent,
+sessionProxyReady
+){
+
+if(
+hasRelayAgent
+){
+return "relay";
+}
+
+if(
+sessionProxyReady
+){
+return "session";
+}
+
+return "direct";
+
+}
+
 async function fetchWithTimeout(
 url,
 options
@@ -917,6 +994,48 @@ const fetchOptions =
 
 delete fetchOptions.timeoutMs;
 
+const relayAgent =
+shouldProxyBybitRestUrl(
+url
+)
+? getRelayHttpsAgent()
+: undefined;
+const transport =
+selectBybitFetchTransport(
+!!relayAgent,
+shouldProxyBybitRestUrl(
+url
+) &&
+isConfiguredSessionProxy()
+);
+
+if(
+transport ===
+"relay"
+){
+return await fetchViaRelayAgent(
+url,
+{
+...fetchOptions,
+timeoutMs
+},
+relayAgent
+);
+}
+
+if(
+transport ===
+"direct"
+){
+return await fetchViaRelayAgent(
+url,
+{
+...fetchOptions,
+timeoutMs
+}
+);
+}
+
 const controller =
 new AbortController();
 const timer =
@@ -928,28 +1047,6 @@ timeoutMs
 );
 
 try{
-const agent =
-shouldProxyBybitRestUrl(
-url
-)
-? getRelayHttpsAgent()
-: undefined;
-
-if(
-agent
-){
-return await fetchViaRelayAgent(
-url,
-{
-...fetchOptions,
-signal:
-controller.signal,
-timeoutMs
-},
-agent
-);
-}
-
 return await net.fetch(
 url,
 {
@@ -4227,6 +4324,8 @@ const bases =
 orderedApiBases(
 testnet
 );
+let lastFail =
+"";
 
 for(
 const base of bases
@@ -4278,8 +4377,18 @@ true,
 data
 };
 }
-}catch{
-/* try next base */
+
+lastFail =
+data?.retMsg ||
+`Bybit HTTP ${response.status || 0}`;
+}catch(
+err
+){
+lastFail =
+err?.message ||
+String(
+err
+);
 }
 
 }
@@ -4288,6 +4397,7 @@ return {
 ok:
 false,
 message:
+lastFail ||
 "Instrument info unavailable"
 };
 
@@ -7525,5 +7635,6 @@ qtyFromVolumeUsdt,
 getSymbolPositionSettings,
 applySymbolPositionSettings,
 orderedApiBases,
-timeoutMsForApiHost
+timeoutMsForApiHost,
+selectBybitFetchTransport
 };

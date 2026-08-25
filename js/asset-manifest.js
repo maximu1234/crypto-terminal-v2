@@ -299,11 +299,11 @@ Object.freeze({
 "script-favorites-list.js":
 2,
 "algo-trading.js":
-201,
+202,
 "algo-trading-page-boot.js":
-9,
+10,
 "algo-trading-list.js":
-24,
+25,
 "algo-trading/coin-list-host.js":
 2,
 "algo-trading/page-prefs.js":
@@ -376,9 +376,9 @@ Object.freeze({
 "algo-trading/rsi-touch-flip-book.js":
 2,
 "algo-trading/rsi-touch-flip-engine.js":
-3,
+4,
 "algo-trading/rsi-touch-flip-overlay.js":
-1,
+2,
 "algo-trading/rsi-touch-flip-mtf.js":
 3,
 "algo-trading/rsi-touch-flip-panel.js":
@@ -456,7 +456,7 @@ Object.freeze({
 "algo-trading/trade/open-positions.js":
 2,
 "algo-trading/trade/book-panel.js":
-12,
+13,
 "algo-trading/trade/config-stub.js":
 1,
 "algo-trading/trade/pnl-privacy-stub.js":
@@ -602,7 +602,7 @@ Object.freeze({
 "screener-widget-zoom.js":
 29,
 "release-marker.js":
-101,
+102,
 "focus-blur-after-pick.js":
 3,
 "site-boot.js":
@@ -885,7 +885,7 @@ Object.freeze({
 "script-page.css":
 25,
 "algo-trading.css":
-148,
+149,
 "algo-trading-book-panel.css":
 6,
 "algo-trading-diary-modal.css":
