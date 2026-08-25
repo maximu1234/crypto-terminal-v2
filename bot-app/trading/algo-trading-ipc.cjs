@@ -206,6 +206,66 @@ err
 
 handleTrustedDesktopUi(
 ipcMain,
+"desktop:algoTradingFetchKlineHistory",
+async(
+_event,
+payload
+)=>{
+
+try{
+const rest =
+require(
+"./algo-bybit-rest.cjs"
+);
+const requests =
+Number(
+payload?.requests
+);
+const batchGapMs =
+Number(
+payload?.batchGapMs
+);
+
+return await rest.fetchKlineHistoryDeep(
+payload?.symbol,
+payload?.tf,
+Number.isFinite(
+requests
+) &&
+requests >
+0
+? requests
+: 10,
+Number.isFinite(
+batchGapMs
+)
+? batchGapMs
+: 0
+);
+}catch(
+err
+){
+log.warn(
+"algoTradingFetchKlineHistory:",
+err?.message ||
+err
+);
+return {
+ok:
+false,
+message:
+err?.message ||
+String(
+err
+)
+};
+}
+
+}
+);
+
+handleTrustedDesktopUi(
+ipcMain,
 "desktop:algoTradingSetEnabled",
 (
 _event,

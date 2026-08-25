@@ -1,7 +1,7 @@
 {
   "name": "multichart-algo-bot",
   "productName": "Multichart Algo Bot",
-  "version": "1.0.156",
+  "version": "1.0.157",
   "description": "Standalone Algo Bot desktop app",
   "main": "main.js",
   "author": "Multichart",

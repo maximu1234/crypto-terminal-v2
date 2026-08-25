@@ -39,7 +39,7 @@ mountRsiTouchFlipOverlay
 } from "./rsi-touch-flip-overlay.js?v=2";
 import {
 mountRsiTouchFlipFit
-} from "./rsi-touch-flip-fit-panel.js?v=6";
+} from "./rsi-touch-flip-fit-panel.js?v=7";
 
 function el(
 id
@@ -241,12 +241,41 @@ usd
  *   getSeries: () => object|null,
  *   getChartTf: () => string,
  *   getSymbol: () => string,
- *   isHistoryReady: () => boolean
+ *   isHistoryReady: () => boolean,
+ *   loadHistory?: Function
  * }} host
  */
 export function mountRsiTouchFlipHost(
 host
 ){
+
+function loadHistoryForHost(
+histSymbol,
+histTf,
+requests,
+options
+){
+
+if(
+typeof host.loadHistory ===
+"function"
+){
+return host.loadHistory(
+histSymbol,
+histTf,
+requests,
+options
+);
+}
+
+return loadMarketHistory(
+histSymbol,
+histTf,
+requests,
+options
+);
+
+}
 
 const overlay =
 mountRsiTouchFlipOverlay(
@@ -633,6 +662,19 @@ return;
 if(
 !host?.isHistoryReady?.()
 ){
+fitApi?.sync?.(
+{
+candles:
+[],
+prefs:
+loadRsiTouchFlipPrefs(),
+chartTf:
+String(
+host.getChartTf?.() ||
+""
+).trim()
+}
+);
 return;
 }
 
@@ -669,7 +711,7 @@ host.getChartTf?.() ||
 symbol:
 host.getSymbol?.(),
 loadHistory:
-loadMarketHistory
+loadHistoryForHost
 }
 );
 }catch(
@@ -1055,12 +1097,14 @@ host.getChartTf?.() ||
 symbol:
 host.getSymbol?.(),
 loadHistory:
-loadMarketHistory
+loadHistoryForHost
 }
 );
 },
 isDisposed:()=>
-disposed
+disposed,
+isHistoryReady:()=>
+!!host.isHistoryReady?.()
 }
 );
 

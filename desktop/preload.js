@@ -447,6 +447,14 @@ listLinearUsdtSymbols:()=>
 ipcRenderer.invoke(
 "desktop:algoTradingListLinearSymbols"
 ),
+fetchKlineHistoryDeep:(
+payload
+)=>
+ipcRenderer.invoke(
+"desktop:algoTradingFetchKlineHistory",
+payload ||
+{}
+),
 startBot:(
 payload
 )=>

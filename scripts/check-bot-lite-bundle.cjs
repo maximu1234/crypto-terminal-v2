@@ -87,7 +87,10 @@ if (!js.includes("mountAlgoBotLiteLayout") || !js.includes("isAlgoBotLiteMode"))
   fail("bot-app/site-bundle/js/algo-trading.js must use lite layout helpers");
 }
 if (!js.includes("isAlgoBotLiteMode()")) {
-  fail("lite mode must skip chart history load");
+  fail("lite mode helper missing in algo-trading.js");
+}
+if (!js.includes("loadAlgoBotLiteHistory")) {
+  fail("lite mode must load candle history for RSI overview / fit");
 }
 
 const liteLayout = read(

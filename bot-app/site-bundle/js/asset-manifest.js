@@ -299,7 +299,7 @@ Object.freeze({
 "script-favorites-list.js":
 2,
 "algo-trading.js":
-202,
+204,
 "algo-trading-page-boot.js":
 11,
 "algo-trading-list.js":
@@ -312,6 +312,8 @@ Object.freeze({
 2,
 "algo-trading/lite-layout.js":
 4,
+"algo-trading/lite-history.js":
+1,
 "algo-trading/live-candle.js":
 1,
 "algo-trading/page-format.js":
@@ -382,13 +384,13 @@ Object.freeze({
 "algo-trading/rsi-touch-flip-mtf.js":
 3,
 "algo-trading/rsi-touch-flip-panel.js":
-13,
+14,
 "algo-trading/rsi-touch-flip-walkforward.js":
 4,
 "algo-trading/rsi-touch-flip-optimize.js":
 4,
 "algo-trading/rsi-touch-flip-fit-panel.js":
-6,
+7,
 "algo-trading/ticker-flags.js":
 9,
 "algo-trading/terminal-early-t3-list.js":

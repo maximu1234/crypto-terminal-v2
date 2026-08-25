@@ -174,7 +174,8 @@ function evaluateSplit(candles, rsiValues, prefs, chartTf, trainPct) {
  *   getPrefs: () => object,
  *   applyCandidate: (patch: object) => void,
  *   resolveRsi: (candles: Array, prefs: object) => Promise<number[]>,
- *   isDisposed: () => boolean
+ *   isDisposed: () => boolean,
+ *   isHistoryReady: () => boolean
  * }} host
  */
 export function mountRsiTouchFlipFit(host) {
@@ -187,7 +188,9 @@ export function mountRsiTouchFlipFit(host) {
       return;
     }
     if (!split) {
-      node.textContent = "мало свечей для нарезки";
+      node.textContent = host.isHistoryReady?.()
+        ? "мало свечей для нарезки"
+        : "загрузка свечей…";
       return;
     }
     node.textContent =
@@ -375,6 +378,10 @@ export function mountRsiTouchFlipFit(host) {
     const basePrefs = host.getPrefs?.();
     const chartTf = host.getChartTf?.() || "";
     const trainPct = readTrainPct();
+    if (!host.isHistoryReady?.()) {
+      renderSplitLabel(null);
+      return;
+    }
     const split = rsiTouchFlipTrainTestSplit(
       candles,
       undefined,

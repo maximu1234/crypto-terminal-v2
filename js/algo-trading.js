@@ -107,7 +107,7 @@ mountAlgoPatternEntryOverlay
 
 import {
 mountRsiTouchFlipHost
-} from "./algo-trading/rsi-touch-flip-panel.js?v=13";
+} from "./algo-trading/rsi-touch-flip-panel.js?v=14";
 
 import {
 clearAlgoPatternAnalysisUi,
@@ -239,6 +239,10 @@ import {
 isAlgoBotLiteMode,
 mountAlgoBotLiteLayout
 } from "./algo-trading/lite-layout.js?v=4";
+
+import {
+loadAlgoBotLiteHistory
+} from "./algo-trading/lite-history.js?v=1";
 
 /** Глубина ботов / сканов / «Подобрать»: ~10 000. График сначала ~5000, затем догрузка. */
 const HISTORY_REQUESTS =
@@ -1958,6 +1962,60 @@ true
 if(
 isAlgoBotLiteMode()
 ){
+markAlgoHistoryStatsPending();
+
+try{
+const rows =
+await loadAlgoBotLiteHistory(
+symbol,
+tf,
+HISTORY_REQUESTS,
+{
+parallel:
+true,
+batchGapMs:
+0
+}
+);
+
+if(
+disposed ||
+seq !==
+loadSeq
+){
+return;
+}
+
+candles =
+Array.isArray(
+rows
+)
+? rows.slice()
+: [];
+
+markAlgoHistoryStatsReadyAndAnalyze();
+listApi?.highlight?.();
+}catch(
+err
+){
+console.error(
+"[algo-trading] lite history",
+getActiveExchangeId(),
+symbol,
+tf,
+err
+);
+
+if(
+seq ===
+loadSeq
+){
+candles =
+[];
+markAlgoHistoryStatsReadyAndAnalyze();
+}
+}
+
 return;
 }
 
@@ -2578,7 +2636,40 @@ tf,
 getSymbol:()=>
 symbol,
 isHistoryReady:()=>
-historyStatsReady
+historyStatsReady,
+loadHistory:(
+histSymbol,
+histTf,
+requests,
+options
+)=>
+isAlgoBotLiteMode()
+? loadAlgoBotLiteHistory(
+histSymbol,
+histTf,
+requests ||
+HISTORY_REQUESTS,
+options ||
+{
+parallel:
+true,
+batchGapMs:
+0
+}
+)
+: loadMarketHistory(
+histSymbol,
+histTf,
+requests ||
+HISTORY_REQUESTS,
+options ||
+{
+parallel:
+true,
+batchGapMs:
+0
+}
+)
 }
 );
 

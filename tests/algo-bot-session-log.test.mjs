@@ -145,6 +145,22 @@ test("session log server and viewer modules are wired", () => {
   );
 });
 
+test("LAN auth session push sends the channel Bearer token", () => {
+  for (const rel of [
+    "desktop/trading/algo-bot-session-log-remote-client.cjs",
+    "bot-app/trading/algo-bot-session-log-remote-client.cjs"
+  ]) {
+    const src = fs.readFileSync(path.join(root, rel), "utf8");
+    const push = src.slice(src.indexOf("function pushRemoteAuthSession"));
+    assert.match(push, /fetchJsonPost\(/, rel);
+    assert.match(
+      push,
+      /payload\.token/,
+      `${rel}: auth push must send channel token`
+    );
+  }
+});
+
 test("pattern engine pushSignal writes through session log module", () => {
   for (const rel of [
     "desktop/trading/algo-bot-pattern-engine.cjs",
