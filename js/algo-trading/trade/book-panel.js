@@ -32,7 +32,7 @@ subscribeAlgoBotStatus
 
 import {
 isAlgoBotLiteMode
-} from "../lite-layout.js?v=4";
+} from "../lite-layout.js?v=5";
 
 const PANEL_HEIGHT_KEY =
 "algo_trade_book_panel_height_v1";

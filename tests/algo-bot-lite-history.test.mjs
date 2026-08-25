@@ -21,6 +21,20 @@ test("Algo Bot lite loads candle history for RSI overview / fit", () => {
   assert.match(botPage, /loadAlgoBotLiteHistory/);
 });
 
+test("Algo Bot lite exposes analysis timeframe without a chart", () => {
+  const layout = read("js/algo-trading/lite-layout.js");
+  assert.doesNotMatch(layout, /tfBar\.hidden\s*=\s*true/);
+  const css = read("css/algo-trading.css");
+  assert.doesNotMatch(
+    css.replace(/\s+/g, ""),
+    /#algo-tf-bar\{[^}]*display:none/
+  );
+  const html = read("algo-trading.html");
+  assert.match(html, /id="algo-rsi-flip-chart-tf"/);
+  const page = read("js/algo-trading.js");
+  assert.match(page, /algo-rsi-flip-chart-tf/);
+});
+
 test("Algo Bot kline history IPC is exposed like linear symbols", () => {
   for (const rel of [
     "desktop/trading/algo-trading-ipc.cjs",

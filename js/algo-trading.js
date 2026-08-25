@@ -238,7 +238,7 @@ bindAlgoStatsPanelResize
 import {
 isAlgoBotLiteMode,
 mountAlgoBotLiteLayout
-} from "./algo-trading/lite-layout.js?v=4";
+} from "./algo-trading/lite-layout.js?v=5";
 
 import {
 loadAlgoBotLiteHistory
@@ -949,6 +949,27 @@ tf
 );
 }
 );
+
+const chartTfSel =
+document.getElementById(
+"algo-rsi-flip-chart-tf"
+);
+
+if(
+chartTfSel &&
+document.activeElement !==
+chartTfSel &&
+[
+...chartTfSel.options
+].some(
+opt=>
+opt.value ===
+tf
+)
+){
+chartTfSel.value =
+tf;
+}
 
 }
 
@@ -4481,6 +4502,34 @@ return;
 void loadSymbol(
 symbol,
 btn.dataset.tf
+);
+
+}
+);
+
+document.getElementById(
+"algo-rsi-flip-chart-tf"
+)?.addEventListener(
+"change",
+event=>{
+
+const next =
+String(
+event?.target?.value ||
+""
+).trim();
+
+if(
+!next ||
+next ===
+tf
+){
+return;
+}
+
+void loadSymbol(
+symbol,
+next
 );
 
 }

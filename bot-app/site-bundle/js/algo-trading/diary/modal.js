@@ -41,7 +41,7 @@ import {
 
 import {
 isAlgoBotLiteMode
-} from "../lite-layout.js?v=4";
+} from "../lite-layout.js?v=5";
 
 const OVERLAY_ATTR = "data-algo-diary-overlay";
 

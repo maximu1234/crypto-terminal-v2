@@ -75,7 +75,7 @@ mountQwertyKeyInput
 
 import {
 isAlgoBotLiteMode
-} from "./algo-trading/lite-layout.js?v=4";
+} from "./algo-trading/lite-layout.js?v=5";
 
 function renderList(){
 

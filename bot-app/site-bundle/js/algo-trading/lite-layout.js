@@ -124,10 +124,6 @@ const statsResize =
 document.getElementById(
 "algo-stats-resize"
 );
-const tfBar =
-document.getElementById(
-"algo-tf-bar"
-);
 const globalSetupCol =
 document.querySelector(
 '.algo-stats-col[data-algo-strategy="global-setup"]'
@@ -148,13 +144,6 @@ const rsiColumns =
 document.querySelector(
 '.algo-stats-columns[data-algo-analysis-bot="rsi-touch-flip"]'
 );
-
-if(
-tfBar
-){
-tfBar.hidden =
-true;
-}
 
 if(
 statsResize

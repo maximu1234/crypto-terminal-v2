@@ -299,7 +299,7 @@ Object.freeze({
 "script-favorites-list.js":
 2,
 "algo-trading.js":
-204,
+205,
 "algo-trading-page-boot.js":
 11,
 "algo-trading-list.js":
@@ -311,7 +311,7 @@ Object.freeze({
 "algo-trading/stats-panel-resize.js":
 2,
 "algo-trading/lite-layout.js":
-4,
+5,
 "algo-trading/lite-history.js":
 1,
 "algo-trading/live-candle.js":
@@ -887,7 +887,7 @@ Object.freeze({
 "script-page.css":
 25,
 "algo-trading.css":
-150,
+151,
 "algo-trading-book-panel.css":
 6,
 "algo-trading-diary-modal.css":

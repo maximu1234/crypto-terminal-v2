@@ -82,6 +82,10 @@ if (html.includes('id="algo-tp-ema"')) {
   fail("bot HTML still has old TP→EMA Data panel");
 }
 
+if (!html.includes('id="algo-rsi-flip-chart-tf"')) {
+  fail("bot HTML missing analysis timeframe select (#algo-rsi-flip-chart-tf)");
+}
+
 const js = read(jsPath);
 if (!js.includes("mountAlgoBotLiteLayout") || !js.includes("isAlgoBotLiteMode")) {
   fail("bot-app/site-bundle/js/algo-trading.js must use lite layout helpers");
@@ -98,6 +102,12 @@ const liteLayout = read(
 );
 if (!liteLayout.includes("algo-bot-main-grid")) {
   fail("lite-layout.js must create #algo-bot-main-grid (panels, not hidden chart stack)");
+}
+if (/tfBar\.hidden\s*=\s*true/.test(liteLayout) || /["']algo-tf-bar["'][\s\S]{0,80}hidden\s*=\s*true/.test(liteLayout)) {
+  fail("lite-layout.js must not hide #algo-tf-bar — analysis needs a timeframe");
+}
+if (/#algo-tf-bar\{[^}]*display:\s*none/.test(css.replace(/\s+/g, ""))) {
+  fail("lite CSS must show #algo-tf-bar (analysis TF, not the chart)");
 }
 
 const botSession = read(path.join(ROOT, "bot-app/app-session.cjs"));

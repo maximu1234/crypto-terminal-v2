@@ -3692,7 +3692,15 @@ display:none !important;
 }
 
 body.algo-trading-page.algo-bot-lite-layout #algo-tf-bar{
-display:none !important;
+display:flex !important;
+align-items:center;
+flex:0 0 auto;
+flex-wrap:wrap;
+gap:2px;
+padding:0 8px;
+margin:0;
+order:1;
+border-right:var(--coins-block-separator, 3.5px solid #2e2e30);
 }
 
 body.algo-trading-page.algo-bot-lite-layout #algo-stats-resize,
