@@ -51,7 +51,7 @@ getAlgoTickerFlagList,
 isAlgoMarketDataset,
 toggleAlgoTickerInFlagList,
 removeAlgoTickerFromFlagList
-} from "./algo-trading/ticker-flags.js?v=9";
+} from "./algo-trading/ticker-flags.js?v=10";
 
 import {
 ALGO_ANALYSIS_BOT_CHANGE_EVENT,
@@ -66,7 +66,8 @@ RSI_TOUCH_FLIP_LIST_MARKET,
 RSI_TOUCH_FLIP_BOOK_CHANGE_EVENT,
 RSI_TOUCH_FLIP_BOOK_OPEN_EVENT,
 listRsiTouchFlipBookSymbols,
-getRsiTouchFlipBookRow
+getRsiTouchFlipBookRow,
+removeRsiTouchFlipBookRow
 } from "./algo-trading/rsi-touch-flip-book.js?v=2";
 
 import {
@@ -485,19 +486,31 @@ const earlyT3On =
 isActiveAnalysisBot(
 ALGO_ANALYSIS_BOT_EARLY_T3
 );
+const rsiOn =
+isActiveAnalysisBot(
+ALGO_ANALYSIS_BOT_RSI_TOUCH_FLIP
+);
 const rows =
 ALGO_LIST_FLAG_UI.filter(
-row=>
-(
-pattern12On &&
-row.ui !==
-"algo-early-t3"
-) ||
-(
-earlyT3On &&
+row=>{
+
+if(
+row.ui ===
+"algo-rsi-flip"
+){
+return rsiOn;
+}
+
+if(
 row.ui ===
 "algo-early-t3"
-)
+){
+return earlyT3On;
+}
+
+return pattern12On;
+
+}
 );
 const signature =
 rows.map(
@@ -714,6 +727,25 @@ btn,
 symbol
 ){
 
+if(
+isRsiTouchFlipMarket(
+coinsState().currentDataset
+) &&
+getRsiTouchFlipBookRow(
+symbol
+)
+){
+btn.className =
+"flag coin-flag-btn screener-flag-btn favorite flag--algo-rsi-flip";
+btn.title =
+"Снять: RSI Touch Flip";
+btn.setAttribute(
+"aria-pressed",
+"true"
+);
+return;
+}
+
 const painted =
 resolveAlgoListFlagUi(
 symbol,
@@ -761,6 +793,18 @@ return;
 
 const dataset =
 coinsState().currentDataset;
+
+if(
+isRsiTouchFlipMarket(
+dataset
+)
+){
+removeRsiTouchFlipBookRow(
+symbol
+);
+refreshAlgoMarketListFromFlags();
+return;
+}
 const preferredFlag =
 algoMarketDatasetToFlagId(
 dataset

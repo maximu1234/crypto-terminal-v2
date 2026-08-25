@@ -303,7 +303,7 @@ Object.freeze({
 "algo-trading-page-boot.js":
 11,
 "algo-trading-list.js":
-25,
+26,
 "algo-trading/coin-list-host.js":
 2,
 "algo-trading/page-prefs.js":
@@ -392,7 +392,7 @@ Object.freeze({
 "algo-trading/rsi-touch-flip-fit-panel.js":
 7,
 "algo-trading/ticker-flags.js":
-9,
+10,
 "algo-trading/terminal-early-t3-list.js":
 2,
 "algo-trading/bot-status-flags.js":
@@ -887,7 +887,7 @@ Object.freeze({
 "script-page.css":
 25,
 "algo-trading.css":
-152,
+153,
 "algo-trading-book-panel.css":
 6,
 "algo-trading-diary-modal.css":

@@ -13,7 +13,7 @@ ALGO_FLAG_SHORT_5M,
 ALGO_FLAG_BOTH_5M,
 ALGO_FLAG_FAVORITES,
 replaceAlgoTickerFlagList
-} from "./ticker-flags.js?v=9";
+} from "./ticker-flags.js?v=10";
 
 import {
 mountAlgoStrategyUniverseUi

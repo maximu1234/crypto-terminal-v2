@@ -81,6 +81,14 @@ flagId:
 ALGO_FLAG_EARLY_T3,
 title:
 "1-2 Early T3"
+},
+{
+ui:
+"algo-rsi-flip",
+flagId:
+"algoRsiTouchFlip",
+title:
+"RSI Touch Flip"
 }
 ];
 

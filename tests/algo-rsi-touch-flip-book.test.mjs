@@ -1,5 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import fs from "node:fs";
+import { fileURLToPath } from "node:url";
+import path from "node:path";
 import {
   normalizeRsiTouchFlipBook,
   normalizeRsiTouchFlipBookRow,
@@ -7,6 +10,8 @@ import {
   rsiTouchFlipBookBudgetFits,
   parseWalletAvailableUsdt
 } from "../js/algo-trading/rsi-touch-flip-book.js";
+
+const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 test("book row keeps chart tf and launch prefs per ticker", () => {
   const row = normalizeRsiTouchFlipBookRow({
@@ -71,6 +76,22 @@ test("coin list symbols stay without .P so they match Bybit tickers and Pattern 
     book.map((row) => row.symbol),
     ["ETHUSDT", "SOLUSDT"]
   );
+});
+
+test("RSI list paints the book flag and clearing it removes the book row", () => {
+  const list = fs.readFileSync(
+    path.join(root, "js/algo-trading-list.js"),
+    "utf8"
+  );
+  const flags = fs.readFileSync(
+    path.join(root, "js/algo-trading/ticker-flags.js"),
+    "utf8"
+  );
+  const css = fs.readFileSync(path.join(root, "css/algo-trading.css"), "utf8");
+  assert.match(list, /removeRsiTouchFlipBookRow/);
+  assert.match(list, /flag--algo-rsi-flip/);
+  assert.match(flags, /algo-rsi-flip/);
+  assert.match(css, /flag--algo-rsi-flip/);
 });
 
 test("wallet available 0 falls back to equity like the algo-profile label", () => {

@@ -17,7 +17,7 @@ syncAllTickerFlagsRootToMain
 } from "./bot-bridge.js?v=25";
 import {
 ALGO_TICKER_FLAGS_KEY
-} from "./ticker-flags.js?v=9";
+} from "./ticker-flags.js?v=10";
 import {
 loadStagedBotTickerBook,
 loadBotTickerBook

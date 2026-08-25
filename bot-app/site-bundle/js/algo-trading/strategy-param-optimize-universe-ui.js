@@ -47,7 +47,7 @@ writeTickerStrategyOverlays
 import {
 botStrategyToFlagId,
 replaceAlgoTickerFlagList
-} from "./ticker-flags.js?v=9";
+} from "./ticker-flags.js?v=10";
 
 /**
  * @param {number|null|undefined} value

@@ -17,7 +17,7 @@ import {
 ALGO_FLAG_EARLY_T3,
 ALGO_MARKET_EARLY_T3,
 getAlgoTickerFlagList
-} from "./ticker-flags.js?v=9";
+} from "./ticker-flags.js?v=10";
 import {
 fetchAlgoBotStatus,
 maybeApplyTickerFlagsFromBotStatus,
