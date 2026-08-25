@@ -968,6 +968,123 @@ typeof prefs ===
 
 if(
 strategyId ===
+"rsi-touch-flip"
+){
+const book =
+Array.isArray(
+p.book
+)
+? p.book
+: [];
+const budgetSum =
+Number.isFinite(
+Number(
+p.budgetSum
+)
+)
+? Number(
+p.budgetSum
+)
+: book.reduce(
+(
+sum,
+row
+)=>{
+const n =
+Number(
+row?.prefs?.budget ??
+row?.budget
+);
+return sum +
+(
+Number.isFinite(
+n
+)
+? n
+: 0
+);
+},
+0
+);
+const available =
+Number(
+p.available
+);
+const tickers =
+book.map(
+row=>{
+const symbol =
+String(
+row?.symbol ||
+""
+).trim() ||
+"—";
+const tf =
+String(
+row?.tf ||
+""
+).trim() ||
+"—";
+const budget =
+Number(
+row?.prefs?.budget ??
+row?.budget
+);
+return `${symbol} ${tf} ${Number.isFinite(budget) ? budget.toFixed(0) : "—"} USDT`;
+}
+).join(
+" · "
+);
+
+return [
+{
+label:
+"Стратегия",
+value:
+"RSI Touch Flip"
+},
+{
+label:
+"Режим",
+value:
+"Реальная торговля"
+},
+{
+label:
+"Книга",
+value:
+book.length
+? `${book.length} тик.`
+: "пуста"
+},
+{
+label:
+"Сумма бюджетов",
+value:
+`${budgetSum.toFixed(0)} USDT`
+},
+{
+label:
+"Баланс на старте",
+value:
+Number.isFinite(
+available
+)
+? `${available.toFixed(2)} USDT`
+: "—"
+},
+{
+label:
+"Тикеры",
+value:
+tickers ||
+"—"
+}
+];
+}
+
+if(
+strategyId ===
 "early-t3"
 ){
 const listMode =

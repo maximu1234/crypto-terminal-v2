@@ -13,7 +13,7 @@ completeAuthFromCallbackUrl,
 hasAuthCallbackInUrl,
 exportAuthSessionTransferString,
 importAuthSessionTransferString
-} from "./cloud-sync.js?v=66";
+} from "./cloud-sync.js?v=67";
 
 import {
 isSupabaseConfigured
@@ -363,14 +363,20 @@ wrap.querySelector(
 "[data-settings-dropdown-anchor]"
 );
 
-if(anchor){
+if(
+anchor &&
+anchor.parentElement ===
+wrap
+){
 wrap.insertBefore(
 dropdown,
 anchor
 );
 anchor.remove();
 }else{
-wrap.appendChild(dropdown);
+wrap.appendChild(
+dropdown
+);
 }
 
 dropdown.classList.remove(
@@ -392,11 +398,23 @@ dropdown.parentElement === document.body
 return;
 }
 
-const anchor =
+if(
+dropdown.parentElement ===
+wrap
+){
+
+let anchor =
+wrap.querySelector(
+"[data-settings-dropdown-anchor]"
+);
+
+if(
+!anchor
+){
+anchor =
 document.createElement(
 "span"
 );
-
 anchor.setAttribute(
 "data-settings-dropdown-anchor",
 ""
@@ -411,7 +429,13 @@ wrap.insertBefore(
 anchor,
 dropdown
 );
-document.body.appendChild(dropdown);
+}
+
+}
+
+document.body.appendChild(
+dropdown
+);
 dropdown.classList.add(
 "header-settings-dropdown--portaled"
 );
@@ -440,6 +464,45 @@ target.closest(
 "#trade-exchange-wrap"
 )
 );
+
+}
+
+function querySettingsShell(
+fromEl
+){
+
+const wrapFromEl =
+fromEl?.closest?.(
+"#header-settings-wrap"
+);
+
+const wrap =
+wrapFromEl ||
+document.querySelector(
+"#topbar > #header-settings-wrap"
+) ||
+document.getElementById(
+"header-settings-wrap"
+);
+
+const btn =
+fromEl?.closest?.(
+"#header-settings-btn"
+) ||
+wrap?.querySelector(
+"#header-settings-btn"
+);
+
+const dropdown =
+wrap?.querySelector(
+"#header-settings-dropdown"
+);
+
+return {
+btn,
+wrap,
+dropdown
+};
 
 }
 
@@ -580,12 +643,12 @@ return true;
 
 function syncSettingsDropdownPlacement(){
 
-const btn =
-document.getElementById("header-settings-btn");
-const dropdown =
-document.getElementById("header-settings-dropdown");
-const wrap =
-document.getElementById("header-settings-wrap");
+const {
+btn,
+dropdown,
+wrap
+} =
+querySettingsShell();
 
 if(
 !btn ||
@@ -683,34 +746,55 @@ syncSettingsDropdownPlacement();
 
 export function closeCloudSettingsDropdown(){
 
-const btn =
-document.getElementById("header-settings-btn");
-const dropdown =
-document.getElementById("header-settings-dropdown");
-const wrap =
-document.getElementById("header-settings-wrap");
+const {
+btn,
+dropdown,
+wrap
+} =
+querySettingsShell();
+
+document.querySelectorAll(
+"#header-settings-dropdown"
+).forEach(
+el=>{
+el.classList.add(
+"hidden"
+);
+clearPortaledPosition(
+el
+);
+}
+);
 
 if(
-!btn ||
-!dropdown
+dropdown &&
+wrap
 ){
-return;
-}
-
-dropdown.classList.add("hidden");
-clearPortaledPosition(dropdown);
-
-if(wrap){
 restoreDropdownHome(
 dropdown,
 wrap
 );
 }
 
+document.querySelectorAll(
+"#header-settings-btn"
+).forEach(
+el=>{
+el.setAttribute(
+"aria-expanded",
+"false"
+);
+}
+);
+
+if(
+btn
+){
 btn.setAttribute(
 "aria-expanded",
 "false"
 );
+}
 
 }
 
@@ -720,14 +804,18 @@ closeCloudSettingsDropdown();
 
 }
 
-function openSettingsDropdown(){
+function openSettingsDropdown(
+fromEl
+){
 
-const btn =
-document.getElementById("header-settings-btn");
-const dropdown =
-document.getElementById("header-settings-dropdown");
-const wrap =
-document.getElementById("header-settings-wrap");
+const {
+btn,
+dropdown,
+wrap
+} =
+querySettingsShell(
+fromEl
+);
 
 if(
 !btn ||
@@ -744,8 +832,8 @@ btn.setAttribute(
 );
 
 const authHost =
-document.getElementById(
-"cloud-settings-mount"
+wrap.querySelector(
+"#cloud-settings-mount"
 );
 
 /*
@@ -787,8 +875,8 @@ void import(
 ).then(
 mod=>{
 mod.mountSessionLogServerSettings(
-document.getElementById(
-"algo-session-log-server-mount"
+wrap.querySelector(
+"#algo-session-log-server-mount"
 )
 );
 }
@@ -889,55 +977,60 @@ return "";
 
 function setupSettingsDropdown(){
 
-const btn =
-document.getElementById("header-settings-btn");
-const dropdown =
-document.getElementById("header-settings-dropdown");
-const wrap =
-document.getElementById("header-settings-wrap");
-
-if(
-!btn ||
-!dropdown ||
-!wrap
-){
-return;
-}
-
 function onSettingsToggle(
 e
 ){
 
+const gearBtn =
+e.target?.closest?.(
+"#header-settings-btn"
+);
+
+if(
+!gearBtn
+){
+return;
+}
+
+if(
+e.headerSettingsToggleHandled
+){
+return;
+}
+
+e.headerSettingsToggleHandled =
+true;
 e.preventDefault();
 e.stopPropagation();
 
-if(
-typeof e.stopImmediatePropagation ===
-"function"
-){
-e.stopImmediatePropagation();
-}
+const {
+dropdown
+} =
+querySettingsShell(
+gearBtn
+);
 
 /* Standalone Algo Bot: inline account / session paste (no Multichart settings window). */
 if(
 isAlgoBotShell()
 ){
-const dropdown =
-document.getElementById(
-"header-settings-dropdown"
-);
-const open =
-dropdown &&
-!dropdown.classList.contains(
-"hidden"
-);
 
 if(
-open
+!dropdown
 ){
-closeSettingsDropdown();
+return;
+}
+
+if(
+dropdown.classList.contains(
+"hidden"
+)
+){
+openSettingsDropdown(
+gearBtn
+);
 }else{
-openSettingsDropdown();
+closeSettingsDropdown();
 }
 
 return;
@@ -955,18 +1048,7 @@ if(
 ){
 document.addEventListener(
 "click",
-e=>{
-const gearBtn =
-e.target?.closest?.(
-"#header-settings-btn"
-);
-if(
-!gearBtn
-){
-return;
-}
-onSettingsToggle(e);
-},
+onSettingsToggle,
 true
 );
 settingsToggleDelegatedBound =
@@ -974,25 +1056,8 @@ true;
 }
 
 if(
-!btn.dataset.settingsToggleBound
+settingsDropdownReady
 ){
-btn.addEventListener(
-"click",
-onSettingsToggle
-);
-
-btn.addEventListener(
-"pointerdown",
-e=>{
-e.stopPropagation();
-},
-true
-);
-btn.dataset.settingsToggleBound =
-"1";
-}
-
-if(settingsDropdownReady){
 return;
 }
 
@@ -1000,22 +1065,28 @@ document.addEventListener(
 "pointerdown",
 e=>{
 
-const panel =
-document.getElementById(
-"header-settings-dropdown"
-);
-
-if(
-!panel ||
-panel.classList.contains("hidden")
-){
-return;
-}
-
 if(
 isSettingsUiTarget(
 e.target
 )
+){
+return;
+}
+
+const openPanel =
+[
+...document.querySelectorAll(
+"#header-settings-dropdown"
+)
+].find(
+el=>
+!el.classList.contains(
+"hidden"
+)
+);
+
+if(
+!openPanel
 ){
 return;
 }
@@ -1789,6 +1860,9 @@ const panels = [];
 
 const headerPanel =
 createAuthPanel(
+document.querySelector(
+"#topbar > #header-settings-wrap #cloud-settings-mount"
+) ||
 document.getElementById("cloud-settings-mount"),
 "panel"
 );

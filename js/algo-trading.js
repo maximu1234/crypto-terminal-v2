@@ -10,7 +10,8 @@ applyCoinsChartViewport,
 applyChartPriceFormat,
 applyRsiFixedPriceScale,
 appendFutureWhitespaceBars,
-computeChartFutureMarginBars
+computeChartFutureMarginBars,
+syncLinkedChartTimescales
 } from "./chart-import.js?v=48";
 
 import {
@@ -31,7 +32,7 @@ normalizeRsiPaneSettings
 
 import {
 buildChartRsiPoints
-} from "./indicators/htf-project.js?v=2";
+} from "./indicators/htf-project.js?v=5";
 
 import {
 loadMarketHistory,
@@ -45,7 +46,7 @@ subscribeKline
 import {
 mountAlgoTradingCoinList,
 refreshAlgoMarketListFromFlags
-} from "./algo-trading-list.js?v=19";
+} from "./algo-trading-list.js?v=24";
 
 import {
 mountAlgoTickerScanUi
@@ -68,16 +69,17 @@ mountAlgoRuntimeUi
 
 import {
 mountAlgoBotStrategyUi
-} from "./algo-trading/bot-strategy-ui.js?v=82";
+} from "./algo-trading/bot-strategy-ui.js?v=89";
 
 import {
 ALGO_ANALYSIS_BOT_CHANGE_EVENT,
+ALGO_ANALYSIS_BOT_NONE,
 ALGO_ANALYSIS_BOT_PATTERN_12,
 getActiveAnalysisBotId,
 isActiveAnalysisBot,
 isAnyAnalysisBotActive,
 setActiveAnalysisBotId
-} from "./algo-trading/active-analysis-bot.js?v=3";
+} from "./algo-trading/active-analysis-bot.js?v=4";
 
 import {
 mountSessionLogServerSettings
@@ -85,11 +87,11 @@ mountSessionLogServerSettings
 
 import {
 syncBotStrategiesToMain
-} from "./algo-trading/bot-bridge.js?v=22";
+} from "./algo-trading/bot-bridge.js?v=25";
 
 import {
 mountAlgoTradeUi
-} from "./algo-trading/trade/boot.js?v=4";
+} from "./algo-trading/trade/boot.js?v=5";
 
 import {
 mountAlgoTradingDrawings
@@ -97,11 +99,15 @@ mountAlgoTradingDrawings
 
 import {
 mountAlgoTradingIndicators
-} from "./algo-trading/indicators.js?v=14";
+} from "./algo-trading/indicators.js?v=15";
 
 import {
 mountAlgoPatternEntryOverlay
 } from "./algo-trading/pattern-entry-overlay.js?v=17";
+
+import {
+mountRsiTouchFlipHost
+} from "./algo-trading/rsi-touch-flip-panel.js?v=13";
 
 import {
 clearAlgoPatternAnalysisUi,
@@ -227,12 +233,12 @@ layoutRsiPane
 
 import {
 bindAlgoStatsPanelResize
-} from "./algo-trading/stats-panel-resize.js?v=1";
+} from "./algo-trading/stats-panel-resize.js?v=2";
 
 import {
 isAlgoBotLiteMode,
 mountAlgoBotLiteLayout
-} from "./algo-trading/lite-layout.js?v=1";
+} from "./algo-trading/lite-layout.js?v=4";
 
 /** Глубина ботов / сканов / «Подобрать»: ~10 000. График сначала ~5000, затем догрузка. */
 const HISTORY_REQUESTS =
@@ -270,7 +276,11 @@ key
 export async function mountAlgoTradingPage(){
 
 setActiveAnalysisBotId(
-getActiveAnalysisBotId(),
+isAlgoBotLiteMode() &&
+getActiveAnalysisBotId() ===
+ALGO_ANALYSIS_BOT_NONE
+? ALGO_ANALYSIS_BOT_PATTERN_12
+: getActiveAnalysisBotId(),
 {
 silent:
 true
@@ -404,13 +414,76 @@ return;
 
 mountAlgoBotLiteLayout();
 
+let symbol =
+resolveInitialSymbol();
+let tf =
+readPrefs().tf ||
+DEFAULT_TF;
+let listApi =
+null;
+
+if(
+isAlgoBotLiteMode()
+){
+void mountAlgoTradingCoinList(
+{
+getSymbol:()=>
+symbol,
+setSymbolLabel(
+next
+){
+setSymbolLabel(
+next
+);
+},
+async loadSymbol(
+next,
+nextTf
+){
+await loadSymbol(
+next,
+nextTf ||
+tf
+);
+listApi?.highlight?.();
+}
+}
+).then(
+api=>{
+listApi =
+api;
+listApi?.highlight?.();
+}
+).catch(
+err=>{
+console.warn(
+"[algo-trading] coin list:",
+err?.message ||
+err
+);
+}
+);
+}
+
+let chart =
+null;
+let candleSeries =
+null;
+let rsiChart =
+null;
+let rsiSeries =
+null;
+
+if(
+!isAlgoBotLiteMode()
+){
 const main =
 createCandlestickChart(
 chartEl
 );
-const chart =
+chart =
 main.chart;
-const candleSeries =
+candleSeries =
 main.series;
 
 candleSeries.applyOptions(
@@ -424,16 +497,12 @@ const rsi =
 createRSIChart(
 rsiChartEl
 );
-const rsiChart =
+rsiChart =
 rsi.chart;
-const rsiSeries =
+rsiSeries =
 rsi.series;
+}
 
-let symbol =
-resolveInitialSymbol();
-let tf =
-readPrefs().tf ||
-DEFAULT_TF;
 const mem =
 createAlgoStrategyMemory();
 
@@ -495,8 +564,6 @@ let disposed =
 false;
 let disposeCrosshair =
 null;
-let listApi =
-null;
 let drawingTools =
 null;
 let destroyDrawings =
@@ -511,6 +578,8 @@ algoChartDbg(
 );
 let entryOverlay =
 null;
+let rsiTouchFlipHost =
+null;
 let tradeUi =
 null;
 let botStrategyUi =
@@ -523,6 +592,8 @@ let lastPatternAnalysisAt =
 0;
 let algoStatsPanelCollapsed =
 false;
+let recaptureAlgoStatsPanelHeight =
+()=>{};
 let algoPattern12EnabledOnce =
 false;
 /** Bottom «Данные» after chart load + settle (как candles-loaded на Терминале). */
@@ -578,6 +649,7 @@ true
 }
 );
 drawingTools?.scheduleRedraw?.();
+rsiTouchFlipHost?.refresh?.();
 
 }
 
@@ -683,7 +755,7 @@ true
 
 /**
  * Аналитика/рисунки на графике — только для активного бота (меню «Боты»).
- * Сейчас: pattern-12. Новый бот — свой блок data-algo-analysis-bot + оверлей.
+ * pattern-12 / rsi-touch-flip — свой блок data-algo-analysis-bot + оверлей.
  */
 function applyActiveAnalysisBotChartUi(){
 
@@ -720,6 +792,12 @@ entryOverlay?.refreshPositions?.();
 algoPattern12EnabledOnce =
 false;
 refreshSupertrendFilterLines();
+rsiTouchFlipHost?.refresh?.();
+requestAnimationFrame(
+()=>{
+recaptureAlgoStatsPanelHeight();
+}
+);
 return;
 }
 
@@ -753,6 +831,12 @@ true
 }
 );
 }
+
+requestAnimationFrame(
+()=>{
+recaptureAlgoStatsPanelHeight();
+}
+);
 
 }
 
@@ -878,6 +962,12 @@ value
 }
 
 function layoutRsi(){
+
+if(
+!rsiSeries
+){
+return;
+}
 
 layoutRsiPane(
 rsiSeries,
@@ -1040,6 +1130,12 @@ true
 ){
 
 if(
+!rsiSeries
+){
+return;
+}
+
+if(
 !algoChartDbg(
 "rsi"
 ) ||
@@ -1096,11 +1192,13 @@ tf,
 symbol,
 loadHistory:(
 histSymbol,
-histTf
+histTf,
+requests
 )=>
 loadMarketHistory(
 histSymbol,
 histTf,
+requests ||
 HISTORY_REQUESTS,
 {
 parallel:
@@ -1121,19 +1219,50 @@ return;
 }
 
 rsiSeries.setData(
-points
+appendFutureWhitespaceBars(
+points,
+computeChartFutureMarginBars(
+terminalVisibleBars(
+candles.length
+)
+),
+tf
+)
 );
 applyRsiFixedPriceScale(
 rsiChart,
 rsiSeries
 );
+syncLinkedChartTimescales(
+chart,
+rsiChart
+);
 layoutRsi();
 
-const last =
-points[
+let last =
+null;
+
+for(
+let i =
 points.length -
-1
-];
+1;
+i >=
+0;
+i--
+){
+
+if(
+Number.isFinite(
+points[i]?.value
+)
+){
+last =
+points[i];
+break;
+}
+
+}
+
 lastRsiHudValue =
 last?.value ??
 null;
@@ -1411,6 +1540,12 @@ false
 {}
 ){
 
+if(
+!candleSeries
+){
+return;
+}
+
 const refPrice =
 candles[
 candles.length -
@@ -1505,6 +1640,8 @@ force:
 );
 }
 
+rsiTouchFlipHost?.refresh?.();
+
 drawingTools?.scheduleRedraw?.();
 
 }
@@ -1542,6 +1679,7 @@ symbol
 function applyLiveCandleTick(){
 
 if(
+!candleSeries ||
 !algoChartDbg(
 "livePrice"
 ) ||
@@ -1818,6 +1956,13 @@ drawingTools?.onSymbolChange?.({
 skipRedraw:
 true
 });
+
+if(
+isAlgoBotLiteMode()
+){
+return;
+}
+
 /* Индикаторы обновим после полной истории — не flush на пустых/старых свечах. */
 try{
 chartIndicators?.clearMainChartOverlays?.();
@@ -2059,7 +2204,9 @@ markAlgoHistoryStatsReadyAndAnalyze();
 }
 
 const unlinkTime =
-linkPairedChartTimeScales(
+chart &&
+rsiChart
+? linkPairedChartTimeScales(
 chart,
 rsiChart,
 layoutRsi,
@@ -2068,9 +2215,12 @@ layoutRsi,
 linkedDrivesMain:
 false
 }
-);
+)
+: ()=>{};
 
 if(
+chart &&
+candleSeries &&
 linkedCrosshairVertEl &&
 algoChartDbg(
 "rsi"
@@ -2121,6 +2271,7 @@ link.clearLinked?.();
 }
 
 const drawingsMount =
+chart &&
 algoChartDbg(
 "drawings"
 )
@@ -2146,6 +2297,9 @@ destroyDrawings =
 drawingsMount?.destroy ||
 (()=>{});
 
+if(
+chart
+){
 supertrendFilterOverlay =
 createAlgoSupertrendFilterOverlay(
 {
@@ -2169,6 +2323,7 @@ ALGO_ANALYSIS_BOT_PATTERN_12
 }
 );
 supertrendFilterOverlay.bind();
+}
 
 if(
 algoChartDbg(
@@ -2182,6 +2337,8 @@ root:
 document.getElementById(
 "chart-indicators-wrap"
 ),
+skipApplyPrefs:
+isAlgoBotLiteMode(),
 getHost:()=>({
 chart,
 series:
@@ -2233,11 +2390,13 @@ drawingTools?.scheduleRedraw?.();
 },
 loadIndicatorHistory:(
 histSymbol,
-histTf
+histTf,
+requests
 )=>
 loadMarketHistory(
 histSymbol,
 histTf,
+requests ||
 HISTORY_REQUESTS,
 {
 parallel:
@@ -2348,10 +2507,6 @@ document.getElementById(
 indicatorsRoot?.classList.add(
 "algo-bot-lite-pattern-only"
 );
-chartIndicators?.setIndicatorEnabled?.(
-"pattern-12",
-true
-);
 chartIndicators?.renderIndicatorSettingsInline?.(
 "pattern-12",
 patternSettingsPane
@@ -2362,6 +2517,7 @@ entryOverlay =
 null;
 
 if(
+chart &&
 algoChartDbg(
 "entryOverlay"
 )
@@ -2410,6 +2566,23 @@ mem.tp3Y
 );
 entryOverlay.bind();
 }
+
+rsiTouchFlipHost?.destroy?.();
+rsiTouchFlipHost =
+mountRsiTouchFlipHost(
+{
+getCandles:()=>
+candles,
+getSeries:()=>
+candleSeries,
+getChartTf:()=>
+tf,
+getSymbol:()=>
+symbol,
+isHistoryReady:()=>
+historyStatsReady
+}
+);
 
 applyActiveAnalysisBotChartUi();
 
@@ -4307,6 +4480,12 @@ true
 }
 );
 
+recaptureAlgoStatsPanelHeight =
+typeof disposeStatsResize.recapture ===
+"function"
+? disposeStatsResize.recapture
+: ()=>{};
+
 let chartResizeObserver =
 null;
 
@@ -4375,6 +4554,9 @@ listApi =
 null;
 entryOverlay?.destroy?.();
 entryOverlay =
+null;
+rsiTouchFlipHost?.destroy?.();
+rsiTouchFlipHost =
 null;
 destroySupertrendFilterLines();
 tradeUi?.destroy?.();
@@ -5046,7 +5228,14 @@ document.getElementById(
 );
 
 botStrategyUi =
-mountAlgoBotStrategyUi();
+mountAlgoBotStrategyUi(
+{
+getSymbol:()=>
+symbol,
+getChartTf:()=>
+tf
+}
+);
 
 void (
 async ()=>{
@@ -5057,7 +5246,8 @@ tf
 );
 
 if(
-disposed
+disposed ||
+isAlgoBotLiteMode()
 ){
 return;
 }
@@ -5080,10 +5270,12 @@ next
 );
 },
 async loadSymbol(
-next
+next,
+nextTf
 ){
 await loadSymbol(
 next,
+nextTf ||
 tf
 );
 listApi?.highlight?.();

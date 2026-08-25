@@ -19,17 +19,17 @@ export {
   stopTradeStreamBridge,
   startTradeStreamBridge,
   initTradeStreamBridge
-} from "./stream-bridge.js?v=1";
+} from "./stream-bridge.js?v=2";
 
 export {
   createTradeChartOverlay,
   initTradeChartOverlay
-} from "./chart-overlay.js?v=2";
+} from "./chart-overlay.js?v=5";
 
 export {
   createTradeChartOrders,
   initTradeChartOrders
-} from "./chart-orders.js?v=2";
+} from "./chart-orders.js?v=4";
 
 
 export {
@@ -48,7 +48,7 @@ export {
 export {
   initTradeMarketEntry,
   openWidgetMarketPosition
-} from "./market-entry.js?v=4";
+} from "./market-entry.js?v=5";
 
 export {
   initTradeBookPanel
@@ -74,7 +74,7 @@ export {
 
 export {
   bootTradeDiaryPage
-} from "./diary/page.js?v=2";
+} from "./diary/page.js?v=3";
 
 export {
   mountTradeDiaryPeriodPicker
@@ -120,12 +120,12 @@ export {
   buildDiaryPayload,
   openPnlShareModal,
   openPnlShareDiaryModal
-} from "./pnl-share-modal.js?v=1";
+} from "./pnl-share-modal.js?v=2";
 
 export {
   mountTradeChartMarkersToggle,
   initTradeChartExecutionMarkers
-} from "./chart-execution-markers.js?v=2";
+} from "./chart-execution-markers.js?v=3";
 
 export {
   fetchTradeHistoryForSymbol

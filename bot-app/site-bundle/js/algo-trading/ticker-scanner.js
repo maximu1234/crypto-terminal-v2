@@ -7,15 +7,15 @@ loadMarketHistory
 
 import {
 analyzeAlgoPatterns
-} from "./pattern-analysis.js?v=37";
+} from "./pattern-analysis.js?v=38";
 
 import {
 normalizeAlgoStatsMode
-} from "./pattern-trade-stats.js?v=14";
+} from "./pattern-trade-stats.js?v=15";
 
 import {
 readAlgoPattern12Settings
-} from "./pattern-12-settings.js?v=3";
+} from "./pattern-12-settings.js?v=5";
 
 import {
 resolveAlgoScanSymbols,

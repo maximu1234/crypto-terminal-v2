@@ -8,8 +8,10 @@ savePatternScanResults
 
 import {
 PATTERN_SCAN_DEPTH_OPTIONS,
-normalizePatternScanSideFilter
-} from "./pattern-12-scanner.js?v=20";
+normalizePatternScanSideFilter,
+normalizeScriptScanIndicatorId,
+SCRIPT_SCAN_INDICATOR_PATTERN12
+} from "./pattern-12-scanner.js?v=25";
 
 import {
 getActiveExchangeId
@@ -76,6 +78,8 @@ searchSide:
 "both",
 searchDepth:
 30,
+scanIndicatorId:
+SCRIPT_SCAN_INDICATOR_PATTERN12,
 minTurnover24hUsdt:
 20_000_000,
 layout:
@@ -160,6 +164,10 @@ raw.searchDepth
 raw.searchDepth
 )
 : DEFAULT_STATE.searchDepth,
+scanIndicatorId:
+normalizeScriptScanIndicatorId(
+raw.scanIndicatorId
+),
 minTurnover24hUsdt:(
 ()=>{
 const n =
@@ -469,6 +477,10 @@ searchSide:
 state.searchSide,
 searchDepth:
 state.searchDepth,
+scanIndicatorId:
+normalizeScriptScanIndicatorId(
+state.scanIndicatorId
+),
 minTurnover24hUsdt:
 state.minTurnover24hUsdt,
 layout:

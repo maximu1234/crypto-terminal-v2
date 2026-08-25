@@ -3,7 +3,7 @@
  */
 import {
   getActiveExchangeId
-} from "../market-api.js?v=2";
+} from "../market-api.js?v=6";
 
 let activeId = null;
 let modules = null;

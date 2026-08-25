@@ -18,7 +18,14 @@ macdHistColor,
 MACD_LINE_COLOR,
 MACD_SIGNAL_COLOR,
 normalizeMacdSettings
-} from "./macd-math.js?v=1";
+} from "./macd-math.js?v=3";
+
+import {
+formatHtfTfLegend,
+htfTfSelectHtml,
+projectHtfRowsOntoChart,
+resolveIndicatorSourceCandles
+} from "./htf-project.js?v=5";
 
 import {
 isChartLayoutReady
@@ -39,7 +46,7 @@ function buildMacdDisplayPoints(
 candles,
 tf,
 visibleBarsCap,
-settings
+macdRows
 ){
 
 if(
@@ -48,18 +55,21 @@ if(
 return [];
 }
 
-const rows =
-calculateMacd(
-candles,
-settings
+const byTime =
+new Map(
+(
+Array.isArray(
+macdRows
+)
+? macdRows
+: []
+).map(
+row=>[
+row.time,
+row
+]
+)
 );
-
-if(
-!rows.length
-){
-return [];
-}
-
 const cap =
 typeof visibleBarsCap ===
 "number"
@@ -82,16 +92,6 @@ candles.length
 const futureMargin =
 computeChartFutureMarginBars(
 visibleBars
-);
-
-const byTime =
-new Map(
-rows.map(
-row=>[
-row.time,
-row
-]
-)
 );
 
 const merged =
@@ -151,8 +151,12 @@ let lastSignal =
 null;
 let lastHist =
 null;
+let lastMacdDrawCandles =
+[];
 let settings =
 defaultMacdSettings();
+let refreshSeq =
+0;
 
 function readSettings(){
 
@@ -232,7 +236,9 @@ return document.getElementById(
 
 function getLegendText(){
 
-return `MACD ${settings.fastLength} ${settings.slowLength} ${settings.signalLength}`;
+return `MACD ${settings.fastLength} ${settings.slowLength} ${settings.signalLength}${formatHtfTfLegend(
+settings.tf
+)}`;
 
 }
 
@@ -461,6 +467,8 @@ lastSignal =
 null;
 lastHist =
 null;
+lastMacdDrawCandles =
+[];
 
 }
 
@@ -551,34 +559,144 @@ updateTimeScaleVisibility
 
 function refreshData(){
 
+const host =
+getHost?.();
+
+const paint =
+enabled &&
+histSeries &&
+macdSeries &&
+signalSeries;
+
+const watchAlerts =
+host?.shouldWatchMacdAlerts?.();
+
 if(
-!enabled ||
-!histSeries ||
-!macdSeries ||
-!signalSeries
+!paint &&
+!watchAlerts
 ){
 return;
 }
 
+if(
+paint
+){
 ensurePaneChartSized();
-
-const host =
-getHost?.();
+}
 
 const raw =
 host?.getCandles?.() ||
 [];
 
-const tf =
+const chartTf =
 host?.getTf?.() ||
 "D";
+
+const seq =
+++refreshSeq;
+
+void (
+async()=>{
+
+const resolved =
+await resolveIndicatorSourceCandles(
+{
+tf:
+settings.tf,
+chartTf,
+chartCandles:
+raw,
+symbol:
+host?.getSymbol?.(),
+loadHistory:
+host?.loadIndicatorHistory
+}
+);
+
+if(
+seq !==
+refreshSeq
+){
+return;
+}
+
+const stillPaint =
+enabled &&
+histSeries &&
+macdSeries &&
+signalSeries;
+
+const stillWatch =
+getHost?.()?.shouldWatchMacdAlerts?.();
+
+if(
+!stillPaint &&
+!stillWatch
+){
+return;
+}
+
+const macdRows =
+calculateMacd(
+resolved.candles,
+settings
+);
+const aligned =
+resolved.projected
+? projectHtfRowsOntoChart(
+raw,
+macdRows
+)
+: macdRows;
+
+lastMacdDrawCandles =
+(
+Array.isArray(
+aligned
+)
+? aligned
+: []
+).filter(
+row=>
+Number.isFinite(
+row?.macd
+)
+).map(
+row=>({
+time:
+row.time,
+open:
+row.macd,
+high:
+row.macd,
+low:
+row.macd,
+close:
+row.macd
+})
+);
+
+if(
+!stillPaint
+){
+lastMacd =
+null;
+lastSignal =
+null;
+lastHist =
+null;
+getHost?.()?.onIndicatorDataReady?.(
+"macd"
+);
+return;
+}
 
 const points =
 buildMacdDisplayPoints(
 raw,
-tf,
+chartTf,
 host?.getVisibleBarsCap?.(),
-settings
+aligned
 );
 
 let prevHist =
@@ -710,6 +828,12 @@ signalData
 );
 syncMacdAfterData();
 updateHud();
+getHost?.()?.onIndicatorDataReady?.(
+"macd"
+);
+
+}
+)();
 
 }
 
@@ -768,8 +892,11 @@ lastSignal =
 null;
 lastHist =
 null;
+lastMacdDrawCandles =
+[];
 updateHud();
 applyVisibility();
+refreshData();
 
 }
 
@@ -788,12 +915,6 @@ updateHud();
 }
 
 function onSymbolChange(){
-
-if(
-!enabled
-){
-return;
-}
 
 refreshData();
 
@@ -927,6 +1048,9 @@ root.innerHTML =
 <option value="sma"${settings.signalMa === "sma" ? " selected" : ""}>SMA</option>
 </select>
 </label>
+${htfTfSelectHtml(
+settings.tf
+)}
 </div>
 <div class="chart-indicator-settings-reset-row">
 <button type="button" class="chart-indicator-settings-reset">Сбросить в дефолт</button>
@@ -1052,6 +1176,12 @@ getChart:()=>
 enabled
 ? chart
 : null,
+getMacdSeries:()=>
+enabled
+? macdSeries
+: null,
+getMacdDrawCandles:()=>
+lastMacdDrawCandles,
 onSymbolChange,
 onCandlesUpdate,
 syncViewport,

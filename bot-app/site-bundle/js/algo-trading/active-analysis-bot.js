@@ -1,12 +1,22 @@
 /**
- * Активный бот для аналитики на АлгоТрейдинг: панель «Данные» + рисунки на графике.
- * Запуск бота (launchStrategyId) — отдельно; здесь только что показываем/рисуем.
+ * Активный бот аналитики на АлгоТрейдинг (меню «Боты»).
+ * В один момент включён не больше одного; «none» — страница без бота.
+ * Запуск live/manual (launchStrategyId) — отдельно, но только при включённом боте.
  */
+export const ALGO_ANALYSIS_BOT_NONE =
+"none";
+
 export const ALGO_ANALYSIS_BOT_PATTERN_12 =
 "pattern-12";
 
+export const ALGO_ANALYSIS_BOT_EARLY_T3 =
+"pattern-12-early-t3";
+
+export const ALGO_ANALYSIS_BOT_RSI_TOUCH_FLIP =
+"rsi-touch-flip";
+
 export const ALGO_ANALYSIS_BOT_KEY =
-"algo_trading_analysis_bot_v1";
+"algo_trading_analysis_bot_v2";
 
 export const ALGO_ANALYSIS_BOT_CHANGE_EVENT =
 "algo-analysis-bot-change";
@@ -14,7 +24,9 @@ export const ALGO_ANALYSIS_BOT_CHANGE_EVENT =
 /** Известные боты аналитики (новые — сюда). */
 export const ALGO_ANALYSIS_BOT_IDS =
 [
-ALGO_ANALYSIS_BOT_PATTERN_12
+ALGO_ANALYSIS_BOT_PATTERN_12,
+ALGO_ANALYSIS_BOT_EARLY_T3,
+ALGO_ANALYSIS_BOT_RSI_TOUCH_FLIP
 ];
 
 /**
@@ -32,6 +44,14 @@ raw ||
 ).trim();
 
 if(
+!id ||
+id ===
+ALGO_ANALYSIS_BOT_NONE
+){
+return ALGO_ANALYSIS_BOT_NONE;
+}
+
+if(
 ALGO_ANALYSIS_BOT_IDS.includes(
 id
 )
@@ -39,7 +59,26 @@ id
 return id;
 }
 
-return ALGO_ANALYSIS_BOT_PATTERN_12;
+return ALGO_ANALYSIS_BOT_NONE;
+
+}
+
+function applyAnalysisBotAttr(
+botId
+){
+
+if(
+typeof document ===
+"undefined"
+){
+return;
+}
+
+document.body?.setAttribute(
+"data-algo-analysis-bot",
+botId ||
+ALGO_ANALYSIS_BOT_NONE
+);
 
 }
 
@@ -55,7 +94,7 @@ ALGO_ANALYSIS_BOT_KEY
 )
 );
 }catch{
-return ALGO_ANALYSIS_BOT_PATTERN_12;
+return ALGO_ANALYSIS_BOT_NONE;
 }
 
 }
@@ -79,23 +118,26 @@ nextRaw
 );
 
 try{
+if(
+next ===
+ALGO_ANALYSIS_BOT_NONE
+){
+localStorage.removeItem(
+ALGO_ANALYSIS_BOT_KEY
+);
+}else{
 localStorage.setItem(
 ALGO_ANALYSIS_BOT_KEY,
 next
 );
+}
 }catch{
 /* ignore quota */
 }
 
-if(
-typeof document !==
-"undefined"
-){
-document.body?.setAttribute(
-"data-algo-analysis-bot",
+applyAnalysisBotAttr(
 next
 );
-}
 
 if(
 !opts.silent &&
@@ -131,9 +173,31 @@ export function isActiveAnalysisBot(
 botId
 ){
 
+const id =
+String(
+botId ||
+""
+).trim();
+
+if(
+!id ||
+id ===
+ALGO_ANALYSIS_BOT_NONE
+){
+return false;
+}
+
 return getActiveAnalysisBotId() ===
-normalizeAnalysisBotId(
-botId
-);
+id;
+
+}
+
+/**
+ * @returns {boolean}
+ */
+export function isAnyAnalysisBotActive(){
+
+return getActiveAnalysisBotId() !==
+ALGO_ANALYSIS_BOT_NONE;
 
 }

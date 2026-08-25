@@ -28,7 +28,11 @@ retagKnownAlgoBotAlerts
 import {
 fetchAlgoBotStatus,
 subscribeAlgoBotStatus
-} from "../bot-bridge.js?v=22";
+} from "../bot-bridge.js?v=25";
+
+import {
+isAlgoBotLiteMode
+} from "../lite-layout.js?v=4";
 
 const PANEL_HEIGHT_KEY =
 "algo_trade_book_panel_height_v1";
@@ -950,8 +954,13 @@ updateEyeUi();
 positionsDiaryBtn?.addEventListener(
 "click",
 ()=>{
+if(
+isAlgoBotLiteMode()
+){
+return;
+}
 void import(
-"../diary/modal.js?v=4"
+"../diary/modal.js?v=5"
 ).then(
 (mod)=>{
 if(

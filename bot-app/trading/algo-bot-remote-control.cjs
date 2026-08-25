@@ -307,7 +307,9 @@ const strategyId =
 [
 "st1",
 "st2",
-"st3"
+"st3",
+"early-t3",
+"rsi-touch-flip"
 ].includes(
 String(
 opts.strategyId ||
@@ -330,6 +332,26 @@ typeof opts.strategyPrefs ===
 ? {
 strategyPrefs:
 opts.strategyPrefs
+}
+: {}
+),
+...(
+opts.earlyT3Prefs &&
+typeof opts.earlyT3Prefs ===
+"object"
+? {
+earlyT3Prefs:
+opts.earlyT3Prefs
+}
+: {}
+),
+...(
+Array.isArray(
+opts.book
+)
+? {
+book:
+opts.book
 }
 : {}
 )

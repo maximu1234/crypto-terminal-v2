@@ -7,7 +7,7 @@ syncTradePositionsCache
 
 import {
 isExchangeTradingEnabled
-} from "./market-api.js?v=2";
+} from "./market-api.js?v=6";
 
 const openPositionSymbols =
 new Set();
@@ -163,7 +163,7 @@ new CustomEvent(
 );
 
 void import(
-"./terminal/terminal-table.js?v=24"
+"./terminal/terminal-table.js?v=32"
 ).then(
 ({
 renderList

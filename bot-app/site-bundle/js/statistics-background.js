@@ -1,16 +1,16 @@
 /**
- * Фоновый пересчёт статистики: продолжается при переходе на другие страницы сайта
- * (site-boot вызывает resumeStatsBackgroundJob на каждой загрузке).
+ * Фоновый пересчёт статистики, пока жмёшь «Обновить» и уходишь на другую
+ * страницу. Когда job status ≠ running, site-boot модуль даже не импортирует.
  */
 import {
 fetchTickersInto
-} from "./tickers.js?v=26";
+} from "./tickers.js?v=27";
 
 import {
 getActiveExchangeId,
 getActiveExchangeDefinition,
 fetchMarketDailyCandles
-} from "./market-api.js?v=2";
+} from "./market-api.js?v=6";
 
 export const STATS_JOB_UPDATE_EVENT =
 "stats-job-update";
@@ -65,8 +65,12 @@ const STATS_PARTIAL_CACHE_EVERY =
 const CACHE_KEY_PREFIX =
 "stats_movers_";
 
-const JOB_STORAGE_KEY =
+/** site-boot peeks this key and skips the module unless status === "running". */
+export const STATS_JOB_STORAGE_KEY =
 "stats_bg_job_v3";
+
+const JOB_STORAGE_KEY =
+STATS_JOB_STORAGE_KEY;
 
 /** Единый job: 1d из тикеров + 1w/1m/1y из одного kline-запроса на монету. */
 export const STATS_JOB_PERIOD_ALL =

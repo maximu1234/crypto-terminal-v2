@@ -16,7 +16,7 @@ isRsiAlert
 
 import {
 isCloudLoggedInEffective
-} from "./cloud-sync.js?v=66";
+} from "./cloud-sync.js?v=67";
 
 import {
 getTelegramChatId

@@ -1111,7 +1111,9 @@ const strategyId =
 [
 "st1",
 "st2",
-"st3"
+"st3",
+"early-t3",
+"rsi-touch-flip"
 ].includes(
 String(
 payload.strategyId ||
@@ -1140,6 +1142,26 @@ typeof payload.strategyPrefs ===
 ? {
 strategyPrefs:
 payload.strategyPrefs
+}
+: {}
+),
+...(
+payload.earlyT3Prefs &&
+typeof payload.earlyT3Prefs ===
+"object"
+? {
+earlyT3Prefs:
+payload.earlyT3Prefs
+}
+: {}
+),
+...(
+Array.isArray(
+payload.book
+)
+? {
+book:
+payload.book
 }
 : {}
 )
@@ -1193,15 +1215,68 @@ payload =
 {}
 ){
 
-void payload;
+const transfer =
+String(
+payload.transfer ||
+""
+).trim();
 
+if(
+!transfer
+){
 return {
 ok:
 false,
 message:
-"Передача сессии на бот отключена",
-skipped:
-true
+"Нет строки сессии"
+};
+}
+
+const url =
+buildUrl(
+{
+host:
+payload.host,
+port:
+payload.port,
+token:
+payload.token,
+path:
+"/auth/session"
+}
+);
+
+const res =
+await fetchJsonPost(
+url,
+{
+transfer
+},
+30000
+);
+
+if(
+!res.ok
+){
+return {
+ok:
+false,
+message:
+res.message ||
+res.json?.message ||
+"Не удалось отправить сессию"
+};
+}
+
+return {
+ok:
+true,
+email:
+res.json?.email ||
+null,
+message:
+res.json?.message ||
+"Сессия отправлена"
 };
 
 }

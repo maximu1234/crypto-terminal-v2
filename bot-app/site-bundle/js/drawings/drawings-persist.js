@@ -26,6 +26,16 @@ normalizeRectangleShape
 } from "./arrow-rect.js?v=2";
 
 import {
+isFvpType,
+normalizeFvpShape,
+createFvpToolDefaults
+} from "./fixed-volume-profile.js?v=3";
+
+import {
+normalizeTextShape
+} from "./text.js?v=3";
+
+import {
 drawingsStorageKey
 } from "../drawings-exchange-key.js?v=1";
 
@@ -210,11 +220,35 @@ createRectangleToolDefaults().color
 }
 
 if(
+isFvpType(
+shape.type
+)
+){
+
+normalizeFvpShape(
+shape,
+createFvpToolDefaults()
+);
+
+}
+
+if(
 shape.type ===
 "brush"
 ){
 
 ensureBrushShape(
+shape
+);
+
+}
+
+if(
+shape.type ===
+"text"
+){
+
+normalizeTextShape(
 shape
 );
 

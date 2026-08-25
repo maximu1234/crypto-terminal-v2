@@ -15,7 +15,7 @@ import {
 ALGO_ANALYSIS_BOT_PATTERN_12,
 isActiveAnalysisBot,
 isAnyAnalysisBotActive
-} from "./active-analysis-bot.js?v=3";
+} from "./active-analysis-bot.js?v=4";
 
 export function bootAlgoDesktopBackgroundJobs(){
 
@@ -105,7 +105,7 @@ if(
 ){
 tasks.push(
 import(
-"./bot-bridge.js?v=22"
+"./bot-bridge.js?v=25"
 ).then(
 m=>
 m.stopAlgoBotIfRunning?.()

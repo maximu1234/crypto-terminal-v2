@@ -7,11 +7,12 @@ clampTpRr,
 clampRiskUsd,
 computeAlgoStopLoss,
 computeAlgoTakeProfit,
-linearUsdFromRisk,
+computeStopFillPrice,
+linearUsdFromFill,
 DEFAULT_SL_PCT_OF_X,
 DEFAULT_TP_RR,
 DEFAULT_RISK_USD
-} from "./pattern-entry-positions.js?v=14";
+} from "./pattern-entry-positions.js?v=16";
 
 /**
  * @typedef {"win"|"loss"|"open"} TradeOutcome
@@ -528,6 +529,16 @@ entry,
 slPrice,
 tpRr
 );
+const fillPrice =
+computeStopFillPrice(
+side,
+entry,
+candles[
+Number(
+event.bar
+)
+]
+);
 let delta =
 0;
 
@@ -542,8 +553,10 @@ detail.exitPrice
 ? detail.exitPrice
 : tpPrice;
 const winUsd =
-linearUsdFromRisk(
+linearUsdFromFill(
+side,
 entry,
+fillPrice,
 exitPx,
 slPrice,
 riskUsd
@@ -559,14 +572,23 @@ continue;
 
 delta =
 winUsd;
-profitUsd +=
-winUsd;
 sumR +=
 riskUsd >
 0
 ? winUsd /
 riskUsd
 : 0;
+
+if(
+winUsd >=
+0
+){
+profitUsd +=
+winUsd;
+}else{
+lossUsd +=
+-winUsd;
+}
 
 if(
 side ===
@@ -586,12 +608,49 @@ winUsd;
 outcome ===
 "loss"
 ){
+const exitPx =
+Number.isFinite(
+detail.exitPrice
+)
+? detail.exitPrice
+: slPrice;
+const lossNet =
+linearUsdFromFill(
+side,
+entry,
+fillPrice,
+exitPx,
+slPrice,
+riskUsd
+);
+
+if(
+!Number.isFinite(
+lossNet
+)
+){
+continue;
+}
+
 delta =
--riskUsd;
-lossUsd +=
-riskUsd;
+lossNet;
 sumR +=
--1;
+riskUsd >
+0
+? lossNet /
+riskUsd
+: 0;
+
+if(
+lossNet >=
+0
+){
+profitUsd +=
+lossNet;
+}else{
+lossUsd +=
+-lossNet;
+}
 
 if(
 side ===
@@ -600,12 +659,18 @@ side ===
 shortLosses +=
 1;
 shortLossUsd +=
-riskUsd;
+lossNet >=
+0
+? 0
+: -lossNet;
 }else{
 longLosses +=
 1;
 longLossUsd +=
-riskUsd;
+lossNet >=
+0
+? 0
+: -lossNet;
 }
 }else if(
 outcome ===

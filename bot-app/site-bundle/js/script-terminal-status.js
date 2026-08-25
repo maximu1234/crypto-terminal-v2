@@ -6,11 +6,11 @@ import {
 getScriptScanNextRunAt,
 isScriptScanBackgroundRunning,
 SCRIPT_SCAN_BG_EVENT
-} from "./script-scan-background.js?v=14";
+} from "./script-scan-background.js?v=17";
 
 import {
 loadScriptPageState
-} from "./script-page-storage.js?v=15";
+} from "./script-page-storage.js?v=16";
 
 import {
 isTerminalPage
@@ -19,7 +19,7 @@ isTerminalPage
 import {
 FEATURE_NAV_PREF_EVENT,
 isScriptNavEnabled
-} from "./desktop-feature-nav-prefs.js?v=2";
+} from "./desktop-feature-nav-prefs.js?v=4";
 
 function formatCountdown(
 ms

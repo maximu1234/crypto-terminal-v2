@@ -3,7 +3,7 @@
  */
 import {
 loadBotStrategiesPrefs
-} from "./bot-strategy-prefs.js?v=30";
+} from "./bot-strategy-prefs.js?v=32";
 import {
 readAlgoPattern12Settings
 } from "./pattern-12-settings.js?v=5";
@@ -232,7 +232,9 @@ err
 
 export async function startAlgoBot(
 strategyId =
-"st1"
+"st1",
+extra =
+{}
 ){
 
 const api =
@@ -271,11 +273,48 @@ lock
 await syncBotStrategiesToMain();
 await syncAllTickerFlagsRootToMain();
 
-if(
+const idNorm =
 String(
 strategyId ||
 ""
-).trim().toLowerCase() ===
+).trim().toLowerCase();
+
+if(
+idNorm ===
+"rsi-touch-flip"
+){
+const book =
+Array.isArray(
+extra?.book
+)
+? extra.book
+: [];
+const result =
+await api.startBot(
+{
+strategyId:
+"rsi-touch-flip",
+book:
+book ||
+[]
+}
+);
+
+if(
+!(
+result?.ok ||
+result?.running ||
+result?.alreadyRunning
+)
+){
+await releaseAlgoBotLock();
+}
+
+return result;
+}
+
+if(
+idNorm ===
 "early-t3"
 ){
 const earlyT3Prefs =

@@ -11,7 +11,7 @@ loadLightweightCharts
 
 import {
 jsImport
-} from "./asset-manifest.js?v=5";
+} from "./asset-manifest.js?v=6";
 
 import {
 isAlgoBotLiteShell

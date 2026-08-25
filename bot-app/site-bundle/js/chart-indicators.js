@@ -168,7 +168,11 @@ getHost,
 storageKey =
 DEFAULT_STORAGE_KEY,
 createPattern12Indicator:
-createPattern12IndicatorOverride
+createPattern12IndicatorOverride,
+extraIndicators =
+[],
+skipApplyPrefs =
+false
 }
 ){
 
@@ -229,7 +233,7 @@ createIndicatorSettingsDialog
 await Promise.all(
 [
 import(
-"./indicators/rsi-pane.js?v=6"
+"./indicators/rsi-pane.js?v=8"
 ),
 import(
 "./indicators/volume-pane.js?v=16"
@@ -238,16 +242,16 @@ import(
 "./indicators/ao-pane.js?v=13"
 ),
 import(
-"./indicators/macd-pane.js?v=2"
+"./indicators/macd-pane.js?v=6"
 ),
 import(
-"./indicators/moving-average.js?v=16"
+"./indicators/moving-average.js?v=18"
 ),
 import(
-"./indicators/ema-shift-ribbon.js?v=8"
+"./indicators/ema-shift-ribbon.js?v=9"
 ),
 import(
-"./indicators/supertrend.js?v=4"
+"./indicators/supertrend.js?v=5"
 ),
 typeof createPattern12IndicatorOverride ===
 "function"
@@ -307,6 +311,23 @@ pattern12Factory(
 getHost,
 settingsStore
 ),
+...((
+Array.isArray(
+extraIndicators
+)
+? extraIndicators
+: []
+).filter(
+create=>
+typeof create ===
+"function"
+).map(
+create=>
+create(
+getHost,
+settingsStore
+)
+)),
 createPatternGipIndicator(
 getHost,
 settingsStore
@@ -838,6 +859,7 @@ indicators.forEach(
 ind=>
 ind.syncMainChartOverlay?.()
 );
+updateLegend();
 
 }
 
@@ -987,7 +1009,11 @@ onDocPointerDown,
 true
 );
 
+if(
+!skipApplyPrefs
+){
 applyPrefs();
+}
 
 return {
 notifyLayoutChange,
@@ -1000,6 +1026,16 @@ flushIndicatorDataRefreshNow,
 syncViewports,
 resizePanes,
 getLinkedPaneCharts,
+getIndicator(
+id
+){
+
+return byId.get(
+id
+) ||
+null;
+
+},
 openSettings:
 openIndicatorSettings,
 openIndicatorSettings,

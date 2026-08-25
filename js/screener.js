@@ -52,7 +52,7 @@ createTickerUiBatcher
 
 import {
 mountReleaseMarker
-} from "./release-marker.js?v=100";
+} from "./release-marker.js?v=101";
 
 import {
 saveScreenerState,
@@ -70,7 +70,7 @@ FAVORITES_BY_EXCHANGE_KEY
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=58";
+} from "./auth-ui.js?v=60";
 
 import {
 ensureSettled,
@@ -80,7 +80,7 @@ withTimeout
 import {
 persistFavoritesToCloud,
 onFavoritesRemoteUpdate
-} from "./cloud-sync.js?v=66";
+} from "./cloud-sync.js?v=67";
 
 import {
 attachSymbolAutocomplete,

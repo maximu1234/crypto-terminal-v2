@@ -6,7 +6,7 @@ import {
 formatHtfTfLegend,
 htfTfSelectHtml,
 normalizeHtfTf
-} from "./htf-project.js?v=2";
+} from "./htf-project.js?v=5";
 
 export const RSI_PANE_ID =
 "rsi";

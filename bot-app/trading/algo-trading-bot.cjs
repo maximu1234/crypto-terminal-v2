@@ -24,6 +24,9 @@ readBotStrategies,
 writeBotStrategies,
 readTickerFlagsRoot,
 writeTickerFlagsRoot,
+mutateTickerFlagSymbol,
+clearTickerFlagList,
+FLAG_EARLY_T3,
 readTickerBook,
 writeTickerBook,
 readPattern12Settings,
@@ -43,6 +46,14 @@ require(
 const patternEngine =
 require(
 "./algo-bot-pattern-engine.cjs"
+);
+const earlyT3Engine =
+require(
+"./algo-bot-early-t3-engine.cjs"
+);
+const rsiTouchFlipEngine =
+require(
+"./algo-bot-rsi-touch-flip-engine.cjs"
 );
 const {
 getAlgoTradingMode
@@ -463,12 +474,18 @@ const POLL_MS =
 let statusTarget =
 null;
 
-/** @type {"st1"|"st2"|"st3"|null} */
+/** @type {"st1"|"st2"|"st3"|"early-t3"|"rsi-touch-flip"|null} */
 let runningStrategyId =
 null;
 
 /** Замороженная книга per-ticker params на текущую сессию (не черновик парсинга). */
 let sessionTickerBook =
+null;
+/** @type {{ tf: string, alertLeadPct: number, minTurnover24hUsdt: number } | null} */
+let sessionEarlyT3Prefs =
+null;
+/** @type {object | null} */
+let sessionRsiTouchFlipPrefs =
 null;
 
 let sessionId =
@@ -610,6 +627,174 @@ function buildStatusSnapshot(
 extra =
 {}
 ){
+
+if(
+runningStrategyId ===
+"rsi-touch-flip"
+){
+const engine =
+rsiTouchFlipEngine.getRsiTouchFlipEngineStatus();
+const prefs =
+sessionRsiTouchFlipPrefs ||
+{};
+const first =
+Array.isArray(
+engine.tickers
+) &&
+engine.tickers.length
+? engine.tickers[0]
+: null;
+
+return {
+ok:
+true,
+running:
+true,
+strategyId:
+"rsi-touch-flip",
+sessionId,
+sessionStartedAt,
+watchlistCount:
+engine.watchlistCount ||
+0,
+openCount:
+(
+engine.tickers ||
+[]
+).filter(
+row=>
+row.position &&
+row.position !==
+"flat"
+).length,
+message:
+statusMessage,
+tradingMode:
+"live",
+entriesPaused:
+false,
+tf:
+first?.tf ||
+"",
+symbol:
+first?.symbol ||
+"",
+exchangeId:
+"bybit",
+side:
+"both",
+sides:{
+long:
+true,
+short:
+true,
+both:
+true
+},
+armedCount:
+(
+engine.tickers ||
+[]
+).filter(
+row=>
+row.mode ===
+"wait-flat"
+).length,
+armedSetups:
+engine.tickers ||
+[],
+entriesCount:
+engine.entriesCount ||
+0,
+wouldEnterCount:
+engine.entriesCount ||
+0,
+lastSignal:
+engine.lastSignal,
+signals:
+engine.signals,
+strategyPrefs:{
+...prefs
+},
+...extra
+};
+}
+
+if(
+runningStrategyId ===
+"early-t3"
+){
+const engine =
+earlyT3Engine.getEarlyT3EngineStatus();
+const prefs =
+sessionEarlyT3Prefs ||
+{};
+
+return {
+ok:
+true,
+running:
+true,
+strategyId:
+"early-t3",
+sessionId,
+sessionStartedAt,
+watchlistCount:
+engine.watchlistCount,
+openCount:
+0,
+message:
+statusMessage,
+tradingMode:
+"manual",
+entriesPaused:
+false,
+tf:
+engine.tf ||
+prefs.tf ||
+"",
+exchangeId:
+"bybit",
+alertLeadPct:
+engine.alertLeadPct ??
+prefs.alertLeadPct,
+actionMode:
+engine.actionMode ||
+prefs.actionMode ||
+"alert",
+listAllLive:
+!!(
+engine.listAllLive ??
+prefs.listAllLive
+),
+minTurnover24hUsdt:
+engine.minTurnover24hUsdt ??
+prefs.minTurnover24hUsdt,
+side:
+"both",
+sides:{
+long:
+false,
+short:
+false,
+both:
+true
+},
+armedCount:
+engine.armedCount,
+armedSetups:
+[],
+entriesCount:
+0,
+wouldEnterCount:
+0,
+lastSignal:
+engine.lastSignal,
+signals:
+engine.signals,
+...extra
+};
+}
 
 const strategies =
 readBotStrategies();
@@ -1008,6 +1193,10 @@ message =
 ""
 ){
 
+const wasEarlyT3 =
+runningStrategyId ===
+"early-t3";
+
 sessionLog.appendNote(
 message
 ? `Стоп: ${message}`
@@ -1022,6 +1211,10 @@ message
 runningStrategyId =
 null;
 sessionTickerBook =
+null;
+sessionEarlyT3Prefs =
+null;
+sessionRsiTouchFlipPrefs =
 null;
 statusMessage =
 message;
@@ -1043,7 +1236,15 @@ strategies
 
 stopPoll();
 stopWatchlistRefresh();
+await earlyT3Engine.stopEarlyT3Engine();
+await rsiTouchFlipEngine.stopRsiTouchFlipEngine();
 await patternEngine.stopPatternEngine();
+
+if(
+wasEarlyT3
+){
+clearEarlyT3SessionFlags();
+}
 
 const snapshot =
 buildStatusSnapshot();
@@ -1235,6 +1436,8 @@ algoShort5m:
 algoBoth5m:
 [],
 algoFavorites:
+[],
+algoEarlyT3:
 []
 };
 const patch =
@@ -1259,7 +1462,10 @@ patch.algoBoth5m ??
 prev.algoBoth5m,
 algoFavorites:
 patch.algoFavorites ??
-prev.algoFavorites
+prev.algoFavorites,
+algoEarlyT3:
+patch.algoEarlyT3 ??
+prev.algoEarlyT3
 };
 
 const result =
@@ -1287,6 +1493,10 @@ sessionStartedAt =
 Date.now();
 statusMessage =
 "";
+sessionEarlyT3Prefs =
+null;
+sessionRsiTouchFlipPrefs =
+null;
 patternEngine.resetEngineSession();
 
 }
@@ -1671,6 +1881,527 @@ shellPrefs
 
 }
 
+async function startEarlyT3BotImpl(
+payload =
+{}
+){
+
+if(
+runningStrategyId
+){
+return {
+ok:
+true,
+alreadyRunning:
+true,
+message:
+`Уже запущена ${runningStrategyId}; сначала остановите её`,
+...buildStatusSnapshot()
+};
+}
+
+resetSessionStats();
+
+const prefs =
+payload?.earlyT3Prefs &&
+typeof payload.earlyT3Prefs ===
+"object"
+? payload.earlyT3Prefs
+: {};
+const tf =
+String(
+prefs.tf ||
+"5"
+).trim() ||
+"5";
+const alertLeadPct =
+Number(
+prefs.alertLeadPct
+);
+const minTurnover24hUsdt =
+Number(
+prefs.minTurnover24hUsdt
+);
+
+sessionEarlyT3Prefs =
+{
+tf,
+alertLeadPct:
+Number.isFinite(
+alertLeadPct
+) &&
+alertLeadPct >=
+0
+? Math.min(
+25,
+alertLeadPct
+)
+: 5,
+minTurnover24hUsdt:
+Number.isFinite(
+minTurnover24hUsdt
+) &&
+minTurnover24hUsdt >=
+0
+? minTurnover24hUsdt
+: 100000,
+actionMode:
+String(
+prefs.actionMode ||
+""
+).toLowerCase() ===
+"list"
+? "list"
+: "alert",
+listAllLive:
+String(
+prefs.actionMode ||
+""
+).toLowerCase() ===
+"list" &&
+!!prefs.listAllLive,
+setupLifeBars:
+Math.min(
+5000,
+Math.max(
+1,
+Math.floor(
+Number(
+prefs.setupLifeBars
+) ||
+300
+)
+)
+)
+};
+
+try{
+statusMessage =
+"Запуск Early T3…";
+
+sessionLog.beginSession(
+{
+sessionId,
+strategyId:
+"early-t3",
+startedAt:
+sessionStartedAt,
+tradingMode:
+"manual",
+watchlistCount:
+0
+}
+);
+sessionLog.appendNote(
+`Запуск early-t3 (${sessionEarlyT3Prefs.actionMode === "list" ? (sessionEarlyT3Prefs.listAllLive ? `list, все живые ≤${sessionEarlyT3Prefs.setupLifeBars}св` : "list, свежий t4") : "alerts"}, tf=${sessionEarlyT3Prefs.tf}, turnover>=${sessionEarlyT3Prefs.minTurnover24hUsdt})`
+);
+
+if(
+clearEarlyT3SessionFlags().changed
+){
+sessionLog.appendNote(
+"Список Early T3 предыдущей сессии очищен"
+);
+}
+
+await earlyT3Engine.startEarlyT3Engine(
+{
+tf:
+sessionEarlyT3Prefs.tf,
+alertLeadPct:
+sessionEarlyT3Prefs.alertLeadPct,
+minTurnover24hUsdt:
+sessionEarlyT3Prefs.minTurnover24hUsdt,
+actionMode:
+sessionEarlyT3Prefs.actionMode,
+listAllLive:
+sessionEarlyT3Prefs.listAllLive,
+setupLifeBars:
+sessionEarlyT3Prefs.setupLifeBars,
+onListAdd:(
+symbol
+)=>{
+mutateEarlyT3ListFlag(
+symbol,
+true
+);
+},
+onListRemove:(
+symbol
+)=>{
+mutateEarlyT3ListFlag(
+symbol,
+false
+);
+},
+patternSettings:
+payload?.patternSettings &&
+typeof payload.patternSettings ===
+"object"
+? payload.patternSettings
+: null,
+onActivity:()=>{
+pushStatus(
+buildStatusSnapshot()
+);
+}
+}
+);
+
+runningStrategyId =
+"early-t3";
+statusMessage =
+"Запущен";
+sessionLog.appendNote(
+"Запущен"
+);
+
+const strategies =
+readBotStrategies();
+
+for(
+const id of [
+"st1",
+"st2",
+"st3"
+]
+){
+strategies[
+id
+].running =
+false;
+}
+writeBotStrategies(
+strategies
+);
+}catch(
+err
+){
+runningStrategyId =
+null;
+sessionEarlyT3Prefs =
+null;
+statusMessage =
+String(
+err?.message ||
+err
+);
+try{
+await earlyT3Engine.stopEarlyT3Engine();
+}catch{
+/* ignore */
+}
+clearEarlyT3SessionFlags();
+sessionLog.appendNote(
+`Ошибка запуска: ${statusMessage}`
+);
+sessionLog.endSession(
+{
+message:
+statusMessage
+}
+);
+
+return {
+ok:
+false,
+message:
+statusMessage,
+...buildStatusSnapshot()
+};
+}
+
+const snapshot =
+buildStatusSnapshot();
+pushStatus(
+snapshot
+);
+
+return snapshot;
+
+}
+
+async function startRsiTouchFlipBotImpl(
+payload =
+{}
+){
+
+if(
+runningStrategyId
+){
+return {
+ok:
+true,
+alreadyRunning:
+true,
+message:
+`Уже запущена ${runningStrategyId}; сначала остановите её`,
+...buildStatusSnapshot()
+};
+}
+
+const creds =
+getAlgoCredentialsStatus(
+"bybit"
+);
+const tradingMode =
+getAlgoTradingMode();
+
+if(
+!isAlgoLiveTradingEnabled()
+){
+return {
+ok:
+false,
+message:
+"Сборка m: только ручная торговля"
+};
+}
+
+if(
+tradingMode !==
+"live"
+){
+return {
+ok:
+false,
+message:
+"RSI Touch Flip — только автоматическая торговля (live)"
+};
+}
+
+if(
+!creds?.configured
+){
+return {
+ok:
+false,
+message:
+"Для реальной торговли нужны алго API-ключи"
+};
+}
+
+resetSessionStats();
+
+const bookRows =
+Array.isArray(
+payload?.book
+)
+? payload.book
+: Array.isArray(
+payload?.rows
+)
+? payload.rows
+: [];
+
+if(
+!bookRows.length
+){
+return {
+ok:
+false,
+message:
+"Книга RSI Touch Flip пуста. Добавьте тикеры кнопкой «Добавить в книгу»."
+};
+}
+
+const wallet =
+await getWalletBalance();
+const availableNum =
+Number(
+wallet?.available
+);
+const equityNum =
+Number(
+wallet?.usdt
+);
+const available =
+Number.isFinite(
+availableNum
+) &&
+availableNum >
+0
+? availableNum
+: Number.isFinite(
+equityNum
+) &&
+equityNum >
+0
+? equityNum
+: availableNum;
+let budgetSum =
+0;
+
+for(
+const row of bookRows
+){
+const budget =
+Number(
+row?.prefs?.budget ??
+row?.budget
+);
+
+if(
+Number.isFinite(
+budget
+)
+){
+budgetSum +=
+budget;
+}
+
+}
+
+if(
+!wallet?.ok ||
+!Number.isFinite(
+available
+)
+){
+return {
+ok:
+false,
+message:
+wallet?.message ||
+"Не удалось прочитать баланс алго-ключа"
+};
+}
+
+if(
+budgetSum >
+available
+){
+return {
+ok:
+false,
+message:
+`Сумма бюджетов ${budgetSum.toFixed(
+2
+)} USDT > баланс ${available.toFixed(
+2
+)} USDT`
+};
+}
+
+sessionRsiTouchFlipPrefs =
+{
+book:
+bookRows,
+budgetSum,
+available
+};
+
+try{
+statusMessage =
+"Запуск RSI Touch Flip…";
+
+sessionLog.beginSession(
+{
+sessionId,
+strategyId:
+"rsi-touch-flip",
+startedAt:
+sessionStartedAt,
+tradingMode:
+"live",
+watchlistCount:
+bookRows.length
+}
+);
+sessionLog.appendNote(
+`Запуск rsi-touch-flip live ${bookRows.length} тик. budgetSum=${budgetSum.toFixed(
+2
+)} available=${available.toFixed(
+2
+)}`
+);
+
+await rsiTouchFlipEngine.startRsiTouchFlipEngine(
+{
+rows:
+bookRows,
+onActivity:()=>{
+pushStatus(
+buildStatusSnapshot()
+);
+}
+}
+);
+
+runningStrategyId =
+"rsi-touch-flip";
+statusMessage =
+"Запущен";
+sessionLog.appendNote(
+"Запущен"
+);
+
+const strategies =
+readBotStrategies();
+
+for(
+const id of [
+"st1",
+"st2",
+"st3"
+]
+){
+strategies[
+id
+].running =
+false;
+}
+writeBotStrategies(
+strategies
+);
+}catch(
+err
+){
+runningStrategyId =
+null;
+sessionRsiTouchFlipPrefs =
+null;
+statusMessage =
+String(
+err?.message ||
+err
+);
+try{
+await rsiTouchFlipEngine.stopRsiTouchFlipEngine();
+}catch{
+/* ignore */
+}
+sessionLog.appendNote(
+`Ошибка запуска: ${statusMessage}`
+);
+sessionLog.endSession(
+{
+message:
+statusMessage
+}
+);
+
+return {
+...buildStatusSnapshot(),
+ok:
+false,
+running:
+false,
+message:
+statusMessage
+};
+}
+
+const snapshot =
+buildStatusSnapshot();
+pushStatus(
+snapshot
+);
+
+return snapshot;
+
+}
+
 async function startBotImpl(
 payload =
 {}
@@ -1681,6 +2412,24 @@ String(
 payload?.strategyId ||
 "st1"
 ).trim().toLowerCase();
+
+if(
+strategyId ===
+"early-t3"
+){
+return startEarlyT3BotImpl(
+payload
+);
+}
+
+if(
+strategyId ===
+"rsi-touch-flip"
+){
+return startRsiTouchFlipBotImpl(
+payload
+);
+}
 
 if(
 ![
@@ -2259,6 +3008,7 @@ runningStrategyId =
 null;
 entriesPaused =
 false;
+await rsiTouchFlipEngine.stopRsiTouchFlipEngine();
 await patternEngine.stopPatternEngine();
 
 }
@@ -2268,6 +3018,24 @@ await patternEngine.stopPatternEngine();
  * Bot lives in main — window is not required (tray/agent mode).
  */
 async function bootAlgoBotIfWasRunning(){
+
+const featureNav =
+require(
+"../feature-nav-prefs-store.cjs"
+).readPrefs();
+
+if(
+!featureNav.algoTradingNavEnabled
+){
+return {
+ok:
+true,
+skipped:
+true,
+message:
+"algo nav disabled"
+};
+}
 
 const strategies =
 readBotStrategies();
@@ -2427,6 +3195,53 @@ ok:
 true,
 sent
 };
+
+}
+
+function clearEarlyT3SessionFlags(){
+
+const result =
+clearTickerFlagList(
+FLAG_EARLY_T3
+);
+
+notifyTickerFlagsToUi(
+{
+root:
+result.root ||
+readTickerFlagsRoot()
+}
+);
+
+return result;
+
+}
+
+function mutateEarlyT3ListFlag(
+symbol,
+add
+){
+
+const result =
+mutateTickerFlagSymbol(
+FLAG_EARLY_T3,
+symbol,
+!!add,
+"bybit"
+);
+
+if(
+result?.changed
+){
+notifyTickerFlagsToUi(
+{
+root:
+result.root
+}
+);
+}
+
+return result;
 
 }
 

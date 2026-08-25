@@ -12,6 +12,12 @@ getAlgoCredentials
 require(
 "./algo-exchange-credentials.cjs"
 );
+const {
+getRelayHttpsAgent
+} =
+require(
+"../app-proxy-socks-relay.cjs"
+);
 
 function getCredentials(){
 return getAlgoCredentials("bybit");
@@ -241,9 +247,18 @@ const url =
 wsUrl(
 creds.testnet
 );
+const agent =
+getRelayHttpsAgent();
 
 socket =
-new Ws(
+agent
+? new Ws(
+url,
+{
+agent
+}
+)
+: new Ws(
 url
 );
 

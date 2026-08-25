@@ -8,7 +8,7 @@ getSystemAdminEmails
 
 import {
 getEffectiveCloudUserEmail
-} from "./cloud-sync.js?v=65";
+} from "./cloud-sync.js?v=67";
 
 import {
 bindSupabaseUsagePrefsForm
@@ -20,7 +20,7 @@ bindAlertsGarbagePurge
 
 import {
 bindWorkerReloadMsSettings
-} from "./system-admin-worker-reload-ms.js?v=4";
+} from "./system-admin-worker-reload-ms.js?v=5";
 
 export async function mountSecretSettingsPanel(
 host

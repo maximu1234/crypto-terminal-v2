@@ -12,6 +12,9 @@ export const ALGO_ANALYSIS_BOT_PATTERN_12 =
 export const ALGO_ANALYSIS_BOT_EARLY_T3 =
 "pattern-12-early-t3";
 
+export const ALGO_ANALYSIS_BOT_RSI_TOUCH_FLIP =
+"rsi-touch-flip";
+
 export const ALGO_ANALYSIS_BOT_KEY =
 "algo_trading_analysis_bot_v2";
 
@@ -22,7 +25,8 @@ export const ALGO_ANALYSIS_BOT_CHANGE_EVENT =
 export const ALGO_ANALYSIS_BOT_IDS =
 [
 ALGO_ANALYSIS_BOT_PATTERN_12,
-ALGO_ANALYSIS_BOT_EARLY_T3
+ALGO_ANALYSIS_BOT_EARLY_T3,
+ALGO_ANALYSIS_BOT_RSI_TOUCH_FLIP
 ];
 
 /**

@@ -13,10 +13,11 @@ const jsPath = path.join(ROOT, "bot-app/site-bundle/js/algo-trading.js");
 
 const REQUIRED_CSS_SELECTORS = [
   "body.algo-trading-page.algo-bot-lite-layout #algo-bot-main-grid",
-  "body.algo-trading-page.algo-bot-lite-layout .algo-bot-grid-top",
-  "body.algo-trading-page.algo-bot-lite-layout .algo-bot-lite-indicators",
-  "body.algo-trading-page.algo-bot-lite-layout .algo-bot-lite-global-col",
-  "body.algo-trading-page.algo-bot-lite-layout #charts-stack"
+  "body.algo-trading-page.algo-bot-lite-layout #charts-stack",
+  "body.algo-trading-page.algo-bot-lite-layout #algo-stats-panel",
+  "body.algo-trading-page.algo-bot-lite-layout .algo-bot-lite-pattern-settings",
+  "body.algo-trading-page.algo-bot-lite-layout #algo-tf-bar",
+  "body.algo-trading-page.algo-bot-lite-layout #cloud-auth-problem-banner"
 ];
 
 function fail(message) {
@@ -55,8 +56,14 @@ if (!html.includes('id="algo-bots-btn"') || !html.includes('id="algo-bot-run"'))
 if (html.includes('id="algo-bot-st1-run"')) {
   fail("bot HTML still has old per-strategy Запустить buttons");
 }
+if (!html.includes('id="algo-bots-item-early-t3"') || !html.includes('id="algo-bots-item-rsi-touch-flip"')) {
+  fail("bot HTML missing Early T3 / RSI Touch Flip in Боты menu");
+}
 if (!html.includes('id="algo-bot-settings-modal"')) {
   fail("bot HTML missing algo-bot-settings-modal");
+}
+if (!html.includes('id="algo-bot-early-t3-settings-modal"') || !html.includes('id="algo-bot-rsi-touch-flip-settings-modal"')) {
+  fail("bot HTML missing Early T3 / RSI settings modals");
 }
 if (!html.includes("algo-stats-supertrend-filter")) {
   fail("bot HTML missing Supertrend Data panel — copy #algo-stats-panel from Multichart");
@@ -72,16 +79,23 @@ if (html.includes('id="algo-tp-ema"')) {
 }
 
 const js = read(jsPath);
-if (!js.includes("function mountAlgoBotLiteLayout(")) {
-  fail(
-    "bot-app/site-bundle/js/algo-trading.js missing mountAlgoBotLiteLayout (Multichart overwrite?)"
-  );
+if (!js.includes("mountAlgoBotLiteLayout") || !js.includes("isAlgoBotLiteMode")) {
+  fail("bot-app/site-bundle/js/algo-trading.js must use lite layout helpers");
 }
-if (!js.includes("mountAlgoBotLiteLayout();")) {
-  fail("mountAlgoTradingPage must call mountAlgoBotLiteLayout()");
+if (!js.includes("isAlgoBotLiteMode()")) {
+  fail("lite mode must skip chart history load");
 }
-if (!js.includes("function isAlgoBotLiteMode(")) {
-  fail("bot-app/site-bundle/js/algo-trading.js missing isAlgoBotLiteMode");
+
+const liteLayout = read(
+  path.join(ROOT, "bot-app/site-bundle/js/algo-trading/lite-layout.js")
+);
+if (!liteLayout.includes("algo-bot-main-grid")) {
+  fail("lite-layout.js must create #algo-bot-main-grid (panels, not hidden chart stack)");
+}
+
+const botSession = read(path.join(ROOT, "bot-app/app-session.cjs"));
+if (!botSession.includes("persist:multichart-algo-bot")) {
+  fail("bot-app/app-session.cjs must keep persist:multichart-algo-bot (not Multichart desktop partition)");
 }
 
 const logsViewerPath = path.join(

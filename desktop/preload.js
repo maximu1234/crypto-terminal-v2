@@ -443,6 +443,10 @@ getTickerFlagsRoot:()=>
 ipcRenderer.invoke(
 "desktop:algoTradingGetTickerFlagsRoot"
 ),
+listLinearUsdtSymbols:()=>
+ipcRenderer.invoke(
+"desktop:algoTradingListLinearSymbols"
+),
 startBot:(
 payload
 )=>

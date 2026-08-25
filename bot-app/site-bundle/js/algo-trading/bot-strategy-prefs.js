@@ -3,7 +3,7 @@
  */
 import {
 normalizeTpShares
-} from "./pattern-trade-stats-partial.js?v=21";
+} from "./pattern-trade-stats-partial.js?v=22";
 
 export const ALGO_BOT_STRATEGIES_KEY =
 "algo_trading_bot_strategies_v1";
@@ -959,6 +959,209 @@ extra =
 null
 ){
 
+const p =
+prefs &&
+typeof prefs ===
+"object"
+? prefs
+: {};
+
+if(
+strategyId ===
+"rsi-touch-flip"
+){
+const book =
+Array.isArray(
+p.book
+)
+? p.book
+: [];
+const budgetSum =
+Number.isFinite(
+Number(
+p.budgetSum
+)
+)
+? Number(
+p.budgetSum
+)
+: book.reduce(
+(
+sum,
+row
+)=>{
+const n =
+Number(
+row?.prefs?.budget ??
+row?.budget
+);
+return sum +
+(
+Number.isFinite(
+n
+)
+? n
+: 0
+);
+},
+0
+);
+const available =
+Number(
+p.available
+);
+const tickers =
+book.map(
+row=>{
+const symbol =
+String(
+row?.symbol ||
+""
+).trim() ||
+"—";
+const tf =
+String(
+row?.tf ||
+""
+).trim() ||
+"—";
+const budget =
+Number(
+row?.prefs?.budget ??
+row?.budget
+);
+return `${symbol} ${tf} ${Number.isFinite(budget) ? budget.toFixed(0) : "—"} USDT`;
+}
+).join(
+" · "
+);
+
+return [
+{
+label:
+"Стратегия",
+value:
+"RSI Touch Flip"
+},
+{
+label:
+"Режим",
+value:
+"Реальная торговля"
+},
+{
+label:
+"Книга",
+value:
+book.length
+? `${book.length} тик.`
+: "пуста"
+},
+{
+label:
+"Сумма бюджетов",
+value:
+`${budgetSum.toFixed(0)} USDT`
+},
+{
+label:
+"Баланс на старте",
+value:
+Number.isFinite(
+available
+)
+? `${available.toFixed(2)} USDT`
+: "—"
+},
+{
+label:
+"Тикеры",
+value:
+tickers ||
+"—"
+}
+];
+}
+
+if(
+strategyId ===
+"early-t3"
+){
+const listMode =
+String(
+p.actionMode ||
+""
+).toLowerCase() ===
+"list";
+const tfRaw =
+String(
+p.tf ||
+extra?.tickerBookTf ||
+""
+).trim();
+const rows =
+[
+{
+label:
+"Стратегия",
+value:
+"1-2 Early T3"
+},
+{
+label:
+"Режим",
+value:
+listMode
+? "Список"
+: "Алерт"
+},
+{
+label:
+"Таймфрейм",
+value:
+BOT_TF_STATUS_LABELS[
+tfRaw
+] ||
+tfRaw ||
+"—"
+}
+];
+
+if(
+!listMode
+){
+rows.push(
+{
+label:
+"Алерт до pt4",
+value:
+`${formatStatusNumber(
+p.alertLeadPct
+)}% X`
+}
+);
+}
+
+rows.push(
+{
+label:
+"Объем за сутки от",
+value:
+`${formatStatusTurnover(
+p.minTurnover24hUsdt
+)} USDT`
+},
+{
+label:
+"Список",
+value:
+"1-2 Early T3"
+}
+);
+
+return rows;
+}
+
 const id =
 strategyId ===
 "st2" ||
@@ -966,12 +1169,6 @@ strategyId ===
 "st3"
 ? strategyId
 : "st1";
-const p =
-prefs &&
-typeof prefs ===
-"object"
-? prefs
-: {};
 const sides =
 normalizeBotSides(
 p.sides,
@@ -1396,7 +1593,7 @@ base.tpRr
 ),
 alertLeadPct:
 Math.min(
-10,
+25,
 clampFloat(
 src.alertLeadPct,
 0,

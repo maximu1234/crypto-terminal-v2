@@ -191,7 +191,9 @@ factor;
 /**
  * СЛ на `slPctOfX`% лог-высоты X между pt3 и pt4 (от pt4 к pt3).
  * 50% → геометрическая середина; 100% → уровень pt3.
- *
+ * Если side не совпадает с геометрией (pt3 относительно pt4) — зеркало
+ * pt3 вокруг pt4: обратная логика, СЛ с другой стороны входа.
+
  * @param {"long"|"short"} side
  * @param {number} pt3
  * @param {number} pt4
@@ -206,16 +208,54 @@ slPctOfX =
 DEFAULT_SL_PCT_OF_X
 ){
 
-void side;
-
 const pct =
 clampSlPctOfX(
 slPctOfX
 );
+const from =
+Number(
+pt4
+);
+const toward =
+Number(
+pt3
+);
 
+if(
+!(
+from >
+0
+) ||
+!(
+toward >
+0
+)
+){
 return interpolateLogPrice(
 pt4,
 pt3,
+pct /
+100
+);
+}
+
+const wantsBelow =
+side !==
+"short";
+const towardIsBelow =
+toward <
+from;
+const slTo =
+wantsBelow ===
+towardIsBelow
+? toward
+: from *
+from /
+toward;
+
+return interpolateLogPrice(
+from,
+slTo,
 pct /
 100
 );
@@ -487,6 +527,235 @@ x -
 e
 ) /
 riskDist;
+
+}
+
+/** Тейкер Bybit в аналитике: 0.08% нотионала на вход и на выход. */
+export const ALGO_TAKER_FEE_PCT =
+0.08;
+
+/**
+ * Стоп-вход хуже p4: 0.1% цены (как AEVO ~2 тика) + гэп, если open пробил стоп.
+ */
+export const ALGO_STOP_SLIPPAGE_PCT =
+0.1;
+
+/**
+ * @param {"long"|"short"} side
+ * @param {number} triggerPrice p4
+ * @param {{ open?: number }|null|undefined} candle
+ * @returns {number}
+ */
+export function computeStopFillPrice(
+side,
+triggerPrice,
+candle
+){
+
+const p4 =
+Number(
+triggerPrice
+);
+
+if(
+!(
+p4 >
+0
+)
+){
+return NaN;
+}
+
+const slip =
+ALGO_STOP_SLIPPAGE_PCT /
+100;
+const o =
+Number(
+candle?.open
+);
+const isShort =
+side ===
+"short";
+let fill =
+p4;
+
+if(
+Number.isFinite(
+o
+) &&
+o >
+0
+){
+
+if(
+isShort &&
+o <
+p4
+){
+fill =
+o;
+}else if(
+!isShort &&
+o >
+p4
+){
+fill =
+o;
+}
+
+}
+
+fill =
+isShort
+? fill *
+(
+1 -
+slip
+)
+: fill *
+(
+1 +
+slip
+);
+
+return fill >
+0
+? fill
+: NaN;
+
+}
+
+/**
+ * $ как у бота: qty от p4 и СЛ0, PnL от fill, минус 0.08% на вход и выход.
+ * @param {"long"|"short"} side
+ * @param {number} trigger p4
+ * @param {number} fill
+ * @param {number} exitPrice
+ * @param {number} sl0
+ * @param {number} riskUsd
+ * @param {number} [frac]
+ * @returns {number}
+ */
+export function linearUsdFromFill(
+side,
+trigger,
+fill,
+exitPrice,
+sl0,
+riskUsd,
+frac =
+1
+){
+
+const p4 =
+Number(
+trigger
+);
+const x =
+Number(
+exitPrice
+);
+const sl =
+Number(
+sl0
+);
+const risk =
+Number(
+riskUsd
+);
+const f =
+Number(
+frac
+);
+let fillN =
+Number(
+fill
+);
+
+if(
+!(
+p4 >
+0
+) ||
+!Number.isFinite(
+x
+) ||
+!Number.isFinite(
+sl
+) ||
+!Number.isFinite(
+risk
+) ||
+risk <=
+0 ||
+!Number.isFinite(
+f
+) ||
+f <=
+0
+){
+return NaN;
+}
+
+if(
+!(
+fillN >
+0
+)
+){
+fillN =
+p4;
+}
+
+const riskDist =
+Math.abs(
+p4 -
+sl
+);
+
+if(
+!(
+riskDist >
+0
+)
+){
+return NaN;
+}
+
+const qty =
+f *
+risk /
+riskDist;
+const gross =
+side ===
+"short"
+? qty *
+(
+fillN -
+x
+)
+: qty *
+(
+x -
+fillN
+);
+const fee =
+(
+ALGO_TAKER_FEE_PCT /
+100
+) *
+qty *
+(
+Math.abs(
+fillN
+) +
+Math.abs(
+x
+)
+);
+
+return gross -
+fee;
 
 }
 

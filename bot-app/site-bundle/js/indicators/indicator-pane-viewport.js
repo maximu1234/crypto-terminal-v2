@@ -4,7 +4,7 @@
 import {
 applyCoinsChartViewport,
 syncLinkedChartTimescales
-} from "../chart-import.js?v=43";
+} from "../chart-import.js?v=48";
 
 export function applyIndicatorPaneViewport(
 getHost,

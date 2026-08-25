@@ -28,7 +28,7 @@ isScriptNavEnabled,
 isAlgoTradingNavEnabled,
 setScriptNavEnabled,
 setAlgoTradingNavEnabled
-} from "./desktop-feature-nav-prefs.js?v=2";
+} from "./desktop-feature-nav-prefs.js?v=4";
 
 import {
 TERMINAL_HISTORY_DEPTH_MAX,
@@ -38,8 +38,15 @@ setTerminalHistoryDepth
 } from "./terminal-chart-history-prefs.js?v=1";
 
 import {
+SCREENER_WIDGET_OSCILLATOR_MACD,
+SCREENER_WIDGET_OSCILLATOR_RSI,
+getScreenerWidgetOscillator,
+setScreenerWidgetOscillator
+} from "./screener-widget-oscillator.js?v=1";
+
+import {
 renderHeaderNav
-} from "./site-header-nav.js?v=6";
+} from "./site-header-nav.js?v=8";
 
 const APP_HEADER_NAV_ID =
 "app-header-nav";
@@ -283,7 +290,7 @@ isDesktopShell()
 <input type="checkbox" class="app-settings-toggle-input" id="app-settings-enable-algo-nav" />
 <span class="app-settings-toggle-label">Включить АлгоТрейдинг</span>
 </label>
-<p class="app-settings-panel-hint">Пункты появляются в верхнем меню. По умолчанию выключены.</p>
+<p class="app-settings-panel-hint">Пункты в верхнем меню. Выключенный модуль не крутит фон. Если Скрипт сейчас сканирует или бот Алго запущен (live / ручной) — выключение останавливает эту работу. По умолчанию выключены.</p>
 `
 : "";
 
@@ -314,6 +321,16 @@ ${snapshotLogoBlock}
 <input type="number" id="app-settings-terminal-history-depth" class="app-settings-field-select" min="${TERMINAL_HISTORY_DEPTH_MIN}" max="${TERMINAL_HISTORY_DEPTH_MAX}" step="1000" inputmode="numeric" aria-label="Глубина истории свечей на Терминале"/>
 </label>
 <p class="app-settings-panel-hint">Сначала грузится ${TERMINAL_HISTORY_DEPTH_MIN}. При сдвиге графика влево — догрузка до этого лимита (${TERMINAL_HISTORY_DEPTH_MIN}–${TERMINAL_HISTORY_DEPTH_MAX}).</p>
+<p class="app-settings-panel-lead app-settings-panel-lead--spaced">Скринер.</p>
+<label class="app-settings-toggle-row">
+<input type="checkbox" class="app-settings-toggle-input" id="app-settings-screener-widget-rsi" />
+<span class="app-settings-toggle-label">Показывать RSI в виджетах в Скринере</span>
+</label>
+<label class="app-settings-toggle-row">
+<input type="checkbox" class="app-settings-toggle-input" id="app-settings-screener-widget-macd" />
+<span class="app-settings-toggle-label">Показывать MACD в виджетах в Скринере</span>
+</label>
+<p class="app-settings-panel-hint">В виджетах 4 и 6 и в окне увеличения. Одновременно включён только один индикатор.</p>
 <p class="app-settings-panel-lead app-settings-panel-lead--spaced">Алерты.</p>
 <label class="app-settings-field-row" for="app-settings-alert-notify-mode">
 <span class="app-settings-field-label">Канал уведомлений</span>
@@ -365,6 +382,37 @@ const snapshotLogoStatus =
 host.querySelector(
 "#app-settings-snapshot-logo-status"
 );
+const screenerRsiInput =
+host.querySelector(
+"#app-settings-screener-widget-rsi"
+);
+const screenerMacdInput =
+host.querySelector(
+"#app-settings-screener-widget-macd"
+);
+
+function syncScreenerOscillatorToggles(){
+
+const kind =
+getScreenerWidgetOscillator();
+
+if(
+screenerRsiInput
+){
+screenerRsiInput.checked =
+kind ===
+SCREENER_WIDGET_OSCILLATOR_RSI;
+}
+
+if(
+screenerMacdInput
+){
+screenerMacdInput.checked =
+kind ===
+SCREENER_WIDGET_OSCILLATOR_MACD;
+}
+
+}
 
 function applySnapshotLogoStatus(
 status
@@ -453,6 +501,7 @@ syncAlertToastDuration(
 alertToastDurationSelect
 );
 void hydrateSnapshotLogo();
+syncScreenerOscillatorToggles();
 
 trayInput?.addEventListener(
 "change",
@@ -695,6 +744,34 @@ alertToastDurationSelect.value
 }
 );
 
+screenerRsiInput?.addEventListener(
+"change",
+()=>{
+
+setScreenerWidgetOscillator(
+screenerRsiInput.checked
+? SCREENER_WIDGET_OSCILLATOR_RSI
+: SCREENER_WIDGET_OSCILLATOR_MACD
+);
+syncScreenerOscillatorToggles();
+
+}
+);
+
+screenerMacdInput?.addEventListener(
+"change",
+()=>{
+
+setScreenerWidgetOscillator(
+screenerMacdInput.checked
+? SCREENER_WIDGET_OSCILLATOR_MACD
+: SCREENER_WIDGET_OSCILLATOR_RSI
+);
+syncScreenerOscillatorToggles();
+
+}
+);
+
 return {
 refresh:()=>{
 syncTrayToggle(
@@ -728,6 +805,7 @@ syncAlertToastDuration(
 alertToastDurationSelect
 );
 void hydrateSnapshotLogo();
+syncScreenerOscillatorToggles();
 }
 };
 

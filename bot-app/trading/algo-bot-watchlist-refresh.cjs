@@ -1650,7 +1650,9 @@ timeoutBars,
 maxPt1Pt4Bars,
 /* TEMP_PULLBACK_BEFORE_ARM */
 pullbackBeforeArm,
-pullbackBeforeArmPct
+pullbackBeforeArmPct,
+reverseLogic:
+!!patternSettings?.reverseLogic
 }
 );
 
@@ -1848,6 +1850,8 @@ algoShort5m:
 algoBoth5m:
 [],
 algoFavorites:
+[],
+algoEarlyT3:
 []
 };
 
@@ -1939,6 +1943,8 @@ algoShort5m:
 algoBoth5m:
 [],
 algoFavorites:
+[],
+algoEarlyT3:
 []
 };
 

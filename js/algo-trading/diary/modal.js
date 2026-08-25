@@ -39,6 +39,10 @@ import {
   diarySanitizeTrade
 } from "./policy.js?v=1";
 
+import {
+isAlgoBotLiteMode
+} from "../lite-layout.js?v=4";
+
 const OVERLAY_ATTR = "data-algo-diary-overlay";
 
 let overlayEl = null;
@@ -641,6 +645,9 @@ export function closeAlgoDiaryModal() {
 }
 
 export async function openAlgoDiaryModal() {
+  if (isAlgoBotLiteMode()) {
+    return;
+  }
   ensureOverlay();
   mountPeriodPickerOnce();
 

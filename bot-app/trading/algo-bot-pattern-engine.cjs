@@ -49,12 +49,17 @@ require(
 "./algo-trading-runtime.cjs"
 );
 
+const ALERT_LEAD_PCT_MAX =
+25;
+const ALERT_LEAD_PCT_DEFAULT =
+5;
 const HISTORY_TAIL =
 120;
 const MAX_LOG =
 500;
+/* Same depth as the Algo chart / scans: ALGO_TICKER_SCAN_HISTORY_REQUESTS = 10. */
 const PATTERN_HISTORY_REQUESTS =
-5;
+10;
 const PATTERN_SCAN_MIN_BARS =
 PATTERN_HISTORY_REQUESTS *
 1000;
@@ -3762,10 +3767,10 @@ leadPct
 leadPct >=
 0
 ? Math.min(
-10,
+ALERT_LEAD_PCT_MAX,
 leadPct
 )
-: 5;
+: ALERT_LEAD_PCT_DEFAULT;
 
 if(
 !(
@@ -3861,10 +3866,10 @@ leadPct
 leadPct >=
 0
 ? Math.min(
-10,
+ALERT_LEAD_PCT_MAX,
 leadPct
 )
-: 5;
+: ALERT_LEAD_PCT_DEFAULT;
 const side =
 setup.side ===
 "short"
@@ -5292,10 +5297,10 @@ return;
 }
 
 const result =
-await algoRest.fetchKlineHistory(
+await algoRest.fetchKlineHistoryDeep(
 symbol,
 engineConfig.tf,
-1000
+PATTERN_HISTORY_REQUESTS
 );
 
 if(
@@ -5999,11 +6004,11 @@ n
 n <
 0
 ){
-return 5;
+return ALERT_LEAD_PCT_DEFAULT;
 }
 
 return Math.min(
-10,
+ALERT_LEAD_PCT_MAX,
 n
 );
 })(),

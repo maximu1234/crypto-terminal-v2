@@ -11,7 +11,11 @@ removeAlert,
 loadAllAlerts,
 saveAlerts,
 dispatchPriceAlertsChanged
-} from "../alerts.js?v=106";
+} from "../alerts.js?v=109";
+
+import {
+shouldRunAlgoBackgroundJobs
+} from "../desktop-feature-nav-prefs.js?v=4";
 
 export const ALGO_BOT_ALERT_SOURCE =
 "algo-bot";
@@ -21,6 +25,8 @@ const KNOWN_BOT_ALERT_IDS_KEY =
 
 let mounted =
 false;
+let unmountBridge =
+null;
 
 function desktopAlgoApi(){
 
@@ -354,15 +360,40 @@ return removed;
 
 }
 
+export function unmountAlgoBotAlertBridge(){
+
+if(
+!unmountBridge
+){
+mounted =
+false;
+return;
+}
+
+const fn =
+unmountBridge;
+unmountBridge =
+null;
+fn();
+
+}
+
 /**
  * @returns {() => void} unmount
  */
 export function mountAlgoBotAlertBridge(){
 
 if(
+!shouldRunAlgoBackgroundJobs()
+){
+unmountAlgoBotAlertBridge();
+return unmountAlgoBotAlertBridge;
+}
+
+if(
 mounted
 ){
-return ()=>{};
+return unmountAlgoBotAlertBridge;
 }
 
 const api =
@@ -372,7 +403,7 @@ if(
 !api?.onBotAlertRequest ||
 !api?.respondBotAlert
 ){
-return ()=>{};
+return unmountAlgoBotAlertBridge;
 }
 
 mounted =
@@ -543,9 +574,12 @@ err
 }
 );
 
-return ()=>{
+unmountBridge =
+()=>{
 mounted =
 false;
+unmountBridge =
+null;
 window.removeEventListener(
 "alerts-registry-pulled",
 onRegistryPulled
@@ -556,5 +590,7 @@ onRegistryPulled
 );
 unsub?.();
 };
+
+return unmountAlgoBotAlertBridge;
 
 }

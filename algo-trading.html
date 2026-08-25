@@ -19,7 +19,7 @@
 <link rel="stylesheet" href="/css/terminal.css?v=175">
 <link rel="stylesheet" href="/css/terminal-layout.css?v=102">
 <link rel="stylesheet" href="/css/chart-indicators.css?v=29">
-<link rel="stylesheet" href="/css/algo-trading.css?v=133">
+<link rel="stylesheet" href="/css/algo-trading.css?v=148">
 <link rel="stylesheet" href="/css/algo-trading-book-panel.css?v=6">
 <link rel="stylesheet" href="/css/algo-trading-chart-overlay.css?v=2">
 <link rel="stylesheet" href="/css/trade-diary.css?v=21">
@@ -182,6 +182,24 @@ data-algo-bot-id="pattern-12-early-t3"
 role="menuitem"
 >
 1-2 Early T3
+</button>
+</div>
+<div class="algo-bots-item-row" role="none">
+<input
+type="checkbox"
+class="algo-bots-item-enabled"
+id="algo-bots-item-rsi-touch-flip-enabled"
+data-algo-bot-id="rsi-touch-flip"
+aria-label="Включить RSI Touch Flip"
+/>
+<button
+type="button"
+class="algo-bots-item"
+id="algo-bots-item-rsi-touch-flip"
+data-algo-bot-id="rsi-touch-flip"
+role="menuitem"
+>
+RSI Touch Flip
 </button>
 </div>
 </div>
@@ -472,6 +490,185 @@ tabindex="0"
 ></div>
 
 <div id="algo-stats-panel" class="algo-stats-panel" aria-label="Статистика АлгоТрейдинг">
+<div class="algo-stats-columns" data-algo-analysis-bot="rsi-touch-flip">
+<div class="algo-stats-chart-cols">
+<div class="algo-stats-col">
+<div class="algo-stats-col-title">RSI Touch Flip</div>
+<p class="algo-rsi-flip-col-note">Подбор на открытом графике. В live тикер попадает только через «Добавить в книгу». Запуск читает книгу, не график.</p>
+<div class="algo-stats-row algo-stats-row--setting">
+<label class="algo-stats-label" for="algo-rsi-flip-len">Период RSI</label>
+<input type="number" id="algo-rsi-flip-len" class="algo-stats-input" min="2" max="999" step="1" value="14" inputmode="numeric" />
+</div>
+<div class="algo-stats-row algo-stats-row--setting">
+<label class="algo-stats-label" for="algo-rsi-flip-os">Перепроданность</label>
+<input type="number" id="algo-rsi-flip-os" class="algo-stats-input" min="1" max="50" step="1" value="30" inputmode="decimal" />
+</div>
+<div class="algo-stats-row algo-stats-row--setting">
+<label class="algo-stats-label" for="algo-rsi-flip-ob">Перекупленность</label>
+<input type="number" id="algo-rsi-flip-ob" class="algo-stats-input" min="50" max="99" step="1" value="70" inputmode="decimal" />
+</div>
+<div class="algo-stats-row algo-stats-row--setting">
+<label class="algo-stats-label" for="algo-rsi-flip-tf">Таймфрейм RSI</label>
+<select id="algo-rsi-flip-tf" class="algo-stats-select">
+<option value="">график</option>
+<option value="1">1m</option>
+<option value="5">5m</option>
+<option value="15">15m</option>
+<option value="60">1h</option>
+<option value="240">4h</option>
+<option value="D">1D</option>
+</select>
+</div>
+<div class="algo-stats-divider" aria-hidden="true"></div>
+<div class="algo-stats-row algo-stats-row--setting">
+<label class="algo-stats-label" for="algo-rsi-flip-side">Направление</label>
+<select id="algo-rsi-flip-side" class="algo-stats-select">
+<option value="BOTH">BOTH</option>
+<option value="LONG">LONG</option>
+<option value="SHORT">SHORT</option>
+</select>
+</div>
+<div class="algo-stats-row algo-stats-row--setting">
+<label class="algo-stats-label" for="algo-rsi-flip-stack">Покупок/продаж подряд</label>
+<input type="number" id="algo-rsi-flip-stack" class="algo-stats-input" min="1" max="20" step="1" value="3" inputmode="numeric" />
+</div>
+<div class="algo-stats-row algo-stats-row--setting">
+<label class="algo-stats-label" for="algo-rsi-flip-budget">Бюджет USDT</label>
+<input type="number" id="algo-rsi-flip-budget" class="algo-stats-input" min="1" step="1" value="100" inputmode="decimal" />
+</div>
+<div class="algo-stats-row algo-stats-row--setting">
+<label class="algo-stats-label" for="algo-rsi-flip-size-mode">Объём</label>
+<select id="algo-rsi-flip-size-mode" class="algo-stats-select">
+<option value="equal">Одним объёмом</option>
+<option value="average">Усреднение</option>
+</select>
+</div>
+<div class="algo-stats-row algo-stats-row--setting" id="algo-rsi-flip-mult-row" hidden>
+<label class="algo-stats-label" for="algo-rsi-flip-mult">Множитель усреднения</label>
+<input type="number" id="algo-rsi-flip-mult" class="algo-stats-input" min="1" step="0.1" value="1.5" inputmode="decimal" />
+</div>
+<div class="algo-stats-row algo-stats-row--rsi-flip-fit-actions">
+<button type="button" class="algo-stats-mode-btn" id="algo-rsi-flip-add-book">Добавить в книгу</button>
+<button type="button" class="algo-stats-mode-btn" id="algo-rsi-flip-remove-book" hidden>Убрать из книги</button>
+</div>
+<p class="algo-rsi-flip-book-status" id="algo-rsi-flip-book-status" role="status"></p>
+<div class="algo-stats-row algo-stats-row--setting">
+<label class="algo-stats-label" for="algo-rsi-flip-marks">Метки сделок</label>
+<label class="algo-stats-check">
+<input type="checkbox" id="algo-rsi-flip-marks" checked />
+</label>
+</div>
+<div class="algo-stats-divider" aria-hidden="true"></div>
+<div class="algo-stats-row algo-stats-row--setting">
+<label class="algo-stats-label" for="algo-rsi-flip-capital">Initial capital</label>
+<input type="number" id="algo-rsi-flip-capital" class="algo-stats-input" min="1" step="1" value="10000" inputmode="decimal" />
+</div>
+<div class="algo-stats-row algo-stats-row--setting">
+<label class="algo-stats-label" for="algo-rsi-flip-commission">Commission %</label>
+<input type="number" id="algo-rsi-flip-commission" class="algo-stats-input" min="0" max="10" step="0.01" value="0.04" inputmode="decimal" />
+</div>
+<div class="algo-stats-row algo-stats-row--setting">
+<label class="algo-stats-label" for="algo-rsi-flip-slippage">Slippage (ticks)</label>
+<input type="number" id="algo-rsi-flip-slippage" class="algo-stats-input" min="0" max="1000" step="1" value="0" inputmode="numeric" />
+</div>
+</div>
+<div class="algo-stats-col">
+<div class="algo-stats-col-title">Обзор</div>
+<p class="algo-rsi-flip-col-note">Весь график — не проверка для запуска.</p>
+<div class="algo-stats-row">
+<span class="algo-stats-label">Дней</span>
+<span class="algo-stats-value" id="algo-rsi-flip-days">—</span>
+</div>
+<div class="algo-stats-row">
+<span class="algo-stats-label">Чистая прибыль</span>
+<span class="algo-stats-value" id="algo-rsi-flip-net">—</span>
+</div>
+<div class="algo-stats-row">
+<span class="algo-stats-label">Прибыль в лонг</span>
+<span class="algo-stats-value" id="algo-rsi-flip-long">—</span>
+</div>
+<div class="algo-stats-row">
+<span class="algo-stats-label">Прибыль в шорт</span>
+<span class="algo-stats-value" id="algo-rsi-flip-short">—</span>
+</div>
+<div class="algo-stats-row">
+<span class="algo-stats-label">Валовая прибыль</span>
+<span class="algo-stats-value" id="algo-rsi-flip-gross-profit">—</span>
+</div>
+<div class="algo-stats-row">
+<span class="algo-stats-label">Валовый убыток</span>
+<span class="algo-stats-value" id="algo-rsi-flip-gross-loss">—</span>
+</div>
+<div class="algo-stats-row">
+<span class="algo-stats-label">Закрытых сделок</span>
+<span class="algo-stats-value" id="algo-rsi-flip-closed">—</span>
+</div>
+<div class="algo-stats-row">
+<span class="algo-stats-label">Прибыльных</span>
+<span class="algo-stats-value" id="algo-rsi-flip-profitable">—</span>
+</div>
+<div class="algo-stats-row">
+<span class="algo-stats-label">Профит-фактор</span>
+<span class="algo-stats-value" id="algo-rsi-flip-pf">—</span>
+</div>
+<div class="algo-stats-row">
+<span class="algo-stats-label">Макс. просадка</span>
+<span class="algo-stats-value" id="algo-rsi-flip-dd">—</span>
+</div>
+<div class="algo-stats-row">
+<span class="algo-stats-label">Средняя сделка</span>
+<span class="algo-stats-value" id="algo-rsi-flip-avg">—</span>
+</div>
+<div class="algo-stats-row">
+<span class="algo-stats-label">Среднее баров</span>
+<span class="algo-stats-value" id="algo-rsi-flip-avg-bars">—</span>
+</div>
+</div>
+<div class="algo-stats-col algo-stats-col--rsi-flip-fit">
+<div class="algo-stats-col-title">Подбор Train / Test</div>
+<p class="algo-rsi-flip-col-note">Сетка на Train, все целые: RSI 5–21, OS 15–35, OB 65–85, стек 1–10. В зачёт идёт набор, который проходит Test, а не чемпион Train. ТФ RSI, направление и объём — как в полях слева. Полный перебор долгий — можно Стоп.</p>
+<div class="algo-stats-row algo-stats-row--setting">
+<label class="algo-stats-label" for="algo-rsi-flip-train-pct">Train %</label>
+<input type="number" id="algo-rsi-flip-train-pct" class="algo-stats-input" min="50" max="90" step="1" value="70" inputmode="numeric" />
+</div>
+<div class="algo-stats-row">
+<span class="algo-stats-label">Окна</span>
+<span class="algo-stats-value algo-rsi-flip-split-label" id="algo-rsi-flip-split-label">—</span>
+</div>
+<div class="algo-stats-row">
+<span class="algo-stats-label">Сейчас в полях → Test</span>
+<span class="algo-stats-value" id="algo-rsi-flip-current-test">—</span>
+</div>
+<div class="algo-stats-row algo-stats-row--rsi-flip-fit-actions">
+<button type="button" class="algo-stats-mode-btn" id="algo-rsi-flip-optimize">Подобрать</button>
+<button type="button" class="algo-stats-mode-btn" id="algo-rsi-flip-optimize-stop" hidden disabled>Стоп</button>
+</div>
+<div class="algo-rsi-flip-fit-progress" id="algo-rsi-flip-fit-progress" hidden>
+<div class="algo-rsi-flip-fit-progress-track">
+<div class="algo-rsi-flip-fit-progress-bar" id="algo-rsi-flip-fit-progress-bar"></div>
+</div>
+<span class="algo-rsi-flip-fit-progress-label" id="algo-rsi-flip-fit-progress-label">0 / 0</span>
+</div>
+<div class="algo-rsi-flip-launch" id="algo-rsi-flip-launch" data-state="idle">
+<div class="algo-rsi-flip-launch-title" id="algo-rsi-flip-launch-title">Сначала подберите параметры</div>
+<div class="algo-rsi-flip-launch-params" id="algo-rsi-flip-launch-params"></div>
+<div class="algo-rsi-flip-launch-detail" id="algo-rsi-flip-launch-detail">Сетка крутится только на Train (старшая часть). Решение — по Test (свежая часть). Обзор слева — весь график, его нельзя читать как «можно запускать».</div>
+</div>
+<div class="algo-stats-row">
+<span class="algo-stats-label">Train</span>
+<span class="algo-stats-value" id="algo-rsi-flip-fit-train">—</span>
+</div>
+<div class="algo-stats-row">
+<span class="algo-stats-label">Test</span>
+<span class="algo-stats-value" id="algo-rsi-flip-fit-test">—</span>
+</div>
+<div class="algo-stats-row algo-stats-row--rsi-flip-fit-actions">
+<button type="button" class="algo-stats-mode-btn" id="algo-rsi-flip-apply-fit" disabled>Подставить в поля слева</button>
+</div>
+<p class="algo-rsi-flip-col-note">Подставить включена только если Test зелёный. Потом «Добавить в книгу» и Запустить.</p>
+</div>
+</div>
+</div>
 <div class="algo-stats-columns" data-algo-analysis-bot="pattern-12">
 <div class="algo-stats-chart-cols">
 <div class="algo-stats-col" data-algo-strategy="fixed-tp">
@@ -1372,6 +1569,21 @@ placeholder="без лимита"
 </div>
 </div>
 
+<div id="algo-bot-rsi-touch-flip-settings-modal" class="algo-bot-settings-modal hidden" hidden>
+<div class="algo-bot-settings-modal-backdrop" data-close="algo-bot-rsi-touch-flip-settings-modal"></div>
+<div class="algo-bot-settings-modal-card" role="dialog" aria-modal="true" aria-labelledby="algo-bot-rsi-touch-flip-settings-modal-title">
+<div class="algo-bot-settings-modal-head">
+<h2 id="algo-bot-rsi-touch-flip-settings-modal-title">RSI Touch Flip</h2>
+<button type="button" class="algo-bot-settings-modal-close" data-close="algo-bot-rsi-touch-flip-settings-modal" aria-label="Закрыть">×</button>
+</div>
+<p class="algo-bot-settings-modal-note">Только автоматическая торговля: рыночные входы и выходы, без алертов и без ТП/СЛ. Параметры каждого тикера живут в книге RSI Touch Flip, не здесь. Добавить/убрать — панель Данные. Запуск берёт снимок книги; пока бот работает, правки на диске идут в следующий старт.</p>
+<div class="algo-bot-settings-modal-body">
+<p class="algo-bot-hint" id="algo-bot-rsi-flip-book-summary">Книга пуста. Добавьте тикеры в панели Данные.</p>
+<p class="algo-bot-hint">Касание OS открывает/наращивает лонг, касание OB — шорт. Стоп закрывает только позиции, которые открыл этот бот.</p>
+</div>
+</div>
+</div>
+
 <div id="algo-optimize-universe-modal" class="algo-universe-modal algo-optimize-universe-modal hidden" hidden>
 <div class="algo-universe-modal-backdrop" data-close="algo-optimize-universe-modal"></div>
 <div class="algo-universe-modal-card" role="dialog" aria-modal="true" aria-labelledby="algo-optimize-universe-modal-title">
@@ -1510,9 +1722,6 @@ placeholder="без лимита"
 
 <select id="market-filter">
 <option value="all">Все</option>
-<option value="algo-long-5m">Стратегия 1</option>
-<option value="algo-short-5m">Стратегия 2</option>
-<option value="algo-both-5m">Стратегия 3</option>
 </select>
 
 <input

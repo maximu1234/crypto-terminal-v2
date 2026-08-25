@@ -4,7 +4,17 @@
 const cache =
 new Map();
 
-function tfPeriodSec(
+export const HTF_KLINE_PAGE_BARS =
+1000;
+
+export const HTF_LTF_REQUESTS_CAP =
+13;
+
+/** Не грузить 1m на всю 5m-историю — хватает видимого окна Терминала. */
+export const HTF_LTF_CHART_BARS_CAP =
+2500;
+
+export function tfPeriodSec(
 tf
 ){
 
@@ -39,6 +49,119 @@ return n *
 }
 
 return 60;
+
+}
+
+/**
+ * Сколько kline-страниц нужно, чтобы младший ТФ покрыл историю графика.
+ * Для старшего ТФ возвращает baseRequests (0 = пусть caller возьмёт свой дефолт).
+ */
+export function sourceHistoryRequests(
+sourceTf,
+chartTf,
+chartBarCount,
+baseRequests =
+0
+){
+
+const base =
+Math.max(
+0,
+Math.floor(
+Number(
+baseRequests
+) ||
+0
+)
+);
+const chartSec =
+tfPeriodSec(
+chartTf
+);
+const sourceSec =
+tfPeriodSec(
+sourceTf
+);
+const bars =
+Math.min(
+HTF_LTF_CHART_BARS_CAP,
+Math.max(
+0,
+Math.floor(
+Number(
+chartBarCount
+) ||
+0
+)
+)
+);
+
+if(
+!sourceSec ||
+!chartSec ||
+sourceSec >=
+chartSec ||
+bars <
+1
+){
+return base;
+}
+
+const neededBars =
+Math.ceil(
+bars *
+chartSec /
+sourceSec
+);
+const neededRequests =
+Math.ceil(
+neededBars /
+HTF_KLINE_PAGE_BARS
+);
+
+return Math.min(
+HTF_LTF_REQUESTS_CAP,
+Math.max(
+base,
+neededRequests
+)
+);
+
+}
+
+function htfCacheCoversRequests(
+entry,
+requests
+){
+
+if(
+!entry?.candles?.length
+){
+return false;
+}
+
+if(
+!(
+requests >
+0
+)
+){
+return true;
+}
+
+if(
+(
+entry.requests ||
+0
+) >=
+requests
+){
+return true;
+}
+
+return entry.candles.length >=
+requests *
+900;
 
 }
 
@@ -303,6 +426,36 @@ htfCandles.length -
 1
 ];
 
+/* 5m-график нельзя подмешивать в 1m-серию: получится грубый бар на хвосте. */
+if(
+chartCandles.length >=
+2
+){
+const chartGap =
+Number(
+lastChart.time
+) -
+Number(
+chartCandles[
+chartCandles.length -
+2
+].time
+);
+
+if(
+Number.isFinite(
+chartGap
+) &&
+chartGap >
+tfPeriodSec(
+timeframe
+)
+){
+return htfCandles;
+}
+
+}
+
 const periodStart =
 alignPeriodStart(
 lastChart.time,
@@ -406,7 +559,9 @@ symbol,
 tf,
 loadHistory,
 chartCandles =
-null
+null,
+chartTf =
+""
 ){
 
 const sym =
@@ -429,6 +584,18 @@ typeof loadHistory !==
 return [];
 }
 
+const requests =
+sourceHistoryRequests(
+timeframe,
+chartTf,
+Array.isArray(
+chartCandles
+)
+? chartCandles.length
+: 0,
+0
+);
+
 const key =
 `${sym}|${timeframe}`;
 
@@ -441,7 +608,10 @@ let candles =
 null;
 
 if(
-existing?.candles
+htfCacheCoversRequests(
+existing,
+requests
+)
 ){
 candles =
 existing.candles;
@@ -450,20 +620,45 @@ existing?.promise
 ){
 candles =
 await existing.promise;
-}else{
+
+if(
+!htfCacheCoversRequests(
+existing,
+requests
+)
+){
+candles =
+null;
+}
+
+}
+
+if(
+!candles
+){
 
 const entry =
 {
 candles:
 null,
 promise:
-null
+null,
+requests
 };
 
 entry.promise =
-loadHistory(
+(
+requests >
+0
+? loadHistory(
+sym,
+timeframe,
+requests
+)
+: loadHistory(
 sym,
 timeframe
+)
 ).then(
 loaded=>{
 

@@ -3,7 +3,7 @@
  */
 import {
 cssUrl
-} from "./asset-manifest.js?v=2";
+} from "./asset-manifest.js?v=6";
 
 import {
 isSystemAdminUser
@@ -36,6 +36,14 @@ id:
 "connections",
 label:
 "Подключения",
+desktopOnly:
+true
+},
+{
+id:
+"proxy",
+label:
+"Прокси",
 desktopOnly:
 true
 },
@@ -244,7 +252,7 @@ const {
 closeCloudSettingsDropdown
 } =
 await import(
-"./auth-ui.js?v=59"
+"./auth-ui.js?v=60"
 );
 closeCloudSettingsDropdown();
 await openAppSettingsWindow();
@@ -437,7 +445,7 @@ const {
 mountSystemSettingsPanel
 } =
 await import(
-"./app-settings-system-panel.js?v=15"
+"./app-settings-system-panel.js?v=18"
 );
 
 systemCtl =
@@ -484,7 +492,7 @@ const {
 mountCloudAuthPanelInSettings
 } =
 await import(
-"./auth-ui.js?v=59"
+"./auth-ui.js?v=60"
 );
 
 mountCloudAuthPanelInSettings(
@@ -550,7 +558,7 @@ mountExchangeConnectionsPanel,
 updateTradeExchangeConnectionChrome
 } =
 await import(
-"./trade-exchange-settings.js?v=21"
+"./trade-exchange-settings.js?v=23"
 );
 
 const host =
@@ -573,6 +581,33 @@ updateTradeExchangeConnectionChrome
 );
 
 void bybitCtl?.refreshPing?.();
+return;
+
+}
+
+if(
+sectionId ===
+"proxy"
+){
+
+if(
+!window.cryptoTerminalDesktop?.isDesktop
+){
+panel.innerHTML =
+`<p class="app-settings-bybit-guest">Прокси доступен в desktop-приложении Multichart.</p>`;
+return;
+}
+
+const {
+mountProxySettingsPanel
+} =
+await import(
+"./app-settings-proxy-panel.js?v=5"
+);
+
+mountProxySettingsPanel(
+panel
+);
 return;
 
 }
@@ -617,7 +652,7 @@ const {
 mountTradingSettingsPanel
 } =
 await import(
-"./trade-trading-settings-panel.js?v=2"
+"./trade-trading-settings-panel.js?v=3"
 );
 
 const host =
@@ -667,7 +702,7 @@ const {
 mountSecretSettingsPanel
 } =
 await import(
-"./app-settings-secret.js?v=7"
+"./app-settings-secret.js?v=8"
 );
 
 await mountSecretSettingsPanel(
@@ -791,7 +826,9 @@ if(
 resolved ===
 "connections" ||
 resolved ===
-"trading"
+"trading" ||
+resolved ===
+"proxy"
 ) &&
 !showConnectionsSettings()
 ){
@@ -864,6 +901,18 @@ if(
 tradingBtn
 ){
 tradingBtn.hidden =
+!showConnectionsSettings();
+}
+
+const proxyBtn =
+overlayEl?.querySelector(
+'.app-settings-nav-btn[data-section="proxy"]'
+);
+
+if(
+proxyBtn
+){
+proxyBtn.hidden =
 !showConnectionsSettings();
 }
 

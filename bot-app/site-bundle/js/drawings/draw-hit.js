@@ -11,6 +11,11 @@ rectangleBodyDist
 } from "./arrow-rect.js?v=2";
 
 import {
+fvpBodyDist,
+isFvpType
+} from "./fixed-volume-profile.js?v=3";
+
+import {
 fibPriceAtRatio,
 getFibRows,
 isSeriesLogarithmic,
@@ -30,6 +35,10 @@ import {
 isCoarseTouchViewport
 } from "../chart/chart-options.js?v=7";
 
+import {
+hitTestTextBody
+} from "./text.js?v=3";
+
 /**
  * @param {object} deps
  * @returns {object} hit-test helpers
@@ -40,7 +49,9 @@ const {
 toXY,
 getPlotWidth,
 series,
-pointFromXY
+pointFromXY,
+getCandles = ()=>
+[]
 } = deps;
 
 function fibHitXPadPx(){
@@ -444,6 +455,29 @@ threshold
 
 }
 
+function hitTestFvpBody(
+px,
+py,
+shape,
+threshold = 8
+){
+
+return (
+isFvpType(
+shape?.type
+) &&
+fvpBodyDist(
+px,
+py,
+shape,
+toXY,
+getCandles()
+) <=
+threshold
+);
+
+}
+
 return {
 hrayLineDist,
 hitTestHrayLine,
@@ -460,6 +494,9 @@ channelBodyDist,
 hitTestChannelBody,
 rectangleBodyDist,
 hitTestRectangleBody,
+fvpBodyDist,
+hitTestFvpBody,
+hitTestTextBody,
 drawBodyHitThreshold(){
 return isCoarseTouchViewport()
 ? DRAW_BODY_HIT_THRESHOLD_TOUCH

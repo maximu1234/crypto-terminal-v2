@@ -26,6 +26,7 @@ const {
 getAlgoRuntimeStatus,
 setAlgoTradingRuntimeEnabled,
 bootAlgoTradingRuntimeIfEnabled,
+stopAlgoTradingRuntime,
 readPrefs,
 setAlgoTradingMode,
 getAlgoTradingMode
@@ -171,7 +172,40 @@ err
 
 handleTrustedDesktopUi(
 ipcMain,
+"desktop:algoTradingListLinearSymbols",
+async()=>{
 
+try{
+const rest =
+require(
+"./algo-bybit-rest.cjs"
+);
+
+return await rest.listLinearUsdtSymbols();
+}catch(
+err
+){
+log.warn(
+"algoTradingListLinearSymbols:",
+err?.message ||
+err
+);
+return {
+ok:
+false,
+message:
+err?.message ||
+String(
+err
+)
+};
+}
+
+}
+);
+
+handleTrustedDesktopUi(
+ipcMain,
 "desktop:algoTradingSetEnabled",
 (
 _event,
@@ -1300,6 +1334,78 @@ err
 }
 );
 
+handleTrustedDesktopUi(
+ipcMain,
+
+"desktop:algoTradingGetClosedPnl",
+async(
+_event,
+payload
+)=>{
+
+try{
+return await algoRest.getClosedPnlHistory(
+payload ||
+{}
+);
+}catch(
+err
+){
+log.warn(
+"algoTradingGetClosedPnl:",
+err?.message ||
+err
+);
+return {
+ok:
+false,
+message:
+err?.message ||
+String(
+err
+)
+};
+}
+
+}
+);
+
+handleTrustedDesktopUi(
+ipcMain,
+
+"desktop:algoTradingGetTradeDiaryDetail",
+async(
+_event,
+payload
+)=>{
+
+try{
+return await algoRest.getTradeDiaryDetail(
+payload ||
+{}
+);
+}catch(
+err
+){
+log.warn(
+"algoTradingGetTradeDiaryDetail:",
+err?.message ||
+err
+);
+return {
+ok:
+false,
+message:
+err?.message ||
+String(
+err
+)
+};
+}
+
+}
+);
+
 
 handleTrustedDesktopUi(
 ipcMain,
@@ -1545,8 +1651,9 @@ err
 
 handleTrustedDesktopUi(
 ipcMain,
+
 "desktop:algoTradingSessionLogRemoteBotStatus",
-async (
+async(
 _event,
 payload
 )=>{
@@ -1587,8 +1694,9 @@ err
 
 handleTrustedDesktopUi(
 ipcMain,
+
 "desktop:algoTradingSessionLogRemoteBotCommand",
-async (
+async(
 _event,
 payload
 )=>{
@@ -1629,8 +1737,9 @@ err
 
 handleTrustedDesktopUi(
 ipcMain,
+
 "desktop:algoTradingSessionLogRemoteAuthPush",
-async (
+async(
 _event,
 payload
 )=>{
@@ -1822,6 +1931,59 @@ err
 
 }
 
+function stopAlgoModulesForFeatureNavOff(){
+
+try{
+stopAlgoTradingStream();
+}catch(
+err
+){
+log.warn(
+"stopAlgoModulesForFeatureNavOff stream:",
+err?.message ||
+err
+);
+}
+
+try{
+stopAlgoTradingRuntime(
+"алго выключен в Системе"
+);
+}catch(
+err
+){
+log.warn(
+"stopAlgoModulesForFeatureNavOff runtime:",
+err?.message ||
+err
+);
+}
+
+return Promise.resolve(
+algoBot.stopBot(
+{}
+)
+).catch(
+err=>{
+log.warn(
+"stopAlgoModulesForFeatureNavOff bot:",
+err?.message ||
+err
+);
+return {
+ok:
+false,
+message:
+err?.message ||
+String(
+err
+)
+};
+}
+);
+
+}
+
 module.exports =
 {
 registerAlgoTradingIpc,
@@ -1830,5 +1992,6 @@ bootAlgoBotIfWasRunning:()=>
 algoBot.bootAlgoBotIfWasRunning(),
 ensureAlgoStream,
 setAlgoTradingStreamTarget,
-stopAlgoTradingStream
+stopAlgoTradingStream,
+stopAlgoModulesForFeatureNavOff
 };

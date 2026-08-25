@@ -5,16 +5,22 @@ removeAlert,
 finalizeAlertPriceDrag,
 setAlertDragLivePrice,
 clearAlertDragLivePrice,
-alertPriceForDisplay
-} from "./alerts.js?v=105";
+alertPriceForDisplay,
+ALERT_SOURCE_MACD,
+ALERT_SOURCE_RSI,
+formatRsiAlertLevel,
+isMacdAlert,
+isOscillatorAlert,
+isRsiAlert
+} from "./alerts.js?v=109";
 
 import {
 isCloudLoggedInEffective
-} from "./cloud-sync.js?v=65";
+} from "./cloud-sync.js?v=67";
 
 import {
 getTelegramChatId
-} from "./alerts-cloud-sync.js?v=65";
+} from "./alerts-cloud-sync.js?v=113";
 
 import {
 formatPrice,
@@ -22,7 +28,7 @@ hideDomChartCrosshair,
 hideDomChartCrosshairHorz,
 hideDomChartCrosshairVert,
 positionDomChartCrosshair
-} from "./chart-import.js?v=43";
+} from "./chart-import.js?v=48";
 
 import {
 isChartLayoutReady,
@@ -151,7 +157,9 @@ scheduleRedraw,
 onCrosshairSuppress,
 onCrosshairRelease,
 onPlusActivate =
-null
+null,
+alertSource =
+""
 }){
 
 if(
@@ -181,7 +189,13 @@ plusBtn.className =
 "price-alert-scale-plus hidden";
 plusBtn.setAttribute(
 "aria-label",
-typeof onPlusActivate ===
+alertSource ===
+ALERT_SOURCE_RSI
+? "Добавить алерт по RSI"
+: alertSource ===
+ALERT_SOURCE_MACD
+? "Добавить алерт по MACD"
+: typeof onPlusActivate ===
 "function"
 ? "Ордер или алерт по цене"
 : "Добавить алерт по цене"
@@ -599,7 +613,7 @@ badge.el
 }
 
 badge.priceEl.textContent =
-formatPrice(
+formatAlertLevel(
 level
 );
 badge.el.style.top =
@@ -686,14 +700,64 @@ wrapW - safeScaleW
 
 }
 
+function formatAlertLevel(
+value
+){
+
+if(
+alertSource ===
+ALERT_SOURCE_RSI ||
+alertSource ===
+ALERT_SOURCE_MACD
+){
+return formatRsiAlertLevel(
+value
+);
+}
+
+return formatPrice(
+value
+);
+
+}
+
 function alertsForChart(){
 
 return getActiveAlerts().filter(
-row=>
+row=>{
+
+if(
 String(
 row.symbol
-).toUpperCase() ===
+).toUpperCase() !==
 sym()
+){
+return false;
+}
+
+if(
+alertSource ===
+ALERT_SOURCE_RSI
+){
+return isRsiAlert(
+row
+);
+}
+
+if(
+alertSource ===
+ALERT_SOURCE_MACD
+){
+return isMacdAlert(
+row
+);
+}
+
+return !isOscillatorAlert(
+row
+);
+
+}
 );
 
 }
@@ -962,7 +1026,7 @@ const plusRightEdge =
 plusLeft + PLUS_ICON_W;
 
 plusPriceHint.textContent =
-formatPrice(price);
+formatAlertLevel(price);
 plusPriceHint.style.left =
 `${Math.round(pw)}px`;
 plusPriceHint.style.width =
@@ -1158,7 +1222,16 @@ const row =
 await createPriceAlert(
 sym(),
 price,
-tf()
+tf(),
+alertSource ===
+ALERT_SOURCE_RSI ||
+alertSource ===
+ALERT_SOURCE_MACD
+? {
+source:
+alertSource
+}
+: {}
 );
 
 if(

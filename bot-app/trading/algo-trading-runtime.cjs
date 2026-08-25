@@ -85,13 +85,10 @@ if(
 return "manual";
 }
 
-/*
-  Temporary: remote Algo Bot — live only. Manual trading UI is inactive;
-  ignore stored/requested "manual" until we re-enable it.
-*/
-void raw;
-
-return "live";
+return raw ===
+"manual"
+? "manual"
+: "live";
 
 }
 
@@ -413,9 +410,14 @@ function bootAlgoTradingRuntimeIfEnabled(){
 
 const prefs =
 readPrefs();
+const featureNav =
+require(
+"../feature-nav-prefs-store.cjs"
+).readPrefs();
 
 if(
-!prefs.enabled
+!prefs.enabled ||
+!featureNav.algoTradingNavEnabled
 ){
 runtimeState =
 "stopped";

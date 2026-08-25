@@ -5,7 +5,7 @@
 
 import {
 isCoarseTouchViewport
-} from "../chart-import.js?v=43";
+} from "../chart-import.js?v=48";
 
 export function createDrawDesktopSelection(
 deps
@@ -30,6 +30,7 @@ getChromePortal,
 styleBar,
 colorPopover,
 widthPopover,
+textSizePopover,
 settingsPopover,
 positionRiskWrap,
 fibPortalHitTest,
@@ -154,6 +155,12 @@ target.closest(
 ".draw-position-risk"
 ) ||
 target.closest(
+".draw-text-editor"
+) ||
+target.closest(
+".draw-text-size-popover"
+) ||
+target.closest(
 ".price-alert-scale-plus"
 ) ||
 target.closest(
@@ -257,6 +264,11 @@ e.clientY
 ) ||
 rectHitsClient(
 widthPopover,
+e.clientX,
+e.clientY
+) ||
+rectHitsClient(
+textSizePopover,
 e.clientX,
 e.clientY
 ) ||

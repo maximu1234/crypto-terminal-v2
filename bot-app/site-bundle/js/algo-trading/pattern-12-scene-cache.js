@@ -6,7 +6,7 @@ import {
 computePattern12Scene,
 defaultPattern12Settings,
 normalizePattern12Settings
-} from "./pattern-12-math.js?v=14";
+} from "./pattern-12-math.js?v=21";
 
 /** @type {{ key: string, scene: object|null }} */
 let cache = {
@@ -217,6 +217,26 @@ n
 
 }
 
+function eventPaintSide(
+event
+){
+
+if(
+event?.setupSide ===
+"short" ||
+event?.setupSide ===
+"long"
+){
+return event.setupSide;
+}
+
+return event?.side ===
+"short"
+? "short"
+: "long";
+
+}
+
 /**
  * @param {unknown} bar
  * @param {unknown} price
@@ -290,7 +310,9 @@ continue;
 
 kept.add(
 setupPaintKey(
-event.side,
+eventPaintSide(
+event
+),
 event.setupBar,
 event.pt4
 )
@@ -314,7 +336,9 @@ continue;
 
 const key =
 setupPaintKey(
-event.side,
+eventPaintSide(
+event
+),
 event.setupBar,
 event.pt4
 );

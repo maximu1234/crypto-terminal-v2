@@ -4,7 +4,7 @@
 import {
 clearAllHtfCache,
 fetchHtfCandles
-} from "./htf-loader.js?v=2";
+} from "./htf-loader.js?v=6";
 
 import {
 isChartLayoutReady
@@ -550,7 +550,8 @@ await fetchHtfCandles(
 symbol,
 tf,
 loadHistory,
-chartCandles
+chartCandles,
+chartTf
 );
 
 }

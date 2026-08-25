@@ -329,10 +329,10 @@ problem.message;
 
 export function mountCloudAuthProblemBanner(){
 
-/*
-  Temporary: auth banners off on Algo Bot (login disabled).
-  Multichart users without remote bot must not see it either.
-*/
+/* Red strip is Algo Bot only — Multichart users without remote bot must not see it. */
+if(
+!isAlgoBotLiteShell()
+){
 try{
 document.getElementById(
 "cloud-auth-problem-banner"
@@ -341,9 +341,81 @@ document.getElementById(
 /* ignore */
 }
 return;
+}
+
+if(
+typeof document ===
+"undefined"
+){
+return;
+}
+
+let el =
+document.getElementById(
+"cloud-auth-problem-banner"
+);
+
+if(
+!el
+){
+
+el =
+document.createElement(
+"div"
+);
+el.id =
+"cloud-auth-problem-banner";
+el.className =
+"cloud-auth-problem-banner hidden";
+el.setAttribute(
+"role",
+"alert"
+);
+
+const header =
+document.querySelector(
+"#header.app-page-header"
+) ||
+document.getElementById(
+"header"
+);
+
+if(
+header?.parentNode
+){
+header.parentNode.insertBefore(
+el,
+header.nextSibling
+);
+}else{
+document.body.prepend(
+el
+);
+}
 
 }
 
+paintCloudAuthProblemBanner();
+
+if(
+!cloudAuthProblemBannerBound
+){
+cloudAuthProblemBannerBound =
+true;
+window.addEventListener(
+"cloud-auth-problem",
+()=>{
+paintCloudAuthProblemBanner();
+}
+);
+onCloudSyncChange(
+()=>{
+paintCloudAuthProblemBanner();
+}
+);
+}
+
+}
 
 /**
  * Algo Bot lite: JWT refresh is owned by Multichart only.
@@ -1700,11 +1772,72 @@ return false;
 }
 
 /**
- * Bot cloud session auto-push — disabled (LAN auth session not used).
+ * After Multichart rotates JWT, push fresh session to LAN Algo Bot so the
+ * bot does not need its own Auth refresh (shared refresh_token).
  */
 async function maybeAutoPushSessionToLanBot(){
 
+if(
+isAlgoBotLiteShell()
+){
 return;
+}
+
+if(
+typeof window ===
+"undefined" ||
+!window.cryptoTerminalDesktop?.isDesktop
+){
+return;
+}
+
+try{
+const {
+pushAuthSessionToRemoteBot,
+readLanRemoteConn,
+isMultichartRemoteControlHost
+} =
+await import(
+"./algo-trading/bot-remote-client.js?v=12"
+);
+
+if(
+!isMultichartRemoteControlHost()
+){
+return;
+}
+
+const lan =
+readLanRemoteConn();
+
+if(
+!lan?.host ||
+!lan?.token
+){
+return;
+}
+
+const res =
+await pushAuthSessionToRemoteBot(
+lan
+);
+
+if(
+res?.ok
+){
+warnAuthOnce(
+"lan-session-auto",
+"[auth] Session auto-pushed to LAN Algo Bot after refresh"
+);
+}
+}catch(
+err
+){
+warnAuthOnce(
+"lan-session-auto-fail",
+`[auth] LAN session auto-push skipped: ${err?.message || err}`
+);
+}
 
 }
 
@@ -1718,7 +1851,7 @@ let realtimeReconnectTimer = null;
 let drawingsPushTimer = null;
 let pendingDrawingsCloudPush = false;
 
-const SYNC_POLL_MS = 5000;
+const SYNC_POLL_MS = 30000;
 const DRAWINGS_PUSH_DEBOUNCE_MS = 250;
 
 const flushAuthListeners =
@@ -2391,7 +2524,7 @@ isFavoritesAutoCloudDisabled()
 return;
 }
 
-void import("./favorites-cloud-sync.js?v=65").then(
+void import("./favorites-cloud-sync.js?v=7").then(
 m=>{
 m.applyFavoritesFromRealtimeRow(
 row
@@ -2529,7 +2662,7 @@ settingsChannel = channel;
 export async function mergeFavoritesWithCloud(){
 
 const m =
-await import("./favorites-cloud-sync.js?v=65");
+await import("./favorites-cloud-sync.js?v=7");
 
 return m.reconcileLocalFavoritesWithCloud();
 
@@ -2539,7 +2672,7 @@ return m.reconcileLocalFavoritesWithCloud();
 export async function pullFavoritesIfCloudNewer(){
 
 const m =
-await import("./favorites-cloud-sync.js?v=65");
+await import("./favorites-cloud-sync.js?v=7");
 
 await m.pullFavoritesFromCloudNow();
 return favoritesToCloudList(
@@ -2563,7 +2696,7 @@ return collectAllLocalDrawings();
 async function syncFavoritesWithCloud(){
 
 const m =
-await import("./favorites-cloud-sync.js?v=65");
+await import("./favorites-cloud-sync.js?v=7");
 
 await m.reconcileLocalFavoritesWithCloud();
 
@@ -2597,7 +2730,7 @@ return;
 }
 
 const m =
-await import("./favorites-cloud-sync.js?v=65");
+await import("./favorites-cloud-sync.js?v=7");
 
 m.pushFavoritesAfterLocalEdit(
 favorites
@@ -4457,7 +4590,7 @@ return;
 try{
 
 const favoritesCloud =
-await import("./favorites-cloud-sync.js?v=65");
+await import("./favorites-cloud-sync.js?v=7");
 
 if(
 !isFavoritesAutoCloudDisabled() &&
@@ -4471,7 +4604,7 @@ if(
 !isAlertsCloudDisabled()
 ){
 const alertsCloud =
-await import("./alerts-cloud-sync.js?v=65");
+await import("./alerts-cloud-sync.js?v=113");
 
 await alertsCloud.hydrateAlertsAfterAuth({
 force: true
@@ -4574,9 +4707,9 @@ await ensureCloudLoginResolved(
 );
 
 const alertsCloud =
-await import("./alerts-cloud-sync.js?v=65");
+await import("./alerts-cloud-sync.js?v=113");
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=106");
+await import("./alerts.js?v=109");
 
 const stripOpts =
 isAlertsPage()
@@ -4799,13 +4932,22 @@ notifyAuth();
 if(
 isAlgoBotLiteShell()
 ){
-/*
-  Temporary: no login on Algo Bot — clear any leftover session,
-  skip auth problem banner and JWT expiry watch.
-*/
+const cached =
+readPersistedAuthSession();
+const session =
+cached?.access_token &&
+cached?.user &&
+!isAccessTokenExpired(
+cached
+)
+? cached
+: null;
+
 await applySession(
-null
+session
 );
+mountCloudAuthProblemBanner();
+bindAlgoBotLiteAuthWatch();
 return;
 }
 

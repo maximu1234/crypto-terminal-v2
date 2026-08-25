@@ -38,6 +38,32 @@ const PREFS_FILE =
 "algo-bot-session-log-server.json";
 const DEFAULT_PORT =
 17865;
+const LAN_BOT_STRATEGY_IDS =
+[
+"st1",
+"st2",
+"st3",
+"early-t3",
+"rsi-touch-flip"
+];
+
+function normalizeLanBotStrategyId(
+raw
+){
+
+const id =
+String(
+raw ||
+""
+).trim().toLowerCase();
+
+return LAN_BOT_STRATEGY_IDS.includes(
+id
+)
+? id
+: "st1";
+
+}
 const AUTH_BODY_MAX =
 65536;
 
@@ -763,20 +789,9 @@ action ||
 ""
 ).trim().toLowerCase();
 const strategyId =
-[
-"st1",
-"st2",
-"st3"
-].includes(
-String(
-opts.strategyId ||
-""
-).trim().toLowerCase()
-)
-? String(
+normalizeLanBotStrategyId(
 opts.strategyId
-).trim().toLowerCase()
-: "st1";
+);
 
 if(
 act ===
@@ -792,6 +807,26 @@ typeof opts.strategyPrefs ===
 ? {
 strategyPrefs:
 opts.strategyPrefs
+}
+: {}
+),
+...(
+opts.earlyT3Prefs &&
+typeof opts.earlyT3Prefs ===
+"object"
+? {
+earlyT3Prefs:
+opts.earlyT3Prefs
+}
+: {}
+),
+...(
+Array.isArray(
+opts.book
+)
+? {
+book:
+opts.book
 }
 : {}
 )
@@ -1300,8 +1335,7 @@ let body;
 try{
 body =
 await readJsonBody(
-req,
-65536
+req
 );
 }catch(
 err
@@ -1348,20 +1382,9 @@ return;
 }
 
 const strategyId =
-[
-"st1",
-"st2",
-"st3"
-].includes(
-String(
-body.strategyId ||
-""
-).trim().toLowerCase()
-)
-? String(
+normalizeLanBotStrategyId(
 body.strategyId
-).trim().toLowerCase()
-: "st1";
+);
 
 const result =
 await handleLanBotCommand(
@@ -1377,6 +1400,30 @@ typeof body.strategyPrefs ===
 ? {
 strategyPrefs:
 body.strategyPrefs
+}
+: {}
+),
+...(
+action ===
+"start" &&
+body.earlyT3Prefs &&
+typeof body.earlyT3Prefs ===
+"object"
+? {
+earlyT3Prefs:
+body.earlyT3Prefs
+}
+: {}
+),
+...(
+action ===
+"start" &&
+Array.isArray(
+body.book
+)
+? {
+book:
+body.book
 }
 : {}
 )

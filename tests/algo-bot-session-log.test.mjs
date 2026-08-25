@@ -147,3 +147,17 @@ test("pattern engine pushSignal writes through session log module", () => {
   );
   assert.ok(engine.includes("sessionLog.appendSignal"));
 });
+
+test("LAN bot command accepts the three live bots", () => {
+  for (const rel of [
+    "desktop/trading/algo-bot-session-log-server.cjs",
+    "desktop/trading/algo-bot-session-log-remote-client.cjs",
+    "desktop/trading/algo-bot-remote-control.cjs",
+    "js/algo-trading/bot-remote-client.js",
+    "js/algo-trading/bot-session-logs-viewer.js"
+  ]) {
+    const src = fs.readFileSync(path.join(root, rel), "utf8");
+    assert.match(src, /early-t3/, rel);
+    assert.match(src, /rsi-touch-flip/, rel);
+  }
+});

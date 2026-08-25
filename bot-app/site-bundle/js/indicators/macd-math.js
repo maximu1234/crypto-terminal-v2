@@ -3,6 +3,9 @@
  * fast/slow MA(source) → MACD, signal MA(MACD), hist = MACD − signal.
  * Дефолты TV: 12 / 26 / close / 9 / EMA / EMA.
  */
+import {
+normalizeHtfTf
+} from "./htf-project.js?v=5";
 
 export const MACD_FAST_LENGTH =
 12;
@@ -75,7 +78,9 @@ MACD_SOURCE,
 oscillatorMa:
 MACD_OSC_MA,
 signalMa:
-MACD_SIGNAL_MA
+MACD_SIGNAL_MA,
+tf:
+""
 };
 
 }
@@ -173,7 +178,11 @@ MA_TYPES.has(
 signalMa
 )
 ? signalMa
-: base.signalMa
+: base.signalMa,
+tf:
+normalizeHtfTf(
+raw?.tf
+)
 };
 
 }

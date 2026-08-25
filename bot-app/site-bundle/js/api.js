@@ -1,6 +1,5 @@
 import {
-fetchBybit,
-isLocalDevHost
+fetchBybit
 } from "./bybit-fetch.js?v=17";
 
 import {
@@ -119,11 +118,11 @@ const { json } =
 await fetchBybit(
 path,
 {
-...(fetchOpts.sequential === false || isLocalDevHost()
-? {}
-: {
+...(fetchOpts.sequential === true
+? {
 sequential: true
-}),
+}
+: {}),
 retries,
 timeoutMs: 10000
 }

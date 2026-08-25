@@ -3,15 +3,20 @@
  */
 import {
 loadBotStrategiesPrefs
-} from "./bot-strategy-prefs.js?v=28";
+} from "./bot-strategy-prefs.js?v=32";
 import {
 readAlgoPattern12Settings
-} from "./pattern-12-settings.js?v=3";
+} from "./pattern-12-settings.js?v=5";
+import {
+readAlgoPattern12EarlyT3Settings
+} from "./pattern-12-early-t3-settings.js?v=1";
+import {
+loadEarlyT3BotPrefs
+} from "./early-t3-bot-prefs.js?v=5";
 import {
 loadAlgoTickerFlags,
-ALGO_TICKER_FLAGS_KEY,
-applyAlgoTickerFlagsRoot
-} from "./ticker-flags.js?v=8";
+ALGO_TICKER_FLAGS_KEY
+} from "./ticker-flags.js?v=9";
 import {
 acquireAlgoBotLock,
 releaseAlgoBotLock,
@@ -27,16 +32,85 @@ loadStagedBotTickerBook,
 writePublishedBotTickerBook
 } from "./bot-ticker-book.js?v=7";
 
-function desktopAlgoApi(){
+import {
+isAlgoBotWorking
+} from "../desktop-feature-nav-shutdown.js?v=1";
+import {
+desktopAlgoApi,
+fetchAlgoBotStatus,
+maybeApplyTickerFlagsFromBotStatus
+} from "./bot-status-flags.js?v=1";
 
-return window.cryptoTerminalDesktop?.algoTrading ||
-null;
-
-}
+export {
+fetchAlgoBotStatus,
+maybeApplyTickerFlagsFromBotStatus
+};
 
 export function isAlgoBotDesktop(){
 
 return !!desktopAlgoApi()?.getBotStatus;
+
+}
+
+function pickAlertLeadPct(
+primary,
+secondary
+){
+
+const a =
+Number(
+primary
+);
+const b =
+Number(
+secondary
+);
+const aOk =
+Number.isFinite(
+a
+) &&
+a >=
+0;
+const bOk =
+Number.isFinite(
+b
+) &&
+b >=
+0;
+
+if(
+aOk &&
+a ===
+5 &&
+bOk &&
+b !==
+5
+){
+return Math.min(
+25,
+b
+);
+}
+
+if(
+aOk
+){
+return Math.min(
+25,
+a
+);
+}
+
+if(
+bOk
+){
+return Math.min(
+25,
+b
+);
+}
+
+return 5;
 
 }
 
@@ -158,7 +232,9 @@ err
 
 export async function startAlgoBot(
 strategyId =
-"st1"
+"st1",
+extra =
+{}
 ){
 
 const api =
@@ -197,6 +273,85 @@ lock
 await syncBotStrategiesToMain();
 await syncAllTickerFlagsRootToMain();
 
+const idNorm =
+String(
+strategyId ||
+""
+).trim().toLowerCase();
+
+if(
+idNorm ===
+"rsi-touch-flip"
+){
+const book =
+Array.isArray(
+extra?.book
+)
+? extra.book
+: [];
+const result =
+await api.startBot(
+{
+strategyId:
+"rsi-touch-flip",
+book:
+book ||
+[]
+}
+);
+
+if(
+!(
+result?.ok ||
+result?.running ||
+result?.alreadyRunning
+)
+){
+await releaseAlgoBotLock();
+}
+
+return result;
+}
+
+if(
+idNorm ===
+"early-t3"
+){
+const earlyT3Prefs =
+{
+...loadEarlyT3BotPrefs()
+};
+const st1Lead =
+loadBotStrategiesPrefs()?.st1?.alertLeadPct;
+earlyT3Prefs.alertLeadPct =
+pickAlertLeadPct(
+earlyT3Prefs.alertLeadPct,
+st1Lead
+);
+const result =
+await api.startBot(
+{
+strategyId:
+"early-t3",
+earlyT3Prefs,
+patternSettings:
+readAlgoPattern12EarlyT3Settings()
+}
+);
+
+if(
+!(
+result?.ok ||
+result?.running ||
+result?.alreadyRunning
+)
+){
+await releaseAlgoBotLock();
+}
+
+return result;
+}
+
 const prefs =
 loadBotStrategiesPrefs();
 const id =
@@ -206,6 +361,19 @@ strategyId ===
 "st3"
 ? strategyId
 : "st1";
+const strategyPrefs =
+{
+...prefs[
+id
+],
+alertLeadPct:
+pickAlertLeadPct(
+prefs[
+id
+]?.alertLeadPct,
+loadEarlyT3BotPrefs().alertLeadPct
+)
+};
 
 let tickerBookSnapshot =
 freezeBotTickerBookSnapshot(
@@ -267,9 +435,7 @@ await api.startBot(
 {
 strategyId,
 strategyPrefs:
-prefs[
-id
-],
+strategyPrefs,
 tickerBookSnapshot
 }
 );
@@ -326,6 +492,39 @@ return result;
 
 }
 
+export async function stopAlgoBotIfRunning(){
+
+const status =
+await fetchAlgoBotStatus();
+
+if(
+!isAlgoBotWorking(
+status
+)
+){
+return {
+ok:
+true,
+stopped:
+false
+};
+}
+
+const result =
+await stopAlgoBot(
+status.strategyId ||
+"st1"
+);
+
+return {
+...result,
+stopped:
+result?.ok !==
+false
+};
+
+}
+
 export async function fetchAlgoBotCloudLock(){
 
 return fetchAlgoBotLock();
@@ -341,26 +540,6 @@ return clearAlgoBotLock();
 export async function ensureAlgoBotCloudLock(){
 
 return ensureAlgoBotLockHeld();
-
-}
-
-export async function fetchAlgoBotStatus(){
-
-const api =
-desktopAlgoApi();
-
-if(
-!api?.getBotStatus
-){
-return {
-ok:
-false,
-message:
-"desktop only"
-};
-}
-
-return api.getBotStatus();
 
 }
 
@@ -385,39 +564,6 @@ message:
 return api.disarmArmedSetup(
 payload ||
 {}
-);
-
-}
-
-/**
- * Подтянуть флаги из main только после Phase D (или явного apply).
- * Обычный status poll НЕ должен затирать localStorage.
- */
-export function maybeApplyTickerFlagsFromBotStatus(
-status
-){
-
-if(
-!status
-){
-return false;
-}
-
-const shouldApply =
-status.applyTickerFlags ===
-true ||
-status.watchlistRefresh?.ok ===
-true;
-
-if(
-!shouldApply ||
-!status.tickerFlagsRoot
-){
-return false;
-}
-
-return applyAlgoTickerFlagsRoot(
-status.tickerFlagsRoot
 );
 
 }

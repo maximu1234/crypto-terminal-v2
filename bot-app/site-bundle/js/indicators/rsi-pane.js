@@ -1,7 +1,13 @@
 /**
  * RSI — панель под графиком; не учитывается в лимите индикаторов.
- * Настройки: период, перекупленность / перепроданность (как TV RSI).
+ * Настройки: период, перекупленность / перепроданность, таймфрейм (как Supertrend).
  */
+import {
+formatHtfTfLegend,
+htfTfSelectHtml,
+normalizeHtfTf
+} from "./htf-project.js?v=5";
+
 export const RSI_PANE_ID =
 "rsi";
 
@@ -13,7 +19,9 @@ period:
 overbought:
 70,
 oversold:
-30
+30,
+tf:
+""
 };
 
 }
@@ -78,6 +86,10 @@ raw?.oversold,
 1,
 99,
 base.oversold
+),
+tf:
+normalizeHtfTf(
+raw?.tf
 )
 };
 
@@ -147,7 +159,9 @@ getHost?.()?.onRsiSettingsChange?.(
 
 function getLegendText(){
 
-return `RSI ${settings.period} close`;
+return `RSI ${settings.period} close${formatHtfTfLegend(
+settings.tf
+)}`;
 
 }
 
@@ -309,6 +323,9 @@ root.innerHTML =
 <span class="chart-indicator-settings-field-label">Перепроданность</span>
 <input type="number" class="chart-indicator-settings-input" min="1" max="99" step="1" data-key="oversold" value="${settings.oversold}" inputmode="numeric"/>
 </label>
+${htfTfSelectHtml(
+settings.tf
+)}
 </div>
 <div class="chart-indicator-settings-reset-row">
 <button type="button" class="chart-indicator-settings-reset">Сбросить в дефолт</button>
@@ -329,6 +346,18 @@ el=>{
 
 const key =
 el.dataset.key;
+
+if(
+el.tagName ===
+"SELECT"
+){
+next[
+key
+] =
+el.value;
+return;
+}
+
 const n =
 Number(
 el.value
@@ -358,7 +387,7 @@ settings
 }
 
 root.querySelectorAll(
-"input"
+"input, select"
 ).forEach(
 el=>{
 el.addEventListener(

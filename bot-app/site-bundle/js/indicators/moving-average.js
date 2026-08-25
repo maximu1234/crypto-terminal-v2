@@ -20,6 +20,14 @@ isValidDrawColor,
 closeIndicatorColorPicker
 } from "./indicator-color-picker-ui.js?v=1";
 
+import {
+formatHtfTfLegend,
+htfTfSelectHtml,
+normalizeHtfTf,
+projectHtfPointsOntoChart,
+resolveIndicatorSourceCandles
+} from "./htf-project.js?v=5";
+
 export const MOVING_AVERAGE_ID =
 "ma";
 
@@ -61,6 +69,8 @@ type:
 "sma",
 lineWidth:
 1,
+tf:
+"",
 lines:
 DEFAULT_LINES.map(
 line=>({
@@ -153,6 +163,10 @@ clampLineWidth(
 raw?.lineWidth ??
 base.lineWidth
 ),
+tf:
+normalizeHtfTf(
+raw?.tf
+),
 lines:
 Array.from(
 {
@@ -209,6 +223,8 @@ let settings =
 defaultSettings();
 const seriesByIndex =
 new Map();
+let refreshSeq =
+0;
 
 function readSettings(){
 
@@ -258,11 +274,15 @@ line.period
 if(
 !periods.length
 ){
-return label;
+return `${label}${formatHtfTfLegend(
+settings.tf
+)}`;
 }
 
 return `${label} ${periods.join(
 " "
+)}${formatHtfTfLegend(
+settings.tf
 )}`;
 
 }
@@ -493,6 +513,38 @@ if(
 return;
 }
 
+const seq =
+++refreshSeq;
+const chartTf =
+host?.getTf?.() ||
+"";
+
+void (
+async()=>{
+
+const resolved =
+await resolveIndicatorSourceCandles(
+{
+tf:
+settings.tf,
+chartTf,
+chartCandles:
+candles,
+symbol:
+host?.getSymbol?.(),
+loadHistory:
+host?.loadIndicatorHistory
+}
+);
+
+if(
+seq !==
+refreshSeq ||
+!enabled
+){
+return;
+}
+
 runWithPreservedVisibleLogicalRange(
 chart,
 ()=>{
@@ -554,13 +606,22 @@ true
 /* ignore */
 }
 
-const points =
-alignMaPointsToDisplayCandles(
+const sourcePoints =
 calculateMaPoints(
-candles,
+resolved.candles,
 line.period,
 settings.type
-),
+);
+const chartPoints =
+resolved.projected
+? projectHtfPointsOntoChart(
+candles,
+sourcePoints
+)
+: sourcePoints;
+const points =
+alignMaPointsToDisplayCandles(
+chartPoints,
 displayCandles
 );
 
@@ -572,6 +633,9 @@ points
 
 }
 );
+
+}
+)();
 
 }
 
@@ -612,6 +676,9 @@ root.innerHTML =
 <button type="button" class="chart-indicators-type-btn ${settings.type === "ema" ? "active" : ""}" data-ma-type="ema">EMA</button>
 </div>
 </div>
+${htfTfSelectHtml(
+settings.tf
+)}
 <div class="ind-ma-settings">
 <div class="ind-ma-settings-head">
 <span></span>
@@ -668,6 +735,12 @@ defaultSettings();
 
 next.type =
 settings.type;
+next.tf =
+normalizeHtfTf(
+root.querySelector(
+'[data-field="tf"]'
+)?.value
+);
 next.lineWidth =
 clampLineWidth(
 root.querySelector(
@@ -784,7 +857,7 @@ commit();
 );
 
 root.querySelectorAll(
-"input"
+"input, select"
 ).forEach(
 el=>{
 el.addEventListener(

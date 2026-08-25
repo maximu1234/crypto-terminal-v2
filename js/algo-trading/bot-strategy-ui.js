@@ -13,21 +13,32 @@ normalizeLaunchStrategyId,
 botStrategyListLabel,
 botSidesDirectionLabel,
 formatBotStrategySettingsRows
-} from "./bot-strategy-prefs.js?v=30";
+} from "./bot-strategy-prefs.js?v=32";
 import {
 loadEarlyT3BotPrefs,
 saveEarlyT3BotPrefs
 } from "./early-t3-bot-prefs.js?v=5";
 import {
+snapshotRsiTouchFlipBook,
+rsiTouchFlipBookBudgetFits,
+loadRsiTouchFlipBook,
+sumRsiTouchFlipBookBudgets,
+RSI_TOUCH_FLIP_BOOK_CHANGE_EVENT
+} from "./rsi-touch-flip-book.js?v=2";
+import {
+getAlgoTradingWalletBalance
+} from "./runtime-bridge.js?v=6";
+import {
 ALGO_ANALYSIS_BOT_NONE,
 ALGO_ANALYSIS_BOT_PATTERN_12,
 ALGO_ANALYSIS_BOT_EARLY_T3,
+ALGO_ANALYSIS_BOT_RSI_TOUCH_FLIP,
 ALGO_ANALYSIS_BOT_CHANGE_EVENT,
 getActiveAnalysisBotId,
 isActiveAnalysisBot,
 isAnyAnalysisBotActive,
 setActiveAnalysisBotId
-} from "./active-analysis-bot.js?v=3";
+} from "./active-analysis-bot.js?v=4";
 import {
 clampMaxPt1Pt4Bars
 } from "./pattern-entry-logic.js?v=14";
@@ -46,7 +57,7 @@ isAlgoBotDesktop,
 fetchAlgoBotCloudLock,
 clearAlgoBotCloudLock,
 ensureAlgoBotCloudLock
-} from "./bot-bridge.js?v=22";
+} from "./bot-bridge.js?v=25";
 import {
 stageBotTickerBookFromPublished,
 hydrateBotTickerBookFromMain,
@@ -56,12 +67,12 @@ persistBotTickerBookToMain
 } from "./bot-ticker-book.js?v=7";
 import {
 isMultichartRemoteControlHost
-} from "./bot-remote-client.js?v=10";
+} from "./bot-remote-client.js?v=12";
 import {
 mountRemoteSessionLogsEntry,
 mountRemoteWatchlistsPushEntry,
 mountLocalSessionLogsEntry
-} from "./bot-session-logs-viewer.js?v=29";
+} from "./bot-session-logs-viewer.js?v=30";
 import {
 rebalanceTpShares
 } from "./pattern-trade-stats-partial.js?v=22";
@@ -151,7 +162,10 @@ n
 /**
  * @returns {{ destroy: () => void }}
  */
-export function mountAlgoBotStrategyUi(){
+export function mountAlgoBotStrategyUi(
+host =
+{}
+){
 
 if(
 typeof activeBotStrategyUiDestroy ===
@@ -220,6 +234,18 @@ const botsItemEarlyT3Enabled =
 document.getElementById(
 "algo-bots-item-early-t3-enabled"
 );
+const botsItemRsiTouchFlip =
+document.getElementById(
+"algo-bots-item-rsi-touch-flip"
+);
+const botsItemRsiTouchFlipEnabled =
+document.getElementById(
+"algo-bots-item-rsi-touch-flip-enabled"
+);
+const rsiTouchFlipSettingsModal =
+document.getElementById(
+"algo-bot-rsi-touch-flip-settings-modal"
+);
 const earlyT3SettingsModal =
 document.getElementById(
 "algo-bot-early-t3-settings-modal"
@@ -275,6 +301,8 @@ document.getElementById(
 let earlyT3Prefs =
 loadEarlyT3BotPrefs();
 let earlyT3Running =
+false;
+let rsiTouchFlipRunning =
 false;
 const botSettingsModal =
 document.getElementById(
@@ -876,6 +904,10 @@ const earlyT3On =
 isActiveAnalysisBot(
 ALGO_ANALYSIS_BOT_EARLY_T3
 );
+const rsiTouchFlipOn =
+isActiveAnalysisBot(
+ALGO_ANALYSIS_BOT_RSI_TOUCH_FLIP
+);
 
 if(
 botsItemPattern12Enabled
@@ -889,6 +921,13 @@ botsItemEarlyT3Enabled
 ){
 botsItemEarlyT3Enabled.checked =
 earlyT3On;
+}
+
+if(
+botsItemRsiTouchFlipEnabled
+){
+botsItemRsiTouchFlipEnabled.checked =
+rsiTouchFlipOn;
 }
 
 botsItemPattern12?.classList.toggle(
@@ -909,6 +948,17 @@ earlyT3On
 botsItemEarlyT3?.setAttribute(
 "aria-current",
 earlyT3On
+? "true"
+: "false"
+);
+
+botsItemRsiTouchFlip?.classList.toggle(
+"is-active-analysis-bot",
+rsiTouchFlipOn
+);
+botsItemRsiTouchFlip?.setAttribute(
+"aria-current",
+rsiTouchFlipOn
 ? "true"
 : "false"
 );
@@ -954,6 +1004,8 @@ return;
 }
 
 closeAllDrops();
+closeEarlyT3SettingsModal();
+closeRsiTouchFlipSettingsModal();
 botSettingsModal.hidden =
 false;
 botSettingsModal.classList.remove(
@@ -988,6 +1040,7 @@ return;
 
 closeAllDrops();
 closeBotSettingsModal();
+closeRsiTouchFlipSettingsModal();
 applyEarlyT3SettingsUi();
 earlyT3SettingsModal.hidden =
 false;
@@ -1009,6 +1062,81 @@ earlyT3SettingsModal.classList.add(
 "hidden"
 );
 earlyT3SettingsModal.hidden =
+true;
+
+}
+
+function fillRsiTouchFlipSettingsModal(){
+
+const summary =
+document.getElementById(
+"algo-bot-rsi-flip-book-summary"
+);
+
+if(
+!summary
+){
+return;
+}
+
+const rows =
+loadRsiTouchFlipBook();
+const sum =
+sumRsiTouchFlipBookBudgets(
+rows
+);
+
+if(
+!rows.length
+){
+summary.textContent =
+"Книга пуста. Добавьте тикеры в панели Данные.";
+return;
+}
+
+const lines =
+rows.map(
+row=>
+`${row.symbol} · ${row.tf} · ${Number(row.prefs?.budget).toFixed(0)} USDT`
+);
+
+summary.textContent =
+`В книге ${rows.length} тик. · сумма бюджетов ${sum.toFixed(0)} USDT\n${lines.join("\n")}`;
+
+}
+
+function openRsiTouchFlipSettingsModal(){
+
+if(
+!rsiTouchFlipSettingsModal
+){
+return;
+}
+
+closeAllDrops();
+closeBotSettingsModal();
+closeEarlyT3SettingsModal();
+fillRsiTouchFlipSettingsModal();
+rsiTouchFlipSettingsModal.hidden =
+false;
+rsiTouchFlipSettingsModal.classList.remove(
+"hidden"
+);
+
+}
+
+function closeRsiTouchFlipSettingsModal(){
+
+if(
+!rsiTouchFlipSettingsModal
+){
+return;
+}
+
+rsiTouchFlipSettingsModal.classList.add(
+"hidden"
+);
+rsiTouchFlipSettingsModal.hidden =
 true;
 
 }
@@ -1891,6 +2019,12 @@ return "early-t3";
 }
 
 if(
+rsiTouchFlipRunning
+){
+return "rsi-touch-flip";
+}
+
+if(
 st1.running
 ){
 return "st1";
@@ -2146,6 +2280,9 @@ status?.strategyId ===
 : status?.strategyId ===
 "early-t3"
 ? "early-t3"
+: status?.strategyId ===
+"rsi-touch-flip"
+? "rsi-touch-flip"
 : status?.running
 ? "st1"
 : "";
@@ -2222,7 +2359,9 @@ tradingMode:
 status?.tradingMode,
 tickerBookTf:
 status?.tickerBook?.tf ||
-status?.tf
+status?.tf,
+symbol:
+status?.symbol
 }
 )
 : [];
@@ -2239,6 +2378,9 @@ strategyId ===
 : strategyId ===
 "early-t3"
 ? "1-2 Early T3"
+: strategyId ===
+"rsi-touch-flip"
+? "RSI Touch Flip"
 : "Стратегия 1"
 )
 : "—";
@@ -2288,6 +2430,14 @@ status?.openCount ??
 "—"
 );
 }
+
+statusArmed?.closest(
+".algo-bot-status-row"
+)?.toggleAttribute(
+"hidden",
+status?.strategyId ===
+"rsi-touch-flip"
+);
 
 if(
 statusArmed
@@ -2826,6 +2976,10 @@ null
 earlyT3Running =
 status.strategyId ===
 "early-t3" &&
+!!status.running;
+rsiTouchFlipRunning =
+status.strategyId ===
+"rsi-touch-flip" &&
 !!status.running;
 st1.running =
 status.strategyId ===
@@ -3433,6 +3587,47 @@ applyRunBtn();
 }
 );
 
+botsItemRsiTouchFlipEnabled?.addEventListener(
+"click",
+event=>{
+event.stopPropagation();
+}
+);
+
+botsItemRsiTouchFlipEnabled?.addEventListener(
+"change",
+event=>{
+event.stopPropagation();
+if(
+botsItemRsiTouchFlipEnabled.checked
+){
+setActiveAnalysisBotId(
+ALGO_ANALYSIS_BOT_RSI_TOUCH_FLIP
+);
+}else if(
+isActiveAnalysisBot(
+ALGO_ANALYSIS_BOT_RSI_TOUCH_FLIP
+)
+){
+setActiveAnalysisBotId(
+ALGO_ANALYSIS_BOT_NONE
+);
+}
+applyActiveAnalysisBotMenuUi();
+applyRunBtn();
+}
+);
+
+botsItemRsiTouchFlip?.addEventListener(
+"click",
+event=>{
+event.preventDefault();
+event.stopPropagation();
+closeAllDrops();
+openRsiTouchFlipSettingsModal();
+}
+);
+
 botsItemEarlyT3?.addEventListener(
 "click",
 event=>{
@@ -3502,6 +3697,37 @@ closeEarlyT3SettingsModal();
 }
 }
 );
+
+rsiTouchFlipSettingsModal?.addEventListener(
+"click",
+event=>{
+const t =
+event.target;
+
+if(
+!(
+t instanceof Element
+)
+){
+return;
+}
+
+if(
+t.closest(
+'[data-close="algo-bot-rsi-touch-flip-settings-modal"]'
+)
+){
+event.preventDefault();
+closeRsiTouchFlipSettingsModal();
+}
+}
+);
+
+window.addEventListener(
+RSI_TOUCH_FLIP_BOOK_CHANGE_EVENT,
+fillRsiTouchFlipSettingsModal
+);
+fillRsiTouchFlipSettingsModal();
 
 for(
 const [
@@ -3574,6 +3800,8 @@ applyActiveAnalysisBotMenuUi();
 applyEarlyT3SettingsUi();
 applyRunBtn();
 
+/* Live-бот живёт в main: не гасить при монтировании страницы
+ * (уход на Терминал / reload). Стоп — только «Остановить» или смена бота. */
 if(
 !isActiveAnalysisBot(
 ALGO_ANALYSIS_BOT_PATTERN_12
@@ -3587,14 +3815,6 @@ m.stopAlgoOptimizeUniverseJob?.()
 ).catch(
 ()=>{}
 );
-
-if(
-!isActiveAnalysisBot(
-ALGO_ANALYSIS_BOT_EARLY_T3
-)
-){
-onPattern12ModuleDisabled();
-}
 }
 
 function onAnalysisBotChanged(
@@ -4144,6 +4364,12 @@ st3.running =
 false;
 }else if(
 activeId ===
+"rsi-touch-flip"
+){
+rsiTouchFlipRunning =
+false;
+}else if(
+activeId ===
 "early-t3"
 ){
 earlyT3Running =
@@ -4160,6 +4386,83 @@ activeId
 applyBotStatus(
 result
 );
+void refreshCloudLockUi();
+}else if(
+isActiveAnalysisBot(
+ALGO_ANALYSIS_BOT_RSI_TOUCH_FLIP
+)
+){
+const book =
+snapshotRsiTouchFlipBook();
+
+if(
+!book.length
+){
+applyStatusPanel(
+{
+ok:
+false,
+message:
+"Книга RSI Touch Flip пуста. Добавьте тикеры кнопкой «Добавить в книгу».",
+running:
+false
+}
+);
+return;
+}
+
+const wallet =
+await getAlgoTradingWalletBalance();
+const gate =
+rsiTouchFlipBookBudgetFits(
+{
+rows:
+book,
+available:
+wallet
+}
+);
+
+if(
+!gate.ok
+){
+applyStatusPanel(
+{
+ok:
+false,
+message:
+gate.message,
+running:
+false
+}
+);
+return;
+}
+
+const result =
+await startAlgoBot(
+"rsi-touch-flip",
+{
+book
+}
+);
+
+if(
+result?.ok ||
+result?.running
+){
+applyBotStatus(
+result
+);
+}else{
+applyBotStatus(
+{
+...result,
+running:
+false
+}
+);
+}
 void refreshCloudLockUi();
 }else if(
 isActiveAnalysisBot(
@@ -5212,6 +5515,10 @@ unsubBotStatus();
 window.removeEventListener(
 "algo-bot-ticker-flags-changed",
 onTickerFlagsChanged
+);
+window.removeEventListener(
+RSI_TOUCH_FLIP_BOOK_CHANGE_EVENT,
+fillRsiTouchFlipSettingsModal
 );
 window.removeEventListener(
 ALGO_ANALYSIS_BOT_CHANGE_EVENT,

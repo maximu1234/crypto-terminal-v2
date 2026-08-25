@@ -33,7 +33,7 @@ normalizeRsiPaneSettings
 
 import {
 buildChartRsiPoints
-} from "./indicators/htf-project.js?v=2";
+} from "./indicators/htf-project.js?v=5";
 
 import {
 loadFavoritesGroups,
@@ -46,7 +46,7 @@ canSetBlueFlag
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=58";
+} from "./auth-ui.js?v=60";
 
 import {
 getActiveAlerts,
@@ -57,7 +57,7 @@ isRsiAlert
 import {
 persistFavoritesToCloud,
 onFavoritesRemoteUpdate
-} from "./cloud-sync.js?v=66";
+} from "./cloud-sync.js?v=67";
 
 import {
 createCandlestickChart,
@@ -2201,12 +2201,14 @@ let rsiRebuildSeq =
 
 function loadRsiHtfHistory(
 symbol,
-tf
+tf,
+requests
 ){
 
 return loadMarketHistory(
 symbol,
 tf,
+requests ||
 terminalHistoryInitialRequests(),
 {
 parallel:
@@ -2417,13 +2419,36 @@ rsiChart,
 rsiSeries
 );
 
+syncLinkedChartTimescales(
+chart,
+rsiChart
+);
+
 layoutRsiBand();
 
-const last =
-rsiPointsCache[
+let last =
+null;
+
+for(
+let i =
 rsiPointsCache.length -
-1
-];
+1;
+i >=
+0;
+i--
+){
+
+if(
+Number.isFinite(
+rsiPointsCache[i]?.value
+)
+){
+last =
+rsiPointsCache[i];
+break;
+}
+
+}
 
 setRsiHudValue(
 last?.value ??
@@ -3343,7 +3368,7 @@ const {
 initChartIndicators
 } =
 await import(
-"./chart-indicators.js?v=60"
+"./chart-indicators.js?v=62"
 );
 const {
 createPattern12EarlyT3Indicator
@@ -3866,11 +3891,13 @@ getTf:()=>
 currentTF,
 loadIndicatorHistory:(
 symbol,
-tf
+tf,
+requests
 )=>
 loadMarketHistory(
 symbol,
 tf,
+requests ||
 terminalHistoryInitialRequests(),
 {
 parallel:

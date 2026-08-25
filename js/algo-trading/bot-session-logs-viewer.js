@@ -4,15 +4,16 @@
 import {
 isMultichartRemoteControlHost,
 fetchLanBotStatus,
-sendLanBotCommand
-} from "./bot-remote-client.js?v=10";
+sendLanBotCommand,
+normalizeLanBotStrategyId
+} from "./bot-remote-client.js?v=12";
 import {
 formatBotStrategySettingsRows,
 loadBotStrategiesPrefs
-} from "./bot-strategy-prefs.js?v=30";
+} from "./bot-strategy-prefs.js?v=32";
 import {
 syncAllTickerFlagsRootToMain
-} from "./bot-bridge.js?v=22";
+} from "./bot-bridge.js?v=25";
 import {
 ALGO_TICKER_FLAGS_KEY
 } from "./ticker-flags.js?v=9";
@@ -20,41 +21,27 @@ import {
 loadStagedBotTickerBook,
 loadBotTickerBook
 } from "./bot-ticker-book.js?v=7";
+import {
+loadEarlyT3BotPrefs
+} from "./early-t3-bot-prefs.js?v=5";
+import {
+loadRsiTouchFlipBook
+} from "./rsi-touch-flip-book.js?v=2";
 
 const STORAGE_KEY =
 "algo_remote_session_logs_v1";
 const TOKEN_SESSION_KEY =
 "algo_remote_session_logs_token_v1";
 const CHANNEL_UI_VER =
-"12";
-const STRATEGY_IDS =
-[
-"st1",
-"st2",
-"st3"
-];
+"13";
 
-/**
- * @param {unknown} value
- * @returns {"st1"|"st2"|"st3"}
- */
 function normalizeLanStrategyId(
 value
 ){
 
-const id =
-String(
-value ||
-""
-).trim().toLowerCase();
-
-return STRATEGY_IDS.includes(
-id
-)
-? /** @type {"st1"|"st2"|"st3"} */ (
-id
-)
-: "st1";
+return normalizeLanBotStrategyId(
+value
+);
 
 }
 
@@ -301,6 +288,14 @@ root.innerHTML =
 <input type="checkbox" id="algo-remote-logs-st3" />
 <span>Ст3</span>
 </label>
+<label class="algo-remote-session-logs-strategy-check" title="Запустить 1-2 Early T3">
+<input type="checkbox" id="algo-remote-logs-early-t3" />
+<span>Early T3</span>
+</label>
+<label class="algo-remote-session-logs-strategy-check" title="Запустить RSI Touch Flip">
+<input type="checkbox" id="algo-remote-logs-rsi-touch-flip" />
+<span>RSI Flip</span>
+</label>
 </div>
 <div class="algo-remote-session-logs-channel-actions">
 <button type="button" class="algo-bot-remote-btn" id="algo-remote-logs-start">Запустить</button>
@@ -347,7 +342,7 @@ spellcheck="false"
 <div class="algo-remote-session-logs-help-body">
 <section class="algo-remote-session-logs-help-lang" lang="ru">
 <h4>Русский</h4>
-<p>Окно <strong>LAN</strong> — прямой канал: Старт/Стоп (Ст1/Ст2/Ст3), списки, книга параметров, логи. Без worker и без трафика в Supabase Auth.</p>
+<p>Окно <strong>LAN</strong> — прямой канал: Старт/Стоп (Ст1/Ст2/Ст3, Early T3, RSI Flip), списки, книга параметров, логи. Без worker и без трафика в Supabase Auth.</p>
 <p><strong>Книга:</strong> «Подобрать для всех» → «Применить к боту» на этом компьютере, затем «Отдать списки и книгу». На удалённом боте можно парсить так же локально.</p>
 <p><strong>Таймаут</strong> почти всегда значит: до порта на сервере пакеты не доходят (firewall / Security Group / бот не слушает). Неверный токен обычно даёт ошибку сразу, а не таймаут.</p>
 <p><strong>Токен доступа к порту</strong> — не сессия <code>mcauth1…</code>. На боте: шестерёнка → «Логи → Терминал» → «Новый токен» или включить доступ и «Сохранить».</p>
@@ -363,7 +358,7 @@ spellcheck="false"
 </section>
 <section class="algo-remote-session-logs-help-lang" lang="en">
 <h4>English</h4>
-<p>The <strong>LAN</strong> window is the direct channel: Start/Stop (St1/St2/St3), lists, ticker book, logs — no alert-worker and no Supabase Auth traffic.</p>
+<p>The <strong>LAN</strong> window is the direct channel: Start/Stop (St1/St2/St3, Early T3, RSI Flip), lists, ticker book, logs — no alert-worker and no Supabase Auth traffic.</p>
 <p>A <strong>timeout</strong> almost always means packets never reach the port (Windows firewall / cloud Security Group / bot not listening).</p>
 <p>The <strong>port token</strong> is not the Multichart session string <code>mcauth1…</code>. On the bot: gear → “Logs → Terminal” → “New token”.</p>
 <ol>
@@ -753,6 +748,14 @@ const st3El =
 root.querySelector(
 "#algo-remote-logs-st3"
 );
+const earlyT3El =
+root.querySelector(
+"#algo-remote-logs-early-t3"
+);
+const rsiFlipEl =
+root.querySelector(
+"#algo-remote-logs-rsi-touch-flip"
+);
 const strategyTitleEl =
 root.querySelector(
 "#algo-remote-logs-strategy-title"
@@ -872,6 +875,22 @@ id ===
 "st3";
 }
 
+if(
+earlyT3El
+){
+earlyT3El.checked =
+id ===
+"early-t3";
+}
+
+if(
+rsiFlipEl
+){
+rsiFlipEl.checked =
+id ===
+"rsi-touch-flip";
+}
+
 }
 
 applyStrategyChecks(
@@ -903,6 +922,18 @@ if(
 st3El?.checked
 ){
 return "st3";
+}
+
+if(
+earlyT3El?.checked
+){
+return "early-t3";
+}
+
+if(
+rsiFlipEl?.checked
+){
+return "rsi-touch-flip";
 }
 
 return "st1";
@@ -1291,10 +1322,23 @@ startStrategyId ===
 : startStrategyId ===
 "st3"
 ? "Ст3"
+: startStrategyId ===
+"early-t3"
+? "Early T3"
+: startStrategyId ===
+"rsi-touch-flip"
+? "RSI Flip"
 : "Ст1";
 const strategies =
 loadBotStrategiesPrefs();
 const strategyPrefs =
+[
+"st1",
+"st2",
+"st3"
+].includes(
+startStrategyId
+) &&
 strategies?.[
 startStrategyId
 ] &&
@@ -1305,6 +1349,16 @@ startStrategyId
 ? strategies[
 startStrategyId
 ]
+: null;
+const earlyT3Prefs =
+startStrategyId ===
+"early-t3"
+? loadEarlyT3BotPrefs()
+: null;
+const rsiBook =
+startStrategyId ===
+"rsi-touch-flip"
+? loadRsiTouchFlipBook()
 : null;
 
 setMessage(
@@ -1327,6 +1381,27 @@ action ===
 strategyPrefs
 ? {
 strategyPrefs
+}
+: {}
+),
+...(
+action ===
+"start" &&
+earlyT3Prefs
+? {
+earlyT3Prefs
+}
+: {}
+),
+...(
+action ===
+"start" &&
+Array.isArray(
+rsiBook
+)
+? {
+book:
+rsiBook
 }
 : {}
 )
@@ -1835,7 +1910,7 @@ void runLanCommand(
 );
 
 /**
- * @param {"st1"|"st2"|"st3"} id
+ * @param {string} id
  */
 function onStrategyCheck(
 id
@@ -1893,6 +1968,38 @@ onStrategyCheck(
 );
 }else{
 st3El.checked =
+true;
+}
+}
+);
+
+earlyT3El?.addEventListener(
+"change",
+()=>{
+if(
+earlyT3El.checked
+){
+onStrategyCheck(
+"early-t3"
+);
+}else{
+earlyT3El.checked =
+true;
+}
+}
+);
+
+rsiFlipEl?.addEventListener(
+"change",
+()=>{
+if(
+rsiFlipEl.checked
+){
+onStrategyCheck(
+"rsi-touch-flip"
+);
+}else{
+rsiFlipEl.checked =
 true;
 }
 }

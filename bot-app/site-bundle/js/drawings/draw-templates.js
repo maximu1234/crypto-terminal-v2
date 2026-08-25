@@ -18,8 +18,22 @@ normalizeRectangleShape
 } from "./arrow-rect.js?v=2";
 
 import {
+isFvpType,
+extractFvpStyleSnapshot,
+copyFvpStyleToShape,
+createFvpToolDefaults
+} from "./fixed-volume-profile.js?v=3";
+
+import {
 isPositionType
 } from "./position.js?v=9";
+
+import {
+isTextTool,
+TEXT_DEFAULT_COLOR,
+TEXT_DEFAULT_SIZE,
+clampTextFontSize
+} from "./text.js?v=3";
 
 export const DRAW_TEMPLATES_STORAGE_KEY =
 "draw_templates_v1";
@@ -33,7 +47,9 @@ Object.freeze([
 "fib",
 "channel",
 "arrow",
-"rectangle"
+"rectangle",
+"fvp",
+"text"
 ]);
 
 const STANDARD_FIB_TEMPLATE_NAME =
@@ -537,13 +553,26 @@ STROKE
 
 if(
 type !==
-"arrow"
+"arrow" &&
+type !==
+"text"
 ){
 out.lineWidth =
 Number(
 shape?.lineWidth
 ) ||
 1;
+}
+
+if(
+isTextTool(
+type
+)
+){
+out.fontSize =
+clampTextFontSize(
+shape?.fontSize
+);
 }
 
 if(
@@ -632,6 +661,21 @@ out.medianLineStyle;
 
 }
 
+if(
+isFvpType(
+type
+)
+){
+
+Object.assign(
+out,
+extractFvpStyleSnapshot(
+shape
+)
+);
+
+}
+
 return out;
 
 }
@@ -679,6 +723,18 @@ out,
 style
 );
 
+}
+
+if(
+isFvpType(
+type
+)
+){
+Object.assign(
+out,
+createFvpToolDefaults(),
+style
+);
 }
 
 return out;
@@ -773,9 +829,34 @@ rectDefaults
 }
 
 if(
+isFvpType(
+type
+)
+){
+
+Object.assign(
+out,
+createFvpToolDefaults()
+);
+
+}
+
+if(
 type ===
 "arrow"
 ){
+delete out.lineWidth;
+}
+
+if(
+isTextTool(
+type
+)
+){
+out.color =
+TEXT_DEFAULT_COLOR;
+out.fontSize =
+TEXT_DEFAULT_SIZE;
 delete out.lineWidth;
 }
 
@@ -807,13 +888,29 @@ STROKE;
 
 if(
 type !==
-"arrow"
+"arrow" &&
+type !==
+"text"
 ){
 shape.lineWidth =
 Number(
 snapshot.lineWidth
 ) ||
 1;
+}
+
+if(
+isTextTool(
+type
+)
+){
+shape.fontSize =
+clampTextFontSize(
+snapshot.fontSize
+);
+shape.color =
+snapshot.color ||
+TEXT_DEFAULT_COLOR;
 }
 
 if(
@@ -875,6 +972,17 @@ normalizeRectangleShape(
 shape
 );
 
+}
+
+if(
+isFvpType(
+type
+)
+){
+copyFvpStyleToShape(
+shape,
+snapshot
+);
 }
 
 }

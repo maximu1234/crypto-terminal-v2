@@ -9,7 +9,7 @@
 import {
 computePattern12Scene,
 defaultPattern12Settings
-} from "./pattern-12-math.js?v=14";
+} from "./pattern-12-math.js?v=21";
 import {
 TEMP_PULLBACK_BEFORE_ARM,
 clampPullbackBeforeArmPct,
@@ -266,8 +266,69 @@ settings
 return detectPatternEntryEventsFromSetups(
 candles,
 scene?.setups,
-opts
+{
+...opts,
+reverseLogic:
+!!(
+settings?.reverseLogic ||
+opts.reverseLogic
+)
+}
 );
+
+}
+
+/**
+ * @param {unknown} setupSide
+ * @param {unknown} reverseLogic
+ * @returns {"long"|"short"}
+ */
+export function patternTradeSide(
+setupSide,
+reverseLogic
+){
+
+const side =
+setupSide ===
+"short"
+? "short"
+: "long";
+
+return reverseLogic
+? side ===
+"short"
+? "long"
+: "short"
+: side;
+
+}
+
+/**
+ * Сетап и бар входа те же; меняется только сторона сделки.
+ * @param {PatternEntryEvent|null|undefined} event
+ * @param {unknown} reverseLogic
+ * @returns {PatternEntryEvent|null|undefined}
+ */
+function applyReverseLogicToEvent(
+event,
+reverseLogic
+){
+
+if(
+!event ||
+!reverseLogic
+){
+return event;
+}
+
+return {
+...event,
+side:
+event.side ===
+"short"
+? "long"
+: "short"
+};
 
 }
 
@@ -307,7 +368,10 @@ if(
 event
 ){
 events.push(
-event
+applyReverseLogicToEvent(
+event,
+!!opts.reverseLogic
+)
 );
 }
 
@@ -646,6 +710,11 @@ setup
 return {
 type,
 side,
+setupSide:
+setup?.side ===
+"short"
+? "short"
+: "long",
 bar,
 price,
 reason:

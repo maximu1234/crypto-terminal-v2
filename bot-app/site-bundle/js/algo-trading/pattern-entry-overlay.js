@@ -3,7 +3,7 @@
  */
 import {
 detectPatternEntryEvents
-} from "./pattern-entry-logic.js?v=13";
+} from "./pattern-entry-logic.js?v=14";
 
 import {
 clearAlgoEntryPositions,
@@ -11,13 +11,13 @@ DEFAULT_RISK_USD,
 DEFAULT_SL_PCT_OF_X,
 DEFAULT_TP_RR,
 syncAlgoEntryPositions
-} from "./pattern-entry-positions.js?v=14";
+} from "./pattern-entry-positions.js?v=16";
 
 import {
 DEFAULT_PARTIAL_TP1_X,
 DEFAULT_PARTIAL_TP2_X,
 DEFAULT_PARTIAL_TP3_X
-} from "./pattern-trade-stats-partial.js?v=21";
+} from "./pattern-trade-stats-partial.js?v=22";
 
 /**
  * @param {{
@@ -185,7 +185,9 @@ n
 pullbackBeforeArm:
 !!host?.getPullbackBeforeArm?.(),
 pullbackBeforeArmPct:
-host?.getPullbackBeforeArmPct?.()
+host?.getPullbackBeforeArmPct?.(),
+reverseLogic:
+!!host?.getReverseLogic?.()
 };
 
 }

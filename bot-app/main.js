@@ -10,10 +10,6 @@ powerSaveBlocker
 require(
 "electron"
 );
-const log =
-require(
-"electron-log"
-);
 const fs =
 require(
 "fs"
@@ -21,6 +17,32 @@ require(
 const path =
 require(
 "path"
+);
+
+/*
+ * Unpackaged `electron .` defaults to name "Electron" and shares
+ * userData + single-instance lock with Multichart `desktop/` npm start.
+ */
+if(
+!app.isPackaged
+){
+app.setName(
+"Multichart Algo Bot"
+);
+app.setPath(
+"userData",
+path.join(
+app.getPath(
+"appData"
+),
+"Multichart Algo Bot"
+)
+);
+}
+
+const log =
+require(
+"electron-log"
 );
 const {
 registerAppScheme,
@@ -65,6 +87,20 @@ registerChartSnapshotLogoIpc
 } =
 require(
 "./chart-snapshot-logo.cjs"
+);
+const {
+applyDesktopProxy,
+registerAppProxyIpc,
+registerAppProxyLogin
+} =
+require(
+"./app-proxy.cjs"
+);
+const {
+APP_SESSION_PARTITION
+} =
+require(
+"./app-session.cjs"
 );
 const {
 registerAlgoTradingIpc,
@@ -132,6 +168,9 @@ require(
 );
 
 registerAppScheme();
+registerAppProxyLogin(
+app
+);
 
 log.info(
 "desktop platform:",
@@ -295,7 +334,7 @@ return value.startsWith(
 }
 
 const PARTITION =
-"persist:multichart-algo-bot";
+APP_SESSION_PARTITION;
 
 /** @type {string | null} */
 let pendingAuthCallbackUrl =
@@ -1532,6 +1571,43 @@ platform.platform
 registerChartSnapshotIpc();
 registerChartSnapshotLogoIpc();
 
+try{
+const {
+handleTrustedDesktopUi
+} =
+require(
+"./trading/desktop-ui-gate.cjs"
+);
+registerAppProxyIpc({
+ipcMain,
+handleTrustedDesktopUi,
+getSessions:()=>
+[
+session.fromPartition(
+PARTITION
+)
+],
+reloadMainWindow:()=>{
+
+if(
+mainWindow &&
+!mainWindow.isDestroyed()
+){
+mainWindow.webContents.reload();
+}
+
+}
+});
+}catch(
+err
+){
+log.warn(
+"app-proxy ipc:",
+err?.message ||
+err
+);
+}
+
 ipcMain.handle(
 "desktop:loadAuthSession",
 ()=>{
@@ -2129,6 +2205,65 @@ PARTITION
 tuneDesktopSession(
 ses
 );
+
+try{
+const proxyStore =
+path.join(
+app.getPath(
+"userData"
+),
+"app-proxy-settings.json"
+);
+const multichartProxy =
+path.join(
+app.getPath(
+"appData"
+),
+"Multichart",
+"app-proxy-settings.json"
+);
+
+if(
+!fs.existsSync(
+proxyStore
+) &&
+fs.existsSync(
+multichartProxy
+)
+){
+fs.copyFileSync(
+multichartProxy,
+proxyStore
+);
+log.info(
+"app-proxy: seeded from Multichart userData"
+);
+}
+}catch(
+err
+){
+log.warn(
+"app-proxy seed:",
+err?.message ||
+err
+);
+}
+
+try{
+await applyDesktopProxy({
+sessions:[
+ses
+]
+});
+}catch(
+err
+){
+log.warn(
+"app-proxy boot:",
+err?.message ||
+err
+);
+}
 
 if(
 !USE_BUNDLE &&

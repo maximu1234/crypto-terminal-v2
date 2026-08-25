@@ -172,7 +172,40 @@ err
 
 handleTrustedDesktopUi(
 ipcMain,
+"desktop:algoTradingListLinearSymbols",
+async()=>{
 
+try{
+const rest =
+require(
+"./algo-bybit-rest.cjs"
+);
+
+return await rest.listLinearUsdtSymbols();
+}catch(
+err
+){
+log.warn(
+"algoTradingListLinearSymbols:",
+err?.message ||
+err
+);
+return {
+ok:
+false,
+message:
+err?.message ||
+String(
+err
+)
+};
+}
+
+}
+);
+
+handleTrustedDesktopUi(
+ipcMain,
 "desktop:algoTradingSetEnabled",
 (
 _event,

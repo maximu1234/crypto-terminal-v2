@@ -18,7 +18,7 @@ paintSupertrendSegments
 
 import {
 fetchHtfCandles
-} from "./htf-loader.js?v=3";
+} from "./htf-loader.js?v=6";
 
 import {
 isChartLayoutReady
@@ -474,7 +474,8 @@ await fetchHtfCandles(
 symbol,
 tf,
 loadHistory,
-chartCandles
+chartCandles,
+chartTf
 );
 }
 

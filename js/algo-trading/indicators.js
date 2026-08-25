@@ -6,7 +6,7 @@
  */
 import {
 initChartIndicators
-} from "../chart-indicators.js?v=60";
+} from "../chart-indicators.js?v=62";
 
 import {
 createPattern12Indicator
@@ -48,10 +48,14 @@ createPattern12EarlyT3Indicator
 }
 );
 
+if(
+!opts?.skipApplyPrefs
+){
 ensureIndicatorEnabled(
 root,
 "rsi"
 );
+}
 
 /* Pattern-12: enable after first candles (algo-trading.js) so cold start
    is not blocked by scene compute before history arrives. */

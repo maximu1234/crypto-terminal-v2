@@ -21,7 +21,7 @@ Object.freeze({
 
 /* ── JS: boot / entry ── */
 "asset-manifest.js":
-5,
+6,
 "market-api.js":
 6,
 "format-price.js":
@@ -241,7 +241,7 @@ Object.freeze({
 "chart-page.js":
 7,
 "terminal.js":
-418,
+422,
 "terminal-multi-chart.js":
 11,
 "terminal-screener-chart-pane.js":
@@ -259,7 +259,7 @@ Object.freeze({
 "chart-visible-range.js":
 3,
 "chart-indicators.js":
-60,
+62,
 "chart-snapshot.js":
 7,
 "indicators/pattern-12.js":
@@ -299,19 +299,19 @@ Object.freeze({
 "script-favorites-list.js":
 2,
 "algo-trading.js":
-181,
+201,
 "algo-trading-page-boot.js":
 9,
 "algo-trading-list.js":
-19,
+24,
 "algo-trading/coin-list-host.js":
 2,
 "algo-trading/page-prefs.js":
 2,
 "algo-trading/stats-panel-resize.js":
-1,
+2,
 "algo-trading/lite-layout.js":
-1,
+4,
 "algo-trading/live-candle.js":
 1,
 "algo-trading/page-format.js":
@@ -343,7 +343,7 @@ Object.freeze({
 "algo-trading/indicators-storage.js":
 1,
 "algo-trading/indicators.js":
-14,
+15,
 "algo-trading/pattern-entry-logic.js":
 14,
 "algo-trading/temp-pullback-before-arm.js":
@@ -371,6 +371,24 @@ Object.freeze({
 1,
 "algo-trading/early-t3-bot-prefs.js":
 5,
+"algo-trading/rsi-touch-flip-prefs.js":
+2,
+"algo-trading/rsi-touch-flip-book.js":
+2,
+"algo-trading/rsi-touch-flip-engine.js":
+3,
+"algo-trading/rsi-touch-flip-overlay.js":
+1,
+"algo-trading/rsi-touch-flip-mtf.js":
+3,
+"algo-trading/rsi-touch-flip-panel.js":
+13,
+"algo-trading/rsi-touch-flip-walkforward.js":
+4,
+"algo-trading/rsi-touch-flip-optimize.js":
+4,
+"algo-trading/rsi-touch-flip-fit-panel.js":
+6,
 "algo-trading/ticker-flags.js":
 9,
 "algo-trading/terminal-early-t3-list.js":
@@ -410,25 +428,25 @@ Object.freeze({
 "algo-trading/runtime-ui.js":
 13,
 "algo-trading/bot-bridge.js":
-22,
+25,
 "algo-trading/bot-alert-bridge.js":
 7,
 "algo-trading/desktop-site-boot.js":
 7,
 "algo-trading/bot-strategy-prefs.js":
-30,
+32,
 "algo-trading/active-analysis-bot.js":
-3,
+4,
 "algo-trading/bot-strategy-ui.js":
-82,
+89,
 "algo-trading/bot-session-log-server-ui.js":
 10,
 "algo-trading/bot-session-logs-viewer.js":
-29,
+30,
 "algo-trading/bot-cloud-lock.js":
 11,
 "algo-trading/bot-remote-client.js":
-10,
+12,
 "algo-trading/trade/format.js":
 2,
 "algo-trading/trade/positions-cache.js":
@@ -438,7 +456,7 @@ Object.freeze({
 "algo-trading/trade/open-positions.js":
 2,
 "algo-trading/trade/book-panel.js":
-11,
+12,
 "algo-trading/trade/config-stub.js":
 1,
 "algo-trading/trade/pnl-privacy-stub.js":
@@ -452,7 +470,7 @@ Object.freeze({
 "algo-trading/trade/chart-orders.js":
 4,
 "algo-trading/trade/boot.js":
-4,
+5,
 "algo-trading/diary/format.js":
 1,
 "algo-trading/diary/day-storage.js":
@@ -476,7 +494,7 @@ Object.freeze({
 "algo-trading/diary/detail-ui.js":
 2,
 "algo-trading/diary/modal.js":
-4,
+5,
 "indicators/horizontal-volume.js":
 11,
 "indicators/rsi-pane.js":
@@ -500,9 +518,9 @@ Object.freeze({
 "indicators/ma-math.js":
 2,
 "indicators/ema-shift-ribbon.js":
-8,
+9,
 "indicators/supertrend.js":
-4,
+5,
 "indicators/supertrend-math.js":
 3,
 "indicators/supertrend-paint.js":
@@ -510,9 +528,9 @@ Object.freeze({
 "indicators/indicator-color-picker-ui.js":
 1,
 "indicators/htf-loader.js":
-3,
+6,
 "indicators/htf-project.js":
-2,
+5,
 "indicators/htf-ema.js":
 1,
 "indicators/indicator-settings-dialog.js":
@@ -584,7 +602,7 @@ Object.freeze({
 "screener-widget-zoom.js":
 29,
 "release-marker.js":
-100,
+101,
 "focus-blur-after-pick.js":
 3,
 "site-boot.js":
@@ -592,7 +610,7 @@ Object.freeze({
 "site-header.js":
 5,
 "site-header-nav.js":
-7,
+8,
 "site-header-nav-web.js":
 1,
 "site-header-nav-desktop.js":
@@ -747,7 +765,7 @@ Object.freeze({
 
 /* ── JS: cloud / auth ── */
 "cloud-sync.js":
-66,
+67,
 "cloud-sync-throttle.js":
 3,
 "page-routes.js":
@@ -765,7 +783,7 @@ Object.freeze({
 "auth-session-transfer.js":
 1,
 "auth-ui.js":
-58,
+60,
 "header-settings-shell.js":
 4,
 "app-settings-window.js":
@@ -867,7 +885,7 @@ Object.freeze({
 "script-page.css":
 25,
 "algo-trading.css":
-133,
+148,
 "algo-trading-book-panel.css":
 6,
 "algo-trading-diary-modal.css":

@@ -5,6 +5,12 @@ const log =
 require(
 "electron-log"
 );
+const {
+getRelayHttpsAgent
+} =
+require(
+"../app-proxy-socks-relay.cjs"
+);
 
 let WsConstructor =
 null;
@@ -499,8 +505,18 @@ Ws.CONNECTING
 return;
 }
 
+const agent =
+getRelayHttpsAgent();
+
 socket =
-new Ws(
+agent
+? new Ws(
+WS_URL,
+{
+agent
+}
+)
+: new Ws(
 WS_URL
 );
 

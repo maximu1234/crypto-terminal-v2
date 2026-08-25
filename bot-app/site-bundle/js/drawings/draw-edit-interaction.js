@@ -4,7 +4,7 @@
  */
 import {
 isCoarseTouchViewport
-} from "../chart-import.js?v=43";
+} from "../chart-import.js?v=48";
 
 import {
 DRAW_HANDLE_HIT_THRESHOLD_DESKTOP,
@@ -17,6 +17,12 @@ import {
 getRectangleHandleScreens,
 moveRectangleHandle
 } from "./arrow-rect.js?v=2";
+
+import {
+getFvpHandleScreens,
+moveFvpHandle,
+isFvpType
+} from "./fixed-volume-profile.js?v=3";
 
 import {
 isPositionType,
@@ -37,6 +43,11 @@ applyBrushScreenMove,
 brushChartPointsForMove,
 brushBodyDist
 } from "./brush.js?v=2";
+
+import {
+isTextTool,
+hitTestTextBody
+} from "./text.js?v=3";
 
 export function createDrawEditInteraction(
 deps
@@ -85,9 +96,12 @@ hitTestTrendlineBody,
 hitTestFibBody,
 hitTestChannelBody,
 hitTestRectangleBody,
+hitTestFvpBody,
 hitTestHrayLine,
 channelP4Point,
-drawBodyHitThreshold: drawBodyHitThresholdDep
+drawBodyHitThreshold: drawBodyHitThresholdDep,
+getCandles = ()=>
+[]
 } =
 deps;
 
@@ -199,6 +213,39 @@ return null;
 
 }
 
+if(
+isFvpType(
+shape.type
+)
+){
+
+for(
+const handle of
+getFvpHandleScreens(
+shape,
+toXY,
+getCandles()
+)
+){
+
+if(
+Math.hypot(
+px - handle.x,
+py - handle.y
+) <=
+handleHitThreshold(
+shape
+)
+){
+return handle.id;
+}
+
+}
+
+return null;
+
+}
+
 for(const handle of listHandles(shape)){
 
 const xy =
@@ -269,7 +316,42 @@ return shape.p2;
 }
 
 if(
+isFvpType(
+shape.type
+)
+){
+
+if(
+handleId ===
+"p1"
+){
+return shape.p1;
+}
+
+if(
+handleId ===
+"p2"
+){
+return shape.p2;
+}
+
+}
+
+if(
 isHorizPriceTool(
+shape.type
+) &&
+handleId ===
+"anchor"
+){
+return {
+time: shape.time,
+price: shape.price
+};
+}
+
+if(
+isTextTool(
 shape.type
 ) &&
 handleId ===
@@ -710,10 +792,33 @@ return;
 
 }
 
+if(
+isFvpType(
+shape.type
+)
+){
+
+moveFvpHandle(
+shape,
+handleId,
+point
+);
+return;
+
+}
+
 if(isHorizPriceTool(shape.type) && handleId === "anchor"){
 
 shape.time = point.time;
 shape.price = point.price;
+
+}
+
+if(isTextTool(shape.type) && handleId === "anchor"){
+
+shape.time = point.time;
+shape.price = point.price;
+shape.p1 = point;
 
 }
 
@@ -950,11 +1055,20 @@ shape.type ===
 return [shape.p1, shape.p2];
 }
 
+/* FVP: TV Fixed Range VP — body selects, only handles move. */
+
 if(shape.type === "channel"){
 return [shape.p1, shape.p2, shape.p3];
 }
 
 if(isHorizPriceTool(shape.type)){
+return [{
+time: shape.time,
+price: shape.price
+}];
+}
+
+if(isTextTool(shape.type)){
 return [{
 time: shape.time,
 price: shape.price
@@ -1170,8 +1284,20 @@ if(shape.type === "rectangle"){
 return hitTestRectangleBody(px, py, shape, bodyThreshold);
 }
 
+if(
+isFvpType(
+shape.type
+)
+){
+return hitTestFvpBody(px, py, shape, bodyThreshold);
+}
+
 if(isHorizPriceTool(shape.type)){
 return hitTestHrayLine(px, py, shape, bodyThreshold);
+}
+
+if(isTextTool(shape.type)){
+return hitTestTextBody(px, py, shape, toXY);
 }
 
 if(isPositionType(shape.type)){
@@ -1251,6 +1377,15 @@ if(isHorizPriceTool(shape.type)){
 
 shape.time = pts[0].time;
 shape.price = pts[0].price;
+return true;
+
+}
+
+if(isTextTool(shape.type)){
+
+shape.time = pts[0].time;
+shape.price = pts[0].price;
+shape.p1 = pts[0];
 return true;
 
 }

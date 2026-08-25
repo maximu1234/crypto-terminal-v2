@@ -14,6 +14,11 @@ import {
 } from "./arrow-rect.js?v=2";
 
 import {
+  migrateFvpToolDefaults,
+  isFvpType
+} from "./fixed-volume-profile.js?v=3";
+
+import {
   migrateFibToolDefaults,
   ensureFibLevelsVisible
 } from "./fib-spec.js?v=13";
@@ -21,6 +26,12 @@ import {
 import {
   isPositionType
 } from "./position.js?v=9";
+
+import {
+  migrateTextToolDefaults,
+  TEXT_DEFAULT_COLOR,
+  TEXT_DEFAULT_SIZE
+} from "./text.js?v=3";
 
 /**
  * @returns {{
@@ -58,6 +69,8 @@ function loadToolDefaults(){
 "channel",
 "arrow",
 "rectangle",
+"fvp",
+"text",
 "long",
 "short"
 ].forEach(
@@ -130,6 +143,54 @@ migrated;
 localStorage.setItem(
 defaultsStorageKey(
 "rectangle"
+),
+JSON.stringify(
+migrated
+)
+);
+
+}
+
+if(
+name ===
+"fvp"
+){
+
+const migrated =
+migrateFvpToolDefaults(
+toolDefaults.fvp
+);
+
+toolDefaults.fvp =
+migrated;
+
+localStorage.setItem(
+defaultsStorageKey(
+"fvp"
+),
+JSON.stringify(
+migrated
+)
+);
+
+}
+
+if(
+name ===
+"text"
+){
+
+const migrated =
+migrateTextToolDefaults(
+toolDefaults.text
+);
+
+toolDefaults.text =
+migrated;
+
+localStorage.setItem(
+defaultsStorageKey(
+"text"
 ),
 JSON.stringify(
 migrated
@@ -371,6 +432,47 @@ normalizeRectangleShape(
 out,
 rectSaved
 );
+
+}
+
+if(
+isFvpType(
+type
+)
+){
+
+const fvpSaved =
+migrateFvpToolDefaults(
+toolDefaults.fvp ||
+saved ||
+null
+);
+
+Object.assign(
+out,
+fvpSaved
+);
+
+}
+
+if(
+type ===
+"text"
+){
+
+const textSaved =
+migrateTextToolDefaults(
+toolDefaults.text ||
+saved ||
+null
+);
+
+out.color =
+textSaved.color ||
+TEXT_DEFAULT_COLOR;
+out.fontSize =
+textSaved.fontSize ||
+TEXT_DEFAULT_SIZE;
 
 }
 

@@ -7,7 +7,7 @@ coinElements
 import {
 isActiveRealtimeMarketDataset,
 isExchangeTradingEnabled
-} from "../market-api.js?v=2";
+} from "../market-api.js?v=6";
 
 import {
 connectKlineStream
@@ -16,7 +16,7 @@ connectKlineStream
 import {
 connectTickerStream,
 fetchTickersInto
-} from "../tickers.js?v=26";
+} from "../tickers.js?v=27";
 
 import {
 createTickerUiBatcher
@@ -24,7 +24,7 @@ createTickerUiBatcher
 
 import {
 processAlertCandle
-} from "../alert-monitor.js?v=70";
+} from "../alert-monitor.js?v=73";
 
 import {
 getFavoriteGroup,
@@ -37,6 +37,29 @@ isTradePage
 } from "./terminal-state.js?v=12";
 
 /** Desktop /trade only — не тянем trade-open-positions в открытый web /coins. */
+function escapeHtml(
+value
+){
+
+return String(
+value ??
+""
+).replace(
+/&/g,
+"&amp;"
+).replace(
+/</g,
+"&lt;"
+).replace(
+/>/g,
+"&gt;"
+).replace(
+/"/g,
+"&quot;"
+);
+
+}
+
 let hasOpenPosition =
 ()=>
 false;
@@ -48,7 +71,7 @@ isTradePage
 ){
 const tradePositions =
 await import(
-"../trade-open-positions.js?v=3"
+"../trade-open-positions.js?v=4"
 );
 hasOpenPosition =
 tradePositions.hasOpenPosition;
@@ -78,11 +101,102 @@ positionPinEnabled =
 
 const hooks = {};
 
+/** Virtual window for #coins-body (large markets). */
+const COIN_ROW_HEIGHT_PX =
+28;
+const COIN_ROW_OVERSCAN =
+14;
+
+/** @type {Array<object>} */
+let virtualCoinData =
+[];
+
+let virtualScrollBound =
+false;
+
+/** @type {Element|null} */
+let virtualScrollRoot =
+null;
+
+/** @type {(() => void)|null} */
+let virtualScrollHandler =
+null;
+
+let virtualPaintRaf =
+0;
+
 export function setCoinsTableHooks(next){
 
 Object.assign(
 hooks,
 next
+);
+
+}
+
+/** @type {{ id: string, label: string }[]} */
+let extraCoinMarkets =
+[];
+
+/**
+ * Extra coin-list markets (plugin datasets). Not exchange registry ids.
+ * @param {{ id?: string, label?: string }[]|null|undefined} markets
+ */
+export function setExtraCoinMarkets(
+markets
+){
+
+extraCoinMarkets =
+Array.isArray(
+markets
+)
+? markets.filter(
+m=>
+m &&
+String(
+m.id ||
+""
+).trim()
+).map(
+m=>({
+id:
+String(
+m.id
+).trim(),
+label:
+String(
+m.label ||
+m.id
+).trim() ||
+String(
+m.id
+).trim()
+})
+)
+: [];
+
+}
+
+export function getExtraCoinMarkets(){
+
+return extraCoinMarkets.slice();
+
+}
+
+export function isExtraCoinMarket(
+id
+){
+
+const key =
+String(
+id ||
+""
+).trim();
+
+return extraCoinMarkets.some(
+m=>
+m.id ===
+key
 );
 
 }
@@ -236,6 +350,13 @@ false;
 let coinListRenderPending =
 false;
 
+let coinListVirtualPaintPending =
+false;
+
+/** @type {ResizeObserver|null} */
+let coinListResizeObserver =
+null;
+
 export function syncCoinListFreezeFromFlagMenus(){
 
 const anyOpen =
@@ -259,7 +380,24 @@ coinListRenderPending
 ){
 coinListRenderPending =
 false;
+coinListVirtualPaintPending =
+false;
 renderListImpl();
+return;
+}
+
+if(
+coinListVirtualPaintPending
+){
+coinListVirtualPaintPending =
+false;
+const list =
+document.getElementById(
+"coins-body"
+);
+paintCoinListWindow(
+list
+);
 }
 
 }
@@ -602,6 +740,269 @@ n >=
 
 }
 
+function resolveCoinListScrollRoot(
+list
+){
+
+return list?.closest?.(
+".coins-table-scroll"
+) ||
+list;
+
+}
+
+function ensureCoinListVirtualScroll(
+list
+){
+
+if(
+!list
+){
+return;
+}
+
+const scrollRoot =
+resolveCoinListScrollRoot(
+list
+);
+
+if(
+virtualScrollBound &&
+virtualScrollRoot ===
+scrollRoot
+){
+return;
+}
+
+if(
+virtualScrollRoot &&
+virtualScrollHandler
+){
+virtualScrollRoot.removeEventListener(
+"scroll",
+virtualScrollHandler
+);
+}
+
+virtualScrollBound =
+true;
+virtualScrollRoot =
+scrollRoot;
+
+virtualScrollHandler =
+()=>{
+if(
+virtualPaintRaf
+){
+return;
+}
+
+virtualPaintRaf =
+requestAnimationFrame(
+()=>{
+virtualPaintRaf =
+0;
+paintCoinListWindow(
+list
+);
+}
+);
+};
+
+scrollRoot.addEventListener(
+"scroll",
+virtualScrollHandler,
+{
+passive:
+true
+}
+);
+
+if(
+typeof ResizeObserver !==
+"undefined"
+){
+coinListResizeObserver?.disconnect?.();
+coinListResizeObserver =
+new ResizeObserver(
+()=>{
+if(
+virtualPaintRaf
+){
+return;
+}
+
+virtualPaintRaf =
+requestAnimationFrame(
+()=>{
+virtualPaintRaf =
+0;
+paintCoinListWindow(
+list
+);
+}
+);
+}
+);
+coinListResizeObserver.observe(
+scrollRoot
+);
+}
+
+}
+
+function paintCoinListWindow(
+list
+){
+
+if(
+!list
+){
+return;
+}
+
+if(
+coinListRenderFrozen
+){
+coinListVirtualPaintPending =
+true;
+return;
+}
+
+coinListVirtualPaintPending =
+false;
+
+const scrollRoot =
+resolveCoinListScrollRoot(
+list
+);
+const data =
+virtualCoinData;
+const total =
+data.length;
+const scrollTop =
+scrollRoot.scrollTop;
+const viewH =
+Math.max(
+scrollRoot.clientHeight ||
+0,
+240
+);
+const start =
+Math.max(
+0,
+Math.floor(
+scrollTop /
+COIN_ROW_HEIGHT_PX
+) -
+COIN_ROW_OVERSCAN
+);
+const end =
+Math.min(
+total,
+Math.ceil(
+(
+scrollTop +
+viewH
+) /
+COIN_ROW_HEIGHT_PX
+) +
+COIN_ROW_OVERSCAN
+);
+
+const prevScroll =
+scrollTop;
+
+list.innerHTML =
+"";
+coinElements.clear();
+
+const topPad =
+document.createElement(
+"div"
+);
+
+topPad.setAttribute(
+"aria-hidden",
+"true"
+);
+topPad.style.height =
+`${start * COIN_ROW_HEIGHT_PX}px`;
+topPad.style.flex =
+"0 0 auto";
+list.appendChild(
+topPad
+);
+
+for(
+let i =
+start;
+i <
+end;
+i++
+){
+
+const item =
+data[
+i
+];
+
+if(
+!item
+){
+continue;
+}
+
+const div =
+createCoinRow(
+item
+);
+
+div.style.boxSizing =
+"border-box";
+div.style.minHeight =
+`${COIN_ROW_HEIGHT_PX}px`;
+
+coinElements.set(
+item.symbol,
+div
+);
+list.appendChild(
+div
+);
+
+}
+
+const bottomPad =
+document.createElement(
+"div"
+);
+
+bottomPad.setAttribute(
+"aria-hidden",
+"true"
+);
+bottomPad.style.height =
+`${Math.max(
+0,
+(
+total -
+end
+) *
+COIN_ROW_HEIGHT_PX
+)}px`;
+bottomPad.style.flex =
+"0 0 auto";
+list.appendChild(
+bottomPad
+);
+
+scrollRoot.scrollTop =
+prevScroll;
+applyCoinRowStates();
+
+}
+
 function renderListImpl(){
 
 const list =
@@ -615,34 +1016,25 @@ if(
 return;
 }
 
-list.innerHTML = "";
-
-coinElements.clear();
-
 const data =
 getFilteredMarketData();
 
-data.sort(sortData);
+data.sort(
+sortData
+);
 
 updateCoinsSymbolHeaderCount(
 data.length
 );
 
-data.forEach(item=>{
-
-const div =
-createCoinRow(item);
-
-coinElements.set(
-item.symbol,
-div
+virtualCoinData =
+data;
+ensureCoinListVirtualScroll(
+list
 );
-
-list.appendChild(div);
-
-});
-
-highlightActiveSymbol();
+paintCoinListWindow(
+list
+);
 
 }
 
@@ -668,7 +1060,7 @@ showFlags
 <div class="col-flag">
 
 <div class="coin-flag-wrap">
-<button type="button" class="flag coin-flag-btn" data-coin-flag-trigger data-symbol="${item.symbol}" title="Выбрать флаг" aria-haspopup="true" aria-expanded="false" aria-pressed="false"></button>
+<button type="button" class="flag coin-flag-btn" data-coin-flag-trigger data-symbol="${escapeHtml(item.symbol)}" title="Выбрать флаг" aria-haspopup="true" aria-expanded="false" aria-pressed="false"></button>
 <div class="coin-flag-menu hidden" role="menu">
 <button type="button" class="flag coin-flag-pick flag--red" data-flag-group="red" title="Красный" role="menuitem"></button>
 <button type="button" class="flag coin-flag-pick flag--green" data-flag-group="green" title="Зелёный" role="menuitem"></button>
@@ -682,8 +1074,8 @@ showFlags
 
 div.innerHTML = `
 ${flagCol}
-<div class="coin-symbol" title="${item.indexTitle || item.symbol}">
-${item.symbol}
+<div class="coin-symbol" title="${escapeHtml(item.indexTitle || item.symbol)}">
+${escapeHtml(item.symbol)}
 </div>
 <div class="coin-change24 col-change">
 0.00%
@@ -937,9 +1329,31 @@ symbol
 
 }
 
+/**
+ * Keep active ticker in the visible scroll window (TradingView-like).
+ * Works with virtual list + `.coins-table-scroll` (Trade/Algo) and plain #coins-body.
+ */
+let ensuringActiveCoinVisible =
+false;
+
 export function ensureActiveCoinVisible(){
 
-applyCoinRowStates();
+if(
+ensuringActiveCoinVisible
+){
+return;
+}
+
+const list =
+document.getElementById(
+"coins-body"
+);
+
+if(
+!list
+){
+return;
+}
 
 const symbol =
 String(
@@ -950,29 +1364,143 @@ coinsState().currentSymbol ||
 if(
 !symbol
 ){
+applyCoinRowStates();
 return;
 }
 
-const row =
-coinElements.get(
+const data =
+virtualCoinData;
+
+if(
+!Array.isArray(
+data
+) ||
+!data.length
+){
+applyCoinRowStates();
+return;
+}
+
+const index =
+data.findIndex(
+item=>
+String(
+item?.symbol ||
+""
+).trim().toUpperCase() ===
 symbol
 );
 
 if(
-!row
+index <
+0
 ){
+applyCoinRowStates();
 return;
 }
 
+ensuringActiveCoinVisible =
+true;
+
 try{
-row.scrollIntoView({
-block:
-"nearest",
-inline:
-"nearest"
-});
-}catch{
-/* ignore */
+const scrollRoot =
+resolveCoinListScrollRoot(
+list
+);
+const rowH =
+COIN_ROW_HEIGHT_PX;
+let headerH =
+0;
+
+if(
+scrollRoot !==
+list
+){
+const header =
+scrollRoot.querySelector(
+"#table-header"
+);
+headerH =
+header?.offsetHeight ||
+0;
+}
+
+const viewH =
+Math.max(
+scrollRoot.clientHeight ||
+0,
+rowH *
+3
+);
+/*
+  Sticky header occupies the top of the viewport inside scrollRoot.
+  Keep one row of margin so the active coin is never clipped.
+*/
+const margin =
+rowH;
+const rowTop =
+headerH +
+index *
+rowH;
+const rowBottom =
+rowTop +
+rowH;
+const viewTop =
+scrollRoot.scrollTop +
+headerH +
+margin;
+const viewBottom =
+scrollRoot.scrollTop +
+viewH -
+margin;
+
+let nextScroll =
+scrollRoot.scrollTop;
+
+if(
+rowTop <
+viewTop
+){
+nextScroll =
+rowTop -
+headerH -
+margin;
+}else if(
+rowBottom >
+viewBottom
+){
+nextScroll =
+rowBottom -
+viewH +
+margin;
+}
+
+nextScroll =
+Math.max(
+0,
+Math.round(
+nextScroll
+)
+);
+
+if(
+Math.abs(
+nextScroll -
+scrollRoot.scrollTop
+) >=
+1
+){
+scrollRoot.scrollTop =
+nextScroll;
+}
+
+paintCoinListWindow(
+list
+);
+applyCoinRowStates();
+}finally{
+ensuringActiveCoinVisible =
+false;
 }
 
 }

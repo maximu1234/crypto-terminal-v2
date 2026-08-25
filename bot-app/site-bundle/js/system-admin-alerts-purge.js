@@ -1,6 +1,6 @@
 import {
 loadAllAlerts
-} from "./alerts.js?v=105";
+} from "./alerts.js?v=109";
 
 import {
 purgeAlertGarbageFromCloud

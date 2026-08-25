@@ -9,7 +9,7 @@ import {
 PATTERN_12_ID,
 defaultPattern12Settings,
 normalizePattern12Settings
-} from "./pattern-12-math.js?v=14";
+} from "./pattern-12-math.js?v=21";
 
 /**
  * @returns {ReturnType<typeof defaultPattern12Settings>}
@@ -83,6 +83,12 @@ s.lngMicRsiLength,
 s.shtRsiLength,
 s.shtMicRsiLength,
 s.requirePt3ConfirmBeforePt4
+? 1
+: 0,
+s.earlyPt3Confirm
+? 1
+: 0,
+s.reverseLogic
 ? 1
 : 0,
 s.tempFastPt4

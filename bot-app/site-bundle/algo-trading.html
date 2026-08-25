@@ -9,26 +9,29 @@
 <link rel="dns-prefetch" href="https://api.bybit.com"/>
 <link rel="dns-prefetch" href="https://stream.bybit.com"/>
 
-<title>АлгоТрейдинг — Multichart</title>
+<title>АлгоБот — Multichart</title>
 
 <link rel="icon" href="/icons/brand-logo.png" type="image/png">
 
 <link rel="stylesheet" href="/css/critical-shell.css?v=10">
 <script src="/js/site-css-ready.js?v=3"></script>
 <link rel="stylesheet" href="/css/common.css?v=55">
-<link rel="stylesheet" href="/css/terminal.css?v=169">
-<link rel="stylesheet" href="/css/terminal-layout.css?v=97">
-<link rel="stylesheet" href="/css/chart-indicators.css?v=26">
-<link rel="stylesheet" href="/css/algo-trading.css?v=130">
-<link rel="stylesheet" href="/css/algo-trading-book-panel.css?v=5">
+<link rel="stylesheet" href="/css/terminal.css?v=175">
+<link rel="stylesheet" href="/css/terminal-layout.css?v=102">
+<link rel="stylesheet" href="/css/chart-indicators.css?v=29">
+<link rel="stylesheet" href="/css/algo-trading.css?v=148">
+<link rel="stylesheet" href="/css/algo-trading-book-panel.css?v=6">
 <link rel="stylesheet" href="/css/algo-trading-chart-overlay.css?v=2">
+<link rel="stylesheet" href="/css/trade-diary.css?v=21">
+<link rel="stylesheet" href="/css/trade-diary-period.css?v=1">
+<link rel="stylesheet" href="/css/algo-trading-diary-modal.css?v=4">
 
-<script src="/vendor/lightweight-charts.standalone.production.js"></script>
+<link rel="preload" href="/vendor/lightweight-charts.standalone.production.js" as="script">
 <link rel="modulepreload" href="/js/charts-lib-boot.js?v=3" crossorigin>
 
 </head>
 
-<body class="terminal-page algo-trading-page algo-bot-lite-layout">
+<body class="terminal-page algo-trading-page algo-bot-lite-layout" data-algo-analysis-bot="none">
 
 <div id="app">
 
@@ -42,7 +45,7 @@
 <a href="/algo-trading.html?botLite=1">АлгоБот</a>
 <div class="header-settings-wrap" id="header-settings-wrap">
 <button type="button" class="header-settings-btn" id="header-settings-btn" title="Вход и синхронизация" aria-label="Настройки" aria-expanded="false" aria-haspopup="true">
-<svg class="header-settings-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.75"/><path fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+<svg class="header-settings-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.75"/><path fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0 1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l-.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
 </button>
 <div class="header-settings-dropdown hidden" id="header-settings-dropdown" role="menu">
 <p class="header-settings-section-title">Аккаунт</p>
@@ -89,9 +92,9 @@ title="Настройки Алго"
 <div class="algo-stats-col-title">Алго-профиль (отдельно от Терминала)</div>
 <div class="algo-trading-mode" id="algo-trading-mode" role="tablist" aria-label="Режим торговли">
 <button type="button" class="algo-trading-mode-btn active" data-algo-trading-mode="live" role="tab" aria-selected="true">Реальная торговля</button>
-<button type="button" class="algo-trading-mode-btn" data-algo-trading-mode="manual" role="tab" aria-selected="false" disabled aria-disabled="true" title="Временно отключено на удалённом боте">Ручная торговля</button>
+<button type="button" class="algo-trading-mode-btn" data-algo-trading-mode="manual" role="tab" aria-selected="false">Ручная торговля</button>
 </div>
-<p id="algo-trading-mode-hint" class="algo-stats-hint">Реальная торговля: бот ставит триггеры на бирже (нужны ключи), Стратегии 1–3. Ручная торговля временно отключена.</p>
+<p id="algo-trading-mode-hint" class="algo-stats-hint">Реальная: бот ставит триггеры на бирже (нужны ключи), Стратегии 1–3. Ручная: алерты на вход, только Стратегия 1.</p>
 <div id="algo-runtime-keys-block" class="algo-runtime-keys-block">
 <p id="algo-runtime-keys-hint" class="algo-stats-hint">Ключи только для Алго — не те, что в Терминале.</p>
 <div class="algo-stats-row algo-stats-row--setting">
@@ -139,6 +142,14 @@ title="Выбор бота"
 Боты
 </button>
 <div class="algo-bots-dropdown hidden" id="algo-bots-dropdown" role="menu" aria-label="Список ботов">
+<div class="algo-bots-item-row" role="none">
+<input
+type="checkbox"
+class="algo-bots-item-enabled"
+id="algo-bots-item-pattern12-enabled"
+data-algo-bot-id="pattern-12"
+aria-label="Включить Паттерн 1-2 1-2"
+/>
 <button
 type="button"
 class="algo-bots-item"
@@ -148,6 +159,43 @@ role="menuitem"
 >
 Паттерн 1-2 1-2
 </button>
+</div>
+<div class="algo-bots-item-row" role="none">
+<input
+type="checkbox"
+class="algo-bots-item-enabled"
+id="algo-bots-item-early-t3-enabled"
+data-algo-bot-id="pattern-12-early-t3"
+aria-label="Включить 1-2 Early T3"
+/>
+<button
+type="button"
+class="algo-bots-item"
+id="algo-bots-item-early-t3"
+data-algo-bot-id="pattern-12-early-t3"
+role="menuitem"
+>
+1-2 Early T3
+</button>
+</div>
+<div class="algo-bots-item-row" role="none">
+<input
+type="checkbox"
+class="algo-bots-item-enabled"
+id="algo-bots-item-rsi-touch-flip-enabled"
+data-algo-bot-id="rsi-touch-flip"
+aria-label="Включить RSI Touch Flip"
+/>
+<button
+type="button"
+class="algo-bots-item"
+id="algo-bots-item-rsi-touch-flip"
+data-algo-bot-id="rsi-touch-flip"
+role="menuitem"
+>
+RSI Touch Flip
+</button>
+</div>
 </div>
 </div>
 
@@ -281,6 +329,16 @@ hidden
 <button
 type="button"
 class="algo-bot-log-btn"
+id="algo-bot-local-logs"
+title="Полные логи сессий бота"
+hidden
+>
+Логи
+</button>
+
+<button
+type="button"
+class="algo-bot-log-btn"
 id="algo-bot-remote-logs"
 title="Прямой канал с Algo Bot: старт/стоп, списки, логи"
 hidden
@@ -327,6 +385,10 @@ LAN
 <span class="draw-width-label" id="draw-width-label">1px</span>
 </button>
 
+<button type="button" class="float-text-size-btn draw-text-size-btn hidden" id="draw-text-size-btn" title="Размер текста" aria-label="Размер текста">
+<span class="draw-text-size-label" id="draw-text-size-label">20</span>
+</button>
+
 <label class="draw-position-risk hidden" id="draw-position-risk-wrap" title="Сумма риска при срабатывании стопа (как в Калькуляторе)">
 <span class="draw-position-risk-label">Стоп-лосс ($)</span>
 <input type="number" class="draw-position-risk-input" id="draw-position-risk-usd" min="0" step="any" placeholder="" inputmode="decimal"/>
@@ -366,6 +428,8 @@ LAN
 </button>
 </div>
 
+<div id="draw-text-size-popover" class="draw-popover draw-text-size-popover hidden" aria-label="Размер текста"></div>
+
 <div id="draw-settings-popover" class="draw-popover draw-settings-popover draw-settings-popover--fib hidden">
 </div>
 
@@ -380,22 +444,29 @@ LAN
 <div id="ao-chart"></div>
 </div>
 
-<div id="volume-wrap" class="indicator-pane-hidden">
-<div id="volume-hud" aria-hidden="false">
-<span class="volume-hud-title">Vol</span>
+<div id="macd-wrap" class="indicator-pane-hidden">
+<div id="macd-hud" aria-hidden="false" title="Двойной щелчок — настройки">
+<span class="macd-hud-title" id="macd-hud-title">MACD 12 26 9</span>
+<span class="macd-hud-macd" id="macd-hud-macd">—</span>
+<span class="macd-hud-signal" id="macd-hud-signal">—</span>
+<span class="macd-hud-hist" id="macd-hud-hist">—</span>
 </div>
+<div id="macd-chart"></div>
+</div>
+
+<div id="volume-wrap" class="indicator-pane-hidden">
 <div id="volume-chart"></div>
 </div>
 
 <div id="rsi-wrap">
 <div id="rsi-band"></div>
-<div id="rsi-hud" aria-hidden="false">
+<div id="rsi-hud" aria-hidden="false" title="Двойной щелчок — настройки" style="cursor:pointer">
 <span class="rsi-hud-title">RSI <span id="rsi-hud-period">14</span></span><span class="rsi-hud-muted">close</span><span id="rsi-hud-value">—</span>
 </div>
 <div id="rsi-chart"></div>
-<div class="rsi-level-line hidden" data-rsi-level="70" aria-hidden="true"></div>
-<div class="rsi-level-line hidden" data-rsi-level="50" aria-hidden="true"></div>
-<div class="rsi-level-line hidden" data-rsi-level="30" aria-hidden="true"></div>
+<div class="rsi-level-line hidden" data-rsi-role="ob" data-rsi-level="70" aria-hidden="true"></div>
+<div class="rsi-level-line hidden" data-rsi-role="mid" data-rsi-level="50" aria-hidden="true"></div>
+<div class="rsi-level-line hidden" data-rsi-role="os" data-rsi-level="30" aria-hidden="true"></div>
 <div id="crosshair-time-label" class="crosshair-axis-label crosshair-time-label hidden" aria-hidden="true"></div>
 </div>
 
@@ -413,6 +484,185 @@ tabindex="0"
 ></div>
 
 <div id="algo-stats-panel" class="algo-stats-panel" aria-label="Статистика АлгоТрейдинг">
+<div class="algo-stats-columns" data-algo-analysis-bot="rsi-touch-flip">
+<div class="algo-stats-chart-cols">
+<div class="algo-stats-col">
+<div class="algo-stats-col-title">RSI Touch Flip</div>
+<p class="algo-rsi-flip-col-note">Подбор на открытом графике. В live тикер попадает только через «Добавить в книгу». Запуск читает книгу, не график.</p>
+<div class="algo-stats-row algo-stats-row--setting">
+<label class="algo-stats-label" for="algo-rsi-flip-len">Период RSI</label>
+<input type="number" id="algo-rsi-flip-len" class="algo-stats-input" min="2" max="999" step="1" value="14" inputmode="numeric" />
+</div>
+<div class="algo-stats-row algo-stats-row--setting">
+<label class="algo-stats-label" for="algo-rsi-flip-os">Перепроданность</label>
+<input type="number" id="algo-rsi-flip-os" class="algo-stats-input" min="1" max="50" step="1" value="30" inputmode="decimal" />
+</div>
+<div class="algo-stats-row algo-stats-row--setting">
+<label class="algo-stats-label" for="algo-rsi-flip-ob">Перекупленность</label>
+<input type="number" id="algo-rsi-flip-ob" class="algo-stats-input" min="50" max="99" step="1" value="70" inputmode="decimal" />
+</div>
+<div class="algo-stats-row algo-stats-row--setting">
+<label class="algo-stats-label" for="algo-rsi-flip-tf">Таймфрейм RSI</label>
+<select id="algo-rsi-flip-tf" class="algo-stats-select">
+<option value="">график</option>
+<option value="1">1m</option>
+<option value="5">5m</option>
+<option value="15">15m</option>
+<option value="60">1h</option>
+<option value="240">4h</option>
+<option value="D">1D</option>
+</select>
+</div>
+<div class="algo-stats-divider" aria-hidden="true"></div>
+<div class="algo-stats-row algo-stats-row--setting">
+<label class="algo-stats-label" for="algo-rsi-flip-side">Направление</label>
+<select id="algo-rsi-flip-side" class="algo-stats-select">
+<option value="BOTH">BOTH</option>
+<option value="LONG">LONG</option>
+<option value="SHORT">SHORT</option>
+</select>
+</div>
+<div class="algo-stats-row algo-stats-row--setting">
+<label class="algo-stats-label" for="algo-rsi-flip-stack">Покупок/продаж подряд</label>
+<input type="number" id="algo-rsi-flip-stack" class="algo-stats-input" min="1" max="20" step="1" value="3" inputmode="numeric" />
+</div>
+<div class="algo-stats-row algo-stats-row--setting">
+<label class="algo-stats-label" for="algo-rsi-flip-budget">Бюджет USDT</label>
+<input type="number" id="algo-rsi-flip-budget" class="algo-stats-input" min="1" step="1" value="100" inputmode="decimal" />
+</div>
+<div class="algo-stats-row algo-stats-row--setting">
+<label class="algo-stats-label" for="algo-rsi-flip-size-mode">Объём</label>
+<select id="algo-rsi-flip-size-mode" class="algo-stats-select">
+<option value="equal">Одним объёмом</option>
+<option value="average">Усреднение</option>
+</select>
+</div>
+<div class="algo-stats-row algo-stats-row--setting" id="algo-rsi-flip-mult-row" hidden>
+<label class="algo-stats-label" for="algo-rsi-flip-mult">Множитель усреднения</label>
+<input type="number" id="algo-rsi-flip-mult" class="algo-stats-input" min="1" step="0.1" value="1.5" inputmode="decimal" />
+</div>
+<div class="algo-stats-row algo-stats-row--rsi-flip-fit-actions">
+<button type="button" class="algo-stats-mode-btn" id="algo-rsi-flip-add-book">Добавить в книгу</button>
+<button type="button" class="algo-stats-mode-btn" id="algo-rsi-flip-remove-book" hidden>Убрать из книги</button>
+</div>
+<p class="algo-rsi-flip-book-status" id="algo-rsi-flip-book-status" role="status"></p>
+<div class="algo-stats-row algo-stats-row--setting">
+<label class="algo-stats-label" for="algo-rsi-flip-marks">Метки сделок</label>
+<label class="algo-stats-check">
+<input type="checkbox" id="algo-rsi-flip-marks" checked />
+</label>
+</div>
+<div class="algo-stats-divider" aria-hidden="true"></div>
+<div class="algo-stats-row algo-stats-row--setting">
+<label class="algo-stats-label" for="algo-rsi-flip-capital">Initial capital</label>
+<input type="number" id="algo-rsi-flip-capital" class="algo-stats-input" min="1" step="1" value="10000" inputmode="decimal" />
+</div>
+<div class="algo-stats-row algo-stats-row--setting">
+<label class="algo-stats-label" for="algo-rsi-flip-commission">Commission %</label>
+<input type="number" id="algo-rsi-flip-commission" class="algo-stats-input" min="0" max="10" step="0.01" value="0.04" inputmode="decimal" />
+</div>
+<div class="algo-stats-row algo-stats-row--setting">
+<label class="algo-stats-label" for="algo-rsi-flip-slippage">Slippage (ticks)</label>
+<input type="number" id="algo-rsi-flip-slippage" class="algo-stats-input" min="0" max="1000" step="1" value="0" inputmode="numeric" />
+</div>
+</div>
+<div class="algo-stats-col">
+<div class="algo-stats-col-title">Обзор</div>
+<p class="algo-rsi-flip-col-note">Весь график — не проверка для запуска.</p>
+<div class="algo-stats-row">
+<span class="algo-stats-label">Дней</span>
+<span class="algo-stats-value" id="algo-rsi-flip-days">—</span>
+</div>
+<div class="algo-stats-row">
+<span class="algo-stats-label">Чистая прибыль</span>
+<span class="algo-stats-value" id="algo-rsi-flip-net">—</span>
+</div>
+<div class="algo-stats-row">
+<span class="algo-stats-label">Прибыль в лонг</span>
+<span class="algo-stats-value" id="algo-rsi-flip-long">—</span>
+</div>
+<div class="algo-stats-row">
+<span class="algo-stats-label">Прибыль в шорт</span>
+<span class="algo-stats-value" id="algo-rsi-flip-short">—</span>
+</div>
+<div class="algo-stats-row">
+<span class="algo-stats-label">Валовая прибыль</span>
+<span class="algo-stats-value" id="algo-rsi-flip-gross-profit">—</span>
+</div>
+<div class="algo-stats-row">
+<span class="algo-stats-label">Валовый убыток</span>
+<span class="algo-stats-value" id="algo-rsi-flip-gross-loss">—</span>
+</div>
+<div class="algo-stats-row">
+<span class="algo-stats-label">Закрытых сделок</span>
+<span class="algo-stats-value" id="algo-rsi-flip-closed">—</span>
+</div>
+<div class="algo-stats-row">
+<span class="algo-stats-label">Прибыльных</span>
+<span class="algo-stats-value" id="algo-rsi-flip-profitable">—</span>
+</div>
+<div class="algo-stats-row">
+<span class="algo-stats-label">Профит-фактор</span>
+<span class="algo-stats-value" id="algo-rsi-flip-pf">—</span>
+</div>
+<div class="algo-stats-row">
+<span class="algo-stats-label">Макс. просадка</span>
+<span class="algo-stats-value" id="algo-rsi-flip-dd">—</span>
+</div>
+<div class="algo-stats-row">
+<span class="algo-stats-label">Средняя сделка</span>
+<span class="algo-stats-value" id="algo-rsi-flip-avg">—</span>
+</div>
+<div class="algo-stats-row">
+<span class="algo-stats-label">Среднее баров</span>
+<span class="algo-stats-value" id="algo-rsi-flip-avg-bars">—</span>
+</div>
+</div>
+<div class="algo-stats-col algo-stats-col--rsi-flip-fit">
+<div class="algo-stats-col-title">Подбор Train / Test</div>
+<p class="algo-rsi-flip-col-note">Сетка на Train, все целые: RSI 5–21, OS 15–35, OB 65–85, стек 1–10. В зачёт идёт набор, который проходит Test, а не чемпион Train. ТФ RSI, направление и объём — как в полях слева. Полный перебор долгий — можно Стоп.</p>
+<div class="algo-stats-row algo-stats-row--setting">
+<label class="algo-stats-label" for="algo-rsi-flip-train-pct">Train %</label>
+<input type="number" id="algo-rsi-flip-train-pct" class="algo-stats-input" min="50" max="90" step="1" value="70" inputmode="numeric" />
+</div>
+<div class="algo-stats-row">
+<span class="algo-stats-label">Окна</span>
+<span class="algo-stats-value algo-rsi-flip-split-label" id="algo-rsi-flip-split-label">—</span>
+</div>
+<div class="algo-stats-row">
+<span class="algo-stats-label">Сейчас в полях → Test</span>
+<span class="algo-stats-value" id="algo-rsi-flip-current-test">—</span>
+</div>
+<div class="algo-stats-row algo-stats-row--rsi-flip-fit-actions">
+<button type="button" class="algo-stats-mode-btn" id="algo-rsi-flip-optimize">Подобрать</button>
+<button type="button" class="algo-stats-mode-btn" id="algo-rsi-flip-optimize-stop" hidden disabled>Стоп</button>
+</div>
+<div class="algo-rsi-flip-fit-progress" id="algo-rsi-flip-fit-progress" hidden>
+<div class="algo-rsi-flip-fit-progress-track">
+<div class="algo-rsi-flip-fit-progress-bar" id="algo-rsi-flip-fit-progress-bar"></div>
+</div>
+<span class="algo-rsi-flip-fit-progress-label" id="algo-rsi-flip-fit-progress-label">0 / 0</span>
+</div>
+<div class="algo-rsi-flip-launch" id="algo-rsi-flip-launch" data-state="idle">
+<div class="algo-rsi-flip-launch-title" id="algo-rsi-flip-launch-title">Сначала подберите параметры</div>
+<div class="algo-rsi-flip-launch-params" id="algo-rsi-flip-launch-params"></div>
+<div class="algo-rsi-flip-launch-detail" id="algo-rsi-flip-launch-detail">Сетка крутится только на Train (старшая часть). Решение — по Test (свежая часть). Обзор слева — весь график, его нельзя читать как «можно запускать».</div>
+</div>
+<div class="algo-stats-row">
+<span class="algo-stats-label">Train</span>
+<span class="algo-stats-value" id="algo-rsi-flip-fit-train">—</span>
+</div>
+<div class="algo-stats-row">
+<span class="algo-stats-label">Test</span>
+<span class="algo-stats-value" id="algo-rsi-flip-fit-test">—</span>
+</div>
+<div class="algo-stats-row algo-stats-row--rsi-flip-fit-actions">
+<button type="button" class="algo-stats-mode-btn" id="algo-rsi-flip-apply-fit" disabled>Подставить в поля слева</button>
+</div>
+<p class="algo-rsi-flip-col-note">Подставить включена только если Test зелёный. Потом «Добавить в книгу» и Запустить.</p>
+</div>
+</div>
+</div>
 <div class="algo-stats-columns" data-algo-analysis-bot="pattern-12">
 <div class="algo-stats-chart-cols">
 <div class="algo-stats-col" data-algo-strategy="fixed-tp">
@@ -1091,6 +1341,243 @@ placeholder="без лимита"
 
 </div>
 
+<div id="algo-bot-settings-modal" class="algo-bot-settings-modal hidden" hidden>
+<div class="algo-bot-settings-modal-backdrop" data-close="algo-bot-settings-modal"></div>
+<div class="algo-bot-settings-modal-card" role="dialog" aria-modal="true" aria-labelledby="algo-bot-settings-modal-title">
+<div class="algo-bot-settings-modal-head">
+<h2 id="algo-bot-settings-modal-title">Паттерн 1-2 1-2</h2>
+<button type="button" class="algo-bot-settings-modal-close" data-close="algo-bot-settings-modal" aria-label="Закрыть">×</button>
+</div>
+<p class="algo-bot-settings-modal-note">Отметьте стратегию чекбоксом и закройте окно. Затем нажмите «Запустить» в верхней панели.</p>
+<div class="algo-bot-settings-modal-body">
+<section class="algo-bot-strategy" data-algo-bot-strategy="st1">
+<label class="algo-bot-strategy-enable">
+<input type="checkbox" id="algo-bot-st1-enabled" checked />
+<span>Стратегия 1</span>
+</label>
+<div class="algo-bot-strategy-panel" id="algo-bot-st1-dropdown" role="region" aria-label="Настройки Стратегия 1">
+<div class="algo-bot-field algo-bot-field--row">
+<button type="button" class="algo-scan-btn" id="algo-bot-st1-load-book">Загрузить книгу параметров</button>
+<span class="algo-bot-hint" id="algo-bot-st1-book-status">Книга не загружена</span>
+</div>
+<div class="algo-bot-field">
+<label class="algo-bot-label" for="algo-bot-st1-timeout">Количество баров до отмены паттерна</label>
+<input type="number" id="algo-bot-st1-timeout" class="algo-bot-input" min="1" max="10000" step="1" value="200" inputmode="numeric" />
+</div>
+<div class="algo-bot-field">
+<label class="algo-bot-label" for="algo-bot-st1-max-pt1-pt4-bars">Количество баров между pt1 и pt4 не более</label>
+<input type="number" id="algo-bot-st1-max-pt1-pt4-bars" class="algo-bot-input" min="1" max="10000" step="1" inputmode="numeric" placeholder="без лимита" title="Пусто — без лимита. Если задано N и между pt1 и pt4 больше N баров — сетап невалиден" />
+</div>
+<div class="algo-bot-field algo-bot-field--row">
+<label class="algo-bot-label" for="algo-bot-st1-sl-usd">СЛ ($)</label>
+<input type="number" id="algo-bot-st1-sl-usd" class="algo-bot-input algo-bot-input--sm" min="0.01" step="0.01" value="1" inputmode="decimal" />
+</div>
+<div class="algo-bot-field algo-bot-field--row">
+<label class="algo-bot-label" for="algo-bot-st1-min-turnover" title="Минимальный 24h оборот (USDT). Ниже — сетап не вооружается.">Объем за сутки от</label>
+<input type="text" id="algo-bot-st1-min-turnover" class="algo-bot-input algo-bot-input--sm algo-bot-input--turnover" inputmode="numeric" autocomplete="off" value="20.000.000" />
+<span class="algo-bot-unit">USDT</span>
+</div>
+<div class="algo-bot-field algo-bot-field--row" id="algo-bot-st1-alert-lead-row" hidden>
+<label class="algo-bot-label" for="algo-bot-st1-alert-lead" title="Опережение: % высоты X (pt3↔pt4) от pt4 к pt3. Лонг ниже pt4, шорт выше.">Алерт до pt4</label>
+<input type="number" id="algo-bot-st1-alert-lead" class="algo-bot-input algo-bot-input--sm" min="0" max="25" step="0.1" value="5" inputmode="decimal" />
+<span class="algo-bot-unit">% X</span>
+</div>
+<p class="algo-bot-hint" id="algo-bot-st1-alert-lead-hint" hidden>Ручная торговля: опережение в % высоты паттерна X (pt3↔pt4), как СЛ — не % цены. Лонг чуть ниже pt4, шорт чуть выше. 0 = точно в pt4.</p>
+<div class="algo-bot-field">
+<span class="algo-bot-label">Торговля</span>
+<div class="algo-bot-side" role="group" aria-label="Стороны торговли">
+<label class="algo-bot-check">
+<input type="checkbox" id="algo-bot-st1-side-long" />
+<span>Лонг</span>
+</label>
+<label class="algo-bot-check">
+<input type="checkbox" id="algo-bot-st1-side-short" />
+<span>Шорт</span>
+</label>
+<label class="algo-bot-check">
+<input type="checkbox" id="algo-bot-st1-side-both" checked />
+<span>Лонг и Шорт</span>
+</label>
+</div>
+<p class="algo-bot-hint" id="algo-bot-st1-side-hint">Список: Стратегия 1</p>
+</div>
+</div>
+</section>
+<section class="algo-bot-strategy" data-algo-bot-strategy="st2">
+<label class="algo-bot-strategy-enable">
+<input type="checkbox" id="algo-bot-st2-enabled" />
+<span>Стратегия 2</span>
+</label>
+<div class="algo-bot-strategy-panel" id="algo-bot-st2-dropdown" role="region" aria-label="Настройки Стратегия 2">
+<div class="algo-bot-field algo-bot-field--row">
+<button type="button" class="algo-scan-btn" id="algo-bot-st2-load-book">Загрузить книгу параметров</button>
+<span class="algo-bot-hint" id="algo-bot-st2-book-status">Книга не загружена</span>
+</div>
+<div class="algo-bot-field">
+<label class="algo-bot-label" for="algo-bot-st2-timeout">Количество баров до отмены паттерна</label>
+<input type="number" id="algo-bot-st2-timeout" class="algo-bot-input" min="1" max="10000" step="1" value="200" inputmode="numeric" />
+</div>
+<div class="algo-bot-field">
+<label class="algo-bot-label" for="algo-bot-st2-max-pt1-pt4-bars">Количество баров между pt1 и pt4 не более</label>
+<input type="number" id="algo-bot-st2-max-pt1-pt4-bars" class="algo-bot-input" min="1" max="10000" step="1" inputmode="numeric" placeholder="без лимита" title="Пусто — без лимита. Если задано N и между pt1 и pt4 больше N баров — сетап невалиден" />
+</div>
+<div class="algo-bot-field algo-bot-field--row">
+<label class="algo-bot-label" for="algo-bot-st2-sl-usd">СЛ ($)</label>
+<input type="number" id="algo-bot-st2-sl-usd" class="algo-bot-input algo-bot-input--sm" min="0.01" step="0.01" value="1" inputmode="decimal" />
+</div>
+<div class="algo-bot-field algo-bot-field--row">
+<label class="algo-bot-label" for="algo-bot-st2-min-turnover" title="Минимальный 24h оборот (USDT). Ниже — сетап не вооружается.">Объем за сутки от</label>
+<input type="text" id="algo-bot-st2-min-turnover" class="algo-bot-input algo-bot-input--sm algo-bot-input--turnover" inputmode="numeric" autocomplete="off" value="20.000.000" />
+<span class="algo-bot-unit">USDT</span>
+</div>
+<div class="algo-bot-field">
+<span class="algo-bot-label">Торговля</span>
+<div class="algo-bot-side" role="group" aria-label="Стороны торговли">
+<label class="algo-bot-check">
+<input type="checkbox" id="algo-bot-st2-side-long" />
+<span>Лонг</span>
+</label>
+<label class="algo-bot-check">
+<input type="checkbox" id="algo-bot-st2-side-short" />
+<span>Шорт</span>
+</label>
+<label class="algo-bot-check">
+<input type="checkbox" id="algo-bot-st2-side-both" checked />
+<span>Лонг и Шорт</span>
+</label>
+</div>
+<p class="algo-bot-hint" id="algo-bot-st2-side-hint">Список: Стратегия 2</p>
+</div>
+</div>
+</section>
+<section class="algo-bot-strategy" data-algo-bot-strategy="st3">
+<label class="algo-bot-strategy-enable">
+<input type="checkbox" id="algo-bot-st3-enabled" />
+<span>Стратегия 3</span>
+</label>
+<div class="algo-bot-strategy-panel" id="algo-bot-st3-dropdown" role="region" aria-label="Настройки Стратегия 3">
+<div class="algo-bot-field algo-bot-field--row">
+<button type="button" class="algo-scan-btn" id="algo-bot-st3-load-book">Загрузить книгу параметров</button>
+<span class="algo-bot-hint" id="algo-bot-st3-book-status">Книга не загружена</span>
+</div>
+<div class="algo-bot-field">
+<label class="algo-bot-label" for="algo-bot-st3-timeout">Количество баров до отмены паттерна</label>
+<input type="number" id="algo-bot-st3-timeout" class="algo-bot-input" min="1" max="10000" step="1" value="200" inputmode="numeric" />
+</div>
+<div class="algo-bot-field">
+<label class="algo-bot-label" for="algo-bot-st3-max-pt1-pt4-bars">Количество баров между pt1 и pt4 не более</label>
+<input type="number" id="algo-bot-st3-max-pt1-pt4-bars" class="algo-bot-input" min="1" max="10000" step="1" inputmode="numeric" placeholder="без лимита" title="Пусто — без лимита. Если задано N и между pt1 и pt4 больше N баров — сетап невалиден" />
+</div>
+<div class="algo-bot-field algo-bot-field--row">
+<label class="algo-bot-label" for="algo-bot-st3-sl-usd">СЛ ($)</label>
+<input type="number" id="algo-bot-st3-sl-usd" class="algo-bot-input algo-bot-input--sm" min="0.01" step="0.01" value="1" inputmode="decimal" />
+</div>
+<div class="algo-bot-field algo-bot-field--row">
+<label class="algo-bot-label" for="algo-bot-st3-min-turnover" title="Минимальный 24h оборот (USDT). Ниже — сетап не вооружается.">Объем за сутки от</label>
+<input type="text" id="algo-bot-st3-min-turnover" class="algo-bot-input algo-bot-input--sm algo-bot-input--turnover" inputmode="numeric" autocomplete="off" value="20.000.000" />
+<span class="algo-bot-unit">USDT</span>
+</div>
+<div class="algo-bot-field">
+<span class="algo-bot-label">Торговля</span>
+<div class="algo-bot-side" role="group" aria-label="Стороны торговли">
+<label class="algo-bot-check">
+<input type="checkbox" id="algo-bot-st3-side-long" />
+<span>Лонг</span>
+</label>
+<label class="algo-bot-check">
+<input type="checkbox" id="algo-bot-st3-side-short" />
+<span>Шорт</span>
+</label>
+<label class="algo-bot-check">
+<input type="checkbox" id="algo-bot-st3-side-both" checked />
+<span>Лонг и Шорт</span>
+</label>
+</div>
+<p class="algo-bot-hint" id="algo-bot-st3-side-hint">Список: Стратегия 3</p>
+</div>
+</div>
+</section>
+</div>
+</div>
+</div>
+
+<div id="algo-bot-early-t3-settings-modal" class="algo-bot-settings-modal hidden" hidden>
+<div class="algo-bot-settings-modal-backdrop" data-close="algo-bot-early-t3-settings-modal"></div>
+<div class="algo-bot-settings-modal-card" role="dialog" aria-modal="true" aria-labelledby="algo-bot-early-t3-settings-modal-title">
+<div class="algo-bot-settings-modal-head">
+<h2 id="algo-bot-early-t3-settings-modal-title">1-2 Early T3</h2>
+<button type="button" class="algo-bot-settings-modal-close" data-close="algo-bot-early-t3-settings-modal" aria-label="Закрыть">×</button>
+</div>
+<p class="algo-bot-settings-modal-note">Только ручная торговля: алерты или список тикеров, без ордеров. Снимок настроек индикатора 1-2 EARLY T3 берётся в момент запуска. Затем нажмите «Запустить».</p>
+<div class="algo-bot-settings-modal-body">
+<div class="algo-bot-field">
+<label class="algo-bot-label" for="algo-bot-early-t3-tf">Таймфрейм</label>
+<select id="algo-bot-early-t3-tf" class="algo-bot-input" aria-label="Таймфрейм бота 1-2 Early T3">
+<option value="1">1m</option>
+<option value="5" selected>5m</option>
+<option value="15">15m</option>
+<option value="60">1h</option>
+<option value="240">4h</option>
+<option value="D">1D</option>
+<option value="W">W</option>
+</select>
+</div>
+<div class="algo-bot-field">
+<span class="algo-bot-label">Действие</span>
+<div class="algo-bot-side" role="group" aria-label="Действие бота 1-2 Early T3">
+<label class="algo-bot-check">
+<input type="checkbox" id="algo-bot-early-t3-mode-alert" checked />
+<span>Алерт до pt4</span>
+</label>
+<label class="algo-bot-check">
+<input type="checkbox" id="algo-bot-early-t3-mode-list" />
+<span>Добавить в список</span>
+</label>
+</div>
+</div>
+<div class="algo-bot-field algo-bot-field--row" id="algo-bot-early-t3-alert-lead-row">
+<label class="algo-bot-label" for="algo-bot-early-t3-alert-lead" title="Опережение: % высоты X (pt3↔pt4) от pt4 к pt3. Лонг ниже pt4, шорт выше.">Алерт до pt4</label>
+<input type="number" id="algo-bot-early-t3-alert-lead" class="algo-bot-input algo-bot-input--sm" min="0" max="25" step="0.1" value="5" inputmode="decimal" />
+<span class="algo-bot-unit">% X</span>
+</div>
+<p class="algo-bot-hint" id="algo-bot-early-t3-alert-lead-hint">Опережение в % высоты паттерна X (pt3↔pt4), как СЛ — не % цены. Лонг чуть ниже pt4, шорт чуть выше. 0 = точно в pt4.</p>
+<p class="algo-bot-hint" id="algo-bot-early-t3-list-hint" hidden>Тикер попадает в список «1-2 Early T3» справа, без алерта. Флаг снимается, когда коробка t3–t4 ломается в любую сторону (t3 или t4).</p>
+<div class="algo-bot-field" id="algo-bot-early-t3-list-all-live-row" hidden>
+<label class="algo-bot-check">
+<input type="checkbox" id="algo-bot-early-t3-list-all-live" />
+<span>Все живые сетапы</span>
+</label>
+<p class="algo-bot-hint">Выкл — только свежий t4 (2–3 свечи). Вкл — сетапы с целой коробкой t3–t4 не старше времени жизни.</p>
+<div class="algo-bot-field algo-bot-field--row" id="algo-bot-early-t3-setup-life-row">
+<label class="algo-bot-label" for="algo-bot-early-t3-setup-life" title="Сколько свечей после t4 сетап ещё считается живым в режиме «все живые».">Время жизни сетапа</label>
+<input type="number" id="algo-bot-early-t3-setup-life" class="algo-bot-input algo-bot-input--sm" min="1" max="5000" step="1" value="300" inputmode="numeric" />
+<span class="algo-bot-unit">свечей</span>
+</div>
+</div>
+<div class="algo-bot-field algo-bot-field--row">
+<label class="algo-bot-label" for="algo-bot-early-t3-min-turnover" title="Минимальный 24h оборот (USDT). Ниже — тикер не сканируется.">Объем за сутки от</label>
+<input type="text" id="algo-bot-early-t3-min-turnover" class="algo-bot-input algo-bot-input--sm algo-bot-input--turnover" inputmode="numeric" autocomplete="off" value="100.000" />
+<span class="algo-bot-unit">USDT</span>
+</div>
+</div>
+</div>
+</div>
+
+<div id="algo-bot-rsi-touch-flip-settings-modal" class="algo-bot-settings-modal hidden" hidden>
+<div class="algo-bot-settings-modal-backdrop" data-close="algo-bot-rsi-touch-flip-settings-modal"></div>
+<div class="algo-bot-settings-modal-card" role="dialog" aria-modal="true" aria-labelledby="algo-bot-rsi-touch-flip-settings-modal-title">
+<div class="algo-bot-settings-modal-head">
+<h2 id="algo-bot-rsi-touch-flip-settings-modal-title">RSI Touch Flip</h2>
+<button type="button" class="algo-bot-settings-modal-close" data-close="algo-bot-rsi-touch-flip-settings-modal" aria-label="Закрыть">×</button>
+</div>
+<p class="algo-bot-settings-modal-note">Только автоматическая торговля: рыночные входы и выходы, без алертов и без ТП/СЛ. Параметры каждого тикера живут в книге RSI Touch Flip, не здесь. Добавить/убрать — панель Данные. Запуск берёт снимок книги; пока бот работает, правки на диске идут в следующий старт.</p>
+<div class="algo-bot-settings-modal-body">
+<p class="algo-bot-hint" id="algo-bot-rsi-flip-book-summary">Книга пуста. Добавьте тикеры в панели Данные.</p>
+<p class="algo-bot-hint">Касание OS открывает/наращивает лонг, касание OB — шорт. Стоп закрывает только позиции, которые открыл этот бот.</p>
+</div>
+</div>
+</div>
+
 <div id="algo-optimize-universe-modal" class="algo-universe-modal algo-optimize-universe-modal hidden" hidden>
 <div class="algo-universe-modal-backdrop" data-close="algo-optimize-universe-modal"></div>
 <div class="algo-universe-modal-card" role="dialog" aria-modal="true" aria-labelledby="algo-optimize-universe-modal-title">
@@ -1229,9 +1716,6 @@ placeholder="без лимита"
 
 <select id="market-filter">
 <option value="all">Все</option>
-<option value="algo-long-5m">Алго Лонг</option>
-<option value="algo-short-5m">Алго Шорт</option>
-<option value="algo-both-5m">Алго Лонг/Шорт</option>
 </select>
 
 <input
@@ -1278,168 +1762,7 @@ Vol
 
 </div>
 
-<div id="algo-bot-settings-modal" class="algo-bot-settings-modal hidden" hidden>
-<div class="algo-bot-settings-modal-backdrop" data-close="algo-bot-settings-modal"></div>
-<div class="algo-bot-settings-modal-card" role="dialog" aria-modal="true" aria-labelledby="algo-bot-settings-modal-title">
-<div class="algo-bot-settings-modal-head">
-<h2 id="algo-bot-settings-modal-title">Паттерн 1-2 1-2</h2>
-<button type="button" class="algo-bot-settings-modal-close" data-close="algo-bot-settings-modal" aria-label="Закрыть">×</button>
-</div>
-<p class="algo-bot-settings-modal-note">Отметьте стратегию чекбоксом и закройте окно. Затем нажмите «Запустить» в верхней панели.</p>
-<div class="algo-bot-settings-modal-body">
-<section class="algo-bot-strategy" data-algo-bot-strategy="st1">
-<label class="algo-bot-strategy-enable">
-<input type="checkbox" id="algo-bot-st1-enabled" checked />
-<span>Стратегия 1</span>
-</label>
-<div class="algo-bot-strategy-panel" id="algo-bot-st1-dropdown" role="region" aria-label="Настройки Стратегия 1">
-<div class="algo-bot-field algo-bot-field--row">
-<button type="button" class="algo-scan-btn" id="algo-bot-st1-load-book">Загрузить книгу параметров</button>
-<span class="algo-bot-hint" id="algo-bot-st1-book-status">Книга не загружена</span>
-</div>
-<div class="algo-bot-field">
-<label class="algo-bot-label" for="algo-bot-st1-timeout">Количество баров до отмены паттерна</label>
-<input type="number" id="algo-bot-st1-timeout" class="algo-bot-input" min="1" max="10000" step="1" value="200" inputmode="numeric" />
-</div>
-<div class="algo-bot-field">
-<label class="algo-bot-label" for="algo-bot-st1-max-pt1-pt4-bars">Количество баров между pt1 и pt4 не более</label>
-<input type="number" id="algo-bot-st1-max-pt1-pt4-bars" class="algo-bot-input" min="1" max="10000" step="1" inputmode="numeric" placeholder="без лимита" title="Пусто — без лимита. Если задано N и между pt1 и pt4 больше N баров — сетап невалиден" />
-</div>
-<div class="algo-bot-field algo-bot-field--row">
-<label class="algo-bot-label" for="algo-bot-st1-sl-usd">СЛ ($)</label>
-<input type="number" id="algo-bot-st1-sl-usd" class="algo-bot-input algo-bot-input--sm" min="0.01" step="0.01" value="1" inputmode="decimal" />
-</div>
-<div class="algo-bot-field algo-bot-field--row">
-<label class="algo-bot-label" for="algo-bot-st1-min-turnover" title="Минимальный 24h оборот (USDT). Ниже — сетап не вооружается.">Объем за сутки от</label>
-<input type="text" id="algo-bot-st1-min-turnover" class="algo-bot-input algo-bot-input--sm algo-bot-input--turnover" inputmode="numeric" autocomplete="off" value="20.000.000" />
-<span class="algo-bot-unit">USDT</span>
-</div>
-<div class="algo-bot-field algo-bot-field--row" id="algo-bot-st1-alert-lead-row" hidden>
-<label class="algo-bot-label" for="algo-bot-st1-alert-lead" title="Опережение: % высоты X (pt3↔pt4) от pt4 к pt3. Лонг ниже pt4, шорт выше.">Алерт до pt4</label>
-<input type="number" id="algo-bot-st1-alert-lead" class="algo-bot-input algo-bot-input--sm" min="0" max="10" step="0.1" value="5" inputmode="decimal" />
-<span class="algo-bot-unit">% X</span>
-</div>
-<p class="algo-bot-hint" id="algo-bot-st1-alert-lead-hint" hidden>Ручная торговля: опережение в % высоты паттерна X (pt3↔pt4), как СЛ — не % цены. Лонг чуть ниже pt4, шорт чуть выше. 0 = точно в pt4.</p>
-<div class="algo-bot-field">
-<span class="algo-bot-label">Торговля</span>
-<div class="algo-bot-side" role="group" aria-label="Стороны торговли">
-<label class="algo-bot-check">
-<input type="checkbox" id="algo-bot-st1-side-long" />
-<span>Лонг</span>
-</label>
-<label class="algo-bot-check">
-<input type="checkbox" id="algo-bot-st1-side-short" />
-<span>Шорт</span>
-</label>
-<label class="algo-bot-check">
-<input type="checkbox" id="algo-bot-st1-side-both" checked />
-<span>Лонг и Шорт</span>
-</label>
-</div>
-<p class="algo-bot-hint" id="algo-bot-st1-side-hint">Список: Стратегия 1</p>
-</div>
-</div>
-</section>
-<section class="algo-bot-strategy" data-algo-bot-strategy="st2">
-<label class="algo-bot-strategy-enable">
-<input type="checkbox" id="algo-bot-st2-enabled" />
-<span>Стратегия 2</span>
-</label>
-<div class="algo-bot-strategy-panel" id="algo-bot-st2-dropdown" role="region" aria-label="Настройки Стратегия 2">
-<div class="algo-bot-field algo-bot-field--row">
-<button type="button" class="algo-scan-btn" id="algo-bot-st2-load-book">Загрузить книгу параметров</button>
-<span class="algo-bot-hint" id="algo-bot-st2-book-status">Книга не загружена</span>
-</div>
-<div class="algo-bot-field">
-<label class="algo-bot-label" for="algo-bot-st2-timeout">Количество баров до отмены паттерна</label>
-<input type="number" id="algo-bot-st2-timeout" class="algo-bot-input" min="1" max="10000" step="1" value="200" inputmode="numeric" />
-</div>
-<div class="algo-bot-field">
-<label class="algo-bot-label" for="algo-bot-st2-max-pt1-pt4-bars">Количество баров между pt1 и pt4 не более</label>
-<input type="number" id="algo-bot-st2-max-pt1-pt4-bars" class="algo-bot-input" min="1" max="10000" step="1" inputmode="numeric" placeholder="без лимита" title="Пусто — без лимита. Если задано N и между pt1 и pt4 больше N баров — сетап невалиден" />
-</div>
-<div class="algo-bot-field algo-bot-field--row">
-<label class="algo-bot-label" for="algo-bot-st2-sl-usd">СЛ ($)</label>
-<input type="number" id="algo-bot-st2-sl-usd" class="algo-bot-input algo-bot-input--sm" min="0.01" step="0.01" value="1" inputmode="decimal" />
-</div>
-<div class="algo-bot-field algo-bot-field--row">
-<label class="algo-bot-label" for="algo-bot-st2-min-turnover" title="Минимальный 24h оборот (USDT). Ниже — сетап не вооружается.">Объем за сутки от</label>
-<input type="text" id="algo-bot-st2-min-turnover" class="algo-bot-input algo-bot-input--sm algo-bot-input--turnover" inputmode="numeric" autocomplete="off" value="20.000.000" />
-<span class="algo-bot-unit">USDT</span>
-</div>
-<div class="algo-bot-field">
-<span class="algo-bot-label">Торговля</span>
-<div class="algo-bot-side" role="group" aria-label="Стороны торговли">
-<label class="algo-bot-check">
-<input type="checkbox" id="algo-bot-st2-side-long" />
-<span>Лонг</span>
-</label>
-<label class="algo-bot-check">
-<input type="checkbox" id="algo-bot-st2-side-short" />
-<span>Шорт</span>
-</label>
-<label class="algo-bot-check">
-<input type="checkbox" id="algo-bot-st2-side-both" checked />
-<span>Лонг и Шорт</span>
-</label>
-</div>
-<p class="algo-bot-hint" id="algo-bot-st2-side-hint">Список: Стратегия 2</p>
-</div>
-</div>
-</section>
-<section class="algo-bot-strategy" data-algo-bot-strategy="st3">
-<label class="algo-bot-strategy-enable">
-<input type="checkbox" id="algo-bot-st3-enabled" />
-<span>Стратегия 3</span>
-</label>
-<div class="algo-bot-strategy-panel" id="algo-bot-st3-dropdown" role="region" aria-label="Настройки Стратегия 3">
-<div class="algo-bot-field algo-bot-field--row">
-<button type="button" class="algo-scan-btn" id="algo-bot-st3-load-book">Загрузить книгу параметров</button>
-<span class="algo-bot-hint" id="algo-bot-st3-book-status">Книга не загружена</span>
-</div>
-<div class="algo-bot-field">
-<label class="algo-bot-label" for="algo-bot-st3-timeout">Количество баров до отмены паттерна</label>
-<input type="number" id="algo-bot-st3-timeout" class="algo-bot-input" min="1" max="10000" step="1" value="200" inputmode="numeric" />
-</div>
-<div class="algo-bot-field">
-<label class="algo-bot-label" for="algo-bot-st3-max-pt1-pt4-bars">Количество баров между pt1 и pt4 не более</label>
-<input type="number" id="algo-bot-st3-max-pt1-pt4-bars" class="algo-bot-input" min="1" max="10000" step="1" inputmode="numeric" placeholder="без лимита" title="Пусто — без лимита. Если задано N и между pt1 и pt4 больше N баров — сетап невалиден" />
-</div>
-<div class="algo-bot-field algo-bot-field--row">
-<label class="algo-bot-label" for="algo-bot-st3-sl-usd">СЛ ($)</label>
-<input type="number" id="algo-bot-st3-sl-usd" class="algo-bot-input algo-bot-input--sm" min="0.01" step="0.01" value="1" inputmode="decimal" />
-</div>
-<div class="algo-bot-field algo-bot-field--row">
-<label class="algo-bot-label" for="algo-bot-st3-min-turnover" title="Минимальный 24h оборот (USDT). Ниже — сетап не вооружается.">Объем за сутки от</label>
-<input type="text" id="algo-bot-st3-min-turnover" class="algo-bot-input algo-bot-input--sm algo-bot-input--turnover" inputmode="numeric" autocomplete="off" value="20.000.000" />
-<span class="algo-bot-unit">USDT</span>
-</div>
-<div class="algo-bot-field">
-<span class="algo-bot-label">Торговля</span>
-<div class="algo-bot-side" role="group" aria-label="Стороны торговли">
-<label class="algo-bot-check">
-<input type="checkbox" id="algo-bot-st3-side-long" />
-<span>Лонг</span>
-</label>
-<label class="algo-bot-check">
-<input type="checkbox" id="algo-bot-st3-side-short" />
-<span>Шорт</span>
-</label>
-<label class="algo-bot-check">
-<input type="checkbox" id="algo-bot-st3-side-both" checked />
-<span>Лонг и Шорт</span>
-</label>
-</div>
-<p class="algo-bot-hint" id="algo-bot-st3-side-hint">Список: Стратегия 3</p>
-</div>
-</div>
-</section>
-</div>
-</div>
-</div>
-
-
-<script type="module" src="/js/algo-trading-page-boot.js?v=4"></script>
+<script type="module" src="/js/algo-trading-page-boot.js?v=9"></script>
 
 </body>
 </html>

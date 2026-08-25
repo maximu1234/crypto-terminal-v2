@@ -3,7 +3,7 @@ DRAW_TOOLS_PALETTE_ICON_SVG,
 TRASH_ICON_SVG,
 SETTINGS_ICON_SVG,
 getDrawToolbarButtonsHtml
-} from "./draw-ui-shared.js?v=35";
+} from "./draw-ui-shared.js?v=37";
 
 const widgetDrawMenuClosers =
 new Set();
@@ -384,6 +384,10 @@ return `
 <span class="draw-width-label">1px</span>
 </button>
 
+<button type="button" class="float-text-size-btn draw-text-size-btn hidden" title="Размер текста" aria-label="Размер текста">
+<span class="draw-text-size-label">20</span>
+</button>
+
 <label class="draw-position-risk hidden" title="Сумма риска при срабатывании стопа">
 <span class="draw-position-risk-label">Стоп-лосс ($)</span>
 <input type="number" class="draw-position-risk-input" min="0" step="any" placeholder="" inputmode="decimal"/>
@@ -407,6 +411,8 @@ ${TRASH_ICON_SVG}
 <button type="button" class="width-option" data-width="3"><span class="width-sample" style="height:3px"></span><span>3</span></button>
 <button type="button" class="width-option" data-width="4"><span class="width-sample" style="height:4px"></span><span>4</span></button>
 </div>
+
+<div class="draw-popover draw-text-size-popover hidden" aria-label="Размер текста"></div>
 
 <div class="draw-popover draw-settings-popover draw-settings-popover--fib hidden">
 </div>

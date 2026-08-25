@@ -25,7 +25,7 @@ formatHtfTfLegend,
 htfTfSelectHtml,
 projectHtfRowsOntoChart,
 resolveIndicatorSourceCandles
-} from "./htf-project.js?v=2";
+} from "./htf-project.js?v=5";
 
 import {
 isChartLayoutReady

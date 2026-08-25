@@ -18,6 +18,12 @@ const RSI_OVERBOUGHT =
 70;
 const RSI_OVERSOLD =
 30;
+const EARLY_T3_RSI_LENGTH =
+5;
+const EARLY_T3_OVERBOUGHT =
+52;
+const EARLY_T3_OVERSOLD =
+48;
 
 export const PATTERN_12_ID =
 "pattern-12";
@@ -95,7 +101,13 @@ false,
 tempFastPt4:
 false,
 tempFastPt4Bars:
-2
+2,
+/* EARLY T3: отдельный RSI 5 / 52-48 + сдвиг экстремума на +1 бар. */
+earlyPt3Confirm:
+false,
+/* Те же точки 1–4. Сторона входа (лонг↔шорт) флипается после детекта, не в сцене. */
+reverseLogic:
+false
 };
 
 }
@@ -272,7 +284,11 @@ raw?.tempFastPt4Bars,
 1,
 5,
 base.tempFastPt4Bars
-)
+),
+earlyPt3Confirm:
+!!raw?.earlyPt3Confirm,
+reverseLogic:
+!!raw?.reverseLogic
 };
 
 if(
@@ -422,6 +438,349 @@ log.confirmBars.shift();
 log.types.shift();
 log.prices.shift();
 }
+
+}
+
+function plus1BarExtreme(
+candles,
+eventBar,
+eventPrice,
+confirmBar,
+kind
+){
+
+if(
+!(
+confirmBar -
+eventBar >=
+1
+)
+){
+return {
+bar:
+eventBar,
+price:
+eventPrice
+};
+}
+
+const nextBar =
+eventBar +
+1;
+
+if(
+nextBar <
+0 ||
+nextBar >=
+candles.length
+){
+return {
+bar:
+eventBar,
+price:
+eventPrice
+};
+}
+
+const next =
+candles[
+nextBar
+];
+
+if(
+kind ===
+"low" &&
+next.low <
+eventPrice
+){
+return {
+bar:
+nextBar,
+price:
+next.low
+};
+}
+
+if(
+kind ===
+"high" &&
+next.high >
+eventPrice
+){
+return {
+bar:
+nextBar,
+price:
+next.high
+};
+}
+
+return {
+bar:
+eventBar,
+price:
+eventPrice
+};
+
+}
+
+function buildEarlyT3SwingLog(
+candles
+){
+
+const log =
+emptySwingLog();
+
+if(
+candles.length <
+2
+){
+return log;
+}
+
+const rsi =
+buildRsiByIndex(
+candles,
+EARLY_T3_RSI_LENGTH
+);
+const cap =
+Math.min(
+MAX_HIST,
+candles.length
+);
+let laststate =
+0;
+let hh =
+candles[
+0
+].high;
+let ll =
+candles[
+0
+].low;
+let hhBar =
+0;
+let llBar =
+0;
+
+for(
+let barIndex =
+1;
+barIndex <
+candles.length;
+barIndex++
+){
+
+const bar =
+candles[
+barIndex
+];
+const rsiVal =
+rsi[
+barIndex
+];
+
+if(
+rsiVal ==
+null
+){
+continue;
+}
+
+const isOB =
+rsiVal >=
+EARLY_T3_OVERBOUGHT;
+const isOS =
+rsiVal <=
+EARLY_T3_OVERSOLD;
+let up =
+false;
+let down =
+false;
+let eventBar =
+null;
+let eventPrice =
+null;
+
+if(
+laststate ===
+2 &&
+isOB
+){
+down =
+true;
+eventBar =
+llBar;
+eventPrice =
+ll;
+hh =
+bar.high;
+hhBar =
+barIndex;
+}
+
+if(
+laststate ===
+1 &&
+isOS
+){
+up =
+true;
+eventBar =
+hhBar;
+eventPrice =
+hh;
+ll =
+bar.low;
+llBar =
+barIndex;
+}
+
+if(
+isOB
+){
+if(
+bar.high >=
+hh
+){
+hh =
+bar.high;
+hhBar =
+barIndex;
+}
+laststate =
+1;
+}
+
+if(
+isOS
+){
+if(
+bar.low <=
+ll
+){
+ll =
+bar.low;
+llBar =
+barIndex;
+}
+laststate =
+2;
+}
+
+if(
+laststate ===
+1 &&
+bar.high >=
+hh
+){
+hh =
+bar.high;
+hhBar =
+barIndex;
+}
+
+if(
+laststate ===
+2 &&
+bar.low <=
+ll
+){
+ll =
+bar.low;
+llBar =
+barIndex;
+}
+
+if(
+up ||
+down
+){
+const corr =
+plus1BarExtreme(
+candles,
+eventBar,
+eventPrice,
+barIndex,
+down
+? "low"
+: "high"
+);
+pushSwing(
+log,
+corr.bar,
+barIndex,
+up
+? 1
+: -1,
+corr.price,
+cap
+);
+}
+
+}
+
+return log;
+
+}
+
+function pt3ScanK0(
+i2,
+independent
+){
+
+return independent
+? 0
+: i2 +
+1;
+
+}
+
+function pt3ScanGate(
+independent,
+confirmK,
+b2,
+lastBar,
+boxOk
+){
+
+if(
+independent
+){
+if(
+confirmK <=
+b2 ||
+!barInHistory(
+b2,
+lastBar
+) ||
+!barInHistory(
+confirmK,
+lastBar
+) ||
+!boxOk
+){
+return "continue";
+}
+
+return "ok";
+}
+
+if(
+!barInHistory(
+b2,
+lastBar
+) ||
+!barInHistory(
+confirmK,
+lastBar
+) ||
+!boxOk
+){
+return "break";
+}
+
+return "ok";
 
 }
 
@@ -2863,7 +3222,9 @@ b2,
 pr1,
 pr2,
 minBar,
-b4
+b4,
+independent =
+false
 ){
 
 let i3 =
@@ -2881,8 +3242,11 @@ candles.length -
 1;
 
 if(
+(
+!independent &&
 i2 <
-0 ||
+0
+) ||
 b2 ==
 null ||
 pr1 ==
@@ -2907,8 +3271,10 @@ pr3
 
 for(
 let k =
-i2 +
-1;
+pt3ScanK0(
+i2,
+independent
+);
 k <
 sz;
 k++
@@ -2918,28 +3284,31 @@ const confirmK =
 log.confirmBars[
 k
 ];
-
-if(
-!barInHistory(
-b2,
-lastBar
-) ||
-!barInHistory(
+const gate =
+pt3ScanGate(
+independent,
 confirmK,
-lastBar
-)
-){
-break;
-}
-
-if(
-!lngBoxIntact(
+b2,
+lastBar,
+lngBoxIntact(
 candles,
 b2,
 confirmK,
 pr1,
 pr2
 )
+);
+
+if(
+gate ===
+"continue"
+){
+continue;
+}
+
+if(
+gate ===
+"break"
 ){
 break;
 }
@@ -3017,7 +3386,9 @@ b2,
 pr1,
 pr2,
 minBar,
-b4
+b4,
+independent =
+false
 ){
 
 let i3 =
@@ -3035,8 +3406,11 @@ candles.length -
 1;
 
 if(
+(
+!independent &&
 i2 <
-0 ||
+0
+) ||
 b2 ==
 null ||
 pr1 ==
@@ -3061,8 +3435,10 @@ pr3
 
 for(
 let k =
-i2 +
-1;
+pt3ScanK0(
+i2,
+independent
+);
 k <
 sz;
 k++
@@ -3072,28 +3448,31 @@ const confirmK =
 log.confirmBars[
 k
 ];
-
-if(
-!barInHistory(
-b2,
-lastBar
-) ||
-!barInHistory(
+const gate =
+pt3ScanGate(
+independent,
 confirmK,
-lastBar
-)
-){
-break;
-}
-
-if(
-!shtBoxIntact(
+b2,
+lastBar,
+shtBoxIntact(
 candles,
 b2,
 confirmK,
 pr1,
 pr2
 )
+);
+
+if(
+gate ===
+"continue"
+){
+continue;
+}
+
+if(
+gate ===
+"break"
 ){
 break;
 }
@@ -3172,7 +3551,9 @@ i2,
 b2,
 pr1,
 pr2,
-nthMicUp
+nthMicUp,
+independent =
+false
 ){
 
 const out =
@@ -3198,8 +3579,10 @@ null;
 
 for(
 let k =
-i2 +
-1;
+pt3ScanK0(
+i2,
+independent
+);
 k <
 sz;
 k++
@@ -3209,28 +3592,31 @@ const confirmK =
 senLog.confirmBars[
 k
 ];
-
-if(
-!barInHistory(
-b2,
-lastBar
-) ||
-!barInHistory(
+const gate =
+pt3ScanGate(
+independent,
 confirmK,
-lastBar
-)
-){
-break;
-}
-
-if(
-!lngBoxIntact(
+b2,
+lastBar,
+lngBoxIntact(
 candles,
 b2,
 confirmK,
 pr1,
 pr2
 )
+);
+
+if(
+gate ===
+"continue"
+){
+continue;
+}
+
+if(
+gate ===
+"break"
 ){
 break;
 }
@@ -3304,7 +3690,8 @@ b2,
 pr1,
 pr2,
 minBar,
-pt4.b4
+pt4.b4,
+independent
 );
 
 if(
@@ -3372,7 +3759,9 @@ i2,
 b2,
 pr1,
 pr2,
-nthMicDn
+nthMicDn,
+independent =
+false
 ){
 
 const out =
@@ -3398,8 +3787,10 @@ null;
 
 for(
 let k =
-i2 +
-1;
+pt3ScanK0(
+i2,
+independent
+);
 k <
 sz;
 k++
@@ -3409,28 +3800,31 @@ const confirmK =
 senLog.confirmBars[
 k
 ];
-
-if(
-!barInHistory(
-b2,
-lastBar
-) ||
-!barInHistory(
+const gate =
+pt3ScanGate(
+independent,
 confirmK,
-lastBar
-)
-){
-break;
-}
-
-if(
-!shtBoxIntact(
+b2,
+lastBar,
+shtBoxIntact(
 candles,
 b2,
 confirmK,
 pr1,
 pr2
 )
+);
+
+if(
+gate ===
+"continue"
+){
+continue;
+}
+
+if(
+gate ===
+"break"
 ){
 break;
 }
@@ -3504,7 +3898,8 @@ b2,
 pr1,
 pr2,
 minBar,
-pt4.b4
+pt4.b4,
+independent
 );
 
 if(
@@ -3576,6 +3971,34 @@ debug
 
 }
 
+export function plus1BarExtremeForTest(
+candles,
+eventBar,
+eventPrice,
+confirmBar,
+kind
+){
+
+return plus1BarExtreme(
+candles,
+eventBar,
+eventPrice,
+confirmBar,
+kind
+);
+
+}
+
+export function buildEarlyT3SwingLogForTest(
+candles
+){
+
+return buildEarlyT3SwingLog(
+candles
+);
+
+}
+
 /** Exported for unit tests (append-only 3-4 under fixed 1-2). */
 export function scanLngChainsAfterPt12ForTest(
 senLog,
@@ -3608,7 +4031,8 @@ candles,
 senLog,
 micLog,
 preHighs,
-settings
+settings,
+earlyLog
 ){
 
 const chains =
@@ -3616,6 +4040,11 @@ const chains =
 const lastBar =
 candles.length -
 1;
+const pt3Log =
+earlyLog ||
+senLog;
+const independent =
+!!earlyLog;
 const scanPt1 =
 side ===
 "long"
@@ -3708,7 +4137,7 @@ const seq =
 side ===
 "long"
 ? lngScanChainsAfterPt12(
-senLog,
+pt3Log,
 micLog,
 candles,
 pt2.i2,
@@ -3717,10 +4146,11 @@ pr1,
 pt2.pr2,
 lngWaveCMicNth(
 settings.lngWaveCMode
-)
+),
+independent
 )
 : shtScanChainsAfterPt12(
-senLog,
+pt3Log,
 micLog,
 candles,
 pt2.i2,
@@ -3729,7 +4159,8 @@ pr1,
 pt2.pr2,
 shtWaveCMicNth(
 settings.shtWaveCMode
-)
+),
+independent
 );
 
 for(
@@ -3894,19 +4325,6 @@ color
 }
 
 }
-
-/**
- * @returns {{
- *   badges: Array,
- *   patternLines: Array,
- *   pt4Dots: Array,
- *   pt4Marks: Array,
- *   fractals: Array,
- *   swingLines: Array,
- *   setups: Array,
- *   confirmMarks: Array
- * }}
- */
 
 /**
  * Оставить сетапы, где экстремум pt4 строго после confirm pt3 (b4 > b3Confirm).
@@ -4222,6 +4640,12 @@ settings.patternMode ===
 "short" ||
 settings.patternMode ===
 "both";
+const earlyLog =
+settings.earlyPt3Confirm
+? buildEarlyT3SwingLog(
+candles
+)
+: null;
 
 if(
 showLong
@@ -4300,7 +4724,8 @@ candles,
 lngSen.log,
 lngMic.log,
 null,
-settings
+settings,
+earlyLog
 );
 const badgeMap =
 new Map();
@@ -4504,7 +4929,8 @@ candles,
 shtSen.log,
 shtMic.log,
 shtSen.preHighs,
-settings
+settings,
+earlyLog
 );
 const badgeMap =
 new Map();

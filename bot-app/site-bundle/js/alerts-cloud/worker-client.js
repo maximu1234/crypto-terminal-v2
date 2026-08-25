@@ -5,7 +5,7 @@ SUPABASE_AUTH_STORAGE_KEY
 import {
 waitForCloudAuth,
 ensureCloudLoginResolved
-} from "../cloud-sync.js?v=65";
+} from "../cloud-sync.js?v=67";
 
 import {
 getCachedAlertAuth,
@@ -1079,7 +1079,7 @@ return false;
 }
 
 const { forgetAlertDeleted } =
-await import("../alerts.js?v=105");
+await import("../alerts.js?v=109");
 
 forgetAlertDeleted(
 sym,
@@ -1527,6 +1527,11 @@ const tf =
 meta?.tf != null
 ? normalizeAlertTf(meta.tf)
 : undefined;
+const source =
+String(
+meta?.source ||
+""
+).trim();
 
 alertsDebugLog(
 "[alerts] cloud →",
@@ -1541,7 +1546,14 @@ shape_id: sid,
 price: Number.isFinite(price)
 ? price
 : undefined,
-tf
+tf,
+...(
+source
+? {
+source
+}
+: {}
+)
 };
 
 let remote = {
@@ -2359,7 +2371,7 @@ null;
 
 if(cloudId){
 const { markAlertCloudId } =
-await import("../alerts.js?v=105");
+await import("../alerts.js?v=109");
 
 markAlertCloudId(
 symbol,

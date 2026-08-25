@@ -16,7 +16,7 @@ stopAlgoTradeStreamBridge
 
 import {
 initAlgoTradeBookPanel
-} from "./book-panel.js?v=11";
+} from "./book-panel.js?v=12";
 
 import {
 createTradeChartOverlay
@@ -70,14 +70,22 @@ host
 )
 );
 
+const hasChart =
+!!host?.chart &&
+!!host?.series;
+
 const overlay =
-createTradeChartOverlay(
+hasChart
+? createTradeChartOverlay(
 host
-);
+)
+: null;
 const orders =
-createTradeChartOrders(
+hasChart
+? createTradeChartOrders(
 host
-);
+)
+: null;
 
 return {
 destroy(){

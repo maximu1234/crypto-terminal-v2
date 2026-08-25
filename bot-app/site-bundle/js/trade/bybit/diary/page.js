@@ -32,7 +32,7 @@ saveDiaryPeriod
 
 import {
 EXCHANGE_CHANGED_EVENT
-} from "../../../market-api.js?v=2";
+} from "../../../market-api.js?v=6";
 
 import {
 initTradeDiaryNav
@@ -41,13 +41,13 @@ initTradeDiaryNav
 import {
 openPnlShareDiaryModal,
 PNL_SHARE_CONTROL_HTML
-} from "../pnl-share-modal.js?v=1";
+} from "../pnl-share-modal.js?v=2";
 
 import {
 getLoadedTradeExchangeModules,
 loadTradeExchangeModules,
 resetTradeExchangeModules
-} from "../../module-router.js?v=14";
+} from "../../module-router.js?v=15";
 
 const EXCHANGE_ID =
 "bybit";

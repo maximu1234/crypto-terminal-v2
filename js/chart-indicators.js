@@ -170,7 +170,9 @@ DEFAULT_STORAGE_KEY,
 createPattern12Indicator:
 createPattern12IndicatorOverride,
 extraIndicators =
-[]
+[],
+skipApplyPrefs =
+false
 }
 ){
 
@@ -246,10 +248,10 @@ import(
 "./indicators/moving-average.js?v=18"
 ),
 import(
-"./indicators/ema-shift-ribbon.js?v=8"
+"./indicators/ema-shift-ribbon.js?v=9"
 ),
 import(
-"./indicators/supertrend.js?v=4"
+"./indicators/supertrend.js?v=5"
 ),
 typeof createPattern12IndicatorOverride ===
 "function"
@@ -1007,7 +1009,11 @@ onDocPointerDown,
 true
 );
 
+if(
+!skipApplyPrefs
+){
 applyPrefs();
+}
 
 return {
 notifyLayoutChange,

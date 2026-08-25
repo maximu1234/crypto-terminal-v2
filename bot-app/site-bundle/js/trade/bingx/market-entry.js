@@ -17,7 +17,7 @@ applyAutoStopsAfterEntry,
 calcStopPriceFromUsd,
 getAutoStopSettings,
 markAutoStopsHandled
-} from "./auto-stops.js?v=8";
+} from "./auto-stops.js?v=9";
 
 import {
 marketMap
@@ -29,7 +29,7 @@ getTradeConfig
 
 import {
 mountTradeChartMarkersToggle
-} from "./chart-execution-markers.js?v=3";
+} from "./chart-execution-markers.js?v=4";
 
 const REFRESH_MS =
 1500;

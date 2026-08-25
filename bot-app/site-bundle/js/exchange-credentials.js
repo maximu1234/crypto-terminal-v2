@@ -1,5 +1,6 @@
 /**
- * Локальные API-ключи бирж (renderer). Торговый IPC пока только Bybit.
+ * Локальные API-ключи бирж (renderer). Secret на диск не пишем —
+ * desktop сохраняет через IPC; веб-fallback только apiKey + hasSecret.
  */
 const STORAGE_PREFIX =
 "multichart_exchange_credentials_v1_";
@@ -15,28 +16,101 @@ exchangeId ||
 
 }
 
+function persistSafePayload(
+exchangeId,
+payload
+){
+
+const safe =
+{
+apiKey:
+String(
+payload?.apiKey ||
+""
+).trim(),
+hasSecret:
+!!payload?.hasSecret,
+savedAt:
+Number(
+payload?.savedAt
+) ||
+Date.now()
+};
+
+localStorage.setItem(
+storageKey(
+exchangeId
+),
+JSON.stringify(
+safe
+)
+);
+
+return safe;
+
+}
+
+function scrubStoredSecret(
+exchangeId,
+parsed
+){
+
+if(
+!parsed ||
+typeof parsed !==
+"object"
+){
+return parsed;
+}
+
+if(
+parsed.apiSecret ==
+null &&
+parsed.secret ==
+null
+){
+return parsed;
+}
+
+try{
+return persistSafePayload(
+exchangeId,
+{
+apiKey:
+parsed.apiKey,
+hasSecret:
+!!parsed.hasSecret ||
+!!parsed.apiSecret ||
+!!parsed.secret,
+savedAt:
+parsed.savedAt
+}
+);
+}catch{
+return {
+apiKey:
+parsed.apiKey,
+hasSecret:
+true,
+savedAt:
+parsed.savedAt
+};
+}
+
+}
+
 export function readExchangeCredentials(
 exchangeId
 ){
 
 try{
 
-const raw =
-localStorage.getItem(
-storageKey(
+const parsed =
+scrubStoredSecret(
+exchangeId,
+readExchangeCredentialsRaw(
 exchangeId
 )
-);
-
-if(
-!raw
-){
-return null;
-}
-
-const parsed =
-JSON.parse(
-raw
 );
 
 if(
@@ -96,7 +170,8 @@ apiSecret ||
 ""
 ).trim();
 
-const payload =
+persistSafePayload(
+exchangeId,
 {
 apiKey:
 key,
@@ -105,27 +180,7 @@ hasSecret:
 !!prev?.hasSecret,
 savedAt:
 Date.now()
-};
-
-if(
-secret
-){
-payload.apiSecret =
-secret;
-}else if(
-prev?.apiSecret
-){
-payload.apiSecret =
-prev.apiSecret;
 }
-
-localStorage.setItem(
-storageKey(
-exchangeId
-),
-JSON.stringify(
-payload
-)
 );
 
 }
@@ -143,11 +198,25 @@ exchangeId
 )
 );
 
-return raw
-? JSON.parse(
+if(
+!raw
+){
+return null;
+}
+
+const parsed =
+JSON.parse(
 raw
-)
-: null;
+);
+
+return scrubStoredSecret(
+exchangeId,
+parsed &&
+typeof parsed ===
+"object"
+? parsed
+: null
+);
 
 }catch{
 return null;

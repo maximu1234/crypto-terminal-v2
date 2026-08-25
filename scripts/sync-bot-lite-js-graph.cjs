@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 /**
- * Fill holes in Algo Bot site-bundle JS from Multichart `js/`.
+ * Sync Algo Bot site-bundle JS from Multichart `js/`.
  *
- * Copies ONLY missing files (never overwrites lite patches).
- * Never replaces bot-session-logs-viewer.js stub.
+ * Overwrites files so the remote app tracks plugin architecture.
+ * Never replaces bot-session-logs-viewer.js (Algo Bot stub).
  *
  * Walks HTML script tags + static/dynamic ESM imports from the algo boot graph.
  */
@@ -41,6 +41,17 @@ function collectSpecs(src) {
   return specs;
 }
 
+function collectJsImportNames(src) {
+  const names = [];
+  const re = /jsImport\s*\(\s*["']([^"']+)["']\s*\)/g;
+  let m;
+  while ((m = re.exec(src))) {
+    const name = stripQuery(m[1]).replace(/^\.\//, "");
+    if (name) names.push(name);
+  }
+  return names;
+}
+
 function htmlScriptFiles() {
   if (!fs.existsSync(HTML)) return [];
   const html = fs.readFileSync(HTML, "utf8");
@@ -55,6 +66,17 @@ function htmlScriptFiles() {
 
 function srcTwin(outFile) {
   return path.join(SRC_JS, path.relative(OUT_JS, outFile));
+}
+
+function sameFile(a, b) {
+  try {
+    const sa = fs.statSync(a);
+    const sb = fs.statSync(b);
+    if (sa.size !== sb.size) return false;
+    return fs.readFileSync(a).equals(fs.readFileSync(b));
+  } catch {
+    return false;
+  }
 }
 
 const copied = [];
@@ -72,33 +94,37 @@ while (queue.length) {
   seen.add(filePath);
   if (!filePath.startsWith(OUT_JS)) continue;
 
-  if (!fs.existsSync(filePath)) {
-    if (NEVER_OVERWRITE.has(filePath)) continue;
-    const src = srcTwin(filePath);
-    if (fs.existsSync(src) && fs.statSync(src).isFile()) {
-      fs.mkdirSync(path.dirname(filePath), { recursive: true });
+  const frozen = NEVER_OVERWRITE.has(filePath);
+  const src = srcTwin(filePath);
+
+  if (!frozen && fs.existsSync(src) && fs.statSync(src).isFile()) {
+    fs.mkdirSync(path.dirname(filePath), { recursive: true });
+    if (!sameFile(src, filePath)) {
       fs.copyFileSync(src, filePath);
       copied.push(path.relative(OUT_JS, filePath));
-    } else {
-      missingSrc.push(path.relative(OUT_JS, filePath));
-      continue;
     }
+  } else if (!fs.existsSync(filePath)) {
+    if (!frozen) missingSrc.push(path.relative(OUT_JS, filePath));
+    continue;
   }
 
   if (!fs.statSync(filePath).isFile()) continue;
   if (!/\.(js|mjs|cjs)$/.test(filePath)) continue;
 
-  const src = fs.readFileSync(filePath, "utf8");
-  for (const spec of collectSpecs(src)) {
+  const text = fs.readFileSync(filePath, "utf8");
+  for (const spec of collectSpecs(text)) {
     queue.push(resolveSpec(filePath, spec));
+  }
+  for (const name of collectJsImportNames(text)) {
+    queue.push(path.join(OUT_JS, name));
   }
 }
 
 if (copied.length) {
-  console.log(`sync-bot-lite-js-graph: copied ${copied.length} missing file(s)`);
-  for (const rel of copied.sort()) console.log(`  + ${rel}`);
+  console.log(`sync-bot-lite-js-graph: synced ${copied.length} file(s)`);
+  for (const rel of copied.sort()) console.log(`  ~ ${rel}`);
 } else {
-  console.log("sync-bot-lite-js-graph: no missing JS files");
+  console.log("sync-bot-lite-js-graph: JS already in sync");
 }
 
 if (missingSrc.length) {

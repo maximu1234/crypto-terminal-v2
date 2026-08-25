@@ -3,18 +3,18 @@
  */
 import {
 defaultPattern12Settings
-} from "./pattern-12-math.js?v=14";
+} from "./pattern-12-math.js?v=21";
 
 import {
 getOrComputeAlgoPattern12Scene,
 setAlgoPattern12PaintEntryFilter,
 clearAlgoPattern12PaintEntryFilter
-} from "./pattern-12-scene-cache.js?v=9";
+} from "./pattern-12-scene-cache.js?v=10";
 
 import {
 detectPatternEntryEventsFromSetups,
 resolvePatternSetupEvent
-} from "./pattern-entry-logic.js?v=13";
+} from "./pattern-entry-logic.js?v=14";
 
 import {
 countPattern12SetupsFromScene,
@@ -26,16 +26,16 @@ computeAlgoTradeStats,
 renderAlgoTradeStats,
 filterSequentialEntryEvents,
 normalizeAlgoStatsMode
-} from "./pattern-trade-stats.js?v=14";
+} from "./pattern-trade-stats.js?v=15";
 
 import {
 computePartialTpTradeStats,
 filterSequentialPartialEntryEvents
-} from "./pattern-trade-stats-partial.js?v=21";
+} from "./pattern-trade-stats-partial.js?v=22";
 
 import {
 filterEntryEventsBySupertrend
-} from "./pattern-supertrend-filter.js?v=4";
+} from "./pattern-supertrend-filter.js?v=5";
 
 /**
  * @param {Array} candles
@@ -419,7 +419,12 @@ opts.maxPt1Pt4Bars,
 pullbackBeforeArm:
 gate.pullbackBeforeArm,
 pullbackBeforeArmPct:
-gate.pullbackBeforeArmPct
+gate.pullbackBeforeArmPct,
+reverseLogic:
+!!(
+opts.patternSettings?.reverseLogic ||
+opts.reverseLogic
+)
 };
 
 const rawEvents =

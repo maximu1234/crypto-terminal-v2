@@ -1,17 +1,20 @@
 import {
 initAlertMonitor
-} from "./alert-monitor.js?v=70";
+} from "./alert-monitor.js?v=73";
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=58";
+} from "./auth-ui.js?v=60";
 
 import {
 isAlertsPage
 } from "./cloud-sync-throttle.js?v=3";
 
 import {
-isAlgoReducedCloudClient
+isAlgoReducedCloudClient,
+isAlgoBotLiteShell,
+isAlgoTradingPage,
+isScriptPage
 } from "./page-routes.js?v=5";
 
 import {
@@ -21,14 +24,14 @@ scheduleRegistryCloudSync
 
 import {
 stripAlertFlagsNotInRegistry
-} from "./alerts.js?v=106";
+} from "./alerts.js?v=109";
 
 import {
 isCloudLoggedIn,
 isCloudLoggedInEffective,
 isCloudSyncEnabled,
 onCloudSyncChange
-} from "./cloud-sync.js?v=65";
+} from "./cloud-sync.js?v=67";
 
 import {
 isSupabaseConfigured
@@ -36,11 +39,11 @@ isSupabaseConfigured
 
 import {
 initExchangeContext
-} from "./market-api.js?v=5";
+} from "./market-api.js?v=6";
 
 import {
 initBybitNetworkUi
-} from "./bybit-network-ui.js?v=3";
+} from "./bybit-network-ui.js?v=4";
 
 import {
 resetBybitEndpoints,
@@ -62,7 +65,7 @@ initFocusBlurAfterPick
 
 import {
 initDesktopAppUi
-} from "./desktop-app-ui.js?v=5";
+} from "./desktop-app-ui.js?v=6";
 
 import {
 initSiteHeader,
@@ -70,12 +73,10 @@ enforceSiteHeaderAfterBoot
 } from "./site-header.js?v=5";
 
 import {
-resumeScriptScanBackgroundJob
-} from "./script-scan-background.js?v=14";
-
-import {
-resumeStatsBackgroundJob
-} from "./statistics-background.js?v=8";
+FEATURE_NAV_PREF_EVENT,
+shouldRunAlgoBackgroundJobs,
+shouldRunScriptBackgroundJobs
+} from "./desktop-feature-nav-prefs.js?v=4";
 
 initSuppressNativeContextMenu();
 initFocusBlurAfterPick();
@@ -83,37 +84,50 @@ initDesktopAppUi();
 initSiteHeader();
 enforceSiteHeaderAfterBoot();
 
-void resumeStatsBackgroundJob();
+function isStatsBackgroundJobRunning(){
 
-function bootScriptScanBackground(){
+try{
+const raw =
+localStorage.getItem(
+"stats_bg_job_v3"
+);
 
 if(
-!window.cryptoTerminalDesktop?.isDesktop
+!raw
 ){
-return;
+return false;
 }
 
-resumeScriptScanBackgroundJob();
+const parsed =
+JSON.parse(
+raw
+);
+
+return parsed?.status ===
+"running";
+}catch{
+return false;
+}
 
 }
 
-function bootAlgoBotAlertBridge(){
+function resumeStatsBackground(){
 
 if(
-!window.cryptoTerminalDesktop?.isDesktop
+!isStatsBackgroundJobRunning()
 ){
 return;
 }
 
 void import(
-"./algo-trading/bot-alert-bridge.js?v=6"
+"./statistics-background.js?v=10"
 ).then(
 m=>
-m.mountAlgoBotAlertBridge?.()
+m.resumeStatsBackgroundJob?.()
 ).catch(
 err=>{
 console.warn(
-"[site-boot] algo bot alert bridge:",
+"[site-boot] stats background:",
 err
 );
 }
@@ -121,8 +135,195 @@ err
 
 }
 
+function bootScriptScanBackground(){
+
+if(
+!shouldRunScriptBackgroundJobs()
+){
+return;
+}
+
+void import(
+"./script-scan-background.js?v=17"
+).then(
+m=>
+m.resumeScriptScanBackgroundJob?.()
+).catch(
+err=>{
+console.warn(
+"[site-boot] script scan background:",
+err
+);
+}
+);
+
+}
+
+function stopScriptScanBackgroundFromBoot(){
+
+if(
+!window.cryptoTerminalDesktop?.isDesktop
+){
+return Promise.resolve();
+}
+
+return import(
+"./script-scan-background.js?v=17"
+).then(
+m=>
+m.stopScriptScanBackground?.()
+).catch(
+err=>{
+console.warn(
+"[site-boot] stop script scan background:",
+err
+);
+}
+);
+
+}
+
+function bootAlgoDesktopBackgroundJobs(){
+
+if(
+!shouldRunAlgoBackgroundJobs()
+){
+return;
+}
+
+void import(
+"./algo-trading/desktop-site-boot.js?v=7"
+).then(
+m=>
+m.bootAlgoDesktopBackgroundJobs?.()
+).catch(
+err=>{
+console.warn(
+"[site-boot] algo desktop background:",
+err
+);
+}
+);
+
+}
+
+function stopAlgoDesktopBackgroundJobsFromBoot(){
+
+if(
+!window.cryptoTerminalDesktop?.isDesktop
+){
+return Promise.resolve();
+}
+
+return import(
+"./algo-trading/desktop-site-boot.js?v=7"
+).then(
+m=>
+m.stopAlgoDesktopBackgroundJobs?.()
+).catch(
+err=>{
+console.warn(
+"[site-boot] stop algo desktop background:",
+err
+);
+}
+);
+
+}
+
+function leaveHiddenFeaturePage(
+feature
+){
+
+if(
+feature ===
+"script" &&
+isScriptPage()
+){
+location.replace(
+"/screener.html"
+);
+return;
+}
+
+if(
+feature ===
+"algo-trading" &&
+isAlgoTradingPage() &&
+!isAlgoBotLiteShell()
+){
+location.replace(
+"/screener.html"
+);
+}
+
+}
+
+function onFeatureNavPrefChanged(
+event
+){
+
+const feature =
+event?.detail?.feature;
+const enabled =
+!!event?.detail?.enabled;
+
+if(
+feature ===
+"script"
+){
+if(
+enabled
+){
 bootScriptScanBackground();
-bootAlgoBotAlertBridge();
+}else{
+void Promise.resolve(
+stopScriptScanBackgroundFromBoot()
+).finally(
+()=>
+leaveHiddenFeaturePage(
+feature
+)
+);
+}
+return;
+}
+
+if(
+feature ===
+"algo-trading"
+){
+if(
+enabled
+){
+bootAlgoDesktopBackgroundJobs();
+}else{
+void Promise.resolve(
+stopAlgoDesktopBackgroundJobsFromBoot()
+).finally(
+()=>
+leaveHiddenFeaturePage(
+feature
+)
+);
+}
+}
+
+}
+
+bootScriptScanBackground();
+bootAlgoDesktopBackgroundJobs();
+resumeStatsBackground();
+
+if(
+typeof window !==
+"undefined"
+){
+window.addEventListener(
+FEATURE_NAV_PREF_EVENT,
+onFeatureNavPrefChanged
+);
+}
 
 if(
 typeof document !==
@@ -138,7 +339,7 @@ true
 );
 document.addEventListener(
 "DOMContentLoaded",
-bootAlgoBotAlertBridge,
+bootAlgoDesktopBackgroundJobs,
 {
 once:
 true

@@ -443,6 +443,10 @@ getTickerFlagsRoot:()=>
 ipcRenderer.invoke(
 "desktop:algoTradingGetTickerFlagsRoot"
 ),
+listLinearUsdtSymbols:()=>
+ipcRenderer.invoke(
+"desktop:algoTradingListLinearSymbols"
+),
 startBot:(
 payload
 )=>
@@ -756,6 +760,18 @@ handler
 getMenuBarAgentPrefs:()=>
 ipcRenderer.invoke(
 "desktop:getMenuBarAgentPrefs"
+),
+getAppProxy:()=>
+ipcRenderer.invoke(
+"desktop:getAppProxy"
+),
+saveAppProxy:(
+payload
+)=>
+ipcRenderer.invoke(
+"desktop:saveAppProxy",
+payload ||
+{}
 ),
 setLaunchAgentAtLogin:(
 enabled

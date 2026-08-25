@@ -6,7 +6,7 @@
  */
 import {
 aggregateCandlesToTf
-} from "../indicators/htf-loader.js?v=3";
+} from "../indicators/htf-loader.js?v=6";
 
 import {
 buildSupertrendChartLineData,
@@ -630,7 +630,12 @@ Number(
 event.price
 );
 const side =
-event.side ===
+event.setupSide ===
+"short" ||
+event.setupSide ===
+"long"
+? event.setupSide
+: event.side ===
 "short"
 ? "short"
 : "long";

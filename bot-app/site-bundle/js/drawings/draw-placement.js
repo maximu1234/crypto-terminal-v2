@@ -5,7 +5,7 @@
 import {
 hideDomChartCrosshair,
 positionTabletProbeHorizInStack
-} from "../chart-import.js?v=43";
+} from "../chart-import.js?v=48";
 
 import {
 ensureFibLevelsVisible,
@@ -32,6 +32,16 @@ touchShapeRevision
 import {
 isHorizPriceTool
 } from "./constants.js?v=11";
+
+import {
+isTextTool,
+TEXT_DEFAULT_CONTENT
+} from "./text.js?v=3";
+
+import {
+isFvpType,
+copyFvpStyleToShape
+} from "./fixed-volume-profile.js?v=3";
 
 export function createDrawPlacement(
 deps
@@ -97,7 +107,8 @@ syncChartRulerEndFromPlot,
 getChartRulerStart,
 showStandardChartCrosshair,
 hideStandardChartCrosshair,
-syncChartTouchPan
+syncChartTouchPan,
+onTextPlaced
 } =
 deps;
 
@@ -1190,10 +1201,48 @@ medianLineStyle: rectStyle.medianLineStyle
 });
 }
 
+if(
+isFvpType(
+getPlacement().type
+) &&
+pts.length >=
+2
+){
+
+const fvpStyle =
+baseDefaultStyle(
+"fvp"
+);
+
+created = makeShape("fvp", {
+p1: pts[0],
+p2: pts[1]
+});
+copyFvpStyleToShape(
+created,
+fvpStyle
+);
+
+}
+
 if(isHorizPriceTool(getPlacement().type) && pts.length >= 1){
 created = makeShape(getPlacement().type, {
 time: pts[0].time,
 price: pts[0].price
+});
+}
+
+if(isTextTool(getPlacement().type) && pts.length >= 1){
+const textStyle =
+baseDefaultStyle("text");
+created = makeShape("text", {
+time: pts[0].time,
+price: pts[0].price,
+p1: pts[0],
+text: TEXT_DEFAULT_CONTENT,
+fontSize: textStyle.fontSize,
+fontFamily: "Arial",
+color: textStyle.color
 });
 }
 
@@ -1294,6 +1343,16 @@ setTool("cursor");
 updateStyleBar();
 syncChartTouchPan?.();
 redraw();
+
+if(
+created &&
+created.type ===
+"text"
+){
+onTextPlaced?.(
+created
+);
+}
 
 }
 

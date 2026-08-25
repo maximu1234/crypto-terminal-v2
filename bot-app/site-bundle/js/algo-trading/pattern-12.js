@@ -11,12 +11,12 @@ import {
 PATTERN_12_ID,
 defaultPattern12Settings,
 normalizePattern12Settings
-} from "./pattern-12-math.js?v=14";
+} from "./pattern-12-math.js?v=21";
 
 import {
 getOrComputeAlgoPattern12Scene,
 applyAlgoPattern12PaintEntryFilter
-} from "./pattern-12-scene-cache.js?v=9";
+} from "./pattern-12-scene-cache.js?v=10";
 
 import {
 paintPattern12Scene
@@ -118,11 +118,18 @@ ${hint ? `<p class="chart-indicator-settings-hint">${hint}</p>` : ""}
 function fieldCheck(
 label,
 key,
-checked
+checked,
+hint =
+""
 ){
 
+const title =
+hint
+? ` title="${hint}"`
+: "";
+
 return `
-<label class="chart-indicator-settings-check">
+<label class="chart-indicator-settings-check"${title}>
 <input type="checkbox" data-key="${key}" ${checked ? "checked" : ""}/>
 <span>${label}</span>
 </label>
@@ -648,6 +655,18 @@ ${fieldCheck(
 "pt4 после confirm pt3",
 "requirePt3ConfirmBeforePt4",
 settings.requirePt3ConfirmBeforePt4
+)}
+${fieldCheck(
+"Раннее подтверждение т.3 (RSI 5)",
+"earlyPt3Confirm",
+settings.earlyPt3Confirm,
+"Точка 3 с отдельного RSI 5 (52/48) и сдвигом экстремума на +1 бар. Точки 1, 2 и 4 без изменений."
+)}
+${fieldCheck(
+"Обратная логика",
+"reverseLogic",
+settings.reverseLogic,
+"Точки 1–4 как есть. Лонг-сетап открывает шорт, шорт-сетап — лонг."
 )}
 ${fieldCheck(
 "Confirm макро (временно)",

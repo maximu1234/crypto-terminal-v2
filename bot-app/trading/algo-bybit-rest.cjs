@@ -11,6 +11,34 @@ net
 require(
 "electron"
 );
+const https =
+require(
+"https"
+);
+const {
+URL
+} =
+require(
+"url"
+);
+const {
+getRendererProxySession
+} =
+require(
+"../app-session.cjs"
+);
+const {
+getRelayHttpsAgent
+} =
+require(
+"../app-proxy-socks-relay.cjs"
+);
+const {
+shouldProxyBybitRestUrl
+} =
+require(
+"../app-proxy-config.cjs"
+);
 const {
 getAlgoCredentials
 } =
@@ -45,6 +73,20 @@ null;
 
 const REQUEST_TIMEOUT_MS =
 12000;
+const PROXY_FAILOVER_TIMEOUT_MS =
+800;
+const PROXY_KEEPALIVE_MS =
+12000;
+
+/** Last signed-REST host that answered through SOCKS (mainnet). */
+let lastGoodApiBase =
+"";
+let lastGoodApiBaseTestnet =
+"";
+let proxyWarmInflight =
+null;
+let proxyKeepaliveTimer =
+null;
 
 function signedNowMs(){
 
@@ -91,22 +133,42 @@ async function syncBybitServerTime(
 testnet
 ){
 
+await ensureProxyApiBase(
+testnet
+);
+
 const localBefore =
 Date.now();
+const bases =
+orderedApiBases(
+testnet
+);
 
 for(
-const base of apiBases(
-testnet
-)
+const base of bases
 ){
+const url =
+`${base}/v5/market/time`;
+const isLastBase =
+base ===
+bases[
+bases.length -
+1
+];
 
 try{
 const response =
 await fetchWithTimeout(
-`${base}/v5/market/time`,
+url,
 {
 method:
-"GET"
+"GET",
+timeoutMs:
+timeoutMsForApiHost(
+url,
+base,
+isLastBase
+)
 }
 );
 const localAfter =
@@ -154,6 +216,10 @@ localMid
 );
 timeSyncedAt =
 Date.now();
+rememberGoodApiBase(
+testnet,
+base
+);
 return;
 }
 
@@ -225,6 +291,306 @@ return [
 "https://api.bybit.com",
 "https://api.bytick.com"
 ];
+
+}
+
+function orderedApiBases(
+testnet,
+proxyOnOverride
+){
+
+const bases =
+apiBases(
+testnet
+);
+
+if(
+testnet
+){
+const lastGood =
+lastGoodApiBaseTestnet;
+
+if(
+lastGood &&
+bases.includes(
+lastGood
+)
+){
+return [
+lastGood,
+...bases.filter(
+base=>
+base !==
+lastGood
+)
+];
+}
+
+return bases;
+}
+
+const proxyOn =
+proxyOnOverride ===
+undefined
+? !!getRelayHttpsAgent()
+: !!proxyOnOverride;
+const ordered =
+proxyOn
+? [
+"https://api.bytick.com",
+"https://api.bybit.com"
+]
+: [
+...bases
+];
+const lastGood =
+lastGoodApiBase;
+
+if(
+lastGood &&
+ordered.includes(
+lastGood
+)
+){
+return [
+lastGood,
+...ordered.filter(
+base=>
+base !==
+lastGood
+)
+];
+}
+
+return ordered;
+
+}
+
+function rememberGoodApiBase(
+testnet,
+base
+){
+
+const value =
+String(
+base ||
+""
+);
+
+if(
+testnet
+){
+lastGoodApiBaseTestnet =
+value;
+return;
+}
+
+lastGoodApiBase =
+value;
+
+}
+
+function timeoutMsForApiHost(
+url,
+base,
+isLastBase
+){
+
+if(
+isLastBase ||
+!shouldProxyBybitRestUrl(
+url
+)
+){
+return REQUEST_TIMEOUT_MS;
+}
+
+if(
+base &&
+(
+base ===
+lastGoodApiBase ||
+base ===
+lastGoodApiBaseTestnet
+)
+){
+return REQUEST_TIMEOUT_MS;
+}
+
+return PROXY_FAILOVER_TIMEOUT_MS;
+
+}
+
+function pickHostTimeoutMs(
+url,
+base,
+isLastBase,
+callerTimeoutMs
+){
+
+const hostTimeout =
+timeoutMsForApiHost(
+url,
+base,
+isLastBase
+);
+const callerTimeout =
+Number(
+callerTimeoutMs
+);
+
+if(
+callerTimeout >
+0
+){
+return Math.min(
+callerTimeout,
+hostTimeout
+);
+}
+
+return hostTimeout;
+
+}
+
+function scheduleProxyKeepalive(){
+
+if(
+proxyKeepaliveTimer ||
+!getRelayHttpsAgent()
+){
+return;
+}
+
+proxyKeepaliveTimer =
+setInterval(
+()=>{
+
+if(
+!getRelayHttpsAgent()
+){
+clearInterval(
+proxyKeepaliveTimer
+);
+proxyKeepaliveTimer =
+null;
+lastGoodApiBase =
+"";
+return;
+}
+
+void warmProxyApiSockets();
+
+},
+PROXY_KEEPALIVE_MS
+);
+
+if(
+typeof proxyKeepaliveTimer.unref ===
+"function"
+){
+proxyKeepaliveTimer.unref();
+}
+
+}
+
+async function warmProxyApiSockets(){
+
+if(
+!getRelayHttpsAgent()
+){
+return;
+}
+
+if(
+proxyWarmInflight
+){
+return proxyWarmInflight;
+}
+
+proxyWarmInflight =
+(
+async()=>{
+
+const bases =
+orderedApiBases(
+false
+);
+
+for(
+const base of bases
+){
+const url =
+`${base}/v5/market/time`;
+const isLastBase =
+base ===
+bases[
+bases.length -
+1
+];
+
+try{
+const response =
+await fetchWithTimeout(
+url,
+{
+method:
+"GET",
+timeoutMs:
+timeoutMsForApiHost(
+url,
+base,
+isLastBase
+)
+}
+);
+const data =
+parseBybitBody(
+await response.text()
+);
+
+if(
+data?.retCode ===
+0
+){
+rememberGoodApiBase(
+false,
+base
+);
+return;
+}
+}catch{
+/* next host */
+}
+
+}
+
+}
+)().finally(
+()=>{
+proxyWarmInflight =
+null;
+}
+);
+
+return proxyWarmInflight;
+
+}
+
+function ensureProxyApiBase(
+testnet
+){
+
+if(
+testnet ||
+!getRelayHttpsAgent()
+){
+return Promise.resolve();
+}
+
+scheduleProxyKeepalive();
+void warmProxyApiSockets();
+return Promise.resolve();
 
 }
 
@@ -315,10 +681,241 @@ return parts.join(
 
 }
 
+async function fetchViaRelayAgent(
+url,
+options,
+agent
+){
+
+const parsed =
+new URL(
+url
+);
+const requestOptions =
+{
+protocol:
+"https:",
+hostname:
+parsed.hostname,
+port:
+parsed.port ||
+443,
+path:
+parsed.pathname +
+parsed.search,
+method:
+(
+options &&
+options.method
+) ||
+"GET",
+headers:
+(
+options &&
+options.headers
+) ||
+{},
+agent
+};
+
+return new Promise(
+(
+resolve,
+reject
+)=>{
+
+let settled =
+false;
+
+function finish(
+err,
+value
+){
+
+if(
+settled
+){
+return;
+}
+
+settled =
+true;
+
+if(
+err
+){
+reject(
+err
+);
+return;
+}
+
+resolve(
+value
+);
+
+}
+
+const req =
+https.request(
+requestOptions,
+res=>{
+
+const chunks =
+[];
+
+res.on(
+"data",
+chunk=>
+chunks.push(
+chunk
+)
+);
+
+res.on(
+"end",
+()=>{
+
+finish(
+null,
+new Response(
+Buffer.concat(
+chunks
+),
+{
+status:
+res.statusCode ||
+0,
+statusText:
+res.statusMessage ||
+"",
+headers:
+res.headers
+}
+)
+);
+
+}
+);
+
+res.on(
+"error",
+finish
+);
+
+}
+);
+
+req.on(
+"error",
+finish
+);
+
+const relayTimeoutMs =
+Number(
+options &&
+options.timeoutMs
+) >
+0
+? Number(
+options.timeoutMs
+)
+: REQUEST_TIMEOUT_MS;
+
+req.setTimeout(
+relayTimeoutMs,
+()=>{
+req.destroy();
+const timeoutErr =
+new Error(
+"timeout"
+);
+timeoutErr.code =
+"timeout";
+finish(
+timeoutErr
+);
+}
+);
+
+const abortSignal =
+options &&
+options.signal;
+
+if(
+abortSignal
+){
+
+const onAbort =
+()=>{
+req.destroy();
+const timeoutErr =
+new Error(
+"timeout"
+);
+timeoutErr.code =
+"timeout";
+timeoutErr.name =
+"AbortError";
+finish(
+timeoutErr
+);
+};
+
+if(
+abortSignal.aborted
+){
+onAbort();
+}else{
+abortSignal.addEventListener(
+"abort",
+onAbort,
+{
+once:
+true
+}
+);
+}
+
+}
+
+if(
+options &&
+options.body
+){
+req.write(
+options.body
+);
+}
+
+req.end();
+
+}
+);
+
+}
+
 async function fetchWithTimeout(
 url,
 options
 ){
+
+const timeoutMs =
+Number(
+options &&
+options.timeoutMs
+) >
+0
+? Number(
+options.timeoutMs
+)
+: REQUEST_TIMEOUT_MS;
+const fetchOptions =
+{
+...options
+};
+
+delete fetchOptions.timeoutMs;
 
 const controller =
 new AbortController();
@@ -327,16 +924,40 @@ setTimeout(
 ()=>{
 controller.abort();
 },
-REQUEST_TIMEOUT_MS
+timeoutMs
 );
 
 try{
+const agent =
+shouldProxyBybitRestUrl(
+url
+)
+? getRelayHttpsAgent()
+: undefined;
+
+if(
+agent
+){
+return await fetchViaRelayAgent(
+url,
+{
+...fetchOptions,
+signal:
+controller.signal,
+timeoutMs
+},
+agent
+);
+}
+
 return await net.fetch(
 url,
 {
-...options,
+...fetchOptions,
 signal:
-controller.signal
+controller.signal,
+session:
+getRendererProxySession()
 }
 );
 }catch(
@@ -457,6 +1078,9 @@ await ensureBybitTimeSync(
 creds.testnet,
 isRetry
 );
+await ensureProxyApiBase(
+creds.testnet
+);
 
 const params =
 new URLSearchParams(
@@ -491,14 +1115,22 @@ let lastNetworkError =
 null;
 let lastAuthError =
 null;
+const getBases =
+orderedApiBases(
+creds.testnet
+);
 
 for(
-const base of apiBases(
-creds.testnet
-)
+const base of getBases
 ){
 const url =
 `${base}${path}?${queryString}`;
+const isLastBase =
+base ===
+getBases[
+getBases.length -
+1
+];
 
 try{
 const response =
@@ -507,7 +1139,13 @@ url,
 {
 method:
 "GET",
-headers
+headers,
+timeoutMs:
+timeoutMsForApiHost(
+url,
+base,
+isLastBase
+)
 }
 );
 
@@ -517,6 +1155,15 @@ const data =
 parseBybitBody(
 rawText
 );
+
+if(
+data
+){
+rememberGoodApiBase(
+creds.testnet,
+base
+);
+}
 
 if(
 !data
@@ -610,6 +1257,19 @@ err
 ){
 lastNetworkError =
 err;
+
+if(
+base ===
+lastGoodApiBase ||
+base ===
+lastGoodApiBaseTestnet
+){
+rememberGoodApiBase(
+creds.testnet,
+""
+);
+}
+
 }
 
 }
@@ -637,6 +1297,97 @@ creds.testnet
 
 }
 
+function parseBybitMoneyField(
+raw
+){
+
+if(
+raw ==
+null ||
+raw ===
+""
+){
+return NaN;
+}
+
+if(
+typeof raw ===
+"string" &&
+!raw.trim()
+){
+return NaN;
+}
+
+const n =
+Number(
+raw
+);
+
+if(
+!Number.isFinite(
+n
+) ||
+n <
+0
+){
+return NaN;
+}
+
+return n;
+
+}
+
+function pickUsdtAvailable(
+usdt,
+account
+){
+
+const candidates =
+[
+account?.totalAvailableBalance,
+usdt?.availableToTrade,
+usdt?.availableBalance,
+usdt?.walletBalance,
+usdt?.equity,
+usdt?.availableToWithdraw
+];
+let sawZero =
+false;
+
+for(
+const raw of candidates
+){
+const n =
+parseBybitMoneyField(
+raw
+);
+
+if(
+!Number.isFinite(
+n
+)
+){
+continue;
+}
+
+if(
+n >
+0
+){
+return n;
+}
+
+sawZero =
+true;
+
+}
+
+return sawZero
+? 0
+: NaN;
+
+}
+
 function pickUsdtBalance(
 payload
 ){
@@ -653,10 +1404,12 @@ list
 return null;
 }
 
-const coins =
+const account =
 list[
 0
-]?.coin;
+];
+const coins =
+account?.coin;
 
 if(
 !Array.isArray(
@@ -685,9 +1438,17 @@ usdt.walletBalance ??
 usdt.availableToWithdraw ??
 "0";
 
-return String(
+return {
+equity:
+String(
 value
-);
+),
+available:
+pickUsdtAvailable(
+usdt,
+account
+)
+};
 
 }
 
@@ -713,12 +1474,34 @@ pickUsdtBalance(
 result.data
 );
 
+if(
+!usdt
+){
 return {
 ok:
 true,
 usdt:
-usdt ??
-"0"
+"0",
+available:
+0
+};
+}
+
+return {
+ok:
+true,
+usdt:
+usdt.equity ??
+"0",
+available:
+Number.isFinite(
+usdt.available
+)
+? usdt.available
+: Number(
+usdt.equity
+) ||
+0
 };
 
 }
@@ -3283,24 +4066,8 @@ const minNotional =
 Number(
 rules?.minNotionalValue
 );
-let targetVol =
-vol;
-
-if(
-Number.isFinite(
-minNotional
-) &&
-minNotional >
-0 &&
-targetVol <
-minNotional
-){
-targetVol =
-minNotional;
-}
-
 const raw =
-targetVol /
+vol /
 p;
 const step =
 Number(
@@ -3330,67 +4097,33 @@ const decimals =
 decimalsFromStep(
 rules.qtyStep
 );
-const stepsFloor =
+const maxQtyByVol =
+vol /
+p;
+const floorQty =
 Math.floor(
-raw /
+(
+maxQtyByVol +
+1e-12
+) /
 step
-);
-const stepsCeil =
-Math.ceil(
-raw /
-step
-);
-const candidates =
-[];
-
-if(
-stepsFloor >
-0
-){
-candidates.push(
-stepsFloor *
-step
-);
-}
-
-if(
-stepsCeil >
-0
-){
-candidates.push(
-stepsCeil *
-step
-);
-}
-
-if(
-min >
-0
-){
-candidates.push(
-min
-);
-}
-
-let bestQty =
-0;
-let bestDiff =
-Infinity;
-
-for(
-const qty of candidates
-){
-if(
-qty <
-min
-){
-continue;
-}
-
+) *
+step;
 const maxQty =
 Number(
 rules?.maxOrderQty
 );
+
+if(
+!(
+floorQty >
+0
+) ||
+floorQty <
+min
+){
+return null;
+}
 
 if(
 Number.isFinite(
@@ -3398,42 +4131,28 @@ maxQty
 ) &&
 maxQty >
 0 &&
-qty >
+floorQty >
 maxQty
 ){
-continue;
-}
-
-const notional =
-qty *
-p;
-const diff =
-Math.abs(
-notional -
-targetVol
-);
-
-if(
-diff <
-bestDiff
-){
-bestDiff =
-diff;
-bestQty =
-qty;
-}
-
+return null;
 }
 
 if(
-bestQty <=
-0
+Number.isFinite(
+minNotional
+) &&
+minNotional >
+0 &&
+floorQty *
+p +
+1e-9 <
+minNotional
 ){
 return null;
 }
 
 return formatQtyValue(
-bestQty,
+floorQty,
 decimals
 );
 }
@@ -3482,7 +4201,8 @@ return raw.toFixed(
 
 async function publicMarketGet(
 path,
-query
+query,
+timeoutMs
 ){
 
 const creds =
@@ -3490,6 +4210,9 @@ getCredentials();
 const testnet =
 creds?.testnet ??
 false;
+await ensureProxyApiBase(
+testnet
+);
 const params =
 new URLSearchParams(
 query
@@ -3500,20 +4223,37 @@ const urlPath =
 queryString
 ? `${path}?${queryString}`
 : path;
+const bases =
+orderedApiBases(
+testnet
+);
 
 for(
-const base of apiBases(
-testnet
-)
+const base of bases
 ){
+const url =
+`${base}${urlPath}`;
+const isLastBase =
+base ===
+bases[
+bases.length -
+1
+];
 
 try{
 const response =
 await fetchWithTimeout(
-`${base}${urlPath}`,
+url,
 {
 method:
-"GET"
+"GET",
+timeoutMs:
+pickHostTimeoutMs(
+url,
+base,
+isLastBase,
+timeoutMs
+)
 }
 );
 
@@ -3528,6 +4268,10 @@ if(
 data?.retCode ===
 0
 ){
+rememberGoodApiBase(
+testnet,
+base
+);
 return {
 ok:
 true,
@@ -4742,6 +5486,9 @@ await ensureBybitTimeSync(
 creds.testnet,
 isRetry
 );
+await ensureProxyApiBase(
+creds.testnet
+);
 
 const bodyStr =
 JSON.stringify(
@@ -4777,14 +5524,22 @@ let lastNetworkError =
 null;
 let lastAuthError =
 null;
+const postBases =
+orderedApiBases(
+creds.testnet
+);
 
 for(
-const base of apiBases(
-creds.testnet
-)
+const base of postBases
 ){
 const url =
 `${base}${path}`;
+const isLastBase =
+base ===
+postBases[
+postBases.length -
+1
+];
 
 try{
 const response =
@@ -4795,7 +5550,13 @@ method:
 "POST",
 headers,
 body:
-bodyStr
+bodyStr,
+timeoutMs:
+timeoutMsForApiHost(
+url,
+base,
+isLastBase
+)
 }
 );
 
@@ -4805,6 +5566,15 @@ const data =
 parseBybitBody(
 rawText
 );
+
+if(
+data
+){
+rememberGoodApiBase(
+creds.testnet,
+base
+);
+}
 
 if(
 !data
@@ -4898,6 +5668,19 @@ err
 ){
 lastNetworkError =
 err;
+
+if(
+base ===
+lastGoodApiBase ||
+base ===
+lastGoodApiBaseTestnet
+){
+rememberGoodApiBase(
+creds.testnet,
+""
+);
+}
+
 }
 
 }
@@ -5335,22 +6118,42 @@ async function measurePublicPing(
 testnet
 ){
 
+await ensureProxyApiBase(
+testnet
+);
+
 const start =
 Date.now();
+const bases =
+orderedApiBases(
+testnet
+);
 
 for(
-const base of apiBases(
-testnet
-)
+const base of bases
 ){
+const url =
+`${base}/v5/market/time`;
+const isLastBase =
+base ===
+bases[
+bases.length -
+1
+];
 
 try{
 const response =
 await fetchWithTimeout(
-`${base}/v5/market/time`,
+url,
 {
 method:
-"GET"
+"GET",
+timeoutMs:
+timeoutMsForApiHost(
+url,
+base,
+isLastBase
+)
 }
 );
 const data =
@@ -5362,6 +6165,10 @@ if(
 data?.retCode ===
 0
 ){
+rememberGoodApiBase(
+testnet,
+base
+);
 return {
 ok:
 true,
@@ -5561,6 +6368,81 @@ n
 : null;
 }
 )()
+};
+
+}
+
+async function listLinearTickerTurnovers(){
+
+const result =
+await publicMarketGet(
+"/v5/market/tickers",
+{
+category:
+"linear"
+}
+);
+
+if(
+!result.ok
+){
+return result;
+}
+
+const list =
+result.data?.result?.list;
+const tickers =
+[];
+
+if(
+Array.isArray(
+list
+)
+){
+
+for(
+const row of list
+){
+
+const symbol =
+String(
+row?.symbol ||
+""
+).trim().toUpperCase();
+
+if(
+!symbol.endsWith(
+"USDT"
+)
+){
+continue;
+}
+
+const n =
+Number(
+row.turnover24h
+);
+
+tickers.push(
+{
+symbol,
+turnover24h:
+Number.isFinite(
+n
+)
+? n
+: 0
+}
+);
+
+}
+
+}
+
+return {
+ok:
+true,
+tickers
 };
 
 }
@@ -6188,7 +7070,8 @@ tf,
 requests =
 5,
 batchGapMs =
-80
+80,
+timeoutMs
 ){
 
 const sym =
@@ -6278,7 +7161,8 @@ end:
 String(
 end
 )
-}
+},
+timeoutMs
 );
 
 if(
@@ -6621,6 +7505,7 @@ placeTradeOrder,
 cancelTradeOrder,
 amendTradeOrder,
 getTickerPrices,
+listLinearTickerTurnovers,
 reconcileOrdersOnPositionOpen,
 reconcileOrdersOnPositionClose,
 pingBybit,
@@ -6638,5 +7523,7 @@ getInstrumentRules,
 formatQtyValue,
 qtyFromVolumeUsdt,
 getSymbolPositionSettings,
-applySymbolPositionSettings
+applySymbolPositionSettings,
+orderedApiBases,
+timeoutMsForApiHost
 };

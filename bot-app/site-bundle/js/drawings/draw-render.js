@@ -20,6 +20,15 @@ drawRectangleShape
 } from "./arrow-rect.js?v=2";
 
 import {
+drawFvpShape
+} from "./fixed-volume-profile-draw.js?v=2";
+
+import {
+isFvpType,
+copyFvpStyleToShape
+} from "./fixed-volume-profile.js?v=3";
+
+import {
 drawBrushPath
 } from "./brush.js?v=2";
 
@@ -27,6 +36,12 @@ import {
 isHorizPriceTool,
 horizPriceLineX1
 } from "./constants.js?v=11";
+
+import {
+isTextTool,
+drawTextShape,
+TEXT_DEFAULT_CONTENT
+} from "./text.js?v=3";
 
 /**
  * @param {object} deps
@@ -51,8 +66,12 @@ getPlacement,
 getPreviewPoint,
 getPreviewXY,
 getSelectedId,
+getEditingTextId = ()=>
+null,
 parseDrawColor,
-formatDrawColor
+formatDrawColor,
+getCandles = ()=>
+[]
 } = deps;
 
 function drawLine(ctx, x1, y1, x2, y2, color, width, dash){
@@ -398,6 +417,23 @@ formatDrawColor
 
 }
 
+if(
+isFvpType(
+shape.type
+)
+){
+
+drawFvpShape(
+ctx,
+shape,
+{
+toXY,
+candles: getCandles()
+}
+);
+
+}
+
 if(isHorizPriceTool(shape.type)){
 
 const anchor = toXY({
@@ -420,6 +456,25 @@ width,
 dash
 );
 }
+
+}
+
+if(isTextTool(shape.type)){
+
+drawTextShape(
+ctx,
+shape,
+toXY,
+{
+selected:
+shape.id ===
+getSelectedId(),
+hideGlyph:
+shape.id &&
+shape.id ===
+getEditingTextId()
+}
+);
 
 }
 
@@ -570,6 +625,9 @@ isHorizPriceTool(
 type
 ) ||
 isPositionType(
+type
+) ||
+isTextTool(
 type
 )
 ){
@@ -921,6 +979,57 @@ if(
 pts.length ===
 1 &&
 previewXYPoint &&
+isFvpType(
+placement.type
+)
+){
+
+const a =
+toXY(
+pts[
+0
+]
+);
+
+if(
+a
+){
+
+const previewShape =
+{
+type: "fvp",
+p1: pts[0],
+p2:
+pointFromXY(
+previewXYPoint.x,
+previewXYPoint.y
+) ||
+pts[0]
+};
+
+copyFvpStyleToShape(
+previewShape,
+style
+);
+drawFvpShape(
+ctx,
+previewShape,
+{
+toXY,
+candles: getCandles()
+}
+);
+
+}
+
+return;
+
+}
+
+if(
+pts.length ===
+1 &&
+previewXYPoint &&
 placement.type ===
 "fib"
 ){
@@ -1006,7 +1115,13 @@ p1: previewPts[0],
 p2: previewPts[1],
 p3: previewPts[2],
 time: previewPts[0]?.time,
-price: previewPts[0]?.price
+price: previewPts[0]?.price,
+text:
+placement.type ===
+"text"
+? TEXT_DEFAULT_CONTENT
+: undefined,
+fontSize: style.fontSize
 };
 
 if(placement.type === "trendline" && previewPts.length >= 2){
@@ -1021,7 +1136,25 @@ if(placement.type === "rectangle" && previewPts.length >= 2){
 drawShape(ctx, previewShape, w, h);
 }
 
+if(
+isFvpType(
+placement.type
+) &&
+previewPts.length >=
+2
+){
+copyFvpStyleToShape(
+previewShape,
+style
+);
+drawShape(ctx, previewShape, w, h);
+}
+
 if(isHorizPriceTool(placement.type) && previewPts.length >= 1){
+drawShape(ctx, previewShape, w, h);
+}
+
+if(isTextTool(placement.type) && previewPts.length >= 1){
 drawShape(ctx, previewShape, w, h);
 }
 

@@ -5,9 +5,40 @@
 const LAN_CONN_KEY =
 "algo_remote_session_logs_v1";
 
+const LAN_BOT_STRATEGY_IDS =
+[
+"st1",
+"st2",
+"st3",
+"early-t3",
+"rsi-touch-flip"
+];
 
 /**
- * @returns {{ host: string, port: string, token: string, strategyId: "st1"|"st2"|"st3" }|null}
+ * @param {unknown} raw
+ * @returns {string}
+ */
+export function normalizeLanBotStrategyId(
+raw
+){
+
+const id =
+String(
+raw ||
+""
+).trim().toLowerCase();
+
+return LAN_BOT_STRATEGY_IDS.includes(
+id
+)
+? id
+: "st1";
+
+}
+
+
+/**
+ * @returns {{ host: string, port: string, token: string, strategyId: string }|null}
  */
 export function readLanRemoteConn(){
 
@@ -34,23 +65,10 @@ String(
 raw.port ||
 "17865"
 ).trim();
-const strategyRaw =
-String(
-raw.strategyId ||
-""
-).trim().toLowerCase();
 const strategyId =
-[
-"st1",
-"st2",
-"st3"
-].includes(
-strategyRaw
-)
-? /** @type {"st1"|"st2"|"st3"} */ (
-strategyRaw
-)
-: "st1";
+normalizeLanBotStrategyId(
+raw.strategyId
+);
 
 if(
 !host ||
@@ -255,20 +273,9 @@ via:
 }
 
 const strategyId =
-[
-"st1",
-"st2",
-"st3"
-].includes(
-String(
-c.strategyId ||
-""
-).trim().toLowerCase()
-)
-? String(
+normalizeLanBotStrategyId(
 c.strategyId
-).trim().toLowerCase()
-: "st1";
+);
 
 const res =
 await api.sessionLogRemoteBotCommand(
@@ -288,6 +295,26 @@ typeof c.strategyPrefs ===
 ? {
 strategyPrefs:
 c.strategyPrefs
+}
+: {}
+),
+...(
+c.earlyT3Prefs &&
+typeof c.earlyT3Prefs ===
+"object"
+? {
+earlyT3Prefs:
+c.earlyT3Prefs
+}
+: {}
+),
+...(
+Array.isArray(
+c.book
+)
+? {
+book:
+c.book
 }
 : {}
 )
@@ -329,7 +356,99 @@ alreadyRunning:
 
 }
 
+/**
+ * Push Multichart auth session to Algo Bot over LAN.
+ * @param {{ host: string, port: string, token: string }|null} [conn]
+ * @returns {Promise<{ ok: boolean, email?: string|null, message?: string }>}
+ */
+export async function pushAuthSessionToRemoteBot(
+conn
+){
+
+const lan =
+conn ||
+readLanRemoteConn();
+
+if(
+!lan
+){
+return {
+ok:
+false,
+message:
+"Сначала укажите IP и токен канала (окно LAN)"
+};
+}
+
+const api =
+desktopAlgoApi();
+
+if(
+!api?.sessionLogRemoteAuthPush
+){
+return {
+ok:
+false,
+message:
+"Нужен desktop Multichart с LAN auth push"
+};
+}
+
+let transfer =
+"";
+
+try{
+const {
+exportAuthSessionTransferString
+} =
+await import(
+"../cloud-sync.js?v=67"
+);
+transfer =
+await exportAuthSessionTransferString();
+}catch(
+err
+){
+return {
+ok:
+false,
+message:
+err?.message ||
+"Не удалось сформировать сессию"
+};
+}
+
+if(
+!transfer
+){
+return {
+ok:
+false,
+message:
+"Нет локальной сессии — войдите в Multichart"
+};
+}
+
+return api.sessionLogRemoteAuthPush(
+{
+...lan,
+transfer
+}
+);
+
+}
+
 export function isMultichartRemoteControlHost(){
+
+if(
+typeof document !==
+"undefined" &&
+document.body?.classList?.contains(
+"algo-bot-lite-layout"
+)
+){
+return false;
+}
 
 const desktop =
 window.cryptoTerminalDesktop;

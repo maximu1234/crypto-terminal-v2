@@ -116,18 +116,19 @@ return false;
 
 const linksHtml =
 buildHeaderNavLinksHtml();
-const existingWrap =
+const wrapInNav =
 nav.querySelector(
 "#header-settings-wrap"
 );
+const wrapAnywhere =
+document.getElementById(
+"header-settings-wrap"
+);
 
-/*
-  Preserve #header-settings-wrap (account panel + Algo Bot «Логи → Терминал»).
-  Full innerHTML replace used to wipe session-log mount after site-boot re-renders.
-*/
-if(
-existingWrap
+function refreshNavLinks(
+beforeNode
 ){
+
 const currentLinks =
 [
 ...nav.querySelectorAll(
@@ -141,9 +142,12 @@ a.outerHTML
 );
 
 if(
-currentLinks !==
+currentLinks ===
 linksHtml
 ){
+return;
+}
+
 for(
 const a of
 [
@@ -155,11 +159,40 @@ const a of
 a.remove();
 }
 
-existingWrap.insertAdjacentHTML(
+if(
+beforeNode
+){
+beforeNode.insertAdjacentHTML(
 "beforebegin",
 linksHtml
 );
+return;
 }
+
+nav.insertAdjacentHTML(
+"afterbegin",
+linksHtml
+);
+
+}
+
+/*
+  Preserve the existing account shell. Algo Bot lite moves it to #topbar;
+  replacing nav.innerHTML would clone a second #header-settings-wrap into
+  the hidden #header — getElementById then toggles the invisible copy.
+*/
+if(
+wrapInNav
+){
+refreshNavLinks(
+wrapInNav
+);
+}else if(
+wrapAnywhere
+){
+refreshNavLinks(
+null
+);
 }else{
 nav.innerHTML =
 linksHtml +

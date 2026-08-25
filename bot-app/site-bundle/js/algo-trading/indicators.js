@@ -1,16 +1,20 @@
 /**
  * Меню индикаторов на АлгоТрейдинг — prefs изолированы.
- * Pattern 1-2 на графике — копия (`./pattern-12.js` + math MAX_HIST=10000),
- * чтобы отрисовка совпадала с аналитикой/ботом на полной истории.
+ * Pattern 1-2 на графике — копия (`./pattern-12.js` + math MAX_HIST=10000).
+ * «1-2 EARLY T3» — отдельный индикатор (`./pattern-12-early-t3.js`), не бот.
  * Оригинал `js/indicators/pattern-12*` не трогаем.
  */
 import {
 initChartIndicators
-} from "../chart-indicators.js?v=55";
+} from "../chart-indicators.js?v=62";
 
 import {
 createPattern12Indicator
-} from "./pattern-12.js?v=15";
+} from "./pattern-12.js?v=17";
+
+import {
+createPattern12EarlyT3Indicator
+} from "./pattern-12-early-t3.js?v=2";
 
 import {
 ALGO_INDICATORS_STORAGE_KEY
@@ -37,14 +41,21 @@ await initChartIndicators(
 ...opts,
 storageKey:
 ALGO_INDICATORS_STORAGE_KEY,
-createPattern12Indicator
+createPattern12Indicator,
+extraIndicators: [
+createPattern12EarlyT3Indicator
+]
 }
 );
 
+if(
+!opts?.skipApplyPrefs
+){
 ensureIndicatorEnabled(
 root,
 "rsi"
 );
+}
 
 /* Pattern-12: enable after first candles (algo-trading.js) so cold start
    is not blocked by scene compute before history arrives. */

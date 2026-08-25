@@ -572,7 +572,7 @@ el.className =
 "trade-pnl-share-overlay";
 el.innerHTML =
 `
-<div class="trade-pnl-share-dialog" role="dialog" aria-modal="true" aria-label="Поделиться PnL">
+<div class="trade-pnl-share-dialog trade-pnl-share-dialog--bybit" role="dialog" aria-modal="true" aria-label="Поделиться PnL">
 <button type="button" class="trade-pnl-share-close" data-action="close" aria-label="Закрыть">×</button>
 <div class="trade-pnl-share-preview-wrap">
 <img class="trade-pnl-share-preview" data-role="preview" alt="Бейдж Поделиться PnL">

@@ -42,6 +42,7 @@ import {
 ALGO_MARKET_LONG_5M,
 ALGO_MARKET_SHORT_5M,
 ALGO_MARKET_BOTH_5M,
+ALGO_MARKET_EARLY_T3,
 ALGO_LIST_FLAG_UI,
 algoMarketDatasetToFlagId,
 algoListUiToFlagId,
@@ -50,11 +51,31 @@ getAlgoTickerFlagList,
 isAlgoMarketDataset,
 toggleAlgoTickerInFlagList,
 removeAlgoTickerFromFlagList
-} from "./algo-trading/ticker-flags.js?v=8";
+} from "./algo-trading/ticker-flags.js?v=9";
+
+import {
+ALGO_ANALYSIS_BOT_CHANGE_EVENT,
+ALGO_ANALYSIS_BOT_PATTERN_12,
+ALGO_ANALYSIS_BOT_EARLY_T3,
+ALGO_ANALYSIS_BOT_RSI_TOUCH_FLIP,
+isActiveAnalysisBot
+} from "./algo-trading/active-analysis-bot.js?v=4";
+
+import {
+RSI_TOUCH_FLIP_LIST_MARKET,
+RSI_TOUCH_FLIP_BOOK_CHANGE_EVENT,
+RSI_TOUCH_FLIP_BOOK_OPEN_EVENT,
+listRsiTouchFlipBookSymbols,
+getRsiTouchFlipBookRow
+} from "./algo-trading/rsi-touch-flip-book.js?v=2";
 
 import {
 mountQwertyKeyInput
 } from "./qwerty-key-input.js?v=1";
+
+import {
+isAlgoBotLiteMode
+} from "./algo-trading/lite-layout.js?v=4";
 
 function renderList(){
 
@@ -95,9 +116,79 @@ lists.forex;
 
 }
 
+function isRsiTouchFlipMarket(
+dataset
+){
+
+return dataset ===
+RSI_TOUCH_FLIP_LIST_MARKET;
+
+}
+
+function resolveRsiTouchFlipListSymbols(){
+
+return listRsiTouchFlipBookSymbols();
+
+}
+
+async function openListSymbol(
+api,
+symbol
+){
+
+const row =
+isRsiTouchFlipMarket(
+coinsState().currentDataset
+)
+? getRsiTouchFlipBookRow(
+symbol
+)
+: null;
+
+if(
+row
+){
+
+try{
+window.dispatchEvent(
+new CustomEvent(
+RSI_TOUCH_FLIP_BOOK_OPEN_EVENT,
+{
+detail:
+row
+}
+)
+);
+}catch{
+/* ignore */
+}
+
+await api.loadSymbol?.(
+symbol,
+row.tf
+);
+return;
+
+}
+
+await api.loadSymbol?.(
+symbol
+);
+
+}
+
 function coinsMarketHasSymbols(
 market
 ){
+
+if(
+isRsiTouchFlipMarket(
+market
+)
+){
+return listRsiTouchFlipBookSymbols().length >
+0;
+}
 
 if(
 isAlgoMarketDataset(
@@ -144,13 +235,48 @@ market
 
 function algoMarketFilterOptions(){
 
+const pattern12On =
+isActiveAnalysisBot(
+ALGO_ANALYSIS_BOT_PATTERN_12
+);
+const earlyT3On =
+isActiveAnalysisBot(
+ALGO_ANALYSIS_BOT_EARLY_T3
+);
+const rsiOn =
+isActiveAnalysisBot(
+ALGO_ANALYSIS_BOT_RSI_TOUCH_FLIP
+);
+
+if(
+!pattern12On &&
+!earlyT3On &&
+!rsiOn
+){
 return [
 {
 id:
 "all",
 label:
 "Все"
-},
+}
+];
+}
+
+const options =
+[
+{
+id:
+"all",
+label:
+"Все"
+}
+];
+
+if(
+pattern12On
+){
+options.push(
 {
 id:
 ALGO_MARKET_LONG_5M,
@@ -169,7 +295,36 @@ ALGO_MARKET_BOTH_5M,
 label:
 "Стратегия 3"
 }
-];
+);
+}
+
+if(
+earlyT3On
+){
+options.push(
+{
+id:
+ALGO_MARKET_EARLY_T3,
+label:
+"1-2 Early T3"
+}
+);
+}
+
+if(
+rsiOn
+){
+options.push(
+{
+id:
+RSI_TOUCH_FLIP_LIST_MARKET,
+label:
+"RSI Touch Flip"
+}
+);
+}
+
+return options;
 
 }
 
@@ -230,9 +385,52 @@ coinsState().currentDataset =
 
 }
 
+function onAnalysisBotMarketFilter(){
+
+const prevDataset =
+coinsState().currentDataset;
+
+if(
+isActiveAnalysisBot(
+ALGO_ANALYSIS_BOT_RSI_TOUCH_FLIP
+)
+){
+coinsState().currentDataset =
+RSI_TOUCH_FLIP_LIST_MARKET;
+}
+
+syncMarketFilterOptions();
+
+if(
+coinsState().currentDataset !==
+prevDataset
+){
+persistCoinsPrefs();
+generateMarketData();
+void primeTickerSnapshots().then(
+()=>{
+renderList();
+highlightActiveSymbol();
+}
+);
+return;
+}
+
+renderList();
+
+}
+
 function resolveAlgoMarketSymbols(
 dataset
 ){
+
+if(
+isRsiTouchFlipMarket(
+dataset
+)
+){
+return resolveRsiTouchFlipListSymbols();
+}
 
 const flagId =
 algoMarketDatasetToFlagId(
@@ -259,6 +457,9 @@ coinsState().currentDataset;
 if(
 !isAlgoMarketDataset(
 dataset
+) &&
+!isRsiTouchFlipMarket(
+dataset
 )
 ){
 return;
@@ -276,25 +477,85 @@ highlightActiveSymbol();
 
 function ensureAlgoListFlagMenus(){
 
+const pattern12On =
+isActiveAnalysisBot(
+ALGO_ANALYSIS_BOT_PATTERN_12
+);
+const earlyT3On =
+isActiveAnalysisBot(
+ALGO_ANALYSIS_BOT_EARLY_T3
+);
+const rows =
+ALGO_LIST_FLAG_UI.filter(
+row=>
+(
+pattern12On &&
+row.ui !==
+"algo-early-t3"
+) ||
+(
+earlyT3On &&
+row.ui ===
+"algo-early-t3"
+)
+);
+const signature =
+rows.map(
+row=>
+row.ui
+).join(
+","
+);
+
 document.querySelectorAll(
 ".coin-flag-menu"
 ).forEach(
 menu=>{
 
+const wrap =
+menu.closest(
+".coin-flag-wrap"
+);
+
+if(
+!signature
+){
+
+if(
+menu.dataset.algoListFlags !==
+"none"
+){
+menu.innerHTML =
+"";
+menu.dataset.algoListFlags =
+"none";
+}
+
+wrap?.classList.add(
+"is-algo-flag-off"
+);
+return;
+
+}
+
+wrap?.classList.remove(
+"is-algo-flag-off"
+);
+
 if(
 menu.dataset.algoListFlags ===
-"1"
+signature
 ){
 return;
 }
 
 menu.dataset.algoListFlags =
-"1";
+signature;
 menu.innerHTML =
 "";
 
 for(
-const row of ALGO_LIST_FLAG_UI
+const row of rows
 ){
 
 const btn =
@@ -400,6 +661,16 @@ window.addEventListener(
 ()=>{
 refreshAlgoMarketListFromFlags();
 }
+);
+
+window.addEventListener(
+RSI_TOUCH_FLIP_BOOK_CHANGE_EVENT,
+refreshAlgoMarketListFromFlags
+);
+
+window.addEventListener(
+ALGO_ANALYSIS_BOT_CHANGE_EVENT,
+onAnalysisBotMarketFilter
 );
 
 function closeAllCoinFlagMenus(
@@ -612,7 +883,8 @@ coinsState().currentSymbol
 async loadSymbol(
 symbol
 ){
-await api.loadSymbol(
+await openListSymbol(
+api,
 symbol
 );
 },
@@ -637,14 +909,79 @@ item
 );
 
 applyCoinsPrefs();
+
+if(
+isActiveAnalysisBot(
+ALGO_ANALYSIS_BOT_RSI_TOUCH_FLIP
+)
+){
+coinsState().currentDataset =
+RSI_TOUCH_FLIP_LIST_MARKET;
+}
+
 syncMarketFilterOptions();
 mountCoinsListRefreshControls();
+
+async function loadAlgoInstrumentList(
+options
+){
+
+if(
+isAlgoBotLiteMode()
+){
+
+const api =
+window.cryptoTerminalDesktop?.algoTrading;
+
+if(
+typeof api?.listLinearUsdtSymbols ===
+"function"
+){
+
+try{
+const result =
+await api.listLinearUsdtSymbols();
+
+if(
+result?.ok &&
+Array.isArray(
+result.symbols
+) &&
+result.symbols.length
+){
+return result.symbols;
+}
+
+console.warn(
+"[algo-trading] symbols ipc:",
+result?.message ||
+"empty"
+);
+}catch(
+err
+){
+console.warn(
+"[algo-trading] symbols ipc:",
+err?.message ||
+err
+);
+}
+
+}
+
+}
+
+return loadMarketSymbols(
+options
+);
+
+}
 
 async function refreshMarketUi(){
 
 try{
 const list =
-await loadMarketSymbols();
+await loadAlgoInstrumentList();
 applyInstrumentLists(
 list
 );
@@ -671,7 +1008,7 @@ dataset
 ){
 try{
 const list =
-await loadMarketSymbols(
+await loadAlgoInstrumentList(
 {
 forceNetwork:
 true
@@ -692,10 +1029,29 @@ err
 }
 
 generateMarketData();
+renderList();
+highlightActiveSymbol();
+
+try{
 await primeTickerSnapshots();
 renderList();
 highlightActiveSymbol();
+}catch(
+err
+){
+console.warn(
+"[algo-trading] ticker snapshots:",
+err?.message ||
+err
+);
+}
+
+if(
+!isAlgoBotLiteMode()
+){
 startRealtime();
+}
+
 startTickerStream();
 
 }
@@ -734,8 +1090,20 @@ searchInput.value =
 }
 
 generateMarketData();
+renderList();
+
+try{
 await primeTickerSnapshots();
 renderList();
+}catch(
+err
+){
+console.warn(
+"[algo-trading] ticker snapshots:",
+err?.message ||
+err
+);
+}
 
 }
 );
@@ -965,7 +1333,8 @@ next
 coinsState().currentSymbol =
 next;
 highlightActiveSymbol();
-await api.loadSymbol?.(
+await openListSymbol(
+api,
 next
 );
 highlightActiveSymbol();
@@ -1036,6 +1405,29 @@ api.getSymbol?.() ||
 coinsState().currentSymbol;
 
 if(
+isRsiTouchFlipMarket(
+coinsState().currentDataset
+)
+){
+const listed =
+symbols.find(
+row=>
+normalizeListSymbol(
+row
+) ===
+normalizeListSymbol(
+active
+)
+);
+
+if(
+listed
+){
+coinsState().currentSymbol =
+listed;
+highlightActiveSymbol();
+}
+}else if(
 active &&
 symbols.includes(
 active
@@ -1056,6 +1448,14 @@ destroy(){
 document.removeEventListener(
 "keydown",
 onListKeyDown
+);
+window.removeEventListener(
+ALGO_ANALYSIS_BOT_CHANGE_EVENT,
+onAnalysisBotMarketFilter
+);
+window.removeEventListener(
+RSI_TOUCH_FLIP_BOOK_CHANGE_EVENT,
+refreshAlgoMarketListFromFlags
 );
 
 }

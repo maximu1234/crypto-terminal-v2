@@ -32,7 +32,7 @@ saveDiaryPeriod
 
 import {
 EXCHANGE_CHANGED_EVENT
-} from "../../../market-api.js?v=2";
+} from "../../../market-api.js?v=6";
 
 import {
 initTradeDiaryNav
@@ -47,7 +47,7 @@ import {
 getLoadedTradeExchangeModules,
 loadTradeExchangeModules,
 resetTradeExchangeModules
-} from "../../module-router.js?v=14";
+} from "../../module-router.js?v=15";
 
 const EXCHANGE_ID =
 "bingx";
