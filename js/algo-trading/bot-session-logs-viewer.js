@@ -14,7 +14,7 @@ loadBotStrategiesPrefs
 } from "./bot-strategy-prefs.js?v=32";
 import {
 syncAllTickerFlagsRootToMain
-} from "./bot-bridge.js?v=25";
+} from "./bot-bridge.js?v=26";
 import {
 ALGO_TICKER_FLAGS_KEY
 } from "./ticker-flags.js?v=10";
@@ -27,14 +27,14 @@ loadEarlyT3BotPrefs
 } from "./early-t3-bot-prefs.js?v=5";
 import {
 loadRsiTouchFlipBook
-} from "./rsi-touch-flip-book.js?v=2";
+} from "./rsi-touch-flip-book.js?v=3";
 
 const STORAGE_KEY =
 "algo_remote_session_logs_v1";
 const TOKEN_SESSION_KEY =
 "algo_remote_session_logs_token_v1";
 const CHANNEL_UI_VER =
-"14";
+"15";
 
 function normalizeLanStrategyId(
 value
@@ -305,7 +305,7 @@ root.innerHTML =
 <div class="algo-remote-session-logs-channel-actions">
 <button type="button" class="algo-bot-remote-btn" id="algo-remote-logs-start">Запустить</button>
 <button type="button" class="algo-bot-remote-btn" id="algo-remote-logs-stop">Остановить</button>
-<button type="button" class="algo-bot-remote-btn algo-bot-remote-btn--push" id="algo-remote-logs-push" title="Отправить списки и книгу выбранной стратегии на бот">Отдать списки и книгу</button>
+<button type="button" class="algo-bot-remote-btn algo-bot-remote-btn--push" id="algo-remote-logs-push" title="Ст1/Ст2/Ст3 — книга паттерна. RSI Flip — книга RSI Touch Flip. Если бот запущен, подхватит без остановки.">Отдать списки и книгу</button>
 <button type="button" class="algo-bot-remote-btn algo-bot-remote-btn--push" id="algo-remote-logs-push-session" title="Отправить JWT Multichart на бот (бот сам сессию не обновляет)">Отдать сессию</button>
 <button type="button" class="algo-bot-remote-btn" id="algo-remote-logs-refresh">Обновить логи</button>
 </div>
@@ -349,7 +349,7 @@ spellcheck="false"
 <section class="algo-remote-session-logs-help-lang" lang="ru">
 <h4>Русский</h4>
 <p>Окно <strong>LAN</strong> — прямой канал: Старт/Стоп (Ст1/Ст2/Ст3, Early T3, RSI Flip), списки, книга параметров, логи, «Отдать сессию». Без worker и без трафика в Supabase Auth.</p>
-<p><strong>Книга:</strong> «Подобрать для всех» → «Применить к боту» на этом компьютере, затем «Отдать списки и книгу». На удалённом боте можно парсить так же локально.</p>
+<p><strong>Книга:</strong> для Ст1/Ст2/Ст3 — «Подобрать для всех» → «Применить к боту», затем «Отдать списки и книгу». Для RSI Flip отметьте RSI Flip и отдайте книгу RSI Touch Flip (тикеры после «Добавить в книгу»). Если бот уже запущен, он подхватит новую книгу без остановки.</p>
 <p><strong>Таймаут</strong> почти всегда значит: до порта на сервере пакеты не доходят (firewall / Security Group / бот не слушает). Неверный токен обычно даёт ошибку сразу, а не таймаут.</p>
 <p><strong>Токен доступа к порту</strong> — не сессия <code>mcauth1…</code>. На боте: шестерёнка → «Логи → Терминал» → «Новый токен» или включить доступ и «Сохранить».</p>
 <ol>
@@ -364,7 +364,7 @@ spellcheck="false"
 </section>
 <section class="algo-remote-session-logs-help-lang" lang="en">
 <h4>English</h4>
-<p>The <strong>LAN</strong> window is the direct channel: Start/Stop (St1/St2/St3, Early T3, RSI Flip), lists, ticker book, logs — no alert-worker and no Supabase Auth traffic.</p>
+<p>The <strong>LAN</strong> window is the direct channel: Start/Stop (St1/St2/St3, Early T3, RSI Flip), lists, ticker book, logs — no alert-worker and no Supabase Auth traffic. For RSI Flip, select RSI Flip then “Send lists and book” to push the RSI Touch Flip book; a running bot applies it live.</p>
 <p>A <strong>timeout</strong> almost always means packets never reach the port (Windows firewall / cloud Security Group / bot not listening).</p>
 <p>The <strong>port token</strong> is not the Multichart session string <code>mcauth1…</code>. On the bot: gear → “Logs → Terminal” → “New token”.</p>
 <ol>
@@ -1549,7 +1549,78 @@ strategyId ===
 : strategyId ===
 "st3"
 ? "Ст3"
+: strategyId ===
+"early-t3"
+? "Early T3"
+: strategyId ===
+"rsi-touch-flip"
+? "RSI Flip"
 : "Ст1";
+
+if(
+strategyId ===
+"rsi-touch-flip"
+){
+const rsiBook =
+loadRsiTouchFlipBook();
+
+if(
+!rsiBook.length
+){
+setMessage(
+`${res.message || "Списки отправлены"}. Нет книги RSI Flip — добавьте тикеры «Добавить в книгу».`
+);
+return;
+}
+
+if(
+!api.sessionLogRemotePushTickerBook
+){
+setMessage(
+`${res.message || "Списки отправлены"}. Этот Multichart не умеет отдавать книгу — обновите приложение.`
+);
+return;
+}
+
+setMessage(
+"Отправка книги RSI Flip…"
+);
+
+const rsiBookRes =
+await api.sessionLogRemotePushTickerBook(
+{
+...next,
+strategyId:
+"rsi-touch-flip",
+rows:
+rsiBook,
+book:{
+strategyId:
+"rsi-touch-flip",
+rows:
+rsiBook
+}
+}
+);
+
+if(
+!rsiBookRes?.ok
+){
+setMessage(
+rsiBookRes?.message ||
+"Списки отправлены, книгу RSI Flip передать не удалось",
+true
+);
+return;
+}
+
+setMessage(
+rsiBookRes.message ||
+"Списки и книга RSI Flip отправлены на бот"
+);
+return;
+}
+
 const book =
 loadStagedBotTickerBook(
 strategyId

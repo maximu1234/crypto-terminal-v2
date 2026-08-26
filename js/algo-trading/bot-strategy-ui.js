@@ -23,8 +23,9 @@ snapshotRsiTouchFlipBook,
 rsiTouchFlipBookBudgetFits,
 loadRsiTouchFlipBook,
 sumRsiTouchFlipBookBudgets,
+replaceRsiTouchFlipBook,
 RSI_TOUCH_FLIP_BOOK_CHANGE_EVENT
-} from "./rsi-touch-flip-book.js?v=2";
+} from "./rsi-touch-flip-book.js?v=3";
 import {
 getAlgoTradingWalletBalance
 } from "./runtime-bridge.js?v=6";
@@ -53,11 +54,13 @@ disarmAlgoArmedSetup,
 subscribeAlgoBotStatus,
 maybeApplyTickerFlagsFromBotStatus,
 maybeApplyTickerBookFromBotStatus,
+syncRsiTouchFlipBookToLive,
+fetchRsiTouchFlipBookFromMain,
 isAlgoBotDesktop,
 fetchAlgoBotCloudLock,
 clearAlgoBotCloudLock,
 ensureAlgoBotCloudLock
-} from "./bot-bridge.js?v=25";
+} from "./bot-bridge.js?v=26";
 import {
 stageBotTickerBookFromPublished,
 hydrateBotTickerBookFromMain,
@@ -72,7 +75,7 @@ import {
 mountRemoteSessionLogsEntry,
 mountRemoteWatchlistsPushEntry,
 mountLocalSessionLogsEntry
-} from "./bot-session-logs-viewer.js?v=31";
+} from "./bot-session-logs-viewer.js?v=32";
 import {
 rebalanceTpShares
 } from "./pattern-trade-stats-partial.js?v=22";
@@ -1102,6 +1105,95 @@ row=>
 
 summary.textContent =
 `В книге ${rows.length} тик. · сумма бюджетов ${sum.toFixed(0)} USDT\n${lines.join("\n")}`;
+
+}
+
+let rsiBookLiveSyncChain =
+Promise.resolve();
+
+function onRsiTouchFlipBookChanged(){
+
+fillRsiTouchFlipSettingsModal();
+const book =
+snapshotRsiTouchFlipBook();
+rsiBookLiveSyncChain =
+rsiBookLiveSyncChain.then(
+()=>
+syncRsiTouchFlipBookToLive(
+book
+)
+).then(
+result=>{
+
+if(
+result?.ok ===
+false &&
+result.message
+){
+applyStatusPanel(
+{
+ok:
+false,
+running:
+rsiTouchFlipRunning,
+strategyId:
+"rsi-touch-flip",
+message:
+result.message
+}
+);
+}
+
+return result;
+
+}
+).catch(
+err=>{
+console.warn(
+"[algo-trading] rsi book live sync",
+err
+);
+}
+);
+
+}
+
+async function hydrateRsiTouchFlipBookFromMain(){
+
+try{
+const res =
+await fetchRsiTouchFlipBookFromMain();
+const rows =
+Array.isArray(
+res?.rows
+)
+? res.rows
+: [];
+
+if(
+rows.length
+){
+replaceRsiTouchFlipBook(
+rows
+);
+return;
+}
+}catch(
+err
+){
+console.warn(
+"[algo-trading] rsi book hydrate",
+err
+);
+}
+
+try{
+await syncRsiTouchFlipBookToLive(
+snapshotRsiTouchFlipBook()
+);
+}catch{
+/* ignore */
+}
 
 }
 
@@ -3725,9 +3817,10 @@ closeRsiTouchFlipSettingsModal();
 
 window.addEventListener(
 RSI_TOUCH_FLIP_BOOK_CHANGE_EVENT,
-fillRsiTouchFlipSettingsModal
+onRsiTouchFlipBookChanged
 );
 fillRsiTouchFlipSettingsModal();
+void hydrateRsiTouchFlipBookFromMain();
 
 for(
 const [
@@ -4453,6 +4546,9 @@ result?.running
 ){
 applyBotStatus(
 result
+);
+void syncRsiTouchFlipBookToLive(
+snapshotRsiTouchFlipBook()
 );
 }else{
 applyBotStatus(
@@ -5518,7 +5614,7 @@ onTickerFlagsChanged
 );
 window.removeEventListener(
 RSI_TOUCH_FLIP_BOOK_CHANGE_EVENT,
-fillRsiTouchFlipSettingsModal
+onRsiTouchFlipBookChanged
 );
 window.removeEventListener(
 ALGO_ANALYSIS_BOT_CHANGE_EVENT,

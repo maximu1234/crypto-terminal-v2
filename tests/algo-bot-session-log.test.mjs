@@ -194,3 +194,31 @@ test("LAN bot command accepts the three live bots", () => {
     assert.match(src, /rsi-touch-flip/, rel);
   }
 });
+
+test("LAN ticker-book payload parser splits RSI Flip from Pattern 1-2", () => {
+  const {
+    parseRsiTouchFlipBookPayload
+  } = require(
+    path.join(root, "desktop/trading/algo-bot-rsi-touch-flip-book-payload.cjs")
+  );
+  const rsi = parseRsiTouchFlipBookPayload({
+    strategyId: "rsi-touch-flip",
+    rows: [{ symbol: "ETHUSDT", tf: "5", prefs: { budget: 100 } }]
+  });
+  assert.equal(rsi.isRsiTouchFlip, true);
+  assert.equal(rsi.rows.length, 1);
+  const nested = parseRsiTouchFlipBookPayload({
+    book: {
+      strategyId: "rsi-touch-flip",
+      rows: [{ symbol: "SOLUSDT", tf: "1" }]
+    }
+  });
+  assert.equal(nested.isRsiTouchFlip, true);
+  assert.equal(nested.rows[0].symbol, "SOLUSDT");
+  const pattern = parseRsiTouchFlipBookPayload({
+    strategyId: "st1",
+    book: { strategyId: "st1", tickers: { ETHUSDT: {} } }
+  });
+  assert.equal(pattern.isRsiTouchFlip, false);
+  assert.equal(pattern.rows.length, 0);
+});

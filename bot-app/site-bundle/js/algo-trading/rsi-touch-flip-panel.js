@@ -23,7 +23,7 @@ loadRsiTouchFlipBook,
 rsiTouchFlipBookBudgetFits,
 upsertRsiTouchFlipBookRow,
 removeRsiTouchFlipBookRow
-} from "./rsi-touch-flip-book.js?v=2";
+} from "./rsi-touch-flip-book.js?v=3";
 import {
 getAlgoTradingWalletBalance
 } from "./runtime-bridge.js?v=6";
@@ -962,7 +962,7 @@ prefs
 }
 );
 setBookStatus(
-`${symbol} ${tf} в книге · бюджет ${Number(prefs.budget).toFixed(0)} USDT (сумма ${gate.sum.toFixed(0)} / ${gate.available.toFixed(0)})`,
+`${symbol} ${tf} в книге · бюджет ${Number(prefs.budget).toFixed(0)} USDT (сумма ${gate.sum.toFixed(0)} / ${gate.available.toFixed(0)}). Запущенный бот подхватывает сразу.`,
 "ok"
 );
 syncBookButtons();
@@ -991,7 +991,7 @@ removeRsiTouchFlipBookRow(
 symbol
 );
 setBookStatus(
-`${symbol} убран из книги`,
+`${symbol} убран из книги. Запущенный бот снимет его с торговли.`,
 "ok"
 );
 syncBookButtons();

@@ -266,6 +266,83 @@ function normalizeLivePrefs(raw) {
   };
 }
 
+/**
+ * Stable id of live-relevant fields. Chart TF + launch prefs, not analysis capital.
+ * @param {unknown} tf
+ * @param {unknown} prefs
+ * @returns {string}
+ */
+function livePrefsFingerprint(tf, prefs) {
+  const p = normalizeLivePrefs(prefs);
+  return JSON.stringify({
+    tf: String(tf || "").trim(),
+    rsiLen: p.rsiLen,
+    osLevel: p.osLevel,
+    obLevel: p.obLevel,
+    rsiTf: String(p.rsiTf || "").trim(),
+    tradeSide: p.tradeSide,
+    maxStack: p.maxStack,
+    budget: p.budget,
+    sizeMode: p.sizeMode,
+    sizeMult: p.sizeMult
+  });
+}
+
+/**
+ * Diff current live contours against a desired book.
+ * `nextRows` should already be normalized (symbol/tf/prefs).
+ * @param {Array<{ symbol: string, tf?: string, prefs?: object, fingerprint?: string }>} currentTickers
+ * @param {Array<{ symbol: string, tf: string, prefs: object }>} nextRows
+ * @returns {{ add: object[], update: object[], remove: string[] }}
+ */
+function planRsiTouchFlipBookSync(currentTickers, nextRows) {
+  const current = Array.isArray(currentTickers) ? currentTickers : [];
+  const next = Array.isArray(nextRows) ? nextRows : [];
+  const nextBy = new Map();
+  for (const row of next) {
+    const symbol = String(row?.symbol || "")
+      .replace(/\.P$/i, "")
+      .trim()
+      .toUpperCase();
+    if (!symbol) {
+      continue;
+    }
+    nextBy.set(symbol, row);
+  }
+  const currentBy = new Map();
+  for (const row of current) {
+    const symbol = String(row?.symbol || "")
+      .replace(/\.P$/i, "")
+      .trim()
+      .toUpperCase();
+    if (symbol) {
+      currentBy.set(symbol, row);
+    }
+  }
+  const add = [];
+  const update = [];
+  const remove = [];
+  for (const [symbol, row] of nextBy) {
+    const cur = currentBy.get(symbol);
+    if (!cur) {
+      add.push(row);
+      continue;
+    }
+    const nextFp = livePrefsFingerprint(row.tf, row.prefs || row);
+    const curFp =
+      cur.fingerprint || livePrefsFingerprint(cur.tf, cur.prefs);
+    if (nextFp !== curFp) {
+      update.push(row);
+    }
+  }
+  for (const symbol of currentBy.keys()) {
+    if (!nextBy.has(symbol)) {
+      remove.push(symbol);
+    }
+  }
+  return { add, update, remove };
+}
+
 module.exports = {
   SIZE_EQUAL,
   SIZE_AVERAGE,
@@ -278,5 +355,7 @@ module.exports = {
   unixSec,
   projectClosedSourceRsiOntoChart,
   decideRsiTouchFlipBar,
-  normalizeLivePrefs
+  normalizeLivePrefs,
+  livePrefsFingerprint,
+  planRsiTouchFlipBookSync
 };

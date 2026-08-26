@@ -1133,6 +1133,74 @@ err
 handleTrustedDesktopUi(
 ipcMain,
 
+"desktop:algoTradingSyncRsiTouchFlipBook",
+async (
+_event,
+payload
+)=>{
+
+try{
+return await algoBot.syncRsiTouchFlipBook(
+payload ||
+{}
+);
+}catch(
+err
+){
+log.warn(
+"algoTradingSyncRsiTouchFlipBook:",
+err?.message ||
+err
+);
+return {
+ok:
+false,
+message:
+err?.message ||
+String(
+err
+)
+};
+}
+
+}
+);
+
+handleTrustedDesktopUi(
+ipcMain,
+
+"desktop:algoTradingGetRsiTouchFlipBook",
+()=>{
+
+try{
+return algoBot.getRsiTouchFlipBook();
+}catch(
+err
+){
+log.warn(
+"algoTradingGetRsiTouchFlipBook:",
+err?.message ||
+err
+);
+return {
+ok:
+false,
+rows:
+[],
+message:
+err?.message ||
+String(
+err
+)
+};
+}
+
+}
+);
+
+handleTrustedDesktopUi(
+ipcMain,
+
 "desktop:algoTradingGetTickerFlagsRoot",
 ()=>{
 

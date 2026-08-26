@@ -15,7 +15,9 @@ const {
   notionalAt,
   projectClosedSourceRsiOntoChart,
   decideRsiTouchFlipBar,
-  normalizeLivePrefs
+  normalizeLivePrefs,
+  livePrefsFingerprint,
+  planRsiTouchFlipBookSync
 } = require("./algo-bot-rsi-touch-flip-math.cjs");
 
 const MAX_CANDLES = 4000;
@@ -36,6 +38,10 @@ const tickers = new Map();
 const signalLog = [];
 let lastSignalText = "";
 let waitFlatTimer = null;
+let engineLive = false;
+let syncBusy = false;
+/** @type {object[]|null} */
+let queuedBookRows = null;
 
 function emptyStatus() {
   return {
@@ -490,8 +496,271 @@ function normalizeBookRows(raw) {
   return [...bySymbol.values()];
 }
 
+function tickerNote(state) {
+  const rsiTfLabel = usesSeparateRsiTf(state) ? rsiSourceTf(state) : "график";
+  return `${state.symbol} chart=${state.tf} rsiTf=${rsiTfLabel} RSI=${state.prefs.rsiLen} OS=${state.prefs.osLevel} OB=${state.prefs.obLevel} side=${state.prefs.tradeSide} stack=${state.prefs.maxStack} budget=${state.prefs.budget} ${state.mode}`;
+}
+
+function lastChartPrice(state) {
+  const close = Number(state?.chartCandles?.[state.chartCandles.length - 1]?.close);
+  return Number.isFinite(close) ? close : undefined;
+}
+
+async function waitNotInflight(state, ms = 15000) {
+  const started = Date.now();
+  while (state?.orderInflight && Date.now() - started < ms) {
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  }
+}
+
+function subscribeStateKlines(state) {
+  if (!klineHub || !state) {
+    return;
+  }
+  klineHub.ensureKline(state.symbol, state.tf);
+  if (usesSeparateRsiTf(state)) {
+    klineHub.ensureKline(state.symbol, rsiSourceTf(state));
+  }
+}
+
+function unsubscribeStateKlines(state) {
+  if (!klineHub || !state) {
+    return;
+  }
+  klineHub.releaseKline(state.symbol, state.tf);
+  const rsiTf = rsiSourceTf(state);
+  if (!sameTf(state.tf, rsiTf)) {
+    klineHub.releaseKline(state.symbol, rsiTf);
+  }
+}
+
+async function seedTicker(row) {
+  const state = {
+    symbol: row.symbol,
+    tf: row.tf,
+    prefs: {
+      ...row.prefs,
+      rsiTf: String(row.prefs.rsiTf || "").trim()
+    },
+    mode: "wait-flat",
+    chartCandles: [],
+    chartForming: null,
+    rsiCandles: [],
+    rsiForming: null,
+    seeded: false,
+    orderInflight: false,
+    position: "flat",
+    stack: 0,
+    sessionEntries: 0,
+    lastHandledChartTime: 0,
+    botOwnsPosition: false
+  };
+
+  const pos = await algoRest.getPosition(state.symbol);
+  if (pos?.ok === false) {
+    throw new Error(pos.message || `Не удалось проверить позицию ${state.symbol}`);
+  }
+  if (pos?.position) {
+    state.mode = "wait-flat";
+  } else {
+    state.mode = "trade";
+  }
+
+  state.chartCandles = await seedSeries(
+    state.symbol,
+    state.tf,
+    state.prefs.rsiLen
+  );
+  state.lastHandledChartTime =
+    Number(state.chartCandles[state.chartCandles.length - 1]?.time) || 0;
+
+  if (usesSeparateRsiTf(state)) {
+    state.rsiCandles = await seedSeries(
+      state.symbol,
+      rsiSourceTf(state),
+      state.prefs.rsiLen
+    );
+  }
+
+  state.seeded = true;
+  tickers.set(state.symbol, state);
+  subscribeStateKlines(state);
+  sessionLog.appendNote?.(tickerNote(state));
+  return state;
+}
+
+async function dropTicker(state, reason) {
+  if (!state) {
+    return;
+  }
+  await waitNotInflight(state);
+  const shouldClose =
+    state.botOwnsPosition ||
+    (state.mode === "trade" && state.position !== "flat");
+  if (shouldClose) {
+    const closed = await closeAll(state, reason, lastChartPrice(state));
+    if (!closed) {
+      throw new Error("не закрыл позицию — тикер остаётся в live");
+    }
+  }
+  unsubscribeStateKlines(state);
+  tickers.delete(state.symbol);
+  sessionLog.appendNote?.(`${state.symbol}: снят с live (${reason})`);
+}
+
+async function reseedSeries(state) {
+  state.chartCandles = await seedSeries(
+    state.symbol,
+    state.tf,
+    state.prefs.rsiLen
+  );
+  state.chartForming = null;
+  state.lastHandledChartTime =
+    Number(state.chartCandles[state.chartCandles.length - 1]?.time) || 0;
+  if (usesSeparateRsiTf(state)) {
+    state.rsiCandles = await seedSeries(
+      state.symbol,
+      rsiSourceTf(state),
+      state.prefs.rsiLen
+    );
+    state.rsiForming = null;
+  } else {
+    state.rsiCandles = [];
+    state.rsiForming = null;
+  }
+}
+
+async function applyTickerUpdate(state, row) {
+  await waitNotInflight(state);
+  const prevTf = state.tf;
+  const prevRsiTf = rsiSourceTf(state);
+  const nextPrefs = {
+    ...row.prefs,
+    rsiTf: String(row.prefs.rsiTf || "").trim()
+  };
+  const nextTf = row.tf;
+  const nextRsiTf = rsiSourceTf({ tf: nextTf, prefs: nextPrefs });
+  const needReseed =
+    !sameTf(prevTf, nextTf) ||
+    !sameTf(prevRsiTf, nextRsiTf) ||
+    Number(state.prefs.rsiLen) !== Number(nextPrefs.rsiLen);
+
+  if (needReseed) {
+    unsubscribeStateKlines(state);
+  }
+
+  state.tf = nextTf;
+  state.prefs = nextPrefs;
+
+  if (needReseed) {
+    await reseedSeries(state);
+    subscribeStateKlines(state);
+  }
+
+  sessionLog.appendNote?.(
+    `${state.symbol}: параметры обновлены · ${tickerNote(state)}`
+  );
+  pushSignal({
+    ts: Date.now(),
+    symbol: state.symbol,
+    side: state.position,
+    price: lastChartPrice(state),
+    text: `${state.symbol}: новые параметры книги${
+      state.position !== "flat"
+        ? " · открытую позицию закроем уже по ним"
+        : ""
+    }`
+  });
+}
+
+function currentSyncPlanInput() {
+  return [...tickers.values()].map((state) => ({
+    symbol: state.symbol,
+    tf: state.tf,
+    prefs: state.prefs,
+    fingerprint: livePrefsFingerprint(state.tf, state.prefs)
+  }));
+}
+
+function formatSyncMessage(plan, skipped) {
+  const parts = [];
+  if (plan.add.length) {
+    parts.push(`+${plan.add.map((row) => row.symbol).join(",")}`);
+  }
+  if (plan.remove.length) {
+    parts.push(`−${plan.remove.join(",")}`);
+  }
+  if (plan.update.length) {
+    parts.push(`~${plan.update.map((row) => row.symbol).join(",")}`);
+  }
+  if (skipped.length) {
+    parts.push(`пропуск ${skipped.join("; ")}`);
+  }
+  if (!parts.length) {
+    return `Live RSI Flip: книга без изменений (${tickers.size} тик.)`;
+  }
+  return `Live RSI Flip подхватил книгу: ${parts.join(" ")}`;
+}
+
+async function applyBookDiff(nextRows) {
+  const plan = planRsiTouchFlipBookSync(currentSyncPlanInput(), nextRows);
+  const skipped = [];
+
+  for (const symbol of plan.remove) {
+    const state = tickers.get(symbol);
+    if (state) {
+      try {
+        await dropTicker(state, "убрали из книги");
+      } catch (err) {
+        skipped.push(`${symbol}: ${err?.message || err}`);
+      }
+    }
+  }
+
+  for (const row of plan.update) {
+    const state = tickers.get(row.symbol);
+    if (!state) {
+      continue;
+    }
+    try {
+      await applyTickerUpdate(state, row);
+    } catch (err) {
+      skipped.push(`${row.symbol}: ${err?.message || err}`);
+    }
+  }
+
+  if (plan.add.length) {
+    await mapPool(plan.add, SEED_CONCURRENCY, async (row) => {
+      try {
+        await seedTicker(row);
+      } catch (err) {
+        skipped.push(`${row.symbol}: ${err?.message || err}`);
+      }
+    });
+  }
+
+  if (plan.add.length || plan.remove.length || plan.update.length) {
+    startWaitFlatLoop();
+    void refreshWaitFlat();
+  }
+
+  const message = formatSyncMessage(plan, skipped);
+  sessionLog.appendNote?.(message);
+  onActivity?.();
+  return {
+    ok: true,
+    running: true,
+    added: plan.add.map((row) => row.symbol),
+    removed: plan.remove,
+    updated: plan.update.map((row) => row.symbol),
+    skipped,
+    watchlistCount: tickers.size,
+    message
+  };
+}
+
 async function startRsiTouchFlipEngine(config = {}) {
-  if (tickers.size) {
+  if (engineLive) {
     throw new Error("RSI Touch Flip уже запущен");
   }
 
@@ -503,71 +772,15 @@ async function startRsiTouchFlipEngine(config = {}) {
   onActivity = typeof config.onActivity === "function" ? config.onActivity : null;
   signalLog.length = 0;
   lastSignalText = "";
+  queuedBookRows = null;
 
   klineHub = createAlgoBybitKlineHub();
   unsubKline = klineHub.onKline(onKline);
 
   const failures = [];
   await mapPool(rows, SEED_CONCURRENCY, async (row) => {
-    const state = {
-      symbol: row.symbol,
-      tf: row.tf,
-      prefs: {
-        ...row.prefs,
-        rsiTf: String(row.prefs.rsiTf || "").trim()
-      },
-      mode: "wait-flat",
-      chartCandles: [],
-      chartForming: null,
-      rsiCandles: [],
-      rsiForming: null,
-      seeded: false,
-      orderInflight: false,
-      position: "flat",
-      stack: 0,
-      sessionEntries: 0,
-      lastHandledChartTime: 0,
-      botOwnsPosition: false
-    };
-
     try {
-      const pos = await algoRest.getPosition(state.symbol);
-      if (pos?.ok === false) {
-        throw new Error(pos.message || `Не удалось проверить позицию ${state.symbol}`);
-      }
-      if (pos?.position) {
-        state.mode = "wait-flat";
-      } else {
-        state.mode = "trade";
-      }
-
-      state.chartCandles = await seedSeries(
-        state.symbol,
-        state.tf,
-        state.prefs.rsiLen
-      );
-      state.lastHandledChartTime =
-        Number(state.chartCandles[state.chartCandles.length - 1]?.time) || 0;
-
-      if (usesSeparateRsiTf(state)) {
-        state.rsiCandles = await seedSeries(
-          state.symbol,
-          rsiSourceTf(state),
-          state.prefs.rsiLen
-        );
-      }
-
-      state.seeded = true;
-      tickers.set(state.symbol, state);
-      klineHub.ensureKline(state.symbol, state.tf);
-      if (usesSeparateRsiTf(state)) {
-        klineHub.ensureKline(state.symbol, rsiSourceTf(state));
-      }
-
-      const rsiTfLabel = usesSeparateRsiTf(state) ? rsiSourceTf(state) : "график";
-      sessionLog.appendNote?.(
-        `${state.symbol} chart=${state.tf} rsiTf=${rsiTfLabel} RSI=${state.prefs.rsiLen} OS=${state.prefs.osLevel} OB=${state.prefs.obLevel} side=${state.prefs.tradeSide} stack=${state.prefs.maxStack} budget=${state.prefs.budget} ${state.mode}`
-      );
+      await seedTicker(row);
     } catch (err) {
       failures.push(`${row.symbol}: ${err?.message || err}`);
     }
@@ -584,6 +797,7 @@ async function startRsiTouchFlipEngine(config = {}) {
     );
   }
 
+  engineLive = true;
   startWaitFlatLoop();
   void refreshWaitFlat();
   log.info("rsi touch flip engine started", {
@@ -593,6 +807,8 @@ async function startRsiTouchFlipEngine(config = {}) {
 }
 
 async function stopRsiTouchFlipEngine() {
+  queuedBookRows = null;
+  engineLive = false;
   stopWaitFlatLoop();
   if (unsubKline) {
     unsubKline();
@@ -629,8 +845,64 @@ async function stopRsiTouchFlipEngine() {
   lastSignalText = "";
 }
 
+async function syncRsiTouchFlipBook(config = {}) {
+  const rows = normalizeBookRows(config.rows || config.book);
+  if (!engineLive) {
+    return {
+      ok: true,
+      running: false,
+      added: [],
+      removed: [],
+      updated: [],
+      skipped: [],
+      watchlistCount: 0,
+      message: "Бот RSI Flip не запущен — книга сохранена"
+    };
+  }
+
+  if (syncBusy) {
+    queuedBookRows = rows;
+    return {
+      ok: true,
+      running: true,
+      queued: true,
+      message: "Live RSI Flip: книга в очереди"
+    };
+  }
+
+  syncBusy = true;
+  try {
+    let current = rows;
+    let result = {
+      ok: true,
+      running: true,
+      added: [],
+      removed: [],
+      updated: [],
+      skipped: [],
+      watchlistCount: tickers.size,
+      message: `Live RSI Flip: книга без изменений (${tickers.size} тик.)`
+    };
+    while (engineLive) {
+      result = await applyBookDiff(current);
+      if (!queuedBookRows) {
+        return result;
+      }
+      current = queuedBookRows;
+      queuedBookRows = null;
+    }
+    return result;
+  } finally {
+    syncBusy = false;
+  }
+}
+
+function isRsiTouchFlipEngineRunning() {
+  return engineLive;
+}
+
 function getRsiTouchFlipEngineStatus() {
-  if (!tickers.size) {
+  if (!engineLive) {
     return emptyStatus();
   }
 
@@ -638,14 +910,14 @@ function getRsiTouchFlipEngineStatus() {
   const first = list[0];
   const inPos = list.filter((row) => row.position !== "flat");
   return {
-    symbol: first.symbol,
-    tf: first.tf,
-    rsiTf: rsiSourceTf(first),
+    symbol: first?.symbol || "",
+    tf: first?.tf || "",
+    rsiTf: first ? rsiSourceTf(first) : "",
     stack: inPos[0]?.stack || 0,
     position: inPos[0]?.position || "flat",
     lastSignal: lastSignalText,
     signals: signalLog.slice(0, MAX_LOG),
-    prefs: first.prefs,
+    prefs: first?.prefs || null,
     entriesCount: list.reduce((sum, row) => sum + (row.sessionEntries || 0), 0),
     watchlistCount: list.length,
     tickers: list.map((row) => ({
@@ -662,5 +934,7 @@ function getRsiTouchFlipEngineStatus() {
 module.exports = {
   startRsiTouchFlipEngine,
   stopRsiTouchFlipEngine,
+  syncRsiTouchFlipBook,
+  isRsiTouchFlipEngineRunning,
   getRsiTouchFlipEngineStatus
 };

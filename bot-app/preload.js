@@ -439,6 +439,18 @@ ipcRenderer.invoke(
 payload ||
 {}
 ),
+getRsiTouchFlipBook:()=>
+ipcRenderer.invoke(
+"desktop:algoTradingGetRsiTouchFlipBook"
+),
+syncRsiTouchFlipBook:(
+payload
+)=>
+ipcRenderer.invoke(
+"desktop:algoTradingSyncRsiTouchFlipBook",
+payload ||
+{}
+),
 getTickerFlagsRoot:()=>
 ipcRenderer.invoke(
 "desktop:algoTradingGetTickerFlagsRoot"

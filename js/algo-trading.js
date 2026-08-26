@@ -69,7 +69,7 @@ mountAlgoRuntimeUi
 
 import {
 mountAlgoBotStrategyUi
-} from "./algo-trading/bot-strategy-ui.js?v=89";
+} from "./algo-trading/bot-strategy-ui.js?v=90";
 
 import {
 ALGO_ANALYSIS_BOT_CHANGE_EVENT,
@@ -87,7 +87,7 @@ mountSessionLogServerSettings
 
 import {
 syncBotStrategiesToMain
-} from "./algo-trading/bot-bridge.js?v=25";
+} from "./algo-trading/bot-bridge.js?v=26";
 
 import {
 mountAlgoTradeUi
@@ -107,7 +107,7 @@ mountAlgoPatternEntryOverlay
 
 import {
 mountRsiTouchFlipHost
-} from "./algo-trading/rsi-touch-flip-panel.js?v=14";
+} from "./algo-trading/rsi-touch-flip-panel.js?v=15";
 
 import {
 clearAlgoPatternAnalysisUi,

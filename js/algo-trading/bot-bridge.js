@@ -31,6 +31,9 @@ loadBotTickerBook,
 loadStagedBotTickerBook,
 writePublishedBotTickerBook
 } from "./bot-ticker-book.js?v=7";
+import {
+replaceRsiTouchFlipBook
+} from "./rsi-touch-flip-book.js?v=3";
 
 import {
 isAlgoBotWorking
@@ -603,6 +606,78 @@ return written.ok;
 
 }
 
+export function maybeApplyRsiTouchFlipBookFromBotStatus(
+status
+){
+
+if(
+status?.applyRsiTouchFlipBook !==
+true ||
+!Array.isArray(
+status.publishedRsiTouchFlipBook
+)
+){
+return false;
+}
+
+replaceRsiTouchFlipBook(
+status.publishedRsiTouchFlipBook
+);
+return true;
+
+}
+
+export async function syncRsiTouchFlipBookToLive(
+book
+){
+
+const api =
+desktopAlgoApi();
+
+if(
+!api?.syncRsiTouchFlipBook
+){
+return {
+ok:
+true,
+skipped:
+true
+};
+}
+
+return api.syncRsiTouchFlipBook(
+{
+book:
+Array.isArray(
+book
+)
+? book
+: []
+}
+);
+
+}
+
+export async function fetchRsiTouchFlipBookFromMain(){
+
+const api =
+desktopAlgoApi();
+
+if(
+!api?.getRsiTouchFlipBook
+){
+return {
+ok:
+false,
+rows:
+[]
+};
+}
+
+return api.getRsiTouchFlipBook();
+
+}
+
 export function subscribeAlgoBotStatus(
 callback
 ){
@@ -625,6 +700,9 @@ maybeApplyTickerFlagsFromBotStatus(
 payload
 );
 maybeApplyTickerBookFromBotStatus(
+payload
+);
+maybeApplyRsiTouchFlipBookFromBotStatus(
 payload
 );
 

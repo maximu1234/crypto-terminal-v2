@@ -99,3 +99,45 @@ test("1m RSI on 5m chart maps last closed 1m inside the 5m", () => {
   assert.equal(out[0], 4);
   assert.equal(out[1], 9);
 });
+
+test("live book sync plan adds, updates prefs, and removes", () => {
+  const current = [
+    {
+      symbol: "ETHUSDT",
+      tf: "5",
+      prefs: math.normalizeLivePrefs({ budget: 100, rsiLen: 14 })
+    },
+    {
+      symbol: "SOLUSDT",
+      tf: "5",
+      prefs: math.normalizeLivePrefs({ budget: 80 })
+    }
+  ];
+  const next = [
+    {
+      symbol: "ETHUSDT",
+      tf: "5",
+      prefs: math.normalizeLivePrefs({ budget: 200, rsiLen: 14 })
+    },
+    {
+      symbol: "BTCUSDT",
+      tf: "15",
+      prefs: math.normalizeLivePrefs({ budget: 50 })
+    }
+  ];
+  const plan = math.planRsiTouchFlipBookSync(current, next);
+  assert.deepEqual(plan.add.map((row) => row.symbol), ["BTCUSDT"]);
+  assert.deepEqual(plan.remove, ["SOLUSDT"]);
+  assert.deepEqual(plan.update.map((row) => row.symbol), ["ETHUSDT"]);
+  assert.notEqual(
+    math.livePrefsFingerprint("5", { budget: 100 }),
+    math.livePrefsFingerprint("5", { budget: 200 })
+  );
+  const same = math.planRsiTouchFlipBookSync(current, [
+    current[0],
+    current[1]
+  ]);
+  assert.equal(same.add.length, 0);
+  assert.equal(same.update.length, 0);
+  assert.equal(same.remove.length, 0);
+});

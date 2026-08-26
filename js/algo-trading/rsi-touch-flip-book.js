@@ -170,8 +170,26 @@ function readStored() {
   }
 }
 
+function booksEqual(a, b) {
+  if (a.length !== b.length) {
+    return false;
+  }
+  const map = new Map(
+    a.map((row) => [row.symbol, JSON.stringify({ tf: row.tf, prefs: row.prefs })])
+  );
+  for (const row of b) {
+    if (map.get(row.symbol) !== JSON.stringify({ tf: row.tf, prefs: row.prefs })) {
+      return false;
+    }
+  }
+  return true;
+}
+
 function writeStored(rows) {
   const next = normalizeRsiTouchFlipBook(rows);
+  if (booksEqual(readStored(), next)) {
+    return next;
+  }
   try {
     localStorage.setItem(RSI_TOUCH_FLIP_BOOK_KEY, JSON.stringify(next));
   } catch (err) {
@@ -234,7 +252,16 @@ export function removeRsiTouchFlipBookRow(symbol) {
 }
 
 /**
- * Снимок на старт бота. Дальнейшие правки книги live не видит.
+ * Полная замена книги (LAN / hydrate из main).
+ * @param {unknown} rows
+ * @returns {Array<{ symbol: string, tf: string, prefs: object }>}
+ */
+export function replaceRsiTouchFlipBook(rows) {
+  return writeStored(rows);
+}
+
+/**
+ * Снимок книги. Live подхватывает правки без перезапуска.
  * @returns {Array<{ symbol: string, tf: string, prefs: object }>}
  */
 export function snapshotRsiTouchFlipBook() {

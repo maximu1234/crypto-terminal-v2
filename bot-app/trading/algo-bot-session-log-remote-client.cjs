@@ -897,6 +897,82 @@ path:
 }
 );
 
+const {
+parseRsiTouchFlipBookPayload
+} =
+require(
+"./algo-bot-rsi-touch-flip-book-payload.cjs"
+);
+const parsed =
+parseRsiTouchFlipBookPayload(
+payload
+);
+
+if(
+parsed.isRsiTouchFlip ||
+String(
+payload.strategyId ||
+""
+).trim().toLowerCase() ===
+"rsi-touch-flip"
+){
+if(
+!parsed.rows.length
+){
+return {
+ok:
+false,
+message:
+"Нет книги RSI Touch Flip для отправки. Добавьте тикеры «Добавить в книгу»."
+};
+}
+
+const res =
+await fetchJsonPost(
+url,
+{
+strategyId:
+"rsi-touch-flip",
+rows:
+parsed.rows,
+book:{
+strategyId:
+"rsi-touch-flip",
+rows:
+parsed.rows
+}
+},
+120000,
+payload.token
+);
+
+if(
+!res.ok
+){
+return {
+ok:
+false,
+message:
+res.message ||
+res.json?.message ||
+"Не удалось отправить книгу RSI Flip"
+};
+}
+
+return {
+ok:
+true,
+tickerCount:
+res.json?.tickerCount ||
+parsed.rows.length,
+running:
+!!res.json?.running,
+message:
+res.json?.message ||
+"Книга RSI Flip отправлена"
+};
+}
+
 const book =
 payload.book &&
 typeof payload.book ===

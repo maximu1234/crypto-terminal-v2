@@ -810,6 +810,25 @@ wanted.delete(
 topic
 );
 
+if(
+socket &&
+socket.readyState ===
+getWs().OPEN &&
+topic
+){
+socket.send(
+JSON.stringify(
+{
+op:
+"unsubscribe",
+args:[
+topic
+]
+}
+)
+);
+}
+
 },
 
 syncTopics(

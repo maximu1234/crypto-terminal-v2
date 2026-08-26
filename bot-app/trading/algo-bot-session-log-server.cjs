@@ -625,9 +625,97 @@ message:
 
 }
 
-function applyRemoteTickerBook(
+async function applyRemoteTickerBook(
 body
 ){
+
+const {
+parseRsiTouchFlipBookPayload
+} =
+require(
+"./algo-bot-rsi-touch-flip-book-payload.cjs"
+);
+const parsed =
+parseRsiTouchFlipBookPayload(
+body
+);
+
+if(
+parsed.isRsiTouchFlip
+){
+const algoBot =
+require(
+"./algo-trading-bot.cjs"
+);
+const result =
+await algoBot.syncRsiTouchFlipBook(
+{
+rows:
+parsed.rows,
+book:
+parsed.rows,
+source:
+"lan"
+}
+);
+
+if(
+result?.ok ===
+false
+){
+return result;
+}
+
+const count =
+Number(
+result?.tickerCount
+) ||
+(
+Array.isArray(
+result?.rows
+)
+? result.rows.length
+: parsed.rows.length
+);
+
+try{
+sessionLog.appendNote(
+`Remote RSI Flip book applied: tickers=${count}${
+result?.running
+? " live-synced"
+: ""
+}`
+);
+}catch{
+/* ignore */
+}
+
+return {
+ok:
+true,
+strategyId:
+"rsi-touch-flip",
+tickerCount:
+count,
+added:
+result?.added ||
+[],
+removed:
+result?.removed ||
+[],
+updated:
+result?.updated ||
+[],
+skipped:
+result?.skipped ||
+[],
+running:
+!!result?.running,
+message:
+result?.message ||
+`Книга RSI Flip записана (${count} тикеров).`
+};
+}
 
 const algoBot =
 require(
@@ -1341,7 +1429,7 @@ return;
 }
 
 const appliedBook =
-applyRemoteTickerBook(
+await applyRemoteTickerBook(
 body
 );
 

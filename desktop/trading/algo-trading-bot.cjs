@@ -29,6 +29,8 @@ clearTickerFlagList,
 FLAG_EARLY_T3,
 readTickerBook,
 writeTickerBook,
+readRsiTouchFlipBook,
+writeRsiTouchFlipBook,
 readPattern12Settings,
 writePattern12Settings,
 getWatchlistForSide,
@@ -2205,6 +2207,20 @@ message:
 };
 }
 
+try{
+writeRsiTouchFlipBook(
+bookRows
+);
+}catch(
+err
+){
+log.warn(
+"rsi touch flip book persist on start:",
+err?.message ||
+err
+);
+}
+
 const wallet =
 await getWalletBalance();
 const availableNum =
@@ -3121,6 +3137,402 @@ null
 
 }
 
+function getRsiTouchFlipBook(){
+
+const read =
+readRsiTouchFlipBook();
+
+return {
+ok:
+true,
+rows:
+Array.isArray(
+read?.rows
+)
+? read.rows
+: []
+};
+
+}
+
+function walletAvailableUsdt(
+wallet
+){
+
+const available =
+Number(
+wallet?.available
+);
+const usdt =
+Number(
+wallet?.usdt
+);
+
+if(
+Number.isFinite(
+available
+) &&
+available >
+0
+){
+return available;
+}
+
+if(
+Number.isFinite(
+usdt
+) &&
+usdt >
+0
+){
+return usdt;
+}
+
+if(
+Number.isFinite(
+available
+) &&
+available >=
+0
+){
+return available;
+}
+
+if(
+Number.isFinite(
+usdt
+)
+){
+return usdt;
+}
+
+return NaN;
+
+}
+
+function sumRsiTouchFlipBookBudgets(
+rows
+){
+
+return (
+Array.isArray(
+rows
+)
+? rows
+: []
+).reduce(
+(
+sum,
+row
+)=>{
+const budget =
+Number(
+row?.prefs?.budget ??
+row?.budget
+);
+
+return sum +
+(
+Number.isFinite(
+budget
+)
+? budget
+: 0
+);
+},
+0
+);
+
+}
+
+/**
+ * After LAN / local book write, push RSI book into renderer localStorage.
+ */
+function notifyRsiTouchFlipBookToUi(
+extra =
+{}
+){
+
+const rows =
+Array.isArray(
+extra.rows
+)
+? extra.rows
+: readRsiTouchFlipBook().rows;
+
+const snapshot =
+buildStatusSnapshot(
+{
+applyRsiTouchFlipBook:
+true,
+publishedRsiTouchFlipBook:
+rows,
+...(
+typeof extra.message ===
+"string"
+? {
+message:
+extra.message
+}
+: {}
+)
+}
+);
+
+return broadcastBotStatus(
+snapshot,
+"algo bot rsi-touch-flip-book UI notify:"
+);
+
+}
+
+async function syncRsiTouchFlipBook(
+payload =
+{}
+){
+
+const rows =
+Array.isArray(
+payload.book
+)
+? payload.book
+: Array.isArray(
+payload.rows
+)
+? payload.rows
+: [];
+const source =
+String(
+payload.source ||
+"local"
+).trim().toLowerCase();
+const isLan =
+source ===
+"lan";
+
+if(
+isLan &&
+!rows.length
+){
+return {
+ok:
+false,
+message:
+"Пустая книга RSI Touch Flip. Добавьте тикеры «Добавить в книгу»."
+};
+}
+
+if(
+runningStrategyId ===
+"rsi-touch-flip" &&
+isLan
+){
+const wallet =
+await getWalletBalance();
+const available =
+walletAvailableUsdt(
+wallet
+);
+const sum =
+sumRsiTouchFlipBookBudgets(
+rows
+);
+
+if(
+!wallet?.ok ||
+!Number.isFinite(
+available
+)
+){
+return {
+ok:
+false,
+message:
+wallet?.message ||
+"Не удалось прочитать баланс алго-ключа перед применением книги RSI Flip"
+};
+}
+
+if(
+sum >
+available
+){
+return {
+ok:
+false,
+message:
+`Сумма бюджетов RSI Flip ${sum.toFixed(
+2
+)} USDT > баланс ${available.toFixed(
+2
+)} USDT — live книгу не менял`
+};
+}
+}
+
+let written;
+
+try{
+written =
+writeRsiTouchFlipBook(
+rows
+);
+}catch(
+err
+){
+log.warn(
+"rsi touch flip book write:",
+err?.message ||
+err
+);
+return {
+ok:
+false,
+message:
+err?.message ||
+String(
+err
+)
+};
+}
+
+if(
+written?.ok ===
+false
+){
+return written;
+}
+
+sessionRsiTouchFlipPrefs =
+{
+...(
+sessionRsiTouchFlipPrefs ||
+{}
+),
+book:
+written.rows
+};
+
+let live =
+{
+ok:
+true,
+running:
+false,
+message:
+`Книга RSI Flip сохранена (${written.tickerCount} тик.)`
+};
+
+if(
+runningStrategyId ===
+"rsi-touch-flip"
+){
+try{
+live =
+await rsiTouchFlipEngine.syncRsiTouchFlipBook(
+{
+rows:
+written.rows
+}
+);
+statusMessage =
+live?.message ||
+statusMessage;
+}catch(
+err
+){
+log.warn(
+"rsi touch flip live sync:",
+err?.message ||
+err
+);
+return {
+ok:
+false,
+running:
+true,
+message:
+err?.message ||
+String(
+err
+)
+};
+}
+}
+
+const message =
+live?.running
+? live.message ||
+`Книга RSI Flip записана (${written.tickerCount} тик.). Live подхватил.`
+: `Книга RSI Flip записана (${written.tickerCount} тик.). Запустите RSI Flip, чтобы торговать по ней.`;
+
+if(
+written.changed !==
+false
+){
+try{
+notifyRsiTouchFlipBookToUi(
+{
+rows:
+written.rows,
+message
+}
+);
+}catch(
+err
+){
+log.warn(
+"algo bot rsi-touch-flip-book UI notify:",
+err?.message ||
+err
+);
+}
+}else if(
+runningStrategyId ===
+"rsi-touch-flip"
+){
+try{
+pushStatus(
+buildStatusSnapshot(
+{
+message
+}
+)
+);
+}catch{
+/* ignore */
+}
+}
+
+return {
+ok:
+live?.ok !==
+false,
+running:
+!!live?.running,
+queued:
+!!live?.queued,
+added:
+live?.added ||
+[],
+removed:
+live?.removed ||
+[],
+updated:
+live?.updated ||
+[],
+skipped:
+live?.skipped ||
+[],
+tickerCount:
+written.tickerCount,
+rows:
+written.rows,
+message
+};
+
+}
+
 function broadcastBotStatus(
 snapshot,
 logLabel
@@ -3396,10 +3808,13 @@ setBotStatusTarget,
 syncBotStrategies,
 syncTickerFlags,
 syncTickerBook,
+syncRsiTouchFlipBook,
 getTickerFlagsRoot,
 getTickerBook,
+getRsiTouchFlipBook,
 notifyTickerFlagsToUi,
 notifyTickerBookToUi,
+notifyRsiTouchFlipBookToUi,
 startBot,
 stopBot,
 getBotStatus,

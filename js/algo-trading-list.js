@@ -68,7 +68,7 @@ RSI_TOUCH_FLIP_BOOK_OPEN_EVENT,
 listRsiTouchFlipBookSymbols,
 getRsiTouchFlipBookRow,
 removeRsiTouchFlipBookRow
-} from "./algo-trading/rsi-touch-flip-book.js?v=2";
+} from "./algo-trading/rsi-touch-flip-book.js?v=3";
 
 import {
 mountQwertyKeyInput

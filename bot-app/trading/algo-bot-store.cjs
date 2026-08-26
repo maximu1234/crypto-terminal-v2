@@ -23,6 +23,8 @@ const TICKER_FLAGS_FILE =
 "algo-ticker-flags.json";
 const TICKER_BOOKS_FILE =
 "algo-bot-ticker-books.json";
+const RSI_TOUCH_FLIP_BOOK_FILE =
+"algo-bot-rsi-touch-flip-book.json";
 const PATTERN12_SETTINGS_FILE =
 "algo-pattern12-settings.json";
 const PENDING_ORDERS_FILE =
@@ -2304,6 +2306,164 @@ root
 
 }
 
+function normalizeStoredRsiTouchFlipBookRows(
+raw
+){
+
+const list =
+Array.isArray(
+raw
+)
+? raw
+: Array.isArray(
+raw?.rows
+)
+? raw.rows
+: [];
+const bySymbol =
+new Map();
+
+for(
+const item of list
+){
+if(
+!item ||
+typeof item !==
+"object"
+){
+continue;
+}
+
+const symbol =
+String(
+item.symbol ||
+""
+).replace(
+/\.P$/i,
+""
+).trim().toUpperCase();
+const tf =
+String(
+item.tf ||
+""
+).trim();
+
+if(
+!symbol ||
+!tf
+){
+continue;
+}
+
+bySymbol.set(
+symbol,
+{
+symbol,
+tf,
+prefs:
+item.prefs &&
+typeof item.prefs ===
+"object"
+? item.prefs
+: item
+}
+);
+
+}
+
+return [
+...bySymbol.values()
+];
+
+}
+
+function readRsiTouchFlipBook(){
+
+const parsed =
+readJsonFile(
+RSI_TOUCH_FLIP_BOOK_FILE,
+{
+rows:
+[]
+}
+);
+const rows =
+normalizeStoredRsiTouchFlipBookRows(
+parsed
+);
+
+return {
+ok:
+true,
+rows
+};
+
+}
+
+function writeRsiTouchFlipBook(
+rows
+){
+
+const next =
+normalizeStoredRsiTouchFlipBookRows(
+rows
+);
+const prev =
+readRsiTouchFlipBook().rows;
+const same =
+JSON.stringify(
+prev
+) ===
+JSON.stringify(
+next
+);
+
+if(
+same
+){
+return {
+ok:
+true,
+changed:
+false,
+rows:
+next,
+tickerCount:
+next.length
+};
+}
+
+const written =
+writeJsonFile(
+RSI_TOUCH_FLIP_BOOK_FILE,
+{
+rows:
+next,
+updatedAt:
+Date.now()
+}
+);
+
+if(
+written?.ok ===
+false
+){
+return written;
+}
+
+return {
+ok:
+true,
+changed:
+true,
+rows:
+next,
+tickerCount:
+next.length
+};
+
+}
+
 module.exports =
 {
 FLAG_LONG_5M,
@@ -2334,5 +2494,7 @@ normalizeSt3,
 normalizeManualRefreshStrategies,
 listManualRefreshStrategyIds,
 readPendingBotOrders,
-writePendingBotOrders
+writePendingBotOrders,
+readRsiTouchFlipBook,
+writeRsiTouchFlipBook
 };

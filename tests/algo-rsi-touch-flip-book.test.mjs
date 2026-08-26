@@ -115,3 +115,46 @@ test("wallet available 0 falls back to equity like the algo-profile label", () =
   assert.equal(gate.ok, true);
   assert.equal(gate.available, 86.53);
 });
+
+test("live engine and LAN accept a full RSI book replace without restart", () => {
+  const engine = fs.readFileSync(
+    path.join(root, "desktop/trading/algo-bot-rsi-touch-flip-engine.cjs"),
+    "utf8"
+  );
+  const bot = fs.readFileSync(
+    path.join(root, "desktop/trading/algo-trading-bot.cjs"),
+    "utf8"
+  );
+  const viewer = fs.readFileSync(
+    path.join(root, "js/algo-trading/bot-session-logs-viewer.js"),
+    "utf8"
+  );
+  const book = fs.readFileSync(
+    path.join(root, "js/algo-trading/rsi-touch-flip-book.js"),
+    "utf8"
+  );
+  const client = fs.readFileSync(
+    path.join(root, "desktop/trading/algo-bot-session-log-remote-client.cjs"),
+    "utf8"
+  );
+  const server = fs.readFileSync(
+    path.join(root, "desktop/trading/algo-bot-session-log-server.cjs"),
+    "utf8"
+  );
+  assert.match(engine, /syncRsiTouchFlipBook/);
+  assert.match(engine, /убрали из книги/);
+  assert.match(bot, /source ===\s*"lan"/);
+  assert.match(viewer, /strategyId ===\s*"rsi-touch-flip"/);
+  assert.match(viewer, /Отправка книги RSI Flip/);
+  assert.match(book, /Live подхватывает/);
+  assert.match(book, /replaceRsiTouchFlipBook/);
+  assert.match(client, /parseRsiTouchFlipBookPayload/);
+  assert.match(server, /parseRsiTouchFlipBookPayload/);
+  assert.match(server, /source:\s*"lan"/);
+  for (const rel of ["desktop/preload.js", "bot-app/preload.js"]) {
+    const src = fs.readFileSync(path.join(root, rel), "utf8");
+    assert.match(src, /syncRsiTouchFlipBook:/);
+    assert.match(src, /desktop:algoTradingSyncRsiTouchFlipBook/);
+    assert.match(src, /desktop:algoTradingGetRsiTouchFlipBook/);
+  }
+});
