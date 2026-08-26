@@ -33,7 +33,11 @@ writePublishedBotTickerBook
 } from "./bot-ticker-book.js?v=7";
 import {
 replaceRsiTouchFlipBook
-} from "./rsi-touch-flip-book.js?v=3";
+} from "./rsi-touch-flip-book.js?v=4";
+import {
+saveRsiTouchFlipBalancePct,
+loadRsiTouchFlipBalancePct
+} from "./rsi-touch-flip-prefs.js?v=4";
 
 import {
 isAlgoBotWorking
@@ -299,7 +303,14 @@ strategyId:
 "rsi-touch-flip",
 book:
 book ||
-[]
+[],
+balancePct:
+extra?.balancePct !=
+null &&
+extra.balancePct !==
+""
+? extra.balancePct
+: loadRsiTouchFlipBalancePct()
 }
 );
 
@@ -623,6 +634,18 @@ return false;
 replaceRsiTouchFlipBook(
 status.publishedRsiTouchFlipBook
 );
+
+if(
+status.publishedRsiTouchFlipBalancePct !=
+null &&
+status.publishedRsiTouchFlipBalancePct !==
+""
+){
+saveRsiTouchFlipBalancePct(
+status.publishedRsiTouchFlipBalancePct
+);
+}
+
 return true;
 
 }
@@ -652,7 +675,9 @@ Array.isArray(
 book
 )
 ? book
-: []
+: [],
+balancePct:
+loadRsiTouchFlipBalancePct()
 }
 );
 

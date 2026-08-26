@@ -1,6 +1,10 @@
 /**
  * RSI — панель под графиком; не учитывается в лимите индикаторов.
  * Настройки: период, перекупленность / перепроданность, таймфрейм (как Supertrend).
+ *
+ * Опциональные host-хуки только для Алго RSI Touch Flip:
+ * getRsiPaneSettings / commitRsiPaneSettings. Терминал и остальные
+ * страницы их не передают — enable/persist идут в settingsStore как раньше.
  */
 import {
 formatHtfTfLegend,
@@ -136,14 +140,60 @@ function persistSettings(
 patch
 ){
 
+const next =
+normalizeRsiPaneSettings(
+patch
+);
+const commit =
+getHost?.()?.commitRsiPaneSettings;
+
+if(
+typeof commit ===
+"function" &&
+commit(
+next
+) ===
+true
+){
+settings =
+next;
+return;
+}
+
 settings =
 normalizeRsiPaneSettings(
 settingsStore?.write?.(
 RSI_PANE_ID,
-patch
+next
 ) ||
-patch
+next
 );
+
+}
+
+function readLiveOrStoredSettings(){
+
+const live =
+getHost?.()?.getRsiPaneSettings?.();
+
+if(
+live &&
+typeof live ===
+"object" &&
+Number.isFinite(
+Number(
+live.period
+)
+)
+){
+settings =
+normalizeRsiPaneSettings(
+live
+);
+return;
+}
+
+readSettings();
 
 }
 
@@ -159,8 +209,24 @@ getHost?.()?.onRsiSettingsChange?.(
 
 function getLegendText(){
 
-return `RSI ${settings.period} close${formatHtfTfLegend(
-settings.tf
+const live =
+getHost?.()?.getRsiPaneSettings?.();
+const shown =
+live &&
+typeof live ===
+"object" &&
+Number.isFinite(
+Number(
+live.period
+)
+)
+? normalizeRsiPaneSettings(
+live
+)
+: settings;
+
+return `RSI ${shown.period} close${formatHtfTfLegend(
+shown.tf
 )}`;
 
 }
@@ -306,7 +372,7 @@ function populateSettingsDialog(
 root
 ){
 
-readSettings();
+readLiveOrStoredSettings();
 
 root.innerHTML =
 `

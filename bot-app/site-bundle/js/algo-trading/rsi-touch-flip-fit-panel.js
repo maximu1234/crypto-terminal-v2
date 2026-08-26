@@ -8,7 +8,7 @@ import {
 } from "./rsi-touch-flip-optimize.js?v=4";
 import {
   runRsiTouchFlip
-} from "./rsi-touch-flip-engine.js?v=4";
+} from "./rsi-touch-flip-engine.js?v=5";
 import {
   clampRsiTouchFlipTrainPct,
   formatRsiTouchFlipParamsBrief,

@@ -585,37 +585,97 @@ body.algo-trading-page:not([data-algo-analysis-bot="rsi-touch-flip"]) .algo-stat
 display:none;
 }
 
-body.algo-trading-page .algo-stats-columns[data-algo-analysis-bot="rsi-touch-flip"] .algo-stats-label{
-min-width:196px;
-}
-
-body.algo-trading-page .algo-stats-columns[data-algo-analysis-bot="rsi-touch-flip"] .algo-stats-select{
-margin-left:auto;
-}
-
-body.algo-trading-page .algo-stats-columns[data-algo-analysis-bot="rsi-touch-flip"] .algo-stats-check{
-margin-left:auto;
-}
-
 body.algo-trading-page .algo-stats-columns[data-algo-analysis-bot="rsi-touch-flip"]{
-align-items:flex-start;
-}
-
-body.algo-trading-page .algo-stats-columns[data-algo-analysis-bot="rsi-touch-flip"] .algo-stats-chart-cols{
-align-items:flex-start;
-flex:0 0 auto;
+align-items:stretch;
+width:100%;
 min-width:0;
 }
 
-body.algo-trading-page .algo-stats-columns[data-algo-analysis-bot="rsi-touch-flip"] .algo-stats-col{
-overflow:visible;
+body.algo-trading-page .algo-stats-columns[data-algo-analysis-bot="rsi-touch-flip"] .algo-stats-chart-cols{
+display:grid;
+grid-template-columns:repeat(3, minmax(0, 1fr));
+align-items:start;
+width:100%;
+min-width:0;
+flex:1 1 auto;
+gap:clamp(16px, 2vw, 32px);
+}
+
+body.algo-trading-page .algo-stats-columns[data-algo-analysis-bot="rsi-touch-flip"] .algo-stats-col,
+body.algo-trading-page .algo-stats-columns[data-algo-analysis-bot="rsi-touch-flip"] .algo-stats-chart-cols .algo-stats-col{
+width:auto;
+min-width:0;
+max-width:none;
+flex:none;
 height:auto;
+overflow:visible;
+align-items:stretch;
+}
+
+body.algo-trading-page .algo-stats-columns[data-algo-analysis-bot="rsi-touch-flip"] .algo-stats-label{
+flex:1 1 auto;
+min-width:0;
+max-width:none;
+}
+
+body.algo-trading-page .algo-stats-columns[data-algo-analysis-bot="rsi-touch-flip"] .algo-stats-input{
+width:56px;
+min-width:56px;
+max-width:56px;
+flex:0 0 56px;
+margin-left:auto;
+}
+
+body.algo-trading-page .algo-stats-columns[data-algo-analysis-bot="rsi-touch-flip"] .algo-stats-select{
+width:auto;
+min-width:64px;
+max-width:128px;
 flex:0 0 auto;
+margin-left:auto;
+}
+
+body.algo-trading-page .algo-stats-columns[data-algo-analysis-bot="rsi-touch-flip"] .algo-rsi-flip-select--tf{
+width:64px;
+min-width:64px;
+max-width:64px;
+flex:0 0 64px;
+padding-left:6px;
+padding-right:22px;
+}
+
+body.algo-trading-page .algo-stats-columns[data-algo-analysis-bot="rsi-touch-flip"] .algo-rsi-flip-select--side{
+width:76px;
+min-width:76px;
+max-width:76px;
+flex:0 0 76px;
+}
+
+body.algo-trading-page .algo-stats-columns[data-algo-analysis-bot="rsi-touch-flip"] .algo-rsi-flip-select--wide{
+width:128px;
+min-width:128px;
+max-width:128px;
+flex:0 0 128px;
+}
+
+body.algo-trading-page .algo-stats-columns[data-algo-analysis-bot="rsi-touch-flip"] .algo-stats-value{
+flex:1 1 auto;
+min-width:0;
+margin-left:auto;
+text-align:right;
+}
+
+body.algo-trading-page .algo-stats-columns[data-algo-analysis-bot="rsi-touch-flip"] .algo-stats-check{
+flex:0 0 auto;
+width:auto;
+margin-left:auto;
+justify-content:flex-end;
 }
 
 body.algo-trading-page .algo-rsi-flip-col-note{
 margin:0 0 8px;
-max-width:280px;
+width:100%;
+max-width:none;
+box-sizing:border-box;
 color:#6b7280;
 font-size:11px;
 line-height:1.35;
@@ -624,7 +684,9 @@ line-height:1.35;
 body.algo-trading-page .algo-rsi-flip-book-status{
 margin:4px 0 8px;
 min-height:14px;
-max-width:280px;
+width:100%;
+max-width:none;
+box-sizing:border-box;
 color:#6b7280;
 font-size:11px;
 line-height:1.35;
@@ -648,12 +710,12 @@ pointer-events:none;
 }
 
 body.algo-trading-page .algo-stats-col--rsi-flip-fit{
-min-width:280px;
-max-width:420px;
+min-width:0;
+max-width:none;
 }
 
 body.algo-trading-page .algo-stats-columns[data-algo-analysis-bot="rsi-touch-flip"] .algo-stats-col--rsi-flip-fit .algo-stats-label{
-min-width:118px;
+min-width:0;
 }
 
 body.algo-trading-page .algo-rsi-flip-split-label,
@@ -662,17 +724,20 @@ body.algo-trading-page #algo-rsi-flip-fit-train,
 body.algo-trading-page #algo-rsi-flip-fit-test{
 white-space:normal;
 text-align:right;
-max-width:260px;
+max-width:none;
 font-size:12px;
 line-height:1.35;
 }
 
 body.algo-trading-page .algo-stats-row--rsi-flip-fit-actions{
 gap:6px;
+width:100%;
+box-sizing:border-box;
 }
 
 body.algo-trading-page .algo-stats-row--rsi-flip-fit-actions .algo-stats-mode-btn{
 flex:1 1 0;
+min-width:0;
 }
 
 body.algo-trading-page .algo-rsi-flip-fit-progress{
@@ -680,12 +745,14 @@ display:flex;
 align-items:center;
 gap:8px;
 margin:0 0 8px;
+width:100%;
+box-sizing:border-box;
 }
 
 body.algo-trading-page .algo-rsi-flip-fit-progress-track{
 height:4px;
 flex:1 1 auto;
-max-width:160px;
+max-width:none;
 border-radius:2px;
 background:#1f2937;
 overflow:hidden;
@@ -706,6 +773,8 @@ font-variant-numeric:tabular-nums;
 body.algo-trading-page .algo-rsi-flip-launch{
 margin:0 0 8px;
 padding:8px;
+width:100%;
+box-sizing:border-box;
 border:1px solid #374151;
 border-radius:6px;
 background:#111827;
@@ -3676,8 +3745,48 @@ color:#e5e7eb;
 overflow:visible;
 }
 
+body.algo-trading-page.algo-bot-lite-layout .algo-bot-grid-cell .algo-stats-value.algo-stats-value--long{
+color:#84cc16;
+}
+
+body.algo-trading-page.algo-bot-lite-layout .algo-bot-grid-cell .algo-stats-value.algo-stats-value--short{
+color:#f87171;
+}
+
 body.algo-trading-page.algo-bot-lite-layout .algo-stats-columns[data-algo-analysis-bot="rsi-touch-flip"] .algo-stats-label{
 min-width:0;
+}
+
+body.algo-trading-page.algo-bot-lite-layout .algo-bot-grid-cell .algo-stats-columns[data-algo-analysis-bot="rsi-touch-flip"]{
+width:100%;
+min-width:0;
+max-width:100%;
+flex-wrap:nowrap;
+}
+
+body.algo-trading-page.algo-bot-lite-layout .algo-bot-grid-cell .algo-stats-columns[data-algo-analysis-bot="rsi-touch-flip"] .algo-stats-chart-cols{
+display:grid;
+grid-template-columns:repeat(3, minmax(0, 1fr));
+width:100%;
+min-width:0;
+max-width:100%;
+flex:1 1 auto;
+align-items:start;
+gap:16px 28px;
+}
+
+body.algo-trading-page.algo-bot-lite-layout .algo-bot-grid-cell .algo-stats-columns[data-algo-analysis-bot="rsi-touch-flip"] .algo-stats-col,
+body.algo-trading-page.algo-bot-lite-layout .algo-bot-grid-cell .algo-stats-columns[data-algo-analysis-bot="rsi-touch-flip"] .algo-stats-chart-cols .algo-stats-col{
+flex:none;
+width:auto;
+min-width:0;
+max-width:none;
+}
+
+body.algo-trading-page.algo-bot-lite-layout .algo-bot-grid-cell .algo-stats-columns[data-algo-analysis-bot="rsi-touch-flip"] .algo-stats-value{
+flex:1 1 auto;
+min-width:0;
+text-align:right;
 }
 
 body.algo-trading-page.algo-bot-lite-layout .algo-bot-grid-cell .algo-stats-col-setup{

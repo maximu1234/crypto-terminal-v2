@@ -7,7 +7,7 @@ import {
 } from "./rsi-touch-flip-mtf.js?v=3";
 import {
   RSI_TOUCH_FLIP_TF_OPTIONS
-} from "./rsi-touch-flip-prefs.js?v=2";
+} from "./rsi-touch-flip-prefs.js?v=4";
 
 export const RSI_TOUCH_FLIP_DEFAULT_TRAIN_PCT = 70;
 

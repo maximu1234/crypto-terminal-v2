@@ -13,30 +13,31 @@ loadMarketHistory
 import {
 RSI_TOUCH_FLIP_SIZE_AVERAGE,
 loadRsiTouchFlipPrefs,
-saveRsiTouchFlipPrefs
-} from "./rsi-touch-flip-prefs.js?v=2";
+saveRsiTouchFlipPrefs,
+loadRsiTouchFlipBalancePct
+} from "./rsi-touch-flip-prefs.js?v=4";
 import {
 RSI_TOUCH_FLIP_BOOK_CHANGE_EVENT,
 RSI_TOUCH_FLIP_BOOK_OPEN_EVENT,
 getRsiTouchFlipBookRow,
 loadRsiTouchFlipBook,
-rsiTouchFlipBookBudgetFits,
+rsiTouchFlipShareBudgetFits,
 upsertRsiTouchFlipBookRow,
 removeRsiTouchFlipBookRow
-} from "./rsi-touch-flip-book.js?v=3";
+} from "./rsi-touch-flip-book.js?v=4";
 import {
 getAlgoTradingWalletBalance
 } from "./runtime-bridge.js?v=6";
 import {
 runRsiTouchFlip
-} from "./rsi-touch-flip-engine.js?v=4";
+} from "./rsi-touch-flip-engine.js?v=5";
 import {
 resolveRsiTouchFlipChartRsi,
 rsiTouchFlipChartDays
 } from "./rsi-touch-flip-mtf.js?v=3";
 import {
 mountRsiTouchFlipOverlay
-} from "./rsi-touch-flip-overlay.js?v=2";
+} from "./rsi-touch-flip-overlay.js?v=3";
 import {
 mountRsiTouchFlipFit
 } from "./rsi-touch-flip-fit-panel.js?v=7";
@@ -343,10 +344,6 @@ showMarks:
 !!el(
 "algo-rsi-flip-marks"
 )?.checked,
-initialCapital:
-el(
-"algo-rsi-flip-capital"
-)?.value,
 commissionPct:
 el(
 "algo-rsi-flip-commission"
@@ -424,10 +421,6 @@ prefs.sizeMode
 assign(
 "algo-rsi-flip-mult",
 prefs.sizeMult
-);
-assign(
-"algo-rsi-flip-capital",
-prefs.initialCapital
 );
 assign(
 "algo-rsi-flip-commission",
@@ -659,6 +652,8 @@ clearOverview();
 return;
 }
 
+syncChartRsiPaneFromColumn();
+
 if(
 !host?.isHistoryReady?.()
 ){
@@ -779,6 +774,21 @@ host.getChartTf?.() ||
 
 }
 
+function syncChartRsiPaneFromColumn(){
+
+if(
+disposed ||
+!isActive()
+){
+return;
+}
+
+host.syncChartRsiPaneFromFlip?.(
+readUiPatch()
+);
+
+}
+
 function onPrefsField(){
 
 if(
@@ -794,6 +804,7 @@ readUiPatch()
 applyPrefsToUi(
 loadRsiTouchFlipPrefs()
 );
+syncChartRsiPaneFromColumn();
 void refresh();
 
 }
@@ -810,21 +821,36 @@ const fieldIds =
 "algo-rsi-flip-size-mode",
 "algo-rsi-flip-mult",
 "algo-rsi-flip-marks",
-"algo-rsi-flip-capital",
 "algo-rsi-flip-commission",
 "algo-rsi-flip-slippage"
+];
+const rsiPaneFieldIds =
+[
+"algo-rsi-flip-len",
+"algo-rsi-flip-os",
+"algo-rsi-flip-ob",
+"algo-rsi-flip-tf"
 ];
 
 for(
 const id of fieldIds
 ){
-const input =
 el(
 id
-);
-input?.addEventListener(
+)?.addEventListener(
 "change",
 onPrefsField
+);
+}
+
+for(
+const id of rsiPaneFieldIds
+){
+el(
+id
+)?.addEventListener(
+"input",
+syncChartRsiPaneFromColumn
 );
 }
 
@@ -928,19 +954,29 @@ wallet =
 null;
 }
 
+const book =
+loadRsiTouchFlipBook();
+const replacing =
+Boolean(
+getRsiTouchFlipBookRow(
+symbol
+)
+);
+const tickerCount =
+replacing
+? book.length
+: book.length +
+1;
+const pct =
+loadRsiTouchFlipBalancePct();
 const gate =
-rsiTouchFlipBookBudgetFits(
+rsiTouchFlipShareBudgetFits(
 {
-rows:
-loadRsiTouchFlipBook(),
 available:
 wallet,
-incoming:{
-symbol,
-budget:
-prefs.budget,
-prefs
-}
+balancePct:
+pct,
+tickerCount
 }
 );
 
@@ -961,8 +997,16 @@ tf,
 prefs
 }
 );
+const shareLabel =
+Number.isFinite(
+gate.share
+)
+? gate.share.toFixed(
+0
+)
+: "—";
 setBookStatus(
-`${symbol} ${tf} в книге · бюджет ${Number(prefs.budget).toFixed(0)} USDT (сумма ${gate.sum.toFixed(0)} / ${gate.available.toFixed(0)}). Запущенный бот подхватывает сразу.`,
+`${symbol} ${tf} в книге · live ~${shareLabel} USDT на тикер (${pct}% / ${tickerCount}). Запущенный бот подхватывает сразу.`,
 "ok"
 );
 syncBookButtons();
@@ -1021,6 +1065,7 @@ saveRsiTouchFlipPrefs(
 applyPrefsToUi(
 loadRsiTouchFlipPrefs()
 );
+syncChartRsiPaneFromColumn();
 syncBookButtons();
 void refresh();
 
@@ -1079,6 +1124,7 @@ patch
 applyPrefsToUi(
 loadRsiTouchFlipPrefs()
 );
+syncChartRsiPaneFromColumn();
 void refresh();
 },
 resolveRsi(
@@ -1116,6 +1162,7 @@ isActive()
 applyPrefsToUi(
 loadRsiTouchFlipPrefs()
 );
+syncChartRsiPaneFromColumn();
 void refresh();
 }else{
 clearOverview();
@@ -1131,6 +1178,19 @@ onBotChanged();
 
 return {
 refresh,
+applyColumnFromPrefs(){
+
+if(
+disposed
+){
+return;
+}
+
+applyPrefsToUi(
+loadRsiTouchFlipPrefs()
+);
+
+},
 destroy(){
 
 disposed =
@@ -1145,13 +1205,22 @@ onBotChanged
 for(
 const id of fieldIds
 ){
-const input =
 el(
 id
-);
-input?.removeEventListener(
+)?.removeEventListener(
 "change",
 onPrefsField
+);
+}
+
+for(
+const id of rsiPaneFieldIds
+){
+el(
+id
+)?.removeEventListener(
+"input",
+syncChartRsiPaneFromColumn
 );
 }
 

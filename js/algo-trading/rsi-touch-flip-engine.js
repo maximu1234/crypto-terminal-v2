@@ -8,7 +8,7 @@ RSI_TOUCH_FLIP_SIDE_LONG,
 RSI_TOUCH_FLIP_SIDE_SHORT,
 RSI_TOUCH_FLIP_SIZE_EQUAL,
 normalizeRsiTouchFlipPrefs
-} from "./rsi-touch-flip-prefs.js?v=2";
+} from "./rsi-touch-flip-prefs.js?v=4";
 
 function rsiFromAvg(
 avgGain,
@@ -323,7 +323,7 @@ rate
 }
 
 function emptyOverview(
-initialCapital
+capital
 ){
 
 return {
@@ -364,7 +364,7 @@ NaN,
 avgBars:
 NaN,
 equity:
-initialCapital,
+capital,
 openTrades:
 0,
 openPnl:
@@ -375,7 +375,7 @@ openPnl:
 
 function finishOverview(
 {
-initialCapital,
+capital,
 closed,
 equityPeak,
 maxDrawdown,
@@ -445,10 +445,10 @@ grossProfit +
 grossLoss;
 const pctOfCapital =
 value=>
-initialCapital >
+capital >
 0
 ? value /
-initialCapital *
+capital *
 100
 : 0;
 
@@ -556,8 +556,10 @@ candles
 )
 ? candles
 : [];
-const initialCapital =
-settings.initialCapital;
+const capital =
+Number(
+settings.budget
+);
 const commissionRate =
 settings.commissionPct /
 100;
@@ -587,7 +589,7 @@ let openTrades =
 let realized =
 0;
 let peak =
-initialCapital;
+capital;
 let maxDrawdown =
 0;
 const marks =
@@ -820,7 +822,7 @@ price
 ){
 
 const equity =
-initialCapital +
+capital +
 realized +
 unrealizedPnl(
 price
@@ -1039,7 +1041,7 @@ unrealizedPnl(
 lastPrice
 );
 const lastEquity =
-initialCapital +
+capital +
 realized +
 openPnl;
 
@@ -1048,7 +1050,7 @@ overview:
 rows.length
 ? finishOverview(
 {
-initialCapital,
+capital,
 closed,
 equityPeak:
 peak,
@@ -1059,7 +1061,7 @@ openPnl
 }
 )
 : emptyOverview(
-initialCapital
+capital
 ),
 marks,
 closedTrades:

@@ -345,13 +345,24 @@ opts.earlyT3Prefs
 }
 : {}
 ),
-...(
+        ...(
 Array.isArray(
 opts.book
 )
 ? {
 book:
 opts.book
+}
+: {}
+),
+...(
+opts.balancePct !=
+null &&
+opts.balancePct !==
+""
+? {
+balancePct:
+opts.balancePct
 }
 : {}
 )

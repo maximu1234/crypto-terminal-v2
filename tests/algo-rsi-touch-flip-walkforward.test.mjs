@@ -213,7 +213,6 @@ test("optimize picks a combo on Train and scores Test separately", async () => {
       commissionPct: 0,
       budget: 90,
       maxStack: 3,
-      initialCapital: 10000,
       tradeSide: "BOTH"
     },
     chartTf: "1",

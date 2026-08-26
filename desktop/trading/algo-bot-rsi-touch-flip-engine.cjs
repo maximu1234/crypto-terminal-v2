@@ -17,7 +17,10 @@ const {
   decideRsiTouchFlipBar,
   normalizeLivePrefs,
   livePrefsFingerprint,
-  planRsiTouchFlipBookSync
+  planRsiTouchFlipBookSync,
+  normalizeBalancePct,
+  allocatedBalanceUsdt,
+  equalShareBudget
 } = require("./algo-bot-rsi-touch-flip-math.cjs");
 
 const MAX_CANDLES = 4000;
@@ -42,6 +45,10 @@ let engineLive = false;
 let syncBusy = false;
 /** @type {object[]|null} */
 let queuedBookRows = null;
+/** @type {number|null} */
+let queuedBalancePct = null;
+let allocPct = 100;
+let allocatedUsdt = 0;
 
 function emptyStatus() {
   return {
@@ -215,6 +222,12 @@ async function closeAll(state, reason, price) {
   state.position = "flat";
   state.stack = 0;
   state.botOwnsPosition = false;
+  state.entryBudget = null;
+  try {
+    await refreshShareBudgets();
+  } catch (err) {
+    log.warn("rsi touch flip share after close:", err?.message || err);
+  }
   pushSignal({
     ts: Date.now(),
     symbol,
@@ -227,7 +240,12 @@ async function closeAll(state, reason, price) {
 
 async function openSlice(state, side, level, price, label) {
   const prefs = state.prefs;
-  const volumeUsdt = notionalAt(level, prefs);
+  const startingFlat = state.stack === 0;
+  const budget = sliceBudget(state);
+  const volumeUsdt = notionalAt(level, {
+    ...prefs,
+    budget
+  });
   if (!(volumeUsdt > 0)) {
     pushSignal({
       ts: Date.now(),
@@ -260,6 +278,9 @@ async function openSlice(state, side, level, price, label) {
   state.stack = level + 1;
   state.sessionEntries += 1;
   state.botOwnsPosition = true;
+  if (startingFlat) {
+    state.entryBudget = budget;
+  }
   pushSignal({
     ts: Date.now(),
     symbol: state.symbol,
@@ -362,6 +383,9 @@ async function onClosedChartBar(state) {
 }
 
 function onKline(symbol, tf, candle) {
+  if (!engineLive) {
+    return;
+  }
   const state = tickers.get(normalizeSymbol(symbol));
   if (!state?.seeded) {
     return;
@@ -436,11 +460,19 @@ async function refreshWaitFlat() {
     state.position = "flat";
     state.stack = 0;
     state.botOwnsPosition = false;
+    state.entryBudget = null;
     pushSignal({
       ts: Date.now(),
       symbol: state.symbol,
       text: `${state.symbol}: позиция закрылась, начинаем торговлю`
     });
+  }
+  if ([...tickers.values()].some((row) => row.mode === "trade" && row.position === "flat")) {
+    try {
+      await refreshShareBudgets();
+    } catch (err) {
+      log.warn("rsi touch flip share after wait-flat:", err?.message || err);
+    }
   }
 }
 
@@ -496,6 +528,54 @@ function normalizeBookRows(raw) {
   return [...bySymbol.values()];
 }
 
+function walletAvailableUsdt(wallet) {
+  const available = Number(wallet?.available);
+  const usdt = Number(wallet?.usdt);
+  if (Number.isFinite(available) && available > 0) {
+    return available;
+  }
+  if (Number.isFinite(usdt) && usdt > 0) {
+    return usdt;
+  }
+  if (Number.isFinite(available) && available >= 0) {
+    return available;
+  }
+  if (Number.isFinite(usdt)) {
+    return usdt;
+  }
+  return NaN;
+}
+
+async function refreshWalletAllocated() {
+  const wallet = await algoRest.getWalletBalance();
+  const available = walletAvailableUsdt(wallet);
+  allocatedUsdt = allocatedBalanceUsdt(available, allocPct);
+  return allocatedUsdt;
+}
+
+function applyShareBudgets() {
+  const share = equalShareBudget(allocatedUsdt, tickers.size);
+  for (const state of tickers.values()) {
+    state.prefs = {
+      ...state.prefs,
+      budget: share
+    };
+  }
+  return share;
+}
+
+async function refreshShareBudgets() {
+  await refreshWalletAllocated();
+  return applyShareBudgets();
+}
+
+function sliceBudget(state) {
+  if (state.stack > 0 && Number(state.entryBudget) > 0) {
+    return Number(state.entryBudget);
+  }
+  return Number(state.prefs.budget);
+}
+
 function tickerNote(state) {
   const rsiTfLabel = usesSeparateRsiTf(state) ? rsiSourceTf(state) : "график";
   return `${state.symbol} chart=${state.tf} rsiTf=${rsiTfLabel} RSI=${state.prefs.rsiLen} OS=${state.prefs.osLevel} OB=${state.prefs.obLevel} side=${state.prefs.tradeSide} stack=${state.prefs.maxStack} budget=${state.prefs.budget} ${state.mode}`;
@@ -540,7 +620,8 @@ async function seedTicker(row) {
     tf: row.tf,
     prefs: {
       ...row.prefs,
-      rsiTf: String(row.prefs.rsiTf || "").trim()
+      rsiTf: String(row.prefs.rsiTf || "").trim(),
+      budget: 0
     },
     mode: "wait-flat",
     chartCandles: [],
@@ -553,7 +634,8 @@ async function seedTicker(row) {
     stack: 0,
     sessionEntries: 0,
     lastHandledChartTime: 0,
-    botOwnsPosition: false
+    botOwnsPosition: false,
+    entryBudget: null
   };
 
   const pos = await algoRest.getPosition(state.symbol);
@@ -634,9 +716,12 @@ async function applyTickerUpdate(state, row) {
   await waitNotInflight(state);
   const prevTf = state.tf;
   const prevRsiTf = rsiSourceTf(state);
+  const liveBudget = Number(state.prefs?.budget);
   const nextPrefs = {
     ...row.prefs,
-    rsiTf: String(row.prefs.rsiTf || "").trim()
+    rsiTf: String(row.prefs.rsiTf || "").trim(),
+    budget:
+      Number.isFinite(liveBudget) && liveBudget > 0 ? liveBudget : 0
   };
   const nextTf = row.tf;
   const nextRsiTf = rsiSourceTf({ tf: nextTf, prefs: nextPrefs });
@@ -702,9 +787,56 @@ function formatSyncMessage(plan, skipped) {
   return `Live RSI Flip подхватил книгу: ${parts.join(" ")}`;
 }
 
-async function applyBookDiff(nextRows) {
+function projectedLiveCount(plan) {
+  let n = tickers.size;
+  for (const symbol of plan.remove || []) {
+    if (tickers.has(symbol)) {
+      n -= 1;
+    }
+  }
+  return Math.max(0, n + (Array.isArray(plan.add) ? plan.add.length : 0));
+}
+
+function shareGateFailResult(message) {
+  return {
+    ok: false,
+    running: true,
+    added: [],
+    removed: [],
+    updated: [],
+    skipped: [],
+    watchlistCount: tickers.size,
+    message
+  };
+}
+
+async function applyBookDiff(nextRows, nextPct = allocPct) {
   const plan = planRsiTouchFlipBookSync(currentSyncPlanInput(), nextRows);
   const skipped = [];
+  const prevPct = allocPct;
+  allocPct = nextPct;
+  const projected = projectedLiveCount(plan);
+  const gateCount = projected === 0 ? 0 : Math.max(tickers.size, projected);
+
+  if (gateCount > 0) {
+    try {
+      await refreshWalletAllocated();
+    } catch (err) {
+      allocPct = prevPct;
+      return shareGateFailResult(
+        err?.message ||
+          "Не удалось прочитать баланс алго-ключа — live книгу не менял"
+      );
+    }
+
+    const gatedShare = equalShareBudget(allocatedUsdt, gateCount);
+    if (!(gatedShare >= 1)) {
+      allocPct = prevPct;
+      return shareGateFailResult(
+        `Доля на тикер ${Number(gatedShare).toFixed(2)} USDT < 1 USDT (${gateCount} тик. · ${nextPct}% баланса) — live книгу не менял`
+      );
+    }
+  }
 
   for (const symbol of plan.remove) {
     const state = tickers.get(symbol);
@@ -744,7 +876,12 @@ async function applyBookDiff(nextRows) {
     void refreshWaitFlat();
   }
 
-  const message = formatSyncMessage(plan, skipped);
+  const share = applyShareBudgets();
+  const shareNote =
+    Number.isFinite(share) && share > 0
+      ? ` · ${allocPct}% → ${Number(allocatedUsdt).toFixed(2)} / ${tickers.size} = ${share.toFixed(2)} USDT`
+      : "";
+  const message = `${formatSyncMessage(plan, skipped)}${shareNote}`;
   sessionLog.appendNote?.(message);
   onActivity?.();
   return {
@@ -773,6 +910,8 @@ async function startRsiTouchFlipEngine(config = {}) {
   signalLog.length = 0;
   lastSignalText = "";
   queuedBookRows = null;
+  queuedBalancePct = null;
+  allocPct = normalizeBalancePct(config.balancePct);
 
   klineHub = createAlgoBybitKlineHub();
   unsubKline = klineHub.onKline(onKline);
@@ -797,6 +936,23 @@ async function startRsiTouchFlipEngine(config = {}) {
     );
   }
 
+  let share = 0;
+  try {
+    share = await refreshShareBudgets();
+  } catch (err) {
+    await stopRsiTouchFlipEngine();
+    throw new Error(err?.message || "Не удалось прочитать баланс для долей RSI Flip");
+  }
+  if (!(share >= 1)) {
+    await stopRsiTouchFlipEngine();
+    throw new Error(
+      `Доля на тикер ${Number(share).toFixed(2)} USDT < 1 USDT (${tickers.size} тик. · ${allocPct}% баланса)`
+    );
+  }
+  sessionLog.appendNote?.(
+    `Доли: ${allocPct}% баланса → ${Number(allocatedUsdt).toFixed(2)} USDT / ${tickers.size} = ${share.toFixed(2)} USDT на тикер`
+  );
+
   engineLive = true;
   startWaitFlatLoop();
   void refreshWaitFlat();
@@ -808,6 +964,7 @@ async function startRsiTouchFlipEngine(config = {}) {
 
 async function stopRsiTouchFlipEngine() {
   queuedBookRows = null;
+  queuedBalancePct = null;
   engineLive = false;
   stopWaitFlatLoop();
   if (unsubKline) {
@@ -847,7 +1004,12 @@ async function stopRsiTouchFlipEngine() {
 
 async function syncRsiTouchFlipBook(config = {}) {
   const rows = normalizeBookRows(config.rows || config.book);
+  const nextPct =
+    config.balancePct != null && config.balancePct !== ""
+      ? normalizeBalancePct(config.balancePct)
+      : allocPct;
   if (!engineLive) {
+    allocPct = nextPct;
     return {
       ok: true,
       running: false,
@@ -862,6 +1024,7 @@ async function syncRsiTouchFlipBook(config = {}) {
 
   if (syncBusy) {
     queuedBookRows = rows;
+    queuedBalancePct = nextPct;
     return {
       ok: true,
       running: true,
@@ -873,6 +1036,7 @@ async function syncRsiTouchFlipBook(config = {}) {
   syncBusy = true;
   try {
     let current = rows;
+    let currentPct = nextPct;
     let result = {
       ok: true,
       running: true,
@@ -884,12 +1048,15 @@ async function syncRsiTouchFlipBook(config = {}) {
       message: `Live RSI Flip: книга без изменений (${tickers.size} тик.)`
     };
     while (engineLive) {
-      result = await applyBookDiff(current);
+      result = await applyBookDiff(current, currentPct);
       if (!queuedBookRows) {
         return result;
       }
       current = queuedBookRows;
+      currentPct =
+        queuedBalancePct != null ? queuedBalancePct : currentPct;
       queuedBookRows = null;
+      queuedBalancePct = null;
     }
     return result;
   } finally {
@@ -920,6 +1087,9 @@ function getRsiTouchFlipEngineStatus() {
     prefs: first?.prefs || null,
     entriesCount: list.reduce((sum, row) => sum + (row.sessionEntries || 0), 0),
     watchlistCount: list.length,
+    allocPct,
+    allocatedUsdt,
+    shareBudget: equalShareBudget(allocatedUsdt, list.length),
     tickers: list.map((row) => ({
       symbol: row.symbol,
       tf: row.tf,

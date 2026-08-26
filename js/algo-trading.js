@@ -28,7 +28,7 @@ ALGO_TICKER_SCAN_HISTORY_REQUESTS
 import {
 defaultRsiPaneSettings,
 normalizeRsiPaneSettings
-} from "./indicators/rsi-pane.js?v=8";
+} from "./indicators/rsi-pane.js?v=10";
 
 import {
 buildChartRsiPoints
@@ -69,12 +69,13 @@ mountAlgoRuntimeUi
 
 import {
 mountAlgoBotStrategyUi
-} from "./algo-trading/bot-strategy-ui.js?v=90";
+} from "./algo-trading/bot-strategy-ui.js?v=92";
 
 import {
 ALGO_ANALYSIS_BOT_CHANGE_EVENT,
 ALGO_ANALYSIS_BOT_NONE,
 ALGO_ANALYSIS_BOT_PATTERN_12,
+ALGO_ANALYSIS_BOT_RSI_TOUCH_FLIP,
 getActiveAnalysisBotId,
 isActiveAnalysisBot,
 isAnyAnalysisBotActive,
@@ -87,7 +88,7 @@ mountSessionLogServerSettings
 
 import {
 syncBotStrategiesToMain
-} from "./algo-trading/bot-bridge.js?v=26";
+} from "./algo-trading/bot-bridge.js?v=27";
 
 import {
 mountAlgoTradeUi
@@ -107,7 +108,12 @@ mountAlgoPatternEntryOverlay
 
 import {
 mountRsiTouchFlipHost
-} from "./algo-trading/rsi-touch-flip-panel.js?v=15";
+} from "./algo-trading/rsi-touch-flip-panel.js?v=19";
+
+import {
+loadRsiTouchFlipPrefs,
+saveRsiTouchFlipPrefs
+} from "./algo-trading/rsi-touch-flip-prefs.js?v=4";
 
 import {
 clearAlgoPatternAnalysisUi,
@@ -361,14 +367,167 @@ indRoot.style.display =
 }
 
 
-let rsiPaneSettings =
+let userRsiPaneSettings =
 normalizeRsiPaneSettings(
 defaultRsiPaneSettings()
 );
+let rsiPaneSettings =
+userRsiPaneSettings;
 let lastRsiHudValue =
 null;
 let rsiRebuildSeq =
 0;
+
+function rsiPaneSettingsFromFlipPrefs(
+raw
+){
+
+const fromColumn =
+raw &&
+typeof raw ===
+"object" &&
+(
+raw.rsiLen !=
+null ||
+raw.osLevel !=
+null ||
+raw.obLevel !=
+null ||
+raw.rsiTf !=
+null
+);
+const prefs =
+fromColumn
+? raw
+: loadRsiTouchFlipPrefs();
+
+return {
+period:
+prefs.rsiLen,
+overbought:
+prefs.obLevel,
+oversold:
+prefs.osLevel,
+tf:
+prefs.rsiTf ||
+""
+};
+
+}
+
+function readFlipPanePatchFromDom(){
+
+const lenEl =
+document.getElementById(
+"algo-rsi-flip-len"
+);
+
+if(
+!lenEl
+){
+return loadRsiTouchFlipPrefs();
+}
+
+return {
+rsiLen:
+lenEl.value,
+osLevel:
+document.getElementById(
+"algo-rsi-flip-os"
+)?.value,
+obLevel:
+document.getElementById(
+"algo-rsi-flip-ob"
+)?.value,
+rsiTf:
+document.getElementById(
+"algo-rsi-flip-tf"
+)?.value
+};
+
+}
+
+let ignoreNextRsiSettingsCapture =
+false;
+
+function applyEffectiveRsiPaneSettings(
+flipPatch
+){
+
+if(
+isActiveAnalysisBot(
+ALGO_ANALYSIS_BOT_RSI_TOUCH_FLIP
+)
+){
+rsiPaneSettings =
+normalizeRsiPaneSettings(
+rsiPaneSettingsFromFlipPrefs(
+flipPatch ||
+readFlipPanePatchFromDom()
+)
+);
+}else{
+rsiPaneSettings =
+userRsiPaneSettings;
+}
+
+syncRsiHudPeriod();
+syncRsiLevelDom();
+applyRsiData();
+
+}
+
+function getRsiPaneSettings(){
+
+if(
+!isActiveAnalysisBot(
+ALGO_ANALYSIS_BOT_RSI_TOUCH_FLIP
+)
+){
+return null;
+}
+
+return normalizeRsiPaneSettings(
+rsiPaneSettingsFromFlipPrefs(
+readFlipPanePatchFromDom()
+)
+);
+
+}
+
+function commitRsiPaneSettings(
+next
+){
+
+if(
+!isActiveAnalysisBot(
+ALGO_ANALYSIS_BOT_RSI_TOUCH_FLIP
+)
+){
+return false;
+}
+
+saveRsiTouchFlipPrefs(
+{
+rsiLen:
+next?.period,
+osLevel:
+next?.oversold,
+obLevel:
+next?.overbought,
+rsiTf:
+next?.tf ||
+""
+}
+);
+rsiTouchFlipHost?.applyColumnFromPrefs?.();
+applyEffectiveRsiPaneSettings();
+void rsiTouchFlipHost?.refresh?.();
+ignoreNextRsiSettingsCapture =
+true;
+return true;
+
+}
 
 function syncRsiHudPeriod(){
 
@@ -392,14 +551,25 @@ function onRsiSettingsChange(
 next
 ){
 
-rsiPaneSettings =
+if(
+ignoreNextRsiSettingsCapture
+){
+ignoreNextRsiSettingsCapture =
+false;
+applyEffectiveRsiPaneSettings();
+return;
+}
+
+if(
+next
+){
+userRsiPaneSettings =
 normalizeRsiPaneSettings(
-next ||
-rsiPaneSettings
+next
 );
-syncRsiHudPeriod();
-syncRsiLevelDom();
-applyRsiData();
+}
+
+applyEffectiveRsiPaneSettings();
 
 }
 
@@ -795,6 +965,7 @@ algoPattern12EnabledOnce =
 false;
 refreshSupertrendFilterLines();
 rsiTouchFlipHost?.refresh?.();
+applyEffectiveRsiPaneSettings();
 requestAnimationFrame(
 ()=>{
 recaptureAlgoStatsPanelHeight();
@@ -834,6 +1005,7 @@ true
 );
 }
 
+applyEffectiveRsiPaneSettings();
 requestAnimationFrame(
 ()=>{
 recaptureAlgoStatsPanelHeight();
@@ -2514,6 +2686,8 @@ rsiPaneActive,
 layoutRsiBand:
 layoutRsi,
 onRsiSettingsChange,
+getRsiPaneSettings,
+commitRsiPaneSettings,
 settleChartViewport:
 fitViewport,
 onIndicatorToggle(
@@ -2658,6 +2832,13 @@ getSymbol:()=>
 symbol,
 isHistoryReady:()=>
 historyStatsReady,
+syncChartRsiPaneFromFlip(
+patch
+){
+applyEffectiveRsiPaneSettings(
+patch
+);
+},
 loadHistory:(
 histSymbol,
 histTf,

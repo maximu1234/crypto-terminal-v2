@@ -6,6 +6,8 @@ const COLOR_OS =
 "#26a69a";
 const COLOR_OB =
 "#ef5350";
+const COLOR_TOUCH =
+"#9ca3af";
 const COLOR_CLOSE =
 "#ab47bc";
 
@@ -211,14 +213,14 @@ position =
 shape =
 "arrowUp";
 color =
-COLOR_OB;
+COLOR_TOUCH;
 }else{
 position =
 "belowBar";
 shape =
 "arrowDown";
 color =
-COLOR_OS;
+COLOR_TOUCH;
 }
 
 out.push(

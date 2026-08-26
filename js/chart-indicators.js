@@ -233,7 +233,7 @@ createIndicatorSettingsDialog
 await Promise.all(
 [
 import(
-"./indicators/rsi-pane.js?v=8"
+"./indicators/rsi-pane.js?v=10"
 ),
 import(
 "./indicators/volume-pane.js?v=16"

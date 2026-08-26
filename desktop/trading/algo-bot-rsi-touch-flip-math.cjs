@@ -98,6 +98,41 @@ function notionalAt(level, settings) {
  * @param {unknown} raw
  * @returns {number}
  */
+function normalizeBalancePct(raw) {
+  return clampNumber(raw, 1, 100, 100);
+}
+
+/**
+ * @param {unknown} available
+ * @param {unknown} pct
+ * @returns {number}
+ */
+function allocatedBalanceUsdt(available, pct) {
+  const wallet = Number(available);
+  if (!Number.isFinite(wallet) || wallet < 0) {
+    return NaN;
+  }
+  return wallet * (normalizeBalancePct(pct) / 100);
+}
+
+/**
+ * @param {unknown} allocated
+ * @param {unknown} tickerCount
+ * @returns {number}
+ */
+function equalShareBudget(allocated, tickerCount) {
+  const n = Math.max(0, Math.round(Number(tickerCount) || 0));
+  const a = Number(allocated);
+  if (n < 1 || !Number.isFinite(a) || a <= 0) {
+    return 0;
+  }
+  return a / n;
+}
+
+/**
+ * @param {unknown} raw
+ * @returns {number}
+ */
 function tfPeriodSec(raw) {
   const t = String(raw || "").trim();
   if (t === "D") {
@@ -282,7 +317,6 @@ function livePrefsFingerprint(tf, prefs) {
     rsiTf: String(p.rsiTf || "").trim(),
     tradeSide: p.tradeSide,
     maxStack: p.maxStack,
-    budget: p.budget,
     sizeMode: p.sizeMode,
     sizeMult: p.sizeMult
   });
@@ -357,5 +391,8 @@ module.exports = {
   decideRsiTouchFlipBar,
   normalizeLivePrefs,
   livePrefsFingerprint,
-  planRsiTouchFlipBookSync
+  planRsiTouchFlipBookSync,
+  normalizeBalancePct,
+  allocatedBalanceUsdt,
+  equalShareBudget
 };

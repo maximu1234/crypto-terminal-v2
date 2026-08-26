@@ -655,7 +655,9 @@ parsed.rows,
 book:
 parsed.rows,
 source:
-"lan"
+"lan",
+balancePct:
+parsed.balancePct
 }
 );
 
@@ -915,6 +917,17 @@ opts.book
 ? {
 book:
 opts.book
+}
+: {}
+),
+...(
+opts.balancePct !=
+null &&
+opts.balancePct !==
+""
+? {
+balancePct:
+opts.balancePct
 }
 : {}
 )

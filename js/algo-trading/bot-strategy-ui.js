@@ -20,12 +20,18 @@ saveEarlyT3BotPrefs
 } from "./early-t3-bot-prefs.js?v=5";
 import {
 snapshotRsiTouchFlipBook,
-rsiTouchFlipBookBudgetFits,
+rsiTouchFlipShareBudgetFits,
+rsiTouchFlipAllocatedUsdt,
+rsiTouchFlipEqualShareBudget,
 loadRsiTouchFlipBook,
-sumRsiTouchFlipBookBudgets,
 replaceRsiTouchFlipBook,
 RSI_TOUCH_FLIP_BOOK_CHANGE_EVENT
-} from "./rsi-touch-flip-book.js?v=3";
+} from "./rsi-touch-flip-book.js?v=4";
+import {
+loadRsiTouchFlipBalancePct,
+saveRsiTouchFlipBalancePct,
+normalizeRsiTouchFlipBalancePct
+} from "./rsi-touch-flip-prefs.js?v=4";
 import {
 getAlgoTradingWalletBalance
 } from "./runtime-bridge.js?v=6";
@@ -60,7 +66,7 @@ isAlgoBotDesktop,
 fetchAlgoBotCloudLock,
 clearAlgoBotCloudLock,
 ensureAlgoBotCloudLock
-} from "./bot-bridge.js?v=26";
+} from "./bot-bridge.js?v=27";
 import {
 stageBotTickerBookFromPublished,
 hydrateBotTickerBookFromMain,
@@ -75,7 +81,7 @@ import {
 mountRemoteSessionLogsEntry,
 mountRemoteWatchlistsPushEntry,
 mountLocalSessionLogsEntry
-} from "./bot-session-logs-viewer.js?v=32";
+} from "./bot-session-logs-viewer.js?v=33";
 import {
 rebalanceTpShares
 } from "./pattern-trade-stats-partial.js?v=22";
@@ -1069,12 +1075,35 @@ true;
 
 }
 
-function fillRsiTouchFlipSettingsModal(){
+async function fillRsiTouchFlipSettingsModal(){
 
 const summary =
 document.getElementById(
 "algo-bot-rsi-flip-book-summary"
 );
+const pctInput =
+document.getElementById(
+"algo-bot-rsi-flip-balance-pct"
+);
+const pct =
+pctInput &&
+document.activeElement ===
+pctInput
+? normalizeRsiTouchFlipBalancePct(
+pctInput.value
+)
+: loadRsiTouchFlipBalancePct();
+
+if(
+pctInput &&
+document.activeElement !==
+pctInput
+){
+pctInput.value =
+String(
+pct
+);
+}
 
 if(
 !summary
@@ -1084,27 +1113,70 @@ return;
 
 const rows =
 loadRsiTouchFlipBook();
-const sum =
-sumRsiTouchFlipBookBudgets(
-rows
+let wallet =
+null;
+
+try{
+wallet =
+await getAlgoTradingWalletBalance();
+}catch{
+wallet =
+null;
+}
+
+const allocated =
+rsiTouchFlipAllocatedUsdt(
+wallet,
+pct
+);
+const share =
+rsiTouchFlipEqualShareBudget(
+allocated,
+rows.length
+);
+const available =
+Number(
+allocated
 );
 
 if(
 !rows.length
 ){
 summary.textContent =
-"Книга пуста. Добавьте тикеры в панели Данные.";
+Number.isFinite(
+available
+)
+? `Книга пуста. ${pct}% от доступного ≈ ${available.toFixed(0)} USDT. Добавьте тикеры в панели Данные.`
+: "Книга пуста. Добавьте тикеры в панели Данные.";
 return;
 }
 
+const shareLabel =
+Number.isFinite(
+share
+) &&
+share >
+0
+? share.toFixed(
+0
+)
+: "—";
+const allocLabel =
+Number.isFinite(
+available
+)
+? available.toFixed(
+0
+)
+: "—";
 const lines =
 rows.map(
 row=>
-`${row.symbol} · ${row.tf} · ${Number(row.prefs?.budget).toFixed(0)} USDT`
+`${row.symbol} · ${row.tf} · live ~${shareLabel} USDT`
 );
 
 summary.textContent =
-`В книге ${rows.length} тик. · сумма бюджетов ${sum.toFixed(0)} USDT\n${lines.join("\n")}`;
+`В книге ${rows.length} тик. · ${pct}% баланса ≈ ${allocLabel} USDT → ~${shareLabel} USDT на тикер\n${lines.join("\n")}`;
 
 }
 
@@ -1113,7 +1185,7 @@ Promise.resolve();
 
 function onRsiTouchFlipBookChanged(){
 
-fillRsiTouchFlipSettingsModal();
+void fillRsiTouchFlipSettingsModal();
 const book =
 snapshotRsiTouchFlipBook();
 rsiBookLiveSyncChain =
@@ -1176,6 +1248,24 @@ rows.length
 replaceRsiTouchFlipBook(
 rows
 );
+}
+
+if(
+res?.balancePct !=
+null &&
+res.balancePct !==
+""
+){
+saveRsiTouchFlipBalancePct(
+res.balancePct
+);
+}
+
+void fillRsiTouchFlipSettingsModal();
+
+if(
+rows.length
+){
 return;
 }
 }catch(
@@ -1208,7 +1298,7 @@ return;
 closeAllDrops();
 closeBotSettingsModal();
 closeEarlyT3SettingsModal();
-fillRsiTouchFlipSettingsModal();
+void fillRsiTouchFlipSettingsModal();
 rsiTouchFlipSettingsModal.hidden =
 false;
 rsiTouchFlipSettingsModal.classList.remove(
@@ -3819,7 +3909,144 @@ window.addEventListener(
 RSI_TOUCH_FLIP_BOOK_CHANGE_EVENT,
 onRsiTouchFlipBookChanged
 );
-fillRsiTouchFlipSettingsModal();
+document.getElementById(
+"algo-bot-rsi-flip-balance-pct"
+)?.addEventListener(
+"input",
+()=>{
+void fillRsiTouchFlipSettingsModal();
+}
+);
+document.getElementById(
+"algo-bot-rsi-flip-balance-pct"
+)?.addEventListener(
+"change",
+event=>{
+const input =
+event.target instanceof HTMLInputElement
+? event.target
+: null;
+const previous =
+loadRsiTouchFlipBalancePct();
+rsiBookLiveSyncChain =
+rsiBookLiveSyncChain.then(
+async()=>{
+const next =
+saveRsiTouchFlipBalancePct(
+input?.value ??
+previous
+);
+void fillRsiTouchFlipSettingsModal();
+const book =
+snapshotRsiTouchFlipBook();
+
+if(
+rsiTouchFlipRunning &&
+book.length
+){
+const wallet =
+await getAlgoTradingWalletBalance();
+const gate =
+rsiTouchFlipShareBudgetFits(
+{
+available:
+wallet,
+balancePct:
+next,
+tickerCount:
+book.length
+}
+);
+
+if(
+!gate.ok
+){
+saveRsiTouchFlipBalancePct(
+previous
+);
+
+if(
+input
+){
+input.value =
+String(
+previous
+);
+}
+
+void fillRsiTouchFlipSettingsModal();
+applyStatusPanel(
+{
+ok:
+false,
+running:
+rsiTouchFlipRunning,
+strategyId:
+"rsi-touch-flip",
+message:
+gate.message
+}
+);
+return;
+}
+}
+
+const result =
+await syncRsiTouchFlipBookToLive(
+book
+);
+
+if(
+result?.ok ===
+false
+){
+saveRsiTouchFlipBalancePct(
+previous
+);
+
+if(
+input
+){
+input.value =
+String(
+previous
+);
+}
+
+void fillRsiTouchFlipSettingsModal();
+
+if(
+result.message
+){
+applyStatusPanel(
+{
+ok:
+false,
+running:
+rsiTouchFlipRunning,
+strategyId:
+"rsi-touch-flip",
+message:
+result.message
+}
+);
+}
+
+}
+
+return result;
+}
+).catch(
+err=>{
+console.warn(
+"[algo-trading] rsi flip balance pct live sync",
+err
+);
+}
+);
+}
+);
+void fillRsiTouchFlipSettingsModal();
 void hydrateRsiTouchFlipBookFromMain();
 
 for(
@@ -4506,13 +4733,25 @@ return;
 
 const wallet =
 await getAlgoTradingWalletBalance();
+const pctInput =
+document.getElementById(
+"algo-bot-rsi-flip-balance-pct"
+);
+const pct =
+saveRsiTouchFlipBalancePct(
+pctInput instanceof HTMLInputElement
+? pctInput.value
+: loadRsiTouchFlipBalancePct()
+);
 const gate =
-rsiTouchFlipBookBudgetFits(
+rsiTouchFlipShareBudgetFits(
 {
-rows:
-book,
 available:
-wallet
+wallet,
+balancePct:
+pct,
+tickerCount:
+book.length
 }
 );
 
@@ -4536,7 +4775,9 @@ const result =
 await startAlgoBot(
 "rsi-touch-flip",
 {
-book
+book,
+balancePct:
+pct
 }
 );
 

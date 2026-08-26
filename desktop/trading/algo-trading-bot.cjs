@@ -57,6 +57,10 @@ const rsiTouchFlipEngine =
 require(
 "./algo-bot-rsi-touch-flip-engine.cjs"
 );
+const rsiTouchFlipMath =
+require(
+"./algo-bot-rsi-touch-flip-math.cjs"
+);
 const {
 getAlgoTradingMode
 } =
@@ -2209,7 +2213,11 @@ message:
 
 try{
 writeRsiTouchFlipBook(
-bookRows
+bookRows,
+{
+balancePct:
+payload?.balancePct
+}
 );
 }catch(
 err
@@ -2245,28 +2253,21 @@ equityNum >
 0
 ? equityNum
 : availableNum;
-let budgetSum =
-0;
-
-for(
-const row of bookRows
-){
-const budget =
-Number(
-row?.prefs?.budget ??
-row?.budget
+const balancePct =
+rsiTouchFlipMath.normalizeBalancePct(
+payload?.balancePct ??
+readRsiTouchFlipBook().balancePct
 );
-
-if(
-Number.isFinite(
-budget
-)
-){
-budgetSum +=
-budget;
-}
-
-}
+const allocated =
+rsiTouchFlipMath.allocatedBalanceUsdt(
+available,
+balancePct
+);
+const share =
+rsiTouchFlipMath.equalShareBudget(
+allocated,
+bookRows.length
+);
 
 if(
 !wallet?.ok ||
@@ -2284,18 +2285,16 @@ wallet?.message ||
 }
 
 if(
-budgetSum >
-available
+!(
+share >=
+1
+)
 ){
 return {
 ok:
 false,
 message:
-`Сумма бюджетов ${budgetSum.toFixed(
-2
-)} USDT > баланс ${available.toFixed(
-2
-)} USDT`
+`Доля на тикер ${Number(share).toFixed(2)} USDT < 1 USDT (${bookRows.length} тик. · ${balancePct}% от ${Number(available).toFixed(2)})`
 };
 }
 
@@ -2303,7 +2302,9 @@ sessionRsiTouchFlipPrefs =
 {
 book:
 bookRows,
-budgetSum,
+balancePct,
+allocated,
+share,
 available
 };
 
@@ -2325,17 +2326,14 @@ bookRows.length
 }
 );
 sessionLog.appendNote(
-`Запуск rsi-touch-flip live ${bookRows.length} тик. budgetSum=${budgetSum.toFixed(
-2
-)} available=${available.toFixed(
-2
-)}`
+`Запуск rsi-touch-flip live ${bookRows.length} тик. ${balancePct}% баланса → ${Number(allocated).toFixed(2)} / ${bookRows.length} = ${Number(share).toFixed(2)} USDT на тикер, available=${available.toFixed(2)}`
 );
 
 await rsiTouchFlipEngine.startRsiTouchFlipEngine(
 {
 rows:
 bookRows,
+balancePct,
 onActivity:()=>{
 pushStatus(
 buildStatusSnapshot()
@@ -3150,7 +3148,17 @@ Array.isArray(
 read?.rows
 )
 ? read.rows
-: []
+: [],
+balancePct:
+Number.isFinite(
+Number(
+read?.balancePct
+)
+)
+? Number(
+read.balancePct
+)
+: 100
 };
 
 }
@@ -3259,6 +3267,11 @@ extra.rows
 )
 ? extra.rows
 : readRsiTouchFlipBook().rows;
+const balancePct =
+extra.balancePct !=
+null
+? extra.balancePct
+: readRsiTouchFlipBook().balancePct;
 
 const snapshot =
 buildStatusSnapshot(
@@ -3267,6 +3280,8 @@ applyRsiTouchFlipBook:
 true,
 publishedRsiTouchFlipBook:
 rows,
+publishedRsiTouchFlipBalancePct:
+balancePct,
 ...(
 typeof extra.message ===
 "string"
@@ -3286,7 +3301,7 @@ snapshot,
 
 }
 
-async function syncRsiTouchFlipBook(
+async function syncRsiTouchFlipBookNow(
 payload =
 {}
 ){
@@ -3325,7 +3340,7 @@ message:
 if(
 runningStrategyId ===
 "rsi-touch-flip" &&
-isLan
+rows.length
 ){
 const wallet =
 await getWalletBalance();
@@ -3333,9 +3348,20 @@ const available =
 walletAvailableUsdt(
 wallet
 );
-const sum =
-sumRsiTouchFlipBookBudgets(
-rows
+const balancePct =
+rsiTouchFlipMath.normalizeBalancePct(
+payload?.balancePct ??
+readRsiTouchFlipBook().balancePct
+);
+const allocated =
+rsiTouchFlipMath.allocatedBalanceUsdt(
+available,
+balancePct
+);
+const share =
+rsiTouchFlipMath.equalShareBudget(
+allocated,
+rows.length
 );
 
 if(
@@ -3354,18 +3380,95 @@ wallet?.message ||
 }
 
 if(
-sum >
-available
+!(
+share >=
+1
+)
 ){
 return {
 ok:
 false,
 message:
-`Сумма бюджетов RSI Flip ${sum.toFixed(
-2
-)} USDT > баланс ${available.toFixed(
-2
-)} USDT — live книгу не менял`
+`Доля на тикер ${Number(share).toFixed(2)} USDT < 1 USDT (${rows.length} тик. · ${balancePct}% от ${available.toFixed(2)}) — live книгу не менял`
+};
+}
+}
+
+let live =
+{
+ok:
+true,
+running:
+false,
+message:
+"Книга RSI Flip сохранена"
+};
+
+if(
+runningStrategyId ===
+"rsi-touch-flip"
+){
+try{
+live =
+await rsiTouchFlipEngine.syncRsiTouchFlipBook(
+{
+rows:
+rows,
+balancePct:
+payload?.balancePct ??
+readRsiTouchFlipBook().balancePct
+}
+);
+statusMessage =
+live?.message ||
+statusMessage;
+}catch(
+err
+){
+log.warn(
+"rsi touch flip live sync:",
+err?.message ||
+err
+);
+return {
+ok:
+false,
+running:
+true,
+message:
+err?.message ||
+String(
+err
+)
+};
+}
+
+if(
+live?.ok ===
+false
+){
+return {
+ok:
+false,
+running:
+true,
+queued:
+!!live?.queued,
+added:
+live?.added ||
+[],
+removed:
+live?.removed ||
+[],
+updated:
+live?.updated ||
+[],
+skipped:
+live?.skipped ||
+[],
+message:
+live?.message ||
+"Live RSI Flip отклонил книгу — файл не менял"
 };
 }
 }
@@ -3375,7 +3478,11 @@ let written;
 try{
 written =
 writeRsiTouchFlipBook(
-rows
+rows,
+{
+balancePct:
+payload?.balancePct
+}
 );
 }catch(
 err
@@ -3410,55 +3517,10 @@ sessionRsiTouchFlipPrefs ||
 {}
 ),
 book:
-written.rows
+written.rows,
+balancePct:
+written.balancePct
 };
-
-let live =
-{
-ok:
-true,
-running:
-false,
-message:
-`Книга RSI Flip сохранена (${written.tickerCount} тик.)`
-};
-
-if(
-runningStrategyId ===
-"rsi-touch-flip"
-){
-try{
-live =
-await rsiTouchFlipEngine.syncRsiTouchFlipBook(
-{
-rows:
-written.rows
-}
-);
-statusMessage =
-live?.message ||
-statusMessage;
-}catch(
-err
-){
-log.warn(
-"rsi touch flip live sync:",
-err?.message ||
-err
-);
-return {
-ok:
-false,
-running:
-true,
-message:
-err?.message ||
-String(
-err
-)
-};
-}
-}
 
 const message =
 live?.running
@@ -3475,6 +3537,8 @@ notifyRsiTouchFlipBookToUi(
 {
 rows:
 written.rows,
+balancePct:
+written.balancePct,
 message
 }
 );
@@ -3532,6 +3596,37 @@ message
 };
 
 }
+
+let rsiTouchFlipBookSyncChain =
+Promise.resolve();
+
+async function syncRsiTouchFlipBook(
+payload =
+{}
+){
+
+const next =
+rsiTouchFlipBookSyncChain.then(
+()=>
+syncRsiTouchFlipBookNow(
+payload
+),
+()=>
+syncRsiTouchFlipBookNow(
+payload
+)
+);
+rsiTouchFlipBookSyncChain =
+next.then(
+()=>
+undefined,
+()=>
+undefined
+);
+return next;
+
+}
+
 
 function broadcastBotStatus(
 snapshot,

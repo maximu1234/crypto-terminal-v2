@@ -227,8 +227,6 @@ sizeMult:
 1.5,
 showMarks:
 true,
-initialCapital:
-10000,
 commissionPct:
 0.04,
 slippageTicks:
@@ -326,13 +324,6 @@ base.sizeMult
 showMarks:
 src.showMarks !==
 false,
-initialCapital:
-clampNumber(
-src.initialCapital,
-1,
-100_000_000,
-base.initialCapital
-),
 commissionPct:
 clampNumber(
 src.commissionPct,
@@ -418,7 +409,7 @@ export const RSI_TOUCH_FLIP_BOT_PREFS_CHANGE_EVENT =
 "algo-rsi-touch-flip-bot-prefs";
 
 /**
- * Поля запуска (без капитала/комиссии/меток аналитики).
+ * Поля запуска (без комиссии/меток аналитики).
  * @param {unknown} raw
  * @returns {object}
  */
@@ -529,5 +520,87 @@ pickRsiTouchFlipLaunchPrefs(
 loadRsiTouchFlipPrefs()
 )
 );
+
+}
+
+export const RSI_TOUCH_FLIP_BALANCE_PCT_KEY =
+"algo_trading_rsi_touch_flip_balance_pct_v1";
+
+export const RSI_TOUCH_FLIP_BALANCE_PCT_DEFAULT =
+100;
+
+/**
+ * @param {unknown} raw
+ * @returns {number}
+ */
+export function normalizeRsiTouchFlipBalancePct(
+raw
+){
+
+return clampNumber(
+raw,
+1,
+100,
+RSI_TOUCH_FLIP_BALANCE_PCT_DEFAULT
+);
+
+}
+
+/**
+ * @returns {number}
+ */
+export function loadRsiTouchFlipBalancePct(){
+
+try{
+const raw =
+localStorage.getItem(
+RSI_TOUCH_FLIP_BALANCE_PCT_KEY
+);
+
+if(
+raw ==
+null ||
+raw ===
+""
+){
+return RSI_TOUCH_FLIP_BALANCE_PCT_DEFAULT;
+}
+
+return normalizeRsiTouchFlipBalancePct(
+JSON.parse(
+raw
+)
+);
+}catch{
+return RSI_TOUCH_FLIP_BALANCE_PCT_DEFAULT;
+}
+
+}
+
+/**
+ * @param {unknown} raw
+ * @returns {number}
+ */
+export function saveRsiTouchFlipBalancePct(
+raw
+){
+
+const next =
+normalizeRsiTouchFlipBalancePct(
+raw
+);
+
+try{
+localStorage.setItem(
+RSI_TOUCH_FLIP_BALANCE_PCT_KEY,
+JSON.stringify(
+next
+)
+);
+}catch{
+/* ignore quota */
+}
+
+return next;
 
 }

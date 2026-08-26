@@ -935,11 +935,17 @@ strategyId:
 "rsi-touch-flip",
 rows:
 parsed.rows,
+balancePct:
+payload.balancePct ??
+parsed.balancePct,
 book:{
 strategyId:
 "rsi-touch-flip",
 rows:
-parsed.rows
+parsed.rows,
+balancePct:
+payload.balancePct ??
+parsed.balancePct
 }
 },
 120000,

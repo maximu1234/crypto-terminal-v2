@@ -174,6 +174,79 @@ assert.doesNotMatch(html, /algo-rsi-flip-copy-to-bot/);
 assert.doesNotMatch(html, /Перенести в Боты/);
 });
 
+test("algo RSI Flip column drives the chart RSI pane and lists OB before OS", () => {
+  const html = fs.readFileSync(
+    path.join(root, "algo-trading.html"),
+    "utf8"
+  );
+  const page = fs.readFileSync(
+    path.join(root, "js/algo-trading.js"),
+    "utf8"
+  );
+  const panel = fs.readFileSync(
+    path.join(root, "js/algo-trading/rsi-touch-flip-panel.js"),
+    "utf8"
+  );
+  const len = html.indexOf('id="algo-rsi-flip-len"');
+  const ob = html.indexOf('id="algo-rsi-flip-ob"');
+  const os = html.indexOf('id="algo-rsi-flip-os"');
+  assert.ok(len > 0 && ob > len && os > ob);
+  assert.doesNotMatch(html, /algo-rsi-flip-capital/);
+  assert.doesNotMatch(html, /Initial capital/);
+  assert.doesNotMatch(html, /Подбор на выбранном таймфрейме/);
+  assert.doesNotMatch(html, /Сетка на Train/);
+  assert.match(html, /Подставить только если Test зелёный\./);
+  assert.doesNotMatch(html, /Подставить включена/);
+  assert.match(page, /applyEffectiveRsiPaneSettings/);
+  assert.match(page, /ALGO_ANALYSIS_BOT_RSI_TOUCH_FLIP/);
+  assert.match(page, /syncChartRsiPaneFromFlip/);
+  assert.match(page, /getRsiPaneSettings/);
+  assert.match(page, /commitRsiPaneSettings/);
+  assert.doesNotMatch(page, /indicators\/pattern-12/);
+  assert.match(panel, /syncChartRsiPaneFromColumn/);
+  const rsiPane = fs.readFileSync(
+    path.join(root, "js/indicators/rsi-pane.js"),
+    "utf8"
+  );
+  assert.match(rsiPane, /getRsiPaneSettings/);
+  assert.match(rsiPane, /commitRsiPaneSettings/);
+  assert.match(rsiPane, /readLiveOrStoredSettings/);
+  const enableStart = rsiPane.indexOf("function enable(");
+  const enableEnd = rsiPane.indexOf("function disable(", enableStart);
+  assert.ok(enableStart > 0 && enableEnd > enableStart);
+  const enableFn = rsiPane.slice(enableStart, enableEnd);
+  assert.match(enableFn, /readSettings\(\)/);
+  assert.doesNotMatch(enableFn, /readLiveOrStoredSettings/);
+  assert.match(rsiPane, /commit\(\s*next\s*\)\s*===\s*true/);
+  const terminal = fs.readFileSync(
+    path.join(root, "js/terminal.js"),
+    "utf8"
+  );
+  assert.doesNotMatch(terminal, /getRsiPaneSettings/);
+  assert.doesNotMatch(terminal, /commitRsiPaneSettings/);
+  assert.doesNotMatch(terminal, /rsi-touch-flip/);
+  for (const rel of [
+    "js/screener.js",
+    "js/watchlist.js",
+    "js/script-page-widgets.js",
+    "js/terminal-screener-chart-pane.js"
+  ]) {
+    const src = fs.readFileSync(path.join(root, rel), "utf8");
+    assert.doesNotMatch(src, /getRsiPaneSettings/, rel);
+    assert.doesNotMatch(src, /commitRsiPaneSettings/, rel);
+  }
+  const getLive = page.indexOf("function getRsiPaneSettings");
+  const getLiveEnd = page.indexOf("function commitRsiPaneSettings", getLive);
+  assert.ok(getLive > 0 && getLiveEnd > getLive);
+  const getLiveFn = page.slice(getLive, getLiveEnd);
+  assert.match(getLiveFn, /ALGO_ANALYSIS_BOT_RSI_TOUCH_FLIP/);
+  assert.match(getLiveFn, /return null/);
+  const onChange = page.indexOf("function onRsiSettingsChange");
+  const onChangeFn = page.slice(onChange, onChange + 800);
+  assert.match(onChangeFn, /userRsiPaneSettings/);
+  assert.match(page, /ignoreNextRsiSettingsCapture/);
+});
+
 test("RSI live bot is not stopped on Algo page mount", () => {
 const ui = fs.readFileSync(
 path.join(root, "js/algo-trading/bot-strategy-ui.js"),
@@ -185,4 +258,51 @@ assert.ok(start > 0 && end > start);
 const mountTail = ui.slice(start, end);
 assert.doesNotMatch(mountTail, /onPattern12ModuleDisabled/);
 assert.doesNotMatch(mountTail, /stopAlgoBotIfRunning/);
+});
+
+test("bot lite layout keeps signed profit/loss colors", () => {
+  const css = fs.readFileSync(path.join(root, "css/algo-trading.css"), "utf8");
+  assert.match(
+    css,
+    /algo-bot-lite-layout .algo-bot-grid-cell .algo-stats-value\{[\s\S]*?color:#e5e7eb/
+  );
+  assert.match(
+    css,
+    /algo-bot-lite-layout .algo-bot-grid-cell .algo-stats-value\.algo-stats-value--long\{\s*color:#84cc16;/
+  );
+  assert.match(
+    css,
+    /algo-bot-lite-layout .algo-bot-grid-cell .algo-stats-value\.algo-stats-value--short\{\s*color:#f87171;/
+  );
+});
+
+test("RSI Flip columns share width and right-align controls", () => {
+  const css = fs.readFileSync(path.join(root, "css/algo-trading.css"), "utf8");
+  assert.match(
+    css,
+    /data-algo-analysis-bot="rsi-touch-flip"\] \.algo-stats-chart-cols\{[\s\S]*?grid-template-columns:repeat\(3, minmax\(0, 1fr\)\)/
+  );
+  assert.match(
+    css,
+    /data-algo-analysis-bot="rsi-touch-flip"\] \.algo-stats-input\{[\s\S]*?width:56px/
+  );
+  const html = fs.readFileSync(path.join(root, "algo-trading.html"), "utf8");
+  assert.doesNotMatch(html, /algo-rsi-flip-row--pair/);
+  assert.match(html, /Период RSI/);
+});
+
+test("RSI Flip commission sits in Overview, trade marks in Train/Test", () => {
+  const html = fs.readFileSync(path.join(root, "algo-trading.html"), "utf8");
+  const start = html.indexOf('data-algo-analysis-bot="rsi-touch-flip"');
+  const end = html.indexOf('data-algo-analysis-bot="pattern-12"');
+  const block = html.slice(start, end);
+  const overview = block.indexOf('id="algo-rsi-flip-avg-bars"');
+  const commission = block.indexOf('id="algo-rsi-flip-commission"');
+  const slippage = block.indexOf('id="algo-rsi-flip-slippage"');
+  const fit = block.indexOf('id="algo-rsi-flip-apply-fit"');
+  const marks = block.indexOf('id="algo-rsi-flip-marks"');
+  assert.ok(overview > 0 && commission > overview && slippage > commission);
+  assert.ok(fit > slippage && marks > fit);
+  assert.equal(block.indexOf('id="algo-rsi-flip-commission"', commission + 1), -1);
+  assert.equal(block.indexOf('id="algo-rsi-flip-marks"', marks + 1), -1);
 });

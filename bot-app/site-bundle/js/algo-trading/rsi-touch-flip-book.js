@@ -4,7 +4,7 @@
  */
 import {
   pickRsiTouchFlipLaunchPrefs
-} from "./rsi-touch-flip-prefs.js?v=2";
+} from "./rsi-touch-flip-prefs.js?v=4";
 
 export const RSI_TOUCH_FLIP_BOOK_KEY =
   "algo_trading_rsi_touch_flip_book_v1";
@@ -154,6 +154,105 @@ export function rsiTouchFlipBookBudgetFits(opts) {
     sum,
     available,
     missing: 0,
+    message: ""
+  };
+}
+
+/**
+ * @param {unknown} pct
+ * @returns {number}
+ */
+export function normalizeRsiTouchFlipBalancePctValue(pct) {
+  const n = Number(pct);
+  if (!Number.isFinite(n)) {
+    return 100;
+  }
+  return Math.min(100, Math.max(1, n));
+}
+
+/**
+ * @param {unknown} available
+ * @param {unknown} pct
+ * @returns {number}
+ */
+export function rsiTouchFlipAllocatedUsdt(available, pct) {
+  const wallet = parseWalletAvailableUsdt(available);
+  if (!Number.isFinite(wallet) || wallet < 0) {
+    return NaN;
+  }
+  return wallet * (normalizeRsiTouchFlipBalancePctValue(pct) / 100);
+}
+
+/**
+ * @param {unknown} allocated
+ * @param {unknown} tickerCount
+ * @returns {number}
+ */
+export function rsiTouchFlipEqualShareBudget(allocated, tickerCount) {
+  const n = Math.max(0, Math.round(Number(tickerCount) || 0));
+  const a = Number(allocated);
+  if (n < 1 || !Number.isFinite(a) || a <= 0) {
+    return 0;
+  }
+  return a / n;
+}
+
+/**
+ * @param {{
+ *   available: unknown,
+ *   balancePct?: unknown,
+ *   tickerCount: unknown
+ * }} opts
+ * @returns {{
+ *   ok: boolean,
+ *   allocated: number,
+ *   share: number,
+ *   available: number,
+ *   tickerCount: number,
+ *   message: string
+ * }}
+ */
+export function rsiTouchFlipShareBudgetFits(opts) {
+  const tickerCount = Math.max(0, Math.round(Number(opts?.tickerCount) || 0));
+  const available = parseWalletAvailableUsdt(opts?.available);
+  const allocated = rsiTouchFlipAllocatedUsdt(opts?.available, opts?.balancePct);
+  const share = rsiTouchFlipEqualShareBudget(allocated, tickerCount);
+  if (!Number.isFinite(available)) {
+    return {
+      ok: false,
+      allocated,
+      share,
+      available: NaN,
+      tickerCount,
+      message: "Не удалось прочитать доступный баланс алго-ключа"
+    };
+  }
+  if (tickerCount < 1) {
+    return {
+      ok: true,
+      allocated,
+      share: 0,
+      available,
+      tickerCount,
+      message: ""
+    };
+  }
+  if (!(share >= 1)) {
+    return {
+      ok: false,
+      allocated,
+      share,
+      available,
+      tickerCount,
+      message: `Доля на тикер ${share.toFixed(2)} USDT < 1 USDT (${tickerCount} тик. · ${(normalizeRsiTouchFlipBalancePctValue(opts?.balancePct)).toFixed(0)}% от ${available.toFixed(2)}). Уберите тикеры или увеличьте %.`
+    };
+  }
+  return {
+    ok: true,
+    allocated,
+    share,
+    available,
+    tickerCount,
     message: ""
   };
 }

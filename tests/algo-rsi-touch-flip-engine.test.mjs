@@ -62,6 +62,15 @@ test("launch prefs copy strategy fields and drop analysis-only", () => {
   assert.equal(launch.commissionPct, undefined);
 });
 
+test("normalized prefs drop initialCapital; analysis percents use budget", () => {
+  const prefs = normalizeRsiTouchFlipPrefs({
+    budget: 50,
+    initialCapital: 10000
+  });
+  assert.equal(prefs.initialCapital, undefined);
+  assert.equal(prefs.budget, 50);
+});
+
 test("RSI Touch Flip averaging uses geometric slices", () => {
   const settings = normalizeRsiTouchFlipPrefs({
     maxStack: 3,
@@ -90,8 +99,7 @@ test("RSI Touch Flip OS opens long, OB closes and opens short", () => {
       obLevel: 70,
       maxStack: 3,
       budget: 90,
-      commissionPct: 0,
-      initialCapital: 10000
+      commissionPct: 0
     },
     { rsiValues }
   );
@@ -187,8 +195,7 @@ test("RSI Touch Flip Overview deducts commission and fills factor", () => {
     {
       budget: 100,
       maxStack: 1,
-      commissionPct: 0.04,
-      initialCapital: 10000
+      commissionPct: 0.04
     },
     { rsiValues }
   );
@@ -206,6 +213,9 @@ test("RSI Touch Flip Overview deducts commission and fills factor", () => {
   assert.equal(result.overview.percentProfitable, 100);
   assert.equal(result.overview.profitFactor, Infinity);
   assert.equal(result.overview.avgBars, 3);
+  assert.ok(
+    Math.abs(result.overview.netProfitPct - result.overview.netProfit) < 1e-9
+  );
 });
 
 test("Wilder RSI is 100 on a strictly rising series after warmup", () => {
@@ -231,6 +241,7 @@ test("markers merge BUY ALL with long entry below the bar", () => {
   assert.equal(markers.length, 1);
   assert.equal(markers[0].text, "BUY ALL L1");
   assert.equal(markers[0].position, "belowBar");
+  assert.equal(markers[0].color, "#26a69a");
 });
 
 test("markers merge SELL ALL with short entry above the bar", () => {
@@ -242,4 +253,14 @@ test("markers merge SELL ALL with short entry above the bar", () => {
   assert.equal(markers.length, 1);
   assert.equal(markers[0].text, "SELL ALL S1");
   assert.equal(markers[0].position, "aboveBar");
+  assert.equal(markers[0].color, "#ef5350");
+});
+
+test("OS and OB touch markers are gray, not trade colors", () => {
+  const os = marksToSeriesMarkers([{ time: 300, kind: "os", text: "OS" }]);
+  const ob = marksToSeriesMarkers([{ time: 400, kind: "ob", text: "OB" }]);
+  assert.equal(os[0].text, "OS");
+  assert.equal(os[0].color, "#9ca3af");
+  assert.equal(ob[0].text, "OB");
+  assert.equal(ob[0].color, "#9ca3af");
 });

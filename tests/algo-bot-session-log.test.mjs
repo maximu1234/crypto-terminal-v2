@@ -203,18 +203,22 @@ test("LAN ticker-book payload parser splits RSI Flip from Pattern 1-2", () => {
   );
   const rsi = parseRsiTouchFlipBookPayload({
     strategyId: "rsi-touch-flip",
-    rows: [{ symbol: "ETHUSDT", tf: "5", prefs: { budget: 100 } }]
+    rows: [{ symbol: "ETHUSDT", tf: "5", prefs: { budget: 100 } }],
+    balancePct: 50
   });
   assert.equal(rsi.isRsiTouchFlip, true);
   assert.equal(rsi.rows.length, 1);
+  assert.equal(rsi.balancePct, 50);
   const nested = parseRsiTouchFlipBookPayload({
     book: {
       strategyId: "rsi-touch-flip",
-      rows: [{ symbol: "SOLUSDT", tf: "1" }]
+      rows: [{ symbol: "SOLUSDT", tf: "1" }],
+      balancePct: 25
     }
   });
   assert.equal(nested.isRsiTouchFlip, true);
   assert.equal(nested.rows[0].symbol, "SOLUSDT");
+  assert.equal(nested.balancePct, 25);
   const pattern = parseRsiTouchFlipBookPayload({
     strategyId: "st1",
     book: { strategyId: "st1", tickers: { ETHUSDT: {} } }

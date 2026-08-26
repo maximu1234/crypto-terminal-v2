@@ -29,7 +29,7 @@ resolveUrlExchangeDeepLink
 import {
 defaultRsiPaneSettings,
 normalizeRsiPaneSettings
-} from "./indicators/rsi-pane.js?v=8";
+} from "./indicators/rsi-pane.js?v=10";
 
 import {
 buildChartRsiPoints

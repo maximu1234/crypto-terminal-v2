@@ -8,6 +8,9 @@ import {
   normalizeRsiTouchFlipBookRow,
   sumRsiTouchFlipBookBudgets,
   rsiTouchFlipBookBudgetFits,
+  rsiTouchFlipShareBudgetFits,
+  rsiTouchFlipAllocatedUsdt,
+  rsiTouchFlipEqualShareBudget,
   parseWalletAvailableUsdt
 } from "../js/algo-trading/rsi-touch-flip-book.js";
 
@@ -65,6 +68,36 @@ test("start gate is sum of all book budgets vs available", () => {
   assert.equal(sumRsiTouchFlipBookBudgets(rows), 150);
   assert.equal(rsiTouchFlipBookBudgetFits({ rows, available: 150 }).ok, true);
   assert.equal(rsiTouchFlipBookBudgetFits({ rows, available: 149 }).ok, false);
+});
+
+test("live share is equal parts of allocated percent, not row budgets", () => {
+  assert.equal(rsiTouchFlipAllocatedUsdt(200, 50), 100);
+  assert.equal(rsiTouchFlipEqualShareBudget(100, 1), 100);
+  assert.equal(rsiTouchFlipEqualShareBudget(100, 3), 100 / 3);
+  assert.equal(
+    rsiTouchFlipShareBudgetFits({
+      available: 200,
+      balancePct: 50,
+      tickerCount: 3
+    }).ok,
+    true
+  );
+  assert.equal(
+    rsiTouchFlipShareBudgetFits({
+      available: 200,
+      balancePct: 50,
+      tickerCount: 3
+    }).share,
+    100 / 3
+  );
+  assert.equal(
+    rsiTouchFlipShareBudgetFits({
+      available: 2,
+      balancePct: 50,
+      tickerCount: 3
+    }).ok,
+    false
+  );
 });
 
 test("coin list symbols stay without .P so they match Bybit tickers and Pattern flags", () => {
@@ -143,18 +176,74 @@ test("live engine and LAN accept a full RSI book replace without restart", () =>
   );
   assert.match(engine, /syncRsiTouchFlipBook/);
   assert.match(engine, /убрали из книги/);
+  assert.match(engine, /refreshShareBudgets/);
+  assert.match(engine, /entryBudget/);
+  assert.match(engine, /queuedBalancePct/);
+  assert.match(engine, /live книгу не менял/);
+  assert.match(engine, /budget: 0/);
+  assert.match(engine, /liveBudget/);
+  const applyIdx = engine.indexOf("async function applyBookDiff");
+  const applyEnd = engine.indexOf("async function startRsiTouchFlipEngine");
+  const applyFn = engine.slice(applyIdx, applyEnd);
+  const walletIdx = applyFn.indexOf("await refreshWalletAllocated()");
+  const seedIdx = applyFn.indexOf("await seedTicker(row)");
+  assert.ok(applyIdx >= 0 && applyEnd > applyIdx);
+  assert.ok(walletIdx >= 0 && seedIdx > walletIdx);
+  assert.match(applyFn, /return shareGateFailResult/);
+  assert.match(engine, /function shareGateFailResult/);
+  assert.match(
+    engine.slice(
+      engine.indexOf("function shareGateFailResult"),
+      applyIdx
+    ),
+    /ok:\s*false/
+  );
+  const syncBot = bot.slice(
+    bot.indexOf("async function syncRsiTouchFlipBookNow"),
+    bot.indexOf("let rsiTouchFlipBookSyncChain")
+  );
+  const liveSyncIdx = syncBot.indexOf("rsiTouchFlipEngine.syncRsiTouchFlipBook");
+  const writeIdx = syncBot.indexOf("writeRsiTouchFlipBook");
+  assert.ok(liveSyncIdx >= 0 && writeIdx > liveSyncIdx);
+  assert.match(syncBot, /rows.length/);
   assert.match(bot, /source ===\s*"lan"/);
   assert.match(viewer, /strategyId ===\s*"rsi-touch-flip"/);
   assert.match(viewer, /Отправка книги RSI Flip/);
+  assert.match(viewer, /loadRsiTouchFlipBalancePct/);
   assert.match(book, /Live подхватывает/);
   assert.match(book, /replaceRsiTouchFlipBook/);
+  assert.match(book, /rsiTouchFlipShareBudgetFits/);
   assert.match(client, /parseRsiTouchFlipBookPayload/);
   assert.match(server, /parseRsiTouchFlipBookPayload/);
   assert.match(server, /source:\s*"lan"/);
+  const html = fs.readFileSync(path.join(root, "algo-trading.html"), "utf8");
+  assert.match(html, /algo-bot-rsi-flip-balance-pct/);
+  assert.match(html, /Размер баланса/);
   for (const rel of ["desktop/preload.js", "bot-app/preload.js"]) {
     const src = fs.readFileSync(path.join(root, rel), "utf8");
     assert.match(src, /syncRsiTouchFlipBook:/);
     assert.match(src, /desktop:algoTradingSyncRsiTouchFlipBook/);
     assert.match(src, /desktop:algoTradingGetRsiTouchFlipBook/);
   }
+});
+
+test("changing live % gates share and reverts a rejected book apply", () => {
+  const ui = fs.readFileSync(
+    path.join(root, "js/algo-trading/bot-strategy-ui.js"),
+    "utf8"
+  );
+  const id = '"algo-bot-rsi-flip-balance-pct"';
+  const first = ui.indexOf(id);
+  const second = ui.indexOf(id, first + 1);
+  const changeIdx = ui.indexOf(id, second + 1);
+  const hydrateIdx = ui.indexOf("void hydrateRsiTouchFlipBookFromMain();", changeIdx);
+  const chunk = ui.slice(
+    changeIdx,
+    hydrateIdx > changeIdx ? hydrateIdx : changeIdx + 2500
+  );
+  assert.ok(first >= 0 && second > first && changeIdx > second);
+  assert.match(chunk, /rsiTouchFlipShareBudgetFits/);
+  assert.match(chunk, /rsiTouchFlipRunning/);
+  assert.match(chunk, /rsiBookLiveSyncChain/);
+  assert.match(chunk, /saveRsiTouchFlipBalancePct\(\s*previous/);
 });

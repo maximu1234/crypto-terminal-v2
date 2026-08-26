@@ -15,10 +15,12 @@ function parseRsiTouchFlipBookPayload(body) {
   const fromBookRows = Array.isArray(nested?.rows) ? nested.rows : null;
   const fromBookArray = Array.isArray(src.book) ? src.book : null;
   const rows = fromRows || fromBookRows || fromBookArray || [];
+  const balancePctRaw = src.balancePct ?? nested?.balancePct;
   return {
     strategyId,
     isRsiTouchFlip: strategyId === "rsi-touch-flip",
-    rows
+    rows,
+    balancePct: balancePctRaw
   };
 }
 

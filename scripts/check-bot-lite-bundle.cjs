@@ -18,7 +18,10 @@ const REQUIRED_CSS_SELECTORS = [
   "body.algo-trading-page.algo-bot-lite-layout .algo-bot-lite-pattern-settings",
   "body.algo-trading-page.algo-bot-lite-layout #algo-tf-bar",
   "body.algo-trading-page.algo-bot-lite-layout #cloud-auth-problem-banner",
-  "body.algo-trading-page.algo-bot-lite-layout .algo-bot-grid-cell .algo-stats-label"
+  "body.algo-trading-page.algo-bot-lite-layout .algo-bot-grid-cell .algo-stats-label",
+  "body.algo-trading-page.algo-bot-lite-layout .algo-bot-grid-cell .algo-stats-value.algo-stats-value--long",
+  "body.algo-trading-page.algo-bot-lite-layout .algo-bot-grid-cell .algo-stats-value.algo-stats-value--short",
+  "body.algo-trading-page.algo-bot-lite-layout .algo-bot-grid-cell .algo-stats-columns[data-algo-analysis-bot=\"rsi-touch-flip\"] .algo-stats-chart-cols"
 ];
 
 function fail(message) {

@@ -3,10 +3,10 @@
  */
 import {
   runRsiTouchFlip
-} from "./rsi-touch-flip-engine.js?v=4";
+} from "./rsi-touch-flip-engine.js?v=5";
 import {
   normalizeRsiTouchFlipPrefs
-} from "./rsi-touch-flip-prefs.js?v=2";
+} from "./rsi-touch-flip-prefs.js?v=4";
 import {
   rsiTouchFlipMinTestTrades,
   rsiTouchFlipTestVerdict,

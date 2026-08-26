@@ -2395,13 +2395,46 @@ parsed
 return {
 ok:
 true,
-rows
+rows,
+balancePct:
+normalizeStoredRsiTouchFlipBalancePct(
+parsed?.balancePct
+)
 };
 
 }
 
+function normalizeStoredRsiTouchFlipBalancePct(
+raw
+){
+
+const n =
+Number(
+raw
+);
+
+if(
+!Number.isFinite(
+n
+)
+){
+return 100;
+}
+
+return Math.min(
+100,
+Math.max(
+1,
+n
+)
+);
+
+}
+
 function writeRsiTouchFlipBook(
-rows
+rows,
+extra =
+{}
 ){
 
 const next =
@@ -2409,14 +2442,25 @@ normalizeStoredRsiTouchFlipBookRows(
 rows
 );
 const prev =
-readRsiTouchFlipBook().rows;
+readRsiTouchFlipBook();
+const balancePct =
+extra.balancePct !=
+null &&
+extra.balancePct !==
+""
+? normalizeStoredRsiTouchFlipBalancePct(
+extra.balancePct
+)
+: prev.balancePct;
 const same =
 JSON.stringify(
-prev
+prev.rows
 ) ===
 JSON.stringify(
 next
-);
+) &&
+prev.balancePct ===
+balancePct;
 
 if(
 same
@@ -2428,6 +2472,7 @@ changed:
 false,
 rows:
 next,
+balancePct,
 tickerCount:
 next.length
 };
@@ -2439,6 +2484,7 @@ RSI_TOUCH_FLIP_BOOK_FILE,
 {
 rows:
 next,
+balancePct,
 updatedAt:
 Date.now()
 }
@@ -2458,6 +2504,7 @@ changed:
 true,
 rows:
 next,
+balancePct,
 tickerCount:
 next.length
 };

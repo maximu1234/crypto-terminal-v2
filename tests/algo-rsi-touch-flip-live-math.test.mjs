@@ -26,6 +26,17 @@ test("live math notional matches analysis engine", () => {
   assert.equal(math.notionalAt(1, avg), notionalAt(1, avg));
 });
 
+test("live budget is percent of wallet split equally across book tickers", () => {
+  assert.equal(math.normalizeBalancePct(50), 50);
+  assert.equal(math.normalizeBalancePct(0), 1);
+  assert.equal(math.normalizeBalancePct(150), 100);
+  assert.equal(math.allocatedBalanceUsdt(200, 50), 100);
+  assert.equal(math.equalShareBudget(100, 1), 100);
+  assert.equal(math.equalShareBudget(100, 3), 100 / 3);
+  assert.equal(math.equalShareBudget(100, 5), 20);
+  assert.equal(math.equalShareBudget(100, 0), 0);
+});
+
 test("OS while short closes then opens long at level 0", () => {
   const d = math.decideRsiTouchFlipBar({
     prevRsi: 31,
@@ -117,7 +128,7 @@ test("live book sync plan adds, updates prefs, and removes", () => {
     {
       symbol: "ETHUSDT",
       tf: "5",
-      prefs: math.normalizeLivePrefs({ budget: 200, rsiLen: 14 })
+      prefs: math.normalizeLivePrefs({ budget: 200, rsiLen: 21 })
     },
     {
       symbol: "BTCUSDT",
@@ -129,9 +140,13 @@ test("live book sync plan adds, updates prefs, and removes", () => {
   assert.deepEqual(plan.add.map((row) => row.symbol), ["BTCUSDT"]);
   assert.deepEqual(plan.remove, ["SOLUSDT"]);
   assert.deepEqual(plan.update.map((row) => row.symbol), ["ETHUSDT"]);
+  assert.equal(
+    math.livePrefsFingerprint("5", { budget: 100, rsiLen: 14 }),
+    math.livePrefsFingerprint("5", { budget: 200, rsiLen: 14 })
+  );
   assert.notEqual(
-    math.livePrefsFingerprint("5", { budget: 100 }),
-    math.livePrefsFingerprint("5", { budget: 200 })
+    math.livePrefsFingerprint("5", { rsiLen: 14, osLevel: 30 }),
+    math.livePrefsFingerprint("5", { rsiLen: 21, osLevel: 30 })
   );
   const same = math.planRsiTouchFlipBookSync(current, [
     current[0],
