@@ -8,7 +8,7 @@ import {
 } from "./rsi-touch-flip-mtf.js?v=3";
 import {
   RSI_TOUCH_FLIP_TF_OPTIONS
-} from "./rsi-touch-flip-prefs.js?v=4";
+} from "./rsi-touch-flip-prefs.js?v=5";
 
 export const RSI_TOUCH_FLIP_DEFAULT_TRAIN_PCT = 70;
 
@@ -119,14 +119,18 @@ export function formatRsiTouchFlipParamsBrief(prefs) {
   const tfLabel = Object.prototype.hasOwnProperty.call(TF_LABELS, tfKey)
     ? TF_LABELS[tfKey]
     : "график";
-  return [
+  const parts = [
     `RSI ${prefs.rsiLen}`,
     `OS ${prefs.osLevel}`,
     `OB ${prefs.obLevel}`,
     `стек ${prefs.maxStack}`,
     `RSI ${tfLabel}`,
     prefs.tradeSide
-  ].join(" · ");
+  ];
+  if (prefs.cycleSlEnabled === true) {
+    parts.push(`СЛ ${prefs.cycleSlPct}%`);
+  }
+  return parts.join(" · ");
 }
 
 /**

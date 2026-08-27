@@ -20,7 +20,8 @@ const {
   planRsiTouchFlipBookSync,
   normalizeBalancePct,
   allocatedBalanceUsdt,
-  equalShareBudget
+  equalShareBudget,
+  rsiTouchFlipCycleSlHit
 } = require("./algo-bot-rsi-touch-flip-math.cjs");
 
 const MAX_CANDLES = 4000;
@@ -335,6 +336,36 @@ async function onClosedChartBar(state) {
   const prevRsi = Number(rsiValues[i - 1]);
   const price = Number(state.chartCandles[i]?.close);
   const prefs = state.prefs;
+
+  if (state.slBlockLong && Number.isFinite(rsi) && rsi > prefs.osLevel) {
+    state.slBlockLong = false;
+  }
+  if (state.slBlockShort && Number.isFinite(rsi) && rsi < prefs.obLevel) {
+    state.slBlockShort = false;
+  }
+
+  let cycleSlHit = false;
+  if (
+    prefs.cycleSlEnabled === true &&
+    state.botOwnsPosition &&
+    state.position !== "flat"
+  ) {
+    const posResult = await algoRest.getPosition(state.symbol);
+    const pnl = Number(posResult?.position?.pnl);
+    const cap =
+      Number(state.entryBudget) > 0
+        ? Number(state.entryBudget)
+        : sliceBudget(state);
+    cycleSlHit = rsiTouchFlipCycleSlHit(pnl, cap, prefs);
+  }
+
+  if (cycleSlHit && state.position === "long") {
+    state.slBlockLong = true;
+  }
+  if (cycleSlHit && state.position === "short") {
+    state.slBlockShort = true;
+  }
+
   const decision = decideRsiTouchFlipBar({
     rsi,
     prevRsi,
@@ -344,10 +375,13 @@ async function onClosedChartBar(state) {
     position: state.position,
     maxStack: prefs.maxStack,
     allowLong: prefs.allowLong,
-    allowShort: prefs.allowShort
+    allowShort: prefs.allowShort,
+    slBlockLong: state.slBlockLong,
+    slBlockShort: state.slBlockShort
   });
 
   if (
+    !cycleSlHit &&
     !decision.closeShort &&
     !decision.closeLong &&
     !decision.openLong &&
@@ -358,6 +392,12 @@ async function onClosedChartBar(state) {
 
   state.orderInflight = true;
   try {
+    if (cycleSlHit) {
+      const ok = await closeAll(state, "CYCLE SL", price);
+      if (!ok) {
+        return;
+      }
+    }
     if (decision.closeShort) {
       const ok = await closeAll(state, "OS", price);
       if (!ok) {
@@ -480,6 +520,8 @@ async function refreshWaitFlat() {
     state.stack = 0;
     state.botOwnsPosition = false;
     state.entryBudget = null;
+    state.slBlockLong = false;
+    state.slBlockShort = false;
     pushSignal({
       ts: Date.now(),
       symbol: state.symbol,
@@ -654,7 +696,9 @@ async function seedTicker(row) {
     sessionEntries: 0,
     lastHandledChartTime: 0,
     botOwnsPosition: false,
-    entryBudget: null
+    entryBudget: null,
+    slBlockLong: false,
+    slBlockShort: false
   };
 
   const pos = await algoRest.getPosition(state.symbol);

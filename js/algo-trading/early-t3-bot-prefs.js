@@ -4,7 +4,7 @@
 import {
 ALGO_BOT_TF_OPTIONS,
 normalizeBotTf
-} from "./bot-strategy-prefs.js?v=32";
+} from "./bot-strategy-prefs.js?v=33";
 
 export const EARLY_T3_BOT_PREFS_KEY =
 "algo_trading_early_t3_bot_v1";

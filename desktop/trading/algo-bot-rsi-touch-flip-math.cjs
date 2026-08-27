@@ -232,14 +232,16 @@ function decideRsiTouchFlipBar(bar = {}) {
   const closeLong = touchOB && inLong;
   const addShort = touchOB && inShort && nOpen < maxStack;
   const openShort = touchOB && allowShort && (inLong || isFlat);
+  const slBlockLong = bar.slBlockLong === true;
+  const slBlockShort = bar.slBlockShort === true;
 
   return {
     touchOS,
     touchOB,
     closeShort,
     closeLong,
-    openLong: !!(openLong || addLong) && allowLong,
-    openShort: !!(openShort || addShort) && allowShort,
+    openLong: !!(openLong || addLong) && allowLong && !slBlockLong,
+    openShort: !!(openShort || addShort) && allowShort && !slBlockShort,
     longLevel: closeShort ? 0 : nOpen,
     shortLevel: closeLong ? 0 : nOpen
   };
@@ -297,7 +299,9 @@ function normalizeLivePrefs(raw) {
     sizeMode: normalizeSizeMode(src.sizeMode),
     sizeMult: clampNumber(src.sizeMult, 1, 20, 1.5),
     allowLong: tradeSide !== SIDE_SHORT,
-    allowShort: tradeSide !== SIDE_LONG
+    allowShort: tradeSide !== SIDE_LONG,
+    cycleSlEnabled: src.cycleSlEnabled === true,
+    cycleSlPct: clampNumber(src.cycleSlPct, 1, 90, 30)
   };
 }
 
@@ -318,7 +322,9 @@ function livePrefsFingerprint(tf, prefs) {
     tradeSide: p.tradeSide,
     maxStack: p.maxStack,
     sizeMode: p.sizeMode,
-    sizeMult: p.sizeMult
+    sizeMult: p.sizeMult,
+    cycleSlEnabled: p.cycleSlEnabled === true,
+    cycleSlPct: p.cycleSlEnabled === true ? p.cycleSlPct : 0
   });
 }
 
@@ -377,6 +383,19 @@ function planRsiTouchFlipBookSync(currentTickers, nextRows) {
   return { add, update, remove };
 }
 
+function rsiTouchFlipCycleSlHit(unrealizedPnl, budget, prefs) {
+  if (prefs?.cycleSlEnabled !== true) {
+    return false;
+  }
+  const pct = Number(prefs.cycleSlPct);
+  const cap = Number(budget);
+  const pnl = Number(unrealizedPnl);
+  if (!(pct > 0) || !(cap > 0) || !Number.isFinite(pnl)) {
+    return false;
+  }
+  return pnl <= -(cap * pct) / 100;
+}
+
 module.exports = {
   SIZE_EQUAL,
   SIZE_AVERAGE,
@@ -394,5 +413,6 @@ module.exports = {
   planRsiTouchFlipBookSync,
   normalizeBalancePct,
   allocatedBalanceUsdt,
-  equalShareBudget
+  equalShareBudget,
+  rsiTouchFlipCycleSlHit
 };

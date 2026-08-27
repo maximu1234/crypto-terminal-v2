@@ -1036,7 +1036,8 @@ return `${symbol} ${tf} ${Number.isFinite(budget) ? budget.toFixed(0) : "—"} U
 " · "
 );
 
-return [
+const rows =
+[
 {
 label:
 "Стратегия",
@@ -1081,6 +1082,31 @@ tickers ||
 "—"
 }
 ];
+
+const samplePrefs =
+book[0]?.prefs &&
+typeof book[0].prefs ===
+"object"
+? book[0].prefs
+: {};
+
+if(
+samplePrefs.cycleSlEnabled ===
+true
+){
+rows.splice(
+rows.length - 1,
+0,
+{
+label:
+"СЛ цикла",
+value:
+`${Number(samplePrefs.cycleSlPct) || 0}% доли`
+}
+);
+}
+
+return rows;
 }
 
 if(

@@ -1,14 +1,15 @@
 /**
  * RSI Touch Flip — копия логики pine (RSI Touch Flip Strategy).
  * Касание OS → лонг/стек, касание OB → шорт/стек, противоположное касание
- * закрывает весь стек. process_orders_on_close, без ТП/СЛ.
+ * закрывает весь стек. process_orders_on_close. Опциональный СЛ цикла —
+ * закрыть открытый стек, если нереализованный минус ≥ % бюджета.
  */
 import {
 RSI_TOUCH_FLIP_SIDE_LONG,
 RSI_TOUCH_FLIP_SIDE_SHORT,
 RSI_TOUCH_FLIP_SIZE_EQUAL,
 normalizeRsiTouchFlipPrefs
-} from "./rsi-touch-flip-prefs.js?v=4";
+} from "./rsi-touch-flip-prefs.js?v=5";
 
 function rsiFromAvg(
 avgGain,
@@ -280,6 +281,64 @@ level
 )
 ) /
 tot;
+
+}
+
+/**
+ * СЛ цикла: нереализованный минус ≥ cycleSlPct от бюджета тикера.
+ * @param {unknown} unrealizedPnl
+ * @param {unknown} budget
+ * @param {object|null|undefined} prefs
+ * @returns {boolean}
+ */
+export function rsiTouchFlipCycleSlHit(
+unrealizedPnl,
+budget,
+prefs
+){
+
+if(
+prefs?.cycleSlEnabled !==
+true
+){
+return false;
+}
+
+const pct =
+Number(
+prefs.cycleSlPct
+);
+const cap =
+Number(
+budget
+);
+const pnl =
+Number(
+unrealizedPnl
+);
+
+if(
+!(
+pct >
+0
+) ||
+!(
+cap >
+0
+) ||
+!Number.isFinite(
+pnl
+)
+){
+return false;
+}
+
+return pnl <=
+-(
+cap *
+pct
+) /
+100;
 
 }
 
@@ -592,6 +651,10 @@ let peak =
 capital;
 let maxDrawdown =
 0;
+let slBlockLong =
+false;
+let slBlockShort =
+false;
 const marks =
 [];
 
@@ -679,7 +742,8 @@ bar.close
 function closeAll(
 index,
 price,
-comment
+comment,
+markText
 ){
 
 if(
@@ -747,10 +811,13 @@ openTrades =
 pushMark(
 index,
 "close",
+markText ||
+(
 side ===
 "long"
 ? "SELL ALL"
 : "BUY ALL"
+)
 );
 
 return side;
@@ -924,6 +991,66 @@ price
 continue;
 }
 
+if(
+rsiTouchFlipCycleSlHit(
+unrealizedPnl(
+price
+),
+capital,
+settings
+) &&
+openTrades.length
+){
+const slSide =
+closeAll(
+i,
+price,
+"CYCLE SL",
+"SL"
+);
+
+if(
+slSide ===
+"long"
+){
+slBlockLong =
+true;
+}
+
+if(
+slSide ===
+"short"
+){
+slBlockShort =
+true;
+}
+
+}
+
+if(
+slBlockLong &&
+Number.isFinite(
+rsi
+) &&
+rsi >
+settings.osLevel
+){
+slBlockLong =
+false;
+}
+
+if(
+slBlockShort &&
+Number.isFinite(
+rsi
+) &&
+rsi <
+settings.obLevel
+){
+slBlockShort =
+false;
+}
+
 const signed =
 positionSize();
 const inLong =
@@ -944,14 +1071,16 @@ const osAddLong =
 touchOS &&
 inLong &&
 nOpen <
-settings.maxStack;
+settings.maxStack &&
+!slBlockLong;
 const osOpenLong =
 touchOS &&
 allowLong &&
 (
 inShort ||
 isFlat
-);
+) &&
+!slBlockLong;
 const obCloseLong =
 touchOB &&
 inLong;
@@ -959,14 +1088,16 @@ const obAddShort =
 touchOB &&
 inShort &&
 nOpen <
-settings.maxStack;
+settings.maxStack &&
+!slBlockShort;
 const obOpenShort =
 touchOB &&
 allowShort &&
 (
 inLong ||
 isFlat
-);
+) &&
+!slBlockShort;
 const longLevel =
 osCloseShort
 ? 0

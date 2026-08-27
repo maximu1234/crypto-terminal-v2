@@ -230,7 +230,11 @@ true,
 commissionPct:
 0.04,
 slippageTicks:
-0
+0,
+cycleSlEnabled:
+false,
+cycleSlPct:
+30
 };
 
 }
@@ -337,6 +341,16 @@ src.slippageTicks,
 0,
 1000,
 base.slippageTicks
+),
+cycleSlEnabled:
+src.cycleSlEnabled ===
+true,
+cycleSlPct:
+clampNumber(
+src.cycleSlPct,
+1,
+90,
+base.cycleSlPct
 )
 };
 
@@ -440,7 +454,11 @@ p.budget,
 sizeMode:
 p.sizeMode,
 sizeMult:
-p.sizeMult
+p.sizeMult,
+cycleSlEnabled:
+p.cycleSlEnabled,
+cycleSlPct:
+p.cycleSlPct
 };
 
 }

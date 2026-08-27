@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createRequire } from "node:module";
-import { notionalAt } from "../js/algo-trading/rsi-touch-flip-engine.js";
+import { notionalAt, rsiTouchFlipCycleSlHit } from "../js/algo-trading/rsi-touch-flip-engine.js";
 import { normalizeRsiTouchFlipPrefs } from "../js/algo-trading/rsi-touch-flip-prefs.js";
 
 const require = createRequire(import.meta.url);
@@ -155,4 +155,35 @@ test("live book sync plan adds, updates prefs, and removes", () => {
   assert.equal(same.add.length, 0);
   assert.equal(same.update.length, 0);
   assert.equal(same.remove.length, 0);
+});
+
+test("live cycle SL matches analysis and fingerprint ignores pct when off", () => {
+  const prefsOn = { cycleSlEnabled: true, cycleSlPct: 30 };
+  assert.equal(math.rsiTouchFlipCycleSlHit(-31, 100, prefsOn), true);
+  assert.equal(
+    math.rsiTouchFlipCycleSlHit(-31, 100, prefsOn),
+    rsiTouchFlipCycleSlHit(-31, 100, prefsOn)
+  );
+  assert.equal(
+    math.livePrefsFingerprint("5", { cycleSlEnabled: false, cycleSlPct: 20 }),
+    math.livePrefsFingerprint("5", { cycleSlEnabled: false, cycleSlPct: 40 })
+  );
+  assert.notEqual(
+    math.livePrefsFingerprint("5", { cycleSlEnabled: true, cycleSlPct: 30 }),
+    math.livePrefsFingerprint("5", { cycleSlEnabled: false, cycleSlPct: 30 })
+  );
+  const blocked = math.decideRsiTouchFlipBar({
+    prevRsi: 31,
+    rsi: 29,
+    osLevel: 30,
+    obLevel: 70,
+    stack: 0,
+    position: "flat",
+    maxStack: 3,
+    allowLong: true,
+    allowShort: true,
+    slBlockLong: true
+  });
+  assert.equal(blocked.touchOS, true);
+  assert.equal(blocked.openLong, false);
 });

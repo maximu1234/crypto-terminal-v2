@@ -558,6 +558,16 @@ tabindex="0"
 <label class="algo-stats-label" for="algo-rsi-flip-mult">Множитель усреднения</label>
 <input type="number" id="algo-rsi-flip-mult" class="algo-stats-input" min="1" step="0.1" value="1.5" inputmode="decimal" />
 </div>
+<div class="algo-stats-row algo-stats-row--setting">
+<label class="algo-stats-label" for="algo-rsi-flip-cycle-sl">СЛ цикла</label>
+<label class="algo-stats-check" title="Вариант: закрыть сделку, если минус ≥ % от бюджета тикера. Бот не выключается.">
+<input type="checkbox" id="algo-rsi-flip-cycle-sl" />
+</label>
+</div>
+<div class="algo-stats-row algo-stats-row--setting" id="algo-rsi-flip-cycle-sl-pct-row" hidden>
+<label class="algo-stats-label" for="algo-rsi-flip-cycle-sl-pct">Макс. убыток %</label>
+<input type="number" id="algo-rsi-flip-cycle-sl-pct" class="algo-stats-input" min="1" max="90" step="1" value="30" inputmode="decimal" title="От бюджета тикера (в Обзоре — поле Бюджет USDT, в live — доля). После СЛ тот же вход, пока RSI в зоне, не повторяется." />
+</div>
 <div class="algo-stats-row algo-stats-row--rsi-flip-fit-actions">
 <button type="button" class="algo-stats-mode-btn" id="algo-rsi-flip-add-book">Добавить в книгу</button>
 <button type="button" class="algo-stats-mode-btn" id="algo-rsi-flip-remove-book" hidden>Убрать из книги</button>
@@ -1583,7 +1593,7 @@ placeholder="без лимита"
 <h2 id="algo-bot-rsi-touch-flip-settings-modal-title">RSI Touch Flip</h2>
 <button type="button" class="algo-bot-settings-modal-close" data-close="algo-bot-rsi-touch-flip-settings-modal" aria-label="Закрыть">×</button>
 </div>
-<p class="algo-bot-settings-modal-note">Только автоматическая торговля: рыночные входы и выходы, без алертов и без ТП/СЛ. Параметры (RSI, OS/OB, сторона, стек) живут в книге. Бюджет live — равные доли от % доступного баланса ниже, не поле «Бюджет USDT» в Данные. Добавить/убрать тикер — панель Данные; запущенный бот подхватывает книгу.</p>
+<p class="algo-bot-settings-modal-note">Только автоматическая торговля: рыночные входы и выходы, без алертов. Опциональный СЛ цикла — чекбокс в колонке Данные (закрывает сделку, бот не стопает). Параметры (RSI, OS/OB, сторона, стек, СЛ) живут в книге. Бюджет live — равные доли от % доступного баланса ниже, не поле «Бюджет USDT» в Данные. Добавить/убрать тикер — панель Данные; запущенный бот подхватывает книгу.</p>
 <div class="algo-bot-settings-modal-body">
 <div class="algo-bot-field algo-bot-field--row">
 <label class="algo-bot-label" for="algo-bot-rsi-flip-balance-pct" title="Доля доступного баланса алго-ключа. Бюджет тикера = эта сумма / число тикеров в книге.">Размер баланса</label>

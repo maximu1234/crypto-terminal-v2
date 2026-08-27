@@ -11,7 +11,7 @@ pushAuthSessionToRemoteBot
 import {
 formatBotStrategySettingsRows,
 loadBotStrategiesPrefs
-} from "./bot-strategy-prefs.js?v=32";
+} from "./bot-strategy-prefs.js?v=33";
 import {
 syncAllTickerFlagsRootToMain
 } from "./bot-bridge.js?v=27";
@@ -30,7 +30,7 @@ loadRsiTouchFlipBook
 } from "./rsi-touch-flip-book.js?v=4";
 import {
 loadRsiTouchFlipBalancePct
-} from "./rsi-touch-flip-prefs.js?v=4";
+} from "./rsi-touch-flip-prefs.js?v=5";
 
 const STORAGE_KEY =
 "algo_remote_session_logs_v1";

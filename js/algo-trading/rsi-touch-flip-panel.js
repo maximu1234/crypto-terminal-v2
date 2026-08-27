@@ -15,7 +15,7 @@ RSI_TOUCH_FLIP_SIZE_AVERAGE,
 loadRsiTouchFlipPrefs,
 saveRsiTouchFlipPrefs,
 loadRsiTouchFlipBalancePct
-} from "./rsi-touch-flip-prefs.js?v=4";
+} from "./rsi-touch-flip-prefs.js?v=5";
 import {
 RSI_TOUCH_FLIP_BOOK_CHANGE_EVENT,
 RSI_TOUCH_FLIP_BOOK_OPEN_EVENT,
@@ -30,7 +30,7 @@ getAlgoTradingWalletBalance
 } from "./runtime-bridge.js?v=6";
 import {
 runRsiTouchFlip
-} from "./rsi-touch-flip-engine.js?v=5";
+} from "./rsi-touch-flip-engine.js?v=6";
 import {
 resolveRsiTouchFlipChartRsi,
 rsiTouchFlipChartDays
@@ -351,6 +351,14 @@ el(
 slippageTicks:
 el(
 "algo-rsi-flip-slippage"
+)?.value,
+cycleSlEnabled:
+!!el(
+"algo-rsi-flip-cycle-sl"
+)?.checked,
+cycleSlPct:
+el(
+"algo-rsi-flip-cycle-sl-pct"
 )?.value
 };
 
@@ -442,6 +450,24 @@ marks.checked =
 !!prefs.showMarks;
 }
 
+const cycleSl =
+el(
+"algo-rsi-flip-cycle-sl"
+);
+
+if(
+cycleSl
+){
+cycleSl.checked =
+prefs.cycleSlEnabled ===
+true;
+}
+
+assign(
+"algo-rsi-flip-cycle-sl-pct",
+prefs.cycleSlPct
+);
+
 const multRow =
 el(
 "algo-rsi-flip-mult-row"
@@ -450,6 +476,13 @@ multRow?.toggleAttribute(
 "hidden",
 prefs.sizeMode !==
 RSI_TOUCH_FLIP_SIZE_AVERAGE
+);
+el(
+"algo-rsi-flip-cycle-sl-pct-row"
+)?.toggleAttribute(
+"hidden",
+prefs.cycleSlEnabled !==
+true
 );
 applyingUi =
 false;
@@ -822,7 +855,9 @@ const fieldIds =
 "algo-rsi-flip-mult",
 "algo-rsi-flip-marks",
 "algo-rsi-flip-commission",
-"algo-rsi-flip-slippage"
+"algo-rsi-flip-slippage",
+"algo-rsi-flip-cycle-sl",
+"algo-rsi-flip-cycle-sl-pct"
 ];
 const rsiPaneFieldIds =
 [

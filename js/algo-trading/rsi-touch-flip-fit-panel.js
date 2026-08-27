@@ -8,7 +8,7 @@ import {
 } from "./rsi-touch-flip-optimize.js?v=8";
 import {
   runRsiTouchFlip
-} from "./rsi-touch-flip-engine.js?v=5";
+} from "./rsi-touch-flip-engine.js?v=6";
 import {
   clampRsiTouchFlipTrainPct,
   formatRsiTouchFlipParamsBrief,
@@ -17,7 +17,7 @@ import {
   rsiTouchFlipTestVerdict,
   rsiTouchFlipTrainTestSplit,
   RSI_TOUCH_FLIP_DEFAULT_TRAIN_PCT
-} from "./rsi-touch-flip-walkforward.js?v=7";
+} from "./rsi-touch-flip-walkforward.js?v=8";
 
 const FIT_KEY = "algo_trading_rsi_touch_flip_fit_v1";
 

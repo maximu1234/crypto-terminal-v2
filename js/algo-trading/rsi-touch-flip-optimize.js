@@ -4,15 +4,15 @@
  */
 import {
   runRsiTouchFlip
-} from "./rsi-touch-flip-engine.js?v=5";
+} from "./rsi-touch-flip-engine.js?v=6";
 import {
   normalizeRsiTouchFlipPrefs
-} from "./rsi-touch-flip-prefs.js?v=4";
+} from "./rsi-touch-flip-prefs.js?v=5";
 import {
   rsiTouchFlipMinTestTrades,
   rsiTouchFlipTestVerdict,
   rsiTouchFlipTrainTestSplit
-} from "./rsi-touch-flip-walkforward.js?v=7";
+} from "./rsi-touch-flip-walkforward.js?v=8";
 
 export function rsiTouchFlipIntRange(from, to) {
   const start = Math.round(Number(from));

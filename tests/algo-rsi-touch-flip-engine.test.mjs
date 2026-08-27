@@ -3,7 +3,8 @@ import assert from "node:assert/strict";
 import {
   notionalAt,
   computeWilderRsiValues,
-  runRsiTouchFlip
+  runRsiTouchFlip,
+  rsiTouchFlipCycleSlHit
 } from "../js/algo-trading/rsi-touch-flip-engine.js";
 import {
   normalizeRsiTouchFlipPrefs,
@@ -60,6 +61,13 @@ test("launch prefs copy strategy fields and drop analysis-only", () => {
   assert.equal(launch.initialCapital, undefined);
   assert.equal(launch.showMarks, undefined);
   assert.equal(launch.commissionPct, undefined);
+  assert.equal(launch.cycleSlEnabled, false);
+  const withSl = pickRsiTouchFlipLaunchPrefs({
+    cycleSlEnabled: true,
+    cycleSlPct: 40
+  });
+  assert.equal(withSl.cycleSlEnabled, true);
+  assert.equal(withSl.cycleSlPct, 40);
 });
 
 test("normalized prefs drop initialCapital; analysis percents use budget", () => {
@@ -263,4 +271,53 @@ test("OS and OB touch markers are gray, not trade colors", () => {
   assert.equal(os[0].color, "#9ca3af");
   assert.equal(ob[0].text, "OB");
   assert.equal(ob[0].color, "#9ca3af");
+});
+
+test("cycle SL is off unless the checkbox flag is true", () => {
+  assert.equal(
+    rsiTouchFlipCycleSlHit(-40, 100, { cycleSlEnabled: false, cycleSlPct: 30 }),
+    false
+  );
+  assert.equal(
+    rsiTouchFlipCycleSlHit(-31, 100, { cycleSlEnabled: true, cycleSlPct: 30 }),
+    true
+  );
+  assert.equal(
+    rsiTouchFlipCycleSlHit(-29, 100, { cycleSlEnabled: true, cycleSlPct: 30 }),
+    false
+  );
+});
+
+test("cycle SL closes the stack and does not re-enter while RSI stays in the zone", () => {
+  const candles = [
+    ...candlesAt(100, 3),
+    { time: 1_700_000_000 + 3 * 60, open: 69, high: 69, low: 69, close: 69 },
+    { time: 1_700_000_000 + 4 * 60, open: 69, high: 69, low: 69, close: 69 },
+    { time: 1_700_000_000 + 5 * 60, open: 69, high: 69, low: 69, close: 69 },
+    { time: 1_700_000_000 + 6 * 60, open: 69, high: 69, low: 69, close: 69 }
+  ];
+  const rsiValues = rsiSeries([40, 40, 25, 20, 20, 40, 25]);
+  const prefs = {
+    osLevel: 30,
+    obLevel: 70,
+    maxStack: 1,
+    budget: 100,
+    commissionPct: 0,
+    cycleSlEnabled: true,
+    cycleSlPct: 30
+  };
+  const withSl = runRsiTouchFlip(candles, prefs, { rsiValues });
+  assert.equal(withSl.closedTrades.length, 1);
+  assert.equal(withSl.closedTrades[0].comment, "CYCLE SL");
+  assert.ok(withSl.marks.some((mark) => mark.text === "SL"));
+  assert.equal(withSl.openTrades.length, 1);
+  assert.equal(withSl.openTrades[0].side, "long");
+
+  const off = runRsiTouchFlip(
+    candles,
+    { ...prefs, cycleSlEnabled: false },
+    { rsiValues }
+  );
+  assert.equal(off.closedTrades.length, 0);
+  assert.equal(off.openTrades.length, 1);
 });

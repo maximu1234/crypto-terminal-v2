@@ -13,7 +13,7 @@ normalizeLaunchStrategyId,
 botStrategyListLabel,
 botSidesDirectionLabel,
 formatBotStrategySettingsRows
-} from "./bot-strategy-prefs.js?v=32";
+} from "./bot-strategy-prefs.js?v=33";
 import {
 loadEarlyT3BotPrefs,
 saveEarlyT3BotPrefs
@@ -31,7 +31,7 @@ import {
 loadRsiTouchFlipBalancePct,
 saveRsiTouchFlipBalancePct,
 normalizeRsiTouchFlipBalancePct
-} from "./rsi-touch-flip-prefs.js?v=4";
+} from "./rsi-touch-flip-prefs.js?v=5";
 import {
 getAlgoTradingWalletBalance
 } from "./runtime-bridge.js?v=6";

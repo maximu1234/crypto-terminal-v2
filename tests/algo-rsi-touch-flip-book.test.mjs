@@ -27,6 +27,7 @@ test("book row keeps chart tf and launch prefs per ticker", () => {
   assert.equal(row.prefs.rsiLen, 20);
   assert.equal(row.prefs.budget, 250);
   assert.equal(row.prefs.rsiTf, "1");
+  assert.equal(row.prefs.cycleSlEnabled, false);
 });
 
 test("duplicate symbols collapse to the last row", () => {
@@ -181,7 +182,9 @@ test("live engine and LAN accept a full RSI book replace without restart", () =>
   assert.match(engine, /queuedBalancePct/);
   assert.match(engine, /live книгу не менял/);
   assert.match(engine, /budget: 0/);
-  assert.match(engine, /liveBudget/);
+  assert.match(engine, /CYCLE SL/);
+  assert.match(engine, /slBlockLong/);
+  assert.match(engine, /rsiTouchFlipCycleSlHit/);
   const applyIdx = engine.indexOf("async function applyBookDiff");
   const applyEnd = engine.indexOf("async function startRsiTouchFlipEngine");
   const applyFn = engine.slice(applyIdx, applyEnd);

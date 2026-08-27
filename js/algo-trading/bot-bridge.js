@@ -3,7 +3,7 @@
  */
 import {
 loadBotStrategiesPrefs
-} from "./bot-strategy-prefs.js?v=32";
+} from "./bot-strategy-prefs.js?v=33";
 import {
 readAlgoPattern12Settings
 } from "./pattern-12-settings.js?v=5";
@@ -37,7 +37,7 @@ replaceRsiTouchFlipBook
 import {
 saveRsiTouchFlipBalancePct,
 loadRsiTouchFlipBalancePct
-} from "./rsi-touch-flip-prefs.js?v=4";
+} from "./rsi-touch-flip-prefs.js?v=5";
 
 import {
 isAlgoBotWorking
