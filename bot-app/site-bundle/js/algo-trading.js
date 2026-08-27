@@ -69,7 +69,7 @@ mountAlgoRuntimeUi
 
 import {
 mountAlgoBotStrategyUi
-} from "./algo-trading/bot-strategy-ui.js?v=92";
+} from "./algo-trading/bot-strategy-ui.js?v=93";
 
 import {
 ALGO_ANALYSIS_BOT_CHANGE_EVENT,
@@ -108,7 +108,7 @@ mountAlgoPatternEntryOverlay
 
 import {
 mountRsiTouchFlipHost
-} from "./algo-trading/rsi-touch-flip-panel.js?v=19";
+} from "./algo-trading/rsi-touch-flip-panel.js?v=20";
 
 import {
 loadRsiTouchFlipPrefs,

@@ -1806,7 +1806,7 @@ readLanRemoteConn,
 isMultichartRemoteControlHost
 } =
 await import(
-"./algo-trading/bot-remote-client.js?v=12"
+"./algo-trading/bot-remote-client.js?v=14"
 );
 
 if(

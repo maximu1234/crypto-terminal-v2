@@ -195,6 +195,63 @@ test("LAN bot command accepts the three live bots", () => {
   }
 });
 
+test("LAN channel token persists in localStorage and start waits for RSI seed", () => {
+  const viewer = fs.readFileSync(
+    path.join(root, "js/algo-trading/bot-session-logs-viewer.js"),
+    "utf8"
+  );
+  assert.match(viewer, /algo_remote_session_logs_v1/);
+  assert.match(viewer, /algo_remote_lan_channel_token_v1/);
+  assert.match(viewer, /writePersistedToken/);
+  assert.match(viewer, /readPersistedToken/);
+  assert.match(viewer, /type="text" id="algo-remote-logs-token"/);
+  assert.doesNotMatch(
+    viewer,
+    /type="password" id="algo-remote-logs-token"/
+  );
+  assert.doesNotMatch(
+    viewer,
+    /sessionStorage\.setItem\(\s*TOKEN_SESSION_KEY/
+  );
+  const client = fs.readFileSync(
+    path.join(root, "desktop/trading/algo-bot-session-log-remote-client.cjs"),
+    "utf8"
+  );
+  const send = client.slice(
+    client.indexOf("async function sendRemoteBotLanCommand")
+  );
+  assert.match(send, /180000/);
+  assert.match(send, /payload\.balancePct/);
+  const server = fs.readFileSync(
+    path.join(root, "desktop/trading/algo-bot-session-log-server.cjs"),
+    "utf8"
+  );
+  assert.match(server, /body\.balancePct/);
+  assert.match(server, /starting:\s*!!st\.starting/);
+  assert.match(server, /startBotFromLan/);
+  assert.match(
+    server.slice(server.indexOf("async function applyPrefs")),
+    /\.trim\(\)\s*\|\|\s*cur\.token/
+  );
+  const remote = fs.readFileSync(
+    path.join(root, "desktop/trading/algo-bot-remote-control.cjs"),
+    "utf8"
+  );
+  const handle = remote.slice(
+    remote.indexOf("async function handleCommand")
+  );
+  const stopIdx = handle.search(/act ===\s*"stop"/);
+  const busyIdx = handle.indexOf("commandBusy");
+  assert.ok(stopIdx >= 0 && busyIdx > stopIdx, "LAN stop must run before commandBusy");
+  assert.match(handle, /startBotFromLan/);
+  const bot = fs.readFileSync(
+    path.join(root, "desktop/trading/algo-trading-bot.cjs"),
+    "utf8"
+  );
+  assert.match(bot, /async function startBotFromLan/);
+  assert.match(bot, /LAN_RSI_START_ACK_MS/);
+});
+
 test("LAN ticker-book payload parser splits RSI Flip from Pattern 1-2", () => {
   const {
     parseRsiTouchFlipBookPayload

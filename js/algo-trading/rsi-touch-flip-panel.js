@@ -40,7 +40,7 @@ mountRsiTouchFlipOverlay
 } from "./rsi-touch-flip-overlay.js?v=3";
 import {
 mountRsiTouchFlipFit
-} from "./rsi-touch-flip-fit-panel.js?v=7";
+} from "./rsi-touch-flip-fit-panel.js?v=10";
 
 function el(
 id

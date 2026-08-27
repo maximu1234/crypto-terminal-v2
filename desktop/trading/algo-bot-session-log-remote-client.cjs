@@ -1115,6 +1115,8 @@ data.online !==
 false,
 running:
 !!data.running,
+starting:
+!!data.starting,
 host:
 data.host ||
 null,
@@ -1139,6 +1141,9 @@ typeof data.strategyPrefs ===
 "object"
 ? data.strategyPrefs
 : null,
+message:
+data.message ||
+null,
 via:
 "lan"
 };
@@ -1246,12 +1251,23 @@ book:
 payload.book
 }
 : {}
+),
+...(
+payload.balancePct !=
+null &&
+payload.balancePct !==
+""
+? {
+balancePct:
+payload.balancePct
+}
+: {}
 )
 }
 : {}
 )
 },
-60000,
+180000,
 payload.token
 );
 
@@ -1283,8 +1299,12 @@ via:
 "lan",
 running:
 !!res.json?.running,
+starting:
+!!res.json?.starting,
 alreadyRunning:
-!!res.json?.alreadyRunning
+!!res.json?.alreadyRunning,
+cancelling:
+!!res.json?.cancelling
 };
 
 }

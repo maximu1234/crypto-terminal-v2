@@ -887,7 +887,13 @@ if(
 act ===
 "start"
 ){
-return algoBot.startBot(
+const startFn =
+typeof algoBot.startBotFromLan ===
+"function"
+? algoBot.startBotFromLan
+: algoBot.startBot;
+
+return startFn(
 {
 strategyId,
 ...(
@@ -993,6 +999,8 @@ running:
 base.running ===
 true ||
 !!st.running,
+starting:
+!!st.starting,
 strategyId:
 st.strategyId ||
 null,
@@ -1010,7 +1018,11 @@ st.watchlistCount
 )
 : null,
 strategyPrefs:
-prefs
+prefs,
+message:
+st.message ||
+base.message ||
+null
 };
 }catch{
 return base;
@@ -1558,6 +1570,19 @@ book:
 body.book
 }
 : {}
+),
+...(
+action ===
+"start" &&
+body.balancePct !=
+null &&
+body.balancePct !==
+""
+? {
+balancePct:
+body.balancePct
+}
+: {}
 )
 }
 );
@@ -1995,10 +2020,13 @@ normalizePrefs(
 ...cur,
 ...patch,
 token:
+String(
 patch.token !=
 null
 ? patch.token
-: cur.token
+: ""
+).trim() ||
+cur.token
 }
 );
 

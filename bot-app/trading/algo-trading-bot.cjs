@@ -516,6 +516,8 @@ let lastWatchlistRefreshAt =
 0;
 let startInflight =
 false;
+let startingStrategyId =
+null;
 let stopInflight =
 false;
 let pendingHydrated =
@@ -2132,6 +2134,8 @@ payload =
 {}
 ){
 
+rsiTouchFlipEngine.clearRsiTouchFlipStartCancel();
+
 if(
 runningStrategyId
 ){
@@ -2189,16 +2193,30 @@ message:
 
 resetSessionStats();
 
-const bookRows =
+const payloadBook =
 Array.isArray(
 payload?.book
-)
+) &&
+payload.book.length
 ? payload.book
 : Array.isArray(
 payload?.rows
-)
+) &&
+payload.rows.length
 ? payload.rows
 : [];
+const storedBook =
+readRsiTouchFlipBook();
+const bookRows =
+payloadBook.length
+? payloadBook
+: (
+Array.isArray(
+storedBook?.rows
+)
+? storedBook.rows
+: []
+);
 
 if(
 !bookRows.length
@@ -2207,7 +2225,20 @@ return {
 ok:
 false,
 message:
-"Книга RSI Touch Flip пуста. Добавьте тикеры кнопкой «Добавить в книгу»."
+"Книга RSI Touch Flip пуста. Добавьте тикеры кнопкой «Добавить в книгу» или отдайте книгу по LAN."
+};
+}
+
+if(
+rsiTouchFlipEngine.isRsiTouchFlipStartCancelled()
+){
+return {
+ok:
+false,
+running:
+false,
+message:
+"Запуск отменён"
 };
 }
 
@@ -2308,6 +2339,21 @@ share,
 available
 };
 
+if(
+rsiTouchFlipEngine.isRsiTouchFlipStartCancelled()
+){
+sessionRsiTouchFlipPrefs =
+null;
+return {
+ok:
+false,
+running:
+false,
+message:
+"Запуск отменён"
+};
+}
+
 try{
 statusMessage =
 "Запуск RSI Touch Flip…";
@@ -2395,7 +2441,8 @@ statusMessage
 }
 );
 
-return {
+const failed =
+{
 ...buildStatusSnapshot(),
 ok:
 false,
@@ -2404,6 +2451,11 @@ false,
 message:
 statusMessage
 };
+pushStatus(
+failed
+);
+
+return failed;
 }
 
 const snapshot =
@@ -2855,6 +2907,11 @@ message:
 
 startInflight =
 true;
+startingStrategyId =
+String(
+payload?.strategyId ||
+"st1"
+).trim().toLowerCase();
 
 try{
 return await startBotImpl(
@@ -2863,7 +2920,124 @@ payload
 }finally{
 startInflight =
 false;
+startingStrategyId =
+null;
 }
+
+}
+
+const LAN_RSI_START_ACK_MS =
+2500;
+
+async function startBotFromLan(
+payload =
+{}
+){
+
+const strategyId =
+String(
+payload?.strategyId ||
+"st1"
+).trim().toLowerCase();
+
+if(
+strategyId !==
+"rsi-touch-flip"
+){
+return startBot(
+payload
+);
+}
+
+if(
+startInflight
+){
+return {
+ok:
+true,
+alreadyRunning:
+!!runningStrategyId,
+starting:
+!runningStrategyId,
+message:
+runningStrategyId
+? `Уже запущена ${runningStrategyId}; сначала остановите её`
+: "Запуск RSI Flip уже идёт",
+...buildStatusSnapshot(),
+starting:
+!!startInflight &&
+!runningStrategyId
+};
+}
+
+const pending =
+startBot(
+payload
+);
+
+pending.catch(
+(
+err
+)=>{
+log.warn(
+"lan rsi-touch-flip start:",
+err?.message ||
+err
+);
+}
+);
+
+const raced =
+await Promise.race(
+[
+pending.then(
+(
+result
+)=>(
+{
+done:
+true,
+result
+}
+)
+),
+new Promise(
+(
+resolve
+)=>
+setTimeout(
+()=>
+resolve(
+{
+done:
+false
+}
+),
+LAN_RSI_START_ACK_MS
+)
+)
+]
+);
+
+if(
+raced.done
+){
+return raced.result;
+}
+
+return {
+ok:
+true,
+starting:
+true,
+strategyId:
+"rsi-touch-flip",
+message:
+"Запуск RSI Flip…",
+...buildStatusSnapshot(),
+starting:
+true
+};
 
 }
 
@@ -2873,8 +3047,7 @@ payload =
 ){
 
 if(
-stopInflight ||
-startInflight
+stopInflight
 ){
 return {
 ok:
@@ -2883,6 +3056,42 @@ busy:
 true,
 message:
 "Bot stop already in progress"
+};
+}
+
+if(
+startInflight
+){
+if(
+startingStrategyId ===
+"rsi-touch-flip"
+){
+try{
+rsiTouchFlipEngine.requestRsiTouchFlipStartCancel();
+}catch{
+/* ignore */
+}
+
+return {
+ok:
+true,
+cancelling:
+true,
+message:
+"Отмена запуска…",
+...buildStatusSnapshot(),
+starting:
+true
+};
+}
+
+return {
+ok:
+false,
+busy:
+true,
+message:
+"Bot start already in progress"
 };
 }
 
@@ -2953,7 +3162,8 @@ false;
 
 function getBotStatus(){
 
-return buildStatusSnapshot(
+const snapshot =
+buildStatusSnapshot(
 lastStatusSnapshot &&
 typeof lastStatusSnapshot ===
 "object"
@@ -2963,6 +3173,13 @@ lastStatusSnapshot.openCount
 }
 : {}
 );
+
+return {
+...snapshot,
+starting:
+!!startInflight &&
+!snapshot.running
+};
 
 }
 
@@ -3911,6 +4128,7 @@ notifyTickerFlagsToUi,
 notifyTickerBookToUi,
 notifyRsiTouchFlipBookToUi,
 startBot,
+startBotFromLan,
 stopBot,
 getBotStatus,
 disarmArmedSetup,

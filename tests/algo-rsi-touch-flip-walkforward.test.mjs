@@ -48,7 +48,7 @@ test("test verdict requires profit, trades and PF", () => {
       profitFactor: 0.4,
       maxDrawdownPct: 40
     },
-    { minTrades: 8, maxDdPct: 25 }
+    { minTrades: 8 }
   );
   assert.equal(fail.ok, false);
   assert.ok(fail.reasons.length >= 3);
@@ -60,9 +60,29 @@ test("test verdict requires profit, trades and PF", () => {
       profitFactor: 1.4,
       maxDrawdownPct: 10
     },
-    { minTrades: 8, maxDdPct: 25 }
+    { minTrades: 8 }
   );
   assert.equal(pass.ok, true);
+});
+
+test("Test stays green when net and PF pass even if DD is 25.7%", () => {
+  const v = rsiTouchFlipTestVerdict({
+    closedTrades: 54,
+    netProfit: 4.26,
+    profitFactor: 1.2,
+    maxDrawdownPct: 25.71
+  });
+  assert.equal(v.ok, true);
+  const capped = rsiTouchFlipTestVerdict(
+    {
+      closedTrades: 54,
+      netProfit: 4.26,
+      profitFactor: 1.2,
+      maxDrawdownPct: 25.71
+    },
+    { maxDdPct: 25 }
+  );
+  assert.equal(capped.ok, false);
 });
 
 test("launch advice tells to use Test, not full-chart Overview", () => {
@@ -80,8 +100,8 @@ test("launch advice tells to use Test, not full-chart Overview", () => {
     { netProfit: -12 }
   );
   assert.equal(fitted.canLaunch, false);
-  assert.match(fitted.title, /не нашла/);
-  assert.match(fitted.detail, /не «с чем запускать»|не рекомендация/);
+  assert.match(fitted.title, /Обзору/);
+  assert.match(fitted.detail, /Test/);
 
   const keepFields = rsiTouchFlipLaunchAdvice(
     { ok: false, reasons: ["просадка Test 42.3% > 25%"] },
@@ -129,9 +149,21 @@ test("optimize grid is every integer in RSI/OS/OB/stack ranges", () => {
   );
 });
 
-test("launch pick prefers a passing Test over a richer failing Train", () => {
+test("parameter winner is Overview net even if Test failed", () => {
   const passing = {
     verdict: { ok: true },
+    overview: {
+      closedTrades: 20,
+      netProfit: 8,
+      profitFactor: 1.5,
+      maxDrawdownPct: 10
+    },
+    train: {
+      closedTrades: 20,
+      netProfit: 8,
+      profitFactor: 1.5,
+      maxDrawdownPct: 10
+    },
     test: {
       closedTrades: 20,
       netProfit: 8,
@@ -141,6 +173,18 @@ test("launch pick prefers a passing Test over a richer failing Train", () => {
   };
   const failing = {
     verdict: { ok: false, reasons: ["Test не прибыльный"] },
+    overview: {
+      closedTrades: 40,
+      netProfit: 40,
+      profitFactor: 2,
+      maxDrawdownPct: 10
+    },
+    train: {
+      closedTrades: 40,
+      netProfit: 40,
+      profitFactor: 2,
+      maxDrawdownPct: 10
+    },
     test: {
       closedTrades: 40,
       netProfit: 40,
@@ -148,8 +192,55 @@ test("launch pick prefers a passing Test over a richer failing Train", () => {
       maxDrawdownPct: 30
     }
   };
-  assert.equal(isBetterRsiTouchFlipLaunch(passing, failing), true);
-  assert.equal(isBetterRsiTouchFlipLaunch(failing, passing), false);
+  assert.equal(isBetterRsiTouchFlipLaunch(failing, passing), true);
+  assert.equal(isBetterRsiTouchFlipLaunch(passing, failing), false);
+});
+
+test("grid rank is full-chart Overview net, Test does not outrank it", () => {
+  const testLottery = {
+    verdict: { ok: true },
+    overview: {
+      closedTrades: 483,
+      netProfit: 6.44,
+      profitFactor: 1.03,
+      maxDrawdownPct: 120
+    },
+    train: {
+      closedTrades: 321,
+      netProfit: -12.12,
+      profitFactor: 0.92,
+      maxDrawdownPct: 120
+    },
+    test: {
+      closedTrades: 162,
+      netProfit: 18.82,
+      profitFactor: 1.57,
+      maxDrawdownPct: 20
+    }
+  };
+  const highOverview = {
+    verdict: { ok: true },
+    overview: {
+      closedTrades: 38,
+      netProfit: 42.59,
+      profitFactor: 2.2,
+      maxDrawdownPct: 38
+    },
+    train: {
+      closedTrades: 30,
+      netProfit: 20,
+      profitFactor: 1.4,
+      maxDrawdownPct: 25
+    },
+    test: {
+      closedTrades: 12,
+      netProfit: 4,
+      profitFactor: 1.2,
+      maxDrawdownPct: 15
+    }
+  };
+  assert.equal(isBetterRsiTouchFlipLaunch(highOverview, testLottery), true);
+  assert.equal(isBetterRsiTouchFlipLaunch(testLottery, highOverview), false);
 });
 
 test("train score prefers higher net profit", () => {
@@ -166,6 +257,51 @@ test("train score prefers higher net profit", () => {
     maxDrawdownPct: 8
   });
   assert.ok(high > low);
+});
+
+test("grid rank is net profit, not gross profit or profit factor", () => {
+  const highGross = {
+    closedTrades: 40,
+    netProfit: 4.9,
+    grossProfit: 90,
+    profitFactor: Infinity,
+    maxDrawdownPct: 1
+  };
+  const highNet = {
+    closedTrades: 8,
+    netProfit: 5,
+    grossProfit: 12,
+    profitFactor: 1.05,
+    maxDrawdownPct: 20
+  };
+  assert.ok(
+    scoreRsiTouchFlipTrainOverview(highNet) >
+      scoreRsiTouchFlipTrainOverview(highGross)
+  );
+  const grossLaunch = {
+    verdict: { ok: true },
+    overview: highGross,
+    train: highGross,
+    test: {
+      closedTrades: 20,
+      netProfit: 30,
+      profitFactor: 2,
+      maxDrawdownPct: 5
+    }
+  };
+  const netLaunch = {
+    verdict: { ok: true },
+    overview: highNet,
+    train: highNet,
+    test: {
+      closedTrades: 8,
+      netProfit: 1,
+      profitFactor: 1.1,
+      maxDrawdownPct: 20
+    }
+  };
+  assert.equal(isBetterRsiTouchFlipLaunch(netLaunch, grossLaunch), true);
+  assert.equal(isBetterRsiTouchFlipLaunch(grossLaunch, netLaunch), false);
 });
 
 test("min test trades scales with window length", () => {

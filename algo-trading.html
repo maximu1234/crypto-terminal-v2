@@ -652,7 +652,7 @@ tabindex="0"
 <div class="algo-rsi-flip-launch" id="algo-rsi-flip-launch" data-state="idle">
 <div class="algo-rsi-flip-launch-title" id="algo-rsi-flip-launch-title">Сначала подберите параметры</div>
 <div class="algo-rsi-flip-launch-params" id="algo-rsi-flip-launch-params"></div>
-<div class="algo-rsi-flip-launch-detail" id="algo-rsi-flip-launch-detail">Сетка крутится только на Train (старшая часть). Решение — по Test (свежая часть). Обзор слева — весь график, его нельзя читать как «можно запускать».</div>
+<div class="algo-rsi-flip-launch-detail" id="algo-rsi-flip-launch-detail">Сетка ищет максимум чистой прибыли на всём графике (Обзор). Train — история, Test — свежий кусок: решение, включать ли тикер в бота.</div>
 </div>
 <div class="algo-stats-row">
 <span class="algo-stats-label">Train</span>
@@ -665,7 +665,7 @@ tabindex="0"
 <div class="algo-stats-row algo-stats-row--rsi-flip-fit-actions">
 <button type="button" class="algo-stats-mode-btn" id="algo-rsi-flip-apply-fit" disabled>Подставить в поля слева</button>
 </div>
-<p class="algo-rsi-flip-col-note">Подставить только если Test зелёный.</p>
+<p class="algo-rsi-flip-col-note">Подставить, если Test в плюсе (сделки и PF). Просадка в строке — справка, не запрет.</p>
 <div class="algo-stats-divider" aria-hidden="true"></div>
 <div class="algo-stats-row algo-stats-row--setting">
 <label class="algo-stats-label" for="algo-rsi-flip-marks">Метки сделок</label>

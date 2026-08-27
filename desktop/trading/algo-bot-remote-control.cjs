@@ -269,6 +269,52 @@ opts =
 {}
 ){
 
+const act =
+String(
+action ||
+""
+).trim().toLowerCase();
+
+if(
+act ===
+"stop"
+){
+const st =
+algoBot.getBotStatus?.() ||
+{};
+const strategyId =
+st.strategyId ||
+"st1";
+const result =
+await algoBot.stopBot(
+{
+strategyId
+}
+);
+
+if(
+result?.ok !==
+false &&
+!result?.running
+){
+await releaseCloudLock();
+}
+
+return result;
+}
+
+if(
+act !==
+"start"
+){
+return {
+ok:
+false,
+error:
+"bad_action"
+};
+}
+
 if(
 commandBusy
 ){
@@ -276,7 +322,9 @@ return {
 ok:
 false,
 busy:
-true
+true,
+message:
+"Бот занят другой командой"
 };
 }
 
@@ -284,11 +332,6 @@ commandBusy =
 true;
 
 try{
-
-if(
-action ===
-"start"
-){
 const lock =
 await acquireCloudLock();
 
@@ -321,8 +364,13 @@ opts.strategyId
 ).trim().toLowerCase()
 : "st1";
 
-const result =
-await algoBot.startBot(
+const startFn =
+typeof algoBot.startBotFromLan ===
+"function"
+? algoBot.startBotFromLan
+: algoBot.startBot;
+
+return await startFn(
 {
 strategyId,
 ...(
@@ -345,7 +393,7 @@ opts.earlyT3Prefs
 }
 : {}
 ),
-        ...(
+...(
 Array.isArray(
 opts.book
 )
@@ -368,44 +416,6 @@ opts.balancePct
 )
 }
 );
-
-return result;
-}
-
-if(
-action ===
-"stop"
-){
-const st =
-algoBot.getBotStatus?.() ||
-{};
-const strategyId =
-st.strategyId ||
-"st1";
-const result =
-await algoBot.stopBot(
-{
-strategyId
-}
-);
-
-if(
-result?.ok !==
-false &&
-!result?.running
-){
-await releaseCloudLock();
-}
-
-return result;
-}
-
-return {
-ok:
-false,
-error:
-"bad_action"
-};
 }finally{
 commandBusy =
 false;

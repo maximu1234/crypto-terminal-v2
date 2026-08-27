@@ -1,5 +1,6 @@
 /**
- * Сетка RSI Touch Flip: крутится только на Train, Test — вето.
+ * Сетка RSI Touch Flip: победитель — чистая прибыль на всём графике (Обзор).
+ * Train/Test считаются отдельно: решение, включать ли тикер в бота.
  */
 import {
   runRsiTouchFlip
@@ -11,7 +12,7 @@ import {
   rsiTouchFlipMinTestTrades,
   rsiTouchFlipTestVerdict,
   rsiTouchFlipTrainTestSplit
-} from "./rsi-touch-flip-walkforward.js?v=4";
+} from "./rsi-touch-flip-walkforward.js?v=7";
 
 export function rsiTouchFlipIntRange(from, to) {
   const start = Math.round(Number(from));
@@ -57,22 +58,32 @@ export function listRsiTouchFlipOptimizeCombos() {
 }
 
 /**
+ * Ранг ячейки сетки: только чистая прибыль (netProfit = сумма pnl сделок
+ * после комиссии). Валовая (grossProfit), профит-фактор и число сделок
+ * не перебивают чистую.
  * @param {object|null|undefined} overview
  * @returns {number}
  */
-export function scoreRsiTouchFlipTrainOverview(overview) {
+export function scoreRsiTouchFlipNetOverview(overview) {
   const closed = Number(overview?.closedTrades);
   if (!Number.isFinite(closed) || closed <= 0) {
     return -Infinity;
   }
   const net = Number(overview?.netProfit);
-  const pfRaw = overview?.profitFactor;
-  const pf = pfRaw === Infinity ? 99 : Number(pfRaw);
+  if (!Number.isFinite(net)) {
+    return -Infinity;
+  }
   const dd = Number(overview?.maxDrawdownPct);
-  const netPart = Number.isFinite(net) ? net : -1e12;
-  const pfPart = Number.isFinite(pf) ? pf : 0;
   const ddPart = Number.isFinite(dd) ? dd : 100;
-  return netPart * 1e6 + pfPart * 1e3 - ddPart + closed * 0.01;
+  return net * 1e9 - ddPart;
+}
+
+/**
+ * @param {object|null|undefined} overview
+ * @returns {number}
+ */
+export function scoreRsiTouchFlipTrainOverview(overview) {
+  return scoreRsiTouchFlipNetOverview(overview);
 }
 
 /**
@@ -99,35 +110,29 @@ export function isBetterRsiTouchFlipTrain(a, b) {
  * @returns {number}
  */
 export function scoreRsiTouchFlipTestOverview(overview) {
-  const closed = Number(overview?.closedTrades);
-  if (!Number.isFinite(closed) || closed <= 0) {
-    return -Infinity;
-  }
-  const net = Number(overview?.netProfit);
-  const pfRaw = overview?.profitFactor;
-  const pf = pfRaw === Infinity ? 99 : Number(pfRaw);
-  const dd = Number(overview?.maxDrawdownPct);
-  const netPart = Number.isFinite(net) ? net : -1e12;
-  const pfPart = Number.isFinite(pf) ? pf : 0;
-  const ddPart = Number.isFinite(dd) ? dd : 100;
-  return netPart * 1e6 + pfPart * 1e3 - ddPart + closed * 0.01;
+  return scoreRsiTouchFlipNetOverview(overview);
 }
 
 /**
- * Лучший набор для запуска: Test уже прошёл, сравниваем по Test, не по Train.
+ * Лучший набор сетки: максимум чистой на всём графике (Обзор).
+ * Test не участвует в ранге — он только для «включать ли тикер в бота».
  * @param {object|null|undefined} a
  * @param {object|null|undefined} b
  * @returns {boolean}
  */
 export function isBetterRsiTouchFlipLaunch(a, b) {
-  if (!a?.verdict?.ok) {
+  if (!a?.overview) {
     return false;
   }
-  if (!b?.verdict?.ok) {
+  const closed = Number(a.overview.closedTrades);
+  if (!Number.isFinite(closed) || closed <= 0) {
+    return false;
+  }
+  if (!b?.overview) {
     return true;
   }
-  return scoreRsiTouchFlipTestOverview(a.test) >
-    scoreRsiTouchFlipTestOverview(b.test);
+  return scoreRsiTouchFlipNetOverview(a.overview) >
+    scoreRsiTouchFlipNetOverview(b.overview);
 }
 
 function pickOverview(overview) {
@@ -160,6 +165,14 @@ function runWindow(window, prefs, rsiFull) {
   return {
     ...pickOverview(result.overview),
     chartDays: window.days
+  };
+}
+
+function runFullChart(candles, prefs, rsiFull, chartDays) {
+  const result = runRsiTouchFlip(candles, prefs, { rsiValues: rsiFull });
+  return {
+    ...pickOverview(result.overview),
+    chartDays
   };
 }
 
@@ -261,11 +274,18 @@ export async function optimizeRsiTouchFlipParams(opts = {}) {
     const verdict = rsiTouchFlipTestVerdict(testOverview, {
       minTrades: rsiTouchFlipMinTestTrades(split.test.bars)
     });
+    const overview = runFullChart(
+      candles,
+      prefs,
+      rsiFull,
+      (Number(split.train.days) || 0) + (Number(split.test.days) || 0)
+    );
     const row = {
       combo,
       prefs,
       train: trainOverview,
       test: testOverview,
+      overview,
       verdict
     };
 

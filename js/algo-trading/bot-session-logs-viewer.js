@@ -7,7 +7,7 @@ fetchLanBotStatus,
 sendLanBotCommand,
 normalizeLanBotStrategyId,
 pushAuthSessionToRemoteBot
-} from "./bot-remote-client.js?v=12";
+} from "./bot-remote-client.js?v=14";
 import {
 formatBotStrategySettingsRows,
 loadBotStrategiesPrefs
@@ -36,8 +36,10 @@ const STORAGE_KEY =
 "algo_remote_session_logs_v1";
 const TOKEN_SESSION_KEY =
 "algo_remote_session_logs_token_v1";
+const TOKEN_PERSIST_KEY =
+"algo_remote_lan_channel_token_v1";
 const CHANNEL_UI_VER =
-"15";
+"16";
 
 function normalizeLanStrategyId(
 value
@@ -56,7 +58,7 @@ null;
 
 }
 
-function readSessionToken(){
+function readLegacySessionToken(){
 
 try{
 return String(
@@ -71,11 +73,69 @@ return "";
 
 }
 
-function writeSessionToken(
+function clearLegacySessionToken(){
+
+try{
+sessionStorage.removeItem(
+TOKEN_SESSION_KEY
+);
+}catch{
+/* ignore */
+}
+
+}
+
+function readPersistedToken(){
+
+try{
+const stored =
+String(
+localStorage.getItem(
+TOKEN_PERSIST_KEY
+) ||
+""
+).trim();
+
+if(
+stored
+){
+return stored;
+}
+}catch{
+/* ignore */
+}
+
+try{
+const raw =
+JSON.parse(
+localStorage.getItem(
+STORAGE_KEY
+) ||
+"{}"
+);
+const nested =
+String(
+raw.token ||
+""
+).trim();
+
+if(
+nested
+){
+return nested;
+}
+}catch{
+/* ignore */
+}
+
+return readLegacySessionToken();
+
+}
+
+function writePersistedToken(
 token
 ){
 
-try{
 const value =
 String(
 token ||
@@ -83,17 +143,16 @@ token ||
 ).trim();
 
 if(
-value
+!value
 ){
-sessionStorage.setItem(
-TOKEN_SESSION_KEY,
+return;
+}
+
+try{
+localStorage.setItem(
+TOKEN_PERSIST_KEY,
 value
 );
-}else{
-sessionStorage.removeItem(
-TOKEN_SESSION_KEY
-);
-}
 }catch{
 /* ignore */
 }
@@ -110,34 +169,6 @@ STORAGE_KEY
 ) ||
 "{}"
 );
-let token =
-readSessionToken();
-
-if(
-!token &&
-raw.token
-){
-token =
-String(
-raw.token ||
-""
-).trim();
-writeSessionToken(
-token
-);
-}
-
-if(
-raw.token
-){
-delete raw.token;
-localStorage.setItem(
-STORAGE_KEY,
-JSON.stringify(
-raw
-)
-);
-}
 
 return {
 host:
@@ -150,7 +181,8 @@ String(
 raw.port ||
 "17865"
 ).trim(),
-token,
+token:
+readPersistedToken(),
 strategyId:
 normalizeLanStrategyId(
 raw.strategyId
@@ -163,7 +195,7 @@ host:
 port:
 "17865",
 token:
-readSessionToken(),
+readPersistedToken(),
 strategyId:
 "st1"
 };
@@ -175,6 +207,16 @@ function writeConn(
 conn
 ){
 
+const token =
+String(
+conn.token ||
+""
+).trim() ||
+readPersistedToken();
+
+writePersistedToken(
+token
+);
 localStorage.setItem(
 STORAGE_KEY,
 JSON.stringify(
@@ -189,6 +231,7 @@ String(
 conn.port ||
 "17865"
 ).trim(),
+token,
 strategyId:
 normalizeLanStrategyId(
 conn.strategyId
@@ -196,9 +239,7 @@ conn.strategyId
 }
 )
 );
-writeSessionToken(
-conn.token
-);
+clearLegacySessionToken();
 
 }
 
@@ -266,7 +307,7 @@ root.innerHTML =
 <section class="algo-remote-session-logs-conn">
 <label>IP / хост<input type="text" id="algo-remote-logs-host" placeholder="203.0.113.10" autocomplete="off" spellcheck="false" /></label>
 <label>Порт<input type="number" id="algo-remote-logs-port" min="1024" max="65535" value="17865" /></label>
-<label class="algo-remote-session-logs-token">Токен<input type="password" id="algo-remote-logs-token" autocomplete="off" spellcheck="false" /></label>
+<label class="algo-remote-session-logs-token">Токен<input type="text" id="algo-remote-logs-token" autocomplete="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true" /></label>
 </section>
 <section class="algo-remote-session-logs-channel" aria-label="Управление по каналу">
 <div class="algo-remote-session-logs-channel-status">
@@ -848,7 +889,8 @@ if(
 tokenEl
 ){
 tokenEl.value =
-conn.token;
+conn.token ||
+readPersistedToken();
 }
 
 function applyStrategyChecks(
@@ -951,6 +993,24 @@ return "st1";
 
 function currentConn(){
 
+const typed =
+String(
+tokenEl?.value ||
+""
+).trim();
+const token =
+typed ||
+readPersistedToken();
+
+if(
+tokenEl &&
+token &&
+!typed
+){
+tokenEl.value =
+token;
+}
+
 return {
 host:
 hostEl?.value ||
@@ -958,9 +1018,7 @@ hostEl?.value ||
 port:
 portEl?.value ||
 "17865",
-token:
-tokenEl?.value ||
-"",
+token,
 strategyId:
 selectedStrategyId()
 };
@@ -1031,6 +1089,17 @@ linkEl.textContent =
 "онлайн · запущен";
 linkEl.classList.add(
 "is-online",
+"is-running"
+);
+}else if(
+st.starting
+){
+linkEl.textContent =
+"онлайн · запускается";
+linkEl.classList.add(
+"is-online"
+);
+linkEl.classList.remove(
 "is-running"
 );
 }else{
@@ -1145,19 +1214,22 @@ channelCmdInflight ||
 st?.ok &&
 st.online
 ) ||
-!!st?.running;
+!!st?.running ||
+!!st?.starting;
 }
 
 if(
 stopBtn
 ){
 stopBtn.disabled =
-channelCmdInflight ||
 !(
 st?.ok &&
 st.online
 ) ||
-!st?.running;
+!(
+!!st?.running ||
+!!st?.starting
+);
 }
 
 if(
@@ -1213,6 +1285,12 @@ strategyId ===
 : strategyId ===
 "st3"
 ? "Стратегия 3"
+: strategyId ===
+"early-t3"
+? "Early T3"
+: strategyId ===
+"rsi-touch-flip"
+? "RSI Flip"
 : "Стратегия 1";
 
 if(
@@ -1269,7 +1347,10 @@ ok:
 false
 }
 );
-return;
+return {
+ok:
+false
+};
 }
 
 const st =
@@ -1280,6 +1361,32 @@ next
 applyLanStatusUi(
 st
 );
+
+if(
+st?.starting &&
+st.message
+){
+setMessage(
+st.message
+);
+}else if(
+st?.ok &&
+st.online &&
+!st.running &&
+!st.starting &&
+st.message &&
+st.message !==
+"Остановлен" &&
+st.message !==
+"Bot already stopped"
+){
+setMessage(
+st.message,
+true
+);
+}
+
+return st;
 
 }
 
@@ -1309,14 +1416,18 @@ channelCmdInflight =
 true;
 
 if(
-startBtn
+startBtn &&
+action ===
+"start"
 ){
 startBtn.disabled =
 true;
 }
 
 if(
-stopBtn
+stopBtn &&
+action ===
+"stop"
 ){
 stopBtn.disabled =
 true;
@@ -1434,12 +1545,52 @@ true
 setMessage(
 action ===
 "start"
-? `Команда запуска ${startStrategyLabel} отправлена`
+? (
+result.starting
+? `Запуск ${startStrategyLabel}…`
+: `Команда запуска ${startStrategyLabel} отправлена`
+)
+: (
+result.cancelling
+? "Отмена запуска…"
 : "Команда остановки отправлена"
+)
 );
 }
 
+let st =
 await refreshLanStatus();
+
+if(
+action ===
+"start" &&
+result?.ok
+){
+for(
+let i =
+0;
+i <
+90;
+i++
+){
+if(
+!st?.starting
+){
+break;
+}
+await new Promise(
+(
+resolve
+)=>
+setTimeout(
+resolve,
+1000
+)
+);
+st =
+await refreshLanStatus();
+}
+}
 
 }
 

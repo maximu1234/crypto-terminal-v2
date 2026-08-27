@@ -5,7 +5,7 @@ import {
   RSI_TOUCH_FLIP_LEN_GRID,
   listRsiTouchFlipOptimizeCombos,
   optimizeRsiTouchFlipParams
-} from "./rsi-touch-flip-optimize.js?v=4";
+} from "./rsi-touch-flip-optimize.js?v=8";
 import {
   runRsiTouchFlip
 } from "./rsi-touch-flip-engine.js?v=5";
@@ -17,7 +17,7 @@ import {
   rsiTouchFlipTestVerdict,
   rsiTouchFlipTrainTestSplit,
   RSI_TOUCH_FLIP_DEFAULT_TRAIN_PCT
-} from "./rsi-touch-flip-walkforward.js?v=4";
+} from "./rsi-touch-flip-walkforward.js?v=7";
 
 const FIT_KEY = "algo_trading_rsi_touch_flip_fit_v1";
 
@@ -110,6 +110,27 @@ function saveFitStore(row) {
   }
 }
 
+function verdictChanged(a, b) {
+  return (
+    a?.ok !== b?.ok ||
+    String((a?.reasons || []).join("|")) !== String((b?.reasons || []).join("|"))
+  );
+}
+
+/** Пересчитать Test по текущим правилам — без повторного прогона сетки. */
+function refreshFitRowVerdict(row, split) {
+  if (!row?.test) {
+    return row;
+  }
+  const opts = split
+    ? { minTrades: rsiTouchFlipMinTestTrades(split.test.bars) }
+    : {};
+  return {
+    ...row,
+    verdict: rsiTouchFlipTestVerdict(row.test, opts)
+  };
+}
+
 function paintSigned(node, value) {
   if (!node) {
     return;
@@ -159,10 +180,15 @@ function evaluateSplit(candles, rsiValues, prefs, chartTf, trainPct) {
     ...testResult.overview,
     chartDays: split.test.days
   };
+  const fullResult = runRsiTouchFlip(candles, prefs, { rsiValues });
+  const overview = {
+    ...fullResult.overview,
+    chartDays: (Number(split.train.days) || 0) + (Number(split.test.days) || 0)
+  };
   const verdict = rsiTouchFlipTestVerdict(test, {
     minTrades: rsiTouchFlipMinTestTrades(split.test.bars)
   });
-  return { split, train, test, verdict };
+  return { split, train, test, overview, verdict };
 }
 
 /**
@@ -252,8 +278,8 @@ export function mountRsiTouchFlipFit(host) {
       row.test,
       { currentPassesTest: currentOk }
     );
-    const currentNet = Number(currentEval?.test?.netProfit);
-    const gridNet = Number(row.test?.netProfit);
+    const currentNet = Number(currentEval?.overview?.netProfit);
+    const gridNet = Number(row.overview?.netProfit);
     if (
       advice.canLaunch &&
       currentOk &&
@@ -265,7 +291,7 @@ export function mountRsiTouchFlipFit(host) {
         canLaunch: false,
         title: "Сетка не обошла поля слева",
         detail:
-          `На Test у текущих полей ${formatUsd(currentNet)}, у лучшего набора сетки ${formatUsd(gridNet)}. Подставлять сетку не нужно.`
+          `На всём графике (Обзор) у текущих полей ${formatUsd(currentNet)}, у лучшего набора сетки ${formatUsd(gridNet)}. Подставлять сетку не нужно.`
       };
     }
     setLaunchState(advice.canLaunch ? "ok" : "no");
@@ -277,9 +303,9 @@ export function mountRsiTouchFlipFit(host) {
       if (advice.canLaunch) {
         params.textContent = brief;
       } else if (row.verdict?.ok) {
-        params.textContent = `лучший на Test в сетке: ${brief}`;
+        params.textContent = `лучший по Обзору в сетке: ${brief}`;
       } else {
-        params.textContent = `лучший на Train (не запускать): ${brief}`;
+        params.textContent = `лучший по Обзору (Test красный — не в бота): ${brief}`;
       }
     }
     if (detail) {
@@ -291,7 +317,7 @@ export function mountRsiTouchFlipFit(host) {
     }
     if (testEl) {
       testEl.textContent = compactOverviewLine(row.test);
-      paintSigned(testEl, row.test?.netProfit);
+      paintSigned(testEl, row.verdict?.ok ? 1 : -1);
     }
     if (advice.canLaunch) {
       applyBtn?.removeAttribute("disabled");
@@ -367,7 +393,13 @@ export function mountRsiTouchFlipFit(host) {
       stored &&
       String(stored.symbol || "") === String(host.getSymbol?.() || "") &&
       String(stored.chartTf || "") === String(chartTf || "");
-    renderCandidate(sameChart ? stored : null, currentEval);
+    const candidate = sameChart
+      ? refreshFitRowVerdict(stored, split)
+      : null;
+    if (candidate && stored && verdictChanged(candidate.verdict, stored.verdict)) {
+      saveFitStore(candidate);
+    }
+    renderCandidate(candidate, currentEval);
   }
 
   async function runOptimize() {
@@ -538,10 +570,19 @@ export function mountRsiTouchFlipFit(host) {
   }
 
   function onApply() {
-    const stored = loadFitStore();
+    const candles = host.getCandles?.() || [];
+    const chartTf = host.getChartTf?.() || "";
+    const split = rsiTouchFlipTrainTestSplit(
+      candles,
+      undefined,
+      chartTf,
+      readTrainPct()
+    );
+    const stored = refreshFitRowVerdict(loadFitStore(), split);
     if (!stored?.prefs || stored.verdict?.ok !== true) {
       return;
     }
+    saveFitStore(stored);
     host.applyCandidate({
       rsiLen: stored.prefs.rsiLen,
       osLevel: stored.prefs.osLevel,
@@ -563,7 +604,7 @@ export function mountRsiTouchFlipFit(host) {
   if (idlePct && !idlePct.value) {
     idlePct.value = String(RSI_TOUCH_FLIP_DEFAULT_TRAIN_PCT);
   }
-  renderCandidate(loadFitStore());
+  renderCandidate(refreshFitRowVerdict(loadFitStore(), null));
 
   return {
     sync,

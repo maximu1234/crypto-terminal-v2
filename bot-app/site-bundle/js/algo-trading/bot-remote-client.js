@@ -176,6 +176,8 @@ st.online !==
 false,
 running:
 !!st.running,
+starting:
+!!st.starting,
 host:
 st.host ||
 null,
@@ -200,6 +202,9 @@ typeof st.strategyPrefs ===
 "object"
 ? st.strategyPrefs
 : null,
+message:
+st.message ||
+null,
 via:
 "lan"
 };
@@ -350,8 +355,12 @@ via:
 "lan",
 running:
 !!res.running,
+starting:
+!!res.starting,
 alreadyRunning:
-!!res.alreadyRunning
+!!res.alreadyRunning,
+cancelling:
+!!res.cancelling
 };
 
 }

@@ -49,6 +49,25 @@ let queuedBookRows = null;
 let queuedBalancePct = null;
 let allocPct = 100;
 let allocatedUsdt = 0;
+let startCancelRequested = false;
+
+function requestRsiTouchFlipStartCancel() {
+  startCancelRequested = true;
+}
+
+function clearRsiTouchFlipStartCancel() {
+  startCancelRequested = false;
+}
+
+function isRsiTouchFlipStartCancelled() {
+  return startCancelRequested;
+}
+
+function throwIfRsiTouchFlipStartCancelled() {
+  if (startCancelRequested) {
+    throw new Error("Запуск RSI Touch Flip отменён");
+  }
+}
 
 function emptyStatus() {
   return {
@@ -900,6 +919,7 @@ async function startRsiTouchFlipEngine(config = {}) {
   if (engineLive) {
     throw new Error("RSI Touch Flip уже запущен");
   }
+  throwIfRsiTouchFlipStartCancelled();
 
   const rows = normalizeBookRows(config.rows || config.book);
   if (!rows.length) {
@@ -918,12 +938,15 @@ async function startRsiTouchFlipEngine(config = {}) {
 
   const failures = [];
   await mapPool(rows, SEED_CONCURRENCY, async (row) => {
+    throwIfRsiTouchFlipStartCancelled();
     try {
       await seedTicker(row);
     } catch (err) {
+      throwIfRsiTouchFlipStartCancelled();
       failures.push(`${row.symbol}: ${err?.message || err}`);
     }
   });
+  throwIfRsiTouchFlipStartCancelled();
 
   if (!tickers.size) {
     await stopRsiTouchFlipEngine();
@@ -938,11 +961,13 @@ async function startRsiTouchFlipEngine(config = {}) {
 
   let share = 0;
   try {
+    throwIfRsiTouchFlipStartCancelled();
     share = await refreshShareBudgets();
   } catch (err) {
     await stopRsiTouchFlipEngine();
     throw new Error(err?.message || "Не удалось прочитать баланс для долей RSI Flip");
   }
+  throwIfRsiTouchFlipStartCancelled();
   if (!(share >= 1)) {
     await stopRsiTouchFlipEngine();
     throw new Error(
@@ -1106,5 +1131,8 @@ module.exports = {
   stopRsiTouchFlipEngine,
   syncRsiTouchFlipBook,
   isRsiTouchFlipEngineRunning,
-  getRsiTouchFlipEngineStatus
+  getRsiTouchFlipEngineStatus,
+  requestRsiTouchFlipStartCancel,
+  clearRsiTouchFlipStartCancel,
+  isRsiTouchFlipStartCancelled
 };

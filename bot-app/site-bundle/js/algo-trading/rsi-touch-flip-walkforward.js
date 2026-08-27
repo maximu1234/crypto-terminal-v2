@@ -1,6 +1,7 @@
 /**
  * Нарезка Train / Test для RSI Touch Flip.
- * Подбор только на Train; решение «запускать или нет» — только по Test.
+ * Победитель сетки — чистая на всём графике (Обзор).
+ * Test — решение, включать ли тикер в бота; Train — как отрабатывало на истории.
  */
 import {
   rsiTouchFlipChartDays
@@ -138,17 +139,20 @@ export function rsiTouchFlipMinTestTrades(testBars) {
 }
 
 /**
+ * Test «зелёный»: прибыльный, достаточно сделок, PF ≥ 1.
+ * Просадка в строке видна, но не вето — 25.7% vs 25% не должна
+ * отбрасывать набор с плюсом на Test и большой чистой на всём графике.
  * @param {object|null|undefined} overview
  * @param {{ minTrades?: number, maxDdPct?: number }} [opts]
  */
 export function rsiTouchFlipTestVerdict(overview, opts = {}) {
   const minTrades = Number.isFinite(opts.minTrades) ? opts.minTrades : 8;
-  const maxDdPct = Number.isFinite(opts.maxDdPct) ? opts.maxDdPct : 25;
   const reasons = [];
   const closed = Number(overview?.closedTrades);
   const net = Number(overview?.netProfit);
   const pf = overview?.profitFactor;
   const dd = Number(overview?.maxDrawdownPct);
+  const maxDdPct = Number(opts.maxDdPct);
 
   if (!Number.isFinite(closed) || closed < minTrades) {
     reasons.push(
@@ -163,18 +167,14 @@ export function rsiTouchFlipTestVerdict(overview, opts = {}) {
   if (!pfOk) {
     reasons.push("профит-фактор Test < 1");
   }
-  if (Number.isFinite(dd) && dd > maxDdPct) {
+  if (
+    Number.isFinite(maxDdPct) &&
+    Number.isFinite(dd) &&
+    dd > maxDdPct
+  ) {
     reasons.push(`просадка Test ${dd.toFixed(1)}% > ${maxDdPct}%`);
   }
   return { ok: reasons.length === 0, reasons };
-}
-
-function formatSigned(value) {
-  if (!Number.isFinite(value)) {
-    return "—";
-  }
-  const abs = Math.abs(value).toFixed(2);
-  return value < 0 ? `-${abs}` : `+${abs}`;
 }
 
 /**
@@ -194,7 +194,7 @@ export function rsiTouchFlipLaunchAdvice(
       canLaunch: false,
       title: "Сначала подберите параметры",
       detail:
-        "Сетка крутится только на Train (старшая часть). Решение — по Test (свежая часть). Обзор слева — весь график, его нельзя читать как «можно запускать»."
+        "Сетка ищет максимум чистой прибыли на всём графике (Обзор). Train — как набор вёл себя на истории, Test — на свежем куске: это решение, включать ли тикер в бота."
     };
   }
   if (verdict.ok) {
@@ -202,7 +202,7 @@ export function rsiTouchFlipLaunchAdvice(
       canLaunch: true,
       title: "Запускать бота с этими параметрами",
       detail:
-        "Проверка прошла на свежей части графика (Test), не на всём Обзоре."
+        "Это набор с максимальной чистой на всём графике (Обзор). Test зелёный — можно включать тикер в бота."
     };
   }
   const trainNet = Number(trainOverview?.netProfit);
@@ -218,15 +218,15 @@ export function rsiTouchFlipLaunchAdvice(
       canLaunch: false,
       title: "Сетка не нашла набор лучше",
       detail:
-        `Жёлтая строка — победитель Train, не рекомендация. Test его забраковал (${why}). ` +
-        "Запускать — с тем, что сейчас в полях слева: там Test уже «можно». Подставлять этот набор не нужно."
+        `Лучший по Обзору набор Test забраковал (${why}). ` +
+        "В бота — то, что сейчас в полях слева: там Test уже «можно». Подставлять этот набор не нужно."
     };
   }
   return {
     canLaunch: false,
-    title: "Сетка не нашла набор для запуска",
+    title: "Лучшие параметры по Обзору — в бота не включать",
     detail: fitted
-      ? `Жёлтая строка — только лучший на Train (${formatSigned(trainNet)} USDT), это не «с чем запускать». На Test подгонка. ${why}`
-      : `Жёлтая строка — только лучший на Train, это не рекомендация. ${why || "Test не прошёл пороги."}`
+      ? `Чистая на всём графике максимальная, но Test красный (${why}). Train/Test — включать ли тикер в бота, не критерий «какие поля лучше».`
+      : `Набор с максимальной чистой на всём графике, но Test не прошёл. ${why || "Test не прошёл пороги."}`
   };
 }
