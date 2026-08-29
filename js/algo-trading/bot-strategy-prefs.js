@@ -1106,6 +1106,22 @@ value:
 );
 }
 
+if(
+samplePrefs.invertEntries ===
+true
+){
+rows.splice(
+rows.length - 1,
+0,
+{
+label:
+"Инвертировать входы",
+value:
+"да"
+}
+);
+}
+
 return rows;
 }
 

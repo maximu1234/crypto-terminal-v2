@@ -10,6 +10,8 @@ const COLOR_TOUCH =
 "#9ca3af";
 const COLOR_CLOSE =
 "#ab47bc";
+const COLOR_LIQ =
+"#d50000";
 
 function toUnixTime(
 value
@@ -128,19 +130,27 @@ const hasOb =
 bucket.kinds.has(
 "ob"
 );
+const hasLiq =
+bucket.kinds.has(
+"liquidation"
+);
 const tradeTexts =
 bucket.texts.filter(
 text=>
 text !==
 "OS" &&
 text !==
-"OB"
+"OB" &&
+text !==
+"LIQ"
 );
 const label =
 tradeTexts.length
 ? tradeTexts.join(
 " "
 )
+: hasLiq
+? "LIQ"
 : hasOs
 ? "OS"
 : hasOb
@@ -155,6 +165,15 @@ let color =
 COLOR_OS;
 
 if(
+hasLiq
+){
+position =
+"inBar";
+shape =
+"circle";
+color =
+COLOR_LIQ;
+}else if(
 hasClose &&
 hasLong
 ){

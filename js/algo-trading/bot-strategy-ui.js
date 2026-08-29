@@ -31,7 +31,7 @@ import {
 loadRsiTouchFlipBalancePct,
 saveRsiTouchFlipBalancePct,
 normalizeRsiTouchFlipBalancePct
-} from "./rsi-touch-flip-prefs.js?v=5";
+} from "./rsi-touch-flip-prefs.js?v=6";
 import {
 getAlgoTradingWalletBalance
 } from "./runtime-bridge.js?v=6";
@@ -81,7 +81,7 @@ import {
 mountRemoteSessionLogsEntry,
 mountRemoteWatchlistsPushEntry,
 mountLocalSessionLogsEntry
-} from "./bot-session-logs-viewer.js?v=35";
+} from "./bot-session-logs-viewer.js?v=37";
 import {
 rebalanceTpShares
 } from "./pattern-trade-stats-partial.js?v=22";

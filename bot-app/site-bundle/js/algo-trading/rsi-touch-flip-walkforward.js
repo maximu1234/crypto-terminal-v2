@@ -8,7 +8,7 @@ import {
 } from "./rsi-touch-flip-mtf.js?v=3";
 import {
   RSI_TOUCH_FLIP_TF_OPTIONS
-} from "./rsi-touch-flip-prefs.js?v=5";
+} from "./rsi-touch-flip-prefs.js?v=6";
 
 export const RSI_TOUCH_FLIP_DEFAULT_TRAIN_PCT = 70;
 
@@ -129,6 +129,12 @@ export function formatRsiTouchFlipParamsBrief(prefs) {
   ];
   if (prefs.cycleSlEnabled === true) {
     parts.push(`СЛ ${prefs.cycleSlPct}%`);
+  }
+  if (prefs.invertEntries === true) {
+    parts.push("инв");
+  }
+  if (prefs.compoundEnabled === true) {
+    parts.push("compound");
   }
   return parts.join(" · ");
 }

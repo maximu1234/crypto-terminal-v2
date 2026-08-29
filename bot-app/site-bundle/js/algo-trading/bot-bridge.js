@@ -37,7 +37,7 @@ replaceRsiTouchFlipBook
 import {
 saveRsiTouchFlipBalancePct,
 loadRsiTouchFlipBalancePct
-} from "./rsi-touch-flip-prefs.js?v=5";
+} from "./rsi-touch-flip-prefs.js?v=6";
 
 import {
 isAlgoBotWorking

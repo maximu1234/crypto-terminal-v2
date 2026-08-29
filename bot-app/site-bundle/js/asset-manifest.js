@@ -374,7 +374,7 @@ Object.freeze({
 "algo-trading/early-t3-bot-prefs.js":
 5,
 "algo-trading/rsi-touch-flip-prefs.js":
-5,
+6,
 "algo-trading/rsi-touch-flip-book.js":
 4,
 "algo-trading/rsi-touch-flip-engine.js":
@@ -384,13 +384,13 @@ Object.freeze({
 "algo-trading/rsi-touch-flip-mtf.js":
 3,
 "algo-trading/rsi-touch-flip-panel.js":
-21,
+24,
 "algo-trading/rsi-touch-flip-walkforward.js":
 8,
 "algo-trading/rsi-touch-flip-optimize.js":
 8,
 "algo-trading/rsi-touch-flip-fit-panel.js":
-10,
+11,
 "algo-trading/ticker-flags.js":
 10,
 "algo-trading/terminal-early-t3-list.js":
@@ -444,7 +444,7 @@ Object.freeze({
 "algo-trading/bot-session-log-server-ui.js":
 11,
 "algo-trading/bot-session-logs-viewer.js":
-35,
+37,
 "algo-trading/bot-cloud-lock.js":
 11,
 "algo-trading/bot-remote-client.js":

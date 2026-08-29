@@ -223,17 +223,38 @@ function decideRsiTouchFlipBar(bar = {}) {
   const inLong = position === "long";
   const inShort = position === "short";
   const isFlat = !inLong && !inShort;
+  const invert = bar.invertEntries === true;
   const ready = Number.isFinite(rsi) && Number.isFinite(prevRsi);
   const touchOS = ready && prevRsi > osLevel && rsi <= osLevel;
   const touchOB = ready && prevRsi < obLevel && rsi >= obLevel;
-  const closeShort = touchOS && inShort;
-  const addLong = touchOS && inLong && nOpen < maxStack;
-  const openLong = touchOS && allowLong && (inShort || isFlat);
-  const closeLong = touchOB && inLong;
-  const addShort = touchOB && inShort && nOpen < maxStack;
-  const openShort = touchOB && allowShort && (inLong || isFlat);
   const slBlockLong = bar.slBlockLong === true;
   const slBlockShort = bar.slBlockShort === true;
+
+  let closeShort;
+  let closeLong;
+  let openLong;
+  let openShort;
+  let addLong;
+  let addShort;
+
+  if (!invert) {
+    closeShort = touchOS && inShort;
+    addLong = touchOS && inLong && nOpen < maxStack;
+    openLong = touchOS && allowLong && (inShort || isFlat);
+    closeLong = touchOB && inLong;
+    addShort = touchOB && inShort && nOpen < maxStack;
+    openShort = touchOB && allowShort && (inLong || isFlat);
+  } else {
+    closeLong = touchOS && inLong;
+    addShort = touchOS && inShort && nOpen < maxStack;
+    openShort = touchOS && allowShort && (inLong || isFlat);
+    closeShort = touchOB && inShort;
+    addLong = touchOB && inLong && nOpen < maxStack;
+    openLong = touchOB && allowLong && (inShort || isFlat);
+  }
+
+  const resetLongStack = closeShort;
+  const resetShortStack = closeLong;
 
   return {
     touchOS,
@@ -242,8 +263,8 @@ function decideRsiTouchFlipBar(bar = {}) {
     closeLong,
     openLong: !!(openLong || addLong) && allowLong && !slBlockLong,
     openShort: !!(openShort || addShort) && allowShort && !slBlockShort,
-    longLevel: closeShort ? 0 : nOpen,
-    shortLevel: closeLong ? 0 : nOpen
+    longLevel: resetLongStack ? 0 : nOpen,
+    shortLevel: resetShortStack ? 0 : nOpen
   };
 }
 
@@ -301,7 +322,8 @@ function normalizeLivePrefs(raw) {
     allowLong: tradeSide !== SIDE_SHORT,
     allowShort: tradeSide !== SIDE_LONG,
     cycleSlEnabled: src.cycleSlEnabled === true,
-    cycleSlPct: clampNumber(src.cycleSlPct, 1, 90, 30)
+    cycleSlPct: clampNumber(src.cycleSlPct, 1, 90, 30),
+    invertEntries: src.invertEntries === true
   };
 }
 
@@ -324,7 +346,8 @@ function livePrefsFingerprint(tf, prefs) {
     sizeMode: p.sizeMode,
     sizeMult: p.sizeMult,
     cycleSlEnabled: p.cycleSlEnabled === true,
-    cycleSlPct: p.cycleSlEnabled === true ? p.cycleSlPct : 0
+    cycleSlPct: p.cycleSlEnabled === true ? p.cycleSlPct : 0,
+    invertEntries: p.invertEntries === true
   });
 }
 

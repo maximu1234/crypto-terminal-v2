@@ -68,6 +68,10 @@ test("launch prefs copy strategy fields and drop analysis-only", () => {
   });
   assert.equal(withSl.cycleSlEnabled, true);
   assert.equal(withSl.cycleSlPct, 40);
+  const withInvert = pickRsiTouchFlipLaunchPrefs({
+    invertEntries: true
+  });
+  assert.equal(withInvert.invertEntries, true);
 });
 
 test("normalized prefs drop initialCapital; analysis percents use budget", () => {
@@ -125,6 +129,29 @@ test("RSI Touch Flip OS opens long, OB closes and opens short", () => {
   const texts = result.marks.map((m) => m.text);
   assert.ok(texts.includes("SELL ALL"));
   assert.equal(result.closedTrades[0].comment, "SELL ALL @ OB");
+});
+
+test("RSI Touch Flip invert entries opens short at OS and long at OB", () => {
+  const candles = candlesAt(100, 6);
+  const rsiValues = rsiSeries([40, 40, 25, 40, 80, 80]);
+  const result = runRsiTouchFlip(
+    candles,
+    {
+      rsiLen: 14,
+      osLevel: 30,
+      obLevel: 70,
+      maxStack: 3,
+      budget: 90,
+      commissionPct: 0,
+      invertEntries: true
+    },
+    { rsiValues }
+  );
+  assert.equal(result.overview.closedTrades, 1);
+  assert.equal(result.openTrades.length, 1);
+  assert.equal(result.openTrades[0].side, "long");
+  assert.equal(result.closedTrades[0].side, "short");
+  assert.equal(result.closedTrades[0].comment, "BUY ALL @ OB");
 });
 
 test("RSI Touch Flip stacks then flips the whole stack", () => {
@@ -286,6 +313,135 @@ test("cycle SL is off unless the checkbox flag is true", () => {
     rsiTouchFlipCycleSlHit(-29, 100, { cycleSlEnabled: true, cycleSlPct: 30 }),
     false
   );
+});
+
+test("max trade MAE tracks worst open PnL even if close is green", () => {
+  const candles = [];
+  const prices = [100, 100, 100, 73, 100, 100];
+  for (let i = 0; i < prices.length; i++) {
+    candles.push({
+      time: 1_700_000_000 + i * 60,
+      open: prices[i],
+      high: prices[i],
+      low: prices[i],
+      close: prices[i]
+    });
+  }
+  const rsiValues = rsiSeries([40, 40, 25, 40, 65, 75]);
+  const result = runRsiTouchFlip(
+    candles,
+    {
+      osLevel: 30,
+      obLevel: 70,
+      maxStack: 1,
+      budget: 100,
+      commissionPct: 0,
+      tradeSide: "LONG"
+    },
+    { rsiValues }
+  );
+  assert.equal(result.closedTrades[0].pnl, 0);
+  assert.ok(Math.abs(result.overview.maxTradeMae - 27) < 0.01);
+  assert.ok(Math.abs(result.overview.maxTradeMaePct - 27) < 0.1);
+});
+
+test("compound sizing shrinks next stack after realized loss", () => {
+  const candles = [];
+  const prices = [100, 100, 100, 90, 90, 90, 90, 90];
+  for (let i = 0; i < prices.length; i++) {
+    candles.push({
+      time: 1_700_000_000 + i * 60,
+      open: prices[i],
+      high: prices[i],
+      low: prices[i],
+      close: prices[i]
+    });
+  }
+  const rsiValues = rsiSeries([40, 40, 25, 40, 65, 75, 40, 25]);
+  const result = runRsiTouchFlip(
+    candles,
+    {
+      osLevel: 30,
+      obLevel: 70,
+      maxStack: 1,
+      budget: 100,
+      commissionPct: 0,
+      tradeSide: "LONG",
+      compoundEnabled: true
+    },
+    { rsiValues }
+  );
+  assert.equal(result.closedTrades.length, 1);
+  assert.ok(result.closedTrades[0].pnl < 0);
+  assert.equal(result.openTrades.length, 1);
+  assert.equal(result.openTrades[0].side, "long");
+  const secondNotional = result.openTrades[0].qty * 90;
+  assert.ok(Math.abs(secondNotional - 90) < 1e-6);
+  assert.ok(Math.abs(secondNotional - 100) > 1);
+});
+
+test("compound off keeps fixed budget after realized loss", () => {
+  const candles = [];
+  const prices = [100, 100, 100, 90, 90, 90, 90, 90];
+  for (let i = 0; i < prices.length; i++) {
+    candles.push({
+      time: 1_700_000_000 + i * 60,
+      open: prices[i],
+      high: prices[i],
+      low: prices[i],
+      close: prices[i]
+    });
+  }
+  const rsiValues = rsiSeries([40, 40, 25, 40, 65, 75, 40, 25]);
+  const result = runRsiTouchFlip(
+    candles,
+    {
+      osLevel: 30,
+      obLevel: 70,
+      maxStack: 1,
+      budget: 100,
+      commissionPct: 0,
+      tradeSide: "LONG",
+      compoundEnabled: false
+    },
+    { rsiValues }
+  );
+  assert.equal(result.openTrades.length, 1);
+  const secondNotional = result.openTrades[0].qty * 90;
+  assert.ok(Math.abs(secondNotional - 100) < 1e-6);
+});
+
+test("full liquidation halts trading and marks LIQ", () => {
+  const candles = candlesAt(100, 4);
+  candles[3] = {
+    ...candles[3],
+    open: 350,
+    high: 350,
+    low: 350,
+    close: 350
+  };
+  const rsiValues = rsiSeries([40, 68, 72, 40]);
+  const result = runRsiTouchFlip(
+    candles,
+    {
+      osLevel: 30,
+      obLevel: 70,
+      maxStack: 1,
+      budget: 100,
+      commissionPct: 0
+    },
+    { rsiValues }
+  );
+  assert.equal(result.overview.liquidations, 1);
+  assert.equal(result.overview.tradingHalted, true);
+  assert.ok(
+    result.marks.some((m) => m.kind === "liquidation" && m.text === "LIQ")
+  );
+  const liqMarker = marksToSeriesMarkers(
+    result.marks.filter((m) => m.kind === "liquidation")
+  )[0];
+  assert.equal(liqMarker?.text, "LIQ");
+  assert.equal(liqMarker?.shape, "circle");
 });
 
 test("cycle SL closes the stack and does not re-enter while RSI stays in the zone", () => {

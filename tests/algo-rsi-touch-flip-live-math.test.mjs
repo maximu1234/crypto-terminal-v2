@@ -187,3 +187,62 @@ test("live cycle SL matches analysis and fingerprint ignores pct when off", () =
   assert.equal(blocked.touchOS, true);
   assert.equal(blocked.openLong, false);
 });
+
+test("invert entries swaps OS/OB open sides", () => {
+  const normal = math.decideRsiTouchFlipBar({
+    prevRsi: 31,
+    rsi: 29,
+    osLevel: 30,
+    obLevel: 70,
+    stack: 0,
+    position: "flat",
+    maxStack: 3,
+    allowLong: true,
+    allowShort: true
+  });
+  assert.equal(normal.openLong, true);
+  assert.equal(normal.openShort, false);
+
+  const inverted = math.decideRsiTouchFlipBar({
+    prevRsi: 31,
+    rsi: 29,
+    osLevel: 30,
+    obLevel: 70,
+    stack: 0,
+    position: "flat",
+    maxStack: 3,
+    allowLong: true,
+    allowShort: true,
+    invertEntries: true
+  });
+  assert.equal(inverted.openLong, false);
+  assert.equal(inverted.openShort, true);
+
+  const obNormal = math.decideRsiTouchFlipBar({
+    prevRsi: 69,
+    rsi: 71,
+    osLevel: 30,
+    obLevel: 70,
+    stack: 0,
+    position: "flat",
+    maxStack: 3,
+    allowLong: true,
+    allowShort: true
+  });
+  assert.equal(obNormal.openShort, true);
+
+  const obInverted = math.decideRsiTouchFlipBar({
+    prevRsi: 69,
+    rsi: 71,
+    osLevel: 30,
+    obLevel: 70,
+    stack: 0,
+    position: "flat",
+    maxStack: 3,
+    allowLong: true,
+    allowShort: true,
+    invertEntries: true
+  });
+  assert.equal(obInverted.openLong, true);
+  assert.equal(obInverted.openShort, false);
+});

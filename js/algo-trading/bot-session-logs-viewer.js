@@ -30,7 +30,7 @@ loadRsiTouchFlipBook
 } from "./rsi-touch-flip-book.js?v=4";
 import {
 loadRsiTouchFlipBalancePct
-} from "./rsi-touch-flip-prefs.js?v=5";
+} from "./rsi-touch-flip-prefs.js?v=6";
 
 const STORAGE_KEY =
 "algo_remote_session_logs_v1";
@@ -404,7 +404,11 @@ spellcheck="false"
 <p><strong>Windows (русская):</strong> Панель управления → Брандмауэр Защитника Windows → Дополнительные параметры → Правила для входящих → Создать правило → Порт → TCP → 17865 → Разрешить подключение.</p>
 <p><strong>PowerShell от администратора:</strong></p>
 <pre class="algo-remote-session-logs-help-code">New-NetFirewallRule -DisplayName "Multichart Algo Bot session logs" -Direction Inbound -Protocol TCP -LocalPort 17865 -Action Allow</pre>
-<p><strong>Проверка с Mac:</strong> <code>nc -vz IP_СЕРВЕРА 17865</code> — если succeeded, снова «Обновить логи».</p>
+<p><strong>Проверка с другого компьютера:</strong></p>
+<ul>
+<li><strong>Mac / Linux:</strong> <code>nc -vz IP_СЕРВЕРА 17865</code> — если <code>succeeded</code>, снова «Обновить логи».</li>
+<li><strong>Windows (PowerShell):</strong> <code>Test-NetConnection IP_СЕРВЕРА -Port 17865</code> — нужно <code>TcpTestSucceeded : True</code>.</li>
+</ul>
 </section>
 <section class="algo-remote-session-logs-help-lang" lang="en">
 <h4>English</h4>
@@ -416,9 +420,14 @@ spellcheck="false"
 <li>Allow TCP port <strong>17865</strong> in Windows Firewall.</li>
 <li>If the host is in the cloud, open the same port in the provider Security Group too.</li>
 </ol>
+<p><strong>Windows (GUI):</strong> Control Panel → Windows Defender Firewall → Advanced settings → Inbound Rules → New Rule → Port → TCP → 17865 → Allow the connection.</p>
 <p><strong>PowerShell (Admin):</strong></p>
 <pre class="algo-remote-session-logs-help-code">New-NetFirewallRule -DisplayName "Multichart Algo Bot session logs" -Direction Inbound -Protocol TCP -LocalPort 17865 -Action Allow</pre>
-<p><strong>Check from Mac:</strong> <code>nc -vz SERVER_IP 17865</code>.</p>
+<p><strong>Check from another PC:</strong></p>
+<ul>
+<li><strong>Mac / Linux:</strong> <code>nc -vz SERVER_IP 17865</code> — look for <code>succeeded</code>, then click “Refresh logs”.</li>
+<li><strong>Windows (PowerShell):</strong> <code>Test-NetConnection SERVER_IP -Port 17865</code> — need <code>TcpTestSucceeded : True</code>.</li>
+</ul>
 </section>
 </div>
 </div>

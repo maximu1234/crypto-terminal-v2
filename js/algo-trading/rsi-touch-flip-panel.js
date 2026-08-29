@@ -14,8 +14,11 @@ import {
 RSI_TOUCH_FLIP_SIZE_AVERAGE,
 loadRsiTouchFlipPrefs,
 saveRsiTouchFlipPrefs,
+hydrateRsiTouchFlipPrefsForSymbol,
+saveRsiTouchFlipTickerPrefs,
+hasRsiTouchFlipTickerPrefs,
 loadRsiTouchFlipBalancePct
-} from "./rsi-touch-flip-prefs.js?v=5";
+} from "./rsi-touch-flip-prefs.js?v=6";
 import {
 RSI_TOUCH_FLIP_BOOK_CHANGE_EVENT,
 RSI_TOUCH_FLIP_BOOK_OPEN_EVENT,
@@ -39,8 +42,9 @@ import {
 mountRsiTouchFlipOverlay
 } from "./rsi-touch-flip-overlay.js?v=3";
 import {
-mountRsiTouchFlipFit
-} from "./rsi-touch-flip-fit-panel.js?v=10";
+mountRsiTouchFlipFit,
+loadRsiTouchFlipFitRowForSymbol
+} from "./rsi-touch-flip-fit-panel.js?v=11";
 
 function el(
 id
@@ -288,6 +292,8 @@ let seq =
 0;
 let applyingUi =
 false;
+let prefsDirty =
+false;
 let fitApi =
 null;
 
@@ -359,7 +365,15 @@ cycleSlEnabled:
 cycleSlPct:
 el(
 "algo-rsi-flip-cycle-sl-pct"
-)?.value
+)?.value,
+invertEntries:
+!!el(
+"algo-rsi-flip-invert"
+)?.checked,
+compoundEnabled:
+!!el(
+"algo-rsi-flip-compound"
+)?.checked
 };
 
 }
@@ -484,6 +498,31 @@ el(
 prefs.cycleSlEnabled !==
 true
 );
+const invert =
+el(
+"algo-rsi-flip-invert"
+);
+
+if(
+invert
+){
+invert.checked =
+prefs.invertEntries ===
+true;
+}
+
+const compound =
+el(
+"algo-rsi-flip-compound"
+);
+
+if(
+compound
+){
+compound.checked =
+prefs.compoundEnabled ===
+true;
+}
 applyingUi =
 false;
 
@@ -600,6 +639,23 @@ overview.maxDrawdownPct
 : NaN
 );
 setPair(
+"algo-rsi-flip-trade-mae",
+Number.isFinite(
+overview?.maxTradeMae
+)
+? -Math.abs(
+overview.maxTradeMae
+)
+: NaN,
+Number.isFinite(
+overview?.maxTradeMaePct
+)
+? -Math.abs(
+overview.maxTradeMaePct
+)
+: NaN
+);
+setPair(
 "algo-rsi-flip-avg",
 overview?.avgTrade,
 overview?.avgTradePct
@@ -617,6 +673,51 @@ formatBars(
 overview?.avgBars
 );
 }
+
+const liq =
+el(
+"algo-rsi-flip-liquidations"
+);
+const liqRow =
+el(
+"algo-rsi-flip-liquidations-row"
+);
+const liqCount =
+Number(
+overview?.liquidations
+) ||
+0;
+
+if(
+liq
+){
+if(
+liqCount >
+0
+){
+liq.textContent =
+overview?.tradingHalted
+? `${liqCount} · стоп`
+: String(
+liqCount
+);
+liq.classList.add(
+"neg"
+);
+}else{
+liq.textContent =
+"0";
+liq.classList.remove(
+"neg"
+);
+}
+}
+
+liqRow?.classList.toggle(
+"algo-rsi-flip-liquidations--hit",
+liqCount >
+0
+);
 
 }
 
@@ -653,6 +754,10 @@ NaN,
 maxDrawdown:
 NaN,
 maxDrawdownPct:
+NaN,
+maxTradeMae:
+NaN,
+maxTradeMaePct:
 NaN,
 avgTrade:
 NaN,
@@ -831,9 +936,29 @@ disposed
 return;
 }
 
+const patch =
+readUiPatch();
+const symbol =
+currentChartSymbol();
+
 saveRsiTouchFlipPrefs(
-readUiPatch()
+patch
 );
+
+if(
+symbol &&
+!getRsiTouchFlipBookRow(
+symbol
+)
+){
+saveRsiTouchFlipTickerPrefs(
+symbol,
+patch
+);
+}
+
+prefsDirty =
+true;
 applyPrefsToUi(
 loadRsiTouchFlipPrefs()
 );
@@ -857,7 +982,9 @@ const fieldIds =
 "algo-rsi-flip-commission",
 "algo-rsi-flip-slippage",
 "algo-rsi-flip-cycle-sl",
-"algo-rsi-flip-cycle-sl-pct"
+"algo-rsi-flip-cycle-sl-pct",
+"algo-rsi-flip-invert",
+"algo-rsi-flip-compound"
 ];
 const rsiPaneFieldIds =
 [
@@ -895,6 +1022,134 @@ return String(
 host.getSymbol?.() ||
 ""
 ).trim();
+
+}
+
+function hydrateForSymbol(
+nextSymbol
+){
+
+if(
+disposed
+){
+return;
+}
+
+const id =
+String(
+nextSymbol ||
+""
+).replace(
+/\.P$/i,
+""
+).trim().toUpperCase();
+
+if(
+!id
+){
+return;
+}
+
+const bookRow =
+getRsiTouchFlipBookRow(
+id
+);
+let prefs;
+
+if(
+bookRow?.prefs
+){
+prefs =
+saveRsiTouchFlipPrefs(
+bookRow.prefs
+);
+}else{
+prefs =
+hydrateRsiTouchFlipPrefsForSymbol(
+id
+);
+
+if(
+!hasRsiTouchFlipTickerPrefs(
+id
+)
+){
+const fit =
+loadRsiTouchFlipFitRowForSymbol(
+id
+);
+
+if(
+fit?.prefs
+){
+prefs =
+saveRsiTouchFlipTickerPrefs(
+id,
+fit.prefs
+);
+}
+}
+
+}
+
+applyPrefsToUi(
+prefs
+);
+syncChartRsiPaneFromColumn();
+syncBookButtons();
+prefsDirty =
+false;
+
+}
+
+function persistForSymbol(
+prevSymbol
+){
+
+if(
+disposed ||
+applyingUi
+){
+return;
+}
+
+const id =
+String(
+prevSymbol ||
+""
+).replace(
+/\.P$/i,
+""
+).trim().toUpperCase();
+
+if(
+!id
+){
+return;
+}
+
+if(
+!prefsDirty
+){
+return;
+}
+
+if(
+getRsiTouchFlipBookRow(
+id
+)
+){
+prefsDirty =
+false;
+return;
+}
+
+saveRsiTouchFlipTickerPrefs(
+id,
+readUiPatch()
+);
+prefsDirty =
+false;
 
 }
 
@@ -954,8 +1209,11 @@ disposed
 return;
 }
 
+const patch =
+readUiPatch();
+
 saveRsiTouchFlipPrefs(
-readUiPatch()
+patch
 );
 const symbol =
 currentChartSymbol();
@@ -975,6 +1233,13 @@ setBookStatus(
 );
 return;
 }
+
+saveRsiTouchFlipTickerPrefs(
+symbol,
+patch
+);
+prefsDirty =
+true;
 
 const prefs =
 loadRsiTouchFlipPrefs();
@@ -1074,6 +1339,10 @@ setBookStatus(
 "ok"
 );
 syncBookButtons();
+hydrateForSymbol(
+symbol
+);
+void refresh();
 
 }
 
@@ -1085,23 +1354,15 @@ const row =
 event?.detail;
 
 if(
-!row?.prefs ||
+!row?.symbol ||
 disposed
 ){
 return;
 }
 
-saveRsiTouchFlipPrefs(
-{
-...loadRsiTouchFlipPrefs(),
-...row.prefs
-}
+hydrateForSymbol(
+row.symbol
 );
-applyPrefsToUi(
-loadRsiTouchFlipPrefs()
-);
-syncChartRsiPaneFromColumn();
-syncBookButtons();
 void refresh();
 
 }
@@ -1153,9 +1414,27 @@ loadRsiTouchFlipPrefs(),
 applyCandidate(
 patch
 ){
+const symbol =
+currentChartSymbol();
+
 saveRsiTouchFlipPrefs(
 patch
 );
+
+if(
+symbol &&
+!getRsiTouchFlipBookRow(
+symbol
+)
+){
+saveRsiTouchFlipTickerPrefs(
+symbol,
+patch
+);
+}
+
+prefsDirty =
+true;
 applyPrefsToUi(
 loadRsiTouchFlipPrefs()
 );
@@ -1213,6 +1492,8 @@ onBotChanged();
 
 return {
 refresh,
+hydrateForSymbol,
+persistForSymbol,
 applyColumnFromPrefs(){
 
 if(

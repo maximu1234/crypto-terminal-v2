@@ -618,12 +618,20 @@ tabindex="0"
 <span class="algo-stats-value" id="algo-rsi-flip-dd">—</span>
 </div>
 <div class="algo-stats-row">
+<span class="algo-stats-label" title="Худший нереализованный минус за один цикл (пока позиция открыта), даже если закрытие в плюс">Макс. минус сделки</span>
+<span class="algo-stats-value" id="algo-rsi-flip-trade-mae">—</span>
+</div>
+<div class="algo-stats-row">
 <span class="algo-stats-label">Средняя сделка</span>
 <span class="algo-stats-value" id="algo-rsi-flip-avg">—</span>
 </div>
 <div class="algo-stats-row">
 <span class="algo-stats-label">Среднее баров</span>
 <span class="algo-stats-value" id="algo-rsi-flip-avg-bars">—</span>
+</div>
+<div class="algo-stats-row" id="algo-rsi-flip-liquidations-row">
+<span class="algo-stats-label">Ликвидации</span>
+<span class="algo-stats-value" id="algo-rsi-flip-liquidations">—</span>
 </div>
 <div class="algo-stats-divider" aria-hidden="true"></div>
 <div class="algo-stats-row algo-stats-row--setting">
@@ -633,6 +641,18 @@ tabindex="0"
 <div class="algo-stats-row algo-stats-row--setting">
 <label class="algo-stats-label" for="algo-rsi-flip-slippage">Slippage (ticks)</label>
 <input type="number" id="algo-rsi-flip-slippage" class="algo-stats-input" min="0" max="1000" step="1" value="0" inputmode="numeric" />
+</div>
+<div class="algo-stats-row algo-stats-row--setting">
+<label class="algo-stats-label" for="algo-rsi-flip-compound">Compound</label>
+<label class="algo-stats-check" title="Объём следующего цикла от текущего equity (бюджет + закрытый PnL). Выкл — всегда от поля «Бюджет USDT».">
+<input type="checkbox" id="algo-rsi-flip-compound" />
+</label>
+</div>
+<div class="algo-stats-row algo-stats-row--setting">
+<label class="algo-stats-label" for="algo-rsi-flip-invert">Инвертировать входы</label>
+<label class="algo-stats-check" title="OS → шорт, OB → лонг (обратная логика flip). Влияет на Обзор, подбор и бота.">
+<input type="checkbox" id="algo-rsi-flip-invert" />
+</label>
 </div>
 </div>
 <div class="algo-stats-col algo-stats-col--rsi-flip-fit">

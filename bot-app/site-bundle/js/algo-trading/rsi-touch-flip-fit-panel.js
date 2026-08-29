@@ -18,8 +18,52 @@ import {
   rsiTouchFlipTrainTestSplit,
   RSI_TOUCH_FLIP_DEFAULT_TRAIN_PCT
 } from "./rsi-touch-flip-walkforward.js?v=8";
+import {
+  saveRsiTouchFlipTickerPrefs
+} from "./rsi-touch-flip-prefs.js?v=6";
+import {
+  getRsiTouchFlipBookRow
+} from "./rsi-touch-flip-book.js?v=4";
 
 const FIT_KEY = "algo_trading_rsi_touch_flip_fit_v1";
+
+/**
+ * Последний подбор для тикера (fallback при первом открытии без ticker-store).
+ * @param {unknown} symbol
+ * @returns {object|null}
+ */
+export function loadRsiTouchFlipFitRowForSymbol(
+symbol
+){
+
+const stored =
+loadFitStore();
+const id =
+String(
+symbol ||
+""
+).replace(
+/\.P$/i,
+""
+).trim().toUpperCase();
+
+if(
+!stored ||
+String(
+stored.symbol ||
+""
+).replace(
+/\.P$/i,
+""
+).trim().toUpperCase() !==
+id
+){
+return null;
+}
+
+return stored;
+
+}
 
 function el(id) {
   return document.getElementById(id);
@@ -489,6 +533,11 @@ export function mountRsiTouchFlipFit(host) {
             updatedAt: Date.now()
           };
           saveFitStore(row);
+          if (
+            !getRsiTouchFlipBookRow(host.getSymbol?.())
+          ) {
+            saveRsiTouchFlipTickerPrefs(host.getSymbol?.(), row.prefs);
+          }
           renderCandidate(row, currentEval);
         } else {
           renderCandidate(null, currentEval);
@@ -519,6 +568,11 @@ export function mountRsiTouchFlipFit(host) {
         updatedAt: Date.now()
       };
       saveFitStore(row);
+      if (
+        !getRsiTouchFlipBookRow(host.getSymbol?.())
+      ) {
+        saveRsiTouchFlipTickerPrefs(host.getSymbol?.(), row.prefs);
+      }
       let currentEval = null;
       try {
         const currentRsi = await host.resolveRsi(candles, basePrefs);

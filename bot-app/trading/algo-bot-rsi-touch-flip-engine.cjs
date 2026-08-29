@@ -377,8 +377,15 @@ async function onClosedChartBar(state) {
     allowLong: prefs.allowLong,
     allowShort: prefs.allowShort,
     slBlockLong: state.slBlockLong,
-    slBlockShort: state.slBlockShort
+    slBlockShort: state.slBlockShort,
+    invertEntries: prefs.invertEntries === true
   });
+
+  const invert = prefs.invertEntries === true;
+  const longZone = invert ? "OB" : "OS";
+  const shortZone = invert ? "OS" : "OB";
+  const closeShortZone = invert ? "OB" : "OS";
+  const closeLongZone = invert ? "OS" : "OB";
 
   if (
     !cycleSlHit &&
@@ -399,7 +406,7 @@ async function onClosedChartBar(state) {
       }
     }
     if (decision.closeShort) {
-      const ok = await closeAll(state, "OS", price);
+      const ok = await closeAll(state, closeShortZone, price);
       if (!ok) {
         return;
       }
@@ -410,11 +417,11 @@ async function onClosedChartBar(state) {
         "long",
         decision.longLevel,
         price,
-        decision.longLevel === 0 ? "LONG @ OS" : "LONG add @ OS"
+        decision.longLevel === 0 ? `LONG @ ${longZone}` : `LONG add @ ${longZone}`
       );
     }
     if (decision.closeLong) {
-      const ok = await closeAll(state, "OB", price);
+      const ok = await closeAll(state, closeLongZone, price);
       if (!ok) {
         return;
       }
@@ -425,7 +432,7 @@ async function onClosedChartBar(state) {
         "short",
         decision.shortLevel,
         price,
-        decision.shortLevel === 0 ? "SHORT @ OB" : "SHORT add @ OB"
+        decision.shortLevel === 0 ? `SHORT @ ${shortZone}` : `SHORT add @ ${shortZone}`
       );
     }
   } catch (err) {

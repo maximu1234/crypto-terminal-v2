@@ -700,6 +700,11 @@ body.algo-trading-page .algo-rsi-flip-book-status.is-ok{
 color:#6ee7b7;
 }
 
+body.algo-trading-page .algo-stats-row.algo-rsi-flip-liquidations--hit .algo-stats-value{
+color:#f87171;
+font-weight:600;
+}
+
 body.algo-trading-page #algo-bot-rsi-flip-book-summary{
 white-space:pre-line;
 }

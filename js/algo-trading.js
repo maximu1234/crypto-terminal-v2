@@ -108,12 +108,12 @@ mountAlgoPatternEntryOverlay
 
 import {
 mountRsiTouchFlipHost
-} from "./algo-trading/rsi-touch-flip-panel.js?v=21";
+} from "./algo-trading/rsi-touch-flip-panel.js?v=24";
 
 import {
 loadRsiTouchFlipPrefs,
 saveRsiTouchFlipPrefs
-} from "./algo-trading/rsi-touch-flip-prefs.js?v=5";
+} from "./algo-trading/rsi-touch-flip-prefs.js?v=6";
 
 import {
 clearAlgoPatternAnalysisUi,
@@ -2116,6 +2116,9 @@ overlaySymbol:
 persistFromSymbol
 }
 );
+rsiTouchFlipHost?.persistForSymbol?.(
+persistFromSymbol
+);
 }
 
 symbol =
@@ -2127,6 +2130,10 @@ String(
 nextTf ||
 tf ||
 DEFAULT_TF
+);
+
+rsiTouchFlipHost?.hydrateForSymbol?.(
+symbol
 );
 
 setChartLayoutReady(
