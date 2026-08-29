@@ -1221,6 +1221,21 @@ FLAG_EARLY_T3
 
 }
 
+function normalizeAuxRunning(
+raw
+){
+
+return {
+running:
+!!(
+raw &&
+typeof raw ===
+"object" &&
+raw.running
+)
+};
+}
+
 function readBotStrategies(){
 
 const parsed =
@@ -1241,6 +1256,14 @@ parsed?.st2
 st3:
 normalizeSt3(
 parsed?.st3
+),
+rsiTouchFlip:
+normalizeAuxRunning(
+parsed?.rsiTouchFlip
+),
+earlyT3:
+normalizeAuxRunning(
+parsed?.earlyT3
 )
 };
 
@@ -1263,6 +1286,14 @@ next?.st2
 st3:
 normalizeSt3(
 next?.st3
+),
+rsiTouchFlip:
+normalizeAuxRunning(
+next?.rsiTouchFlip
+),
+earlyT3:
+normalizeAuxRunning(
+next?.earlyT3
 )
 };
 

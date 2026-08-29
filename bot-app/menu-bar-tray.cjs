@@ -662,9 +662,7 @@ positionTrayPopup();
 win.show();
 win.focus();
 sendTrayPopupState(
-enrichTrayStateWithAlgoBot(
 lastTrayState
-)
 );
 positionTrayPopup();
 lockTrayPopupPosition();
@@ -749,116 +747,9 @@ popup &&
 popup.isVisible()
 ){
 sendTrayPopupState(
-enrichTrayStateWithAlgoBot(
 lastTrayState
-)
 );
 }
-
-}
-
-function enrichTrayStateWithAlgoBot(
-state
-){
-
-const base =
-state &&
-typeof state ===
-"object"
-? {
-...state
-}
-: {};
-
-base.showAlgoBot =
-false;
-
-try{
-const featureNav =
-require(
-"./feature-nav-prefs-store.cjs"
-).readPrefs();
-
-if(
-!featureNav.algoTradingNavEnabled
-){
-base.algoBot =
-null;
-return base;
-}
-
-base.showAlgoBot =
-true;
-
-const algoBot =
-require(
-"./trading/algo-trading-bot.cjs"
-);
-const snap =
-algoBot.getBotStatus?.() ||
-null;
-
-if(
-!snap ||
-typeof snap !==
-"object"
-){
-base.algoBot =
-null;
-return base;
-}
-
-base.algoBot =
-{
-running:
-!!snap.running,
-entriesPaused:
-!!snap.entriesPaused,
-watchlistCount:
-snap.watchlistCount ??
-0,
-openCount:
-snap.openCount ??
-0,
-armedCount:
-snap.armedCount ??
-0,
-armedSetups:
-Array.isArray(
-snap.armedSetups
-)
-? snap.armedSetups.slice(
-0,
-12
-)
-: [],
-entriesCount:
-snap.entriesCount ??
-snap.wouldEnterCount ??
-0,
-lastSignal:
-String(
-snap.lastSignal ||
-""
-).trim(),
-message:
-String(
-snap.message ||
-""
-).trim(),
-side:
-snap.side ||
-"long",
-tf:
-snap.tf ||
-"5"
-};
-}catch{
-base.algoBot =
-null;
-}
-
-return base;
 
 }
 

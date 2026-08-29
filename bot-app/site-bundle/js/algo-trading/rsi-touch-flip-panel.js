@@ -366,10 +366,6 @@ cycleSlPct:
 el(
 "algo-rsi-flip-cycle-sl-pct"
 )?.value,
-invertEntries:
-!!el(
-"algo-rsi-flip-invert"
-)?.checked,
 compoundEnabled:
 !!el(
 "algo-rsi-flip-compound"
@@ -498,19 +494,6 @@ el(
 prefs.cycleSlEnabled !==
 true
 );
-const invert =
-el(
-"algo-rsi-flip-invert"
-);
-
-if(
-invert
-){
-invert.checked =
-prefs.invertEntries ===
-true;
-}
-
 const compound =
 el(
 "algo-rsi-flip-compound"
@@ -983,7 +966,6 @@ const fieldIds =
 "algo-rsi-flip-slippage",
 "algo-rsi-flip-cycle-sl",
 "algo-rsi-flip-cycle-sl-pct",
-"algo-rsi-flip-invert",
 "algo-rsi-flip-compound"
 ];
 const rsiPaneFieldIds =

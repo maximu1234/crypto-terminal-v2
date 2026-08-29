@@ -239,8 +239,6 @@ cycleSlEnabled:
 false,
 cycleSlPct:
 30,
-invertEntries:
-false,
 compoundEnabled:
 false
 };
@@ -360,9 +358,6 @@ src.cycleSlPct,
 90,
 base.cycleSlPct
 ),
-invertEntries:
-src.invertEntries ===
-true,
 compoundEnabled:
 src.compoundEnabled ===
 true
@@ -689,10 +684,7 @@ p.sizeMult,
 cycleSlEnabled:
 p.cycleSlEnabled,
 cycleSlPct:
-p.cycleSlPct,
-invertEntries:
-p.invertEntries ===
-true
+p.cycleSlPct
 };
 
 }

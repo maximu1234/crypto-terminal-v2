@@ -68,10 +68,6 @@ test("launch prefs copy strategy fields and drop analysis-only", () => {
   });
   assert.equal(withSl.cycleSlEnabled, true);
   assert.equal(withSl.cycleSlPct, 40);
-  const withInvert = pickRsiTouchFlipLaunchPrefs({
-    invertEntries: true
-  });
-  assert.equal(withInvert.invertEntries, true);
 });
 
 test("normalized prefs drop initialCapital; analysis percents use budget", () => {
@@ -129,29 +125,6 @@ test("RSI Touch Flip OS opens long, OB closes and opens short", () => {
   const texts = result.marks.map((m) => m.text);
   assert.ok(texts.includes("SELL ALL"));
   assert.equal(result.closedTrades[0].comment, "SELL ALL @ OB");
-});
-
-test("RSI Touch Flip invert entries opens short at OS and long at OB", () => {
-  const candles = candlesAt(100, 6);
-  const rsiValues = rsiSeries([40, 40, 25, 40, 80, 80]);
-  const result = runRsiTouchFlip(
-    candles,
-    {
-      rsiLen: 14,
-      osLevel: 30,
-      obLevel: 70,
-      maxStack: 3,
-      budget: 90,
-      commissionPct: 0,
-      invertEntries: true
-    },
-    { rsiValues }
-  );
-  assert.equal(result.overview.closedTrades, 1);
-  assert.equal(result.openTrades.length, 1);
-  assert.equal(result.openTrades[0].side, "long");
-  assert.equal(result.closedTrades[0].side, "short");
-  assert.equal(result.closedTrades[0].comment, "BUY ALL @ OB");
 });
 
 test("RSI Touch Flip stacks then flips the whole stack", () => {

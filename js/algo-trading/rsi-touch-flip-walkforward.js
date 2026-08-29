@@ -130,9 +130,6 @@ export function formatRsiTouchFlipParamsBrief(prefs) {
   if (prefs.cycleSlEnabled === true) {
     parts.push(`СЛ ${prefs.cycleSlPct}%`);
   }
-  if (prefs.invertEntries === true) {
-    parts.push("инв");
-  }
   if (prefs.compoundEnabled === true) {
     parts.push("compound");
   }

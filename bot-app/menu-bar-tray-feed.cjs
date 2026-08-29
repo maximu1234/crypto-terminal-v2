@@ -4,6 +4,8 @@
  *
  * PnL must match Terminal «Позиции»: mark-based unrealised (not stale stream
  * exchange pnl). Prefer REST positions for fresh markPrice; fall back to stream.
+ *
+ * Popup: main (Terminal) account on top; algo account below when algo keys exist.
  */
 const log =
 require(
@@ -17,6 +19,16 @@ getPositions
 } =
 require(
 "./trading/trading-router.cjs"
+);
+const {
+getAlgoCredentialsStatus
+} =
+require(
+"./trading/algo-exchange-credentials.cjs"
+);
+const algoRest =
+require(
+"./trading/algo-bybit-rest.cjs"
 );
 const {
 getTradingSnapshot
@@ -49,6 +61,9 @@ let balanceTimer =
 null;
 
 let cachedBalanceLabel =
+"—";
+
+let cachedAlgoBalanceLabel =
 "—";
 
 /** @type {((state: Record<string, unknown>) => void) | null} */
@@ -117,6 +132,14 @@ maximumFractionDigits:
 2
 }
 );
+
+}
+
+function isAlgoTrayAccount(){
+
+return !!getAlgoCredentialsStatus(
+"bybit"
+)?.configured;
 
 }
 
@@ -238,7 +261,7 @@ return null;
 
 }
 
-async function loadOpenPositions(
+async function loadTerminalOpenPositions(
 exchangeId
 ){
 
@@ -285,7 +308,45 @@ return [];
 
 }
 
-async function refreshBalance(){
+async function loadAlgoOpenPositions(){
+
+if(
+!isAlgoTrayAccount()
+){
+return [];
+}
+
+try{
+const rest =
+await algoRest.getPositions();
+
+if(
+rest?.ok &&
+Array.isArray(
+rest.positions
+)
+){
+return rest.positions.filter(
+isOpenPosition
+).map(
+withResolvedPnl
+);
+}
+}catch(
+err
+){
+log.warn(
+"tray-feed algo positions:",
+err?.message ||
+err
+);
+}
+
+return [];
+
+}
+
+async function refreshTerminalBalance(){
 
 try{
 const status =
@@ -327,6 +388,56 @@ cachedBalanceLabel =
 
 }
 
+async function refreshAlgoBalance(){
+
+if(
+!isAlgoTrayAccount()
+){
+cachedAlgoBalanceLabel =
+"—";
+return;
+}
+
+try{
+const bal =
+await algoRest.getWalletBalance();
+
+if(
+bal?.ok
+){
+cachedAlgoBalanceLabel =
+formatBalanceLabel(
+bal.usdt
+);
+}else{
+cachedAlgoBalanceLabel =
+"ошибка";
+}
+}catch(
+err
+){
+log.warn(
+"tray-feed algo balance:",
+err?.message ||
+err
+);
+cachedAlgoBalanceLabel =
+"ошибка";
+}
+
+}
+
+async function refreshBalances(){
+
+await Promise.all(
+[
+refreshTerminalBalance(),
+refreshAlgoBalance()
+]
+);
+
+}
+
 async function pushTrayState(){
 
 if(
@@ -355,7 +466,7 @@ exchangeId
 
 const positions =
 configured
-? await loadOpenPositions(
+? await loadTerminalOpenPositions(
 exchangeId
 )
 : [];
@@ -367,6 +478,37 @@ configured
 
 const pnlHidden =
 !!trayPrefsStore.readPrefs().pnlHidden;
+
+let algo =
+null;
+
+if(
+isAlgoTrayAccount()
+){
+const algoPositions =
+await loadAlgoOpenPositions();
+
+algo =
+{
+exchange:
+exchangeDisplayName(
+"bybit"
+),
+statusLabel:
+"Активно",
+balanceLabel:
+cachedAlgoBalanceLabel,
+totalPnl:
+sumOpenPnl(
+algoPositions
+),
+positions:
+mapPositions(
+algoPositions,
+pnlHidden
+)
+};
+}
 
 publishTrayState(
 {
@@ -389,7 +531,8 @@ configured
 positions,
 pnlHidden
 )
-: []
+: [],
+algo
 }
 );
 }finally{
@@ -451,7 +594,7 @@ return;
 publishTrayState =
 publish;
 
-void refreshBalance().then(
+void refreshBalances().then(
 ()=>
 pushTrayState()
 );
@@ -467,7 +610,7 @@ POSITIONS_POLL_MS
 balanceTimer =
 setInterval(
 ()=>{
-void refreshBalance().then(
+void refreshBalances().then(
 ()=>
 pushTrayState()
 );

@@ -631,6 +631,91 @@ positions
 
 }
 
+function clearAllStrategyRunningFlags(
+strategies
+){
+
+strategies.st1.running =
+false;
+strategies.st2.running =
+false;
+strategies.st3.running =
+false;
+strategies.rsiTouchFlip.running =
+false;
+strategies.earlyT3.running =
+false;
+
+}
+
+function markStrategyRunning(
+strategies,
+strategyId
+){
+
+clearAllStrategyRunningFlags(
+strategies
+);
+
+if(
+strategyId ===
+"rsi-touch-flip"
+){
+strategies.rsiTouchFlip.running =
+true;
+}else if(
+strategyId ===
+"early-t3"
+){
+strategies.earlyT3.running =
+true;
+}else if(
+strategyId ===
+"st1" ||
+strategyId ===
+"st2" ||
+strategyId ===
+"st3"
+){
+strategies[
+strategyId
+].running =
+true;
+}
+
+}
+
+function strategyTrayLabel(
+strategyId
+){
+
+if(
+strategyId ===
+"rsi-touch-flip"
+){
+return "RSI Touch Flip";
+}
+
+if(
+strategyId ===
+"early-t3"
+){
+return "Early T3";
+}
+
+if(
+strategyId ===
+"st2" ||
+strategyId ===
+"st3"
+){
+return `Pattern 1-2 (${strategyId})`;
+}
+
+return "Pattern 1-2";
+
+}
+
 function buildStatusSnapshot(
 extra =
 {}
@@ -638,8 +723,18 @@ extra =
 
 if(
 runningStrategyId ===
+"rsi-touch-flip" ||
+rsiTouchFlipEngine.isRsiTouchFlipEngineRunning()
+){
+
+if(
+runningStrategyId !==
 "rsi-touch-flip"
 ){
+runningStrategyId =
+"rsi-touch-flip";
+}
+
 const engine =
 rsiTouchFlipEngine.getRsiTouchFlipEngineStatus();
 const prefs =
@@ -652,6 +747,15 @@ engine.tickers
 engine.tickers.length
 ? engine.tickers[0]
 : null;
+const waitFlat =
+(
+engine.tickers ||
+[]
+).filter(
+row=>
+row.mode ===
+"wait-flat"
+);
 
 return {
 ok:
@@ -660,6 +764,10 @@ running:
 true,
 strategyId:
 "rsi-touch-flip",
+strategyLabel:
+strategyTrayLabel(
+"rsi-touch-flip"
+),
 sessionId,
 sessionStartedAt,
 watchlistCount:
@@ -700,17 +808,19 @@ both:
 true
 },
 armedCount:
-(
-engine.tickers ||
-[]
-).filter(
-row=>
-row.mode ===
-"wait-flat"
-).length,
+waitFlat.length,
 armedSetups:
-engine.tickers ||
-[],
+waitFlat.map(
+row=>({
+symbol:
+row.symbol,
+side:
+row.position ===
+"short"
+? "short"
+: "long"
+})
+),
 entriesCount:
 engine.entriesCount ||
 0,
@@ -745,6 +855,10 @@ running:
 true,
 strategyId:
 "early-t3",
+strategyLabel:
+strategyTrayLabel(
+"early-t3"
+),
 sessionId,
 sessionStartedAt,
 watchlistCount:
@@ -831,6 +945,11 @@ running:
 !!runningStrategyId,
 strategyId:
 runningStrategyId,
+strategyLabel:
+strategyTrayLabel(
+runningStrategyId ||
+"st1"
+),
 sessionId,
 sessionStartedAt,
 watchlistCount:
@@ -1232,12 +1351,9 @@ false;
 const strategies =
 readBotStrategies();
 
-strategies.st1.running =
-false;
-strategies.st2.running =
-false;
-strategies.st3.running =
-false;
+clearAllStrategyRunningFlags(
+strategies
+);
 writeBotStrategies(
 strategies
 );
@@ -1319,7 +1435,29 @@ payload?.st3 !=
 null
 ? payload.st3
 : cur.st3
+),
+rsiTouchFlip:{
+running:
+!!(
+(
+payload?.rsiTouchFlip !=
+null
+? payload.rsiTouchFlip
+: cur.rsiTouchFlip
+)?.running
 )
+},
+earlyT3:{
+running:
+!!(
+(
+payload?.earlyT3 !=
+null
+? payload.earlyT3
+: cur.earlyT3
+)?.running
+)
+}
 };
 
 for(
@@ -1334,6 +1472,22 @@ id
 ].running =
 id ===
 runningStrategyId;
+}
+
+if(
+runningStrategyId
+){
+markStrategyRunning(
+next,
+runningStrategyId
+);
+}else if(
+rsiTouchFlipEngine.isRsiTouchFlipEngineRunning()
+){
+markStrategyRunning(
+next,
+"rsi-touch-flip"
+);
 }
 
 const result =
@@ -2067,18 +2221,10 @@ sessionLog.appendNote(
 const strategies =
 readBotStrategies();
 
-for(
-const id of [
-"st1",
-"st2",
-"st3"
-]
-){
-strategies[
-id
-].running =
-false;
-}
+markStrategyRunning(
+strategies,
+"early-t3"
+);
 writeBotStrategies(
 strategies
 );
@@ -2399,18 +2545,10 @@ sessionLog.appendNote(
 const strategies =
 readBotStrategies();
 
-for(
-const id of [
-"st1",
-"st2",
-"st3"
-]
-){
-strategies[
-id
-].running =
-false;
-}
+markStrategyRunning(
+strategies,
+"rsi-touch-flip"
+);
 writeBotStrategies(
 strategies
 );
@@ -2815,6 +2953,10 @@ id
 id ===
 strategyId;
 }
+markStrategyRunning(
+strategies,
+strategyId
+);
 writeBotStrategies(
 strategies
 );
@@ -2839,18 +2981,9 @@ message:
 statusMessage
 }
 );
-for(
-const id of [
-"st1",
-"st2",
-"st3"
-]
-){
-strategies[
-id
-].running =
-false;
-}
+clearAllStrategyRunningFlags(
+strategies
+);
 writeBotStrategies(
 strategies
 );
@@ -3111,12 +3244,9 @@ if(
 ){
 const strategies =
 readBotStrategies();
-strategies.st1.running =
-false;
-strategies.st2.running =
-false;
-strategies.st3.running =
-false;
+clearAllStrategyRunningFlags(
+strategies
+);
 writeBotStrategies(
 strategies
 );
@@ -3271,6 +3401,50 @@ message:
 const strategies =
 readBotStrategies();
 
+if(
+runningStrategyId
+){
+return {
+ok:
+true,
+alreadyRunning:
+true,
+...buildStatusSnapshot()
+};
+}
+
+if(
+strategies.rsiTouchFlip?.running
+){
+log.info(
+"algo bot: resuming rsi-touch-flip after boot/agent"
+);
+const book =
+readRsiTouchFlipBook();
+return startBot(
+{
+strategyId:
+"rsi-touch-flip",
+balancePct:
+book?.balancePct
+}
+);
+}
+
+if(
+strategies.earlyT3?.running
+){
+log.info(
+"algo bot: resuming early-t3 after boot/agent"
+);
+return startBot(
+{
+strategyId:
+"early-t3"
+}
+);
+}
+
 const resumeId =
 [
 "st1",
@@ -3292,18 +3466,6 @@ skipped:
 true,
 message:
 "bot was not running"
-};
-}
-
-if(
-runningStrategyId
-){
-return {
-ok:
-true,
-alreadyRunning:
-true,
-...buildStatusSnapshot()
 };
 }
 

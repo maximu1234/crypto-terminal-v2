@@ -411,9 +411,6 @@ position ===
 const isFlat =
 !inLong &&
 !inShort;
-const invert =
-bar.invertEntries ===
-true;
 const ready =
 Number.isFinite(
 rsi
@@ -440,78 +437,36 @@ const slBlockShort =
 bar.slBlockShort ===
 true;
 
-let closeShort;
-let closeLong;
-let openLong;
-let openShort;
-let addLong;
-let addShort;
-
-if(
-!invert
-){
-closeShort =
+const closeShort =
 touchOS &&
 inShort;
-addLong =
+const addLong =
 touchOS &&
 inLong &&
 nOpen <
 maxStack;
-openLong =
+const openLong =
 touchOS &&
 allowLong &&
 (
 inShort ||
 isFlat
 );
-closeLong =
+const closeLong =
 touchOB &&
 inLong;
-addShort =
+const addShort =
 touchOB &&
 inShort &&
 nOpen <
 maxStack;
-openShort =
+const openShort =
 touchOB &&
 allowShort &&
 (
 inLong ||
 isFlat
 );
-}else{
-closeLong =
-touchOS &&
-inLong;
-addShort =
-touchOS &&
-inShort &&
-nOpen <
-maxStack;
-openShort =
-touchOS &&
-allowShort &&
-(
-inLong ||
-isFlat
-);
-closeShort =
-touchOB &&
-inShort;
-addLong =
-touchOB &&
-inLong &&
-nOpen <
-maxStack;
-openLong =
-touchOB &&
-allowLong &&
-(
-inShort ||
-isFlat
-);
-}
 
 return {
 touchOS,
@@ -1585,25 +1540,16 @@ settings.maxStack,
 allowLong,
 allowShort,
 slBlockLong,
-slBlockShort,
-invertEntries:
-settings.invertEntries ===
-true
+slBlockShort
 }
 );
-const invert =
-settings.invertEntries ===
-true;
-
 if(
 decision.closeShort
 ){
 closeAll(
 i,
 price,
-invert
-? "BUY ALL @ OB"
-: "BUY ALL @ OS"
+"BUY ALL @ OS"
 );
 }
 
@@ -1625,9 +1571,7 @@ decision.closeLong
 closeAll(
 i,
 price,
-invert
-? "SELL ALL @ OS"
-: "SELL ALL @ OB"
+"SELL ALL @ OB"
 );
 }
 
