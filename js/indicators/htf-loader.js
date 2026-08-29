@@ -183,6 +183,156 @@ period;
 
 }
 
+function isLtfOnHtfChart(
+timeframe,
+chartTf
+){
+
+const srcSec =
+tfPeriodSec(
+timeframe
+);
+const chartSec =
+tfPeriodSec(
+chartTf
+);
+
+return (
+srcSec >
+0 &&
+chartSec >
+srcSec
+);
+
+}
+
+function ltfSourceTailStale(
+chartCandles,
+htfCandles,
+cachedChartTailTime
+){
+
+const lastChart =
+Number(
+chartCandles[
+chartCandles.length -
+1
+]?.time
+);
+const lastHtf =
+Number(
+htfCandles[
+htfCandles.length -
+1
+]?.time
+);
+const prevTail =
+Number(
+cachedChartTailTime
+);
+
+if(
+!Number.isFinite(
+lastChart
+) ||
+!Number.isFinite(
+lastHtf
+) ||
+!Number.isFinite(
+prevTail
+)
+){
+return false;
+}
+
+return (
+lastChart >
+prevTail &&
+lastHtf <
+lastChart
+);
+
+}
+
+function mergeCandleSeriesByTime(
+base,
+extra
+){
+
+const byTime =
+new Map();
+
+for(
+const bar of base ||
+[]
+){
+
+const t =
+Number(
+bar?.time
+);
+
+if(
+Number.isFinite(
+t
+)
+){
+byTime.set(
+t,
+bar
+);
+}
+
+}
+
+for(
+const bar of extra ||
+[]
+){
+
+const t =
+Number(
+bar?.time
+);
+
+if(
+Number.isFinite(
+t
+)
+){
+byTime.set(
+t,
+bar
+);
+}
+
+}
+
+return [
+...byTime.entries()
+].sort(
+(
+a,
+b
+)=>
+a[
+0
+] -
+b[
+0
+]
+).map(
+(
+[
+,
+bar
+]
+)=>
+bar
+);
+
+}
+
 function aggregateChartBars(
 bars,
 time
@@ -689,6 +839,81 @@ await entry.promise;
 
 }
 
+const chartNorm =
+String(
+chartTf ||
+""
+).trim();
+
+if(
+Array.isArray(
+candles
+) &&
+candles.length &&
+Array.isArray(
+chartCandles
+) &&
+chartCandles.length &&
+isLtfOnHtfChart(
+timeframe,
+chartNorm
+) &&
+ltfSourceTailStale(
+chartCandles,
+candles,
+existing?.chartTailTime
+)
+){
+
+try{
+const tail =
+await loadHistory(
+sym,
+timeframe,
+2
+);
+
+if(
+Array.isArray(
+tail
+) &&
+tail.length
+){
+candles =
+mergeCandleSeriesByTime(
+candles,
+tail
+);
+const cached =
+cache.get(
+key
+);
+
+if(
+cached
+){
+cached.candles =
+candles;
+cached.chartTailTime =
+Number(
+chartCandles[
+chartCandles.length -
+1
+]?.time
+) ||
+0;
+cache.set(
+key,
+cached
+);
+}
+}
+}catch{
+/* keep cached series */
+}
+
+}
+
 if(
 Array.isArray(
 chartCandles
@@ -699,11 +924,35 @@ candles
 ) &&
 candles.length
 ){
-return mergeChartTailIntoHtf(
+const merged =
+mergeChartTailIntoHtf(
 chartCandles,
 candles,
 timeframe
 );
+const cached =
+cache.get(
+key
+);
+
+if(
+cached
+){
+cached.chartTailTime =
+Number(
+chartCandles[
+chartCandles.length -
+1
+]?.time
+) ||
+0;
+cache.set(
+key,
+cached
+);
+}
+
+return merged;
 }
 
 return Array.isArray(

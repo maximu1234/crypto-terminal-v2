@@ -210,3 +210,39 @@ test("fetchHtfCandles asks loadHistory for extra 1m pages on a 5m chart", async 
   assert.equal(loaded.length, 2);
   clearAllHtfCache();
 });
+
+test("fetchHtfCandles refetches 1m tail when 5m chart advances ahead of cache", async () => {
+  clearAllHtfCache();
+  const calls = [];
+  const chart1 = [
+    { time: 0, open: 1, high: 1, low: 1, close: 1, volume: 1 },
+    { time: 300, open: 1, high: 1, low: 1, close: 1, volume: 1 }
+  ];
+  const loader = async (sym, tf, requests) => {
+    calls.push(requests);
+    if (calls.length === 1) {
+      return [
+        { time: 0, open: 1, high: 1, low: 1, close: 1, volume: 1 },
+        { time: 60, open: 1, high: 1, low: 1, close: 1, volume: 1 },
+        { time: 120, open: 1, high: 1, low: 1, close: 1, volume: 1 }
+      ];
+    }
+    return [
+      { time: 0, open: 1, high: 1, low: 1, close: 1, volume: 1 },
+      { time: 60, open: 1, high: 1, low: 1, close: 1, volume: 1 },
+      { time: 120, open: 1, high: 1, low: 1, close: 1, volume: 1 },
+      { time: 360, open: 1, high: 1, low: 1, close: 1, volume: 1 },
+      { time: 420, open: 1, high: 1, low: 1, close: 1, volume: 1 }
+    ];
+  };
+  await fetchHtfCandles("BTCUSDT", "1", loader, chart1, "5");
+  const chart2 = [
+    ...chart1,
+    { time: 600, open: 1, high: 1, low: 1, close: 1, volume: 1 }
+  ];
+  const loaded = await fetchHtfCandles("BTCUSDT", "1", loader, chart2, "5");
+  assert.equal(calls.length, 2);
+  assert.equal(calls[1], 2);
+  assert.ok(loaded.some((bar) => bar.time >= 360));
+  clearAllHtfCache();
+});

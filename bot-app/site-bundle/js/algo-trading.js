@@ -2341,12 +2341,27 @@ skipAnalysis:
 )
 }
 );
-}else if(
+}else{
+if(
 algoChartDbg(
 "livePrice"
 )
 ){
 applyLiveCandleTick();
+}
+if(
+algoChartDbg(
+"rsi"
+) &&
+rsiPaneActive
+){
+applyRsiData(
+{
+notifyIndicators:
+false
+}
+);
+}
 }
 
 }
