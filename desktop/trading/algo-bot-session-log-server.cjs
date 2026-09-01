@@ -231,43 +231,12 @@ String(
 requestOrigin ||
 ""
 ).trim();
-const loopback =
-prefs.bindHost ===
-"127.0.0.1" ||
-prefs.bindHost ===
-"localhost";
 
-if(
-loopback
-){
 if(
 origin &&
 /^https?:\/\/(127\.0\.0\.1|localhost|\[::1\])(:\d+)?$/i.test(
 origin
 )
-){
-return {
-"Access-Control-Allow-Origin":
-origin,
-"Access-Control-Allow-Headers":
-"Authorization, Content-Type",
-"Access-Control-Allow-Methods":
-"GET, POST, OPTIONS",
-Vary:
-"Origin"
-};
-}
-
-return {
-"Access-Control-Allow-Headers":
-"Authorization, Content-Type",
-"Access-Control-Allow-Methods":
-"GET, POST, OPTIONS"
-};
-}
-
-if(
-origin
 ){
 return {
 "Access-Control-Allow-Origin":

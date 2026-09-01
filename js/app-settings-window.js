@@ -252,7 +252,7 @@ const {
 closeCloudSettingsDropdown
 } =
 await import(
-"./auth-ui.js?v=61"
+"./auth-ui.js?v=62"
 );
 closeCloudSettingsDropdown();
 await openAppSettingsWindow();
@@ -492,7 +492,7 @@ const {
 mountCloudAuthPanelInSettings
 } =
 await import(
-"./auth-ui.js?v=61"
+"./auth-ui.js?v=62"
 );
 
 mountCloudAuthPanelInSettings(
@@ -602,7 +602,7 @@ const {
 mountProxySettingsPanel
 } =
 await import(
-"./app-settings-proxy-panel.js?v=5"
+"./app-settings-proxy-panel.js?v=6"
 );
 
 mountProxySettingsPanel(

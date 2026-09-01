@@ -43,6 +43,7 @@ test("main-process exchange adapters do not import each other", () => {
   for (const file of [
     "desktop/trading/bybit-rest.cjs",
     "desktop/trading/bybit-private-ws.cjs",
+    "desktop/trading/bybit-public-ws.cjs",
     "desktop/trading/bybit-trading-stream.cjs"
   ]) {
     assert.doesNotMatch(read(file), /require\([^)]*bingx/i, file);
@@ -110,7 +111,8 @@ test("BingX request scheduler stays BingX-only", () => {
   for (const file of [
     "desktop/trading/bybit-rest.cjs",
     "desktop/trading/bybit-trading-stream.cjs",
-    "desktop/trading/bybit-private-ws.cjs"
+    "desktop/trading/bybit-private-ws.cjs",
+    "desktop/trading/bybit-public-ws.cjs"
   ]) {
     assert.doesNotMatch(
       read(file),

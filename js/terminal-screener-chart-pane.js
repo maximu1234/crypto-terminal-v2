@@ -19,7 +19,7 @@ appendFutureWhitespaceBars,
 computeChartFutureMarginBars,
 coinsTfVisibleBars,
 linkChartsCrosshair
-} from "./chart-import.js?v=48";
+} from "./chart-import.js?v=49";
 
 import {
 readCoinsPrefs
@@ -35,7 +35,8 @@ loadMarketHistory
 } from "./market-api.js?v=6";
 
 import {
-subscribeKline
+subscribeKline,
+subscribeTicker
 } from "./market-ws.js?v=1";
 
 import {
@@ -183,6 +184,10 @@ true;
 let loadSeq =
 0;
 let unsubKline =
+null;
+let unsubTicker =
+null;
+let onMarketLastPrice =
 null;
 let streamPaused =
 false;
@@ -1005,6 +1010,98 @@ function detachKline(){
 unsubKline?.();
 unsubKline =
 null;
+unsubTicker?.();
+unsubTicker =
+null;
+if(
+onMarketLastPrice
+){
+window.removeEventListener(
+"market-last-price",
+onMarketLastPrice
+);
+onMarketLastPrice =
+null;
+}
+
+}
+
+function applyPaneLivePrice(
+price
+){
+
+const px =
+Number(
+price
+);
+
+if(
+!Number.isFinite(
+px
+) ||
+px <=
+0 ||
+!candles.length ||
+!series
+){
+return;
+}
+
+const last =
+candles[
+candles.length -
+1
+];
+const high =
+Number(
+last.high
+);
+const low =
+Number(
+last.low
+);
+const bar =
+{
+...last,
+close:
+px,
+high:
+Number.isFinite(
+high
+)
+? Math.max(
+high,
+px
+)
+: px,
+low:
+Number.isFinite(
+low
+)
+? Math.min(
+low,
+px
+)
+: px
+};
+
+candles[
+candles.length -
+1
+] =
+bar;
+
+try{
+series.update(
+bar
+);
+applyChartPriceFormat(
+series,
+px
+);
+}catch{
+/* chart disposed */
+}
 
 }
 
@@ -1020,6 +1117,72 @@ streamPaused ||
 ){
 return;
 }
+
+unsubTicker =
+subscribeTicker(
+symbol,
+tick=>{
+
+if(
+!alive ||
+streamPaused
+){
+return;
+}
+
+applyPaneLivePrice(
+tick?.lastPrice ||
+tick?.markPrice
+);
+
+}
+);
+
+onMarketLastPrice =
+event=>{
+
+if(
+!alive ||
+streamPaused
+){
+return;
+}
+
+const incoming =
+String(
+event?.detail?.symbol ||
+""
+).replace(
+/\.P$/i,
+""
+).trim().toUpperCase();
+const mine =
+String(
+symbol ||
+""
+).replace(
+/\.P$/i,
+""
+).trim().toUpperCase();
+
+if(
+!incoming ||
+incoming !==
+mine
+){
+return;
+}
+
+applyPaneLivePrice(
+event?.detail?.price
+);
+
+};
+
+window.addEventListener(
+"market-last-price",
+onMarketLastPrice
+);
 
 unsubKline =
 subscribeKline(

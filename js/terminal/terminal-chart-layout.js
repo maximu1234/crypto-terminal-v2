@@ -3,8 +3,10 @@
  */
 import {
 appendFutureWhitespaceBars,
-computeChartFutureMarginBars
-} from "../chart-import.js?v=48";
+computeChartFutureMarginBars,
+computeCoinsChartViewportPlan,
+syncLinkedChartTimescales
+} from "../chart-import.js?v=49";
 
 import {
 terminalVisibleBars,
@@ -296,12 +298,78 @@ return true;
 
 }
 
+function coinsChartWidthPx(){
+
+const {
+chartEl
+} =
+ctx();
+
+const chartWrap =
+document.getElementById(
+"chart-wrap"
+);
+
+return Math.max(
+chartWrap?.clientWidth ||
+0,
+chartEl?.clientWidth ||
+0,
+1
+);
+
+}
+
+function computeLayoutViewportPlan(
+displayCandles
+){
+
+const {
+chart,
+getCandles,
+getTf
+} =
+ctx();
+
+const candles =
+getCandles?.() ||
+[];
+
+const seriesCandles =
+Array.isArray(
+displayCandles
+) &&
+displayCandles.length
+? displayCandles
+: buildChartDisplayCandles();
+
+if(
+!seriesCandles.length
+){
+return null;
+}
+
+const plotWidth =
+chart?.timeScale?.().width?.() ||
+0;
+
+return computeCoinsChartViewportPlan(
+seriesCandles,
+getTf?.() ||
+"60",
+coinsChartWidthPx(),
+candles.length,
+TERMINAL_VISIBLE_BARS,
+plotWidth
+);
+
+}
+
 export function settleCoinsChartViewport(){
 
 const {
 getCandles,
 chart,
-chartEl,
 getTf,
 getChartIndicators,
 getRsiChart,
@@ -328,19 +396,8 @@ return;
 
 invalidatePreservedVisibleLogicalRange();
 
-const chartWrap =
-document.getElementById(
-"chart-wrap"
-);
-
 const chartWidth =
-Math.max(
-chartWrap?.clientWidth ||
-0,
-chartEl?.clientWidth ||
-0,
-1
-);
+coinsChartWidthPx();
 
 const viewportCtx =
 {
@@ -399,6 +456,167 @@ currentTF,
 chartWidth,
 candles.length,
 TERMINAL_VISIBLE_BARS
+);
+
+layoutRsiBand?.();
+
+}
+
+}
+
+let coinsReplaceViewportGen =
+0;
+
+function applyCoinsChartViewportPlan(
+plan
+){
+
+const {
+chart
+} =
+ctx();
+
+if(
+!chart ||
+!plan
+){
+return;
+}
+
+invalidatePreservedVisibleLogicalRange();
+
+chart.timeScale().applyOptions(
+plan.timeOpts
+);
+
+chart.timeScale().setVisibleLogicalRange(
+plan.range
+);
+
+}
+
+/**
+ * Смена тикера/ТФ: barSpacing до setData, целевой range сразу после —
+ * один кадр LW, без промежуточного «свечи у правой шкалы».
+ * Повтор plan на следующем rAF: setData иногда сбрасывает range до первой отрисовки.
+ */
+export function replaceCoinsChartCandles(
+series,
+displayCandles
+){
+
+if(
+!series
+){
+return;
+}
+
+const {
+chart
+} =
+ctx();
+
+const gen =
+++coinsReplaceViewportGen;
+
+const plan =
+computeLayoutViewportPlan(
+displayCandles
+);
+
+if(
+chart &&
+plan
+){
+
+chart.timeScale().applyOptions(
+plan.timeOpts
+);
+
+}
+
+series.setData(
+displayCandles
+);
+
+applyCoinsChartViewportPlan(
+plan
+);
+
+if(
+!chart ||
+!plan
+){
+return;
+}
+
+requestAnimationFrame(
+()=>{
+
+if(
+gen !==
+coinsReplaceViewportGen
+){
+return;
+}
+
+applyCoinsChartViewportPlan(
+plan
+);
+
+}
+);
+
+}
+
+export function syncCoinsChartLinkedViewports(){
+
+const {
+chart,
+getChartIndicators,
+getRsiChart,
+rsiPaneActive,
+layoutRsiBand
+} =
+ctx();
+
+if(
+!chart
+){
+return;
+}
+
+const linked =
+getChartIndicators?.()?.getLinkedPaneCharts?.() ||
+[];
+
+for(
+const linkedChart of
+linked
+){
+
+if(
+linkedChart
+){
+syncLinkedChartTimescales(
+chart,
+linkedChart
+);
+}
+
+}
+
+const rsiChart =
+getRsiChart?.();
+
+if(
+rsiChart &&
+rsiPaneActive?.()
+){
+
+syncLinkedChartTimescales(
+chart,
+rsiChart
 );
 
 layoutRsiBand?.();
@@ -508,6 +726,10 @@ const scheduleDrawingRedraw =
 options.scheduleDrawingRedraw !==
 false;
 
+const skipViewportSettle =
+options.skipViewportSettle ===
+true;
+
 const {
 getCandles,
 viewportSettleRaf
@@ -526,8 +748,13 @@ return;
 
 const run =
 ()=>{
+
+if(
+!skipViewportSettle
+){
 applyChartDimensions();
 settleCoinsChartViewport();
+}
 
 if(
 scheduleDrawingRedraw
@@ -544,6 +771,12 @@ tool.resize?.();
 };
 
 run();
+
+if(
+skipViewportSettle
+){
+return;
+}
 
 if(
 viewportSettleRaf.value

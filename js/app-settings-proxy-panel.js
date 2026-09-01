@@ -253,6 +253,53 @@ err?.message ||
 
 async function testBybitThroughProxy(){
 
+const desktop =
+window.cryptoTerminalDesktop;
+const probeFn =
+desktop?.bybitPublicWs?.probe;
+
+if(
+typeof probeFn ===
+"function"
+){
+
+try{
+const result =
+await probeFn();
+
+if(
+result?.ok
+){
+return {
+ok:
+true,
+message:
+result.message ||
+"Прокси до тиков Bybit живой. Свечи идут напрямую."
+};
+}
+
+return {
+ok:
+false,
+message:
+result?.message ||
+"Проверка WebSocket Bybit не удалась."
+};
+}catch(
+err
+){
+return {
+ok:
+false,
+message:
+err?.message ||
+"Проверка WebSocket Bybit не удалась."
+};
+}
+
+}
+
 const ctrl =
 new AbortController();
 const timer =
@@ -289,12 +336,7 @@ return {
 ok:
 false,
 message:
-"Bybit не ответил (retCode " +
-(
-json?.retCode ??
-res.status
-) +
-")."
+"Bybit не ответил."
 };
 }catch(
 err

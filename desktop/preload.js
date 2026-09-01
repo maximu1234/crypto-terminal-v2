@@ -1181,6 +1181,71 @@ fn
 };
 
 }
+},
+bybitPublicWs:{
+setTopics:(
+topics,
+opts
+)=>
+ipcRenderer.invoke(
+"bybitPublic:setTopics",
+{
+topics,
+reset:
+!!opts?.reset
+}
+),
+probe:()=>
+ipcRenderer.invoke(
+"bybitPublic:probe"
+),
+getTickers:()=>
+ipcRenderer.invoke(
+"bybitPublic:getTickers"
+),
+onPush:(
+callback
+)=>{
+
+if(
+typeof callback !==
+"function"
+){
+return ()=>{};
+}
+
+const fn =
+(
+_event,
+payload
+)=>{
+try{
+callback(
+payload
+);
+}catch(
+err
+){
+console.warn(
+"bybit public ws listener:",
+err
+);
+}
+};
+
+ipcRenderer.on(
+"bybitPublic:push",
+fn
+);
+
+return ()=>{
+ipcRenderer.removeListener(
+"bybitPublic:push",
+fn
+);
+};
+
+}
 }
 }
 );

@@ -607,27 +607,30 @@ return visibleBars;
 }
 
 /**
- * Монеты: шкала времени с «хвостом» в будущее (как TradingView).
- * Явный barSpacing + rightOffset — иначе LW жмёт последнюю свечу к правому краю.
+ * @returns {{
+ *   range: { from: number, to: number },
+ *   timeOpts: object,
+ *   futureMargin: number,
+ *   realTotal: number,
+ *   visibleBars: number
+ * }|null}
  */
-export function applyCoinsChartViewport(
-mainChart,
-linkedChart,
+export function computeCoinsChartViewportPlan(
 candles,
 tf,
 chartWidthPx,
 realCandleCount,
-visibleBarsCap
+visibleBarsCap,
+plotWidthPx
 ){
 
 if(
-!mainChart ||
 !Array.isArray(
 candles
 ) ||
 !candles.length
 ){
-return 0;
+return null;
 }
 
 const totalBars =
@@ -690,12 +693,14 @@ chartWidthPx ||
 );
 
 const plotWidth =
-linkedChart?.timeScale().width() ||
-mainChart.timeScale().width() ||
+Math.max(
+plotWidthPx ||
+0,
 Math.max(
 width -
 effectiveChartPriceScaleWidth(),
 40
+)
 );
 
 const logicalSpan =
@@ -715,13 +720,13 @@ plotWidth /
 logicalSpan
 );
 
-const range = {
+return {
+range:{
 from,
 to:
 lastIndex
-};
-
-const timeOpts = {
+},
+timeOpts:{
 barSpacing,
 rightOffset:
 4,
@@ -733,14 +738,65 @@ shiftVisibleRangeOnNewBar:
 false,
 lockVisibleTimeRangeOnResize:
 false
+},
+futureMargin,
+realTotal,
+visibleBars
 };
 
+}
+
+/**
+ * Монеты: шкала времени с «хвостом» в будущее (как TradingView).
+ * Явный barSpacing + rightOffset — иначе LW жмёт последнюю свечу к правому краю.
+ */
+export function applyCoinsChartViewport(
+mainChart,
+linkedChart,
+candles,
+tf,
+chartWidthPx,
+realCandleCount,
+visibleBarsCap
+){
+
+if(
+!mainChart ||
+!Array.isArray(
+candles
+) ||
+!candles.length
+){
+return 0;
+}
+
+const plotWidth =
+linkedChart?.timeScale().width() ||
+mainChart.timeScale().width() ||
+0;
+
+const plan =
+computeCoinsChartViewportPlan(
+candles,
+tf,
+chartWidthPx,
+realCandleCount,
+visibleBarsCap,
+plotWidth
+);
+
+if(
+!plan
+){
+return 0;
+}
+
 mainChart.timeScale().applyOptions(
-timeOpts
+plan.timeOpts
 );
 
 mainChart.timeScale().setVisibleLogicalRange(
-range
+plan.range
 );
 
 if(
@@ -748,7 +804,7 @@ linkedChart
 ){
 
 linkedChart.timeScale().applyOptions({
-...timeOpts,
+...plan.timeOpts,
 visible:
 true,
 timeVisible:
@@ -760,12 +816,12 @@ false
 });
 
 linkedChart.timeScale().setVisibleLogicalRange(
-range
+plan.range
 );
 
 }
 
-return futureMargin;
+return plan.futureMargin;
 
 }
 

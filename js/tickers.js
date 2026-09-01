@@ -6,7 +6,7 @@ loadMarketTickers
 
 import {
 fetchBybit
-} from "./bybit-fetch.js?v=17";
+} from "./bybit-fetch.js?v=18";
 
 import {
 toCanonicalSymbol
@@ -37,6 +37,62 @@ let subscribers =
 
 let boundExchangeListener =
 false;
+
+let tickersInflight =
+null;
+
+function hasDesktopTickers(){
+
+return typeof window !==
+"undefined" &&
+typeof window.cryptoTerminalDesktop?.bybitPublicWs?.getTickers ===
+"function";
+
+}
+
+async function fetchBybitTickersJson(){
+
+if(
+hasDesktopTickers()
+){
+
+const result =
+await window.cryptoTerminalDesktop.bybitPublicWs.getTickers();
+
+if(
+result?.ok &&
+Array.isArray(
+result.list
+)
+){
+return {
+json:{
+result:{
+list:
+result.list
+}
+}
+};
+}
+
+throw new Error(
+result?.message ||
+"tickers"
+);
+
+}
+
+return fetchBybit(
+"/v5/market/tickers?category=linear",
+{
+timeoutMs:
+10000,
+retries:
+1
+}
+);
+
+}
 
 function ensureExchangeListener(){
 
@@ -477,15 +533,7 @@ targetMap
 const {
 json
 } =
-await fetchBybit(
-"/v5/market/tickers?category=linear",
-{
-timeoutMs:
-10000,
-retries:
-1
-}
-);
+await fetchBybitTickersJson();
 
 if(
 !json.result ||
@@ -675,6 +723,28 @@ async function loadTickers(){
 
 ensureExchangeListener();
 
+if(
+tickersInflight
+){
+return tickersInflight;
+}
+
+tickersInflight =
+loadTickersNow().finally(
+()=>{
+tickersInflight =
+null;
+}
+);
+
+return tickersInflight;
+
+}
+
+async function loadTickersNow(){
+
+ensureExchangeListener();
+
 try{
 
 if(
@@ -734,15 +804,7 @@ return;
 const {
 json
 } =
-await fetchBybit(
-"/v5/market/tickers?category=linear",
-{
-timeoutMs:
-10000,
-retries:
-1
-}
-);
+await fetchBybitTickersJson();
 
 if(
 !json.result ||

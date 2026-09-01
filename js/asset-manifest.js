@@ -59,7 +59,7 @@ Object.freeze({
 "terminal-list-refresh.js":
 1,
 "trade-desktop-boot.js":
-23,
+24,
 "desktop-menu-bar-tray.js":
 10,
 "desktop-menu-bar-tray-prefs.js":
@@ -132,14 +132,12 @@ Object.freeze({
 7,
 "trade-widget-mount.js":
 16,
-"trade-desktop-boot.js":
-23,
 "trade/module-router.js":
-15,
+16,
 "trade-trading-settings-panel.js":
 3,
 "trade/bybit/bundle.js":
-10,
+11,
 "trade/bybit/config.js":
 3,
 "trade/bybit/positions-cache.js":
@@ -147,7 +145,7 @@ Object.freeze({
 "trade/bybit/stream-bridge.js":
 2,
 "trade/bybit/chart-overlay.js":
-5,
+6,
 "trade/bybit/auto-stops.js":
 1,
 "trade/bybit/market-entry.js":
@@ -171,7 +169,7 @@ Object.freeze({
 "trade/bybit/history/fetch.js":
 2,
 "trade/bybit/chart-orders.js":
-4,
+5,
 "trade/bybit/chart-execution-markers.js":
 3,
 "trade/bybit/volume-presets.js":
@@ -187,7 +185,7 @@ Object.freeze({
 "trade/bybit/diary/period.js":
 1,
 "trade/bingx/bundle.js":
-24,
+25,
 "trade/bingx/config.js":
 10,
 "trade/bingx/positions-cache.js":
@@ -195,11 +193,11 @@ Object.freeze({
 "trade/bingx/stream-bridge.js":
 6,
 "trade/bingx/chart-overlay.js":
-15,
+16,
 "trade/bingx/stop-amend.js":
 1,
 "trade/bingx/chart-orders.js":
-4,
+5,
 "trade/bingx/chart-execution-markers.js":
 4,
 "trade/bingx/pnl-share-modal.js":
@@ -241,15 +239,15 @@ Object.freeze({
 "chart-page.js":
 7,
 "terminal.js":
-422,
+425,
 "terminal-multi-chart.js":
 11,
 "terminal-screener-chart-pane.js":
-14,
+16,
 "terminal-layout-picker.js":
 11,
 "terminal/terminal-chart-layout.js":
-10,
+12,
 "terminal-chart-history-prefs.js":
 1,
 "terminal/terminal-chart-switch-veil.js":
@@ -550,7 +548,7 @@ Object.freeze({
 "terminal/terminal-prefs.js":
 22,
 "terminal/terminal-table.js":
-32,
+36,
 "terminal/terminal-checklist.js":
 1,
 "telegram-bot-public.js":
@@ -558,11 +556,13 @@ Object.freeze({
 "watchlist.js":
 99,
 "screener.js":
-107,
+109,
 "ipad-web-viewport.js":
 2,
 "screener-widget-guard.js":
 1,
+"screener-volume-filter.js":
+2,
 "screener-widget-oscillator.js":
 1,
 "scalping-dom/prefs.js":
@@ -604,13 +604,13 @@ Object.freeze({
 "screener-widget-zoom.js":
 29,
 "release-marker.js":
-106,
+107,
 "focus-blur-after-pick.js":
 3,
 "site-boot.js":
 122,
 "site-header.js":
-5,
+6,
 "site-header-nav.js":
 8,
 "site-header-nav-web.js":
@@ -624,7 +624,7 @@ Object.freeze({
 "charts-lib-boot.js":
 3,
 "chart-import.js":
-48,
+49,
 "chart-widget-host.js":
 20,
 "tablet-gesture-policy.js":
@@ -634,7 +634,7 @@ Object.freeze({
 
 /* ── JS: chart / drawings ── */
 "chart.js":
-158,
+159,
 "chart/chart-options.js":
 7,
 "chart/chart-local-time.js":
@@ -644,7 +644,7 @@ Object.freeze({
 "chart/chart-dom-crosshair.js":
 15,
 "chart/chart-factory.js":
-47,
+48,
 "chart-tablet-gestures.js":
 19,
 "terminal-tablet-controller.js":
@@ -750,20 +750,20 @@ Object.freeze({
 "api.js":
 33,
 "bybit-fetch.js":
-17,
+18,
 "bybit-listings.js":
 5,
 "bybit-network-ui.js":
-4,
+6,
 "bybit-route-pref.js":
 2,
 "twelvedata-fetch.js":
 1,
 
 "ws.js":
-17,
+19,
 "tickers.js":
-27,
+28,
 
 /* ── JS: cloud / auth ── */
 "cloud-sync.js":
@@ -785,13 +785,13 @@ Object.freeze({
 "auth-session-transfer.js":
 1,
 "auth-ui.js":
-61,
+62,
 "header-settings-shell.js":
 4,
 "app-settings-window.js":
 18,
 "app-settings-proxy-panel.js":
-5,
+6,
 "app-settings-system-panel.js":
 18,
 "app-settings-hotkeys-panel.js":
@@ -877,7 +877,7 @@ Object.freeze({
 "common.css":
 55,
 "screener.css":
-56,
+58,
 "terminal.css":
 175,
 "watchlist.css":

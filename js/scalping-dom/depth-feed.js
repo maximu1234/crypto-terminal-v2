@@ -17,7 +17,7 @@ getActiveExchangeId
 import {
 getBybitWsUrl,
 rotateBybitWsEndpoint
-} from "../bybit-fetch.js?v=17";
+} from "../bybit-fetch.js?v=18";
 
 import {
 getBingxWsUrl

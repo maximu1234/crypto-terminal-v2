@@ -15,7 +15,7 @@
 <link rel="stylesheet" href="/css/critical-shell.css?v=10">
 <script src="/js/site-css-ready.js?v=3"></script>
 <link rel="stylesheet" href="/css/common.css?v=55">
-<link rel="stylesheet" href="/css/screener.css?v=56">
+<link rel="stylesheet" href="/css/screener.css?v=58">
 
 <link rel="preload" href="/vendor/lightweight-charts.standalone.production.js" as="script">
 
@@ -55,6 +55,18 @@
 <label class="screener-invert-charts-label" for="screener-invert-charts" title="Перевернуть график">
 <input type="checkbox" id="screener-invert-charts" title="Перевернуть график" aria-label="Перевернуть график"/>
 </label>
+
+<input
+type="text"
+id="screener-volume-filter"
+class="screener-volume-filter"
+placeholder="Объём ≥"
+spellcheck="false"
+autocomplete="off"
+inputmode="decimal"
+aria-label="Минимальный объём 24ч"
+title="Скрыть тикеры с объёмом 24ч ниже этого значения"
+/>
 
 <input
 type="search"
@@ -172,7 +184,7 @@ const { loadLightweightCharts } =
 await import("/js/charts-lib-boot.js?v=3");
 
 await loadLightweightCharts();
-await import("/js/screener.js?v=107");
+await import("/js/screener.js?v=109");
 import("/js/site-boot.js?v=122").catch(err=>{
 console.warn("site-boot:", err);
 });

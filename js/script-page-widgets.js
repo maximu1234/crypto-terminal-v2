@@ -12,7 +12,7 @@ updateRsiLevelLinesLayout,
 linkPairedChartTimeScales,
 SCREENER_MAX_BARS,
 SCREENER_VISIBLE_BARS
-} from "./chart-import.js?v=48";
+} from "./chart-import.js?v=49";
 
 import {
 loadMarketHistory,
@@ -31,7 +31,7 @@ subscribeKline
 
 import {
 fetchTickersInto
-} from "./tickers.js?v=27";
+} from "./tickers.js?v=28";
 
 import {
 isScreenerWidgetCurrent as isWidgetCurrentGuard

@@ -180,7 +180,7 @@ test("local SOCKS relay logs into remote SOCKS5 with user/pass", async () => {
   await new Promise((resolve) => remote.server.close(resolve));
 });
 
-test("Bybit REST from main (tickers + signed) goes through SOCKS; public WS stays direct", () => {
+test("Bybit REST from main goes through SOCKS; candle history stays direct; public WS is not Chromium REST", () => {
   assert.equal(
     shouldProxyBybitRestUrl("https://api.bybit.com/v5/market/tickers?symbol=BTCUSDT"),
     true
@@ -193,8 +193,12 @@ test("Bybit REST from main (tickers + signed) goes through SOCKS; public WS stay
     shouldProxyBybitRestUrl("https://stream.bybit.com/v5/public/linear"),
     false
   );
-  assert.doesNotMatch(
+  assert.match(
     PROXY_BYPASS_RULES,
     /api\.bybit\.com/
+  );
+  assert.match(
+    PROXY_BYPASS_RULES,
+    /api\.bytick\.com/
   );
 });

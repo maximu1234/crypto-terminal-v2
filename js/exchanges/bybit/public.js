@@ -6,7 +6,7 @@ loadBybitOrderbook
 
 import {
 fetchBybitBulk
-} from "../../bybit-fetch.js?v=17";
+} from "../../bybit-fetch.js?v=18";
 
 import {
 buildCoinsMarketLists

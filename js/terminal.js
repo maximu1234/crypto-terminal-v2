@@ -20,7 +20,7 @@ EXCHANGE_CHANGED_EVENT
 
 import {
 clearBybitNetworkIssue
-} from "./bybit-network-ui.js?v=4";
+} from "./bybit-network-ui.js?v=6";
 
 import {
 resolveUrlExchangeDeepLink
@@ -46,7 +46,7 @@ canSetBlueFlag
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=61";
+} from "./auth-ui.js?v=62";
 
 import {
 getActiveAlerts,
@@ -87,7 +87,7 @@ appendFutureWhitespaceBars,
 applyCoinsChartViewport,
 refreshCoinsChartBarSpacing,
 tfPeriodSec
-} from "./chart-import.js?v=48";
+} from "./chart-import.js?v=49";
 
 import {
 terminalVisibleBars,
@@ -143,6 +143,7 @@ mountQwertyKeyInput
 } from "./qwerty-key-input.js?v=1";
 
 import {
+isChartLayoutReady,
 setChartLayoutReady
 } from "./chart-layout-gate.js?v=2";
 
@@ -160,7 +161,7 @@ isTradePage
 
 import {
 stopTickerStream
-} from "./tickers.js?v=27";
+} from "./tickers.js?v=28";
 
 import {
 mountCoinsListRefreshControls,
@@ -199,7 +200,7 @@ setCoinsTableHooks,
 syncCoinListFreezeFromFlagMenus,
 getExtraCoinMarkets,
 isExtraCoinMarket
-} from "./terminal/terminal-table.js?v=32";
+} from "./terminal/terminal-table.js?v=36";
 
 import {
 createCoinsChartSwitchVeil
@@ -208,12 +209,13 @@ createCoinsChartSwitchVeil
 import {
 registerCoinsChartLayoutContext,
 buildChartDisplayCandles,
-applyChartDimensions,
 settleCoinsChartViewport,
+replaceCoinsChartCandles,
+syncCoinsChartLinkedViewports,
 resizeCharts,
 scheduleResizeCharts,
 applyDefaultZoom
-} from "./terminal/terminal-chart-layout.js?v=10";
+} from "./terminal/terminal-chart-layout.js?v=12";
 
 import {
 initTerminalMultiChart,
@@ -224,10 +226,6 @@ isTerminalMultiChartLayout
 import {
 mountTerminalLayoutPicker
 } from "./terminal-layout-picker.js?v=11";
-
-import {
-mountScriptTerminalStatus
-} from "./script-terminal-status.js?v=10";
 
 import {
 shouldRunScriptBackgroundJobs,
@@ -5080,7 +5078,7 @@ currentDataset
 )
 ){
 
-void import("./bybit-network-ui.js?v=4").then(m=>{
+void import("./bybit-network-ui.js?v=6").then(m=>{
 m.showBybitNetworkIssue(
 new Error(
 `История свечей ${getActiveExchangeDefinition().name} пуста`
@@ -5107,9 +5105,8 @@ loadSeq
 
 chartIndicators?.clearMainChartOverlays?.();
 
-candleSeries.setData(
-buildChartDisplayCandles()
-);
+const displayCandles =
+buildChartDisplayCandles();
 
 const refPrice =
 candles[candles.length - 1]?.close ?? 1;
@@ -5119,13 +5116,20 @@ candleSeries,
 refPrice
 );
 
+replaceCoinsChartCandles(
+candleSeries,
+displayCandles
+);
+
 resetCoinsChartPriceScale();
 
 rebuildRsiFromCandles();
 
 applyDefaultZoom({
 scheduleDrawingRedraw:
-false
+false,
+skipViewportSettle:
+true
 });
 
 chartIndicators?.notifyMainChartOverlaysSync?.();
@@ -5150,9 +5154,8 @@ true
 );
 
 chartIndicators?.notifySymbolChange?.();
-settleCoinsChartViewport();
 chartIndicators?.flushIndicatorDataRefreshNow?.();
-settleCoinsChartViewport();
+syncCoinsChartLinkedViewports();
 chartIndicators?.notifyLayoutSettled?.();
 
 scheduleCoinsDrawRedraw();
@@ -5360,7 +5363,11 @@ syncLinkedChartsLayout,
 {
 isLocked:()=>
 !rsiPaneActive ||
-isTabletCrosshairProbeLocked()
+isTabletCrosshairProbeLocked() ||
+!isChartLayoutReady(),
+/* RSI setData не должен двигать main — иначе смена ТФ мигает viewport. */
+linkedDrivesMain:
+false
 }
 );
 
@@ -6755,6 +6762,7 @@ startTickerStream();
 async function syncTerminalAlgoEarlyT3List(){
 
 if(
+!window.cryptoTerminalDesktop?.isDesktop ||
 !isAlgoTradingNavEnabled()
 ){
 terminalAlgoEarlyT3ListMod?.unmountTerminalAlgoEarlyT3List?.();
@@ -6846,7 +6854,23 @@ mountPicker:
 mountTerminalLayoutPicker
 });
 
-mountScriptTerminalStatus();
+if(
+window.cryptoTerminalDesktop?.isDesktop
+){
+void import(
+"./script-terminal-status.js?v=10"
+).then(
+m=>
+m.mountScriptTerminalStatus?.()
+).catch(
+err=>{
+console.warn(
+"[terminal] script terminal status:",
+err
+);
+}
+);
+}
 
 if(
 shouldRunScriptBackgroundJobs()

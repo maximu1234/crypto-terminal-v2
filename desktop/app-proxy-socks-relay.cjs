@@ -24,8 +24,8 @@ let relayServer =
 null;
 let relayHttpsAgent =
 null;
-let relayAgentCreatedHandler =
-null;
+const relayAgentCreatedHandlers =
+new Set();
 
 function closeSocket(
 socket
@@ -1252,7 +1252,7 @@ true,
 keepAliveMsecs:
 10000,
 maxSockets:
-8,
+16,
 maxFreeSockets:
 4,
 scheduling:
@@ -1364,15 +1364,20 @@ done
 });
 
 if(
-typeof relayAgentCreatedHandler ===
-"function"
+relayAgentCreatedHandlers.size
 ){
 queueMicrotask(
 ()=>{
+for(
+const fn of [
+...relayAgentCreatedHandlers
+]
+){
 try{
-relayAgentCreatedHandler();
+fn();
 }catch{
 /* ignore */
+}
 }
 }
 );
@@ -1386,11 +1391,14 @@ function setRelayAgentCreatedHandler(
 fn
 ){
 
-relayAgentCreatedHandler =
+if(
 typeof fn ===
 "function"
-? fn
-: null;
+){
+relayAgentCreatedHandlers.add(
+fn
+);
+}
 
 }
 

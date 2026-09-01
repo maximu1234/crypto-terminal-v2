@@ -4029,10 +4029,9 @@ expectedSymbol
 ){
 
 const eventSym =
-String(
-event?.detail?.symbol ||
-""
-).trim().toUpperCase();
+normalizeOverlaySymbol(
+event?.detail?.symbol
+);
 const expected =
 normalizeOverlaySymbol(
 expectedSymbol

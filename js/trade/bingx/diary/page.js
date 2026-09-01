@@ -47,7 +47,7 @@ import {
 getLoadedTradeExchangeModules,
 loadTradeExchangeModules,
 resetTradeExchangeModules
-} from "../../module-router.js?v=15";
+} from "../../module-router.js?v=16";
 
 const EXCHANGE_ID =
 "bingx";

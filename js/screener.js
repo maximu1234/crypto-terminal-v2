@@ -16,6 +16,14 @@ isScreenerWidgetCurrent as isScreenerWidgetCurrentGuard
 } from "./screener-widget-guard.js?v=1";
 
 import {
+parseMinVolumeFilter,
+normalizeMinVolume,
+filterSymbolsByMinVolume,
+formatMinVolumeFilter,
+formatMinVolumeInputText
+} from "./screener-volume-filter.js?v=2";
+
+import {
 createScreenerChart,
 createRSIChart,
 applyChartPriceFormat,
@@ -26,7 +34,7 @@ updateRsiLevelLinesLayout,
 linkPairedChartTimeScales,
 SCREENER_VISIBLE_BARS,
 SCREENER_MAX_BARS
-} from "./chart-import.js?v=48";
+} from "./chart-import.js?v=49";
 
 import {
 isIpadWebViewport
@@ -44,7 +52,7 @@ subscribeKline
 import {
 connectTickerStream,
 fetchTickersInto
-} from "./tickers.js?v=27";
+} from "./tickers.js?v=28";
 
 import {
 createTickerUiBatcher
@@ -52,7 +60,7 @@ createTickerUiBatcher
 
 import {
 mountReleaseMarker
-} from "./release-marker.js?v=106";
+} from "./release-marker.js?v=107";
 
 import {
 saveScreenerState,
@@ -70,7 +78,7 @@ FAVORITES_BY_EXCHANGE_KEY
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=61";
+} from "./auth-ui.js?v=62";
 
 import {
 ensureSettled,
@@ -646,6 +654,11 @@ Number(saved.page) || 1;
 let invertCharts =
 saved.invertCharts === true;
 
+let minVolumeFilter =
+normalizeMinVolume(
+saved.minVolume
+);
+
 let allSymbols = [];
 let screenerMarketLoadFailed = false;
 const tickerMap = new Map();
@@ -660,7 +673,8 @@ layout,
 sort:sortMode,
 tf:currentTF,
 page:currentPage,
-invertCharts
+invertCharts,
+minVolume:minVolumeFilter
 });
 
 }
@@ -936,9 +950,23 @@ return `
 
 }
 
+function getVisibleSymbols(){
+
+return filterSymbolsByMinVolume(
+allSymbols,
+minVolumeFilter,
+sym=>
+tickerMap.get(
+sym
+)?.volume24
+);
+
+}
+
 function getSortedSymbols(){
 
-const list = [...allSymbols];
+const list =
+getVisibleSymbols();
 
 if(sortMode === "symbol"){
 
@@ -997,13 +1025,16 @@ function totalPages(){
 const size =
 pageSize();
 
-if(!allSymbols.length || !size){
+const n =
+getVisibleSymbols().length;
+
+if(!n || !size){
 return 1;
 }
 
 return Math.max(
 1,
-Math.ceil(allSymbols.length / size)
+Math.ceil(n / size)
 );
 
 }
@@ -1208,6 +1239,33 @@ normalized
 
 setStatus(
 `Монета ${normalized} не найдена`,
+true
+);
+
+setTimeout(
+()=>{
+setStatus(
+"",
+false
+);
+},
+2800
+);
+
+return;
+
+}
+
+if(
+minVolumeFilter >
+0 &&
+!getVisibleSymbols().includes(
+normalized
+)
+){
+
+setStatus(
+`${normalized} скрыта фильтром объёма`,
 true
 );
 
@@ -2415,6 +2473,14 @@ setStatus(
 `Список монет ${activeExchangeName()} не загрузился — «Повторить» внизу экрана`,
 true
 );
+}else if(
+minVolumeFilter >
+0
+){
+setStatus(
+"Нет монет с таким объёмом",
+true
+);
 }else{
 setStatus(
 "Нет монет для отображения",
@@ -2539,6 +2605,56 @@ syncHeaderControlLabels();
 
 persistState();
 renderPage();
+
+}
+
+function setMinVolumeFilter(
+next
+){
+
+const n =
+normalizeMinVolume(
+next
+);
+
+if(
+n ===
+minVolumeFilter
+){
+return;
+}
+
+minVolumeFilter =
+n;
+currentPage =
+1;
+persistState();
+void renderPage();
+
+}
+
+function syncVolumeFilterInput(){
+
+const input =
+document.getElementById(
+"screener-volume-filter"
+);
+
+if(
+!input ||
+document.activeElement ===
+input
+){
+return;
+}
+
+input.value =
+minVolumeFilter >
+0
+? formatMinVolumeFilter(
+minVolumeFilter
+)
+: "";
 
 }
 
@@ -2867,11 +2983,187 @@ cb.checked
 
 }
 
+function bindVolumeFilter(){
+
+const input =
+document.getElementById(
+"screener-volume-filter"
+);
+
+if(
+!input
+){
+return;
+}
+
+syncVolumeFilterInput();
+
+let applyTimer =
+0;
+
+const applyFromInput =
+()=>{
+const raw =
+String(
+input.value ??
+""
+);
+
+if(
+!raw.trim()
+){
+setMinVolumeFilter(
+0
+);
+return;
+}
+
+const n =
+parseMinVolumeFilter(
+raw
+);
+
+if(
+n >
+0
+){
+setMinVolumeFilter(
+n
+);
+const grouped =
+formatMinVolumeFilter(
+n
+);
+if(
+input.value !==
+grouped
+){
+input.value =
+grouped;
+}
+}
+
+};
+
+const groupTypedVolume =
+()=>{
+const raw =
+String(
+input.value ??
+""
+);
+const caret =
+input.selectionStart ??
+raw.length;
+const digitsBefore =
+raw.slice(
+0,
+caret
+).replace(
+/[^\d]/g,
+""
+).length;
+const next =
+formatMinVolumeInputText(
+raw
+);
+
+if(
+next ===
+raw
+){
+return;
+}
+
+input.value =
+next;
+
+let pos =
+0;
+let seen =
+0;
+
+while(
+pos <
+next.length &&
+seen <
+digitsBefore
+){
+
+if(
+/\d/.test(
+next.charAt(
+pos
+)
+)
+){
+seen++;
+}
+
+pos++;
+
+}
+
+try{
+input.setSelectionRange(
+pos,
+pos
+);
+}catch{
+/* ignore */
+}
+
+};
+
+input.addEventListener(
+"input",
+()=>{
+groupTypedVolume();
+clearTimeout(
+applyTimer
+);
+applyTimer =
+setTimeout(
+applyFromInput,
+450
+);
+}
+);
+
+input.addEventListener(
+"change",
+()=>{
+clearTimeout(
+applyTimer
+);
+applyFromInput();
+}
+);
+
+input.addEventListener(
+"keydown",
+e=>{
+if(
+e.key ===
+"Enter"
+){
+e.preventDefault();
+clearTimeout(
+applyTimer
+);
+applyFromInput();
+}
+}
+);
+
+}
+
 function bindControls(){
 
 bindDesktopHeaderPicks();
 bindSymbolSearch();
 bindInvertChartsCheckbox();
+bindVolumeFilter();
 bindScreenerLayoutHotkeys();
 
 }
@@ -3024,6 +3316,7 @@ goToPage(currentPage - 1);
 function applySavedUi(){
 
 syncHeaderControlLabels();
+syncVolumeFilterInput();
 
 }
 
@@ -3181,7 +3474,7 @@ setStatus(
 true
 );
 
-void import("./bybit-network-ui.js?v=4").then(m=>{
+void import("./bybit-network-ui.js?v=6").then(m=>{
 m.showBybitNetworkIssue(err);
 });
 
@@ -3364,7 +3657,7 @@ err
 screenerMarketLoadFailed = true;
 allSymbols = [];
 
-void import("./bybit-network-ui.js?v=4").then(m=>{
+void import("./bybit-network-ui.js?v=6").then(m=>{
 m.showBybitNetworkIssue(err);
 });
 

@@ -6,10 +6,6 @@ ensureHeaderSettingsShell
 } from "./header-settings-shell.js?v=4";
 
 import {
-mountScriptTerminalStatus
-} from "./script-terminal-status.js?v=10";
-
-import {
 renderHeaderNav
 } from "./site-header-nav.js?v=8";
 
@@ -279,7 +275,19 @@ initDesktopHeaderLayout();
 if(
 window.cryptoTerminalDesktop?.isDesktop
 ){
-mountScriptTerminalStatus();
+void import(
+"./script-terminal-status.js?v=10"
+).then(
+m=>
+m.mountScriptTerminalStatus()
+).catch(
+err=>{
+console.warn(
+"[site-header] script terminal status:",
+err
+);
+}
+);
 }
 
 }

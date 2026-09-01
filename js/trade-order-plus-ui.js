@@ -7,7 +7,7 @@ getActiveTradeVolumeUsdt
 
 import {
 formatPrice
-} from "./chart-import.js?v=48";
+} from "./chart-import.js?v=49";
 
 import {
 createPriceAlert
@@ -23,7 +23,7 @@ getTelegramChatId
 
 import {
 getActiveTradeConfig
-} from "./trade/module-router.js?v=15";
+} from "./trade/module-router.js?v=16";
 
 function tradingApi(){
 

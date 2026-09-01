@@ -16,7 +16,7 @@ EXCHANGE_CHANGED_EVENT
 
 import {
 clearBybitNetworkIssue
-} from "./bybit-network-ui.js?v=4";
+} from "./bybit-network-ui.js?v=6";
 
 import {
 buildAlertChartUrl
@@ -24,7 +24,7 @@ buildAlertChartUrl
 
 import {
 isLocalDevHost
-} from "./bybit-fetch.js?v=17";
+} from "./bybit-fetch.js?v=18";
 
 import {
 applyChartPriceFormat,
@@ -34,7 +34,7 @@ createRSIChart,
 updateRsiBandLayout,
 updateRsiLevelLinesLayout,
 linkPairedChartTimeScales
-} from "./chart-import.js?v=48";
+} from "./chart-import.js?v=49";
 
 import {
 calculateRSI,
@@ -1051,7 +1051,7 @@ widget.classList.add(
 "widget-chart-empty"
 );
 
-void import("./bybit-network-ui.js?v=4").then(
+void import("./bybit-network-ui.js?v=6").then(
 m=>{
 m.showBybitNetworkIssue(
 new Error(

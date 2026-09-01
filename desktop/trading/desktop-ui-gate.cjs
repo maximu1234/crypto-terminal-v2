@@ -65,6 +65,36 @@ return tradingIpcLocked;
 
 }
 
+function parseHttpOrigin(
+url
+){
+
+try{
+return new URL(
+String(
+url ||
+""
+).trim()
+).origin;
+}catch{
+return "";
+}
+
+}
+
+function isLoopbackHttpOrigin(
+origin
+){
+
+return /^http:\/\/(127\.0\.0\.1|localhost)(:\d+)?$/i.test(
+String(
+origin ||
+""
+)
+);
+
+}
+
 function isTrustedDesktopUiUrl(
 url
 ){
@@ -81,21 +111,6 @@ if(
 return false;
 }
 
-const origin =
-typeof getLocalSiteOrigin ===
-"function"
-? getLocalSiteOrigin()
-: null;
-
-if(
-origin &&
-value.startsWith(
-origin
-)
-){
-return true;
-}
-
 if(
 value.startsWith(
 "multichart://"
@@ -104,12 +119,35 @@ value.startsWith(
 return true;
 }
 
+const configured =
+typeof getLocalSiteOrigin ===
+"function"
+? getLocalSiteOrigin()
+: null;
+const localOrigin =
+configured
+? parseHttpOrigin(
+configured
+)
+: "";
+const pageOrigin =
+parseHttpOrigin(
+value
+);
+
 if(
-value.startsWith(
-"http://127.0.0.1:"
-) ||
-value.startsWith(
-"http://localhost:"
+localOrigin &&
+pageOrigin &&
+pageOrigin ===
+localOrigin
+){
+return true;
+}
+
+if(
+!localOrigin &&
+isLoopbackHttpOrigin(
+pageOrigin
 )
 ){
 return true;

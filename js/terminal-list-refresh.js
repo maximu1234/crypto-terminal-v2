@@ -9,7 +9,7 @@ normalizeListRefreshMs
 
 import {
 setTickerPollInterval
-} from "./tickers.js?v=27";
+} from "./tickers.js?v=28";
 
 export const COINS_LIST_REFRESH_OPTIONS =
 [

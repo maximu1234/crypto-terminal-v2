@@ -148,7 +148,8 @@ accent-color:#2563eb;
 cursor:pointer;
 }
 
-.screener-symbol-search{
+.screener-symbol-search,
+.screener-volume-filter{
 width:148px;
 max-width:100%;
 box-sizing:border-box;
@@ -160,15 +161,26 @@ border-radius:8px;
 font-size:12px;
 font-weight:600;
 outline:none;
+}
+
+.screener-symbol-search{
 text-transform:uppercase;
 letter-spacing:.02em;
 }
 
-.screener-symbol-search:focus{
+.screener-volume-filter{
+width:136px;
+letter-spacing:.02em;
+font-variant-numeric:tabular-nums;
+}
+
+.screener-symbol-search:focus,
+.screener-volume-filter:focus{
 border-color:#2563eb;
 }
 
-.screener-symbol-search::placeholder{
+.screener-symbol-search::placeholder,
+.screener-volume-filter::placeholder{
 color:rgba(156,163,175,.5);
 text-transform:none;
 font-weight:500;

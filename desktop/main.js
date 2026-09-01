@@ -63,6 +63,13 @@ require(
 "./trading/register-ipc.cjs"
 );
 const {
+registerBybitPublicWsIpc,
+setBybitPublicWsTarget
+} =
+require(
+"./trading/bybit-public-ws.cjs"
+);
+const {
 registerChartSnapshotIpc
 } =
 require(
@@ -563,6 +570,9 @@ false;
 }
 
 setTradingStreamTarget(
+null
+);
+setBybitPublicWsTarget(
 null
 );
 startTradingStream();
@@ -1137,6 +1147,9 @@ chromeLikeUserAgent(
 mainWindow.webContents.getUserAgent()
 )
 );
+setBybitPublicWsTarget(
+mainWindow.webContents
+);
 
 mainWindow.once(
 "ready-to-show",
@@ -1381,6 +1394,9 @@ mainWindow &&
 setTradingStreamTarget(
 mainWindow.webContents
 );
+setBybitPublicWsTarget(
+mainWindow.webContents
+);
 startTradingStream();
 setAlgoTradingStreamTarget(
 mainWindow.webContents
@@ -1399,6 +1415,9 @@ mainWindow.on(
 "closed",
 ()=>{
 setTradingStreamTarget(
+null
+);
+setBybitPublicWsTarget(
 null
 );
 setAlgoTradingStreamTarget(
@@ -1597,10 +1616,15 @@ platform.platform
 );
 
 registerTradingIpc();
+registerBybitPublicWsIpc(
+ipcMain
+);
 registerChartSnapshotIpc({
 handleTrustedDesktopUi
 });
-registerChartSnapshotLogoIpc();
+registerChartSnapshotLogoIpc({
+handleTrustedDesktopUi
+});
 registerAppProxyIpc({
 ipcMain,
 handleTrustedDesktopUi,
@@ -1731,7 +1755,8 @@ err.message
 }
 );
 
-ipcMain.handle(
+handleTrustedDesktopUi(
+ipcMain,
 "desktop:updateMenuBarTray",
 (
 _event,
@@ -1765,7 +1790,8 @@ err.message
 }
 );
 
-ipcMain.handle(
+handleTrustedDesktopUi(
+ipcMain,
 "desktop:setMenuBarTrayVisible",
 (
 _event,
@@ -1822,7 +1848,8 @@ err.message
 }
 );
 
-ipcMain.handle(
+handleTrustedDesktopUi(
+ipcMain,
 "desktop:setMenuBarTrayPnlHidden",
 (
 _event,
@@ -1913,7 +1940,8 @@ err.message
 }
 );
 
-ipcMain.handle(
+handleTrustedDesktopUi(
+ipcMain,
 "desktop:getMenuBarAgentPrefs",
 ()=>{
 
@@ -1943,7 +1971,8 @@ trayPrefsStore.readPrefs()
 }
 );
 
-ipcMain.handle(
+handleTrustedDesktopUi(
+ipcMain,
 "desktop:setLaunchAgentAtLogin",
 (
 _event,
@@ -1987,7 +2016,8 @@ err
 }
 );
 
-ipcMain.handle(
+handleTrustedDesktopUi(
+ipcMain,
 "desktop:importScriptFavorites",
 async(
 _event,
@@ -2021,7 +2051,8 @@ err
 }
 );
 
-ipcMain.handle(
+handleTrustedDesktopUi(
+ipcMain,
 "desktop:loadScriptFavorites",
 (
 _event,
@@ -2059,7 +2090,8 @@ err
 }
 );
 
-ipcMain.handle(
+handleTrustedDesktopUi(
+ipcMain,
 "desktop:clearScriptFavorites",
 (
 _event,
@@ -2369,6 +2401,9 @@ log.info(
 );
 hideDockIcon();
 setTradingStreamTarget(
+null
+);
+setBybitPublicWsTarget(
 null
 );
 startTradingStream();
