@@ -264,9 +264,26 @@ return overlays;
 
 }
 
+function overlayExitPrice(overlay, lastAsk, lastBid){
+  if(overlay.long === true && lastBid > 0){
+    return lastBid;
+  }
+  if(overlay.long === false && lastAsk > 0){
+    return lastAsk;
+  }
+  return overlay.current;
+}
+
+function rowInPositionFill(row, overlay, lastAsk, lastBid, eps){
+  const current = overlayExitPrice(overlay, lastAsk, lastBid);
+  const lo = Math.min(overlay.entry, current);
+  const hi = Math.max(overlay.entry, current);
+  return row.price >= lo - eps && row.price <= hi + eps;
+}
+
 /**
  * @param {ReturnType<import("./depth-store.js").buildLadderFromBook>} ladder
- * @param {{ entry: number, current: number, tone: "profit" | "loss" }[]} overlays
+ * @param {{ entry: number, current: number, tone: "profit" | "loss", long?: boolean }[]} overlays
  */
 export function applyPositionOverlays(
 ladder,
@@ -296,20 +313,51 @@ false
 };
 }
 
-const tick =
+const nativeTick =
+Number(
+ladder.nativeTick
+) ||
+0;
+const displayTick =
 Number(
 ladder.tick
 ) ||
 0;
 const eps =
-tick >
+(
+nativeTick >
 0
-? tick *
-0.51
-: 1e-12;
+? nativeTick
+: displayTick
+) *
+0.51 ||
+1e-12;
 
 const rows =
 ladder.rows;
+
+let lastAsk =
+0;
+let lastBid =
+0;
+
+for(
+const row of
+rows
+){
+if(
+row.touchAsk
+){
+lastAsk =
+row.price;
+}
+if(
+row.touchBid
+){
+lastBid =
+row.price;
+}
+}
 
 for(
 const row of
@@ -322,24 +370,14 @@ for(
 const overlay of
 overlays
 ){
-const lo =
-Math.min(
-overlay.entry,
-overlay.current
-);
-const hi =
-Math.max(
-overlay.entry,
-overlay.current
-);
-
 if(
-row.price >=
-lo -
-eps &&
-row.price <=
-hi +
+rowInPositionFill(
+row,
+overlay,
+lastAsk,
+lastBid,
 eps
+)
 ){
 tone =
 overlay.tone;
@@ -355,7 +393,19 @@ tone;
 return {
 ...ladder,
 hasOpenPosition:
+true,
+positionExit:
+overlays[
+0
+]?.long ===
 true
+? "bid"
+: overlays[
+0
+]?.long ===
+false
+? "ask"
+: ""
 };
 
 }
@@ -488,8 +538,7 @@ return levels;
 }
 
 /**
- * Lighten + edge mark for SL/TP rows (ladder high → low).
- * Marks: sl-long | sl-short | tp-long | tp-short
+ * Marks the nearest ladder row for each SL/TP: sl-long | sl-short | tp-long | tp-short
  */
 export function applySlTpHighlights(
 ladder,

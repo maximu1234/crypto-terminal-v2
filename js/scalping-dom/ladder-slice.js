@@ -5,7 +5,7 @@ import {
 stickyHalfSpanForScale,
 makeStickyPriceRange,
 stickyRangeNeedsRecenter
-} from "./depth-store.js?v=10";
+} from "./depth-store.js?v=11";
 
 const HARD_MAX_ROWS =
 320;
@@ -53,18 +53,114 @@ function clampViewRows(viewRows){
   return Math.max(8, Math.min(HARD_MAX_ROWS, Math.round(Number(viewRows) || 40)));
 }
 
-function displayStepForNativeIdx(
-nativeIdx,
-scale
-){
-  if(
-    nativeIdx == null ||
-    !Number.isFinite(nativeIdx) ||
-    !(scale > 0)
-  ){
-    return null;
+/**
+ * Last ask / last bid of the *visible* compressed book: the last ask-side
+ * row and the first bid-side row. Leftover opposite-side size inside a
+ * bid (or ask) bucket must not move the highlight onto that other row
+ * or split a row in half.
+ */
+function markCompressedBbo(rows){
+  let lastAskI = -1;
+  let firstBidI = -1;
+  for(let i = 0; i < rows.length; i++){
+    if(rows[i].side === "ask"){
+      lastAskI = i;
+    }
+    if(rows[i].side === "bid" && firstBidI < 0){
+      firstBidI = i;
+    }
   }
-  return Math.floor(nativeIdx / scale);
+  if(lastAskI >= 0 && firstBidI < 0 && rows[lastAskI].bidSize > 0){
+    firstBidI = lastAskI;
+  }else if(firstBidI >= 0 && lastAskI < 0 && rows[firstBidI].askSize > 0){
+    lastAskI = firstBidI;
+  }
+  for(let i = 0; i < rows.length; i++){
+    const touchAsk = i === lastAskI;
+    const touchBid = i === firstBidI;
+    rows[i].touchAsk = touchAsk;
+    rows[i].touchBid = touchBid;
+    rows[i].touch = touchAsk || touchBid;
+    if(touchAsk && !touchBid){
+      rows[i].side = "ask";
+    }else if(touchBid && !touchAsk){
+      rows[i].side = "bid";
+    }else if(touchAsk && touchBid){
+      rows[i].side = rows[i].askSize >= rows[i].bidSize ? "ask" : "bid";
+      rows[i].size = (rows[i].askSize || 0) + (rows[i].bidSize || 0);
+    }
+  }
+  return rows;
+}
+
+export function compressedBboPaintMode(row){
+  if(!row){
+    return "";
+  }
+  const touchAsk =
+    row.touchAsk === true ||
+    (row.touch === true && row.side === "ask" && row.touchBid !== true);
+  const touchBid =
+    row.touchBid === true ||
+    (row.touch === true && row.side === "bid" && row.touchAsk !== true);
+  if(touchAsk && touchBid){
+    return "split";
+  }
+  if(touchAsk){
+    return "ask";
+  }
+  if(touchBid){
+    return "bid";
+  }
+  return "";
+}
+
+function collectVisibleRows(
+book,
+view,
+displayTick,
+scale,
+dec
+){
+  const rows = [];
+  let maxSize = 0;
+  if(view.rows > 0 && displayTick > 0){
+    for(let step = view.startIdx; step >= view.endIdx; step--){
+      const price = Number((step * displayTick).toFixed(dec));
+      const askSize = book.notionalAtDisplay("ask", step, scale);
+      const bidSize = book.notionalAtDisplay("bid", step, scale);
+      let side = "hole";
+      let size = 0;
+      if(askSize > 0 && bidSize > 0){
+        side = askSize >= bidSize ? "ask" : "bid";
+        size = askSize + bidSize;
+      }else if(askSize > 0){
+        side = "ask";
+        size = askSize;
+      }else if(bidSize > 0){
+        side = "bid";
+        size = bidSize;
+      }
+      if(size > maxSize){
+        maxSize = size;
+      }
+      rows.push({
+        price,
+        size,
+        side,
+        touch: false,
+        touchAsk: false,
+        touchBid: false,
+        major: isMajorPrice(price, displayTick),
+        askSize,
+        bidSize
+      });
+    }
+  }
+  return {
+    rows: markCompressedBbo(rows),
+    maxSize
+  };
 }
 
 function attachViewCenter(sticky, viewCenterIdx){
@@ -200,67 +296,6 @@ viewOffset
   };
 }
 
-function collectVisibleRows(
-book,
-view,
-displayTick,
-scale,
-dec,
-bestAsk,
-bestBid
-){
-  const rows = [];
-  let maxSize = 0;
-  const askStep =
-    displayStepForNativeIdx(
-      book.bestAskIdx?.(),
-      scale
-    );
-  const bidStep =
-    displayStepForNativeIdx(
-      book.bestBidIdx?.(),
-      scale
-    );
-  if(view.rows > 0 && displayTick > 0){
-    for(let step = view.startIdx; step >= view.endIdx; step--){
-      const price = Number((step * displayTick).toFixed(dec));
-      const askSize = book.notionalAtDisplay("ask", step, scale);
-      const bidSize = book.notionalAtDisplay("bid", step, scale);
-      const touchAsk = askStep != null && step === askStep;
-      const touchBid = bidStep != null && step === bidStep;
-      let side = "hole";
-      let size = 0;
-      if(askSize > 0){
-        side = "ask";
-        size = askSize;
-      }else if(bidSize > 0){
-        side = "bid";
-        size = bidSize;
-      }else if(touchAsk && !touchBid){
-        side = "ask";
-      }else if(touchBid && !touchAsk){
-        side = "bid";
-      }
-      if(size > maxSize){
-        maxSize = size;
-      }
-      rows.push({
-        price,
-        size,
-        side,
-        touch: touchAsk || touchBid,
-        touchAsk,
-        touchBid,
-        major: isMajorPrice(price, displayTick)
-      });
-    }
-  }
-  return {
-    rows,
-    maxSize
-  };
-}
-
 /**
  * @param {ReturnType<import("./tick-book.js").createTickBook>} book
  * @param {{
@@ -312,9 +347,7 @@ options =
     view,
     displayTick,
     scale,
-    dec,
-    bestAsk,
-    bestBid
+    dec
   );
 
   /* Empty window (hover freeze / leftover offset) — snap back to the book. */
@@ -346,9 +379,7 @@ options =
       view,
       displayTick,
       scale,
-      dec,
-      bestAsk,
-      bestBid
+      dec
     );
   }
 

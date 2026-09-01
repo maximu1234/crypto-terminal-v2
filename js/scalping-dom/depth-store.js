@@ -933,7 +933,8 @@ priceScale
 1
 );
 
-/* ~200 display-ticks at scale 1; grows with scale (cap 1500) — closer to densities/1000-depth. */
+/* ~200 display-ticks at scale 1; grows with scale (cap 1500) so x10 still
+ * covers a 1000-level Bybit book after compression. */
 return Math.min(
 1500,
 Math.max(

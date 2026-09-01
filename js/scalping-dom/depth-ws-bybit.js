@@ -1,10 +1,11 @@
 /**
  * Bybit public orderbook WS (plugin-local).
- * Topic: orderbook.200.{SYMBOL} — display depth; densities keep their own 1000.
+ * Topic: orderbook.1000.{SYMBOL} — full L2 for compressed densities (cScalp / Vataga).
+ * Snapshot/deltas stay in the depth worker; the UI paints only the visible slice.
  * URL comes from the host (main thread) so this module can run in a Worker.
  */
 export const BYBIT_DOM_DEPTH =
-200;
+1000;
 
 const DEPTH =
 BYBIT_DOM_DEPTH;
@@ -144,6 +145,39 @@ RECONNECT_MS
 function handleMessage(
 raw
 ){
+
+if(
+typeof Blob !==
+"undefined" &&
+raw instanceof
+Blob
+){
+raw.text().then(
+handleMessage
+).catch(
+()=>{}
+);
+return;
+}
+
+if(
+raw instanceof
+ArrayBuffer
+){
+handleMessage(
+new TextDecoder().decode(
+raw
+)
+);
+return;
+}
+
+if(
+typeof raw !==
+"string"
+){
+return;
+}
 
 let msg;
 
@@ -291,6 +325,8 @@ return;
 
 socket =
 ws;
+ws.binaryType =
+"arraybuffer";
 const openedAt =
 Date.now();
 

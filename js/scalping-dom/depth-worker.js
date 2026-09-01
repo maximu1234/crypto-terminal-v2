@@ -4,16 +4,16 @@
  */
 import {
 createTickBook
-} from "./tick-book.js?v=2";
+} from "./tick-book.js?v=3";
 
 import {
 buildVisibleSliceFromTickBook
-} from "./ladder-slice.js?v=4";
+} from "./ladder-slice.js?v=11";
 
 import {
 createBybitDepthWs,
 BYBIT_DOM_DEPTH
-} from "./depth-ws-bybit.js?v=4";
+} from "./depth-ws-bybit.js?v=6";
 
 import {
 createBingxDepthWs
@@ -82,7 +82,7 @@ function postFrame(slice){
     const row = rows[i];
     prices[i] = row.price;
     sizes[i] = row.size;
-    sides[i] = row.side === "ask" ? 1 : row.side === "bid" ? -1 : 0;
+    sides[i] = row.side === "ask" ? 1 : row.side === "bid" ? -1 : row.side === "spread" ? 2 : 0;
     flags[i] = (row.touch ? 1 : 0)
       | (row.major ? 2 : 0)
       | (row.touchAsk ? 4 : 0)
@@ -283,6 +283,9 @@ self.onmessage = (event) => {
       break;
 
     case "snapshot":
+      if(msg.onlyIfEmpty && book.isReady()){
+        break;
+      }
       book.applySnapshot(msg);
       sticky = null;
       scheduleFrame();

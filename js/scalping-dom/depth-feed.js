@@ -28,7 +28,7 @@ applyPositionOverlays,
 applySlTpHighlights,
 resolvePositionOverlays,
 resolveSlTpPrices
-} from "./position-overlay.js?v=6";
+} from "./position-overlay.js?v=14";
 
 import {
 applyAlertUnderlines,
@@ -54,7 +54,7 @@ getScalpingDomPriceScale
 
 import {
 BYBIT_DOM_DEPTH
-} from "./depth-ws-bybit.js?v=4";
+} from "./depth-ws-bybit.js?v=6";
 
 const REST_WAIT_MS =
 1800;
@@ -89,7 +89,7 @@ function decodeFrame(data){
     rows.push({
       price: prices[i],
       size: sizes[i],
-      side: sideBits > 0 ? "ask" : sideBits < 0 ? "bid" : "hole",
+      side: sideBits === 2 ? "spread" : sideBits > 0 ? "ask" : sideBits < 0 ? "bid" : "hole",
       touch: (flags[i] & 1) !== 0,
       touchAsk: (flags[i] & 4) !== 0,
       touchBid: (flags[i] & 8) !== 0,
@@ -247,6 +247,7 @@ export function createDepthFeed(handlers){
       }
       post({
         type: "snapshot",
+        onlyIfEmpty: reason === "boot" || reason === "wait",
         bids: snap?.bids,
         asks: snap?.asks
       });
@@ -321,6 +322,7 @@ export function createDepthFeed(handlers){
       symbol: sym,
       ...workerConfig()
     });
+    void restSnapshot("boot");
     armRestWait();
   }
 

@@ -5,11 +5,13 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 
 import {
-createLiveBook
+createLiveBook,
+inferTickFromLevels
 } from "../js/scalping-dom/live-book.js";
 
 import {
-buildVisibleSliceFromTickBook
+buildVisibleSliceFromTickBook,
+compressedBboPaintMode
 } from "../js/scalping-dom/ladder-slice.js";
 
 import {
@@ -27,7 +29,8 @@ applyTriggerUnderlines
 } from "../js/scalping-dom/trigger-order-overlay.js";
 
 import {
-applySlTpHighlights
+applySlTpHighlights,
+applyPositionOverlays
 } from "../js/scalping-dom/position-overlay.js";
 
 import {
@@ -217,6 +220,59 @@ test("buildLadderFromBook fills continuous ask/bid rows around mid", () => {
   assert.ok(ladder.bestBid === 100 || ladder.bestBid < 101);
 });
 
+test("tick-book snaps BTC numeric REST prices to 0.1 so the first ladder is dense", () => {
+  const asks = [];
+  const bids = [];
+  for(let i = 0; i < 30; i++){
+    asks.push({
+      price: 77459.1 + i * 0.1 + 1e-11,
+      size: 1
+    });
+    bids.push({
+      price: 77458.9 - i * 0.1 - 1e-12,
+      size: 1
+    });
+  }
+  assert.equal(inferTickFromLevels(asks.concat(bids)), 0.1);
+
+  const book = createLiveBook();
+  book.applySnapshot({ bids, asks });
+  assert.equal(book.getNativeTick(), 0.1);
+
+  const slice = buildVisibleSliceFromTickBook(book, {
+    priceScale: 1,
+    viewRows: 24,
+    viewOffset: 0,
+    autocenterPct: 85
+  });
+  const filled = slice.rows.filter((row) => row.size > 0).length;
+  assert.ok(
+    filled >= 20,
+    `first BTC book must be dense at 0.1, got ${filled}/${slice.rows.length}`
+  );
+});
+
+test("unpinned snapshot re-infers tick so a later WS book can fix REST float noise", () => {
+  const book = createLiveBook();
+  const noisyAsks = [];
+  const noisyBids = [];
+  for(let i = 0; i < 8; i++){
+    noisyAsks.push({ price: 77459.1 + i * 0.1 + 1e-11, size: 1 });
+    noisyBids.push({ price: 77458.9 - i * 0.1 - 1e-12, size: 1 });
+  }
+  book.applySnapshot({ bids: noisyBids, asks: noisyAsks });
+  assert.equal(book.getNativeTick(), 0.1);
+
+  const asks = [];
+  const bids = [];
+  for(let i = 0; i < 20; i++){
+    asks.push([String((77459.1 + i * 0.1).toFixed(1)), "1"]);
+    bids.push([String((77458.9 - i * 0.1).toFixed(1)), "1"]);
+  }
+  book.applySnapshot({ b: bids, a: asks });
+  assert.equal(book.getNativeTick(), 0.1);
+});
+
 test("BTC float noise snaps tick to 0.1 and formats clean prices", () => {
   const asks = [];
   const bids = [];
@@ -333,8 +389,26 @@ test("depth-feed does not poll REST on an interval", () => {
   assert.doesNotMatch(source, /REST_RESYNC_MS|20000/);
   assert.match(source, /1800/);
   assert.match(source, /needResync/);
+  assert.match(source, /restSnapshot\("boot"\)/);
+  assert.match(source, /onlyIfEmpty/);
   assert.match(source, /drawing-overlay/);
   assert.match(source, /drawings-updated/);
+});
+
+test("empty-book deltas do not REST-overwrite a live WS snapshot", () => {
+  const worker = fs.readFileSync(
+    new URL("../js/scalping-dom/depth-worker.js", import.meta.url),
+    "utf8"
+  );
+  const emptyGuard = worker.split("if(!book.isReady())")[1]?.split("const result")[0] || "";
+  assert.match(emptyGuard, /return;/);
+  assert.doesNotMatch(emptyGuard, /needResync/);
+  assert.match(worker, /result === "resync"/);
+  const feed = fs.readFileSync(
+    new URL("../js/scalping-dom/depth-feed.js", import.meta.url),
+    "utf8"
+  );
+  assert.match(feed, /onlyIfEmpty: reason === "boot" \|\| reason === "wait"/);
 });
 
 test("hline and hray underlines keep drawing color on the row above price", () => {
@@ -449,6 +523,524 @@ test("empty visible window recenters onto the book even while hovered", () => {
   assert.ok(slice.rows.some((row) => row.size > 0 && row.side !== "hole"));
   const midRow = slice.rows[Math.floor(slice.rows.length / 2)];
   assert.ok(Math.abs(midRow.price - slice.mid) <= 1);
+});
+
+test("Bybit DOM subscribes to orderbook.1000, not a shallow 200 book", () => {
+  const source = fs.readFileSync(
+    new URL("../js/scalping-dom/depth-ws-bybit.js", import.meta.url),
+    "utf8"
+  );
+  assert.match(source, /BYBIT_DOM_DEPTH =\s*\n1000/);
+  assert.match(source, /orderbook\.\$\{DEPTH\}\.\$\{symbol\}/);
+  assert.match(source, /binaryType/);
+  assert.match(source, /ArrayBuffer/);
+  assert.doesNotMatch(source, /BYBIT_DOM_DEPTH =\s*\n200/);
+});
+
+test("x10 compression of a 1000-level book fills the viewport with bid/ask", () => {
+  const book = createLiveBook();
+  book.setNativeTick(1);
+  fillBookAround(book, 5000, 1000);
+
+  const deep = buildVisibleSliceFromTickBook(book, {
+    priceScale: 10,
+    viewRows: 80,
+    viewOffset: 0,
+    autocenterPct: 85
+  });
+  const deepFilled = deep.rows.filter((row) => row.size > 0).length;
+  assert.ok(deep.rows.length >= 70, "viewport still paints visible rows only");
+  assert.ok(
+    deepFilled >= 70,
+    `1000-level x10 should fill the ladder, got ${deepFilled}/${deep.rows.length}`
+  );
+
+  const shallow = createLiveBook();
+  shallow.setNativeTick(1);
+  fillBookAround(shallow, 5000, 200);
+  const thin = buildVisibleSliceFromTickBook(shallow, {
+    priceScale: 10,
+    viewRows: 80,
+    viewOffset: 0,
+    autocenterPct: 85
+  });
+  const thinFilled = thin.rows.filter((row) => row.size > 0).length;
+  assert.ok(
+    deepFilled > thinFilled,
+    `deep book must outrange 200-level x10 (${deepFilled} vs ${thinFilled})`
+  );
+});
+
+test("empty ticks without orders stay holes; the gap between BBO is the spread", () => {
+  const book = createLiveBook();
+  book.setNativeTick(1);
+  book.applySnapshot({
+    bids: [
+      ["100", "2"],
+      ["98", "1"]
+    ],
+    asks: [
+      ["110", "3"],
+      ["112", "1"]
+    ]
+  });
+
+  const slice = buildVisibleSliceFromTickBook(book, {
+    priceScale: 1,
+    viewRows: 30,
+    viewOffset: 0,
+    autocenterPct: 85
+  });
+
+  const byPrice = Object.fromEntries(
+    slice.rows.map((row) => [row.price, row])
+  );
+  assert.equal(byPrice[110]?.side, "ask");
+  assert.equal(byPrice[110]?.touchAsk, true);
+  assert.equal(byPrice[111]?.side, "hole");
+  assert.equal(byPrice[111]?.size, 0);
+  assert.equal(byPrice[100]?.side, "bid");
+  assert.equal(byPrice[100]?.touchBid, true);
+  assert.equal(byPrice[99]?.side, "hole");
+  assert.equal(byPrice[99]?.size, 0);
+  assert.equal(byPrice[105]?.side, "hole");
+  assert.equal(byPrice[105]?.size, 0);
+});
+
+test("round display prices stay major at the active scale", () => {
+  const book = createLiveBook();
+  book.setNativeTick(1);
+  book.applySnapshot({
+    bids: [
+      ["94", "2"],
+      ["93", "1"],
+      ["90", "4"]
+    ],
+    asks: [
+      ["106", "3"],
+      ["107", "1"],
+      ["110", "5"]
+    ]
+  });
+
+  const slice = buildVisibleSliceFromTickBook(book, {
+    priceScale: 10,
+    viewRows: 24,
+    viewOffset: 0,
+    autocenterPct: 85
+  });
+
+  const round110 = slice.rows.find((row) => row.price === 110);
+  const round100 = slice.rows.find((row) => row.price === 100);
+  const round90 = slice.rows.find((row) => row.price === 90);
+  assert.equal(round110?.major, false);
+  assert.equal(round100?.major, true);
+  assert.equal(round90?.major, false);
+  const askRow = slice.rows.find((row) => row.touchAsk);
+  const bidRow = slice.rows.find((row) => row.touchBid);
+  assert.ok(askRow, "compressed best ask");
+  assert.ok(bidRow, "compressed best bid");
+  assert.equal(askRow.price, 100);
+  assert.equal(bidRow.price, 90);
+});
+
+test("x10 last ask and last bid stay adjacent with no hole", () => {
+  const book = createLiveBook();
+  book.setNativeTick(1);
+  book.applySnapshot({
+    bids: [
+      ["94", "2"],
+      ["93", "1"]
+    ],
+    asks: [
+      ["106", "3"],
+      ["107", "1"]
+    ]
+  });
+
+  const slice = buildVisibleSliceFromTickBook(book, {
+    priceScale: 10,
+    viewRows: 24,
+    viewOffset: 0,
+    autocenterPct: 85
+  });
+
+  const askI = slice.rows.findIndex((row) => row.touchAsk);
+  const bidI = slice.rows.findIndex((row) => row.touchBid);
+  assert.ok(askI >= 0, "compressed last ask");
+  assert.ok(bidI >= 0, "compressed last bid");
+  assert.equal(slice.rows[askI].side, "ask");
+  assert.equal(slice.rows[bidI].side, "bid");
+  assert.equal(bidI, askI + 1, "no empty row between last ask and last bid");
+  assert.equal(
+    slice.rows.slice(askI + 1, bidI).some((row) => row.side === "spread" || row.side === "hole"),
+    false
+  );
+});
+
+test("x10 last ask and last bid share one compressed row when the native spread is inside one bucket", () => {
+  const book = createLiveBook();
+  book.setNativeTick(1);
+  book.applySnapshot({
+    bids: [
+      ["101", "2"]
+    ],
+    asks: [
+      ["102", "3"]
+    ]
+  });
+
+  const slice = buildVisibleSliceFromTickBook(book, {
+    priceScale: 10,
+    viewRows: 24,
+    viewOffset: 0,
+    autocenterPct: 85
+  });
+
+  const askI = slice.rows.findIndex((row) => row.touchAsk);
+  const bidI = slice.rows.findIndex((row) => row.touchBid);
+  assert.equal(askI, bidI);
+  assert.equal(slice.rows[askI].touchAsk, true);
+  assert.equal(slice.rows[bidI].touchBid, true);
+  assert.ok(!slice.rows.some((row) => row.side === "spread"));
+});
+
+test("dense x10 book never paints a sized hole between last ask and last bid", () => {
+  const book = createLiveBook();
+  book.setNativeTick(1);
+  const bids = [];
+  const asks = [];
+  for(let i = 0; i < 80; i++){
+    asks.push([String(101 + i), "10"]);
+    bids.push([String(100 - i), "10"]);
+  }
+  book.applySnapshot({ bids, asks });
+
+  const slice = buildVisibleSliceFromTickBook(book, {
+    priceScale: 10,
+    viewRows: 40,
+    viewOffset: 0,
+    autocenterPct: 85
+  });
+
+  const askI = slice.rows.findIndex((row) => row.touchAsk);
+  const bidI = slice.rows.findIndex((row) => row.touchBid);
+  assert.ok(askI >= 0);
+  assert.ok(bidI >= 0);
+  assert.ok(
+    bidI === askI || bidI === askI + 1,
+    "compressed BBO is one row or two adjacent rows"
+  );
+  for(const row of slice.rows){
+    if(row.size > 0){
+      assert.notEqual(row.side, "hole", `sized row ${row.price} must not be a hole`);
+    }
+  }
+});
+
+test("x10 ETH-like last ask 2449.75 is full red and last bid 2449.50 is full green", () => {
+  const book = createLiveBook();
+  book.setNativeTick(0.025);
+  book.applySnapshot({
+    bids: [
+      ["2449.50", "200"],
+      ["2449.25", "80"]
+    ],
+    asks: [
+      ["2449.75", "40"],
+      ["2450.00", "20"],
+      ["2449.70", "1"]
+    ]
+  });
+
+  const slice = buildVisibleSliceFromTickBook(book, {
+    priceScale: 10,
+    viewRows: 24,
+    viewOffset: 0,
+    autocenterPct: 85
+  });
+
+  const askRow = slice.rows.find((row) => row.touchAsk);
+  const bidRow = slice.rows.find((row) => row.touchBid);
+  assert.equal(askRow?.price, 2449.75);
+  assert.equal(bidRow?.price, 2449.5);
+  assert.notEqual(askRow, bidRow);
+  assert.equal(compressedBboPaintMode(askRow), "ask");
+  assert.equal(compressedBboPaintMode(bidRow), "bid");
+});
+
+test("leftover ask size inside the last bid row does not split that row", () => {
+  const book = createLiveBook();
+  book.setNativeTick(1);
+  book.applySnapshot({
+    bids: [
+      ["94", "20"],
+      ["93", "1"]
+    ],
+    asks: [
+      ["106", "3"],
+      ["107", "1"],
+      ["99", "1"]
+    ]
+  });
+
+  const slice = buildVisibleSliceFromTickBook(book, {
+    priceScale: 10,
+    viewRows: 24,
+    viewOffset: 0,
+    autocenterPct: 85
+  });
+
+  const askI = slice.rows.findIndex((row) => row.touchAsk);
+  const bidI = slice.rows.findIndex((row) => row.touchBid);
+  const askRow = slice.rows[askI];
+  const bidRow = slice.rows[bidI];
+  assert.equal(askRow.price, 100);
+  assert.equal(bidRow.price, 90);
+  assert.equal(bidI, askI + 1);
+  assert.equal(askRow.touchBid, false);
+  assert.equal(bidRow.touchAsk, false);
+  assert.equal(compressedBboPaintMode(askRow), "ask");
+  assert.equal(compressedBboPaintMode(bidRow), "bid");
+});
+
+test("collapsed last ask/bid still paints as split when a position fill covers the row", () => {
+  assert.equal(
+    compressedBboPaintMode({
+      side: "ask",
+      size: 201000,
+      touch: true,
+      touchAsk: true,
+      touchBid: true,
+      positionFill: "loss"
+    }),
+    "split"
+  );
+  assert.equal(
+    compressedBboPaintMode({
+      side: "ask",
+      touchAsk: true,
+      touchBid: false,
+      positionFill: "loss"
+    }),
+    "ask"
+  );
+  assert.equal(
+    compressedBboPaintMode({
+      side: "bid",
+      touchAsk: false,
+      touchBid: true,
+      positionFill: "profit"
+    }),
+    "bid"
+  );
+
+  const book = createLiveBook();
+  book.setNativeTick(1);
+  book.applySnapshot({
+    bids: [["101", "2"]],
+    asks: [["102", "3"]]
+  });
+  const slice = buildVisibleSliceFromTickBook(book, {
+    priceScale: 10,
+    viewRows: 24,
+    viewOffset: 0,
+    autocenterPct: 85
+  });
+  const bbo = slice.rows.find((row) => row.touchAsk && row.touchBid);
+  assert.ok(bbo, "native spread inside one x10 bucket");
+  const withPos = applyPositionOverlays(slice, [
+    { entry: 90, current: 110, tone: "loss", long: false }
+  ]);
+  const filled = withPos.rows.find((row) => row.price === bbo.price);
+  assert.equal(filled.positionFill, "loss");
+  assert.equal(filled.size > 0, true);
+  assert.equal(compressedBboPaintMode(filled), "split");
+});
+
+test("compressed position fill stops at last ask, not the ask row above it", () => {
+  const book = createLiveBook();
+  book.setNativeTick(0.1);
+  const bids = [];
+  const asks = [];
+  for(let i = 0; i < 40; i++){
+    asks.push([String((77925 + i * 0.1).toFixed(1)), "1"]);
+    bids.push([String((77924.9 - i * 0.1).toFixed(1)), "1"]);
+  }
+  book.applySnapshot({ bids, asks });
+
+  const slice = buildVisibleSliceFromTickBook(book, {
+    priceScale: 25,
+    viewRows: 40,
+    viewOffset: 0,
+    autocenterPct: 85
+  });
+  const lastAsk = slice.rows.find((row) => row.touchAsk);
+  const lastBid = slice.rows.find((row) => row.touchBid);
+  assert.equal(lastAsk?.price, 77925);
+  assert.equal(lastBid?.price, 77922.5);
+
+  const withPos = applyPositionOverlays(slice, [
+    { entry: 77900, current: book.bestAsk(), tone: "loss", long: false }
+  ]);
+  const askAbove = withPos.rows.find((row) => row.price === 77927.5);
+  const askRow = withPos.rows.find((row) => row.price === lastAsk.price);
+  assert.equal(askRow?.positionFill, "loss");
+  assert.equal(askAbove?.positionFill ?? null, null);
+});
+
+test("long fill live edge is the last bid row, not the last ask", () => {
+  const book = createLiveBook();
+  book.setNativeTick(0.1);
+  const bids = [];
+  const asks = [];
+  for(let i = 0; i < 40; i++){
+    asks.push([String((77925 + i * 0.1).toFixed(1)), "1"]);
+    bids.push([String((77924.9 - i * 0.1).toFixed(1)), "1"]);
+  }
+  book.applySnapshot({ bids, asks });
+
+  const slice = buildVisibleSliceFromTickBook(book, {
+    priceScale: 25,
+    viewRows: 40,
+    viewOffset: 0,
+    autocenterPct: 85
+  });
+  const lastAsk = slice.rows.find((row) => row.touchAsk);
+  const lastBid = slice.rows.find((row) => row.touchBid);
+  const withPos = applyPositionOverlays(slice, [
+    { entry: 77900, current: book.bestBid(), tone: "profit", long: true }
+  ]);
+  assert.equal(
+    withPos.rows.find((row) => row.price === lastBid.price)?.positionFill,
+    "profit"
+  );
+  assert.equal(
+    withPos.rows.find((row) => row.price === lastAsk.price)?.positionFill ?? null,
+    null
+  );
+  assert.equal(
+    withPos.rows.find((row) => row.price === 77927.5)?.positionFill ?? null,
+    null
+  );
+});
+
+test("losing short fills from entry through last bid up to last ask", () => {
+  const book = createLiveBook();
+  book.setNativeTick(0.1);
+  const bids = [];
+  const asks = [];
+  for(let i = 0; i < 40; i++){
+    asks.push([String((77925 + i * 0.1).toFixed(1)), "1"]);
+    bids.push([String((77924.9 - i * 0.1).toFixed(1)), "1"]);
+  }
+  book.applySnapshot({ bids, asks });
+
+  const slice = buildVisibleSliceFromTickBook(book, {
+    priceScale: 25,
+    viewRows: 40,
+    viewOffset: 0,
+    autocenterPct: 85
+  });
+  const lastAsk = slice.rows.find((row) => row.touchAsk);
+  const lastBid = slice.rows.find((row) => row.touchBid);
+  const withPos = applyPositionOverlays(slice, [
+    { entry: 77880, current: book.bestAsk(), tone: "loss", long: false }
+  ]);
+  assert.equal(
+    withPos.rows.find((row) => row.price === lastAsk.price)?.positionFill,
+    "loss"
+  );
+  assert.equal(
+    withPos.rows.find((row) => row.price === lastBid.price)?.positionFill,
+    "loss"
+  );
+  assert.equal(
+    withPos.rows.find((row) => row.price === 77880)?.positionFill,
+    "loss"
+  );
+  assert.equal(withPos.positionExit, "ask");
+});
+
+test("profitable short fills ask rows from last ask up to entry", () => {
+  const book = createLiveBook();
+  book.setNativeTick(0.1);
+  const bids = [];
+  const asks = [];
+  for(let i = 0; i < 40; i++){
+    asks.push([String((77925 + i * 0.1).toFixed(1)), "1"]);
+    bids.push([String((77924.9 - i * 0.1).toFixed(1)), "1"]);
+  }
+  book.applySnapshot({ bids, asks });
+
+  const slice = buildVisibleSliceFromTickBook(book, {
+    priceScale: 25,
+    viewRows: 40,
+    viewOffset: 0,
+    autocenterPct: 85
+  });
+  const lastAsk = slice.rows.find((row) => row.touchAsk);
+  const lastBid = slice.rows.find((row) => row.touchBid);
+  const withPos = applyPositionOverlays(slice, [
+    { entry: 77940, current: book.bestAsk(), tone: "profit", long: false }
+  ]);
+  assert.equal(
+    withPos.rows.find((row) => row.price === lastAsk.price)?.positionFill,
+    "profit"
+  );
+  assert.equal(
+    withPos.rows.find((row) => row.price === 77927.5)?.positionFill,
+    "profit"
+  );
+  assert.equal(
+    withPos.rows.find((row) => row.price === 77940)?.positionFill,
+    "profit"
+  );
+  assert.equal(
+    withPos.rows.find((row) => row.price === lastBid.price)?.positionFill ?? null,
+    null
+  );
+});
+
+test("losing long fills ask rows from last bid up to the entry", () => {
+  const book = createLiveBook();
+  book.setNativeTick(0.1);
+  const bids = [];
+  const asks = [];
+  for(let i = 0; i < 40; i++){
+    asks.push([String((77925 + i * 0.1).toFixed(1)), "1"]);
+    bids.push([String((77924.9 - i * 0.1).toFixed(1)), "1"]);
+  }
+  book.applySnapshot({ bids, asks });
+
+  const slice = buildVisibleSliceFromTickBook(book, {
+    priceScale: 25,
+    viewRows: 40,
+    viewOffset: 0,
+    autocenterPct: 85
+  });
+  const lastAsk = slice.rows.find((row) => row.touchAsk);
+  const lastBid = slice.rows.find((row) => row.touchBid);
+  const withPos = applyPositionOverlays(slice, [
+    { entry: 77940, current: book.bestBid(), tone: "loss", long: true }
+  ]);
+  assert.equal(
+    withPos.rows.find((row) => row.price === lastBid.price)?.positionFill,
+    "loss"
+  );
+  assert.equal(
+    withPos.rows.find((row) => row.price === lastAsk.price)?.positionFill,
+    "loss"
+  );
+  assert.equal(
+    withPos.rows.find((row) => row.price === 77927.5)?.positionFill,
+    "loss"
+  );
+  assert.equal(
+    withPos.rows.find((row) => row.price === 77940)?.positionFill,
+    "loss"
+  );
+  assert.equal(withPos.positionExit, "bid");
 });
 
 test("best bid and ask stay touched when the ladder scale compresses", () => {

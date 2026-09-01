@@ -9,6 +9,10 @@ setScalpingDomPriceScale,
 setScalpingDomVolumeInput
 } from "./prefs.js?v=4";
 
+import {
+compressedBboPaintMode
+} from "./ladder-slice.js?v=11";
+
 const ROW_H =
 14;
 
@@ -95,41 +99,34 @@ function volumeBarPct(size, refMax){
   return Math.min(100, (size / refMax) * 100);
 }
 
-function lightenHex(hex, amount = 0.2){
-  const raw = String(hex || "").replace("#", "");
-  if(raw.length !== 6){
-    return hex;
-  }
-  const n = parseInt(raw, 16);
-  if(!Number.isFinite(n)){
-    return hex;
-  }
-  const mix = (c) => Math.round(c + (255 - c) * amount);
-  const r = mix((n >> 16) & 255);
-  const g = mix((n >> 8) & 255);
-  const b = mix(n & 255);
-  return "#" + [r, g, b].map((x) => x.toString(16).padStart(2, "0")).join("");
-}
-
 function rowSideBg(row){
-  let sideBg =
-    row.side === "ask"
-      ? (row.touch ? "#5d0e07" : "#5c1d1a")
-      : row.side === "bid"
-        ? (row.touch ? "#102f1e" : "#0d3d31")
-        : "";
-  if(sideBg && row.slTpHighlight){
-    sideBg = lightenHex(sideBg, 0.22);
-  }
-  return sideBg;
+  return row.side === "ask"
+    ? (row.touch ? "#b33228" : "#5c1d1a")
+    : row.side === "bid"
+      ? (row.touch ? "#1f8f5c" : "#0d3d31")
+      : "";
 }
 
 function rowPriceBg(row, sideBg){
+  if(row.touchAsk || row.touchBid || row.touch){
+    return sideBg;
+  }
   return row.positionFill === "profit"
-    ? (row.slTpHighlight ? lightenHex("#357a20", 0.18) : "#357a20")
+    ? "#357a20"
     : row.positionFill === "loss"
-      ? (row.slTpHighlight ? lightenHex("#b61e0c", 0.18) : "#b61e0c")
+      ? "#b61e0c"
       : sideBg;
+}
+
+function slTpWashColor(mark){
+  const kind = String(mark || "").slice(0, 2);
+  if(kind === "sl"){
+    return "rgba(185, 36, 28, 0.42)";
+  }
+  if(kind === "tp"){
+    return "rgba(34, 160, 90, 0.42)";
+  }
+  return "";
 }
 
 function resolveVolumeRefMax(rows, userMax){
@@ -195,20 +192,49 @@ function paintLadder(canvas, ladder){
     if(y >= cssH){
       break;
     }
-    const touchAsk = row.touchAsk === true || (row.touch && row.side === "ask" && row.touchBid !== true);
-    const touchBid = row.touchBid === true || (row.touch && row.side === "bid" && row.touchAsk !== true);
-    const splitTouch = touchAsk && touchBid;
-    const sideBg = splitTouch ? "" : rowSideBg({ ...row, touch: touchAsk || touchBid });
-    const priceBg = rowPriceBg(row, sideBg);
-    if(splitTouch && !row.positionFill){
-      const midY = y + ROW_H / 2;
-      ctx.fillStyle = "#5d0e07";
-      ctx.fillRect(0, y, cssW, midY - y);
-      ctx.fillStyle = "#102f1e";
-      ctx.fillRect(0, midY, cssW, y + ROW_H - midY);
+    const bbo = compressedBboPaintMode(row);
+    const ownExit = ladder.positionExit === "ask" || ladder.positionExit === "bid"
+      ? ladder.positionExit
+      : "";
+    if(bbo === "split"){
+      if(ownExit === "ask"){
+        ctx.fillStyle = "#b33228";
+        ctx.fillRect(0, y, cssW, ROW_H);
+      }else if(ownExit === "bid"){
+        ctx.fillStyle = "#1f8f5c";
+        ctx.fillRect(0, y, cssW, ROW_H);
+      }else{
+        const midY = y + ROW_H / 2;
+        ctx.fillStyle = "#b33228";
+        ctx.fillRect(0, y, cssW, midY - y);
+        ctx.fillStyle = "#1f8f5c";
+        ctx.fillRect(0, midY, cssW, y + ROW_H - midY);
+      }
+    }else if(bbo === "ask" || bbo === "bid"){
+      const opposite = ownExit && bbo !== ownExit;
+      if(opposite && row.positionFill){
+        const sideBg = bbo === "ask" ? "#b33228" : "#1f8f5c";
+        const priceBg = row.positionFill === "profit"
+          ? "#357a20"
+          : row.positionFill === "loss"
+            ? "#b61e0c"
+            : sideBg;
+        ctx.fillStyle = sideBg;
+        ctx.fillRect(0, y, sizeW, ROW_H);
+        ctx.fillStyle = priceBg;
+        ctx.fillRect(sizeW, y, cssW - sizeW, ROW_H);
+      }else{
+        ctx.fillStyle = bbo === "ask" ? "#b33228" : "#1f8f5c";
+        ctx.fillRect(0, y, cssW, ROW_H);
+      }
     }else{
+      const sideBg = rowSideBg(row);
+      const priceBg = rowPriceBg(row, sideBg);
       if(sideBg){
         ctx.fillStyle = sideBg;
+        ctx.fillRect(0, y, sizeW, ROW_H);
+      }else if(row.size > 0){
+        ctx.fillStyle = row.side === "bid" ? "#0d3d31" : "#5c1d1a";
         ctx.fillRect(0, y, sizeW, ROW_H);
       }
       if(priceBg){
@@ -223,6 +249,11 @@ function paintLadder(canvas, ladder){
       ctx.fillRect(0, y, sizeW * (barPct / 100), ROW_H);
       ctx.globalAlpha = 1;
     }
+    const wash = slTpWashColor(row.slTpMark);
+    if(wash){
+      ctx.fillStyle = wash;
+      ctx.fillRect(0, y, cssW, ROW_H);
+    }
     ctx.fillStyle = "#fff";
     ctx.font = font;
     ctx.textAlign = "left";
@@ -233,20 +264,6 @@ function paintLadder(canvas, ladder){
     ctx.font = row.major ? fontMajor : font;
     ctx.textAlign = "right";
     ctx.fillText(formatPrice(row.price, tick), cssW - 4, y + ROW_H / 2);
-
-    const mark = row.slTpMark || "";
-    if(mark === "sl-short" || mark === "tp-long"){
-      ctx.fillStyle = "#ef4444";
-      ctx.fillRect(0, y, cssW, 2);
-    }
-    if(mark === "sl-long"){
-      ctx.fillStyle = "#ef4444";
-      ctx.fillRect(0, y + ROW_H - 2, cssW, 2);
-    }
-    if(mark === "tp-short"){
-      ctx.fillStyle = "#22c55e";
-      ctx.fillRect(0, y + ROW_H - 2, cssW, 2);
-    }
     if(row.triggerUnderline === "long" || row.triggerUnderline === "short"){
       ctx.fillStyle = row.triggerUnderline === "long" ? "#22c55e" : "#ef4444";
       const ty = row.alertUnderline ? y + ROW_H - 5 : y + ROW_H - 2;

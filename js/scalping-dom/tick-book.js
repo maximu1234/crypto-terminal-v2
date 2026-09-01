@@ -24,29 +24,74 @@ function toSizeRaw(raw){
 
 /**
  * Tick from exchange price strings ("64713.9" → 0.1). Fallback 0.
+ * Numeric REST prices use adjacent diffs + a 1/2/5 snap so BTC float
+ * noise does not collapse the ladder into 0.01 holes.
  * @param {unknown[]} levels
  */
 export function inferTickFromLevels(levels){
   if(!Array.isArray(levels)){
     return 0;
   }
-  let tick = 0;
+  const prices = [];
+  let fromDec = 0;
   for(const row of levels){
-    const key = String(toPrice(row) ?? "").trim();
-    if(!key){
-      continue;
-    }
-    const dot = key.indexOf(".");
-    const fromDec = dot < 0 ? 1 : 10 ** -(key.length - dot - 1);
-    const n = Number(key);
+    const raw = toPrice(row);
+    const n = Number(raw);
     if(!Number.isFinite(n) || n <= 0){
       continue;
     }
-    if(!tick || fromDec < tick){
-      tick = fromDec;
+    prices.push(n);
+    if(typeof raw === "string"){
+      const key = raw.trim();
+      const dot = key.indexOf(".");
+      const decimals = dot < 0 ? 0 : key.length - dot - 1;
+      if(decimals <= 8){
+        const step = decimals === 0 ? 1 : 10 ** -decimals;
+        if(!fromDec || step < fromDec){
+          fromDec = step;
+        }
+      }
     }
   }
-  return tick;
+  let adj = 0;
+  if(prices.length >= 2){
+    prices.sort((a, b) => a - b);
+    for(let i = 1; i < prices.length; i++){
+      const d = roundTick(prices[i] - prices[i - 1]);
+      if(d > 0 && (!adj || d < adj)){
+        adj = d;
+      }
+    }
+  }
+  return snapNiceTick(adj > 0 ? adj : fromDec);
+}
+
+function roundTick(value){
+  if(!Number.isFinite(value) || value <= 0){
+    return 0;
+  }
+  return Number(value.toPrecision(12));
+}
+
+function snapNiceTick(raw){
+  const cleaned = roundTick(raw);
+  if(!(cleaned > 0)){
+    return 0;
+  }
+  const exp = Math.floor(Math.log10(cleaned));
+  const mag = 10 ** exp;
+  const norm = cleaned / mag;
+  let nice = 1;
+  if(norm < 1.5){
+    nice = 1;
+  }else if(norm < 3.5){
+    nice = 2;
+  }else if(norm < 7.5){
+    nice = 5;
+  }else{
+    nice = 10;
+  }
+  return roundTick(nice * mag);
 }
 
 export function priceToTickIndex(price, nativeTick){
@@ -134,6 +179,7 @@ export function createTickBook(){
   /** @type {Map<number, number>} */
   const asks = new Map();
   let nativeTick = 0;
+  let tickPinned = false;
   let lastU = 0;
   let ready = false;
   /** @type {number | null} */
@@ -149,12 +195,14 @@ export function createTickBook(){
     bestBidIdx = null;
     bestAskIdx = null;
     nativeTick = 0;
+    tickPinned = false;
   }
 
   function setNativeTick(tick){
     const n = Number(tick);
     if(Number.isFinite(n) && n > 0){
       nativeTick = n;
+      tickPinned = true;
     }
   }
 
@@ -180,6 +228,9 @@ export function createTickBook(){
     asks.clear();
     bestBidIdx = null;
     bestAskIdx = null;
+    if(!tickPinned){
+      nativeTick = 0;
+    }
     ensureTick(data);
     bestBidIdx = applyLevels(bids, data?.b || data?.bids, nativeTick, null, true);
     bestAskIdx = applyLevels(asks, data?.a || data?.asks, nativeTick, null, false);

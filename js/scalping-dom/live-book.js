@@ -8,4 +8,4 @@ createTickBook,
 inferTickFromLevels,
 priceToTickIndex,
 tickIndexToPrice
-} from "./tick-book.js?v=2";
+} from "./tick-book.js?v=3";
