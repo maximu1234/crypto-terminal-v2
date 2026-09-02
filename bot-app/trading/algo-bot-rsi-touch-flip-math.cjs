@@ -305,7 +305,11 @@ function normalizeLivePrefs(raw) {
     allowLong: tradeSide !== SIDE_SHORT,
     allowShort: tradeSide !== SIDE_LONG,
     cycleSlEnabled: src.cycleSlEnabled === true,
-    cycleSlPct: clampNumber(src.cycleSlPct, 1, 90, 30)
+    cycleSlPct: clampNumber(src.cycleSlPct, 1, 90, 30),
+    marginMode:
+      String(src.marginMode || "").toLowerCase() === "isolated"
+        ? "isolated"
+        : "cross"
   };
 }
 
@@ -328,7 +332,8 @@ function livePrefsFingerprint(tf, prefs) {
     sizeMode: p.sizeMode,
     sizeMult: p.sizeMult,
     cycleSlEnabled: p.cycleSlEnabled === true,
-    cycleSlPct: p.cycleSlEnabled === true ? p.cycleSlPct : 0
+    cycleSlPct: p.cycleSlEnabled === true ? p.cycleSlPct : 0,
+    marginMode: p.marginMode
   });
 }
 

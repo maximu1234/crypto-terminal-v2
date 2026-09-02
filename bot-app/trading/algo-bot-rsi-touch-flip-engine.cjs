@@ -177,7 +177,8 @@ function isLeverageError(result) {
   );
 }
 
-async function openWithLeverageRetry(symbol, side, volumeUsdt) {
+async function openWithLeverageRetry(state, side, volumeUsdt) {
+  const symbol = state.symbol;
   let result = await algoRest.openPositionAtMarket(symbol, side, volumeUsdt);
   if (result?.ok !== false) {
     return result;
@@ -193,13 +194,37 @@ async function openWithLeverageRetry(symbol, side, volumeUsdt) {
 
   const applyResult = await algoRest.applySymbolPositionSettings(symbol, {
     leverage: settings.maxLeverage,
-    marginMode: settings.marginMode || "cross"
+    marginMode: wantedMarginMode(state)
   });
   if (applyResult?.ok === false) {
     return result;
   }
 
   return algoRest.openPositionAtMarket(symbol, side, volumeUsdt);
+}
+
+function wantedMarginMode(state) {
+  return String(state?.prefs?.marginMode || "").toLowerCase() === "isolated"
+    ? "isolated"
+    : "cross";
+}
+
+async function ensureTickerMarginMode(state) {
+  const wanted = wantedMarginMode(state);
+  const settings = await algoRest.getSymbolPositionSettings(state.symbol);
+  if (!settings?.ok) {
+    return settings;
+  }
+  if (settings.marginMode === wanted) {
+    return { ok: true };
+  }
+  if (state.position !== "flat" || state.mode === "wait-flat") {
+    return { ok: true, deferred: true };
+  }
+  return algoRest.applySymbolPositionSettings(state.symbol, {
+    leverage: settings.leverage,
+    marginMode: wanted
+  });
 }
 
 function chartRsiSeries(state) {
@@ -261,6 +286,17 @@ async function closeAll(state, reason, price) {
 async function openSlice(state, side, level, price, label) {
   const prefs = state.prefs;
   const startingFlat = state.stack === 0;
+  const margin = await ensureTickerMarginMode(state);
+  if (margin?.ok === false) {
+    pushSignal({
+      ts: Date.now(),
+      symbol: state.symbol,
+      side,
+      price,
+      text: `Пропуск ${label}: не выставил ${wantedMarginMode(state)} (${margin.message || "fail"})`
+    });
+    return false;
+  }
   const budget = sliceBudget(state);
   const volumeUsdt = notionalAt(level, {
     ...prefs,
@@ -278,7 +314,7 @@ async function openSlice(state, side, level, price, label) {
   }
 
   const result = await openWithLeverageRetry(
-    state.symbol,
+    state,
     side === "long" ? "Buy" : "Sell",
     volumeUsdt
   );
@@ -522,6 +558,11 @@ async function refreshWaitFlat() {
     state.entryBudget = null;
     state.slBlockLong = false;
     state.slBlockShort = false;
+    try {
+      await ensureTickerMarginMode(state);
+    } catch (err) {
+      log.warn("rsi touch flip margin after wait-flat:", err?.message || err);
+    }
     pushSignal({
       ts: Date.now(),
       symbol: state.symbol,
@@ -639,7 +680,7 @@ function sliceBudget(state) {
 
 function tickerNote(state) {
   const rsiTfLabel = usesSeparateRsiTf(state) ? rsiSourceTf(state) : "график";
-  return `${state.symbol} chart=${state.tf} rsiTf=${rsiTfLabel} RSI=${state.prefs.rsiLen} OS=${state.prefs.osLevel} OB=${state.prefs.obLevel} side=${state.prefs.tradeSide} stack=${state.prefs.maxStack} budget=${state.prefs.budget} ${state.mode}`;
+  return `${state.symbol} chart=${state.tf} rsiTf=${rsiTfLabel} RSI=${state.prefs.rsiLen} OS=${state.prefs.osLevel} OB=${state.prefs.obLevel} side=${state.prefs.tradeSide} stack=${state.prefs.maxStack} budget=${state.prefs.budget} margin=${wantedMarginMode(state)} ${state.mode}`;
 }
 
 function lastChartPrice(state) {
@@ -730,6 +771,13 @@ async function seedTicker(row) {
   state.seeded = true;
   tickers.set(state.symbol, state);
   subscribeStateKlines(state);
+  if (state.mode === "trade") {
+    try {
+      await ensureTickerMarginMode(state);
+    } catch (err) {
+      log.warn("rsi touch flip margin on seed:", err?.message || err);
+    }
+  }
   sessionLog.appendNote?.(tickerNote(state));
   return state;
 }
@@ -803,6 +851,14 @@ async function applyTickerUpdate(state, row) {
   if (needReseed) {
     await reseedSeries(state);
     subscribeStateKlines(state);
+  }
+
+  if (state.position === "flat" && state.mode === "trade") {
+    try {
+      await ensureTickerMarginMode(state);
+    } catch (err) {
+      log.warn("rsi touch flip margin on update:", err?.message || err);
+    }
   }
 
   sessionLog.appendNote?.(

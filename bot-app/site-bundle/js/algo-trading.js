@@ -12,7 +12,7 @@ applyRsiFixedPriceScale,
 appendFutureWhitespaceBars,
 computeChartFutureMarginBars,
 syncLinkedChartTimescales
-} from "./chart-import.js?v=48";
+} from "./chart-import.js?v=49";
 
 import {
 terminalVisibleBars,
@@ -108,12 +108,12 @@ mountAlgoPatternEntryOverlay
 
 import {
 mountRsiTouchFlipHost
-} from "./algo-trading/rsi-touch-flip-panel.js?v=24";
+} from "./algo-trading/rsi-touch-flip-panel.js?v=25";
 
 import {
 loadRsiTouchFlipPrefs,
 saveRsiTouchFlipPrefs
-} from "./algo-trading/rsi-touch-flip-prefs.js?v=6";
+} from "./algo-trading/rsi-touch-flip-prefs.js?v=7";
 
 import {
 clearAlgoPatternAnalysisUi,

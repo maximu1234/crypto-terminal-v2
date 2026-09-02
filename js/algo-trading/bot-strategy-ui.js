@@ -26,12 +26,12 @@ rsiTouchFlipEqualShareBudget,
 loadRsiTouchFlipBook,
 replaceRsiTouchFlipBook,
 RSI_TOUCH_FLIP_BOOK_CHANGE_EVENT
-} from "./rsi-touch-flip-book.js?v=4";
+} from "./rsi-touch-flip-book.js?v=5";
 import {
 loadRsiTouchFlipBalancePct,
 saveRsiTouchFlipBalancePct,
 normalizeRsiTouchFlipBalancePct
-} from "./rsi-touch-flip-prefs.js?v=6";
+} from "./rsi-touch-flip-prefs.js?v=7";
 import {
 getAlgoTradingWalletBalance
 } from "./runtime-bridge.js?v=6";

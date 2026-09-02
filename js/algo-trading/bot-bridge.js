@@ -33,11 +33,11 @@ writePublishedBotTickerBook
 } from "./bot-ticker-book.js?v=7";
 import {
 replaceRsiTouchFlipBook
-} from "./rsi-touch-flip-book.js?v=4";
+} from "./rsi-touch-flip-book.js?v=5";
 import {
 saveRsiTouchFlipBalancePct,
 loadRsiTouchFlipBalancePct
-} from "./rsi-touch-flip-prefs.js?v=6";
+} from "./rsi-touch-flip-prefs.js?v=7";
 
 import {
 isAlgoBotWorking

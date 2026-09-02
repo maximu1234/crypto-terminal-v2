@@ -139,6 +139,16 @@ test("params brief lists the launch fields", () => {
     cycleSlPct: 30
   });
   assert.match(withSl, /СЛ 30%/);
+  const isolated = formatRsiTouchFlipParamsBrief({
+    rsiLen: 14,
+    osLevel: 25,
+    obLevel: 75,
+    maxStack: 2,
+    rsiTf: "5",
+    tradeSide: "BOTH",
+    marginMode: "isolated"
+  });
+  assert.match(isolated, /isolated/);
 });
 
 test("optimize grid is every integer in RSI/OS/OB/stack ranges", () => {

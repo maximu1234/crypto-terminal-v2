@@ -28,6 +28,13 @@ test("book row keeps chart tf and launch prefs per ticker", () => {
   assert.equal(row.prefs.budget, 250);
   assert.equal(row.prefs.rsiTf, "1");
   assert.equal(row.prefs.cycleSlEnabled, false);
+  assert.equal(row.prefs.marginMode, "cross");
+  const isolated = normalizeRsiTouchFlipBookRow({
+    symbol: "BTCUSDT",
+    tf: "5",
+    prefs: { marginMode: "isolated" }
+  });
+  assert.equal(isolated.prefs.marginMode, "isolated");
 });
 
 test("duplicate symbols collapse to the last row", () => {

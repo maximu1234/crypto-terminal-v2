@@ -27,10 +27,10 @@ loadEarlyT3BotPrefs
 } from "./early-t3-bot-prefs.js?v=5";
 import {
 loadRsiTouchFlipBook
-} from "./rsi-touch-flip-book.js?v=4";
+} from "./rsi-touch-flip-book.js?v=5";
 import {
 loadRsiTouchFlipBalancePct
-} from "./rsi-touch-flip-prefs.js?v=6";
+} from "./rsi-touch-flip-prefs.js?v=7";
 
 const STORAGE_KEY =
 "algo_remote_session_logs_v1";

@@ -17,13 +17,13 @@ import {
   rsiTouchFlipTestVerdict,
   rsiTouchFlipTrainTestSplit,
   RSI_TOUCH_FLIP_DEFAULT_TRAIN_PCT
-} from "./rsi-touch-flip-walkforward.js?v=8";
+} from "./rsi-touch-flip-walkforward.js?v=9";
 import {
   saveRsiTouchFlipTickerPrefs
-} from "./rsi-touch-flip-prefs.js?v=6";
+} from "./rsi-touch-flip-prefs.js?v=7";
 import {
   getRsiTouchFlipBookRow
-} from "./rsi-touch-flip-book.js?v=4";
+} from "./rsi-touch-flip-book.js?v=5";
 
 const FIT_KEY = "algo_trading_rsi_touch_flip_fit_v1";
 

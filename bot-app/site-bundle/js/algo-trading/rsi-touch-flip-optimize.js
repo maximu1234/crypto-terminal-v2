@@ -7,12 +7,12 @@ import {
 } from "./rsi-touch-flip-engine.js?v=6";
 import {
   normalizeRsiTouchFlipPrefs
-} from "./rsi-touch-flip-prefs.js?v=6";
+} from "./rsi-touch-flip-prefs.js?v=7";
 import {
   rsiTouchFlipMinTestTrades,
   rsiTouchFlipTestVerdict,
   rsiTouchFlipTrainTestSplit
-} from "./rsi-touch-flip-walkforward.js?v=8";
+} from "./rsi-touch-flip-walkforward.js?v=9";
 
 export function rsiTouchFlipIntRange(from, to) {
   const start = Math.round(Number(from));

@@ -18,7 +18,7 @@ hydrateRsiTouchFlipPrefsForSymbol,
 saveRsiTouchFlipTickerPrefs,
 hasRsiTouchFlipTickerPrefs,
 loadRsiTouchFlipBalancePct
-} from "./rsi-touch-flip-prefs.js?v=6";
+} from "./rsi-touch-flip-prefs.js?v=7";
 import {
 RSI_TOUCH_FLIP_BOOK_CHANGE_EVENT,
 RSI_TOUCH_FLIP_BOOK_OPEN_EVENT,
@@ -27,7 +27,7 @@ loadRsiTouchFlipBook,
 rsiTouchFlipShareBudgetFits,
 upsertRsiTouchFlipBookRow,
 removeRsiTouchFlipBookRow
-} from "./rsi-touch-flip-book.js?v=4";
+} from "./rsi-touch-flip-book.js?v=5";
 import {
 getAlgoTradingWalletBalance
 } from "./runtime-bridge.js?v=6";
@@ -369,7 +369,13 @@ el(
 compoundEnabled:
 !!el(
 "algo-rsi-flip-compound"
+)?.checked,
+marginMode:
+el(
+"algo-rsi-flip-isolated"
 )?.checked
+? "isolated"
+: "cross"
 };
 
 }
@@ -505,6 +511,18 @@ compound
 compound.checked =
 prefs.compoundEnabled ===
 true;
+}
+const isolated =
+el(
+"algo-rsi-flip-isolated"
+);
+
+if(
+isolated
+){
+isolated.checked =
+prefs.marginMode ===
+"isolated";
 }
 applyingUi =
 false;
@@ -966,7 +984,8 @@ const fieldIds =
 "algo-rsi-flip-slippage",
 "algo-rsi-flip-cycle-sl",
 "algo-rsi-flip-cycle-sl-pct",
-"algo-rsi-flip-compound"
+"algo-rsi-flip-compound",
+"algo-rsi-flip-isolated"
 ];
 const rsiPaneFieldIds =
 [

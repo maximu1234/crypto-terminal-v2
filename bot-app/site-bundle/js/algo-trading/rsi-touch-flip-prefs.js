@@ -16,6 +16,12 @@ export const RSI_TOUCH_FLIP_SIZE_EQUAL =
 export const RSI_TOUCH_FLIP_SIZE_AVERAGE =
 "average";
 
+export const RSI_TOUCH_FLIP_MARGIN_CROSS =
+"cross";
+
+export const RSI_TOUCH_FLIP_MARGIN_ISOLATED =
+"isolated";
+
 export const RSI_TOUCH_FLIP_SIDE_BOTH =
 "BOTH";
 
@@ -206,6 +212,24 @@ return RSI_TOUCH_FLIP_SIZE_EQUAL;
 }
 
 /**
+ * @param {unknown} raw
+ * @returns {"cross"|"isolated"}
+ */
+export function normalizeRsiTouchFlipMarginMode(
+raw
+){
+
+return String(
+raw ||
+""
+).trim().toLowerCase() ===
+RSI_TOUCH_FLIP_MARGIN_ISOLATED
+? RSI_TOUCH_FLIP_MARGIN_ISOLATED
+: RSI_TOUCH_FLIP_MARGIN_CROSS;
+
+}
+
+/**
  * @returns {object}
  */
 export function defaultRsiTouchFlipPrefs(){
@@ -240,7 +264,9 @@ false,
 cycleSlPct:
 30,
 compoundEnabled:
-false
+false,
+marginMode:
+RSI_TOUCH_FLIP_MARGIN_CROSS
 };
 
 }
@@ -360,7 +386,11 @@ base.cycleSlPct
 ),
 compoundEnabled:
 src.compoundEnabled ===
-true
+true,
+marginMode:
+normalizeRsiTouchFlipMarginMode(
+src.marginMode
+)
 };
 
 }
@@ -684,7 +714,9 @@ p.sizeMult,
 cycleSlEnabled:
 p.cycleSlEnabled,
 cycleSlPct:
-p.cycleSlPct
+p.cycleSlPct,
+marginMode:
+p.marginMode
 };
 
 }
