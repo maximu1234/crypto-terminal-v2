@@ -19,11 +19,11 @@ appendFutureWhitespaceBars,
 computeChartFutureMarginBars,
 coinsTfVisibleBars,
 linkChartsCrosshair
-} from "./chart-import.js?v=49";
+} from "./chart-import.js?v=53";
 
 import {
 readCoinsPrefs
-} from "./terminal/terminal-prefs.js?v=22";
+} from "./terminal/terminal-prefs.js?v=25";
 
 import {
 calculateRSI,
@@ -41,7 +41,7 @@ subscribeTicker
 
 import {
 mountWidgetDomCrosshair
-} from "./chart-widget-host.js?v=20";
+} from "./chart-widget-host.js?v=21";
 
 function mergeLiveCandle(
 candles,

@@ -24,7 +24,7 @@ getActiveTradeVolumeUsdt
 
 import {
 marketMap
-} from "./terminal/terminal-state.js?v=12";
+} from "./terminal/terminal-state.js?v=13";
 
 import {
 getLoadedTradeExchangeModules

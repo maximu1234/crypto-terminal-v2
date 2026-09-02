@@ -93,6 +93,121 @@ body.terminal-page .coins-tf-desktop .tf-btn:focus{
 outline:none;
 }
 
+body.terminal-page .coins-chart-type-desktop{
+display:flex;
+align-items:center;
+gap:2px;
+flex:0 0 auto;
+position:relative;
+padding:0 8px;
+margin:0;
+border-right:var(--coins-block-separator);
+}
+
+body.terminal-page .chart-type-btn,
+body.terminal-page .chart-type-settings-btn{
+box-sizing:border-box;
+display:inline-flex;
+align-items:center;
+justify-content:center;
+width:36px;
+height:40px;
+padding:0;
+margin:0;
+border:none;
+border-radius:4px;
+background:transparent;
+color:#d1d4dc;
+cursor:pointer;
+flex-shrink:0;
+-webkit-tap-highlight-color:transparent;
+}
+
+body.terminal-page .chart-type-settings-btn{
+width:22px;
+}
+
+body.terminal-page .chart-type-btn:hover,
+body.terminal-page .chart-type-settings-btn:hover{
+background:rgba(255,255,255,0.06);
+color:#f0f3fa;
+}
+
+body.terminal-page .chart-type-btn.active{
+background:#363a45;
+color:#fff;
+}
+
+body.terminal-page .chart-type-btn:focus,
+body.terminal-page .chart-type-settings-btn:focus{
+outline:none;
+}
+
+body.terminal-page .chart-type-settings-btn[hidden]{
+display:none !important;
+}
+
+body.terminal-page .chart-type-line-popover{
+position:absolute;
+top:calc(100% + 6px);
+left:8px;
+z-index:10021;
+min-width:260px;
+padding:12px;
+border:1px solid #2a2e39;
+border-radius:6px;
+background:#1e222d;
+box-shadow:0 8px 24px rgba(0,0,0,0.45);
+}
+
+body.terminal-page .chart-type-line-popover.hidden{
+display:none;
+}
+
+body.terminal-page .chart-type-line-row{
+display:flex;
+align-items:center;
+gap:8px;
+min-height:28px;
+}
+
+body.terminal-page .chart-type-line-row + .chart-type-line-row{
+margin-top:8px;
+}
+
+body.terminal-page .chart-type-line-label{
+flex:0 0 108px;
+font-size:13px;
+color:#d1d4dc;
+}
+
+body.terminal-page .chart-type-line-select{
+flex:1 1 auto;
+min-width:0;
+height:28px;
+padding:0 8px;
+border:1px solid #363a45;
+border-radius:4px;
+background:#131722;
+color:#d1d4dc;
+font-size:13px;
+}
+
+body.terminal-page .chart-type-line-select--width{
+flex:0 0 52px;
+}
+
+body.terminal-page .chart-type-line-color{
+flex:0 0 36px;
+width:36px;
+height:28px;
+padding:0;
+border:1px solid #363a45;
+border-radius:4px;
+background:#131722;
+cursor:pointer;
+}
+
 body.terminal-page #topbar.coins-topbar{
 height:40px;
 padding:0 16px;

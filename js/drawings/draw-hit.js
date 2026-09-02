@@ -20,7 +20,7 @@ fibPriceAtRatio,
 getFibRows,
 isSeriesLogarithmic,
 fibLevelXSpan
-} from "./fib-spec.js?v=13";
+} from "./fib-spec.js?v=15";
 
 import {
 FIB_HIT_X_PAD_PX,

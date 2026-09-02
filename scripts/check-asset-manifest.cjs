@@ -236,6 +236,72 @@ const versionRe =
 /([a-zA-Z0-9_./-]+\.(?:js|css))\?v=(\d+)/g;
 let mismatches =
 0;
+let missingFiles =
+0;
+
+function resolveAssetFile(
+key
+){
+
+const jsPath =
+path.join(
+ROOT,
+"js",
+key
+);
+
+if(
+fs.existsSync(
+jsPath
+) &&
+fs.lstatSync(
+jsPath
+).isFile()
+){
+return jsPath;
+}
+
+const cssPath =
+path.join(
+ROOT,
+"css",
+key
+);
+
+if(
+fs.existsSync(
+cssPath
+) &&
+fs.lstatSync(
+cssPath
+).isFile()
+){
+return cssPath;
+}
+
+return null;
+
+}
+
+for(
+const key of
+Object.keys(
+assets
+)
+){
+
+if(
+!resolveAssetFile(
+key
+)
+){
+console.error(
+`manifest missing file: ${key}`
+);
+missingFiles++;
+}
+
+}
 
 for(
 const file of
@@ -307,10 +373,11 @@ mismatches++;
 }
 
 if(
-mismatches
+mismatches ||
+missingFiles
 ){
 console.error(
-`\n${mismatches} mismatch(es). Run: node scripts/sync-asset-versions.cjs`
+`\n${mismatches} mismatch(es), ${missingFiles} missing file(s). Run: node scripts/sync-asset-versions.cjs`
 );
 process.exit(
 1

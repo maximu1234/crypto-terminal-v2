@@ -6,14 +6,14 @@
 export {
 coinsState,
 coinElements
-} from "../terminal/terminal-state.js?v=12";
+} from "../terminal/terminal-state.js?v=13";
 
 export {
 applyCoinsPrefs,
 persistCoinsPrefs,
 applySortForCurrentMarket,
 readCoinsPrefs
-} from "../terminal/terminal-prefs.js?v=22";
+} from "../terminal/terminal-prefs.js?v=25";
 
 export {
 generateMarketData,

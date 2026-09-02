@@ -4,7 +4,7 @@
  */
 import {
 isCoarseTouchViewport
-} from "../chart-import.js?v=49";
+} from "../chart-import.js?v=53";
 
 import {
 DRAW_HANDLE_HIT_THRESHOLD_DESKTOP,
@@ -27,11 +27,11 @@ isFvpType
 import {
 isPositionType,
 positionEntryPrice
-} from "./position.js?v=9";
+} from "./position.js?v=10";
 
 import {
 ensureFibAnchorMinSpan
-} from "./fib-spec.js?v=13";
+} from "./fib-spec.js?v=15";
 
 import {
 touchShapeRevision

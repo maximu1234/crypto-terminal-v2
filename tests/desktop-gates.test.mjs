@@ -189,9 +189,19 @@ test("Vercel redirects diary index HTML to screener", () => {
   assert.doesNotMatch(diaryHtml, /href="\/script\.html"/);
 });
 
-test("asset-manifest check skips bot-app", () => {
+test("asset-manifest check skips bot-app and requires files to exist", () => {
   const source = read("scripts/check-asset-manifest.cjs");
   assert.match(source, /"bot-app"/);
+  assert.match(source, /manifest missing file/);
+});
+
+test("watchlist widget HTML escapes the symbol", () => {
+  const source = read("js/watchlist.js");
+  assert.match(source, /function escapeHtml\(/);
+  assert.match(
+    source,
+    /screener-symbol">\$\{escapeHtml\(\s*fixedSymbol\s*\)\}/
+  );
 });
 
 test("tray, launch-agent and script-favorites IPC is gated", () => {

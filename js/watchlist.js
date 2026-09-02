@@ -34,7 +34,7 @@ createRSIChart,
 updateRsiBandLayout,
 updateRsiLevelLinesLayout,
 linkPairedChartTimeScales
-} from "./chart-import.js?v=49";
+} from "./chart-import.js?v=53";
 
 import {
 calculateRSI,
@@ -44,7 +44,7 @@ alignRsiWithCandleTimes
 import {
 createDashboardChartWidget,
 mountDashboardChartInteractions
-} from "./chart-widget-host.js?v=20";
+} from "./chart-widget-host.js?v=21";
 
 import {
 mountWidgetTabletChart
@@ -85,6 +85,29 @@ wireWidgetFlagUi,
 updateWidgetFlagUi,
 bindWidgetFlagGlobalListeners
 } from "./widget-favorite-flag.js?v=7";
+
+function escapeHtml(
+value
+){
+
+return String(
+value ??
+""
+).replace(
+/&/g,
+"&amp;"
+).replace(
+/</g,
+"&lt;"
+).replace(
+/>/g,
+"&gt;"
+).replace(
+/"/g,
+"&quot;"
+);
+
+}
 
 const dashboard =
 document.getElementById("dashboard");
@@ -637,7 +660,7 @@ ${getWidgetFlagHtml()}
 
 <div class="left-controls">
 
-<span class="widget-symbol screener-symbol">${fixedSymbol}</span>
+<span class="widget-symbol screener-symbol">${escapeHtml(fixedSymbol)}</span>
 
 <select class="tf-select">
 <option value="1" ${startTf==="1"?"selected":""}>1m</option>

@@ -4,7 +4,7 @@
  */
 import {
 coinsState
-} from "../terminal/terminal-state.js?v=12";
+} from "../terminal/terminal-state.js?v=13";
 import {
 setExtraCoinMarkets,
 setCoinsTableHooks,

@@ -2,7 +2,7 @@ import {
 coinsState,
 marketMap,
 coinElements
-} from "./terminal-state.js?v=12";
+} from "./terminal-state.js?v=13";
 
 import {
 isActiveRealtimeMarketDataset,
@@ -35,7 +35,7 @@ emptyFavorites
 
 import {
 isTradePage
-} from "./terminal-state.js?v=12";
+} from "./terminal-state.js?v=13";
 
 /** Desktop /trade only — не тянем trade-open-positions в открытый web /coins. */
 function escapeHtml(

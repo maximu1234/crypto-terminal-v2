@@ -5,7 +5,7 @@
 import {
 COINS_TF_HOTKEYS,
 COINS_TF_VALUES
-} from "../terminal/terminal-state.js?v=12";
+} from "../terminal/terminal-state.js?v=13";
 
 export const ALGO_POSITION_DRAW_HOTKEYS =
 new Map(

@@ -111,6 +111,11 @@ test("position metrics use log RR; sizing $/% use linear exchange PnL", () => {
   assert.ok(Math.abs(metrics.slPct - slPct) < 1e-9);
   assert.equal(metrics.rr, (tpPct / slPct).toFixed(2));
 
+  const linearMetrics = positionMetrics(shape, { logarithmic: false });
+  assert.equal(linearMetrics.tpPct, 20);
+  assert.equal(linearMetrics.slPct, 20);
+  assert.equal(linearMetrics.rr, "1.00");
+
   const sizing = positionSizingFromShape(shape);
   assert.equal(sizing.riskUsd, 100);
   assert.ok(Number.isFinite(sizing.volume));

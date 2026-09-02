@@ -10,6 +10,10 @@ FIB_LABEL_X_PAD_PX,
 FIB_LABEL_RIGHT_RESERVE_PX
 } from "./constants.js?v=11";
 
+import {
+isLwPriceScaleModeLogarithmic
+} from "../chart/price-scale-mode.js?v=3";
+
 export {
 FIB_MIN_ANCHOR_SPAN_PX
 };
@@ -1107,13 +1111,13 @@ typeof ps?.options ===
 const mode =
 opts?.mode;
 
-if(mode === 1){
-return true;
-}
-
-if(mode === 0){
-return false;
-
+if(
+typeof mode ===
+"number"
+){
+return isLwPriceScaleModeLogarithmic(
+mode
+);
 }
 
 }catch(_){

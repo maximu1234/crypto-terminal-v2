@@ -50,7 +50,7 @@ ensureDomChartCrosshair,
 hideDomChartCrosshair,
 positionTabletProbeHorizInStack,
 fullCrosshairOptions
-} from "../chart-import.js?v=49";
+} from "../chart-import.js?v=53";
 
 import {
 STROKE,
@@ -88,7 +88,7 @@ normalizeFibLevelsShape,
 parseFibRatioField,
 getFibRows,
 isSeriesLogarithmic
-} from "./fib-spec.js?v=13";
+} from "./fib-spec.js?v=15";
 
 import {
 setFibPanelCommitHook,
@@ -112,7 +112,7 @@ positionEntryPrice,
 positionXBounds as resolvePositionXBounds,
 positionBodyDist as resolvePositionBodyDist,
 getPositionHandleScreens as resolvePositionHandleScreens
-} from "./position.js?v=9";
+} from "./position.js?v=10";
 
 import {
 createDrawPrefs
@@ -120,7 +120,7 @@ createDrawPrefs
 
 import {
 createPositionDraw
-} from "./position-draw.js?v=3";
+} from "./position-draw.js?v=4";
 
 import {
 pickUi

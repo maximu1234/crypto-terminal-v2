@@ -87,7 +87,7 @@ appendFutureWhitespaceBars,
 applyCoinsChartViewport,
 refreshCoinsChartBarSpacing,
 tfPeriodSec
-} from "./chart-import.js?v=49";
+} from "./chart-import.js?v=53";
 
 import {
 terminalVisibleBars,
@@ -157,7 +157,7 @@ COINS_TF_HOTKEYS,
 COINS_MARKETS,
 isTerminalPage,
 isTradePage
-} from "./terminal/terminal-state.js?v=12";
+} from "./terminal/terminal-state.js?v=13";
 
 import {
 stopTickerStream
@@ -179,7 +179,7 @@ saveLastViewForExchange,
 applyCoinsPrefs,
 applySortForCurrentMarket,
 readUrlParams
-} from "./terminal/terminal-prefs.js?v=22";
+} from "./terminal/terminal-prefs.js?v=25";
 
 import {
 mountDesktopOpenChartHandler
@@ -228,6 +228,27 @@ mountTerminalLayoutPicker
 } from "./terminal-layout-picker.js?v=11";
 
 import {
+mountChartDisplayStyleUi
+} from "./terminal/chart-display-style-ui.js?v=2";
+
+import {
+loadChartDisplayStyle,
+saveChartDisplayStyle
+} from "./chart/chart-display-style.js?v=2";
+
+import {
+createPriceSeriesHost
+} from "./chart/price-series-host.js?v=7";
+
+import {
+CHART_PRICE_SCALE_MODE_LOGARITHMIC,
+CHART_PRICE_SCALE_MODE_REGULAR,
+normalizeChartPriceScaleMode,
+applyChartPriceScaleMode,
+lwPriceScaleModeId
+} from "./chart/price-scale-mode.js?v=3";
+
+import {
 shouldRunScriptBackgroundJobs,
 isAlgoTradingNavEnabled,
 FEATURE_NAV_PREF_EVENT
@@ -244,6 +265,10 @@ let isCoinsChartInverted =
 false;
 let isCoinsRsiInverted =
 false;
+let coinsPriceScaleMode =
+normalizeChartPriceScaleMode(
+readCoinsPrefs().priceScaleMode
+);
 let drawingTools =
 null;
 let rsiDrawingTools =
@@ -390,6 +415,16 @@ return isCoinsRsiInverted;
 },
 set isCoinsRsiInverted(v){
 isCoinsRsiInverted = v;
+},
+
+get coinsPriceScaleMode(){
+return coinsPriceScaleMode;
+},
+set coinsPriceScaleMode(v){
+coinsPriceScaleMode =
+normalizeChartPriceScaleMode(
+v
+);
 },
 
 get displaySymbol(){
@@ -587,14 +622,24 @@ drawingTools = v;
 
 const mainChart =
 createCandlestickChart(
-document.getElementById("chart")
+document.getElementById("chart"),
+{
+priceScaleMode:
+normalizeChartPriceScaleMode(
+readCoinsPrefs().priceScaleMode
+)
+}
 );
 
 chart =
 mainChart.chart;
 
 candleSeries =
-mainChart.series;
+createPriceSeriesHost(
+chart,
+mainChart.series,
+loadChartDisplayStyle()
+);
 
 function unbindTerminalHistoryLazyLoad(){
 
@@ -1027,6 +1072,91 @@ persistCoinsRsiInversion();
 
 }
 
+function applyCoinsChartPriceScaleMode(
+mode,
+opts =
+{}
+){
+
+const next =
+normalizeChartPriceScaleMode(
+mode
+);
+
+const changed =
+next !==
+coinsPriceScaleMode;
+
+coinsPriceScaleMode =
+next;
+
+try{
+applyChartPriceScaleMode(
+chart,
+next
+);
+candleSeries?.priceScale?.()?.applyOptions?.({
+mode:
+lwPriceScaleModeId(
+next
+)
+});
+}catch{
+/* ignore */
+}
+
+if(
+opts.recalc ===
+false ||
+!changed
+){
+return;
+}
+
+drawingTools?.endPriceScaleDragRedraw?.();
+rsiDrawingTools?.endPriceScaleDragRedraw?.();
+macdDrawingTools?.endPriceScaleDragRedraw?.();
+window.__tradeChartOverlay?.onPriceScaleDragEnd?.();
+scheduleCoinsDrawRedraw();
+priceHudCtrl?.refresh?.();
+
+}
+
+function persistCoinsChartPriceScaleMode(){
+
+if(
+!isTerminalPage
+){
+return;
+}
+
+const prefs =
+readCoinsPrefs();
+
+prefs.priceScaleMode =
+coinsPriceScaleMode;
+
+writeCoinsPrefs(prefs);
+
+}
+
+function setCoinsChartPriceScaleMode(
+mode
+){
+
+if(
+!isTerminalPage
+){
+return;
+}
+
+applyCoinsChartPriceScaleMode(
+mode
+);
+persistCoinsChartPriceScaleMode();
+
+}
+
 function mountCoinsScaleInvertMenu(){
 
 if(
@@ -1065,19 +1195,81 @@ const menu =
 document.createElement("div");
 menu.className =
 "chart-scale-context-menu hidden";
+menu.setAttribute(
+"role",
+"menu"
+);
+
+const priceModeBox =
+document.createElement("div");
+priceModeBox.className =
+"chart-scale-context-menu-price-modes";
+
+function makeModeItem(
+mode,
+label
+){
+
+const btn =
+document.createElement("button");
+btn.type = "button";
+btn.className =
+"chart-scale-context-menu-item";
+btn.textContent =
+label;
+btn.dataset.priceScaleMode =
+mode;
+btn.setAttribute(
+"role",
+"menuitemradio"
+);
+return btn;
+
+}
+
+const regularItem =
+makeModeItem(
+CHART_PRICE_SCALE_MODE_REGULAR,
+"Regular"
+);
+
+const logItem =
+makeModeItem(
+CHART_PRICE_SCALE_MODE_LOGARITHMIC,
+"Logarithmic"
+);
+
+const sep =
+document.createElement("div");
+sep.className =
+"chart-scale-context-menu-sep";
+sep.setAttribute(
+"role",
+"separator"
+);
+
+priceModeBox.appendChild(regularItem);
+priceModeBox.appendChild(logItem);
+priceModeBox.appendChild(sep);
 
 const item =
 document.createElement("button");
 item.type = "button";
 item.className =
 "chart-scale-context-menu-item";
+item.setAttribute(
+"role",
+"menuitem"
+);
+
+menu.appendChild(priceModeBox);
 menu.appendChild(item);
 document.body.appendChild(menu);
 
 let menuTarget =
 "price";
 
-function syncMenuLabel(){
+function syncMenuState(){
 
 const inverted =
 menuTarget ===
@@ -1105,9 +1297,41 @@ inverted
 : "false"
 );
 
+const isRegular =
+coinsPriceScaleMode ===
+CHART_PRICE_SCALE_MODE_REGULAR;
+
+regularItem.classList.toggle(
+"is-checked",
+isRegular
+);
+logItem.classList.toggle(
+"is-checked",
+!isRegular
+);
+regularItem.setAttribute(
+"aria-checked",
+isRegular
+? "true"
+: "false"
+);
+logItem.setAttribute(
+"aria-checked",
+isRegular
+? "false"
+: "true"
+);
+
+const showModes =
+menuTarget ===
+"price";
+
+priceModeBox.hidden =
+!showModes;
+
 }
 
-syncMenuLabel();
+syncMenuState();
 
 let touchHoldTimer =
 null;
@@ -1131,7 +1355,7 @@ target ===
 ? "rsi"
 : "price";
 
-syncMenuLabel();
+syncMenuState();
 
 const margin = 8;
 menu.classList.remove("hidden");
@@ -1535,9 +1759,39 @@ toggleCoinsRsiInversion();
 toggleCoinsChartInversion();
 }
 
-syncMenuLabel();
+syncMenuState();
 hideMenu();
 }
+);
+
+function onPriceScaleModeClick(
+mode
+){
+
+return e=>{
+e.preventDefault();
+e.stopPropagation();
+setCoinsChartPriceScaleMode(
+mode
+);
+syncMenuState();
+hideMenu();
+};
+
+}
+
+regularItem.addEventListener(
+"click",
+onPriceScaleModeClick(
+CHART_PRICE_SCALE_MODE_REGULAR
+)
+);
+
+logItem.addEventListener(
+"click",
+onPriceScaleModeClick(
+CHART_PRICE_SCALE_MODE_LOGARITHMIC
+)
 );
 
 chartWrapEl.addEventListener(
@@ -1623,7 +1877,7 @@ return;
 e.preventDefault();
 hideMenu();
 toggleCoinsChartInversion();
-syncMenuLabel();
+syncMenuState();
 
 }
 
@@ -1688,6 +1942,13 @@ isTerminalPage
 ){
 applyCoinsChartInversion(
 readCoinsPrefs().invertChart === true
+);
+applyCoinsChartPriceScaleMode(
+readCoinsPrefs().priceScaleMode,
+{
+recalc:
+false
+}
 );
 unmountCoinsScaleInvertMenu =
 mountCoinsScaleInvertMenu();
@@ -2549,6 +2810,86 @@ rsiLookupAtOrBefore(ts)
 
 }
 
+function extraIndicatorCrosshairPanes(){
+
+const specs = [
+{
+id:
+"macd",
+wrapId:
+"macd-wrap",
+chartId:
+"macd-chart"
+},
+{
+id:
+"volume",
+wrapId:
+"volume-wrap",
+chartId:
+"volume-chart"
+},
+{
+id:
+"ao",
+wrapId:
+"ao-wrap",
+chartId:
+"ao-chart"
+}
+];
+
+const panes =
+[];
+
+for(
+const spec of
+specs
+){
+
+const wrapEl =
+document.getElementById(
+spec.wrapId
+);
+const chartEl =
+document.getElementById(
+spec.chartId
+);
+
+if(
+!wrapEl ||
+wrapEl.classList.contains(
+"indicator-pane-hidden"
+) ||
+!chartEl
+){
+continue;
+}
+
+const paneChart =
+chartIndicators?.getIndicator?.(
+spec.id
+)?.getChart?.();
+
+if(
+!paneChart
+){
+continue;
+}
+
+panes.push({
+wrapEl,
+chartEl,
+chart:
+paneChart
+});
+
+}
+
+return panes;
+
+}
+
 const chartCrosshairLink =
 linkChartsCrosshair({
 mainChart:chart,
@@ -2609,7 +2950,9 @@ return null;
 }
 
 return candleCloseAtOrBefore(ts);
-}
+},
+getExtraPanes:
+extraIndicatorCrosshairPanes
 });
 
 chart.subscribeCrosshairMove(param=>{
@@ -3360,7 +3703,7 @@ const {
 initWidgetDrawings
 } =
 await import(
-"./chart-widget-host.js?v=20"
+"./chart-widget-host.js?v=21"
 );
 const {
 initChartIndicators
@@ -5390,6 +5733,38 @@ scheduleCoinsDrawRedraw();
 
 }
 
+function applyCoinsChartDisplayStyle(
+style
+){
+
+const next =
+saveChartDisplayStyle(
+style
+);
+
+const typeChanged =
+candleSeries?.applyDisplayStyle?.(
+next
+);
+
+if(typeChanged){
+resetCoinsChartPriceScale();
+}
+
+const refPrice =
+candles[candles.length - 1]?.close ?? 1;
+
+applyChartPriceFormat(
+candleSeries,
+refPrice
+);
+
+drawingTools?.scheduleRedraw?.();
+chartIndicators?.notifyMainChartOverlaysSync?.();
+priceHudCtrl.refresh?.();
+
+}
+
 function startPriceHud(){
 
 priceHudCtrl.stop?.();
@@ -5399,7 +5774,9 @@ mountChartPriceHud({
 chart,
 series: candleSeries,
 wrapEl: chartWrapEl,
-getTf: ()=> currentTF
+getTf: ()=> currentTF,
+getLastCandle: ()=>
+candles[candles.length - 1]
 });
 
 }
@@ -5641,6 +6018,18 @@ btn.blur();
 
 bindCoinsTfHotkeys();
 bindCoinsPositionDrawHotkeys();
+
+mountChartDisplayStyleUi({
+root:
+document.getElementById(
+"coins-chart-type-bar"
+),
+getStyle:()=>
+candleSeries?.getStyle?.() ||
+loadChartDisplayStyle(),
+onChange:
+applyCoinsChartDisplayStyle
+});
 
 /* =========================================================
    FILTER
@@ -7064,6 +7453,14 @@ lastIdx
 return {
 build:
 "20260609-future-timescale-v10",
+priceScaleMode:
+chart?.priceScale?.(
+"right"
+)?.options?.()?.mode,
+priceScaleInvert:
+chart?.priceScale?.(
+"right"
+)?.options?.()?.invertScale,
 candles:
 candles?.length ||
 0,

@@ -48,7 +48,7 @@ isUserCrosshairEvent
 import {
 TABLET_LW_NATIVE_PRICE_SCALE,
 clearTabletProbeCrosshairForChart
-} from "./chart/chart-factory.js?v=48";
+} from "./chart/chart-factory.js?v=51";
 
 export {
 createCandlestickChart,
@@ -87,7 +87,7 @@ coinsTfVisibleBars,
 applyCoinsChartViewport,
 computeCoinsChartViewportPlan,
 refreshCoinsChartBarSpacing
-} from "./chart/chart-factory.js?v=48";
+} from "./chart/chart-factory.js?v=51";
 
 /* Tablet gestures: import ./chart-tablet-gestures.js only from tablet paths
    (tablet-widget-chart / terminal-tablet-controller) — never re-export here. */
@@ -98,27 +98,26 @@ CHART_TIME_SCALE_HEIGHT,
 isTabletChartViewport
 } from "./chart/chart-options.js?v=7";
 
+export {
+CHART_PRICE_SCALE_MODE_LOGARITHMIC,
+CHART_PRICE_SCALE_MODE_REGULAR,
+normalizeChartPriceScaleMode,
+lwPriceScaleModeId,
+isLwPriceScaleModeLogarithmic,
+isChartPriceScaleLogarithmic,
+applyChartPriceScaleMode
+} from "./chart/price-scale-mode.js?v=3";
+
+import {
+isChartPriceScaleLogarithmic
+} from "./chart/price-scale-mode.js?v=3";
+
 
 export const DEFAULT_PRICE_SCALE_MARGINS =
 Object.freeze({
 top:0.12,
 bottom:0.12
 });
-
-export function isChartPriceScaleLogarithmic(
-chart
-){
-
-try{
-return chart.priceScale(
-"right"
-).options().mode ===
-1;
-}catch{
-return true;
-}
-
-}
 
 /**
  * Log-шкала: min > 0. Иначе LW рисует отрицательные «цены».

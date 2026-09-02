@@ -21,11 +21,11 @@ import {
 import {
   migrateFibToolDefaults,
   ensureFibLevelsVisible
-} from "./fib-spec.js?v=13";
+} from "./fib-spec.js?v=15";
 
 import {
   isPositionType
-} from "./position.js?v=9";
+} from "./position.js?v=10";
 
 import {
   migrateTextToolDefaults,

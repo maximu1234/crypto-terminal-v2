@@ -4,11 +4,11 @@ isTabletChartViewport,
 hasAnyFinePointer,
 positionDomChartCrosshair,
 hideDomChartCrosshair
-} from "./chart-import.js?v=49";
+} from "./chart-import.js?v=53";
 
 import {
 isPositionType
-} from "./drawings/position.js?v=9";
+} from "./drawings/position.js?v=10";
 
 import {
 isHorizPriceTool

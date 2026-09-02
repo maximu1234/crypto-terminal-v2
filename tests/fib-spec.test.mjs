@@ -289,3 +289,56 @@ span.x2,
 
 }
 );
+
+test(
+"isSeriesLogarithmic reads LW mode 0 and 1",
+async()=>{
+
+const {
+isSeriesLogarithmic
+} =
+await import(
+"../js/drawings/fib-spec.js"
+);
+
+function seriesWithMode(
+mode
+){
+return {
+priceScale(){
+return {
+options(){
+return {
+mode
+};
+}
+};
+}
+};
+}
+
+assert.equal(
+isSeriesLogarithmic(
+seriesWithMode(
+0
+)
+),
+false
+);
+assert.equal(
+isSeriesLogarithmic(
+seriesWithMode(
+1
+)
+),
+true
+);
+assert.equal(
+isSeriesLogarithmic(
+{}
+),
+true
+);
+
+}
+);

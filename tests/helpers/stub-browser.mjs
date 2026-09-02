@@ -28,3 +28,15 @@ if (
     href: "http://localhost/"
   };
 }
+
+if (
+  typeof globalThis.window.addEventListener !== "function"
+) {
+  globalThis.window.addEventListener = () => {};
+}
+
+if (
+  typeof globalThis.window.removeEventListener !== "function"
+) {
+  globalThis.window.removeEventListener = () => {};
+}

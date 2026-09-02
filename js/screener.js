@@ -34,7 +34,7 @@ updateRsiLevelLinesLayout,
 linkPairedChartTimeScales,
 SCREENER_VISIBLE_BARS,
 SCREENER_MAX_BARS
-} from "./chart-import.js?v=49";
+} from "./chart-import.js?v=53";
 
 import {
 isIpadWebViewport
@@ -60,7 +60,7 @@ createTickerUiBatcher
 
 import {
 mountReleaseMarker
-} from "./release-marker.js?v=108";
+} from "./release-marker.js?v=109";
 
 import {
 saveScreenerState,

@@ -292,7 +292,7 @@ return [
 
 }
 
-export function positionMetrics(shape){
+export function positionMetrics(shape, opts = {}){
 
 const entry =
 positionEntryPrice(shape);
@@ -314,13 +314,22 @@ rr:
 };
 }
 
+const logarithmic =
+opts.logarithmic !==
+false;
+
+const pctFromEntry =
+logarithmic
+? positionLogPctFromEntry
+: positionLinearPctFromEntry;
+
 const tpPct =
-positionLogPctFromEntry(
+pctFromEntry(
 entry,
 shape.tpPrice
 );
 const slPct =
-positionLogPctFromEntry(
+pctFromEntry(
 entry,
 shape.slPrice
 );

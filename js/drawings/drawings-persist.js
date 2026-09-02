@@ -10,12 +10,12 @@ createRectangleToolDefaults
 import {
 ensureFibLevelsVisible,
 finalizeFibLevels
-} from "./fib-spec.js?v=13";
+} from "./fib-spec.js?v=15";
 
 import {
 isPositionType,
 positionEntryPrice
-} from "./position.js?v=9";
+} from "./position.js?v=10";
 
 import {
 ensureBrushShape
