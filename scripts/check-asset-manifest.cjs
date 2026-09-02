@@ -283,12 +283,25 @@ return null;
 
 }
 
+const SKIP_MISSING_ASSETS =
+new Set([
+"supabase-env.js"
+]);
+
 for(
 const key of
 Object.keys(
 assets
 )
 ){
+
+if(
+SKIP_MISSING_ASSETS.has(
+key
+)
+){
+continue;
+}
 
 if(
 !resolveAssetFile(

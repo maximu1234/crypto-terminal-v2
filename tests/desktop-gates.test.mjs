@@ -193,6 +193,7 @@ test("asset-manifest check skips bot-app and requires files to exist", () => {
   const source = read("scripts/check-asset-manifest.cjs");
   assert.match(source, /"bot-app"/);
   assert.match(source, /manifest missing file/);
+  assert.match(source, /supabase-env\.js/);
 });
 
 test("watchlist widget HTML escapes the symbol", () => {
