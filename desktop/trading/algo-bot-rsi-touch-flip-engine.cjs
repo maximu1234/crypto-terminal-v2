@@ -19,6 +19,7 @@ const {
   livePrefsFingerprint,
   planRsiTouchFlipBookSync,
   normalizeBalancePct,
+  normalizeMarginMode,
   allocatedBalanceUsdt,
   equalShareBudget,
   rsiTouchFlipCycleSlHit
@@ -48,8 +49,12 @@ let syncBusy = false;
 let queuedBookRows = null;
 /** @type {number|null} */
 let queuedBalancePct = null;
+/** @type {"cross"|"isolated"|null} */
+let queuedMarginMode = null;
 let allocPct = 100;
 let allocatedUsdt = 0;
+/** @type {"cross"|"isolated"} */
+let sessionMarginMode = "cross";
 let startCancelRequested = false;
 
 function requestRsiTouchFlipStartCancel() {
@@ -194,7 +199,7 @@ async function openWithLeverageRetry(state, side, volumeUsdt) {
 
   const applyResult = await algoRest.applySymbolPositionSettings(symbol, {
     leverage: settings.maxLeverage,
-    marginMode: wantedMarginMode(state)
+    marginMode: wantedMarginMode()
   });
   if (applyResult?.ok === false) {
     return result;
@@ -203,14 +208,12 @@ async function openWithLeverageRetry(state, side, volumeUsdt) {
   return algoRest.openPositionAtMarket(symbol, side, volumeUsdt);
 }
 
-function wantedMarginMode(state) {
-  return String(state?.prefs?.marginMode || "").toLowerCase() === "isolated"
-    ? "isolated"
-    : "cross";
+function wantedMarginMode() {
+  return sessionMarginMode === "isolated" ? "isolated" : "cross";
 }
 
 async function ensureTickerMarginMode(state) {
-  const wanted = wantedMarginMode(state);
+  const wanted = wantedMarginMode();
   const settings = await algoRest.getSymbolPositionSettings(state.symbol);
   if (!settings?.ok) {
     return settings;
@@ -293,7 +296,7 @@ async function openSlice(state, side, level, price, label) {
       symbol: state.symbol,
       side,
       price,
-      text: `Пропуск ${label}: не выставил ${wantedMarginMode(state)} (${margin.message || "fail"})`
+      text: `Пропуск ${label}: не выставил ${wantedMarginMode()} (${margin.message || "fail"})`
     });
     return false;
   }
@@ -680,7 +683,7 @@ function sliceBudget(state) {
 
 function tickerNote(state) {
   const rsiTfLabel = usesSeparateRsiTf(state) ? rsiSourceTf(state) : "график";
-  return `${state.symbol} chart=${state.tf} rsiTf=${rsiTfLabel} RSI=${state.prefs.rsiLen} OS=${state.prefs.osLevel} OB=${state.prefs.obLevel} side=${state.prefs.tradeSide} stack=${state.prefs.maxStack} budget=${state.prefs.budget} margin=${wantedMarginMode(state)} ${state.mode}`;
+  return `${state.symbol} chart=${state.tf} rsiTf=${rsiTfLabel} RSI=${state.prefs.rsiLen} OS=${state.prefs.osLevel} OB=${state.prefs.obLevel} side=${state.prefs.tradeSide} stack=${state.prefs.maxStack} budget=${state.prefs.budget} margin=${wantedMarginMode()} ${state.mode}`;
 }
 
 function lastChartPrice(state) {
@@ -929,11 +932,13 @@ function shareGateFailResult(message) {
   };
 }
 
-async function applyBookDiff(nextRows, nextPct = allocPct) {
+async function applyBookDiff(nextRows, nextPct = allocPct, nextMargin = sessionMarginMode) {
   const plan = planRsiTouchFlipBookSync(currentSyncPlanInput(), nextRows);
   const skipped = [];
   const prevPct = allocPct;
+  const prevMargin = sessionMarginMode;
   allocPct = nextPct;
+  sessionMarginMode = nextMargin;
   const projected = projectedLiveCount(plan);
   const gateCount = projected === 0 ? 0 : Math.max(tickers.size, projected);
 
@@ -942,6 +947,7 @@ async function applyBookDiff(nextRows, nextPct = allocPct) {
       await refreshWalletAllocated();
     } catch (err) {
       allocPct = prevPct;
+      sessionMarginMode = prevMargin;
       return shareGateFailResult(
         err?.message ||
           "Не удалось прочитать баланс алго-ключа — live книгу не менял"
@@ -951,6 +957,7 @@ async function applyBookDiff(nextRows, nextPct = allocPct) {
     const gatedShare = equalShareBudget(allocatedUsdt, gateCount);
     if (!(gatedShare >= 1)) {
       allocPct = prevPct;
+      sessionMarginMode = prevMargin;
       return shareGateFailResult(
         `Доля на тикер ${Number(gatedShare).toFixed(2)} USDT < 1 USDT (${gateCount} тик. · ${nextPct}% баланса) — live книгу не менял`
       );
@@ -1031,7 +1038,9 @@ async function startRsiTouchFlipEngine(config = {}) {
   lastSignalText = "";
   queuedBookRows = null;
   queuedBalancePct = null;
+  queuedMarginMode = null;
   allocPct = normalizeBalancePct(config.balancePct);
+  sessionMarginMode = normalizeMarginMode(config.marginMode);
 
   klineHub = createAlgoBybitKlineHub();
   unsubKline = klineHub.onKline(onKline);
@@ -1133,8 +1142,13 @@ async function syncRsiTouchFlipBook(config = {}) {
     config.balancePct != null && config.balancePct !== ""
       ? normalizeBalancePct(config.balancePct)
       : allocPct;
+  const nextMargin =
+    config.marginMode != null && config.marginMode !== ""
+      ? normalizeMarginMode(config.marginMode)
+      : sessionMarginMode;
   if (!engineLive) {
     allocPct = nextPct;
+    sessionMarginMode = nextMargin;
     return {
       ok: true,
       running: false,
@@ -1150,6 +1164,7 @@ async function syncRsiTouchFlipBook(config = {}) {
   if (syncBusy) {
     queuedBookRows = rows;
     queuedBalancePct = nextPct;
+    queuedMarginMode = nextMargin;
     return {
       ok: true,
       running: true,
@@ -1162,6 +1177,7 @@ async function syncRsiTouchFlipBook(config = {}) {
   try {
     let current = rows;
     let currentPct = nextPct;
+    let currentMargin = nextMargin;
     let result = {
       ok: true,
       running: true,
@@ -1173,15 +1189,18 @@ async function syncRsiTouchFlipBook(config = {}) {
       message: `Live RSI Flip: книга без изменений (${tickers.size} тик.)`
     };
     while (engineLive) {
-      result = await applyBookDiff(current, currentPct);
+      result = await applyBookDiff(current, currentPct, currentMargin);
       if (!queuedBookRows) {
         return result;
       }
       current = queuedBookRows;
       currentPct =
         queuedBalancePct != null ? queuedBalancePct : currentPct;
+      currentMargin =
+        queuedMarginMode != null ? queuedMarginMode : currentMargin;
       queuedBookRows = null;
       queuedBalancePct = null;
+      queuedMarginMode = null;
     }
     return result;
   } finally {

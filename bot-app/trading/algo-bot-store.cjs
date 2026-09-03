@@ -2430,6 +2430,11 @@ rows,
 balancePct:
 normalizeStoredRsiTouchFlipBalancePct(
 parsed?.balancePct
+),
+marginMode:
+normalizeStoredRsiTouchFlipMarginMode(
+parsed?.marginMode,
+rows
 )
 };
 
@@ -2462,6 +2467,50 @@ n
 
 }
 
+function normalizeStoredRsiTouchFlipMarginMode(
+raw,
+rows
+){
+
+if(
+raw !=
+null &&
+raw !==
+""
+){
+return String(
+raw
+).toLowerCase() ===
+"isolated"
+? "isolated"
+: "cross";
+}
+
+const list =
+Array.isArray(
+rows
+)
+? rows
+: [];
+
+for(
+const row of list
+){
+if(
+String(
+row?.prefs?.marginMode ||
+""
+).toLowerCase() ===
+"isolated"
+){
+return "isolated";
+}
+}
+
+return "cross";
+
+}
+
 function writeRsiTouchFlipBook(
 rows,
 extra =
@@ -2483,6 +2532,16 @@ extra.balancePct !==
 extra.balancePct
 )
 : prev.balancePct;
+const marginMode =
+extra.marginMode !=
+null &&
+extra.marginMode !==
+""
+? normalizeStoredRsiTouchFlipMarginMode(
+extra.marginMode,
+next
+)
+: prev.marginMode;
 const same =
 JSON.stringify(
 prev.rows
@@ -2491,7 +2550,9 @@ JSON.stringify(
 next
 ) &&
 prev.balancePct ===
-balancePct;
+balancePct &&
+prev.marginMode ===
+marginMode;
 
 if(
 same
@@ -2504,6 +2565,7 @@ false,
 rows:
 next,
 balancePct,
+marginMode,
 tickerCount:
 next.length
 };
@@ -2516,6 +2578,7 @@ RSI_TOUCH_FLIP_BOOK_FILE,
 rows:
 next,
 balancePct,
+marginMode,
 updatedAt:
 Date.now()
 }
@@ -2536,6 +2599,7 @@ true,
 rows:
 next,
 balancePct,
+marginMode,
 tickerCount:
 next.length
 };

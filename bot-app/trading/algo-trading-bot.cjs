@@ -2393,7 +2393,9 @@ writeRsiTouchFlipBook(
 bookRows,
 {
 balancePct:
-payload?.balancePct
+payload?.balancePct,
+marginMode:
+payload?.marginMode
 }
 );
 }catch(
@@ -2526,6 +2528,11 @@ await rsiTouchFlipEngine.startRsiTouchFlipEngine(
 rows:
 bookRows,
 balancePct,
+marginMode:
+rsiTouchFlipMath.normalizeMarginMode(
+payload?.marginMode ??
+readRsiTouchFlipBook().marginMode
+),
 onActivity:()=>{
 pushStatus(
 buildStatusSnapshot()
@@ -3426,7 +3433,9 @@ return startBot(
 strategyId:
 "rsi-touch-flip",
 balancePct:
-book?.balancePct
+book?.balancePct,
+marginMode:
+book?.marginMode
 }
 );
 }
@@ -3537,7 +3546,11 @@ read?.balancePct
 ? Number(
 read.balancePct
 )
-: 100
+: 100,
+marginMode:
+rsiTouchFlipMath.normalizeMarginMode(
+read?.marginMode
+)
 };
 
 }
@@ -3651,6 +3664,11 @@ extra.balancePct !=
 null
 ? extra.balancePct
 : readRsiTouchFlipBook().balancePct;
+const marginMode =
+extra.marginMode !=
+null
+? extra.marginMode
+: readRsiTouchFlipBook().marginMode;
 
 const snapshot =
 buildStatusSnapshot(
@@ -3661,6 +3679,8 @@ publishedRsiTouchFlipBook:
 rows,
 publishedRsiTouchFlipBalancePct:
 balancePct,
+publishedRsiTouchFlipMarginMode:
+marginMode,
 ...(
 typeof extra.message ===
 "string"
@@ -3795,7 +3815,10 @@ rows:
 rows,
 balancePct:
 payload?.balancePct ??
-readRsiTouchFlipBook().balancePct
+readRsiTouchFlipBook().balancePct,
+marginMode:
+payload?.marginMode ??
+readRsiTouchFlipBook().marginMode
 }
 );
 statusMessage =
@@ -3860,7 +3883,9 @@ writeRsiTouchFlipBook(
 rows,
 {
 balancePct:
-payload?.balancePct
+payload?.balancePct,
+marginMode:
+payload?.marginMode
 }
 );
 }catch(
@@ -3898,7 +3923,9 @@ sessionRsiTouchFlipPrefs ||
 book:
 written.rows,
 balancePct:
-written.balancePct
+written.balancePct,
+marginMode:
+written.marginMode
 };
 
 const message =
@@ -3918,6 +3945,8 @@ rows:
 written.rows,
 balancePct:
 written.balancePct,
+marginMode:
+written.marginMode,
 message
 }
 );

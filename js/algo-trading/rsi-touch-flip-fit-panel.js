@@ -20,7 +20,7 @@ import {
 } from "./rsi-touch-flip-walkforward.js?v=9";
 import {
   saveRsiTouchFlipTickerPrefs
-} from "./rsi-touch-flip-prefs.js?v=7";
+} from "./rsi-touch-flip-prefs.js?v=8";
 import {
   getRsiTouchFlipBookRow
 } from "./rsi-touch-flip-book.js?v=5";

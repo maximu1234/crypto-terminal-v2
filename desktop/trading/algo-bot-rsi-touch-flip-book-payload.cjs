@@ -16,11 +16,13 @@ function parseRsiTouchFlipBookPayload(body) {
   const fromBookArray = Array.isArray(src.book) ? src.book : null;
   const rows = fromRows || fromBookRows || fromBookArray || [];
   const balancePctRaw = src.balancePct ?? nested?.balancePct;
+  const marginModeRaw = src.marginMode ?? nested?.marginMode;
   return {
     strategyId,
     isRsiTouchFlip: strategyId === "rsi-touch-flip",
     rows,
-    balancePct: balancePctRaw
+    balancePct: balancePctRaw,
+    marginMode: marginModeRaw
   };
 }
 

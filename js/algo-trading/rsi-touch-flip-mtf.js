@@ -8,7 +8,7 @@ computeWilderRsiValues
 } from "./rsi-touch-flip-engine.js?v=6";
 import {
 normalizeRsiTouchFlipPrefs
-} from "./rsi-touch-flip-prefs.js?v=7";
+} from "./rsi-touch-flip-prefs.js?v=8";
 
 const KLINE_PAGE =
 1000;

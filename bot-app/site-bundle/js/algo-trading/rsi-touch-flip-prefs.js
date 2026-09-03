@@ -714,9 +714,7 @@ p.sizeMult,
 cycleSlEnabled:
 p.cycleSlEnabled,
 cycleSlPct:
-p.cycleSlPct,
-marginMode:
-p.marginMode
+p.cycleSlPct
 };
 
 }
@@ -869,6 +867,69 @@ raw
 try{
 localStorage.setItem(
 RSI_TOUCH_FLIP_BALANCE_PCT_KEY,
+JSON.stringify(
+next
+)
+);
+}catch{
+/* ignore quota */
+}
+
+return next;
+
+}
+
+export const RSI_TOUCH_FLIP_MARGIN_MODE_KEY =
+"algo_trading_rsi_touch_flip_margin_mode_v1";
+
+/**
+ * @param {unknown} raw
+ * @returns {"cross"|"isolated"}
+ */
+export function loadRsiTouchFlipMarginMode(){
+
+try{
+const raw =
+localStorage.getItem(
+RSI_TOUCH_FLIP_MARGIN_MODE_KEY
+);
+
+if(
+raw ==
+null ||
+raw ===
+""
+){
+return RSI_TOUCH_FLIP_MARGIN_CROSS;
+}
+
+return normalizeRsiTouchFlipMarginMode(
+JSON.parse(
+raw
+)
+);
+}catch{
+return RSI_TOUCH_FLIP_MARGIN_CROSS;
+}
+
+}
+
+/**
+ * @param {unknown} raw
+ * @returns {"cross"|"isolated"}
+ */
+export function saveRsiTouchFlipMarginMode(
+raw
+){
+
+const next =
+normalizeRsiTouchFlipMarginMode(
+raw
+);
+
+try{
+localStorage.setItem(
+RSI_TOUCH_FLIP_MARGIN_MODE_KEY,
 JSON.stringify(
 next
 )

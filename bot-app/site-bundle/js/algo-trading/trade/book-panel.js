@@ -28,7 +28,7 @@ retagKnownAlgoBotAlerts
 import {
 fetchAlgoBotStatus,
 subscribeAlgoBotStatus
-} from "../bot-bridge.js?v=27";
+} from "../bot-bridge.js?v=28";
 
 import {
 isAlgoBotLiteMode

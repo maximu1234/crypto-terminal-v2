@@ -30,8 +30,10 @@ RSI_TOUCH_FLIP_BOOK_CHANGE_EVENT
 import {
 loadRsiTouchFlipBalancePct,
 saveRsiTouchFlipBalancePct,
-normalizeRsiTouchFlipBalancePct
-} from "./rsi-touch-flip-prefs.js?v=7";
+normalizeRsiTouchFlipBalancePct,
+loadRsiTouchFlipMarginMode,
+saveRsiTouchFlipMarginMode
+} from "./rsi-touch-flip-prefs.js?v=8";
 import {
 getAlgoTradingWalletBalance
 } from "./runtime-bridge.js?v=6";
@@ -66,7 +68,7 @@ isAlgoBotDesktop,
 fetchAlgoBotCloudLock,
 clearAlgoBotCloudLock,
 ensureAlgoBotCloudLock
-} from "./bot-bridge.js?v=27";
+} from "./bot-bridge.js?v=28";
 import {
 stageBotTickerBookFromPublished,
 hydrateBotTickerBookFromMain,
@@ -1085,6 +1087,10 @@ const pctInput =
 document.getElementById(
 "algo-bot-rsi-flip-balance-pct"
 );
+const isolatedInput =
+document.getElementById(
+"algo-bot-rsi-flip-isolated"
+);
 const pct =
 pctInput &&
 document.activeElement ===
@@ -1103,6 +1109,14 @@ pctInput.value =
 String(
 pct
 );
+}
+
+if(
+isolatedInput
+){
+isolatedInput.checked =
+loadRsiTouchFlipMarginMode() ===
+"isolated";
 }
 
 if(
@@ -1258,6 +1272,17 @@ res.balancePct !==
 ){
 saveRsiTouchFlipBalancePct(
 res.balancePct
+);
+}
+
+if(
+res?.marginMode !=
+null &&
+res.marginMode !==
+""
+){
+saveRsiTouchFlipMarginMode(
+res.marginMode
 );
 }
 
@@ -4046,6 +4071,70 @@ err
 );
 }
 );
+document.getElementById(
+"algo-bot-rsi-flip-isolated"
+)?.addEventListener(
+"change",
+event=>{
+const input =
+event.target instanceof HTMLInputElement
+? event.target
+: null;
+saveRsiTouchFlipMarginMode(
+input?.checked
+? "isolated"
+: "cross"
+);
+rsiBookLiveSyncChain =
+rsiBookLiveSyncChain.then(
+async()=>{
+const book =
+snapshotRsiTouchFlipBook();
+
+if(
+rsiTouchFlipRunning &&
+book.length
+){
+const result =
+await syncRsiTouchFlipBookToLive(
+book
+);
+
+if(
+result?.ok ===
+false &&
+result.message
+){
+applyStatusPanel(
+{
+ok:
+false,
+running:
+rsiTouchFlipRunning,
+strategyId:
+"rsi-touch-flip",
+message:
+result.message
+}
+);
+}
+
+return result;
+}
+
+return null;
+}
+).catch(
+err=>{
+console.warn(
+"[algo-trading] rsi flip margin mode live sync",
+err
+);
+}
+);
+void fillRsiTouchFlipSettingsModal();
+}
+);
 void fillRsiTouchFlipSettingsModal();
 void hydrateRsiTouchFlipBookFromMain();
 
@@ -4771,13 +4860,28 @@ false
 return;
 }
 
+const isolatedInput =
+document.getElementById(
+"algo-bot-rsi-flip-isolated"
+);
+const marginMode =
+saveRsiTouchFlipMarginMode(
+isolatedInput instanceof HTMLInputElement
+? (
+isolatedInput.checked
+? "isolated"
+: "cross"
+)
+: loadRsiTouchFlipMarginMode()
+);
 const result =
 await startAlgoBot(
 "rsi-touch-flip",
 {
 book,
 balancePct:
-pct
+pct,
+marginMode
 }
 );
 

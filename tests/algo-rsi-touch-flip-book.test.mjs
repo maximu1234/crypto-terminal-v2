@@ -28,13 +28,7 @@ test("book row keeps chart tf and launch prefs per ticker", () => {
   assert.equal(row.prefs.budget, 250);
   assert.equal(row.prefs.rsiTf, "1");
   assert.equal(row.prefs.cycleSlEnabled, false);
-  assert.equal(row.prefs.marginMode, "cross");
-  const isolated = normalizeRsiTouchFlipBookRow({
-    symbol: "BTCUSDT",
-    tf: "5",
-    prefs: { marginMode: "isolated" }
-  });
-  assert.equal(isolated.prefs.marginMode, "isolated");
+  assert.equal("marginMode" in row.prefs, false);
 });
 
 test("duplicate symbols collapse to the last row", () => {
@@ -241,6 +235,7 @@ test("live engine and LAN accept a full RSI book replace without restart", () =>
   assert.match(server, /source:\s*"lan"/);
   const html = fs.readFileSync(path.join(root, "algo-trading.html"), "utf8");
   assert.match(html, /algo-bot-rsi-flip-balance-pct/);
+  assert.match(html, /algo-bot-rsi-flip-isolated/);
   assert.match(html, /Размер баланса/);
   for (const rel of ["desktop/preload.js", "bot-app/preload.js"]) {
     const src = fs.readFileSync(path.join(root, rel), "utf8");

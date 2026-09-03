@@ -194,7 +194,8 @@ test("algo RSI Flip column drives the chart RSI pane and lists OB before OS", ()
   assert.match(html, /id="algo-rsi-flip-cycle-sl"/);
   assert.match(html, /id="algo-rsi-flip-cycle-sl-pct"/);
   assert.match(html, /id="algo-rsi-flip-compound"/);
-  assert.match(html, /id="algo-rsi-flip-isolated"/);
+  assert.doesNotMatch(html, /id="algo-rsi-flip-isolated"/);
+  assert.match(html, /id="algo-bot-rsi-flip-isolated"/);
   assert.doesNotMatch(html, /algo-rsi-flip-capital/);
   assert.doesNotMatch(html, /Initial capital/);
   assert.doesNotMatch(html, /Подбор на выбранном таймфрейме/);

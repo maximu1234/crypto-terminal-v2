@@ -103,6 +103,14 @@ function normalizeBalancePct(raw) {
 }
 
 /**
+ * @param {unknown} raw
+ * @returns {"cross"|"isolated"}
+ */
+function normalizeMarginMode(raw) {
+  return String(raw || "").toLowerCase() === "isolated" ? "isolated" : "cross";
+}
+
+/**
  * @param {unknown} available
  * @param {unknown} pct
  * @returns {number}
@@ -305,11 +313,7 @@ function normalizeLivePrefs(raw) {
     allowLong: tradeSide !== SIDE_SHORT,
     allowShort: tradeSide !== SIDE_LONG,
     cycleSlEnabled: src.cycleSlEnabled === true,
-    cycleSlPct: clampNumber(src.cycleSlPct, 1, 90, 30),
-    marginMode:
-      String(src.marginMode || "").toLowerCase() === "isolated"
-        ? "isolated"
-        : "cross"
+    cycleSlPct: clampNumber(src.cycleSlPct, 1, 90, 30)
   };
 }
 
@@ -332,8 +336,7 @@ function livePrefsFingerprint(tf, prefs) {
     sizeMode: p.sizeMode,
     sizeMult: p.sizeMult,
     cycleSlEnabled: p.cycleSlEnabled === true,
-    cycleSlPct: p.cycleSlEnabled === true ? p.cycleSlPct : 0,
-    marginMode: p.marginMode
+    cycleSlPct: p.cycleSlEnabled === true ? p.cycleSlPct : 0
   });
 }
 
@@ -421,6 +424,7 @@ module.exports = {
   livePrefsFingerprint,
   planRsiTouchFlipBookSync,
   normalizeBalancePct,
+  normalizeMarginMode,
   allocatedBalanceUsdt,
   equalShareBudget,
   rsiTouchFlipCycleSlHit

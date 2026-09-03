@@ -36,8 +36,10 @@ replaceRsiTouchFlipBook
 } from "./rsi-touch-flip-book.js?v=5";
 import {
 saveRsiTouchFlipBalancePct,
-loadRsiTouchFlipBalancePct
-} from "./rsi-touch-flip-prefs.js?v=7";
+loadRsiTouchFlipBalancePct,
+saveRsiTouchFlipMarginMode,
+loadRsiTouchFlipMarginMode
+} from "./rsi-touch-flip-prefs.js?v=8";
 
 import {
 isAlgoBotWorking
@@ -310,7 +312,14 @@ null &&
 extra.balancePct !==
 ""
 ? extra.balancePct
-: loadRsiTouchFlipBalancePct()
+: loadRsiTouchFlipBalancePct(),
+marginMode:
+extra?.marginMode !=
+null &&
+extra.marginMode !==
+""
+? extra.marginMode
+: loadRsiTouchFlipMarginMode()
 }
 );
 
@@ -646,6 +655,17 @@ status.publishedRsiTouchFlipBalancePct
 );
 }
 
+if(
+status.publishedRsiTouchFlipMarginMode !=
+null &&
+status.publishedRsiTouchFlipMarginMode !==
+""
+){
+saveRsiTouchFlipMarginMode(
+status.publishedRsiTouchFlipMarginMode
+);
+}
+
 return true;
 
 }
@@ -677,7 +697,9 @@ book
 ? book
 : [],
 balancePct:
-loadRsiTouchFlipBalancePct()
+loadRsiTouchFlipBalancePct(),
+marginMode:
+loadRsiTouchFlipMarginMode()
 }
 );
 

@@ -62,17 +62,13 @@ test("launch prefs copy strategy fields and drop analysis-only", () => {
   assert.equal(launch.showMarks, undefined);
   assert.equal(launch.commissionPct, undefined);
   assert.equal(launch.cycleSlEnabled, false);
-  assert.equal(launch.marginMode, "cross");
   const withSl = pickRsiTouchFlipLaunchPrefs({
     cycleSlEnabled: true,
     cycleSlPct: 40
   });
   assert.equal(withSl.cycleSlEnabled, true);
   assert.equal(withSl.cycleSlPct, 40);
-  const isolated = pickRsiTouchFlipLaunchPrefs({
-    marginMode: "isolated"
-  });
-  assert.equal(isolated.marginMode, "isolated");
+  assert.equal("marginMode" in launch, false);
 });
 
 test("normalized prefs drop initialCapital; analysis percents use budget", () => {

@@ -14,7 +14,7 @@ loadBotStrategiesPrefs
 } from "./bot-strategy-prefs.js?v=33";
 import {
 syncAllTickerFlagsRootToMain
-} from "./bot-bridge.js?v=27";
+} from "./bot-bridge.js?v=28";
 import {
 ALGO_TICKER_FLAGS_KEY
 } from "./ticker-flags.js?v=10";
@@ -30,7 +30,7 @@ loadRsiTouchFlipBook
 } from "./rsi-touch-flip-book.js?v=5";
 import {
 loadRsiTouchFlipBalancePct
-} from "./rsi-touch-flip-prefs.js?v=7";
+} from "./rsi-touch-flip-prefs.js?v=8";
 
 const STORAGE_KEY =
 "algo_remote_session_logs_v1";
