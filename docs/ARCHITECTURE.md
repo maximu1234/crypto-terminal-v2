@@ -54,4 +54,4 @@ npm run check:all
 
 ## Откат
 
-**Текущий эталон:** `metka-161` / desktop `1.1.60` — [MARKER_161.md](./MARKER_161.md), `js/release-marker.js`. Desktop .app: [DESKTOP_APP.md](./DESKTOP_APP.md).
+**Текущий эталон:** `metka-162` / desktop `1.1.61` — [MARKER_162.md](./MARKER_162.md), `js/release-marker.js`. Desktop .app: [DESKTOP_APP.md](./DESKTOP_APP.md).

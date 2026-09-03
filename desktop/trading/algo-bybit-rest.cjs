@@ -45,6 +45,16 @@ getAlgoCredentials
 require(
 "./algo-exchange-credentials.cjs"
 );
+const {
+isUnifiedAccount,
+accountMarginToTradeMargin,
+wantedAccountSetMarginMode,
+isSwitchIsolatedForbidden,
+formatSetMarginModeReasons
+} =
+require(
+"./algo-bybit-uta-margin.cjs"
+);
 
 function getCredentials(){
 return getAlgoCredentials("bybit");
@@ -1122,13 +1132,24 @@ httpStatus
 } = {}
 ){
 
-const msg =
+const reasons =
+formatSetMarginModeReasons(
+data
+);
+const rawMsg =
 data?.retMsg ||
 (
 data?.retCode != null
 ? `Bybit error ${data.retCode}`
 : null
 );
+const msg =
+rawMsg &&
+reasons
+? `${rawMsg}: ${reasons}`
+: rawMsg ||
+reasons ||
+null;
 
 if(
 data?.retCode ===
@@ -6743,6 +6764,172 @@ position
 
 }
 
+const ACCOUNT_MARGIN_TTL_MS =
+15000;
+let accountMarginCache =
+null;
+
+function rememberAccountMarginInfo(
+value
+){
+
+accountMarginCache =
+{
+at:
+Date.now(),
+value
+};
+
+}
+
+async function getAccountMarginInfo(){
+
+if(
+accountMarginCache &&
+Date.now() -
+accountMarginCache.at <
+ACCOUNT_MARGIN_TTL_MS
+){
+return accountMarginCache.value;
+}
+
+const result =
+await privateGet(
+"/v5/account/info",
+{}
+);
+
+if(
+!result.ok
+){
+return result;
+}
+
+const row =
+result.data?.result ||
+{};
+const value =
+{
+ok:
+true,
+marginMode:
+String(
+row.marginMode ||
+""
+),
+unifiedMarginStatus:
+Number(
+row.unifiedMarginStatus ||
+0
+)
+};
+
+rememberAccountMarginInfo(
+value
+);
+return value;
+
+}
+
+async function setUnifiedAccountMarginMode(
+tradeMargin
+){
+
+const setMarginMode =
+wantedAccountSetMarginMode(
+tradeMargin
+);
+const result =
+await privatePost(
+"/v5/account/set-margin-mode",
+{
+setMarginMode
+}
+);
+
+if(
+result.ok
+){
+rememberAccountMarginInfo(
+{
+ok:
+true,
+marginMode:
+setMarginMode,
+unifiedMarginStatus:
+accountMarginCache?.value?.unifiedMarginStatus ||
+5
+}
+);
+}
+
+return result;
+
+}
+
+async function switchLinearMarginMode(
+sym,
+marginMode,
+levStr
+){
+
+const account =
+await getAccountMarginInfo();
+if(
+account?.ok &&
+isUnifiedAccount(
+account.unifiedMarginStatus
+)
+){
+return setUnifiedAccountMarginMode(
+marginMode
+);
+}
+
+const switchResult =
+await privatePost(
+"/v5/position/switch-isolated",
+{
+category:
+"linear",
+symbol:
+sym,
+tradeMode:
+marginMode ===
+"isolated"
+? 1
+: 0,
+buyLeverage:
+levStr,
+sellLeverage:
+levStr
+}
+);
+
+if(
+switchResult.ok
+){
+return {
+...switchResult,
+leverageApplied:
+true
+};
+}
+
+if(
+isSwitchIsolatedForbidden(
+switchResult
+)
+){
+return setUnifiedAccountMarginMode(
+marginMode
+);
+}
+
+return switchResult;
+
+}
+
 async function getSymbolPositionSettings(
 symbol
 ){
@@ -6765,7 +6952,8 @@ message:
 
 const [
 posResult,
-rules
+rules,
+account
 ] =
 await Promise.all(
 [
@@ -6780,7 +6968,8 @@ sym
 ),
 getInstrumentRules(
 sym
-)
+),
+getAccountMarginInfo()
 ]
 );
 
@@ -6804,7 +6993,7 @@ row?.leverage
 10
 )
 );
-const marginMode =
+let marginMode =
 Number(
 row?.tradeMode ??
 0
@@ -6812,6 +7001,18 @@ row?.tradeMode ??
 1
 ? "isolated"
 : "cross";
+
+if(
+account?.ok &&
+isUnifiedAccount(
+account.unifiedMarginStatus
+)
+){
+marginMode =
+accountMarginToTradeMargin(
+account.marginMode
+);
+}
 const maxLeverage =
 Math.max(
 1,
@@ -6943,32 +7144,20 @@ marginChanged
 ){
 
 const switchResult =
-await privatePost(
-"/v5/position/switch-isolated",
-{
-category:
-"linear",
-symbol:
+await switchLinearMarginMode(
 sym,
-tradeMode:
-marginMode ===
-"isolated"
-? 1
-: 0,
-buyLeverage:
-levStr,
-sellLeverage:
+marginMode,
 levStr
-}
 );
 
 if(
-switchResult.ok
+!switchResult.ok
 ){
 return switchResult;
 }
 
 if(
+switchResult.leverageApplied ||
 !leverageChanged
 ){
 return switchResult;
