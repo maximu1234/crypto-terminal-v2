@@ -92,7 +92,7 @@ syncBotStrategiesToMain
 
 import {
 mountAlgoTradeUi
-} from "./algo-trading/trade/boot.js?v=5";
+} from "./algo-trading/trade/boot.js?v=11";
 
 import {
 mountAlgoTradingDrawings

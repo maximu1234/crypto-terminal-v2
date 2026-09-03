@@ -64,7 +64,7 @@ return false;
 }
 
 if(
-window.cryptoTerminalDesktop?.isDesktop
+isDesktopShell()
 ){
 return false;
 }
@@ -80,6 +80,14 @@ host ===
 host ===
 "[::1]"
 );
+
+}
+
+function isDesktopShell(){
+
+return typeof window !==
+"undefined" &&
+!!window.cryptoTerminalDesktop?.isDesktop;
 
 }
 
@@ -508,6 +516,19 @@ lastErr = err;
 
 }
 
+if(
+isDesktopShell()
+){
+
+throw (
+lastErr ||
+new Error(
+"Bybit API недоступен"
+)
+);
+
+}
+
 try{
 
 return await fetchOneBybitProxyUrl(
@@ -528,12 +549,33 @@ err
 
 }
 
+function isAbortFetchError(
+err
+){
+
+if(
+err?.name ===
+"AbortError"
+){
+return true;
+}
+
+return /aborted/i.test(
+String(
+err?.message ||
+err ||
+""
+)
+);
+
+}
+
 function markBybitSuccess(baseIndex){
 
 activeApiBaseIndex =
 baseIndex;
 
-void import("./bybit-network-ui.js?v=4").then(m=>{
+void import("./bybit-network-ui.js?v=6").then(m=>{
 m.clearBybitNetworkIssue();
 });
 
@@ -541,7 +583,15 @@ m.clearBybitNetworkIssue();
 
 function markBybitFailure(err){
 
-void import("./bybit-network-ui.js?v=4").then(m=>{
+if(
+isAbortFetchError(
+err
+)
+){
+return;
+}
+
+void import("./bybit-network-ui.js?v=6").then(m=>{
 m.showBybitNetworkIssue(err);
 });
 
@@ -1011,6 +1061,10 @@ timeoutMs,
 
 }
 
+if(
+!isDesktopShell()
+){
+
 try{
 
 return await fetchOneBybitProxyUrl(
@@ -1026,6 +1080,8 @@ err
 
 lastErr =
 err;
+
+}
 
 }
 

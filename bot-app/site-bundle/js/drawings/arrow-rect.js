@@ -6,7 +6,7 @@ distToSegment
 import {
 fibLevelDash,
 normalizeFibLineStyle
-} from "./fib-spec.js?v=13";
+} from "./fib-spec.js?v=15";
 
 /** @param {CanvasRenderingContext2D} ctx */
 export function drawFilledArrow(

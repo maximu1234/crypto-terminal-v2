@@ -1511,15 +1511,17 @@ menu
 
 function registerIpc(){
 
+let handleTrustedDesktopUi =
+null;
+
 try{
-const {
-configureDesktopUiGate,
-setTradingIpcLocked
-} =
+const gate =
 require(
 "./trading/desktop-ui-gate.cjs"
 );
-configureDesktopUiGate(
+handleTrustedDesktopUi =
+gate.handleTrustedDesktopUi;
+gate.configureDesktopUiGate(
 {
 getLocalSiteOrigin:
 ()=>
@@ -1534,10 +1536,13 @@ if(
 process.env.DESKTOP_REMOTE_UI ===
 "1"
 ){
-setTradingIpcLocked(
+gate.setTradingIpcLocked(
 true
 );
 }
+
+handleTrustedDesktopUi =
+gate.handleTrustedDesktopUi;
 }catch(
 err
 ){
@@ -1568,16 +1573,31 @@ platform.platform
 
 /* Terminal trading IPC: не регистрируем в Algo Bot — только algoTrading.* */
 /* registerTradingIpc(); */
-registerChartSnapshotIpc();
-registerChartSnapshotLogoIpc();
+if(
+typeof handleTrustedDesktopUi ===
+"function"
+){
+registerChartSnapshotIpc({
+handleTrustedDesktopUi
+});
+registerChartSnapshotLogoIpc({
+handleTrustedDesktopUi
+});
+}else{
+log.warn(
+"chart snapshot IPC skipped: desktop-ui-gate missing"
+);
+}
 
 try{
-const {
-handleTrustedDesktopUi
-} =
-require(
-"./trading/desktop-ui-gate.cjs"
+if(
+typeof handleTrustedDesktopUi !==
+"function"
+){
+throw new Error(
+"desktop-ui-gate missing"
 );
+}
 registerAppProxyIpc({
 ipcMain,
 handleTrustedDesktopUi,
@@ -1608,7 +1628,16 @@ err
 );
 }
 
-ipcMain.handle(
+if(
+typeof handleTrustedDesktopUi !==
+"function"
+){
+log.warn(
+"auth session IPC skipped: desktop-ui-gate missing"
+);
+}else{
+handleTrustedDesktopUi(
+ipcMain,
 "desktop:loadAuthSession",
 ()=>{
 
@@ -1641,7 +1670,8 @@ null
 }
 );
 
-ipcMain.handle(
+handleTrustedDesktopUi(
+ipcMain,
 "desktop:saveAuthSession",
 (
 _event,
@@ -1697,7 +1727,8 @@ err.message
 }
 );
 
-ipcMain.handle(
+handleTrustedDesktopUi(
+ipcMain,
 "desktop:clearAuthSession",
 ()=>{
 
@@ -1729,6 +1760,8 @@ err.message
 
 }
 );
+
+}
 
 ipcMain.handle(
 "desktop:updateMenuBarTray",

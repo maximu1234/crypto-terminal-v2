@@ -3,7 +3,7 @@
  */
 import {
 cssUrl
-} from "./asset-manifest.js?v=7";
+} from "./asset-manifest.js?v=8";
 
 import {
 isWatchlistPage
@@ -31,7 +31,7 @@ initTradeBookPanel
 
 import {
 loadTradeExchangeModules
-} from "./trade/module-router.js?v=16";
+} from "./trade/module-router.js?v=23";
 
 import {
 getActiveExchangeId
@@ -328,7 +328,7 @@ const {
 initTradeChartOverlay
 } =
 await import(
-"./trade-chart-overlay.js?v=63"
+"./trade-chart-overlay.js?v=64"
 );
 
 initTradeChartOverlay();

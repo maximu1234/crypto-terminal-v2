@@ -420,15 +420,30 @@ err
 
 }
 
-function registerChartSnapshotLogoIpc(){
+function registerChartSnapshotLogoIpc(
+opts =
+{}
+){
 
-ipcMain.handle(
+const handleTrustedDesktopUi =
+opts.handleTrustedDesktopUi;
+
+if(
+typeof handleTrustedDesktopUi !==
+"function"
+){
+return;
+}
+
+handleTrustedDesktopUi(
+ipcMain,
 "desktop:chartSnapshotLogoGet",
 ()=>
 getStatus()
 );
 
-ipcMain.handle(
+handleTrustedDesktopUi(
+ipcMain,
 "desktop:chartSnapshotLogoSetEnabled",
 (
 _event,
@@ -474,7 +489,8 @@ err
 }
 );
 
-ipcMain.handle(
+handleTrustedDesktopUi(
+ipcMain,
 "desktop:chartSnapshotLogoPick",
 async (
 event
@@ -587,7 +603,8 @@ err
 }
 );
 
-ipcMain.handle(
+handleTrustedDesktopUi(
+ipcMain,
 "desktop:chartSnapshotLogoDataUrl",
 ()=>
 getBwDataUrl()

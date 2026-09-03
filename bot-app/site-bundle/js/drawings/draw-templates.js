@@ -11,7 +11,7 @@ import {
 cloneDefaultFibRows,
 ensureFibLevelsVisible,
 getFibRows
-} from "./fib-spec.js?v=13";
+} from "./fib-spec.js?v=15";
 
 import {
 normalizeRectangleShape
@@ -26,7 +26,7 @@ createFvpToolDefaults
 
 import {
 isPositionType
-} from "./position.js?v=9";
+} from "./position.js?v=10";
 
 import {
 isTextTool,

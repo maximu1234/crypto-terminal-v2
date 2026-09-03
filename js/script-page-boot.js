@@ -11,7 +11,7 @@ loadLightweightCharts
 
 import {
 jsImport
-} from "./asset-manifest.js?v=7";
+} from "./asset-manifest.js?v=8";
 
 import {
 mountScriptPage

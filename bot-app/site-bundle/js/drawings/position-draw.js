@@ -30,7 +30,11 @@ positionSizingFromShape,
 initialPositionTpSlPercent,
 clampPositionPrices as clampPositionPricesPure,
 formatPositionPrice
-} from "./position.js?v=9";
+} from "./position.js?v=10";
+
+import {
+isSeriesLogarithmic
+} from "./fib-spec.js?v=15";
 
 /**
  * @param {{
@@ -1128,7 +1132,15 @@ const sizing =
 positionSizingFromShape(shape);
 
 const metrics =
-positionMetrics(shape);
+positionMetrics(
+shape,
+{
+logarithmic:
+isSeriesLogarithmic(
+series
+)
+}
+);
 const cx =
 (x1 + x2) / 2;
 const topY =

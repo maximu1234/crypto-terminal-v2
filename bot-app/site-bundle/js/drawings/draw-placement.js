@@ -5,17 +5,17 @@
 import {
 hideDomChartCrosshair,
 positionTabletProbeHorizInStack
-} from "../chart-import.js?v=48";
+} from "../chart-import.js?v=53";
 
 import {
 ensureFibLevelsVisible,
 cloneDefaultFibRows,
 ensureFibAnchorMinSpan
-} from "./fib-spec.js?v=13";
+} from "./fib-spec.js?v=15";
 
 import {
 isPositionType
-} from "./position.js?v=9";
+} from "./position.js?v=10";
 
 import {
 uid

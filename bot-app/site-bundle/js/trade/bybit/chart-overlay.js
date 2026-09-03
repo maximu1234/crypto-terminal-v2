@@ -394,6 +394,10 @@ let bindDrawingSyncTimer =
 0;
 let badgeLayoutCache =
 null;
+let badgeActionGuard =
+0;
+let lastPointerClientY =
+NaN;
 let dragStop =
 null;
 let pendingStopPrice =
@@ -1262,6 +1266,8 @@ function onWrapPointerMove(
 e
 ){
 
+lastPointerClientY =
+e.clientY;
 refreshEntryHoverFromPointer(
 e.clientY
 );
@@ -1433,6 +1439,22 @@ if(
 return;
 }
 
+const actionBtn =
+e.target.closest(
+".seg-close[data-action]"
+);
+
+if(
+actionBtn
+){
+e.preventDefault();
+e.stopPropagation();
+badgeActionGuard =
+Date.now();
+actionBtn.click();
+return;
+}
+
 const badge =
 e.target.closest(
 ".trade-pos-badge"
@@ -1440,14 +1462,6 @@ e.target.closest(
 
 if(
 !badge
-){
-return;
-}
-
-if(
-e.target.closest(
-".seg-close"
-)
 ){
 return;
 }
@@ -1502,17 +1516,18 @@ pos.symbol,
 pos.positionSide ||
 pos.side,
 pos.side,
-pos.avgPrice,
 Number(
 pos.stopLoss
-) ||
-0,
+) >
+0
+? "sl"
+: "",
 Number(
 pos.takeProfit
-) ||
-0,
-pos.volumeUsdt,
-pos.leverage,
+) >
+0
+? "tp"
+: "",
 dragStop
 ? `${dragStop.kind}-drag`
 : ""
@@ -1764,15 +1779,51 @@ return badgeSpecs;
 
 }
 
+function badgeCacheMatches(
+badgeSpecs,
+layoutKey
+){
+
+if(
+!badgeLayoutCache ||
+badgeLayoutCache.key !==
+layoutKey ||
+badgeLayoutCache.elementsByKind.size !==
+badgeSpecs.length
+){
+return false;
+}
+
+for(
+const spec of badgeSpecs
+){
+const el =
+badgeLayoutCache.elementsByKind.get(
+spec.kind
+);
+
+if(
+!el?.isConnected
+){
+return false;
+}
+
+}
+
+return true;
+
+}
+
 function syncBadgeDom(
 badgeSpecs,
 layoutKey
 ){
 
 const canFast =
-badgeLayoutCache &&
-badgeLayoutCache.key ===
-layoutKey;
+badgeCacheMatches(
+badgeSpecs,
+layoutKey
+);
 
 if(
 canFast
@@ -1833,6 +1884,40 @@ displayPosition.pnl
 );
 }
 
+const volEl =
+el.querySelector(
+".seg-vol"
+);
+
+if(
+volEl &&
+displayPosition
+){
+volEl.textContent =
+displayVolume(
+displayPosition.volumeUsdt
+);
+}
+
+const levEl =
+el.querySelector(
+".seg-lev"
+);
+
+if(
+levEl &&
+displayPosition
+){
+const lev =
+displayPosition.leverage
+? `${displayPosition.leverage}x`
+: "—";
+levEl.textContent =
+displayLeverage(
+lev
+);
+}
+
 }
 
 if(
@@ -1890,6 +1975,20 @@ el.classList.toggle(
 );
 }
 
+}
+
+const width =
+el.getBoundingClientRect().width ||
+0;
+
+if(
+width >
+0
+){
+badgeLayoutCache.gapByKind.set(
+spec.kind,
+width
+);
 }
 
 }
@@ -2130,7 +2229,9 @@ badgeSpecs,
 layoutKey
 );
 
-refreshEntryHoverFromPointer();
+refreshEntryHoverFromPointer(
+lastPointerClientY
+);
 syncEntryHoverUI();
 
 const entryExtraGap =
@@ -2551,6 +2652,17 @@ badgesEl.addEventListener(
 "click",
 event=>{
 
+if(
+event.isTrusted &&
+Date.now() -
+badgeActionGuard <
+500
+){
+event.preventDefault();
+event.stopPropagation();
+return;
+}
+
 const btn =
 event.target.closest(
 "[data-action]"
@@ -2861,6 +2973,18 @@ btn.dataset.wired =
 btn.addEventListener(
 "click",
 event=>{
+
+if(
+event.isTrusted &&
+Date.now() -
+badgeActionGuard <
+500
+){
+event.preventDefault();
+event.stopPropagation();
+return;
+}
+
 event.preventDefault();
 event.stopPropagation();
 handler();
@@ -2927,7 +3051,9 @@ syncBadgeDom(
 badgeSpecs,
 layoutKey
 );
-refreshEntryHoverFromPointer();
+refreshEntryHoverFromPointer(
+lastPointerClientY
+);
 syncEntryHoverUI();
 host?.getDrawingTools?.()?.scheduleRedraw?.();
 
@@ -3113,7 +3239,6 @@ return;
 
 position =
 nextPos;
-invalidateBadgeLayoutCache();
 scheduleDraw(
 true
 );
@@ -3183,7 +3308,6 @@ cachedNow.size
 ){
 position =
 cachedNow;
-invalidateBadgeLayoutCache();
 scheduleDraw(
 true
 );
@@ -3243,7 +3367,6 @@ cachedAfter.size
 ){
 position =
 cachedAfter;
-invalidateBadgeLayoutCache();
 scheduleDraw(
 true
 );
@@ -3403,7 +3526,6 @@ return;
 
 position =
 found;
-invalidateBadgeLayoutCache();
 scheduleDraw(
 true
 );
@@ -3476,7 +3598,6 @@ position
 null;
 }
 
-invalidateBadgeLayoutCache();
 scheduleDraw(
 true
 );
@@ -3622,7 +3743,6 @@ false
 );
 }
 
-invalidateBadgeLayoutCache();
 scheduleDraw(
 true
 );
@@ -3663,10 +3783,9 @@ expectedSymbol
 ){
 
 const eventSym =
-String(
-event?.detail?.symbol ||
-""
-).trim().toUpperCase();
+normalizeOverlaySymbol(
+event?.detail?.symbol
+);
 const expected =
 normalizeOverlaySymbol(
 expectedSymbol

@@ -44,10 +44,15 @@ PNL_SHARE_CONTROL_HTML
 } from "../pnl-share-modal.js?v=2";
 
 import {
+renderDiaryPeriodAnalytics,
+clearDiaryPeriodAnalytics
+} from "../../../diary-period-analytics-ui.js?v=5";
+
+import {
 getLoadedTradeExchangeModules,
 loadTradeExchangeModules,
 resetTradeExchangeModules
-} from "../../module-router.js?v=15";
+} from "../../module-router.js?v=23";
 
 const EXCHANGE_ID =
 "bybit";
@@ -74,6 +79,11 @@ document.getElementById(
 const statusEl =
 document.getElementById(
 "trade-diary-status"
+);
+
+const analyticsEl =
+document.getElementById(
+"trade-diary-analytics"
 );
 
 const contentEl =
@@ -1156,6 +1166,10 @@ trades,
 activePeriod.startMs,
 activePeriod.endMs
 );
+renderDiaryPeriodAnalytics(
+analyticsEl,
+weekTrades
+);
 setStatus(
 statusText,
 {
@@ -1326,6 +1340,11 @@ trade.side
 
 }
 
+renderDiaryPeriodAnalytics(
+analyticsEl,
+weekTrades
+);
+
 }
 
 async function maybeEnrichDiaryDurations(
@@ -1408,6 +1427,9 @@ contentEl.innerHTML =
 "";
 openTradeKey =
 null;
+clearDiaryPeriodAnalytics(
+analyticsEl
+);
 }
 }else{
 setStatus(
@@ -1421,6 +1443,9 @@ contentEl.innerHTML =
 "";
 openTradeKey =
 null;
+clearDiaryPeriodAnalytics(
+analyticsEl
+);
 }
 
 const loadingRunId =
@@ -1455,6 +1480,9 @@ if(
 ){
 contentEl.innerHTML =
 "";
+clearDiaryPeriodAnalytics(
+analyticsEl
+);
 }
 
 return;
@@ -1509,6 +1537,9 @@ if(
 ){
 contentEl.innerHTML =
 "";
+clearDiaryPeriodAnalytics(
+analyticsEl
+);
 }
 
 }finally{

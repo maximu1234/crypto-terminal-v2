@@ -50,6 +50,12 @@ return !!window.cryptoTerminalDesktop?.isDesktop;
 function isAlgoBotShell(){
 
 if(
+!isDesktopShell()
+){
+return false;
+}
+
+if(
 document.body?.classList?.contains(
 "algo-bot-lite-layout"
 )

@@ -93,6 +93,29 @@ false
 }
 };
 
+function escapeHtml(
+value
+){
+
+return String(
+value ??
+""
+).replace(
+/&/g,
+"&amp;"
+).replace(
+/</g,
+"&lt;"
+).replace(
+/>/g,
+"&gt;"
+).replace(
+/"/g,
+"&quot;"
+);
+
+}
+
 function readTotalPnlHidden(){
 
 try{
@@ -1779,14 +1802,14 @@ row.positionSide;
 
 el.innerHTML =
 `
-<span class="col-ticker" title="${row.ticker}">
+<span class="col-ticker" title="${escapeHtml(row.ticker)}">
 <span class="trade-book-side ${positionSideClass(row.side)}" aria-hidden="true"></span>
-<span class="trade-book-ticker-text">${row.ticker}</span>
+<span class="trade-book-ticker-text">${escapeHtml(row.ticker)}</span>
 </span>
 <span class="col-pnl-wrap">
 <span class="col-pnl ${totalPnlHidden ? "is-masked" : pnlClass(row.pnl)}">${maskTradeValue(totalPnlHidden, formatTradePnl(row.pnl))}</span>
 ${SHARE_BUTTON_HTML}
-<button type="button" class="trade-book-close" title="Закрыть по рынку" aria-label="Закрыть ${row.ticker}">×</button>
+<button type="button" class="trade-book-close" title="Закрыть по рынку" aria-label="Закрыть ${escapeHtml(row.ticker)}">×</button>
 </span>
 <span class="col-volume">${maskTradeValue(totalPnlHidden, formatTradeUsdt(row.volumeUsdt))}</span>
 <span class="col-entry">${formatPositionPrice(row.avgPrice)}</span>
@@ -1855,8 +1878,8 @@ row.orderId;
 
 el.innerHTML =
 `
-<span class="col-ticker" title="${row.ticker}">
-<span class="trade-book-ticker-text">${row.ticker}</span>
+<span class="col-ticker" title="${escapeHtml(row.ticker)}">
+<span class="trade-book-ticker-text">${escapeHtml(row.ticker)}</span>
 </span>
 <span class="col-order-type">${orderPanelTypeLabel(row)}</span>
 <span class="col-price">${formatPrice(row.price)}</span>

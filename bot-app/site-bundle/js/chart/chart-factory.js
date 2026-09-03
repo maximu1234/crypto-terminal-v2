@@ -16,6 +16,10 @@ getChartLayoutBgColor
 } from "./chart-options.js?v=7";
 
 import {
+lwPriceScaleModeId
+} from "./price-scale-mode.js?v=3";
+
+import {
 withChartLocalTime
 } from "./chart-local-time.js?v=1";
 
@@ -181,7 +185,10 @@ unfreeze
 
 }
 
-export function createCandlestickChart(container){
+export function createCandlestickChart(
+container,
+chartOpts
+){
 
 const chartBg =
 getChartLayoutBgColor();
@@ -208,9 +215,12 @@ rightPriceScale:{
 
 borderColor:"#1f2937",
 
-/* LW: Normal=0 Log=1… Дефолт log — см. расчёт фибоначчи в drawings.js */
+/* LW: Normal=0 Log=1. Дефолт log; Terminal может переключить на Regular. */
 
-mode:1,
+mode:
+lwPriceScaleModeId(
+chartOpts?.priceScaleMode
+),
 
 autoScale:true,
 minimumWidth:effectiveChartPriceScaleWidth(),
@@ -607,27 +617,30 @@ return visibleBars;
 }
 
 /**
- * Монеты: шкала времени с «хвостом» в будущее (как TradingView).
- * Явный barSpacing + rightOffset — иначе LW жмёт последнюю свечу к правому краю.
+ * @returns {{
+ *   range: { from: number, to: number },
+ *   timeOpts: object,
+ *   futureMargin: number,
+ *   realTotal: number,
+ *   visibleBars: number
+ * }|null}
  */
-export function applyCoinsChartViewport(
-mainChart,
-linkedChart,
+export function computeCoinsChartViewportPlan(
 candles,
 tf,
 chartWidthPx,
 realCandleCount,
-visibleBarsCap
+visibleBarsCap,
+plotWidthPx
 ){
 
 if(
-!mainChart ||
 !Array.isArray(
 candles
 ) ||
 !candles.length
 ){
-return 0;
+return null;
 }
 
 const totalBars =
@@ -690,12 +703,14 @@ chartWidthPx ||
 );
 
 const plotWidth =
-linkedChart?.timeScale().width() ||
-mainChart.timeScale().width() ||
+Math.max(
+plotWidthPx ||
+0,
 Math.max(
 width -
 effectiveChartPriceScaleWidth(),
 40
+)
 );
 
 const logicalSpan =
@@ -715,13 +730,13 @@ plotWidth /
 logicalSpan
 );
 
-const range = {
+return {
+range:{
 from,
 to:
 lastIndex
-};
-
-const timeOpts = {
+},
+timeOpts:{
 barSpacing,
 rightOffset:
 4,
@@ -733,14 +748,65 @@ shiftVisibleRangeOnNewBar:
 false,
 lockVisibleTimeRangeOnResize:
 false
+},
+futureMargin,
+realTotal,
+visibleBars
 };
 
+}
+
+/**
+ * Монеты: шкала времени с «хвостом» в будущее (как TradingView).
+ * Явный barSpacing + rightOffset — иначе LW жмёт последнюю свечу к правому краю.
+ */
+export function applyCoinsChartViewport(
+mainChart,
+linkedChart,
+candles,
+tf,
+chartWidthPx,
+realCandleCount,
+visibleBarsCap
+){
+
+if(
+!mainChart ||
+!Array.isArray(
+candles
+) ||
+!candles.length
+){
+return 0;
+}
+
+const plotWidth =
+linkedChart?.timeScale().width() ||
+mainChart.timeScale().width() ||
+0;
+
+const plan =
+computeCoinsChartViewportPlan(
+candles,
+tf,
+chartWidthPx,
+realCandleCount,
+visibleBarsCap,
+plotWidth
+);
+
+if(
+!plan
+){
+return 0;
+}
+
 mainChart.timeScale().applyOptions(
-timeOpts
+plan.timeOpts
 );
 
 mainChart.timeScale().setVisibleLogicalRange(
-range
+plan.range
 );
 
 if(
@@ -748,7 +814,7 @@ linkedChart
 ){
 
 linkedChart.timeScale().applyOptions({
-...timeOpts,
+...plan.timeOpts,
 visible:
 true,
 timeVisible:
@@ -760,12 +826,12 @@ false
 });
 
 linkedChart.timeScale().setVisibleLogicalRange(
-range
+plan.range
 );
 
 }
 
-return futureMargin;
+return plan.futureMargin;
 
 }
 
@@ -2234,7 +2300,9 @@ onLinkedCrosshairTime,
 onLinkedCrosshairRsiValue = null,
 onLinkedCrosshairClear,
 getLinkedValueAtTime,
-getMainValueAtTime
+getMainValueAtTime,
+getExtraPanes = ()=>
+[]
 }){
 
 let lock =
@@ -2272,6 +2340,60 @@ linkedWrapEl
 ensureDomChartCrosshair(
 linkedWrapEl
 );
+}
+
+function extraPanes(){
+
+try{
+
+const list =
+getExtraPanes?.();
+
+if(
+!Array.isArray(
+list
+)
+){
+return [];
+}
+
+return list.filter(
+pane=>
+pane?.wrapEl &&
+pane?.chartEl &&
+pane?.chart
+);
+
+}catch{
+return [];
+}
+
+}
+
+function ensureExtraPaneDomCrosshairs(){
+
+extraPanes().forEach(
+pane=>
+ensureDomChartCrosshair(
+pane.wrapEl
+)
+);
+
+}
+
+function hideExtraPaneCrosshairHorz(){
+
+extraPanes().forEach(
+pane=>{
+hideDomChartCrosshairHorz(
+pane.wrapEl
+);
+hideDomChartCrosshairVert(
+pane.wrapEl
+);
+}
+);
+
 }
 
 function trackPointerClient(
@@ -2388,6 +2510,15 @@ linkedChart,
 cx,
 cy
 )
+) ||
+extraPanes().some(
+pane=>
+isClientOnChartPriceScale(
+pane.chartEl,
+pane.chart,
+cx,
+cy
+)
 );
 
 }
@@ -2446,6 +2577,8 @@ hideDomChartCrosshairHorz(
 linkedWrapEl
 );
 }
+
+hideExtraPaneCrosshairHorz();
 
 }
 
@@ -2600,6 +2733,8 @@ linkedWrapEl
 );
 }
 
+hideExtraPaneCrosshairHorz();
+
 linkedVertStackLeft(
 x,
 chartEl
@@ -2639,6 +2774,8 @@ hideDomChartCrosshairHorz(
 chartWrapEl
 );
 }
+
+hideExtraPaneCrosshairHorz();
 
 linkedVertStackLeft(
 x,
@@ -2744,6 +2881,257 @@ null;
 
 }
 
+function plotCoordsFromExtraPaneClient(
+pane,
+clientX,
+clientY
+){
+
+if(
+!pane?.chartEl ||
+!pane?.chart
+){
+return null;
+}
+
+if(
+isClientOnChartPriceScale(
+pane.chartEl,
+pane.chart,
+clientX,
+clientY
+)
+){
+return null;
+}
+
+const {
+chartR,
+plotW
+} =
+chartPlotMetrics(
+pane.chartEl,
+pane.chart
+);
+
+const x =
+clientX - chartR.left;
+const y =
+clientY - chartR.top;
+
+if(
+x < 0 ||
+x > plotW ||
+y < 0 ||
+y > chartR.height
+){
+return null;
+}
+
+return {
+x,
+y
+};
+
+}
+
+function extraPaneAtPointer(
+clientX,
+clientY
+){
+
+if(
+clientX ==
+null ||
+clientY ==
+null
+){
+return null;
+}
+
+for(
+const pane of
+extraPanes()
+){
+
+const plot =
+plotCoordsFromExtraPaneClient(
+pane,
+clientX,
+clientY
+);
+
+if(
+plot
+){
+return {
+pane,
+plot
+};
+}
+
+}
+
+return null;
+
+}
+
+function applyExtraPaneCrosshairPlot(
+pane,
+x,
+y
+){
+
+ensureExtraPaneDomCrosshairs();
+
+if(
+chartWrapEl
+){
+hideDomChartCrosshairVert(
+chartWrapEl
+);
+hideDomChartCrosshairHorz(
+chartWrapEl
+);
+}
+
+if(
+linkedWrapEl
+){
+hideDomChartCrosshairHorz(
+linkedWrapEl
+);
+}
+
+extraPanes().forEach(
+other=>{
+hideDomChartCrosshairVert(
+other.wrapEl
+);
+
+if(
+other.wrapEl !==
+pane.wrapEl
+){
+hideDomChartCrosshairHorz(
+other.wrapEl
+);
+}
+
+}
+);
+
+linkedVertStackLeft(
+x,
+pane.chartEl ||
+chartEl
+);
+
+if(
+Number.isFinite(
+y
+)
+){
+
+positionDomChartCrosshairHorz({
+wrapEl:pane.wrapEl,
+chartEl:pane.chartEl,
+chart:pane.chart,
+plotY:y
+});
+
+}
+
+}
+
+function showExtraPaneCrosshairFromClient(
+clientX,
+clientY
+){
+
+const hit =
+extraPaneAtPointer(
+clientX,
+clientY
+);
+
+if(
+!hit
+){
+return false;
+}
+
+if(
+hideCrosshairOnAnyPriceScale(
+clientX,
+clientY
+)
+){
+return true;
+}
+
+applyExtraPaneCrosshairPlot(
+hit.pane,
+hit.plot.x,
+hit.plot.y
+);
+
+try{
+mainChart.clearCrosshairPosition();
+}catch{
+/* ignore */
+}
+
+try{
+linkedChart?.clearCrosshairPosition?.();
+}catch{
+/* ignore */
+}
+
+try{
+hit.pane.chart.clearCrosshairPosition();
+}catch{
+/* ignore */
+}
+
+let probeTime =
+hit.pane.chart.timeScale()?.coordinateToTime?.(
+hit.plot.x
+);
+
+if(
+probeTime ==
+null &&
+mainChart?.timeScale
+){
+
+probeTime =
+mainChart.timeScale().coordinateToTime?.(
+hit.plot.x
+);
+
+}
+
+updateCrosshairAxisLabels({
+param:{
+time: probeTime,
+point:{
+x: hit.plot.x,
+y: hit.plot.y
+}
+},
+timeLabelEl:crosshairTimeLabelEl,
+priceLabelEl:crosshairPriceLabelEl,
+snappedX:hit.plot.x,
+plotY:null,
+mainSeries:null,
+mainChart:null
+});
+
+return true;
+
+}
+
 function isClientOverChartPlots(
 clientX,
 clientY
@@ -2767,7 +3155,12 @@ null ||
 isClientOnRsiPlot(
 clientX,
 clientY
-)
+) ||
+extraPaneAtPointer(
+clientX,
+clientY
+) !=
+null
 );
 
 }
@@ -2803,6 +3196,22 @@ linkedChartEl,
 linkedChart,
 clientX,
 clientY
+)
+){
+clearLinked();
+clearMainCrosshair();
+return true;
+}
+
+if(
+extraPanes().some(
+pane=>
+isClientOnChartPriceScale(
+pane.chartEl,
+pane.chart,
+clientX,
+clientY
+)
 )
 ){
 clearLinked();
@@ -3222,6 +3631,15 @@ e.clientY
 return;
 }
 
+if(
+showExtraPaneCrosshairFromClient(
+e.clientX,
+e.clientY
+)
+){
+return;
+}
+
 clearLinked();
 clearMainCrosshair();
 return;
@@ -3303,6 +3721,15 @@ e.clientY
 return;
 }
 
+if(
+showExtraPaneCrosshairFromClient(
+e.clientX,
+e.clientY
+)
+){
+return;
+}
+
 clearLinked();
 clearMainCrosshair();
 return;
@@ -3328,6 +3755,44 @@ e.clientX,
 e.clientY
 );
 }
+
+if(
+lock ||
+e.pointerType ===
+"touch" ||
+document.body.classList.contains(
+"chart-probe-active"
+)
+){
+return;
+}
+
+if(
+hideCrosshairOnAnyPriceScale(
+e.clientX,
+e.clientY
+)
+){
+return;
+}
+
+if(
+plotCoordsFromClient(
+e.clientX,
+e.clientY
+) ||
+isClientOnRsiPlot(
+e.clientX,
+e.clientY
+)
+){
+return;
+}
+
+showExtraPaneCrosshairFromClient(
+e.clientX,
+e.clientY
+);
 
 }
 
@@ -3432,7 +3897,13 @@ if(
 param.point ===
 undefined
 ){
+
+if(
+!isLivePointerOverChartPlots()
+){
 clearLinked();
+}
+
 return;
 }
 
@@ -3452,6 +3923,38 @@ param
 clearLinked();
 clearMainCrosshair();
 return;
+}
+
+{
+const clientX =
+livePointerClientX ??
+lastPointerClientX;
+const clientY =
+livePointerClientY ??
+lastPointerClientY;
+
+if(
+isClientOnRsiPlot(
+clientX,
+clientY
+)
+){
+showRsiCrosshairFromClient(
+clientX,
+clientY
+);
+return;
+}
+
+if(
+showExtraPaneCrosshairFromClient(
+clientX,
+clientY
+)
+){
+return;
+}
+
 }
 
 const overlayX =
@@ -3555,6 +4058,15 @@ clientY
 
 return;
 
+}
+
+if(
+showExtraPaneCrosshairFromClient(
+clientX,
+clientY
+)
+){
+return;
 }
 
 clearLinked();

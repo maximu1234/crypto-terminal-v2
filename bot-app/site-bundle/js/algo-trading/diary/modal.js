@@ -43,11 +43,17 @@ import {
 isAlgoBotLiteMode
 } from "../lite-layout.js?v=5";
 
+import {
+renderDiaryPeriodAnalytics,
+clearDiaryPeriodAnalytics
+} from "../../diary-period-analytics-ui.js?v=5";
+
 const OVERLAY_ATTR = "data-algo-diary-overlay";
 
 let overlayEl = null;
 let modalEl = null;
 let statusEl = null;
+let analyticsEl = null;
 let contentEl = null;
 let refreshBtn = null;
 let periodBtn = null;
@@ -387,6 +393,7 @@ function paintDiaryTrades(trades, statusText, { loading = false, error = false }
   }
 
   renderDiaryContent(trades, activePeriod.startMs, activePeriod.endMs);
+  renderDiaryPeriodAnalytics(analyticsEl, weekTrades);
   setStatus(statusText, { loading, error });
 }
 
@@ -448,6 +455,8 @@ function patchDiaryTradeDurations(enrichedTrades) {
       sideEl.className = `trade-diary-side ${sideToneClass(trade.side)}`;
     }
   }
+
+  renderDiaryPeriodAnalytics(analyticsEl, weekTrades);
 }
 
 async function maybeEnrichDiaryDurations(trades, period) {
@@ -483,11 +492,13 @@ async function refreshDiary({ forceRefresh = false } = {}) {
       setStatus("Идет загрузка сделок ...", { loading: true });
       contentEl.innerHTML = "";
       openTradeKey = null;
+      clearDiaryPeriodAnalytics(analyticsEl);
     }
   } else {
     setStatus("Идет загрузка сделок ...", { loading: true });
     contentEl.innerHTML = "";
     openTradeKey = null;
+    clearDiaryPeriodAnalytics(analyticsEl);
   }
 
   const loadingRunId = startDiaryLoadingStatus(loadingCachedCount);
@@ -501,6 +512,7 @@ async function refreshDiary({ forceRefresh = false } = {}) {
       });
       if (!weekTrades.length) {
         contentEl.innerHTML = "";
+        clearDiaryPeriodAnalytics(analyticsEl);
       }
       return;
     }
@@ -529,6 +541,7 @@ async function refreshDiary({ forceRefresh = false } = {}) {
     setStatus(err?.message || "Ошибка загрузки", { error: true });
     if (!weekTrades.length) {
       contentEl.innerHTML = "";
+      clearDiaryPeriodAnalytics(analyticsEl);
     }
   } finally {
     stopDiaryLoadingStatus(loadingRunId);
@@ -574,7 +587,10 @@ function ensureOverlay() {
       </div>
     </div>
     <p id="algo-diary-status" class="trade-diary-status" aria-live="polite"></p>
+    <div class="algo-diary-scroll">
+    <div id="algo-diary-analytics" class="trade-diary-analytics is-collapsed" hidden></div>
     <div id="algo-diary-content" class="trade-diary-content algo-diary-content"></div>
+    </div>
   </div>`;
 
   document.body.appendChild(root);
@@ -582,6 +598,7 @@ function ensureOverlay() {
   overlayEl = root;
   modalEl = root.querySelector(".algo-diary-modal");
   statusEl = root.querySelector("#algo-diary-status");
+  analyticsEl = root.querySelector("#algo-diary-analytics");
   contentEl = root.querySelector("#algo-diary-content");
   refreshBtn = root.querySelector("#algo-diary-refresh");
   periodBtn = root.querySelector("#algo-diary-period-btn");

@@ -2,7 +2,7 @@ import {
 coinsState,
 marketMap,
 coinElements
-} from "./terminal-state.js?v=12";
+} from "./terminal-state.js?v=13";
 
 import {
 isActiveRealtimeMarketDataset,
@@ -10,13 +10,14 @@ isExchangeTradingEnabled
 } from "../market-api.js?v=6";
 
 import {
-connectKlineStream
+connectKlineStream,
+subscribeTicker
 } from "../market-ws.js?v=1";
 
 import {
 connectTickerStream,
 fetchTickersInto
-} from "../tickers.js?v=27";
+} from "../tickers.js?v=28";
 
 import {
 createTickerUiBatcher
@@ -34,7 +35,7 @@ emptyFavorites
 
 import {
 isTradePage
-} from "./terminal-state.js?v=12";
+} from "./terminal-state.js?v=13";
 
 /** Desktop /trade only — не тянем trade-open-positions в открытый web /coins. */
 function escapeHtml(
@@ -297,6 +298,11 @@ return [];
 
 export function generateMarketData(){
 
+const previous =
+new Map(
+marketMap
+);
+
 marketMap.clear();
 
 const symbols =
@@ -308,15 +314,33 @@ coinsState().currentDataset;
 const next =
 symbols.map(
 symbol=>{
+
+const prev =
+previous.get(
+symbol
+);
+
 return {
 symbol,
 price:
+Number(
+prev?.price
+) ||
 0,
 change24:
+Number(
+prev?.change24
+) ||
 0,
 change1h:
+Number(
+prev?.change1h
+) ||
 0,
 volume24:
+Number(
+prev?.volume24
+) ||
 0
 };
 }
@@ -534,6 +558,27 @@ item
 );
 scheduleTickerUiFlush();
 
+applyLivePriceToLastCandle(
+tick.price ||
+tick.lastPrice,
+tick.symbol
+);
+
+window.dispatchEvent(
+new CustomEvent(
+"market-last-price",
+{
+detail:{
+symbol:
+tick.symbol,
+price:
+tick.price ||
+tick.lastPrice
+}
+}
+)
+);
+
 if(
 typeof hooks.onTickerTick ===
 "function"
@@ -552,6 +597,183 @@ item
    REALTIME
 ========================================================= */
 
+function canonicalChartSymbol(
+symbol
+){
+
+return String(
+symbol ||
+""
+).replace(
+/\.P$/i,
+""
+).trim().toUpperCase();
+
+}
+
+let lastPublicKlineAt =
+0;
+let liveMarkUnsub =
+null;
+let liveTickerUnsub =
+null;
+let livePriceFlushTimer =
+null;
+let pendingLiveBar =
+null;
+
+function flushPendingLiveBar(){
+
+livePriceFlushTimer =
+null;
+const bar =
+pendingLiveBar;
+pendingLiveBar =
+null;
+
+if(
+!bar
+){
+return;
+}
+
+if(
+hooks.applyChartLiveCandle
+){
+hooks.applyChartLiveCandle(
+bar
+);
+}else{
+coinsState().candleSeries?.update(
+bar
+);
+}
+
+}
+
+function applyLivePriceToLastCandle(
+price,
+sourceSymbol
+){
+
+if(
+canonicalChartSymbol(
+sourceSymbol
+) !==
+canonicalChartSymbol(
+coinsState().currentSymbol
+)
+){
+return;
+}
+
+const px =
+Number(
+price
+);
+
+if(
+!Number.isFinite(
+px
+) ||
+px <=
+0 ||
+!coinsState().candles.length
+){
+return;
+}
+
+const last =
+coinsState().candles[
+coinsState().candles.length -
+1
+];
+const high =
+Number(
+last.high
+);
+const low =
+Number(
+last.low
+);
+const bar =
+{
+...last,
+close:
+px,
+high:
+Number.isFinite(
+high
+)
+? Math.max(
+high,
+px
+)
+: px,
+low:
+Number.isFinite(
+low
+)
+? Math.min(
+low,
+px
+)
+: px
+};
+
+coinsState().candles[
+coinsState().candles.length -
+1
+] =
+bar;
+pendingLiveBar =
+bar;
+
+if(
+!livePriceFlushTimer
+){
+livePriceFlushTimer =
+setTimeout(
+flushPendingLiveBar,
+120
+);
+}
+
+}
+
+function stopLivePriceFallbacks(){
+
+if(
+liveMarkUnsub
+){
+liveMarkUnsub();
+liveMarkUnsub =
+null;
+}
+
+if(
+liveTickerUnsub
+){
+liveTickerUnsub();
+liveTickerUnsub =
+null;
+}
+
+if(
+livePriceFlushTimer
+){
+clearTimeout(
+livePriceFlushTimer
+);
+livePriceFlushTimer =
+null;
+}
+
+pendingLiveBar =
+null;
+
+}
+
 export function startRealtime(){
 
 if(
@@ -564,6 +786,58 @@ return;
 
 const streamSymbol =
 coinsState().currentSymbol;
+
+stopLivePriceFallbacks();
+lastPublicKlineAt =
+0;
+
+const onPositionMark =
+event=>{
+
+if(
+Date.now() -
+lastPublicKlineAt <
+2000
+){
+return;
+}
+
+applyLivePriceToLastCandle(
+event?.detail?.position?.markPrice,
+event?.detail?.symbol
+);
+
+};
+
+window.addEventListener(
+"trade-position-updated",
+onPositionMark
+);
+
+liveMarkUnsub =
+()=>{
+window.removeEventListener(
+"trade-position-updated",
+onPositionMark
+);
+};
+
+try{
+liveTickerUnsub =
+subscribeTicker(
+streamSymbol,
+tick=>{
+applyLivePriceToLastCandle(
+tick?.lastPrice ||
+tick?.markPrice,
+streamSymbol
+);
+}
+);
+}catch{
+liveTickerUnsub =
+null;
+}
 
 connectKlineStream({
 
@@ -627,6 +901,9 @@ coinsState().candles.shift();
 }else{
 return;
 }
+
+lastPublicKlineAt =
+Date.now();
 
 if(
 hooks.applyChartLiveCandle

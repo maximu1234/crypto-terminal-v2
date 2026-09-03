@@ -172,9 +172,23 @@ image
 
 }
 
-function registerChartSnapshotIpc(){
+function registerChartSnapshotIpc(
+opts =
+{}
+){
 
-ipcMain.handle(
+const handleTrustedDesktopUi =
+opts.handleTrustedDesktopUi;
+
+if(
+typeof handleTrustedDesktopUi !==
+"function"
+){
+return;
+}
+
+handleTrustedDesktopUi(
+ipcMain,
 "desktop:chartSnapshotCopy",
 async (
 event,
@@ -229,7 +243,8 @@ err
 }
 );
 
-ipcMain.handle(
+handleTrustedDesktopUi(
+ipcMain,
 "desktop:chartSnapshotSave",
 async (
 event,

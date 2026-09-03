@@ -1,7 +1,7 @@
 import {
 getBybitWsUrl,
 rotateBybitWsEndpoint
-} from "./bybit-fetch.js?v=17";
+} from "./bybit-fetch.js?v=18";
 
 let socket = null;
 
@@ -73,6 +73,258 @@ pendingCandleByTopic.clear();
 
 }
 
+const lastTickerRawByTopic =
+new Map();
+
+let desktopPushUnsub =
+null;
+
+let desktopTopicsTimer =
+null;
+
+function canonicalWsSymbol(
+symbol
+){
+
+return String(
+symbol ||
+""
+).replace(
+/\.P$/i,
+""
+).trim().toUpperCase();
+
+}
+
+function hasDesktopPublicWs(){
+
+return typeof window !==
+"undefined" &&
+typeof window.cryptoTerminalDesktop?.bybitPublicWs?.setTopics ===
+"function";
+
+}
+
+function handlePublicMessage(
+msg
+){
+
+if(
+!msg?.topic
+){
+return;
+}
+
+const callbacks =
+topicCallbacks.get(
+msg.topic
+);
+
+if(
+!callbacks?.size
+){
+return;
+}
+
+if(
+msg.topic.startsWith(
+"kline."
+)
+){
+
+const row =
+Array.isArray(
+msg.data
+)
+? msg.data[
+0
+]
+: msg.data;
+
+if(
+!row
+){
+return;
+}
+
+const candle =
+parseCandle(
+row
+);
+
+pendingCandleByTopic.set(
+msg.topic,
+candle
+);
+
+scheduleKlineFlush();
+return;
+
+}
+
+if(
+msg.topic.startsWith(
+"tickers."
+)
+){
+
+const raw =
+Array.isArray(
+msg.data
+)
+? msg.data[
+msg.data.length -
+1
+]
+: msg.data;
+
+const tick =
+parseTicker(
+mergeTickerRaw(
+msg.topic,
+raw
+)
+);
+
+if(
+!tick.markPrice
+){
+return;
+}
+
+callbacks.forEach(
+fn=>{
+fn(
+tick
+);
+}
+);
+
+}
+
+}
+
+function mergeTickerRaw(
+topic,
+raw
+){
+
+if(
+!raw ||
+typeof raw !==
+"object" ||
+Array.isArray(
+raw
+)
+){
+return raw;
+}
+
+const prev =
+lastTickerRawByTopic.get(
+topic
+);
+const next =
+prev &&
+typeof prev ===
+"object"
+? {
+...prev,
+...raw
+}
+: {
+...raw
+};
+
+lastTickerRawByTopic.set(
+topic,
+next
+);
+return next;
+
+}
+
+function bindDesktopPublicWs(){
+
+if(
+desktopPushUnsub ||
+!hasDesktopPublicWs()
+){
+return;
+}
+
+const onPush =
+window.cryptoTerminalDesktop.bybitPublicWs.onPush;
+
+if(
+typeof onPush !==
+"function"
+){
+return;
+}
+
+desktopPushUnsub =
+onPush(
+payload=>{
+handlePublicMessage(
+payload
+);
+}
+);
+
+}
+
+function syncDesktopTopics(
+opts
+){
+
+if(
+!hasDesktopPublicWs()
+){
+return;
+}
+
+bindDesktopPublicWs();
+
+if(
+desktopTopicsTimer
+){
+clearTimeout(
+desktopTopicsTimer
+);
+}
+
+desktopTopicsTimer =
+setTimeout(
+()=>{
+desktopTopicsTimer =
+null;
+void window.cryptoTerminalDesktop.bybitPublicWs.setTopics(
+[
+...activeTopics
+],
+opts
+).then(
+result=>{
+if(
+result &&
+result.ok ===
+false
+){
+console.warn(
+"bybit public ws:",
+result.message ||
+result
+);
+}
+}
+);
+},
+0
+);
+
+}
+
 function convertTf(tf){
 
 if(tf === "D"){
@@ -89,7 +341,7 @@ return tf;
 
 function topicFor(symbol, tf){
 
-return `kline.${convertTf(tf)}.${symbol}`;
+return `kline.${convertTf(tf)}.${canonicalWsSymbol(symbol)}`;
 
 }
 
@@ -140,6 +392,22 @@ last >
 0
 ? last
 : null
+),
+lastPrice:
+Number.isFinite(
+last
+) &&
+last >
+0
+? last
+: (
+Number.isFinite(
+mark
+) &&
+mark >
+0
+? mark
+: null
 )
 };
 
@@ -149,14 +417,20 @@ function tickerTopicFor(
 symbol
 ){
 
-return `tickers.${String(
-symbol ||
-""
-).trim().toUpperCase()}`;
+return `tickers.${canonicalWsSymbol(
+symbol
+)}`;
 
 }
 
 function resubscribeAll(){
+
+if(
+hasDesktopPublicWs()
+){
+syncDesktopTopics();
+return;
+}
 
 if(
 !socket ||
@@ -200,6 +474,13 @@ delayMs
 function ensureSocket(){
 
 if(
+hasDesktopPublicWs()
+){
+syncDesktopTopics();
+return;
+}
+
+if(
 socket &&
 (
 socket.readyState === WebSocket.OPEN ||
@@ -231,82 +512,9 @@ socket.onmessage = event=>{
 const msg =
 JSON.parse(event.data);
 
-if(
-!msg.topic
-){
-return;
-}
-
-const callbacks =
-topicCallbacks.get(msg.topic);
-
-if(
-!callbacks?.size
-){
-return;
-}
-
-if(
-msg.topic.startsWith(
-"kline."
-)
-){
-
-if(
-!msg.data?.[0]
-){
-return;
-}
-
-const candle =
-parseCandle(msg.data[0]);
-
-pendingCandleByTopic.set(
-msg.topic,
-candle
+handlePublicMessage(
+msg
 );
-
-scheduleKlineFlush();
-return;
-
-}
-
-if(
-msg.topic.startsWith(
-"tickers."
-)
-){
-
-const raw =
-Array.isArray(
-msg.data
-)
-? msg.data[
-msg.data.length -
-1
-]
-: msg.data;
-
-const tick =
-parseTicker(
-raw
-);
-
-if(
-!tick.markPrice
-){
-return;
-}
-
-callbacks.forEach(
-fn=>{
-fn(
-tick
-);
-}
-);
-
-}
 
 };
 
@@ -356,6 +564,13 @@ return;
 
 activeTopics.add(topic);
 
+if(
+hasDesktopPublicWs()
+){
+syncDesktopTopics();
+return;
+}
+
 ensureSocket();
 
 if(
@@ -381,6 +596,16 @@ return;
 
 activeTopics.delete(topic);
 topicCallbacks.delete(topic);
+lastTickerRawByTopic.delete(
+topic
+);
+
+if(
+hasDesktopPublicWs()
+){
+syncDesktopTopics();
+return;
+}
 
 if(
 socket &&
@@ -419,7 +644,27 @@ klineFlushTimer = null;
 
 }
 
+if(
+desktopTopicsTimer
+){
+clearTimeout(
+desktopTopicsTimer
+);
+desktopTopicsTimer =
+null;
+}
+
 pendingCandleByTopic.clear();
+lastTickerRawByTopic.clear();
+
+if(
+hasDesktopPublicWs()
+){
+void window.cryptoTerminalDesktop.bybitPublicWs.setTopics(
+[]
+);
+return;
+}
 
 if(socket){
 
@@ -442,6 +687,16 @@ wsConnectFailures = 0;
 if(reconnectTimer){
 clearTimeout(reconnectTimer);
 reconnectTimer = null;
+}
+
+if(
+hasDesktopPublicWs()
+){
+syncDesktopTopics({
+reset:
+true
+});
+return;
 }
 
 if(socket){

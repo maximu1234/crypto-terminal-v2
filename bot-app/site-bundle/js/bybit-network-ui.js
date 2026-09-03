@@ -43,7 +43,7 @@ retryBtn.addEventListener(
 ()=>{
 
 void import(
-"./bybit-fetch.js?v=17"
+"./bybit-fetch.js?v=18"
 ).then(
 m=>{
 m.resetBybitEndpoints?.();
@@ -86,19 +86,32 @@ return bannerEl;
 
 export function showBybitNetworkIssue(err){
 
-const host =
-ensureBanner();
-
 const detail =
 err?.message ||
 (
-typeof err === "string"
+typeof err ===
+"string"
 ? err
 : ""
 );
 
 const lower =
-String(detail).toLowerCase();
+String(
+detail
+).toLowerCase();
+
+if(
+err?.name ===
+"AbortError" ||
+lower.includes(
+"aborted"
+)
+){
+return;
+}
+
+const host =
+ensureBanner();
 
 const desktopHint =
 lower.includes("failed to fetch") ||

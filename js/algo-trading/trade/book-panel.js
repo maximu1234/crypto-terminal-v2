@@ -100,6 +100,29 @@ label
 
 }
 
+function escapeHtml(
+value
+){
+
+return String(
+value ??
+""
+).replace(
+/&/g,
+"&amp;"
+).replace(
+/</g,
+"&lt;"
+).replace(
+/>/g,
+"&gt;"
+).replace(
+/"/g,
+"&quot;"
+);
+
+}
+
 function pnlToneClass(
 pnl
 ){
@@ -965,7 +988,7 @@ isAlgoBotLiteMode()
 return;
 }
 void import(
-"../diary/modal.js?v=5"
+"../diary/modal.js?v=10"
 ).then(
 (mod)=>{
 if(
@@ -1090,13 +1113,13 @@ sym;
 
 el.innerHTML =
 `
-<span class="col-ticker" title="${ticker}">
+<span class="col-ticker" title="${escapeHtml(ticker)}">
 <span class="trade-book-side ${sideClass(row.side)}" aria-hidden="true"></span>
-<span class="trade-book-ticker-text">${ticker}</span>
+<span class="trade-book-ticker-text">${escapeHtml(ticker)}</span>
 </span>
 <span class="col-pnl-wrap">
 <span class="col-pnl"></span>
-<button type="button" class="trade-book-close" title="Закрыть по рынку" aria-label="Закрыть ${ticker}">×</button>
+<button type="button" class="trade-book-close" title="Закрыть по рынку" aria-label="Закрыть ${escapeHtml(ticker)}">×</button>
 </span>
 <span class="col-volume"></span>
 <span class="col-entry"></span>
@@ -1325,8 +1348,8 @@ orderId;
 
 el.innerHTML =
 `
-<span class="col-ticker" title="${ticker}">
-<span class="trade-book-ticker-text">${ticker}</span>
+<span class="col-ticker" title="${escapeHtml(ticker)}">
+<span class="trade-book-ticker-text">${escapeHtml(ticker)}</span>
 </span>
 <span class="col-order-type">${orderTypeLabel(
 row
@@ -1497,12 +1520,12 @@ sym ===
 getActiveChartSymbol();
 
 return `
-<div class="trade-book-row trade-book-row--alert${active ? " is-active" : ""}" data-symbol="${sym}" data-shape-id="${shapeId}">
+<div class="trade-book-row trade-book-row--alert${active ? " is-active" : ""}" data-symbol="${escapeHtml(sym)}" data-shape-id="${escapeHtml(shapeId)}">
 <span class="col-date">${formatAlertDate(
 alert.createdAt
 )}</span>
-<span class="col-ticker" title="${ticker}">
-<span class="trade-book-ticker-text">${ticker}</span>
+<span class="col-ticker" title="${escapeHtml(ticker)}">
+<span class="trade-book-ticker-text">${escapeHtml(ticker)}</span>
 </span>
 <span class="col-action">
 <button type="button" class="trade-book-close" title="Удалить алерт" aria-label="Удалить алерт">×</button>
@@ -1843,6 +1866,102 @@ result.message ||
 
 }
 
+function showCloseAllConfirm(){
+
+return new Promise(
+resolve=>{
+
+const overlay =
+document.createElement(
+"div"
+);
+overlay.className =
+"trade-book-confirm-overlay";
+overlay.innerHTML =
+`
+<div class="trade-book-confirm-dialog" role="alertdialog" aria-modal="true" aria-labelledby="algo-book-close-all-title">
+<p id="algo-book-close-all-title" class="trade-book-confirm-message">Вы действительно хотите закрыть все открытые позиции по рыночной цене?</p>
+<div class="trade-book-confirm-actions">
+<button type="button" class="trade-book-confirm-cancel" data-action="cancel">Отмена</button>
+<button type="button" class="trade-book-confirm-yes" data-action="yes">Да</button>
+</div>
+</div>`;
+
+document.body.appendChild(
+overlay
+);
+
+const finish =
+confirmed=>{
+
+overlay.remove();
+document.removeEventListener(
+"keydown",
+onKey
+);
+resolve(
+confirmed
+);
+
+};
+
+const onKey =
+event=>{
+
+if(
+event.key ===
+"Escape"
+){
+finish(
+false
+);
+}
+
+};
+
+document.addEventListener(
+"keydown",
+onKey
+);
+
+overlay.addEventListener(
+"click",
+event=>{
+
+const action =
+event.target.closest(
+"[data-action]"
+)?.dataset.action;
+
+if(
+action ===
+"yes"
+){
+finish(
+true
+);
+return;
+}
+
+if(
+action ===
+"cancel" ||
+event.target ===
+overlay
+){
+finish(
+false
+);
+}
+
+}
+);
+
+}
+);
+
+}
+
 async function closeOne(
 symbol
 ){
@@ -1907,6 +2026,15 @@ closeAllBtn?.addEventListener(
 ()=>{
 void (
 async()=>{
+
+const confirmed =
+await showCloseAllConfirm();
+
+if(
+!confirmed
+){
+return;
+}
 
 const rows =
 getAllCachedPositions();

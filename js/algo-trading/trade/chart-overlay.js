@@ -1765,15 +1765,51 @@ return badgeSpecs;
 
 }
 
+function badgeCacheMatches(
+badgeSpecs,
+layoutKey
+){
+
+if(
+!badgeLayoutCache ||
+badgeLayoutCache.key !==
+layoutKey ||
+badgeLayoutCache.elementsByKind.size !==
+badgeSpecs.length
+){
+return false;
+}
+
+for(
+const spec of badgeSpecs
+){
+const el =
+badgeLayoutCache.elementsByKind.get(
+spec.kind
+);
+
+if(
+!el?.isConnected
+){
+return false;
+}
+
+}
+
+return true;
+
+}
+
 function syncBadgeDom(
 badgeSpecs,
 layoutKey
 ){
 
 const canFast =
-badgeLayoutCache &&
-badgeLayoutCache.key ===
-layoutKey;
+badgeCacheMatches(
+badgeSpecs,
+layoutKey
+);
 
 if(
 canFast

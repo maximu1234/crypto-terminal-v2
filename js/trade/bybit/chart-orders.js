@@ -16,6 +16,29 @@ registerChartScaleLabelProvider
 const BADGE_LEFT =
 12;
 
+function escapeHtml(
+value
+){
+
+return String(
+value ??
+""
+).replace(
+/&/g,
+"&amp;"
+).replace(
+/</g,
+"&lt;"
+).replace(
+/>/g,
+"&gt;"
+).replace(
+/"/g,
+"&quot;"
+);
+
+}
+
 function tradingApi(){
 
 return window.cryptoTerminalDesktop?.trading;
@@ -548,7 +571,7 @@ sideClass,
 html:
 `
 <span class="seg seg-vol">${displayVolume(order.volumeUsdt)}</span>
-<span class="seg seg-type">${formatOrderBadgeLabel(order)}</span>
+<span class="seg seg-type">${escapeHtml(formatOrderBadgeLabel(order))}</span>
 <button type="button" class="seg seg-close" data-action="cancel-order" title="Отменить ордер" aria-label="Отменить ордер">×</button>
 `,
 line:{

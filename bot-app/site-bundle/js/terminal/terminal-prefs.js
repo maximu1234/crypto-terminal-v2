@@ -14,13 +14,13 @@ COINS_PREFS_KEY,
 COINS_SORT_MODES,
 COINS_TF_VALUES,
 isTerminalPage
-} from "./terminal-state.js?v=12";
+} from "./terminal-state.js?v=13";
 
 import {
 getCurrentSymbols,
 getFirstVisibleSymbol,
 getExtraCoinMarkets
-} from "./terminal-table.js?v=32";
+} from "./terminal-table.js?v=36";
 
 import {
 parseAlertDeepLinkExchange
@@ -30,6 +30,11 @@ import {
 DEFAULT_CHART_SYMBOL,
 pickSymbolFromLastView as pickSymbolFromLastViewPure
 } from "./exchange-last-symbol.js?v=1";
+
+import {
+CHART_PRICE_SCALE_MODE_LOGARITHMIC,
+normalizeChartPriceScaleMode
+} from "../chart/price-scale-mode.js?v=3";
 
 export {
 DEFAULT_CHART_SYMBOL
@@ -157,6 +162,8 @@ lastViewByExchange:
 defaultLastViewByExchange(),
 invertChart:false,
 invertRsiChart:false,
+priceScaleMode:
+CHART_PRICE_SCALE_MODE_LOGARITHMIC,
 listRefreshMs:
 10000
 };
@@ -398,6 +405,65 @@ return prefs;
 
 }
 
+export function normalizeCoinsPrefs(
+prefs
+){
+
+const out =
+defaultCoinsPrefs();
+
+out.market =
+isAllowedCoinsMarketId(
+prefs?.market
+)
+? prefs.market
+: "all";
+
+for(
+const m of
+getAllCoinsMarketIds()
+){
+out.sortByMarket[m] =
+normalizeSortEntry(
+prefs?.sortByMarket?.[m]
+);
+
+out.lastViewByMarket[m] =
+normalizeLastViewEntry(
+prefs?.lastViewByMarket?.[m]
+);
+}
+
+for(
+const ex of
+EXCHANGE_IDS
+){
+out.lastViewByExchange[ex] =
+normalizeLastViewEntry(
+prefs?.lastViewByExchange?.[ex]
+);
+}
+
+out.invertChart =
+!!prefs?.invertChart;
+
+out.invertRsiChart =
+!!prefs?.invertRsiChart;
+
+out.priceScaleMode =
+normalizeChartPriceScaleMode(
+prefs?.priceScaleMode
+);
+
+out.listRefreshMs =
+normalizeListRefreshMs(
+prefs?.listRefreshMs
+);
+
+return out;
+
+}
+
 export function readCoinsPrefs(){
 
 try{
@@ -410,51 +476,11 @@ localStorage.getItem(COINS_PREFS_KEY);
 
 if(raw){
 
-const parsed =
-JSON.parse(raw);
-
-prefs.market =
-isAllowedCoinsMarketId(
-parsed?.market
+prefs =
+normalizeCoinsPrefs(
+JSON.parse(
+raw
 )
-? parsed.market
-: "all";
-
-for(
-const m of
-getAllCoinsMarketIds()
-){
-prefs.sortByMarket[m] =
-normalizeSortEntry(
-parsed?.sortByMarket?.[m]
-);
-
-prefs.lastViewByMarket[m] =
-normalizeLastViewEntry(
-parsed?.lastViewByMarket?.[m]
-);
-
-}
-
-for(
-const ex of
-EXCHANGE_IDS
-){
-prefs.lastViewByExchange[ex] =
-normalizeLastViewEntry(
-parsed?.lastViewByExchange?.[ex]
-);
-}
-
-prefs.invertChart =
-!!parsed?.invertChart;
-
-prefs.invertRsiChart =
-!!parsed?.invertRsiChart;
-
-prefs.listRefreshMs =
-normalizeListRefreshMs(
-parsed?.listRefreshMs
 );
 
 try{
@@ -500,55 +526,13 @@ export function writeCoinsPrefs(prefs){
 
 try{
 
-const out =
-defaultCoinsPrefs();
-
-out.market =
-isAllowedCoinsMarketId(
-prefs?.market
-)
-? prefs.market
-: "all";
-
-for(
-const m of
-getAllCoinsMarketIds()
-){
-out.sortByMarket[m] =
-normalizeSortEntry(
-prefs?.sortByMarket?.[m]
-);
-
-out.lastViewByMarket[m] =
-normalizeLastViewEntry(
-prefs?.lastViewByMarket?.[m]
-);
-}
-
-for(
-const ex of
-EXCHANGE_IDS
-){
-out.lastViewByExchange[ex] =
-normalizeLastViewEntry(
-prefs?.lastViewByExchange?.[ex]
-);
-}
-
-out.invertChart =
-!!prefs?.invertChart;
-
-out.invertRsiChart =
-!!prefs?.invertRsiChart;
-
-out.listRefreshMs =
-normalizeListRefreshMs(
-prefs?.listRefreshMs
-);
-
 localStorage.setItem(
 COINS_PREFS_KEY,
-JSON.stringify(out)
+JSON.stringify(
+normalizeCoinsPrefs(
+prefs
+)
+)
 );
 
 }catch(err){
@@ -616,6 +600,11 @@ coinsState().isCoinsChartInverted;
 
 prefs.invertRsiChart =
 coinsState().isCoinsRsiInverted;
+
+prefs.priceScaleMode =
+normalizeChartPriceScaleMode(
+coinsState().coinsPriceScaleMode
+);
 }
 
 writeCoinsPrefs(prefs);

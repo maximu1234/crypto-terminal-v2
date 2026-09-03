@@ -4,7 +4,7 @@ initAlertMonitor
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=61";
+} from "./auth-ui.js?v=62";
 
 import {
 isAlertsPage
@@ -43,13 +43,13 @@ initExchangeContext
 
 import {
 initBybitNetworkUi
-} from "./bybit-network-ui.js?v=4";
+} from "./bybit-network-ui.js?v=6";
 
 import {
 resetBybitEndpoints,
 preloadBybitProxyConfig,
 warmBybitWorkerProxy
-} from "./bybit-fetch.js?v=17";
+} from "./bybit-fetch.js?v=18";
 
 import {
 ensureDrawToolsVisible
@@ -65,12 +65,12 @@ initFocusBlurAfterPick
 
 import {
 initDesktopAppUi
-} from "./desktop-app-ui.js?v=6";
+} from "./desktop-app-ui.js?v=7";
 
 import {
 initSiteHeader,
 enforceSiteHeaderAfterBoot
-} from "./site-header.js?v=5";
+} from "./site-header.js?v=6";
 
 import {
 FEATURE_NAV_PREF_EVENT,

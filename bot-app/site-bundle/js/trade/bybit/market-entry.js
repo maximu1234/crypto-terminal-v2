@@ -19,7 +19,7 @@ getAutoStopSettings
 
 import {
 marketMap
-} from "../../terminal/terminal-state.js?v=12";
+} from "../../terminal/terminal-state.js?v=13";
 
 import {
 getTradeConfig
@@ -628,6 +628,18 @@ cached =
 getCachedPosition(
 symbol
 );
+}
+
+const label =
+cached?.ticker ||
+symbol;
+
+if(
+!window.confirm(
+`Закрыть ${label} по рынку?`
+)
+){
+return;
 }
 
 const closeOptions =

@@ -17,7 +17,7 @@ formatFibInputValue,
 parseFibRatioField,
 setFibLineStyleButton,
 setFibLevelWidthButton
-} from "./fib-spec.js?v=13";
+} from "./fib-spec.js?v=15";
 
 import {
 closeAllFibLineStyleMenus,

@@ -127,23 +127,45 @@ padding:8px 16px;
 flex:0 0 auto;
 }
 
-body.algo-trading-page .algo-diary-content{
+body.algo-trading-page .algo-diary-scroll{
 flex:1 1 0;
 min-height:0;
-max-height:100%;
 overflow-x:hidden;
-overflow-y:scroll;
+overflow-y:auto;
 overscroll-behavior:contain;
 -webkit-overflow-scrolling:touch;
+}
+
+body.algo-trading-page .algo-diary-overlay .trade-diary-analytics{
+flex:none;
+max-height:none;
+overflow:hidden;
+margin:0 16px 8px;
+padding:0;
+}
+
+body.algo-trading-page .algo-diary-overlay .trade-diary-analytics:not(.is-collapsed) .diary-an-body{
+grid-template-rows:auto;
+}
+
+body.algo-trading-page .algo-diary-overlay .trade-diary-analytics:not(.is-collapsed) .diary-an-body-inner{
+overflow:visible;
+min-height:auto;
+max-height:none;
+}
+
+body.algo-trading-page .algo-diary-content{
+flex:none;
+min-height:0;
+max-height:none;
+overflow:visible;
 padding:0 0 16px;
 --trade-diary-inner-width:100%;
 }
 
 body.algo-trading-page .algo-diary-content.trade-diary-content{
-/* Override page diary layout: keep scroll inside the modal pane. */
 display:block;
-overflow-x:hidden;
-overflow-y:scroll;
+overflow:visible;
 min-height:0;
 }
 

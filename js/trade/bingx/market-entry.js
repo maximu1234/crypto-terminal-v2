@@ -662,6 +662,18 @@ symbol
 );
 }
 
+const label =
+cached?.ticker ||
+symbol;
+
+if(
+!window.confirm(
+`Закрыть ${label} по рынку?`
+)
+){
+return;
+}
+
 const closeOptions =
 cached
 ? {

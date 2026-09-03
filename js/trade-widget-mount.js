@@ -3,7 +3,7 @@
  */
 import {
 createTradeChartOverlay
-} from "./trade-chart-overlay.js?v=63";
+} from "./trade-chart-overlay.js?v=64";
 
 import {
 createTradeChartOrders
@@ -28,7 +28,7 @@ marketMap
 
 import {
 getLoadedTradeExchangeModules
-} from "./trade/module-router.js?v=16";
+} from "./trade/module-router.js?v=23";
 
 import {
 mountTradeLeverageControl

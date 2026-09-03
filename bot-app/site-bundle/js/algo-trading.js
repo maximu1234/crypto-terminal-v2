@@ -12,7 +12,7 @@ applyRsiFixedPriceScale,
 appendFutureWhitespaceBars,
 computeChartFutureMarginBars,
 syncLinkedChartTimescales
-} from "./chart-import.js?v=49";
+} from "./chart-import.js?v=53";
 
 import {
 terminalVisibleBars,
@@ -92,7 +92,7 @@ syncBotStrategiesToMain
 
 import {
 mountAlgoTradeUi
-} from "./algo-trading/trade/boot.js?v=5";
+} from "./algo-trading/trade/boot.js?v=11";
 
 import {
 mountAlgoTradingDrawings
@@ -184,7 +184,7 @@ runWithPreservedVisibleLogicalRange
 import {
 coinsState,
 marketMap
-} from "./terminal/terminal-state.js?v=12";
+} from "./terminal/terminal-state.js?v=13";
 
 import {
 DEFAULT_TF,

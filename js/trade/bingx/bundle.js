@@ -24,12 +24,12 @@ export {
 export {
   createTradeChartOverlay,
   initTradeChartOverlay
-} from "./chart-overlay.js?v=16";
+} from "./chart-overlay.js?v=18";
 
 export {
   createTradeChartOrders,
   initTradeChartOrders
-} from "./chart-orders.js?v=5";
+} from "./chart-orders.js?v=6";
 
 export {
   getAutoStopSettings,
@@ -48,11 +48,11 @@ export {
 export {
   initTradeMarketEntry,
   openWidgetMarketPosition
-} from "./market-entry.js?v=9";
+} from "./market-entry.js?v=10";
 
 export {
   initTradeBookPanel
-} from "./book-panel.js?v=4";
+} from "./book-panel.js?v=5";
 
 export {
   getTradeConfig
@@ -73,7 +73,7 @@ export {
 
 export {
   bootTradeDiaryPage
-} from "./diary/page.js?v=3";
+} from "./diary/page.js?v=8";
 
 export {
   mountTradeDiaryPeriodPicker

@@ -9,7 +9,7 @@ parseDrawColor
 
 import {
 isCoarseTouchViewport
-} from "../chart-import.js?v=48";
+} from "../chart-import.js?v=53";
 
 import {
 STROKE,
@@ -22,7 +22,7 @@ import {
 migrateFibToolDefaults,
 ensureFibLevelsVisible,
 getFibRows
-} from "./fib-spec.js?v=13";
+} from "./fib-spec.js?v=15";
 
 import {
 setFibPanelCommitHook,
@@ -33,7 +33,7 @@ closeAllFibLineWidthMenus
 import {
 isPositionType,
 positionEntryPrice
-} from "./position.js?v=9";
+} from "./position.js?v=10";
 
 import {
 isTextTool,
