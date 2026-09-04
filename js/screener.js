@@ -50,6 +50,14 @@ subscribeKline
 } from "./market-ws.js?v=1";
 
 import {
+ensureOhlcRollover,
+ingestLiveOhlcKline,
+lastOhlcBar,
+liveBarPeriodSec,
+paintLiveOhlcSeries
+} from "./chart/live-bar-roll.js?v=2";
+
+import {
 connectTickerStream,
 fetchTickersInto
 } from "./tickers.js?v=28";
@@ -60,7 +68,7 @@ createTickerUiBatcher
 
 import {
 mountReleaseMarker
-} from "./release-marker.js?v=112";
+} from "./release-marker.js?v=113";
 
 import {
 saveScreenerState,
@@ -146,7 +154,7 @@ if(
 ){
 screenerZoomMountPromise =
 import(
-"./screener-widget-zoom.js?v=29"
+"./screener-widget-zoom.js?v=30"
 ).then(
 mod=>{
 refreshZoomFavoriteUi =
@@ -1370,39 +1378,80 @@ statusEl.classList.toggle(
 
 }
 
-function mergeLiveCandle(candles, candle, maxLen){
+function paintScreenerWidgetLive(
+widget,
+{
+isNewBar,
+kind,
+shifted
+} = {}
+){
 
-if(!candles.length){
-return false;
-}
-
+const {
+chart,
+series,
+chartEl
+} =
+widget;
 const last =
-candles[candles.length - 1];
+lastOhlcBar(
+widget.candles
+);
 
-if(candle.time === last.time){
-
-candles[candles.length - 1] = candle;
-
-return true;
-
+paintLiveOhlcSeries(
+series,
+widget.candles,
+{
+kind,
+shifted
 }
-
-if(candle.time > last.time){
-
-candles.push(candle);
+);
 
 if(
-maxLen &&
-candles.length > maxLen
+last
 ){
-candles.shift();
+applyChartPriceFormat(
+series,
+last.close
+);
 }
 
-return true;
-
+if(
+widget.rsiSeries &&
+(
+isNewBar ||
+kind ===
+"hist" ||
+widget.oscKind ===
+SCREENER_WIDGET_OSCILLATOR_MACD
+)
+){
+updateWidgetRsiData(
+widget
+);
 }
 
-return false;
+if(
+!widget.userAdjustedZoom &&
+isNewBar
+){
+
+const total =
+widget.candles.length;
+const visible =
+Math.min(
+SCREENER_VISIBLE_BARS,
+total
+);
+
+restoreScreenerViewport(
+chart,
+chartEl.clientWidth,
+visible,
+total
+);
+
+}
 
 }
 
@@ -1657,11 +1706,7 @@ return;
 }
 
 const {
-symbol,
-chart,
-series,
-chartEl,
-loadId
+symbol
 } =
 widget;
 
@@ -1683,7 +1728,7 @@ null;
 return;
 }
 
-widget.unsubKline =
+const unsub =
 subscribeKline(
 symbol,
 currentTF,
@@ -1699,101 +1744,44 @@ return;
 
 try{
 
-const prevLast =
-widget.candles[
-widget.candles.length -
-1
-];
-
-const isNewBar =
-prevLast &&
-candle.time >
-prevLast.time;
-
-if(
-!mergeLiveCandle(
+const maxLen =
+widget.userAdjustedZoom
+? 0
+: SCREENER_MAX_BARS;
+const {
+rolled,
+kind,
+shifted
+} =
+ingestLiveOhlcKline(
 widget.candles,
 candle,
-SCREENER_MAX_BARS
-)
+liveBarPeriodSec(
+currentTF
+),
+maxLen
+);
+
+if(
+!kind &&
+!rolled
 ){
 return;
 }
 
-if(
-isNewBar &&
-widget.candles.length >
-SCREENER_MAX_BARS &&
-!widget.userAdjustedZoom
-){
+const isNewBar =
+kind ===
+"new" ||
+rolled;
 
-widget.candles =
-widget.candles.slice(
--SCREENER_MAX_BARS
-);
-
-series.setData(
-widget.candles
-);
-
-updateWidgetRsiData(
-widget
-);
-
-
-}else{
-
-series.update(
-candle
-);
-
-if(
-widget.rsiSeries &&
-(
-isNewBar ||
-widget.oscKind ===
-SCREENER_WIDGET_OSCILLATOR_MACD
-)
-){
-updateWidgetRsiData(
-widget
-);
+paintScreenerWidgetLive(
+widget,
+{
+isNewBar,
+kind,
+shifted
 }
-
-if(
-isNewBar
-){
-}
-
-}
-
-applyChartPriceFormat(
-series,
-candle.close
 );
-
-if(
-!widget.userAdjustedZoom &&
-isNewBar
-){
-
-const total =
-widget.candles.length;
-
-const visible =
-Math.min(
-SCREENER_VISIBLE_BARS,
-total
-);
-
-restoreScreenerViewport(
-chart,
-chartEl.clientWidth,
-visible,
-total
-);
-
-}
 
 }catch{
 /* chart disposed during page change */
@@ -1801,6 +1789,55 @@ total
 
 }
 );
+const timer =
+setInterval(
+()=>{
+
+if(
+!isScreenerWidgetCurrent(
+widget
+) ||
+!widget.candles.length
+){
+return;
+}
+
+if(
+!ensureOhlcRollover(
+widget.candles,
+liveBarPeriodSec(
+currentTF
+)
+)
+){
+return;
+}
+
+try{
+paintScreenerWidgetLive(
+widget,
+{
+isNewBar:
+true,
+kind:
+"new"
+}
+);
+}catch{
+/* chart disposed during page change */
+}
+
+},
+1000
+);
+
+widget.unsubKline =
+()=>{
+unsub?.();
+clearInterval(
+timer
+);
+};
 
 }
 

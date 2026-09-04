@@ -11,7 +11,7 @@ subscribeKline as subscribeBybitKline,
 subscribeTicker as subscribeBybitTicker,
 connectKlineStream as connectBybitKlineStream,
 disconnectKlineStream as disconnectBybitKlineStream
-} from "./ws.js?v=19";
+} from "./ws.js?v=20";
 
 import {
 subscribeBingxKline,
@@ -19,7 +19,7 @@ subscribeBingxTicker,
 connectBingxKlineStream,
 disconnectBingxKlineStream,
 shutdownBingxWs
-} from "./exchanges/bingx/ws.js?v=17";
+} from "./exchanges/bingx/ws.js?v=18";
 
 let boundExchangeListener =
 false;

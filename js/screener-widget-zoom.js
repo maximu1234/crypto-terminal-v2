@@ -35,6 +35,14 @@ subscribeKline
 } from "./market-ws.js?v=1";
 
 import {
+ensureOhlcRollover,
+ingestLiveOhlcKline,
+lastOhlcBar,
+liveBarPeriodSec,
+paintLiveOhlcSeries
+} from "./chart/live-bar-roll.js?v=2";
+
+import {
 SCREENER_WIDGET_OSCILLATOR_CHANGED,
 SCREENER_WIDGET_OSCILLATOR_MACD,
 createScreenerMacdChart,
@@ -1366,6 +1374,182 @@ null;
 
 }
 
+function paintZoomLive(
+state,
+{
+isNewBar,
+kind,
+shifted
+} = {}
+){
+
+const last =
+lastOhlcBar(
+state.candles
+);
+
+paintLiveOhlcSeries(
+state.series,
+state.candles,
+{
+kind,
+shifted
+}
+);
+
+if(
+last
+){
+applyChartPriceFormat(
+state.series,
+last.close
+);
+}
+
+if(
+isNewBar ||
+kind ===
+"hist" ||
+state.oscKind ===
+SCREENER_WIDGET_OSCILLATOR_MACD
+){
+updateZoomRsiData(
+state
+);
+}
+
+if(
+isNewBar ||
+kind ===
+"hist"
+){
+updateZoomPatternData(
+state
+);
+}
+
+refreshZoomPriceHud(
+state
+);
+
+}
+
+function attachZoomLiveKline(
+state
+){
+
+try{
+state.unsubKline?.();
+}catch{
+/* ignore */
+}
+
+state.unsubKline =
+null;
+
+if(
+state.disposed ||
+!state.candles?.length ||
+!state.symbol ||
+!state.tf
+){
+return;
+}
+
+const unsub =
+subscribeKline(
+state.symbol,
+state.tf,
+candle=>{
+
+if(
+state.disposed ||
+!state.candles.length
+){
+return;
+}
+
+const {
+rolled,
+kind,
+shifted
+} =
+ingestLiveOhlcKline(
+state.candles,
+candle,
+liveBarPeriodSec(
+state.tf
+),
+SCREENER_MAX_BARS
+);
+
+if(
+!kind &&
+!rolled
+){
+return;
+}
+
+paintZoomLive(
+state,
+{
+isNewBar:
+kind ===
+"new" ||
+rolled,
+kind,
+shifted
+}
+);
+
+}
+);
+const timer =
+setInterval(
+()=>{
+
+if(
+state.disposed ||
+!state.candles.length
+){
+return;
+}
+
+if(
+!ensureOhlcRollover(
+state.candles,
+liveBarPeriodSec(
+state.tf
+)
+)
+){
+return;
+}
+
+paintZoomLive(
+state,
+{
+isNewBar:
+true,
+kind:
+"new"
+}
+);
+
+},
+1000
+);
+
+state.unsubKline =
+()=>{
+unsub?.();
+clearInterval(
+timer
+);
+};
+
+}
+
 async function applyZoomTimeframe(
 state,
 tf
@@ -1432,100 +1616,8 @@ state
 }
 
 state.unsubKline?.();
-state.unsubKline =
-subscribeKline(
-state.symbol,
-tf,
-candle=>{
-
-if(
-!state.candles.length
-){
-return;
-}
-
-const prevLast =
-state.candles[
-state.candles.length -
-1
-];
-
-if(
-prevLast &&
-candle.time <
-prevLast.time
-){
-return;
-}
-
-if(
-prevLast &&
-candle.time ===
-prevLast.time
-){
-state.candles[
-state.candles.length -
-1
-] =
-candle;
-state.series.update(
-candle
-);
-if(
-state.oscKind ===
-SCREENER_WIDGET_OSCILLATOR_MACD
-){
-updateZoomRsiData(
+attachZoomLiveKline(
 state
-);
-}
-}else{
-state.candles.push(
-candle
-);
-
-if(
-state.candles.length >
-SCREENER_MAX_BARS
-){
-state.candles =
-state.candles.slice(
--SCREENER_MAX_BARS
-);
-state.series.setData(
-state.candles
-);
-updateZoomRsiData(
-state
-);
-updateZoomPatternData(
-state
-);
-}else{
-state.series.update(
-candle
-);
-updateZoomRsiData(
-state
-);
-updateZoomPatternData(
-state
-);
-}
-}
-
-applyChartPriceFormat(
-state.series,
-state.candles[
-state.candles.length -
-1
-]?.close
-);
-refreshZoomPriceHud(
-state
-);
-
-}
 );
 
 }catch{
@@ -2143,100 +2235,8 @@ state
 );
 }
 
-state.unsubKline =
-subscribeKline(
-symbol,
-tf,
-candle=>{
-
-if(
-!state.candles.length
-){
-return;
-}
-
-const prevLast =
-state.candles[
-state.candles.length -
-1
-];
-
-if(
-prevLast &&
-candle.time <
-prevLast.time
-){
-return;
-}
-
-if(
-prevLast &&
-candle.time ===
-prevLast.time
-){
-state.candles[
-state.candles.length -
-1
-] =
-candle;
-series.update(
-candle
-);
-if(
-state.oscKind ===
-SCREENER_WIDGET_OSCILLATOR_MACD
-){
-updateZoomRsiData(
+attachZoomLiveKline(
 state
-);
-}
-}else{
-state.candles.push(
-candle
-);
-
-if(
-state.candles.length >
-SCREENER_MAX_BARS
-){
-state.candles =
-state.candles.slice(
--SCREENER_MAX_BARS
-);
-series.setData(
-state.candles
-);
-updateZoomRsiData(
-state
-);
-updateZoomPatternData(
-state
-);
-}else{
-series.update(
-candle
-);
-updateZoomRsiData(
-state
-);
-updateZoomPatternData(
-state
-);
-}
-}
-
-applyChartPriceFormat(
-series,
-state.candles[
-state.candles.length -
-1
-]?.close
-);
-refreshZoomPriceHud(
-state
-);
-
-}
 );
 
 backdrop.addEventListener(

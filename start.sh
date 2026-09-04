@@ -11,7 +11,7 @@ fi
 
 echo ""
 echo "Crypto Terminal:"
-echo "  http://127.0.0.1:$PORT/                 (Главная / скринер)"
+echo "  http://127.0.0.1:$PORT/screener.html    (Скринер)"
 echo "  http://127.0.0.1:$PORT/coins.html       (Монеты)"
 echo "  http://127.0.0.1:$PORT/listings.html    (Листинги)"
 echo "  http://127.0.0.1:$PORT/terminal.html    (Терминал)"

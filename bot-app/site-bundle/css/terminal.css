@@ -2136,6 +2136,7 @@ body.tablet-chart #rsi-wrap .rsi-level-line:not(.hidden){
 
 #coins-body{
   overflow:visible;
+  overflow-anchor:none;
   flex:0 0 auto;
 }
 

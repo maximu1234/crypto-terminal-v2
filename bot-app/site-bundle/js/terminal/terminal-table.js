@@ -37,6 +37,12 @@ import {
 isTradePage
 } from "./terminal-state.js?v=13";
 
+import {
+applyLiveOhlcBar,
+ensureOhlcRollover,
+liveBarPeriodSec
+} from "../chart/live-bar-roll.js?v=2";
+
 /** Desktop /trade only — не тянем trade-open-positions в открытый web /coins. */
 function escapeHtml(
 value
@@ -124,6 +130,15 @@ let virtualScrollHandler =
 null;
 
 let virtualPaintRaf =
+0;
+
+let coinListScrollRestoreRaf =
+0;
+
+let coinListVisibleDeferRaf =
+0;
+
+let coinListVisibleDeferTries =
 0;
 
 export function setCoinsTableHooks(next){
@@ -619,8 +634,81 @@ let liveTickerUnsub =
 null;
 let livePriceFlushTimer =
 null;
+let liveBarRollTimer =
+null;
 let pendingLiveBar =
 null;
+
+function paintLiveChartBar(
+bar
+){
+
+const last =
+bar ||
+coinsState().candles[
+coinsState().candles.length -
+1
+];
+
+if(
+!last
+){
+return;
+}
+
+try{
+if(
+hooks.applyChartLiveCandle
+){
+hooks.applyChartLiveCandle(
+last
+);
+}else{
+coinsState().candleSeries?.update(
+last
+);
+}
+}catch{
+try{
+coinsState().candleSeries?.setData?.(
+coinsState().candles
+);
+}catch{
+/* ignore */
+}
+}
+
+}
+
+function rollLiveBarsIfNeeded(){
+
+const candles =
+coinsState().candles;
+
+if(
+!ensureOhlcRollover(
+candles,
+liveBarPeriodSec(
+coinsState().currentTF
+)
+)
+){
+return false;
+}
+
+const last =
+candles[
+candles.length -
+1
+];
+pendingLiveBar =
+last;
+paintLiveChartBar(
+last
+);
+return true;
+
+}
 
 function flushPendingLiveBar(){
 
@@ -637,17 +725,9 @@ if(
 return;
 }
 
-if(
-hooks.applyChartLiveCandle
-){
-hooks.applyChartLiveCandle(
+paintLiveChartBar(
 bar
 );
-}else{
-coinsState().candleSeries?.update(
-bar
-);
-}
 
 }
 
@@ -682,6 +762,8 @@ px <=
 ){
 return;
 }
+
+rollLiveBarsIfNeeded();
 
 const last =
 coinsState().candles[
@@ -769,6 +851,16 @@ livePriceFlushTimer =
 null;
 }
 
+if(
+liveBarRollTimer
+){
+clearInterval(
+liveBarRollTimer
+);
+liveBarRollTimer =
+null;
+}
+
 pendingLiveBar =
 null;
 
@@ -839,6 +931,18 @@ liveTickerUnsub =
 null;
 }
 
+liveBarRollTimer =
+setInterval(
+()=>{
+if(
+rollLiveBarsIfNeeded()
+){
+hooks.rebuildRsiFromCandles?.();
+}
+},
+1000
+);
+
 connectKlineStream({
 
 symbol:coinsState().currentSymbol,
@@ -874,50 +978,41 @@ const bar = {
 time
 };
 
-const last =
-coinsState().candles[coinsState().candles.length - 1];
+rollLiveBarsIfNeeded();
 
-if(
-time === last.time
-){
-
-coinsState().candles[coinsState().candles.length - 1] =
-bar;
-
-}else if(
-time > last.time
-){
-
-coinsState().candles.push(
-bar
+const kind =
+applyLiveOhlcBar(
+coinsState().candles,
+bar,
+4000
 );
 
 if(
-coinsState().candles.length > 4000
+!kind
 ){
-coinsState().candles.shift();
-}
-
-}else{
 return;
 }
 
 lastPublicKlineAt =
 Date.now();
 
-if(
-hooks.applyChartLiveCandle
-){
-hooks.applyChartLiveCandle(
+paintLiveChartBar(
 bar
+);
+
+if(
+kind ===
+"last"
+){
+hooks.rebuildRsiFromCandles?.(
+{
+liveLastOnly:
+true
+}
 );
 }else{
-coinsState().candleSeries.update(
-bar
-);
-}
-
 hooks.rebuildRsiFromCandles();
+}
 
 processAlertCandle(
 streamSymbol,
@@ -1061,6 +1156,16 @@ virtualScrollHandler
 );
 }
 
+if(
+coinListScrollRestoreRaf
+){
+cancelAnimationFrame(
+coinListScrollRestoreRaf
+);
+coinListScrollRestoreRaf =
+0;
+}
+
 virtualScrollBound =
 true;
 virtualScrollRoot =
@@ -1157,12 +1262,19 @@ const data =
 virtualCoinData;
 const total =
 data.length;
+const viewHRaw =
+scrollRoot.clientHeight ||
+0;
+const laidOut =
+viewHRaw >=
+COIN_ROW_HEIGHT_PX;
 const scrollTop =
-scrollRoot.scrollTop;
+laidOut
+? scrollRoot.scrollTop
+: 0;
 const viewH =
 Math.max(
-scrollRoot.clientHeight ||
-0,
+viewHRaw,
 240
 );
 const start =
@@ -1274,9 +1386,40 @@ list.appendChild(
 bottomPad
 );
 
+void scrollRoot.scrollHeight;
+
+if(
+laidOut
+){
 scrollRoot.scrollTop =
 prevScroll;
+}else{
+scrollRoot.scrollTop =
+0;
+}
+
 applyCoinRowStates();
+
+if(
+laidOut &&
+Math.abs(
+scrollRoot.scrollTop -
+prevScroll
+) >
+1 &&
+!coinListScrollRestoreRaf
+){
+coinListScrollRestoreRaf =
+requestAnimationFrame(
+()=>{
+coinListScrollRestoreRaf =
+0;
+paintCoinListWindow(
+list
+);
+}
+);
+}
 
 }
 
@@ -1304,11 +1447,25 @@ updateCoinsSymbolHeaderCount(
 data.length
 );
 
+const wasEmpty =
+!virtualCoinData.length;
+
 virtualCoinData =
 data;
 ensureCoinListVirtualScroll(
 list
 );
+
+if(
+wasEmpty &&
+data.length
+){
+resolveCoinListScrollRoot(
+list
+).scrollTop =
+0;
+}
+
 paintCoinListWindow(
 list
 );
@@ -1702,10 +1859,43 @@ header?.offsetHeight ||
 0;
 }
 
+const clientH =
+scrollRoot.clientHeight ||
+0;
+
+if(
+clientH <
+rowH
+){
+applyCoinRowStates();
+if(
+coinListVisibleDeferTries <
+12
+){
+coinListVisibleDeferTries +=
+1;
+if(
+!coinListVisibleDeferRaf
+){
+coinListVisibleDeferRaf =
+requestAnimationFrame(
+()=>{
+coinListVisibleDeferRaf =
+0;
+ensureActiveCoinVisible();
+}
+);
+}
+}
+return;
+}
+
+coinListVisibleDeferTries =
+0;
+
 const viewH =
 Math.max(
-scrollRoot.clientHeight ||
-0,
+clientH,
 rowH *
 3
 );
@@ -1782,9 +1972,10 @@ false;
 
 }
 
+/** CSS `.active` only — do not scroll the list here (first load must stay at the top). */
 export function highlightActiveSymbol(){
 
-ensureActiveCoinVisible();
+applyCoinRowStates();
 
 }
 

@@ -200,7 +200,7 @@ setCoinsTableHooks,
 syncCoinListFreezeFromFlagMenus,
 getExtraCoinMarkets,
 isExtraCoinMarket
-} from "./terminal/terminal-table.js?v=36";
+} from "./terminal/terminal-table.js?v=39";
 
 import {
 createCoinsChartSwitchVeil
@@ -238,7 +238,7 @@ saveChartDisplayStyle
 
 import {
 createPriceSeriesHost
-} from "./chart/price-series-host.js?v=7";
+} from "./chart/price-series-host.js?v=9";
 
 import {
 CHART_PRICE_SCALE_MODE_LOGARITHMIC,
@@ -2619,7 +2619,14 @@ last
 
 }
 
-async function rebuildRsiFromCandles(){
+async function rebuildRsiFromCandles(
+opts =
+{}
+){
+
+const liveLastOnly =
+opts.liveLastOnly ===
+true;
 
 const watchRsiAlerts =
 symbolHasRsiAlerts();
@@ -2627,6 +2634,27 @@ symbolHasRsiAlerts();
 if(
 !rsiPaneActive &&
 !watchRsiAlerts
+){
+chartIndicators?.notifyCandlesUpdate?.();
+return;
+}
+
+const rsiTf =
+String(
+rsiPaneSettings.tf ||
+""
+).trim();
+const chartTf =
+String(
+currentTF ||
+""
+).trim();
+
+if(
+liveLastOnly &&
+rsiTf &&
+rsiTf !==
+chartTf
 ){
 chartIndicators?.notifyCandlesUpdate?.();
 return;
@@ -5510,8 +5538,6 @@ loadSeq
 
 highlightActiveSymbol();
 
-scrollActiveCoinIntoView();
-
 startRealtime();
 startPriceHud();
 
@@ -6057,12 +6083,6 @@ e.target.blur();
 ========================================================= */
 
 
-function scrollActiveCoinIntoView(){
-
-ensureActiveCoinVisible();
-
-}
-
 function closeAllCoinFlagMenus(
 exceptWrap = null
 ){
@@ -6575,6 +6595,7 @@ setCoinsChartSymbol(
 next
 );
 highlightActiveSymbol();
+ensureActiveCoinVisible();
 await loadSymbol(
 next
 );
@@ -7538,9 +7559,25 @@ item.symbol
 applyChartLiveCandle(
 bar
 ){
+try{
+candleSeries.update(
+bar
+);
+}catch{
+try{
 candleSeries.setData(
 buildChartDisplayCandles()
 );
+}catch{
+try{
+candleSeries.setData(
+candles
+);
+}catch{
+/* ignore */
+}
+}
+}
 applyChartPriceFormat(
 candleSeries,
 bar?.close ??

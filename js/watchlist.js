@@ -55,6 +55,14 @@ subscribeKline
 } from "./market-ws.js?v=1";
 
 import {
+ensureOhlcRollover,
+ingestLiveOhlcKline,
+lastOhlcBar,
+liveBarPeriodSec,
+paintLiveOhlcSeries
+} from "./chart/live-bar-roll.js?v=2";
+
+import {
 getWidgetToolbarHtml,
 getWidgetChartUiHtml,
 initWidgetDrawToolsDropdown,
@@ -1102,7 +1110,9 @@ updateTerminalWidgetRsiData(
 entry
 );
 
-entry.unsubKline =
+entry.unsubKline?.();
+
+const unsubKline =
 subscribeKline(
 symbol,
 tf,
@@ -1116,19 +1126,124 @@ if(!candles.length){
 return;
 }
 
+const {
+rolled,
+kind,
+shifted
+} =
+ingestLiveOhlcKline(
+candles,
+candle,
+liveBarPeriodSec(
+tf
+),
+6000
+);
+
+if(
+!kind &&
+!rolled
+){
+return;
+}
+
+const isNewBar =
+kind ===
+"new" ||
+rolled;
+
+paintLiveOhlcSeries(
+series,
+candles,
+{
+kind,
+shifted
+}
+);
+
 const last =
-candles[candles.length - 1];
+lastOhlcBar(
+candles
+);
 
-if(candle.time === last.time){
+if(
+last
+){
+applyChartPriceFormat(
+series,
+last.close
+);
+priceEl.innerText =
+last.close.toFixed(
+2
+);
+}
 
-candles[candles.length - 1] = candle;
+if(
+entry.rsiSeries &&
+(
+isNewBar ||
+kind ===
+"hist"
+)
+){
+updateTerminalWidgetRsiData(
+entry
+);
+}
 
-}else if(candle.time > last.time){
+priceHudCtrl?.refresh?.();
 
-candles.push(candle);
+}
+);
+const liveBarRollTimer =
+setInterval(
+()=>{
 
-if(candles.length > 6000){
-candles.shift();
+if(
+seq !==
+loadSeq.id ||
+!candles.length
+){
+return;
+}
+
+if(
+!ensureOhlcRollover(
+candles,
+liveBarPeriodSec(
+tf
+)
+)
+){
+return;
+}
+
+paintLiveOhlcSeries(
+series,
+candles,
+{
+kind:
+"new"
+}
+);
+
+const last =
+lastOhlcBar(
+candles
+);
+
+if(
+last
+){
+applyChartPriceFormat(
+series,
+last.close
+);
+priceEl.innerText =
+last.close.toFixed(
+2
+);
 }
 
 if(
@@ -1139,24 +1254,19 @@ entry
 );
 }
 
-}else{
-return;
-}
-
-series.update(candle);
-
-applyChartPriceFormat(
-series,
-candle.close
-);
-
 priceHudCtrl?.refresh?.();
 
-priceEl.innerText =
-candle.close.toFixed(2);
-
-}
+},
+1000
 );
+
+entry.unsubKline =
+()=>{
+unsubKline?.();
+clearInterval(
+liveBarRollTimer
+);
+};
 
 applyChartPriceFormat(
 series,

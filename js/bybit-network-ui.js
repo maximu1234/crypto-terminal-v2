@@ -56,7 +56,7 @@ getActiveExchangeId() ===
 ){
 
 void import(
-"./exchanges/bingx/ws.js?v=17"
+"./exchanges/bingx/ws.js?v=18"
 ).then(
 m=>{
 m.resetBingxWs?.();

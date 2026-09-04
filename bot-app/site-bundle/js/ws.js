@@ -3,6 +3,12 @@ getBybitWsUrl,
 rotateBybitWsEndpoint
 } from "./bybit-fetch.js?v=18";
 
+import {
+collectKlineRows,
+queueKlineByTime,
+takeQueuedKlinesSorted
+} from "./chart/live-bar-roll.js?v=2";
+
 let socket = null;
 
 let reconnectTimer = null;
@@ -49,27 +55,40 @@ if(!pendingCandleByTopic.size){
 return;
 }
 
-pendingCandleByTopic.forEach(
-(
-candle,
-topic
-)=>{
+const batches =
+takeQueuedKlinesSorted(
+pendingCandleByTopic
+);
+
+for(
+const {
+topic,
+candles
+} of
+batches
+){
 
 const callbacks =
 topicCallbacks.get(topic);
 
 if(!callbacks?.size){
-return;
+continue;
 }
 
+for(const candle of candles){
 callbacks.forEach(fn=>{
+try{
 fn(candle);
+}catch(err){
+console.warn(
+"kline listener:",
+err
+);
+}
 });
+}
 
 }
-);
-
-pendingCandleByTopic.clear();
 
 }
 
@@ -132,32 +151,25 @@ msg.topic.startsWith(
 )
 ){
 
-const row =
-Array.isArray(
+const rows =
+collectKlineRows(
 msg.data
-)
-? msg.data[
-0
-]
-: msg.data;
+);
 
-if(
-!row
-){
-return;
-}
-
-const candle =
+for(const row of rows){
+queueKlineByTime(
+pendingCandleByTopic,
+msg.topic,
 parseCandle(
 row
+)
 );
+}
 
-pendingCandleByTopic.set(
-msg.topic,
-candle
-);
-
+if(rows.length){
 scheduleKlineFlush();
+}
+
 return;
 
 }
@@ -349,7 +361,7 @@ function parseCandle(raw){
 
 return {
 
-time:Number(raw.start) / 1000,
+time:Math.floor(Number(raw.start) / 1000),
 
 open:Number(raw.open),
 

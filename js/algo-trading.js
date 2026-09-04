@@ -15,6 +15,12 @@ syncLinkedChartTimescales
 } from "./chart-import.js?v=53";
 
 import {
+applyLiveSeriesUpdate,
+ensureOhlcRollover,
+liveBarPeriodSec
+} from "./chart/live-bar-roll.js?v=2";
+
+import {
 terminalVisibleBars,
 terminalHistoryInitialRequests,
 TERMINAL_VISIBLE_BARS,
@@ -46,7 +52,7 @@ subscribeKline
 import {
 mountAlgoTradingCoinList,
 refreshAlgoMarketListFromFlags
-} from "./algo-trading-list.js?v=26";
+} from "./algo-trading-list.js?v=27";
 
 import {
 mountAlgoTickerScanUi
@@ -201,7 +207,7 @@ resolveInitialSymbol
 
 import {
 mergeLiveCandle
-} from "./algo-trading/live-candle.js?v=1";
+} from "./algo-trading/live-candle.js?v=2";
 
 import {
 formatTurnover24Label
@@ -731,6 +737,8 @@ let candles =
 let loadSeq =
 0;
 let unsubKline =
+null;
+let liveBarRollTimer =
 null;
 let disposed =
 false;
@@ -1319,7 +1327,9 @@ rsiPaneSettings.period
 function applyRsiData(
 {
 notifyIndicators =
-true
+true,
+liveLastOnly =
+false
 } =
 {}
 ){
@@ -1344,6 +1354,26 @@ algoChartDbg(
 ){
 chartIndicators?.notifyCandlesUpdate?.();
 }
+return;
+}
+
+const rsiTf =
+String(
+rsiPaneSettings.tf ||
+""
+).trim();
+const chartTf =
+String(
+tf ||
+""
+).trim();
+
+if(
+liveLastOnly &&
+rsiTf &&
+rsiTf !==
+chartTf
+){
 return;
 }
 
@@ -1883,14 +1913,21 @@ if(
 return;
 }
 
+ensureOhlcRollover(
+candles,
+liveBarPeriodSec(
+tf
+)
+);
+
 const last =
 candles[
 candles.length -
 1
 ];
 
-try{
-candleSeries.update(
+applyLiveSeriesUpdate(
+candleSeries,
 {
 time:
 last.time,
@@ -1902,20 +1939,9 @@ low:
 last.low,
 close:
 last.close
-}
+},
+buildDisplayCandles
 );
-}catch{
-applyCandleData(
-{
-forceAnalysis:
-false,
-light:
-true,
-skipAnalysis:
-true
-}
-);
-}
 
 }
 
@@ -1929,6 +1955,16 @@ unsubKline?.();
 
 unsubKline =
 null;
+
+if(
+liveBarRollTimer
+){
+clearInterval(
+liveBarRollTimer
+);
+liveBarRollTimer =
+null;
+}
 
 }
 
@@ -2289,6 +2325,13 @@ loadSeq
 return;
 }
 
+ensureOhlcRollover(
+candles,
+liveBarPeriodSec(
+tf
+)
+);
+
 const beforeLen =
 candles.length;
 const beforeTime =
@@ -2358,13 +2401,41 @@ rsiPaneActive
 applyRsiData(
 {
 notifyIndicators:
-false
+false,
+liveLastOnly:
+true
 }
 );
 }
 }
 
 }
+);
+
+liveBarRollTimer =
+setInterval(
+()=>{
+if(
+disposed ||
+seq !==
+loadSeq ||
+!candles.length
+){
+return;
+}
+
+if(
+ensureOhlcRollover(
+candles,
+liveBarPeriodSec(
+tf
+)
+)
+){
+applyLiveCandleTick();
+}
+},
+1000
 );
 
 listApi?.highlight?.();

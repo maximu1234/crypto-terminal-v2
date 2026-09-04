@@ -22,6 +22,7 @@ startTickerStream,
 startRealtime,
 renderList as renderListCore,
 highlightActiveSymbol,
+ensureActiveCoinVisible,
 setCoinsTableHooks,
 syncCoinListFreezeFromFlagMenus,
 getCurrentSymbols,
@@ -1602,6 +1603,7 @@ next
 coinsState().currentSymbol =
 next;
 highlightActiveSymbol();
+ensureActiveCoinVisible();
 await openListSymbol(
 api,
 next

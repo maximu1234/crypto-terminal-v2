@@ -12,6 +12,7 @@ import {
 CANDLE_SERIES_PAINT,
 CHART_DISPLAY_TYPE_CANDLES,
 CHART_DISPLAY_TYPE_LINE,
+isOhlcBar,
 lineSeriesOptions,
 mapBarToSeriesPoint,
 mapDisplayCandlesToSeriesData,
@@ -19,6 +20,10 @@ normalizeChartDisplayStyle,
 ohlcPriceRangeFromBars,
 seriesBarClose
 } from "./chart-display-style.js?v=2";
+
+import {
+mergeLiveBarIntoDisplay
+} from "./live-bar-roll.js?v=2";
 
 import {
 runWithPreservedVisibleLogicalRange
@@ -268,23 +273,66 @@ true
 
 }
 
+function setInnerData(
+inner,
+rows
+){
+
+if(!inner){
+return;
+}
+
+try{
+inner.setData(
+rows
+);
+}catch{
+inner.setData(
+rows.filter(
+bar=>
+isOhlcBar(
+bar
+) ||
+Number.isFinite(
+Number(
+bar?.value
+)
+)
+)
+);
+}
+
+}
+
 function paint(){
 
 if(candleInner){
-candleInner.setData(
+const candleData =
 mapDisplayCandlesToSeriesData(
 lastDisplay,
 {
 type:
 CHART_DISPLAY_TYPE_CANDLES
 }
+);
+
+try{
+candleInner.setData(
+candleData
+);
+}catch{
+candleInner.setData(
+candleData.filter(
+isOhlcBar
 )
 );
+}
 }
 
 if(isLineType()){
 ensureLineSeries();
-lineInner?.setData(
+setInnerData(
+lineInner,
 mapDisplayCandlesToSeriesData(
 lastDisplay,
 currentStyle
@@ -323,6 +371,13 @@ bar.time == null
 return;
 }
 
+lastDisplay =
+mergeLiveBarIntoDisplay(
+lastDisplay,
+bar
+);
+
+try{
 if(candleInner){
 const candlePoint =
 mapBarToSeriesPoint(
@@ -355,6 +410,9 @@ lineInner.update(
 point
 );
 }
+}
+}catch{
+paint();
 }
 },
 applyOptions(

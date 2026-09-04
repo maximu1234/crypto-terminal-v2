@@ -246,3 +246,68 @@ test("line mode adds a line series and never removes the candlestick", () => {
   }
 });
 
+test("price series host update paints a new bar over trailing whitespace", () => {
+  const candle = seriesStub("candle");
+  candle.update = () => {
+    throw new Error("Cannot update oldest data");
+  };
+  const chart = {
+    removeSeries() {},
+    addLineSeries() {
+      return seriesStub("line");
+    },
+    timeScale() {
+      return {
+        getVisibleLogicalRange() {
+          return { from: 0, to: 2 };
+        },
+        setVisibleLogicalRange() {}
+      };
+    }
+  };
+  const host = createPriceSeriesHost(chart, candle, { type: "candles" });
+  host.setData([sample, { time: 2 }]);
+  host.update({
+    time: 2,
+    open: 14,
+    high: 15,
+    low: 13,
+    close: 14.5
+  });
+  assert.equal(candle.rows[1].close, 14.5);
+  assert.equal(candle.rows.length, 2);
+});
+
+test("price series host update keeps lastDisplay in sync when inner.update works", () => {
+  const candle = seriesStub("candle");
+  let updated = null;
+  candle.update = (bar) => {
+    updated = bar;
+    candle.rows[candle.rows.length - 1] = bar;
+  };
+  const chart = {
+    removeSeries() {},
+    addLineSeries() {
+      return seriesStub("line");
+    },
+    timeScale() {
+      return {
+        getVisibleLogicalRange() {
+          return { from: 0, to: 1 };
+        },
+        setVisibleLogicalRange() {}
+      };
+    }
+  };
+  const host = createPriceSeriesHost(chart, candle, { type: "candles" });
+  host.setData([sample]);
+  host.update({
+    ...sample,
+    close: 15,
+    high: 16
+  });
+  assert.equal(updated.close, 15);
+  assert.equal(candle.rows[0].close, 15);
+  assert.equal(candle.rows.length, 1);
+});
+

@@ -40,66 +40,15 @@ subscribeTicker
 } from "./market-ws.js?v=1";
 
 import {
+applyLiveOhlcBar,
+applyLiveSeriesUpdate,
+ensureOhlcRollover,
+liveBarPeriodSec
+} from "./chart/live-bar-roll.js?v=2";
+
+import {
 mountWidgetDomCrosshair
 } from "./chart-widget-host.js?v=21";
-
-function mergeLiveCandle(
-candles,
-candle,
-maxLen
-){
-
-if(
-!candles.length
-){
-return false;
-}
-
-const last =
-candles[
-candles.length -
-1
-];
-
-if(
-candle.time ===
-last.time
-){
-
-candles[
-candles.length -
-1
-] =
-candle;
-
-return true;
-
-}
-
-if(
-candle.time >
-last.time
-){
-
-candles.push(
-candle
-);
-
-if(
-maxLen &&
-candles.length >
-maxLen
-){
-candles.shift();
-}
-
-return true;
-
-}
-
-return false;
-
-}
 
 function buildBodyHtml(
 showRsi
@@ -186,6 +135,8 @@ let loadSeq =
 let unsubKline =
 null;
 let unsubTicker =
+null;
+let liveBarRollTimer =
 null;
 let onMarketLastPrice =
 null;
@@ -1014,6 +965,15 @@ unsubTicker?.();
 unsubTicker =
 null;
 if(
+liveBarRollTimer
+){
+clearInterval(
+liveBarRollTimer
+);
+liveBarRollTimer =
+null;
+}
+if(
 onMarketLastPrice
 ){
 window.removeEventListener(
@@ -1046,6 +1006,14 @@ px <=
 ){
 return;
 }
+
+const rolled =
+ensureOhlcRollover(
+candles,
+liveBarPeriodSec(
+tf
+)
+);
 
 const last =
 candles[
@@ -1091,16 +1059,21 @@ candles.length -
 ] =
 bar;
 
-try{
-series.update(
-bar
+applyLiveSeriesUpdate(
+series,
+bar,
+buildDisplayCandles
 );
 applyChartPriceFormat(
 series,
 px
 );
-}catch{
-/* chart disposed */
+
+if(
+rolled &&
+rsiSeries
+){
+updateRsiData();
 }
 
 }
@@ -1199,26 +1172,32 @@ return;
 
 try{
 
-const prevLast =
-candles[
-candles.length -
-1
-];
+const rolled =
+ensureOhlcRollover(
+candles,
+liveBarPeriodSec(
+tf
+)
+);
 
-const isNewBar =
-prevLast &&
-candle.time >
-prevLast.time;
-
-if(
-!mergeLiveCandle(
+const kind =
+applyLiveOhlcBar(
 candles,
 candle,
 SCREENER_MAX_BARS
-)
+);
+
+if(
+!kind &&
+!rolled
 ){
 return;
 }
+
+const isNewBar =
+rolled ||
+kind ===
+"new";
 
 if(
 isNewBar &&
@@ -1237,20 +1216,25 @@ buildDisplayCandles()
 );
 updateRsiData();
 
+}else if(
+kind ===
+"hist"
+){
+
+series.setData(
+buildDisplayCandles()
+);
+
 }else{
 
-if(
-viewportMode ===
-"coins"
-){
-series.update(
-candle
+applyLiveSeriesUpdate(
+series,
+candles[
+candles.length -
+1
+],
+buildDisplayCandles
 );
-}else{
-series.update(
-candle
-);
-}
 
 if(
 isNewBar &&
@@ -1302,6 +1286,43 @@ total
 }
 
 }
+);
+
+liveBarRollTimer =
+setInterval(
+()=>{
+if(
+!alive ||
+streamPaused ||
+!candles.length
+){
+return;
+}
+
+if(
+ensureOhlcRollover(
+candles,
+liveBarPeriodSec(
+tf
+)
+)
+){
+applyLiveSeriesUpdate(
+series,
+candles[
+candles.length -
+1
+],
+buildDisplayCandles
+);
+if(
+rsiSeries
+){
+updateRsiData();
+}
+}
+},
+1000
 );
 
 }

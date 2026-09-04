@@ -38,6 +38,25 @@ class ThreadingHTTPServer(
 
 class QuietHandler(http.server.SimpleHTTPRequestHandler):
 
+    def _apply_clean_html_url(self) -> None:
+        parsed = urllib.parse.urlparse(self.path)
+        raw_path = parsed.path or "/"
+        if raw_path.endswith("/"):
+            return
+        base = os.path.basename(raw_path)
+        if "." in base:
+            return
+        rel = raw_path.lstrip("/")
+        if not rel or ".." in rel.split("/"):
+            return
+        html_name = f"{rel}.html"
+        if not os.path.isfile(html_name):
+            return
+        mapped = "/" + html_name
+        if parsed.query:
+            mapped += "?" + parsed.query
+        self.path = mapped
+
     def do_GET(self) -> None:
         parsed = urllib.parse.urlparse(self.path)
         if parsed.path == "/api/bybit":
@@ -49,6 +68,7 @@ class QuietHandler(http.server.SimpleHTTPRequestHandler):
         if parsed.path == "/api/twelvedata":
             self._serve_twelvedata_proxy(parsed)
             return
+        self._apply_clean_html_url()
         super().do_GET()
 
     def _serve_bybit_proxy(self, parsed: urllib.parse.ParseResult) -> None:

@@ -13,6 +13,11 @@ import {
 tfToBingxInterval
 } from "./intervals.js?v=1";
 
+import {
+queueKlineByTime,
+takeQueuedKlinesSorted
+} from "../../chart/live-bar-roll.js?v=2";
+
 let socket =
 null;
 
@@ -66,11 +71,18 @@ if(
 return;
 }
 
-pendingCandleByTopic.forEach(
-(
-candle,
-topic
-)=>{
+const batches =
+takeQueuedKlinesSorted(
+pendingCandleByTopic
+);
+
+for(
+const {
+topic,
+candles
+} of
+batches
+){
 
 const callbacks =
 topicCallbacks.get(
@@ -80,21 +92,32 @@ topic
 if(
 !callbacks?.size
 ){
-return;
+continue;
 }
 
+for(
+const candle of
+candles
+){
 callbacks.forEach(
 fn=>{
+try{
 fn(
 candle
 );
+}catch(
+err
+){
+console.warn(
+"bingx kline listener:",
+err
+);
+}
 }
 );
+}
 
 }
-);
-
-pendingCandleByTopic.clear();
 
 }
 
@@ -148,6 +171,36 @@ null
 
 }
 
+export function extractKlineRows(
+msg
+){
+
+const raw =
+msg?.data;
+
+if(
+Array.isArray(
+raw
+)
+){
+return raw.filter(
+Boolean
+);
+}
+
+const row =
+extractKlineRow(
+msg
+);
+
+return row
+? [
+row
+]
+: [];
+
+}
+
 export function extractKlineTimestamp(
 row
 ){
@@ -159,6 +212,63 @@ row?.time ||
 row?.openTime ||
 0
 );
+
+}
+
+function candleFromBingxRow(
+row
+){
+
+if(
+!row
+){
+return null;
+}
+
+const ts =
+extractKlineTimestamp(
+row
+);
+const sec =
+ts >
+1e12
+? Math.floor(
+ts /
+1000
+)
+: ts;
+
+return {
+time:
+sec,
+open:
+Number(
+row.o ||
+row.open
+),
+high:
+Number(
+row.h ||
+row.high
+),
+low:
+Number(
+row.l ||
+row.low
+),
+close:
+Number(
+row.c ||
+row.close
+),
+volume:
+Number(
+row.v ||
+row.volume ||
+0
+) ||
+0
+};
 
 }
 
@@ -488,68 +598,39 @@ dataType.split(
 );
 const topic =
 `kline:${bingxSym}:${rest}`;
-const row =
-extractKlineRow(
+const rows =
+extractKlineRows(
 msg
 );
 
-if(
-!row
+for(
+const row of
+rows
 ){
-return;
-}
-
-const ts =
-extractKlineTimestamp(
+const candle =
+candleFromBingxRow(
 row
 );
-const sec =
-ts >
-1e12
-? Math.floor(
-ts /
-1000
-)
-: ts;
 
-const candle =
-{
-time:
-sec,
-open:
-Number(
-row.o ||
-row.open
-),
-high:
-Number(
-row.h ||
-row.high
-),
-low:
-Number(
-row.l ||
-row.low
-),
-close:
-Number(
-row.c ||
-row.close
-),
-volume:
-Number(
-row.v ||
-row.volume ||
-0
-) ||
-0
-};
+if(
+!candle
+){
+continue;
+}
 
-pendingCandleByTopic.set(
+queueKlineByTime(
+pendingCandleByTopic,
 topic,
 candle
 );
+}
+
+if(
+rows.length
+){
 scheduleKlineFlush();
+}
+
 return;
 
 }

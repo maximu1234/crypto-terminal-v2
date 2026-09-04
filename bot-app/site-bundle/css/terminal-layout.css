@@ -1117,6 +1117,7 @@ flex:1 1 auto;
 min-height:0;
 overflow-x:hidden;
 overflow-y:auto;
+overflow-anchor:none;
 -webkit-overflow-scrolling:touch;
 }
 

@@ -49,7 +49,7 @@ Object.freeze({
 "exchanges/bingx/markets.js":
 3,
 "exchanges/bingx/ws.js":
-17,
+18,
 "exchanges/bingx/intervals.js":
 1,
 "terminal-page-boot.js":
@@ -243,11 +243,11 @@ Object.freeze({
 "chart-page.js":
 7,
 "terminal.js":
-437,
+440,
 "terminal-multi-chart.js":
 11,
 "terminal-screener-chart-pane.js":
-16,
+17,
 "terminal-layout-picker.js":
 11,
 "terminal/terminal-chart-layout.js":
@@ -295,7 +295,7 @@ Object.freeze({
 "script-page-storage.js":
 16,
 "script-page-widgets.js":
-21,
+22,
 "script-terminal-status.js":
 10,
 "script-scan-background.js":
@@ -303,11 +303,11 @@ Object.freeze({
 "script-favorites-list.js":
 2,
 "algo-trading.js":
-216,
+218,
 "algo-trading-page-boot.js":
 18,
 "algo-trading-list.js":
-26,
+27,
 "algo-trading/coin-list-host.js":
 2,
 "algo-trading/page-prefs.js":
@@ -319,7 +319,7 @@ Object.freeze({
 "algo-trading/lite-history.js":
 1,
 "algo-trading/live-candle.js":
-1,
+2,
 "algo-trading/page-format.js":
 1,
 "algo-trading/page-dom.js":
@@ -554,15 +554,15 @@ Object.freeze({
 "terminal/terminal-prefs.js":
 25,
 "terminal/terminal-table.js":
-36,
+39,
 "terminal/terminal-checklist.js":
 1,
 "telegram-bot-public.js":
 1,
 "watchlist.js":
-101,
+102,
 "screener.js":
-110,
+111,
 "ipad-web-viewport.js":
 2,
 "screener-widget-guard.js":
@@ -608,9 +608,9 @@ Object.freeze({
 "screener-pattern-overlay.js":
 10,
 "screener-widget-zoom.js":
-29,
+30,
 "release-marker.js":
-112,
+113,
 "focus-blur-after-pick.js":
 3,
 "site-boot.js":
@@ -640,7 +640,7 @@ Object.freeze({
 
 /* ── JS: chart / drawings ── */
 "chart.js":
-164,
+165,
 "chart/chart-options.js":
 7,
 "chart/chart-local-time.js":
@@ -650,11 +650,13 @@ Object.freeze({
 "chart/chart-dom-crosshair.js":
 15,
 "chart/chart-factory.js":
-51,
+52,
 "chart/chart-display-style.js":
 2,
 "chart/price-series-host.js":
-7,
+9,
+"chart/live-bar-roll.js":
+2,
 "chart/price-scale-mode.js":
 3,
 "chart-tablet-gestures.js":
@@ -773,7 +775,7 @@ Object.freeze({
 1,
 
 "ws.js":
-19,
+20,
 "tickers.js":
 28,
 
@@ -891,11 +893,11 @@ Object.freeze({
 "screener.css":
 58,
 "terminal.css":
-177,
+178,
 "watchlist.css":
 57,
 "terminal-layout.css":
-103,
+104,
 "script-page.css":
 25,
 "algo-trading.css":

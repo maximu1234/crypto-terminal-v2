@@ -20,6 +20,10 @@ lwPriceScaleModeId
 } from "./price-scale-mode.js?v=3";
 
 import {
+liveBarPeriodSec
+} from "./live-bar-roll.js?v=2";
+
+import {
 withChartLocalTime
 } from "./chart-local-time.js?v=1";
 
@@ -4133,17 +4137,7 @@ clearLinked();
 
 export function tfPeriodSec(tf){
 
-const map = {
-"1":60,
-"5":300,
-"15":900,
-"60":3600,
-"240":14400,
-"D":86400,
-"W":604800
-};
-
-return map[tf] || 900;
+return liveBarPeriodSec(tf);
 
 }
 
