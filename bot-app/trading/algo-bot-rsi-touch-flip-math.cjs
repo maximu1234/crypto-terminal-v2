@@ -408,6 +408,34 @@ function rsiTouchFlipCycleSlHit(unrealizedPnl, budget, prefs) {
   return pnl <= -(cap * pct) / 100;
 }
 
+function rsiTouchFlipLocalLooksOpen(state) {
+  return Boolean(
+    state &&
+      (state.botOwnsPosition === true ||
+        (state.position && state.position !== "flat"))
+  );
+}
+
+function rsiTouchFlipOpenLooksFilled(result) {
+  if (!result || result.ok === false) {
+    return false;
+  }
+  return Boolean(result.position);
+}
+
+function rsiTouchFlipShouldFlattenGhost(state, posResult) {
+  if (!rsiTouchFlipLocalLooksOpen(state)) {
+    return false;
+  }
+  if (state.mode != null && state.mode !== "trade") {
+    return false;
+  }
+  if (!posResult || posResult.ok === false) {
+    return false;
+  }
+  return !posResult.position;
+}
+
 module.exports = {
   SIZE_EQUAL,
   SIZE_AVERAGE,
@@ -427,5 +455,8 @@ module.exports = {
   normalizeMarginMode,
   allocatedBalanceUsdt,
   equalShareBudget,
-  rsiTouchFlipCycleSlHit
+  rsiTouchFlipCycleSlHit,
+  rsiTouchFlipLocalLooksOpen,
+  rsiTouchFlipOpenLooksFilled,
+  rsiTouchFlipShouldFlattenGhost
 };

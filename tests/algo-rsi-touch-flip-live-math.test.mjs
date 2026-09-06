@@ -197,3 +197,87 @@ test("live cycle SL matches analysis and fingerprint ignores pct when off", () =
   assert.equal(blocked.touchOS, true);
   assert.equal(blocked.openLong, false);
 });
+
+test("OS at max stack while long does not add or flip", () => {
+  const d = math.decideRsiTouchFlipBar({
+    prevRsi: 34,
+    rsi: 32,
+    osLevel: 33,
+    obLevel: 82,
+    stack: 1,
+    position: "long",
+    maxStack: 1,
+    allowLong: true,
+    allowShort: true
+  });
+  assert.equal(d.touchOS, true);
+  assert.equal(d.openLong, false);
+  assert.equal(d.closeLong, false);
+  assert.equal(d.openShort, false);
+});
+
+test("open is filled only when exchange returns a position", () => {
+  assert.equal(math.rsiTouchFlipOpenLooksFilled({ ok: true }), false);
+  assert.equal(math.rsiTouchFlipOpenLooksFilled({ ok: true, position: null }), false);
+  assert.equal(
+    math.rsiTouchFlipOpenLooksFilled({ ok: true, position: { size: 1 } }),
+    true
+  );
+  assert.equal(
+    math.rsiTouchFlipOpenLooksFilled({ position: { size: 1 } }),
+    true
+  );
+  assert.equal(
+    math.rsiTouchFlipOpenLooksFilled({ ok: false, position: { size: 1 } }),
+    false
+  );
+});
+
+test("ghost flatten only when live thinks open and exchange is flat", () => {
+  const ghost = {
+    mode: "trade",
+    position: "long",
+    botOwnsPosition: true
+  };
+  assert.equal(
+    math.rsiTouchFlipShouldFlattenGhost(ghost, { ok: true, position: null }),
+    true
+  );
+  assert.equal(
+    math.rsiTouchFlipShouldFlattenGhost(ghost, { ok: true, position: { size: 1 } }),
+    false
+  );
+  assert.equal(
+    math.rsiTouchFlipShouldFlattenGhost(ghost, { ok: false }),
+    false
+  );
+  assert.equal(
+    math.rsiTouchFlipShouldFlattenGhost(
+      { mode: "wait-flat", position: "long", botOwnsPosition: true },
+      { ok: true, position: null }
+    ),
+    false
+  );
+  assert.equal(
+    math.rsiTouchFlipShouldFlattenGhost(
+      { mode: "trade", position: "flat", botOwnsPosition: false },
+      { ok: true, position: null }
+    ),
+    false
+  );
+  assert.equal(math.rsiTouchFlipLocalLooksOpen(ghost), true);
+  assert.equal(
+    math.rsiTouchFlipLocalLooksOpen({ position: "flat", botOwnsPosition: false }),
+    false
+  );
+});
+
+test("cycle SL without exchange pnl does not hit", () => {
+  assert.equal(
+    math.rsiTouchFlipCycleSlHit(NaN, 19.25, {
+      cycleSlEnabled: true,
+      cycleSlPct: 30
+    }),
+    false
+  );
+});

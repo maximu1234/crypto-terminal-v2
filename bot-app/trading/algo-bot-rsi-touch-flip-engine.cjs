@@ -22,7 +22,10 @@ const {
   normalizeMarginMode,
   allocatedBalanceUsdt,
   equalShareBudget,
-  rsiTouchFlipCycleSlHit
+  rsiTouchFlipCycleSlHit,
+  rsiTouchFlipLocalLooksOpen,
+  rsiTouchFlipOpenLooksFilled,
+  rsiTouchFlipShouldFlattenGhost
 } = require("./algo-bot-rsi-touch-flip-math.cjs");
 
 const MAX_CANDLES = 4000;
@@ -248,6 +251,37 @@ function chartRsiSeries(state) {
   );
 }
 
+function flattenLocalToFlat(state) {
+  if (!state) {
+    return;
+  }
+  state.position = "flat";
+  state.stack = 0;
+  state.botOwnsPosition = false;
+  state.entryBudget = null;
+}
+
+async function flattenGhostIfMissing(state, posResult, price) {
+  if (!rsiTouchFlipShouldFlattenGhost(state, posResult)) {
+    return false;
+  }
+  const prev = state.position;
+  flattenLocalToFlat(state);
+  try {
+    await refreshShareBudgets();
+  } catch (err) {
+    log.warn("rsi touch flip share after ghost flatten:", err?.message || err);
+  }
+  pushSignal({
+    ts: Date.now(),
+    symbol: state.symbol,
+    side: prev,
+    price,
+    text: `${state.symbol}: позиция на бирже исчезла, сбрасываем`
+  });
+  return true;
+}
+
 async function closeAll(state, reason, price) {
   const symbol = state.symbol;
   const result = await algoRest.closePositionAtMarket(symbol);
@@ -267,10 +301,7 @@ async function closeAll(state, reason, price) {
   }
 
   const prev = state.position;
-  state.position = "flat";
-  state.stack = 0;
-  state.botOwnsPosition = false;
-  state.entryBudget = null;
+  flattenLocalToFlat(state);
   try {
     await refreshShareBudgets();
   } catch (err) {
@@ -333,6 +364,17 @@ async function openSlice(state, side, level, price, label) {
     return false;
   }
 
+  if (!rsiTouchFlipOpenLooksFilled(result)) {
+    pushSignal({
+      ts: Date.now(),
+      symbol: state.symbol,
+      side,
+      price,
+      text: `Ошибка входа ${label}: ордер принят, позиции на бирже нет`
+    });
+    return false;
+  }
+
   state.position = side;
   state.stack = level + 1;
   state.sessionEntries += 1;
@@ -383,13 +425,21 @@ async function onClosedChartBar(state) {
     state.slBlockShort = false;
   }
 
+  let posResult = null;
+  if (rsiTouchFlipLocalLooksOpen(state)) {
+    posResult = await algoRest.getPosition(state.symbol);
+    await flattenGhostIfMissing(state, posResult, price);
+  }
+
   let cycleSlHit = false;
   if (
     prefs.cycleSlEnabled === true &&
     state.botOwnsPosition &&
     state.position !== "flat"
   ) {
-    const posResult = await algoRest.getPosition(state.symbol);
+    if (!posResult) {
+      posResult = await algoRest.getPosition(state.symbol);
+    }
     const pnl = Number(posResult?.position?.pnl);
     const cap =
       Number(state.entryBudget) > 0
@@ -535,7 +585,13 @@ function positionSymbol(row) {
 
 async function refreshWaitFlat() {
   const waiting = [...tickers.values()].filter((row) => row.mode === "wait-flat");
-  if (!waiting.length) {
+  const owned = [...tickers.values()].filter(
+    (row) =>
+      row.mode === "trade" &&
+      !row.orderInflight &&
+      rsiTouchFlipLocalLooksOpen(row)
+  );
+  if (!waiting.length && !owned.length) {
     return;
   }
 
@@ -555,10 +611,7 @@ async function refreshWaitFlat() {
       continue;
     }
     state.mode = "trade";
-    state.position = "flat";
-    state.stack = 0;
-    state.botOwnsPosition = false;
-    state.entryBudget = null;
+    flattenLocalToFlat(state);
     state.slBlockLong = false;
     state.slBlockShort = false;
     try {
@@ -571,6 +624,13 @@ async function refreshWaitFlat() {
       symbol: state.symbol,
       text: `${state.symbol}: позиция закрылась, начинаем торговлю`
     });
+  }
+  for (const state of owned) {
+    await flattenGhostIfMissing(
+      state,
+      { ok: true, position: open.has(state.symbol) ? { symbol: state.symbol } : null },
+      lastChartPrice(state)
+    );
   }
   if ([...tickers.values()].some((row) => row.mode === "trade" && row.position === "flat")) {
     try {

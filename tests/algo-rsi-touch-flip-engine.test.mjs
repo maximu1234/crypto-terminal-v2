@@ -1,5 +1,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import fs from "node:fs";
+import path from "node:path";
+import { createRequire } from "node:module";
+import { fileURLToPath } from "node:url";
 import {
   notionalAt,
   computeWilderRsiValues,
@@ -15,6 +19,10 @@ import {
 import {
   marksToSeriesMarkers
 } from "../js/algo-trading/rsi-touch-flip-overlay.js";
+
+const require = createRequire(import.meta.url);
+const liveMath = require("../desktop/trading/algo-bot-rsi-touch-flip-math.cjs");
+const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 function candlesAt(price, count) {
   const rows = [];
@@ -450,4 +458,57 @@ test("cycle SL closes the stack and does not re-enter while RSI stays in the zon
   );
   assert.equal(off.closedTrades.length, 0);
   assert.equal(off.openTrades.length, 1);
+});
+
+test("live ghost: missing exchange position flattens; order without position is not filled", () => {
+  assert.equal(
+    liveMath.rsiTouchFlipShouldFlattenGhost(
+      { mode: "trade", position: "long", botOwnsPosition: true },
+      { ok: true, position: null }
+    ),
+    true
+  );
+  assert.equal(
+    liveMath.rsiTouchFlipOpenLooksFilled({ ok: true, position: null }),
+    false
+  );
+  const osAtCap = liveMath.decideRsiTouchFlipBar({
+    prevRsi: 34,
+    rsi: 32,
+    osLevel: 33,
+    obLevel: 82,
+    stack: 1,
+    position: "long",
+    maxStack: 1,
+    allowLong: true,
+    allowShort: true
+  });
+  assert.equal(osAtCap.touchOS, true);
+  assert.equal(osAtCap.openLong, false);
+  assert.equal(osAtCap.closeLong, false);
+});
+
+test("live engine logs CYCLE SL only via closeAll and reconciles vanished exchange positions", () => {
+  for (const rel of [
+    "desktop/trading/algo-bot-rsi-touch-flip-engine.cjs",
+    "bot-app/trading/algo-bot-rsi-touch-flip-engine.cjs"
+  ]) {
+    const src = fs.readFileSync(path.join(root, rel), "utf8");
+    assert.match(src, /closeAll\(state, "CYCLE SL"/);
+    assert.match(src, /Закрыть всё @ \$\{reason\}/);
+    assert.match(src, /позиция на бирже исчезла, сбрасываем/);
+    assert.match(src, /ордер принят, позиции на бирже нет/);
+    assert.match(src, /rsiTouchFlipOpenLooksFilled/);
+    assert.match(src, /flattenGhostIfMissing/);
+    assert.doesNotMatch(src, /setTradingStop|trading-stop|stopLoss/);
+    const openSlice = src.slice(
+      src.indexOf("async function openSlice"),
+      src.indexOf("async function onClosedChartBar")
+    );
+    assert.match(openSlice, /rsiTouchFlipOpenLooksFilled\(result\)/);
+    assert.ok(
+      openSlice.indexOf("rsiTouchFlipOpenLooksFilled") <
+        openSlice.indexOf("state.botOwnsPosition = true")
+    );
+  }
 });

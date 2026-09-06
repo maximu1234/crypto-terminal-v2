@@ -186,6 +186,8 @@ test("live engine and LAN accept a full RSI book replace without restart", () =>
   assert.match(engine, /CYCLE SL/);
   assert.match(engine, /slBlockLong/);
   assert.match(engine, /rsiTouchFlipCycleSlHit/);
+  assert.match(engine, /позиция на бирже исчезла, сбрасываем/);
+  assert.match(engine, /rsiTouchFlipOpenLooksFilled/);
   const applyIdx = engine.indexOf("async function applyBookDiff");
   const applyEnd = engine.indexOf("async function startRsiTouchFlipEngine");
   const applyFn = engine.slice(applyIdx, applyEnd);
