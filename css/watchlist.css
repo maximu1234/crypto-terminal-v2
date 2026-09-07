@@ -1431,6 +1431,14 @@ body.tablet-chart .widget-chart-wrap.chart-touch-locked .chart{
     gap:6px;
 }
 
+.channel-level-row{
+    grid-template-columns:14px minmax(0,4rem) 28px;
+}
+
+.channel-level-row:not(:has(.channel-level-on:checked)) .channel-level-val{
+    color:#6b7280;
+}
+
 .fib-level-row .fib-level-on{
     width:14px;
     height:14px;

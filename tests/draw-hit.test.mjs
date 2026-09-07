@@ -427,5 +427,39 @@ shape
 true
 );
 
+assert.equal(
+hit.hitTestChannelBody(
+50,
+100,
+shape
+),
+false
+);
+
+const withExt = {
+...shape,
+channelLevels:
+[
+{ v: 0, enabled: true },
+{ v: 0.236, enabled: false },
+{ v: 0.382, enabled: false },
+{ v: 0.5, enabled: true },
+{ v: 0.618, enabled: false },
+{ v: 0.786, enabled: false },
+{ v: 1, enabled: true },
+{ v: 1.618, enabled: false },
+{ v: 2, enabled: true }
+]
+};
+
+assert.equal(
+hit.hitTestChannelBody(
+50,
+100,
+withExt
+),
+true
+);
+
 }
 );

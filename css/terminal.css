@@ -1012,6 +1012,14 @@ body.terminal-page #draw-toolbar.draw-toolbar-inline .draw-btn .draw-tool-icon--
   min-width:0;
 }
 
+.channel-level-row{
+  grid-template-columns:14px minmax(0,4rem) 28px;
+}
+
+.channel-level-row:not(:has(.channel-level-on:checked)) .channel-level-val{
+  color:#6b7280;
+}
+
 .fib-level-row .fib-level-on{
   flex:0 0 auto;
   width:14px;

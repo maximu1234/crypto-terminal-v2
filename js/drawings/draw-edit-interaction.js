@@ -7,6 +7,10 @@ isCoarseTouchViewport
 } from "../chart-import.js?v=53";
 
 import {
+uid
+} from "./math.js?v=2";
+
+import {
 DRAW_HANDLE_HIT_THRESHOLD_DESKTOP,
 DRAW_HANDLE_HIT_THRESHOLD_DESKTOP_POSITION,
 DRAW_BODY_HIT_THRESHOLD_TOUCH,
@@ -38,6 +42,10 @@ touchShapeRevision
 } from "../drawings-storage.js?v=7";
 
 import {
+stripAlertFromShape
+} from "./drawings-persist.js?v=13";
+
+import {
 moveBrushHandle,
 applyBrushScreenMove,
 brushChartPointsForMove,
@@ -48,6 +56,13 @@ import {
 isTextTool,
 hitTestTextBody
 } from "./text.js?v=3";
+
+import {
+isElliottType,
+getElliottPoints,
+setElliottPoints,
+elliottHandleIndex
+} from "./elliott-spec.js?v=5";
 
 export function createDrawEditInteraction(
 deps
@@ -61,6 +76,20 @@ getDragState,
 setDragState,
 getSelectedId,
 setSelectedId,
+getSelectedIds = ()=>{
+const id =
+getSelectedId();
+return id
+? [
+id
+]
+: [];
+},
+toggleSelectedId = null,
+setSelectedIds = null,
+isIdSelected = id=>
+id ===
+getSelectedId(),
 getSelected,
 getDrawings,
 setBlockChartClick,
@@ -95,11 +124,13 @@ syncChartTouchPan,
 hitTestTrendlineBody,
 hitTestFibBody,
 hitTestChannelBody,
+hitTestElliottBody,
 hitTestRectangleBody,
 hitTestFvpBody,
 hitTestHrayLine,
 channelP4Point,
 drawBodyHitThreshold: drawBodyHitThresholdDep,
+drawingsIntersectingRect = null,
 getCandles = ()=>
 []
 } =
@@ -108,6 +139,11 @@ deps;
 let drawBodyHitThreshold =
 drawBodyHitThresholdDep ??
 (()=>DRAW_BODY_HIT_THRESHOLD_TOUCH);
+let pendingModSelect =
+null;
+
+const MULTI_DRAG_PX =
+4;
 
 function handleHitThreshold(
 shape
@@ -396,6 +432,35 @@ handleId ===
 return channelP4Point(
 shape
 );
+}
+
+}
+
+if(
+isElliottType(
+shape.type
+)
+){
+
+const idx =
+elliottHandleIndex(
+handleId
+);
+const pts =
+getElliottPoints(
+shape
+);
+
+if(
+idx >=
+0 &&
+pts[
+idx
+]
+){
+return pts[
+idx
+];
 }
 
 }
@@ -720,6 +785,20 @@ drag.snapshot
 
 }
 
+if(
+drag.mode ===
+"group-move"
+){
+
+return applyGroupMove(
+drag,
+x,
+y,
+false
+);
+
+}
+
 return false;
 
 }
@@ -863,6 +942,40 @@ if(np3){
 shape.p3 = np3;
 }
 
+}
+
+}
+
+if(
+isElliottType(
+shape.type
+)
+){
+
+const idx =
+elliottHandleIndex(
+handleId
+);
+const pts =
+getElliottPoints(
+shape
+);
+
+if(
+idx >=
+0 &&
+idx <
+pts.length
+){
+pts[
+idx
+] = {
+...point
+};
+setElliottPoints(
+shape,
+pts
+);
 }
 
 }
@@ -1059,6 +1172,16 @@ return [shape.p1, shape.p2];
 
 if(shape.type === "channel"){
 return [shape.p1, shape.p2, shape.p3];
+}
+
+if(
+isElliottType(
+shape.type
+)
+){
+return getElliottPoints(
+shape
+);
 }
 
 if(isHorizPriceTool(shape.type)){
@@ -1280,6 +1403,19 @@ if(shape.type === "channel"){
 return hitTestChannelBody(px, py, shape, bodyThreshold);
 }
 
+if(
+isElliottType(
+shape.type
+)
+){
+return hitTestElliottBody(
+px,
+py,
+shape,
+bodyThreshold
+);
+}
+
 if(shape.type === "rectangle"){
 return hitTestRectangleBody(px, py, shape, bodyThreshold);
 }
@@ -1373,6 +1509,20 @@ return true;
 
 }
 
+if(
+isElliottType(
+shape.type
+)
+){
+
+setElliottPoints(
+shape,
+pts
+);
+return true;
+
+}
+
 if(isHorizPriceTool(shape.type)){
 
 shape.time = pts[0].time;
@@ -1405,6 +1555,345 @@ return true;
 }
 
 return false;
+
+}
+
+function cloneDrawingShape(
+shape
+){
+
+const copy =
+stripAlertFromShape(
+JSON.parse(
+JSON.stringify(
+shape
+)
+)
+);
+
+copy.id =
+uid();
+return copy;
+
+}
+
+function selectedShapes(){
+
+const ids =
+new Set(
+getSelectedIds()
+);
+const out =
+[];
+
+for(
+const shape of getDrawings()
+){
+
+if(
+ids.has(
+shape.id
+)
+){
+out.push(
+shape
+);
+}
+
+}
+
+return out;
+
+}
+
+function groupMoveMembers(
+shapes,
+x,
+y
+){
+
+const members =
+[];
+
+for(
+const shape of shapes
+){
+
+if(
+isFvpType(
+shape.type
+)
+){
+continue;
+}
+
+if(
+isPositionType(
+shape.type
+)
+){
+
+members.push({
+id: shape.id,
+mode: "position-move",
+snapshot: {
+p1: { ...shape.p1 },
+p2: { ...shape.p2 },
+tpPrice: shape.tpPrice,
+slPrice: shape.slPrice,
+entry: positionEntryPrice(
+shape
+)
+}
+});
+continue;
+
+}
+
+const movePoints =
+chartPointsForScreenMove(
+shape
+);
+const offsets =
+movePoints
+? screenDragOffsetsForPoints(
+movePoints,
+x,
+y
+)
+: null;
+
+if(
+!offsets
+){
+continue;
+}
+
+members.push({
+id: shape.id,
+mode: "screen-move",
+pointOffsets: offsets
+});
+
+}
+
+return members;
+
+}
+
+function applyGroupMove(
+drag,
+x,
+y,
+shiftKey
+){
+
+const locked =
+constrainBodyDragPointer(
+drag,
+x,
+y,
+shiftKey
+);
+
+for(
+const member of drag.members ||
+[]
+){
+
+const shape =
+getDrawings().find(
+d=>
+d.id ===
+member.id
+);
+
+if(
+!shape
+){
+continue;
+}
+
+if(
+member.mode ===
+"position-move"
+){
+
+applyPositionBodyMove(
+shape,
+drag.startX,
+drag.startY,
+locked.x,
+locked.y,
+member.snapshot
+);
+
+}else if(
+member.mode ===
+"screen-move"
+){
+
+applyScreenMoveToShape(
+shape,
+member.pointOffsets,
+locked.x,
+locked.y
+);
+
+}
+
+}
+
+drag.lastPlotX =
+locked.x;
+drag.lastPlotY =
+locked.y;
+return true;
+
+}
+
+function beginGroupOrSingleMove(
+shapes,
+x,
+y,
+e
+){
+
+const members =
+groupMoveMembers(
+shapes,
+x,
+y
+);
+
+if(
+!members.length
+){
+return false;
+}
+
+const primary =
+shapes[
+0
+];
+
+setDragState({
+shapeId: primary?.id ||
+members[
+0
+].id,
+mode: "group-move",
+startX: x,
+startY: y,
+lastPlotX: x,
+lastPlotY: y,
+members
+});
+
+notifyTabletChartGestureAbort();
+setBlockChartClick(
+true
+);
+e.preventDefault();
+e.stopPropagation();
+beginEditDragCrosshair(
+e,
+x,
+y
+);
+syncChartTouchPan();
+
+try{
+wrapEl.setPointerCapture(
+e.pointerId
+);
+}catch{
+/* ignore */
+}
+
+return true;
+
+}
+
+function captureModPointer(
+e,
+x,
+y
+){
+
+notifyTabletChartGestureAbort();
+setBlockChartClick(
+true
+);
+e.preventDefault();
+e.stopPropagation();
+syncChartTouchPan();
+
+try{
+wrapEl.setPointerCapture(
+e.pointerId
+);
+}catch{
+/* ignore */
+}
+
+}
+
+function hitTestHandleOnSelected(
+px,
+py
+){
+
+const drawings =
+getDrawings();
+const primary =
+getSelectedId();
+const ordered =
+[
+primary,
+...getSelectedIds().filter(
+id=>
+id !==
+primary
+)
+];
+
+for(
+const id of ordered
+){
+
+const shape =
+drawings.find(
+d=>
+d.id ===
+id
+);
+
+if(
+!shape
+){
+continue;
+}
+
+const handleId =
+hitTestHandle(
+px,
+py,
+shape
+);
+
+if(
+handleId
+){
+return {
+shape,
+handleId
+};
+}
+
+}
+
+return null;
 
 }
 
@@ -1656,6 +2145,50 @@ const hoverSelect =
 desktopEdit.isDesktopDrawHoverSelect() &&
 e.pointerType ===
 "mouse";
+const multiMod =
+hoverSelect &&
+desktopEdit.isDrawMultiSelectModifier?.(
+e
+);
+
+if(
+multiMod
+){
+
+if(
+!hitId
+){
+
+setDragState({
+mode: "marquee",
+startX: x,
+startY: y,
+lastPlotX: x,
+lastPlotY: y,
+shapeId: null
+});
+captureModPointer(
+e,
+x,
+y
+);
+return;
+
+}
+
+pendingModSelect = {
+hitId,
+x,
+y
+};
+captureModPointer(
+e,
+x,
+y
+);
+return;
+
+}
 
 if(
 !hitId
@@ -1670,6 +2203,21 @@ return;
 }
 
 if(
+!isIdSelected(
+hitId
+)
+){
+
+setSelectedId(
+hitId
+);
+desktopEdit.pinDrawingSelection?.(
+hitId
+);
+updateStyleBar();
+redraw();
+
+}else if(
 hoverSelect
 ){
 
@@ -1677,64 +2225,25 @@ desktopEdit.onPointerDownHoverHit(
 hitId
 );
 
-}else if(
-hitId !==
-getSelectedId()
-){
-
-setSelectedId(hitId);
-
-const picked =
-getSelected();
-
-if(
-picked?.type ===
-"fib"
-){
-styleBarCtl?.setFibSettingsShapeId?.(
-picked.id
-);
 }
 
-if(
-isCoarseTouchViewport()
-){
-desktopEdit?.pinDrawingSelection?.(
+const handleHit =
+hitTestHandleOnSelected(
+x,
+y
+);
+const hitShape =
+getDrawings().find(
+d=>
+d.id ===
 hitId
 );
-setBlockChartClick(
-true
-);
-}
-
-updateStyleBar();
-redraw();
-
-return;
-
-}
-
-const sel =
-getSelected();
-
-if(
-!sel
-){
-return;
-}
-
-const handleId =
-hitTestHandle(
-x,
-y,
-sel
-);
-
 const onBody =
+!!hitShape &&
 hitTestShapeBody(
 x,
 y,
-sel
+hitShape
 );
 
 function blockDesktopChartClick(){
@@ -1747,9 +2256,38 @@ e.stopPropagation();
 }
 
 if(
-!handleId &&
-!onBody
+handleHit
 ){
+
+beginHandleDragState(
+handleHit.shape,
+handleHit.handleId,
+x,
+y
+);
+
+}else if(
+onBody
+){
+
+if(
+getSelectedIds().length >
+1 &&
+isIdSelected(
+hitId
+)
+){
+
+if(
+beginGroupOrSingleMove(
+selectedShapes(),
+x,
+y,
+e
+)
+){
+return;
+}
 
 if(
 hoverSelect
@@ -1761,20 +2299,8 @@ return;
 
 }
 
-if(
-handleId
-){
-
-beginHandleDragState(
-sel,
-handleId,
-x,
-y
-);
-
-}else if(
-onBody
-){
+const sel =
+hitShape;
 
 if(
 isPositionType(
@@ -1842,6 +2368,16 @@ pointOffsets: offsets
 
 }
 
+}else{
+
+if(
+hoverSelect
+){
+blockDesktopChartClick();
+}
+
+return;
+
 }
 
 notifyTabletChartGestureAbort();
@@ -1889,17 +2425,158 @@ onEditLeave
 
 const onEditMove = e=>{
 
-if(!getAlive() || !getDragState()){
+if(
+!getAlive()
+){
 return;
 }
 
-if(!e.isPrimary){
+if(
+!e.isPrimary
+){
+return;
+}
+
+if(
+pendingModSelect &&
+!getDragState()
+){
+
+const { x, y } =
+pointerFromEvent(
+e
+);
+const dx =
+x - pendingModSelect.x;
+const dy =
+y - pendingModSelect.y;
+
+if(
+Math.hypot(
+dx,
+dy
+) <
+MULTI_DRAG_PX
+){
+return;
+}
+
+e.preventDefault();
+
+const hitId =
+pendingModSelect.hitId;
+pendingModSelect =
+null;
+
+const hitSelected =
+isIdSelected(
+hitId
+);
+
+if(
+!hitSelected
+){
+setSelectedId(
+hitId
+);
+}
+
+const sources =
+selectedShapes();
+const clones =
+[];
+
+for(
+const src of sources
+){
+
+const copy =
+cloneDrawingShape(
+src
+);
+getDrawings().push(
+copy
+);
+clones.push(
+copy
+);
+
+}
+
+if(
+clones.length
+){
+
+setSelectedIds?.(
+clones.map(
+c=>
+c.id
+),
+clones[
+clones.length -
+1
+].id
+);
+desktopEdit.pinCurrentSelection?.();
+beginGroupOrSingleMove(
+clones,
+x,
+y,
+e
+);
+
+}
+
+updateStyleBar();
+scheduleDragRedraw();
+return;
+
+}
+
+if(
+!getDragState()
+){
 return;
 }
 
 e.preventDefault();
 
 const { x, y } = pointerFromEvent(e);
+
+if(
+getDragState().mode ===
+"marquee"
+){
+
+getDragState().lastPlotX =
+x;
+getDragState().lastPlotY =
+y;
+scheduleDragRedraw();
+return;
+
+}
+
+if(
+getDragState().mode ===
+"group-move"
+){
+
+syncEditDragCrosshair(
+e,
+x,
+y
+);
+applyGroupMove(
+getDragState(),
+x,
+y,
+e.shiftKey
+);
+scheduleDragRedraw();
+return;
+
+}
 
 const shape =
 getDrawings().find(d=>d.id === getDragState().shapeId);
@@ -1988,6 +2665,151 @@ scheduleDragRedraw();
 };
 
 const onEditUp = e=>{
+
+if(
+pendingModSelect
+){
+
+const hitId =
+pendingModSelect.hitId;
+pendingModSelect =
+null;
+toggleSelectedId?.(
+hitId
+);
+desktopEdit.pinCurrentSelection?.();
+desktopEdit.suppressNextSelectClick?.();
+updateStyleBar();
+redraw();
+setBlockChartClick(
+true
+);
+
+}
+
+const drag =
+getDragState();
+
+if(
+drag?.mode ===
+"marquee"
+){
+
+const spanX =
+Math.abs(
+drag.lastPlotX - drag.startX
+);
+const spanY =
+Math.abs(
+drag.lastPlotY - drag.startY
+);
+
+if(
+spanX >=
+MULTI_DRAG_PX ||
+spanY >=
+MULTI_DRAG_PX
+){
+
+const ids =
+drawingsIntersectingRect?.(
+getDrawings(),
+drag.startX,
+drag.startY,
+drag.lastPlotX,
+drag.lastPlotY
+) ||
+[];
+
+setSelectedIds?.(
+ids,
+ids[
+ids.length -
+1
+]
+);
+desktopEdit.pinCurrentSelection?.();
+
+}
+
+desktopEdit.suppressNextSelectClick?.();
+setDragState(
+null
+);
+clearEditDragCrosshair();
+syncChartTouchPan();
+updateStyleBar();
+redraw();
+setBlockChartClick(
+true
+);
+return;
+
+}
+
+if(
+drag?.mode ===
+"group-move"
+){
+
+desktopEdit.suppressNextSelectClick?.();
+
+for(
+const member of drag.members ||
+[]
+){
+
+const shape =
+getDrawings().find(
+d=>
+d.id ===
+member.id
+);
+
+if(
+!shape
+){
+continue;
+}
+
+if(
+isPositionType(
+shape.type
+)
+){
+
+clampPositionPrices(
+shape,
+{
+preserveTpSl: true
+}
+);
+
+}
+
+touchShapeRevision(
+shape
+);
+
+}
+
+saveDrawings();
+desktopEdit.finishDesktopPointerSelect(
+e
+);
+setDragState(
+null
+);
+clearEditDragCrosshair();
+flushDeferredFibSettingsSync?.();
+syncChartTouchPan();
+redraw();
+setBlockChartClick(
+true
+);
+return;
+
+}
 
 desktopEdit.finishDesktopPointerSelect(
 e

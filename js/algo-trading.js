@@ -18,7 +18,7 @@ import {
 applyLiveSeriesUpdate,
 ensureOhlcRollover,
 liveBarPeriodSec
-} from "./chart/live-bar-roll.js?v=2";
+} from "./chart/live-bar-roll.js?v=3";
 
 import {
 terminalVisibleBars,
@@ -52,7 +52,7 @@ subscribeKline
 import {
 mountAlgoTradingCoinList,
 refreshAlgoMarketListFromFlags
-} from "./algo-trading-list.js?v=27";
+} from "./algo-trading-list.js?v=28";
 
 import {
 mountAlgoTickerScanUi
@@ -102,11 +102,11 @@ mountAlgoTradeUi
 
 import {
 mountAlgoTradingDrawings
-} from "./algo-trading/drawings.js?v=2";
+} from "./algo-trading/drawings.js?v=4";
 
 import {
 mountAlgoTradingIndicators
-} from "./algo-trading/indicators.js?v=15";
+} from "./algo-trading/indicators.js?v=16";
 
 import {
 mountAlgoPatternEntryOverlay
@@ -219,7 +219,7 @@ bindAlgoNumericField
 
 import {
 bindAlgoPageHotkeys
-} from "./algo-trading/page-hotkeys.js?v=1";
+} from "./algo-trading/page-hotkeys.js?v=2";
 
 import {
 createAlgoStrategyMemory,

@@ -14,6 +14,11 @@ import {
 isHorizPriceTool
 } from "./drawings/constants.js?v=11";
 
+import {
+isElliottType,
+elliottPointCount
+} from "./drawings/elliott-spec.js?v=5";
+
 /**
  * Touch/pointer placement for iPad and coarse-touch viewports.
  * @param {object} ctx
@@ -261,6 +266,16 @@ function placementPointsNeeded(type){
 
 if(type === "channel"){
 return 3;
+}
+
+if(
+isElliottType(
+type
+)
+){
+return elliottPointCount(
+type
+);
 }
 
 if(

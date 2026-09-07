@@ -1,7 +1,7 @@
 import {
 distToRect,
 distToSegment
-} from "./math.js?v=1";
+} from "./math.js?v=2";
 
 import {
 fibLevelDash,

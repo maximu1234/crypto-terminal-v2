@@ -44,11 +44,11 @@ applyLiveOhlcBar,
 applyLiveSeriesUpdate,
 ensureOhlcRollover,
 liveBarPeriodSec
-} from "./chart/live-bar-roll.js?v=2";
+} from "./chart/live-bar-roll.js?v=3";
 
 import {
 mountWidgetDomCrosshair
-} from "./chart-widget-host.js?v=21";
+} from "./chart-widget-host.js?v=23";
 
 function buildBodyHtml(
 showRsi

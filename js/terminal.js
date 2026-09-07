@@ -45,6 +45,10 @@ canSetBlueFlag
 } from "./favorites.js?v=5";
 
 import {
+seedWatchlistTfOnBlueFlag
+} from "./storage.js?v=14";
+
+import {
 ensureCloudReady
 } from "./auth-ui.js?v=62";
 
@@ -52,7 +56,7 @@ import {
 getActiveAlerts,
 isMacdAlert,
 isRsiAlert
-} from "./alerts.js?v=109";
+} from "./alerts.js?v=110";
 
 import {
 persistFavoritesToCloud,
@@ -120,7 +124,7 @@ createSharedDrawUndoStack
 import {
 mountDrawToolbar,
 mountDrawToolIcons
-} from "./draw-ui-shared.js?v=37";
+} from "./draw-ui-shared.js?v=38";
 import {
 mountTerminalChecklist
 } from "./terminal/terminal-checklist.js?v=1";
@@ -139,8 +143,9 @@ mountCoinsLayoutResize
 } from "./terminal-layout-resize.js?v=8";
 
 import {
-mountQwertyKeyInput
-} from "./qwerty-key-input.js?v=1";
+mountQwertyKeyInput,
+shouldIgnoreTypingHotkey
+} from "./qwerty-key-input.js?v=3";
 
 import {
 isChartLayoutReady,
@@ -221,7 +226,7 @@ import {
 initTerminalMultiChart,
 syncPrimaryTfToLayout,
 isTerminalMultiChartLayout
-} from "./terminal-multi-chart.js?v=11";
+} from "./terminal-multi-chart.js?v=13";
 
 import {
 mountTerminalLayoutPicker
@@ -3731,13 +3736,13 @@ const {
 initWidgetDrawings
 } =
 await import(
-"./chart-widget-host.js?v=21"
+"./chart-widget-host.js?v=23"
 );
 const {
 initChartIndicators
 } =
 await import(
-"./chart-indicators.js?v=62"
+"./chart-indicators.js?v=63"
 );
 const {
 createPattern12EarlyT3Indicator
@@ -4530,7 +4535,7 @@ const {
 createTradePlusMenuHandler
 } =
 await import(
-"./trade-order-plus-ui.js?v=7"
+"./trade-order-plus-ui.js?v=8"
 );
 
 tradePlusHandler =
@@ -5905,17 +5910,10 @@ e.shiftKey
 return;
 }
 
-const tag =
-e.target?.tagName;
-
 if(
-tag ===
-"INPUT" ||
-tag ===
-"TEXTAREA" ||
-tag ===
-"SELECT" ||
-e.target?.isContentEditable
+shouldIgnoreTypingHotkey(
+e
+)
 ){
 return;
 }
@@ -5973,6 +5971,14 @@ return;
 
 if(
 shouldIgnoreListKeyNav(
+e
+)
+){
+return;
+}
+
+if(
+shouldIgnoreTypingHotkey(
 e
 )
 ){
@@ -6142,6 +6148,16 @@ return;
 
 saveFavoritesGroups(favorites);
 persistFavoritesToCloud(favorites);
+
+if(
+group ===
+"blue"
+){
+seedWatchlistTfOnBlueFlag(
+symbol,
+currentTF
+);
+}
 
 const row =
 coinElements.get(symbol);

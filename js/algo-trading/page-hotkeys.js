@@ -7,6 +7,10 @@ COINS_TF_HOTKEYS,
 COINS_TF_VALUES
 } from "../terminal/terminal-state.js?v=13";
 
+import {
+shouldIgnoreTypingHotkey
+} from "../qwerty-key-input.js?v=3";
+
 export const ALGO_POSITION_DRAW_HOTKEYS =
 new Map(
 [
@@ -68,19 +72,10 @@ event.shiftKey
 return true;
 }
 
-const target =
-event.target;
-const tag =
-target?.tagName?.toLowerCase?.();
-
 if(
-tag ===
-"input" ||
-tag ===
-"textarea" ||
-tag ===
-"select" ||
-target?.isContentEditable
+shouldIgnoreTypingHotkey(
+event
+)
 ){
 return true;
 }

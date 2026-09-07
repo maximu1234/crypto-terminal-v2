@@ -46,6 +46,15 @@ holdChartPanRedraw,
 bumpChartPanRedraw,
 getDrawings,
 getSelectedId,
+getSelectedIds = ()=>{
+const id =
+getSelectedId();
+return id
+? [
+id
+]
+: [];
+},
 listHandles,
 toXY,
 shapeStyle,
@@ -253,10 +262,12 @@ color
 
 });
 
-if(getSelectedId()){
+for(
+const selectedId of getSelectedIds()
+){
 
 const sel =
-getDrawings().find(d=>d.id === getSelectedId());
+getDrawings().find(d=>d.id === selectedId);
 
 if(
 sel &&

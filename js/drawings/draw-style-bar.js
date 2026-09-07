@@ -5,7 +5,7 @@
 import {
 mountTvColorPicker,
 parseDrawColor
-} from "../draw-color-palette.js?v=6";
+} from "../draw-color-palette.js?v=7";
 
 import {
 isCoarseTouchViewport
@@ -64,7 +64,7 @@ listTemplatesForType,
 mergeStyleSnapshot,
 saveNamedTemplate,
 deleteTemplateAtIndex
-} from "./draw-templates.js?v=11";
+} from "./draw-templates.js?v=13";
 
 import {
 isFvpType,
@@ -79,14 +79,14 @@ fillFvpSettingsPanel,
 readFvpSettingsPanel,
 bindFvpSettingsPanel,
 closeFvpColorMenu
-} from "./fixed-volume-profile-settings.js?v=3";
+} from "./fixed-volume-profile-settings.js?v=4";
 
 import {
 rectSettingsHtml,
 fillRectSettingsPanel as fillRectSettingsPanelDom,
 readRectSettingsPanel,
 bindRectSettingsPanel
-} from "./draw-rect-settings.js?v=1";
+} from "./draw-rect-settings.js?v=2";
 
 import {
 fibSettingsHtml,
@@ -98,6 +98,34 @@ setFibLevelColorButton,
 mergeFibLevelsAfterGlobalChange
 } from "./draw-fib-settings.js?v=1";
 
+import {
+CHANNEL_DEFAULT_COLOR,
+CHANNEL_TOOL_DEFAULTS_VERSION,
+ensureChannelLevelsVisible
+} from "./channel-spec.js?v=1";
+
+import {
+channelSettingsHtml,
+mountChannelLevelRows,
+fillChannelSettingsPanel as fillChannelSettingsPanelDom,
+readChannelSettingsPanel,
+bindChannelSettingsPanel
+} from "./draw-channel-settings.js?v=1";
+
+import {
+ELLIOTT_TOOL_DEFAULTS_VERSION,
+createElliottToolDefaults,
+isElliottType,
+migrateElliottToolDefaults
+} from "./elliott-spec.js?v=5";
+
+import {
+elliottSettingsHtml,
+fillElliottSettingsPanel as fillElliottSettingsPanelDom,
+readElliottSettingsPanel,
+bindElliottSettingsPanel
+} from "./draw-elliott-settings.js?v=1";
+
 export function createDrawStyleBar(
 deps
 ){
@@ -108,6 +136,15 @@ isActive,
 getTool,
 getSelectedId,
 setSelectedId,
+getSelectedIds = ()=>{
+const id =
+getSelectedId();
+return id
+? [
+id
+]
+: [];
+},
 getSelected,
 getPlacement,
 getDrawings,
@@ -161,6 +198,7 @@ if(
 return {
 getTool,
 getSelectedId,
+getSelectedIds,
 getSelected,
 getPlacement,
 getDrawings,
@@ -181,6 +219,9 @@ getTool,
 getSelectedId:
 delegate.getSelectedId ||
 getSelectedId,
+getSelectedIds:
+delegate.getSelectedIds ||
+getSelectedIds,
 getSelected:
 delegate.getSelected ||
 getSelected,
@@ -253,6 +294,13 @@ let rectSettingsShapeId = null;
 let fvpPanelBuilt = false;
 let fvpPanelSyncing = false;
 let fvpSettingsShapeId = null;
+let channelPanelBuilt = false;
+let channelPanelSyncing = false;
+let channelApplyTimer = null;
+let channelSettingsShapeId = null;
+let elliottPanelBuilt = false;
+let elliottPanelSyncing = false;
+let elliottSettingsShapeId = null;
 let settingsPanelAbort = null;
 let activeColor = STROKE;
 let chromePortal = null;
@@ -452,6 +500,42 @@ return getTool() ===
 
 }
 
+function isChannelContext(){
+
+const sel =
+getSelected();
+
+if(
+sel?.type ===
+"channel"
+){
+return true;
+}
+
+return getTool() ===
+"channel";
+
+}
+
+function isElliottContext(){
+
+const sel =
+getSelected();
+
+if(
+isElliottType(
+sel?.type
+)
+){
+return true;
+}
+
+return isElliottType(
+getTool()
+);
+
+}
+
 function resetSettingsPanelListeners(){
 
 settingsPanelAbort?.abort();
@@ -479,6 +563,12 @@ kind ===
 : kind ===
 "fvp"
 ? ".fvp-settings"
+: kind ===
+"channel"
+? ".channel-settings"
+: kind ===
+"elliott"
+? ".elliott-settings"
 : ".rect-settings"
 );
 
@@ -518,6 +608,32 @@ settingsPopover &&
 fvpPanelBuilt &&
 settingsPopover.querySelector(
 ".fvp-settings"
+)
+);
+
+}
+
+function isChannelSettingsOpen(){
+
+return !!(
+settingsPopover &&
+!settingsPopover.classList.contains("hidden") &&
+channelPanelBuilt &&
+settingsPopover.querySelector(
+".channel-settings"
+)
+);
+
+}
+
+function isElliottSettingsOpen(){
+
+return !!(
+settingsPopover &&
+!settingsPopover.classList.contains("hidden") &&
+elliottPanelBuilt &&
+settingsPopover.querySelector(
+".elliott-settings"
 )
 );
 
@@ -609,6 +725,8 @@ return;
 rectPanelBuilt = true;
 fibPanelBuilt = false;
 fvpPanelBuilt = false;
+channelPanelBuilt = false;
+elliottPanelBuilt = false;
 
 const signal =
 resetSettingsPanelListeners();
@@ -777,6 +895,8 @@ return;
 fvpPanelBuilt = true;
 fibPanelBuilt = false;
 rectPanelBuilt = false;
+channelPanelBuilt = false;
+elliottPanelBuilt = false;
 
 resetSettingsPanelListeners();
 settingsPopover.classList.add(
@@ -860,6 +980,509 @@ FVP_TOOL_DEFAULTS_VERSION
 
 }
 
+function getChannelEditShape(){
+
+if(
+channelSettingsShapeId
+){
+
+const pinned =
+getDrawings().find(
+d=>
+d.id === channelSettingsShapeId &&
+d.type ===
+"channel"
+);
+
+if(
+pinned
+){
+return pinned;
+}
+
+}
+
+const sel =
+getSelected();
+
+return sel?.type ===
+"channel"
+? sel
+: null;
+
+}
+
+function canApplyChannelPanel(){
+
+return (
+getAlive() &&
+isChannelSettingsOpen() &&
+!channelPanelSyncing
+);
+
+}
+
+function ensureChannelSettingsPanel(){
+
+if(
+!settingsPopover
+){
+return;
+}
+
+if(
+channelPanelBuilt &&
+settingsPopoverHasPanel(
+"channel"
+)
+){
+return;
+}
+
+channelPanelBuilt = true;
+fibPanelBuilt = false;
+rectPanelBuilt = false;
+fvpPanelBuilt = false;
+elliottPanelBuilt = false;
+
+const signal =
+resetSettingsPanelListeners();
+
+settingsPopover.classList.remove(
+"draw-settings-popover--fvp"
+);
+
+settingsPopover.innerHTML =
+channelSettingsHtml();
+
+mountChannelLevelRows(
+settingsPopover
+);
+
+bindChannelSettingsPanel(
+settingsPopover,
+{
+getAlive,
+canApply: canApplyChannelPanel,
+getChannelEditShape,
+openColorMenu:(
+btn,
+fallback
+)=>{
+closeFibColorMenu();
+openChannelColorMenu(
+btn,
+fallback
+);
+},
+scheduleImmediate: scheduleChannelApplyImmediate,
+scheduleDebounced: scheduleChannelApplyDebounced,
+signal
+}
+);
+
+}
+
+function fillChannelSettingsPanel(
+shape
+){
+
+ensureChannelSettingsPanel();
+
+if(
+!settingsPopover
+){
+return;
+}
+
+channelPanelSyncing = true;
+
+try{
+
+fillChannelSettingsPanelDom(
+settingsPopover,
+shape?.channelLevels,
+shape?.color ||
+CHANNEL_DEFAULT_COLOR
+);
+
+}finally{
+channelPanelSyncing = false;
+}
+
+}
+
+function readChannelPanelFromDOM(){
+
+ensureChannelSettingsPanel();
+
+return readChannelSettingsPanel(
+settingsPopover
+);
+
+}
+
+function commitChannelPanelToShape(){
+
+if(
+!getAlive() ||
+!isChannelSettingsOpen() ||
+channelPanelSyncing
+){
+return false;
+}
+
+const shape =
+getChannelEditShape();
+const panel =
+readChannelPanelFromDOM();
+
+if(
+!shape
+){
+
+const style =
+readStyleFromUI();
+
+saveToolDefaults(
+"channel",
+{
+channelDefaultsVersion:
+CHANNEL_TOOL_DEFAULTS_VERSION,
+color:
+style.color ||
+CHANNEL_DEFAULT_COLOR,
+lineWidth:
+style.lineWidth,
+channelLevels:
+panel.channelLevels
+}
+);
+
+redraw();
+return true;
+
+}
+
+shape.channelLevels =
+JSON.parse(
+JSON.stringify(
+ensureChannelLevelsVisible(
+panel.channelLevels
+)
+)
+);
+
+touchShapeRevisionFn(
+shape
+);
+
+saveDrawings();
+redraw();
+
+const style =
+readStyleFromUI();
+
+saveToolDefaults(
+"channel",
+{
+channelDefaultsVersion:
+CHANNEL_TOOL_DEFAULTS_VERSION,
+color:
+style.color ||
+shape.color ||
+CHANNEL_DEFAULT_COLOR,
+lineWidth:
+style.lineWidth ??
+shape.lineWidth,
+channelLevels:
+shape.channelLevels
+}
+);
+
+return true;
+
+}
+
+function scheduleChannelApplyImmediate(){
+
+if(
+!isChannelSettingsOpen() ||
+channelPanelSyncing
+){
+return;
+}
+
+if(
+channelApplyTimer
+){
+clearTimeout(
+channelApplyTimer
+);
+channelApplyTimer =
+null;
+}
+
+commitChannelPanelToShape();
+
+}
+
+function scheduleChannelApplyDebounced(){
+
+if(
+!isChannelSettingsOpen() ||
+channelPanelSyncing
+){
+return;
+}
+
+if(
+channelApplyTimer
+){
+clearTimeout(
+channelApplyTimer
+);
+}
+
+channelApplyTimer =
+setTimeout(
+()=>{
+
+channelApplyTimer =
+null;
+
+if(
+!isChannelSettingsOpen() ||
+channelPanelSyncing
+){
+return;
+}
+
+commitChannelPanelToShape();
+
+},
+320
+);
+
+}
+
+function getElliottEditType(){
+
+const sel =
+getSelected();
+
+if(
+isElliottType(
+sel?.type
+)
+){
+return sel.type;
+}
+
+const tool =
+getTool();
+
+return isElliottType(
+tool
+)
+? tool
+: null;
+
+}
+
+function getElliottEditShape(){
+
+const type =
+getElliottEditType();
+
+if(
+!type
+){
+return null;
+}
+
+if(
+elliottSettingsShapeId
+){
+
+const pinned =
+getDrawings().find(
+d=>
+d.id === elliottSettingsShapeId &&
+isElliottType(
+d.type
+)
+);
+
+if(
+pinned
+){
+return pinned;
+}
+
+}
+
+const sel =
+getSelected();
+
+return isElliottType(
+sel?.type
+)
+? sel
+: null;
+
+}
+
+function canApplyElliottPanel(){
+
+return (
+getAlive() &&
+isElliottSettingsOpen() &&
+!elliottPanelSyncing
+);
+
+}
+
+function ensureElliottSettingsPanel(){
+
+if(
+!settingsPopover
+){
+return;
+}
+
+if(
+elliottPanelBuilt &&
+settingsPopoverHasPanel(
+"elliott"
+)
+){
+return;
+}
+
+elliottPanelBuilt = true;
+fibPanelBuilt = false;
+rectPanelBuilt = false;
+fvpPanelBuilt = false;
+channelPanelBuilt = false;
+
+const signal =
+resetSettingsPanelListeners();
+
+settingsPopover.classList.remove(
+"draw-settings-popover--fvp"
+);
+
+settingsPopover.innerHTML =
+elliottSettingsHtml();
+
+bindElliottSettingsPanel(
+settingsPopover,
+{
+canApply: canApplyElliottPanel,
+onApply: applyElliottSettingsFromPanel,
+signal
+}
+);
+
+}
+
+function fillElliottSettingsFromContext(){
+
+ensureElliottSettingsPanel();
+elliottPanelSyncing = true;
+
+try{
+
+fillElliottSettingsPanelDom(
+settingsPopover,
+getElliottEditShape() ||
+baseDefaultStyle(
+getElliottEditType() ||
+"elliott-impulse"
+)
+);
+
+}finally{
+elliottPanelSyncing = false;
+}
+
+}
+
+function applyElliottSettingsFromPanel(){
+
+if(
+!canApplyElliottPanel()
+){
+return;
+}
+
+const type =
+getElliottEditType();
+
+if(
+!type
+){
+return;
+}
+
+const shape =
+getElliottEditShape();
+const panel =
+readElliottSettingsPanel(
+settingsPopover
+);
+const style =
+readStyleFromUI();
+const prev =
+migrateElliottToolDefaults(
+getToolDefaults()[
+type
+]
+);
+
+if(
+shape
+){
+
+shape.degree =
+panel.degree;
+shape.showWave =
+panel.showWave !==
+false;
+touchShapeRevisionFn(
+shape
+);
+saveDrawings();
+redraw();
+
+}
+
+saveToolDefaults(
+type,
+{
+...createElliottToolDefaults(),
+...prev,
+color:
+shape?.color ||
+style.color ||
+prev.color,
+lineWidth:
+shape?.lineWidth ??
+style.lineWidth ??
+prev.lineWidth,
+degree:
+panel.degree,
+showWave:
+panel.showWave !==
+false,
+elliottDefaultsVersion:
+ELLIOTT_TOOL_DEFAULTS_VERSION
+}
+);
+
+}
+
 function canApplyFibPanel(){
 
 return (
@@ -937,6 +1560,8 @@ return;
 fibPanelBuilt = true;
 rectPanelBuilt = false;
 fvpPanelBuilt = false;
+channelPanelBuilt = false;
+elliottPanelBuilt = false;
 
 const signal =
 resetSettingsPanelListeners();
@@ -1236,6 +1861,70 @@ portal.style.zIndex = "20000";
 
 }
 
+function openChannelColorMenu(
+anchorBtn,
+fallbackColor
+){
+
+const portal =
+ensureFibColorMenuPortal();
+
+fibColorMenuAnchor =
+anchorBtn;
+
+const active =
+anchorBtn.dataset.customColor ||
+fallbackColor ||
+CHANNEL_DEFAULT_COLOR;
+
+mountTvColorPicker(
+portal,
+{
+activeColor: active,
+onChange: color=>{
+
+setFibLevelColorButton(
+anchorBtn,
+color,
+fallbackColor
+);
+
+commitChannelPanelToShape();
+
+},
+onSelect: color=>{
+
+setFibLevelColorButton(
+anchorBtn,
+color,
+fallbackColor
+);
+
+closeFibColorMenu();
+commitChannelPanelToShape();
+
+}
+}
+);
+
+portal.classList.remove(
+"hidden"
+);
+
+const rect =
+anchorBtn.getBoundingClientRect();
+
+portal.style.position =
+"fixed";
+portal.style.left =
+`${Math.round(rect.left)}px`;
+portal.style.top =
+`${Math.round(rect.bottom + 4)}px`;
+portal.style.zIndex =
+"20000";
+
+}
+
 function ensureFibColorMenuPortal(){
 
 if(fibColorMenuPortal){
@@ -1254,11 +1943,15 @@ el.addEventListener("mousedown", e=>{
 e.stopPropagation();
 });
 
+el.addEventListener("keydown", e=>{
+e.stopPropagation();
+});
+
 document.addEventListener("mousedown", e=>{
 
 if(
 e.target.closest(
-".fib-level-color-btn, .fib-level-color-menu, .rect-fill-color-btn, .rect-median-color-btn, .tv-color-picker"
+".fib-level-color-btn, .fib-level-color-menu, .channel-level-color-btn, .rect-fill-color-btn, .rect-median-color-btn, .tv-color-picker"
 )
 ){
 return;
@@ -1461,6 +2154,15 @@ isRectSettingsOpen()
 Object.assign(
 base,
 readRectPanelFromDOM()
+);
+
+}else if(
+isChannelSettingsOpen()
+){
+
+Object.assign(
+base,
+readChannelPanelFromDOM()
 );
 
 }else if(
@@ -1963,7 +2665,11 @@ settingsBtn?.classList.toggle(
 "hidden",
 type !== "fib" &&
 type !== "rectangle" &&
-type !== "fvp"
+type !== "fvp" &&
+type !== "channel" &&
+!isElliottType(
+type
+)
 );
 
 const isTextToolbar =
@@ -2144,6 +2850,30 @@ baseDefaultStyle(
 
 }
 
+}else if(
+type ===
+"channel"
+){
+
+if(
+!isChannelSettingsOpen()
+){
+
+const channelShape =
+getSelected()?.type ===
+"channel"
+? getSelected()
+: getChannelEditShape();
+
+fillChannelSettingsPanel(
+channelShape ||
+baseDefaultStyle(
+"channel"
+)
+);
+
+}
+
 }else{
 settingsPopover?.classList.add("hidden");
 }
@@ -2253,25 +2983,86 @@ type === "fib" &&
 ? resolveFibStyleTarget()
 : null;
 
-const target =
+const primaryTarget =
 fibTarget || (
 !placementForStyle()
 ? sel
 : null
 );
 
-if(target){
+const {
+getSelectedIds: selectedIdsForStyle,
+getDrawings: drawingsForStyle
+} =
+styleCtx();
 
-if(target.type === "fib"){
+const selectedIdList =
+selectedIdsForStyle?.() ||
+[];
+const targets =
+[];
 
-if(scope === "width"){
+if(
+!placementForStyle() &&
+selectedIdList.length >
+1 &&
+drawingsForStyle
+){
+
+for(
+const id of selectedIdList
+){
+
+const shape =
+drawingsForStyle().find(
+d=>
+d.id ===
+id
+);
+
+if(
+shape
+){
+targets.push(
+shape
+);
+}
+
+}
+
+}else if(
+primaryTarget
+){
+
+targets.push(
+primaryTarget
+);
+
+}
+
+function applyStylePayloadToShape(
+target
+){
+
+if(
+target.type ===
+"fib"
+){
+
+if(
+scope ===
+"width"
+){
 
 applyFibGlobalWidthFromToolbar(
 target,
 style.lineWidth
 );
 
-}else if(scope === "color"){
+}else if(
+scope ===
+"color"
+){
 
 applyFibGlobalColorFromToolbar(
 target,
@@ -2356,6 +3147,20 @@ touchShapeRevisionFn(
 target
 );
 
+}
+
+if(
+targets.length
+){
+
+for(
+const target of targets
+){
+applyStylePayloadToShape(
+target
+);
+}
+
 saveDrawingsForStyle();
 redrawForStyle();
 
@@ -2425,6 +3230,66 @@ type: "fvp",
 },
 "fvp"
 )
+);
+
+}
+
+if(
+type ===
+"channel"
+){
+
+Object.assign(
+defaultsPayload,
+{
+channelDefaultsVersion:
+CHANNEL_TOOL_DEFAULTS_VERSION,
+channelLevels:
+ensureChannelLevelsVisible(
+isChannelSettingsOpen()
+? readChannelPanelFromDOM().channelLevels
+: target?.channelLevels ||
+getToolDefaults().channel?.channelLevels ||
+style.channelLevels
+)
+}
+);
+
+}
+
+if(
+isElliottType(
+type
+)
+){
+
+const prev =
+migrateElliottToolDefaults(
+getToolDefaults()[
+type
+]
+);
+const panel =
+isElliottSettingsOpen()
+? readElliottSettingsPanel(
+settingsPopover
+)
+: null;
+
+Object.assign(
+defaultsPayload,
+{
+elliottDefaultsVersion:
+ELLIOTT_TOOL_DEFAULTS_VERSION,
+degree:
+target?.degree ||
+panel?.degree ||
+prev.degree,
+showWave:
+target?.showWave ??
+panel?.showWave ??
+prev.showWave
+}
 );
 
 }
@@ -2630,6 +3495,15 @@ defaultsPayload.fibDefaultsVersion =
 FIB_TOOL_DEFAULTS_VERSION;
 }
 
+if(
+type ===
+"channel" &&
+snapshot.channelLevels
+){
+defaultsPayload.channelDefaultsVersion =
+CHANNEL_TOOL_DEFAULTS_VERSION;
+}
+
 saveToolDefaults(
 type,
 defaultsPayload
@@ -2683,6 +3557,21 @@ color:
 snapshot.color,
 lineWidth:
 snapshot.lineWidth
+});
+
+}
+
+if(
+type ===
+"channel" &&
+isChannelSettingsOpen()
+){
+
+fillChannelSettingsPanel({
+color:
+snapshot.color,
+channelLevels:
+snapshot.channelLevels
 });
 
 }
@@ -2887,6 +3776,12 @@ document.body.appendChild(
 root
 );
 templateSaveModal = root;
+root.addEventListener(
+"keydown",
+e=>{
+e.stopPropagation();
+}
+);
 templateNameInput =
 root.querySelector(
 ".draw-template-save-input"
@@ -3334,6 +4229,8 @@ const fibSettingsWasOpen =
 isFibSettingsOpen();
 const fvpSettingsWasOpen =
 isFvpSettingsOpen();
+const channelSettingsWasOpen =
+isChannelSettingsOpen();
 
 if(
 fibSettingsWasOpen
@@ -3345,6 +4242,12 @@ if(
 fvpSettingsWasOpen
 ){
 applyFvpSettingsFromPanel();
+}
+
+if(
+channelSettingsWasOpen
+){
+commitChannelPanelToShape();
 }
 
 colorPopover?.classList.add("hidden");
@@ -3365,6 +4268,23 @@ closeTemplateMenu();
 if(fibSettingsWasOpen){
 fibSettingsShapeId = null;
 flushDeferredFibSettingsSync();
+}
+
+if(
+channelSettingsWasOpen
+){
+channelSettingsShapeId = null;
+
+if(
+channelApplyTimer
+){
+clearTimeout(
+channelApplyTimer
+);
+channelApplyTimer =
+null;
+}
+
 }
 
 }
@@ -3388,6 +4308,32 @@ popover.style.zIndex = "10051";
 function initStylePopovers(){
 
 initTemplateUi();
+
+function stopDrawUiKeydownBubble(
+el
+){
+
+el?.addEventListener(
+"keydown",
+e=>{
+e.stopPropagation();
+}
+);
+
+}
+
+stopDrawUiKeydownBubble(
+colorPopover
+);
+stopDrawUiKeydownBubble(
+widthPopover
+);
+stopDrawUiKeydownBubble(
+textSizePopover
+);
+stopDrawUiKeydownBubble(
+settingsPopover
+);
 
 if(colorPopover){
 colorPopover.classList.add("tv-color-popover");
@@ -3547,11 +4493,17 @@ const rectCtx =
 isRectContext();
 const fvpCtx =
 isFvpContext();
+const channelCtx =
+isChannelContext();
+const elliottCtx =
+isElliottContext();
 
 if(
 !fibCtx &&
 !rectCtx &&
-!fvpCtx
+!fvpCtx &&
+!channelCtx &&
+!elliottCtx
 ){
 return;
 }
@@ -3589,6 +4541,33 @@ baseDefaultStyle(
 "rectangle"
 )
 );
+
+}else if(
+channelCtx
+){
+
+channelSettingsShapeId =
+getSelected()?.id ||
+null;
+
+const channelShape =
+getChannelEditShape();
+
+fillChannelSettingsPanel(
+channelShape ||
+baseDefaultStyle(
+"channel"
+)
+);
+
+}else if(
+elliottCtx
+){
+
+elliottSettingsShapeId =
+getSelected()?.id ||
+null;
+fillElliottSettingsFromContext();
 
 }else{
 

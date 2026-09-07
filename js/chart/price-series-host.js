@@ -23,7 +23,7 @@ seriesBarClose
 
 import {
 mergeLiveBarIntoDisplay
-} from "./live-bar-roll.js?v=2";
+} from "./live-bar-roll.js?v=3";
 
 import {
 runWithPreservedVisibleLogicalRange

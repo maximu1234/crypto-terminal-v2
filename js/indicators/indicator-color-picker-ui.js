@@ -4,7 +4,7 @@
 import {
 mountTvColorPicker,
 parseDrawColor
-} from "../draw-color-palette.js?v=6";
+} from "../draw-color-palette.js?v=7";
 
 let portal =
 null;

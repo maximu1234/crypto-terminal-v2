@@ -11,7 +11,7 @@ formatPrice
 
 import {
 createPriceAlert
-} from "./alerts.js?v=109";
+} from "./alerts.js?v=110";
 
 import {
 isCloudLoggedInEffective
@@ -289,7 +289,9 @@ return false;
 }
 
 const volumeUsdt =
-getActiveTradeVolumeUsdt();
+getActiveTradeVolumeUsdt(
+sym
+);
 
 if(
 !Number.isFinite(

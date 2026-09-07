@@ -7,7 +7,7 @@ import {
 collectKlineRows,
 queueKlineByTime,
 takeQueuedKlinesSorted
-} from "./chart/live-bar-roll.js?v=2";
+} from "./chart/live-bar-roll.js?v=3";
 
 let socket = null;
 

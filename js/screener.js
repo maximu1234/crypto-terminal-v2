@@ -55,7 +55,7 @@ ingestLiveOhlcKline,
 lastOhlcBar,
 liveBarPeriodSec,
 paintLiveOhlcSeries
-} from "./chart/live-bar-roll.js?v=2";
+} from "./chart/live-bar-roll.js?v=3";
 
 import {
 connectTickerStream,
@@ -68,12 +68,13 @@ createTickerUiBatcher
 
 import {
 mountReleaseMarker
-} from "./release-marker.js?v=113";
+} from "./release-marker.js?v=114";
 
 import {
 saveScreenerState,
-loadScreenerState
-} from "./storage.js?v=13";
+loadScreenerState,
+seedWatchlistTfOnBlueFlag
+} from "./storage.js?v=14";
 
 import {
 loadFavoritesGroups,
@@ -104,8 +105,9 @@ preloadTradingSymbols
 } from "./symbol-autocomplete.js?v=3";
 
 import {
-mountQwertyKeyInput
-} from "./qwerty-key-input.js?v=1";
+mountQwertyKeyInput,
+shouldIgnoreTypingHotkey
+} from "./qwerty-key-input.js?v=3";
 
 import {
 mapWithConcurrency
@@ -154,7 +156,7 @@ if(
 ){
 screenerZoomMountPromise =
 import(
-"./screener-widget-zoom.js?v=30"
+"./screener-widget-zoom.js?v=31"
 ).then(
 mod=>{
 refreshZoomFavoriteUi =
@@ -482,6 +484,17 @@ favorites
 persistFavoritesToCloud(
 favorites
 );
+
+if(
+group ===
+"blue"
+){
+seedWatchlistTfOnBlueFlag(
+symbol,
+currentTF
+);
+}
+
 syncFavoriteFlagsForSymbol(symbol);
 
 }
@@ -2931,17 +2944,10 @@ e.altKey
 return;
 }
 
-const tag =
-e.target?.tagName;
-
 if(
-tag ===
-"INPUT" ||
-tag ===
-"TEXTAREA" ||
-tag ===
-"SELECT" ||
-e.target?.isContentEditable
+shouldIgnoreTypingHotkey(
+e
+)
 ){
 return;
 }

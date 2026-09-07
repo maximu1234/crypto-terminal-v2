@@ -5,7 +5,7 @@
 import {
 parseDrawColor,
 formatDrawColor
-} from "../draw-color-palette.js?v=6";
+} from "../draw-color-palette.js?v=7";
 
 import {
 STROKE,

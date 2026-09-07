@@ -11,7 +11,7 @@ createTradeChartOrders
 
 import {
 createTradePlusMenuHandler
-} from "./trade-order-plus-ui.js?v=7";
+} from "./trade-order-plus-ui.js?v=8";
 
 import {
 TRADE_VOLUME_SLOT_COUNT,

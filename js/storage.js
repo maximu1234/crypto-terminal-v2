@@ -26,6 +26,22 @@ tf
 
 }
 
+export const WATCHLIST_WIDGET_TFS =
+Object.freeze([
+"1",
+"5",
+"15",
+"60",
+"240",
+"D",
+"W"
+]);
+
+const WATCHLIST_WIDGET_TF_SET =
+new Set(
+WATCHLIST_WIDGET_TFS
+);
+
 export function saveWidgetStateBySymbol(symbol, tf){
 
 const sym =
@@ -46,6 +62,34 @@ symbol: sym,
 tf
 })
 );
+
+}
+
+export function seedWatchlistTfOnBlueFlag(
+symbol,
+tf
+){
+
+const next =
+String(
+tf ||
+""
+).trim();
+
+if(
+!WATCHLIST_WIDGET_TF_SET.has(
+next
+)
+){
+return false;
+}
+
+saveWidgetStateBySymbol(
+symbol,
+next
+);
+
+return true;
 
 }
 

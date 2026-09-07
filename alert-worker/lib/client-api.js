@@ -163,7 +163,8 @@ async function handleClientPushAlert(
 
 
 /**
- * POST /delete-alert — удаление активного алерта (service role, hard DELETE).
+ * POST /delete-alert — ручное снятие алерта (soft deleted_at).
+ * Hard DELETE только как запасной путь: его realtime путают со срабатыванием.
  */
 async function handleClientDeleteAlert(
   req,
@@ -254,8 +255,61 @@ async function handleClientDeleteAlert(
 
   try{
     let deleted = 0;
+    const stamp = {
+      deleted_at: new Date().toISOString()
+    };
 
     if (alertId) {
+      const rows =
+        await restPatchReturning(
+          "price_alerts?id=eq." +
+          encodeURIComponent(alertId) +
+          "&" +
+          userFilter +
+          "&deleted_at=is.null",
+          stamp
+        );
+      deleted += rows.length;
+    }
+
+    if (
+      deleted === 0 &&
+      alertId
+    ) {
+      const rows =
+        await restPatchReturning(
+          "price_alerts?id=eq." +
+          encodeURIComponent(alertId) +
+          "&" +
+          userFilter,
+          stamp
+        );
+      deleted += rows.length;
+    }
+
+    if (
+      deleted === 0 &&
+      sym &&
+      sid
+    ) {
+      const rows =
+        await restPatchReturning(
+          "price_alerts?" +
+          userFilter +
+          "&symbol=eq." +
+          encodeURIComponent(sym) +
+          "&shape_id=eq." +
+          encodeURIComponent(sid) +
+          "&deleted_at=is.null",
+          stamp
+        );
+      deleted += rows.length;
+    }
+
+    if (
+      deleted === 0 &&
+      alertId
+    ) {
       const rows =
         await restDeleteReturning(
           "price_alerts?id=eq." +
@@ -279,27 +333,6 @@ async function handleClientDeleteAlert(
           encodeURIComponent(sym) +
           "&shape_id=eq." +
           encodeURIComponent(sid)
-        );
-      deleted += rows.length;
-    }
-
-    if (
-      deleted === 0 &&
-      sym &&
-      sid
-    ) {
-      const rows =
-        await restPatchReturning(
-          "price_alerts?" +
-          userFilter +
-          "&symbol=eq." +
-          encodeURIComponent(sym) +
-          "&shape_id=eq." +
-          encodeURIComponent(sid) +
-          "&deleted_at=is.null",
-          {
-            deleted_at: new Date().toISOString()
-          }
         );
       deleted += rows.length;
     }

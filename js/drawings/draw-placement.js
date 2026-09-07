@@ -19,7 +19,7 @@ isPositionType
 
 import {
 uid
-} from "./math.js?v=1";
+} from "./math.js?v=2";
 
 import {
 snapPlotToCandleWick
@@ -37,6 +37,16 @@ import {
 isTextTool,
 TEXT_DEFAULT_CONTENT
 } from "./text.js?v=3";
+
+import {
+ensureChannelLevelsVisible,
+cloneDefaultChannelRows
+} from "./channel-spec.js?v=1";
+
+import {
+isElliottType,
+elliottPointCount
+} from "./elliott-spec.js?v=5";
 
 import {
 isFvpType,
@@ -1162,6 +1172,23 @@ typeof style.fibShowTrendLine ===
 : false
 )
 :undefined,
+channelLevels:type === "channel"
+? JSON.parse(
+JSON.stringify(
+ensureChannelLevelsVisible(
+style.channelLevels ||
+cloneDefaultChannelRows()
+)
+)
+)
+:undefined,
+degree:isElliottType(type)
+? style.degree
+:undefined,
+showWave:isElliottType(type)
+? style.showWave !==
+false
+:undefined,
 ...data
 });
 
@@ -1290,6 +1317,23 @@ p1: pts[0],
 p2: pts[1],
 p3: pts[2]
 });
+}
+
+if(
+isElliottType(
+getPlacement().type
+) &&
+pts.length >=
+elliottPointCount(
+getPlacement().type
+)
+){
+created = makeShape(
+getPlacement().type,
+{
+points: pts.slice()
+}
+);
 }
 
 if(

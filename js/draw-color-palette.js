@@ -262,6 +262,57 @@ return null;
 
 }
 
+export function parseOpacityPercentInput(
+raw
+){
+
+const s =
+String(
+raw ??
+""
+).replace(
+/%/g,
+""
+).replace(
+",",
+"."
+).trim();
+
+if(
+!s ||
+s ===
+"." ||
+s ===
+"-"
+){
+return null;
+}
+
+const n =
+Number(
+s
+);
+
+if(
+!Number.isFinite(
+n
+)
+){
+return null;
+}
+
+return Math.max(
+0,
+Math.min(
+100,
+Math.round(
+n
+)
+)
+);
+
+}
+
 export function formatDrawColor(
 hex,
 opacity =
@@ -361,8 +412,27 @@ hex
 if(
 pct
 ){
+
+if(
+pct.tagName ===
+"INPUT"
+){
+
+if(
+typeof document ===
+"undefined" ||
+document.activeElement !==
+pct
+){
+pct.value =
+`${pctVal}%`;
+}
+
+}else{
 pct.textContent =
 `${pctVal}%`;
+}
+
 }
 
 if(
@@ -512,6 +582,20 @@ container.classList.add(
 "tv-color-picker"
 );
 
+if(
+container.dataset.tvColorKeyTrap !==
+"1"
+){
+container.dataset.tvColorKeyTrap =
+"1";
+container.addEventListener(
+"keydown",
+e=>{
+e.stopPropagation();
+}
+);
+}
+
 function pickColor(
 hex
 ){
@@ -628,7 +712,7 @@ opacityWrap.innerHTML =
 <div class="tv-color-opacity-track">
 <input type="range" class="tv-color-opacity-slider" min="0" max="100" step="1" value="100" aria-label="Opacity"/>
 </div>
-<div class="tv-color-opacity-pct">100%</div>
+<input type="text" class="tv-color-opacity-pct" inputmode="numeric" maxlength="4" autocomplete="off" spellcheck="false" aria-label="Opacity percent" value="100%"/>
 </div>`;
 
 container.appendChild(
@@ -640,14 +724,12 @@ opacityWrap.querySelector(
 ".tv-color-opacity-slider"
 );
 
-slider?.addEventListener(
-"input",
-()=>{
-
-pickedOpacity =
-Number(
-slider.value
+const pctInput =
+opacityWrap.querySelector(
+".tv-color-opacity-pct"
 );
+
+function emitOpacity(){
 
 syncOpacityUi(
 container,
@@ -679,6 +761,19 @@ formatted
 }
 
 }
+
+slider?.addEventListener(
+"input",
+()=>{
+
+pickedOpacity =
+Number(
+slider.value
+);
+
+emitOpacity();
+
+}
 );
 
 slider?.addEventListener(
@@ -692,6 +787,115 @@ slider?.addEventListener(
 "click",
 e=>{
 e.stopPropagation();
+}
+);
+
+let opacityBeforeEdit =
+pickedOpacity;
+
+pctInput?.addEventListener(
+"focus",
+()=>{
+
+opacityBeforeEdit =
+pickedOpacity;
+
+const n =
+parseOpacityPercentInput(
+pctInput.value
+);
+
+pctInput.value =
+String(
+n ??
+Math.round(
+pickedOpacity
+)
+);
+
+pctInput.select();
+
+}
+);
+
+pctInput?.addEventListener(
+"keydown",
+e=>{
+
+e.stopPropagation();
+
+if(
+e.key ===
+"Enter"
+){
+e.preventDefault();
+pctInput.blur();
+return;
+}
+
+if(
+e.key ===
+"Escape"
+){
+e.preventDefault();
+pickedOpacity =
+opacityBeforeEdit;
+pctInput.value =
+`${Math.round(pickedOpacity)}%`;
+emitOpacity();
+pctInput.blur();
+}
+
+}
+);
+
+pctInput?.addEventListener(
+"input",
+()=>{
+
+const parsed =
+parseOpacityPercentInput(
+pctInput.value
+);
+
+if(
+parsed ==
+null
+){
+return;
+}
+
+pickedOpacity =
+parsed;
+emitOpacity();
+
+}
+);
+
+pctInput?.addEventListener(
+"blur",
+()=>{
+
+const parsed =
+parseOpacityPercentInput(
+pctInput.value
+);
+
+if(
+parsed ==
+null
+){
+pctInput.value =
+`${Math.round(pickedOpacity)}%`;
+return;
+}
+
+pickedOpacity =
+parsed;
+pctInput.value =
+`${parsed}%`;
+emitOpacity();
+
 }
 );
 

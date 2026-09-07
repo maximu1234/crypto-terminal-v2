@@ -1,15 +1,15 @@
 import {
 parseDrawColor,
 formatDrawColor
-} from "../draw-color-palette.js?v=6";
+} from "../draw-color-palette.js?v=7";
 
 import {
 TRASH_ICON_SVG
-} from "../draw-ui-shared.js?v=37";
+} from "../draw-ui-shared.js?v=38";
 
 import {
 closeAllWidgetDrawToolsMenus
-} from "../watchlist-draw-ui.js?v=17";
+} from "../watchlist-draw-ui.js?v=18";
 
 import {
 ensureDrawToolsVisible
@@ -75,7 +75,7 @@ fvpBodyDist
 
 import {
 distToSegment
-} from "./math.js?v=1";
+} from "./math.js?v=2";
 
 import {
 normalizeFibLineStyle,
@@ -116,7 +116,7 @@ getPositionHandleScreens as resolvePositionHandleScreens
 
 import {
 createDrawPrefs
-} from "./draw-prefs.js?v=4";
+} from "./draw-prefs.js?v=6";
 
 import {
 createPositionDraw
@@ -128,11 +128,11 @@ pickUi
 
 import {
 createDrawHitTester
-} from "./draw-hit.js?v=12";
+} from "./draw-hit.js?v=16";
 
 import {
 createDrawRenderer
-} from "./draw-render.js?v=16";
+} from "./draw-render.js?v=21";
 
 import {
 snapPlotToCandleWick
@@ -149,7 +149,7 @@ updateChartRulerLabelEl
 
 import {
 mountTabletDrawInput
-} from "../drawings-tablet-input.js?v=6";
+} from "../drawings-tablet-input.js?v=7";
 
 import {
 cloneDrawingsForUndo,
@@ -158,15 +158,15 @@ createDrawUndoStack
 
 import {
 createDrawDesktopSelection
-} from "./draw-edit-desktop.js?v=11";
+} from "./draw-edit-desktop.js?v=13";
 
 import {
 createDrawingsPersist
-} from "./drawings-persist.js?v=11";
+} from "./drawings-persist.js?v=13";
 
 import {
 createDrawStyleBar
-} from "./draw-style-bar.js?v=34";
+} from "./draw-style-bar.js?v=39";
 
 import {
 createDrawAlertsChart
@@ -174,7 +174,7 @@ createDrawAlertsChart
 
 import {
 createDrawPlacement
-} from "./draw-placement.js?v=13";
+} from "./draw-placement.js?v=15";
 
 import {
 createDrawTextEditor,
@@ -183,12 +183,22 @@ hitTestTextBody
 } from "./text.js?v=3";
 
 import {
+isElliottType,
+listElliottHandles
+} from "./elliott-spec.js?v=5";
+
+import {
+closeElliottFlyout,
+syncElliottGroupActive
+} from "./elliott-toolbar.js?v=1";
+
+import {
 createBrushPlacement
 } from "./brush-placement.js?v=3";
 
 import {
 createDrawEditInteraction
-} from "./draw-edit-interaction.js?v=17";
+} from "./draw-edit-interaction.js?v=20";
 
 import {
 createDrawChartInput
@@ -196,11 +206,11 @@ createDrawChartInput
 
 import {
 createDrawPriceScale
-} from "./draw-price-scale.js?v=13";
+} from "./draw-price-scale.js?v=14";
 
 import {
 createDrawRedrawLoop
-} from "./draw-redraw-loop.js?v=10";
+} from "./draw-redraw-loop.js?v=12";
 
 import {
 isAlgoReducedCloudClient
@@ -346,6 +356,145 @@ let lastLoadedSymbol = null;
 const drawUndo =
 createDrawUndoStack();
 let selectedId = null;
+const selectedIds =
+new Set();
+
+function selectedIdsList(){
+
+return [
+...selectedIds
+];
+
+}
+
+function isIdSelected(
+id
+){
+
+return !!id &&
+selectedIds.has(
+id
+);
+
+}
+
+function applyPrimarySelectedId(
+id
+){
+
+selectedId =
+id ||
+null;
+selectedIds.clear();
+
+if(
+selectedId
+){
+selectedIds.add(
+selectedId
+);
+}
+
+}
+
+function applySelectedIds(
+ids,
+primaryId
+){
+
+selectedIds.clear();
+
+for(
+const id of ids ||
+[]
+){
+
+if(
+id
+){
+selectedIds.add(
+id
+);
+}
+
+}
+
+if(
+primaryId &&
+selectedIds.has(
+primaryId
+)
+){
+selectedId =
+primaryId;
+}else if(
+!(
+selectedId &&
+selectedIds.has(
+selectedId
+)
+)
+){
+selectedId =
+selectedIds.size
+? [
+...selectedIds
+][
+selectedIds.size -
+1
+]
+: null;
+}
+
+}
+
+function toggleIdInSelection(
+id
+){
+
+if(
+!id
+){
+return;
+}
+
+if(
+selectedIds.has(
+id
+)
+){
+
+selectedIds.delete(
+id
+);
+
+if(
+selectedId ===
+id
+){
+selectedId =
+selectedIds.size
+? [
+...selectedIds
+][
+selectedIds.size -
+1
+]
+: null;
+}
+
+}else{
+
+selectedIds.add(
+id
+);
+selectedId =
+id;
+
+}
+
+}
+
 let textEditor =
 null;
 /** @type {ReturnType<typeof createDrawDesktopSelection> | null} */
@@ -1034,8 +1183,8 @@ if(
 return false;
 }
 
-const keepSelected =
-selectedId;
+const keepIds =
+selectedIdsList();
 
 drawUndo.setReplay(
 true
@@ -1048,11 +1197,12 @@ shape
 )
 );
 
-selectedId =
-keepSelected &&
-drawings.some(d=>d.id === keepSelected)
-? keepSelected
-: null;
+applySelectedIds(
+keepIds.filter(
+id=>
+drawings.some(d=>d.id === id)
+)
+);
 
 syncDrawUndoBaseline();
 
@@ -2159,9 +2309,7 @@ setDrawings: next=>{
 drawings = next;
 },
 getSelectedId: ()=>selectedId,
-setSelectedId: id=>{
-selectedId = id;
-},
+setSelectedId: applyPrimarySelectedId,
 syncDrawUndoBaseline,
 drawUndo,
 cloneDrawingsForUndo,
@@ -2600,6 +2748,16 @@ return [
 
 }
 
+if(
+isElliottType(
+shape.type
+)
+){
+return listElliottHandles(
+shape
+);
+}
+
 if(isPositionType(shape.type)){
 
 const entry =
@@ -2634,6 +2792,7 @@ bumpChartPanRedraw:()=>
 bumpChartPanRedraw(),
 getDrawings:()=>drawings,
 getSelectedId:()=>selectedId,
+getSelectedIds: selectedIdsList,
 listHandles,
 toXY,
 shapeStyle,
@@ -2728,10 +2887,13 @@ channelP4Point,
 channelScreenGeometry,
 channelBodyDist,
 hitTestChannelBody,
+elliottBodyDist,
+hitTestElliottBody,
 rectangleBodyDist,
 hitTestRectangleBody,
 hitTestFvpBody,
-drawBodyHitThreshold
+drawBodyHitThreshold,
+drawingsIntersectingRect
 } =
 createDrawHitTester({
 toXY,
@@ -2765,6 +2927,7 @@ getPlacement:()=>placement,
 getPreviewPoint:()=>previewPoint,
 getPreviewXY:()=>previewXY,
 getSelectedId:()=>selectedId,
+getIsIdSelected: isIdSelected,
 getEditingTextId:()=>
 textEditor?.editingId?.() ||
 null,
@@ -2940,6 +3103,8 @@ getPlotWidth,
 getChartPanActive:()=>chartPanActive,
 getDrawings:()=>drawings,
 getSelectedId:()=>selectedId,
+getIsIdSelected: isIdSelected,
+getDragState:()=>dragState,
 getPlacement:()=>placement,
 removePriceGutterOverlay,
 toXY,
@@ -3036,9 +3201,7 @@ setDrawings:v=>{
 drawings = v;
 },
 getSelectedId:()=>selectedId,
-setSelectedId:id=>{
-selectedId = id;
-},
+setSelectedId: applyPrimarySelectedId,
 getBlockChartClick:()=>blockChartClick,
 setBlockChartClick:v=>{
 blockChartClick = v;
@@ -3232,6 +3395,20 @@ dist = channelBodyDist(px, py, d);
 
 }
 
+if(
+isElliottType(
+d.type
+)
+){
+
+dist = elliottBodyDist(
+px,
+py,
+d
+);
+
+}
+
 if(d.type === "brush"){
 
 dist = brushBodyDist(px, py, d);
@@ -3326,6 +3503,11 @@ btn.dataset.drawTool === tool
 );
 });
 
+syncElliottGroupActive(
+tools,
+tool
+);
+
 updateStyleBar();
 redraw();
 
@@ -3380,6 +3562,8 @@ if(
 return;
 }
 
+closeElliottFlyout();
+
 const now =
 performance.now();
 
@@ -3429,7 +3613,18 @@ closeAllWidgetDrawToolsMenus();
 
 function deleteSelected(){
 
-if(!selectedId){
+const ids =
+selectedIds.size
+? selectedIdsList()
+: selectedId
+? [
+selectedId
+]
+: [];
+
+if(
+!ids.length
+){
 return;
 }
 
@@ -3437,14 +3632,25 @@ textEditor?.close?.(
 false
 );
 
-const removed =
-drawings.find(d=>d.id === selectedId);
+const idSet =
+new Set(
+ids
+);
 
 const symDel =
 String(
 getSymbol() ||
 ""
 ).trim().toUpperCase();
+
+for(
+const removed of drawings.filter(
+d=>
+idSet.has(
+d.id
+)
+)
+){
 
 if(
 removed?.id &&
@@ -3456,7 +3662,15 @@ removed.id
 );
 }
 
-drawings = drawings.filter(d=>d.id !== selectedId);
+}
+
+drawings =
+drawings.filter(
+d=>
+!idSet.has(
+d.id
+)
+);
 desktopEdit.clearDrawingSelection();
 saveDrawings();
 updateStyleBar();
@@ -3476,8 +3690,9 @@ touchShapeRevision,
 onEmptyDelete(
 id
 ){
-selectedId =
-id;
+applyPrimarySelectedId(
+id
+);
 deleteSelected();
 }
 });
@@ -3531,8 +3746,9 @@ return;
 }
 
 e.preventDefault();
-selectedId =
-id;
+applyPrimarySelectedId(
+id
+);
 updateStyleBar();
 textEditor.begin(
 shape
@@ -3564,7 +3780,9 @@ d.id
 }
 
 drawings = [];
-selectedId = null;
+applyPrimarySelectedId(
+null
+);
 cancelPlacement();
 saveDrawings();
 
@@ -3878,6 +4096,8 @@ return;
 }
 
 if(e.key === "Escape"){
+
+closeElliottFlyout();
 
 if(
 chartRulerStart
@@ -4247,6 +4467,24 @@ onToolsClick,
 true
 );
 
+tools.addEventListener(
+"draw-pick-tool",
+e=>{
+
+const next =
+e.detail?.tool;
+
+if(
+next
+){
+pickDrawTool(
+next
+);
+}
+
+}
+);
+
 bindClearAllToolbarButtons();
 
 }
@@ -4261,10 +4499,8 @@ getAlive:()=>alive,
 isActive,
 getTool:()=>tool,
 getSelectedId:()=>selectedId,
-setSelectedId:id=>{
-selectedId =
-id;
-},
+setSelectedId: applyPrimarySelectedId,
+getSelectedIds: selectedIdsList,
 getSelected,
 getPlacement:()=>placement,
 getDrawings:()=>drawings,
@@ -4332,10 +4568,8 @@ getTool:()=>tool,
 getPlacement:()=>placement,
 getDragState:()=>dragState,
 getSelectedId:()=>selectedId,
-setSelectedId:id=>{
-selectedId =
-id;
-},
+setSelectedId: applyPrimarySelectedId,
+getSelectedIds: selectedIdsList,
 getSelected,
 setFibSettingsShapeId:id=>{
 styleBarCtl?.setFibSettingsShapeId?.(
@@ -4379,10 +4613,7 @@ v;
 },
 makeShape,
 getDrawings:()=>drawings,
-setSelectedId:id=>{
-selectedId =
-id;
-},
+setSelectedId: applyPrimarySelectedId,
 saveDrawings,
 updateStyleBar,
 redraw,
@@ -4411,9 +4642,11 @@ setDragState:v=>{
 dragState = v;
 },
 getSelectedId:()=>selectedId,
-setSelectedId:id=>{
-selectedId = id;
-},
+setSelectedId: applyPrimarySelectedId,
+getSelectedIds: selectedIdsList,
+toggleSelectedId: toggleIdInSelection,
+setSelectedIds: applySelectedIds,
+isIdSelected,
 getSelected,
 getDrawings:()=>drawings,
 setBlockChartClick:v=>{
@@ -4452,11 +4685,13 @@ syncChartTouchPan,
 hitTestTrendlineBody,
 hitTestFibBody,
 hitTestChannelBody,
+hitTestElliottBody,
 hitTestRectangleBody,
 hitTestFvpBody,
 hitTestHrayLine,
 channelP4Point,
 drawBodyHitThreshold,
+drawingsIntersectingRect,
 getCandles:()=>
 getCandles?.() ||
 []
@@ -4726,7 +4961,9 @@ return;
 if(e.detail?.cleared){
 
 drawings = [];
-selectedId = null;
+applyPrimarySelectedId(
+null
+);
 cancelPlacement();
 loadDrawings();
 updateStyleBar();
@@ -5344,6 +5581,7 @@ getStyleBarDelegate(){
 return {
 getTool: ()=> tool,
 getSelectedId: ()=> selectedId,
+getSelectedIds: selectedIdsList,
 getSelected,
 getPlacement: ()=> placement,
 getDrawings: ()=> drawings,
@@ -5729,7 +5967,9 @@ wrapEl.removeEventListener(
 onTextDblClick
 );
 resetDrawUndoHistory();
-selectedId = null;
+applyPrimarySelectedId(
+null
+);
 hideDomChartCrosshair(
 wrapEl
 );

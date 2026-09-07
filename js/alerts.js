@@ -2452,7 +2452,7 @@ const REMOTE_FIRE_COOLDOWN_MS = 60000;
 
 /**
  * Worker удалил строку в Supabase — убрать линию и показать уведомление.
- * (Единственный путь срабатывания при входе в облако.)
+ * Hard DELETE больше не ставит triggered_at: keyed DELETE = fire.
  */
 export function applyRemoteAlertFired(
 row

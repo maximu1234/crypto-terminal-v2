@@ -1,7 +1,7 @@
 import {
 saveWidgetStateBySymbol,
 loadWidgetStateBySymbol
-} from "./storage.js?v=13";
+} from "./storage.js?v=14";
 
 import {
 getTerminalBlueSymbols
@@ -44,23 +44,26 @@ alignRsiWithCandleTimes
 import {
 createDashboardChartWidget,
 mountDashboardChartInteractions
-} from "./chart-widget-host.js?v=21";
+} from "./chart-widget-host.js?v=23";
 
 import {
 mountWidgetTabletChart
 } from "./tablet-widget-chart.js?v=3";
 
 import {
-subscribeKline
+subscribeKline,
+subscribeTicker
 } from "./market-ws.js?v=1";
 
 import {
+applyLiveLastPriceToCandles,
+applyLiveSeriesUpdate,
 ensureOhlcRollover,
 ingestLiveOhlcKline,
 lastOhlcBar,
 liveBarPeriodSec,
 paintLiveOhlcSeries
-} from "./chart/live-bar-roll.js?v=2";
+} from "./chart/live-bar-roll.js?v=3";
 
 import {
 getWidgetToolbarHtml,
@@ -69,7 +72,7 @@ initWidgetDrawToolsDropdown,
 wireWidgetDrawToolMenu,
 closeAllWidgetDrawToolsMenus,
 resetWidgetDrawToolsMenus
-} from "./watchlist-draw-ui.js?v=17";
+} from "./watchlist-draw-ui.js?v=18";
 
 import {
 ensureDrawToolsVisible
@@ -92,7 +95,7 @@ getWidgetFlagHtml,
 wireWidgetFlagUi,
 updateWidgetFlagUi,
 bindWidgetFlagGlobalListeners
-} from "./widget-favorite-flag.js?v=7";
+} from "./widget-favorite-flag.js?v=8";
 
 function escapeHtml(
 value
@@ -162,7 +165,7 @@ return;
 
 const mod =
 await import(
-"./trade-widget-mount.js?v=17"
+"./trade-widget-mount.js?v=18"
 );
 
 mountTradeOnDashboardWidget =
@@ -827,7 +830,8 @@ widget,
 getSymbol,
 ()=>{
 void refreshWatchlistDashboard();
-}
+},
+getTf
 );
 
 const entry = {
@@ -1112,6 +1116,89 @@ entry
 
 entry.unsubKline?.();
 
+const paintWidgetLast =
+(
+isNewBar
+)=>{
+
+const last =
+lastOhlcBar(
+candles
+);
+
+if(
+!last
+){
+return;
+}
+
+applyLiveSeriesUpdate(
+series,
+last,
+()=>
+candles
+);
+applyChartPriceFormat(
+series,
+last.close
+);
+priceEl.innerText =
+last.close.toFixed(
+2
+);
+
+if(
+entry.rsiSeries &&
+isNewBar
+){
+updateTerminalWidgetRsiData(
+entry
+);
+}
+
+priceHudCtrl?.refresh?.();
+
+};
+
+const unsubTicker =
+subscribeTicker(
+symbol,
+tick=>{
+
+if(
+seq !==
+loadSeq.id ||
+!candles.length
+){
+return;
+}
+
+const {
+rolled,
+bar
+} =
+applyLiveLastPriceToCandles(
+candles,
+tick?.lastPrice ||
+tick?.markPrice,
+liveBarPeriodSec(
+tf
+)
+);
+
+if(
+!bar
+){
+return;
+}
+
+paintWidgetLast(
+rolled
+);
+
+}
+);
+
 const unsubKline =
 subscribeKline(
 symbol,
@@ -1219,42 +1306,9 @@ tf
 return;
 }
 
-paintLiveOhlcSeries(
-series,
-candles,
-{
-kind:
-"new"
-}
+paintWidgetLast(
+true
 );
-
-const last =
-lastOhlcBar(
-candles
-);
-
-if(
-last
-){
-applyChartPriceFormat(
-series,
-last.close
-);
-priceEl.innerText =
-last.close.toFixed(
-2
-);
-}
-
-if(
-entry.rsiSeries
-){
-updateTerminalWidgetRsiData(
-entry
-);
-}
-
-priceHudCtrl?.refresh?.();
 
 },
 1000
@@ -1263,6 +1317,7 @@ priceHudCtrl?.refresh?.();
 entry.unsubKline =
 ()=>{
 unsubKline?.();
+unsubTicker?.();
 clearInterval(
 liveBarRollTimer
 );

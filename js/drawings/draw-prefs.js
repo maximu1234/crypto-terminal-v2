@@ -33,6 +33,16 @@ import {
   TEXT_DEFAULT_SIZE
 } from "./text.js?v=3";
 
+import {
+  migrateChannelToolDefaults
+} from "./channel-spec.js?v=1";
+
+import {
+  ELLIOTT_TOOL_TYPES,
+  isElliottType,
+  migrateElliottToolDefaults
+} from "./elliott-spec.js?v=5";
+
 /**
  * @returns {{
  *   loadToolDefaults: () => void,
@@ -72,7 +82,8 @@ function loadToolDefaults(){
 "fvp",
 "text",
 "long",
-"short"
+"short",
+...ELLIOTT_TOOL_TYPES
 ].forEach(
 name=>{
 
@@ -191,6 +202,59 @@ migrated;
 localStorage.setItem(
 defaultsStorageKey(
 "text"
+),
+JSON.stringify(
+migrated
+)
+);
+
+}
+
+if(
+name ===
+"channel"
+){
+
+const migrated =
+migrateChannelToolDefaults(
+toolDefaults.channel
+);
+
+toolDefaults.channel =
+migrated;
+
+localStorage.setItem(
+defaultsStorageKey(
+"channel"
+),
+JSON.stringify(
+migrated
+)
+);
+
+}
+
+if(
+isElliottType(
+name
+)
+){
+
+const migrated =
+migrateElliottToolDefaults(
+toolDefaults[
+name
+]
+);
+
+toolDefaults[
+name
+] =
+migrated;
+
+localStorage.setItem(
+defaultsStorageKey(
+name
 ),
 JSON.stringify(
 migrated
@@ -473,6 +537,60 @@ TEXT_DEFAULT_COLOR;
 out.fontSize =
 textSaved.fontSize ||
 TEXT_DEFAULT_SIZE;
+
+}
+
+if(
+type ===
+"channel"
+){
+
+const channelSaved =
+migrateChannelToolDefaults(
+toolDefaults.channel ||
+saved ||
+null
+);
+
+out.color =
+channelSaved.color;
+out.lineWidth =
+channelSaved.lineWidth ??
+1;
+out.channelLevels =
+JSON.parse(
+JSON.stringify(
+channelSaved.channelLevels
+)
+);
+
+}
+
+if(
+isElliottType(
+type
+)
+){
+
+const elliottSaved =
+migrateElliottToolDefaults(
+toolDefaults[
+type
+] ||
+saved ||
+null
+);
+
+out.color =
+elliottSaved.color;
+out.lineWidth =
+elliottSaved.lineWidth ??
+1;
+out.degree =
+elliottSaved.degree;
+out.showWave =
+elliottSaved.showWave !==
+false;
 
 }
 

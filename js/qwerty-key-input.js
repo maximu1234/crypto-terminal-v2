@@ -420,3 +420,134 @@ onInput
 };
 
 }
+
+const DRAW_UI_HOTKEY_TRAP_SEL =
+[
+".draw-popover:not(.hidden)",
+".fib-line-style-menu--portal:not(.hidden)",
+".fib-line-width-menu--portal:not(.hidden)",
+".draw-template-save-modal:not(.hidden)",
+".elliott-flyout:not(.hidden)"
+].join(
+","
+);
+
+function isTypingHotkeyElement(
+node
+){
+
+if(
+!node
+){
+return false;
+}
+
+if(
+typeof document !==
+"undefined" &&
+node ===
+document
+){
+return false;
+}
+
+if(
+typeof window !==
+"undefined" &&
+node ===
+window
+){
+return false;
+}
+
+const el =
+node.nodeType ==
+null ||
+node.nodeType ===
+1
+? node
+: node.parentElement;
+
+if(
+!el
+){
+return false;
+}
+
+const tag =
+el.tagName?.toLowerCase?.();
+
+if(
+tag ===
+"input" ||
+tag ===
+"textarea" ||
+tag ===
+"select"
+){
+return true;
+}
+
+if(
+el.isContentEditable
+){
+return true;
+}
+
+return false;
+
+}
+
+/**
+ * True when a digit/letter hotkey should not switch TF / drawing tools:
+ * typing in a field, or a drawing settings / color popover is open.
+ * @param {KeyboardEvent | { defaultPrevented?: boolean, target?: EventTarget | null }} event
+ * @returns {boolean}
+ */
+export function shouldIgnoreTypingHotkey(
+event
+){
+
+if(
+!event
+){
+return false;
+}
+
+if(
+event.defaultPrevented
+){
+return true;
+}
+
+if(
+isTypingHotkeyElement(
+event.target
+)
+){
+return true;
+}
+
+if(
+typeof document !==
+"undefined" &&
+isTypingHotkeyElement(
+document.activeElement
+)
+){
+return true;
+}
+
+if(
+typeof document !==
+"undefined" &&
+document.querySelector?.(
+DRAW_UI_HOTKEY_TRAP_SEL
+)
+){
+return true;
+}
+
+return false;
+
+}

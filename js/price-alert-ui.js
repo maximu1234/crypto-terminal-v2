@@ -12,7 +12,7 @@ formatRsiAlertLevel,
 isMacdAlert,
 isOscillatorAlert,
 isRsiAlert
-} from "./alerts.js?v=109";
+} from "./alerts.js?v=110";
 
 import {
 isCloudLoggedInEffective

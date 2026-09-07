@@ -20,6 +20,15 @@ getPlacement,
 getDragState,
 getSelectedId,
 setSelectedId,
+getSelectedIds = ()=>{
+const id =
+getSelectedId();
+return id
+? [
+id
+]
+: [];
+},
 getSelected,
 setFibSettingsShapeId,
 hitTest,
@@ -43,6 +52,8 @@ let desktopSelectionPinned =
 false;
 let desktopClickSelectId =
 null;
+let suppressSelectClick =
+false;
 
 function isDesktopDrawHoverSelect(){
 
@@ -68,6 +79,67 @@ desktopSelectionPinned =
 false;
 desktopClickSelectId =
 null;
+
+}
+
+function pinCurrentSelection(){
+
+try{
+clearPeerSelections?.();
+}catch{
+/* ignore */
+}
+
+desktopSelectionPinned =
+!!getSelectedId() ||
+getSelectedIds().length >
+0;
+desktopClickSelectId =
+null;
+
+const picked =
+getSelected();
+
+if(
+picked?.type ===
+"fib"
+){
+setFibSettingsShapeId(
+picked.id
+);
+}
+
+}
+
+function suppressNextSelectClick(){
+
+suppressSelectClick =
+true;
+
+}
+
+function consumeSelectClickSuppress(){
+
+if(
+!suppressSelectClick
+){
+return false;
+}
+
+suppressSelectClick =
+false;
+return true;
+
+}
+
+function isDrawMultiSelectModifier(
+e
+){
+
+return !!(
+e?.metaKey ||
+e?.ctrlKey
+);
 
 }
 
@@ -141,6 +213,9 @@ target.closest(
 ) ||
 target.closest(
 ".fib-line-width-menu--portal"
+) ||
+target.closest(
+".elliott-flyout"
 ) ||
 target.closest(
 ".fib-level-color-menu"
@@ -337,9 +412,13 @@ if(
 dragState
 ){
 
-pinDrawingSelection(
-dragState.shapeId
-);
+if(
+dragState.mode !==
+"marquee"
+){
+pinCurrentSelection();
+}
+
 desktopClickSelectId =
 null;
 updateStyleBar();
@@ -389,7 +468,9 @@ return;
 }
 
 if(
-desktopSelectionPinned
+desktopSelectionPinned ||
+getSelectedIds().length >
+1
 ){
 return;
 }
@@ -555,6 +636,17 @@ redraw();
 
 const onDesktopSelectClick =
 e=>{
+
+if(
+consumeSelectClickSuppress() ||
+isDrawMultiSelectModifier(
+e
+)
+){
+e.preventDefault();
+e.stopPropagation();
+return;
+}
 
 if(
 !getAlive() ||
@@ -725,6 +817,9 @@ return {
 isDesktopDrawHoverSelect,
 clearDrawingSelection,
 pinDrawingSelection,
+pinCurrentSelection,
+suppressNextSelectClick,
+isDrawMultiSelectModifier,
 releaseDrawingSelectionPin,
 isDrawingSelectionPinned:()=>desktopSelectionPinned,
 isDrawChromePointerEvent,

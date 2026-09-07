@@ -38,10 +38,28 @@ horizPriceLineX1
 } from "./constants.js?v=11";
 
 import {
+CHANNEL_MIDLINE_ALPHA,
+CHANNEL_MIDLINE_DASH,
+channelLevelSegment,
+ensureChannelLevelsVisible,
+isChannelMidlineRatio
+} from "./channel-spec.js?v=1";
+
+import {
 isTextTool,
 drawTextShape,
 TEXT_DEFAULT_CONTENT
 } from "./text.js?v=3";
+
+import {
+isElliottType,
+elliottPointCount,
+elliottScreenPoints,
+elliottLabelAnchor,
+elliottLabelForVertex,
+elliottUsesCircleWrap,
+elliottLabelFontPx
+} from "./elliott-spec.js?v=5";
 
 /**
  * @param {object} deps
@@ -66,6 +84,9 @@ getPlacement,
 getPreviewPoint,
 getPreviewXY,
 getSelectedId,
+getIsIdSelected = id=>
+id ===
+getSelectedId(),
 getEditingTextId = ()=>
 null,
 parseDrawColor,
@@ -86,6 +107,210 @@ ctx.lineTo(x2, y2);
 ctx.stroke();
 
 ctx.setLineDash([]);
+
+}
+
+function drawElliottLabel(
+ctx,
+x,
+y,
+text,
+color,
+circled,
+fontPx
+){
+
+const px =
+Number.isFinite(
+fontPx
+) &&
+fontPx >
+0
+? fontPx
+: 13;
+
+ctx.save();
+ctx.font =
+`600 ${px}px Arial, sans-serif`;
+ctx.textAlign =
+"center";
+ctx.textBaseline =
+"middle";
+
+const metrics =
+ctx.measureText(
+text
+);
+const tw =
+metrics.width ||
+text.length *
+px *
+0.55;
+
+if(
+circled
+){
+
+const r =
+Math.max(
+px *
+0.72,
+tw /
+2 +
+px *
+0.28
+);
+
+ctx.beginPath();
+ctx.arc(
+x,
+y,
+r,
+0,
+Math.PI *
+2
+);
+ctx.strokeStyle =
+color;
+ctx.lineWidth =
+Math.max(
+1,
+px /
+10
+);
+ctx.stroke();
+
+}
+
+ctx.fillStyle =
+color;
+ctx.fillText(
+text,
+x,
+y
+);
+ctx.restore();
+
+}
+
+function drawElliottWave(
+ctx,
+shape,
+color,
+width
+){
+
+const screens =
+elliottScreenPoints(
+shape,
+toXY
+);
+
+if(
+!screens.length
+){
+return;
+}
+
+if(
+shape.showWave !==
+false &&
+screens.length >
+1
+){
+
+ctx.save();
+ctx.strokeStyle =
+color;
+ctx.lineWidth =
+width ||
+1;
+ctx.lineJoin =
+"round";
+ctx.lineCap =
+"round";
+ctx.setLineDash(
+[]
+);
+ctx.beginPath();
+ctx.moveTo(
+screens[
+0
+].x,
+screens[
+0
+].y
+);
+
+for(
+let i =
+1;
+i <
+screens.length;
+i++
+){
+ctx.lineTo(
+screens[
+i
+].x,
+screens[
+i
+].y
+);
+}
+
+ctx.stroke();
+ctx.restore();
+
+}
+
+const circled =
+elliottUsesCircleWrap(
+shape.degree
+);
+const fontPx =
+elliottLabelFontPx(
+shape.degree
+);
+
+screens.forEach(
+(
+pt,
+i
+)=>{
+
+const label =
+elliottLabelForVertex(
+shape.type,
+shape.degree,
+i
+);
+
+if(
+!label
+){
+return;
+}
+
+const anchor =
+elliottLabelAnchor(
+screens,
+i
+) ||
+pt;
+
+drawElliottLabel(
+ctx,
+anchor.x,
+anchor.y,
+label,
+color,
+circled,
+fontPx
+);
+
+}
+);
 
 }
 
@@ -304,7 +529,7 @@ width,
 
 }
 
-function drawChannelAtXY(ctx, p1, p2, p3, color, width){
+function drawChannelAtXY(ctx, p1, p2, p3, color, width, levels){
 
 if(!p1 || !p2 || !p3){
 return;
@@ -313,26 +538,80 @@ return;
 const dx = p2.x - p1.x;
 const dy = p2.y - p1.y;
 
-const p4 = {
+const geom = {
+p1,
+p2,
+p3,
+p4: {
 x: p3.x + dx,
 y: p3.y + dy
+}
 };
 
-drawLine(ctx, p1.x, p1.y, p2.x, p2.y, color, width);
-drawLine(ctx, p3.x, p3.y, p4.x, p4.y, color, width);
+const rows =
+ensureChannelLevelsVisible(
+levels
+);
 
-ctx.globalAlpha = 0.55;
+rows.forEach(
+row=>{
+
+if(
+!row.enabled
+){
+return;
+}
+
+const seg =
+channelLevelSegment(
+geom,
+row.v
+);
+
+if(
+!seg
+){
+return;
+}
+
+const lineColor =
+row.color ||
+color;
+
+if(
+isChannelMidlineRatio(
+row.v
+)
+){
+ctx.globalAlpha =
+CHANNEL_MIDLINE_ALPHA;
 drawLine(
 ctx,
-(p1.x + p3.x) / 2,
-(p1.y + p3.y) / 2,
-(p2.x + p4.x) / 2,
-(p2.y + p4.y) / 2,
-color,
+seg.start.x,
+seg.start.y,
+seg.end.x,
+seg.end.y,
+lineColor,
 Math.max(1, width),
-[5, 4]
+CHANNEL_MIDLINE_DASH.slice()
 );
-ctx.globalAlpha = 1;
+ctx.globalAlpha =
+1;
+return;
+}
+
+drawLine(
+ctx,
+seg.start.x,
+seg.start.y,
+seg.end.x,
+seg.end.y,
+lineColor,
+width
+);
+
+}
+);
 
 }
 
@@ -342,7 +621,15 @@ const p1 = toXY(shape.p1);
 const p2 = toXY(shape.p2);
 const p3 = toXY(shape.p3);
 
-drawChannelAtXY(ctx, p1, p2, p3, color, width);
+drawChannelAtXY(
+ctx,
+p1,
+p2,
+p3,
+color,
+width,
+shape.channelLevels
+);
 
 }
 
@@ -467,8 +754,9 @@ shape,
 toXY,
 {
 selected:
-shape.id ===
-getSelectedId(),
+getIsIdSelected(
+shape.id
+),
 hideGlyph:
 shape.id &&
 shape.id ===
@@ -486,11 +774,26 @@ if(shape.type === "channel"){
 drawChannel(ctx, shape, color, width);
 }
 
+if(
+isElliottType(
+shape.type
+)
+){
+drawElliottWave(
+ctx,
+shape,
+color,
+width
+);
+}
+
 if(isPositionType(shape.type)){
 drawPosition(
 ctx,
 shape,
-shape.id === getSelectedId()
+getIsIdSelected(
+shape.id
+)
 );
 }
 
@@ -618,6 +921,16 @@ type ===
 "channel"
 ){
 return 3;
+}
+
+if(
+isElliottType(
+type
+)
+){
+return elliottPointCount(
+type
+);
 }
 
 if(
@@ -797,7 +1110,15 @@ const c = previewPoint
 : previewXY;
 
 if(c){
-drawChannelAtXY(ctx, a, b, c, style.color, style.lineWidth);
+drawChannelAtXY(
+ctx,
+a,
+b,
+c,
+style.color,
+style.lineWidth,
+style.channelLevels
+);
 }
 
 }
@@ -1160,6 +1481,41 @@ drawShape(ctx, previewShape, w, h);
 
 if(placement.type === "fib" && previewPts.length >= 2){
 drawShape(ctx, previewShape, w, h, true);
+}
+
+if(
+isElliottType(
+placement.type
+) &&
+previewPts.length >=
+1
+){
+
+const elliottPts =
+previewPts.filter(
+Boolean
+);
+
+drawShape(
+ctx,
+{
+type: placement.type,
+color: style.color,
+lineWidth: style.lineWidth,
+degree: style.degree,
+showWave: style.showWave !==
+false,
+points: elliottPts,
+p1: elliottPts[0],
+p2: elliottPts[
+elliottPts.length -
+1
+]
+},
+w,
+h
+);
+
 }
 
 }

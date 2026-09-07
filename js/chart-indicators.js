@@ -245,13 +245,13 @@ import(
 "./indicators/macd-pane.js?v=6"
 ),
 import(
-"./indicators/moving-average.js?v=18"
+"./indicators/moving-average.js?v=19"
 ),
 import(
-"./indicators/ema-shift-ribbon.js?v=9"
+"./indicators/ema-shift-ribbon.js?v=10"
 ),
 import(
-"./indicators/supertrend.js?v=5"
+"./indicators/supertrend.js?v=6"
 ),
 typeof createPattern12IndicatorOverride ===
 "function"
@@ -265,13 +265,13 @@ createPattern12IndicatorOverride
 "./indicators/pattern-12.js?v=17"
 ),
 import(
-"./indicators/pattern-gip.js?v=2"
+"./indicators/pattern-gip.js?v=3"
 ),
 import(
 "./indicators/horizontal-volume.js?v=11"
 ),
 import(
-"./indicators/indicator-settings-dialog.js?v=7"
+"./indicators/indicator-settings-dialog.js?v=8"
 )
 ]
 );

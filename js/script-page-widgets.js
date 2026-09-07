@@ -35,7 +35,7 @@ ingestLiveOhlcKline,
 lastOhlcBar,
 liveBarPeriodSec,
 paintLiveOhlcSeries
-} from "./chart/live-bar-roll.js?v=2";
+} from "./chart/live-bar-roll.js?v=3";
 
 import {
 fetchTickersInto
@@ -54,7 +54,7 @@ getWidgetFlagHtml,
 wireWidgetFlagUi,
 updateWidgetFlagUi,
 bindWidgetFlagGlobalListeners
-} from "./widget-favorite-flag.js?v=7";
+} from "./widget-favorite-flag.js?v=8";
 
 const SCRIPT_MAX_CONCURRENT_CHART_LOADS =
 4;
@@ -80,7 +80,7 @@ if(
 ){
 scriptZoomModulePromise =
 import(
-"./screener-widget-zoom.js?v=30"
+"./screener-widget-zoom.js?v=31"
 ).then(
 mod=>{
 refreshZoomFavoriteUi =
@@ -1162,7 +1162,9 @@ root,
 row.symbol,
 ()=>{
 refreshAllWidgetFlags();
-}
+},
+()=>
+chartTf
 );
 
 updateWidgetFlagUi(

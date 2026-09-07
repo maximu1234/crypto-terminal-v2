@@ -10,7 +10,7 @@ POSITION_DEFAULT_SL_PCT
 import {
 distToRect,
 distToSegment
-} from "./math.js?v=1";
+} from "./math.js?v=2";
 
 import {
 calcPositionVolumeUsd,

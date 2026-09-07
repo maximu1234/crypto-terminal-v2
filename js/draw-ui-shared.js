@@ -1,6 +1,10 @@
 import {
 getDrawToolIconSrc
-} from "./draw-toolbar-icon-data.js?v=36";
+} from "./draw-toolbar-icon-data.js?v=37";
+
+import {
+ensureElliottToolbarEvents
+} from "./drawings/elliott-toolbar.js?v=1";
 
 export function drawToolIconImg(
 name,
@@ -49,6 +53,8 @@ return;
 container.innerHTML =
 getDrawToolbarButtonsHtml();
 
+ensureElliottToolbarEvents();
+
 }
 
 export const CURSOR_TOOL_ICON_SVG = drawToolIconImg("cursor");
@@ -59,6 +65,7 @@ export const BRUSH_ICON_SVG = drawToolIconImg("brush");
 export const HRAY_ICON_SVG = drawToolIconImg("hray");
 export const HLINE_ICON_SVG = drawToolIconImg("hline");
 export const FIB_ICON_SVG = drawToolIconImg("fib");
+export const ELLIOTT_ICON_SVG = drawToolIconImg("elliott");
 export const TEXT_ICON_SVG = drawToolIconImg("text");
 export const CHANNEL_ICON_SVG = drawToolIconImg("channel");
 export const LONG_POSITION_ICON_SVG = drawToolIconImg("long", "draw-tool-icon draw-pos-icon draw-pos-icon--long");
@@ -100,6 +107,8 @@ export function getDrawToolbarButtonsHtml(
 opts = {}
 ){
 
+ensureElliottToolbarEvents();
+
 const btnClass =
 opts.compact
 ? "draw-btn draw-btn-sm"
@@ -136,6 +145,10 @@ ${BRUSH_ICON_SVG}
 
 <button type="button" class="${btnClass}" data-draw-tool="fib" title="Fib Retracement (F)">
 ${FIB_ICON_SVG}
+</button>
+
+<button type="button" class="${btnClass} draw-tool-group-btn" data-draw-tool-group="elliott" title="Волны Эллиота" aria-haspopup="menu" aria-expanded="false">
+${ELLIOTT_ICON_SVG}
 </button>
 
 <button type="button" class="${btnClass}" data-draw-tool="text" title="Текст">

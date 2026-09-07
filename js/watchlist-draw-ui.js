@@ -3,7 +3,11 @@ DRAW_TOOLS_PALETTE_ICON_SVG,
 TRASH_ICON_SVG,
 SETTINGS_ICON_SVG,
 getDrawToolbarButtonsHtml
-} from "./draw-ui-shared.js?v=37";
+} from "./draw-ui-shared.js?v=38";
+
+import {
+closeElliottFlyout
+} from "./drawings/elliott-toolbar.js?v=1";
 
 const widgetDrawMenuClosers =
 new Set();
@@ -24,6 +28,14 @@ drawToolsMenuDocBound = true;
 document.addEventListener(
 "click",
 e=>{
+
+if(
+e.target.closest(
+".elliott-flyout"
+)
+){
+return;
+}
 
 if(
 e.target.closest(
@@ -80,6 +92,8 @@ closeAllWidgetDrawToolsMenus();
 }
 
 export function closeAllWidgetDrawToolsMenus(){
+
+closeElliottFlyout();
 
 widgetDrawMenuClosers.forEach(
 close=>{
@@ -334,6 +348,29 @@ menu.addEventListener(
 "click",
 onMenuPick,
 true
+);
+
+menu.addEventListener(
+"draw-pick-tool",
+e=>{
+
+const next =
+e.detail?.tool;
+
+if(
+!next ||
+!pickTool
+){
+return;
+}
+
+onActivate?.(e);
+pickTool(
+next
+);
+closeAllWidgetDrawToolsMenus();
+
+}
 );
 
 }

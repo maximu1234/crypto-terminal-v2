@@ -40,7 +40,7 @@ ingestLiveOhlcKline,
 lastOhlcBar,
 liveBarPeriodSec,
 paintLiveOhlcSeries
-} from "./chart/live-bar-roll.js?v=2";
+} from "./chart/live-bar-roll.js?v=3";
 
 import {
 SCREENER_WIDGET_OSCILLATOR_CHANGED,
@@ -48,6 +48,10 @@ SCREENER_WIDGET_OSCILLATOR_MACD,
 createScreenerMacdChart,
 setScreenerMacdData
 } from "./screener-widget-oscillator.js?v=1";
+
+import {
+shouldIgnoreTypingHotkey
+} from "./qwerty-key-input.js?v=3";
 
 let zoomPatternOverlayApi =
 null;
@@ -298,34 +302,9 @@ function shouldIgnoreZoomHotkey(
 event
 ){
 
-const target =
-event.target;
-
-if(
-!target
-){
-return false;
-}
-
-const tag =
-String(
-target.tagName ||
-""
-).toLowerCase();
-
-if(
-tag ===
-"input" ||
-tag ===
-"textarea" ||
-tag ===
-"select" ||
-target.isContentEditable
-){
-return true;
-}
-
-return false;
+return shouldIgnoreTypingHotkey(
+event
+);
 
 }
 

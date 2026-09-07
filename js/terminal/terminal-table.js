@@ -41,7 +41,7 @@ import {
 applyLiveOhlcBar,
 ensureOhlcRollover,
 liveBarPeriodSec
-} from "../chart/live-bar-roll.js?v=2";
+} from "../chart/live-bar-roll.js?v=3";
 
 /** Desktop /trade only — не тянем trade-open-positions в открытый web /coins. */
 function escapeHtml(

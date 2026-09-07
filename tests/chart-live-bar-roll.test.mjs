@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
+applyLiveLastPriceToCandles,
 applyLiveOhlcBar,
 collectKlineRows,
 ensureOhlcRollover,
@@ -60,6 +61,24 @@ test("applyLiveOhlcBar keeps a late confirm of the closed bar after rollover", (
   assert.equal(kind, "hist");
   assert.equal(candles[0].high, 13);
   assert.equal(candles[1].time, 1060);
+});
+
+test("applyLiveLastPriceToCandles ticks the last bar and opens the next on the clock", () => {
+  const candles = [
+    { time: 1000, open: 10, high: 12, low: 9, close: 11, volume: 1 }
+  ];
+  const sameBar = applyLiveLastPriceToCandles(candles, 12.5, 60, 1059);
+  assert.equal(sameBar.rolled, false);
+  assert.equal(candles.length, 1);
+  assert.equal(candles[0].close, 12.5);
+  assert.equal(candles[0].high, 12.5);
+
+  const rolled = applyLiveLastPriceToCandles(candles, 13, 60, 1060);
+  assert.equal(rolled.rolled, true);
+  assert.equal(candles.length, 2);
+  assert.equal(candles[1].time, 1060);
+  assert.equal(candles[1].close, 13);
+  assert.equal(candles[1].high, 13);
 });
 
 test("applyLiveOhlcBar appends a newer bar", () => {

@@ -19,6 +19,10 @@ import {
 EXCHANGE_CHANGED_EVENT
 } from "./market-api.js?v=6";
 
+import {
+seedWatchlistTfOnBlueFlag
+} from "./storage.js?v=14";
+
 let favorites =
 loadFavoritesGroups();
 
@@ -170,7 +174,8 @@ wrap.querySelector(
 
 function applyFavoriteGroup(
 symbol,
-group
+group,
+getTf
 ){
 
 if(
@@ -223,6 +228,19 @@ persistFavoritesToCloud(
 favorites
 );
 
+if(
+group ===
+"blue"
+){
+seedWatchlistTfOnBlueFlag(
+symbol,
+typeof getTf ===
+"function"
+? getTf()
+: getTf
+);
+}
+
 return true;
 
 }
@@ -230,7 +248,8 @@ return true;
 export function wireWidgetFlagUi(
 root,
 getSymbol,
-onChanged = null
+onChanged = null,
+getTf = null
 ){
 
 const flagWrap =
@@ -350,7 +369,8 @@ e.stopPropagation();
 
 applyFavoriteGroup(
 getSymbol(),
-btn.dataset.flagGroup
+btn.dataset.flagGroup,
+getTf
 );
 onChanged?.();
 

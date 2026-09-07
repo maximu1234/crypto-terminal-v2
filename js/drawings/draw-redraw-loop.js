@@ -23,6 +23,11 @@ import {
 isHorizPriceTool
 } from "./constants.js?v=11";
 
+import {
+isElliottType,
+elliottSelectionHandlePoints
+} from "./elliott-spec.js?v=5";
+
 export function createDrawRedrawLoop(
 deps
 ){
@@ -34,6 +39,11 @@ getPlotWidth,
 getChartPanActive,
 getDrawings,
 getSelectedId,
+getIsIdSelected = id=>
+id ===
+getSelectedId(),
+getDragState = ()=>
+null,
 getPlacement,
 removePriceGutterOverlay,
 toXY,
@@ -151,6 +161,39 @@ if(shape.type === "text"){
 return;
 }
 
+if(
+isElliottType(
+shape.type
+)
+){
+
+elliottSelectionHandlePoints(
+shape
+).forEach(
+point=>{
+
+const xy =
+toXY(
+point
+);
+
+if(
+xy
+){
+drawAnchorCircle(
+ctx,
+xy.x,
+xy.y
+);
+}
+
+}
+);
+
+return;
+
+}
+
 if(shape.type === "channel"){
 
 const geom =
@@ -259,6 +302,28 @@ return !!(
 toXY(shape.p1) &&
 toXY(shape.p2) &&
 toXY(shape.p3)
+);
+
+}
+
+if(
+isElliottType(
+shape.type
+)
+){
+
+const ends =
+elliottSelectionHandlePoints(
+shape
+);
+
+return ends.length >
+0 &&
+ends.every(
+point=>
+!!toXY(
+point
+)
 );
 
 }
@@ -387,7 +452,11 @@ getDrawings().forEach(d=>{
 try{
 drawShape(ctx, d, plotW, h);
 
-if(d.id === getSelectedId()){
+if(
+getIsIdSelected(
+d.id
+)
+){
 drawSelectionHandles(ctx, d);
 }
 
@@ -412,6 +481,70 @@ ctx,
 plotW,
 h
 );
+
+const marquee =
+getDragState()?.mode ===
+"marquee"
+? getDragState()
+: null;
+
+if(
+marquee &&
+marquee.startX !=
+null &&
+marquee.lastPlotX !=
+null
+){
+
+const x =
+Math.min(
+marquee.startX,
+marquee.lastPlotX
+);
+const y =
+Math.min(
+marquee.startY,
+marquee.lastPlotY
+);
+const mw =
+Math.abs(
+marquee.lastPlotX - marquee.startX
+);
+const mh =
+Math.abs(
+marquee.lastPlotY - marquee.startY
+);
+
+ctx.save();
+ctx.fillStyle =
+"rgba(41, 98, 255, 0.12)";
+ctx.strokeStyle =
+"rgba(96, 165, 250, 0.95)";
+ctx.lineWidth =
+1;
+ctx.fillRect(
+x,
+y,
+mw,
+mh
+);
+ctx.strokeRect(
+x + 0.5,
+y + 0.5,
+Math.max(
+0,
+mw -
+1
+),
+Math.max(
+0,
+mh -
+1
+)
+);
+ctx.restore();
+
+}
 
 ctx.restore();
 

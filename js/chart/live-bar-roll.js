@@ -193,6 +193,109 @@ return changed;
 }
 
 /**
+ * Patch the last OHLC bar from a public ticker last/mark price.
+ * Opens the next bar on the clock first, same as the Terminal pane.
+ */
+export function applyLiveLastPriceToCandles(
+candles,
+price,
+periodSec,
+nowSec = Date.now() / 1000
+){
+
+const px =
+Number(
+price
+);
+
+if(
+!Number.isFinite(
+px
+) ||
+px <=
+0 ||
+!Array.isArray(
+candles
+) ||
+!candles.length
+){
+return {
+rolled: false,
+bar: null
+};
+}
+
+const rolled =
+ensureOhlcRollover(
+candles,
+periodSec,
+nowSec
+);
+const idx =
+lastOhlcIndex(
+candles
+);
+
+if(
+idx <
+0
+){
+return {
+rolled,
+bar: null
+};
+}
+
+const last =
+candles[
+idx
+];
+const high =
+Number(
+last.high
+);
+const low =
+Number(
+last.low
+);
+const bar =
+{
+...last,
+close:
+px,
+high:
+Number.isFinite(
+high
+)
+? Math.max(
+high,
+px
+)
+: px,
+low:
+Number.isFinite(
+low
+)
+? Math.min(
+low,
+px
+)
+: px
+};
+
+candles[
+idx
+] =
+bar;
+
+return {
+rolled,
+bar
+};
+
+}
+
+/**
  * @returns {"new"|"last"|"hist"|null}
  */
 export function applyLiveOhlcBar(

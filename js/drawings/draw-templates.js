@@ -35,6 +35,24 @@ TEXT_DEFAULT_SIZE,
 clampTextFontSize
 } from "./text.js?v=3";
 
+import {
+CHANNEL_DEFAULT_COLOR,
+CHANNEL_TOOL_DEFAULTS_VERSION,
+cloneDefaultChannelRows,
+createChannelToolDefaults,
+ensureChannelLevelsVisible
+} from "./channel-spec.js?v=1";
+
+import {
+ELLIOTT_DEFAULT_COLOR,
+ELLIOTT_TOOL_DEFAULTS_VERSION,
+ELLIOTT_TOOL_TYPES,
+createElliottToolDefaults,
+isElliottType,
+migrateElliottToolDefaults,
+normalizeElliottDegree
+} from "./elliott-spec.js?v=5";
+
 export const DRAW_TEMPLATES_STORAGE_KEY =
 "draw_templates_v1";
 
@@ -49,7 +67,8 @@ Object.freeze([
 "arrow",
 "rectangle",
 "fvp",
-"text"
+"text",
+...ELLIOTT_TOOL_TYPES
 ]);
 
 const STANDARD_FIB_TEMPLATE_NAME =
@@ -676,6 +695,51 @@ shape
 
 }
 
+if(
+type ===
+"channel"
+){
+
+out.color =
+shape?.color ||
+CHANNEL_DEFAULT_COLOR;
+out.channelLevels =
+JSON.parse(
+JSON.stringify(
+ensureChannelLevelsVisible(
+shape?.channelLevels
+)
+)
+);
+out.channelDefaultsVersion =
+CHANNEL_TOOL_DEFAULTS_VERSION;
+
+}
+
+if(
+isElliottType(
+type
+)
+){
+
+const defaults =
+migrateElliottToolDefaults(
+shape
+);
+
+out.color =
+defaults.color ||
+ELLIOTT_DEFAULT_COLOR;
+out.degree =
+defaults.degree;
+out.showWave =
+defaults.showWave !==
+false;
+out.elliottDefaultsVersion =
+ELLIOTT_TOOL_DEFAULTS_VERSION;
+
+}
+
 return out;
 
 }
@@ -735,6 +799,49 @@ out,
 createFvpToolDefaults(),
 style
 );
+}
+
+if(
+type ===
+"channel" &&
+style.channelLevels
+){
+out.channelLevels =
+JSON.parse(
+JSON.stringify(
+ensureChannelLevelsVisible(
+style.channelLevels
+)
+)
+);
+out.color =
+style.color ||
+CHANNEL_DEFAULT_COLOR;
+}
+
+if(
+isElliottType(
+type
+)
+){
+
+const defaults =
+migrateElliottToolDefaults(
+style
+);
+
+out.color =
+defaults.color;
+out.lineWidth =
+defaults.lineWidth;
+out.degree =
+defaults.degree;
+out.showWave =
+defaults.showWave !==
+false;
+out.elliottDefaultsVersion =
+ELLIOTT_TOOL_DEFAULTS_VERSION;
+
 }
 
 return out;
@@ -838,6 +945,51 @@ Object.assign(
 out,
 createFvpToolDefaults()
 );
+
+}
+
+if(
+type ===
+"channel"
+){
+
+const channelDefaults =
+createChannelToolDefaults();
+
+out.color =
+channelDefaults.color;
+out.lineWidth =
+channelDefaults.lineWidth;
+out.channelDefaultsVersion =
+CHANNEL_TOOL_DEFAULTS_VERSION;
+out.channelLevels =
+JSON.parse(
+JSON.stringify(
+cloneDefaultChannelRows()
+)
+);
+
+}
+
+if(
+isElliottType(
+type
+)
+){
+
+const elliottDefaults =
+createElliottToolDefaults();
+
+out.color =
+elliottDefaults.color;
+out.lineWidth =
+elliottDefaults.lineWidth;
+out.degree =
+elliottDefaults.degree;
+out.showWave =
+elliottDefaults.showWave;
+out.elliottDefaultsVersion =
+ELLIOTT_TOOL_DEFAULTS_VERSION;
 
 }
 
@@ -983,6 +1135,58 @@ copyFvpStyleToShape(
 shape,
 snapshot
 );
+}
+
+if(
+type ===
+"channel"
+){
+
+shape.color =
+snapshot.color ||
+CHANNEL_DEFAULT_COLOR;
+
+if(
+snapshot.channelLevels
+){
+shape.channelLevels =
+JSON.parse(
+JSON.stringify(
+ensureChannelLevelsVisible(
+snapshot.channelLevels
+)
+)
+);
+}else{
+shape.channelLevels =
+cloneDefaultChannelRows();
+}
+
+}
+
+if(
+isElliottType(
+type
+)
+){
+
+const defaults =
+migrateElliottToolDefaults(
+snapshot
+);
+
+shape.color =
+defaults.color;
+shape.lineWidth =
+defaults.lineWidth;
+shape.degree =
+normalizeElliottDegree(
+defaults.degree
+);
+shape.showWave =
+defaults.showWave !==
+false;
+
 }
 
 }
