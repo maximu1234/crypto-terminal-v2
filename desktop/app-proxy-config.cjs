@@ -4,8 +4,18 @@
  */
 "use strict";
 
+/**
+ * Chromium session.setProxy гоняет весь renderer через SOCKS.
+ * Bybit REST/private WS в main и так идут через relay; публичные хосты Bybit
+ * в обходе — иначе ломается kline WS. Облако (Supabase / Railway worker)
+ * тоже должно идти напрямую: кафе-SOCKS часто режет auth refresh, и алерты
+ * нельзя поставить, хотя шестерёнка ещё показывает сохранённый email.
+ */
 const PROXY_BYPASS_RULES =
-"<-loopback>,localhost,127.0.0.1,::1,<local>,api.bybit.com,api.bytick.com,api-testnet.bybit.com";
+"<-loopback>,localhost,127.0.0.1,::1,<local>," +
+"api.bybit.com,api.bytick.com,api-testnet.bybit.com," +
+"*.supabase.co,.supabase.co,*.supabase.in," +
+"*.up.railway.app,.up.railway.app";
 
 function normalizeProxyType(
 raw

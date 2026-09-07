@@ -126,6 +126,19 @@ readElliottSettingsPanel,
 bindElliottSettingsPanel
 } from "./draw-elliott-settings.js?v=1";
 
+import {
+hasCoordSettings
+} from "./draw-coords.js?v=1";
+
+import {
+bindCoordSettingsPanel,
+bindDrawSettingsTabs,
+coordSettingsHtml,
+drawSettingsTabsHtml,
+fillCoordSettingsPanel,
+isCoordInputFocused
+} from "./draw-coord-settings.js?v=1";
+
 export function createDrawStyleBar(
 deps
 ){
@@ -183,6 +196,10 @@ deleteSelected,
 flushDeferredFibSettingsSync,
 getDesktopEdit,
 getSymbol,
+getCandles = ()=>
+[],
+getTf = ()=>
+"",
 getStyleDelegate = null
 } =
 deps;
@@ -208,7 +225,9 @@ saveToolDefaults,
 saveGlobalStyle,
 baseDefaultStyle,
 getDesktopEdit,
-deleteSelected
+deleteSelected,
+getCandles,
+getTf
 };
 }
 
@@ -251,7 +270,13 @@ delegate.getDesktopEdit ||
 getDesktopEdit,
 deleteSelected:
 delegate.deleteSelected ||
-deleteSelected
+deleteSelected,
+getCandles:
+delegate.getCandles ||
+getCandles,
+getTf:
+delegate.getTf ||
+getTf
 };
 
 }
@@ -301,6 +326,10 @@ let channelSettingsShapeId = null;
 let elliottPanelBuilt = false;
 let elliottPanelSyncing = false;
 let elliottSettingsShapeId = null;
+let coordsOnlyPanelBuilt = false;
+let coordPanelSyncing = false;
+let coordSettingsShapeId = null;
+let coordSettingsType = null;
 let settingsPanelAbort = null;
 let activeColor = STROKE;
 let chromePortal = null;
@@ -536,6 +565,354 @@ getTool()
 
 }
 
+function candlesForCoords(){
+
+return styleCtx().getCandles?.() ||
+[];
+
+}
+
+function tfForCoords(){
+
+return styleCtx().getTf?.() ||
+"";
+
+}
+
+function getCoordEditShape(){
+
+const {
+getSelected: selectedForStyle,
+getDrawings: drawingsForStyle
+} =
+styleCtx();
+
+if(
+coordSettingsShapeId
+){
+
+const pinned =
+drawingsForStyle().find(
+d=>
+d.id ===
+coordSettingsShapeId
+);
+
+if(
+pinned &&
+hasCoordSettings(
+pinned.type
+)
+){
+return pinned;
+}
+
+}
+
+const sel =
+selectedForStyle();
+
+return hasCoordSettings(
+sel?.type
+)
+? sel
+: null;
+
+}
+
+function isCoordContext(){
+
+return hasCoordSettings(
+styleCtx().getSelected?.()?.type
+);
+
+}
+
+function isCoordSettingsOpen(){
+
+return !!(
+settingsPopover &&
+!settingsPopover.classList.contains(
+"hidden"
+) &&
+settingsPopover.querySelector(
+".draw-coord-settings"
+)
+);
+
+}
+
+function canApplyCoordPanel(){
+
+return (
+getAlive() &&
+isCoordSettingsOpen() &&
+!coordPanelSyncing &&
+!!getCoordEditShape()
+);
+
+}
+
+function persistCoordChange(){
+
+const {
+saveDrawings: saveDrawingsForStyle,
+redraw: redrawForStyle
+} =
+styleCtx();
+const shape =
+getCoordEditShape();
+
+if(
+!shape
+){
+return;
+}
+
+touchShapeRevisionFn(
+shape
+);
+saveDrawingsForStyle();
+redrawForStyle();
+
+}
+
+function syncCoordSettingsIfIdle(){
+
+if(
+!settingsPopover?.querySelector(
+".draw-coord-settings"
+)
+){
+return;
+}
+
+if(
+coordPanelSyncing ||
+isCoordInputFocused(
+settingsPopover
+)
+){
+return;
+}
+
+const shape =
+getCoordEditShape();
+
+if(
+!shape
+){
+return;
+}
+
+coordPanelSyncing = true;
+
+try{
+
+fillCoordSettingsPanel(
+settingsPopover,
+shape,
+candlesForCoords(),
+tfForCoords()
+);
+
+}finally{
+coordPanelSyncing = false;
+}
+
+}
+
+function composeSettingsHtml(
+type,
+styleHtml
+){
+
+return drawSettingsTabsHtml({
+styleHtml,
+coordsHtml: coordSettingsHtml(
+type
+),
+activeTab: "style"
+});
+
+}
+
+function attachCoordUi(
+type,
+signal
+){
+
+coordSettingsType =
+type;
+bindDrawSettingsTabs(
+settingsPopover,
+signal
+);
+bindCoordSettingsPanel(
+settingsPopover,
+{
+getAlive,
+getShape: getCoordEditShape,
+getCandles: candlesForCoords,
+getTf: tfForCoords,
+canApply: canApplyCoordPanel,
+onApply: persistCoordChange,
+signal
+}
+);
+
+}
+
+function pinCoordSettingsShape(){
+
+coordSettingsShapeId =
+styleCtx().getSelected?.()?.id ||
+null;
+
+}
+
+function typeShowsSettingsBtn(
+type
+){
+
+if(
+type ===
+"fib" ||
+type ===
+"rectangle" ||
+type ===
+"fvp" ||
+type ===
+"channel" ||
+isElliottType(
+type
+)
+){
+return true;
+}
+
+const sel =
+styleCtx().getSelected?.();
+
+return !!(
+hasCoordSettings(
+type
+) &&
+sel &&
+sel.type ===
+type
+);
+
+}
+
+function settingsOpenMatchesType(
+type
+){
+
+if(
+type ===
+"fib"
+){
+return isFibSettingsOpen();
+}
+
+if(
+type ===
+"rectangle"
+){
+return isRectSettingsOpen();
+}
+
+if(
+type ===
+"fvp"
+){
+return isFvpSettingsOpen();
+}
+
+if(
+type ===
+"channel"
+){
+return isChannelSettingsOpen();
+}
+
+if(
+isElliottType(
+type
+)
+){
+return isElliottSettingsOpen();
+}
+
+return !!(
+hasCoordSettings(
+type
+) &&
+isCoordSettingsOpen() &&
+coordSettingsType ===
+type
+);
+
+}
+
+function ensureCoordSettingsPanel(
+type
+){
+
+if(
+!settingsPopover ||
+!hasCoordSettings(
+type
+)
+){
+return;
+}
+
+const already =
+coordsOnlyPanelBuilt &&
+coordSettingsType ===
+type &&
+!!settingsPopover.querySelector(
+".draw-coord-settings"
+) &&
+!settingsPopover.querySelector(
+".draw-settings-tabs"
+);
+
+if(
+already
+){
+return;
+}
+
+coordsOnlyPanelBuilt = true;
+fibPanelBuilt = false;
+rectPanelBuilt = false;
+fvpPanelBuilt = false;
+channelPanelBuilt = false;
+elliottPanelBuilt = false;
+
+const signal =
+resetSettingsPanelListeners();
+
+settingsPopover.classList.remove(
+"draw-settings-popover--fvp"
+);
+settingsPopover.classList.add(
+"draw-settings-popover--coords"
+);
+settingsPopover.innerHTML =
+coordSettingsHtml(
+type
+);
+attachCoordUi(
+type,
+signal
+);
+
+}
+
 function resetSettingsPanelListeners(){
 
 settingsPanelAbort?.abort();
@@ -727,16 +1104,21 @@ fibPanelBuilt = false;
 fvpPanelBuilt = false;
 channelPanelBuilt = false;
 elliottPanelBuilt = false;
+coordsOnlyPanelBuilt = false;
 
 const signal =
 resetSettingsPanelListeners();
 
 settingsPopover.classList.remove(
-"draw-settings-popover--fvp"
+"draw-settings-popover--fvp",
+"draw-settings-popover--coords"
 );
 
 settingsPopover.innerHTML =
-rectSettingsHtml();
+composeSettingsHtml(
+"rectangle",
+rectSettingsHtml()
+);
 
 bindRectSettingsPanel(
 settingsPopover,
@@ -757,6 +1139,11 @@ fallback
 },
 signal
 }
+);
+
+attachCoordUi(
+"rectangle",
+signal
 );
 
 }
@@ -785,6 +1172,8 @@ shape
 }finally{
 rectPanelSyncing = false;
 }
+
+syncCoordSettingsIfIdle();
 
 }
 
@@ -897,8 +1286,12 @@ fibPanelBuilt = false;
 rectPanelBuilt = false;
 channelPanelBuilt = false;
 elliottPanelBuilt = false;
+coordsOnlyPanelBuilt = false;
 
 resetSettingsPanelListeners();
+settingsPopover.classList.remove(
+"draw-settings-popover--coords"
+);
 settingsPopover.classList.add(
 "draw-settings-popover--fvp"
 );
@@ -1044,16 +1437,21 @@ fibPanelBuilt = false;
 rectPanelBuilt = false;
 fvpPanelBuilt = false;
 elliottPanelBuilt = false;
+coordsOnlyPanelBuilt = false;
 
 const signal =
 resetSettingsPanelListeners();
 
 settingsPopover.classList.remove(
-"draw-settings-popover--fvp"
+"draw-settings-popover--fvp",
+"draw-settings-popover--coords"
 );
 
 settingsPopover.innerHTML =
-channelSettingsHtml();
+composeSettingsHtml(
+"channel",
+channelSettingsHtml()
+);
 
 mountChannelLevelRows(
 settingsPopover
@@ -1079,6 +1477,11 @@ scheduleImmediate: scheduleChannelApplyImmediate,
 scheduleDebounced: scheduleChannelApplyDebounced,
 signal
 }
+);
+
+attachCoordUi(
+"channel",
+signal
 );
 
 }
@@ -1109,6 +1512,8 @@ CHANNEL_DEFAULT_COLOR
 }finally{
 channelPanelSyncing = false;
 }
+
+syncCoordSettingsIfIdle();
 
 }
 
@@ -1365,12 +1770,14 @@ fibPanelBuilt = false;
 rectPanelBuilt = false;
 fvpPanelBuilt = false;
 channelPanelBuilt = false;
+coordsOnlyPanelBuilt = false;
 
 const signal =
 resetSettingsPanelListeners();
 
 settingsPopover.classList.remove(
-"draw-settings-popover--fvp"
+"draw-settings-popover--fvp",
+"draw-settings-popover--coords"
 );
 
 settingsPopover.innerHTML =
@@ -1562,16 +1969,21 @@ rectPanelBuilt = false;
 fvpPanelBuilt = false;
 channelPanelBuilt = false;
 elliottPanelBuilt = false;
+coordsOnlyPanelBuilt = false;
 
 const signal =
 resetSettingsPanelListeners();
 
 settingsPopover.classList.remove(
-"draw-settings-popover--fvp"
+"draw-settings-popover--fvp",
+"draw-settings-popover--coords"
 );
 
 settingsPopover.innerHTML =
-fibSettingsHtml();
+composeSettingsHtml(
+"fib",
+fibSettingsHtml()
+);
 
 mountFibLevelRows(
 settingsPopover
@@ -1597,6 +2009,11 @@ scheduleImmediate: scheduleFibApplyImmediate,
 scheduleDebounced: scheduleFibApplyDebounced,
 signal
 }
+);
+
+attachCoordUi(
+"fib",
+signal
 );
 
 }
@@ -2112,6 +2529,8 @@ fallbackWidth
 }finally{
 fibPanelSyncing = false;
 }
+
+syncCoordSettingsIfIdle();
 
 }
 
@@ -2663,11 +3082,7 @@ setActiveWidth(style.lineWidth);
 
 settingsBtn?.classList.toggle(
 "hidden",
-type !== "fib" &&
-type !== "rectangle" &&
-type !== "fvp" &&
-type !== "channel" &&
-!isElliottType(
+!typeShowsSettingsBtn(
 type
 )
 );
@@ -2874,8 +3289,27 @@ baseDefaultStyle(
 
 }
 
+}
+
+if(
+settingsPopover &&
+!settingsPopover.classList.contains(
+"hidden"
+)
+){
+
+if(
+!settingsOpenMatchesType(
+type
+)
+){
+settingsPopover.classList.add(
+"hidden"
+);
 }else{
-settingsPopover?.classList.add("hidden");
+syncCoordSettingsIfIdle();
+}
+
 }
 
 }
@@ -4270,6 +4704,9 @@ fibSettingsShapeId = null;
 flushDeferredFibSettingsSync();
 }
 
+coordSettingsShapeId =
+null;
+
 if(
 channelSettingsWasOpen
 ){
@@ -4497,13 +4934,16 @@ const channelCtx =
 isChannelContext();
 const elliottCtx =
 isElliottContext();
+const coordCtx =
+isCoordContext();
 
 if(
 !fibCtx &&
 !rectCtx &&
 !fvpCtx &&
 !channelCtx &&
-!elliottCtx
+!elliottCtx &&
+!coordCtx
 ){
 return;
 }
@@ -4531,6 +4971,7 @@ rectCtx
 rectSettingsShapeId =
 getSelected()?.id ||
 null;
+pinCoordSettingsShape();
 
 const rectShape =
 getRectEditShape();
@@ -4549,6 +4990,7 @@ channelCtx
 channelSettingsShapeId =
 getSelected()?.id ||
 null;
+pinCoordSettingsShape();
 
 const channelShape =
 getChannelEditShape();
@@ -4569,9 +5011,12 @@ getSelected()?.id ||
 null;
 fillElliottSettingsFromContext();
 
-}else{
+}else if(
+fibCtx
+){
 
 rememberFibSettingsTarget();
+pinCoordSettingsShape();
 
 const fibShape =
 getFibEditShape();
@@ -4601,6 +5046,28 @@ style.color,
 style.lineWidth
 );
 
+}
+
+}else if(
+coordCtx
+){
+
+pinCoordSettingsShape();
+
+const coordShape =
+styleCtx().getSelected?.() ||
+getSelected();
+
+if(
+coordShape &&
+hasCoordSettings(
+coordShape.type
+)
+){
+ensureCoordSettingsPanel(
+coordShape.type
+);
+syncCoordSettingsIfIdle();
 }
 
 }
@@ -4789,8 +5256,10 @@ true
 function isFibSettingsChromePointerEvent(e){
 
 if(
-!isFibSettingsOpen() &&
-!isRectSettingsOpen()
+!settingsPopover ||
+settingsPopover.classList.contains(
+"hidden"
+)
 ){
 return false;
 }
@@ -5071,7 +5540,14 @@ isFibSettingsChromePointerEvent,
 shouldDeferExternalDrawingsSync: ()=>(
 isFibSettingsOpen() ||
 isRectSettingsOpen() ||
-isPositionRiskInputFocused()
+isFvpSettingsOpen() ||
+isChannelSettingsOpen() ||
+isElliottSettingsOpen() ||
+isCoordSettingsOpen() ||
+isPositionRiskInputFocused() ||
+isCoordInputFocused(
+settingsPopover
+)
 ),
 setFibSettingsShapeId: id=>{
 fibSettingsShapeId = id;

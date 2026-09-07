@@ -3,7 +3,7 @@
  */
 import {
 jsUrl
-} from "../asset-manifest.js?v=8";
+} from "../asset-manifest.js?v=9";
 
 import {
 loadMarketOrderbook

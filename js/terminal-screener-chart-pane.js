@@ -48,7 +48,7 @@ liveBarPeriodSec
 
 import {
 mountWidgetDomCrosshair
-} from "./chart-widget-host.js?v=23";
+} from "./chart-widget-host.js?v=25";
 
 function buildBodyHtml(
 showRsi

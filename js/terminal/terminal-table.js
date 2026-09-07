@@ -1508,7 +1508,7 @@ showFlags
 
 div.innerHTML = `
 ${flagCol}
-<div class="coin-symbol" title="${escapeHtml(item.indexTitle || item.symbol)}">
+<div class="coin-symbol">
 ${escapeHtml(item.symbol)}
 </div>
 <div class="coin-change24 col-change">

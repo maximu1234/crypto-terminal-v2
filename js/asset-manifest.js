@@ -21,7 +21,7 @@ Object.freeze({
 
 /* ── JS: boot / entry ── */
 "asset-manifest.js":
-8,
+9,
 "market-api.js":
 6,
 "format-price.js":
@@ -53,9 +53,9 @@ Object.freeze({
 "exchanges/bingx/intervals.js":
 1,
 "terminal-page-boot.js":
-29,
+30,
 "terminal-entry.js":
-3,
+4,
 "terminal-list-refresh.js":
 1,
 "trade-desktop-boot.js":
@@ -155,7 +155,7 @@ Object.freeze({
 "trade/bybit/market-entry.js":
 6,
 "trade/bybit/book-panel.js":
-3,
+4,
 "trade/bybit/position-open-orders.js":
 1,
 "trade/bybit/diary/index.js":
@@ -221,7 +221,7 @@ Object.freeze({
 "trade/bingx/market-entry.js":
 10,
 "trade/bingx/book-panel.js":
-5,
+6,
 "trade/bingx/position-open-orders.js":
 1,
 "trade/bingx/diary/index.js":
@@ -243,11 +243,11 @@ Object.freeze({
 "chart-page.js":
 7,
 "terminal.js":
-446,
+449,
 "terminal-multi-chart.js":
-13,
+14,
 "terminal-screener-chart-pane.js":
-19,
+20,
 "terminal-layout-picker.js":
 11,
 "terminal/terminal-chart-layout.js":
@@ -303,9 +303,9 @@ Object.freeze({
 "script-favorites-list.js":
 2,
 "algo-trading.js":
-221,
+222,
 "algo-trading-page-boot.js":
-18,
+19,
 "algo-trading-list.js":
 28,
 "algo-trading/coin-list-host.js":
@@ -345,7 +345,7 @@ Object.freeze({
 "algo-trading/pattern-stats.js":
 3,
 "algo-trading/drawings.js":
-4,
+5,
 "algo-trading/indicators-storage.js":
 1,
 "algo-trading/indicators.js":
@@ -462,7 +462,7 @@ Object.freeze({
 "algo-trading/trade/open-positions.js":
 2,
 "algo-trading/trade/book-panel.js":
-19,
+20,
 "algo-trading/trade/config-stub.js":
 1,
 "algo-trading/trade/pnl-privacy-stub.js":
@@ -554,15 +554,15 @@ Object.freeze({
 "terminal/terminal-prefs.js":
 25,
 "terminal/terminal-table.js":
-39,
+40,
 "terminal/terminal-checklist.js":
 1,
 "telegram-bot-public.js":
 1,
 "watchlist.js":
-107,
+108,
 "screener.js":
-114,
+115,
 "ipad-web-viewport.js":
 2,
 "screener-widget-guard.js":
@@ -610,11 +610,11 @@ Object.freeze({
 "screener-widget-zoom.js":
 31,
 "release-marker.js":
-114,
+115,
 "focus-blur-after-pick.js":
 3,
 "site-boot.js":
-123,
+124,
 "site-header.js":
 6,
 "site-header-nav.js":
@@ -624,7 +624,7 @@ Object.freeze({
 "site-header-nav-desktop.js":
 2,
 "desktop-app-ui.js":
-7,
+8,
 "suppress-native-context-menu.js":
 4,
 "charts-lib-boot.js":
@@ -632,7 +632,7 @@ Object.freeze({
 "chart-import.js":
 53,
 "chart-widget-host.js":
-23,
+25,
 "tablet-gesture-policy.js":
 2,
 "tablet-widget-chart.js":
@@ -664,9 +664,9 @@ Object.freeze({
 "terminal-tablet-controller.js":
 7,
 "drawings.js":
-264,
+266,
 "drawings/init.js":
-188,
+190,
 "drawings/draw-prefs.js":
 6,
 "drawings/draw-edit-desktop.js":
@@ -676,7 +676,7 @@ Object.freeze({
 "drawings/drawings-persist.js":
 13,
 "drawings/draw-style-bar.js":
-39,
+40,
 "drawings/draw-templates.js":
 13,
 "drawings/draw-alerts-chart.js":
@@ -736,6 +736,10 @@ Object.freeze({
 "drawings/channel-spec.js":
 1,
 "drawings/draw-channel-settings.js":
+1,
+"drawings/draw-coords.js":
+1,
+"drawings/draw-coord-settings.js":
 1,
 "drawings/elliott-spec.js":
 5,
@@ -903,9 +907,9 @@ Object.freeze({
 "screener.css":
 58,
 "terminal.css":
-179,
+180,
 "watchlist.css":
-58,
+59,
 "terminal-layout.css":
 104,
 "script-page.css":

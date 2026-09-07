@@ -163,7 +163,7 @@ new CustomEvent(
 );
 
 void import(
-"./terminal/terminal-table.js?v=39"
+"./terminal/terminal-table.js?v=40"
 ).then(
 ({
 renderList

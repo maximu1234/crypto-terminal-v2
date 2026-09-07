@@ -1113,7 +1113,7 @@ sym;
 
 el.innerHTML =
 `
-<span class="col-ticker" title="${escapeHtml(ticker)}">
+<span class="col-ticker">
 <span class="trade-book-side ${sideClass(row.side)}" aria-hidden="true"></span>
 <span class="trade-book-ticker-text">${escapeHtml(ticker)}</span>
 </span>
@@ -1348,7 +1348,7 @@ orderId;
 
 el.innerHTML =
 `
-<span class="col-ticker" title="${escapeHtml(ticker)}">
+<span class="col-ticker">
 <span class="trade-book-ticker-text">${escapeHtml(ticker)}</span>
 </span>
 <span class="col-order-type">${orderTypeLabel(
@@ -1524,7 +1524,7 @@ return `
 <span class="col-date">${formatAlertDate(
 alert.createdAt
 )}</span>
-<span class="col-ticker" title="${escapeHtml(ticker)}">
+<span class="col-ticker">
 <span class="trade-book-ticker-text">${escapeHtml(ticker)}</span>
 </span>
 <span class="col-action">

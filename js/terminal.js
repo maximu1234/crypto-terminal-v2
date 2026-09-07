@@ -205,7 +205,7 @@ setCoinsTableHooks,
 syncCoinListFreezeFromFlagMenus,
 getExtraCoinMarkets,
 isExtraCoinMarket
-} from "./terminal/terminal-table.js?v=39";
+} from "./terminal/terminal-table.js?v=40";
 
 import {
 createCoinsChartSwitchVeil
@@ -226,7 +226,7 @@ import {
 initTerminalMultiChart,
 syncPrimaryTfToLayout,
 isTerminalMultiChartLayout
-} from "./terminal-multi-chart.js?v=13";
+} from "./terminal-multi-chart.js?v=14";
 
 import {
 mountTerminalLayoutPicker
@@ -3736,7 +3736,7 @@ const {
 initWidgetDrawings
 } =
 await import(
-"./chart-widget-host.js?v=23"
+"./chart-widget-host.js?v=25"
 );
 const {
 initChartIndicators

@@ -166,7 +166,7 @@ createDrawingsPersist
 
 import {
 createDrawStyleBar
-} from "./draw-style-bar.js?v=39";
+} from "./draw-style-bar.js?v=40";
 
 import {
 createDrawAlertsChart
@@ -4538,6 +4538,10 @@ deleteSelected,
 flushDeferredFibSettingsSync,
 getDesktopEdit:()=>desktopEdit,
 getSymbol,
+getCandles:()=>
+getCandles?.() ||
+[],
+getTf,
 getStyleDelegate
 });
 
@@ -5591,7 +5595,12 @@ redraw,
 saveToolDefaults,
 saveGlobalStyle,
 baseDefaultStyle,
-deleteSelected
+deleteSelected,
+getCandles: ()=>
+getCandles?.() ||
+[],
+getTf
+
 };
 
 },

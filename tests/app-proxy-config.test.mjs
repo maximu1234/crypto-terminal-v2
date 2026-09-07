@@ -201,4 +201,12 @@ test("Bybit REST from main goes through SOCKS; candle history stays direct; publ
     PROXY_BYPASS_RULES,
     /api\.bytick\.com/
   );
+  assert.match(
+    PROXY_BYPASS_RULES,
+    /\*\.supabase\.co/
+  );
+  assert.match(
+    PROXY_BYPASS_RULES,
+    /\*\.up\.railway\.app/
+  );
 });

@@ -1371,6 +1371,144 @@ body.tablet-chart .widget-chart-wrap.chart-touch-locked .chart{
     padding:10px 12px;
 }
 
+.draw-settings-popover--coords{
+    min-width:280px;
+    width:max-content;
+    max-width:min(420px,calc(100vw - 24px));
+}
+
+.draw-settings-shell{
+    display:flex;
+    flex-direction:column;
+    min-width:0;
+}
+
+.draw-settings-tabs{
+    display:flex;
+    gap:16px;
+    margin:-4px -12px 12px;
+    padding:0 12px;
+    border-bottom:1px solid #2a2e39;
+}
+
+.draw-settings-tab{
+    appearance:none;
+    background:none;
+    border:none;
+    padding:8px 0 10px;
+    margin:0;
+    font-size:13px;
+    color:#787b86;
+    cursor:pointer;
+    box-shadow:inset 0 -2px 0 transparent;
+}
+
+.draw-settings-tab:hover{
+    color:#d1d4dc;
+}
+
+.draw-settings-tab.is-active{
+    color:#f8fafc;
+    box-shadow:inset 0 -2px 0 #f8fafc;
+}
+
+.draw-coord-settings{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    min-width:260px;
+}
+
+.draw-coord-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+}
+
+.draw-coord-label{
+    font-size:12px;
+    color:#d1d4dc;
+    white-space:nowrap;
+}
+
+.draw-coord-fields{
+    display:flex;
+    align-items:center;
+    gap:8px;
+}
+
+.draw-coord-input-wrap{
+    position:relative;
+    display:inline-flex;
+    align-items:stretch;
+}
+
+.draw-settings-popover .draw-coord-input{
+    width:96px;
+    padding:6px 22px 6px 8px;
+    text-align:right;
+    font-variant-numeric:tabular-nums;
+    box-sizing:border-box;
+    background:#13181e;
+    border:1px solid #374151;
+    color:#e5e7eb;
+    border-radius:6px;
+    font-size:12px;
+}
+
+.draw-settings-popover .draw-coord-input:focus{
+    outline:none;
+    border-color:#2962ff;
+}
+
+.draw-coord-spin{
+    position:absolute;
+    top:1px;
+    right:1px;
+    bottom:1px;
+    width:16px;
+    display:flex;
+    flex-direction:column;
+}
+
+.draw-coord-spin-btn{
+    flex:1;
+    margin:0;
+    padding:0;
+    border:none;
+    background:transparent;
+    cursor:pointer;
+    position:relative;
+}
+
+.draw-coord-spin-btn:hover{
+    background:rgba(255,255,255,0.06);
+}
+
+.draw-coord-spin-up::before,
+.draw-coord-spin-down::before{
+    content:"";
+    position:absolute;
+    left:50%;
+    width:0;
+    height:0;
+    border-left:3px solid transparent;
+    border-right:3px solid transparent;
+}
+
+.draw-coord-spin-up::before{
+    top:2px;
+    transform:translateX(-50%);
+    border-bottom:4px solid #9ca3af;
+}
+
+.draw-coord-spin-down::before{
+    bottom:2px;
+    transform:translateX(-50%);
+    border-top:4px solid #9ca3af;
+}
+
 .fib-levels-global{
     display:flex;
     align-items:center;
