@@ -7,9 +7,11 @@ import {
 collectKlineRows,
 queueKlineByTime,
 takeQueuedKlinesSorted
-} from "./chart/live-bar-roll.js?v=3";
+} from "./chart/live-bar-roll.js?v=4";
 
 let socket = null;
+
+let socketGen = 0;
 
 let reconnectTimer = null;
 
@@ -504,6 +506,8 @@ return;
 
 intentionalClose = false;
 
+socketGen += 1;
+const thisGen = socketGen;
 const wsUrl =
 getBybitWsUrl();
 const openedAt =
@@ -514,12 +518,26 @@ new WebSocket(wsUrl);
 
 socket.onopen = ()=>{
 
+if(
+thisGen !==
+socketGen
+){
+return;
+}
+
 wsConnectFailures = 0;
 resubscribeAll();
 
 };
 
 socket.onmessage = event=>{
+
+if(
+thisGen !==
+socketGen
+){
+return;
+}
 
 const msg =
 JSON.parse(event.data);
@@ -534,6 +552,13 @@ socket.onclose = ()=>{
 
 const livedMs =
 Date.now() - openedAt;
+
+if(
+thisGen !==
+socketGen
+){
+return;
+}
 
 socket = null;
 
@@ -563,8 +588,63 @@ livedMs < 3000
 };
 
 socket.onerror = ()=>{
+
+if(
+thisGen !==
+socketGen
+){
+return;
+}
+
 socket?.close();
+
 };
+
+}
+
+export function forceReconnectPublicSocket(){
+
+wsConnectFailures = 0;
+
+if(reconnectTimer){
+clearTimeout(reconnectTimer);
+reconnectTimer = null;
+}
+
+if(klineFlushTimer){
+clearTimeout(klineFlushTimer);
+klineFlushTimer = null;
+}
+
+pendingCandleByTopic.clear();
+
+if(
+hasDesktopPublicWs()
+){
+syncDesktopTopics({
+reset:
+true
+});
+return;
+}
+
+socketGen += 1;
+const old = socket;
+socket = null;
+
+if(old){
+intentionalClose = true;
+try{
+old.close();
+}catch{
+/* ignore */
+}
+intentionalClose = false;
+}
+
+if(activeTopics.size){
+ensureSocket();
+}
 
 }
 
@@ -694,33 +774,7 @@ window.addEventListener(
 "bybit-ws-reset",
 ()=>{
 
-wsConnectFailures = 0;
-
-if(reconnectTimer){
-clearTimeout(reconnectTimer);
-reconnectTimer = null;
-}
-
-if(
-hasDesktopPublicWs()
-){
-syncDesktopTopics({
-reset:
-true
-});
-return;
-}
-
-if(socket){
-intentionalClose = true;
-socket.close();
-socket = null;
-intentionalClose = false;
-}
-
-if(activeTopics.size){
-ensureSocket();
-}
+forceReconnectPublicSocket();
 
 }
 );

@@ -49,7 +49,7 @@ Object.freeze({
 "exchanges/bingx/markets.js":
 3,
 "exchanges/bingx/ws.js":
-18,
+19,
 "exchanges/bingx/intervals.js":
 1,
 "terminal-page-boot.js":
@@ -61,7 +61,7 @@ Object.freeze({
 "trade-desktop-boot.js":
 27,
 "trade-web/client.js":
-3,
+4,
 "trade-web/boot.js":
 5,
 "desktop-menu-bar-tray.js":
@@ -247,11 +247,11 @@ Object.freeze({
 "chart-page.js":
 7,
 "terminal.js":
-454,
+455,
 "terminal-multi-chart.js":
 14,
 "terminal-screener-chart-pane.js":
-20,
+21,
 "terminal-layout-picker.js":
 11,
 "terminal/terminal-chart-layout.js":
@@ -299,7 +299,7 @@ Object.freeze({
 "script-page-storage.js":
 16,
 "script-page-widgets.js":
-24,
+25,
 "script-terminal-status.js":
 11,
 "script-scan-background.js":
@@ -307,7 +307,7 @@ Object.freeze({
 "script-favorites-list.js":
 2,
 "algo-trading.js":
-230,
+231,
 "algo-trading-page-boot.js":
 20,
 "algo-trading-list.js":
@@ -323,7 +323,7 @@ Object.freeze({
 "algo-trading/lite-history.js":
 1,
 "algo-trading/live-candle.js":
-2,
+3,
 "algo-trading/page-format.js":
 1,
 "algo-trading/page-dom.js":
@@ -566,15 +566,15 @@ Object.freeze({
 "terminal/terminal-prefs.js":
 25,
 "terminal/terminal-table.js":
-41,
+42,
 "terminal/terminal-checklist.js":
 1,
 "telegram-bot-public.js":
 1,
 "watchlist.js":
-109,
+110,
 "screener.js":
-117,
+118,
 "ipad-web-viewport.js":
 2,
 "screener-widget-guard.js":
@@ -620,13 +620,13 @@ Object.freeze({
 "screener-pattern-overlay.js":
 10,
 "screener-widget-zoom.js":
-31,
+32,
 "release-marker.js":
 116,
 "focus-blur-after-pick.js":
 3,
 "site-boot.js":
-128,
+129,
 "site-header.js":
 7,
 "site-header-nav.js":
@@ -668,7 +668,7 @@ Object.freeze({
 "chart/price-series-host.js":
 9,
 "chart/live-bar-roll.js":
-3,
+4,
 "chart/price-scale-mode.js":
 3,
 "chart-tablet-gestures.js":
@@ -805,9 +805,15 @@ Object.freeze({
 1,
 
 "ws.js":
-20,
+21,
+"market-ws.js":
+2,
+"market-ws-resume.js":
+1,
+"market-ws-resume-policy.js":
+1,
 "tickers.js":
-28,
+29,
 
 /* ── JS: cloud / auth ── */
 "cloud-sync.js":
@@ -873,7 +879,7 @@ Object.freeze({
 "alerts-page.js":
 71,
 "alert-monitor.js":
-73,
+74,
 "alert-deep-link-exchange.js":
 2,
 "alert-deep-link-url.js":

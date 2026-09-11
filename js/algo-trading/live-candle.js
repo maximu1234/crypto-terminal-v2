@@ -5,18 +5,20 @@
  */
 import {
 applyLiveOhlcBar
-} from "../chart/live-bar-roll.js?v=3";
+} from "../chart/live-bar-roll.js?v=4";
 
 export function mergeLiveCandle(
 candles,
 candle,
-maxLen
+maxLen,
+periodSec = 0
 ){
 
 return applyLiveOhlcBar(
 candles,
 candle,
-maxLen
+maxLen,
+periodSec
 ) !=
 null;
 

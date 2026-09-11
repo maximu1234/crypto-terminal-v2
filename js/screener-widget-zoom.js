@@ -31,16 +31,18 @@ alignRsiWithCandleTimes
 } from "./indicators.js?v=3";
 
 import {
-subscribeKline
-} from "./market-ws.js?v=1";
+subscribeKline,
+bindLiveCandleCatchup
+} from "./market-ws.js?v=2";
 
 import {
 ensureOhlcRollover,
 ingestLiveOhlcKline,
 lastOhlcBar,
 liveBarPeriodSec,
+paintCatchupLiveSeries,
 paintLiveOhlcSeries
-} from "./chart/live-bar-roll.js?v=3";
+} from "./chart/live-bar-roll.js?v=4";
 
 import {
 SCREENER_WIDGET_OSCILLATOR_CHANGED,
@@ -1519,8 +1521,47 @@ kind:
 1000
 );
 
+const unbindCatchup =
+bindLiveCandleCatchup({
+getSymbol:
+()=>
+state.symbol,
+getTf:
+()=>
+state.tf,
+getCandles:
+()=>
+state.candles,
+maxLen:
+SCREENER_MAX_BARS,
+isAlive:
+()=>
+!state.disposed &&
+!!state.candles?.length,
+paint:
+(rows, info)=>{
+paintCatchupLiveSeries(
+state.series,
+rows,
+state.chart,
+info?.appended,
+info?.prevLen
+);
+paintZoomLive(
+state,
+{
+isNewBar:
+false,
+kind:
+"hist"
+}
+);
+}
+});
+
 state.unsubKline =
 ()=>{
+unbindCatchup?.();
 unsub?.();
 clearInterval(
 timer

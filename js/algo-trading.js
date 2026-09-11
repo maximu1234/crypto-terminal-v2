@@ -17,8 +17,9 @@ syncLinkedChartTimescales
 import {
 applyLiveSeriesUpdate,
 ensureOhlcRollover,
-liveBarPeriodSec
-} from "./chart/live-bar-roll.js?v=3";
+liveBarPeriodSec,
+paintCatchupLiveSeries
+} from "./chart/live-bar-roll.js?v=4";
 
 import {
 terminalVisibleBars,
@@ -46,8 +47,9 @@ getActiveExchangeId
 } from "./market-api.js?v=6";
 
 import {
-subscribeKline
-} from "./market-ws.js?v=1";
+subscribeKline,
+bindLiveCandleCatchup
+} from "./market-ws.js?v=2";
 
 import {
 mountAlgoTradingCoinList,
@@ -207,7 +209,7 @@ resolveInitialSymbol
 
 import {
 mergeLiveCandle
-} from "./algo-trading/live-candle.js?v=2";
+} from "./algo-trading/live-candle.js?v=3";
 
 import {
 formatTurnover24Label
@@ -737,6 +739,8 @@ let candles =
 let loadSeq =
 0;
 let unsubKline =
+null;
+let unbindLiveCatchup =
 null;
 let liveBarRollTimer =
 null;
@@ -1948,6 +1952,15 @@ buildDisplayCandles
 function stopKline(){
 
 try{
+unbindLiveCatchup?.();
+}catch{
+/* ignore */
+}
+
+unbindLiveCatchup =
+null;
+
+try{
 unsubKline?.();
 }catch{
 /* ignore */
@@ -2344,7 +2357,10 @@ if(
 !mergeLiveCandle(
 candles,
 candle,
-0
+0,
+liveBarPeriodSec(
+tf
+)
 )
 ){
 return;
@@ -2437,6 +2453,50 @@ applyLiveCandleTick();
 },
 1000
 );
+
+unbindLiveCatchup =
+bindLiveCandleCatchup({
+getSymbol:
+()=>
+symbol,
+getTf:
+()=>
+tf,
+getCandles:
+()=>
+candles,
+maxLen:
+0,
+isAlive:
+()=>
+!disposed &&
+seq ===
+loadSeq,
+paint:
+(rows, info)=>{
+paintCatchupLiveSeries(
+series,
+buildDisplayCandles(),
+chart,
+info?.appended,
+info?.prevLen
+);
+if(
+info?.appended
+){
+applyCandleData(
+{
+light:
+true,
+skipAnalysis:
+true
+}
+);
+}else{
+applyLiveCandleTick();
+}
+}
+});
 
 listApi?.highlight?.();
 

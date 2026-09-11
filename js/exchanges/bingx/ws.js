@@ -16,10 +16,13 @@ tfToBingxInterval
 import {
 queueKlineByTime,
 takeQueuedKlinesSorted
-} from "../../chart/live-bar-roll.js?v=3";
+} from "../../chart/live-bar-roll.js?v=4";
 
 let socket =
 null;
+
+let socketGen =
+0;
 
 let reconnectTimer =
 null;
@@ -523,6 +526,10 @@ return;
 intentionalClose =
 false;
 
+socketGen += 1;
+const thisGen =
+socketGen;
+
 socket =
 new WebSocket(
 getBingxWsUrl()
@@ -533,11 +540,24 @@ socket.binaryType =
 
 socket.onopen =
 ()=>{
+if(
+thisGen !==
+socketGen
+){
+return;
+}
 resubscribeAll();
 };
 
 socket.onmessage =
 async event=>{
+
+if(
+thisGen !==
+socketGen
+){
+return;
+}
 
 if(
 handleSocketPing(
@@ -701,6 +721,13 @@ tick
 socket.onclose =
 ()=>{
 
+if(
+thisGen !==
+socketGen
+){
+return;
+}
+
 socket =
 null;
 
@@ -740,13 +767,33 @@ null;
 }
 
 if(
-socket
+klineFlushTimer
+){
+clearTimeout(
+klineFlushTimer
+);
+klineFlushTimer =
+null;
+}
+
+pendingCandleByTopic.clear();
+
+socketGen += 1;
+const old =
+socket;
+socket =
+null;
+
+if(
+old
 ){
 intentionalClose =
 true;
-socket.close();
-socket =
-null;
+try{
+old.close();
+}catch{
+/* ignore */
+}
 intentionalClose =
 false;
 }

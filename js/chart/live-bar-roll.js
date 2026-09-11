@@ -301,7 +301,8 @@ bar
 export function applyLiveOhlcBar(
 candles,
 bar,
-maxLen = 0
+maxLen = 0,
+periodSec = 0
 ){
 
 if(!Array.isArray(candles) || !bar || bar.time == null){
@@ -332,6 +333,12 @@ return "last";
 }
 
 if(time > last.time){
+const period = Math.max(0, Math.floor(Number(periodSec) || 0));
+
+if(period > 0 && time > Number(last.time) + period){
+return null;
+}
+
 candles.push(next);
 
 if(maxLen && candles.length > maxLen){
@@ -415,7 +422,8 @@ const lenBefore = Array.isArray(candles) ? candles.length : 0;
 const kind = applyLiveOhlcBar(
 candles,
 candle,
-maxLen
+maxLen,
+periodSec
 );
 const shifted = Boolean(
 kind === "new" &&
@@ -527,6 +535,246 @@ byTime.set(time, {
 ...candle,
 time
 });
+
+}
+
+export function upsertOhlcBar(
+candles,
+bar,
+maxLen = 0
+){
+
+if(!Array.isArray(candles) || !bar || bar.time == null){
+return null;
+}
+
+const time = Number(bar.time);
+
+if(!Number.isFinite(time)){
+return null;
+}
+
+const next = {
+...bar,
+time
+};
+
+if(!candles.length){
+candles.push(next);
+return "new";
+}
+
+const last = candles[candles.length - 1];
+const lastTime = Number(last.time);
+
+if(time === lastTime){
+candles[candles.length - 1] = next;
+return "last";
+}
+
+if(time > lastTime){
+candles.push(next);
+
+if(maxLen && candles.length > maxLen){
+candles.shift();
+}
+
+return "new";
+}
+
+for(let i = candles.length - 2; i >= 0; i--){
+const t = Number(candles[i].time);
+
+if(t === time){
+candles[i] = next;
+return "hist";
+}
+
+if(t < time){
+candles.splice(i + 1, 0, next);
+
+if(maxLen && candles.length > maxLen){
+candles.shift();
+}
+
+return "insert";
+}
+}
+
+candles.unshift(next);
+
+if(maxLen && candles.length > maxLen){
+candles.pop();
+}
+
+return "insert";
+
+}
+
+/**
+ * Keep only bars that chain from lastTime without skipping a period.
+ * Incoming may be unsorted. Older history is never included.
+ */
+export function sliceContiguousCatchupBars(
+lastTime,
+periodSec,
+incoming
+){
+
+const period = Math.max(1, Math.floor(Number(periodSec) || 0));
+const start = Number(lastTime);
+
+if(!period || !Number.isFinite(start) || !Array.isArray(incoming) || !incoming.length){
+return [];
+}
+
+const byTime = new Map();
+
+for(const bar of incoming){
+const time = Number(bar?.time);
+
+if(!Number.isFinite(time)){
+continue;
+}
+
+byTime.set(time, {
+...bar,
+time
+});
+}
+
+const out = [];
+
+if(byTime.has(start)){
+out.push(byTime.get(start));
+}
+
+let t = start + period;
+
+while(byTime.has(t)){
+out.push(byTime.get(t));
+t += period;
+}
+
+return out;
+
+}
+
+/**
+ * Merge REST klines into the live buffer without dropping older history.
+ * With periodSec, skip a disconnected suffix so setData cannot draw a hole.
+ */
+export function mergeCatchupOhlcBars(
+candles,
+incoming,
+maxLen = 0,
+periodSec = 0
+){
+
+if(!Array.isArray(candles) || !Array.isArray(incoming) || !incoming.length){
+return {
+changed: false,
+appended: 0,
+patched: false
+};
+}
+
+const last = lastOhlcBar(candles);
+const rows = periodSec > 0 && last
+? sliceContiguousCatchupBars(
+last.time,
+periodSec,
+incoming
+)
+: incoming;
+
+if(!rows.length){
+return {
+changed: false,
+appended: 0,
+patched: false
+};
+}
+
+let appended = 0;
+let patched = false;
+
+for(const raw of rows){
+const kind = upsertOhlcBar(
+candles,
+raw,
+maxLen
+);
+
+if(kind === "new"){
+appended += 1;
+}
+
+if(
+kind === "hist" ||
+kind === "insert" ||
+kind === "last"
+){
+patched = true;
+}
+}
+
+return {
+changed: appended > 0 || patched,
+appended,
+patched
+};
+
+}
+
+export function paintCatchupLiveSeries(
+series,
+candles,
+chart,
+appended = 0,
+prevLen = 0
+){
+
+if(!series || !Array.isArray(candles) || !candles.length){
+return;
+}
+
+const ts = chart?.timeScale?.();
+let range = null;
+const lenBefore = Number.isFinite(prevLen) && prevLen > 0
+? prevLen
+: Math.max(0, candles.length - Math.max(0, appended));
+let followLive = true;
+
+try{
+range = ts?.getVisibleLogicalRange?.() || null;
+
+if(range && Number.isFinite(range.to)){
+followLive = range.to >= lenBefore - 4;
+}
+}catch{
+range = null;
+}
+
+try{
+series.setData(candles);
+}catch{
+/* ignore */
+}
+
+if(!ts){
+return;
+}
+
+try{
+if(followLive && typeof ts.scrollToRealTime === "function"){
+ts.scrollToRealTime();
+}else if(range && typeof ts.setVisibleLogicalRange === "function"){
+ts.setVisibleLogicalRange(range);
+}
+}catch{
+/* ignore */
+}
 
 }
 

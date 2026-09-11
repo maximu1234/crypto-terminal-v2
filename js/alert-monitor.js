@@ -12,7 +12,7 @@ normalizeAlertTf
 
 import {
 subscribeKline
-} from "./market-ws.js?v=1";
+} from "./market-ws.js?v=2";
 
 import {
 EXCHANGE_CHANGED_EVENT,

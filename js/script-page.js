@@ -3,7 +3,7 @@
  */
 import {
 createScriptWidgetGrid
-} from "./script-page-widgets.js?v=24";
+} from "./script-page-widgets.js?v=25";
 
 import {
 getSharedPatternScanner,
@@ -36,7 +36,7 @@ periodMsById
 
 import {
 fetchTickersInto
-} from "./tickers.js?v=28";
+} from "./tickers.js?v=29";
 
 import {
 parseTradingViewSymbolList,

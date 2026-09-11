@@ -1836,7 +1836,7 @@ pauseRegistryCloudSync(
 );
 });
 
-void import("./alert-monitor.js?v=73").then(m=>{
+void import("./alert-monitor.js?v=74").then(m=>{
 m.armAlertQuietAfterDrag(
 sym,
 sid
@@ -2536,7 +2536,7 @@ sym
 );
 
 if(existing){
-void import("./alert-monitor.js?v=73").then(m=>{
+void import("./alert-monitor.js?v=74").then(m=>{
 m.notifyAlertTriggered({
 symbol: sym,
 shapeId: sid,
@@ -2807,7 +2807,7 @@ dispatchPriceAlertsChanged(
 sym
 );
 
-void import("./alert-monitor.js?v=73").then(m=>{
+void import("./alert-monitor.js?v=74").then(m=>{
 m.notifyAlertTriggered({
 symbol: sym,
 shapeId: sid,

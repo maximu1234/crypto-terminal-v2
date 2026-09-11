@@ -32,7 +32,7 @@ import {
 } from "../market-api.js?v=6";
 import {
   installWebTradingShell
-} from "./client.js?v=3";
+} from "./client.js?v=4";
 
 const TRADE_CSS = [
   "trade-exchange-settings.css",

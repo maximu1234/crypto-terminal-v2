@@ -114,6 +114,17 @@ restartPolling();
 }
 );
 
+window.addEventListener(
+"market-ws-foreground",
+()=>{
+if(
+subscribers.length
+){
+void loadTickers();
+}
+}
+);
+
 }
 
 function buildBybitTickerPayload(

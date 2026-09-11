@@ -52,8 +52,9 @@ mountWidgetTabletChart
 
 import {
 subscribeKline,
-subscribeTicker
-} from "./market-ws.js?v=1";
+subscribeTicker,
+bindLiveCandleCatchup
+} from "./market-ws.js?v=2";
 
 import {
 applyLiveLastPriceToCandles,
@@ -62,8 +63,9 @@ ensureOhlcRollover,
 ingestLiveOhlcKline,
 lastOhlcBar,
 liveBarPeriodSec,
+paintCatchupLiveSeries,
 paintLiveOhlcSeries
-} from "./chart/live-bar-roll.js?v=3";
+} from "./chart/live-bar-roll.js?v=4";
 
 import {
 getWidgetToolbarHtml,
@@ -1317,8 +1319,62 @@ true
 1000
 );
 
+const unbindCatchup =
+bindLiveCandleCatchup({
+getSymbol:
+()=>
+symbol,
+getTf:
+()=>
+tf,
+getCandles:
+()=>
+candles,
+maxLen:
+6000,
+isAlive:
+()=>
+seq ===
+loadSeq.id,
+paint:
+(rows, info)=>{
+paintCatchupLiveSeries(
+series,
+rows,
+chart,
+info?.appended,
+info?.prevLen
+);
+const last =
+lastOhlcBar(
+rows
+);
+if(
+last
+){
+applyChartPriceFormat(
+series,
+last.close
+);
+priceEl.innerText =
+last.close.toFixed(
+2
+);
+}
+if(
+entry.rsiSeries
+){
+updateTerminalWidgetRsiData(
+entry
+);
+}
+priceHudCtrl?.refresh?.();
+}
+});
+
 entry.unsubKline =
 ()=>{
+unbindCatchup?.();
 unsubKline?.();
 unsubTicker?.();
 clearInterval(

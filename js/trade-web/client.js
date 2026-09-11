@@ -145,6 +145,8 @@ export function createWebTradingApi() {
   const streamListeners = new Set();
   let ws = null;
   let reconnectTimer = null;
+  let streamGen = 0;
+  let hiddenAt = 0;
 
   function emit(payload) {
     for (const fn of streamListeners) {
@@ -162,6 +164,8 @@ export function createWebTradingApi() {
     if (!origin || !token || typeof WebSocket === "undefined") {
       return;
     }
+    streamGen += 1;
+    const thisGen = streamGen;
     try {
       ws?.close();
     } catch {
@@ -170,6 +174,9 @@ export function createWebTradingApi() {
     const url = `${origin.replace(/^http/, "ws")}/trade/stream`;
     ws = new WebSocket(url);
     ws.onopen = () => {
+      if (thisGen !== streamGen) {
+        return;
+      }
       try {
         ws.send(JSON.stringify({ type: "auth", token }));
       } catch {
@@ -177,6 +184,9 @@ export function createWebTradingApi() {
       }
     };
     ws.onmessage = (event) => {
+      if (thisGen !== streamGen) {
+        return;
+      }
       try {
         emit(JSON.parse(String(event.data || "{}")));
       } catch {
@@ -184,12 +194,36 @@ export function createWebTradingApi() {
       }
     };
     ws.onclose = () => {
+      if (thisGen !== streamGen) {
+        return;
+      }
       ws = null;
       clearTimeout(reconnectTimer);
       reconnectTimer = setTimeout(() => {
         void connectStream();
       }, 3000);
     };
+  }
+
+  if (typeof document !== "undefined") {
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "hidden") {
+        hiddenAt = Date.now();
+        return;
+      }
+      if (document.visibilityState !== "visible") {
+        return;
+      }
+      if (globalThis.window?.cryptoTerminalDesktop?.isDesktop) {
+        return;
+      }
+      const hiddenMs = hiddenAt ? Date.now() - hiddenAt : 0;
+      hiddenAt = 0;
+      if (hiddenMs < 800) {
+        return;
+      }
+      void connectStream();
+    });
   }
 
   void connectStream();

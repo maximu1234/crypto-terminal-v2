@@ -7,11 +7,14 @@ collectKlineRows,
 ensureOhlcRollover,
 ingestLiveOhlcKline,
 liveBarPeriodSec,
+mergeCatchupOhlcBars,
 mergeLiveBarIntoDisplay,
 nextOhlcOpenTime,
 queueKlineByTime,
+sliceContiguousCatchupBars,
 takeQueuedKlinesSorted,
-UNIX_MONDAY_OPEN_SEC
+UNIX_MONDAY_OPEN_SEC,
+upsertOhlcBar
 } from "../js/chart/live-bar-roll.js";
 
 test("liveBarPeriodSec matches chart TFs", () => {
@@ -211,4 +214,106 @@ test("ingestLiveOhlcKline reports a shifted cap and keeps a hist confirm", () =>
   assert.equal(next.shifted, true);
   assert.equal(capped.length, 2);
   assert.equal(capped[0].time, 1060);
+});
+
+test("applyLiveOhlcBar refuses a jump that would leave a hole", () => {
+  const candles = [
+    { time: 1000, open: 10, high: 12, low: 9, close: 11, volume: 1 }
+  ];
+  assert.equal(
+    applyLiveOhlcBar(
+      candles,
+      {
+        time: 1180,
+        open: 11,
+        high: 12,
+        low: 11,
+        close: 12,
+        volume: 1
+      },
+      0,
+      60
+    ),
+    null
+  );
+  assert.equal(candles.length, 1);
+  assert.equal(candles[0].time, 1000);
+});
+
+test("applyLiveOhlcBar still appends the next contiguous period", () => {
+  const candles = [
+    { time: 1000, open: 10, high: 12, low: 9, close: 11, volume: 1 }
+  ];
+  assert.equal(
+    applyLiveOhlcBar(
+      candles,
+      {
+        time: 1060,
+        open: 11,
+        high: 12,
+        low: 11,
+        close: 12,
+        volume: 1
+      },
+      0,
+      60
+    ),
+    "new"
+  );
+  assert.equal(candles.length, 2);
+});
+
+test("upsertOhlcBar inserts a missing middle bar", () => {
+  const candles = [
+    { time: 1000, open: 10, high: 12, low: 9, close: 11, volume: 1 },
+    { time: 1120, open: 12, high: 13, low: 12, close: 12.5, volume: 1 }
+  ];
+  assert.equal(
+    upsertOhlcBar(candles, {
+      time: 1060,
+      open: 11,
+      high: 11.5,
+      low: 10.5,
+      close: 11.2,
+      volume: 1
+    }),
+    "insert"
+  );
+  assert.equal(candles.length, 3);
+  assert.equal(candles[1].time, 1060);
+  assert.equal(candles[0].time, 1000);
+  assert.equal(candles[2].time, 1120);
+});
+
+test("mergeCatchupOhlcBars keeps older history and drops a disconnected suffix", () => {
+  const candles = [
+    { time: 900, open: 9, high: 10, low: 8, close: 9.5, volume: 1 },
+    { time: 1000, open: 10, high: 12, low: 9, close: 11, volume: 1 }
+  ];
+  const result = mergeCatchupOhlcBars(
+    candles,
+    [
+      { time: 1000, open: 10, high: 13, low: 9, close: 12, volume: 2 },
+      { time: 1060, open: 12, high: 12.5, low: 11.5, close: 12.2, volume: 1 },
+      { time: 2000, open: 20, high: 21, low: 19, close: 20, volume: 1 }
+    ],
+    0,
+    60
+  );
+  assert.equal(result.appended, 1);
+  assert.equal(result.patched, true);
+  assert.equal(candles[0].time, 900);
+  assert.equal(candles[1].high, 13);
+  assert.equal(candles[2].time, 1060);
+  assert.equal(candles.length, 3);
+});
+
+test("sliceContiguousCatchupBars stops before a missing period", () => {
+  const rows = sliceContiguousCatchupBars(1000, 60, [
+    { time: 1000, close: 1 },
+    { time: 1060, close: 2 },
+    { time: 1180, close: 4 }
+  ]);
+  assert.equal(rows.length, 2);
+  assert.equal(rows[1].time, 1060);
 });

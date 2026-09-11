@@ -1,6 +1,6 @@
 import {
 initAlertMonitor
-} from "./alert-monitor.js?v=73";
+} from "./alert-monitor.js?v=74";
 
 import {
 ensureCloudReady
@@ -80,7 +80,7 @@ shouldRunScriptBackgroundJobs
 
 import {
 installWebTradingShell
-} from "./trade-web/client.js?v=3";
+} from "./trade-web/client.js?v=4";
 
 if(
 !window.cryptoTerminalDesktop?.isDesktop

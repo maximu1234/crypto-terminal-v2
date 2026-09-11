@@ -978,7 +978,7 @@ const {
 installWebTradingShell
 } =
 await import(
-"./trade-web/client.js?v=3"
+"./trade-web/client.js?v=4"
 );
 installWebTradingShell();
 }

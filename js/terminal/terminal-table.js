@@ -11,13 +11,14 @@ isExchangeTradingEnabled
 
 import {
 connectKlineStream,
-subscribeTicker
-} from "../market-ws.js?v=1";
+subscribeTicker,
+bindLiveCandleCatchup
+} from "../market-ws.js?v=2";
 
 import {
 connectTickerStream,
 fetchTickersInto
-} from "../tickers.js?v=28";
+} from "../tickers.js?v=29";
 
 import {
 createTickerUiBatcher
@@ -25,7 +26,7 @@ createTickerUiBatcher
 
 import {
 processAlertCandle
-} from "../alert-monitor.js?v=73";
+} from "../alert-monitor.js?v=74";
 
 import {
 getFavoriteGroup,
@@ -40,8 +41,9 @@ isTradePage
 import {
 applyLiveOhlcBar,
 ensureOhlcRollover,
-liveBarPeriodSec
-} from "../chart/live-bar-roll.js?v=3";
+liveBarPeriodSec,
+paintCatchupLiveSeries
+} from "../chart/live-bar-roll.js?v=4";
 
 import {
 canonicalChartSymbol,
@@ -631,6 +633,8 @@ let pendingLiveBar =
 null;
 let pendingLiveBarSymbol =
 "";
+let unbindLiveCatchup =
+null;
 
 function paintLiveChartBar(
 bar
@@ -859,6 +863,10 @@ flushPendingLiveBar,
 
 export function stopLivePriceFallbacks(){
 
+unbindLiveCatchup?.();
+unbindLiveCatchup =
+null;
+
 if(
 liveMarkUnsub
 ){
@@ -1028,7 +1036,10 @@ const kind =
 applyLiveOhlcBar(
 coinsState().candles,
 bar,
-4000
+4000,
+liveBarPeriodSec(
+coinsState().currentTF
+)
 );
 
 if(
@@ -1066,6 +1077,39 @@ coinsState().currentTF
 
 }
 
+});
+
+unbindLiveCatchup =
+bindLiveCandleCatchup({
+getSymbol:
+()=>
+coinsState().currentSymbol,
+getTf:
+()=>
+coinsState().currentTF,
+getCandles:
+()=>
+coinsState().candles,
+maxLen:
+4000,
+isAlive:
+()=>
+canPaintLiveChartBar(
+streamSymbol
+) &&
+coinsState().currentSymbol ===
+streamSymbol,
+paint:
+(rows, info)=>{
+paintCatchupLiveSeries(
+coinsState().candleSeries,
+rows,
+coinsState().chart,
+info?.appended,
+info?.prevLen
+);
+hooks.rebuildRsiFromCandles?.();
+}
 });
 
 }

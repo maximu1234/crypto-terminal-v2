@@ -3,7 +3,7 @@
  */
 import {
 subscribeTicker
-} from "./ws.js?v=20";
+} from "./ws.js?v=21";
 
 import {
 getAllCachedPositions,

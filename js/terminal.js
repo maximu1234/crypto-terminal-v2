@@ -109,13 +109,13 @@ mountCoinsTabletController
 
 import {
 disconnectKlineStream
-} from "./market-ws.js?v=1";
+} from "./market-ws.js?v=2";
 
 import {
 syncBackgroundAlertStreams,
 onMacdSeriesUpdate,
 onRsiSeriesUpdate
-} from "./alert-monitor.js?v=73";
+} from "./alert-monitor.js?v=74";
 
 import {
 createSharedDrawUndoStack
@@ -166,7 +166,7 @@ isTradePage
 
 import {
 stopTickerStream
-} from "./tickers.js?v=28";
+} from "./tickers.js?v=29";
 
 import {
 mountCoinsListRefreshControls,
@@ -206,7 +206,7 @@ setCoinsTableHooks,
 syncCoinListFreezeFromFlagMenus,
 getExtraCoinMarkets,
 isExtraCoinMarket
-} from "./terminal/terminal-table.js?v=41";
+} from "./terminal/terminal-table.js?v=42";
 
 import {
 createCoinsChartSwitchVeil

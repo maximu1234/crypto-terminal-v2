@@ -36,15 +36,17 @@ loadMarketHistory
 
 import {
 subscribeKline,
-subscribeTicker
-} from "./market-ws.js?v=1";
+subscribeTicker,
+bindLiveCandleCatchup
+} from "./market-ws.js?v=2";
 
 import {
 applyLiveOhlcBar,
 applyLiveSeriesUpdate,
 ensureOhlcRollover,
-liveBarPeriodSec
-} from "./chart/live-bar-roll.js?v=3";
+liveBarPeriodSec,
+paintCatchupLiveSeries
+} from "./chart/live-bar-roll.js?v=4";
 
 import {
 mountWidgetDomCrosshair
@@ -133,6 +135,8 @@ true;
 let loadSeq =
 0;
 let unsubKline =
+null;
+let unbindCatchup =
 null;
 let unsubTicker =
 null;
@@ -958,6 +962,9 @@ rsiWrapEl
 
 function detachKline(){
 
+unbindCatchup?.();
+unbindCatchup =
+null;
 unsubKline?.();
 unsubKline =
 null;
@@ -1184,7 +1191,10 @@ const kind =
 applyLiveOhlcBar(
 candles,
 candle,
-SCREENER_MAX_BARS
+SCREENER_MAX_BARS,
+liveBarPeriodSec(
+tf
+)
 );
 
 if(
@@ -1324,6 +1334,42 @@ updateRsiData();
 },
 1000
 );
+
+unbindCatchup =
+bindLiveCandleCatchup({
+getSymbol:
+()=>
+symbol,
+getTf:
+()=>
+tf,
+getCandles:
+()=>
+candles,
+maxLen:
+userAdjustedZoom
+? 0
+: SCREENER_MAX_BARS,
+isAlive:
+()=>
+alive &&
+!streamPaused,
+paint:
+(rows, info)=>{
+paintCatchupLiveSeries(
+series,
+buildDisplayCandles(),
+chart,
+info?.appended,
+info?.prevLen
+);
+if(
+rsiSeries
+){
+updateRsiData();
+}
+}
+});
 
 }
 

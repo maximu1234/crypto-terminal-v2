@@ -26,20 +26,22 @@ alignRsiWithCandleTimes
 } from "./indicators.js?v=3";
 
 import {
-subscribeKline
-} from "./market-ws.js?v=1";
+subscribeKline,
+bindLiveCandleCatchup
+} from "./market-ws.js?v=2";
 
 import {
 ensureOhlcRollover,
 ingestLiveOhlcKline,
 lastOhlcBar,
 liveBarPeriodSec,
+paintCatchupLiveSeries,
 paintLiveOhlcSeries
-} from "./chart/live-bar-roll.js?v=3";
+} from "./chart/live-bar-roll.js?v=4";
 
 import {
 fetchTickersInto
-} from "./tickers.js?v=28";
+} from "./tickers.js?v=29";
 
 import {
 isScreenerWidgetCurrent as isWidgetCurrentGuard
@@ -80,7 +82,7 @@ if(
 ){
 scriptZoomModulePromise =
 import(
-"./screener-widget-zoom.js?v=31"
+"./screener-widget-zoom.js?v=32"
 ).then(
 mod=>{
 refreshZoomFavoriteUi =
@@ -650,8 +652,54 @@ kind:
 1000
 );
 
+const unbindCatchup =
+bindLiveCandleCatchup({
+getSymbol:
+()=>
+widget.symbol,
+getTf:
+()=>
+widget.tf,
+getCandles:
+()=>
+widget.candles,
+maxLen:
+widget.userAdjustedZoom
+? 0
+: SCREENER_MAX_BARS,
+isAlive:
+()=>
+isWidgetCurrent(
+widget,
+renderToken,
+activeWidgets
+),
+paint:
+(rows, info)=>{
+paintCatchupLiveSeries(
+widget.series,
+rows,
+widget.chart,
+info?.appended,
+info?.prevLen
+);
+paintScriptWidgetLive(
+widget,
+renderToken,
+activeWidgets,
+{
+isNewBar:
+false,
+kind:
+"hist"
+}
+);
+}
+});
+
 widget.unsubKline =
 ()=>{
+unbindCatchup?.();
 unsub?.();
 clearInterval(
 timer
