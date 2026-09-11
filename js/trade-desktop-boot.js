@@ -3,11 +3,11 @@
  */
 import {
 cssUrl
-} from "./asset-manifest.js?v=9";
+} from "./asset-manifest.js?v=11";
 
 import {
 isWatchlistPage
-} from "./page-routes.js?v=5";
+} from "./page-routes.js?v=6";
 
 import {
 initTradeExchangeSettings
@@ -206,7 +206,7 @@ const {
 initTradePositionSounds
 } =
 await import(
-"./trade-position-sounds.js?v=3"
+"./trade-position-sounds.js?v=4"
 );
 
 initTradePositionSounds();

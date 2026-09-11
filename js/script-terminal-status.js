@@ -6,7 +6,7 @@ import {
 getScriptScanNextRunAt,
 isScriptScanBackgroundRunning,
 SCRIPT_SCAN_BG_EVENT
-} from "./script-scan-background.js?v=17";
+} from "./script-scan-background.js?v=18";
 
 import {
 loadScriptPageState
@@ -14,12 +14,12 @@ loadScriptPageState
 
 import {
 isTerminalPage
-} from "./page-routes.js?v=5";
+} from "./page-routes.js?v=6";
 
 import {
 FEATURE_NAV_PREF_EVENT,
 isScriptNavEnabled
-} from "./desktop-feature-nav-prefs.js?v=4";
+} from "./desktop-feature-nav-prefs.js?v=5";
 
 function formatCountdown(
 ms
@@ -165,7 +165,10 @@ existing.remove();
 export function mountScriptTerminalStatus(){
 
 if(
-!window.cryptoTerminalDesktop?.isDesktop ||
+(
+!window.cryptoTerminalDesktop?.isDesktop &&
+!window.cryptoTerminalDesktop?.webTrading
+) ||
 !isTerminalPage()
 ){
 return null;

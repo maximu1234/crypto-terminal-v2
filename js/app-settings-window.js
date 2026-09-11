@@ -3,7 +3,7 @@
  */
 import {
 cssUrl
-} from "./asset-manifest.js?v=9";
+} from "./asset-manifest.js?v=11";
 
 import {
 isSystemAdminUser
@@ -491,7 +491,7 @@ const {
 mountSystemSettingsPanel
 } =
 await import(
-"./app-settings-system-panel.js?v=18"
+"./app-settings-system-panel.js?v=19"
 );
 
 systemCtl =
@@ -852,7 +852,7 @@ const {
 installWebTradingShell
 } =
 await import(
-"./trade-web/client.js?v=1"
+"./trade-web/client.js?v=2"
 );
 installWebTradingShell();
 }

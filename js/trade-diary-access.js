@@ -1,5 +1,9 @@
+import {
+isTradeRuntime
+} from "./page-routes.js?v=6";
+
 export function isDesktopTradeDiaryContext(){
 
-return !!window.cryptoTerminalDesktop?.isDesktop;
+return isTradeRuntime();
 
 }

@@ -28,7 +28,7 @@ isScriptNavEnabled,
 isAlgoTradingNavEnabled,
 setScriptNavEnabled,
 setAlgoTradingNavEnabled
-} from "./desktop-feature-nav-prefs.js?v=4";
+} from "./desktop-feature-nav-prefs.js?v=5";
 
 import {
 TERMINAL_HISTORY_DEPTH_MAX,
@@ -46,7 +46,7 @@ setScreenerWidgetOscillator
 
 import {
 renderHeaderNav
-} from "./site-header-nav.js?v=8";
+} from "./site-header-nav.js?v=10";
 
 const APP_HEADER_NAV_ID =
 "app-header-nav";
@@ -279,9 +279,8 @@ window.cryptoTerminalDesktop?.platform ===
 : "";
 
 const featureNavBlock =
-isDesktopShell()
-? `
-<p class="app-settings-panel-lead${trayBlock ? " app-settings-panel-lead--spaced" : ""}">Модули desktop.</p>
+`
+<p class="app-settings-panel-lead${trayBlock ? " app-settings-panel-lead--spaced" : ""}">Модули Скрипт и АлгоТрейдинг.</p>
 <label class="app-settings-toggle-row">
 <input type="checkbox" class="app-settings-toggle-input" id="app-settings-enable-script-nav" />
 <span class="app-settings-toggle-label">Включить Скрипт</span>
@@ -291,8 +290,7 @@ isDesktopShell()
 <span class="app-settings-toggle-label">Включить АлгоТрейдинг</span>
 </label>
 <p class="app-settings-panel-hint">Пункты в верхнем меню. Выключенный модуль не крутит фон. Если Скрипт сейчас сканирует или бот Алго запущен (live / ручной) — выключение останавливает эту работу. По умолчанию выключены.</p>
-`
-: "";
+`;
 
 const snapshotLogoBlock =
 isDesktopShell()

@@ -3,7 +3,7 @@
  */
 import {
 isScreenerPage
-} from "./page-routes.js?v=5";
+} from "./page-routes.js?v=6";
 
 import {
 mountReleaseMarker

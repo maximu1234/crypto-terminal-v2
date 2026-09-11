@@ -5,7 +5,8 @@ function withPath(
 pathname,
 fn,
 {
-desktop = false
+desktop = false,
+webTrading = false
 } = {}
 ){
 
@@ -20,7 +21,8 @@ pathname
 };
 
 if(
-desktop
+desktop ||
+webTrading
 ){
 globalThis.window =
 globalThis.window ||
@@ -28,7 +30,9 @@ globalThis.window ||
 globalThis.window.cryptoTerminalDesktop =
 {
 isDesktop:
-true
+!!desktop,
+webTrading:
+!!webTrading
 };
 }else if(
 globalThis.window
@@ -237,6 +241,50 @@ false
 },
 {
 desktop:
+true
+}
+);
+
+}
+);
+
+test(
+"isTradePage: web trading /terminal",
+async()=>{
+
+const mod =
+await import(
+"../js/page-routes.js"
+);
+
+withPath(
+"/terminal.html",
+()=>{
+assert.equal(
+mod.isTradePage(),
+true
+);
+assert.equal(
+mod.isTradeRuntime(),
+true
+);
+},
+{
+webTrading:
+true
+}
+);
+
+withPath(
+"/screener.html",
+()=>{
+assert.equal(
+mod.isTradePage(),
+false
+);
+},
+{
+webTrading:
 true
 }
 );

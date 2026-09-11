@@ -32,43 +32,8 @@
       "permanent": false
     },
     {
-      "source": "/script",
-      "destination": "/screener",
-      "permanent": false
-    },
-    {
-      "source": "/script.html",
-      "destination": "/screener.html",
-      "permanent": false
-    },
-    {
-      "source": "/diary",
-      "destination": "/screener",
-      "permanent": false
-    },
-    {
-      "source": "/diary/",
-      "destination": "/screener",
-      "permanent": false
-    },
-    {
-      "source": "/diary/index.html",
-      "destination": "/screener.html",
-      "permanent": false
-    },
-    {
-      "source": "/algo-trading",
-      "destination": "/screener",
-      "permanent": false
-    },
-    {
-      "source": "/algo-trading.html",
-      "destination": "/screener.html",
-      "permanent": false
-    },
-    {
       "source": "/algo-trading/",
-      "destination": "/screener",
+      "destination": "/algo-trading.html",
       "permanent": false
     }
   ],

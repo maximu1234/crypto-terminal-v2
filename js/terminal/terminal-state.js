@@ -67,10 +67,15 @@ path
 return false;
 }
 
-return !!(
+const desktop =
 typeof globalThis !==
-"undefined" &&
-globalThis.window?.cryptoTerminalDesktop?.isDesktop
+"undefined"
+? globalThis.window?.cryptoTerminalDesktop
+: null;
+
+return !!(
+desktop?.isDesktop ||
+desktop?.webTrading
 );
 
 }

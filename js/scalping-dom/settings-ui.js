@@ -15,7 +15,10 @@ const INPUT_ID =
 
 export function isScalpingDomSettingsAvailable(){
 
-return !!window.cryptoTerminalDesktop?.isDesktop;
+return !!(
+window.cryptoTerminalDesktop?.isDesktop ||
+window.cryptoTerminalDesktop?.webTrading
+);
 
 }
 

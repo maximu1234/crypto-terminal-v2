@@ -9,6 +9,10 @@ import {
   volumeLooksMounted
 } from "./keys-store.js";
 import * as bybit from "./bybit-ops.js";
+import {
+  getClosedPnlHistory,
+  getTradeDiaryDetail
+} from "./bybit-diary.js";
 import { restartTradePrivateStream } from "./stream.js";
 
 function desktopOnly() {
@@ -116,8 +120,10 @@ export async function runTradeRpc(method, payload = {}) {
       };
     }
     case "getClosedPnl":
-    case "enrichClosedPnlTrades":
+      return getClosedPnlHistory(payload);
     case "getTradeDiaryDetail":
+      return getTradeDiaryDetail(payload);
+    case "enrichClosedPnlTrades":
     case "generatePnlShareCard":
     case "savePnlShareCard":
     case "discardPnlShareCard":

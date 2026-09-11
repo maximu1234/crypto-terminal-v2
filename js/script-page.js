@@ -16,7 +16,7 @@ stopActivePatternScan,
 startFullPatternScan,
 isScriptScanBackgroundRunning,
 SCRIPT_SCAN_BG_EVENT
-} from "./script-scan-background.js?v=17";
+} from "./script-scan-background.js?v=18";
 
 import {
 PATTERN_SCAN_TF_LABELS,

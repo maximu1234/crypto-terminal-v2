@@ -6,7 +6,7 @@
 export {
 coinsState,
 coinElements
-} from "../terminal/terminal-state.js?v=14";
+} from "../terminal/terminal-state.js?v=15";
 
 export {
 applyCoinsPrefs,

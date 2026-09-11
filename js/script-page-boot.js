@@ -11,7 +11,7 @@ loadLightweightCharts
 
 import {
 jsImport
-} from "./asset-manifest.js?v=9";
+} from "./asset-manifest.js?v=11";
 
 import {
 mountScriptPage
@@ -19,18 +19,9 @@ mountScriptPage
 
 import {
 isScriptNavEnabled
-} from "./desktop-feature-nav-prefs.js?v=4";
+} from "./desktop-feature-nav-prefs.js?v=5";
 
 async function boot(){
-
-if(
-!window.cryptoTerminalDesktop?.isDesktop
-){
-location.replace(
-"/screener.html"
-);
-return;
-}
 
 if(
 !isScriptNavEnabled()

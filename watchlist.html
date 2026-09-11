@@ -98,14 +98,26 @@ mode:
 }
 );
 }
+}else{
+tradeBoot =
+await import("/js/trade-web/boot.js?v=4");
+await tradeBoot.initTradeWebBeforeChart(
+{
+mode:
+"watchlist"
+}
+);
 }
 
 const { loadLightweightCharts } =
 await import("/js/charts-lib-boot.js?v=3");
 
 await loadLightweightCharts();
-await import("./js/watchlist.js?v=108");
+await import("./js/watchlist.js?v=109");
 
+if(
+window.cryptoTerminalDesktop?.isDesktop
+){
 if(
 tradeBoot?.isWatchlistTradeMode()
 ){
@@ -116,9 +128,19 @@ mode:
 }
 );
 }
+}else if(
+tradeBoot?.isWatchlistTradeMode()
+){
+await tradeBoot.initTradeWebAfterChart(
+{
+mode:
+"watchlist"
+}
+);
+}
 
 await import("./js/watchlist-page.js?v=4");
-import("/js/site-boot.js?v=124").catch(err=>{
+import("/js/site-boot.js?v=126").catch(err=>{
 console.warn("site-boot:", err);
 });
 

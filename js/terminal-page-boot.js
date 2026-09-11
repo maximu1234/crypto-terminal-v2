@@ -14,7 +14,7 @@ CHART_BUILD_ID,
 CHART_PAGE_ENTRY,
 TERMINAL_ENTRY,
 jsUrl
-} from "./asset-manifest.js?v=9";
+} from "./asset-manifest.js?v=11";
 
 function isDesktopTradeMode(){
 
@@ -66,7 +66,7 @@ if(
 ){
 tradeWebBootPromise =
 import(
-"./trade-web/boot.js?v=1"
+"./trade-web/boot.js?v=4"
 );
 }
 

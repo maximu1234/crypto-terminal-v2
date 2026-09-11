@@ -190,7 +190,7 @@ runWithPreservedVisibleLogicalRange
 import {
 coinsState,
 marketMap
-} from "./terminal/terminal-state.js?v=14";
+} from "./terminal/terminal-state.js?v=15";
 
 import {
 DEFAULT_TF,

@@ -21,7 +21,7 @@ Object.freeze({
 
 /* ── JS: boot / entry ── */
 "asset-manifest.js":
-9,
+11,
 "market-api.js":
 6,
 "format-price.js":
@@ -53,7 +53,7 @@ Object.freeze({
 "exchanges/bingx/intervals.js":
 1,
 "terminal-page-boot.js":
-31,
+36,
 "terminal-entry.js":
 4,
 "terminal-list-refresh.js":
@@ -61,21 +61,21 @@ Object.freeze({
 "trade-desktop-boot.js":
 27,
 "trade-web/client.js":
-1,
+2,
 "trade-web/boot.js":
-1,
+4,
 "desktop-menu-bar-tray.js":
 10,
 "desktop-menu-bar-tray-prefs.js":
 3,
 "desktop-feature-nav-prefs.js":
-4,
+5,
 "desktop-feature-nav-shutdown.js":
 1,
 "desktop-open-chart.js":
 3,
 "trade-diary-access.js":
-3,
+4,
 "trade-diary-format.js":
 6,
 "trade-diary-nav.js":
@@ -83,7 +83,7 @@ Object.freeze({
 "trade-diary-time.js":
 1,
 "trade-diary-page.js":
-42,
+43,
 "trade-diary-period.js":
 4,
 "trade-diary-detail.js":
@@ -99,7 +99,7 @@ Object.freeze({
 "trade-positions-cache.js":
 35,
 "trade-position-sounds.js":
-3,
+4,
 "trade-positions-live.js":
 1,
 "trade-format.js":
@@ -247,7 +247,7 @@ Object.freeze({
 "chart-page.js":
 7,
 "terminal.js":
-452,
+454,
 "terminal-multi-chart.js":
 14,
 "terminal-screener-chart-pane.js":
@@ -295,21 +295,21 @@ Object.freeze({
 "script-page.js":
 53,
 "script-page-boot.js":
-22,
+23,
 "script-page-storage.js":
 16,
 "script-page-widgets.js":
 24,
 "script-terminal-status.js":
-10,
+11,
 "script-scan-background.js":
-17,
+18,
 "script-favorites-list.js":
 2,
 "algo-trading.js":
 229,
 "algo-trading-page-boot.js":
-19,
+20,
 "algo-trading-list.js":
 28,
 "algo-trading/coin-list-host.js":
@@ -558,7 +558,7 @@ Object.freeze({
 "terminal-layout-math.js":
 6,
 "terminal/terminal-state.js":
-14,
+15,
 "terminal/chart-live-guard.js":
 1,
 "terminal/exchange-last-symbol.js":
@@ -572,7 +572,7 @@ Object.freeze({
 "telegram-bot-public.js":
 1,
 "watchlist.js":
-108,
+109,
 "screener.js":
 115,
 "ipad-web-viewport.js":
@@ -586,7 +586,7 @@ Object.freeze({
 "scalping-dom/prefs.js":
 4,
 "scalping-dom/boot.js":
-53,
+55,
 "scalping-dom/host.js":
 2,
 "scalping-dom/depth-feed.js":
@@ -602,7 +602,7 @@ Object.freeze({
 "scalping-dom/ladder-ui.js":
 38,
 "scalping-dom/settings-ui.js":
-27,
+28,
 "scalping-dom/position-overlay.js":
 14,
 "scalping-dom/alert-overlay.js":
@@ -626,11 +626,11 @@ Object.freeze({
 "focus-blur-after-pick.js":
 3,
 "site-boot.js":
-124,
+126,
 "site-header.js":
-6,
+7,
 "site-header-nav.js":
-8,
+10,
 "site-header-nav-web.js":
 1,
 "site-header-nav-desktop.js":
@@ -815,7 +815,7 @@ Object.freeze({
 "cloud-sync-throttle.js":
 3,
 "page-routes.js":
-5,
+6,
 "ticker-update-batch.js":
 1,
 "types/chart-types.js":
@@ -837,7 +837,7 @@ Object.freeze({
 "app-settings-proxy-panel.js":
 6,
 "app-settings-system-panel.js":
-18,
+19,
 "app-settings-hotkeys-panel.js":
 3,
 "app-settings-secret.js":

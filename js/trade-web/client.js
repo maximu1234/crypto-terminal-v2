@@ -166,12 +166,10 @@ export function createWebTradingApi() {
     applySymbolPositionSettings: (symbol, settings) =>
       rpc("applySymbolPositionSettings", { symbol, ...settings }),
     pingBybit: (payload) => rpc("pingBybit", payload),
-    getClosedPnl: () =>
-      Promise.resolve({ ok: false, message: "Только в приложении" }),
+    getClosedPnl: (payload) => rpc("getClosedPnl", payload),
     enrichClosedPnlTrades: () =>
       Promise.resolve({ ok: false, message: "Только в приложении" }),
-    getTradeDiaryDetail: () =>
-      Promise.resolve({ ok: false, message: "Только в приложении" }),
+    getTradeDiaryDetail: (payload) => rpc("getTradeDiaryDetail", payload),
     replayStream: () => rpc("replayStream"),
     getStreamSnapshot: () => rpc("getStreamSnapshot"),
     requestStreamSeed: () => rpc("requestStreamSeed"),

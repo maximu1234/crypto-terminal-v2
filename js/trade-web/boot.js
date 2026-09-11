@@ -1,12 +1,14 @@
 /**
- * Web Terminal trade layer — Railway Bybit only. Desktop boot is untouched.
+ * Web trade layer — same UI as desktop, Railway Bybit instead of IPC.
+ * Desktop boot (`trade-desktop-boot.js`) is untouched.
  */
 import {
   cssUrl
-} from "../asset-manifest.js?v=9";
+} from "../asset-manifest.js?v=11";
 import {
-  isTerminalPageOnly
-} from "../page-routes.js?v=5";
+  isTerminalPageOnly,
+  isWatchlistPage
+} from "../page-routes.js?v=6";
 import {
   initTradeExchangeSettings
 } from "../trade-exchange-settings.js?v=24";
@@ -30,7 +32,7 @@ import {
 } from "../market-api.js?v=6";
 import {
   installWebTradingShell
-} from "./client.js?v=1";
+} from "./client.js?v=2";
 
 const TRADE_CSS = [
   "trade-exchange-settings.css",
@@ -44,12 +46,19 @@ const TRADE_CSS = [
   "trade-widget-compact.css"
 ];
 
-export function isWebTerminalTradeMode() {
+export function isWebTradeMode() {
   return (
     !window.cryptoTerminalDesktop?.isDesktop &&
-    !!window.cryptoTerminalDesktop?.webTrading &&
-    isTerminalPageOnly()
+    !!window.cryptoTerminalDesktop?.webTrading
   );
+}
+
+export function isWebTerminalTradeMode() {
+  return isWebTradeMode() && isTerminalPageOnly();
+}
+
+export function isWatchlistTradeMode() {
+  return isWebTradeMode() && isWatchlistPage();
 }
 
 function enableTradeCss() {
@@ -65,11 +74,26 @@ function enableTradeCss() {
   document.body.classList.add("trade-page");
 }
 
-export async function initTradeWebBeforeChart() {
+export async function initTradeWebBeforeChart(options = {}) {
   if (window.cryptoTerminalDesktop?.isDesktop) {
     return;
   }
   installWebTradingShell();
+  const mode = options.mode || "terminal";
+  if (mode === "watchlist") {
+    if (!isWatchlistPage()) {
+      return;
+    }
+    setActiveExchangeId("bybit");
+    enableTradeCss();
+    initTradeExchangeSettings();
+    await loadTradeExchangeModules("bybit");
+    const { initExchangeTradingGate } = await import(
+      "../exchange-trading-gate.js?v=4"
+    );
+    await initExchangeTradingGate();
+    return;
+  }
   if (!isWebTerminalTradeMode()) {
     return;
   }
@@ -85,7 +109,7 @@ export async function initTradeWebBeforeChart() {
   );
   await initExchangeTradingGate();
   const { initTradePositionSounds } = await import(
-    "../trade-position-sounds.js?v=3"
+    "../trade-position-sounds.js?v=4"
   );
   initTradePositionSounds();
   const { initTradePositionsLive } = await import(
@@ -98,7 +122,23 @@ export async function initTradeWebBeforeChart() {
   initTradeOpenPositions();
 }
 
-export async function initTradeWebAfterChart() {
+export async function initTradeWebAfterChart(options = {}) {
+  if (!isWebTradeMode()) {
+    return;
+  }
+  const mode = options.mode || "terminal";
+  if (mode === "watchlist") {
+    if (!isWatchlistPage()) {
+      return;
+    }
+    const { initTradePositionsCache } = await import(
+      "../trade-positions-cache.js?v=35"
+    );
+    initTradePositionsCache();
+    window.__tradeAppReady = true;
+    window.dispatchEvent(new CustomEvent("trade-app-ready"));
+    return;
+  }
   if (!isWebTerminalTradeMode()) {
     return;
   }

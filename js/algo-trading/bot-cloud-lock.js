@@ -20,7 +20,7 @@ readPersistedAuthSession
 } from "../alert-auth-cache.js?v=7";
 import {
 isAlgoBotLiteShell
-} from "../page-routes.js?v=5";
+} from "../page-routes.js?v=6";
 
 const INSTANCE_KEY =
 "algo_bot_lock_instance_id";

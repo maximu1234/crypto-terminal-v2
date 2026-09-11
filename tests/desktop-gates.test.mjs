@@ -178,13 +178,14 @@ test("Bybit public WS IPC is gated like trading IPC", () => {
   );
 });
 
-test("Vercel redirects diary index HTML to screener", () => {
+test("Vercel keeps diary, script and algo pages on the web", () => {
   const vercel = JSON.parse(read("vercel.json"));
   const sources = (vercel.redirects || []).map((row) => row.source);
-  assert.ok(sources.includes("/diary"));
-  assert.ok(sources.includes("/diary/"));
-  assert.ok(sources.includes("/diary/index.html"));
-  assert.ok(sources.includes("/algo-trading.html"));
+  assert.equal(sources.includes("/diary"), false);
+  assert.equal(sources.includes("/diary/"), false);
+  assert.equal(sources.includes("/diary/index.html"), false);
+  assert.equal(sources.includes("/script.html"), false);
+  assert.equal(sources.includes("/algo-trading.html"), false);
   const diaryHtml = read("diary/index.html");
   assert.doesNotMatch(diaryHtml, /href="\/script\.html"/);
 });

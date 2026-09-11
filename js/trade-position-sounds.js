@@ -330,7 +330,8 @@ ensureCloseAudio()
 export function initTradePositionSounds(){
 
 if(
-!window.cryptoTerminalDesktop?.isDesktop
+!window.cryptoTerminalDesktop?.isDesktop &&
+!window.cryptoTerminalDesktop?.webTrading
 ){
 return;
 }

@@ -4,11 +4,11 @@
  */
 import {
 cssUrl
-} from "../asset-manifest.js?v=9";
+} from "../asset-manifest.js?v=11";
 
 import {
 isTerminalPageOnly
-} from "../page-routes.js?v=5";
+} from "../page-routes.js?v=6";
 
 import {
 ensureScalpingDomStylesheet,
@@ -32,7 +32,7 @@ SCALPING_DOM_PREF_EVENT
 
 import {
 mountScalpingDomHeaderToggle
-} from "./settings-ui.js?v=27";
+} from "./settings-ui.js?v=28";
 
 let mounted =
 false;
@@ -43,16 +43,19 @@ null;
 let prefListenerBound =
 false;
 
-function isDesktopShell(){
+function isTradeRuntime(){
 
-return !!window.cryptoTerminalDesktop?.isDesktop;
+return !!(
+window.cryptoTerminalDesktop?.isDesktop ||
+window.cryptoTerminalDesktop?.webTrading
+);
 
 }
 
 function canMount(){
 
 return (
-isDesktopShell() &&
+isTradeRuntime() &&
 isTerminalPageOnly() &&
 isScalpingDomEnabled()
 );
@@ -172,7 +175,7 @@ export function maybeMount(){
 
 if(
 !(
-isDesktopShell() &&
+isTradeRuntime() &&
 isTerminalPageOnly()
 )
 ){

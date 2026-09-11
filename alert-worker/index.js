@@ -43,7 +43,7 @@ import { attachTradeStreamWs } from "./lib/trade/stream.js";
 import { tradeHealth } from "./lib/trade/rpc.js";
 
 const PORT = Number(process.env.PORT) || 8080;
-const WORKER_BUILD = "2026-09-12-web-trade-v1";
+const WORKER_BUILD = "2026-09-12-web-trade-v2";
 
 /** alert key -> row */
 let activeAlerts = new Map();

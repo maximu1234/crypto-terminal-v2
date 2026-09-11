@@ -5,11 +5,11 @@
  */
 import {
 shouldRunAlgoBackgroundJobs
-} from "../desktop-feature-nav-prefs.js?v=4";
+} from "../desktop-feature-nav-prefs.js?v=5";
 
 import {
 isAlgoBotLiteShell
-} from "../page-routes.js?v=5";
+} from "../page-routes.js?v=6";
 
 import {
 ALGO_ANALYSIS_BOT_PATTERN_12,

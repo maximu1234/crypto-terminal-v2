@@ -14,7 +14,7 @@ COINS_PREFS_KEY,
 COINS_SORT_MODES,
 COINS_TF_VALUES,
 isTerminalPage
-} from "./terminal-state.js?v=14";
+} from "./terminal-state.js?v=15";
 
 import {
 getCurrentSymbols,

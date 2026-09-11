@@ -138,7 +138,10 @@ null;
 function isWatchlistTradeEnabled(){
 
 return !!(
-window.cryptoTerminalDesktop?.isDesktop &&
+(
+window.cryptoTerminalDesktop?.isDesktop ||
+window.cryptoTerminalDesktop?.webTrading
+) &&
 /\/watchlist(\.html)?\/?$/i.test(
 location.pathname ||
 ""

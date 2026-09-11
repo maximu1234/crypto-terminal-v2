@@ -92,6 +92,21 @@ pagePath()
 
 }
 
+export function isTradeRuntime(){
+
+const desktop =
+typeof globalThis !==
+"undefined"
+? globalThis.window?.cryptoTerminalDesktop
+: null;
+
+return !!(
+desktop?.isDesktop ||
+desktop?.webTrading
+);
+
+}
+
 export function isTradePage(){
 
 const path =
@@ -113,11 +128,7 @@ path
 return false;
 }
 
-return !!(
-typeof globalThis !==
-"undefined" &&
-globalThis.window?.cryptoTerminalDesktop?.isDesktop
-);
+return isTradeRuntime();
 
 }
 

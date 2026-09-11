@@ -2,7 +2,7 @@ import {
 coinsState,
 marketMap,
 coinElements
-} from "./terminal-state.js?v=14";
+} from "./terminal-state.js?v=15";
 
 import {
 isActiveRealtimeMarketDataset,
@@ -35,7 +35,7 @@ emptyFavorites
 
 import {
 isTradePage
-} from "./terminal-state.js?v=14";
+} from "./terminal-state.js?v=15";
 
 import {
 applyLiveOhlcBar,

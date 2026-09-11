@@ -15,7 +15,7 @@ isAlgoReducedCloudClient,
 isAlgoBotLiteShell,
 isAlgoTradingPage,
 isScriptPage
-} from "./page-routes.js?v=5";
+} from "./page-routes.js?v=6";
 
 import {
 initAlertsCloudSync,
@@ -70,13 +70,23 @@ initDesktopAppUi
 import {
 initSiteHeader,
 enforceSiteHeaderAfterBoot
-} from "./site-header.js?v=6";
+} from "./site-header.js?v=7";
 
 import {
 FEATURE_NAV_PREF_EVENT,
 shouldRunAlgoBackgroundJobs,
 shouldRunScriptBackgroundJobs
-} from "./desktop-feature-nav-prefs.js?v=4";
+} from "./desktop-feature-nav-prefs.js?v=5";
+
+import {
+installWebTradingShell
+} from "./trade-web/client.js?v=2";
+
+if(
+!window.cryptoTerminalDesktop?.isDesktop
+){
+installWebTradingShell();
+}
 
 initSuppressNativeContextMenu();
 initFocusBlurAfterPick();
@@ -144,7 +154,7 @@ return;
 }
 
 void import(
-"./script-scan-background.js?v=17"
+"./script-scan-background.js?v=18"
 ).then(
 m=>
 m.resumeScriptScanBackgroundJob?.()
@@ -161,14 +171,8 @@ err
 
 function stopScriptScanBackgroundFromBoot(){
 
-if(
-!window.cryptoTerminalDesktop?.isDesktop
-){
-return Promise.resolve();
-}
-
 return import(
-"./script-scan-background.js?v=17"
+"./script-scan-background.js?v=18"
 ).then(
 m=>
 m.stopScriptScanBackground?.()
@@ -184,6 +188,12 @@ err
 }
 
 function bootAlgoDesktopBackgroundJobs(){
+
+if(
+!window.cryptoTerminalDesktop?.isDesktop
+){
+return;
+}
 
 if(
 !shouldRunAlgoBackgroundJobs()

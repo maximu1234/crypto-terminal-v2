@@ -7,7 +7,7 @@ ensureHeaderSettingsShell
 
 import {
 renderHeaderNav
-} from "./site-header-nav.js?v=8";
+} from "./site-header-nav.js?v=10";
 
 export const APP_HEADER_NAV_ID =
 "app-header-nav";
@@ -273,10 +273,11 @@ ensureHeaderSettingsShell();
 initDesktopHeaderLayout();
 
 if(
-window.cryptoTerminalDesktop?.isDesktop
+window.cryptoTerminalDesktop?.isDesktop ||
+window.cryptoTerminalDesktop?.webTrading
 ){
 void import(
-"./script-terminal-status.js?v=10"
+"./script-terminal-status.js?v=11"
 ).then(
 m=>
 m.mountScriptTerminalStatus()

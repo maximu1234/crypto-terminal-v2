@@ -145,7 +145,7 @@ false
 
 });
 
-test("web (no desktop shell) never runs script/algo background jobs", ()=>{
+test("web can store script/algo nav prefs without desktop shell", ()=>{
 
 installDesktopShell();
 resetFlags();
@@ -161,11 +161,11 @@ ALGO_TRADING_NAV_ENABLED_KEY,
 
 assert.equal(
 shouldRunScriptBackgroundJobs(),
-false
+true
 );
 assert.equal(
 shouldRunAlgoBackgroundJobs(),
-false
+true
 );
 
 });

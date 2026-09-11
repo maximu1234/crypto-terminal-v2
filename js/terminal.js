@@ -162,7 +162,7 @@ COINS_TF_HOTKEYS,
 COINS_MARKETS,
 isTerminalPage,
 isTradePage
-} from "./terminal/terminal-state.js?v=14";
+} from "./terminal/terminal-state.js?v=15";
 
 import {
 stopTickerStream
@@ -258,7 +258,7 @@ import {
 shouldRunScriptBackgroundJobs,
 isAlgoTradingNavEnabled,
 FEATURE_NAV_PREF_EVENT
-} from "./desktop-feature-nav-prefs.js?v=4";
+} from "./desktop-feature-nav-prefs.js?v=5";
 
 /** @type {typeof import("./algo-trading/terminal-early-t3-list.js")|null} */
 let terminalAlgoEarlyT3ListMod =
@@ -7196,7 +7196,10 @@ startTickerStream();
 async function syncTerminalAlgoEarlyT3List(){
 
 if(
-!window.cryptoTerminalDesktop?.isDesktop ||
+!(
+window.cryptoTerminalDesktop?.isDesktop ||
+window.cryptoTerminalDesktop?.webTrading
+) ||
 !isAlgoTradingNavEnabled()
 ){
 terminalAlgoEarlyT3ListMod?.unmountTerminalAlgoEarlyT3List?.();
@@ -7289,10 +7292,11 @@ mountTerminalLayoutPicker
 });
 
 if(
-window.cryptoTerminalDesktop?.isDesktop
+window.cryptoTerminalDesktop?.isDesktop ||
+window.cryptoTerminalDesktop?.webTrading
 ){
 void import(
-"./script-terminal-status.js?v=10"
+"./script-terminal-status.js?v=11"
 ).then(
 m=>
 m.mountScriptTerminalStatus?.()
@@ -7310,7 +7314,7 @@ if(
 shouldRunScriptBackgroundJobs()
 ){
 void import(
-"./script-scan-background.js?v=17"
+"./script-scan-background.js?v=18"
 ).then(
 m=>
 m.resumeScriptScanBackgroundJob?.()
