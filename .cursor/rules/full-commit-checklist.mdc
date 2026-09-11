@@ -1,102 +1,89 @@
 ---
-description: Чеклист перед полным коммитом — изоляция desktop, метка, desktop-тег
+description: Чеклист полного коммита — веб+desktop торговля, метка, теги
 alwaysApply: false
 ---
 
 # Полный коммит — обязательный чеклист
 
-Когда пользователь просит **сделать полный коммит** (или «полный коммит»,
-«собери коммит» в этом смысле), **до** `git commit` выполнить все пункты ниже.
-После коммита агент сам выполняет push, цикл исправления CI и запуск релизов,
-если пользователь явно не запретил.
+Когда пользователь просит **полный коммит** (или «собери коммит» в этом
+смысле), **до** `git commit` выполнить все пункты ниже. После коммита
+агент сам делает push, чинит CI и запускает релизы, если пользователь
+явно не запретил.
 
-Старый чеклист pre-commit-release **не использовать** — действует только этот список.
+Старый desktop-only чеклист **не использовать**.
 
-## 1. Изоляция desktop-only (Торговля, Скрипт, Дневник)
+## 1. Торговый модуль есть и на сайте, и в .app
 
-Убедиться, что **не попадают в открытую веб-версию**, остаются только в desktop-приложении:
+Один продукт. Разница только в доставке ордеров, не в наборе страниц.
 
-- Торговый модуль: `trade-desktop-boot`, `isDesktop` / `isDesktopShell` gates, нет прямых импортов trade-модулей на публичных страницах без гейта.
-- **Скрипт:** `script-page-boot` → редирект вне desktop; пункт меню и фоновый скан только desktop (`script-scan-background.js`, `docs/TRADING_MODULE.md`).
-- **Дневник:** маршрут и навигация только desktop (`trade-diary-nav`, diary в desktop-меню).
-- **Desktop Mac/Win:** платформенные правки — `desktop/platform/win32.cjs` или `js/desktop/win/*`; `darwin.cjs` не трогать без Mac-бага (см. `.cursor/rules/desktop-platform.mdc`).
+| | Сайт (Vercel) | Desktop (.app) |
+|---|---|---|
+| Стенка email+пароль | да (`middleware.js`) | нет |
+| Терминал / Вотчлист / Дневник Bybit | Railway `/trade/*` (`js/trade-web/*`, `alert-worker/lib/trade/*`) | IPC + ключи на диске |
+| Скрипт / Алго страница | да, тоггл в Системных, по умолчанию выкл. | то же |
+| Live-бот Алго | нет (нужен процесс `.app`) | да |
+| BingX торговля | **нет** (не добавлять, пока пользователь не попросит) | да |
+| Прокси / трей / PnL-карточка | нет | да |
 
-См. также `.cursor/rules/trading-module-script.mdc`, `docs/TRADING_MODULE.md`.
+Проверить перед коммитом:
 
-## 2. Настройки (шестерёнка) — веб
+- Не ставить `isDesktop: true` на вебе. Шелл сайта: `isDesktop: false`, `webTrading: true`.
+- Ключи биржи не возвращать в браузер; веб пишет их на Railway volume.
+- Свечи / стакан / тикер **не** гонять через Railway. Браузерный fallback — Vercel `/api/bybit` или прямой Bybit, не `GET /bybit` воркера.
+- Тики сделок не писать в Supabase.
+- Bybit/BingX isolation без изменений: не тащить policy в shared `js/trade-*.js`. Веб-стек не импортирует BingX-торговлю и не кладёт BingX на Railway.
+- Скрипт/Алго: редирект на скринер **только** если тоггл выключен, не «потому что веб».
+- Настройки: **Подключения** и **Торговля** на вебе видны (ключи Bybit → Railway). **Прокси** — только `.app`.
+- Pattern 1-2 оригинал (`js/indicators/pattern-12*`) не трогать. `bot-app/` не патчить.
+- Desktop Mac/Win: правки платформы только в своём файле (`desktop-platform.mdc`).
 
-В **веб-версии** в окне настроек подпункты **Подключения** и **Торговля** должны быть **скрыты** (не показываться). Только desktop: `app-settings-window.js` → `showConnectionsSettings()` через `cryptoTerminalDesktop?.isDesktop`.
+См. `.cursor/rules/web-desktop-trade.mdc`, `docs/TRADING_MODULE.md`.
 
-## 3. Подпись версии на Скринере
+## 2. Подпись версии на Скринере
 
-В **верхнем правом углу** страницы Скринер — корректная подпись:
+Верхний правый угол `[data-release-marker]`:
 
-- Веб: `v0.N` (из `METKA_NUMBER` в `js/release-marker.js`).
-- Desktop: `v0.N / vX.Y.Z` (веб + `DESKTOP_APP_VERSION`).
+- Веб: `v0.N` (`METKA_NUMBER`).
+- Desktop: `v0.N / vX.Y.Zf` или `v0.N / vX.Y.Zm`.
 
-Монтирование: `mountReleaseMarker()` в `screener.js` / `desktop-app-ui.js`, элемент `[data-release-marker]` на screener.
+Монтирование: `mountReleaseMarker()` в `screener.js` / `desktop-app-ui.js`.
 
-## 4. Версии и CI
+## 3. Версии и CI
 
-- `node scripts/sync-asset-versions.cjs` — импорты `?v=` согласованы с `js/asset-manifest.js`.
-- `npm run check:all` без ошибок (чтобы CI на GitHub не ругался).
-- При изменении ассетов — `npm run bundle:sync`, затем снова drift-check / `check:all`.
-- **CI-parity unit tests (обязательно перед пушем):** `check:all` уже гоняет
-  `npm run test:ci-parity` — unit-тесты **без** `desktop/node_modules`.
-  Иначе локально зелёный прогон (Electron/`electron-log` находятся в
-  `desktop/node_modules`), а на GitHub Actions падает Unit tests при первом
-  пуше. Типичные причины прошлых first-push fail:
-  - новый `tests/*.test.mjs` тянет `desktop/**` с top-level `require("electron")`
-    / `require("electron-log")` → lazy-require или stub;
-  - тест трогает DOM/`navigator` без `tests/helpers/stub-browser.mjs`;
-  - забыли `bundle:sync` после bump ассетов.
+- `node scripts/sync-asset-versions.cjs`
+- При смене ассетов — `npm run bundle:sync`
+- `npm run check:all` без ошибок, включая `test:ci-parity` без `desktop/node_modules`
+- Новый `tests/*.test.mjs` не тянет `electron` / `electron-log` с top-level require; DOM — через `tests/helpers/stub-browser.mjs`
 
-## 5. Новая метка (metka-N)
+## 4. Новая метка (metka-N)
 
-Пример: новая **metka-10** → оставить документы и теги **metka-10, metka-9, metka-8, metka-7**; все **старше 7** удалить.
+Оставить `metka-N` … `metka-{N-3}`; старше удалить.
 
-1. `js/release-marker.js`: `METKA_NUMBER = N` → подпись веб `v0.N`.
-2. Создать/обновить `docs/MARKER_N.md`.
-3. Удалить `docs/MARKER_{k}.md` для всех `k < N-3`.
-4. Локальные git-теги `metka-*`: оставить `metka-N`, `metka-{N-1}`, `metka-{N-2}`, `metka-{N-3}`; удалить более старые.
+1. `js/release-marker.js`: `METKA_NUMBER = N`
+2. `docs/MARKER_N.md`; удалить `docs/MARKER_{k}.md` для `k < N-3`
+3. Локальные теги `metka-*` так же
 
-## 6. Desktop .dmg — новый тег
+## 5. Desktop Mac / Windows — новые теги
 
-1. `js/release-marker.js`: `DESKTOP_APP_VERSION` (patch +1 при desktop-релизе).
-   После `1.0.99` → **`1.1.1`** (валидный semver; не `1.0.100` / `1.1.01`); далее `1.1.2`…
-2. `desktop/package.json`: `"version"` = тот же номер.
-3. Git-тег `desktop-vX.Y.Z` на коммит (для сборки нового .dmg).
-4. Локальные теги `desktop-v*`: оставить новый и **один** предыдущий; остальные удалить.
+1. `DESKTOP_APP_VERSION` и `desktop/package.json` (после `1.0.99` → `1.1.1`, не `1.0.100`)
+2. Тег `desktop-vX.Y.Z` и `desktop-win-vX.Y.Z`
+3. Локально оставить новый тег и **один** предыдущий каждого вида
 
-## 6b. Desktop Windows (.exe) — новый тег
+## 6. Коммит
 
-1. Версия Windows desktop = тот же `DESKTOP_APP_VERSION` / `desktop/package.json` semver.
-2. Git-тег `desktop-win-vX.Y.Z` на коммит (для сборки нового `.exe` workflow).
-3. Локальные теги `desktop-win-v*`: оставить новый и **один** предыдущий; остальные удалить.
+Только после пунктов 1–5.
 
-## 7. Коммит
+## 7. Пуш
 
-- Создать коммит только после прохождения пунктов 1–6.
+Пуш `main`. Если нет авторизации — сразу сказать пользователю (GitHub Desktop). После пуша не останавливать чеклист: CI (п.8), затем релизы (п.9), если это полный релизный коммит.
 
-## 8. Пуш на GitHub
+## 8. CI после пуша
 
-- Запушить ветку (`main`) на GitHub.
-- Если агент не может выполнить push из-за авторизации, credential helper или
-  ограничений среды — сразу сообщить пользователю и попросить запушить коммит
-  через GitHub Desktop.
-- После подтверждения пользователя, что push выполнен, **не останавливать
-  чеклист**: проверить CI по пункту 9 и после зелёного CI запустить оба релиза
-  по пункту 10.
+Пока все проверки не зелёные — чинить новым коммитом и пушить снова.
 
-## 9. Исправление ошибок после пуша (цикл)
+## 9. Релизы Mac + Windows
 
-- После пуша проверить GitHub (CI / Actions / статусы).
-- Если есть ошибки — исправить, собрать **новый коммит** и запушить снова.
-- Повторять пункт 9, **пока все ошибки не исчезнут** (все проверки зелёные).
+Только после зелёного CI:
 
-## 10. Запуск релизов (Mac + Windows)
-
-- Только после зелёного CI запушить теги релизов на новую версию:
-  - Mac: `desktop-vX.Y.Z` → workflow `desktop-release.yml`.
-  - Windows: `desktop-win-vX.Y.Z` → workflow `desktop-release-windows.yml`.
-- Убедиться, что оба релизных workflow запустились для новой версии.
+- Mac: `desktop-vX.Y.Z` → `desktop-release.yml`
+- Windows: `desktop-win-vX.Y.Z` → `desktop-release-windows.yml`

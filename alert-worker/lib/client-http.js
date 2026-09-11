@@ -42,6 +42,46 @@ export function setPublicCors(res, req) {
 
 }
 
+const DEFAULT_TRADE_ORIGINS = [
+  "https://crypto-terminal-v2.vercel.app"
+];
+
+export function isAllowedTradeOrigin(origin) {
+  const o = String(origin || "").trim().replace(/\/$/, "");
+  if (!o) {
+    return true;
+  }
+  if (DEFAULT_TRADE_ORIGINS.includes(o)) {
+    return true;
+  }
+  if (/^https:\/\/crypto-terminal-v2(?:-[a-z0-9-]+)?\.vercel\.app$/i.test(o)) {
+    return true;
+  }
+  const extra = String(process.env.SITE_WEB_ORIGIN || "")
+    .trim()
+    .replace(/\/$/, "");
+  if (extra && o === extra) {
+    return true;
+  }
+  if (/^https?:\/\/(?:localhost|127\.0\.0\.1)(?::\d+)?$/i.test(o)) {
+    return true;
+  }
+  return false;
+}
+
+export function setTradeCors(res, req) {
+  const origin = String(req.headers.origin || "").trim();
+  if (origin && isAllowedTradeOrigin(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader("Vary", "Origin");
+  }
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    "Authorization, Content-Type"
+  );
+}
+
 export function readJsonBody(req) {
 
   return new Promise((resolve, reject) => {

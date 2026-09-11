@@ -61,9 +61,9 @@ Object.freeze({
 "trade-desktop-boot.js":
 27,
 "trade-web/client.js":
-2,
+3,
 "trade-web/boot.js":
-4,
+5,
 "desktop-menu-bar-tray.js":
 10,
 "desktop-menu-bar-tray-prefs.js":
@@ -307,7 +307,7 @@ Object.freeze({
 "script-favorites-list.js":
 2,
 "algo-trading.js":
-229,
+230,
 "algo-trading-page-boot.js":
 20,
 "algo-trading-list.js":
@@ -440,7 +440,7 @@ Object.freeze({
 "algo-trading/runtime-bridge.js":
 6,
 "algo-trading/runtime-ui.js":
-14,
+15,
 "algo-trading/bot-bridge.js":
 28,
 "algo-trading/bot-alert-bridge.js":
@@ -574,7 +574,7 @@ Object.freeze({
 "watchlist.js":
 109,
 "screener.js":
-116,
+117,
 "ipad-web-viewport.js":
 2,
 "screener-widget-guard.js":
@@ -622,11 +622,11 @@ Object.freeze({
 "screener-widget-zoom.js":
 31,
 "release-marker.js":
-115,
+116,
 "focus-blur-after-pick.js":
 3,
 "site-boot.js":
-127,
+128,
 "site-header.js":
 7,
 "site-header-nav.js":
@@ -636,7 +636,7 @@ Object.freeze({
 "site-header-nav-desktop.js":
 2,
 "desktop-app-ui.js":
-8,
+9,
 "suppress-native-context-menu.js":
 4,
 "charts-lib-boot.js":
@@ -792,9 +792,9 @@ Object.freeze({
 
 /* ── JS: market data ── */
 "api.js":
-33,
+34,
 "bybit-fetch.js":
-18,
+19,
 "bybit-listings.js":
 5,
 "bybit-network-ui.js":

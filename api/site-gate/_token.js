@@ -19,6 +19,9 @@ function fromB64url(s) {
   );
 }
 
+const GATE_TTL_SEC = 30 * 24 * 60 * 60;
+const TRADE_TTL_SEC = 12 * 60 * 60;
+
 function signSiteGateToken(secret, payload) {
   const body = b64url(JSON.stringify(payload));
   const sig = crypto
@@ -26,6 +29,24 @@ function signSiteGateToken(secret, payload) {
     .update(`v1.${body}`)
     .digest("hex");
   return `v1.${body}.${sig}`;
+}
+
+function signGateCookieToken(secret, email) {
+  const exp = Math.floor(Date.now() / 1000) + GATE_TTL_SEC;
+  return signSiteGateToken(secret, {
+    email: String(email || "").trim().toLowerCase(),
+    exp,
+    typ: "gate"
+  });
+}
+
+function signTradeToken(secret, email) {
+  const exp = Math.floor(Date.now() / 1000) + TRADE_TTL_SEC;
+  return signSiteGateToken(secret, {
+    email: String(email || "").trim().toLowerCase(),
+    exp,
+    typ: "trade"
+  });
 }
 
 function verifySiteGateToken(secret, token) {
@@ -56,7 +77,8 @@ function verifySiteGateToken(secret, token) {
     if (!email) {
       return null;
     }
-    return { email, exp: payload.exp };
+    const typ = payload.typ === "trade" ? "trade" : "gate";
+    return { email, exp: payload.exp, typ };
   } catch {
     return null;
   }
@@ -74,7 +96,11 @@ function timingEqual(a, b) {
 }
 
 module.exports = {
+  GATE_TTL_SEC,
+  TRADE_TTL_SEC,
   signSiteGateToken,
+  signGateCookieToken,
+  signTradeToken,
   verifySiteGateToken,
   timingEqual
 };

@@ -1,6 +1,7 @@
 import { WebSocketServer, WebSocket } from "ws";
 import { verifySiteGateToken } from "./gate-token.js";
 import { readEnv } from "../config.js";
+import { isAllowedTradeOrigin } from "../client-http.js";
 import { loadTradeKeys } from "./keys-store.js";
 import {
   connectBybitPrivateWs
@@ -14,15 +15,15 @@ import {
 const clients = new Set();
 let bybitCtl = null;
 let seedTimer = null;
+const AUTH_WAIT_MS = 3000;
 
-function extractToken(req) {
-  const auth = req.headers.authorization || "";
-  if (auth.startsWith("Bearer ")) {
-    return auth.slice(7).trim();
-  }
+function parseAuthMessage(raw) {
   try {
-    const u = new URL(req.url || "", "http://localhost");
-    return String(u.searchParams.get("access_token") || "").trim();
+    const parsed = JSON.parse(String(raw || ""));
+    if (parsed?.type !== "auth") {
+      return "";
+    }
+    return String(parsed.token || "").trim();
   } catch {
     return "";
   }
@@ -107,6 +108,12 @@ export function restartTradePrivateStream() {
   }
 }
 
+function admit(ws) {
+  clients.add(ws);
+  ensureBybit();
+  void seed();
+}
+
 export function attachTradeStreamWs(server) {
   const wss = new WebSocketServer({ noServer: true });
   const secret = () => readEnv("SITE_GATE_SECRET");
@@ -116,9 +123,9 @@ export function attachTradeStreamWs(server) {
     if (pathOnly !== "/trade/stream") {
       return;
     }
-    const session = verifySiteGateToken(secret(), extractToken(req));
-    if (!session) {
-      socket.write("HTTP/1.1 401 Unauthorized\r\n\r\n");
+    const origin = req.headers.origin;
+    if (origin && !isAllowedTradeOrigin(origin)) {
+      socket.write("HTTP/1.1 403 Forbidden\r\n\r\n");
       socket.destroy();
       return;
     }
@@ -128,14 +135,43 @@ export function attachTradeStreamWs(server) {
   });
 
   wss.on("connection", (ws) => {
-    clients.add(ws);
-    ensureBybit();
-    void seed();
+    let authed = false;
+    const timer = setTimeout(() => {
+      if (!authed) {
+        try {
+          ws.close();
+        } catch {
+          /* ignore */
+        }
+      }
+    }, AUTH_WAIT_MS);
+
+    ws.on("message", (data) => {
+      if (authed) {
+        return;
+      }
+      const token = parseAuthMessage(data);
+      const session = verifySiteGateToken(secret(), token);
+      if (!session || session.typ !== "trade") {
+        try {
+          ws.close();
+        } catch {
+          /* ignore */
+        }
+        return;
+      }
+      authed = true;
+      clearTimeout(timer);
+      admit(ws);
+    });
+
     ws.on("close", () => {
+      clearTimeout(timer);
       clients.delete(ws);
       maybeStopBybit();
     });
     ws.on("error", () => {
+      clearTimeout(timer);
       clients.delete(ws);
       maybeStopBybit();
     });

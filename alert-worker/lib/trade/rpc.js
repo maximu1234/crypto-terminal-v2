@@ -147,5 +147,9 @@ export function verifyTradeRequest(req) {
   const token = auth.startsWith("Bearer ")
     ? auth.slice(7).trim()
     : "";
-  return verifySiteGateToken(secret, token);
+  const session = verifySiteGateToken(secret, token);
+  if (!session || session.typ !== "trade") {
+    return null;
+  }
+  return session;
 }

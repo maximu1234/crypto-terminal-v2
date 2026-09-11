@@ -130,6 +130,8 @@ button:disabled { opacity: .55; cursor: default; }
         err.hidden = false;
         err.textContent = data.error === "invalid"
           ? "Неверная почта или пароль."
+          : data.error === "locked"
+            ? "Слишком много попыток. Подождите 15 минут."
           : data.error === "gate_not_configured"
             ? "Вход не настроен на сервере."
             : "Не удалось войти.";
@@ -137,7 +139,8 @@ button:disabled { opacity: .55; cursor: default; }
       }
       try {
         if (data.tradeToken) {
-          sessionStorage.setItem("mc_trade_token_v1", data.tradeToken);
+          sessionStorage.removeItem("mc_trade_token_v1");
+          sessionStorage.setItem("mc_trade_token_v2", data.tradeToken);
         }
       } catch (ignore) {}
       const next = params.get("next") || "/screener";

@@ -1,4 +1,7 @@
-const { verifySiteGateToken } = require("./_token.js");
+const {
+  verifySiteGateToken,
+  signTradeToken
+} = require("./_token.js");
 
 function readCookie(header, name) {
   const raw = String(header || "");
@@ -20,9 +23,14 @@ module.exports = async function handler(req, res) {
   const secret = String(process.env.SITE_GATE_SECRET || "").trim();
   const token = readCookie(req.headers.cookie, "mc_site_gate");
   const session = secret ? verifySiteGateToken(secret, token) : null;
-  if (!session) {
+  if (!session || session.typ === "trade") {
     res.status(401).json({ ok: false });
     return;
   }
-  res.status(200).json({ ok: true, tradeToken: token, email: session.email });
+  const tradeToken = signTradeToken(secret, session.email);
+  res.status(200).json({
+    ok: true,
+    tradeToken,
+    email: session.email
+  });
 };

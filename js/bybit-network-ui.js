@@ -43,7 +43,7 @@ retryBtn.addEventListener(
 ()=>{
 
 void import(
-"./bybit-fetch.js?v=18"
+"./bybit-fetch.js?v=19"
 ).then(
 m=>{
 m.resetBybitEndpoints?.();

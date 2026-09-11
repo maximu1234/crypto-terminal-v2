@@ -13,7 +13,7 @@
 | Скрипт (сканер) | ✅ (вкл. в Настройках) | ✅ |
 | АлгоТрейдинг страница | ✅ (вкл. в Настройках) | ✅ |
 | Live-бот Алго (main runtime) | ❌ нужен `.app` | ✅ |
-| BingX | ❌ | ✅ |
+| BingX торговля | ❌ пока нет (добавим отдельно) | ✅ |
 
 ## Скрипт (часть торгового модуля)
 
@@ -27,7 +27,10 @@
 
 **Аудит торгового модуля** → проверять Скрипт в том же проходе (bundle, nav, фоновый таймер). См. `.cursor/rules/trading-module-script.mdc`.
 
-## АлгоТрейдинг (desktop, изолированный плагин)
+## АлгоТрейдинг (изолированный плагин)
+
+Страница открывается на вебе и в `.app` (тоггл в Системных). Live-бот и
+алго-ключи — только процесс `.app`.
 
 Облегчённый Терминал для алготорговли. Pattern 1-2 — **копии** в
 `js/algo-trading/` (оригинал индикатора не трогать).
@@ -216,7 +219,9 @@ Bybit history не импортирует BingX history и наоборот. И�
 | `desktop/trading/credentials.cjs` | Bybit credentials shim |
 | `coins.html` | Монеты (+ торговля в desktop .app) |
 | `js/terminal-page-boot.js` | Boot: chart + условный trade-слой |
-| `js/trade-desktop-boot.js` | Trade CSS + init (только desktop) |
+| `js/trade-desktop-boot.js` | Trade CSS + init в `.app` |
+| `js/trade-web/client.js` | Веб: Railway `/trade/rpc` + stream, `webTrading` |
+| `js/trade-web/boot.js` | Веб-терминал/вотчлист: Bybit-only модули |
 | `js/trade-exchange-settings.js` | Exchange dropdown + ping |
 | `js/trade-market-entry.js` | Thin facade → active exchange renderer |
 | `js/trade-volume-presets.js` | Thin facade → active exchange volume presets |
@@ -235,12 +240,12 @@ Bybit history не импортирует BingX history и наоборот. И�
 | `js/trade/bingx/diary/page.js` | BingX diary page UI |
 | `js/trade-order-plus-ui.js` | Меню «+» на шкале |
 | `js/trade-open-positions.js` | Пин символов с позицией |
-| `script.html` | Скрипт — сканер 1-2 (только desktop) |
-| `js/script-page-boot.js` | Boot + редирект вне desktop |
+| `script.html` | Скрипт — сканер 1-2 (тоггл в Системных) |
+| `js/script-page-boot.js` | Boot; редирект если тоггл выключен |
 | `js/script-scan-background.js` | Фоновое авто-сканирование |
 | `js/script-terminal-status.js` | Статус скана в шапке Терминала |
-| `algo-trading.html` | АлгоТрейдинг — прототип (только desktop) |
-| `js/algo-trading-page-boot.js` | Boot + редирект вне desktop |
+| `algo-trading.html` | АлгоТрейдинг — страница (тоггл в Системных) |
+| `js/algo-trading-page-boot.js` | Boot; редирект если тоггл выключен |
 | `js/algo-trading.js` | График + RSI + Pattern 1-2 |
 
 ## IPC

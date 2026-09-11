@@ -27,7 +27,7 @@ window.cryptoTerminalDesktop;
 if(
 !desktop?.isDesktop
 ){
-return true;
+return false;
 }
 
 if(
@@ -503,9 +503,13 @@ tradingMode !==
 ){
 tradingMode =
 "manual";
+if(
+window.cryptoTerminalDesktop?.isDesktop
+){
 void setAlgoTradingMode(
 "manual"
 );
+}
 }
 
 applyModeUi();
@@ -898,7 +902,9 @@ next ===
 !isLiveTradingEditionEnabled()
 ){
 setStatusText(
-"Сборка m: Реальная торговля отключена"
+window.cryptoTerminalDesktop?.isDesktop
+? "Сборка m: Реальная торговля отключена"
+: "Реальная торговля алго — только в приложении"
 );
 return;
 }

@@ -11,8 +11,8 @@ const BASES = JSON.parse(
 );
 
 /**
- * GET /bybit?path=/v5/market/tickers?category=linear
- * Публичный REST-прокси (без auth) — для браузера, когда api.bybit.com недоступен.
+ * GET /bybit — disabled. Browser market data must not use Railway.
+ * Keep the file so old links 404 via index (handler not wired).
  */
 export async function handleBybitProxy(req, res) {
 

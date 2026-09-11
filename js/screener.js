@@ -1,6 +1,6 @@
 import {
 symbolListSignature
-} from "./api.js?v=33";
+} from "./api.js?v=34";
 
 import {
 loadMarketHistory,
@@ -68,7 +68,7 @@ createTickerUiBatcher
 
 import {
 mountReleaseMarker
-} from "./release-marker.js?v=115";
+} from "./release-marker.js?v=116";
 
 import {
 saveScreenerState,

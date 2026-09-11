@@ -9,14 +9,51 @@ import {
   normalizeAlertWorkerBaseUrl
 } from "../alert-worker-url.js?v=2";
 
-const TOKEN_KEY = "mc_trade_token_v1";
+const TOKEN_KEY = "mc_trade_token_v2";
+const TOKEN_KEY_LEGACY = "mc_trade_token_v1";
 
 function workerOrigin() {
   return normalizeAlertWorkerBaseUrl(ALERT_WORKER_URL || "");
 }
 
+function decodeTokenPayload(token) {
+  try {
+    const parts = String(token || "").split(".");
+    if (parts.length !== 3 || parts[0] !== "v1") {
+      return null;
+    }
+    const pad = parts[1].length % 4 === 0 ? "" : "=".repeat(4 - (parts[1].length % 4));
+    const json = atob(parts[1].replace(/-/g, "+").replace(/_/g, "/") + pad);
+    const payload = JSON.parse(json);
+    if (!payload || typeof payload !== "object") {
+      return null;
+    }
+    return payload;
+  } catch {
+    return null;
+  }
+}
+
+function storedTokenUsable() {
+  const token = readToken();
+  if (!token) {
+    return "";
+  }
+  const payload = decodeTokenPayload(token);
+  if (!payload || payload.typ !== "trade") {
+    writeToken("");
+    return "";
+  }
+  if (!Number.isFinite(payload.exp) || payload.exp * 1000 < Date.now() + 60_000) {
+    writeToken("");
+    return "";
+  }
+  return token;
+}
+
 function readToken() {
   try {
+    sessionStorage.removeItem(TOKEN_KEY_LEGACY);
     return String(sessionStorage.getItem(TOKEN_KEY) || "").trim();
   } catch {
     return "";
@@ -25,6 +62,7 @@ function readToken() {
 
 function writeToken(token) {
   try {
+    sessionStorage.removeItem(TOKEN_KEY_LEGACY);
     if (token) {
       sessionStorage.setItem(TOKEN_KEY, token);
     } else {
@@ -37,9 +75,12 @@ function writeToken(token) {
 
 let tokenPromise = null;
 
-export async function ensureTradeToken() {
-  if (readToken()) {
-    return readToken();
+export async function ensureTradeToken(forceRefresh = false) {
+  if (!forceRefresh) {
+    const existing = storedTokenUsable();
+    if (existing) {
+      return existing;
+    }
   }
   if (!tokenPromise) {
     tokenPromise = fetch("/api/site-gate/session", {
@@ -51,6 +92,7 @@ export async function ensureTradeToken() {
           writeToken(data.tradeToken);
           return data.tradeToken;
         }
+        writeToken("");
         return "";
       })
       .catch(() => "")
@@ -66,18 +108,29 @@ async function rpc(method, payload) {
   if (!origin) {
     return { ok: false, message: "ALERT_WORKER_URL не задан" };
   }
-  const token = await ensureTradeToken();
+  let token = await ensureTradeToken();
   if (!token) {
     return { ok: false, message: "Нет сессии входа" };
   }
-  const res = await fetch(`${origin}/trade/rpc`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`
-    },
-    body: JSON.stringify({ method, payload: payload || {} })
-  });
+  const send = (access) =>
+    fetch(`${origin}/trade/rpc`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${access}`
+      },
+      body: JSON.stringify({ method, payload: payload || {} })
+    });
+  let res = await send(token);
+  if (res.status === 401) {
+    writeToken("");
+    tokenPromise = null;
+    token = await ensureTradeToken(true);
+    if (!token) {
+      return { ok: false, message: "Нет сессии входа" };
+    }
+    res = await send(token);
+  }
   const data = await res.json().catch(() => ({}));
   if (!res.ok && data && typeof data === "object") {
     return {
@@ -114,8 +167,15 @@ export function createWebTradingApi() {
     } catch {
       /* ignore */
     }
-    const url = `${origin.replace(/^http/, "ws")}/trade/stream?access_token=${encodeURIComponent(token)}`;
+    const url = `${origin.replace(/^http/, "ws")}/trade/stream`;
     ws = new WebSocket(url);
+    ws.onopen = () => {
+      try {
+        ws.send(JSON.stringify({ type: "auth", token }));
+      } catch {
+        /* ignore */
+      }
+    };
     ws.onmessage = (event) => {
       try {
         emit(JSON.parse(String(event.data || "{}")));

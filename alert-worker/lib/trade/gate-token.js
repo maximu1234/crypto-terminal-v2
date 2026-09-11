@@ -44,7 +44,8 @@ export function verifySiteGateToken(secret, token) {
     if (!email) {
       return null;
     }
-    return { email, exp: payload.exp };
+    const typ = payload.typ === "trade" ? "trade" : "gate";
+    return { email, exp: payload.exp, typ };
   } catch {
     return null;
   }

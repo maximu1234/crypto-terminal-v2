@@ -1,4 +1,4 @@
-import { setCors, readJsonBody } from "../client-http.js";
+import { setTradeCors, readJsonBody } from "../client-http.js";
 import { tradeHealth, runTradeRpc, verifyTradeRequest } from "./rpc.js";
 
 export async function handleTradeHttp(req, res) {
@@ -7,10 +7,17 @@ export async function handleTradeHttp(req, res) {
     return false;
   }
 
-  setCors(res, req);
+  setTradeCors(res, req);
   if (req.method === "OPTIONS") {
     res.writeHead(204);
     res.end();
+    return true;
+  }
+
+  const session = verifyTradeRequest(req);
+  if (!session) {
+    res.writeHead(401, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ ok: false, error: "invalid_token" }));
     return true;
   }
 
@@ -28,13 +35,6 @@ export async function handleTradeHttp(req, res) {
   if (req.method !== "POST") {
     res.writeHead(405);
     res.end("Method not allowed");
-    return true;
-  }
-
-  const session = verifyTradeRequest(req);
-  if (!session) {
-    res.writeHead(401, { "Content-Type": "application/json" });
-    res.end(JSON.stringify({ ok: false, error: "invalid_token" }));
     return true;
   }
 

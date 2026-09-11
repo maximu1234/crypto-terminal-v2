@@ -2,11 +2,11 @@ import {
 loadBybitHistory,
 loadBybitSymbols,
 loadBybitOrderbook
-} from "../../api.js?v=33";
+} from "../../api.js?v=34";
 
 import {
 fetchBybitBulk
-} from "../../bybit-fetch.js?v=18";
+} from "../../bybit-fetch.js?v=19";
 
 import {
 buildCoinsMarketLists

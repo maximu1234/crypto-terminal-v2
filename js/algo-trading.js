@@ -71,7 +71,7 @@ mountAlgoStrategyParamOptimizeUi
 
 import {
 mountAlgoRuntimeUi
-} from "./algo-trading/runtime-ui.js?v=14";
+} from "./algo-trading/runtime-ui.js?v=15";
 
 import {
 mountAlgoBotStrategyUi

@@ -49,7 +49,7 @@ import {
 resetBybitEndpoints,
 preloadBybitProxyConfig,
 warmBybitWorkerProxy
-} from "./bybit-fetch.js?v=18";
+} from "./bybit-fetch.js?v=19";
 
 import {
 ensureDrawToolsVisible
@@ -65,7 +65,7 @@ initFocusBlurAfterPick
 
 import {
 initDesktopAppUi
-} from "./desktop-app-ui.js?v=8";
+} from "./desktop-app-ui.js?v=9";
 
 import {
 initSiteHeader,
@@ -80,7 +80,7 @@ shouldRunScriptBackgroundJobs
 
 import {
 installWebTradingShell
-} from "./trade-web/client.js?v=2";
+} from "./trade-web/client.js?v=3";
 
 if(
 !window.cryptoTerminalDesktop?.isDesktop

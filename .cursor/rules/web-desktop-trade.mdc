@@ -1,0 +1,34 @@
+---
+description: Веб и desktop — один продукт; торговля Bybit на сайте через Railway
+alwaysApply: true
+---
+
+# Веб = .app по страницам, не по ключам
+
+Сайт на Vercel и Multichart.app — один UI. Ордера Bybit на вебе идут через
+Railway, в `.app` — через IPC. **Не** делать веб «как desktop» через
+`isDesktop: true`.
+
+| | Vercel | .app |
+|---|---|---|
+| Логин-стенка | email+пароль, весь HTML | нет |
+| Bybit терминал / вотчлист / дневник | `js/trade-web/*` → Railway `/trade/*` | `cryptoTerminalDesktop.trading` IPC |
+| BingX торговля | нет (пока пользователь не попросит) | да |
+| Live-бот Алго | нет | да |
+| Скрипт / страница Алго | тоггл в Системных, default off | то же |
+
+```text
+❌ isDesktop: true на сайте
+❌ ключи биржи в localStorage / ответе getStatus
+❌ свечи/стакан через Railway GET /bybit
+❌ BingX на Railway / js/trade-web
+❌ редирект /script /algo-trading /diary «потому что веб»
+
+✅ webTrading + isDesktop:false
+✅ ключи AES-GCM на volume Railway
+✅ рынок: прямой Bybit или Vercel /api/bybit
+✅ live-бот и BingX-торговля только в процессе .app
+```
+
+Полный коммит: `.cursor/rules/full-commit-checklist.mdc`.
+Таблица продукта: `docs/TRADING_MODULE.md`.

@@ -1,13 +1,20 @@
 /**
  * POST /api/site-gate/login  { email, password }
- * Sets httpOnly cookie and returns tradeToken for Railway.
+ * Sets httpOnly cookie (gate) and returns a short-lived tradeToken for Railway.
  */
 const {
-  signSiteGateToken,
+  GATE_TTL_SEC,
+  signGateCookieToken,
+  signTradeToken,
   timingEqual
 } = require("./_token.js");
-
-const TOKEN_TTL_SEC = 30 * 24 * 60 * 60;
+const {
+  clientKey,
+  isLocked,
+  noteFailure,
+  noteSuccess,
+  failDelay
+} = require("./_rate-limit.js");
 
 function readEnv(name) {
   const v = String(process.env[name] || "").trim();
@@ -20,7 +27,7 @@ function cookieHeader(token, secure) {
     "Path=/",
     "HttpOnly",
     "SameSite=Lax",
-    `Max-Age=${TOKEN_TTL_SEC}`
+    `Max-Age=${GATE_TTL_SEC}`
   ];
   if (secure) {
     parts.push("Secure");
@@ -61,8 +68,16 @@ module.exports = async function handler(req, res) {
   }
   const email = String(body.email || "").trim().toLowerCase();
   const pass = String(body.password || "");
+  const limitKey = clientKey(req, email || "missing");
+
+  if (isLocked(limitKey)) {
+    res.status(429).json({ ok: false, error: "locked" });
+    return;
+  }
 
   if (!email || !pass) {
+    noteFailure(limitKey);
+    await failDelay();
     res.status(400).json({ ok: false, error: "missing" });
     return;
   }
@@ -70,17 +85,20 @@ module.exports = async function handler(req, res) {
   const emailOk = timingEqual(email, emailAllow);
   const passOk = timingEqual(pass, password);
   if (!emailOk || !passOk) {
+    noteFailure(limitKey);
+    await failDelay();
     res.status(401).json({ ok: false, error: "invalid" });
     return;
   }
 
-  const exp = Math.floor(Date.now() / 1000) + TOKEN_TTL_SEC;
-  const token = signSiteGateToken(secret, { email, exp });
+  noteSuccess(limitKey);
+  const cookieToken = signGateCookieToken(secret, email);
+  const tradeToken = signTradeToken(secret, email);
   const proto = String(
     req.headers["x-forwarded-proto"] || ""
   ).split(",")[0].trim();
   const secure = proto === "https";
 
-  res.setHeader("Set-Cookie", cookieHeader(token, secure));
-  res.status(200).json({ ok: true, tradeToken: token });
+  res.setHeader("Set-Cookie", cookieHeader(cookieToken, secure));
+  res.status(200).json({ ok: true, tradeToken });
 };
