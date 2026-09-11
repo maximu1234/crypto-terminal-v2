@@ -38,6 +38,37 @@ hideDomChartCrosshairVert,
 positionDomChartCrosshairHorz
 } from "./chart-dom-crosshair.js?v=15";
 
+const chartHostElements =
+new WeakMap();
+
+function rememberChartHost(
+chart,
+container
+){
+
+if(
+chart &&
+container
+){
+chartHostElements.set(
+chart,
+container
+);
+}
+
+}
+
+function hostElementForChart(
+chart
+){
+
+return chartHostElements.get(
+chart
+) ||
+null;
+
+}
+
 export function mountChartRangeFreeze(
 chart
 ){
@@ -1254,17 +1285,17 @@ fixRightEdge:false
 crosshair:hiddenCrosshairOptions(),
 
 handleScroll:{
-mouseWheel:false,
-pressedMouseMove:false,
-horzTouchDrag:false,
+mouseWheel:true,
+pressedMouseMove:true,
+horzTouchDrag:true,
 vertTouchDrag:false
 },
 
 handleScale:{
-mouseWheel:false,
-pinch:false,
+mouseWheel:true,
+pinch:true,
 axisPressedMouseMove:{
-time:false,
+time:true,
 price:false
 },
 axisDoubleClickReset:{
@@ -1323,6 +1354,11 @@ minMove:0.01
 applyRsiFixedPriceScale(
 chart,
 series
+);
+
+rememberChartHost(
+chart,
+container
 );
 
 return {
@@ -1384,17 +1420,17 @@ fixRightEdge:false
 crosshair:hiddenCrosshairOptions(),
 
 handleScroll:{
-mouseWheel:false,
-pressedMouseMove:false,
-horzTouchDrag:false,
+mouseWheel:true,
+pressedMouseMove:true,
+horzTouchDrag:true,
 vertTouchDrag:false
 },
 
 handleScale:{
-mouseWheel:false,
-pinch:false,
+mouseWheel:true,
+pinch:true,
 axisPressedMouseMove:{
-time:false,
+time:true,
 price:false
 },
 axisDoubleClickReset:{
@@ -1422,6 +1458,11 @@ priceScaleId:"right"
 
 });
 
+rememberChartHost(
+chart,
+container
+);
+
 return {
 
 chart,
@@ -1435,7 +1476,11 @@ export function applyChartScaleWidthCss(
 mainChart
 ){
 
-if(!mainChart){
+if(
+!mainChart ||
+typeof document ===
+"undefined"
+){
 return;
 }
 
@@ -1619,13 +1664,55 @@ const isLocked =
 options.isLocked ??
 (()=>false);
 
-/** false — только main → linked (панели Volume/AO не двигают основной график после setData). */
+/** false — setData на панели не двигает main; жест (pan/wheel) всё равно синхронизирует. */
 const linkedDrivesMain =
 options.linkedDrivesMain !==
 false;
 
+const gestureRoot =
+options.linkedEl ||
+hostElementForChart(
+linkedChart
+);
+
 let lock =
 false;
+let linkedPointerDown =
+false;
+let linkedGestureUntil =
+0;
+
+function markLinkedGesture(){
+
+linkedGestureUntil =
+(
+typeof performance !==
+"undefined"
+? performance.now()
+: Date.now()
+) +
+250;
+
+}
+
+function linkedGestureActive(){
+
+if(
+linkedPointerDown
+){
+return true;
+}
+
+const now =
+typeof performance !==
+"undefined"
+? performance.now()
+: Date.now();
+
+return now <
+linkedGestureUntil;
+
+}
 
 function fromMain(){
 
@@ -1654,6 +1741,13 @@ function fromLinked(){
 if(
 lock ||
 isLocked()
+){
+return;
+}
+
+if(
+!linkedDrivesMain &&
+!linkedGestureActive()
 ){
 return;
 }
@@ -1700,17 +1794,102 @@ fromMain();
 );
 
 const subLinked =
-linkedDrivesMain
-? linkedChart.timeScale().subscribeVisibleLogicalRangeChange(
+linkedChart.timeScale().subscribeVisibleLogicalRangeChange(
 range=>{
 if(range){
 fromLinked();
 }
 }
-)
+);
+
+const gestureAbort =
+typeof AbortController ===
+"function"
+? new AbortController()
 : null;
 
+if(
+!linkedDrivesMain &&
+gestureRoot &&
+gestureAbort
+){
+
+const listenerOpts =
+{
+signal:
+gestureAbort.signal,
+passive:
+true
+};
+
+gestureRoot.addEventListener(
+"pointerdown",
+e=>{
+
+if(
+e.button !==
+0 &&
+e.button !==
+1
+){
+return;
+}
+
+if(
+isTabletEventOnPriceScale(
+gestureRoot,
+e,
+linkedChart
+)
+){
+return;
+}
+
+linkedPointerDown = true;
+markLinkedGesture();
+
+},
+listenerOpts
+);
+
+gestureRoot.addEventListener(
+"wheel",
+()=>{
+markLinkedGesture();
+},
+listenerOpts
+);
+
+const win =
+typeof window !==
+"undefined"
+? window
+: null;
+
+win?.addEventListener(
+"pointerup",
+()=>{
+linkedPointerDown = false;
+markLinkedGesture();
+},
+listenerOpts
+);
+
+win?.addEventListener(
+"pointercancel",
+()=>{
+linkedPointerDown = false;
+markLinkedGesture();
+},
+listenerOpts
+);
+
+}
+
 return ()=>{
+
+gestureAbort?.abort();
+
 if(
 subMain
 ){
@@ -1726,6 +1905,7 @@ linkedChart.timeScale().unsubscribeVisibleLogicalRangeChange(
 subLinked
 );
 }
+
 };
 
 }

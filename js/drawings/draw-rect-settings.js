@@ -11,14 +11,14 @@ import {
 STROKE,
 RECT_DEFAULT_FILL_COLOR,
 RECT_DEFAULT_FILL_OPACITY
-} from "./constants.js?v=11";
+} from "./constants.js?v=13";
 
 import {
 normalizeFibLineStyle,
 normalizeFibLevelWidth,
 setFibLineStyleButton,
 setFibLevelWidthButton
-} from "./fib-spec.js?v=15";
+} from "./fib-spec.js?v=17";
 
 import {
 closeAllFibLineStyleMenus,

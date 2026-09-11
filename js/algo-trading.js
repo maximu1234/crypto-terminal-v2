@@ -12,7 +12,7 @@ applyRsiFixedPriceScale,
 appendFutureWhitespaceBars,
 computeChartFutureMarginBars,
 syncLinkedChartTimescales
-} from "./chart-import.js?v=53";
+} from "./chart-import.js?v=54";
 
 import {
 applyLiveSeriesUpdate,
@@ -98,11 +98,11 @@ syncBotStrategiesToMain
 
 import {
 mountAlgoTradeUi
-} from "./algo-trading/trade/boot.js?v=11";
+} from "./algo-trading/trade/boot.js?v=12";
 
 import {
 mountAlgoTradingDrawings
-} from "./algo-trading/drawings.js?v=5";
+} from "./algo-trading/drawings.js?v=7";
 
 import {
 mountAlgoTradingIndicators
@@ -114,7 +114,7 @@ mountAlgoPatternEntryOverlay
 
 import {
 mountRsiTouchFlipHost
-} from "./algo-trading/rsi-touch-flip-panel.js?v=26";
+} from "./algo-trading/rsi-touch-flip-panel.js?v=32";
 
 import {
 loadRsiTouchFlipPrefs,
@@ -190,7 +190,7 @@ runWithPreservedVisibleLogicalRange
 import {
 coinsState,
 marketMap
-} from "./terminal/terminal-state.js?v=13";
+} from "./terminal/terminal-state.js?v=14";
 
 import {
 DEFAULT_TF,

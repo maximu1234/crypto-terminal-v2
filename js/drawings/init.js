@@ -5,11 +5,11 @@ formatDrawColor
 
 import {
 TRASH_ICON_SVG
-} from "../draw-ui-shared.js?v=38";
+} from "../draw-ui-shared.js?v=40";
 
 import {
 closeAllWidgetDrawToolsMenus
-} from "../watchlist-draw-ui.js?v=18";
+} from "../watchlist-draw-ui.js?v=20";
 
 import {
 ensureDrawToolsVisible
@@ -50,7 +50,7 @@ ensureDomChartCrosshair,
 hideDomChartCrosshair,
 positionTabletProbeHorizInStack,
 fullCrosshairOptions
-} from "../chart-import.js?v=53";
+} from "../chart-import.js?v=54";
 
 import {
 STROKE,
@@ -59,7 +59,7 @@ HANDLE_STROKE,
 WIDTH_OPTIONS,
 isHorizPriceTool,
 horizPriceLineX1
-} from "./constants.js?v=11";
+} from "./constants.js?v=13";
 
 import {
 getRectangleHandleScreens,
@@ -87,8 +87,10 @@ finalizeFibLevels,
 normalizeFibLevelsShape,
 parseFibRatioField,
 getFibRows,
-isSeriesLogarithmic
-} from "./fib-spec.js?v=15";
+isSeriesLogarithmic,
+isFibType,
+isFibExtType
+} from "./fib-spec.js?v=17";
 
 import {
 setFibPanelCommitHook,
@@ -112,15 +114,15 @@ positionEntryPrice,
 positionXBounds as resolvePositionXBounds,
 positionBodyDist as resolvePositionBodyDist,
 getPositionHandleScreens as resolvePositionHandleScreens
-} from "./position.js?v=10";
+} from "./position.js?v=11";
 
 import {
 createDrawPrefs
-} from "./draw-prefs.js?v=6";
+} from "./draw-prefs.js?v=8";
 
 import {
 createPositionDraw
-} from "./position-draw.js?v=4";
+} from "./position-draw.js?v=5";
 
 import {
 pickUi
@@ -128,11 +130,11 @@ pickUi
 
 import {
 createDrawHitTester
-} from "./draw-hit.js?v=16";
+} from "./draw-hit.js?v=17";
 
 import {
 createDrawRenderer
-} from "./draw-render.js?v=21";
+} from "./draw-render.js?v=24";
 
 import {
 snapPlotToCandleWick
@@ -149,7 +151,7 @@ updateChartRulerLabelEl
 
 import {
 mountTabletDrawInput
-} from "../drawings-tablet-input.js?v=7";
+} from "../drawings-tablet-input.js?v=8";
 
 import {
 cloneDrawingsForUndo,
@@ -158,15 +160,15 @@ createDrawUndoStack
 
 import {
 createDrawDesktopSelection
-} from "./draw-edit-desktop.js?v=13";
+} from "./draw-edit-desktop.js?v=14";
 
 import {
 createDrawingsPersist
-} from "./drawings-persist.js?v=13";
+} from "./drawings-persist.js?v=15";
 
 import {
 createDrawStyleBar
-} from "./draw-style-bar.js?v=40";
+} from "./draw-style-bar.js?v=43";
 
 import {
 createDrawAlertsChart
@@ -174,7 +176,7 @@ createDrawAlertsChart
 
 import {
 createDrawPlacement
-} from "./draw-placement.js?v=15";
+} from "./draw-placement.js?v=18";
 
 import {
 createDrawTextEditor,
@@ -193,16 +195,21 @@ syncElliottGroupActive
 } from "./elliott-toolbar.js?v=1";
 
 import {
+closeFibFlyout,
+syncFibGroupActive
+} from "./fib-toolbar.js?v=2";
+
+import {
 createBrushPlacement
 } from "./brush-placement.js?v=3";
 
 import {
 createDrawEditInteraction
-} from "./draw-edit-interaction.js?v=20";
+} from "./draw-edit-interaction.js?v=22";
 
 import {
 createDrawChartInput
-} from "./draw-chart-input.js?v=2";
+} from "./draw-chart-input.js?v=3";
 
 import {
 createDrawPriceScale
@@ -210,7 +217,7 @@ createDrawPriceScale
 
 import {
 createDrawRedrawLoop
-} from "./draw-redraw-loop.js?v=12";
+} from "./draw-redraw-loop.js?v=13";
 
 import {
 isAlgoReducedCloudClient
@@ -1322,6 +1329,8 @@ placement.type ===
 "trendline" ||
 placement.type ===
 "fib" ||
+placement.type ===
+"fib-ext" ||
 placement.type ===
 "channel" ||
 placement.type ===
@@ -2685,6 +2694,20 @@ return [
 }
 
 if(
+isFibExtType(
+shape.type
+)
+){
+
+return [
+{ id: "p1", point: shape.p1 },
+{ id: "p2", point: shape.p2 },
+{ id: "p3", point: shape.p3 }
+];
+
+}
+
+if(
 shape.type ===
 "rectangle"
 ){
@@ -3191,6 +3214,7 @@ getDrawMagnetKeyDown:()=>drawMagnetKeyDown,
 setDrawMagnetKeyDown:v=>{
 drawMagnetKeyDown = v;
 },
+getShiftKeyDown:()=>chartRulerShiftDown,
 enableMagnet,
 getLastCrosshairPlotXY:()=>lastCrosshairPlotXY,
 setLastCrosshairPlotXY:v=>{
@@ -3384,7 +3408,11 @@ anchor.y
 
 }
 
-if(d.type === "fib"){
+if(
+isFibType(
+d.type
+)
+){
 
 dist = fibBodyDist(px, py, d);
 
@@ -3507,6 +3535,10 @@ syncElliottGroupActive(
 tools,
 tool
 );
+syncFibGroupActive(
+tools,
+tool
+);
 
 updateStyleBar();
 redraw();
@@ -3563,6 +3595,7 @@ return;
 }
 
 closeElliottFlyout();
+closeFibFlyout();
 
 const now =
 performance.now();
@@ -4098,6 +4131,7 @@ return;
 if(e.key === "Escape"){
 
 closeElliottFlyout();
+closeFibFlyout();
 
 if(
 chartRulerStart
@@ -4138,6 +4172,9 @@ e.key ===
 ){
 
 chartRulerShiftDown = true;
+refreshPlacementPreviewFromPointer(
+e
+);
 return;
 
 }
@@ -4292,6 +4329,9 @@ e.key ===
 "Shift"
 ){
 chartRulerShiftDown = false;
+refreshPlacementPreviewFromPointer(
+e
+);
 
 if(
 chartRulerStart
@@ -4341,13 +4381,6 @@ drawMagnetKeyDown
 drawMagnetKeyDown = false;
 
 if(
-placement &&
-placementPointerXY
-){
-refreshPlacementPreviewFromPointer();
-}
-
-if(
 dragState &&
 reapplyActiveDragCoordsHook
 ){
@@ -4358,6 +4391,13 @@ scheduleDragRedraw();
 }
 
 chartRulerShiftDown = false;
+
+if(
+placement &&
+placementPointerXY
+){
+refreshPlacementPreviewFromPointer();
+}
 
 if(
 chartRulerStart

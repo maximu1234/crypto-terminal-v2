@@ -5,7 +5,7 @@
  */
 import {
 computeWilderRsiValues
-} from "./rsi-touch-flip-engine.js?v=6";
+} from "./rsi-touch-flip-engine.js?v=8";
 import {
 normalizeRsiTouchFlipPrefs
 } from "./rsi-touch-flip-prefs.js?v=8";

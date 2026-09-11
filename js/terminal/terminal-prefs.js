@@ -14,13 +14,13 @@ COINS_PREFS_KEY,
 COINS_SORT_MODES,
 COINS_TF_VALUES,
 isTerminalPage
-} from "./terminal-state.js?v=13";
+} from "./terminal-state.js?v=14";
 
 import {
 getCurrentSymbols,
 getFirstVisibleSymbol,
 getExtraCoinMarkets
-} from "./terminal-table.js?v=40";
+} from "./terminal-table.js?v=41";
 
 import {
 parseAlertDeepLinkExchange

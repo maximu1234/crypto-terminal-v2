@@ -6,7 +6,7 @@
 export {
 coinsState,
 coinElements
-} from "../terminal/terminal-state.js?v=13";
+} from "../terminal/terminal-state.js?v=14";
 
 export {
 applyCoinsPrefs,
@@ -28,4 +28,4 @@ syncCoinListFreezeFromFlagMenus,
 getCurrentSymbols,
 getVisibleSymbolList,
 setCoinOpenPositionChecker
-} from "../terminal/terminal-table.js?v=40";
+} from "../terminal/terminal-table.js?v=41";

@@ -7,7 +7,7 @@ import {
   GLOBAL_STYLE_KEY,
   RECT_DEFAULT_COLOR,
   migrateRectangleToolDefaults
-} from "./constants.js?v=11";
+} from "./constants.js?v=13";
 
 import {
   normalizeRectangleShape
@@ -20,12 +20,16 @@ import {
 
 import {
   migrateFibToolDefaults,
-  ensureFibLevelsVisible
-} from "./fib-spec.js?v=15";
+  migrateFibExtToolDefaults,
+  ensureFibLevelsVisible,
+  isFibType,
+  isFibExtType,
+  resolveFibTrendLineColor
+} from "./fib-spec.js?v=17";
 
 import {
   isPositionType
-} from "./position.js?v=10";
+} from "./position.js?v=11";
 
 import {
   migrateTextToolDefaults,
@@ -76,6 +80,7 @@ function loadToolDefaults(){
 "hray",
 "hline",
 "fib",
+"fib-ext",
 "channel",
 "arrow",
 "rectangle",
@@ -130,6 +135,30 @@ migrated;
 localStorage.setItem(
 defaultsStorageKey(
 "fib"
+),
+JSON.stringify(
+migrated
+)
+);
+
+}
+
+if(
+name ===
+"fib-ext"
+){
+
+const migrated =
+migrateFibExtToolDefaults(
+toolDefaults["fib-ext"]
+);
+
+toolDefaults["fib-ext"] =
+migrated;
+
+localStorage.setItem(
+defaultsStorageKey(
+"fib-ext"
 ),
 JSON.stringify(
 migrated
@@ -431,13 +460,20 @@ risk
 }
 
 if(
-type ===
-"fib"
+isFibType(
+type
+)
 ){
 
+const migrate =
+isFibExtType(
+type
+)
+? migrateFibExtToolDefaults
+: migrateFibToolDefaults;
 const fibStore =
-migrateFibToolDefaults(
-toolDefaults.fib ||
+migrate(
+toolDefaults[type] ||
 saved
 );
 
@@ -445,7 +481,8 @@ out.fibLevels =
 JSON.parse(
 JSON.stringify(
 ensureFibLevelsVisible(
-fibStore.fibLevels
+fibStore.fibLevels,
+type
 )
 )
 );
@@ -454,7 +491,14 @@ out.fibShowTrendLine =
 typeof fibStore.fibShowTrendLine ===
 "boolean"
 ? fibStore.fibShowTrendLine
-: false;
+: isFibExtType(
+type
+);
+
+out.fibTrendLineColor =
+resolveFibTrendLineColor(
+fibStore.fibTrendLineColor
+);
 
 if(
 saved?.color

@@ -20,7 +20,28 @@ export const DEFAULT_FIB_SPEC = Object.freeze([
 { v:-2.618, enabled:false, color:"#ffffff" }
 ]);
 
+/** Trend-Based Fib Extension — TV ratios, our palette. */
+export const DEFAULT_FIB_EXT_SPEC = Object.freeze([
+{ v:0, enabled:true, color:"#facc15" },
+{ v:0.236, enabled:true, color:"#ef4444" },
+{ v:0.382, enabled:true, color:"#ffa726" },
+{ v:0.5, enabled:true, color:"#ffffff" },
+{ v:0.618, enabled:true, color:"#ffa726" },
+{ v:0.786, enabled:true, color:"#ef4444" },
+{ v:1, enabled:true, color:"#facc15" },
+{ v:1.272, enabled:true, color:"#ef4444" },
+{ v:1.414, enabled:true, color:"#9ca3af" },
+{ v:1.618, enabled:true, color:"#66bb6a" },
+{ v:2.618, enabled:true, color:"#66bb6a" },
+{ v:3.618, enabled:true, color:"#facc15" },
+{ v:4.236, enabled:true, color:"#facc15" }
+]);
+
+export const FIB_EXT_TOOL_DEFAULTS_VERSION = 1;
+
 export const STROKE = "#3b82f6";
+/** Fibonacci trend line — dashed, default gray from our palette. */
+export const FIB_TREND_LINE_COLOR = "#9ca3af";
 export const HANDLE_FILL = "#000000";
 export const HANDLE_STROKE = "#ffffff";
 export const WIDTH_OPTIONS = [1, 2, 3, 4];

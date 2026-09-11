@@ -15,16 +15,17 @@
 
 <link rel="stylesheet" href="/css/critical-shell.css?v=10">
 <script src="/js/site-css-ready.js?v=3"></script>
-<link rel="stylesheet" href="/css/common.css?v=57">
-<link rel="stylesheet" href="/css/terminal.css?v=180">
+<link rel="stylesheet" href="/css/common.css?v=58">
+<link rel="stylesheet" href="/css/terminal.css?v=182">
 <link rel="stylesheet" href="/css/terminal-layout.css?v=104">
 <link rel="stylesheet" href="/css/chart-indicators.css?v=29">
-<link rel="stylesheet" href="/css/algo-trading.css?v=158">
+<link rel="stylesheet" href="/css/algo-trading.css?v=160">
 <link rel="stylesheet" href="/css/algo-trading-book-panel.css?v=6">
 <link rel="stylesheet" href="/css/algo-trading-chart-overlay.css?v=2">
 <link rel="stylesheet" href="/css/trade-diary.css?v=26">
 <link rel="stylesheet" href="/css/trade-diary-period.css?v=1">
-<link rel="stylesheet" href="/css/algo-trading-diary-modal.css?v=7">
+<link rel="stylesheet" href="/css/trade-pnl-share-modal.css?v=5">
+<link rel="stylesheet" href="/css/algo-trading-diary-modal.css?v=8">
 
 <link rel="preload" href="/vendor/lightweight-charts.standalone.production.js" as="script">
 <link rel="modulepreload" href="/js/charts-lib-boot.js?v=3" crossorigin>
@@ -491,6 +492,11 @@ tabindex="0"
 
 <div id="algo-stats-panel" class="algo-stats-panel" aria-label="Статистика АлгоТрейдинг">
 <div class="algo-stats-columns" data-algo-analysis-bot="rsi-touch-flip">
+<div class="algo-rsi-flip-stats-tabs algo-stats-mode" role="tablist" aria-label="Панель Данные">
+<button type="button" class="algo-stats-mode-btn active" id="algo-rsi-flip-tab-data" data-algo-rsi-flip-stats-tab="data" role="tab" aria-selected="true" aria-controls="algo-rsi-flip-panel-data">Данные</button>
+<button type="button" class="algo-stats-mode-btn" id="algo-rsi-flip-tab-equity" data-algo-rsi-flip-stats-tab="equity" role="tab" aria-selected="false" aria-controls="algo-rsi-flip-panel-equity">Доходность</button>
+</div>
+<div id="algo-rsi-flip-panel-data" class="algo-rsi-flip-stats-tab-panel" data-algo-rsi-flip-stats-tab="data" role="tabpanel" aria-labelledby="algo-rsi-flip-tab-data">
 <div class="algo-stats-chart-cols">
 <div class="algo-stats-col">
 <div class="algo-stats-col-title">RSI Touch Flip</div>
@@ -697,6 +703,19 @@ tabindex="0"
 <input type="checkbox" id="algo-rsi-flip-marks" checked />
 </label>
 </div>
+</div>
+</div>
+</div>
+<div id="algo-rsi-flip-panel-equity" class="algo-rsi-flip-stats-tab-panel" data-algo-rsi-flip-stats-tab="equity" role="tabpanel" aria-labelledby="algo-rsi-flip-tab-equity" hidden>
+<div class="algo-rsi-flip-equity">
+<div class="algo-rsi-flip-equity-legend">
+<span class="algo-rsi-flip-equity-legend-item is-pnl"><i></i>Доходность</span>
+<span class="algo-rsi-flip-equity-legend-item is-train"><i></i>Train</span>
+<span class="algo-rsi-flip-equity-legend-item is-test"><i></i>Test</span>
+<span class="algo-rsi-flip-equity-legend-item is-trades"><i></i>Сделки</span>
+</div>
+<div id="algo-rsi-flip-equity-chart" class="algo-rsi-flip-equity-chart"></div>
+<p class="algo-rsi-flip-equity-empty" id="algo-rsi-flip-equity-empty" hidden>Нет данных для кривой</p>
 </div>
 </div>
 </div>

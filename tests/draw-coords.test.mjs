@@ -36,6 +36,7 @@ const type of
 "arrow",
 "rectangle",
 "fib",
+"fib-ext",
 "channel",
 "long",
 "short"
@@ -291,6 +292,146 @@ shape,
 "tp"
 ).price,
 12
+);
+
+});
+
+test("position coord settings expose entry, width, TP and SL", ()=>{
+
+const html =
+coordSettingsHtml(
+"long"
+);
+
+assert.match(
+html,
+/#1 \(price, bar\)/
+);
+assert.match(
+html,
+/#2 \(bar\)/
+);
+assert.match(
+html,
+/Take profit \(price\)/
+);
+assert.match(
+html,
+/Stop \(price\)/
+);
+assert.equal(
+coordSettingsHtml(
+"short"
+).includes(
+"data-coord-id=\"tp\""
+),
+true
+);
+
+});
+
+test("position coord apply rejects TP/SL on the wrong side of entry", ()=>{
+
+const shape = {
+type: "long",
+p1: { time: 1_000, price: 10 },
+p2: { time: 1_180, price: 10 },
+tpPrice: 12,
+slPrice: 9
+};
+
+assert.equal(
+applyCoordFieldToShape(
+shape,
+"tp",
+"price",
+"8",
+candles,
+"1"
+),
+false
+);
+assert.equal(
+shape.tpPrice,
+12
+);
+
+assert.equal(
+applyCoordFieldToShape(
+shape,
+"sl",
+"price",
+"11",
+candles,
+"1"
+),
+false
+);
+assert.equal(
+shape.slPrice,
+9
+);
+
+assert.equal(
+applyCoordFieldToShape(
+shape,
+"tp",
+"price",
+"13.5",
+candles,
+"1"
+),
+true
+);
+assert.equal(
+shape.tpPrice,
+13.5
+);
+
+const short = {
+type: "short",
+p1: { time: 1_000, price: 10 },
+p2: { time: 1_180, price: 10 },
+tpPrice: 8,
+slPrice: 12
+};
+
+assert.equal(
+applyCoordFieldToShape(
+short,
+"tp",
+"price",
+"11",
+candles,
+"1"
+),
+false
+);
+assert.equal(
+applyCoordFieldToShape(
+short,
+"sl",
+"price",
+"7",
+candles,
+"1"
+),
+false
+);
+assert.equal(
+applyCoordFieldToShape(
+short,
+"tp",
+"price",
+"7.5",
+candles,
+"1"
+),
+true
+);
+assert.equal(
+short.tpPrice,
+7.5
 );
 
 });

@@ -19,7 +19,7 @@ appendFutureWhitespaceBars,
 computeChartFutureMarginBars,
 coinsTfVisibleBars,
 linkChartsCrosshair
-} from "./chart-import.js?v=53";
+} from "./chart-import.js?v=54";
 
 import {
 readCoinsPrefs
@@ -48,7 +48,7 @@ liveBarPeriodSec
 
 import {
 mountWidgetDomCrosshair
-} from "./chart-widget-host.js?v=25";
+} from "./chart-widget-host.js?v=27";
 
 function buildBodyHtml(
 showRsi

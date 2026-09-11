@@ -236,13 +236,13 @@ import(
 "./indicators/rsi-pane.js?v=10"
 ),
 import(
-"./indicators/volume-pane.js?v=16"
+"./indicators/volume-pane.js?v=17"
 ),
 import(
-"./indicators/ao-pane.js?v=13"
+"./indicators/ao-pane.js?v=14"
 ),
 import(
-"./indicators/macd-pane.js?v=6"
+"./indicators/macd-pane.js?v=7"
 ),
 import(
 "./indicators/moving-average.js?v=19"

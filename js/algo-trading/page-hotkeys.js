@@ -5,11 +5,11 @@
 import {
 COINS_TF_HOTKEYS,
 COINS_TF_VALUES
-} from "../terminal/terminal-state.js?v=13";
+} from "../terminal/terminal-state.js?v=14";
 
 import {
 shouldIgnoreTypingHotkey
-} from "../qwerty-key-input.js?v=3";
+} from "../qwerty-key-input.js?v=4";
 
 export const ALGO_POSITION_DRAW_HOTKEYS =
 new Map(

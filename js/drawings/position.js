@@ -5,7 +5,7 @@ POSITION_SCALE_SL_BG,
 POSITION_SCALE_TP_BG,
 POSITION_DEFAULT_TP_PCT,
 POSITION_DEFAULT_SL_PCT
-} from "./constants.js?v=11";
+} from "./constants.js?v=13";
 
 import {
 distToRect,
@@ -527,6 +527,203 @@ slPrice: entryN * (1 - POSITION_DEFAULT_SL_PCT)
 return {
 tpPrice: entryN * (1 - POSITION_DEFAULT_TP_PCT),
 slPrice: entryN * (1 + POSITION_DEFAULT_SL_PCT)
+};
+
+}
+
+/**
+ * Convert a pixel offset from entry Y into a price on the requested
+ * side of entry. Tries both screen directions so invertScale still
+ * yields the same on-screen TP/SL height as a normal chart.
+ * @param {(y: number) => number|null} coordinateToPrice
+ * @param {number} yEntry
+ * @param {number} px
+ * @param {number} entryN
+ * @param {boolean} wantHigher
+ * @returns {number|null}
+ */
+function priceFromPixelOffset(
+coordinateToPrice,
+yEntry,
+px,
+entryN,
+wantHigher
+){
+
+const up =
+coordinateToPrice(
+yEntry -
+px
+);
+const down =
+coordinateToPrice(
+yEntry +
+px
+);
+
+if(
+wantHigher
+){
+
+if(
+Number.isFinite(
+up
+) &&
+up >
+entryN
+){
+return up;
+}
+
+if(
+Number.isFinite(
+down
+) &&
+down >
+entryN
+){
+return down;
+}
+
+return null;
+
+}
+
+if(
+Number.isFinite(
+up
+) &&
+up <
+entryN
+){
+return up;
+}
+
+if(
+Number.isFinite(
+down
+) &&
+down <
+entryN
+){
+return down;
+}
+
+return null;
+
+}
+
+/**
+ * Default TP/SL from live scale pixel heights.
+ * Same visual size on inverted and normal charts; percent is fallback.
+ * @param {"long"|"short"} type
+ * @param {number} entryN
+ * @param {number|null} yEntry
+ * @param {(y: number) => number|null} coordinateToPrice
+ * @param {number} tpPx
+ * @param {number} slPx
+ */
+export function initialPositionTpSlFromScale(
+type,
+entryN,
+yEntry,
+coordinateToPrice,
+tpPx,
+slPx
+){
+
+const fallback =
+initialPositionTpSlPercent(
+type,
+entryN
+);
+
+if(
+yEntry ==
+null ||
+typeof coordinateToPrice !==
+"function"
+){
+return fallback;
+}
+
+if(
+type ===
+"long"
+){
+
+const tpPrice =
+priceFromPixelOffset(
+coordinateToPrice,
+yEntry,
+tpPx,
+entryN,
+true
+);
+const slPrice =
+priceFromPixelOffset(
+coordinateToPrice,
+yEntry,
+slPx,
+entryN,
+false
+);
+
+return {
+tpPrice:
+Number.isFinite(
+tpPrice
+) &&
+tpPrice >
+entryN
+? tpPrice
+: fallback.tpPrice,
+slPrice:
+Number.isFinite(
+slPrice
+) &&
+slPrice <
+entryN
+? slPrice
+: fallback.slPrice
+};
+
+}
+
+const slPrice =
+priceFromPixelOffset(
+coordinateToPrice,
+yEntry,
+slPx,
+entryN,
+true
+);
+const tpPrice =
+priceFromPixelOffset(
+coordinateToPrice,
+yEntry,
+tpPx,
+entryN,
+false
+);
+
+return {
+tpPrice:
+Number.isFinite(
+tpPrice
+) &&
+tpPrice <
+entryN
+? tpPrice
+: fallback.tpPrice,
+slPrice:
+Number.isFinite(
+slPrice
+) &&
+slPrice >
+entryN
+? slPrice
+: fallback.slPrice
 };
 
 }

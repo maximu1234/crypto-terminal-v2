@@ -4,20 +4,24 @@ isTabletChartViewport,
 hasAnyFinePointer,
 positionDomChartCrosshair,
 hideDomChartCrosshair
-} from "./chart-import.js?v=53";
+} from "./chart-import.js?v=54";
 
 import {
 isPositionType
-} from "./drawings/position.js?v=10";
+} from "./drawings/position.js?v=11";
 
 import {
 isHorizPriceTool
-} from "./drawings/constants.js?v=11";
+} from "./drawings/constants.js?v=13";
 
 import {
 isElliottType,
 elliottPointCount
 } from "./drawings/elliott-spec.js?v=5";
+
+import {
+isFibExtType
+} from "./drawings/fib-spec.js?v=17";
 
 /**
  * Touch/pointer placement for iPad and coarse-touch viewports.
@@ -264,7 +268,13 @@ chart.clearCrosshairPosition();
 
 function placementPointsNeeded(type){
 
-if(type === "channel"){
+if(
+type ===
+"channel" ||
+isFibExtType(
+type
+)
+){
 return 3;
 }
 

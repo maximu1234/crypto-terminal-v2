@@ -4,18 +4,22 @@
  */
 import {
 isCoarseTouchViewport
-} from "../chart-import.js?v=53";
+} from "../chart-import.js?v=54";
 
 import {
 uid
 } from "./math.js?v=2";
 
 import {
+constrainPointerToAxis
+} from "./draw-axis-lock.js?v=1";
+
+import {
 DRAW_HANDLE_HIT_THRESHOLD_DESKTOP,
 DRAW_HANDLE_HIT_THRESHOLD_DESKTOP_POSITION,
 DRAW_BODY_HIT_THRESHOLD_TOUCH,
 isHorizPriceTool
-} from "./constants.js?v=11";
+} from "./constants.js?v=13";
 
 import {
 getRectangleHandleScreens,
@@ -31,11 +35,13 @@ isFvpType
 import {
 isPositionType,
 positionEntryPrice
-} from "./position.js?v=10";
+} from "./position.js?v=11";
 
 import {
-ensureFibAnchorMinSpan
-} from "./fib-spec.js?v=15";
+ensureFibAnchorMinSpan,
+isFibType,
+isFibExtType
+} from "./fib-spec.js?v=17";
 
 import {
 touchShapeRevision
@@ -43,7 +49,7 @@ touchShapeRevision
 
 import {
 stripAlertFromShape
-} from "./drawings-persist.js?v=13";
+} from "./drawings-persist.js?v=15";
 
 import {
 moveBrushHandle,
@@ -326,6 +332,35 @@ handleId ===
 "p2"
 ){
 return shape.p2;
+}
+
+}
+
+if(
+isFibExtType(
+shape.type
+)
+){
+
+if(
+handleId ===
+"p1"
+){
+return shape.p1;
+}
+
+if(
+handleId ===
+"p2"
+){
+return shape.p2;
+}
+
+if(
+handleId ===
+"p3"
+){
+return shape.p3;
 }
 
 }
@@ -831,6 +866,26 @@ shape.p2 = { ...point };
 }
 
 if(
+isFibExtType(
+shape.type
+)
+){
+
+if(handleId === "p1"){
+shape.p1 = { ...point };
+}
+
+if(handleId === "p2"){
+shape.p2 = { ...point };
+}
+
+if(handleId === "p3"){
+shape.p3 = { ...point };
+}
+
+}
+
+if(
 shape.type ===
 "brush"
 ){
@@ -1153,6 +1208,14 @@ return [shape.p1, shape.p2];
 }
 
 if(
+isFibExtType(
+shape.type
+)
+){
+return [shape.p1, shape.p2, shape.p3];
+}
+
+if(
 shape.type ===
 "brush"
 ){
@@ -1249,58 +1312,12 @@ y,
 shiftKey
 ){
 
-const startX =
-dragState.startX;
-const startY =
-dragState.startY;
-
-if(
-startX == null ||
-startY == null ||
-!shiftKey
-){
-dragState.shiftAxisLock = null;
-return {
+return constrainPointerToAxis(
+dragState,
 x,
-y
-};
-}
-
-if(
-!dragState.shiftAxisLock
-){
-
-const adx =
-Math.abs(
-x - startX
+y,
+shiftKey
 );
-const ady =
-Math.abs(
-y - startY
-);
-
-dragState.shiftAxisLock =
-adx >=
-ady
-? "x"
-: "y";
-
-}
-
-if(
-dragState.shiftAxisLock ===
-"x"
-){
-return {
-x,
-y: startY
-};
-}
-
-return {
-x: startX,
-y
-};
 
 }
 
@@ -1395,7 +1412,11 @@ bodyThreshold
 );
 }
 
-if(shape.type === "fib"){
+if(
+isFibType(
+shape.type
+)
+){
 return hitTestFibBody(px, py, shape, bodyThreshold);
 }
 
@@ -1470,6 +1491,19 @@ shape.type === "arrow"
 
 shape.p1 = pts[0];
 shape.p2 = pts[1];
+return true;
+
+}
+
+if(
+isFibExtType(
+shape.type
+)
+){
+
+shape.p1 = pts[0];
+shape.p2 = pts[1];
+shape.p3 = pts[2];
 return true;
 
 }
@@ -1990,8 +2024,9 @@ const picked =
 getSelected();
 
 if(
-picked?.type ===
-"fib"
+isFibType(
+picked?.type
+)
 ){
 styleBarCtl?.setFibSettingsShapeId?.(picked.id);
 }
@@ -2863,8 +2898,9 @@ preserveTpSl
 );
 
 }else if(
-draggedShape.type ===
-"fib" &&
+isFibType(
+draggedShape.type
+) &&
 getDragState().mode ===
 "handle"
 ){

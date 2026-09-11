@@ -53,12 +53,38 @@ return "bybit";
 
 }
 
+function resolveCardExchange(
+payload
+){
+
+const forced =
+String(
+payload?.exchange ||
+""
+).trim().toLowerCase();
+
+if(
+forced ===
+"bingx" ||
+forced ===
+"bybit"
+){
+return forced;
+}
+
+return getActiveExchangeId();
+
+}
+
 function getScriptPath(
-variant
+variant,
+payload
 ){
 
 if(
-getActiveExchangeId() ===
+resolveCardExchange(
+payload
+) ===
 "bingx"
 ){
 return path.join(
@@ -84,7 +110,8 @@ name
 
 function templatePaths(
 appRoot,
-variant
+variant,
+payload
 ){
 
 const root =
@@ -92,7 +119,9 @@ appRoot ||
 getAppRoot();
 
 const exchange =
-getActiveExchangeId();
+resolveCardExchange(
+payload
+);
 
 const prefix =
 exchange ===
@@ -188,7 +217,9 @@ outPath
 ];
 
 if(
-getActiveExchangeId() ===
+resolveCardExchange(
+payload
+) ===
 "bingx"
 ){
 args.push(
@@ -500,7 +531,8 @@ const variant =
 payload?.variant;
 const scriptPath =
 getScriptPath(
-variant
+variant,
+payload
 );
 
 if(
@@ -518,7 +550,8 @@ new Error(
 const templates =
 templatePaths(
 appRoot,
-variant
+variant,
+payload
 );
 
 if(

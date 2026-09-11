@@ -12,7 +12,7 @@ updateRsiLevelLinesLayout,
 linkPairedChartTimeScales,
 SCREENER_MAX_BARS,
 SCREENER_VISIBLE_BARS
-} from "./chart-import.js?v=53";
+} from "./chart-import.js?v=54";
 
 import {
 loadMarketHistory,

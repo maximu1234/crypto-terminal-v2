@@ -5,17 +5,20 @@
 import {
 hideDomChartCrosshair,
 positionTabletProbeHorizInStack
-} from "../chart-import.js?v=53";
+} from "../chart-import.js?v=54";
 
 import {
 ensureFibLevelsVisible,
-cloneDefaultFibRows,
-ensureFibAnchorMinSpan
-} from "./fib-spec.js?v=15";
+cloneDefaultFibRowsForType,
+ensureFibAnchorMinSpan,
+isFibType,
+isFibExtType,
+resolveFibTrendLineColor
+} from "./fib-spec.js?v=17";
 
 import {
 isPositionType
-} from "./position.js?v=10";
+} from "./position.js?v=11";
 
 import {
 uid
@@ -31,7 +34,7 @@ touchShapeRevision
 
 import {
 isHorizPriceTool
-} from "./constants.js?v=11";
+} from "./constants.js?v=13";
 
 import {
 isTextTool,
@@ -53,6 +56,12 @@ isFvpType,
 copyFvpStyleToShape
 } from "./fixed-volume-profile.js?v=3";
 
+import {
+constrainPointerToAxis,
+eventHasShiftKey,
+lastPlacementPointPlotXY
+} from "./draw-axis-lock.js?v=1";
+
 export function createDrawPlacement(
 deps
 ){
@@ -72,6 +81,9 @@ getPlacementPointerXY,
 setPlacementPointerXY,
 getDrawMagnetKeyDown,
 setDrawMagnetKeyDown,
+getShiftKeyDown =
+()=>
+false,
 enableMagnet =
 true,
 getLastCrosshairPlotXY,
@@ -131,12 +143,15 @@ let placementSkipNextPointerUp =
 false;
 let placementStrokeDown =
 false;
+let placementShiftAxisLock =
+null;
 
 const DESKTOP_STROKE_PLACEMENT_TOOLS =
 new Set([
 "rectangle",
 "trendline",
 "fib",
+"fib-ext",
 "channel",
 "arrow"
 ]);
@@ -157,6 +172,14 @@ placementSkipNextPointerUp =
 false;
 placementStrokeDown =
 false;
+resetPlacementAxisLock();
+
+}
+
+function resetPlacementAxisLock(){
+
+placementShiftAxisLock =
+null;
 
 }
 
@@ -601,6 +624,7 @@ return;
 placement.points.push(
 point
 );
+resetPlacementAxisLock();
 placementSkipNextPointerUp =
 true;
 setBlockChartClick(
@@ -716,6 +740,7 @@ return;
 placement.points.push(
 point
 );
+resetPlacementAxisLock();
 
 if(
 placement.points.length >=
@@ -958,17 +983,19 @@ snapped: false
 };
 }
 
+let x =
+rawX;
+let y =
+rawY;
+let snapped =
+false;
+let point;
+
 if(
-!isDrawMagnetActive(
+isDrawMagnetActive(
 optEvent
 )
 ){
-return {
-x: rawX,
-y: rawY,
-snapped: false
-};
-}
 
 const snap =
 snapPlotToCandleWick({
@@ -981,24 +1008,136 @@ priceToPlotY: plotPriceToCoordinate
 });
 
 if(
-!snap
+snap
+){
+x =
+snap.x;
+y =
+snap.y;
+snapped =
+true;
+point = {
+time: snap.time,
+price: snap.price
+};
+}
+
+}
+
+const locked =
+applyPlacementShiftAxisLock(
+x,
+y,
+optEvent
+);
+
+if(
+locked.x !==
+x ||
+locked.y !==
+y
 ){
 return {
-x: rawX,
-y: rawY,
+x: locked.x,
+y: locked.y,
 snapped: false
 };
 }
 
+if(
+snapped &&
+point
+){
 return {
-x: snap.x,
-y: snap.y,
+x,
+y,
 snapped: true,
-point: {
-time: snap.time,
-price: snap.price
-}
+point
 };
+}
+
+return {
+x,
+y,
+snapped: false
+};
+
+}
+
+function isPlacementShiftActive(
+optEvent
+){
+
+return !!(
+getShiftKeyDown() ||
+eventHasShiftKey(
+optEvent
+)
+);
+
+}
+
+function applyPlacementShiftAxisLock(
+x,
+y,
+optEvent
+){
+
+const placement =
+getPlacement();
+const pts =
+placement?.points;
+
+if(
+isTouchDrawPlacement() ||
+!pts?.length ||
+!isPlacementShiftActive(
+optEvent
+)
+){
+resetPlacementAxisLock();
+return {
+x,
+y
+};
+}
+
+const origin =
+lastPlacementPointPlotXY(
+pts[
+pts.length -
+1
+],
+xFromTime,
+plotPriceToCoordinate
+);
+
+if(
+!origin
+){
+return {
+x,
+y
+};
+}
+
+const state = {
+startX: origin.x,
+startY: origin.y,
+shiftAxisLock: placementShiftAxisLock
+};
+const locked =
+constrainPointerToAxis(
+state,
+x,
+y,
+true
+);
+
+placementShiftAxisLock =
+state.shiftAxisLock;
+
+return locked;
 
 }
 
@@ -1154,22 +1293,28 @@ createdAt: Date.now(),
 type,
 color: style.color,
 lineWidth: style.lineWidth,
-fibLevels:type === "fib"
+fibLevels:isFibType(type)
 ? JSON.parse(
 JSON.stringify(
 ensureFibLevelsVisible(
 style.fibLevels ||
-cloneDefaultFibRows()
+cloneDefaultFibRowsForType(type),
+type
 )
 )
 )
 :undefined,
-fibShowTrendLine:type === "fib"
+fibShowTrendLine:isFibType(type)
 ? (
 typeof style.fibShowTrendLine ===
 "boolean"
 ? style.fibShowTrendLine
-: false
+: isFibExtType(type)
+)
+:undefined,
+fibTrendLineColor:isFibType(type)
+? resolveFibTrendLineColor(
+style.fibTrendLineColor
 )
 :undefined,
 channelLevels:type === "channel"
@@ -1311,6 +1456,48 @@ pointFromXY
 );
 }
 
+if(isFibExtType(getPlacement().type) && pts.length >= 3){
+created = makeShape("fib-ext", {
+p1: pts[0],
+p2: pts[1],
+p3: pts[2]
+});
+ensureFibAnchorMinSpan(
+created,
+"p3",
+{
+toXY(
+pt
+){
+const x =
+xFromTime(
+pt.time
+);
+const y =
+plotPriceToCoordinate(
+pt.price
+);
+
+if(
+x ==
+null ||
+y ==
+null
+){
+return null;
+}
+
+return {
+x,
+y
+};
+
+},
+pointFromXY
+}
+);
+}
+
 if(getPlacement().type === "channel" && pts.length >= 3){
 created = makeShape("channel", {
 p1: pts[0],
@@ -1406,6 +1593,7 @@ setPlacement({ type, points: [] });
 setPreviewPoint(null);
 setPreviewXY(null);
 setPlacementPointerXY(null);
+resetPlacementAxisLock();
 cancelPlacementPreviewRaf();
 resetPlacementCrosshairCache();
 invalidateLastCandleRightXCache();
@@ -1532,6 +1720,7 @@ return true;
 }
 
 getPlacement().points.push(point);
+resetPlacementAxisLock();
 
 if(
 getPlacement().points.length >=

@@ -4,15 +4,20 @@ normalizeFibLevelWidth,
 ensureFibLevelsVisible,
 formatFibLabel,
 fibPriceAtRatio,
+fibShapePriceAtRatio,
 getFibDrawRows,
 getFibFillPairs,
 isSeriesLogarithmic,
-fibLevelXSpan
-} from "./fib-spec.js?v=15";
+fibLevelXSpan,
+fibShapeLevelXSpan,
+isFibType,
+isFibExtType,
+resolveFibTrendLineColor
+} from "./fib-spec.js?v=17";
 
 import {
 isPositionType
-} from "./position.js?v=10";
+} from "./position.js?v=11";
 
 import {
 drawFilledArrow,
@@ -35,7 +40,7 @@ drawBrushPath
 import {
 isHorizPriceTool,
 horizPriceLineX1
-} from "./constants.js?v=11";
+} from "./constants.js?v=13";
 
 import {
 CHANNEL_MIDLINE_ALPHA,
@@ -107,6 +112,42 @@ ctx.lineTo(x2, y2);
 ctx.stroke();
 
 ctx.setLineDash([]);
+
+}
+
+function drawFibTrendConnector(
+ctx,
+from,
+to,
+style,
+width
+){
+
+if(
+!from ||
+!to
+){
+return;
+}
+
+drawLine(
+ctx,
+from.x,
+from.y,
+to.x,
+to.y,
+resolveFibTrendLineColor(
+style?.fibTrendLineColor
+),
+Math.max(
+1,
+width ||
+1
+),
+fibLevelDash(
+"dashed"
+)
+);
 
 }
 
@@ -326,8 +367,53 @@ const a =
 toXY(shape.p1);
 const b =
 toXY(shape.p2);
+const c =
+isFibExtType(
+shape.type
+)
+? toXY(shape.p3)
+: null;
 
-if(!a || !b){
+if(
+!a ||
+!b
+){
+return;
+}
+
+if(
+isFibExtType(
+shape.type
+) &&
+!c
+){
+
+if(
+shape.fibShowTrendLine ===
+true
+){
+drawFibTrendConnector(
+ctx,
+a,
+b,
+shape,
+width
+);
+}
+
+return;
+}
+
+const span =
+fibShapeLevelXSpan(
+shape,
+toXY,
+plotW
+);
+
+if(
+!span
+){
 return;
 }
 
@@ -336,11 +422,7 @@ x1,
 x2,
 labelX
 } =
-fibLevelXSpan(
-a,
-b,
-plotW
-);
+span;
 
 const useLog =
 isSeriesLogarithmic(
@@ -358,16 +440,14 @@ drawRows
 pair=>{
 
 const priceFrom =
-fibPriceAtRatio(
-shape.p1.price,
-shape.p2.price,
+fibShapePriceAtRatio(
+shape,
 pair.from.v,
 useLog
 );
 const priceTo =
-fibPriceAtRatio(
-shape.p1.price,
-shape.p2.price,
+fibShapePriceAtRatio(
+shape,
 pair.to.v,
 useLog
 );
@@ -455,9 +535,8 @@ return;
 }
 
 const price =
-fibPriceAtRatio(
-shape.p1.price,
-shape.p2.price,
+fibShapePriceAtRatio(
+shape,
 row.v,
 useLog
 );
@@ -514,16 +593,25 @@ shape.fibShowTrendLine ===
 true
 ){
 
-drawLine(
+drawFibTrendConnector(
 ctx,
-a.x,
-a.y,
-b.x,
-b.y,
-color,
-width,
-[]
+a,
+b,
+shape,
+width
 );
+
+if(
+c
+){
+drawFibTrendConnector(
+ctx,
+b,
+c,
+shape,
+width
+);
+}
 
 }
 
@@ -766,7 +854,11 @@ getEditingTextId()
 
 }
 
-if(shape.type === "fib"){
+if(
+isFibType(
+shape.type
+)
+){
 drawFib(ctx, shape, color, width, w);
 }
 
@@ -918,7 +1010,10 @@ type
 
 if(
 type ===
-"channel"
+"channel" ||
+isFibExtType(
+type
+)
 ){
 return 3;
 }
@@ -1119,6 +1214,103 @@ style.color,
 style.lineWidth,
 style.channelLevels
 );
+}
+
+}
+
+return;
+
+}
+
+if(
+isFibExtType(
+placement.type
+)
+){
+
+if(pts.length === 1){
+
+const a = toXY(pts[0]);
+const b = previewPointToXY(
+previewPoint || (previewXY ? { _xy: previewXY } : null)
+);
+
+if(a && b){
+drawFibTrendConnector(
+ctx,
+a,
+b,
+style,
+style.lineWidth
+);
+}
+
+return;
+
+}
+
+if(pts.length >= 2){
+
+const previewAnchor =
+resolvePreviewAnchorPoint() ||
+(
+previewXY
+? pointFromXY(
+previewXY.x,
+previewXY.y
+)
+: null
+);
+const p3 =
+pts[2] ||
+previewAnchor;
+
+if(
+p3
+){
+
+drawShape(
+ctx,
+{
+type: "fib-ext",
+color: style.color,
+lineWidth: style.lineWidth,
+fibLevels: ensureFibLevelsVisible(
+style.fibLevels,
+"fib-ext"
+),
+fibShowTrendLine:
+style.fibShowTrendLine !==
+false,
+fibTrendLineColor: style.fibTrendLineColor,
+p1: pts[0],
+p2: pts[1],
+p3
+},
+w,
+h,
+true
+);
+
+}else{
+
+const a =
+toXY(
+pts[0]
+);
+const b =
+toXY(
+pts[1]
+);
+
+drawFibTrendConnector(
+ctx,
+a,
+b,
+style,
+style.lineWidth
+);
+
 }
 
 }
@@ -1404,6 +1596,7 @@ ensureFibLevelsVisible(
 style.fibLevels
 ),
 fibShowTrendLine: style.fibShowTrendLine,
+fibTrendLineColor: style.fibTrendLineColor,
 p1: pts[0],
 p2: previewAnchor
 };
@@ -1428,10 +1621,16 @@ type: placement.type,
 color: style.color,
 lineWidth: style.lineWidth,
 fibLevels:
-placement.type === "fib"
-? ensureFibLevelsVisible(style.fibLevels)
+isFibType(
+placement.type
+)
+? ensureFibLevelsVisible(
+style.fibLevels,
+placement.type
+)
 : style.fibLevels,
 fibShowTrendLine: style.fibShowTrendLine,
+fibTrendLineColor: style.fibTrendLineColor,
 p1: previewPts[0],
 p2: previewPts[1],
 p3: previewPts[2],
@@ -1480,6 +1679,16 @@ drawShape(ctx, previewShape, w, h);
 }
 
 if(placement.type === "fib" && previewPts.length >= 2){
+drawShape(ctx, previewShape, w, h, true);
+}
+
+if(
+isFibExtType(
+placement.type
+) &&
+previewPts.length >=
+3
+){
 drawShape(ctx, previewShape, w, h, true);
 }
 

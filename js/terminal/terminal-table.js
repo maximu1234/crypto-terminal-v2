@@ -2,7 +2,7 @@ import {
 coinsState,
 marketMap,
 coinElements
-} from "./terminal-state.js?v=13";
+} from "./terminal-state.js?v=14";
 
 import {
 isActiveRealtimeMarketDataset,
@@ -35,13 +35,18 @@ emptyFavorites
 
 import {
 isTradePage
-} from "./terminal-state.js?v=13";
+} from "./terminal-state.js?v=14";
 
 import {
 applyLiveOhlcBar,
 ensureOhlcRollover,
 liveBarPeriodSec
 } from "../chart/live-bar-roll.js?v=3";
+
+import {
+canonicalChartSymbol,
+shouldApplyLivePriceToChart
+} from "./chart-live-guard.js?v=1";
 
 /** Desktop /trade only — не тянем trade-open-positions в открытый web /coins. */
 function escapeHtml(
@@ -612,20 +617,6 @@ item
    REALTIME
 ========================================================= */
 
-function canonicalChartSymbol(
-symbol
-){
-
-return String(
-symbol ||
-""
-).replace(
-/\.P$/i,
-""
-).trim().toUpperCase();
-
-}
-
 let lastPublicKlineAt =
 0;
 let liveMarkUnsub =
@@ -638,6 +629,8 @@ let liveBarRollTimer =
 null;
 let pendingLiveBar =
 null;
+let pendingLiveBarSymbol =
+"";
 
 function paintLiveChartBar(
 bar
@@ -680,7 +673,36 @@ coinsState().candles
 
 }
 
+function liveChartGuard(
+sourceSymbol
+){
+
+return shouldApplyLivePriceToChart({
+sourceSymbol,
+currentSymbol: coinsState().currentSymbol,
+chartCandlesSymbol: coinsState().chartCandlesSymbol
+});
+
+}
+
+function canPaintLiveChartBar(
+sourceSymbol
+){
+
+return liveChartGuard(
+sourceSymbol ??
+coinsState().chartCandlesSymbol
+);
+
+}
+
 function rollLiveBarsIfNeeded(){
+
+if(
+!canPaintLiveChartBar()
+){
+return false;
+}
 
 const candles =
 coinsState().candles;
@@ -703,6 +725,10 @@ candles.length -
 ];
 pendingLiveBar =
 last;
+pendingLiveBarSymbol =
+canonicalChartSymbol(
+coinsState().chartCandlesSymbol
+);
 paintLiveChartBar(
 last
 );
@@ -716,11 +742,18 @@ livePriceFlushTimer =
 null;
 const bar =
 pendingLiveBar;
+const barSymbol =
+pendingLiveBarSymbol;
 pendingLiveBar =
 null;
+pendingLiveBarSymbol =
+"";
 
 if(
-!bar
+!bar ||
+!canPaintLiveChartBar(
+barSymbol
+)
 ){
 return;
 }
@@ -737,11 +770,8 @@ sourceSymbol
 ){
 
 if(
-canonicalChartSymbol(
+!canPaintLiveChartBar(
 sourceSymbol
-) !==
-canonicalChartSymbol(
-coinsState().currentSymbol
 )
 ){
 return;
@@ -810,6 +840,10 @@ coinsState().candles.length -
 bar;
 pendingLiveBar =
 bar;
+pendingLiveBarSymbol =
+canonicalChartSymbol(
+sourceSymbol
+);
 
 if(
 !livePriceFlushTimer
@@ -823,7 +857,7 @@ flushPendingLiveBar,
 
 }
 
-function stopLivePriceFallbacks(){
+export function stopLivePriceFallbacks(){
 
 if(
 liveMarkUnsub
@@ -863,6 +897,8 @@ null;
 
 pendingLiveBar =
 null;
+pendingLiveBarSymbol =
+"";
 
 }
 
@@ -952,6 +988,14 @@ onCandle:candle=>{
 
 if(
 streamSymbol !== coinsState().currentSymbol
+){
+return;
+}
+
+if(
+!canPaintLiveChartBar(
+streamSymbol
+)
 ){
 return;
 }

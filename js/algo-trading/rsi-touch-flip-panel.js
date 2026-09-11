@@ -33,18 +33,24 @@ getAlgoTradingWalletBalance
 } from "./runtime-bridge.js?v=6";
 import {
 runRsiTouchFlip
-} from "./rsi-touch-flip-engine.js?v=6";
+} from "./rsi-touch-flip-engine.js?v=8";
 import {
 resolveRsiTouchFlipChartRsi,
 rsiTouchFlipChartDays
-} from "./rsi-touch-flip-mtf.js?v=3";
+} from "./rsi-touch-flip-mtf.js?v=4";
 import {
 mountRsiTouchFlipOverlay
 } from "./rsi-touch-flip-overlay.js?v=3";
 import {
 mountRsiTouchFlipFit,
 loadRsiTouchFlipFitRowForSymbol
-} from "./rsi-touch-flip-fit-panel.js?v=11";
+} from "./rsi-touch-flip-fit-panel.js?v=12";
+import {
+RSI_TOUCH_FLIP_DEFAULT_TRAIN_PCT
+} from "./rsi-touch-flip-walkforward.js?v=10";
+import {
+buildRsiTouchFlipEquityModel
+} from "./rsi-touch-flip-equity.js?v=4";
 
 function el(
 id
@@ -296,6 +302,395 @@ let prefsDirty =
 false;
 let fitApi =
 null;
+let statsTab =
+"data";
+let equityChart =
+null;
+let equityChartMod =
+null;
+let equityPaintSeq =
+0;
+let lastEquityInput =
+null;
+
+function isEquityTab(){
+
+return statsTab ===
+"equity";
+
+}
+
+function readTrainPct(){
+
+return el(
+"algo-rsi-flip-train-pct"
+)?.value ||
+RSI_TOUCH_FLIP_DEFAULT_TRAIN_PCT;
+
+}
+
+function syncStatsTabUi(){
+
+const dataBtn =
+el(
+"algo-rsi-flip-tab-data"
+);
+const equityBtn =
+el(
+"algo-rsi-flip-tab-equity"
+);
+const dataPanel =
+el(
+"algo-rsi-flip-panel-data"
+);
+const equityPanel =
+el(
+"algo-rsi-flip-panel-equity"
+);
+const dataOn =
+!isEquityTab();
+
+if(
+dataBtn
+){
+dataBtn.classList.toggle(
+"active",
+dataOn
+);
+dataBtn.setAttribute(
+"aria-selected",
+dataOn
+? "true"
+: "false"
+);
+}
+
+if(
+equityBtn
+){
+equityBtn.classList.toggle(
+"active",
+!dataOn
+);
+equityBtn.setAttribute(
+"aria-selected",
+dataOn
+? "false"
+: "true"
+);
+}
+
+if(
+dataPanel
+){
+dataPanel.hidden =
+!dataOn;
+}
+
+if(
+equityPanel
+){
+equityPanel.hidden =
+dataOn;
+}
+
+}
+
+function setEquityEmpty(
+on
+){
+
+const node =
+el(
+"algo-rsi-flip-equity-empty"
+);
+const chart =
+el(
+"algo-rsi-flip-equity-chart"
+);
+
+if(
+node
+){
+node.hidden =
+!on;
+}
+
+if(
+chart
+){
+chart.hidden =
+!!on;
+}
+
+}
+
+async function paintEquityChart(
+candles,
+prefs,
+rsiValues,
+precomputed
+){
+
+if(
+disposed ||
+!isEquityTab()
+){
+return;
+}
+
+const mySeq =
+++equityPaintSeq;
+const emptyNode =
+el(
+"algo-rsi-flip-equity-empty"
+);
+
+if(
+emptyNode &&
+!equityChart
+){
+emptyNode.hidden =
+false;
+emptyNode.textContent =
+"Считаем кривую…";
+}
+
+if(
+!equityChartMod
+){
+equityChartMod =
+await import(
+"./rsi-touch-flip-equity-chart.js?v=4"
+);
+}
+
+if(
+disposed ||
+mySeq !==
+equityPaintSeq ||
+!isEquityTab()
+){
+return;
+}
+
+const hostEl =
+el(
+"algo-rsi-flip-equity-chart"
+);
+
+if(
+!hostEl
+){
+return;
+}
+
+if(
+!equityChart
+){
+equityChart =
+equityChartMod.mountRsiTouchFlipEquityChart(
+hostEl
+);
+}
+
+const result =
+precomputed &&
+Array.isArray(
+precomputed.equityCurve
+)
+? precomputed
+: runRsiTouchFlip(
+candles,
+prefs,
+{
+rsiValues,
+collectEquity:
+true
+}
+);
+const model =
+buildRsiTouchFlipEquityModel(
+{
+equityCurve:
+result.equityCurve,
+closedTrades:
+result.closedTrades,
+candles,
+capital:
+prefs.budget,
+trainPct:
+readTrainPct()
+}
+);
+lastEquityInput =
+{
+equityCurve:
+result.equityCurve,
+closedTrades:
+result.closedTrades,
+candles,
+capital:
+prefs.budget
+};
+const empty =
+!(
+Array.isArray(
+model.line
+) &&
+model.line.length
+);
+
+setEquityEmpty(
+empty
+);
+
+if(
+emptyNode &&
+empty
+){
+emptyNode.textContent =
+"Нет данных для кривой";
+}
+
+if(
+!empty
+){
+await equityChart.setModel(
+model
+);
+}
+
+}
+
+async function onStatsTabClick(
+event
+){
+
+const btn =
+event.currentTarget;
+const next =
+btn?.dataset?.algoRsiFlipStatsTab ===
+"equity"
+? "equity"
+: "data";
+
+if(
+next ===
+statsTab
+){
+return;
+}
+
+statsTab =
+next;
+syncStatsTabUi();
+
+if(
+!isEquityTab()
+){
+return;
+}
+
+if(
+!isActive() ||
+!host?.isHistoryReady?.()
+){
+setEquityEmpty(
+true
+);
+const emptyNode =
+el(
+"algo-rsi-flip-equity-empty"
+);
+if(
+emptyNode
+){
+emptyNode.textContent =
+"Нет данных для кривой";
+}
+return;
+}
+
+const candles =
+host.getCandles?.() ||
+[];
+const prefs =
+loadRsiTouchFlipPrefs();
+
+if(
+!candles.length
+){
+setEquityEmpty(
+true
+);
+return;
+}
+
+let rsiValues;
+try{
+rsiValues =
+await resolveRsiTouchFlipChartRsi(
+candles,
+prefs,
+{
+chartTf:
+String(
+host.getChartTf?.() ||
+""
+).trim(),
+symbol:
+host.getSymbol?.(),
+loadHistory:
+loadHistoryForHost
+}
+);
+}catch(
+err
+){
+console.warn(
+"[algo-rsi-touch-flip] equity rsi",
+err?.message ||
+err
+);
+}
+
+await paintEquityChart(
+candles,
+prefs,
+rsiValues
+);
+
+}
+
+function onTrainPctForEquity(){
+
+if(
+disposed ||
+!isEquityTab()
+){
+return;
+}
+
+if(
+equityChart &&
+lastEquityInput
+){
+void equityChart.setModel(
+buildRsiTouchFlipEquityModel(
+{
+...lastEquityInput,
+trainPct:
+readTrainPct()
+}
+)
+);
+return;
+}
+
+void refresh();
+
+}
 
 function isActive(){
 
@@ -853,7 +1248,9 @@ runRsiTouchFlip(
 candles,
 prefs,
 {
-rsiValues
+rsiValues,
+collectEquity:
+isEquityTab()
 }
 );
 renderOverview(
@@ -892,6 +1289,17 @@ host.getChartTf?.() ||
 ).trim()
 }
 );
+
+if(
+isEquityTab()
+){
+await paintEquityChart(
+candles,
+prefs,
+rsiValues,
+result
+);
+}
 
 }
 
@@ -997,6 +1405,26 @@ id
 syncChartRsiPaneFromColumn
 );
 }
+
+el(
+"algo-rsi-flip-tab-data"
+)?.addEventListener(
+"click",
+onStatsTabClick
+);
+el(
+"algo-rsi-flip-tab-equity"
+)?.addEventListener(
+"click",
+onStatsTabClick
+);
+el(
+"algo-rsi-flip-train-pct"
+)?.addEventListener(
+"change",
+onTrainPctForEquity
+);
+syncStatsTabUi();
 
 function currentChartSymbol(){
 
@@ -1461,6 +1889,9 @@ loadRsiTouchFlipPrefs()
 syncChartRsiPaneFromColumn();
 void refresh();
 }else{
+statsTab =
+"data";
+syncStatsTabUi();
 clearOverview();
 }
 
@@ -1542,6 +1973,33 @@ window.removeEventListener(
 RSI_TOUCH_FLIP_BOOK_CHANGE_EVENT,
 onBookChanged
 );
+
+el(
+"algo-rsi-flip-tab-data"
+)?.removeEventListener(
+"click",
+onStatsTabClick
+);
+el(
+"algo-rsi-flip-tab-equity"
+)?.removeEventListener(
+"click",
+onStatsTabClick
+);
+el(
+"algo-rsi-flip-train-pct"
+)?.removeEventListener(
+"change",
+onTrainPctForEquity
+);
+
+equityChart?.destroy?.();
+equityChart =
+null;
+equityChartMod =
+null;
+lastEquityInput =
+null;
 
 overlay.destroy();
 fitApi?.destroy?.();

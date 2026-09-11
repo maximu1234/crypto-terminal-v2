@@ -34,7 +34,7 @@ updateRsiLevelLinesLayout,
 linkPairedChartTimeScales,
 SCREENER_VISIBLE_BARS,
 SCREENER_MAX_BARS
-} from "./chart-import.js?v=53";
+} from "./chart-import.js?v=54";
 
 import {
 isIpadWebViewport
@@ -107,7 +107,7 @@ preloadTradingSymbols
 import {
 mountQwertyKeyInput,
 shouldIgnoreTypingHotkey
-} from "./qwerty-key-input.js?v=3";
+} from "./qwerty-key-input.js?v=4";
 
 import {
 mapWithConcurrency

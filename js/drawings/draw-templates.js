@@ -5,13 +5,18 @@ RECT_DEFAULT_FILL_COLOR,
 RECT_DEFAULT_FILL_OPACITY,
 createRectangleToolDefaults,
 FIB_TOOL_DEFAULTS_VERSION
-} from "./constants.js?v=11";
+} from "./constants.js?v=13";
 
 import {
 cloneDefaultFibRows,
+cloneDefaultFibExtRows,
 ensureFibLevelsVisible,
-getFibRows
-} from "./fib-spec.js?v=15";
+getFibRows,
+isFibType,
+isFibExtType,
+FIB_EXT_TOOL_DEFAULTS_VERSION,
+resolveFibTrendLineColor
+} from "./fib-spec.js?v=17";
 
 import {
 normalizeRectangleShape
@@ -26,7 +31,7 @@ createFvpToolDefaults
 
 import {
 isPositionType
-} from "./position.js?v=10";
+} from "./position.js?v=11";
 
 import {
 isTextTool,
@@ -63,6 +68,7 @@ Object.freeze([
 "hray",
 "hline",
 "fib",
+"fib-ext",
 "channel",
 "arrow",
 "rectangle",
@@ -129,6 +135,8 @@ fibDefaultsVersion:
 FIB_TOOL_DEFAULTS_VERSION,
 fibShowTrendLine:
 false,
+fibTrendLineColor:
+resolveFibTrendLineColor(),
 fibLevels:[
 standardFibLevel(
 0,
@@ -595,14 +603,17 @@ shape?.fontSize
 }
 
 if(
-type ===
-"fib"
+isFibType(
+type
+)
 ){
 
 const rows =
 getFibRows(
 shape ||
-{}
+{
+type
+}
 );
 
 out.fibLevels =
@@ -616,7 +627,14 @@ out.fibShowTrendLine =
 typeof shape?.fibShowTrendLine ===
 "boolean"
 ? shape.fibShowTrendLine
-: false;
+: isFibExtType(
+type
+);
+
+out.fibTrendLineColor =
+resolveFibTrendLineColor(
+shape?.fibTrendLineColor
+);
 
 }
 
@@ -763,17 +781,30 @@ const out = {
 };
 
 if(
-type ===
-"fib" &&
+isFibType(
+type
+) &&
 style.fibLevels
 ){
 out.fibLevels =
 JSON.parse(
 JSON.stringify(
 ensureFibLevelsVisible(
-style.fibLevels
+style.fibLevels,
+type
 )
 )
+);
+}
+
+if(
+isFibType(
+type
+)
+){
+out.fibTrendLineColor =
+resolveFibTrendLineColor(
+style.fibTrendLineColor
 );
 }
 
@@ -898,22 +929,36 @@ lineWidth: 1
 };
 
 if(
-type ===
-"fib"
+isFibType(
+type
+)
 ){
 
 out.fibDefaultsVersion =
-FIB_TOOL_DEFAULTS_VERSION;
+isFibExtType(
+type
+)
+? FIB_EXT_TOOL_DEFAULTS_VERSION
+: FIB_TOOL_DEFAULTS_VERSION;
 
 out.fibLevels =
 JSON.parse(
 JSON.stringify(
-cloneDefaultFibRows()
+isFibExtType(
+type
+)
+? cloneDefaultFibExtRows()
+: cloneDefaultFibRows()
 )
 );
 
 out.fibShowTrendLine =
-false;
+isFibExtType(
+type
+);
+
+out.fibTrendLineColor =
+resolveFibTrendLineColor();
 
 }
 
@@ -1066,8 +1111,9 @@ TEXT_DEFAULT_COLOR;
 }
 
 if(
-type ===
-"fib"
+isFibType(
+type
+)
 ){
 
 if(
@@ -1085,7 +1131,14 @@ shape.fibShowTrendLine =
 typeof snapshot.fibShowTrendLine ===
 "boolean"
 ? snapshot.fibShowTrendLine
-: false;
+: isFibExtType(
+type
+);
+
+shape.fibTrendLineColor =
+resolveFibTrendLineColor(
+snapshot.fibTrendLineColor
+);
 
 delete shape.levels;
 delete shape.showFibTrend;

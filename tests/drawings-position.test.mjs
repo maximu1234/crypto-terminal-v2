@@ -5,6 +5,7 @@ const {
   clampPositionPrices,
   formatPositionPrice,
   getPositionHandleScreens,
+  initialPositionTpSlFromScale,
   initialPositionTpSlPercent,
   positionBodyDist,
   positionMetrics,
@@ -176,6 +177,63 @@ test("initialPositionTpSlPercent uses default percents", () => {
   const short = initialPositionTpSlPercent("short", 100);
   assert.equal(short.tpPrice, 97);
   assert.ok(Math.abs(short.slPrice - 101.5) < 1e-9);
+});
+
+function linearScale(inverted) {
+  // Visible prices 0..200 mapped onto y 0..200.
+  // Normal: higher price → smaller y. Inverted: higher price → larger y.
+  const yToPrice = inverted
+    ? (y) => y
+    : (y) => 200 - y;
+  return yToPrice;
+}
+
+test("initialPositionTpSlFromScale keeps the same pixel height on inverted scale", () => {
+  const entry = 100;
+  const yEntry = 100;
+  const tpPx = 40;
+  const slPx = 20;
+  const expectedLong = { tpPrice: 140, slPrice: 80 };
+  const expectedShort = { tpPrice: 60, slPrice: 120 };
+
+  for (const inverted of [false, true]) {
+    const coordinateToPrice = linearScale(inverted);
+    assert.deepEqual(
+      initialPositionTpSlFromScale(
+        "long",
+        entry,
+        yEntry,
+        coordinateToPrice,
+        tpPx,
+        slPx
+      ),
+      expectedLong,
+      inverted ? "inverted long" : "normal long"
+    );
+    assert.deepEqual(
+      initialPositionTpSlFromScale(
+        "short",
+        entry,
+        yEntry,
+        coordinateToPrice,
+        tpPx,
+        slPx
+      ),
+      expectedShort,
+      inverted ? "inverted short" : "normal short"
+    );
+  }
+});
+
+test("initialPositionTpSlFromScale falls back to percents when coords miss", () => {
+  assert.deepEqual(
+    initialPositionTpSlFromScale("long", 100, null, () => 140, 40, 20),
+    initialPositionTpSlPercent("long", 100)
+  );
+  assert.deepEqual(
+    initialPositionTpSlFromScale("short", 100, 100, () => null, 40, 20),
+    initialPositionTpSlPercent("short", 100)
+  );
 });
 
 test("clampPositionPrices keeps long TP above entry", () => {

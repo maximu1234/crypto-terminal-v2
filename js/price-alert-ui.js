@@ -28,7 +28,7 @@ hideDomChartCrosshair,
 hideDomChartCrosshairHorz,
 hideDomChartCrosshairVert,
 positionDomChartCrosshair
-} from "./chart-import.js?v=53";
+} from "./chart-import.js?v=54";
 
 import {
 isChartLayoutReady,

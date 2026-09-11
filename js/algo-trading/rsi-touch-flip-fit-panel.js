@@ -5,10 +5,10 @@ import {
   RSI_TOUCH_FLIP_LEN_GRID,
   listRsiTouchFlipOptimizeCombos,
   optimizeRsiTouchFlipParams
-} from "./rsi-touch-flip-optimize.js?v=8";
+} from "./rsi-touch-flip-optimize.js?v=9";
 import {
   runRsiTouchFlip
-} from "./rsi-touch-flip-engine.js?v=6";
+} from "./rsi-touch-flip-engine.js?v=8";
 import {
   clampRsiTouchFlipTrainPct,
   formatRsiTouchFlipParamsBrief,
@@ -17,7 +17,7 @@ import {
   rsiTouchFlipTestVerdict,
   rsiTouchFlipTrainTestSplit,
   RSI_TOUCH_FLIP_DEFAULT_TRAIN_PCT
-} from "./rsi-touch-flip-walkforward.js?v=9";
+} from "./rsi-touch-flip-walkforward.js?v=10";
 import {
   saveRsiTouchFlipTickerPrefs
 } from "./rsi-touch-flip-prefs.js?v=8";

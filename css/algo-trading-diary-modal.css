@@ -187,10 +187,10 @@ body.algo-trading-page .algo-diary-content .trade-diary-week{
 overflow:visible;
 }
 
-/* 7 cols: time, ticker, duration, PnL$, PnL%, Com, side */
+/* 8 cols: time, ticker, duration, PnL$, share, PnL%, Com, side */
 body.algo-trading-page .algo-diary-content .trade-diary-grid{
 max-width:none;
-grid-template-columns:96px minmax(120px,1fr) 96px 88px 72px 72px 92px;
+grid-template-columns:96px minmax(120px,1fr) 96px 88px 28px 72px 72px 92px;
 }
 
 body.algo-trading-page .algo-diary-content .trade-diary-week-range{
@@ -204,7 +204,18 @@ grid-column:4;
 
 body.algo-trading-page .algo-diary-content .trade-diary-week-com,
 body.algo-trading-page .algo-diary-content .trade-diary-day-com{
-grid-column:6;
+grid-column:7;
+}
+
+body.algo-trading-page .algo-diary-content .trade-diary-share-col{
+display:flex;
+align-items:center;
+justify-content:center;
+min-width:0;
+}
+
+body.algo-trading-page .trade-pnl-share-overlay{
+z-index:14000;
 }
 
 body.algo-trading-page .algo-diary-content .trade-diary-day-label{

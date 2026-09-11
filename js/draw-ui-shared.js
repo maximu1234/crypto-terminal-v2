@@ -1,10 +1,14 @@
 import {
 getDrawToolIconSrc
-} from "./draw-toolbar-icon-data.js?v=37";
+} from "./draw-toolbar-icon-data.js?v=39";
 
 import {
 ensureElliottToolbarEvents
 } from "./drawings/elliott-toolbar.js?v=1";
+
+import {
+ensureFibToolbarEvents
+} from "./drawings/fib-toolbar.js?v=2";
 
 export function drawToolIconImg(
 name,
@@ -54,6 +58,7 @@ container.innerHTML =
 getDrawToolbarButtonsHtml();
 
 ensureElliottToolbarEvents();
+ensureFibToolbarEvents();
 
 }
 
@@ -108,6 +113,7 @@ opts = {}
 ){
 
 ensureElliottToolbarEvents();
+ensureFibToolbarEvents();
 
 const btnClass =
 opts.compact
@@ -143,7 +149,7 @@ ${CHANNEL_ICON_SVG}
 ${BRUSH_ICON_SVG}
 </button>
 
-<button type="button" class="${btnClass}" data-draw-tool="fib" title="Fib Retracement (F)">
+<button type="button" class="${btnClass} draw-tool-group-btn" data-draw-tool-group="fib" title="Fibonacci" aria-haspopup="menu" aria-expanded="false">
 ${FIB_ICON_SVG}
 </button>
 

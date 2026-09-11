@@ -5,11 +5,11 @@ import {
 formatFibInputValue,
 parseFibRatioField,
 normalizeFibLevelColor
-} from "./fib-spec.js?v=15";
+} from "./fib-spec.js?v=17";
 
 import {
 setFibLevelColorButton
-} from "./draw-fib-settings.js?v=1";
+} from "./draw-fib-settings.js?v=3";
 
 import {
 CHANNEL_DEFAULT_COLOR,

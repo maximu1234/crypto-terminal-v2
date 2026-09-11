@@ -9,13 +9,11 @@ POSITION_SL_FILL,
 POSITION_SCALE_TP_BG,
 POSITION_SCALE_SL_BG,
 POSITION_SCALE_ENTRY_BG,
-POSITION_DEFAULT_TP_PCT,
-POSITION_DEFAULT_SL_PCT,
 POSITION_DEFAULT_TP_ZONE_PX,
 POSITION_DEFAULT_SL_ZONE_PX,
 POSITION_DEFAULT_WIDTH_BARS,
 POSITION_RR_LABEL_SAMPLE
-} from "./constants.js?v=11";
+} from "./constants.js?v=13";
 
 import {
 formatMoneyUsd,
@@ -27,14 +25,14 @@ positionEntryPrice,
 positionXBounds as resolvePositionXBounds,
 positionMetrics,
 positionSizingFromShape,
-initialPositionTpSlPercent,
+initialPositionTpSlFromScale,
 clampPositionPrices as clampPositionPricesPure,
 formatPositionPrice
-} from "./position.js?v=10";
+} from "./position.js?v=11";
 
 import {
 isSeriesLogarithmic
-} from "./fib-spec.js?v=15";
+} from "./fib-spec.js?v=17";
 
 /**
  * @param {{
@@ -407,56 +405,15 @@ slPrice: entryN
 };
 }
 
-const yEntry =
-series.priceToCoordinate(entryN);
-
-if(yEntry == null){
-return initialPositionTpSlPercent(
+return initialPositionTpSlFromScale(
 type,
-entryN
+entryN,
+series.priceToCoordinate(entryN),
+(y)=>
+series.coordinateToPrice(y),
+POSITION_DEFAULT_TP_ZONE_PX,
+POSITION_DEFAULT_SL_ZONE_PX
 );
-}
-
-const tpPx =
-POSITION_DEFAULT_TP_ZONE_PX;
-const slPx =
-POSITION_DEFAULT_SL_ZONE_PX;
-
-if(type === "long"){
-
-const tpPrice =
-series.coordinateToPrice(yEntry - tpPx);
-const slPrice =
-series.coordinateToPrice(yEntry + slPx);
-
-return {
-tpPrice:
-Number.isFinite(tpPrice) && tpPrice > entryN
-? tpPrice
-: entryN * (1 + POSITION_DEFAULT_TP_PCT),
-slPrice:
-Number.isFinite(slPrice) && slPrice < entryN
-? slPrice
-: entryN * (1 - POSITION_DEFAULT_SL_PCT)
-};
-
-}
-
-const slPrice =
-series.coordinateToPrice(yEntry - slPx);
-const tpPrice =
-series.coordinateToPrice(yEntry + tpPx);
-
-return {
-tpPrice:
-Number.isFinite(tpPrice) && tpPrice < entryN
-? tpPrice
-: entryN * (1 - POSITION_DEFAULT_TP_PCT),
-slPrice:
-Number.isFinite(slPrice) && slPrice > entryN
-? slPrice
-: entryN * (1 + POSITION_DEFAULT_SL_PCT)
-};
 
 }
 

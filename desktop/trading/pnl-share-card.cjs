@@ -225,12 +225,38 @@ return "bybit";
 
 }
 
+function resolveCardExchange(
+payload
+){
+
+const forced =
+String(
+payload?.exchange ||
+""
+).trim().toLowerCase();
+
+if(
+forced ===
+"bingx" ||
+forced ===
+"bybit"
+){
+return forced;
+}
+
+return getActiveExchangeId();
+
+}
+
 function getScriptPath(
-variant
+variant,
+payload
 ){
 
 if(
-getActiveExchangeId() ===
+resolveCardExchange(
+payload
+) ===
 "bingx"
 ){
 return SCRIPT_BINGX;
@@ -301,7 +327,9 @@ outPath
 ];
 
 if(
-getActiveExchangeId() ===
+resolveCardExchange(
+payload
+) ===
 "bingx"
 ){
 args.push(
@@ -367,7 +395,8 @@ reject
 
 const scriptPath =
 getScriptPath(
-payload?.variant
+payload?.variant,
+payload
 );
 const args =
 buildGenerateArgs(

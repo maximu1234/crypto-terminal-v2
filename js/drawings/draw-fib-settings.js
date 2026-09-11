@@ -4,20 +4,25 @@
  */
 import {
 STROKE,
-DEFAULT_FIB_SPEC
-} from "./constants.js?v=11";
+DEFAULT_FIB_SPEC,
+DEFAULT_FIB_EXT_SPEC,
+FIB_TREND_LINE_COLOR
+} from "./constants.js?v=13";
 
 import {
 normalizeFibLineStyle,
 normalizeFibLevelColor,
 normalizeFibLevelWidth,
-cloneDefaultFibRows,
+cloneDefaultFibRowsForType,
+fibLevelSpecForType,
+isFibExtType,
 normalizeFibLevelsShape,
 formatFibInputValue,
 parseFibRatioField,
 setFibLineStyleButton,
-setFibLevelWidthButton
-} from "./fib-spec.js?v=15";
+setFibLevelWidthButton,
+resolveFibTrendLineColor
+} from "./fib-spec.js?v=17";
 
 import {
 closeAllFibLineStyleMenus,
@@ -28,14 +33,72 @@ isFibLineStyleMenuOpenForAnchor,
 isFibLineWidthMenuOpenForAnchor
 } from "./fib-portals.js?v=3";
 
-export function fibSettingsHtml(){
+function fibToolFromRoot(
+root
+){
+
+return root?.querySelector?.(
+".fib-settings"
+)?.dataset?.fibTool ||
+root?.dataset?.fibTool ||
+"fib";
+
+}
+
+function fibSpecForPanel(
+root,
+fibLevels
+){
+
+const tool =
+fibToolFromRoot(
+root
+);
+
+if(
+isFibExtType(
+tool
+) ||
+(
+Array.isArray(
+fibLevels
+) &&
+fibLevels.length ===
+DEFAULT_FIB_EXT_SPEC.length &&
+fibLevels.length !==
+DEFAULT_FIB_SPEC.length
+)
+){
+return DEFAULT_FIB_EXT_SPEC;
+}
+
+return fibLevelSpecForType(
+tool
+);
+
+}
+
+export function fibSettingsHtml(
+type =
+"fib"
+){
+
+const tool =
+isFibExtType(
+type
+)
+? "fib-ext"
+: "fib";
 
 return `
-<div class="fib-settings">
+<div class="fib-settings" data-fib-tool="${tool}">
+<div class="fib-trend-row">
 <label class="fib-trend-label">
 <input type="checkbox" id="fib-show-trend-line" />
 <span>Линия тренда</span>
 </label>
+<button type="button" class="fib-level-color-btn fib-trend-color-btn" title="Цвет линии тренда" aria-label="Цвет линии тренда"></button>
+</div>
 <div class="fib-levels-global">
 <span class="fib-levels-global-label">Levels line</span>
 <button type="button" class="fib-global-line-style-btn" data-line-style="solid" title="Тип линии" aria-label="Тип линии"></button>
@@ -88,7 +151,8 @@ btn.classList.remove(
 }
 
 export function mountFibLevelRows(
-root
+root,
+type
 ){
 
 const grid =
@@ -101,6 +165,33 @@ if(
 ){
 return;
 }
+
+const spec =
+type
+? fibLevelSpecForType(
+type
+)
+: fibSpecForPanel(
+root
+);
+const fibRoot =
+root.querySelector(
+".fib-settings"
+);
+
+if(
+fibRoot &&
+type
+){
+fibRoot.dataset.fibTool =
+isFibExtType(
+type
+)
+? "fib-ext"
+: "fib";
+}
+
+grid.replaceChildren();
 
 const globalStyleBtn =
 root.querySelector(
@@ -130,9 +221,9 @@ null,
 );
 }
 
-DEFAULT_FIB_SPEC.forEach(
+spec.forEach(
 (
-spec,
+levelSpec,
 i
 )=>{
 
@@ -175,7 +266,7 @@ if(
 on
 ){
 on.checked =
-!!spec.enabled;
+!!levelSpec.enabled;
 }
 
 if(
@@ -183,14 +274,14 @@ val
 ){
 val.value =
 formatFibInputValue(
-spec.v
+levelSpec.v
 );
 }
 
 setFibLevelColorButton(
 colorBtn,
 normalizeFibLevelColor(
-spec.color
+levelSpec.color
 ),
 STROKE
 );
@@ -209,7 +300,8 @@ root,
 fibLevels,
 fibShowTrendLine,
 fallbackColor,
-fallbackWidth
+fallbackWidth,
+fibTrendLineColor
 ){
 
 if(
@@ -218,19 +310,40 @@ if(
 return;
 }
 
+const spec =
+fibSpecForPanel(
+root,
+fibLevels
+);
+
+if(
+root.querySelectorAll(
+".fib-level-row"
+).length !==
+spec.length
+){
+mountFibLevelRows(
+root,
+spec ===
+DEFAULT_FIB_EXT_SPEC
+? "fib-ext"
+: "fib"
+);
+}
+
 const rows =
 Array.isArray(
 fibLevels
 ) &&
 fibLevels.length ===
-DEFAULT_FIB_SPEC.length
+spec.length
 ? fibLevels.map(
 (
 row,
 i
 )=>{
 const def =
-DEFAULT_FIB_SPEC[
+spec[
 i
 ];
 const levelColor =
@@ -273,7 +386,11 @@ levelColor
 };
 }
 )
-: cloneDefaultFibRows();
+: cloneDefaultFibRowsForType(
+fibToolFromRoot(
+root
+)
+);
 
 const baseColor =
 fallbackColor ||
@@ -304,6 +421,19 @@ trendEl
 trendEl.checked =
 !!fibShowTrendLine;
 }
+
+const trendColorBtn =
+root.querySelector(
+".fib-trend-color-btn"
+);
+
+setFibLevelColorButton(
+trendColorBtn,
+resolveFibTrendLineColor(
+fibTrendLineColor
+),
+FIB_TREND_LINE_COLOR
+);
 
 const globalStyleBtn =
 root.querySelector(
@@ -402,8 +532,16 @@ if(
 return {};
 }
 
+const spec =
+fibSpecForPanel(
+root
+);
 const template =
-cloneDefaultFibRows();
+cloneDefaultFibRowsForType(
+fibToolFromRoot(
+root
+)
+);
 const trendEl =
 root.querySelector(
 "#fib-show-trend-line"
@@ -412,6 +550,14 @@ const fibShowTrendLine =
 trendEl
 ? !!trendEl.checked
 : false;
+const trendColorBtn =
+root.querySelector(
+".fib-trend-color-btn"
+);
+const fibTrendLineColor =
+resolveFibTrendLineColor(
+trendColorBtn?.dataset.customColor
+);
 const globalStyleBtn =
 root.querySelector(
 ".fib-global-line-style-btn"
@@ -475,7 +621,7 @@ i
 parsed !=
 null
 ? parsed
-: DEFAULT_FIB_SPEC[
+: spec[
 i
 ].v;
 template[
@@ -511,7 +657,7 @@ levelColor;
 
 const defColor =
 normalizeFibLevelColor(
-DEFAULT_FIB_SPEC[
+spec[
 i
 ]?.color
 );
@@ -538,6 +684,7 @@ return {
 fibLevels:
 template,
 fibShowTrendLine,
+fibTrendLineColor,
 lineWidth:
 globalLineWidth,
 lineStyle:
@@ -555,6 +702,11 @@ clearWidths = false
 }
 ){
 
+const spec =
+fibLevelSpecForType(
+shape?.type
+);
+
 let levels =
 panel
 ? JSON.parse(
@@ -565,14 +717,16 @@ panel.fibLevels
 : JSON.parse(
 JSON.stringify(
 normalizeFibLevelsShape(
-shape.fibLevels
+shape.fibLevels,
+spec
 )
 )
 );
 
 levels =
 normalizeFibLevelsShape(
-levels
+levels,
+spec
 );
 
 levels.forEach(
@@ -664,6 +818,11 @@ levelWidth;
 
 shape.fibShowTrendLine =
 panel.fibShowTrendLine;
+shape.fibTrendLineColor =
+resolveFibTrendLineColor(
+panel.fibTrendLineColor ??
+shape.fibTrendLineColor
+);
 
 }
 
@@ -716,7 +875,11 @@ e.stopPropagation();
 const shape =
 getFibEditShape?.();
 const fallback =
-shape?.color ||
+colorBtn.classList.contains(
+"fib-trend-color-btn"
+)
+? FIB_TREND_LINE_COLOR
+: shape?.color ||
 STROKE;
 
 openColorMenu?.(

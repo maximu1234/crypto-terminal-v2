@@ -25,14 +25,18 @@ isFvpType
 import {
 isPositionType,
 positionXBounds
-} from "./position.js?v=10";
+} from "./position.js?v=11";
 
 import {
 fibPriceAtRatio,
+fibShapePriceAtRatio,
 getFibRows,
 isSeriesLogarithmic,
-fibLevelXSpan
-} from "./fib-spec.js?v=15";
+fibLevelXSpan,
+fibShapeLevelXSpan,
+isFibType,
+isFibExtType
+} from "./fib-spec.js?v=17";
 
 import {
 FIB_HIT_X_PAD_PX,
@@ -41,7 +45,7 @@ DRAW_BODY_HIT_THRESHOLD_TOUCH,
 DRAW_BODY_HIT_THRESHOLD_DESKTOP,
 isHorizPriceTool,
 horizPriceLineX1
-} from "./constants.js?v=11";
+} from "./constants.js?v=13";
 
 import {
 isCoarseTouchViewport
@@ -199,7 +203,9 @@ brushBodyDist(px, py, shape) <= threshold
 function fibBodyDist(px, py, shape){
 
 if(
-shape?.type !== "fib"
+!isFibType(
+shape?.type
+)
 ){
 return Infinity;
 }
@@ -208,8 +214,23 @@ const a =
 toXY(shape.p1);
 const b =
 toXY(shape.p2);
+const c =
+isFibExtType(
+shape.type
+)
+? toXY(shape.p3)
+: null;
 
-if(!a || !b){
+if(
+!a ||
+!b ||
+(
+isFibExtType(
+shape.type
+) &&
+!c
+)
+){
 return Infinity;
 }
 
@@ -221,15 +242,24 @@ isSeriesLogarithmic(series);
 const plotW =
 getPlotWidth();
 
+const span =
+fibShapeLevelXSpan(
+shape,
+toXY,
+plotW
+);
+
+if(
+!span
+){
+return Infinity;
+}
+
 const {
 x1,
 x2
 } =
-fibLevelXSpan(
-a,
-b,
-plotW
-);
+span;
 
 getFibRows(shape).forEach(row=>{
 
@@ -238,9 +268,8 @@ return;
 }
 
 const price =
-fibPriceAtRatio(
-shape.p1.price,
-shape.p2.price,
+fibShapePriceAtRatio(
+shape,
 row.v,
 useLog
 );
@@ -281,6 +310,22 @@ b.y
 )
 );
 
+if(
+c
+){
+dist = Math.min(
+dist,
+distToSegment(
+px,
+py,
+b.x,
+b.y,
+c.x,
+c.y
+)
+);
+}
+
 }
 
 return dist;
@@ -290,7 +335,9 @@ return dist;
 function hitTestFibBody(px, py, shape, threshold = 8){
 
 return (
-shape?.type === "fib" &&
+isFibType(
+shape?.type
+) &&
 fibBodyDist(px, py, shape) <= threshold
 );
 
@@ -853,8 +900,9 @@ rect
 }
 
 if(
-shape.type ===
-"fib"
+isFibType(
+shape.type
+)
 ){
 
 const a =
@@ -865,10 +913,24 @@ const b =
 toXY(
 shape.p2
 );
+const c =
+isFibExtType(
+shape.type
+)
+? toXY(
+shape.p3
+)
+: null;
 
 if(
 !a ||
-!b
+!b ||
+(
+isFibExtType(
+shape.type
+) &&
+!c
+)
 ){
 return false;
 }
@@ -876,12 +938,24 @@ return false;
 if(
 shape.fibShowTrendLine ===
 true &&
+(
 segmentIntersectsScreenRect(
 a.x,
 a.y,
 b.x,
 b.y,
 rect
+) ||
+(
+c &&
+segmentIntersectsScreenRect(
+b.x,
+b.y,
+c.x,
+c.y,
+rect
+)
+)
 )
 ){
 return true;
@@ -889,15 +963,24 @@ return true;
 
 const plotW =
 getPlotWidth();
+const span =
+fibShapeLevelXSpan(
+shape,
+toXY,
+plotW
+);
+
+if(
+!span
+){
+return false;
+}
+
 const {
 x1,
 x2
 } =
-fibLevelXSpan(
-a,
-b,
-plotW
-);
+span;
 const useLog =
 isSeriesLogarithmic(
 series
@@ -915,9 +998,8 @@ return false;
 }
 
 const price =
-fibPriceAtRatio(
-shape.p1.price,
-shape.p2.price,
+fibShapePriceAtRatio(
+shape,
 row.v,
 useLog
 );

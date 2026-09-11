@@ -39,6 +39,14 @@ require(
 "./algo-bybit-rest.cjs"
 );
 const {
+generatePnlShareCard,
+savePnlShareCard,
+discardPnlShareCard
+} =
+require(
+"./pnl-share-card.cjs"
+);
+const {
 setAlgoTradingStreamTarget,
 startAlgoTradingStream,
 stopAlgoTradingStream,
@@ -1534,6 +1542,119 @@ err
 }
 );
 
+
+handleTrustedDesktopUi(
+ipcMain,
+
+"desktop:algoTradingGeneratePnlShareCard",
+async(
+_event,
+payload
+)=>{
+
+try{
+return await generatePnlShareCard(
+{
+...(
+payload ||
+{}
+),
+exchange:
+"bybit"
+}
+);
+}catch(
+err
+){
+log.warn(
+"algoTradingGeneratePnlShareCard:",
+err?.message ||
+err
+);
+return {
+ok:
+false,
+error:
+err?.message ||
+String(
+err
+)
+};
+}
+
+}
+);
+
+handleTrustedDesktopUi(
+ipcMain,
+
+"desktop:algoTradingSavePnlShareCard",
+async(
+_event,
+payload
+)=>{
+
+try{
+return await savePnlShareCard(
+payload?.tempPath,
+payload?.defaultName
+);
+}catch(
+err
+){
+log.warn(
+"algoTradingSavePnlShareCard:",
+err?.message ||
+err
+);
+return {
+ok:
+false,
+error:
+err?.message ||
+String(
+err
+)
+};
+}
+
+}
+);
+
+handleTrustedDesktopUi(
+ipcMain,
+
+"desktop:algoTradingDiscardPnlShareCard",
+(
+_event,
+payload
+)=>{
+
+try{
+return discardPnlShareCard(
+payload?.tempPath
+);
+}catch(
+err
+){
+log.warn(
+"algoTradingDiscardPnlShareCard:",
+err?.message ||
+err
+);
+return {
+ok:
+false,
+error:
+err?.message ||
+String(
+err
+)
+};
+}
+
+}
+);
 
 handleTrustedDesktopUi(
 ipcMain,

@@ -214,11 +214,10 @@ body.terminal-page #draw-toolbar.draw-toolbar-inline .draw-btn .draw-tool-icon--
   display:none;
 }
 
-/* Long / Short: стоп ($), перетаскивание и удаление */
+/* Long / Short: стоп ($), настройки координат, перетаскивание и удаление */
 .draw-style-float.draw-style-float--position .draw-color-btn,
 .draw-style-float.draw-style-float--position .draw-width-btn,
 .draw-style-float.draw-style-float--position .draw-template-btn,
-.draw-style-float.draw-style-float--position .draw-settings-btn,
 .draw-style-float.draw-style-float--position .draw-alert-toggle{
   display:none !important;
 }
@@ -1053,13 +1052,21 @@ body.terminal-page #draw-toolbar.draw-toolbar-inline .draw-btn .draw-tool-icon--
   border-top:4px solid #9ca3af;
 }
 
+.fib-trend-row{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-bottom:10px;
+}
+
 .fib-trend-label{
   display:flex;
   align-items:center;
   gap:8px;
   font-size:12px;
   color:#e5e7eb;
-  margin-bottom:10px;
+  margin-bottom:0;
+  flex:1;
   cursor:pointer;
   user-select:none;
 }

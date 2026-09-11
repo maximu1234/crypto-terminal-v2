@@ -3,11 +3,15 @@ DRAW_TOOLS_PALETTE_ICON_SVG,
 TRASH_ICON_SVG,
 SETTINGS_ICON_SVG,
 getDrawToolbarButtonsHtml
-} from "./draw-ui-shared.js?v=38";
+} from "./draw-ui-shared.js?v=40";
 
 import {
 closeElliottFlyout
 } from "./drawings/elliott-toolbar.js?v=1";
+
+import {
+closeFibFlyout
+} from "./drawings/fib-toolbar.js?v=2";
 
 const widgetDrawMenuClosers =
 new Set();
@@ -31,7 +35,7 @@ e=>{
 
 if(
 e.target.closest(
-".elliott-flyout"
+".elliott-flyout, .fib-flyout"
 )
 ){
 return;
@@ -94,6 +98,7 @@ closeAllWidgetDrawToolsMenus();
 export function closeAllWidgetDrawToolsMenus(){
 
 closeElliottFlyout();
+closeFibFlyout();
 
 widgetDrawMenuClosers.forEach(
 close=>{

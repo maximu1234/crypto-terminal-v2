@@ -617,6 +617,53 @@ color:#fff;
 outline:none;
 }
 
+.fib-flyout{
+position:fixed;
+z-index:12000;
+min-width:280px;
+padding:6px 0;
+background:#1e222d;
+border:1px solid #2a2e39;
+border-radius:4px;
+box-shadow:0 8px 24px rgba(0,0,0,0.55);
+}
+
+.fib-flyout.hidden{
+display:none;
+}
+
+.fib-flyout-item{
+display:flex;
+align-items:center;
+gap:10px;
+width:100%;
+box-sizing:border-box;
+margin:0;
+padding:8px 16px;
+border:none;
+background:transparent;
+color:#d1d4dc;
+font-size:13px;
+line-height:1.3;
+text-align:left;
+cursor:pointer;
+white-space:nowrap;
+}
+
+.fib-flyout-item .draw-tool-icon{
+width:18px;
+height:18px;
+flex-shrink:0;
+object-fit:contain;
+}
+
+.fib-flyout-item:hover,
+.fib-flyout-item:focus{
+background:#2a2e39;
+color:#fff;
+outline:none;
+}
+
 .draw-tool-group-btn--open{
 background:#363a45;
 }

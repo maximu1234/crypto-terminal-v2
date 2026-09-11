@@ -22,6 +22,10 @@ html,
 );
 assert.match(
 html,
+/fib-trend-color-btn/
+);
+assert.match(
+html,
 /fib-global-line-style-btn/
 );
 assert.match(

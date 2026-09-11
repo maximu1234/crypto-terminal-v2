@@ -1,22 +1,54 @@
 /** @module drawings/fib-spec */
 import {
 DEFAULT_FIB_SPEC,
+DEFAULT_FIB_EXT_SPEC,
 STROKE,
+FIB_TREND_LINE_COLOR,
 FIB_TOOL_DEFAULTS_VERSION,
+FIB_EXT_TOOL_DEFAULTS_VERSION,
 FIB_LINE_DASH,
 WIDTH_OPTIONS,
 FIB_MIN_ANCHOR_SPAN_PX,
 FIB_LABEL_X_PAD_PX,
 FIB_LABEL_RIGHT_RESERVE_PX
-} from "./constants.js?v=11";
+} from "./constants.js?v=13";
 
 import {
 isLwPriceScaleModeLogarithmic
 } from "../chart/price-scale-mode.js?v=3";
 
 export {
-FIB_MIN_ANCHOR_SPAN_PX
+FIB_MIN_ANCHOR_SPAN_PX,
+FIB_EXT_TOOL_DEFAULTS_VERSION,
+FIB_TREND_LINE_COLOR
 };
+
+export const FIB_RETRACEMENT_TYPE =
+"fib";
+
+export const FIB_EXT_TYPE =
+"fib-ext";
+
+export function isFibExtType(
+type
+){
+
+return type ===
+FIB_EXT_TYPE;
+
+}
+
+export function isFibType(
+type
+){
+
+return type ===
+FIB_RETRACEMENT_TYPE ||
+isFibExtType(
+type
+);
+
+}
 
 const FIB_LINE_STYLE_OPTIONS = [
 { value: "solid", label: "Line" },
@@ -169,9 +201,38 @@ return null;
 
 }
 
+export function resolveFibTrendLineColor(
+raw
+){
+
+return normalizeFibLevelColor(
+raw
+) ||
+FIB_TREND_LINE_COLOR;
+
+}
+
 export function cloneDefaultFibRows(){
 
-return DEFAULT_FIB_SPEC.map(x=>{
+return cloneRowsFromSpec(
+DEFAULT_FIB_SPEC
+);
+
+}
+
+export function cloneDefaultFibExtRows(){
+
+return cloneRowsFromSpec(
+DEFAULT_FIB_EXT_SPEC
+);
+
+}
+
+function cloneRowsFromSpec(
+spec
+){
+
+return spec.map(x=>{
 
 const row =
 {
@@ -194,6 +255,30 @@ return row;
 
 }
 
+export function fibLevelSpecForType(
+type
+){
+
+return isFibExtType(
+type
+)
+? DEFAULT_FIB_EXT_SPEC
+: DEFAULT_FIB_SPEC;
+
+}
+
+export function cloneDefaultFibRowsForType(
+type
+){
+
+return isFibExtType(
+type
+)
+? cloneDefaultFibExtRows()
+: cloneDefaultFibRows();
+
+}
+
 export function buildDefaultFibToolStorage(){
 
 return {
@@ -201,18 +286,36 @@ fibDefaultsVersion: FIB_TOOL_DEFAULTS_VERSION,
 color: STROKE,
 lineWidth: 1,
 fibLevels: cloneDefaultFibRows(),
-fibShowTrendLine: false
+fibShowTrendLine: false,
+fibTrendLineColor: FIB_TREND_LINE_COLOR
+};
+
+}
+
+export function buildDefaultFibExtToolStorage(){
+
+return {
+fibDefaultsVersion: FIB_EXT_TOOL_DEFAULTS_VERSION,
+color: STROKE,
+lineWidth: 1,
+fibLevels: cloneDefaultFibExtRows(),
+fibShowTrendLine: true,
+fibTrendLineColor: FIB_TREND_LINE_COLOR
 };
 
 }
 
 /** Если все уровни выключены (legacy localStorage), вернуть дефолтные. */
 export function ensureFibLevelsVisible(
-raw
+raw,
+type
 ){
 
 const rows =
-finalizeFibLevels(raw);
+finalizeFibLevels(
+raw,
+type
+);
 
 if(
 rows.some(row=>row.enabled)
@@ -220,7 +323,9 @@ rows.some(row=>row.enabled)
 return rows;
 }
 
-return cloneDefaultFibRows();
+return cloneDefaultFibRowsForType(
+type
+);
 
 }
 
@@ -246,12 +351,50 @@ fibShowTrendLine:
 typeof saved.fibShowTrendLine ===
 "boolean"
 ? saved.fibShowTrendLine
-: false
+: false,
+fibTrendLineColor: resolveFibTrendLineColor(
+saved.fibTrendLineColor
+)
 };
 
 }
 
 return buildDefaultFibToolStorage();
+
+}
+
+export function migrateFibExtToolDefaults(
+saved
+){
+
+if(
+saved?.fibDefaultsVersion ===
+FIB_EXT_TOOL_DEFAULTS_VERSION &&
+Array.isArray(saved.fibLevels) &&
+saved.fibLevels.length ===
+DEFAULT_FIB_EXT_SPEC.length
+){
+return {
+...buildDefaultFibExtToolStorage(),
+color: saved.color || STROKE,
+lineWidth: saved.lineWidth ?? 1,
+fibLevels: ensureFibLevelsVisible(
+saved.fibLevels,
+FIB_EXT_TYPE
+),
+fibShowTrendLine:
+typeof saved.fibShowTrendLine ===
+"boolean"
+? saved.fibShowTrendLine
+: true,
+fibTrendLineColor: resolveFibTrendLineColor(
+saved.fibTrendLineColor
+)
+};
+
+}
+
+return buildDefaultFibExtToolStorage();
 
 }
 
@@ -307,10 +450,16 @@ return next;
 
 }
 
-export function migrateFibFromObjectRows(rows){
+export function migrateFibFromObjectRows(
+rows,
+spec =
+DEFAULT_FIB_SPEC
+){
 
 const next =
-cloneDefaultFibRows();
+cloneRowsFromSpec(
+spec
+);
 
 rows.forEach((cell,i)=>{
 
@@ -465,30 +614,59 @@ return out;
 
 }
 
-/** Уровни/цвета по DEFAULT_FIB_SPEC; чинит legacy localStorage. */
+/** Уровни/цвета по spec; чинит legacy localStorage. */
 export function finalizeFibLevels(
-raw
+raw,
+type
 ){
+
+const spec =
+fibLevelSpecForType(
+type
+);
 
 if(
 !raw
 ){
-return cloneDefaultFibRows();
+return cloneDefaultFibRowsForType(
+type
+);
 }
 
 if(
+!isFibExtType(
+type
+) &&
 isClassicFibLevelNumbers(raw)
 ){
 return cloneDefaultFibRows();
 }
 
+if(
+isFibExtType(
+type
+)
+){
+return normalizeFibLevelsShape(
+raw,
+spec
+);
+}
+
 return repairFibLevels(
-normalizeFibLevelsShape(raw)
+normalizeFibLevelsShape(
+raw,
+spec
+)
 );
 
 }
 
-export function normalizeFibLevelsShape(raw){
+export function normalizeFibLevelsShape(
+raw,
+spec =
+DEFAULT_FIB_SPEC
+){
 
 if(
 !raw ||
@@ -496,13 +674,24 @@ if(
 !raw.length
 ){
 
-return cloneDefaultFibRows();
+return cloneRowsFromSpec(
+spec
+);
 
 }
 
 if(
 typeof raw[0] === "number"
 ){
+
+if(
+spec ===
+DEFAULT_FIB_EXT_SPEC
+){
+return migrateFibExtFromNumberArray(
+raw
+);
+}
 
 return migrateFibFromNumberArray(raw);
 
@@ -512,11 +701,61 @@ if(
 typeof raw[0] === "object"
 ){
 
-return migrateFibFromObjectRows(raw);
+return migrateFibFromObjectRows(
+raw,
+spec
+);
 
 }
 
-return cloneDefaultFibRows();
+return cloneRowsFromSpec(
+spec
+);
+
+}
+
+function migrateFibExtFromNumberArray(
+arr
+){
+
+const next =
+cloneDefaultFibExtRows().map(r=>({
+...r,
+enabled:false
+}));
+
+const wanted =
+arr.filter(x=>
+typeof x === "number" &&
+Number.isFinite(x)
+);
+
+if(!wanted.length){
+return cloneDefaultFibExtRows();
+}
+
+wanted.forEach(n=>{
+
+next.forEach(r=>{
+
+if(
+Math.abs(n - r.v) <
+1e-6
+){
+r.enabled = true;
+}
+
+});
+
+});
+
+if(
+!next.some(r=>r.enabled)
+){
+return cloneDefaultFibExtRows();
+}
+
+return next;
 
 }
 
@@ -654,11 +893,207 @@ p1 + (p2 - p1) * ratio
 
 }
 
+export function fibExtPriceAtRatio(
+anchorA,
+anchorB,
+anchorC,
+ratio,
+logarithmic
+){
+
+const p1 =
+Number(anchorA);
+const p2 =
+Number(anchorB);
+const p3 =
+Number(anchorC);
+
+if(
+!Number.isFinite(p1) ||
+!Number.isFinite(p2) ||
+!Number.isFinite(p3) ||
+!Number.isFinite(ratio)
+){
+return NaN;
+}
+
+if(
+logarithmic &&
+p1 > 0 &&
+p2 > 0 &&
+p3 > 0
+){
+return (
+p3 * Math.pow(
+p2 / p1,
+ratio
+)
+);
+}
+
+return (
+p3 + (p2 - p1) * ratio
+);
+
+}
+
+export function fibShapePriceAtRatio(
+shape,
+ratio,
+logarithmic
+){
+
+if(
+isFibExtType(
+shape?.type
+)
+){
+return fibExtPriceAtRatio(
+shape.p1?.price,
+shape.p2?.price,
+shape.p3?.price,
+ratio,
+logarithmic
+);
+}
+
+return fibPriceAtRatio(
+shape?.p1?.price,
+shape?.p2?.price,
+ratio,
+logarithmic
+);
+
+}
+
 /**
  * После drag handle: не оставлять fib с нулевым горизонтальным span
  * (иначе уровни скрыты и объект «пропадает»).
  * @returns {boolean} якорь был скорректирован
  */
+/**
+ * После drag handle: не оставлять fib с нулевым горизонтальным span
+ * (иначе уровни скрыты и объект «пропадает»).
+ * @returns {boolean} якорь был скорректирован
+ */
+function ensureFibExtAnchorMinSpan(
+shape,
+movedHandleId,
+toXY,
+pointFromXY,
+minSpanPx
+){
+
+const ids =
+[
+"p1",
+"p2",
+"p3"
+];
+const xys =
+ids.map(
+id=>
+toXY(
+shape[
+id
+]
+)
+);
+
+if(
+xys.some(
+xy=>
+!xy
+)
+){
+return false;
+}
+
+const xs =
+xys.map(
+xy=>
+xy.x
+);
+const span =
+Math.max(
+...xs
+) -
+Math.min(
+...xs
+);
+
+if(
+span >=
+minSpanPx
+){
+return false;
+}
+
+const movedId =
+ids.includes(
+movedHandleId
+)
+? movedHandleId
+: "p3";
+const movedPt =
+shape[
+movedId
+];
+const movedXY =
+toXY(
+movedPt
+);
+const others =
+ids.filter(
+id=>
+id !==
+movedId
+).map(
+id=>
+xys[
+ids.indexOf(
+id
+)
+].x
+);
+const otherMid =
+(
+others[0] +
+others[1]
+) /
+2;
+const dir =
+movedXY.x >=
+otherMid
+? 1
+: -1;
+const targetX =
+otherMid +
+dir *
+minSpanPx;
+const next =
+pointFromXY(
+targetX,
+movedXY.y
+);
+
+if(
+!next
+){
+return false;
+}
+
+shape[
+movedId
+] = {
+time: next.time,
+price: movedPt.price
+};
+
+return true;
+
+}
+
 export function ensureFibAnchorMinSpan(
 shape,
 movedHandleId,
@@ -666,10 +1101,20 @@ deps
 ){
 
 if(
-shape?.type !==
-"fib" ||
+!isFibType(
+shape?.type
+) ||
 !shape.p1 ||
 !shape.p2
+){
+return false;
+}
+
+if(
+isFibExtType(
+shape.type
+) &&
+!shape.p3
 ){
 return false;
 }
@@ -689,6 +1134,20 @@ typeof pointFromXY !==
 "function"
 ){
 return false;
+}
+
+if(
+isFibExtType(
+shape.type
+)
+){
+return ensureFibExtAnchorMinSpan(
+shape,
+movedHandleId,
+toXY,
+pointFromXY,
+minSpanPx
+);
 }
 
 const movedId =
@@ -814,15 +1273,120 @@ b,
 plotW
 ){
 
+return fibLevelXSpanFromXs(
+[
+a?.x,
+b?.x
+],
+plotW
+);
+
+}
+
+export function fibShapeLevelXSpan(
+shape,
+toXY,
+plotW
+){
+
+if(
+!shape ||
+typeof toXY !==
+"function"
+){
+return null;
+}
+
+const a =
+toXY(
+shape.p1
+);
+const b =
+toXY(
+shape.p2
+);
+
+if(
+isFibExtType(
+shape.type
+)
+){
+
+const c =
+toXY(
+shape.p3
+);
+
+if(
+!a ||
+!b ||
+!c
+){
+return null;
+}
+
+return fibLevelXSpanFromXs(
+[
+a.x,
+b.x,
+c.x
+],
+plotW
+);
+
+}
+
+if(
+!a ||
+!b
+){
+return null;
+}
+
+return fibLevelXSpan(
+a,
+b,
+plotW
+);
+
+}
+
+export function fibLevelXSpanFromXs(
+xs,
+plotW
+){
+
+const nums =
+(
+Array.isArray(
+xs
+)
+? xs
+: []
+).filter(
+x=>
+Number.isFinite(
+x
+)
+);
+
+if(
+!nums.length
+){
+return {
+x1: 0,
+x2: 0,
+labelX: 0
+};
+}
+
 let x1 =
 Math.min(
-a.x,
-b.x
+...nums
 );
 let x2 =
 Math.max(
-a.x,
-b.x
+...nums
 );
 
 let span =
@@ -922,9 +1486,16 @@ export function getFibRows(shape){
 
 const raw =
 shape.fibLevels ?? shape.levels;
+const spec =
+fibLevelSpecForType(
+shape?.type
+);
 
 const rows =
-normalizeFibLevelsShape(raw);
+normalizeFibLevelsShape(
+raw,
+spec
+);
 
 if(
 !Array.isArray(raw) ||
@@ -1073,7 +1644,8 @@ shape
 const fibLevels =
 ensureFibLevelsVisible(
 shape?.fibLevels ??
-shape?.levels
+shape?.levels,
+shape?.type
 );
 
 const rows =
@@ -1088,7 +1660,9 @@ rows.some(row=>row.enabled)
 return rows;
 }
 
-return cloneDefaultFibRows();
+return cloneDefaultFibRowsForType(
+shape?.type
+);
 
 }
 

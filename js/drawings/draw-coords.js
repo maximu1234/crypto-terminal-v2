@@ -10,7 +10,7 @@ tfPeriodSec
 import {
 isPositionType,
 positionEntryPrice
-} from "./position.js?v=10";
+} from "./position.js?v=11";
 
 import {
 priceDecimalPlaces
@@ -28,6 +28,7 @@ export const COORD_TOOL_TYPES = Object.freeze([
 "hline",
 "hray",
 "channel",
+"fib-ext",
 "long",
 "short"
 ]);
@@ -97,7 +98,9 @@ bar: true
 
 if(
 type ===
-"channel"
+"channel" ||
+type ===
+"fib-ext"
 ){
 return [
 {
@@ -820,6 +823,74 @@ return false;
 
 }
 
+function isValidPositionCoordPrice(
+shape,
+fieldId,
+price
+){
+
+if(
+!isPositionType(
+shape.type
+) ||
+!Number.isFinite(
+price
+)
+){
+return false;
+}
+
+if(
+fieldId ===
+"entry"
+){
+return price >
+0;
+}
+
+const entry =
+positionEntryPrice(
+shape
+);
+
+if(
+!Number.isFinite(
+entry
+) ||
+entry <=
+0
+){
+return false;
+}
+
+if(
+fieldId ===
+"tp"
+){
+return shape.type ===
+"long"
+? price >
+entry
+: price <
+entry;
+}
+
+if(
+fieldId ===
+"sl"
+){
+return shape.type ===
+"long"
+? price <
+entry
+: price >
+entry;
+}
+
+return true;
+
+}
+
 export function applyCoordFieldToShape(
 shape,
 fieldId,
@@ -850,6 +921,27 @@ raw
 
 if(
 !Number.isFinite(
+price
+)
+){
+return false;
+}
+
+if(
+isPositionType(
+shape.type
+) &&
+(
+fieldId ===
+"entry" ||
+fieldId ===
+"tp" ||
+fieldId ===
+"sl"
+) &&
+!isValidPositionCoordPrice(
+shape,
+fieldId,
 price
 )
 ){

@@ -5,7 +5,11 @@
 
 import {
 isCoarseTouchViewport
-} from "../chart-import.js?v=53";
+} from "../chart-import.js?v=54";
+
+import {
+isFibType
+} from "./fib-spec.js?v=17";
 
 export function createDrawDesktopSelection(
 deps
@@ -101,8 +105,9 @@ const picked =
 getSelected();
 
 if(
-picked?.type ===
-"fib"
+isFibType(
+picked?.type
+)
 ){
 setFibSettingsShapeId(
 picked.id
@@ -161,8 +166,9 @@ const picked =
 getSelected();
 
 if(
-picked?.type ===
-"fib"
+isFibType(
+picked?.type
+)
 ){
 setFibSettingsShapeId(
 picked.id
@@ -216,6 +222,9 @@ target.closest(
 ) ||
 target.closest(
 ".elliott-flyout"
+) ||
+target.closest(
+".fib-flyout"
 ) ||
 target.closest(
 ".fib-level-color-menu"
@@ -526,8 +535,9 @@ const picked =
 getSelected();
 
 if(
-picked?.type ===
-"fib"
+isFibType(
+picked?.type
+)
 ){
 setFibSettingsShapeId(
 picked.id
@@ -762,8 +772,9 @@ const picked =
 getSelected();
 
 if(
-picked?.type ===
-"fib"
+isFibType(
+picked?.type
+)
 ){
 setFibSettingsShapeId(
 picked.id

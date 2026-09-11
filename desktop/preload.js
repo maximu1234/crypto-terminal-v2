@@ -515,6 +515,31 @@ ipcRenderer.invoke(
 payload ||
 {}
 ),
+generatePnlShareCard:(
+payload
+)=>
+ipcRenderer.invoke(
+"desktop:algoTradingGeneratePnlShareCard",
+payload ||
+{}
+),
+savePnlShareCard:(
+payload
+)=>
+ipcRenderer.invoke(
+"desktop:algoTradingSavePnlShareCard",
+payload ||
+{}
+),
+discardPnlShareCard:(
+tempPath
+)=>
+ipcRenderer.invoke(
+"desktop:algoTradingDiscardPnlShareCard",
+{
+tempPath
+}
+),
 setTradingMode:(
 payload
 )=>

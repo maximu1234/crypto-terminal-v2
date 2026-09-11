@@ -8,7 +8,7 @@ linkPairedChartTimeScales,
 appendFutureWhitespaceBars,
 computeChartFutureMarginBars,
 coinsTfVisibleBars
-} from "../chart-import.js?v=53";
+} from "../chart-import.js?v=54";
 
 import {
 isChartLayoutReady
@@ -20,7 +20,7 @@ isBottomIndicatorPane
 
 import {
 syncPaneViewportAfterData
-} from "./indicator-pane-viewport.js?v=4";
+} from "./indicator-pane-viewport.js?v=5";
 
 export const VOLUME_PANE_ID =
 "volume";

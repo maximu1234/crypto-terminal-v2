@@ -17,6 +17,10 @@ test("standard fib template has 18 levels matching DEFAULT_FIB_SPEC slots", () =
     false
   );
   assert.equal(
+    snap.fibTrendLineColor,
+    "#9ca3af"
+  );
+  assert.equal(
     snap.lineWidth,
     1
   );

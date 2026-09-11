@@ -5,17 +5,20 @@
 import {
 STROKE,
 createRectangleToolDefaults
-} from "./constants.js?v=11";
+} from "./constants.js?v=13";
 
 import {
 ensureFibLevelsVisible,
-finalizeFibLevels
-} from "./fib-spec.js?v=15";
+finalizeFibLevels,
+isFibType,
+isFibExtType,
+resolveFibTrendLineColor
+} from "./fib-spec.js?v=17";
 
 import {
 isPositionType,
 positionEntryPrice
-} from "./position.js?v=10";
+} from "./position.js?v=11";
 
 import {
 ensureBrushShape
@@ -125,16 +128,19 @@ shape.lineWidth ||
 1;
 
 if(
-shape.type ===
-"fib"
+isFibType(
+shape.type
+)
 ){
 
 shape.fibLevels =
 ensureFibLevelsVisible(
 finalizeFibLevels(
 shape.fibLevels ??
-shape.levels
-)
+shape.levels,
+shape.type
+),
+shape.type
 );
 
 shape.fibShowTrendLine =
@@ -144,7 +150,14 @@ typeof shape.fibShowTrendLine ===
 : typeof shape.showFibTrend ===
 "boolean"
 ? !!shape.showFibTrend
-: false;
+: isFibExtType(
+shape.type
+);
+
+shape.fibTrendLineColor =
+resolveFibTrendLineColor(
+shape.fibTrendLineColor
+);
 
 delete shape.levels;
 delete shape.showFibTrend;

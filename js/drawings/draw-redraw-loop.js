@@ -4,7 +4,7 @@
  */
 import {
 isPositionType
-} from "./position.js?v=10";
+} from "./position.js?v=11";
 
 import {
 getRectangleHandleScreens
@@ -21,7 +21,11 @@ isChartLayoutReady
 
 import {
 isHorizPriceTool
-} from "./constants.js?v=11";
+} from "./constants.js?v=13";
+
+import {
+isFibExtType
+} from "./fib-spec.js?v=17";
 
 import {
 isElliottType,
@@ -82,6 +86,30 @@ drawAnchorCircle(ctx, a.x, a.y);
 
 if(b){
 drawAnchorCircle(ctx, b.x, b.y);
+}
+
+}
+
+if(
+isFibExtType(
+shape.type
+)
+){
+
+const a = toXY(shape.p1);
+const b = toXY(shape.p2);
+const c = toXY(shape.p3);
+
+if(a){
+drawAnchorCircle(ctx, a.x, a.y);
+}
+
+if(b){
+drawAnchorCircle(ctx, b.x, b.y);
+}
+
+if(c){
+drawAnchorCircle(ctx, c.x, c.y);
 }
 
 }
@@ -262,6 +290,20 @@ if(shape.type === "trendline" || shape.type === "fib" || shape.type === "arrow" 
 return !!(
 toXY(shape.p1) &&
 toXY(shape.p2)
+);
+
+}
+
+if(
+isFibExtType(
+shape.type
+)
+){
+
+return !!(
+toXY(shape.p1) &&
+toXY(shape.p2) &&
+toXY(shape.p3)
 );
 
 }

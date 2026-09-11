@@ -91,7 +91,7 @@ appendFutureWhitespaceBars,
 applyCoinsChartViewport,
 refreshCoinsChartBarSpacing,
 tfPeriodSec
-} from "./chart-import.js?v=53";
+} from "./chart-import.js?v=54";
 
 import {
 terminalVisibleBars,
@@ -124,7 +124,7 @@ createSharedDrawUndoStack
 import {
 mountDrawToolbar,
 mountDrawToolIcons
-} from "./draw-ui-shared.js?v=38";
+} from "./draw-ui-shared.js?v=40";
 import {
 mountTerminalChecklist
 } from "./terminal/terminal-checklist.js?v=1";
@@ -145,7 +145,7 @@ mountCoinsLayoutResize
 import {
 mountQwertyKeyInput,
 shouldIgnoreTypingHotkey
-} from "./qwerty-key-input.js?v=3";
+} from "./qwerty-key-input.js?v=4";
 
 import {
 isChartLayoutReady,
@@ -162,7 +162,7 @@ COINS_TF_HOTKEYS,
 COINS_MARKETS,
 isTerminalPage,
 isTradePage
-} from "./terminal/terminal-state.js?v=13";
+} from "./terminal/terminal-state.js?v=14";
 
 import {
 stopTickerStream
@@ -197,6 +197,7 @@ scheduleResortPriceColumns,
 primeTickerSnapshots,
 startTickerStream,
 startRealtime,
+stopLivePriceFallbacks,
 renderList,
 highlightActiveSymbol,
 ensureActiveCoinVisible,
@@ -205,7 +206,7 @@ setCoinsTableHooks,
 syncCoinListFreezeFromFlagMenus,
 getExtraCoinMarkets,
 isExtraCoinMarket
-} from "./terminal/terminal-table.js?v=40";
+} from "./terminal/terminal-table.js?v=41";
 
 import {
 createCoinsChartSwitchVeil
@@ -3736,13 +3737,13 @@ const {
 initWidgetDrawings
 } =
 await import(
-"./chart-widget-host.js?v=25"
+"./chart-widget-host.js?v=27"
 );
 const {
 initChartIndicators
 } =
 await import(
-"./chart-indicators.js?v=63"
+"./chart-indicators.js?v=64"
 );
 const {
 createPattern12EarlyT3Indicator
@@ -5365,6 +5366,9 @@ historyLoadingOlder =
 false;
 
 disconnectKlineStream();
+stopLivePriceFallbacks();
+coinsState().chartCandlesSymbol =
+"";
 chartSwitchVeil.startChartSwitchVeil();
 setChartLayoutReady(
 false
@@ -5442,6 +5446,10 @@ return;
 }
 
 candles = nextCandles;
+coinsState().chartCandlesSymbol =
+candles.length
+? symbol
+: "";
 historyExhausted =
 nextCandles.length <
 TERMINAL_HISTORY_INITIAL_BARS *

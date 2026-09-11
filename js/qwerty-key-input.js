@@ -427,7 +427,8 @@ const DRAW_UI_HOTKEY_TRAP_SEL =
 ".fib-line-style-menu--portal:not(.hidden)",
 ".fib-line-width-menu--portal:not(.hidden)",
 ".draw-template-save-modal:not(.hidden)",
-".elliott-flyout:not(.hidden)"
+".elliott-flyout:not(.hidden)",
+".fib-flyout:not(.hidden)"
 ].join(
 ","
 );

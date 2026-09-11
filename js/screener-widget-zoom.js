@@ -15,7 +15,7 @@ mountChartPriceHud,
 applyTabletMainChartScroll,
 applyTabletRsiChartOptions,
 SCREENER_MAX_BARS
-} from "./chart-import.js?v=53";
+} from "./chart-import.js?v=54";
 
 import {
 isIpadWebViewport
@@ -51,7 +51,7 @@ setScreenerMacdData
 
 import {
 shouldIgnoreTypingHotkey
-} from "./qwerty-key-input.js?v=3";
+} from "./qwerty-key-input.js?v=4";
 
 let zoomPatternOverlayApi =
 null;

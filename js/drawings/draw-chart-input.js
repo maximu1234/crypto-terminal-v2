@@ -6,7 +6,7 @@ import {
 isCoarseTouchViewport,
 isTabletChartViewport,
 hasAnyFinePointer
-} from "../chart-import.js?v=53";
+} from "../chart-import.js?v=54";
 
 export function createDrawChartInput(
 deps
@@ -100,7 +100,8 @@ point:{
 x,
 y
 },
-metaKey: e.metaKey
+metaKey: e.metaKey,
+shiftKey: e.shiftKey
 }
 );
 
