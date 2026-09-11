@@ -85,8 +85,8 @@ let bybitCtl =
 null;
 let tradingCtl =
 null;
-let cssLoaded =
-false;
+let cssReadyPromise =
+null;
 let adminNavVisible =
 false;
 
@@ -124,28 +124,79 @@ return true;
 
 }
 
-function ensureCss(){
+function ensureOverlayLockCss(){
 
 if(
-cssLoaded
+document.getElementById(
+"app-settings-overlay-lock"
+)
 ){
 return;
 }
 
-cssLoaded =
-true;
+const style =
+document.createElement(
+"style"
+);
+
+style.id =
+"app-settings-overlay-lock";
+style.textContent =
+"#app-settings-overlay{position:fixed!important;inset:0!important;z-index:10100!important}" +
+"#app-settings-overlay.hidden{display:none!important}";
+document.head.appendChild(
+style
+);
+
+}
+
+function settingsCssLink(){
+
+return document.querySelector(
+'link[rel="stylesheet"][href*="app-settings-window.css"]'
+);
+
+}
+
+function cssLinkReady(
+link
+){
+
+if(
+!link
+){
+return false;
+}
+
+try{
+return !!link.sheet;
+}catch{
+return false;
+}
+
+}
+
+function ensureCss(){
+
+ensureOverlayLockCss();
+
+if(
+cssReadyPromise
+){
+return cssReadyPromise;
+}
 
 const href =
 cssUrl(
 "app-settings-window.css"
 );
+let link =
+settingsCssLink();
 
 if(
-!document.querySelector(
-`link[rel="stylesheet"][href^="/css/app-settings-window.css"]`
-)
+!link
 ){
-const link =
+link =
 document.createElement(
 "link"
 );
@@ -157,6 +208,77 @@ document.head.appendChild(
 link
 );
 }
+
+cssReadyPromise =
+new Promise(
+resolve=>{
+
+let settled =
+false;
+
+const done =
+()=>{
+
+if(
+settled
+){
+return;
+}
+
+settled =
+true;
+resolve();
+
+};
+
+if(
+cssLinkReady(
+link
+)
+){
+done();
+return;
+}
+
+link.addEventListener(
+"load",
+done,
+{
+once:
+true
+}
+);
+link.addEventListener(
+"error",
+done,
+{
+once:
+true
+}
+);
+requestAnimationFrame(
+()=>{
+
+if(
+cssLinkReady(
+link
+)
+){
+done();
+}
+
+}
+);
+/* Electron custom protocol may skip load; don't hang the dialog. */
+setTimeout(
+done,
+250
+);
+
+}
+);
+
+return cssReadyPromise;
 
 }
 
@@ -274,7 +396,7 @@ const {
 closeCloudSettingsDropdown
 } =
 await import(
-"./auth-ui.js?v=62"
+"./auth-ui.js?v=63"
 );
 closeCloudSettingsDropdown();
 await openAppSettingsWindow();
@@ -538,7 +660,7 @@ const {
 mountCloudAuthPanelInSettings
 } =
 await import(
-"./auth-ui.js?v=62"
+"./auth-ui.js?v=63"
 );
 
 mountCloudAuthPanelInSettings(
@@ -845,6 +967,10 @@ sectionId =
 "sync"
 ){
 
+ensureOverlayLockCss();
+const cssReady =
+ensureCss();
+
 if(
 !window.cryptoTerminalDesktop?.isDesktop
 ){
@@ -857,7 +983,7 @@ await import(
 installWebTradingShell();
 }
 
-ensureCss();
+await cssReady;
 buildOverlay();
 
 overlayEl.classList.remove(
@@ -1010,7 +1136,8 @@ await setActiveSection(
 export function initAppSettingsWindow(){
 
 renameAccountSectionTitles();
-
+ensureOverlayLockCss();
+void ensureCss();
 void refreshAppSettingsAdminNav();
 
 }
