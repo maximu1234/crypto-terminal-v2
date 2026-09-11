@@ -53,13 +53,17 @@ Object.freeze({
 "exchanges/bingx/intervals.js":
 1,
 "terminal-page-boot.js":
-30,
+31,
 "terminal-entry.js":
 4,
 "terminal-list-refresh.js":
 1,
 "trade-desktop-boot.js":
 27,
+"trade-web/client.js":
+1,
+"trade-web/boot.js":
+1,
 "desktop-menu-bar-tray.js":
 10,
 "desktop-menu-bar-tray-prefs.js":
@@ -107,7 +111,7 @@ Object.freeze({
 "exchange-trading-gate.js":
 4,
 "trade-exchange-settings.js":
-23,
+24,
 "trade-volume-presets.js":
 11,
 "trade-leverage-settings.js":
@@ -829,7 +833,7 @@ Object.freeze({
 "header-settings-shell.js":
 4,
 "app-settings-window.js":
-18,
+19,
 "app-settings-proxy-panel.js":
 6,
 "app-settings-system-panel.js":

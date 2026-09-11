@@ -90,9 +90,31 @@ false;
 let adminNavVisible =
 false;
 
-function showConnectionsSettings(){
+function isDesktopApp(){
 
 return !!window.cryptoTerminalDesktop?.isDesktop;
+
+}
+
+function isWebTradeUi(){
+
+return (
+!!window.cryptoTerminalDesktop?.webTrading &&
+!isDesktopApp()
+);
+
+}
+
+function showDesktopExtras(){
+
+return isDesktopApp();
+
+}
+
+function showTradeAndKeysSettings(){
+
+return isDesktopApp() ||
+isWebTradeUi();
 
 }
 
@@ -326,10 +348,16 @@ btn.textContent =
 section.label;
 
 if(
+section.id ===
+"proxy"
+){
+btn.hidden =
+!showDesktopExtras();
+}else if(
 section.desktopOnly
 ){
 btn.hidden =
-!showConnectionsSettings();
+!showTradeAndKeysSettings();
 }
 
 if(
@@ -369,6 +397,24 @@ panels.appendChild(
 panel
 );
 
+}
+
+if(
+isWebTradeUi()
+){
+const logout =
+document.createElement(
+"a"
+);
+logout.href =
+"/api/site-gate/logout";
+logout.className =
+"app-settings-nav-btn";
+logout.textContent =
+"Выйти с сайта";
+nav.appendChild(
+logout
+);
 }
 
 overlayEl.querySelector(
@@ -523,7 +569,8 @@ sectionId ===
 ){
 
 if(
-!window.cryptoTerminalDesktop?.isDesktop
+!isDesktopApp() &&
+!isWebTradeUi()
 ){
 panel.innerHTML =
 `<p class="app-settings-bybit-guest">Подключение Bybit доступно в desktop-приложении Multichart.</p>`;
@@ -558,7 +605,7 @@ mountExchangeConnectionsPanel,
 updateTradeExchangeConnectionChrome
 } =
 await import(
-"./trade-exchange-settings.js?v=23"
+"./trade-exchange-settings.js?v=24"
 );
 
 const host =
@@ -618,7 +665,8 @@ sectionId ===
 ){
 
 if(
-!window.cryptoTerminalDesktop?.isDesktop
+!isDesktopApp() &&
+!isWebTradeUi()
 ){
 panel.innerHTML =
 `<p class="app-settings-bybit-guest">Торговые настройки доступны в desktop-приложении Multichart.</p>`;
@@ -797,6 +845,18 @@ sectionId =
 "sync"
 ){
 
+if(
+!window.cryptoTerminalDesktop?.isDesktop
+){
+const {
+installWebTradingShell
+} =
+await import(
+"./trade-web/client.js?v=1"
+);
+installWebTradingShell();
+}
+
 ensureCss();
 buildOverlay();
 
@@ -822,15 +882,22 @@ let resolved =
 target;
 
 if(
+resolved ===
+"proxy" &&
+!showDesktopExtras()
+){
+resolved =
+"sync";
+}
+
+if(
 (
 resolved ===
 "connections" ||
 resolved ===
-"trading" ||
-resolved ===
-"proxy"
+"trading"
 ) &&
-!showConnectionsSettings()
+!showTradeAndKeysSettings()
 ){
 resolved =
 "sync";
@@ -889,7 +956,7 @@ if(
 connectionsBtn
 ){
 connectionsBtn.hidden =
-!showConnectionsSettings();
+!showTradeAndKeysSettings();
 }
 
 const tradingBtn =
@@ -901,7 +968,7 @@ if(
 tradingBtn
 ){
 tradingBtn.hidden =
-!showConnectionsSettings();
+!showTradeAndKeysSettings();
 }
 
 const proxyBtn =
@@ -913,7 +980,7 @@ if(
 proxyBtn
 ){
 proxyBtn.hidden =
-!showConnectionsSettings();
+!showDesktopExtras();
 }
 
 const systemBtn =

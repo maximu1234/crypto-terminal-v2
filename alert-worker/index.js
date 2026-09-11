@@ -38,9 +38,12 @@ import {
   handleBotRemoteHttp,
   getBotRemoteStats
 } from "./lib/bot-remote.js";
+import { handleTradeHttp } from "./lib/trade/http.js";
+import { attachTradeStreamWs } from "./lib/trade/stream.js";
+import { tradeHealth } from "./lib/trade/rpc.js";
 
 const PORT = Number(process.env.PORT) || 8080;
-const WORKER_BUILD = "2026-08-02-postgrest-cut-v3";
+const WORKER_BUILD = "2026-09-12-web-trade-v1";
 
 /** alert key -> row */
 let activeAlerts = new Map();
@@ -221,6 +224,10 @@ async function main() {
       return;
     }
 
+    if (await handleTradeHttp(req, res)) {
+      return;
+    }
+
     const pathOnly =
       (req.url || "").split("?")[0];
 
@@ -242,6 +249,7 @@ async function main() {
         config: st,
         diag,
         botRemote: getBotRemoteStats(),
+        trade: tradeHealth(),
         ticker: marketHubs.getStats?.() || null,
         reload: {
           intervalMs: getReloadIntervalMs(),
@@ -338,6 +346,7 @@ async function main() {
   });
 
   attachBotRemoteWs(server);
+  attachTradeStreamWs(server);
 
   server.listen(PORT, () => {
     console.log(`alert-worker listening :${PORT}`);

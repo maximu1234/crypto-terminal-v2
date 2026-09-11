@@ -48,8 +48,37 @@ return tradeDesktopBootPromise;
 
 }
 
-async function initTradeDesktopBeforeChart(){
+let tradeWebBootPromise =
+null;
 
+function loadTradeWebBoot(){
+
+if(
+isDesktopTradeMode()
+){
+return Promise.resolve(
+null
+);
+}
+
+if(
+!tradeWebBootPromise
+){
+tradeWebBootPromise =
+import(
+"./trade-web/boot.js?v=1"
+);
+}
+
+return tradeWebBootPromise;
+
+}
+
+async function initTradeLayerBeforeChart(){
+
+if(
+isDesktopTradeMode()
+){
 const m =
 await loadTradeDesktopBoot();
 
@@ -59,10 +88,25 @@ m
 await m.initTradeDesktopBeforeChart();
 }
 
+return;
 }
 
-async function initTradeDesktopAfterChart(){
+const m =
+await loadTradeWebBoot();
 
+if(
+m
+){
+await m.initTradeWebBeforeChart();
+}
+
+}
+
+async function initTradeLayerAfterChart(){
+
+if(
+isDesktopTradeMode()
+){
 const m =
 await loadTradeDesktopBoot();
 
@@ -70,6 +114,18 @@ if(
 m
 ){
 await m.initTradeDesktopAfterChart();
+}
+
+return;
+}
+
+const m =
+await loadTradeWebBoot();
+
+if(
+m
+){
+await m.initTradeWebAfterChart();
 }
 
 }
@@ -264,10 +320,10 @@ return;
 }
 
 await waitForSiteCssReady();
-await initTradeDesktopBeforeChart();
+await initTradeLayerBeforeChart();
 await loadLightweightCharts();
 await loadChartEntryWithRetry();
-await initTradeDesktopAfterChart();
+await initTradeLayerAfterChart();
 
 void import(
 jsUrl(

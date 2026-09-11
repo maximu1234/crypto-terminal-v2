@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<title>Вход — Multichart</title>
+<link rel="icon" href="/icons/brand-logo.png" type="image/png">
+<style>
+:root { --app-bg:#16181f; --app-input:#171b21; }
+html, body {
+  margin: 0;
+  min-height: 100%;
+  background: var(--app-bg);
+  color: #e5e7eb;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px;
+}
+.card {
+  width: 100%;
+  max-width: 380px;
+}
+.brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 28px;
+}
+.brand img { width: 48px; height: 48px; }
+h1 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+.sub {
+  margin: 6px 0 0;
+  color: #9ca3af;
+  font-size: 14px;
+}
+label {
+  display: block;
+  margin: 14px 0 6px;
+  font-size: 13px;
+  color: #d1d5db;
+}
+input {
+  width: 100%;
+  box-sizing: border-box;
+  height: 42px;
+  padding: 0 12px;
+  border: 1px solid #2a3344;
+  border-radius: 8px;
+  background: var(--app-input);
+  color: #f9fafb;
+  font-size: 15px;
+}
+input:focus {
+  outline: none;
+  border-color: #eab308;
+}
+button {
+  width: 100%;
+  margin-top: 22px;
+  height: 44px;
+  border: 0;
+  border-radius: 8px;
+  background: #eab308;
+  color: #111827;
+  font-size: 15px;
+  font-weight: 650;
+  cursor: pointer;
+}
+button:disabled { opacity: .55; cursor: default; }
+.err {
+  min-height: 20px;
+  margin: 12px 0 0;
+  color: #f87171;
+  font-size: 13px;
+}
+</style>
+</head>
+<body>
+<form class="card" id="gate-form" autocomplete="on">
+  <div class="brand">
+    <img src="/icons/brand-logo.png" alt="">
+    <div>
+      <h1>Добро пожаловать</h1>
+      <p class="sub">Вход в аккаунт</p>
+    </div>
+  </div>
+  <label for="email">Электронная почта</label>
+  <input id="email" name="email" type="email" autocomplete="username" required>
+  <label for="password">Пароль</label>
+  <input id="password" name="password" type="password" autocomplete="current-password" required>
+  <p class="err" id="err" hidden></p>
+  <button type="submit" id="go">Продолжить</button>
+</form>
+<script>
+(function () {
+  const form = document.getElementById("gate-form");
+  const err = document.getElementById("err");
+  const go = document.getElementById("go");
+  const params = new URLSearchParams(location.search);
+  if (params.get("setup") === "1") {
+    err.hidden = false;
+    err.textContent = "Вход ещё не настроен: задайте SITE_GATE_EMAIL, SITE_GATE_PASSWORD и SITE_GATE_SECRET в Vercel.";
+  }
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    err.hidden = true;
+    go.disabled = true;
+    try {
+      const res = await fetch("/api/site-gate/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({
+          email: document.getElementById("email").value,
+          password: document.getElementById("password").value
+        })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) {
+        err.hidden = false;
+        err.textContent = data.error === "invalid"
+          ? "Неверная почта или пароль."
+          : data.error === "gate_not_configured"
+            ? "Вход не настроен на сервере."
+            : "Не удалось войти.";
+        return;
+      }
+      try {
+        if (data.tradeToken) {
+          sessionStorage.setItem("mc_trade_token_v1", data.tradeToken);
+        }
+      } catch (ignore) {}
+      const next = params.get("next") || "/screener";
+      const dest = next.startsWith("/") && !next.startsWith("//") ? next : "/screener";
+      location.replace(dest);
+    } catch (ex) {
+      err.hidden = false;
+      err.textContent = "Сеть недоступна.";
+    } finally {
+      go.disabled = false;
+    }
+  });
+})();
+</script>
+</body>
+</html>
