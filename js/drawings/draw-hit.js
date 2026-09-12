@@ -66,8 +66,12 @@ import {
 isElliottType,
 elliottScreenPoints,
 elliottLabelAnchor,
-elliottLabelForVertex
-} from "./elliott-spec.js?v=5";
+elliottVertexLabel,
+elliottNecklineScreen,
+pattern12DashScreen,
+pattern12TpTickLayout,
+isPattern12Draw
+} from "./elliott-spec.js?v=12";
 
 /**
  * @param {object} deps
@@ -81,7 +85,8 @@ getPlotWidth,
 series,
 pointFromXY,
 getCandles = ()=>
-[]
+[],
+plotPriceToCoordinate
 } = deps;
 
 function fibHitXPadPx(){
@@ -625,6 +630,101 @@ b.y
 
 }
 
+const neck =
+elliottNecklineScreen(
+shape.type,
+screens
+);
+
+if(
+neck &&
+shape.showWave !==
+false
+){
+best =
+Math.min(
+best,
+distToSegment(
+px,
+py,
+neck.a.x,
+neck.a.y,
+neck.b.x,
+neck.b.y
+)
+);
+}
+
+if(
+isPattern12Draw(
+shape.type
+) &&
+shape.showPatternDash !==
+false
+){
+
+const dash =
+pattern12DashScreen(
+screens
+);
+
+if(
+dash
+){
+best =
+Math.min(
+best,
+distToSegment(
+px,
+py,
+dash.a.x,
+dash.a.y,
+dash.b.x,
+dash.b.y
+)
+);
+}
+
+}
+
+if(
+isPattern12Draw(
+shape.type
+)
+){
+
+const ticks =
+pattern12TpTickLayout(
+shape,
+screens,
+plotPriceToCoordinate,
+isSeriesLogarithmic(
+series
+)
+);
+
+for(
+const tick of ticks
+){
+
+best =
+Math.min(
+best,
+distToSegment(
+px,
+py,
+tick.x1,
+tick.y,
+tick.x2 +
+28,
+tick.y
+)
+);
+
+}
+
+}
+
 screens.forEach(
 (
 pt,
@@ -643,14 +743,13 @@ pt.y
 );
 
 const label =
-elliottLabelForVertex(
-shape.type,
-shape.degree,
+elliottVertexLabel(
+shape,
 i
 );
 
 if(
-!label
+!label.text
 ){
 return;
 }

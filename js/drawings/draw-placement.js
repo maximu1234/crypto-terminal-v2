@@ -48,8 +48,11 @@ cloneDefaultChannelRows
 
 import {
 isElliottType,
-elliottPointCount
-} from "./elliott-spec.js?v=5";
+isPattern12Draw,
+elliottPointCount,
+normalizePattern12TpFlags,
+normalizePattern12TpLevels
+} from "./elliott-spec.js?v=12";
 
 import {
 isFvpType,
@@ -1330,10 +1333,35 @@ cloneDefaultChannelRows()
 degree:isElliottType(type)
 ? style.degree
 :undefined,
+degreeJunior:isElliottType(type)
+? style.degreeJunior
+:undefined,
 showWave:isElliottType(type)
 ? style.showWave !==
 false
 :undefined,
+showPatternDash:isElliottType(type)
+? style.showPatternDash !==
+false
+:undefined,
+patternDashOpacity:isElliottType(type)
+? style.patternDashOpacity
+:undefined,
+...(isPattern12Draw(type)
+? {
+...normalizePattern12TpFlags(
+style.showTpSenior,
+style.showTpJunior
+),
+tpLevels:normalizePattern12TpLevels(
+style.tpLevels
+)
+}
+: {
+showTpSenior:undefined,
+showTpJunior:undefined,
+tpLevels:undefined
+}),
 ...data
 });
 

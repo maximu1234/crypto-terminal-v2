@@ -49,7 +49,7 @@ touchShapeRevision
 
 import {
 stripAlertFromShape
-} from "./drawings-persist.js?v=15";
+} from "./drawings-persist.js?v=18";
 
 import {
 moveBrushHandle,
@@ -68,7 +68,7 @@ isElliottType,
 getElliottPoints,
 setElliottPoints,
 elliottHandleIndex
-} from "./elliott-spec.js?v=5";
+} from "./elliott-spec.js?v=12";
 
 export function createDrawEditInteraction(
 deps

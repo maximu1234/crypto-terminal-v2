@@ -54,9 +54,11 @@ ELLIOTT_TOOL_DEFAULTS_VERSION,
 ELLIOTT_TOOL_TYPES,
 createElliottToolDefaults,
 isElliottType,
+isPattern12Draw,
 migrateElliottToolDefaults,
-normalizeElliottDegree
-} from "./elliott-spec.js?v=5";
+normalizeElliottDegree,
+normalizePattern12TpFlags
+} from "./elliott-spec.js?v=12";
 
 export const DRAW_TEMPLATES_STORAGE_KEY =
 "draw_templates_v1";
@@ -742,7 +744,8 @@ type
 
 const defaults =
 migrateElliottToolDefaults(
-shape
+shape,
+type
 );
 
 out.color =
@@ -750,11 +753,34 @@ defaults.color ||
 ELLIOTT_DEFAULT_COLOR;
 out.degree =
 defaults.degree;
+out.degreeJunior =
+defaults.degreeJunior;
 out.showWave =
 defaults.showWave !==
 false;
+out.showPatternDash =
+defaults.showPatternDash !==
+false;
+out.patternDashOpacity =
+defaults.patternDashOpacity;
 out.elliottDefaultsVersion =
 ELLIOTT_TOOL_DEFAULTS_VERSION;
+
+if(
+isPattern12Draw(
+type
+)
+){
+Object.assign(
+out,
+normalizePattern12TpFlags(
+defaults.showTpSenior,
+defaults.showTpJunior
+)
+);
+out.tpLevels =
+defaults.tpLevels;
+}
 
 }
 
@@ -858,7 +884,8 @@ type
 
 const defaults =
 migrateElliottToolDefaults(
-style
+style,
+type
 );
 
 out.color =
@@ -867,11 +894,34 @@ out.lineWidth =
 defaults.lineWidth;
 out.degree =
 defaults.degree;
+out.degreeJunior =
+defaults.degreeJunior;
 out.showWave =
 defaults.showWave !==
 false;
+out.showPatternDash =
+defaults.showPatternDash !==
+false;
+out.patternDashOpacity =
+defaults.patternDashOpacity;
 out.elliottDefaultsVersion =
 ELLIOTT_TOOL_DEFAULTS_VERSION;
+
+if(
+isPattern12Draw(
+type
+)
+){
+Object.assign(
+out,
+normalizePattern12TpFlags(
+defaults.showTpSenior,
+defaults.showTpJunior
+)
+);
+out.tpLevels =
+defaults.tpLevels;
+}
 
 }
 
@@ -1023,7 +1073,11 @@ type
 ){
 
 const elliottDefaults =
-createElliottToolDefaults();
+createElliottToolDefaults(
+{
+type
+}
+);
 
 out.color =
 elliottDefaults.color;
@@ -1031,10 +1085,32 @@ out.lineWidth =
 elliottDefaults.lineWidth;
 out.degree =
 elliottDefaults.degree;
+out.degreeJunior =
+elliottDefaults.degreeJunior;
 out.showWave =
 elliottDefaults.showWave;
+out.showPatternDash =
+elliottDefaults.showPatternDash;
+out.patternDashOpacity =
+elliottDefaults.patternDashOpacity;
 out.elliottDefaultsVersion =
 ELLIOTT_TOOL_DEFAULTS_VERSION;
+
+if(
+isPattern12Draw(
+type
+)
+){
+Object.assign(
+out,
+normalizePattern12TpFlags(
+elliottDefaults.showTpSenior,
+elliottDefaults.showTpJunior
+)
+);
+out.tpLevels =
+elliottDefaults.tpLevels;
+}
 
 }
 
@@ -1225,7 +1301,8 @@ type
 
 const defaults =
 migrateElliottToolDefaults(
-snapshot
+snapshot,
+type
 );
 
 shape.color =
@@ -1236,9 +1313,34 @@ shape.degree =
 normalizeElliottDegree(
 defaults.degree
 );
+shape.degreeJunior =
+normalizeElliottDegree(
+defaults.degreeJunior
+);
 shape.showWave =
 defaults.showWave !==
 false;
+shape.showPatternDash =
+defaults.showPatternDash !==
+false;
+shape.patternDashOpacity =
+defaults.patternDashOpacity;
+
+if(
+isPattern12Draw(
+type
+)
+){
+Object.assign(
+shape,
+normalizePattern12TpFlags(
+defaults.showTpSenior,
+defaults.showTpJunior
+)
+);
+shape.tpLevels =
+defaults.tpLevels;
+}
 
 }
 

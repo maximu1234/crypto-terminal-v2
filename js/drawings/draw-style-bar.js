@@ -69,7 +69,7 @@ listTemplatesForType,
 mergeStyleSnapshot,
 saveNamedTemplate,
 deleteTemplateAtIndex
-} from "./draw-templates.js?v=15";
+} from "./draw-templates.js?v=20";
 
 import {
 isFvpType,
@@ -121,15 +121,19 @@ import {
 ELLIOTT_TOOL_DEFAULTS_VERSION,
 createElliottToolDefaults,
 isElliottType,
-migrateElliottToolDefaults
-} from "./elliott-spec.js?v=5";
+isPattern12Draw,
+migrateElliottToolDefaults,
+normalizePattern12TpFlags,
+normalizePattern12TpLevels
+} from "./elliott-spec.js?v=12";
 
 import {
 elliottSettingsHtml,
 fillElliottSettingsPanel as fillElliottSettingsPanelDom,
 readElliottSettingsPanel,
-bindElliottSettingsPanel
-} from "./draw-elliott-settings.js?v=1";
+bindElliottSettingsPanel,
+syncElliottSettingsColor
+} from "./draw-elliott-settings.js?v=6";
 
 import {
 hasCoordSettings
@@ -1916,13 +1920,23 @@ elliottPanelSyncing = true;
 
 try{
 
-fillElliottSettingsPanelDom(
-settingsPopover,
+const type =
+getElliottEditType() ||
+"elliott-impulse";
+const shape =
 getElliottEditShape() ||
 baseDefaultStyle(
-getElliottEditType() ||
-"elliott-impulse"
-)
+type
+);
+
+fillElliottSettingsPanelDom(
+settingsPopover,
+{
+...shape,
+type:
+shape.type ||
+type
+}
 );
 
 }finally{
@@ -1952,7 +1966,8 @@ const shape =
 getElliottEditShape();
 const panel =
 readElliottSettingsPanel(
-settingsPopover
+settingsPopover,
+type
 );
 const style =
 readStyleFromUI();
@@ -1960,7 +1975,8 @@ const prev =
 migrateElliottToolDefaults(
 getToolDefaults()[
 type
-]
+],
+type
 );
 
 if(
@@ -1969,9 +1985,35 @@ shape
 
 shape.degree =
 panel.degree;
+shape.degreeJunior =
+panel.degreeJunior;
 shape.showWave =
 panel.showWave !==
 false;
+shape.showPatternDash =
+panel.showPatternDash !==
+false;
+shape.patternDashOpacity =
+panel.patternDashOpacity;
+
+if(
+isPattern12Draw(
+type
+)
+){
+Object.assign(
+shape,
+normalizePattern12TpFlags(
+panel.showTpSenior,
+panel.showTpJunior
+)
+);
+shape.tpLevels =
+normalizePattern12TpLevels(
+panel.tpLevels
+);
+}
+
 touchShapeRevisionFn(
 shape
 );
@@ -1983,7 +2025,9 @@ redraw();
 saveToolDefaults(
 type,
 {
-...createElliottToolDefaults(),
+...createElliottToolDefaults({
+type
+}),
 ...prev,
 color:
 shape?.color ||
@@ -1995,9 +2039,32 @@ style.lineWidth ??
 prev.lineWidth,
 degree:
 panel.degree,
+degreeJunior:
+panel.degreeJunior,
 showWave:
 panel.showWave !==
 false,
+showPatternDash:
+panel.showPatternDash !==
+false,
+patternDashOpacity:
+panel.patternDashOpacity,
+...(
+isPattern12Draw(
+type
+)
+? {
+...normalizePattern12TpFlags(
+panel.showTpSenior,
+panel.showTpJunior
+),
+tpLevels:
+normalizePattern12TpLevels(
+panel.tpLevels
+)
+}
+: {}
+),
 elliottDefaultsVersion:
 ELLIOTT_TOOL_DEFAULTS_VERSION
 }
@@ -3338,6 +3405,18 @@ const stripeColor =
 style.color;
 
 updateColorStripe(stripeColor);
+
+if(
+isElliottType(
+type
+) &&
+isElliottSettingsOpen()
+){
+syncElliottSettingsColor(
+settingsPopover,
+stripeColor
+);
+}
 setActiveWidth(style.lineWidth);
 
 settingsBtn?.classList.toggle(
@@ -3849,6 +3928,15 @@ clampTextFontSize(
 style.fontSize
 );
 
+}else if(
+isElliottType(
+target.type
+)
+){
+
+target.color = style.color;
+target.lineWidth = style.lineWidth;
+
 }else{
 
 target.color = style.color;
@@ -3974,7 +4062,7 @@ channelLevels:
 ensureChannelLevelsVisible(
 isChannelSettingsOpen()
 ? readChannelPanelFromDOM().channelLevels
-: target?.channelLevels ||
+: primaryTarget?.channelLevels ||
 getToolDefaults().channel?.channelLevels ||
 style.channelLevels
 )
@@ -3993,12 +4081,14 @@ const prev =
 migrateElliottToolDefaults(
 getToolDefaults()[
 type
-]
+],
+type
 );
 const panel =
 isElliottSettingsOpen()
 ? readElliottSettingsPanel(
-settingsPopover
+settingsPopover,
+type
 )
 : null;
 
@@ -4008,13 +4098,47 @@ defaultsPayload,
 elliottDefaultsVersion:
 ELLIOTT_TOOL_DEFAULTS_VERSION,
 degree:
-target?.degree ||
+primaryTarget?.degree ||
 panel?.degree ||
 prev.degree,
+degreeJunior:
+primaryTarget?.degreeJunior ||
+panel?.degreeJunior ||
+prev.degreeJunior,
 showWave:
-target?.showWave ??
+primaryTarget?.showWave ??
 panel?.showWave ??
-prev.showWave
+prev.showWave,
+showPatternDash:
+primaryTarget?.showPatternDash ??
+panel?.showPatternDash ??
+prev.showPatternDash,
+patternDashOpacity:
+primaryTarget?.patternDashOpacity ??
+panel?.patternDashOpacity ??
+prev.patternDashOpacity,
+...(
+isPattern12Draw(
+type
+)
+? {
+...normalizePattern12TpFlags(
+primaryTarget?.showTpSenior ??
+panel?.showTpSenior ??
+prev.showTpSenior,
+primaryTarget?.showTpJunior ??
+panel?.showTpJunior ??
+prev.showTpJunior
+),
+tpLevels:
+normalizePattern12TpLevels(
+primaryTarget?.tpLevels ||
+panel?.tpLevels ||
+prev.tpLevels
+)
+}
+: {}
+)
 }
 );
 
@@ -4038,6 +4162,24 @@ saveGlobalStyleForStyle({
 color: style.color,
 lineWidth: style.lineWidth
 });
+
+if(
+isElliottType(
+type
+) &&
+isElliottSettingsOpen()
+){
+syncElliottSettingsColor(
+settingsPopover,
+style.color
+);
+}
+
+if(
+!targets.length
+){
+redrawForStyle();
+}
 
 }
 

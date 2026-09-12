@@ -610,11 +610,143 @@ cursor:pointer;
 white-space:nowrap;
 }
 
-.elliott-flyout-item:hover,
-.elliott-flyout-item:focus{
+.elliott-flyout-sep{
+height:1px;
+margin:6px 12px;
 background:#2a2e39;
-color:#fff;
-outline:none;
+}
+
+.elliott-degree-row{
+display:flex;
+gap:8px;
+align-items:flex-start;
+width:max-content;
+max-width:100%;
+}
+
+.elliott-degree-row > .elliott-degree-wrap,
+.elliott-degree-row > .elliott-degree-junior-wrap{
+flex:none;
+width:6.5rem;
+min-width:0;
+margin-top:0;
+}
+
+.elliott-degree-junior-wrap{
+margin-top:8px;
+}
+
+.elliott-pattern-dash-row{
+display:flex;
+align-items:center;
+gap:8px;
+margin-top:8px;
+font-size:12px;
+color:#e5e7eb;
+cursor:pointer;
+user-select:none;
+}
+
+.elliott-pattern-dash-row input{
+width:auto;
+margin:0;
+}
+
+.elliott-degree-wrap.hidden,
+.elliott-degree-junior-wrap.hidden,
+.elliott-pattern-dash-row.hidden,
+.elliott-pattern-dash-opacity.hidden,
+.elliott-tp-wrap.hidden{
+display:none;
+}
+
+.elliott-pattern-dash-opacity{
+margin-top:6px;
+}
+
+.elliott-pattern-dash-opacity .tv-color-opacity-slider,
+.draw-settings-popover .elliott-pattern-dash-opacity-slider{
+width:100%;
+height:14px;
+margin:0;
+padding:0;
+background:transparent;
+border:none;
+border-radius:0;
+box-shadow:none;
+appearance:none;
+-webkit-appearance:none;
+}
+
+.elliott-pattern-dash-opacity .tv-color-opacity-pct,
+.draw-settings-popover .elliott-pattern-dash-opacity-pct{
+flex:none;
+min-width:44px;
+width:44px;
+height:20px;
+padding:0 4px;
+border-radius:4px;
+background:#131722;
+border:1px solid #363a45;
+color:#d1d4dc;
+font-size:11px;
+line-height:18px;
+font-variant-numeric:tabular-nums;
+text-align:center;
+}
+
+.elliott-tp-wrap{
+margin-top:8px;
+}
+
+.elliott-tp-flags{
+display:flex;
+gap:10px;
+align-items:center;
+}
+
+.elliott-tp-row{
+display:flex;
+align-items:center;
+gap:6px;
+margin-top:0;
+flex:1;
+font-size:12px;
+color:#e5e7eb;
+cursor:pointer;
+user-select:none;
+}
+
+.elliott-tp-row input{
+width:auto;
+margin:0;
+}
+
+.elliott-tp-levels-label{
+margin-top:8px;
+margin-bottom:4px;
+}
+
+.elliott-tp-levels{
+display:grid;
+grid-template-columns:repeat(2, 3.4rem);
+gap:6px 8px;
+justify-content:start;
+}
+
+.elliott-tp-level,
+.draw-settings-popover .elliott-tp-level{
+width:3.4rem;
+max-width:3.4rem;
+box-sizing:border-box;
+background:#13181e;
+border:1px solid #374151;
+color:#e5e7eb;
+border-radius:6px;
+padding:4px 6px;
+font-size:12px;
+line-height:18px;
+font-variant-numeric:tabular-nums;
 }
 
 .fib-flyout{
@@ -669,14 +801,21 @@ background:#363a45;
 }
 
 .elliott-settings{
-min-width:220px;
+min-width:0;
+width:max-content;
+max-width:100%;
+}
+
+.draw-settings-popover:has(.elliott-settings){
+min-width:0;
+width:max-content;
 }
 
 .elliott-wave-row{
 display:flex;
 align-items:center;
 gap:8px;
-margin-bottom:12px;
+margin-bottom:8px;
 font-size:12px;
 color:#e5e7eb;
 cursor:pointer;
@@ -688,18 +827,23 @@ width:auto;
 margin:0;
 }
 
-.elliott-degree-label{
-margin-bottom:6px;
+.elliott-degree-label,
+.elliott-degree-junior-label{
+margin-bottom:4px;
+font-size:11px;
+white-space:nowrap;
 }
 
-.elliott-degree{
+.elliott-degree,
+.elliott-degree-junior{
 width:100%;
+max-width:100%;
 box-sizing:border-box;
 background:#13181e;
 border:1px solid #374151;
 color:#e5e7eb;
 border-radius:6px;
-padding:8px 10px;
+padding:4px 2px 4px 6px;
 font-size:12px;
 }
 

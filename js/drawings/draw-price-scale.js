@@ -31,6 +31,10 @@ import {
 isHorizPriceTool
 } from "./constants.js?v=13";
 
+import {
+isElliottType
+} from "./elliott-spec.js?v=12";
+
 export function createDrawPriceScale(
 deps
 ){
@@ -309,7 +313,13 @@ sel
 entries.push({
 yIdeal: xy.y,
 price: handle.point.price,
-color
+color,
+/* Multi-vertex drawings (Pattern 1-2, Elliott) stack off the
+points if the scale layout is allowed to dodge overlaps. */
+pinToPrice:
+isElliottType(
+sel.type
+)
 });
 
 });

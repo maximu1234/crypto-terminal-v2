@@ -104,7 +104,7 @@ mountAlgoTradeUi
 
 import {
 mountAlgoTradingDrawings
-} from "./algo-trading/drawings.js?v=7";
+} from "./algo-trading/drawings.js?v=10";
 
 import {
 mountAlgoTradingIndicators

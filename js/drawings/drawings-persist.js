@@ -45,7 +45,7 @@ ensureChannelLevelsVisible
 import {
 isElliottType,
 normalizeElliottShape
-} from "./elliott-spec.js?v=5";
+} from "./elliott-spec.js?v=12";
 
 import {
 drawingsStorageKey
@@ -120,9 +120,16 @@ function normalizeShape(
 shape
 ){
 
+if(
+!isElliottType(
+shape.type
+)
+){
 shape.color =
 shape.color ||
 STROKE;
+}
+
 shape.lineWidth =
 shape.lineWidth ||
 1;

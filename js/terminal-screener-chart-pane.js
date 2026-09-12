@@ -50,7 +50,7 @@ paintCatchupLiveSeries
 
 import {
 mountWidgetDomCrosshair
-} from "./chart-widget-host.js?v=27";
+} from "./chart-widget-host.js?v=30";
 
 function buildBodyHtml(
 showRsi

@@ -2,10 +2,11 @@
  * Left-toolbar flyout for Elliott Waves subtypes.
  */
 import {
-ELLIOTT_TOOL_TYPES,
+ELLIOTT_WAVE_TYPES,
+ELLIOTT_PATTERN_TYPES,
 ELLIOTT_TOOL_META,
 isElliottType
-} from "./elliott-spec.js?v=5";
+} from "./elliott-spec.js?v=12";
 
 const FLYOUT_CLASS =
 "elliott-flyout";
@@ -37,9 +38,9 @@ el.setAttribute(
 "menu"
 );
 
-el.innerHTML =
-ELLIOTT_TOOL_TYPES.map(
-id=>{
+function flyoutItemHtml(
+id
+){
 
 const meta =
 ELLIOTT_TOOL_META[
@@ -49,7 +50,17 @@ id
 return `<button type="button" class="elliott-flyout-item" role="menuitem" data-elliott-tool="${id}">${meta.title}</button>`;
 
 }
-).join(
+
+el.innerHTML =
+[
+...ELLIOTT_WAVE_TYPES.map(
+flyoutItemHtml
+),
+`<div class="elliott-flyout-sep" role="separator"></div>`,
+...ELLIOTT_PATTERN_TYPES.map(
+flyoutItemHtml
+)
+].join(
 ""
 );
 

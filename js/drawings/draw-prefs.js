@@ -44,8 +44,10 @@ import {
 import {
   ELLIOTT_TOOL_TYPES,
   isElliottType,
-  migrateElliottToolDefaults
-} from "./elliott-spec.js?v=5";
+isPattern12Draw,
+migrateElliottToolDefaults,
+normalizePattern12TpFlags
+} from "./elliott-spec.js?v=12";
 
 /**
  * @returns {{
@@ -273,7 +275,8 @@ const migrated =
 migrateElliottToolDefaults(
 toolDefaults[
 name
-]
+],
+name
 );
 
 toolDefaults[
@@ -622,7 +625,8 @@ toolDefaults[
 type
 ] ||
 saved ||
-null
+null,
+type
 );
 
 out.color =
@@ -632,9 +636,34 @@ elliottSaved.lineWidth ??
 1;
 out.degree =
 elliottSaved.degree;
+out.degreeJunior =
+elliottSaved.degreeJunior;
 out.showWave =
 elliottSaved.showWave !==
 false;
+out.showPatternDash =
+elliottSaved.showPatternDash !==
+false;
+out.patternDashOpacity =
+elliottSaved.patternDashOpacity;
+out.type =
+type;
+
+if(
+isPattern12Draw(
+type
+)
+){
+Object.assign(
+out,
+normalizePattern12TpFlags(
+elliottSaved.showTpSenior,
+elliottSaved.showTpJunior
+)
+);
+out.tpLevels =
+elliottSaved.tpLevels;
+}
 
 }
 

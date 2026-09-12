@@ -7,7 +7,7 @@ getDrawToolIconSrc
 
 import {
 closeElliottFlyout
-} from "./elliott-toolbar.js?v=1";
+} from "./elliott-toolbar.js?v=3";
 
 import {
 FIB_EXT_TYPE,

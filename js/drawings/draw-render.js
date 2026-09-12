@@ -38,6 +38,7 @@ drawBrushPath
 } from "./brush.js?v=2";
 
 import {
+FIB_LINE_DASH,
 isHorizPriceTool,
 horizPriceLineX1
 } from "./constants.js?v=13";
@@ -58,13 +59,17 @@ TEXT_DEFAULT_CONTENT
 
 import {
 isElliottType,
+isPattern12Draw,
 elliottPointCount,
 elliottScreenPoints,
 elliottLabelAnchor,
-elliottLabelForVertex,
-elliottUsesCircleWrap,
-elliottLabelFontPx
-} from "./elliott-spec.js?v=5";
+elliottVertexLabel,
+elliottNecklineScreen,
+normalizePattern12TpFlags,
+normalizePatternDashOpacity,
+pattern12DashScreen,
+pattern12TpTickLayout
+} from "./elliott-spec.js?v=12";
 
 /**
  * @param {object} deps
@@ -151,6 +156,92 @@ fibLevelDash(
 
 }
 
+function drawPattern12TpTicks(
+ctx,
+shape,
+screens,
+color,
+width
+){
+
+const ticks =
+pattern12TpTickLayout(
+shape,
+screens,
+plotPriceToCoordinate,
+isSeriesLogarithmic(
+series
+)
+);
+
+if(
+!ticks.length
+){
+return;
+}
+
+const lineWidth =
+Math.max(
+1,
+width ||
+1
+);
+const opacityPct =
+normalizePatternDashOpacity(
+shape.patternDashOpacity
+);
+
+ctx.save();
+ctx.globalAlpha =
+opacityPct /
+100;
+ctx.strokeStyle =
+color;
+ctx.fillStyle =
+color;
+ctx.lineWidth =
+lineWidth;
+ctx.lineCap =
+"round";
+ctx.lineJoin =
+"round";
+ctx.setLineDash(
+FIB_LINE_DASH.dotted
+);
+ctx.font =
+"11px Arial";
+ctx.textAlign =
+"left";
+ctx.textBaseline =
+"middle";
+
+for(
+const tick of ticks
+){
+
+ctx.beginPath();
+ctx.moveTo(
+tick.x1,
+tick.y
+);
+ctx.lineTo(
+tick.x2,
+tick.y
+);
+ctx.stroke();
+ctx.fillText(
+tick.label,
+tick.x2 +
+6,
+tick.y
+);
+
+}
+
+ctx.restore();
+
+}
+
 function drawElliottLabel(
 ctx,
 x,
@@ -234,6 +325,146 @@ ctx.restore();
 
 }
 
+function strokePatternSegment(
+ctx,
+a,
+b,
+color,
+width,
+dash,
+opacityPct
+){
+
+if(
+!a ||
+!b
+){
+return;
+}
+
+ctx.save();
+ctx.strokeStyle =
+color;
+ctx.lineWidth =
+width ||
+1;
+ctx.lineJoin =
+"round";
+ctx.lineCap =
+"round";
+
+if(
+opacityPct !=
+null
+){
+ctx.globalAlpha =
+normalizePatternDashOpacity(
+opacityPct
+) /
+100;
+}
+
+ctx.setLineDash(
+dash ||
+[]
+);
+ctx.beginPath();
+ctx.moveTo(
+a.x,
+a.y
+);
+ctx.lineTo(
+b.x,
+b.y
+);
+ctx.stroke();
+ctx.restore();
+
+}
+
+function drawStrokeArrowHead(
+ctx,
+from,
+to,
+color,
+width
+){
+
+const dx =
+to.x -
+from.x;
+const dy =
+to.y -
+from.y;
+const len =
+Math.hypot(
+dx,
+dy
+);
+
+if(
+len <
+6
+){
+return;
+}
+
+const ux =
+dx /
+len;
+const uy =
+dy /
+len;
+const wx =
+-uy;
+const wy =
+ux;
+const head =
+11 +
+(width || 1) *
+1.5;
+const hw =
+head *
+0.38;
+
+ctx.save();
+ctx.fillStyle =
+color;
+ctx.beginPath();
+ctx.moveTo(
+to.x,
+to.y
+);
+ctx.lineTo(
+to.x -
+ux *
+head +
+wx *
+hw,
+to.y -
+uy *
+head +
+wy *
+hw
+);
+ctx.lineTo(
+to.x -
+ux *
+head -
+wx *
+hw,
+to.y -
+uy *
+head -
+wy *
+hw
+);
+ctx.closePath();
+ctx.fill();
+ctx.restore();
+
+}
+
 function drawElliottWave(
 ctx,
 shape,
@@ -303,16 +534,97 @@ i
 ctx.stroke();
 ctx.restore();
 
+const neck =
+elliottNecklineScreen(
+shape.type,
+screens
+);
+
+if(
+neck
+){
+strokePatternSegment(
+ctx,
+neck.a,
+neck.b,
+color,
+width
+);
 }
 
-const circled =
-elliottUsesCircleWrap(
-shape.degree
+if(
+isPattern12Draw(
+shape.type
+) &&
+screens.length >=
+6
+){
+drawStrokeArrowHead(
+ctx,
+screens[
+screens.length -
+2
+],
+screens[
+screens.length -
+1
+],
+color,
+width
 );
-const fontPx =
-elliottLabelFontPx(
-shape.degree
+}
+
+}
+
+if(
+isPattern12Draw(
+shape.type
+) &&
+shape.showPatternDash !==
+false
+){
+
+const dash =
+pattern12DashScreen(
+screens
 );
+
+if(
+dash
+){
+strokePatternSegment(
+ctx,
+dash.a,
+dash.b,
+color,
+Math.max(
+1,
+(width || 1) *
+0.9
+),
+[
+7,
+5
+],
+shape.patternDashOpacity
+);
+}
+
+}
+
+if(
+isPattern12Draw(
+shape.type
+)
+){
+drawPattern12TpTicks(
+ctx,
+shape,
+screens,
+color,
+width
+);
+}
 
 screens.forEach(
 (
@@ -321,14 +633,13 @@ i
 )=>{
 
 const label =
-elliottLabelForVertex(
-shape.type,
-shape.degree,
+elliottVertexLabel(
+shape,
 i
 );
 
 if(
-!label
+!label.text
 ){
 return;
 }
@@ -344,10 +655,10 @@ drawElliottLabel(
 ctx,
 anchor.x,
 anchor.y,
-label,
+label.text,
 color,
-circled,
-fontPx
+label.circled,
+label.fontPx
 );
 
 }
@@ -1712,8 +2023,17 @@ type: placement.type,
 color: style.color,
 lineWidth: style.lineWidth,
 degree: style.degree,
+degreeJunior: style.degreeJunior,
 showWave: style.showWave !==
 false,
+showPatternDash: style.showPatternDash !==
+false,
+patternDashOpacity: style.patternDashOpacity,
+...normalizePattern12TpFlags(
+style.showTpSenior,
+style.showTpJunior
+),
+tpLevels: style.tpLevels,
 points: elliottPts,
 p1: elliottPts[0],
 p2: elliottPts[

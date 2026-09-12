@@ -3,6 +3,9 @@
  * Geometry is a polyline starting at an unlabeled origin (vertex 0),
  * then labeled wave ends: 0–1–2–3–4–5, 0–A–B–C, etc.
  */
+import {
+fibPriceAtRatio
+} from "./fib-spec.js?v=17";
 
 export const ELLIOTT_DEFAULT_COLOR =
 "#38bdf8";
@@ -11,7 +14,28 @@ export const ELLIOTT_DEFAULT_DEGREE =
 "submicro";
 
 export const ELLIOTT_TOOL_DEFAULTS_VERSION =
-1;
+5;
+
+export const PATTERN_DASH_DEFAULT_OPACITY =
+40;
+
+export const PATTERN_12_TP_LEVEL_COUNT =
+5;
+
+export const PATTERN_12_TP_DEFAULT_LEVELS =
+Object.freeze([
+1,
+1.5,
+2,
+2.44,
+2.5
+]);
+
+export const PATTERN_12_TP_TICK_PAD_PX =
+14;
+
+export const PATTERN_12_TP_TICK_LEN_PX =
+40;
 
 export const ELLIOTT_IMPULSE =
 "elliott-impulse";
@@ -28,13 +52,35 @@ export const ELLIOTT_DOUBLE =
 export const ELLIOTT_TRIPLE =
 "elliott-triple";
 
-export const ELLIOTT_TOOL_TYPES =
+export const PATTERN_HS =
+"pattern-hs";
+
+export const PATTERN_DOUBLE_TB =
+"pattern-double-tb";
+
+export const PATTERN_12 =
+"pattern-12";
+
+export const ELLIOTT_WAVE_TYPES =
 Object.freeze([
 ELLIOTT_IMPULSE,
 ELLIOTT_CORRECTION,
 ELLIOTT_TRIANGLE,
 ELLIOTT_DOUBLE,
 ELLIOTT_TRIPLE
+]);
+
+export const ELLIOTT_PATTERN_TYPES =
+Object.freeze([
+PATTERN_HS,
+PATTERN_DOUBLE_TB,
+PATTERN_12
+]);
+
+export const ELLIOTT_TOOL_TYPES =
+Object.freeze([
+...ELLIOTT_WAVE_TYPES,
+...ELLIOTT_PATTERN_TYPES
 ]);
 
 export const ELLIOTT_TOOL_META =
@@ -73,6 +119,27 @@ id: ELLIOTT_TRIPLE,
 kind: "triple",
 pointCount: 6,
 title: "Elliott triple combo wave (W·X·Y·X·Z)"
+}),
+[PATTERN_HS]:
+Object.freeze({
+id: PATTERN_HS,
+kind: "hs",
+pointCount: 7,
+title: "Head & Shoulders (LS · H · RS)"
+}),
+[PATTERN_DOUBLE_TB]:
+Object.freeze({
+id: PATTERN_DOUBLE_TB,
+kind: "double-tb",
+pointCount: 5,
+title: "Double Top/Bottom (D1 · D2)"
+}),
+[PATTERN_12]:
+Object.freeze({
+id: PATTERN_12,
+kind: "pattern-12",
+pointCount: 6,
+title: "Pattern 1-2-1-2-3 (1·2 · 1·2·3)"
 })
 });
 
@@ -332,6 +399,36 @@ type
 
 }
 
+export function isElliottWaveType(
+type
+){
+
+return ELLIOTT_WAVE_TYPES.includes(
+type
+);
+
+}
+
+export function isPatternHsFamily(
+type
+){
+
+return type ===
+PATTERN_HS ||
+type ===
+PATTERN_DOUBLE_TB;
+
+}
+
+export function isPattern12Draw(
+type
+){
+
+return type ===
+PATTERN_12;
+
+}
+
 export function elliottToolMeta(
 type
 ){
@@ -431,7 +528,10 @@ degreeId
 );
 
 if(
-!meta
+!meta ||
+!isElliottWaveType(
+type
+)
 ){
 return [];
 }
@@ -474,24 +574,402 @@ spec.wrap
 export function elliottLabelForVertex(
 type,
 degreeId,
+index,
+degreeJuniorId
+){
+
+return elliottVertexLabel({
+type,
+degree:
+degreeId,
+degreeJunior:
+degreeJuniorId
+},
+index
+).text;
+
+}
+
+export function elliottVertexLabel(
+shape,
 index
 ){
+
+const type =
+shape?.type;
+const empty =
+{
+text: "",
+circled: false,
+fontPx: 13
+};
 
 if(
 index <
 1
 ){
-return "";
+return empty;
 }
 
-return elliottDisplayLabels(
+if(
+type ===
+PATTERN_HS
+){
+const text =
+[
+"",
+"LS",
+"",
+"H",
+"",
+"RS",
+""
+][
+index
+] ||
+"";
+
+return {
+text,
+circled: false,
+fontPx: 13
+};
+
+}
+
+if(
+type ===
+PATTERN_DOUBLE_TB
+){
+const text =
+[
+"",
+"D1",
+"",
+"D2",
+""
+][
+index
+] ||
+"";
+
+return {
+text,
+circled: false,
+fontPx: 13
+};
+
+}
+
+if(
+type ===
+PATTERN_12
+){
+
+const senior =
+elliottDegreeSpec(
+shape?.degree
+);
+const junior =
+elliottDegreeSpec(
+shape?.degreeJunior
+);
+const spec =
+index <=
+2
+? senior
+: junior;
+let core =
+"";
+
+if(
+index ===
+1 ||
+index ===
+3
+){
+core =
+"1";
+}else if(
+index ===
+2 ||
+index ===
+4
+){
+core =
+"2";
+}else if(
+index ===
+5
+){
+core =
+"3";
+}
+
+if(
+!core
+){
+return empty;
+}
+
+return {
+text:
+wrapLabelText(
+core,
+spec.wrap
+),
+circled:
+spec.wrap ===
+"circle",
+fontPx:
+Number.isFinite(
+spec.fontPx
+) &&
+spec.fontPx >
+0
+? spec.fontPx
+: 13
+};
+
+}
+
+if(
+!isElliottWaveType(
+type
+)
+){
+return empty;
+}
+
+const text =
+elliottDisplayLabels(
 type,
-degreeId
+shape?.degree
 )[
 index -
 1
 ] ||
 "";
+
+return {
+text,
+circled:
+elliottUsesCircleWrap(
+shape?.degree
+),
+fontPx:
+elliottLabelFontPx(
+shape?.degree
+)
+};
+
+}
+
+function lineThroughToXRange(
+a,
+b,
+x1,
+x2
+){
+
+if(
+!a ||
+!b
+){
+return null;
+}
+
+const leftX =
+Math.min(
+x1,
+x2
+);
+const rightX =
+Math.max(
+x1,
+x2
+);
+
+if(
+Math.abs(
+b.x -
+a.x
+) <
+0.5
+){
+return {
+a: {
+x: a.x,
+y: a.y
+},
+b: {
+x: a.x,
+y: b.y
+}
+};
+}
+
+const k =
+(b.y - a.y) /
+(b.x - a.x);
+const yAt =
+x=>
+a.y +
+k *
+(x - a.x);
+
+return {
+a: {
+x: leftX,
+y: yAt(
+leftX
+)
+},
+b: {
+x: rightX,
+y: yAt(
+rightX
+)
+}
+};
+
+}
+
+export function elliottNecklineScreen(
+type,
+screens
+){
+
+if(
+!Array.isArray(
+screens
+) ||
+!screens.length
+){
+return null;
+}
+
+const xs =
+screens.map(
+p=>
+p.x
+);
+const minX =
+Math.min(
+...xs
+);
+const maxX =
+Math.max(
+...xs
+);
+
+if(
+type ===
+PATTERN_HS &&
+screens.length >=
+5
+){
+return lineThroughToXRange(
+screens[2],
+screens[4],
+minX,
+maxX
+);
+}
+
+if(
+type ===
+PATTERN_DOUBLE_TB &&
+screens.length >=
+3 &&
+screens[2]
+){
+return {
+a: {
+x: minX,
+y: screens[2].y
+},
+b: {
+x: maxX,
+y: screens[2].y
+}
+};
+}
+
+return null;
+
+}
+
+export function pattern12DashScreen(
+screens
+){
+
+if(
+!Array.isArray(
+screens
+) ||
+screens.length <
+4 ||
+!screens[1] ||
+!screens[3]
+){
+return null;
+}
+
+const a =
+screens[1];
+const b =
+screens[3];
+const maxX =
+Math.max(
+...screens.map(
+p=>
+p.x
+),
+a.x,
+b.x
+) +
+36;
+const left =
+a.x <=
+b.x
+? a
+: b;
+const right =
+a.x <=
+b.x
+? b
+: a;
+
+if(
+Math.abs(
+right.x -
+left.x
+) <
+0.5
+){
+return {
+a: left,
+b: {
+x: maxX,
+y: left.y
+}
+};
+}
+
+const k =
+(right.y - left.y) /
+(right.x - left.x);
+
+return {
+a: left,
+b: {
+x: maxX,
+y: left.y +
+k *
+(maxX - left.x)
+}
+};
 
 }
 
@@ -525,10 +1003,280 @@ px >
 
 }
 
+export function parsePattern12TpLevel(
+raw
+){
+
+if(
+raw ==
+null ||
+raw ===
+""
+){
+return null;
+}
+
+if(
+typeof raw ===
+"number"
+){
+
+if(
+!Number.isFinite(
+raw
+)
+){
+return null;
+}
+
+return Math.round(
+raw *
+1e6
+) /
+1e6;
+
+}
+
+const s =
+String(
+raw
+).replace(
+/,/g,
+"."
+).trim();
+
+if(
+!s ||
+s ===
+"." ||
+s ===
+"-"
+){
+return null;
+}
+
+const n =
+Number(
+s
+);
+
+if(
+!Number.isFinite(
+n
+)
+){
+return null;
+}
+
+return Math.round(
+n *
+1e6
+) /
+1e6;
+
+}
+
+export function formatPattern12TpLabel(
+raw
+){
+
+const n =
+parsePattern12TpLevel(
+raw
+);
+
+if(
+n ==
+null
+){
+return "";
+}
+
+if(
+Number.isInteger(
+n
+)
+){
+return String(
+n
+);
+}
+
+let s =
+n.toFixed(
+6
+).replace(
+/0+$/,
+""
+);
+
+if(
+s.endsWith(
+"."
+)
+){
+s =
+s.slice(
+0,
+-1
+);
+}
+
+return s;
+
+}
+
+export function normalizePattern12TpLevels(
+raw
+){
+
+if(
+!Array.isArray(
+raw
+) ||
+raw.length ===
+0
+){
+return PATTERN_12_TP_DEFAULT_LEVELS.slice();
+}
+
+const out =
+[];
+
+for(
+let i =
+0;
+i <
+PATTERN_12_TP_LEVEL_COUNT;
+i++
+){
+
+if(
+i <
+raw.length
+){
+out.push(
+parsePattern12TpLevel(
+raw[
+i
+]
+)
+);
+}else{
+out.push(
+PATTERN_12_TP_DEFAULT_LEVELS[
+i
+]
+);
+}
+
+}
+
+return out;
+
+}
+
+export function normalizePattern12TpFlags(
+senior,
+junior
+){
+
+const seniorSet =
+senior ===
+true ||
+senior ===
+false;
+const juniorSet =
+junior ===
+true ||
+junior ===
+false;
+
+if(
+!seniorSet &&
+!juniorSet
+){
+return {
+showTpSenior:
+false,
+showTpJunior:
+true
+};
+}
+
+const seniorOn =
+senior ===
+true;
+const juniorOn =
+junior ===
+true;
+
+if(
+seniorOn &&
+juniorOn
+){
+return {
+showTpSenior:
+false,
+showTpJunior:
+true
+};
+}
+
+return {
+showTpSenior:
+seniorOn,
+showTpJunior:
+juniorOn
+};
+
+}
+
+export function normalizePatternDashOpacity(
+raw
+){
+
+const n =
+Number(
+raw
+);
+
+if(
+!Number.isFinite(
+n
+)
+){
+return PATTERN_DASH_DEFAULT_OPACITY;
+}
+
+return Math.max(
+0,
+Math.min(
+100,
+Math.round(
+n
+)
+)
+);
+
+}
+
 export function createElliottToolDefaults(
 overrides =
 {}
 ){
+
+const type =
+overrides.type;
+const isP12 =
+type ===
+PATTERN_12;
+const rest =
+{
+...overrides
+};
+
+delete rest.type;
 
 return {
 elliottDefaultsVersion:
@@ -538,20 +1286,46 @@ ELLIOTT_DEFAULT_COLOR,
 lineWidth:
 1,
 degree:
+isP12
+? "micro"
+: ELLIOTT_DEFAULT_DEGREE,
+degreeJunior:
 ELLIOTT_DEFAULT_DEGREE,
 showWave:
 true,
-...overrides
+showPatternDash:
+true,
+patternDashOpacity:
+PATTERN_DASH_DEFAULT_OPACITY,
+...(
+isP12
+? {
+...normalizePattern12TpFlags(),
+tpLevels:
+PATTERN_12_TP_DEFAULT_LEVELS.slice()
+}
+: {}
+),
+...rest
 };
 
 }
 
 export function migrateElliottToolDefaults(
-saved
+saved,
+type
 ){
 
+const toolType =
+type ||
+saved?.type;
 const base =
-createElliottToolDefaults();
+createElliottToolDefaults(
+{
+type:
+toolType
+}
+);
 
 if(
 !saved ||
@@ -589,11 +1363,40 @@ lineWidth
 : 1,
 degree:
 normalizeElliottDegree(
-saved.degree
+saved.degree ||
+base.degree
+),
+degreeJunior:
+normalizeElliottDegree(
+saved.degreeJunior ||
+base.degreeJunior
 ),
 showWave:
 saved.showWave !==
-false
+false,
+showPatternDash:
+saved.showPatternDash !==
+false,
+patternDashOpacity:
+normalizePatternDashOpacity(
+saved.patternDashOpacity ??
+base.patternDashOpacity
+),
+...(
+toolType ===
+PATTERN_12
+? {
+...normalizePattern12TpFlags(
+saved.showTpSenior,
+saved.showTpJunior
+),
+tpLevels:
+normalizePattern12TpLevels(
+saved.tpLevels
+)
+}
+: {}
+)
 };
 
 }
@@ -715,6 +1518,250 @@ next.length -
 
 }
 
+export function pattern12TpPrice(
+fromPt,
+toPt,
+ratio,
+logarithmic
+){
+
+const a =
+Number(
+fromPt?.price
+);
+const b =
+Number(
+toPt?.price
+);
+const v =
+parsePattern12TpLevel(
+ratio
+);
+
+if(
+!Number.isFinite(
+a
+) ||
+!Number.isFinite(
+b
+) ||
+a ===
+b ||
+v ==
+null ||
+v ===
+0
+){
+return null;
+}
+
+const price =
+fibPriceAtRatio(
+a,
+b,
+v,
+logarithmic
+);
+
+return Number.isFinite(
+price
+)
+? price
+: null;
+
+}
+
+export function pattern12TpEntries(
+shape,
+logarithmic
+){
+
+if(
+!isPattern12Draw(
+shape?.type
+)
+){
+return [];
+}
+
+const pts =
+getElliottPoints(
+shape
+);
+const levels =
+normalizePattern12TpLevels(
+shape?.tpLevels
+);
+const out =
+[];
+
+function addFamily(
+fromPt,
+toPt,
+kind
+){
+
+for(
+const ratio of levels
+){
+
+const price =
+pattern12TpPrice(
+fromPt,
+toPt,
+ratio,
+logarithmic
+);
+
+if(
+price ==
+null
+){
+continue;
+}
+
+out.push(
+{
+kind,
+ratio,
+price,
+label:
+formatPattern12TpLabel(
+ratio
+)
+}
+);
+
+}
+
+}
+
+const tpFlags =
+normalizePattern12TpFlags(
+shape.showTpSenior,
+shape.showTpJunior
+);
+
+if(
+tpFlags.showTpSenior
+){
+addFamily(
+pts[
+0
+],
+pts[
+1
+],
+"senior"
+);
+}
+
+if(
+tpFlags.showTpJunior
+){
+addFamily(
+pts[
+2
+],
+pts[
+3
+],
+"junior"
+);
+}
+
+return out;
+
+}
+
+export function pattern12TpTickLayout(
+shape,
+screens,
+priceToY,
+logarithmic
+){
+
+const entries =
+pattern12TpEntries(
+shape,
+logarithmic
+);
+
+if(
+!entries.length ||
+!Array.isArray(
+screens
+) ||
+typeof priceToY !==
+"function"
+){
+return [];
+}
+
+const xs =
+screens.filter(
+Boolean
+).map(
+p=>
+p.x
+).filter(
+x=>
+Number.isFinite(
+x
+)
+);
+
+if(
+!xs.length
+){
+return [];
+}
+
+const x1 =
+Math.max(
+...xs
+) +
+PATTERN_12_TP_TICK_PAD_PX;
+const x2 =
+x1 +
+PATTERN_12_TP_TICK_LEN_PX;
+const ticks =
+[];
+
+for(
+const entry of entries
+){
+
+const y =
+priceToY(
+entry.price
+);
+
+if(
+y ==
+null ||
+!Number.isFinite(
+y
+)
+){
+continue;
+}
+
+ticks.push(
+{
+...entry,
+x1,
+x2,
+y
+}
+);
+
+}
+
+return ticks;
+
+}
+
 export function normalizeElliottShape(
 shape
 ){
@@ -728,7 +1775,12 @@ return shape;
 }
 
 const defaults =
-createElliottToolDefaults();
+createElliottToolDefaults(
+{
+type:
+shape.type
+}
+);
 const needed =
 elliottPointCount(
 shape.type
@@ -773,12 +1825,44 @@ width
 : 1;
 
 shape.degree =
-normalizeElliottDegree(
+shape.type ===
+PATTERN_12 &&
+!shape.degree
+? "micro"
+: normalizeElliottDegree(
 shape.degree
+);
+shape.degreeJunior =
+normalizeElliottDegree(
+shape.degreeJunior
 );
 shape.showWave =
 shape.showWave !==
 false;
+shape.showPatternDash =
+shape.showPatternDash !==
+false;
+shape.patternDashOpacity =
+normalizePatternDashOpacity(
+shape.patternDashOpacity
+);
+
+if(
+shape.type ===
+PATTERN_12
+){
+Object.assign(
+shape,
+normalizePattern12TpFlags(
+shape.showTpSenior,
+shape.showTpJunior
+)
+);
+shape.tpLevels =
+normalizePattern12TpLevels(
+shape.tpLevels
+);
+}
 
 return shape;
 

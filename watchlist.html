@@ -13,7 +13,7 @@
 
 <link rel="stylesheet" href="/css/critical-shell.css?v=10">
 <script src="/js/site-css-ready.js?v=3"></script>
-<link rel="stylesheet" href="/css/common.css?v=58">
+<link rel="stylesheet" href="/css/common.css?v=63">
 <link rel="stylesheet" href="/css/watchlist.css?v=61">
 <link rel="stylesheet" href="/css/screener.css?v=58">
 <link rel="stylesheet" href="/css/watchlist-page.css?v=3">
@@ -113,7 +113,7 @@ const { loadLightweightCharts } =
 await import("/js/charts-lib-boot.js?v=3");
 
 await loadLightweightCharts();
-await import("./js/watchlist.js?v=110");
+await import("./js/watchlist.js?v=113");
 
 if(
 window.cryptoTerminalDesktop?.isDesktop
@@ -140,7 +140,7 @@ mode:
 }
 
 await import("./js/watchlist-page.js?v=4");
-import("/js/site-boot.js?v=129").catch(err=>{
+import("/js/site-boot.js?v=130").catch(err=>{
 console.warn("site-boot:", err);
 });
 
