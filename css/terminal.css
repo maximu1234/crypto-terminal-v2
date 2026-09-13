@@ -240,6 +240,10 @@ body.terminal-page #draw-toolbar.draw-toolbar-inline .draw-btn .draw-tool-icon--
   cursor:default;
 }
 
+form.draw-position-risk{
+  margin:0;
+}
+
 .draw-position-risk.hidden{
   display:none;
 }
@@ -1537,6 +1541,16 @@ body.tablet-chart .draw-style-float *{
   -webkit-touch-callout:none;
 }
 
+body.tablet-chart.tablet-chart-draw-mode #charts-stack .draw-position-risk,
+body.tablet-chart.tablet-chart-draw-mode #charts-stack .draw-position-risk *,
+body.tablet-chart .draw-style-float .draw-position-risk,
+body.tablet-chart .draw-style-float .draw-position-risk *{
+  -webkit-user-select:text !important;
+  user-select:text !important;
+  touch-action:manipulation;
+  -webkit-touch-callout:default !important;
+}
+
 body.tablet-chart.tablet-chart-draw-mode #charts-stack,
 body.tablet-chart.tablet-chart-draw-mode #charts-stack *{
   -webkit-user-select:none !important;
@@ -2154,6 +2168,11 @@ body.tablet-chart #rsi-wrap .rsi-level-line:not(.hidden){
 }
 
 #chart-wrap .chart-dom-crosshair-horz.chart-crosshair-probe-active{
+  z-index:26;
+}
+
+body.tablet-chart #chart-wrap .chart-dom-crosshair-horz,
+body.tablet-chart .widget-chart-wrap .chart-dom-crosshair-horz{
   z-index:26;
 }
 

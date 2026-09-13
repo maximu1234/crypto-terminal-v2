@@ -11,11 +11,11 @@ loadLightweightCharts
 
 import {
 jsImport
-} from "./asset-manifest.js?v=11";
+} from "./asset-manifest.js?v=12";
 
 import {
 mountScriptPage
-} from "./script-page.js?v=53";
+} from "./script-page.js?v=54";
 
 import {
 isScriptNavEnabled

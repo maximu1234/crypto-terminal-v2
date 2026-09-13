@@ -34,7 +34,7 @@ updateRsiLevelLinesLayout,
 linkPairedChartTimeScales,
 SCREENER_VISIBLE_BARS,
 SCREENER_MAX_BARS
-} from "./chart-import.js?v=54";
+} from "./chart-import.js?v=55";
 
 import {
 isIpadWebViewport
@@ -89,7 +89,7 @@ FAVORITES_BY_EXCHANGE_KEY
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=63";
+} from "./auth-ui.js?v=64";
 
 import {
 ensureSettled,
@@ -158,7 +158,7 @@ if(
 ){
 screenerZoomMountPromise =
 import(
-"./screener-widget-zoom.js?v=32"
+"./screener-widget-zoom.js?v=33"
 ).then(
 mod=>{
 refreshZoomFavoriteUi =

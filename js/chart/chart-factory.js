@@ -35,8 +35,10 @@ hideTabletProbeCrosshair,
 hideDomChartCrosshair,
 hideDomChartCrosshairHorz,
 hideDomChartCrosshairVert,
-positionDomChartCrosshairHorz
-} from "./chart-dom-crosshair.js?v=15";
+positionDomChartCrosshairHorz,
+positionTabletProbeHorizInStack,
+hideTabletProbeHorizInStack
+} from "./chart-dom-crosshair.js?v=16";
 
 const chartHostElements =
 new WeakMap();
@@ -2764,6 +2766,15 @@ linkedWrapEl
 
 hideExtraPaneCrosshairHorz();
 
+if(
+isTabletChartViewport() &&
+!document.body.classList.contains(
+"chart-probe-active"
+)
+){
+hideTabletProbeHorizInStack();
+}
+
 }
 
 function clearLinked(){
@@ -2938,6 +2949,26 @@ chartEl,
 chart:mainChart,
 plotY
 });
+
+if(
+isTabletChartViewport() &&
+!document.body.classList.contains(
+"chart-probe-active"
+)
+){
+
+const chartR =
+chartEl.getBoundingClientRect();
+
+positionTabletProbeHorizInStack({
+chartsStackEl,
+chartEl,
+chart:mainChart,
+clientY: chartR.top +
+plotY
+});
+
+}
 
 }
 

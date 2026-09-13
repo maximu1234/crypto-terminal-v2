@@ -7,7 +7,7 @@ getActiveTradeVolumeUsdt
 
 import {
 formatPrice
-} from "./chart-import.js?v=54";
+} from "./chart-import.js?v=55";
 
 import {
 createPriceAlert
@@ -24,6 +24,10 @@ getTelegramChatId
 import {
 getActiveTradeConfig
 } from "./trade/module-router.js?v=23";
+
+import {
+computePlusMenuPosition
+} from "./trade-order-plus-menu-pos.js?v=1";
 
 function tradingApi(){
 
@@ -357,51 +361,22 @@ plusBtn.getBoundingClientRect();
 const menuRect =
 menu.getBoundingClientRect();
 
-let left =
-plusRect.left -
-wrapRect.left -
-menuRect.width -
-8;
-let top =
-plusRect.top -
-wrapRect.top +
-(
-plusRect.height /
-2
-) -
-(
-menuRect.height /
-2
-);
-
-const minLeft =
-4;
-const maxTop =
-Math.max(
-4,
-wrapRect.height -
-menuRect.height -
-4
-);
-
-left =
-Math.max(
-minLeft,
-left
-);
-top =
-Math.max(
-4,
-Math.min(
-top,
-maxTop
-)
-);
+const pos =
+computePlusMenuPosition({
+wrapWidth: wrapRect.width,
+wrapHeight: wrapRect.height,
+plusLeft: plusRect.left - wrapRect.left,
+plusTop: plusRect.top - wrapRect.top,
+plusWidth: plusRect.width,
+plusHeight: plusRect.height,
+menuWidth: menuRect.width,
+menuHeight: menuRect.height
+});
 
 menu.style.left =
-`${Math.round(left)}px`;
+`${Math.round(pos.left)}px`;
 menu.style.top =
-`${Math.round(top)}px`;
+`${Math.round(pos.top)}px`;
 
 }
 
@@ -443,6 +418,14 @@ document.createElement(
 );
 menuEl.className =
 "trade-order-plus-menu";
+menuEl.style.position =
+"absolute";
+menuEl.style.zIndex =
+"40";
+menuEl.style.pointerEvents =
+"auto";
+menuEl.style.visibility =
+"hidden";
 menuEl.innerHTML =
 buildMenuHtml(
 items,
@@ -462,6 +445,12 @@ menuEl,
 ctx.plusBtn,
 ctx.wrapEl
 );
+if(
+menuEl
+){
+menuEl.style.visibility =
+"visible";
+}
 }
 );
 

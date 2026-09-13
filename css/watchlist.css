@@ -551,6 +551,10 @@ body.terminal-page .widget-draw-tools{
     z-index:4;
 }
 
+body.tablet-chart .widget-chart-wrap .chart-dom-crosshair-horz{
+    z-index:26;
+}
+
 .price-alert-scale-plus{
     position:absolute;
     z-index:32;
@@ -832,6 +836,16 @@ body.tablet-chart.tablet-chart-draw-mode .widget-chart-wrap *{
     user-select:none !important;
     -webkit-touch-callout:none !important;
     touch-action:none;
+}
+
+body.tablet-chart.tablet-chart-draw-mode .widget-chart-wrap .draw-position-risk,
+body.tablet-chart.tablet-chart-draw-mode .widget-chart-wrap .draw-position-risk *,
+body.tablet-chart .widget-chart-wrap .draw-style-float .draw-position-risk,
+body.tablet-chart .widget-chart-wrap .draw-style-float .draw-position-risk *{
+    -webkit-user-select:text !important;
+    user-select:text !important;
+    touch-action:manipulation !important;
+    -webkit-touch-callout:default !important;
 }
 
 body.tablet-chart .widget-chart-wrap.chart-touch-locked .chart{
@@ -1300,6 +1314,10 @@ body.tablet-chart .widget-chart-wrap.chart-touch-locked .chart{
     font-size:11px;
     color:#9ca3af;
     white-space:nowrap;
+}
+
+form.draw-position-risk{
+    margin:0;
 }
 
 .draw-position-risk.hidden{

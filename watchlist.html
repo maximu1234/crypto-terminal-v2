@@ -14,7 +14,7 @@
 <link rel="stylesheet" href="/css/critical-shell.css?v=10">
 <script src="/js/site-css-ready.js?v=3"></script>
 <link rel="stylesheet" href="/css/common.css?v=63">
-<link rel="stylesheet" href="/css/watchlist.css?v=61">
+<link rel="stylesheet" href="/css/watchlist.css?v=63">
 <link rel="stylesheet" href="/css/screener.css?v=58">
 <link rel="stylesheet" href="/css/watchlist-page.css?v=3">
 
@@ -86,7 +86,7 @@ if(
 window.cryptoTerminalDesktop?.isDesktop
 ){
 tradeBoot =
-await import("/js/trade-desktop-boot.js?v=27");
+await import("/js/trade-desktop-boot.js?v=28");
 
 if(
 tradeBoot.isWatchlistTradeMode()
@@ -100,7 +100,7 @@ mode:
 }
 }else{
 tradeBoot =
-await import("/js/trade-web/boot.js?v=5");
+await import("/js/trade-web/boot.js?v=6");
 await tradeBoot.initTradeWebBeforeChart(
 {
 mode:
@@ -113,7 +113,7 @@ const { loadLightweightCharts } =
 await import("/js/charts-lib-boot.js?v=3");
 
 await loadLightweightCharts();
-await import("./js/watchlist.js?v=113");
+await import("./js/watchlist.js?v=119");
 
 if(
 window.cryptoTerminalDesktop?.isDesktop

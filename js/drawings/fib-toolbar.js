@@ -7,7 +7,7 @@ getDrawToolIconSrc
 
 import {
 closeElliottFlyout
-} from "./elliott-toolbar.js?v=3";
+} from "./elliott-toolbar.js?v=4";
 
 import {
 FIB_EXT_TYPE,
@@ -121,7 +121,8 @@ new CustomEvent(
 {
 bubbles: true,
 detail: {
-tool
+tool,
+pointerType: e.pointerType
 }
 }
 )

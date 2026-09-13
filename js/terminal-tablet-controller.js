@@ -15,11 +15,11 @@ normalCrosshairOptions,
 positionTabletProbeCrosshair,
 tabletProbeCrosshairOptions,
 TABLET_USE_CUSTOM_TOUCH_PAN
-} from "./chart-import.js?v=54";
+} from "./chart-import.js?v=55";
 
 import {
 createTabletGesturePolicy
-} from "./tablet-gesture-policy.js?v=2";
+} from "./tablet-gesture-policy.js?v=3";
 
 /** @deprecated legacy sandbox flag — удаляем из localStorage */
 const LEGACY_COINS_TABLET_V2_KEY =
@@ -394,7 +394,7 @@ const {
 mountTabletChartGestures
 } =
 await import(
-"./chart-tablet-gestures.js?v=19"
+"./chart-tablet-gestures.js?v=21"
 );
 
 const tabletGestureCtrl =

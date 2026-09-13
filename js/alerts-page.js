@@ -20,7 +20,7 @@ alertExchangeId
 
 import {
 buildAlertChartUrl
-} from "./alert-deep-link-exchange.js?v=2";
+} from "./alert-deep-link-exchange.js?v=3";
 
 import {
 getTelegramChatId,
@@ -43,7 +43,7 @@ ensureCloudLoginResolved
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=63";
+} from "./auth-ui.js?v=64";
 
 import {
 TELEGRAM_BOT_USERNAME,

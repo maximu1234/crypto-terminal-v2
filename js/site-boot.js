@@ -1,10 +1,10 @@
 import {
 initAlertMonitor
-} from "./alert-monitor.js?v=74";
+} from "./alert-monitor.js?v=75";
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=63";
+} from "./auth-ui.js?v=64";
 
 import {
 isAlertsPage

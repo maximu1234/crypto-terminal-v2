@@ -8,7 +8,7 @@ linkPairedChartTimeScales,
 appendFutureWhitespaceBars,
 computeChartFutureMarginBars,
 coinsTfVisibleBars
-} from "../chart-import.js?v=54";
+} from "../chart-import.js?v=55";
 
 import {
 calculateAwesomeOscillator,

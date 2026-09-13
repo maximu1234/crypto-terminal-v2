@@ -110,7 +110,8 @@ new CustomEvent(
 {
 bubbles: true,
 detail: {
-tool
+tool,
+pointerType: e.pointerType
 }
 }
 )

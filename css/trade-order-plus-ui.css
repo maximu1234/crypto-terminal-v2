@@ -1,6 +1,6 @@
-/* /trade — меню «+» у шкалы цены */
+/* Меню «+» у шкалы цены (терминал / вотчлист при trade-page) */
 
-body.trade-page .trade-order-plus-menu{
+.trade-order-plus-menu{
 position:absolute;
 z-index:40;
 width:max-content;

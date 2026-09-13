@@ -3,15 +3,15 @@ DRAW_TOOLS_PALETTE_ICON_SVG,
 TRASH_ICON_SVG,
 SETTINGS_ICON_SVG,
 getDrawToolbarButtonsHtml
-} from "./draw-ui-shared.js?v=43";
+} from "./draw-ui-shared.js?v=44";
 
 import {
 closeElliottFlyout
-} from "./drawings/elliott-toolbar.js?v=3";
+} from "./drawings/elliott-toolbar.js?v=4";
 
 import {
 closeFibFlyout
-} from "./drawings/fib-toolbar.js?v=3";
+} from "./drawings/fib-toolbar.js?v=4";
 
 const widgetDrawMenuClosers =
 new Set();
@@ -315,7 +315,8 @@ return false;
 
 onActivate?.(e);
 pickTool(
-btn.dataset.drawTool
+btn.dataset.drawTool,
+e.pointerType
 );
 closeAllWidgetDrawToolsMenus();
 return true;
@@ -371,7 +372,8 @@ return;
 
 onActivate?.(e);
 pickTool(
-next
+next,
+e.detail?.pointerType
 );
 closeAllWidgetDrawToolsMenus();
 
@@ -430,10 +432,10 @@ return `
 <span class="draw-text-size-label">20</span>
 </button>
 
-<label class="draw-position-risk hidden" title="Сумма риска при срабатывании стопа">
+<form class="draw-position-risk hidden" action="#" title="Сумма риска при срабатывании стопа">
 <span class="draw-position-risk-label">Стоп-лосс ($)</span>
-<input type="number" class="draw-position-risk-input" min="0" step="any" placeholder="" inputmode="decimal"/>
-</label>
+<input type="number" class="draw-position-risk-input" min="0" step="any" placeholder="" inputmode="decimal" enterkeyhint="go" autocomplete="off"/>
+</form>
 
 <button type="button" class="float-settings draw-settings-btn" title="Настройки">
 ${SETTINGS_ICON_SVG}

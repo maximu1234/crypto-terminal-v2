@@ -465,7 +465,7 @@ el.classList.remove(
 
 }
 
-function hideTabletProbeHorizInStack(
+export function hideTabletProbeHorizInStack(
 horizLineEl
 ){
 

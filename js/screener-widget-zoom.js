@@ -15,7 +15,7 @@ mountChartPriceHud,
 applyTabletMainChartScroll,
 applyTabletRsiChartOptions,
 SCREENER_MAX_BARS
-} from "./chart-import.js?v=54";
+} from "./chart-import.js?v=55";
 
 import {
 isIpadWebViewport
@@ -1119,7 +1119,7 @@ const {
 mountWidgetTabletChart
 } =
 await import(
-"./tablet-widget-chart.js?v=3"
+"./tablet-widget-chart.js?v=5"
 );
 
 if(

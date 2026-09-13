@@ -2,6 +2,28 @@
  * Единые проверки для tablet pan/probe (coins + dashboard widgets).
  * Только вызывается при isTabletChartViewport().
  */
+
+const PLUS_CHROME_SELECTOR =
+[
+".price-scale-touch-strip",
+".rsi-scale-touch-strip",
+".price-alert-scale-plus",
+".trade-order-plus-menu",
+".price-alert-badge"
+].join(
+","
+);
+
+export function isPriceScalePlusChromeTarget(
+e
+){
+
+return !!e?.target?.closest?.(
+PLUS_CHROME_SELECTOR
+);
+
+}
+
 export function createTabletGesturePolicy(
 {
 chartWrap,
@@ -30,8 +52,8 @@ return false;
 }
 
 if(
-e.target?.closest?.(
-".price-scale-touch-strip"
+isPriceScalePlusChromeTarget(
+e
 )
 ){
 return false;

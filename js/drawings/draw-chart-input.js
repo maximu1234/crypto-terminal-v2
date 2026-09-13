@@ -4,9 +4,12 @@
  */
 import {
 isCoarseTouchViewport,
-isTabletChartViewport,
-hasAnyFinePointer
-} from "../chart-import.js?v=54";
+isTabletChartViewport
+} from "../chart-import.js?v=55";
+
+import {
+isFineChartPointerType
+} from "./touch-placement-policy.js?v=1";
 
 export function createDrawChartInput(
 deps
@@ -24,6 +27,7 @@ wrapEl,
 desktopEdit,
 pointerFromEvent,
 handleToolClick,
+isTouchDrawPlacement,
 hitTest,
 hitTestHandle,
 hitTestShapeBody,
@@ -57,15 +61,23 @@ return;
 }
 
 if(
-e.pointerType !==
-"mouse"
+!isTabletChartViewport()
 ){
 return;
 }
 
+const finePointer =
+isFineChartPointerType(
+e.pointerType
+);
+const hybridFinger =
+e.pointerType ===
+"touch" &&
+!isTouchDrawPlacement?.();
+
 if(
-!isTabletChartViewport() ||
-!hasAnyFinePointer()
+!finePointer &&
+!hybridFinger
 ){
 return;
 }
@@ -101,7 +113,9 @@ x,
 y
 },
 metaKey: e.metaKey,
-shiftKey: e.shiftKey
+shiftKey: e.shiftKey,
+useEventPlot: true,
+pointerType: e.pointerType
 }
 );
 

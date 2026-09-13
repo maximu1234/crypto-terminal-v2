@@ -1563,7 +1563,7 @@ sym
 );
 
 const { ensureCloudReady } =
-await import("./auth-ui.js?v=63");
+await import("./auth-ui.js?v=64");
 
 await ensureCloudReady();
 
@@ -1660,7 +1660,7 @@ list.push(row);
 saveAlerts(list);
 
 const { ensureCloudReady } =
-await import("./auth-ui.js?v=63");
+await import("./auth-ui.js?v=64");
 
 await ensureCloudReady();
 
@@ -1836,7 +1836,7 @@ pauseRegistryCloudSync(
 );
 });
 
-void import("./alert-monitor.js?v=74").then(m=>{
+void import("./alert-monitor.js?v=75").then(m=>{
 m.armAlertQuietAfterDrag(
 sym,
 sid
@@ -2536,7 +2536,7 @@ sym
 );
 
 if(existing){
-void import("./alert-monitor.js?v=74").then(m=>{
+void import("./alert-monitor.js?v=75").then(m=>{
 m.notifyAlertTriggered({
 symbol: sym,
 shapeId: sid,
@@ -2807,7 +2807,7 @@ dispatchPriceAlertsChanged(
 sym
 );
 
-void import("./alert-monitor.js?v=74").then(m=>{
+void import("./alert-monitor.js?v=75").then(m=>{
 m.notifyAlertTriggered({
 symbol: sym,
 shapeId: sid,

@@ -9,7 +9,7 @@ parseDrawColor
 
 import {
 isCoarseTouchViewport
-} from "../chart-import.js?v=54";
+} from "../chart-import.js?v=55";
 
 import {
 STROKE,
@@ -299,15 +299,14 @@ isActive() ||
 
 }
 
-function isTradeDesktopApp(){
+function isTradeVolumeUiActive(){
 
 return (
 typeof document !==
 "undefined" &&
 document.body.classList.contains(
 "trade-page"
-) &&
-!!globalThis.window?.cryptoTerminalDesktop?.isDesktop
+)
 );
 
 }
@@ -3171,7 +3170,7 @@ redraw();
 function submitPositionVolumeApply(){
 
 if(
-!isTradeDesktopApp()
+!isTradeVolumeUiActive()
 ){
 return;
 }
@@ -3281,23 +3280,39 @@ return false;
 
 }
 
+function isEnterKey(
+event
+){
+
+return (
+event.key ===
+"Enter" ||
+event.key ===
+"Go" ||
+event.code ===
+"Enter" ||
+event.code ===
+"NumpadEnter" ||
+event.keyCode ===
+13
+);
+
+}
+
 function isPositionApplyEnterHotkey(
 event
 ){
 
 if(
-event.key !==
-"Enter" &&
-event.code !==
-"Enter" &&
-event.code !==
-"NumpadEnter"
+!isEnterKey(
+event
+)
 ){
 return false;
 }
 
 if(
-!isTradeDesktopApp()
+!isTradeVolumeUiActive()
 ){
 return false;
 }
@@ -3517,7 +3532,7 @@ positionRiskWrap?.classList.toggle(
 positionApplyBtn?.classList.toggle(
 "hidden",
 !isPosToolbar ||
-!isTradeDesktopApp()
+!isTradeVolumeUiActive()
 );
 
 if(
@@ -5575,28 +5590,9 @@ positionRiskInput?.addEventListener(
 e=>{
 
 if(
-e.key !==
-"Enter"
-){
-return;
-}
-
-e.preventDefault();
-e.stopPropagation();
-
-submitPositionVolumeApply();
-positionRiskInput?.blur();
-
-}
-);
-
-positionRiskInput?.addEventListener(
-"keydown",
-e=>{
-
-if(
-e.key !==
-"Enter"
+!isEnterKey(
+e
+)
 ){
 return;
 }
@@ -5649,6 +5645,24 @@ positionRiskWrap?.addEventListener(
 "mousedown",
 e=>{
 e.stopPropagation();
+}
+);
+
+positionRiskInput?.setAttribute?.(
+"enterkeyhint",
+"go"
+);
+
+positionRiskWrap?.addEventListener(
+"submit",
+e=>{
+
+e.preventDefault();
+e.stopPropagation();
+
+submitPositionVolumeApply();
+positionRiskInput?.blur();
+
 }
 );
 

@@ -34,7 +34,7 @@ createRSIChart,
 updateRsiBandLayout,
 updateRsiLevelLinesLayout,
 linkPairedChartTimeScales
-} from "./chart-import.js?v=54";
+} from "./chart-import.js?v=55";
 
 import {
 calculateRSI,
@@ -44,11 +44,11 @@ alignRsiWithCandleTimes
 import {
 createDashboardChartWidget,
 mountDashboardChartInteractions
-} from "./chart-widget-host.js?v=30";
+} from "./chart-widget-host.js?v=36";
 
 import {
 mountWidgetTabletChart
-} from "./tablet-widget-chart.js?v=3";
+} from "./tablet-widget-chart.js?v=5";
 
 import {
 subscribeKline,
@@ -74,7 +74,7 @@ initWidgetDrawToolsDropdown,
 wireWidgetDrawToolMenu,
 closeAllWidgetDrawToolsMenus,
 resetWidgetDrawToolsMenus
-} from "./watchlist-draw-ui.js?v=23";
+} from "./watchlist-draw-ui.js?v=27";
 
 import {
 ensureDrawToolsVisible
@@ -170,7 +170,7 @@ return;
 
 const mod =
 await import(
-"./trade-widget-mount.js?v=18"
+"./trade-widget-mount.js?v=19"
 );
 
 mountTradeOnDashboardWidget =
@@ -792,7 +792,8 @@ wireWidgetDrawToolMenu(
 toolsRoot,
 {
 pickTool:(
-name
+name,
+pointerType
 )=>{
 void (
 async ()=>{
@@ -805,7 +806,8 @@ entry.drawingTools =
 tools;
 
 tools?.pickDrawTool?.(
-name
+name,
+pointerType
 );
 
 }

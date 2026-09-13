@@ -40,15 +40,16 @@ hideDomChartCrosshairVert,
 ensureTabletProbeHorizLine,
 positionTabletProbeCrosshair,
 positionTabletProbeHorizInStack,
+hideTabletProbeHorizInStack,
 hideTabletProbeCrosshair,
 formatCrosshairTimeLabel,
 isUserCrosshairEvent
-} from "./chart/chart-dom-crosshair.js?v=15";
+} from "./chart/chart-dom-crosshair.js?v=16";
 
 import {
 TABLET_LW_NATIVE_PRICE_SCALE,
 clearTabletProbeCrosshairForChart
-} from "./chart/chart-factory.js?v=53";
+} from "./chart/chart-factory.js?v=54";
 
 export {
 createCandlestickChart,
@@ -87,7 +88,7 @@ coinsTfVisibleBars,
 applyCoinsChartViewport,
 computeCoinsChartViewportPlan,
 refreshCoinsChartBarSpacing
-} from "./chart/chart-factory.js?v=53";
+} from "./chart/chart-factory.js?v=54";
 
 /* Tablet gestures: import ./chart-tablet-gestures.js only from tablet paths
    (tablet-widget-chart / terminal-tablet-controller) — never re-export here. */

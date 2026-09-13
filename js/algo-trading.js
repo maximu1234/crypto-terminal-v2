@@ -12,7 +12,7 @@ applyRsiFixedPriceScale,
 appendFutureWhitespaceBars,
 computeChartFutureMarginBars,
 syncLinkedChartTimescales
-} from "./chart-import.js?v=54";
+} from "./chart-import.js?v=55";
 
 import {
 applyLiveSeriesUpdate,
@@ -104,7 +104,7 @@ mountAlgoTradeUi
 
 import {
 mountAlgoTradingDrawings
-} from "./algo-trading/drawings.js?v=10";
+} from "./algo-trading/drawings.js?v=13";
 
 import {
 mountAlgoTradingIndicators

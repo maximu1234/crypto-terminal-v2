@@ -28,7 +28,11 @@ hideDomChartCrosshair,
 hideDomChartCrosshairHorz,
 hideDomChartCrosshairVert,
 positionDomChartCrosshair
-} from "./chart-import.js?v=54";
+} from "./chart-import.js?v=55";
+
+import {
+isFineChartPointerType
+} from "./drawings/touch-placement-policy.js?v=1";
 
 import {
 isChartLayoutReady,
@@ -930,8 +934,8 @@ return;
 }
 
 if(
-IS_COARSE_TOUCH &&
-e.pointerType !== "mouse" &&
+e.pointerType ===
+"touch" &&
 !isInPriceScaleArea(
 e.clientX,
 e.clientY
@@ -940,20 +944,19 @@ e.clientY
 return;
 }
 
-if(
-IS_COARSE_TOUCH &&
-e.pointerType === "mouse"
-){
-return;
-}
+const finePointer =
+isFineChartPointerType(
+e.pointerType
+);
 
 syncPlusFromClient(
 e.clientX,
 e.clientY,
 {
 fromTouch:
-IS_COARSE_TOUCH &&
-e.pointerType !== "mouse"
+e.pointerType ===
+"touch",
+finePointer
 }
 );
 
@@ -976,11 +979,23 @@ plotWidth();
 const scaleW =
 rect.width - pw;
 
-if(
-!opts.forceShowFromProbe &&
-!isClientOnChartPlot(
+const onPlot =
+isClientOnChartPlot(
 clientX,
 clientY
+);
+const onScale =
+isInPriceScaleArea(
+clientX,
+clientY
+);
+
+if(
+!opts.forceShowFromProbe &&
+!onPlot &&
+!(
+opts.finePointer &&
+onScale
 )
 ){
 hidePlus({
@@ -1003,8 +1018,10 @@ return;
 }
 
 const showTouchStyle =
-opts.fromTouch === true ||
-IS_COARSE_TOUCH;
+opts.fromTouch ===
+true ||
+opts.forceShowFromProbe ===
+true;
 const plusLeft =
 Math.round(
 pw -
@@ -1050,7 +1067,7 @@ clientY
 const nearPlus =
 inScaleZone ||
 (
-!IS_COARSE_TOUCH &&
+!showTouchStyle &&
 isNearPlusButton(
 x,
 y,
@@ -1305,8 +1322,8 @@ const onWrapPointerLeave =
 e=>{
 
 if(
-IS_COARSE_TOUCH ||
-e?.pointerType === "touch"
+e?.pointerType ===
+"touch"
 ){
 return;
 }

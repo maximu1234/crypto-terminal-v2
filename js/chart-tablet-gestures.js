@@ -3,6 +3,10 @@
  * На десктопе не монтируется (terminal.js + isTabletChartViewport).
  * Старые mountTabletCrosshairLongPress / mountTabletCustomTouchPan удалены из chart.js.
  */
+import {
+isPriceScalePlusChromeTarget
+} from "./tablet-gesture-policy.js?v=3";
+
 const HOLD_MS =
 500;
 
@@ -14,6 +18,351 @@ const PAN_HORIZ_BIAS =
 
 const CROSSHAIR_TAP_TOGGLE_PX =
 8;
+
+const WHEEL_ZOOM_MIN_SPAN =
+2;
+
+const WHEEL_HORIZ_PAN_BIAS =
+1.25;
+
+/**
+ * Mouse wheel / trackpad pinch (ctrlKey) → scale factor for visible range.
+ * deltaY > 0 (scroll down) zooms out (factor > 1).
+ */
+export function wheelZoomFactor(
+e
+){
+
+const dy =
+Number(
+e?.deltaY
+) ||
+0;
+
+if(
+dy ===
+0 &&
+!e?.ctrlKey
+){
+return 1;
+}
+
+let pixels =
+dy;
+
+if(
+e?.deltaMode ===
+1
+){
+pixels =
+dy *
+16;
+}else if(
+e?.deltaMode ===
+2
+){
+pixels =
+dy *
+400;
+}
+
+const scale =
+e?.ctrlKey ?
+0.01 :
+0.0015;
+const factor =
+Math.exp(
+pixels *
+scale
+);
+
+return Math.min(
+1.35,
+Math.max(
+0.74,
+factor
+)
+);
+
+}
+
+export function rangeZoomAroundAnchor(
+from,
+to,
+anchorFrac,
+factor,
+minSpan =
+WHEEL_ZOOM_MIN_SPAN
+){
+
+const span =
+to -
+from;
+
+if(
+!Number.isFinite(
+span
+) ||
+span ===
+0 ||
+!Number.isFinite(
+factor
+) ||
+factor ===
+1
+){
+return {
+from,
+to
+};
+}
+
+const frac =
+Math.min(
+1,
+Math.max(
+0,
+anchorFrac
+)
+);
+const newSpan =
+Math.max(
+minSpan,
+span *
+factor
+);
+const anchor =
+from +
+span *
+frac;
+
+return {
+from: anchor -
+newSpan *
+frac,
+to: anchor -
+newSpan *
+frac +
+newSpan
+};
+
+}
+
+/**
+ * Overlay sits on top of LW canvas on iPad, so wheel never reaches the chart.
+ * Apply desktop-like zoom / horizontal pan from the overlay event.
+ * @returns {boolean} true if the chart range changed
+ */
+export function applyPointerWheelOnChart(
+chart,
+chartEl,
+e
+){
+
+if(
+!chart ||
+!e
+){
+return false;
+}
+
+const dy =
+Number(
+e.deltaY
+) ||
+0;
+const dx =
+Number(
+e.deltaX
+) ||
+0;
+
+if(
+dy ===
+0 &&
+dx ===
+0
+){
+return false;
+}
+
+const ts =
+chart.timeScale?.();
+
+if(
+!ts
+){
+return false;
+}
+
+const range =
+ts.getVisibleLogicalRange?.();
+
+if(
+!range ||
+!Number.isFinite(
+range.from
+) ||
+!Number.isFinite(
+range.to
+)
+){
+return false;
+}
+
+const rect =
+chartEl?.getBoundingClientRect?.();
+const width =
+Math.max(
+1,
+rect?.width ||
+1
+);
+const height =
+Math.max(
+1,
+rect?.height ||
+1
+);
+const anchorFrac =
+rect ?
+Math.min(
+1,
+Math.max(
+0,
+(
+(
+e.clientX ??
+0
+) -
+rect.left
+) /
+width
+)
+) :
+0.5;
+const priceFrac =
+rect ?
+Math.min(
+1,
+Math.max(
+0,
+(
+(
+e.clientY ??
+0
+) -
+rect.top
+) /
+height
+)
+) :
+0.5;
+
+if(
+!e.ctrlKey &&
+Math.abs(
+dx
+) >
+Math.abs(
+dy
+) *
+WHEEL_HORIZ_PAN_BIAS &&
+Math.abs(
+dx
+) >
+0.5
+){
+
+const spacing =
+ts.options?.()?.barSpacing ??
+6;
+const shift =
+dx /
+Math.max(
+1,
+spacing
+);
+
+ts.setVisibleLogicalRange({
+from: range.from +
+shift,
+to: range.to +
+shift
+});
+
+return true;
+
+}
+
+const factor =
+wheelZoomFactor(
+e
+);
+
+if(
+factor ===
+1
+){
+return false;
+}
+
+const next =
+rangeZoomAroundAnchor(
+range.from,
+range.to,
+anchorFrac,
+factor
+);
+
+ts.setVisibleLogicalRange(
+next
+);
+
+try{
+
+const ps =
+chart.priceScale?.(
+"right"
+);
+const pr =
+ps?.getVisibleRange?.();
+
+if(
+pr &&
+Number.isFinite(
+pr.from
+) &&
+Number.isFinite(
+pr.to
+) &&
+pr.to !==
+pr.from
+){
+
+const zoomed =
+rangeZoomAroundAnchor(
+pr.from,
+pr.to,
+1 -
+priceFrac,
+factor,
+Number.EPSILON
+);
+
+ps.setVisibleRange(
+zoomed
+);
+
+}
+
+}catch{
+/* auto-scale / missing scale */
+}
+
+return true;
+
+}
 
 export function mountTabletChartGestures(
 chart,
@@ -958,8 +1307,8 @@ mode ===
 ){
 
 if(
-e.target?.closest?.(
-".price-scale-touch-strip"
+isPriceScalePlusChromeTarget(
+e
 )
 ){
 return;
@@ -1225,8 +1574,8 @@ return;
 }
 
 if(
-e.target?.closest?.(
-".price-scale-touch-strip"
+isPriceScalePlusChromeTarget(
+e
 )
 ){
 return;
@@ -1275,10 +1624,66 @@ e.preventDefault();
 
 }
 
+function onOverlayWheel(
+e
+){
+
+if(
+panSuspended ||
+blockChartScroll()
+){
+return;
+}
+
+if(
+mode ===
+"pinch" ||
+mode ===
+"crosshair" ||
+mode ===
+"crosshair-docked"
+){
+return;
+}
+
+if(
+e.target?.closest?.(
+"input, textarea, select"
+)
+){
+return;
+}
+
+const handled =
+applyPointerWheelOnChart(
+chart,
+touchLayerEl,
+e
+);
+
+if(
+handled
+){
+e.preventDefault();
+}
+
+}
+
 const capDown = {
 capture:true,
 passive:false
 };
+
+const capWheel = {
+capture:true,
+passive:false
+};
+
+touchLayerEl.addEventListener(
+"wheel",
+onOverlayWheel,
+capWheel
+);
 
 chartWrapEl.addEventListener(
 "pointerdown",
@@ -1333,6 +1738,12 @@ function dispose(){
 resetGesture();
 touchLayerEl.classList.remove(
 "active"
+);
+
+touchLayerEl.removeEventListener(
+"wheel",
+onOverlayWheel,
+capWheel
 );
 
 chartWrapEl.removeEventListener(

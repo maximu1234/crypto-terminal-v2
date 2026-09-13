@@ -16,7 +16,7 @@
 <link rel="stylesheet" href="/css/critical-shell.css?v=10">
 <script src="/js/site-css-ready.js?v=3"></script>
 <link rel="stylesheet" href="/css/common.css?v=63">
-<link rel="stylesheet" href="/css/terminal.css?v=182">
+<link rel="stylesheet" href="/css/terminal.css?v=184">
 <link rel="stylesheet" href="/css/terminal-layout.css?v=104">
 <link rel="stylesheet" href="/css/chart-indicators.css?v=29">
 <link rel="stylesheet" href="/css/algo-trading.css?v=160">
@@ -396,10 +396,10 @@ LAN
 <span class="draw-text-size-label" id="draw-text-size-label">20</span>
 </button>
 
-<label class="draw-position-risk hidden" id="draw-position-risk-wrap" title="Сумма риска при срабатывании стопа (как в Калькуляторе)">
+<form class="draw-position-risk hidden" id="draw-position-risk-wrap" action="#" title="Сумма риска при срабатывании стопа (как в Калькуляторе)">
 <span class="draw-position-risk-label">Стоп-лосс ($)</span>
-<input type="number" class="draw-position-risk-input" id="draw-position-risk-usd" min="0" step="any" placeholder="" inputmode="decimal"/>
-</label>
+<input type="number" class="draw-position-risk-input" id="draw-position-risk-usd" min="0" step="any" placeholder="" inputmode="decimal" enterkeyhint="go" autocomplete="off"/>
+</form>
 
 <button type="button" class="float-settings draw-settings-btn" id="draw-settings-btn" title="Все настройки" aria-label="Настройки">
 <svg class="draw-settings-icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
@@ -1830,7 +1830,7 @@ Vol
 
 </div>
 
-<script type="module" src="/js/algo-trading-page-boot.js?v=20"></script>
+<script type="module" src="/js/algo-trading-page-boot.js?v=21"></script>
 
 </body>
 </html>

@@ -5,7 +5,7 @@
 import {
 hideDomChartCrosshair,
 positionTabletProbeHorizInStack
-} from "../chart-import.js?v=54";
+} from "../chart-import.js?v=55";
 
 import {
 ensureFibLevelsVisible,
@@ -133,7 +133,8 @@ getChartRulerStart,
 showStandardChartCrosshair,
 hideStandardChartCrosshair,
 syncChartTouchPan,
-onTextPlaced
+onTextPlaced,
+beginTouchPlacementSession
 } =
 deps;
 
@@ -1615,7 +1616,14 @@ created
 
 }
 
-function startPlacement(type){
+function startPlacement(
+type,
+pointerType
+){
+
+beginTouchPlacementSession?.(
+pointerType
+);
 
 setPlacement({ type, points: [] });
 setPreviewPoint(null);
@@ -1660,24 +1668,34 @@ getTool() ===
 return false;
 }
 
+const useEventPlot =
+param?.useEventPlot ===
+true;
+
 if(
 getTool() !== "cursor" &&
 isTouchDrawPlacement() &&
-getPlacement()
+getPlacement() &&
+!useEventPlot
 ){
 return false;
 }
 
 const rawClickX =
+useEventPlot ?
+param.point?.x :
 getPlacementPointerXY()?.x ??
 param.point?.x;
 const rawClickY =
+useEventPlot ?
+param.point?.y :
 getPlacementPointerXY()?.y ??
 param.point?.y;
 
 const point =
 isTouchDrawPlacement() &&
-getTouchDrawCrosshair()
+getTouchDrawCrosshair() &&
+!useEventPlot
 ? pointFromXY(
 getTouchDrawCrosshair().x,
 getTouchDrawCrosshair().y
@@ -1724,7 +1742,10 @@ return true;
 }
 
 if(!getPlacement()){
-startPlacement(getTool());
+startPlacement(
+getTool(),
+param?.pointerType
+);
 }
 
 if(

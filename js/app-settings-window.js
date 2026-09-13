@@ -3,7 +3,7 @@
  */
 import {
 cssUrl
-} from "./asset-manifest.js?v=11";
+} from "./asset-manifest.js?v=12";
 
 import {
 isSystemAdminUser
@@ -396,7 +396,7 @@ const {
 closeCloudSettingsDropdown
 } =
 await import(
-"./auth-ui.js?v=63"
+"./auth-ui.js?v=64"
 );
 closeCloudSettingsDropdown();
 await openAppSettingsWindow();
@@ -660,7 +660,7 @@ const {
 mountCloudAuthPanelInSettings
 } =
 await import(
-"./auth-ui.js?v=63"
+"./auth-ui.js?v=64"
 );
 
 mountCloudAuthPanelInSettings(

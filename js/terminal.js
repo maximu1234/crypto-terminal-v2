@@ -24,7 +24,7 @@ clearBybitNetworkIssue
 
 import {
 resolveUrlExchangeDeepLink
-} from "./alert-deep-link-exchange.js?v=2";
+} from "./alert-deep-link-exchange.js?v=3";
 
 import {
 defaultRsiPaneSettings,
@@ -50,7 +50,7 @@ seedWatchlistTfOnBlueFlag
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=63";
+} from "./auth-ui.js?v=64";
 
 import {
 getActiveAlerts,
@@ -91,7 +91,7 @@ appendFutureWhitespaceBars,
 applyCoinsChartViewport,
 refreshCoinsChartBarSpacing,
 tfPeriodSec
-} from "./chart-import.js?v=54";
+} from "./chart-import.js?v=55";
 
 import {
 terminalVisibleBars,
@@ -105,7 +105,7 @@ TERMINAL_HISTORY_LAZY_BATCH_BARS
 
 import {
 mountCoinsTabletController
-} from "./terminal-tablet-controller.js?v=7";
+} from "./terminal-tablet-controller.js?v=9";
 
 import {
 disconnectKlineStream
@@ -115,7 +115,7 @@ import {
 syncBackgroundAlertStreams,
 onMacdSeriesUpdate,
 onRsiSeriesUpdate
-} from "./alert-monitor.js?v=74";
+} from "./alert-monitor.js?v=75";
 
 import {
 createSharedDrawUndoStack
@@ -124,7 +124,7 @@ createSharedDrawUndoStack
 import {
 mountDrawToolbar,
 mountDrawToolIcons
-} from "./draw-ui-shared.js?v=43";
+} from "./draw-ui-shared.js?v=44";
 import {
 mountTerminalChecklist
 } from "./terminal/terminal-checklist.js?v=1";
@@ -227,7 +227,7 @@ import {
 initTerminalMultiChart,
 syncPrimaryTfToLayout,
 isTerminalMultiChartLayout
-} from "./terminal-multi-chart.js?v=16";
+} from "./terminal-multi-chart.js?v=19";
 
 import {
 mountTerminalLayoutPicker
@@ -3737,7 +3737,7 @@ const {
 initWidgetDrawings
 } =
 await import(
-"./chart-widget-host.js?v=30"
+"./chart-widget-host.js?v=36"
 );
 const {
 initChartIndicators
@@ -3895,7 +3895,7 @@ drawingTools?.getTool?.() ??
 );
 
 void import(
-"./price-alert-ui.js?v=48"
+"./price-alert-ui.js?v=50"
 ).then(
 ({
 mountPriceAlertUi
@@ -4536,7 +4536,7 @@ const {
 createTradePlusMenuHandler
 } =
 await import(
-"./trade-order-plus-ui.js?v=8"
+"./trade-order-plus-ui.js?v=9"
 );
 
 tradePlusHandler =
@@ -4567,7 +4567,7 @@ const {
 mountPriceAlertUi
 } =
 await import(
-"./price-alert-ui.js?v=48"
+"./price-alert-ui.js?v=50"
 );
 
 let disposeAlertUi =
@@ -4627,7 +4627,7 @@ const {
 mountPriceAlertUi: mountRsiPriceAlertUi
 } =
 await import(
-"./price-alert-ui.js?v=48"
+"./price-alert-ui.js?v=50"
 );
 
 mountRsiPriceAlertUi(

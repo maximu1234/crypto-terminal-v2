@@ -5,11 +5,11 @@ formatDrawColor
 
 import {
 TRASH_ICON_SVG
-} from "../draw-ui-shared.js?v=43";
+} from "../draw-ui-shared.js?v=44";
 
 import {
 closeAllWidgetDrawToolsMenus
-} from "../watchlist-draw-ui.js?v=23";
+} from "../watchlist-draw-ui.js?v=27";
 
 import {
 ensureDrawToolsVisible
@@ -50,7 +50,7 @@ ensureDomChartCrosshair,
 hideDomChartCrosshair,
 positionTabletProbeHorizInStack,
 fullCrosshairOptions
-} from "../chart-import.js?v=54";
+} from "../chart-import.js?v=55";
 
 import {
 STROKE,
@@ -151,7 +151,7 @@ updateChartRulerLabelEl
 
 import {
 mountTabletDrawInput
-} from "../drawings-tablet-input.js?v=10";
+} from "../drawings-tablet-input.js?v=11";
 
 import {
 cloneDrawingsForUndo,
@@ -168,7 +168,7 @@ createDrawingsPersist
 
 import {
 createDrawStyleBar
-} from "./draw-style-bar.js?v=51";
+} from "./draw-style-bar.js?v=53";
 
 import {
 createDrawAlertsChart
@@ -176,7 +176,7 @@ createDrawAlertsChart
 
 import {
 createDrawPlacement
-} from "./draw-placement.js?v=22";
+} from "./draw-placement.js?v=23";
 
 import {
 createDrawTextEditor,
@@ -192,12 +192,12 @@ listElliottHandles
 import {
 closeElliottFlyout,
 syncElliottGroupActive
-} from "./elliott-toolbar.js?v=3";
+} from "./elliott-toolbar.js?v=4";
 
 import {
 closeFibFlyout,
 syncFibGroupActive
-} from "./fib-toolbar.js?v=3";
+} from "./fib-toolbar.js?v=4";
 
 import {
 createBrushPlacement
@@ -209,7 +209,7 @@ createDrawEditInteraction
 
 import {
 createDrawChartInput
-} from "./draw-chart-input.js?v=3";
+} from "./draw-chart-input.js?v=4";
 
 import {
 createDrawPriceScale
@@ -1379,6 +1379,16 @@ function isTouchDrawPlacement(){
 
 return tabletDrawInput?.isTouchDrawPlacement() ??
 false;
+
+}
+
+function beginTouchPlacementSession(
+pointerType
+){
+
+tabletDrawInput?.beginPlacementSession?.(
+pointerType
+);
 
 }
 
@@ -2650,13 +2660,18 @@ function drawAnchorCircle(ctx, x, y){
 const r =
 anchorCircleRadius();
 const touch =
-isCoarseTouchViewport();
+isCoarseTouchViewport() ||
+isTabletChartViewport();
 
 ctx.beginPath();
 ctx.arc(x, y, r, 0, Math.PI * 2);
 
+if(
+!touch
+){
 ctx.fillStyle = HANDLE_FILL;
 ctx.fill();
+}
 
 ctx.strokeStyle = HANDLE_STROKE;
 ctx.lineWidth =
@@ -2670,10 +2685,15 @@ function drawAnchorSquare(ctx, x, y){
 const h =
 anchorSquareHalfSize();
 const touch =
-isCoarseTouchViewport();
+isCoarseTouchViewport() ||
+isTabletChartViewport();
 
+if(
+!touch
+){
 ctx.fillStyle = HANDLE_FILL;
 ctx.fillRect(x - h, y - h, h * 2, h * 2);
+}
 
 ctx.strokeStyle = HANDLE_STROKE;
 ctx.lineWidth =
@@ -3284,7 +3304,8 @@ shape
 }
 );
 
-}
+},
+beginTouchPlacementSession
 });
 
 ({
@@ -3475,7 +3496,10 @@ return best;
 
 }
 
-function setTool(next){
+function setTool(
+next,
+pointerType
+){
 
 tool = next;
 cancelPlacement();
@@ -3517,7 +3541,8 @@ next !==
 "brush"
 ){
 startPlacement(
-next
+next,
+pointerType
 );
 }
 
@@ -3586,7 +3611,8 @@ at: 0
 };
 
 function pickDrawTool(
-next
+next,
+pointerType
 ){
 
 if(
@@ -3638,7 +3664,8 @@ return;
 }
 
 setTool(
-next
+next,
+pointerType
 );
 
 closeAllWidgetDrawToolsMenus();
@@ -4443,7 +4470,8 @@ return false;
 e.preventDefault();
 e.stopPropagation();
 pickDrawTool(
-btn.dataset.drawTool
+btn.dataset.drawTool,
+e.pointerType
 );
 return true;
 
@@ -4519,7 +4547,8 @@ if(
 next
 ){
 pickDrawTool(
-next
+next,
+e.detail?.pointerType
 );
 }
 
@@ -4770,6 +4799,7 @@ wrapEl,
 desktopEdit,
 pointerFromEvent,
 handleToolClick,
+isTouchDrawPlacement,
 hitTest,
 hitTestHandle,
 hitTestShapeBody,

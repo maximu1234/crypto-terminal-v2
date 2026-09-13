@@ -4,7 +4,12 @@ isTabletChartViewport,
 hasAnyFinePointer,
 positionDomChartCrosshair,
 hideDomChartCrosshair
-} from "./chart-import.js?v=54";
+} from "./chart-import.js?v=55";
+
+import {
+isFineChartPointerType,
+shouldUseTouchDrawPlacement
+} from "./drawings/touch-placement-policy.js?v=1";
 
 import {
 isPositionType
@@ -54,7 +59,13 @@ tabletCustomPanHooked
 
 let touchDrawCrosshair = null;
 let touchPlaceTrack = null;
+let touchPlacementSession =
+false;
 
+/**
+ * Viewport can use finger drawing chrome (iPad / coarse phone).
+ * A mouse on iPad does not change this — placement session is per pointerType.
+ */
 function prefersTouchDrawInput(){
 
 if(
@@ -79,9 +90,25 @@ return prefersTouchDrawInput();
 
 }
 
+function beginPlacementSession(
+pointerType
+){
+
+touchPlacementSession =
+shouldUseTouchDrawPlacement(
+pointerType,
+{
+coarseTouch: isCoarseTouchViewport(),
+tabletChart: isTabletChartViewport(),
+anyFinePointer: hasAnyFinePointer()
+}
+);
+
+}
+
 function isTouchDrawPlacement(){
 
-return prefersTouchDrawInput();
+return touchPlacementSession;
 
 }
 
@@ -465,6 +492,8 @@ function clearTouchDrawState(){
 
 touchDrawCrosshair = null;
 touchPlaceTrack = null;
+touchPlacementSession =
+false;
 
 }
 
@@ -489,8 +518,9 @@ return;
 }
 
 if(
-e.pointerType ===
-"mouse"
+isFineChartPointerType(
+e.pointerType
+)
 ){
 return;
 }
@@ -643,6 +673,7 @@ true
 return {
 dispose,
 prefersTouchDrawInput,
+beginPlacementSession,
 isTouchDrawPlacement,
 isTouchDrawTablet,
 useChartProbeCrosshair,
