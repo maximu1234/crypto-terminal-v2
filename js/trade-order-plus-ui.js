@@ -7,11 +7,11 @@ getActiveTradeVolumeUsdt
 
 import {
 formatPrice
-} from "./chart-import.js?v=55";
+} from "./chart-import.js?v=56";
 
 import {
 createPriceAlert
-} from "./alerts.js?v=110";
+} from "./alerts.js?v=111";
 
 import {
 isCloudLoggedInEffective

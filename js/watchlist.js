@@ -34,7 +34,7 @@ createRSIChart,
 updateRsiBandLayout,
 updateRsiLevelLinesLayout,
 linkPairedChartTimeScales
-} from "./chart-import.js?v=55";
+} from "./chart-import.js?v=56";
 
 import {
 calculateRSI,
@@ -44,11 +44,11 @@ alignRsiWithCandleTimes
 import {
 createDashboardChartWidget,
 mountDashboardChartInteractions
-} from "./chart-widget-host.js?v=36";
+} from "./chart-widget-host.js?v=38";
 
 import {
 mountWidgetTabletChart
-} from "./tablet-widget-chart.js?v=5";
+} from "./tablet-widget-chart.js?v=6";
 
 import {
 subscribeKline,
@@ -170,7 +170,7 @@ return;
 
 const mod =
 await import(
-"./trade-widget-mount.js?v=19"
+"./trade-widget-mount.js?v=20"
 );
 
 mountTradeOnDashboardWidget =

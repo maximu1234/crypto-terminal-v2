@@ -1565,12 +1565,14 @@ body.tablet-chart .price-scale-touch-strip{
   z-index:30;
   bottom:var(--chart-time-scale-height, 28px);
   touch-action:none;
+  cursor:ns-resize;
 }
 
 body.tablet-chart .rsi-scale-touch-strip{
   display:block;
   pointer-events:auto;
   z-index:30;
+  cursor:ns-resize;
 }
 
 .rsi-scale-touch-strip{

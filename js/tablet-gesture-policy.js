@@ -24,6 +24,33 @@ PLUS_CHROME_SELECTOR
 
 }
 
+/**
+ * Overlay strip covers the LW price axis on iPad. Finger already scales
+ * through this handler; mouse must too — otherwise the strip swallows
+ * click+drag and native axisPressedMouseMove never sees it.
+ */
+export function shouldHandleTabletPriceScalePointer(
+e
+){
+
+if(
+!e
+){
+return false;
+}
+
+if(
+e.pointerType ===
+"mouse"
+){
+return e.button ===
+0;
+}
+
+return true;
+
+}
+
 export function createTabletGesturePolicy(
 {
 chartWrap,

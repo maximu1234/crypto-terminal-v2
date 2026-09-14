@@ -5,7 +5,7 @@
  */
 import {
 isPriceScalePlusChromeTarget
-} from "./tablet-gesture-policy.js?v=3";
+} from "./tablet-gesture-policy.js?v=4";
 
 const HOLD_MS =
 500;

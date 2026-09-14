@@ -40,7 +40,7 @@ pullRegistryFromCloud,
 pullRegistryFromCloudNow,
 pullAlertHistoryFromCloud,
 scheduleRegistryCloudSync
-} from "./alerts-cloud/registry-sync.js?v=16";
+} from "./alerts-cloud/registry-sync.js?v=17";
 
 export {
 purgeAlertGarbageFromCloud

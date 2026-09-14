@@ -113,7 +113,7 @@ const { loadLightweightCharts } =
 await import("/js/charts-lib-boot.js?v=3");
 
 await loadLightweightCharts();
-await import("./js/watchlist.js?v=119");
+await import("./js/watchlist.js?v=121");
 
 if(
 window.cryptoTerminalDesktop?.isDesktop
@@ -140,7 +140,7 @@ mode:
 }
 
 await import("./js/watchlist-page.js?v=4");
-import("/js/site-boot.js?v=130").catch(err=>{
+import("/js/site-boot.js?v=131").catch(err=>{
 console.warn("site-boot:", err);
 });
 

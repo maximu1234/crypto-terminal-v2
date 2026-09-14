@@ -34,7 +34,7 @@ updateRsiLevelLinesLayout,
 linkPairedChartTimeScales,
 SCREENER_VISIBLE_BARS,
 SCREENER_MAX_BARS
-} from "./chart-import.js?v=55";
+} from "./chart-import.js?v=56";
 
 import {
 isIpadWebViewport
@@ -89,7 +89,7 @@ FAVORITES_BY_EXCHANGE_KEY
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=64";
+} from "./auth-ui.js?v=65";
 
 import {
 ensureSettled,
@@ -126,7 +126,7 @@ SCREENER_WIDGET_OSCILLATOR_MACD,
 createScreenerMacdChart,
 getScreenerWidgetOscillator,
 setScreenerMacdData
-} from "./screener-widget-oscillator.js?v=1";
+} from "./screener-widget-oscillator.js?v=2";
 
 const SCREENER_MAX_CONCURRENT_CHART_LOADS =
 4;
@@ -158,7 +158,7 @@ if(
 ){
 screenerZoomMountPromise =
 import(
-"./screener-widget-zoom.js?v=33"
+"./screener-widget-zoom.js?v=34"
 ).then(
 mod=>{
 refreshZoomFavoriteUi =

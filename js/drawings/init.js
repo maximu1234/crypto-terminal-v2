@@ -50,7 +50,7 @@ ensureDomChartCrosshair,
 hideDomChartCrosshair,
 positionTabletProbeHorizInStack,
 fullCrosshairOptions
-} from "../chart-import.js?v=55";
+} from "../chart-import.js?v=56";
 
 import {
 STROKE,
@@ -151,7 +151,7 @@ updateChartRulerLabelEl
 
 import {
 mountTabletDrawInput
-} from "../drawings-tablet-input.js?v=11";
+} from "../drawings-tablet-input.js?v=12";
 
 import {
 cloneDrawingsForUndo,
@@ -160,7 +160,7 @@ createDrawUndoStack
 
 import {
 createDrawDesktopSelection
-} from "./draw-edit-desktop.js?v=14";
+} from "./draw-edit-desktop.js?v=15";
 
 import {
 createDrawingsPersist
@@ -168,7 +168,7 @@ createDrawingsPersist
 
 import {
 createDrawStyleBar
-} from "./draw-style-bar.js?v=53";
+} from "./draw-style-bar.js?v=54";
 
 import {
 createDrawAlertsChart
@@ -176,7 +176,7 @@ createDrawAlertsChart
 
 import {
 createDrawPlacement
-} from "./draw-placement.js?v=23";
+} from "./draw-placement.js?v=24";
 
 import {
 createDrawTextEditor,
@@ -205,15 +205,15 @@ createBrushPlacement
 
 import {
 createDrawEditInteraction
-} from "./draw-edit-interaction.js?v=25";
+} from "./draw-edit-interaction.js?v=26";
 
 import {
 createDrawChartInput
-} from "./draw-chart-input.js?v=4";
+} from "./draw-chart-input.js?v=5";
 
 import {
 createDrawPriceScale
-} from "./draw-price-scale.js?v=17";
+} from "./draw-price-scale.js?v=18";
 
 import {
 createDrawRedrawLoop

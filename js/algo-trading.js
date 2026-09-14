@@ -12,7 +12,7 @@ applyRsiFixedPriceScale,
 appendFutureWhitespaceBars,
 computeChartFutureMarginBars,
 syncLinkedChartTimescales
-} from "./chart-import.js?v=55";
+} from "./chart-import.js?v=56";
 
 import {
 applyLiveSeriesUpdate,
@@ -104,11 +104,11 @@ mountAlgoTradeUi
 
 import {
 mountAlgoTradingDrawings
-} from "./algo-trading/drawings.js?v=13";
+} from "./algo-trading/drawings.js?v=14";
 
 import {
 mountAlgoTradingIndicators
-} from "./algo-trading/indicators.js?v=16";
+} from "./algo-trading/indicators.js?v=17";
 
 import {
 mountAlgoPatternEntryOverlay
@@ -243,7 +243,7 @@ syncRsiLevelDom as syncRsiLevelDomEl,
 setRsiHud as setRsiHudEl,
 lastRsiValue as lastRsiValueFromCandles,
 layoutRsiPane
-} from "./algo-trading/page-rsi.js?v=1";
+} from "./algo-trading/page-rsi.js?v=2";
 
 import {
 bindAlgoStatsPanelResize

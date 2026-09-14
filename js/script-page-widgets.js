@@ -12,7 +12,7 @@ updateRsiLevelLinesLayout,
 linkPairedChartTimeScales,
 SCREENER_MAX_BARS,
 SCREENER_VISIBLE_BARS
-} from "./chart-import.js?v=55";
+} from "./chart-import.js?v=56";
 
 import {
 loadMarketHistory,
@@ -82,7 +82,7 @@ if(
 ){
 scriptZoomModulePromise =
 import(
-"./screener-widget-zoom.js?v=33"
+"./screener-widget-zoom.js?v=34"
 ).then(
 mod=>{
 refreshZoomFavoriteUi =

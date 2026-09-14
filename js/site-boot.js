@@ -4,7 +4,7 @@ initAlertMonitor
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=64";
+} from "./auth-ui.js?v=65";
 
 import {
 isAlertsPage
@@ -24,7 +24,7 @@ scheduleRegistryCloudSync
 
 import {
 stripAlertFlagsNotInRegistry
-} from "./alerts.js?v=110";
+} from "./alerts.js?v=111";
 
 import {
 isCloudLoggedIn,

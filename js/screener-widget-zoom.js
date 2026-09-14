@@ -15,7 +15,7 @@ mountChartPriceHud,
 applyTabletMainChartScroll,
 applyTabletRsiChartOptions,
 SCREENER_MAX_BARS
-} from "./chart-import.js?v=55";
+} from "./chart-import.js?v=56";
 
 import {
 isIpadWebViewport
@@ -49,7 +49,7 @@ SCREENER_WIDGET_OSCILLATOR_CHANGED,
 SCREENER_WIDGET_OSCILLATOR_MACD,
 createScreenerMacdChart,
 setScreenerMacdData
-} from "./screener-widget-oscillator.js?v=1";
+} from "./screener-widget-oscillator.js?v=2";
 
 import {
 shouldIgnoreTypingHotkey
@@ -1119,7 +1119,7 @@ const {
 mountWidgetTabletChart
 } =
 await import(
-"./tablet-widget-chart.js?v=5"
+"./tablet-widget-chart.js?v=6"
 );
 
 if(

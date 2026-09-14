@@ -51,6 +51,10 @@ TABLET_LW_NATIVE_PRICE_SCALE,
 clearTabletProbeCrosshairForChart
 } from "./chart/chart-factory.js?v=54";
 
+import {
+shouldHandleTabletPriceScalePointer
+} from "./tablet-gesture-policy.js?v=4";
+
 export {
 createCandlestickChart,
 createScreenerChart,
@@ -1838,8 +1842,9 @@ e
 ){
 
 if(
-e.pointerType ===
-"mouse"
+!shouldHandleTabletPriceScalePointer(
+e
+)
 ){
 return;
 }

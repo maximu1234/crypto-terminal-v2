@@ -4717,7 +4717,7 @@ await ensureCloudLoginResolved(
 const alertsCloud =
 await import("./alerts-cloud-sync.js?v=113");
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=110");
+await import("./alerts.js?v=111");
 
 const stripOpts =
 isAlertsPage()

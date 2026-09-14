@@ -50,13 +50,13 @@ seedWatchlistTfOnBlueFlag
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=64";
+} from "./auth-ui.js?v=65";
 
 import {
 getActiveAlerts,
 isMacdAlert,
 isRsiAlert
-} from "./alerts.js?v=110";
+} from "./alerts.js?v=111";
 
 import {
 persistFavoritesToCloud,
@@ -91,7 +91,7 @@ appendFutureWhitespaceBars,
 applyCoinsChartViewport,
 refreshCoinsChartBarSpacing,
 tfPeriodSec
-} from "./chart-import.js?v=55";
+} from "./chart-import.js?v=56";
 
 import {
 terminalVisibleBars,
@@ -105,7 +105,7 @@ TERMINAL_HISTORY_LAZY_BATCH_BARS
 
 import {
 mountCoinsTabletController
-} from "./terminal-tablet-controller.js?v=9";
+} from "./terminal-tablet-controller.js?v=10";
 
 import {
 disconnectKlineStream
@@ -221,13 +221,13 @@ syncCoinsChartLinkedViewports,
 resizeCharts,
 scheduleResizeCharts,
 applyDefaultZoom
-} from "./terminal/terminal-chart-layout.js?v=12";
+} from "./terminal/terminal-chart-layout.js?v=13";
 
 import {
 initTerminalMultiChart,
 syncPrimaryTfToLayout,
 isTerminalMultiChartLayout
-} from "./terminal-multi-chart.js?v=19";
+} from "./terminal-multi-chart.js?v=21";
 
 import {
 mountTerminalLayoutPicker
@@ -3737,13 +3737,13 @@ const {
 initWidgetDrawings
 } =
 await import(
-"./chart-widget-host.js?v=36"
+"./chart-widget-host.js?v=38"
 );
 const {
 initChartIndicators
 } =
 await import(
-"./chart-indicators.js?v=64"
+"./chart-indicators.js?v=65"
 );
 const {
 createPattern12EarlyT3Indicator
@@ -3895,7 +3895,7 @@ drawingTools?.getTool?.() ??
 );
 
 void import(
-"./price-alert-ui.js?v=50"
+"./price-alert-ui.js?v=51"
 ).then(
 ({
 mountPriceAlertUi
@@ -4536,7 +4536,7 @@ const {
 createTradePlusMenuHandler
 } =
 await import(
-"./trade-order-plus-ui.js?v=9"
+"./trade-order-plus-ui.js?v=10"
 );
 
 tradePlusHandler =
@@ -4567,7 +4567,7 @@ const {
 mountPriceAlertUi
 } =
 await import(
-"./price-alert-ui.js?v=50"
+"./price-alert-ui.js?v=51"
 );
 
 let disposeAlertUi =
@@ -4627,7 +4627,7 @@ const {
 mountPriceAlertUi: mountRsiPriceAlertUi
 } =
 await import(
-"./price-alert-ui.js?v=50"
+"./price-alert-ui.js?v=51"
 );
 
 mountRsiPriceAlertUi(

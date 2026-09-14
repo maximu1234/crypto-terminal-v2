@@ -12,7 +12,7 @@ formatRsiAlertLevel,
 isMacdAlert,
 isOscillatorAlert,
 isRsiAlert
-} from "./alerts.js?v=110";
+} from "./alerts.js?v=111";
 
 import {
 isCloudLoggedInEffective
@@ -28,7 +28,7 @@ hideDomChartCrosshair,
 hideDomChartCrosshairHorz,
 hideDomChartCrosshairVert,
 positionDomChartCrosshair
-} from "./chart-import.js?v=55";
+} from "./chart-import.js?v=56";
 
 import {
 isFineChartPointerType

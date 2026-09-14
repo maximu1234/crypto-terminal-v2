@@ -396,7 +396,7 @@ const {
 closeCloudSettingsDropdown
 } =
 await import(
-"./auth-ui.js?v=64"
+"./auth-ui.js?v=65"
 );
 closeCloudSettingsDropdown();
 await openAppSettingsWindow();
@@ -613,7 +613,7 @@ const {
 mountSystemSettingsPanel
 } =
 await import(
-"./app-settings-system-panel.js?v=19"
+"./app-settings-system-panel.js?v=20"
 );
 
 systemCtl =
@@ -660,7 +660,7 @@ const {
 mountCloudAuthPanelInSettings
 } =
 await import(
-"./auth-ui.js?v=64"
+"./auth-ui.js?v=65"
 );
 
 mountCloudAuthPanelInSettings(

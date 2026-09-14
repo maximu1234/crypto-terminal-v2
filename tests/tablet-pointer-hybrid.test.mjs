@@ -12,6 +12,10 @@ rangeZoomAroundAnchor,
 applyPointerWheelOnChart
 } from "../js/chart-tablet-gestures.js";
 
+import {
+shouldHandleTabletPriceScalePointer
+} from "../js/tablet-gesture-policy.js";
+
 test("mouse and pen never use the finger center-crosshair placement", ()=>{
 
 const ipadMouse = {
@@ -215,6 +219,43 @@ assert.ok(
 nextRange.to -
 nextRange.from >
 100
+);
+
+});
+
+test("iPad price-scale strip handles mouse left-drag like a finger", ()=>{
+
+assert.equal(
+shouldHandleTabletPriceScalePointer({
+pointerType: "touch"
+}),
+true
+);
+assert.equal(
+shouldHandleTabletPriceScalePointer({
+pointerType: "pen"
+}),
+true
+);
+assert.equal(
+shouldHandleTabletPriceScalePointer({
+pointerType: "mouse",
+button: 0
+}),
+true
+);
+assert.equal(
+shouldHandleTabletPriceScalePointer({
+pointerType: "mouse",
+button: 2
+}),
+false
+);
+assert.equal(
+shouldHandleTabletPriceScalePointer(
+null
+),
+false
 );
 
 });
