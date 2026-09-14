@@ -249,7 +249,7 @@ Object.freeze({
 "chart-page.js":
 8,
 "terminal.js":
-472,
+473,
 "terminal-multi-chart.js":
 21,
 "terminal-screener-chart-pane.js":
@@ -258,6 +258,8 @@ Object.freeze({
 11,
 "terminal/terminal-chart-layout.js":
 13,
+"terminal/coins-tablet-list-nav.js":
+2,
 "terminal/chart-display-style-ui.js":
 2,
 "terminal-chart-history-prefs.js":

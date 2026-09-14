@@ -224,6 +224,10 @@ applyDefaultZoom
 } from "./terminal/terminal-chart-layout.js?v=13";
 
 import {
+placeCoinsTabletListNav
+} from "./terminal/coins-tablet-list-nav.js?v=2";
+
+import {
 initTerminalMultiChart,
 syncPrimaryTfToLayout,
 isTerminalMultiChartLayout
@@ -6687,10 +6691,8 @@ document.getElementById(
 );
 
 if(
-nav
+!nav
 ){
-return;
-}
 
 nav =
 document.createElement(
@@ -6746,8 +6748,12 @@ nav.append(
 up,
 down
 );
-list.appendChild(
-nav
+
+}
+
+placeCoinsTabletListNav(
+nav,
+list
 );
 
 }
@@ -6758,6 +6764,11 @@ syncCoinsTabletListNav,
 {
 passive:true
 }
+);
+
+window.addEventListener(
+"trade-app-ready",
+syncCoinsTabletListNav
 );
 
 /* =========================================================
