@@ -28,12 +28,12 @@ slowBackgroundSync: false
 
 /**
  * BANDWIDTH-CUT: экономия Supabase Free (egress / Realtime).
- * Чтобы вернуть автосинхру — закомментируйте весь блок BANDWIDTH_CUT.
+ * Флаги Терминала (red/green/gray/blue) — как алерты: REST при клике и
+ * один hydrate после входа. Realtime и автопулл при фокусе остаются выкл.
  */
 const BANDWIDTH_CUT =
 Object.freeze({
 disableRealtime: true,
-disableFavoritesAutoCloud: true,
 disableAutoDevicePull: true,
 slowBackgroundSync: true
 });
@@ -173,7 +173,7 @@ try{
 const {
 ensureCloudLoginResolved
 } =
-await import("./cloud-sync.js?v=68");
+await import("./cloud-sync.js?v=70");
 
 const ctx =
 await ensureCloudLoginResolved(
@@ -262,15 +262,14 @@ return getSupabaseUsagePrefs().disableFavoritesCloud;
 
 }
 
-/** Авто push/pull флагов (Realtime, focus, после клика). Ручная кнопка в настройках не блокируется. */
+/**
+ * Авто push после клика и hydrate после входа.
+ * Совпадает с «Отключить облачные флаги»; Realtime не включается.
+ * Ручная кнопка «Обновить» в Настройки → Синхронизация не блокируется.
+ */
 export function isFavoritesAutoCloudDisabled(){
 
-return (
-bandwidthCutEnabled(
-"disableFavoritesAutoCloud"
-) ||
-getSupabaseUsagePrefs().disableFavoritesAutoCloud
-);
+return isFavoritesCloudDisabled();
 
 }
 

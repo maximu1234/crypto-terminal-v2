@@ -50,7 +50,7 @@ seedWatchlistTfOnBlueFlag
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=65";
+} from "./auth-ui.js?v=66";
 
 import {
 getActiveAlerts,
@@ -61,7 +61,7 @@ isRsiAlert
 import {
 persistFavoritesToCloud,
 onFavoritesRemoteUpdate
-} from "./cloud-sync.js?v=68";
+} from "./cloud-sync.js?v=70";
 
 import {
 createCandlestickChart,

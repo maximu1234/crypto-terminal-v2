@@ -16,11 +16,11 @@ isRsiAlert
 
 import {
 isCloudLoggedInEffective
-} from "./cloud-sync.js?v=68";
+} from "./cloud-sync.js?v=70";
 
 import {
 getTelegramChatId
-} from "./alerts-cloud-sync.js?v=113";
+} from "./alerts-cloud-sync.js?v=115";
 
 import {
 formatPrice,

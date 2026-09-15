@@ -15,7 +15,7 @@ mountTelegramSettingsPanel
 
 import {
 mountFavoritesCloudSettingsPanel
-} from "./favorites-settings-panel.js?v=1";
+} from "./favorites-settings-panel.js?v=3";
 
 const SECTIONS =
 [
@@ -396,7 +396,7 @@ const {
 closeCloudSettingsDropdown
 } =
 await import(
-"./auth-ui.js?v=65"
+"./auth-ui.js?v=66"
 );
 closeCloudSettingsDropdown();
 await openAppSettingsWindow();
@@ -660,7 +660,7 @@ const {
 mountCloudAuthPanelInSettings
 } =
 await import(
-"./auth-ui.js?v=65"
+"./auth-ui.js?v=66"
 );
 
 mountCloudAuthPanelInSettings(
@@ -872,7 +872,7 @@ const {
 mountSecretSettingsPanel
 } =
 await import(
-"./app-settings-secret.js?v=8"
+"./app-settings-secret.js?v=10"
 );
 
 await mountSecretSettingsPanel(

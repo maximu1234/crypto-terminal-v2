@@ -249,7 +249,7 @@ Object.freeze({
 "chart-page.js":
 8,
 "terminal.js":
-473,
+475,
 "terminal-multi-chart.js":
 21,
 "terminal-screener-chart-pane.js":
@@ -578,7 +578,7 @@ Object.freeze({
 "watchlist.js":
 121,
 "screener.js":
-122,
+124,
 "ipad-web-viewport.js":
 2,
 "screener-widget-guard.js":
@@ -630,7 +630,7 @@ Object.freeze({
 "focus-blur-after-pick.js":
 3,
 "site-boot.js":
-131,
+134,
 "site-header.js":
 7,
 "site-header-nav.js":
@@ -823,7 +823,7 @@ Object.freeze({
 
 /* ── JS: cloud / auth ── */
 "cloud-sync.js":
-68,
+70,
 "cloud-sync-throttle.js":
 3,
 "page-routes.js":
@@ -841,11 +841,11 @@ Object.freeze({
 "auth-session-transfer.js":
 1,
 "auth-ui.js":
-65,
+66,
 "header-settings-shell.js":
 4,
 "app-settings-window.js":
-22,
+25,
 "app-settings-proxy-panel.js":
 6,
 "app-settings-system-panel.js":
@@ -853,23 +853,23 @@ Object.freeze({
 "app-settings-hotkeys-panel.js":
 3,
 "app-settings-secret.js":
-8,
+10,
 "telegram-settings-panel.js":
 2,
 "favorites-settings-panel.js":
-1,
+3,
 "alert-auth-cache.js":
 7,
 "favorites.js":
 5,
 "favorites-cloud-sync.js":
-7,
+9,
 
 /* ── JS: alerts ── */
 "alerts.js":
 111,
 "alerts-cloud-sync.js":
-113,
+115,
 "alerts-cloud/garbage-purge.js":
 1,
 "alerts-cloud/debug.js":
@@ -877,11 +877,11 @@ Object.freeze({
 "alerts-cloud/telegram-id.js":
 2,
 "alerts-cloud/worker-client.js":
-7,
+8,
 "alerts-cloud/registry-sync.js":
-17,
+18,
 "alerts-cloud/polling-realtime.js":
-14,
+16,
 "alerts-page.js":
 73,
 "alert-monitor.js":
@@ -915,7 +915,7 @@ Object.freeze({
 "trade-calculator.js":
 3,
 "system-admin-page.js":
-11,
+14,
 "system-admin-alerts-purge.js":
 2,
 "system-admin-worker-reload-ms.js":
@@ -923,9 +923,9 @@ Object.freeze({
 "system-admin-access.js":
 3,
 "supabase-usage-prefs.js":
-5,
+7,
 "system-admin-supabase-prefs.js":
-4,
+6,
 
 /* ── CSS ── */
 "critical-shell.css":

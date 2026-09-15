@@ -26,7 +26,7 @@ import {
 getTelegramChatId,
 initAlertsCloudSync,
 pullAlertHistoryFromCloud
-} from "./alerts-cloud-sync.js?v=113";
+} from "./alerts-cloud-sync.js?v=115";
 
 import {
 readAlertTokenSync
@@ -39,11 +39,11 @@ onCloudSyncChange,
 getCloudUserEmail,
 pullDeviceStateFromCloud,
 ensureCloudLoginResolved
-} from "./cloud-sync.js?v=68";
+} from "./cloud-sync.js?v=70";
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=65";
+} from "./auth-ui.js?v=66";
 
 import {
 TELEGRAM_BOT_USERNAME,

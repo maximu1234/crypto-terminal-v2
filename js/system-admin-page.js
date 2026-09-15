@@ -1,11 +1,11 @@
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=65";
+} from "./auth-ui.js?v=66";
 
 import {
 ensureCloudLoginResolved,
 getEffectiveCloudUserEmail
-} from "./cloud-sync.js?v=68";
+} from "./cloud-sync.js?v=70";
 
 import {
 isSystemAdminUser,
@@ -15,7 +15,7 @@ isLoggedInEffective
 
 import {
 bindSupabaseUsagePrefsForm
-} from "./system-admin-supabase-prefs.js?v=4";
+} from "./system-admin-supabase-prefs.js?v=6";
 
 import {
 bindAlertsGarbagePurge

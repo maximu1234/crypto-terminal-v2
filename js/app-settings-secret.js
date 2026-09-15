@@ -8,11 +8,11 @@ getSystemAdminEmails
 
 import {
 getEffectiveCloudUserEmail
-} from "./cloud-sync.js?v=68";
+} from "./cloud-sync.js?v=70";
 
 import {
 bindSupabaseUsagePrefsForm
-} from "./system-admin-supabase-prefs.js?v=4";
+} from "./system-admin-supabase-prefs.js?v=6";
 
 import {
 bindAlertsGarbagePurge
@@ -67,7 +67,7 @@ host.innerHTML =
 
 <section class="system-admin-card" aria-labelledby="app-supabase-usage-heading">
 <h2 id="app-supabase-usage-heading" class="app-settings-subtitle">Экономия лимитов Supabase</h2>
-<p class="system-admin-card-lead">Экономия лимитов Supabase: ниже — единственный переключатель (облачные алерты). Остальное зафиксировано в коде.</p>
+<p class="system-admin-card-lead">Экономия лимитов Supabase: переключатели облачных алертов и флагов Терминала. Realtime и автопулл рисунков зафиксированы в коде.</p>
 <div id="system-supabase-usage-mount"></div>
 <p id="system-supabase-usage-status" class="system-admin-status" aria-live="polite"></p>
 <div class="system-admin-actions">

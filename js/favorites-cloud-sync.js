@@ -1,5 +1,6 @@
 /**
- * Синхронизация флагов: user_favorites (REST + realtime), per exchange_id.
+ * Синхронизация флагов Терминала: user_favorites (REST при клике и hydrate после входа).
+ * Realtime-канал не поднимается (экономия Supabase Free).
  */
 import {
 isCloudLoggedInEffective,
@@ -8,12 +9,13 @@ isCloudApiUsable,
 isCloudAuthError,
 reportCloudAuthFailure,
 tryCloudAuthRecovery
-} from "./cloud-sync.js?v=68";
+} from "./cloud-sync.js?v=70";
 
 import {
 isFavoritesCloudDisabled,
-isFavoritesAutoCloudDisabled
-} from "./supabase-usage-prefs.js?v=5";
+isFavoritesAutoCloudDisabled,
+isSupabaseRealtimeDisabled
+} from "./supabase-usage-prefs.js?v=7";
 
 import {
 getActiveExchangeId
@@ -1363,7 +1365,8 @@ row
 ){
 
 if(
-isFavoritesAutoCloudDisabled()
+isFavoritesAutoCloudDisabled() ||
+isSupabaseRealtimeDisabled()
 ){
 return;
 }
@@ -1549,5 +1552,20 @@ return;
 
 ready =
 true;
+
+window.addEventListener(
+"supabase-usage-prefs-changed",
+()=>{
+
+if(
+isFavoritesCloudDisabled()
+){
+return;
+}
+
+void pullFavoritesFromCloudNow();
+
+}
+);
 
 }

@@ -8,7 +8,7 @@ isCloudLoggedIn,
 isCloudLoggedInEffective,
 onCloudSyncChange,
 ensureCloudLoginResolved
-} from "../cloud-sync.js?v=68";
+} from "../cloud-sync.js?v=70";
 
 import {
 clearAlertAuthCache,
@@ -39,7 +39,7 @@ setAlertsRealtimeUserId
 import {
 getAuthed,
 runCloudOp
-} from "./worker-client.js?v=7";
+} from "./worker-client.js?v=8";
 
 import {
 pullRegistryFromCloudNow,
@@ -47,12 +47,12 @@ pushUnsyncedAlerts,
 scheduleRegistryCloudSync,
 isRegistryCloudSyncPaused,
 syncAllLocalAlertsToCloud
-} from "./registry-sync.js?v=17";
+} from "./registry-sync.js?v=18";
 
 import {
 isAlertsCloudDisabled,
 syncAlertsCloudPauseToServer
-} from "../supabase-usage-prefs.js?v=5";
+} from "../supabase-usage-prefs.js?v=7";
 
 import {
 isAlgoReducedCloudClient
@@ -1025,7 +1025,7 @@ if(
 isAlertsPage()
 ){
 const { pullAlertHistoryFromCloud } =
-await import("./registry-sync.js?v=17");
+await import("./registry-sync.js?v=18");
 
 await pullAlertHistoryFromCloud({
 force: !!opts.force

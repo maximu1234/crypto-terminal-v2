@@ -1,7 +1,7 @@
 import {
 isCloudLoggedInEffective,
 ensureCloudLoginResolved
-} from "../cloud-sync.js?v=68";
+} from "../cloud-sync.js?v=70";
 
 import {
 resolveAlertAuthFast,
@@ -46,11 +46,11 @@ clearAllAlertsFromCloud,
 fetchWithTimeout,
 softDeleteAlertViaRest,
 hintWorkerReloadAlerts
-} from "./worker-client.js?v=7";
+} from "./worker-client.js?v=8";
 
 import {
 isAlertsCloudDisabled
-} from "../supabase-usage-prefs.js?v=5";
+} from "../supabase-usage-prefs.js?v=7";
 
 function resolveAlertExchangeId(
 entry
@@ -758,7 +758,7 @@ return false;
 }
 
 const { ensureCloudReady } =
-await import("../auth-ui.js?v=65");
+await import("../auth-ui.js?v=66");
 
 await ensureCloudReady();
 
@@ -990,7 +990,7 @@ return ok;
 async function syncAllLocalAlertsToCloudImpl(){
 
 const { ensureCloudReady } =
-await import("../auth-ui.js?v=65");
+await import("../auth-ui.js?v=66");
 
 await ensureCloudReady();
 
@@ -2190,7 +2190,7 @@ return 0;
 
 try{
 const { ensureCloudLoginResolved } =
-await import("../cloud-sync.js?v=68");
+await import("../cloud-sync.js?v=70");
 
 await ensureCloudLoginResolved(
 8000

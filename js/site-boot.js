@@ -4,7 +4,7 @@ initAlertMonitor
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=65";
+} from "./auth-ui.js?v=66";
 
 import {
 isAlertsPage
@@ -20,7 +20,7 @@ isScriptPage
 import {
 initAlertsCloudSync,
 scheduleRegistryCloudSync
-} from "./alerts-cloud-sync.js?v=113";
+} from "./alerts-cloud-sync.js?v=115";
 
 import {
 stripAlertFlagsNotInRegistry
@@ -31,7 +31,7 @@ isCloudLoggedIn,
 isCloudLoggedInEffective,
 isCloudSyncEnabled,
 onCloudSyncChange
-} from "./cloud-sync.js?v=68";
+} from "./cloud-sync.js?v=70";
 
 import {
 isSupabaseConfigured
@@ -516,7 +516,7 @@ isAlgoReducedCloudClient();
 if(
 !algoCloudLite
 ){
-import("./favorites-cloud-sync.js?v=7").then(
+import("./favorites-cloud-sync.js?v=9").then(
 ({ initFavoritesCloudSync })=>{
 initFavoritesCloudSync();
 }
