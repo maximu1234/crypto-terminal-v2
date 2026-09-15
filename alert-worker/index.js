@@ -3,7 +3,6 @@ import { createMarketHubs } from "./lib/market-hubs.js";
 import { getConfigStatus, getWorkerConfig } from "./lib/config.js";
 import {
   fetchTelegramAlerts,
-  fetchAlertDiagnostics,
   resolveTelegramAlertsReload
 } from "./lib/alerts-db.js";
 import {
@@ -233,15 +232,18 @@ async function main() {
         return;
       }
       const st = getConfigStatus();
-      const diag = await fetchAlertDiagnostics().catch(() => null);
       res.writeHead(200, { "Content-Type": "application/json" });
       res.end(JSON.stringify({
         ok: st.ready,
         build: WORKER_BUILD,
         alerts: activeAlerts.size,
         telegram: telegramConfigured(),
-        config: st,
-        diag,
+        config: {
+          ready: st.ready,
+          missing: st.missing,
+          supabaseUrlSet: st.supabaseUrlSet,
+          telegramSet: st.telegramSet
+        },
         botRemote: getBotRemoteStats(),
         ticker: marketHubs.getStats?.() || null,
         reload: {

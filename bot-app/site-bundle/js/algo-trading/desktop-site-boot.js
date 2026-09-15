@@ -5,30 +5,40 @@
  */
 import {
 shouldRunAlgoBackgroundJobs
-} from "../desktop-feature-nav-prefs.js?v=4";
+} from "../desktop-feature-nav-prefs.js?v=5";
 
 import {
 isAlgoBotLiteShell
-} from "../page-routes.js?v=5";
+} from "../page-routes.js?v=6";
 
 import {
 ALGO_ANALYSIS_BOT_PATTERN_12,
-isActiveAnalysisBot,
-isAnyAnalysisBotActive
+isActiveAnalysisBot
 } from "./active-analysis-bot.js?v=4";
+
+function stopPatternOptimizeJob(){
+
+return import(
+"./optimize-universe-background.js?v=5"
+).then(
+m=>
+m.stopAlgoOptimizeUniverseJob?.()
+).catch(
+err=>{
+console.warn(
+"[algo desktop-site-boot] stop optimize universe:",
+err
+);
+}
+);
+
+}
 
 export function bootAlgoDesktopBackgroundJobs(){
 
 if(
 !shouldRunAlgoBackgroundJobs()
 ){
-return;
-}
-
-if(
-!isAnyAnalysisBotActive()
-){
-void stopAlgoDesktopBackgroundJobs();
 return;
 }
 
@@ -50,6 +60,8 @@ err
 );
 }
 );
+}else{
+void stopPatternOptimizeJob();
 }
 
 void import(

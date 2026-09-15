@@ -30,7 +30,7 @@ loadRsiTouchFlipBook
 } from "./rsi-touch-flip-book.js?v=5";
 import {
 loadRsiTouchFlipBalancePct
-} from "./rsi-touch-flip-prefs.js?v=8";
+} from "./rsi-touch-flip-prefs.js?v=9";
 
 const STORAGE_KEY =
 "algo_remote_session_logs_v1";

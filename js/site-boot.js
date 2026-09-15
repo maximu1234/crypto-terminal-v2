@@ -202,7 +202,7 @@ return;
 }
 
 void import(
-"./algo-trading/desktop-site-boot.js?v=7"
+"./algo-trading/desktop-site-boot.js?v=8"
 ).then(
 m=>
 m.bootAlgoDesktopBackgroundJobs?.()
@@ -226,7 +226,7 @@ return Promise.resolve();
 }
 
 return import(
-"./algo-trading/desktop-site-boot.js?v=7"
+"./algo-trading/desktop-site-boot.js?v=8"
 ).then(
 m=>
 m.stopAlgoDesktopBackgroundJobs?.()

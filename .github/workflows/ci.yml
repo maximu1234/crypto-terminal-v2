@@ -19,6 +19,11 @@ jobs:
           find . -name '*.js' -not -path './node_modules/*' -not -path './vendor/*' | while read f; do
             node --check "$f" || exit 1
           done
+      - name: Syntax check CJS
+        run: |
+          find . -name '*.cjs' -not -path './node_modules/*' | while read f; do
+            node --check "$f" || exit 1
+          done
       - name: Asset manifest sync
         run: node scripts/check-asset-manifest.cjs
       - name: Build desktop site bundle

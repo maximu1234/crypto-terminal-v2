@@ -5,25 +5,23 @@ import {
   RSI_TOUCH_FLIP_LEN_GRID,
   listRsiTouchFlipOptimizeCombos,
   optimizeRsiTouchFlipParams
-} from "./rsi-touch-flip-optimize.js?v=8";
+} from "./rsi-touch-flip-optimize.js?v=11";
 import {
   runRsiTouchFlip
-} from "./rsi-touch-flip-engine.js?v=6";
+} from "./rsi-touch-flip-engine.js?v=8";
 import {
   clampRsiTouchFlipTrainPct,
   formatRsiTouchFlipParamsBrief,
+  rsiTouchFlipFitColumnPatch,
   rsiTouchFlipLaunchAdvice,
   rsiTouchFlipMinTestTrades,
+  rsiTouchFlipShouldFillColumnFromFit,
   rsiTouchFlipTestVerdict,
   rsiTouchFlipTrainTestSplit,
+  rsiTouchFlipJsonReplacer,
+  rsiTouchFlipJsonReviver,
   RSI_TOUCH_FLIP_DEFAULT_TRAIN_PCT
-} from "./rsi-touch-flip-walkforward.js?v=9";
-import {
-  saveRsiTouchFlipTickerPrefs
-} from "./rsi-touch-flip-prefs.js?v=8";
-import {
-  getRsiTouchFlipBookRow
-} from "./rsi-touch-flip-book.js?v=5";
+} from "./rsi-touch-flip-walkforward.js?v=13";
 
 const FIT_KEY = "algo_trading_rsi_touch_flip_fit_v1";
 
@@ -69,6 +67,23 @@ function el(id) {
   return document.getElementById(id);
 }
 
+function sameFitSymbol(a, b) {
+  const norm = (value) =>
+    String(value || "")
+      .replace(/\.P$/i, "")
+      .trim()
+      .toUpperCase();
+  return norm(a) === norm(b) && !!norm(a);
+}
+
+function sameOverlayPrefs(a, b) {
+  return (
+    (a?.cycleSlEnabled === true) === (b?.cycleSlEnabled === true) &&
+    Number(a?.cycleSlPct || 0) === Number(b?.cycleSlPct || 0) &&
+    (a?.compoundEnabled === true) === (b?.compoundEnabled === true)
+  );
+}
+
 function formatUsd(value) {
   if (!Number.isFinite(value)) {
     return "—";
@@ -89,7 +104,7 @@ function formatPct(value) {
 }
 
 function formatFactor(value) {
-  if (value === Infinity) {
+  if (value === Infinity || value === "Infinity") {
     return "∞";
   }
   if (!Number.isFinite(value)) {
@@ -139,7 +154,7 @@ function loadFitStore() {
     if (!raw) {
       return null;
     }
-    const parsed = JSON.parse(raw);
+    const parsed = JSON.parse(raw, rsiTouchFlipJsonReviver);
     return parsed && typeof parsed === "object" ? parsed : null;
   } catch {
     return null;
@@ -148,7 +163,10 @@ function loadFitStore() {
 
 function saveFitStore(row) {
   try {
-    localStorage.setItem(FIT_KEY, JSON.stringify(row));
+    localStorage.setItem(
+      FIT_KEY,
+      JSON.stringify(row, rsiTouchFlipJsonReplacer)
+    );
   } catch {
     /* quota */
   }
@@ -251,6 +269,14 @@ function evaluateSplit(candles, rsiValues, prefs, chartTf, trainPct) {
 export function mountRsiTouchFlipFit(host) {
   let running = false;
   let signal = { cancelled: false };
+  let pinnedChart = { symbol: "", tf: "" };
+
+  function stillOnPinnedChart() {
+    return (
+      sameFitSymbol(pinnedChart.symbol, host.getSymbol?.()) &&
+      String(pinnedChart.tf || "") === String(host.getChartTf?.() || "")
+    );
+  }
 
   function renderSplitLabel(split) {
     const node = el("algo-rsi-flip-split-label");
@@ -347,13 +373,23 @@ export function mountRsiTouchFlipFit(host) {
       if (advice.canLaunch) {
         params.textContent = brief;
       } else if (row.verdict?.ok) {
-        params.textContent = `лучший по Обзору в сетке: ${brief}`;
+        params.textContent = `лучший с зелёным Test: ${brief}`;
       } else {
-        params.textContent = `лучший по Обзору (Test красный — не в бота): ${brief}`;
+        params.textContent = `макс. по Обзору (Test красный — не в бота): ${brief}`;
       }
     }
     if (detail) {
-      detail.textContent = advice.detail;
+      let text = advice.detail;
+      const overviewBest = row.overviewBest;
+      if (
+        row.verdict?.ok &&
+        overviewBest?.prefs &&
+        overviewBest.verdict?.ok !== true
+      ) {
+        text +=
+          ` Макс. по Обзору ${formatRsiTouchFlipParamsBrief(overviewBest.prefs)} — Test красный, в бота не берём.`;
+      }
+      detail.textContent = text;
     }
     if (trainEl) {
       trainEl.textContent = compactOverviewLine(row.train);
@@ -400,9 +436,81 @@ export function mountRsiTouchFlipFit(host) {
     }
   }
 
+  function makeFitRow(resultRow, candles, chartTf, trainPct, extra = {}) {
+    return {
+      symbol: extra.symbol || host.getSymbol?.(),
+      chartTf,
+      candleCount: candles.length,
+      trainPct,
+      prefs: resultRow.prefs,
+      combo: resultRow.combo,
+      train: resultRow.train,
+      test: resultRow.test,
+      overview: resultRow.overview,
+      verdict: resultRow.verdict,
+      overviewBest: extra.overviewBest || null,
+      updatedAt: Date.now()
+    };
+  }
+
+  function applyFitRowToColumn(row, currentEval) {
+    if (!rsiTouchFlipShouldFillColumnFromFit(row, currentEval)) {
+      return;
+    }
+    host.applyCandidate(rsiTouchFlipFitColumnPatch(row.prefs));
+  }
+
+  async function recomputeStoredOverlay(candles, chartTf, livePrefs, currentEval) {
+    const stored = loadFitStore();
+    if (!stored?.prefs || host.isDisposed?.()) {
+      return;
+    }
+    if (!sameFitSymbol(stored.symbol, host.getSymbol?.())) {
+      return;
+    }
+    const nextPrefs = {
+      ...stored.prefs,
+      cycleSlEnabled: livePrefs?.cycleSlEnabled === true,
+      cycleSlPct: livePrefs?.cycleSlPct,
+      compoundEnabled: livePrefs?.compoundEnabled === true
+    };
+    let rsi;
+    try {
+      rsi = await host.resolveRsi(candles, nextPrefs);
+    } catch {
+      return;
+    }
+    if (host.isDisposed?.() || !sameFitSymbol(stored.symbol, host.getSymbol?.())) {
+      return;
+    }
+    const evalRow = evaluateSplit(
+      candles,
+      rsi,
+      nextPrefs,
+      chartTf,
+      readTrainPct()
+    );
+    if (!evalRow) {
+      return;
+    }
+    const row = {
+      ...stored,
+      prefs: nextPrefs,
+      train: evalRow.train,
+      test: evalRow.test,
+      overview: evalRow.overview,
+      verdict: evalRow.verdict
+    };
+    saveFitStore(row);
+    renderCandidate(row, currentEval);
+  }
+
   function sync(payload) {
     if (host.isDisposed?.() || !host.isActive?.()) {
       return;
+    }
+    if (running && !stillOnPinnedChart()) {
+      signal.cancelled = true;
     }
     const candles = payload?.candles || [];
     const prefs = payload?.prefs;
@@ -435,13 +543,17 @@ export function mountRsiTouchFlipFit(host) {
     const stored = loadFitStore();
     const sameChart =
       stored &&
-      String(stored.symbol || "") === String(host.getSymbol?.() || "") &&
+      sameFitSymbol(stored.symbol, host.getSymbol?.()) &&
       String(stored.chartTf || "") === String(chartTf || "");
     const candidate = sameChart
       ? refreshFitRowVerdict(stored, split)
       : null;
     if (candidate && stored && verdictChanged(candidate.verdict, stored.verdict)) {
       saveFitStore(candidate);
+    }
+    if (candidate && prefs && !sameOverlayPrefs(candidate.prefs, prefs)) {
+      void recomputeStoredOverlay(candles, chartTf, prefs, currentEval);
+      return;
     }
     renderCandidate(candidate, currentEval);
   }
@@ -470,20 +582,33 @@ export function mountRsiTouchFlipFit(host) {
     }
 
     signal = { cancelled: false };
+    pinnedChart = {
+      symbol: host.getSymbol?.(),
+      tf: chartTf
+    };
     setRunningUi(true);
     renderProgress(0, listRsiTouchFlipOptimizeCombos().length);
 
     const rsiByLen = new Map();
     try {
       for (const rsiLen of RSI_TOUCH_FLIP_LEN_GRID) {
-        if (signal.cancelled || host.isDisposed?.()) {
+        if (signal.cancelled || host.isDisposed?.() || !stillOnPinnedChart()) {
+          signal.cancelled = true;
           break;
         }
         const rsi = await host.resolveRsi(candles, {
           ...basePrefs,
           rsiLen
         });
+        if (signal.cancelled || host.isDisposed?.() || !stillOnPinnedChart()) {
+          signal.cancelled = true;
+          break;
+        }
         rsiByLen.set(rsiLen, rsi);
+      }
+
+      if (signal.cancelled || host.isDisposed?.() || !stillOnPinnedChart()) {
+        return;
       }
 
       const result = await optimizeRsiTouchFlipParams({
@@ -496,17 +621,17 @@ export function mountRsiTouchFlipFit(host) {
         onProgress: (p) => renderProgress(p.done, p.total)
       });
 
-      if (host.isDisposed?.()) {
+      if (host.isDisposed?.() || !stillOnPinnedChart()) {
         return;
       }
       if (result.cancelled) {
         return;
       }
-      if (!result.best) {
+      if (!result.best && !result.bestTradable) {
         let currentEval = null;
         try {
           const currentRsi = await host.resolveRsi(candles, basePrefs);
-          if (!host.isDisposed?.()) {
+          if (!host.isDisposed?.() && stillOnPinnedChart()) {
             currentEval = evaluateSplit(
               candles,
               currentRsi,
@@ -519,25 +644,15 @@ export function mountRsiTouchFlipFit(host) {
         } catch {
           /* ignore */
         }
+        if (!stillOnPinnedChart()) {
+          return;
+        }
         if (result.bestTrain?.prefs) {
-          const row = {
-            symbol: host.getSymbol?.(),
-            chartTf,
-            candleCount: candles.length,
-            trainPct,
-            prefs: result.bestTrain.prefs,
-            combo: result.bestTrain.combo,
-            train: result.bestTrain.train,
-            test: result.bestTrain.test,
-            verdict: result.bestTrain.verdict,
-            updatedAt: Date.now()
-          };
+          const row = makeFitRow(result.bestTrain, candles, chartTf, trainPct, {
+            symbol: pinnedChart.symbol
+          });
           saveFitStore(row);
-          if (
-            !getRsiTouchFlipBookRow(host.getSymbol?.())
-          ) {
-            saveRsiTouchFlipTickerPrefs(host.getSymbol?.(), row.prefs);
-          }
+          applyFitRowToColumn(row, currentEval);
           renderCandidate(row, currentEval);
         } else {
           renderCandidate(null, currentEval);
@@ -555,28 +670,31 @@ export function mountRsiTouchFlipFit(host) {
         return;
       }
 
-      const row = {
-        symbol: host.getSymbol?.(),
-        chartTf,
-        candleCount: candles.length,
-        trainPct,
-        prefs: result.best.prefs,
-        combo: result.best.combo,
-        train: result.best.train,
-        test: result.best.test,
-        verdict: result.best.verdict,
-        updatedAt: Date.now()
-      };
-      saveFitStore(row);
-      if (
-        !getRsiTouchFlipBookRow(host.getSymbol?.())
-      ) {
-        saveRsiTouchFlipTickerPrefs(host.getSymbol?.(), row.prefs);
-      }
+      const pick = result.bestTradable || result.best;
+      const overviewBest =
+        result.best?.prefs &&
+        result.bestTradable?.prefs &&
+        (
+          result.best.prefs.rsiLen !== result.bestTradable.prefs.rsiLen ||
+          result.best.prefs.osLevel !== result.bestTradable.prefs.osLevel ||
+          result.best.prefs.obLevel !== result.bestTradable.prefs.obLevel ||
+          result.best.prefs.maxStack !== result.bestTradable.prefs.maxStack
+        )
+          ? {
+              prefs: result.best.prefs,
+              verdict: result.best.verdict,
+              overview: result.best.overview,
+              test: result.best.test
+            }
+          : null;
+      const row = makeFitRow(pick, candles, chartTf, trainPct, {
+        overviewBest,
+        symbol: pinnedChart.symbol
+      });
       let currentEval = null;
       try {
         const currentRsi = await host.resolveRsi(candles, basePrefs);
-        if (!host.isDisposed?.()) {
+        if (!host.isDisposed?.() && stillOnPinnedChart()) {
           currentEval = evaluateSplit(
             candles,
             currentRsi,
@@ -589,6 +707,11 @@ export function mountRsiTouchFlipFit(host) {
       } catch {
         /* ignore */
       }
+      if (!stillOnPinnedChart()) {
+        return;
+      }
+      saveFitStore(row);
+      applyFitRowToColumn(row, currentEval);
       renderCandidate(row, currentEval);
     } catch (err) {
       console.warn("[algo-rsi-touch-flip] fit", err?.message || err);
@@ -637,12 +760,7 @@ export function mountRsiTouchFlipFit(host) {
       return;
     }
     saveFitStore(stored);
-    host.applyCandidate({
-      rsiLen: stored.prefs.rsiLen,
-      osLevel: stored.prefs.osLevel,
-      obLevel: stored.prefs.obLevel,
-      maxStack: stored.prefs.maxStack
-    });
+    host.applyCandidate(rsiTouchFlipFitColumnPatch(stored.prefs));
   }
 
   el("algo-rsi-flip-optimize")?.addEventListener("click", () => {

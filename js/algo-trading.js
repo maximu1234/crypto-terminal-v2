@@ -73,7 +73,7 @@ mountAlgoStrategyParamOptimizeUi
 
 import {
 mountAlgoRuntimeUi
-} from "./algo-trading/runtime-ui.js?v=15";
+} from "./algo-trading/runtime-ui.js?v=16";
 
 import {
 mountAlgoBotStrategyUi
@@ -116,12 +116,12 @@ mountAlgoPatternEntryOverlay
 
 import {
 mountRsiTouchFlipHost
-} from "./algo-trading/rsi-touch-flip-panel.js?v=32";
+} from "./algo-trading/rsi-touch-flip-panel.js?v=36";
 
 import {
 loadRsiTouchFlipPrefs,
 saveRsiTouchFlipPrefs
-} from "./algo-trading/rsi-touch-flip-prefs.js?v=8";
+} from "./algo-trading/rsi-touch-flip-prefs.js?v=9";
 
 import {
 clearAlgoPatternAnalysisUi,

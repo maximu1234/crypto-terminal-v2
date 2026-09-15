@@ -38,6 +38,44 @@ const DEFAULT_LOCAL_SITE_PORT =
 47391;
 const BINGX_API_BASE =
 "https://open-api.bingx.com";
+
+function isPublicBingxPath(
+raw
+){
+
+if(
+typeof raw !==
+"string" ||
+raw.includes(
+".."
+) ||
+raw.includes(
+"\\"
+)
+){
+return false;
+}
+
+const pathname =
+raw.split(
+"?"
+)[
+0
+];
+
+return pathname.startsWith(
+"/openApi/swap/v2/quote/"
+) ||
+pathname.startsWith(
+"/openApi/swap/v3/quote/"
+) ||
+pathname ===
+"/openApi/swap/v2/server/time" ||
+pathname.startsWith(
+"/openApi/spot/v1/ticker/"
+);
+
+}
 const PORT_FILE =
 "local-site-port.json";
 
@@ -167,8 +205,8 @@ reqUrl.searchParams.get(
 "";
 
 if(
-!apiPath.startsWith(
-"/openApi/"
+!isPublicBingxPath(
+apiPath
 )
 ){
 res.writeHead(

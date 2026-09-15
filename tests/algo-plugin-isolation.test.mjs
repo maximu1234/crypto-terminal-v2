@@ -200,7 +200,7 @@ test("algo RSI Flip column drives the chart RSI pane and lists OB before OS", ()
   assert.doesNotMatch(html, /Initial capital/);
   assert.doesNotMatch(html, /Подбор на выбранном таймфрейме/);
   assert.doesNotMatch(html, /Сетка на Train/);
-  assert.match(html, /Подставить, если Test в плюсе \(сделки и PF\)\. Просадка в строке — справка, не запрет\./);
+  assert.match(html, /В бота — лучший набор с зелёным Test\. Макс\. по Обзору, если Test красный, только справка\./);
   assert.doesNotMatch(html, /Подставить включена/);
   assert.match(page, /applyEffectiveRsiPaneSettings/);
   assert.match(page, /ALGO_ANALYSIS_BOT_RSI_TOUCH_FLIP/);

@@ -16,9 +16,11 @@ loadRsiTouchFlipPrefs,
 saveRsiTouchFlipPrefs,
 hydrateRsiTouchFlipPrefsForSymbol,
 saveRsiTouchFlipTickerPrefs,
-hasRsiTouchFlipTickerPrefs,
+loadRsiTouchFlipTickerPrefs,
+normalizeRsiTouchFlipPrefs,
+shouldReloadRsiTouchFlipColumn,
 loadRsiTouchFlipBalancePct
-} from "./rsi-touch-flip-prefs.js?v=8";
+} from "./rsi-touch-flip-prefs.js?v=9";
 import {
 RSI_TOUCH_FLIP_BOOK_CHANGE_EVENT,
 RSI_TOUCH_FLIP_BOOK_OPEN_EVENT,
@@ -33,18 +35,25 @@ getAlgoTradingWalletBalance
 } from "./runtime-bridge.js?v=6";
 import {
 runRsiTouchFlip
-} from "./rsi-touch-flip-engine.js?v=6";
+} from "./rsi-touch-flip-engine.js?v=8";
 import {
 resolveRsiTouchFlipChartRsi,
 rsiTouchFlipChartDays
-} from "./rsi-touch-flip-mtf.js?v=3";
+} from "./rsi-touch-flip-mtf.js?v=5";
 import {
 mountRsiTouchFlipOverlay
 } from "./rsi-touch-flip-overlay.js?v=3";
 import {
 mountRsiTouchFlipFit,
 loadRsiTouchFlipFitRowForSymbol
-} from "./rsi-touch-flip-fit-panel.js?v=11";
+} from "./rsi-touch-flip-fit-panel.js?v=15";
+import {
+RSI_TOUCH_FLIP_DEFAULT_TRAIN_PCT,
+rsiTouchFlipFitPrefsForHydrate
+} from "./rsi-touch-flip-walkforward.js?v=13";
+import {
+buildRsiTouchFlipEquityModel
+} from "./rsi-touch-flip-equity.js?v=5";
 
 function el(
 id
@@ -294,8 +303,401 @@ let applyingUi =
 false;
 let prefsDirty =
 false;
+let prefsInputTimer =
+0;
+let lastHydratedSymbol =
+"";
 let fitApi =
 null;
+let statsTab =
+"data";
+let equityChart =
+null;
+let equityChartMod =
+null;
+let equityPaintSeq =
+0;
+let lastEquityInput =
+null;
+
+function isEquityTab(){
+
+return statsTab ===
+"equity";
+
+}
+
+function readTrainPct(){
+
+return el(
+"algo-rsi-flip-train-pct"
+)?.value ||
+RSI_TOUCH_FLIP_DEFAULT_TRAIN_PCT;
+
+}
+
+function syncStatsTabUi(){
+
+const dataBtn =
+el(
+"algo-rsi-flip-tab-data"
+);
+const equityBtn =
+el(
+"algo-rsi-flip-tab-equity"
+);
+const dataPanel =
+el(
+"algo-rsi-flip-panel-data"
+);
+const equityPanel =
+el(
+"algo-rsi-flip-panel-equity"
+);
+const dataOn =
+!isEquityTab();
+
+if(
+dataBtn
+){
+dataBtn.classList.toggle(
+"active",
+dataOn
+);
+dataBtn.setAttribute(
+"aria-selected",
+dataOn
+? "true"
+: "false"
+);
+}
+
+if(
+equityBtn
+){
+equityBtn.classList.toggle(
+"active",
+!dataOn
+);
+equityBtn.setAttribute(
+"aria-selected",
+dataOn
+? "false"
+: "true"
+);
+}
+
+if(
+dataPanel
+){
+dataPanel.hidden =
+!dataOn;
+}
+
+if(
+equityPanel
+){
+equityPanel.hidden =
+dataOn;
+}
+
+}
+
+function setEquityEmpty(
+on
+){
+
+const node =
+el(
+"algo-rsi-flip-equity-empty"
+);
+const chart =
+el(
+"algo-rsi-flip-equity-chart"
+);
+
+if(
+node
+){
+node.hidden =
+!on;
+}
+
+if(
+chart
+){
+chart.hidden =
+!!on;
+}
+
+}
+
+async function paintEquityChart(
+candles,
+prefs,
+rsiValues,
+precomputed
+){
+
+if(
+disposed ||
+!isEquityTab()
+){
+return;
+}
+
+const mySeq =
+++equityPaintSeq;
+const emptyNode =
+el(
+"algo-rsi-flip-equity-empty"
+);
+
+if(
+emptyNode &&
+!equityChart
+){
+emptyNode.hidden =
+false;
+emptyNode.textContent =
+"Считаем кривую…";
+}
+
+if(
+!equityChartMod
+){
+equityChartMod =
+await import(
+"./rsi-touch-flip-equity-chart.js?v=5"
+);
+}
+
+if(
+disposed ||
+mySeq !==
+equityPaintSeq ||
+!isEquityTab()
+){
+return;
+}
+
+const hostEl =
+el(
+"algo-rsi-flip-equity-chart"
+);
+
+if(
+!hostEl
+){
+return;
+}
+
+if(
+!equityChart
+){
+equityChart =
+equityChartMod.mountRsiTouchFlipEquityChart(
+hostEl
+);
+}
+
+const result =
+precomputed &&
+Array.isArray(
+precomputed.equityCurve
+)
+? precomputed
+: runRsiTouchFlip(
+candles,
+prefs,
+{
+rsiValues,
+collectEquity:
+true
+}
+);
+const model =
+buildRsiTouchFlipEquityModel(
+{
+equityCurve:
+result.equityCurve,
+closedTrades:
+result.closedTrades,
+candles,
+capital:
+prefs.budget,
+trainPct:
+readTrainPct()
+}
+);
+lastEquityInput =
+{
+equityCurve:
+result.equityCurve,
+closedTrades:
+result.closedTrades,
+candles,
+capital:
+prefs.budget
+};
+const empty =
+!(
+Array.isArray(
+model.line
+) &&
+model.line.length
+);
+
+setEquityEmpty(
+empty
+);
+
+if(
+emptyNode &&
+empty
+){
+emptyNode.textContent =
+"Нет данных для кривой";
+}
+
+if(
+!empty
+){
+await equityChart.setModel(
+model
+);
+}
+
+}
+
+async function onStatsTabClick(
+event
+){
+
+const btn =
+event.currentTarget;
+const next =
+btn?.dataset?.algoRsiFlipStatsTab ===
+"equity"
+? "equity"
+: "data";
+
+if(
+next ===
+statsTab
+){
+return;
+}
+
+statsTab =
+next;
+syncStatsTabUi();
+
+if(
+!isEquityTab()
+){
+return;
+}
+
+if(
+!isActive() ||
+!host?.isHistoryReady?.()
+){
+setEquityEmpty(
+true
+);
+const emptyNode =
+el(
+"algo-rsi-flip-equity-empty"
+);
+if(
+emptyNode
+){
+emptyNode.textContent =
+"Нет данных для кривой";
+}
+return;
+}
+
+const candles =
+host.getCandles?.() ||
+[];
+const prefs =
+loadRsiTouchFlipPrefs();
+
+if(
+!candles.length
+){
+setEquityEmpty(
+true
+);
+return;
+}
+
+let rsiValues;
+try{
+rsiValues =
+await resolveRsiTouchFlipChartRsi(
+candles,
+prefs,
+{
+chartTf:
+String(
+host.getChartTf?.() ||
+""
+).trim(),
+symbol:
+host.getSymbol?.(),
+loadHistory:
+loadHistoryForHost
+}
+);
+}catch(
+err
+){
+console.warn(
+"[algo-rsi-touch-flip] equity rsi",
+err?.message ||
+err
+);
+}
+
+await paintEquityChart(
+candles,
+prefs,
+rsiValues
+);
+
+}
+
+function onTrainPctForEquity(){
+
+if(
+disposed ||
+!isEquityTab()
+){
+return;
+}
+
+if(
+equityChart &&
+lastEquityInput
+){
+void equityChart.setModel(
+buildRsiTouchFlipEquityModel(
+{
+...lastEquityInput,
+trainPct:
+readTrainPct()
+}
+)
+);
+return;
+}
+
+void refresh();
+
+}
 
 function isActive(){
 
@@ -374,12 +776,105 @@ compoundEnabled:
 
 }
 
-function applyPrefsToUi(
+function columnPrefs(){
+
+return normalizeRsiTouchFlipPrefs(
+{
+...loadRsiTouchFlipPrefs(),
+...readUiPatch()
+}
+);
+
+}
+
+function isEditingColumnField(){
+
+const active =
+document.activeElement;
+const id =
+active?.id;
+
+return id ===
+"algo-rsi-flip-len" ||
+id ===
+"algo-rsi-flip-os" ||
+id ===
+"algo-rsi-flip-ob" ||
+id ===
+"algo-rsi-flip-tf" ||
+id ===
+"algo-rsi-flip-side" ||
+id ===
+"algo-rsi-flip-stack" ||
+id ===
+"algo-rsi-flip-budget" ||
+id ===
+"algo-rsi-flip-size-mode" ||
+id ===
+"algo-rsi-flip-mult" ||
+id ===
+"algo-rsi-flip-marks" ||
+id ===
+"algo-rsi-flip-commission" ||
+id ===
+"algo-rsi-flip-slippage" ||
+id ===
+"algo-rsi-flip-cycle-sl" ||
+id ===
+"algo-rsi-flip-cycle-sl-pct" ||
+id ===
+"algo-rsi-flip-compound";
+
+}
+
+function syncDerivedRows(
 prefs
 ){
 
+el(
+"algo-rsi-flip-mult-row"
+)?.toggleAttribute(
+"hidden",
+prefs.sizeMode !==
+RSI_TOUCH_FLIP_SIZE_AVERAGE
+);
+el(
+"algo-rsi-flip-cycle-sl-pct-row"
+)?.toggleAttribute(
+"hidden",
+prefs.cycleSlEnabled !==
+true
+);
+
+}
+
+function applyPrefsToUi(
+prefs,
+opts =
+{}
+){
+
+const force =
+opts.force ===
+true;
+
+if(
+!force &&
+(
+prefsDirty ||
+isEditingColumnField()
+)
+){
+syncDerivedRows(
+prefs
+);
+return;
+}
+
 applyingUi =
 true;
+
+try{
 const assign =
 (
 id,
@@ -454,6 +949,8 @@ el(
 );
 
 if(
+marks &&
+document.activeElement !==
 marks
 ){
 marks.checked =
@@ -466,6 +963,8 @@ el(
 );
 
 if(
+cycleSl &&
+document.activeElement !==
 cycleSl
 ){
 cycleSl.checked =
@@ -477,22 +976,8 @@ assign(
 "algo-rsi-flip-cycle-sl-pct",
 prefs.cycleSlPct
 );
-
-const multRow =
-el(
-"algo-rsi-flip-mult-row"
-);
-multRow?.toggleAttribute(
-"hidden",
-prefs.sizeMode !==
-RSI_TOUCH_FLIP_SIZE_AVERAGE
-);
-el(
-"algo-rsi-flip-cycle-sl-pct-row"
-)?.toggleAttribute(
-"hidden",
-prefs.cycleSlEnabled !==
-true
+syncDerivedRows(
+prefs
 );
 const compound =
 el(
@@ -500,14 +985,18 @@ el(
 );
 
 if(
+compound &&
+document.activeElement !==
 compound
 ){
 compound.checked =
 prefs.compoundEnabled ===
 true;
 }
+}finally{
 applyingUi =
 false;
+}
 
 }
 
@@ -704,6 +1193,34 @@ liqCount >
 
 }
 
+function setOverviewError(
+message
+){
+
+const node =
+document.getElementById(
+"algo-rsi-flip-overview-error"
+);
+
+if(
+!node
+){
+return;
+}
+
+const text =
+String(
+message ||
+""
+).trim();
+
+node.hidden =
+!text;
+node.textContent =
+text;
+
+}
+
 function clearOverview(){
 
 renderOverview(
@@ -783,7 +1300,7 @@ fitApi?.sync?.(
 candles:
 [],
 prefs:
-loadRsiTouchFlipPrefs(),
+columnPrefs(),
 chartTf:
 String(
 host.getChartTf?.() ||
@@ -798,10 +1315,7 @@ const candles =
 host.getCandles?.() ||
 [];
 const prefs =
-loadRsiTouchFlipPrefs();
-applyPrefsToUi(
-prefs
-);
+columnPrefs();
 const mySeq =
 ++seq;
 
@@ -809,6 +1323,9 @@ if(
 !candles.length
 ){
 clearOverview();
+setOverviewError(
+""
+);
 return;
 }
 
@@ -838,6 +1355,12 @@ console.warn(
 err?.message ||
 err
 );
+clearOverview();
+setOverviewError(
+err?.message ||
+"нет свечей RSI ТФ"
+);
+return;
 }
 
 if(
@@ -848,12 +1371,18 @@ seq
 return;
 }
 
+setOverviewError(
+""
+);
+
 const result =
 runRsiTouchFlip(
 candles,
 prefs,
 {
-rsiValues
+rsiValues,
+collectEquity:
+isEquityTab()
 }
 );
 renderOverview(
@@ -893,6 +1422,17 @@ host.getChartTf?.() ||
 }
 );
 
+if(
+isEquityTab()
+){
+await paintEquityChart(
+candles,
+prefs,
+rsiValues,
+result
+);
+}
+
 }
 
 function syncChartRsiPaneFromColumn(){
@@ -919,6 +1459,16 @@ disposed
 return;
 }
 
+if(
+prefsInputTimer
+){
+clearTimeout(
+prefsInputTimer
+);
+prefsInputTimer =
+0;
+}
+
 const patch =
 readUiPatch();
 const symbol =
@@ -929,10 +1479,7 @@ patch
 );
 
 if(
-symbol &&
-!getRsiTouchFlipBookRow(
 symbol
-)
 ){
 saveRsiTouchFlipTickerPrefs(
 symbol,
@@ -942,11 +1489,43 @@ patch
 
 prefsDirty =
 true;
-applyPrefsToUi(
+syncDerivedRows(
 loadRsiTouchFlipPrefs()
 );
 syncChartRsiPaneFromColumn();
 void refresh();
+
+}
+
+function schedulePrefsFromInput(){
+
+if(
+applyingUi ||
+disposed
+){
+return;
+}
+
+prefsDirty =
+true;
+
+if(
+prefsInputTimer
+){
+clearTimeout(
+prefsInputTimer
+);
+}
+
+prefsInputTimer =
+setTimeout(
+()=>{
+prefsInputTimer =
+0;
+onPrefsField();
+},
+250
+);
 
 }
 
@@ -975,6 +1554,18 @@ const rsiPaneFieldIds =
 "algo-rsi-flip-ob",
 "algo-rsi-flip-tf"
 ];
+const prefsInputFieldIds =
+[
+"algo-rsi-flip-len",
+"algo-rsi-flip-os",
+"algo-rsi-flip-ob",
+"algo-rsi-flip-stack",
+"algo-rsi-flip-budget",
+"algo-rsi-flip-mult",
+"algo-rsi-flip-commission",
+"algo-rsi-flip-slippage",
+"algo-rsi-flip-cycle-sl-pct"
+];
 
 for(
 const id of fieldIds
@@ -998,6 +1589,37 @@ syncChartRsiPaneFromColumn
 );
 }
 
+for(
+const id of prefsInputFieldIds
+){
+el(
+id
+)?.addEventListener(
+"input",
+schedulePrefsFromInput
+);
+}
+
+el(
+"algo-rsi-flip-tab-data"
+)?.addEventListener(
+"click",
+onStatsTabClick
+);
+el(
+"algo-rsi-flip-tab-equity"
+)?.addEventListener(
+"click",
+onStatsTabClick
+);
+el(
+"algo-rsi-flip-train-pct"
+)?.addEventListener(
+"change",
+onTrainPctForEquity
+);
+syncStatsTabUi();
+
 function currentChartSymbol(){
 
 return String(
@@ -1008,7 +1630,9 @@ host.getSymbol?.() ||
 }
 
 function hydrateForSymbol(
-nextSymbol
+nextSymbol,
+opts =
+{}
 ){
 
 if(
@@ -1032,53 +1656,96 @@ if(
 return;
 }
 
+if(
+!shouldReloadRsiTouchFlipColumn(
+lastHydratedSymbol,
+id,
+opts
+)
+){
+return;
+}
+
 const bookRow =
 getRsiTouchFlipBookRow(
+id
+);
+const tickerStored =
+loadRsiTouchFlipTickerPrefs(
 id
 );
 let prefs;
 
 if(
+opts.preferBook &&
 bookRow?.prefs
 ){
 prefs =
 saveRsiTouchFlipPrefs(
 bookRow.prefs
 );
+saveRsiTouchFlipTickerPrefs(
+id,
+prefs
+);
+}else if(
+tickerStored
+){
+prefs =
+saveRsiTouchFlipPrefs(
+tickerStored
+);
+}else if(
+bookRow?.prefs
+){
+prefs =
+saveRsiTouchFlipPrefs(
+bookRow.prefs
+);
+saveRsiTouchFlipTickerPrefs(
+id,
+prefs
+);
 }else{
 prefs =
 hydrateRsiTouchFlipPrefsForSymbol(
 id
 );
-
-if(
-!hasRsiTouchFlipTickerPrefs(
-id
-)
-){
 const fit =
 loadRsiTouchFlipFitRowForSymbol(
 id
 );
+const fitPrefs =
+rsiTouchFlipFitPrefsForHydrate(
+fit
+);
 
 if(
-fit?.prefs
+fitPrefs
 ){
 prefs =
 saveRsiTouchFlipTickerPrefs(
 id,
-fit.prefs
+fitPrefs
 );
-}
+saveRsiTouchFlipPrefs(
+prefs
+);
 }
 
 }
 
 applyPrefsToUi(
-prefs
+prefs,
+{
+force:
+true
+}
 );
 syncChartRsiPaneFromColumn();
 syncBookButtons();
+lastHydratedSymbol =
+id;
 prefsDirty =
 false;
 
@@ -1113,16 +1780,6 @@ return;
 if(
 !prefsDirty
 ){
-return;
-}
-
-if(
-getRsiTouchFlipBookRow(
-id
-)
-){
-prefsDirty =
-false;
 return;
 }
 
@@ -1322,7 +1979,11 @@ setBookStatus(
 );
 syncBookButtons();
 hydrateForSymbol(
-symbol
+symbol,
+{
+force:
+true
+}
 );
 void refresh();
 
@@ -1343,7 +2004,11 @@ return;
 }
 
 hydrateForSymbol(
-row.symbol
+row.symbol,
+{
+preferBook:
+true
+}
 );
 void refresh();
 
@@ -1404,10 +2069,7 @@ patch
 );
 
 if(
-symbol &&
-!getRsiTouchFlipBookRow(
 symbol
-)
 ){
 saveRsiTouchFlipTickerPrefs(
 symbol,
@@ -1418,7 +2080,11 @@ patch
 prefsDirty =
 true;
 applyPrefsToUi(
-loadRsiTouchFlipPrefs()
+loadRsiTouchFlipPrefs(),
+{
+force:
+true
+}
 );
 syncChartRsiPaneFromColumn();
 void refresh();
@@ -1461,6 +2127,9 @@ loadRsiTouchFlipPrefs()
 syncChartRsiPaneFromColumn();
 void refresh();
 }else{
+statsTab =
+"data";
+syncStatsTabUi();
 clearOverview();
 }
 
@@ -1485,7 +2154,11 @@ return;
 }
 
 applyPrefsToUi(
-loadRsiTouchFlipPrefs()
+loadRsiTouchFlipPrefs(),
+{
+force:
+true
+}
 );
 
 },
@@ -1495,6 +2168,17 @@ disposed =
 true;
 seq +=
 1;
+
+if(
+prefsInputTimer
+){
+clearTimeout(
+prefsInputTimer
+);
+prefsInputTimer =
+0;
+}
+
 window.removeEventListener(
 ALGO_ANALYSIS_BOT_CHANGE_EVENT,
 onBotChanged
@@ -1522,6 +2206,17 @@ syncChartRsiPaneFromColumn
 );
 }
 
+for(
+const id of prefsInputFieldIds
+){
+el(
+id
+)?.removeEventListener(
+"input",
+schedulePrefsFromInput
+);
+}
+
 el(
 "algo-rsi-flip-add-book"
 )?.removeEventListener(
@@ -1542,6 +2237,33 @@ window.removeEventListener(
 RSI_TOUCH_FLIP_BOOK_CHANGE_EVENT,
 onBookChanged
 );
+
+el(
+"algo-rsi-flip-tab-data"
+)?.removeEventListener(
+"click",
+onStatsTabClick
+);
+el(
+"algo-rsi-flip-tab-equity"
+)?.removeEventListener(
+"click",
+onStatsTabClick
+);
+el(
+"algo-rsi-flip-train-pct"
+)?.removeEventListener(
+"change",
+onTrainPctForEquity
+);
+
+equityChart?.destroy?.();
+equityChart =
+null;
+equityChartMod =
+null;
+lastEquityInput =
+null;
 
 overlay.destroy();
 fitApi?.destroy?.();

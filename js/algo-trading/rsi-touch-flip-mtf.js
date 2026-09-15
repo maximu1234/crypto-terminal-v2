@@ -8,7 +8,7 @@ computeWilderRsiValues
 } from "./rsi-touch-flip-engine.js?v=8";
 import {
 normalizeRsiTouchFlipPrefs
-} from "./rsi-touch-flip-prefs.js?v=8";
+} from "./rsi-touch-flip-prefs.js?v=9";
 
 const KLINE_PAGE =
 1000;
@@ -424,6 +424,15 @@ loaded
 )
 ? loaded
 : [];
+
+if(
+!rows.length
+){
+throw new Error(
+"нет свечей RSI ТФ"
+);
+}
+
 sourceCache.set(
 key,
 rows
@@ -514,9 +523,8 @@ srcSec >
 0
 )
 ){
-return computeWilderRsiValues(
-chart,
-settings.rsiLen
+throw new Error(
+"некорректный ТФ RSI"
 );
 }
 

@@ -583,6 +583,7 @@ tabindex="0"
 <div class="algo-stats-col">
 <div class="algo-stats-col-title">Обзор</div>
 <p class="algo-rsi-flip-col-note">Весь график — не проверка для запуска.</p>
+<p class="algo-rsi-flip-col-note" id="algo-rsi-flip-overview-error" hidden></p>
 <div class="algo-stats-row">
 <span class="algo-stats-label">Дней</span>
 <span class="algo-stats-value" id="algo-rsi-flip-days">—</span>
@@ -682,7 +683,7 @@ tabindex="0"
 <div class="algo-rsi-flip-launch" id="algo-rsi-flip-launch" data-state="idle">
 <div class="algo-rsi-flip-launch-title" id="algo-rsi-flip-launch-title">Сначала подберите параметры</div>
 <div class="algo-rsi-flip-launch-params" id="algo-rsi-flip-launch-params"></div>
-<div class="algo-rsi-flip-launch-detail" id="algo-rsi-flip-launch-detail">Сетка ищет максимум чистой прибыли на всём графике (Обзор). Train — история, Test — свежий кусок: решение, включать ли тикер в бота.</div>
+<div class="algo-rsi-flip-launch-detail" id="algo-rsi-flip-launch-detail">Сетка предлагает максимум чистой среди наборов с зелёным Test — это в бота. Чемпион Обзора с красным Test в бота не берём.</div>
 </div>
 <div class="algo-stats-row">
 <span class="algo-stats-label">Train</span>
@@ -695,7 +696,7 @@ tabindex="0"
 <div class="algo-stats-row algo-stats-row--rsi-flip-fit-actions">
 <button type="button" class="algo-stats-mode-btn" id="algo-rsi-flip-apply-fit" disabled>Подставить в поля слева</button>
 </div>
-<p class="algo-rsi-flip-col-note">Подставить, если Test в плюсе (сделки и PF). Просадка в строке — справка, не запрет.</p>
+<p class="algo-rsi-flip-col-note">В бота — лучший набор с зелёным Test. Макс. по Обзору, если Test красный, только справка.</p>
 <div class="algo-stats-divider" aria-hidden="true"></div>
 <div class="algo-stats-row algo-stats-row--setting">
 <label class="algo-stats-label" for="algo-rsi-flip-marks">Метки сделок</label>
@@ -1830,7 +1831,7 @@ Vol
 
 </div>
 
-<script type="module" src="/js/algo-trading-page-boot.js?v=22"></script>
+<script type="module" src="/js/algo-trading-page-boot.js?v=25"></script>
 
 </body>
 </html>

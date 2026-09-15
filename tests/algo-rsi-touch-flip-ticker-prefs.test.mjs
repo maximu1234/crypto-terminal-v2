@@ -22,7 +22,8 @@ const {
   hydrateRsiTouchFlipPrefsForSymbol,
   hasRsiTouchFlipTickerPrefs,
   loadRsiTouchFlipTickerPrefs,
-  saveRsiTouchFlipTickerPrefs
+  saveRsiTouchFlipTickerPrefs,
+  shouldReloadRsiTouchFlipColumn
 } = await import("../js/algo-trading/rsi-touch-flip-prefs.js");
 
 test.beforeEach(() => {
@@ -58,4 +59,23 @@ test("hydrate falls back to defaults when ticker unseen", () => {
 
   assert.equal(hydrated.rsiLen, defaults.rsiLen);
   assert.equal(hasRsiTouchFlipTickerPrefs("NEWCOIN"), false);
+});
+
+test("same ticker does not reload the Data column", () => {
+  assert.equal(
+    shouldReloadRsiTouchFlipColumn("ETHUSDT", "ETHUSD.P"),
+    true
+  );
+  assert.equal(
+    shouldReloadRsiTouchFlipColumn("ETHUSDT.P", "ethusdt"),
+    false
+  );
+  assert.equal(
+    shouldReloadRsiTouchFlipColumn("ETHUSDT", "ETHUSDT", { preferBook: true }),
+    true
+  );
+  assert.equal(
+    shouldReloadRsiTouchFlipColumn("ETHUSDT", "ETHUSDT", { force: true }),
+    true
+  );
 });

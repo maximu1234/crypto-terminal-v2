@@ -4,7 +4,7 @@
  */
 import {
   cssUrl
-} from "../asset-manifest.js?v=13";
+} from "../asset-manifest.js?v=15";
 import {
   isTerminalPageOnly,
   isWatchlistPage

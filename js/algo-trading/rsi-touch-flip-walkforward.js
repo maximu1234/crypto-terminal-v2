@@ -1,14 +1,14 @@
 /**
  * Нарезка Train / Test для RSI Touch Flip.
- * Победитель сетки — чистая на всём графике (Обзор).
- * Test — решение, включать ли тикер в бота; Train — как отрабатывало на истории.
+ * Победитель для бота — максимум Обзора среди зелёного Test.
+ * Отдельно сетка помнит максимум Обзора даже с красным Test — его в бота не берём.
  */
 import {
   rsiTouchFlipChartDays
-} from "./rsi-touch-flip-mtf.js?v=4";
+} from "./rsi-touch-flip-mtf.js?v=5";
 import {
   RSI_TOUCH_FLIP_TF_OPTIONS
-} from "./rsi-touch-flip-prefs.js?v=8";
+} from "./rsi-touch-flip-prefs.js?v=9";
 
 export const RSI_TOUCH_FLIP_DEFAULT_TRAIN_PCT = 70;
 
@@ -148,6 +148,50 @@ export function rsiTouchFlipMinTestTrades(testBars) {
   return Math.max(4, Math.min(8, Math.floor(n / 150) || 4));
 }
 
+/** JSON.stringify превращает Infinity в null — храним строку, как скринер. */
+export function rsiTouchFlipReviveProfitFactor(raw) {
+  if (raw === Infinity || raw === "Infinity") {
+    return Infinity;
+  }
+  if (raw === -Infinity || raw === "-Infinity") {
+    return -Infinity;
+  }
+  const n = Number(raw);
+  return Number.isFinite(n) ? n : NaN;
+}
+
+export function rsiTouchFlipJsonReplacer(_key, value) {
+  if (value === Infinity) {
+    return "Infinity";
+  }
+  if (value === -Infinity) {
+    return "-Infinity";
+  }
+  return value;
+}
+
+export function rsiTouchFlipJsonReviver(_key, value) {
+  if (value === "Infinity") {
+    return Infinity;
+  }
+  if (value === "-Infinity") {
+    return -Infinity;
+  }
+  return value;
+}
+
+/**
+ * В поля тикера — только набор с зелёным Test.
+ * @param {object|null|undefined} fit
+ * @returns {object|null}
+ */
+export function rsiTouchFlipFitPrefsForHydrate(fit) {
+  if (!fit?.prefs || fit.verdict?.ok !== true) {
+    return null;
+  }
+  return fit.prefs;
+}
+
 /**
  * Test «зелёный»: прибыльный, достаточно сделок, PF ≥ 1.
  * Просадка в строке видна, но не вето — 25.7% vs 25% не должна
@@ -160,7 +204,7 @@ export function rsiTouchFlipTestVerdict(overview, opts = {}) {
   const reasons = [];
   const closed = Number(overview?.closedTrades);
   const net = Number(overview?.netProfit);
-  const pf = overview?.profitFactor;
+  const pf = rsiTouchFlipReviveProfitFactor(overview?.profitFactor);
   const dd = Number(overview?.maxDrawdownPct);
   const maxDdPct = Number(opts.maxDdPct);
 
@@ -204,7 +248,7 @@ export function rsiTouchFlipLaunchAdvice(
       canLaunch: false,
       title: "Сначала подберите параметры",
       detail:
-        "Сетка ищет максимум чистой прибыли на всём графике (Обзор). Train — как набор вёл себя на истории, Test — на свежем куске: это решение, включать ли тикер в бота."
+        "Сетка ищет максимум чистой среди наборов с зелёным Test — это в бота. Отдельно виден чемпион Обзора, если у него Test красный."
     };
   }
   if (verdict.ok) {
@@ -212,7 +256,7 @@ export function rsiTouchFlipLaunchAdvice(
       canLaunch: true,
       title: "Запускать бота с этими параметрами",
       detail:
-        "Это набор с максимальной чистой на всём графике (Обзор). Test зелёный — можно включать тикер в бота."
+        "Лучшая чистая на всём графике среди наборов, где Test зелёный (сделки и PF). Это то, что можно ставить в бота."
     };
   }
   const trainNet = Number(trainOverview?.netProfit);
@@ -229,14 +273,53 @@ export function rsiTouchFlipLaunchAdvice(
       title: "Сетка не нашла набор лучше",
       detail:
         `Лучший по Обзору набор Test забраковал (${why}). ` +
-        "В бота — то, что сейчас в полях слева: там Test уже «можно». Подставлять этот набор не нужно."
+        "Набора с зелёным Test, который обошёл поля слева, нет. В бота — то, что сейчас в полях слева."
     };
   }
   return {
     canLaunch: false,
-    title: "Лучшие параметры по Обзору — в бота не включать",
+    title: "В сетке нет набора для бота",
     detail: fitted
-      ? `Чистая на всём графике максимальная, но Test красный (${why}). Train/Test — включать ли тикер в бота, не критерий «какие поля лучше».`
-      : `Набор с максимальной чистой на всём графике, но Test не прошёл. ${why || "Test не прошёл пороги."}`
+      ? `Макс. по Обзору Test красный (${why}). Среди ячеек с зелёным Test ничего не нашлось.`
+      : `Набор с максимальной чистой на всём графике не проходит Test (${why || "Test не прошёл пороги."}). Зелёного набора в сетке нет.`
   };
+}
+
+/**
+ * Поля сетки, которые уходят в левую колонку Данные.
+ * @param {object|null|undefined} prefs
+ * @returns {object}
+ */
+export function rsiTouchFlipFitColumnPatch(prefs) {
+  return {
+    rsiLen: prefs?.rsiLen,
+    osLevel: prefs?.osLevel,
+    obLevel: prefs?.obLevel,
+    maxStack: prefs?.maxStack
+  };
+}
+
+/**
+ * Подставить в поля слева только набор с зелёным Test (то, что можно в бота).
+ * Не подставлять, если текущие поля уже зелёные и чистая Обзора выше.
+ * @param {object|null|undefined} row
+ * @param {object|null|undefined} currentEval
+ * @returns {boolean}
+ */
+export function rsiTouchFlipShouldFillColumnFromFit(row, currentEval) {
+  if (!row?.prefs || row.verdict?.ok !== true) {
+    return false;
+  }
+  const currentNet = Number(currentEval?.overview?.netProfit);
+  const gridNet = Number(row.overview?.netProfit);
+  const currentOk = currentEval?.verdict?.ok === true;
+  if (
+    currentOk &&
+    Number.isFinite(currentNet) &&
+    Number.isFinite(gridNet) &&
+    currentNet > gridNet + 1e-9
+  ) {
+    return false;
+  }
+  return true;
 }

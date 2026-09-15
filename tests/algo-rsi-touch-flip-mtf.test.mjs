@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   projectClosedSourceRsiOntoChart,
+  resolveRsiTouchFlipChartRsi,
   rsiTouchFlipSourcePages,
   rsiTouchFlipChartDays
 } from "../js/algo-trading/rsi-touch-flip-mtf.js";
@@ -64,4 +65,33 @@ test("chart days is span from first open to last close", () => {
   }
   const days = rsiTouchFlipChartDays(chart, "5");
   assert.ok(Math.abs(days - 10_000 * 300 / 86400) < 1e-9);
+});
+
+test("missing RSI TF history throws instead of using chart RSI", async () => {
+  const chart = [];
+  for (let i = 0; i < 40; i++) {
+    chart.push({ time: 1_700_000_000 + i * 300, close: 100 + i });
+  }
+  await assert.rejects(
+    () =>
+      resolveRsiTouchFlipChartRsi(chart, { rsiLen: 14, rsiTf: "1" }, {
+        chartTf: "5",
+        symbol: "BTCUSDT",
+        loadHistory: async () => []
+      }),
+    /нет свечей RSI ТФ/
+  );
+});
+
+test("invalid RSI TF throws instead of silent chart RSI", async () => {
+  const chart = [{ time: 1, close: 1 }, { time: 2, close: 2 }];
+  await assert.rejects(
+    () =>
+      resolveRsiTouchFlipChartRsi(chart, { rsiLen: 14, rsiTf: "1" }, {
+        chartTf: "nope",
+        symbol: "BTCUSDT",
+        loadHistory: async () => [{ time: 1, close: 1 }]
+      }),
+    /некорректный ТФ RSI/
+  );
 });

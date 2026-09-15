@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   isBetterRsiTouchFlipLaunch,
+  isBetterRsiTouchFlipTradable,
   listRsiTouchFlipOptimizeCombos,
   optimizeRsiTouchFlipParams,
   scoreRsiTouchFlipTrainOverview
@@ -9,8 +10,14 @@ import {
 import {
   clampRsiTouchFlipTrainPct,
   formatRsiTouchFlipParamsBrief,
+  rsiTouchFlipFitColumnPatch,
+  rsiTouchFlipFitPrefsForHydrate,
+  rsiTouchFlipJsonReplacer,
+  rsiTouchFlipJsonReviver,
   rsiTouchFlipLaunchAdvice,
   rsiTouchFlipMinTestTrades,
+  rsiTouchFlipReviveProfitFactor,
+  rsiTouchFlipShouldFillColumnFromFit,
   rsiTouchFlipSplitIndex,
   rsiTouchFlipTestVerdict,
   rsiTouchFlipTrainTestSplit
@@ -65,6 +72,50 @@ test("test verdict requires profit, trades and PF", () => {
   assert.equal(pass.ok, true);
 });
 
+test("Test stays green when PF is Infinity or the JSON string Infinity", () => {
+  const live = rsiTouchFlipTestVerdict({
+    closedTrades: 12,
+    netProfit: 8,
+    profitFactor: Infinity
+  });
+  assert.equal(live.ok, true);
+  const stored = rsiTouchFlipTestVerdict({
+    closedTrades: 12,
+    netProfit: 8,
+    profitFactor: "Infinity"
+  });
+  assert.equal(stored.ok, true);
+  assert.equal(rsiTouchFlipReviveProfitFactor("Infinity"), Infinity);
+  const dumped = JSON.stringify(
+    { profitFactor: Infinity },
+    rsiTouchFlipJsonReplacer
+  );
+  assert.equal(JSON.parse(dumped).profitFactor, "Infinity");
+  const revived = JSON.parse(dumped, rsiTouchFlipJsonReviver);
+  assert.equal(revived.profitFactor, Infinity);
+});
+
+test("hydrate skips fit prefs unless Test is green", () => {
+  assert.equal(
+    rsiTouchFlipFitPrefsForHydrate({
+      prefs: { rsiLen: 14 },
+      verdict: { ok: false }
+    }),
+    null
+  );
+  assert.equal(
+    rsiTouchFlipFitPrefsForHydrate({ prefs: { rsiLen: 14 } }),
+    null
+  );
+  assert.equal(
+    rsiTouchFlipFitPrefsForHydrate({
+      prefs: { rsiLen: 21 },
+      verdict: { ok: true }
+    })?.rsiLen,
+    21
+  );
+});
+
 test("Test stays green when net and PF pass even if DD is 25.7%", () => {
   const v = rsiTouchFlipTestVerdict({
     closedTrades: 54,
@@ -100,7 +151,7 @@ test("launch advice tells to use Test, not full-chart Overview", () => {
     { netProfit: -12 }
   );
   assert.equal(fitted.canLaunch, false);
-  assert.match(fitted.title, /Обзору/);
+  assert.match(fitted.title, /нет набора для бота/);
   assert.match(fitted.detail, /Test/);
 
   const keepFields = rsiTouchFlipLaunchAdvice(
@@ -216,6 +267,20 @@ test("parameter winner is Overview net even if Test failed", () => {
   };
   assert.equal(isBetterRsiTouchFlipLaunch(failing, passing), true);
   assert.equal(isBetterRsiTouchFlipLaunch(passing, failing), false);
+});
+
+test("tradable winner ignores red Overview champ", () => {
+  const passing = {
+    verdict: { ok: true },
+    overview: { closedTrades: 20, netProfit: 8 }
+  };
+  const failing = {
+    verdict: { ok: false, reasons: ["Test не прибыльный"] },
+    overview: { closedTrades: 40, netProfit: 40 }
+  };
+  assert.equal(isBetterRsiTouchFlipTradable(passing, failing), true);
+  assert.equal(isBetterRsiTouchFlipTradable(failing, passing), false);
+  assert.equal(isBetterRsiTouchFlipTradable(failing, null), false);
 });
 
 test("grid rank is full-chart Overview net, Test does not outrank it", () => {
@@ -384,4 +449,35 @@ test("optimize picks a combo on Train and scores Test separately", async () => {
   assert.ok(result.best.test);
   assert.ok(result.best.verdict);
   assert.notEqual(result.best.train.netProfit, result.best.test.netProfit);
+  assert.equal("bestTradable" in result, true);
+  if (result.best.verdict?.ok) {
+    assert.equal(result.bestTradable?.prefs?.rsiLen, result.best.prefs.rsiLen);
+  }
+});
+
+test("fit fills left column only for green Test unless current overview already beats it", () => {
+  const prefs = { rsiLen: 9, osLevel: 22, obLevel: 78, maxStack: 4 };
+  assert.deepEqual(rsiTouchFlipFitColumnPatch(prefs), prefs);
+  assert.equal(
+    rsiTouchFlipShouldFillColumnFromFit(
+      { prefs, overview: { netProfit: 12 }, verdict: { ok: true } },
+      null
+    ),
+    true
+  );
+  assert.equal(
+    rsiTouchFlipShouldFillColumnFromFit(
+      { prefs, overview: { netProfit: 8 }, verdict: { ok: true } },
+      { overview: { netProfit: 10 }, verdict: { ok: true } }
+    ),
+    false
+  );
+  assert.equal(
+    rsiTouchFlipShouldFillColumnFromFit(
+      { prefs, overview: { netProfit: 40 }, verdict: { ok: false } },
+      null
+    ),
+    false
+  );
+  assert.equal(rsiTouchFlipShouldFillColumnFromFit({}, null), false);
 });

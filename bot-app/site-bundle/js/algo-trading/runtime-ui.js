@@ -27,7 +27,7 @@ window.cryptoTerminalDesktop;
 if(
 !desktop?.isDesktop
 ){
-return true;
+return false;
 }
 
 if(
@@ -464,7 +464,10 @@ keysDisabled;
 
 }
 
-async function refresh(){
+async function refresh(
+opts =
+{}
+){
 
 const status =
 await getAlgoTradingStatus();
@@ -474,6 +477,7 @@ await getAlgoTradingKeysStatus(
 exchangeId:
 exchangeId(),
 revealApiKey:
+opts.revealApiKey ===
 true
 }
 );
@@ -503,9 +507,13 @@ tradingMode !==
 ){
 tradingMode =
 "manual";
+if(
+window.cryptoTerminalDesktop?.isDesktop
+){
 void setAlgoTradingMode(
 "manual"
 );
+}
 }
 
 applyModeUi();
@@ -566,11 +574,11 @@ keys?.configured
 }
 
 if(
-keyInput
+keyInput &&
+keys?.apiKey
 ){
 keyInput.value =
-keys?.apiKey ||
-"";
+keys.apiKey;
 }
 
 if(
@@ -633,7 +641,12 @@ open
 if(
 open
 ){
-void refresh();
+void refresh(
+{
+revealApiKey:
+true
+}
+);
 }
 
 }
@@ -898,7 +911,9 @@ next ===
 !isLiveTradingEditionEnabled()
 ){
 setStatusText(
-"Сборка m: Реальная торговля отключена"
+window.cryptoTerminalDesktop?.isDesktop
+? "Сборка m: Реальная торговля отключена"
+: "Реальная торговля алго — только в приложении"
 );
 return;
 }

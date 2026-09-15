@@ -33,7 +33,7 @@ saveRsiTouchFlipBalancePct,
 normalizeRsiTouchFlipBalancePct,
 loadRsiTouchFlipMarginMode,
 saveRsiTouchFlipMarginMode
-} from "./rsi-touch-flip-prefs.js?v=8";
+} from "./rsi-touch-flip-prefs.js?v=9";
 import {
 getAlgoTradingWalletBalance
 } from "./runtime-bridge.js?v=6";

@@ -473,6 +473,47 @@ symbol ||
 
 }
 
+/**
+ * Повторная загрузка того же тикера не должна сбрасывать поля Данные на дефолт.
+ * @param {unknown} prevSymbol
+ * @param {unknown} nextSymbol
+ * @param {{ force?: boolean, preferBook?: boolean }} [opts]
+ * @returns {boolean}
+ */
+export function shouldReloadRsiTouchFlipColumn(
+prevSymbol,
+nextSymbol,
+opts =
+{}
+){
+
+if(
+opts.force ===
+true ||
+opts.preferBook ===
+true
+){
+return true;
+}
+
+const next =
+normalizeRsiTouchFlipTickerSymbol(
+nextSymbol
+);
+
+if(
+!next
+){
+return false;
+}
+
+return next !==
+normalizeRsiTouchFlipTickerSymbol(
+prevSymbol
+);
+
+}
+
 function readRsiTouchFlipTickerRoot(){
 
 try{

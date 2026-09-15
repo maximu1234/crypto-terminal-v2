@@ -1,18 +1,19 @@
 /**
- * Сетка RSI Touch Flip: победитель — чистая прибыль на всём графике (Обзор).
- * Train/Test считаются отдельно: решение, включать ли тикер в бота.
+ * Сетка RSI Touch Flip.
+ * best — максимум чистой на всём графике (Обзор), даже если Test красный.
+ * bestTradable — максимум Обзора среди наборов с зелёным Test: это в бота.
  */
 import {
   runRsiTouchFlip
 } from "./rsi-touch-flip-engine.js?v=8";
 import {
   normalizeRsiTouchFlipPrefs
-} from "./rsi-touch-flip-prefs.js?v=8";
+} from "./rsi-touch-flip-prefs.js?v=9";
 import {
   rsiTouchFlipMinTestTrades,
   rsiTouchFlipTestVerdict,
   rsiTouchFlipTrainTestSplit
-} from "./rsi-touch-flip-walkforward.js?v=10";
+} from "./rsi-touch-flip-walkforward.js?v=13";
 
 export function rsiTouchFlipIntRange(from, to) {
   const start = Math.round(Number(from));
@@ -135,6 +136,22 @@ export function isBetterRsiTouchFlipLaunch(a, b) {
     scoreRsiTouchFlipNetOverview(b.overview);
 }
 
+/**
+ * Для бота: только зелёный Test, среди них — максимум чистой на Обзоре.
+ * @param {object|null|undefined} a
+ * @param {object|null|undefined} b
+ * @returns {boolean}
+ */
+export function isBetterRsiTouchFlipTradable(a, b) {
+  if (!a?.verdict?.ok) {
+    return false;
+  }
+  if (!b?.verdict?.ok) {
+    return true;
+  }
+  return isBetterRsiTouchFlipLaunch(a, b);
+}
+
 function pickOverview(overview) {
   if (!overview || typeof overview !== "object") {
     return null;
@@ -224,6 +241,7 @@ export async function optimizeRsiTouchFlipParams(opts = {}) {
       cancelled: false,
       best: null,
       bestTrain: null,
+      bestTradable: null,
       tried: 0,
       total: combos.length,
       split: null
@@ -233,6 +251,7 @@ export async function optimizeRsiTouchFlipParams(opts = {}) {
   const minTrainTrades = 8;
   let bestLaunch = null;
   let bestTrain = null;
+  let bestTradable = null;
   let tried = 0;
 
   for (const combo of combos) {
@@ -241,6 +260,7 @@ export async function optimizeRsiTouchFlipParams(opts = {}) {
         cancelled: true,
         best: bestLaunch,
         bestTrain,
+        bestTradable,
         tried,
         total: combos.length,
         split
@@ -295,6 +315,9 @@ export async function optimizeRsiTouchFlipParams(opts = {}) {
     if (isBetterRsiTouchFlipLaunch(row, bestLaunch)) {
       bestLaunch = row;
     }
+    if (isBetterRsiTouchFlipTradable(row, bestTradable)) {
+      bestTradable = row;
+    }
 
     if (onProgress) {
       onProgress({ done: tried, total: combos.length });
@@ -308,6 +331,7 @@ export async function optimizeRsiTouchFlipParams(opts = {}) {
     cancelled: false,
     best: bestLaunch,
     bestTrain,
+    bestTradable,
     tried,
     total: combos.length,
     split

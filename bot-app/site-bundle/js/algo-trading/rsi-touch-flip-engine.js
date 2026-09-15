@@ -9,7 +9,7 @@ RSI_TOUCH_FLIP_SIDE_LONG,
 RSI_TOUCH_FLIP_SIDE_SHORT,
 RSI_TOUCH_FLIP_SIZE_EQUAL,
 normalizeRsiTouchFlipPrefs
-} from "./rsi-touch-flip-prefs.js?v=8";
+} from "./rsi-touch-flip-prefs.js?v=9";
 
 function rsiFromAvg(
 avgGain,
@@ -786,7 +786,7 @@ lastEquity
 /**
  * @param {Array<{time:number, close:number, high?:number, low?:number}>} candles
  * @param {object} [rawSettings]
- * @param {{ rsiValues?: number[] }} [opts]
+ * @param {{ rsiValues?: number[], collectEquity?: boolean }} [opts]
  */
 export function runRsiTouchFlip(
 candles,
@@ -864,6 +864,13 @@ let maxTradeMaePct =
 0;
 const marks =
 [];
+const collectEquity =
+opts.collectEquity ===
+true;
+const equityCurve =
+collectEquity
+? []
+: null;
 
 function positionSize(){
 
@@ -1325,7 +1332,8 @@ return true;
 }
 
 function trackEquity(
-price
+price,
+index
 ){
 
 const equity =
@@ -1353,6 +1361,39 @@ maxDrawdown
 ){
 maxDrawdown =
 dd;
+}
+
+if(
+equityCurve
+){
+const time =
+Number(
+rows[index]?.time
+);
+if(
+Number.isFinite(
+time
+) &&
+time >
+0 &&
+Number.isFinite(
+equity
+)
+){
+equityCurve.push(
+{
+time,
+value:
+capital >
+0
+? realized /
+capital *
+100
+: 0
+}
+);
+}
+
 }
 
 return equity;
@@ -1426,7 +1467,8 @@ price <=
 0
 ){
 trackEquity(
-price
+price,
+i
 );
 continue;
 }
@@ -1435,7 +1477,8 @@ if(
 tradingHalted
 ){
 trackEquity(
-price
+price,
+i
 );
 continue;
 }
@@ -1588,7 +1631,8 @@ decision.shortLevel
 }
 
 trackEquity(
-price
+price,
+i
 );
 noteCycleAdverse(
 price
@@ -1645,7 +1689,10 @@ capital
 marks,
 closedTrades:
 closed,
-openTrades
+openTrades,
+equityCurve:
+equityCurve ||
+[]
 };
 
 }

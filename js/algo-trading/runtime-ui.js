@@ -464,7 +464,10 @@ keysDisabled;
 
 }
 
-async function refresh(){
+async function refresh(
+opts =
+{}
+){
 
 const status =
 await getAlgoTradingStatus();
@@ -474,6 +477,7 @@ await getAlgoTradingKeysStatus(
 exchangeId:
 exchangeId(),
 revealApiKey:
+opts.revealApiKey ===
 true
 }
 );
@@ -570,11 +574,11 @@ keys?.configured
 }
 
 if(
-keyInput
+keyInput &&
+keys?.apiKey
 ){
 keyInput.value =
-keys?.apiKey ||
-"";
+keys.apiKey;
 }
 
 if(
@@ -637,7 +641,12 @@ open
 if(
 open
 ){
-void refresh();
+void refresh(
+{
+revealApiKey:
+true
+}
+);
 }
 
 }

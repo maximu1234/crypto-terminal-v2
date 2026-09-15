@@ -9,7 +9,7 @@ RSI_TOUCH_FLIP_SIDE_LONG,
 RSI_TOUCH_FLIP_SIDE_SHORT,
 RSI_TOUCH_FLIP_SIZE_EQUAL,
 normalizeRsiTouchFlipPrefs
-} from "./rsi-touch-flip-prefs.js?v=8";
+} from "./rsi-touch-flip-prefs.js?v=9";
 
 function rsiFromAvg(
 avgGain,

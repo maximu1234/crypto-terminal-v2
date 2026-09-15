@@ -489,7 +489,7 @@ export async function fetchAlertDiagnostics() {
   }
 
   const loaded = await fetchTelegramAlerts({
-    force: true
+    force: false
   });
 
   return {
