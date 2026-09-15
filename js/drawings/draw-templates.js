@@ -46,7 +46,7 @@ CHANNEL_TOOL_DEFAULTS_VERSION,
 cloneDefaultChannelRows,
 createChannelToolDefaults,
 ensureChannelLevelsVisible
-} from "./channel-spec.js?v=1";
+} from "./channel-spec.js?v=2";
 
 import {
 ELLIOTT_DEFAULT_COLOR,

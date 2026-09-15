@@ -16,7 +16,7 @@ CHANNEL_DEFAULT_COLOR,
 DEFAULT_CHANNEL_LEVEL_SPEC,
 cloneDefaultChannelRows,
 ensureChannelLevelsVisible
-} from "./channel-spec.js?v=1";
+} from "./channel-spec.js?v=2";
 
 export function channelSettingsHtml(){
 

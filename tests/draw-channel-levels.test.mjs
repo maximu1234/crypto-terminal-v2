@@ -16,6 +16,10 @@ import {
 channelSettingsHtml
 } from "../js/drawings/draw-channel-settings.js";
 
+import {
+createDrawRenderer
+} from "../js/drawings/draw-render.js";
+
 test("default channel levels: only 0, 0.5 and 1 are on", ()=>{
 
 const rows =
@@ -209,6 +213,121 @@ true
 assert.equal(
 isChannelMidlineRatio(
 0.618
+),
+false
+);
+
+});
+
+test("channel rails and median stroke as the same solid line", ()=>{
+
+const dashes = [];
+const alphas = [];
+const ctx = {
+strokeStyle: "",
+lineWidth: 1,
+setLineDash(
+dash
+){
+dashes.push(
+Array.isArray(
+dash
+)
+? dash.slice()
+: []
+);
+},
+beginPath(){},
+moveTo(){},
+lineTo(){},
+stroke(){}
+};
+
+Object.defineProperty(
+ctx,
+"globalAlpha",
+{
+configurable: true,
+get(){
+return this._alpha ?? 1;
+},
+set(
+value
+){
+this._alpha = value;
+alphas.push(
+value
+);
+}
+}
+);
+
+const { drawShape } =
+createDrawRenderer({
+toXY(
+pt
+){
+return pt?._xy || null;
+},
+shapeStyle:()=>({
+color: CHANNEL_DEFAULT_COLOR,
+width: 2,
+dash: null
+}),
+baseDefaultStyle:()=>({}),
+getPlacement:()=>null,
+getPreviewPoint:()=>null,
+getPreviewXY:()=>null,
+getSelectedId:()=>null,
+parseDrawColor:()=>null,
+formatDrawColor:()=>"",
+drawPosition(){},
+defaultPositionP2:()=>({}),
+initialPositionTpSl:()=>({}),
+pointFromXY:()=>({}),
+drawAnchorCircle(){},
+drawPositionAnchor(){},
+getPositionHandleScreens:()=>[]
+});
+
+drawShape(
+ctx,
+{
+type: "channel",
+p1: { _xy: { x: 0, y: 0 } },
+p2: { _xy: { x: 100, y: 0 } },
+p3: { _xy: { x: 0, y: 40 } }
+},
+200,
+100
+);
+
+const strokes =
+dashes.filter(
+(
+dash,
+i
+)=>
+i %
+2 ===
+0
+);
+
+assert.equal(
+strokes.length,
+3
+);
+for(const dash of strokes){
+assert.deepEqual(
+dash,
+[]
+);
+}
+assert.equal(
+alphas.some(
+value=>
+value !==
+1
 ),
 false
 );

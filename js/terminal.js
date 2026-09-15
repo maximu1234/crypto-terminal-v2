@@ -231,7 +231,7 @@ import {
 initTerminalMultiChart,
 syncPrimaryTfToLayout,
 isTerminalMultiChartLayout
-} from "./terminal-multi-chart.js?v=21";
+} from "./terminal-multi-chart.js?v=22";
 
 import {
 mountTerminalLayoutPicker
@@ -3741,7 +3741,7 @@ const {
 initWidgetDrawings
 } =
 await import(
-"./chart-widget-host.js?v=38"
+"./chart-widget-host.js?v=39"
 );
 const {
 initChartIndicators

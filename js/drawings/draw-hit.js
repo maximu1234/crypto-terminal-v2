@@ -60,7 +60,7 @@ measureTextBox
 import {
 channelLevelSegment,
 getChannelDrawRows
-} from "./channel-spec.js?v=1";
+} from "./channel-spec.js?v=2";
 
 import {
 isElliottType,

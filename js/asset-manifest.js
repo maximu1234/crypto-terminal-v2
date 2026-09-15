@@ -21,7 +21,7 @@ Object.freeze({
 
 /* ── JS: boot / entry ── */
 "asset-manifest.js":
-12,
+13,
 "market-api.js":
 6,
 "format-price.js":
@@ -53,7 +53,7 @@ Object.freeze({
 "exchanges/bingx/intervals.js":
 1,
 "terminal-page-boot.js":
-38,
+39,
 "terminal-entry.js":
 5,
 "terminal-list-refresh.js":
@@ -249,11 +249,11 @@ Object.freeze({
 "chart-page.js":
 8,
 "terminal.js":
-475,
+477,
 "terminal-multi-chart.js":
-21,
+22,
 "terminal-screener-chart-pane.js":
-28,
+29,
 "terminal-layout-picker.js":
 11,
 "terminal/terminal-chart-layout.js":
@@ -299,7 +299,7 @@ Object.freeze({
 "script-page.js":
 55,
 "script-page-boot.js":
-25,
+26,
 "script-page-storage.js":
 16,
 "script-page-widgets.js":
@@ -311,9 +311,9 @@ Object.freeze({
 "script-favorites-list.js":
 2,
 "algo-trading.js":
-240,
+241,
 "algo-trading-page-boot.js":
-21,
+22,
 "algo-trading-list.js":
 28,
 "algo-trading/coin-list-host.js":
@@ -353,7 +353,7 @@ Object.freeze({
 "algo-trading/pattern-stats.js":
 3,
 "algo-trading/drawings.js":
-14,
+15,
 "algo-trading/indicators-storage.js":
 1,
 "algo-trading/indicators.js":
@@ -576,7 +576,7 @@ Object.freeze({
 "telegram-bot-public.js":
 1,
 "watchlist.js":
-121,
+122,
 "screener.js":
 124,
 "ipad-web-viewport.js":
@@ -648,7 +648,7 @@ Object.freeze({
 "chart-import.js":
 56,
 "chart-widget-host.js":
-38,
+39,
 "tablet-gesture-policy.js":
 4,
 "tablet-widget-chart.js":
@@ -680,9 +680,9 @@ Object.freeze({
 "terminal-tablet-controller.js":
 10,
 "drawings.js":
-287,
+288,
 "drawings/init.js":
-212,
+213,
 "drawings/draw-prefs.js":
 13,
 "drawings/draw-edit-desktop.js":
@@ -740,7 +740,7 @@ Object.freeze({
 "drawings/brush-placement.js":
 3,
 "drawings/draw-render.js":
-29,
+30,
 "drawings/draw-hit.js":
 21,
 "drawings/fixed-volume-profile.js":
@@ -754,7 +754,7 @@ Object.freeze({
 "drawings/draw-fib-settings.js":
 3,
 "drawings/channel-spec.js":
-1,
+2,
 "drawings/draw-channel-settings.js":
 1,
 "drawings/draw-coords.js":

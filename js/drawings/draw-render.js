@@ -44,12 +44,9 @@ horizPriceLineX1
 } from "./constants.js?v=13";
 
 import {
-CHANNEL_MIDLINE_ALPHA,
-CHANNEL_MIDLINE_DASH,
 channelLevelSegment,
-ensureChannelLevelsVisible,
-isChannelMidlineRatio
-} from "./channel-spec.js?v=1";
+ensureChannelLevelsVisible
+} from "./channel-spec.js?v=2";
 
 import {
 isTextTool,
@@ -976,28 +973,6 @@ return;
 const lineColor =
 row.color ||
 color;
-
-if(
-isChannelMidlineRatio(
-row.v
-)
-){
-ctx.globalAlpha =
-CHANNEL_MIDLINE_ALPHA;
-drawLine(
-ctx,
-seg.start.x,
-seg.start.y,
-seg.end.x,
-seg.end.y,
-lineColor,
-Math.max(1, width),
-CHANNEL_MIDLINE_DASH.slice()
-);
-ctx.globalAlpha =
-1;
-return;
-}
 
 drawLine(
 ctx,

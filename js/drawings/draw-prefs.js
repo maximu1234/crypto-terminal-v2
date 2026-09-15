@@ -39,7 +39,7 @@ import {
 
 import {
   migrateChannelToolDefaults
-} from "./channel-spec.js?v=1";
+} from "./channel-spec.js?v=2";
 
 import {
   ELLIOTT_TOOL_TYPES,

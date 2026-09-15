@@ -15,15 +15,6 @@ export const CHANNEL_TOOL_DEFAULTS_VERSION =
 export const CHANNEL_MIDLINE_RATIO =
 0.5;
 
-export const CHANNEL_MIDLINE_ALPHA =
-0.55;
-
-export const CHANNEL_MIDLINE_DASH =
-Object.freeze([
-5,
-4
-]);
-
 /** Fixed slots like TradingView Fib Channel; only 0 / 0.5 / 1 on by default. */
 export const DEFAULT_CHANNEL_LEVEL_SPEC =
 Object.freeze([

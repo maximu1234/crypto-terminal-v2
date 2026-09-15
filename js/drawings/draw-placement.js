@@ -44,7 +44,7 @@ TEXT_DEFAULT_CONTENT
 import {
 ensureChannelLevelsVisible,
 cloneDefaultChannelRows
-} from "./channel-spec.js?v=1";
+} from "./channel-spec.js?v=2";
 
 import {
 isElliottType,

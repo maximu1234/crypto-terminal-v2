@@ -134,7 +134,7 @@ createDrawHitTester
 
 import {
 createDrawRenderer
-} from "./draw-render.js?v=29";
+} from "./draw-render.js?v=30";
 
 import {
 snapPlotToCandleWick
