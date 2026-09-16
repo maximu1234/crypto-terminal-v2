@@ -1,7 +1,12 @@
 /**
  * Windows-only: корректный кроп скриншота графика.
  * capturePage(rect) на Win часто захватывает лишнее из‑за DPI —
- * берём весь viewport и режем NativeImage по DIP→physical.
+ * берём весь viewport и режем NativeImage по CSS→bitmap.
+ *
+ * Масштаб — от CSS-вьюпорта страницы (LayoutMetrics / innerWidth),
+ * не от BrowserWindow.getContentSize(): после CDP fromSurface размер
+ * картинки совпадает с CSS, а getContentSize на Win часто меньше
+ * (DPI) — кроп раздувается вправо на список монет и Позиции.
  *
  * Качество: CDP Page.captureScreenshot(fromSurface) — пиксели compositor
  * (как на экране). Без апскейла. Если CDP недоступен — fallback capturePage().
@@ -19,6 +24,34 @@ const log =
 require(
 "electron-log"
 );
+
+function isValidSize(
+size
+){
+
+const width =
+Number(
+size?.width
+);
+const height =
+Number(
+size?.height
+);
+
+return (
+Number.isFinite(
+width
+) &&
+Number.isFinite(
+height
+) &&
+width >=
+1 &&
+height >=
+1
+);
+
+}
 
 function clampCrop(
 crop,
@@ -71,6 +104,118 @@ height
 
 }
 
+/**
+ * dipRect — CSS (getBoundingClientRect). imageSize — пиксели снимка.
+ * viewportSize — тот же CSS-вьюпорт, что и у rect (не getContentSize).
+ */
+function scaleDipRectToImage(
+dipRect,
+imageSize,
+viewportSize
+){
+
+const vp =
+isValidSize(
+viewportSize
+)
+? viewportSize
+: imageSize;
+
+const scaleX =
+imageSize.width /
+vp.width;
+const scaleY =
+imageSize.height /
+vp.height;
+
+const x1 =
+Math.round(
+dipRect.x *
+scaleX
+);
+const y1 =
+Math.round(
+dipRect.y *
+scaleY
+);
+const x2 =
+Math.round(
+(
+dipRect.x +
+dipRect.width
+) *
+scaleX
+);
+const y2 =
+Math.round(
+(
+dipRect.y +
+dipRect.height
+) *
+scaleY
+);
+
+return clampCrop(
+{
+x:
+x1,
+y:
+y1,
+width:
+Math.max(
+1,
+x2 -
+x1
+),
+height:
+Math.max(
+1,
+y2 -
+y1
+)
+},
+imageSize
+);
+
+}
+
+function cssViewportFromLayoutMetrics(
+metrics
+){
+
+const visual =
+metrics?.cssVisualViewport;
+const layout =
+metrics?.cssLayoutViewport;
+const width =
+Number(
+visual?.clientWidth ||
+layout?.clientWidth
+);
+const height =
+Number(
+visual?.clientHeight ||
+layout?.clientHeight
+);
+
+if(
+!isValidSize(
+{
+width,
+height
+}
+)
+){
+return null;
+}
+
+return {
+width,
+height
+};
+
+}
+
 function imageFromPngBase64(
 b64
 ){
@@ -107,7 +252,7 @@ return null;
 /**
  * Viewport в пикселях compositor (без clip.scale — не растягиваем растр).
  * @param {Electron.WebContents} wc
- * @returns {Promise<Electron.NativeImage|null>}
+ * @returns {Promise<{ image: Electron.NativeImage, cssViewport: { width: number, height: number } | null } | null>}
  */
 async function captureViewportSurfaceCdp(
 wc
@@ -142,6 +287,21 @@ attachedByUs =
 true;
 }
 
+let cssViewport =
+null;
+
+try{
+cssViewport =
+cssViewportFromLayoutMetrics(
+await dbg.sendCommand(
+"Page.getLayoutMetrics"
+)
+);
+}catch{
+cssViewport =
+null;
+}
+
 const result =
 await dbg.sendCommand(
 "Page.captureScreenshot",
@@ -155,9 +315,21 @@ false
 }
 );
 
-return imageFromPngBase64(
+const image =
+imageFromPngBase64(
 result?.data
 );
+
+if(
+!image
+){
+return null;
+}
+
+return {
+image,
+cssViewport
+};
 }catch(
 err
 ){
@@ -182,6 +354,83 @@ dbg.detach();
 }
 
 }
+
+}
+
+async function readCssViewportFromRenderer(
+wc
+){
+
+if(
+typeof wc?.executeJavaScript !==
+"function"
+){
+return null;
+}
+
+try{
+const value =
+await wc.executeJavaScript(
+"({width:Math.round((window.visualViewport&&window.visualViewport.width)||window.innerWidth),height:Math.round((window.visualViewport&&window.visualViewport.height)||window.innerHeight)})",
+true
+);
+
+if(
+!isValidSize(
+value
+)
+){
+return null;
+}
+
+return {
+width:
+Number(
+value.width
+),
+height:
+Number(
+value.height
+)
+};
+}catch{
+return null;
+}
+
+}
+
+function contentSizeToViewport(
+contentSize
+){
+
+const width =
+Number(
+contentSize?.[
+0
+]
+);
+const height =
+Number(
+contentSize?.[
+1
+]
+);
+
+if(
+!isValidSize(
+{
+width,
+height
+}
+)
+){
+return null;
+}
+
+return {
+width,
+height
+};
 
 }
 
@@ -212,29 +461,31 @@ BrowserWindow.fromWebContents(
 wc
 );
 
-const contentSize =
+const contentViewport =
+contentSizeToViewport(
 typeof win?.getContentSize ===
 "function"
 ? win.getContentSize()
-: null;
-
-const contentW =
-Number(
-contentSize?.[
-0
-]
-);
-const contentH =
-Number(
-contentSize?.[
-1
-]
+: null
 );
 
 let full =
+null;
+let cssViewport =
+null;
+const cdp =
 await captureViewportSurfaceCdp(
 wc
 );
+
+if(
+cdp?.image
+){
+full =
+cdp.image;
+cssViewport =
+cdp.cssViewport;
+}
 
 if(
 !full
@@ -255,61 +506,23 @@ error:
 };
 }
 
-const imageSize =
-full.getSize();
-
 if(
-!Number.isFinite(
-contentW
-) ||
-!Number.isFinite(
-contentH
-) ||
-contentW <
-1 ||
-contentH <
-1
+!cssViewport
 ){
-return {
-ok:
-true,
-image:
-full
-};
+cssViewport =
+await readCssViewportFromRenderer(
+wc
+);
 }
 
-const scaleX =
-imageSize.width /
-contentW;
-const scaleY =
-imageSize.height /
-contentH;
-
+const imageSize =
+full.getSize();
 const crop =
-clampCrop(
-{
-x:
-Math.round(
-dipRect.x *
-scaleX
-),
-y:
-Math.round(
-dipRect.y *
-scaleY
-),
-width:
-Math.round(
-dipRect.width *
-scaleX
-),
-height:
-Math.round(
-dipRect.height *
-scaleY
-)
-},
-imageSize
+scaleDipRectToImage(
+dipRect,
+imageSize,
+cssViewport ||
+contentViewport
 );
 
 const image =
@@ -339,5 +552,8 @@ image
 
 module.exports =
 {
-captureChartAreaWin
+captureChartAreaWin,
+clampCrop,
+cssViewportFromLayoutMetrics,
+scaleDipRectToImage
 };
