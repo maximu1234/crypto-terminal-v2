@@ -168,7 +168,7 @@ createDrawingsPersist
 
 import {
 createDrawStyleBar
-} from "./draw-style-bar.js?v=55";
+} from "./draw-style-bar.js?v=57";
 
 import {
 createDrawAlertsChart
@@ -187,7 +187,7 @@ hitTestTextBody
 import {
 isElliottType,
 listElliottHandles
-} from "./elliott-spec.js?v=14";
+} from "./elliott-spec.js?v=17";
 
 import {
 closeElliottFlyout,
@@ -205,7 +205,7 @@ createBrushPlacement
 
 import {
 createDrawEditInteraction
-} from "./draw-edit-interaction.js?v=26";
+} from "./draw-edit-interaction.js?v=28";
 
 import {
 createDrawChartInput

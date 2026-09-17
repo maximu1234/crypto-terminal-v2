@@ -1357,10 +1357,8 @@ try{
 const ok =
 await mainWindow.webContents.executeJavaScript(
 `(() => {
-const app = document.getElementById("app");
-if (!app) return false;
-const vis = getComputedStyle(document.documentElement).visibility;
-return vis !== "hidden";
+/* html:not(.css-ready){visibility:hidden} is FOUC guard, not a failed bundle. */
+return !!document.getElementById("app");
 })()`,
 true
 );

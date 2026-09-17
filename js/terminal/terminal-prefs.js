@@ -20,7 +20,7 @@ import {
 getCurrentSymbols,
 getFirstVisibleSymbol,
 getExtraCoinMarkets
-} from "./terminal-table.js?v=43";
+} from "./terminal-table.js?v=44";
 
 import {
 parseAlertDeepLinkExchange
@@ -38,7 +38,7 @@ normalizeChartPriceScaleMode
 
 import {
 normalizeMinVolume
-} from "../screener-volume-filter.js?v=3";
+} from "../screener-volume-filter.js?v=4";
 
 export {
 DEFAULT_CHART_SYMBOL

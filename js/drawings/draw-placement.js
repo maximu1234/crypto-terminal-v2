@@ -52,7 +52,7 @@ isPattern12Draw,
 elliottPointCount,
 normalizePattern12TpFlags,
 normalizePattern12TpLevels
-} from "./elliott-spec.js?v=14";
+} from "./elliott-spec.js?v=17";
 
 import {
 isFvpType,

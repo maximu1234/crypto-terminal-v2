@@ -20,7 +20,7 @@ normalizeMinVolume,
 filterSymbolsByMinVolume,
 formatMinVolumeFilter,
 mountMinVolumeFilterInput
-} from "./screener-volume-filter.js?v=3";
+} from "./screener-volume-filter.js?v=4";
 
 import {
 createScreenerChart,
@@ -69,7 +69,7 @@ createTickerUiBatcher
 
 import {
 mountReleaseMarker
-} from "./release-marker.js?v=120";
+} from "./release-marker.js?v=121";
 
 import {
 saveScreenerState,

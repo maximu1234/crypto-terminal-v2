@@ -45,7 +45,7 @@ ensureChannelLevelsVisible
 import {
 isElliottType,
 normalizeElliottShape
-} from "./elliott-spec.js?v=14";
+} from "./elliott-spec.js?v=17";
 
 import {
 drawingsStorageKey

@@ -19,6 +19,55 @@ n > 0
 
 }
 
+export function syncMinVolumeFilterInput(
+input,
+minVolume
+){
+
+if(
+!input
+){
+return;
+}
+
+try{
+
+if(
+typeof document !==
+"undefined" &&
+document.activeElement ===
+input
+){
+return;
+}
+
+}catch{
+/* ignore */
+}
+
+const n =
+normalizeMinVolume(
+minVolume
+);
+
+const next =
+n >
+0
+? formatMinVolumeFilter(
+n
+)
+: "";
+
+if(
+input.value !==
+next
+){
+input.value =
+next;
+}
+
+}
+
 export function formatMinVolumeFilter(
 value
 ){

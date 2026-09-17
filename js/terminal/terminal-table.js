@@ -8,7 +8,7 @@ isTerminalPage
 import {
 normalizeMinVolume,
 filterMarketItemsByMinVolume
-} from "../screener-volume-filter.js?v=3";
+} from "../screener-volume-filter.js?v=4";
 
 import {
 isActiveRealtimeMarketDataset,

@@ -71,7 +71,7 @@ elliottNecklineScreen,
 pattern12DashScreen,
 pattern12TpTickLayout,
 isPattern12Draw
-} from "./elliott-spec.js?v=14";
+} from "./elliott-spec.js?v=17";
 
 /**
  * @param {object} deps

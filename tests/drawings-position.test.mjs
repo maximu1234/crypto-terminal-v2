@@ -52,6 +52,36 @@ test("positionXBounds normalizes horizontal direction", () => {
   );
 });
 
+test("handle drag crosshair uses the vertex, not the click on the ring", async () => {
+  const {
+    handleDragCrosshairPlotXY
+  } = await import("../js/drawings/draw-edit-interaction.js");
+
+  assert.deepEqual(
+    handleDragCrosshairPlotXY(
+      {
+        mode: "handle",
+        grabOffsetX: 6,
+        grabOffsetY: -4
+      },
+      40,
+      80
+    ),
+    { x: 34, y: 84 }
+  );
+
+  assert.deepEqual(
+    handleDragCrosshairPlotXY(
+      {
+        mode: "position-move"
+      },
+      40,
+      80
+    ),
+    { x: 40, y: 80 }
+  );
+});
+
 test("positionBodyDist covers long and short zones", () => {
   assert.equal(
     positionBodyDist(20, 45, position("long"), toXY, plotPriceToCoordinate),

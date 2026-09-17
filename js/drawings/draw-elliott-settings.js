@@ -5,7 +5,7 @@ import {
 ELLIOTT_DEGREES,
 ELLIOTT_DEFAULT_COLOR,
 ELLIOTT_DEFAULT_DEGREE,
-PATTERN_DASH_DEFAULT_OPACITY,
+PATTERN_12_DEFAULT_DASH_OPACITY,
 PATTERN_12_TP_LEVEL_COUNT,
 createElliottToolDefaults,
 formatPattern12TpLabel,
@@ -16,7 +16,7 @@ normalizePattern12TpFlags,
 normalizePattern12TpLevels,
 normalizePatternDashOpacity,
 parsePattern12TpLevel
-} from "./elliott-spec.js?v=14";
+} from "./elliott-spec.js?v=17";
 
 export function elliottSettingsHtml(){
 
@@ -56,9 +56,9 @@ ${options}
 <div class="tv-color-opacity-label">1 → (1) / TP opacity</div>
 <div class="tv-color-opacity-row">
 <div class="tv-color-opacity-track elliott-pattern-dash-opacity-track">
-<input type="range" class="tv-color-opacity-slider elliott-pattern-dash-opacity-slider" min="0" max="100" step="1" value="${PATTERN_DASH_DEFAULT_OPACITY}" aria-label="1 to 1 and take profit line opacity"/>
+<input type="range" class="tv-color-opacity-slider elliott-pattern-dash-opacity-slider" min="0" max="100" step="1" value="${PATTERN_12_DEFAULT_DASH_OPACITY}" aria-label="1 to 1 and take profit line opacity"/>
 </div>
-<input type="text" class="tv-color-opacity-pct elliott-pattern-dash-opacity-pct" inputmode="numeric" maxlength="4" autocomplete="off" spellcheck="false" aria-label="1 to 1 and take profit line opacity percent" value="${PATTERN_DASH_DEFAULT_OPACITY}%"/>
+<input type="text" class="tv-color-opacity-pct elliott-pattern-dash-opacity-pct" inputmode="numeric" maxlength="4" autocomplete="off" spellcheck="false" aria-label="1 to 1 and take profit line opacity percent" value="${PATTERN_12_DEFAULT_DASH_OPACITY}%"/>
 </div>
 </div>
 <div class="elliott-tp-wrap hidden">
@@ -236,7 +236,10 @@ if(
 waveOn
 ){
 waveOn.checked =
-shape?.showWave !==
+typeof shape?.showWave ===
+"boolean"
+? shape.showWave
+: defaults.showWave !==
 false;
 }
 

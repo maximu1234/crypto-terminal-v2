@@ -33,7 +33,7 @@ isHorizPriceTool
 
 import {
 isElliottType
-} from "./elliott-spec.js?v=14";
+} from "./elliott-spec.js?v=17";
 
 export function createDrawPriceScale(
 deps

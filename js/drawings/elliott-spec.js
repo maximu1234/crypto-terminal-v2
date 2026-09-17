@@ -14,7 +14,7 @@ export const ELLIOTT_DEFAULT_DEGREE =
 "submicro";
 
 export const ELLIOTT_TOOL_DEFAULTS_VERSION =
-5;
+8;
 
 export const PATTERN_DASH_DEFAULT_OPACITY =
 40;
@@ -24,16 +24,28 @@ export const PATTERN_12_TP_LEVEL_COUNT =
 
 export const PATTERN_12_TP_DEFAULT_LEVELS =
 Object.freeze([
+0.5,
+0.75,
 1,
 1.5,
 2,
 2.44,
-2.5,
-null,
-null,
+3,
 null,
 null
 ]);
+
+export const PATTERN_12_DEFAULT_DEGREE =
+"submicro";
+
+export const PATTERN_12_DEFAULT_DEGREE_JUNIOR =
+"minuscule";
+
+export const PATTERN_12_DEFAULT_SHOW_WAVE =
+false;
+
+export const PATTERN_12_DEFAULT_DASH_OPACITY =
+100;
 
 export const PATTERN_12_TP_TICK_PAD_PX =
 14;
@@ -1168,11 +1180,7 @@ i
 );
 }else{
 out.push(
-parsePattern12TpLevel(
-PATTERN_12_TP_DEFAULT_LEVELS[
-i
-]
-)
+null
 );
 }
 
@@ -1293,20 +1301,29 @@ lineWidth:
 1,
 degree:
 isP12
-? "micro"
+? PATTERN_12_DEFAULT_DEGREE
 : ELLIOTT_DEFAULT_DEGREE,
 degreeJunior:
-ELLIOTT_DEFAULT_DEGREE,
+isP12
+? PATTERN_12_DEFAULT_DEGREE_JUNIOR
+: ELLIOTT_DEFAULT_DEGREE,
 showWave:
-true,
+isP12
+? PATTERN_12_DEFAULT_SHOW_WAVE
+: true,
 showPatternDash:
 true,
 patternDashOpacity:
-PATTERN_DASH_DEFAULT_OPACITY,
+isP12
+? PATTERN_12_DEFAULT_DASH_OPACITY
+: PATTERN_DASH_DEFAULT_OPACITY,
 ...(
 isP12
 ? {
-...normalizePattern12TpFlags(),
+showTpSenior:
+true,
+showTpJunior:
+false,
 tpLevels:
 PATTERN_12_TP_DEFAULT_LEVELS.slice()
 }
@@ -1346,6 +1363,14 @@ Number(
 saved.lineWidth
 );
 
+const keepP12Custom =
+toolType !==
+PATTERN_12 ||
+Number(
+saved.elliottDefaultsVersion
+) >=
+ELLIOTT_TOOL_DEFAULTS_VERSION;
+
 return {
 ...base,
 color:
@@ -1369,37 +1394,58 @@ lineWidth
 : 1,
 degree:
 normalizeElliottDegree(
-saved.degree ||
+keepP12Custom
+? saved.degree ||
 base.degree
+: base.degree
 ),
 degreeJunior:
 normalizeElliottDegree(
-saved.degreeJunior ||
+keepP12Custom
+? saved.degreeJunior ||
 base.degreeJunior
+: base.degreeJunior
 ),
 showWave:
-saved.showWave !==
-false,
+keepP12Custom
+? saved.showWave !==
+false
+: base.showWave,
 showPatternDash:
-saved.showPatternDash !==
-false,
+keepP12Custom
+? saved.showPatternDash !==
+false
+: base.showPatternDash,
 patternDashOpacity:
-normalizePatternDashOpacity(
+keepP12Custom
+? normalizePatternDashOpacity(
 saved.patternDashOpacity ??
 base.patternDashOpacity
-),
+)
+: base.patternDashOpacity,
 ...(
 toolType ===
 PATTERN_12
 ? {
-...normalizePattern12TpFlags(
+...(
+keepP12Custom
+? normalizePattern12TpFlags(
 saved.showTpSenior,
 saved.showTpJunior
+)
+: {
+showTpSenior:
+base.showTpSenior,
+showTpJunior:
+base.showTpJunior
+}
 ),
 tpLevels:
-normalizePattern12TpLevels(
+keepP12Custom
+? normalizePattern12TpLevels(
 saved.tpLevels
 )
+: PATTERN_12_TP_DEFAULT_LEVELS.slice()
 }
 : {}
 )
@@ -1834,22 +1880,33 @@ shape.degree =
 shape.type ===
 PATTERN_12 &&
 !shape.degree
-? "micro"
+? defaults.degree
 : normalizeElliottDegree(
 shape.degree
 );
 shape.degreeJunior =
-normalizeElliottDegree(
+shape.type ===
+PATTERN_12 &&
+!shape.degreeJunior
+? defaults.degreeJunior
+: normalizeElliottDegree(
 shape.degreeJunior
 );
 shape.showWave =
-shape.showWave !==
-false;
+typeof shape.showWave ===
+"boolean"
+? shape.showWave
+: defaults.showWave;
 shape.showPatternDash =
-shape.showPatternDash !==
-false;
+typeof shape.showPatternDash ===
+"boolean"
+? shape.showPatternDash
+: defaults.showPatternDash;
 shape.patternDashOpacity =
-normalizePatternDashOpacity(
+shape.patternDashOpacity ==
+null
+? defaults.patternDashOpacity
+: normalizePatternDashOpacity(
 shape.patternDashOpacity
 );
 

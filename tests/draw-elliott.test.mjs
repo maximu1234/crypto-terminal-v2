@@ -13,6 +13,10 @@ ELLIOTT_TOOL_TYPES,
 ELLIOTT_TRIANGLE,
 ELLIOTT_TRIPLE,
 PATTERN_12,
+PATTERN_12_DEFAULT_DEGREE,
+PATTERN_12_DEFAULT_DEGREE_JUNIOR,
+PATTERN_12_DEFAULT_DASH_OPACITY,
+PATTERN_12_DEFAULT_SHOW_WAVE,
 PATTERN_12_TP_DEFAULT_LEVELS,
 PATTERN_DASH_DEFAULT_OPACITY,
 PATTERN_DOUBLE_TB,
@@ -32,6 +36,7 @@ isElliottWaveType,
 isPattern12Draw,
 isPatternHsFamily,
 migrateElliottToolDefaults,
+ELLIOTT_TOOL_DEFAULTS_VERSION,
 normalizeElliottDegree,
 normalizeElliottShape,
 normalizePattern12TpFlags,
@@ -606,19 +611,23 @@ type: PATTERN_12
 
 assert.equal(
 defaults.degree,
-"micro"
+PATTERN_12_DEFAULT_DEGREE
 );
 assert.equal(
 defaults.degreeJunior,
-"submicro"
+PATTERN_12_DEFAULT_DEGREE_JUNIOR
 );
 assert.equal(
 defaults.showPatternDash,
 true
 );
 assert.equal(
+defaults.showWave,
+PATTERN_12_DEFAULT_SHOW_WAVE
+);
+assert.equal(
 defaults.patternDashOpacity,
-PATTERN_DASH_DEFAULT_OPACITY
+PATTERN_12_DEFAULT_DASH_OPACITY
 );
 
 const shape =
@@ -768,6 +777,55 @@ PATTERN_12
 
 });
 
+test("Apply Default snapshot uses pattern 1-2 factory degree and TP", async ()=>{
+
+const {
+buildFactoryDefaultSnapshot
+} =
+await import(
+"../js/drawings/draw-templates.js"
+);
+
+const factory =
+buildFactoryDefaultSnapshot(
+PATTERN_12
+);
+
+assert.equal(
+factory.degree,
+PATTERN_12_DEFAULT_DEGREE
+);
+assert.equal(
+factory.degreeJunior,
+PATTERN_12_DEFAULT_DEGREE_JUNIOR
+);
+assert.equal(
+factory.showWave,
+false
+);
+assert.equal(
+factory.showPatternDash,
+true
+);
+assert.equal(
+factory.patternDashOpacity,
+PATTERN_12_DEFAULT_DASH_OPACITY
+);
+assert.equal(
+factory.showTpSenior,
+true
+);
+assert.equal(
+factory.showTpJunior,
+false
+);
+assert.deepEqual(
+factory.tpLevels,
+PATTERN_12_TP_DEFAULT_LEVELS.slice()
+);
+
+});
+
 test("pattern 1-2 color default payload keeps toolbar color when shape extras are merged", ()=>{
 
 const prev =
@@ -816,7 +874,7 @@ defaultsPayload.degree,
 
 });
 
-test("pattern 1-2 dash opacity clamps to 0-100 and defaults to 40", ()=>{
+test("pattern 1-2 dash opacity clamps to 0-100 and factory default is 100", ()=>{
 
 assert.equal(
 normalizePatternDashOpacity(),
@@ -854,11 +912,13 @@ color: "#ffffff"
 },
 PATTERN_12
 ).patternDashOpacity,
-PATTERN_DASH_DEFAULT_OPACITY
+PATTERN_12_DEFAULT_DASH_OPACITY
 );
 assert.equal(
 migrateElliottToolDefaults(
 {
+elliottDefaultsVersion:
+ELLIOTT_TOOL_DEFAULTS_VERSION,
 patternDashOpacity: 25
 },
 PATTERN_12
@@ -878,12 +938,12 @@ points: [
 { time: 6, price: 16 }
 ]
 }).patternDashOpacity,
-PATTERN_DASH_DEFAULT_OPACITY
+PATTERN_12_DEFAULT_DASH_OPACITY
 );
 
 });
 
-test("pattern 1-2-1-2-3 take profit uses five fib levels on senior 0-1 and junior 2-1", async ()=>{
+test("pattern 1-2-1-2-3 take profit uses seven fib levels on senior 0-1 and junior 2-1", async ()=>{
 
 assert.equal(
 ELLIOTT_TOOL_META[
@@ -895,13 +955,13 @@ PATTERN_12
 assert.deepEqual(
 PATTERN_12_TP_DEFAULT_LEVELS,
 [
+0.5,
+0.75,
 1,
 1.5,
 2,
 2.44,
-2.5,
-null,
-null,
+3,
 null,
 null
 ]
@@ -926,22 +986,26 @@ type: PATTERN_12
 
 assert.equal(
 defaults.showTpSenior,
-false
+true
 );
 assert.equal(
 defaults.showTpJunior,
-true
+false
+);
+assert.equal(
+defaults.showWave,
+false
 );
 assert.deepEqual(
 defaults.tpLevels,
 [
+0.5,
+0.75,
 1,
 1.5,
 2,
 2.44,
-2.5,
-null,
-null,
+3,
 null,
 null
 ]
@@ -1062,7 +1126,7 @@ true
 
 assert.equal(
 senior.length,
-5
+7
 );
 assert.equal(
 pattern12TpEntries(
@@ -1093,7 +1157,7 @@ senior[0].kind,
 );
 assert.equal(
 senior[0].price,
-14
+12
 );
 assert.equal(
 junior[0].kind,
@@ -1101,7 +1165,7 @@ junior[0].kind,
 );
 assert.equal(
 junior[0].price,
-13
+12
 );
 
 const ticks =
@@ -1122,7 +1186,7 @@ price
 
 assert.equal(
 ticks.length,
-5
+7
 );
 assert.ok(
 ticks[0].x1 >
@@ -1190,13 +1254,13 @@ normalizePattern12TpLevels(
 null
 ),
 [
+0.5,
+0.75,
 1,
 1.5,
 2,
 2.44,
-2.5,
-null,
-null,
+3,
 null,
 null
 ]
@@ -1228,18 +1292,27 @@ migrateElliottToolDefaults(
 {},
 PATTERN_12
 ).showTpSenior,
-false
+true
 );
 assert.equal(
 migrateElliottToolDefaults(
 {},
 PATTERN_12
 ).showTpJunior,
-true
+false
+);
+assert.equal(
+migrateElliottToolDefaults(
+{},
+PATTERN_12
+).showWave,
+false
 );
 assert.equal(
 migrateElliottToolDefaults(
 {
+elliottDefaultsVersion:
+ELLIOTT_TOOL_DEFAULTS_VERSION,
 showTpSenior:
 true,
 showTpJunior:
@@ -1252,6 +1325,8 @@ false
 assert.equal(
 migrateElliottToolDefaults(
 {
+elliottDefaultsVersion:
+ELLIOTT_TOOL_DEFAULTS_VERSION,
 showTpSenior:
 true,
 showTpJunior:
@@ -1262,10 +1337,94 @@ PATTERN_12
 true
 );
 assert.equal(
+migrateElliottToolDefaults(
+{
+elliottDefaultsVersion:
+5,
+degree:
+"micro",
+degreeJunior:
+"submicro",
+tpLevels: [
+1,
+1.5,
+2,
+2.44,
+2.5
+]
+},
+PATTERN_12
+).degree,
+PATTERN_12_DEFAULT_DEGREE
+);
+assert.equal(
+migrateElliottToolDefaults(
+{
+elliottDefaultsVersion:
+5,
+degree:
+"micro",
+degreeJunior:
+"submicro"
+},
+PATTERN_12
+).degreeJunior,
+PATTERN_12_DEFAULT_DEGREE_JUNIOR
+);
+assert.deepEqual(
+migrateElliottToolDefaults(
+{
+elliottDefaultsVersion:
+5,
+tpLevels: [
+1,
+1.5,
+2,
+2.44,
+2.5
+]
+},
+PATTERN_12
+).tpLevels,
+PATTERN_12_TP_DEFAULT_LEVELS.slice()
+);
+assert.equal(
+migrateElliottToolDefaults(
+{
+elliottDefaultsVersion:
+ELLIOTT_TOOL_DEFAULTS_VERSION,
+degree:
+"micro",
+degreeJunior:
+"submicro",
+tpLevels: [
+4
+]
+},
+PATTERN_12
+).degree,
+"micro"
+);
+assert.equal(
+migrateElliottToolDefaults(
+{
+elliottDefaultsVersion:
+ELLIOTT_TOOL_DEFAULTS_VERSION,
+tpLevels: [
+4
+]
+},
+PATTERN_12
+).tpLevels[
+0
+],
+4
+);
+assert.equal(
 normalizeElliottShape(
 shape
 ).tpLevels[
-3
+5
 ],
 2.44
 );

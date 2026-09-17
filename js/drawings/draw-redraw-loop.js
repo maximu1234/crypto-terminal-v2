@@ -30,7 +30,7 @@ isFibExtType
 import {
 isElliottType,
 elliottSelectionHandlePoints
-} from "./elliott-spec.js?v=14";
+} from "./elliott-spec.js?v=17";
 
 export function createDrawRedrawLoop(
 deps

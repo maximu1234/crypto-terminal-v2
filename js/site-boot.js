@@ -65,7 +65,7 @@ initFocusBlurAfterPick
 
 import {
 initDesktopAppUi
-} from "./desktop-app-ui.js?v=10";
+} from "./desktop-app-ui.js?v=11";
 
 import {
 initSiteHeader,

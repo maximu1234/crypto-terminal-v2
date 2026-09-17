@@ -68,7 +68,208 @@ isElliottType,
 getElliottPoints,
 setElliottPoints,
 elliottHandleIndex
-} from "./elliott-spec.js?v=14";
+} from "./elliott-spec.js?v=17";
+
+/**
+ * Handle hit circles are larger than the vertex. Drag already uses grab
+ * offset so the object does not jump; the chart crosshair must use that
+ * same plot point (handle center), not the raw click on the ring.
+ */
+export function handleDragCrosshairPlotXY(
+drag,
+pointerX,
+pointerY
+){
+
+if(
+!drag ||
+drag.mode !==
+"handle"
+){
+return {
+x: pointerX,
+y: pointerY
+};
+}
+
+return {
+x: pointerX - (
+Number(
+drag.grabOffsetX
+) ||
+0
+),
+y: pointerY - (
+Number(
+drag.grabOffsetY
+) ||
+0
+)
+};
+
+}
+
+export function handleVertexPlotXY(
+screens,
+handleId
+){
+
+if(
+!handleId ||
+!Array.isArray(
+screens
+)
+){
+return null;
+}
+
+for(
+const handle of
+screens
+){
+
+if(
+handle?.id !==
+handleId
+){
+continue;
+}
+
+const x =
+Number(
+handle.x
+);
+const y =
+Number(
+handle.y
+);
+
+if(
+Number.isFinite(
+x
+) &&
+Number.isFinite(
+y
+)
+){
+return {
+x,
+y
+};
+}
+
+}
+
+return null;
+
+}
+
+export function listHandleScreenPoints(
+shape,
+adapters =
+{}
+){
+
+if(
+!shape
+){
+return [];
+}
+
+const toXY =
+adapters.toXY;
+const getPositionHandleScreens =
+adapters.getPositionHandleScreens;
+const listHandles =
+adapters.listHandles;
+const getCandles =
+typeof adapters.getCandles ===
+"function"
+? adapters.getCandles
+: ()=>
+[];
+
+if(
+typeof toXY !==
+"function"
+){
+return [];
+}
+
+if(
+isPositionType(
+shape.type
+) &&
+typeof getPositionHandleScreens ===
+"function"
+){
+return getPositionHandleScreens(
+shape
+) ||
+[];
+}
+
+if(
+shape.type ===
+"rectangle"
+){
+return getRectangleHandleScreens(
+shape,
+toXY
+) ||
+[];
+}
+
+if(
+isFvpType(
+shape.type
+)
+){
+return getFvpHandleScreens(
+shape,
+toXY,
+getCandles()
+) ||
+[];
+}
+
+if(
+typeof listHandles !==
+"function"
+){
+return [];
+}
+
+const out =
+[];
+
+for(
+const handle of
+listHandles(
+shape
+)
+){
+
+const xy =
+toXY(
+handle.point
+);
+
+if(
+xy
+){
+out.push({
+id: handle.id,
+x: xy.x,
+y: xy.y
+});
+}
+
+}
+
+return out;
+
+}
 
 export function createDrawEditInteraction(
 deps
@@ -142,6 +343,295 @@ getCandles = ()=>
 } =
 deps;
 
+function clientXYFromChartPlot(
+plotX,
+plotY
+){
+
+const el =
+wrapEl?.querySelector?.(
+".chart"
+) ||
+wrapEl?.querySelector?.(
+"#chart"
+) ||
+wrapEl;
+
+const r =
+el?.getBoundingClientRect?.();
+
+if(
+!r
+){
+return null;
+}
+
+return {
+clientX: r.left + plotX,
+clientY: r.top + plotY
+};
+
+}
+
+function listHandleScreens(
+shape
+){
+
+return listHandleScreenPoints(
+shape,
+{
+toXY,
+getPositionHandleScreens,
+listHandles,
+getCandles
+}
+);
+
+}
+
+function plotToEditDragCrosshairArgs(
+e,
+plotX,
+plotY,
+pointerX,
+pointerY
+){
+
+const client =
+clientXYFromChartPlot(
+plotX,
+plotY
+);
+
+if(
+client
+){
+return {
+event:{
+clientX: client.clientX,
+clientY: client.clientY,
+pointerType: e?.pointerType
+},
+x: plotX,
+y: plotY
+};
+}
+
+return {
+event: e,
+x: pointerX,
+y: pointerY
+};
+
+}
+
+function editDragCrosshairArgs(
+e,
+pointerX,
+pointerY
+){
+
+const drag =
+getDragState();
+
+if(
+drag?.mode ===
+"handle"
+){
+
+const plot =
+handleDragCrosshairPlotXY(
+drag,
+pointerX,
+pointerY
+);
+
+return plotToEditDragCrosshairArgs(
+e,
+plot.x,
+plot.y,
+pointerX,
+pointerY
+);
+
+}
+
+return {
+event: e,
+x: pointerX,
+y: pointerY
+};
+
+}
+
+function handleEditDragCrosshairArgs(
+e,
+shape,
+handleId,
+pointerX,
+pointerY
+){
+
+const vertex =
+handleVertexPlotXY(
+listHandleScreens(
+shape
+),
+handleId
+);
+
+if(
+vertex
+){
+return plotToEditDragCrosshairArgs(
+e,
+vertex.x,
+vertex.y,
+pointerX,
+pointerY
+);
+}
+
+return editDragCrosshairArgs(
+e,
+pointerX,
+pointerY
+);
+
+}
+
+function beginHandleEditDragCrosshair(
+e,
+shape,
+handleId,
+pointerX,
+pointerY
+){
+
+const a =
+handleEditDragCrosshairArgs(
+e,
+shape,
+handleId,
+pointerX,
+pointerY
+);
+
+beginEditDragCrosshair(
+a.event,
+a.x,
+a.y
+);
+
+}
+
+function syncHandleEditDragCrosshair(
+e,
+shape,
+handleId,
+pointerX,
+pointerY
+){
+
+const a =
+handleEditDragCrosshairArgs(
+e,
+shape,
+handleId,
+pointerX,
+pointerY
+);
+
+syncEditDragCrosshair(
+a.event,
+a.x,
+a.y
+);
+
+}
+
+function beginSnappedEditDragCrosshair(
+e,
+pointerX,
+pointerY
+){
+
+const a =
+editDragCrosshairArgs(
+e,
+pointerX,
+pointerY
+);
+
+beginEditDragCrosshair(
+a.event,
+a.x,
+a.y
+);
+
+}
+
+function syncSnappedEditDragCrosshair(
+e,
+pointerX,
+pointerY
+){
+
+const a =
+editDragCrosshairArgs(
+e,
+pointerX,
+pointerY
+);
+
+syncEditDragCrosshair(
+a.event,
+a.x,
+a.y
+);
+
+}
+
+function beginActiveEditDragCrosshair(
+e,
+pointerX,
+pointerY
+){
+
+const drag =
+getDragState();
+
+if(
+drag?.mode ===
+"handle"
+){
+
+const shape =
+getDrawings().find(
+d=>
+d.id ===
+drag.shapeId
+);
+
+beginHandleEditDragCrosshair(
+e,
+shape,
+drag.handleId,
+pointerX,
+pointerY
+);
+return;
+
+}
+
+beginSnappedEditDragCrosshair(
+e,
+pointerX,
+pointerY
+);
+
+}
+
 let drawBodyHitThreshold =
 drawBodyHitThresholdDep ??
 (()=>DRAW_BODY_HIT_THRESHOLD_TOUCH);
@@ -199,45 +689,18 @@ handleHitThreshold(
 shape
 );
 
-if(isPositionType(shape.type)){
-
-for(const handle of getPositionHandleScreens(shape)){
-
-if(
-Math.hypot(px - handle.x, py - handle.y) <=
-handleThreshold
-){
-return handle.id;
-}
-
-}
-
-return null;
-
-}
-
-if(
-shape.type ===
-"rectangle"
-){
-
 for(
 const handle of
-getRectangleHandleScreens(
-shape,
-toXY
+listHandleScreens(
+shape
 )
 ){
 
 const threshold =
 handle.square
-? handleHitThreshold(
-shape
-) *
+? handleThreshold *
 0.95
-: handleHitThreshold(
-shape
-);
+: handleThreshold;
 
 if(
 Math.hypot(
@@ -246,58 +709,6 @@ py - handle.y
 ) <=
 threshold
 ){
-return handle.id;
-}
-
-}
-
-return null;
-
-}
-
-if(
-isFvpType(
-shape.type
-)
-){
-
-for(
-const handle of
-getFvpHandleScreens(
-shape,
-toXY,
-getCandles()
-)
-){
-
-if(
-Math.hypot(
-px - handle.x,
-py - handle.y
-) <=
-handleHitThreshold(
-shape
-)
-){
-return handle.id;
-}
-
-}
-
-return null;
-
-}
-
-for(const handle of listHandles(shape)){
-
-const xy =
-toXY(handle.point);
-
-if(!xy){
-continue;
-}
-
-if(Math.hypot(px - xy.x, py - xy.y) <= handleThreshold){
 return handle.id;
 }
 
@@ -551,92 +962,12 @@ shape,
 handleId
 ){
 
-if(
-isPositionType(
-shape.type
-)
-){
-
-for(
-const handle of
-getPositionHandleScreens(
+return handleVertexPlotXY(
+listHandleScreens(
 shape
-)
-){
-
-if(
-handle.id ===
+),
 handleId
-){
-return {
-x: handle.x,
-y: handle.y
-};
-}
-
-}
-
-return null;
-
-}
-
-if(
-shape.type ===
-"rectangle"
-){
-
-for(
-const handle of
-getRectangleHandleScreens(
-shape,
-toXY
-)
-){
-
-if(
-handle.id ===
-handleId
-){
-return {
-x: handle.x,
-y: handle.y
-};
-}
-
-}
-
-return null;
-
-}
-
-for(
-const handle of
-listHandles(
-shape
-)
-){
-
-if(
-handle.id !==
-handleId
-){
-continue;
-}
-
-const xy =
-toXY(
-handle.point
 );
-
-if(
-xy
-){
-return xy;
-}
-
-}
-
-return null;
 
 }
 
@@ -1830,7 +2161,7 @@ true
 );
 e.preventDefault();
 e.stopPropagation();
-beginEditDragCrosshair(
+beginSnappedEditDragCrosshair(
 e,
 x,
 y
@@ -2152,7 +2483,7 @@ setBlockChartClick(true);
 e.preventDefault();
 e.stopPropagation();
 
-beginEditDragCrosshair(
+beginActiveEditDragCrosshair(
 e,
 x,
 y
@@ -2419,7 +2750,7 @@ notifyTabletChartGestureAbort();
 
 blockDesktopChartClick();
 
-beginEditDragCrosshair(
+beginActiveEditDragCrosshair(
 e,
 x,
 y
@@ -2597,7 +2928,7 @@ getDragState().mode ===
 "group-move"
 ){
 
-syncEditDragCrosshair(
+syncSnappedEditDragCrosshair(
 e,
 x,
 y
@@ -2620,7 +2951,35 @@ if(!shape){
 return;
 }
 
-syncEditDragCrosshair(
+if(
+getDragState().mode ===
+"handle"
+){
+
+if(
+!applyHandleDragAtPlot(
+shape,
+x,
+y,
+e
+)
+){
+return;
+}
+
+syncHandleEditDragCrosshair(
+e,
+shape,
+getDragState().handleId,
+x,
+y
+);
+scheduleDragRedraw();
+return;
+
+}
+
+syncSnappedEditDragCrosshair(
 e,
 x,
 y
@@ -2679,19 +3038,6 @@ getDragState().lastPlotX =
 locked.x;
 getDragState().lastPlotY =
 locked.y;
-
-}else{
-
-if(
-!applyHandleDragAtPlot(
-shape,
-x,
-y,
-e
-)
-){
-return;
-}
 
 }
 

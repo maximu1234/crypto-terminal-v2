@@ -188,7 +188,7 @@ saveLastViewForExchange,
 applyCoinsPrefs,
 applySortForCurrentMarket,
 readUrlParams
-} from "./terminal/terminal-prefs.js?v=26";
+} from "./terminal/terminal-prefs.js?v=28";
 
 import {
 mountDesktopOpenChartHandler
@@ -210,7 +210,7 @@ setCoinsTableHooks,
 syncCoinListFreezeFromFlagMenus,
 getExtraCoinMarkets,
 isExtraCoinMarket
-} from "./terminal/terminal-table.js?v=43";
+} from "./terminal/terminal-table.js?v=44";
 
 import {
 createCoinsChartSwitchVeil
@@ -235,7 +235,7 @@ import {
 initTerminalMultiChart,
 syncPrimaryTfToLayout,
 isTerminalMultiChartLayout
-} from "./terminal-multi-chart.js?v=22";
+} from "./terminal-multi-chart.js?v=27";
 
 import {
 mountTerminalLayoutPicker
@@ -263,10 +263,11 @@ lwPriceScaleModeId
 } from "./chart/price-scale-mode.js?v=3";
 
 import {
-formatMinVolumeFilter,
 normalizeMinVolume,
+parseMinVolumeFilter,
+syncMinVolumeFilterInput,
 mountMinVolumeFilterInput
-} from "./screener-volume-filter.js?v=3";
+} from "./screener-volume-filter.js?v=4";
 
 import {
 shouldRunScriptBackgroundJobs,
@@ -3751,7 +3752,7 @@ const {
 initWidgetDrawings
 } =
 await import(
-"./chart-widget-host.js?v=40"
+"./chart-widget-host.js?v=47"
 );
 const {
 initChartIndicators
@@ -6510,27 +6511,77 @@ renderList();
 
 }
 
+let coinVolumeFilterMounted =
+false;
+
+function syncCoinVolumeFilterInput(){
+
+syncMinVolumeFilterInput(
+document.getElementById(
+"coin-volume-filter"
+),
+coinsState().minVolumeFilter
+);
+
+}
+
+function commitCoinVolumeFilterFromInput(){
+
+const el =
+document.getElementById(
+"coin-volume-filter"
+);
+
+if(
+!el
+){
+return;
+}
+
+const n =
+normalizeMinVolume(
+parseMinVolumeFilter(
+el.value
+)
+);
+
+if(
+n ===
+normalizeMinVolume(
+coinsState().minVolumeFilter
+)
+){
+return;
+}
+
+coinsState().minVolumeFilter =
+n;
+
+}
+
+function mountCoinVolumeFilter(){
+
 const coinVolumeFilterEl =
 document.getElementById(
 "coin-volume-filter"
 );
 
 if(
-coinVolumeFilterEl
+!coinVolumeFilterEl
 ){
+return;
+}
 
-const minVolume =
-normalizeMinVolume(
-coinsState().minVolumeFilter
-);
+syncCoinVolumeFilterInput();
 
-coinVolumeFilterEl.value =
-minVolume >
-0
-? formatMinVolumeFilter(
-minVolume
-)
-: "";
+if(
+coinVolumeFilterMounted
+){
+return;
+}
+
+coinVolumeFilterMounted =
+true;
 
 mountMinVolumeFilterInput(
 coinVolumeFilterEl,
@@ -7282,6 +7333,7 @@ void drawingTools?.refreshDrawToolsAccessUi?.();
 });
 
 applyCoinsPrefs();
+mountCoinVolumeFilter();
 
 const urlExchangeAllowed =
 await resolveUrlExchangeDeepLink({
@@ -7455,6 +7507,8 @@ currentSymbol
 
 function flushCoinsPrefs(){
 
+commitCoinVolumeFilterFromInput();
+
 /* Do not write lastViewByExchange here: on exchange switch the page reloads
  * after activeExchangeId already flipped, while currentSymbol is still the
  * previous exchange ticker — that would poison the destination exchange. */
@@ -7497,6 +7551,7 @@ flushCoinsPrefs();
 );
 
 bootstrapCoinsPageState();
+syncCoinVolumeFilterInput();
 
 window.__coinsChartDebug =
 function(){

@@ -8,7 +8,8 @@ normalizeMinVolume,
 filterSymbolsByMinVolume,
 filterMarketItemsByMinVolume,
 formatMinVolumeFilter,
-formatMinVolumeInputText
+formatMinVolumeInputText,
+syncMinVolumeFilterInput
 } from "../js/screener-volume-filter.js";
 
 test("parseMinVolumeFilter: empty means no filter", () => {
@@ -113,6 +114,27 @@ test("screener header places volume filter between invert and search", () => {
   const volume = html.indexOf('id="screener-volume-filter"');
   const search = html.indexOf('id="screener-symbol-search"');
   assert.ok(invert > 0 && volume > invert && search > volume);
+});
+
+test("syncMinVolumeFilterInput restores grouped thousands", () => {
+  const input = { value: "" };
+  syncMinVolumeFilterInput(input, 500000);
+  assert.equal(input.value, "500,000");
+  syncMinVolumeFilterInput(input, 0);
+  assert.equal(input.value, "");
+});
+
+test("terminal restores and flushes the volume filter with coins prefs", () => {
+  const src = readFileSync(
+    new URL("../js/terminal.js", import.meta.url),
+    "utf8"
+  );
+  assert.match(src, /bootstrapCoinsPageState\(\);\s*syncCoinVolumeFilterInput\(\)/);
+  assert.match(src, /applyCoinsPrefs\(\);\s*mountCoinVolumeFilter\(\)/);
+  assert.match(
+    src,
+    /function flushCoinsPrefs\(\)\s*\{\s*commitCoinVolumeFilterFromInput\(\)/
+  );
 });
 
 test("terminal list places volume filter under search", () => {

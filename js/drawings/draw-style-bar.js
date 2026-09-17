@@ -125,7 +125,7 @@ isPattern12Draw,
 migrateElliottToolDefaults,
 normalizePattern12TpFlags,
 normalizePattern12TpLevels
-} from "./elliott-spec.js?v=14";
+} from "./elliott-spec.js?v=17";
 
 import {
 elliottSettingsHtml,
@@ -133,7 +133,7 @@ fillElliottSettingsPanel as fillElliottSettingsPanelDom,
 readElliottSettingsPanel,
 bindElliottSettingsPanel,
 syncElliottSettingsColor
-} from "./draw-elliott-settings.js?v=7";
+} from "./draw-elliott-settings.js?v=8";
 
 import {
 hasCoordSettings
@@ -4409,6 +4409,21 @@ snapshot.lineWidth ??
 
 }
 
+const lockElliott =
+isElliottType(
+type
+) &&
+isElliottSettingsOpen();
+
+if(
+lockElliott
+){
+elliottPanelSyncing =
+true;
+}
+
+try{
+
 fillStyleUI(
 snapshot,
 type
@@ -4463,6 +4478,32 @@ snapshot.color,
 channelLevels:
 snapshot.channelLevels
 });
+
+}
+
+if(
+lockElliott
+){
+
+ensureElliottSettingsPanel();
+fillElliottSettingsPanelDom(
+settingsPopover,
+{
+...snapshot,
+type
+}
+);
+
+}
+
+}finally{
+
+if(
+lockElliott
+){
+elliottPanelSyncing =
+false;
+}
 
 }
 
