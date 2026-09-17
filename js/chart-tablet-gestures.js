@@ -16,6 +16,48 @@ const PAN_START_PX =
 const PAN_HORIZ_BIAS =
 1.25;
 
+/**
+ * After a price-scale zoom, plot drag must pan (time and/or locked price),
+ * not wait for a strictly horizontal swipe. Desktop LW does the same
+ * once autoScale is off.
+ */
+export function shouldStartTabletPlotPan(
+dx,
+dy,
+canShiftPrice = false
+){
+
+const absDx =
+Math.abs(
+dx
+);
+
+const absDy =
+Math.abs(
+dy
+);
+
+if(
+canShiftPrice
+){
+return (
+absDx >=
+PAN_START_PX ||
+absDy >=
+PAN_START_PX
+);
+}
+
+return (
+absDx >=
+PAN_START_PX &&
+absDx >
+absDy *
+PAN_HORIZ_BIAS
+);
+
+}
+
 const CROSSHAIR_TAP_TOGGLE_PX =
 8;
 
@@ -376,6 +418,9 @@ shouldSuppressNativeSelection = ()=>false,
 blockChartScroll = ()=>false,
 /** iPad + Bluetooth-мышь; на чистом десктопе LW сам ловит click/pan */
 allowMousePan = ()=>false,
+canShiftPrice = ()=>false,
+shiftPriceByPointer = ()=>{},
+onPricePanEnd = ()=>{},
 onHoldStart = ()=>{},
 onHoldEnd = ()=>{},
 onProbeAt = ()=>{},
@@ -459,6 +504,9 @@ let startClientY =
 let lastPanClientX =
 0;
 
+let lastPanClientY =
+0;
+
 let holdTimer =
 null;
 
@@ -538,6 +586,49 @@ ts.setVisibleLogicalRange({
 from:range.from - shift,
 to:range.to - shift
 });
+
+}
+
+function applyPanPointerDelta(
+clientX,
+clientY
+){
+
+const dx =
+clientX - lastPanClientX;
+
+const dy =
+clientY - lastPanClientY;
+
+lastPanClientX =
+clientX;
+
+lastPanClientY =
+clientY;
+
+if(
+Math.abs(
+dx
+) >=
+1
+){
+scrollByDx(
+dx
+);
+}
+
+if(
+Math.abs(
+dy
+) >=
+1 &&
+canShiftPrice()
+){
+shiftPriceByPointer(
+clientY,
+clientY - dy
+);
+}
 
 }
 
@@ -857,6 +948,10 @@ to:center + newHalf
 
 function resetGesture(){
 
+const wasPan =
+mode ===
+"pan";
+
 clearTimeout(
 holdTimer
 );
@@ -879,6 +974,12 @@ mode =
 
 pointerId = null;
 detachDocListeners();
+
+if(
+wasPan
+){
+onPricePanEnd();
+}
 
 }
 
@@ -959,17 +1060,11 @@ const dy =
 e.clientY - startClientY;
 
 if(
-Math.abs(
-dx
-) >=
-PAN_START_PX &&
-Math.abs(
-dx
-) >
-Math.abs(
-dy
-) *
-PAN_HORIZ_BIAS
+shouldStartTabletPlotPan(
+dx,
+dy,
+canShiftPrice()
+)
 ){
 
 clearTimeout(
@@ -983,6 +1078,9 @@ mode =
 
 lastPanClientX =
 e.clientX;
+
+lastPanClientY =
+e.clientY;
 
 onPanStart();
 
@@ -1006,25 +1104,11 @@ resetGesture();
 return;
 }
 
-const dx =
-e.clientX - lastPanClientX;
-
-lastPanClientX =
-e.clientX;
-
-if(
-Math.abs(
-dx
-) >=
-1
-){
-
 e.preventDefault();
-scrollByDx(
-dx
+applyPanPointerDelta(
+e.clientX,
+e.clientY
 );
-
-}
 
 return;
 
@@ -1288,6 +1372,9 @@ e.clientY;
 lastPanClientX =
 e.clientX;
 
+lastPanClientY =
+e.clientY;
+
 mode =
 "pan";
 
@@ -1406,6 +1493,9 @@ e.clientY;
 
 lastPanClientX =
 e.clientX;
+
+lastPanClientY =
+e.clientY;
 
 mode =
 "pending";

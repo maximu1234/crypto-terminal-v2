@@ -34,7 +34,7 @@ createRSIChart,
 updateRsiBandLayout,
 updateRsiLevelLinesLayout,
 linkPairedChartTimeScales
-} from "./chart-import.js?v=56";
+} from "./chart-import.js?v=57";
 
 import {
 calculateRSI,
@@ -44,11 +44,11 @@ alignRsiWithCandleTimes
 import {
 createDashboardChartWidget,
 mountDashboardChartInteractions
-} from "./chart-widget-host.js?v=39";
+} from "./chart-widget-host.js?v=40";
 
 import {
 mountWidgetTabletChart
-} from "./tablet-widget-chart.js?v=6";
+} from "./tablet-widget-chart.js?v=7";
 
 import {
 subscribeKline,

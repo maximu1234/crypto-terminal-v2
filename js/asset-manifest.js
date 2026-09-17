@@ -21,7 +21,7 @@ Object.freeze({
 
 /* ── JS: boot / entry ── */
 "asset-manifest.js":
-15,
+17,
 "market-api.js":
 6,
 "format-price.js":
@@ -53,7 +53,7 @@ Object.freeze({
 "exchanges/bingx/intervals.js":
 1,
 "terminal-page-boot.js":
-41,
+43,
 "terminal-entry.js":
 5,
 "terminal-list-refresh.js":
@@ -251,7 +251,7 @@ Object.freeze({
 "chart-page.js":
 8,
 "terminal.js":
-480,
+482,
 "terminal-multi-chart.js":
 22,
 "terminal-screener-chart-pane.js":
@@ -642,17 +642,17 @@ Object.freeze({
 "charts-lib-boot.js":
 3,
 "chart-import.js":
-56,
+57,
 "chart-widget-host.js":
-39,
+40,
 "tablet-gesture-policy.js":
 4,
 "tablet-widget-chart.js":
-6,
+7,
 
 /* ── JS: chart / drawings ── */
 "chart.js":
-168,
+169,
 "chart/chart-options.js":
 7,
 "chart/chart-local-time.js":
@@ -672,13 +672,13 @@ Object.freeze({
 "chart/price-scale-mode.js":
 3,
 "chart-tablet-gestures.js":
-22,
+23,
 "terminal-tablet-controller.js":
-10,
+11,
 "drawings.js":
-288,
+290,
 "drawings/init.js":
-213,
+215,
 "drawings/draw-prefs.js":
 13,
 "drawings/draw-edit-desktop.js":
@@ -688,7 +688,7 @@ Object.freeze({
 "drawings/drawings-persist.js":
 18,
 "drawings/draw-style-bar.js":
-54,
+55,
 "drawings/draw-templates.js":
 20,
 "drawings/draw-alerts-chart.js":
@@ -736,7 +736,7 @@ Object.freeze({
 "drawings/brush-placement.js":
 3,
 "drawings/draw-render.js":
-30,
+31,
 "drawings/draw-hit.js":
 21,
 "drawings/fixed-volume-profile.js":
@@ -758,11 +758,11 @@ Object.freeze({
 "drawings/draw-coord-settings.js":
 2,
 "drawings/elliott-spec.js":
-13,
+14,
 "drawings/draw-tool-hotkeys.js":
 1,
 "drawings/draw-elliott-settings.js":
-6,
+7,
 "drawings/elliott-toolbar.js":
 4,
 "drawings/fib-toolbar.js":
@@ -929,7 +929,7 @@ Object.freeze({
 "critical-shell.css":
 10,
 "common.css":
-63,
+64,
 "screener.css":
 58,
 "terminal.css":

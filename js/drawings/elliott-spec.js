@@ -20,7 +20,7 @@ export const PATTERN_DASH_DEFAULT_OPACITY =
 40;
 
 export const PATTERN_12_TP_LEVEL_COUNT =
-5;
+9;
 
 export const PATTERN_12_TP_DEFAULT_LEVELS =
 Object.freeze([
@@ -28,7 +28,11 @@ Object.freeze([
 1.5,
 2,
 2.44,
-2.5
+2.5,
+null,
+null,
+null,
+null
 ]);
 
 export const PATTERN_12_TP_TICK_PAD_PX =
@@ -1164,9 +1168,11 @@ i
 );
 }else{
 out.push(
+parsePattern12TpLevel(
 PATTERN_12_TP_DEFAULT_LEVELS[
 i
 ]
+)
 );
 }
 

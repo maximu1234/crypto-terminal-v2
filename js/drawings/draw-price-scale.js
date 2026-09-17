@@ -7,7 +7,7 @@ chartScaleFont,
 CHART_SCALE_LABEL_PAD_LEFT,
 CHART_SCALE_LABEL_LINE_HEIGHT,
 scaleLabelTextColorForBackground
-} from "../chart-import.js?v=56";
+} from "../chart-import.js?v=57";
 
 import {
 layoutScaleLabelYs,
@@ -33,7 +33,7 @@ isHorizPriceTool
 
 import {
 isElliottType
-} from "./elliott-spec.js?v=13";
+} from "./elliott-spec.js?v=14";
 
 export function createDrawPriceScale(
 deps

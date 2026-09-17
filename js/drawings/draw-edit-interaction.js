@@ -4,7 +4,7 @@
  */
 import {
 isCoarseTouchViewport
-} from "../chart-import.js?v=56";
+} from "../chart-import.js?v=57";
 
 import {
 uid
@@ -68,7 +68,7 @@ isElliottType,
 getElliottPoints,
 setElliottPoints,
 elliottHandleIndex
-} from "./elliott-spec.js?v=13";
+} from "./elliott-spec.js?v=14";
 
 export function createDrawEditInteraction(
 deps

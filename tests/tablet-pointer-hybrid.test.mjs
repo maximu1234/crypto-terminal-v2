@@ -9,7 +9,8 @@ shouldUseTouchDrawPlacement
 import {
 wheelZoomFactor,
 rangeZoomAroundAnchor,
-applyPointerWheelOnChart
+applyPointerWheelOnChart,
+shouldStartTabletPlotPan
 } from "../js/chart-tablet-gestures.js";
 
 import {
@@ -254,6 +255,43 @@ false
 assert.equal(
 shouldHandleTabletPriceScalePointer(
 null
+),
+false
+);
+
+});
+
+test("iPad plot pan after price-scale zoom accepts vertical drag", ()=>{
+
+assert.equal(
+shouldStartTabletPlotPan(
+8,
+1,
+false
+),
+true
+);
+assert.equal(
+shouldStartTabletPlotPan(
+1,
+12,
+false
+),
+false
+);
+assert.equal(
+shouldStartTabletPlotPan(
+1,
+12,
+true
+),
+true
+);
+assert.equal(
+shouldStartTabletPlotPan(
+0,
+0,
+true
 ),
 false
 );

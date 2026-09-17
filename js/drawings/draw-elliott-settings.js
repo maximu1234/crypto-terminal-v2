@@ -16,7 +16,7 @@ normalizePattern12TpFlags,
 normalizePattern12TpLevels,
 normalizePatternDashOpacity,
 parsePattern12TpLevel
-} from "./elliott-spec.js?v=13";
+} from "./elliott-spec.js?v=14";
 
 export function elliottSettingsHtml(){
 
@@ -421,8 +421,7 @@ tpJuniorOn
 ),
 tpLevels:
 readTpLevelInputs(
-root,
-defaults.tpLevels
+root
 )
 }
 : {}
@@ -596,9 +595,25 @@ input.addEventListener(
 "change",
 ()=>{
 
+const raw =
+String(
+input.value ??
+""
+).trim();
+
+if(
+raw ===
+""
+){
+input.value =
+"";
+commit();
+return;
+}
+
 const parsed =
 parsePattern12TpLevel(
-input.value
+raw
 );
 
 if(
@@ -828,14 +843,9 @@ value
 }
 
 function readTpLevelInputs(
-root,
-fallback
+root
 ){
 
-const defaults =
-normalizePattern12TpLevels(
-fallback
-);
 const rows =
 [];
 
@@ -857,17 +867,7 @@ input?.value
 );
 
 rows.push(
-parsed ==
-null &&
-String(
-input?.value ??
-""
-).trim() ===
-""
-? defaults[
-i
-]
-: parsed
+parsed
 );
 
 }

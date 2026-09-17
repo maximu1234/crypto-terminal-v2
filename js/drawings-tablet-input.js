@@ -4,7 +4,7 @@ isTabletChartViewport,
 hasAnyFinePointer,
 positionDomChartCrosshair,
 hideDomChartCrosshair
-} from "./chart-import.js?v=56";
+} from "./chart-import.js?v=57";
 
 import {
 isFineChartPointerType,
@@ -22,7 +22,7 @@ isHorizPriceTool
 import {
 isElliottType,
 elliottPointCount
-} from "./drawings/elliott-spec.js?v=13";
+} from "./drawings/elliott-spec.js?v=14";
 
 import {
 isFibExtType

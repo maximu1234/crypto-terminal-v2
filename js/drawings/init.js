@@ -50,7 +50,7 @@ ensureDomChartCrosshair,
 hideDomChartCrosshair,
 positionTabletProbeHorizInStack,
 fullCrosshairOptions
-} from "../chart-import.js?v=56";
+} from "../chart-import.js?v=57";
 
 import {
 STROKE,
@@ -134,7 +134,7 @@ createDrawHitTester
 
 import {
 createDrawRenderer
-} from "./draw-render.js?v=30";
+} from "./draw-render.js?v=31";
 
 import {
 snapPlotToCandleWick
@@ -168,7 +168,7 @@ createDrawingsPersist
 
 import {
 createDrawStyleBar
-} from "./draw-style-bar.js?v=54";
+} from "./draw-style-bar.js?v=55";
 
 import {
 createDrawAlertsChart
@@ -187,7 +187,7 @@ hitTestTextBody
 import {
 isElliottType,
 listElliottHandles
-} from "./elliott-spec.js?v=13";
+} from "./elliott-spec.js?v=14";
 
 import {
 closeElliottFlyout,

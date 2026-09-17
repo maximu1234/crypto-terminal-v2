@@ -5,7 +5,7 @@
 import {
 hideDomChartCrosshair,
 positionTabletProbeHorizInStack
-} from "../chart-import.js?v=56";
+} from "../chart-import.js?v=57";
 
 import {
 ensureFibLevelsVisible,
@@ -52,7 +52,7 @@ isPattern12Draw,
 elliottPointCount,
 normalizePattern12TpFlags,
 normalizePattern12TpLevels
-} from "./elliott-spec.js?v=13";
+} from "./elliott-spec.js?v=14";
 
 import {
 isFvpType,

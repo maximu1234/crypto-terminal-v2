@@ -14,7 +14,7 @@ CHART_BUILD_ID,
 CHART_PAGE_ENTRY,
 TERMINAL_ENTRY,
 jsUrl
-} from "./asset-manifest.js?v=15";
+} from "./asset-manifest.js?v=17";
 
 function isDesktopTradeMode(){
 

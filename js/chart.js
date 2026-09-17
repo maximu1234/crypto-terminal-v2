@@ -1148,16 +1148,40 @@ true;
 
 function notifyChartPriceRangeChanged(){
 
+const safe =
+priceZoomRange
+? sanitizeAutoscalePriceRange(
+chart,
+priceZoomRange.min,
+priceZoomRange.max
+)
+: null;
+
 try{
+const ps =
 chart.priceScale(
 "right"
-).applyOptions({
-autoScale:true,
+);
+
+ps.applyOptions({
+autoScale:!safe,
 scaleMargins:{
 top:margins.top,
 bottom:margins.bottom
 }
 });
+
+if(
+safe &&
+typeof ps.setVisibleRange ===
+"function"
+){
+ps.setVisibleRange({
+from:safe.min,
+to:safe.max
+});
+}
+
 }catch{
 /* ignore */
 }
@@ -1485,6 +1509,200 @@ scaleFramePayload()
 
 }
 
+function hasManualPriceZoom(){
+
+return !!priceZoomRange;
+
+}
+
+/**
+ * Plot drag after axis zoom: keep the candle under the pointer
+ * (desktop autoScale:false pan). iPad custom pan is otherwise time-only.
+ * @returns {boolean}
+ */
+function shiftVisiblePriceByPointer(
+clientY,
+prevClientY
+){
+
+if(
+!priceZoomRange ||
+!Number.isFinite(
+clientY
+) ||
+!Number.isFinite(
+prevClientY
+)
+){
+return false;
+}
+
+const dy =
+clientY - prevClientY;
+
+if(
+Math.abs(
+dy
+) <
+0.5
+){
+return false;
+}
+
+const rect =
+chartEl.getBoundingClientRect();
+
+const y0 =
+prevClientY - rect.top;
+
+const y1 =
+clientY - rect.top;
+
+let nextMin =
+null;
+
+let nextMax =
+null;
+
+try{
+const coordMin =
+series.priceToCoordinate(
+priceZoomRange.min
+);
+
+const coordMax =
+series.priceToCoordinate(
+priceZoomRange.max
+);
+
+if(
+coordMin !=
+null &&
+coordMax !=
+null
+){
+
+const shiftedMin =
+series.coordinateToPrice(
+coordMin + dy
+);
+
+const shiftedMax =
+series.coordinateToPrice(
+coordMax + dy
+);
+
+if(
+shiftedMin !=
+null &&
+shiftedMax !=
+null
+){
+nextMin =
+shiftedMin;
+nextMax =
+shiftedMax;
+}
+
+}
+}catch{
+/* fall through */
+}
+
+if(
+nextMin ==
+null ||
+nextMax ==
+null
+){
+
+const p0 =
+series.coordinateToPrice(
+y0
+);
+
+const p1 =
+series.coordinateToPrice(
+y1
+);
+
+if(
+p0 ==
+null ||
+p1 ==
+null ||
+!Number.isFinite(
+p0
+) ||
+!Number.isFinite(
+p1
+)
+){
+return false;
+}
+
+const delta =
+p0 - p1;
+
+nextMin =
+priceZoomRange.min +
+delta;
+
+nextMax =
+priceZoomRange.max +
+delta;
+
+}
+
+const safe =
+sanitizeAutoscalePriceRange(
+chart,
+nextMin,
+nextMax
+);
+
+if(
+!safe
+){
+return false;
+}
+
+priceZoomRange.min =
+safe.min;
+
+priceZoomRange.max =
+safe.max;
+
+if(
+!didApplyZoomThisGesture
+){
+didApplyZoomThisGesture =
+true;
+hooks.onDragStart?.(
+scaleFramePayload()
+);
+}
+
+notifyChartPriceRangeChanged();
+hooks.onInteraction?.();
+notifyScaleFrame();
+
+return true;
+
+}
+
+function endPricePan(){
+
+if(
+didApplyZoomThisGesture
+){
+hooks.onDragEnd?.();
+didApplyZoomThisGesture =
+false;
+}
+
+}
+
 function applyVerticalScaleDrag(
 dy
 ){
@@ -1679,9 +1897,6 @@ return;
 const hadZoomThisGesture =
 didApplyZoomThisGesture;
 
-didApplyZoomThisGesture =
-false;
-
 if(
 !hadZoomThisGesture
 ){
@@ -1700,6 +1915,8 @@ endEvent
 )
 ){
 abortDrag();
+didApplyZoomThisGesture =
+false;
 stripPointerDown =
 null;
 stripDidDrag =
@@ -1712,6 +1929,8 @@ return;
 }
 
 abortDrag();
+didApplyZoomThisGesture =
+false;
 stripPointerDown =
 null;
 stripDidDrag =
@@ -2151,7 +2370,10 @@ abortDrag();
 return {
 dispose,
 resetPriceAutoScale:resetStripPriceAutoScale,
-isScaleDragging:()=>!!drag
+isScaleDragging:()=>!!drag,
+hasManualPriceZoom,
+shiftVisiblePriceByPointer,
+endPricePan
 };
 
 }

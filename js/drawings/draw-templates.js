@@ -58,7 +58,7 @@ isPattern12Draw,
 migrateElliottToolDefaults,
 normalizeElliottDegree,
 normalizePattern12TpFlags
-} from "./elliott-spec.js?v=13";
+} from "./elliott-spec.js?v=14";
 
 export const DRAW_TEMPLATES_STORAGE_KEY =
 "draw_templates_v1";

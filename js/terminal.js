@@ -91,7 +91,7 @@ appendFutureWhitespaceBars,
 applyCoinsChartViewport,
 refreshCoinsChartBarSpacing,
 tfPeriodSec
-} from "./chart-import.js?v=56";
+} from "./chart-import.js?v=57";
 
 import {
 terminalVisibleBars,
@@ -105,7 +105,7 @@ TERMINAL_HISTORY_LAZY_BATCH_BARS
 
 import {
 mountCoinsTabletController
-} from "./terminal-tablet-controller.js?v=10";
+} from "./terminal-tablet-controller.js?v=11";
 
 import {
 disconnectKlineStream
@@ -3751,7 +3751,7 @@ const {
 initWidgetDrawings
 } =
 await import(
-"./chart-widget-host.js?v=39"
+"./chart-widget-host.js?v=40"
 );
 const {
 initChartIndicators
@@ -4764,6 +4764,7 @@ chartWrapEl,
 rsiChart,
 candleSeries,
 getDrawingTools: ()=> drawingTools,
+getTabletPriceScale: ()=> tabletPriceScaleCtrl,
 updateRsiHudFromCrosshairTime,
 getRsiHudFallbackValue(){
 const last =

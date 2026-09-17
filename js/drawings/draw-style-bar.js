@@ -9,7 +9,7 @@ parseDrawColor
 
 import {
 isCoarseTouchViewport
-} from "../chart-import.js?v=56";
+} from "../chart-import.js?v=57";
 
 import {
 STROKE,
@@ -125,7 +125,7 @@ isPattern12Draw,
 migrateElliottToolDefaults,
 normalizePattern12TpFlags,
 normalizePattern12TpLevels
-} from "./elliott-spec.js?v=13";
+} from "./elliott-spec.js?v=14";
 
 import {
 elliottSettingsHtml,
@@ -133,7 +133,7 @@ fillElliottSettingsPanel as fillElliottSettingsPanelDom,
 readElliottSettingsPanel,
 bindElliottSettingsPanel,
 syncElliottSettingsColor
-} from "./draw-elliott-settings.js?v=6";
+} from "./draw-elliott-settings.js?v=7";
 
 import {
 hasCoordSettings

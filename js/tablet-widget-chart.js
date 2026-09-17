@@ -10,7 +10,7 @@ applyTabletMainChartScroll,
 mountChartRangeFreeze,
 tabletProbeCrosshairOptions,
 normalCrosshairOptions
-} from "./chart-import.js?v=56";
+} from "./chart-import.js?v=57";
 
 import {
 createTabletGesturePolicy
@@ -143,7 +143,7 @@ const {
 mountTabletChartGestures
 } =
 await import(
-"./chart-tablet-gestures.js?v=22"
+"./chart-tablet-gestures.js?v=23"
 );
 
 let probeActive =
