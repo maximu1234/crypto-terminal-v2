@@ -1570,16 +1570,56 @@ p1
 return false;
 }
 
+let nextMin =
+null;
+
+let nextMax =
+null;
+
+const logScale =
+isChartPriceScaleLogarithmic(
+chart
+);
+
+if(
+logScale &&
+priceZoomRange.min >
+0 &&
+priceZoomRange.max >
+0 &&
+p0 >
+0 &&
+p1 >
+0
+){
+
+/* Preserve log span: linear ±delta would stretch/squash candles
+ * as the window moves up/down the log scale. */
+const factor =
+p0 / p1;
+
+nextMin =
+priceZoomRange.min *
+factor;
+
+nextMax =
+priceZoomRange.max *
+factor;
+
+}else{
+
 const delta =
 p0 - p1;
 
-const nextMin =
+nextMin =
 priceZoomRange.min +
 delta;
 
-const nextMax =
+nextMax =
 priceZoomRange.max +
 delta;
+
+}
 
 const safe =
 sanitizeAutoscalePriceRange(

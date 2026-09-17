@@ -10,7 +10,7 @@ alignRsiWithCandleTimes
 import {
 updateRsiBandLayout,
 updateRsiLevelLinesLayout
-} from "../chart-import.js?v=60";
+} from "../chart-import.js?v=61";
 
 export function syncRsiHudPeriod(
 el,

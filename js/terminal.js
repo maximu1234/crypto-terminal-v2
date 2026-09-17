@@ -91,7 +91,7 @@ appendFutureWhitespaceBars,
 applyCoinsChartViewport,
 refreshCoinsChartBarSpacing,
 tfPeriodSec
-} from "./chart-import.js?v=60";
+} from "./chart-import.js?v=61";
 
 import {
 terminalVisibleBars,
