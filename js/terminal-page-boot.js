@@ -66,7 +66,7 @@ if(
 ){
 tradeWebBootPromise =
 import(
-"./trade-web/boot.js?v=6"
+"./trade-web/boot.js?v=8"
 );
 }
 

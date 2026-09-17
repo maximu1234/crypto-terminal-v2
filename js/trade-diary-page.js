@@ -13,7 +13,7 @@ import {
 
 import {
   installWebTradingShell
-} from "./trade-web/client.js?v=4";
+} from "./trade-web/client.js?v=6";
 
 import {
   setActiveExchangeId

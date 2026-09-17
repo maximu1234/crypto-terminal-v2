@@ -8,6 +8,9 @@ import {
 import {
   normalizeAlertWorkerBaseUrl
 } from "../alert-worker-url.js?v=2";
+import {
+  createWebPnlShareCardApi
+} from "./pnl-share-card.js?v=2";
 
 const TOKEN_KEY = "mc_trade_token_v2";
 const TOKEN_KEY_LEGACY = "mc_trade_token_v1";
@@ -143,6 +146,7 @@ async function rpc(method, payload) {
 
 export function createWebTradingApi() {
   const streamListeners = new Set();
+  const pnlShare = createWebPnlShareCardApi();
   let ws = null;
   let reconnectTimer = null;
   let streamGen = 0;
@@ -267,12 +271,9 @@ export function createWebTradingApi() {
     replayStream: () => rpc("replayStream"),
     getStreamSnapshot: () => rpc("getStreamSnapshot"),
     requestStreamSeed: () => rpc("requestStreamSeed"),
-    generatePnlShareCard: () =>
-      Promise.resolve({ ok: false, message: "Только в приложении" }),
-    savePnlShareCard: () =>
-      Promise.resolve({ ok: false, message: "Только в приложении" }),
-    discardPnlShareCard: () =>
-      Promise.resolve({ ok: false, message: "Только в приложении" }),
+    generatePnlShareCard: (payload) => pnlShare.generatePnlShareCard(payload),
+    savePnlShareCard: (payload) => pnlShare.savePnlShareCard(payload),
+    discardPnlShareCard: (tempPath) => pnlShare.discardPnlShareCard(tempPath),
     onStream: (callback) => {
       if (typeof callback !== "function") {
         return () => {};
@@ -285,11 +286,22 @@ export function createWebTradingApi() {
   };
 }
 
+const WEB_PNL_SHARE_MARK = "__mcWebPnlShare";
+
 export function installWebTradingShell() {
   if (window.cryptoTerminalDesktop?.isDesktop) {
     return;
   }
+  const existing = window.cryptoTerminalDesktop;
+  if (
+    existing?.webTrading &&
+    existing?.isDesktop === false &&
+    existing?.trading?.[WEB_PNL_SHARE_MARK]
+  ) {
+    return;
+  }
   const trading = createWebTradingApi();
+  trading[WEB_PNL_SHARE_MARK] = true;
   window.cryptoTerminalDesktop = {
     isDesktop: false,
     webTrading: true,

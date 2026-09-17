@@ -53,7 +53,7 @@ Object.freeze({
 "exchanges/bingx/intervals.js":
 1,
 "terminal-page-boot.js":
-39,
+41,
 "terminal-entry.js":
 5,
 "terminal-list-refresh.js":
@@ -61,9 +61,11 @@ Object.freeze({
 "trade-desktop-boot.js":
 28,
 "trade-web/client.js":
-4,
-"trade-web/boot.js":
 6,
+"trade-web/pnl-share-card.js":
+2,
+"trade-web/boot.js":
+8,
 "desktop-menu-bar-tray.js":
 10,
 "desktop-menu-bar-tray-prefs.js":
@@ -83,7 +85,7 @@ Object.freeze({
 "trade-diary-time.js":
 1,
 "trade-diary-page.js":
-43,
+45,
 "trade-diary-period.js":
 4,
 "trade-diary-detail.js":
@@ -624,7 +626,7 @@ Object.freeze({
 "focus-blur-after-pick.js":
 3,
 "site-boot.js":
-134,
+136,
 "site-header.js":
 7,
 "site-header-nav.js":
