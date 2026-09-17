@@ -28,7 +28,7 @@ hideDomChartCrosshair,
 hideDomChartCrosshairHorz,
 hideDomChartCrosshairVert,
 positionDomChartCrosshair
-} from "./chart-import.js?v=57";
+} from "./chart-import.js?v=58";
 
 import {
 isFineChartPointerType

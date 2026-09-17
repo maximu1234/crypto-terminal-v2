@@ -21,7 +21,7 @@ Object.freeze({
 
 /* ── JS: boot / entry ── */
 "asset-manifest.js":
-27,
+28,
 "market-api.js":
 6,
 "format-price.js":
@@ -53,7 +53,7 @@ Object.freeze({
 "exchanges/bingx/intervals.js":
 1,
 "terminal-page-boot.js":
-55,
+57,
 "terminal-entry.js":
 5,
 "terminal-list-refresh.js":
@@ -251,7 +251,7 @@ Object.freeze({
 "chart-page.js":
 8,
 "terminal.js":
-496,
+497,
 "terminal-multi-chart.js":
 27,
 "terminal-screener-chart-pane.js":
@@ -307,9 +307,9 @@ Object.freeze({
 "script-favorites-list.js":
 2,
 "algo-trading.js":
-249,
+250,
 "algo-trading-page-boot.js":
-32,
+33,
 "algo-trading-list.js":
 28,
 "algo-trading/coin-list-host.js":
@@ -572,9 +572,9 @@ Object.freeze({
 "telegram-bot-public.js":
 1,
 "watchlist.js":
-128,
+129,
 "screener.js":
-127,
+128,
 "ipad-web-viewport.js":
 2,
 "screener-widget-guard.js":
@@ -642,7 +642,7 @@ Object.freeze({
 "charts-lib-boot.js":
 3,
 "chart-import.js":
-57,
+58,
 "chart-widget-host.js":
 47,
 "tablet-gesture-policy.js":
@@ -652,7 +652,7 @@ Object.freeze({
 
 /* ── JS: chart / drawings ── */
 "chart.js":
-169,
+170,
 "chart/chart-options.js":
 7,
 "chart/chart-local-time.js":

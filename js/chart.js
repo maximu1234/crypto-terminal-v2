@@ -1148,40 +1148,22 @@ true;
 
 function notifyChartPriceRangeChanged(){
 
-const safe =
-priceZoomRange
-? sanitizeAutoscalePriceRange(
-chart,
-priceZoomRange.min,
-priceZoomRange.max
-)
-: null;
-
+/*
+ * Keep autoScale:true. iPad strip zoom locks the range via
+ * series.autoscaleInfoProvider (priceZoomRange), not via
+ * autoScale:false + setVisibleRange — that path freezes the
+ * axis (provider is ignored when autoScale is off).
+ */
 try{
-const ps =
 chart.priceScale(
 "right"
-);
-
-ps.applyOptions({
-autoScale:!safe,
+).applyOptions({
+autoScale:true,
 scaleMargins:{
 top:margins.top,
 bottom:margins.bottom
 }
 });
-
-if(
-safe &&
-typeof ps.setVisibleRange ===
-"function"
-){
-ps.setVisibleRange({
-from:safe.min,
-to:safe.max
-});
-}
-
 }catch{
 /* ignore */
 }

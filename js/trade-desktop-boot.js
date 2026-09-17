@@ -3,7 +3,7 @@
  */
 import {
 cssUrl
-} from "./asset-manifest.js?v=27";
+} from "./asset-manifest.js?v=28";
 
 import {
 isWatchlistPage
