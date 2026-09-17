@@ -1564,14 +1564,16 @@ coordMax !=
 null
 ){
 
+/* Content follows the finger: drag down → candles move down
+ * (shift price range up). Screen Y grows downward, so subtract dy. */
 const shiftedMin =
 series.coordinateToPrice(
-coordMin + dy
+coordMin - dy
 );
 
 const shiftedMax =
 series.coordinateToPrice(
-coordMax + dy
+coordMax - dy
 );
 
 if(

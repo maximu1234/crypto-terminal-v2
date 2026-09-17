@@ -7,7 +7,7 @@ getActiveTradeVolumeUsdt
 
 import {
 formatPrice
-} from "./chart-import.js?v=58";
+} from "./chart-import.js?v=59";
 
 import {
 createPriceAlert

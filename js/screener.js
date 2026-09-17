@@ -33,7 +33,7 @@ updateRsiLevelLinesLayout,
 linkPairedChartTimeScales,
 SCREENER_VISIBLE_BARS,
 SCREENER_MAX_BARS
-} from "./chart-import.js?v=58";
+} from "./chart-import.js?v=59";
 
 import {
 isIpadWebViewport
