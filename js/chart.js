@@ -1540,66 +1540,11 @@ prevClientY - rect.top;
 const y1 =
 clientY - rect.top;
 
-let nextMin =
-null;
-
-let nextMax =
-null;
-
-try{
-const coordMin =
-series.priceToCoordinate(
-priceZoomRange.min
-);
-
-const coordMax =
-series.priceToCoordinate(
-priceZoomRange.max
-);
-
-if(
-coordMin !=
-null &&
-coordMax !=
-null
-){
-
-/* Content follows the finger: drag down → candles move down
- * (shift price range up). Screen Y grows downward, so subtract dy. */
-const shiftedMin =
-series.coordinateToPrice(
-coordMin - dy
-);
-
-const shiftedMax =
-series.coordinateToPrice(
-coordMax - dy
-);
-
-if(
-shiftedMin !=
-null &&
-shiftedMax !=
-null
-){
-nextMin =
-shiftedMin;
-nextMax =
-shiftedMax;
-}
-
-}
-}catch{
-/* fall through */
-}
-
-if(
-nextMin ==
-null ||
-nextMax ==
-null
-){
-
+/*
+ * Keep the price that was under the finger under the finger
+ * (grab the chart). Works with normal and inverted scales —
+ * do not shift min/max by raw screen dy (that inverts).
+ */
 const p0 =
 series.coordinateToPrice(
 y0
@@ -1628,15 +1573,13 @@ return false;
 const delta =
 p0 - p1;
 
-nextMin =
+const nextMin =
 priceZoomRange.min +
 delta;
 
-nextMax =
+const nextMax =
 priceZoomRange.max +
 delta;
-
-}
 
 const safe =
 sanitizeAutoscalePriceRange(
