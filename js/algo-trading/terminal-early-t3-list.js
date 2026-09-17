@@ -4,7 +4,7 @@
  */
 import {
 coinsState
-} from "../terminal/terminal-state.js?v=15";
+} from "../terminal/terminal-state.js?v=16";
 import {
 setExtraCoinMarkets,
 setCoinsTableHooks,
@@ -12,7 +12,7 @@ generateMarketData,
 primeTickerSnapshots,
 renderList,
 highlightActiveSymbol
-} from "../terminal/terminal-table.js?v=42";
+} from "../terminal/terminal-table.js?v=43";
 import {
 ALGO_FLAG_EARLY_T3,
 ALGO_MARKET_EARLY_T3,

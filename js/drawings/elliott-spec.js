@@ -139,7 +139,7 @@ Object.freeze({
 id: PATTERN_12,
 kind: "pattern-12",
 pointCount: 6,
-title: "Pattern 1-2-1-2-3 (1·2 · 1·2·3)"
+title: "Pattern 1-2-1-2-3 (1·2 · 1·2·3) (P)"
 })
 });
 

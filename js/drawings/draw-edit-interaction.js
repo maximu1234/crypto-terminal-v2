@@ -68,7 +68,7 @@ isElliottType,
 getElliottPoints,
 setElliottPoints,
 elliottHandleIndex
-} from "./elliott-spec.js?v=12";
+} from "./elliott-spec.js?v=13";
 
 export function createDrawEditInteraction(
 deps

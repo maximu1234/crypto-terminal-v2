@@ -851,7 +851,7 @@ const {
 mountHotkeysSettingsPanel
 } =
 await import(
-"./app-settings-hotkeys-panel.js?v=3"
+"./app-settings-hotkeys-panel.js?v=4"
 );
 
 mountHotkeysSettingsPanel(

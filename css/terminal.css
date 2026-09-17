@@ -2245,7 +2245,8 @@ body.tablet-chart .widget-chart-wrap .chart-dom-crosshair-horz{
   gap:6px;
 }
 
-#coin-search{
+#coin-search,
+#coin-volume-filter{
   width:100%;
   background:#171b21;
   color:white;
@@ -2257,11 +2258,18 @@ body.tablet-chart .widget-chart-wrap .chart-dom-crosshair-horz{
   outline:none;
 }
 
-#coin-search::placeholder{
+#coin-volume-filter{
+  font-variant-numeric:tabular-nums;
+  letter-spacing:.02em;
+}
+
+#coin-search::placeholder,
+#coin-volume-filter::placeholder{
   color:#6b7280;
 }
 
-#coin-search:focus{
+#coin-search:focus,
+#coin-volume-filter:focus{
   border-color:#2563eb;
 }
 

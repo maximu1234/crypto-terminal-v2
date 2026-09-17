@@ -66,7 +66,7 @@ normalizePattern12TpFlags,
 normalizePatternDashOpacity,
 pattern12DashScreen,
 pattern12TpTickLayout
-} from "./elliott-spec.js?v=12";
+} from "./elliott-spec.js?v=13";
 
 /**
  * @param {object} deps

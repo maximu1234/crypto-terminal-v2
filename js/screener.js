@@ -16,12 +16,11 @@ isScreenerWidgetCurrent as isScreenerWidgetCurrentGuard
 } from "./screener-widget-guard.js?v=1";
 
 import {
-parseMinVolumeFilter,
 normalizeMinVolume,
 filterSymbolsByMinVolume,
 formatMinVolumeFilter,
-formatMinVolumeInputText
-} from "./screener-volume-filter.js?v=2";
+mountMinVolumeFilterInput
+} from "./screener-volume-filter.js?v=3";
 
 import {
 createScreenerChart,
@@ -70,7 +69,7 @@ createTickerUiBatcher
 
 import {
 mountReleaseMarker
-} from "./release-marker.js?v=119";
+} from "./release-marker.js?v=120";
 
 import {
 saveScreenerState,
@@ -3084,162 +3083,11 @@ return;
 }
 
 syncVolumeFilterInput();
-
-let applyTimer =
-0;
-
-const applyFromInput =
-()=>{
-const raw =
-String(
-input.value ??
-""
-);
-
-if(
-!raw.trim()
-){
-setMinVolumeFilter(
-0
-);
-return;
-}
-
-const n =
-parseMinVolumeFilter(
-raw
-);
-
-if(
-n >
-0
-){
-setMinVolumeFilter(
-n
-);
-const grouped =
-formatMinVolumeFilter(
-n
-);
-if(
-input.value !==
-grouped
-){
-input.value =
-grouped;
-}
-}
-
-};
-
-const groupTypedVolume =
-()=>{
-const raw =
-String(
-input.value ??
-""
-);
-const caret =
-input.selectionStart ??
-raw.length;
-const digitsBefore =
-raw.slice(
-0,
-caret
-).replace(
-/[^\d]/g,
-""
-).length;
-const next =
-formatMinVolumeInputText(
-raw
-);
-
-if(
-next ===
-raw
-){
-return;
-}
-
-input.value =
-next;
-
-let pos =
-0;
-let seen =
-0;
-
-while(
-pos <
-next.length &&
-seen <
-digitsBefore
-){
-
-if(
-/\d/.test(
-next.charAt(
-pos
-)
-)
-){
-seen++;
-}
-
-pos++;
-
-}
-
-try{
-input.setSelectionRange(
-pos,
-pos
-);
-}catch{
-/* ignore */
-}
-
-};
-
-input.addEventListener(
-"input",
-()=>{
-groupTypedVolume();
-clearTimeout(
-applyTimer
-);
-applyTimer =
-setTimeout(
-applyFromInput,
-450
-);
-}
-);
-
-input.addEventListener(
-"change",
-()=>{
-clearTimeout(
-applyTimer
-);
-applyFromInput();
-}
-);
-
-input.addEventListener(
-"keydown",
-e=>{
-if(
-e.key ===
-"Enter"
-){
-e.preventDefault();
-clearTimeout(
-applyTimer
-);
-applyFromInput();
-}
+mountMinVolumeFilterInput(
+input,
+{
+onCommit:
+setMinVolumeFilter
 }
 );
 

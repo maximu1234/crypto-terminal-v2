@@ -889,7 +889,7 @@ assert.equal(
 ELLIOTT_TOOL_META[
 PATTERN_12
 ].title,
-"Pattern 1-2-1-2-3 (1·2 · 1·2·3)"
+"Pattern 1-2-1-2-3 (1·2 · 1·2·3) (P)"
 );
 
 assert.deepEqual(

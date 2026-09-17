@@ -6,6 +6,14 @@
  * price scale and LW recreates it from defaults. Line is an extra series;
  * visibility toggles. First-load scale stays the one createCandlestickChart made.
  *
+ * Type switch must not rebuild candles or line.setData([]). On a log scale
+ * that blanks the pane until the next live bar; a second toggle looks instant
+ * because the series is already rebuilt.
+ *
+ * After line mode the hidden line series still occupies the time scale. Every
+ * setData / live update must keep it on the same bars as candles, or the next
+ * ticker can land in an empty viewport until refresh.
+ *
  * LW series methods are class APIs — call inner.fn(...) so `this` is the series.
  */
 import {
@@ -196,8 +204,7 @@ chart.addLineSeries({
 currentStyle
 ),
 visible:
-currentStyle.type ===
-CHART_DISPLAY_TYPE_LINE,
+false,
 autoscaleInfoProvider:
 lineAutoscaleInfoProvider
 });
@@ -304,6 +311,36 @@ bar?.value
 
 }
 
+function linePaintStyle(){
+
+return {
+...currentStyle,
+type:
+CHART_DISPLAY_TYPE_LINE
+};
+
+}
+
+function paintLineSeries(){
+
+if(
+!lineInner &&
+!isLineType()
+){
+return;
+}
+
+ensureLineSeries();
+setInnerData(
+lineInner,
+mapDisplayCandlesToSeriesData(
+lastDisplay,
+linePaintStyle()
+)
+);
+
+}
+
 function paint(){
 
 if(candleInner){
@@ -329,20 +366,7 @@ isOhlcBar
 }
 }
 
-if(isLineType()){
-ensureLineSeries();
-setInnerData(
-lineInner,
-mapDisplayCandlesToSeriesData(
-lastDisplay,
-currentStyle
-)
-);
-}else if(lineInner){
-lineInner.setData(
-[]
-);
-}
+paintLineSeries();
 
 }
 
@@ -395,14 +419,11 @@ candlePoint
 }
 }
 
-if(
-isLineType() &&
-lineInner
-){
+if(lineInner){
 const point =
 mapBarToSeriesPoint(
 bar,
-currentStyle
+linePaintStyle()
 );
 
 if(point){
@@ -520,21 +541,45 @@ return currentStyle;
 applyDisplayStyle(
 nextStyle
 ){
+const prev =
+currentStyle;
 const next =
 normalizeChartDisplayStyle(
 nextStyle
 );
 const typeChanged =
 next.type !==
-currentStyle.type;
+prev.type;
+const lineSourceChanged =
+next.source !==
+prev.source;
 currentStyle =
 next;
+
+function paintLine(){
+
+ensureLineSeries();
+lineInner.applyOptions(
+lineSeriesOptions(
+currentStyle
+)
+);
+paintLineSeries();
+
+}
 
 function apply(){
 
 if(typeChanged){
+if(isLineType()){
+paintLine();
+}
+
 syncVisibility();
-}else if(
+return;
+}
+
+if(
 isLineType() &&
 lineInner
 ){
@@ -543,9 +588,11 @@ lineSeriesOptions(
 currentStyle
 )
 );
-}
 
-paint();
+if(lineSourceChanged){
+paintLineSeries();
+}
+}
 
 }
 

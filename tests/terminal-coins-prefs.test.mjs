@@ -89,7 +89,8 @@ const keys =
 "invertChart",
 "invertRsiChart",
 "priceScaleMode",
-"listRefreshMs"
+"listRefreshMs",
+"minVolume"
 ];
 
 for(

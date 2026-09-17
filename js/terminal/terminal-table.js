@@ -1,8 +1,14 @@
 import {
 coinsState,
 marketMap,
-coinElements
-} from "./terminal-state.js?v=15";
+coinElements,
+isTerminalPage
+} from "./terminal-state.js?v=16";
+
+import {
+normalizeMinVolume,
+filterMarketItemsByMinVolume
+} from "../screener-volume-filter.js?v=3";
 
 import {
 isActiveRealtimeMarketDataset,
@@ -36,7 +42,7 @@ emptyFavorites
 
 import {
 isTradePage
-} from "./terminal-state.js?v=15";
+} from "./terminal-state.js?v=16";
 
 import {
 applyLiveOhlcBar,
@@ -450,9 +456,17 @@ list
 
 export function scheduleResortPriceColumns(){
 
+const volumeFilterOn =
+isTerminalPage &&
+normalizeMinVolume(
+coinsState().minVolumeFilter
+) >
+0;
+
 if(
 coinsState().innerSortMode !== "24h" &&
-coinsState().innerSortMode !== "volume24"
+coinsState().innerSortMode !== "volume24" &&
+!volumeFilterOn
 ){
 return;
 }
@@ -1127,6 +1141,14 @@ data = data.filter(item=>
 item.symbol.includes(query)
 );
 
+}
+
+if(isTerminalPage){
+data =
+filterMarketItemsByMinVolume(
+data,
+coinsState().minVolumeFilter
+);
 }
 
 return data;

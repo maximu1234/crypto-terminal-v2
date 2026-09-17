@@ -47,7 +47,7 @@ import {
 isPattern12Draw,
 migrateElliottToolDefaults,
 normalizePattern12TpFlags
-} from "./elliott-spec.js?v=12";
+} from "./elliott-spec.js?v=13";
 
 /**
  * @returns {{

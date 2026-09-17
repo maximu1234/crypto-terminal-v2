@@ -6,6 +6,7 @@ import {
 parseMinVolumeFilter,
 normalizeMinVolume,
 filterSymbolsByMinVolume,
+filterMarketItemsByMinVolume,
 formatMinVolumeFilter,
 formatMinVolumeInputText
 } from "../js/screener-volume-filter.js";
@@ -81,6 +82,28 @@ test("filterSymbolsByMinVolume empty threshold keeps all", () => {
   );
 });
 
+test("filterMarketItemsByMinVolume hides rows below 24h volume", () => {
+  const rows = [
+    { symbol: "AAA", volume24: 50000 },
+    { symbol: "BBB", volume24: 100000 },
+    { symbol: "CCC", volume24: 200000 },
+    { symbol: "DDD", volume24: NaN }
+  ];
+  const out = filterMarketItemsByMinVolume(rows, 100000);
+  assert.deepEqual(
+    out.map((row) => row.symbol),
+    ["BBB", "CCC"]
+  );
+});
+
+test("filterMarketItemsByMinVolume empty threshold keeps all", () => {
+  const rows = [{ symbol: "AAA", volume24: 1 }];
+  assert.equal(
+    filterMarketItemsByMinVolume(rows, 0).length,
+    1
+  );
+});
+
 test("screener header places volume filter between invert and search", () => {
   const html = readFileSync(
     new URL("../screener.html", import.meta.url),
@@ -90,4 +113,15 @@ test("screener header places volume filter between invert and search", () => {
   const volume = html.indexOf('id="screener-volume-filter"');
   const search = html.indexOf('id="screener-symbol-search"');
   assert.ok(invert > 0 && volume > invert && search > volume);
+});
+
+test("terminal list places volume filter under search", () => {
+  const html = readFileSync(
+    new URL("../terminal.html", import.meta.url),
+    "utf8"
+  );
+  const search = html.indexOf('id="coin-search"');
+  const volume = html.indexOf('id="coin-volume-filter"');
+  const refresh = html.indexOf('id="coins-list-refresh"');
+  assert.ok(search > 0 && volume > search && refresh > volume);
 });

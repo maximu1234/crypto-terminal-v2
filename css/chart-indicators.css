@@ -252,11 +252,6 @@ width:min(560px,calc(100vw - 24px));
 max-height:min(92vh,700px);
 }
 
-.chart-indicator-settings-dialog--pattern-gip{
-width:min(520px,calc(100vw - 32px));
-max-height:min(88vh,760px);
-}
-
 .chart-indicator-settings-color{
 width:112px;
 flex:0 0 auto;
@@ -272,11 +267,6 @@ cursor:pointer;
 max-height:min(78vh,620px);
 overflow:auto;
 padding:8px 12px 6px;
-}
-
-.chart-indicator-settings-dialog--pattern-gip .chart-indicator-settings-body{
-max-height:min(62vh,560px);
-overflow:auto;
 }
 
 .chart-indicator-settings-dialog--pattern12-early-t3{
@@ -440,10 +430,6 @@ padding-top:8px;
 border-top:1px solid rgba(255,255,255,0.08);
 margin-top:4px;
 }
-}
-
-.ind-pattern-gip-settings .chart-indicator-settings-section{
-margin-bottom:14px;
 }
 
 .chart-indicator-settings-dialog--compact{

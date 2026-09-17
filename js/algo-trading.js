@@ -192,7 +192,7 @@ runWithPreservedVisibleLogicalRange
 import {
 coinsState,
 marketMap
-} from "./terminal/terminal-state.js?v=15";
+} from "./terminal/terminal-state.js?v=16";
 
 import {
 DEFAULT_TF,
@@ -221,7 +221,7 @@ bindAlgoNumericField
 
 import {
 bindAlgoPageHotkeys
-} from "./algo-trading/page-hotkeys.js?v=2";
+} from "./algo-trading/page-hotkeys.js?v=3";
 
 import {
 createAlgoStrategyMemory,

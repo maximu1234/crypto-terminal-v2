@@ -125,7 +125,7 @@ isPattern12Draw,
 migrateElliottToolDefaults,
 normalizePattern12TpFlags,
 normalizePattern12TpLevels
-} from "./elliott-spec.js?v=12";
+} from "./elliott-spec.js?v=13";
 
 import {
 elliottSettingsHtml,

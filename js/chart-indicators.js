@@ -221,9 +221,6 @@ createSupertrendIndicator
 },
 pattern12Mod,
 {
-createPatternGipIndicator
-},
-{
 createHorizontalVolumeIndicator
 },
 {
@@ -263,9 +260,6 @@ createPattern12IndicatorOverride
 )
 : import(
 "./indicators/pattern-12.js?v=17"
-),
-import(
-"./indicators/pattern-gip.js?v=3"
 ),
 import(
 "./indicators/horizontal-volume.js?v=11"
@@ -328,10 +322,6 @@ getHost,
 settingsStore
 )
 )),
-createPatternGipIndicator(
-getHost,
-settingsStore
-),
 createHorizontalVolumeIndicator(
 getHost
 )

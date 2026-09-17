@@ -16,9 +16,9 @@
 <link rel="stylesheet" href="/css/critical-shell.css?v=10">
 <script src="/js/site-css-ready.js?v=3"></script>
 <link rel="stylesheet" href="/css/common.css?v=63">
-<link rel="stylesheet" href="/css/terminal.css?v=185">
+<link rel="stylesheet" href="/css/terminal.css?v=186">
 <link rel="stylesheet" href="/css/terminal-layout.css?v=104">
-<link rel="stylesheet" href="/css/chart-indicators.css?v=29">
+<link rel="stylesheet" href="/css/chart-indicators.css?v=30">
 <link rel="stylesheet" href="/css/chart-snapshot.css?v=5">
 <script>
 if(window.cryptoTerminalDesktop&&window.cryptoTerminalDesktop.isDesktop){
@@ -338,6 +338,18 @@ id="coin-search"
 type="search"
 placeholder="Поиск монеты..."
 autocomplete="off"
+/>
+
+<input
+id="coin-volume-filter"
+type="text"
+class="coin-volume-filter"
+placeholder="Объём ≥"
+spellcheck="false"
+autocomplete="off"
+inputmode="decimal"
+aria-label="Минимальный объём 24ч"
+title="Скрыть тикеры с объёмом 24ч ниже этого значения"
 />
 
 </div>

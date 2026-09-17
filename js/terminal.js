@@ -148,6 +148,10 @@ shouldIgnoreTypingHotkey
 } from "./qwerty-key-input.js?v=4";
 
 import {
+DRAW_TOOL_HOTKEYS
+} from "./drawings/draw-tool-hotkeys.js?v=1";
+
+import {
 isChartLayoutReady,
 setChartLayoutReady
 } from "./chart-layout-gate.js?v=2";
@@ -162,7 +166,7 @@ COINS_TF_HOTKEYS,
 COINS_MARKETS,
 isTerminalPage,
 isTradePage
-} from "./terminal/terminal-state.js?v=15";
+} from "./terminal/terminal-state.js?v=16";
 
 import {
 stopTickerStream
@@ -184,7 +188,7 @@ saveLastViewForExchange,
 applyCoinsPrefs,
 applySortForCurrentMarket,
 readUrlParams
-} from "./terminal/terminal-prefs.js?v=25";
+} from "./terminal/terminal-prefs.js?v=26";
 
 import {
 mountDesktopOpenChartHandler
@@ -206,7 +210,7 @@ setCoinsTableHooks,
 syncCoinListFreezeFromFlagMenus,
 getExtraCoinMarkets,
 isExtraCoinMarket
-} from "./terminal/terminal-table.js?v=42";
+} from "./terminal/terminal-table.js?v=43";
 
 import {
 createCoinsChartSwitchVeil
@@ -248,7 +252,7 @@ saveChartDisplayStyle
 
 import {
 createPriceSeriesHost
-} from "./chart/price-series-host.js?v=9";
+} from "./chart/price-series-host.js?v=11";
 
 import {
 CHART_PRICE_SCALE_MODE_LOGARITHMIC,
@@ -257,6 +261,12 @@ normalizeChartPriceScaleMode,
 applyChartPriceScaleMode,
 lwPriceScaleModeId
 } from "./chart/price-scale-mode.js?v=3";
+
+import {
+formatMinVolumeFilter,
+normalizeMinVolume,
+mountMinVolumeFilterInput
+} from "./screener-volume-filter.js?v=3";
 
 import {
 shouldRunScriptBackgroundJobs,
@@ -3747,7 +3757,7 @@ const {
 initChartIndicators
 } =
 await import(
-"./chart-indicators.js?v=65"
+"./chart-indicators.js?v=66"
 );
 const {
 createPattern12EarlyT3Indicator
@@ -5785,14 +5795,9 @@ saveChartDisplayStyle(
 style
 );
 
-const typeChanged =
 candleSeries?.applyDisplayStyle?.(
 next
 );
-
-if(typeChanged){
-resetCoinsChartPriceScale();
-}
 
 const refPrice =
 candles[candles.length - 1]?.close ?? 1;
@@ -5860,46 +5865,7 @@ persistCoinsPrefs();
 }
 
 const COINS_POSITION_DRAW_HOTKEYS =
-new Map(
-[
-[
-"KeyL",
-"long"
-],
-[
-"KeyS",
-"short"
-],
-[
-"KeyF",
-"fib"
-],
-[
-"KeyR",
-"rectangle"
-],
-[
-"KeyH",
-"hline"
-],
-[
-"KeyJ",
-"hray"
-],
-[
-"KeyA",
-"trendline"
-],
-[
-"KeyB",
-"brush"
-],
-[
-"KeyC",
-"channel"
-]
-]
-);
+DRAW_TOOL_HOTKEYS;
 
 function bindCoinsTfHotkeys(){
 
@@ -6537,6 +6503,60 @@ onInput(){
 searchQuery =
 coinSearchEl.value;
 renderList();
+}
+}
+);
+
+}
+
+const coinVolumeFilterEl =
+document.getElementById(
+"coin-volume-filter"
+);
+
+if(
+coinVolumeFilterEl
+){
+
+const minVolume =
+normalizeMinVolume(
+coinsState().minVolumeFilter
+);
+
+coinVolumeFilterEl.value =
+minVolume >
+0
+? formatMinVolumeFilter(
+minVolume
+)
+: "";
+
+mountMinVolumeFilterInput(
+coinVolumeFilterEl,
+{
+onCommit(
+next
+){
+
+const n =
+normalizeMinVolume(
+next
+);
+
+if(
+n ===
+normalizeMinVolume(
+coinsState().minVolumeFilter
+)
+){
+return;
+}
+
+coinsState().minVolumeFilter =
+n;
+persistCoinsPrefs();
+renderList();
+
 }
 }
 );

@@ -3,7 +3,7 @@
  */
 import {
 coinsState
-} from "../../terminal/terminal-state.js?v=15";
+} from "../../terminal/terminal-state.js?v=16";
 
 import {
 EXCHANGE_CHANGED_EVENT,

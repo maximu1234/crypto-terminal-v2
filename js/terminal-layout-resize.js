@@ -24,7 +24,7 @@ clampCoinsMacdHeight
 
 import {
 isTerminalPage
-} from "./terminal/terminal-state.js?v=15";
+} from "./terminal/terminal-state.js?v=16";
 
 export {
 COINS_LIST_DEFAULT_PX,

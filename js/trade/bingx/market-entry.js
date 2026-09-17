@@ -21,7 +21,7 @@ markAutoStopsHandled
 
 import {
 marketMap
-} from "../../terminal/terminal-state.js?v=15";
+} from "../../terminal/terminal-state.js?v=16";
 
 import {
 getTradeConfig

@@ -1,5 +1,6 @@
 /**
- * Screener min 24h volume filter (turnover, same units as tickerMap.volume24).
+ * Min 24h volume filter (turnover, same units as tickerMap.volume24 / coin.volume24).
+ * Used by Screener and Terminal coin list.
  */
 
 export function normalizeMinVolume(
@@ -227,6 +228,231 @@ vol
 vol >=
 threshold;
 
+}
+);
+
+}
+
+export function filterMarketItemsByMinVolume(
+items,
+minVolume
+){
+
+const list =
+Array.isArray(
+items
+)
+? items.slice()
+: [];
+
+const threshold =
+normalizeMinVolume(
+minVolume
+);
+
+if(
+!(
+threshold >
+0
+)
+){
+return list;
+}
+
+return list.filter(
+item=>{
+
+const vol =
+Number(
+item?.volume24
+);
+
+return Number.isFinite(
+vol
+) &&
+vol >=
+threshold;
+
+}
+);
+
+}
+
+/**
+ * @param {HTMLInputElement} input
+ * @param {{ onCommit: (value: number) => void }} opts
+ */
+export function mountMinVolumeFilterInput(
+input,
+opts
+){
+
+const onCommit =
+opts?.onCommit;
+
+if(
+!input ||
+typeof onCommit !==
+"function"
+){
+return;
+}
+
+let applyTimer =
+0;
+
+const applyFromInput =
+()=>{
+const raw =
+String(
+input.value ??
+""
+);
+
+if(
+!raw.trim()
+){
+onCommit(
+0
+);
+return;
+}
+
+const n =
+parseMinVolumeFilter(
+raw
+);
+
+if(
+n >
+0
+){
+onCommit(
+n
+);
+const grouped =
+formatMinVolumeFilter(
+n
+);
+if(
+input.value !==
+grouped
+){
+input.value =
+grouped;
+}
+}
+
+};
+
+const groupTypedVolume =
+()=>{
+const raw =
+String(
+input.value ??
+""
+);
+const caret =
+input.selectionStart ??
+raw.length;
+const digitsBefore =
+raw.slice(
+0,
+caret
+).replace(
+/[^\d]/g,
+""
+).length;
+const next =
+formatMinVolumeInputText(
+raw
+);
+
+if(
+next ===
+raw
+){
+return;
+}
+
+input.value =
+next;
+
+let pos =
+0;
+let seen =
+0;
+
+while(
+pos <
+next.length &&
+seen <
+digitsBefore
+){
+
+if(
+/\d/.test(
+next.charAt(
+pos
+)
+)
+){
+seen++;
+}
+
+pos++;
+
+}
+
+try{
+input.setSelectionRange(
+pos,
+pos
+);
+}catch{
+/* ignore */
+}
+
+};
+
+input.addEventListener(
+"input",
+()=>{
+groupTypedVolume();
+clearTimeout(
+applyTimer
+);
+applyTimer =
+setTimeout(
+applyFromInput,
+450
+);
+}
+);
+
+input.addEventListener(
+"change",
+()=>{
+clearTimeout(
+applyTimer
+);
+applyFromInput();
+}
+);
+
+input.addEventListener(
+"keydown",
+e=>{
+if(
+e.key ===
+"Enter"
+){
+e.preventDefault();
+clearTimeout(
+applyTimer
+);
+applyFromInput();
+}
 }
 );
 

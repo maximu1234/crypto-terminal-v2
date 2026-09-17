@@ -45,6 +45,10 @@ new Map(
 [
 "KeyC",
 "channel"
+],
+[
+"KeyP",
+"pattern-12"
 ]
 ]
 );

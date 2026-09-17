@@ -236,7 +236,141 @@ test("line mode adds a line series and never removes the candlestick", () => {
   assert.equal(removed, 0);
   assert.equal(candle.visible, true);
   assert.equal(line.visible, false);
-  assert.deepEqual(line.rows, []);
+  assert.equal(line.rows[0].value, 14);
+  } finally {
+    if (prevRaf) {
+      globalThis.requestAnimationFrame = prevRaf;
+    } else {
+      delete globalThis.requestAnimationFrame;
+    }
+  }
+});
+
+test("switching back to candles toggles visibility without rebuilding candles", () => {
+  const prevRaf = globalThis.requestAnimationFrame;
+  globalThis.requestAnimationFrame = (fn) => fn();
+  try {
+    const candle = seriesStub("candle");
+    const line = seriesStub("line");
+    let candleSetData = 0;
+    const innerSetData = candle.setData.bind(candle);
+    candle.setData = (rows) => {
+      candleSetData += 1;
+      innerSetData(rows);
+    };
+    const chart = {
+      removeSeries() {},
+      addLineSeries() {
+        return line;
+      },
+      timeScale() {
+        return {
+          getVisibleLogicalRange() {
+            return { from: 0, to: 1 };
+          },
+          setVisibleLogicalRange() {}
+        };
+      }
+    };
+    const host = createPriceSeriesHost(chart, candle, { type: "candles" });
+    host.setData([sample, { time: 2 }]);
+    const afterLoad = candleSetData;
+    host.applyDisplayStyle({ type: "line" });
+    host.applyDisplayStyle({ type: "candles" });
+    assert.equal(candle.visible, true);
+    assert.equal(line.visible, false);
+    assert.equal(candleSetData, afterLoad);
+    assert.equal(line.rows[0].value, 14);
+  } finally {
+    if (prevRaf) {
+      globalThis.requestAnimationFrame = prevRaf;
+    } else {
+      delete globalThis.requestAnimationFrame;
+    }
+  }
+});
+
+test("after line then candles, the next ticker remaps the hidden line series", () => {
+  const prevRaf = globalThis.requestAnimationFrame;
+  globalThis.requestAnimationFrame = (fn) => fn();
+  try {
+    const candle = seriesStub("candle");
+    const line = seriesStub("line");
+    const chart = {
+      removeSeries() {},
+      addLineSeries() {
+        return line;
+      },
+      timeScale() {
+        return {
+          getVisibleLogicalRange() {
+            return { from: 0, to: 1 };
+          },
+          setVisibleLogicalRange() {}
+        };
+      }
+    };
+    const host = createPriceSeriesHost(chart, candle, { type: "candles" });
+    host.setData([sample, { time: 2 }]);
+    host.applyDisplayStyle({ type: "line" });
+    host.applyDisplayStyle({ type: "candles" });
+    const next = {
+      time: 50,
+      open: 100,
+      high: 120,
+      low: 90,
+      close: 110
+    };
+    host.setData([next, { time: 51 }]);
+    assert.equal(candle.visible, true);
+    assert.equal(line.visible, false);
+    assert.equal(candle.rows[0].time, 50);
+    assert.equal(candle.rows[0].close, 110);
+    assert.equal(line.rows[0].time, 50);
+    assert.equal(line.rows[0].value, 110);
+  } finally {
+    if (prevRaf) {
+      globalThis.requestAnimationFrame = prevRaf;
+    } else {
+      delete globalThis.requestAnimationFrame;
+    }
+  }
+});
+
+test("switching to line remaps lastDisplay after candle-mode updates", () => {
+  const prevRaf = globalThis.requestAnimationFrame;
+  globalThis.requestAnimationFrame = (fn) => fn();
+  try {
+    const candle = seriesStub("candle");
+    candle.update = (bar) => {
+      candle.rows[candle.rows.length - 1] = bar;
+    };
+    const line = seriesStub("line");
+    const chart = {
+      removeSeries() {},
+      addLineSeries() {
+        return line;
+      },
+      timeScale() {
+        return {
+          getVisibleLogicalRange() {
+            return { from: 0, to: 1 };
+          },
+          setVisibleLogicalRange() {}
+        };
+      }
+    };
+    const host = createPriceSeriesHost(chart, candle, { type: "candles" });
+    host.setData([sample]);
+    host.update({
+      ...sample,
+      close: 20,
+      high: 20
+    });
+    host.applyDisplayStyle({ type: "line" });
+    assert.equal(line.visible, true);
+    assert.equal(candle.visible, false);
+    assert.equal(line.rows[0].value, 20);
   } finally {
     if (prevRaf) {
       globalThis.requestAnimationFrame = prevRaf;

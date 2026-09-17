@@ -2899,7 +2899,7 @@ const {
 initChartIndicators
 } =
 await import(
-"./chart-indicators.js?v=55"
+"./chart-indicators.js?v=63"
 );
 
 drawingTools =
@@ -4661,6 +4661,10 @@ new Map(
 [
 "KeyC",
 "channel"
+],
+[
+"KeyP",
+"pattern-12"
 ]
 ]
 );

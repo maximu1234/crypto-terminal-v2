@@ -1840,6 +1840,41 @@ priceLabelEl.classList.remove(
 
 }
 
+export function resolveCrosshairPlotTime(
+plotX,
+charts = []
+){
+
+if(
+!Number.isFinite(
+plotX
+)
+){
+return null;
+}
+
+for(
+const chart of charts
+){
+
+const time =
+chart?.timeScale?.()?.coordinateToTime?.(
+plotX
+);
+
+if(
+time !=
+null
+){
+return time;
+}
+
+}
+
+return null;
+
+}
+
 export function updateCrosshairAxisLabels({
 param,
 timeLabelEl,

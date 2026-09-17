@@ -5,53 +5,18 @@
 import {
 COINS_TF_HOTKEYS,
 COINS_TF_VALUES
-} from "../terminal/terminal-state.js?v=15";
+} from "../terminal/terminal-state.js?v=16";
 
 import {
 shouldIgnoreTypingHotkey
 } from "../qwerty-key-input.js?v=4";
 
+import {
+DRAW_TOOL_HOTKEYS
+} from "../drawings/draw-tool-hotkeys.js?v=1";
+
 export const ALGO_POSITION_DRAW_HOTKEYS =
-new Map(
-[
-[
-"KeyL",
-"long"
-],
-[
-"KeyS",
-"short"
-],
-[
-"KeyF",
-"fib"
-],
-[
-"KeyR",
-"rectangle"
-],
-[
-"KeyH",
-"hline"
-],
-[
-"KeyJ",
-"hray"
-],
-[
-"KeyA",
-"trendline"
-],
-[
-"KeyB",
-"brush"
-],
-[
-"KeyC",
-"channel"
-]
-]
-);
+DRAW_TOOL_HOTKEYS;
 
 export function shouldIgnoreAlgoHotkey(
 event

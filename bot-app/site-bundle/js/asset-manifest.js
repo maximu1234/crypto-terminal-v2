@@ -263,7 +263,7 @@ Object.freeze({
 "chart-visible-range.js":
 3,
 "chart-indicators.js":
-62,
+63,
 "chart-snapshot.js":
 7,
 "indicators/pattern-12.js":
@@ -277,12 +277,6 @@ Object.freeze({
 "indicators/pattern-12-early-t3.js":
 2,
 "indicators/pattern-12-early-t3-scene-cache.js":
-1,
-"indicators/pattern-gip.js":
-2,
-"indicators/pattern-gip-math.js":
-3,
-"indicators/pattern-gip-paint.js":
 1,
 "pattern-12-scanner.js":
 25,
@@ -909,7 +903,7 @@ Object.freeze({
 "algo-trading-chart-overlay.css":
 2,
 "chart-indicators.css":
-29,
+30,
 "chart-snapshot.css":
 5,
 "pattern-12-scanner.css":

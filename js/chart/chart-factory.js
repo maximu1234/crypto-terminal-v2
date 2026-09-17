@@ -29,6 +29,7 @@ withChartLocalTime
 
 import {
 ensureDomChartCrosshair,
+resolveCrosshairPlotTime,
 updateCrosshairAxisLabels,
 clearCrosshairAxisLabels,
 hideTabletProbeCrosshair,
@@ -38,7 +39,7 @@ hideDomChartCrosshairVert,
 positionDomChartCrosshairHorz,
 positionTabletProbeHorizInStack,
 hideTabletProbeHorizInStack
-} from "./chart-dom-crosshair.js?v=16";
+} from "./chart-dom-crosshair.js?v=17";
 
 const chartHostElements =
 new WeakMap();
@@ -2895,6 +2896,59 @@ linkedVertOverlayEl.classList.remove(
 
 }
 
+function syncMainPlotAxisLabels(
+x,
+plotY
+){
+
+if(
+!isTabletChartViewport() ||
+document.body.classList.contains(
+"chart-probe-active"
+) ||
+!Number.isFinite(
+x
+)
+){
+return;
+}
+
+const probeTime =
+resolveCrosshairPlotTime(
+x,
+[
+mainChart,
+linkedChart
+]
+);
+
+updateCrosshairAxisLabels({
+param:{
+time: probeTime,
+point:{
+x,
+y: plotY
+}
+},
+timeLabelEl:crosshairTimeLabelEl,
+priceLabelEl:crosshairPriceLabelEl,
+snappedX:x,
+plotY,
+mainSeries,
+mainChart
+});
+
+if(
+probeTime !=
+null
+){
+onLinkedCrosshairTime?.(
+probeTime
+);
+}
+
+}
+
 function applyMainCrosshairPlot(
 x,
 y
@@ -2971,6 +3025,11 @@ plotY
 }
 
 }
+
+syncMainPlotAxisLabels(
+x,
+plotY
+);
 
 }
 

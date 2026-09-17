@@ -16,7 +16,7 @@ normalizePattern12TpFlags,
 normalizePattern12TpLevels,
 normalizePatternDashOpacity,
 parsePattern12TpLevel
-} from "./elliott-spec.js?v=12";
+} from "./elliott-spec.js?v=13";
 
 export function elliottSettingsHtml(){
 
