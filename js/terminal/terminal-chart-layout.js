@@ -6,7 +6,7 @@ appendFutureWhitespaceBars,
 computeChartFutureMarginBars,
 computeCoinsChartViewportPlan,
 syncLinkedChartTimescales
-} from "../chart-import.js?v=61";
+} from "../chart-import.js?v=62";
 
 import {
 terminalVisibleBars,

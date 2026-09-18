@@ -12,7 +12,7 @@ applyRsiFixedPriceScale,
 appendFutureWhitespaceBars,
 computeChartFutureMarginBars,
 syncLinkedChartTimescales
-} from "./chart-import.js?v=61";
+} from "./chart-import.js?v=62";
 
 import {
 applyLiveSeriesUpdate,

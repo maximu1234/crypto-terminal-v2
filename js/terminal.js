@@ -91,7 +91,7 @@ appendFutureWhitespaceBars,
 applyCoinsChartViewport,
 refreshCoinsChartBarSpacing,
 tfPeriodSec
-} from "./chart-import.js?v=61";
+} from "./chart-import.js?v=62";
 
 import {
 terminalVisibleBars,
@@ -105,7 +105,7 @@ TERMINAL_HISTORY_LAZY_BATCH_BARS
 
 import {
 mountCoinsTabletController
-} from "./terminal-tablet-controller.js?v=12";
+} from "./terminal-tablet-controller.js?v=13";
 
 import {
 disconnectKlineStream

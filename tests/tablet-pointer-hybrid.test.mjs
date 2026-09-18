@@ -261,37 +261,26 @@ false
 
 });
 
-test("iPad plot pan after price-scale zoom accepts vertical drag", ()=>{
+test("iPad plot pan starts on horizontal drag, not vertical", ()=>{
 
 assert.equal(
 shouldStartTabletPlotPan(
 8,
-1,
-false
+1
 ),
 true
 );
 assert.equal(
 shouldStartTabletPlotPan(
 1,
-12,
-false
+12
 ),
 false
-);
-assert.equal(
-shouldStartTabletPlotPan(
-1,
-12,
-true
-),
-true
 );
 assert.equal(
 shouldStartTabletPlotPan(
 0,
-0,
-true
+0
 ),
 false
 );

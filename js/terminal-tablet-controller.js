@@ -15,7 +15,7 @@ normalCrosshairOptions,
 positionTabletProbeCrosshair,
 tabletProbeCrosshairOptions,
 TABLET_USE_CUSTOM_TOUCH_PAN
-} from "./chart-import.js?v=61";
+} from "./chart-import.js?v=62";
 
 import {
 createTabletGesturePolicy
@@ -395,7 +395,7 @@ const {
 mountTabletChartGestures
 } =
 await import(
-"./chart-tablet-gestures.js?v=24"
+"./chart-tablet-gestures.js?v=25"
 );
 
 const tabletGestureCtrl =
@@ -407,18 +407,6 @@ chartTouchLayerEl,
 allowMousePan:()=>
 isTabletChartViewport() &&
 hasAnyFinePointer(),
-canShiftPrice:()=>
-!!getTabletPriceScale?.()?.hasManualPriceZoom?.(),
-shiftPriceByPointer:(
-clientY,
-prevClientY
-)=>
-getTabletPriceScale?.()?.shiftVisiblePriceByPointer?.(
-clientY,
-prevClientY
-),
-onPricePanEnd:()=>
-getTabletPriceScale?.()?.endPricePan?.(),
 shouldBeginGesture:(
 e
 )=>
