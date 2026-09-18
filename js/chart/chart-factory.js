@@ -2147,6 +2147,8 @@ chartEl
 );
 
 if(
+clientY <
+chartR.top ||
 clientY >
 chartR.bottom - timeH
 ){
@@ -2154,7 +2156,9 @@ return false;
 }
 
 return clientX >=
-chartR.right - scaleW - 0.5;
+chartR.right - scaleW - 0.5 &&
+clientX <=
+chartR.right + 0.5;
 
 }
 

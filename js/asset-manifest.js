@@ -626,7 +626,7 @@ Object.freeze({
 "screener-widget-zoom.js":
 34,
 "release-marker.js":
-122,
+123,
 "focus-blur-after-pick.js":
 3,
 "site-boot.js":
@@ -666,7 +666,7 @@ Object.freeze({
 "chart/chart-dom-crosshair.js":
 17,
 "chart/chart-factory.js":
-56,
+57,
 "chart/chart-display-style.js":
 2,
 "chart/price-series-host.js":
