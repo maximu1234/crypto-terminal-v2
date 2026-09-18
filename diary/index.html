@@ -11,7 +11,7 @@
 <link rel="stylesheet" href="/css/critical-shell.css?v=10">
 <script src="/js/site-css-ready.js?v=3"></script>
 <link rel="stylesheet" href="/css/common.css?v=64">
-<link rel="stylesheet" href="/css/trade-diary.css?v=26">
+<link rel="stylesheet" href="/css/trade-diary.css?v=27">
 <link rel="stylesheet" href="/css/trade-diary-period.css?v=1">
 <link rel="stylesheet" href="/css/trade-pnl-share-modal.css?v=5">
 
@@ -53,6 +53,15 @@
 <span data-period-label>Период</span>
 </button>
 <button type="button" class="trade-diary-refresh" id="trade-diary-refresh">Обновить</button>
+<div class="trade-diary-download-wrap" id="trade-diary-download-wrap">
+<button type="button" class="trade-diary-refresh trade-diary-download-btn" id="trade-diary-download-btn" aria-haspopup="menu" aria-expanded="false">Скачать</button>
+<div class="trade-diary-download-menu hidden" id="trade-diary-download-menu" role="menu">
+<button type="button" role="menuitem" data-download="json">Дневник (.json)</button>
+<button type="button" role="menuitem" data-download="excel">Excel (.xls)</button>
+</div>
+</div>
+<button type="button" class="trade-diary-refresh" id="trade-diary-upload-btn">Загрузить дневник</button>
+<input type="file" id="trade-diary-upload-input" accept="application/json,.json" hidden/>
 </div>
 </div>
 
@@ -67,7 +76,7 @@
 </div>
 
 <script type="module" src="/js/site-boot.js?v=136"></script>
-<script type="module" src="/js/trade-diary-page.js?v=45"></script>
+<script type="module" src="/js/trade-diary-page.js?v=46"></script>
 
 </body>
 </html>

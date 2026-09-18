@@ -3453,47 +3453,11 @@ clientX,
 clientY
 ){
 
-if(
-hideCrosshairOnPriceScale(
+/* На шкале оставляем только горизонталь (как TV); вертикаль/время гасим. */
+return showPriceScaleHorzFromClient(
 clientX,
 clientY
-)
-){
-return true;
-}
-
-if(
-linkedChartEl &&
-linkedChart &&
-isClientOnChartPriceScale(
-linkedChartEl,
-linkedChart,
-clientX,
-clientY
-)
-){
-clearLinked();
-clearMainCrosshair();
-return true;
-}
-
-if(
-extraPanes().some(
-pane=>
-isClientOnChartPriceScale(
-pane.chartEl,
-pane.chart,
-clientX,
-clientY
-)
-)
-){
-clearLinked();
-clearMainCrosshair();
-return true;
-}
-
-return false;
+);
 
 }
 
@@ -3700,20 +3664,192 @@ clientX,
 clientY
 ){
 
+return showPriceScaleHorzFromClient(
+clientX,
+clientY
+);
+
+}
+
+/**
+ * Курсор на ценовой шкале: горизонталь + цена, без вертикали.
+ * Не конфликтует с «+» / зумом шкалы (линия pointer-events: none).
+ */
+function showPriceScaleHorzFromClient(
+clientX,
+clientY
+){
+
 if(
-!isClientOnChartPriceScale(
+clientX ==
+null ||
+clientY ==
+null
+){
+return false;
+}
+
+function paintScaleHorz(
+wrapEl,
+targetChartEl,
+targetChart,
+{
+showMainPriceLabel = false
+} = {}
+){
+
+clearLinkedVert();
+clearMainCrosshair();
+
+if(
+chartWrapEl &&
+chartWrapEl !==
+wrapEl
+){
+hideDomChartCrosshairHorz(
+chartWrapEl
+);
+}
+
+if(
+linkedWrapEl &&
+linkedWrapEl !==
+wrapEl
+){
+hideDomChartCrosshairHorz(
+linkedWrapEl
+);
+}
+
+hideExtraPaneCrosshairHorz();
+
+const chartR =
+targetChartEl.getBoundingClientRect();
+const plotY =
+clientY -
+chartR.top;
+
+if(
+!Number.isFinite(
+plotY
+) ||
+!wrapEl
+){
+return;
+}
+
+positionDomChartCrosshairHorz({
+wrapEl,
+chartEl:targetChartEl,
+chart:targetChart,
+plotY
+});
+
+if(
+crosshairTimeLabelEl
+){
+crosshairTimeLabelEl.classList.add(
+"hidden"
+);
+crosshairTimeLabelEl.style.removeProperty(
+"left"
+);
+}
+
+if(
+showMainPriceLabel
+){
+updateCrosshairAxisLabels({
+param:{
+time:null,
+point:{
+x:0,
+y:plotY
+}
+},
+timeLabelEl:crosshairTimeLabelEl,
+priceLabelEl:crosshairPriceLabelEl,
+plotY,
+mainSeries,
+mainChart
+});
+}else if(
+crosshairPriceLabelEl
+){
+crosshairPriceLabelEl.classList.add(
+"hidden"
+);
+crosshairPriceLabelEl.style.removeProperty(
+"top"
+);
+}
+
+}
+
+if(
+isClientOnChartPriceScale(
 chartEl,
 mainChart,
 clientX,
 clientY
 )
 ){
-return false;
+paintScaleHorz(
+chartWrapEl,
+chartEl,
+mainChart,
+{
+showMainPriceLabel:true
+}
+);
+return true;
 }
 
-clearLinked();
-clearMainCrosshair();
+if(
+linkedChartEl &&
+linkedChart &&
+linkedWrapEl &&
+isClientOnChartPriceScale(
+linkedChartEl,
+linkedChart,
+clientX,
+clientY
+)
+){
+paintScaleHorz(
+linkedWrapEl,
+linkedChartEl,
+linkedChart
+);
 return true;
+}
+
+const extraHit =
+extraPanes().find(
+pane=>
+pane?.wrapEl &&
+pane?.chartEl &&
+pane?.chart &&
+isClientOnChartPriceScale(
+pane.chartEl,
+pane.chart,
+clientX,
+clientY
+)
+);
+
+if(
+extraHit
+){
+paintScaleHorz(
+extraHit.wrapEl,
+extraHit.chartEl,
+extraHit.chart
+);
+return true;
+}
+
+return false;
 
 }
 
@@ -3732,8 +3868,26 @@ isCrosshairPointerOnPriceScale(
 param
 )
 ){
+const {
+cx,
+cy
+} =
+crosshairClientFromParam(
+param
+);
+
+if(
+!showPriceScaleHorzFromClient(
+cx ??
+livePointerClientX,
+cy ??
+livePointerClientY
+)
+){
 clearLinked();
 clearMainCrosshair();
+}
+
 return true;
 }
 
@@ -4146,8 +4300,17 @@ return;
 if(
 !isLivePointerOverChartPlots()
 ){
+
+if(
+!showPriceScaleHorzFromClient(
+e.clientX,
+e.clientY
+)
+){
 clearLinked();
 clearMainCrosshair();
+}
+
 }
 
 }
@@ -4164,6 +4327,22 @@ capture:true
 mainChart.subscribeCrosshairMove(param=>{
 
 if(lock){
+return;
+}
+
+const liveX =
+livePointerClientX ??
+lastPointerClientX;
+const liveY =
+livePointerClientY ??
+lastPointerClientY;
+
+if(
+showPriceScaleHorzFromClient(
+liveX,
+liveY
+)
+){
 return;
 }
 
@@ -4189,23 +4368,11 @@ clearMainCrosshair();
 return;
 }
 
-if(
-isCrosshairPointerOnPriceScale(
-param
-)
-){
-clearLinked();
-clearMainCrosshair();
-return;
-}
-
 {
 const clientX =
-livePointerClientX ??
-lastPointerClientX;
+liveX;
 const clientY =
-livePointerClientY ??
-lastPointerClientY;
+liveY;
 
 if(
 isClientOnRsiPlot(
@@ -4274,14 +4441,6 @@ document.body.classList.contains(
 return;
 }
 
-if(
-!isLivePointerOverChartPlots()
-){
-clearLinked();
-clearMainCrosshair();
-return;
-}
-
 const clientX =
 livePointerClientX ??
 lastPointerClientX;
@@ -4291,11 +4450,19 @@ livePointerClientY ??
 lastPointerClientY;
 
 if(
-hideCrosshairOnAnyPriceScale(
+showPriceScaleHorzFromClient(
 clientX,
 clientY
 )
 ){
+return;
+}
+
+if(
+!isLivePointerOverChartPlots()
+){
+clearLinked();
+clearMainCrosshair();
 return;
 }
 

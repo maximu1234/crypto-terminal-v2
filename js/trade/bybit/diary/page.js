@@ -49,6 +49,21 @@ clearDiaryPeriodAnalytics
 } from "../../../diary-period-analytics-ui.js?v=5";
 
 import {
+DIARY_COMMENT_MAX_LEN,
+diaryTradeIdentityKey,
+ensureDiaryJournalLoaded,
+getDiaryJournalComment,
+listDiaryJournalTradesInPeriod,
+diaryJournalRowToTrade,
+setDiaryJournalComment,
+upsertDiaryJournalTrades
+} from "../../../trade-diary-journal.js?v=2";
+
+import {
+mountDiaryJournalActions
+} from "../../../trade-diary-journal-ui.js?v=2";
+
+import {
 getLoadedTradeExchangeModules,
 loadTradeExchangeModules,
 resetTradeExchangeModules
@@ -140,27 +155,9 @@ function tradeIdentityKey(
 trade
 ){
 
-const sym =
-String(
-trade?.symbol ||
-""
-).toUpperCase();
-const oid =
-String(
-trade?.orderId ||
-""
-).trim();
-
-if(
-sym &&
-oid
-){
-return `id:${sym}:${oid}`;
-}
-
-return `t:${tradeKey(
+return diaryTradeIdentityKey(
 trade
-)}`;
+);
 
 }
 
@@ -450,6 +447,7 @@ return `
 <span class="trade-diary-num">PnL %</span>
 <span class="trade-diary-num">Com. $</span>
 <span class="trade-diary-num">Long/Short</span>
+<span>Коммент</span>
 </div>`;
 
 }
@@ -462,17 +460,30 @@ const key =
 tradeKey(
 trade
 );
+const identity =
+tradeIdentityKey(
+trade
+);
 const isOpen =
 openTradeKey ===
 key;
+const comment =
+escapeHtml(
+getDiaryJournalComment(
+EXCHANGE_ID,
+identity
+)
+);
 
 return `
 <div class="trade-diary-trade" data-trade-key="${escapeHtml(
 key
+)}" data-trade-id="${escapeHtml(
+identity
 )}">
-<button type="button" class="trade-diary-row trade-diary-grid${isOpen
+<div class="trade-diary-row trade-diary-grid${isOpen
 ? " is-open"
-: ""}" data-action="toggle-detail" aria-expanded="${isOpen
+: ""}" data-action="toggle-detail" role="button" tabindex="0" aria-expanded="${isOpen
 ? "true"
 : "false"}">
 <span class="trade-diary-time">
@@ -523,7 +534,12 @@ sideLabel(
 trade.side
 )
 )}</span>
-</button>
+<span class="trade-diary-comment-cell" data-action="comment-cell">
+<input type="text" class="trade-diary-comment-input" maxlength="${DIARY_COMMENT_MAX_LEN}" data-trade-id="${escapeHtml(
+identity
+)}" value="${comment}" placeholder="Коммент" aria-label="Комментарий к сделке"/>
+</span>
+</div>
 <div class="trade-diary-detail${isOpen
 ? ""
 : " hidden"}" data-detail-panel></div>
@@ -963,6 +979,18 @@ contentEl.addEventListener(
 "click",
 event=>{
 
+const commentCell =
+event.target.closest(
+"[data-action='comment-cell']"
+);
+
+if(
+commentCell
+){
+event.stopPropagation();
+return;
+}
+
 const shareBtn =
 event.target.closest(
 "[data-action='share-pnl']"
@@ -1087,6 +1115,97 @@ key
 }
 );
 
+contentEl.addEventListener(
+"input",
+event=>{
+
+const input =
+event.target.closest?.(
+".trade-diary-comment-input"
+);
+
+if(
+!input
+){
+return;
+}
+
+const tradeId =
+String(
+input.dataset.tradeId ||
+""
+).trim();
+
+if(
+!tradeId
+){
+return;
+}
+
+void setDiaryJournalComment(
+EXCHANGE_ID,
+tradeId,
+input.value
+);
+
+}
+);
+
+contentEl.addEventListener(
+"keydown",
+event=>{
+
+if(
+event.target.closest?.(
+".trade-diary-comment-input"
+)
+){
+event.stopPropagation();
+return;
+}
+
+if(
+event.key !==
+"Enter" &&
+event.key !==
+" "
+){
+return;
+}
+
+const row =
+event.target.closest?.(
+"[data-action='toggle-detail']"
+);
+
+if(
+!row ||
+event.target !==
+row
+){
+return;
+}
+
+event.preventDefault();
+
+const wrap =
+row.closest(
+"[data-trade-key]"
+);
+const key =
+wrap?.dataset.tradeKey;
+
+if(
+key
+){
+void toggleTradeDetail(
+key
+);
+}
+
+}
+);
+
 }
 
 async function loadTradesForPeriod(
@@ -1176,6 +1295,42 @@ statusText,
 loading,
 error
 }
+);
+
+if(
+!loading &&
+weekTrades.length
+){
+void upsertDiaryJournalTrades(
+EXCHANGE_ID,
+weekTrades
+);
+}
+
+}
+
+function paintDiaryFromJournal(
+statusText
+){
+
+const rows =
+listDiaryJournalTradesInPeriod(
+EXCHANGE_ID,
+activePeriod.startMs,
+activePeriod.endMs
+);
+const trades =
+rows.map(
+diaryJournalRowToTrade
+);
+paintDiaryTrades(
+trades,
+statusText ||
+(
+trades.length
+? `Сделок за период: ${trades.length} · из файла`
+: "Нет сделок в загруженном дневнике за период"
+)
 );
 
 }
@@ -1595,6 +1750,15 @@ true
 
 bindDiaryInteractions();
 
+mountDiaryJournalActions({
+exchangeId:
+EXCHANGE_ID,
+setStatus,
+onJournalReplaced:()=>{
+paintDiaryFromJournal();
+}
+});
+
 refreshBtn?.addEventListener(
 "click",
 ()=>{
@@ -1611,12 +1775,18 @@ EXCHANGE_CHANGED_EVENT,
 void (async ()=>{
 resetTradeExchangeModules();
 await loadTradeExchangeModules();
+await ensureDiaryJournalLoaded(
+EXCHANGE_ID
+);
 await refreshDiary();
 })();
 }
 );
 
 await loadTradeExchangeModules();
+await ensureDiaryJournalLoaded(
+EXCHANGE_ID
+);
 await refreshDiary();
 
 }

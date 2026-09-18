@@ -206,6 +206,10 @@ const scriptFavoritesStore =
 require(
 "./script-favorites-store.cjs"
 );
+const tradeDiaryJournalStore =
+require(
+"./trade-diary-journal-store.cjs"
+);
 const {
 hasAgentArg
 } =
@@ -2106,6 +2110,79 @@ err
 ){
 log.warn(
 "desktop:clearScriptFavorites:",
+err?.message ||
+err
+);
+return {
+ok:
+false,
+message:
+err?.message ||
+String(
+err
+)
+};
+}
+
+}
+);
+
+handleTrustedDesktopUi(
+ipcMain,
+"desktop:diaryJournalRead",
+(
+_event,
+payload
+)=>{
+
+try{
+return tradeDiaryJournalStore.readText(
+payload?.exchangeId
+);
+}catch(
+err
+){
+log.warn(
+"desktop:diaryJournalRead:",
+err?.message ||
+err
+);
+return {
+ok:
+false,
+exists:
+false,
+text:
+"",
+message:
+err?.message ||
+String(
+err
+)
+};
+}
+
+}
+);
+
+handleTrustedDesktopUi(
+ipcMain,
+"desktop:diaryJournalWrite",
+(
+_event,
+payload
+)=>{
+
+try{
+return tradeDiaryJournalStore.writeText(
+payload?.exchangeId,
+payload?.text
+);
+}catch(
+err
+){
+log.warn(
+"desktop:diaryJournalWrite:",
 err?.message ||
 err
 );

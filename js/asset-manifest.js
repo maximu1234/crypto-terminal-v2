@@ -85,7 +85,7 @@ Object.freeze({
 "trade-diary-time.js":
 1,
 "trade-diary-page.js":
-45,
+46,
 "trade-diary-period.js":
 4,
 "trade-diary-detail.js":
@@ -94,6 +94,10 @@ Object.freeze({
 15,
 "trade-diary-storage.js":
 4,
+"trade-diary-journal.js":
+2,
+"trade-diary-journal-ui.js":
+2,
 "diary-period-analytics.js":
 2,
 "diary-period-analytics-ui.js":
@@ -622,7 +626,7 @@ Object.freeze({
 "screener-widget-zoom.js":
 34,
 "release-marker.js":
-121,
+122,
 "focus-blur-after-pick.js":
 3,
 "site-boot.js":
@@ -662,7 +666,7 @@ Object.freeze({
 "chart/chart-dom-crosshair.js":
 17,
 "chart/chart-factory.js":
-55,
+56,
 "chart/chart-display-style.js":
 2,
 "chart/price-series-host.js":
@@ -969,7 +973,7 @@ Object.freeze({
 "trade-pnl-share-modal.css":
 5,
 "trade-diary.css":
-26,
+27,
 "trade-diary-period.css":
 1,
 "trade-chart-overlay.css":
