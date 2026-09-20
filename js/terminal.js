@@ -130,6 +130,10 @@ mountTerminalChecklist
 } from "./terminal/terminal-checklist.js?v=1";
 
 import {
+mountTerminalDxBall
+} from "./terminal/terminal-dxball.js?v=6";
+
+import {
 mountChartSnapshot
 } from "./chart-snapshot.js?v=7";
 
@@ -3037,6 +3041,7 @@ document.getElementById("draw-toolbar")
 mountDrawToolIcons(
 document
 );
+mountTerminalDxBall();
 mountTerminalChecklist();
 
 }catch(err){

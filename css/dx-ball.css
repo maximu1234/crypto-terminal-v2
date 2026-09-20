@@ -1,0 +1,79 @@
+/* Super DX-Ball — scoped under Terminal host (no global html/body takeover) */
+
+.terminal-dxball-host{
+  --dxball-bg:#05060a;
+  --dxball-text:#e8eef7;
+  flex:1 1 50%;
+  min-width:0;
+  min-height:0;
+  display:none;
+  position:relative;
+  overflow:hidden;
+  border-right:var(--coins-block-separator, 3.5px solid #2e2e30);
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 0%, #152033 0%, transparent 55%),
+    radial-gradient(ellipse 50% 40% at 80% 100%, #1a1020 0%, transparent 50%),
+    var(--dxball-bg);
+  color:var(--dxball-text);
+  font-family:"Rajdhani", sans-serif;
+}
+
+body.terminal-page.terminal-dxball-open .terminal-dxball-host{
+  display:flex;
+  align-items:stretch;
+  justify-content:stretch;
+}
+
+body.terminal-page.terminal-dxball-open .charts-stack-panes{
+  flex:1 1 50%;
+  min-width:0;
+}
+
+.terminal-dxball-app{
+  width:100%;
+  height:100%;
+  display:flex;
+  align-items:stretch;
+  justify-content:stretch;
+  position:relative;
+  padding:0;
+  box-sizing:border-box;
+}
+
+.terminal-dxball-canvas{
+  width:100%;
+  height:100%;
+  max-height:none;
+  aspect-ratio:auto;
+  background:#000;
+  border:0;
+  box-shadow:none;
+  image-rendering:auto;
+  cursor:default;
+  outline:none;
+  display:block;
+}
+
+.terminal-dxball-canvas.is-playing{
+  cursor:none;
+}
+
+body.terminal-page #draw-toolbar.draw-toolbar-vertical .terminal-dxball-btn{
+  margin-top:auto;
+  position:sticky;
+  bottom:35px;
+  z-index:2;
+  background:var(--coins-panel-bg);
+}
+
+body.terminal-page #draw-toolbar.draw-toolbar-vertical .terminal-checklist-btn{
+  margin-top:0;
+  position:sticky;
+  bottom:0;
+  z-index:2;
+  background:var(--coins-panel-bg);
+}
+
+body.terminal-page #draw-toolbar.draw-toolbar-vertical .terminal-dxball-btn.active{
+  color:#3de0ff;
+}
