@@ -131,7 +131,7 @@ mountTerminalChecklist
 
 import {
 mountTerminalDxBall
-} from "./terminal/terminal-dxball.js?v=7";
+} from "./terminal/terminal-dxball.js?v=8";
 
 import {
 mountChartSnapshot

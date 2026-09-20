@@ -21,6 +21,26 @@ function pickWeighted(list) {
   return list[list.length - 1];
 }
 
+/** Pack/title card geometry — fits any host size (iPad half-panel ≠ 800×600). */
+function packMenuLayout() {
+  const n = 3;
+  const gap = Math.max(8, Math.round(H * 0.015));
+  const cardH = clamp(Math.round(H * 0.12), 56, 84);
+  const totalH = n * cardH + (n - 1) * gap;
+  const topPad = Math.max(56, Math.round(H * 0.16));
+  const bottomPad = 48;
+  const baseY = clamp(topPad, 48, Math.max(48, H - totalH - bottomPad));
+  const cardW = Math.min(560, Math.max(160, W - 40));
+  const cardX = (W - cardW) / 2;
+  return { n, gap, cardH, cardW, cardX, baseY, step: cardH + gap };
+}
+
+function titleMenuLayout() {
+  const lineH = clamp(Math.round(H * 0.055), 28, 40);
+  const baseY = clamp(Math.round(H * 0.58), Math.round(H * 0.45), H - lineH * 2 - 56);
+  return { lineH, baseY };
+}
+
 export class Game {
   constructor(canvas, input, audio) {
     this.canvas = canvas;
@@ -43,6 +63,9 @@ export class Game {
     this.floatScores = [];
     this._ignoreLockLoss = false;
     this._pauseAt = 0;
+    this._ui = null;
+    this._uiMode = '';
+    this._onUiPointer = null;
 
     this.input.onLockChange((locked) => {
       // Browser Esc (or Alt-Tab) releases the pointer — treat as pause
@@ -52,6 +75,11 @@ export class Game {
     });
 
     this.resetRun();
+    this.syncMenuUi();
+  }
+
+  destroy() {
+    this.teardownMenuUi();
   }
 
   resetRun() {
@@ -89,6 +117,7 @@ export class Game {
     this.input.exitLock();
     this._ignoreLockLoss = false;
     this.canvas.classList.remove('is-playing');
+    this.syncMenuUi();
   }
 
   resumeGame() {
@@ -97,6 +126,7 @@ export class Game {
     // Sync virtual cursor to paddle center, then lock
     this.input.syncX(this.paddleX + this.paddleWidth() / 2);
     this.input.requestLock();
+    this.syncMenuUi();
   }
 
   goToTitle() {
@@ -106,6 +136,7 @@ export class Game {
     this.input.exitLock();
     this._ignoreLockLoss = false;
     this.canvas.classList.remove('is-playing');
+    this.syncMenuUi();
   }
 
   toggleSound() {
@@ -113,21 +144,168 @@ export class Game {
   }
 
   titleMenuHitIndex(mouseY) {
-    const baseY = Math.min(H - 180, Math.max(340, Math.round(H * 0.58)));
+    const { lineH, baseY } = titleMenuLayout();
     for (let i = 0; i < 2; i++) {
-      const y = baseY + i * 36;
-      if (mouseY >= y - 18 && mouseY <= y + 14) return i;
+      const y = baseY + i * lineH;
+      if (mouseY >= y - lineH * 0.55 && mouseY <= y + lineH * 0.45) return i;
     }
-    return -1;
+    /* Nearest line — iPad taps often miss the thin text band. */
+    let best = -1;
+    let bestDist = Infinity;
+    for (let i = 0; i < 2; i++) {
+      const y = baseY + i * lineH;
+      const d = Math.abs(mouseY - y);
+      if (d < bestDist) {
+        bestDist = d;
+        best = i;
+      }
+    }
+    return bestDist <= lineH * 1.25 ? best : -1;
   }
 
-  packMenuHitIndex(mouseY) {
-    const baseY = Math.min(H - 360, Math.max(160, Math.round(H * 0.28)));
-    for (let i = 0; i < 3; i++) {
-      const y = baseY + i * 100;
-      if (mouseY >= y && mouseY <= y + 84) return i;
+  packMenuHitIndex(mouseY, mouseX = W / 2) {
+    const { n, cardH, cardW, cardX, baseY, step } = packMenuLayout();
+    for (let i = 0; i < n; i++) {
+      const y = baseY + i * step;
+      const inY = mouseY >= y && mouseY <= y + cardH;
+      const inX = mouseX >= cardX - 8 && mouseX <= cardX + cardW + 8;
+      if (inY && inX) return i;
     }
-    return -1;
+    let best = -1;
+    let bestDist = Infinity;
+    for (let i = 0; i < n; i++) {
+      const y = baseY + i * step + cardH / 2;
+      const d = Math.abs(mouseY - y);
+      if (d < bestDist) {
+        bestDist = d;
+        best = i;
+      }
+    }
+    return bestDist <= cardH ? best : -1;
+  }
+
+  /**
+   * Real DOM buttons over the canvas — iPad Safari often won't deliver
+   * reliable hit-testing to canvas alone (mouse, finger, or trackpad).
+   */
+  ensureMenuUi() {
+    if (this._ui) return this._ui;
+    const app = this.canvas.parentElement;
+    if (!app) return null;
+    const ui = document.createElement('div');
+    ui.className = 'terminal-dxball-ui';
+    ui.setAttribute('data-dxball-ui', '1');
+    this._onUiPointer = (e) => {
+      const btn = e.target?.closest?.('[data-dxball-act]');
+      if (!btn || !ui.contains(btn)) return;
+      e.preventDefault();
+      e.stopPropagation();
+      const act = btn.getAttribute('data-dxball-act');
+      this.applyMenuAction(act);
+    };
+    ui.addEventListener('pointerup', this._onUiPointer);
+    ui.addEventListener('click', this._onUiPointer);
+    app.appendChild(ui);
+    this._ui = ui;
+    return ui;
+  }
+
+  teardownMenuUi() {
+    if (!this._ui) return;
+    this._ui.removeEventListener('pointerup', this._onUiPointer);
+    this._ui.removeEventListener('click', this._onUiPointer);
+    this._ui.remove();
+    this._ui = null;
+    this._uiMode = '';
+    this._onUiPointer = null;
+  }
+
+  applyMenuAction(act) {
+    if (!act) return;
+    if (act === 'play') {
+      this.mode = 'pack';
+      this.menuIndex = 0;
+      this.syncMenuUi();
+      return;
+    }
+    if (act === 'help') {
+      this.mode = 'help';
+      this.syncMenuUi();
+      return;
+    }
+    if (act === 'back-title') {
+      this.goToTitle();
+      return;
+    }
+    if (act === 'pack-classic' || act === 'pack-super' || act === 'pack-endless') {
+      this.startPack(act.slice('pack-'.length));
+      return;
+    }
+    if (act === 'resume') {
+      this.resumeGame();
+      return;
+    }
+    if (act === 'dismiss-help' || act === 'dismiss-gameover') {
+      this.goToTitle();
+    }
+  }
+
+  syncMenuUi() {
+    const ui = this.ensureMenuUi();
+    if (!ui) return;
+    if (this._uiMode === this.mode) return;
+    this._uiMode = this.mode;
+    ui.replaceChildren();
+    ui.hidden = false;
+    ui.classList.remove('is-playing');
+
+    const mk = (label, act, extraClass = '') => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = `terminal-dxball-ui-btn ${extraClass}`.trim();
+      b.setAttribute('data-dxball-act', act);
+      b.textContent = label;
+      return b;
+    };
+
+    if (this.mode === 'title') {
+      const col = document.createElement('div');
+      col.className = 'terminal-dxball-ui-col terminal-dxball-ui-col--title';
+      col.append(mk('PLAY', 'play', 'is-primary'), mk('POWER-UPS', 'help'));
+      ui.append(col);
+      return;
+    }
+    if (this.mode === 'pack') {
+      const col = document.createElement('div');
+      col.className = 'terminal-dxball-ui-col terminal-dxball-ui-col--pack';
+      col.append(
+        mk('CLASSIC', 'pack-classic', 'is-pack'),
+        mk('SUPER', 'pack-super', 'is-pack'),
+        mk('ENDLESS', 'pack-endless', 'is-pack'),
+        mk('← Back', 'back-title', 'is-ghost')
+      );
+      ui.append(col);
+      return;
+    }
+    if (this.mode === 'help') {
+      ui.append(mk('Tap to go back', 'dismiss-help', 'is-overlay-hit'));
+      return;
+    }
+    if (this.mode === 'paused') {
+      const col = document.createElement('div');
+      col.className = 'terminal-dxball-ui-col';
+      col.append(mk('Resume', 'resume', 'is-primary'), mk('Menu', 'back-title', 'is-ghost'));
+      ui.append(col);
+      return;
+    }
+    if (this.mode === 'gameover') {
+      ui.append(mk('Tap for menu', 'dismiss-gameover', 'is-overlay-hit'));
+      return;
+    }
+
+    /* playing / clear — paddle uses canvas pointers */
+    ui.hidden = true;
+    ui.classList.add('is-playing');
   }
 
   get pack() { return getPack(this.packId); }
@@ -409,6 +587,7 @@ export class Game {
       this.input.exitLock();
       this._ignoreLockLoss = false;
       this.canvas.classList.remove('is-playing');
+      this.syncMenuUi();
       return;
     }
     this.loadLevel(this.levelIndex + 1);
@@ -417,6 +596,7 @@ export class Game {
     this.input.syncX(this.paddleX + this.paddleWidth() / 2);
     // Keep lock if we still have it; otherwise ask again
     if (!this.input.isLocked()) this.input.requestLock();
+    this.syncMenuUi();
   }
 
   loseLife() {
@@ -440,6 +620,7 @@ export class Game {
       this.input.exitLock();
       this._ignoreLockLoss = false;
       this.canvas.classList.remove('is-playing');
+      this.syncMenuUi();
       return;
     }
     this.resetBallOnPaddle(true);
@@ -1285,18 +1466,19 @@ export class Game {
     ctx.font = '600 18px Rajdhani, sans-serif';
     ctx.fillText('Browser remake · all classic power-ups', W / 2, titleY + 110);
 
-    const baseY = Math.min(H - 180, Math.max(340, Math.round(H * 0.58)));
+    const baseY = titleMenuLayout().baseY;
+    const lineH = titleMenuLayout().lineH;
     const items = ['PLAY', 'POWER-UPS'];
     items.forEach((label, i) => {
       const selected = this.menuIndex === i;
       ctx.fillStyle = selected ? '#3de0ff' : '#e8eef7';
       ctx.font = `${selected ? 700 : 600} 22px Orbitron, sans-serif`;
-      ctx.fillText(`${selected ? '▸ ' : '  '}${label}`, W / 2, baseY + i * 36);
+      ctx.fillText(`${selected ? '▸ ' : '  '}${label}`, W / 2, baseY + i * lineH);
     });
 
     ctx.fillStyle = '#5a6577';
     ctx.font = '500 14px Rajdhani, sans-serif';
-    ctx.fillText('Click menu  ·  Mouse / ← → move paddle  ·  Click / Space launch  ·  Esc pause', W / 2, H - 40);
+    ctx.fillText('Tap / click menu  ·  drag paddle  ·  tap to launch', W / 2, H - 40);
     ctx.fillText(`Best: ${this.highScore}`, W / 2, H - 20);
     this.drawMessages();
   }
@@ -1315,28 +1497,28 @@ export class Game {
       { id: 'super', name: 'SUPER', desc: `${getPack('super').levels.length} boards · geometric mosaics` },
       { id: 'endless', name: 'ENDLESS', desc: `${getPack('endless').levels.length} boards · auto-generated, rising difficulty` },
     ];
-    const baseY = Math.min(H - 360, Math.max(160, Math.round(H * 0.28)));
+    const { cardH, cardW, cardX, baseY, step } = packMenuLayout();
     packs.forEach((p, i) => {
       const selected = this.menuIndex === i;
-      const y = baseY + i * 100;
+      const y = baseY + i * step;
       ctx.strokeStyle = selected ? '#3de0ff' : '#2a3548';
       ctx.fillStyle = selected ? 'rgba(61,224,255,0.08)' : 'rgba(20,28,40,0.6)';
       ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.roundRect(120, y, 560, 84, 8);
+      ctx.roundRect(cardX, y, cardW, cardH, 8);
       ctx.fill();
       ctx.stroke();
       ctx.fillStyle = selected ? '#3de0ff' : '#e8eef7';
       ctx.font = '700 22px Orbitron, sans-serif';
-      ctx.fillText(p.name, W / 2, y + 36);
+      ctx.fillText(p.name, W / 2, y + Math.round(cardH * 0.42));
       ctx.fillStyle = '#8a96a8';
       ctx.font = '600 15px Rajdhani, sans-serif';
-      ctx.fillText(p.desc, W / 2, y + 62);
+      ctx.fillText(p.desc, W / 2, y + Math.round(cardH * 0.72));
     });
 
     ctx.fillStyle = '#5a6577';
     ctx.font = '500 14px Rajdhani';
-    ctx.fillText('Click a pack to start  ·  Esc back', W / 2, H - 36);
+    ctx.fillText('Tap a pack to start', W / 2, H - 36);
   }
 
   drawHelp() {
@@ -1399,6 +1581,7 @@ export class Game {
     const enter = this.input.pressed('Enter');
     const space = this.input.pressed('Space');
     const mouseY = this.input.mouseY;
+    const mouseX = this.input.mouseX;
 
     if (this.mode === 'title') {
       const hit = this.titleMenuHitIndex(mouseY);
@@ -1413,7 +1596,7 @@ export class Game {
         }
       }
     } else if (this.mode === 'pack') {
-      const hit = this.packMenuHitIndex(mouseY);
+      const hit = this.packMenuHitIndex(mouseY, mouseX);
       if (hit >= 0) this.menuIndex = hit;
       if (esc) this.goToTitle();
       const click = this.input.consumeClick();
@@ -1446,6 +1629,7 @@ export class Game {
       if (!this.input.isLocked()) this.input.wantLock = true;
     }
 
+    this.syncMenuUi();
     this.input.endFrame();
   }
 }

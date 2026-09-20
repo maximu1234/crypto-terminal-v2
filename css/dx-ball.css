@@ -1,5 +1,115 @@
 /* Super DX-Ball — scoped under Terminal host (no global html/body takeover) */
 
+.terminal-dxball-app{
+  width:100%;
+  height:100%;
+  display:flex;
+  align-items:stretch;
+  justify-content:stretch;
+  position:relative;
+  padding:0;
+  box-sizing:border-box;
+}
+
+.terminal-dxball-ui{
+  position:absolute;
+  inset:0;
+  z-index:5;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  pointer-events:auto;
+  touch-action:manipulation;
+  -webkit-user-select:none;
+  user-select:none;
+}
+
+.terminal-dxball-ui[hidden],
+.terminal-dxball-ui.is-playing{
+  display:none !important;
+  pointer-events:none;
+}
+
+.terminal-dxball-ui-col{
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;
+  gap:10px;
+  width:min(420px, 86%);
+  pointer-events:auto;
+}
+
+.terminal-dxball-ui-col--title{
+  margin-top:18%;
+}
+
+.terminal-dxball-ui-col--pack{
+  width:min(520px, 90%);
+  gap:12px;
+}
+
+.terminal-dxball-ui-btn{
+  appearance:none;
+  margin:0;
+  border:2px solid #2a3548;
+  border-radius:8px;
+  background:rgba(20,28,40,0.92);
+  color:#e8eef7;
+  font:700 18px Orbitron, sans-serif;
+  letter-spacing:0.04em;
+  padding:14px 16px;
+  min-height:48px;
+  cursor:pointer;
+  touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;
+  pointer-events:auto;
+}
+
+.terminal-dxball-ui-btn.is-primary,
+.terminal-dxball-ui-btn.is-pack:active,
+.terminal-dxball-ui-btn:active{
+  border-color:#3de0ff;
+  color:#3de0ff;
+  background:rgba(61,224,255,0.1);
+}
+
+.terminal-dxball-ui-btn.is-pack{
+  min-height:64px;
+  font-size:20px;
+}
+
+.terminal-dxball-ui-btn.is-ghost{
+  border-color:transparent;
+  background:transparent;
+  color:#8a96a8;
+  font:600 15px Rajdhani, sans-serif;
+  min-height:40px;
+}
+
+.terminal-dxball-ui-btn.is-overlay-hit{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  border:0;
+  border-radius:0;
+  background:transparent;
+  color:transparent;
+  min-height:0;
+}
+
+body.tablet-chart .terminal-dxball-host,
+body.tablet-chart .terminal-dxball-host *{
+  -webkit-user-select:none;
+  user-select:none;
+  -webkit-touch-callout:none;
+  touch-action:manipulation;
+}
+
+body.tablet-chart .terminal-dxball-canvas{
+  touch-action:none;
+}
+
 .terminal-dxball-host{
   --dxball-bg:#05060a;
   --dxball-text:#e8eef7;
@@ -8,6 +118,7 @@
   min-height:0;
   display:none;
   position:relative;
+  z-index:4;
   overflow:hidden;
   border-right:var(--coins-block-separator, 3.5px solid #2e2e30);
   background:
@@ -16,6 +127,7 @@
     var(--dxball-bg);
   color:var(--dxball-text);
   font-family:"Rajdhani", sans-serif;
+  pointer-events:auto;
 }
 
 body.terminal-page.terminal-dxball-open .terminal-dxball-host{
@@ -27,17 +139,6 @@ body.terminal-page.terminal-dxball-open .terminal-dxball-host{
 body.terminal-page.terminal-dxball-open .charts-stack-panes{
   flex:1 1 50%;
   min-width:0;
-}
-
-.terminal-dxball-app{
-  width:100%;
-  height:100%;
-  display:flex;
-  align-items:stretch;
-  justify-content:stretch;
-  position:relative;
-  padding:0;
-  box-sizing:border-box;
 }
 
 .terminal-dxball-canvas{

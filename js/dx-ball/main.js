@@ -3,7 +3,7 @@
  */
 import { AudioSys } from "./audio.js?v=2";
 import { Input } from "./input.js?v=3";
-import { Game } from "./game.js?v=5";
+import { Game } from "./game.js?v=6";
 
 let rafId = 0;
 let last = 0;
@@ -103,7 +103,12 @@ export function stopDxBall() {
     rafId = 0;
   }
   try {
-    game?.pauseGame?.();
+    input?.exitLock?.();
+  } catch {
+    /* ignore */
+  }
+  try {
+    game?.destroy?.();
   } catch {
     /* ignore */
   }

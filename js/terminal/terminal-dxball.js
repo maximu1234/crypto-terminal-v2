@@ -4,7 +4,7 @@
 import {
   startDxBall,
   stopDxBall
-} from "../dx-ball/main.js?v=6";
+} from "../dx-ball/main.js?v=7";
 
 const FONT_HREF =
   "https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&display=swap";
