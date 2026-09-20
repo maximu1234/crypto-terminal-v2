@@ -2,7 +2,7 @@
  * Super DX-Ball — mountable host for Terminal (not a standalone page boot).
  */
 import { AudioSys } from "./audio.js?v=2";
-import { Input } from "./input.js?v=2";
+import { Input } from "./input.js?v=3";
 import { Game } from "./game.js?v=5";
 
 let rafId = 0;

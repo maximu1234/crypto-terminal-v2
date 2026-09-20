@@ -9,8 +9,8 @@ export class Input {
     this.wantLock = false;
     this._lockListeners = [];
     this._bound = false;
-    this._onMouseMove = null;
-    this._onMouseDown = null;
+    this._onPointerMove = null;
+    this._onPointerDown = null;
     this._onKeyDown = null;
     this._onKeyUp = null;
     this._onContextMenu = null;
@@ -22,29 +22,48 @@ export class Input {
     const r = this.canvas.getBoundingClientRect();
     return {
       r,
-      sx: this.canvas.width / r.width,
-      sy: this.canvas.height / r.height,
+      sx: this.canvas.width / Math.max(1, r.width),
+      sy: this.canvas.height / Math.max(1, r.height),
     };
+  }
+
+  _setFromClient(clientX, clientY) {
+    const { r, sx, sy } = this._scale();
+    this.mouseX = (clientX - r.left) * sx;
+    this.mouseY = (clientY - r.top) * sy;
   }
 
   _bind() {
     if (this._bound) return;
     this._bound = true;
 
-    this._onMouseMove = (e) => {
-      const { r, sx, sy } = this._scale();
-      if (this.isLocked()) {
+    /* Pointer Events cover mouse + iPad touch (mousedown alone is silent on iOS). */
+    this._onPointerMove = (e) => {
+      if (this.isLocked() && e.pointerType === "mouse") {
+        const { sx, sy } = this._scale();
         this.mouseX = Math.max(0, Math.min(this.canvas.width, this.mouseX + e.movementX * sx));
         this.mouseY = Math.max(0, Math.min(this.canvas.height, this.mouseY + e.movementY * sy));
-      } else {
-        this.mouseX = (e.clientX - r.left) * sx;
-        this.mouseY = (e.clientY - r.top) * sy;
+        return;
       }
+      this._setFromClient(e.clientX, e.clientY);
     };
 
-    this._onMouseDown = (e) => {
-      if (e.button === 0) this.clicked = true;
-      if (this.wantLock && !this.isLocked()) this.requestLock();
+    this._onPointerDown = (e) => {
+      if (e.pointerType === "mouse" && e.button !== 0) return;
+      this._setFromClient(e.clientX, e.clientY);
+      this.clicked = true;
+      try {
+        this.canvas.setPointerCapture?.(e.pointerId);
+      } catch {
+        /* ignore */
+      }
+      /* Stop iPad page scroll / chart pan while tapping the game. */
+      if (e.pointerType !== "mouse") {
+        e.preventDefault();
+      }
+      if (this.wantLock && e.pointerType === "mouse" && !this.isLocked()) {
+        this.requestLock();
+      }
     };
 
     this._onKeyDown = (e) => {
@@ -85,8 +104,9 @@ export class Input {
       for (const fn of this._lockListeners) fn(this.isLocked());
     };
 
-    this.canvas.addEventListener("mousemove", this._onMouseMove);
-    this.canvas.addEventListener("mousedown", this._onMouseDown);
+    const ptrOpts = { passive: false };
+    this.canvas.addEventListener("pointermove", this._onPointerMove, ptrOpts);
+    this.canvas.addEventListener("pointerdown", this._onPointerDown, ptrOpts);
     window.addEventListener("keydown", this._onKeyDown);
     window.addEventListener("keyup", this._onKeyUp);
     this.canvas.addEventListener("contextmenu", this._onContextMenu);
@@ -97,8 +117,8 @@ export class Input {
     if (!this._bound) return;
     this._bound = false;
     this.exitLock();
-    this.canvas.removeEventListener("mousemove", this._onMouseMove);
-    this.canvas.removeEventListener("mousedown", this._onMouseDown);
+    this.canvas.removeEventListener("pointermove", this._onPointerMove);
+    this.canvas.removeEventListener("pointerdown", this._onPointerDown);
     window.removeEventListener("keydown", this._onKeyDown);
     window.removeEventListener("keyup", this._onKeyUp);
     this.canvas.removeEventListener("contextmenu", this._onContextMenu);
@@ -119,6 +139,8 @@ export class Input {
   requestLock() {
     this.wantLock = true;
     if (this.isLocked()) return;
+    /* Pointer Lock is desktop-only; iPad has no API / always rejects. */
+    if (typeof this.canvas.requestPointerLock !== "function") return;
     const req = this.canvas.requestPointerLock();
     if (req && typeof req.catch === "function") req.catch(() => {});
   }

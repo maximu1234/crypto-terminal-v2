@@ -574,13 +574,13 @@ Object.freeze({
 "terminal/terminal-checklist.js":
 1,
 "terminal/terminal-dxball.js":
-6,
+7,
 "dx-ball/main.js":
-5,
+6,
 "dx-ball/game.js":
 5,
 "dx-ball/input.js":
-2,
+3,
 "dx-ball/audio.js":
 2,
 "dx-ball/constants.js":
@@ -959,7 +959,7 @@ Object.freeze({
 "terminal-layout.css":
 104,
 "dx-ball.css":
-2,
+3,
 "script-page.css":
 25,
 "algo-trading.css":

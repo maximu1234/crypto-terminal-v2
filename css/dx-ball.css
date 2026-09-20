@@ -52,6 +52,10 @@ body.terminal-page.terminal-dxball-open .charts-stack-panes{
   cursor:default;
   outline:none;
   display:block;
+  /* iPad: don’t scroll/pan the page while tapping Classic/Super/Endless. */
+  touch-action:none;
+  -webkit-user-select:none;
+  user-select:none;
 }
 
 .terminal-dxball-canvas.is-playing{
