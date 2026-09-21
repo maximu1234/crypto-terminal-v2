@@ -30,7 +30,7 @@ loadTradeExchangeModules
 import {
 candleAlignSec,
 markerForExecutionSide
-} from "./trade-markers-sandbox/marker-math.js?v=10";
+} from "./trade-markers-sandbox/marker-math.js?v=12";
 
 export const DIARY_CHART_TFS =
 Object.freeze([

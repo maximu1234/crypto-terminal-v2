@@ -344,6 +344,7 @@ test("Bybit and BingX bundles export facade-required APIs", () => {
     "createTradeChartOrders",
     "mountTradeChartMarkersToggle",
     "initTradeChartExecutionMarkers",
+    "applyDiaryTradeDeepLink",
     "openPnlShareModal",
     "applyPositionColumnLayout",
     "wirePositionColumnResize"

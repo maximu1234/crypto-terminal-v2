@@ -6,7 +6,7 @@ getCachedPosition,
 listCachedPositionsForSymbol,
 removeTradePositionFromCache,
 upsertTradePositionInCache
-} from "./positions-cache.js?v=1";
+} from "./positions-cache.js?v=2";
 
 import {
 getActiveTradeVolumeUsdt
@@ -18,8 +18,14 @@ getAutoStopSettings
 } from "./auto-stops.js?v=1";
 
 import {
+peekDrawingStopsPendingForSide,
+tryApplyDrawingStopsPending,
+wasDrawingStopsJustApplied
+} from "./drawing-stops.js?v=3";
+
+import {
 marketMap
-} from "../../terminal/terminal-state.js?v=16";
+} from "../../terminal/terminal-state.js?v=17";
 
 import {
 getTradeConfig
@@ -27,7 +33,7 @@ getTradeConfig
 
 import {
 mountTradeChartMarkersToggle
-} from "./chart-execution-markers.js?v=3";
+} from "./chart-execution-markers.js?v=5";
 
 const REFRESH_MS =
 1500;
@@ -355,9 +361,15 @@ const settings =
 getAutoStopSettings();
 const openOptions =
 {};
+const drawingStops =
+peekDrawingStopsPendingForSide(
+symbol,
+side
+);
 
 if(
-getTradeConfig().passAutoStopUsdOnOpen
+getTradeConfig().passAutoStopUsdOnOpen &&
+!drawingStops
 ){
 openOptions.autoSlUsd =
 settings.slEnabled &&
@@ -426,9 +438,21 @@ const attached =
 result?.stopsAttached ||
 {};
 
+const drawingApplied =
+await tryApplyDrawingStopsPending(
+symbol,
+result.position
+);
+
 const needsAutoStops =
+!drawingApplied &&
+!wasDrawingStopsJustApplied(
+symbol
+) &&
+(
 !attached.sl ||
-!attached.tp;
+!attached.tp
+);
 
 if(
 needsAutoStops

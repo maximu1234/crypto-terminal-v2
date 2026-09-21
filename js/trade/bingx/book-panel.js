@@ -11,7 +11,7 @@ getAllCachedPositions,
 isTradePositionRecentlyClosed,
 removeTradePositionFromCache,
 syncTradePositionsCache
-} from "./positions-cache.js?v=5";
+} from "./positions-cache.js?v=6";
 
 import {
 getTradeConfig

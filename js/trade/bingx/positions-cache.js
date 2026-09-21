@@ -8,6 +8,11 @@ isStopDismissed
 } from "./auto-stops.js?v=9";
 
 import {
+tryApplyDrawingStopsPending,
+wasDrawingStopsJustApplied
+} from "./drawing-stops.js?v=3";
+
+import {
 maybeReconcileOrdersOnPositionOpen
 } from "./position-open-orders.js?v=1";
 
@@ -1118,11 +1123,30 @@ rowWithStops.symbol ||
 sym,
 rowWithStops
 );
+void (
+async()=>{
+const drawingApplied =
+await tryApplyDrawingStopsPending(
+rowWithStops.symbol ||
+sym,
+rowWithStops
+);
+
+if(
+!drawingApplied &&
+!wasDrawingStopsJustApplied(
+rowWithStops.symbol ||
+sym
+)
+){
 maybeApplyAutoStopsForNewPosition(
 rowWithStops.symbol ||
 sym,
 rowWithStops
 );
+}
+}
+)();
 }
 
 if(

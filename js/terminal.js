@@ -170,7 +170,7 @@ COINS_TF_HOTKEYS,
 COINS_MARKETS,
 isTerminalPage,
 isTradePage
-} from "./terminal/terminal-state.js?v=16";
+} from "./terminal/terminal-state.js?v=17";
 
 import {
 stopTickerStream
@@ -192,7 +192,7 @@ saveLastViewForExchange,
 applyCoinsPrefs,
 applySortForCurrentMarket,
 readUrlParams
-} from "./terminal/terminal-prefs.js?v=28";
+} from "./terminal/terminal-prefs.js?v=29";
 
 import {
 mountDesktopOpenChartHandler

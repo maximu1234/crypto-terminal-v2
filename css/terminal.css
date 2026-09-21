@@ -238,6 +238,7 @@ body.terminal-page #draw-toolbar.draw-toolbar-inline .draw-btn .draw-tool-icon--
   color:#9ca3af;
   white-space:nowrap;
   cursor:default;
+  flex-wrap:wrap;
 }
 
 form.draw-position-risk{
@@ -288,10 +289,31 @@ form.draw-position-risk{
   font-weight:600;
   cursor:pointer;
   flex-shrink:0;
+  white-space:nowrap;
 }
 
 .draw-position-risk-apply:hover{
   background:#166534;
+}
+
+.draw-position-risk-apply--stops{
+  border-color:#1d4ed8;
+  background:#1e3a5f;
+  color:#dbeafe;
+}
+
+.draw-position-risk-apply--stops:hover{
+  background:#1e40af;
+}
+
+.draw-position-risk-apply--stops.is-armed{
+  border-color:#b91c1c;
+  background:#991b1b;
+  color:#fee2e2;
+}
+
+.draw-position-risk-apply--stops.is-armed:hover{
+  background:#7f1d1d;
 }
 
 .draw-position-risk-apply.hidden{

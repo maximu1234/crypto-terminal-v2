@@ -81,6 +81,20 @@ symbol ||
 
 }
 
+export function tfMinutes(
+tf
+){
+
+return TF_MINUTES[
+String(
+tf ||
+""
+)
+] ||
+60;
+
+}
+
 export function candleAlignSec(
 ms,
 tf
@@ -112,7 +126,9 @@ tfSec;
 
 export function markerForExecutionSide(
 side,
-timeSec
+timeSec,
+opts =
+{}
 ){
 
 const isBuy =
@@ -121,6 +137,8 @@ side ||
 ""
 ).toLowerCase() ===
 "buy";
+const focused =
+!!opts.focused;
 
 return {
 time:
@@ -130,13 +148,22 @@ isBuy
 ? "belowBar"
 : "aboveBar",
 color:
+focused
+? (
+isBuy
+? "#4ade80"
+: "#f87171"
+)
+: (
 isBuy
 ? "#22c55e"
-: "#ef4444",
+: "#ef4444"
+),
 shape:
 isBuy
 ? "arrowUp"
 : "arrowDown",
+/* Same size as normal history — deep-link focus only changes color. */
 size:
 2
 };
@@ -269,7 +296,9 @@ return out;
 export function buildMarkersForCandles(
 executions,
 tf,
-candles
+candles,
+focusRangeMs =
+null
 ){
 
 if(
@@ -284,6 +313,24 @@ candles
 ){
 return [];
 }
+
+const focusFrom =
+Number(
+focusRangeMs?.fromMs
+);
+const focusTo =
+Number(
+focusRangeMs?.toMs
+);
+const hasFocus =
+Number.isFinite(
+focusFrom
+) &&
+Number.isFinite(
+focusTo
+) &&
+focusTo >=
+focusFrom;
 
 const sortedTimes =
 candles
@@ -432,10 +479,21 @@ continue;
 seen.add(
 key
 );
+
+const focused =
+hasFocus &&
+execTimeMs >=
+focusFrom &&
+execTimeMs <=
+focusTo;
+
 markers.push(
 markerForExecutionSide(
 ex.side,
-time
+time,
+{
+focused
+}
 )
 );
 

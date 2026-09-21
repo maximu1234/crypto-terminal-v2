@@ -166,7 +166,7 @@ export async function initTradeWebAfterChart(options = {}) {
   );
   initTradeChartOrders();
   const { initTradeChartExecutionMarkers } = await import(
-    "../trade-chart-execution-markers.js?v=10"
+    "../trade-chart-execution-markers.js?v=11"
   );
   initTradeChartExecutionMarkers();
   initTradeBookPanel();

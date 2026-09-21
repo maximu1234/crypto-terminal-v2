@@ -3,7 +3,7 @@
  */
 import {
 coinsState
-} from "../../terminal/terminal-state.js?v=16";
+} from "../../terminal/terminal-state.js?v=17";
 
 import {
 EXCHANGE_CHANGED_EVENT,
@@ -12,12 +12,17 @@ getActiveExchangeId
 
 import {
 buildMarkersForCandles,
-normalizeSymbol
-} from "../../trade-markers-sandbox/marker-math.js?v=10";
+normalizeSymbol,
+tfMinutes
+} from "../../trade-markers-sandbox/marker-math.js?v=12";
 
 import {
 fetchTradesForSymbol
 } from "../../trade-markers-sandbox/trade-fetch.js?v=19";
+
+import {
+clearDiaryTradeDeepLinkParams
+} from "../../trade-diary-terminal-deep-link.js?v=2";
 
 let showMarkers =
 false;
@@ -36,6 +41,13 @@ let markersSeq =
 let checkboxEl =
 null;
 let wired =
+false;
+/** @type {{ fromMs: number, toMs: number, orderId: string } | null} */
+let focusWindow =
+null;
+let pendingDeepLink =
+null;
+let deepLinkScrollDone =
 false;
 
 function chartHost(){
@@ -355,7 +367,8 @@ buildMarkersForCandles(
 tradeData.executions ||
 [],
 tf,
-candles
+candles,
+focusWindow
 );
 
 applyMarkers();
@@ -499,6 +512,10 @@ if(
 !showMarkers
 ){
 markersSeq++;
+focusWindow =
+null;
+deepLinkScrollDone =
+false;
 clearTradeCache();
 cachedMarkers =
 [];
@@ -535,10 +552,211 @@ clearTradeCache();
 if(
 showMarkers
 ){
-void rebuildMarkers();
+void rebuildMarkers().then(
+()=>{
+void tryConsumePendingDeepLink();
+}
+);
 }else{
 applyMarkers();
+void tryConsumePendingDeepLink();
 }
+
+}
+
+function scrollChartToFocusWindow(){
+
+if(
+!focusWindow ||
+deepLinkScrollDone
+){
+return;
+}
+
+const chart =
+chartHost()?.chart;
+
+if(
+!chart?.timeScale
+){
+return;
+}
+
+const {
+tf
+} =
+chartContext();
+const padSec =
+Math.max(
+1,
+tfMinutes(
+tf
+)
+) *
+30 *
+60;
+const from =
+Math.floor(
+focusWindow.fromMs /
+1000
+) -
+padSec;
+const to =
+Math.floor(
+focusWindow.toMs /
+1000
+) +
+padSec;
+
+if(
+!(
+to >
+from
+)
+){
+return;
+}
+
+try{
+chart.timeScale().setVisibleRange(
+{
+from,
+to
+}
+);
+deepLinkScrollDone =
+true;
+}catch(
+err
+){
+console.warn(
+"[trade-chart-markers] setVisibleRange",
+err?.message ||
+err
+);
+}
+
+}
+
+async function tryConsumePendingDeepLink(){
+
+const link =
+pendingDeepLink ||
+coinsState().diaryTradeDeepLink;
+
+if(
+!link?.history
+){
+return false;
+}
+
+const {
+candles
+} =
+chartContext();
+
+if(
+!candles.length ||
+!chartHost()?.chart
+){
+pendingDeepLink =
+link;
+return false;
+}
+
+pendingDeepLink =
+null;
+coinsState().diaryTradeDeepLink =
+null;
+
+const openMs =
+Number(
+link.openMs
+);
+const closeMs =
+Number(
+link.closeMs
+);
+
+if(
+!Number.isFinite(
+openMs
+) ||
+!Number.isFinite(
+closeMs
+)
+){
+clearDiaryTradeDeepLinkParams();
+return false;
+}
+
+focusWindow =
+{
+fromMs:
+Math.min(
+openMs,
+closeMs
+) -
+60 *
+1000,
+toMs:
+Math.max(
+openMs,
+closeMs
+) +
+60 *
+1000,
+orderId:
+String(
+link.orderId ||
+""
+)
+};
+deepLinkScrollDone =
+false;
+
+const box =
+ensureCheckbox();
+
+if(
+box
+){
+box.checked =
+true;
+}
+
+showMarkers =
+true;
+clearTradeCache();
+await rebuildMarkers(
+{
+forceTrades:
+true
+}
+);
+scrollChartToFocusWindow();
+clearDiaryTradeDeepLinkParams();
+return true;
+
+}
+
+/**
+ * Enable history markers and focus chart on a diary trade window.
+ * @param {{ history?: boolean, openMs?: number, closeMs?: number, orderId?: string }} link
+ */
+export async function applyDiaryTradeDeepLink(
+link
+){
+
+if(
+!link?.history
+){
+return false;
+}
+
+pendingDeepLink =
+link;
+return tryConsumePendingDeepLink();
 
 }
 
@@ -653,6 +871,17 @@ showMarkers
 void rebuildMarkers();
 }else{
 applyMarkers();
+}
+
+const diaryLink =
+coinsState().diaryTradeDeepLink;
+
+if(
+diaryLink?.history
+){
+void applyDiaryTradeDeepLink(
+diaryLink
+);
 }
 
 }

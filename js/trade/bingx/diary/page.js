@@ -64,6 +64,11 @@ mountDiaryJournalActions
 } from "../../../trade-diary-journal-ui.js?v=2";
 
 import {
+buildDiaryTradeTerminalUrl,
+resolveDiaryTradeFocusTimes
+} from "../../../trade-diary-terminal-deep-link.js?v=2";
+
+import {
 getLoadedTradeExchangeModules,
 loadTradeExchangeModules,
 resetTradeExchangeModules
@@ -499,7 +504,28 @@ trade.symbol
 )}</span>
 <span class="trade-diary-chart-link" data-action="open-terminal" data-symbol="${escapeHtml(
 trade.symbol
-)}" title="Открыть в Терминале" role="link" tabindex="-1">↗</span>
+)}" data-open-ms="${escapeHtml(
+String(
+Number(
+trade.openTimeMs
+) ||
+""
+)
+)}" data-close-ms="${escapeHtml(
+String(
+Number(
+trade.closeTimeMs ||
+trade.listCloseTimeMs
+) ||
+""
+)
+)}" data-order-id="${escapeHtml(
+String(
+trade.orderId ||
+trade.positionId ||
+""
+)
+)}" title="Открыть сделку в Терминале" role="link" tabindex="-1">↗</span>
 <span class="trade-diary-duration">${escapeHtml(
 formatDiaryDuration(
 trade.durationMs
@@ -1037,20 +1063,60 @@ chartLink
 event.preventDefault();
 event.stopPropagation();
 
+const wrap =
+chartLink.closest(
+"[data-trade-key]"
+);
+const trade =
+findTradeByKey(
+wrap?.dataset.tradeKey ||
+""
+) ||
+{
+symbol:
+chartLink.dataset.symbol,
+openTimeMs:
+chartLink.dataset.openMs,
+closeTimeMs:
+chartLink.dataset.closeMs,
+orderId:
+chartLink.dataset.orderId
+};
+
 const symbol =
 String(
+trade?.symbol ||
 chartLink.dataset.symbol ||
 ""
 ).trim();
 
 if(
-symbol
+!symbol
 ){
-window.location.href =
-`/terminal.html?symbol=${encodeURIComponent(
-symbol
-)}&tf=60`;
+return;
 }
+
+const focus =
+resolveDiaryTradeFocusTimes(
+trade
+);
+
+window.location.href =
+buildDiaryTradeTerminalUrl(
+{
+symbol,
+tf:
+"60",
+openMs:
+focus.openMs,
+closeMs:
+focus.closeMs,
+orderId:
+focus.orderId,
+exchange:
+EXCHANGE_ID
+}
+);
 
 return;
 

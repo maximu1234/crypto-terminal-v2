@@ -16,3 +16,7 @@ export function mountTradeChartMarkersToggle(...args) {
 export function initTradeChartExecutionMarkers(...args) {
   return mod()?.initTradeChartExecutionMarkers?.(...args) || null;
 }
+
+export function applyDiaryTradeDeepLink(...args) {
+  return mod()?.applyDiaryTradeDeepLink?.(...args);
+}

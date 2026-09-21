@@ -31,10 +31,6 @@ import {
 isHorizPriceTool
 } from "./constants.js?v=13";
 
-import {
-isElliottType
-} from "./elliott-spec.js?v=17";
-
 export function createDrawPriceScale(
 deps
 ){
@@ -261,7 +257,10 @@ shapeStyle(shape);
 entries.push({
 yIdeal: y,
 price: shape.price,
-color
+color,
+/* Keep plaque on the line — collision layout drifts plaques on zoom. */
+pinToPrice:
+true
 });
 
 });
@@ -314,12 +313,9 @@ entries.push({
 yIdeal: xy.y,
 price: handle.point.price,
 color,
-/* Multi-vertex drawings (Pattern 1-2, Elliott) stack off the
-points if the scale layout is allowed to dodge overlaps. */
+/* Keep plaque on the handle — collision layout drifts plaques on zoom. */
 pinToPrice:
-isElliottType(
-sel.type
-)
+true
 });
 
 });

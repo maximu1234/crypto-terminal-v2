@@ -13,7 +13,7 @@ export {
   getTradePositionsCacheSyncError,
   syncTradePositionsCache,
   initTradePositionsCache
-} from "./positions-cache.js?v=5";
+} from "./positions-cache.js?v=6";
 
 export {
   stopTradeStreamBridge,
@@ -46,9 +46,19 @@ export {
 } from "./auto-stops.js?v=9";
 
 export {
+  stashDrawingStopsFromDrawing,
+  peekDrawingStopsPendingForSide,
+  consumeDrawingStopsPending,
+  tryApplyDrawingStopsPending,
+  wasDrawingStopsJustApplied,
+  hasDrawingStopsPending,
+  clearDrawingStopsPending
+} from "./drawing-stops.js?v=3";
+
+export {
   initTradeMarketEntry,
   openWidgetMarketPosition
-} from "./market-entry.js?v=10";
+} from "./market-entry.js?v=11";
 
 export {
   initTradeBookPanel
@@ -73,7 +83,7 @@ export {
 
 export {
   bootTradeDiaryPage
-} from "./diary/page.js?v=8";
+} from "./diary/page.js?v=9";
 
 export {
   mountTradeDiaryPeriodPicker
@@ -123,8 +133,9 @@ export {
 
 export {
   mountTradeChartMarkersToggle,
-  initTradeChartExecutionMarkers
-} from "./chart-execution-markers.js?v=4";
+  initTradeChartExecutionMarkers,
+  applyDiaryTradeDeepLink
+} from "./chart-execution-markers.js?v=6";
 
 export {
   fetchTradeHistoryForSymbol

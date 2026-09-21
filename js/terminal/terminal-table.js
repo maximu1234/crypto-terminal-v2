@@ -3,7 +3,7 @@ coinsState,
 marketMap,
 coinElements,
 isTerminalPage
-} from "./terminal-state.js?v=16";
+} from "./terminal-state.js?v=17";
 
 import {
 normalizeMinVolume,
@@ -42,7 +42,7 @@ emptyFavorites
 
 import {
 isTradePage
-} from "./terminal-state.js?v=16";
+} from "./terminal-state.js?v=17";
 
 import {
 applyLiveOhlcBar,

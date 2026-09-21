@@ -57,6 +57,12 @@ applyPositionVolumeFromDrawing
 } from "../trade-volume-presets.js?v=11";
 
 import {
+stashDrawingStopsFromDrawing,
+clearDrawingStopsPending,
+hasDrawingStopsPending
+} from "../trade-auto-stops.js?v=18";
+
+import {
 touchShapeRevision
 } from "../drawings-storage.js?v=7";
 
@@ -349,6 +355,8 @@ false;
 let positionRiskShapeId =
 null;
 let positionApplyBtn =
+null;
+let positionApplyStopsBtn =
 null;
 let templateSaveModal =
 null;
@@ -3224,6 +3232,277 @@ symbol
 
 }
 
+function validatePositionDrawingStops(
+shape
+){
+
+if(
+!shape ||
+!isPositionType(
+shape.type
+)
+){
+return {
+ok:
+false,
+message:
+"Выберите объект Позиция Long/Short."
+};
+}
+
+const entry =
+positionEntryPrice(
+shape
+);
+const slPrice =
+Number(
+shape.slPrice
+);
+const tpPrice =
+Number(
+shape.tpPrice
+);
+
+if(
+!Number.isFinite(entry) ||
+entry <=
+0
+){
+return {
+ok:
+false,
+message:
+"Некорректная цена входа на объекте Позиция."
+};
+}
+
+if(
+!Number.isFinite(slPrice) ||
+slPrice <=
+0 ||
+!Number.isFinite(tpPrice) ||
+tpPrice <=
+0
+){
+return {
+ok:
+false,
+message:
+"Укажите СЛ и ТП на объекте Позиция."
+};
+}
+
+const isLong =
+shape.type ===
+"long";
+
+if(
+isLong
+){
+if(
+slPrice >=
+entry
+){
+return {
+ok:
+false,
+message:
+"Для Long стоп-лосс должен быть ниже входа."
+};
+}
+if(
+tpPrice <=
+entry
+){
+return {
+ok:
+false,
+message:
+"Для Long тейк-профит должен быть выше входа."
+};
+}
+}else{
+if(
+slPrice <=
+entry
+){
+return {
+ok:
+false,
+message:
+"Для Short стоп-лосс должен быть выше входа."
+};
+}
+if(
+tpPrice >=
+entry
+){
+return {
+ok:
+false,
+message:
+"Для Short тейк-профит должен быть ниже входа."
+};
+}
+}
+
+return {
+ok:
+true,
+side:
+isLong
+? "long"
+: "short",
+slPrice,
+tpPrice
+};
+
+}
+
+function resolveTradeSymbol(){
+
+return String(
+getSymbol?.() ||
+""
+).replace(
+/\.P$/i,
+""
+).trim().toUpperCase();
+
+}
+
+function syncPositionApplyStopsArmed(){
+
+if(
+!positionApplyStopsBtn
+){
+return;
+}
+
+const symbol =
+resolveTradeSymbol();
+const armed =
+isTradeVolumeUiActive() &&
+hasDrawingStopsPending(
+symbol
+);
+
+positionApplyStopsBtn.classList.toggle(
+"is-armed",
+armed
+);
+positionApplyStopsBtn.setAttribute(
+"aria-pressed",
+armed
+? "true"
+: "false"
+);
+positionApplyStopsBtn.title =
+armed
+? "Ожидание сделки с СЛ/ТП с объекта — нажмите ещё раз, чтобы отменить"
+: "Объём + СЛ/ТП с объекта на следующее открытие (авто-СЛ/ТП пропускаются)";
+
+}
+
+function submitPositionVolumeApplyWithStops(){
+
+if(
+!isTradeVolumeUiActive()
+){
+return;
+}
+
+const symbol =
+resolveTradeSymbol();
+
+/* Toggle off while armed for this symbol. */
+if(
+hasDrawingStopsPending(
+symbol
+)
+){
+clearDrawingStopsPending();
+syncPositionApplyStopsArmed();
+return;
+}
+
+applyPositionRiskUsd();
+
+const shape =
+resolvePositionRiskTarget();
+const volumeUsdt =
+getPositionEntryVolumeUsd(
+shape
+);
+
+if(
+!Number.isFinite(volumeUsdt) ||
+volumeUsdt <= 0
+){
+window.alert(
+"Не удалось применить объём: укажите стоп-лосс ($) и проверьте границы позиции."
+);
+return;
+}
+
+const stops =
+validatePositionDrawingStops(
+shape
+);
+
+if(
+!stops.ok
+){
+window.alert(
+stops.message
+);
+return;
+}
+
+applyPositionVolumeFromDrawing(
+{
+symbol,
+volumeUsdt
+}
+);
+
+window.dispatchEvent(
+new CustomEvent(
+"trade-apply-position-volume",
+{
+detail:{
+volumeUsdt,
+symbol
+}
+}
+)
+);
+
+const stashed =
+stashDrawingStopsFromDrawing(
+{
+symbol,
+side:
+stops.side,
+slPrice:
+stops.slPrice,
+tpPrice:
+stops.tpPrice
+}
+);
+
+if(
+!stashed
+){
+window.alert(
+"Объём применён, но СЛ/ТП не сохранены для следующего входа."
+);
+}
+
+syncPositionApplyStopsArmed();
+
+}
+
 function isUnrelatedFormFieldFocused(
 active
 ){
@@ -3534,6 +3813,12 @@ positionApplyBtn?.classList.toggle(
 !isPosToolbar ||
 !isTradeVolumeUiActive()
 );
+positionApplyStopsBtn?.classList.toggle(
+"hidden",
+!isPosToolbar ||
+!isTradeVolumeUiActive()
+);
+syncPositionApplyStopsArmed();
 
 if(
 isPositionType(type) &&
@@ -5742,6 +6027,51 @@ submitPositionVolumeApply();
 }
 );
 }
+
+if(
+positionRiskWrap &&
+!positionApplyStopsBtn
+){
+positionApplyStopsBtn =
+document.createElement("button");
+positionApplyStopsBtn.type =
+"button";
+positionApplyStopsBtn.className =
+"draw-position-risk-apply draw-position-risk-apply--stops hidden";
+positionApplyStopsBtn.textContent =
+"Применить + СЛ и ТП";
+positionApplyStopsBtn.title =
+"Объём + СЛ/ТП с объекта на следующее открытие (авто-СЛ/ТП пропускаются)";
+positionRiskWrap.appendChild(
+positionApplyStopsBtn
+);
+
+positionApplyStopsBtn.addEventListener(
+"mousedown",
+e=>{
+e.stopPropagation();
+}
+);
+
+positionApplyStopsBtn.addEventListener(
+"click",
+e=>{
+
+e.preventDefault();
+e.stopPropagation();
+
+submitPositionVolumeApplyWithStops();
+
+}
+);
+}
+
+window.addEventListener(
+"trade-drawing-stops-pending",
+()=>{
+syncPositionApplyStopsArmed();
+}
+);
 
 document.addEventListener(
 "keydown",

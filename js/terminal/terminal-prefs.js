@@ -14,7 +14,7 @@ COINS_PREFS_KEY,
 COINS_SORT_MODES,
 COINS_TF_VALUES,
 isTerminalPage
-} from "./terminal-state.js?v=16";
+} from "./terminal-state.js?v=17";
 
 import {
 getCurrentSymbols,
@@ -25,6 +25,10 @@ getExtraCoinMarkets
 import {
 parseAlertDeepLinkExchange
 } from "../alert-deep-link-url.js?v=2";
+
+import {
+parseDiaryTradeDeepLink
+} from "../trade-diary-terminal-deep-link.js?v=2";
 
 import {
 DEFAULT_CHART_SYMBOL,
@@ -863,6 +867,11 @@ params
 coinsState().urlExchangeId =
 urlExchange ||
 "";
+
+coinsState().diaryTradeDeepLink =
+parseDiaryTradeDeepLink(
+params
+);
 
 if(symbol){
 coinsState().currentSymbol = symbol.trim().toUpperCase();

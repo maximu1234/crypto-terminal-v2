@@ -8,7 +8,7 @@ getTradeConfig
 import {
 getCachedPosition,
 upsertTradePositionInCache
-} from "./positions-cache.js?v=5";
+} from "./positions-cache.js?v=6";
 
 const STORAGE_KEY =
 "trade_auto_stops_bingx_v1";

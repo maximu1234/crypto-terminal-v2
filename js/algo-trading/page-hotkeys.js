@@ -5,7 +5,7 @@
 import {
 COINS_TF_HOTKEYS,
 COINS_TF_VALUES
-} from "../terminal/terminal-state.js?v=16";
+} from "../terminal/terminal-state.js?v=17";
 
 import {
 shouldIgnoreTypingHotkey

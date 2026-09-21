@@ -168,7 +168,7 @@ createDrawingsPersist
 
 import {
 createDrawStyleBar
-} from "./draw-style-bar.js?v=57";
+} from "./draw-style-bar.js?v=59";
 
 import {
 createDrawAlertsChart
@@ -213,7 +213,7 @@ createDrawChartInput
 
 import {
 createDrawPriceScale
-} from "./draw-price-scale.js?v=18";
+} from "./draw-price-scale.js?v=19";
 
 import {
 createDrawRedrawLoop

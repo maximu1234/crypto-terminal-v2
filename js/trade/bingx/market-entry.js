@@ -6,7 +6,7 @@ getCachedPosition,
 listCachedPositionsForSymbol,
 removeTradePositionFromCache,
 upsertTradePositionInCache
-} from "./positions-cache.js?v=5";
+} from "./positions-cache.js?v=6";
 
 import {
 getActiveTradeVolumeUsdt
@@ -20,8 +20,14 @@ markAutoStopsHandled
 } from "./auto-stops.js?v=9";
 
 import {
+peekDrawingStopsPendingForSide,
+tryApplyDrawingStopsPending,
+wasDrawingStopsJustApplied
+} from "./drawing-stops.js?v=3";
+
+import {
 marketMap
-} from "../../terminal/terminal-state.js?v=16";
+} from "../../terminal/terminal-state.js?v=17";
 
 import {
 getTradeConfig
@@ -29,7 +35,7 @@ getTradeConfig
 
 import {
 mountTradeChartMarkersToggle
-} from "./chart-execution-markers.js?v=4";
+} from "./chart-execution-markers.js?v=6";
 
 const REFRESH_MS =
 1500;
@@ -251,9 +257,15 @@ const openOptions =
 exchangeId:
 "bingx"
 };
+const drawingStops =
+peekDrawingStopsPendingForSide(
+symbol,
+side
+);
 
 if(
-getTradeConfig().passAutoStopUsdOnOpen
+getTradeConfig().passAutoStopUsdOnOpen &&
+!drawingStops
 ){
 openOptions.autoSlUsd =
 settings.slEnabled &&
@@ -332,7 +344,20 @@ const mainOwns =
 getTradeConfig().attachStopsInMainProcess ===
 true;
 
+const drawingApplied =
+await tryApplyDrawingStopsPending(
+symbol,
+result.position
+);
+
 if(
+drawingApplied
+){
+markAutoStopsHandled(
+symbol,
+result.position
+);
+}else if(
 mainOwns &&
 (
 openOptions.autoSlUsd >
@@ -462,8 +487,13 @@ result.position
 }
 
 const needsAutoStops =
+!wasDrawingStopsJustApplied(
+symbol
+) &&
+(
 !attached.sl ||
-!attached.tp;
+!attached.tp
+);
 
 if(
 needsAutoStops
