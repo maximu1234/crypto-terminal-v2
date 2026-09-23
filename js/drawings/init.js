@@ -142,12 +142,13 @@ snapPlotToCandleWick
 
 import {
 computeChartRulerMetrics,
+containingBarOpenTime,
 drawChartRuler,
 ensureChartRulerLabelEl,
 hideChartRulerLabelEl,
 isChartRulerGoingDown,
 updateChartRulerLabelEl
-} from "./chart-ruler.js?v=8";
+} from "./chart-ruler.js?v=9";
 
 import {
 mountTabletDrawInput
@@ -168,7 +169,7 @@ createDrawingsPersist
 
 import {
 createDrawStyleBar
-} from "./draw-style-bar.js?v=59";
+} from "./draw-style-bar.js?v=60";
 
 import {
 createDrawAlertsChart
@@ -910,17 +911,17 @@ return direct;
 
 const candles = candleSeries();
 
-if(candles.length < 2){
+if(!candles.length){
 return null;
 }
 
 const first = candles[0];
-const second = candles[1];
-const prev = candles[candles.length - 2];
 const last = candles[candles.length - 1];
 
-if(t <= first.time){
+/* Past / future beyond series: keep linear extrapolate so rays can extend. */
+if(candles.length >= 2 && t < first.time){
 
+const second = candles[1];
 const seg = segmentX(ts, first.time, second.time);
 
 if(!seg || seg.dt <= 0){
@@ -931,8 +932,9 @@ return seg.x0 + (seg.x1 - seg.x0) * ((t - first.time) / seg.dt);
 
 }
 
-if(t >= last.time){
+if(candles.length >= 2 && t > last.time){
 
+const prev = candles[candles.length - 2];
 const seg = segmentX(ts, prev.time, last.time);
 
 if(!seg || seg.dt <= 0){
@@ -943,32 +945,18 @@ return seg.x1 + (seg.x1 - seg.x0) * ((t - last.time) / seg.dt);
 
 }
 
-let lo = 0;
-let hi = candles.length - 1;
-
-while(lo + 1 < hi){
-
-const mid = (lo + hi) >> 1;
-
-if(candles[mid].time <= t){
-lo = mid;
-}else{
-hi = mid;
-}
-
-}
-
-const seg = segmentX(
-ts,
-candles[lo].time,
-candles[lo + 1].time
+/* Between bars (e.g. 1h open on Daily): stick to containing bar column. */
+const barOpen =
+containingBarOpenTime(
+candles,
+t
 );
 
-if(!seg || seg.dt <= 0){
-return seg?.x0 ?? null;
+if(barOpen == null){
+return null;
 }
 
-return seg.x0 + (seg.x1 - seg.x0) * ((t - candles[lo].time) / seg.dt);
+return ts.timeToCoordinate(barOpen);
 
 }
 

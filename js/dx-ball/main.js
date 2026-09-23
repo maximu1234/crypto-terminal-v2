@@ -3,7 +3,7 @@
  */
 import { AudioSys } from "./audio.js?v=2";
 import { Input } from "./input.js?v=3";
-import { Game } from "./game.js?v=6";
+import { Game } from "./game.js?v=7";
 
 let rafId = 0;
 let last = 0;

@@ -6,7 +6,7 @@ getCachedPosition,
 listCachedPositionsForSymbol,
 removeTradePositionFromCache,
 upsertTradePositionInCache
-} from "./positions-cache.js?v=2";
+} from "./positions-cache.js?v=3";
 
 import {
 getActiveTradeVolumeUsdt
@@ -21,7 +21,7 @@ import {
 peekDrawingStopsPendingForSide,
 tryApplyDrawingStopsPending,
 wasDrawingStopsJustApplied
-} from "./drawing-stops.js?v=3";
+} from "./drawing-stops.js?v=4";
 
 import {
 marketMap

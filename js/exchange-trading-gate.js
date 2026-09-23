@@ -20,7 +20,7 @@ startTradeStreamBridge
 import {
 loadTradeExchangeModules,
 resetTradeExchangeModules
-} from "./trade/module-router.js?v=23";
+} from "./trade/module-router.js?v=24";
 
 const BODY_CLASS =
 "exchange-trading-inactive";

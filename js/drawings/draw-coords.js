@@ -5,7 +5,7 @@
 import {
 candleIndexAtOrBefore,
 tfPeriodSec
-} from "./chart-ruler.js?v=8";
+} from "./chart-ruler.js?v=9";
 
 import {
 isPositionType,

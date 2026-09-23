@@ -137,3 +137,40 @@ test("hasDrawingStopsPending tracks armed state", () => {
   assert.equal(hasDrawingStopsPending("ETHUSDT"), false);
   assert.equal(hasDrawingStopsPending(), true);
 });
+
+test("multiple symbols stay armed independently", () => {
+  assert.equal(
+    stashDrawingStopsFromDrawing({
+      symbol: "BTCUSDT",
+      side: "long",
+      slPrice: 90_000,
+      tpPrice: 100_000
+    }),
+    true
+  );
+  assert.equal(
+    stashDrawingStopsFromDrawing({
+      symbol: "ETHUSDT",
+      side: "short",
+      slPrice: 4_000,
+      tpPrice: 3_000
+    }),
+    true
+  );
+
+  assert.equal(hasDrawingStopsPending("BTCUSDT"), true);
+  assert.equal(hasDrawingStopsPending("ETHUSDT"), true);
+
+  const eth = consumeDrawingStopsPending("ETHUSDT", {
+    side: "Sell",
+    size: 1
+  });
+  assert.ok(eth);
+  assert.equal(eth.slPrice, 4_000);
+  assert.equal(hasDrawingStopsPending("ETHUSDT"), false);
+  assert.equal(hasDrawingStopsPending("BTCUSDT"), true);
+
+  clearDrawingStopsPending("BTCUSDT");
+  assert.equal(hasDrawingStopsPending("BTCUSDT"), false);
+  assert.equal(hasDrawingStopsPending(), false);
+});

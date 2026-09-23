@@ -8,7 +8,7 @@ syncTradePositionsCache,
 upsertTradePositionInCache,
 markTradePositionRecentlyClosed,
 isTradePositionRecentlyClosed
-} from "./positions-cache.js?v=6";
+} from "./positions-cache.js?v=7";
 
 import {
 markStopDismissed,

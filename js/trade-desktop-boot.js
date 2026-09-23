@@ -31,7 +31,7 @@ initTradeBookPanel
 
 import {
 loadTradeExchangeModules
-} from "./trade/module-router.js?v=23";
+} from "./trade/module-router.js?v=24";
 
 import {
 getActiveExchangeId

@@ -18,7 +18,7 @@ getExchangeSecretForSave
 
 import {
 getLoadedTradeExchangeModules
-} from "./trade/module-router.js?v=23";
+} from "./trade/module-router.js?v=24";
 
 import {
 maskTradeDisplay

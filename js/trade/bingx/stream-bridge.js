@@ -5,7 +5,7 @@
 import {
 applyTradePositionsStream,
 syncTradePositionsCache
-} from "./positions-cache.js?v=6";
+} from "./positions-cache.js?v=7";
 
 import {
 isExchangeTradingEnabled

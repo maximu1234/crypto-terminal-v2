@@ -278,12 +278,38 @@ export class Game {
     if (this.mode === 'pack') {
       const col = document.createElement('div');
       col.className = 'terminal-dxball-ui-col terminal-dxball-ui-col--pack';
-      col.append(
-        mk('CLASSIC', 'pack-classic', 'is-pack'),
-        mk('SUPER', 'pack-super', 'is-pack'),
-        mk('ENDLESS', 'pack-endless', 'is-pack'),
-        mk('← Back', 'back-title', 'is-ghost')
-      );
+      const packs = [
+        {
+          label: 'CLASSIC',
+          act: 'pack-classic',
+          desc: `${getPack('classic').levels.length} boards · original rectangular style`,
+        },
+        {
+          label: 'SUPER',
+          act: 'pack-super',
+          desc: `${getPack('super').levels.length} boards · geometric mosaics`,
+        },
+        {
+          label: 'ENDLESS',
+          act: 'pack-endless',
+          desc: `${getPack('endless').levels.length} boards · auto-generated, rising difficulty`,
+        },
+      ];
+      for (const p of packs) {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'terminal-dxball-ui-btn is-pack';
+        b.setAttribute('data-dxball-act', p.act);
+        const title = document.createElement('span');
+        title.className = 'terminal-dxball-ui-btn-title';
+        title.textContent = p.label;
+        const desc = document.createElement('span');
+        desc.className = 'terminal-dxball-ui-btn-desc';
+        desc.textContent = p.desc;
+        b.append(title, desc);
+        col.append(b);
+      }
+      col.append(mk('← Back', 'back-title', 'is-ghost'));
       ui.append(col);
       return;
     }
@@ -1466,15 +1492,7 @@ export class Game {
     ctx.font = '600 18px Rajdhani, sans-serif';
     ctx.fillText('Browser remake · all classic power-ups', W / 2, titleY + 110);
 
-    const baseY = titleMenuLayout().baseY;
-    const lineH = titleMenuLayout().lineH;
-    const items = ['PLAY', 'POWER-UPS'];
-    items.forEach((label, i) => {
-      const selected = this.menuIndex === i;
-      ctx.fillStyle = selected ? '#3de0ff' : '#e8eef7';
-      ctx.font = `${selected ? 700 : 600} 22px Orbitron, sans-serif`;
-      ctx.fillText(`${selected ? '▸ ' : '  '}${label}`, W / 2, baseY + i * lineH);
-    });
+    /* Menu actions: HTML overlay (syncMenuUi) — do not draw canvas twins. */
 
     ctx.fillStyle = '#5a6577';
     ctx.font = '500 14px Rajdhani, sans-serif';
@@ -1492,29 +1510,7 @@ export class Game {
     ctx.textAlign = 'center';
     ctx.fillText('SELECT BOARD PACK', W / 2, Math.round(H * 0.12));
 
-    const packs = [
-      { id: 'classic', name: 'CLASSIC', desc: `${getPack('classic').levels.length} boards · original rectangular style` },
-      { id: 'super', name: 'SUPER', desc: `${getPack('super').levels.length} boards · geometric mosaics` },
-      { id: 'endless', name: 'ENDLESS', desc: `${getPack('endless').levels.length} boards · auto-generated, rising difficulty` },
-    ];
-    const { cardH, cardW, cardX, baseY, step } = packMenuLayout();
-    packs.forEach((p, i) => {
-      const selected = this.menuIndex === i;
-      const y = baseY + i * step;
-      ctx.strokeStyle = selected ? '#3de0ff' : '#2a3548';
-      ctx.fillStyle = selected ? 'rgba(61,224,255,0.08)' : 'rgba(20,28,40,0.6)';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.roundRect(cardX, y, cardW, cardH, 8);
-      ctx.fill();
-      ctx.stroke();
-      ctx.fillStyle = selected ? '#3de0ff' : '#e8eef7';
-      ctx.font = '700 22px Orbitron, sans-serif';
-      ctx.fillText(p.name, W / 2, y + Math.round(cardH * 0.42));
-      ctx.fillStyle = '#8a96a8';
-      ctx.font = '600 15px Rajdhani, sans-serif';
-      ctx.fillText(p.desc, W / 2, y + Math.round(cardH * 0.72));
-    });
+    /* Pack cards: HTML overlay only — canvas cards would double the controls. */
 
     ctx.fillStyle = '#5a6577';
     ctx.font = '500 14px Rajdhani';

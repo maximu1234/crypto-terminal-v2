@@ -26,7 +26,7 @@ import {
 } from "../trade-book-panel.js?v=60";
 import {
   loadTradeExchangeModules
-} from "../trade/module-router.js?v=23";
+} from "../trade/module-router.js?v=24";
 import {
   setActiveExchangeId
 } from "../market-api.js?v=6";

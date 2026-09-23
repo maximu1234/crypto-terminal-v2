@@ -3757,7 +3757,7 @@ const {
 initWidgetDrawings
 } =
 await import(
-"./chart-widget-host.js?v=47"
+"./chart-widget-host.js?v=50"
 );
 const {
 initChartIndicators

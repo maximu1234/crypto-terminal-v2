@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import {
 countBarsBetween,
 computeChartRulerMetrics,
+containingBarOpenTime,
 formatRulerDuration,
 formatRulerPercent,
 CHART_RULER_SHOULDER_HALF,
@@ -38,6 +39,62 @@ candles,
 1000
 ),
 3
+);
+
+}
+);
+
+test(
+"containingBarOpenTime snaps LTF time to HTF bar open",
+()=>{
+
+const daily = [
+{ time: 0, open: 1, high: 2, low: 0.5, close: 1.5 },
+{ time: 86400, open: 1.5, high: 3, low: 1, close: 2 },
+{ time: 172800, open: 2, high: 2.5, low: 1.8, close: 2.2 }
+];
+
+/* 14:00 UTC on day 1 → still day-0 open (0). */
+assert.equal(
+containingBarOpenTime(
+daily,
+14 * 3600
+),
+0
+);
+
+/* Exact day open stays itself. */
+assert.equal(
+containingBarOpenTime(
+daily,
+86400
+),
+86400
+);
+
+/* Mid day-1 → day-1 open. */
+assert.equal(
+containingBarOpenTime(
+daily,
+86400 + 14 * 3600
+),
+86400
+);
+
+assert.equal(
+containingBarOpenTime(
+[],
+100
+),
+null
+);
+
+assert.equal(
+containingBarOpenTime(
+daily,
+null
+),
+null
 );
 
 }

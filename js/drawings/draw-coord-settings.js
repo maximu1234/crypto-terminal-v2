@@ -11,7 +11,7 @@ parseCoordBar,
 parseCoordNumber,
 priceStepFor,
 readShapeCoordPoint
-} from "./draw-coords.js?v=3";
+} from "./draw-coords.js?v=4";
 
 function spinButtonsHtml(
 kind

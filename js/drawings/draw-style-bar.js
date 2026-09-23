@@ -143,7 +143,7 @@ syncElliottSettingsColor
 
 import {
 hasCoordSettings
-} from "./draw-coords.js?v=3";
+} from "./draw-coords.js?v=4";
 
 import {
 bindCoordSettingsPanel,
@@ -3415,13 +3415,15 @@ return;
 const symbol =
 resolveTradeSymbol();
 
-/* Toggle off while armed for this symbol. */
+/* Toggle off while armed for this symbol only. */
 if(
 hasDrawingStopsPending(
 symbol
 )
 ){
-clearDrawingStopsPending();
+clearDrawingStopsPending(
+symbol
+);
 syncPositionApplyStopsArmed();
 return;
 }

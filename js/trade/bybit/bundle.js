@@ -13,7 +13,7 @@ export {
   getTradePositionsCacheSyncError,
   syncTradePositionsCache,
   initTradePositionsCache
-} from "./positions-cache.js?v=2";
+} from "./positions-cache.js?v=3";
 
 export {
   stopTradeStreamBridge,
@@ -53,12 +53,12 @@ export {
   wasDrawingStopsJustApplied,
   hasDrawingStopsPending,
   clearDrawingStopsPending
-} from "./drawing-stops.js?v=3";
+} from "./drawing-stops.js?v=4";
 
 export {
   initTradeMarketEntry,
   openWidgetMarketPosition
-} from "./market-entry.js?v=7";
+} from "./market-entry.js?v=8";
 
 export {
   initTradeBookPanel

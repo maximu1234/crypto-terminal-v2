@@ -1,9 +1,10 @@
 /**
  * One-shot SL/TP from Position Long/Short drawing («Применить + СЛ и ТП»).
- * In-memory only; clears after next matching open (or side mismatch).
-
+ * In-memory only; one pending per symbol — multiple charts can arm at once.
+ * Clears after next matching open for that symbol (or side mismatch).
  */
-let pending = null;
+/** @type {Map<string, { symbol: string, side: string, slPrice: number, tpPrice: number, createdAt: number }>} */
+const pendingBySymbol = new Map();
 /** @type {Map<string, number>} symbol → suppress USD auto until ts */
 const appliedUntilBySymbol = new Map();
 
@@ -72,19 +73,18 @@ export function resolvePositionTradeSide(position) {
   return normalizeDrawingTradeSide(side);
 }
 
-function emitDrawingStopsPendingChange() {
+function emitDrawingStopsPendingChange(changedSymbol = "") {
   try {
-    const detail = pending
-      ? {
-          active: true,
-          symbol: pending.symbol,
-          side: pending.side
-        }
-      : {
-          active: false,
-          symbol: "",
-          side: ""
-        };
+    const symbols = [...pendingBySymbol.keys()];
+    const primary = changedSymbol
+      ? pendingBySymbol.get(normalizeSymbol(changedSymbol))
+      : pendingBySymbol.values().next().value;
+    const detail = {
+      active: symbols.length > 0,
+      symbols,
+      symbol: primary?.symbol || "",
+      side: primary?.side || ""
+    };
     window.dispatchEvent(
       new CustomEvent("trade-drawing-stops-pending", { detail })
     );
@@ -93,23 +93,37 @@ function emitDrawingStopsPendingChange() {
   }
 }
 
-export function clearDrawingStopsPending() {
-  if (!pending) {
+/**
+ * Clear pending. With symbol — only that chart; without — all.
+ * @param {string} [symbol]
+ */
+export function clearDrawingStopsPending(symbol) {
+  if (symbol == null || symbol === "") {
+    if (pendingBySymbol.size === 0) {
+      return;
+    }
+    pendingBySymbol.clear();
+    emitDrawingStopsPendingChange();
     return;
   }
-  pending = null;
-  emitDrawingStopsPendingChange();
+
+  const sym = normalizeSymbol(symbol);
+  if (!sym || !pendingBySymbol.has(sym)) {
+    return;
+  }
+  pendingBySymbol.delete(sym);
+  emitDrawingStopsPendingChange(sym);
 }
 
 /** True if a one-shot Apply+SL/TP is armed (optionally for symbol). */
 export function hasDrawingStopsPending(symbol) {
-  if (!pending) {
+  if (pendingBySymbol.size === 0) {
     return false;
   }
   if (symbol == null || symbol === "") {
     return true;
   }
-  return pending.symbol === normalizeSymbol(symbol);
+  return pendingBySymbol.has(normalizeSymbol(symbol));
 }
 
 /**
@@ -122,28 +136,27 @@ export function stashDrawingStopsFromDrawing(payload) {
   const tpPrice = Number(payload?.tpPrice);
 
   if (!symbol || !side) {
-    clearDrawingStopsPending();
     return false;
   }
 
   if (!Number.isFinite(slPrice) || slPrice <= 0) {
-    clearDrawingStopsPending();
+    clearDrawingStopsPending(symbol);
     return false;
   }
 
   if (!Number.isFinite(tpPrice) || tpPrice <= 0) {
-    clearDrawingStopsPending();
+    clearDrawingStopsPending(symbol);
     return false;
   }
 
-  pending = {
+  pendingBySymbol.set(symbol, {
     symbol,
     side,
     slPrice,
     tpPrice,
     createdAt: Date.now()
-  };
-  emitDrawingStopsPendingChange();
+  });
+  emitDrawingStopsPendingChange(symbol);
   return true;
 }
 
@@ -153,12 +166,13 @@ export function stashDrawingStopsFromDrawing(payload) {
  * @param {string} side Buy/Sell/long/short
  */
 export function peekDrawingStopsPendingForSide(symbol, side) {
+  const sym = normalizeSymbol(symbol);
+  const pending = sym ? pendingBySymbol.get(sym) : null;
   if (!pending) {
     return null;
   }
-  const sym = normalizeSymbol(symbol);
   const want = normalizeDrawingTradeSide(side);
-  if (!sym || pending.symbol !== sym || !want || pending.side !== want) {
+  if (!want || pending.side !== want) {
     return null;
   }
   return { ...pending };
@@ -170,18 +184,18 @@ export function peekDrawingStopsPendingForSide(symbol, side) {
  * @returns {{ symbol: string, side: string, slPrice: number, tpPrice: number } | null}
  */
 export function consumeDrawingStopsPending(symbol, position) {
-  if (!pending) {
-    return null;
-  }
-
   const sym = normalizeSymbol(symbol);
-  if (!sym || pending.symbol !== sym) {
+  if (!sym) {
     return null;
   }
 
-  const stashed = pending;
-  pending = null;
-  emitDrawingStopsPendingChange();
+  const stashed = pendingBySymbol.get(sym);
+  if (!stashed) {
+    return null;
+  }
+
+  pendingBySymbol.delete(sym);
+  emitDrawingStopsPendingChange(sym);
 
   const got = resolvePositionTradeSide(position);
   if (!got || stashed.side !== got) {
@@ -273,13 +287,23 @@ export async function tryApplyDrawingStopsPending(symbol, position) {
   return true;
 }
 
-/** @internal tests */
-export function __getDrawingStopsPendingForTests() {
-  return pending ? { ...pending } : null;
+/** @internal tests — pass symbol, or omit when at most one pending expected */
+export function __getDrawingStopsPendingForTests(symbol) {
+  if (symbol != null && symbol !== "") {
+    const pending = pendingBySymbol.get(normalizeSymbol(symbol));
+    return pending ? { ...pending } : null;
+  }
+  if (pendingBySymbol.size === 0) {
+    return null;
+  }
+  if (pendingBySymbol.size === 1) {
+    return { ...pendingBySymbol.values().next().value };
+  }
+  return [...pendingBySymbol.values()].map((p) => ({ ...p }));
 }
 
 /** @internal tests */
 export function __resetDrawingStopsForTests() {
-  pending = null;
+  pendingBySymbol.clear();
   appliedUntilBySymbol.clear();
 }
