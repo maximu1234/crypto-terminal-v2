@@ -62,9 +62,9 @@ function pinHostSize(hostEl) {
   if (w < 120) {
     w = Math.max(120, Math.round(window.innerWidth - 28));
   }
-  if (h < 160) {
-    /* toolbar+nav+pager ≈ 260; two slots share the rest */
-    h = Math.max(180, Math.floor((window.innerHeight - 280) / 2));
+  if (h < 80) {
+    /* Flex layout not settled yet — estimate half of leftover viewport */
+    h = Math.max(100, Math.floor((window.innerHeight - 300) / 2));
   }
   hostEl.style.width = `${w}px`;
   hostEl.style.height = `${h}px`;

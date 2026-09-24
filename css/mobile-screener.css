@@ -1,17 +1,47 @@
-.mobile-screener-main {
-  padding-bottom: 8px;
+/* Screener: lock to one phone screen — topbar + filters + 2 widgets + pager */
+
+html.mobile-page:has(.mobile-screener-main),
+body.mobile-shell:has(.mobile-screener-main) {
+  height: 100%;
+  height: 100svh;
+  max-height: 100svh;
+  overflow: hidden;
+}
+
+body.mobile-shell:has(.mobile-screener-main) {
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 0;
+}
+
+body.mobile-shell:has(.mobile-screener-main) .mobile-topbar {
+  flex: 0 0 auto;
+  padding: 6px 10px;
+  padding-top: calc(6px + env(safe-area-inset-top, 0px));
+}
+
+.mobile-screener-main.mobile-main {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 6px 10px 0;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 .mobile-screener-toolbar {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  margin-bottom: 8px;
+  gap: 6px;
+  margin-bottom: 6px;
+  flex: 0 0 auto;
 }
 
 .mobile-screener-toolbar .mobile-input {
-  min-height: 40px;
-  font-size: 14px;
+  min-height: 34px;
+  font-size: 13px;
+  padding: 6px 8px;
 }
 
 .mobile-screener-pick-wrap {
@@ -25,13 +55,13 @@
   align-items: center;
   justify-content: space-between;
   gap: 6px;
-  min-height: 40px;
+  min-height: 34px;
   border-radius: 8px;
   border: 1px solid #2a3548;
   background: #0e1014;
   color: #e8eef7;
-  font: 700 13px Orbitron, sans-serif;
-  padding: 8px 10px;
+  font: 700 12px Orbitron, sans-serif;
+  padding: 6px 8px;
   cursor: pointer;
 }
 
@@ -78,8 +108,13 @@
 }
 
 .mobile-screener-status {
-  margin: 0 0 8px;
-  font-size: 12px;
+  margin: 0 0 4px;
+  font-size: 11px;
+  line-height: 1.2;
+  flex: 0 0 auto;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .mobile-screener-status[hidden] {
@@ -89,13 +124,16 @@
 .mobile-screener-grid {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 6px;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .mobile-screener-slot {
   display: flex;
   flex-direction: column;
-  flex: 0 0 auto;
+  flex: 1 1 0;
+  min-height: 0;
   background: #16181f;
   border: 1px solid #252830;
   border-radius: 10px;
@@ -107,24 +145,24 @@
   gap: 8px;
   align-items: baseline;
   justify-content: space-between;
-  padding: 8px 10px;
+  padding: 4px 8px;
   border-bottom: 1px solid #252830;
   flex: 0 0 auto;
 }
 
 .mobile-screener-slot-sym {
-  font: 700 14px Orbitron, sans-serif;
+  font: 700 13px Orbitron, sans-serif;
   letter-spacing: 0.03em;
 }
 
 .mobile-screener-slot-chg {
-  font: 700 13px Rajdhani, sans-serif;
+  font: 700 12px Rajdhani, sans-serif;
 }
 
 .mobile-screener-slot-chart {
-  /* Explicit height — do not rely on flex+% for LW Charts on iOS */
-  height: min(42dvh, 320px);
-  min-height: 200px;
+  /* Fill leftover slot height — no fixed dvh (that forced page scroll) */
+  flex: 1 1 auto;
+  min-height: 0;
   width: 100%;
   position: relative;
   overflow: hidden;
@@ -144,20 +182,23 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  margin-top: 10px;
-  margin-bottom: 8px;
-  padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+  gap: 10px;
+  flex: 0 0 auto;
+  margin-top: 4px;
+  margin-bottom: 0;
+  padding: 4px 0 calc(6px + env(safe-area-inset-bottom, 0px));
 }
 
 .mobile-screener-page-btn {
-  min-width: 48px;
-  font-size: 22px;
+  min-width: 44px;
+  min-height: 40px;
+  font-size: 20px;
   line-height: 1;
+  padding: 6px 10px;
 }
 
 .mobile-screener-page-info {
-  font: 700 14px Orbitron, sans-serif;
+  font: 700 13px Orbitron, sans-serif;
   color: #8a96a8;
   min-width: 72px;
   text-align: center;
