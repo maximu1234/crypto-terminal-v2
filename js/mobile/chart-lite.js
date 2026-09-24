@@ -38,22 +38,49 @@ function waitFrames(n = 2) {
 
 /**
  * iOS Safari: flex + % height often leaves LW chart at ~80px while the card is tall.
- * Pin explicit px size on the host before createChart / resize.
+ * Clear previous pin first — otherwise rotate keeps portrait px and layout breaks.
  */
 function pinHostSize(hostEl) {
   if (!hostEl) {
     return { w: 120, h: 180 };
   }
+  hostEl.style.width = "";
+  hostEl.style.height = "";
+  hostEl.style.minHeight = "";
+  void hostEl.offsetHeight;
+
+  const parent = hostEl.parentElement;
   const rect = hostEl.getBoundingClientRect();
+  const parentRect = parent?.getBoundingClientRect();
   let w = Math.round(rect.width || hostEl.clientWidth || 0);
   let h = Math.round(rect.height || hostEl.clientHeight || 0);
+
   if (w < 120) {
-    w = Math.max(120, Math.round(window.innerWidth - 28));
+    const pw = parentRect ? Math.round(parentRect.width) : 0;
+    w = Math.max(120, pw > 40 ? pw - 8 : Math.round(window.innerWidth - 28));
+  }
+
+  if (h < 80 && parent && parentRect) {
+    const cs = getComputedStyle(parent);
+    const padY =
+      (parseFloat(cs.paddingTop) || 0) + (parseFloat(cs.paddingBottom) || 0);
+    let used = 0;
+    for (const child of parent.children) {
+      if (child === hostEl || child.hidden) {
+        continue;
+      }
+      used += child.getBoundingClientRect().height;
+    }
+    h = Math.max(80, Math.round(parentRect.height - padY - used));
   }
   if (h < 80) {
-    /* Layout not settled — use leftover viewport (single chart / flex child). */
-    h = Math.max(120, Math.round(window.innerHeight - 160));
+    const landscape = window.innerWidth > window.innerHeight;
+    h = Math.max(
+      80,
+      Math.round(window.innerHeight - (landscape ? 110 : 160))
+    );
   }
+
   hostEl.style.width = `${w}px`;
   hostEl.style.height = `${h}px`;
   hostEl.style.minHeight = `${h}px`;
@@ -261,19 +288,41 @@ export async function mountMobileReadOnlyChart(hostEl, symbol, tf = "60") {
   }, 1000);
 
   let resizeTimer = null;
+  const scheduleFit = () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+      if (!destroyed) {
+        fitChart();
+      }
+    }, 50);
+  };
+  const onOrientation = () => {
+    clearTimeout(resizeTimer);
+    /* iOS settles new svh/safe-area after the event */
+    resizeTimer = setTimeout(() => {
+      if (!destroyed) {
+        fitChart();
+      }
+    }, 120);
+    setTimeout(() => {
+      if (!destroyed) {
+        fitChart();
+      }
+    }, 350);
+  };
   const ro =
     typeof ResizeObserver !== "undefined"
       ? new ResizeObserver(() => {
-          clearTimeout(resizeTimer);
-          resizeTimer = setTimeout(() => {
-            fitChart();
-          }, 40);
+          scheduleFit();
         })
       : null;
   ro?.observe(hostEl);
   if (hostEl.parentElement) {
     ro?.observe(hostEl.parentElement);
   }
+  window.addEventListener("orientationchange", onOrientation);
+  window.addEventListener("resize", scheduleFit);
+  window.visualViewport?.addEventListener("resize", scheduleFit);
 
   return {
     symbol: sym,
@@ -284,6 +333,9 @@ export async function mountMobileReadOnlyChart(hostEl, symbol, tf = "60") {
       destroyed = true;
       clearInterval(rollTimer);
       clearTimeout(resizeTimer);
+      window.removeEventListener("orientationchange", onOrientation);
+      window.removeEventListener("resize", scheduleFit);
+      window.visualViewport?.removeEventListener("resize", scheduleFit);
       try {
         unsub?.();
       } catch {
