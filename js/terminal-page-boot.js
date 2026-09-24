@@ -319,6 +319,24 @@ document.body.innerHTML =
 return;
 }
 
+try{
+const {
+redirectPhoneTo
+} =
+await import(
+"./mobile/viewport.js?v=1"
+);
+if(
+redirectPhoneTo(
+"/m-terminal.html"
+)
+){
+return;
+}
+}catch{
+/* phone gate optional */
+}
+
 await waitForSiteCssReady();
 await initTradeLayerBeforeChart();
 await loadLightweightCharts();

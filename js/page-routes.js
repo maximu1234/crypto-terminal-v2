@@ -42,6 +42,12 @@ const TERMINAL_ONLY_PATH_RE =
 const WATCHLIST_PATH_RE =
 /^\/watchlist(?:\.html)?\/?$/i;
 
+const MOBILE_SCREENER_PATH_RE =
+/^\/(?:m-screener|mobile-screener)(?:\.html)?\/?$/i;
+
+const MOBILE_TERMINAL_PATH_RE =
+/^\/(?:m-terminal|mobile-terminal)(?:\.html)?\/?$/i;
+
 export function isAlertsPage(){
 
 return pathMatches(
@@ -189,6 +195,31 @@ export function isAlgoTradingPage(){
 
 return pathMatches(
 /\/algo-trading(\.html)?\/?$/i
+);
+
+}
+
+export function isMobileScreenerPage(){
+
+return pathMatches(
+MOBILE_SCREENER_PATH_RE
+);
+
+}
+
+export function isMobileTerminalPage(){
+
+return pathMatches(
+MOBILE_TERMINAL_PATH_RE
+);
+
+}
+
+export function isMobileAppPage(){
+
+return (
+isMobileScreenerPage() ||
+isMobileTerminalPage()
 );
 
 }

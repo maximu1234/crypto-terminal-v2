@@ -8,7 +8,7 @@ import {
 import {
   isTerminalPageOnly,
   isWatchlistPage
-} from "../page-routes.js?v=6";
+} from "../page-routes.js?v=7";
 import {
   initTradeExchangeSettings
 } from "../trade-exchange-settings.js?v=24";

@@ -1,0 +1,43 @@
+.mobile-screener-main {
+  padding-bottom: 8px;
+}
+
+.mobile-screener-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: calc(100dvh - 120px - env(safe-area-inset-bottom, 0px));
+}
+
+.mobile-screener-slot {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 50%;
+  min-height: 220px;
+  background: #16181f;
+  border: 1px solid #252830;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.mobile-screener-slot-head {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 10px;
+  border-bottom: 1px solid #252830;
+}
+
+.mobile-screener-slot-head .mobile-select {
+  flex: 1;
+}
+
+.mobile-screener-slot-chart {
+  flex: 1;
+  min-height: 180px;
+  position: relative;
+}
+
+.mobile-screener-slot-chart canvas {
+  touch-action: none;
+}

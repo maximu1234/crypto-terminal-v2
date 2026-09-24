@@ -7,7 +7,7 @@ cssUrl
 
 import {
 isWatchlistPage
-} from "./page-routes.js?v=6";
+} from "./page-routes.js?v=7";
 
 import {
 initTradeExchangeSettings

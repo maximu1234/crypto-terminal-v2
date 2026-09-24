@@ -18,7 +18,7 @@ isDrawingsUiPage
 
 import {
 isAlgoReducedCloudClient
-} from "../page-routes.js?v=6";
+} from "../page-routes.js?v=7";
 
 import {
 IS_YANDEX,

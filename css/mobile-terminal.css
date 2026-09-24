@@ -1,0 +1,103 @@
+.mobile-terminal-tabs {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.mobile-terminal-tab {
+  flex: 0 0 auto;
+  appearance: none;
+  border: 1px solid #2a3548;
+  border-radius: 999px;
+  background: #16181f;
+  color: #8a96a8;
+  font: 700 13px Orbitron, sans-serif;
+  padding: 8px 12px;
+  min-height: 40px;
+}
+
+.mobile-terminal-tab.is-active {
+  color: #3de0ff;
+  border-color: #3de0ff;
+}
+
+.mobile-terminal-panel[hidden] {
+  display: none !important;
+}
+
+.mobile-coin-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 50vh;
+  overflow: auto;
+}
+
+.mobile-coin-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 12px 10px;
+  border-bottom: 1px solid #252830;
+  cursor: pointer;
+  min-height: 48px;
+}
+
+.mobile-coin-item.is-active {
+  background: rgba(61, 224, 255, 0.08);
+}
+
+.mobile-coin-item-sym {
+  font: 700 16px Orbitron, sans-serif;
+}
+
+.mobile-chart-host {
+  height: 240px;
+  min-height: 200px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #0e1014;
+}
+
+.mobile-pos-row,
+.mobile-order-row,
+.mobile-alert-row {
+  display: grid;
+  gap: 4px;
+  padding: 10px 0;
+  border-bottom: 1px solid #252830;
+  font-size: 14px;
+}
+
+.mobile-pos-row-top,
+.mobile-order-row-top,
+.mobile-alert-row-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-weight: 700;
+}
+
+.mobile-pnl-up {
+  color: #3dd68c;
+}
+
+.mobile-pnl-down {
+  color: #f07178;
+}
+
+.mobile-trade-fields {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.mobile-trade-fields label {
+  display: grid;
+  gap: 4px;
+  font-size: 13px;
+  color: #8a96a8;
+}

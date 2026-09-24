@@ -5,7 +5,7 @@
 import {
 isAlertsPage,
 isDrawingsUiPage
-} from "./page-routes.js?v=6";
+} from "./page-routes.js?v=7";
 
 export {
 isAlertsPage,
@@ -16,7 +16,7 @@ isScreenerPage,
 isListingsPage,
 isTradeCalculatorPage,
 isSystemAdminPage
-} from "./page-routes.js?v=6";
+} from "./page-routes.js?v=7";
 
 const IS_YANDEX =
 typeof navigator !==

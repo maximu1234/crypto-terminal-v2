@@ -233,7 +233,9 @@ const name of
 "system/index.html",
 "diary/index.html",
 "script.html",
-"algo-trading.html"
+"algo-trading.html",
+"m-screener.html",
+"m-terminal.html"
 ]
 ){
 

@@ -9,7 +9,7 @@ shouldRunAlgoBackgroundJobs
 
 import {
 isAlgoBotLiteShell
-} from "../page-routes.js?v=6";
+} from "../page-routes.js?v=7";
 
 import {
 ALGO_ANALYSIS_BOT_PATTERN_12,

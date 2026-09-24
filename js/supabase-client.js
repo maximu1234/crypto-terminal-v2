@@ -7,7 +7,7 @@ noteAuthRefreshHttpStatus
 
 import {
 isAlgoBotLiteShell
-} from "./page-routes.js?v=6";
+} from "./page-routes.js?v=7";
 
 export {
 SUPABASE_AUTH_STORAGE_KEY
