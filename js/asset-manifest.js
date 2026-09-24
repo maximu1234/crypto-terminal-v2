@@ -55,7 +55,7 @@ Object.freeze({
 "terminal-page-boot.js":
 63,
 "mobile/viewport.js":
-1,
+2,
 "mobile/nav.js":
 2,
 "mobile/chart-lite.js":

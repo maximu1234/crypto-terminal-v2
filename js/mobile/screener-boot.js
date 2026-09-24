@@ -9,7 +9,7 @@ import {
 } from "../charts-lib-boot.js?v=3";
 import {
   redirectNonPhoneFromMobile
-} from "./viewport.js?v=1";
+} from "./viewport.js?v=2";
 import {
   mountMobileNav
 } from "./nav.js?v=2";

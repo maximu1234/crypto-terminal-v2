@@ -324,7 +324,7 @@ const {
 redirectPhoneTo
 } =
 await import(
-"./mobile/viewport.js?v=1"
+"./mobile/viewport.js?v=2"
 );
 if(
 redirectPhoneTo(
