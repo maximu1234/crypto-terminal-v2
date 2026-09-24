@@ -51,13 +51,74 @@ function pinHostSize(hostEl) {
     w = Math.max(120, Math.round(window.innerWidth - 28));
   }
   if (h < 80) {
-    /* Flex layout not settled yet — estimate half of leftover viewport */
-    h = Math.max(100, Math.floor((window.innerHeight - 300) / 2));
+    /* Layout not settled — use leftover viewport (single chart / flex child). */
+    h = Math.max(120, Math.round(window.innerHeight - 160));
   }
   hostEl.style.width = `${w}px`;
   hostEl.style.height = `${h}px`;
   hostEl.style.minHeight = `${h}px`;
   return { w, h };
+}
+
+/** Narrow right scale — labels secondary on phone. */
+const MOBILE_PRICE_SCALE_WIDTH = 22;
+
+function formatMobilePriceLabel(price) {
+  const n = Number(price);
+  if (!Number.isFinite(n)) {
+    return "";
+  }
+  const abs = Math.abs(n);
+  if (abs >= 1000) {
+    return String(Math.round(n));
+  }
+  if (abs >= 1) {
+    return n.toFixed(2);
+  }
+  if (abs >= 0.01) {
+    return n.toFixed(4);
+  }
+  return n.toPrecision(3);
+}
+
+function applyMobileChartChrome(chart) {
+  if (!chart) {
+    return;
+  }
+  try {
+    chart.applyOptions({
+      layout: {
+        fontSize: 8,
+        textColor: "#6b7280"
+      },
+      localization: {
+        priceFormatter: formatMobilePriceLabel
+      },
+      rightPriceScale: {
+        borderVisible: false,
+        minimumWidth: MOBILE_PRICE_SCALE_WIDTH,
+        entireTextOnly: false,
+        scaleMargins: {
+          top: 0.05,
+          bottom: 0.05
+        }
+      },
+      timeScale: {
+        borderVisible: false,
+        fontSize: 8
+      }
+    });
+  } catch {
+    /* ignore */
+  }
+  try {
+    chart.priceScale("right").applyOptions({
+      minimumWidth: MOBILE_PRICE_SCALE_WIDTH,
+      borderVisible: false
+    });
+  } catch {
+    /* ignore */
+  }
 }
 
 /**
@@ -93,6 +154,7 @@ export async function mountMobileReadOnlyChart(hostEl, symbol, tf = "60") {
   chartEl.style.height = `${h}px`;
 
   const { chart, series } = createScreenerChart(chartEl);
+  applyMobileChartChrome(chart);
   try {
     chart.resize(w, h);
     chart.applyOptions({ width: w, height: h });
@@ -114,6 +176,7 @@ export async function mountMobileReadOnlyChart(hostEl, symbol, tf = "60") {
     h = size.h;
     chartEl.style.width = `${w}px`;
     chartEl.style.height = `${h}px`;
+    applyMobileChartChrome(chart);
     try {
       chart.resize(w, h);
       chart.applyOptions({ width: w, height: h });

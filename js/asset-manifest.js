@@ -59,7 +59,7 @@ Object.freeze({
 "mobile/nav.js":
 2,
 "mobile/chart-lite.js":
-5,
+6,
 "mobile/screener-boot.js":
 2,
 "mobile/screener-page.js":
@@ -989,7 +989,7 @@ Object.freeze({
 "mobile-screener.css":
 7,
 "mobile-terminal.css":
-3,
+4,
 "script-page.css":
 25,
 "algo-trading.css":
