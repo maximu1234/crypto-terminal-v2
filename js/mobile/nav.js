@@ -1,15 +1,23 @@
 /**
- * Bottom nav for phone pages only — not wired into desktop header.
+ * Top page tabs for phone pages only — not wired into desktop header.
+ * Mounts into `.mobile-topbar` next to the logo (replaces the single H1 title).
  */
 export function mountMobileNav(active) {
-  const existing = document.getElementById("mobile-bottom-nav");
-  if (existing) {
-    existing.remove();
+  document.getElementById("mobile-bottom-nav")?.remove();
+  document.body.classList.add("mobile-shell");
+  document.body.classList.remove("mobile-shell--bottom-nav");
+
+  const topbar = document.querySelector(".mobile-topbar");
+  if (!topbar) {
+    return;
   }
 
+  topbar.querySelector("#mobile-top-nav")?.remove();
+  topbar.querySelector(".mobile-topbar-title")?.remove();
+
   const nav = document.createElement("nav");
-  nav.id = "mobile-bottom-nav";
-  nav.className = "mobile-bottom-nav";
+  nav.id = "mobile-top-nav";
+  nav.className = "mobile-top-nav";
   nav.setAttribute("aria-label", "Мобильная навигация");
 
   const items = [
@@ -20,7 +28,7 @@ export function mountMobileNav(active) {
   for (const item of items) {
     const a = document.createElement("a");
     a.href = item.href;
-    a.className = "mobile-bottom-nav-link";
+    a.className = "mobile-top-nav-link";
     if (item.id === active) {
       a.classList.add("is-active");
       a.setAttribute("aria-current", "page");
@@ -29,6 +37,5 @@ export function mountMobileNav(active) {
     nav.append(a);
   }
 
-  document.body.append(nav);
-  document.body.classList.add("mobile-shell");
+  topbar.append(nav);
 }

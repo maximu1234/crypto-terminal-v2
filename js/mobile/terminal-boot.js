@@ -12,7 +12,7 @@ import {
 } from "./viewport.js?v=1";
 import {
   mountMobileNav
-} from "./nav.js?v=1";
+} from "./nav.js?v=2";
 import {
   mountMobileTerminalPage
 } from "./terminal-page.js?v=1";
