@@ -5,7 +5,8 @@ import {
   createScreenerChart,
   applyChartPriceFormat,
   applyScreenerZoom,
-  SCREENER_MAX_BARS
+  SCREENER_MAX_BARS,
+  SCREENER_VISIBLE_BARS
 } from "../chart-import.js?v=62";
 import {
   loadMarketHistory
@@ -19,19 +20,6 @@ import {
   liveBarPeriodSec,
   paintLiveOhlcSeries
 } from "../chart/live-bar-roll.js?v=4";
-
-function mobileVisibleBars(tf) {
-  const map = {
-    "1": 120,
-    "5": 100,
-    "15": 96,
-    "60": 72,
-    "240": 60,
-    D: 60,
-    W: 52
-  };
-  return map[String(tf || "15")] || 96;
-}
 
 function waitFrames(n = 2) {
   return new Promise((resolve) => {
@@ -137,7 +125,7 @@ export async function mountMobileReadOnlyChart(hostEl, symbol, tf = "60") {
     }
     try {
       applyScreenerZoom(chart, series, candles, w, h, {
-        visibleBars: mobileVisibleBars(resolution),
+        visibleBars: SCREENER_VISIBLE_BARS,
         shouldContinue: () => !destroyed
       });
       chart.resize(w, h);

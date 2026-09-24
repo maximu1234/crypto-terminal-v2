@@ -59,7 +59,7 @@ Object.freeze({
 "mobile/nav.js":
 2,
 "mobile/chart-lite.js":
-4,
+5,
 "mobile/screener-boot.js":
 2,
 "mobile/screener-page.js":
