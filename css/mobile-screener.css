@@ -97,7 +97,7 @@
   display: flex;
   flex-direction: column;
   flex: 1 1 50%;
-  min-height: 200px;
+  min-height: 220px;
   background: #16181f;
   border: 1px solid #252830;
   border-radius: 10px;
@@ -111,6 +111,7 @@
   justify-content: space-between;
   padding: 8px 10px;
   border-bottom: 1px solid #252830;
+  flex: 0 0 auto;
 }
 
 .mobile-screener-slot-sym {
@@ -123,9 +124,19 @@
 }
 
 .mobile-screener-slot-chart {
-  flex: 1;
-  min-height: 160px;
+  flex: 1 1 auto;
+  min-height: 180px;
   position: relative;
+  width: 100%;
+}
+
+/* Only the inner LW host fills the slot — keep flex child in flow. */
+.mobile-screener-slot-chart > .mobile-chart-canvas-host,
+.mobile-chart-host > .mobile-chart-canvas-host {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
 }
 
 .mobile-screener-slot-chart canvas {

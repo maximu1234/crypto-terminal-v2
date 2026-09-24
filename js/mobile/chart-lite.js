@@ -20,6 +20,41 @@ import {
   paintLiveOhlcSeries
 } from "../chart/live-bar-roll.js?v=4";
 
+function mobileVisibleBars(tf) {
+  const map = {
+    "1": 120,
+    "5": 100,
+    "15": 96,
+    "60": 72,
+    "240": 60,
+    D: 60,
+    W: 52
+  };
+  return map[String(tf || "15")] || 96;
+}
+
+function waitTwoFrames() {
+  return new Promise((resolve) => {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(resolve);
+    });
+  });
+}
+
+function measureHost(hostEl, chartEl) {
+  const w = Math.max(
+    hostEl?.clientWidth || 0,
+    chartEl?.clientWidth || 0,
+    120
+  );
+  const h = Math.max(
+    hostEl?.clientHeight || 0,
+    chartEl?.clientHeight || 0,
+    140
+  );
+  return { w, h };
+}
+
 /**
  * @param {HTMLElement} hostEl
  * @param {string} symbol
@@ -30,18 +65,44 @@ export async function mountMobileReadOnlyChart(hostEl, symbol, tf = "60") {
     return null;
   }
   hostEl.replaceChildren();
+
   const chartEl = document.createElement("div");
-  chartEl.style.width = "100%";
-  chartEl.style.height = "100%";
+  chartEl.className = "mobile-chart-canvas-host";
   hostEl.append(chartEl);
 
   const sym = String(symbol || "BTCUSDT").replace(/\.P$/i, "").toUpperCase();
   const resolution = String(tf || "60");
+
+  /* Flex slots often report 0×0 until laid out — wait before createChart. */
+  await waitTwoFrames();
+  if (!hostEl.isConnected) {
+    return null;
+  }
+
   const { chart, series } = createScreenerChart(chartEl);
   let destroyed = false;
   /** @type {any[]} */
   let candles = [];
   let unsub = null;
+
+  function fitChart() {
+    if (destroyed || !candles.length) {
+      return;
+    }
+    const { w, h } = measureHost(hostEl, chartEl);
+    try {
+      applyScreenerZoom(chart, series, candles, w, h, {
+        visibleBars: mobileVisibleBars(resolution),
+        shouldContinue: () => !destroyed
+      });
+    } catch {
+      try {
+        chart.resize(w, h);
+      } catch {
+        /* ignore */
+      }
+    }
+  }
 
   const history = await loadMarketHistory(sym, resolution, 2, { parallel: true });
   if (destroyed) {
@@ -56,7 +117,8 @@ export async function mountMobileReadOnlyChart(hostEl, symbol, tf = "60") {
   if (candles.length) {
     applyChartPriceFormat(series, candles);
     series.setData(candles);
-    applyScreenerZoom(chart, candles);
+    await waitTwoFrames();
+    fitChart();
   }
 
   const periodSec = liveBarPeriodSec(resolution);
@@ -94,17 +156,17 @@ export async function mountMobileReadOnlyChart(hostEl, symbol, tf = "60") {
     }
   }, 1000);
 
+  let resizeTimer = null;
   const ro =
     typeof ResizeObserver !== "undefined"
       ? new ResizeObserver(() => {
-          try {
-            chart.resize(chartEl.clientWidth, chartEl.clientHeight);
-          } catch {
-            /* ignore */
-          }
+          clearTimeout(resizeTimer);
+          resizeTimer = setTimeout(() => {
+            fitChart();
+          }, 50);
         })
       : null;
-  ro?.observe(chartEl);
+  ro?.observe(hostEl);
 
   return {
     symbol: sym,
@@ -114,6 +176,7 @@ export async function mountMobileReadOnlyChart(hostEl, symbol, tf = "60") {
     destroy() {
       destroyed = true;
       clearInterval(rollTimer);
+      clearTimeout(resizeTimer);
       try {
         unsub?.();
       } catch {
