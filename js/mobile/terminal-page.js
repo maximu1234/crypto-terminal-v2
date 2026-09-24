@@ -26,15 +26,51 @@ import {
 } from "./alerts-lite.js?v=1";
 
 const STORAGE_SYMBOL = "mc-mobile-terminal-symbol-v1";
+const STORAGE_TF = "mc-mobile-terminal-tf-v1";
 const DEFAULT_SYMBOLS = ["BTCUSDT", "ETHUSDT", "SOLUSDT"];
 const TABS = [
   { id: "chart", label: "График" },
-  { id: "trade", label: "Сделка" },
+  { id: "coins", label: "Монеты" },
   { id: "positions", label: "Позиции" },
+  { id: "trade", label: "Сделка" },
   { id: "orders", label: "Ордера" },
-  { id: "alerts", label: "Алерты" },
-  { id: "coins", label: "Монеты" }
+  { id: "alerts", label: "Алерты" }
 ];
+
+const TF_OPTIONS = [
+  { id: "1", label: "1m" },
+  { id: "5", label: "5m" },
+  { id: "15", label: "15m" },
+  { id: "60", label: "1h" },
+  { id: "240", label: "4h" },
+  { id: "D", label: "1D" },
+  { id: "W", label: "W" }
+];
+
+function normalizeTf(value) {
+  const id = String(value || "");
+  return TF_OPTIONS.some((o) => o.id === id) ? id : "60";
+}
+
+function tfLabel(id) {
+  return TF_OPTIONS.find((o) => o.id === id)?.label || id;
+}
+
+function loadActiveTf() {
+  try {
+    return normalizeTf(localStorage.getItem(STORAGE_TF));
+  } catch {
+    return "60";
+  }
+}
+
+function saveActiveTf(tf) {
+  try {
+    localStorage.setItem(STORAGE_TF, normalizeTf(tf));
+  } catch {
+    /* ignore */
+  }
+}
 
 function normalizeSymbol(raw) {
   return String(raw || "")
@@ -101,6 +137,7 @@ function pnlClass(value) {
  */
 export async function mountMobileTerminalPage(root) {
   let activeSymbol = loadActiveSymbol();
+  let activeTf = loadActiveTf();
   let activeTab = "chart";
   /** @type {Awaited<ReturnType<typeof mountMobileReadOnlyChart>>|null} */
   let chartMount = null;
@@ -109,8 +146,27 @@ export async function mountMobileTerminalPage(root) {
   root.innerHTML = `
     <div class="mobile-terminal-tabs" role="tablist"></div>
     <section class="mobile-card mobile-terminal-panel" data-panel="chart">
-      <h2 class="mobile-card-title"><span data-active-sym></span> · 1h</h2>
+      <div class="mobile-terminal-chart-toolbar">
+        <h2 class="mobile-card-title mobile-terminal-chart-title"><span data-active-sym></span></h2>
+        <div class="mobile-terminal-tf-wrap">
+          <button type="button" class="mobile-terminal-tf-btn" id="mobile-terminal-tf-btn"
+            aria-haspopup="listbox" aria-expanded="false" aria-label="Таймфрейм">
+            <span id="mobile-terminal-tf-label">${tfLabel(activeTf)}</span>
+            <span class="mobile-terminal-tf-caret" aria-hidden="true">▾</span>
+          </button>
+          <div class="mobile-terminal-tf-menu hidden" id="mobile-terminal-tf-menu" role="listbox" aria-label="Таймфрейм"></div>
+        </div>
+      </div>
       <div class="mobile-chart-host" id="mobile-terminal-chart"></div>
+    </section>
+    <section class="mobile-card mobile-terminal-panel" data-panel="coins" hidden>
+      <h2 class="mobile-card-title">Монеты</h2>
+      <ul class="mobile-coin-list" id="mobile-coin-list"></ul>
+    </section>
+    <section class="mobile-card mobile-terminal-panel" data-panel="positions" hidden>
+      <h2 class="mobile-card-title">Позиции</h2>
+      <div id="mobile-positions-list" class="mobile-empty">Загрузка…</div>
+      <button type="button" class="mobile-btn is-ghost" data-act="refresh-pos" style="margin-top:8px;width:100%">Обновить</button>
     </section>
     <section class="mobile-card mobile-terminal-panel" data-panel="trade" hidden>
       <h2 class="mobile-card-title">Сделка · <span data-active-sym></span></h2>
@@ -128,11 +184,6 @@ export async function mountMobileTerminalPage(root) {
       </div>
       <p class="mobile-muted" id="mobile-trade-status" style="margin-top:8px"></p>
     </section>
-    <section class="mobile-card mobile-terminal-panel" data-panel="positions" hidden>
-      <h2 class="mobile-card-title">Позиции</h2>
-      <div id="mobile-positions-list" class="mobile-empty">Загрузка…</div>
-      <button type="button" class="mobile-btn is-ghost" data-act="refresh-pos" style="margin-top:8px;width:100%">Обновить</button>
-    </section>
     <section class="mobile-card mobile-terminal-panel" data-panel="orders" hidden>
       <h2 class="mobile-card-title">Отложенные ордера · <span data-active-sym></span></h2>
       <div id="mobile-orders-list" class="mobile-empty">Загрузка…</div>
@@ -148,13 +199,13 @@ export async function mountMobileTerminalPage(root) {
       <button type="button" class="mobile-btn" data-act="create-alert" style="width:100%">Создать алерт на <span data-active-sym></span></button>
       <div id="mobile-alerts-list" class="mobile-empty" style="margin-top:10px">—</div>
     </section>
-    <section class="mobile-card mobile-terminal-panel" data-panel="coins" hidden>
-      <h2 class="mobile-card-title">Монеты</h2>
-      <ul class="mobile-coin-list" id="mobile-coin-list"></ul>
-    </section>
   `;
 
   const tabsEl = root.querySelector(".mobile-terminal-tabs");
+  const tfBtn = root.querySelector("#mobile-terminal-tf-btn");
+  const tfMenu = root.querySelector("#mobile-terminal-tf-menu");
+  const tfLabelEl = root.querySelector("#mobile-terminal-tf-label");
+
   for (const tab of TABS) {
     const btn = document.createElement("button");
     btn.type = "button";
@@ -167,6 +218,41 @@ export async function mountMobileTerminalPage(root) {
     tabsEl.append(btn);
   }
 
+  function closeTfMenu() {
+    tfMenu?.classList.add("hidden");
+    tfBtn?.setAttribute("aria-expanded", "false");
+  }
+
+  function fillTfMenu() {
+    if (!tfMenu) {
+      return;
+    }
+    tfMenu.replaceChildren();
+    for (const opt of TF_OPTIONS) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "mobile-terminal-tf-item";
+      btn.setAttribute("role", "option");
+      if (opt.id === activeTf) {
+        btn.classList.add("is-active");
+      }
+      btn.textContent = opt.label;
+      btn.addEventListener("click", () => {
+        activeTf = normalizeTf(opt.id);
+        saveActiveTf(activeTf);
+        if (tfLabelEl) {
+          tfLabelEl.textContent = tfLabel(activeTf);
+        }
+        closeTfMenu();
+        fillTfMenu();
+        if (activeTab === "chart") {
+          void remountChart();
+        }
+      });
+      tfMenu.append(btn);
+    }
+  }
+
   function syncSymLabels() {
     root.querySelectorAll("[data-active-sym]").forEach((el) => {
       el.textContent = activeSymbol;
@@ -175,6 +261,7 @@ export async function mountMobileTerminalPage(root) {
 
   function setTab(id) {
     activeTab = id;
+    closeTfMenu();
     tabsEl.querySelectorAll(".mobile-terminal-tab").forEach((btn) => {
       btn.classList.toggle("is-active", btn.dataset.tab === id);
     });
@@ -208,7 +295,7 @@ export async function mountMobileTerminalPage(root) {
     } catch {
       /* ignore */
     }
-    chartMount = await mountMobileReadOnlyChart(host, activeSymbol, "60");
+    chartMount = await mountMobileReadOnlyChart(host, activeSymbol, activeTf);
   }
 
   function renderCoins() {
@@ -356,6 +443,18 @@ export async function mountMobileTerminalPage(root) {
     }
     setTab(btn.dataset.tab);
   });
+
+  fillTfMenu();
+  tfBtn?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const open = tfMenu?.classList.contains("hidden");
+    closeTfMenu();
+    if (open) {
+      tfMenu?.classList.remove("hidden");
+      tfBtn.setAttribute("aria-expanded", "true");
+    }
+  });
+  document.addEventListener("click", () => closeTfMenu());
 
   root.addEventListener("click", async (e) => {
     const act = e.target?.closest?.("[data-act]")?.getAttribute("data-act");

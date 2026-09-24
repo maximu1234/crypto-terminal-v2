@@ -76,10 +76,88 @@ body.mobile-shell:has(.mobile-terminal-main) .mobile-topbar {
   margin-bottom: calc(4px + env(safe-area-inset-bottom, 0px));
 }
 
-.mobile-terminal-panel[data-panel="chart"] .mobile-card-title {
+.mobile-terminal-panel[data-panel="chart"]:not([hidden]) .mobile-card-title {
   flex: 0 0 auto;
-  margin: 0 0 4px;
+  margin: 0;
   font-size: 11px;
+}
+
+.mobile-terminal-chart-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex: 0 0 auto;
+  margin-bottom: 4px;
+}
+
+.mobile-terminal-chart-title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mobile-terminal-tf-wrap {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.mobile-terminal-tf-btn {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 32px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  border: 1px solid #2a3548;
+  background: #0e1014;
+  color: #3de0ff;
+  font: 700 12px Orbitron, sans-serif;
+  cursor: pointer;
+}
+
+.mobile-terminal-tf-caret {
+  color: #8a96a8;
+  font-size: 10px;
+}
+
+.mobile-terminal-tf-menu {
+  position: absolute;
+  z-index: 40;
+  top: calc(100% + 4px);
+  right: 0;
+  min-width: 88px;
+  background: #16181f;
+  border: 1px solid #2a3548;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+
+.mobile-terminal-tf-menu.hidden {
+  display: none;
+}
+
+.mobile-terminal-tf-item {
+  display: block;
+  width: 100%;
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: #e8eef7;
+  text-align: left;
+  font: 600 14px Rajdhani, sans-serif;
+  padding: 10px 12px;
+  min-height: 40px;
+  cursor: pointer;
+}
+
+.mobile-terminal-tf-item.is-active,
+.mobile-terminal-tf-item:active {
+  background: rgba(61, 224, 255, 0.12);
+  color: #3de0ff;
 }
 
 .mobile-coin-list {
