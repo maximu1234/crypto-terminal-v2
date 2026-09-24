@@ -55,12 +55,13 @@
 }
 
 .mobile-chart-host {
-  height: 260px;
+  height: min(42dvh, 320px);
   min-height: 220px;
   border-radius: 8px;
   overflow: hidden;
   background: #0e1014;
   position: relative;
+  width: 100%;
 }
 
 .mobile-pos-row,

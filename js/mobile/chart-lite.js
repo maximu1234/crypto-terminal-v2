@@ -33,25 +33,42 @@ function mobileVisibleBars(tf) {
   return map[String(tf || "15")] || 96;
 }
 
-function waitTwoFrames() {
+function waitFrames(n = 2) {
   return new Promise((resolve) => {
-    requestAnimationFrame(() => {
-      requestAnimationFrame(resolve);
-    });
+    let left = Math.max(1, n);
+    const step = () => {
+      left -= 1;
+      if (left <= 0) {
+        resolve();
+        return;
+      }
+      requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
   });
 }
 
-function measureHost(hostEl, chartEl) {
-  const w = Math.max(
-    hostEl?.clientWidth || 0,
-    chartEl?.clientWidth || 0,
-    120
-  );
-  const h = Math.max(
-    hostEl?.clientHeight || 0,
-    chartEl?.clientHeight || 0,
-    140
-  );
+/**
+ * iOS Safari: flex + % height often leaves LW chart at ~80px while the card is tall.
+ * Pin explicit px size on the host before createChart / resize.
+ */
+function pinHostSize(hostEl) {
+  if (!hostEl) {
+    return { w: 120, h: 180 };
+  }
+  const rect = hostEl.getBoundingClientRect();
+  let w = Math.round(rect.width || hostEl.clientWidth || 0);
+  let h = Math.round(rect.height || hostEl.clientHeight || 0);
+  if (w < 120) {
+    w = Math.max(120, Math.round(window.innerWidth - 28));
+  }
+  if (h < 160) {
+    /* toolbar+nav+pager ≈ 260; two slots share the rest */
+    h = Math.max(180, Math.floor((window.innerHeight - 280) / 2));
+  }
+  hostEl.style.width = `${w}px`;
+  hostEl.style.height = `${h}px`;
+  hostEl.style.minHeight = `${h}px`;
   return { w, h };
 }
 
@@ -65,42 +82,67 @@ export async function mountMobileReadOnlyChart(hostEl, symbol, tf = "60") {
     return null;
   }
   hostEl.replaceChildren();
+  hostEl.style.width = "";
+  hostEl.style.height = "";
+  hostEl.style.minHeight = "";
 
   const chartEl = document.createElement("div");
   chartEl.className = "mobile-chart-canvas-host";
+  chartEl.style.width = "100%";
+  chartEl.style.height = "100%";
   hostEl.append(chartEl);
 
   const sym = String(symbol || "BTCUSDT").replace(/\.P$/i, "").toUpperCase();
   const resolution = String(tf || "60");
 
-  /* Flex slots often report 0×0 until laid out — wait before createChart. */
-  await waitTwoFrames();
+  await waitFrames(2);
   if (!hostEl.isConnected) {
     return null;
   }
 
+  let { w, h } = pinHostSize(hostEl);
+  chartEl.style.width = `${w}px`;
+  chartEl.style.height = `${h}px`;
+
   const { chart, series } = createScreenerChart(chartEl);
+  try {
+    chart.resize(w, h);
+    chart.applyOptions({ width: w, height: h });
+  } catch {
+    /* ignore */
+  }
+
   let destroyed = false;
   /** @type {any[]} */
   let candles = [];
   let unsub = null;
 
   function fitChart() {
-    if (destroyed || !candles.length) {
+    if (destroyed) {
       return;
     }
-    const { w, h } = measureHost(hostEl, chartEl);
+    const size = pinHostSize(hostEl);
+    w = size.w;
+    h = size.h;
+    chartEl.style.width = `${w}px`;
+    chartEl.style.height = `${h}px`;
+    try {
+      chart.resize(w, h);
+      chart.applyOptions({ width: w, height: h });
+    } catch {
+      /* ignore */
+    }
+    if (!candles.length) {
+      return;
+    }
     try {
       applyScreenerZoom(chart, series, candles, w, h, {
         visibleBars: mobileVisibleBars(resolution),
         shouldContinue: () => !destroyed
       });
+      chart.resize(w, h);
     } catch {
-      try {
-        chart.resize(w, h);
-      } catch {
-        /* ignore */
-      }
+      /* ignore */
     }
   }
 
@@ -117,8 +159,19 @@ export async function mountMobileReadOnlyChart(hostEl, symbol, tf = "60") {
   if (candles.length) {
     applyChartPriceFormat(series, candles);
     series.setData(candles);
-    await waitTwoFrames();
+    await waitFrames(2);
     fitChart();
+    /* Late layout pass — iOS often settles height after fonts/safe-area. */
+    setTimeout(() => {
+      if (!destroyed) {
+        fitChart();
+      }
+    }, 120);
+    setTimeout(() => {
+      if (!destroyed) {
+        fitChart();
+      }
+    }, 400);
   }
 
   const periodSec = liveBarPeriodSec(resolution);
@@ -163,10 +216,13 @@ export async function mountMobileReadOnlyChart(hostEl, symbol, tf = "60") {
           clearTimeout(resizeTimer);
           resizeTimer = setTimeout(() => {
             fitChart();
-          }, 50);
+          }, 40);
         })
       : null;
   ro?.observe(hostEl);
+  if (hostEl.parentElement) {
+    ro?.observe(hostEl.parentElement);
+  }
 
   return {
     symbol: sym,
@@ -193,6 +249,9 @@ export async function mountMobileReadOnlyChart(hostEl, symbol, tf = "60") {
         /* ignore */
       }
       hostEl.replaceChildren();
+      hostEl.style.width = "";
+      hostEl.style.height = "";
+      hostEl.style.minHeight = "";
     }
   };
 }

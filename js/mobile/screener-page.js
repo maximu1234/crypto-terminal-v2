@@ -4,7 +4,7 @@
  */
 import {
   mountMobileReadOnlyChart
-} from "./chart-lite.js?v=2";
+} from "./chart-lite.js?v=3";
 import {
   loadMarketSymbols,
   peekMarketSymbolsCache
@@ -393,11 +393,19 @@ export async function mountMobileScreenerPage(root) {
     }
     fillPickMenu(sortMenu, SORT_OPTIONS, sortMode, (id) => {
       sortMode = normalizeSortMode(id);
+      if (sortLabelEl) {
+        sortLabelEl.textContent = sortLabel(sortMode);
+      }
       currentPage = 1;
+      syncPickLabels();
       void renderPage();
     });
     fillPickMenu(tfMenu, TF_OPTIONS, currentTF, (id) => {
       currentTF = normalizeTf(id);
+      if (tfLabelEl) {
+        tfLabelEl.textContent = tfLabel(currentTF);
+      }
+      syncPickLabels();
       void renderPage();
     });
   }

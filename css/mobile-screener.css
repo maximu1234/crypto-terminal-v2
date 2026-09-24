@@ -90,14 +90,12 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
-  min-height: calc(100dvh - 220px - env(safe-area-inset-bottom, 0px));
 }
 
 .mobile-screener-slot {
   display: flex;
   flex-direction: column;
-  flex: 1 1 50%;
-  min-height: 220px;
+  flex: 0 0 auto;
   background: #16181f;
   border: 1px solid #252830;
   border-radius: 10px;
@@ -124,17 +122,16 @@
 }
 
 .mobile-screener-slot-chart {
-  flex: 1 1 auto;
-  min-height: 180px;
-  position: relative;
+  /* Explicit height — do not rely on flex+% for LW Charts on iOS */
+  height: min(42dvh, 320px);
+  min-height: 200px;
   width: 100%;
+  position: relative;
+  overflow: hidden;
 }
 
-/* Only the inner LW host fills the slot — keep flex child in flow. */
-.mobile-screener-slot-chart > .mobile-chart-canvas-host,
-.mobile-chart-host > .mobile-chart-canvas-host {
-  position: absolute;
-  inset: 0;
+.mobile-chart-canvas-host {
+  display: block;
   width: 100%;
   height: 100%;
 }
