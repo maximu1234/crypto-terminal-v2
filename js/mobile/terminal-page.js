@@ -3,7 +3,7 @@
  */
 import {
   mountMobileReadOnlyChart
-} from "./chart-lite.js?v=3";
+} from "./chart-lite.js?v=4";
 import {
   getTerminalBlueSymbols,
   loadFavoritesGroups
