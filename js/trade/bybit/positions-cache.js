@@ -5,7 +5,7 @@ import {
 maybeApplyAutoStopsForNewPosition,
 clearDismissedStops,
 isStopDismissed
-} from "./auto-stops.js?v=1";
+} from "./auto-stops.js?v=2";
 
 import {
 tryApplyDrawingStopsPending,
