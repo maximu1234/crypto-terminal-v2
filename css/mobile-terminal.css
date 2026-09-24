@@ -162,6 +162,245 @@ body.mobile-shell:has(.mobile-terminal-main) .mobile-topbar {
   color: #3de0ff;
 }
 
+.mobile-terminal-panel[data-panel="coins"]:not([hidden]) {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 6px;
+}
+
+.mobile-coins-root {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  gap: 6px;
+}
+
+.mobile-coins-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
+.mobile-coins-search {
+  min-height: 40px;
+  font-size: 15px;
+}
+
+.mobile-coins-filters {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.mobile-coins-pick-wrap {
+  position: relative;
+  min-width: 0;
+}
+
+.mobile-coins-pick {
+  width: 100%;
+  appearance: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  min-height: 36px;
+  border-radius: 8px;
+  border: 1px solid #2a3548;
+  background: #0e1014;
+  color: #e8eef7;
+  font: 700 12px Orbitron, sans-serif;
+  padding: 6px 8px;
+  cursor: pointer;
+}
+
+.mobile-coins-pick-caret {
+  color: #8a96a8;
+  font-size: 11px;
+}
+
+.mobile-coins-pick-menu {
+  position: absolute;
+  z-index: 40;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  max-height: 240px;
+  overflow: auto;
+  background: #16181f;
+  border: 1px solid #2a3548;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+
+.mobile-coins-pick-menu.hidden {
+  display: none;
+}
+
+.mobile-coins-pick-item {
+  display: block;
+  width: 100%;
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: #e8eef7;
+  text-align: left;
+  font: 600 14px Rajdhani, sans-serif;
+  padding: 10px 12px;
+  min-height: 40px;
+  cursor: pointer;
+}
+
+.mobile-coins-pick-item.is-active,
+.mobile-coins-pick-item:active {
+  background: rgba(61, 224, 255, 0.12);
+  color: #3de0ff;
+}
+
+.mobile-coins-volume {
+  min-height: 36px;
+  font-size: 13px;
+}
+
+.mobile-coins-header {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1.2fr) 72px 64px;
+  gap: 4px;
+  align-items: center;
+  flex: 0 0 auto;
+  padding: 0 2px;
+}
+
+.mobile-coins-th {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: #8a96a8;
+  font: 700 11px Orbitron, sans-serif;
+  letter-spacing: 0.03em;
+  text-align: left;
+  padding: 4px 2px;
+  min-height: 28px;
+  cursor: pointer;
+}
+
+.mobile-coins-th-chg,
+.mobile-coins-th-vol {
+  text-align: right;
+}
+
+.mobile-coins-th-flag {
+  text-align: center;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.mobile-coins-th.is-active {
+  color: #3de0ff;
+}
+
+.mobile-coins-th.is-asc::after {
+  content: " ▲";
+  font-size: 9px;
+}
+
+.mobile-coins-th.is-desc::after {
+  content: " ▼";
+  font-size: 9px;
+}
+
+.mobile-coins-status {
+  margin: 0;
+  font-size: 11px;
+  flex: 0 0 auto;
+}
+
+.mobile-coins-status[hidden] {
+  display: none !important;
+}
+
+.mobile-coins-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.mobile-coins-row {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1.2fr) 72px 64px;
+  gap: 4px;
+  align-items: center;
+  width: 100%;
+  appearance: none;
+  border: 0;
+  border-bottom: 1px solid #252830;
+  background: transparent;
+  color: #e8eef7;
+  text-align: left;
+  padding: 10px 2px;
+  min-height: 48px;
+  cursor: pointer;
+}
+
+.mobile-coins-row.is-active {
+  background: rgba(61, 224, 255, 0.08);
+}
+
+.mobile-coins-flag-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mobile-coins-flag {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1.5px solid #4a5568;
+  background: transparent;
+  display: inline-block;
+  cursor: pointer;
+}
+
+.mobile-coins-flag.is-red {
+  border-color: #f07178;
+  background: #f07178;
+}
+
+.mobile-coins-flag.is-green {
+  border-color: #3dd68c;
+  background: #3dd68c;
+}
+
+.mobile-coins-flag.is-gray {
+  border-color: #9ca3af;
+  background: #9ca3af;
+}
+
+.mobile-coins-flag.is-blue {
+  border-color: #3b82f6;
+  background: #3b82f6;
+}
+
+.mobile-coins-sym {
+  font: 700 14px Orbitron, sans-serif;
+  letter-spacing: 0.02em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mobile-coins-chg,
+.mobile-coins-vol {
+  font: 700 13px Rajdhani, sans-serif;
+  text-align: right;
+  color: #8a96a8;
+}
+
 .mobile-coin-list {
   list-style: none;
   margin: 0;

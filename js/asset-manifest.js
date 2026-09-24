@@ -67,7 +67,9 @@ Object.freeze({
 "mobile/terminal-boot.js":
 1,
 "mobile/terminal-page.js":
-2,
+3,
+"mobile/terminal-coins.js":
+1,
 "mobile/trade-lite.js":
 1,
 "mobile/alerts-lite.js":
@@ -989,7 +991,7 @@ Object.freeze({
 "mobile-screener.css":
 8,
 "mobile-terminal.css":
-6,
+7,
 "script-page.css":
 25,
 "algo-trading.css":

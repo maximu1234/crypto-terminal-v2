@@ -5,9 +5,8 @@ import {
   mountMobileReadOnlyChart
 } from "./chart-lite.js?v=7";
 import {
-  getTerminalBlueSymbols,
-  loadFavoritesGroups
-} from "../favorites.js?v=5";
+  mountMobileTerminalCoins
+} from "./terminal-coins.js?v=1";
 import {
   initMobileTradeLite,
   listCachedPositions,
@@ -27,7 +26,7 @@ import {
 
 const STORAGE_SYMBOL = "mc-mobile-terminal-symbol-v1";
 const STORAGE_TF = "mc-mobile-terminal-tf-v1";
-const DEFAULT_SYMBOLS = ["BTCUSDT", "ETHUSDT", "SOLUSDT"];
+const DEFAULT_SYMBOL = "BTCUSDT";
 const TABS = [
   { id: "chart", label: "График" },
   { id: "coins", label: "Монеты" },
@@ -79,22 +78,6 @@ function normalizeSymbol(raw) {
     .toUpperCase();
 }
 
-function coinList() {
-  const out = [...DEFAULT_SYMBOLS];
-  try {
-    const blue = getTerminalBlueSymbols(loadFavoritesGroups()) || [];
-    for (const entry of blue) {
-      const sym = normalizeSymbol(entry);
-      if (sym && !out.includes(sym)) {
-        out.push(sym);
-      }
-    }
-  } catch {
-    /* ignore */
-  }
-  return out;
-}
-
 function loadActiveSymbol() {
   try {
     const saved = normalizeSymbol(localStorage.getItem(STORAGE_SYMBOL));
@@ -104,7 +87,7 @@ function loadActiveSymbol() {
   } catch {
     /* ignore */
   }
-  return coinList()[0];
+  return DEFAULT_SYMBOL;
 }
 
 function saveActiveSymbol(sym) {
@@ -142,6 +125,9 @@ export async function mountMobileTerminalPage(root) {
   /** @type {Awaited<ReturnType<typeof mountMobileReadOnlyChart>>|null} */
   let chartMount = null;
   let tradeReady = false;
+  /** @type {null | (() => void)} */
+  let coinsUnmount = null;
+  let coinsReady = false;
 
   root.innerHTML = `
     <div class="mobile-terminal-tabs" role="tablist"></div>
@@ -160,8 +146,7 @@ export async function mountMobileTerminalPage(root) {
       <div class="mobile-chart-host" id="mobile-terminal-chart"></div>
     </section>
     <section class="mobile-card mobile-terminal-panel" data-panel="coins" hidden>
-      <h2 class="mobile-card-title">Монеты</h2>
-      <ul class="mobile-coin-list" id="mobile-coin-list"></ul>
+      <div id="mobile-coins-root" class="mobile-coins-root"></div>
     </section>
     <section class="mobile-card mobile-terminal-panel" data-panel="positions" hidden>
       <h2 class="mobile-card-title">Позиции</h2>
@@ -281,7 +266,36 @@ export async function mountMobileTerminalPage(root) {
       renderAlerts();
     }
     if (id === "coins") {
-      renderCoins();
+      void ensureCoins();
+    }
+  }
+
+  async function ensureCoins() {
+    if (coinsUnmount) {
+      return;
+    }
+    const host = root.querySelector("#mobile-coins-root");
+    if (!host || coinsReady) {
+      return;
+    }
+    coinsReady = true;
+    try {
+      coinsUnmount = await mountMobileTerminalCoins(host, {
+        getActiveSymbol: () => activeSymbol,
+        onPickSymbol: (sym) => {
+          const next = normalizeSymbol(sym);
+          if (!next) {
+            return;
+          }
+          activeSymbol = next;
+          saveActiveSymbol(next);
+          syncSymLabels();
+          setTab("chart");
+        }
+      });
+    } catch (err) {
+      coinsReady = false;
+      console.warn("[mobile terminal] coins", err);
     }
   }
 
@@ -296,29 +310,6 @@ export async function mountMobileTerminalPage(root) {
       /* ignore */
     }
     chartMount = await mountMobileReadOnlyChart(host, activeSymbol, activeTf);
-  }
-
-  function renderCoins() {
-    const list = root.querySelector("#mobile-coin-list");
-    if (!list) {
-      return;
-    }
-    list.replaceChildren();
-    for (const sym of coinList()) {
-      const li = document.createElement("li");
-      li.className = "mobile-coin-item";
-      if (sym === activeSymbol) {
-        li.classList.add("is-active");
-      }
-      li.innerHTML = `<span class="mobile-coin-item-sym">${sym}</span>`;
-      li.addEventListener("click", () => {
-        activeSymbol = sym;
-        saveActiveSymbol(sym);
-        syncSymLabels();
-        setTab("chart");
-      });
-      list.append(li);
-    }
   }
 
   function renderPositions() {
