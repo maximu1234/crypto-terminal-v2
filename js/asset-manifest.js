@@ -61,9 +61,9 @@ Object.freeze({
 "mobile/chart-lite.js":
 1,
 "mobile/screener-boot.js":
-1,
+2,
 "mobile/screener-page.js":
-1,
+2,
 "mobile/terminal-boot.js":
 1,
 "mobile/terminal-page.js":
@@ -987,7 +987,7 @@ Object.freeze({
 "mobile-shell.css":
 1,
 "mobile-screener.css":
-1,
+2,
 "mobile-terminal.css":
 1,
 "script-page.css":
