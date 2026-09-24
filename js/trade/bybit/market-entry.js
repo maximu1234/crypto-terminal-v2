@@ -15,7 +15,7 @@ getActiveTradeVolumeUsdt
 import {
 applyAutoStopsAfterEntry,
 getAutoStopSettings
-} from "./auto-stops.js?v=1";
+} from "./auto-stops.js?v=2";
 
 import {
 peekDrawingStopsPendingForSide,
@@ -294,7 +294,13 @@ return hints;
 
 /**
  * Shared open path for coins chart + terminal widget mount.
- * @param {{ symbol: string, side: string, volumeUsdt: number, btn?: HTMLElement | null }} opts
+ * @param {{
+ *   symbol: string,
+ *   side: string,
+ *   volumeUsdt: number,
+ *   btn?: HTMLElement | null,
+ *   autoStops?: { slEnabled?: boolean, slUsd?: number, tpEnabled?: boolean, tpUsd?: number } | null
+ * }} opts
  */
 async function openMarketPositionCore(
 {
@@ -302,6 +308,8 @@ symbol,
 side,
 volumeUsdt,
 btn =
+null,
+autoStops =
 null
 }
 ){
@@ -457,9 +465,10 @@ symbol
 if(
 needsAutoStops
 ){
-void applyAutoStopsAfterEntry(
+await applyAutoStopsAfterEntry(
 symbol,
-result.position
+result.position,
+autoStops
 );
 }
 }else if(
@@ -532,9 +541,35 @@ export async function openWidgetMarketPosition(
 {
 symbol,
 side,
-volumeUsdt
+volumeUsdt,
+autoSlUsd,
+autoTpUsd
 }
 ){
+
+const sl =
+Number(
+autoSlUsd
+);
+const tp =
+Number(
+autoTpUsd
+);
+const hasOverride =
+(
+Number.isFinite(
+sl
+) &&
+sl >
+0
+) ||
+(
+Number.isFinite(
+tp
+) &&
+tp >
+0
+);
 
 await openMarketPositionCore(
 {
@@ -542,7 +577,40 @@ symbol,
 side,
 volumeUsdt,
 btn:
-null
+null,
+autoStops:
+hasOverride
+? {
+slEnabled:
+Number.isFinite(
+sl
+) &&
+sl >
+0,
+slUsd:
+Number.isFinite(
+sl
+) &&
+sl >
+0
+? sl
+: 0,
+tpEnabled:
+Number.isFinite(
+tp
+) &&
+tp >
+0,
+tpUsd:
+Number.isFinite(
+tp
+) &&
+tp >
+0
+? tp
+: 0
+}
+: null
 }
 );
 

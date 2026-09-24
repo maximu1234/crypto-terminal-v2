@@ -15,7 +15,7 @@ import {
   cancelOpenOrder,
   openMarket,
   closeMarket
-} from "./trade-lite.js?v=1";
+} from "./trade-lite.js?v=2";
 import {
   initMobileAlertsLite,
   listMobileAlerts,
@@ -159,6 +159,15 @@ export async function mountMobileTerminalPage(root) {
         <label>Объём USDT
           <input class="mobile-input" id="mobile-trade-usdt" type="number" inputmode="decimal" min="1" step="1" value="50"/>
         </label>
+        <div class="mobile-row mobile-trade-stops">
+          <label>SL USDT
+            <input class="mobile-input" id="mobile-trade-sl" type="number" inputmode="decimal" min="0" step="0.1" value="" placeholder="напр. 1"/>
+          </label>
+          <label>TP USDT
+            <input class="mobile-input" id="mobile-trade-tp" type="number" inputmode="decimal" min="0" step="0.1" value="" placeholder="напр. 3"/>
+          </label>
+        </div>
+        <p class="mobile-muted mobile-trade-stops-hint">Стоп и тейк — в долларах PnL, как авто-СЛ/ТП на десктопе. Пусто = без стопа.</p>
       </div>
       <div class="mobile-row">
         <button type="button" class="mobile-btn is-long" data-act="long">Long</button>
@@ -455,6 +464,8 @@ export async function mountMobileTerminalPage(root) {
     const status = root.querySelector("#mobile-trade-status");
     if (act === "long" || act === "short") {
       const usdt = Number(root.querySelector("#mobile-trade-usdt")?.value);
+      const slUsd = Number(root.querySelector("#mobile-trade-sl")?.value);
+      const tpUsd = Number(root.querySelector("#mobile-trade-tp")?.value);
       if (!Number.isFinite(usdt) || usdt <= 0) {
         window.alert("Укажите объём USDT");
         return;
@@ -463,9 +474,21 @@ export async function mountMobileTerminalPage(root) {
         if (status) {
           status.textContent = "Отправка…";
         }
-        await openMarket(activeSymbol, act === "long" ? "Buy" : "Sell", usdt);
+        await openMarket(activeSymbol, act === "long" ? "Buy" : "Sell", usdt, {
+          slUsd: Number.isFinite(slUsd) && slUsd > 0 ? slUsd : 0,
+          tpUsd: Number.isFinite(tpUsd) && tpUsd > 0 ? tpUsd : 0
+        });
         if (status) {
-          status.textContent = "Ордер отправлен";
+          const bits = [];
+          if (Number.isFinite(slUsd) && slUsd > 0) {
+            bits.push(`SL $${slUsd}`);
+          }
+          if (Number.isFinite(tpUsd) && tpUsd > 0) {
+            bits.push(`TP $${tpUsd}`);
+          }
+          status.textContent = bits.length
+            ? `Ордер отправлен · ${bits.join(" · ")}`
+            : "Ордер отправлен";
         }
         await refreshPositions();
         renderPositions();

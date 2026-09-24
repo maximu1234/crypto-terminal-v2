@@ -43,7 +43,7 @@ export {
   applyAutoStopsAfterEntry,
   maybeApplyAutoStopsForNewPosition,
   wireAutoStopSettings
-} from "./auto-stops.js?v=1";
+} from "./auto-stops.js?v=2";
 
 export {
   stashDrawingStopsFromDrawing,
@@ -58,7 +58,7 @@ export {
 export {
   initTradeMarketEntry,
   openWidgetMarketPosition
-} from "./market-entry.js?v=8";
+} from "./market-entry.js?v=9";
 
 export {
   initTradeBookPanel

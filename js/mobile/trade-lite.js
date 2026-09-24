@@ -92,14 +92,18 @@ export async function cancelOpenOrder(order) {
   return api.cancelOrder(symbol, orderId, order);
 }
 
-export async function openMarket(symbol, side, volumeUsdt) {
+export async function openMarket(symbol, side, volumeUsdt, stops = {}) {
   const { openWidgetMarketPosition } = await import(
     "../trade-market-entry.js?v=35"
   );
+  const slUsd = Number(stops.slUsd);
+  const tpUsd = Number(stops.tpUsd);
   return openWidgetMarketPosition({
     symbol: String(symbol || "").replace(/\.P$/i, "").toUpperCase(),
     side,
-    volumeUsdt: Number(volumeUsdt)
+    volumeUsdt: Number(volumeUsdt),
+    autoSlUsd: Number.isFinite(slUsd) && slUsd > 0 ? slUsd : 0,
+    autoTpUsd: Number.isFinite(tpUsd) && tpUsd > 0 ? tpUsd : 0
   });
 }
 

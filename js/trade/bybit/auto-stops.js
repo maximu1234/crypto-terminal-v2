@@ -571,7 +571,9 @@ message:
 
 export async function applyAutoStopsAfterEntry(
 symbol,
-position
+position,
+settingsOverride =
+null
 ){
 
 if(
@@ -582,7 +584,32 @@ return;
 }
 
 const settings =
-getAutoStopSettings();
+settingsOverride &&
+typeof settingsOverride ===
+"object"
+? {
+slEnabled:
+!!settingsOverride.slEnabled &&
+Number(
+settingsOverride.slUsd
+) >
+0,
+tpEnabled:
+!!settingsOverride.tpEnabled &&
+Number(
+settingsOverride.tpUsd
+) >
+0,
+slUsd:
+normalizeUsd(
+settingsOverride.slUsd
+),
+tpUsd:
+normalizeUsd(
+settingsOverride.tpUsd
+)
+}
+: getAutoStopSettings();
 const api =
 window.cryptoTerminalDesktop?.trading;
 

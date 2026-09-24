@@ -485,6 +485,17 @@ body.mobile-shell:has(.mobile-terminal-main) .mobile-topbar {
   color: #8a96a8;
 }
 
+.mobile-trade-stops label {
+  flex: 1;
+  min-width: 0;
+}
+
+.mobile-trade-stops-hint {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.3;
+}
+
 /* Landscape: shrink chrome so the chart gets the width advantage */
 @media (orientation: landscape) and (max-height: 520px) {
   body.mobile-shell:has(.mobile-terminal-main) .mobile-topbar {

@@ -67,11 +67,11 @@ Object.freeze({
 "mobile/terminal-boot.js":
 1,
 "mobile/terminal-page.js":
-3,
+4,
 "mobile/terminal-coins.js":
 1,
 "mobile/trade-lite.js":
-1,
+2,
 "mobile/alerts-lite.js":
 1,
 "terminal-entry.js":
@@ -175,7 +175,7 @@ Object.freeze({
 "trade-trading-settings-panel.js":
 3,
 "trade/bybit/bundle.js":
-21,
+22,
 "trade/bybit/config.js":
 3,
 "trade/bybit/positions-cache.js":
@@ -185,11 +185,11 @@ Object.freeze({
 "trade/bybit/chart-overlay.js":
 8,
 "trade/bybit/auto-stops.js":
-1,
+2,
 "trade/bybit/drawing-stops.js":
 4,
 "trade/bybit/market-entry.js":
-8,
+9,
 "trade/bybit/book-panel.js":
 4,
 "trade/bybit/position-open-orders.js":
@@ -991,7 +991,7 @@ Object.freeze({
 "mobile-screener.css":
 8,
 "mobile-terminal.css":
-7,
+8,
 "script-page.css":
 25,
 "algo-trading.css":
