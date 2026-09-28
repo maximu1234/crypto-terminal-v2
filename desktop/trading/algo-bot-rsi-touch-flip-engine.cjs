@@ -265,7 +265,28 @@ async function flattenGhostIfMissing(state, posResult, price) {
   if (!rsiTouchFlipShouldFlattenGhost(state, posResult)) {
     return false;
   }
+  /*
+   * Bulk getPositions(settleCoin) can miss a live row (pagination / flake).
+   * Always confirm with symbol-scoped getPosition before wiping local state.
+   * If the position is truly gone (liq / external close), block same-side
+   * re-entry while RSI stays in the extreme — same idea as cycle SL.
+   * Backtest never liquidates mid-hold; without this block live re-enters
+   * on the next OS/OB touch and diverges into a losing path.
+   */
+  const confirmed = await algoRest.getPosition(state.symbol);
+  if (!confirmed?.ok) {
+    return false;
+  }
+  if (confirmed.position) {
+    return false;
+  }
   const prev = state.position;
+  if (prev === "long") {
+    state.slBlockLong = true;
+  }
+  if (prev === "short") {
+    state.slBlockShort = true;
+  }
   flattenLocalToFlat(state);
   try {
     await refreshShareBudgets();
@@ -277,7 +298,7 @@ async function flattenGhostIfMissing(state, posResult, price) {
     symbol: state.symbol,
     side: prev,
     price,
-    text: `${state.symbol}: позиция на бирже исчезла, сбрасываем`
+    text: `${state.symbol}: позиция на бирже исчезла, сбрасываем (блок входа, пока RSI в зоне)`
   });
   return true;
 }

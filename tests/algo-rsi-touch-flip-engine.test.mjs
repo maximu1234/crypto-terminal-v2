@@ -501,6 +501,17 @@ test("live engine logs CYCLE SL only via closeAll and reconciles vanished exchan
     assert.match(src, /rsiTouchFlipOpenLooksFilled/);
     assert.match(src, /flattenGhostIfMissing/);
     assert.doesNotMatch(src, /setTradingStop|trading-stop|stopLoss/);
+    const ghost = src.slice(
+      src.indexOf("async function flattenGhostIfMissing"),
+      src.indexOf("async function closeAll")
+    );
+    assert.match(ghost, /algoRest\.getPosition\(state\.symbol\)/);
+    assert.match(ghost, /slBlockLong = true/);
+    assert.match(ghost, /slBlockShort = true/);
+    assert.ok(
+      ghost.indexOf("algoRest.getPosition") <
+        ghost.indexOf("flattenLocalToFlat")
+    );
     const openSlice = src.slice(
       src.indexOf("async function openSlice"),
       src.indexOf("async function onClosedChartBar")
@@ -510,5 +521,21 @@ test("live engine logs CYCLE SL only via closeAll and reconciles vanished exchan
       openSlice.indexOf("rsiTouchFlipOpenLooksFilled") <
         openSlice.indexOf("state.botOwnsPosition = true")
     );
+  }
+});
+
+test("algo getPositions pages through nextPageCursor (settleCoin list)", () => {
+  for (const rel of [
+    "desktop/trading/algo-bybit-rest.cjs",
+    "bot-app/trading/algo-bybit-rest.cjs"
+  ]) {
+    const src = fs.readFileSync(path.join(root, rel), "utf8");
+    const fn = src.slice(
+      src.indexOf("async function fetchPositionListRaw"),
+      src.indexOf("async function getPositions")
+    );
+    assert.match(fn, /nextPageCursor/);
+    assert.match(fn, /settleCoin/);
+    assert.match(fn, /limit:\s*"200"/);
   }
 });

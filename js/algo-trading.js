@@ -116,7 +116,7 @@ mountAlgoPatternEntryOverlay
 
 import {
 mountRsiTouchFlipHost
-} from "./algo-trading/rsi-touch-flip-panel.js?v=36";
+} from "./algo-trading/rsi-touch-flip-panel.js?v=38";
 
 import {
 loadRsiTouchFlipPrefs,

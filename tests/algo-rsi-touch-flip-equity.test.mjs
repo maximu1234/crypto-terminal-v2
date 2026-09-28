@@ -5,6 +5,7 @@ import {
 } from "../js/algo-trading/rsi-touch-flip-engine.js";
 import {
   buildRsiTouchFlipEquityModel,
+  buildRsiTouchFlipTradeEquity,
   buildRsiTouchFlipTradeHistogram,
   normalizeRsiTouchFlipEquityCurve
 } from "../js/algo-trading/rsi-touch-flip-equity.js";
@@ -81,7 +82,7 @@ test("equity curve last point matches closed net while a trade is open at a move
   assert.ok(Math.abs(mtmPct - last.value) > 0.5);
 });
 
-test("trade histogram sums PnL on the same exit bar as % of budget", () => {
+test("trade histogram sums PnL on the same exit bar in dollars", () => {
   const candles = candlesAt(100, 4);
   const rows = buildRsiTouchFlipTradeHistogram(
     [
@@ -94,13 +95,13 @@ test("trade histogram sums PnL on the same exit bar as % of budget", () => {
   );
   assert.equal(rows.length, 2);
   assert.equal(rows[0].time, candles[2].time);
-  assert.ok(Math.abs(rows[0].value - 6 / 90 * 100) < 1e-10);
+  assert.ok(Math.abs(rows[0].value - 6) < 1e-10);
   assert.equal(rows[0].color, "#26a69a");
   assert.equal(rows[1].time, candles[3].time);
-  assert.ok(Math.abs(rows[1].value - 4.5 / 90 * 100) < 1e-10);
+  assert.ok(Math.abs(rows[1].value - 4.5) < 1e-10);
 });
 
-test("equity model splits Train / Test on the walk-forward index", () => {
+test("equity model plots cumulative pnl at closed-trade exits", () => {
   const n = 200;
   const candles = candlesAt(100, n);
   const curve = candles.map((row, i) => ({
@@ -109,23 +110,62 @@ test("equity model splits Train / Test on the walk-forward index", () => {
   }));
   const model = buildRsiTouchFlipEquityModel({
     equityCurve: curve,
-    closedTrades: [{ exitIndex: 190, pnl: 2 }],
+    closedTrades: [
+      { entryIndex: 10, exitIndex: 50, pnl: 5 },
+      { entryIndex: 60, exitIndex: 50, pnl: 1 },
+      { entryIndex: 80, exitIndex: 190, pnl: -3 }
+    ],
     candles,
-    capital: 100,
+    capital: 30,
     trainPct: 70
   });
   assert.equal(model.hasSplit, true);
   assert.equal(model.splitTime, candles[140].time);
-  assert.equal(model.train[model.train.length - 1].time, candles[139].time);
-  assert.equal(model.test[0].time, candles[139].time);
-  assert.equal(model.test[1].time, candles[140].time);
-  assert.equal(model.histogram.length, 1);
-  assert.equal(model.histogram[0].time, candles[190].time);
-  assert.equal(model.fromTime, curve[0].time);
-  assert.equal(model.toTime, curve[curve.length - 1].time);
+  assert.deepEqual(
+    model.line.map((point) => point.time),
+    [candles[0].time, candles[50].time, candles[190].time, candles[n - 1].time]
+  );
+  assert.equal(model.line[0].value, 0);
+  assert.ok(Math.abs(model.line[1].value - 6) < 1e-10);
+  assert.ok(Math.abs(model.line[2].value - 3) < 1e-10);
+  assert.ok(Math.abs(model.line[3].value - 3) < 1e-10);
+  assert.equal(model.markers.length, 2);
+  assert.equal(model.markers[0].time, candles[50].time);
+  assert.equal(model.markers[0].size, 0.5);
+  assert.equal(model.markers[1].time, candles[190].time);
+  assert.equal(model.train[model.train.length - 1].time, candles[50].time);
+  assert.equal(model.test[0].time, candles[50].time);
+  assert.equal(model.test[1].time, candles[190].time);
+  assert.equal(model.histogram.length, 2);
+  assert.equal(model.fromTime, candles[0].time);
+  assert.equal(model.toTime, candles[n - 1].time);
+});
+
+test("equity model falls back to the bar curve when there are no closed trades", () => {
+  const candles = candlesAt(100, 4);
+  const curve = candles.map((row, i) => ({ time: row.time, value: i }));
+  const model = buildRsiTouchFlipEquityModel({
+    equityCurve: curve,
+    closedTrades: [],
+    candles,
+    capital: 100
+  });
   assert.equal(model.line.length, curve.length);
-  assert.equal(model.line[0].time, curve[0].time);
-  assert.equal(model.line[model.line.length - 1].value, curve[curve.length - 1].value);
+  assert.equal(model.markers.length, 0);
+  assert.equal(model.line[3].value, 3);
+});
+
+test("trade equity ignores a missing exit candle", () => {
+  const candles = candlesAt(100, 3);
+  const built = buildRsiTouchFlipTradeEquity(
+    [{ exitIndex: 9, pnl: 10 }, { exitIndex: 1, pnl: 4 }],
+    candles,
+    80
+  );
+  assert.equal(built.points.length, 3);
+  assert.equal(built.markers.length, 1);
+  assert.equal(built.markers[0].time, candles[1].time);
+  assert.ok(Math.abs(built.points[1].value - 4) < 1e-10);
 });
 
 test("normalize equity curve keeps last point for duplicate timestamps", () => {

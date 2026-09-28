@@ -53,7 +53,7 @@ rsiTouchFlipFitPrefsForHydrate
 } from "./rsi-touch-flip-walkforward.js?v=13";
 import {
 buildRsiTouchFlipEquityModel
-} from "./rsi-touch-flip-equity.js?v=5";
+} from "./rsi-touch-flip-equity.js?v=7";
 
 function el(
 id
@@ -468,7 +468,7 @@ if(
 ){
 equityChartMod =
 await import(
-"./rsi-touch-flip-equity-chart.js?v=5"
+"./rsi-touch-flip-equity-chart.js?v=7"
 );
 }
 

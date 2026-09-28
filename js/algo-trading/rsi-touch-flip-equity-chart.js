@@ -1,6 +1,6 @@
 /**
  * График «Доходность» в панели Данные (RSI Touch Flip).
- * Стиль кривой как PnL в Дневнике: зелёный выше 0, красный ниже.
+ * Линия по закрытым сделкам, точка на каждом выходе — как Cumulative PnL в TradingView.
  * Lazy: модуль импортируют только при открытии вкладки.
  */
 import {
@@ -10,9 +10,8 @@ import {
   withChartLocalTime
 } from "../chart/chart-local-time.js?v=1";
 import {
-  RSI_TOUCH_FLIP_EQUITY_NEG_COLOR,
   RSI_TOUCH_FLIP_EQUITY_POS_COLOR
-} from "./rsi-touch-flip-equity.js?v=5";
+} from "./rsi-touch-flip-equity.js?v=7";
 
 const BG =
 "#0f1419";
@@ -24,14 +23,11 @@ const AXIS =
 "#2e2e30";
 const ZERO =
 "#374151";
-const POS_FILL =
-"rgba(34, 197, 94, 0.18)";
-const NEG_FILL =
-"rgba(239, 68, 68, 0.18)";
 
 function emptyModel() {
   return {
     line: [],
+    markers: [],
     train: [],
     test: [],
     histogram: [],
@@ -132,6 +128,9 @@ export function mountRsiTouchFlipEquityChart(host) {
       return;
     }
     pnlSeries.setData(Array.isArray(model.line) ? model.line : []);
+    if (typeof pnlSeries.setMarkers === "function") {
+      pnlSeries.setMarkers(Array.isArray(model.markers) ? model.markers : []);
+    }
     histSeries.setData(model.histogram);
     fitVisibleRange();
     syncSplitOverlay();
@@ -272,17 +271,8 @@ export function mountRsiTouchFlipEquityChart(host) {
         }
       };
     };
-    pnlSeries = chart.addBaselineSeries({
-      baseValue: {
-        type: "price",
-        price: 0
-      },
-      topLineColor: RSI_TOUCH_FLIP_EQUITY_POS_COLOR,
-      topFillColor1: POS_FILL,
-      topFillColor2: POS_FILL,
-      bottomLineColor: RSI_TOUCH_FLIP_EQUITY_NEG_COLOR,
-      bottomFillColor1: NEG_FILL,
-      bottomFillColor2: NEG_FILL,
+    pnlSeries = chart.addLineSeries({
+      color: RSI_TOUCH_FLIP_EQUITY_POS_COLOR,
       lineWidth: 2,
       priceScaleId: "right",
       priceLineVisible: false,

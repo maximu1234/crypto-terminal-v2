@@ -3780,9 +3780,20 @@ merged
 
 async function fetchPositionListRaw(){
 
-const result =
-await privateGet(
-"/v5/position/list",
+const list =
+[];
+let cursor =
+"";
+
+for(
+let page =
+0;
+page <
+20;
+page++
+){
+
+const query =
 {
 category:
 "linear",
@@ -3790,7 +3801,19 @@ settleCoin:
 "USDT",
 limit:
 "200"
+};
+
+if(
+cursor
+){
+query.cursor =
+cursor;
 }
+
+const result =
+await privateGet(
+"/v5/position/list",
+query
 );
 
 if(
@@ -3799,18 +3822,38 @@ if(
 return result;
 }
 
-const list =
+const chunk =
 result.data?.result?.list;
+
+if(
+Array.isArray(
+chunk
+) &&
+chunk.length
+){
+list.push(
+...chunk
+);
+}
+
+cursor =
+String(
+result.data?.result?.nextPageCursor ||
+""
+).trim();
+
+if(
+!cursor
+){
+break;
+}
+
+}
 
 return {
 ok:
 true,
-list:
-Array.isArray(
 list
-)
-? list
-: []
 };
 
 }

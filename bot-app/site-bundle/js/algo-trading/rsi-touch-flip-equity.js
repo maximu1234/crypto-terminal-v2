@@ -1,6 +1,6 @@
 /**
  * Модель кривой доходности RSI Touch Flip (без Lightweight Charts).
- * Значения — % от бюджета, как колонка «Обзор».
+ * Линия — накопительный PnL закрытых сделок в точках выхода, в долларах.
  */
 import {
   rsiTouchFlipSplitIndex
@@ -57,7 +57,7 @@ export function normalizeRsiTouchFlipEquityCurve(curve) {
 }
 
 /**
- * Сумма PnL закрытых сделок на баре выхода, в % от бюджета.
+ * Сумма PnL закрытых сделок на баре выхода, в долларах.
  * @param {Array<{exitIndex?:number, pnl?:number}>} closedTrades
  * @param {Array<{time?:number}>} candles
  * @param {number} capital
@@ -71,7 +71,7 @@ export function buildRsiTouchFlipTradeHistogram(
   const rows = Array.isArray(candles) ? candles : [];
   const trades = Array.isArray(closedTrades) ? closedTrades : [];
   const byTime = new Map();
-  const cap = Number(capital);
+  void capital;
   for (const trade of trades) {
     const idx = Math.floor(Number(trade?.exitIndex));
     const time = rsiTouchFlipUnixTime(rows[idx]?.time);
@@ -79,8 +79,7 @@ export function buildRsiTouchFlipTradeHistogram(
     if (time == null || !Number.isFinite(pnl)) {
       continue;
     }
-    const pct = cap > 0 ? pnl / cap * 100 : pnl;
-    byTime.set(time, (byTime.get(time) || 0) + pct);
+    byTime.set(time, (byTime.get(time) || 0) + pnl);
   }
   return [...byTime.entries()]
     .sort((a, b) => a[0] - b[0])
@@ -95,6 +94,83 @@ export function buildRsiTouchFlipTradeHistogram(
 }
 
 /**
+ * Накопительный PnL в точках выхода, как Cumulative PnL в TradingView.
+ * Ноль стоит на первой свече, последнее значение тянется до конца окна.
+ * @param {Array<{exitIndex?:number, pnl?:number}>} closedTrades
+ * @param {Array<{time?:number}>} candles
+ * @param {number} capital
+ * @returns {{
+ *   points: Array<{time:number, value:number}>,
+ *   markers: Array<{time:number, position:string, shape:string, color:string}>
+ * }}
+ */
+export function buildRsiTouchFlipTradeEquity(closedTrades, candles, capital) {
+  void capital;
+  const rows = Array.isArray(candles) ? candles : [];
+  const trades = (Array.isArray(closedTrades) ? closedTrades : [])
+    .filter((trade) => {
+      const idx = Math.floor(Number(trade?.exitIndex));
+      const pnl = Number(trade?.pnl);
+      return Number.isFinite(idx) && idx >= 0 && Number.isFinite(pnl);
+    })
+    .slice()
+    .sort((a, b) => {
+      const byExit = Math.floor(Number(a.exitIndex)) - Math.floor(Number(b.exitIndex));
+      if (byExit !== 0) {
+        return byExit;
+      }
+      return Math.floor(Number(a.entryIndex) || 0) - Math.floor(Number(b.entryIndex) || 0);
+    });
+  /** @type {Array<{time:number, value:number, marker:boolean}>} */
+  const raw = [];
+
+  function put(time, value, marker) {
+    if (raw.length && raw[raw.length - 1].time === time) {
+      raw[raw.length - 1].value = value;
+      if (marker) {
+        raw[raw.length - 1].marker = true;
+      }
+      return;
+    }
+    if (raw.length && time < raw[raw.length - 1].time) {
+      return;
+    }
+    raw.push({ time, value, marker });
+  }
+
+  const startTime = rsiTouchFlipUnixTime(rows[0]?.time);
+  if (startTime != null) {
+    put(startTime, 0, false);
+  }
+  let cumulative = 0;
+  for (const trade of trades) {
+    const time = rsiTouchFlipUnixTime(rows[Math.floor(Number(trade.exitIndex))]?.time);
+    if (time == null) {
+      continue;
+    }
+    cumulative += Number(trade.pnl);
+    put(time, cumulative, true);
+  }
+  const endTime = rsiTouchFlipUnixTime(rows[rows.length - 1]?.time);
+  if (endTime != null) {
+    put(endTime, cumulative, false);
+  }
+
+  return {
+    points: raw.map((point) => ({ time: point.time, value: point.value })),
+    markers: raw
+      .filter((point) => point.marker)
+      .map((point) => ({
+        time: point.time,
+        position: "inBar",
+        shape: "circle",
+        size: 0.5,
+        color: RSI_TOUCH_FLIP_EQUITY_POS_COLOR
+      }))
+  };
+}
+
+/**
  * @param {{
  *   equityCurve?: Array,
  *   closedTrades?: Array,
@@ -106,7 +182,14 @@ export function buildRsiTouchFlipTradeHistogram(
 export function buildRsiTouchFlipEquityModel(input) {
   const candles = Array.isArray(input?.candles) ? input.candles : [];
   const capital = Number(input?.capital);
-  const curve = normalizeRsiTouchFlipEquityCurve(input?.equityCurve);
+  const closedTrades = Array.isArray(input?.closedTrades) ? input.closedTrades : [];
+  const tradeEquity = closedTrades.length
+    ? buildRsiTouchFlipTradeEquity(closedTrades, candles, capital)
+    : null;
+  const curve = tradeEquity?.points?.length
+    ? tradeEquity.points
+    : normalizeRsiTouchFlipEquityCurve(input?.equityCurve);
+  const markers = tradeEquity?.markers || [];
   const histogram = buildRsiTouchFlipTradeHistogram(
     input?.closedTrades,
     candles,
@@ -145,6 +228,7 @@ export function buildRsiTouchFlipEquityModel(input) {
 
   return {
     line: curve,
+    markers,
     train,
     test,
     histogram,
