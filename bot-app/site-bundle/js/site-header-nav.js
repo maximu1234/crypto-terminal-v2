@@ -3,41 +3,15 @@ headerSettingsShellHtml
 } from "./header-settings-shell.js?v=4";
 
 import {
-WEB_HEADER_NAV_ITEMS
-} from "./site-header-nav-web.js?v=1";
-
-import {
 DESKTOP_HEADER_NAV_ITEMS
 } from "./site-header-nav-desktop.js?v=2";
 
 import {
 isScriptNavEnabled,
 isAlgoTradingNavEnabled
-} from "./desktop-feature-nav-prefs.js?v=4";
-
-function isDesktopRuntime(){
-
-if(
-window.cryptoTerminalDesktop?.isDesktop
-){
-return true;
-}
-
-/* Electron desktop-shell доступен с первого кадра по UA. */
-return /Electron\//i.test(
-navigator.userAgent ||
-""
-);
-
-}
+} from "./desktop-feature-nav-prefs.js?v=5";
 
 function getNavItems(){
-
-if(
-!isDesktopRuntime()
-){
-return WEB_HEADER_NAV_ITEMS;
-}
 
 return DESKTOP_HEADER_NAV_ITEMS.filter(
 item=>{

@@ -29,7 +29,7 @@ import {
   canSetBlueFlag,
   flagSortRank,
   FLAG_TITLES
-} from "../favorites.js?v=5";
+} from "../favorites.js?v=6";
 
 const STORAGE_KEY = "mc-mobile-terminal-coins-v1";
 

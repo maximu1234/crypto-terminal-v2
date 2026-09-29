@@ -8,11 +8,11 @@ isMacdAlert,
 isOscillatorAlert,
 isRsiAlert,
 normalizeAlertTf
-} from "./alerts.js?v=109";
+} from "./alerts.js?v=111";
 
 import {
 subscribeKline
-} from "./market-ws.js?v=1";
+} from "./market-ws.js?v=2";
 
 import {
 EXCHANGE_CHANGED_EVENT,
@@ -27,7 +27,7 @@ getAlertToastDurationMs
 import {
 buildAlertChartUrl,
 gateAlertExchangeNavigation
-} from "./alert-deep-link-exchange.js?v=2";
+} from "./alert-deep-link-exchange.js?v=3";
 
 /* Базовая цена отдельно для каждого алерта (symbol + shapeId) */
 const lastPriceByAlert =

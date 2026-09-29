@@ -15,7 +15,7 @@ import {
 } from "../alerts-cloud-sync.js?v=115";
 import {
   isCloudLoggedIn
-} from "../cloud-sync.js?v=70";
+} from "../cloud-sync.js?v=71";
 
 export async function initMobileAlertsLite() {
   initAlertsCloudSync();

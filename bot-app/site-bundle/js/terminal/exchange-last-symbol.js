@@ -14,18 +14,42 @@ symbols,
 getFallbackSymbol
 ){
 
+const saved =
+typeof last?.symbol ===
+"string" &&
+last.symbol.trim()
+? last.symbol.trim().toUpperCase()
+: null;
+
 if(
-last?.symbol &&
-symbols.length >
-0 &&
-symbols.includes(
-last.symbol
-)
+saved
 ){
-return last.symbol;
+
+if(
+!Array.isArray(
+symbols
+) ||
+symbols.length ===
+0
+){
+/* Список ещё не загружен — не мигаем BTC поверх последнего тикера. */
+return saved;
 }
 
 if(
+symbols.includes(
+saved
+)
+){
+return saved;
+}
+
+}
+
+if(
+Array.isArray(
+symbols
+) &&
 symbols.includes(
 DEFAULT_CHART_SYMBOL
 )
@@ -41,7 +65,12 @@ typeof getFallbackSymbol ===
 
 return (
 fallback ||
-symbols[0] ||
+(
+Array.isArray(
+symbols
+) &&
+symbols[0]
+) ||
 DEFAULT_CHART_SYMBOL
 );
 

@@ -33,7 +33,7 @@ parseDiaryTradeDeepLink
 import {
 DEFAULT_CHART_SYMBOL,
 pickSymbolFromLastView as pickSymbolFromLastViewPure
-} from "./exchange-last-symbol.js?v=1";
+} from "./exchange-last-symbol.js?v=2";
 
 import {
 CHART_PRICE_SCALE_MODE_LOGARITHMIC,

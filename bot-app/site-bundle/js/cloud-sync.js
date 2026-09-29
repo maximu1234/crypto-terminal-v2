@@ -41,7 +41,7 @@ loadFavoritesCloudUpdatedAt,
 saveFavoritesCloudUpdatedAt,
 saveFavoritesCloudSyncedSignature,
 hasUnsyncedFavoritesCloud
-} from "./favorites.js?v=5";
+} from "./favorites.js?v=6";
 
 import {
 getActiveExchangeId
@@ -79,11 +79,11 @@ isFavoritesAutoCloudDisabled,
 isAlertsCloudDisabled,
 isAutoDevicePullDisabled,
 scaleSupabasePollMs
-} from "./supabase-usage-prefs.js?v=5";
+} from "./supabase-usage-prefs.js?v=7";
 
 import {
 isAlgoBotLiteShell
-} from "./page-routes.js?v=5";
+} from "./page-routes.js?v=7";
 
 const DRAWINGS_LOCAL_TS_KEY =
 "drawings_local_updated_at";
@@ -2532,7 +2532,7 @@ isFavoritesAutoCloudDisabled()
 return;
 }
 
-void import("./favorites-cloud-sync.js?v=7").then(
+void import("./favorites-cloud-sync.js?v=10").then(
 m=>{
 m.applyFavoritesFromRealtimeRow(
 row
@@ -2670,7 +2670,7 @@ settingsChannel = channel;
 export async function mergeFavoritesWithCloud(){
 
 const m =
-await import("./favorites-cloud-sync.js?v=7");
+await import("./favorites-cloud-sync.js?v=10");
 
 return m.reconcileLocalFavoritesWithCloud();
 
@@ -2680,7 +2680,7 @@ return m.reconcileLocalFavoritesWithCloud();
 export async function pullFavoritesIfCloudNewer(){
 
 const m =
-await import("./favorites-cloud-sync.js?v=7");
+await import("./favorites-cloud-sync.js?v=10");
 
 await m.pullFavoritesFromCloudNow();
 return favoritesToCloudList(
@@ -2704,7 +2704,7 @@ return collectAllLocalDrawings();
 async function syncFavoritesWithCloud(){
 
 const m =
-await import("./favorites-cloud-sync.js?v=7");
+await import("./favorites-cloud-sync.js?v=10");
 
 await m.reconcileLocalFavoritesWithCloud();
 
@@ -2738,7 +2738,7 @@ return;
 }
 
 const m =
-await import("./favorites-cloud-sync.js?v=7");
+await import("./favorites-cloud-sync.js?v=10");
 
 m.pushFavoritesAfterLocalEdit(
 favorites
@@ -4598,7 +4598,7 @@ return;
 try{
 
 const favoritesCloud =
-await import("./favorites-cloud-sync.js?v=7");
+await import("./favorites-cloud-sync.js?v=10");
 
 if(
 !isFavoritesAutoCloudDisabled() &&
@@ -4612,7 +4612,7 @@ if(
 !isAlertsCloudDisabled()
 ){
 const alertsCloud =
-await import("./alerts-cloud-sync.js?v=113");
+await import("./alerts-cloud-sync.js?v=115");
 
 await alertsCloud.hydrateAlertsAfterAuth({
 force: true
@@ -4715,9 +4715,9 @@ await ensureCloudLoginResolved(
 );
 
 const alertsCloud =
-await import("./alerts-cloud-sync.js?v=113");
+await import("./alerts-cloud-sync.js?v=115");
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=109");
+await import("./alerts.js?v=111");
 
 const stripOpts =
 isAlertsPage()

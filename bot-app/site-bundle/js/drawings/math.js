@@ -63,3 +63,140 @@ py < top
 return Math.hypot(dx, dy);
 
 }
+
+export function normalizeScreenRect(
+x1,
+y1,
+x2,
+y2
+){
+
+return {
+left: Math.min(x1, x2),
+right: Math.max(x1, x2),
+top: Math.min(y1, y2),
+bottom: Math.max(y1, y2)
+};
+
+}
+
+export function pointInScreenRect(
+px,
+py,
+rect
+){
+
+return (
+px >= rect.left &&
+px <= rect.right &&
+py >= rect.top &&
+py <= rect.bottom
+);
+
+}
+
+export function screenRectsIntersect(
+a,
+b
+){
+
+return (
+a.left <= b.right &&
+a.right >= b.left &&
+a.top <= b.bottom &&
+a.bottom >= b.top
+);
+
+}
+
+/**
+ * Liang–Barsky: отрезок касается или пересекает axis-aligned rect.
+ */
+export function segmentIntersectsScreenRect(
+x1,
+y1,
+x2,
+y2,
+rect
+){
+
+const dx =
+x2 - x1;
+const dy =
+y2 - y1;
+
+if(
+dx === 0 &&
+dy === 0
+){
+return pointInScreenRect(
+x1,
+y1,
+rect
+);
+}
+
+let t0 =
+0;
+let t1 =
+1;
+
+function clip(
+p,
+q
+){
+
+if(
+p === 0
+){
+return q >= 0;
+}
+
+const r =
+q / p;
+
+if(
+p < 0
+){
+
+if(
+r > t1
+){
+return false;
+}
+
+if(
+r > t0
+){
+t0 = r;
+}
+
+}else{
+
+if(
+r < t0
+){
+return false;
+}
+
+if(
+r < t1
+){
+t1 = r;
+}
+
+}
+
+return true;
+
+}
+
+return (
+clip(-dx, x1 - rect.left) &&
+clip(dx, rect.right - x1) &&
+clip(-dy, y1 - rect.top) &&
+clip(dy, rect.bottom - y1) &&
+t0 <= t1
+);
+
+}

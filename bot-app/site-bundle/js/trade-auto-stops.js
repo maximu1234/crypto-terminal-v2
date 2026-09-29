@@ -3,7 +3,7 @@
  */
 import {
   getLoadedTradeExchangeModules
-} from "./trade/module-router.js?v=23";
+} from "./trade/module-router.js?v=24";
 
 function mod() {
   return getLoadedTradeExchangeModules();
@@ -56,4 +56,32 @@ export function maybeApplyAutoStopsForNewPosition(...args) {
 
 export function wireAutoStopSettings(...args) {
   return mod()?.wireAutoStopSettings?.(...args);
+}
+
+export function stashDrawingStopsFromDrawing(...args) {
+  return !!mod()?.stashDrawingStopsFromDrawing?.(...args);
+}
+
+export function peekDrawingStopsPendingForSide(...args) {
+  return mod()?.peekDrawingStopsPendingForSide?.(...args) || null;
+}
+
+export function clearDrawingStopsPending(...args) {
+  return mod()?.clearDrawingStopsPending?.(...args);
+}
+
+export function hasDrawingStopsPending(...args) {
+  return !!mod()?.hasDrawingStopsPending?.(...args);
+}
+
+export function wasDrawingStopsJustApplied(...args) {
+  return !!mod()?.wasDrawingStopsJustApplied?.(...args);
+}
+
+export async function tryApplyDrawingStopsPending(...args) {
+  const fn = mod()?.tryApplyDrawingStopsPending;
+  if (typeof fn !== "function") {
+    return false;
+  }
+  return fn(...args);
 }

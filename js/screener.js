@@ -84,7 +84,7 @@ getFavoriteGroup,
 setFavoriteGroup,
 canSetBlueFlag,
 FAVORITES_BY_EXCHANGE_KEY
-} from "./favorites.js?v=5";
+} from "./favorites.js?v=6";
 
 import {
 ensureCloudReady
@@ -98,7 +98,7 @@ withTimeout
 import {
 persistFavoritesToCloud,
 onFavoritesRemoteUpdate
-} from "./cloud-sync.js?v=70";
+} from "./cloud-sync.js?v=71";
 
 import {
 attachSymbolAutocomplete,

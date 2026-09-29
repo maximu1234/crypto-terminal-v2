@@ -2,21 +2,31 @@ import {
 getSupabaseUsagePrefs,
 setSupabaseUsagePref,
 syncAlertsCloudPauseToServer
-} from "./supabase-usage-prefs.js?v=5";
+} from "./supabase-usage-prefs.js?v=7";
 
 const BANDWIDTH_CUT_NOTE =
-"Realtime, авто-синхронизация флагов и автозагрузка из облака при фокусе отключены в коде (экономия лимитов Supabase Free). " +
-"Флаги подтягиваются вручную: Настройки → Синхронизация → «Обновить». " +
+"Realtime и автозагрузка рисунков при фокусе отключены в коде (экономия лимитов Supabase Free). " +
+"Облачные алерты и флаги Терминала (красный / зелёный / синий / серый) — по переключателям ниже: " +
+"запрос при изменении и один при входе, без постоянного мониторинга. " +
 "Рисунки хранятся только на устройстве.";
 
-const ALERTS_FIELD =
+const USAGE_FIELDS =
+[
 {
 key: "disableAlertsCloud",
 label: "Отключить облачные алерты (Telegram)",
 hint:
 "Не синхронизирует price_alerts с Supabase и не обращается к alert-worker. " +
 "Уведомления в Telegram с сервера не уходят. Снижает Egress и Realtime."
-};
+},
+{
+key: "disableFavoritesCloud",
+label: "Отключить облачные флаги (Терминал)",
+hint:
+"Не синхронизирует красный / зелёный / синий / серый с Supabase. " +
+"Флаги АлгоТрейдинга не затрагиваются. Без Realtime: один запрос при клике по флагу и один при входе."
+}
+];
 
 export function bindSupabaseUsagePrefsForm(
 rootEl,
@@ -55,6 +65,11 @@ form.append(
 note
 );
 
+for(
+const field of
+USAGE_FIELDS
+){
+
 const label =
 document.createElement(
 "label"
@@ -69,9 +84,9 @@ document.createElement(
 input.type =
 "checkbox";
 input.name =
-ALERTS_FIELD.key;
+field.key;
 input.dataset.pref =
-ALERTS_FIELD.key;
+field.key;
 
 const text =
 document.createElement(
@@ -85,7 +100,7 @@ document.createElement(
 "strong"
 );
 strong.textContent =
-ALERTS_FIELD.label;
+field.label;
 
 const hint =
 document.createElement(
@@ -94,7 +109,7 @@ document.createElement(
 hint.className =
 "system-admin-pref-hint";
 hint.textContent =
-ALERTS_FIELD.hint;
+field.hint;
 
 text.append(
 strong,
@@ -108,6 +123,8 @@ form.append(
 label
 );
 
+}
+
 rootEl.append(
 form
 );
@@ -117,8 +134,26 @@ function syncFromStorage(){
 const prefs =
 getSupabaseUsagePrefs();
 
+for(
+const field of
+USAGE_FIELDS
+){
+
+const input =
+form.querySelector(
+`[data-pref="${field.key}"]`
+);
+
+if(
+input
+){
 input.checked =
-!!prefs.disableAlertsCloud;
+!!prefs[
+field.key
+];
+}
+
+}
 
 if(
 statusEl
@@ -161,7 +196,7 @@ if(
 statusEl
 ){
 statusEl.textContent =
-"Сохранено. Обновите вкладки с Терминалом / Алертами (F5), чтобы применить.";
+"Сохранено. Обновите вкладки с Терминалом / Скринером / Алертами (F5), чтобы применить.";
 }
 
 }

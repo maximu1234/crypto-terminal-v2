@@ -4,15 +4,29 @@ isTabletChartViewport,
 hasAnyFinePointer,
 positionDomChartCrosshair,
 hideDomChartCrosshair
-} from "./chart-import.js?v=53";
+} from "./chart-import.js?v=62";
+
+import {
+isFineChartPointerType,
+shouldUseTouchDrawPlacement
+} from "./drawings/touch-placement-policy.js?v=1";
 
 import {
 isPositionType
-} from "./drawings/position.js?v=10";
+} from "./drawings/position.js?v=11";
 
 import {
 isHorizPriceTool
-} from "./drawings/constants.js?v=11";
+} from "./drawings/constants.js?v=13";
+
+import {
+isElliottType,
+elliottPointCount
+} from "./drawings/elliott-spec.js?v=17";
+
+import {
+isFibExtType
+} from "./drawings/fib-spec.js?v=17";
 
 /**
  * Touch/pointer placement for iPad and coarse-touch viewports.
@@ -45,7 +59,13 @@ tabletCustomPanHooked
 
 let touchDrawCrosshair = null;
 let touchPlaceTrack = null;
+let touchPlacementSession =
+false;
 
+/**
+ * Viewport can use finger drawing chrome (iPad / coarse phone).
+ * A mouse on iPad does not change this — placement session is per pointerType.
+ */
 function prefersTouchDrawInput(){
 
 if(
@@ -70,9 +90,25 @@ return prefersTouchDrawInput();
 
 }
 
+function beginPlacementSession(
+pointerType
+){
+
+touchPlacementSession =
+shouldUseTouchDrawPlacement(
+pointerType,
+{
+coarseTouch: isCoarseTouchViewport(),
+tabletChart: isTabletChartViewport(),
+anyFinePointer: hasAnyFinePointer()
+}
+);
+
+}
+
 function isTouchDrawPlacement(){
 
-return prefersTouchDrawInput();
+return touchPlacementSession;
 
 }
 
@@ -259,8 +295,24 @@ chart.clearCrosshairPosition();
 
 function placementPointsNeeded(type){
 
-if(type === "channel"){
+if(
+type ===
+"channel" ||
+isFibExtType(
+type
+)
+){
 return 3;
+}
+
+if(
+isElliottType(
+type
+)
+){
+return elliottPointCount(
+type
+);
 }
 
 if(
@@ -440,6 +492,8 @@ function clearTouchDrawState(){
 
 touchDrawCrosshair = null;
 touchPlaceTrack = null;
+touchPlacementSession =
+false;
 
 }
 
@@ -464,8 +518,9 @@ return;
 }
 
 if(
-e.pointerType ===
-"mouse"
+isFineChartPointerType(
+e.pointerType
+)
 ){
 return;
 }
@@ -618,6 +673,7 @@ true
 return {
 dispose,
 prefersTouchDrawInput,
+beginPlacementSession,
 isTouchDrawPlacement,
 isTouchDrawTablet,
 useChartProbeCrosshair,

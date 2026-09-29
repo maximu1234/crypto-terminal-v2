@@ -31,12 +31,6 @@ function readFlag(
 key
 ){
 
-if(
-!isDesktopShell()
-){
-return false;
-}
-
 try{
 const raw =
 localStorage.getItem(

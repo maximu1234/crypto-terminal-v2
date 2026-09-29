@@ -12,13 +12,14 @@ applyRsiFixedPriceScale,
 appendFutureWhitespaceBars,
 computeChartFutureMarginBars,
 syncLinkedChartTimescales
-} from "./chart-import.js?v=53";
+} from "./chart-import.js?v=62";
 
 import {
 applyLiveSeriesUpdate,
 ensureOhlcRollover,
-liveBarPeriodSec
-} from "./chart/live-bar-roll.js?v=2";
+liveBarPeriodSec,
+paintCatchupLiveSeries
+} from "./chart/live-bar-roll.js?v=4";
 
 import {
 terminalVisibleBars,
@@ -46,13 +47,14 @@ getActiveExchangeId
 } from "./market-api.js?v=6";
 
 import {
-subscribeKline
-} from "./market-ws.js?v=1";
+subscribeKline,
+bindLiveCandleCatchup
+} from "./market-ws.js?v=2";
 
 import {
 mountAlgoTradingCoinList,
 refreshAlgoMarketListFromFlags
-} from "./algo-trading-list.js?v=27";
+} from "./algo-trading-list.js?v=28";
 
 import {
 mountAlgoTickerScanUi
@@ -71,7 +73,7 @@ mountAlgoStrategyParamOptimizeUi
 
 import {
 mountAlgoRuntimeUi
-} from "./algo-trading/runtime-ui.js?v=14";
+} from "./algo-trading/runtime-ui.js?v=16";
 
 import {
 mountAlgoBotStrategyUi
@@ -98,15 +100,15 @@ syncBotStrategiesToMain
 
 import {
 mountAlgoTradeUi
-} from "./algo-trading/trade/boot.js?v=11";
+} from "./algo-trading/trade/boot.js?v=12";
 
 import {
 mountAlgoTradingDrawings
-} from "./algo-trading/drawings.js?v=2";
+} from "./algo-trading/drawings.js?v=20";
 
 import {
 mountAlgoTradingIndicators
-} from "./algo-trading/indicators.js?v=15";
+} from "./algo-trading/indicators.js?v=17";
 
 import {
 mountAlgoPatternEntryOverlay
@@ -119,7 +121,7 @@ mountRsiTouchFlipHost
 import {
 loadRsiTouchFlipPrefs,
 saveRsiTouchFlipPrefs
-} from "./algo-trading/rsi-touch-flip-prefs.js?v=8";
+} from "./algo-trading/rsi-touch-flip-prefs.js?v=9";
 
 import {
 clearAlgoPatternAnalysisUi,
@@ -190,7 +192,7 @@ runWithPreservedVisibleLogicalRange
 import {
 coinsState,
 marketMap
-} from "./terminal/terminal-state.js?v=13";
+} from "./terminal/terminal-state.js?v=17";
 
 import {
 DEFAULT_TF,
@@ -207,7 +209,7 @@ resolveInitialSymbol
 
 import {
 mergeLiveCandle
-} from "./algo-trading/live-candle.js?v=2";
+} from "./algo-trading/live-candle.js?v=3";
 
 import {
 formatTurnover24Label
@@ -219,7 +221,7 @@ bindAlgoNumericField
 
 import {
 bindAlgoPageHotkeys
-} from "./algo-trading/page-hotkeys.js?v=1";
+} from "./algo-trading/page-hotkeys.js?v=3";
 
 import {
 createAlgoStrategyMemory,
@@ -241,7 +243,7 @@ syncRsiLevelDom as syncRsiLevelDomEl,
 setRsiHud as setRsiHudEl,
 lastRsiValue as lastRsiValueFromCandles,
 layoutRsiPane
-} from "./algo-trading/page-rsi.js?v=1";
+} from "./algo-trading/page-rsi.js?v=2";
 
 import {
 bindAlgoStatsPanelResize
@@ -737,6 +739,8 @@ let candles =
 let loadSeq =
 0;
 let unsubKline =
+null;
+let unbindLiveCatchup =
 null;
 let liveBarRollTimer =
 null;
@@ -1948,6 +1952,15 @@ buildDisplayCandles
 function stopKline(){
 
 try{
+unbindLiveCatchup?.();
+}catch{
+/* ignore */
+}
+
+unbindLiveCatchup =
+null;
+
+try{
 unsubKline?.();
 }catch{
 /* ignore */
@@ -2344,7 +2357,10 @@ if(
 !mergeLiveCandle(
 candles,
 candle,
-0
+0,
+liveBarPeriodSec(
+tf
+)
 )
 ){
 return;
@@ -2437,6 +2453,50 @@ applyLiveCandleTick();
 },
 1000
 );
+
+unbindLiveCatchup =
+bindLiveCandleCatchup({
+getSymbol:
+()=>
+symbol,
+getTf:
+()=>
+tf,
+getCandles:
+()=>
+candles,
+maxLen:
+0,
+isAlive:
+()=>
+!disposed &&
+seq ===
+loadSeq,
+paint:
+(rows, info)=>{
+paintCatchupLiveSeries(
+series,
+buildDisplayCandles(),
+chart,
+info?.appended,
+info?.prevLen
+);
+if(
+info?.appended
+){
+applyCandleData(
+{
+light:
+true,
+skipAnalysis:
+true
+}
+);
+}else{
+applyLiveCandleTick();
+}
+}
+});
 
 listApi?.highlight?.();
 

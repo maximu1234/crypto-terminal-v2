@@ -5,7 +5,7 @@ loadWidgetStateBySymbol
 
 import {
 getTerminalBlueSymbols
-} from "./favorites.js?v=5";
+} from "./favorites.js?v=6";
 
 import {
 loadMarketHistory,

@@ -7,6 +7,7 @@ isCoinsChartInverted:false,
 coinsPriceScaleMode:"logarithmic",
 displaySymbol:"",
 candles:[],
+chartCandlesSymbol:"",
 symbolLoadSeq:0,
 marketData:[],
 innerSortMode:"symbol",
@@ -14,8 +15,10 @@ sortAsc:true,
 flagSortActive:false,
 flagSortAsc:false,
 searchQuery:"",
+minVolumeFilter:0,
 hasUrlSymbol:false,
 urlExchangeId:"",
+diaryTradeDeepLink:null,
 favorites:null,
 allListings:[],
 allBybitSymbols:[],
@@ -66,10 +69,15 @@ path
 return false;
 }
 
-return !!(
+const desktop =
 typeof globalThis !==
-"undefined" &&
-globalThis.window?.cryptoTerminalDesktop?.isDesktop
+"undefined"
+? globalThis.window?.cryptoTerminalDesktop
+: null;
+
+return !!(
+desktop?.isDesktop ||
+desktop?.webTrading
 );
 
 }

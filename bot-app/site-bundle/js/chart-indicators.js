@@ -233,22 +233,22 @@ import(
 "./indicators/rsi-pane.js?v=10"
 ),
 import(
-"./indicators/volume-pane.js?v=16"
+"./indicators/volume-pane.js?v=19"
 ),
 import(
-"./indicators/ao-pane.js?v=13"
+"./indicators/ao-pane.js?v=16"
 ),
 import(
-"./indicators/macd-pane.js?v=6"
+"./indicators/macd-pane.js?v=9"
 ),
 import(
-"./indicators/moving-average.js?v=18"
+"./indicators/moving-average.js?v=19"
 ),
 import(
-"./indicators/ema-shift-ribbon.js?v=9"
+"./indicators/ema-shift-ribbon.js?v=10"
 ),
 import(
-"./indicators/supertrend.js?v=5"
+"./indicators/supertrend.js?v=6"
 ),
 typeof createPattern12IndicatorOverride ===
 "function"
@@ -265,7 +265,7 @@ import(
 "./indicators/horizontal-volume.js?v=11"
 ),
 import(
-"./indicators/indicator-settings-dialog.js?v=7"
+"./indicators/indicator-settings-dialog.js?v=8"
 )
 ]
 );

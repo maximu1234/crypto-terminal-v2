@@ -41,7 +41,7 @@ loadFavoritesCloudUpdatedAt,
 saveFavoritesCloudUpdatedAt,
 saveFavoritesCloudSyncedSignature,
 hasUnsyncedFavoritesCloud
-} from "./favorites.js?v=5";
+} from "./favorites.js?v=6";
 
 import {
 getActiveExchangeId
@@ -2532,7 +2532,7 @@ isFavoritesAutoCloudDisabled()
 return;
 }
 
-void import("./favorites-cloud-sync.js?v=9").then(
+void import("./favorites-cloud-sync.js?v=10").then(
 m=>{
 m.applyFavoritesFromRealtimeRow(
 row
@@ -2670,7 +2670,7 @@ settingsChannel = channel;
 export async function mergeFavoritesWithCloud(){
 
 const m =
-await import("./favorites-cloud-sync.js?v=9");
+await import("./favorites-cloud-sync.js?v=10");
 
 return m.reconcileLocalFavoritesWithCloud();
 
@@ -2680,7 +2680,7 @@ return m.reconcileLocalFavoritesWithCloud();
 export async function pullFavoritesIfCloudNewer(){
 
 const m =
-await import("./favorites-cloud-sync.js?v=9");
+await import("./favorites-cloud-sync.js?v=10");
 
 await m.pullFavoritesFromCloudNow();
 return favoritesToCloudList(
@@ -2704,7 +2704,7 @@ return collectAllLocalDrawings();
 async function syncFavoritesWithCloud(){
 
 const m =
-await import("./favorites-cloud-sync.js?v=9");
+await import("./favorites-cloud-sync.js?v=10");
 
 await m.reconcileLocalFavoritesWithCloud();
 
@@ -2738,7 +2738,7 @@ return;
 }
 
 const m =
-await import("./favorites-cloud-sync.js?v=9");
+await import("./favorites-cloud-sync.js?v=10");
 
 m.pushFavoritesAfterLocalEdit(
 favorites
@@ -4598,7 +4598,7 @@ return;
 try{
 
 const favoritesCloud =
-await import("./favorites-cloud-sync.js?v=9");
+await import("./favorites-cloud-sync.js?v=10");
 
 if(
 !isFavoritesAutoCloudDisabled() &&

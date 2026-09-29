@@ -1,8 +1,14 @@
 import {
 coinsState,
 marketMap,
-coinElements
-} from "./terminal-state.js?v=13";
+coinElements,
+isTerminalPage
+} from "./terminal-state.js?v=17";
+
+import {
+normalizeMinVolume,
+filterMarketItemsByMinVolume
+} from "../screener-volume-filter.js?v=4";
 
 import {
 isActiveRealtimeMarketDataset,
@@ -11,13 +17,14 @@ isExchangeTradingEnabled
 
 import {
 connectKlineStream,
-subscribeTicker
-} from "../market-ws.js?v=1";
+subscribeTicker,
+bindLiveCandleCatchup
+} from "../market-ws.js?v=2";
 
 import {
 connectTickerStream,
 fetchTickersInto
-} from "../tickers.js?v=28";
+} from "../tickers.js?v=29";
 
 import {
 createTickerUiBatcher
@@ -25,23 +32,29 @@ createTickerUiBatcher
 
 import {
 processAlertCandle
-} from "../alert-monitor.js?v=73";
+} from "../alert-monitor.js?v=75";
 
 import {
 getFavoriteGroup,
 flagSortRank,
 emptyFavorites
-} from "../favorites.js?v=5";
+} from "../favorites.js?v=6";
 
 import {
 isTradePage
-} from "./terminal-state.js?v=13";
+} from "./terminal-state.js?v=17";
 
 import {
 applyLiveOhlcBar,
 ensureOhlcRollover,
-liveBarPeriodSec
-} from "../chart/live-bar-roll.js?v=2";
+liveBarPeriodSec,
+paintCatchupLiveSeries
+} from "../chart/live-bar-roll.js?v=4";
+
+import {
+canonicalChartSymbol,
+shouldApplyLivePriceToChart
+} from "./chart-live-guard.js?v=1";
 
 /** Desktop /trade only — не тянем trade-open-positions в открытый web /coins. */
 function escapeHtml(
@@ -443,9 +456,17 @@ list
 
 export function scheduleResortPriceColumns(){
 
+const volumeFilterOn =
+isTerminalPage &&
+normalizeMinVolume(
+coinsState().minVolumeFilter
+) >
+0;
+
 if(
 coinsState().innerSortMode !== "24h" &&
-coinsState().innerSortMode !== "volume24"
+coinsState().innerSortMode !== "volume24" &&
+!volumeFilterOn
 ){
 return;
 }
@@ -612,20 +633,6 @@ item
    REALTIME
 ========================================================= */
 
-function canonicalChartSymbol(
-symbol
-){
-
-return String(
-symbol ||
-""
-).replace(
-/\.P$/i,
-""
-).trim().toUpperCase();
-
-}
-
 let lastPublicKlineAt =
 0;
 let liveMarkUnsub =
@@ -637,6 +644,10 @@ null;
 let liveBarRollTimer =
 null;
 let pendingLiveBar =
+null;
+let pendingLiveBarSymbol =
+"";
+let unbindLiveCatchup =
 null;
 
 function paintLiveChartBar(
@@ -680,7 +691,36 @@ coinsState().candles
 
 }
 
+function liveChartGuard(
+sourceSymbol
+){
+
+return shouldApplyLivePriceToChart({
+sourceSymbol,
+currentSymbol: coinsState().currentSymbol,
+chartCandlesSymbol: coinsState().chartCandlesSymbol
+});
+
+}
+
+function canPaintLiveChartBar(
+sourceSymbol
+){
+
+return liveChartGuard(
+sourceSymbol ??
+coinsState().chartCandlesSymbol
+);
+
+}
+
 function rollLiveBarsIfNeeded(){
+
+if(
+!canPaintLiveChartBar()
+){
+return false;
+}
 
 const candles =
 coinsState().candles;
@@ -703,6 +743,10 @@ candles.length -
 ];
 pendingLiveBar =
 last;
+pendingLiveBarSymbol =
+canonicalChartSymbol(
+coinsState().chartCandlesSymbol
+);
 paintLiveChartBar(
 last
 );
@@ -716,11 +760,18 @@ livePriceFlushTimer =
 null;
 const bar =
 pendingLiveBar;
+const barSymbol =
+pendingLiveBarSymbol;
 pendingLiveBar =
 null;
+pendingLiveBarSymbol =
+"";
 
 if(
-!bar
+!bar ||
+!canPaintLiveChartBar(
+barSymbol
+)
 ){
 return;
 }
@@ -737,11 +788,8 @@ sourceSymbol
 ){
 
 if(
-canonicalChartSymbol(
+!canPaintLiveChartBar(
 sourceSymbol
-) !==
-canonicalChartSymbol(
-coinsState().currentSymbol
 )
 ){
 return;
@@ -810,6 +858,10 @@ coinsState().candles.length -
 bar;
 pendingLiveBar =
 bar;
+pendingLiveBarSymbol =
+canonicalChartSymbol(
+sourceSymbol
+);
 
 if(
 !livePriceFlushTimer
@@ -823,7 +875,11 @@ flushPendingLiveBar,
 
 }
 
-function stopLivePriceFallbacks(){
+export function stopLivePriceFallbacks(){
+
+unbindLiveCatchup?.();
+unbindLiveCatchup =
+null;
 
 if(
 liveMarkUnsub
@@ -863,6 +919,8 @@ null;
 
 pendingLiveBar =
 null;
+pendingLiveBarSymbol =
+"";
 
 }
 
@@ -956,6 +1014,14 @@ streamSymbol !== coinsState().currentSymbol
 return;
 }
 
+if(
+!canPaintLiveChartBar(
+streamSymbol
+)
+){
+return;
+}
+
 if(!coinsState().candles.length){
 return;
 }
@@ -984,7 +1050,10 @@ const kind =
 applyLiveOhlcBar(
 coinsState().candles,
 bar,
-4000
+4000,
+liveBarPeriodSec(
+coinsState().currentTF
+)
 );
 
 if(
@@ -1024,6 +1093,39 @@ coinsState().currentTF
 
 });
 
+unbindLiveCatchup =
+bindLiveCandleCatchup({
+getSymbol:
+()=>
+coinsState().currentSymbol,
+getTf:
+()=>
+coinsState().currentTF,
+getCandles:
+()=>
+coinsState().candles,
+maxLen:
+4000,
+isAlive:
+()=>
+canPaintLiveChartBar(
+streamSymbol
+) &&
+coinsState().currentSymbol ===
+streamSymbol,
+paint:
+(rows, info)=>{
+paintCatchupLiveSeries(
+coinsState().candleSeries,
+rows,
+coinsState().chart,
+info?.appended,
+info?.prevLen
+);
+hooks.rebuildRsiFromCandles?.();
+}
+});
+
 }
 
 export function getFilteredMarketData(){
@@ -1039,6 +1141,14 @@ data = data.filter(item=>
 item.symbol.includes(query)
 );
 
+}
+
+if(isTerminalPage){
+data =
+filterMarketItemsByMinVolume(
+data,
+coinsState().minVolumeFilter
+);
 }
 
 return data;
@@ -1508,7 +1618,7 @@ showFlags
 
 div.innerHTML = `
 ${flagCol}
-<div class="coin-symbol" title="${escapeHtml(item.indexTitle || item.symbol)}">
+<div class="coin-symbol">
 ${escapeHtml(item.symbol)}
 </div>
 <div class="coin-change24 col-change">

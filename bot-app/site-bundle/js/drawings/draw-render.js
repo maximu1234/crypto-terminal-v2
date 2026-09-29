@@ -4,15 +4,20 @@ normalizeFibLevelWidth,
 ensureFibLevelsVisible,
 formatFibLabel,
 fibPriceAtRatio,
+fibShapePriceAtRatio,
 getFibDrawRows,
 getFibFillPairs,
 isSeriesLogarithmic,
-fibLevelXSpan
-} from "./fib-spec.js?v=15";
+fibLevelXSpan,
+fibShapeLevelXSpan,
+isFibType,
+isFibExtType,
+resolveFibTrendLineColor
+} from "./fib-spec.js?v=17";
 
 import {
 isPositionType
-} from "./position.js?v=10";
+} from "./position.js?v=11";
 
 import {
 drawFilledArrow,
@@ -33,15 +38,35 @@ drawBrushPath
 } from "./brush.js?v=2";
 
 import {
+FIB_LINE_DASH,
 isHorizPriceTool,
 horizPriceLineX1
-} from "./constants.js?v=11";
+} from "./constants.js?v=13";
+
+import {
+channelLevelSegment,
+ensureChannelLevelsVisible
+} from "./channel-spec.js?v=2";
 
 import {
 isTextTool,
 drawTextShape,
 TEXT_DEFAULT_CONTENT
 } from "./text.js?v=3";
+
+import {
+isElliottType,
+isPattern12Draw,
+elliottPointCount,
+elliottScreenPoints,
+elliottLabelAnchor,
+elliottVertexLabel,
+elliottNecklineScreen,
+normalizePattern12TpFlags,
+normalizePatternDashOpacity,
+pattern12DashScreen,
+pattern12TpTickLayout
+} from "./elliott-spec.js?v=17";
 
 /**
  * @param {object} deps
@@ -66,6 +91,9 @@ getPlacement,
 getPreviewPoint,
 getPreviewXY,
 getSelectedId,
+getIsIdSelected = id=>
+id ===
+getSelectedId(),
 getEditingTextId = ()=>
 null,
 parseDrawColor,
@@ -89,6 +117,552 @@ ctx.setLineDash([]);
 
 }
 
+function drawFibTrendConnector(
+ctx,
+from,
+to,
+style,
+width
+){
+
+if(
+!from ||
+!to
+){
+return;
+}
+
+drawLine(
+ctx,
+from.x,
+from.y,
+to.x,
+to.y,
+resolveFibTrendLineColor(
+style?.fibTrendLineColor
+),
+Math.max(
+1,
+width ||
+1
+),
+fibLevelDash(
+"dashed"
+)
+);
+
+}
+
+function drawPattern12TpTicks(
+ctx,
+shape,
+screens,
+color,
+width
+){
+
+const ticks =
+pattern12TpTickLayout(
+shape,
+screens,
+plotPriceToCoordinate,
+isSeriesLogarithmic(
+series
+)
+);
+
+if(
+!ticks.length
+){
+return;
+}
+
+const lineWidth =
+Math.max(
+1,
+width ||
+1
+);
+const opacityPct =
+normalizePatternDashOpacity(
+shape.patternDashOpacity
+);
+
+ctx.save();
+ctx.globalAlpha =
+opacityPct /
+100;
+ctx.strokeStyle =
+color;
+ctx.fillStyle =
+color;
+ctx.lineWidth =
+lineWidth;
+ctx.lineCap =
+"round";
+ctx.lineJoin =
+"round";
+ctx.setLineDash(
+FIB_LINE_DASH.dotted
+);
+ctx.font =
+"11px Arial";
+ctx.textAlign =
+"left";
+ctx.textBaseline =
+"middle";
+
+for(
+const tick of ticks
+){
+
+ctx.beginPath();
+ctx.moveTo(
+tick.x1,
+tick.y
+);
+ctx.lineTo(
+tick.x2,
+tick.y
+);
+ctx.stroke();
+ctx.fillText(
+tick.label,
+tick.x2 +
+6,
+tick.y
+);
+
+}
+
+ctx.restore();
+
+}
+
+function drawElliottLabel(
+ctx,
+x,
+y,
+text,
+color,
+circled,
+fontPx
+){
+
+const px =
+Number.isFinite(
+fontPx
+) &&
+fontPx >
+0
+? fontPx
+: 13;
+
+ctx.save();
+ctx.font =
+`600 ${px}px Arial, sans-serif`;
+ctx.textAlign =
+"center";
+ctx.textBaseline =
+"middle";
+
+const metrics =
+ctx.measureText(
+text
+);
+const tw =
+metrics.width ||
+text.length *
+px *
+0.55;
+
+if(
+circled
+){
+
+const r =
+Math.max(
+px *
+0.72,
+tw /
+2 +
+px *
+0.28
+);
+
+ctx.beginPath();
+ctx.arc(
+x,
+y,
+r,
+0,
+Math.PI *
+2
+);
+ctx.strokeStyle =
+color;
+ctx.lineWidth =
+Math.max(
+1,
+px /
+10
+);
+ctx.stroke();
+
+}
+
+ctx.fillStyle =
+color;
+ctx.fillText(
+text,
+x,
+y
+);
+ctx.restore();
+
+}
+
+function strokePatternSegment(
+ctx,
+a,
+b,
+color,
+width,
+dash,
+opacityPct
+){
+
+if(
+!a ||
+!b
+){
+return;
+}
+
+ctx.save();
+ctx.strokeStyle =
+color;
+ctx.lineWidth =
+width ||
+1;
+ctx.lineJoin =
+"round";
+ctx.lineCap =
+"round";
+
+if(
+opacityPct !=
+null
+){
+ctx.globalAlpha =
+normalizePatternDashOpacity(
+opacityPct
+) /
+100;
+}
+
+ctx.setLineDash(
+dash ||
+[]
+);
+ctx.beginPath();
+ctx.moveTo(
+a.x,
+a.y
+);
+ctx.lineTo(
+b.x,
+b.y
+);
+ctx.stroke();
+ctx.restore();
+
+}
+
+function drawStrokeArrowHead(
+ctx,
+from,
+to,
+color,
+width
+){
+
+const dx =
+to.x -
+from.x;
+const dy =
+to.y -
+from.y;
+const len =
+Math.hypot(
+dx,
+dy
+);
+
+if(
+len <
+6
+){
+return;
+}
+
+const ux =
+dx /
+len;
+const uy =
+dy /
+len;
+const wx =
+-uy;
+const wy =
+ux;
+const head =
+11 +
+(width || 1) *
+1.5;
+const hw =
+head *
+0.38;
+
+ctx.save();
+ctx.fillStyle =
+color;
+ctx.beginPath();
+ctx.moveTo(
+to.x,
+to.y
+);
+ctx.lineTo(
+to.x -
+ux *
+head +
+wx *
+hw,
+to.y -
+uy *
+head +
+wy *
+hw
+);
+ctx.lineTo(
+to.x -
+ux *
+head -
+wx *
+hw,
+to.y -
+uy *
+head -
+wy *
+hw
+);
+ctx.closePath();
+ctx.fill();
+ctx.restore();
+
+}
+
+function drawElliottWave(
+ctx,
+shape,
+color,
+width
+){
+
+const screens =
+elliottScreenPoints(
+shape,
+toXY
+);
+
+if(
+!screens.length
+){
+return;
+}
+
+if(
+shape.showWave !==
+false &&
+screens.length >
+1
+){
+
+ctx.save();
+ctx.strokeStyle =
+color;
+ctx.lineWidth =
+width ||
+1;
+ctx.lineJoin =
+"round";
+ctx.lineCap =
+"round";
+ctx.setLineDash(
+[]
+);
+ctx.beginPath();
+ctx.moveTo(
+screens[
+0
+].x,
+screens[
+0
+].y
+);
+
+for(
+let i =
+1;
+i <
+screens.length;
+i++
+){
+ctx.lineTo(
+screens[
+i
+].x,
+screens[
+i
+].y
+);
+}
+
+ctx.stroke();
+ctx.restore();
+
+const neck =
+elliottNecklineScreen(
+shape.type,
+screens
+);
+
+if(
+neck
+){
+strokePatternSegment(
+ctx,
+neck.a,
+neck.b,
+color,
+width
+);
+}
+
+if(
+isPattern12Draw(
+shape.type
+) &&
+screens.length >=
+6
+){
+drawStrokeArrowHead(
+ctx,
+screens[
+screens.length -
+2
+],
+screens[
+screens.length -
+1
+],
+color,
+width
+);
+}
+
+}
+
+if(
+isPattern12Draw(
+shape.type
+) &&
+shape.showPatternDash !==
+false
+){
+
+const dash =
+pattern12DashScreen(
+screens
+);
+
+if(
+dash
+){
+strokePatternSegment(
+ctx,
+dash.a,
+dash.b,
+color,
+Math.max(
+1,
+(width || 1) *
+0.9
+),
+[
+7,
+5
+],
+shape.patternDashOpacity
+);
+}
+
+}
+
+if(
+isPattern12Draw(
+shape.type
+)
+){
+drawPattern12TpTicks(
+ctx,
+shape,
+screens,
+color,
+width
+);
+}
+
+screens.forEach(
+(
+pt,
+i
+)=>{
+
+const label =
+elliottVertexLabel(
+shape,
+i
+);
+
+if(
+!label.text
+){
+return;
+}
+
+const anchor =
+elliottLabelAnchor(
+screens,
+i
+) ||
+pt;
+
+drawElliottLabel(
+ctx,
+anchor.x,
+anchor.y,
+label.text,
+color,
+label.circled,
+label.fontPx
+);
+
+}
+);
+
+}
+
 function drawFib(
 ctx,
 shape,
@@ -101,8 +675,53 @@ const a =
 toXY(shape.p1);
 const b =
 toXY(shape.p2);
+const c =
+isFibExtType(
+shape.type
+)
+? toXY(shape.p3)
+: null;
 
-if(!a || !b){
+if(
+!a ||
+!b
+){
+return;
+}
+
+if(
+isFibExtType(
+shape.type
+) &&
+!c
+){
+
+if(
+shape.fibShowTrendLine ===
+true
+){
+drawFibTrendConnector(
+ctx,
+a,
+b,
+shape,
+width
+);
+}
+
+return;
+}
+
+const span =
+fibShapeLevelXSpan(
+shape,
+toXY,
+plotW
+);
+
+if(
+!span
+){
 return;
 }
 
@@ -111,11 +730,7 @@ x1,
 x2,
 labelX
 } =
-fibLevelXSpan(
-a,
-b,
-plotW
-);
+span;
 
 const useLog =
 isSeriesLogarithmic(
@@ -133,16 +748,14 @@ drawRows
 pair=>{
 
 const priceFrom =
-fibPriceAtRatio(
-shape.p1.price,
-shape.p2.price,
+fibShapePriceAtRatio(
+shape,
 pair.from.v,
 useLog
 );
 const priceTo =
-fibPriceAtRatio(
-shape.p1.price,
-shape.p2.price,
+fibShapePriceAtRatio(
+shape,
 pair.to.v,
 useLog
 );
@@ -230,9 +843,8 @@ return;
 }
 
 const price =
-fibPriceAtRatio(
-shape.p1.price,
-shape.p2.price,
+fibShapePriceAtRatio(
+shape,
 row.v,
 useLog
 );
@@ -289,22 +901,31 @@ shape.fibShowTrendLine ===
 true
 ){
 
-drawLine(
+drawFibTrendConnector(
 ctx,
-a.x,
-a.y,
-b.x,
-b.y,
-color,
-width,
-[]
+a,
+b,
+shape,
+width
 );
 
+if(
+c
+){
+drawFibTrendConnector(
+ctx,
+b,
+c,
+shape,
+width
+);
 }
 
 }
 
-function drawChannelAtXY(ctx, p1, p2, p3, color, width){
+}
+
+function drawChannelAtXY(ctx, p1, p2, p3, color, width, levels){
 
 if(!p1 || !p2 || !p3){
 return;
@@ -313,26 +934,58 @@ return;
 const dx = p2.x - p1.x;
 const dy = p2.y - p1.y;
 
-const p4 = {
+const geom = {
+p1,
+p2,
+p3,
+p4: {
 x: p3.x + dx,
 y: p3.y + dy
+}
 };
 
-drawLine(ctx, p1.x, p1.y, p2.x, p2.y, color, width);
-drawLine(ctx, p3.x, p3.y, p4.x, p4.y, color, width);
+const rows =
+ensureChannelLevelsVisible(
+levels
+);
 
-ctx.globalAlpha = 0.55;
+rows.forEach(
+row=>{
+
+if(
+!row.enabled
+){
+return;
+}
+
+const seg =
+channelLevelSegment(
+geom,
+row.v
+);
+
+if(
+!seg
+){
+return;
+}
+
+const lineColor =
+row.color ||
+color;
+
 drawLine(
 ctx,
-(p1.x + p3.x) / 2,
-(p1.y + p3.y) / 2,
-(p2.x + p4.x) / 2,
-(p2.y + p4.y) / 2,
-color,
-Math.max(1, width),
-[5, 4]
+seg.start.x,
+seg.start.y,
+seg.end.x,
+seg.end.y,
+lineColor,
+width
 );
-ctx.globalAlpha = 1;
+
+}
+);
 
 }
 
@@ -342,7 +995,15 @@ const p1 = toXY(shape.p1);
 const p2 = toXY(shape.p2);
 const p3 = toXY(shape.p3);
 
-drawChannelAtXY(ctx, p1, p2, p3, color, width);
+drawChannelAtXY(
+ctx,
+p1,
+p2,
+p3,
+color,
+width,
+shape.channelLevels
+);
 
 }
 
@@ -467,8 +1128,9 @@ shape,
 toXY,
 {
 selected:
-shape.id ===
-getSelectedId(),
+getIsIdSelected(
+shape.id
+),
 hideGlyph:
 shape.id &&
 shape.id ===
@@ -478,7 +1140,11 @@ getEditingTextId()
 
 }
 
-if(shape.type === "fib"){
+if(
+isFibType(
+shape.type
+)
+){
 drawFib(ctx, shape, color, width, w);
 }
 
@@ -486,11 +1152,26 @@ if(shape.type === "channel"){
 drawChannel(ctx, shape, color, width);
 }
 
+if(
+isElliottType(
+shape.type
+)
+){
+drawElliottWave(
+ctx,
+shape,
+color,
+width
+);
+}
+
 if(isPositionType(shape.type)){
 drawPosition(
 ctx,
 shape,
-shape.id === getSelectedId()
+getIsIdSelected(
+shape.id
+)
 );
 }
 
@@ -615,9 +1296,22 @@ type
 
 if(
 type ===
-"channel"
+"channel" ||
+isFibExtType(
+type
+)
 ){
 return 3;
+}
+
+if(
+isElliottType(
+type
+)
+){
+return elliottPointCount(
+type
+);
 }
 
 if(
@@ -797,7 +1491,112 @@ const c = previewPoint
 : previewXY;
 
 if(c){
-drawChannelAtXY(ctx, a, b, c, style.color, style.lineWidth);
+drawChannelAtXY(
+ctx,
+a,
+b,
+c,
+style.color,
+style.lineWidth,
+style.channelLevels
+);
+}
+
+}
+
+return;
+
+}
+
+if(
+isFibExtType(
+placement.type
+)
+){
+
+if(pts.length === 1){
+
+const a = toXY(pts[0]);
+const b = previewPointToXY(
+previewPoint || (previewXY ? { _xy: previewXY } : null)
+);
+
+if(a && b){
+drawFibTrendConnector(
+ctx,
+a,
+b,
+style,
+style.lineWidth
+);
+}
+
+return;
+
+}
+
+if(pts.length >= 2){
+
+const previewAnchor =
+resolvePreviewAnchorPoint() ||
+(
+previewXY
+? pointFromXY(
+previewXY.x,
+previewXY.y
+)
+: null
+);
+const p3 =
+pts[2] ||
+previewAnchor;
+
+if(
+p3
+){
+
+drawShape(
+ctx,
+{
+type: "fib-ext",
+color: style.color,
+lineWidth: style.lineWidth,
+fibLevels: ensureFibLevelsVisible(
+style.fibLevels,
+"fib-ext"
+),
+fibShowTrendLine:
+style.fibShowTrendLine !==
+false,
+fibTrendLineColor: style.fibTrendLineColor,
+p1: pts[0],
+p2: pts[1],
+p3
+},
+w,
+h,
+true
+);
+
+}else{
+
+const a =
+toXY(
+pts[0]
+);
+const b =
+toXY(
+pts[1]
+);
+
+drawFibTrendConnector(
+ctx,
+a,
+b,
+style,
+style.lineWidth
+);
+
 }
 
 }
@@ -1083,6 +1882,7 @@ ensureFibLevelsVisible(
 style.fibLevels
 ),
 fibShowTrendLine: style.fibShowTrendLine,
+fibTrendLineColor: style.fibTrendLineColor,
 p1: pts[0],
 p2: previewAnchor
 };
@@ -1107,10 +1907,16 @@ type: placement.type,
 color: style.color,
 lineWidth: style.lineWidth,
 fibLevels:
-placement.type === "fib"
-? ensureFibLevelsVisible(style.fibLevels)
+isFibType(
+placement.type
+)
+? ensureFibLevelsVisible(
+style.fibLevels,
+placement.type
+)
 : style.fibLevels,
 fibShowTrendLine: style.fibShowTrendLine,
+fibTrendLineColor: style.fibTrendLineColor,
 p1: previewPts[0],
 p2: previewPts[1],
 p3: previewPts[2],
@@ -1160,6 +1966,60 @@ drawShape(ctx, previewShape, w, h);
 
 if(placement.type === "fib" && previewPts.length >= 2){
 drawShape(ctx, previewShape, w, h, true);
+}
+
+if(
+isFibExtType(
+placement.type
+) &&
+previewPts.length >=
+3
+){
+drawShape(ctx, previewShape, w, h, true);
+}
+
+if(
+isElliottType(
+placement.type
+) &&
+previewPts.length >=
+1
+){
+
+const elliottPts =
+previewPts.filter(
+Boolean
+);
+
+drawShape(
+ctx,
+{
+type: placement.type,
+color: style.color,
+lineWidth: style.lineWidth,
+degree: style.degree,
+degreeJunior: style.degreeJunior,
+showWave: style.showWave !==
+false,
+showPatternDash: style.showPatternDash !==
+false,
+patternDashOpacity: style.patternDashOpacity,
+...normalizePattern12TpFlags(
+style.showTpSenior,
+style.showTpJunior
+),
+tpLevels: style.tpLevels,
+points: elliottPts,
+p1: elliottPts[0],
+p2: elliottPts[
+elliottPts.length -
+1
+]
+},
+w,
+h
+);
+
 }
 
 }

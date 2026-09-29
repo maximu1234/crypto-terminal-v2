@@ -18,7 +18,7 @@ getExchangeSecretForSave
 
 import {
 getLoadedTradeExchangeModules
-} from "./trade/module-router.js?v=23";
+} from "./trade/module-router.js?v=24";
 
 import {
 maskTradeDisplay
@@ -284,9 +284,24 @@ return `
 
 }
 
+function listedExchangeIds(){
+
+if(
+window.cryptoTerminalDesktop?.webTrading &&
+!window.cryptoTerminalDesktop?.isDesktop
+){
+return [
+"bybit"
+];
+}
+
+return EXCHANGE_IDS;
+
+}
+
 function buildExchangeSwitcherHtml(){
 
-return EXCHANGE_IDS.map(
+return listedExchangeIds().map(
 id=>{
 const def =
 EXCHANGE_DEFINITIONS[

@@ -43,7 +43,7 @@ retryBtn.addEventListener(
 ()=>{
 
 void import(
-"./bybit-fetch.js?v=18"
+"./bybit-fetch.js?v=19"
 ).then(
 m=>{
 m.resetBybitEndpoints?.();
@@ -56,7 +56,7 @@ getActiveExchangeId() ===
 ){
 
 void import(
-"./exchanges/bingx/ws.js?v=18"
+"./exchanges/bingx/ws.js?v=19"
 ).then(
 m=>{
 m.resetBingxWs?.();

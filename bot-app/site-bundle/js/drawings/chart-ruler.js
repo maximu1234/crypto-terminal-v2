@@ -130,6 +130,54 @@ return lo;
 
 }
 
+/**
+ * Open time of the candle that contains `time` on the current series.
+ * Used so drawing X sticks to the HTF bar column instead of interpolating
+ * between opens when the stored time is an LTF bar open.
+ * @returns {number|null}
+ */
+export function containingBarOpenTime(
+candles,
+time
+){
+
+if(
+!candles?.length
+){
+return null;
+}
+
+const t =
+typeof time ===
+"number"
+? time
+:null;
+
+if(
+t ==
+null ||
+!Number.isFinite(
+t
+)
+){
+return null;
+}
+
+const idx =
+candleIndexAtOrBefore(
+candles,
+t
+);
+const bar =
+candles[
+idx
+];
+
+return bar?.time ??
+null;
+
+}
+
 export function countBarsBetween(
 candles,
 timeA,

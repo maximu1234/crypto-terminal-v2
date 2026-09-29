@@ -217,6 +217,23 @@ new CustomEvent(
 /* ignore */
 }
 
+const synced =
+favoritesCloudSyncBucket(
+id
+).bucket.signature ||
+"";
+
+if(
+favoritesSignature(
+groups
+) !==
+synced
+){
+markFavoritesCloudDirty(
+id
+);
+}
+
 }
 
 export function isTerminalBlueSymbol(

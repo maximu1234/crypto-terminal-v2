@@ -73,7 +73,7 @@ removeRsiTouchFlipBookRow
 
 import {
 mountQwertyKeyInput
-} from "./qwerty-key-input.js?v=1";
+} from "./qwerty-key-input.js?v=4";
 
 import {
 isAlgoBotLiteMode

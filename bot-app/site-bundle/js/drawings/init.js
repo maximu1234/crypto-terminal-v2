@@ -1,15 +1,15 @@
 import {
 parseDrawColor,
 formatDrawColor
-} from "../draw-color-palette.js?v=6";
+} from "../draw-color-palette.js?v=7";
 
 import {
 TRASH_ICON_SVG
-} from "../draw-ui-shared.js?v=37";
+} from "../draw-ui-shared.js?v=44";
 
 import {
 closeAllWidgetDrawToolsMenus
-} from "../watchlist-draw-ui.js?v=17";
+} from "../watchlist-draw-ui.js?v=27";
 
 import {
 ensureDrawToolsVisible
@@ -50,7 +50,7 @@ ensureDomChartCrosshair,
 hideDomChartCrosshair,
 positionTabletProbeHorizInStack,
 fullCrosshairOptions
-} from "../chart-import.js?v=53";
+} from "../chart-import.js?v=62";
 
 import {
 STROKE,
@@ -59,7 +59,7 @@ HANDLE_STROKE,
 WIDTH_OPTIONS,
 isHorizPriceTool,
 horizPriceLineX1
-} from "./constants.js?v=11";
+} from "./constants.js?v=13";
 
 import {
 getRectangleHandleScreens,
@@ -75,7 +75,7 @@ fvpBodyDist
 
 import {
 distToSegment
-} from "./math.js?v=1";
+} from "./math.js?v=2";
 
 import {
 normalizeFibLineStyle,
@@ -87,8 +87,10 @@ finalizeFibLevels,
 normalizeFibLevelsShape,
 parseFibRatioField,
 getFibRows,
-isSeriesLogarithmic
-} from "./fib-spec.js?v=15";
+isSeriesLogarithmic,
+isFibType,
+isFibExtType
+} from "./fib-spec.js?v=17";
 
 import {
 setFibPanelCommitHook,
@@ -112,15 +114,15 @@ positionEntryPrice,
 positionXBounds as resolvePositionXBounds,
 positionBodyDist as resolvePositionBodyDist,
 getPositionHandleScreens as resolvePositionHandleScreens
-} from "./position.js?v=10";
+} from "./position.js?v=11";
 
 import {
 createDrawPrefs
-} from "./draw-prefs.js?v=4";
+} from "./draw-prefs.js?v=13";
 
 import {
 createPositionDraw
-} from "./position-draw.js?v=4";
+} from "./position-draw.js?v=5";
 
 import {
 pickUi
@@ -128,11 +130,11 @@ pickUi
 
 import {
 createDrawHitTester
-} from "./draw-hit.js?v=12";
+} from "./draw-hit.js?v=21";
 
 import {
 createDrawRenderer
-} from "./draw-render.js?v=16";
+} from "./draw-render.js?v=31";
 
 import {
 snapPlotToCandleWick
@@ -140,16 +142,17 @@ snapPlotToCandleWick
 
 import {
 computeChartRulerMetrics,
+containingBarOpenTime,
 drawChartRuler,
 ensureChartRulerLabelEl,
 hideChartRulerLabelEl,
 isChartRulerGoingDown,
 updateChartRulerLabelEl
-} from "./chart-ruler.js?v=8";
+} from "./chart-ruler.js?v=9";
 
 import {
 mountTabletDrawInput
-} from "../drawings-tablet-input.js?v=6";
+} from "../drawings-tablet-input.js?v=12";
 
 import {
 cloneDrawingsForUndo,
@@ -158,15 +161,15 @@ createDrawUndoStack
 
 import {
 createDrawDesktopSelection
-} from "./draw-edit-desktop.js?v=11";
+} from "./draw-edit-desktop.js?v=15";
 
 import {
 createDrawingsPersist
-} from "./drawings-persist.js?v=11";
+} from "./drawings-persist.js?v=18";
 
 import {
 createDrawStyleBar
-} from "./draw-style-bar.js?v=34";
+} from "./draw-style-bar.js?v=60";
 
 import {
 createDrawAlertsChart
@@ -174,7 +177,7 @@ createDrawAlertsChart
 
 import {
 createDrawPlacement
-} from "./draw-placement.js?v=13";
+} from "./draw-placement.js?v=24";
 
 import {
 createDrawTextEditor,
@@ -183,28 +186,43 @@ hitTestTextBody
 } from "./text.js?v=3";
 
 import {
+isElliottType,
+listElliottHandles
+} from "./elliott-spec.js?v=17";
+
+import {
+closeElliottFlyout,
+syncElliottGroupActive
+} from "./elliott-toolbar.js?v=4";
+
+import {
+closeFibFlyout,
+syncFibGroupActive
+} from "./fib-toolbar.js?v=4";
+
+import {
 createBrushPlacement
 } from "./brush-placement.js?v=3";
 
 import {
 createDrawEditInteraction
-} from "./draw-edit-interaction.js?v=17";
+} from "./draw-edit-interaction.js?v=28";
 
 import {
 createDrawChartInput
-} from "./draw-chart-input.js?v=2";
+} from "./draw-chart-input.js?v=5";
 
 import {
 createDrawPriceScale
-} from "./draw-price-scale.js?v=13";
+} from "./draw-price-scale.js?v=19";
 
 import {
 createDrawRedrawLoop
-} from "./draw-redraw-loop.js?v=10";
+} from "./draw-redraw-loop.js?v=15";
 
 import {
 isAlgoReducedCloudClient
-} from "../page-routes.js?v=5";
+} from "../page-routes.js?v=7";
 
 export function initDrawings({
 
@@ -346,6 +364,145 @@ let lastLoadedSymbol = null;
 const drawUndo =
 createDrawUndoStack();
 let selectedId = null;
+const selectedIds =
+new Set();
+
+function selectedIdsList(){
+
+return [
+...selectedIds
+];
+
+}
+
+function isIdSelected(
+id
+){
+
+return !!id &&
+selectedIds.has(
+id
+);
+
+}
+
+function applyPrimarySelectedId(
+id
+){
+
+selectedId =
+id ||
+null;
+selectedIds.clear();
+
+if(
+selectedId
+){
+selectedIds.add(
+selectedId
+);
+}
+
+}
+
+function applySelectedIds(
+ids,
+primaryId
+){
+
+selectedIds.clear();
+
+for(
+const id of ids ||
+[]
+){
+
+if(
+id
+){
+selectedIds.add(
+id
+);
+}
+
+}
+
+if(
+primaryId &&
+selectedIds.has(
+primaryId
+)
+){
+selectedId =
+primaryId;
+}else if(
+!(
+selectedId &&
+selectedIds.has(
+selectedId
+)
+)
+){
+selectedId =
+selectedIds.size
+? [
+...selectedIds
+][
+selectedIds.size -
+1
+]
+: null;
+}
+
+}
+
+function toggleIdInSelection(
+id
+){
+
+if(
+!id
+){
+return;
+}
+
+if(
+selectedIds.has(
+id
+)
+){
+
+selectedIds.delete(
+id
+);
+
+if(
+selectedId ===
+id
+){
+selectedId =
+selectedIds.size
+? [
+...selectedIds
+][
+selectedIds.size -
+1
+]
+: null;
+}
+
+}else{
+
+selectedIds.add(
+id
+);
+selectedId =
+id;
+
+}
+
+}
+
 let textEditor =
 null;
 /** @type {ReturnType<typeof createDrawDesktopSelection> | null} */
@@ -754,17 +911,17 @@ return direct;
 
 const candles = candleSeries();
 
-if(candles.length < 2){
+if(!candles.length){
 return null;
 }
 
 const first = candles[0];
-const second = candles[1];
-const prev = candles[candles.length - 2];
 const last = candles[candles.length - 1];
 
-if(t <= first.time){
+/* Past / future beyond series: keep linear extrapolate so rays can extend. */
+if(candles.length >= 2 && t < first.time){
 
+const second = candles[1];
 const seg = segmentX(ts, first.time, second.time);
 
 if(!seg || seg.dt <= 0){
@@ -775,8 +932,9 @@ return seg.x0 + (seg.x1 - seg.x0) * ((t - first.time) / seg.dt);
 
 }
 
-if(t >= last.time){
+if(candles.length >= 2 && t > last.time){
 
+const prev = candles[candles.length - 2];
 const seg = segmentX(ts, prev.time, last.time);
 
 if(!seg || seg.dt <= 0){
@@ -787,32 +945,18 @@ return seg.x1 + (seg.x1 - seg.x0) * ((t - last.time) / seg.dt);
 
 }
 
-let lo = 0;
-let hi = candles.length - 1;
-
-while(lo + 1 < hi){
-
-const mid = (lo + hi) >> 1;
-
-if(candles[mid].time <= t){
-lo = mid;
-}else{
-hi = mid;
-}
-
-}
-
-const seg = segmentX(
-ts,
-candles[lo].time,
-candles[lo + 1].time
+/* Between bars (e.g. 1h open on Daily): stick to containing bar column. */
+const barOpen =
+containingBarOpenTime(
+candles,
+t
 );
 
-if(!seg || seg.dt <= 0){
-return seg?.x0 ?? null;
+if(barOpen == null){
+return null;
 }
 
-return seg.x0 + (seg.x1 - seg.x0) * ((t - candles[lo].time) / seg.dt);
+return ts.timeToCoordinate(barOpen);
 
 }
 
@@ -1034,8 +1178,8 @@ if(
 return false;
 }
 
-const keepSelected =
-selectedId;
+const keepIds =
+selectedIdsList();
 
 drawUndo.setReplay(
 true
@@ -1048,11 +1192,12 @@ shape
 )
 );
 
-selectedId =
-keepSelected &&
-drawings.some(d=>d.id === keepSelected)
-? keepSelected
-: null;
+applySelectedIds(
+keepIds.filter(
+id=>
+drawings.some(d=>d.id === id)
+)
+);
 
 syncDrawUndoBaseline();
 
@@ -1173,6 +1318,8 @@ placement.type ===
 placement.type ===
 "fib" ||
 placement.type ===
+"fib-ext" ||
+placement.type ===
 "channel" ||
 placement.type ===
 "arrow"
@@ -1220,6 +1367,16 @@ function isTouchDrawPlacement(){
 
 return tabletDrawInput?.isTouchDrawPlacement() ??
 false;
+
+}
+
+function beginTouchPlacementSession(
+pointerType
+){
+
+tabletDrawInput?.beginPlacementSession?.(
+pointerType
+);
 
 }
 
@@ -2159,9 +2316,7 @@ setDrawings: next=>{
 drawings = next;
 },
 getSelectedId: ()=>selectedId,
-setSelectedId: id=>{
-selectedId = id;
-},
+setSelectedId: applyPrimarySelectedId,
 syncDrawUndoBaseline,
 drawUndo,
 cloneDrawingsForUndo,
@@ -2493,13 +2648,18 @@ function drawAnchorCircle(ctx, x, y){
 const r =
 anchorCircleRadius();
 const touch =
-isCoarseTouchViewport();
+isCoarseTouchViewport() ||
+isTabletChartViewport();
 
 ctx.beginPath();
 ctx.arc(x, y, r, 0, Math.PI * 2);
 
+if(
+!touch
+){
 ctx.fillStyle = HANDLE_FILL;
 ctx.fill();
+}
 
 ctx.strokeStyle = HANDLE_STROKE;
 ctx.lineWidth =
@@ -2513,10 +2673,15 @@ function drawAnchorSquare(ctx, x, y){
 const h =
 anchorSquareHalfSize();
 const touch =
-isCoarseTouchViewport();
+isCoarseTouchViewport() ||
+isTabletChartViewport();
 
+if(
+!touch
+){
 ctx.fillStyle = HANDLE_FILL;
 ctx.fillRect(x - h, y - h, h * 2, h * 2);
+}
 
 ctx.strokeStyle = HANDLE_STROKE;
 ctx.lineWidth =
@@ -2532,6 +2697,20 @@ if(shape.type === "trendline" || shape.type === "fib" || shape.type === "arrow" 
 return [
 { id: "p1", point: shape.p1 },
 { id: "p2", point: shape.p2 }
+];
+
+}
+
+if(
+isFibExtType(
+shape.type
+)
+){
+
+return [
+{ id: "p1", point: shape.p1 },
+{ id: "p2", point: shape.p2 },
+{ id: "p3", point: shape.p3 }
 ];
 
 }
@@ -2600,6 +2779,16 @@ return [
 
 }
 
+if(
+isElliottType(
+shape.type
+)
+){
+return listElliottHandles(
+shape
+);
+}
+
 if(isPositionType(shape.type)){
 
 const entry =
@@ -2634,6 +2823,7 @@ bumpChartPanRedraw:()=>
 bumpChartPanRedraw(),
 getDrawings:()=>drawings,
 getSelectedId:()=>selectedId,
+getSelectedIds: selectedIdsList,
 listHandles,
 toXY,
 shapeStyle,
@@ -2728,10 +2918,13 @@ channelP4Point,
 channelScreenGeometry,
 channelBodyDist,
 hitTestChannelBody,
+elliottBodyDist,
+hitTestElliottBody,
 rectangleBodyDist,
 hitTestRectangleBody,
 hitTestFvpBody,
-drawBodyHitThreshold
+drawBodyHitThreshold,
+drawingsIntersectingRect
 } =
 createDrawHitTester({
 toXY,
@@ -2740,7 +2933,8 @@ series,
 pointFromXY,
 getCandles:()=>
 getCandles?.() ||
-[]
+[],
+plotPriceToCoordinate
 });
 
 const {
@@ -2765,6 +2959,7 @@ getPlacement:()=>placement,
 getPreviewPoint:()=>previewPoint,
 getPreviewXY:()=>previewXY,
 getSelectedId:()=>selectedId,
+getIsIdSelected: isIdSelected,
 getEditingTextId:()=>
 textEditor?.editingId?.() ||
 null,
@@ -2940,6 +3135,8 @@ getPlotWidth,
 getChartPanActive:()=>chartPanActive,
 getDrawings:()=>drawings,
 getSelectedId:()=>selectedId,
+getIsIdSelected: isIdSelected,
+getDragState:()=>dragState,
 getPlacement:()=>placement,
 removePriceGutterOverlay,
 toXY,
@@ -3026,6 +3223,7 @@ getDrawMagnetKeyDown:()=>drawMagnetKeyDown,
 setDrawMagnetKeyDown:v=>{
 drawMagnetKeyDown = v;
 },
+getShiftKeyDown:()=>chartRulerShiftDown,
 enableMagnet,
 getLastCrosshairPlotXY:()=>lastCrosshairPlotXY,
 setLastCrosshairPlotXY:v=>{
@@ -3036,9 +3234,7 @@ setDrawings:v=>{
 drawings = v;
 },
 getSelectedId:()=>selectedId,
-setSelectedId:id=>{
-selectedId = id;
-},
+setSelectedId: applyPrimarySelectedId,
 getBlockChartClick:()=>blockChartClick,
 setBlockChartClick:v=>{
 blockChartClick = v;
@@ -3096,7 +3292,8 @@ shape
 }
 );
 
-}
+},
+beginTouchPlacementSession
 });
 
 ({
@@ -3221,7 +3418,11 @@ anchor.y
 
 }
 
-if(d.type === "fib"){
+if(
+isFibType(
+d.type
+)
+){
 
 dist = fibBodyDist(px, py, d);
 
@@ -3229,6 +3430,20 @@ dist = fibBodyDist(px, py, d);
 if(d.type === "channel"){
 
 dist = channelBodyDist(px, py, d);
+
+}
+
+if(
+isElliottType(
+d.type
+)
+){
+
+dist = elliottBodyDist(
+px,
+py,
+d
+);
 
 }
 
@@ -3269,7 +3484,10 @@ return best;
 
 }
 
-function setTool(next){
+function setTool(
+next,
+pointerType
+){
 
 tool = next;
 cancelPlacement();
@@ -3311,7 +3529,8 @@ next !==
 "brush"
 ){
 startPlacement(
-next
+next,
+pointerType
 );
 }
 
@@ -3325,6 +3544,15 @@ btn.classList.toggle(
 btn.dataset.drawTool === tool
 );
 });
+
+syncElliottGroupActive(
+tools,
+tool
+);
+syncFibGroupActive(
+tools,
+tool
+);
 
 updateStyleBar();
 redraw();
@@ -3371,7 +3599,8 @@ at: 0
 };
 
 function pickDrawTool(
-next
+next,
+pointerType
 ){
 
 if(
@@ -3379,6 +3608,9 @@ if(
 ){
 return;
 }
+
+closeElliottFlyout();
+closeFibFlyout();
 
 const now =
 performance.now();
@@ -3420,7 +3652,8 @@ return;
 }
 
 setTool(
-next
+next,
+pointerType
 );
 
 closeAllWidgetDrawToolsMenus();
@@ -3429,7 +3662,18 @@ closeAllWidgetDrawToolsMenus();
 
 function deleteSelected(){
 
-if(!selectedId){
+const ids =
+selectedIds.size
+? selectedIdsList()
+: selectedId
+? [
+selectedId
+]
+: [];
+
+if(
+!ids.length
+){
 return;
 }
 
@@ -3437,14 +3681,25 @@ textEditor?.close?.(
 false
 );
 
-const removed =
-drawings.find(d=>d.id === selectedId);
+const idSet =
+new Set(
+ids
+);
 
 const symDel =
 String(
 getSymbol() ||
 ""
 ).trim().toUpperCase();
+
+for(
+const removed of drawings.filter(
+d=>
+idSet.has(
+d.id
+)
+)
+){
 
 if(
 removed?.id &&
@@ -3456,7 +3711,15 @@ removed.id
 );
 }
 
-drawings = drawings.filter(d=>d.id !== selectedId);
+}
+
+drawings =
+drawings.filter(
+d=>
+!idSet.has(
+d.id
+)
+);
 desktopEdit.clearDrawingSelection();
 saveDrawings();
 updateStyleBar();
@@ -3476,8 +3739,9 @@ touchShapeRevision,
 onEmptyDelete(
 id
 ){
-selectedId =
-id;
+applyPrimarySelectedId(
+id
+);
 deleteSelected();
 }
 });
@@ -3531,8 +3795,9 @@ return;
 }
 
 e.preventDefault();
-selectedId =
-id;
+applyPrimarySelectedId(
+id
+);
 updateStyleBar();
 textEditor.begin(
 shape
@@ -3564,7 +3829,9 @@ d.id
 }
 
 drawings = [];
-selectedId = null;
+applyPrimarySelectedId(
+null
+);
 cancelPlacement();
 saveDrawings();
 
@@ -3879,6 +4146,9 @@ return;
 
 if(e.key === "Escape"){
 
+closeElliottFlyout();
+closeFibFlyout();
+
 if(
 chartRulerStart
 ){
@@ -3918,6 +4188,9 @@ e.key ===
 ){
 
 chartRulerShiftDown = true;
+refreshPlacementPreviewFromPointer(
+e
+);
 return;
 
 }
@@ -4072,6 +4345,9 @@ e.key ===
 "Shift"
 ){
 chartRulerShiftDown = false;
+refreshPlacementPreviewFromPointer(
+e
+);
 
 if(
 chartRulerStart
@@ -4121,13 +4397,6 @@ drawMagnetKeyDown
 drawMagnetKeyDown = false;
 
 if(
-placement &&
-placementPointerXY
-){
-refreshPlacementPreviewFromPointer();
-}
-
-if(
 dragState &&
 reapplyActiveDragCoordsHook
 ){
@@ -4138,6 +4407,13 @@ scheduleDragRedraw();
 }
 
 chartRulerShiftDown = false;
+
+if(
+placement &&
+placementPointerXY
+){
+refreshPlacementPreviewFromPointer();
+}
 
 if(
 chartRulerStart
@@ -4182,7 +4458,8 @@ return false;
 e.preventDefault();
 e.stopPropagation();
 pickDrawTool(
-btn.dataset.drawTool
+btn.dataset.drawTool,
+e.pointerType
 );
 return true;
 
@@ -4247,6 +4524,25 @@ onToolsClick,
 true
 );
 
+tools.addEventListener(
+"draw-pick-tool",
+e=>{
+
+const next =
+e.detail?.tool;
+
+if(
+next
+){
+pickDrawTool(
+next,
+e.detail?.pointerType
+);
+}
+
+}
+);
+
 bindClearAllToolbarButtons();
 
 }
@@ -4261,10 +4557,8 @@ getAlive:()=>alive,
 isActive,
 getTool:()=>tool,
 getSelectedId:()=>selectedId,
-setSelectedId:id=>{
-selectedId =
-id;
-},
+setSelectedId: applyPrimarySelectedId,
+getSelectedIds: selectedIdsList,
 getSelected,
 getPlacement:()=>placement,
 getDrawings:()=>drawings,
@@ -4302,6 +4596,10 @@ deleteSelected,
 flushDeferredFibSettingsSync,
 getDesktopEdit:()=>desktopEdit,
 getSymbol,
+getCandles:()=>
+getCandles?.() ||
+[],
+getTf,
 getStyleDelegate
 });
 
@@ -4332,10 +4630,8 @@ getTool:()=>tool,
 getPlacement:()=>placement,
 getDragState:()=>dragState,
 getSelectedId:()=>selectedId,
-setSelectedId:id=>{
-selectedId =
-id;
-},
+setSelectedId: applyPrimarySelectedId,
+getSelectedIds: selectedIdsList,
 getSelected,
 setFibSettingsShapeId:id=>{
 styleBarCtl?.setFibSettingsShapeId?.(
@@ -4379,10 +4675,7 @@ v;
 },
 makeShape,
 getDrawings:()=>drawings,
-setSelectedId:id=>{
-selectedId =
-id;
-},
+setSelectedId: applyPrimarySelectedId,
 saveDrawings,
 updateStyleBar,
 redraw,
@@ -4411,9 +4704,11 @@ setDragState:v=>{
 dragState = v;
 },
 getSelectedId:()=>selectedId,
-setSelectedId:id=>{
-selectedId = id;
-},
+setSelectedId: applyPrimarySelectedId,
+getSelectedIds: selectedIdsList,
+toggleSelectedId: toggleIdInSelection,
+setSelectedIds: applySelectedIds,
+isIdSelected,
 getSelected,
 getDrawings:()=>drawings,
 setBlockChartClick:v=>{
@@ -4452,11 +4747,13 @@ syncChartTouchPan,
 hitTestTrendlineBody,
 hitTestFibBody,
 hitTestChannelBody,
+hitTestElliottBody,
 hitTestRectangleBody,
 hitTestFvpBody,
 hitTestHrayLine,
 channelP4Point,
 drawBodyHitThreshold,
+drawingsIntersectingRect,
 getCandles:()=>
 getCandles?.() ||
 []
@@ -4490,6 +4787,7 @@ wrapEl,
 desktopEdit,
 pointerFromEvent,
 handleToolClick,
+isTouchDrawPlacement,
 hitTest,
 hitTestHandle,
 hitTestShapeBody,
@@ -4726,7 +5024,9 @@ return;
 if(e.detail?.cleared){
 
 drawings = [];
-selectedId = null;
+applyPrimarySelectedId(
+null
+);
 cancelPlacement();
 loadDrawings();
 updateStyleBar();
@@ -5039,7 +5339,7 @@ lastChartAlertsPullMs =
 Date.now();
 
 void import(
-"../alerts-cloud-sync.js?v=113"
+"../alerts-cloud-sync.js?v=115"
 ).then(
 ({ pullRegistryFromCloudNow })=>
 pullRegistryFromCloudNow({
@@ -5344,6 +5644,7 @@ getStyleBarDelegate(){
 return {
 getTool: ()=> tool,
 getSelectedId: ()=> selectedId,
+getSelectedIds: selectedIdsList,
 getSelected,
 getPlacement: ()=> placement,
 getDrawings: ()=> drawings,
@@ -5353,7 +5654,12 @@ redraw,
 saveToolDefaults,
 saveGlobalStyle,
 baseDefaultStyle,
-deleteSelected
+deleteSelected,
+getCandles: ()=>
+getCandles?.() ||
+[],
+getTf
+
 };
 
 },
@@ -5729,7 +6035,9 @@ wrapEl.removeEventListener(
 onTextDblClick
 );
 resetDrawUndoHistory();
-selectedId = null;
+applyPrimarySelectedId(
+null
+);
 hideDomChartCrosshair(
 wrapEl
 );

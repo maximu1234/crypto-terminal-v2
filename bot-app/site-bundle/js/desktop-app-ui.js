@@ -3,11 +3,11 @@
  */
 import {
 isScreenerPage
-} from "./page-routes.js?v=5";
+} from "./page-routes.js?v=7";
 
 import {
 mountReleaseMarker
-} from "./release-marker.js?v=113";
+} from "./release-marker.js?v=124";
 
 export function initDesktopAppUi(){
 

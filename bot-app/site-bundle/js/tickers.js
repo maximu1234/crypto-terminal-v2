@@ -6,7 +6,7 @@ loadMarketTickers
 
 import {
 fetchBybit
-} from "./bybit-fetch.js?v=18";
+} from "./bybit-fetch.js?v=19";
 
 import {
 toCanonicalSymbol
@@ -111,6 +111,17 @@ window.addEventListener(
 EXCHANGE_CHANGED_EVENT,
 ()=>{
 restartPolling();
+}
+);
+
+window.addEventListener(
+"market-ws-foreground",
+()=>{
+if(
+subscribers.length
+){
+void loadTickers();
+}
 }
 );
 

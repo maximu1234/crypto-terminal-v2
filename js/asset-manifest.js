@@ -21,7 +21,7 @@ Object.freeze({
 
 /* ── JS: boot / entry ── */
 "asset-manifest.js":
-32,
+35,
 "market-api.js":
 6,
 "format-price.js":
@@ -53,7 +53,7 @@ Object.freeze({
 "exchanges/bingx/intervals.js":
 1,
 "terminal-page-boot.js":
-63,
+66,
 "mobile/viewport.js":
 2,
 "mobile/nav.js":
@@ -75,7 +75,7 @@ Object.freeze({
 "mobile/alerts-lite.js":
 1,
 "terminal-entry.js":
-5,
+7,
 "terminal-list-refresh.js":
 1,
 "trade-desktop-boot.js":
@@ -281,7 +281,7 @@ Object.freeze({
 "chart-page.js":
 8,
 "terminal.js":
-503,
+505,
 "terminal-multi-chart.js":
 27,
 "terminal-screener-chart-pane.js":
@@ -592,7 +592,7 @@ Object.freeze({
 "terminal/chart-live-guard.js":
 1,
 "terminal/exchange-last-symbol.js":
-1,
+2,
 "terminal/terminal-prefs.js":
 29,
 "terminal/terminal-table.js":
@@ -620,7 +620,7 @@ Object.freeze({
 "watchlist.js":
 133,
 "screener.js":
-132,
+133,
 "ipad-web-viewport.js":
 2,
 "screener-widget-guard.js":
@@ -672,7 +672,7 @@ Object.freeze({
 "focus-blur-after-pick.js":
 3,
 "site-boot.js":
-136,
+137,
 "site-header.js":
 7,
 "site-header-nav.js":
@@ -867,7 +867,7 @@ Object.freeze({
 
 /* ── JS: cloud / auth ── */
 "cloud-sync.js":
-70,
+71,
 "cloud-sync-throttle.js":
 3,
 "page-routes.js":
@@ -905,9 +905,9 @@ Object.freeze({
 "alert-auth-cache.js":
 7,
 "favorites.js":
-5,
+6,
 "favorites-cloud-sync.js":
-9,
+10,
 
 /* ── JS: alerts ── */
 "alerts.js":

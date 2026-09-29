@@ -44,6 +44,11 @@ isAlgoBotLiteMode
 } from "../lite-layout.js?v=5";
 
 import {
+  openPnlShareDiaryModal,
+  PNL_SHARE_CONTROL_HTML
+} from "./pnl-share-modal.js?v=1";
+
+import {
 renderDiaryPeriodAnalytics,
 clearDiaryPeriodAnalytics
 } from "../../diary-period-analytics-ui.js?v=5";
@@ -164,7 +169,7 @@ function groupTradesByDay(trades) {
   return [...map.entries()].sort((a, b) => b[0].localeCompare(a[0]));
 }
 
-/** Cols: time, ticker, duration, PnL $, PnL %, Com, Long/Short (no share / chart-link). */
+/** Cols: time, ticker, duration, PnL $, share, PnL %, Com, Long/Short. */
 function renderColHead() {
   return `
 <div class="trade-diary-colhead trade-diary-grid" aria-hidden="true">
@@ -172,6 +177,7 @@ function renderColHead() {
 <span>Тикер</span>
 <span>Время</span>
 <span class="trade-diary-num">PnL $</span>
+<span class="trade-diary-share-col" aria-hidden="true"></span>
 <span class="trade-diary-num">PnL %</span>
 <span class="trade-diary-num">Com. $</span>
 <span class="trade-diary-num">Long/Short</span>
@@ -194,6 +200,7 @@ ${escapeHtml(formatDiaryTime(trade.closeTimeMs))}
 <span class="trade-diary-pnl-wrap trade-diary-num ${pnlToneClass(trade.pnlUsd)}">
 <span class="trade-diary-pnl-value">${escapeHtml(formatDiaryUsd(trade.pnlUsd))}</span>
 </span>
+<span class="trade-diary-share-col">${PNL_SHARE_CONTROL_HTML}</span>
 <span class="trade-diary-num ${pnlToneClass(trade.pnlPct)}">${escapeHtml(formatDiaryPct(trade.pnlPct))}</span>
 <span class="trade-diary-num trade-diary-muted">${escapeHtml(formatDiaryUsd(trade.commissionUsd))}</span>
 <span class="trade-diary-side ${sideToneClass(trade.side)}">${escapeHtml(sideLabel(trade.side))}</span>
@@ -360,6 +367,18 @@ function bindDiaryInteractions() {
   contentEl.dataset.bound = "1";
 
   contentEl.addEventListener("click", (event) => {
+    const shareBtn = event.target.closest("[data-action='share-pnl']");
+    if (shareBtn) {
+      event.preventDefault();
+      event.stopPropagation();
+      const wrap = shareBtn.closest("[data-trade-key]");
+      const trade = findTradeByKey(wrap?.dataset.tradeKey || "");
+      if (trade) {
+        void openPnlShareDiaryModal(trade);
+      }
+      return;
+    }
+
     const dayBtn = event.target.closest("[data-action='toggle-day']");
     if (dayBtn) {
       const section = dayBtn.closest("[data-day-key]");
@@ -559,6 +578,10 @@ function onEscapeKey(event) {
     return;
   }
   if (document.querySelector(".trade-diary-period-overlay")) {
+    return;
+  }
+  const shareOverlay = document.querySelector(".trade-pnl-share-overlay");
+  if (shareOverlay && !shareOverlay.hidden) {
     return;
   }
   event.preventDefault();

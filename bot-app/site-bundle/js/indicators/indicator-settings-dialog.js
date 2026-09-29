@@ -1,6 +1,6 @@
 import {
 closeIndicatorColorPicker
-} from "./indicator-color-picker-ui.js?v=1";
+} from "./indicator-color-picker-ui.js?v=2";
 
 const DRAG_MARGIN_PX =
 4;

@@ -42,7 +42,7 @@ getFavoriteGroup,
 setFavoriteGroup,
 flagSortRank,
 canSetBlueFlag
-} from "./favorites.js?v=5";
+} from "./favorites.js?v=6";
 
 import {
 seedWatchlistTfOnBlueFlag
@@ -61,7 +61,7 @@ isRsiAlert
 import {
 persistFavoritesToCloud,
 onFavoritesRemoteUpdate
-} from "./cloud-sync.js?v=70";
+} from "./cloud-sync.js?v=71";
 
 import {
 createCandlestickChart,

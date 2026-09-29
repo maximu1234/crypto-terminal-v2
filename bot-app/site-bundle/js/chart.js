@@ -40,15 +40,20 @@ hideDomChartCrosshairVert,
 ensureTabletProbeHorizLine,
 positionTabletProbeCrosshair,
 positionTabletProbeHorizInStack,
+hideTabletProbeHorizInStack,
 hideTabletProbeCrosshair,
 formatCrosshairTimeLabel,
 isUserCrosshairEvent
-} from "./chart/chart-dom-crosshair.js?v=15";
+} from "./chart/chart-dom-crosshair.js?v=17";
 
 import {
 TABLET_LW_NATIVE_PRICE_SCALE,
 clearTabletProbeCrosshairForChart
-} from "./chart/chart-factory.js?v=52";
+} from "./chart/chart-factory.js?v=57";
+
+import {
+shouldHandleTabletPriceScalePointer
+} from "./tablet-gesture-policy.js?v=4";
 
 export {
 createCandlestickChart,
@@ -87,7 +92,7 @@ coinsTfVisibleBars,
 applyCoinsChartViewport,
 computeCoinsChartViewportPlan,
 refreshCoinsChartBarSpacing
-} from "./chart/chart-factory.js?v=52";
+} from "./chart/chart-factory.js?v=57";
 
 /* Tablet gestures: import ./chart-tablet-gestures.js only from tablet paths
    (tablet-widget-chart / terminal-tablet-controller) — never re-export here. */
@@ -1143,6 +1148,12 @@ true;
 
 function notifyChartPriceRangeChanged(){
 
+/*
+ * Keep autoScale:true. iPad strip zoom locks the range via
+ * series.autoscaleInfoProvider (priceZoomRange), not via
+ * autoScale:false + setVisibleRange — that path freezes the
+ * axis (provider is ignored when autoScale is off).
+ */
 try{
 chart.priceScale(
 "right"
@@ -1674,9 +1685,6 @@ return;
 const hadZoomThisGesture =
 didApplyZoomThisGesture;
 
-didApplyZoomThisGesture =
-false;
-
 if(
 !hadZoomThisGesture
 ){
@@ -1695,6 +1703,8 @@ endEvent
 )
 ){
 abortDrag();
+didApplyZoomThisGesture =
+false;
 stripPointerDown =
 null;
 stripDidDrag =
@@ -1707,6 +1717,8 @@ return;
 }
 
 abortDrag();
+didApplyZoomThisGesture =
+false;
 stripPointerDown =
 null;
 stripDidDrag =
@@ -1837,8 +1849,9 @@ e
 ){
 
 if(
-e.pointerType ===
-"mouse"
+!shouldHandleTabletPriceScalePointer(
+e
+)
 ){
 return;
 }

@@ -5,7 +5,12 @@ import {
 maybeApplyAutoStopsForNewPosition,
 clearDismissedStops,
 isStopDismissed
-} from "./auto-stops.js?v=1";
+} from "./auto-stops.js?v=2";
+
+import {
+tryApplyDrawingStopsPending,
+wasDrawingStopsJustApplied
+} from "./drawing-stops.js?v=4";
 
 import {
 maybeReconcileOrdersOnPositionOpen
@@ -20,7 +25,7 @@ applyTradePositionSoundDiff,
 establishTradePositionSoundBaseline,
 isTradePositionSoundBaselineReady,
 resetTradePositionSoundBaseline
-} from "../../trade-position-sounds.js?v=3";
+} from "../../trade-position-sounds.js?v=4";
 
 import {
 getTradeConfig
@@ -1065,11 +1070,30 @@ rowWithStops.symbol ||
 sym,
 rowWithStops
 );
+void (
+async()=>{
+const drawingApplied =
+await tryApplyDrawingStopsPending(
+rowWithStops.symbol ||
+sym,
+rowWithStops
+);
+
+if(
+!drawingApplied &&
+!wasDrawingStopsJustApplied(
+rowWithStops.symbol ||
+sym
+)
+){
 maybeApplyAutoStopsForNewPosition(
 rowWithStops.symbol ||
 sym,
 rowWithStops
 );
+}
+}
+)();
 }
 
 if(

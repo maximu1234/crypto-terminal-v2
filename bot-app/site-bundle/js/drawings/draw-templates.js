@@ -5,13 +5,18 @@ RECT_DEFAULT_FILL_COLOR,
 RECT_DEFAULT_FILL_OPACITY,
 createRectangleToolDefaults,
 FIB_TOOL_DEFAULTS_VERSION
-} from "./constants.js?v=11";
+} from "./constants.js?v=13";
 
 import {
 cloneDefaultFibRows,
+cloneDefaultFibExtRows,
 ensureFibLevelsVisible,
-getFibRows
-} from "./fib-spec.js?v=15";
+getFibRows,
+isFibType,
+isFibExtType,
+FIB_EXT_TOOL_DEFAULTS_VERSION,
+resolveFibTrendLineColor
+} from "./fib-spec.js?v=17";
 
 import {
 normalizeRectangleShape
@@ -26,7 +31,7 @@ createFvpToolDefaults
 
 import {
 isPositionType
-} from "./position.js?v=10";
+} from "./position.js?v=11";
 
 import {
 isTextTool,
@@ -34,6 +39,26 @@ TEXT_DEFAULT_COLOR,
 TEXT_DEFAULT_SIZE,
 clampTextFontSize
 } from "./text.js?v=3";
+
+import {
+CHANNEL_DEFAULT_COLOR,
+CHANNEL_TOOL_DEFAULTS_VERSION,
+cloneDefaultChannelRows,
+createChannelToolDefaults,
+ensureChannelLevelsVisible
+} from "./channel-spec.js?v=2";
+
+import {
+ELLIOTT_DEFAULT_COLOR,
+ELLIOTT_TOOL_DEFAULTS_VERSION,
+ELLIOTT_TOOL_TYPES,
+createElliottToolDefaults,
+isElliottType,
+isPattern12Draw,
+migrateElliottToolDefaults,
+normalizeElliottDegree,
+normalizePattern12TpFlags
+} from "./elliott-spec.js?v=17";
 
 export const DRAW_TEMPLATES_STORAGE_KEY =
 "draw_templates_v1";
@@ -45,11 +70,13 @@ Object.freeze([
 "hray",
 "hline",
 "fib",
+"fib-ext",
 "channel",
 "arrow",
 "rectangle",
 "fvp",
-"text"
+"text",
+...ELLIOTT_TOOL_TYPES
 ]);
 
 const STANDARD_FIB_TEMPLATE_NAME =
@@ -110,6 +137,8 @@ fibDefaultsVersion:
 FIB_TOOL_DEFAULTS_VERSION,
 fibShowTrendLine:
 false,
+fibTrendLineColor:
+resolveFibTrendLineColor(),
 fibLevels:[
 standardFibLevel(
 0,
@@ -576,14 +605,17 @@ shape?.fontSize
 }
 
 if(
-type ===
-"fib"
+isFibType(
+type
+)
 ){
 
 const rows =
 getFibRows(
 shape ||
-{}
+{
+type
+}
 );
 
 out.fibLevels =
@@ -597,7 +629,14 @@ out.fibShowTrendLine =
 typeof shape?.fibShowTrendLine ===
 "boolean"
 ? shape.fibShowTrendLine
-: false;
+: isFibExtType(
+type
+);
+
+out.fibTrendLineColor =
+resolveFibTrendLineColor(
+shape?.fibTrendLineColor
+);
 
 }
 
@@ -676,6 +715,75 @@ shape
 
 }
 
+if(
+type ===
+"channel"
+){
+
+out.color =
+shape?.color ||
+CHANNEL_DEFAULT_COLOR;
+out.channelLevels =
+JSON.parse(
+JSON.stringify(
+ensureChannelLevelsVisible(
+shape?.channelLevels
+)
+)
+);
+out.channelDefaultsVersion =
+CHANNEL_TOOL_DEFAULTS_VERSION;
+
+}
+
+if(
+isElliottType(
+type
+)
+){
+
+const defaults =
+migrateElliottToolDefaults(
+shape,
+type
+);
+
+out.color =
+defaults.color ||
+ELLIOTT_DEFAULT_COLOR;
+out.degree =
+defaults.degree;
+out.degreeJunior =
+defaults.degreeJunior;
+out.showWave =
+defaults.showWave !==
+false;
+out.showPatternDash =
+defaults.showPatternDash !==
+false;
+out.patternDashOpacity =
+defaults.patternDashOpacity;
+out.elliottDefaultsVersion =
+ELLIOTT_TOOL_DEFAULTS_VERSION;
+
+if(
+isPattern12Draw(
+type
+)
+){
+Object.assign(
+out,
+normalizePattern12TpFlags(
+defaults.showTpSenior,
+defaults.showTpJunior
+)
+);
+out.tpLevels =
+defaults.tpLevels;
+}
+
+}
+
 return out;
 
 }
@@ -699,17 +807,30 @@ const out = {
 };
 
 if(
-type ===
-"fib" &&
+isFibType(
+type
+) &&
 style.fibLevels
 ){
 out.fibLevels =
 JSON.parse(
 JSON.stringify(
 ensureFibLevelsVisible(
-style.fibLevels
+style.fibLevels,
+type
 )
 )
+);
+}
+
+if(
+isFibType(
+type
+)
+){
+out.fibTrendLineColor =
+resolveFibTrendLineColor(
+style.fibTrendLineColor
 );
 }
 
@@ -735,6 +856,73 @@ out,
 createFvpToolDefaults(),
 style
 );
+}
+
+if(
+type ===
+"channel" &&
+style.channelLevels
+){
+out.channelLevels =
+JSON.parse(
+JSON.stringify(
+ensureChannelLevelsVisible(
+style.channelLevels
+)
+)
+);
+out.color =
+style.color ||
+CHANNEL_DEFAULT_COLOR;
+}
+
+if(
+isElliottType(
+type
+)
+){
+
+const defaults =
+migrateElliottToolDefaults(
+style,
+type
+);
+
+out.color =
+defaults.color;
+out.lineWidth =
+defaults.lineWidth;
+out.degree =
+defaults.degree;
+out.degreeJunior =
+defaults.degreeJunior;
+out.showWave =
+defaults.showWave !==
+false;
+out.showPatternDash =
+defaults.showPatternDash !==
+false;
+out.patternDashOpacity =
+defaults.patternDashOpacity;
+out.elliottDefaultsVersion =
+ELLIOTT_TOOL_DEFAULTS_VERSION;
+
+if(
+isPattern12Draw(
+type
+)
+){
+Object.assign(
+out,
+normalizePattern12TpFlags(
+defaults.showTpSenior,
+defaults.showTpJunior
+)
+);
+out.tpLevels =
+defaults.tpLevels;
+}
+
 }
 
 return out;
@@ -791,22 +979,36 @@ lineWidth: 1
 };
 
 if(
-type ===
-"fib"
+isFibType(
+type
+)
 ){
 
 out.fibDefaultsVersion =
-FIB_TOOL_DEFAULTS_VERSION;
+isFibExtType(
+type
+)
+? FIB_EXT_TOOL_DEFAULTS_VERSION
+: FIB_TOOL_DEFAULTS_VERSION;
 
 out.fibLevels =
 JSON.parse(
 JSON.stringify(
-cloneDefaultFibRows()
+isFibExtType(
+type
+)
+? cloneDefaultFibExtRows()
+: cloneDefaultFibRows()
 )
 );
 
 out.fibShowTrendLine =
-false;
+isFibExtType(
+type
+);
+
+out.fibTrendLineColor =
+resolveFibTrendLineColor();
 
 }
 
@@ -838,6 +1040,77 @@ Object.assign(
 out,
 createFvpToolDefaults()
 );
+
+}
+
+if(
+type ===
+"channel"
+){
+
+const channelDefaults =
+createChannelToolDefaults();
+
+out.color =
+channelDefaults.color;
+out.lineWidth =
+channelDefaults.lineWidth;
+out.channelDefaultsVersion =
+CHANNEL_TOOL_DEFAULTS_VERSION;
+out.channelLevels =
+JSON.parse(
+JSON.stringify(
+cloneDefaultChannelRows()
+)
+);
+
+}
+
+if(
+isElliottType(
+type
+)
+){
+
+const elliottDefaults =
+createElliottToolDefaults(
+{
+type
+}
+);
+
+out.color =
+elliottDefaults.color;
+out.lineWidth =
+elliottDefaults.lineWidth;
+out.degree =
+elliottDefaults.degree;
+out.degreeJunior =
+elliottDefaults.degreeJunior;
+out.showWave =
+elliottDefaults.showWave;
+out.showPatternDash =
+elliottDefaults.showPatternDash;
+out.patternDashOpacity =
+elliottDefaults.patternDashOpacity;
+out.elliottDefaultsVersion =
+ELLIOTT_TOOL_DEFAULTS_VERSION;
+
+if(
+isPattern12Draw(
+type
+)
+){
+Object.assign(
+out,
+normalizePattern12TpFlags(
+elliottDefaults.showTpSenior,
+elliottDefaults.showTpJunior
+)
+);
+out.tpLevels =
+elliottDefaults.tpLevels;
+}
 
 }
 
@@ -914,8 +1187,9 @@ TEXT_DEFAULT_COLOR;
 }
 
 if(
-type ===
-"fib"
+isFibType(
+type
+)
 ){
 
 if(
@@ -933,7 +1207,14 @@ shape.fibShowTrendLine =
 typeof snapshot.fibShowTrendLine ===
 "boolean"
 ? snapshot.fibShowTrendLine
-: false;
+: isFibExtType(
+type
+);
+
+shape.fibTrendLineColor =
+resolveFibTrendLineColor(
+snapshot.fibTrendLineColor
+);
 
 delete shape.levels;
 delete shape.showFibTrend;
@@ -983,6 +1264,84 @@ copyFvpStyleToShape(
 shape,
 snapshot
 );
+}
+
+if(
+type ===
+"channel"
+){
+
+shape.color =
+snapshot.color ||
+CHANNEL_DEFAULT_COLOR;
+
+if(
+snapshot.channelLevels
+){
+shape.channelLevels =
+JSON.parse(
+JSON.stringify(
+ensureChannelLevelsVisible(
+snapshot.channelLevels
+)
+)
+);
+}else{
+shape.channelLevels =
+cloneDefaultChannelRows();
+}
+
+}
+
+if(
+isElliottType(
+type
+)
+){
+
+const defaults =
+migrateElliottToolDefaults(
+snapshot,
+type
+);
+
+shape.color =
+defaults.color;
+shape.lineWidth =
+defaults.lineWidth;
+shape.degree =
+normalizeElliottDegree(
+defaults.degree
+);
+shape.degreeJunior =
+normalizeElliottDegree(
+defaults.degreeJunior
+);
+shape.showWave =
+defaults.showWave !==
+false;
+shape.showPatternDash =
+defaults.showPatternDash !==
+false;
+shape.patternDashOpacity =
+defaults.patternDashOpacity;
+
+if(
+isPattern12Draw(
+type
+)
+){
+Object.assign(
+shape,
+normalizePattern12TpFlags(
+defaults.showTpSenior,
+defaults.showTpJunior
+)
+);
+shape.tpLevels =
+defaults.tpLevels;
+}
+
 }
 
 }

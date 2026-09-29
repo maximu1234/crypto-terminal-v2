@@ -3,7 +3,15 @@ DRAW_TOOLS_PALETTE_ICON_SVG,
 TRASH_ICON_SVG,
 SETTINGS_ICON_SVG,
 getDrawToolbarButtonsHtml
-} from "./draw-ui-shared.js?v=37";
+} from "./draw-ui-shared.js?v=44";
+
+import {
+closeElliottFlyout
+} from "./drawings/elliott-toolbar.js?v=4";
+
+import {
+closeFibFlyout
+} from "./drawings/fib-toolbar.js?v=4";
 
 const widgetDrawMenuClosers =
 new Set();
@@ -24,6 +32,14 @@ drawToolsMenuDocBound = true;
 document.addEventListener(
 "click",
 e=>{
+
+if(
+e.target.closest(
+".elliott-flyout, .fib-flyout"
+)
+){
+return;
+}
 
 if(
 e.target.closest(
@@ -80,6 +96,9 @@ closeAllWidgetDrawToolsMenus();
 }
 
 export function closeAllWidgetDrawToolsMenus(){
+
+closeElliottFlyout();
+closeFibFlyout();
 
 widgetDrawMenuClosers.forEach(
 close=>{
@@ -296,7 +315,8 @@ return false;
 
 onActivate?.(e);
 pickTool(
-btn.dataset.drawTool
+btn.dataset.drawTool,
+e.pointerType
 );
 closeAllWidgetDrawToolsMenus();
 return true;
@@ -334,6 +354,30 @@ menu.addEventListener(
 "click",
 onMenuPick,
 true
+);
+
+menu.addEventListener(
+"draw-pick-tool",
+e=>{
+
+const next =
+e.detail?.tool;
+
+if(
+!next ||
+!pickTool
+){
+return;
+}
+
+onActivate?.(e);
+pickTool(
+next,
+e.detail?.pointerType
+);
+closeAllWidgetDrawToolsMenus();
+
+}
 );
 
 }
@@ -388,10 +432,10 @@ return `
 <span class="draw-text-size-label">20</span>
 </button>
 
-<label class="draw-position-risk hidden" title="Сумма риска при срабатывании стопа">
+<form class="draw-position-risk hidden" action="#" title="Сумма риска при срабатывании стопа">
 <span class="draw-position-risk-label">Стоп-лосс ($)</span>
-<input type="number" class="draw-position-risk-input" min="0" step="any" placeholder="" inputmode="decimal"/>
-</label>
+<input type="number" class="draw-position-risk-input" min="0" step="any" placeholder="" inputmode="decimal" enterkeyhint="go" autocomplete="off"/>
+</form>
 
 <button type="button" class="float-settings draw-settings-btn" title="Настройки">
 ${SETTINGS_ICON_SVG}

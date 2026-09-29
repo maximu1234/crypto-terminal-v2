@@ -7,7 +7,7 @@ import {
   GLOBAL_STYLE_KEY,
   RECT_DEFAULT_COLOR,
   migrateRectangleToolDefaults
-} from "./constants.js?v=11";
+} from "./constants.js?v=13";
 
 import {
   normalizeRectangleShape
@@ -20,18 +20,34 @@ import {
 
 import {
   migrateFibToolDefaults,
-  ensureFibLevelsVisible
-} from "./fib-spec.js?v=15";
+  migrateFibExtToolDefaults,
+  ensureFibLevelsVisible,
+  isFibType,
+  isFibExtType,
+  resolveFibTrendLineColor
+} from "./fib-spec.js?v=17";
 
 import {
   isPositionType
-} from "./position.js?v=10";
+} from "./position.js?v=11";
 
 import {
   migrateTextToolDefaults,
   TEXT_DEFAULT_COLOR,
   TEXT_DEFAULT_SIZE
 } from "./text.js?v=3";
+
+import {
+  migrateChannelToolDefaults
+} from "./channel-spec.js?v=2";
+
+import {
+  ELLIOTT_TOOL_TYPES,
+  isElliottType,
+isPattern12Draw,
+migrateElliottToolDefaults,
+normalizePattern12TpFlags
+} from "./elliott-spec.js?v=17";
 
 /**
  * @returns {{
@@ -66,13 +82,15 @@ function loadToolDefaults(){
 "hray",
 "hline",
 "fib",
+"fib-ext",
 "channel",
 "arrow",
 "rectangle",
 "fvp",
 "text",
 "long",
-"short"
+"short",
+...ELLIOTT_TOOL_TYPES
 ].forEach(
 name=>{
 
@@ -119,6 +137,30 @@ migrated;
 localStorage.setItem(
 defaultsStorageKey(
 "fib"
+),
+JSON.stringify(
+migrated
+)
+);
+
+}
+
+if(
+name ===
+"fib-ext"
+){
+
+const migrated =
+migrateFibExtToolDefaults(
+toolDefaults["fib-ext"]
+);
+
+toolDefaults["fib-ext"] =
+migrated;
+
+localStorage.setItem(
+defaultsStorageKey(
+"fib-ext"
 ),
 JSON.stringify(
 migrated
@@ -191,6 +233,60 @@ migrated;
 localStorage.setItem(
 defaultsStorageKey(
 "text"
+),
+JSON.stringify(
+migrated
+)
+);
+
+}
+
+if(
+name ===
+"channel"
+){
+
+const migrated =
+migrateChannelToolDefaults(
+toolDefaults.channel
+);
+
+toolDefaults.channel =
+migrated;
+
+localStorage.setItem(
+defaultsStorageKey(
+"channel"
+),
+JSON.stringify(
+migrated
+)
+);
+
+}
+
+if(
+isElliottType(
+name
+)
+){
+
+const migrated =
+migrateElliottToolDefaults(
+toolDefaults[
+name
+],
+name
+);
+
+toolDefaults[
+name
+] =
+migrated;
+
+localStorage.setItem(
+defaultsStorageKey(
+name
 ),
 JSON.stringify(
 migrated
@@ -367,13 +463,20 @@ risk
 }
 
 if(
-type ===
-"fib"
+isFibType(
+type
+)
 ){
 
+const migrate =
+isFibExtType(
+type
+)
+? migrateFibExtToolDefaults
+: migrateFibToolDefaults;
 const fibStore =
-migrateFibToolDefaults(
-toolDefaults.fib ||
+migrate(
+toolDefaults[type] ||
 saved
 );
 
@@ -381,7 +484,8 @@ out.fibLevels =
 JSON.parse(
 JSON.stringify(
 ensureFibLevelsVisible(
-fibStore.fibLevels
+fibStore.fibLevels,
+type
 )
 )
 );
@@ -390,7 +494,14 @@ out.fibShowTrendLine =
 typeof fibStore.fibShowTrendLine ===
 "boolean"
 ? fibStore.fibShowTrendLine
-: false;
+: isFibExtType(
+type
+);
+
+out.fibTrendLineColor =
+resolveFibTrendLineColor(
+fibStore.fibTrendLineColor
+);
 
 if(
 saved?.color
@@ -473,6 +584,86 @@ TEXT_DEFAULT_COLOR;
 out.fontSize =
 textSaved.fontSize ||
 TEXT_DEFAULT_SIZE;
+
+}
+
+if(
+type ===
+"channel"
+){
+
+const channelSaved =
+migrateChannelToolDefaults(
+toolDefaults.channel ||
+saved ||
+null
+);
+
+out.color =
+channelSaved.color;
+out.lineWidth =
+channelSaved.lineWidth ??
+1;
+out.channelLevels =
+JSON.parse(
+JSON.stringify(
+channelSaved.channelLevels
+)
+);
+
+}
+
+if(
+isElliottType(
+type
+)
+){
+
+const elliottSaved =
+migrateElliottToolDefaults(
+toolDefaults[
+type
+] ||
+saved ||
+null,
+type
+);
+
+out.color =
+elliottSaved.color;
+out.lineWidth =
+elliottSaved.lineWidth ??
+1;
+out.degree =
+elliottSaved.degree;
+out.degreeJunior =
+elliottSaved.degreeJunior;
+out.showWave =
+elliottSaved.showWave !==
+false;
+out.showPatternDash =
+elliottSaved.showPatternDash !==
+false;
+out.patternDashOpacity =
+elliottSaved.patternDashOpacity;
+out.type =
+type;
+
+if(
+isPattern12Draw(
+type
+)
+){
+Object.assign(
+out,
+normalizePattern12TpFlags(
+elliottSaved.showTpSenior,
+elliottSaved.showTpJunior
+)
+);
+out.tpLevels =
+elliottSaved.tpLevels;
+}
 
 }
 

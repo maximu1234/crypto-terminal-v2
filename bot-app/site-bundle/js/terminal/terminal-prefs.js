@@ -14,27 +14,35 @@ COINS_PREFS_KEY,
 COINS_SORT_MODES,
 COINS_TF_VALUES,
 isTerminalPage
-} from "./terminal-state.js?v=13";
+} from "./terminal-state.js?v=17";
 
 import {
 getCurrentSymbols,
 getFirstVisibleSymbol,
 getExtraCoinMarkets
-} from "./terminal-table.js?v=39";
+} from "./terminal-table.js?v=44";
 
 import {
 parseAlertDeepLinkExchange
 } from "../alert-deep-link-url.js?v=2";
 
 import {
+parseDiaryTradeDeepLink
+} from "../trade-diary-terminal-deep-link.js?v=2";
+
+import {
 DEFAULT_CHART_SYMBOL,
 pickSymbolFromLastView as pickSymbolFromLastViewPure
-} from "./exchange-last-symbol.js?v=1";
+} from "./exchange-last-symbol.js?v=2";
 
 import {
 CHART_PRICE_SCALE_MODE_LOGARITHMIC,
 normalizeChartPriceScaleMode
 } from "../chart/price-scale-mode.js?v=3";
+
+import {
+normalizeMinVolume
+} from "../screener-volume-filter.js?v=4";
 
 export {
 DEFAULT_CHART_SYMBOL
@@ -165,7 +173,9 @@ invertRsiChart:false,
 priceScaleMode:
 CHART_PRICE_SCALE_MODE_LOGARITHMIC,
 listRefreshMs:
-10000
+10000,
+minVolume:
+0
 };
 
 }
@@ -460,6 +470,11 @@ normalizeListRefreshMs(
 prefs?.listRefreshMs
 );
 
+out.minVolume =
+normalizeMinVolume(
+prefs?.minVolume
+);
+
 return out;
 
 }
@@ -606,6 +621,11 @@ normalizeChartPriceScaleMode(
 coinsState().coinsPriceScaleMode
 );
 }
+
+prefs.minVolume =
+normalizeMinVolume(
+coinsState().minVolumeFilter
+);
 
 writeCoinsPrefs(prefs);
 
@@ -821,6 +841,11 @@ coinsState().currentDataset = prefs.market;
 
 applySortForCurrentMarket();
 
+coinsState().minVolumeFilter =
+normalizeMinVolume(
+prefs.minVolume
+);
+
 }
 
 
@@ -842,6 +867,11 @@ params
 coinsState().urlExchangeId =
 urlExchange ||
 "";
+
+coinsState().diaryTradeDeepLink =
+parseDiaryTradeDeepLink(
+params
+);
 
 if(symbol){
 coinsState().currentSymbol = symbol.trim().toUpperCase();

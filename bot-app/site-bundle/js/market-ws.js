@@ -11,7 +11,7 @@ subscribeKline as subscribeBybitKline,
 subscribeTicker as subscribeBybitTicker,
 connectKlineStream as connectBybitKlineStream,
 disconnectKlineStream as disconnectBybitKlineStream
-} from "./ws.js?v=20";
+} from "./ws.js?v=21";
 
 import {
 subscribeBingxKline,
@@ -19,7 +19,12 @@ subscribeBingxTicker,
 connectBingxKlineStream,
 disconnectBingxKlineStream,
 shutdownBingxWs
-} from "./exchanges/bingx/ws.js?v=18";
+} from "./exchanges/bingx/ws.js?v=19";
+
+import {
+bindLiveCandleCatchup,
+installMarketWsResume
+} from "./market-ws-resume.js?v=1";
 
 let boundExchangeListener =
 false;
@@ -36,6 +41,8 @@ return;
 
 boundExchangeListener =
 true;
+
+installMarketWsResume();
 
 window.addEventListener(
 EXCHANGE_CHANGED_EVENT,
@@ -141,5 +148,6 @@ export {
 subscribeMarketKline as subscribeKline,
 subscribeMarketTicker as subscribeTicker,
 connectMarketKlineStream as connectKlineStream,
-disconnectMarketKlineStream as disconnectKlineStream
+disconnectMarketKlineStream as disconnectKlineStream,
+bindLiveCandleCatchup
 };

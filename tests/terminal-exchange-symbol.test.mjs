@@ -26,13 +26,23 @@ test("pickSymbolFromLastView falls back to BTC when last symbol missing on excha
   );
 });
 
-test("pickSymbolFromLastView does not trust last symbol before list is loaded", () => {
+test("pickSymbolFromLastView keeps last symbol while market list is still empty", () => {
   assert.equal(
     pickSymbolFromLastView(
-      { symbol: "NCCOALUMINIUM2USDUSDT", tf: "15" },
+      { symbol: "ETHUSDT", tf: "15" },
       []
     ),
-    DEFAULT_CHART_SYMBOL
+    "ETHUSDT"
+  );
+});
+
+test("pickSymbolFromLastView keeps last symbol when symbols is missing", () => {
+  assert.equal(
+    pickSymbolFromLastView(
+      { symbol: "SOLUSDT", tf: "5" },
+      null
+    ),
+    "SOLUSDT"
   );
 });
 

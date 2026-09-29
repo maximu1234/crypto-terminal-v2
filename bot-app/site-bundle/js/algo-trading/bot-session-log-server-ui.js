@@ -4,12 +4,12 @@
  */
 import {
 isAlgoBotLiteShell
-} from "../page-routes.js?v=5";
+} from "../page-routes.js?v=7";
 import {
 applyPersistedAuthSessionNow,
 clearCloudAuthProblem,
 importAuthSessionTransferString
-} from "../cloud-sync.js?v=68";
+} from "../cloud-sync.js?v=71";
 import {
 forceRestoreDesktopAuthSession
 } from "../auth-storage.js?v=11";

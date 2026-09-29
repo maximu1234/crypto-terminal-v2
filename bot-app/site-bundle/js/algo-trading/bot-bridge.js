@@ -39,7 +39,7 @@ saveRsiTouchFlipBalancePct,
 loadRsiTouchFlipBalancePct,
 saveRsiTouchFlipMarginMode,
 loadRsiTouchFlipMarginMode
-} from "./rsi-touch-flip-prefs.js?v=8";
+} from "./rsi-touch-flip-prefs.js?v=9";
 
 import {
 isAlgoBotWorking

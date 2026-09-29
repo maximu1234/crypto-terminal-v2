@@ -30,7 +30,7 @@ getActiveExchangeId
 
 import {
 shouldRunScriptBackgroundJobs
-} from "./desktop-feature-nav-prefs.js?v=4";
+} from "./desktop-feature-nav-prefs.js?v=5";
 
 export const SCRIPT_SCAN_BG_EVENT =
 "script-scan-bg-update";
@@ -95,9 +95,10 @@ getActiveExchangeId()
 
 }
 
-function isDesktopShell(){
+function isScriptScanRuntime(){
 
-return !!window.cryptoTerminalDesktop?.isDesktop;
+return typeof window !==
+"undefined";
 
 }
 
@@ -584,7 +585,7 @@ function restartWatchdog(){
 stopWatchdog();
 
 if(
-!isDesktopShell()
+!isScriptScanRuntime()
 ){
 return;
 }
@@ -1033,7 +1034,7 @@ false;
 function syncScriptScanTimer(){
 
 if(
-!isDesktopShell()
+!isScriptScanRuntime()
 ){
 return;
 }
@@ -1118,7 +1119,7 @@ false
 async function tickScriptScanWatchdog(){
 
 if(
-!isDesktopShell()
+!isScriptScanRuntime()
 ){
 return;
 }
@@ -1344,7 +1345,7 @@ sideFilter
 ){
 
 if(
-!isDesktopShell()
+!isScriptScanRuntime()
 ){
 return null;
 }

@@ -4,7 +4,7 @@
  */
 import {
 fetchTickersInto
-} from "./tickers.js?v=28";
+} from "./tickers.js?v=29";
 
 import {
 getActiveExchangeId,

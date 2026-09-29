@@ -465,7 +465,7 @@ el.classList.remove(
 
 }
 
-function hideTabletProbeHorizInStack(
+export function hideTabletProbeHorizInStack(
 horizLineEl
 ){
 
@@ -1837,6 +1837,41 @@ priceLabelEl.style.width =
 priceLabelEl.classList.remove(
 "hidden"
 );
+
+}
+
+export function resolveCrosshairPlotTime(
+plotX,
+charts = []
+){
+
+if(
+!Number.isFinite(
+plotX
+)
+){
+return null;
+}
+
+for(
+const chart of charts
+){
+
+const time =
+chart?.timeScale?.()?.coordinateToTime?.(
+plotX
+);
+
+if(
+time !=
+null
+){
+return time;
+}
+
+}
+
+return null;
 
 }
 

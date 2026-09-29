@@ -5,24 +5,29 @@
 import {
 mountTvColorPicker,
 parseDrawColor
-} from "../draw-color-palette.js?v=6";
+} from "../draw-color-palette.js?v=7";
 
 import {
 isCoarseTouchViewport
-} from "../chart-import.js?v=53";
+} from "../chart-import.js?v=62";
 
 import {
 STROKE,
 FIB_TOOL_DEFAULTS_VERSION,
 RECT_DEFAULT_FILL_OPACITY,
 RECT_TOOL_DEFAULTS_VERSION
-} from "./constants.js?v=11";
+} from "./constants.js?v=13";
 
 import {
 migrateFibToolDefaults,
+migrateFibExtToolDefaults,
 ensureFibLevelsVisible,
-getFibRows
-} from "./fib-spec.js?v=15";
+getFibRows,
+isFibType,
+isFibExtType,
+FIB_EXT_TOOL_DEFAULTS_VERSION,
+resolveFibTrendLineColor
+} from "./fib-spec.js?v=17";
 
 import {
 setFibPanelCommitHook,
@@ -33,7 +38,7 @@ closeAllFibLineWidthMenus
 import {
 isPositionType,
 positionEntryPrice
-} from "./position.js?v=10";
+} from "./position.js?v=11";
 
 import {
 isTextTool,
@@ -52,6 +57,12 @@ applyPositionVolumeFromDrawing
 } from "../trade-volume-presets.js?v=11";
 
 import {
+stashDrawingStopsFromDrawing,
+clearDrawingStopsPending,
+hasDrawingStopsPending
+} from "../trade-auto-stops.js?v=18";
+
+import {
 touchShapeRevision
 } from "../drawings-storage.js?v=7";
 
@@ -64,7 +75,7 @@ listTemplatesForType,
 mergeStyleSnapshot,
 saveNamedTemplate,
 deleteTemplateAtIndex
-} from "./draw-templates.js?v=11";
+} from "./draw-templates.js?v=20";
 
 import {
 isFvpType,
@@ -79,14 +90,14 @@ fillFvpSettingsPanel,
 readFvpSettingsPanel,
 bindFvpSettingsPanel,
 closeFvpColorMenu
-} from "./fixed-volume-profile-settings.js?v=3";
+} from "./fixed-volume-profile-settings.js?v=4";
 
 import {
 rectSettingsHtml,
 fillRectSettingsPanel as fillRectSettingsPanelDom,
 readRectSettingsPanel,
 bindRectSettingsPanel
-} from "./draw-rect-settings.js?v=1";
+} from "./draw-rect-settings.js?v=2";
 
 import {
 fibSettingsHtml,
@@ -96,7 +107,52 @@ readFibSettingsPanel,
 bindFibSettingsPanel,
 setFibLevelColorButton,
 mergeFibLevelsAfterGlobalChange
-} from "./draw-fib-settings.js?v=1";
+} from "./draw-fib-settings.js?v=3";
+
+import {
+CHANNEL_DEFAULT_COLOR,
+CHANNEL_TOOL_DEFAULTS_VERSION,
+ensureChannelLevelsVisible
+} from "./channel-spec.js?v=2";
+
+import {
+channelSettingsHtml,
+mountChannelLevelRows,
+fillChannelSettingsPanel as fillChannelSettingsPanelDom,
+readChannelSettingsPanel,
+bindChannelSettingsPanel
+} from "./draw-channel-settings.js?v=1";
+
+import {
+ELLIOTT_TOOL_DEFAULTS_VERSION,
+createElliottToolDefaults,
+isElliottType,
+isPattern12Draw,
+migrateElliottToolDefaults,
+normalizePattern12TpFlags,
+normalizePattern12TpLevels
+} from "./elliott-spec.js?v=17";
+
+import {
+elliottSettingsHtml,
+fillElliottSettingsPanel as fillElliottSettingsPanelDom,
+readElliottSettingsPanel,
+bindElliottSettingsPanel,
+syncElliottSettingsColor
+} from "./draw-elliott-settings.js?v=8";
+
+import {
+hasCoordSettings
+} from "./draw-coords.js?v=4";
+
+import {
+bindCoordSettingsPanel,
+bindDrawSettingsTabs,
+coordSettingsHtml,
+drawSettingsTabsHtml,
+fillCoordSettingsPanel,
+isCoordInputFocused
+} from "./draw-coord-settings.js?v=2";
 
 export function createDrawStyleBar(
 deps
@@ -108,6 +164,15 @@ isActive,
 getTool,
 getSelectedId,
 setSelectedId,
+getSelectedIds = ()=>{
+const id =
+getSelectedId();
+return id
+? [
+id
+]
+: [];
+},
 getSelected,
 getPlacement,
 getDrawings,
@@ -146,6 +211,10 @@ deleteSelected,
 flushDeferredFibSettingsSync,
 getDesktopEdit,
 getSymbol,
+getCandles = ()=>
+[],
+getTf = ()=>
+"",
 getStyleDelegate = null
 } =
 deps;
@@ -161,6 +230,7 @@ if(
 return {
 getTool,
 getSelectedId,
+getSelectedIds,
 getSelected,
 getPlacement,
 getDrawings,
@@ -170,7 +240,9 @@ saveToolDefaults,
 saveGlobalStyle,
 baseDefaultStyle,
 getDesktopEdit,
-deleteSelected
+deleteSelected,
+getCandles,
+getTf
 };
 }
 
@@ -181,6 +253,9 @@ getTool,
 getSelectedId:
 delegate.getSelectedId ||
 getSelectedId,
+getSelectedIds:
+delegate.getSelectedIds ||
+getSelectedIds,
 getSelected:
 delegate.getSelected ||
 getSelected,
@@ -210,7 +285,13 @@ delegate.getDesktopEdit ||
 getDesktopEdit,
 deleteSelected:
 delegate.deleteSelected ||
-deleteSelected
+deleteSelected,
+getCandles:
+delegate.getCandles ||
+getCandles,
+getTf:
+delegate.getTf ||
+getTf
 };
 
 }
@@ -224,15 +305,14 @@ isActive() ||
 
 }
 
-function isTradeDesktopApp(){
+function isTradeVolumeUiActive(){
 
 return (
 typeof document !==
 "undefined" &&
 document.body.classList.contains(
 "trade-page"
-) &&
-!!globalThis.window?.cryptoTerminalDesktop?.isDesktop
+)
 );
 
 }
@@ -242,6 +322,7 @@ touchShapeRevisionDep ||
 touchShapeRevision;
 
 let fibPanelBuilt = false;
+let fibPanelCoordType = "fib";
 let fibPanelSyncing = false;
 let fibApplyTimer = null;
 let fibSettingsShapeId = null;
@@ -253,6 +334,17 @@ let rectSettingsShapeId = null;
 let fvpPanelBuilt = false;
 let fvpPanelSyncing = false;
 let fvpSettingsShapeId = null;
+let channelPanelBuilt = false;
+let channelPanelSyncing = false;
+let channelApplyTimer = null;
+let channelSettingsShapeId = null;
+let elliottPanelBuilt = false;
+let elliottPanelSyncing = false;
+let elliottSettingsShapeId = null;
+let coordsOnlyPanelBuilt = false;
+let coordPanelSyncing = false;
+let coordSettingsShapeId = null;
+let coordSettingsType = null;
 let settingsPanelAbort = null;
 let activeColor = STROKE;
 let chromePortal = null;
@@ -263,6 +355,8 @@ false;
 let positionRiskShapeId =
 null;
 let positionApplyBtn =
+null;
+let positionApplyStopsBtn =
 null;
 let templateSaveModal =
 null;
@@ -340,7 +434,67 @@ settingsPopover,
 }
 
 }
+function activeFibType(){
+
+const sel =
+getSelected();
+
+if(
+isFibType(
+sel?.type
+)
+){
+return sel.type;
+}
+
+const tool =
+getTool();
+
+if(
+isFibType(
+tool
+)
+){
+return tool;
+}
+
+return "fib";
+
+}
+
+function fibDefaultsVersionFor(
+type
+){
+
+return isFibExtType(
+type
+)
+? FIB_EXT_TOOL_DEFAULTS_VERSION
+: FIB_TOOL_DEFAULTS_VERSION;
+
+}
+
+function migrateActiveFibDefaults(
+type,
+saved
+){
+
+return isFibExtType(
+type
+)
+? migrateFibExtToolDefaults(
+saved
+)
+: migrateFibToolDefaults(
+saved
+);
+
+}
+
 function getFibEditShape(){
+
+const wanted =
+activeFibType();
 
 if(fibSettingsShapeId){
 
@@ -348,10 +502,16 @@ const pinned =
 getDrawings().find(
 d=>
 d.id === fibSettingsShapeId &&
-d.type === "fib"
+isFibType(
+d.type
+)
 );
 
-if(pinned){
+if(
+pinned &&
+pinned.type ===
+wanted
+){
 return pinned;
 }
 
@@ -360,7 +520,11 @@ return pinned;
 const sel =
 getSelected();
 
-if(sel?.type === "fib"){
+if(
+isFibType(
+sel?.type
+)
+){
 return sel;
 }
 
@@ -386,13 +550,17 @@ function rememberFibSettingsTarget(){
 const sel =
 getSelected();
 
-if(sel?.type === "fib"){
+if(
+isFibType(
+sel?.type
+)
+){
 fibSettingsShapeId = sel.id;
 return;
 }
 
 const fibs =
-getDrawings().filter(d=>d.type === "fib");
+getDrawings().filter(d=>isFibType(d.type));
 
 if(fibs.length === 1){
 fibSettingsShapeId = fibs[0].id;
@@ -406,14 +574,16 @@ const sel =
 getSelected();
 
 if(
-sel?.type ===
-"fib"
+isFibType(
+sel?.type
+)
 ){
 return true;
 }
 
-return getTool() ===
-"fib";
+return isFibType(
+getTool()
+);
 
 }
 
@@ -452,6 +622,423 @@ return getTool() ===
 
 }
 
+function isChannelContext(){
+
+const sel =
+getSelected();
+
+if(
+sel?.type ===
+"channel"
+){
+return true;
+}
+
+return getTool() ===
+"channel";
+
+}
+
+function isElliottContext(){
+
+const sel =
+getSelected();
+
+if(
+isElliottType(
+sel?.type
+)
+){
+return true;
+}
+
+return isElliottType(
+getTool()
+);
+
+}
+
+function candlesForCoords(){
+
+return styleCtx().getCandles?.() ||
+[];
+
+}
+
+function tfForCoords(){
+
+return styleCtx().getTf?.() ||
+"";
+
+}
+
+function getCoordEditShape(){
+
+const {
+getSelected: selectedForStyle,
+getDrawings: drawingsForStyle
+} =
+styleCtx();
+
+if(
+coordSettingsShapeId
+){
+
+const pinned =
+drawingsForStyle().find(
+d=>
+d.id ===
+coordSettingsShapeId
+);
+
+if(
+pinned &&
+hasCoordSettings(
+pinned.type
+)
+){
+
+const sel =
+selectedForStyle();
+const tool =
+styleCtx().getTool?.();
+
+if(
+sel?.id ===
+pinned.id
+){
+return pinned;
+}
+
+if(
+sel &&
+hasCoordSettings(
+sel.type
+)
+){
+return sel;
+}
+
+if(
+!tool ||
+tool ===
+"cursor" ||
+pinned.type ===
+tool
+){
+return pinned;
+}
+
+}
+
+}
+
+const sel =
+selectedForStyle();
+
+return hasCoordSettings(
+sel?.type
+)
+? sel
+: null;
+
+}
+
+function isCoordContext(){
+
+return hasCoordSettings(
+styleCtx().getSelected?.()?.type
+);
+
+}
+
+function isCoordSettingsOpen(){
+
+return !!(
+settingsPopover &&
+!settingsPopover.classList.contains(
+"hidden"
+) &&
+settingsPopover.querySelector(
+".draw-coord-settings"
+)
+);
+
+}
+
+function canApplyCoordPanel(){
+
+return (
+getAlive() &&
+isCoordSettingsOpen() &&
+!coordPanelSyncing &&
+!!getCoordEditShape()
+);
+
+}
+
+function persistCoordChange(){
+
+const {
+saveDrawings: saveDrawingsForStyle,
+redraw: redrawForStyle
+} =
+styleCtx();
+const shape =
+getCoordEditShape();
+
+if(
+!shape
+){
+return;
+}
+
+touchShapeRevisionFn(
+shape
+);
+saveDrawingsForStyle();
+redrawForStyle();
+
+}
+
+function syncCoordSettingsIfIdle(){
+
+if(
+!settingsPopover?.querySelector(
+".draw-coord-settings"
+)
+){
+return;
+}
+
+if(
+coordPanelSyncing ||
+isCoordInputFocused(
+settingsPopover
+)
+){
+return;
+}
+
+const shape =
+getCoordEditShape();
+
+if(
+!shape
+){
+return;
+}
+
+coordPanelSyncing = true;
+
+try{
+
+fillCoordSettingsPanel(
+settingsPopover,
+shape,
+candlesForCoords(),
+tfForCoords()
+);
+
+}finally{
+coordPanelSyncing = false;
+}
+
+}
+
+function composeSettingsHtml(
+type,
+styleHtml
+){
+
+return drawSettingsTabsHtml({
+styleHtml,
+coordsHtml: coordSettingsHtml(
+type
+),
+activeTab: "style"
+});
+
+}
+
+function attachCoordUi(
+type,
+signal
+){
+
+coordSettingsType =
+type;
+bindDrawSettingsTabs(
+settingsPopover,
+signal
+);
+bindCoordSettingsPanel(
+settingsPopover,
+{
+getAlive,
+getShape: getCoordEditShape,
+getCandles: candlesForCoords,
+getTf: tfForCoords,
+canApply: canApplyCoordPanel,
+onApply: persistCoordChange,
+signal
+}
+);
+
+}
+
+function pinCoordSettingsShape(){
+
+coordSettingsShapeId =
+styleCtx().getSelected?.()?.id ||
+null;
+
+}
+
+function typeShowsSettingsBtn(
+type
+){
+
+if(
+isFibType(
+type
+) ||
+type ===
+"rectangle" ||
+type ===
+"fvp" ||
+type ===
+"channel" ||
+isElliottType(
+type
+)
+){
+return true;
+}
+
+const sel =
+styleCtx().getSelected?.();
+
+return !!(
+hasCoordSettings(
+type
+) &&
+sel &&
+sel.type ===
+type
+);
+
+}
+
+function settingsOpenMatchesType(
+type
+){
+
+if(
+isFibType(
+type
+)
+){
+return isFibSettingsOpen();
+}
+
+if(
+type ===
+"rectangle"
+){
+return isRectSettingsOpen();
+}
+
+if(
+type ===
+"fvp"
+){
+return isFvpSettingsOpen();
+}
+
+if(
+type ===
+"channel"
+){
+return isChannelSettingsOpen();
+}
+
+if(
+isElliottType(
+type
+)
+){
+return isElliottSettingsOpen();
+}
+
+return !!(
+hasCoordSettings(
+type
+) &&
+isCoordSettingsOpen() &&
+coordSettingsType ===
+type
+);
+
+}
+
+function ensureCoordSettingsPanel(
+type
+){
+
+if(
+!settingsPopover ||
+!hasCoordSettings(
+type
+)
+){
+return;
+}
+
+const already =
+coordsOnlyPanelBuilt &&
+coordSettingsType ===
+type &&
+!!settingsPopover.querySelector(
+".draw-coord-settings"
+) &&
+!settingsPopover.querySelector(
+".draw-settings-tabs"
+);
+
+if(
+already
+){
+return;
+}
+
+coordsOnlyPanelBuilt = true;
+fibPanelBuilt = false;
+rectPanelBuilt = false;
+fvpPanelBuilt = false;
+channelPanelBuilt = false;
+elliottPanelBuilt = false;
+
+const signal =
+resetSettingsPanelListeners();
+
+settingsPopover.classList.remove(
+"draw-settings-popover--fvp"
+);
+settingsPopover.classList.add(
+"draw-settings-popover--coords"
+);
+settingsPopover.innerHTML =
+coordSettingsHtml(
+type
+);
+attachCoordUi(
+type,
+signal
+);
+
+}
+
 function resetSettingsPanelListeners(){
 
 settingsPanelAbort?.abort();
@@ -479,6 +1066,12 @@ kind ===
 : kind ===
 "fvp"
 ? ".fvp-settings"
+: kind ===
+"channel"
+? ".channel-settings"
+: kind ===
+"elliott"
+? ".elliott-settings"
 : ".rect-settings"
 );
 
@@ -518,6 +1111,32 @@ settingsPopover &&
 fvpPanelBuilt &&
 settingsPopover.querySelector(
 ".fvp-settings"
+)
+);
+
+}
+
+function isChannelSettingsOpen(){
+
+return !!(
+settingsPopover &&
+!settingsPopover.classList.contains("hidden") &&
+channelPanelBuilt &&
+settingsPopover.querySelector(
+".channel-settings"
+)
+);
+
+}
+
+function isElliottSettingsOpen(){
+
+return !!(
+settingsPopover &&
+!settingsPopover.classList.contains("hidden") &&
+elliottPanelBuilt &&
+settingsPopover.querySelector(
+".elliott-settings"
 )
 );
 
@@ -609,16 +1228,23 @@ return;
 rectPanelBuilt = true;
 fibPanelBuilt = false;
 fvpPanelBuilt = false;
+channelPanelBuilt = false;
+elliottPanelBuilt = false;
+coordsOnlyPanelBuilt = false;
 
 const signal =
 resetSettingsPanelListeners();
 
 settingsPopover.classList.remove(
-"draw-settings-popover--fvp"
+"draw-settings-popover--fvp",
+"draw-settings-popover--coords"
 );
 
 settingsPopover.innerHTML =
-rectSettingsHtml();
+composeSettingsHtml(
+"rectangle",
+rectSettingsHtml()
+);
 
 bindRectSettingsPanel(
 settingsPopover,
@@ -639,6 +1265,11 @@ fallback
 },
 signal
 }
+);
+
+attachCoordUi(
+"rectangle",
+signal
 );
 
 }
@@ -667,6 +1298,8 @@ shape
 }finally{
 rectPanelSyncing = false;
 }
+
+syncCoordSettingsIfIdle();
 
 }
 
@@ -777,8 +1410,14 @@ return;
 fvpPanelBuilt = true;
 fibPanelBuilt = false;
 rectPanelBuilt = false;
+channelPanelBuilt = false;
+elliottPanelBuilt = false;
+coordsOnlyPanelBuilt = false;
 
 resetSettingsPanelListeners();
+settingsPopover.classList.remove(
+"draw-settings-popover--coords"
+);
 settingsPopover.classList.add(
 "draw-settings-popover--fvp"
 );
@@ -860,6 +1499,586 @@ FVP_TOOL_DEFAULTS_VERSION
 
 }
 
+function getChannelEditShape(){
+
+if(
+channelSettingsShapeId
+){
+
+const pinned =
+getDrawings().find(
+d=>
+d.id === channelSettingsShapeId &&
+d.type ===
+"channel"
+);
+
+if(
+pinned
+){
+return pinned;
+}
+
+}
+
+const sel =
+getSelected();
+
+return sel?.type ===
+"channel"
+? sel
+: null;
+
+}
+
+function canApplyChannelPanel(){
+
+return (
+getAlive() &&
+isChannelSettingsOpen() &&
+!channelPanelSyncing
+);
+
+}
+
+function ensureChannelSettingsPanel(){
+
+if(
+!settingsPopover
+){
+return;
+}
+
+if(
+channelPanelBuilt &&
+settingsPopoverHasPanel(
+"channel"
+)
+){
+return;
+}
+
+channelPanelBuilt = true;
+fibPanelBuilt = false;
+rectPanelBuilt = false;
+fvpPanelBuilt = false;
+elliottPanelBuilt = false;
+coordsOnlyPanelBuilt = false;
+
+const signal =
+resetSettingsPanelListeners();
+
+settingsPopover.classList.remove(
+"draw-settings-popover--fvp",
+"draw-settings-popover--coords"
+);
+
+settingsPopover.innerHTML =
+composeSettingsHtml(
+"channel",
+channelSettingsHtml()
+);
+
+mountChannelLevelRows(
+settingsPopover
+);
+
+bindChannelSettingsPanel(
+settingsPopover,
+{
+getAlive,
+canApply: canApplyChannelPanel,
+getChannelEditShape,
+openColorMenu:(
+btn,
+fallback
+)=>{
+closeFibColorMenu();
+openChannelColorMenu(
+btn,
+fallback
+);
+},
+scheduleImmediate: scheduleChannelApplyImmediate,
+scheduleDebounced: scheduleChannelApplyDebounced,
+signal
+}
+);
+
+attachCoordUi(
+"channel",
+signal
+);
+
+}
+
+function fillChannelSettingsPanel(
+shape
+){
+
+ensureChannelSettingsPanel();
+
+if(
+!settingsPopover
+){
+return;
+}
+
+channelPanelSyncing = true;
+
+try{
+
+fillChannelSettingsPanelDom(
+settingsPopover,
+shape?.channelLevels,
+shape?.color ||
+CHANNEL_DEFAULT_COLOR
+);
+
+}finally{
+channelPanelSyncing = false;
+}
+
+syncCoordSettingsIfIdle();
+
+}
+
+function readChannelPanelFromDOM(){
+
+ensureChannelSettingsPanel();
+
+return readChannelSettingsPanel(
+settingsPopover
+);
+
+}
+
+function commitChannelPanelToShape(){
+
+if(
+!getAlive() ||
+!isChannelSettingsOpen() ||
+channelPanelSyncing
+){
+return false;
+}
+
+const shape =
+getChannelEditShape();
+const panel =
+readChannelPanelFromDOM();
+
+if(
+!shape
+){
+
+const style =
+readStyleFromUI();
+
+saveToolDefaults(
+"channel",
+{
+channelDefaultsVersion:
+CHANNEL_TOOL_DEFAULTS_VERSION,
+color:
+style.color ||
+CHANNEL_DEFAULT_COLOR,
+lineWidth:
+style.lineWidth,
+channelLevels:
+panel.channelLevels
+}
+);
+
+redraw();
+return true;
+
+}
+
+shape.channelLevels =
+JSON.parse(
+JSON.stringify(
+ensureChannelLevelsVisible(
+panel.channelLevels
+)
+)
+);
+
+touchShapeRevisionFn(
+shape
+);
+
+saveDrawings();
+redraw();
+
+const style =
+readStyleFromUI();
+
+saveToolDefaults(
+"channel",
+{
+channelDefaultsVersion:
+CHANNEL_TOOL_DEFAULTS_VERSION,
+color:
+style.color ||
+shape.color ||
+CHANNEL_DEFAULT_COLOR,
+lineWidth:
+style.lineWidth ??
+shape.lineWidth,
+channelLevels:
+shape.channelLevels
+}
+);
+
+return true;
+
+}
+
+function scheduleChannelApplyImmediate(){
+
+if(
+!isChannelSettingsOpen() ||
+channelPanelSyncing
+){
+return;
+}
+
+if(
+channelApplyTimer
+){
+clearTimeout(
+channelApplyTimer
+);
+channelApplyTimer =
+null;
+}
+
+commitChannelPanelToShape();
+
+}
+
+function scheduleChannelApplyDebounced(){
+
+if(
+!isChannelSettingsOpen() ||
+channelPanelSyncing
+){
+return;
+}
+
+if(
+channelApplyTimer
+){
+clearTimeout(
+channelApplyTimer
+);
+}
+
+channelApplyTimer =
+setTimeout(
+()=>{
+
+channelApplyTimer =
+null;
+
+if(
+!isChannelSettingsOpen() ||
+channelPanelSyncing
+){
+return;
+}
+
+commitChannelPanelToShape();
+
+},
+320
+);
+
+}
+
+function getElliottEditType(){
+
+const sel =
+getSelected();
+
+if(
+isElliottType(
+sel?.type
+)
+){
+return sel.type;
+}
+
+const tool =
+getTool();
+
+return isElliottType(
+tool
+)
+? tool
+: null;
+
+}
+
+function getElliottEditShape(){
+
+const type =
+getElliottEditType();
+
+if(
+!type
+){
+return null;
+}
+
+if(
+elliottSettingsShapeId
+){
+
+const pinned =
+getDrawings().find(
+d=>
+d.id === elliottSettingsShapeId &&
+isElliottType(
+d.type
+)
+);
+
+if(
+pinned
+){
+return pinned;
+}
+
+}
+
+const sel =
+getSelected();
+
+return isElliottType(
+sel?.type
+)
+? sel
+: null;
+
+}
+
+function canApplyElliottPanel(){
+
+return (
+getAlive() &&
+isElliottSettingsOpen() &&
+!elliottPanelSyncing
+);
+
+}
+
+function ensureElliottSettingsPanel(){
+
+if(
+!settingsPopover
+){
+return;
+}
+
+if(
+elliottPanelBuilt &&
+settingsPopoverHasPanel(
+"elliott"
+)
+){
+return;
+}
+
+elliottPanelBuilt = true;
+fibPanelBuilt = false;
+rectPanelBuilt = false;
+fvpPanelBuilt = false;
+channelPanelBuilt = false;
+coordsOnlyPanelBuilt = false;
+
+const signal =
+resetSettingsPanelListeners();
+
+settingsPopover.classList.remove(
+"draw-settings-popover--fvp",
+"draw-settings-popover--coords"
+);
+
+settingsPopover.innerHTML =
+elliottSettingsHtml();
+
+bindElliottSettingsPanel(
+settingsPopover,
+{
+canApply: canApplyElliottPanel,
+onApply: applyElliottSettingsFromPanel,
+signal
+}
+);
+
+}
+
+function fillElliottSettingsFromContext(){
+
+ensureElliottSettingsPanel();
+elliottPanelSyncing = true;
+
+try{
+
+const type =
+getElliottEditType() ||
+"elliott-impulse";
+const shape =
+getElliottEditShape() ||
+baseDefaultStyle(
+type
+);
+
+fillElliottSettingsPanelDom(
+settingsPopover,
+{
+...shape,
+type:
+shape.type ||
+type
+}
+);
+
+}finally{
+elliottPanelSyncing = false;
+}
+
+}
+
+function applyElliottSettingsFromPanel(){
+
+if(
+!canApplyElliottPanel()
+){
+return;
+}
+
+const type =
+getElliottEditType();
+
+if(
+!type
+){
+return;
+}
+
+const shape =
+getElliottEditShape();
+const panel =
+readElliottSettingsPanel(
+settingsPopover,
+type
+);
+const style =
+readStyleFromUI();
+const prev =
+migrateElliottToolDefaults(
+getToolDefaults()[
+type
+],
+type
+);
+
+if(
+shape
+){
+
+shape.degree =
+panel.degree;
+shape.degreeJunior =
+panel.degreeJunior;
+shape.showWave =
+panel.showWave !==
+false;
+shape.showPatternDash =
+panel.showPatternDash !==
+false;
+shape.patternDashOpacity =
+panel.patternDashOpacity;
+
+if(
+isPattern12Draw(
+type
+)
+){
+Object.assign(
+shape,
+normalizePattern12TpFlags(
+panel.showTpSenior,
+panel.showTpJunior
+)
+);
+shape.tpLevels =
+normalizePattern12TpLevels(
+panel.tpLevels
+);
+}
+
+touchShapeRevisionFn(
+shape
+);
+saveDrawings();
+redraw();
+
+}
+
+saveToolDefaults(
+type,
+{
+...createElliottToolDefaults({
+type
+}),
+...prev,
+color:
+shape?.color ||
+style.color ||
+prev.color,
+lineWidth:
+shape?.lineWidth ??
+style.lineWidth ??
+prev.lineWidth,
+degree:
+panel.degree,
+degreeJunior:
+panel.degreeJunior,
+showWave:
+panel.showWave !==
+false,
+showPatternDash:
+panel.showPatternDash !==
+false,
+patternDashOpacity:
+panel.patternDashOpacity,
+...(
+isPattern12Draw(
+type
+)
+? {
+...normalizePattern12TpFlags(
+panel.showTpSenior,
+panel.showTpJunior
+),
+tpLevels:
+normalizePattern12TpLevels(
+panel.tpLevels
+)
+}
+: {}
+),
+elliottDefaultsVersion:
+ELLIOTT_TOOL_DEFAULTS_VERSION
+}
+);
+
+}
+
 function canApplyFibPanel(){
 
 return (
@@ -872,16 +2091,22 @@ isFibSettingsOpen() &&
 
 function readFibDefaultsForStyle(){
 
+const type =
+activeFibType();
 const fibStore =
-migrateFibToolDefaults(
-getToolDefaults().fib
+migrateActiveFibDefaults(
+type,
+getToolDefaults()[
+type
+]
 );
 
 return {
 fibLevels: JSON.parse(
 JSON.stringify(
 ensureFibLevelsVisible(
-fibStore.fibLevels
+fibStore.fibLevels,
+type
 )
 )
 ),
@@ -889,7 +2114,12 @@ fibShowTrendLine:
 typeof fibStore.fibShowTrendLine ===
 "boolean"
 ? fibStore.fibShowTrendLine
-: false
+: isFibExtType(
+type
+),
+fibTrendLineColor: resolveFibTrendLineColor(
+fibStore.fibTrendLineColor
+)
 };
 
 }
@@ -925,31 +2155,62 @@ if(
 return;
 }
 
+const type =
+activeFibType();
+
 if(
 fibPanelBuilt &&
 settingsPopoverHasPanel(
 "fib"
-)
+) &&
+fibPanelCoordType ===
+type
 ){
 return;
 }
 
+if(
+fibPanelBuilt &&
+isFibSettingsOpen() &&
+isFibType(
+fibPanelCoordType
+) &&
+fibPanelCoordType !==
+type
+){
+flushFibPanelForType(
+fibPanelCoordType
+);
+}
+
 fibPanelBuilt = true;
+fibPanelCoordType =
+type;
 rectPanelBuilt = false;
 fvpPanelBuilt = false;
+channelPanelBuilt = false;
+elliottPanelBuilt = false;
+coordsOnlyPanelBuilt = false;
 
 const signal =
 resetSettingsPanelListeners();
 
 settingsPopover.classList.remove(
-"draw-settings-popover--fvp"
+"draw-settings-popover--fvp",
+"draw-settings-popover--coords"
 );
 
 settingsPopover.innerHTML =
-fibSettingsHtml();
+composeSettingsHtml(
+type,
+fibSettingsHtml(
+type
+)
+);
 
 mountFibLevelRows(
-settingsPopover
+settingsPopover,
+type
 );
 
 bindFibSettingsPanel(
@@ -971,6 +2232,97 @@ fallback
 scheduleImmediate: scheduleFibApplyImmediate,
 scheduleDebounced: scheduleFibApplyDebounced,
 signal
+}
+);
+
+attachCoordUi(
+type,
+signal
+);
+
+}
+
+function flushFibPanelForType(
+type
+){
+
+if(
+!isFibType(
+type
+) ||
+!settingsPopoverHasPanel(
+"fib"
+) ||
+fibPanelSyncing
+){
+return;
+}
+
+const panel =
+readFibSettingsPanel(
+settingsPopover
+);
+const shape =
+getDrawings().find(
+d=>
+d.id ===
+fibSettingsShapeId &&
+d.type ===
+type
+);
+
+if(
+shape
+){
+
+shape.fibLevels =
+JSON.parse(
+JSON.stringify(
+panel.fibLevels
+)
+);
+shape.fibShowTrendLine =
+panel.fibShowTrendLine;
+shape.fibTrendLineColor =
+resolveFibTrendLineColor(
+panel.fibTrendLineColor
+);
+
+if(
+Number.isFinite(
+panel.lineWidth
+)
+){
+shape.lineWidth =
+panel.lineWidth;
+}
+
+touchShapeRevisionFn(
+shape
+);
+saveDrawings();
+
+}
+
+saveToolDefaults(
+type,
+{
+fibDefaultsVersion: fibDefaultsVersionFor(
+type
+),
+color: activeColor ||
+STROKE,
+lineWidth:
+Number.isFinite(
+panel.lineWidth
+)
+? panel.lineWidth
+: 1,
+fibLevels: panel.fibLevels,
+fibShowTrendLine: panel.fibShowTrendLine,
+fibTrendLineColor: resolveFibTrendLineColor(
+panel.fibTrendLineColor
+)
 }
 );
 
@@ -996,15 +2348,22 @@ if(!shape){
 
 const style =
 readStyleFromUI();
+const type =
+activeFibType();
 
 saveToolDefaults(
-"fib",
+type,
 {
-fibDefaultsVersion: FIB_TOOL_DEFAULTS_VERSION,
+fibDefaultsVersion: fibDefaultsVersionFor(
+type
+),
 color: style.color,
 lineWidth: style.lineWidth,
 fibLevels: panel.fibLevels,
-fibShowTrendLine: panel.fibShowTrendLine
+fibShowTrendLine: panel.fibShowTrendLine,
+fibTrendLineColor: resolveFibTrendLineColor(
+panel.fibTrendLineColor
+)
 }
 );
 
@@ -1020,6 +2379,10 @@ JSON.stringify(panel.fibLevels)
 
 shape.fibShowTrendLine =
 panel.fibShowTrendLine;
+shape.fibTrendLineColor =
+resolveFibTrendLineColor(
+panel.fibTrendLineColor
+);
 
 if(
 Number.isFinite(
@@ -1041,13 +2404,18 @@ const style =
 readStyleFromUI();
 
 saveToolDefaults(
-"fib",
+shape.type,
 {
-fibDefaultsVersion: FIB_TOOL_DEFAULTS_VERSION,
+fibDefaultsVersion: fibDefaultsVersionFor(
+shape.type
+),
 color: style.color,
 lineWidth: style.lineWidth,
 fibLevels: shape.fibLevels,
-fibShowTrendLine: shape.fibShowTrendLine
+fibShowTrendLine: shape.fibShowTrendLine,
+fibTrendLineColor: resolveFibTrendLineColor(
+shape.fibTrendLineColor
+)
 }
 );
 
@@ -1236,6 +2604,70 @@ portal.style.zIndex = "20000";
 
 }
 
+function openChannelColorMenu(
+anchorBtn,
+fallbackColor
+){
+
+const portal =
+ensureFibColorMenuPortal();
+
+fibColorMenuAnchor =
+anchorBtn;
+
+const active =
+anchorBtn.dataset.customColor ||
+fallbackColor ||
+CHANNEL_DEFAULT_COLOR;
+
+mountTvColorPicker(
+portal,
+{
+activeColor: active,
+onChange: color=>{
+
+setFibLevelColorButton(
+anchorBtn,
+color,
+fallbackColor
+);
+
+commitChannelPanelToShape();
+
+},
+onSelect: color=>{
+
+setFibLevelColorButton(
+anchorBtn,
+color,
+fallbackColor
+);
+
+closeFibColorMenu();
+commitChannelPanelToShape();
+
+}
+}
+);
+
+portal.classList.remove(
+"hidden"
+);
+
+const rect =
+anchorBtn.getBoundingClientRect();
+
+portal.style.position =
+"fixed";
+portal.style.left =
+`${Math.round(rect.left)}px`;
+portal.style.top =
+`${Math.round(rect.bottom + 4)}px`;
+portal.style.zIndex =
+"20000";
+
+}
+
 function ensureFibColorMenuPortal(){
 
 if(fibColorMenuPortal){
@@ -1254,11 +2686,15 @@ el.addEventListener("mousedown", e=>{
 e.stopPropagation();
 });
 
+el.addEventListener("keydown", e=>{
+e.stopPropagation();
+});
+
 document.addEventListener("mousedown", e=>{
 
 if(
 e.target.closest(
-".fib-level-color-btn, .fib-level-color-menu, .rect-fill-color-btn, .rect-median-color-btn, .tv-color-picker"
+".fib-level-color-btn, .fib-level-color-menu, .channel-level-color-btn, .rect-fill-color-btn, .rect-median-color-btn, .tv-color-picker"
 )
 ){
 return;
@@ -1360,7 +2796,8 @@ fillFibSettingsPanel(
 shape.fibLevels,
 shape.fibShowTrendLine,
 shape.color,
-shape.lineWidth
+shape.lineWidth,
+shape.fibTrendLineColor
 );
 }
 
@@ -1389,7 +2826,8 @@ fillFibSettingsPanel(
 shape.fibLevels,
 shape.fibShowTrendLine,
 shape.color,
-shape.lineWidth
+shape.lineWidth,
+shape.fibTrendLineColor
 );
 }
 
@@ -1399,7 +2837,8 @@ function fillFibSettingsPanel(
 fibLevels,
 fibShowTrendLine,
 fallbackColor,
-fallbackWidth
+fallbackWidth,
+fibTrendLineColor
 ){
 
 ensureFibSettingsPanel();
@@ -1413,12 +2852,15 @@ settingsPopover,
 fibLevels,
 fibShowTrendLine,
 fallbackColor,
-fallbackWidth
+fallbackWidth,
+fibTrendLineColor
 );
 
 }finally{
 fibPanelSyncing = false;
 }
+
+syncCoordSettingsIfIdle();
 
 }
 
@@ -1464,8 +2906,21 @@ readRectPanelFromDOM()
 );
 
 }else if(
-tgt === "fib" ||
-getTool() === "fib"
+isChannelSettingsOpen()
+){
+
+Object.assign(
+base,
+readChannelPanelFromDOM()
+);
+
+}else if(
+isFibType(
+tgt
+) ||
+isFibType(
+getTool()
+)
 ){
 
 Object.assign(
@@ -1723,7 +3178,7 @@ redraw();
 function submitPositionVolumeApply(){
 
 if(
-!isTradeDesktopApp()
+!isTradeVolumeUiActive()
 ){
 return;
 }
@@ -1774,6 +3229,279 @@ symbol
 }
 )
 );
+
+}
+
+function validatePositionDrawingStops(
+shape
+){
+
+if(
+!shape ||
+!isPositionType(
+shape.type
+)
+){
+return {
+ok:
+false,
+message:
+"Выберите объект Позиция Long/Short."
+};
+}
+
+const entry =
+positionEntryPrice(
+shape
+);
+const slPrice =
+Number(
+shape.slPrice
+);
+const tpPrice =
+Number(
+shape.tpPrice
+);
+
+if(
+!Number.isFinite(entry) ||
+entry <=
+0
+){
+return {
+ok:
+false,
+message:
+"Некорректная цена входа на объекте Позиция."
+};
+}
+
+if(
+!Number.isFinite(slPrice) ||
+slPrice <=
+0 ||
+!Number.isFinite(tpPrice) ||
+tpPrice <=
+0
+){
+return {
+ok:
+false,
+message:
+"Укажите СЛ и ТП на объекте Позиция."
+};
+}
+
+const isLong =
+shape.type ===
+"long";
+
+if(
+isLong
+){
+if(
+slPrice >=
+entry
+){
+return {
+ok:
+false,
+message:
+"Для Long стоп-лосс должен быть ниже входа."
+};
+}
+if(
+tpPrice <=
+entry
+){
+return {
+ok:
+false,
+message:
+"Для Long тейк-профит должен быть выше входа."
+};
+}
+}else{
+if(
+slPrice <=
+entry
+){
+return {
+ok:
+false,
+message:
+"Для Short стоп-лосс должен быть выше входа."
+};
+}
+if(
+tpPrice >=
+entry
+){
+return {
+ok:
+false,
+message:
+"Для Short тейк-профит должен быть ниже входа."
+};
+}
+}
+
+return {
+ok:
+true,
+side:
+isLong
+? "long"
+: "short",
+slPrice,
+tpPrice
+};
+
+}
+
+function resolveTradeSymbol(){
+
+return String(
+getSymbol?.() ||
+""
+).replace(
+/\.P$/i,
+""
+).trim().toUpperCase();
+
+}
+
+function syncPositionApplyStopsArmed(){
+
+if(
+!positionApplyStopsBtn
+){
+return;
+}
+
+const symbol =
+resolveTradeSymbol();
+const armed =
+isTradeVolumeUiActive() &&
+hasDrawingStopsPending(
+symbol
+);
+
+positionApplyStopsBtn.classList.toggle(
+"is-armed",
+armed
+);
+positionApplyStopsBtn.setAttribute(
+"aria-pressed",
+armed
+? "true"
+: "false"
+);
+positionApplyStopsBtn.title =
+armed
+? "Ожидание сделки с СЛ/ТП с объекта — нажмите ещё раз, чтобы отменить"
+: "Объём + СЛ/ТП с объекта на следующее открытие (авто-СЛ/ТП пропускаются)";
+
+}
+
+function submitPositionVolumeApplyWithStops(){
+
+if(
+!isTradeVolumeUiActive()
+){
+return;
+}
+
+const symbol =
+resolveTradeSymbol();
+
+/* Toggle off while armed for this symbol only. */
+if(
+hasDrawingStopsPending(
+symbol
+)
+){
+clearDrawingStopsPending(
+symbol
+);
+syncPositionApplyStopsArmed();
+return;
+}
+
+applyPositionRiskUsd();
+
+const shape =
+resolvePositionRiskTarget();
+const volumeUsdt =
+getPositionEntryVolumeUsd(
+shape
+);
+
+if(
+!Number.isFinite(volumeUsdt) ||
+volumeUsdt <= 0
+){
+window.alert(
+"Не удалось применить объём: укажите стоп-лосс ($) и проверьте границы позиции."
+);
+return;
+}
+
+const stops =
+validatePositionDrawingStops(
+shape
+);
+
+if(
+!stops.ok
+){
+window.alert(
+stops.message
+);
+return;
+}
+
+applyPositionVolumeFromDrawing(
+{
+symbol,
+volumeUsdt
+}
+);
+
+window.dispatchEvent(
+new CustomEvent(
+"trade-apply-position-volume",
+{
+detail:{
+volumeUsdt,
+symbol
+}
+}
+)
+);
+
+const stashed =
+stashDrawingStopsFromDrawing(
+{
+symbol,
+side:
+stops.side,
+slPrice:
+stops.slPrice,
+tpPrice:
+stops.tpPrice
+}
+);
+
+if(
+!stashed
+){
+window.alert(
+"Объём применён, но СЛ/ТП не сохранены для следующего входа."
+);
+}
+
+syncPositionApplyStopsArmed();
 
 }
 
@@ -1833,23 +3561,39 @@ return false;
 
 }
 
+function isEnterKey(
+event
+){
+
+return (
+event.key ===
+"Enter" ||
+event.key ===
+"Go" ||
+event.code ===
+"Enter" ||
+event.code ===
+"NumpadEnter" ||
+event.keyCode ===
+13
+);
+
+}
+
 function isPositionApplyEnterHotkey(
 event
 ){
 
 if(
-event.key !==
-"Enter" &&
-event.code !==
-"Enter" &&
-event.code !==
-"NumpadEnter"
+!isEnterKey(
+event
+)
 ){
 return false;
 }
 
 if(
-!isTradeDesktopApp()
+!isTradeVolumeUiActive()
 ){
 return false;
 }
@@ -1957,13 +3701,25 @@ const stripeColor =
 style.color;
 
 updateColorStripe(stripeColor);
+
+if(
+isElliottType(
+type
+) &&
+isElliottSettingsOpen()
+){
+syncElliottSettingsColor(
+settingsPopover,
+stripeColor
+);
+}
 setActiveWidth(style.lineWidth);
 
 settingsBtn?.classList.toggle(
 "hidden",
-type !== "fib" &&
-type !== "rectangle" &&
-type !== "fvp"
+!typeShowsSettingsBtn(
+type
+)
 );
 
 const isTextToolbar =
@@ -2034,8 +3790,9 @@ colorBtn?.classList.toggle(
 isPosToolbar ||
 type ===
 "rectangle" ||
-type ===
-"fib" ||
+isFibType(
+type
+) ||
 type ===
 "fvp"
 );
@@ -2056,8 +3813,14 @@ positionRiskWrap?.classList.toggle(
 positionApplyBtn?.classList.toggle(
 "hidden",
 !isPosToolbar ||
-!isTradeDesktopApp()
+!isTradeVolumeUiActive()
 );
+positionApplyStopsBtn?.classList.toggle(
+"hidden",
+!isPosToolbar ||
+!isTradeVolumeUiActive()
+);
+syncPositionApplyStopsArmed();
 
 if(
 isPositionType(type) &&
@@ -2097,25 +3860,40 @@ riskVal > 0
 
 }
 
-if(type === "fib"){
+if(
+isFibType(
+type
+)
+){
 
 if(
-!isFibSettingsOpen()
+!isFibSettingsOpen() ||
+fibPanelCoordType !==
+type
 ){
 
 const fibShape =
-getSelected()?.type === "fib"
+isFibType(
+getSelected()?.type
+)
 ? getSelected()
 : getFibEditShape();
 
 fillFibSettingsPanel(
 getFibRows(
 fibShape ||
-{ fibLevels: style.fibLevels }
+{
+type,
+fibLevels: style.fibLevels
+}
 ),
 style.fibShowTrendLine,
 style.color,
-style.lineWidth
+style.lineWidth,
+(
+fibShape ||
+style
+).fibTrendLineColor
 );
 
 }
@@ -2144,8 +3922,51 @@ baseDefaultStyle(
 
 }
 
+}else if(
+type ===
+"channel"
+){
+
+if(
+!isChannelSettingsOpen()
+){
+
+const channelShape =
+getSelected()?.type ===
+"channel"
+? getSelected()
+: getChannelEditShape();
+
+fillChannelSettingsPanel(
+channelShape ||
+baseDefaultStyle(
+"channel"
+)
+);
+
+}
+
+}
+
+if(
+settingsPopover &&
+!settingsPopover.classList.contains(
+"hidden"
+)
+){
+
+if(
+!settingsOpenMatchesType(
+type
+)
+){
+settingsPopover.classList.add(
+"hidden"
+);
 }else{
-settingsPopover?.classList.add("hidden");
+syncCoordSettingsIfIdle();
+}
+
 }
 
 }
@@ -2248,30 +4069,94 @@ const sel =
 selectedForStyle();
 
 const fibTarget =
-type === "fib" &&
+isFibType(
+type
+) &&
 !placementForStyle()
 ? resolveFibStyleTarget()
 : null;
 
-const target =
+const primaryTarget =
 fibTarget || (
 !placementForStyle()
 ? sel
 : null
 );
 
-if(target){
+const {
+getSelectedIds: selectedIdsForStyle,
+getDrawings: drawingsForStyle
+} =
+styleCtx();
 
-if(target.type === "fib"){
+const selectedIdList =
+selectedIdsForStyle?.() ||
+[];
+const targets =
+[];
 
-if(scope === "width"){
+if(
+!placementForStyle() &&
+selectedIdList.length >
+1 &&
+drawingsForStyle
+){
+
+for(
+const id of selectedIdList
+){
+
+const shape =
+drawingsForStyle().find(
+d=>
+d.id ===
+id
+);
+
+if(
+shape
+){
+targets.push(
+shape
+);
+}
+
+}
+
+}else if(
+primaryTarget
+){
+
+targets.push(
+primaryTarget
+);
+
+}
+
+function applyStylePayloadToShape(
+target
+){
+
+if(
+isFibType(
+target.type
+)
+){
+
+if(
+scope ===
+"width"
+){
 
 applyFibGlobalWidthFromToolbar(
 target,
 style.lineWidth
 );
 
-}else if(scope === "color"){
+}else if(
+scope ===
+"color"
+){
 
 applyFibGlobalColorFromToolbar(
 target,
@@ -2345,6 +4230,15 @@ clampTextFontSize(
 style.fontSize
 );
 
+}else if(
+isElliottType(
+target.type
+)
+){
+
+target.color = style.color;
+target.lineWidth = style.lineWidth;
+
 }else{
 
 target.color = style.color;
@@ -2355,6 +4249,20 @@ target.lineWidth = style.lineWidth;
 touchShapeRevisionFn(
 target
 );
+
+}
+
+if(
+targets.length
+){
+
+for(
+const target of targets
+){
+applyStylePayloadToShape(
+target
+);
+}
 
 saveDrawingsForStyle();
 redrawForStyle();
@@ -2379,10 +4287,17 @@ style.fontSize
 delete defaultsPayload.lineWidth;
 }
 
-if(style.fibLevels){
+if(
+isFibType(
+type
+) &&
+style.fibLevels
+){
 
 defaultsPayload.fibDefaultsVersion =
-FIB_TOOL_DEFAULTS_VERSION;
+fibDefaultsVersionFor(
+type
+);
 
 defaultsPayload.fibLevels =
 style.fibLevels;
@@ -2391,7 +4306,13 @@ defaultsPayload.fibShowTrendLine =
 typeof style.fibShowTrendLine ===
 "boolean"
 ? style.fibShowTrendLine
-: false;
+: isFibExtType(
+type
+);
+defaultsPayload.fibTrendLineColor =
+resolveFibTrendLineColor(
+style.fibTrendLineColor
+);
 
 }
 
@@ -2431,6 +4352,102 @@ type: "fvp",
 
 if(
 type ===
+"channel"
+){
+
+Object.assign(
+defaultsPayload,
+{
+channelDefaultsVersion:
+CHANNEL_TOOL_DEFAULTS_VERSION,
+channelLevels:
+ensureChannelLevelsVisible(
+isChannelSettingsOpen()
+? readChannelPanelFromDOM().channelLevels
+: primaryTarget?.channelLevels ||
+getToolDefaults().channel?.channelLevels ||
+style.channelLevels
+)
+}
+);
+
+}
+
+if(
+isElliottType(
+type
+)
+){
+
+const prev =
+migrateElliottToolDefaults(
+getToolDefaults()[
+type
+],
+type
+);
+const panel =
+isElliottSettingsOpen()
+? readElliottSettingsPanel(
+settingsPopover,
+type
+)
+: null;
+
+Object.assign(
+defaultsPayload,
+{
+elliottDefaultsVersion:
+ELLIOTT_TOOL_DEFAULTS_VERSION,
+degree:
+primaryTarget?.degree ||
+panel?.degree ||
+prev.degree,
+degreeJunior:
+primaryTarget?.degreeJunior ||
+panel?.degreeJunior ||
+prev.degreeJunior,
+showWave:
+primaryTarget?.showWave ??
+panel?.showWave ??
+prev.showWave,
+showPatternDash:
+primaryTarget?.showPatternDash ??
+panel?.showPatternDash ??
+prev.showPatternDash,
+patternDashOpacity:
+primaryTarget?.patternDashOpacity ??
+panel?.patternDashOpacity ??
+prev.patternDashOpacity,
+...(
+isPattern12Draw(
+type
+)
+? {
+...normalizePattern12TpFlags(
+primaryTarget?.showTpSenior ??
+panel?.showTpSenior ??
+prev.showTpSenior,
+primaryTarget?.showTpJunior ??
+panel?.showTpJunior ??
+prev.showTpJunior
+),
+tpLevels:
+normalizePattern12TpLevels(
+primaryTarget?.tpLevels ||
+panel?.tpLevels ||
+prev.tpLevels
+)
+}
+: {}
+)
+}
+);
+
+}
+
+if(
+type ===
 "arrow"
 ){
 
@@ -2447,6 +4464,24 @@ saveGlobalStyleForStyle({
 color: style.color,
 lineWidth: style.lineWidth
 });
+
+if(
+isElliottType(
+type
+) &&
+isElliottSettingsOpen()
+){
+syncElliottSettingsColor(
+settingsPopover,
+style.color
+);
+}
+
+if(
+!targets.length
+){
+redrawForStyle();
+}
 
 }
 
@@ -2537,8 +4572,9 @@ type
 }
 
 if(
-type ===
-"fib" &&
+isFibType(
+type
+) &&
 isFibSettingsOpen()
 ){
 
@@ -2622,12 +4658,24 @@ delete defaultsPayload.lineWidth;
 }
 
 if(
-type ===
-"fib" &&
+isFibType(
+type
+) &&
 snapshot.fibLevels
 ){
 defaultsPayload.fibDefaultsVersion =
-FIB_TOOL_DEFAULTS_VERSION;
+fibDefaultsVersionFor(
+type
+);
+}
+
+if(
+type ===
+"channel" &&
+snapshot.channelLevels
+){
+defaultsPayload.channelDefaultsVersion =
+CHANNEL_TOOL_DEFAULTS_VERSION;
 }
 
 saveToolDefaults(
@@ -2648,25 +4696,43 @@ snapshot.lineWidth ??
 
 }
 
+const lockElliott =
+isElliottType(
+type
+) &&
+isElliottSettingsOpen();
+
+if(
+lockElliott
+){
+elliottPanelSyncing =
+true;
+}
+
+try{
+
 fillStyleUI(
 snapshot,
 type
 );
 
 if(
-type ===
-"fib" &&
+isFibType(
+type
+) &&
 isFibSettingsOpen()
 ){
 
 fillFibSettingsPanel(
 getFibRows({
+type,
 fibLevels:
 snapshot.fibLevels
 }),
 snapshot.fibShowTrendLine,
 snapshot.color,
-snapshot.lineWidth
+snapshot.lineWidth,
+snapshot.fibTrendLineColor
 );
 
 }
@@ -2684,6 +4750,47 @@ snapshot.color,
 lineWidth:
 snapshot.lineWidth
 });
+
+}
+
+if(
+type ===
+"channel" &&
+isChannelSettingsOpen()
+){
+
+fillChannelSettingsPanel({
+color:
+snapshot.color,
+channelLevels:
+snapshot.channelLevels
+});
+
+}
+
+if(
+lockElliott
+){
+
+ensureElliottSettingsPanel();
+fillElliottSettingsPanelDom(
+settingsPopover,
+{
+...snapshot,
+type
+}
+);
+
+}
+
+}finally{
+
+if(
+lockElliott
+){
+elliottPanelSyncing =
+false;
+}
 
 }
 
@@ -2887,6 +4994,12 @@ document.body.appendChild(
 root
 );
 templateSaveModal = root;
+root.addEventListener(
+"keydown",
+e=>{
+e.stopPropagation();
+}
+);
 templateNameInput =
 root.querySelector(
 ".draw-template-save-input"
@@ -3334,6 +5447,8 @@ const fibSettingsWasOpen =
 isFibSettingsOpen();
 const fvpSettingsWasOpen =
 isFvpSettingsOpen();
+const channelSettingsWasOpen =
+isChannelSettingsOpen();
 
 if(
 fibSettingsWasOpen
@@ -3345,6 +5460,12 @@ if(
 fvpSettingsWasOpen
 ){
 applyFvpSettingsFromPanel();
+}
+
+if(
+channelSettingsWasOpen
+){
+commitChannelPanelToShape();
 }
 
 colorPopover?.classList.add("hidden");
@@ -3365,6 +5486,26 @@ closeTemplateMenu();
 if(fibSettingsWasOpen){
 fibSettingsShapeId = null;
 flushDeferredFibSettingsSync();
+}
+
+coordSettingsShapeId =
+null;
+
+if(
+channelSettingsWasOpen
+){
+channelSettingsShapeId = null;
+
+if(
+channelApplyTimer
+){
+clearTimeout(
+channelApplyTimer
+);
+channelApplyTimer =
+null;
+}
+
 }
 
 }
@@ -3388,6 +5529,32 @@ popover.style.zIndex = "10051";
 function initStylePopovers(){
 
 initTemplateUi();
+
+function stopDrawUiKeydownBubble(
+el
+){
+
+el?.addEventListener(
+"keydown",
+e=>{
+e.stopPropagation();
+}
+);
+
+}
+
+stopDrawUiKeydownBubble(
+colorPopover
+);
+stopDrawUiKeydownBubble(
+widthPopover
+);
+stopDrawUiKeydownBubble(
+textSizePopover
+);
+stopDrawUiKeydownBubble(
+settingsPopover
+);
 
 if(colorPopover){
 colorPopover.classList.add("tv-color-popover");
@@ -3547,11 +5714,20 @@ const rectCtx =
 isRectContext();
 const fvpCtx =
 isFvpContext();
+const channelCtx =
+isChannelContext();
+const elliottCtx =
+isElliottContext();
+const coordCtx =
+isCoordContext();
 
 if(
 !fibCtx &&
 !rectCtx &&
-!fvpCtx
+!fvpCtx &&
+!channelCtx &&
+!elliottCtx &&
+!coordCtx
 ){
 return;
 }
@@ -3579,6 +5755,7 @@ rectCtx
 rectSettingsShapeId =
 getSelected()?.id ||
 null;
+pinCoordSettingsShape();
 
 const rectShape =
 getRectEditShape();
@@ -3590,9 +5767,40 @@ baseDefaultStyle(
 )
 );
 
-}else{
+}else if(
+channelCtx
+){
+
+channelSettingsShapeId =
+getSelected()?.id ||
+null;
+pinCoordSettingsShape();
+
+const channelShape =
+getChannelEditShape();
+
+fillChannelSettingsPanel(
+channelShape ||
+baseDefaultStyle(
+"channel"
+)
+);
+
+}else if(
+elliottCtx
+){
+
+elliottSettingsShapeId =
+getSelected()?.id ||
+null;
+fillElliottSettingsFromContext();
+
+}else if(
+fibCtx
+){
 
 rememberFibSettingsTarget();
+pinCoordSettingsShape();
 
 const fibShape =
 getFibEditShape();
@@ -3606,22 +5814,46 @@ fibShape
 ),
 fibShape.fibShowTrendLine,
 fibShape.color,
-fibShape.lineWidth
+fibShape.lineWidth,
+fibShape.fibTrendLineColor
 );
 }else{
 
 const style =
 baseDefaultStyle(
-"fib"
+activeFibType()
 );
 
 fillFibSettingsPanel(
 style.fibLevels,
 style.fibShowTrendLine,
 style.color,
-style.lineWidth
+style.lineWidth,
+style.fibTrendLineColor
 );
 
+}
+
+}else if(
+coordCtx
+){
+
+pinCoordSettingsShape();
+
+const coordShape =
+styleCtx().getSelected?.() ||
+getSelected();
+
+if(
+coordShape &&
+hasCoordSettings(
+coordShape.type
+)
+){
+ensureCoordSettingsPanel(
+coordShape.type
+);
+syncCoordSettingsIfIdle();
 }
 
 }
@@ -3686,28 +5918,9 @@ positionRiskInput?.addEventListener(
 e=>{
 
 if(
-e.key !==
-"Enter"
-){
-return;
-}
-
-e.preventDefault();
-e.stopPropagation();
-
-submitPositionVolumeApply();
-positionRiskInput?.blur();
-
-}
-);
-
-positionRiskInput?.addEventListener(
-"keydown",
-e=>{
-
-if(
-e.key !==
-"Enter"
+!isEnterKey(
+e
+)
 ){
 return;
 }
@@ -3763,6 +5976,24 @@ e.stopPropagation();
 }
 );
 
+positionRiskInput?.setAttribute?.(
+"enterkeyhint",
+"go"
+);
+
+positionRiskWrap?.addEventListener(
+"submit",
+e=>{
+
+e.preventDefault();
+e.stopPropagation();
+
+submitPositionVolumeApply();
+positionRiskInput?.blur();
+
+}
+);
+
 if(
 positionRiskWrap &&
 !positionApplyBtn
@@ -3799,6 +6030,51 @@ submitPositionVolumeApply();
 );
 }
 
+if(
+positionRiskWrap &&
+!positionApplyStopsBtn
+){
+positionApplyStopsBtn =
+document.createElement("button");
+positionApplyStopsBtn.type =
+"button";
+positionApplyStopsBtn.className =
+"draw-position-risk-apply draw-position-risk-apply--stops hidden";
+positionApplyStopsBtn.textContent =
+"Применить + СЛ и ТП";
+positionApplyStopsBtn.title =
+"Объём + СЛ/ТП с объекта на следующее открытие (авто-СЛ/ТП пропускаются)";
+positionRiskWrap.appendChild(
+positionApplyStopsBtn
+);
+
+positionApplyStopsBtn.addEventListener(
+"mousedown",
+e=>{
+e.stopPropagation();
+}
+);
+
+positionApplyStopsBtn.addEventListener(
+"click",
+e=>{
+
+e.preventDefault();
+e.stopPropagation();
+
+submitPositionVolumeApplyWithStops();
+
+}
+);
+}
+
+window.addEventListener(
+"trade-drawing-stops-pending",
+()=>{
+syncPositionApplyStopsArmed();
+}
+);
+
 document.addEventListener(
 "keydown",
 onPositionApplyEnterHotkey,
@@ -3810,8 +6086,10 @@ true
 function isFibSettingsChromePointerEvent(e){
 
 if(
-!isFibSettingsOpen() &&
-!isRectSettingsOpen()
+!settingsPopover ||
+settingsPopover.classList.contains(
+"hidden"
+)
 ){
 return false;
 }
@@ -4092,7 +6370,14 @@ isFibSettingsChromePointerEvent,
 shouldDeferExternalDrawingsSync: ()=>(
 isFibSettingsOpen() ||
 isRectSettingsOpen() ||
-isPositionRiskInputFocused()
+isFvpSettingsOpen() ||
+isChannelSettingsOpen() ||
+isElliottSettingsOpen() ||
+isCoordSettingsOpen() ||
+isPositionRiskInputFocused() ||
+isCoordInputFocused(
+settingsPopover
+)
 ),
 setFibSettingsShapeId: id=>{
 fibSettingsShapeId = id;

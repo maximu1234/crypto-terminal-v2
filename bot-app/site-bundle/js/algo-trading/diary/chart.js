@@ -17,7 +17,7 @@ withChartLocalTime
 import {
 candleAlignSec,
 markerForExecutionSide
-} from "../../trade-markers-sandbox/marker-math.js?v=10";
+} from "../../trade-markers-sandbox/marker-math.js?v=12";
 
 import {
 diaryFetchKlineBatch

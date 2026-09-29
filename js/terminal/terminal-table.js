@@ -38,7 +38,7 @@ import {
 getFavoriteGroup,
 flagSortRank,
 emptyFavorites
-} from "../favorites.js?v=5";
+} from "../favorites.js?v=6";
 
 import {
 isTradePage

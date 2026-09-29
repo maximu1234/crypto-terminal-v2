@@ -11,7 +11,7 @@ getAllCachedPositions,
 isTradePositionRecentlyClosed,
 removeTradePositionFromCache,
 syncTradePositionsCache
-} from "./positions-cache.js?v=1";
+} from "./positions-cache.js?v=3";
 
 import {
 getTradeConfig
@@ -38,7 +38,7 @@ getAlertsSorted,
 getAlertsHistorySorted,
 removeAlert,
 removeAlertHistoryEntry
-} from "../../alerts.js?v=109";
+} from "../../alerts.js?v=111";
 
 const SHARE_ICON_V =
 2;
@@ -1802,7 +1802,7 @@ row.positionSide;
 
 el.innerHTML =
 `
-<span class="col-ticker" title="${escapeHtml(row.ticker)}">
+<span class="col-ticker">
 <span class="trade-book-side ${positionSideClass(row.side)}" aria-hidden="true"></span>
 <span class="trade-book-ticker-text">${escapeHtml(row.ticker)}</span>
 </span>
@@ -1878,7 +1878,7 @@ row.orderId;
 
 el.innerHTML =
 `
-<span class="col-ticker" title="${escapeHtml(row.ticker)}">
+<span class="col-ticker">
 <span class="trade-book-ticker-text">${escapeHtml(row.ticker)}</span>
 </span>
 <span class="col-order-type">${orderPanelTypeLabel(row)}</span>
@@ -2282,7 +2282,7 @@ activeChartSymbol
 return `
 <div class="trade-book-row trade-book-row--alert${active ? " is-active" : ""}" data-symbol="${symbol}" data-shape-id="${shapeId}" data-triggered-at="${triggeredAt}">
 <span class="col-date">${formatAlertDate(alert[dateField])}</span>
-<span class="col-ticker" title="${formatAlertTicker(symbol)}">
+<span class="col-ticker">
 <span class="trade-book-ticker-text">${formatAlertTicker(symbol)}</span>
 </span>
 <span class="col-action">

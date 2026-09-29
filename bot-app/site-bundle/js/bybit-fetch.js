@@ -19,7 +19,6 @@ const DIRECT_BAD_KEY = "bybit_direct_bad";
 let activeApiBaseIndex = 0;
 let activeWsIndex = 0;
 
-let cachedWorkerProxyBase;
 let workerProxyConfigPromise = null;
 
 function sleep(ms){
@@ -261,33 +260,7 @@ return workerProxyConfigPromise;
 /** Прогрев TLS/DNS к Railway (после preload). */
 export function warmBybitWorkerProxy(){
 
-if(
-isLocalDevHost() ||
-!prefersBybitWorkerProxy()
-){
 return;
-}
-
-void preloadBybitProxyConfig().then(base=>{
-
-if(
-!base
-){
-return;
-}
-
-const path =
-encodeURIComponent("/v5/market/time");
-
-fetch(
-`${base}/bybit?path=${path}`,
-{
-cache: "no-store",
-priority: "low"
-}
-).catch(()=>{});
-
-});
 
 }
 
@@ -347,30 +320,6 @@ msg.includes("network request failed") ||
 msg.includes("timed_out") ||
 msg.includes("timeout")
 );
-
-}
-
-async function getWorkerProxyBase(){
-
-if(
-cachedWorkerProxyBase !==
-undefined
-){
-return cachedWorkerProxyBase;
-}
-
-if(
-isLocalDevHost()
-){
-cachedWorkerProxyBase =
-"";
-return "";
-}
-
-cachedWorkerProxyBase =
-await preloadBybitProxyConfig();
-
-return cachedWorkerProxyBase;
 
 }
 
@@ -489,30 +438,6 @@ path,
 timeoutMs,
 "local-dev-proxy"
 );
-
-}
-
-const workerBase =
-await getWorkerProxyBase();
-
-if(
-workerBase
-){
-
-try{
-
-return await fetchOneBybitProxyUrl(
-`${workerBase}/bybit?path=${encoded}`,
-path,
-timeoutMs,
-"worker-proxy"
-);
-
-}catch(err){
-
-lastErr = err;
-
-}
 
 }
 
@@ -708,60 +633,8 @@ return tasks;
 
 }
 
-const workerBase =
-await getWorkerProxyBase();
-
-const proxyOnly =
-options.proxyOnly === true ||
-(
-workerBase &&
-prefersBybitWorkerProxy()
-);
-
-if(
-proxyOnly &&
-workerBase
-){
-
-return [
-fetchOneBybitProxyUrl(
-`${workerBase}/bybit?path=${encoded}`,
-path,
-timeoutMs,
-"worker-proxy"
-)
-];
-
-}
-
-const useWorker =
-workerBase &&
-prefersBybitWorkerProxy();
-
 const tasks = [];
-
-if(
-useWorker
-){
-
-tasks.push(
-fetchOneBybitProxyUrl(
-`${workerBase}/bybit?path=${encoded}`,
-path,
-timeoutMs,
-"worker-proxy"
-)
-);
-
-}
-
-const directTimeoutMs =
-useWorker
-? Math.min(
-1800,
-timeoutMs
-)
-: timeoutMs;
+const directTimeoutMs = timeoutMs;
 
 BYBIT_API_BASES.forEach(
 (base, index)=>{
@@ -891,47 +764,6 @@ err.errors.length - 1
 ] ||
 err;
 
-}
-
-}
-
-if(
-prefersBybitWorkerProxy() &&
-!isLocalDevHost()
-){
-
-const workerBase =
-await getWorkerProxyBase();
-
-if(
-workerBase
-){
-
-try{
-
-return await fetchOneBybitProxyUrl(
-`${workerBase}/bybit?path=${encodeURIComponent(path)}`,
-path,
-timeoutMs,
-"worker-proxy"
-);
-
-}catch(err){
-
-lastErr = err;
-
-}
-
-}
-
-try{
-return await fetchBybitViaProxies(
-path,
-timeoutMs
-);
-}catch(proxyErr){
-markBybitFailure(proxyErr);
-throw proxyErr;
 }
 
 }
@@ -1122,33 +954,6 @@ await sleep(
 }
 
 }
-
-}
-
-}
-
-const workerBase =
-await getWorkerProxyBase();
-
-if(
-workerBase
-){
-
-try{
-
-return await fetchOneBybitProxyUrl(
-`${workerBase}/bybit?path=${encoded}`,
-path,
-timeoutMs,
-"worker-proxy"
-);
-
-}catch(
-err
-){
-
-lastErr =
-err;
 
 }
 

@@ -31,7 +31,7 @@ isCloudLoggedIn,
 isCloudLoggedInEffective,
 isCloudSyncEnabled,
 onCloudSyncChange
-} from "./cloud-sync.js?v=70";
+} from "./cloud-sync.js?v=71";
 
 import {
 isSupabaseConfigured
@@ -516,7 +516,7 @@ isAlgoReducedCloudClient();
 if(
 !algoCloudLite
 ){
-import("./favorites-cloud-sync.js?v=9").then(
+import("./favorites-cloud-sync.js?v=10").then(
 ({ initFavoritesCloudSync })=>{
 initFavoritesCloudSync();
 }

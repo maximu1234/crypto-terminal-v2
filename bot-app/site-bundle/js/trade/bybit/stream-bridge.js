@@ -4,11 +4,11 @@
 import {
 applyTradePositionsStream,
 syncTradePositionsCache
-} from "./positions-cache.js?v=1";
+} from "./positions-cache.js?v=3";
 
 import {
 isTradePositionSoundBaselineReady
-} from "../../trade-position-sounds.js?v=3";
+} from "../../trade-position-sounds.js?v=4";
 
 import {
 isExchangeTradingEnabled

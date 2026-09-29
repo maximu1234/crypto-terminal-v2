@@ -7,7 +7,7 @@ chartScaleFont,
 CHART_SCALE_LABEL_PAD_LEFT,
 CHART_SCALE_LABEL_LINE_HEIGHT,
 scaleLabelTextColorForBackground
-} from "../chart-import.js?v=53";
+} from "../chart-import.js?v=62";
 
 import {
 layoutScaleLabelYs,
@@ -16,12 +16,12 @@ CHART_PRICE_HUD_FALLBACK_HEIGHT
 
 import {
 isSeriesLogarithmic
-} from "./fib-spec.js?v=15";
+} from "./fib-spec.js?v=17";
 
 import {
 isPositionType,
 positionScaleLabelColor
-} from "./position.js?v=10";
+} from "./position.js?v=11";
 
 import {
 collectChartScaleLabelEntries
@@ -29,7 +29,7 @@ collectChartScaleLabelEntries
 
 import {
 isHorizPriceTool
-} from "./constants.js?v=11";
+} from "./constants.js?v=13";
 
 export function createDrawPriceScale(
 deps
@@ -46,6 +46,15 @@ holdChartPanRedraw,
 bumpChartPanRedraw,
 getDrawings,
 getSelectedId,
+getSelectedIds = ()=>{
+const id =
+getSelectedId();
+return id
+? [
+id
+]
+: [];
+},
 listHandles,
 toXY,
 shapeStyle,
@@ -248,15 +257,20 @@ shapeStyle(shape);
 entries.push({
 yIdeal: y,
 price: shape.price,
-color
+color,
+/* Keep plaque on the line — collision layout drifts plaques on zoom. */
+pinToPrice:
+true
 });
 
 });
 
-if(getSelectedId()){
+for(
+const selectedId of getSelectedIds()
+){
 
 const sel =
-getDrawings().find(d=>d.id === getSelectedId());
+getDrawings().find(d=>d.id === selectedId);
 
 if(
 sel &&
@@ -298,7 +312,10 @@ sel
 entries.push({
 yIdeal: xy.y,
 price: handle.point.price,
-color
+color,
+/* Keep plaque on the handle — collision layout drifts plaques on zoom. */
+pinToPrice:
+true
 });
 
 });

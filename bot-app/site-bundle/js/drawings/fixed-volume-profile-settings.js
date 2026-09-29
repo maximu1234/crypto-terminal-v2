@@ -3,14 +3,14 @@
 import {
 mountTvColorPicker,
 parseDrawColor
-} from "../draw-color-palette.js?v=6";
+} from "../draw-color-palette.js?v=7";
 
 import {
 normalizeFibLineStyle,
 normalizeFibLevelWidth,
 setFibLineStyleButton,
 setFibLevelWidthButton
-} from "./fib-spec.js?v=15";
+} from "./fib-spec.js?v=17";
 
 import {
 closeAllFibLineStyleMenus,

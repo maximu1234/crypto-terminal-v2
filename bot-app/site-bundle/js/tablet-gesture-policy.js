@@ -2,6 +2,55 @@
  * Единые проверки для tablet pan/probe (coins + dashboard widgets).
  * Только вызывается при isTabletChartViewport().
  */
+
+const PLUS_CHROME_SELECTOR =
+[
+".price-scale-touch-strip",
+".rsi-scale-touch-strip",
+".price-alert-scale-plus",
+".trade-order-plus-menu",
+".price-alert-badge"
+].join(
+","
+);
+
+export function isPriceScalePlusChromeTarget(
+e
+){
+
+return !!e?.target?.closest?.(
+PLUS_CHROME_SELECTOR
+);
+
+}
+
+/**
+ * Overlay strip covers the LW price axis on iPad. Finger already scales
+ * through this handler; mouse must too — otherwise the strip swallows
+ * click+drag and native axisPressedMouseMove never sees it.
+ */
+export function shouldHandleTabletPriceScalePointer(
+e
+){
+
+if(
+!e
+){
+return false;
+}
+
+if(
+e.pointerType ===
+"mouse"
+){
+return e.button ===
+0;
+}
+
+return true;
+
+}
+
 export function createTabletGesturePolicy(
 {
 chartWrap,
@@ -30,8 +79,8 @@ return false;
 }
 
 if(
-e.target?.closest?.(
-".price-scale-touch-strip"
+isPriceScalePlusChromeTarget(
+e
 )
 ){
 return false;

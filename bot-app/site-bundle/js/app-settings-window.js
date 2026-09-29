@@ -3,7 +3,7 @@
  */
 import {
 cssUrl
-} from "./asset-manifest.js?v=8";
+} from "./asset-manifest.js?v=35";
 
 import {
 isSystemAdminUser
@@ -15,7 +15,7 @@ mountTelegramSettingsPanel
 
 import {
 mountFavoritesCloudSettingsPanel
-} from "./favorites-settings-panel.js?v=1";
+} from "./favorites-settings-panel.js?v=3";
 
 const SECTIONS =
 [
@@ -85,14 +85,36 @@ let bybitCtl =
 null;
 let tradingCtl =
 null;
-let cssLoaded =
-false;
+let cssReadyPromise =
+null;
 let adminNavVisible =
 false;
 
-function showConnectionsSettings(){
+function isDesktopApp(){
 
 return !!window.cryptoTerminalDesktop?.isDesktop;
+
+}
+
+function isWebTradeUi(){
+
+return (
+!!window.cryptoTerminalDesktop?.webTrading &&
+!isDesktopApp()
+);
+
+}
+
+function showDesktopExtras(){
+
+return isDesktopApp();
+
+}
+
+function showTradeAndKeysSettings(){
+
+return isDesktopApp() ||
+isWebTradeUi();
 
 }
 
@@ -102,28 +124,79 @@ return true;
 
 }
 
-function ensureCss(){
+function ensureOverlayLockCss(){
 
 if(
-cssLoaded
+document.getElementById(
+"app-settings-overlay-lock"
+)
 ){
 return;
 }
 
-cssLoaded =
-true;
+const style =
+document.createElement(
+"style"
+);
+
+style.id =
+"app-settings-overlay-lock";
+style.textContent =
+"#app-settings-overlay{position:fixed!important;inset:0!important;z-index:10100!important}" +
+"#app-settings-overlay.hidden{display:none!important}";
+document.head.appendChild(
+style
+);
+
+}
+
+function settingsCssLink(){
+
+return document.querySelector(
+'link[rel="stylesheet"][href*="app-settings-window.css"]'
+);
+
+}
+
+function cssLinkReady(
+link
+){
+
+if(
+!link
+){
+return false;
+}
+
+try{
+return !!link.sheet;
+}catch{
+return false;
+}
+
+}
+
+function ensureCss(){
+
+ensureOverlayLockCss();
+
+if(
+cssReadyPromise
+){
+return cssReadyPromise;
+}
 
 const href =
 cssUrl(
 "app-settings-window.css"
 );
+let link =
+settingsCssLink();
 
 if(
-!document.querySelector(
-`link[rel="stylesheet"][href^="/css/app-settings-window.css"]`
-)
+!link
 ){
-const link =
+link =
 document.createElement(
 "link"
 );
@@ -135,6 +208,77 @@ document.head.appendChild(
 link
 );
 }
+
+cssReadyPromise =
+new Promise(
+resolve=>{
+
+let settled =
+false;
+
+const done =
+()=>{
+
+if(
+settled
+){
+return;
+}
+
+settled =
+true;
+resolve();
+
+};
+
+if(
+cssLinkReady(
+link
+)
+){
+done();
+return;
+}
+
+link.addEventListener(
+"load",
+done,
+{
+once:
+true
+}
+);
+link.addEventListener(
+"error",
+done,
+{
+once:
+true
+}
+);
+requestAnimationFrame(
+()=>{
+
+if(
+cssLinkReady(
+link
+)
+){
+done();
+}
+
+}
+);
+/* Electron custom protocol may skip load; don't hang the dialog. */
+setTimeout(
+done,
+250
+);
+
+}
+);
+
+return cssReadyPromise;
 
 }
 
@@ -252,7 +396,7 @@ const {
 closeCloudSettingsDropdown
 } =
 await import(
-"./auth-ui.js?v=62"
+"./auth-ui.js?v=66"
 );
 closeCloudSettingsDropdown();
 await openAppSettingsWindow();
@@ -326,10 +470,16 @@ btn.textContent =
 section.label;
 
 if(
+section.id ===
+"proxy"
+){
+btn.hidden =
+!showDesktopExtras();
+}else if(
 section.desktopOnly
 ){
 btn.hidden =
-!showConnectionsSettings();
+!showTradeAndKeysSettings();
 }
 
 if(
@@ -369,6 +519,24 @@ panels.appendChild(
 panel
 );
 
+}
+
+if(
+isWebTradeUi()
+){
+const logout =
+document.createElement(
+"a"
+);
+logout.href =
+"/api/site-gate/logout";
+logout.className =
+"app-settings-nav-btn";
+logout.textContent =
+"Выйти с сайта";
+nav.appendChild(
+logout
+);
 }
 
 overlayEl.querySelector(
@@ -445,7 +613,7 @@ const {
 mountSystemSettingsPanel
 } =
 await import(
-"./app-settings-system-panel.js?v=18"
+"./app-settings-system-panel.js?v=20"
 );
 
 systemCtl =
@@ -492,7 +660,7 @@ const {
 mountCloudAuthPanelInSettings
 } =
 await import(
-"./auth-ui.js?v=62"
+"./auth-ui.js?v=66"
 );
 
 mountCloudAuthPanelInSettings(
@@ -523,7 +691,8 @@ sectionId ===
 ){
 
 if(
-!window.cryptoTerminalDesktop?.isDesktop
+!isDesktopApp() &&
+!isWebTradeUi()
 ){
 panel.innerHTML =
 `<p class="app-settings-bybit-guest">Подключение Bybit доступно в desktop-приложении Multichart.</p>`;
@@ -558,7 +727,7 @@ mountExchangeConnectionsPanel,
 updateTradeExchangeConnectionChrome
 } =
 await import(
-"./trade-exchange-settings.js?v=23"
+"./trade-exchange-settings.js?v=24"
 );
 
 const host =
@@ -618,7 +787,8 @@ sectionId ===
 ){
 
 if(
-!window.cryptoTerminalDesktop?.isDesktop
+!isDesktopApp() &&
+!isWebTradeUi()
 ){
 panel.innerHTML =
 `<p class="app-settings-bybit-guest">Торговые настройки доступны в desktop-приложении Multichart.</p>`;
@@ -681,7 +851,7 @@ const {
 mountHotkeysSettingsPanel
 } =
 await import(
-"./app-settings-hotkeys-panel.js?v=3"
+"./app-settings-hotkeys-panel.js?v=4"
 );
 
 mountHotkeysSettingsPanel(
@@ -702,7 +872,7 @@ const {
 mountSecretSettingsPanel
 } =
 await import(
-"./app-settings-secret.js?v=8"
+"./app-settings-secret.js?v=10"
 );
 
 await mountSecretSettingsPanel(
@@ -797,7 +967,23 @@ sectionId =
 "sync"
 ){
 
+ensureOverlayLockCss();
+const cssReady =
 ensureCss();
+
+if(
+!window.cryptoTerminalDesktop?.isDesktop
+){
+const {
+installWebTradingShell
+} =
+await import(
+"./trade-web/client.js?v=6"
+);
+installWebTradingShell();
+}
+
+await cssReady;
 buildOverlay();
 
 overlayEl.classList.remove(
@@ -822,15 +1008,22 @@ let resolved =
 target;
 
 if(
+resolved ===
+"proxy" &&
+!showDesktopExtras()
+){
+resolved =
+"sync";
+}
+
+if(
 (
 resolved ===
 "connections" ||
 resolved ===
-"trading" ||
-resolved ===
-"proxy"
+"trading"
 ) &&
-!showConnectionsSettings()
+!showTradeAndKeysSettings()
 ){
 resolved =
 "sync";
@@ -889,7 +1082,7 @@ if(
 connectionsBtn
 ){
 connectionsBtn.hidden =
-!showConnectionsSettings();
+!showTradeAndKeysSettings();
 }
 
 const tradingBtn =
@@ -901,7 +1094,7 @@ if(
 tradingBtn
 ){
 tradingBtn.hidden =
-!showConnectionsSettings();
+!showTradeAndKeysSettings();
 }
 
 const proxyBtn =
@@ -913,7 +1106,7 @@ if(
 proxyBtn
 ){
 proxyBtn.hidden =
-!showConnectionsSettings();
+!showDesktopExtras();
 }
 
 const systemBtn =
@@ -943,7 +1136,8 @@ await setActiveSection(
 export function initAppSettingsWindow(){
 
 renameAccountSectionTitles();
-
+ensureOverlayLockCss();
+void ensureCss();
 void refreshAppSettingsAdminNav();
 
 }

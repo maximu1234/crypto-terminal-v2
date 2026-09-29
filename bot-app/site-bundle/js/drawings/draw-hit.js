@@ -1,26 +1,42 @@
 import {
-distToSegment
-} from "./math.js?v=1";
+distToSegment,
+normalizeScreenRect,
+segmentIntersectsScreenRect,
+screenRectsIntersect,
+pointInScreenRect
+} from "./math.js?v=2";
 
 import {
-brushBodyDist as brushStrokeBodyDist
+brushBodyDist as brushStrokeBodyDist,
+brushPathScreenPoints
 } from "./brush.js?v=2";
 
 import {
-rectangleBodyDist
+rectangleBodyDist,
+rectangleScreenBox
 } from "./arrow-rect.js?v=2";
 
 import {
 fvpBodyDist,
+fvpScreenBox,
 isFvpType
 } from "./fixed-volume-profile.js?v=3";
 
 import {
+isPositionType,
+positionXBounds
+} from "./position.js?v=11";
+
+import {
 fibPriceAtRatio,
+fibShapePriceAtRatio,
 getFibRows,
 isSeriesLogarithmic,
-fibLevelXSpan
-} from "./fib-spec.js?v=15";
+fibLevelXSpan,
+fibShapeLevelXSpan,
+isFibType,
+isFibExtType
+} from "./fib-spec.js?v=17";
 
 import {
 FIB_HIT_X_PAD_PX,
@@ -29,15 +45,33 @@ DRAW_BODY_HIT_THRESHOLD_TOUCH,
 DRAW_BODY_HIT_THRESHOLD_DESKTOP,
 isHorizPriceTool,
 horizPriceLineX1
-} from "./constants.js?v=11";
+} from "./constants.js?v=13";
 
 import {
 isCoarseTouchViewport
 } from "../chart/chart-options.js?v=7";
 
 import {
-hitTestTextBody
+hitTestTextBody,
+isTextTool,
+measureTextBox
 } from "./text.js?v=3";
+
+import {
+channelLevelSegment,
+getChannelDrawRows
+} from "./channel-spec.js?v=2";
+
+import {
+isElliottType,
+elliottScreenPoints,
+elliottLabelAnchor,
+elliottVertexLabel,
+elliottNecklineScreen,
+pattern12DashScreen,
+pattern12TpTickLayout,
+isPattern12Draw
+} from "./elliott-spec.js?v=17";
 
 /**
  * @param {object} deps
@@ -51,7 +85,8 @@ getPlotWidth,
 series,
 pointFromXY,
 getCandles = ()=>
-[]
+[],
+plotPriceToCoordinate
 } = deps;
 
 function fibHitXPadPx(){
@@ -173,7 +208,9 @@ brushBodyDist(px, py, shape) <= threshold
 function fibBodyDist(px, py, shape){
 
 if(
-shape?.type !== "fib"
+!isFibType(
+shape?.type
+)
 ){
 return Infinity;
 }
@@ -182,8 +219,23 @@ const a =
 toXY(shape.p1);
 const b =
 toXY(shape.p2);
+const c =
+isFibExtType(
+shape.type
+)
+? toXY(shape.p3)
+: null;
 
-if(!a || !b){
+if(
+!a ||
+!b ||
+(
+isFibExtType(
+shape.type
+) &&
+!c
+)
+){
 return Infinity;
 }
 
@@ -195,15 +247,24 @@ isSeriesLogarithmic(series);
 const plotW =
 getPlotWidth();
 
+const span =
+fibShapeLevelXSpan(
+shape,
+toXY,
+plotW
+);
+
+if(
+!span
+){
+return Infinity;
+}
+
 const {
 x1,
 x2
 } =
-fibLevelXSpan(
-a,
-b,
-plotW
-);
+span;
 
 getFibRows(shape).forEach(row=>{
 
@@ -212,9 +273,8 @@ return;
 }
 
 const price =
-fibPriceAtRatio(
-shape.p1.price,
-shape.p2.price,
+fibShapePriceAtRatio(
+shape,
 row.v,
 useLog
 );
@@ -255,6 +315,22 @@ b.y
 )
 );
 
+if(
+c
+){
+dist = Math.min(
+dist,
+distToSegment(
+px,
+py,
+b.x,
+b.y,
+c.x,
+c.y
+)
+);
+}
+
 }
 
 return dist;
@@ -264,7 +340,9 @@ return dist;
 function hitTestFibBody(px, py, shape, threshold = 8){
 
 return (
-shape?.type === "fib" &&
+isFibType(
+shape?.type
+) &&
 fibBodyDist(px, py, shape) <= threshold
 );
 
@@ -396,6 +474,59 @@ if(
 return Infinity;
 }
 
+const rows =
+getChannelDrawRows(
+shape
+);
+
+let best =
+Infinity;
+
+rows.forEach(
+row=>{
+
+if(
+!row.enabled
+){
+return;
+}
+
+const seg =
+channelLevelSegment(
+geom,
+row.v
+);
+
+if(
+!seg
+){
+return;
+}
+
+best =
+Math.min(
+best,
+distToSegment(
+px,
+py,
+seg.start.x,
+seg.start.y,
+seg.end.x,
+seg.end.y
+)
+);
+
+}
+);
+
+if(
+Number.isFinite(
+best
+)
+){
+return best;
+}
+
 return Math.min(
 distToSegment(
 px,
@@ -430,6 +561,236 @@ function hitTestChannelBody(px, py, shape, threshold = 8){
 return (
 shape?.type === "channel" &&
 channelBodyDist(px, py, shape) <= threshold
+);
+
+}
+
+function elliottBodyDist(px, py, shape){
+
+if(
+!isElliottType(
+shape?.type
+)
+){
+return Infinity;
+}
+
+const screens =
+elliottScreenPoints(
+shape,
+toXY
+);
+
+if(
+!screens.length
+){
+return Infinity;
+}
+
+let best =
+Infinity;
+
+if(
+shape.showWave !==
+false
+){
+
+for(
+let i =
+1;
+i <
+screens.length;
+i++
+){
+
+const a =
+screens[
+i -
+1
+];
+const b =
+screens[
+i
+];
+
+best =
+Math.min(
+best,
+distToSegment(
+px,
+py,
+a.x,
+a.y,
+b.x,
+b.y
+)
+);
+
+}
+
+}
+
+const neck =
+elliottNecklineScreen(
+shape.type,
+screens
+);
+
+if(
+neck &&
+shape.showWave !==
+false
+){
+best =
+Math.min(
+best,
+distToSegment(
+px,
+py,
+neck.a.x,
+neck.a.y,
+neck.b.x,
+neck.b.y
+)
+);
+}
+
+if(
+isPattern12Draw(
+shape.type
+) &&
+shape.showPatternDash !==
+false
+){
+
+const dash =
+pattern12DashScreen(
+screens
+);
+
+if(
+dash
+){
+best =
+Math.min(
+best,
+distToSegment(
+px,
+py,
+dash.a.x,
+dash.a.y,
+dash.b.x,
+dash.b.y
+)
+);
+}
+
+}
+
+if(
+isPattern12Draw(
+shape.type
+)
+){
+
+const ticks =
+pattern12TpTickLayout(
+shape,
+screens,
+plotPriceToCoordinate,
+isSeriesLogarithmic(
+series
+)
+);
+
+for(
+const tick of ticks
+){
+
+best =
+Math.min(
+best,
+distToSegment(
+px,
+py,
+tick.x1,
+tick.y,
+tick.x2 +
+28,
+tick.y
+)
+);
+
+}
+
+}
+
+screens.forEach(
+(
+pt,
+i
+)=>{
+
+best =
+Math.min(
+best,
+Math.hypot(
+px -
+pt.x,
+py -
+pt.y
+)
+);
+
+const label =
+elliottVertexLabel(
+shape,
+i
+);
+
+if(
+!label.text
+){
+return;
+}
+
+const anchor =
+elliottLabelAnchor(
+screens,
+i
+) ||
+pt;
+
+best =
+Math.min(
+best,
+Math.hypot(
+px -
+anchor.x,
+py -
+anchor.y
+)
+);
+
+}
+);
+
+return best;
+
+}
+
+function hitTestElliottBody(px, py, shape, threshold = 8){
+
+return (
+isElliottType(
+shape?.type
+) &&
+elliottBodyDist(
+px,
+py,
+shape
+) <=
+threshold
 );
 
 }
@@ -478,6 +839,602 @@ threshold
 
 }
 
+function anySegmentHitsRect(
+pts,
+rect
+){
+
+for(
+let i =
+1;
+i <
+pts.length;
+i++
+){
+
+const a =
+pts[
+i -
+1
+];
+const b =
+pts[
+i
+];
+
+if(
+!a ||
+!b
+){
+continue;
+}
+
+if(
+segmentIntersectsScreenRect(
+a.x,
+a.y,
+b.x,
+b.y,
+rect
+)
+){
+return true;
+}
+
+}
+
+return false;
+
+}
+
+function boxHitsRect(
+box,
+rect
+){
+
+if(
+!box
+){
+return false;
+}
+
+return screenRectsIntersect(
+{
+left: box.left,
+right: box.right,
+top: box.top,
+bottom: box.bottom
+},
+rect
+);
+
+}
+
+function shapeIntersectsMarquee(
+shape,
+rect
+){
+
+if(
+!shape ||
+!rect
+){
+return false;
+}
+
+if(
+shape.type ===
+"trendline" ||
+shape.type ===
+"arrow"
+){
+
+const a =
+toXY(
+shape.p1
+);
+const b =
+toXY(
+shape.p2
+);
+
+return !!(
+a &&
+b &&
+segmentIntersectsScreenRect(
+a.x,
+a.y,
+b.x,
+b.y,
+rect
+)
+);
+
+}
+
+if(
+shape.type ===
+"brush"
+){
+
+return anySegmentHitsRect(
+brushPathScreenPoints(
+shape,
+toXY
+),
+rect
+);
+
+}
+
+if(
+isHorizPriceTool(
+shape.type
+)
+){
+
+const anchor =
+toXY({
+time: shape.time,
+price: shape.price
+});
+
+if(
+!anchor
+){
+return false;
+}
+
+return segmentIntersectsScreenRect(
+horizPriceLineX1(
+shape.type,
+anchor.x
+),
+anchor.y,
+getPlotWidth(),
+anchor.y,
+rect
+);
+
+}
+
+if(
+isFibType(
+shape.type
+)
+){
+
+const a =
+toXY(
+shape.p1
+);
+const b =
+toXY(
+shape.p2
+);
+const c =
+isFibExtType(
+shape.type
+)
+? toXY(
+shape.p3
+)
+: null;
+
+if(
+!a ||
+!b ||
+(
+isFibExtType(
+shape.type
+) &&
+!c
+)
+){
+return false;
+}
+
+if(
+shape.fibShowTrendLine ===
+true &&
+(
+segmentIntersectsScreenRect(
+a.x,
+a.y,
+b.x,
+b.y,
+rect
+) ||
+(
+c &&
+segmentIntersectsScreenRect(
+b.x,
+b.y,
+c.x,
+c.y,
+rect
+)
+)
+)
+){
+return true;
+}
+
+const plotW =
+getPlotWidth();
+const span =
+fibShapeLevelXSpan(
+shape,
+toXY,
+plotW
+);
+
+if(
+!span
+){
+return false;
+}
+
+const {
+x1,
+x2
+} =
+span;
+const useLog =
+isSeriesLogarithmic(
+series
+);
+
+return getFibRows(
+shape
+).some(
+row=>{
+
+if(
+!row.enabled
+){
+return false;
+}
+
+const price =
+fibShapePriceAtRatio(
+shape,
+row.v,
+useLog
+);
+
+if(
+!Number.isFinite(
+price
+)
+){
+return false;
+}
+
+const y =
+series.priceToCoordinate(
+price
+);
+
+return (
+y !=
+null &&
+segmentIntersectsScreenRect(
+x1,
+y,
+x2,
+y,
+rect
+)
+);
+
+}
+);
+
+}
+
+if(
+shape.type ===
+"channel"
+){
+
+const geom =
+channelScreenGeometry(
+shape
+);
+
+if(
+!geom
+){
+return false;
+}
+
+const rows =
+getChannelDrawRows(
+shape
+);
+
+for(
+const row of rows
+){
+
+if(
+!row.enabled
+){
+continue;
+}
+
+const seg =
+channelLevelSegment(
+geom,
+row.v
+);
+
+if(
+seg &&
+segmentIntersectsScreenRect(
+seg.start.x,
+seg.start.y,
+seg.end.x,
+seg.end.y,
+rect
+)
+){
+return true;
+}
+
+}
+
+return (
+segmentIntersectsScreenRect(
+geom.p1.x,
+geom.p1.y,
+geom.p2.x,
+geom.p2.y,
+rect
+) ||
+segmentIntersectsScreenRect(
+geom.p3.x,
+geom.p3.y,
+geom.p4.x,
+geom.p4.y,
+rect
+)
+);
+
+}
+
+if(
+isElliottType(
+shape.type
+)
+){
+
+const screens =
+elliottScreenPoints(
+shape,
+toXY
+);
+
+if(
+anySegmentHitsRect(
+screens,
+rect
+)
+){
+return true;
+}
+
+return screens.some(
+pt=>
+pointInScreenRect(
+pt.x,
+pt.y,
+rect
+)
+);
+
+}
+
+if(
+shape.type ===
+"rectangle"
+){
+
+return boxHitsRect(
+rectangleScreenBox(
+shape,
+toXY
+),
+rect
+);
+
+}
+
+if(
+isFvpType(
+shape.type
+)
+){
+
+const box =
+fvpScreenBox(
+shape,
+toXY,
+getCandles()
+);
+
+if(
+!box
+){
+return false;
+}
+
+return boxHitsRect(
+{
+left: box.left,
+right: box.right,
+top: box.top,
+bottom: box.bottom
+},
+rect
+);
+
+}
+
+if(
+isTextTool(
+shape.type
+)
+){
+
+const anchor =
+toXY({
+time: shape.time,
+price: shape.price
+});
+const box =
+measureTextBox(
+null,
+shape,
+anchor
+);
+
+if(
+!box
+){
+return false;
+}
+
+return boxHitsRect(
+{
+left: box.x,
+right: box.x + box.w,
+top: box.y,
+bottom: box.y + box.h
+},
+rect
+);
+
+}
+
+if(
+isPositionType(
+shape.type
+)
+){
+
+const box =
+positionXBounds(
+shape,
+toXY
+);
+
+if(
+!box
+){
+return false;
+}
+
+const yTp =
+series.priceToCoordinate(
+shape.tpPrice
+);
+const ySl =
+series.priceToCoordinate(
+shape.slPrice
+);
+
+if(
+yTp ==
+null ||
+ySl ==
+null
+){
+return false;
+}
+
+const top =
+Math.min(
+yTp,
+ySl,
+box.yEntry
+);
+const bottom =
+Math.max(
+yTp,
+ySl,
+box.yEntry
+);
+
+return boxHitsRect(
+{
+left: box.x1,
+right: box.x2,
+top,
+bottom
+},
+rect
+);
+
+}
+
+return false;
+
+}
+
+function drawingsIntersectingRect(
+drawings,
+x1,
+y1,
+x2,
+y2
+){
+
+const rect =
+normalizeScreenRect(
+x1,
+y1,
+x2,
+y2
+);
+
+if(
+rect.right -
+rect.left <
+0.5 &&
+rect.bottom -
+rect.top <
+0.5
+){
+return [];
+}
+
+const ids =
+[];
+
+for(
+const shape of drawings ||
+[]
+){
+
+if(
+shapeIntersectsMarquee(
+shape,
+rect
+)
+){
+ids.push(
+shape.id
+);
+}
+
+}
+
+return ids;
+
+}
+
 return {
 hrayLineDist,
 hitTestHrayLine,
@@ -492,11 +1449,15 @@ channelScreenGeometry,
 channelP4Point,
 channelBodyDist,
 hitTestChannelBody,
+elliottBodyDist,
+hitTestElliottBody,
 rectangleBodyDist,
 hitTestRectangleBody,
 fvpBodyDist,
 hitTestFvpBody,
 hitTestTextBody,
+shapeIntersectsMarquee,
+drawingsIntersectingRect,
 drawBodyHitThreshold(){
 return isCoarseTouchViewport()
 ? DRAW_BODY_HIT_THRESHOLD_TOUCH

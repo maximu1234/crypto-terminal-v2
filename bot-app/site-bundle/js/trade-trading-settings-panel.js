@@ -8,11 +8,11 @@ TRADE_VOLUME_SLOT_COUNT
 
 import {
 wireAutoStopSettings
-} from "./trade-auto-stops.js?v=16";
+} from "./trade-auto-stops.js?v=18";
 
 import {
 loadTradeExchangeModules
-} from "./trade/module-router.js?v=23";
+} from "./trade/module-router.js?v=24";
 
 import {
 getActiveExchangeId

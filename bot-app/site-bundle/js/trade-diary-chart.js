@@ -25,12 +25,12 @@ getExchangeDefinition
 import {
 getLoadedTradeExchangeModules,
 loadTradeExchangeModules
-} from "./trade/module-router.js?v=23";
+} from "./trade/module-router.js?v=24";
 
 import {
 candleAlignSec,
 markerForExecutionSide
-} from "./trade-markers-sandbox/marker-math.js?v=10";
+} from "./trade-markers-sandbox/marker-math.js?v=12";
 
 export const DIARY_CHART_TFS =
 Object.freeze([

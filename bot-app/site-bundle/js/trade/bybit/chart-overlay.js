@@ -8,12 +8,12 @@ syncTradePositionsCache,
 upsertTradePositionInCache,
 markTradePositionRecentlyClosed,
 isTradePositionRecentlyClosed
-} from "./positions-cache.js?v=1";
+} from "./positions-cache.js?v=3";
 
 import {
 markStopDismissed,
 clearDismissedStops
-} from "./auto-stops.js?v=1";
+} from "./auto-stops.js?v=2";
 
 import {
 isExchangeTradingEnabled

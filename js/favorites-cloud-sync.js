@@ -9,7 +9,7 @@ isCloudApiUsable,
 isCloudAuthError,
 reportCloudAuthFailure,
 tryCloudAuthRecovery
-} from "./cloud-sync.js?v=70";
+} from "./cloud-sync.js?v=71";
 
 import {
 isFavoritesCloudDisabled,
@@ -36,7 +36,7 @@ saveFavoritesCloudUpdatedAt,
 saveFavoritesCloudSyncedSignature,
 hasUnsyncedFavoritesCloud,
 markFavoritesCloudDirty
-} from "./favorites.js?v=5";
+} from "./favorites.js?v=6";
 
 import {
 readAlertTokenSync,
@@ -957,7 +957,8 @@ return null;
 }
 
 /**
- * Побеждает более новый updated_at. hasUnsynced не перетирает более свежее облако.
+ * Локальная правка с несинхронной подписью важнее облака: иначе уход на другую
+ * страницу до завершения push стирает только что поставленный флаг.
  */
 export async function reconcileLocalFavoritesWithCloud(
 options =
@@ -1100,8 +1101,13 @@ isTsNewer(
 localTs,
 cloud.updatedAt
 );
+const localPending =
+hasUnsyncedFavoritesCloud(
+exchangeId
+);
 
 if(
+!localPending &&
 cloudNewer &&
 !localNewer
 ){
@@ -1470,10 +1476,6 @@ cloudFavorites
 const cloudTs =
 row.updated_at ||
 "";
-const localTs =
-loadFavoritesCloudUpdatedAt(
-exchangeId
-);
 
 if(
 favoritesGroupsEqual(
@@ -1500,12 +1502,6 @@ return;
 }
 
 if(
-localTs &&
-cloudTs &&
-isTsNewer(
-localTs,
-cloudTs
-) &&
 hasUnsyncedFavoritesCloud(
 exchangeId
 )

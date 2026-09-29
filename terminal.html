@@ -123,6 +123,17 @@ return;
 }
 document.title=sym+" — Multichart";
 }
+function paint(sym){
+var saved=String(sym||"").trim().toUpperCase();
+if(!saved){
+return;
+}
+if(!/\.P$/i.test(saved)){
+saved+=".P";
+}
+el.textContent=saved;
+tabTitle(saved);
+}
 var el=document.getElementById("current-symbol");
 if(!el){
 return;
@@ -130,12 +141,7 @@ return;
 var params=new URLSearchParams(location.search);
 var fromUrl=params.get("symbol");
 if(fromUrl){
-var sym=fromUrl.trim().toUpperCase();
-if(!/\.P$/i.test(sym)){
-sym+=".P";
-}
-el.textContent=sym;
-tabTitle(sym);
+paint(fromUrl);
 return;
 }
 try{
@@ -144,17 +150,27 @@ if(!raw){
 return;
 }
 var prefs=JSON.parse(raw);
+var exchange="bybit";
+try{
+var exRaw=localStorage.getItem("multichart_active_exchange_v1");
+if(exRaw){
+var ex=String(exRaw).trim().toLowerCase();
+if(ex==="bybit"||ex==="bingx"){
+exchange=ex;
+}
+}
+}catch(e){}
+var byEx=prefs.lastViewByExchange&&prefs.lastViewByExchange[exchange];
+if(byEx&&byEx.symbol){
+paint(byEx.symbol);
+return;
+}
 var market=prefs.market||"all";
 var last=
 prefs.lastViewByMarket&&
 prefs.lastViewByMarket[market];
 if(last&&last.symbol){
-var saved=String(last.symbol).toUpperCase();
-if(!/\.P$/i.test(saved)){
-saved+=".P";
-}
-el.textContent=saved;
-tabTitle(saved);
+paint(last.symbol);
 }
 }catch(e){}
 })();
@@ -392,7 +408,7 @@ Vol
 
 <div id="coins-chart-status" class="coins-chart-status hidden" aria-live="polite"></div>
 
-<script src="/js/terminal-page-boot.js?v=63" type="module"></script>
+<script src="/js/terminal-page-boot.js?v=66" type="module"></script>
 
 </body>
 </html>

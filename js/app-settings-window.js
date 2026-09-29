@@ -3,7 +3,7 @@
  */
 import {
 cssUrl
-} from "./asset-manifest.js?v=32";
+} from "./asset-manifest.js?v=35";
 
 import {
 isSystemAdminUser
