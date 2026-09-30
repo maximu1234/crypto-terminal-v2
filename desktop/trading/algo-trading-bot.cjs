@@ -31,6 +31,8 @@ readTickerBook,
 writeTickerBook,
 readRsiTouchFlipBook,
 writeRsiTouchFlipBook,
+readMacdFlipTouchBook,
+writeMacdFlipTouchBook,
 readPattern12Settings,
 writePattern12Settings,
 getWatchlistForSide,
@@ -60,6 +62,14 @@ require(
 const rsiTouchFlipMath =
 require(
 "./algo-bot-rsi-touch-flip-math.cjs"
+);
+const macdFlipTouchEngine =
+require(
+"./algo-bot-macd-flip-touch-engine.cjs"
+);
+const macdFlipTouchMath =
+require(
+"./algo-bot-macd-flip-touch-math.cjs"
 );
 const {
 getAlgoTradingMode
