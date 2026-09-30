@@ -493,6 +493,8 @@ null;
 /** @type {object | null} */
 let sessionRsiTouchFlipPrefs =
 null;
+let sessionMacdFlipTouchPrefs =
+null;
 
 let sessionId =
 0;
@@ -698,6 +700,13 @@ return "RSI Touch Flip";
 
 if(
 strategyId ===
+"macd-flip-touch"
+){
+return "MACD Flip Touch";
+}
+
+if(
+strategyId ===
 "early-t3"
 ){
 return "Early T3";
@@ -720,6 +729,123 @@ function buildStatusSnapshot(
 extra =
 {}
 ){
+
+if(
+runningStrategyId ===
+"macd-flip-touch" ||
+macdFlipTouchEngine.isMacdFlipTouchEngineRunning()
+){
+
+if(
+runningStrategyId !==
+"macd-flip-touch"
+){
+runningStrategyId =
+"macd-flip-touch";
+}
+
+const engine =
+macdFlipTouchEngine.getMacdFlipTouchEngineStatus();
+const prefs =
+sessionMacdFlipTouchPrefs ||
+{};
+const first =
+Array.isArray(
+engine.tickers
+) &&
+engine.tickers.length
+? engine.tickers[0]
+: null;
+const waitFlat =
+(
+engine.tickers ||
+[]
+).filter(
+row=>
+row.mode ===
+"wait-flat"
+);
+
+return {
+ok:
+true,
+running:
+true,
+strategyId:
+"macd-flip-touch",
+strategyLabel:
+strategyTrayLabel(
+"macd-flip-touch"
+),
+sessionId,
+sessionStartedAt,
+watchlistCount:
+engine.watchlistCount ||
+0,
+openCount:
+(
+engine.tickers ||
+[]
+).filter(
+row=>
+row.position &&
+row.position !==
+"flat"
+).length,
+message:
+statusMessage,
+tradingMode:
+"live",
+entriesPaused:
+false,
+tf:
+first?.tf ||
+"",
+symbol:
+first?.symbol ||
+"",
+exchangeId:
+"bybit",
+side:
+"both",
+sides:{
+long:
+true,
+short:
+true,
+both:
+true
+},
+armedCount:
+waitFlat.length,
+armedSetups:
+waitFlat.map(
+row=>({
+symbol:
+row.symbol,
+side:
+row.position ===
+"short"
+? "short"
+: "long"
+})
+),
+entriesCount:
+engine.entriesCount ||
+0,
+wouldEnterCount:
+engine.entriesCount ||
+0,
+lastSignal:
+engine.lastSignal,
+signals:
+engine.signals,
+strategyPrefs:{
+...prefs
+},
+...extra
+};
+}
 
 if(
 runningStrategyId ===
@@ -1343,6 +1469,8 @@ sessionEarlyT3Prefs =
 null;
 sessionRsiTouchFlipPrefs =
 null;
+sessionMacdFlipTouchPrefs =
+null;
 statusMessage =
 message;
 entriesPaused =
@@ -1362,6 +1490,7 @@ stopPoll();
 stopWatchlistRefresh();
 await earlyT3Engine.stopEarlyT3Engine();
 await rsiTouchFlipEngine.stopRsiTouchFlipEngine();
+await macdFlipTouchEngine.stopMacdFlipTouchEngine();
 await patternEngine.stopPatternEngine();
 
 if(
@@ -2281,6 +2410,7 @@ payload =
 ){
 
 rsiTouchFlipEngine.clearRsiTouchFlipStartCancel();
+macdFlipTouchEngine.clearMacdFlipTouchStartCancel();
 
 if(
 runningStrategyId
@@ -2613,6 +2743,344 @@ return snapshot;
 
 }
 
+async function startMacdFlipTouchBotImpl(
+payload =
+{}
+){
+
+macdFlipTouchEngine.clearMacdFlipTouchStartCancel();
+
+if(
+runningStrategyId
+){
+return {
+ok:
+true,
+alreadyRunning:
+true,
+message:
+`Уже запущена ${runningStrategyId}; сначала остановите её`,
+...buildStatusSnapshot()
+};
+}
+
+const creds =
+getAlgoCredentialsStatus(
+"bybit"
+);
+const tradingMode =
+getAlgoTradingMode();
+
+if(
+!isAlgoLiveTradingEnabled()
+){
+return {
+ok:
+false,
+message:
+"Сборка m: только ручная торговля"
+};
+}
+
+if(
+tradingMode !==
+"live"
+){
+return {
+ok:
+false,
+message:
+"MACD Flip Touch — только автоматическая торговля (live)"
+};
+}
+
+if(
+!creds?.configured
+){
+return {
+ok:
+false,
+message:
+"Для реальной торговли нужны алго API-ключи"
+};
+}
+
+resetSessionStats();
+
+const payloadBook =
+Array.isArray(
+payload?.book
+) &&
+payload.book.length
+? payload.book
+: Array.isArray(
+payload?.rows
+) &&
+payload.rows.length
+? payload.rows
+: [];
+const storedBook =
+readMacdFlipTouchBook();
+const bookRows =
+payloadBook.length
+? payloadBook
+: (
+Array.isArray(
+storedBook?.rows
+)
+? storedBook.rows
+: []
+);
+
+if(
+!bookRows.length
+){
+return {
+ok:
+false,
+message:
+"Книга MACD Flip Touch пуста. Добавьте тикеры кнопкой «Добавить в книгу» или отдайте книгу по LAN."
+};
+}
+
+if(
+macdFlipTouchEngine.isMacdFlipTouchStartCancelled()
+){
+return {
+ok:
+false,
+running:
+false,
+message:
+"Запуск отменён"
+};
+}
+
+try{
+writeMacdFlipTouchBook(
+bookRows,
+{
+balancePct:
+payload?.balancePct,
+marginMode:
+payload?.marginMode
+}
+);
+}catch(
+err
+){
+log.warn(
+"rsi touch flip book persist on start:",
+err?.message ||
+err
+);
+}
+
+const wallet =
+await getWalletBalance();
+const availableNum =
+Number(
+wallet?.available
+);
+const equityNum =
+Number(
+wallet?.usdt
+);
+const available =
+Number.isFinite(
+availableNum
+) &&
+availableNum >
+0
+? availableNum
+: Number.isFinite(
+equityNum
+) &&
+equityNum >
+0
+? equityNum
+: availableNum;
+const balancePct =
+macdFlipTouchMath.normalizeBalancePct(
+payload?.balancePct ??
+readMacdFlipTouchBook().balancePct
+);
+const allocated =
+macdFlipTouchMath.allocatedBalanceUsdt(
+available,
+balancePct
+);
+const share =
+macdFlipTouchMath.equalShareBudget(
+allocated,
+bookRows.length
+);
+
+if(
+!wallet?.ok ||
+!Number.isFinite(
+available
+)
+){
+return {
+ok:
+false,
+message:
+wallet?.message ||
+"Не удалось прочитать баланс алго-ключа"
+};
+}
+
+if(
+!(
+share >=
+1
+)
+){
+return {
+ok:
+false,
+message:
+`Доля на тикер ${Number(share).toFixed(2)} USDT < 1 USDT (${bookRows.length} тик. · ${balancePct}% от ${Number(available).toFixed(2)})`
+};
+}
+
+sessionMacdFlipTouchPrefs =
+{
+book:
+bookRows,
+balancePct,
+allocated,
+share,
+available
+};
+
+if(
+macdFlipTouchEngine.isMacdFlipTouchStartCancelled()
+){
+sessionMacdFlipTouchPrefs =
+null;
+return {
+ok:
+false,
+running:
+false,
+message:
+"Запуск отменён"
+};
+}
+
+try{
+statusMessage =
+"Запуск MACD Flip Touch…";
+
+sessionLog.beginSession(
+{
+sessionId,
+strategyId:
+"macd-flip-touch",
+startedAt:
+sessionStartedAt,
+tradingMode:
+"live",
+watchlistCount:
+bookRows.length
+}
+);
+sessionLog.appendNote(
+`Запуск MACD Flip Touch live ${bookRows.length} тик. ${balancePct}% баланса → ${Number(allocated).toFixed(2)} / ${bookRows.length} = ${Number(share).toFixed(2)} USDT на тикер, available=${available.toFixed(2)}`
+);
+
+await macdFlipTouchEngine.startMacdFlipTouchEngine(
+{
+rows:
+bookRows,
+balancePct,
+marginMode:
+macdFlipTouchMath.normalizeMarginMode(
+payload?.marginMode ??
+readMacdFlipTouchBook().marginMode
+),
+onActivity:()=>{
+pushStatus(
+buildStatusSnapshot()
+);
+}
+}
+);
+
+runningStrategyId =
+"macd-flip-touch";
+statusMessage =
+"Запущен";
+sessionLog.appendNote(
+"Запущен"
+);
+
+const strategies =
+readBotStrategies();
+
+markStrategyRunning(
+strategies,
+"macd-flip-touch"
+);
+writeBotStrategies(
+strategies
+);
+}catch(
+err
+){
+runningStrategyId =
+null;
+sessionMacdFlipTouchPrefs =
+null;
+statusMessage =
+String(
+err?.message ||
+err
+);
+try{
+await macdFlipTouchEngine.stopMacdFlipTouchEngine();
+}catch{
+/* ignore */
+}
+sessionLog.appendNote(
+`Ошибка запуска: ${statusMessage}`
+);
+sessionLog.endSession(
+{
+message:
+statusMessage
+}
+);
+
+const failed =
+{
+...buildStatusSnapshot(),
+ok:
+false,
+running:
+false,
+message:
+statusMessage
+};
+pushStatus(
+failed
+);
+
+return failed;
+}
+
+const snapshot =
+buildStatusSnapshot();
+pushStatus(
+snapshot
+);
+
+return snapshot;
+
+}
+
 async function startBotImpl(
 payload =
 {}
@@ -2638,6 +3106,15 @@ strategyId ===
 "rsi-touch-flip"
 ){
 return startRsiTouchFlipBotImpl(
+payload
+);
+}
+
+if(
+strategyId ===
+"macd-flip-touch"
+){
+return startMacdFlipTouchBotImpl(
 payload
 );
 }
@@ -3208,6 +3685,7 @@ startingStrategyId ===
 ){
 try{
 rsiTouchFlipEngine.requestRsiTouchFlipStartCancel();
+macdFlipTouchEngine.requestMacdFlipTouchStartCancel();
 }catch{
 /* ignore */
 }
@@ -3421,6 +3899,26 @@ true,
 }
 
 if(
+strategies.macdFlipTouch?.running
+){
+log.info(
+"algo bot: resuming macd-flip-touch after boot/agent"
+);
+const bookMacd =
+readMacdFlipTouchBook();
+return startBot(
+{
+strategyId:
+"macd-flip-touch",
+balancePct:
+bookMacd?.balancePct,
+marginMode:
+bookMacd?.marginMode
+}
+);
+}
+
+if(
 strategies.rsiTouchFlip?.running
 ){
 log.info(
@@ -3519,6 +4017,38 @@ true,
 book:
 book ||
 null
+};
+
+}
+
+function getMacdFlipTouchBook(){
+
+const read =
+readMacdFlipTouchBook();
+
+return {
+ok:
+true,
+rows:
+Array.isArray(
+read?.rows
+)
+? read.rows
+: [],
+balancePct:
+Number.isFinite(
+Number(
+read?.balancePct
+)
+)
+? Number(
+read.balancePct
+)
+: 100,
+marginMode:
+macdFlipTouchMath.normalizeMarginMode(
+read?.marginMode
+)
 };
 
 }
@@ -3641,6 +4171,61 @@ budget
 );
 },
 0
+);
+
+}
+
+/**
+ * After LAN / local book write, push MACD book into renderer localStorage.
+ */
+function notifyMacdFlipTouchBookToUi(
+extra =
+{}
+){
+
+const rows =
+Array.isArray(
+extra.rows
+)
+? extra.rows
+: readMacdFlipTouchBook().rows;
+const balancePct =
+extra.balancePct !=
+null
+? extra.balancePct
+: readMacdFlipTouchBook().balancePct;
+const marginMode =
+extra.marginMode !=
+null
+? extra.marginMode
+: readMacdFlipTouchBook().marginMode;
+
+const snapshot =
+buildStatusSnapshot(
+{
+applyMacdFlipTouchBook:
+true,
+publishedMacdFlipTouchBook:
+rows,
+publishedMacdFlipTouchBalancePct:
+balancePct,
+publishedMacdFlipTouchMarginMode:
+marginMode,
+...(
+typeof extra.message ===
+"string"
+? {
+message:
+extra.message
+}
+: {}
+)
+}
+);
+
+return broadcastBotStatus(
+snapshot,
+"algo bot macd-flip-touch-book UI notify:"
 );
 
 }
@@ -4005,6 +4590,318 @@ message
 
 }
 
+async function syncMacdFlipTouchBookNow(
+payload =
+{}
+){
+
+const rows =
+Array.isArray(
+payload.book
+)
+? payload.book
+: Array.isArray(
+payload.rows
+)
+? payload.rows
+: [];
+const source =
+String(
+payload.source ||
+"local"
+).trim().toLowerCase();
+const isLan =
+source ===
+"lan";
+
+if(
+isLan &&
+!rows.length
+){
+return {
+ok:
+false,
+message:
+"Пустая книга MACD Flip Touch. Добавьте тикеры «Добавить в книгу»."
+};
+}
+
+if(
+runningStrategyId ===
+"macd-flip-touch" &&
+rows.length
+){
+const wallet =
+await getWalletBalance();
+const available =
+walletAvailableUsdt(
+wallet
+);
+const balancePct =
+macdFlipTouchMath.normalizeBalancePct(
+payload?.balancePct ??
+readMacdFlipTouchBook().balancePct
+);
+const allocated =
+macdFlipTouchMath.allocatedBalanceUsdt(
+available,
+balancePct
+);
+const share =
+macdFlipTouchMath.equalShareBudget(
+allocated,
+rows.length
+);
+
+if(
+!wallet?.ok ||
+!Number.isFinite(
+available
+)
+){
+return {
+ok:
+false,
+message:
+wallet?.message ||
+"Не удалось прочитать баланс алго-ключа перед применением книги MACD Flip"
+};
+}
+
+if(
+!(
+share >=
+1
+)
+){
+return {
+ok:
+false,
+message:
+`Доля на тикер ${Number(share).toFixed(2)} USDT < 1 USDT (${rows.length} тик. · ${balancePct}% от ${available.toFixed(2)}) — live книгу не менял`
+};
+}
+}
+
+let live =
+{
+ok:
+true,
+running:
+false,
+message:
+"Книга MACD Flip сохранена"
+};
+
+if(
+runningStrategyId ===
+"macd-flip-touch"
+){
+try{
+live =
+await macdFlipTouchEngine.syncMacdFlipTouchBook(
+{
+rows:
+rows,
+balancePct:
+payload?.balancePct ??
+readMacdFlipTouchBook().balancePct,
+marginMode:
+payload?.marginMode ??
+readMacdFlipTouchBook().marginMode
+}
+);
+statusMessage =
+live?.message ||
+statusMessage;
+}catch(
+err
+){
+log.warn(
+"rsi touch flip live sync:",
+err?.message ||
+err
+);
+return {
+ok:
+false,
+running:
+true,
+message:
+err?.message ||
+String(
+err
+)
+};
+}
+
+if(
+live?.ok ===
+false
+){
+return {
+ok:
+false,
+running:
+true,
+queued:
+!!live?.queued,
+added:
+live?.added ||
+[],
+removed:
+live?.removed ||
+[],
+updated:
+live?.updated ||
+[],
+skipped:
+live?.skipped ||
+[],
+message:
+live?.message ||
+"Live MACD Flip отклонил книгу — файл не менял"
+};
+}
+}
+
+let written;
+
+try{
+written =
+writeMacdFlipTouchBook(
+rows,
+{
+balancePct:
+payload?.balancePct,
+marginMode:
+payload?.marginMode
+}
+);
+}catch(
+err
+){
+log.warn(
+"rsi touch flip book write:",
+err?.message ||
+err
+);
+return {
+ok:
+false,
+message:
+err?.message ||
+String(
+err
+)
+};
+}
+
+if(
+written?.ok ===
+false
+){
+return written;
+}
+
+sessionMacdFlipTouchPrefs =
+{
+...(
+sessionMacdFlipTouchPrefs ||
+{}
+),
+book:
+written.rows,
+balancePct:
+written.balancePct,
+marginMode:
+written.marginMode
+};
+
+const message =
+live?.running
+? live.message ||
+`Книга MACD Flip записана (${written.tickerCount} тик.). Live подхватил.`
+: `Книга MACD Flip записана (${written.tickerCount} тик.). Запустите MACD Flip, чтобы торговать по ней.`;
+
+if(
+written.changed !==
+false
+){
+try{
+notifyMacdFlipTouchBookToUi(
+{
+rows:
+written.rows,
+balancePct:
+written.balancePct,
+marginMode:
+written.marginMode,
+message
+}
+);
+}catch(
+err
+){
+log.warn(
+"algo bot macd-flip-touch-book UI notify:",
+err?.message ||
+err
+);
+}
+}else if(
+runningStrategyId ===
+"macd-flip-touch"
+){
+try{
+pushStatus(
+buildStatusSnapshot(
+{
+message
+}
+)
+);
+}catch{
+/* ignore */
+}
+}
+
+return {
+ok:
+live?.ok !==
+false,
+running:
+!!live?.running,
+queued:
+!!live?.queued,
+added:
+live?.added ||
+[],
+removed:
+live?.removed ||
+[],
+updated:
+live?.updated ||
+[],
+skipped:
+live?.skipped ||
+[],
+tickerCount:
+written.tickerCount,
+rows:
+written.rows,
+message
+};
+
+}
+
+let macdFlipTouchBookSyncChain = Promise.resolve();
+async function syncMacdFlipTouchBook(payload = {}) {
+  const next = macdFlipTouchBookSyncChain.then(() => syncMacdFlipTouchBookNow(payload), () => syncMacdFlipTouchBookNow(payload));
+  macdFlipTouchBookSyncChain = next.then(() => undefined, () => undefined);
+  return next;
+}
+
 let rsiTouchFlipBookSyncChain =
 Promise.resolve();
 
@@ -4312,12 +5209,15 @@ syncBotStrategies,
 syncTickerFlags,
 syncTickerBook,
 syncRsiTouchFlipBook,
+syncMacdFlipTouchBook,
 getTickerFlagsRoot,
 getTickerBook,
 getRsiTouchFlipBook,
+getMacdFlipTouchBook,
 notifyTickerFlagsToUi,
 notifyTickerBookToUi,
 notifyRsiTouchFlipBookToUi,
+notifyMacdFlipTouchBookToUi,
 startBot,
 startBotFromLan,
 stopBot,

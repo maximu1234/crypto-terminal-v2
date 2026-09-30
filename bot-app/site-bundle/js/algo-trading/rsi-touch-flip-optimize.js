@@ -174,11 +174,14 @@ function pickOverview(overview) {
   };
 }
 
-function runWindow(window, prefs, rsiFull) {
+function runWindow(window, prefs, rsiFull, excludeFormingBar = false) {
   const rsiValues = Array.isArray(rsiFull)
     ? rsiFull.slice(window.from, window.to)
     : window.rsiValues;
-  const result = runRsiTouchFlip(window.candles, prefs, { rsiValues });
+  const result = runRsiTouchFlip(window.candles, prefs, {
+    rsiValues,
+    excludeFormingBar
+  });
   return {
     ...pickOverview(result.overview),
     chartDays: window.days
@@ -186,7 +189,10 @@ function runWindow(window, prefs, rsiFull) {
 }
 
 function runFullChart(candles, prefs, rsiFull, chartDays) {
-  const result = runRsiTouchFlip(candles, prefs, { rsiValues: rsiFull });
+  const result = runRsiTouchFlip(candles, prefs, {
+    rsiValues: rsiFull,
+    excludeFormingBar: true
+  });
   return {
     ...pickOverview(result.overview),
     chartDays
@@ -277,7 +283,7 @@ export async function optimizeRsiTouchFlipParams(opts = {}) {
       ...basePrefs,
       ...combo
     });
-    const trainOverview = runWindow(split.train, prefs, rsiFull);
+    const trainOverview = runWindow(split.train, prefs, rsiFull, false);
     tried += 1;
 
     if (Number(trainOverview.closedTrades) < minTrainTrades) {
@@ -290,7 +296,7 @@ export async function optimizeRsiTouchFlipParams(opts = {}) {
       continue;
     }
 
-    const testOverview = runWindow(split.test, prefs, rsiFull);
+    const testOverview = runWindow(split.test, prefs, rsiFull, true);
     const verdict = rsiTouchFlipTestVerdict(testOverview, {
       minTrades: rsiTouchFlipMinTestTrades(split.test.bars)
     });

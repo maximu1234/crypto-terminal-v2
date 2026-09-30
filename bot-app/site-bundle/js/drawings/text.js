@@ -884,10 +884,19 @@ false
 return;
 }
 
+// Enter / Shift+Enter — новая строка в textarea.
+// Завершение ввода: клик вне поля (blur) или Escape (отмена).
 if(
+(
 e.key ===
-"Enter" &&
-!e.shiftKey
+"Enter" ||
+e.key ===
+"NumpadEnter"
+) &&
+(
+e.metaKey ||
+e.ctrlKey
+)
 ){
 e.preventDefault();
 close(

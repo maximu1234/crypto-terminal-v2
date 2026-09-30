@@ -25,6 +25,8 @@ const TICKER_BOOKS_FILE =
 "algo-bot-ticker-books.json";
 const RSI_TOUCH_FLIP_BOOK_FILE =
 "algo-bot-rsi-touch-flip-book.json";
+const MACD_FLIP_TOUCH_BOOK_FILE =
+"algo-bot-macd-flip-touch-book.json";
 const PATTERN12_SETTINGS_FILE =
 "algo-pattern12-settings.json";
 const PENDING_ORDERS_FILE =
@@ -1264,6 +1266,10 @@ parsed?.rsiTouchFlip
 earlyT3:
 normalizeAuxRunning(
 parsed?.earlyT3
+),
+macdFlipTouch:
+normalizeAuxRunning(
+parsed?.macdFlipTouch
 )
 };
 
@@ -1294,6 +1300,10 @@ next?.rsiTouchFlip
 earlyT3:
 normalizeAuxRunning(
 next?.earlyT3
+),
+macdFlipTouch:
+normalizeAuxRunning(
+next?.macdFlipTouch
 )
 };
 
@@ -2606,6 +2616,129 @@ next.length
 
 }
 
+function readMacdFlipTouchBook(){
+const parsed =
+readJsonFile(
+MACD_FLIP_TOUCH_BOOK_FILE,
+{
+rows:
+[]
+}
+);
+const rows =
+normalizeStoredRsiTouchFlipBookRows(
+parsed
+);
+return {
+ok:
+true,
+rows,
+balancePct:
+normalizeStoredRsiTouchFlipBalancePct(
+parsed?.balancePct
+),
+marginMode:
+normalizeStoredRsiTouchFlipMarginMode(
+parsed?.marginMode,
+rows
+)
+};
+}
+
+function writeMacdFlipTouchBook(
+rows,
+extra =
+{}
+){
+const next =
+normalizeStoredRsiTouchFlipBookRows(
+rows
+);
+const prev =
+readMacdFlipTouchBook();
+const balancePct =
+extra.balancePct !=
+null &&
+extra.balancePct !==
+""
+? normalizeStoredRsiTouchFlipBalancePct(
+extra.balancePct
+)
+: prev.balancePct;
+const marginMode =
+extra.marginMode !=
+null &&
+extra.marginMode !==
+""
+? normalizeStoredRsiTouchFlipMarginMode(
+extra.marginMode,
+next
+)
+: prev.marginMode;
+const same =
+JSON.stringify(
+prev.rows
+) ===
+JSON.stringify(
+next
+) &&
+prev.balancePct ===
+balancePct &&
+prev.marginMode ===
+marginMode;
+
+if(
+same
+){
+return {
+ok:
+true,
+changed:
+false,
+rows:
+next,
+balancePct,
+marginMode,
+tickerCount:
+next.length
+};
+}
+
+const written =
+writeJsonFile(
+MACD_FLIP_TOUCH_BOOK_FILE,
+{
+rows:
+next,
+balancePct,
+marginMode,
+updatedAt:
+Date.now()
+}
+);
+
+if(
+written?.ok ===
+false
+){
+return written;
+}
+
+return {
+ok:
+true,
+changed:
+true,
+rows:
+next,
+balancePct,
+marginMode,
+tickerCount:
+next.length
+};
+
+}
+
 module.exports =
 {
 FLAG_LONG_5M,
@@ -2638,5 +2771,7 @@ listManualRefreshStrategyIds,
 readPendingBotOrders,
 writePendingBotOrders,
 readRsiTouchFlipBook,
-writeRsiTouchFlipBook
+writeRsiTouchFlipBook,
+readMacdFlipTouchBook,
+writeMacdFlipTouchBook
 };

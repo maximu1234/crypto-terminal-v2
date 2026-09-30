@@ -436,6 +436,64 @@ function rsiTouchFlipShouldFlattenGhost(state, posResult) {
   return !posResult.position;
 }
 
+/**
+ * Open time (sec) of the last closed 1m bar used for a chart bar (lookahead_off).
+ * @param {number} chartBarOpenSec
+ * @param {string} chartTf
+ * @param {string} sourceTf
+ * @returns {number}
+ */
+function requiredSourceOpenSecForChartBar(chartBarOpenSec, chartTf, sourceTf) {
+  const chartSec = tfPeriodSec(chartTf);
+  const srcSec = tfPeriodSec(sourceTf);
+  const open = unixSec(chartBarOpenSec);
+  if (!(chartSec > 0) || !(srcSec > 0) || !Number.isFinite(open)) {
+    return NaN;
+  }
+  if (chartSec === srcSec) {
+    return open;
+  }
+  return open + chartSec - srcSec;
+}
+
+/**
+ * Live MTF: wait until the last 1m of the 5m window is closed in rsiCandles.
+ * @param {number} chartBarOpenSec
+ * @param {string} chartTf
+ * @param {string} sourceTf
+ * @param {Array<{time:number}>} rsiCandles
+ * @param {{time:number}|null|undefined} rsiForming
+ * @returns {boolean}
+ */
+function isChartBarSourceRsiReady(
+  chartBarOpenSec,
+  chartTf,
+  sourceTf,
+  rsiCandles,
+  rsiForming
+) {
+  const need = requiredSourceOpenSecForChartBar(
+    chartBarOpenSec,
+    chartTf,
+    sourceTf
+  );
+  if (!Number.isFinite(need)) {
+    return true;
+  }
+  const list = Array.isArray(rsiCandles) ? rsiCandles : [];
+  if (!list.length) {
+    return false;
+  }
+  const lastClosed = unixSec(list[list.length - 1]?.time);
+  if (!Number.isFinite(lastClosed) || lastClosed < need) {
+    return false;
+  }
+  if (rsiForming && unixSec(rsiForming.time) === need) {
+    return false;
+  }
+  return true;
+}
+
 module.exports = {
   SIZE_EQUAL,
   SIZE_AVERAGE,
@@ -458,5 +516,7 @@ module.exports = {
   rsiTouchFlipCycleSlHit,
   rsiTouchFlipLocalLooksOpen,
   rsiTouchFlipOpenLooksFilled,
-  rsiTouchFlipShouldFlattenGhost
+  rsiTouchFlipShouldFlattenGhost,
+  requiredSourceOpenSecForChartBar,
+  isChartBarSourceRsiReady
 };

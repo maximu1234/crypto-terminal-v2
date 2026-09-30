@@ -513,6 +513,8 @@ prefs,
 {
 rsiValues,
 collectEquity:
+true,
+excludeFormingBar:
 true
 }
 );
@@ -1382,7 +1384,9 @@ prefs,
 {
 rsiValues,
 collectEquity:
-isEquityTab()
+isEquityTab(),
+excludeFormingBar:
+true
 }
 );
 renderOverview(

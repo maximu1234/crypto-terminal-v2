@@ -28,12 +28,28 @@ replaceRsiTouchFlipBook,
 RSI_TOUCH_FLIP_BOOK_CHANGE_EVENT
 } from "./rsi-touch-flip-book.js?v=5";
 import {
+snapshotMacdFlipTouchBook,
+macdFlipTouchShareBudgetFits,
+macdFlipTouchAllocatedUsdt,
+macdFlipTouchEqualShareBudget,
+loadMacdFlipTouchBook,
+replaceMacdFlipTouchBook,
+MACD_FLIP_TOUCH_BOOK_CHANGE_EVENT
+} from "./macd-flip-touch-book.js?v=5";
+import {
 loadRsiTouchFlipBalancePct,
 saveRsiTouchFlipBalancePct,
 normalizeRsiTouchFlipBalancePct,
 loadRsiTouchFlipMarginMode,
 saveRsiTouchFlipMarginMode
 } from "./rsi-touch-flip-prefs.js?v=9";
+import {
+loadMacdFlipTouchBalancePct,
+saveMacdFlipTouchBalancePct,
+normalizeMacdFlipTouchBalancePct,
+loadMacdFlipTouchMarginMode,
+saveMacdFlipTouchMarginMode
+} from "./macd-flip-touch-prefs.js?v=9";
 import {
 getAlgoTradingWalletBalance
 } from "./runtime-bridge.js?v=6";
@@ -42,6 +58,7 @@ ALGO_ANALYSIS_BOT_NONE,
 ALGO_ANALYSIS_BOT_PATTERN_12,
 ALGO_ANALYSIS_BOT_EARLY_T3,
 ALGO_ANALYSIS_BOT_RSI_TOUCH_FLIP,
+ALGO_ANALYSIS_BOT_MACD_FLIP_TOUCH,
 ALGO_ANALYSIS_BOT_CHANGE_EVENT,
 getActiveAnalysisBotId,
 isActiveAnalysisBot,
@@ -64,6 +81,8 @@ maybeApplyTickerFlagsFromBotStatus,
 maybeApplyTickerBookFromBotStatus,
 syncRsiTouchFlipBookToLive,
 fetchRsiTouchFlipBookFromMain,
+syncMacdFlipTouchBookToLive,
+fetchMacdFlipTouchBookFromMain,
 isAlgoBotDesktop,
 fetchAlgoBotCloudLock,
 clearAlgoBotCloudLock,
@@ -253,9 +272,21 @@ const botsItemRsiTouchFlipEnabled =
 document.getElementById(
 "algo-bots-item-rsi-touch-flip-enabled"
 );
+const botsItemMacdFlipTouch =
+document.getElementById(
+"algo-bots-item-macd-flip-touch"
+);
+const botsItemMacdFlipTouchEnabled =
+document.getElementById(
+"algo-bots-item-macd-flip-touch-enabled"
+);
 const rsiTouchFlipSettingsModal =
 document.getElementById(
 "algo-bot-rsi-touch-flip-settings-modal"
+);
+const macdFlipTouchSettingsModal =
+document.getElementById(
+"algo-bot-macd-flip-touch-settings-modal"
 );
 const earlyT3SettingsModal =
 document.getElementById(
@@ -314,6 +345,8 @@ loadEarlyT3BotPrefs();
 let earlyT3Running =
 false;
 let rsiTouchFlipRunning =
+false;
+let macdFlipTouchRunning =
 false;
 const botSettingsModal =
 document.getElementById(
@@ -919,6 +952,10 @@ const rsiTouchFlipOn =
 isActiveAnalysisBot(
 ALGO_ANALYSIS_BOT_RSI_TOUCH_FLIP
 );
+const macdFlipTouchOn =
+isActiveAnalysisBot(
+ALGO_ANALYSIS_BOT_MACD_FLIP_TOUCH
+);
 
 if(
 botsItemPattern12Enabled
@@ -939,6 +976,13 @@ botsItemRsiTouchFlipEnabled
 ){
 botsItemRsiTouchFlipEnabled.checked =
 rsiTouchFlipOn;
+}
+
+if(
+botsItemMacdFlipTouchEnabled
+){
+botsItemMacdFlipTouchEnabled.checked =
+macdFlipTouchOn;
 }
 
 botsItemPattern12?.classList.toggle(
@@ -970,6 +1014,17 @@ rsiTouchFlipOn
 botsItemRsiTouchFlip?.setAttribute(
 "aria-current",
 rsiTouchFlipOn
+? "true"
+: "false"
+);
+
+botsItemMacdFlipTouch?.classList.toggle(
+"is-active-analysis-bot",
+macdFlipTouchOn
+);
+botsItemMacdFlipTouch?.setAttribute(
+"aria-current",
+macdFlipTouchOn
 ? "true"
 : "false"
 );
@@ -1017,6 +1072,7 @@ return;
 closeAllDrops();
 closeEarlyT3SettingsModal();
 closeRsiTouchFlipSettingsModal();
+closeMacdFlipTouchSettingsModal();
 botSettingsModal.hidden =
 false;
 botSettingsModal.classList.remove(
@@ -1052,6 +1108,7 @@ return;
 closeAllDrops();
 closeBotSettingsModal();
 closeRsiTouchFlipSettingsModal();
+closeMacdFlipTouchSettingsModal();
 applyEarlyT3SettingsUi();
 earlyT3SettingsModal.hidden =
 false;
@@ -1312,6 +1369,121 @@ snapshotRsiTouchFlipBook()
 
 }
 
+let macdBookLiveSyncChain =
+Promise.resolve();
+
+function onMacdFlipTouchBookChanged(){
+
+const book =
+snapshotMacdFlipTouchBook();
+macdBookLiveSyncChain =
+macdBookLiveSyncChain.then(
+()=>
+syncMacdFlipTouchBookToLive(
+book
+)
+).then(
+result=>{
+
+if(
+result?.ok ===
+false &&
+result.message
+){
+applyStatusPanel(
+{
+ok:
+false,
+running:
+macdFlipTouchRunning,
+strategyId:
+"macd-flip-touch",
+message:
+result.message
+}
+);
+}
+
+return result;
+
+}
+).catch(
+err=>{
+console.warn(
+"[algo-trading] macd book live sync",
+err
+);
+}
+);
+
+}
+
+async function hydrateMacdFlipTouchBookFromMain(){
+
+try{
+const res =
+await fetchMacdFlipTouchBookFromMain();
+const rows =
+Array.isArray(
+res?.rows
+)
+? res.rows
+: [];
+
+if(
+rows.length
+){
+replaceMacdFlipTouchBook(
+rows
+);
+}
+
+if(
+res?.balancePct !=
+null &&
+res.balancePct !==
+""
+){
+saveMacdFlipTouchBalancePct(
+res.balancePct
+);
+}
+
+if(
+res?.marginMode !=
+null &&
+res.marginMode !==
+""
+){
+saveMacdFlipTouchMarginMode(
+res.marginMode
+);
+}
+
+if(
+rows.length
+){
+return;
+}
+}catch(
+err
+){
+console.warn(
+"[algo-trading] macd book hydrate",
+err
+);
+}
+
+try{
+await syncMacdFlipTouchBookToLive(
+snapshotMacdFlipTouchBook()
+);
+}catch{
+/* ignore */
+}
+
+}
+
 function openRsiTouchFlipSettingsModal(){
 
 if(
@@ -1323,6 +1495,7 @@ return;
 closeAllDrops();
 closeBotSettingsModal();
 closeEarlyT3SettingsModal();
+closeMacdFlipTouchSettingsModal();
 void fillRsiTouchFlipSettingsModal();
 rsiTouchFlipSettingsModal.hidden =
 false;
@@ -1344,6 +1517,154 @@ rsiTouchFlipSettingsModal.classList.add(
 "hidden"
 );
 rsiTouchFlipSettingsModal.hidden =
+true;
+
+}
+
+async function fillMacdFlipTouchSettingsModal(){
+
+const summary =
+document.getElementById(
+"algo-bot-macd-flip-book-summary"
+);
+const pctInput =
+document.getElementById(
+"algo-bot-macd-flip-balance-pct"
+);
+const isolatedInput =
+document.getElementById(
+"algo-bot-macd-flip-isolated"
+);
+const pct =
+pctInput &&
+document.activeElement ===
+pctInput
+? normalizeMacdFlipTouchBalancePct(
+pctInput.value
+)
+: loadMacdFlipTouchBalancePct();
+
+if(
+pctInput &&
+document.activeElement !==
+pctInput
+){
+pctInput.value =
+String(
+pct
+);
+}
+
+if(
+isolatedInput
+){
+isolatedInput.checked =
+loadMacdFlipTouchMarginMode() ===
+"isolated";
+}
+
+if(
+!summary
+){
+return;
+}
+
+const rows =
+loadMacdFlipTouchBook();
+let wallet =
+null;
+
+try{
+wallet =
+await getAlgoTradingWalletBalance();
+}catch{
+wallet =
+null;
+}
+
+const allocated =
+macdFlipTouchAllocatedUsdt(
+wallet,
+pct
+);
+const share =
+macdFlipTouchEqualShareBudget(
+allocated,
+rows.length
+);
+const available =
+Number(
+allocated
+);
+
+if(
+!rows.length
+){
+summary.textContent =
+Number.isFinite(
+available
+)
+? `Книга пуста. ${pct}% от доступного ≈ ${available.toFixed(0)} USDT. Добавьте тикеры в панели Данные.`
+: "Книга пуста. Добавьте тикеры в панели Данные.";
+return;
+}
+
+const shareLabel =
+Number.isFinite(
+share
+) &&
+share >
+0
+? share.toFixed(
+0
+)
+: "—";
+const allocLabel =
+Number.isFinite(
+available
+)
+? available.toFixed(
+0
+)
+: "—";
+summary.textContent =
+`Книга: ${rows.length} тик. · ${pct}% ≈ ${allocLabel} USDT · ~${shareLabel} USDT на тикер.`;
+
+}
+
+function openMacdFlipTouchSettingsModal(){
+
+if(
+!macdFlipTouchSettingsModal
+){
+return;
+}
+
+closeAllDrops();
+closeBotSettingsModal();
+closeEarlyT3SettingsModal();
+closeRsiTouchFlipSettingsModal();
+void fillMacdFlipTouchSettingsModal();
+macdFlipTouchSettingsModal.hidden =
+false;
+macdFlipTouchSettingsModal.classList.remove(
+"hidden"
+);
+
+}
+
+function closeMacdFlipTouchSettingsModal(){
+
+if(
+!macdFlipTouchSettingsModal
+){
+return;
+}
+
+macdFlipTouchSettingsModal.classList.add(
+"hidden"
+);
+macdFlipTouchSettingsModal.hidden =
 true;
 
 }
@@ -2223,6 +2544,12 @@ if(
 earlyT3Running
 ){
 return "early-t3";
+}
+
+if(
+macdFlipTouchRunning
+){
+return "macd-flip-touch";
 }
 
 if(
@@ -3188,6 +3515,10 @@ rsiTouchFlipRunning =
 status.strategyId ===
 "rsi-touch-flip" &&
 !!status.running;
+macdFlipTouchRunning =
+status.strategyId ===
+"macd-flip-touch" &&
+!!status.running;
 st1.running =
 status.strategyId ===
 "st1" &&
@@ -3835,6 +4166,47 @@ openRsiTouchFlipSettingsModal();
 }
 );
 
+botsItemMacdFlipTouchEnabled?.addEventListener(
+"click",
+event=>{
+event.stopPropagation();
+}
+);
+
+botsItemMacdFlipTouchEnabled?.addEventListener(
+"change",
+event=>{
+event.stopPropagation();
+if(
+botsItemMacdFlipTouchEnabled.checked
+){
+setActiveAnalysisBotId(
+ALGO_ANALYSIS_BOT_MACD_FLIP_TOUCH
+);
+}else if(
+isActiveAnalysisBot(
+ALGO_ANALYSIS_BOT_MACD_FLIP_TOUCH
+)
+){
+setActiveAnalysisBotId(
+ALGO_ANALYSIS_BOT_NONE
+);
+}
+applyActiveAnalysisBotMenuUi();
+applyRunBtn();
+}
+);
+
+botsItemMacdFlipTouch?.addEventListener(
+"click",
+event=>{
+event.preventDefault();
+event.stopPropagation();
+closeAllDrops();
+openMacdFlipTouchSettingsModal();
+}
+);
+
 botsItemEarlyT3?.addEventListener(
 "click",
 event=>{
@@ -3930,9 +4302,38 @@ closeRsiTouchFlipSettingsModal();
 }
 );
 
+macdFlipTouchSettingsModal?.addEventListener(
+"click",
+event=>{
+const t =
+event.target;
+
+if(
+!(
+t instanceof Element
+)
+){
+return;
+}
+
+if(
+t.closest(
+'[data-close="algo-bot-macd-flip-touch-settings-modal"]'
+)
+){
+event.preventDefault();
+closeMacdFlipTouchSettingsModal();
+}
+}
+);
+
 window.addEventListener(
 RSI_TOUCH_FLIP_BOOK_CHANGE_EVENT,
 onRsiTouchFlipBookChanged
+);
+window.addEventListener(
+MACD_FLIP_TOUCH_BOOK_CHANGE_EVENT,
+onMacdFlipTouchBookChanged
 );
 document.getElementById(
 "algo-bot-rsi-flip-balance-pct"
@@ -4135,8 +4536,202 @@ err
 void fillRsiTouchFlipSettingsModal();
 }
 );
+document.getElementById(
+"algo-bot-macd-flip-balance-pct"
+)?.addEventListener(
+"input",
+()=>{
+void fillMacdFlipTouchSettingsModal();
+}
+);
+document.getElementById(
+"algo-bot-macd-flip-balance-pct"
+)?.addEventListener(
+"change",
+event=>{
+const input =
+event.target instanceof HTMLInputElement
+? event.target
+: null;
+const previous =
+loadMacdFlipTouchBalancePct();
+macdBookLiveSyncChain =
+macdBookLiveSyncChain.then(
+async()=>{
+const next =
+saveMacdFlipTouchBalancePct(
+input?.value ??
+previous
+);
+void fillMacdFlipTouchSettingsModal();
+const book =
+snapshotMacdFlipTouchBook();
+
+if(
+macdFlipTouchRunning &&
+book.length
+){
+const wallet =
+await getAlgoTradingWalletBalance();
+const gate =
+macdFlipTouchShareBudgetFits(
+{
+available:
+wallet,
+balancePct:
+next,
+tickerCount:
+book.length
+}
+);
+
+if(
+!gate.ok
+){
+saveMacdFlipTouchBalancePct(
+previous
+);
+
+if(
+input
+){
+input.value =
+String(
+previous
+);
+}
+
+void fillMacdFlipTouchSettingsModal();
+applyStatusPanel(
+{
+ok:
+false,
+running:
+macdFlipTouchRunning,
+strategyId:
+"macd-flip-touch",
+message:
+gate.message
+}
+);
+return {
+ok:
+false,
+message:
+gate.message
+};
+}
+
+const result =
+await syncMacdFlipTouchBookToLive(
+book
+);
+
+if(
+result?.ok ===
+false &&
+result.message
+){
+applyStatusPanel(
+{
+ok:
+false,
+running:
+macdFlipTouchRunning,
+strategyId:
+"macd-flip-touch",
+message:
+result.message
+}
+);
+}
+
+return result;
+}
+
+return {
+ok:
+true
+};
+}
+).catch(
+err=>{
+console.warn(
+"[algo-trading] macd flip balance pct live sync",
+err
+);
+}
+);
+}
+);
+document.getElementById(
+"algo-bot-macd-flip-isolated"
+)?.addEventListener(
+"change",
+event=>{
+const input =
+event.target instanceof HTMLInputElement
+? event.target
+: null;
+saveMacdFlipTouchMarginMode(
+input?.checked
+? "isolated"
+: "cross"
+);
+macdBookLiveSyncChain =
+macdBookLiveSyncChain.then(
+async()=>{
+const book =
+snapshotMacdFlipTouchBook();
+
+if(
+macdFlipTouchRunning &&
+book.length
+){
+const result =
+await syncMacdFlipTouchBookToLive(
+book
+);
+
+if(
+result?.ok ===
+false &&
+result.message
+){
+applyStatusPanel(
+{
+ok:
+false,
+running:
+macdFlipTouchRunning,
+strategyId:
+"macd-flip-touch",
+message:
+result.message
+}
+);
+}
+
+return result;
+}
+
+return null;
+}
+).catch(
+err=>{
+console.warn(
+"[algo-trading] macd flip margin mode live sync",
+err
+);
+}
+);
+void fillMacdFlipTouchSettingsModal();
+}
+);
 void fillRsiTouchFlipSettingsModal();
+void fillMacdFlipTouchSettingsModal();
 void hydrateRsiTouchFlipBookFromMain();
+void hydrateMacdFlipTouchBookFromMain();
 
 for(
 const [
@@ -4779,6 +5374,12 @@ rsiTouchFlipRunning =
 false;
 }else if(
 activeId ===
+"macd-flip-touch"
+){
+macdFlipTouchRunning =
+false;
+}else if(
+activeId ===
 "early-t3"
 ){
 earlyT3Running =
@@ -4894,6 +5495,115 @@ result
 );
 void syncRsiTouchFlipBookToLive(
 snapshotRsiTouchFlipBook()
+);
+}else{
+applyBotStatus(
+{
+...result,
+running:
+false
+}
+);
+}
+void refreshCloudLockUi();
+}else if(
+isActiveAnalysisBot(
+ALGO_ANALYSIS_BOT_MACD_FLIP_TOUCH
+)
+){
+const book =
+snapshotMacdFlipTouchBook();
+
+if(
+!book.length
+){
+applyStatusPanel(
+{
+ok:
+false,
+message:
+"Книга MACD Flip Touch пуста. Добавьте тикеры кнопкой «Добавить в книгу».",
+running:
+false
+}
+);
+return;
+}
+
+const wallet =
+await getAlgoTradingWalletBalance();
+const pctInput =
+document.getElementById(
+"algo-bot-macd-flip-balance-pct"
+);
+const pct =
+saveMacdFlipTouchBalancePct(
+pctInput instanceof HTMLInputElement
+? pctInput.value
+: loadMacdFlipTouchBalancePct()
+);
+const gate =
+macdFlipTouchShareBudgetFits(
+{
+available:
+wallet,
+balancePct:
+pct,
+tickerCount:
+book.length
+}
+);
+
+if(
+!gate.ok
+){
+applyStatusPanel(
+{
+ok:
+false,
+message:
+gate.message,
+running:
+false
+}
+);
+return;
+}
+
+const isolatedInput =
+document.getElementById(
+"algo-bot-macd-flip-isolated"
+);
+const marginMode =
+saveMacdFlipTouchMarginMode(
+isolatedInput instanceof HTMLInputElement
+? (
+isolatedInput.checked
+? "isolated"
+: "cross"
+)
+: loadMacdFlipTouchMarginMode()
+);
+const result =
+await startAlgoBot(
+"macd-flip-touch",
+{
+book,
+balancePct:
+pct,
+marginMode
+}
+);
+
+if(
+result?.ok ||
+result?.running
+){
+applyBotStatus(
+result
+);
+void syncMacdFlipTouchBookToLive(
+snapshotMacdFlipTouchBook()
 );
 }else{
 applyBotStatus(
@@ -5960,6 +6670,10 @@ onTickerFlagsChanged
 window.removeEventListener(
 RSI_TOUCH_FLIP_BOOK_CHANGE_EVENT,
 onRsiTouchFlipBookChanged
+);
+window.removeEventListener(
+MACD_FLIP_TOUCH_BOOK_CHANGE_EVENT,
+onMacdFlipTouchBookChanged
 );
 window.removeEventListener(
 ALGO_ANALYSIS_BOT_CHANGE_EVENT,

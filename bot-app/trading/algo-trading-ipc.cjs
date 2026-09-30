@@ -39,6 +39,14 @@ require(
 "./algo-bybit-rest.cjs"
 );
 const {
+generatePnlShareCard,
+savePnlShareCard,
+discardPnlShareCard
+} =
+require(
+"./pnl-share-card.cjs"
+);
+const {
 setAlgoTradingStreamTarget,
 startAlgoTradingStream,
 stopAlgoTradingStream,
@@ -1201,6 +1209,74 @@ err
 handleTrustedDesktopUi(
 ipcMain,
 
+"desktop:algoTradingSyncMacdFlipTouchBook",
+async (
+_event,
+payload
+)=>{
+
+try{
+return await algoBot.syncMacdFlipTouchBook(
+payload ||
+{}
+);
+}catch(
+err
+){
+log.warn(
+"algoTradingSyncMacdFlipTouchBook:",
+err?.message ||
+err
+);
+return {
+ok:
+false,
+message:
+err?.message ||
+String(
+err
+)
+};
+}
+
+}
+);
+
+handleTrustedDesktopUi(
+ipcMain,
+
+"desktop:algoTradingGetMacdFlipTouchBook",
+()=>{
+
+try{
+return algoBot.getMacdFlipTouchBook();
+}catch(
+err
+){
+log.warn(
+"algoTradingGetMacdFlipTouchBook:",
+err?.message ||
+err
+);
+return {
+ok:
+false,
+rows:
+[],
+message:
+err?.message ||
+String(
+err
+)
+};
+}
+
+}
+);
+
+handleTrustedDesktopUi(
+ipcMain,
+
 "desktop:algoTradingGetTickerFlagsRoot",
 ()=>{
 
@@ -1534,6 +1610,119 @@ err
 }
 );
 
+
+handleTrustedDesktopUi(
+ipcMain,
+
+"desktop:algoTradingGeneratePnlShareCard",
+async(
+_event,
+payload
+)=>{
+
+try{
+return await generatePnlShareCard(
+{
+...(
+payload ||
+{}
+),
+exchange:
+"bybit"
+}
+);
+}catch(
+err
+){
+log.warn(
+"algoTradingGeneratePnlShareCard:",
+err?.message ||
+err
+);
+return {
+ok:
+false,
+error:
+err?.message ||
+String(
+err
+)
+};
+}
+
+}
+);
+
+handleTrustedDesktopUi(
+ipcMain,
+
+"desktop:algoTradingSavePnlShareCard",
+async(
+_event,
+payload
+)=>{
+
+try{
+return await savePnlShareCard(
+payload?.tempPath,
+payload?.defaultName
+);
+}catch(
+err
+){
+log.warn(
+"algoTradingSavePnlShareCard:",
+err?.message ||
+err
+);
+return {
+ok:
+false,
+error:
+err?.message ||
+String(
+err
+)
+};
+}
+
+}
+);
+
+handleTrustedDesktopUi(
+ipcMain,
+
+"desktop:algoTradingDiscardPnlShareCard",
+(
+_event,
+payload
+)=>{
+
+try{
+return discardPnlShareCard(
+payload?.tempPath
+);
+}catch(
+err
+){
+log.warn(
+"algoTradingDiscardPnlShareCard:",
+err?.message ||
+err
+);
+return {
+ok:
+false,
+error:
+err?.message ||
+String(
+err
+)
+};
+}
+
+}
+);
 
 handleTrustedDesktopUi(
 ipcMain,

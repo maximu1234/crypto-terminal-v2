@@ -93,6 +93,29 @@ test("editor css size grows with longer text and extra lines", () => {
   assert.ok(short.height >= 24);
 });
 
+test("measureTextBox grows height for multi-line text blocks", () => {
+  const one = measureTextBox(
+    null,
+    normalizeTextShape({ type: "text", time: 1, price: 2, text: "one", fontSize: 20 }),
+    { x: 0, y: 0 }
+  );
+  const three = measureTextBox(
+    null,
+    normalizeTextShape({
+      type: "text",
+      time: 1,
+      price: 2,
+      text: "line1\nline2\nline3",
+      fontSize: 20
+    }),
+    { x: 0, y: 0 }
+  );
+  assert.equal(one.lines.length, 1);
+  assert.equal(three.lines.length, 3);
+  assert.ok(three.h > one.h);
+  assert.ok(Math.abs(three.h - (one.h + 2 * one.lineH)) < 0.5);
+});
+
 test("templates treat text as eligible and keep fontSize", async () => {
   const {
     isTemplateEligibleType,

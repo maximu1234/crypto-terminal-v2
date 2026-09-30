@@ -232,7 +232,8 @@ function evaluateSplit(candles, rsiValues, prefs, chartTf, trainPct) {
     rsiValues: split.train.rsiValues
   });
   const testResult = runRsiTouchFlip(split.test.candles, prefs, {
-    rsiValues: split.test.rsiValues
+    rsiValues: split.test.rsiValues,
+    excludeFormingBar: true
   });
   const train = {
     ...trainResult.overview,
@@ -242,7 +243,10 @@ function evaluateSplit(candles, rsiValues, prefs, chartTf, trainPct) {
     ...testResult.overview,
     chartDays: split.test.days
   };
-  const fullResult = runRsiTouchFlip(candles, prefs, { rsiValues });
+  const fullResult = runRsiTouchFlip(candles, prefs, {
+    rsiValues,
+    excludeFormingBar: true
+  });
   const overview = {
     ...fullResult.overview,
     chartDays: (Number(split.train.days) || 0) + (Number(split.test.days) || 0)

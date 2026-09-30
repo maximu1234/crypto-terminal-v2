@@ -214,11 +214,10 @@ body.terminal-page #draw-toolbar.draw-toolbar-inline .draw-btn .draw-tool-icon--
   display:none;
 }
 
-/* Long / Short: стоп ($), перетаскивание и удаление */
+/* Long / Short: стоп ($), настройки координат, перетаскивание и удаление */
 .draw-style-float.draw-style-float--position .draw-color-btn,
 .draw-style-float.draw-style-float--position .draw-width-btn,
 .draw-style-float.draw-style-float--position .draw-template-btn,
-.draw-style-float.draw-style-float--position .draw-settings-btn,
 .draw-style-float.draw-style-float--position .draw-alert-toggle{
   display:none !important;
 }
@@ -239,6 +238,11 @@ body.terminal-page #draw-toolbar.draw-toolbar-inline .draw-btn .draw-tool-icon--
   color:#9ca3af;
   white-space:nowrap;
   cursor:default;
+  flex-wrap:wrap;
+}
+
+form.draw-position-risk{
+  margin:0;
 }
 
 .draw-position-risk.hidden{
@@ -285,10 +289,31 @@ body.terminal-page #draw-toolbar.draw-toolbar-inline .draw-btn .draw-tool-icon--
   font-weight:600;
   cursor:pointer;
   flex-shrink:0;
+  white-space:nowrap;
 }
 
 .draw-position-risk-apply:hover{
   background:#166534;
+}
+
+.draw-position-risk-apply--stops{
+  border-color:#1d4ed8;
+  background:#1e3a5f;
+  color:#dbeafe;
+}
+
+.draw-position-risk-apply--stops:hover{
+  background:#1e40af;
+}
+
+.draw-position-risk-apply--stops.is-armed{
+  border-color:#b91c1c;
+  background:#991b1b;
+  color:#fee2e2;
+}
+
+.draw-position-risk-apply--stops.is-armed:hover{
+  background:#7f1d1d;
 }
 
 .draw-position-risk-apply.hidden{
@@ -921,13 +946,153 @@ body.terminal-page #draw-toolbar.draw-toolbar-inline .draw-btn .draw-tool-icon--
   box-sizing:border-box;
 }
 
+.draw-settings-popover--coords{
+  min-width:280px;
+  width:max-content;
+  max-width:min(420px,calc(100vw - 24px));
+}
+
+.draw-settings-shell{
+  display:flex;
+  flex-direction:column;
+  min-width:0;
+}
+
+.draw-settings-tabs{
+  display:flex;
+  gap:16px;
+  margin:-4px -12px 12px;
+  padding:0 12px;
+  border-bottom:1px solid #2a2e39;
+}
+
+.draw-settings-tab{
+  appearance:none;
+  background:none;
+  border:none;
+  padding:8px 0 10px;
+  margin:0;
+  font-size:13px;
+  color:#787b86;
+  cursor:pointer;
+  box-shadow:inset 0 -2px 0 transparent;
+}
+
+.draw-settings-tab:hover{
+  color:#d1d4dc;
+}
+
+.draw-settings-tab.is-active{
+  color:#f8fafc;
+  box-shadow:inset 0 -2px 0 #f8fafc;
+}
+
+.draw-coord-settings{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  min-width:260px;
+}
+
+.draw-coord-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+
+.draw-coord-label{
+  font-size:12px;
+  color:#d1d4dc;
+  white-space:nowrap;
+}
+
+.draw-coord-fields{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+.draw-coord-input-wrap{
+  position:relative;
+  display:inline-flex;
+  align-items:stretch;
+}
+
+.draw-settings-popover .draw-coord-input{
+  width:96px;
+  padding:6px 22px 6px 8px;
+  text-align:right;
+  font-variant-numeric:tabular-nums;
+}
+
+.draw-settings-popover .draw-coord-input:focus{
+  outline:none;
+  border-color:#2962ff;
+}
+
+.draw-coord-spin{
+  position:absolute;
+  top:1px;
+  right:1px;
+  bottom:1px;
+  width:16px;
+  display:flex;
+  flex-direction:column;
+}
+
+.draw-coord-spin-btn{
+  flex:1;
+  margin:0;
+  padding:0;
+  border:none;
+  background:transparent;
+  cursor:pointer;
+  position:relative;
+}
+
+.draw-coord-spin-btn:hover{
+  background:rgba(255,255,255,0.06);
+}
+
+.draw-coord-spin-up::before,
+.draw-coord-spin-down::before{
+  content:"";
+  position:absolute;
+  left:50%;
+  width:0;
+  height:0;
+  border-left:3px solid transparent;
+  border-right:3px solid transparent;
+}
+
+.draw-coord-spin-up::before{
+  top:2px;
+  transform:translateX(-50%);
+  border-bottom:4px solid #9ca3af;
+}
+
+.draw-coord-spin-down::before{
+  bottom:2px;
+  transform:translateX(-50%);
+  border-top:4px solid #9ca3af;
+}
+
+.fib-trend-row{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-bottom:10px;
+}
+
 .fib-trend-label{
   display:flex;
   align-items:center;
   gap:8px;
   font-size:12px;
   color:#e5e7eb;
-  margin-bottom:10px;
+  margin-bottom:0;
+  flex:1;
   cursor:pointer;
   user-select:none;
 }
@@ -1010,6 +1175,14 @@ body.terminal-page #draw-toolbar.draw-toolbar-inline .draw-btn .draw-tool-icon--
   align-items:center;
   gap:6px;
   min-width:0;
+}
+
+.channel-level-row{
+  grid-template-columns:14px minmax(0,4rem) 28px;
+}
+
+.channel-level-row:not(:has(.channel-level-on:checked)) .channel-level-val{
+  color:#6b7280;
 }
 
 .fib-level-row .fib-level-on{
@@ -1390,6 +1563,16 @@ body.tablet-chart .draw-style-float *{
   -webkit-touch-callout:none;
 }
 
+body.tablet-chart.tablet-chart-draw-mode #charts-stack .draw-position-risk,
+body.tablet-chart.tablet-chart-draw-mode #charts-stack .draw-position-risk *,
+body.tablet-chart .draw-style-float .draw-position-risk,
+body.tablet-chart .draw-style-float .draw-position-risk *{
+  -webkit-user-select:text !important;
+  user-select:text !important;
+  touch-action:manipulation;
+  -webkit-touch-callout:default !important;
+}
+
 body.tablet-chart.tablet-chart-draw-mode #charts-stack,
 body.tablet-chart.tablet-chart-draw-mode #charts-stack *{
   -webkit-user-select:none !important;
@@ -1404,12 +1587,14 @@ body.tablet-chart .price-scale-touch-strip{
   z-index:30;
   bottom:var(--chart-time-scale-height, 28px);
   touch-action:none;
+  cursor:ns-resize;
 }
 
 body.tablet-chart .rsi-scale-touch-strip{
   display:block;
   pointer-events:auto;
   z-index:30;
+  cursor:ns-resize;
 }
 
 .rsi-scale-touch-strip{
@@ -2010,6 +2195,11 @@ body.tablet-chart #rsi-wrap .rsi-level-line:not(.hidden){
   z-index:26;
 }
 
+body.tablet-chart #chart-wrap .chart-dom-crosshair-horz,
+body.tablet-chart .widget-chart-wrap .chart-dom-crosshair-horz{
+  z-index:26;
+}
+
 #chart-wrap .chart-dom-crosshair-vert.hidden,
 #chart-wrap .chart-dom-crosshair-horz.hidden,
 #rsi-wrap .chart-dom-crosshair-vert.hidden,
@@ -2077,7 +2267,8 @@ body.tablet-chart #rsi-wrap .rsi-level-line:not(.hidden){
   gap:6px;
 }
 
-#coin-search{
+#coin-search,
+#coin-volume-filter{
   width:100%;
   background:#171b21;
   color:white;
@@ -2089,11 +2280,18 @@ body.tablet-chart #rsi-wrap .rsi-level-line:not(.hidden){
   outline:none;
 }
 
-#coin-search::placeholder{
+#coin-volume-filter{
+  font-variant-numeric:tabular-nums;
+  letter-spacing:.02em;
+}
+
+#coin-search::placeholder,
+#coin-volume-filter::placeholder{
   color:#6b7280;
 }
 
-#coin-search:focus{
+#coin-search:focus,
+#coin-volume-filter:focus{
   border-color:#2563eb;
 }
 

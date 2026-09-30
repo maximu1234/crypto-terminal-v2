@@ -24,7 +24,7 @@ body.trade-diary-body .coins-diary-link.active{
 }
 
 .trade-diary-shell{
-  --trade-diary-inner-width:960px;
+  --trade-diary-inner-width:1120px;
   box-sizing:border-box;
   width:min(
 100%,
@@ -164,7 +164,7 @@ var(
 --trade-diary-inner-width,
 916px
 );
-  grid-template-columns:96px minmax(148px,1fr) 28px 96px 88px 28px 72px 72px 92px;
+  grid-template-columns:96px minmax(148px,1fr) 28px 96px 88px 28px 72px 72px 92px minmax(132px,180px);
   column-gap:16px;
   align-items:center;
   padding:8px 18px;
@@ -315,6 +315,71 @@ var(
 .trade-diary-row:hover,
 .trade-diary-row.is-open{
   background:rgba(255,255,255,0.03);
+}
+
+.trade-diary-comment-cell{
+  min-width:0;
+  display:flex;
+  align-items:center;
+}
+
+.trade-diary-comment-input{
+  width:100%;
+  min-width:0;
+  height:22px;
+  padding:0 6px;
+  border:1px solid #2e2e30;
+  border-radius:4px;
+  background:#0f0f0f;
+  color:#f0f3fa;
+  font-size:12px;
+  line-height:20px;
+  font-family:inherit;
+  box-sizing:border-box;
+}
+
+.trade-diary-comment-input:focus{
+  outline:none;
+  border-color:#4b5563;
+}
+
+.trade-diary-download-wrap{
+  position:relative;
+}
+
+.trade-diary-download-menu{
+  position:absolute;
+  top:calc(100% + 4px);
+  right:0;
+  z-index:40;
+  min-width:168px;
+  padding:4px;
+  border:1px solid #374151;
+  border-radius:8px;
+  background:#1e222d;
+  box-shadow:0 8px 24px rgba(0,0,0,0.35);
+}
+
+.trade-diary-download-menu.hidden{
+  display:none;
+}
+
+.trade-diary-download-menu button{
+  display:block;
+  width:100%;
+  text-align:left;
+  border:0;
+  background:transparent;
+  color:#e5e7eb;
+  font:inherit;
+  font-size:13px;
+  padding:8px 10px;
+  border-radius:6px;
+  cursor:pointer;
+}
+
+.trade-diary-download-menu button:hover{
+  background:#2a2e39;
 }
 
 .trade-diary-time{

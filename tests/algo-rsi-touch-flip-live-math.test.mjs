@@ -233,6 +233,33 @@ test("open is filled only when exchange returns a position", () => {
   );
 });
 
+test("MTF live waits for last closed 1m before 5m bar decision", () => {
+  const chartOpen = Date.parse("2026-09-30T18:10:00+07:00") / 1000;
+  const need = math.requiredSourceOpenSecForChartBar(chartOpen, "5", "1");
+  assert.equal(need, chartOpen + 240);
+  const rsiCandles = [{ time: chartOpen + 180, close: 1 }];
+  assert.equal(
+    math.isChartBarSourceRsiReady(chartOpen, "5", "1", rsiCandles, null),
+    false
+  );
+  const ready = [{ time: need, close: 1 }];
+  assert.equal(
+    math.isChartBarSourceRsiReady(chartOpen, "5", "1", ready, null),
+    true
+  );
+  assert.equal(
+    math.isChartBarSourceRsiReady(chartOpen, "5", "1", ready, {
+      time: need,
+      close: 1
+    }),
+    false
+  );
+  assert.equal(
+    math.isChartBarSourceRsiReady(chartOpen, "5", "5", [{ time: chartOpen }], null),
+    true
+  );
+});
+
 test("ghost flatten only when live thinks open and exchange is flat", () => {
   const ghost = {
     mode: "trade",

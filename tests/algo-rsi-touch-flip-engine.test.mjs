@@ -500,6 +500,9 @@ test("live engine logs CYCLE SL only via closeAll and reconciles vanished exchan
     assert.match(src, /ордер принят, позиции на бирже нет/);
     assert.match(src, /rsiTouchFlipOpenLooksFilled/);
     assert.match(src, /flattenGhostIfMissing/);
+    assert.match(src, /flushPendingChartBars/);
+    assert.match(src, /isChartBarSourceRsiReady/);
+    assert.match(src, /pendingChartBarOpens/);
     assert.doesNotMatch(src, /setTradingStop|trading-stop|stopLoss/);
     const ghost = src.slice(
       src.indexOf("async function flattenGhostIfMissing"),

@@ -84,6 +84,7 @@ ALGO_ANALYSIS_BOT_CHANGE_EVENT,
 ALGO_ANALYSIS_BOT_NONE,
 ALGO_ANALYSIS_BOT_PATTERN_12,
 ALGO_ANALYSIS_BOT_RSI_TOUCH_FLIP,
+ALGO_ANALYSIS_BOT_MACD_FLIP_TOUCH,
 getActiveAnalysisBotId,
 isActiveAnalysisBot,
 isAnyAnalysisBotActive,
@@ -119,9 +120,16 @@ mountRsiTouchFlipHost
 } from "./algo-trading/rsi-touch-flip-panel.js?v=38";
 
 import {
+mountMacdFlipTouchHost
+} from "./algo-trading/macd-flip-touch-panel.js?v=1";
+
+import {
 loadRsiTouchFlipPrefs,
 saveRsiTouchFlipPrefs
 } from "./algo-trading/rsi-touch-flip-prefs.js?v=9";
+import {
+loadMacdFlipTouchPrefs
+} from "./algo-trading/macd-flip-touch-prefs.js?v=9";
 
 import {
 clearAlgoPatternAnalysisUi,
@@ -764,6 +772,8 @@ let entryOverlay =
 null;
 let rsiTouchFlipHost =
 null;
+let macdFlipTouchHost =
+null;
 let tradeUi =
 null;
 let botStrategyUi =
@@ -834,6 +844,7 @@ true
 );
 drawingTools?.scheduleRedraw?.();
 rsiTouchFlipHost?.refresh?.();
+macdFlipTouchHost?.refresh?.();
 
 }
 
@@ -977,7 +988,20 @@ algoPattern12EnabledOnce =
 false;
 refreshSupertrendFilterLines();
 rsiTouchFlipHost?.refresh?.();
+macdFlipTouchHost?.refresh?.();
 applyEffectiveRsiPaneSettings();
+if(
+isActiveAnalysisBot(
+ALGO_ANALYSIS_BOT_MACD_FLIP_TOUCH
+)
+){
+syncChartMacdPaneFromFlip();
+}else{
+chartIndicators?.setIndicatorEnabled?.(
+"macd",
+false
+);
+}
 requestAnimationFrame(
 ()=>{
 recaptureAlgoStatsPanelHeight();
@@ -1023,6 +1047,56 @@ requestAnimationFrame(
 recaptureAlgoStatsPanelHeight();
 }
 );
+
+}
+
+function syncChartMacdPaneFromFlip(
+flipPatch
+){
+
+if(
+!isActiveAnalysisBot(
+ALGO_ANALYSIS_BOT_MACD_FLIP_TOUCH
+)
+){
+return;
+}
+
+const prefs =
+flipPatch &&
+typeof flipPatch ===
+"object"
+? flipPatch
+: loadMacdFlipTouchPrefs();
+const macdInd =
+chartIndicators?.getIndicator?.(
+"macd"
+);
+
+if(
+!macdInd
+){
+return;
+}
+
+chartIndicators?.setIndicatorEnabled?.(
+"macd",
+true
+);
+macdInd.applySettings?.(
+{
+fastLength:
+prefs.fastLength,
+slowLength:
+prefs.slowLength,
+signalLength:
+prefs.signalLength,
+tf:
+prefs.macdTf ||
+""
+}
+);
+chartIndicators?.notifyCandlesUpdate?.();
 
 }
 
@@ -1870,6 +1944,7 @@ force:
 }
 
 rsiTouchFlipHost?.refresh?.();
+macdFlipTouchHost?.refresh?.();
 
 drawingTools?.scheduleRedraw?.();
 
@@ -3025,6 +3100,63 @@ batchGapMs:
 0
 }
 )
+}
+);
+
+macdFlipTouchHost?.destroy?.();
+macdFlipTouchHost =
+mountMacdFlipTouchHost(
+{
+getCandles:()=>
+candles,
+getSeries:()=>
+candleSeries,
+getChartTf:()=>
+tf,
+getSymbol:()=>
+symbol,
+isHistoryReady:()=>
+historyStatsReady,
+loadHistory:(
+histSymbol,
+histTf,
+requests,
+options
+)=>
+isAlgoBotLiteMode()
+? loadAlgoBotLiteHistory(
+histSymbol,
+histTf,
+requests ||
+HISTORY_REQUESTS,
+options ||
+{
+parallel:
+true,
+batchGapMs:
+0
+}
+)
+: loadMarketHistory(
+histSymbol,
+histTf,
+requests ||
+HISTORY_REQUESTS,
+options ||
+{
+parallel:
+true,
+batchGapMs:
+0
+}
+),
+syncChartMacdPaneFromFlip(
+patch
+){
+syncChartMacdPaneFromFlip(
+patch
+);
+}
 }
 );
 
@@ -5029,6 +5161,9 @@ entryOverlay =
 null;
 rsiTouchFlipHost?.destroy?.();
 rsiTouchFlipHost =
+null;
+macdFlipTouchHost?.destroy?.();
+macdFlipTouchHost =
 null;
 destroySupertrendFilterLines();
 tradeUi?.destroy?.();

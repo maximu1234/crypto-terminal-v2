@@ -32,6 +32,10 @@ export const ALGO_FLAG_FAVORITES =
 export const ALGO_FLAG_EARLY_T3 =
 "algoEarlyT3";
 
+/** MACD Flip Touch book list (dedicated coin-list market). */
+export const ALGO_FLAG_MACD_FLIP_TOUCH =
+"algoMacdFlipTouch";
+
 export const ALGO_MARKET_LONG_5M =
 "algo-long-5m";
 
@@ -89,6 +93,14 @@ flagId:
 "algoRsiTouchFlip",
 title:
 "RSI Touch Flip"
+},
+{
+ui:
+"algo-macd-flip",
+flagId:
+ALGO_FLAG_MACD_FLIP_TOUCH,
+title:
+"MACD Flip Touch"
 }
 ];
 

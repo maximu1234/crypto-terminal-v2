@@ -35,11 +35,20 @@ import {
 replaceRsiTouchFlipBook
 } from "./rsi-touch-flip-book.js?v=5";
 import {
+replaceMacdFlipTouchBook
+} from "./macd-flip-touch-book.js?v=5";
+import {
 saveRsiTouchFlipBalancePct,
 loadRsiTouchFlipBalancePct,
 saveRsiTouchFlipMarginMode,
 loadRsiTouchFlipMarginMode
 } from "./rsi-touch-flip-prefs.js?v=9";
+import {
+saveMacdFlipTouchBalancePct,
+loadMacdFlipTouchBalancePct,
+saveMacdFlipTouchMarginMode,
+loadMacdFlipTouchMarginMode
+} from "./macd-flip-touch-prefs.js?v=9";
 
 import {
 isAlgoBotWorking
@@ -320,6 +329,54 @@ extra.marginMode !==
 ""
 ? extra.marginMode
 : loadRsiTouchFlipMarginMode()
+}
+);
+
+if(
+!(
+result?.ok ||
+result?.running ||
+result?.alreadyRunning
+)
+){
+await releaseAlgoBotLock();
+}
+
+return result;
+}
+
+if(
+idNorm ===
+"macd-flip-touch"
+){
+const book =
+Array.isArray(
+extra?.book
+)
+? extra.book
+: [];
+const result =
+await api.startBot(
+{
+strategyId:
+"macd-flip-touch",
+book:
+book ||
+[],
+balancePct:
+extra?.balancePct !=
+null &&
+extra.balancePct !==
+""
+? extra.balancePct
+: loadMacdFlipTouchBalancePct(),
+marginMode:
+extra?.marginMode !=
+null &&
+extra.marginMode !==
+""
+? extra.marginMode
+: loadMacdFlipTouchMarginMode()
 }
 );
 
@@ -670,6 +727,50 @@ return true;
 
 }
 
+export function maybeApplyMacdFlipTouchBookFromBotStatus(
+status
+){
+
+if(
+status?.applyMacdFlipTouchBook !==
+true ||
+!Array.isArray(
+status.publishedMacdFlipTouchBook
+)
+){
+return false;
+}
+
+replaceMacdFlipTouchBook(
+status.publishedMacdFlipTouchBook
+);
+
+if(
+status.publishedMacdFlipTouchBalancePct !=
+null &&
+status.publishedMacdFlipTouchBalancePct !==
+""
+){
+saveMacdFlipTouchBalancePct(
+status.publishedMacdFlipTouchBalancePct
+);
+}
+
+if(
+status.publishedMacdFlipTouchMarginMode !=
+null &&
+status.publishedMacdFlipTouchMarginMode !==
+""
+){
+saveMacdFlipTouchMarginMode(
+status.publishedMacdFlipTouchMarginMode
+);
+}
+
+return true;
+
+}
+
 export async function syncRsiTouchFlipBookToLive(
 book
 ){
@@ -705,6 +806,41 @@ loadRsiTouchFlipMarginMode()
 
 }
 
+export async function syncMacdFlipTouchBookToLive(
+book
+){
+
+const api =
+desktopAlgoApi();
+
+if(
+!api?.syncMacdFlipTouchBook
+){
+return {
+ok:
+true,
+skipped:
+true
+};
+}
+
+return api.syncMacdFlipTouchBook(
+{
+book:
+Array.isArray(
+book
+)
+? book
+: [],
+balancePct:
+loadMacdFlipTouchBalancePct(),
+marginMode:
+loadMacdFlipTouchMarginMode()
+}
+);
+
+}
+
 export async function fetchRsiTouchFlipBookFromMain(){
 
 const api =
@@ -722,6 +858,26 @@ rows:
 }
 
 return api.getRsiTouchFlipBook();
+
+}
+
+export async function fetchMacdFlipTouchBookFromMain(){
+
+const api =
+desktopAlgoApi();
+
+if(
+!api?.getMacdFlipTouchBook
+){
+return {
+ok:
+false,
+rows:
+[]
+};
+}
+
+return api.getMacdFlipTouchBook();
 
 }
 
@@ -750,6 +906,9 @@ maybeApplyTickerBookFromBotStatus(
 payload
 );
 maybeApplyRsiTouchFlipBookFromBotStatus(
+payload
+);
+maybeApplyMacdFlipTouchBookFromBotStatus(
 payload
 );
 

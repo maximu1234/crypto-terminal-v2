@@ -203,6 +203,10 @@ role="menuitem"
 RSI Touch Flip
 </button>
 </div>
+<div class="algo-bots-item-row" role="none">
+<input type="checkbox" class="algo-bots-item-enabled" id="algo-bots-item-macd-flip-touch-enabled" data-algo-bot-id="macd-flip-touch" aria-label="Включить MACD Flip Touch" />
+<button type="button" class="algo-bots-item" id="algo-bots-item-macd-flip-touch" data-algo-bot-id="macd-flip-touch" role="menuitem">MACD Flip Touch</button>
+</div>
 </div>
 </div>
 
@@ -491,6 +495,235 @@ tabindex="0"
 ></div>
 
 <div id="algo-stats-panel" class="algo-stats-panel" aria-label="Статистика АлгоТрейдинг">
+<div class="algo-stats-columns" data-algo-analysis-bot="macd-flip-touch">
+<div class="algo-macd-flip-stats-tabs algo-stats-mode" role="tablist" aria-label="Панель Данные">
+<button type="button" class="algo-stats-mode-btn active" id="algo-macd-flip-tab-data" data-algo-macd-flip-stats-tab="data" role="tab" aria-selected="true" aria-controls="algo-macd-flip-panel-data">Данные</button>
+<button type="button" class="algo-stats-mode-btn" id="algo-macd-flip-tab-equity" data-algo-macd-flip-stats-tab="equity" role="tab" aria-selected="false" aria-controls="algo-macd-flip-panel-equity">Доходность</button>
+</div>
+<div id="algo-macd-flip-panel-data" class="algo-macd-flip-stats-tab-panel" data-algo-macd-flip-stats-tab="data" role="tabpanel" aria-labelledby="algo-macd-flip-tab-data">
+<div class="algo-stats-chart-cols">
+<div class="algo-stats-col">
+<div class="algo-stats-col-title">MACD Flip Touch</div>
+<div class="algo-stats-row algo-stats-row--setting">
+<label class="algo-stats-label" for="algo-macd-flip-chart-tf">Таймфрейм</label>
+<select id="algo-macd-flip-chart-tf" class="algo-stats-select algo-macd-flip-select--tf">
+<option value="1">1m</option>
+<option value="5">5m</option>
+<option value="15">15m</option>
+<option value="60">1h</option>
+<option value="240">4h</option>
+<option value="D">D</option>
+<option value="W">W</option>
+</select>
+</div>
+<div class="algo-stats-row algo-stats-row--setting">
+<label class="algo-stats-label" for="algo-macd-flip-fast">Быстрая</label>
+<input type="number" id="algo-macd-flip-fast" class="algo-stats-input" min="2" max="999" step="1" value="12" inputmode="numeric" />
+</div>
+<div class="algo-stats-row algo-stats-row--setting">
+<label class="algo-stats-label" for="algo-macd-flip-slow">Медленная</label>
+<input type="number" id="algo-macd-flip-slow" class="algo-stats-input" min="2" max="999" step="1" value="26" inputmode="decimal" />
+</div>
+<div class="algo-stats-row algo-stats-row--setting">
+<label class="algo-stats-label" for="algo-macd-flip-signal">Сигнал</label>
+<input type="number" id="algo-macd-flip-signal" class="algo-stats-input" min="1" max="999" step="1" value="9" inputmode="decimal" />
+</div>
+<div class="algo-stats-row algo-stats-row--setting">
+<label class="algo-stats-label" for="algo-macd-flip-tf">Таймфрейм MACD</label>
+<select id="algo-macd-flip-tf" class="algo-stats-select algo-macd-flip-select--wide">
+<option value="">как таймфрейм</option>
+<option value="1">1m</option>
+<option value="5">5m</option>
+<option value="15">15m</option>
+<option value="60">1h</option>
+<option value="240">4h</option>
+<option value="D">1D</option>
+</select>
+</div>
+<div class="algo-stats-divider" aria-hidden="true"></div>
+<div class="algo-stats-row algo-stats-row--setting">
+<label class="algo-stats-label" for="algo-macd-flip-side">Направление</label>
+<select id="algo-macd-flip-side" class="algo-stats-select algo-macd-flip-select--side">
+<option value="BOTH">BOTH</option>
+<option value="LONG">LONG</option>
+<option value="SHORT">SHORT</option>
+</select>
+</div>
+<div class="algo-stats-row algo-stats-row--setting">
+<label class="algo-stats-label" for="algo-macd-flip-stack">Покупок/продаж подряд</label>
+<input type="number" id="algo-macd-flip-stack" class="algo-stats-input" min="1" max="20" step="1" value="3" inputmode="numeric" />
+</div>
+<div class="algo-stats-row algo-stats-row--setting">
+<label class="algo-stats-label" for="algo-macd-flip-budget">Бюджет USDT</label>
+<input type="number" id="algo-macd-flip-budget" class="algo-stats-input" min="1" step="1" value="100" inputmode="decimal" />
+</div>
+<div class="algo-stats-row algo-stats-row--setting">
+<label class="algo-stats-label" for="algo-macd-flip-size-mode">Объём</label>
+<select id="algo-macd-flip-size-mode" class="algo-stats-select algo-macd-flip-select--wide">
+<option value="equal">Одним объёмом</option>
+<option value="average">Усреднение</option>
+</select>
+</div>
+<div class="algo-stats-row algo-stats-row--setting" id="algo-macd-flip-mult-row" hidden>
+<label class="algo-stats-label" for="algo-macd-flip-mult">Множитель усреднения</label>
+<input type="number" id="algo-macd-flip-mult" class="algo-stats-input" min="1" step="0.1" value="1.5" inputmode="decimal" />
+</div>
+<div class="algo-stats-row algo-stats-row--setting">
+<label class="algo-stats-label" for="algo-macd-flip-cycle-sl">СЛ цикла</label>
+<label class="algo-stats-check" title="Вариант: закрыть сделку, если минус ≥ % от бюджета тикера. Бот не выключается.">
+<input type="checkbox" id="algo-macd-flip-cycle-sl" />
+</label>
+</div>
+<div class="algo-stats-row algo-stats-row--setting" id="algo-macd-flip-cycle-sl-pct-row" hidden>
+<label class="algo-stats-label" for="algo-macd-flip-cycle-sl-pct">Макс. убыток %</label>
+<input type="number" id="algo-macd-flip-cycle-sl-pct" class="algo-stats-input" min="1" max="90" step="1" value="9" inputmode="decimal" title="От бюджета тикера (в Обзоре — поле Бюджет USDT, в live — доля). После СЛ тот же вход, пока MACD с неверной стороны сигнала, не повторяется." />
+</div>
+<div class="algo-stats-row algo-stats-row--macd-flip-fit-actions">
+<button type="button" class="algo-stats-mode-btn" id="algo-macd-flip-add-book">Добавить в книгу</button>
+<button type="button" class="algo-stats-mode-btn" id="algo-macd-flip-remove-book" hidden>Убрать из книги</button>
+</div>
+<p class="algo-macd-flip-book-status" id="algo-macd-flip-book-status" role="status"></p>
+</div>
+<div class="algo-stats-col">
+<div class="algo-stats-col-title">Обзор</div>
+<p class="algo-macd-flip-col-note">Весь график — не проверка для запуска.</p>
+<p class="algo-macd-flip-col-note" id="algo-macd-flip-overview-error" hidden></p>
+<div class="algo-stats-row">
+<span class="algo-stats-label">Дней</span>
+<span class="algo-stats-value" id="algo-macd-flip-days">—</span>
+</div>
+<div class="algo-stats-row">
+<span class="algo-stats-label">Чистая прибыль</span>
+<span class="algo-stats-value" id="algo-macd-flip-net">—</span>
+</div>
+<div class="algo-stats-row">
+<span class="algo-stats-label">Прибыль в лонг</span>
+<span class="algo-stats-value" id="algo-macd-flip-long">—</span>
+</div>
+<div class="algo-stats-row">
+<span class="algo-stats-label">Прибыль в шорт</span>
+<span class="algo-stats-value" id="algo-macd-flip-short">—</span>
+</div>
+<div class="algo-stats-row">
+<span class="algo-stats-label">Валовая прибыль</span>
+<span class="algo-stats-value" id="algo-macd-flip-gross-profit">—</span>
+</div>
+<div class="algo-stats-row">
+<span class="algo-stats-label">Валовый убыток</span>
+<span class="algo-stats-value" id="algo-macd-flip-gross-loss">—</span>
+</div>
+<div class="algo-stats-row">
+<span class="algo-stats-label">Закрытых сделок</span>
+<span class="algo-stats-value" id="algo-macd-flip-closed">—</span>
+</div>
+<div class="algo-stats-row">
+<span class="algo-stats-label">Прибыльных</span>
+<span class="algo-stats-value" id="algo-macd-flip-profitable">—</span>
+</div>
+<div class="algo-stats-row">
+<span class="algo-stats-label">Профит-фактор</span>
+<span class="algo-stats-value" id="algo-macd-flip-pf">—</span>
+</div>
+<div class="algo-stats-row">
+<span class="algo-stats-label">Макс. просадка</span>
+<span class="algo-stats-value" id="algo-macd-flip-dd">—</span>
+</div>
+<div class="algo-stats-row">
+<span class="algo-stats-label" title="Худший нереализованный минус за один цикл (пока позиция открыта), даже если закрытие в плюс">Макс. минус сделки</span>
+<span class="algo-stats-value" id="algo-macd-flip-trade-mae">—</span>
+</div>
+<div class="algo-stats-row">
+<span class="algo-stats-label">Средняя сделка</span>
+<span class="algo-stats-value" id="algo-macd-flip-avg">—</span>
+</div>
+<div class="algo-stats-row">
+<span class="algo-stats-label">Среднее баров</span>
+<span class="algo-stats-value" id="algo-macd-flip-avg-bars">—</span>
+</div>
+<div class="algo-stats-row" id="algo-macd-flip-liquidations-row">
+<span class="algo-stats-label">Ликвидации</span>
+<span class="algo-stats-value" id="algo-macd-flip-liquidations">—</span>
+</div>
+<div class="algo-stats-divider" aria-hidden="true"></div>
+<div class="algo-stats-row algo-stats-row--setting">
+<label class="algo-stats-label" for="algo-macd-flip-commission">Commission %</label>
+<input type="number" id="algo-macd-flip-commission" class="algo-stats-input" min="0" max="10" step="0.01" value="0.04" inputmode="decimal" />
+</div>
+<div class="algo-stats-row algo-stats-row--setting">
+<label class="algo-stats-label" for="algo-macd-flip-slippage">Slippage (ticks)</label>
+<input type="number" id="algo-macd-flip-slippage" class="algo-stats-input" min="0" max="1000" step="1" value="0" inputmode="numeric" />
+</div>
+<div class="algo-stats-row algo-stats-row--setting">
+<label class="algo-stats-label" for="algo-macd-flip-compound">Compound</label>
+<label class="algo-stats-check" title="Объём следующего цикла от текущего equity (бюджет + закрытый PnL). Выкл — всегда от поля «Бюджет USDT».">
+<input type="checkbox" id="algo-macd-flip-compound" />
+</label>
+</div>
+</div>
+<div class="algo-stats-col algo-stats-col--macd-flip-fit">
+<div class="algo-stats-col-title">Подбор Train / Test</div>
+<div class="algo-stats-row algo-stats-row--setting">
+<label class="algo-stats-label" for="algo-macd-flip-train-pct">Train %</label>
+<input type="number" id="algo-macd-flip-train-pct" class="algo-stats-input" min="50" max="90" step="1" value="70" inputmode="numeric" />
+</div>
+<div class="algo-stats-row">
+<span class="algo-stats-label">Окна</span>
+<span class="algo-stats-value algo-macd-flip-split-label" id="algo-macd-flip-split-label">—</span>
+</div>
+<div class="algo-stats-row">
+<span class="algo-stats-label">Сейчас в полях → Test</span>
+<span class="algo-stats-value" id="algo-macd-flip-current-test">—</span>
+</div>
+<div class="algo-stats-row algo-stats-row--macd-flip-fit-actions">
+<button type="button" class="algo-stats-mode-btn" id="algo-macd-flip-optimize">Подобрать</button>
+<button type="button" class="algo-stats-mode-btn" id="algo-macd-flip-optimize-stop" hidden disabled>Стоп</button>
+</div>
+<div class="algo-macd-flip-fit-progress" id="algo-macd-flip-fit-progress" hidden>
+<div class="algo-macd-flip-fit-progress-track">
+<div class="algo-macd-flip-fit-progress-bar" id="algo-macd-flip-fit-progress-bar"></div>
+</div>
+<span class="algo-macd-flip-fit-progress-label" id="algo-macd-flip-fit-progress-label">0 / 0</span>
+</div>
+<div class="algo-macd-flip-launch" id="algo-macd-flip-launch" data-state="idle">
+<div class="algo-macd-flip-launch-title" id="algo-macd-flip-launch-title">Сначала подберите параметры</div>
+<div class="algo-macd-flip-launch-params" id="algo-macd-flip-launch-params"></div>
+<div class="algo-macd-flip-launch-detail" id="algo-macd-flip-launch-detail">Сетка предлагает максимум чистой среди наборов с зелёным Test — это в бота. Чемпион Обзора с красным Test в бота не берём.</div>
+</div>
+<div class="algo-stats-row">
+<span class="algo-stats-label">Train</span>
+<span class="algo-stats-value" id="algo-macd-flip-fit-train">—</span>
+</div>
+<div class="algo-stats-row">
+<span class="algo-stats-label">Test</span>
+<span class="algo-stats-value" id="algo-macd-flip-fit-test">—</span>
+</div>
+<div class="algo-stats-row algo-stats-row--macd-flip-fit-actions">
+<button type="button" class="algo-stats-mode-btn" id="algo-macd-flip-apply-fit" disabled>Подставить в поля слева</button>
+</div>
+<p class="algo-macd-flip-col-note">В бота — лучший набор с зелёным Test. Макс. по Обзору, если Test красный, только справка.</p>
+<div class="algo-stats-divider" aria-hidden="true"></div>
+<div class="algo-stats-row algo-stats-row--setting">
+<label class="algo-stats-label" for="algo-macd-flip-marks">Метки сделок</label>
+<label class="algo-stats-check">
+<input type="checkbox" id="algo-macd-flip-marks" checked />
+</label>
+</div>
+</div>
+</div>
+</div>
+<div id="algo-macd-flip-panel-equity" class="algo-macd-flip-stats-tab-panel" data-algo-macd-flip-stats-tab="equity" role="tabpanel" aria-labelledby="algo-macd-flip-tab-equity" hidden>
+<div class="algo-macd-flip-equity">
+<div class="algo-macd-flip-equity-legend">
+<span class="algo-macd-flip-equity-legend-item is-pnl"><i></i>Доходность</span>
+<span class="algo-macd-flip-equity-legend-item is-train"><i></i>Train</span>
+<span class="algo-macd-flip-equity-legend-item is-test"><i></i>Test</span>
+<span class="algo-macd-flip-equity-legend-item is-trades"><i></i>Сделки</span>
+</div>
+<div id="algo-macd-flip-equity-chart" class="algo-macd-flip-equity-chart"></div>
+<p class="algo-macd-flip-equity-empty" id="algo-macd-flip-equity-empty" hidden>Нет данных для кривой</p>
+</div>
+</div>
+</div>
 <div class="algo-stats-columns" data-algo-analysis-bot="rsi-touch-flip">
 <div class="algo-rsi-flip-stats-tabs algo-stats-mode" role="tablist" aria-label="Панель Данные">
 <button type="button" class="algo-stats-mode-btn active" id="algo-rsi-flip-tab-data" data-algo-rsi-flip-stats-tab="data" role="tab" aria-selected="true" aria-controls="algo-rsi-flip-panel-data">Данные</button>
@@ -1643,6 +1876,33 @@ placeholder="без лимита"
 <p class="algo-bot-hint">Например 50% при 200 USDT доступно — бот работает на 100 USDT, три тикера получат по ~33 USDT.</p>
 <p class="algo-bot-hint" id="algo-bot-rsi-flip-book-summary">Книга пуста. Добавьте тикеры в панели Данные.</p>
 <p class="algo-bot-hint">Касание OS открывает/наращивает лонг, касание OB — шорт. Стоп закрывает только позиции, которые открыл этот бот.</p>
+</div>
+</div>
+</div>
+
+<div id="algo-bot-macd-flip-touch-settings-modal" class="algo-bot-settings-modal hidden" hidden>
+<div class="algo-bot-settings-modal-backdrop" data-close="algo-bot-macd-flip-touch-settings-modal"></div>
+<div class="algo-bot-settings-modal-card" role="dialog" aria-modal="true" aria-labelledby="algo-bot-macd-flip-touch-settings-modal-title">
+<div class="algo-bot-settings-modal-head">
+<h2 id="algo-bot-macd-flip-touch-settings-modal-title">MACD Flip Touch</h2>
+<button type="button" class="algo-bot-settings-modal-close" data-close="algo-bot-macd-flip-touch-settings-modal" aria-label="Закрыть">×</button>
+</div>
+<p class="algo-bot-settings-modal-note">Только автоматическая торговля: рыночные входы и выходы, без алертов. Опциональный СЛ цикла — чекбокс в колонке Данные (закрывает сделку, бот не стопает). Isolated или кросс — чекбокс ниже: один режим на все тикеры книги (на Unified Bybit это весь субаккаунт API-ключа). Параметры (MACD fast/slow/signal, ТФ, сторона, стек, СЛ) живут в книге. Бюджет live — равные доли от % доступного баланса, не поле «Бюджет USDT» в Данные. Добавить/убрать тикер — панель Данные; запущенный бот подхватывает книгу.</p>
+<div class="algo-bot-settings-modal-body">
+<div class="algo-bot-field algo-bot-field--row">
+<label class="algo-bot-label" for="algo-bot-macd-flip-balance-pct" title="Доля доступного баланса алго-ключа. Бюджет тикера = эта сумма / число тикеров в книге.">Размер баланса</label>
+<input type="number" id="algo-bot-macd-flip-balance-pct" class="algo-bot-input algo-bot-input--sm" min="1" max="100" step="1" value="100" inputmode="numeric" />
+<span class="algo-bot-unit">%</span>
+</div>
+<div class="algo-bot-field algo-bot-field--row">
+<label class="algo-bot-label" for="algo-bot-macd-flip-isolated" title="На Unified Bybit isolated или кросс ставится на весь субаккаунт — сразу на все тикеры книги.">Изолированная маржа</label>
+<label class="algo-bot-check">
+<input type="checkbox" id="algo-bot-macd-flip-isolated" />
+</label>
+</div>
+<p class="algo-bot-hint">Например 50% при 200 USDT доступно — бот работает на 100 USDT, три тикера получат по ~33 USDT.</p>
+<p class="algo-bot-hint" id="algo-bot-macd-flip-book-summary">Книга пуста. Добавьте тикеры в панели Данные.</p>
+<p class="algo-bot-hint">Кросс MACD вверх открывает/наращивает лонг, кросс вниз — шорт. Стоп закрывает только позиции, которые открыл этот бот.</p>
 </div>
 </div>
 </div>

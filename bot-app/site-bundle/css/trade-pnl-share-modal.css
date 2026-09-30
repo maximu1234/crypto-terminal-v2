@@ -25,7 +25,6 @@ border:1px solid #2a3140;
 box-shadow:0 18px 48px rgba(0,0,0,.45);
 }
 
-/* Высота превью = портретная карточка Позиций @ 360px ширины (960×1323). */
 .trade-pnl-share-dialog--diary{
 width:min(92vw,720px);
 }
@@ -88,6 +87,22 @@ max-width:360px;
 max-width:min(
 684px,
 calc(92vw - 36px)
+);
+}
+
+/* Bybit позиции: 960×1080 @ 360px → 405px. */
+.trade-pnl-share-dialog--bybit .trade-pnl-share-preview-wrap{
+--pnl-share-preview-h:min(
+405px,
+calc(92vh - 120px)
+);
+}
+
+/* Bybit дневник: 1323×720 @ 684px → 372px. */
+.trade-pnl-share-dialog--bybit.trade-pnl-share-dialog--diary .trade-pnl-share-preview-wrap{
+--pnl-share-preview-h:min(
+372px,
+calc(92vh - 120px)
 );
 }
 

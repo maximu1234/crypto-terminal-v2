@@ -688,6 +688,98 @@ result?.message ||
 };
 }
 
+const {
+parseMacdFlipTouchBookPayload
+} =
+require(
+"./algo-bot-macd-flip-touch-book-payload.cjs"
+);
+const macdParsed =
+parseMacdFlipTouchBookPayload(
+body
+);
+
+if(
+macdParsed.isMacdFlipTouch
+){
+const algoBotMacd =
+require(
+"./algo-trading-bot.cjs"
+);
+const macdResult =
+await algoBotMacd.syncMacdFlipTouchBook(
+{
+rows:
+macdParsed.rows,
+book:
+macdParsed.rows,
+source:
+"lan",
+balancePct:
+macdParsed.balancePct,
+marginMode:
+macdParsed.marginMode
+}
+);
+
+if(
+macdResult?.ok ===
+false
+){
+return macdResult;
+}
+
+const macdCount =
+Number(
+macdResult?.tickerCount
+) ||
+(
+Array.isArray(
+macdResult?.rows
+)
+? macdResult.rows.length
+: macdParsed.rows.length
+);
+
+try{
+sessionLog.appendNote(
+`Remote MACD Flip book applied: tickers=${macdCount}${
+macdResult?.running
+? " live-synced"
+: ""
+}`
+);
+}catch{
+/* ignore */
+}
+
+return {
+ok:
+true,
+strategyId:
+"macd-flip-touch",
+tickerCount:
+macdCount,
+added:
+macdResult?.added ||
+[],
+removed:
+macdResult?.removed ||
+[],
+updated:
+macdResult?.updated ||
+[],
+skipped:
+macdResult?.skipped ||
+[],
+running:
+!!macdResult?.running,
+message:
+macdResult?.message ||
+`Книга MACD Flip записана (${macdCount} тикеров).`
+};
+}
+
 const algoBot =
 require(
 "./algo-trading-bot.cjs"

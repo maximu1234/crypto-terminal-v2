@@ -59,6 +59,7 @@ ALGO_ANALYSIS_BOT_CHANGE_EVENT,
 ALGO_ANALYSIS_BOT_PATTERN_12,
 ALGO_ANALYSIS_BOT_EARLY_T3,
 ALGO_ANALYSIS_BOT_RSI_TOUCH_FLIP,
+ALGO_ANALYSIS_BOT_MACD_FLIP_TOUCH,
 isActiveAnalysisBot
 } from "./algo-trading/active-analysis-bot.js?v=4";
 
@@ -70,6 +71,15 @@ listRsiTouchFlipBookSymbols,
 getRsiTouchFlipBookRow,
 removeRsiTouchFlipBookRow
 } from "./algo-trading/rsi-touch-flip-book.js?v=5";
+
+import {
+MACD_FLIP_TOUCH_LIST_MARKET,
+MACD_FLIP_TOUCH_BOOK_CHANGE_EVENT,
+MACD_FLIP_TOUCH_BOOK_OPEN_EVENT,
+listMacdFlipTouchBookSymbols,
+getMacdFlipTouchBookRow,
+removeMacdFlipTouchBookRow
+} from "./algo-trading/macd-flip-touch-book.js?v=5";
 
 import {
 mountQwertyKeyInput
@@ -127,9 +137,37 @@ RSI_TOUCH_FLIP_LIST_MARKET;
 
 }
 
+function isMacdFlipTouchMarket(
+dataset
+){
+
+return dataset ===
+MACD_FLIP_TOUCH_LIST_MARKET;
+
+}
+
+function isFlipTouchBookMarket(
+dataset
+){
+
+return isRsiTouchFlipMarket(
+dataset
+) ||
+isMacdFlipTouchMarket(
+dataset
+);
+
+}
+
 function resolveRsiTouchFlipListSymbols(){
 
 return listRsiTouchFlipBookSymbols();
+
+}
+
+function resolveMacdFlipTouchListSymbols(){
+
+return listMacdFlipTouchBookSymbols();
 
 }
 
@@ -138,14 +176,27 @@ api,
 symbol
 ){
 
-const row =
+const dataset =
+coinsState().currentDataset;
+const rsiRow =
 isRsiTouchFlipMarket(
-coinsState().currentDataset
+dataset
 )
 ? getRsiTouchFlipBookRow(
 symbol
 )
 : null;
+const macdRow =
+isMacdFlipTouchMarket(
+dataset
+)
+? getMacdFlipTouchBookRow(
+symbol
+)
+: null;
+const row =
+rsiRow ||
+macdRow;
 
 if(
 row
@@ -154,7 +205,9 @@ row
 try{
 window.dispatchEvent(
 new CustomEvent(
-RSI_TOUCH_FLIP_BOOK_OPEN_EVENT,
+rsiRow
+? RSI_TOUCH_FLIP_BOOK_OPEN_EVENT
+: MACD_FLIP_TOUCH_BOOK_OPEN_EVENT,
 {
 detail:
 row
@@ -184,11 +237,16 @@ market
 ){
 
 if(
-isRsiTouchFlipMarket(
+isFlipTouchBookMarket(
 market
 )
 ){
-return listRsiTouchFlipBookSymbols().length >
+return isRsiTouchFlipMarket(
+market
+)
+? listRsiTouchFlipBookSymbols().length >
+0
+: listMacdFlipTouchBookSymbols().length >
 0;
 }
 
@@ -249,11 +307,16 @@ const rsiOn =
 isActiveAnalysisBot(
 ALGO_ANALYSIS_BOT_RSI_TOUCH_FLIP
 );
+const macdOn =
+isActiveAnalysisBot(
+ALGO_ANALYSIS_BOT_MACD_FLIP_TOUCH
+);
 
 if(
 !pattern12On &&
 !earlyT3On &&
-!rsiOn
+!rsiOn &&
+!macdOn
 ){
 return [
 {
@@ -322,6 +385,19 @@ id:
 RSI_TOUCH_FLIP_LIST_MARKET,
 label:
 "RSI Touch Flip"
+}
+);
+}
+
+if(
+macdOn
+){
+options.push(
+{
+id:
+MACD_FLIP_TOUCH_LIST_MARKET,
+label:
+"MACD Flip Touch"
 }
 );
 }
@@ -399,6 +475,13 @@ ALGO_ANALYSIS_BOT_RSI_TOUCH_FLIP
 ){
 coinsState().currentDataset =
 RSI_TOUCH_FLIP_LIST_MARKET;
+}else if(
+isActiveAnalysisBot(
+ALGO_ANALYSIS_BOT_MACD_FLIP_TOUCH
+)
+){
+coinsState().currentDataset =
+MACD_FLIP_TOUCH_LIST_MARKET;
 }
 
 syncMarketFilterOptions();
@@ -434,6 +517,14 @@ dataset
 return resolveRsiTouchFlipListSymbols();
 }
 
+if(
+isMacdFlipTouchMarket(
+dataset
+)
+){
+return resolveMacdFlipTouchListSymbols();
+}
+
 const flagId =
 algoMarketDatasetToFlagId(
 dataset
@@ -460,7 +551,7 @@ if(
 !isAlgoMarketDataset(
 dataset
 ) &&
-!isRsiTouchFlipMarket(
+!isFlipTouchBookMarket(
 dataset
 )
 ){
@@ -491,6 +582,10 @@ const rsiOn =
 isActiveAnalysisBot(
 ALGO_ANALYSIS_BOT_RSI_TOUCH_FLIP
 );
+const macdOn =
+isActiveAnalysisBot(
+ALGO_ANALYSIS_BOT_MACD_FLIP_TOUCH
+);
 const rows =
 ALGO_LIST_FLAG_UI.filter(
 row=>{
@@ -500,6 +595,13 @@ row.ui ===
 "algo-rsi-flip"
 ){
 return rsiOn;
+}
+
+if(
+row.ui ===
+"algo-macd-flip"
+){
+return macdOn;
 }
 
 if(
@@ -681,6 +783,10 @@ window.addEventListener(
 RSI_TOUCH_FLIP_BOOK_CHANGE_EVENT,
 refreshAlgoMarketListFromFlags
 );
+window.addEventListener(
+MACD_FLIP_TOUCH_BOOK_CHANGE_EVENT,
+refreshAlgoMarketListFromFlags
+);
 
 window.addEventListener(
 ALGO_ANALYSIS_BOT_CHANGE_EVENT,
@@ -727,6 +833,25 @@ function updateCoinFlagButton(
 btn,
 symbol
 ){
+
+if(
+isMacdFlipTouchMarket(
+coinsState().currentDataset
+) &&
+getMacdFlipTouchBookRow(
+symbol
+)
+){
+btn.className =
+"flag coin-flag-btn screener-flag-btn favorite flag--algo-macd-flip";
+btn.title =
+"Снять: MACD Flip Touch";
+btn.setAttribute(
+"aria-pressed",
+"true"
+);
+return;
+}
 
 if(
 isRsiTouchFlipMarket(
@@ -801,6 +926,18 @@ dataset
 )
 ){
 removeRsiTouchFlipBookRow(
+symbol
+);
+refreshAlgoMarketListFromFlags();
+return;
+}
+
+if(
+isMacdFlipTouchMarket(
+dataset
+)
+){
+removeMacdFlipTouchBookRow(
 symbol
 );
 refreshAlgoMarketListFromFlags();
@@ -1676,7 +1813,7 @@ api.getSymbol?.() ||
 coinsState().currentSymbol;
 
 if(
-isRsiTouchFlipMarket(
+isFlipTouchBookMarket(
 coinsState().currentDataset
 )
 ){
@@ -1726,6 +1863,10 @@ onAnalysisBotMarketFilter
 );
 window.removeEventListener(
 RSI_TOUCH_FLIP_BOOK_CHANGE_EVENT,
+refreshAlgoMarketListFromFlags
+);
+window.removeEventListener(
+MACD_FLIP_TOUCH_BOOK_CHANGE_EVENT,
 refreshAlgoMarketListFromFlags
 );
 

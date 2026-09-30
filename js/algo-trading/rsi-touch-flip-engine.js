@@ -871,6 +871,16 @@ const equityCurve =
 collectEquity
 ? []
 : null;
+/* На живом графике последняя свеча ещё формируется — не ставим на неё сделки/метки. */
+const closedBarCount =
+opts.excludeFormingBar ===
+true
+? Math.max(
+0,
+rows.length -
+1
+)
+: rows.length;
 
 function positionSize(){
 
@@ -1404,7 +1414,7 @@ for(
 let i =
 0;
 i <
-rows.length;
+closedBarCount;
 i++
 ){
 const price =

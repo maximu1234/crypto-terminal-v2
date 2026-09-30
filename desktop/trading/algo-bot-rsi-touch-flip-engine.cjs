@@ -25,7 +25,8 @@ const {
   rsiTouchFlipCycleSlHit,
   rsiTouchFlipLocalLooksOpen,
   rsiTouchFlipOpenLooksFilled,
-  rsiTouchFlipShouldFlattenGhost
+  rsiTouchFlipShouldFlattenGhost,
+  isChartBarSourceRsiReady
 } = require("./algo-bot-rsi-touch-flip-math.cjs");
 
 const MAX_CANDLES = 4000;
@@ -415,12 +416,46 @@ async function openSlice(state, side, level, price, label) {
   return true;
 }
 
-async function onClosedChartBar(state) {
+function chartBarSourceReady(state, chartBarOpenSec) {
+  if (!usesSeparateRsiTf(state)) {
+    return true;
+  }
+  return isChartBarSourceRsiReady(
+    chartBarOpenSec,
+    state.tf,
+    rsiSourceTf(state),
+    state.rsiCandles,
+    state.rsiForming
+  );
+}
+
+function enqueuePendingChartBar(state, barOpenTime) {
+  if (!Number.isFinite(barOpenTime)) {
+    return;
+  }
+  const q = state.pendingChartBarOpens || (state.pendingChartBarOpens = []);
+  if (q.includes(barOpenTime)) {
+    return;
+  }
+  q.push(barOpenTime);
+  q.sort((a, b) => a - b);
+}
+
+function findChartBarIndexByOpen(state, barOpenTime) {
+  const list = state.chartCandles;
+  for (let i = list.length - 1; i >= 0; i -= 1) {
+    if (Number(list[i]?.time) === barOpenTime) {
+      return i;
+    }
+  }
+  return -1;
+}
+
+async function processClosedChartBarAt(state, i) {
   if (!state?.seeded || state.orderInflight || state.mode !== "trade") {
     return;
   }
 
-  const i = state.chartCandles.length - 1;
   if (i < 1) {
     return;
   }
@@ -551,6 +586,53 @@ async function onClosedChartBar(state) {
   }
 }
 
+async function flushPendingChartBars(state) {
+  if (!state?.seeded || state.orderInflight || state.mode !== "trade") {
+    return;
+  }
+  const q = state.pendingChartBarOpens;
+  if (!Array.isArray(q) || !q.length) {
+    return;
+  }
+  while (q.length) {
+    const openTime = q[0];
+    if (!chartBarSourceReady(state, openTime)) {
+      break;
+    }
+    const i = findChartBarIndexByOpen(state, openTime);
+    q.shift();
+    if (i < 1) {
+      continue;
+    }
+    await processClosedChartBarAt(state, i);
+    if (state.orderInflight) {
+      break;
+    }
+  }
+}
+
+async function onClosedChartBar(state) {
+  if (!state?.seeded || state.orderInflight || state.mode !== "trade") {
+    return;
+  }
+
+  const i = state.chartCandles.length - 1;
+  if (i < 1) {
+    return;
+  }
+
+  const barTime = Number(state.chartCandles[i]?.time);
+  if (Number.isFinite(barTime) && barTime <= state.lastHandledChartTime) {
+    return;
+  }
+  if (!chartBarSourceReady(state, barTime)) {
+    enqueuePendingChartBar(state, barTime);
+    return;
+  }
+  await processClosedChartBarAt(state, i);
+  await flushPendingChartBars(state);
+}
+
 function onKline(symbol, tf, candle) {
   if (!engineLive) {
     return;
@@ -570,6 +652,9 @@ function onKline(symbol, tf, candle) {
     const next = mergeKline(state.rsiCandles, state.rsiForming, candle);
     state.rsiCandles = next.candles;
     state.rsiForming = next.forming;
+    if (next.closed) {
+      void flushPendingChartBars(state);
+    }
   }
 
   if (chartHit) {
@@ -820,6 +905,7 @@ async function seedTicker(row) {
     stack: 0,
     sessionEntries: 0,
     lastHandledChartTime: 0,
+    pendingChartBarOpens: [],
     botOwnsPosition: false,
     entryBudget: null,
     slBlockLong: false,
@@ -892,6 +978,7 @@ async function reseedSeries(state) {
     state.prefs.rsiLen
   );
   state.chartForming = null;
+  state.pendingChartBarOpens = [];
   state.lastHandledChartTime =
     Number(state.chartCandles[state.chartCandles.length - 1]?.time) || 0;
   if (usesSeparateRsiTf(state)) {

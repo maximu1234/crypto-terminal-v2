@@ -31,6 +31,13 @@ loadRsiTouchFlipBook
 import {
 loadRsiTouchFlipBalancePct
 } from "./rsi-touch-flip-prefs.js?v=9";
+import {
+loadMacdFlipTouchBook
+} from "./macd-flip-touch-book.js?v=5";
+import {
+loadMacdFlipTouchBalancePct,
+loadMacdFlipTouchMarginMode
+} from "./macd-flip-touch-prefs.js?v=9";
 
 const STORAGE_KEY =
 "algo_remote_session_logs_v1";
@@ -344,6 +351,10 @@ root.innerHTML =
 <label class="algo-remote-session-logs-strategy-check" title="Запустить RSI Touch Flip">
 <input type="checkbox" id="algo-remote-logs-rsi-touch-flip" />
 <span>RSI Flip</span>
+</label>
+<label class="algo-remote-session-logs-strategy-check" title="Запустить MACD Flip Touch">
+<input type="checkbox" id="algo-remote-logs-macd-flip-touch" />
+<span>MACD Flip</span>
 </label>
 </div>
 <div class="algo-remote-session-logs-channel-actions">
@@ -815,6 +826,10 @@ const rsiFlipEl =
 root.querySelector(
 "#algo-remote-logs-rsi-touch-flip"
 );
+const macdFlipEl =
+root.querySelector(
+"#algo-remote-logs-macd-flip-touch"
+);
 const strategyTitleEl =
 root.querySelector(
 "#algo-remote-logs-strategy-title"
@@ -951,6 +966,14 @@ id ===
 "rsi-touch-flip";
 }
 
+if(
+macdFlipEl
+){
+macdFlipEl.checked =
+id ===
+"macd-flip-touch";
+}
+
 }
 
 applyStrategyChecks(
@@ -994,6 +1017,12 @@ if(
 rsiFlipEl?.checked
 ){
 return "rsi-touch-flip";
+}
+
+if(
+macdFlipEl?.checked
+){
+return "macd-flip-touch";
 }
 
 return "st1";
@@ -1300,6 +1329,9 @@ strategyId ===
 : strategyId ===
 "rsi-touch-flip"
 ? "RSI Flip"
+: strategyId ===
+"macd-flip-touch"
+? "MACD Flip"
 : "Стратегия 1";
 
 if(
@@ -1457,6 +1489,9 @@ startStrategyId ===
 : startStrategyId ===
 "rsi-touch-flip"
 ? "RSI Flip"
+: startStrategyId ===
+"macd-flip-touch"
+? "MACD Flip"
 : "Ст1";
 const strategies =
 loadBotStrategiesPrefs();
@@ -1488,6 +1523,11 @@ const rsiBook =
 startStrategyId ===
 "rsi-touch-flip"
 ? loadRsiTouchFlipBook()
+: null;
+const macdBook =
+startStrategyId ===
+"macd-flip-touch"
+? loadMacdFlipTouchBook()
 : null;
 
 setMessage(
@@ -1533,6 +1573,22 @@ book:
 rsiBook,
 balancePct:
 loadRsiTouchFlipBalancePct()
+}
+: {}
+),
+...(
+action ===
+"start" &&
+Array.isArray(
+macdBook
+)
+? {
+book:
+macdBook,
+balancePct:
+loadMacdFlipTouchBalancePct(),
+marginMode:
+loadMacdFlipTouchMarginMode()
 }
 : {}
 )
@@ -1720,6 +1776,9 @@ strategyId ===
 : strategyId ===
 "rsi-touch-flip"
 ? "RSI Flip"
+: strategyId ===
+"macd-flip-touch"
+? "MACD Flip"
 : "Ст1";
 
 if(
@@ -1786,6 +1845,78 @@ return;
 setMessage(
 rsiBookRes.message ||
 "Списки и книга RSI Flip отправлены на бот"
+);
+return;
+}
+
+if(
+strategyId ===
+"macd-flip-touch"
+){
+const macdBook =
+loadMacdFlipTouchBook();
+
+if(
+!macdBook.length
+){
+setMessage(
+`${res.message || "Списки отправлены"}. Нет книги MACD Flip — добавьте тикеры «Добавить в книгу».`
+);
+return;
+}
+
+if(
+!api.sessionLogRemotePushTickerBook
+){
+setMessage(
+`${res.message || "Списки отправлены"}. Этот Multichart не умеет отдавать книгу — обновите приложение.`
+);
+return;
+}
+
+setMessage(
+"Отправка книги MACD Flip…"
+);
+
+const macdBookRes =
+await api.sessionLogRemotePushTickerBook(
+{
+...next,
+strategyId:
+"macd-flip-touch",
+rows:
+macdBook,
+balancePct:
+loadMacdFlipTouchBalancePct(),
+marginMode:
+loadMacdFlipTouchMarginMode(),
+book:{
+strategyId:
+"macd-flip-touch",
+rows:
+macdBook,
+balancePct:
+loadMacdFlipTouchBalancePct(),
+marginMode:
+loadMacdFlipTouchMarginMode()
+}
+}
+);
+
+if(
+!macdBookRes?.ok
+){
+setMessage(
+macdBookRes?.message ||
+"Списки отправлены, книгу MACD Flip передать не удалось",
+true
+);
+return;
+}
+
+setMessage(
+macdBookRes.message ||
+"Списки и книга MACD Flip отправлены на бот"
 );
 return;
 }

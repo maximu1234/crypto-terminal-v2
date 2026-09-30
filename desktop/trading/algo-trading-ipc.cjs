@@ -1209,6 +1209,74 @@ err
 handleTrustedDesktopUi(
 ipcMain,
 
+"desktop:algoTradingSyncMacdFlipTouchBook",
+async (
+_event,
+payload
+)=>{
+
+try{
+return await algoBot.syncMacdFlipTouchBook(
+payload ||
+{}
+);
+}catch(
+err
+){
+log.warn(
+"algoTradingSyncMacdFlipTouchBook:",
+err?.message ||
+err
+);
+return {
+ok:
+false,
+message:
+err?.message ||
+String(
+err
+)
+};
+}
+
+}
+);
+
+handleTrustedDesktopUi(
+ipcMain,
+
+"desktop:algoTradingGetMacdFlipTouchBook",
+()=>{
+
+try{
+return algoBot.getMacdFlipTouchBook();
+}catch(
+err
+){
+log.warn(
+"algoTradingGetMacdFlipTouchBook:",
+err?.message ||
+err
+);
+return {
+ok:
+false,
+rows:
+[],
+message:
+err?.message ||
+String(
+err
+)
+};
+}
+
+}
+);
+
+handleTrustedDesktopUi(
+ipcMain,
+
 "desktop:algoTradingGetTickerFlagsRoot",
 ()=>{
 

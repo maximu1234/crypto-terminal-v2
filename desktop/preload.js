@@ -451,6 +451,18 @@ ipcRenderer.invoke(
 payload ||
 {}
 ),
+getMacdFlipTouchBook:()=>
+ipcRenderer.invoke(
+"desktop:algoTradingGetMacdFlipTouchBook"
+),
+syncMacdFlipTouchBook:(
+payload
+)=>
+ipcRenderer.invoke(
+"desktop:algoTradingSyncMacdFlipTouchBook",
+payload ||
+{}
+),
 getTickerFlagsRoot:()=>
 ipcRenderer.invoke(
 "desktop:algoTradingGetTickerFlagsRoot"
