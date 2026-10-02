@@ -10,7 +10,7 @@ countLimitedActive
 
 import {
 isChartLayoutReady
-} from "./chart-layout-gate.js?v=2";
+} from "./chart-layout-gate.js?v=3";
 
 const DEFAULT_STORAGE_KEY =
 "chart_indicators_v1";

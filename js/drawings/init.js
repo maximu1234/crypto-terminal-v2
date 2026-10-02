@@ -218,7 +218,7 @@ createDrawPriceScale
 
 import {
 createDrawRedrawLoop
-} from "./draw-redraw-loop.js?v=15";
+} from "./draw-redraw-loop.js?v=16";
 
 import {
 isAlgoReducedCloudClient

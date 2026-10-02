@@ -17,7 +17,12 @@ isFvpType
 
 import {
 isChartLayoutReady
-} from "../chart-layout-gate.js?v=2";
+} from "../chart-layout-gate.js?v=3";
+
+import {
+createChartRedrawScheduler,
+CHART_REDRAW_REASON
+} from "../chart-redraw-scheduler.js?v=2";
 
 import {
 isHorizPriceTool
@@ -70,8 +75,18 @@ getCandles = ()=>
 deps;
 
 let coordRetryCount = 0;
-let redrawRaf1 = 0;
-let redrawRaf2 = 0;
+
+const redrawScheduler =
+createChartRedrawScheduler({
+useDoubleRaf: true,
+isReady:()=>
+isChartLayoutReady() &&
+!document.hidden &&
+!getChartPanActive(),
+paint:()=>{
+redraw();
+}
+});
 
 function drawSelectionHandles(ctx, shape){
 
@@ -385,45 +400,14 @@ return true;
 
 }
 
-function scheduleRedraw(){
-
-if(
-!isChartLayoutReady()
+function scheduleRedraw(
+reason =
+CHART_REDRAW_REASON.DRAWINGS
 ){
-return;
-}
 
-if(
-document.hidden
-){
-return;
-}
-
-if(getChartPanActive()){
-return;
-}
-
-if(redrawRaf1){
-cancelAnimationFrame(redrawRaf1);
-}
-
-if(redrawRaf2){
-cancelAnimationFrame(redrawRaf2);
-}
-
-redrawRaf1 =
-requestAnimationFrame(()=>{
-
-redrawRaf2 =
-requestAnimationFrame(()=>{
-
-redrawRaf1 = 0;
-redrawRaf2 = 0;
-redraw();
-
-});
-
-});
+redrawScheduler.request(
+reason
+);
 
 }
 
@@ -459,7 +443,9 @@ coordRetryCount <
 ){
 
 coordRetryCount++;
-scheduleRedraw();
+scheduleRedraw(
+CHART_REDRAW_REASON.DRAWINGS
+);
 
 }
 
@@ -617,15 +603,7 @@ console.warn("redraw", err);
 
 function cancelPendingRedraws(){
 
-if(redrawRaf1){
-cancelAnimationFrame(redrawRaf1);
-redrawRaf1 = 0;
-}
-
-if(redrawRaf2){
-cancelAnimationFrame(redrawRaf2);
-redrawRaf2 = 0;
-}
+redrawScheduler.cancel();
 
 }
 

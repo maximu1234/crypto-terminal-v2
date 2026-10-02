@@ -10,6 +10,12 @@ isSystemAdminUser
 } from "./system-admin-access.js?v=3";
 
 import {
+beginChromeOverlay,
+endChromeOverlay,
+isChromeOverlayActive
+} from "./chart-layout-gate.js?v=3";
+
+import {
 mountTelegramSettingsPanel
 } from "./telegram-settings-panel.js?v=2";
 
@@ -396,7 +402,7 @@ const {
 closeCloudSettingsDropdown
 } =
 await import(
-"./auth-ui.js?v=66"
+"./auth-ui.js?v=67"
 );
 closeCloudSettingsDropdown();
 await openAppSettingsWindow();
@@ -660,7 +666,7 @@ const {
 mountCloudAuthPanelInSettings
 } =
 await import(
-"./auth-ui.js?v=66"
+"./auth-ui.js?v=67"
 );
 
 mountCloudAuthPanelInSettings(
@@ -960,6 +966,12 @@ document.body.classList.remove(
 "app-settings-open"
 );
 
+if(
+isChromeOverlayActive()
+){
+endChromeOverlay();
+}
+
 }
 
 export async function openAppSettingsWindow(
@@ -985,6 +997,14 @@ installWebTradingShell();
 
 await cssReady;
 buildOverlay();
+
+if(
+!document.body.classList.contains(
+"app-settings-open"
+)
+){
+beginChromeOverlay();
+}
 
 overlayEl.classList.remove(
 "hidden"

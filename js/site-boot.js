@@ -4,7 +4,7 @@ initAlertMonitor
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=66";
+} from "./auth-ui.js?v=67";
 
 import {
 isAlertsPage
@@ -65,7 +65,7 @@ initFocusBlurAfterPick
 
 import {
 initDesktopAppUi
-} from "./desktop-app-ui.js?v=12";
+} from "./desktop-app-ui.js?v=13";
 
 import {
 initSiteHeader,

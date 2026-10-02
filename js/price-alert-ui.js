@@ -37,7 +37,7 @@ isFineChartPointerType
 import {
 isChartLayoutReady,
 shouldDeferAlertBadgeSync
-} from "./chart-layout-gate.js?v=2";
+} from "./chart-layout-gate.js?v=3";
 
 const PLUS_ICON_W =
 22;

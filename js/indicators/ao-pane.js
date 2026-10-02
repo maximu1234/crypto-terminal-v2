@@ -18,7 +18,7 @@ formatAoLegendValue
 
 import {
 isChartLayoutReady
-} from "../chart-layout-gate.js?v=2";
+} from "../chart-layout-gate.js?v=3";
 
 import {
 isBottomIndicatorPane

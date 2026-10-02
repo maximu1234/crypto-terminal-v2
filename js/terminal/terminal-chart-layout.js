@@ -14,8 +14,13 @@ TERMINAL_VISIBLE_BARS
 } from "../terminal-chart-history-prefs.js?v=1";
 
 import {
-isChartLayoutReady
-} from "../chart-layout-gate.js?v=2";
+isChartLayoutReady,
+isChromeOverlayActive
+} from "../chart-layout-gate.js?v=3";
+
+import {
+CHART_REDRAW_REASON
+} from "../chart-redraw-scheduler.js?v=2";
 
 import {
 invalidatePreservedVisibleLogicalRange
@@ -24,12 +29,17 @@ invalidatePreservedVisibleLogicalRange
 let layoutCtx =
 null;
 
+let lastChartLayoutKey =
+"";
+
 export function registerCoinsChartLayoutContext(
 ctx
 ){
 
 layoutCtx =
 ctx;
+lastChartLayoutKey =
+"";
 
 }
 
@@ -98,12 +108,17 @@ tool
 
 }
 
-function syncDrawingToolsLayout(){
+function syncDrawingToolsLayout(
+reason =
+CHART_REDRAW_REASON.LAYOUT
+){
 
 forEachDrawingTool(
 tool=>{
 tool.resize?.();
-tool.scheduleRedraw?.();
+tool.scheduleRedraw?.(
+reason
+);
 }
 );
 
@@ -246,6 +261,19 @@ chartH <
 ){
 return false;
 }
+
+const layoutKey =
+`${w}x${chartH}x${paneH}`;
+
+if(
+layoutKey ===
+lastChartLayoutKey
+){
+return false;
+}
+
+lastChartLayoutKey =
+layoutKey;
 
 chart.applyOptions({
 width:
@@ -698,6 +726,12 @@ let coinsResizeRaf =
 0;
 
 export function scheduleResizeCharts(){
+
+if(
+isChromeOverlayActive()
+){
+return;
+}
 
 if(
 coinsResizeRaf

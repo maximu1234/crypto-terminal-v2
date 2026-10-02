@@ -69,7 +69,7 @@ createTickerUiBatcher
 
 import {
 mountReleaseMarker
-} from "./release-marker.js?v=125";
+} from "./release-marker.js?v=126";
 
 import {
 saveScreenerState,
@@ -88,7 +88,7 @@ FAVORITES_BY_EXCHANGE_KEY
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=66";
+} from "./auth-ui.js?v=67";
 
 import {
 ensureSettled,
@@ -2293,7 +2293,23 @@ if(w < 2 || h < 2){
 return 0;
 }
 
+const sizeKey =
+`${w}x${h}`;
+
+const sizeUnchanged =
+widget._lastChartSizeKey ===
+sizeKey;
+
+if(
+!sizeUnchanged
+){
+
+widget._lastChartSizeKey =
+sizeKey;
+
 chart.applyOptions({ width: w, height: h });
+
+}
 
 if(
 widget.rsiChart &&
@@ -2329,10 +2345,22 @@ rw >=
 rh >=
 2
 ){
+
+const rsiKey =
+`${rw}x${rh}`;
+
+if(
+widget._lastRsiSizeKey !==
+rsiKey
+){
+widget._lastRsiSizeKey =
+rsiKey;
 widget.rsiChart.applyOptions({
 width: rw,
 height: rh
 });
+}
+
 layoutWidgetRsi(
 widget
 );
@@ -2353,14 +2381,28 @@ if(!range){
 return 0;
 }
 
-return Math.max(
+const bars =
+Math.max(
 0,
 Math.round(range.to - range.from)
 );
+widget._lastVisibleBars =
+bars;
+return bars;
 
 }
 
-return applyScreenerZoom(
+if(
+sizeUnchanged &&
+widget._lastZoomCandleLen ===
+widget.candles.length
+){
+return widget._lastVisibleBars ||
+0;
+}
+
+const bars =
+applyScreenerZoom(
 chart,
 series,
 widget.candles,
@@ -2374,6 +2416,12 @@ widget
 }
 );
 
+widget._lastZoomCandleLen =
+widget.candles.length;
+widget._lastVisibleBars =
+bars;
+return bars;
+
 }catch{
 return 0;
 }
@@ -2386,8 +2434,34 @@ root.querySelector(
 ) ||
 chartEl;
 
+let screenerResizeRaf =
+0;
+
+function scheduleSyncChartSize(){
+
+if(
+screenerResizeRaf
+){
+cancelAnimationFrame(
+screenerResizeRaf
+);
+}
+
+screenerResizeRaf =
+requestAnimationFrame(
+()=>{
+screenerResizeRaf =
+0;
+syncChartSize();
+}
+);
+
+}
+
 const resizeObserver =
-new ResizeObserver(syncChartSize);
+new ResizeObserver(
+scheduleSyncChartSize
+);
 
 resizeObserver.observe(resizeTarget);
 widget.resizeObserver = resizeObserver;

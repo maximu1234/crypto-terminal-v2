@@ -50,7 +50,7 @@ seedWatchlistTfOnBlueFlag
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=66";
+} from "./auth-ui.js?v=67";
 
 import {
 getActiveAlerts,
@@ -158,7 +158,7 @@ DRAW_TOOL_HOTKEYS
 import {
 isChartLayoutReady,
 setChartLayoutReady
-} from "./chart-layout-gate.js?v=2";
+} from "./chart-layout-gate.js?v=3";
 
 import {
 registerCoinsState,
@@ -229,7 +229,7 @@ syncCoinsChartLinkedViewports,
 resizeCharts,
 scheduleResizeCharts,
 applyDefaultZoom
-} from "./terminal/terminal-chart-layout.js?v=13";
+} from "./terminal/terminal-chart-layout.js?v=14";
 
 import {
 placeCoinsTabletListNav

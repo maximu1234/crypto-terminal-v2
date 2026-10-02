@@ -291,7 +291,7 @@ Object.freeze({
 "chart-page.js":
 8,
 "terminal.js":
-506,
+507,
 "terminal-multi-chart.js":
 27,
 "terminal-screener-chart-pane.js":
@@ -299,7 +299,7 @@ Object.freeze({
 "terminal-layout-picker.js":
 11,
 "terminal/terminal-chart-layout.js":
-13,
+14,
 "terminal/coins-tablet-list-nav.js":
 2,
 "terminal/chart-display-style-ui.js":
@@ -309,6 +309,8 @@ Object.freeze({
 "terminal/terminal-chart-switch-veil.js":
 7,
 "chart-layout-gate.js":
+3,
+"chart-redraw-scheduler.js":
 2,
 "chart-visible-range.js":
 3,
@@ -654,7 +656,7 @@ Object.freeze({
 "watchlist.js":
 133,
 "screener.js":
-134,
+136,
 "ipad-web-viewport.js":
 2,
 "screener-widget-guard.js":
@@ -702,7 +704,7 @@ Object.freeze({
 "screener-widget-zoom.js":
 34,
 "release-marker.js":
-125,
+126,
 "focus-blur-after-pick.js":
 3,
 "site-boot.js":
@@ -716,7 +718,7 @@ Object.freeze({
 "site-header-nav-desktop.js":
 2,
 "desktop-app-ui.js":
-12,
+13,
 "suppress-native-context-menu.js":
 4,
 "charts-lib-boot.js":
@@ -756,9 +758,9 @@ Object.freeze({
 "terminal-tablet-controller.js":
 13,
 "drawings.js":
-300,
+301,
 "drawings/init.js":
-229,
+230,
 "drawings/draw-prefs.js":
 13,
 "drawings/draw-edit-desktop.js":
@@ -776,7 +778,7 @@ Object.freeze({
 "drawings/draw-price-scale.js":
 19,
 "drawings/draw-redraw-loop.js":
-15,
+16,
 "drawings/draw-chart-input.js":
 5,
 "drawings/draw-edit-interaction.js":
@@ -919,11 +921,11 @@ Object.freeze({
 "auth-session-transfer.js":
 1,
 "auth-ui.js":
-66,
+67,
 "header-settings-shell.js":
 4,
 "app-settings-window.js":
-25,
+26,
 "app-settings-proxy-panel.js":
 6,
 "app-settings-system-panel.js":
