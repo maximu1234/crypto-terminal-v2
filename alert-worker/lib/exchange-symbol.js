@@ -10,10 +10,21 @@ exchangeId ||
 "bybit"
 ).trim().toLowerCase();
 
-return id ===
+if(
+id ===
 "bingx"
-? "bingx"
-: "bybit";
+){
+return "bingx";
+}
+
+if(
+id ===
+"moex"
+){
+return "moex";
+}
+
+return "bybit";
 
 }
 

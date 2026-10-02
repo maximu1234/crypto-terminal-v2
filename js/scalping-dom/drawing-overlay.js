@@ -4,7 +4,7 @@
  */
 import {
 drawingsStorageKey
-} from "../drawings-exchange-key.js?v=1";
+} from "../drawings-exchange-key.js?v=2";
 
 const LEGACY_TF_KEYS =
 Object.freeze([

@@ -2,7 +2,7 @@ import {
 getActiveExchangeId,
 EXCHANGE_CHANGED_EVENT,
 loadMarketTickers
-} from "./market-api.js?v=6";
+} from "./market-api.js?v=7";
 
 import {
 fetchBybit
@@ -10,7 +10,7 @@ fetchBybit
 
 import {
 toCanonicalSymbol
-} from "./exchanges/symbol.js?v=1";
+} from "./exchanges/symbol.js?v=2";
 
 import {
 fetchBingx
@@ -624,6 +624,73 @@ return targetMap.size;
 
 }
 
+async function fetchMoexTickersInto(
+targetMap
+){
+
+const map =
+await loadMarketTickers();
+
+if(
+!map
+){
+return 0;
+}
+
+map.forEach(
+(
+ticker,
+sym
+)=>{
+
+const change24 =
+Number(
+ticker.price24hPcnt ||
+0
+) *
+100;
+const last =
+Number(
+ticker.lastPrice ||
+0
+);
+
+targetMap.set(
+sym,
+{
+symbol:
+sym,
+price:
+last,
+bid:
+Number(
+ticker.bid1Price ||
+last
+),
+ask:
+Number(
+ticker.ask1Price ||
+last
+),
+change24,
+change1h:
+change24 /
+24,
+volume24:
+Number(
+ticker.turnover24h ||
+0
+)
+}
+);
+
+}
+);
+
+return targetMap.size;
+
+}
+
 export async function fetchTickersInto(
 targetMap
 ){
@@ -632,11 +699,23 @@ ensureExchangeListener();
 
 try{
 
+const exchangeId =
+getActiveExchangeId();
+
 if(
-getActiveExchangeId() ===
+exchangeId ===
 "bingx"
 ){
 return await fetchBingxTickersInto(
+targetMap
+);
+}
+
+if(
+exchangeId ===
+"moex"
+){
+return await fetchMoexTickersInto(
 targetMap
 );
 }
@@ -707,12 +786,21 @@ subscribers.length ===
 return;
 }
 
+const effectiveMs =
+getActiveExchangeId() ===
+"moex"
+? Math.max(
+pollIntervalMs,
+8000
+)
+: pollIntervalMs;
+
 void loadTickers();
 
 pollTimer =
 setInterval(
 loadTickers,
-pollIntervalMs
+effectiveMs
 );
 
 }
@@ -797,6 +885,78 @@ spotPct.get(
 sym
 )
 );
+
+subscribers.forEach(
+fn=>
+fn(
+payload
+)
+);
+
+}
+);
+
+return;
+
+}
+
+if(
+getActiveExchangeId() ===
+"moex"
+){
+
+const map =
+await loadMarketTickers();
+
+if(
+!map
+){
+return;
+}
+
+map.forEach(
+(
+ticker,
+sym
+)=>{
+
+const change24 =
+Number(
+ticker.price24hPcnt ||
+0
+) *
+100;
+const last =
+Number(
+ticker.lastPrice ||
+0
+);
+const payload =
+{
+symbol:
+sym,
+price:
+last,
+bid:
+Number(
+ticker.bid1Price ||
+last
+),
+ask:
+Number(
+ticker.ask1Price ||
+last
+),
+change24,
+change1h:
+change24 /
+24,
+volume24:
+Number(
+ticker.turnover24h ||
+0
+)
+};
 
 subscribers.forEach(
 fn=>

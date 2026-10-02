@@ -17,6 +17,10 @@ import {
 isAlgoTradingNavEnabled
 } from "./desktop-feature-nav-prefs.js?v=5";
 
+import {
+mountMoexUnavailableStub
+} from "./exchanges/moex-readonly-stub.js?v=1";
+
 async function boot(){
 
 if(
@@ -30,6 +34,20 @@ return;
 }
 
 await waitForSiteCssReady();
+
+if(
+mountMoexUnavailableStub({
+title:
+"АлгоТрейдинг"
+})
+){
+await import(
+jsImport(
+"site-boot.js"
+)
+);
+return;
+}
 
 if(
 !isAlgoBotLiteShell()

@@ -9,7 +9,7 @@ peekMarketSymbolsCache,
 getActiveExchangeDefinition,
 getActiveExchangeId,
 EXCHANGE_CHANGED_EVENT
-} from "./market-api.js?v=6";
+} from "./market-api.js?v=7";
 
 import {
 isScreenerWidgetCurrent as isScreenerWidgetCurrentGuard
@@ -47,7 +47,7 @@ alignRsiWithCandleTimes
 import {
 subscribeKline,
 bindLiveCandleCatchup
-} from "./market-ws.js?v=2";
+} from "./market-ws.js?v=3";
 
 import {
 ensureOhlcRollover,
@@ -69,7 +69,7 @@ createTickerUiBatcher
 
 import {
 mountReleaseMarker
-} from "./release-marker.js?v=124";
+} from "./release-marker.js?v=125";
 
 import {
 saveScreenerState,

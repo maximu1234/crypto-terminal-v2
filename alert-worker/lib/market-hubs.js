@@ -19,9 +19,19 @@ function pickKline(
 exchangeId
 ){
 
-return normalizeExchangeId(
+const id =
+normalizeExchangeId(
 exchangeId
-) ===
+);
+
+if(
+id ===
+"moex"
+){
+return null;
+}
+
+return id ===
 "bingx"
 ? bingxKline
 : bybitKline;
@@ -32,9 +42,19 @@ function pickTicker(
 exchangeId
 ){
 
-return normalizeExchangeId(
+const id =
+normalizeExchangeId(
 exchangeId
-) ===
+);
+
+if(
+id ===
+"moex"
+){
+return null;
+}
+
+return id ===
 "bingx"
 ? bingxTicker
 : bybitTicker;
@@ -50,7 +70,7 @@ exchangeId = "bybit"
 ) {
 pickKline(
 exchangeId
-).ensureKline(
+)?.ensureKline?.(
 symbol,
 tf
 );
@@ -62,7 +82,7 @@ exchangeId = "bybit"
 ) {
 pickTicker(
 exchangeId
-).ensureSymbol(
+)?.ensureSymbol?.(
 symbol
 );
 },

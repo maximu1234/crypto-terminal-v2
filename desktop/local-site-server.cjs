@@ -38,6 +38,8 @@ const DEFAULT_LOCAL_SITE_PORT =
 47391;
 const BINGX_API_BASE =
 "https://open-api.bingx.com";
+const MOEX_ISS_BASE =
+"https://iss.moex.com";
 
 function isPublicBingxPath(
 raw
@@ -73,6 +75,77 @@ pathname ===
 "/openApi/swap/v2/server/time" ||
 pathname.startsWith(
 "/openApi/spot/v1/ticker/"
+);
+
+}
+
+function isPublicMoexIssPath(
+raw
+){
+
+if(
+typeof raw !==
+"string" ||
+raw.includes(
+".."
+) ||
+raw.includes(
+"\\"
+)
+){
+return false;
+}
+
+const pathname =
+raw.split(
+"?"
+)[
+0
+];
+
+if(
+pathname ===
+"/iss.json" ||
+pathname ===
+"/iss/index.json" ||
+pathname ===
+"/iss/engines.json"
+){
+return true;
+}
+
+if(
+!pathname.startsWith(
+"/iss/engines/"
+)
+){
+return false;
+}
+
+if(
+pathname.includes(
+"/orderbook"
+) ||
+pathname.includes(
+"/trades"
+)
+){
+return false;
+}
+
+return (
+pathname.includes(
+"/securities"
+) ||
+pathname.includes(
+"/candles"
+) ||
+pathname.includes(
+"/candleborders"
+) ||
+pathname.endsWith(
+".json"
+)
 );
 
 }
@@ -267,6 +340,80 @@ buf
 
 }
 
+async function serveMoexProxy(
+reqUrl,
+res
+){
+
+const apiPath =
+reqUrl.searchParams.get(
+"path"
+) ||
+"";
+
+if(
+!isPublicMoexIssPath(
+apiPath
+)
+){
+res.writeHead(
+400,
+{
+"Content-Type":
+"application/json; charset=utf-8",
+"Access-Control-Allow-Origin":
+"*"
+}
+);
+res.end(
+JSON.stringify({
+code:
+-1,
+msg:
+"invalid path"
+})
+);
+return;
+}
+
+const upstream =
+await net.fetch(
+`${MOEX_ISS_BASE}${apiPath}`,
+{
+headers:{
+Accept:
+"application/json",
+"User-Agent":
+"Multichart-Desktop/1.0"
+}
+}
+);
+
+const buf =
+Buffer.from(
+await upstream.arrayBuffer()
+);
+
+res.writeHead(
+upstream.status,
+{
+"Content-Type":
+upstream.headers.get(
+"content-type"
+) ||
+"application/json",
+"Access-Control-Allow-Origin":
+"*",
+"Cache-Control":
+"no-cache"
+}
+);
+res.end(
+buf
+);
+
+}
+
 function createRequestHandler({
 bundleRoot,
 remoteApiOrigin
@@ -293,6 +440,17 @@ reqUrl.pathname ===
 "/api/bingx"
 ){
 await serveBingxProxy(
+reqUrl,
+res
+);
+return;
+}
+
+if(
+reqUrl.pathname ===
+"/api/moex"
+){
+await serveMoexProxy(
 reqUrl,
 res
 );

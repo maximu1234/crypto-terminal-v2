@@ -28,8 +28,9 @@ import {
   loadTradeExchangeModules
 } from "../trade/module-router.js?v=24";
 import {
+  getActiveExchangeId,
   setActiveExchangeId
-} from "../market-api.js?v=6";
+} from "../market-api.js?v=7";
 import {
   installWebTradingShell
 } from "./client.js?v=6";
@@ -61,6 +62,11 @@ export function isWatchlistTradeMode() {
   return isWebTradeMode() && isWatchlistPage();
 }
 
+/** Мосбиржа — только рынок; веб-торговля Bybit не должна сбрасывать active exchange. */
+function isMoexReadOnlyMarket() {
+  return getActiveExchangeId() === "moex";
+}
+
 function enableTradeCss() {
   for (const name of TRADE_CSS) {
     const href = cssUrl(name);
@@ -76,6 +82,9 @@ function enableTradeCss() {
 
 export async function initTradeWebBeforeChart(options = {}) {
   if (window.cryptoTerminalDesktop?.isDesktop) {
+    return;
+  }
+  if (isMoexReadOnlyMarket()) {
     return;
   }
   installWebTradingShell();
@@ -124,6 +133,9 @@ export async function initTradeWebBeforeChart(options = {}) {
 
 export async function initTradeWebAfterChart(options = {}) {
   if (!isWebTradeMode()) {
+    return;
+  }
+  if (isMoexReadOnlyMarket()) {
     return;
   }
   const mode = options.mode || "terminal";

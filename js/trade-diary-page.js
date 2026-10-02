@@ -17,21 +17,37 @@ import {
 
 import {
   setActiveExchangeId
-} from "./market-api.js?v=6";
+} from "./market-api.js?v=7";
 
-if (!window.cryptoTerminalDesktop?.isDesktop) {
-  installWebTradingShell();
-  setActiveExchangeId("bybit");
-}
+import {
+  mountMoexUnavailableStub
+} from "./exchanges/moex-readonly-stub.js?v=1";
 
-if (!isDesktopTradeDiaryContext()) {
-  location.replace("/screener.html");
+if (
+  mountMoexUnavailableStub({
+    title: "Дневник",
+    host: document.getElementById("trade-diary-panel") || document.querySelector("main")
+  })
+) {
+  const panel = document.getElementById("trade-diary-panel");
+  if (panel) {
+    panel.classList.remove("hidden");
+  }
 } else {
-  await loadTradeExchangeModules();
+  if (!window.cryptoTerminalDesktop?.isDesktop) {
+    installWebTradingShell();
+    setActiveExchangeId("bybit");
+  }
 
-  const boot = getLoadedTradeExchangeModules()?.bootTradeDiaryPage;
+  if (!isDesktopTradeDiaryContext()) {
+    location.replace("/screener.html");
+  } else {
+    await loadTradeExchangeModules();
 
-  if (typeof boot === "function") {
-    await boot();
+    const boot = getLoadedTradeExchangeModules()?.bootTradeDiaryPage;
+
+    if (typeof boot === "function") {
+      await boot();
+    }
   }
 }

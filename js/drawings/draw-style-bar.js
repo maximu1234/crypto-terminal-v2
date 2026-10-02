@@ -192,6 +192,7 @@ textSizePopover,
 settingsPopover,
 settingsBtn,
 deleteOneBtn,
+lockBtn,
 positionRiskWrap,
 positionRiskInput,
 dragHandle,
@@ -4017,6 +4018,100 @@ deleteOneBtn.style.display =
 selectedIdForStyle() ? "inline-flex" : "none";
 }
 
+if(lockBtn){
+
+const {
+getSelectedIds: selectedIdsForLock,
+getDrawings: drawingsForLock
+} =
+styleCtx();
+const lockIdList =
+selectedIdsForLock?.() ||
+[];
+const lockTargets =
+[];
+
+if(
+lockIdList.length &&
+drawingsForLock
+){
+
+for(
+const id of lockIdList
+){
+
+const shape =
+drawingsForLock().find(
+d=>
+d.id ===
+id
+);
+
+if(
+shape
+){
+lockTargets.push(
+shape
+);
+}
+
+}
+
+}
+
+if(
+!lockTargets.length
+){
+
+const selForLock =
+selectedForStyle();
+
+if(
+selForLock
+){
+lockTargets.push(
+selForLock
+);
+}
+
+}
+
+const locked =
+lockTargets.length > 0 &&
+lockTargets.every(
+s=>
+!!s.locked
+);
+
+lockBtn.style.display =
+selectedIdForStyle()
+? "inline-flex"
+: "none";
+lockBtn.classList.toggle(
+"is-locked",
+locked
+);
+lockBtn.setAttribute(
+"aria-pressed",
+locked
+? "true"
+: "false"
+);
+lockBtn.title =
+locked
+? (
+lockTargets.length > 1
+? "Снять закрепление со всех"
+: "Снять закрепление"
+)
+: (
+lockTargets.length > 1
+? "Закрепить все объекты"
+: "Закрепить объект"
+);
+
+}
+
 if(!show){
 closePopovers();
 return;
@@ -5138,10 +5233,7 @@ e.preventDefault();
 submitTemplateSave();
 
 },
-{
-capture:true,
-signal
-}
+true
 );
 
 return root;
@@ -5873,6 +5965,99 @@ deleteOneBtn?.addEventListener("click", e=>{
 e.stopPropagation();
 e.preventDefault();
 styleCtx().deleteSelected?.();
+
+});
+
+lockBtn?.addEventListener("mousedown", e=>{
+e.stopPropagation();
+});
+
+lockBtn?.addEventListener("click", e=>{
+
+e.stopPropagation();
+e.preventDefault();
+
+const {
+getSelected: selectedForLock,
+getSelectedIds: selectedIdsForLock,
+getDrawings: drawingsForLock
+} =
+styleCtx();
+
+const lockIdList =
+selectedIdsForLock?.() ||
+[];
+const targets =
+[];
+
+if(
+lockIdList.length &&
+drawingsForLock
+){
+
+for(
+const id of lockIdList
+){
+
+const shape =
+drawingsForLock().find(
+d=>
+d.id ===
+id
+);
+
+if(
+shape
+){
+targets.push(
+shape
+);
+}
+
+}
+
+}
+
+if(
+!targets.length
+){
+
+const sel =
+selectedForLock?.() ||
+getSelected();
+
+if(
+sel
+){
+targets.push(
+sel
+);
+}
+
+}
+
+if(
+!targets.length
+){
+return;
+}
+
+const nextLocked =
+!targets.every(
+s=>
+!!s.locked
+);
+
+for(
+const shape of targets
+){
+shape.locked =
+nextLocked;
+}
+
+styleCtx().saveDrawings?.();
+updateStyleBar();
+styleCtx().redraw?.();
 
 });
 

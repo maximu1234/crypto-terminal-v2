@@ -8,7 +8,7 @@ import {
 import {
   loadMarketSymbols,
   peekMarketSymbolsCache
-} from "../market-api.js?v=6";
+} from "../market-api.js?v=7";
 import {
   fetchTickersInto
 } from "../tickers.js?v=29";

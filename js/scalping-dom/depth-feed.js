@@ -7,7 +7,7 @@ jsUrl
 
 import {
 loadMarketOrderbook
-} from "../market-api.js?v=6";
+} from "../market-api.js?v=7";
 
 import {
 EXCHANGE_CHANGED_EVENT,

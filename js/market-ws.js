@@ -65,6 +65,19 @@ return getActiveExchangeId() ===
 
 }
 
+function isMoex(){
+
+return getActiveExchangeId() ===
+"moex";
+
+}
+
+function noopUnsubscribe(){
+
+return ()=>{};
+
+}
+
 export function subscribeMarketKline(
 symbol,
 tf,
@@ -72,6 +85,13 @@ onCandle
 ){
 
 ensureExchangeListener();
+
+if(
+isMoex()
+){
+/* ISS без публичного WS — свечи через REST / catchup. */
+return noopUnsubscribe();
+}
 
 if(
 isBingx()
@@ -99,6 +119,12 @@ onTick
 ensureExchangeListener();
 
 if(
+isMoex()
+){
+return noopUnsubscribe();
+}
+
+if(
 isBingx()
 ){
 return subscribeBingxTicker(
@@ -119,6 +145,12 @@ opts
 ){
 
 ensureExchangeListener();
+
+if(
+isMoex()
+){
+return;
+}
 
 if(
 isBingx()

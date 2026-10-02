@@ -36,6 +36,18 @@ test("pickSymbolFromLastView keeps last symbol while market list is still empty"
   );
 });
 
+test("pickSymbolFromLastView on moex drops crypto ticker while list empty", () => {
+  assert.equal(
+    pickSymbolFromLastView(
+      { symbol: "BTCUSDT", tf: "60" },
+      [],
+      null,
+      "SBER"
+    ),
+    "SBER"
+  );
+});
+
 test("pickSymbolFromLastView keeps last symbol when symbols is missing", () => {
   assert.equal(
     pickSymbolFromLastView(
@@ -53,5 +65,17 @@ test("pickSymbolFromLastView uses BTC on first visit with empty last view", () =
       ["ETHUSDT", "BTCUSDT", "SOLUSDT"]
     ),
     DEFAULT_CHART_SYMBOL
+  );
+});
+
+test("pickSymbolFromLastView uses SBER default for moex when last missing", () => {
+  assert.equal(
+    pickSymbolFromLastView(
+      { symbol: "BTCUSDT", tf: "60" },
+      ["SBER", "GAZP", "LKOH"],
+      null,
+      "SBER"
+    ),
+    "SBER"
   );
 });

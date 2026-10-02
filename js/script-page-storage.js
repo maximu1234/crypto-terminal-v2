@@ -123,6 +123,13 @@ exchangeId ||
 ""
 ).trim().toLowerCase();
 
+if(
+id ===
+"moex"
+){
+return "moex";
+}
+
 return id ===
 "bingx"
 ? "bingx"

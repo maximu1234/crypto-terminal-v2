@@ -23,7 +23,7 @@ Object.freeze({
 "asset-manifest.js":
 35,
 "market-api.js":
-6,
+7,
 "format-price.js":
 2,
 "kline-history-pages.js":
@@ -37,6 +37,16 @@ Object.freeze({
 "exchanges/registry.js":
 1,
 "exchanges/symbol.js":
+2,
+"exchanges/moex/public.js":
+3,
+"exchanges/moex/fetch.js":
+1,
+"exchanges/moex/listings.js":
+1,
+"exchanges/moex/intervals.js":
+1,
+"exchanges/moex-readonly-stub.js":
 1,
 "exchanges/bybit/public.js":
 2,
@@ -281,7 +291,7 @@ Object.freeze({
 "chart-page.js":
 8,
 "terminal.js":
-505,
+506,
 "terminal-multi-chart.js":
 27,
 "terminal-screener-chart-pane.js":
@@ -644,7 +654,7 @@ Object.freeze({
 "watchlist.js":
 133,
 "screener.js":
-133,
+134,
 "ipad-web-viewport.js":
 2,
 "screener-widget-guard.js":
@@ -692,11 +702,11 @@ Object.freeze({
 "screener-widget-zoom.js":
 34,
 "release-marker.js":
-124,
+125,
 "focus-blur-after-pick.js":
 3,
 "site-boot.js":
-137,
+138,
 "site-header.js":
 7,
 "site-header-nav.js":
@@ -706,7 +716,7 @@ Object.freeze({
 "site-header-nav-desktop.js":
 2,
 "desktop-app-ui.js":
-11,
+12,
 "suppress-native-context-menu.js":
 4,
 "charts-lib-boot.js":
@@ -748,7 +758,7 @@ Object.freeze({
 "drawings.js":
 300,
 "drawings/init.js":
-225,
+229,
 "drawings/draw-prefs.js":
 13,
 "drawings/draw-edit-desktop.js":
@@ -756,9 +766,9 @@ Object.freeze({
 "drawings/draw-undo.js":
 2,
 "drawings/drawings-persist.js":
-18,
+19,
 "drawings/draw-style-bar.js":
-60,
+65,
 "drawings/draw-templates.js":
 20,
 "drawings/draw-alerts-chart.js":
@@ -770,7 +780,7 @@ Object.freeze({
 "drawings/draw-chart-input.js":
 5,
 "drawings/draw-edit-interaction.js":
-28,
+30,
 "drawings/draw-placement.js":
 24,
 "drawings/draw-axis-lock.js":
@@ -852,7 +862,7 @@ Object.freeze({
 "draw-tools-visible.js":
 2,
 "watchlist-draw-ui.js":
-27,
+28,
 "price-alert-ui.js":
 51,
 "indicators.js":
@@ -881,7 +891,7 @@ Object.freeze({
 "ws.js":
 21,
 "market-ws.js":
-2,
+3,
 "market-ws-resume.js":
 1,
 "market-ws-resume-policy.js":
@@ -1003,9 +1013,9 @@ Object.freeze({
 "screener.css":
 58,
 "terminal.css":
-188,
+189,
 "watchlist.css":
-65,
+67,
 "terminal-layout.css":
 104,
 "dx-ball.css":

@@ -20,6 +20,7 @@ BYBIT_API_BASES = (
 )
 
 BINGX_API_BASE = "https://open-api.bingx.com"
+MOEX_ISS_BASE = "https://iss.moex.com"
 
 TWELVEDATA_BASE = "https://api.twelvedata.com"
 
@@ -64,6 +65,9 @@ class QuietHandler(http.server.SimpleHTTPRequestHandler):
             return
         if parsed.path == "/api/bingx":
             self._serve_bingx_proxy(parsed)
+            return
+        if parsed.path == "/api/moex":
+            self._serve_moex_proxy(parsed)
             return
         if parsed.path == "/api/twelvedata":
             self._serve_twelvedata_proxy(parsed)
@@ -118,6 +122,45 @@ class QuietHandler(http.server.SimpleHTTPRequestHandler):
                 self.wfile.write(body)
         except (urllib.error.URLError, TimeoutError, OSError) as err:
             self.send_error(502, f"BingX upstream failed: {err}")
+
+    def _serve_moex_proxy(self, parsed: urllib.parse.ParseResult) -> None:
+        qs = urllib.parse.parse_qs(parsed.query)
+        path = (qs.get("path") or [""])[0]
+        pathname = path.split("?", 1)[0]
+        allowed = (
+            pathname in ("/iss.json", "/iss/index.json", "/iss/engines.json")
+            or (
+                pathname.startswith("/iss/engines/")
+                and "/orderbook" not in pathname
+                and "/trades" not in pathname
+                and (
+                    "/securities" in pathname
+                    or "/candles" in pathname
+                    or "/candleborders" in pathname
+                    or pathname.endswith(".json")
+                )
+            )
+        )
+        if ".." in path or "\\" in path or not allowed:
+            self.send_error(400, "invalid path")
+            return
+        try:
+            req = urllib.request.Request(
+                f"{MOEX_ISS_BASE}{path}",
+                headers={
+                    "Accept": "application/json",
+                    "User-Agent": "Multichart-Dev/1.0",
+                },
+            )
+            with urllib.request.urlopen(req, timeout=20) as upstream:
+                body = upstream.read()
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Cache-Control", "no-cache")
+                self.end_headers()
+                self.wfile.write(body)
+        except (urllib.error.URLError, TimeoutError, OSError) as err:
+            self.send_error(502, f"MOEX upstream failed: {err}")
 
     def _serve_twelvedata_proxy(self, parsed: urllib.parse.ParseResult) -> None:
         api_key = (

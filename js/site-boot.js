@@ -39,7 +39,7 @@ isSupabaseConfigured
 
 import {
 initExchangeContext
-} from "./market-api.js?v=6";
+} from "./market-api.js?v=7";
 
 import {
 initBybitNetworkUi
@@ -65,7 +65,7 @@ initFocusBlurAfterPick
 
 import {
 initDesktopAppUi
-} from "./desktop-app-ui.js?v=11";
+} from "./desktop-app-ui.js?v=12";
 
 import {
 initSiteHeader,

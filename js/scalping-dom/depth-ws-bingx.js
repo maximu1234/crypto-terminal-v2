@@ -4,7 +4,7 @@
  */
 import {
 toBingxSymbol
-} from "../exchanges/symbol.js?v=1";
+} from "../exchanges/symbol.js?v=2";
 
 const DEFAULT_BINGX_WS_URL =
 "wss://open-api-swap.bingx.com/swap-market";

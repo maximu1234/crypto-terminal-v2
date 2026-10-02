@@ -6,7 +6,7 @@ import {
 } from "../trade-web/client.js?v=6";
 import {
   setActiveExchangeId
-} from "../market-api.js?v=6";
+} from "../market-api.js?v=7";
 import {
   loadTradeExchangeModules
 } from "../trade/module-router.js?v=24";

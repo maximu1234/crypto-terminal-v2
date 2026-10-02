@@ -1,6 +1,6 @@
 import {
 toCanonicalSymbol
-} from "../symbol.js?v=1";
+} from "../symbol.js?v=2";
 
 export const BINGX_NEW_LISTING_WINDOW_MS =
 30 *

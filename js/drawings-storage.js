@@ -7,7 +7,7 @@ drawingsStorageKey,
 parseDrawingsStorageKey,
 migrateLegacyDrawingsStorage,
 listDrawingsStorageKeys
-} from "./drawings-exchange-key.js?v=1";
+} from "./drawings-exchange-key.js?v=2";
 
 const LEGACY_TF_RE =
 /^(.+)_(1|5|15|60|240|D)$/;

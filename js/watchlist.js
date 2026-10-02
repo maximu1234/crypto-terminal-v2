@@ -12,7 +12,7 @@ loadMarketHistory,
 getActiveExchangeId,
 getActiveExchangeDefinition,
 EXCHANGE_CHANGED_EVENT
-} from "./market-api.js?v=6";
+} from "./market-api.js?v=7";
 
 import {
 clearBybitNetworkIssue
@@ -54,7 +54,7 @@ import {
 subscribeKline,
 subscribeTicker,
 bindLiveCandleCatchup
-} from "./market-ws.js?v=2";
+} from "./market-ws.js?v=3";
 
 import {
 applyLiveLastPriceToCandles,
@@ -74,7 +74,7 @@ initWidgetDrawToolsDropdown,
 wireWidgetDrawToolMenu,
 closeAllWidgetDrawToolsMenus,
 resetWidgetDrawToolsMenus
-} from "./watchlist-draw-ui.js?v=27";
+} from "./watchlist-draw-ui.js?v=28";
 
 import {
 ensureDrawToolsVisible

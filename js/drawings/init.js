@@ -9,7 +9,7 @@ TRASH_ICON_SVG
 
 import {
 closeAllWidgetDrawToolsMenus
-} from "../watchlist-draw-ui.js?v=27";
+} from "../watchlist-draw-ui.js?v=28";
 
 import {
 ensureDrawToolsVisible
@@ -23,7 +23,7 @@ recordDrawingTombstone
 import {
 EXCHANGE_CHANGED_EVENT,
 loadMarketHistory
-} from "../market-api.js?v=6";
+} from "../market-api.js?v=7";
 
 import {
 registerDrawingsStoragePoller,
@@ -165,11 +165,11 @@ createDrawDesktopSelection
 
 import {
 createDrawingsPersist
-} from "./drawings-persist.js?v=18";
+} from "./drawings-persist.js?v=19";
 
 import {
 createDrawStyleBar
-} from "./draw-style-bar.js?v=60";
+} from "./draw-style-bar.js?v=65";
 
 import {
 createDrawAlertsChart
@@ -206,7 +206,7 @@ createBrushPlacement
 
 import {
 createDrawEditInteraction
-} from "./draw-edit-interaction.js?v=28";
+} from "./draw-edit-interaction.js?v=30";
 
 import {
 createDrawChartInput
@@ -339,6 +339,9 @@ pickUi(uiRoot, "draw-settings-btn", ".draw-settings-btn");
 
 const deleteOneBtn =
 pickUi(uiRoot, "draw-delete-one", ".draw-delete-one-btn");
+
+const lockBtn =
+pickUi(uiRoot, "draw-lock-btn", ".draw-lock-btn");
 
 const positionRiskWrap =
 pickUi(uiRoot, "draw-position-risk-wrap", ".draw-position-risk");
@@ -4578,6 +4581,7 @@ textSizePopover,
 settingsPopover,
 settingsBtn,
 deleteOneBtn,
+lockBtn,
 positionRiskWrap,
 positionRiskInput,
 dragHandle,

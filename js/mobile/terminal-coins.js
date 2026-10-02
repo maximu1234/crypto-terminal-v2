@@ -6,7 +6,7 @@ import {
   loadMarketSymbols,
   peekMarketSymbolsCache,
   buildMarketLists
-} from "../market-api.js?v=6";
+} from "../market-api.js?v=7";
 import {
   fetchTickersInto
 } from "../tickers.js?v=29";
@@ -388,8 +388,12 @@ export async function mountMobileTerminalCoins(host, hooks) {
       new: mapSymbolList(built.new),
       innovation: mapSymbolList(built.innovation),
       stocks: mapSymbolList(built.stocks),
+      shares: mapSymbolList(built.shares),
+      etf: mapSymbolList(built.etf),
+      indices: mapSymbolList(built.indices),
       commodities: mapSymbolList(built.commodities),
-      forex: mapSymbolList(built.forex)
+      forex: mapSymbolList(built.forex),
+      currency: mapSymbolList(built.currency)
     };
     if (!listsByMarket.all.length) {
       const flat = mapSymbolList(instruments);

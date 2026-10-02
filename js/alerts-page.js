@@ -56,7 +56,27 @@ import {
 EXCHANGE_CHANGED_EVENT,
 getActiveExchangeDefinition,
 getActiveExchangeId
-} from "./market-api.js?v=6";
+} from "./market-api.js?v=7";
+
+import {
+mountMoexUnavailableStub
+} from "./exchanges/moex-readonly-stub.js?v=1";
+
+if(
+mountMoexUnavailableStub({
+title:
+"Алерты",
+host:
+document.getElementById(
+"alerts-page"
+) ||
+document.querySelector(
+"main"
+)
+})
+){
+/* read-only Мосбиржа — страница недоступна */
+}else{
 
 function escapeHtml(
 raw
@@ -936,3 +956,5 @@ err
 refreshTelegramUi();
 }
 );
+
+}

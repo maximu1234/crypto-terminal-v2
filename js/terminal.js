@@ -16,7 +16,7 @@ getActiveExchangeMarkets,
 getActiveExchangeId,
 getActiveExchangeDefinition,
 EXCHANGE_CHANGED_EVENT
-} from "./market-api.js?v=6";
+} from "./market-api.js?v=7";
 
 import {
 clearBybitNetworkIssue
@@ -109,7 +109,7 @@ mountCoinsTabletController
 
 import {
 disconnectKlineStream
-} from "./market-ws.js?v=2";
+} from "./market-ws.js?v=3";
 
 import {
 syncBackgroundAlertStreams,
@@ -398,8 +398,11 @@ let indicesListings = [];
 let newListings = [];
 let innovationListings = [];
 let stockListings = [];
+let shareListings = [];
+let etfListings = [];
 let commodityListings = [];
 let forexListings = [];
+let currencyListings = [];
 
 let chart = null;
 let candleSeries = null;
@@ -589,6 +592,20 @@ set stockListings(v){
 stockListings = v;
 },
 
+get shareListings(){
+return shareListings;
+},
+set shareListings(v){
+shareListings = v;
+},
+
+get etfListings(){
+return etfListings;
+},
+set etfListings(v){
+etfListings = v;
+},
+
 get commodityListings(){
 return commodityListings;
 },
@@ -601,6 +618,13 @@ return forexListings;
 },
 set forexListings(v){
 forexListings = v;
+},
+
+get currencyListings(){
+return currencyListings;
+},
+set currencyListings(v){
+currencyListings = v;
 },
 
 get candleSeries(){
@@ -4844,10 +4868,12 @@ list
 );
 
 coinsState().allListings =
-lists.all;
+lists.all ||
+[];
 
 coinsState().allBybitSymbols =
-lists.crypto;
+lists.crypto ||
+[];
 
 coinsState().usdcListings =
 lists.usdc ||
@@ -4858,19 +4884,36 @@ lists.indices ||
 [];
 
 coinsState().newListings =
-lists.new;
+lists.new ||
+[];
 
 coinsState().innovationListings =
-lists.innovation;
+lists.innovation ||
+[];
 
 coinsState().stockListings =
-lists.stocks;
+lists.stocks ||
+[];
+
+coinsState().shareListings =
+lists.shares ||
+[];
+
+coinsState().etfListings =
+lists.etf ||
+[];
 
 coinsState().commodityListings =
-lists.commodities;
+lists.commodities ||
+[];
 
 coinsState().forexListings =
-lists.forex;
+lists.forex ||
+[];
+
+coinsState().currencyListings =
+lists.currency ||
+[];
 
 }
 
@@ -4906,9 +4949,12 @@ new:coinsState().newListings,
 innovation:coinsState().innovationListings,
 usdc:coinsState().usdcListings,
 stocks:coinsState().stockListings,
+shares:coinsState().shareListings,
+etf:coinsState().etfListings,
 indices:coinsState().indicesListings,
 commodities:coinsState().commodityListings,
-forex:coinsState().forexListings
+forex:coinsState().forexListings,
+currency:coinsState().currencyListings
 };
 
 return !!(
@@ -7082,9 +7128,15 @@ coinsState().innovationListings =
 [];
 coinsState().stockListings =
 [];
+coinsState().shareListings =
+[];
+coinsState().etfListings =
+[];
 coinsState().commodityListings =
 [];
 coinsState().forexListings =
+[];
+coinsState().currencyListings =
 [];
 
 if(
@@ -7143,6 +7195,65 @@ e
 );
 
 window.addEventListener(
+"market-symbols-updated",
+e=>{
+
+const exchangeId =
+String(
+e?.detail?.exchangeId ||
+""
+).trim().toLowerCase();
+
+if(
+exchangeId &&
+exchangeId !==
+getActiveExchangeId()
+){
+return;
+}
+
+const symbols =
+e?.detail?.symbols;
+
+if(
+!Array.isArray(
+symbols
+) ||
+!symbols.length
+){
+return;
+}
+
+applyInstrumentLists(
+symbols
+);
+generateMarketData();
+renderList();
+
+if(
+!getCurrentSymbols().includes(
+currentSymbol
+)
+){
+resolveSymbolForExchange(
+getActiveExchangeId()
+);
+highlightActiveSymbol();
+
+if(
+currentSymbol
+){
+void loadSymbol(
+currentSymbol
+);
+}
+
+}
+
+}
+);
+
+window.addEventListener(
 FEATURE_NAV_PREF_EVENT,
 e=>{
 if(
@@ -7195,7 +7306,11 @@ async function refreshCoinsMarketUi(){
 
 try{
 
-await initSymbols();
+await initSymbols({
+forceNetwork:
+getActiveExchangeId() ===
+"moex"
+});
 
 }catch(
 err

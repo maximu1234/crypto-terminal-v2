@@ -875,6 +875,7 @@ form.draw-position-risk{
 }
 
 .float-settings,
+.float-lock,
 .float-delete{
   width:32px;
   height:32px;
@@ -891,6 +892,7 @@ form.draw-position-risk{
 }
 
 .float-settings .draw-tool-icon,
+.float-lock .draw-tool-icon,
 .float-delete .draw-tool-icon{
   width:18px;
   height:18px;
@@ -904,12 +906,36 @@ form.draw-position-risk{
   height:34px;
 }
 
-.draw-settings-icon{
+.draw-settings-icon,
+.draw-lock-icon{
   width:20px;
   height:20px;
   color:#d1d5db;
   display:block;
   flex-shrink:0;
+}
+
+.draw-lock-icon{
+  width:18px;
+  height:18px;
+}
+
+.float-lock:hover{
+  background:#1f2937;
+  color:#f3f4f6;
+}
+
+.float-lock.is-locked{
+  color:#fbbf24;
+}
+
+.float-lock.is-locked .draw-lock-icon{
+  color:#fbbf24;
+}
+
+.float-lock.is-locked:hover{
+  background:#422006;
+  color:#fcd34d;
 }
 
 .float-delete:hover{

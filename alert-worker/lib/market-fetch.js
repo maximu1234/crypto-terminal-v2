@@ -26,6 +26,15 @@ exchangeId
 
 if(
 ex ===
+"moex"
+){
+return Promise.resolve(
+[]
+);
+}
+
+if(
+ex ===
 "bingx"
 ){
 return fetchBingxRecentKlines(
@@ -52,6 +61,15 @@ const ex =
 normalizeExchangeId(
 exchangeId
 );
+
+if(
+ex ===
+"moex"
+){
+return Promise.resolve(
+null
+);
+}
 
 if(
 ex ===

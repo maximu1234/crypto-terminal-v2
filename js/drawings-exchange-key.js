@@ -10,7 +10,7 @@ export const DRAWINGS_TF_SUFFIX_RE =
 /^(.+)_(1|5|15|60|240|D)$/;
 
 const EXCHANGE_PREFIX_RE =
-/^(bybit|bingx)_(.+)$/;
+/^(bybit|bingx|moex)_(.+)$/;
 
 export const DRAWINGS_META_STORAGE_KEYS =
 new Set([

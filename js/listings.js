@@ -3,7 +3,7 @@ loadMarketSymbols,
 getActiveExchangeDefinition,
 getActiveExchangeId,
 EXCHANGE_CHANGED_EVENT
-} from "./market-api.js?v=6";
+} from "./market-api.js?v=7";
 
 import {
 buildAlertChartUrl

@@ -14,12 +14,12 @@ jsImport
 } from "./asset-manifest.js?v=35";
 
 import {
-mountScriptPage
-} from "./script-page.js?v=55";
-
-import {
 isScriptNavEnabled
 } from "./desktop-feature-nav-prefs.js?v=5";
+
+import {
+mountMoexUnavailableStub
+} from "./exchanges/moex-readonly-stub.js?v=1";
 
 async function boot(){
 
@@ -33,11 +33,35 @@ return;
 }
 
 await waitForSiteCssReady();
+
+if(
+mountMoexUnavailableStub({
+title:
+"Скрипт"
+})
+){
+await import(
+jsImport(
+"site-boot.js"
+)
+);
+return;
+}
+
 await loadLightweightCharts();
 
 await import(
 jsImport(
 "site-boot.js"
+)
+);
+
+const {
+mountScriptPage
+} =
+await import(
+jsImport(
+"script-page.js"
 )
 );
 

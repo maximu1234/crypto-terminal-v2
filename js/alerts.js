@@ -22,12 +22,12 @@ symbolFromDrawingsKey,
 parseDrawingsStorageKey,
 exchangeFromDrawingsKey,
 migrateLegacyDrawingsStorage
-} from "./drawings-exchange-key.js?v=1";
+} from "./drawings-exchange-key.js?v=2";
 
 export {
 isDrawingsStorageKey,
 symbolFromDrawingsKey
-} from "./drawings-exchange-key.js?v=1";
+} from "./drawings-exchange-key.js?v=2";
 
 const STORAGE_KEY = "price_alerts_v1";
 

@@ -13,13 +13,13 @@ filterMarketItemsByMinVolume
 import {
 isActiveRealtimeMarketDataset,
 isExchangeTradingEnabled
-} from "../market-api.js?v=6";
+} from "../market-api.js?v=7";
 
 import {
 connectKlineStream,
 subscribeTicker,
 bindLiveCandleCatchup
-} from "../market-ws.js?v=2";
+} from "../market-ws.js?v=3";
 
 import {
 connectTickerStream,
@@ -303,6 +303,20 @@ return coinsState().stockListings;
 
 if(
 dataset ===
+"shares"
+){
+return coinsState().shareListings;
+}
+
+if(
+dataset ===
+"etf"
+){
+return coinsState().etfListings;
+}
+
+if(
+dataset ===
 "commodities"
 ){
 return coinsState().commodityListings;
@@ -313,6 +327,13 @@ dataset ===
 "forex"
 ){
 return coinsState().forexListings;
+}
+
+if(
+dataset ===
+"currency"
+){
+return coinsState().currencyListings;
 }
 
 console.warn(
