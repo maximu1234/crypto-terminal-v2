@@ -6,7 +6,7 @@ appendFutureWhitespaceBars,
 computeChartFutureMarginBars,
 computeCoinsChartViewportPlan,
 syncLinkedChartTimescales
-} from "../chart-import.js?v=64";
+} from "../chart-import.js?v=65";
 
 import {
 terminalVisibleBars,
@@ -720,22 +720,24 @@ const linked =
 chartIndicators?.getLinkedPaneCharts?.() ||
 [];
 
-/*
- * One barSpacing pass from main width, then copy to panes.
- * Also runs when wrap W×H is unchanged but price-scale width
- * changed (position labels / AO scale sync) — that used to leave
- * stale barSpacing and look like a broken zoom on position tickers.
- */
-refreshCoinsChartBarSpacing(
-chart,
-null
-);
-
-if(
+const panes =
 linked.length
-){
+? linked
+: (
+rsiPaneActive?.() &&
+getRsiChart?.()
+)
+? [
+getRsiChart()
+]
+: [];
 
-linked.forEach(
+/*
+ * 1) Equalize price-scale widths (AO/RSI labels) — may shrink plot.
+ * 2) Re-fit main barSpacing + rightOffset once.
+ * 3) Copy to panes (sync must not re-fit main).
+ */
+panes.forEach(
 linkedChart=>{
 syncLinkedChartTimescales(
 chart,
@@ -744,23 +746,19 @@ linkedChart
 }
 );
 
-}else if(
-rsiPaneActive?.()
-){
+refreshCoinsChartBarSpacing(
+chart,
+null
+);
 
-const rsiChart =
-getRsiChart?.();
-
-if(
-rsiChart
-){
+panes.forEach(
+linkedChart=>{
 syncLinkedChartTimescales(
 chart,
-rsiChart
+linkedChart
 );
 }
-
-}
+);
 
 if(
 rsiPaneActive?.()

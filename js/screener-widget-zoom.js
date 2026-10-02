@@ -15,7 +15,7 @@ mountChartPriceHud,
 applyTabletMainChartScroll,
 applyTabletRsiChartOptions,
 SCREENER_MAX_BARS
-} from "./chart-import.js?v=64";
+} from "./chart-import.js?v=65";
 
 import {
 isIpadWebViewport

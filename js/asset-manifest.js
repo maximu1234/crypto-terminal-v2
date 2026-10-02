@@ -291,7 +291,7 @@ Object.freeze({
 "chart-page.js":
 8,
 "terminal.js":
-510,
+511,
 "terminal-multi-chart.js":
 27,
 "terminal-screener-chart-pane.js":
@@ -299,7 +299,7 @@ Object.freeze({
 "terminal-layout-picker.js":
 11,
 "terminal/terminal-chart-layout.js":
-17,
+18,
 "terminal/coins-tablet-list-nav.js":
 2,
 "terminal/chart-display-style-ui.js":
@@ -708,7 +708,7 @@ Object.freeze({
 "screener-widget-zoom.js":
 34,
 "release-marker.js":
-132,
+133,
 "focus-blur-after-pick.js":
 3,
 "site-boot.js":
@@ -728,7 +728,7 @@ Object.freeze({
 "charts-lib-boot.js":
 3,
 "chart-import.js":
-64,
+65,
 "chart-widget-host.js":
 50,
 "tablet-gesture-policy.js":
@@ -738,7 +738,7 @@ Object.freeze({
 
 /* ── JS: chart / drawings ── */
 "chart.js":
-176,
+177,
 "chart/chart-options.js":
 7,
 "chart/chart-local-time.js":
@@ -748,7 +748,7 @@ Object.freeze({
 "chart/chart-dom-crosshair.js":
 17,
 "chart/chart-factory.js":
-59,
+60,
 "chart/chart-display-style.js":
 2,
 "chart/price-series-host.js":

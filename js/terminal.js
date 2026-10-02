@@ -95,7 +95,7 @@ appendFutureWhitespaceBars,
 applyCoinsChartViewport,
 refreshCoinsChartBarSpacing,
 tfPeriodSec
-} from "./chart-import.js?v=64";
+} from "./chart-import.js?v=65";
 
 import {
 terminalVisibleBars,
@@ -233,7 +233,7 @@ syncCoinsChartLinkedViewports,
 resizeCharts,
 scheduleResizeCharts,
 applyDefaultZoom
-} from "./terminal/terminal-chart-layout.js?v=17";
+} from "./terminal/terminal-chart-layout.js?v=18";
 
 import {
 placeCoinsTabletListNav
@@ -5610,11 +5610,12 @@ true
 
 chartIndicators?.notifySymbolChange?.();
 chartIndicators?.flushIndicatorDataRefreshNow?.();
-syncCoinsChartLinkedViewports();
 /*
- * Position overlays / AO price-scale sync can change plot width after the
- * initial replaceCoinsChartCandles plan. Re-fit barSpacing once more.
+ * Full viewport plan from candles (keeps future margin + rightOffset).
+ * AO + RSI sync only copies main → panes and must not re-fit main.
  */
+settleCoinsChartViewport();
+syncCoinsChartLinkedViewports();
 refreshCoinsChartBarSpacing(
 chart,
 null
@@ -5636,6 +5637,9 @@ symbolLoadSeq
 return;
 }
 
+/* Late AO/RSI/position overlay may change price-scale width. */
+settleCoinsChartViewport();
+syncCoinsChartLinkedViewports();
 refreshCoinsChartBarSpacing(
 chart,
 null

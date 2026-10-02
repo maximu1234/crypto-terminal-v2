@@ -939,6 +939,8 @@ range
 
 /**
  * Recompute main barSpacing so `range` fills the current plot width.
+ * Always keep rightOffset — otherwise short histories sit flush on the
+ * price scale (esp. after AO/RSI price-scale width sync).
  * @returns {boolean} false if plot width is not ready
  */
 function fitMainChartBarSpacingToRange(
@@ -980,7 +982,15 @@ span
 );
 
 mainChart.timeScale().applyOptions({
-barSpacing
+barSpacing,
+rightOffset:
+4,
+fixRightEdge:
+false,
+fixLeftEdge:
+false,
+shiftVisibleRangeOnNewBar:
+false
 });
 
 mainChart.timeScale().setVisibleLogicalRange(
@@ -1670,14 +1680,11 @@ linkedChart
 );
 
 /*
- * Price-scale minimumWidth sync shrinks/grows plot width without a
- * wrap resize. Re-fit barSpacing to the saved range, then copy.
+ * Copy main → linked only. Do NOT re-fit main barSpacing here:
+ * AO and RSI each call this on setData; re-fitting from a mid-sync
+ * range (often without future whitespace / rightOffset) pressed
+ * short histories against the right price scale.
  */
-fitMainChartBarSpacingToRange(
-mainChart,
-range
-);
-
 linkedChart.timeScale().applyOptions(
 getTimeScaleSyncOptions(
 mainChart.timeScale()
