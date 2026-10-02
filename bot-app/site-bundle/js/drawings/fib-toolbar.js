@@ -2,12 +2,17 @@
  * Left-toolbar flyout for Fib Retracement / Trend-Based Fib Extension.
  */
 import {
+openChromeSurface,
+closeChromeSurface
+} from "../chrome-motion.js?v=5";
+
+import {
 getDrawToolIconSrc
 } from "../draw-toolbar-icon-data.js?v=39";
 
 import {
 closeElliottFlyout
-} from "./elliott-toolbar.js?v=4";
+} from "./elliott-toolbar.js?v=5";
 
 import {
 FIB_EXT_TYPE,
@@ -168,6 +173,9 @@ window.innerHeight;
 el.classList.remove(
 "hidden"
 );
+openChromeSurface(
+el
+);
 
 const menuW =
 Math.max(
@@ -232,30 +240,33 @@ flyoutEl &&
 
 export function closeFibFlyout(){
 
+const btn =
+anchorBtn;
+
+anchorBtn =
+null;
+
+if(
+btn
+){
+btn.classList.remove(
+"draw-tool-group-btn--open"
+);
+btn.setAttribute(
+"aria-expanded",
+"false"
+);
+}
+
 if(
 !flyoutEl
 ){
 return;
 }
 
-flyoutEl.classList.add(
-"hidden"
+closeChromeSurface(
+flyoutEl
 );
-
-if(
-anchorBtn
-){
-anchorBtn.classList.remove(
-"draw-tool-group-btn--open"
-);
-anchorBtn.setAttribute(
-"aria-expanded",
-"false"
-);
-}
-
-anchorBtn =
-null;
 
 }
 

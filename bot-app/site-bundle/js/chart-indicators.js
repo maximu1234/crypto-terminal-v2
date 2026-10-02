@@ -10,7 +10,7 @@ countLimitedActive
 
 import {
 isChartLayoutReady
-} from "./chart-layout-gate.js?v=2";
+} from "./chart-layout-gate.js?v=4";
 
 const DEFAULT_STORAGE_KEY =
 "chart_indicators_v1";
@@ -224,22 +224,25 @@ pattern12Mod,
 createHorizontalVolumeIndicator
 },
 {
+createVolumeBubblesIndicator
+},
+{
 createIndicatorSettingsDialog
 }
 ] =
 await Promise.all(
 [
 import(
-"./indicators/rsi-pane.js?v=10"
+"./indicators/rsi-pane.js?v=12"
 ),
 import(
-"./indicators/volume-pane.js?v=19"
+"./indicators/volume-pane.js?v=21"
 ),
 import(
-"./indicators/ao-pane.js?v=16"
+"./indicators/ao-pane.js?v=18"
 ),
 import(
-"./indicators/macd-pane.js?v=9"
+"./indicators/macd-pane.js?v=11"
 ),
 import(
 "./indicators/moving-average.js?v=19"
@@ -263,6 +266,9 @@ createPattern12IndicatorOverride
 ),
 import(
 "./indicators/horizontal-volume.js?v=11"
+),
+import(
+"./indicators/volume-bubbles.js?v=3"
 ),
 import(
 "./indicators/indicator-settings-dialog.js?v=8"
@@ -324,6 +330,10 @@ settingsStore
 )),
 createHorizontalVolumeIndicator(
 getHost
+),
+createVolumeBubblesIndicator(
+getHost,
+settingsStore
 )
 ];
 
@@ -431,7 +441,7 @@ const hasSettings =
 !!ind.supportsSettingsDialog;
 
 return `
-<button type="button" class="chart-indicator-legend-item${hasSettings ? " chart-indicator-legend-item--settings" : ""}" data-indicator-id="${ind.id}" ${hasSettings ? 'data-has-settings="true" title="Двойной щелчок — настройки"' : ""}>${label}</button>
+<button type="button" class="chart-indicator-legend-item${hasSettings ? " chart-indicator-legend-item--settings" : ""}" data-indicator-id="${ind.id}" ${hasSettings ? 'data-has-settings="true" title="Клик — настройки"' : ""}>${label}</button>
 `;
 }
 ).join(
@@ -508,6 +518,31 @@ close:()=>{}
 return true;
 
 }
+
+legendEl.addEventListener(
+"click",
+event=>{
+
+const item =
+event.target.closest(
+"[data-indicator-id]"
+);
+
+if(
+!item?.dataset?.hasSettings
+){
+return;
+}
+
+/* Single click opens settings (dblclick also works). */
+event.preventDefault();
+event.stopPropagation();
+openIndicatorSettings(
+item.dataset.indicatorId
+);
+
+}
+);
 
 legendEl.addEventListener(
 "dblclick",

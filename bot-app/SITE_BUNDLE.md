@@ -1,8 +1,23 @@
-# bot-app site-bundle — frozen (intentional)
+# bot-app site-bundle — lite sync (intentional)
 
-Standalone Algo Bot (`bot-app/`) keeps a **frozen** `site-bundle`.
-`bot-app/scripts/bundle-site.cjs` does **not** pull live Multichart `js/`.
+Standalone Algo Bot (`bot-app/`) is a **lite** shell: no Terminal chart UI.
+It does **not** show Multichart graphs on the remote/server bot.
 
-Expect marker/ lag vs Multichart web (e.g. web `v0.193` while bot may stay on an older drawings path without `drawings-kv.js`).
+Sync path (plugin + JS dependency graph + algo engines):
 
-When promoting Multichart chart/drawings/algo UI into Algo Bot, sync **manually** and bump bot release — do not treat drift as an accidental CI failure of Multichart `bundle:sync`.
+```bash
+node scripts/sync-bot-lite-from-multichart.cjs
+# or: npm run bundle:site --prefix bot-app
+```
+
+Source of truth:
+- `js/algo-trading/**`, `js/algo-trading.js`, related CSS/HTML panels
+- `desktop/trading/algo-*.cjs` → `bot-app/trading/`
+
+Frozen in bot-app (not overwritten by Multichart chrome):
+- lite nav / Electron shell (`main` / preload / platform)
+- bot-session-logs-viewer stub
+- no Terminal trading IPC (stubs only)
+
+After sync: bump `bot-app/package.json` and cut `algo-bot-v*` / `algo-bot-win-v*` releases.
+Do not treat Multichart `bundle:sync` drift as a CI failure for the bot.

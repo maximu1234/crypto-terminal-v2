@@ -5,9 +5,18 @@ getActiveExchangeId
 import {
 drawingsStorageKey,
 parseDrawingsStorageKey,
-migrateLegacyDrawingsStorage,
-listDrawingsStorageKeys
-} from "./drawings-exchange-key.js?v=1";
+migrateLegacyDrawingsStorage
+} from "./drawings-exchange-key.js?v=5";
+
+import {
+drawingsKvGet,
+drawingsKvSet,
+drawingsKvRemove,
+drawingsKvListKeysForExchange,
+ensureDrawingsKvReady
+} from "./drawings-kv.js?v=3";
+
+void ensureDrawingsKvReady();
 
 const LEGACY_TF_RE =
 /^(.+)_(1|5|15|60|240|D)$/;
@@ -878,6 +887,8 @@ export function purgeExchangeLocalDrawingsStorage(
 exchangeId
 ){
 
+void ensureDrawingsKvReady();
+
 migrateLegacyDrawingsStorage();
 
 const ex =
@@ -890,8 +901,12 @@ const symbols =
 new Set();
 
 const keys =
-listDrawingsStorageKeys(
-ex
+drawingsKvListKeysForExchange(
+ex,
+{
+includeTf:
+true
+}
 );
 
 for(
@@ -911,47 +926,7 @@ parsed.symbol
 );
 }
 
-localStorage.removeItem(
-key
-);
-
-}
-
-for(
-let i =
-0;
-i <
-localStorage.length;
-i++
-){
-
-const key =
-localStorage.key(
-i
-);
-const parsed =
-parseDrawingsStorageKey(
-key
-);
-
-if(
-!parsed ||
-parsed.exchangeId !==
-ex ||
-!parsed.tfSuffix
-){
-continue;
-}
-
-if(
-parsed.symbol
-){
-symbols.add(
-parsed.symbol
-);
-}
-
-localStorage.removeItem(
+drawingsKvRemove(
 key
 );
 
@@ -1091,7 +1066,7 @@ let list =
 try{
 list =
 JSON.parse(
-localStorage.getItem(
+drawingsKvGet(
 key
 ) ||
 "[]"
@@ -1123,7 +1098,7 @@ if(
 next.length !==
 list.length
 ){
-localStorage.setItem(
+drawingsKvSet(
 key,
 JSON.stringify(
 next
@@ -1141,6 +1116,8 @@ export function collectAllLocalDrawings(
 exchangeId
 ){
 
+void ensureDrawingsKvReady();
+
 migrateLegacyDrawingsStorage();
 
 const ex =
@@ -1153,7 +1130,7 @@ const out =
 {};
 
 for(
-const key of listDrawingsStorageKeys(
+const key of drawingsKvListKeysForExchange(
 ex
 )
 ){
@@ -1173,7 +1150,7 @@ try{
 
 const list =
 JSON.parse(
-localStorage.getItem(
+drawingsKvGet(
 key
 ) ||
 "[]"
@@ -1242,7 +1219,7 @@ if(
 ){
 
 for(
-const key of listDrawingsStorageKeys(
+const key of drawingsKvListKeysForExchange(
 mergeExchangeId
 )
 ){
@@ -1261,7 +1238,7 @@ parsed.symbol
 continue;
 }
 
-localStorage.removeItem(
+drawingsKvRemove(
 key
 );
 
@@ -1270,7 +1247,7 @@ key
 }else{
 
 for(
-const key of listDrawingsStorageKeys(
+const key of drawingsKvListKeysForExchange(
 mergeExchangeId
 )
 ){
@@ -1333,7 +1310,7 @@ list.length ===
 if(
 !merge
 ){
-localStorage.removeItem(
+drawingsKvRemove(
 key
 );
 }
@@ -1354,7 +1331,7 @@ let localList =
 try{
 localList =
 JSON.parse(
-localStorage.getItem(
+drawingsKvGet(
 key
 ) ||
 "[]"
@@ -1381,7 +1358,7 @@ list
 
 }
 
-localStorage.setItem(
+drawingsKvSet(
 key,
 JSON.stringify(
 next

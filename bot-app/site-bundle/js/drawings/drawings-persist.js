@@ -1,6 +1,6 @@
 /**
- * LocalStorage load/save + shape normalization for drawings.
- * Drawings are local-only — no cloud sync.
+ * LocalStorage / IndexedDB load/save + shape normalization for drawings.
+ * Payloads go through drawings-kv (memory + IndexedDB; cross-tab BroadcastChannel).
  */
 import {
 STROKE,
@@ -49,7 +49,15 @@ normalizeElliottShape
 
 import {
 drawingsStorageKey
-} from "../drawings-exchange-key.js?v=1";
+} from "../drawings-exchange-key.js?v=5";
+
+import {
+drawingsKvGet,
+drawingsKvSet,
+ensureDrawingsKvReady
+} from "../drawings-kv.js?v=3";
+
+void ensureDrawingsKvReady();
 
 const LEGACY_TF_KEYS =
 Object.freeze([
@@ -133,6 +141,9 @@ STROKE;
 shape.lineWidth =
 shape.lineWidth ||
 1;
+
+shape.locked =
+!!shape.locked;
 
 if(
 isFibType(
@@ -402,7 +413,7 @@ dirty
 ){
 
 try{
-localStorage.setItem(
+drawingsKvSet(
 storageKey(),
 JSON.stringify(
 getDrawings()
@@ -423,7 +434,7 @@ key
 try{
 
 const raw =
-localStorage.getItem(
+drawingsKvGet(
 key
 );
 
@@ -466,7 +477,7 @@ storageKey();
 try{
 
 let raw =
-localStorage.getItem(
+drawingsKvGet(
 key
 );
 
@@ -488,7 +499,7 @@ try{
 
 const legacy =
 JSON.parse(
-localStorage.getItem(
+drawingsKvGet(
 drawingsStorageKey(
 sym,
 {
@@ -497,7 +508,7 @@ tfSuffix:
 }
 )
 ) ||
-localStorage.getItem(
+drawingsKvGet(
 `drawings_${sym}_${tf}`
 ) ||
 "[]"
@@ -543,7 +554,7 @@ sanitizeDrawingsForCurrentSymbol();
 if(
 getDrawings().length
 ){
-localStorage.setItem(
+drawingsKvSet(
 storageKey(),
 JSON.stringify(
 getDrawings()
@@ -621,7 +632,7 @@ onDrawUndoPush
 
 try{
 
-localStorage.setItem(
+drawingsKvSet(
 storageKey(),
 JSON.stringify(
 getDrawings()
@@ -660,7 +671,7 @@ return;
 
 try{
 
-localStorage.setItem(
+drawingsKvSet(
 drawingsStorageKey(
 sym
 ),

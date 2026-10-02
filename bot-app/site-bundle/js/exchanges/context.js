@@ -11,6 +11,14 @@ const DEFAULT_EXCHANGE =
 const KNOWN_EXCHANGES =
 new Set([
 "bybit",
+"bingx",
+"moex"
+]);
+
+/** Desktop trading IPC знает только Bybit/BingX. */
+const TRADING_EXCHANGES =
+new Set([
+"bybit",
 "bingx"
 ]);
 
@@ -133,7 +141,10 @@ next
 if(
 typeof window !==
 "undefined" &&
-window.cryptoTerminalDesktop?.isDesktop
+window.cryptoTerminalDesktop?.isDesktop &&
+TRADING_EXCHANGES.has(
+next
+)
 ){
 notifyMainActiveExchange(
 next
@@ -179,7 +190,10 @@ DEFAULT_EXCHANGE
 if(
 typeof window !==
 "undefined" &&
-window.cryptoTerminalDesktop?.isDesktop
+window.cryptoTerminalDesktop?.isDesktop &&
+TRADING_EXCHANGES.has(
+activeExchangeId
+)
 ){
 notifyMainActiveExchange(
 activeExchangeId

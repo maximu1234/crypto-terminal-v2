@@ -8,16 +8,16 @@ isMacdAlert,
 isOscillatorAlert,
 isRsiAlert,
 normalizeAlertTf
-} from "./alerts.js?v=111";
+} from "./alerts.js?v=114";
 
 import {
 subscribeKline
-} from "./market-ws.js?v=2";
+} from "./market-ws.js?v=3";
 
 import {
 EXCHANGE_CHANGED_EVENT,
 getActiveExchangeId
-} from "./market-api.js?v=6";
+} from "./market-api.js?v=7";
 
 import {
 getAlertNotifyMode,
@@ -1326,6 +1326,14 @@ onCandle
  * Подписки на все пары symbol+tf из реестра алертов (не зависит от открытой монеты).
  */
 export function syncGlobalAlertStreams(){
+
+if(
+getActiveExchangeId() ===
+"moex"
+){
+/* Read-only Мосбиржа — алерты не мониторим. */
+return;
+}
 
 const needed =
 new Set();

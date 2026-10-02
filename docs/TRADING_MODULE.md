@@ -54,13 +54,12 @@
 Auth keepalive / chart→`price_alerts`. JWT + push + cloud lock + remote Status —
 да. Live-бот на бирже, не на cloud alerts.
 
-**Standalone Algo Bot (`bot-app/`):** `site-bundle` **заморожен**
-(`bot-app/scripts/bundle-site.cjs` не тянет Multichart). См. `bot-app/SITE_BUNDLE.md`.
-Terminal `trading.*`
+**Standalone Algo Bot (`bot-app/`):** lite shell **без графика Терминала**.
+Sync плагина + JS-графа + движка: `node scripts/sync-bot-lite-from-multichart.cjs`
+(см. `bot-app/SITE_BUNDLE.md`). Terminal `trading.*`
 IPC **не регистрируется**; preload отдаёт stub. Ключи — только
-`algo-exchange-credentials`. При фиксе движка бота синхронизировать вручную
-зеркала: `desktop/trading/algo-bot-*.cjs` ↔ `bot-app/trading/algo-bot-*.cjs`
-(и `algo-trading-bot.cjs` / store / executor).
+`algo-exchange-credentials`. Движок зеркалится:
+`desktop/trading/algo-*.cjs` ↔ `bot-app/trading/algo-*.cjs`.
 
 **Disk pending:** `pendingTriggers` + `pendingMirrorTriggers` + `pendingEntries`
 в `algo-bot-store` (Stop→Start / restart).

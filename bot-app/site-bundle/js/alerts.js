@@ -22,12 +22,19 @@ symbolFromDrawingsKey,
 parseDrawingsStorageKey,
 exchangeFromDrawingsKey,
 migrateLegacyDrawingsStorage
-} from "./drawings-exchange-key.js?v=1";
+} from "./drawings-exchange-key.js?v=5";
+
+import {
+drawingsKvGet,
+drawingsKvSet,
+drawingsKvRemove,
+drawingsKvListKeys
+} from "./drawings-kv.js?v=3";
 
 export {
 isDrawingsStorageKey,
 symbolFromDrawingsKey
-} from "./drawings-exchange-key.js?v=1";
+} from "./drawings-exchange-key.js?v=5";
 
 const STORAGE_KEY = "price_alerts_v1";
 
@@ -767,7 +774,7 @@ String(symbol || "").trim().toUpperCase();
 try{
 
 const raw =
-localStorage.getItem(
+drawingsKvGet(
 exchangeDrawingsStorageKey(
 sym
 )
@@ -1175,21 +1182,9 @@ let n =
 0;
 
 for(
-let i = 0;
-i < localStorage.length;
-i++
+const key of
+drawingsKvListKeys()
 ){
-
-const key =
-localStorage.key(i);
-
-if(
-!isDrawingsStorageKey(
-key
-)
-){
-continue;
-}
 
 if(
 exchangeFromDrawingsKey(
@@ -1213,7 +1208,7 @@ let drawings;
 try{
 drawings =
 JSON.parse(
-localStorage.getItem(key) || "[]"
+drawingsKvGet(key) || "[]"
 );
 }catch{
 continue;
@@ -1294,19 +1289,12 @@ row
 }
 
 for(
-let i = 0;
-i <
-localStorage.length;
-i++
+const key of
+drawingsKvListKeys()
 ){
 
-const key =
-localStorage.key(
-i
-);
-
 if(
-!key?.startsWith(
+!key.startsWith(
 "drawings_"
 )
 ){
@@ -1329,7 +1317,7 @@ let drawings;
 try{
 drawings =
 JSON.parse(
-localStorage.getItem(
+drawingsKvGet(
 key
 ) ||
 "[]"
@@ -1466,7 +1454,7 @@ opts =
 ){
 
 const { isCloudLoggedIn } =
-await import("./cloud-sync.js?v=71");
+await import("./cloud-sync.js?v=74");
 
 if(
 !isCloudLoggedIn()
@@ -1563,7 +1551,7 @@ sym
 );
 
 const { ensureCloudReady } =
-await import("./auth-ui.js?v=66");
+await import("./auth-ui.js?v=69");
 
 await ensureCloudReady();
 
@@ -1660,7 +1648,7 @@ list.push(row);
 saveAlerts(list);
 
 const { ensureCloudReady } =
-await import("./auth-ui.js?v=66");
+await import("./auth-ui.js?v=69");
 
 await ensureCloudReady();
 
@@ -1941,7 +1929,7 @@ const key =
 exchangeDrawingsStorageKey(symbol);
 
 const raw =
-localStorage.getItem(key);
+drawingsKvGet(key);
 
 if(!raw){
 return false;
@@ -1965,7 +1953,7 @@ if(next.length === drawings.length){
 return false;
 }
 
-localStorage.setItem(
+drawingsKvSet(
 key,
 JSON.stringify(next)
 );
@@ -2875,7 +2863,7 @@ if(!dirty){
 continue;
 }
 
-localStorage.setItem(
+drawingsKvSet(
 exchangeDrawingsStorageKey(sym),
 JSON.stringify(next)
 );
@@ -3093,7 +3081,7 @@ if(
 continue;
 }
 
-localStorage.setItem(
+drawingsKvSet(
 exchangeDrawingsStorageKey(
 sym
 ),
@@ -3144,7 +3132,7 @@ const key =
 exchangeDrawingsStorageKey(sym);
 
 const raw =
-localStorage.getItem(key);
+drawingsKvGet(key);
 
 if(!raw){
 return false;
@@ -3179,7 +3167,7 @@ if(!changed){
 return false;
 }
 
-localStorage.setItem(
+drawingsKvSet(
 key,
 JSON.stringify(next)
 );
@@ -3221,17 +3209,9 @@ const entries =
 [];
 
 for(
-let i =
-0;
-i <
-localStorage.length;
-i++
+const key of
+drawingsKvListKeys()
 ){
-
-const key =
-localStorage.key(
-i
-);
 
 if(
 !isDrawingsStorageKey(
@@ -3287,17 +3267,9 @@ const activeExchange =
 getActiveExchangeId();
 
 for(
-let i =
-0;
-i <
-localStorage.length;
-i++
+const key of
+drawingsKvListKeys()
 ){
-
-const key =
-localStorage.key(
-i
-);
 
 if(
 !isDrawingsStorageKey(
@@ -3320,7 +3292,7 @@ try{
 
 const drawings =
 JSON.parse(
-localStorage.getItem(
+drawingsKvGet(
 key
 ) ||
 "[]"
@@ -3340,7 +3312,7 @@ Array.isArray(
 drawings
 )
 ){
-localStorage.removeItem(
+drawingsKvRemove(
 key
 );
 }
@@ -3358,9 +3330,16 @@ return total;
 export async function clearAllDrawings(){
 
 const {
+ensureDrawingsKvReady
+} =
+await import("./drawings-kv.js?v=3");
+
+await ensureDrawingsKvReady();
+
+const {
 purgeExchangeLocalDrawingsStorage
 } =
-await import("./drawings-storage.js?v=7");
+await import("./drawings-storage.js?v=10");
 
 const symbols =
 purgeExchangeLocalDrawingsStorage(

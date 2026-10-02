@@ -25,6 +25,20 @@ return s.replace(
 
 }
 
+/**
+ * SECID Мосбиржи — дефисы значимы (VEON-RX ≠ VEONRX).
+ */
+export function toMoexSymbol(
+raw
+){
+
+return String(
+raw ||
+""
+).trim().toUpperCase();
+
+}
+
 /** Внутренний ключ linear USDT (без USDC и прочих quote). */
 export function isUsdtMarginedSymbol(
 canonical
@@ -111,6 +125,13 @@ exchangeId ===
 "bybit"
 ){
 return `${sym}.P`;
+}
+
+if(
+exchangeId ===
+"moex"
+){
+return sym;
 }
 
 return sym;

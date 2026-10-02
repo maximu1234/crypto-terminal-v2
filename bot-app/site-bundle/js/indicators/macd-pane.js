@@ -8,7 +8,7 @@ linkPairedChartTimeScales,
 appendFutureWhitespaceBars,
 computeChartFutureMarginBars,
 coinsTfVisibleBars
-} from "../chart-import.js?v=62";
+} from "../chart-import.js?v=66";
 
 import {
 calculateMacd,
@@ -29,7 +29,7 @@ resolveIndicatorSourceCandles
 
 import {
 isChartLayoutReady
-} from "../chart-layout-gate.js?v=2";
+} from "../chart-layout-gate.js?v=4";
 
 import {
 isBottomIndicatorPane
@@ -37,7 +37,7 @@ isBottomIndicatorPane
 
 import {
 syncPaneViewportAfterData
-} from "./indicator-pane-viewport.js?v=6";
+} from "./indicator-pane-viewport.js?v=8";
 
 export const MACD_PANE_ID =
 "macd";
@@ -938,16 +938,16 @@ if(
 return;
 }
 
-ctx.applyCoinsChartViewport?.(
-ctx.mainChart,
+/* Copy main viewport — do not recompute barSpacing from this pane's width. */
+syncPaneViewportAfterData(
+getHost,
 chart,
-ctx.candles,
-ctx.tf,
-ctx.chartWidth,
-ctx.realCandleCount,
-ctx.visibleBarsCap
+{
+updateTimeScaleVisibility,
+pulseAutoscale:
+pulseMacdAutoscale
+}
 );
-updateTimeScaleVisibility();
 
 }
 

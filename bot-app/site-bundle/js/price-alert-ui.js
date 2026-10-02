@@ -12,11 +12,11 @@ formatRsiAlertLevel,
 isMacdAlert,
 isOscillatorAlert,
 isRsiAlert
-} from "./alerts.js?v=111";
+} from "./alerts.js?v=114";
 
 import {
 isCloudLoggedInEffective
-} from "./cloud-sync.js?v=71";
+} from "./cloud-sync.js?v=74";
 
 import {
 getTelegramChatId
@@ -28,7 +28,7 @@ hideDomChartCrosshair,
 hideDomChartCrosshairHorz,
 hideDomChartCrosshairVert,
 positionDomChartCrosshair
-} from "./chart-import.js?v=62";
+} from "./chart-import.js?v=66";
 
 import {
 isFineChartPointerType
@@ -37,7 +37,7 @@ isFineChartPointerType
 import {
 isChartLayoutReady,
 shouldDeferAlertBadgeSync
-} from "./chart-layout-gate.js?v=2";
+} from "./chart-layout-gate.js?v=4";
 
 const PLUS_ICON_W =
 22;

@@ -5,11 +5,11 @@ formatDrawColor
 
 import {
 TRASH_ICON_SVG
-} from "../draw-ui-shared.js?v=44";
+} from "../draw-ui-shared.js?v=45";
 
 import {
 closeAllWidgetDrawToolsMenus
-} from "../watchlist-draw-ui.js?v=27";
+} from "../watchlist-draw-ui.js?v=29";
 
 import {
 ensureDrawToolsVisible
@@ -18,17 +18,17 @@ ensureDrawToolsVisible
 import {
 touchShapeRevision,
 recordDrawingTombstone
-} from "../drawings-storage.js?v=7";
+} from "../drawings-storage.js?v=10";
 
 import {
 EXCHANGE_CHANGED_EVENT,
 loadMarketHistory
-} from "../market-api.js?v=6";
+} from "../market-api.js?v=7";
 
 import {
 registerDrawingsStoragePoller,
 touchDrawingsStorageSnap
-} from "../drawings-storage-poller.js?v=1";
+} from "../drawings-storage-poller.js?v=4";
 
 import {
 layoutScaleLabelYs,
@@ -50,7 +50,7 @@ ensureDomChartCrosshair,
 hideDomChartCrosshair,
 positionTabletProbeHorizInStack,
 fullCrosshairOptions
-} from "../chart-import.js?v=62";
+} from "../chart-import.js?v=66";
 
 import {
 STROKE,
@@ -165,11 +165,11 @@ createDrawDesktopSelection
 
 import {
 createDrawingsPersist
-} from "./drawings-persist.js?v=18";
+} from "./drawings-persist.js?v=21";
 
 import {
 createDrawStyleBar
-} from "./draw-style-bar.js?v=60";
+} from "./draw-style-bar.js?v=67";
 
 import {
 createDrawAlertsChart
@@ -193,12 +193,12 @@ listElliottHandles
 import {
 closeElliottFlyout,
 syncElliottGroupActive
-} from "./elliott-toolbar.js?v=4";
+} from "./elliott-toolbar.js?v=5";
 
 import {
 closeFibFlyout,
 syncFibGroupActive
-} from "./fib-toolbar.js?v=4";
+} from "./fib-toolbar.js?v=5";
 
 import {
 createBrushPlacement
@@ -206,7 +206,7 @@ createBrushPlacement
 
 import {
 createDrawEditInteraction
-} from "./draw-edit-interaction.js?v=28";
+} from "./draw-edit-interaction.js?v=30";
 
 import {
 createDrawChartInput
@@ -218,7 +218,7 @@ createDrawPriceScale
 
 import {
 createDrawRedrawLoop
-} from "./draw-redraw-loop.js?v=15";
+} from "./draw-redraw-loop.js?v=16";
 
 import {
 isAlgoReducedCloudClient
@@ -339,6 +339,9 @@ pickUi(uiRoot, "draw-settings-btn", ".draw-settings-btn");
 
 const deleteOneBtn =
 pickUi(uiRoot, "draw-delete-one", ".draw-delete-one-btn");
+
+const lockBtn =
+pickUi(uiRoot, "draw-lock-btn", ".draw-lock-btn");
 
 const positionRiskWrap =
 pickUi(uiRoot, "draw-position-risk-wrap", ".draw-position-risk");
@@ -2468,6 +2471,49 @@ true
 reapplyEphemeralDrawings();
 };
 
+void import("../drawings-kv.js?v=3").then(
+(
+m
+)=>{
+
+void m.ensureDrawingsKvReady().then(
+()=>{
+
+if(
+typeof loadDrawings ===
+"function"
+){
+loadDrawings();
+scheduleRedraw();
+}
+
+}
+);
+
+try{
+
+window.addEventListener(
+"drawings-kv-ready",
+()=>{
+
+if(
+typeof loadDrawings ===
+"function"
+){
+loadDrawings();
+scheduleRedraw();
+}
+
+}
+);
+
+}catch{
+/* ignore */
+}
+
+}
+);
+
 saveDrawings =
 opts=>{
 
@@ -4578,6 +4624,7 @@ textSizePopover,
 settingsPopover,
 settingsBtn,
 deleteOneBtn,
+lockBtn,
 positionRiskWrap,
 positionRiskInput,
 dragHandle,

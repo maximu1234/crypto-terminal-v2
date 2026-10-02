@@ -24,7 +24,7 @@ export {
 export {
   createTradeChartOverlay,
   initTradeChartOverlay
-} from "./chart-overlay.js?v=18";
+} from "./chart-overlay.js?v=19";
 
 export {
   createTradeChartOrders,
@@ -62,7 +62,7 @@ export {
 
 export {
   initTradeBookPanel
-} from "./book-panel.js?v=6";
+} from "./book-panel.js?v=9";
 
 export {
   getTradeConfig
@@ -129,7 +129,7 @@ export {
   buildDiaryPayload,
   openPnlShareModal,
   openPnlShareDiaryModal
-} from "./pnl-share-modal.js?v=2";
+} from "./pnl-share-modal.js?v=4";
 
 export {
   mountTradeChartMarkersToggle,

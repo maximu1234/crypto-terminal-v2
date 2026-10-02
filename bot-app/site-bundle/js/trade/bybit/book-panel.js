@@ -18,6 +18,11 @@ getTradeConfig
 } from "./config.js?v=3";
 
 import {
+openChromeSurface,
+closeChromeSurface
+} from "../../chrome-motion.js?v=5";
+
+import {
 applyPositionColumnLayout,
 applyOrderColumnLayout,
 applyAlertColumnLayout,
@@ -29,7 +34,7 @@ columnResizeHandle
 
 import {
 openPnlShareModal
-} from "./pnl-share-modal.js?v=2";
+} from "./pnl-share-modal.js?v=4";
 
 import {
 formatAlertDate,
@@ -38,7 +43,7 @@ getAlertsSorted,
 getAlertsHistorySorted,
 removeAlert,
 removeAlertHistoryEntry
-} from "../../alerts.js?v=111";
+} from "../../alerts.js?v=114";
 
 const SHARE_ICON_V =
 2;
@@ -1178,6 +1183,9 @@ splitResize
 list.appendChild(
 panel
 );
+openChromeSurface(
+panel
+);
 
 applyPositionColumnLayout(
 panel
@@ -1310,10 +1318,17 @@ overlay.innerHTML =
 document.body.appendChild(
 overlay
 );
+openChromeSurface(
+overlay
+);
 
 const finish =
 confirmed=>{
 
+closeChromeSurface(
+overlay,
+{
+onDone:()=>{
 overlay.remove();
 document.removeEventListener(
 "keydown",
@@ -1321,6 +1336,9 @@ onKey
 );
 resolve(
 confirmed
+);
+}
+}
 );
 
 };

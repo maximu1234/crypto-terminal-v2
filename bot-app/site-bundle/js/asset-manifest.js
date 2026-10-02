@@ -23,7 +23,7 @@ Object.freeze({
 "asset-manifest.js":
 35,
 "market-api.js":
-6,
+7,
 "format-price.js":
 2,
 "kline-history-pages.js":
@@ -37,6 +37,16 @@ Object.freeze({
 "exchanges/registry.js":
 1,
 "exchanges/symbol.js":
+2,
+"exchanges/moex/public.js":
+3,
+"exchanges/moex/fetch.js":
+1,
+"exchanges/moex/listings.js":
+1,
+"exchanges/moex/intervals.js":
+1,
+"exchanges/moex-readonly-stub.js":
 1,
 "exchanges/bybit/public.js":
 2,
@@ -53,7 +63,7 @@ Object.freeze({
 "exchanges/bingx/intervals.js":
 1,
 "terminal-page-boot.js":
-66,
+67,
 "mobile/viewport.js":
 2,
 "mobile/nav.js":
@@ -139,7 +149,7 @@ Object.freeze({
 "exchange-trading-gate.js":
 4,
 "trade-exchange-settings.js":
-24,
+25,
 "trade-volume-presets.js":
 11,
 "trade-leverage-settings.js":
@@ -151,7 +161,7 @@ Object.freeze({
 "trade-market-entry.js":
 35,
 "trade-book-panel.js":
-60,
+61,
 "trade-pnl-share-modal.js":
 9,
 "trade-book-columns.js":
@@ -191,7 +201,7 @@ Object.freeze({
 "trade/bybit/market-entry.js":
 9,
 "trade/bybit/book-panel.js":
-4,
+7,
 "trade/bybit/position-open-orders.js":
 1,
 "trade/bybit/diary/index.js":
@@ -219,7 +229,7 @@ Object.freeze({
 "trade/bybit/book-columns.js":
 1,
 "trade/bybit/pnl-share-modal.js":
-2,
+4,
 "trade/bybit/diary/page.js":
 9,
 "trade/bybit/diary/period.js":
@@ -233,7 +243,7 @@ Object.freeze({
 "trade/bingx/stream-bridge.js":
 6,
 "trade/bingx/chart-overlay.js":
-18,
+19,
 "trade/bingx/stop-amend.js":
 1,
 "trade/bingx/chart-orders.js":
@@ -241,7 +251,7 @@ Object.freeze({
 "trade/bingx/chart-execution-markers.js":
 6,
 "trade/bingx/pnl-share-modal.js":
-2,
+4,
 "trade/bingx/book-columns.js":
 1,
 "trade/bingx/leverage-settings.js":
@@ -259,7 +269,7 @@ Object.freeze({
 "trade/bingx/market-entry.js":
 12,
 "trade/bingx/book-panel.js":
-6,
+9,
 "trade/bingx/position-open-orders.js":
 1,
 "trade/bingx/diary/index.js":
@@ -281,7 +291,7 @@ Object.freeze({
 "chart-page.js":
 8,
 "terminal.js":
-505,
+512,
 "terminal-multi-chart.js":
 27,
 "terminal-screener-chart-pane.js":
@@ -289,7 +299,7 @@ Object.freeze({
 "terminal-layout-picker.js":
 11,
 "terminal/terminal-chart-layout.js":
-13,
+19,
 "terminal/coins-tablet-list-nav.js":
 2,
 "terminal/chart-display-style-ui.js":
@@ -299,11 +309,17 @@ Object.freeze({
 "terminal/terminal-chart-switch-veil.js":
 7,
 "chart-layout-gate.js":
+4,
+"chart-redraw-scheduler.js":
+2,
+"chrome-motion.js":
+5,
+"app-boot-splash.js":
 2,
 "chart-visible-range.js":
 3,
 "chart-indicators.js":
-66,
+68,
 "chart-snapshot.js":
 7,
 "indicators/pattern-12.js":
@@ -339,7 +355,7 @@ Object.freeze({
 "algo-trading.js":
 255,
 "algo-trading-page-boot.js":
-37,
+38,
 "algo-trading-list.js":
 28,
 "algo-trading/coin-list-host.js":
@@ -562,27 +578,31 @@ Object.freeze({
 "algo-trading/diary/detail-ui.js":
 2,
 "algo-trading/diary/modal.js":
-11,
+13,
 "algo-trading/diary/pnl-share-modal.js":
 1,
 "indicators/horizontal-volume.js":
 11,
+"indicators/volume-bubbles.js":
+3,
+"indicators/volume-bubbles-math.js":
+1,
 "indicators/rsi-pane.js":
-10,
+12,
 "indicators/volume-pane.js":
-19,
+21,
 "indicators/ao-math.js":
 1,
 "indicators/ao-pane.js":
-16,
+18,
 "indicators/macd-math.js":
 3,
 "indicators/macd-pane.js":
-9,
+11,
 "indicators/indicator-pane-order.js":
 2,
 "indicators/indicator-pane-viewport.js":
-6,
+8,
 "indicators/moving-average.js":
 19,
 "indicators/ma-math.js":
@@ -644,7 +664,7 @@ Object.freeze({
 "watchlist.js":
 133,
 "screener.js":
-133,
+141,
 "ipad-web-viewport.js":
 2,
 "screener-widget-guard.js":
@@ -658,7 +678,7 @@ Object.freeze({
 "scalping-dom/boot.js":
 57,
 "scalping-dom/host.js":
-2,
+4,
 "scalping-dom/depth-feed.js":
 39,
 "scalping-dom/depth-store.js":
@@ -680,7 +700,7 @@ Object.freeze({
 "scalping-dom/trigger-order-overlay.js":
 2,
 "scalping-dom/drawing-overlay.js":
-2,
+4,
 "scalping-dom/live-book.js":
 3,
 "scalping-dom/depth-ws-bybit.js":
@@ -692,11 +712,11 @@ Object.freeze({
 "screener-widget-zoom.js":
 34,
 "release-marker.js":
-124,
+135,
 "focus-blur-after-pick.js":
 3,
 "site-boot.js":
-137,
+140,
 "site-header.js":
 7,
 "site-header-nav.js":
@@ -706,13 +726,13 @@ Object.freeze({
 "site-header-nav-desktop.js":
 2,
 "desktop-app-ui.js":
-11,
+16,
 "suppress-native-context-menu.js":
 4,
 "charts-lib-boot.js":
 3,
 "chart-import.js":
-62,
+66,
 "chart-widget-host.js":
 50,
 "tablet-gesture-policy.js":
@@ -722,7 +742,7 @@ Object.freeze({
 
 /* ── JS: chart / drawings ── */
 "chart.js":
-174,
+178,
 "chart/chart-options.js":
 7,
 "chart/chart-local-time.js":
@@ -732,7 +752,7 @@ Object.freeze({
 "chart/chart-dom-crosshair.js":
 17,
 "chart/chart-factory.js":
-57,
+61,
 "chart/chart-display-style.js":
 2,
 "chart/price-series-host.js":
@@ -746,9 +766,9 @@ Object.freeze({
 "terminal-tablet-controller.js":
 13,
 "drawings.js":
-300,
+301,
 "drawings/init.js":
-225,
+235,
 "drawings/draw-prefs.js":
 13,
 "drawings/draw-edit-desktop.js":
@@ -756,9 +776,9 @@ Object.freeze({
 "drawings/draw-undo.js":
 2,
 "drawings/drawings-persist.js":
-18,
+21,
 "drawings/draw-style-bar.js":
-60,
+67,
 "drawings/draw-templates.js":
 20,
 "drawings/draw-alerts-chart.js":
@@ -766,11 +786,11 @@ Object.freeze({
 "drawings/draw-price-scale.js":
 19,
 "drawings/draw-redraw-loop.js":
-15,
+16,
 "drawings/draw-chart-input.js":
 5,
 "drawings/draw-edit-interaction.js":
-28,
+30,
 "drawings/draw-placement.js":
 24,
 "drawings/draw-axis-lock.js":
@@ -834,25 +854,29 @@ Object.freeze({
 "drawings/draw-elliott-settings.js":
 8,
 "drawings/elliott-toolbar.js":
-4,
+5,
 "drawings/fib-toolbar.js":
-4,
+5,
 "drawings-tablet-input.js":
 12,
 "drawings-storage.js":
-7,
+10,
 "drawings-storage-poller.js":
-1,
+4,
+"drawings-idb.js":
+2,
+"drawings-kv.js":
+3,
 "draw-color-palette.js":
 7,
 "draw-ui-shared.js":
-44,
+45,
 "draw-toolbar-icon-data.js":
 39,
 "draw-tools-visible.js":
 2,
 "watchlist-draw-ui.js":
-27,
+29,
 "price-alert-ui.js":
 51,
 "indicators.js":
@@ -881,7 +905,7 @@ Object.freeze({
 "ws.js":
 21,
 "market-ws.js":
-2,
+3,
 "market-ws-resume.js":
 1,
 "market-ws-resume-policy.js":
@@ -891,7 +915,7 @@ Object.freeze({
 
 /* ── JS: cloud / auth ── */
 "cloud-sync.js":
-71,
+74,
 "cloud-sync-throttle.js":
 3,
 "page-routes.js":
@@ -907,13 +931,13 @@ Object.freeze({
 "auth-storage.js":
 11,
 "auth-session-transfer.js":
-1,
+2,
 "auth-ui.js":
-66,
+69,
 "header-settings-shell.js":
 4,
 "app-settings-window.js":
-25,
+29,
 "app-settings-proxy-panel.js":
 6,
 "app-settings-system-panel.js":
@@ -935,7 +959,7 @@ Object.freeze({
 
 /* ── JS: alerts ── */
 "alerts.js":
-111,
+114,
 "alerts-cloud-sync.js":
 115,
 "alerts-cloud/garbage-purge.js":
@@ -943,7 +967,7 @@ Object.freeze({
 "alerts-cloud/debug.js":
 4,
 "alerts-cloud/telegram-id.js":
-2,
+3,
 "alerts-cloud/worker-client.js":
 8,
 "alerts-cloud/registry-sync.js":
@@ -997,15 +1021,17 @@ Object.freeze({
 
 /* ── CSS ── */
 "critical-shell.css":
-10,
+11,
 "common.css":
-64,
+65,
+"chrome-motion.css":
+5,
 "screener.css":
 58,
 "terminal.css":
-188,
+189,
 "watchlist.css":
-65,
+67,
 "terminal-layout.css":
 104,
 "dx-ball.css":
@@ -1027,7 +1053,7 @@ Object.freeze({
 "algo-trading-chart-overlay.css":
 2,
 "chart-indicators.css":
-30,
+31,
 "chart-snapshot.css":
 5,
 "pattern-12-scanner.css":

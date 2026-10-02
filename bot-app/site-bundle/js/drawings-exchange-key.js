@@ -10,7 +10,7 @@ export const DRAWINGS_TF_SUFFIX_RE =
 /^(.+)_(1|5|15|60|240|D)$/;
 
 const EXCHANGE_PREFIX_RE =
-/^(bybit|bingx)_(.+)$/;
+/^(bybit|bingx|moex)_(.+)$/;
 
 export const DRAWINGS_META_STORAGE_KEYS =
 new Set([
@@ -19,6 +19,8 @@ new Set([
 "drawings_tombstones_v1",
 "drawings_row_sync_v1",
 "drawings_exchange_storage_migrated_v1",
+"drawings_idb_migrated_v1",
+"drawings_idb_ls_purged_v1",
 "drawings_local_updated_at",
 "drawings_synced_signature"
 ]);
@@ -477,6 +479,10 @@ LEGACY_MIGRATED_KEY,
 
 }
 
+/**
+ * @deprecated Prefer `drawingsKvListKeysForExchange` from drawings-kv.js.
+ * LS-only scan — empty after IDB LS purge (metka-193+).
+ */
 export function listDrawingsStorageKeys(
 exchangeId
 ){
@@ -488,6 +494,7 @@ exchangeId
 const keys =
 [];
 
+/* Legacy LS scan — prefer drawingsKvListKeysForExchange after IDB hydrate. */
 for(
 let i =
 0;

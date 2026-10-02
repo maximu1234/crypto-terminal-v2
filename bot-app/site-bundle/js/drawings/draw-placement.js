@@ -5,7 +5,7 @@
 import {
 hideDomChartCrosshair,
 positionTabletProbeHorizInStack
-} from "../chart-import.js?v=62";
+} from "../chart-import.js?v=66";
 
 import {
 ensureFibLevelsVisible,
@@ -30,7 +30,7 @@ snapPlotToCandleWick
 
 import {
 touchShapeRevision
-} from "../drawings-storage.js?v=7";
+} from "../drawings-storage.js?v=10";
 
 import {
 isHorizPriceTool

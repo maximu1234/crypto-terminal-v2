@@ -18,8 +18,41 @@ html:not(.css-ready){
 visibility:hidden;
 }
 
+/* Splash paints before full CSS/JS — visible child of hidden root. */
+html:not(.css-ready) #app-boot-splash{
+visibility:visible;
+}
+
 html.css-ready{
 visibility:visible;
+}
+
+.app-boot-splash{
+position:fixed;
+inset:0;
+z-index:9998;
+display:flex;
+align-items:center;
+justify-content:center;
+background:var(--app-bg, #16181f);
+pointer-events:none;
+opacity:1;
+transition:
+opacity 700ms cubic-bezier(0.16, 1, 0.3, 1),
+visibility 700ms;
+}
+
+.app-boot-splash.dismissed{
+opacity:0;
+visibility:hidden;
+}
+
+.app-boot-splash-mark{
+width:40px;
+height:40px;
+border-radius:10px;
+background:center / contain no-repeat url("/icons/brand-logo.png");
+opacity:0.92;
 }
 
 html,

@@ -2,7 +2,7 @@ import {
 getAllCoinsMarketIds,
 getActiveCoinsMarkets,
 getActiveExchangeId
-} from "../market-api.js?v=6";
+} from "../market-api.js?v=7";
 
 import {
 EXCHANGE_IDS
@@ -32,6 +32,7 @@ parseDiaryTradeDeepLink
 
 import {
 DEFAULT_CHART_SYMBOL,
+defaultChartSymbolForExchange,
 pickSymbolFromLastView as pickSymbolFromLastViewPure
 } from "./exchange-last-symbol.js?v=2";
 
@@ -45,7 +46,8 @@ normalizeMinVolume
 } from "../screener-volume-filter.js?v=4";
 
 export {
-DEFAULT_CHART_SYMBOL
+DEFAULT_CHART_SYMBOL,
+defaultChartSymbolForExchange
 };
 
 function isAllowedCoinsMarketId(
@@ -713,13 +715,18 @@ prefs
 
 export function pickSymbolFromLastView(
 last,
-symbols
+symbols,
+exchangeId
 ){
 
 return pickSymbolFromLastViewPure(
 last,
 symbols,
-getFirstVisibleSymbol
+getFirstVisibleSymbol,
+defaultChartSymbolForExchange(
+exchangeId ||
+getActiveExchangeId()
+)
 );
 
 }
@@ -749,7 +756,8 @@ getCurrentSymbols();
 coinsState().currentSymbol =
 pickSymbolFromLastView(
 last,
-symbols
+symbols,
+exchangeId
 );
 
 return coinsState().currentSymbol;
@@ -807,7 +815,8 @@ getCurrentSymbols();
 coinsState().currentSymbol =
 pickSymbolFromLastView(
 last,
-symbols
+symbols,
+exchangeId
 );
 
 }

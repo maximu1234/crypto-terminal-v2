@@ -12,7 +12,7 @@ applyRsiFixedPriceScale,
 appendFutureWhitespaceBars,
 computeChartFutureMarginBars,
 syncLinkedChartTimescales
-} from "./chart-import.js?v=62";
+} from "./chart-import.js?v=66";
 
 import {
 applyLiveSeriesUpdate,
@@ -35,7 +35,7 @@ ALGO_TICKER_SCAN_HISTORY_REQUESTS
 import {
 defaultRsiPaneSettings,
 normalizeRsiPaneSettings
-} from "./indicators/rsi-pane.js?v=10";
+} from "./indicators/rsi-pane.js?v=12";
 
 import {
 buildChartRsiPoints
@@ -44,12 +44,12 @@ buildChartRsiPoints
 import {
 loadMarketHistory,
 getActiveExchangeId
-} from "./market-api.js?v=6";
+} from "./market-api.js?v=7";
 
 import {
 subscribeKline,
 bindLiveCandleCatchup
-} from "./market-ws.js?v=2";
+} from "./market-ws.js?v=3";
 
 import {
 mountAlgoTradingCoinList,
@@ -190,7 +190,7 @@ readAlgoPattern12Settings
 import {
 setChartLayoutReady,
 isChartLayoutReady
-} from "./chart-layout-gate.js?v=2";
+} from "./chart-layout-gate.js?v=4";
 
 import {
 invalidatePreservedVisibleLogicalRange,

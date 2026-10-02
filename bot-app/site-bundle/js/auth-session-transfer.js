@@ -6,6 +6,12 @@
 export const AUTH_SESSION_TRANSFER_PREFIX =
 "mcauth1.";
 
+/** Transfer codes older than this are rejected (clipboard leak window). */
+export const AUTH_SESSION_TRANSFER_TTL_MS =
+15 *
+60 *
+1000;
+
 /**
  * @param {unknown} session
  * @returns {session is { access_token: string, refresh_token?: string, user?: object, expires_at?: number }}
@@ -256,9 +262,18 @@ throw new Error(
 );
 }
 
+const envelope =
+JSON.stringify({
+v:
+1,
+iat:
+Date.now(),
+session
+});
+
 return AUTH_SESSION_TRANSFER_PREFIX +
 toBase64Url(
-raw
+envelope
 );
 
 }
@@ -304,9 +319,59 @@ throw new Error(
 }
 }
 
+let sessionPayload =
+text;
+
+try{
+
+const parsed =
+JSON.parse(
+text
+);
+
+if(
+parsed &&
+typeof parsed ===
+"object" &&
+parsed.session &&
+typeof parsed.iat ===
+"number"
+){
+
+if(
+Date.now() -
+parsed.iat >
+AUTH_SESSION_TRANSFER_TTL_MS
+){
+throw new Error(
+"Строка сессии устарела (больше 15 минут). Скопируйте снова из Multichart."
+);
+}
+
+sessionPayload =
+JSON.stringify(
+parsed.session
+);
+
+}
+
+}catch(
+err
+){
+
+if(
+err?.message?.includes?.(
+"устарела"
+)
+){
+throw err;
+}
+
+}
+
 const raw =
 normalizeAuthSessionRaw(
-text
+sessionPayload
 );
 const session =
 parseAuthSessionRaw(

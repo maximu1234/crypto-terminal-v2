@@ -3,16 +3,46 @@
 export const DEFAULT_CHART_SYMBOL =
 "BTCUSDT";
 
+export const DEFAULT_MOEX_SYMBOL =
+"SBER";
+
+/**
+ * @param {string} [exchangeId]
+ */
+export function defaultChartSymbolForExchange(
+exchangeId
+){
+
+return String(
+exchangeId ||
+""
+).trim().toLowerCase() ===
+"moex"
+? DEFAULT_MOEX_SYMBOL
+: DEFAULT_CHART_SYMBOL;
+
+}
+
 /**
  * @param {{ symbol?: string|null }} last
  * @param {string[]} symbols
  * @param {() => string|null|undefined} [getFallbackSymbol]
+ * @param {string} [defaultSymbol]
  */
 export function pickSymbolFromLastView(
 last,
 symbols,
-getFallbackSymbol
+getFallbackSymbol,
+defaultSymbol =
+DEFAULT_CHART_SYMBOL
 ){
+
+const fallbackDefault =
+String(
+defaultSymbol ||
+DEFAULT_CHART_SYMBOL
+).trim().toUpperCase() ||
+DEFAULT_CHART_SYMBOL;
 
 const saved =
 typeof last?.symbol ===
@@ -32,7 +62,20 @@ symbols
 symbols.length ===
 0
 ){
-/* Список ещё не загружен — не мигаем BTC поверх последнего тикера. */
+/*
+  Список ещё не загружен.
+  Для Мосбиржи не держим крипто-тикер (BTCUSDT) — иначе пустой график.
+*/
+if(
+fallbackDefault ===
+DEFAULT_MOEX_SYMBOL &&
+/USDT$/i.test(
+saved
+)
+){
+return fallbackDefault;
+}
+
 return saved;
 }
 
@@ -51,10 +94,10 @@ Array.isArray(
 symbols
 ) &&
 symbols.includes(
-DEFAULT_CHART_SYMBOL
+fallbackDefault
 )
 ){
-return DEFAULT_CHART_SYMBOL;
+return fallbackDefault;
 }
 
 const fallback =
@@ -71,7 +114,7 @@ symbols
 ) &&
 symbols[0]
 ) ||
-DEFAULT_CHART_SYMBOL
+fallbackDefault
 );
 
 }

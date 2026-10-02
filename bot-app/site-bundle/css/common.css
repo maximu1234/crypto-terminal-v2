@@ -1095,6 +1095,10 @@ box-shadow:none;
 display:none;
 }
 
+.header-settings-dropdown.chrome-surface.chrome-surface--closing{
+display:block;
+}
+
 .header-settings-section-title{
 margin:0 0 10px;
 font-size:11px;

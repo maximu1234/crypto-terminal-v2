@@ -3,7 +3,7 @@
  */
 import {
   toBingxSymbol
-} from "../../../exchanges/symbol.js?v=1";
+} from "../../../exchanges/symbol.js?v=2";
 
 import {
   fetchBingx

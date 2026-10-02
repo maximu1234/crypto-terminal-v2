@@ -28,7 +28,7 @@ import {
 encodeAuthSessionTransfer,
 decodeAuthSessionTransfer,
 normalizeAuthSessionRaw
-} from "./auth-session-transfer.js?v=1";
+} from "./auth-session-transfer.js?v=2";
 
 import {
 loadFavoritesGroups,
@@ -56,7 +56,7 @@ mergeTombstoneMaps,
 mergeDrawingsPayload,
 packCloudDrawings,
 unpackCloudDrawings
-} from "./drawings-storage.js?v=7";
+} from "./drawings-storage.js?v=10";
 
 import {
 withTimeout
@@ -4308,8 +4308,8 @@ i++
 const key =
 localStorage.key(i);
 
+/* Drawings stay local on logout (DRAWINGS_REGRESSION + IDB). */
 if(
-key?.startsWith("drawings_") ||
 key === "price_alerts_v1" ||
 key === "price_alerts_history_v1"
 ){
@@ -4321,6 +4321,19 @@ localKeys.push(key);
 localKeys.forEach(k=>{
 localStorage.removeItem(k);
 });
+
+try{
+
+const {
+clearAllTelegramChatCaches
+} =
+await import("./alerts-cloud/telegram-id.js?v=3");
+
+clearAllTelegramChatCaches();
+
+}catch{
+/* ignore */
+}
 
 }catch{
 /* ignore */
@@ -4717,7 +4730,7 @@ await ensureCloudLoginResolved(
 const alertsCloud =
 await import("./alerts-cloud-sync.js?v=115");
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=111");
+await import("./alerts.js?v=114");
 
 const stripOpts =
 isAlertsPage()

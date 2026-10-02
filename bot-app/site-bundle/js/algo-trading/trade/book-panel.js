@@ -17,7 +17,7 @@ loadAllAlerts,
 removeAlert,
 formatAlertDate,
 formatAlertTicker
-} from "../../alerts.js?v=111";
+} from "../../alerts.js?v=114";
 
 import {
 isAlgoBotAlertRow,
@@ -988,7 +988,7 @@ isAlgoBotLiteMode()
 return;
 }
 void import(
-"../diary/modal.js?v=11"
+"../diary/modal.js?v=13"
 ).then(
 (mod)=>{
 if(

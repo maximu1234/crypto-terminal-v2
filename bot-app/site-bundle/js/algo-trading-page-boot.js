@@ -17,6 +17,10 @@ import {
 isAlgoTradingNavEnabled
 } from "./desktop-feature-nav-prefs.js?v=5";
 
+import {
+mountMoexUnavailableStub
+} from "./exchanges/moex-readonly-stub.js?v=1";
+
 async function boot(){
 
 if(
@@ -30,6 +34,32 @@ return;
 }
 
 await waitForSiteCssReady();
+
+try{
+const {
+dismissAppBootSplash
+} =
+await import(
+"./app-boot-splash.js?v=2"
+);
+dismissAppBootSplash();
+}catch{
+/* optional */
+}
+
+if(
+mountMoexUnavailableStub({
+title:
+"АлгоТрейдинг"
+})
+){
+await import(
+jsImport(
+"site-boot.js"
+)
+);
+return;
+}
 
 if(
 !isAlgoBotLiteShell()

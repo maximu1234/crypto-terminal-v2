@@ -32,7 +32,7 @@ saveDiaryPeriod
 
 import {
 EXCHANGE_CHANGED_EVENT
-} from "../../../market-api.js?v=6";
+} from "../../../market-api.js?v=7";
 
 import {
 initTradeDiaryNav
@@ -41,7 +41,7 @@ initTradeDiaryNav
 import {
 openPnlShareDiaryModal,
 PNL_SHARE_CONTROL_HTML
-} from "../pnl-share-modal.js?v=2";
+} from "../pnl-share-modal.js?v=4";
 
 import {
 renderDiaryPeriodAnalytics,

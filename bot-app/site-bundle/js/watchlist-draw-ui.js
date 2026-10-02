@@ -3,15 +3,15 @@ DRAW_TOOLS_PALETTE_ICON_SVG,
 TRASH_ICON_SVG,
 SETTINGS_ICON_SVG,
 getDrawToolbarButtonsHtml
-} from "./draw-ui-shared.js?v=44";
+} from "./draw-ui-shared.js?v=45";
 
 import {
 closeElliottFlyout
-} from "./drawings/elliott-toolbar.js?v=4";
+} from "./drawings/elliott-toolbar.js?v=5";
 
 import {
 closeFibFlyout
-} from "./drawings/fib-toolbar.js?v=4";
+} from "./drawings/fib-toolbar.js?v=5";
 
 const widgetDrawMenuClosers =
 new Set();
@@ -439,6 +439,13 @@ return `
 
 <button type="button" class="float-settings draw-settings-btn" title="Настройки">
 ${SETTINGS_ICON_SVG}
+</button>
+
+<button type="button" class="float-lock draw-lock-btn" title="Закрепить объект" aria-label="Замок" aria-pressed="false">
+<svg class="draw-lock-icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+<rect x="5" y="11" width="14" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/>
+<path class="draw-lock-shackle" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" d="M8 11V8a4 4 0 0 1 8 0v3"/>
+</svg>
 </button>
 
 <button type="button" class="float-delete draw-delete-one-btn" title="Удалить">

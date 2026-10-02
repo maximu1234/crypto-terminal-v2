@@ -26,7 +26,7 @@ intersectFavoritesWithMarket
 import {
 EXCHANGE_CHANGED_EVENT,
 getActiveExchangeId
-} from "./market-api.js?v=6";
+} from "./market-api.js?v=7";
 
 import {
 shouldRunScriptBackgroundJobs
@@ -76,6 +76,13 @@ String(
 exchangeId ||
 ""
 ).trim().toLowerCase();
+
+if(
+id ===
+"moex"
+){
+return "moex";
+}
 
 return id ===
 "bingx"

@@ -1,6 +1,11 @@
 /**
  * BingX — модалка «Поделиться PnL».
  */
+import {
+openChromeSurface,
+closeChromeSurface
+} from "../../chrome-motion.js?v=5";
+
 const SHARE_ICON_V =
 2;
 
@@ -460,6 +465,9 @@ el
 
 el.hidden =
 false;
+openChromeSurface(
+el
+);
 
 }
 
@@ -473,8 +481,15 @@ if(
 return;
 }
 
+closeChromeSurface(
+el,
+{
+onDone:()=>{
 el.hidden =
 true;
+}
+}
+);
 
 }
 

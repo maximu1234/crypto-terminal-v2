@@ -819,8 +819,8 @@ return 0;
 }
 
 const plotWidth =
-linkedChart?.timeScale().width() ||
 mainChart.timeScale().width() ||
+linkedChart?.timeScale().width() ||
 0;
 
 const plan =
@@ -894,8 +894,68 @@ if(
 return;
 }
 
+/*
+ * barSpacing always from the main chart plot width.
+ * Linked panes (AO / Volume / MACD / RSI) have different price-scale
+ * label widths per symbol — using their timeScale().width() made
+ * Terminal viewport jump (compressed / stretched / off-screen) when
+ * switching tickers with those panes enabled.
+ *
+ * After applyOptions({ barSpacing }), LW can drift the logical range —
+ * always re-apply the saved range (esp. when position overlays /
+ * scale-label sync change plot width without a wrap resize).
+ */
+if(
+!fitMainChartBarSpacingToRange(
+mainChart,
+range
+)
+){
+return;
+}
+
+if(
+linkedChart
+){
+
+const barSpacing =
+mainChart.timeScale().options().barSpacing;
+
+if(
+barSpacing !== undefined
+){
+linkedChart.timeScale().applyOptions({
+barSpacing
+});
+}
+
+linkedChart.timeScale().setVisibleLogicalRange(
+range
+);
+
+}
+
+}
+
+/**
+ * Recompute main barSpacing so `range` fills the current plot width.
+ * Always keep rightOffset — otherwise short histories sit flush on the
+ * price scale (esp. after AO/RSI price-scale width sync).
+ * @returns {boolean} false if plot width is not ready
+ */
+function fitMainChartBarSpacingToRange(
+mainChart,
+range
+){
+
+if(
+!mainChart ||
+!range
+){
+return false;
+}
+
 const plotWidth =
-linkedChart?.timeScale().width() ||
 mainChart.timeScale().width();
 
 if(
@@ -903,7 +963,7 @@ if(
 plotWidth <
 2
 ){
-return;
+return false;
 }
 
 const span =
@@ -922,29 +982,22 @@ span
 );
 
 mainChart.timeScale().applyOptions({
-barSpacing
+barSpacing,
+rightOffset:
+4,
+fixRightEdge:
+false,
+fixLeftEdge:
+false,
+shiftVisibleRangeOnNewBar:
+false
 });
 
-if(
-linkedChart
-){
-
-linkedChart.timeScale().applyOptions({
-barSpacing
-});
-
-const linkedRange =
-mainChart.timeScale().getVisibleLogicalRange();
-
-if(
-linkedRange
-){
-linkedChart.timeScale().setVisibleLogicalRange(
-linkedRange
+mainChart.timeScale().setVisibleLogicalRange(
+range
 );
-}
 
-}
+return true;
 
 }
 
@@ -1551,50 +1604,164 @@ if(
 return effectiveChartPriceScaleWidth();
 }
 
-const scale =
-"right";
-
-function measuredWidth(){
-
-return Math.max(
-mainChart.priceScale(scale).width() || 0,
-linkedChart.priceScale(scale).width() || 0,
-effectiveChartPriceScaleWidth()
+return equalizeLinkedPanePriceScales(
+mainChart,
+[
+linkedChart
+]
 );
 
 }
 
-let w =
-measuredWidth();
-
-mainChart.priceScale(scale).applyOptions({
-minimumWidth:w
-});
-
-linkedChart.priceScale(scale).applyOptions({
-minimumWidth:w
-});
-
-const w2 =
-measuredWidth();
-
-if(
-w2 > w
+/**
+ * Equalize right price-scale width across main + all indicator panes at once.
+ * Resets minimumWidth first so a wide AO label does not permanently ratchet
+ * the gutter after the pane is disabled or a shorter-labeled pane remains.
+ */
+export function equalizeLinkedPanePriceScales(
+mainChart,
+linkedCharts =
+[]
 ){
 
-w = w2;
+if(
+!mainChart
+){
+return effectiveChartPriceScaleWidth();
+}
 
-mainChart.priceScale(scale).applyOptions({
-minimumWidth:w
-});
+const scale =
+"right";
+const base =
+effectiveChartPriceScaleWidth();
 
-linkedChart.priceScale(scale).applyOptions({
-minimumWidth:w
+const charts =
+[
+mainChart,
+...(
+Array.isArray(
+linkedCharts
+)
+? linkedCharts
+: []
+)
+].filter(
+Boolean
+);
+
+for(
+const chart of
+charts
+){
+
+try{
+chart.priceScale(
+scale
+).applyOptions({
+minimumWidth:
+base
 });
+}catch{
+/* ignore */
+}
 
 }
 
-applyChartScaleWidthCss(mainChart);
+let w =
+base;
+
+for(
+const chart of
+charts
+){
+
+try{
+w =
+Math.max(
+w,
+chart.priceScale(
+scale
+).width() ||
+0
+);
+}catch{
+/* ignore */
+}
+
+}
+
+for(
+const chart of
+charts
+){
+
+try{
+chart.priceScale(
+scale
+).applyOptions({
+minimumWidth:
+w
+});
+}catch{
+/* ignore */
+}
+
+}
+
+let w2 =
+w;
+
+for(
+const chart of
+charts
+){
+
+try{
+w2 =
+Math.max(
+w2,
+chart.priceScale(
+scale
+).width() ||
+0
+);
+}catch{
+/* ignore */
+}
+
+}
+
+if(
+w2 >
+w
+){
+
+w =
+w2;
+
+for(
+const chart of
+charts
+){
+
+try{
+chart.priceScale(
+scale
+).applyOptions({
+minimumWidth:
+w
+});
+}catch{
+/* ignore */
+}
+
+}
+
+}
+
+applyChartScaleWidthCss(
+mainChart
+);
 
 return w;
 
@@ -1612,40 +1779,34 @@ if(
 return;
 }
 
-syncLinkedChartPriceScales(
-mainChart,
-linkedChart
-);
-
 const range =
 mainChart.timeScale().getVisibleLogicalRange();
 
-if(!range){
+if(
+!range
+){
 return;
 }
 
+/*
+ * Time-scale copy only. Price-scale width must be equalized across
+ * ALL panes in one pass (equalizeLinkedPanePriceScales) — pairwise
+ * sync from AO then RSI then Volume fought over minimumWidth and
+ * left short charts flush to the right scale.
+ */
 linkedChart.timeScale().applyOptions(
 getTimeScaleSyncOptions(
 mainChart.timeScale()
 )
 );
 
-linkedChart.timeScale().setVisibleLogicalRange(range);
+linkedChart.timeScale().setVisibleLogicalRange(
+range
+);
 
-const barSpacing =
-mainChart.timeScale().options().barSpacing;
-
-if(
-barSpacing !== undefined
-){
-
-linkedChart.timeScale().applyOptions({
-barSpacing
-});
-
-}
-
-applyChartScaleWidthCss(mainChart);
+applyChartScaleWidthCss(
+mainChart
+);
 
 }
 
@@ -1774,11 +1935,6 @@ linkedChart.timeScale()
 
 mainChart.timeScale().setVisibleLogicalRange(
 range
-);
-
-syncLinkedChartPriceScales(
-mainChart,
-linkedChart
 );
 
 afterSync?.();

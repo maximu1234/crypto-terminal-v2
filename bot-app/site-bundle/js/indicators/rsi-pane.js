@@ -12,6 +12,10 @@ htfTfSelectHtml,
 normalizeHtfTf
 } from "./htf-project.js?v=5";
 
+import {
+syncPaneViewportAfterData
+} from "./indicator-pane-viewport.js?v=8";
+
 export const RSI_PANE_ID =
 "rsi";
 
@@ -312,19 +316,10 @@ if(
 return;
 }
 
-const {
-applyCoinsChartViewport
-} =
-ctx;
-
-applyCoinsChartViewport?.(
-ctx.mainChart,
-chart,
-ctx.candles,
-ctx.tf,
-ctx.chartWidth,
-ctx.realCandleCount,
-ctx.visibleBarsCap
+/* Copy main viewport — do not recompute barSpacing from RSI pane width. */
+syncPaneViewportAfterData(
+getHost,
+chart
 );
 
 getHost?.()?.layoutRsiBand?.();

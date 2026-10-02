@@ -17,7 +17,7 @@ clearDismissedStops
 
 import {
 isExchangeTradingEnabled
-} from "../../market-api.js?v=6";
+} from "../../market-api.js?v=7";
 
 import {
 getTradeConfig
@@ -3914,7 +3914,7 @@ prev
 )
 );
 }else{
-/* Bybit (metka-70): empty getPosition after open must not wipe cache/tombstone. */
+/* BingX (metka-70): empty getPosition after open must not wipe cache/tombstone. */
 if(
 !next &&
 getTradeConfig().softKeepCachedOnEmptyGetPosition
@@ -4079,7 +4079,7 @@ position
 )
 );
 }else{
-/* Bybit: empty snapshot after open is lag — keep cache, no tombstone. */
+/* BingX: empty snapshot after open is lag — keep cache, no tombstone. */
 position =
 getCachedPosition(
 sym,

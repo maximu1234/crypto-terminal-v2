@@ -4,7 +4,7 @@ initAlertMonitor
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=66";
+} from "./auth-ui.js?v=69";
 
 import {
 isAlertsPage
@@ -24,14 +24,14 @@ scheduleRegistryCloudSync
 
 import {
 stripAlertFlagsNotInRegistry
-} from "./alerts.js?v=111";
+} from "./alerts.js?v=114";
 
 import {
 isCloudLoggedIn,
 isCloudLoggedInEffective,
 isCloudSyncEnabled,
 onCloudSyncChange
-} from "./cloud-sync.js?v=71";
+} from "./cloud-sync.js?v=74";
 
 import {
 isSupabaseConfigured
@@ -39,7 +39,7 @@ isSupabaseConfigured
 
 import {
 initExchangeContext
-} from "./market-api.js?v=6";
+} from "./market-api.js?v=7";
 
 import {
 initBybitNetworkUi
@@ -65,7 +65,7 @@ initFocusBlurAfterPick
 
 import {
 initDesktopAppUi
-} from "./desktop-app-ui.js?v=11";
+} from "./desktop-app-ui.js?v=16";
 
 import {
 initSiteHeader,
@@ -494,7 +494,7 @@ fn,
 
 }
 
-function runCloudBoot(){
+function runAlertsCloudBoot(){
 
 initAlertsCloudSync();
 
@@ -509,19 +509,6 @@ new CustomEvent(
 
 }
 );
-
-const algoCloudLite =
-isAlgoReducedCloudClient();
-
-if(
-!algoCloudLite
-){
-import("./favorites-cloud-sync.js?v=10").then(
-({ initFavoritesCloudSync })=>{
-initFavoritesCloudSync();
-}
-);
-}
 
 void ensureCloudReady()
 .then(async()=>{
@@ -539,6 +526,9 @@ await isSupabaseConfigured();
 
 const loggedIn =
 isCloudLoggedIn();
+
+const algoCloudLite =
+isAlgoReducedCloudClient();
 
 if(
 configured &&
@@ -566,6 +556,25 @@ console.warn("cloud init failed:", err);
 
 }
 
+function runDeferredCloudExtras(){
+
+const algoCloudLite =
+isAlgoReducedCloudClient();
+
+if(
+!algoCloudLite
+){
+import("./favorites-cloud-sync.js?v=10").then(
+({ initFavoritesCloudSync })=>{
+initFavoritesCloudSync();
+}
+);
+}
+
+}
+
+/* Alerts must boot immediately — not idle-deferred (docs/PERF_CHROME_CHART.md). */
+runAlertsCloudBoot();
 deferTerminalNonCriticalBoot(
-runCloudBoot
+runDeferredCloudExtras
 );

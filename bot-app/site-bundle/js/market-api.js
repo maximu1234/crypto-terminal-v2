@@ -10,7 +10,7 @@ getActiveCoinsMarkets
 
 import {
 formatExchangeDisplayLabel
-} from "./exchanges/symbol.js?v=1";
+} from "./exchanges/symbol.js?v=2";
 
 import {
 bybitPublicAdapter
@@ -21,6 +21,10 @@ bingxPublicAdapter
 } from "./exchanges/bingx/public.js?v=10";
 
 import {
+moexPublicAdapter
+} from "./exchanges/moex/public.js?v=3";
+
+import {
 peekBybitSymbolsCache
 } from "./api.js?v=34";
 
@@ -29,7 +33,9 @@ const ADAPTERS =
 bybit:
 bybitPublicAdapter,
 bingx:
-bingxPublicAdapter
+bingxPublicAdapter,
+moex:
+moexPublicAdapter
 };
 
 /** @type {Map<string, Promise<unknown>>} */
@@ -81,7 +87,7 @@ EXCHANGE_DEFINITIONS
 export {
 formatExchangeDisplayLabel,
 toCanonicalSymbol
-} from "./exchanges/symbol.js?v=1";
+} from "./exchanges/symbol.js?v=2";
 
 export async function loadMarketHistory(
 symbol,
@@ -265,6 +271,39 @@ try{
 const raw =
 localStorage.getItem(
 "bingx_swap_symbols_v4"
+);
+
+if(
+!raw
+){
+return null;
+}
+
+const parsed =
+JSON.parse(
+raw
+);
+
+return parsed?.instruments?.length
+? parsed.instruments
+: null;
+
+}catch{
+return null;
+}
+
+}
+
+if(
+id ===
+"moex"
+){
+
+try{
+
+const raw =
+localStorage.getItem(
+"moex_symbols_v2"
 );
 
 if(

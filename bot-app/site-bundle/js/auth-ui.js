@@ -13,7 +13,7 @@ completeAuthFromCallbackUrl,
 hasAuthCallbackInUrl,
 exportAuthSessionTransferString,
 importAuthSessionTransferString
-} from "./cloud-sync.js?v=71";
+} from "./cloud-sync.js?v=74";
 
 import {
 isSupabaseConfigured
@@ -31,11 +31,16 @@ import {
 initAppSettingsWindow,
 refreshAppSettingsAdminNav,
 openAppSettingsWindow
-} from "./app-settings-window.js?v=25";
+} from "./app-settings-window.js?v=29";
 
 import {
 ensureHeaderSettingsShell
 } from "./header-settings-shell.js?v=4";
+
+import {
+openChromeSurface,
+closeChromeSurface
+} from "./chrome-motion.js?v=5";
 
 let cloudEnvConfigured = false;
 let cloudSdkError = "";
@@ -769,24 +774,33 @@ document.querySelectorAll(
 "#header-settings-dropdown"
 ).forEach(
 el=>{
-el.classList.add(
-"hidden"
-);
+
+closeChromeSurface(
+el,
+{
+onDone:()=>{
 clearPortaledPosition(
 el
-);
-}
 );
 
 if(
 dropdown &&
-wrap
+wrap &&
+el ===
+dropdown
 ){
 restoreDropdownHome(
 dropdown,
 wrap
 );
 }
+
+}
+}
+);
+
+}
+);
 
 document.querySelectorAll(
 "#header-settings-btn"
@@ -837,7 +851,9 @@ if(
 return;
 }
 
-dropdown.classList.remove("hidden");
+openChromeSurface(
+dropdown
+);
 btn.setAttribute(
 "aria-expanded",
 "true"
@@ -1750,7 +1766,7 @@ const {
 getTelegramChatId
 } =
 await import(
-"./alerts-cloud/telegram-id.js?v=2"
+"./alerts-cloud/telegram-id.js?v=3"
 );
 const chatId =
 await getTelegramChatId();

@@ -1,0 +1,261 @@
+/**
+ * Chrome surface motion — opacity/transform only (no layout thrash).
+ * docs/PERF_CHROME_CHART.md phase 2
+ */
+
+:root{
+  --chrome-motion-ms:180ms;
+  --chrome-motion-ease:cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (prefers-reduced-motion: reduce){
+  :root{
+    --chrome-motion-ms:0ms;
+  }
+}
+
+/* --- App settings overlay --- */
+.app-settings-overlay.chrome-surface{
+  opacity:0;
+  transition:
+    opacity var(--chrome-motion-ms) var(--chrome-motion-ease);
+}
+
+.app-settings-overlay.chrome-surface .app-settings-dialog{
+  transform:translateY(10px) scale(0.98);
+  opacity:0.92;
+  transition:
+    transform var(--chrome-motion-ms) var(--chrome-motion-ease),
+    opacity var(--chrome-motion-ms) var(--chrome-motion-ease);
+}
+
+.app-settings-overlay.chrome-surface.chrome-surface--shown{
+  opacity:1;
+}
+
+.app-settings-overlay.chrome-surface.chrome-surface--shown .app-settings-dialog{
+  transform:none;
+  opacity:1;
+}
+
+.app-settings-overlay.chrome-surface.chrome-surface--closing{
+  display:flex !important;
+  pointer-events:none;
+  opacity:0;
+}
+
+.app-settings-overlay.chrome-surface.chrome-surface--closing .app-settings-dialog{
+  transform:translateY(8px) scale(0.985);
+  opacity:0.85;
+}
+
+/* --- Header settings dropdown (Terminal / Screener) --- */
+.header-settings-dropdown.chrome-surface{
+  opacity:0;
+  transform:translateY(-6px);
+  transition:
+    opacity var(--chrome-motion-ms) var(--chrome-motion-ease),
+    transform var(--chrome-motion-ms) var(--chrome-motion-ease);
+}
+
+.header-settings-dropdown.chrome-surface.chrome-surface--shown{
+  opacity:1;
+  transform:none;
+}
+
+.header-settings-dropdown.chrome-surface.chrome-surface--closing{
+  display:block !important;
+  pointer-events:none;
+  opacity:0;
+  transform:translateY(-4px);
+}
+
+/* --- Coins list: trade book mount --- */
+body.trade-page #list .trade-book-panel.chrome-surface{
+  opacity:0;
+  transform:translateY(8px);
+  transition:
+    opacity var(--chrome-motion-ms) var(--chrome-motion-ease),
+    transform var(--chrome-motion-ms) var(--chrome-motion-ease);
+}
+
+body.trade-page #list .trade-book-panel.chrome-surface.chrome-surface--shown{
+  opacity:1;
+  transform:none;
+}
+
+/* --- Scalping DOM (стакан) --- */
+.scalping-dom-root.chrome-surface{
+  opacity:0;
+  transform:translateX(12px);
+  transition:
+    opacity var(--chrome-motion-ms) var(--chrome-motion-ease),
+    transform var(--chrome-motion-ms) var(--chrome-motion-ease);
+}
+
+.scalping-dom-root.chrome-surface.chrome-surface--shown{
+  opacity:1;
+  transform:none;
+}
+
+/* --- Draw popovers / template menu / save modal --- */
+.draw-popover.chrome-surface,
+.draw-template-menu.chrome-surface,
+.coin-flag-menu.chrome-surface,
+.screener-flag-menu.chrome-surface{
+  opacity:0;
+  transform:translateY(-4px);
+  transition:
+    opacity var(--chrome-motion-ms) var(--chrome-motion-ease),
+    transform var(--chrome-motion-ms) var(--chrome-motion-ease);
+}
+
+.draw-popover.chrome-surface.chrome-surface--shown,
+.draw-template-menu.chrome-surface.chrome-surface--shown,
+.coin-flag-menu.chrome-surface.chrome-surface--shown,
+.screener-flag-menu.chrome-surface.chrome-surface--shown{
+  opacity:1;
+  transform:none;
+}
+
+.draw-popover.chrome-surface.chrome-surface--closing,
+.draw-template-menu.chrome-surface.chrome-surface--closing,
+.coin-flag-menu.chrome-surface.chrome-surface--closing,
+.screener-flag-menu.chrome-surface.chrome-surface--closing{
+  display:block !important;
+  pointer-events:none;
+  opacity:0;
+  transform:translateY(-3px);
+}
+
+.draw-template-save-modal.chrome-surface{
+  opacity:0;
+  transition:opacity var(--chrome-motion-ms) var(--chrome-motion-ease);
+}
+
+.draw-template-save-modal.chrome-surface .draw-template-save-dialog{
+  transform:translateY(8px) scale(0.98);
+  opacity:0.92;
+  transition:
+    transform var(--chrome-motion-ms) var(--chrome-motion-ease),
+    opacity var(--chrome-motion-ms) var(--chrome-motion-ease);
+}
+
+.draw-template-save-modal.chrome-surface.chrome-surface--shown{
+  opacity:1;
+}
+
+.draw-template-save-modal.chrome-surface.chrome-surface--shown .draw-template-save-dialog{
+  transform:none;
+  opacity:1;
+}
+
+.draw-template-save-modal.chrome-surface.chrome-surface--closing{
+  display:flex !important;
+  pointer-events:none;
+  opacity:0;
+}
+
+.scalping-dom-root.chrome-surface.chrome-surface--closing{
+  pointer-events:none;
+  opacity:0;
+  transform:translateX(10px);
+}
+
+/* --- Trade / diary overlays --- */
+.trade-pnl-share-overlay.chrome-surface,
+.trade-book-confirm-overlay.chrome-surface,
+.algo-diary-overlay.chrome-surface{
+  opacity:0;
+  transition:opacity var(--chrome-motion-ms) var(--chrome-motion-ease);
+}
+
+.trade-pnl-share-overlay.chrome-surface .trade-pnl-share-dialog,
+.trade-book-confirm-overlay.chrome-surface .trade-book-confirm-dialog,
+.algo-diary-overlay.chrome-surface .algo-diary-modal{
+  transform:translateY(10px) scale(0.98);
+  opacity:0.92;
+  transition:
+    transform var(--chrome-motion-ms) var(--chrome-motion-ease),
+    opacity var(--chrome-motion-ms) var(--chrome-motion-ease);
+}
+
+.trade-pnl-share-overlay.chrome-surface.chrome-surface--shown,
+.trade-book-confirm-overlay.chrome-surface.chrome-surface--shown,
+.algo-diary-overlay.chrome-surface.chrome-surface--shown{
+  opacity:1;
+}
+
+.trade-pnl-share-overlay.chrome-surface.chrome-surface--shown .trade-pnl-share-dialog,
+.trade-book-confirm-overlay.chrome-surface.chrome-surface--shown .trade-book-confirm-dialog,
+.algo-diary-overlay.chrome-surface.chrome-surface--shown .algo-diary-modal{
+  transform:none;
+  opacity:1;
+}
+
+.trade-pnl-share-overlay.chrome-surface.chrome-surface--closing,
+.trade-book-confirm-overlay.chrome-surface.chrome-surface--closing,
+.algo-diary-overlay.chrome-surface.chrome-surface--closing{
+  display:flex !important;
+  pointer-events:none;
+  opacity:0;
+}
+
+.trade-pnl-share-overlay.chrome-surface.chrome-surface--closing[hidden]{
+  display:flex !important;
+}
+
+/* --- Draw tool flyouts / exchange dropdown --- */
+.elliott-flyout.chrome-surface,
+.fib-flyout.chrome-surface,
+.trade-exchange-dropdown.chrome-surface{
+  opacity:0;
+  transform:translateY(-4px);
+  transition:
+    opacity var(--chrome-motion-ms) var(--chrome-motion-ease),
+    transform var(--chrome-motion-ms) var(--chrome-motion-ease);
+}
+
+.elliott-flyout.chrome-surface.chrome-surface--shown,
+.fib-flyout.chrome-surface.chrome-surface--shown,
+.trade-exchange-dropdown.chrome-surface.chrome-surface--shown{
+  opacity:1;
+  transform:none;
+}
+
+.elliott-flyout.chrome-surface.chrome-surface--closing,
+.fib-flyout.chrome-surface.chrome-surface--closing,
+.trade-exchange-dropdown.chrome-surface.chrome-surface--closing{
+  display:block !important;
+  pointer-events:none;
+  opacity:0;
+  transform:translateY(-3px);
+}
+
+.trade-exchange-confirm-overlay.chrome-surface{
+  opacity:0;
+  transition:opacity var(--chrome-motion-ms) var(--chrome-motion-ease);
+}
+
+.trade-exchange-confirm-overlay.chrome-surface .trade-exchange-confirm-dialog{
+  transform:translateY(8px) scale(0.98);
+  opacity:0.92;
+  transition:
+    transform var(--chrome-motion-ms) var(--chrome-motion-ease),
+    opacity var(--chrome-motion-ms) var(--chrome-motion-ease);
+}
+
+.trade-exchange-confirm-overlay.chrome-surface.chrome-surface--shown{
+  opacity:1;
+}
+
+.trade-exchange-confirm-overlay.chrome-surface.chrome-surface--shown .trade-exchange-confirm-dialog{
+  transform:none;
+  opacity:1;
+}
+
+.trade-exchange-confirm-overlay.chrome-surface.chrome-surface--closing{
+  display:flex !important;
+  pointer-events:none;
+  opacity:0;
+}

@@ -4,7 +4,7 @@
  */
 import {
 isCoarseTouchViewport
-} from "../chart-import.js?v=62";
+} from "../chart-import.js?v=66";
 
 import {
 uid
@@ -45,11 +45,11 @@ isFibExtType
 
 import {
 touchShapeRevision
-} from "../drawings-storage.js?v=7";
+} from "../drawings-storage.js?v=10";
 
 import {
 stripAlertFromShape
-} from "./drawings-persist.js?v=18";
+} from "./drawings-persist.js?v=21";
 
 import {
 moveBrushHandle,
@@ -2124,6 +2124,18 @@ y,
 e
 ){
 
+if(
+(
+shapes ||
+[]
+).some(
+s=>
+s?.locked
+)
+){
+return false;
+}
+
 const members =
 groupMoveMembers(
 shapes,
@@ -2414,6 +2426,17 @@ if(
 handleId
 ){
 
+if(
+sel.locked
+){
+setBlockChartClick(
+true
+);
+e.preventDefault?.();
+e.stopPropagation?.();
+return;
+}
+
 beginHandleDragState(
 sel,
 handleId,
@@ -2424,6 +2447,17 @@ y
 }else if(
 onBody
 ){
+
+if(
+sel.locked
+){
+setBlockChartClick(
+true
+);
+e.preventDefault?.();
+e.stopPropagation?.();
+return;
+}
 
 if(isPositionType(sel.type)){
 
@@ -2625,6 +2659,13 @@ if(
 handleHit
 ){
 
+if(
+handleHit.shape?.locked
+){
+blockDesktopChartClick();
+return;
+}
+
 beginHandleDragState(
 handleHit.shape,
 handleHit.handleId,
@@ -2635,6 +2676,21 @@ y
 }else if(
 onBody
 ){
+
+if(
+hitShape?.locked ||
+(
+getSelectedIds().length >
+1 &&
+selectedShapes().some(
+s=>
+s?.locked
+)
+)
+){
+blockDesktopChartClick();
+return;
+}
 
 if(
 getSelectedIds().length >
@@ -2860,6 +2916,8 @@ const copy =
 cloneDrawingShape(
 src
 );
+copy.locked =
+false;
 getDrawings().push(
 copy
 );

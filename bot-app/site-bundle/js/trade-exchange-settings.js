@@ -7,7 +7,7 @@ EXCHANGE_DEFINITIONS,
 getActiveExchangeId,
 setActiveExchangeId,
 pingActiveExchangePublic
-} from "./market-api.js?v=6";
+} from "./market-api.js?v=7";
 
 import {
 readExchangeCredentials,
@@ -23,6 +23,11 @@ getLoadedTradeExchangeModules
 import {
 maskTradeDisplay
 } from "./trade-pnl-privacy.js?v=1";
+
+import {
+openChromeSurface,
+closeChromeSurface
+} from "./chrome-motion.js?v=5";
 
 function tradingApi(){
 
@@ -163,9 +168,17 @@ document.body.appendChild(
 overlay
 );
 
+openChromeSurface(
+overlay
+);
+
 const finish =
 confirmed=>{
 
+closeChromeSurface(
+overlay,
+{
+onDone:()=>{
 overlay.remove();
 document.removeEventListener(
 "keydown",
@@ -173,6 +186,9 @@ onKey
 );
 resolve(
 confirmed
+);
+}
+}
 );
 
 };
@@ -238,9 +254,43 @@ overlay.querySelector(
 
 }
 
+function buildMoexReadonlyFormHtml(){
+
+const def =
+EXCHANGE_DEFINITIONS.moex;
+
+return `
+<form class="trade-exchange-form trade-exchange-form--readonly" data-exchange="moex" autocomplete="off">
+<p class="header-settings-section-title">${def.name}</p>
+<div class="trade-exchange-connection-status" data-role="connection-status">
+<span class="trade-exchange-connection-dot" aria-hidden="true"></span>
+<span>Только просмотр</span>
+</div>
+<p class="trade-exchange-hint">Публичные данные ISS Мосбиржи. Без торговли, алертов и API-ключей. Котировки обычно с задержкой ~15&nbsp;мин (индексы чаще без задержки).</p>
+<p class="trade-exchange-status-text" data-role="status" aria-live="polite"></p>
+<hr class="trade-exchange-divider"/>
+<p class="header-settings-section-title">Пинг до ${def.name}</p>
+<p class="trade-exchange-hint">Задержка публичного ISS.</p>
+<div class="trade-exchange-ping-row">
+<p class="trade-exchange-ping" data-role="ping" aria-live="polite"><span data-role="ping-main">—</span></p>
+<button type="button" class="trade-exchange-refresh" data-role="refresh-ping">Измерить</button>
+</div>
+<p class="trade-exchange-ping-detail" data-role="ping-detail" hidden></p>
+</form>
+`;
+
+}
+
 function buildConnectionFormHtml(
 exchangeId
 ){
+
+if(
+exchangeId ===
+"moex"
+){
+return buildMoexReadonlyFormHtml();
+}
 
 const def =
 EXCHANGE_DEFINITIONS[
@@ -291,7 +341,8 @@ window.cryptoTerminalDesktop?.webTrading &&
 !window.cryptoTerminalDesktop?.isDesktop
 ){
 return [
-"bybit"
+"bybit",
+"moex"
 ];
 }
 
@@ -359,10 +410,6 @@ function setOpen(
 open
 ){
 
-dropdown.classList.toggle(
-"hidden",
-!open
-);
 btn.setAttribute(
 "aria-expanded",
 open
@@ -373,9 +420,21 @@ open
 if(
 open
 ){
+dropdown.classList.remove(
+"hidden"
+);
 positionPanel?.();
+openChromeSurface(
+dropdown
+);
 onOpen?.();
-}else{
+return;
+}
+
+closeChromeSurface(
+dropdown,
+{
+onDone:()=>{
 onClose?.();
 dropdown.classList.remove(
 "trade-exchange-dropdown--portaled"
@@ -389,6 +448,8 @@ dropdown.style.right =
 dropdown.style.bottom =
 "";
 }
+}
+);
 
 }
 
@@ -539,13 +600,21 @@ const quality =
 pingQuality(
 result.publicMs
 );
+const delayNote =
+exchangeId ===
+"moex"
+? (
+result.message ||
+"ISS · задержка ~15 мин"
+)
+: "";
 return {
 text:
 `API ${result.publicMs} ms — ${quality.label}`,
 kind:
 quality.kind,
 detail:
-""
+delayNote
 };
 }
 
@@ -632,6 +701,181 @@ if(
 return {
 refreshPing:()=>{}
 };
+}
+
+if(
+exchangeId ===
+"moex"
+){
+
+const pingEl =
+form.querySelector(
+'[data-role="ping"]'
+);
+const pingMainEl =
+form.querySelector(
+'[data-role="ping-main"]'
+);
+const pingDetailEl =
+form.querySelector(
+'[data-role="ping-detail"]'
+);
+const refreshPingBtn =
+form.querySelector(
+'[data-role="refresh-ping"]'
+);
+const statusEl =
+form.querySelector(
+'[data-role="status"]'
+);
+
+function setPing(
+text,
+kind =
+"",
+detail =
+""
+){
+
+if(
+pingMainEl
+){
+pingMainEl.textContent =
+text ||
+"—";
+}
+
+if(
+pingEl
+){
+pingEl.classList.remove(
+"is-good",
+"is-warn",
+"is-bad"
+);
+
+if(
+kind
+){
+pingEl.classList.add(
+kind
+);
+}
+
+}
+
+if(
+pingDetailEl
+){
+
+if(
+detail
+){
+pingDetailEl.hidden =
+false;
+pingDetailEl.textContent =
+detail;
+}else{
+pingDetailEl.hidden =
+true;
+pingDetailEl.textContent =
+"";
+}
+
+}
+
+}
+
+async function refreshPing(){
+
+if(
+refreshPingBtn
+){
+refreshPingBtn.disabled =
+true;
+}
+
+setPing(
+"Измеряем…"
+);
+
+try{
+
+const result =
+await pingActiveExchangePublic();
+const formatted =
+formatPingText(
+result,
+"moex"
+);
+
+setPing(
+formatted.text,
+formatted.kind,
+formatted.detail
+);
+
+if(
+statusEl
+){
+statusEl.textContent =
+result?.ok
+? "ISS доступен (read-only)"
+: (
+result?.message ||
+"Нет связи с ISS"
+);
+statusEl.classList.toggle(
+"is-ok",
+!!result?.ok
+);
+statusEl.classList.toggle(
+"is-error",
+!result?.ok
+);
+}
+
+}catch(
+err
+){
+setPing(
+err?.message ||
+"Ошибка измерения",
+"is-bad"
+);
+}finally{
+
+if(
+refreshPingBtn
+){
+refreshPingBtn.disabled =
+false;
+}
+
+}
+
+}
+
+refreshPingBtn?.addEventListener(
+"click",
+()=>{
+void refreshPing();
+}
+);
+
+form.addEventListener(
+"submit",
+event=>{
+event.preventDefault();
+}
+);
+
+void refreshPing();
+
+return {
+refreshPing
+};
+
 }
 
 if(
@@ -1728,7 +1972,7 @@ input.checked =
 true;
 
 const other =
-EXCHANGE_IDS.find(
+listedExchangeIds().find(
 ex=>
 ex !==
 id

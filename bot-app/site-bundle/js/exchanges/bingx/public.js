@@ -12,7 +12,7 @@ classifyBingxContract
 import {
 toBingxSymbol,
 toCanonicalSymbol
-} from "../symbol.js?v=1";
+} from "../symbol.js?v=2";
 
 import {
 tfToBingxInterval

@@ -12,7 +12,7 @@ runWithPreservedVisibleLogicalRange
 
 import {
 isChartLayoutReady
-} from "../chart-layout-gate.js?v=2";
+} from "../chart-layout-gate.js?v=4";
 import {
 openIndicatorColorPicker,
 previewColorHex,
