@@ -4308,8 +4308,8 @@ i++
 const key =
 localStorage.key(i);
 
+/* Drawings stay local on logout (DRAWINGS_REGRESSION + IDB dual-write). */
 if(
-key?.startsWith("drawings_") ||
 key === "price_alerts_v1" ||
 key === "price_alerts_history_v1"
 ){
@@ -4717,7 +4717,7 @@ await ensureCloudLoginResolved(
 const alertsCloud =
 await import("./alerts-cloud-sync.js?v=115");
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=111");
+await import("./alerts.js?v=112");
 
 const stripOpts =
 isAlertsPage()

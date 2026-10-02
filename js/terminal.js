@@ -60,12 +60,12 @@ import {
 getActiveAlerts,
 isMacdAlert,
 isRsiAlert
-} from "./alerts.js?v=111";
+} from "./alerts.js?v=112";
 
 import {
 persistFavoritesToCloud,
 onFavoritesRemoteUpdate
-} from "./cloud-sync.js?v=71";
+} from "./cloud-sync.js?v=72";
 
 import {
 createCandlestickChart,

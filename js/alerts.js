@@ -22,12 +22,18 @@ symbolFromDrawingsKey,
 parseDrawingsStorageKey,
 exchangeFromDrawingsKey,
 migrateLegacyDrawingsStorage
-} from "./drawings-exchange-key.js?v=2";
+} from "./drawings-exchange-key.js?v=3";
+
+import {
+drawingsKvGet,
+drawingsKvSet,
+drawingsKvRemove
+} from "./drawings-kv.js?v=1";
 
 export {
 isDrawingsStorageKey,
 symbolFromDrawingsKey
-} from "./drawings-exchange-key.js?v=2";
+} from "./drawings-exchange-key.js?v=3";
 
 const STORAGE_KEY = "price_alerts_v1";
 
@@ -767,7 +773,7 @@ String(symbol || "").trim().toUpperCase();
 try{
 
 const raw =
-localStorage.getItem(
+drawingsKvGet(
 exchangeDrawingsStorageKey(
 sym
 )
@@ -1213,7 +1219,7 @@ let drawings;
 try{
 drawings =
 JSON.parse(
-localStorage.getItem(key) || "[]"
+drawingsKvGet(key) || "[]"
 );
 }catch{
 continue;
@@ -1329,7 +1335,7 @@ let drawings;
 try{
 drawings =
 JSON.parse(
-localStorage.getItem(
+drawingsKvGet(
 key
 ) ||
 "[]"
@@ -1466,7 +1472,7 @@ opts =
 ){
 
 const { isCloudLoggedIn } =
-await import("./cloud-sync.js?v=71");
+await import("./cloud-sync.js?v=72");
 
 if(
 !isCloudLoggedIn()
@@ -1941,7 +1947,7 @@ const key =
 exchangeDrawingsStorageKey(symbol);
 
 const raw =
-localStorage.getItem(key);
+drawingsKvGet(key);
 
 if(!raw){
 return false;
@@ -1965,7 +1971,7 @@ if(next.length === drawings.length){
 return false;
 }
 
-localStorage.setItem(
+drawingsKvSet(
 key,
 JSON.stringify(next)
 );
@@ -2875,7 +2881,7 @@ if(!dirty){
 continue;
 }
 
-localStorage.setItem(
+drawingsKvSet(
 exchangeDrawingsStorageKey(sym),
 JSON.stringify(next)
 );
@@ -3093,7 +3099,7 @@ if(
 continue;
 }
 
-localStorage.setItem(
+drawingsKvSet(
 exchangeDrawingsStorageKey(
 sym
 ),
@@ -3144,7 +3150,7 @@ const key =
 exchangeDrawingsStorageKey(sym);
 
 const raw =
-localStorage.getItem(key);
+drawingsKvGet(key);
 
 if(!raw){
 return false;
@@ -3179,7 +3185,7 @@ if(!changed){
 return false;
 }
 
-localStorage.setItem(
+drawingsKvSet(
 key,
 JSON.stringify(next)
 );
@@ -3320,7 +3326,7 @@ try{
 
 const drawings =
 JSON.parse(
-localStorage.getItem(
+drawingsKvGet(
 key
 ) ||
 "[]"
@@ -3340,7 +3346,7 @@ Array.isArray(
 drawings
 )
 ){
-localStorage.removeItem(
+drawingsKvRemove(
 key
 );
 }

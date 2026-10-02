@@ -13,7 +13,7 @@ completeAuthFromCallbackUrl,
 hasAuthCallbackInUrl,
 exportAuthSessionTransferString,
 importAuthSessionTransferString
-} from "./cloud-sync.js?v=71";
+} from "./cloud-sync.js?v=72";
 
 import {
 isSupabaseConfigured

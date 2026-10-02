@@ -4,7 +4,11 @@
  */
 import {
 drawingsStorageKey
-} from "../drawings-exchange-key.js?v=2";
+} from "../drawings-exchange-key.js?v=3";
+
+import {
+drawingsKvGet
+} from "../drawings-kv.js?v=1";
 
 const LEGACY_TF_KEYS =
 Object.freeze([
@@ -53,7 +57,7 @@ key
 
 try{
 const raw =
-localStorage.getItem(
+drawingsKvGet(
 key
 );
 

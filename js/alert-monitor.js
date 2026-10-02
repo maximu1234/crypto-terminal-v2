@@ -8,7 +8,7 @@ isMacdAlert,
 isOscillatorAlert,
 isRsiAlert,
 normalizeAlertTf
-} from "./alerts.js?v=111";
+} from "./alerts.js?v=112";
 
 import {
 subscribeKline

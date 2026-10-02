@@ -696,7 +696,7 @@ Object.freeze({
 "scalping-dom/trigger-order-overlay.js":
 2,
 "scalping-dom/drawing-overlay.js":
-2,
+3,
 "scalping-dom/live-book.js":
 3,
 "scalping-dom/depth-ws-bybit.js":
@@ -911,7 +911,7 @@ Object.freeze({
 
 /* ── JS: cloud / auth ── */
 "cloud-sync.js":
-71,
+72,
 "cloud-sync-throttle.js":
 3,
 "page-routes.js":
@@ -955,7 +955,7 @@ Object.freeze({
 
 /* ── JS: alerts ── */
 "alerts.js":
-111,
+112,
 "alerts-cloud-sync.js":
 115,
 "alerts-cloud/garbage-purge.js":
