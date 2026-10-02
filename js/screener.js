@@ -69,7 +69,7 @@ createTickerUiBatcher
 
 import {
 mountReleaseMarker
-} from "./release-marker.js?v=126";
+} from "./release-marker.js?v=127";
 
 import {
 saveScreenerState,
@@ -88,7 +88,7 @@ FAVORITES_BY_EXCHANGE_KEY
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=67";
+} from "./auth-ui.js?v=68";
 
 import {
 ensureSettled,

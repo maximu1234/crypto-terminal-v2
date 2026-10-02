@@ -161,7 +161,7 @@ Object.freeze({
 "trade-market-entry.js":
 35,
 "trade-book-panel.js":
-60,
+61,
 "trade-pnl-share-modal.js":
 9,
 "trade-book-columns.js":
@@ -201,7 +201,7 @@ Object.freeze({
 "trade/bybit/market-entry.js":
 9,
 "trade/bybit/book-panel.js":
-4,
+5,
 "trade/bybit/position-open-orders.js":
 1,
 "trade/bybit/diary/index.js":
@@ -269,7 +269,7 @@ Object.freeze({
 "trade/bingx/market-entry.js":
 12,
 "trade/bingx/book-panel.js":
-6,
+7,
 "trade/bingx/position-open-orders.js":
 1,
 "trade/bingx/diary/index.js":
@@ -311,6 +311,8 @@ Object.freeze({
 "chart-layout-gate.js":
 3,
 "chart-redraw-scheduler.js":
+2,
+"chrome-motion.js":
 2,
 "chart-visible-range.js":
 3,
@@ -656,7 +658,7 @@ Object.freeze({
 "watchlist.js":
 133,
 "screener.js":
-136,
+137,
 "ipad-web-viewport.js":
 2,
 "screener-widget-guard.js":
@@ -670,7 +672,7 @@ Object.freeze({
 "scalping-dom/boot.js":
 57,
 "scalping-dom/host.js":
-2,
+3,
 "scalping-dom/depth-feed.js":
 39,
 "scalping-dom/depth-store.js":
@@ -704,11 +706,11 @@ Object.freeze({
 "screener-widget-zoom.js":
 34,
 "release-marker.js":
-126,
+127,
 "focus-blur-after-pick.js":
 3,
 "site-boot.js":
-138,
+139,
 "site-header.js":
 7,
 "site-header-nav.js":
@@ -718,7 +720,7 @@ Object.freeze({
 "site-header-nav-desktop.js":
 2,
 "desktop-app-ui.js":
-13,
+14,
 "suppress-native-context-menu.js":
 4,
 "charts-lib-boot.js":
@@ -921,11 +923,11 @@ Object.freeze({
 "auth-session-transfer.js":
 1,
 "auth-ui.js":
-67,
+68,
 "header-settings-shell.js":
 4,
 "app-settings-window.js":
-26,
+27,
 "app-settings-proxy-panel.js":
 6,
 "app-settings-system-panel.js":
@@ -1011,7 +1013,9 @@ Object.freeze({
 "critical-shell.css":
 10,
 "common.css":
-64,
+65,
+"chrome-motion.css":
+2,
 "screener.css":
 58,
 "terminal.css":

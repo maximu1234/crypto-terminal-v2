@@ -1,6 +1,11 @@
 /**
  * Runtime host for scalping DOM — created/removed without terminal.html changes.
  */
+import {
+openChromeSurface,
+closeChromeSurface
+} from "../chrome-motion.js?v=2";
+
 const ROOT_ID =
 "scalping-dom-root";
 
@@ -75,6 +80,9 @@ existing
 document.body.classList.add(
 BODY_CLASS
 );
+openChromeSurface(
+existing
+);
 return existing;
 }
 
@@ -124,6 +132,9 @@ root
 document.body.classList.add(
 BODY_CLASS
 );
+openChromeSurface(
+root
+);
 return root;
 
 }
@@ -134,13 +145,24 @@ const root =
 getScalpingDomRoot();
 
 if(
-root
+!root
 ){
-root.remove();
-}
-
 document.body.classList.remove(
 BODY_CLASS
+);
+return;
+}
+
+closeChromeSurface(
+root,
+{
+onDone:()=>{
+root.remove();
+document.body.classList.remove(
+BODY_CLASS
+);
+}
+}
 );
 
 }

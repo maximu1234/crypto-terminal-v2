@@ -50,7 +50,7 @@ seedWatchlistTfOnBlueFlag
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=67";
+} from "./auth-ui.js?v=68";
 
 import {
 getActiveAlerts,

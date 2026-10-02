@@ -27,7 +27,7 @@ initTradeMarketEntry
 
 import {
 initTradeBookPanel
-} from "./trade-book-panel.js?v=60";
+} from "./trade-book-panel.js?v=61";
 
 import {
 loadTradeExchangeModules

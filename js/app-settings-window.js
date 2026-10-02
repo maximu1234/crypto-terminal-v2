@@ -16,6 +16,11 @@ isChromeOverlayActive
 } from "./chart-layout-gate.js?v=3";
 
 import {
+openChromeSurface,
+closeChromeSurface
+} from "./chrome-motion.js?v=2";
+
+import {
 mountTelegramSettingsPanel
 } from "./telegram-settings-panel.js?v=2";
 
@@ -149,7 +154,8 @@ style.id =
 "app-settings-overlay-lock";
 style.textContent =
 "#app-settings-overlay{position:fixed!important;inset:0!important;z-index:10100!important}" +
-"#app-settings-overlay.hidden{display:none!important}";
+"#app-settings-overlay.hidden:not(.chrome-surface--closing){display:none!important}" +
+"#app-settings-overlay.chrome-surface--closing{display:flex!important;pointer-events:none!important}";
 document.head.appendChild(
 style
 );
@@ -182,9 +188,45 @@ return false;
 
 }
 
+function ensureChromeMotionCss(){
+
+const href =
+cssUrl(
+"chrome-motion.css"
+);
+
+if(
+!href
+){
+return;
+}
+
+if(
+document.querySelector(
+`link[rel="stylesheet"][href*="chrome-motion.css"]`
+)
+){
+return;
+}
+
+const link =
+document.createElement(
+"link"
+);
+link.rel =
+"stylesheet";
+link.href =
+href;
+document.head.appendChild(
+link
+);
+
+}
+
 function ensureCss(){
 
 ensureOverlayLockCss();
+ensureChromeMotionCss();
 
 if(
 cssReadyPromise
@@ -402,7 +444,7 @@ const {
 closeCloudSettingsDropdown
 } =
 await import(
-"./auth-ui.js?v=67"
+"./auth-ui.js?v=68"
 );
 closeCloudSettingsDropdown();
 await openAppSettingsWindow();
@@ -666,7 +708,7 @@ const {
 mountCloudAuthPanelInSettings
 } =
 await import(
-"./auth-ui.js?v=67"
+"./auth-ui.js?v=68"
 );
 
 mountCloudAuthPanelInSettings(
@@ -959,9 +1001,8 @@ if(
 return;
 }
 
-overlayEl.classList.add(
-"hidden"
-);
+function afterClose(){
+
 document.body.classList.remove(
 "app-settings-open"
 );
@@ -971,6 +1012,24 @@ isChromeOverlayActive()
 ){
 endChromeOverlay();
 }
+
+}
+
+if(
+overlayEl.classList.contains(
+"hidden"
+)
+){
+afterClose();
+return;
+}
+
+closeChromeSurface(
+overlayEl,
+{
+onDone: afterClose
+}
+);
 
 }
 
@@ -998,19 +1057,22 @@ installWebTradingShell();
 await cssReady;
 buildOverlay();
 
-if(
-!document.body.classList.contains(
+const alreadyOpen =
+document.body.classList.contains(
 "app-settings-open"
-)
+);
+
+if(
+!alreadyOpen
 ){
 beginChromeOverlay();
 }
 
-overlayEl.classList.remove(
-"hidden"
-);
 document.body.classList.add(
 "app-settings-open"
+);
+openChromeSurface(
+overlayEl
 );
 
 await refreshAppSettingsAdminNav();

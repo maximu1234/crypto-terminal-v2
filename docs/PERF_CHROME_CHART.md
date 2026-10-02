@@ -51,8 +51,8 @@ alerts registry / monitor / cloud (как сейчас по срочности)
 | Фаза | Содержание | След. metka | Статус |
 |------|------------|-------------|--------|
 | 0 | Baseline + ограждения + этот документ | — / prep | done |
-| 1 | Chrome ≠ chart: scheduler + skip no-op resize + settings overlay pause | **182** | in progress |
-| 2 | Motion: coins panel, стакан, настройки | 183 | pending |
+| 1 | Chrome ≠ chart: scheduler + skip no-op resize + settings overlay pause | **182** | done |
+| 2 | Motion: coins panel, стакан, настройки | **183** | in progress |
 | 2b | Полный аудит всех «плавных» chrome-элементов | 184+ | pending |
 | 3 | Boot skeleton (Terminal + Screener) | после 2 | pending |
 | 4 | Lazy **только** не-алерты (trade book UI, тяжёлые настройки) | осторожно | pending |

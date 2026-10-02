@@ -31,11 +31,16 @@ import {
 initAppSettingsWindow,
 refreshAppSettingsAdminNav,
 openAppSettingsWindow
-} from "./app-settings-window.js?v=26";
+} from "./app-settings-window.js?v=27";
 
 import {
 ensureHeaderSettingsShell
 } from "./header-settings-shell.js?v=4";
+
+import {
+openChromeSurface,
+closeChromeSurface
+} from "./chrome-motion.js?v=2";
 
 let cloudEnvConfigured = false;
 let cloudSdkError = "";
@@ -769,24 +774,33 @@ document.querySelectorAll(
 "#header-settings-dropdown"
 ).forEach(
 el=>{
-el.classList.add(
-"hidden"
-);
+
+closeChromeSurface(
+el,
+{
+onDone:()=>{
 clearPortaledPosition(
 el
-);
-}
 );
 
 if(
 dropdown &&
-wrap
+wrap &&
+el ===
+dropdown
 ){
 restoreDropdownHome(
 dropdown,
 wrap
 );
 }
+
+}
+}
+);
+
+}
+);
 
 document.querySelectorAll(
 "#header-settings-btn"
@@ -837,7 +851,9 @@ if(
 return;
 }
 
-dropdown.classList.remove("hidden");
+openChromeSurface(
+dropdown
+);
 btn.setAttribute(
 "aria-expanded",
 "true"

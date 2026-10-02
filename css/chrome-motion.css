@@ -1,0 +1,105 @@
+/**
+ * Chrome surface motion — opacity/transform only (no layout thrash).
+ * docs/PERF_CHROME_CHART.md phase 2
+ */
+
+:root{
+  --chrome-motion-ms:180ms;
+  --chrome-motion-ease:cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (prefers-reduced-motion: reduce){
+  :root{
+    --chrome-motion-ms:0ms;
+  }
+}
+
+/* --- App settings overlay --- */
+.app-settings-overlay.chrome-surface{
+  opacity:0;
+  transition:
+    opacity var(--chrome-motion-ms) var(--chrome-motion-ease);
+}
+
+.app-settings-overlay.chrome-surface .app-settings-dialog{
+  transform:translateY(10px) scale(0.98);
+  opacity:0.92;
+  transition:
+    transform var(--chrome-motion-ms) var(--chrome-motion-ease),
+    opacity var(--chrome-motion-ms) var(--chrome-motion-ease);
+}
+
+.app-settings-overlay.chrome-surface.chrome-surface--shown{
+  opacity:1;
+}
+
+.app-settings-overlay.chrome-surface.chrome-surface--shown .app-settings-dialog{
+  transform:none;
+  opacity:1;
+}
+
+.app-settings-overlay.chrome-surface.chrome-surface--closing{
+  display:flex !important;
+  pointer-events:none;
+  opacity:0;
+}
+
+.app-settings-overlay.chrome-surface.chrome-surface--closing .app-settings-dialog{
+  transform:translateY(8px) scale(0.985);
+  opacity:0.85;
+}
+
+/* --- Header settings dropdown (Terminal / Screener) --- */
+.header-settings-dropdown.chrome-surface{
+  opacity:0;
+  transform:translateY(-6px);
+  transition:
+    opacity var(--chrome-motion-ms) var(--chrome-motion-ease),
+    transform var(--chrome-motion-ms) var(--chrome-motion-ease);
+}
+
+.header-settings-dropdown.chrome-surface.chrome-surface--shown{
+  opacity:1;
+  transform:none;
+}
+
+.header-settings-dropdown.chrome-surface.chrome-surface--closing{
+  display:block !important;
+  pointer-events:none;
+  opacity:0;
+  transform:translateY(-4px);
+}
+
+/* --- Coins list: trade book mount --- */
+body.trade-page #list .trade-book-panel.chrome-surface{
+  opacity:0;
+  transform:translateY(8px);
+  transition:
+    opacity var(--chrome-motion-ms) var(--chrome-motion-ease),
+    transform var(--chrome-motion-ms) var(--chrome-motion-ease);
+}
+
+body.trade-page #list .trade-book-panel.chrome-surface.chrome-surface--shown{
+  opacity:1;
+  transform:none;
+}
+
+/* --- Scalping DOM (стакан) --- */
+.scalping-dom-root.chrome-surface{
+  opacity:0;
+  transform:translateX(12px);
+  transition:
+    opacity var(--chrome-motion-ms) var(--chrome-motion-ease),
+    transform var(--chrome-motion-ms) var(--chrome-motion-ease);
+}
+
+.scalping-dom-root.chrome-surface.chrome-surface--shown{
+  opacity:1;
+  transform:none;
+}
+
+.scalping-dom-root.chrome-surface.chrome-surface--closing{
+  pointer-events:none;
+  opacity:0;
+  transform:translateX(10px);
+}

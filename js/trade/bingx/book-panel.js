@@ -28,6 +28,10 @@ columnResizeHandle
 } from "./book-columns.js?v=1";
 
 import {
+openChromeSurface
+} from "../../chrome-motion.js?v=2";
+
+import {
 openPnlShareModal
 } from "./pnl-share-modal.js?v=2";
 
@@ -1176,6 +1180,9 @@ list.appendChild(
 splitResize
 );
 list.appendChild(
+panel
+);
+openChromeSurface(
 panel
 );
 

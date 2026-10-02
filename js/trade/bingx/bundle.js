@@ -62,7 +62,7 @@ export {
 
 export {
   initTradeBookPanel
-} from "./book-panel.js?v=6";
+} from "./book-panel.js?v=7";
 
 export {
   getTradeConfig

@@ -14,7 +14,8 @@
 
 <link rel="stylesheet" href="/css/critical-shell.css?v=10">
 <script src="/js/site-css-ready.js?v=3"></script>
-<link rel="stylesheet" href="/css/common.css?v=64">
+<link rel="stylesheet" href="/css/common.css?v=65">
+<link rel="stylesheet" href="/css/chrome-motion.css?v=2">
 <link rel="stylesheet" href="/css/screener.css?v=58">
 
 <link rel="preload" href="/vendor/lightweight-charts.standalone.production.js" as="script">
@@ -196,8 +197,8 @@ const { loadLightweightCharts } =
 await import("/js/charts-lib-boot.js?v=3");
 
 await loadLightweightCharts();
-await import("/js/screener.js?v=136");
-import("/js/site-boot.js?v=138").catch(err=>{
+await import("/js/screener.js?v=137");
+import("/js/site-boot.js?v=139").catch(err=>{
 console.warn("site-boot:", err);
 });
 
