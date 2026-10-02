@@ -14,6 +14,7 @@
 <link rel="stylesheet" href="/css/critical-shell.css?v=11">
 <script src="/js/site-css-ready.js?v=3"></script>
 <link rel="stylesheet" href="/css/common.css?v=65">
+<link rel="stylesheet" href="/css/chrome-motion.css?v=4">
 <link rel="stylesheet" href="/css/watchlist.css?v=67">
 <link rel="stylesheet" href="/css/screener.css?v=58">
 <link rel="stylesheet" href="/css/watchlist-page.css?v=3">
@@ -23,6 +24,11 @@
 </head>
 
 <body class="watchlist-page">
+
+<div id="app-boot-splash" class="app-boot-splash" aria-hidden="false">
+<div class="app-boot-splash-mark" aria-hidden="true"></div>
+</div>
+
 
 <header id="header" class="app-page-header">
 
@@ -79,6 +85,16 @@ window.waitForSiteCssReady
 await window.waitForSiteCssReady();
 }
 
+try{
+const {
+dismissAppBootSplash
+} =
+await import("/js/app-boot-splash.js?v=2");
+dismissAppBootSplash();
+}catch{
+/* optional */
+}
+
 const {
 mountMoexUnavailableStub
 } =
@@ -99,7 +115,7 @@ document.querySelector(
 )
 })
 ){
-import("/js/site-boot.js?v=139").catch(err=>{
+import("/js/site-boot.js?v=140").catch(err=>{
 console.warn("site-boot:", err);
 });
 }else{
@@ -165,7 +181,7 @@ mode:
 }
 
 await import("./js/watchlist-page.js?v=4");
-import("/js/site-boot.js?v=139").catch(err=>{
+import("/js/site-boot.js?v=140").catch(err=>{
 console.warn("site-boot:", err);
 });
 

@@ -18,7 +18,7 @@ isChromeOverlayActive
 import {
 openChromeSurface,
 closeChromeSurface
-} from "./chrome-motion.js?v=3";
+} from "./chrome-motion.js?v=4";
 
 import {
 mountTelegramSettingsPanel

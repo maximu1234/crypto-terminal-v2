@@ -18,6 +18,11 @@ getTradeConfig
 } from "./config.js?v=3";
 
 import {
+openChromeSurface,
+closeChromeSurface
+} from "../../chrome-motion.js?v=4";
+
+import {
 applyPositionColumnLayout,
 applyOrderColumnLayout,
 applyAlertColumnLayout,
@@ -28,12 +33,8 @@ columnResizeHandle
 } from "./book-columns.js?v=1";
 
 import {
-openChromeSurface
-} from "../../chrome-motion.js?v=3";
-
-import {
 openPnlShareModal
-} from "./pnl-share-modal.js?v=2";
+} from "./pnl-share-modal.js?v=3";
 
 import {
 formatAlertDate,
@@ -1317,10 +1318,17 @@ overlay.innerHTML =
 document.body.appendChild(
 overlay
 );
+openChromeSurface(
+overlay
+);
 
 const finish =
 confirmed=>{
 
+closeChromeSurface(
+overlay,
+{
+onDone:()=>{
 overlay.remove();
 document.removeEventListener(
 "keydown",
@@ -1328,6 +1336,9 @@ onKey
 );
 resolve(
 confirmed
+);
+}
+}
 );
 
 };

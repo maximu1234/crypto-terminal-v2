@@ -35,6 +35,18 @@ return;
 
 await waitForSiteCssReady();
 
+try{
+const {
+dismissAppBootSplash
+} =
+await import(
+"./app-boot-splash.js?v=2"
+);
+dismissAppBootSplash();
+}catch{
+/* optional */
+}
+
 if(
 mountMoexUnavailableStub({
 title:

@@ -30,6 +30,11 @@ import {
 } from "./storage.js?v=2";
 
 import {
+  openChromeSurface,
+  closeChromeSurface
+} from "../../chrome-motion.js?v=4";
+
+import {
   diaryLoadPeriod,
   diaryCollectCachedTrades,
   diaryAfterListPaint
@@ -681,7 +686,7 @@ export function closeAlgoDiaryModal() {
   }
 
   overlayEl.classList.remove("is-open");
-  overlayEl.classList.add("hidden");
+  closeChromeSurface(overlayEl);
 }
 
 export async function openAlgoDiaryModal() {
@@ -691,7 +696,7 @@ export async function openAlgoDiaryModal() {
   ensureOverlay();
   mountPeriodPickerOnce();
 
-  overlayEl.classList.remove("hidden");
+  openChromeSurface(overlayEl);
   overlayEl.classList.add("is-open");
 
   await refreshDiary({ forceRefresh: false });

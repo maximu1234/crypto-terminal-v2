@@ -155,3 +155,52 @@ body.trade-page #list .trade-book-panel.chrome-surface.chrome-surface--shown{
   pointer-events:none;
   opacity:0;
 }
+
+.scalping-dom-root.chrome-surface.chrome-surface--closing{
+  pointer-events:none;
+  opacity:0;
+  transform:translateX(10px);
+}
+
+/* --- Trade / diary overlays --- */
+.trade-pnl-share-overlay.chrome-surface,
+.trade-book-confirm-overlay.chrome-surface,
+.algo-diary-overlay.chrome-surface{
+  opacity:0;
+  transition:opacity var(--chrome-motion-ms) var(--chrome-motion-ease);
+}
+
+.trade-pnl-share-overlay.chrome-surface .trade-pnl-share-dialog,
+.trade-book-confirm-overlay.chrome-surface .trade-book-confirm-dialog,
+.algo-diary-overlay.chrome-surface .algo-diary-modal{
+  transform:translateY(10px) scale(0.98);
+  opacity:0.92;
+  transition:
+    transform var(--chrome-motion-ms) var(--chrome-motion-ease),
+    opacity var(--chrome-motion-ms) var(--chrome-motion-ease);
+}
+
+.trade-pnl-share-overlay.chrome-surface.chrome-surface--shown,
+.trade-book-confirm-overlay.chrome-surface.chrome-surface--shown,
+.algo-diary-overlay.chrome-surface.chrome-surface--shown{
+  opacity:1;
+}
+
+.trade-pnl-share-overlay.chrome-surface.chrome-surface--shown .trade-pnl-share-dialog,
+.trade-book-confirm-overlay.chrome-surface.chrome-surface--shown .trade-book-confirm-dialog,
+.algo-diary-overlay.chrome-surface.chrome-surface--shown .algo-diary-modal{
+  transform:none;
+  opacity:1;
+}
+
+.trade-pnl-share-overlay.chrome-surface.chrome-surface--closing,
+.trade-book-confirm-overlay.chrome-surface.chrome-surface--closing,
+.algo-diary-overlay.chrome-surface.chrome-surface--closing{
+  display:flex !important;
+  pointer-events:none;
+  opacity:0;
+}
+
+.trade-pnl-share-overlay.chrome-surface.chrome-surface--closing[hidden]{
+  display:flex !important;
+}

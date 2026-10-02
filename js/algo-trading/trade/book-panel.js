@@ -988,7 +988,7 @@ isAlgoBotLiteMode()
 return;
 }
 void import(
-"../diary/modal.js?v=11"
+"../diary/modal.js?v=12"
 ).then(
 (mod)=>{
 if(

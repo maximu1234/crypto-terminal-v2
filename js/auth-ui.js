@@ -40,7 +40,7 @@ ensureHeaderSettingsShell
 import {
 openChromeSurface,
 closeChromeSurface
-} from "./chrome-motion.js?v=3";
+} from "./chrome-motion.js?v=4";
 
 let cloudEnvConfigured = false;
 let cloudSdkError = "";
