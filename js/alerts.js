@@ -22,18 +22,19 @@ symbolFromDrawingsKey,
 parseDrawingsStorageKey,
 exchangeFromDrawingsKey,
 migrateLegacyDrawingsStorage
-} from "./drawings-exchange-key.js?v=3";
+} from "./drawings-exchange-key.js?v=4";
 
 import {
 drawingsKvGet,
 drawingsKvSet,
-drawingsKvRemove
-} from "./drawings-kv.js?v=1";
+drawingsKvRemove,
+drawingsKvListKeys
+} from "./drawings-kv.js?v=2";
 
 export {
 isDrawingsStorageKey,
 symbolFromDrawingsKey
-} from "./drawings-exchange-key.js?v=3";
+} from "./drawings-exchange-key.js?v=4";
 
 const STORAGE_KEY = "price_alerts_v1";
 
@@ -1181,21 +1182,9 @@ let n =
 0;
 
 for(
-let i = 0;
-i < localStorage.length;
-i++
+const key of
+drawingsKvListKeys()
 ){
-
-const key =
-localStorage.key(i);
-
-if(
-!isDrawingsStorageKey(
-key
-)
-){
-continue;
-}
 
 if(
 exchangeFromDrawingsKey(
@@ -1300,19 +1289,12 @@ row
 }
 
 for(
-let i = 0;
-i <
-localStorage.length;
-i++
+const key of
+drawingsKvListKeys()
 ){
 
-const key =
-localStorage.key(
-i
-);
-
 if(
-!key?.startsWith(
+!key.startsWith(
 "drawings_"
 )
 ){
@@ -1472,7 +1454,7 @@ opts =
 ){
 
 const { isCloudLoggedIn } =
-await import("./cloud-sync.js?v=72");
+await import("./cloud-sync.js?v=73");
 
 if(
 !isCloudLoggedIn()
@@ -3227,17 +3209,9 @@ const entries =
 [];
 
 for(
-let i =
-0;
-i <
-localStorage.length;
-i++
+const key of
+drawingsKvListKeys()
 ){
-
-const key =
-localStorage.key(
-i
-);
 
 if(
 !isDrawingsStorageKey(
@@ -3293,17 +3267,9 @@ const activeExchange =
 getActiveExchangeId();
 
 for(
-let i =
-0;
-i <
-localStorage.length;
-i++
+const key of
+drawingsKvListKeys()
 ){
-
-const key =
-localStorage.key(
-i
-);
 
 if(
 !isDrawingsStorageKey(
@@ -3366,7 +3332,7 @@ export async function clearAllDrawings(){
 const {
 purgeExchangeLocalDrawingsStorage
 } =
-await import("./drawings-storage.js?v=8");
+await import("./drawings-storage.js?v=9");
 
 const symbols =
 purgeExchangeLocalDrawingsStorage(

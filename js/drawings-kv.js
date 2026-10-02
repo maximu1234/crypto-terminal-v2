@@ -1,14 +1,18 @@
 /**
- * Sync facade for drawings payloads: memory → IndexedDB (+ dual-write LS).
+ * Sync facade for drawings payloads: memory → IndexedDB.
+ * Cross-tab via BroadcastChannel (no LS dual-write for payloads).
  * Callers keep sync get/set; hydrate runs in background and must not be
  * awaited on the candle / alert critical path.
  *
  * Meta keys (tombstones, sync flags) stay in localStorage only.
+ * If IndexedDB is unavailable, payloads fall back to localStorage alone.
  */
 import {
 isDrawingsStorageKey,
-isDrawingsMetaStorageKey
-} from "./drawings-exchange-key.js?v=3";
+isDrawingsMetaStorageKey,
+migrateLegacyDrawingsStorage,
+parseDrawingsStorageKey
+} from "./drawings-exchange-key.js?v=4";
 
 import {
 drawingsIdbAvailable,
@@ -20,9 +24,19 @@ drawingsIdbSet
 export const DRAWINGS_IDB_MIGRATED_KEY =
 "drawings_idb_migrated_v1";
 
+export const DRAWINGS_IDB_LS_PURGED_KEY =
+"drawings_idb_ls_purged_v1";
+
+const BC_NAME =
+"multichart-drawings-kv-v1";
+
 /** @type {Map<string, string>} */
 const cache =
 new Map();
+
+/** @type {Set<(key: string, value: string|null) => void>} */
+const externalListeners =
+new Set();
 
 /** @type {Promise<void>|null} */
 let hydratePromise =
@@ -30,6 +44,16 @@ null;
 
 let hydrated =
 false;
+
+const tabId =
+typeof globalThis.crypto?.randomUUID ===
+"function"
+? globalThis.crypto.randomUUID()
+: `tab-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+
+/** @type {BroadcastChannel|null} */
+let broadcastChannel =
+null;
 
 function lsGet(
 key
@@ -104,6 +128,185 @@ k.startsWith(
 
 }
 
+function lsPayloadsPurged(){
+
+return lsGet(
+DRAWINGS_IDB_LS_PURGED_KEY
+) ===
+"1";
+
+}
+
+function idbReady(){
+
+return drawingsIdbAvailable();
+
+}
+
+function notifyExternal(
+key,
+value
+){
+
+for(
+const fn of
+externalListeners
+){
+
+try{
+fn(
+key,
+value
+);
+}catch{
+/* ignore listener errors */
+}
+
+}
+
+}
+
+function ensureBroadcast(){
+
+if(
+broadcastChannel
+){
+return broadcastChannel;
+}
+
+if(
+typeof BroadcastChannel ===
+"undefined"
+){
+return null;
+}
+
+try{
+
+broadcastChannel =
+new BroadcastChannel(
+BC_NAME
+);
+
+broadcastChannel.onmessage =
+(
+ev
+)=>{
+
+const msg =
+ev?.data;
+
+if(
+!msg ||
+msg.tabId ===
+tabId
+){
+return;
+}
+
+const key =
+String(
+msg.key ||
+""
+);
+
+if(
+!shouldUseKv(
+key
+)
+){
+return;
+}
+
+if(
+msg.type ===
+"set" &&
+typeof msg.value ===
+"string"
+){
+cache.set(
+key,
+msg.value
+);
+notifyExternal(
+key,
+msg.value
+);
+return;
+}
+
+if(
+msg.type ===
+"remove"
+){
+cache.delete(
+key
+);
+notifyExternal(
+key,
+null
+);
+}
+
+};
+
+}catch{
+broadcastChannel =
+null;
+}
+
+return broadcastChannel;
+
+}
+
+function broadcast(
+payload
+){
+
+try{
+
+ensureBroadcast()?.postMessage(
+{
+...payload,
+tabId
+}
+);
+
+}catch{
+/* ignore */
+}
+
+}
+
+/**
+ * Other tabs / poller — not fired for local set/remove.
+ * @param {(key: string, value: string|null) => void} fn
+ * @returns {() => void}
+ */
+export function onDrawingsKvExternalChange(
+fn
+){
+
+if(
+typeof fn !==
+"function"
+){
+return ()=>{};
+}
+
+externalListeners.add(
+fn
+);
+ensureBroadcast();
+
+return ()=>{
+externalListeners.delete(
+fn
+);
+};
+
+}
+
 /**
  * @param {string} key
  * @returns {string|null}
@@ -133,6 +336,12 @@ key
 null;
 }
 
+/* Migration window / IDB-down fallback — never await IDB on critical path. */
+if(
+!lsPayloadsPurged() ||
+!idbReady()
+){
+
 const fromLs =
 lsGet(
 key
@@ -146,9 +355,12 @@ cache.set(
 key,
 fromLs
 );
+return fromLs;
 }
 
-return fromLs;
+}
+
+return null;
 
 }
 
@@ -184,15 +396,10 @@ key,
 v
 );
 
-/* Dual-write: LS keeps cross-tab `storage` events + rollback safety. */
-lsSet(
-key,
-v
-);
-
 if(
-drawingsIdbAvailable()
+idbReady()
 ){
+
 void drawingsIdbSet(
 key,
 v
@@ -201,7 +408,21 @@ v
 /* ignore */
 }
 );
+
+}else{
+lsSet(
+key,
+v
+);
 }
+
+broadcast({
+type:
+"set",
+key,
+value:
+v
+});
 
 }
 
@@ -226,13 +447,11 @@ return;
 cache.delete(
 key
 );
-lsRemove(
-key
-);
 
 if(
-drawingsIdbAvailable()
+idbReady()
 ){
+
 void drawingsIdbDelete(
 key
 ).catch(
@@ -240,12 +459,24 @@ key
 /* ignore */
 }
 );
+
 }
+
+/* Always drop any leftover LS mirror (migration / IDB-down cleanup). */
+lsRemove(
+key
+);
+
+broadcast({
+type:
+"remove",
+key
+});
 
 }
 
 /**
- * Keys present in memory cache and/or localStorage for an exchange scan.
+ * Keys present in memory cache and (until LS purge) localStorage.
  * @param {(key: string) => boolean} [predicate]
  * @returns {string[]}
  */
@@ -262,6 +493,14 @@ cache.keys()
 ){
 
 if(
+!shouldUseKv(
+key
+)
+){
+continue;
+}
+
+if(
 !predicate ||
 predicate(
 key
@@ -273,6 +512,10 @@ key
 }
 
 }
+
+if(
+!lsPayloadsPurged()
+){
 
 try{
 
@@ -290,7 +533,10 @@ i
 );
 
 if(
-!key
+!key ||
+!shouldUseKv(
+key
+)
 ){
 continue;
 }
@@ -304,20 +550,16 @@ key
 continue;
 }
 
-if(
-shouldUseKv(
-key
-)
-){
 keys.add(
 key
 );
-}
 
 }
 
 }catch{
 /* ignore */
+}
+
 }
 
 return [
@@ -326,10 +568,68 @@ return [
 
 }
 
+/**
+ * Main (non-tf) drawing keys for an exchange — replaces LS scan helper.
+ * @param {string} [exchangeId]
+ * @param {{ includeTf?: boolean }} [opts]
+ * @returns {string[]}
+ */
+export function drawingsKvListKeysForExchange(
+exchangeId,
+opts = {}
+){
+
+const ex =
+String(
+exchangeId ||
+""
+).trim().toLowerCase();
+const includeTf =
+opts.includeTf ===
+true;
+
+return drawingsKvListKeys(
+(
+key
+)=>{
+
+const parsed =
+parseDrawingsStorageKey(
+key
+);
+
+if(
+!parsed
+){
+return false;
+}
+
+if(
+ex &&
+parsed.exchangeId !==
+ex
+){
+return false;
+}
+
+if(
+!includeTf &&
+parsed.tfSuffix
+){
+return false;
+}
+
+return true;
+
+}
+);
+
+}
+
 async function migrateLocalStorageToIdb(){
 
 if(
-!drawingsIdbAvailable()
+!idbReady()
 ){
 return;
 }
@@ -344,6 +644,8 @@ return;
 }
 
 try{
+
+migrateLegacyDrawingsStorage();
 
 for(
 let i =
@@ -401,10 +703,75 @@ DRAWINGS_IDB_MIGRATED_KEY,
 
 }
 
+function purgeLocalStoragePayloads(){
+
+if(
+!idbReady()
+){
+return;
+}
+
+if(
+lsPayloadsPurged()
+){
+return;
+}
+
+try{
+
+const toRemove =
+[];
+
+for(
+let i =
+0;
+i <
+localStorage.length;
+i++
+){
+
+const key =
+localStorage.key(
+i
+);
+
+if(
+key &&
+shouldUseKv(
+key
+)
+){
+toRemove.push(
+key
+);
+}
+
+}
+
+for(
+const key of
+toRemove
+){
+lsRemove(
+key
+);
+}
+
+lsSet(
+DRAWINGS_IDB_LS_PURGED_KEY,
+"1"
+);
+
+}catch{
+/* leave flag unset — retry next boot */
+}
+
+}
+
 async function hydrateFromIdb(){
 
 if(
-!drawingsIdbAvailable()
+!idbReady()
 ){
 hydrated =
 true;
@@ -437,20 +804,9 @@ key,
 value
 );
 
-/* Keep LS mirror for cross-tab + older tabs. */
-if(
-lsGet(
-key
-) ==
-null
-){
-lsSet(
-key,
-value
-);
 }
 
-}
+purgeLocalStoragePayloads();
 
 hydrated =
 true;

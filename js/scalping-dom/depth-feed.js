@@ -45,7 +45,7 @@ resolveTriggerLevels
 import {
 applyHorizDrawingUnderlines,
 resolveHorizDrawingLevels
-} from "./drawing-overlay.js?v=3";
+} from "./drawing-overlay.js?v=4";
 
 import {
 getScalpingDomAutocenterPct,

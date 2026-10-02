@@ -56,7 +56,7 @@ mergeTombstoneMaps,
 mergeDrawingsPayload,
 packCloudDrawings,
 unpackCloudDrawings
-} from "./drawings-storage.js?v=8";
+} from "./drawings-storage.js?v=9";
 
 import {
 withTimeout
@@ -4308,7 +4308,7 @@ i++
 const key =
 localStorage.key(i);
 
-/* Drawings stay local on logout (DRAWINGS_REGRESSION + IDB dual-write). */
+/* Drawings stay local on logout (DRAWINGS_REGRESSION + IDB). */
 if(
 key === "price_alerts_v1" ||
 key === "price_alerts_history_v1"
@@ -4717,7 +4717,7 @@ await ensureCloudLoginResolved(
 const alertsCloud =
 await import("./alerts-cloud-sync.js?v=115");
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=112");
+await import("./alerts.js?v=113");
 
 const stripOpts =
 isAlertsPage()

@@ -18,7 +18,7 @@ ensureDrawToolsVisible
 import {
 touchShapeRevision,
 recordDrawingTombstone
-} from "../drawings-storage.js?v=8";
+} from "../drawings-storage.js?v=9";
 
 import {
 EXCHANGE_CHANGED_EVENT,
@@ -28,7 +28,7 @@ loadMarketHistory
 import {
 registerDrawingsStoragePoller,
 touchDrawingsStorageSnap
-} from "../drawings-storage-poller.js?v=3";
+} from "../drawings-storage-poller.js?v=4";
 
 import {
 layoutScaleLabelYs,
@@ -165,7 +165,7 @@ createDrawDesktopSelection
 
 import {
 createDrawingsPersist
-} from "./drawings-persist.js?v=20";
+} from "./drawings-persist.js?v=21";
 
 import {
 createDrawStyleBar

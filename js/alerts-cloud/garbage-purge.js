@@ -5,7 +5,7 @@ readPersistedAuthSession
 
 import {
 ensureCloudLoginResolved
-} from "../cloud-sync.js?v=72";
+} from "../cloud-sync.js?v=73";
 
 import {
 withTimeout

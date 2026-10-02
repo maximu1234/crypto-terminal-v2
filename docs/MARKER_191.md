@@ -14,7 +14,7 @@
 
 ## Следующий шаг (позже)
 
-- Убрать LS dual-write, cross-tab через BroadcastChannel.
+- ~~Убрать LS dual-write, cross-tab через BroadcastChannel.~~ → **metka-193**
 - Quota smoke на больших volume profile / brush.
 
 ## Версии

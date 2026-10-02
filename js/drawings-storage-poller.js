@@ -1,10 +1,11 @@
 /**
  * Один poller drawings KV для всех initDrawings (dashboard 4/6/9 виджетов).
- * Cross-tab: window "storage" (LS dual-write mirror).
+ * Cross-tab: BroadcastChannel via drawings-kv (no LS dual-write).
  */
 import {
-drawingsKvGet
-} from "./drawings-kv.js?v=1";
+drawingsKvGet,
+onDrawingsKvExternalChange
+} from "./drawings-kv.js?v=2";
 
 const POLL_MS =
 400;
@@ -23,8 +24,8 @@ new Map();
 let pollTimer =
 null;
 
-let storageListenerBound =
-false;
+let bcUnsub =
+null;
 
 function readStorageRaw(
 key
@@ -147,6 +148,39 @@ key
 
 }
 
+function onExternalKvChange(
+key,
+newValue
+){
+
+if(
+!key?.startsWith?.(
+KEY_PREFIX
+)
+){
+return;
+}
+
+if(
+newValue !=
+null
+){
+keySnaps.set(
+key,
+newValue
+);
+}else{
+keySnaps.delete(
+key
+);
+}
+
+notifyKey(
+key
+);
+
+}
+
 function ensurePollTimer(){
 
 if(
@@ -162,17 +196,12 @@ POLL_MS
 );
 
 if(
-!storageListenerBound
+!bcUnsub
 ){
-
-storageListenerBound =
-true;
-
-window.addEventListener(
-"storage",
-onStorageEvent
+bcUnsub =
+onDrawingsKvExternalChange(
+onExternalKvChange
 );
-
 }
 
 }
@@ -196,37 +225,13 @@ pollTimer =
 null;
 }
 
-}
-
-function onStorageEvent(
-e
-){
-
 if(
-!e.key?.startsWith?.(
-KEY_PREFIX
-)
+bcUnsub
 ){
-return;
+bcUnsub();
+bcUnsub =
+null;
 }
-
-if(
-e.newValue !=
-null
-){
-keySnaps.set(
-e.key,
-e.newValue
-);
-}else{
-keySnaps.delete(
-e.key
-);
-}
-
-notifyKey(
-e.key
-);
 
 }
 

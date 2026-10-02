@@ -696,7 +696,7 @@ Object.freeze({
 "scalping-dom/trigger-order-overlay.js":
 2,
 "scalping-dom/drawing-overlay.js":
-3,
+4,
 "scalping-dom/live-book.js":
 3,
 "scalping-dom/depth-ws-bybit.js":
@@ -764,7 +764,7 @@ Object.freeze({
 "drawings.js":
 301,
 "drawings/init.js":
-233,
+234,
 "drawings/draw-prefs.js":
 13,
 "drawings/draw-edit-desktop.js":
@@ -772,7 +772,7 @@ Object.freeze({
 "drawings/draw-undo.js":
 2,
 "drawings/drawings-persist.js":
-20,
+21,
 "drawings/draw-style-bar.js":
 67,
 "drawings/draw-templates.js":
@@ -856,13 +856,13 @@ Object.freeze({
 "drawings-tablet-input.js":
 12,
 "drawings-storage.js":
-8,
+9,
 "drawings-storage-poller.js":
-3,
+4,
 "drawings-idb.js":
 2,
 "drawings-kv.js":
-1,
+2,
 "draw-color-palette.js":
 7,
 "draw-ui-shared.js":
@@ -911,7 +911,7 @@ Object.freeze({
 
 /* ── JS: cloud / auth ── */
 "cloud-sync.js":
-72,
+73,
 "cloud-sync-throttle.js":
 3,
 "page-routes.js":
@@ -955,7 +955,7 @@ Object.freeze({
 
 /* ── JS: alerts ── */
 "alerts.js":
-112,
+113,
 "alerts-cloud-sync.js":
 115,
 "alerts-cloud/garbage-purge.js":

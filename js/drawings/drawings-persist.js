@@ -1,6 +1,6 @@
 /**
  * LocalStorage / IndexedDB load/save + shape normalization for drawings.
- * Payloads go through drawings-kv (memory + IDB + LS dual-write).
+ * Payloads go through drawings-kv (memory + IndexedDB; cross-tab BroadcastChannel).
  */
 import {
 STROKE,
@@ -49,13 +49,13 @@ normalizeElliottShape
 
 import {
 drawingsStorageKey
-} from "../drawings-exchange-key.js?v=3";
+} from "../drawings-exchange-key.js?v=4";
 
 import {
 drawingsKvGet,
 drawingsKvSet,
 ensureDrawingsKvReady
-} from "../drawings-kv.js?v=1";
+} from "../drawings-kv.js?v=2";
 
 void ensureDrawingsKvReady();
 

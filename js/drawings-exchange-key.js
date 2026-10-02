@@ -20,6 +20,7 @@ new Set([
 "drawings_row_sync_v1",
 "drawings_exchange_storage_migrated_v1",
 "drawings_idb_migrated_v1",
+"drawings_idb_ls_purged_v1",
 "drawings_local_updated_at",
 "drawings_synced_signature"
 ]);
@@ -489,6 +490,7 @@ exchangeId
 const keys =
 [];
 
+/* Legacy LS scan — prefer drawingsKvListKeysForExchange after IDB hydrate. */
 for(
 let i =
 0;

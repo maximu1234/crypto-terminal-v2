@@ -5,16 +5,16 @@ getActiveExchangeId
 import {
 drawingsStorageKey,
 parseDrawingsStorageKey,
-migrateLegacyDrawingsStorage,
-listDrawingsStorageKeys
-} from "./drawings-exchange-key.js?v=3";
+migrateLegacyDrawingsStorage
+} from "./drawings-exchange-key.js?v=4";
 
 import {
 drawingsKvGet,
 drawingsKvSet,
 drawingsKvRemove,
+drawingsKvListKeysForExchange,
 ensureDrawingsKvReady
-} from "./drawings-kv.js?v=1";
+} from "./drawings-kv.js?v=2";
 
 void ensureDrawingsKvReady();
 
@@ -899,8 +899,12 @@ const symbols =
 new Set();
 
 const keys =
-listDrawingsStorageKeys(
-ex
+drawingsKvListKeysForExchange(
+ex,
+{
+includeTf:
+true
+}
 );
 
 for(
@@ -914,46 +918,6 @@ key
 
 if(
 parsed?.symbol
-){
-symbols.add(
-parsed.symbol
-);
-}
-
-drawingsKvRemove(
-key
-);
-
-}
-
-for(
-let i =
-0;
-i <
-localStorage.length;
-i++
-){
-
-const key =
-localStorage.key(
-i
-);
-const parsed =
-parseDrawingsStorageKey(
-key
-);
-
-if(
-!parsed ||
-parsed.exchangeId !==
-ex ||
-!parsed.tfSuffix
-){
-continue;
-}
-
-if(
-parsed.symbol
 ){
 symbols.add(
 parsed.symbol
@@ -1162,7 +1126,7 @@ const out =
 {};
 
 for(
-const key of listDrawingsStorageKeys(
+const key of drawingsKvListKeysForExchange(
 ex
 )
 ){
@@ -1251,7 +1215,7 @@ if(
 ){
 
 for(
-const key of listDrawingsStorageKeys(
+const key of drawingsKvListKeysForExchange(
 mergeExchangeId
 )
 ){
@@ -1279,7 +1243,7 @@ key
 }else{
 
 for(
-const key of listDrawingsStorageKeys(
+const key of drawingsKvListKeysForExchange(
 mergeExchangeId
 )
 ){
