@@ -169,7 +169,7 @@ createDrawingsPersist
 
 import {
 createDrawStyleBar
-} from "./draw-style-bar.js?v=65";
+} from "./draw-style-bar.js?v=66";
 
 import {
 createDrawAlertsChart

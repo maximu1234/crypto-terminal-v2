@@ -98,8 +98,60 @@ body.trade-page #list .trade-book-panel.chrome-surface.chrome-surface--shown{
   transform:none;
 }
 
-.scalping-dom-root.chrome-surface.chrome-surface--closing{
+/* --- Draw popovers / template menu / save modal --- */
+.draw-popover.chrome-surface,
+.draw-template-menu.chrome-surface,
+.coin-flag-menu.chrome-surface,
+.screener-flag-menu.chrome-surface{
+  opacity:0;
+  transform:translateY(-4px);
+  transition:
+    opacity var(--chrome-motion-ms) var(--chrome-motion-ease),
+    transform var(--chrome-motion-ms) var(--chrome-motion-ease);
+}
+
+.draw-popover.chrome-surface.chrome-surface--shown,
+.draw-template-menu.chrome-surface.chrome-surface--shown,
+.coin-flag-menu.chrome-surface.chrome-surface--shown,
+.screener-flag-menu.chrome-surface.chrome-surface--shown{
+  opacity:1;
+  transform:none;
+}
+
+.draw-popover.chrome-surface.chrome-surface--closing,
+.draw-template-menu.chrome-surface.chrome-surface--closing,
+.coin-flag-menu.chrome-surface.chrome-surface--closing,
+.screener-flag-menu.chrome-surface.chrome-surface--closing{
+  display:block !important;
   pointer-events:none;
   opacity:0;
-  transform:translateX(10px);
+  transform:translateY(-3px);
+}
+
+.draw-template-save-modal.chrome-surface{
+  opacity:0;
+  transition:opacity var(--chrome-motion-ms) var(--chrome-motion-ease);
+}
+
+.draw-template-save-modal.chrome-surface .draw-template-save-dialog{
+  transform:translateY(8px) scale(0.98);
+  opacity:0.92;
+  transition:
+    transform var(--chrome-motion-ms) var(--chrome-motion-ease),
+    opacity var(--chrome-motion-ms) var(--chrome-motion-ease);
+}
+
+.draw-template-save-modal.chrome-surface.chrome-surface--shown{
+  opacity:1;
+}
+
+.draw-template-save-modal.chrome-surface.chrome-surface--shown .draw-template-save-dialog{
+  transform:none;
+  opacity:1;
+}
+
+.draw-template-save-modal.chrome-surface.chrome-surface--closing{
+  display:flex !important;
+  pointer-events:none;
+  opacity:0;
 }

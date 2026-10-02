@@ -63,7 +63,7 @@ Object.freeze({
 "exchanges/bingx/intervals.js":
 1,
 "terminal-page-boot.js":
-66,
+67,
 "mobile/viewport.js":
 2,
 "mobile/nav.js":
@@ -291,7 +291,7 @@ Object.freeze({
 "chart-page.js":
 8,
 "terminal.js":
-507,
+508,
 "terminal-multi-chart.js":
 27,
 "terminal-screener-chart-pane.js":
@@ -313,6 +313,8 @@ Object.freeze({
 "chart-redraw-scheduler.js":
 2,
 "chrome-motion.js":
+3,
+"app-boot-splash.js":
 2,
 "chart-visible-range.js":
 3,
@@ -658,7 +660,7 @@ Object.freeze({
 "watchlist.js":
 133,
 "screener.js":
-137,
+139,
 "ipad-web-viewport.js":
 2,
 "screener-widget-guard.js":
@@ -706,7 +708,7 @@ Object.freeze({
 "screener-widget-zoom.js":
 34,
 "release-marker.js":
-127,
+128,
 "focus-blur-after-pick.js":
 3,
 "site-boot.js":
@@ -720,7 +722,7 @@ Object.freeze({
 "site-header-nav-desktop.js":
 2,
 "desktop-app-ui.js":
-14,
+15,
 "suppress-native-context-menu.js":
 4,
 "charts-lib-boot.js":
@@ -762,7 +764,7 @@ Object.freeze({
 "drawings.js":
 301,
 "drawings/init.js":
-230,
+231,
 "drawings/draw-prefs.js":
 13,
 "drawings/draw-edit-desktop.js":
@@ -772,7 +774,7 @@ Object.freeze({
 "drawings/drawings-persist.js":
 19,
 "drawings/draw-style-bar.js":
-65,
+66,
 "drawings/draw-templates.js":
 20,
 "drawings/draw-alerts-chart.js":
@@ -1011,11 +1013,11 @@ Object.freeze({
 
 /* ── CSS ── */
 "critical-shell.css":
-10,
+11,
 "common.css":
 65,
 "chrome-motion.css":
-2,
+3,
 "screener.css":
 58,
 "terminal.css":

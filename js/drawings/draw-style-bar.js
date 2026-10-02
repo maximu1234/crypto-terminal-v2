@@ -36,6 +36,11 @@ closeAllFibLineWidthMenus
 } from "./fib-portals.js?v=3";
 
 import {
+openChromeSurface,
+closeChromeSurface
+} from "../chrome-motion.js?v=3";
+
+import {
 isPositionType,
 positionEntryPrice
 } from "./position.js?v=11";
@@ -5015,8 +5020,8 @@ name || ""
 
 function closeTemplateMenu(){
 
-templateMenu?.classList.add(
-"hidden"
+closeChromeSurface(
+templateMenu
 );
 
 templateBtn?.setAttribute(
@@ -5044,8 +5049,8 @@ positionPopover(
 templateMenu,
 40
 );
-templateMenu.classList.remove(
-"hidden"
+openChromeSurface(
+templateMenu
 );
 templateBtn?.setAttribute(
 "aria-expanded",
@@ -5366,6 +5371,9 @@ templateNameInput.value = "";
 modal.classList.remove(
 "hidden"
 );
+openChromeSurface(
+modal
+);
 
 requestAnimationFrame(()=>{
 templateNameInput?.focus();
@@ -5375,8 +5383,8 @@ templateNameInput?.focus();
 
 function closeTemplateSaveModal(){
 
-templateSaveModal?.classList.add(
-"hidden"
+closeChromeSurface(
+templateSaveModal
 );
 closeTemplateSaveList();
 
@@ -5684,7 +5692,9 @@ colorPopover.classList.add("hidden");
 );
 
 positionPopover(colorPopover, 40);
-colorPopover.classList.remove("hidden");
+openChromeSurface(
+colorPopover
+);
 }
 
 });
@@ -5700,7 +5710,9 @@ closePopovers();
 
 if(open){
 positionPopover(widthPopover, 40);
-widthPopover?.classList.remove("hidden");
+openChromeSurface(
+widthPopover
+);
 }
 
 });
@@ -5762,6 +5774,9 @@ textSizePopover
 ){
 positionPopover(textSizePopover, 40);
 textSizePopover.classList.remove("hidden");
+openChromeSurface(
+textSizePopover
+);
 }
 
 });
@@ -5951,7 +5966,9 @@ syncCoordSettingsIfIdle();
 }
 
 positionPopover(settingsPopover, 40);
-settingsPopover?.classList.remove("hidden");
+openChromeSurface(
+settingsPopover
+);
 }
 
 });

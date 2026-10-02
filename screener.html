@@ -12,10 +12,10 @@
 
 <link rel="icon" href="/icons/brand-logo.png" type="image/png">
 
-<link rel="stylesheet" href="/css/critical-shell.css?v=10">
+<link rel="stylesheet" href="/css/critical-shell.css?v=11">
 <script src="/js/site-css-ready.js?v=3"></script>
 <link rel="stylesheet" href="/css/common.css?v=65">
-<link rel="stylesheet" href="/css/chrome-motion.css?v=2">
+<link rel="stylesheet" href="/css/chrome-motion.css?v=3">
 <link rel="stylesheet" href="/css/screener.css?v=58">
 
 <link rel="preload" href="/vendor/lightweight-charts.standalone.production.js" as="script">
@@ -23,6 +23,10 @@
 </head>
 
 <body>
+
+<div id="app-boot-splash" class="app-boot-splash" aria-hidden="false">
+<div class="app-boot-splash-mark" aria-hidden="true"></div>
+</div>
 
 <header id="header" class="app-page-header">
 
@@ -193,11 +197,21 @@ window.waitForSiteCssReady
 await window.waitForSiteCssReady();
 }
 
+try{
+const {
+dismissAppBootSplash
+} =
+await import("/js/app-boot-splash.js?v=2");
+dismissAppBootSplash();
+}catch{
+/* optional */
+}
+
 const { loadLightweightCharts } =
 await import("/js/charts-lib-boot.js?v=3");
 
 await loadLightweightCharts();
-await import("/js/screener.js?v=137");
+await import("/js/screener.js?v=139");
 import("/js/site-boot.js?v=139").catch(err=>{
 console.warn("site-boot:", err);
 });

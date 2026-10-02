@@ -338,6 +338,19 @@ return;
 }
 
 await waitForSiteCssReady();
+
+try{
+const {
+dismissAppBootSplash
+} =
+await import(
+"./app-boot-splash.js?v=2"
+);
+dismissAppBootSplash();
+}catch{
+/* optional */
+}
+
 await initTradeLayerBeforeChart();
 await loadLightweightCharts();
 await loadChartEntryWithRetry();

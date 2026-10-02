@@ -23,6 +23,10 @@ clearBybitNetworkIssue
 } from "./bybit-network-ui.js?v=6";
 
 import {
+openChromeSurface
+} from "./chrome-motion.js?v=3";
+
+import {
 resolveUrlExchangeDeepLink
 } from "./alert-deep-link-exchange.js?v=3";
 
@@ -6368,8 +6372,8 @@ flagTrigger.setAttribute(
 "false"
 );
 }else{
-flagMenu.classList.remove(
-"hidden"
+openChromeSurface(
+flagMenu
 );
 flagTrigger.setAttribute(
 "aria-expanded",

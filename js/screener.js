@@ -12,6 +12,10 @@ EXCHANGE_CHANGED_EVENT
 } from "./market-api.js?v=7";
 
 import {
+openChromeSurface
+} from "./chrome-motion.js?v=3";
+
+import {
 isScreenerWidgetCurrent as isScreenerWidgetCurrentGuard
 } from "./screener-widget-guard.js?v=1";
 
@@ -69,7 +73,7 @@ createTickerUiBatcher
 
 import {
 mountReleaseMarker
-} from "./release-marker.js?v=127";
+} from "./release-marker.js?v=128";
 
 import {
 saveScreenerState,
@@ -606,8 +610,8 @@ flagTrigger.setAttribute(
 "false"
 );
 }else{
-flagMenu?.classList.remove(
-"hidden"
+openChromeSurface(
+flagMenu
 );
 flagTrigger.setAttribute(
 "aria-expanded",

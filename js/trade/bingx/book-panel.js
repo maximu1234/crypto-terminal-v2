@@ -29,7 +29,7 @@ columnResizeHandle
 
 import {
 openChromeSurface
-} from "../../chrome-motion.js?v=2";
+} from "../../chrome-motion.js?v=3";
 
 import {
 openPnlShareModal
