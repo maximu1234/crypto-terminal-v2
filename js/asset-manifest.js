@@ -319,7 +319,7 @@ Object.freeze({
 "chart-visible-range.js":
 3,
 "chart-indicators.js":
-66,
+68,
 "chart-snapshot.js":
 7,
 "indicators/pattern-12.js":
@@ -583,6 +583,10 @@ Object.freeze({
 1,
 "indicators/horizontal-volume.js":
 11,
+"indicators/volume-bubbles.js":
+3,
+"indicators/volume-bubbles-math.js":
+1,
 "indicators/rsi-pane.js":
 12,
 "indicators/volume-pane.js":
@@ -1049,7 +1053,7 @@ Object.freeze({
 "algo-trading-chart-overlay.css":
 2,
 "chart-indicators.css":
-30,
+31,
 "chart-snapshot.css":
 5,
 "pattern-12-scanner.css":

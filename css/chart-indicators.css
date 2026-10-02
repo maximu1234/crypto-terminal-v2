@@ -183,7 +183,7 @@ text-align:left;
 
 .chart-indicator-legend-item--settings{
 pointer-events:auto;
-cursor:default;
+cursor:pointer;
 }
 
 .chart-indicator-legend-item--settings:hover{
@@ -779,6 +779,52 @@ accent-color:#818cf8;
 .chart-indicator-settings-hint{
 margin:8px 0 0;
 font:400 11px/1.35 system-ui,-apple-system,sans-serif;
+color:#787b86;
+}
+
+.volume-bubbles-badge{
+position:absolute;
+z-index:28;
+display:inline-flex;
+align-items:center;
+gap:6px;
+padding:3px 7px;
+border-radius:4px;
+border:1px solid rgba(255,255,255,0.12);
+background:rgba(19,23,34,0.92);
+box-shadow:none;
+pointer-events:none;
+font:500 11px/1.2 system-ui,-apple-system,sans-serif;
+color:#d1d4dc;
+white-space:nowrap;
+transform:translateY(-50%);
+}
+
+.volume-bubbles-badge.hidden{
+display:none;
+}
+
+.volume-bubbles-badge--pinned{
+border-color:rgba(129,140,248,0.55);
+}
+
+.volume-bubbles-badge-side{
+font-weight:600;
+}
+
+.volume-bubbles-badge-side--buy{
+color:#4ade80;
+}
+
+.volume-bubbles-badge-side--sell{
+color:#f87171;
+}
+
+.volume-bubbles-badge-vol{
+color:#f0f3fa;
+}
+
+.volume-bubbles-badge-ratio{
 color:#787b86;
 }
 

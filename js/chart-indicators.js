@@ -224,6 +224,9 @@ pattern12Mod,
 createHorizontalVolumeIndicator
 },
 {
+createVolumeBubblesIndicator
+},
+{
 createIndicatorSettingsDialog
 }
 ] =
@@ -263,6 +266,9 @@ createPattern12IndicatorOverride
 ),
 import(
 "./indicators/horizontal-volume.js?v=11"
+),
+import(
+"./indicators/volume-bubbles.js?v=3"
 ),
 import(
 "./indicators/indicator-settings-dialog.js?v=8"
@@ -324,6 +330,10 @@ settingsStore
 )),
 createHorizontalVolumeIndicator(
 getHost
+),
+createVolumeBubblesIndicator(
+getHost,
+settingsStore
 )
 ];
 
@@ -431,7 +441,7 @@ const hasSettings =
 !!ind.supportsSettingsDialog;
 
 return `
-<button type="button" class="chart-indicator-legend-item${hasSettings ? " chart-indicator-legend-item--settings" : ""}" data-indicator-id="${ind.id}" ${hasSettings ? 'data-has-settings="true" title="Двойной щелчок — настройки"' : ""}>${label}</button>
+<button type="button" class="chart-indicator-legend-item${hasSettings ? " chart-indicator-legend-item--settings" : ""}" data-indicator-id="${ind.id}" ${hasSettings ? 'data-has-settings="true" title="Клик — настройки"' : ""}>${label}</button>
 `;
 }
 ).join(
@@ -508,6 +518,31 @@ close:()=>{}
 return true;
 
 }
+
+legendEl.addEventListener(
+"click",
+event=>{
+
+const item =
+event.target.closest(
+"[data-indicator-id]"
+);
+
+if(
+!item?.dataset?.hasSettings
+){
+return;
+}
+
+/* Single click opens settings (dblclick also works). */
+event.preventDefault();
+event.stopPropagation();
+openIndicatorSettings(
+item.dataset.indicatorId
+);
+
+}
+);
 
 legendEl.addEventListener(
 "dblclick",

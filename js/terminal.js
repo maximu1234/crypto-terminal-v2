@@ -3791,7 +3791,7 @@ const {
 initChartIndicators
 } =
 await import(
-"./chart-indicators.js?v=66"
+"./chart-indicators.js?v=68"
 );
 const {
 createPattern12EarlyT3Indicator
