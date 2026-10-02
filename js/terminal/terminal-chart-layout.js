@@ -6,7 +6,7 @@ appendFutureWhitespaceBars,
 computeChartFutureMarginBars,
 computeCoinsChartViewportPlan,
 syncLinkedChartTimescales
-} from "../chart-import.js?v=62";
+} from "../chart-import.js?v=63";
 
 import {
 terminalVisibleBars,
@@ -733,27 +733,43 @@ const linked =
 chartIndicators?.getLinkedPaneCharts?.() ||
 [];
 
+/*
+ * One barSpacing pass from main width, then copy to panes.
+ * Do not recompute spacing per linked pane (their widths differ).
+ */
+refreshCoinsChartBarSpacing(
+chart,
+null
+);
+
 if(
 linked.length
 ){
 
 linked.forEach(
 linkedChart=>{
-refreshCoinsChartBarSpacing(
+syncLinkedChartTimescales(
 chart,
 linkedChart
 );
 }
 );
 
-}else{
-
-refreshCoinsChartBarSpacing(
-chart,
+}else if(
 rsiPaneActive?.()
-? getRsiChart?.()
-: null
+){
+
+const rsiChart =
+getRsiChart?.();
+
+if(
+rsiChart
+){
+syncLinkedChartTimescales(
+chart,
+rsiChart
 );
+}
 
 }
 

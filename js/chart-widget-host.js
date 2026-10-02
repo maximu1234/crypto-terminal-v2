@@ -7,7 +7,7 @@ ensureDomChartCrosshair,
 positionDomChartCrosshair,
 hideDomChartCrosshair,
 mountChartPriceHud
-} from "./chart-import.js?v=62";
+} from "./chart-import.js?v=63";
 
 import {
 initDrawings

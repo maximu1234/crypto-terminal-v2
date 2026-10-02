@@ -819,8 +819,8 @@ return 0;
 }
 
 const plotWidth =
-linkedChart?.timeScale().width() ||
 mainChart.timeScale().width() ||
+linkedChart?.timeScale().width() ||
 0;
 
 const plan =
@@ -894,8 +894,14 @@ if(
 return;
 }
 
+/*
+ * barSpacing always from the main chart plot width.
+ * Linked panes (AO / Volume / MACD / RSI) have different price-scale
+ * label widths per symbol — using their timeScale().width() made
+ * Terminal viewport jump (compressed / stretched / off-screen) when
+ * switching tickers with those panes enabled.
+ */
 const plotWidth =
-linkedChart?.timeScale().width() ||
 mainChart.timeScale().width();
 
 if(

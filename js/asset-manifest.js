@@ -299,7 +299,7 @@ Object.freeze({
 "terminal-layout-picker.js":
 11,
 "terminal/terminal-chart-layout.js":
-15,
+16,
 "terminal/coins-tablet-list-nav.js":
 2,
 "terminal/chart-display-style-ui.js":
@@ -584,21 +584,21 @@ Object.freeze({
 "indicators/horizontal-volume.js":
 11,
 "indicators/rsi-pane.js":
-10,
+11,
 "indicators/volume-pane.js":
-19,
+20,
 "indicators/ao-math.js":
 1,
 "indicators/ao-pane.js":
-16,
+17,
 "indicators/macd-math.js":
 3,
 "indicators/macd-pane.js":
-9,
+10,
 "indicators/indicator-pane-order.js":
 2,
 "indicators/indicator-pane-viewport.js":
-6,
+7,
 "indicators/moving-average.js":
 19,
 "indicators/ma-math.js":
@@ -708,7 +708,7 @@ Object.freeze({
 "screener-widget-zoom.js":
 34,
 "release-marker.js":
-130,
+131,
 "focus-blur-after-pick.js":
 3,
 "site-boot.js":
@@ -728,7 +728,7 @@ Object.freeze({
 "charts-lib-boot.js":
 3,
 "chart-import.js":
-62,
+63,
 "chart-widget-host.js":
 50,
 "tablet-gesture-policy.js":
@@ -738,7 +738,7 @@ Object.freeze({
 
 /* ── JS: chart / drawings ── */
 "chart.js":
-174,
+175,
 "chart/chart-options.js":
 7,
 "chart/chart-local-time.js":
@@ -748,7 +748,7 @@ Object.freeze({
 "chart/chart-dom-crosshair.js":
 17,
 "chart/chart-factory.js":
-57,
+58,
 "chart/chart-display-style.js":
 2,
 "chart/price-series-host.js":

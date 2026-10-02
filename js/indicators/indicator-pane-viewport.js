@@ -1,10 +1,12 @@
 /**
- * Volume / AO: viewport с основным графиком (отступ справа от текущей свечи).
+ * Volume / AO / MACD / RSI: viewport с основным графиком (отступ справа от текущей свечи).
+ * syncViewport must copy from main — never recompute barSpacing from pane width
+ * (pane price-scale labels change per symbol and corrupted Terminal zoom).
  */
 import {
 applyCoinsChartViewport,
 syncLinkedChartTimescales
-} from "../chart-import.js?v=62";
+} from "../chart-import.js?v=63";
 
 export function applyIndicatorPaneViewport(
 getHost,

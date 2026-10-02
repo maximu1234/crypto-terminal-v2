@@ -33,7 +33,7 @@ resolveUrlExchangeDeepLink
 import {
 defaultRsiPaneSettings,
 normalizeRsiPaneSettings
-} from "./indicators/rsi-pane.js?v=10";
+} from "./indicators/rsi-pane.js?v=11";
 
 import {
 buildChartRsiPoints
@@ -95,7 +95,7 @@ appendFutureWhitespaceBars,
 applyCoinsChartViewport,
 refreshCoinsChartBarSpacing,
 tfPeriodSec
-} from "./chart-import.js?v=62";
+} from "./chart-import.js?v=63";
 
 import {
 terminalVisibleBars,
@@ -233,7 +233,7 @@ syncCoinsChartLinkedViewports,
 resizeCharts,
 scheduleResizeCharts,
 applyDefaultZoom
-} from "./terminal/terminal-chart-layout.js?v=15";
+} from "./terminal/terminal-chart-layout.js?v=16";
 
 import {
 placeCoinsTabletListNav
