@@ -5,7 +5,7 @@
 import {
 hideDomChartCrosshair,
 positionTabletProbeHorizInStack
-} from "../chart-import.js?v=63";
+} from "../chart-import.js?v=64";
 
 import {
 ensureFibLevelsVisible,

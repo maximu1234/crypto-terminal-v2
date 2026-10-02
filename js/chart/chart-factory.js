@@ -900,7 +900,59 @@ return;
  * label widths per symbol — using their timeScale().width() made
  * Terminal viewport jump (compressed / stretched / off-screen) when
  * switching tickers with those panes enabled.
+ *
+ * After applyOptions({ barSpacing }), LW can drift the logical range —
+ * always re-apply the saved range (esp. when position overlays /
+ * scale-label sync change plot width without a wrap resize).
  */
+if(
+!fitMainChartBarSpacingToRange(
+mainChart,
+range
+)
+){
+return;
+}
+
+if(
+linkedChart
+){
+
+const barSpacing =
+mainChart.timeScale().options().barSpacing;
+
+if(
+barSpacing !== undefined
+){
+linkedChart.timeScale().applyOptions({
+barSpacing
+});
+}
+
+linkedChart.timeScale().setVisibleLogicalRange(
+range
+);
+
+}
+
+}
+
+/**
+ * Recompute main barSpacing so `range` fills the current plot width.
+ * @returns {boolean} false if plot width is not ready
+ */
+function fitMainChartBarSpacingToRange(
+mainChart,
+range
+){
+
+if(
+!mainChart ||
+!range
+){
+return false;
+}
+
 const plotWidth =
 mainChart.timeScale().width();
 
@@ -909,7 +961,7 @@ if(
 plotWidth <
 2
 ){
-return;
+return false;
 }
 
 const span =
@@ -931,26 +983,11 @@ mainChart.timeScale().applyOptions({
 barSpacing
 });
 
-if(
-linkedChart
-){
-
-linkedChart.timeScale().applyOptions({
-barSpacing
-});
-
-const linkedRange =
-mainChart.timeScale().getVisibleLogicalRange();
-
-if(
-linkedRange
-){
-linkedChart.timeScale().setVisibleLogicalRange(
-linkedRange
+mainChart.timeScale().setVisibleLogicalRange(
+range
 );
-}
 
-}
+return true;
 
 }
 
@@ -1618,17 +1655,28 @@ if(
 return;
 }
 
+const range =
+mainChart.timeScale().getVisibleLogicalRange();
+
+if(
+!range
+){
+return;
+}
+
 syncLinkedChartPriceScales(
 mainChart,
 linkedChart
 );
 
-const range =
-mainChart.timeScale().getVisibleLogicalRange();
-
-if(!range){
-return;
-}
+/*
+ * Price-scale minimumWidth sync shrinks/grows plot width without a
+ * wrap resize. Re-fit barSpacing to the saved range, then copy.
+ */
+fitMainChartBarSpacingToRange(
+mainChart,
+range
+);
 
 linkedChart.timeScale().applyOptions(
 getTimeScaleSyncOptions(
@@ -1636,22 +1684,13 @@ mainChart.timeScale()
 )
 );
 
-linkedChart.timeScale().setVisibleLogicalRange(range);
+linkedChart.timeScale().setVisibleLogicalRange(
+range
+);
 
-const barSpacing =
-mainChart.timeScale().options().barSpacing;
-
-if(
-barSpacing !== undefined
-){
-
-linkedChart.timeScale().applyOptions({
-barSpacing
-});
-
-}
-
-applyChartScaleWidthCss(mainChart);
+applyChartScaleWidthCss(
+mainChart
+);
 
 }
 

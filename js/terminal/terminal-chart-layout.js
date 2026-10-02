@@ -6,7 +6,7 @@ appendFutureWhitespaceBars,
 computeChartFutureMarginBars,
 computeCoinsChartViewportPlan,
 syncLinkedChartTimescales
-} from "../chart-import.js?v=63";
+} from "../chart-import.js?v=64";
 
 import {
 terminalVisibleBars,
@@ -688,26 +688,6 @@ isTerminalLayoutDragging();
 const applied =
 applyChartDimensions();
 
-if(
-!applied
-){
-
-if(
-layoutDragWasActive &&
-!dragging
-){
-layoutDragWasActive =
-false;
-syncDrawingToolsLayout();
-}
-
-return;
-
-}
-
-layoutDragWasActive =
-dragging;
-
 const {
 getCandles,
 chart,
@@ -719,12 +699,19 @@ refreshCoinsChartBarSpacing
 } =
 ctx();
 
+function syncLinkedBarSpacing(){
+
 const candles =
 getCandles?.() ||
 [];
+
 if(
-candles.length
+!chart ||
+!candles.length ||
+dragging
 ){
+return;
+}
 
 const chartIndicators =
 getChartIndicators?.();
@@ -735,7 +722,9 @@ chartIndicators?.getLinkedPaneCharts?.() ||
 
 /*
  * One barSpacing pass from main width, then copy to panes.
- * Do not recompute spacing per linked pane (their widths differ).
+ * Also runs when wrap W×H is unchanged but price-scale width
+ * changed (position labels / AO scale sync) — that used to leave
+ * stale barSpacing and look like a broken zoom on position tickers.
  */
 refreshCoinsChartBarSpacing(
 chart,
@@ -780,6 +769,29 @@ layoutRsiBand?.();
 }
 
 }
+
+if(
+!applied
+){
+
+if(
+layoutDragWasActive &&
+!dragging
+){
+layoutDragWasActive =
+false;
+syncDrawingToolsLayout();
+}
+
+syncLinkedBarSpacing();
+return;
+
+}
+
+layoutDragWasActive =
+dragging;
+
+syncLinkedBarSpacing();
 
 if(
 !dragging
