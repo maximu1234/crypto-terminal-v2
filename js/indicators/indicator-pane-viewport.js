@@ -1,67 +1,25 @@
 /**
- * Volume / AO / MACD / RSI: viewport с основным графиком (отступ справа от текущей свечи).
- * syncViewport must copy from main — never recompute barSpacing from pane width
- * (pane price-scale labels change per symbol and corrupted Terminal zoom).
+ * Volume / AO / MACD / RSI: viewport sync with the main chart.
+ * Never recompute main barSpacing from a pane width — that caused
+ * Terminal zoom fights when several panes were enabled together.
  */
 import {
-applyCoinsChartViewport,
 syncLinkedChartTimescales
-} from "../chart-import.js?v=65";
+} from "../chart-import.js?v=66";
 
+/**
+ * After enabling a pane: copy main → pane only.
+ * (Formerly applied a full viewport plan onto main — unsafe with multi-pane.)
+ */
 export function applyIndicatorPaneViewport(
 getHost,
 linkedChart
 ){
 
-const host =
-getHost?.();
-
-const mainChart =
-host?.chart;
-
-if(
-!mainChart ||
-!linkedChart
-){
-return false;
-}
-
-const rawCandles =
-host?.getCandles?.() ||
-[];
-
-if(
-!rawCandles.length
-){
-return false;
-}
-
-const candles =
-host?.getDisplayCandles?.() ||
-rawCandles;
-
-const tf =
-host?.getTf?.() ||
-"D";
-
-const chartWidth =
-Math.max(
-host?.getChartWrapWidth?.() ||
-0,
-1
+return syncPaneViewportAfterData(
+getHost,
+linkedChart
 );
-
-applyCoinsChartViewport(
-mainChart,
-linkedChart,
-candles,
-tf,
-chartWidth,
-rawCandles.length,
-host?.getVisibleBarsCap?.()
-);
-
-return true;
 
 }
 

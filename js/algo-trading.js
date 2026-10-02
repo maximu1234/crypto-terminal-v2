@@ -12,7 +12,7 @@ applyRsiFixedPriceScale,
 appendFutureWhitespaceBars,
 computeChartFutureMarginBars,
 syncLinkedChartTimescales
-} from "./chart-import.js?v=65";
+} from "./chart-import.js?v=66";
 
 import {
 applyLiveSeriesUpdate,
@@ -35,7 +35,7 @@ ALGO_TICKER_SCAN_HISTORY_REQUESTS
 import {
 defaultRsiPaneSettings,
 normalizeRsiPaneSettings
-} from "./indicators/rsi-pane.js?v=11";
+} from "./indicators/rsi-pane.js?v=12";
 
 import {
 buildChartRsiPoints

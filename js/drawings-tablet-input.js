@@ -4,7 +4,7 @@ isTabletChartViewport,
 hasAnyFinePointer,
 positionDomChartCrosshair,
 hideDomChartCrosshair
-} from "./chart-import.js?v=65";
+} from "./chart-import.js?v=66";
 
 import {
 isFineChartPointerType,

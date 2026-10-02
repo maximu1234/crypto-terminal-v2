@@ -5,8 +5,9 @@ import {
 appendFutureWhitespaceBars,
 computeChartFutureMarginBars,
 computeCoinsChartViewportPlan,
+equalizeLinkedPanePriceScales,
 syncLinkedChartTimescales
-} from "../chart-import.js?v=65";
+} from "../chart-import.js?v=66";
 
 import {
 terminalVisibleBars,
@@ -632,7 +633,8 @@ chart,
 getChartIndicators,
 getRsiChart,
 rsiPaneActive,
-layoutRsiBand
+layoutRsiBand,
+refreshCoinsChartBarSpacing
 } =
 ctx();
 
@@ -646,37 +648,54 @@ const linked =
 getChartIndicators?.()?.getLinkedPaneCharts?.() ||
 [];
 
-for(
-const linkedChart of
-linked
-){
-
-if(
-linkedChart
-){
-syncLinkedChartTimescales(
-chart,
-linkedChart
-);
-}
-
-}
+const panes =
+[
+...linked
+];
 
 const rsiChart =
 getRsiChart?.();
 
 if(
 rsiChart &&
-rsiPaneActive?.()
+rsiPaneActive?.() &&
+!panes.includes(
+rsiChart
+)
+){
+panes.push(
+rsiChart
+);
+}
+
+/* One price-scale pass for all panes, then time copy. */
+equalizeLinkedPanePriceScales(
+chart,
+panes
+);
+
+refreshCoinsChartBarSpacing?.(
+chart,
+null
+);
+
+for(
+const linkedChart of
+panes
 ){
 
 syncLinkedChartTimescales(
 chart,
-rsiChart
+linkedChart
 );
 
-layoutRsiBand?.();
+}
 
+if(
+rsiChart &&
+rsiPaneActive?.()
+){
+layoutRsiBand?.();
 }
 
 }
@@ -733,17 +752,13 @@ getRsiChart()
 : [];
 
 /*
- * 1) Equalize price-scale widths (AO/RSI labels) — may shrink plot.
+ * 1) Equalize price-scale widths across ALL panes in one pass.
  * 2) Re-fit main barSpacing + rightOffset once.
- * 3) Copy to panes (sync must not re-fit main).
+ * 3) Copy time-scale to panes (must not re-fit main / pairwise scales).
  */
-panes.forEach(
-linkedChart=>{
-syncLinkedChartTimescales(
+equalizeLinkedPanePriceScales(
 chart,
-linkedChart
-);
-}
+panes
 );
 
 refreshCoinsChartBarSpacing(
