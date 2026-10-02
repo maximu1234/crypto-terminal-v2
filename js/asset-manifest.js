@@ -708,7 +708,7 @@ Object.freeze({
 "screener-widget-zoom.js":
 34,
 "release-marker.js":
-134,
+135,
 "focus-blur-after-pick.js":
 3,
 "site-boot.js":
@@ -764,7 +764,7 @@ Object.freeze({
 "drawings.js":
 301,
 "drawings/init.js":
-232,
+233,
 "drawings/draw-prefs.js":
 13,
 "drawings/draw-edit-desktop.js":
@@ -772,7 +772,7 @@ Object.freeze({
 "drawings/draw-undo.js":
 2,
 "drawings/drawings-persist.js":
-19,
+20,
 "drawings/draw-style-bar.js":
 67,
 "drawings/draw-templates.js":
@@ -856,8 +856,12 @@ Object.freeze({
 "drawings-tablet-input.js":
 12,
 "drawings-storage.js":
-7,
+8,
 "drawings-storage-poller.js":
+3,
+"drawings-idb.js":
+2,
+"drawings-kv.js":
 1,
 "draw-color-palette.js":
 7,

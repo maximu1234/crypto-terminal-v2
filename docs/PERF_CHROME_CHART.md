@@ -30,7 +30,7 @@
   аудит всех панелей/окон по приложению.
 - **Алерты / cloud sync не откладывать** (скорость появления и снятия —
   основа торговли).
-- IndexedDB для рисунков — **отложено**.
+- IndexedDB для рисунков — **фаза 5** (dual-write + memory cache).
 - Feature-flag в Системных не нужен: откат = `metka-181`.
 
 ## Критический путь (не трогать / не await-ить лишнее)
@@ -57,7 +57,7 @@ alerts registry / monitor / cloud (как сейчас по срочности)
 | 3 | Boot skeleton (Terminal + Screener) | **184** | done |
 | 4 | Lazy **только** не-алерты (favorites idle; alerts immediate) | **185** | done |
 | 1b | Skip drawing sync during coins/book layout drag | **186** | done |
-| 5 | IndexedDB drawings | позже | pending |
+| 5 | IndexedDB drawings (KV + dual-write LS) | **191** | done (v1) |
 | 6–7 | CDN hash / workers | по профилю | pending |
 
 ## Smoke после каждой фазы

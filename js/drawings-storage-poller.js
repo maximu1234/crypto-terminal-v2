@@ -1,7 +1,11 @@
 /**
- * Один poller localStorage для всех initDrawings (dashboard 4/6/9 виджетов).
- * Cross-tab: window "storage".
+ * Один poller drawings KV для всех initDrawings (dashboard 4/6/9 виджетов).
+ * Cross-tab: window "storage" (LS dual-write mirror).
  */
+import {
+drawingsKvGet
+} from "./drawings-kv.js?v=1";
+
 const POLL_MS =
 400;
 
@@ -27,7 +31,7 @@ key
 ){
 
 try{
-return localStorage.getItem(
+return drawingsKvGet(
 key
 ) ||
 "[]";

@@ -19,6 +19,7 @@ new Set([
 "drawings_tombstones_v1",
 "drawings_row_sync_v1",
 "drawings_exchange_storage_migrated_v1",
+"drawings_idb_migrated_v1",
 "drawings_local_updated_at",
 "drawings_synced_signature"
 ]);

@@ -56,7 +56,7 @@ mergeTombstoneMaps,
 mergeDrawingsPayload,
 packCloudDrawings,
 unpackCloudDrawings
-} from "./drawings-storage.js?v=7";
+} from "./drawings-storage.js?v=8";
 
 import {
 withTimeout

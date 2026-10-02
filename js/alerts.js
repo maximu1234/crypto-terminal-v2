@@ -3360,7 +3360,7 @@ export async function clearAllDrawings(){
 const {
 purgeExchangeLocalDrawingsStorage
 } =
-await import("./drawings-storage.js?v=7");
+await import("./drawings-storage.js?v=8");
 
 const symbols =
 purgeExchangeLocalDrawingsStorage(

@@ -69,7 +69,7 @@ hasDrawingStopsPending
 
 import {
 touchShapeRevision
-} from "../drawings-storage.js?v=7";
+} from "../drawings-storage.js?v=8";
 
 import {
 applyStyleSnapshotToShape,

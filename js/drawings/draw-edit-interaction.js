@@ -45,11 +45,11 @@ isFibExtType
 
 import {
 touchShapeRevision
-} from "../drawings-storage.js?v=7";
+} from "../drawings-storage.js?v=8";
 
 import {
 stripAlertFromShape
-} from "./drawings-persist.js?v=19";
+} from "./drawings-persist.js?v=20";
 
 import {
 moveBrushHandle,

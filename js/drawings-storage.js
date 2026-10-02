@@ -7,7 +7,16 @@ drawingsStorageKey,
 parseDrawingsStorageKey,
 migrateLegacyDrawingsStorage,
 listDrawingsStorageKeys
-} from "./drawings-exchange-key.js?v=2";
+} from "./drawings-exchange-key.js?v=3";
+
+import {
+drawingsKvGet,
+drawingsKvSet,
+drawingsKvRemove,
+ensureDrawingsKvReady
+} from "./drawings-kv.js?v=1";
+
+void ensureDrawingsKvReady();
 
 const LEGACY_TF_RE =
 /^(.+)_(1|5|15|60|240|D)$/;
@@ -911,7 +920,7 @@ parsed.symbol
 );
 }
 
-localStorage.removeItem(
+drawingsKvRemove(
 key
 );
 
@@ -951,7 +960,7 @@ parsed.symbol
 );
 }
 
-localStorage.removeItem(
+drawingsKvRemove(
 key
 );
 
@@ -1091,7 +1100,7 @@ let list =
 try{
 list =
 JSON.parse(
-localStorage.getItem(
+drawingsKvGet(
 key
 ) ||
 "[]"
@@ -1123,7 +1132,7 @@ if(
 next.length !==
 list.length
 ){
-localStorage.setItem(
+drawingsKvSet(
 key,
 JSON.stringify(
 next
@@ -1173,7 +1182,7 @@ try{
 
 const list =
 JSON.parse(
-localStorage.getItem(
+drawingsKvGet(
 key
 ) ||
 "[]"
@@ -1261,7 +1270,7 @@ parsed.symbol
 continue;
 }
 
-localStorage.removeItem(
+drawingsKvRemove(
 key
 );
 
@@ -1333,7 +1342,7 @@ list.length ===
 if(
 !merge
 ){
-localStorage.removeItem(
+drawingsKvRemove(
 key
 );
 }
@@ -1354,7 +1363,7 @@ let localList =
 try{
 localList =
 JSON.parse(
-localStorage.getItem(
+drawingsKvGet(
 key
 ) ||
 "[]"
@@ -1381,7 +1390,7 @@ list
 
 }
 
-localStorage.setItem(
+drawingsKvSet(
 key,
 JSON.stringify(
 next
