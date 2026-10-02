@@ -24,7 +24,7 @@ export {
 export {
   createTradeChartOverlay,
   initTradeChartOverlay
-} from "./chart-overlay.js?v=18";
+} from "./chart-overlay.js?v=19";
 
 export {
   createTradeChartOrders,

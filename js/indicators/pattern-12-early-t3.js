@@ -5,7 +5,7 @@
  */
 import {
 isChartLayoutReady
-} from "../chart-layout-gate.js?v=3";
+} from "../chart-layout-gate.js?v=4";
 import {
 PATTERN_12_EARLY_T3_ID,
 defaultPattern12Settings,

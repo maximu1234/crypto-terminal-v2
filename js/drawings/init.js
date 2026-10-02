@@ -18,7 +18,7 @@ ensureDrawToolsVisible
 import {
 touchShapeRevision,
 recordDrawingTombstone
-} from "../drawings-storage.js?v=9";
+} from "../drawings-storage.js?v=10";
 
 import {
 EXCHANGE_CHANGED_EVENT,
@@ -2470,6 +2470,49 @@ true
 
 reapplyEphemeralDrawings();
 };
+
+void import("../drawings-kv.js?v=3").then(
+(
+m
+)=>{
+
+void m.ensureDrawingsKvReady().then(
+()=>{
+
+if(
+typeof loadDrawings ===
+"function"
+){
+loadDrawings();
+scheduleRedraw();
+}
+
+}
+);
+
+try{
+
+window.addEventListener(
+"drawings-kv-ready",
+()=>{
+
+if(
+typeof loadDrawings ===
+"function"
+){
+loadDrawings();
+scheduleRedraw();
+}
+
+}
+);
+
+}catch{
+/* ignore */
+}
+
+}
+);
 
 saveDrawings =
 opts=>{

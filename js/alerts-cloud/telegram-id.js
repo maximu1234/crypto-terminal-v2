@@ -1,7 +1,7 @@
 import {
 waitForCloudAuth,
 ensureCloudLoginResolved
-} from "../cloud-sync.js?v=73";
+} from "../cloud-sync.js?v=74";
 
 import {
 setAlertAuthCache,
@@ -590,5 +590,53 @@ return parsed;
 export async function clearTelegramChatId(){
 
 return saveTelegramChatId(null);
+
+}
+
+/** Удалить все локальные кэши chat id (logout / смена аккаунта). */
+export function clearAllTelegramChatCaches(){
+
+try{
+
+const toRemove =
+[];
+
+for(
+let i =
+0;
+i <
+localStorage.length;
+i++
+){
+
+const key =
+localStorage.key(
+i
+);
+
+if(
+key?.startsWith(
+TELEGRAM_CHAT_CACHE_PREFIX
+)
+){
+toRemove.push(
+key
+);
+}
+
+}
+
+for(
+const key of
+toRemove
+){
+localStorage.removeItem(
+key
+);
+}
+
+}catch{
+/* ignore */
+}
 
 }

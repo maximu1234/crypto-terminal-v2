@@ -12,8 +12,9 @@ isSystemAdminUser
 import {
 beginChromeOverlay,
 endChromeOverlay,
-isChromeOverlayActive
-} from "./chart-layout-gate.js?v=3";
+isChromeOverlayActive,
+chromeOverlayRedrawReason
+} from "./chart-layout-gate.js?v=4";
 
 import {
 openChromeSurface,
@@ -1066,6 +1067,7 @@ if(
 !alreadyOpen
 ){
 beginChromeOverlay();
+void chromeOverlayRedrawReason();
 }
 
 document.body.classList.add(

@@ -6,7 +6,7 @@ import {
 drawingsStorageKey,
 parseDrawingsStorageKey,
 migrateLegacyDrawingsStorage
-} from "./drawings-exchange-key.js?v=4";
+} from "./drawings-exchange-key.js?v=5";
 
 import {
 drawingsKvGet,
@@ -14,7 +14,7 @@ drawingsKvSet,
 drawingsKvRemove,
 drawingsKvListKeysForExchange,
 ensureDrawingsKvReady
-} from "./drawings-kv.js?v=2";
+} from "./drawings-kv.js?v=3";
 
 void ensureDrawingsKvReady();
 
@@ -887,6 +887,8 @@ export function purgeExchangeLocalDrawingsStorage(
 exchangeId
 ){
 
+void ensureDrawingsKvReady();
+
 migrateLegacyDrawingsStorage();
 
 const ex =
@@ -1113,6 +1115,8 @@ return removed;
 export function collectAllLocalDrawings(
 exchangeId
 ){
+
+void ensureDrawingsKvReady();
 
 migrateLegacyDrawingsStorage();
 

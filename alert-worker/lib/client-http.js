@@ -2,17 +2,15 @@ import { getWorkerConfig } from "./config.js";
 
 export function setCors(res, req) {
 
-  const origin =
-    req.headers.origin || "*";
+  const origin = String(req.headers.origin || "").trim();
 
-  res.setHeader(
-    "Access-Control-Allow-Origin",
-    origin
-  );
-  res.setHeader(
-    "Vary",
-    "Origin"
-  );
+  if (!origin) {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+  } else if (isAllowedTradeOrigin(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader("Vary", "Origin");
+  }
+
   res.setHeader(
     "Access-Control-Allow-Methods",
     "GET, POST, OPTIONS"
@@ -27,14 +25,15 @@ export function setCors(res, req) {
 /** Публичные GET (ссылка на бота) — без Authorization. */
 export function setPublicCors(res, req) {
 
-  const origin =
-    req.headers.origin || "*";
+  const origin = String(req.headers.origin || "").trim();
 
-  res.setHeader(
-    "Access-Control-Allow-Origin",
-    origin
-  );
-  res.setHeader("Vary", "Origin");
+  if (!origin) {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+  } else if (isAllowedTradeOrigin(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader("Vary", "Origin");
+  }
+
   res.setHeader(
     "Access-Control-Allow-Methods",
     "GET, OPTIONS"

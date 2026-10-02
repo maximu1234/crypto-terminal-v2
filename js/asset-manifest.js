@@ -243,7 +243,7 @@ Object.freeze({
 "trade/bingx/stream-bridge.js":
 6,
 "trade/bingx/chart-overlay.js":
-18,
+19,
 "trade/bingx/stop-amend.js":
 1,
 "trade/bingx/chart-orders.js":
@@ -309,7 +309,7 @@ Object.freeze({
 "terminal/terminal-chart-switch-veil.js":
 7,
 "chart-layout-gate.js":
-3,
+4,
 "chart-redraw-scheduler.js":
 2,
 "chrome-motion.js":
@@ -764,7 +764,7 @@ Object.freeze({
 "drawings.js":
 301,
 "drawings/init.js":
-234,
+235,
 "drawings/draw-prefs.js":
 13,
 "drawings/draw-edit-desktop.js":
@@ -856,13 +856,13 @@ Object.freeze({
 "drawings-tablet-input.js":
 12,
 "drawings-storage.js":
-9,
+10,
 "drawings-storage-poller.js":
 4,
 "drawings-idb.js":
 2,
 "drawings-kv.js":
-2,
+3,
 "draw-color-palette.js":
 7,
 "draw-ui-shared.js":
@@ -911,7 +911,7 @@ Object.freeze({
 
 /* ── JS: cloud / auth ── */
 "cloud-sync.js":
-73,
+74,
 "cloud-sync-throttle.js":
 3,
 "page-routes.js":
@@ -927,13 +927,13 @@ Object.freeze({
 "auth-storage.js":
 11,
 "auth-session-transfer.js":
-1,
+2,
 "auth-ui.js":
 69,
 "header-settings-shell.js":
 4,
 "app-settings-window.js":
-28,
+29,
 "app-settings-proxy-panel.js":
 6,
 "app-settings-system-panel.js":
@@ -955,7 +955,7 @@ Object.freeze({
 
 /* ── JS: alerts ── */
 "alerts.js":
-113,
+114,
 "alerts-cloud-sync.js":
 115,
 "alerts-cloud/garbage-purge.js":
@@ -963,7 +963,7 @@ Object.freeze({
 "alerts-cloud/debug.js":
 4,
 "alerts-cloud/telegram-id.js":
-2,
+3,
 "alerts-cloud/worker-client.js":
 8,
 "alerts-cloud/registry-sync.js":

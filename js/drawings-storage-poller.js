@@ -5,7 +5,7 @@
 import {
 drawingsKvGet,
 onDrawingsKvExternalChange
-} from "./drawings-kv.js?v=2";
+} from "./drawings-kv.js?v=3";
 
 const POLL_MS =
 400;

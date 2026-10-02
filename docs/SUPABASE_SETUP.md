@@ -1,6 +1,8 @@
 # Supabase — синхронизация избранного и рисунков
 
-**Избранное** (флаги), **рисунки** и **алерты в Telegram** (опционально) между устройствами после входа по email.
+**Избранное** (флаги) и **алерты в Telegram** (опционально) между устройствами после входа по email.
+
+**Рисунки (metka-193+):** локально в IndexedDB (`js/drawings-kv.js`). Cloud push/pull для drawings в runtime **заглушен** (`scheduleDrawingsCloudPush` / `pullDrawingsIfCloudNewer` — no-op). Таблицы `user_settings.drawings` / `user_drawings` могут оставаться в SQL для будущего восстановления sync; клиент их больше не пишет.
 
 Подробный перенос с тестовой ветки на production: [PRODUCTION_DEPLOY.md](./PRODUCTION_DEPLOY.md).
 
@@ -11,11 +13,11 @@
 3. Запускай по **блокам** из `supabase/schema.sql` (см. комментарии в файле)
 4. Закрой **Table Editor** для `user_settings` перед Run, если был deadlock
 
-Проверка: в `user_settings` есть колонки `drawings`, `drawings_updated_at`.
+Проверка: в `user_settings` есть колонки `drawings`, `drawings_updated_at` (legacy / future cloud).
 
 **Алерты + Telegram:** после блоков 1–3 выполни `supabase/migration-alerts-telegram.sql`. Worker: папка `alert-worker/`, деплой на Railway — см. `alert-worker/README.md`.
 
-**Рисунки (как алерты, по строкам):** выполни `supabase/migration-user-drawings.sql`, затем `supabase/migration-user-drawings-realtime.sql`. При первом входе старый JSON из `user_settings.drawings` импортируется в таблицу `user_drawings` автоматически.
+**Рисунки (SQL, опционально):** `supabase/migration-user-drawings.sql` + `migration-user-drawings-realtime.sql` — схема для возможного возврата cloud sync; не используется клиентом metka-193+.
 
 ## 2. Вход по email
 

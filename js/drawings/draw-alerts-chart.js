@@ -8,11 +8,11 @@ ALERT_LINE_DASH,
 alertPriceForDisplay,
 getActiveAlerts,
 isOscillatorAlert
-} from "../alerts.js?v=113";
+} from "../alerts.js?v=114";
 
 import {
 isChartLayoutReady
-} from "../chart-layout-gate.js?v=3";
+} from "../chart-layout-gate.js?v=4";
 
 import {
 registerChartScaleLabelProvider

@@ -45,7 +45,7 @@ isFibExtType
 
 import {
 touchShapeRevision
-} from "../drawings-storage.js?v=9";
+} from "../drawings-storage.js?v=10";
 
 import {
 stripAlertFromShape

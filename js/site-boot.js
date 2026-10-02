@@ -24,14 +24,14 @@ scheduleRegistryCloudSync
 
 import {
 stripAlertFlagsNotInRegistry
-} from "./alerts.js?v=113";
+} from "./alerts.js?v=114";
 
 import {
 isCloudLoggedIn,
 isCloudLoggedInEffective,
 isCloudSyncEnabled,
 onCloudSyncChange
-} from "./cloud-sync.js?v=73";
+} from "./cloud-sync.js?v=74";
 
 import {
 isSupabaseConfigured

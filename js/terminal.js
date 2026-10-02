@@ -60,12 +60,12 @@ import {
 getActiveAlerts,
 isMacdAlert,
 isRsiAlert
-} from "./alerts.js?v=113";
+} from "./alerts.js?v=114";
 
 import {
 persistFavoritesToCloud,
 onFavoritesRemoteUpdate
-} from "./cloud-sync.js?v=73";
+} from "./cloud-sync.js?v=74";
 
 import {
 createCandlestickChart,
@@ -162,7 +162,7 @@ DRAW_TOOL_HOTKEYS
 import {
 isChartLayoutReady,
 setChartLayoutReady
-} from "./chart-layout-gate.js?v=3";
+} from "./chart-layout-gate.js?v=4";
 
 import {
 registerCoinsState,

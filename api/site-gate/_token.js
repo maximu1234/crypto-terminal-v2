@@ -20,7 +20,7 @@ function fromB64url(s) {
 }
 
 const GATE_TTL_SEC = 30 * 24 * 60 * 60;
-const TRADE_TTL_SEC = 12 * 60 * 60;
+const TRADE_TTL_SEC = 2 * 60 * 60;
 
 function signSiteGateToken(secret, payload) {
   const body = b64url(JSON.stringify(payload));

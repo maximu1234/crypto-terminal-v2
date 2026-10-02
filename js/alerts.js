@@ -22,19 +22,19 @@ symbolFromDrawingsKey,
 parseDrawingsStorageKey,
 exchangeFromDrawingsKey,
 migrateLegacyDrawingsStorage
-} from "./drawings-exchange-key.js?v=4";
+} from "./drawings-exchange-key.js?v=5";
 
 import {
 drawingsKvGet,
 drawingsKvSet,
 drawingsKvRemove,
 drawingsKvListKeys
-} from "./drawings-kv.js?v=2";
+} from "./drawings-kv.js?v=3";
 
 export {
 isDrawingsStorageKey,
 symbolFromDrawingsKey
-} from "./drawings-exchange-key.js?v=4";
+} from "./drawings-exchange-key.js?v=5";
 
 const STORAGE_KEY = "price_alerts_v1";
 
@@ -1454,7 +1454,7 @@ opts =
 ){
 
 const { isCloudLoggedIn } =
-await import("./cloud-sync.js?v=73");
+await import("./cloud-sync.js?v=74");
 
 if(
 !isCloudLoggedIn()
@@ -3330,9 +3330,16 @@ return total;
 export async function clearAllDrawings(){
 
 const {
+ensureDrawingsKvReady
+} =
+await import("./drawings-kv.js?v=3");
+
+await ensureDrawingsKvReady();
+
+const {
 purgeExchangeLocalDrawingsStorage
 } =
-await import("./drawings-storage.js?v=9");
+await import("./drawings-storage.js?v=10");
 
 const symbols =
 purgeExchangeLocalDrawingsStorage(

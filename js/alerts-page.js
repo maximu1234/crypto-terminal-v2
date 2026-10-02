@@ -16,7 +16,7 @@ removeAlert,
 stripAlertFlagsNotInRegistry,
 removeAllAlerts,
 alertExchangeId
-} from "./alerts.js?v=113";
+} from "./alerts.js?v=114";
 
 import {
 buildAlertChartUrl
@@ -39,7 +39,7 @@ onCloudSyncChange,
 getCloudUserEmail,
 pullDeviceStateFromCloud,
 ensureCloudLoginResolved
-} from "./cloud-sync.js?v=73";
+} from "./cloud-sync.js?v=74";
 
 import {
 ensureCloudReady

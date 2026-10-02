@@ -13,7 +13,7 @@ completeAuthFromCallbackUrl,
 hasAuthCallbackInUrl,
 exportAuthSessionTransferString,
 importAuthSessionTransferString
-} from "./cloud-sync.js?v=73";
+} from "./cloud-sync.js?v=74";
 
 import {
 isSupabaseConfigured
@@ -31,7 +31,7 @@ import {
 initAppSettingsWindow,
 refreshAppSettingsAdminNav,
 openAppSettingsWindow
-} from "./app-settings-window.js?v=28";
+} from "./app-settings-window.js?v=29";
 
 import {
 ensureHeaderSettingsShell
@@ -1766,7 +1766,7 @@ const {
 getTelegramChatId
 } =
 await import(
-"./alerts-cloud/telegram-id.js?v=2"
+"./alerts-cloud/telegram-id.js?v=3"
 );
 const chatId =
 await getTelegramChatId();

@@ -12,11 +12,11 @@ formatRsiAlertLevel,
 isMacdAlert,
 isOscillatorAlert,
 isRsiAlert
-} from "./alerts.js?v=113";
+} from "./alerts.js?v=114";
 
 import {
 isCloudLoggedInEffective
-} from "./cloud-sync.js?v=73";
+} from "./cloud-sync.js?v=74";
 
 import {
 getTelegramChatId
@@ -37,7 +37,7 @@ isFineChartPointerType
 import {
 isChartLayoutReady,
 shouldDeferAlertBadgeSync
-} from "./chart-layout-gate.js?v=3";
+} from "./chart-layout-gate.js?v=4";
 
 const PLUS_ICON_W =
 22;

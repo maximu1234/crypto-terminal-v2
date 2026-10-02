@@ -17,7 +17,7 @@ TERMINAL_VISIBLE_BARS
 import {
 isChartLayoutReady,
 isChromeOverlayActive
-} from "../chart-layout-gate.js?v=3";
+} from "../chart-layout-gate.js?v=4";
 
 import {
 CHART_REDRAW_REASON

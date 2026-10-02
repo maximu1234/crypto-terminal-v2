@@ -24,7 +24,7 @@ readCachedTelegramChatId,
 getTelegramChatId,
 saveTelegramChatId,
 clearTelegramChatId
-} from "./alerts-cloud/telegram-id.js?v=2";
+} from "./alerts-cloud/telegram-id.js?v=3";
 
 export {
 pauseRegistryCloudSync,

@@ -55,7 +55,8 @@ Auth keepalive / chart→`price_alerts`. JWT + push + cloud lock + remote Status
 да. Live-бот на бирже, не на cloud alerts.
 
 **Standalone Algo Bot (`bot-app/`):** `site-bundle` **заморожен**
-(`bot-app/scripts/bundle-site.cjs` не тянет Multichart). Terminal `trading.*`
+(`bot-app/scripts/bundle-site.cjs` не тянет Multichart). См. `bot-app/SITE_BUNDLE.md`.
+Terminal `trading.*`
 IPC **не регистрируется**; preload отдаёт stub. Ключи — только
 `algo-exchange-credentials`. При фиксе движка бота синхронизировать вручную
 зеркала: `desktop/trading/algo-bot-*.cjs` ↔ `bot-app/trading/algo-bot-*.cjs`

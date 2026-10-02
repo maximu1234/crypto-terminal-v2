@@ -4,11 +4,11 @@
  */
 import {
 drawingsStorageKey
-} from "../drawings-exchange-key.js?v=4";
+} from "../drawings-exchange-key.js?v=5";
 
 import {
 drawingsKvGet
-} from "../drawings-kv.js?v=2";
+} from "../drawings-kv.js?v=3";
 
 const LEGACY_TF_KEYS =
 Object.freeze([

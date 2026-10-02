@@ -190,7 +190,7 @@ readAlgoPattern12Settings
 import {
 setChartLayoutReady,
 isChartLayoutReady
-} from "./chart-layout-gate.js?v=3";
+} from "./chart-layout-gate.js?v=4";
 
 import {
 invalidatePreservedVisibleLogicalRange,

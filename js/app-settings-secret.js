@@ -8,7 +8,7 @@ getSystemAdminEmails
 
 import {
 getEffectiveCloudUserEmail
-} from "./cloud-sync.js?v=73";
+} from "./cloud-sync.js?v=74";
 
 import {
 bindSupabaseUsagePrefsForm

@@ -5,7 +5,7 @@ ensureCloudReady
 import {
 ensureCloudLoginResolved,
 getEffectiveCloudUserEmail
-} from "./cloud-sync.js?v=73";
+} from "./cloud-sync.js?v=74";
 
 import {
 isSystemAdminUser,

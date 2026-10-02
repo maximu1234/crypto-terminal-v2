@@ -49,13 +49,13 @@ normalizeElliottShape
 
 import {
 drawingsStorageKey
-} from "../drawings-exchange-key.js?v=4";
+} from "../drawings-exchange-key.js?v=5";
 
 import {
 drawingsKvGet,
 drawingsKvSet,
 ensureDrawingsKvReady
-} from "../drawings-kv.js?v=2";
+} from "../drawings-kv.js?v=3";
 
 void ensureDrawingsKvReady();
 

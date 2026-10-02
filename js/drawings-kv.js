@@ -12,7 +12,7 @@ isDrawingsStorageKey,
 isDrawingsMetaStorageKey,
 migrateLegacyDrawingsStorage,
 parseDrawingsStorageKey
-} from "./drawings-exchange-key.js?v=4";
+} from "./drawings-exchange-key.js?v=5";
 
 import {
 drawingsIdbAvailable,
@@ -137,9 +137,58 @@ DRAWINGS_IDB_LS_PURGED_KEY
 
 }
 
-function idbReady(){
+/** IDB present and recent writes/opens have not failed. */
+let idbHealthy =
+drawingsIdbAvailable();
 
-return drawingsIdbAvailable();
+function idbUsable(){
+
+return drawingsIdbAvailable() &&
+idbHealthy;
+
+}
+
+function markIdbUnhealthy(){
+
+if(
+!idbHealthy
+){
+return;
+}
+
+idbHealthy =
+false;
+
+try{
+
+for(
+const [
+key,
+value
+] of
+cache
+){
+
+if(
+shouldUseKv(
+key
+)
+){
+lsSet(
+key,
+value
+);
+}
+
+}
+
+lsRemove(
+DRAWINGS_IDB_LS_PURGED_KEY
+);
+
+}catch{
+/* ignore */
+}
 
 }
 
@@ -336,10 +385,16 @@ key
 null;
 }
 
-/* Migration window / IDB-down fallback — never await IDB on critical path. */
+if(
+!hydrated
+){
+void ensureDrawingsKvReady();
+}
+
+/* LS mirror: migration window, IDB-down, or unhealthy fallback. */
 if(
 !lsPayloadsPurged() ||
-!idbReady()
+!idbUsable()
 ){
 
 const fromLs =
@@ -397,7 +452,7 @@ v
 );
 
 if(
-idbReady()
+idbUsable()
 ){
 
 void drawingsIdbSet(
@@ -405,7 +460,11 @@ key,
 v
 ).catch(
 ()=>{
-/* ignore */
+markIdbUnhealthy();
+lsSet(
+key,
+v
+);
 }
 );
 
@@ -449,20 +508,19 @@ key
 );
 
 if(
-idbReady()
+idbUsable()
 ){
 
 void drawingsIdbDelete(
 key
 ).catch(
 ()=>{
-/* ignore */
+markIdbUnhealthy();
 }
 );
 
 }
 
-/* Always drop any leftover LS mirror (migration / IDB-down cleanup). */
 lsRemove(
 key
 );
@@ -514,7 +572,9 @@ key
 }
 
 if(
-!lsPayloadsPurged()
+!lsPayloadsPurged() ||
+!idbUsable() ||
+!hydrated
 ){
 
 try{
@@ -629,7 +689,7 @@ return true;
 async function migrateLocalStorageToIdb(){
 
 if(
-!idbReady()
+!idbUsable()
 ){
 return;
 }
@@ -706,7 +766,7 @@ DRAWINGS_IDB_MIGRATED_KEY,
 function purgeLocalStoragePayloads(){
 
 if(
-!idbReady()
+!idbUsable()
 ){
 return;
 }
@@ -771,17 +831,22 @@ DRAWINGS_IDB_LS_PURGED_KEY,
 async function hydrateFromIdb(){
 
 if(
-!idbReady()
+!drawingsIdbAvailable()
 ){
 hydrated =
 true;
 return;
 }
 
+try{
+
 await migrateLocalStorageToIdb();
 
 const all =
 await drawingsIdbGetAll();
+
+const changed =
+[];
 
 for(
 const [
@@ -799,10 +864,31 @@ key
 continue;
 }
 
+const prev =
+cache.has(
+key
+)
+? cache.get(
+key
+)
+: undefined;
+
 cache.set(
 key,
 value
 );
+
+if(
+prev !==
+value
+){
+changed.push(
+[
+key,
+value
+]
+);
+}
 
 }
 
@@ -811,10 +897,49 @@ purgeLocalStoragePayloads();
 hydrated =
 true;
 
+for(
+const [
+key,
+value
+] of
+changed
+){
+notifyExternal(
+key,
+value
+);
+}
+
+try{
+
+if(
+typeof window !==
+"undefined"
+){
+window.dispatchEvent(
+new CustomEvent(
+"drawings-kv-ready"
+)
+);
+}
+
+}catch{
+/* ignore */
+}
+
+}catch{
+
+markIdbUnhealthy();
+hydrated =
+true;
+
+}
+
 }
 
 /**
- * Background hydrate. Safe to call many times; never await on critical path.
+ * Background hydrate. Safe to call many times; never await on candle paint.
+ * Prefer awaiting before enumerate / first chart load.
  * @returns {Promise<void>}
  */
 export function ensureDrawingsKvReady(){
@@ -828,6 +953,7 @@ return hydratePromise;
 hydratePromise =
 hydrateFromIdb().catch(
 ()=>{
+markIdbUnhealthy();
 hydrated =
 true;
 }
@@ -843,34 +969,102 @@ return hydrated;
 
 }
 
-/* Kick hydrate on import — idle-ish, non-blocking. */
+export function isDrawingsIdbHealthy(){
+
+return idbUsable();
+
+}
+
+async function refreshCacheFromIdb(){
+
+if(
+!idbUsable() ||
+typeof document !==
+"undefined" &&
+document.visibilityState !==
+"visible"
+){
+return;
+}
+
+try{
+
+const all =
+await drawingsIdbGetAll();
+const seen =
+new Set();
+
+for(
+const [
+key,
+value
+] of
+all
+){
+
+if(
+!shouldUseKv(
+key
+)
+){
+continue;
+}
+
+seen.add(
+key
+);
+
+const prev =
+cache.get(
+key
+);
+
+if(
+prev ===
+value
+){
+continue;
+}
+
+cache.set(
+key,
+value
+);
+notifyExternal(
+key,
+value
+);
+
+}
+
+}catch{
+markIdbUnhealthy();
+}
+
+}
+
+/* Kick hydrate immediately — do not wait for idle (avoids empty first paint). */
+void ensureDrawingsKvReady();
+
 try{
 
 if(
-typeof requestIdleCallback ===
-"function"
+typeof document !==
+"undefined"
 ){
-requestIdleCallback(
+document.addEventListener(
+"visibilitychange",
 ()=>{
-void ensureDrawingsKvReady();
-},
-{
-timeout:
-2500
+if(
+document.visibilityState ===
+"visible"
+){
+void refreshCacheFromIdb();
 }
-);
-}else if(
-typeof setTimeout ===
-"function"
-){
-setTimeout(
-()=>{
-void ensureDrawingsKvReady();
-},
-0
+}
 );
 }
 
 }catch{
-void ensureDrawingsKvReady();
+/* ignore */
 }

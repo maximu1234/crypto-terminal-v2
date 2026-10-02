@@ -2,6 +2,8 @@
 .vercel
 .env
 .env.local
+.env.*
+node_modules/
 js/supabase-env.js
 bot-app/site-bundle/js/supabase-env.js
 *-api-credentials.json

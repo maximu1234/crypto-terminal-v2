@@ -479,6 +479,10 @@ LEGACY_MIGRATED_KEY,
 
 }
 
+/**
+ * @deprecated Prefer `drawingsKvListKeysForExchange` from drawings-kv.js.
+ * LS-only scan — empty after IDB LS purge (metka-193+).
+ */
 export function listDrawingsStorageKeys(
 exchangeId
 ){
