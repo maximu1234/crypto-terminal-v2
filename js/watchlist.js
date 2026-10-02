@@ -74,7 +74,7 @@ initWidgetDrawToolsDropdown,
 wireWidgetDrawToolMenu,
 closeAllWidgetDrawToolsMenus,
 resetWidgetDrawToolsMenus
-} from "./watchlist-draw-ui.js?v=28";
+} from "./watchlist-draw-ui.js?v=29";
 
 import {
 ensureDrawToolsVisible

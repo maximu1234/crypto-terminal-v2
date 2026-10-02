@@ -62,7 +62,7 @@ export {
 
 export {
   initTradeBookPanel
-} from "./book-panel.js?v=6";
+} from "./book-panel.js?v=7";
 
 export {
   getTradeConfig
@@ -130,7 +130,7 @@ export {
   buildDiaryPayload,
   openPnlShareModal,
   openPnlShareDiaryModal
-} from "./pnl-share-modal.js?v=3";
+} from "./pnl-share-modal.js?v=4";
 
 export {
   mountTradeChartMarkersToggle,

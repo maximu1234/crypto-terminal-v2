@@ -18,7 +18,7 @@ isChromeOverlayActive
 import {
 openChromeSurface,
 closeChromeSurface
-} from "./chrome-motion.js?v=4";
+} from "./chrome-motion.js?v=5";
 
 import {
 mountTelegramSettingsPanel
@@ -444,7 +444,7 @@ const {
 closeCloudSettingsDropdown
 } =
 await import(
-"./auth-ui.js?v=68"
+"./auth-ui.js?v=69"
 );
 closeCloudSettingsDropdown();
 await openAppSettingsWindow();
@@ -708,7 +708,7 @@ const {
 mountCloudAuthPanelInSettings
 } =
 await import(
-"./auth-ui.js?v=68"
+"./auth-ui.js?v=69"
 );
 
 mountCloudAuthPanelInSettings(
@@ -775,7 +775,7 @@ mountExchangeConnectionsPanel,
 updateTradeExchangeConnectionChrome
 } =
 await import(
-"./trade-exchange-settings.js?v=24"
+"./trade-exchange-settings.js?v=25"
 );
 
 const host =

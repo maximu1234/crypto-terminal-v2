@@ -2,6 +2,11 @@
  * Left-toolbar flyout for Elliott Waves subtypes.
  */
 import {
+openChromeSurface,
+closeChromeSurface
+} from "../chrome-motion.js?v=5";
+
+import {
 ELLIOTT_WAVE_TYPES,
 ELLIOTT_PATTERN_TYPES,
 ELLIOTT_TOOL_META,
@@ -157,6 +162,9 @@ window.innerHeight;
 el.classList.remove(
 "hidden"
 );
+openChromeSurface(
+el
+);
 
 const menuW =
 Math.max(
@@ -218,28 +226,33 @@ el.style.top =
 
 export function closeElliottFlyout(){
 
-if(
-flyoutEl
-){
-flyoutEl.classList.add(
-"hidden"
-);
-}
+const btn =
+anchorBtn;
+
+anchorBtn =
+null;
 
 if(
-anchorBtn
+btn
 ){
-anchorBtn.classList.remove(
+btn.classList.remove(
 "draw-tool-group-btn--open"
 );
-anchorBtn.setAttribute(
+btn.setAttribute(
 "aria-expanded",
 "false"
 );
 }
 
-anchorBtn =
-null;
+if(
+!flyoutEl
+){
+return;
+}
+
+closeChromeSurface(
+flyoutEl
+);
 
 }
 

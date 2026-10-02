@@ -32,7 +32,7 @@ import {
 import {
   openChromeSurface,
   closeChromeSurface
-} from "../../chrome-motion.js?v=4";
+} from "../../chrome-motion.js?v=5";
 
 import {
   diaryLoadPeriod,

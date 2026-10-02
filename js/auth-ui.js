@@ -31,7 +31,7 @@ import {
 initAppSettingsWindow,
 refreshAppSettingsAdminNav,
 openAppSettingsWindow
-} from "./app-settings-window.js?v=27";
+} from "./app-settings-window.js?v=28";
 
 import {
 ensureHeaderSettingsShell
@@ -40,7 +40,7 @@ ensureHeaderSettingsShell
 import {
 openChromeSurface,
 closeChromeSurface
-} from "./chrome-motion.js?v=4";
+} from "./chrome-motion.js?v=5";
 
 let cloudEnvConfigured = false;
 let cloudSdkError = "";

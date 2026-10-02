@@ -11,7 +11,7 @@ import {
 } from "../page-routes.js?v=7";
 import {
   initTradeExchangeSettings
-} from "../trade-exchange-settings.js?v=24";
+} from "../trade-exchange-settings.js?v=25";
 import {
   initTradeVolumePresets
 } from "../trade-volume-presets.js?v=11";

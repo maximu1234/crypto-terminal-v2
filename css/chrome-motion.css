@@ -204,3 +204,58 @@ body.trade-page #list .trade-book-panel.chrome-surface.chrome-surface--shown{
 .trade-pnl-share-overlay.chrome-surface.chrome-surface--closing[hidden]{
   display:flex !important;
 }
+
+/* --- Draw tool flyouts / exchange dropdown --- */
+.elliott-flyout.chrome-surface,
+.fib-flyout.chrome-surface,
+.trade-exchange-dropdown.chrome-surface{
+  opacity:0;
+  transform:translateY(-4px);
+  transition:
+    opacity var(--chrome-motion-ms) var(--chrome-motion-ease),
+    transform var(--chrome-motion-ms) var(--chrome-motion-ease);
+}
+
+.elliott-flyout.chrome-surface.chrome-surface--shown,
+.fib-flyout.chrome-surface.chrome-surface--shown,
+.trade-exchange-dropdown.chrome-surface.chrome-surface--shown{
+  opacity:1;
+  transform:none;
+}
+
+.elliott-flyout.chrome-surface.chrome-surface--closing,
+.fib-flyout.chrome-surface.chrome-surface--closing,
+.trade-exchange-dropdown.chrome-surface.chrome-surface--closing{
+  display:block !important;
+  pointer-events:none;
+  opacity:0;
+  transform:translateY(-3px);
+}
+
+.trade-exchange-confirm-overlay.chrome-surface{
+  opacity:0;
+  transition:opacity var(--chrome-motion-ms) var(--chrome-motion-ease);
+}
+
+.trade-exchange-confirm-overlay.chrome-surface .trade-exchange-confirm-dialog{
+  transform:translateY(8px) scale(0.98);
+  opacity:0.92;
+  transition:
+    transform var(--chrome-motion-ms) var(--chrome-motion-ease),
+    opacity var(--chrome-motion-ms) var(--chrome-motion-ease);
+}
+
+.trade-exchange-confirm-overlay.chrome-surface.chrome-surface--shown{
+  opacity:1;
+}
+
+.trade-exchange-confirm-overlay.chrome-surface.chrome-surface--shown .trade-exchange-confirm-dialog{
+  transform:none;
+  opacity:1;
+}
+
+.trade-exchange-confirm-overlay.chrome-surface.chrome-surface--closing{
+  display:flex !important;
+  pointer-events:none;
+  opacity:0;
+}

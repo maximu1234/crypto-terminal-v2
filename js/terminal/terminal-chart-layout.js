@@ -32,6 +32,34 @@ null;
 let lastChartLayoutKey =
 "";
 
+let layoutDragWasActive =
+false;
+
+function isTerminalLayoutDragging(){
+
+try{
+
+const body =
+document.body;
+
+return !!(
+body?.classList?.contains(
+"coins-layout-dragging-h"
+) ||
+body?.classList?.contains(
+"coins-layout-dragging-v"
+) ||
+body?.classList?.contains(
+"trade-book-panel-dragging"
+)
+);
+
+}catch{
+return false;
+}
+
+}
+
 export function registerCoinsChartLayoutContext(
 ctx
 ){
@@ -655,11 +683,30 @@ layoutRsiBand?.();
 
 export function resizeCharts(){
 
+const dragging =
+isTerminalLayoutDragging();
+const applied =
+applyChartDimensions();
+
 if(
-!applyChartDimensions()
+!applied
 ){
-return;
+
+if(
+layoutDragWasActive &&
+!dragging
+){
+layoutDragWasActive =
+false;
+syncDrawingToolsLayout();
 }
+
+return;
+
+}
+
+layoutDragWasActive =
+dragging;
 
 const {
 getCandles,
@@ -718,7 +765,11 @@ layoutRsiBand?.();
 
 }
 
+if(
+!dragging
+){
 syncDrawingToolsLayout();
+}
 
 }
 

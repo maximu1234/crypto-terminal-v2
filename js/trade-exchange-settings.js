@@ -24,6 +24,11 @@ import {
 maskTradeDisplay
 } from "./trade-pnl-privacy.js?v=1";
 
+import {
+openChromeSurface,
+closeChromeSurface
+} from "./chrome-motion.js?v=5";
+
 function tradingApi(){
 
 return window.cryptoTerminalDesktop?.trading;
@@ -163,9 +168,17 @@ document.body.appendChild(
 overlay
 );
 
+openChromeSurface(
+overlay
+);
+
 const finish =
 confirmed=>{
 
+closeChromeSurface(
+overlay,
+{
+onDone:()=>{
 overlay.remove();
 document.removeEventListener(
 "keydown",
@@ -173,6 +186,9 @@ onKey
 );
 resolve(
 confirmed
+);
+}
+}
 );
 
 };
@@ -394,10 +410,6 @@ function setOpen(
 open
 ){
 
-dropdown.classList.toggle(
-"hidden",
-!open
-);
 btn.setAttribute(
 "aria-expanded",
 open
@@ -408,9 +420,21 @@ open
 if(
 open
 ){
+dropdown.classList.remove(
+"hidden"
+);
 positionPanel?.();
+openChromeSurface(
+dropdown
+);
 onOpen?.();
-}else{
+return;
+}
+
+closeChromeSurface(
+dropdown,
+{
+onDone:()=>{
 onClose?.();
 dropdown.classList.remove(
 "trade-exchange-dropdown--portaled"
@@ -424,6 +448,8 @@ dropdown.style.right =
 dropdown.style.bottom =
 "";
 }
+}
+);
 
 }
 

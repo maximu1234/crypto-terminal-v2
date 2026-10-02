@@ -13,7 +13,7 @@ EXCHANGE_CHANGED_EVENT
 
 import {
 openChromeSurface
-} from "./chrome-motion.js?v=4";
+} from "./chrome-motion.js?v=5";
 
 import {
 isScreenerWidgetCurrent as isScreenerWidgetCurrentGuard
@@ -73,7 +73,7 @@ createTickerUiBatcher
 
 import {
 mountReleaseMarker
-} from "./release-marker.js?v=129";
+} from "./release-marker.js?v=130";
 
 import {
 saveScreenerState,
@@ -92,7 +92,7 @@ FAVORITES_BY_EXCHANGE_KEY
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=68";
+} from "./auth-ui.js?v=69";
 
 import {
 ensureSettled,

@@ -43,7 +43,7 @@ ensureCloudLoginResolved
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=68";
+} from "./auth-ui.js?v=69";
 
 import {
 TELEGRAM_BOT_USERNAME,

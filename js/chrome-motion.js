@@ -7,6 +7,29 @@
 export const CHROME_MOTION_MS =
 180;
 
+const CLOSE_GEN_KEY =
+"__chromeCloseGen";
+
+function bumpCloseGen(
+el
+){
+
+const next =
+(
+Number(
+el[CLOSE_GEN_KEY]
+) ||
+0
+) +
+1;
+
+el[CLOSE_GEN_KEY] =
+next;
+
+return next;
+
+}
+
 export function prefersReducedChromeMotion(){
 
 try{
@@ -33,6 +56,11 @@ if(
 ){
 return;
 }
+
+/* Invalidate any in-flight close so settle() cannot hide a reopened surface. */
+bumpCloseGen(
+el
+);
 
 const shownClass =
 opts.shownClass ||
@@ -95,7 +123,19 @@ onDone?.();
 return;
 }
 
+const closeGen =
+bumpCloseGen(
+el
+);
+
 function finish(){
+
+if(
+el[CLOSE_GEN_KEY] !==
+closeGen
+){
+return;
+}
 
 el.classList.add(
 "hidden"

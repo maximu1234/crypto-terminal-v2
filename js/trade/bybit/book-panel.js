@@ -20,7 +20,7 @@ getTradeConfig
 import {
 openChromeSurface,
 closeChromeSurface
-} from "../../chrome-motion.js?v=4";
+} from "../../chrome-motion.js?v=5";
 
 import {
 applyPositionColumnLayout,
@@ -34,7 +34,7 @@ columnResizeHandle
 
 import {
 openPnlShareModal
-} from "./pnl-share-modal.js?v=3";
+} from "./pnl-share-modal.js?v=4";
 
 import {
 formatAlertDate,

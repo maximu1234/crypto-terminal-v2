@@ -149,7 +149,7 @@ Object.freeze({
 "exchange-trading-gate.js":
 4,
 "trade-exchange-settings.js":
-24,
+25,
 "trade-volume-presets.js":
 11,
 "trade-leverage-settings.js":
@@ -201,7 +201,7 @@ Object.freeze({
 "trade/bybit/market-entry.js":
 9,
 "trade/bybit/book-panel.js":
-6,
+7,
 "trade/bybit/position-open-orders.js":
 1,
 "trade/bybit/diary/index.js":
@@ -229,7 +229,7 @@ Object.freeze({
 "trade/bybit/book-columns.js":
 1,
 "trade/bybit/pnl-share-modal.js":
-3,
+4,
 "trade/bybit/diary/page.js":
 9,
 "trade/bybit/diary/period.js":
@@ -251,7 +251,7 @@ Object.freeze({
 "trade/bingx/chart-execution-markers.js":
 6,
 "trade/bingx/pnl-share-modal.js":
-3,
+4,
 "trade/bingx/book-columns.js":
 1,
 "trade/bingx/leverage-settings.js":
@@ -269,7 +269,7 @@ Object.freeze({
 "trade/bingx/market-entry.js":
 12,
 "trade/bingx/book-panel.js":
-8,
+9,
 "trade/bingx/position-open-orders.js":
 1,
 "trade/bingx/diary/index.js":
@@ -291,7 +291,7 @@ Object.freeze({
 "chart-page.js":
 8,
 "terminal.js":
-508,
+509,
 "terminal-multi-chart.js":
 27,
 "terminal-screener-chart-pane.js":
@@ -299,7 +299,7 @@ Object.freeze({
 "terminal-layout-picker.js":
 11,
 "terminal/terminal-chart-layout.js":
-14,
+15,
 "terminal/coins-tablet-list-nav.js":
 2,
 "terminal/chart-display-style-ui.js":
@@ -313,7 +313,7 @@ Object.freeze({
 "chart-redraw-scheduler.js":
 2,
 "chrome-motion.js":
-4,
+5,
 "app-boot-splash.js":
 2,
 "chart-visible-range.js":
@@ -578,7 +578,7 @@ Object.freeze({
 "algo-trading/diary/detail-ui.js":
 2,
 "algo-trading/diary/modal.js":
-12,
+13,
 "algo-trading/diary/pnl-share-modal.js":
 1,
 "indicators/horizontal-volume.js":
@@ -660,7 +660,7 @@ Object.freeze({
 "watchlist.js":
 133,
 "screener.js":
-140,
+141,
 "ipad-web-viewport.js":
 2,
 "screener-widget-guard.js":
@@ -674,7 +674,7 @@ Object.freeze({
 "scalping-dom/boot.js":
 57,
 "scalping-dom/host.js":
-3,
+4,
 "scalping-dom/depth-feed.js":
 39,
 "scalping-dom/depth-store.js":
@@ -708,7 +708,7 @@ Object.freeze({
 "screener-widget-zoom.js":
 34,
 "release-marker.js":
-129,
+130,
 "focus-blur-after-pick.js":
 3,
 "site-boot.js":
@@ -764,7 +764,7 @@ Object.freeze({
 "drawings.js":
 301,
 "drawings/init.js":
-231,
+232,
 "drawings/draw-prefs.js":
 13,
 "drawings/draw-edit-desktop.js":
@@ -774,7 +774,7 @@ Object.freeze({
 "drawings/drawings-persist.js":
 19,
 "drawings/draw-style-bar.js":
-66,
+67,
 "drawings/draw-templates.js":
 20,
 "drawings/draw-alerts-chart.js":
@@ -850,9 +850,9 @@ Object.freeze({
 "drawings/draw-elliott-settings.js":
 8,
 "drawings/elliott-toolbar.js":
-4,
+5,
 "drawings/fib-toolbar.js":
-4,
+5,
 "drawings-tablet-input.js":
 12,
 "drawings-storage.js":
@@ -862,13 +862,13 @@ Object.freeze({
 "draw-color-palette.js":
 7,
 "draw-ui-shared.js":
-44,
+45,
 "draw-toolbar-icon-data.js":
 39,
 "draw-tools-visible.js":
 2,
 "watchlist-draw-ui.js":
-28,
+29,
 "price-alert-ui.js":
 51,
 "indicators.js":
@@ -925,11 +925,11 @@ Object.freeze({
 "auth-session-transfer.js":
 1,
 "auth-ui.js":
-68,
+69,
 "header-settings-shell.js":
 4,
 "app-settings-window.js":
-27,
+28,
 "app-settings-proxy-panel.js":
 6,
 "app-settings-system-panel.js":
@@ -1017,7 +1017,7 @@ Object.freeze({
 "common.css":
 65,
 "chrome-motion.css":
-4,
+5,
 "screener.css":
 58,
 "terminal.css":

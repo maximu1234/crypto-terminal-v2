@@ -53,9 +53,10 @@ alerts registry / monitor / cloud (как сейчас по срочности)
 | 0 | Baseline + ограждения + этот документ | — / prep | done |
 | 1 | Chrome ≠ chart: scheduler + skip no-op resize + settings overlay pause | **182** | done |
 | 2 | Motion: coins panel, стакан, настройки | **183** | done |
-| 2b | Полный аудит всех «плавных» chrome-элементов | **185** | done (app-wide batch) |
+| 2b | Полный аудит всех «плавных» chrome-элементов | **185–186** | done (app-wide + flyouts/exchange) |
 | 3 | Boot skeleton (Terminal + Screener) | **184** | done |
 | 4 | Lazy **только** не-алерты (favorites idle; alerts immediate) | **185** | done |
+| 1b | Skip drawing sync during coins/book layout drag | **186** | done |
 | 5 | IndexedDB drawings | позже | pending |
 | 6–7 | CDN hash / workers | по профилю | pending |
 

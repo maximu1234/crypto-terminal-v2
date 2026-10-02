@@ -5,11 +5,11 @@ formatDrawColor
 
 import {
 TRASH_ICON_SVG
-} from "../draw-ui-shared.js?v=44";
+} from "../draw-ui-shared.js?v=45";
 
 import {
 closeAllWidgetDrawToolsMenus
-} from "../watchlist-draw-ui.js?v=28";
+} from "../watchlist-draw-ui.js?v=29";
 
 import {
 ensureDrawToolsVisible
@@ -169,7 +169,7 @@ createDrawingsPersist
 
 import {
 createDrawStyleBar
-} from "./draw-style-bar.js?v=66";
+} from "./draw-style-bar.js?v=67";
 
 import {
 createDrawAlertsChart
@@ -193,12 +193,12 @@ listElliottHandles
 import {
 closeElliottFlyout,
 syncElliottGroupActive
-} from "./elliott-toolbar.js?v=4";
+} from "./elliott-toolbar.js?v=5";
 
 import {
 closeFibFlyout,
 syncFibGroupActive
-} from "./fib-toolbar.js?v=4";
+} from "./fib-toolbar.js?v=5";
 
 import {
 createBrushPlacement

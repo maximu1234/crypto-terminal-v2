@@ -24,7 +24,7 @@ clearBybitNetworkIssue
 
 import {
 openChromeSurface
-} from "./chrome-motion.js?v=4";
+} from "./chrome-motion.js?v=5";
 
 import {
 resolveUrlExchangeDeepLink
@@ -54,7 +54,7 @@ seedWatchlistTfOnBlueFlag
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=68";
+} from "./auth-ui.js?v=69";
 
 import {
 getActiveAlerts,
@@ -128,7 +128,7 @@ createSharedDrawUndoStack
 import {
 mountDrawToolbar,
 mountDrawToolIcons
-} from "./draw-ui-shared.js?v=44";
+} from "./draw-ui-shared.js?v=45";
 import {
 mountTerminalChecklist
 } from "./terminal/terminal-checklist.js?v=1";
@@ -233,7 +233,7 @@ syncCoinsChartLinkedViewports,
 resizeCharts,
 scheduleResizeCharts,
 applyDefaultZoom
-} from "./terminal/terminal-chart-layout.js?v=14";
+} from "./terminal/terminal-chart-layout.js?v=15";
 
 import {
 placeCoinsTabletListNav

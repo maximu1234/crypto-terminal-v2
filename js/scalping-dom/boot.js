@@ -15,7 +15,7 @@ ensureScalpingDomStylesheet,
 mountScalpingDomHost,
 removeScalpingDomStylesheet,
 unmountScalpingDomHost
-} from "./host.js?v=3";
+} from "./host.js?v=4";
 
 import {
 createDepthFeed

@@ -41,7 +41,7 @@ initTradeDiaryNav
 import {
 openPnlShareDiaryModal,
 PNL_SHARE_CONTROL_HTML
-} from "../pnl-share-modal.js?v=3";
+} from "../pnl-share-modal.js?v=4";
 
 import {
 renderDiaryPeriodAnalytics,
