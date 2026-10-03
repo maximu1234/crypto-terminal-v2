@@ -20,6 +20,8 @@ const {
   planRsiTouchFlipBookSync,
   normalizeBalancePct,
   normalizeMarginMode,
+  normalizeLeverage,
+  clampLeverageToSymbol,
   allocatedBalanceUsdt,
   equalShareBudget,
   rsiTouchFlipCycleSlHit,
@@ -55,10 +57,13 @@ let queuedBookRows = null;
 let queuedBalancePct = null;
 /** @type {"cross"|"isolated"|null} */
 let queuedMarginMode = null;
+/** @type {number|null} */
+let queuedLeverage = null;
 let allocPct = 100;
 let allocatedUsdt = 0;
 /** @type {"cross"|"isolated"} */
 let sessionMarginMode = "cross";
+let sessionLeverage = 10;
 let startCancelRequested = false;
 
 function requestRsiTouchFlipStartCancel() {
@@ -216,22 +221,121 @@ function wantedMarginMode() {
   return sessionMarginMode === "isolated" ? "isolated" : "cross";
 }
 
+function wantedLeverage() {
+  return normalizeLeverage(sessionLeverage);
+}
+
+function leverageUnchanged(result) {
+  return String(result?.retCode || result?.data?.retCode || "") === "110043";
+}
+
+/**
+ * Set the book leverage, dropping to the symbol maximum the exchange accepts.
+ * @param {string} symbol
+ * @param {number} wanted
+ * @param {"cross"|"isolated"} marginMode
+ * @param {object} settings
+ */
+async function applySymbolLeverage(symbol, wanted, marginMode, settings) {
+  const minLev = Math.max(1, Math.round(Number(settings?.minLeverage) || 1));
+  const maxLev = Math.max(
+    minLev,
+    Math.round(Number(settings?.maxLeverage) || wanted)
+  );
+  const target = clampLeverageToSymbol(wanted, minLev, maxLev);
+
+  if (
+    Number(settings?.leverage) === target &&
+    settings?.marginMode === marginMode
+  ) {
+    return {
+      ok: true,
+      leverage: target,
+      lowered: target < normalizeLeverage(wanted)
+    };
+  }
+
+  const attempt = async (leverage) => {
+    const result = await algoRest.applySymbolPositionSettings(symbol, {
+      leverage,
+      marginMode
+    });
+    if (result?.ok !== false || leverageUnchanged(result)) {
+      return { ok: true, leverage, lowered: leverage < normalizeLeverage(wanted), result };
+    }
+    return result;
+  };
+
+  const first = await attempt(target);
+  if (first?.ok !== false) {
+    return first;
+  }
+  if (!isLeverageError(first) || target <= minLev) {
+    return first;
+  }
+
+  let high = target - 1;
+  let low = minLev;
+  let accepted = null;
+  let lastFail = first;
+  while (low <= high) {
+    const mid = Math.floor((low + high) / 2);
+    const next = await attempt(mid);
+    if (next?.ok !== false) {
+      accepted = mid;
+      low = mid + 1;
+    } else if (isLeverageError(next)) {
+      lastFail = next;
+      high = mid - 1;
+    } else {
+      return next;
+    }
+  }
+  if (accepted != null) {
+    return { ok: true, leverage: accepted, lowered: true };
+  }
+  return lastFail;
+}
+
+function noteAppliedLeverage(state, applied) {
+  if (!state || applied?.ok === false || !Number.isFinite(applied?.leverage)) {
+    return;
+  }
+  const lev = applied.leverage;
+  if (applied.lowered && state.lastLoggedLeverage !== lev) {
+    const text = `${state.symbol}: плечо ${wantedLeverage()}x недоступно, ставим ${lev}x`;
+    sessionLog.appendNote?.(text);
+    pushSignal({
+      ts: Date.now(),
+      symbol: state.symbol,
+      text
+    });
+  }
+  state.lastLoggedLeverage = lev;
+}
+
 async function ensureTickerMarginMode(state) {
   const wanted = wantedMarginMode();
   const settings = await algoRest.getSymbolPositionSettings(state.symbol);
   if (!settings?.ok) {
     return settings;
   }
-  if (settings.marginMode === wanted) {
-    return { ok: true };
+  const marginBlocked = state.position !== "flat" || state.mode === "wait-flat";
+  const marginToApply = marginBlocked ? settings.marginMode : wanted;
+  const applied = await applySymbolLeverage(
+    state.symbol,
+    wantedLeverage(),
+    marginToApply,
+    settings
+  );
+  noteAppliedLeverage(state, applied);
+  if (applied?.ok === false) {
+    return applied;
   }
-  if (state.position !== "flat" || state.mode === "wait-flat") {
-    return { ok: true, deferred: true };
+  if (marginBlocked && settings.marginMode !== wanted) {
+    return { ok: true, deferred: true, leverage: applied.leverage };
   }
-  return algoRest.applySymbolPositionSettings(state.symbol, {
-    leverage: settings.leverage,
-    marginMode: wanted
-  });
+  return applied;
 }
 
 function chartRsiSeries(state) {
@@ -349,7 +453,7 @@ async function openSlice(state, side, level, price, label) {
       symbol: state.symbol,
       side,
       price,
-      text: `Пропуск ${label}: не выставил ${wantedMarginMode()} (${margin.message || "fail"})`
+      text: `Пропуск ${label}: не выставил ${wantedLeverage()}x / ${wantedMarginMode()} (${margin.message || "fail"})`
     });
     return false;
   }
@@ -1100,13 +1204,20 @@ function shareGateFailResult(message) {
   };
 }
 
-async function applyBookDiff(nextRows, nextPct = allocPct, nextMargin = sessionMarginMode) {
+async function applyBookDiff(
+  nextRows,
+  nextPct = allocPct,
+  nextMargin = sessionMarginMode,
+  nextLeverage = sessionLeverage
+) {
   const plan = planRsiTouchFlipBookSync(currentSyncPlanInput(), nextRows);
   const skipped = [];
   const prevPct = allocPct;
   const prevMargin = sessionMarginMode;
+  const prevLeverage = sessionLeverage;
   allocPct = nextPct;
   sessionMarginMode = nextMargin;
+  sessionLeverage = normalizeLeverage(nextLeverage);
   const projected = projectedLiveCount(plan);
   const gateCount = projected === 0 ? 0 : Math.max(tickers.size, projected);
 
@@ -1116,6 +1227,7 @@ async function applyBookDiff(nextRows, nextPct = allocPct, nextMargin = sessionM
     } catch (err) {
       allocPct = prevPct;
       sessionMarginMode = prevMargin;
+      sessionLeverage = prevLeverage;
       return shareGateFailResult(
         err?.message ||
           "Не удалось прочитать баланс алго-ключа — live книгу не менял"
@@ -1126,6 +1238,7 @@ async function applyBookDiff(nextRows, nextPct = allocPct, nextMargin = sessionM
     if (!(gatedShare >= 1)) {
       allocPct = prevPct;
       sessionMarginMode = prevMargin;
+      sessionLeverage = prevLeverage;
       return shareGateFailResult(
         `Доля на тикер ${Number(gatedShare).toFixed(2)} USDT < 1 USDT (${gateCount} тик. · ${nextPct}% баланса) — live книгу не менял`
       );
@@ -1163,6 +1276,23 @@ async function applyBookDiff(nextRows, nextPct = allocPct, nextMargin = sessionM
         skipped.push(`${row.symbol}: ${err?.message || err}`);
       }
     });
+  }
+
+  if (
+    prevLeverage !== sessionLeverage ||
+    prevMargin !== sessionMarginMode
+  ) {
+    const added = new Set((plan.add || []).map((row) => row.symbol));
+    for (const state of tickers.values()) {
+      if (added.has(state.symbol)) {
+        continue;
+      }
+      try {
+        await ensureTickerMarginMode(state);
+      } catch (err) {
+        skipped.push(`${state.symbol}: ${err?.message || err}`);
+      }
+    }
   }
 
   if (plan.add.length || plan.remove.length || plan.update.length) {
@@ -1207,8 +1337,10 @@ async function startRsiTouchFlipEngine(config = {}) {
   queuedBookRows = null;
   queuedBalancePct = null;
   queuedMarginMode = null;
+  queuedLeverage = null;
   allocPct = normalizeBalancePct(config.balancePct);
   sessionMarginMode = normalizeMarginMode(config.marginMode);
+  sessionLeverage = normalizeLeverage(config.leverage);
 
   klineHub = createAlgoBybitKlineHub();
   unsubKline = klineHub.onKline(onKline);
@@ -1267,6 +1399,8 @@ async function startRsiTouchFlipEngine(config = {}) {
 async function stopRsiTouchFlipEngine() {
   queuedBookRows = null;
   queuedBalancePct = null;
+  queuedMarginMode = null;
+  queuedLeverage = null;
   engineLive = false;
   stopWaitFlatLoop();
   if (unsubKline) {
@@ -1314,9 +1448,14 @@ async function syncRsiTouchFlipBook(config = {}) {
     config.marginMode != null && config.marginMode !== ""
       ? normalizeMarginMode(config.marginMode)
       : sessionMarginMode;
+  const nextLeverage =
+    config.leverage != null && config.leverage !== ""
+      ? normalizeLeverage(config.leverage)
+      : sessionLeverage;
   if (!engineLive) {
     allocPct = nextPct;
     sessionMarginMode = nextMargin;
+    sessionLeverage = nextLeverage;
     return {
       ok: true,
       running: false,
@@ -1333,6 +1472,7 @@ async function syncRsiTouchFlipBook(config = {}) {
     queuedBookRows = rows;
     queuedBalancePct = nextPct;
     queuedMarginMode = nextMargin;
+    queuedLeverage = nextLeverage;
     return {
       ok: true,
       running: true,
@@ -1346,6 +1486,7 @@ async function syncRsiTouchFlipBook(config = {}) {
     let current = rows;
     let currentPct = nextPct;
     let currentMargin = nextMargin;
+    let currentLeverage = nextLeverage;
     let result = {
       ok: true,
       running: true,
@@ -1357,7 +1498,12 @@ async function syncRsiTouchFlipBook(config = {}) {
       message: `Live RSI Flip: книга без изменений (${tickers.size} тик.)`
     };
     while (engineLive) {
-      result = await applyBookDiff(current, currentPct, currentMargin);
+      result = await applyBookDiff(
+        current,
+        currentPct,
+        currentMargin,
+        currentLeverage
+      );
       if (!queuedBookRows) {
         return result;
       }
@@ -1366,9 +1512,12 @@ async function syncRsiTouchFlipBook(config = {}) {
         queuedBalancePct != null ? queuedBalancePct : currentPct;
       currentMargin =
         queuedMarginMode != null ? queuedMarginMode : currentMargin;
+      currentLeverage =
+        queuedLeverage != null ? queuedLeverage : currentLeverage;
       queuedBookRows = null;
       queuedBalancePct = null;
       queuedMarginMode = null;
+      queuedLeverage = null;
     }
     return result;
   } finally {

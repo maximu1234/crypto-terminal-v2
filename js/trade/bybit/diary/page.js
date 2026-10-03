@@ -66,7 +66,7 @@ mountDiaryJournalActions
 import {
 buildDiaryTradeTerminalUrl,
 resolveDiaryTradeFocusTimes
-} from "../../../trade-diary-terminal-deep-link.js?v=2";
+} from "../../../trade-diary-terminal-deep-link.js?v=3";
 
 import {
 getLoadedTradeExchangeModules,
@@ -1105,8 +1105,6 @@ window.location.href =
 buildDiaryTradeTerminalUrl(
 {
 symbol,
-tf:
-"60",
 openMs:
 focus.openMs,
 closeMs:

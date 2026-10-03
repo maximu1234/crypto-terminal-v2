@@ -14,7 +14,7 @@ loadBotStrategiesPrefs
 } from "./bot-strategy-prefs.js?v=33";
 import {
 syncAllTickerFlagsRootToMain
-} from "./bot-bridge.js?v=28";
+} from "./bot-bridge.js?v=29";
 import {
 ALGO_TICKER_FLAGS_KEY
 } from "./ticker-flags.js?v=10";
@@ -29,8 +29,9 @@ import {
 loadRsiTouchFlipBook
 } from "./rsi-touch-flip-book.js?v=5";
 import {
-loadRsiTouchFlipBalancePct
-} from "./rsi-touch-flip-prefs.js?v=9";
+loadRsiTouchFlipBalancePct,
+loadRsiTouchFlipLeverage
+} from "./rsi-touch-flip-prefs.js?v=10";
 import {
 loadMacdFlipTouchBook
 } from "./macd-flip-touch-book.js?v=5";
@@ -1572,7 +1573,9 @@ rsiBook
 book:
 rsiBook,
 balancePct:
-loadRsiTouchFlipBalancePct()
+loadRsiTouchFlipBalancePct(),
+leverage:
+loadRsiTouchFlipLeverage()
 }
 : {}
 ),
@@ -1820,13 +1823,17 @@ rows:
 rsiBook,
 balancePct:
 loadRsiTouchFlipBalancePct(),
+leverage:
+loadRsiTouchFlipLeverage(),
 book:{
 strategyId:
 "rsi-touch-flip",
 rows:
 rsiBook,
 balancePct:
-loadRsiTouchFlipBalancePct()
+loadRsiTouchFlipBalancePct(),
+leverage:
+loadRsiTouchFlipLeverage()
 }
 }
 );

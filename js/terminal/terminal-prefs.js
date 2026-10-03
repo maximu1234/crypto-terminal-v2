@@ -28,7 +28,7 @@ parseAlertDeepLinkExchange
 
 import {
 parseDiaryTradeDeepLink
-} from "../trade-diary-terminal-deep-link.js?v=2";
+} from "../trade-diary-terminal-deep-link.js?v=3";
 
 import {
 DEFAULT_CHART_SYMBOL,

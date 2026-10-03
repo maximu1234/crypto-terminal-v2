@@ -1,3 +1,3 @@
 export {
   fetchTradeHistoryForSymbol
-} from "./fetch.js?v=2";
+} from "./fetch.js?v=3";

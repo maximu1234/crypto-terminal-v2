@@ -1877,6 +1877,12 @@ placeholder="без лимита"
 <input type="checkbox" id="algo-bot-rsi-flip-isolated" />
 </label>
 </div>
+<div class="algo-bot-field algo-bot-field--row">
+<label class="algo-bot-label" for="algo-bot-rsi-flip-leverage" title="Одно плечо на все тикеры книги. Если биржа не даёт его на монете, бот снизит до максимума по этой монете.">Плечо</label>
+<input type="number" id="algo-bot-rsi-flip-leverage" class="algo-bot-input algo-bot-input--sm" min="1" max="125" step="1" value="10" inputmode="numeric" />
+<span class="algo-bot-unit">x</span>
+</div>
+<p class="algo-bot-hint">Если на монете это плечо недоступно, бот снизит его до максимума, который разрешает биржа.</p>
 <p class="algo-bot-hint">Например 50% при 200 USDT доступно — бот работает на 100 USDT, три тикера получат по ~33 USDT.</p>
 <p class="algo-bot-hint" id="algo-bot-rsi-flip-book-summary">Книга пуста. Добавьте тикеры в панели Данные.</p>
 <p class="algo-bot-hint">Касание OS открывает/наращивает лонг, касание OB — шорт. Стоп закрывает только позиции, которые открыл этот бот.</p>

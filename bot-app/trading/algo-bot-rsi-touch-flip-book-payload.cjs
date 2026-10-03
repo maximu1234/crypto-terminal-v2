@@ -17,12 +17,14 @@ function parseRsiTouchFlipBookPayload(body) {
   const rows = fromRows || fromBookRows || fromBookArray || [];
   const balancePctRaw = src.balancePct ?? nested?.balancePct;
   const marginModeRaw = src.marginMode ?? nested?.marginMode;
+  const leverageRaw = src.leverage ?? nested?.leverage;
   return {
     strategyId,
     isRsiTouchFlip: strategyId === "rsi-touch-flip",
     rows,
     balancePct: balancePctRaw,
-    marginMode: marginModeRaw
+    marginMode: marginModeRaw,
+    leverage: leverageRaw
   };
 }
 

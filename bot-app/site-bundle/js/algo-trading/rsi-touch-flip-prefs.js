@@ -920,6 +920,46 @@ return next;
 
 }
 
+export const RSI_TOUCH_FLIP_LEVERAGE_DEFAULT =
+10;
+
+export const RSI_TOUCH_FLIP_LEVERAGE_MAX =
+125;
+
+/**
+ * Плечо книги RSI Touch Flip. Биржа может отдать меньше на конкретной монете.
+ * @param {unknown} raw
+ * @returns {number}
+ */
+export function normalizeRsiTouchFlipLeverage(
+raw
+){
+
+const n =
+Math.round(
+Number(
+raw
+)
+);
+
+if(
+!Number.isFinite(
+n
+)
+){
+return RSI_TOUCH_FLIP_LEVERAGE_DEFAULT;
+}
+
+return Math.min(
+RSI_TOUCH_FLIP_LEVERAGE_MAX,
+Math.max(
+1,
+n
+)
+);
+
+}
+
 export const RSI_TOUCH_FLIP_MARGIN_MODE_KEY =
 "algo_trading_rsi_touch_flip_margin_mode_v1";
 
@@ -971,6 +1011,68 @@ raw
 try{
 localStorage.setItem(
 RSI_TOUCH_FLIP_MARGIN_MODE_KEY,
+JSON.stringify(
+next
+)
+);
+}catch{
+/* ignore quota */
+}
+
+return next;
+
+}
+
+export const RSI_TOUCH_FLIP_LEVERAGE_KEY =
+"algo_trading_rsi_touch_flip_leverage_v1";
+
+/**
+ * @returns {number}
+ */
+export function loadRsiTouchFlipLeverage(){
+
+try{
+const raw =
+localStorage.getItem(
+RSI_TOUCH_FLIP_LEVERAGE_KEY
+);
+
+if(
+raw ==
+null ||
+raw ===
+""
+){
+return RSI_TOUCH_FLIP_LEVERAGE_DEFAULT;
+}
+
+return normalizeRsiTouchFlipLeverage(
+JSON.parse(
+raw
+)
+);
+}catch{
+return RSI_TOUCH_FLIP_LEVERAGE_DEFAULT;
+}
+
+}
+
+/**
+ * @param {unknown} raw
+ * @returns {number}
+ */
+export function saveRsiTouchFlipLeverage(
+raw
+){
+
+const next =
+normalizeRsiTouchFlipLeverage(
+raw
+);
+
+try{
+localStorage.setItem(
+RSI_TOUCH_FLIP_LEVERAGE_KEY,
 JSON.stringify(
 next
 )

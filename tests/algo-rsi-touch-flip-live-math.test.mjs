@@ -182,6 +182,13 @@ test("live cycle SL matches analysis and fingerprint ignores pct when off", () =
   );
   assert.equal(math.normalizeMarginMode("isolated"), "isolated");
   assert.equal(math.normalizeMarginMode("CROSS"), "cross");
+  assert.equal(math.normalizeLeverage(undefined), 10);
+  assert.equal(math.normalizeLeverage(10.4), 10);
+  assert.equal(math.normalizeLeverage(200), 125);
+  assert.equal(math.normalizeLeverage(0), 1);
+  assert.equal(math.clampLeverageToSymbol(50, 1, 20), 20);
+  assert.equal(math.clampLeverageToSymbol(5, 1, 100), 5);
+  assert.equal(math.clampLeverageToSymbol(3, 5, 20), 5);
   const blocked = math.decideRsiTouchFlipBar({
     prevRsi: 31,
     rsi: 29,

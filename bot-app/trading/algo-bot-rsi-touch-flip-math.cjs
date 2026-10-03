@@ -110,6 +110,39 @@ function normalizeMarginMode(raw) {
   return String(raw || "").toLowerCase() === "isolated" ? "isolated" : "cross";
 }
 
+const LEVERAGE_DEFAULT = 10;
+const LEVERAGE_MAX = 125;
+
+/**
+ * Book leverage. The exchange may allow less on a given symbol.
+ * @param {unknown} raw
+ * @returns {number}
+ */
+function normalizeLeverage(raw) {
+  const n = Math.round(Number(raw));
+  if (!Number.isFinite(n)) {
+    return LEVERAGE_DEFAULT;
+  }
+  return Math.min(LEVERAGE_MAX, Math.max(1, n));
+}
+
+/**
+ * @param {unknown} wanted
+ * @param {unknown} minLeverage
+ * @param {unknown} maxLeverage
+ * @returns {number}
+ */
+function clampLeverageToSymbol(wanted, minLeverage, maxLeverage) {
+  const wantedN = normalizeLeverage(wanted);
+  const min = Math.max(1, Math.round(Number(minLeverage) || 1));
+  let max = Math.round(Number(maxLeverage));
+  if (!Number.isFinite(max) || max < 1) {
+    max = wantedN;
+  }
+  const hi = Math.max(min, max);
+  return Math.min(Math.max(wantedN, min), hi);
+}
+
 /**
  * @param {unknown} available
  * @param {unknown} pct
@@ -511,6 +544,8 @@ module.exports = {
   planRsiTouchFlipBookSync,
   normalizeBalancePct,
   normalizeMarginMode,
+  normalizeLeverage,
+  clampLeverageToSymbol,
   allocatedBalanceUsdt,
   equalShareBudget,
   rsiTouchFlipCycleSlHit,

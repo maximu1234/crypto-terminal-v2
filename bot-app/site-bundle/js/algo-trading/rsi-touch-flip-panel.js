@@ -20,7 +20,7 @@ loadRsiTouchFlipTickerPrefs,
 normalizeRsiTouchFlipPrefs,
 shouldReloadRsiTouchFlipColumn,
 loadRsiTouchFlipBalancePct
-} from "./rsi-touch-flip-prefs.js?v=9";
+} from "./rsi-touch-flip-prefs.js?v=10";
 import {
 RSI_TOUCH_FLIP_BOOK_CHANGE_EVENT,
 RSI_TOUCH_FLIP_BOOK_OPEN_EVENT,

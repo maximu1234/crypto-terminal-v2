@@ -238,7 +238,10 @@ test("live engine and LAN accept a full RSI book replace without restart", () =>
   const html = fs.readFileSync(path.join(root, "algo-trading.html"), "utf8");
   assert.match(html, /algo-bot-rsi-flip-balance-pct/);
   assert.match(html, /algo-bot-rsi-flip-isolated/);
+  assert.match(html, /algo-bot-rsi-flip-leverage/);
   assert.match(html, /Размер баланса/);
+  assert.match(engine, /sessionLeverage/);
+  assert.match(engine, /clampLeverageToSymbol/);
   for (const rel of ["desktop/preload.js", "bot-app/preload.js"]) {
     const src = fs.readFileSync(path.join(root, rel), "utf8");
     assert.match(src, /syncRsiTouchFlipBook:/);

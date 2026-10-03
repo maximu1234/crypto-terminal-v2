@@ -41,8 +41,11 @@ loadRsiTouchFlipBalancePct,
 saveRsiTouchFlipBalancePct,
 normalizeRsiTouchFlipBalancePct,
 loadRsiTouchFlipMarginMode,
-saveRsiTouchFlipMarginMode
-} from "./rsi-touch-flip-prefs.js?v=9";
+saveRsiTouchFlipMarginMode,
+loadRsiTouchFlipLeverage,
+saveRsiTouchFlipLeverage,
+normalizeRsiTouchFlipLeverage
+} from "./rsi-touch-flip-prefs.js?v=10";
 import {
 loadMacdFlipTouchBalancePct,
 saveMacdFlipTouchBalancePct,
@@ -87,7 +90,7 @@ isAlgoBotDesktop,
 fetchAlgoBotCloudLock,
 clearAlgoBotCloudLock,
 ensureAlgoBotCloudLock
-} from "./bot-bridge.js?v=28";
+} from "./bot-bridge.js?v=29";
 import {
 stageBotTickerBookFromPublished,
 hydrateBotTickerBookFromMain,
@@ -102,7 +105,7 @@ import {
 mountRemoteSessionLogsEntry,
 mountRemoteWatchlistsPushEntry,
 mountLocalSessionLogsEntry
-} from "./bot-session-logs-viewer.js?v=37";
+} from "./bot-session-logs-viewer.js?v=38";
 import {
 rebalanceTpShares
 } from "./pattern-trade-stats-partial.js?v=22";
@@ -1148,6 +1151,10 @@ const isolatedInput =
 document.getElementById(
 "algo-bot-rsi-flip-isolated"
 );
+const levInput =
+document.getElementById(
+"algo-bot-rsi-flip-leverage"
+);
 const pct =
 pctInput &&
 document.activeElement ===
@@ -1174,6 +1181,26 @@ isolatedInput
 isolatedInput.checked =
 loadRsiTouchFlipMarginMode() ===
 "isolated";
+}
+
+const leverage =
+levInput &&
+document.activeElement ===
+levInput
+? normalizeRsiTouchFlipLeverage(
+levInput.value
+)
+: loadRsiTouchFlipLeverage();
+
+if(
+levInput &&
+document.activeElement !==
+levInput
+){
+levInput.value =
+String(
+leverage
+);
 }
 
 if(
@@ -1340,6 +1367,17 @@ res.marginMode !==
 ){
 saveRsiTouchFlipMarginMode(
 res.marginMode
+);
+}
+
+if(
+res?.leverage !=
+null &&
+res.leverage !==
+""
+){
+saveRsiTouchFlipLeverage(
+res.leverage
 );
 }
 
@@ -4537,6 +4575,80 @@ void fillRsiTouchFlipSettingsModal();
 }
 );
 document.getElementById(
+"algo-bot-rsi-flip-leverage"
+)?.addEventListener(
+"change",
+event=>{
+const input =
+event.target instanceof HTMLInputElement
+? event.target
+: null;
+const next =
+saveRsiTouchFlipLeverage(
+input?.value ??
+loadRsiTouchFlipLeverage()
+);
+
+if(
+input
+){
+input.value =
+String(
+next
+);
+}
+
+rsiBookLiveSyncChain =
+rsiBookLiveSyncChain.then(
+async()=>{
+const book =
+snapshotRsiTouchFlipBook();
+
+if(
+rsiTouchFlipRunning &&
+book.length
+){
+const result =
+await syncRsiTouchFlipBookToLive(
+book
+);
+
+if(
+result?.ok ===
+false &&
+result.message
+){
+applyStatusPanel(
+{
+ok:
+false,
+running:
+rsiTouchFlipRunning,
+strategyId:
+"rsi-touch-flip",
+message:
+result.message
+}
+);
+}
+
+return result;
+}
+
+return null;
+}
+).catch(
+err=>{
+console.warn(
+"[algo-trading] rsi flip leverage live sync",
+err
+);
+}
+);
+void fillRsiTouchFlipSettingsModal();
+}
+);
+document.getElementById(
 "algo-bot-macd-flip-balance-pct"
 )?.addEventListener(
 "input",
@@ -5475,6 +5587,16 @@ isolatedInput.checked
 )
 : loadRsiTouchFlipMarginMode()
 );
+const levInput =
+document.getElementById(
+"algo-bot-rsi-flip-leverage"
+);
+const leverage =
+saveRsiTouchFlipLeverage(
+levInput instanceof HTMLInputElement
+? levInput.value
+: loadRsiTouchFlipLeverage()
+);
 const result =
 await startAlgoBot(
 "rsi-touch-flip",
@@ -5482,7 +5604,8 @@ await startAlgoBot(
 book,
 balancePct:
 pct,
-marginMode
+marginMode,
+leverage
 }
 );
 

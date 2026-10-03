@@ -117,7 +117,7 @@ if(
 ){
 tasks.push(
 import(
-"./bot-bridge.js?v=28"
+"./bot-bridge.js?v=29"
 ).then(
 m=>
 m.stopAlgoBotIfRunning?.()

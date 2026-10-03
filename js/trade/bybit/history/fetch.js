@@ -8,7 +8,7 @@
 import {
   closedPnlTradesToExecutions,
   normalizeSymbol
-} from "../../../trade-markers-sandbox/marker-math.js?v=12";
+} from "../../../trade-markers-sandbox/marker-math.js?v=13";
 
 const CHART_START_BUFFER_MS = 2 * 60 * 60 * 1000;
 const DETAIL_CONCURRENCY = 4;
@@ -66,19 +66,22 @@ function executionsFromResolvedTrade(trade, chartStartMs) {
   }
 
   const isLong = sideIsLong(trade.side);
+  const orderId = String(trade.orderId || trade.positionId || "").trim();
   const executions = [];
 
   if (openMs >= chartStartMs) {
     executions.push({
       execTimeMs: openMs,
-      side: isLong ? "Buy" : "Sell"
+      side: isLong ? "Buy" : "Sell",
+      orderId
     });
   }
 
   if (closeMs >= chartStartMs) {
     executions.push({
       execTimeMs: closeMs,
-      side: isLong ? "Sell" : "Buy"
+      side: isLong ? "Sell" : "Buy",
+      orderId
     });
   }
 

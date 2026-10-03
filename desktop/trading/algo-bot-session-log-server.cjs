@@ -626,7 +626,9 @@ parsed.rows,
 source:
 "lan",
 balancePct:
-parsed.balancePct
+parsed.balancePct,
+leverage:
+parsed.leverage
 }
 );
 
@@ -1642,6 +1644,19 @@ body.balancePct !==
 ? {
 balancePct:
 body.balancePct
+}
+: {}
+),
+...(
+action ===
+"start" &&
+body.leverage !=
+null &&
+body.leverage !==
+""
+? {
+leverage:
+body.leverage
 }
 : {}
 )

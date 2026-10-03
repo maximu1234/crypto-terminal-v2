@@ -15,13 +15,13 @@ export const ASSETS =
 Object.freeze({
 
 "trade-markers-sandbox/marker-math.js":
-12,
+13,
 "trade-markers-sandbox/trade-fetch.js":
 19,
 
 /* ── JS: boot / entry ── */
 "asset-manifest.js":
-35,
+39,
 "market-api.js":
 7,
 "format-price.js":
@@ -127,7 +127,7 @@ Object.freeze({
 "trade-diary-journal.js":
 2,
 "trade-diary-terminal-deep-link.js":
-2,
+3,
 "trade-diary-journal-ui.js":
 2,
 "diary-period-analytics.js":
@@ -217,11 +217,11 @@ Object.freeze({
 "trade/bybit/history/index.js":
 2,
 "trade/bybit/history/fetch.js":
-2,
+3,
 "trade/bybit/chart-orders.js":
 6,
 "trade/bybit/chart-execution-markers.js":
-5,
+7,
 "trade/bybit/volume-presets.js":
 2,
 "trade/bybit/leverage-settings.js":
@@ -231,7 +231,7 @@ Object.freeze({
 "trade/bybit/pnl-share-modal.js":
 4,
 "trade/bybit/diary/page.js":
-9,
+10,
 "trade/bybit/diary/period.js":
 1,
 "trade/bingx/bundle.js":
@@ -249,7 +249,7 @@ Object.freeze({
 "trade/bingx/chart-orders.js":
 6,
 "trade/bingx/chart-execution-markers.js":
-6,
+8,
 "trade/bingx/pnl-share-modal.js":
 4,
 "trade/bingx/book-columns.js":
@@ -261,7 +261,7 @@ Object.freeze({
 "trade/bingx/diary/period.js":
 1,
 "trade/bingx/diary/page.js":
-9,
+10,
 "trade/bingx/drawing-stops.js":
 4,
 "trade/bingx/auto-stops.js":
@@ -291,7 +291,7 @@ Object.freeze({
 "chart-page.js":
 8,
 "terminal.js":
-512,
+514,
 "terminal-multi-chart.js":
 27,
 "terminal-screener-chart-pane.js":
@@ -428,7 +428,7 @@ Object.freeze({
 "algo-trading/early-t3-bot-prefs.js":
 5,
 "algo-trading/rsi-touch-flip-prefs.js":
-9,
+10,
 "algo-trading/rsi-touch-flip-book.js":
 5,
 "algo-trading/rsi-touch-flip-engine.js":
@@ -512,7 +512,7 @@ Object.freeze({
 "algo-trading/runtime-ui.js":
 16,
 "algo-trading/bot-bridge.js":
-28,
+29,
 "algo-trading/bot-alert-bridge.js":
 7,
 "algo-trading/desktop-site-boot.js":
@@ -522,11 +522,11 @@ Object.freeze({
 "algo-trading/active-analysis-bot.js":
 4,
 "algo-trading/bot-strategy-ui.js":
-94,
+95,
 "algo-trading/bot-session-log-server-ui.js":
 11,
 "algo-trading/bot-session-logs-viewer.js":
-37,
+38,
 "algo-trading/bot-cloud-lock.js":
 11,
 "algo-trading/bot-remote-client.js":
@@ -712,7 +712,7 @@ Object.freeze({
 "screener-widget-zoom.js":
 34,
 "release-marker.js":
-135,
+136,
 "focus-blur-after-pick.js":
 3,
 "site-boot.js":

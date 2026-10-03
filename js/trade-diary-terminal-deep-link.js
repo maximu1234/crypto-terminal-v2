@@ -38,7 +38,10 @@ export function buildDiaryTradeTerminalUrl(opts = {}) {
     params.set("symbol", symbol);
   }
 
-  params.set("tf", String(opts.tf || "60"));
+  const tf = String(opts.tf || "").trim();
+  if (tf) {
+    params.set("tf", tf);
+  }
 
   const openMs = toFiniteMs(opts.openMs);
   const closeMs = toFiniteMs(opts.closeMs);

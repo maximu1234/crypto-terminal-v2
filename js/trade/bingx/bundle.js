@@ -83,7 +83,7 @@ export {
 
 export {
   bootTradeDiaryPage
-} from "./diary/page.js?v=9";
+} from "./diary/page.js?v=10";
 
 export {
   mountTradeDiaryPeriodPicker
@@ -135,7 +135,7 @@ export {
   mountTradeChartMarkersToggle,
   initTradeChartExecutionMarkers,
   applyDiaryTradeDeepLink
-} from "./chart-execution-markers.js?v=6";
+} from "./chart-execution-markers.js?v=8";
 
 export {
   fetchTradeHistoryForSymbol

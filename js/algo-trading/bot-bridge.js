@@ -41,8 +41,10 @@ import {
 saveRsiTouchFlipBalancePct,
 loadRsiTouchFlipBalancePct,
 saveRsiTouchFlipMarginMode,
-loadRsiTouchFlipMarginMode
-} from "./rsi-touch-flip-prefs.js?v=9";
+loadRsiTouchFlipMarginMode,
+saveRsiTouchFlipLeverage,
+loadRsiTouchFlipLeverage
+} from "./rsi-touch-flip-prefs.js?v=10";
 import {
 saveMacdFlipTouchBalancePct,
 loadMacdFlipTouchBalancePct,
@@ -328,7 +330,14 @@ null &&
 extra.marginMode !==
 ""
 ? extra.marginMode
-: loadRsiTouchFlipMarginMode()
+: loadRsiTouchFlipMarginMode(),
+leverage:
+extra?.leverage !=
+null &&
+extra.leverage !==
+""
+? extra.leverage
+: loadRsiTouchFlipLeverage()
 }
 );
 
@@ -723,6 +732,17 @@ status.publishedRsiTouchFlipMarginMode
 );
 }
 
+if(
+status.publishedRsiTouchFlipLeverage !=
+null &&
+status.publishedRsiTouchFlipLeverage !==
+""
+){
+saveRsiTouchFlipLeverage(
+status.publishedRsiTouchFlipLeverage
+);
+}
+
 return true;
 
 }
@@ -800,7 +820,9 @@ book
 balancePct:
 loadRsiTouchFlipBalancePct(),
 marginMode:
-loadRsiTouchFlipMarginMode()
+loadRsiTouchFlipMarginMode(),
+leverage:
+loadRsiTouchFlipLeverage()
 }
 );
 

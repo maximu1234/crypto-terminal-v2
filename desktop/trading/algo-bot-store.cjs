@@ -2445,6 +2445,10 @@ marginMode:
 normalizeStoredRsiTouchFlipMarginMode(
 parsed?.marginMode,
 rows
+),
+leverage:
+normalizeStoredRsiTouchFlipLeverage(
+parsed?.leverage
 )
 };
 
@@ -2521,6 +2525,35 @@ return "cross";
 
 }
 
+function normalizeStoredRsiTouchFlipLeverage(
+raw
+){
+
+const n =
+Math.round(
+Number(
+raw
+)
+);
+
+if(
+!Number.isFinite(
+n
+)
+){
+return 10;
+}
+
+return Math.min(
+125,
+Math.max(
+1,
+n
+)
+);
+
+}
+
 function writeRsiTouchFlipBook(
 rows,
 extra =
@@ -2552,6 +2585,15 @@ extra.marginMode,
 next
 )
 : prev.marginMode;
+const leverage =
+extra.leverage !=
+null &&
+extra.leverage !==
+""
+? normalizeStoredRsiTouchFlipLeverage(
+extra.leverage
+)
+: prev.leverage;
 const same =
 JSON.stringify(
 prev.rows
@@ -2562,7 +2604,9 @@ next
 prev.balancePct ===
 balancePct &&
 prev.marginMode ===
-marginMode;
+marginMode &&
+prev.leverage ===
+leverage;
 
 if(
 same
@@ -2576,6 +2620,7 @@ rows:
 next,
 balancePct,
 marginMode,
+leverage,
 tickerCount:
 next.length
 };
@@ -2589,6 +2634,7 @@ rows:
 next,
 balancePct,
 marginMode,
+leverage,
 updatedAt:
 Date.now()
 }
@@ -2610,6 +2656,7 @@ rows:
 next,
 balancePct,
 marginMode,
+leverage,
 tickerCount:
 next.length
 };

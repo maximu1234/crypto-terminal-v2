@@ -938,6 +938,9 @@ parsed.rows,
 balancePct:
 payload.balancePct ??
 parsed.balancePct,
+leverage:
+payload.leverage ??
+parsed.leverage,
 book:{
 strategyId:
 "rsi-touch-flip",
@@ -945,7 +948,10 @@ rows:
 parsed.rows,
 balancePct:
 payload.balancePct ??
-parsed.balancePct
+parsed.balancePct,
+leverage:
+payload.leverage ??
+parsed.leverage
 }
 },
 120000,
@@ -1260,6 +1266,17 @@ payload.balancePct !==
 ? {
 balancePct:
 payload.balancePct
+}
+: {}
+),
+...(
+payload.leverage !=
+null &&
+payload.leverage !==
+""
+? {
+leverage:
+payload.leverage
 }
 : {}
 )

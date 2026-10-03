@@ -2535,7 +2535,9 @@ bookRows,
 balancePct:
 payload?.balancePct,
 marginMode:
-payload?.marginMode
+payload?.marginMode,
+leverage:
+payload?.leverage
 }
 );
 }catch(
@@ -2624,7 +2626,12 @@ bookRows,
 balancePct,
 allocated,
 share,
-available
+available,
+leverage:
+rsiTouchFlipMath.normalizeLeverage(
+payload?.leverage ??
+readRsiTouchFlipBook().leverage
+)
 };
 
 if(
@@ -2660,7 +2667,7 @@ bookRows.length
 }
 );
 sessionLog.appendNote(
-`Запуск rsi-touch-flip live ${bookRows.length} тик. ${balancePct}% баланса → ${Number(allocated).toFixed(2)} / ${bookRows.length} = ${Number(share).toFixed(2)} USDT на тикер, available=${available.toFixed(2)}`
+`Запуск rsi-touch-flip live ${bookRows.length} тик. ${balancePct}% баланса → ${Number(allocated).toFixed(2)} / ${bookRows.length} = ${Number(share).toFixed(2)} USDT на тикер, available=${available.toFixed(2)}, плечо ${rsiTouchFlipMath.normalizeLeverage(payload?.leverage ?? readRsiTouchFlipBook().leverage)}x`
 );
 
 await rsiTouchFlipEngine.startRsiTouchFlipEngine(
@@ -2672,6 +2679,11 @@ marginMode:
 rsiTouchFlipMath.normalizeMarginMode(
 payload?.marginMode ??
 readRsiTouchFlipBook().marginMode
+),
+leverage:
+rsiTouchFlipMath.normalizeLeverage(
+payload?.leverage ??
+readRsiTouchFlipBook().leverage
 ),
 onActivity:()=>{
 pushStatus(
@@ -3943,7 +3955,9 @@ strategyId:
 balancePct:
 book?.balancePct,
 marginMode:
-book?.marginMode
+book?.marginMode,
+leverage:
+book?.leverage
 }
 );
 }
@@ -4090,6 +4104,10 @@ read.balancePct
 marginMode:
 rsiTouchFlipMath.normalizeMarginMode(
 read?.marginMode
+),
+leverage:
+rsiTouchFlipMath.normalizeLeverage(
+read?.leverage
 )
 };
 
@@ -4264,6 +4282,11 @@ extra.marginMode !=
 null
 ? extra.marginMode
 : readRsiTouchFlipBook().marginMode;
+const leverage =
+extra.leverage !=
+null
+? extra.leverage
+: readRsiTouchFlipBook().leverage;
 
 const snapshot =
 buildStatusSnapshot(
@@ -4276,6 +4299,8 @@ publishedRsiTouchFlipBalancePct:
 balancePct,
 publishedRsiTouchFlipMarginMode:
 marginMode,
+publishedRsiTouchFlipLeverage:
+leverage,
 ...(
 typeof extra.message ===
 "string"
@@ -4413,7 +4438,10 @@ payload?.balancePct ??
 readRsiTouchFlipBook().balancePct,
 marginMode:
 payload?.marginMode ??
-readRsiTouchFlipBook().marginMode
+readRsiTouchFlipBook().marginMode,
+leverage:
+payload?.leverage ??
+readRsiTouchFlipBook().leverage
 }
 );
 statusMessage =
@@ -4480,7 +4508,9 @@ rows,
 balancePct:
 payload?.balancePct,
 marginMode:
-payload?.marginMode
+payload?.marginMode,
+leverage:
+payload?.leverage
 }
 );
 }catch(
@@ -4520,7 +4550,9 @@ written.rows,
 balancePct:
 written.balancePct,
 marginMode:
-written.marginMode
+written.marginMode,
+leverage:
+written.leverage
 };
 
 const message =
@@ -4542,6 +4574,8 @@ balancePct:
 written.balancePct,
 marginMode:
 written.marginMode,
+leverage:
+written.leverage,
 message
 }
 );

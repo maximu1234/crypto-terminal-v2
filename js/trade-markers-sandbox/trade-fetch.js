@@ -4,7 +4,7 @@
  */
 import {
   SANDBOX_SYMBOL
-} from "./marker-math.js?v=12";
+} from "./marker-math.js?v=13";
 
 import {
   getLoadedTradeExchangeModules,

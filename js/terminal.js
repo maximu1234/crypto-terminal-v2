@@ -195,7 +195,8 @@ resolveSymbolForExchange,
 saveLastViewForExchange,
 applyCoinsPrefs,
 applySortForCurrentMarket,
-readUrlParams
+readUrlParams,
+readLastViewForExchange
 } from "./terminal/terminal-prefs.js?v=29";
 
 import {
@@ -7509,6 +7510,51 @@ false;
 urlExchangeId =
 "";
 resolveInitialSymbolAndTf();
+}else if(
+coinsState().diaryTradeDeepLink?.history
+){
+const lastTf =
+readLastViewForExchange(
+getActiveExchangeId()
+).tf;
+
+if(
+lastTf &&
+COINS_TF_VALUES.has(
+lastTf
+)
+){
+currentTF =
+lastTf;
+
+try{
+const params =
+new URLSearchParams(
+window.location.search
+);
+
+if(
+params.get(
+"tf"
+) !==
+lastTf
+){
+params.set(
+"tf",
+lastTf
+);
+const qs =
+params.toString();
+history.replaceState(
+null,
+"",
+`${window.location.pathname || "/"}${qs ? `?${qs}` : ""}`
+);
+}
+}catch{
+/* ignore */
+}
+}
 }
 
 mountCoinsListRefreshControls();
