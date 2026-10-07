@@ -16,7 +16,7 @@ CHART_PRICE_HUD_FALLBACK_HEIGHT
 
 import {
 isSeriesLogarithmic
-} from "./fib-spec.js?v=17";
+} from "./fib-spec.js?v=18";
 
 import {
 isPositionType,
@@ -29,7 +29,7 @@ collectChartScaleLabelEntries
 
 import {
 isHorizPriceTool
-} from "./constants.js?v=13";
+} from "./constants.js?v=14";
 
 export function createDrawPriceScale(
 deps
@@ -45,6 +45,8 @@ pointerFromEvent,
 holdChartPanRedraw,
 bumpChartPanRedraw,
 getDrawings,
+getDrawingsHidden = ()=>
+false,
 getSelectedId,
 getSelectedIds = ()=>{
 const id =
@@ -237,6 +239,12 @@ height
 function drawPriceScaleLabels(ctx){
 
 const entries = [];
+const hideDrawings =
+getDrawingsHidden();
+
+if(
+!hideDrawings
+){
 
 getDrawings().forEach(shape=>{
 
@@ -319,6 +327,8 @@ true
 });
 
 });
+
+}
 
 }
 

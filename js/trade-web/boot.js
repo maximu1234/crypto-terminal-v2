@@ -4,7 +4,7 @@
  */
 import {
   cssUrl
-} from "../asset-manifest.js?v=39";
+} from "../asset-manifest.js?v=54";
 import {
   isTerminalPageOnly,
   isWatchlistPage
@@ -30,7 +30,7 @@ import {
 import {
   getActiveExchangeId,
   setActiveExchangeId
-} from "../market-api.js?v=7";
+} from "../market-api.js?v=9";
 import {
   installWebTradingShell
 } from "./client.js?v=6";

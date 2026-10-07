@@ -4,7 +4,7 @@
  */
 import {
 loadMarketHistory
-} from "../market-api.js?v=7";
+} from "../market-api.js?v=9";
 
 import {
 analyzeAlgoPatterns

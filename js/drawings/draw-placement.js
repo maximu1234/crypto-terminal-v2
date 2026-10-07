@@ -14,7 +14,7 @@ ensureFibAnchorMinSpan,
 isFibType,
 isFibExtType,
 resolveFibTrendLineColor
-} from "./fib-spec.js?v=17";
+} from "./fib-spec.js?v=18";
 
 import {
 isPositionType
@@ -34,7 +34,7 @@ touchShapeRevision
 
 import {
 isHorizPriceTool
-} from "./constants.js?v=13";
+} from "./constants.js?v=14";
 
 import {
 isTextTool,
@@ -52,7 +52,7 @@ isPattern12Draw,
 elliottPointCount,
 normalizePattern12TpFlags,
 normalizePattern12TpLevels
-} from "./elliott-spec.js?v=17";
+} from "./elliott-spec.js?v=18";
 
 import {
 isFvpType,
@@ -1316,6 +1316,10 @@ typeof style.fibShowTrendLine ===
 : isFibExtType(type)
 )
 :undefined,
+fibShowLabels:isFibType(type)
+? style.fibShowLabels !==
+false
+:undefined,
 fibTrendLineColor:isFibType(type)
 ? resolveFibTrendLineColor(
 style.fibTrendLineColor
@@ -1344,6 +1348,12 @@ false
 showPatternDash:isElliottType(type)
 ? style.showPatternDash !==
 false
+:undefined,
+patternDashLineStyle:isPattern12Draw(type)
+? style.patternDashLineStyle
+:undefined,
+patternTpLineStyle:isPattern12Draw(type)
+? style.patternTpLineStyle
 :undefined,
 patternDashOpacity:isElliottType(type)
 ? style.patternDashOpacity
@@ -1392,6 +1402,12 @@ created = makeShape("rectangle", {
 p1: pts[0],
 p2: pts[1],
 lineStyle: rectStyle.lineStyle,
+showHorizLines: rectStyle.showHorizLines,
+horizLineStyle: rectStyle.horizLineStyle,
+horizColor: rectStyle.horizColor,
+showVertLines: rectStyle.showVertLines,
+vertLineStyle: rectStyle.vertLineStyle,
+vertColor: rectStyle.vertColor,
 showFill: rectStyle.showFill,
 fillColor: rectStyle.fillColor,
 fillOpacity: rectStyle.fillOpacity,

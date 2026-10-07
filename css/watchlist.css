@@ -1702,9 +1702,16 @@ form.draw-position-risk{
     object-fit:contain;
 }
 
+.float-delete{
+    height:36px;
+}
+
 .float-delete .draw-tool-icon{
     width:24px;
     height:34px;
+    pointer-events:none;
+    -webkit-user-drag:none;
+    user-select:none;
 }
 
 .draw-settings-icon,
@@ -1764,7 +1771,8 @@ form.draw-position-risk{
     cursor:pointer;
 }
 
-.rect-border-style-btn,
+.rect-horiz-style-btn,
+.rect-vert-style-btn,
 .rect-median-style-btn{
     width:40px;
     height:28px;
@@ -1787,8 +1795,8 @@ form.draw-position-risk{
     cursor:pointer;
 }
 
-.rect-border-color-btn,
-.rect-border-color-btn,
+.rect-horiz-color-btn,
+.rect-vert-color-btn,
 .rect-median-color-btn,
 .rect-fill-color-btn{
     width:28px;

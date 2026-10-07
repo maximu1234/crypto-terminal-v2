@@ -6,7 +6,7 @@
 import {
 STROKE,
 POSITION_DEFAULT_WIDTH_BARS
-} from "../drawings/constants.js?v=13";
+} from "../drawings/constants.js?v=14";
 
 import {
 initialPositionTpSlPercent

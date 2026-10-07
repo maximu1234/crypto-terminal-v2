@@ -12,7 +12,7 @@ loadMarketHistory,
 getActiveExchangeId,
 getActiveExchangeDefinition,
 EXCHANGE_CHANGED_EVENT
-} from "./market-api.js?v=7";
+} from "./market-api.js?v=9";
 
 import {
 clearBybitNetworkIssue
@@ -44,7 +44,7 @@ alignRsiWithCandleTimes
 import {
 createDashboardChartWidget,
 mountDashboardChartInteractions
-} from "./chart-widget-host.js?v=50";
+} from "./chart-widget-host.js?v=59";
 
 import {
 mountWidgetTabletChart
@@ -74,7 +74,7 @@ initWidgetDrawToolsDropdown,
 wireWidgetDrawToolMenu,
 closeAllWidgetDrawToolsMenus,
 resetWidgetDrawToolsMenus
-} from "./watchlist-draw-ui.js?v=29";
+} from "./watchlist-draw-ui.js?v=30";
 
 import {
 ensureDrawToolsVisible

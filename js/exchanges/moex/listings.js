@@ -8,7 +8,7 @@ toMoexSymbol
 
 /**
  * v1: акции TQBR + индексы + ликвидная валюта с котировкой.
- * ETF-борды ISS сейчас отдают 0 строк — вкладка etf пока пустая.
+ * ETF и ПИФ идут с TQBR (INSTRID IF*), отдельные борды TQTF/TQTD пустые.
  */
 /** @type {MoexBoardSpec[]} */
 export const MOEX_BOARD_SPECS =
@@ -72,6 +72,87 @@ board
 ){
 
 return `/iss/engines/${engine}/markets/${market}/boards/${board}/securities.json`;
+
+}
+
+/** Одна страница ISS уже вмещает весь борд (TQBR ~500). */
+export const MOEX_LIST_LIMIT =
+1000;
+
+/**
+ * Узкий список: без полного паспорта бумаги.
+ * @param {string} basePath
+ * @param {number} [start]
+ */
+export function moexBoardListQuery(
+basePath,
+start =
+0
+){
+
+const params =
+new URLSearchParams();
+
+params.set(
+"iss.meta",
+"off"
+);
+params.set(
+"iss.only",
+"securities,marketdata"
+);
+params.set(
+"securities.columns",
+"SECID,SHORTNAME,LATNAME,NAME,STATUS,PREVPRICE,INSTRID"
+);
+params.set(
+"marketdata.columns",
+"SECID,LAST,LASTCHANGEPRCNT,LASTTOPREVPRICE,VALTODAY,VALTODAY_RUR"
+);
+params.set(
+"limit",
+String(
+MOEX_LIST_LIMIT
+)
+);
+params.set(
+"start",
+String(
+start
+)
+);
+
+return `${basePath}?${params}`;
+
+}
+
+/**
+ * ETF и ПИФ торгуются на TQBR вместе с акциями (INSTRID IF*).
+ * @param {string} category
+ * @param {string} instrId
+ */
+export function moexListCategory(
+category,
+instrId
+){
+
+const instr =
+String(
+instrId ||
+""
+).trim().toUpperCase();
+
+if(
+category ===
+"shares" &&
+instr.startsWith(
+"IF"
+)
+){
+return "etf";
+}
+
+return category;
 
 }
 
@@ -260,8 +341,16 @@ sec?.SHORTNAME ||
 sec?.NAME ||
 symbol
 ),
+instrId:
+String(
+sec?.INSTRID ||
+""
+).trim().toUpperCase(),
 moexCategory:
+moexListCategory(
 spec.category,
+sec?.INSTRID
+),
 engine:
 spec.engine,
 market:
@@ -338,7 +427,11 @@ instruments
 ){
 
 const cat =
-item?.moexCategory;
+moexListCategory(
+item?.moexCategory,
+item?.instrId ||
+item?.raw?.securities?.INSTRID
+);
 const sym =
 toMoexSymbol(
 item?.symbol ||

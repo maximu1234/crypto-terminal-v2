@@ -8,7 +8,7 @@ isPositionType
 
 import {
 getRectangleHandleScreens
-} from "./arrow-rect.js?v=2";
+} from "./arrow-rect.js?v=4";
 
 import {
 getFvpHandleScreens,
@@ -26,16 +26,16 @@ CHART_REDRAW_REASON
 
 import {
 isHorizPriceTool
-} from "./constants.js?v=13";
+} from "./constants.js?v=14";
 
 import {
 isFibExtType
-} from "./fib-spec.js?v=17";
+} from "./fib-spec.js?v=18";
 
 import {
 isElliottType,
 elliottSelectionHandlePoints
-} from "./elliott-spec.js?v=17";
+} from "./elliott-spec.js?v=18";
 
 export function createDrawRedrawLoop(
 deps
@@ -47,6 +47,8 @@ chartSize,
 getPlotWidth,
 getChartPanActive,
 getDrawings,
+getDrawingsHidden = ()=>
+false,
 getSelectedId,
 getIsIdSelected = id=>
 id ===
@@ -475,6 +477,10 @@ ctx.beginPath();
 ctx.rect(0, 0, plotW, h);
 ctx.clip();
 
+if(
+!getDrawingsHidden()
+){
+
 getDrawings().forEach(d=>{
 
 try{
@@ -493,6 +499,8 @@ console.warn("draw shape", err);
 }
 
 });
+
+}
 
 if(getPlacement()){
 drawPlacementPreview(ctx, plotW, h);

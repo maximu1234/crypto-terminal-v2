@@ -11,7 +11,7 @@ ELLIOTT_WAVE_TYPES,
 ELLIOTT_PATTERN_TYPES,
 ELLIOTT_TOOL_META,
 isElliottType
-} from "./elliott-spec.js?v=17";
+} from "./elliott-spec.js?v=18";
 
 const FLYOUT_CLASS =
 "elliott-flyout";
@@ -291,16 +291,29 @@ t.closest(
 
 }
 
-function toggleFlyout(
+const ELLIOTT_DEFAULT_TOOL =
+ELLIOTT_WAVE_TYPES[
+0
+];
+
+function openFlyout(
 btn
 ){
+
+if(
+!btn
+){
+return;
+}
 
 if(
 anchorBtn ===
 btn &&
 isElliottFlyoutOpen()
 ){
-closeElliottFlyout();
+positionFlyout(
+btn
+);
 return;
 }
 
@@ -320,6 +333,71 @@ btn
 
 }
 
+function toggleFlyout(
+btn
+){
+
+if(
+anchorBtn ===
+btn &&
+isElliottFlyoutOpen()
+){
+closeElliottFlyout();
+return;
+}
+
+openFlyout(
+btn
+);
+
+}
+
+function pickDefaultTool(
+btn,
+pointerType
+){
+
+closeElliottFlyout();
+
+const host =
+resolvePickHost(
+btn
+);
+
+if(
+!host ||
+!ELLIOTT_DEFAULT_TOOL
+){
+return;
+}
+
+host.dispatchEvent(
+new CustomEvent(
+"draw-pick-tool",
+{
+bubbles: true,
+detail: {
+tool: ELLIOTT_DEFAULT_TOOL,
+pointerType: pointerType ||
+"mouse"
+}
+}
+)
+);
+
+}
+
+function wantsToolMenu(
+e
+){
+
+return e?.button ===
+2 ||
+e?.ctrlKey ===
+true;
+
+}
+
 function onDocPointerDown(
 e
 ){
@@ -334,8 +412,31 @@ groupBtn
 ){
 e.preventDefault();
 e.stopPropagation();
+
+if(
+e.pointerType ===
+"touch"
+){
 toggleFlyout(
 groupBtn
+);
+return;
+}
+
+if(
+wantsToolMenu(
+e
+)
+){
+openFlyout(
+groupBtn
+);
+return;
+}
+
+pickDefaultTool(
+groupBtn,
+e.pointerType
 );
 return;
 }
@@ -349,6 +450,31 @@ return;
 }
 
 closeElliottFlyout();
+
+}
+
+function onDocContextMenu(
+e
+){
+
+const groupBtn =
+e.target.closest?.(
+"[data-draw-tool-group=\"elliott\"]"
+);
+
+if(
+!groupBtn ||
+e.pointerType ===
+"touch"
+){
+return;
+}
+
+e.preventDefault();
+e.stopPropagation();
+openFlyout(
+groupBtn
+);
 
 }
 
@@ -396,6 +522,12 @@ ensureFlyout();
 document.addEventListener(
 "pointerdown",
 onDocPointerDown,
+true
+);
+
+document.addEventListener(
+"contextmenu",
+onDocContextMenu,
 true
 );
 

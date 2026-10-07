@@ -652,6 +652,23 @@ width:auto;
 margin:0;
 }
 
+.elliott-pattern-line-style-btn{
+margin-left:auto;
+width:40px;
+height:28px;
+padding:0 4px;
+border:1px solid #374151;
+border-radius:6px;
+background:#2a2e39;
+color:#d1d4dc;
+cursor:pointer;
+flex:0 0 auto;
+}
+
+.elliott-pattern-line-style-btn:hover{
+border-color:#4b5563;
+}
+
 .elliott-degree-wrap.hidden,
 .elliott-degree-junior-wrap.hidden,
 .elliott-pattern-dash-row.hidden,

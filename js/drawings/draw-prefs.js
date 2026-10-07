@@ -7,11 +7,11 @@ import {
   GLOBAL_STYLE_KEY,
   RECT_DEFAULT_COLOR,
   migrateRectangleToolDefaults
-} from "./constants.js?v=13";
+} from "./constants.js?v=14";
 
 import {
   normalizeRectangleShape
-} from "./arrow-rect.js?v=2";
+} from "./arrow-rect.js?v=4";
 
 import {
   migrateFvpToolDefaults,
@@ -25,7 +25,7 @@ import {
   isFibType,
   isFibExtType,
   resolveFibTrendLineColor
-} from "./fib-spec.js?v=17";
+} from "./fib-spec.js?v=18";
 
 import {
   isPositionType
@@ -47,7 +47,7 @@ import {
 isPattern12Draw,
 migrateElliottToolDefaults,
 normalizePattern12TpFlags
-} from "./elliott-spec.js?v=17";
+} from "./elliott-spec.js?v=18";
 
 /**
  * @returns {{
@@ -498,6 +498,12 @@ typeof fibStore.fibShowTrendLine ===
 type
 );
 
+out.fibShowLabels =
+typeof fibStore.fibShowLabels ===
+"boolean"
+? fibStore.fibShowLabels
+: true;
+
 out.fibTrendLineColor =
 resolveFibTrendLineColor(
 fibStore.fibTrendLineColor
@@ -644,6 +650,10 @@ false;
 out.showPatternDash =
 elliottSaved.showPatternDash !==
 false;
+out.patternDashLineStyle =
+elliottSaved.patternDashLineStyle;
+out.patternTpLineStyle =
+elliottSaved.patternTpLineStyle;
 out.patternDashOpacity =
 elliottSaved.patternDashOpacity;
 out.type =

@@ -19,12 +19,12 @@ DRAW_HANDLE_HIT_THRESHOLD_DESKTOP,
 DRAW_HANDLE_HIT_THRESHOLD_DESKTOP_POSITION,
 DRAW_BODY_HIT_THRESHOLD_TOUCH,
 isHorizPriceTool
-} from "./constants.js?v=13";
+} from "./constants.js?v=14";
 
 import {
 getRectangleHandleScreens,
 moveRectangleHandle
-} from "./arrow-rect.js?v=2";
+} from "./arrow-rect.js?v=4";
 
 import {
 getFvpHandleScreens,
@@ -41,7 +41,7 @@ import {
 ensureFibAnchorMinSpan,
 isFibType,
 isFibExtType
-} from "./fib-spec.js?v=17";
+} from "./fib-spec.js?v=18";
 
 import {
 touchShapeRevision
@@ -49,7 +49,7 @@ touchShapeRevision
 
 import {
 stripAlertFromShape
-} from "./drawings-persist.js?v=21";
+} from "./drawings-persist.js?v=24";
 
 import {
 moveBrushHandle,
@@ -68,7 +68,7 @@ isElliottType,
 getElliottPoints,
 setElliottPoints,
 elliottHandleIndex
-} from "./elliott-spec.js?v=17";
+} from "./elliott-spec.js?v=18";
 
 /**
  * Handle hit circles are larger than the vertex. Drag already uses grab

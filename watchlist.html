@@ -13,11 +13,12 @@
 
 <link rel="stylesheet" href="/css/critical-shell.css?v=11">
 <script src="/js/site-css-ready.js?v=3"></script>
-<link rel="stylesheet" href="/css/common.css?v=65">
+<link rel="stylesheet" href="/css/common.css?v=66">
 <link rel="stylesheet" href="/css/chrome-motion.css?v=5">
-<link rel="stylesheet" href="/css/watchlist.css?v=67">
+<link rel="stylesheet" href="/css/watchlist.css?v=69">
 <link rel="stylesheet" href="/css/screener.css?v=58">
 <link rel="stylesheet" href="/css/watchlist-page.css?v=3">
+<link rel="stylesheet" href="/css/draw-menus.css?v=4">
 
 <link rel="preload" href="/vendor/lightweight-charts.standalone.production.js" as="script">
 
@@ -115,7 +116,7 @@ document.querySelector(
 )
 })
 ){
-import("/js/site-boot.js?v=140").catch(err=>{
+import("/js/site-boot.js?v=141").catch(err=>{
 console.warn("site-boot:", err);
 });
 }else{
@@ -154,7 +155,7 @@ const { loadLightweightCharts } =
 await import("/js/charts-lib-boot.js?v=3");
 
 await loadLightweightCharts();
-await import("./js/watchlist.js?v=133");
+await import("./js/watchlist.js?v=141");
 
 if(
 window.cryptoTerminalDesktop?.isDesktop
@@ -181,7 +182,7 @@ mode:
 }
 
 await import("./js/watchlist-page.js?v=4");
-import("/js/site-boot.js?v=140").catch(err=>{
+import("/js/site-boot.js?v=141").catch(err=>{
 console.warn("site-boot:", err);
 });
 

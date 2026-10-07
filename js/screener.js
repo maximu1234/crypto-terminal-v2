@@ -9,7 +9,7 @@ peekMarketSymbolsCache,
 getActiveExchangeDefinition,
 getActiveExchangeId,
 EXCHANGE_CHANGED_EVENT
-} from "./market-api.js?v=7";
+} from "./market-api.js?v=9";
 
 import {
 openChromeSurface
@@ -73,7 +73,7 @@ createTickerUiBatcher
 
 import {
 mountReleaseMarker
-} from "./release-marker.js?v=136";
+} from "./release-marker.js?v=137";
 
 import {
 saveScreenerState,

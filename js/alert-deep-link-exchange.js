@@ -2,7 +2,7 @@ import {
 getActiveExchangeId,
 setActiveExchangeId,
 getExchangeDefinition
-} from "./market-api.js?v=7";
+} from "./market-api.js?v=9";
 
 import {
 isKnownExchangeId
@@ -10,7 +10,7 @@ isKnownExchangeId
 
 import {
 cssUrl
-} from "./asset-manifest.js?v=39";
+} from "./asset-manifest.js?v=54";
 
 import {
 ALERT_DEEP_LINK_EXCHANGE_PARAM,

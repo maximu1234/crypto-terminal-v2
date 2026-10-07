@@ -13,7 +13,7 @@ POSITION_DEFAULT_TP_ZONE_PX,
 POSITION_DEFAULT_SL_ZONE_PX,
 POSITION_DEFAULT_WIDTH_BARS,
 POSITION_RR_LABEL_SAMPLE
-} from "./constants.js?v=13";
+} from "./constants.js?v=14";
 
 import {
 formatMoneyUsd,
@@ -32,7 +32,7 @@ formatPositionPrice
 
 import {
 isSeriesLogarithmic
-} from "./fib-spec.js?v=17";
+} from "./fib-spec.js?v=18";
 
 /**
  * @param {{

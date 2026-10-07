@@ -18,7 +18,7 @@ import {
 loadMarketHistory,
 getActiveExchangeId,
 getExchangeDefinition
-} from "./market-api.js?v=7";
+} from "./market-api.js?v=9";
 
 import {
 calculateRSI,

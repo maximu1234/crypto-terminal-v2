@@ -9,7 +9,7 @@ isCoarseTouchViewport
 
 import {
 isFibType
-} from "./fib-spec.js?v=17";
+} from "./fib-spec.js?v=18";
 
 export function createDrawDesktopSelection(
 deps

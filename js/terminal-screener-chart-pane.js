@@ -23,7 +23,7 @@ linkChartsCrosshair
 
 import {
 readCoinsPrefs
-} from "./terminal/terminal-prefs.js?v=29";
+} from "./terminal/terminal-prefs.js?v=30";
 
 import {
 calculateRSI,
@@ -32,7 +32,7 @@ alignRsiWithCandleTimes
 
 import {
 loadMarketHistory
-} from "./market-api.js?v=7";
+} from "./market-api.js?v=9";
 
 import {
 subscribeKline,
@@ -50,7 +50,7 @@ paintCatchupLiveSeries
 
 import {
 mountWidgetDomCrosshair
-} from "./chart-widget-host.js?v=50";
+} from "./chart-widget-host.js?v=59";
 
 function buildBodyHtml(
 showRsi

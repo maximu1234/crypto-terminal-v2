@@ -12,13 +12,13 @@ getDrawToolIconSrc
 
 import {
 closeElliottFlyout
-} from "./elliott-toolbar.js?v=5";
+} from "./elliott-toolbar.js?v=7";
 
 import {
 FIB_EXT_TYPE,
 FIB_RETRACEMENT_TYPE,
 isFibType
-} from "./fib-spec.js?v=17";
+} from "./fib-spec.js?v=18";
 
 const FLYOUT_CLASS =
 "fib-flyout";
@@ -294,16 +294,24 @@ t.closest(
 
 }
 
-function toggleFlyout(
+function openFlyout(
 btn
 ){
+
+if(
+!btn
+){
+return;
+}
 
 if(
 anchorBtn ===
 btn &&
 isFibFlyoutOpen()
 ){
-closeFibFlyout();
+positionFlyout(
+btn
+);
 return;
 }
 
@@ -324,6 +332,70 @@ btn
 
 }
 
+function toggleFlyout(
+btn
+){
+
+if(
+anchorBtn ===
+btn &&
+isFibFlyoutOpen()
+){
+closeFibFlyout();
+return;
+}
+
+openFlyout(
+btn
+);
+
+}
+
+function pickDefaultTool(
+btn,
+pointerType
+){
+
+closeFibFlyout();
+
+const host =
+resolvePickHost(
+btn
+);
+
+if(
+!host
+){
+return;
+}
+
+host.dispatchEvent(
+new CustomEvent(
+"draw-pick-tool",
+{
+bubbles: true,
+detail: {
+tool: FIB_RETRACEMENT_TYPE,
+pointerType: pointerType ||
+"mouse"
+}
+}
+)
+);
+
+}
+
+function wantsToolMenu(
+e
+){
+
+return e?.button ===
+2 ||
+e?.ctrlKey ===
+true;
+
+}
+
 function onDocPointerDown(
 e
 ){
@@ -338,8 +410,31 @@ groupBtn
 ){
 e.preventDefault();
 e.stopPropagation();
+
+if(
+e.pointerType ===
+"touch"
+){
 toggleFlyout(
 groupBtn
+);
+return;
+}
+
+if(
+wantsToolMenu(
+e
+)
+){
+openFlyout(
+groupBtn
+);
+return;
+}
+
+pickDefaultTool(
+groupBtn,
+e.pointerType
 );
 return;
 }
@@ -353,6 +448,31 @@ return;
 }
 
 closeFibFlyout();
+
+}
+
+function onDocContextMenu(
+e
+){
+
+const groupBtn =
+e.target.closest?.(
+"[data-draw-tool-group=\"fib\"]"
+);
+
+if(
+!groupBtn ||
+e.pointerType ===
+"touch"
+){
+return;
+}
+
+e.preventDefault();
+e.stopPropagation();
+openFlyout(
+groupBtn
+);
 
 }
 
@@ -400,6 +520,12 @@ ensureFlyout();
 document.addEventListener(
 "pointerdown",
 onDocPointerDown,
+true
+);
+
+document.addEventListener(
+"contextmenu",
+onDocContextMenu,
 true
 );
 

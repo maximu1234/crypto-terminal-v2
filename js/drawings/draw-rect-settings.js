@@ -11,14 +11,14 @@ import {
 STROKE,
 RECT_DEFAULT_FILL_COLOR,
 RECT_DEFAULT_FILL_OPACITY
-} from "./constants.js?v=13";
+} from "./constants.js?v=14";
 
 import {
 normalizeFibLineStyle,
 normalizeFibLevelWidth,
 setFibLineStyleButton,
 setFibLevelWidthButton
-} from "./fib-spec.js?v=17";
+} from "./fib-spec.js?v=18";
 
 import {
 closeAllFibLineStyleMenus,
@@ -33,10 +33,17 @@ export function rectSettingsHtml(){
 
 return `
 <div class="rect-settings">
-<label class="rect-settings-row">
-<span class="rect-settings-label">Border</span>
-<button type="button" class="rect-border-color-btn" title="Цвет линии" aria-label="Цвет линии"></button>
-<button type="button" class="rect-border-style-btn" title="Тип линии" aria-label="Тип линии"></button>
+<label class="rect-settings-row rect-settings-row--check">
+<input type="checkbox" class="rect-show-horiz" checked />
+<span class="rect-settings-label">Horizontal</span>
+<button type="button" class="rect-horiz-style-btn" title="Тип горизонтальных линий" aria-label="Тип горизонтальных линий"></button>
+<button type="button" class="rect-horiz-color-btn" title="Цвет горизонтальных линий" aria-label="Цвет горизонтальных линий"></button>
+</label>
+<label class="rect-settings-row rect-settings-row--check">
+<input type="checkbox" class="rect-show-vert" checked />
+<span class="rect-settings-label">Vertical</span>
+<button type="button" class="rect-vert-style-btn" title="Тип вертикальных линий" aria-label="Тип вертикальных линий"></button>
+<button type="button" class="rect-vert-color-btn" title="Цвет вертикальных линий" aria-label="Цвет вертикальных линий"></button>
 </label>
 <label class="rect-settings-row rect-settings-row--check">
 <input type="checkbox" class="rect-show-median" />
@@ -103,13 +110,29 @@ if(
 return;
 }
 
-const borderStyleBtn =
+const horizStyleBtn =
 root.querySelector(
-".rect-border-style-btn"
+".rect-horiz-style-btn"
 );
-const borderColorBtn =
+const horizColorBtn =
 root.querySelector(
-".rect-border-color-btn"
+".rect-horiz-color-btn"
+);
+const vertStyleBtn =
+root.querySelector(
+".rect-vert-style-btn"
+);
+const vertColorBtn =
+root.querySelector(
+".rect-vert-color-btn"
+);
+const showHoriz =
+root.querySelector(
+".rect-show-horiz"
+);
+const showVert =
+root.querySelector(
+".rect-show-vert"
 );
 const medianStyleBtn =
 root.querySelector(
@@ -136,24 +159,69 @@ root.querySelector(
 ".rect-show-fill"
 );
 
+const horizColor =
+shape?.horizColor ||
+shape?.color ||
+STROKE;
+const vertColor =
+shape?.vertColor ||
+shape?.color ||
+STROKE;
+
 if(
-borderStyleBtn
+horizStyleBtn
 ){
 setFibLineStyleButton(
-borderStyleBtn,
+horizStyleBtn,
+shape?.horizLineStyle ||
 shape?.lineStyle ||
 "solid"
 );
 }
 
 if(
-borderColorBtn
+vertStyleBtn
 ){
-borderColorBtn.style.setProperty(
-"--rect-swatch",
-shape?.color ||
-STROKE
+setFibLineStyleButton(
+vertStyleBtn,
+shape?.vertLineStyle ||
+shape?.lineStyle ||
+"solid"
 );
+}
+
+if(
+horizColorBtn
+){
+horizColorBtn.style.setProperty(
+"--rect-swatch",
+horizColor
+);
+}
+
+if(
+vertColorBtn
+){
+vertColorBtn.style.setProperty(
+"--rect-swatch",
+vertColor
+);
+}
+
+if(
+showHoriz
+){
+showHoriz.checked =
+shape?.showHorizLines !==
+false;
+}
+
+if(
+showVert
+){
+showVert.checked =
+shape?.showVertLines !==
+false;
 }
 
 if(
@@ -247,13 +315,29 @@ if(
 return {};
 }
 
-const borderStyleBtn =
+const horizStyleBtn =
 root.querySelector(
-".rect-border-style-btn"
+".rect-horiz-style-btn"
 );
-const borderColorBtn =
+const horizColorBtn =
 root.querySelector(
-".rect-border-color-btn"
+".rect-horiz-color-btn"
+);
+const vertStyleBtn =
+root.querySelector(
+".rect-vert-style-btn"
+);
+const vertColorBtn =
+root.querySelector(
+".rect-vert-color-btn"
+);
+const showHoriz =
+root.querySelector(
+".rect-show-horiz"
+);
+const showVert =
+root.querySelector(
+".rect-show-vert"
 );
 const medianStyleBtn =
 root.querySelector(
@@ -282,17 +366,44 @@ parseRectFillSwatch(
 fillSwatch
 );
 
-return {
-color:
-borderColorBtn?.style.getPropertyValue(
+const horizColor =
+horizColorBtn?.style.getPropertyValue(
 "--rect-swatch"
 )?.trim() ||
-STROKE,
-lineStyle:
+STROKE;
+const vertColor =
+vertColorBtn?.style.getPropertyValue(
+"--rect-swatch"
+)?.trim() ||
+STROKE;
+const horizLineStyle =
 normalizeFibLineStyle(
-borderStyleBtn?.dataset.lineStyle
+horizStyleBtn?.dataset.lineStyle
 ) ||
-"solid",
+"solid";
+const vertLineStyle =
+normalizeFibLineStyle(
+vertStyleBtn?.dataset.lineStyle
+) ||
+"solid";
+
+return {
+color:
+horizColor,
+lineStyle:
+horizLineStyle,
+showHorizLines:
+showHoriz
+? showHoriz.checked
+: true,
+showVertLines:
+showVert
+? showVert.checked
+: true,
+horizColor,
+horizLineStyle,
+vertColor,
+vertLineStyle,
 showMedian:
 !!root.querySelector(
 ".rect-show-median"
@@ -344,13 +455,21 @@ if(
 return;
 }
 
-const borderStyleBtn =
+const horizStyleBtn =
 root.querySelector(
-".rect-border-style-btn"
+".rect-horiz-style-btn"
 );
-const borderColorBtn =
+const horizColorBtn =
 root.querySelector(
-".rect-border-color-btn"
+".rect-horiz-color-btn"
+);
+const vertStyleBtn =
+root.querySelector(
+".rect-vert-style-btn"
+);
+const vertColorBtn =
+root.querySelector(
+".rect-vert-color-btn"
 );
 const medianStyleBtn =
 root.querySelector(
@@ -370,10 +489,19 @@ root.querySelector(
 );
 
 if(
-borderStyleBtn
+horizStyleBtn
 ){
 setFibLineStyleButton(
-borderStyleBtn,
+horizStyleBtn,
+"solid"
+);
+}
+
+if(
+vertStyleBtn
+){
+setFibLineStyleButton(
+vertStyleBtn,
 "solid"
 );
 }
@@ -409,7 +537,7 @@ return;
 
 const styleBtn =
 e.target.closest(
-".rect-border-style-btn, .rect-median-style-btn"
+".rect-horiz-style-btn, .rect-vert-style-btn, .rect-median-style-btn"
 );
 
 if(
@@ -478,7 +606,7 @@ return;
 
 const colorBtn =
 e.target.closest(
-".rect-border-color-btn, .rect-median-color-btn, .rect-fill-color-btn"
+".rect-horiz-color-btn, .rect-vert-color-btn, .rect-median-color-btn, .rect-fill-color-btn"
 );
 
 if(
@@ -494,9 +622,13 @@ const isFill =
 colorBtn.classList.contains(
 "rect-fill-color-btn"
 );
-const isBorder =
+const isHoriz =
 colorBtn.classList.contains(
-"rect-border-color-btn"
+"rect-horiz-color-btn"
+);
+const isVert =
+colorBtn.classList.contains(
+"rect-vert-color-btn"
 );
 const fallback =
 isFill
@@ -505,8 +637,15 @@ shape?.fillColor ||
 shape?.color ||
 STROKE
 )
-: isBorder
+: isHoriz
 ? (
+shape?.horizColor ||
+shape?.color ||
+STROKE
+)
+: isVert
+? (
+shape?.vertColor ||
 shape?.color ||
 STROKE
 )
@@ -542,7 +681,7 @@ return;
 
 if(
 e.target.matches(
-".rect-show-median, .rect-show-fill"
+".rect-show-horiz, .rect-show-vert, .rect-show-median, .rect-show-fill"
 )
 ){
 onApply?.();
@@ -555,8 +694,10 @@ signal
 );
 
 [
-borderStyleBtn,
-borderColorBtn,
+horizStyleBtn,
+horizColorBtn,
+vertStyleBtn,
+vertColorBtn,
 medianStyleBtn,
 medianWidthBtn,
 medianColorBtn,

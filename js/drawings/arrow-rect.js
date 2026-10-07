@@ -6,7 +6,7 @@ distToSegment
 import {
 fibLevelDash,
 normalizeFibLineStyle
-} from "./fib-spec.js?v=17";
+} from "./fib-spec.js?v=18";
 
 /** @param {CanvasRenderingContext2D} ctx */
 export function drawFilledArrow(
@@ -586,10 +586,6 @@ const border =
 shapeStyle(
 shape
 );
-const borderDash =
-fibLevelDash(
-shape.lineStyle
-);
 
 if(
 shape.showFill !==
@@ -652,22 +648,129 @@ ctx.restore();
 }
 
 ctx.save();
-ctx.strokeStyle =
-border.color;
 ctx.lineWidth =
 border.width;
+
+const strokeEdge = (
+x1,
+y1,
+x2,
+y2,
+colorRaw,
+lineStyle
+)=>{
+
+const parsed =
+parseDrawColor(
+colorRaw ||
+border.color
+);
+
+ctx.strokeStyle =
+formatDrawColor(
+parsed?.hex ||
+colorRaw ||
+border.color,
+parsed?.opacity ??
+100
+);
 ctx.setLineDash(
-borderDash ||
+fibLevelDash(
+lineStyle
+) ||
 []
 );
-ctx.strokeRect(
+ctx.beginPath();
+ctx.moveTo(
+x1,
+y1
+);
+ctx.lineTo(
+x2,
+y2
+);
+ctx.stroke();
+
+};
+
+if(
+shape.showHorizLines !==
+false
+){
+
+const horizColor =
+shape.horizColor ||
+border.color;
+const horizStyle =
+shape.horizLineStyle ||
+shape.lineStyle;
+
+strokeEdge(
 left +
 0.5,
 top +
 0.5,
-w,
-h
+right +
+0.5,
+top +
+0.5,
+horizColor,
+horizStyle
 );
+strokeEdge(
+left +
+0.5,
+bottom +
+0.5,
+right +
+0.5,
+bottom +
+0.5,
+horizColor,
+horizStyle
+);
+
+}
+
+if(
+shape.showVertLines !==
+false
+){
+
+const vertColor =
+shape.vertColor ||
+border.color;
+const vertStyle =
+shape.vertLineStyle ||
+shape.lineStyle;
+
+strokeEdge(
+left +
+0.5,
+top +
+0.5,
+left +
+0.5,
+bottom +
+0.5,
+vertColor,
+vertStyle
+);
+strokeEdge(
+right +
+0.5,
+top +
+0.5,
+right +
+0.5,
+bottom +
+0.5,
+vertColor,
+vertStyle
+);
+
+}
+
 ctx.setLineDash(
 []
 );
@@ -734,11 +837,99 @@ shape,
 defaults = {}
 ){
 
-shape.lineStyle =
-normalizeFibLineStyle(
+const explicitLineStyle = (
+raw
+)=>
+raw == null ||
+raw === ""
+? ""
+: normalizeFibLineStyle(
+raw
+);
+
+const ownLineStyle =
+explicitLineStyle(
 shape.lineStyle
+);
+const ownHorizStyle =
+explicitLineStyle(
+shape.horizLineStyle
+);
+const ownVertStyle =
+explicitLineStyle(
+shape.vertLineStyle
+);
+const legacyBorder =
+!!ownLineStyle &&
+!ownHorizStyle &&
+!ownVertStyle &&
+typeof shape.showHorizLines !==
+"boolean" &&
+typeof shape.showVertLines !==
+"boolean";
+
+shape.lineStyle =
+ownLineStyle ||
+explicitLineStyle(
+defaults.lineStyle
 ) ||
 "solid";
+
+if(
+typeof shape.showHorizLines !==
+"boolean"
+){
+shape.showHorizLines =
+typeof defaults.showHorizLines ===
+"boolean"
+? defaults.showHorizLines
+: true;
+}
+
+if(
+typeof shape.showVertLines !==
+"boolean"
+){
+shape.showVertLines =
+typeof defaults.showVertLines ===
+"boolean"
+? defaults.showVertLines
+: true;
+}
+
+shape.horizLineStyle =
+ownHorizStyle ||
+(
+legacyBorder
+? ownLineStyle
+: ""
+) ||
+explicitLineStyle(
+defaults.horizLineStyle
+) ||
+shape.lineStyle;
+
+shape.vertLineStyle =
+ownVertStyle ||
+(
+legacyBorder
+? ownLineStyle
+: ""
+) ||
+explicitLineStyle(
+defaults.vertLineStyle
+) ||
+shape.lineStyle;
+
+shape.horizColor =
+shape.horizColor ||
+defaults.horizColor ||
+shape.color;
+
+shape.vertColor =
+shape.vertColor ||
+defaults.vertColor ||
+shape.color;
 
 if(
 typeof shape.showFill !==
@@ -774,8 +965,13 @@ defaults.fillOpacity ??
 0.2
 );
 
+if(
+typeof shape.showMedian !==
+"boolean"
+){
 shape.showMedian =
-!!shape.showMedian;
+!!defaults.showMedian;
+}
 
 shape.medianColor =
 shape.medianColor ||
@@ -793,8 +989,11 @@ defaults.medianLineWidth ||
 );
 
 shape.medianLineStyle =
-normalizeFibLineStyle(
+explicitLineStyle(
 shape.medianLineStyle
+) ||
+explicitLineStyle(
+defaults.medianLineStyle
 ) ||
 "dashed";
 

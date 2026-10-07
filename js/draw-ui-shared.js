@@ -4,11 +4,11 @@ getDrawToolIconSrc
 
 import {
 ensureElliottToolbarEvents
-} from "./drawings/elliott-toolbar.js?v=5";
+} from "./drawings/elliott-toolbar.js?v=7";
 
 import {
 ensureFibToolbarEvents
-} from "./drawings/fib-toolbar.js?v=5";
+} from "./drawings/fib-toolbar.js?v=6";
 
 export function drawToolIconImg(
 name,
@@ -45,7 +45,8 @@ getDrawToolIconSrc(name);
 }
 
 export function mountDrawToolbar(
-container
+container,
+opts
 ){
 
 if(
@@ -55,7 +56,9 @@ return;
 }
 
 container.innerHTML =
-getDrawToolbarButtonsHtml();
+getDrawToolbarButtonsHtml(
+opts
+);
 
 ensureElliottToolbarEvents();
 ensureFibToolbarEvents();
@@ -77,6 +80,17 @@ export const LONG_POSITION_ICON_SVG = drawToolIconImg("long", "draw-tool-icon dr
 export const SHORT_POSITION_ICON_SVG = drawToolIconImg("short", "draw-tool-icon draw-pos-icon draw-pos-icon--short");
 export const FVP_ICON_SVG = drawToolIconImg("fixed-volume-profile");
 export const TRASH_ICON_SVG = drawToolIconImg("trash");
+export const DRAWINGS_EYE_ICON_SVG = `
+<svg class="draw-tool-icon draw-tool-hide-drawings-eye" viewBox="0 0 24 24" aria-hidden="true">
+<path fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" d="M2.2 12S6 6.6 12 6.6 21.8 12 21.8 12 18 17.4 12 17.4 2.2 12 2.2 12z"/>
+<circle cx="12" cy="12" r="2.5" fill="none" stroke="currentColor" stroke-width="1.6"/>
+</svg>`;
+export const DRAWINGS_EYE_OFF_ICON_SVG = `
+<svg class="draw-tool-icon draw-tool-hide-drawings-eye-off" viewBox="0 0 24 24" aria-hidden="true">
+<path fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" d="M3.2 9.2C4.8 7.4 7.6 5.8 12 5.8c4.4 0 7.2 1.6 8.8 3.4M3.2 14.8C4.8 16.6 7.6 18.2 12 18.2c4.4 0 7.2-1.6 8.8-3.4"/>
+<path fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" d="M4 5.2 20 18.8"/>
+<circle cx="12" cy="12" r="2.5" fill="none" stroke="currentColor" stroke-width="1.6"/>
+</svg>`;
 export const SETTINGS_ICON_SVG = `
 <svg class="draw-settings-icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
 <path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" d="M12 3.75 19.25 7.875v8.25L12 20.25 4.75 16.125v-8.25L12 3.75z"/>
@@ -170,6 +184,13 @@ ${getPositionDrawToolbarButtonsHtml(opts)}
 <button type="button" class="${btnClass}" data-draw-tool="fvp" title="Fixed Volume Profile">
 ${FVP_ICON_SVG}
 </button>
+
+${opts.showDrawingsVisibilityToggle ? `
+<button type="button" class="${btnClass} draw-tool-hide-drawings" title="Скрыть рисунки" aria-pressed="false" aria-label="Скрыть рисунки">
+${DRAWINGS_EYE_ICON_SVG}
+${DRAWINGS_EYE_OFF_ICON_SVG}
+</button>
+` : ""}
 
 <button type="button" class="${btnClass} draw-tool-clear-all" title="Удалить все объекты на графике (Shift+Backspace)">
 ${TOOLBAR_CLEAR_TRASH_ICON_SVG}

@@ -17,16 +17,16 @@ isPositionType
 
 import {
 isHorizPriceTool
-} from "./drawings/constants.js?v=13";
+} from "./drawings/constants.js?v=14";
 
 import {
 isElliottType,
 elliottPointCount
-} from "./drawings/elliott-spec.js?v=17";
+} from "./drawings/elliott-spec.js?v=18";
 
 import {
 isFibExtType
-} from "./drawings/fib-spec.js?v=17";
+} from "./drawings/fib-spec.js?v=18";
 
 /**
  * Touch/pointer placement for iPad and coarse-touch viewports.

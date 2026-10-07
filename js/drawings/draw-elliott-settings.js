@@ -15,8 +15,19 @@ normalizeElliottDegree,
 normalizePattern12TpFlags,
 normalizePattern12TpLevels,
 normalizePatternDashOpacity,
+normalizePatternLineStyle,
 parsePattern12TpLevel
-} from "./elliott-spec.js?v=17";
+} from "./elliott-spec.js?v=18";
+
+import {
+setFibLineStyleButton
+} from "./fib-spec.js?v=18";
+
+import {
+closeAllFibLineStyleMenus,
+isFibLineStyleMenuOpenForAnchor,
+openFibLineStyleMenu
+} from "./fib-portals.js?v=3";
 
 export function elliottSettingsHtml(){
 
@@ -50,7 +61,8 @@ ${options}
 </div>
 <label class="elliott-pattern-dash-row hidden">
 <input type="checkbox" class="elliott-pattern-dash-on"/>
-<span>1 → (1) dashed</span>
+<span>1 → (1)</span>
+<button type="button" class="elliott-pattern-line-style-btn elliott-pattern-dash-style-btn" title="Тип линии 1 → (1)" aria-label="Тип линии 1 → (1)"></button>
 </label>
 <div class="elliott-pattern-dash-opacity hidden">
 <div class="tv-color-opacity-label">1 → (1) / TP opacity</div>
@@ -71,6 +83,7 @@ ${options}
 <input type="checkbox" class="elliott-tp-junior-on"/>
 <span>TP (1·2·3)</span>
 </label>
+<button type="button" class="elliott-pattern-line-style-btn elliott-pattern-tp-style-btn" title="Тип линий тейк-профита" aria-label="Тип линий тейк-профита"></button>
 </div>
 <div class="popover-label elliott-tp-levels-label">Take profit</div>
 <div class="elliott-tp-levels">
@@ -273,6 +286,26 @@ shape?.showPatternDash !==
 false;
 }
 
+setFibLineStyleButton(
+root.querySelector(
+".elliott-pattern-dash-style-btn"
+),
+normalizePatternLineStyle(
+shape?.patternDashLineStyle,
+defaults.patternDashLineStyle
+)
+);
+
+setFibLineStyleButton(
+root.querySelector(
+".elliott-pattern-tp-style-btn"
+),
+normalizePatternLineStyle(
+shape?.patternTpLineStyle,
+defaults.patternTpLineStyle
+)
+);
+
 const tpSeniorOn =
 root.querySelector(
 ".elliott-tp-senior-on"
@@ -354,6 +387,14 @@ const dashOn =
 root.querySelector(
 ".elliott-pattern-dash-on"
 );
+const dashStyleBtn =
+root.querySelector(
+".elliott-pattern-dash-style-btn"
+);
+const tpStyleBtn =
+root.querySelector(
+".elliott-pattern-tp-style-btn"
+);
 const dashOpacitySlider =
 root.querySelector(
 ".elliott-pattern-dash-opacity-slider"
@@ -398,6 +439,16 @@ showPatternDash:
 dashOn
 ? !!dashOn.checked
 : true,
+patternDashLineStyle:
+normalizePatternLineStyle(
+dashStyleBtn?.dataset.lineStyle,
+defaults.patternDashLineStyle
+),
+patternTpLineStyle:
+normalizePatternLineStyle(
+tpStyleBtn?.dataset.lineStyle,
+defaults.patternTpLineStyle
+),
 patternDashOpacity:
 Number.isFinite(
 fromSlider
@@ -497,6 +548,43 @@ root.querySelector(
 )?.addEventListener(
 "change",
 commit,
+opts
+);
+
+root.addEventListener(
+"mousedown",
+e=>{
+
+const styleBtn =
+e.target.closest(
+".elliott-pattern-line-style-btn"
+);
+
+if(
+!styleBtn
+){
+return;
+}
+
+e.preventDefault();
+e.stopPropagation();
+
+const wasOpen =
+isFibLineStyleMenuOpenForAnchor(
+styleBtn
+);
+
+closeAllFibLineStyleMenus();
+
+if(
+!wasOpen
+){
+openFibLineStyleMenu(
+styleBtn
+);
+}
+
+},
 opts
 );
 

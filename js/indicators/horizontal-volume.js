@@ -4,7 +4,7 @@
 import {
 EXCHANGE_CHANGED_EVENT,
 loadMarketOrderbook
-} from "../market-api.js?v=7";
+} from "../market-api.js?v=9";
 
 const POLL_MS =
 2500;

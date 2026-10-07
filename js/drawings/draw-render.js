@@ -13,7 +13,7 @@ fibShapeLevelXSpan,
 isFibType,
 isFibExtType,
 resolveFibTrendLineColor
-} from "./fib-spec.js?v=17";
+} from "./fib-spec.js?v=18";
 
 import {
 isPositionType
@@ -22,7 +22,7 @@ isPositionType
 import {
 drawFilledArrow,
 drawRectangleShape
-} from "./arrow-rect.js?v=2";
+} from "./arrow-rect.js?v=4";
 
 import {
 drawFvpShape
@@ -38,10 +38,9 @@ drawBrushPath
 } from "./brush.js?v=2";
 
 import {
-FIB_LINE_DASH,
 isHorizPriceTool,
 horizPriceLineX1
-} from "./constants.js?v=13";
+} from "./constants.js?v=14";
 
 import {
 channelLevelSegment,
@@ -64,9 +63,10 @@ elliottVertexLabel,
 elliottNecklineScreen,
 normalizePattern12TpFlags,
 normalizePatternDashOpacity,
+normalizePatternLineStyle,
 pattern12DashScreen,
 pattern12TpTickLayout
-} from "./elliott-spec.js?v=17";
+} from "./elliott-spec.js?v=18";
 
 /**
  * @param {object} deps
@@ -203,7 +203,12 @@ ctx.lineCap =
 ctx.lineJoin =
 "round";
 ctx.setLineDash(
-FIB_LINE_DASH.dotted
+fibLevelDash(
+normalizePatternLineStyle(
+shape.patternTpLineStyle,
+"dotted"
+)
+)
 );
 ctx.font =
 "11px Arial";
@@ -599,10 +604,12 @@ Math.max(
 (width || 1) *
 0.9
 ),
-[
-7,
-5
-],
+fibLevelDash(
+normalizePatternLineStyle(
+shape.patternDashLineStyle,
+"dashed"
+)
+),
 shape.patternDashOpacity
 );
 }
@@ -886,6 +893,11 @@ lineWidth,
 dash
 );
 
+if(
+shape.fibShowLabels !==
+false
+){
+
 ctx.fillStyle = lineColor;
 ctx.font = "11px Arial";
 ctx.fillText(
@@ -893,6 +905,8 @@ formatFibLabel(row.v),
 labelX,
 y + 4
 );
+
+}
 
 });
 
@@ -1568,6 +1582,9 @@ style.fibLevels,
 fibShowTrendLine:
 style.fibShowTrendLine !==
 false,
+fibShowLabels:
+style.fibShowLabels !==
+false,
 fibTrendLineColor: style.fibTrendLineColor,
 p1: pts[0],
 p2: pts[1],
@@ -1749,6 +1766,12 @@ pts[0],
 color: style.color,
 lineWidth: style.lineWidth,
 lineStyle: style.lineStyle,
+showHorizLines: style.showHorizLines,
+horizLineStyle: style.horizLineStyle,
+horizColor: style.horizColor,
+showVertLines: style.showVertLines,
+vertLineStyle: style.vertLineStyle,
+vertColor: style.vertColor,
 showFill: style.showFill,
 fillColor: style.fillColor,
 fillOpacity: style.fillOpacity,
@@ -1882,6 +1905,7 @@ ensureFibLevelsVisible(
 style.fibLevels
 ),
 fibShowTrendLine: style.fibShowTrendLine,
+fibShowLabels: style.fibShowLabels,
 fibTrendLineColor: style.fibTrendLineColor,
 p1: pts[0],
 p2: previewAnchor
@@ -1916,6 +1940,7 @@ placement.type
 )
 : style.fibLevels,
 fibShowTrendLine: style.fibShowTrendLine,
+fibShowLabels: style.fibShowLabels,
 fibTrendLineColor: style.fibTrendLineColor,
 p1: previewPts[0],
 p2: previewPts[1],
@@ -2003,6 +2028,8 @@ showWave: style.showWave !==
 false,
 showPatternDash: style.showPatternDash !==
 false,
+patternDashLineStyle: style.patternDashLineStyle,
+patternTpLineStyle: style.patternTpLineStyle,
 patternDashOpacity: style.patternDashOpacity,
 ...normalizePattern12TpFlags(
 style.showTpSenior,

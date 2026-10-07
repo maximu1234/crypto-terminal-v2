@@ -22,7 +22,7 @@ bingxPublicAdapter
 
 import {
 moexPublicAdapter
-} from "./exchanges/moex/public.js?v=3";
+} from "./exchanges/moex/public.js?v=5";
 
 import {
 peekBybitSymbolsCache
@@ -180,6 +180,27 @@ options = {}
 return getActivePublicMarketAdapter().loadSymbols(
 options
 );
+
+}
+
+export function peekMarketQuote(
+symbol
+){
+
+const peek =
+getActivePublicMarketAdapter().peekQuote;
+
+if(
+typeof peek !==
+"function"
+){
+return null;
+}
+
+return peek(
+symbol
+) ||
+null;
 
 }
 

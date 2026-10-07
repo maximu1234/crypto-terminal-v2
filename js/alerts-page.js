@@ -56,7 +56,7 @@ import {
 EXCHANGE_CHANGED_EVENT,
 getActiveExchangeDefinition,
 getActiveExchangeId
-} from "./market-api.js?v=7";
+} from "./market-api.js?v=9";
 
 import {
 mountMoexUnavailableStub

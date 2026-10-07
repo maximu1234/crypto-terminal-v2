@@ -22,6 +22,14 @@ html,
 );
 assert.match(
 html,
+/id="fib-show-labels"/
+);
+assert.match(
+html,
+/Подписи/
+);
+assert.match(
+html,
 /fib-trend-color-btn/
 );
 assert.match(
@@ -124,7 +132,9 @@ lineWidth:
 }
 ],
 fibShowTrendLine:
-true
+true,
+fibShowLabels:
+false
 };
 
 mergeFibLevelsAfterGlobalChange(
@@ -141,6 +151,10 @@ false
 assert.equal(
 shape.fibShowTrendLine,
 true
+);
+assert.equal(
+shape.fibShowLabels,
+false
 );
 assert.equal(
 shape.fibLevels[

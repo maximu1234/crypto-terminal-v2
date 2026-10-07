@@ -16,7 +16,7 @@ getActiveExchangeMarkets,
 getActiveExchangeId,
 getActiveExchangeDefinition,
 EXCHANGE_CHANGED_EVENT
-} from "./market-api.js?v=7";
+} from "./market-api.js?v=9";
 
 import {
 clearBybitNetworkIssue
@@ -128,7 +128,7 @@ createSharedDrawUndoStack
 import {
 mountDrawToolbar,
 mountDrawToolIcons
-} from "./draw-ui-shared.js?v=45";
+} from "./draw-ui-shared.js?v=47";
 import {
 mountTerminalChecklist
 } from "./terminal/terminal-checklist.js?v=1";
@@ -140,6 +140,10 @@ mountTerminalDxBall
 import {
 mountChartSnapshot
 } from "./chart-snapshot.js?v=7";
+
+import {
+mountChartSymbolFullName
+} from "./symbol-display-name.js?v=3";
 
 import {
 perfMark,
@@ -197,7 +201,7 @@ applyCoinsPrefs,
 applySortForCurrentMarket,
 readUrlParams,
 readLastViewForExchange
-} from "./terminal/terminal-prefs.js?v=29";
+} from "./terminal/terminal-prefs.js?v=30";
 
 import {
 mountDesktopOpenChartHandler
@@ -219,7 +223,7 @@ setCoinsTableHooks,
 syncCoinListFreezeFromFlagMenus,
 getExtraCoinMarkets,
 isExtraCoinMarket
-} from "./terminal/terminal-table.js?v=44";
+} from "./terminal/terminal-table.js?v=45";
 
 import {
 createCoinsChartSwitchVeil
@@ -244,7 +248,7 @@ import {
 initTerminalMultiChart,
 syncPrimaryTfToLayout,
 isTerminalMultiChartLayout
-} from "./terminal-multi-chart.js?v=27";
+} from "./terminal-multi-chart.js?v=34";
 
 import {
 mountTerminalLayoutPicker
@@ -3065,7 +3069,11 @@ document.body.classList.add(
 try{
 
 mountDrawToolbar(
-document.getElementById("draw-toolbar")
+document.getElementById("draw-toolbar"),
+{
+showDrawingsVisibilityToggle:
+true
+}
 );
 mountDrawToolIcons(
 document
@@ -3786,7 +3794,7 @@ const {
 initWidgetDrawings
 } =
 await import(
-"./chart-widget-host.js?v=50"
+"./chart-widget-host.js?v=59"
 );
 const {
 initChartIndicators
@@ -4425,6 +4433,15 @@ createPattern12EarlyT3Indicator
 
 syncMacdDrawingTools();
 
+mountChartSymbolFullName({
+getSymbol(){
+return currentSymbol;
+},
+getExchange(){
+return getActiveExchangeId();
+}
+});
+
 document.getElementById(
 "rsi-hud"
 )?.addEventListener(
@@ -5008,34 +5025,25 @@ searchInput.value =
 }
 
 if(
-isActiveRealtimeMarketDataset(
-nextMarket
-) &&
 !coinsMarketHasSymbols(
 nextMarket
 )
 ){
 
-try{
-await initSymbols({
-forceNetwork:true
-});
-}catch(
-err
+const cached =
+peekMarketSymbolsCache();
+
+if(
+cached?.length
 ){
-console.warn(
-"Terminal market symbols:",
-err?.message ||
-err
+applyInstrumentLists(
+cached
 );
 }
 
 }
 
 generateMarketData();
-
-await primeTickerSnapshots();
-
 renderList();
 
 resolveInitialSymbolAndTf();
@@ -5051,10 +5059,64 @@ currentSymbol
 if(
 currentSymbol
 ){
-await loadSymbol(
+void loadSymbol(
 currentSymbol
 );
 }
+
+if(
+isActiveRealtimeMarketDataset(
+nextMarket
+) &&
+!coinsMarketHasSymbols(
+nextMarket
+)
+){
+
+void initSymbols({
+forceNetwork:true
+}).then(
+()=>{
+
+if(
+coinsState().currentDataset !==
+nextMarket
+){
+return;
+}
+
+generateMarketData();
+renderList();
+
+}
+).catch(
+err=>{
+console.warn(
+"Terminal market symbols:",
+err?.message ||
+err
+);
+}
+);
+
+return;
+
+}
+
+void primeTickerSnapshots().then(
+()=>{
+
+if(
+coinsState().currentDataset !==
+nextMarket
+){
+return;
+}
+
+renderList();
+
+}
+);
 
 }
 
@@ -7189,6 +7251,19 @@ currentDataset =
 "all";
 }
 
+const cachedSymbols =
+peekMarketSymbolsCache();
+
+if(
+cachedSymbols?.length
+){
+applyInstrumentLists(
+cachedSymbols
+);
+generateMarketData();
+renderList();
+}
+
 await refreshCoinsMarketUi().catch(
 err=>{
 console.warn(
@@ -7347,11 +7422,7 @@ async function refreshCoinsMarketUi(){
 
 try{
 
-await initSymbols({
-forceNetwork:
-getActiveExchangeId() ===
-"moex"
-});
+await initSymbols();
 
 }catch(
 err

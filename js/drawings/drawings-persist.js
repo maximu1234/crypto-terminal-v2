@@ -5,7 +5,7 @@
 import {
 STROKE,
 createRectangleToolDefaults
-} from "./constants.js?v=13";
+} from "./constants.js?v=14";
 
 import {
 ensureFibLevelsVisible,
@@ -13,7 +13,7 @@ finalizeFibLevels,
 isFibType,
 isFibExtType,
 resolveFibTrendLineColor
-} from "./fib-spec.js?v=17";
+} from "./fib-spec.js?v=18";
 
 import {
 isPositionType,
@@ -26,7 +26,7 @@ ensureBrushShape
 
 import {
 normalizeRectangleShape
-} from "./arrow-rect.js?v=2";
+} from "./arrow-rect.js?v=4";
 
 import {
 isFvpType,
@@ -45,7 +45,7 @@ ensureChannelLevelsVisible
 import {
 isElliottType,
 normalizeElliottShape
-} from "./elliott-spec.js?v=17";
+} from "./elliott-spec.js?v=18";
 
 import {
 drawingsStorageKey
@@ -172,6 +172,12 @@ typeof shape.fibShowTrendLine ===
 shape.type
 );
 
+shape.fibShowLabels =
+typeof shape.fibShowLabels ===
+"boolean"
+? shape.fibShowLabels
+: true;
+
 shape.fibTrendLineColor =
 resolveFibTrendLineColor(
 shape.fibTrendLineColor
@@ -245,16 +251,31 @@ shape.type ===
 "rectangle"
 ){
 
+const rectFactory =
+createRectangleToolDefaults();
+
 normalizeRectangleShape(
 shape,
-createRectangleToolDefaults({
+{
 fillColor:
+shape.fillColor ||
 shape.color ||
-createRectangleToolDefaults().color,
+rectFactory.fillColor,
+fillOpacity:
+Number.isFinite(
+Number(
+shape.fillOpacity
+)
+)
+? Number(
+shape.fillOpacity
+)
+: rectFactory.fillOpacity,
 medianColor:
+shape.medianColor ||
 shape.color ||
-createRectangleToolDefaults().color
-})
+rectFactory.medianColor
+}
 );
 
 }

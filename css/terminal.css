@@ -901,9 +901,16 @@ form.draw-position-risk{
 }
 
 /* 2× trash asset (50×70); glyph has padding — scale up to match 20px SVG neighbors */
+.float-delete{
+  height:36px;
+}
+
 .float-delete .draw-tool-icon{
   width:24px;
   height:34px;
+  pointer-events:none;
+  -webkit-user-drag:none;
+  user-select:none;
 }
 
 .draw-settings-icon,
@@ -1524,6 +1531,31 @@ form.draw-position-risk{
   z-index:1;
   pointer-events:auto;
   touch-action:pan-x pan-y;
+}
+
+body.terminal-page:not(.algo-trading-page) .chart-symbol-fullname{
+  position:absolute;
+  top:8px;
+  left:10px;
+  z-index:20;
+  max-width:min(72%,420px);
+  margin:0;
+  font:500 12px/1.35 system-ui,-apple-system,sans-serif;
+  color:#d1d4dc;
+  letter-spacing:0.01em;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  pointer-events:none;
+  user-select:none;
+}
+
+body.terminal-page:not(.algo-trading-page) .chart-symbol-fullname[hidden]{
+  display:none !important;
+}
+
+body.terminal-page:not(.algo-trading-page) #chart-wrap:has(.chart-symbol-fullname:not([hidden])) .chart-indicator-legend{
+  top:26px;
 }
 
 .coins-chart-turnover24{
@@ -2547,7 +2579,8 @@ body.trade-page .coin.has-position .coin-symbol{
   cursor:pointer;
 }
 
-.rect-border-style-btn,
+.rect-horiz-style-btn,
+.rect-vert-style-btn,
 .rect-median-style-btn{
   width:40px;
   height:28px;
@@ -2570,7 +2603,8 @@ body.trade-page .coin.has-position .coin-symbol{
   cursor:pointer;
 }
 
-.rect-border-color-btn,
+.rect-horiz-color-btn,
+.rect-vert-color-btn,
 .rect-median-color-btn,
 .rect-fill-color-btn{
   width:28px;

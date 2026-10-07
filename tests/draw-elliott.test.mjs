@@ -629,6 +629,14 @@ assert.equal(
 defaults.patternDashOpacity,
 PATTERN_12_DEFAULT_DASH_OPACITY
 );
+assert.equal(
+defaults.patternDashLineStyle,
+"dashed"
+);
+assert.equal(
+defaults.patternTpLineStyle,
+"dotted"
+);
 
 const shape =
 normalizeElliottShape({
@@ -1461,6 +1469,43 @@ html,
 assert.match(
 html,
 /1 → \(1\) \/ TP opacity/
+);
+assert.match(
+html,
+/elliott-pattern-dash-style-btn/
+);
+assert.match(
+html,
+/elliott-pattern-tp-style-btn/
+);
+assert.equal(
+migrateElliottToolDefaults(
+{
+elliottDefaultsVersion:
+ELLIOTT_TOOL_DEFAULTS_VERSION,
+patternDashLineStyle:
+"solid",
+patternTpLineStyle:
+"dashed"
+},
+PATTERN_12
+).patternDashLineStyle,
+"solid"
+);
+assert.equal(
+normalizeElliottShape({
+type: PATTERN_12,
+patternTpLineStyle: "solid",
+points: []
+}).patternTpLineStyle,
+"solid"
+);
+assert.equal(
+normalizeElliottShape({
+type: PATTERN_12,
+points: []
+}).patternDashLineStyle,
+"dashed"
 );
 assert.equal(
 (html.match(

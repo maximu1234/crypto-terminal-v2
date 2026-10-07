@@ -12,8 +12,9 @@ filterMarketItemsByMinVolume
 
 import {
 isActiveRealtimeMarketDataset,
-isExchangeTradingEnabled
-} from "../market-api.js?v=7";
+isExchangeTradingEnabled,
+peekMarketQuote
+} from "../market-api.js?v=9";
 
 import {
 connectKlineStream,
@@ -368,6 +369,15 @@ const prev =
 previous.get(
 symbol
 );
+const seeded =
+Number(
+prev?.price
+) >
+0
+? null
+: peekMarketQuote(
+symbol
+);
 
 return {
 symbol,
@@ -375,10 +385,16 @@ price:
 Number(
 prev?.price
 ) ||
+Number(
+seeded?.price
+) ||
 0,
 change24:
 Number(
 prev?.change24
+) ||
+Number(
+seeded?.change24
 ) ||
 0,
 change1h:
@@ -389,6 +405,9 @@ prev?.change1h
 volume24:
 Number(
 prev?.volume24
+) ||
+Number(
+seeded?.volume24
 ) ||
 0
 };

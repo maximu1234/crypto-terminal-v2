@@ -3,7 +3,7 @@
  */
 import {
 cssUrl
-} from "./asset-manifest.js?v=39";
+} from "./asset-manifest.js?v=54";
 
 import {
 isWatchlistPage
@@ -35,7 +35,7 @@ loadTradeExchangeModules
 
 import {
 getActiveExchangeId
-} from "./market-api.js?v=7";
+} from "./market-api.js?v=9";
 
 const TRADE_CSS =
 [

@@ -5,7 +5,7 @@
  */
 import {
 fibPriceAtRatio
-} from "./fib-spec.js?v=17";
+} from "./fib-spec.js?v=18";
 
 export const ELLIOTT_DEFAULT_COLOR =
 "#38bdf8";
@@ -46,6 +46,43 @@ false;
 
 export const PATTERN_12_DEFAULT_DASH_OPACITY =
 100;
+
+export const PATTERN_12_DEFAULT_DASH_LINE_STYLE =
+"dashed";
+
+export const PATTERN_12_DEFAULT_TP_LINE_STYLE =
+"dotted";
+
+export function normalizePatternLineStyle(
+raw,
+fallback
+){
+
+if(
+raw ===
+"solid" ||
+raw ===
+"dashed" ||
+raw ===
+"dotted"
+){
+return raw;
+}
+
+if(
+fallback ===
+"solid" ||
+fallback ===
+"dashed" ||
+fallback ===
+"dotted"
+){
+return fallback;
+}
+
+return "solid";
+
+}
 
 export const PATTERN_12_TP_TICK_PAD_PX =
 14;
@@ -1313,6 +1350,10 @@ isP12
 : true,
 showPatternDash:
 true,
+patternDashLineStyle:
+PATTERN_12_DEFAULT_DASH_LINE_STYLE,
+patternTpLineStyle:
+PATTERN_12_DEFAULT_TP_LINE_STYLE,
 patternDashOpacity:
 isP12
 ? PATTERN_12_DEFAULT_DASH_OPACITY
@@ -1416,6 +1457,20 @@ keepP12Custom
 ? saved.showPatternDash !==
 false
 : base.showPatternDash,
+patternDashLineStyle:
+keepP12Custom
+? normalizePatternLineStyle(
+saved.patternDashLineStyle,
+base.patternDashLineStyle
+)
+: base.patternDashLineStyle,
+patternTpLineStyle:
+keepP12Custom
+? normalizePatternLineStyle(
+saved.patternTpLineStyle,
+base.patternTpLineStyle
+)
+: base.patternTpLineStyle,
 patternDashOpacity:
 keepP12Custom
 ? normalizePatternDashOpacity(
@@ -1902,6 +1957,18 @@ typeof shape.showPatternDash ===
 "boolean"
 ? shape.showPatternDash
 : defaults.showPatternDash;
+shape.patternDashLineStyle =
+normalizePatternLineStyle(
+shape.patternDashLineStyle,
+defaults.patternDashLineStyle ||
+PATTERN_12_DEFAULT_DASH_LINE_STYLE
+);
+shape.patternTpLineStyle =
+normalizePatternLineStyle(
+shape.patternTpLineStyle,
+defaults.patternTpLineStyle ||
+PATTERN_12_DEFAULT_TP_LINE_STYLE
+);
 shape.patternDashOpacity =
 shape.patternDashOpacity ==
 null

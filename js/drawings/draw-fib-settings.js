@@ -7,7 +7,7 @@ STROKE,
 DEFAULT_FIB_SPEC,
 DEFAULT_FIB_EXT_SPEC,
 FIB_TREND_LINE_COLOR
-} from "./constants.js?v=13";
+} from "./constants.js?v=14";
 
 import {
 normalizeFibLineStyle,
@@ -22,7 +22,7 @@ parseFibRatioField,
 setFibLineStyleButton,
 setFibLevelWidthButton,
 resolveFibTrendLineColor
-} from "./fib-spec.js?v=17";
+} from "./fib-spec.js?v=18";
 
 import {
 closeAllFibLineStyleMenus,
@@ -98,6 +98,12 @@ return `
 <span>Линия тренда</span>
 </label>
 <button type="button" class="fib-level-color-btn fib-trend-color-btn" title="Цвет линии тренда" aria-label="Цвет линии тренда"></button>
+</div>
+<div class="fib-trend-row">
+<label class="fib-trend-label">
+<input type="checkbox" id="fib-show-labels" checked />
+<span>Подписи</span>
+</label>
 </div>
 <div class="fib-levels-global">
 <span class="fib-levels-global-label">Levels line</span>
@@ -301,7 +307,8 @@ fibLevels,
 fibShowTrendLine,
 fallbackColor,
 fallbackWidth,
-fibTrendLineColor
+fibTrendLineColor,
+fibShowLabels = true
 ){
 
 if(
@@ -420,6 +427,19 @@ trendEl
 ){
 trendEl.checked =
 !!fibShowTrendLine;
+}
+
+const labelsEl =
+root.querySelector(
+"#fib-show-labels"
+);
+
+if(
+labelsEl
+){
+labelsEl.checked =
+fibShowLabels !==
+false;
 }
 
 const trendColorBtn =
@@ -550,6 +570,14 @@ const fibShowTrendLine =
 trendEl
 ? !!trendEl.checked
 : false;
+const labelsEl =
+root.querySelector(
+"#fib-show-labels"
+);
+const fibShowLabels =
+labelsEl
+? !!labelsEl.checked
+: true;
 const trendColorBtn =
 root.querySelector(
 ".fib-trend-color-btn"
@@ -684,6 +712,7 @@ return {
 fibLevels:
 template,
 fibShowTrendLine,
+fibShowLabels,
 fibTrendLineColor,
 lineWidth:
 globalLineWidth,
@@ -818,6 +847,15 @@ levelWidth;
 
 shape.fibShowTrendLine =
 panel.fibShowTrendLine;
+
+if(
+typeof panel.fibShowLabels ===
+"boolean"
+){
+shape.fibShowLabels =
+panel.fibShowLabels;
+}
+
 shape.fibTrendLineColor =
 resolveFibTrendLineColor(
 panel.fibTrendLineColor ??
@@ -977,6 +1015,8 @@ return;
 if(
 e.target?.id ===
 "fib-show-trend-line" ||
+e.target?.id ===
+"fib-show-labels" ||
 e.target?.classList.contains(
 "fib-level-on"
 ) ||

@@ -44,7 +44,7 @@ buildChartRsiPoints
 import {
 loadMarketHistory,
 getActiveExchangeId
-} from "./market-api.js?v=7";
+} from "./market-api.js?v=9";
 
 import {
 subscribeKline,
@@ -105,7 +105,7 @@ mountAlgoTradeUi
 
 import {
 mountAlgoTradingDrawings
-} from "./algo-trading/drawings.js?v=20";
+} from "./algo-trading/drawings.js?v=27";
 
 import {
 mountAlgoTradingIndicators

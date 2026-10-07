@@ -6,11 +6,13 @@ pingMoexPublic
 
 import {
 MOEX_BOARD_SPECS,
+MOEX_LIST_LIMIT,
 moexBoardSecuritiesPath,
+moexBoardListQuery,
 moexCandlesPath,
 normalizeMoexInstrument,
 buildMoexMarketLists
-} from "./listings.js?v=1";
+} from "./listings.js?v=2";
 
 import {
 tfToMoexInterval,
@@ -29,6 +31,13 @@ const SYMBOLS_CACHE_TTL_MS =
 60 *
 1000;
 
+const SYMBOLS_STALE_MAX_MS =
+7 *
+24 *
+60 *
+60 *
+1000;
+
 const MARKETDATA_REFRESH_MIN_MS =
 8000;
 
@@ -39,7 +48,11 @@ let lastMarketdataRefreshAt =
 const locationBySymbol =
 new Map();
 
-function readSymbolsCache(){
+/** @type {Map<string, Record<string, unknown>>} */
+const quoteBySymbol =
+new Map();
+
+function readSymbolsCacheEntry(){
 
 try{
 
@@ -65,22 +78,105 @@ if(
 return null;
 }
 
-if(
-Date.now() -
+const savedAt =
 Number(
 parsed.savedAt ||
 0
-) >
-SYMBOLS_CACHE_TTL_MS
+);
+
+if(
+Date.now() -
+savedAt >
+SYMBOLS_STALE_MAX_MS
 ){
 return null;
 }
 
-return parsed.instruments;
+return {
+savedAt,
+instruments:
+parsed.instruments
+};
 
 }catch{
 return null;
 }
+
+}
+
+export function peekMoexQuote(
+symbol
+){
+
+const sym =
+toMoexSymbol(
+symbol
+);
+
+if(
+!sym
+){
+return null;
+}
+
+if(
+!quoteBySymbol.has(
+sym
+)
+){
+
+const cached =
+peekMoexSymbolsCache();
+
+if(
+cached?.length
+){
+rememberLocations(
+cached
+);
+}
+
+}
+
+const item =
+quoteBySymbol.get(
+sym
+);
+const price =
+Number(
+item?.last
+) ||
+0;
+
+if(
+!(
+price >
+0
+)
+){
+return null;
+}
+
+return {
+price,
+change24:
+Number(
+item?.changePct
+) ||
+0,
+volume24:
+Number(
+item?.volume24
+) ||
+0
+};
+
+}
+
+function peekMoexSymbolsCache(){
+
+return readSymbolsCacheEntry()?.instruments ||
+null;
 
 }
 
@@ -108,6 +204,7 @@ instruments
 ){
 
 locationBySymbol.clear();
+quoteBySymbol.clear();
 
 for(
 const item of
@@ -139,6 +236,10 @@ item.market,
 board:
 item.board
 }
+);
+quoteBySymbol.set(
+sym,
+item
 );
 
 }
@@ -174,42 +275,24 @@ instruments
 
 /**
  * @param {import("./listings.js").MoexBoardSpec} spec
+ * @param {number} page
  */
-async function loadBoardInstruments(
-spec
-){
-
-const basePath =
-moexBoardSecuritiesPath(
-spec.engine,
-spec.market,
-spec.board
-);
-const maxPages =
-Number(
-spec.maxPages
-) > 0
-? Number(
-spec.maxPages
-)
-: 5;
-
-const mdBySecid =
-new Map();
-const securities =
-[];
-
-for(
-let page =
-0;
-page <
-maxPages;
-page++
+async function fetchBoardPage(
+spec,
+page
 ){
 
 const json =
 await fetchMoex(
-`${basePath}?iss.meta=off&start=${page * 100}`,
+moexBoardListQuery(
+moexBoardSecuritiesPath(
+spec.engine,
+spec.market,
+spec.board
+),
+page *
+MOEX_LIST_LIMIT
+),
 {
 timeoutMs:
 12000,
@@ -218,18 +301,42 @@ retries:
 }
 );
 
-const secRows =
+return {
+secRows:
 issBlockToRows(
 json?.securities
-);
-const mdRows =
+),
+mdRows:
 issBlockToRows(
 json?.marketdata
-);
+)
+};
+
+}
+
+/**
+ * @param {import("./listings.js").MoexBoardSpec} spec
+ * @param {{ secRows: object[], mdRows: object[] }[]} pages
+ */
+function instrumentsFromBoardPages(
+spec,
+pages
+){
+
+const mdBySecid =
+new Map();
+const securities =
+[];
+
+for(
+const page of
+pages
+){
 
 for(
 const row of
-mdRows
+page?.mdRows ||
+[]
 ){
 
 const id =
@@ -249,22 +356,12 @@ row
 
 }
 
-if(
-!secRows.length
-){
-break;
-}
-
 securities.push(
-...secRows
+...(
+page?.secRows ||
+[]
+)
 );
-
-if(
-secRows.length <
-100
-){
-break;
-}
 
 }
 
@@ -310,6 +407,104 @@ item
 }
 
 return out;
+
+}
+
+/**
+ * Страница 0 сразу, остальные страницы борда — одним параллельным заходом.
+ * @param {import("./listings.js").MoexBoardSpec} spec
+ * @param {{ onFirstPage?: ((rows: object[]) => void) | null }} [hooks]
+ */
+async function loadBoardInstruments(
+spec,
+hooks = {}
+){
+
+const maxPages =
+Number(
+spec.maxPages
+) > 0
+? Number(
+spec.maxPages
+)
+: 5;
+const first =
+await fetchBoardPage(
+spec,
+0
+).catch(
+()=>
+null
+);
+const firstPages =
+first
+? [
+first
+]
+: [];
+
+if(
+first?.secRows?.length &&
+typeof hooks.onFirstPage ===
+"function"
+){
+hooks.onFirstPage(
+instrumentsFromBoardPages(
+spec,
+firstPages
+)
+);
+}
+
+if(
+first &&
+first.secRows.length <
+MOEX_LIST_LIMIT
+){
+return instrumentsFromBoardPages(
+spec,
+firstPages
+);
+}
+
+const rest =
+await Promise.all(
+Array.from(
+{
+length:
+Math.max(
+0,
+maxPages -
+1
+)
+},
+(
+_,
+index
+)=>
+fetchBoardPage(
+spec,
+index +
+1
+).catch(
+()=>
+(
+{
+secRows:[],
+mdRows:[]
+}
+)
+)
+)
+);
+
+return instrumentsFromBoardPages(
+spec,
+[
+...firstPages,
+...rest
+]
+);
 
 }
 
@@ -366,92 +561,78 @@ onPartial
 } = {}
 ){
 
-const primary =
-MOEX_BOARD_SPECS[
-0
-];
-const rest =
-MOEX_BOARD_SPECS.slice(
-1
-);
-
-/* Page 0 TQBR → сразу в UI (~0.5–2с), остальное догружаем. */
-const primaryFirst =
-await loadBoardInstruments({
-...primary,
-maxPages:
-1
-}).catch(
-()=>
-[]
-);
-
-if(
-typeof onPartial ===
-"function" &&
-primaryFirst.length
-){
-onPartial(
-primaryFirst
-);
-}
-
-const [
-primaryRest,
-...more
-] =
+const batches =
 await Promise.all(
-[
+MOEX_BOARD_SPECS.map(
+(
+spec,
+index
+)=>
 loadBoardInstruments(
-primary
-).catch(
-()=>
-[]
-),
-...rest.map(
-spec=>
-loadBoardInstruments(
-spec
+spec,
+{
+onFirstPage:
+index ===
+0 &&
+typeof onPartial ===
+"function"
+? onPartial
+: null
+}
 ).catch(
 ()=>
 []
 )
 )
-]
 );
 
 return mergeInstrumentLists(
-primaryFirst,
-primaryRest,
-...more
+...batches
 );
 
 }
 
-export async function loadMoexSymbols(
-options = {}
+function publishSymbolList(
+instruments,
+{
+allowPartialCache
+} = {}
 ){
 
 if(
-options.skipCache !==
-true &&
-options.forceNetwork !==
-true
+!instruments?.length
 ){
+return;
+}
 
 const cached =
-readSymbolsCache();
+peekMoexSymbolsCache();
 
 if(
-cached?.length
+allowPartialCache ===
+false &&
+cached &&
+cached.length >
+instruments.length
 ){
-rememberLocations(
-cached
-);
-return cached;
+return;
 }
 
+rememberLocations(
+instruments
+);
+writeSymbolsCache(
+instruments
+);
+dispatchMoexSymbolsUpdated(
+instruments
+);
+
 }
+
+function beginSymbolsLoad(
+publishPartial
+){
 
 if(
 symbolsInflight
@@ -466,35 +647,35 @@ async()=>{
 const instruments =
 await loadAllInstrumentsFromNetwork(
 {
-onPartial:(
+onPartial:
+publishPartial
+? (
 partial
 )=>{
 
-rememberLocations(
-partial
-);
-writeSymbolsCache(
-partial
-);
-dispatchMoexSymbolsUpdated(
-partial
-);
-
-}
+publishSymbolList(
+partial,
+{
+allowPartialCache:
+false
 }
 );
 
-writeSymbolsCache(
-instruments
-);
-rememberLocations(
-instruments
-);
-dispatchMoexSymbolsUpdated(
-instruments
+}
+: null
+}
 );
 
-return instruments;
+if(
+instruments?.length
+){
+publishSymbolList(
+instruments
+);
+}
+
+return instruments ||
+[];
 
 }
 )().finally(
@@ -505,6 +686,56 @@ null;
 );
 
 return symbolsInflight;
+
+}
+
+export async function loadMoexSymbols(
+options = {}
+){
+
+const bypassCache =
+options.skipCache ===
+true ||
+options.forceNetwork ===
+true;
+
+if(
+!bypassCache
+){
+
+const cached =
+peekMoexSymbolsCache();
+
+if(
+cached?.length
+){
+rememberLocations(
+cached
+);
+
+const entry =
+readSymbolsCacheEntry();
+
+if(
+!entry ||
+Date.now() -
+entry.savedAt >
+SYMBOLS_CACHE_TTL_MS
+){
+void beginSymbolsLoad(
+false
+);
+}
+
+return cached;
+
+}
+
+}
+
+return beginSymbolsLoad(
+true
+);
 
 }
 
@@ -533,7 +764,7 @@ sym,
 }
 
 const cached =
-readSymbolsCache();
+peekMoexSymbolsCache();
 
 if(
 cached?.length
@@ -1154,34 +1385,18 @@ await Promise.all(
 MOEX_BOARD_SPECS.map(
 async spec=>{
 
-const basePath =
-moexBoardSecuritiesPath(
-spec.engine,
-spec.market,
-spec.board
-);
-const pages =
-Math.min(
-2,
-Number(
-spec.maxPages
-) ||
-2
-);
-
-for(
-let page =
-0;
-page <
-pages;
-page++
-){
-
 try{
 
 const json =
 await fetchMoex(
-`${basePath}?iss.meta=off&start=${page * 100}`,
+moexBoardListQuery(
+moexBoardSecuritiesPath(
+spec.engine,
+spec.market,
+spec.board
+),
+0
+),
 {
 timeoutMs:
 10000,
@@ -1193,12 +1408,6 @@ const mdRows =
 issBlockToRows(
 json?.marketdata
 );
-
-if(
-!mdRows.length
-){
-break;
-}
 
 for(
 const md of
@@ -1248,17 +1457,8 @@ item.volume24;
 
 }
 
-if(
-mdRows.length <
-100
-){
-break;
-}
-
 }catch{
-break;
-}
-
+/* этот борд пропускаем, остальные уже в пути */
 }
 
 }
@@ -1323,6 +1523,16 @@ instruments
 
 },
 
+peekQuote(
+symbol
+){
+
+return peekMoexQuote(
+symbol
+);
+
+},
+
 async loadOrderbook(){
 
 return {
@@ -1342,12 +1552,12 @@ now -
 lastMarketdataRefreshAt >=
 MARKETDATA_REFRESH_MIN_MS
 ){
-await refreshMoexMarketdata().catch(
+lastMarketdataRefreshAt =
+now;
+void refreshMoexMarketdata().catch(
 ()=>
 null
 );
-lastMarketdataRefreshAt =
-Date.now();
 }
 
 return loadMoexTickers();

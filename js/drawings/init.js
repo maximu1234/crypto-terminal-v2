@@ -5,11 +5,11 @@ formatDrawColor
 
 import {
 TRASH_ICON_SVG
-} from "../draw-ui-shared.js?v=45";
+} from "../draw-ui-shared.js?v=47";
 
 import {
 closeAllWidgetDrawToolsMenus
-} from "../watchlist-draw-ui.js?v=29";
+} from "../watchlist-draw-ui.js?v=30";
 
 import {
 ensureDrawToolsVisible
@@ -23,7 +23,7 @@ recordDrawingTombstone
 import {
 EXCHANGE_CHANGED_EVENT,
 loadMarketHistory
-} from "../market-api.js?v=7";
+} from "../market-api.js?v=9";
 
 import {
 registerDrawingsStoragePoller,
@@ -59,12 +59,12 @@ HANDLE_STROKE,
 WIDTH_OPTIONS,
 isHorizPriceTool,
 horizPriceLineX1
-} from "./constants.js?v=13";
+} from "./constants.js?v=14";
 
 import {
 getRectangleHandleScreens,
 moveRectangleHandle
-} from "./arrow-rect.js?v=2";
+} from "./arrow-rect.js?v=4";
 
 import {
 bindFvpDataSource,
@@ -90,7 +90,7 @@ getFibRows,
 isSeriesLogarithmic,
 isFibType,
 isFibExtType
-} from "./fib-spec.js?v=17";
+} from "./fib-spec.js?v=18";
 
 import {
 setFibPanelCommitHook,
@@ -118,7 +118,7 @@ getPositionHandleScreens as resolvePositionHandleScreens
 
 import {
 createDrawPrefs
-} from "./draw-prefs.js?v=13";
+} from "./draw-prefs.js?v=16";
 
 import {
 createPositionDraw
@@ -130,11 +130,11 @@ pickUi
 
 import {
 createDrawHitTester
-} from "./draw-hit.js?v=21";
+} from "./draw-hit.js?v=22";
 
 import {
 createDrawRenderer
-} from "./draw-render.js?v=31";
+} from "./draw-render.js?v=34";
 
 import {
 snapPlotToCandleWick
@@ -152,7 +152,7 @@ updateChartRulerLabelEl
 
 import {
 mountTabletDrawInput
-} from "../drawings-tablet-input.js?v=12";
+} from "../drawings-tablet-input.js?v=13";
 
 import {
 cloneDrawingsForUndo,
@@ -165,11 +165,11 @@ createDrawDesktopSelection
 
 import {
 createDrawingsPersist
-} from "./drawings-persist.js?v=21";
+} from "./drawings-persist.js?v=24";
 
 import {
 createDrawStyleBar
-} from "./draw-style-bar.js?v=67";
+} from "./draw-style-bar.js?v=73";
 
 import {
 createDrawAlertsChart
@@ -177,7 +177,7 @@ createDrawAlertsChart
 
 import {
 createDrawPlacement
-} from "./draw-placement.js?v=24";
+} from "./draw-placement.js?v=27";
 
 import {
 createDrawTextEditor,
@@ -188,17 +188,17 @@ hitTestTextBody
 import {
 isElliottType,
 listElliottHandles
-} from "./elliott-spec.js?v=17";
+} from "./elliott-spec.js?v=18";
 
 import {
 closeElliottFlyout,
 syncElliottGroupActive
-} from "./elliott-toolbar.js?v=5";
+} from "./elliott-toolbar.js?v=7";
 
 import {
 closeFibFlyout,
 syncFibGroupActive
-} from "./fib-toolbar.js?v=5";
+} from "./fib-toolbar.js?v=6";
 
 import {
 createBrushPlacement
@@ -206,7 +206,7 @@ createBrushPlacement
 
 import {
 createDrawEditInteraction
-} from "./draw-edit-interaction.js?v=30";
+} from "./draw-edit-interaction.js?v=31";
 
 import {
 createDrawChartInput
@@ -214,11 +214,11 @@ createDrawChartInput
 
 import {
 createDrawPriceScale
-} from "./draw-price-scale.js?v=19";
+} from "./draw-price-scale.js?v=21";
 
 import {
 createDrawRedrawLoop
-} from "./draw-redraw-loop.js?v=16";
+} from "./draw-redraw-loop.js?v=19";
 
 import {
 isAlgoReducedCloudClient
@@ -508,6 +508,8 @@ id;
 
 let textEditor =
 null;
+let drawingsHidden =
+false;
 /** @type {ReturnType<typeof createDrawDesktopSelection> | null} */
 let desktopEdit =
 null;
@@ -2868,6 +2870,8 @@ holdChartPanRedraw(),
 bumpChartPanRedraw:()=>
 bumpChartPanRedraw(),
 getDrawings:()=>drawings,
+getDrawingsHidden:()=>
+drawingsHidden,
 getSelectedId:()=>selectedId,
 getSelectedIds: selectedIdsList,
 listHandles,
@@ -3180,6 +3184,8 @@ chartSize,
 getPlotWidth,
 getChartPanActive:()=>chartPanActive,
 getDrawings:()=>drawings,
+getDrawingsHidden:()=>
+drawingsHidden,
 getSelectedId:()=>selectedId,
 getIsIdSelected: isIdSelected,
 getDragState:()=>dragState,
@@ -3364,6 +3370,12 @@ placementCtl);
 
 
 function hitTest(px, py){
+
+if(
+drawingsHidden
+){
+return null;
+}
 
 const bodyThreshold =
 drawBodyHitThreshold();
@@ -3697,6 +3709,14 @@ closeAllWidgetDrawToolsMenus();
 return;
 }
 
+if(
+drawingsHidden
+){
+setDrawingsHidden(
+false
+);
+}
+
 setTool(
 next,
 pointerType
@@ -3910,6 +3930,116 @@ return true;
 
 }
 
+function syncDrawingsHiddenButton(){
+
+tools.querySelectorAll(
+".draw-tool-hide-drawings"
+).forEach(btn=>{
+
+btn.classList.toggle(
+"is-drawings-hidden",
+drawingsHidden
+);
+btn.classList.toggle(
+"active",
+drawingsHidden
+);
+btn.setAttribute(
+"aria-pressed",
+drawingsHidden
+? "true"
+: "false"
+);
+
+const label =
+drawingsHidden
+? "Показать рисунки"
+: "Скрыть рисунки";
+
+btn.title =
+label;
+btn.setAttribute(
+"aria-label",
+label
+);
+
+});
+
+}
+
+function setDrawingsHidden(
+next
+){
+
+const hidden =
+!!next;
+
+if(
+hidden ===
+drawingsHidden
+){
+syncDrawingsHiddenButton();
+return;
+}
+
+drawingsHidden =
+hidden;
+
+if(
+hidden
+){
+textEditor?.close?.(
+false
+);
+applyPrimarySelectedId(
+null
+);
+try{
+cancelPlacement?.();
+}catch{
+/* ignore */
+}
+updateStyleBar?.();
+}
+
+syncDrawingsHiddenButton();
+scheduleRedraw?.();
+
+}
+
+function bindHideDrawingsToolbarButtons(){
+
+tools.querySelectorAll(
+".draw-tool-hide-drawings"
+).forEach(btn=>{
+
+if(
+btn.dataset.hideDrawingsBound ===
+"1"
+){
+return;
+}
+
+btn.dataset.hideDrawingsBound =
+"1";
+
+btn.addEventListener(
+"click",
+e=>{
+
+e.preventDefault();
+e.stopPropagation();
+setDrawingsHidden(
+!drawingsHidden
+);
+
+}
+);
+
+});
+
+}
+
 function bindClearAllToolbarButtons(){
 
 const buttons =
@@ -3964,6 +4094,16 @@ if(
 !isActive()
 ){
 return;
+}
+
+if(
+tool !==
+"cursor" &&
+drawingsHidden
+){
+setDrawingsHidden(
+false
+);
 }
 
 handleToolClick(param);
@@ -4517,6 +4657,9 @@ e=>{
 if(
 e.target.closest?.(
 ".draw-tool-clear-all"
+) ||
+e.target.closest?.(
+".draw-tool-hide-drawings"
 )
 ){
 return;
@@ -4545,6 +4688,20 @@ clearBtn
 e.preventDefault();
 e.stopPropagation();
 clearAllDrawingsOnChart();
+return;
+}
+
+const hideBtn =
+e.target.closest?.(
+".draw-tool-hide-drawings"
+);
+
+if(
+hideBtn &&
+tools.contains(
+hideBtn
+)
+){
 return;
 }
 
@@ -4590,6 +4747,7 @@ e.detail?.pointerType
 );
 
 bindClearAllToolbarButtons();
+bindHideDrawingsToolbarButtons();
 
 }
 
@@ -4800,7 +4958,22 @@ hitTestFvpBody,
 hitTestHrayLine,
 channelP4Point,
 drawBodyHitThreshold,
-drawingsIntersectingRect,
+drawingsIntersectingRect:(
+list,
+x1,
+y1,
+x2,
+y2
+)=>
+drawingsHidden
+? []
+: drawingsIntersectingRect(
+list,
+x1,
+y1,
+x2,
+y2
+),
 getCandles:()=>
 getCandles?.() ||
 []

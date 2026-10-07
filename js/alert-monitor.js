@@ -17,7 +17,7 @@ subscribeKline
 import {
 EXCHANGE_CHANGED_EVENT,
 getActiveExchangeId
-} from "./market-api.js?v=7";
+} from "./market-api.js?v=9";
 
 import {
 getAlertNotifyMode,

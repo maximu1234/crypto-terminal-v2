@@ -16,7 +16,7 @@ STROKE,
 FIB_TOOL_DEFAULTS_VERSION,
 RECT_DEFAULT_FILL_OPACITY,
 RECT_TOOL_DEFAULTS_VERSION
-} from "./constants.js?v=13";
+} from "./constants.js?v=14";
 
 import {
 migrateFibToolDefaults,
@@ -27,7 +27,7 @@ isFibType,
 isFibExtType,
 FIB_EXT_TOOL_DEFAULTS_VERSION,
 resolveFibTrendLineColor
-} from "./fib-spec.js?v=17";
+} from "./fib-spec.js?v=18";
 
 import {
 setFibPanelCommitHook,
@@ -74,13 +74,14 @@ touchShapeRevision
 import {
 applyStyleSnapshotToShape,
 buildFactoryDefaultSnapshot,
+collectTemplateApplyTargets,
 extractStyleSnapshot,
 isTemplateEligibleType,
 listTemplatesForType,
 mergeStyleSnapshot,
 saveNamedTemplate,
 deleteTemplateAtIndex
-} from "./draw-templates.js?v=20";
+} from "./draw-templates.js?v=25";
 
 import {
 isFvpType,
@@ -102,7 +103,7 @@ rectSettingsHtml,
 fillRectSettingsPanel as fillRectSettingsPanelDom,
 readRectSettingsPanel,
 bindRectSettingsPanel
-} from "./draw-rect-settings.js?v=2";
+} from "./draw-rect-settings.js?v=3";
 
 import {
 fibSettingsHtml,
@@ -112,7 +113,7 @@ readFibSettingsPanel,
 bindFibSettingsPanel,
 setFibLevelColorButton,
 mergeFibLevelsAfterGlobalChange
-} from "./draw-fib-settings.js?v=3";
+} from "./draw-fib-settings.js?v=4";
 
 import {
 CHANNEL_DEFAULT_COLOR,
@@ -136,7 +137,7 @@ isPattern12Draw,
 migrateElliottToolDefaults,
 normalizePattern12TpFlags,
 normalizePattern12TpLevels
-} from "./elliott-spec.js?v=17";
+} from "./elliott-spec.js?v=18";
 
 import {
 elliottSettingsHtml,
@@ -144,7 +145,7 @@ fillElliottSettingsPanel as fillElliottSettingsPanelDom,
 readElliottSettingsPanel,
 bindElliottSettingsPanel,
 syncElliottSettingsColor
-} from "./draw-elliott-settings.js?v=8";
+} from "./draw-elliott-settings.js?v=9";
 
 import {
 hasCoordSettings
@@ -1348,6 +1349,18 @@ shape.lineStyle =
 panel.lineStyle;
 shape.color =
 panel.color;
+shape.showHorizLines =
+panel.showHorizLines;
+shape.showVertLines =
+panel.showVertLines;
+shape.horizLineStyle =
+panel.horizLineStyle;
+shape.horizColor =
+panel.horizColor;
+shape.vertLineStyle =
+panel.vertLineStyle;
+shape.vertColor =
+panel.vertColor;
 shape.showMedian =
 panel.showMedian;
 shape.showFill =
@@ -2006,6 +2019,10 @@ false;
 shape.showPatternDash =
 panel.showPatternDash !==
 false;
+shape.patternDashLineStyle =
+panel.patternDashLineStyle;
+shape.patternTpLineStyle =
+panel.patternTpLineStyle;
 shape.patternDashOpacity =
 panel.patternDashOpacity;
 
@@ -2060,6 +2077,10 @@ false,
 showPatternDash:
 panel.showPatternDash !==
 false,
+patternDashLineStyle:
+panel.patternDashLineStyle,
+patternTpLineStyle:
+panel.patternTpLineStyle,
 patternDashOpacity:
 panel.patternDashOpacity,
 ...(
@@ -2123,6 +2144,11 @@ typeof fibStore.fibShowTrendLine ===
 : isFibExtType(
 type
 ),
+fibShowLabels:
+typeof fibStore.fibShowLabels ===
+"boolean"
+? fibStore.fibShowLabels
+: true,
 fibTrendLineColor: resolveFibTrendLineColor(
 fibStore.fibTrendLineColor
 )
@@ -2289,6 +2315,9 @@ panel.fibLevels
 );
 shape.fibShowTrendLine =
 panel.fibShowTrendLine;
+shape.fibShowLabels =
+panel.fibShowLabels !==
+false;
 shape.fibTrendLineColor =
 resolveFibTrendLineColor(
 panel.fibTrendLineColor
@@ -2326,6 +2355,9 @@ panel.lineWidth
 : 1,
 fibLevels: panel.fibLevels,
 fibShowTrendLine: panel.fibShowTrendLine,
+fibShowLabels:
+panel.fibShowLabels !==
+false,
 fibTrendLineColor: resolveFibTrendLineColor(
 panel.fibTrendLineColor
 )
@@ -2367,6 +2399,9 @@ color: style.color,
 lineWidth: style.lineWidth,
 fibLevels: panel.fibLevels,
 fibShowTrendLine: panel.fibShowTrendLine,
+fibShowLabels:
+panel.fibShowLabels !==
+false,
 fibTrendLineColor: resolveFibTrendLineColor(
 panel.fibTrendLineColor
 )
@@ -2385,6 +2420,9 @@ JSON.stringify(panel.fibLevels)
 
 shape.fibShowTrendLine =
 panel.fibShowTrendLine;
+shape.fibShowLabels =
+panel.fibShowLabels !==
+false;
 shape.fibTrendLineColor =
 resolveFibTrendLineColor(
 panel.fibTrendLineColor
@@ -2419,6 +2457,9 @@ color: style.color,
 lineWidth: style.lineWidth,
 fibLevels: shape.fibLevels,
 fibShowTrendLine: shape.fibShowTrendLine,
+fibShowLabels:
+shape.fibShowLabels !==
+false,
 fibTrendLineColor: resolveFibTrendLineColor(
 shape.fibTrendLineColor
 )
@@ -2430,6 +2471,13 @@ return true;
 }
 
 setFibPanelCommitHook(()=>{
+
+if(
+isElliottSettingsOpen()
+){
+applyElliottSettingsFromPanel();
+return;
+}
 
 if(
 isRectSettingsOpen()
@@ -2803,7 +2851,8 @@ shape.fibLevels,
 shape.fibShowTrendLine,
 shape.color,
 shape.lineWidth,
-shape.fibTrendLineColor
+shape.fibTrendLineColor,
+shape.fibShowLabels
 );
 }
 
@@ -2833,7 +2882,8 @@ shape.fibLevels,
 shape.fibShowTrendLine,
 shape.color,
 shape.lineWidth,
-shape.fibTrendLineColor
+shape.fibTrendLineColor,
+shape.fibShowLabels
 );
 }
 
@@ -2844,7 +2894,8 @@ fibLevels,
 fibShowTrendLine,
 fallbackColor,
 fallbackWidth,
-fibTrendLineColor
+fibTrendLineColor,
+fibShowLabels = true
 ){
 
 ensureFibSettingsPanel();
@@ -2859,7 +2910,8 @@ fibLevels,
 fibShowTrendLine,
 fallbackColor,
 fallbackWidth,
-fibTrendLineColor
+fibTrendLineColor,
+fibShowLabels
 );
 
 }finally{
@@ -3899,7 +3951,11 @@ style.lineWidth,
 (
 fibShape ||
 style
-).fibTrendLineColor
+).fibTrendLineColor,
+(
+fibShape ||
+style
+).fibShowLabels
 );
 
 }
@@ -4293,6 +4349,15 @@ target.color = style.color;
 target.lineWidth = style.lineWidth;
 
 if(
+!isRectSettingsOpen()
+){
+target.horizColor =
+style.color;
+target.vertColor =
+style.color;
+}
+
+if(
 isRectSettingsOpen()
 ){
 
@@ -4301,6 +4366,18 @@ readRectPanelFromDOM();
 
 target.lineStyle =
 panel.lineStyle;
+target.showHorizLines =
+panel.showHorizLines;
+target.showVertLines =
+panel.showVertLines;
+target.horizLineStyle =
+panel.horizLineStyle;
+target.horizColor =
+panel.horizColor;
+target.vertLineStyle =
+panel.vertLineStyle;
+target.vertColor =
+panel.vertColor;
 target.showMedian =
 panel.showMedian;
 target.showFill =
@@ -4409,6 +4486,9 @@ typeof style.fibShowTrendLine ===
 : isFibExtType(
 type
 );
+defaultsPayload.fibShowLabels =
+style.fibShowLabels !==
+false;
 defaultsPayload.fibTrendLineColor =
 resolveFibTrendLineColor(
 style.fibTrendLineColor
@@ -4421,10 +4501,23 @@ type ===
 "rectangle"
 ){
 
+if(
+isRectSettingsOpen()
+){
+
 Object.assign(
 defaultsPayload,
 readRectPanelFromDOM()
 );
+
+}else{
+
+defaultsPayload.horizColor =
+style.color;
+defaultsPayload.vertColor =
+style.color;
+
+}
 
 }
 
@@ -4515,6 +4608,14 @@ showPatternDash:
 primaryTarget?.showPatternDash ??
 panel?.showPatternDash ??
 prev.showPatternDash,
+patternDashLineStyle:
+primaryTarget?.patternDashLineStyle ??
+panel?.patternDashLineStyle ??
+prev.patternDashLineStyle,
+patternTpLineStyle:
+primaryTarget?.patternTpLineStyle ??
+panel?.patternTpLineStyle ??
+prev.patternTpLineStyle,
 patternDashOpacity:
 primaryTarget?.patternDashOpacity ??
 panel?.patternDashOpacity ??
@@ -4712,28 +4813,34 @@ if(
 return;
 }
 
-const sel =
-getSelected();
-const target =
-!getPlacement()
-? sel
-: null;
+const targets =
+getPlacement()
+? []
+: collectTemplateApplyTargets({
+type,
+selectedIds: getSelectedIds(),
+drawings: getDrawings(),
+primary: getSelected()
+});
 
 if(
-target &&
-isTemplateEligibleType(
-target.type
-)
+targets.length
+){
+
+for(
+const target of targets
 ){
 
 applyStyleSnapshotToShape(
 target,
 snapshot
 );
-
 touchShapeRevisionFn(
 target
 );
+
+}
+
 saveDrawings();
 
 }
@@ -4832,7 +4939,8 @@ snapshot.fibLevels
 snapshot.fibShowTrendLine,
 snapshot.color,
 snapshot.lineWidth,
-snapshot.fibTrendLineColor
+snapshot.fibTrendLineColor,
+snapshot.fibShowLabels
 );
 
 }
@@ -5922,7 +6030,8 @@ fibShape
 fibShape.fibShowTrendLine,
 fibShape.color,
 fibShape.lineWidth,
-fibShape.fibTrendLineColor
+fibShape.fibTrendLineColor,
+fibShape.fibShowLabels
 );
 }else{
 
@@ -5936,7 +6045,8 @@ style.fibLevels,
 style.fibShowTrendLine,
 style.color,
 style.lineWidth,
-style.fibTrendLineColor
+style.fibTrendLineColor,
+style.fibShowLabels
 );
 
 }
@@ -5973,14 +6083,23 @@ settingsPopover
 
 });
 
-deleteOneBtn?.addEventListener("mousedown", e=>{
-e.stopPropagation();
-});
+deleteOneBtn?.addEventListener("pointerdown", e=>{
 
-deleteOneBtn?.addEventListener("click", e=>{
+if(
+e.pointerType === "mouse" &&
+e.button !== 0
+){
+return;
+}
 
-e.stopPropagation();
+if(
+!e.isPrimary
+){
+return;
+}
+
 e.preventDefault();
+e.stopPropagation();
 styleCtx().deleteSelected?.();
 
 });

@@ -10,7 +10,7 @@ import {
 } from "../chart-import.js?v=66";
 import {
   loadMarketHistory
-} from "../market-api.js?v=7";
+} from "../market-api.js?v=9";
 import {
   subscribeKline
 } from "../market-ws.js?v=3";

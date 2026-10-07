@@ -14,7 +14,7 @@ brushPathScreenPoints
 import {
 rectangleBodyDist,
 rectangleScreenBox
-} from "./arrow-rect.js?v=2";
+} from "./arrow-rect.js?v=4";
 
 import {
 fvpBodyDist,
@@ -36,7 +36,7 @@ fibLevelXSpan,
 fibShapeLevelXSpan,
 isFibType,
 isFibExtType
-} from "./fib-spec.js?v=17";
+} from "./fib-spec.js?v=18";
 
 import {
 FIB_HIT_X_PAD_PX,
@@ -45,7 +45,7 @@ DRAW_BODY_HIT_THRESHOLD_TOUCH,
 DRAW_BODY_HIT_THRESHOLD_DESKTOP,
 isHorizPriceTool,
 horizPriceLineX1
-} from "./constants.js?v=13";
+} from "./constants.js?v=14";
 
 import {
 isCoarseTouchViewport
@@ -71,7 +71,7 @@ elliottNecklineScreen,
 pattern12DashScreen,
 pattern12TpTickLayout,
 isPattern12Draw
-} from "./elliott-spec.js?v=17";
+} from "./elliott-spec.js?v=18";
 
 /**
  * @param {object} deps
