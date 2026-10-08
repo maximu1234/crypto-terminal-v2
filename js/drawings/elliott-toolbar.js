@@ -11,7 +11,7 @@ ELLIOTT_WAVE_TYPES,
 ELLIOTT_PATTERN_TYPES,
 ELLIOTT_TOOL_META,
 isElliottType
-} from "./elliott-spec.js?v=18";
+} from "./elliott-spec.js?v=23";
 
 const FLYOUT_CLASS =
 "elliott-flyout";

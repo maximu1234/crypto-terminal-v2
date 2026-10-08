@@ -47,7 +47,7 @@ import {
 isPattern12Draw,
 migrateElliottToolDefaults,
 normalizePattern12TpFlags
-} from "./elliott-spec.js?v=18";
+} from "./elliott-spec.js?v=23";
 
 /**
  * @returns {{
@@ -650,6 +650,15 @@ false;
 out.showPatternDash =
 elliottSaved.showPatternDash !==
 false;
+out.showPatternChannel =
+elliottSaved.showPatternChannel ===
+true;
+out.patternChannelLineStyle =
+elliottSaved.patternChannelLineStyle;
+out.patternChannelLineWidth =
+elliottSaved.patternChannelLineWidth;
+out.patternChannelColor =
+elliottSaved.patternChannelColor;
 out.patternDashLineStyle =
 elliottSaved.patternDashLineStyle;
 out.patternTpLineStyle =

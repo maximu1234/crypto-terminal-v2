@@ -68,10 +68,12 @@ elliottScreenPoints,
 elliottLabelAnchor,
 elliottVertexLabel,
 elliottNecklineScreen,
+PATTERN_12_CHANNEL_LEVELS,
+pattern12ChannelGeometry,
 pattern12DashScreen,
 pattern12TpTickLayout,
 isPattern12Draw
-} from "./elliott-spec.js?v=18";
+} from "./elliott-spec.js?v=23";
 
 /**
  * @param {object} deps
@@ -683,6 +685,58 @@ dash.b.x,
 dash.b.y
 )
 );
+}
+
+}
+
+if(
+isPattern12Draw(
+shape.type
+) &&
+shape.showPatternChannel ===
+true
+){
+
+const channel =
+pattern12ChannelGeometry(
+screens
+);
+
+if(
+channel
+){
+
+for(
+const level of PATTERN_12_CHANNEL_LEVELS
+){
+
+const seg =
+channelLevelSegment(
+channel,
+level
+);
+
+if(
+!seg
+){
+continue;
+}
+
+best =
+Math.min(
+best,
+distToSegment(
+px,
+py,
+seg.start.x,
+seg.start.y,
+seg.end.x,
+seg.end.y
+)
+);
+
+}
+
 }
 
 }

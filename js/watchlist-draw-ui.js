@@ -3,15 +3,15 @@ DRAW_TOOLS_PALETTE_ICON_SVG,
 TRASH_ICON_SVG,
 SETTINGS_ICON_SVG,
 getDrawToolbarButtonsHtml
-} from "./draw-ui-shared.js?v=47";
+} from "./draw-ui-shared.js?v=51";
 
 import {
 closeElliottFlyout
-} from "./drawings/elliott-toolbar.js?v=7";
+} from "./drawings/elliott-toolbar.js?v=12";
 
 import {
 closeFibFlyout
-} from "./drawings/fib-toolbar.js?v=6";
+} from "./drawings/fib-toolbar.js?v=10";
 
 const widgetDrawMenuClosers =
 new Set();

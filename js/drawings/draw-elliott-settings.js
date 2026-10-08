@@ -14,19 +14,30 @@ isPatternHsFamily,
 normalizeElliottDegree,
 normalizePattern12TpFlags,
 normalizePattern12TpLevels,
+normalizePatternChannelColor,
+normalizePatternChannelWidth,
 normalizePatternDashOpacity,
 normalizePatternLineStyle,
-parsePattern12TpLevel
-} from "./elliott-spec.js?v=18";
+parsePattern12TpLevel,
+PATTERN_12_DEFAULT_CHANNEL_COLOR
+} from "./elliott-spec.js?v=23";
 
 import {
+setFibLevelWidthButton,
 setFibLineStyleButton
 } from "./fib-spec.js?v=18";
 
 import {
+setFibLevelColorButton
+} from "./draw-fib-settings.js?v=4";
+
+import {
 closeAllFibLineStyleMenus,
+closeAllFibLineWidthMenus,
 isFibLineStyleMenuOpenForAnchor,
-openFibLineStyleMenu
+isFibLineWidthMenuOpenForAnchor,
+openFibLineStyleMenu,
+openFibLineWidthMenu
 } from "./fib-portals.js?v=3";
 
 export function elliottSettingsHtml(){
@@ -63,6 +74,13 @@ ${options}
 <input type="checkbox" class="elliott-pattern-dash-on"/>
 <span>1 → (1)</span>
 <button type="button" class="elliott-pattern-line-style-btn elliott-pattern-dash-style-btn" title="Тип линии 1 → (1)" aria-label="Тип линии 1 → (1)"></button>
+</label>
+<label class="elliott-pattern-channel-row hidden">
+<input type="checkbox" class="elliott-pattern-channel-on"/>
+<span>Channel</span>
+<button type="button" class="elliott-pattern-line-style-btn elliott-pattern-channel-style-btn" title="Тип линий канала" aria-label="Тип линий канала"></button>
+<button type="button" class="fib-line-width-btn elliott-pattern-channel-width-btn" title="Толщина линий канала" aria-label="Толщина линий канала">1px</button>
+<button type="button" class="fib-level-color-btn elliott-pattern-channel-color-btn" title="Цвет линий канала" aria-label="Цвет линий канала"></button>
 </label>
 <div class="elliott-pattern-dash-opacity hidden">
 <div class="tv-color-opacity-label">1 → (1) / TP opacity</div>
@@ -130,6 +148,10 @@ const dashRow =
 root.querySelector(
 ".elliott-pattern-dash-row"
 );
+const channelRow =
+root.querySelector(
+".elliott-pattern-channel-row"
+);
 const dashOpacity =
 root.querySelector(
 ".elliott-pattern-dash-opacity"
@@ -178,6 +200,15 @@ if(
 dashRow
 ){
 dashRow.classList.toggle(
+"hidden",
+!p12
+);
+}
+
+if(
+channelRow
+){
+channelRow.classList.toggle(
 "hidden",
 !p12
 );
@@ -244,6 +275,10 @@ const dashOn =
 root.querySelector(
 ".elliott-pattern-dash-on"
 );
+const channelOn =
+root.querySelector(
+".elliott-pattern-channel-on"
+);
 
 if(
 waveOn
@@ -285,6 +320,41 @@ dashOn.checked =
 shape?.showPatternDash !==
 false;
 }
+
+if(
+channelOn
+){
+channelOn.checked =
+shape?.showPatternChannel ===
+true;
+}
+
+setFibLineStyleButton(
+root.querySelector(
+".elliott-pattern-channel-style-btn"
+),
+normalizePatternLineStyle(
+shape?.patternChannelLineStyle,
+defaults.patternChannelLineStyle
+)
+);
+
+setFibLevelWidthButton(
+root.querySelector(
+".elliott-pattern-channel-width-btn"
+),
+shape?.patternChannelLineWidth,
+defaults.patternChannelLineWidth
+);
+
+setFibLevelColorButton(
+root.querySelector(
+".elliott-pattern-channel-color-btn"
+),
+shape?.patternChannelColor,
+defaults.patternChannelColor ||
+PATTERN_12_DEFAULT_CHANNEL_COLOR
+);
 
 setFibLineStyleButton(
 root.querySelector(
@@ -387,6 +457,22 @@ const dashOn =
 root.querySelector(
 ".elliott-pattern-dash-on"
 );
+const channelOn =
+root.querySelector(
+".elliott-pattern-channel-on"
+);
+const channelStyleBtn =
+root.querySelector(
+".elliott-pattern-channel-style-btn"
+);
+const channelWidthBtn =
+root.querySelector(
+".elliott-pattern-channel-width-btn"
+);
+const channelColorBtn =
+root.querySelector(
+".elliott-pattern-channel-color-btn"
+);
 const dashStyleBtn =
 root.querySelector(
 ".elliott-pattern-dash-style-btn"
@@ -439,6 +525,26 @@ showPatternDash:
 dashOn
 ? !!dashOn.checked
 : true,
+showPatternChannel:
+channelOn
+? !!channelOn.checked
+: false,
+patternChannelLineStyle:
+normalizePatternLineStyle(
+channelStyleBtn?.dataset.lineStyle,
+defaults.patternChannelLineStyle
+),
+patternChannelLineWidth:
+normalizePatternChannelWidth(
+channelWidthBtn?.dataset.customWidth ??
+defaults.patternChannelLineWidth
+),
+patternChannelColor:
+normalizePatternChannelColor(
+channelColorBtn?.dataset.customColor
+) ||
+defaults.patternChannelColor ||
+PATTERN_12_DEFAULT_CHANNEL_COLOR,
 patternDashLineStyle:
 normalizePatternLineStyle(
 dashStyleBtn?.dataset.lineStyle,
@@ -489,6 +595,7 @@ root,
 {
 canApply,
 onApply,
+openColorMenu,
 signal
 } =
 {}
@@ -551,6 +658,14 @@ commit,
 opts
 );
 
+root.querySelector(
+".elliott-pattern-channel-on"
+)?.addEventListener(
+"change",
+commit,
+opts
+);
+
 root.addEventListener(
 "mousedown",
 e=>{
@@ -559,9 +674,19 @@ const styleBtn =
 e.target.closest(
 ".elliott-pattern-line-style-btn"
 );
+const widthBtn =
+e.target.closest(
+".elliott-pattern-channel-width-btn"
+);
+const colorBtn =
+e.target.closest(
+".elliott-pattern-channel-color-btn"
+);
 
 if(
-!styleBtn
+!styleBtn &&
+!widthBtn &&
+!colorBtn
 ){
 return;
 }
@@ -569,10 +694,54 @@ return;
 e.preventDefault();
 e.stopPropagation();
 
+if(
+widthBtn
+){
+
+const wasWidthOpen =
+isFibLineWidthMenuOpenForAnchor(
+widthBtn
+);
+
+closeAllFibLineWidthMenus();
+closeAllFibLineStyleMenus();
+
+if(
+!wasWidthOpen
+){
+openFibLineWidthMenu(
+widthBtn,
+widthBtn.dataset.customWidth ||
+1
+);
+}
+
+return;
+
+}
+
+if(
+colorBtn
+){
+
+closeAllFibLineStyleMenus();
+closeAllFibLineWidthMenus();
+openColorMenu?.(
+colorBtn,
+colorBtn.dataset.customColor ||
+PATTERN_12_DEFAULT_CHANNEL_COLOR
+);
+
+return;
+
+}
+
 const wasOpen =
 isFibLineStyleMenuOpenForAnchor(
 styleBtn
 );
+
+closeAllFibLineWidthMenus();
 
 closeAllFibLineStyleMenus();
 

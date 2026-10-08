@@ -49,7 +49,7 @@ touchShapeRevision
 
 import {
 stripAlertFromShape
-} from "./drawings-persist.js?v=24";
+} from "./drawings-persist.js?v=29";
 
 import {
 moveBrushHandle,
@@ -68,7 +68,7 @@ isElliottType,
 getElliottPoints,
 setElliottPoints,
 elliottHandleIndex
-} from "./elliott-spec.js?v=18";
+} from "./elliott-spec.js?v=23";
 
 /**
  * Handle hit circles are larger than the vertex. Drag already uses grab

@@ -63,10 +63,15 @@ elliottVertexLabel,
 elliottNecklineScreen,
 normalizePattern12TpFlags,
 normalizePatternDashOpacity,
+normalizePatternChannelColor,
+normalizePatternChannelWidth,
 normalizePatternLineStyle,
+PATTERN_12_CHANNEL_LEVELS,
+PATTERN_12_DEFAULT_CHANNEL_COLOR,
+pattern12ChannelGeometry,
 pattern12DashScreen,
 pattern12TpTickLayout
-} from "./elliott-spec.js?v=18";
+} from "./elliott-spec.js?v=23";
 
 /**
  * @param {object} deps
@@ -237,6 +242,84 @@ tick.x2 +
 6,
 tick.y
 );
+
+}
+
+ctx.restore();
+
+}
+
+function drawPattern12Channel(
+ctx,
+shape,
+screens
+){
+
+const geom =
+pattern12ChannelGeometry(
+screens
+);
+
+if(
+!geom
+){
+return;
+}
+
+const lineColor =
+normalizePatternChannelColor(
+shape?.patternChannelColor
+) ||
+PATTERN_12_DEFAULT_CHANNEL_COLOR;
+const lineWidth =
+normalizePatternChannelWidth(
+shape?.patternChannelLineWidth
+);
+
+ctx.save();
+ctx.strokeStyle =
+lineColor;
+ctx.lineWidth =
+lineWidth;
+ctx.lineCap =
+"round";
+ctx.lineJoin =
+"round";
+ctx.setLineDash(
+fibLevelDash(
+normalizePatternLineStyle(
+shape?.patternChannelLineStyle,
+"solid"
+)
+)
+);
+
+for(
+const level of PATTERN_12_CHANNEL_LEVELS
+){
+
+const seg =
+channelLevelSegment(
+geom,
+level
+);
+
+if(
+!seg
+){
+continue;
+}
+
+ctx.beginPath();
+ctx.moveTo(
+seg.start.x,
+seg.start.y
+);
+ctx.lineTo(
+seg.end.x,
+seg.end.y
+);
+ctx.stroke();
 
 }
 
@@ -614,6 +697,20 @@ shape.patternDashOpacity
 );
 }
 
+}
+
+if(
+isPattern12Draw(
+shape.type
+) &&
+shape.showPatternChannel ===
+true
+){
+drawPattern12Channel(
+ctx,
+shape,
+screens
+);
 }
 
 if(
@@ -2028,6 +2125,11 @@ showWave: style.showWave !==
 false,
 showPatternDash: style.showPatternDash !==
 false,
+showPatternChannel: style.showPatternChannel ===
+true,
+patternChannelLineStyle: style.patternChannelLineStyle,
+patternChannelLineWidth: style.patternChannelLineWidth,
+patternChannelColor: style.patternChannelColor,
 patternDashLineStyle: style.patternDashLineStyle,
 patternTpLineStyle: style.patternTpLineStyle,
 patternDashOpacity: style.patternDashOpacity,

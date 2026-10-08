@@ -22,7 +22,7 @@ isHorizPriceTool
 import {
 isElliottType,
 elliottPointCount
-} from "./drawings/elliott-spec.js?v=18";
+} from "./drawings/elliott-spec.js?v=23";
 
 import {
 isFibExtType

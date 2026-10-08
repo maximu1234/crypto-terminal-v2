@@ -52,7 +52,7 @@ isPattern12Draw,
 elliottPointCount,
 normalizePattern12TpFlags,
 normalizePattern12TpLevels
-} from "./elliott-spec.js?v=18";
+} from "./elliott-spec.js?v=23";
 
 import {
 isFvpType,
@@ -1348,6 +1348,19 @@ false
 showPatternDash:isElliottType(type)
 ? style.showPatternDash !==
 false
+:undefined,
+showPatternChannel:isPattern12Draw(type)
+? style.showPatternChannel ===
+true
+:undefined,
+patternChannelLineStyle:isPattern12Draw(type)
+? style.patternChannelLineStyle
+:undefined,
+patternChannelLineWidth:isPattern12Draw(type)
+? style.patternChannelLineWidth
+:undefined,
+patternChannelColor:isPattern12Draw(type)
+? style.patternChannelColor
 :undefined,
 patternDashLineStyle:isPattern12Draw(type)
 ? style.patternDashLineStyle

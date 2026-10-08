@@ -39,10 +39,12 @@ migrateElliottToolDefaults,
 ELLIOTT_TOOL_DEFAULTS_VERSION,
 normalizeElliottDegree,
 normalizeElliottShape,
+normalizePatternChannelColor,
 normalizePattern12TpFlags,
 normalizePattern12TpLevels,
 normalizePatternDashOpacity,
 parsePattern12TpLevel,
+pattern12ChannelGeometry,
 pattern12DashScreen,
 pattern12TpEntries,
 pattern12TpPrice,
@@ -622,6 +624,47 @@ defaults.showPatternDash,
 true
 );
 assert.equal(
+defaults.showPatternChannel,
+false
+);
+assert.equal(
+defaults.patternChannelLineStyle,
+"solid"
+);
+assert.equal(
+defaults.patternChannelLineWidth,
+1
+);
+assert.equal(
+defaults.patternChannelColor,
+"#ffa53e"
+);
+assert.equal(
+normalizePatternChannelColor(
+"#FFA53E"
+),
+"#ffa53e"
+);
+assert.equal(
+normalizePatternChannelColor(
+"rgba(255, 165, 62, 0.4)"
+),
+"rgba(255,165,62,0.4)"
+);
+
+const colored =
+normalizeElliottShape({
+type: PATTERN_12,
+patternChannelColor:
+"rgba(255, 165, 62, 0.35)",
+points: []
+});
+
+assert.equal(
+colored.patternChannelColor,
+"rgba(255,165,62,0.35)"
+);
+assert.equal(
 defaults.showWave,
 PATTERN_12_DEFAULT_SHOW_WAVE
 );
@@ -712,9 +755,136 @@ assert.equal(
 dash.a.x,
 10
 );
+assert.equal(
+dash.b.x,
+80
+);
 assert.ok(
-dash.b.x >
+Math.abs(
+dash.b.y -
+(
+8 +
+(
+(16 - 8) /
+(40 - 10)
+) *
+(80 - 10)
+)
+) <
+1e-6
+);
+
+const channel =
+pattern12ChannelGeometry(
+[
+{ x: 0, y: 40 },
+{ x: 10, y: 8 },
+{ x: 20, y: 30 },
+{ x: 40, y: 16 },
+{ x: 50, y: 24 },
+{ x: 80, y: 4 }
+]
+);
+
+assert.equal(
+channel.p1.x,
+0
+);
+assert.equal(
+channel.p1.y,
 40
+);
+assert.equal(
+channel.p2.x,
+80
+);
+assert.ok(
+Math.abs(
+channel.p2.y -
+0
+) <
+1e-6
+);
+assert.equal(
+channel.p3.x,
+0
+);
+assert.ok(
+Math.abs(
+channel.p3.y -
+13
+) <
+1e-6
+);
+assert.equal(
+channel.p4.x,
+80
+);
+assert.ok(
+Math.abs(
+channel.p4.y -
+(
+-27
+)
+) <
+1e-6
+);
+const yThroughUpper =
+channel.p3.y +
+(
+channel.p4.y -
+channel.p3.y
+) *
+(
+(10 - channel.p3.x) /
+(channel.p4.x - channel.p3.x)
+);
+assert.ok(
+Math.abs(
+yThroughUpper -
+8
+) <
+1e-6
+);
+const yAtSenior2 =
+channel.p1.y +
+(
+channel.p2.y -
+channel.p1.y
+) *
+(
+(20 - channel.p1.x) /
+(channel.p2.x - channel.p1.x)
+);
+
+assert.ok(
+Math.abs(
+yAtSenior2 -
+30
+) <
+1e-6
+);
+assert.equal(
+migrateElliottToolDefaults(
+{
+elliottDefaultsVersion:
+ELLIOTT_TOOL_DEFAULTS_VERSION,
+showPatternChannel:
+true
+},
+PATTERN_12
+).showPatternChannel,
+true
+);
+assert.equal(
+migrateElliottToolDefaults(
+{
+elliottDefaultsVersion:
+ELLIOTT_TOOL_DEFAULTS_VERSION
+},
+PATTERN_12
+).showPatternChannel,
+false
 );
 
 });
@@ -757,6 +927,78 @@ type: PATTERN_12,
 color
 }).color,
 color
+);
+
+});
+
+test("pattern 1-2 template keeps the channel from the drawing", async ()=>{
+
+const {
+extractStyleSnapshot,
+applyStyleSnapshotToShape
+} =
+await import(
+"../js/drawings/draw-templates.js"
+);
+
+const snap =
+extractStyleSnapshot(
+{
+type: PATTERN_12,
+color: "#ef4444",
+showPatternChannel: true,
+patternChannelLineStyle: "dashed",
+patternChannelLineWidth: 3,
+patternChannelColor: "rgba(255, 165, 62, 0.4)"
+},
+PATTERN_12
+);
+
+assert.equal(
+snap.showPatternChannel,
+true
+);
+assert.equal(
+snap.patternChannelLineStyle,
+"dashed"
+);
+assert.equal(
+snap.patternChannelLineWidth,
+3
+);
+assert.equal(
+snap.patternChannelColor,
+"rgba(255,165,62,0.4)"
+);
+
+const shape = {
+type: PATTERN_12,
+showPatternChannel: false,
+patternChannelLineStyle: "solid",
+patternChannelLineWidth: 1,
+patternChannelColor: "#ffa53e"
+};
+
+applyStyleSnapshotToShape(
+shape,
+snap
+);
+
+assert.equal(
+shape.showPatternChannel,
+true
+);
+assert.equal(
+shape.patternChannelLineStyle,
+"dashed"
+);
+assert.equal(
+shape.patternChannelLineWidth,
+3
+);
+assert.equal(
+shape.patternChannelColor,
+"rgba(255,165,62,0.4)"
 );
 
 });
@@ -1473,6 +1715,22 @@ html,
 assert.match(
 html,
 /elliott-pattern-dash-style-btn/
+);
+assert.match(
+html,
+/elliott-pattern-channel-on/
+);
+assert.match(
+html,
+/elliott-pattern-channel-style-btn/
+);
+assert.match(
+html,
+/elliott-pattern-channel-width-btn/
+);
+assert.match(
+html,
+/elliott-pattern-channel-color-btn/
 );
 assert.match(
 html,

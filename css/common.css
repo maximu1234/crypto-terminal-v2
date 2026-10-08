@@ -636,7 +636,8 @@ margin-top:0;
 margin-top:8px;
 }
 
-.elliott-pattern-dash-row{
+.elliott-pattern-dash-row,
+.elliott-pattern-channel-row{
 display:flex;
 align-items:center;
 gap:8px;
@@ -647,9 +648,15 @@ cursor:pointer;
 user-select:none;
 }
 
-.elliott-pattern-dash-row input{
+.elliott-pattern-dash-row input,
+.elliott-pattern-channel-row input{
 width:auto;
 margin:0;
+}
+
+.elliott-pattern-channel-width-btn,
+.elliott-pattern-channel-color-btn{
+flex:0 0 auto;
 }
 
 .elliott-pattern-line-style-btn{
@@ -672,6 +679,7 @@ border-color:#4b5563;
 .elliott-degree-wrap.hidden,
 .elliott-degree-junior-wrap.hidden,
 .elliott-pattern-dash-row.hidden,
+.elliott-pattern-channel-row.hidden,
 .elliott-pattern-dash-opacity.hidden,
 .elliott-tp-wrap.hidden{
 display:none;

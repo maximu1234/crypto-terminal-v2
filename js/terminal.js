@@ -128,7 +128,7 @@ createSharedDrawUndoStack
 import {
 mountDrawToolbar,
 mountDrawToolIcons
-} from "./draw-ui-shared.js?v=47";
+} from "./draw-ui-shared.js?v=51";
 import {
 mountTerminalChecklist
 } from "./terminal/terminal-checklist.js?v=1";
@@ -238,7 +238,7 @@ syncCoinsChartLinkedViewports,
 resizeCharts,
 scheduleResizeCharts,
 applyDefaultZoom
-} from "./terminal/terminal-chart-layout.js?v=19";
+} from "./terminal/terminal-chart-layout.js?v=20";
 
 import {
 placeCoinsTabletListNav
@@ -248,7 +248,7 @@ import {
 initTerminalMultiChart,
 syncPrimaryTfToLayout,
 isTerminalMultiChartLayout
-} from "./terminal-multi-chart.js?v=34";
+} from "./terminal-multi-chart.js?v=40";
 
 import {
 mountTerminalLayoutPicker
@@ -3794,7 +3794,7 @@ const {
 initWidgetDrawings
 } =
 await import(
-"./chart-widget-host.js?v=59"
+"./chart-widget-host.js?v=65"
 );
 const {
 initChartIndicators

@@ -57,8 +57,11 @@ isElliottType,
 isPattern12Draw,
 migrateElliottToolDefaults,
 normalizeElliottDegree,
-normalizePattern12TpFlags
-} from "./elliott-spec.js?v=18";
+normalizePattern12TpFlags,
+normalizePatternChannelColor,
+normalizePatternChannelWidth,
+normalizePatternLineStyle
+} from "./elliott-spec.js?v=23";
 
 export const DRAW_TEMPLATES_STORAGE_KEY =
 "draw_templates_v1";
@@ -805,6 +808,31 @@ false;
 out.showPatternDash =
 defaults.showPatternDash !==
 false;
+out.showPatternChannel =
+typeof shape?.showPatternChannel ===
+"boolean"
+? shape.showPatternChannel
+: defaults.showPatternChannel ===
+true;
+out.patternChannelLineStyle =
+shape?.patternChannelLineStyle
+? normalizePatternLineStyle(
+shape.patternChannelLineStyle,
+defaults.patternChannelLineStyle
+)
+: defaults.patternChannelLineStyle;
+out.patternChannelLineWidth =
+shape?.patternChannelLineWidth !=
+null
+? normalizePatternChannelWidth(
+shape.patternChannelLineWidth
+)
+: defaults.patternChannelLineWidth;
+out.patternChannelColor =
+normalizePatternChannelColor(
+shape?.patternChannelColor
+) ||
+defaults.patternChannelColor;
 out.patternDashLineStyle =
 defaults.patternDashLineStyle;
 out.patternTpLineStyle =
@@ -950,6 +978,15 @@ false;
 out.showPatternDash =
 defaults.showPatternDash !==
 false;
+out.showPatternChannel =
+defaults.showPatternChannel ===
+true;
+out.patternChannelLineStyle =
+defaults.patternChannelLineStyle;
+out.patternChannelLineWidth =
+defaults.patternChannelLineWidth;
+out.patternChannelColor =
+defaults.patternChannelColor;
 out.patternDashLineStyle =
 defaults.patternDashLineStyle;
 out.patternTpLineStyle =
@@ -1223,6 +1260,15 @@ out.showWave =
 elliottDefaults.showWave;
 out.showPatternDash =
 elliottDefaults.showPatternDash;
+out.showPatternChannel =
+elliottDefaults.showPatternChannel ===
+true;
+out.patternChannelLineStyle =
+elliottDefaults.patternChannelLineStyle;
+out.patternChannelLineWidth =
+elliottDefaults.patternChannelLineWidth;
+out.patternChannelColor =
+elliottDefaults.patternChannelColor;
 out.patternDashLineStyle =
 elliottDefaults.patternDashLineStyle;
 out.patternTpLineStyle =
@@ -1469,6 +1515,15 @@ false;
 shape.showPatternDash =
 defaults.showPatternDash !==
 false;
+shape.showPatternChannel =
+defaults.showPatternChannel ===
+true;
+shape.patternChannelLineStyle =
+defaults.patternChannelLineStyle;
+shape.patternChannelLineWidth =
+defaults.patternChannelLineWidth;
+shape.patternChannelColor =
+defaults.patternChannelColor;
 shape.patternDashLineStyle =
 defaults.patternDashLineStyle;
 shape.patternTpLineStyle =

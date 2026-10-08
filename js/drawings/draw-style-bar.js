@@ -81,7 +81,7 @@ listTemplatesForType,
 mergeStyleSnapshot,
 saveNamedTemplate,
 deleteTemplateAtIndex
-} from "./draw-templates.js?v=25";
+} from "./draw-templates.js?v=31";
 
 import {
 isFvpType,
@@ -137,7 +137,7 @@ isPattern12Draw,
 migrateElliottToolDefaults,
 normalizePattern12TpFlags,
 normalizePattern12TpLevels
-} from "./elliott-spec.js?v=18";
+} from "./elliott-spec.js?v=23";
 
 import {
 elliottSettingsHtml,
@@ -145,7 +145,7 @@ fillElliottSettingsPanel as fillElliottSettingsPanelDom,
 readElliottSettingsPanel,
 bindElliottSettingsPanel,
 syncElliottSettingsColor
-} from "./draw-elliott-settings.js?v=9";
+} from "./draw-elliott-settings.js?v=14";
 
 import {
 hasCoordSettings
@@ -1933,6 +1933,16 @@ settingsPopover,
 {
 canApply: canApplyElliottPanel,
 onApply: applyElliottSettingsFromPanel,
+openColorMenu:(
+btn,
+fallback
+)=>{
+closeFibColorMenu();
+openElliottChannelColorMenu(
+btn,
+fallback
+);
+},
 signal
 }
 );
@@ -2019,6 +2029,15 @@ false;
 shape.showPatternDash =
 panel.showPatternDash !==
 false;
+shape.showPatternChannel =
+panel.showPatternChannel ===
+true;
+shape.patternChannelLineStyle =
+panel.patternChannelLineStyle;
+shape.patternChannelLineWidth =
+panel.patternChannelLineWidth;
+shape.patternChannelColor =
+panel.patternChannelColor;
 shape.patternDashLineStyle =
 panel.patternDashLineStyle;
 shape.patternTpLineStyle =
@@ -2077,6 +2096,15 @@ false,
 showPatternDash:
 panel.showPatternDash !==
 false,
+showPatternChannel:
+panel.showPatternChannel ===
+true,
+patternChannelLineStyle:
+panel.patternChannelLineStyle,
+patternChannelLineWidth:
+panel.patternChannelLineWidth,
+patternChannelColor:
+panel.patternChannelColor,
 patternDashLineStyle:
 panel.patternDashLineStyle,
 patternTpLineStyle:
@@ -2655,6 +2683,70 @@ portal.style.position = "fixed";
 portal.style.left = `${Math.round(rect.left)}px`;
 portal.style.top = `${Math.round(rect.bottom + 4)}px`;
 portal.style.zIndex = "20000";
+
+}
+
+function openElliottChannelColorMenu(
+anchorBtn,
+fallbackColor
+){
+
+const portal =
+ensureFibColorMenuPortal();
+
+fibColorMenuAnchor =
+anchorBtn;
+
+const active =
+anchorBtn.dataset.customColor ||
+fallbackColor ||
+CHANNEL_DEFAULT_COLOR;
+
+mountTvColorPicker(
+portal,
+{
+activeColor: active,
+onChange: color=>{
+
+setFibLevelColorButton(
+anchorBtn,
+color,
+fallbackColor
+);
+
+applyElliottSettingsFromPanel();
+
+},
+onSelect: color=>{
+
+setFibLevelColorButton(
+anchorBtn,
+color,
+fallbackColor
+);
+
+closeFibColorMenu();
+applyElliottSettingsFromPanel();
+
+}
+}
+);
+
+portal.classList.remove(
+"hidden"
+);
+
+const rect =
+anchorBtn.getBoundingClientRect();
+
+portal.style.position =
+"fixed";
+portal.style.left =
+`${Math.round(rect.left)}px`;
+portal.style.top =
+`${Math.round(rect.bottom + 4)}px`;
+portal.style.zIndex =
+"20000";
 
 }
 
@@ -4608,6 +4700,22 @@ showPatternDash:
 primaryTarget?.showPatternDash ??
 panel?.showPatternDash ??
 prev.showPatternDash,
+showPatternChannel:
+primaryTarget?.showPatternChannel ??
+panel?.showPatternChannel ??
+prev.showPatternChannel,
+patternChannelLineStyle:
+primaryTarget?.patternChannelLineStyle ||
+panel?.patternChannelLineStyle ||
+prev.patternChannelLineStyle,
+patternChannelLineWidth:
+primaryTarget?.patternChannelLineWidth ??
+panel?.patternChannelLineWidth ??
+prev.patternChannelLineWidth,
+patternChannelColor:
+primaryTarget?.patternChannelColor ||
+panel?.patternChannelColor ||
+prev.patternChannelColor,
 patternDashLineStyle:
 primaryTarget?.patternDashLineStyle ??
 panel?.patternDashLineStyle ??
@@ -4782,6 +4890,33 @@ isFibSettingsOpen()
 Object.assign(
 snapshot,
 readFibPanelFromDOM()
+);
+
+snapshot =
+mergeStyleSnapshot(
+snapshot,
+type
+);
+
+}
+
+if(
+isElliottType(
+type
+) &&
+isElliottSettingsOpen()
+){
+
+Object.assign(
+snapshot,
+readElliottSettingsPanel(
+settingsPopover,
+type
+),
+{
+elliottDefaultsVersion:
+ELLIOTT_TOOL_DEFAULTS_VERSION
+}
 );
 
 snapshot =

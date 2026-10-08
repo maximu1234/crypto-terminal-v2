@@ -44,7 +44,7 @@ alignRsiWithCandleTimes
 import {
 createDashboardChartWidget,
 mountDashboardChartInteractions
-} from "./chart-widget-host.js?v=59";
+} from "./chart-widget-host.js?v=65";
 
 import {
 mountWidgetTabletChart
@@ -74,7 +74,7 @@ initWidgetDrawToolsDropdown,
 wireWidgetDrawToolMenu,
 closeAllWidgetDrawToolsMenus,
 resetWidgetDrawToolsMenus
-} from "./watchlist-draw-ui.js?v=30";
+} from "./watchlist-draw-ui.js?v=34";
 
 import {
 ensureDrawToolsVisible

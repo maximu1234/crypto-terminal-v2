@@ -5,11 +5,11 @@ formatDrawColor
 
 import {
 TRASH_ICON_SVG
-} from "../draw-ui-shared.js?v=47";
+} from "../draw-ui-shared.js?v=51";
 
 import {
 closeAllWidgetDrawToolsMenus
-} from "../watchlist-draw-ui.js?v=30";
+} from "../watchlist-draw-ui.js?v=34";
 
 import {
 ensureDrawToolsVisible
@@ -118,7 +118,7 @@ getPositionHandleScreens as resolvePositionHandleScreens
 
 import {
 createDrawPrefs
-} from "./draw-prefs.js?v=16";
+} from "./draw-prefs.js?v=21";
 
 import {
 createPositionDraw
@@ -130,11 +130,11 @@ pickUi
 
 import {
 createDrawHitTester
-} from "./draw-hit.js?v=22";
+} from "./draw-hit.js?v=27";
 
 import {
 createDrawRenderer
-} from "./draw-render.js?v=34";
+} from "./draw-render.js?v=39";
 
 import {
 snapPlotToCandleWick
@@ -152,7 +152,7 @@ updateChartRulerLabelEl
 
 import {
 mountTabletDrawInput
-} from "../drawings-tablet-input.js?v=13";
+} from "../drawings-tablet-input.js?v=18";
 
 import {
 cloneDrawingsForUndo,
@@ -165,11 +165,11 @@ createDrawDesktopSelection
 
 import {
 createDrawingsPersist
-} from "./drawings-persist.js?v=24";
+} from "./drawings-persist.js?v=29";
 
 import {
 createDrawStyleBar
-} from "./draw-style-bar.js?v=73";
+} from "./draw-style-bar.js?v=79";
 
 import {
 createDrawAlertsChart
@@ -177,7 +177,7 @@ createDrawAlertsChart
 
 import {
 createDrawPlacement
-} from "./draw-placement.js?v=27";
+} from "./draw-placement.js?v=32";
 
 import {
 createDrawTextEditor,
@@ -188,17 +188,17 @@ hitTestTextBody
 import {
 isElliottType,
 listElliottHandles
-} from "./elliott-spec.js?v=18";
+} from "./elliott-spec.js?v=23";
 
 import {
 closeElliottFlyout,
 syncElliottGroupActive
-} from "./elliott-toolbar.js?v=7";
+} from "./elliott-toolbar.js?v=12";
 
 import {
 closeFibFlyout,
 syncFibGroupActive
-} from "./fib-toolbar.js?v=6";
+} from "./fib-toolbar.js?v=10";
 
 import {
 createBrushPlacement
@@ -206,7 +206,7 @@ createBrushPlacement
 
 import {
 createDrawEditInteraction
-} from "./draw-edit-interaction.js?v=31";
+} from "./draw-edit-interaction.js?v=36";
 
 import {
 createDrawChartInput
@@ -218,7 +218,7 @@ createDrawPriceScale
 
 import {
 createDrawRedrawLoop
-} from "./draw-redraw-loop.js?v=19";
+} from "./draw-redraw-loop.js?v=24";
 
 import {
 isAlgoReducedCloudClient

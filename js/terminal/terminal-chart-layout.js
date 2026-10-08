@@ -806,11 +806,27 @@ dragging;
 
 syncLinkedBarSpacing();
 
+/*
+ * Высота графика меняется на каждом кадре, пока тянут RSI / Volume / AO / MACD.
+ * scheduleRedraw с двойным rAF сбрасывается следующим resize и фигуры
+ * стоят до pointerup, потом прыгают. Здесь рисуем в том же кадре, что и свечи.
+ */
 if(
-!dragging
+dragging
 ){
-syncDrawingToolsLayout();
+
+forEachDrawingTool(
+tool=>{
+tool.resize?.();
+tool.forceRedraw?.();
 }
+);
+
+return;
+
+}
+
+syncDrawingToolsLayout();
 
 }
 
