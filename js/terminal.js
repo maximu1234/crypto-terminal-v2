@@ -60,7 +60,7 @@ import {
 getActiveAlerts,
 isMacdAlert,
 isRsiAlert
-} from "./alerts.js?v=114";
+} from "./alerts.js?v=115";
 
 import {
 persistFavoritesToCloud,
@@ -113,13 +113,13 @@ mountCoinsTabletController
 
 import {
 disconnectKlineStream
-} from "./market-ws.js?v=3";
+} from "./market-ws.js?v=4";
 
 import {
 syncBackgroundAlertStreams,
 onMacdSeriesUpdate,
 onRsiSeriesUpdate
-} from "./alert-monitor.js?v=75";
+} from "./alert-monitor.js?v=76";
 
 import {
 createSharedDrawUndoStack
@@ -187,7 +187,7 @@ stopTickerStream
 import {
 mountCoinsListRefreshControls,
 applyCoinsListRefreshInterval
-} from "./terminal-list-refresh.js?v=1";
+} from "./terminal-list-refresh.js?v=2";
 
 import {
 readCoinsPrefs,
@@ -201,7 +201,7 @@ applyCoinsPrefs,
 applySortForCurrentMarket,
 readUrlParams,
 readLastViewForExchange
-} from "./terminal/terminal-prefs.js?v=30";
+} from "./terminal/terminal-prefs.js?v=31";
 
 import {
 mountDesktopOpenChartHandler
@@ -223,7 +223,7 @@ setCoinsTableHooks,
 syncCoinListFreezeFromFlagMenus,
 getExtraCoinMarkets,
 isExtraCoinMarket
-} from "./terminal/terminal-table.js?v=45";
+} from "./terminal/terminal-table.js?v=46";
 
 import {
 createCoinsChartSwitchVeil
@@ -248,7 +248,7 @@ import {
 initTerminalMultiChart,
 syncPrimaryTfToLayout,
 isTerminalMultiChartLayout
-} from "./terminal-multi-chart.js?v=40";
+} from "./terminal-multi-chart.js?v=41";
 
 import {
 mountTerminalLayoutPicker
@@ -7536,7 +7536,7 @@ if(
 ){
 terminalAlgoEarlyT3ListMod =
 await import(
-"./algo-trading/terminal-early-t3-list.js?v=2"
+"./algo-trading/terminal-early-t3-list.js?v=3"
 );
 }
 terminalAlgoEarlyT3ListMod.mountTerminalAlgoEarlyT3List();

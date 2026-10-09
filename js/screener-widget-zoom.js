@@ -33,7 +33,7 @@ alignRsiWithCandleTimes
 import {
 subscribeKline,
 bindLiveCandleCatchup
-} from "./market-ws.js?v=3";
+} from "./market-ws.js?v=4";
 
 import {
 ensureOhlcRollover,

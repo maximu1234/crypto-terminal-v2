@@ -20,7 +20,7 @@ import {
 connectKlineStream,
 subscribeTicker,
 bindLiveCandleCatchup
-} from "../market-ws.js?v=3";
+} from "../market-ws.js?v=4";
 
 import {
 connectTickerStream,
@@ -33,7 +33,7 @@ createTickerUiBatcher
 
 import {
 processAlertCandle
-} from "../alert-monitor.js?v=75";
+} from "../alert-monitor.js?v=76";
 
 import {
 getFavoriteGroup,

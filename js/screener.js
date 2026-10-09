@@ -51,7 +51,7 @@ alignRsiWithCandleTimes
 import {
 subscribeKline,
 bindLiveCandleCatchup
-} from "./market-ws.js?v=3";
+} from "./market-ws.js?v=4";
 
 import {
 ensureOhlcRollover,
@@ -73,7 +73,7 @@ createTickerUiBatcher
 
 import {
 mountReleaseMarker
-} from "./release-marker.js?v=138";
+} from "./release-marker.js?v=139";
 
 import {
 saveScreenerState,
@@ -161,7 +161,7 @@ if(
 ){
 screenerZoomMountPromise =
 import(
-"./screener-widget-zoom.js?v=34"
+"./screener-widget-zoom.js?v=35"
 ).then(
 mod=>{
 refreshZoomFavoriteUi =

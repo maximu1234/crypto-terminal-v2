@@ -8,11 +8,11 @@ isMacdAlert,
 isOscillatorAlert,
 isRsiAlert,
 normalizeAlertTf
-} from "./alerts.js?v=114";
+} from "./alerts.js?v=115";
 
 import {
 subscribeKline
-} from "./market-ws.js?v=3";
+} from "./market-ws.js?v=4";
 
 import {
 EXCHANGE_CHANGED_EVENT,

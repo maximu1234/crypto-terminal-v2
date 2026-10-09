@@ -1,6 +1,6 @@
 import {
 initAlertMonitor
-} from "./alert-monitor.js?v=75";
+} from "./alert-monitor.js?v=76";
 
 import {
 ensureCloudReady
@@ -24,7 +24,7 @@ scheduleRegistryCloudSync
 
 import {
 stripAlertFlagsNotInRegistry
-} from "./alerts.js?v=114";
+} from "./alerts.js?v=115";
 
 import {
 isCloudLoggedIn,
@@ -65,7 +65,7 @@ initFocusBlurAfterPick
 
 import {
 initDesktopAppUi
-} from "./desktop-app-ui.js?v=18";
+} from "./desktop-app-ui.js?v=19";
 
 import {
 initSiteHeader,

@@ -5,7 +5,7 @@
  */
 import {
 forceReconnectPublicSocket
-} from "./ws.js?v=21";
+} from "./ws.js?v=22";
 
 import {
 resetBingxWs

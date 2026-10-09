@@ -49,12 +49,12 @@ getActiveExchangeId
 import {
 subscribeKline,
 bindLiveCandleCatchup
-} from "./market-ws.js?v=3";
+} from "./market-ws.js?v=4";
 
 import {
 mountAlgoTradingCoinList,
 refreshAlgoMarketListFromFlags
-} from "./algo-trading-list.js?v=28";
+} from "./algo-trading-list.js?v=29";
 
 import {
 mountAlgoTickerScanUi

@@ -4,7 +4,7 @@
  */
 import {
   cssUrl
-} from "../asset-manifest.js?v=61";
+} from "../asset-manifest.js?v=62";
 import {
   isTerminalPageOnly,
   isWatchlistPage
@@ -122,7 +122,7 @@ export async function initTradeWebBeforeChart(options = {}) {
   );
   initTradePositionSounds();
   const { initTradePositionsLive } = await import(
-    "../trade-positions-live.js?v=1"
+    "../trade-positions-live.js?v=2"
   );
   initTradePositionsLive();
   const { initTradeOpenPositions } = await import(

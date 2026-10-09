@@ -37,7 +37,7 @@ export async function initMobileTradeLite() {
   }
   try {
     const { initTradePositionsLive } = await import(
-      "../trade-positions-live.js?v=1"
+      "../trade-positions-live.js?v=2"
     );
     initTradePositionsLive();
   } catch {

@@ -15,7 +15,16 @@ let socketGen = 0;
 
 let reconnectTimer = null;
 
+let pingTimer = null;
+
 let intentionalClose = false;
+
+/** Bybit отклоняет subscribe, если в args больше 10 тем. */
+const SUBSCRIBE_CHUNK =
+10;
+
+const PING_MS =
+20000;
 
 const topicCallbacks = new Map();
 
@@ -126,9 +135,105 @@ typeof window.cryptoTerminalDesktop?.bybitPublicWs?.setTopics ===
 
 }
 
+function clearPing(){
+
+if(
+pingTimer
+){
+clearInterval(
+pingTimer
+);
+pingTimer = null;
+}
+
+}
+
+function startPing(){
+
+clearPing();
+
+pingTimer =
+setInterval(
+()=>{
+
+if(
+!socket ||
+socket.readyState !==
+WebSocket.OPEN
+){
+return;
+}
+
+try{
+socket.send(
+JSON.stringify({
+op: "ping"
+})
+);
+}catch{
+/* сокет уже закрывается */
+}
+
+},
+PING_MS
+);
+
+}
+
+function sendTopicOp(
+op,
+topics
+){
+
+if(
+!socket ||
+socket.readyState !==
+WebSocket.OPEN ||
+!topics?.length
+){
+return;
+}
+
+for(
+let i =
+0;
+i <
+topics.length;
+i +=
+SUBSCRIBE_CHUNK
+){
+
+socket.send(
+JSON.stringify({
+op,
+args: topics.slice(
+i,
+i +
+SUBSCRIBE_CHUNK
+)
+})
+);
+
+}
+
+}
+
 function handlePublicMessage(
 msg
 ){
+
+if(
+msg?.op ===
+"subscribe" &&
+msg.success ===
+false
+){
+console.warn(
+"bybit subscribe:",
+msg.ret_msg ||
+msg
+);
+}
 
 if(
 !msg?.topic
@@ -446,21 +551,12 @@ syncDesktopTopics();
 return;
 }
 
-if(
-!socket ||
-socket.readyState !== WebSocket.OPEN ||
-!activeTopics.size
-){
-return;
-}
-
-socket.send(JSON.stringify({
-
-op:"subscribe",
-
-args:[...activeTopics]
-
-}));
+sendTopicOp(
+"subscribe",
+[
+...activeTopics
+]
+);
 
 }
 
@@ -526,6 +622,7 @@ return;
 }
 
 wsConnectFailures = 0;
+startPing();
 resubscribeAll();
 
 };
@@ -561,6 +658,7 @@ return;
 }
 
 socket = null;
+clearPing();
 
 if(intentionalClose){
 return;
@@ -617,6 +715,7 @@ klineFlushTimer = null;
 }
 
 pendingCandleByTopic.clear();
+clearPing();
 
 if(
 hasDesktopPublicWs()
@@ -669,13 +768,12 @@ if(
 socket &&
 socket.readyState === WebSocket.OPEN
 ){
-socket.send(JSON.stringify({
-
-op:"subscribe",
-
-args:[topic]
-
-}));
+sendTopicOp(
+"subscribe",
+[
+topic
+]
+);
 }
 
 }
@@ -703,13 +801,12 @@ if(
 socket &&
 socket.readyState === WebSocket.OPEN
 ){
-socket.send(JSON.stringify({
-
-op:"unsubscribe",
-
-args:[topic]
-
-}));
+sendTopicOp(
+"unsubscribe",
+[
+topic
+]
+);
 }
 
 if(!activeTopics.size){
@@ -748,6 +845,7 @@ null;
 
 pendingCandleByTopic.clear();
 lastTickerRawByTopic.clear();
+clearPing();
 
 if(
 hasDesktopPublicWs()

@@ -28,7 +28,7 @@ alignRsiWithCandleTimes
 import {
 subscribeKline,
 bindLiveCandleCatchup
-} from "./market-ws.js?v=3";
+} from "./market-ws.js?v=4";
 
 import {
 ensureOhlcRollover,
@@ -82,7 +82,7 @@ if(
 ){
 scriptZoomModulePromise =
 import(
-"./screener-widget-zoom.js?v=34"
+"./screener-widget-zoom.js?v=35"
 ).then(
 mod=>{
 refreshZoomFavoriteUi =

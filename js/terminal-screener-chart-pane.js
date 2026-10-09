@@ -23,7 +23,7 @@ linkChartsCrosshair
 
 import {
 readCoinsPrefs
-} from "./terminal/terminal-prefs.js?v=30";
+} from "./terminal/terminal-prefs.js?v=31";
 
 import {
 calculateRSI,
@@ -38,7 +38,7 @@ import {
 subscribeKline,
 subscribeTicker,
 bindLiveCandleCatchup
-} from "./market-ws.js?v=3";
+} from "./market-ws.js?v=4";
 
 import {
 applyLiveOhlcBar,

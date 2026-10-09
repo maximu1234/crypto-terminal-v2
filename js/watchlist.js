@@ -54,7 +54,7 @@ import {
 subscribeKline,
 subscribeTicker,
 bindLiveCandleCatchup
-} from "./market-ws.js?v=3";
+} from "./market-ws.js?v=4";
 
 import {
 applyLiveLastPriceToCandles,
