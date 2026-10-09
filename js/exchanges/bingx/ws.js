@@ -16,7 +16,7 @@ tfToBingxInterval
 import {
 queueKlineByTime,
 takeQueuedKlinesSorted
-} from "../../chart/live-bar-roll.js?v=4";
+} from "../../chart/live-bar-roll.js?v=6";
 
 let socket =
 null;

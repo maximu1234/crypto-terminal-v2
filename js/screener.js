@@ -1,6 +1,6 @@
 import {
 symbolListSignature
-} from "./api.js?v=34";
+} from "./api.js?v=36";
 
 import {
 loadMarketHistory,
@@ -9,7 +9,7 @@ peekMarketSymbolsCache,
 getActiveExchangeDefinition,
 getActiveExchangeId,
 EXCHANGE_CHANGED_EVENT
-} from "./market-api.js?v=9";
+} from "./market-api.js?v=11";
 
 import {
 openChromeSurface
@@ -37,7 +37,7 @@ updateRsiLevelLinesLayout,
 linkPairedChartTimeScales,
 SCREENER_VISIBLE_BARS,
 SCREENER_MAX_BARS
-} from "./chart-import.js?v=66";
+} from "./chart-import.js?v=68";
 
 import {
 isIpadWebViewport
@@ -51,7 +51,7 @@ alignRsiWithCandleTimes
 import {
 subscribeKline,
 bindLiveCandleCatchup
-} from "./market-ws.js?v=4";
+} from "./market-ws.js?v=7";
 
 import {
 ensureOhlcRollover,
@@ -60,12 +60,12 @@ lastOhlcBar,
 liveBarPeriodSec,
 paintCatchupLiveSeries,
 paintLiveOhlcSeries
-} from "./chart/live-bar-roll.js?v=4";
+} from "./chart/live-bar-roll.js?v=6";
 
 import {
 connectTickerStream,
 fetchTickersInto
-} from "./tickers.js?v=29";
+} from "./tickers.js?v=31";
 
 import {
 createTickerUiBatcher
@@ -73,7 +73,7 @@ createTickerUiBatcher
 
 import {
 mountReleaseMarker
-} from "./release-marker.js?v=139";
+} from "./release-marker.js?v=140";
 
 import {
 saveScreenerState,
@@ -92,7 +92,7 @@ FAVORITES_BY_EXCHANGE_KEY
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=69";
+} from "./auth-ui.js?v=74";
 
 import {
 ensureSettled,
@@ -102,12 +102,12 @@ withTimeout
 import {
 persistFavoritesToCloud,
 onFavoritesRemoteUpdate
-} from "./cloud-sync.js?v=74";
+} from "./cloud-sync.js?v=79";
 
 import {
 attachSymbolAutocomplete,
 preloadTradingSymbols
-} from "./symbol-autocomplete.js?v=3";
+} from "./symbol-autocomplete.js?v=5";
 
 import {
 mountQwertyKeyInput,
@@ -129,7 +129,7 @@ SCREENER_WIDGET_OSCILLATOR_MACD,
 createScreenerMacdChart,
 getScreenerWidgetOscillator,
 setScreenerMacdData
-} from "./screener-widget-oscillator.js?v=2";
+} from "./screener-widget-oscillator.js?v=4";
 
 const SCREENER_MAX_CONCURRENT_CHART_LOADS =
 4;
@@ -161,7 +161,7 @@ if(
 ){
 screenerZoomMountPromise =
 import(
-"./screener-widget-zoom.js?v=35"
+"./screener-widget-zoom.js?v=38"
 ).then(
 mod=>{
 refreshZoomFavoriteUi =
@@ -3487,7 +3487,7 @@ setStatus(
 true
 );
 
-void import("./bybit-network-ui.js?v=6").then(m=>{
+void import("./bybit-network-ui.js?v=8").then(m=>{
 m.showBybitNetworkIssue(err);
 });
 
@@ -3670,7 +3670,7 @@ err
 screenerMarketLoadFailed = true;
 allSymbols = [];
 
-void import("./bybit-network-ui.js?v=6").then(m=>{
+void import("./bybit-network-ui.js?v=8").then(m=>{
 m.showBybitNetworkIssue(err);
 });
 

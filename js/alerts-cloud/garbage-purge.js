@@ -1,11 +1,11 @@
 import {
 readAlertTokenSync,
 readPersistedAuthSession
-} from "../alert-auth-cache.js?v=7";
+} from "../alert-auth-cache.js?v=8";
 
 import {
 ensureCloudLoginResolved
-} from "../cloud-sync.js?v=74";
+} from "../cloud-sync.js?v=79";
 
 import {
 withTimeout
@@ -13,7 +13,7 @@ withTimeout
 
 import {
 purgeAlertRowByCloudId
-} from "./worker-client.js?v=8";
+} from "./worker-client.js?v=13";
 
 function alertKeepKey(
 symbol,

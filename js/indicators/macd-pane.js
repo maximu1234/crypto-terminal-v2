@@ -8,7 +8,7 @@ linkPairedChartTimeScales,
 appendFutureWhitespaceBars,
 computeChartFutureMarginBars,
 coinsTfVisibleBars
-} from "../chart-import.js?v=66";
+} from "../chart-import.js?v=68";
 
 import {
 calculateMacd,
@@ -32,12 +32,16 @@ isChartLayoutReady
 } from "../chart-layout-gate.js?v=4";
 
 import {
+isCoinsPaneHeightDrag
+} from "../terminal-layout-resize.js?v=9";
+
+import {
 isBottomIndicatorPane
 } from "./indicator-pane-order.js?v=2";
 
 import {
 syncPaneViewportAfterData
-} from "./indicator-pane-viewport.js?v=8";
+} from "./indicator-pane-viewport.js?v=10";
 
 export const MACD_PANE_ID =
 "macd";
@@ -343,7 +347,8 @@ updateTimeScaleVisibility,
 linkedDrivesMain:
 false,
 isLocked:()=>
-!isChartLayoutReady()
+!isChartLayoutReady() ||
+isCoinsPaneHeightDrag()
 }
 );
 

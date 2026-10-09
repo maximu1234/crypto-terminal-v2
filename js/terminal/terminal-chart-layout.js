@@ -7,7 +7,7 @@ computeChartFutureMarginBars,
 computeCoinsChartViewportPlan,
 equalizeLinkedPanePriceScales,
 syncLinkedChartTimescales
-} from "../chart-import.js?v=66";
+} from "../chart-import.js?v=68";
 
 import {
 terminalVisibleBars,
@@ -18,6 +18,10 @@ import {
 isChartLayoutReady,
 isChromeOverlayActive
 } from "../chart-layout-gate.js?v=4";
+
+import {
+isCoinsPaneHeightDrag
+} from "../terminal-layout-resize.js?v=9";
 
 import {
 CHART_REDRAW_REASON
@@ -700,12 +704,150 @@ layoutRsiBand?.();
 
 }
 
+function visibleLogicalRange(
+chart
+){
+
+try{
+
+return chart?.timeScale?.().getVisibleLogicalRange?.() ||
+null;
+
+}catch{
+return null;
+}
+
+}
+
+function chartsForTimePin(){
+
+const {
+chart,
+getChartIndicators,
+getRsiChart,
+rsiPaneActive
+} =
+ctx();
+
+const list =
+[];
+
+if(
+chart
+){
+list.push(
+chart
+);
+}
+
+for(
+const pane of getChartIndicators?.()?.getLinkedPaneCharts?.() ||
+[]
+){
+
+if(
+pane &&
+!list.includes(
+pane
+)
+){
+list.push(
+pane
+);
+}
+
+}
+
+const rsiChart =
+getRsiChart?.();
+
+if(
+rsiChart &&
+rsiPaneActive?.() &&
+!list.includes(
+rsiChart
+)
+){
+list.push(
+rsiChart
+);
+}
+
+return list;
+
+}
+
+function pinVisibleTimeRanges(
+snaps
+){
+
+for(
+const item of snaps
+){
+
+const range =
+item.range;
+
+if(
+!range
+){
+continue;
+}
+
+const now =
+visibleLogicalRange(
+item.chart
+);
+
+if(
+now &&
+now.from ===
+range.from &&
+now.to ===
+range.to
+){
+continue;
+}
+
+try{
+item.chart.timeScale().setVisibleLogicalRange(
+range
+);
+}catch{
+/* chart disposed */
+}
+
+}
+
+}
+
 export function resizeCharts(){
 
 const dragging =
 isTerminalLayoutDragging();
+const pinTime =
+isCoinsPaneHeightDrag();
+const pinned =
+pinTime
+? chartsForTimePin().map(
+chart=>({
+chart,
+range: visibleLogicalRange(
+chart
+)
+})
+)
+: [];
 const applied =
 applyChartDimensions();
+
+if(
+pinTime
+){
+pinVisibleTimeRanges(
+pinned
+);
+}
 
 const {
 getCandles,
@@ -839,6 +981,29 @@ if(
 isChromeOverlayActive()
 ){
 return;
+}
+
+/*
+ * Высота индикатора уже стоит в CSS. Если ждать rAF, шкала времени
+ * кадр живёт в старом холсте и рябит. Пока тянут — размер в этом же кадре.
+ */
+if(
+isCoinsPaneHeightDrag()
+){
+
+if(
+coinsResizeRaf
+){
+cancelAnimationFrame(
+coinsResizeRaf
+);
+coinsResizeRaf =
+0;
+}
+
+resizeCharts();
+return;
+
 }
 
 if(

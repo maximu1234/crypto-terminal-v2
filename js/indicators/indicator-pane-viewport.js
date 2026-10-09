@@ -5,7 +5,7 @@
  */
 import {
 syncLinkedChartTimescales
-} from "../chart-import.js?v=66";
+} from "../chart-import.js?v=68";
 
 /**
  * After enabling a pane: copy main → pane only.

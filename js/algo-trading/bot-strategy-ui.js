@@ -90,7 +90,7 @@ isAlgoBotDesktop,
 fetchAlgoBotCloudLock,
 clearAlgoBotCloudLock,
 ensureAlgoBotCloudLock
-} from "./bot-bridge.js?v=29";
+} from "./bot-bridge.js?v=30";
 import {
 stageBotTickerBookFromPublished,
 hydrateBotTickerBookFromMain,
@@ -100,12 +100,12 @@ persistBotTickerBookToMain
 } from "./bot-ticker-book.js?v=7";
 import {
 isMultichartRemoteControlHost
-} from "./bot-remote-client.js?v=14";
+} from "./bot-remote-client.js?v=19";
 import {
 mountRemoteSessionLogsEntry,
 mountRemoteWatchlistsPushEntry,
 mountLocalSessionLogsEntry
-} from "./bot-session-logs-viewer.js?v=38";
+} from "./bot-session-logs-viewer.js?v=43";
 import {
 rebalanceTpShares
 } from "./pattern-trade-stats-partial.js?v=22";
@@ -1054,7 +1054,7 @@ applyRunBtn();
 );
 
 void import(
-"./optimize-universe-background.js?v=5"
+"./optimize-universe-background.js?v=7"
 ).then(
 m=>
 m.stopAlgoOptimizeUniverseJob?.()
@@ -4924,7 +4924,7 @@ ALGO_ANALYSIS_BOT_PATTERN_12
 )
 ){
 void import(
-"./optimize-universe-background.js?v=5"
+"./optimize-universe-background.js?v=7"
 ).then(
 m=>
 m.stopAlgoOptimizeUniverseJob?.()

@@ -1,6 +1,6 @@
 import {
 isTradeRuntime
-} from "./page-routes.js?v=7";
+} from "./page-routes.js?v=8";
 
 export function isDesktopTradeDiaryContext(){
 

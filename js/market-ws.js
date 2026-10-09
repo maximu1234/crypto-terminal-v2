@@ -11,7 +11,7 @@ subscribeKline as subscribeBybitKline,
 subscribeTicker as subscribeBybitTicker,
 connectKlineStream as connectBybitKlineStream,
 disconnectKlineStream as disconnectBybitKlineStream
-} from "./ws.js?v=22";
+} from "./ws.js?v=25";
 
 import {
 subscribeBingxKline,
@@ -19,12 +19,17 @@ subscribeBingxTicker,
 connectBingxKlineStream,
 disconnectBingxKlineStream,
 shutdownBingxWs
-} from "./exchanges/bingx/ws.js?v=19";
+} from "./exchanges/bingx/ws.js?v=21";
 
 import {
 bindLiveCandleCatchup,
 installMarketWsResume
-} from "./market-ws-resume.js?v=2";
+} from "./market-ws-resume.js?v=5";
+
+import {
+subscribeMoexKline,
+subscribeMoexTicker
+} from "./moex-live-poll.js?v=3";
 
 let boundExchangeListener =
 false;
@@ -72,12 +77,6 @@ return getActiveExchangeId() ===
 
 }
 
-function noopUnsubscribe(){
-
-return ()=>{};
-
-}
-
 export function subscribeMarketKline(
 symbol,
 tf,
@@ -89,8 +88,11 @@ ensureExchangeListener();
 if(
 isMoex()
 ){
-/* ISS без публичного WS — свечи через REST / catchup. */
-return noopUnsubscribe();
+return subscribeMoexKline(
+symbol,
+tf,
+onCandle
+);
 }
 
 if(
@@ -121,7 +123,10 @@ ensureExchangeListener();
 if(
 isMoex()
 ){
-return noopUnsubscribe();
+return subscribeMoexTicker(
+symbol,
+onTick
+);
 }
 
 if(

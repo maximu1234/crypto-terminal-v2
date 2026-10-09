@@ -49,6 +49,21 @@ clampCoinsMacdHeight
 export const COINS_LAYOUT_KEY =
 "coins_layout_v1";
 
+/** Высоту RSI / MACD / Volume / AO тянут прямо сейчас. */
+export function isCoinsPaneHeightDrag(){
+
+try{
+
+return !!document.body?.classList.contains(
+"coins-layout-dragging-v"
+);
+
+}catch{
+return false;
+}
+
+}
+
 const DESKTOP_MQ =
 "(min-width:641px)";
 
@@ -575,7 +590,9 @@ immediate = false
 
 if(
 immediate ||
-!dragMode
+!dragMode ||
+dragMode !==
+"h"
 ){
 
 if(

@@ -3,7 +3,7 @@
  */
 import {
 loadMarketHistory
-} from "../market-api.js?v=9";
+} from "../market-api.js?v=11";
 
 import {
 analyzeAlgoPatterns
@@ -20,7 +20,7 @@ readAlgoPattern12Settings
 import {
 resolveAlgoScanSymbols,
 normalizeAlgoScanUniverse
-} from "./scan-universe.js?v=3";
+} from "./scan-universe.js?v=5";
 
 /** Дефолтный ТФ скана (если не передан opts.tf). */
 export const ALGO_TICKER_SCAN_TF =

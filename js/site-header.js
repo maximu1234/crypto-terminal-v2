@@ -277,7 +277,7 @@ window.cryptoTerminalDesktop?.isDesktop ||
 window.cryptoTerminalDesktop?.webTrading
 ){
 void import(
-"./script-terminal-status.js?v=11"
+"./script-terminal-status.js?v=14"
 ).then(
 m=>
 m.mountScriptTerminalStatus()

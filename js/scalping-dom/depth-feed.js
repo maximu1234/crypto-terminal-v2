@@ -3,11 +3,11 @@
  */
 import {
 jsUrl
-} from "../asset-manifest.js?v=62";
+} from "../asset-manifest.js?v=67";
 
 import {
 loadMarketOrderbook
-} from "../market-api.js?v=9";
+} from "../market-api.js?v=11";
 
 import {
 EXCHANGE_CHANGED_EVENT,
@@ -17,7 +17,7 @@ getActiveExchangeId
 import {
 getBybitWsUrl,
 rotateBybitWsEndpoint
-} from "../bybit-fetch.js?v=19";
+} from "../bybit-fetch.js?v=21";
 
 import {
 getBingxWsUrl
@@ -28,12 +28,12 @@ applyPositionOverlays,
 applySlTpHighlights,
 resolvePositionOverlays,
 resolveSlTpPrices
-} from "./position-overlay.js?v=14";
+} from "./position-overlay.js?v=19";
 
 import {
 applyAlertUnderlines,
 resolveAlertPrices
-} from "./alert-overlay.js?v=3";
+} from "./alert-overlay.js?v=8";
 
 import {
 applyTriggerUnderlines,

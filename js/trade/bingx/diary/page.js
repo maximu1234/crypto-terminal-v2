@@ -1,7 +1,7 @@
 /** BingX trade diary page. */
 import {
 isDesktopTradeDiaryContext
-} from "../../../trade-diary-access.js?v=4";
+} from "../../../trade-diary-access.js?v=5";
 
 import {
 diaryDayKeyLocal,
@@ -19,7 +19,7 @@ sideToneClass
 import {
 closeTradeDetail,
 openTradeDetail
-} from "../../../trade-diary-detail.js?v=17";
+} from "../../../trade-diary-detail.js?v=22";
 
 import {
 mountTradeDiaryPeriodPicker
@@ -32,11 +32,11 @@ saveDiaryPeriod
 
 import {
 EXCHANGE_CHANGED_EVENT
-} from "../../../market-api.js?v=9";
+} from "../../../market-api.js?v=11";
 
 import {
 initTradeDiaryNav
-} from "../../../trade-diary-nav.js?v=11";
+} from "../../../trade-diary-nav.js?v=12";
 
 import {
 openPnlShareDiaryModal,
@@ -72,7 +72,7 @@ import {
 getLoadedTradeExchangeModules,
 loadTradeExchangeModules,
 resetTradeExchangeModules
-} from "../../module-router.js?v=24";
+} from "../../module-router.js?v=29";
 
 const EXCHANGE_ID =
 "bingx";

@@ -19,11 +19,11 @@ appendFutureWhitespaceBars,
 computeChartFutureMarginBars,
 coinsTfVisibleBars,
 linkChartsCrosshair
-} from "./chart-import.js?v=66";
+} from "./chart-import.js?v=68";
 
 import {
 readCoinsPrefs
-} from "./terminal/terminal-prefs.js?v=31";
+} from "./terminal/terminal-prefs.js?v=36";
 
 import {
 calculateRSI,
@@ -32,13 +32,13 @@ alignRsiWithCandleTimes
 
 import {
 loadMarketHistory
-} from "./market-api.js?v=9";
+} from "./market-api.js?v=11";
 
 import {
 subscribeKline,
 subscribeTicker,
 bindLiveCandleCatchup
-} from "./market-ws.js?v=4";
+} from "./market-ws.js?v=7";
 
 import {
 applyLiveOhlcBar,
@@ -46,11 +46,11 @@ applyLiveSeriesUpdate,
 ensureOhlcRollover,
 liveBarPeriodSec,
 paintCatchupLiveSeries
-} from "./chart/live-bar-roll.js?v=4";
+} from "./chart/live-bar-roll.js?v=6";
 
 import {
 mountWidgetDomCrosshair
-} from "./chart-widget-host.js?v=65";
+} from "./chart-widget-host.js?v=70";
 
 function buildBodyHtml(
 showRsi

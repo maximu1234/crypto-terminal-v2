@@ -1,20 +1,20 @@
 import {
 waitForCloudAuth,
 ensureCloudLoginResolved
-} from "../cloud-sync.js?v=74";
+} from "../cloud-sync.js?v=79";
 
 import {
 setAlertAuthCache,
 resolveAlertAuthFast,
 readAlertTokenSync,
 readPersistedAuthSession
-} from "../alert-auth-cache.js?v=7";
+} from "../alert-auth-cache.js?v=8";
 
 import {
 fetchWithTimeout,
 withTimeout,
 getAccessTokenForUser
-} from "./worker-client.js?v=8";
+} from "./worker-client.js?v=13";
 
 const TELEGRAM_CHAT_CACHE_PREFIX =
 "ct_telegram_chat_v1:";

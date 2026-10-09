@@ -8,7 +8,7 @@ import {
 loadMarketHistory,
 loadMarketSymbols,
 buildMarketLists
-} from "./market-api.js?v=9";
+} from "./market-api.js?v=11";
 
 import {
 PATTERN_12_ID,
@@ -750,6 +750,195 @@ lists.crypto
 
 }
 
+let scanWorker =
+null;
+let scanWorkerSeq =
+0;
+const scanWorkerPending =
+new Map();
+
+function getScanWorker(){
+
+if(
+typeof Worker ===
+"undefined"
+){
+return null;
+}
+
+if(
+scanWorker
+){
+return scanWorker;
+}
+
+try{
+scanWorker =
+new Worker(
+new URL(
+"./pattern-12-scan-worker.js?v=3",
+import.meta.url
+),
+{
+type: "module"
+}
+);
+scanWorker.onmessage =
+event=>{
+
+const pending =
+scanWorkerPending.get(
+event.data?.id
+);
+
+if(
+!pending
+){
+return;
+}
+
+scanWorkerPending.delete(
+event.data.id
+);
+pending.hits(
+event.data.hits
+);
+
+};
+scanWorker.onerror =
+()=>{
+
+const dead =
+scanWorker;
+scanWorker = null;
+
+try{
+dead?.terminate();
+}catch{
+/* already gone */
+}
+
+for(
+const [
+id,
+pending
+] of scanWorkerPending
+){
+scanWorkerPending.delete(
+id
+);
+pending.fail();
+}
+
+};
+}catch{
+scanWorker = null;
+}
+
+return scanWorker;
+
+}
+
+function findHitsOffMainThread(
+candles,
+lookbackBars,
+sideFilter,
+patternSettings,
+indicatorId
+){
+
+const fallback =
+()=>
+findPattern12HitsInLookback(
+candles,
+lookbackBars,
+sideFilter,
+patternSettings,
+indicatorId
+);
+const worker =
+getScanWorker();
+
+if(
+!worker
+){
+return Promise.resolve(
+fallback()
+);
+}
+
+const id =
+++scanWorkerSeq;
+
+return new Promise(
+resolve=>{
+
+const timer =
+setTimeout(
+()=>{
+scanWorkerPending.delete(
+id
+);
+resolve(
+fallback()
+);
+},
+8000
+);
+
+scanWorkerPending.set(
+id,
+{
+hits(
+value
+){
+clearTimeout(
+timer
+);
+resolve(
+value ||
+[]
+);
+},
+fail(){
+clearTimeout(
+timer
+);
+resolve(
+fallback()
+);
+}
+}
+);
+
+try{
+worker.postMessage(
+{
+id,
+candles,
+lookbackBars,
+sideFilter,
+patternSettings,
+indicatorId
+}
+);
+}catch{
+clearTimeout(
+timer
+);
+scanWorkerPending.delete(
+id
+);
+resolve(
+fallback()
+);
+}
+
+}
+);
+
+}
+
 export function createPattern12Scanner(){
 
 let running =
@@ -1094,7 +1283,7 @@ return;
 }
 
 const hits =
-findPattern12HitsInLookback(
+await findHitsOffMainThread(
 candles,
 lookbackBars,
 taskSideFilter,

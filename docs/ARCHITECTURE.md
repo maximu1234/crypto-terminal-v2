@@ -8,13 +8,15 @@
 
 ## Имена страниц (не путать)
 
-| URL | HTML | JS entry |
-|-----|------|----------|
-| `/terminal.html` | Монеты | `terminal-entry.js` → `terminal.js` |
-| `/terminal.html` | Терминал (виджеты) | `watchlist.js` |
-| `/` | Главная (screener) | `screener.js` |
+| URL | Страница | JS entry |
+|-----|----------|----------|
+| `/`, `/screener.html` | Скринер | `screener.js` (`index.html` редиректит сюда) |
+| `/terminal.html` | Терминал | `terminal-page-boot.js` → `terminal-entry.js` → `terminal.js` |
+| `/watchlist.html` | Вотчлист | `watchlist.js` |
 
-`terminal.js` — **legacy** имя для страницы Монеты; не связано с `terminal.html`.
+`/coins` и `/trade` на сайте открывают Терминал (`vercel.json`). Файла `coins.html` нет.
+
+`terminal.js` — реализация страницы Терминал. Виджеты Вотчлиста — `watchlist.js`.
 
 `js/asset-manifest.js` + `scripts/sync-asset-versions.cjs` — версии `?v=`.
 
@@ -54,4 +56,6 @@ npm run check:all
 
 ## Откат
 
-**Текущий эталон:** `metka-165` / desktop `1.1.64` — [MARKER_165.md](./MARKER_165.md), `js/release-marker.js`. Desktop .app: [DESKTOP_APP.md](./DESKTOP_APP.md).
+**Текущий релиз:** `metka-200` / веб `v0.200` / desktop `1.1.86` — [MARKER_200.md](./MARKER_200.md), `js/release-marker.js`. Desktop .app: [DESKTOP_APP.md](./DESKTOP_APP.md).
+
+Откат perf chrome/chart по-прежнему **`metka-181`** — не удалять, см. [PERF_CHROME_CHART.md](./PERF_CHROME_CHART.md).

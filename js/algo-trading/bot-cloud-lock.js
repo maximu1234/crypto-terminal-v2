@@ -14,13 +14,13 @@
 import {
 ensureSupabaseSdk,
 isSupabaseConfigured
-} from "../supabase-client.js?v=9";
+} from "../supabase-client.js?v=10";
 import {
 readPersistedAuthSession
-} from "../alert-auth-cache.js?v=7";
+} from "../alert-auth-cache.js?v=8";
 import {
 isAlgoBotLiteShell
-} from "../page-routes.js?v=7";
+} from "../page-routes.js?v=8";
 
 const INSTANCE_KEY =
 "algo_bot_lock_instance_id";

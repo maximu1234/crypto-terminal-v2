@@ -32,6 +32,12 @@ handleTrustedDesktopUi
 require(
 "./desktop-ui-gate.cjs"
 );
+const {
+planPublicTopicLiveness
+} =
+require(
+"./public-topic-liveness.cjs"
+);
 
 let WsConstructor =
 null;
@@ -86,6 +92,10 @@ let lastDataAt =
 0;
 let lastKlineAt =
 0;
+const lastTopicAt =
+new Map();
+const topicSubscribedAt =
+new Map();
 let wsConnectFailures =
 0;
 let socketUsedAgent =
@@ -428,37 +438,90 @@ forceReconnect(
 return;
 }
 
-const hasKline =
-[
-...wanted
-].some(
-topic=>
-topic.startsWith(
-"kline."
+const lastAt =
+{};
+const subscribedAt =
+{};
+
+for(
+const topic of wanted
+){
+
+if(
+lastTopicAt.has(
+topic
 )
+){
+lastAt[
+topic
+] =
+lastTopicAt.get(
+topic
+);
+}
+
+if(
+topicSubscribedAt.has(
+topic
+)
+){
+subscribedAt[
+topic
+] =
+topicSubscribedAt.get(
+topic
+);
+}
+
+}
+
+const plan =
+planPublicTopicLiveness(
+{
+now: Date.now(),
+topics: [
+...wanted
+],
+lastAt,
+subscribedAt,
+klineSilenceMs: KLINE_SILENCE_MS
+}
 );
 
 if(
-!hasKline ||
-!lastKlineAt
+plan.reconnect
 ){
-return;
-}
-
-const klineSilentMs =
-Date.now() -
-lastKlineAt;
-
-if(
-klineSilentMs <
-KLINE_SILENCE_MS
-){
-return;
-}
-
 forceReconnect(
-`kline silence ${Math.round(klineSilentMs / 1000)}s`
+"topic silence"
 );
+return;
+}
+
+if(
+!plan.resubscribe.length ||
+!isSocketOpen()
+){
+return;
+}
+
+unsubscribeTopics(
+plan.resubscribe
+);
+subscribeTopics(
+plan.resubscribe
+);
+
+const pokedAt =
+Date.now();
+
+for(
+const topic of plan.resubscribe
+){
+topicSubscribedAt.set(
+topic,
+pokedAt
+);
+}
 
 },
 SILENCE_CHECK_MS
@@ -570,6 +633,10 @@ return;
 
 lastDataAt =
 Date.now();
+lastTopicAt.set(
+topic,
+Date.now()
+);
 if(
 topic.startsWith(
 "kline."
@@ -742,6 +809,16 @@ lastKlineAt =
 Date.now();
 startPing();
 startSilenceWatch();
+const openedStamp =
+Date.now();
+for(
+const topic of wanted
+){
+topicSubscribedAt.set(
+topic,
+openedStamp
+);
+}
 subscribeTopics(
 [
 ...wanted
@@ -884,6 +961,29 @@ t=>
 t
 )
 );
+
+for(
+const topic of removed
+){
+lastTopicAt.delete(
+topic
+);
+topicSubscribedAt.delete(
+topic
+);
+}
+
+const addedStamp =
+Date.now();
+
+for(
+const topic of added
+){
+topicSubscribedAt.set(
+topic,
+addedStamp
+);
+}
 
 wanted.clear();
 for(
@@ -1403,6 +1503,7 @@ getLinearTickers()
 module.exports =
 {
 sanitizeBybitPublicTopic,
+planPublicTopicLiveness,
 registerBybitPublicWsIpc,
 setBybitPublicWsTarget
 };

@@ -4,14 +4,14 @@
  */
 import {
   mountMobileReadOnlyChart
-} from "./chart-lite.js?v=8";
+} from "./chart-lite.js?v=11";
 import {
   loadMarketSymbols,
   peekMarketSymbolsCache
-} from "../market-api.js?v=9";
+} from "../market-api.js?v=11";
 import {
   fetchTickersInto
-} from "../tickers.js?v=29";
+} from "../tickers.js?v=31";
 import {
   filterSymbolsByMinVolume,
   normalizeMinVolume,

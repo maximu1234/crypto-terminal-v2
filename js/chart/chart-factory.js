@@ -21,7 +21,7 @@ lwPriceScaleModeId
 
 import {
 liveBarPeriodSec
-} from "./live-bar-roll.js?v=4";
+} from "./live-bar-roll.js?v=6";
 
 import {
 withChartLocalTime

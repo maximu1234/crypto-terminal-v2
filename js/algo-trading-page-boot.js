@@ -7,11 +7,11 @@ waitForSiteCssReady
 
 import {
 jsImport
-} from "./asset-manifest.js?v=62";
+} from "./asset-manifest.js?v=67";
 
 import {
 isAlgoBotLiteShell
-} from "./page-routes.js?v=7";
+} from "./page-routes.js?v=8";
 
 import {
 isAlgoTradingNavEnabled

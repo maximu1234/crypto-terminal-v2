@@ -12,11 +12,11 @@ loadMarketHistory,
 getActiveExchangeId,
 getActiveExchangeDefinition,
 EXCHANGE_CHANGED_EVENT
-} from "./market-api.js?v=9";
+} from "./market-api.js?v=11";
 
 import {
 clearBybitNetworkIssue
-} from "./bybit-network-ui.js?v=6";
+} from "./bybit-network-ui.js?v=8";
 
 import {
 buildAlertChartUrl
@@ -24,7 +24,7 @@ buildAlertChartUrl
 
 import {
 isLocalDevHost
-} from "./bybit-fetch.js?v=19";
+} from "./bybit-fetch.js?v=21";
 
 import {
 applyChartPriceFormat,
@@ -34,7 +34,11 @@ createRSIChart,
 updateRsiBandLayout,
 updateRsiLevelLinesLayout,
 linkPairedChartTimeScales
-} from "./chart-import.js?v=66";
+} from "./chart-import.js?v=68";
+
+import {
+formatPrice
+} from "./format-price.js?v=2";
 
 import {
 calculateRSI,
@@ -44,17 +48,17 @@ alignRsiWithCandleTimes
 import {
 createDashboardChartWidget,
 mountDashboardChartInteractions
-} from "./chart-widget-host.js?v=65";
+} from "./chart-widget-host.js?v=70";
 
 import {
 mountWidgetTabletChart
-} from "./tablet-widget-chart.js?v=7";
+} from "./tablet-widget-chart.js?v=9";
 
 import {
 subscribeKline,
 subscribeTicker,
 bindLiveCandleCatchup
-} from "./market-ws.js?v=4";
+} from "./market-ws.js?v=7";
 
 import {
 applyLiveLastPriceToCandles,
@@ -65,7 +69,7 @@ lastOhlcBar,
 liveBarPeriodSec,
 paintCatchupLiveSeries,
 paintLiveOhlcSeries
-} from "./chart/live-bar-roll.js?v=4";
+} from "./chart/live-bar-roll.js?v=6";
 
 import {
 getWidgetToolbarHtml,
@@ -82,7 +86,7 @@ ensureDrawToolsVisible
 
 import {
 preloadTradingSymbols
-} from "./symbol-autocomplete.js?v=3";
+} from "./symbol-autocomplete.js?v=5";
 
 import {
 loadLightweightCharts
@@ -97,7 +101,7 @@ getWidgetFlagHtml,
 wireWidgetFlagUi,
 updateWidgetFlagUi,
 bindWidgetFlagGlobalListeners
-} from "./widget-favorite-flag.js?v=8";
+} from "./widget-favorite-flag.js?v=13";
 
 function escapeHtml(
 value
@@ -170,7 +174,7 @@ return;
 
 const mod =
 await import(
-"./trade-widget-mount.js?v=20"
+"./trade-widget-mount.js?v=25"
 );
 
 mountTradeOnDashboardWidget =
@@ -1093,7 +1097,7 @@ widget.classList.add(
 "widget-chart-empty"
 );
 
-void import("./bybit-network-ui.js?v=6").then(
+void import("./bybit-network-ui.js?v=8").then(
 m=>{
 m.showBybitNetworkIssue(
 new Error(
@@ -1150,8 +1154,8 @@ series,
 last.close
 );
 priceEl.innerText =
-last.close.toFixed(
-2
+formatPrice(
+last.close
 );
 
 if(
@@ -1268,8 +1272,8 @@ series,
 last.close
 );
 priceEl.innerText =
-last.close.toFixed(
-2
+formatPrice(
+last.close
 );
 }
 
@@ -1359,8 +1363,8 @@ series,
 last.close
 );
 priceEl.innerText =
-last.close.toFixed(
-2
+formatPrice(
+last.close
 );
 }
 if(
@@ -1478,7 +1482,9 @@ tf === "W" ? 200 : 300
 ];
 
 priceEl.innerText =
-last.close.toFixed(2);
+formatPrice(
+last.close
+);
 
 const change =
 ((last.close - first.close) / first.close) * 100;

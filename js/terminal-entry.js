@@ -1,13 +1,13 @@
 /**
- * @module coins-page
- * Canonical entry script for `/terminal.html` («Монеты»).
+ * @module terminal-page
+ * Canonical entry for `/terminal.html` (Терминал).
  *
- * Implementation lives in `terminal.js` (legacy filename).
- * Do not confuse with `/terminal.html` — that page loads `watchlist.js`.
+ * Implementation lives in `terminal.js`.
+ * Watchlist widgets live in `watchlist.js` on `/watchlist.html`.
  */
 import {
 jsUrl
-} from "./asset-manifest.js?v=62";
+} from "./asset-manifest.js?v=67";
 
 await import(
 jsUrl(

@@ -4,12 +4,12 @@
  */
 import {
   isDesktopTradeDiaryContext
-} from "./trade-diary-access.js?v=4";
+} from "./trade-diary-access.js?v=5";
 
 import {
   getLoadedTradeExchangeModules,
   loadTradeExchangeModules
-} from "./trade/module-router.js?v=24";
+} from "./trade/module-router.js?v=29";
 
 import {
   installWebTradingShell
@@ -17,7 +17,7 @@ import {
 
 import {
   setActiveExchangeId
-} from "./market-api.js?v=9";
+} from "./market-api.js?v=11";
 
 import {
   mountMoexUnavailableStub

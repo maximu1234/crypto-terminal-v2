@@ -6,11 +6,11 @@ loadMarketSymbols,
 buildMarketLists,
 loadMarketTickers,
 getActiveExchangeId
-} from "../market-api.js?v=9";
+} from "../market-api.js?v=11";
 
 import {
 fetchBybit
-} from "../bybit-fetch.js?v=19";
+} from "../bybit-fetch.js?v=21";
 
 export const ALGO_SCAN_UNIVERSE_ALL =
 "all";

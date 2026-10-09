@@ -48,6 +48,8 @@ test("public Bybit WS in main uses SOCKS relay and gated IPC", () => {
   assert.match(source, /wss:\/\/stream\.bybit\.com\/v5\/public\/linear/);
   assert.match(source, /handleTrustedDesktopUi/);
   assert.match(source, /bybitPublic:setTopics/);
+  assert.match(source, /planPublicTopicLiveness/);
+  assert.match(source, /lastTopicAt/);
   assert.match(source, /bybitPublic:getTickers/);
   assert.doesNotMatch(source, /bingx/i);
   assert.doesNotMatch(source, /require\([^)]*algo-bybit-kline/);
@@ -110,7 +112,8 @@ test("topic changes resubscribe the full wanted set, not only added", () => {
   );
   assert.match(source, /KLINE_SILENCE_MS/);
   assert.match(source, /lastKlineAt/);
-  assert.match(source, /kline silence/);
+  assert.match(source, /topic silence/);
+  assert.match(source, /subscribeTopics\(\s*\nplan\.resubscribe/);
 });
 
 test("terminal live ticker updates the last candle without waiting for kline", () => {

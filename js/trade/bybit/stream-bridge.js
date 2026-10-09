@@ -12,7 +12,7 @@ isTradePositionSoundBaselineReady
 
 import {
 isExchangeTradingEnabled
-} from "../../market-api.js?v=9";
+} from "../../market-api.js?v=11";
 
 import {
 getTradeConfig

@@ -23,7 +23,7 @@ releaseAlgoBotLock,
 clearAlgoBotLock,
 fetchAlgoBotLock,
 ensureAlgoBotLockHeld
-} from "./bot-cloud-lock.js?v=11";
+} from "./bot-cloud-lock.js?v=12";
 import {
 freezeBotTickerBookSnapshot,
 hydrateBotTickerBookFromMain,

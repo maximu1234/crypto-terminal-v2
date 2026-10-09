@@ -9,7 +9,7 @@ isActiveAnalysisBot
 } from "./active-analysis-bot.js?v=4";
 import {
 loadMarketHistory
-} from "../market-api.js?v=9";
+} from "../market-api.js?v=11";
 import {
 RSI_TOUCH_FLIP_SIZE_AVERAGE,
 loadRsiTouchFlipPrefs,

@@ -4,23 +4,23 @@
 import {
 isSystemAdminUser,
 getSystemAdminEmails
-} from "./system-admin-access.js?v=3";
+} from "./system-admin-access.js?v=8";
 
 import {
 getEffectiveCloudUserEmail
-} from "./cloud-sync.js?v=74";
+} from "./cloud-sync.js?v=79";
 
 import {
 bindSupabaseUsagePrefsForm
-} from "./system-admin-supabase-prefs.js?v=6";
+} from "./system-admin-supabase-prefs.js?v=11";
 
 import {
 bindAlertsGarbagePurge
-} from "./system-admin-alerts-purge.js?v=2";
+} from "./system-admin-alerts-purge.js?v=7";
 
 import {
 bindWorkerReloadMsSettings
-} from "./system-admin-worker-reload-ms.js?v=5";
+} from "./system-admin-worker-reload-ms.js?v=6";
 
 export async function mountSecretSettingsPanel(
 host

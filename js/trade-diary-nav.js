@@ -1,6 +1,6 @@
 import {
 isDesktopTradeDiaryContext
-} from "./trade-diary-access.js?v=4";
+} from "./trade-diary-access.js?v=5";
 
 function isDiaryPage(){
 

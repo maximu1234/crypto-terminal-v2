@@ -15,7 +15,7 @@ mountChartPriceHud,
 applyTabletMainChartScroll,
 applyTabletRsiChartOptions,
 SCREENER_MAX_BARS
-} from "./chart-import.js?v=66";
+} from "./chart-import.js?v=68";
 
 import {
 isIpadWebViewport
@@ -23,7 +23,7 @@ isIpadWebViewport
 
 import {
 loadMarketHistory
-} from "./market-api.js?v=9";
+} from "./market-api.js?v=11";
 
 import {
 calculateRSI,
@@ -33,7 +33,7 @@ alignRsiWithCandleTimes
 import {
 subscribeKline,
 bindLiveCandleCatchup
-} from "./market-ws.js?v=4";
+} from "./market-ws.js?v=7";
 
 import {
 ensureOhlcRollover,
@@ -42,14 +42,14 @@ lastOhlcBar,
 liveBarPeriodSec,
 paintCatchupLiveSeries,
 paintLiveOhlcSeries
-} from "./chart/live-bar-roll.js?v=4";
+} from "./chart/live-bar-roll.js?v=6";
 
 import {
 SCREENER_WIDGET_OSCILLATOR_CHANGED,
 SCREENER_WIDGET_OSCILLATOR_MACD,
 createScreenerMacdChart,
 setScreenerMacdData
-} from "./screener-widget-oscillator.js?v=2";
+} from "./screener-widget-oscillator.js?v=4";
 
 import {
 shouldIgnoreTypingHotkey
@@ -1119,7 +1119,7 @@ const {
 mountWidgetTabletChart
 } =
 await import(
-"./tablet-widget-chart.js?v=7"
+"./tablet-widget-chart.js?v=9"
 );
 
 if(

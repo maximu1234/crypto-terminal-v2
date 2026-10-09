@@ -1,13 +1,17 @@
 import {
 getBybitWsUrl,
 rotateBybitWsEndpoint
-} from "./bybit-fetch.js?v=19";
+} from "./bybit-fetch.js?v=21";
 
 import {
 collectKlineRows,
 queueKlineByTime,
 takeQueuedKlinesSorted
-} from "./chart/live-bar-roll.js?v=4";
+} from "./chart/live-bar-roll.js?v=6";
+
+import {
+planPublicTopicLiveness
+} from "./public-topic-liveness.js?v=1";
 
 let socket = null;
 
@@ -17,6 +21,12 @@ let reconnectTimer = null;
 
 let pingTimer = null;
 
+let livenessTimer = null;
+
+const lastTopicAt = new Map();
+
+const topicSubscribedAt = new Map();
+
 let intentionalClose = false;
 
 /** Bybit отклоняет subscribe, если в args больше 10 тем. */
@@ -25,6 +35,9 @@ const SUBSCRIBE_CHUNK =
 
 const PING_MS =
 20000;
+
+const LIVENESS_CHECK_MS =
+15000;
 
 const topicCallbacks = new Map();
 
@@ -148,6 +161,139 @@ pingTimer = null;
 
 }
 
+function clearLiveness(){
+
+if(
+livenessTimer
+){
+clearInterval(
+livenessTimer
+);
+livenessTimer = null;
+}
+
+}
+
+function stampSubscribed(
+topics
+){
+
+const now =
+Date.now();
+
+for(
+const topic of topics
+){
+topicSubscribedAt.set(
+topic,
+now
+);
+}
+
+}
+
+function runLivenessCheck(){
+
+if(
+hasDesktopPublicWs() ||
+!socket ||
+socket.readyState !==
+WebSocket.OPEN ||
+!activeTopics.size
+){
+return;
+}
+
+const topics =
+[
+...activeTopics
+];
+const lastAt =
+{};
+const subscribedAt =
+{};
+
+for(
+const topic of topics
+){
+
+if(
+lastTopicAt.has(
+topic
+)
+){
+lastAt[
+topic
+] =
+lastTopicAt.get(
+topic
+);
+}
+
+if(
+topicSubscribedAt.has(
+topic
+)
+){
+subscribedAt[
+topic
+] =
+topicSubscribedAt.get(
+topic
+);
+}
+
+}
+
+const plan =
+planPublicTopicLiveness(
+{
+now: Date.now(),
+topics,
+lastAt,
+subscribedAt
+}
+);
+
+if(
+plan.reconnect
+){
+forceReconnectPublicSocket();
+return;
+}
+
+if(
+!plan.resubscribe.length
+){
+return;
+}
+
+sendTopicOp(
+"unsubscribe",
+plan.resubscribe
+);
+sendTopicOp(
+"subscribe",
+plan.resubscribe
+);
+stampSubscribed(
+plan.resubscribe
+);
+
+}
+
+function startLiveness(){
+
+clearLiveness();
+
+livenessTimer =
+setInterval(
+runLivenessCheck,
+LIVENESS_CHECK_MS
+);
+
+}
+
 function startPing(){
 
 clearPing();
@@ -240,6 +386,11 @@ if(
 ){
 return;
 }
+
+lastTopicAt.set(
+msg.topic,
+Date.now()
+);
 
 const callbacks =
 topicCallbacks.get(
@@ -557,6 +708,9 @@ sendTopicOp(
 ...activeTopics
 ]
 );
+stampSubscribed(
+activeTopics
+);
 
 }
 
@@ -623,6 +777,7 @@ return;
 
 wsConnectFailures = 0;
 startPing();
+startLiveness();
 resubscribeAll();
 
 };
@@ -636,8 +791,20 @@ socketGen
 return;
 }
 
-const msg =
-JSON.parse(event.data);
+let msg;
+
+try{
+
+msg =
+JSON.parse(
+event.data
+);
+
+}catch{
+
+return;
+
+}
 
 handlePublicMessage(
 msg
@@ -659,6 +826,7 @@ return;
 
 socket = null;
 clearPing();
+clearLiveness();
 
 if(intentionalClose){
 return;
@@ -716,6 +884,7 @@ klineFlushTimer = null;
 
 pendingCandleByTopic.clear();
 clearPing();
+clearLiveness();
 
 if(
 hasDesktopPublicWs()
@@ -754,6 +923,10 @@ return;
 }
 
 activeTopics.add(topic);
+topicSubscribedAt.set(
+topic,
+Date.now()
+);
 
 if(
 hasDesktopPublicWs()
@@ -786,6 +959,12 @@ return;
 
 activeTopics.delete(topic);
 topicCallbacks.delete(topic);
+lastTopicAt.delete(
+topic
+);
+topicSubscribedAt.delete(
+topic
+);
 lastTickerRawByTopic.delete(
 topic
 );

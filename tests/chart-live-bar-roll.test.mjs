@@ -308,6 +308,57 @@ test("mergeCatchupOhlcBars keeps older history and drops a disconnected suffix",
   assert.equal(candles.length, 3);
 });
 
+test("mergeLast updates close without wiping the bar open", () => {
+  const candles = [
+    { time: 1000, open: 10, high: 12, low: 9, close: 11, volume: 4 }
+  ];
+  const kind = applyLiveOhlcBar(
+    candles,
+    { time: 1000, open: 1, high: 1, low: 1, close: 13, mergeLast: true },
+    0,
+    60
+  );
+  assert.equal(kind, "last");
+  assert.equal(candles[0].open, 10);
+  assert.equal(candles[0].high, 13);
+  assert.equal(candles[0].low, 9);
+  assert.equal(candles[0].close, 13);
+  assert.equal(candles[0].volume, 4);
+});
+
+test("mergeLast does not rewrite an older bar or append a new one", () => {
+  const candles = [
+    { time: 0, open: 10, high: 12, low: 9, close: 11, volume: 4 },
+    { time: 600, open: 11, high: 14, low: 10, close: 13, volume: 5 }
+  ];
+  const older = applyLiveOhlcBar(
+    candles,
+    { time: 0, open: 1, high: 1, low: 1, close: 20, mergeLast: true },
+    0,
+    900
+  );
+  assert.equal(older, "last");
+  assert.equal(candles.length, 2);
+  assert.equal(candles[0].close, 11);
+  assert.equal(candles[0].open, 10);
+  assert.equal(candles[1].open, 11);
+  assert.equal(candles[1].close, 20);
+  assert.equal(candles[1].high, 20);
+  assert.equal(candles[1].low, 10);
+  assert.equal(candles[1].volume, 5);
+
+  const ahead = applyLiveOhlcBar(
+    candles,
+    { time: 9000, open: 1, high: 1, low: 1, close: 21, mergeLast: true },
+    0,
+    60
+  );
+  assert.equal(ahead, "last");
+  assert.equal(candles.length, 2);
+  assert.equal(candles[1].close, 21);
+  assert.equal(candles[0].close, 11);
+});
+
 test("sliceContiguousCatchupBars stops before a missing period", () => {
   const rows = sliceContiguousCatchupBars(1000, 60, [
     { time: 1000, close: 1 },

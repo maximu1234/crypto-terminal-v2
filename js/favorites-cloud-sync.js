@@ -9,13 +9,13 @@ isCloudApiUsable,
 isCloudAuthError,
 reportCloudAuthFailure,
 tryCloudAuthRecovery
-} from "./cloud-sync.js?v=74";
+} from "./cloud-sync.js?v=79";
 
 import {
 isFavoritesCloudDisabled,
 isFavoritesAutoCloudDisabled,
 isSupabaseRealtimeDisabled
-} from "./supabase-usage-prefs.js?v=7";
+} from "./supabase-usage-prefs.js?v=12";
 
 import {
 getActiveExchangeId
@@ -41,11 +41,11 @@ markFavoritesCloudDirty
 import {
 readAlertTokenSync,
 resolveAlertAuthFast
-} from "./alert-auth-cache.js?v=7";
+} from "./alert-auth-cache.js?v=8";
 
 import {
 createPullCoalescer
-} from "./cloud-sync-throttle.js?v=3";
+} from "./cloud-sync-throttle.js?v=4";
 
 const coalesceFavoritesPull =
 createPullCoalescer({

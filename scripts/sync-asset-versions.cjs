@@ -3,7 +3,8 @@
  * Синхронизирует ?v=N во всех js/html с js/asset-manifest.js (ASSETS).
  *
  *   node scripts/sync-asset-versions.cjs              # sync all
- *   node scripts/sync-asset-versions.cjs bump chart.js  # +1 в manifest и sync
+ *   node scripts/sync-asset-versions.cjs bump chart.js [more.js]
+ *   Один проход: лист, все кто его импортирует, и asset-manifest.js — каждый +1.
  *   node scripts/sync-asset-versions.cjs list         # показать реестр
  */
 const fs =
@@ -451,6 +452,256 @@ return changed;
 
 }
 
+function fileManifestKey(
+filePath
+){
+
+const rel =
+path.relative(
+ROOT,
+filePath
+).replace(
+/\\/g,
+"/"
+);
+
+if(
+rel.startsWith(
+"js/"
+)
+){
+return rel.slice(
+3
+);
+}
+
+if(
+rel.startsWith(
+"css/"
+)
+){
+return rel.slice(
+4
+);
+}
+
+return null;
+
+}
+
+function importerGraph(
+assets
+){
+
+const reverse =
+new Map();
+const versionRe =
+/([a-zA-Z0-9_./-]+\.(?:js|css))\?v=\d+/g;
+
+for(
+const file of collectFiles()
+){
+
+if(
+!file.endsWith(
+".js"
+) &&
+!file.endsWith(
+".css"
+)
+){
+continue;
+}
+
+const fromKey =
+fileManifestKey(
+file
+);
+
+if(
+!fromKey ||
+assets[
+fromKey
+] ==
+null
+){
+continue;
+}
+
+const text =
+fs.readFileSync(
+file,
+"utf8"
+);
+
+for(
+const match of text.matchAll(
+versionRe
+)
+){
+
+const key =
+resolveImportKey(
+file,
+match[
+1
+]
+);
+
+if(
+!key ||
+assets[
+key
+] ==
+null ||
+key ===
+fromKey
+){
+continue;
+}
+
+if(
+!reverse.has(
+key
+)
+){
+reverse.set(
+key,
+new Set()
+);
+}
+
+reverse.get(
+key
+).add(
+fromKey
+);
+
+}
+
+}
+
+return reverse;
+
+}
+
+function collectBumpClosure(
+assets,
+seeds
+){
+
+const reverse =
+importerGraph(
+assets
+);
+const closure =
+new Set();
+const queue =
+[
+...seeds
+];
+
+if(
+assets[
+"asset-manifest.js"
+] !=
+null
+){
+queue.push(
+"asset-manifest.js"
+);
+}
+
+while(
+queue.length
+){
+
+const key =
+queue.pop();
+
+if(
+closure.has(
+key
+)
+){
+continue;
+}
+
+if(
+assets[
+key
+] ==
+null
+){
+console.error(
+`Unknown asset: ${key}`
+);
+process.exit(
+1
+);
+}
+
+closure.add(
+key
+);
+
+for(
+const parent of reverse.get(
+key
+) ||
+[]
+){
+queue.push(
+parent
+);
+}
+
+}
+
+return closure;
+
+}
+
+function bumpClosure(
+names
+){
+
+const assets =
+readManifestAssets();
+const seeds =
+names.map(
+name=>
+name.replace(
+/^(?:js|css)\//,
+""
+)
+);
+const closure =
+collectBumpClosure(
+assets,
+seeds
+);
+
+for(
+const name of closure
+){
+assets[
+name
+] +=
+1;
+console.log(
+`Bumped ${name} → v=${assets[name]}`
+);
+}
+
+writeManifestAssets(
+assets
+);
+
+return assets;
+
+}
+
 function bumpAsset(
 name
 ){
@@ -555,7 +806,7 @@ if(
 ){
 
 console.error(
-"Usage: sync-asset-versions.cjs bump <file.js|file.css>"
+"Usage: sync-asset-versions.cjs bump <file.js|file.css> [more.js]"
 );
 process.exit(
 1
@@ -563,10 +814,10 @@ process.exit(
 }
 
 assets =
-bumpAsset(
-args[
+bumpClosure(
+args.slice(
 1
-]
+)
 );
 
 }else{

@@ -12,13 +12,13 @@ updateRsiLevelLinesLayout,
 linkPairedChartTimeScales,
 SCREENER_MAX_BARS,
 SCREENER_VISIBLE_BARS
-} from "./chart-import.js?v=66";
+} from "./chart-import.js?v=68";
 
 import {
 loadMarketHistory,
 getActiveExchangeId,
 getExchangeDefinition
-} from "./market-api.js?v=9";
+} from "./market-api.js?v=11";
 
 import {
 calculateRSI,
@@ -28,7 +28,7 @@ alignRsiWithCandleTimes
 import {
 subscribeKline,
 bindLiveCandleCatchup
-} from "./market-ws.js?v=4";
+} from "./market-ws.js?v=7";
 
 import {
 ensureOhlcRollover,
@@ -37,11 +37,11 @@ lastOhlcBar,
 liveBarPeriodSec,
 paintCatchupLiveSeries,
 paintLiveOhlcSeries
-} from "./chart/live-bar-roll.js?v=4";
+} from "./chart/live-bar-roll.js?v=6";
 
 import {
 fetchTickersInto
-} from "./tickers.js?v=29";
+} from "./tickers.js?v=31";
 
 import {
 isScreenerWidgetCurrent as isWidgetCurrentGuard
@@ -56,7 +56,7 @@ getWidgetFlagHtml,
 wireWidgetFlagUi,
 updateWidgetFlagUi,
 bindWidgetFlagGlobalListeners
-} from "./widget-favorite-flag.js?v=8";
+} from "./widget-favorite-flag.js?v=13";
 
 const SCRIPT_MAX_CONCURRENT_CHART_LOADS =
 4;
@@ -82,7 +82,7 @@ if(
 ){
 scriptZoomModulePromise =
 import(
-"./screener-widget-zoom.js?v=35"
+"./screener-widget-zoom.js?v=38"
 ).then(
 mod=>{
 refreshZoomFavoriteUi =
@@ -103,7 +103,7 @@ return scriptZoomModulePromise;
 import {
 PATTERN_SCAN_TF_LABELS,
 PATTERN_SCAN_SIDE_LABELS
-} from "./pattern-12-scanner.js?v=25";
+} from "./pattern-12-scanner.js?v=27";
 
 let patternOverlayApi =
 null;

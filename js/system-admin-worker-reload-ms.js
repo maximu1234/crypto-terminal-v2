@@ -1,6 +1,6 @@
 import {
 readAlertTokenSync
-} from "./alert-auth-cache.js?v=7";
+} from "./alert-auth-cache.js?v=8";
 
 import {
 normalizeAlertWorkerBaseUrl

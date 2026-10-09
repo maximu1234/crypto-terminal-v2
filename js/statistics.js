@@ -7,12 +7,12 @@ cacheStorageKey,
 getStatsJobState,
 startStatsBackgroundRefresh,
 resumeStatsBackgroundJob
-} from "./statistics-background.js?v=10";
+} from "./statistics-background.js?v=12";
 
 import {
 getActiveExchangeDefinition,
 EXCHANGE_CHANGED_EVENT
-} from "./market-api.js?v=9";
+} from "./market-api.js?v=11";
 
 const statusEl =
 document.getElementById(

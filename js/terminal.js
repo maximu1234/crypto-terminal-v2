@@ -1,8 +1,8 @@
 /**
- * Coins page (/coins.html) — main chart app implementation.
+ * Terminal page (/terminal.html) — main chart app implementation.
  *
- * Entry: terminal-entry.js (canonical). This file keeps the legacy name `terminal.js`.
- * Dashboard widgets page (/terminal.html) is `watchlist.js` — not this module.
+ * Entry: terminal-page-boot.js → terminal-entry.js → this file.
+ * Watchlist widgets (/watchlist.html) are watchlist.js — not this module.
  */
 import {
 loadMarketHistory,
@@ -16,11 +16,11 @@ getActiveExchangeMarkets,
 getActiveExchangeId,
 getActiveExchangeDefinition,
 EXCHANGE_CHANGED_EVENT
-} from "./market-api.js?v=9";
+} from "./market-api.js?v=11";
 
 import {
 clearBybitNetworkIssue
-} from "./bybit-network-ui.js?v=6";
+} from "./bybit-network-ui.js?v=8";
 
 import {
 openChromeSurface
@@ -28,12 +28,12 @@ openChromeSurface
 
 import {
 resolveUrlExchangeDeepLink
-} from "./alert-deep-link-exchange.js?v=3";
+} from "./alert-deep-link-exchange.js?v=8";
 
 import {
 defaultRsiPaneSettings,
 normalizeRsiPaneSettings
-} from "./indicators/rsi-pane.js?v=12";
+} from "./indicators/rsi-pane.js?v=14";
 
 import {
 buildChartRsiPoints
@@ -54,18 +54,18 @@ seedWatchlistTfOnBlueFlag
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=69";
+} from "./auth-ui.js?v=74";
 
 import {
 getActiveAlerts,
 isMacdAlert,
 isRsiAlert
-} from "./alerts.js?v=115";
+} from "./alerts.js?v=120";
 
 import {
 persistFavoritesToCloud,
 onFavoritesRemoteUpdate
-} from "./cloud-sync.js?v=74";
+} from "./cloud-sync.js?v=79";
 
 import {
 createCandlestickChart,
@@ -95,7 +95,7 @@ appendFutureWhitespaceBars,
 applyCoinsChartViewport,
 refreshCoinsChartBarSpacing,
 tfPeriodSec
-} from "./chart-import.js?v=66";
+} from "./chart-import.js?v=68";
 
 import {
 terminalVisibleBars,
@@ -109,17 +109,17 @@ TERMINAL_HISTORY_LAZY_BATCH_BARS
 
 import {
 mountCoinsTabletController
-} from "./terminal-tablet-controller.js?v=13";
+} from "./terminal-tablet-controller.js?v=15";
 
 import {
 disconnectKlineStream
-} from "./market-ws.js?v=4";
+} from "./market-ws.js?v=7";
 
 import {
 syncBackgroundAlertStreams,
 onMacdSeriesUpdate,
 onRsiSeriesUpdate
-} from "./alert-monitor.js?v=76";
+} from "./alert-monitor.js?v=81";
 
 import {
 createSharedDrawUndoStack
@@ -143,7 +143,7 @@ mountChartSnapshot
 
 import {
 mountChartSymbolFullName
-} from "./symbol-display-name.js?v=3";
+} from "./symbol-display-name.js?v=5";
 
 import {
 perfMark,
@@ -151,8 +151,9 @@ perfMeasure
 } from "./perf-marks.js?v=2";
 
 import {
+isCoinsPaneHeightDrag,
 mountCoinsLayoutResize
-} from "./terminal-layout-resize.js?v=8";
+} from "./terminal-layout-resize.js?v=9";
 
 import {
 mountQwertyKeyInput,
@@ -182,12 +183,12 @@ isTradePage
 
 import {
 stopTickerStream
-} from "./tickers.js?v=29";
+} from "./tickers.js?v=31";
 
 import {
 mountCoinsListRefreshControls,
 applyCoinsListRefreshInterval
-} from "./terminal-list-refresh.js?v=2";
+} from "./terminal-list-refresh.js?v=7";
 
 import {
 readCoinsPrefs,
@@ -201,11 +202,11 @@ applyCoinsPrefs,
 applySortForCurrentMarket,
 readUrlParams,
 readLastViewForExchange
-} from "./terminal/terminal-prefs.js?v=31";
+} from "./terminal/terminal-prefs.js?v=36";
 
 import {
 mountDesktopOpenChartHandler
-} from "./desktop-open-chart.js?v=3";
+} from "./desktop-open-chart.js?v=5";
 
 import {
 getCurrentSymbols,
@@ -223,7 +224,7 @@ setCoinsTableHooks,
 syncCoinListFreezeFromFlagMenus,
 getExtraCoinMarkets,
 isExtraCoinMarket
-} from "./terminal/terminal-table.js?v=46";
+} from "./terminal/terminal-table.js?v=51";
 
 import {
 createCoinsChartSwitchVeil
@@ -238,7 +239,7 @@ syncCoinsChartLinkedViewports,
 resizeCharts,
 scheduleResizeCharts,
 applyDefaultZoom
-} from "./terminal/terminal-chart-layout.js?v=20";
+} from "./terminal/terminal-chart-layout.js?v=23";
 
 import {
 placeCoinsTabletListNav
@@ -248,7 +249,7 @@ import {
 initTerminalMultiChart,
 syncPrimaryTfToLayout,
 isTerminalMultiChartLayout
-} from "./terminal-multi-chart.js?v=41";
+} from "./terminal-multi-chart.js?v=46";
 
 import {
 mountTerminalLayoutPicker
@@ -265,7 +266,7 @@ saveChartDisplayStyle
 
 import {
 createPriceSeriesHost
-} from "./chart/price-series-host.js?v=11";
+} from "./chart/price-series-host.js?v=13";
 
 import {
 CHART_PRICE_SCALE_MODE_LOGARITHMIC,
@@ -3794,13 +3795,13 @@ const {
 initWidgetDrawings
 } =
 await import(
-"./chart-widget-host.js?v=65"
+"./chart-widget-host.js?v=70"
 );
 const {
 initChartIndicators
 } =
 await import(
-"./chart-indicators.js?v=68"
+"./chart-indicators.js?v=71"
 );
 const {
 createPattern12EarlyT3Indicator
@@ -3952,7 +3953,7 @@ drawingTools?.getTool?.() ??
 );
 
 void import(
-"./price-alert-ui.js?v=51"
+"./price-alert-ui.js?v=56"
 ).then(
 ({
 mountPriceAlertUi
@@ -4602,7 +4603,7 @@ const {
 createTradePlusMenuHandler
 } =
 await import(
-"./trade-order-plus-ui.js?v=10"
+"./trade-order-plus-ui.js?v=15"
 );
 
 tradePlusHandler =
@@ -4633,7 +4634,7 @@ const {
 mountPriceAlertUi
 } =
 await import(
-"./price-alert-ui.js?v=51"
+"./price-alert-ui.js?v=56"
 );
 
 let disposeAlertUi =
@@ -4693,7 +4694,7 @@ const {
 mountPriceAlertUi: mountRsiPriceAlertUi
 } =
 await import(
-"./price-alert-ui.js?v=51"
+"./price-alert-ui.js?v=56"
 );
 
 mountRsiPriceAlertUi(
@@ -5537,7 +5538,7 @@ if(
 isTradePage
 ){
 void import(
-"./trade-volume-presets.js?v=11"
+"./trade-volume-presets.js?v=16"
 ).then(
 ({
 switchTradeVolumeSymbol
@@ -5596,7 +5597,7 @@ currentDataset
 )
 ){
 
-void import("./bybit-network-ui.js?v=6").then(m=>{
+void import("./bybit-network-ui.js?v=8").then(m=>{
 m.showBybitNetworkIssue(
 new Error(
 `История свечей ${getActiveExchangeDefinition().name} пуста`
@@ -5916,7 +5917,8 @@ syncLinkedChartsLayout,
 isLocked:()=>
 !rsiPaneActive ||
 isTabletCrosshairProbeLocked() ||
-!isChartLayoutReady(),
+!isChartLayoutReady() ||
+isCoinsPaneHeightDrag(),
 /* RSI setData не должен двигать main — иначе смена ТФ мигает viewport. */
 linkedDrivesMain:
 false
@@ -7536,7 +7538,7 @@ if(
 ){
 terminalAlgoEarlyT3ListMod =
 await import(
-"./algo-trading/terminal-early-t3-list.js?v=3"
+"./algo-trading/terminal-early-t3-list.js?v=8"
 );
 }
 terminalAlgoEarlyT3ListMod.mountTerminalAlgoEarlyT3List();
@@ -7657,7 +7659,7 @@ window.cryptoTerminalDesktop?.isDesktop ||
 window.cryptoTerminalDesktop?.webTrading
 ){
 void import(
-"./script-terminal-status.js?v=11"
+"./script-terminal-status.js?v=14"
 ).then(
 m=>
 m.mountScriptTerminalStatus?.()
@@ -7675,7 +7677,7 @@ if(
 shouldRunScriptBackgroundJobs()
 ){
 void import(
-"./script-scan-background.js?v=18"
+"./script-scan-background.js?v=20"
 ).then(
 m=>
 m.resumeScriptScanBackgroundJob?.()

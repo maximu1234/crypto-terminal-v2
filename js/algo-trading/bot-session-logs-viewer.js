@@ -7,14 +7,14 @@ fetchLanBotStatus,
 sendLanBotCommand,
 normalizeLanBotStrategyId,
 pushAuthSessionToRemoteBot
-} from "./bot-remote-client.js?v=14";
+} from "./bot-remote-client.js?v=19";
 import {
 formatBotStrategySettingsRows,
 loadBotStrategiesPrefs
 } from "./bot-strategy-prefs.js?v=33";
 import {
 syncAllTickerFlagsRootToMain
-} from "./bot-bridge.js?v=29";
+} from "./bot-bridge.js?v=30";
 import {
 ALGO_TICKER_FLAGS_KEY
 } from "./ticker-flags.js?v=10";

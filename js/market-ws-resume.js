@@ -5,23 +5,23 @@
  */
 import {
 forceReconnectPublicSocket
-} from "./ws.js?v=22";
+} from "./ws.js?v=25";
 
 import {
 resetBingxWs
-} from "./exchanges/bingx/ws.js?v=19";
+} from "./exchanges/bingx/ws.js?v=21";
 
 import {
 getActiveExchangeId,
 loadMarketHistory
-} from "./market-api.js?v=9";
+} from "./market-api.js?v=11";
 
 import {
 lastOhlcBar,
 liveBarPeriodSec,
 mergeCatchupOhlcBars,
 paintCatchupLiveSeries
-} from "./chart/live-bar-roll.js?v=4";
+} from "./chart/live-bar-roll.js?v=6";
 
 import {
 catchupHistoryPages,

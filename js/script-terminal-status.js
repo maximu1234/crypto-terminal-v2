@@ -6,15 +6,15 @@ import {
 getScriptScanNextRunAt,
 isScriptScanBackgroundRunning,
 SCRIPT_SCAN_BG_EVENT
-} from "./script-scan-background.js?v=18";
+} from "./script-scan-background.js?v=20";
 
 import {
 loadScriptPageState
-} from "./script-page-storage.js?v=16";
+} from "./script-page-storage.js?v=18";
 
 import {
 isTerminalPage
-} from "./page-routes.js?v=7";
+} from "./page-routes.js?v=8";
 
 import {
 FEATURE_NAV_PREF_EVENT,

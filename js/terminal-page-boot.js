@@ -1,5 +1,5 @@
 /**
- * Загрузка /coins — web: графики; desktop .app: + торговый слой на той же странице.
+ * Загрузка /terminal.html — web: графики; desktop .app: + торговый слой на той же странице.
  */
 import {
 waitForSiteCssReady
@@ -14,7 +14,7 @@ CHART_BUILD_ID,
 CHART_PAGE_ENTRY,
 TERMINAL_ENTRY,
 jsUrl
-} from "./asset-manifest.js?v=62";
+} from "./asset-manifest.js?v=67";
 
 function isDesktopTradeMode(){
 
@@ -40,7 +40,7 @@ if(
 ){
 tradeDesktopBootPromise =
 import(
-"./trade-desktop-boot.js?v=31"
+"./trade-desktop-boot.js?v=36"
 );
 }
 
@@ -66,7 +66,7 @@ if(
 ){
 tradeWebBootPromise =
 import(
-"./trade-web/boot.js?v=11"
+"./trade-web/boot.js?v=16"
 );
 }
 
@@ -314,7 +314,7 @@ document.body.innerHTML =
 `
 <div style="padding:40px;background:#16181f;color:#fff;max-width:520px">
 <h2>Нужен локальный сервер</h2>
-<p><a href="http://127.0.0.1:8080/watchlist.html">http://127.0.0.1:8080/watchlist.html</a></p>
+<p><a href="http://127.0.0.1:8080/terminal.html">http://127.0.0.1:8080/terminal.html</a></p>
 </div>`;
 return;
 }

@@ -16,7 +16,7 @@ withChartLocalTime
 
 import {
 getActiveExchangeId
-} from "./market-api.js?v=9";
+} from "./market-api.js?v=11";
 
 import {
 getExchangeDefinition
@@ -25,7 +25,7 @@ getExchangeDefinition
 import {
 getLoadedTradeExchangeModules,
 loadTradeExchangeModules
-} from "./trade/module-router.js?v=24";
+} from "./trade/module-router.js?v=29";
 
 import {
 candleAlignSec,

@@ -111,7 +111,7 @@ Pattern на графике Алго и у бота — **копии** math
 ## Архитектура
 
 ```
-Renderer (/coins.html — desktop)
+Renderer (/terminal.html — desktop)
   ├─ trade/module-router.js → active renderer bundle
   │    ├─ trade/bybit/*
   │    └─ trade/bingx/*
@@ -217,7 +217,7 @@ Bybit history не импортирует BingX history и наоборот. И�
 | `js/trade/bybit/*` | Bybit renderer: cache/stream/overlay/entry/book/stops |
 | `js/trade/bingx/*` | BingX renderer: cache/stream/overlay/entry/book/stops |
 | `desktop/trading/credentials.cjs` | Bybit credentials shim |
-| `coins.html` | Монеты (+ торговля в desktop .app) |
+| `terminal.html` | Терминал (+ торговля в desktop .app) |
 | `js/terminal-page-boot.js` | Boot: chart + условный trade-слой |
 | `js/trade-desktop-boot.js` | Trade CSS + init в `.app` |
 | `js/trade-web/client.js` | Веб: Railway `/trade/rpc` + stream, `webTrading` |

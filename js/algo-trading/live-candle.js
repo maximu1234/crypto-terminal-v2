@@ -5,7 +5,7 @@
  */
 import {
 applyLiveOhlcBar
-} from "../chart/live-bar-roll.js?v=4";
+} from "../chart/live-bar-roll.js?v=6";
 
 export function mergeLiveCandle(
 candles,
