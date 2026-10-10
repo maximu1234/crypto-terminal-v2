@@ -12,7 +12,7 @@ applyRsiFixedPriceScale,
 appendFutureWhitespaceBars,
 computeChartFutureMarginBars,
 syncLinkedChartTimescales
-} from "./chart-import.js?v=68";
+} from "./chart-import.js?v=70";
 
 import {
 applyLiveSeriesUpdate,
@@ -29,13 +29,20 @@ TERMINAL_HISTORY_LAZY_BATCH_BARS
 } from "./terminal-chart-history-prefs.js?v=1";
 
 import {
+peekHistoryCache,
+putHistoryCache,
+mergeCandleRows,
+logicalIndexShift
+} from "./market-history-cache.js?v=2";
+
+import {
 ALGO_TICKER_SCAN_HISTORY_REQUESTS
-} from "./algo-trading/ticker-scanner.js?v=12";
+} from "./algo-trading/ticker-scanner.js?v=15";
 
 import {
 defaultRsiPaneSettings,
 normalizeRsiPaneSettings
-} from "./indicators/rsi-pane.js?v=14";
+} from "./indicators/rsi-pane.js?v=16";
 
 import {
 buildChartRsiPoints
@@ -44,21 +51,21 @@ buildChartRsiPoints
 import {
 loadMarketHistory,
 getActiveExchangeId
-} from "./market-api.js?v=11";
+} from "./market-api.js?v=14";
 
 import {
 subscribeKline,
 bindLiveCandleCatchup
-} from "./market-ws.js?v=7";
+} from "./market-ws.js?v=10";
 
 import {
 mountAlgoTradingCoinList,
 refreshAlgoMarketListFromFlags
-} from "./algo-trading-list.js?v=34";
+} from "./algo-trading-list.js?v=42";
 
 import {
 mountAlgoTickerScanUi
-} from "./algo-trading/ticker-scan-ui.js?v=35";
+} from "./algo-trading/ticker-scan-ui.js?v=38";
 
 import {
 getTickerStrategyOverlay,
@@ -77,7 +84,7 @@ mountAlgoRuntimeUi
 
 import {
 mountAlgoBotStrategyUi
-} from "./algo-trading/bot-strategy-ui.js?v=100";
+} from "./algo-trading/bot-strategy-ui.js?v=108";
 
 import {
 ALGO_ANALYSIS_BOT_CHANGE_EVENT,
@@ -93,7 +100,7 @@ setActiveAnalysisBotId
 
 import {
 mountSessionLogServerSettings
-} from "./algo-trading/bot-session-log-server-ui.js?v=16";
+} from "./algo-trading/bot-session-log-server-ui.js?v=24";
 
 import {
 syncBotStrategiesToMain
@@ -101,15 +108,15 @@ syncBotStrategiesToMain
 
 import {
 mountAlgoTradeUi
-} from "./algo-trading/trade/boot.js?v=17";
+} from "./algo-trading/trade/boot.js?v=25";
 
 import {
 mountAlgoTradingDrawings
-} from "./algo-trading/drawings.js?v=38";
+} from "./algo-trading/drawings.js?v=46";
 
 import {
 mountAlgoTradingIndicators
-} from "./algo-trading/indicators.js?v=20";
+} from "./algo-trading/indicators.js?v=24";
 
 import {
 mountAlgoPatternEntryOverlay
@@ -117,11 +124,11 @@ mountAlgoPatternEntryOverlay
 
 import {
 mountRsiTouchFlipHost
-} from "./algo-trading/rsi-touch-flip-panel.js?v=40";
+} from "./algo-trading/rsi-touch-flip-panel.js?v=43";
 
 import {
 mountMacdFlipTouchHost
-} from "./algo-trading/macd-flip-touch-panel.js?v=3";
+} from "./algo-trading/macd-flip-touch-panel.js?v=6";
 
 import {
 loadRsiTouchFlipPrefs,
@@ -251,7 +258,7 @@ syncRsiLevelDom as syncRsiLevelDomEl,
 setRsiHud as setRsiHudEl,
 lastRsiValue as lastRsiValueFromCandles,
 layoutRsiPane
-} from "./algo-trading/page-rsi.js?v=4";
+} from "./algo-trading/page-rsi.js?v=6";
 
 import {
 bindAlgoStatsPanelResize
@@ -264,7 +271,7 @@ mountAlgoBotLiteLayout
 
 import {
 loadAlgoBotLiteHistory
-} from "./algo-trading/lite-history.js?v=3";
+} from "./algo-trading/lite-history.js?v=6";
 
 /** Глубина ботов / сканов / «Подобрать»: ~10 000. График сначала ~5000, затем догрузка. */
 const HISTORY_REQUESTS =
@@ -2214,8 +2221,145 @@ added
 
 drawingTools?.scheduleRedraw?.();
 markAlgoHistoryStatsReadyAndAnalyze();
+putHistoryCache(
+getActiveExchangeId(),
+symbol,
+tf,
+candles,
+{
+coversVisible:
+candles.length <
+TERMINAL_VISIBLE_BARS ||
+candles.length >=
+HISTORY_REQUESTS *
+TERMINAL_HISTORY_LAZY_BATCH_BARS
+}
+);
 }catch{
 /* first paint already on screen */
+}
+
+}
+
+async function refreshAlgoHistoryTail(
+seq
+){
+
+if(
+disposed ||
+seq !==
+loadSeq ||
+!symbol ||
+!candles.length
+){
+return;
+}
+
+try{
+const latest =
+await loadMarketHistory(
+symbol,
+tf,
+1,
+{
+parallel:
+true,
+batchGapMs:
+0
+}
+);
+
+if(
+disposed ||
+seq !==
+loadSeq ||
+!latest?.length
+){
+return;
+}
+
+const merged =
+mergeCandleRows(
+candles,
+latest,
+{
+preferIncoming:
+true,
+limit:
+HISTORY_REQUESTS *
+TERMINAL_HISTORY_LAZY_BATCH_BARS
+}
+);
+const shift =
+logicalIndexShift(
+candles,
+merged
+);
+const sameEdge =
+shift ===
+0 &&
+merged.length ===
+candles.length &&
+merged[
+merged.length -
+1
+]?.close ===
+candles[
+candles.length -
+1
+]?.close;
+
+if(
+sameEdge
+){
+return;
+}
+
+const range =
+chart?.timeScale?.().getVisibleLogicalRange?.();
+candles =
+merged;
+applyCandleData(
+{
+light:
+true,
+skipAnalysis:
+true
+}
+);
+
+if(
+range &&
+chart?.timeScale?.().setVisibleLogicalRange
+){
+chart.timeScale().setVisibleLogicalRange(
+{
+from:
+range.from +
+shift,
+to:
+range.to +
+shift
+}
+);
+}
+
+putHistoryCache(
+getActiveExchangeId(),
+symbol,
+tf,
+candles,
+{
+coversVisible:
+candles.length <
+TERMINAL_VISIBLE_BARS ||
+candles.length >=
+HISTORY_REQUESTS *
+TERMINAL_HISTORY_LAZY_BATCH_BARS
+}
+);
+}catch{
+/* cached chart is already on screen */
 }
 
 }
@@ -2356,7 +2500,30 @@ false;
 markAlgoHistoryStatsPending();
 
 try{
-const rows =
+const cached =
+peekHistoryCache(
+getActiveExchangeId(),
+symbol,
+tf
+);
+let fromCache =
+false;
+let rows;
+
+if(
+cached &&
+(
+cached.candles.length >=
+TERMINAL_VISIBLE_BARS ||
+cached.coversVisible
+)
+){
+rows =
+cached.candles.slice();
+fromCache =
+true;
+}else{
+rows =
 await loadMarketHistory(
 symbol,
 tf,
@@ -2368,6 +2535,7 @@ batchGapMs:
 0
 }
 );
+}
 
 if(
 disposed ||
@@ -2384,6 +2552,21 @@ rows
 ? rows.slice()
 : [];
 
+putHistoryCache(
+getActiveExchangeId(),
+symbol,
+tf,
+candles,
+{
+coversVisible:
+candles.length <
+TERMINAL_VISIBLE_BARS ||
+candles.length >=
+HISTORY_REQUESTS *
+TERMINAL_HISTORY_LAZY_BATCH_BARS
+}
+);
+
 /* Как Терминал: сначала свечи + fit, без тяжёлых оверлеев. */
 applyCandleData(
 {
@@ -2398,6 +2581,13 @@ true
 void deepenAlgoHistoryIfNeeded(
 seq
 );
+if(
+fromCache
+){
+void refreshAlgoHistoryTail(
+seq
+);
+}
 
 unsubKline =
 subscribeKline(

@@ -16,17 +16,17 @@ removeAlert,
 stripAlertFlagsNotInRegistry,
 removeAllAlerts,
 alertExchangeId
-} from "./alerts.js?v=120";
+} from "./alerts.js?v=128";
 
 import {
 buildAlertChartUrl
-} from "./alert-deep-link-exchange.js?v=8";
+} from "./alert-deep-link-exchange.js?v=16";
 
 import {
 getTelegramChatId,
 initAlertsCloudSync,
 pullAlertHistoryFromCloud
-} from "./alerts-cloud-sync.js?v=120";
+} from "./alerts-cloud-sync.js?v=128";
 
 import {
 readAlertTokenSync
@@ -39,11 +39,11 @@ onCloudSyncChange,
 getCloudUserEmail,
 pullDeviceStateFromCloud,
 ensureCloudLoginResolved
-} from "./cloud-sync.js?v=79";
+} from "./cloud-sync.js?v=87";
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=74";
+} from "./auth-ui.js?v=82";
 
 import {
 TELEGRAM_BOT_USERNAME,
@@ -56,7 +56,7 @@ import {
 EXCHANGE_CHANGED_EVENT,
 getActiveExchangeDefinition,
 getActiveExchangeId
-} from "./market-api.js?v=11";
+} from "./market-api.js?v=14";
 
 import {
 mountMoexUnavailableStub

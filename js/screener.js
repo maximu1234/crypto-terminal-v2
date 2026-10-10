@@ -1,6 +1,6 @@
 import {
 symbolListSignature
-} from "./api.js?v=36";
+} from "./api.js?v=39";
 
 import {
 loadMarketHistory,
@@ -9,7 +9,14 @@ peekMarketSymbolsCache,
 getActiveExchangeDefinition,
 getActiveExchangeId,
 EXCHANGE_CHANGED_EVENT
-} from "./market-api.js?v=11";
+} from "./market-api.js?v=14";
+
+import {
+peekHistoryCache,
+putHistoryCache,
+mergeCandleRows,
+logicalIndexShift
+} from "./market-history-cache.js?v=2";
 
 import {
 openChromeSurface
@@ -37,7 +44,7 @@ updateRsiLevelLinesLayout,
 linkPairedChartTimeScales,
 SCREENER_VISIBLE_BARS,
 SCREENER_MAX_BARS
-} from "./chart-import.js?v=68";
+} from "./chart-import.js?v=70";
 
 import {
 isIpadWebViewport
@@ -51,7 +58,7 @@ alignRsiWithCandleTimes
 import {
 subscribeKline,
 bindLiveCandleCatchup
-} from "./market-ws.js?v=7";
+} from "./market-ws.js?v=10";
 
 import {
 ensureOhlcRollover,
@@ -65,7 +72,7 @@ paintLiveOhlcSeries
 import {
 connectTickerStream,
 fetchTickersInto
-} from "./tickers.js?v=31";
+} from "./tickers.js?v=34";
 
 import {
 createTickerUiBatcher
@@ -73,7 +80,7 @@ createTickerUiBatcher
 
 import {
 mountReleaseMarker
-} from "./release-marker.js?v=140";
+} from "./release-marker.js?v=141";
 
 import {
 saveScreenerState,
@@ -92,7 +99,7 @@ FAVORITES_BY_EXCHANGE_KEY
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=74";
+} from "./auth-ui.js?v=82";
 
 import {
 ensureSettled,
@@ -102,12 +109,12 @@ withTimeout
 import {
 persistFavoritesToCloud,
 onFavoritesRemoteUpdate
-} from "./cloud-sync.js?v=79";
+} from "./cloud-sync.js?v=87";
 
 import {
 attachSymbolAutocomplete,
 preloadTradingSymbols
-} from "./symbol-autocomplete.js?v=5";
+} from "./symbol-autocomplete.js?v=8";
 
 import {
 mountQwertyKeyInput,
@@ -129,7 +136,7 @@ SCREENER_WIDGET_OSCILLATOR_MACD,
 createScreenerMacdChart,
 getScreenerWidgetOscillator,
 setScreenerMacdData
-} from "./screener-widget-oscillator.js?v=4";
+} from "./screener-widget-oscillator.js?v=6";
 
 const SCREENER_MAX_CONCURRENT_CHART_LOADS =
 4;
@@ -161,7 +168,7 @@ if(
 ){
 screenerZoomMountPromise =
 import(
-"./screener-widget-zoom.js?v=38"
+"./screener-widget-zoom.js?v=42"
 ).then(
 mod=>{
 refreshZoomFavoriteUi =
@@ -1901,6 +1908,117 @@ timer
 
 }
 
+async function refreshScreenerWidgetTail(
+widget
+){
+
+if(
+!widget?.candles?.length ||
+!isScreenerWidgetCurrent(
+widget
+)
+){
+return;
+}
+
+let latest;
+
+try{
+latest =
+await loadMarketHistory(
+widget.symbol,
+currentTF,
+1,
+{ parallel: true }
+);
+}catch{
+return;
+}
+
+if(
+widget.loadId !==
+renderToken ||
+!isScreenerWidgetCurrent(
+widget
+) ||
+!latest?.length
+){
+return;
+}
+
+const previous =
+widget.candles;
+const merged =
+mergeCandleRows(
+previous,
+latest,
+{
+preferIncoming:
+true,
+limit:
+SCREENER_MAX_BARS
+}
+);
+const shift =
+logicalIndexShift(
+previous,
+merged
+);
+const range =
+widget.userAdjustedZoom
+? widget.chart.timeScale().getVisibleLogicalRange()
+: null;
+
+widget.candles =
+merged;
+widget._lastZoomCandleLen =
+0;
+
+try{
+updateWidgetRsiData(
+widget
+);
+}catch{
+return;
+}
+
+if(
+widget.userAdjustedZoom &&
+range &&
+shift
+){
+widget.chart.timeScale().setVisibleLogicalRange(
+{
+from:
+range.from +
+shift,
+to:
+range.to +
+shift
+}
+);
+}else if(
+!widget.userAdjustedZoom
+){
+widget.syncChartSize?.();
+}
+
+putHistoryCache(
+getActiveExchangeId(),
+widget.symbol,
+currentTF,
+merged,
+{
+coversVisible:
+merged.length >=
+SCREENER_VISIBLE_BARS ||
+merged.length <
+500
+}
+);
+
+}
+
 async function loadWidgetChart(widget){
 
 const {
@@ -1915,16 +2033,60 @@ chartEl.classList.add("loading");
 
 try{
 
-const candles =
+const cached =
+peekHistoryCache(
+getActiveExchangeId(),
+symbol,
+currentTF
+);
+let fromCache =
+false;
+let candles;
+
+if(
+cached &&
+(
+cached.candles.length >=
+SCREENER_VISIBLE_BARS ||
+cached.coversVisible
+)
+){
+candles =
+cached.candles.slice(
+-SCREENER_MAX_BARS
+);
+fromCache =
+true;
+}else{
+candles =
 await loadMarketHistory(
 symbol,
 currentTF,
 2,
 { parallel: true }
 );
+}
 
 if(loadId !== renderToken){
 return;
+}
+
+if(
+candles.length
+){
+putHistoryCache(
+getActiveExchangeId(),
+symbol,
+currentTF,
+candles,
+{
+coversVisible:
+candles.length >=
+SCREENER_VISIBLE_BARS ||
+candles.length <
+500
+}
+);
 }
 
 if(!candles.length){
@@ -1958,12 +2120,6 @@ return;
 
 try{
 
-/* iPad/Safari: сетка иногда отдаёт 0×0 до первого layout — zoom ждёт размер,
-   но свечи должны попасть в series сразу */
-series.setData(
-loaded
-);
-
 applyChartPriceFormat(
 series,
 loaded[loaded.length - 1].close
@@ -1973,10 +2129,15 @@ updateWidgetRsiData(
 widget
 );
 
-
 }catch{
+chartEl.classList.remove(
+"loading"
+);
 return;
 }
+
+widget._lastZoomCandleLen =
+0;
 
 const runZoom =
 ()=>{
@@ -1999,28 +2160,34 @@ widget.syncChartSize?.();
 
 runZoom();
 requestAnimationFrame(
-runZoom
+()=>{
+runZoom();
+requestAnimationFrame(
+()=>{
+if(
+loadId ===
+renderToken
+){
+chartEl.classList.remove(
+"loading"
 );
-setTimeout(
-runZoom,
-50
+}
+}
 );
-setTimeout(
-runZoom,
-200
-);
-setTimeout(
-runZoom,
-500
-);
-setTimeout(
-runZoom,
-1200
+}
 );
 
 attachWidgetKlineStream(
 widget
 );
+
+if(
+fromCache
+){
+void refreshScreenerWidgetTail(
+widget
+);
+}
 
 }catch(err){
 
@@ -2028,8 +2195,14 @@ console.error("Screener chart:", symbol, err);
 
 }finally{
 
-if(loadId === renderToken){
-chartEl.classList.remove("loading");
+if(
+loadId ===
+renderToken &&
+!widget.candles.length
+){
+chartEl.classList.remove(
+"loading"
+);
 }
 
 }
@@ -3487,7 +3660,7 @@ setStatus(
 true
 );
 
-void import("./bybit-network-ui.js?v=8").then(m=>{
+void import("./bybit-network-ui.js?v=11").then(m=>{
 m.showBybitNetworkIssue(err);
 });
 
@@ -3670,7 +3843,7 @@ err
 screenerMarketLoadFailed = true;
 allSymbols = [];
 
-void import("./bybit-network-ui.js?v=8").then(m=>{
+void import("./bybit-network-ui.js?v=11").then(m=>{
 m.showBybitNetworkIssue(err);
 });
 

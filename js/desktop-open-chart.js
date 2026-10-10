@@ -4,7 +4,7 @@
 import {
 getActiveExchangeId,
 setActiveExchangeId
-} from "./market-api.js?v=11";
+} from "./market-api.js?v=14";
 
 /**
  * @param {{

@@ -5,11 +5,11 @@ import {
 readCoinsPrefs,
 writeCoinsPrefs,
 normalizeListRefreshMs
-} from "./terminal/terminal-prefs.js?v=36";
+} from "./terminal/terminal-prefs.js?v=44";
 
 import {
 setTickerPollInterval
-} from "./tickers.js?v=31";
+} from "./tickers.js?v=34";
 
 export const COINS_LIST_REFRESH_OPTIONS =
 [

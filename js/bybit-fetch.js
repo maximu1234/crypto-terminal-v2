@@ -289,13 +289,78 @@ code === 10016
 
 }
 
+function bybitCodeOf(err){
+
+const direct =
+Number(
+err?.bybitCode
+);
+
+if(
+Number.isFinite(direct) &&
+direct !==
+0
+){
+return direct;
+}
+
+const match =
+String(
+err?.message ||
+""
+).match(
+/^Bybit (\d+)\b/
+);
+
+if(
+!match
+){
+return 0;
+}
+
+const parsed =
+Number(
+match[1]
+);
+
+return Number.isFinite(parsed)
+? parsed
+: 0;
+
+}
+
+/** Ответ биржи, который повтор и другое зеркало не исправят. */
+function isBybitClientReject(err){
+
+const code =
+bybitCodeOf(err);
+
+return (
+code > 0 &&
+code !== 10006 &&
+code !== 10016
+);
+
+}
+
 function isRetryableFetchError(err){
 
-if(!err){
+if(
+!err ||
+isAbortFetchError(err) ||
+isBybitClientReject(err)
+){
 return false;
 }
 
+if(
+err.retryable ===
+true
+){
 return true;
+}
+
+return isNetworkFetchError(err);
 
 }
 
@@ -354,11 +419,36 @@ async function fetchOneBybitProxyUrl(
 url,
 pathQuery,
 timeoutMs,
-label
+label,
+parentSignal
 ){
 
 const controller =
 new AbortController();
+const onParentAbort =
+()=>
+controller.abort();
+
+if(
+parentSignal
+){
+
+if(
+parentSignal.aborted
+){
+controller.abort();
+}else{
+parentSignal.addEventListener(
+"abort",
+onParentAbort,
+{
+once: true
+}
+);
+}
+
+}
+
 const timer =
 setTimeout(
 ()=>controller.abort(),
@@ -398,6 +488,10 @@ new Error(
 `Bybit ${json.retCode}: ${json.retMsg || res.status}`
 );
 
+err.bybitCode =
+Number(
+json.retCode
+);
 err.retryable =
 isRetryableBybitResponse(
 res,
@@ -411,7 +505,122 @@ throw err;
 clearTimeout(timer);
 throw err;
 
+}finally{
+
+parentSignal?.removeEventListener(
+"abort",
+onParentAbort
+);
+
 }
+
+}
+
+function settleBybitRace(
+tasks,
+parent
+){
+
+return new Promise(
+(resolve, reject)=>{
+
+let pending =
+tasks.length;
+let lastErr =
+null;
+let settled =
+false;
+
+if(
+!pending
+){
+reject(
+new Error(
+"Bybit API недоступен"
+)
+);
+return;
+}
+
+const finish =
+(ok, value)=>{
+
+if(
+settled
+){
+return;
+}
+
+settled =
+true;
+parent?.abort();
+
+if(
+ok
+){
+resolve(value);
+return;
+}
+
+reject(value);
+
+};
+
+for(
+const task of tasks
+){
+
+Promise.resolve(
+task
+).then(
+value=>
+finish(
+true,
+value
+),
+err=>{
+
+if(
+settled
+){
+return;
+}
+
+lastErr =
+err;
+
+if(
+isBybitClientReject(
+err
+)
+){
+finish(
+false,
+err
+);
+return;
+}
+
+pending -=
+1;
+
+if(
+pending ===
+0
+){
+finish(
+false,
+lastErr
+);
+}
+
+}
+);
+
+}
+
+}
+);
 
 }
 
@@ -500,7 +709,7 @@ function markBybitSuccess(baseIndex){
 activeApiBaseIndex =
 baseIndex;
 
-void import("./bybit-network-ui.js?v=8").then(m=>{
+void import("./bybit-network-ui.js?v=11").then(m=>{
 m.clearBybitNetworkIssue();
 });
 
@@ -511,12 +720,15 @@ function markBybitFailure(err){
 if(
 isAbortFetchError(
 err
+) ||
+isBybitClientReject(
+err
 )
 ){
 return;
 }
 
-void import("./bybit-network-ui.js?v=8").then(m=>{
+void import("./bybit-network-ui.js?v=11").then(m=>{
 m.showBybitNetworkIssue(err);
 });
 
@@ -525,11 +737,36 @@ m.showBybitNetworkIssue(err);
 async function fetchOneBybitUrl(
 url,
 baseIndex,
-timeoutMs
+timeoutMs,
+parentSignal
 ){
 
 const controller =
 new AbortController();
+const onParentAbort =
+()=>
+controller.abort();
+
+if(
+parentSignal
+){
+
+if(
+parentSignal.aborted
+){
+controller.abort();
+}else{
+parentSignal.addEventListener(
+"abort",
+onParentAbort,
+{
+once: true
+}
+);
+}
+
+}
+
 const timer =
 setTimeout(
 ()=>controller.abort(),
@@ -569,6 +806,10 @@ new Error(
 `Bybit ${json.retCode}: ${json.retMsg || res.status}`
 );
 
+err.bybitCode =
+Number(
+json.retCode
+);
 err.retryable =
 isRetryableBybitResponse(
 res,
@@ -582,12 +823,20 @@ throw err;
 clearTimeout(timer);
 
 if(
-isNetworkFetchError(err)
+isNetworkFetchError(err) &&
+!isAbortFetchError(err)
 ){
 noteDirectBybitBad();
 }
 
 throw err;
+
+}finally{
+
+parentSignal?.removeEventListener(
+"abort",
+onParentAbort
+);
 
 }
 
@@ -596,7 +845,8 @@ throw err;
 async function buildBybitRaceTasks(
 path,
 timeoutMs,
-options = {}
+options = {},
+parentSignal
 ){
 
 const encoded =
@@ -613,7 +863,8 @@ encoded
 ),
 path,
 timeoutMs,
-"local-dev-proxy"
+"local-dev-proxy",
+parentSignal
 )
 ];
 
@@ -623,7 +874,8 @@ tasks.push(
 fetchOneBybitUrl(
 `${base}${path}`,
 index,
-timeoutMs
+timeoutMs,
+parentSignal
 )
 );
 }
@@ -642,7 +894,8 @@ tasks.push(
 fetchOneBybitUrl(
 `${base}${path}`,
 index,
-directTimeoutMs
+directTimeoutMs,
+parentSignal
 )
 );
 }
@@ -663,16 +916,22 @@ const timeoutMs =
 options.timeoutMs ??
 10000;
 
+const parent =
+new AbortController();
 const tasks =
 await buildBybitRaceTasks(
 path,
 timeoutMs,
-options
+options,
+parent.signal
 );
 
 try{
 
-return await Promise.any(tasks);
+return await settleBybitRace(
+tasks,
+parent
+);
 
 }catch(err){
 
@@ -681,6 +940,14 @@ err?.errors?.[
 err.errors.length - 1
 ] ||
 err;
+
+if(
+isBybitClientReject(
+lastErr
+)
+){
+throw lastErr;
+}
 
 const tryProxies =
 isNetworkFetchError(
@@ -743,15 +1010,19 @@ isLocalDevHost()
 
 try{
 
+const parent =
+new AbortController();
 const tasks =
 await buildBybitRaceTasks(
 path,
 timeoutMs,
-options
+options,
+parent.signal
 );
 
-return await Promise.any(
-tasks
+return await settleBybitRace(
+tasks,
+parent
 );
 
 }catch(
@@ -763,6 +1034,14 @@ err?.errors?.[
 err.errors.length - 1
 ] ||
 err;
+
+if(
+isBybitClientReject(
+lastErr
+)
+){
+throw lastErr;
+}
 
 }
 
@@ -797,6 +1076,14 @@ timeoutMs
 }catch(err){
 
 lastErr = err;
+
+if(
+isBybitClientReject(
+err
+)
+){
+throw err;
+}
 
 if(
 err?.retryable &&

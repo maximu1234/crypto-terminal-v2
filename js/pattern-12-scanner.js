@@ -8,7 +8,11 @@ import {
 loadMarketHistory,
 loadMarketSymbols,
 buildMarketLists
-} from "./market-api.js?v=11";
+} from "./market-api.js?v=14";
+
+import {
+packCandles
+} from "./candle-columns.js?v=2";
 
 import {
 PATTERN_12_ID,
@@ -776,7 +780,7 @@ try{
 scanWorker =
 new Worker(
 new URL(
-"./pattern-12-scan-worker.js?v=3",
+"./pattern-12-scan-worker.js?v=7",
 import.meta.url
 ),
 {
@@ -912,15 +916,26 @@ fallback()
 );
 
 try{
+const packed =
+packCandles(
+candles
+);
+
 worker.postMessage(
 {
 id,
-candles,
+packed:
+packed.buffer,
+rows:
+candles.length,
 lookbackBars,
 sideFilter,
 patternSettings,
 indicatorId
-}
+},
+[
+packed.buffer
+]
 );
 }catch{
 clearTimeout(

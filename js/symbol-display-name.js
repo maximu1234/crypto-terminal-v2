@@ -1,22 +1,22 @@
 /**
  * Полное имя тикера в левом верхнем углу графика Терминала.
  * Bybit — instruments-info fullName (Bitcoin, Apple).
- * BingX в контракте отдаёт только тикер, поэтому имя берётся
- * из того же справочника Bybit, а своя подпись — если она не тикер.
+ * BingX в контракте отдаёт только тикер. Имя берётся из справочника
+ * Bybit, если контракт там есть; монета только BingX справочник не спрашивает.
  * Мосбиржа — короткое имя бумаги (Сбербанк, Газпром ао).
  */
 
 import {
 peekBybitSymbolsCache
-} from "./api.js?v=36";
+} from "./api.js?v=39";
 
 import {
 fetchBybit
-} from "./bybit-fetch.js?v=21";
+} from "./bybit-fetch.js?v=24";
 
 import {
 peekMarketSymbolsCache
-} from "./market-api.js?v=11";
+} from "./market-api.js?v=14";
 
 import {
 EXCHANGE_CHANGED_EVENT
@@ -721,6 +721,37 @@ symbol
 
 }
 
+function bybitCatalogListsSymbol(
+symbol
+){
+
+const list =
+peekBybitSymbolsCache();
+
+if(
+!Array.isArray(
+list
+) ||
+!list.length
+){
+return null;
+}
+
+const key =
+canonicalChartSymbol(
+symbol
+);
+
+return list.some(
+row=>
+canonicalChartSymbol(
+row?.symbol
+) ===
+key
+);
+
+}
+
 async function nameFromNetwork(
 symbol
 ){
@@ -971,6 +1002,13 @@ local
 return local;
 }
 
+if(
+bybitCatalogListsSymbol(
+symbol
+) !==
+false
+){
+
 const direct =
 await bybitName(
 symbol
@@ -980,6 +1018,8 @@ if(
 direct
 ){
 return direct;
+}
+
 }
 
 let display =

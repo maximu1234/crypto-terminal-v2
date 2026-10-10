@@ -12,11 +12,18 @@ loadMarketHistory,
 getActiveExchangeId,
 getActiveExchangeDefinition,
 EXCHANGE_CHANGED_EVENT
-} from "./market-api.js?v=11";
+} from "./market-api.js?v=14";
+
+import {
+peekHistoryCache,
+putHistoryCache,
+mergeCandleRows,
+logicalIndexShift
+} from "./market-history-cache.js?v=2";
 
 import {
 clearBybitNetworkIssue
-} from "./bybit-network-ui.js?v=8";
+} from "./bybit-network-ui.js?v=11";
 
 import {
 buildAlertChartUrl
@@ -24,7 +31,7 @@ buildAlertChartUrl
 
 import {
 isLocalDevHost
-} from "./bybit-fetch.js?v=21";
+} from "./bybit-fetch.js?v=24";
 
 import {
 applyChartPriceFormat,
@@ -34,7 +41,7 @@ createRSIChart,
 updateRsiBandLayout,
 updateRsiLevelLinesLayout,
 linkPairedChartTimeScales
-} from "./chart-import.js?v=68";
+} from "./chart-import.js?v=70";
 
 import {
 formatPrice
@@ -48,17 +55,17 @@ alignRsiWithCandleTimes
 import {
 createDashboardChartWidget,
 mountDashboardChartInteractions
-} from "./chart-widget-host.js?v=70";
+} from "./chart-widget-host.js?v=78";
 
 import {
 mountWidgetTabletChart
-} from "./tablet-widget-chart.js?v=9";
+} from "./tablet-widget-chart.js?v=11";
 
 import {
 subscribeKline,
 subscribeTicker,
 bindLiveCandleCatchup
-} from "./market-ws.js?v=7";
+} from "./market-ws.js?v=10";
 
 import {
 applyLiveLastPriceToCandles,
@@ -86,7 +93,7 @@ ensureDrawToolsVisible
 
 import {
 preloadTradingSymbols
-} from "./symbol-autocomplete.js?v=5";
+} from "./symbol-autocomplete.js?v=8";
 
 import {
 loadLightweightCharts
@@ -101,7 +108,7 @@ getWidgetFlagHtml,
 wireWidgetFlagUi,
 updateWidgetFlagUi,
 bindWidgetFlagGlobalListeners
-} from "./widget-favorite-flag.js?v=13";
+} from "./widget-favorite-flag.js?v=21";
 
 function escapeHtml(
 value
@@ -174,7 +181,7 @@ return;
 
 const mod =
 await import(
-"./trade-widget-mount.js?v=25"
+"./trade-widget-mount.js?v=33"
 );
 
 mountTradeOnDashboardWidget =
@@ -1065,7 +1072,30 @@ return;
 
 try{
 
-const data =
+const cached =
+peekHistoryCache(
+getActiveExchangeId(),
+symbol,
+tf
+);
+let fromCache =
+false;
+let data;
+
+if(
+cached &&
+(
+cached.candles.length >=
+1000 ||
+cached.coversVisible
+)
+){
+data =
+cached.candles.slice();
+fromCache =
+true;
+}else{
+data =
 await loadMarketHistory(
 symbol,
 tf,
@@ -1075,6 +1105,7 @@ parallel: true,
 batchGapMs: DASHBOARD_BATCH_GAP_MS
 }
 );
+}
 
 if(
 seq !== loadSeq.id
@@ -1087,6 +1118,21 @@ entry.setCandles(
 data
 );
 
+putHistoryCache(
+getActiveExchangeId(),
+symbol,
+tf,
+data,
+{
+coversVisible:
+data.length <
+1000 ||
+data.length >=
+DASHBOARD_HISTORY_BATCHES *
+1000
+}
+);
+
 entry.unsubKline?.();
 
 if(
@@ -1097,7 +1143,7 @@ widget.classList.add(
 "widget-chart-empty"
 );
 
-void import("./bybit-network-ui.js?v=8").then(
+void import("./bybit-network-ui.js?v=11").then(
 m=>{
 m.showBybitNetworkIssue(
 new Error(
@@ -1421,6 +1467,17 @@ symNorm
 
 entry.tradeWidget?.overlay?.drawNow?.();
 
+if(
+!(
+fromCache &&
+(
+candles.length >=
+DASHBOARD_HISTORY_BATCHES *
+1000 ||
+cached?.coversVisible
+)
+)
+){
 void loadMarketHistory(
 symbol,
 tf,
@@ -1457,9 +1514,104 @@ chart,
 candles,
 tf
 );
+putHistoryCache(
+getActiveExchangeId(),
+symbol,
+tf,
+more,
+{
+coversVisible:
+true
+}
+);
 
 }
 );
+}else{
+void loadMarketHistory(
+symbol,
+tf,
+1,
+{
+parallel: true,
+batchGapMs: DASHBOARD_BATCH_GAP_MS
+}
+).then(
+latest=>{
+
+if(
+seq !== loadSeq.id ||
+!latest?.length
+){
+return;
+}
+
+const merged =
+mergeCandleRows(
+candles,
+latest,
+{
+preferIncoming:
+true,
+limit:
+DASHBOARD_HISTORY_BATCHES *
+1000
+}
+);
+const sameEdge =
+merged.length ===
+candles.length &&
+merged[
+merged.length -
+1
+]?.close ===
+candles[
+candles.length -
+1
+]?.close &&
+logicalIndexShift(
+candles,
+merged
+) ===
+0;
+
+putHistoryCache(
+getActiveExchangeId(),
+symbol,
+tf,
+merged,
+{
+coversVisible:
+true
+}
+);
+
+if(
+sameEdge
+){
+return;
+}
+
+candles =
+merged;
+entry.setCandles(
+merged
+);
+series.setData(
+merged
+);
+updateTerminalWidgetRsiData(
+entry
+);
+applyDashboardZoom(
+chart,
+candles,
+tf
+);
+
+}
+);
+}
 
 const last =
 candles[candles.length - 1];

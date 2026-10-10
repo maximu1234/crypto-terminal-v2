@@ -28,6 +28,10 @@ withChartLocalTime
 } from "./chart-local-time.js?v=1";
 
 import {
+attachChartWheelDeadband
+} from "./chart-wheel-deadband.js?v=1";
+
+import {
 ensureDomChartCrosshair,
 resolveCrosshairPlotTime,
 updateCrosshairAxisLabels,
@@ -320,6 +324,10 @@ lastValueVisible:false
 
 });
 
+attachChartWheelDeadband(
+container
+);
+
 return {
 
 chart,
@@ -412,6 +420,10 @@ priceLineVisible:true,
 lastValueVisible:true
 
 });
+
+attachChartWheelDeadband(
+container
+);
 
 return {
 chart,
@@ -1133,21 +1145,54 @@ totalBars
 
 try{
 
+const rightMargin =
+computeChartFutureMarginBars(
+visibleBars
+);
+const plotGuess =
+Math.max(
+chart.timeScale().width() ||
+width -
+56,
+40
+);
+const initialSpacing =
+Math.max(
+0.01,
+plotGuess /
+Math.max(
+visibleBars +
+rightMargin,
+1
+)
+);
+
 chart.applyOptions({
 width,
 height
 });
 
+/*
+  Иначе первый кадр после setData берёт barSpacing 6:
+  на виджете вспыхивают несколько крупных свечей, и только
+  следующий кадр ставит плотный обзор.
+*/
+chart.timeScale().applyOptions({
+barSpacing:
+initialSpacing,
+rightOffset:
+rightMargin,
+fixRightEdge:
+false,
+lockVisibleTimeRangeOnResize:
+false,
+minBarSpacing:
+0.01
+});
+
 series.setData(
 candles
 );
-
-chart.timeScale().applyOptions({
-rightOffset:4,
-fixRightEdge:false,
-lockVisibleTimeRangeOnResize:false,
-minBarSpacing:0.01
-});
 
 const fitViewport =
 ()=>{
@@ -1181,28 +1226,6 @@ shouldContinue()
 fitViewport();
 }
 }
-);
-
-setTimeout(
-()=>{
-if(
-shouldContinue()
-){
-fitViewport();
-}
-},
-100
-);
-
-setTimeout(
-()=>{
-if(
-shouldContinue()
-){
-fitViewport();
-}
-},
-300
 );
 
 const range =
@@ -1417,6 +1440,10 @@ chart,
 container
 );
 
+attachChartWheelDeadband(
+container
+);
+
 return {
 
 chart,
@@ -1516,6 +1543,10 @@ priceScaleId:"right"
 
 rememberChartHost(
 chart,
+container
+);
+
+attachChartWheelDeadband(
 container
 );
 
@@ -4384,48 +4415,145 @@ e.clientY
 
 }
 
-if(
-chartsStackEl
+function bindLatestPointerMove(
+target,
+handler,
+listenerOpts,
+sync
 ){
 
-chartsStackEl.addEventListener(
+let frame =
+0;
+let sample =
+null;
+
+const listener =
+event=>{
+
+if(
+typeof sync ===
+"function"
+){
+sync(
+event
+);
+}else if(
+event.pointerType !==
+"touch"
+){
+trackPointerClient(
+event.clientX,
+event.clientY
+);
+}
+
+sample = {
+clientX:
+event.clientX,
+clientY:
+event.clientY,
+pointerType:
+event.pointerType
+};
+
+if(
+frame
+){
+return;
+}
+
+frame =
+requestAnimationFrame(
+()=>{
+
+frame =
+0;
+const current =
+sample;
+sample =
+null;
+
+if(
+current
+){
+handler(
+current
+);
+}
+
+}
+);
+
+};
+
+const capture =
+listenerOpts?.capture ===
+true;
+
+target.addEventListener(
 "pointermove",
+listener,
+listenerOpts
+);
+
+return ()=>{
+
+target.removeEventListener(
+"pointermove",
+listener,
+capture
+);
+
+if(
+frame
+){
+cancelAnimationFrame(
+frame
+);
+}
+
+frame =
+0;
+sample =
+null;
+
+};
+
+}
+
+const unbindStackPointer =
+chartsStackEl
+? bindLatestPointerMove(
+chartsStackEl,
 onStackPointerTrack,
 {
 passive:true,
 capture:true
 }
-);
+)
+: ()=>{};
 
-}
-
-if(
+const unbindChartWrapPointer =
 chartWrapEl
-){
-
-chartWrapEl.addEventListener(
-"pointermove",
+? bindLatestPointerMove(
+chartWrapEl,
 onChartWrapPointerMove,
 {
 passive:true
 }
-);
+)
+: ()=>{};
 
-}
-
-if(
+const unbindRsiWrapPointer =
 linkedWrapEl
-){
-
-linkedWrapEl.addEventListener(
-"pointermove",
+? bindLatestPointerMove(
+linkedWrapEl,
 onRsiWrapPointerMove,
 {
 passive:true
 }
-);
-
-}
+)
+: ()=>{};
 
 function onDocumentPointerMove(
 e
@@ -4475,16 +4603,45 @@ clearMainCrosshair();
 
 }
 
-document.addEventListener(
-"pointermove",
+const unbindDocumentPointer =
+bindLatestPointerMove(
+document,
 onDocumentPointerMove,
 {
 passive:true,
 capture:true
+},
+event=>{
+
+if(
+event.pointerType ===
+"touch"
+){
+return;
+}
+
+livePointerClientX =
+event.clientX;
+livePointerClientY =
+event.clientY;
+trackPointerClient(
+event.clientX,
+event.clientY
+);
+
 }
 );
 
-mainChart.subscribeCrosshairMove(param=>{
+let crosshairMoveFrame =
+0;
+let crosshairMovePending =
+false;
+let pendingCrosshairParam =
+null;
+
+function runLinkedCrosshairMove(
+param
+){
 
 if(lock){
 return;
@@ -4583,7 +4740,46 @@ param
 
 }
 
-});
+}
+
+mainChart.subscribeCrosshairMove(
+param=>{
+
+pendingCrosshairParam =
+param;
+crosshairMovePending =
+true;
+
+if(
+crosshairMoveFrame
+){
+return;
+}
+
+crosshairMoveFrame =
+requestAnimationFrame(
+()=>{
+
+crosshairMoveFrame =
+0;
+
+if(
+!crosshairMovePending
+){
+return;
+}
+
+crosshairMovePending =
+false;
+runLinkedCrosshairMove(
+pendingCrosshairParam
+);
+
+}
+);
+
+}
+);
 
 function refreshPointerCrosshair(){
 
@@ -4680,39 +4876,23 @@ clearLinked,
 refreshPointerCrosshair,
 detachPointerCrosshair(){
 
-if(
-chartsStackEl
-){
-chartsStackEl.removeEventListener(
-"pointermove",
-onStackPointerTrack,
-true
-);
-}
+unbindStackPointer();
+unbindChartWrapPointer();
+unbindRsiWrapPointer();
+unbindDocumentPointer();
 
 if(
-chartWrapEl
+crosshairMoveFrame
 ){
-chartWrapEl.removeEventListener(
-"pointermove",
-onChartWrapPointerMove
+cancelAnimationFrame(
+crosshairMoveFrame
 );
+crosshairMoveFrame =
+0;
 }
 
-if(
-linkedWrapEl
-){
-linkedWrapEl.removeEventListener(
-"pointermove",
-onRsiWrapPointerMove
-);
-}
-
-document.removeEventListener(
-"pointermove",
-onDocumentPointerMove,
-true
-);
+crosshairMovePending =
+false;
 
 },
 setSuppressed(

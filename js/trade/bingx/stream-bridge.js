@@ -9,7 +9,7 @@ syncTradePositionsCache
 
 import {
 isExchangeTradingEnabled
-} from "../../market-api.js?v=11";
+} from "../../market-api.js?v=14";
 
 let unsubscribe = null;
 let visibilityHandler = null;

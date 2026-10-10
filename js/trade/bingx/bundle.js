@@ -19,17 +19,17 @@ export {
   stopTradeStreamBridge,
   startTradeStreamBridge,
   initTradeStreamBridge
-} from "./stream-bridge.js?v=8";
+} from "./stream-bridge.js?v=11";
 
 export {
   createTradeChartOverlay,
   initTradeChartOverlay
-} from "./chart-overlay.js?v=21";
+} from "./chart-overlay.js?v=24";
 
 export {
   createTradeChartOrders,
   initTradeChartOrders
-} from "./chart-orders.js?v=8";
+} from "./chart-orders.js?v=11";
 
 export {
   getAutoStopSettings,
@@ -58,11 +58,11 @@ export {
 export {
   initTradeMarketEntry,
   openWidgetMarketPosition
-} from "./market-entry.js?v=17";
+} from "./market-entry.js?v=25";
 
 export {
   initTradeBookPanel
-} from "./book-panel.js?v=14";
+} from "./book-panel.js?v=22";
 
 export {
   getTradeConfig
@@ -79,11 +79,11 @@ export {
   diaryApplyDetailToTrade,
   diaryAfterDetailSuccess,
   diaryFetchKlineBatch
-} from "./diary/index.js?v=7";
+} from "./diary/index.js?v=10";
 
 export {
   bootTradeDiaryPage
-} from "./diary/page.js?v=15";
+} from "./diary/page.js?v=23";
 
 export {
   mountTradeDiaryPeriodPicker
@@ -135,7 +135,7 @@ export {
   mountTradeChartMarkersToggle,
   initTradeChartExecutionMarkers,
   applyDiaryTradeDeepLink
-} from "./chart-execution-markers.js?v=13";
+} from "./chart-execution-markers.js?v=21";
 
 export {
   fetchTradeHistoryForSymbol

@@ -3,7 +3,7 @@
  */
 import {
   fetchBybit
-} from "../../bybit-fetch.js?v=21";
+} from "../../bybit-fetch.js?v=24";
 
 export async function diaryFetchKlineBatch(symbol, tf, end) {
   const path =

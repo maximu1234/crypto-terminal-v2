@@ -23,7 +23,7 @@ recordDrawingTombstone
 import {
 EXCHANGE_CHANGED_EVENT,
 loadMarketHistory
-} from "../market-api.js?v=11";
+} from "../market-api.js?v=14";
 
 import {
 registerDrawingsStoragePoller,
@@ -50,7 +50,7 @@ ensureDomChartCrosshair,
 hideDomChartCrosshair,
 positionTabletProbeHorizInStack,
 fullCrosshairOptions
-} from "../chart-import.js?v=68";
+} from "../chart-import.js?v=70";
 
 import {
 STROKE,
@@ -152,7 +152,7 @@ updateChartRulerLabelEl
 
 import {
 mountTabletDrawInput
-} from "../drawings-tablet-input.js?v=20";
+} from "../drawings-tablet-input.js?v=22";
 
 import {
 cloneDrawingsForUndo,
@@ -161,7 +161,7 @@ createDrawUndoStack
 
 import {
 createDrawDesktopSelection
-} from "./draw-edit-desktop.js?v=17";
+} from "./draw-edit-desktop.js?v=19";
 
 import {
 createDrawingsPersist
@@ -169,15 +169,15 @@ createDrawingsPersist
 
 import {
 createDrawStyleBar
-} from "./draw-style-bar.js?v=84";
+} from "./draw-style-bar.js?v=92";
 
 import {
 createDrawAlertsChart
-} from "./draw-alerts-chart.js?v=12";
+} from "./draw-alerts-chart.js?v=20";
 
 import {
 createDrawPlacement
-} from "./draw-placement.js?v=34";
+} from "./draw-placement.js?v=36";
 
 import {
 createDrawTextEditor,
@@ -202,23 +202,23 @@ syncFibGroupActive
 
 import {
 createBrushPlacement
-} from "./brush-placement.js?v=3";
+} from "./brush-placement.js?v=4";
 
 import {
 createDrawEditInteraction
-} from "./draw-edit-interaction.js?v=38";
+} from "./draw-edit-interaction.js?v=40";
 
 import {
 createDrawChartInput
-} from "./draw-chart-input.js?v=7";
+} from "./draw-chart-input.js?v=9";
 
 import {
 createDrawPriceScale
-} from "./draw-price-scale.js?v=23";
+} from "./draw-price-scale.js?v=25";
 
 import {
 createDrawRedrawLoop
-} from "./draw-redraw-loop.js?v=24";
+} from "./draw-redraw-loop.js?v=25";
 
 import {
 isAlgoReducedCloudClient
@@ -3207,7 +3207,8 @@ drawPriceScaleLabels,
 onAfterRedraw:notifyAfterRedraw,
 getCandles:()=>
 getCandles?.() ||
-[]
+[],
+chart
 });
 
 let redrawCore;
@@ -5559,7 +5560,7 @@ lastChartAlertsPullMs =
 Date.now();
 
 void import(
-"../alerts-cloud-sync.js?v=120"
+"../alerts-cloud-sync.js?v=128"
 ).then(
 ({ pullRegistryFromCloudNow })=>
 pullRegistryFromCloudNow({
@@ -6208,14 +6209,6 @@ stripOrphanAlertDrawings();
 desktopEdit.clearDrawingSelection();
 cancelPlacement();
 clearChartRuler();
-
-if(tool !== "cursor"){
-const style =
-baseDefaultStyle(tool);
-
-updateColorStripe(style.color);
-setActiveWidth(style.lineWidth);
-}
 
 updateStyleBar();
 

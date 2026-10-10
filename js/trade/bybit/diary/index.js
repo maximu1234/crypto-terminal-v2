@@ -18,4 +18,4 @@ export {
 
 export {
   diaryFetchKlineBatch
-} from "./chart-klines.js?v=3";
+} from "./chart-klines.js?v=6";

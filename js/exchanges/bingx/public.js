@@ -23,6 +23,11 @@ klineHistoryPageEnds,
 shouldFetchKlinePagesInParallel
 } from "../../kline-history-pages.js?v=2";
 
+import {
+clampHistoryPageLimit,
+noteHistoryTransfer
+} from "../../history-link-pace.js?v=1";
+
 const SYMBOLS_CACHE_PREFIX =
 "bingx_swap_symbols_v4";
 
@@ -131,7 +136,8 @@ instruments
 async function fetchKlineBatch(
 symbol,
 tf,
-endTime
+endTime,
+pageLimit
 ){
 
 const bingxSym =
@@ -149,7 +155,11 @@ symbol:
 bingxSym,
 interval,
 limit:
-"1000"
+String(
+clampHistoryPageLimit(
+pageLimit
+)
+)
 });
 
 if(
@@ -169,6 +179,8 @@ endTime
 
 try{
 
+const started =
+performance.now();
 const json =
 await fetchBingx(
 `/openApi/swap/v3/quote/klines?${params}`
@@ -180,6 +192,16 @@ json?.data
 )
 ? json.data
 : [];
+
+if(
+rows.length
+){
+noteHistoryTransfer(
+rows.length,
+performance.now() -
+started
+);
+}
 
 return rows;
 
@@ -345,7 +367,8 @@ Boolean
 async function fetchBingxKlineBatchWithRetry(
 symbol,
 tf,
-end
+end,
+pageLimit
 ){
 
 let batch =
@@ -364,7 +387,8 @@ batch =
 await fetchKlineBatch(
 symbol,
 tf,
-end
+end,
+pageLimit
 );
 break;
 }catch(
@@ -446,6 +470,10 @@ options.parallel === true ||
 options.batchGapMs === 0
 ? 0
 : 1;
+const pageLimit =
+clampHistoryPageLimit(
+options.pageLimit
+);
 const pageEnds =
 shouldFetchKlinePagesInParallel(
 requests,
@@ -454,7 +482,8 @@ gapForPages
 ? klineHistoryPageEnds(
 end,
 tf,
-requests
+requests,
+pageLimit
 )
 : [];
 
@@ -472,7 +501,8 @@ try{
 return await fetchBingxKlineBatchWithRetry(
 symbol,
 tf,
-pageEnd
+pageEnd,
+pageLimit
 );
 }catch{
 return null;
@@ -509,7 +539,8 @@ const batch =
 await fetchBingxKlineBatchWithRetry(
 symbol,
 tf,
-end
+end,
+pageLimit
 );
 
 if(

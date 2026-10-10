@@ -1,7 +1,7 @@
 import {
 getBybitWsUrl,
 rotateBybitWsEndpoint
-} from "./bybit-fetch.js?v=21";
+} from "./bybit-fetch.js?v=24";
 
 import {
 collectKlineRows,

@@ -1,6 +1,6 @@
 import {
 fetchBybit
-} from "./bybit-fetch.js?v=21";
+} from "./bybit-fetch.js?v=24";
 
 import {
 fetchTwelveTimeSeries
@@ -10,6 +10,11 @@ import {
 klineHistoryPageEnds,
 shouldFetchKlinePagesInParallel
 } from "./kline-history-pages.js?v=2";
+
+import {
+clampHistoryPageLimit,
+noteHistoryTransfer
+} from "./history-link-pace.js?v=1";
 
 /* =========================================================
    BYBIT HISTORY
@@ -109,8 +114,14 @@ retries = 3,
 fetchOpts = {}
 ){
 
+const limit =
+clampHistoryPageLimit(
+fetchOpts.limit
+);
 const path =
-`/v5/market/kline?category=linear&symbol=${encodeURIComponent(symbol)}&interval=${encodeURIComponent(tf)}&limit=1000&end=${end}`;
+`/v5/market/kline?category=linear&symbol=${encodeURIComponent(symbol)}&interval=${encodeURIComponent(tf)}&limit=${limit}&end=${end}`;
+const started =
+performance.now();
 
 try{
 
@@ -132,6 +143,11 @@ if(
 json.retCode === 0 &&
 json.result?.list?.length
 ){
+noteHistoryTransfer(
+json.result.list.length,
+performance.now() -
+started
+);
 return json.result.list;
 }
 
@@ -148,8 +164,14 @@ symbol,
 tf,
 requests = 6,
 batchGapMs = 80,
-endMs
+endMs,
+pageLimit
 ){
+
+const limit =
+clampHistoryPageLimit(
+pageLimit
+);
 
 let all = [];
 let end =
@@ -170,7 +192,7 @@ shouldFetchKlinePagesInParallel(
 requests,
 batchGapMs
 )
-? klineHistoryPageEnds(end, tf, requests)
+? klineHistoryPageEnds(end, tf, requests, limit)
 : [];
 
 if(pageEnds.length > 1){
@@ -185,7 +207,8 @@ tf,
 pageEnd,
 3,
 {
-sequential: false
+sequential: false,
+limit
 }
 )
 )
@@ -207,7 +230,11 @@ const batch =
 await fetchBybitKlineBatch(
 symbol,
 tf,
-end
+end,
+3,
+{
+limit
+}
 );
 
 if(!batch?.length){
@@ -305,7 +332,8 @@ gap,
 typeof options.endMs ===
 "number"
 ? options.endMs
-: undefined
+: undefined,
+options.pageLimit
 );
 
 if(options.parallel){

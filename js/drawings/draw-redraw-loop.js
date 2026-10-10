@@ -37,6 +37,10 @@ isElliottType,
 elliottSelectionHandlePoints
 } from "./elliott-spec.js?v=23";
 
+import {
+shapeMissesViewport
+} from "./draw-viewport-cull.js?v=2";
+
 export function createDrawRedrawLoop(
 deps
 ){
@@ -72,9 +76,54 @@ drawRegistryPriceAlerts,
 drawPriceScaleLabels,
 onAfterRedraw,
 getCandles = ()=>
-[]
+[],
+chart = null
 } =
 deps;
+
+function readDrawViewport(){
+
+const time =
+chart?.timeScale?.().getVisibleRange?.();
+const price =
+chart?.priceScale?.("right")?.getVisibleRange?.();
+
+if(
+!time ||
+!Number.isFinite(
+Number(
+time.from
+)
+) ||
+!Number.isFinite(
+Number(
+time.to
+)
+)
+){
+return null;
+}
+
+return {
+timeFrom:
+Number(
+time.from
+),
+timeTo:
+Number(
+time.to
+),
+priceFrom:
+Number(
+price?.from
+),
+priceTo:
+Number(
+price?.to
+)
+};
+
+}
 
 let coordRetryCount = 0;
 
@@ -481,9 +530,28 @@ if(
 !getDrawingsHidden()
 ){
 
+const drawView =
+getDragState()
+? null
+: readDrawViewport();
+
 getDrawings().forEach(d=>{
 
 try{
+
+if(
+drawView &&
+!getIsIdSelected(
+d.id
+) &&
+shapeMissesViewport(
+d,
+drawView
+)
+){
+return;
+}
+
 drawShape(ctx, d, plotW, h);
 
 if(

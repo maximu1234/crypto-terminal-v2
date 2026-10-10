@@ -15,7 +15,7 @@ export {
   diaryInterpretDetailResult,
   diaryApplyDetailToTrade,
   diaryAfterDetailSuccess
-} from "./detail.js?v=4";
+} from "./detail.js?v=7";
 
 export {
   diaryFetchKlineBatch

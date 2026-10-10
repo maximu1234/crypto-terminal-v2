@@ -21,7 +21,7 @@ markerForExecutionSide
 
 import {
 diaryFetchKlineBatch
-} from "./chart-klines.js?v=3";
+} from "./chart-klines.js?v=6";
 
 export const DIARY_CHART_TFS =
 Object.freeze([

@@ -3,7 +3,11 @@
  */
 import {
 findPattern12HitsInLookback
-} from "./pattern-12-scanner.js?v=27";
+} from "./pattern-12-scanner.js?v=31";
+
+import {
+unpackCandles
+} from "./candle-columns.js?v=2";
 
 self.onmessage =
 event=>{
@@ -11,9 +15,16 @@ event=>{
 const data =
 event.data ||
 {};
+const candles =
+data.packed
+? unpackCandles(
+data.packed,
+data.rows
+)
+: data.candles;
 const hits =
 findPattern12HitsInLookback(
-data.candles,
+candles,
 data.lookbackBars,
 data.sideFilter,
 data.patternSettings,

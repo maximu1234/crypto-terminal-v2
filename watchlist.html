@@ -16,7 +16,7 @@
 <link rel="stylesheet" href="/css/common.css?v=68">
 <link rel="stylesheet" href="/css/chrome-motion.css?v=5">
 <link rel="stylesheet" href="/css/watchlist.css?v=69">
-<link rel="stylesheet" href="/css/screener.css?v=58">
+<link rel="stylesheet" href="/css/screener.css?v=59">
 <link rel="stylesheet" href="/css/watchlist-page.css?v=3">
 <link rel="stylesheet" href="/css/draw-menus.css?v=5">
 
@@ -116,7 +116,7 @@ document.querySelector(
 )
 })
 ){
-import("/js/site-boot.js?v=149").catch(err=>{
+import("/js/site-boot.js?v=157").catch(err=>{
 console.warn("site-boot:", err);
 });
 }else{
@@ -128,7 +128,7 @@ if(
 window.cryptoTerminalDesktop?.isDesktop
 ){
 tradeBoot =
-await import("/js/trade-desktop-boot.js?v=36");
+await import("/js/trade-desktop-boot.js?v=44");
 
 if(
 tradeBoot.isWatchlistTradeMode()
@@ -142,7 +142,7 @@ mode:
 }
 }else{
 tradeBoot =
-await import("/js/trade-web/boot.js?v=16");
+await import("/js/trade-web/boot.js?v=24");
 await tradeBoot.initTradeWebBeforeChart(
 {
 mode:
@@ -155,7 +155,7 @@ const { loadLightweightCharts } =
 await import("/js/charts-lib-boot.js?v=3");
 
 await loadLightweightCharts();
-await import("./js/watchlist.js?v=153");
+await import("./js/watchlist.js?v=161");
 
 if(
 window.cryptoTerminalDesktop?.isDesktop
@@ -182,7 +182,7 @@ mode:
 }
 
 await import("./js/watchlist-page.js?v=4");
-import("/js/site-boot.js?v=149").catch(err=>{
+import("/js/site-boot.js?v=157").catch(err=>{
 console.warn("site-boot:", err);
 });
 

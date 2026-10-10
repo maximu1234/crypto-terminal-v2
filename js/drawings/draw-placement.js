@@ -5,7 +5,7 @@
 import {
 hideDomChartCrosshair,
 positionTabletProbeHorizInStack
-} from "../chart-import.js?v=68";
+} from "../chart-import.js?v=70";
 
 import {
 ensureFibLevelsVisible,
@@ -859,6 +859,28 @@ setDrawMagnetKeyDown(true);
 
 }
 
+let placementPreviewFrame =
+0;
+
+function schedulePlacementPreviewRedraw(){
+
+if(
+placementPreviewFrame
+){
+return;
+}
+
+placementPreviewFrame =
+requestAnimationFrame(
+()=>{
+placementPreviewFrame =
+0;
+redraw();
+}
+);
+
+}
+
 function syncDesktopDrawPlacementPreview(
 rawX,
 rawY,
@@ -960,7 +982,7 @@ ly
 
 }
 
-redraw();
+schedulePlacementPreviewRedraw();
 
 return resolved;
 
