@@ -6,6 +6,10 @@ isTerminalPage
 } from "./terminal-state.js?v=4747a92f";
 
 import {
+isTerminalReplayActive
+} from "./terminal-replay.js?v=1b9e6de6";
+
+import {
 normalizeMinVolume,
 filterMarketItemsByMinVolume
 } from "../screener-volume-filter.js?v=2018f0b9";
@@ -33,7 +37,7 @@ createTickerUiBatcher
 
 import {
 processAlertCandle
-} from "../alert-monitor.js?v=2825f63b";
+} from "../alert-monitor.js?v=2b31b421";
 
 import {
 getFavoriteGroup,
@@ -92,7 +96,7 @@ isTradePage
 ){
 const tradePositions =
 await import(
-"../trade-open-positions.js?v=f9c59bde"
+"../trade-open-positions.js?v=b0fccd66"
 );
 hasOpenPosition =
 tradePositions.hasOpenPosition;
@@ -693,6 +697,10 @@ null;
 function paintLiveChartBar(
 bar
 ){
+
+if(isTerminalReplayActive()){
+return;
+}
 
 const last =
 bar ||

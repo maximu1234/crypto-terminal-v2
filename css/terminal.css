@@ -1508,6 +1508,92 @@ form.draw-position-risk{
   background:var(--app-chart-bg);
 }
 
+.terminal-replay-bar{
+  position:absolute;
+  left:50%;
+  bottom:36px;
+  transform:translateX(-50%);
+  z-index:30;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:6px 10px;
+  border:1px solid #2a2e39;
+  border-radius:8px;
+  background:rgba(19,23,34,0.94);
+  color:#d1d4dc;
+  font-size:13px;
+  pointer-events:auto;
+}
+
+.terminal-replay-bar button,
+.terminal-replay-bar select{
+  height:28px;
+  padding:0 10px;
+  border:1px solid #363a45;
+  border-radius:4px;
+  background:#1e222d;
+  color:#d1d4dc;
+  font:inherit;
+  cursor:pointer;
+}
+
+.terminal-replay-bar button:disabled{
+  opacity:0.45;
+  cursor:default;
+}
+
+.terminal-replay-speed{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+}
+
+#terminal-replay-status{
+  min-width:180px;
+  color:#9ca3af;
+}
+
+body.terminal-page .terminal-replay-btn{
+  box-sizing:border-box;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  flex:0 0 auto;
+  height:40px;
+  margin:0 0 0 4px;
+  padding:0 12px;
+  border:none;
+  border-radius:4px;
+  background:transparent;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  font-size:13px;
+  font-weight:400;
+  line-height:16px;
+  color:#d1d4dc;
+  cursor:pointer;
+}
+
+body.terminal-page .terminal-replay-btn:hover:not(.active){
+  background:rgba(255,255,255,0.06);
+  color:#f0f3fa;
+}
+
+#terminal-replay-btn.active{
+  color:#fff;
+  background:#2962ff;
+}
+
+body.terminal-replay-pick .linked-crosshair-vert,
+body.terminal-replay-pick #chart-wrap .chart-dom-crosshair-vert,
+body.terminal-replay-pick #rsi-wrap .chart-dom-crosshair-vert,
+body.terminal-replay-pick #macd-wrap .chart-dom-crosshair-vert,
+body.terminal-replay-pick #volume-wrap .chart-dom-crosshair-vert,
+body.terminal-replay-pick #ao-wrap .chart-dom-crosshair-vert{
+  width:1px;
+  background:#2962ff;
+}
+
 /* Переключение монеты: затемнение всего стека (свечи + Vol + RSI) на время загрузки (до 1s). */
 #charts-stack-panes{
   position:relative;

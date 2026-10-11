@@ -1,3 +1,8 @@
+import {
+replayVisibleCandles,
+isTerminalReplayActive
+} from "./terminal-replay.js?v=1b9e6de6";
+
 /**
  * Closure slice. `host` is the surrounding function's bindings.
  */
@@ -779,7 +784,9 @@ return;
 const seq =
 ++host.rsiRebuildSeq;
 const chartCandles =
-host.candles;
+replayVisibleCandles(
+host.candles
+);
 const points =
 await host.buildChartRsiPoints(
 {
@@ -863,9 +870,11 @@ host.rsiDrawingTools?.scheduleRedraw?.();
 }
 
 host.chartIndicators?.notifyCandlesUpdate?.();
+if(!isTerminalReplayActive()){
 publishRsiAlertValue(host, 
 points
 );
+}
 
 }
 
@@ -3578,7 +3587,7 @@ if(
 ){
 host.terminalAlgoEarlyT3ListMod =
 await import(
-"../algo-trading/terminal-early-t3-list.js?v=631285ce"
+"../algo-trading/terminal-early-t3-list.js?v=c302e698"
 );
 }
 host.terminalAlgoEarlyT3ListMod.mountTerminalAlgoEarlyT3List();

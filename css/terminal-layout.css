@@ -89,7 +89,8 @@ color:#fff;
 font-weight:400;
 }
 
-body.terminal-page .coins-tf-desktop .tf-btn:focus{
+body.terminal-page .coins-tf-desktop .tf-btn:focus,
+body.terminal-page .terminal-replay-btn:focus{
 outline:none;
 }
 

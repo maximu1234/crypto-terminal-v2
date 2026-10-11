@@ -40,7 +40,7 @@ openChromeSurface
 
 import {
 resolveUrlExchangeDeepLink
-} from "./alert-deep-link-exchange.js?v=5ff5a43d";
+} from "./alert-deep-link-exchange.js?v=b76dbb2a";
 
 import {
 defaultRsiPaneSettings,
@@ -66,18 +66,18 @@ seedWatchlistTfOnBlueFlag
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=bdb3e8a2";
+} from "./auth-ui.js?v=90492704";
 
 import {
 getActiveAlerts,
 isMacdAlert,
 isRsiAlert
-} from "./alerts.js?v=a2080b8b";
+} from "./alerts.js?v=c853225f";
 
 import {
 persistFavoritesToCloud,
 onFavoritesRemoteUpdate
-} from "./cloud-sync.js?v=1b073694";
+} from "./cloud-sync.js?v=d861e774";
 
 import {
 createCandlestickChart,
@@ -131,7 +131,7 @@ import {
 syncBackgroundAlertStreams,
 onMacdSeriesUpdate,
 onRsiSeriesUpdate
-} from "./alert-monitor.js?v=2825f63b";
+} from "./alert-monitor.js?v=2b31b421";
 
 import {
 createSharedDrawUndoStack
@@ -199,7 +199,7 @@ mountCoinsScaleInvertMenu
 
 import {
 mountTerminalDrawChrome
-} from "./terminal/terminal-draw-chrome.js?v=2d0f7187";
+} from "./terminal/terminal-draw-chrome.js?v=70675e04";
 
 
 
@@ -210,7 +210,7 @@ stopTickerStream
 import {
 mountCoinsListRefreshControls,
 applyCoinsListRefreshInterval
-} from "./terminal-list-refresh.js?v=3c92c460";
+} from "./terminal-list-refresh.js?v=5c7ed0e5";
 
 import {
 readCoinsPrefs,
@@ -224,7 +224,7 @@ applyCoinsPrefs,
 applySortForCurrentMarket,
 readUrlParams,
 readLastViewForExchange
-} from "./terminal/terminal-prefs.js?v=ea11fbd3";
+} from "./terminal/terminal-prefs.js?v=b44820f2";
 
 import {
 mountDesktopOpenChartHandler
@@ -246,7 +246,7 @@ setCoinsTableHooks,
 syncCoinListFreezeFromFlagMenus,
 getExtraCoinMarkets,
 isExtraCoinMarket
-} from "./terminal/terminal-table.js?v=e09d14c8";
+} from "./terminal/terminal-table.js?v=ac3a3c39";
 
 import {
 createCoinsChartSwitchVeil
@@ -264,6 +264,12 @@ applyDefaultZoom
 } from "./terminal/terminal-chart-layout.js?v=df9a7a4d";
 
 import {
+isTerminalReplayActive,
+mountTerminalReplay,
+replayVisibleCandles
+} from "./terminal/terminal-replay.js?v=1b9e6de6";
+
+import {
 placeCoinsTabletListNav
 } from "./terminal/coins-tablet-list-nav.js?v=ac1c11c4";
 
@@ -271,7 +277,7 @@ import {
 initTerminalMultiChart,
 syncPrimaryTfToLayout,
 isTerminalMultiChartLayout
-} from "./terminal-multi-chart.js?v=06ec4777";
+} from "./terminal-multi-chart.js?v=1186dcf5";
 
 import {
 mountTerminalLayoutPicker
@@ -319,7 +325,7 @@ loadVisibleTerminalHistory as loadVisibleTerminalHistoryMoved,
 applyMergedTerminalCandles as applyMergedTerminalCandlesMoved,
 settleTerminalHistoryAfterPaint as settleTerminalHistoryAfterPaintMoved,
 bindTerminalHistoryLazyLoad as bindTerminalHistoryLazyLoadMoved
-} from "./terminal/terminal-history.js?v=00e6d0b7";
+} from "./terminal/terminal-history.js?v=5805727f";
 import {
 allCoinsDrawTools as allCoinsDrawToolsMoved,
 scheduleCoinsDrawRedraw as scheduleCoinsDrawRedrawMoved,
@@ -411,7 +417,7 @@ syncCoinsMarketFilterOptions as syncCoinsMarketFilterOptionsMoved,
 handleExchangeChanged as handleExchangeChangedMoved,
 refreshCoinsMarketUi as refreshCoinsMarketUiMoved,
 syncTerminalAlgoEarlyT3List as syncTerminalAlgoEarlyT3ListMoved
-} from "./terminal/terminal-coins-page.js?v=fa5669f0";
+} from "./terminal/terminal-coins-page.js?v=cc23f1bb";
 let terminalAlgoEarlyT3ListMod =
 null;
 
@@ -1802,7 +1808,7 @@ getActiveExchangeDefinition().name
 
 registerCoinsChartLayoutContext({
 getCandles:()=>
-candles,
+replayVisibleCandles(candles),
 chart,
 chartEl,
 getTf:()=>
@@ -3099,6 +3105,30 @@ currentSymbol
 }
 );
 
+mountTerminalReplay({
+getChart:()=>
+chart,
+getCandles:()=>
+candles,
+getDrawTool:()=>
+drawingTools?.tool,
+applySlice(){
+candleSeries?.setData(
+buildChartDisplayCandles()
+);
+},
+restoreLive(){
+candleSeries?.setData(
+buildChartDisplayCandles()
+);
+},
+rebuild(){
+void rebuildRsiFromCandles();
+chartIndicators?.notifyCandlesUpdate?.();
+scheduleCoinsDrawRedraw();
+}
+});
+
 }
 
 function flushCoinsPrefs(){
@@ -3270,6 +3300,9 @@ item.symbol
 applyChartLiveCandle(
 bar
 ){
+if(isTerminalReplayActive()){
+return;
+}
 try{
 candleSeries.update(
 bar

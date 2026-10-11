@@ -16,9 +16,9 @@
 <link rel="stylesheet" href="/css/critical-shell.css?v=306c4f27">
 <script src="/js/site-css-ready.js?v=b5c14dd2"></script>
 <link rel="stylesheet" href="/css/common.css?v=8f7db7de">
-<link rel="stylesheet" href="/css/terminal.css?v=bf355286">
+<link rel="stylesheet" href="/css/terminal.css?v=e8386ca9">
 <link rel="stylesheet" href="/css/chrome-motion.css?v=ce79f4e8">
-<link rel="stylesheet" href="/css/terminal-layout.css?v=c026bfab">
+<link rel="stylesheet" href="/css/terminal-layout.css?v=44df4467">
 <link rel="stylesheet" href="/css/dx-ball.css?v=6ef49e6c">
 <link rel="stylesheet" href="/css/chart-indicators.css?v=e17e8432">
 <link rel="stylesheet" href="/css/chart-snapshot.css?v=13c62ee8">
@@ -118,6 +118,7 @@ document.documentElement.classList.add("trade-desktop");
 <div id="chart-indicators-wrap" class="chart-indicators-wrap coins-draw-desktop"></div>
 <span class="coins-topbar-divider" id="chart-snapshot-divider" hidden></span>
 <div id="chart-snapshot-wrap" class="chart-snapshot-wrap coins-draw-desktop" hidden></div>
+<button type="button" class="terminal-replay-btn" id="terminal-replay-btn" title="Проигрывание графика" aria-pressed="false">Replay</button>
 
 <script>
 (function(){
@@ -193,6 +194,21 @@ paint(last.symbol);
 <div id="charts-stack-panes" class="charts-stack-panes">
 
 <div id="chart-wrap">
+<div id="terminal-replay-bar" class="terminal-replay-bar hidden" role="toolbar" aria-label="Проигрывание графика">
+<button type="button" id="terminal-replay-play" disabled>Пуск</button>
+<button type="button" id="terminal-replay-step" disabled title="Следующая свеча">+1</button>
+<label class="terminal-replay-speed">Скорость
+<select id="terminal-replay-speed" aria-label="Скорость проигрывания">
+<option value="0.5">0.5×</option>
+<option value="1" selected>1×</option>
+<option value="2">2×</option>
+<option value="5">5×</option>
+<option value="10">10×</option>
+</select>
+</label>
+<span id="terminal-replay-status">Кликните свечу, с которой начать</span>
+<button type="button" id="terminal-replay-close">Закрыть</button>
+</div>
 <div id="chart"></div>
 <div id="coins-chart-turnover24" class="coins-chart-turnover24" aria-live="polite"></div>
 <div id="crosshair-price-label" class="crosshair-axis-label crosshair-price-label hidden" aria-hidden="true"></div>
@@ -421,7 +437,7 @@ Vol
 
 <div id="coins-chart-status" class="coins-chart-status hidden" aria-live="polite"></div>
 
-<script src="/js/terminal-page-boot.js?v=9d58ef91" type="module"></script>
+<script src="/js/terminal-page-boot.js?v=e330ce1a" type="module"></script>
 
 </body>
 </html>

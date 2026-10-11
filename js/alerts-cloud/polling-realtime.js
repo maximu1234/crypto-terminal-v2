@@ -8,7 +8,7 @@ isCloudLoggedIn,
 isCloudLoggedInEffective,
 onCloudSyncChange,
 ensureCloudLoginResolved
-} from "../cloud-sync.js?v=1b073694";
+} from "../cloud-sync.js?v=d861e774";
 
 import {
 clearAlertAuthCache,
@@ -34,12 +34,12 @@ isAlertsPullInBackoff,
 broadcastAlertsRegistrySync,
 setAlertsRealtimeChannel,
 setAlertsRealtimeUserId
-} from "./debug.js?v=b911eb85";
+} from "./debug.js?v=2fdfb0ef";
 
 import {
 getAuthed,
 runCloudOp
-} from "./worker-client.js?v=236ea47a";
+} from "./worker-client.js?v=1874c061";
 
 import {
 pullRegistryFromCloudNow,
@@ -47,12 +47,12 @@ pushUnsyncedAlerts,
 scheduleRegistryCloudSync,
 isRegistryCloudSyncPaused,
 syncAllLocalAlertsToCloud
-} from "./registry-sync.js?v=3daa9258";
+} from "./registry-sync.js?v=9b954a74";
 
 import {
 isAlertsCloudDisabled,
 syncAlertsCloudPauseToServer
-} from "../supabase-usage-prefs.js?v=4953b15c";
+} from "../supabase-usage-prefs.js?v=154dbb33";
 
 import {
 isAlgoReducedCloudClient
@@ -220,7 +220,7 @@ immediate: true
 async n=>{
 
 const { stripAlertFlagsNotInRegistry } =
-await import("../alerts.js?v=a2080b8b");
+await import("../alerts.js?v=c853225f");
 
 stripAlertFlagsNotInRegistry({
 emitDrawingsEvents: false
@@ -258,7 +258,7 @@ oldRow
 ){
 
 const { applyRemoteAlertFired } =
-await import("../alerts.js?v=a2080b8b");
+await import("../alerts.js?v=c853225f");
 
 applyRemoteAlertFired(
 oldRow
@@ -300,7 +300,7 @@ row?.deleted_at &&
 row.symbol &&
 row.shape_id
 ){
-void import("../alerts.js?v=a2080b8b").then(
+void import("../alerts.js?v=c853225f").then(
 ({ applyRemoteAlertRemoved })=>{
 applyRemoteAlertRemoved(row);
 }
@@ -322,7 +322,7 @@ row?.symbol &&
 row?.shape_id &&
 triggered
 ){
-void import("../alerts.js?v=a2080b8b").then(
+void import("../alerts.js?v=c853225f").then(
 ({ applyRemoteAlertFired })=>{
 applyRemoteAlertFired(row);
 }
@@ -338,7 +338,7 @@ row.symbol &&
 row.shape_id
 ){
 
-void import("../alerts.js?v=a2080b8b").then(
+void import("../alerts.js?v=c853225f").then(
 ({ applyRemoteAlertUpsert })=>{
 
 if(
@@ -384,7 +384,7 @@ if(
 return;
 }
 
-void import("../alerts.js?v=a2080b8b").then(
+void import("../alerts.js?v=c853225f").then(
 ({ applyRemoteAlertFired })=>{
 applyRemoteAlertFired(
 row
@@ -1009,7 +1009,7 @@ if(
 !isAlertsPage()
 ){
 const { mergeRegistryFromChartDrawings } =
-await import("../alerts.js?v=a2080b8b");
+await import("../alerts.js?v=c853225f");
 
 mergeRegistryFromChartDrawings({
 stripFlags: stripOpts
@@ -1025,7 +1025,7 @@ if(
 isAlertsPage()
 ){
 const { pullAlertHistoryFromCloud } =
-await import("./registry-sync.js?v=3daa9258");
+await import("./registry-sync.js?v=9b954a74");
 
 await pullAlertHistoryFromCloud({
 force: !!opts.force
@@ -1033,7 +1033,7 @@ force: !!opts.force
 }
 
 const { stripAlertFlagsNotInRegistry } =
-await import("../alerts.js?v=a2080b8b");
+await import("../alerts.js?v=c853225f");
 
 stripAlertFlagsNotInRegistry(
 stripOpts

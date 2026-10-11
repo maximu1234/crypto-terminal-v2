@@ -33,6 +33,10 @@ settleCoinsChartViewport,
 scheduleResizeCharts
 } from "./terminal-chart-layout.js?v=df9a7a4d";
 
+import {
+replayVisibleCandles
+} from "./terminal-replay.js?v=1b9e6de6";
+
 export async function mountTerminalDrawChrome(
 deps
 ){
@@ -48,7 +52,7 @@ const {
 initWidgetDrawings
 } =
 await import(
-"../chart-widget-host.js?v=dc81d4ae"
+"../chart-widget-host.js?v=ab6cbf5f"
 );
 const {
 initChartIndicators
@@ -206,7 +210,7 @@ deps.drawingTools?.getTool?.() ??
 );
 
 void import(
-"../price-alert-ui.js?v=2485ed2f"
+"../price-alert-ui.js?v=b96b5642"
 ).then(
 ({
 mountPriceAlertUi
@@ -299,7 +303,7 @@ clearAllPeers:
 deps.drawClearAllPeers,
 getSymbol: ()=> deps.currentSymbol,
 getTf: ()=> deps.currentTF,
-getCandles: ()=> deps.candles,
+getCandles: ()=> replayVisibleCandles(deps.candles),
 isActive: ()=>
 deps.activeDrawPane ===
 "chart",
@@ -570,7 +574,9 @@ deps.drawingTools,
 getSymbol:()=>
 deps.currentSymbol,
 getCandles:()=>
-deps.candles,
+replayVisibleCandles(
+deps.candles
+),
 getDisplayCandles:()=>
 buildChartDisplayCandles(),
 getTf:()=>
@@ -856,7 +862,7 @@ const {
 createTradePlusMenuHandler
 } =
 await import(
-"../trade-order-plus-ui.js?v=316a81dc"
+"../trade-order-plus-ui.js?v=a8451d70"
 );
 
 tradePlusHandler =
@@ -887,7 +893,7 @@ const {
 mountPriceAlertUi
 } =
 await import(
-"../price-alert-ui.js?v=2485ed2f"
+"../price-alert-ui.js?v=b96b5642"
 );
 
 let disposeAlertUi =
@@ -947,7 +953,7 @@ const {
 mountPriceAlertUi: mountRsiPriceAlertUi
 } =
 await import(
-"../price-alert-ui.js?v=2485ed2f"
+"../price-alert-ui.js?v=b96b5642"
 );
 
 mountRsiPriceAlertUi(

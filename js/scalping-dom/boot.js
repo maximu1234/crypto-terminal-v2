@@ -4,7 +4,7 @@
  */
 import {
 cssUrl
-} from "../asset-manifest.js?v=88e789c8";
+} from "../asset-manifest.js?v=69b5d087";
 
 import {
 isTerminalPageOnly
@@ -19,7 +19,7 @@ unmountScalpingDomHost
 
 import {
 createDepthFeed
-} from "./depth-feed.js?v=c229db39";
+} from "./depth-feed.js?v=d390d072";
 
 import {
 createLadderUi

@@ -1,7 +1,16 @@
+import {
+stopTerminalReplay,
+isTerminalReplayActive
+} from "./terminal-replay.js?v=1b9e6de6";
+
 /**
  * Closure slice. `host` is the surrounding function's bindings.
  */
 export async function loadSymbol(host, symbol){
+
+stopTerminalReplay({
+restore: false
+});
 
 if(
 symbol !==
@@ -70,7 +79,7 @@ if(
 host.isTradePage
 ){
 void import(
-"../trade-volume-presets.js?v=678b2d19"
+"../trade-volume-presets.js?v=5f674712"
 ).then(
 ({
 switchTradeVolumeSymbol
@@ -348,6 +357,7 @@ false
 export async function maybeLoadOlderTerminalHistory(host){
 
 if(
+isTerminalReplayActive() ||
 host.historyLoadingOlder ||
 host.historyExhausted ||
 !host.candles.length ||
